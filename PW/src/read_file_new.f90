@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2016-2020 Quantum ESPRESSO group
+! Copyright (C) 2016-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -152,7 +152,7 @@ SUBROUTINE post_xml_init (  )
   USE paw_onecenter,        ONLY : paw_potential
   USE dfunct,               ONLY : newd
   USE funct,                ONLY : get_dft_name
-  USE ldaU,                 ONLY : lda_plus_u, eth, init_lda_plus_u, U_projection, &
+  USE ldaU,                 ONLY : lda_plus_u, eth, init_hubbard, Hubbard_projectors, &
                                    lda_plus_u_kind
   USE esm,                  ONLY : do_comp_esm, esm_init
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact 
@@ -201,10 +201,10 @@ SUBROUTINE post_xml_init (  )
   !
   okpaw = ANY ( upf(1:nsp)%tpawp )
   IF ( .NOT. lspinorb ) CALL average_pp ( nsp )
-  !! average_pp must be called before init_lda_plus_u
+  !! average_pp must be called before init_hubbard
   IF ( lda_plus_u ) THEN
      IF (lda_plus_u_kind == 2) CALL read_V
-     CALL init_lda_plus_u ( upf(1:nsp)%psd, nspin, noncolin )
+     CALL init_hubbard ( upf(1:nsp)%psd, nspin, noncolin )
   ENDIF
   !
   ! ... allocate memory for G- and R-space fft arrays (from init_run.f90)
@@ -254,7 +254,7 @@ SUBROUTINE post_xml_init (  )
   IF (tbeta_smoothing) CALL init_us_b0(ecutwfc,intra_bgrp_comm)
   IF (tq_smoothing) CALL init_us_0(ecutrho,intra_bgrp_comm)
   CALL init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
-  IF ( lda_plus_U .AND. ( U_projection == 'pseudo' ) ) CALL init_q_aeps()
+  IF ( lda_plus_u .AND. ( Hubbard_projectors == 'pseudo' ) ) CALL init_q_aeps()
   CALL init_tab_atwfc(omega, intra_bgrp_comm)
   !
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, dfftp%nr1, dfftp%nr2,&

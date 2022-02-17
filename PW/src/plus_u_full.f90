@@ -4,7 +4,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! Set of subroutines needed for full LDA+U calculations
+! Set of subroutines needed for full DFT+U(+J) calculations
 ! after Liechtenstein and co-workers (PRB 52, R5467 (1995)). 
 ! Works with two-component spinor WFs and with fully-relativistic
 ! pseudopotentials. 

@@ -117,6 +117,7 @@ h_psi.o \
 h_psi_meta.o \
 hinit0.o \
 hinit1.o \
+hubbard.o \
 init_ns.o \
 init_q_aeps.o \
 init_run.o \
@@ -230,7 +231,6 @@ summary.o \
 symme.o \
 symm_base.o \
 symmetrize_at.o \
-tabd.o \
 tetra.o \
 transform_becsum_so.o \
 transform_becsum_nc.o \

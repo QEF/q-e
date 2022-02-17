@@ -6,11 +6,14 @@ New in development version:
 Incompatible changes in development version:
   * Source files previously found in FFTXLIB/ moved to FFTXLIB/src/
   * gen_us_dj, gen_us_dj moved to upflib/ and into module uspp_init
+  * DFT+Hubbard codes have new input syntax (check Doc/Hubbard_input.pdf)
 
 Fixed in development version:
   * XSPECTRA gave incorrect results with k-point parallelization, since
     at least v. 6.6, due to missing broadcast of recomputed Fermi energy
-    (found and fixed by Fanchen Meng, Brookhaven)
+  * Makov-Payne correction wasn't working with ibrav=0 and cubic cell (A. Fonari)  
+    (found and fixed by Fanchan Meng, Brookhaven)
+  * Bugfix in DFPT+U with PAW pseudos and when fildvscf/=''
   * Makov-Payne correction wasn't working with ibrav=0 and cubic cell (A. Fonari)
   * Card ADDITIONAL_KPOINTS wasn't working as expected (Prasenjit Ghosh)
 

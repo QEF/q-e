@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2007-2010 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -66,7 +66,7 @@ SUBROUTINE PAW_symmetrize( becsum )
     INTEGER :: table(48,48)
     !
     ! The following mess is necessary because the symmetrization operation
-    ! in LDA+U code is simpler than in PAW, so the required quantities are
+    ! in DFT+Hubbard code is simpler than in PAW, so the required quantities are
     ! represented in a simple but not general way.
     ! I will fix this when everything works.
     REAL(DP), TARGET :: d0(1,1,48)
@@ -329,7 +329,7 @@ SUBROUTINE PAW_symmetrize_ddd( ddd )
     INTEGER :: table(48,48)
     !
     ! The following mess is necessary because the symmetrization operation
-    ! in LDA+U code is simpler than in PAW, so the required quantities are
+    ! in DFT+Hubbard code is simpler than in PAW, so the required quantities are
     ! represented in a simple but not general way.
     ! I will fix this when everything works.
     REAL(DP), TARGET :: d0(1,1,48)
@@ -568,7 +568,7 @@ SUBROUTINE PAW_desymmetrize( dbecsum )
     INTEGER :: table(48, 48)
     !
     ! The following mess is necessary because the symmetrization operation
-    ! in LDA+U code is simpler than in PAW, so the required quantities are
+    ! in DFT+Hubbard code is simpler than in PAW, so the required quantities are
     ! represented in a simple but not general way.
     ! I will fix this when everything works.
     REAL(DP), TARGET :: d0(1,1,48)
@@ -866,7 +866,7 @@ SUBROUTINE PAW_dusymmetrize( dbecsum, npe, irr, npertx, nsymq, rtau, xq, t )
     INTEGER :: table(48,48)
     !
     ! The following mess is necessary because the symmetrization operation
-    ! in LDA+U code is simpler than in PAW, so the required quantities are
+    ! in DFT+Hubbard code is simpler than in PAW, so the required quantities are
     ! represented in a simple but not general way.
     ! I will fix this when everything works.
     REAL(DP), TARGET :: d0(1,1,48)
@@ -1174,7 +1174,7 @@ SUBROUTINE PAW_dumqsymmetrize( dbecsum, npe, irr, npertx, isymq, rtau, xq, tmq )
     COMPLEX(DP) :: fase(nat)
     !
     ! The following mess is necessary because the symmetrization operation
-    ! in LDA+U code is simpler than in PAW, so the required quantities are
+    ! in DFT+Hubbard code is simpler than in PAW, so the required quantities are
     ! represented in a simple but not general way.
     ! I will fix this when everything works.
     REAL(DP), TARGET :: d0(1,1,48)

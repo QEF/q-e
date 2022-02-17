@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,7 +10,7 @@
 SUBROUTINE init_q_aeps()
    !------------------------------------------------------------------------
    !! Initialization of the pseudopotential-dependent quantities needed for
-   !! LDA+U method with projections computed through <beta|psi>:
+   !! DFT+Hubbard with projections computed through <beta|psi>:
    !
    !! * q_ae = integral of the AE wfc up to r_core ;
    !! * q_ps = integral of the PS wfc up to r_core (not used at the moment).
@@ -20,7 +20,7 @@ SUBROUTINE init_q_aeps()
    USE atom,          ONLY : rgrid, msh
    USE lsda_mod,      ONLY : nspin
    USE ldaU,          ONLY : q_ae, q_ps, Hubbard_l, &
-                             U_projection, is_hubbard, nwfcU, offsetU
+                             Hubbard_projectors, is_hubbard, nwfcU, offsetU
    USE uspp_param,    ONLY : nbetam, nh, nhm, upf
    USE uspp,          ONLY : indv, nhtol, nhtolm, nkb
    USE control_flags, ONLY : iverbosity
@@ -53,7 +53,7 @@ SUBROUTINE init_q_aeps()
       IF ( .NOT. is_hubbard(nt) ) CYCLE
       !
       IF ( .NOT.upf(nt)%has_wfc ) CALL errore( 'init_q_aeps', &
-           "All-electron atomic-wavefunctions needed for pseudo U_projection", 1 )
+           "All-electron atomic-wavefunctions needed for pseudo Hubbard_projectors", 1 )
       !
       DO nb = 1, upf(nt)%nbeta
          DO mb = nb, upf(nt)%nbeta
@@ -88,7 +88,7 @@ SUBROUTINE init_q_aeps()
       IF ( lH >= 0 ) THEN
          !
          ! NOTE: one might run into troubles when using a PP with semicore 
-         ! states with same l as valence states (also otherwhere for LDA+U)
+         ! states with same l as valence states (also otherwhere for DFT+Hubbard)
          DO nb = 1, upf(nt)%nwfc
             IF (upf(nt)%lchi(nb) == lH .AND. upf(nt)%oc(nb) >= 0.d0) nchiH = nb
          ENDDO

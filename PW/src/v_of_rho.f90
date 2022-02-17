@@ -858,7 +858,7 @@ SUBROUTINE v_hubbard_b (ns, v_hub, eth)
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp
-  USE ldaU,                 ONLY : Hubbard_J0, Hubbard_beta, Hubbard_U_back, &
+  USE ldaU,                 ONLY : Hubbard_J0, Hubbard_beta, Hubbard_U2,  &
                                    ldim_back, ldmx_b, Hubbard_alpha_back, &
                                    is_hubbard_back
   USE lsda_mod,             ONLY : nspin
@@ -886,7 +886,7 @@ SUBROUTINE v_hubbard_b (ns, v_hub, eth)
      !
      IF (is_hubbard_back(nt)) THEN
         !
-        effU = Hubbard_U_back(nt)
+        effU = Hubbard_U2(nt)
         !
         DO is = 1, nspin
            !

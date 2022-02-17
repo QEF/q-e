@@ -197,7 +197,7 @@ SUBROUTINE openfilq()
         IF (okpaw) THEN
            filint=TRIM(fildvscf)//'_paw'
            lint3paw = 2 * nhm * nhm * nat * nspin_mag
-           iuint3paw=34
+           iuint3paw=43
            CALL diropn (iuint3paw, filint, lint3paw, exst)
         ENDIF
         END IF

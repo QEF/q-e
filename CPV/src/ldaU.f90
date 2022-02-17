@@ -71,7 +71,6 @@
       !
       implicit none
       integer is, nb, l
-      integer, external :: set_hubbard_l
 
       IF ( .NOT.lda_plus_u ) RETURN
       ! FIXME: wasteful allocation, should be removed
@@ -81,7 +80,7 @@
       Hubbard_lmax = -1
       do is=1,nsp
          if (Hubbard_U(is).ne.0.d0) then 
-            Hubbard_l(is) = set_hubbard_l( upf(is)%psd )
+            ! Hubbard_l is read from the HUBBARD card in the input file
             Hubbard_lmax = max(Hubbard_lmax,Hubbard_l(is))
             write (6,*) ' HUBBARD L FOR TYPE ',atm(is),' IS ', Hubbard_l(is)
          else

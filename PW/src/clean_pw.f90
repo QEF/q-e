@@ -41,7 +41,7 @@ SUBROUTINE clean_pw( lflag )
   USE uspp_data,            ONLY : deallocate_uspp_data
   USE uspp_param,           ONLY : upf
   USE m_gth,                ONLY : deallocate_gth
-  USE ldaU,                 ONLY : deallocate_ldaU
+  USE ldaU,                 ONLY : deallocate_hubbard
   USE extfield,             ONLY : forcefield, forcegate
   USE fft_base,             ONLY : dfftp, dffts  
   USE fft_base,             ONLY : pstickdealloc
@@ -112,7 +112,7 @@ SUBROUTINE clean_pw( lflag )
   !
   CALL deallocate_bp_efield()
   !
-  CALL deallocate_ldaU( lflag )
+  CALL deallocate_hubbard( lflag )
   !
   IF ( ALLOCATED( f_inp ) .AND. lflag )  DEALLOCATE( f_inp )
   !

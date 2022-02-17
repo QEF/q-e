@@ -122,8 +122,6 @@ radial_gradients.o \
 rgen.o \
 recips.o \
 remove_tot_torque.o \
-set_hubbard_l.o \
-set_hubbard_n.o \
 sort.o \
 trimcheck.o \
 test_input_file.o \

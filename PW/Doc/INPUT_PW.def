@@ -95,6 +95,35 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
         [ @b ADDITIONAL_K_POINTS
              see: K_POINTS ]
+        
+        [ @b HUBBARD { atomic | ortho-atomic | norm-atomic | wf | pseudo }
+        if (DFT+U)
+           U  label(1)-manifold(1) u_val(1)
+           ...
+           U  label(n)-manifold(n) u_val(n)
+          [J0 label(1)-manifold(1) j0_val(1)
+           ...
+           J0 label(n)-manifold(n) j0_val(n)]
+        if (DFT+U+J)
+           U label(1)-manifold(1) u_val(1)
+           J label(1)-manifold(1) 1 j1_val(1)
+           J label(1)-manifold(1) 2 j2_val(1)
+           J label(1)-manifold(1) 3 j3_val(1)
+           ...
+           U label(n)-manifold(n) u_val(n)
+           J label(n)-manifold(n) 1 j1_val(n)
+           J label(n)-manifold(n) 2 j2_val(n)
+           J label(n)-manifold(n) 3 j3_val(n)
+        if (DFT+U+V)
+           U label(I)-manifold(I) u_val(I)
+           V label(I)-manifold(I) label(J)-manifold(J) I J v_val(IJ)
+           ...
+           [J0 label(I)-manifold(I) j0_val(I)
+           ...
+           J0 label(n)-manifold(n) j0_val(n)]
+        All Hubbard parameters must be specified in eV.
+        Check Doc/Hubbard_input.pdf for more details. ]
+
     }
 
     #
@@ -1164,86 +1193,21 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                        evaluation } 
         } 
 
-        var lda_plus_u -type LOGICAL { 
-            default { .FALSE. }
-            status {
-                DFT+U (formerly known as LDA+U) currently works only for 
-                a few selected elements. Modify @tt Modules/set_hubbard_l.f90 and 
-                @tt PW/src/tabd.f90 if you plan to use DFT+U with an element that 
-                is not configured there.
-            }
-            info { 
-                Specify @ref lda_plus_u = .TRUE. to enable @b DFT+U, @b DFT+U+V, or @b DFT+U+J calculations.
-                See: Anisimov, Zaanen, and Andersen, PRB 44, 943 (1991); 
-                     Anisimov et al., PRB 48, 16929 (1993); 
-                     Liechtenstein, Anisimov, and Zaanen, PRB 52, R5467 (1994).
-                You must specify, for each Hubbard atom, the value of
-                U and (optionally) V, J, alpha of the Hubbard model (all in eV):
-                see @ref lda_plus_u_kind, @ref Hubbard_U, @ref Hubbard_V, 
-                @ref Hubbard_J, @ref Hubbard_alpha
-            }
-        }
-        var lda_plus_u_kind -type INTEGER { 
-            default { 0 }
-            options {
-                info { Specifies the type of calculation: }
-                
-                opt -val { lda_plus_u_kind = 0 } {
-                    DFT+U simplified version of Cococcioni and de Gironcoli, 
-                    PRB 71, 035105 (2005), using @ref Hubbard_U
-                }
-
-                opt -val { lda_plus_u_kind = 1 } {                
-                    DFT+U rotationally invariant scheme of Liechtenstein et al., 
-                    using @ref Hubbard_U and @ref Hubbard_J
-                }
-
-                opt -val { lda_plus_u_kind = 2 } {
-                    DFT+U+V simplified version of Campo Jr and Cococcioni,
-                    J. Phys.: Condens. Matter 22, 055602 (2010), doi:10.1088/0953-8984/22/5/055602,
-                    using @ref Hubbard_V
-                }
-            }
-        }
-        dimension Hubbard_U -start 1 -end ntyp -type REAL {      
-            default { 0.D0 for all species }
+        dimension Hubbard_occ -start 1,1 -end ntyp,3 -indexes ityp,i -type REAL {
+            default { read from pseudopotentials }
             info {
-                Hubbard_U(i): U parameter (eV) for species i, DFT+U calculation 
+                Hubbard occupations is the number of electrons in the
+                Hubbard manifold. By default they are initialized by 
+                reading the occupations from pseudopotentials. If specified
+                from the input, then the values read from the pseudopotentials
+                will be overwritten.
+                The second index of the Hubbard_occ array corrsponds to the
+                Hubbard manifold number. It is possible to specify up to
+                three Hubbard manifolds per Hubbard atom. However, if you want
+                to specify three manifolds then the second and the third manifolds
+                will be considered as one effective manifold (see Doc/Hubbard_input.pdf)
             }
         }
-        dimension Hubbard_J0 -start 1 -end ntype -type REAL {
-            default { 0.D0 for all species }
-            info {
-                Hubbard_J0(i): J0 parameter (eV) for species i, DFT+U+J calculation,
-                see PRB 84, 115108 (2011) for details.
-            }
-        }
-        multidimension  Hubbard_V  -start 1,1,1 -end natx,27*natx,4 -indexes na,nb,k -type REAL {
-            default { 0.D0 for all elements}
-            info {
-                Hubbard_V(na,nb,k): V parameters (eV) between atoms na and nb,
-                used in DFT+U+V calculations (only for @ref lda_plus_u_kind=2).
-                The atomic indices na and nb correspond to the atomic positions
-                in the @ref ATOMIC_POSITIONS card (this is not the same as Hubbard_U
-                which is specified for @ref ATOMIC_SPECIES). 
-
-                When na=nb, then @ref Hubbard_V(na,na,k) is the on-site @ref Hubbard_U
-                for the atom na.
-                
-                natx=50 (if needed it can be changed in /Modules/parameters.f90)
-
-                The index k controls the "interaction type" (k=1 is used for the
-                simplest DFT+U+V calculation):
-                @b k=1 - interaction between standard orbitals (both on na and nb); 
-                @b k=2 - interaction between standard (on na) and background (on nb) orbitals;
-                @b k=3 - interaction between background orbitals (both on na and nb);
-                @b k=4 - interaction between background (on na) and standard (on nb) orbitals.
-                
-                Standard orbitals correspond to the main Hubbard channel (e.g. d electrons
-                in transition metals) and background orbitals correspond to the secondary
-                Hubbard channel (e.g. p electrons in transition metals).
-            }
-        } 
         dimension Hubbard_alpha -start 1 -end ntyp -type REAL { 
             default { 0.D0 for all species }
             info {
@@ -1268,21 +1232,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 PRB 84, 115108 (2011).
             }
         }
-        multidimension  Hubbard_J  -start 1,1 -end 3,ntyp -indexes i,ityp -type REAL { 
-            default { 0.D0 for all species }
-            info {
-                Hubbard_J(i,ityp): J parameters (eV) for species ityp, 
-                used in DFT+U calculations (only for @ref lda_plus_u_kind=1)
-                
-                For p orbitals:  J = Hubbard_J(1,ityp);
-                For d orbitals:  J = Hubbard_J(1,ityp), B = Hubbard_J(2,ityp);
-                For f orbitals:  J = Hubbard_J(1,ityp), E2 = Hubbard_J(2,ityp),
-                                 E3= Hubbard_J(3,ityp).
-
-                If B or E2 or E3 are not specified or set to 0 they will be
-                calculated from J using atomic ratios.
-            }
-        }
         
         multidimension  starting_ns_eigenvalue  -indexes m,ispin,ityp -start 1,1,1 -end 2*lmax+1,nspin\ or\ npol,ntyp  -type REAL { 
             default { -1.d0 that means NOT SET }
@@ -1298,71 +1247,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 when the default choice takes another path.
             }
         }
-
-        var U_projection_type -type CHARACTER {   
-            default { 'atomic' }
-            options {
-                info {
-                    Only active when @ref lda_plus_U is .true., specifies the type
-                    of projector on localized orbital to be used in the DFT+U
-                    scheme.
-                    
-                    Currently available choices:
-                }
-                
-                opt -val 'atomic' { use atomic wfc's (as they are) to build the projector }
-
-                opt -val 'ortho-atomic' { use Lowdin orthogonalized atomic wfc's }
-                
-                opt -val 'norm-atomic' {
-                    Lowdin normalization of atomic wfc. Keep in mind:
-                    atomic wfc are not orthogonalized in this case.
-                    This is a "quick and dirty" trick to be used when
-                    atomic wfc from the pseudopotential are not
-                    normalized (and thus produce occupation whose
-                    value exceeds unity). If orthogonalized wfc are
-                    not needed always try @b 'atomic' first.
-                }
-                opt -val 'file' {
-                    use the information from file "prefix".atwfc that must
-                    have been generated previously, for instance by pmw.x
-                    (see PP/src/poormanwannier.f90 for details).
-                }
-
-                opt -val 'pseudo' {
-                    use the pseudopotential projectors. The charge density
-                    outside the atomic core radii is excluded.
-                    N.B.: for atoms with +U, a pseudopotential with the 
-                    all-electron atomic wavefunctions is required (i.e.,
-                    as generated by ld1.x with lsave_wfc flag).
-                }
-
-                info {
-                    NB: forces and stress currently implemented only for the
-                    'atomic' and 'pseudo' choice.
-                }
-            }
-        }
-
-        var Hubbard_parameters -type CHARACTER {
-            default { 'input' }
-            options {
-                info {
-                    Available choices:
-                }
-                opt -val 'input' {
-                    read the @ref Hubbard_U (or @ref Hubbard_V) parameters from
-                    the PW input file
-                }
-                opt -val 'file' {
-                    read the @ref Hubbard_V parameters from the file "parameters.in"
-                    which can be generated after the linear-response calculation
-                    (using the HP code). This option has a higher priority over 
-                    the @ref Hubbard_V if they are specified in the input. This option 
-                    can be used only when @ref lda_plus_u_kind = 2.
-                }
-            }
-        }        
 
         var dmft -type LOGICAL { 
             default { .FALSE. }
@@ -3705,5 +3589,67 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
               }
            }
         }
-    }   
+    }
+
+    #
+    # HUBBARD
+    #
+    card HUBBARD {
+        flag hubbard_type -use optional {
+            enum { atomic | ortho-atomic | norm-atomic | wf | pseudo }
+            options {
+                info {
+                    HUBBARD options are:
+                }
+                opt -val atomic    {
+                    use atomic orbitals (read from pseudopotential) to build the 
+                    Hubbard projectors
+                }
+
+                opt -val ortho-atomic {
+                    use Lowdin orthogonalized atomic orbitals. This option is 
+                    recommended to be used whenever possible instead of atomic
+                    because it allows to avoid applying Hubbard corrections twice
+                    in the orbital overlap regions.
+                }
+
+                opt -val norm-atomic  {
+                    Lowdin normalization of atomic orbitals. Keep in mind:
+                    atomic orbitals are not orthogonalized in this case.
+                    This is a "quick and dirty" trick to be used when
+                    atomic orbitals from the pseudopotential are not
+                    normalized (and thus produce occupation whose
+                    value exceeds unity). 
+                }
+
+                opt -val wf {
+                    use Wannier functions to built Hubbard projectors. 
+                    The information about the Wannier functionas are read
+                    from file "prefix".hub that must be generated using pmw.x
+                    (see PP/src/poormanwannier.f90 for details).
+                    Note: these are not maximally localized Wannier functions.
+                    (see PP/examples/example05)
+                }
+
+                opt -val pseudo {
+                    use the pseudopotential projectors. The charge density
+                    outside the atomic core radii is excluded.
+                    N.B.: for atoms with +U, a pseudopotential with the
+                    all-electron atomic orbitals are required (i.e.,
+                    as generated by ld1.x with lsave_wfc flag).
+                }
+
+                info {
+                    NB: forces and stress are currently implemented only for the
+                    'atomic', 'ortho-atomic', and 'pseudo' Hubbard projectors.
+                }
+
+                info {
+                    Check Doc/Hubbard_input.pdf to see how to specify Hubbard parameters
+                    U, J0, J, V in the HUBBARD card.
+                }
+
+            }
+        }
+   
 }

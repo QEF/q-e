@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,9 +23,9 @@ SUBROUTINE new_nsb( ns )
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp
   USE klist,                ONLY : nks, ngk
-  USE ldaU,                 ONLY : Hubbard_l, q_ae, wfcU, U_projection, backall, &
+  USE ldaU,                 ONLY : Hubbard_l, q_ae, wfcU, Hubbard_projectors, backall, &
                                    is_hubbard_back, nwfcU, offsetU_back, ldmx_b, &
-                                   ldim_back, Hubbard_l_back, Hubbard_l1_back,   &
+                                   ldim_back, Hubbard_l2, Hubbard_l3,   &
                                    offsetU_back1
   USE symm_base,            ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
@@ -79,8 +79,8 @@ SUBROUTINE new_nsb( ns )
      !
      ! make the projection
      !
-     IF ( U_projection == 'pseudo' ) THEN
-        CALL errore('new_nsb', 'U_projection = pseudo is not supported',1)
+     IF ( Hubbard_projectors == 'pseudo' ) THEN
+        CALL errore('new_nsb', 'Hubbard_projectors = pseudo is not supported',1)
         !CALL compute_pproj( ik, q_ae, proj )
      ELSE
         IF (nks > 1) CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
@@ -95,13 +95,13 @@ SUBROUTINE new_nsb( ns )
         IF ( is_hubbard_back(nt) ) THEN  
            DO m1 = 1, ldim_back(nt)  
               off1 = offsetU_back(na)+m1
-              IF (backall(nt) .AND. m1.GT.2*Hubbard_l_back(nt)+1) THEN
-                 off1 = offsetU_back1(na)+m1-2*Hubbard_l_back(nt)-1
+              IF (backall(nt) .AND. m1.GT.2*Hubbard_l2(nt)+1) THEN
+                 off1 = offsetU_back1(na)+m1-2*Hubbard_l2(nt)-1
               ENDIF
               DO m2 = m1, ldim_back(nt) 
                  off2 = offsetU_back(na)+m2
-                 IF (backall(nt) .AND. m2.GT.2*Hubbard_l_back(nt)+1) THEN
-                    off2 = offsetU_back1(na)+m2-2*Hubbard_l_back(nt)-1
+                 IF (backall(nt) .AND. m2.GT.2*Hubbard_l2(nt)+1) THEN
+                    off2 = offsetU_back1(na)+m2-2*Hubbard_l2(nt)-1
                  ENDIF
                  IF ( gamma_only ) THEN
                     DO ibnd = 1, nbnd  
@@ -153,42 +153,42 @@ SUBROUTINE new_nsb( ns )
      IF ( is_hubbard_back(nt) ) THEN 
         ! 
         DO m1 = 1, ldim_back(nt)
-           lhub(m1) = Hubbard_l_back(nt)
-           IF (backall(nt) .AND. m1.GT.(2*Hubbard_l_back(nt)+1)) THEN
-              lhub(m1) = Hubbard_l1_back(nt)
+           lhub(m1) = Hubbard_l2(nt)
+           IF (backall(nt) .AND. m1.GT.(2*Hubbard_l2(nt)+1)) THEN
+              lhub(m1) = Hubbard_l3(nt)
            ENDIF
         ENDDO
         !
         ldim_std = 2*Hubbard_l(nt)+1
         !
         DO is = 1, nspin  
-           off = 0 !2*Hubbard_l(nt)+1
-           off2 = 2*Hubbard_l_back(nt)+1 !2*(Hubbard_l(nt)+Hubbard_l_back(nt)+1)
+           off = 0 
+           off2 = 2*Hubbard_l2(nt)+1 
            DO m1 = 1, ldim_back(nt)
               m11 = m1
               !
-              IF (backall(nt) .AND. m1.GT.(2*Hubbard_l_back(nt)+1)) THEN
-                 off = 2*Hubbard_l_back(nt)+1 !2*(Hubbard_l(nt)+Hubbard_l_back(nt)+1)
-                 off2 = 2*(Hubbard_l_back(nt)+Hubbard_l1_back(nt)+1) !ldim_u(nt)
-                 m11 = m1-2*Hubbard_l_back(nt)-1
+              IF (backall(nt) .AND. m1.GT.(2*Hubbard_l2(nt)+1)) THEN
+                 off = 2*Hubbard_l2(nt)+1
+                 off2 = 2*(Hubbard_l2(nt)+Hubbard_l3(nt)+1)
+                 m11 = m1-2*Hubbard_l2(nt)-1
               ENDIF
               !
-              off1 = 0 !2*Hubbard_l(nt)+1
-              off3 = 2*Hubbard_l_back(nt)+1 !2*(Hubbard_l(nt)+Hubbard_l_back(nt)+1)
+              off1 = 0
+              off3 = 2*Hubbard_l2(nt)+1
               !
               DO m2 = 1, ldim_back(nt) 
                  m22 = m2
                  !
-                 IF (backall(nt) .AND. m2.GT.(2*Hubbard_l_back(nt)+1)) THEN
-                    off1 = 2*Hubbard_l_back(nt)+1 !2*(Hubbard_l(nt)+Hubbard_l_back(nt)+1)
-                    off3 = 2*(Hubbard_l_back(nt)+Hubbard_l1_back(nt)+1) !ldim_u(nt)
-                    m22 = m2 - 2*Hubbard_l_back(nt)-1
+                 IF (backall(nt) .AND. m2.GT.(2*Hubbard_l2(nt)+1)) THEN
+                    off1 = 2*Hubbard_l2(nt)+1
+                    off3 = 2*(Hubbard_l2(nt)+Hubbard_l3(nt)+1)
+                    m22 = m2 - 2*Hubbard_l2(nt)-1
                  ENDIF
                  !
                  DO isym = 1, nsym  
                     nb = irt (isym, na)  
-                    DO m0 = 1, 2*lhub(m1)+1     ! 2 * Hubbard_l(nt) + 1  
-                       DO m00 = 1, 2*lhub(m2)+1 ! 2 * Hubbard_l(nt) + 1  
+                    DO m0 = 1, 2*lhub(m1)+1     
+                       DO m00 = 1, 2*lhub(m2)+1 
                           !
                           if (lhub(m1).eq.0.and.lhub(m2).eq.0) then
                              ns(m1,m2,is,na) = &
