@@ -691,7 +691,15 @@ SUBROUTINE electrons_scf ( printout, exxen )
            !
            IF ( iverbosity > 0 .OR. first ) THEN
               IF (lda_plus_u_kind.EQ.0) THEN
-                 CALL write_ns()
+                ! --- LUCA -------- 
+                IF (noncolin) THEN
+                    CALL write_ns_nc()
+                ELSE        
+                ! -----------------      
+                    CALL write_ns()
+                ! --- LUCA --------   
+                ENDIF 
+                ! -----------------
               ELSEIF (lda_plus_u_kind.EQ.1) THEN
                  IF (noncolin) THEN
                     CALL write_ns_nc()
@@ -710,6 +718,10 @@ SUBROUTINE electrons_scf ( printout, exxen )
            !
            IF (hub_pot_fix) THEN
              IF (lda_plus_u_kind.EQ.0) THEN
+                ! ---- LUCA ------------     
+                IF (noncolin) CALL errore('electrons_scf', &
+                & 'hub_pot_fix is not implemented for (lda_plus_u_kind=0 .AND. noncolin)',1)     
+                ! ---------------------
                 rho%ns = rhoin%ns ! back to input values
                 IF (lhb) rho%nsb = rhoin%nsb
              ELSEIF (lda_plus_u_kind.EQ.1) THEN
@@ -722,9 +734,17 @@ SUBROUTINE electrons_scf ( printout, exxen )
            !
            IF ( first .AND. starting_pot == 'atomic' ) THEN
               IF (lda_plus_u_kind.EQ.0) THEN
-                 CALL ns_adj()
-                 rhoin%ns = rho%ns
-                 IF (lhb) rhoin%nsb = rho%nsb
+                 CALL ns_adj()     
+                 ! --- LUCA --------------     
+                 IF (noncolin) THEN
+                    rhoin%ns_nc = rho%ns_nc                    
+                 ELSE
+                 ! -----------------        
+                    rhoin%ns = rho%ns
+                    IF (lhb) rhoin%nsb = rho%nsb
+                 ! ------LUCA -----  
+                 ENDIF   
+                 ! ---------------  
               ELSEIF (lda_plus_u_kind.EQ.1) THEN
                  CALL ns_adj()
                  IF (noncolin) THEN
@@ -739,8 +759,16 @@ SUBROUTINE electrons_scf ( printout, exxen )
            IF ( iter <= niter_with_fixed_ns ) THEN
               WRITE( stdout, '(/,5X,"RESET ns to initial values (iter <= mixing_fixed_ns)",/)')
               IF (lda_plus_u_kind.EQ.0) THEN
-                 rho%ns = rhoin%ns
-                 IF (lhb) rhoin%nsb = rho%nsb
+                 ! --- LUCA --------------     
+                 IF (noncolin) THEN   
+                    rho%ns_nc = rhoin%ns_nc  
+                 ELSE        
+                 ! -----------------         
+                    rho%ns = rhoin%ns
+                    IF (lhb) rhoin%nsb = rho%nsb
+                 ! ------LUCA -----  
+                 ENDIF
+                 ! ---------------
               ELSEIF (lda_plus_u_kind.EQ.1) THEN
                  IF (noncolin) THEN
                     rho%ns_nc = rhoin%ns_nc
@@ -962,7 +990,15 @@ SUBROUTINE electrons_scf ( printout, exxen )
            !
            ! Write the occupation matrices
            IF (lda_plus_u_kind == 0) THEN
-              CALL write_ns()
+              ! --- LUCA --------     
+              IF (noncolin) THEN      
+                 CALL write_ns_nc()
+              ELSE        
+              ! -----------------        
+                 CALL write_ns()
+              ! --- LUCA --------   
+              ENDIF
+              ! -----------------
            ELSEIF (lda_plus_u_kind == 1) THEN
               IF (noncolin) THEN
                  CALL write_ns_nc()
@@ -1247,10 +1283,19 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !
        IF (lda_plus_u .AND. (.NOT.hub_pot_fix)) THEN
          IF (lda_plus_u_kind.EQ.0) THEN
-            delta_e_hub = - SUM( rho%ns(:,:,:,:)*v%ns(:,:,:,:) )
-            IF (lhb) delta_e_hub = delta_e_hub - SUM(rho%nsb(:,:,:,:)*v%nsb(:,:,:,:))
-            IF (nspin==1) delta_e_hub = 2.d0 * delta_e_hub
-            delta_e = delta_e + delta_e_hub
+            ! --- LUCA -----------    
+            IF (noncolin) THEN
+              delta_e_hub = - SUM( rho%ns_nc(:,:,:,:)*v%ns_nc(:,:,:,:) )
+              delta_e = delta_e + delta_e_hub              
+            ELSE        
+            ! --------------------        
+               delta_e_hub = - SUM( rho%ns(:,:,:,:)*v%ns(:,:,:,:) )
+               IF (lhb) delta_e_hub = delta_e_hub - SUM(rho%nsb(:,:,:,:)*v%nsb(:,:,:,:))
+               IF (nspin==1) delta_e_hub = 2.d0 * delta_e_hub
+               delta_e = delta_e + delta_e_hub
+            ! --- LUCA ----------   
+            ENDIF  
+            ! -------------------
          ELSEIF (lda_plus_u_kind.EQ.1) THEN
             IF (noncolin) THEN
               delta_e_hub = - SUM( rho%ns_nc(:,:,:,:)*v%ns_nc(:,:,:,:) )
@@ -1334,11 +1379,20 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !
        IF (lda_plus_u .AND. (.NOT.hub_pot_fix)) THEN
           IF (lda_plus_u_kind.EQ.0) THEN
-             delta_escf_hub = -SUM((rhoin%ns(:,:,:,:)-rho%ns(:,:,:,:))*v%ns(:,:,:,:))
-             IF (lhb) delta_escf_hub = delta_escf_hub - &
-                         SUM((rhoin%nsb(:,:,:,:)-rho%nsb(:,:,:,:))*v%nsb(:,:,:,:))
-             IF ( nspin==1 ) delta_escf_hub = 2.d0 * delta_escf_hub
-             delta_escf = delta_escf + delta_escf_hub
+             ! --- LUCA --------------------
+             IF (noncolin) THEN 
+                delta_escf_hub = -SUM((rhoin%ns_nc(:,:,:,:)-rho%ns_nc(:,:,:,:))*v%ns_nc(:,:,:,:))
+                delta_escf = delta_escf + delta_escf_hub
+             ELSE        
+             ! -----------------------------                     
+                delta_escf_hub = -SUM((rhoin%ns(:,:,:,:)-rho%ns(:,:,:,:))*v%ns(:,:,:,:))
+                IF (lhb) delta_escf_hub = delta_escf_hub - &
+                            SUM((rhoin%nsb(:,:,:,:)-rho%nsb(:,:,:,:))*v%nsb(:,:,:,:))
+                IF ( nspin==1 ) delta_escf_hub = 2.d0 * delta_escf_hub
+                delta_escf = delta_escf + delta_escf_hub
+             ! --- LUCA --------------------  
+             ENDIF   
+             ! -----------------------------
           ELSEIF (lda_plus_u_kind.EQ.1) THEN
              IF (noncolin) THEN
                 delta_escf_hub = -SUM((rhoin%ns_nc(:,:,:,:)-rho%ns_nc(:,:,:,:))*v%ns_nc(:,:,:,:))

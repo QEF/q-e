@@ -152,8 +152,16 @@ SUBROUTINE potinit()
      !
      IF (lda_plus_u) THEN
         !
-        IF (lda_plus_u_kind == 0) THEN
-           CALL init_ns()
+        IF (lda_plus_u_kind == 0) THEN    
+           ! --- LUCA ---------------
+           IF (noncolin) THEN
+              CALL init_ns_nc() 
+           ELSE 
+           ! ---------------------        
+              CALL init_ns()
+           ! --- LUCA -------------   
+           ENDIF   
+           ! ----------------------
         ELSEIF (lda_plus_u_kind == 1) THEN
            IF (noncolin) THEN
               CALL init_ns_nc()
@@ -273,7 +281,15 @@ SUBROUTINE potinit()
      WRITE( stdout, '(/5X,"STARTING HUBBARD OCCUPATIONS:")')
      !
      IF (lda_plus_u_kind == 0) THEN
-        CALL write_ns()
+        ! ----- LUCA ------------
+        IF (noncolin) THEN
+           CALL write_ns_nc() 
+        ELSE   
+        ! ----------------------     
+           CALL write_ns()
+        ! ----- LUCA ------------
+        ENDIF
+        ! ----------------------        
      ELSEIF (lda_plus_u_kind == 1) THEN
         IF (noncolin) THEN
            CALL write_ns_nc()
