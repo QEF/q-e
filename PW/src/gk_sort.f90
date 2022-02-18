@@ -19,8 +19,8 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
    !!      In practice, in some special cases (primitive lattice vectors that
    !!      are close to but not exactly equal to a symmetric Bravais lattice)
    !!      this does not hold, presumably due to a limitation of "hpsort_eps".
-   !!      This is ia source of troouble for Gamma-only calculations, so one
-   !!      explicitly sets igk(i)=i for k=0
+   !!      This is a source of trouble for Gamma-only calculations, so here
+   !!      we explicitly set igk(i)=i for k=0.
    !
    USE kinds,      ONLY: DP
    USE constants,  ONLY: eps8

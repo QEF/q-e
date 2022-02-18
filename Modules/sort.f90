@@ -11,13 +11,13 @@ subroutine hpsort_eps (n, ra, ind, eps)
   !! Sort an array ra(1:n) into ascending order using heapsort algorithm,
   !! and considering two elements being equal if their values differ
   !! for less than "eps". IMPORTANT NOTICE (PG February 2022):
-  !! Assume you have in input a,b,c, in this order, with |a-b| < eps,
-  !! |b-c| < eps, but |a-c| > eps. The resulting output order may be a,b,c,
-  !! not c,a,b as it should. I think this is a bug. I don't know how to fix
+  !! Assume you have in input a,b,c with c < b < a and a-b < eps, b-c < eps,
+  !! but a-c > eps. The resulting output order should be c,a,b, but may turn
+  !! out to be a,b,c instead. I think this is a bug. I don't know how to fix
   !! it, I am not sure it does any harm, but re-ordering k+G with this same
   !! routine may yield a different ordering for k+G and G vectors even if k=0.
-  !! This was definitely a bug that has been around for years and that was
-  !! worked around by avoiding to recompute the indices for k+G if k=0.
+  !! This is a bug that has been around for years. The current work-around 
+  !! (in routine gk_sort) is to avoid recomputing indices for k+G if k=0.
   !!
   !! \(\text{n}\) is input, \(\text{ra}\) is replaced on output by its 
   !! sorted rearrangement.  
