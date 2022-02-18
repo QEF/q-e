@@ -16,6 +16,10 @@ Fixed in development version:
   * Bugfix in DFPT+U with PAW pseudos and when fildvscf/=''
   * Makov-Payne correction wasn't working with ibrav=0 and cubic cell (A. Fonari)
   * Card ADDITIONAL_KPOINTS wasn't working as expected (Prasenjit Ghosh)
+  * Subtle bug in G-vector ordering, usually triggered by almost-but-not-quite
+    symmetric primitive lattice vectors, was affecting k=0 calculations (not CP)
+    since v.6.0. The ultimate fix would require to change routine hpsort_eps; 
+    the current workaround consists in not recomputing k+G indices if k=0.
 
 New in 7.0 version:
   * Unscreened and screened (range-separated) vdW-DF hybrids
