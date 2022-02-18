@@ -259,6 +259,11 @@ SUBROUTINE summary()
                  Hubbard_J0(nt)*rytoev, Hubbard_beta(nt)*rytoev
            END IF
         END DO
+        ! ------------------- LUCA -----------------
+        IF (lspinorb) THEN
+           WRITE(stdout, '(5x,"LDA+U on averaged j=l+1/2,l-1/2 radial WFs")')
+        END IF
+        ! ------------------------------------------
         !
      ELSEIF(lda_plus_u_kind == 1) THEN
         !

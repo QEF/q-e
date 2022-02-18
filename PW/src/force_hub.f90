@@ -45,11 +45,12 @@ SUBROUTINE force_hub( forceh )
    USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU
    USE buffers,              ONLY : get_buffer
    USE mp_bands,             ONLY : use_bgrp_in_hpsi
-   USE noncollin_module,     ONLY : noncolin
+   USE noncollin_module,     ONLY : noncolin, npol
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv
    USE wavefunctions_gpum,   ONLY : using_evc
    USE becmod_subs_gpum,     ONLY : using_becp_auto
    USE uspp_init,            ONLY : init_us_2
+   USE mp_bands,             ONLY : intra_bgrp_comm
    !
    IMPLICIT NONE
    !
@@ -61,9 +62,12 @@ SUBROUTINE force_hub( forceh )
    TYPE(bec_type) :: proj     ! proj(nwfcU,nbnd)
    COMPLEX(DP), ALLOCATABLE :: spsi(:,:) 
    REAL(DP), ALLOCATABLE :: dns(:,:,:,:), dnsb(:,:,:,:)
+   ! ---------- LUCA -------------------------------------
+   COMPLEX (DP), ALLOCATABLE ::  dns_nc(:,:,:,:)
+   ! -----------------------------------------------------
    COMPLEX (DP), ALLOCATABLE ::  dnsg(:,:,:,:,:)
    ! dns(ldim,ldim,nspin,nat) ! the derivative of the atomic occupations
-   INTEGER :: npw, alpha, na, nt, is, m1, m2, ipol, ldim, ik, ijkb0
+   INTEGER :: npw, alpha, na, nt, is, is2, m1, m2, ipol, ldim, ik, ijkb0
    INTEGER :: na1, na2, equiv_na2, nt1, nt2, ldim1, ldim2, viz
    INTEGER :: nb_s, nb_e, mykey, ldimb
    LOGICAL :: lhubb
@@ -81,17 +85,27 @@ SUBROUTINE force_hub( forceh )
    IF (lda_plus_u_kind == 1) CALL errore("force_hub", &
                    " forces in full LDA+U scheme are not yet implemented", 1 )
    !
-   IF (noncolin) CALL errore ("forceh","Noncollinear case is not supported",1)
+   ! IF (noncolin) CALL errore ("forceh","Noncollinear case is not supported",1)
    !
    IF (lda_plus_u_kind.EQ.0) THEN
       ! DFT+U
       lhubb = .FALSE.
       ldim = 2*Hubbard_lmax + 1
-      ALLOCATE ( dns(ldim, ldim, nspin, nat) )
+      ! ---------------------- LUCA -----------------------
+      IF (noncolin) then
+         ALLOCATE ( dns_nc(ldim, ldim, nspin, nat) ) 
+      ELSE        
+         ALLOCATE ( dns(ldim, ldim, nspin, nat) )
+      ENDIF
+      ! --------------------------------------------------
       DO nt = 1, ntyp
          IF (is_hubbard_back(nt)) lhubb = .TRUE.
       ENDDO
+
       IF (lhubb) THEN
+         ! ------------ LUCA ------------------     
+         IF (noncolin) CALL errore ("force_hub","Noncollinear and background are not supported",1)     
+         ! ------------------------------
          ldimb = ldmx_b
          ALLOCATE ( dnsb(ldimb, ldimb, nspin, nat) )
       ENDIF
@@ -101,16 +115,24 @@ SUBROUTINE force_hub( forceh )
       ALLOCATE( dnsg(ldim, ldim, max_num_neighbors, nat, nspin) )
    ENDIF
    !
-   ALLOCATE (spsi(npwx,nbnd)) 
-   ALLOCATE (wfcatom(npwx,natomwfc))
+   ! -------------------- LUCA (added npol to the plane-wave size)-----------------------
+   ALLOCATE (spsi(npwx*npol,nbnd))     
+   ALLOCATE ( wfcatom(npwx*npol,natomwfc) )
+   ! ----------------------------------------------------------------
    IF (U_projection.EQ."ortho-atomic") THEN
-      ALLOCATE (swfcatom(npwx,natomwfc))
+      ! ----------- LUCA (added npol) ---------------------------
+      ALLOCATE (swfcatom(npwx*npol,natomwfc))
       ALLOCATE (eigenval(natomwfc))
       ALLOCATE (eigenvect(natomwfc,natomwfc)) 
       ALLOCATE (overlap_inv(natomwfc,natomwfc))
    ENDIF
    !
-   CALL allocate_bec_type( nwfcU, nbnd, proj )
+   ! ----------------------- LUCA -------------------
+   IF (noncolin) THEN
+      ALLOCATE (proj%k (nwfcU, nbnd))      
+   ELSE        
+      CALL allocate_bec_type( nwfcU, nbnd, proj )
+   ENDIF    
    !
    ! poor-man parallelization over bands
    ! - if nproc_pool=1   : nb_s=1, nb_e=nbnd, mykey=0
@@ -148,7 +170,15 @@ SUBROUTINE force_hub( forceh )
       CALL orthoUwfc2 (ik)
       !
       ! proj=<wfcU|S|evc>
-      CALL calbec( npw, wfcU, spsi, proj )
+      ! ----------------------- LUCA ------------------------------------
+      IF (noncolin) THEN
+         CALL ZGEMM ('C', 'N', nwfcU, nbnd, npwx*npol, (1.0_DP, 0.0_DP), wfcU, &
+                    npwx*npol, spsi, npwx*npol, (0.0_DP, 0.0_DP),  proj%k, nwfcU)
+         CALL mp_sum( proj%k( :, 1:nbnd ), intra_bgrp_comm )              
+      ELSE      
+         CALL calbec( npw, wfcU(1:npwx,:), spsi, proj )
+      ENDIF   
+      ! ----------------------------------------------------------------
       !
       ! now we need the first derivative of proj with respect to tau(alpha,ipol)
       !
@@ -160,27 +190,52 @@ SUBROUTINE force_hub( forceh )
             !
             DO ipol = 1, 3  ! forces are calculated for coordinate ipol ...
                !
-               IF ( gamma_only ) THEN
-                  CALL dndtau_gamma ( ldim, proj%r, spsi, alpha, ijkb0, ipol, ik, &
-                                      nb_s, nb_e, mykey, 1, dns )
-               ELSE
-                  CALL dndtau_k     ( ldim, proj%k, spsi, alpha, ijkb0, ipol, ik, &
-                                      nb_s, nb_e, mykey, 1, dns )
-               ENDIF
+               ! ---------------------------- LUCA --------------------------------
 ! !omp parallel do default(shared) private(na,nt,m1,m2,is)
-               DO na = 1, nat                
-                  nt = ityp(na)
-                  IF ( is_hubbard(nt) ) THEN
-                     DO is = 1, nspin
-                        DO m2 = 1, 2*Hubbard_l(nt)+1
-                           DO m1 = 1, 2*Hubbard_l(nt)+1
-                              forceh(ipol,alpha) = forceh(ipol,alpha) -    &
-                                 v%ns(m2,m1,is,na) * dns(m1,m2,is,na)
+               IF (noncolin) THEN  
+                  CALL dndtau_k_nc ( ldim, proj%k, spsi, alpha, ijkb0, ipol, ik, &
+                                      nb_s, nb_e, mykey, 1, dns_nc )                  
+                  DO na = 1, nat
+                     nt = ityp(na)
+                     IF ( is_hubbard(nt) ) THEN
+                        DO is = 1, npol
+                           DO is2 = 1, npol
+                              DO m2 = 1, 2*Hubbard_l(nt)+1
+                                 DO m1 = 1, 2*Hubbard_l(nt)+1
+                                    forceh(ipol,alpha) = forceh(ipol,alpha)      -   &
+                                           dble( v%ns_nc(m2, m1, npol*(is-1)+is2, na)  *   &
+                                           dns_nc(m1, m2, npol*(is2-1)+is, na) )
+                                 ENDDO
+                              ENDDO
                            ENDDO
                         ENDDO
-                     ENDDO
-                  ENDIF
-               ENDDO
+                     ENDIF
+                  ENDDO                              
+               ELSE
+                  IF ( gamma_only ) THEN
+                      CALL dndtau_gamma ( ldim, proj%r, spsi, alpha, ijkb0, ipol, ik, &
+                                         nb_s, nb_e, mykey, 1, dns )
+                  ELSE            
+                      CALL dndtau_k    ( ldim, proj%k, spsi, alpha, ijkb0, ipol, ik, &
+                                         nb_s, nb_e, mykey, 1, dns )
+                  ENDIF            
+                  DO na = 1, nat
+                     nt = ityp(na)
+                     IF ( is_hubbard(nt) ) THEN
+                        DO is = 1, nspin
+                           DO m2 = 1, 2*Hubbard_l(nt)+1
+                              DO m1 = 1, 2*Hubbard_l(nt)+1
+                                 forceh(ipol,alpha) = forceh(ipol,alpha) -    &
+                                    v%ns(m2,m1,is,na) * dns(m1,m2,is,na)
+                              ENDDO
+                            ENDDO
+                        ENDDO
+                     ENDIF
+                  ENDDO                              
+               ENDIF
+               !
+               ! -------------------------------------------------------------------
+! !omp parallel do default(shared) private(na,nt,m1,m2,is)               
 ! !omp end parallel do
                !
                IF (lhubb) THEN
@@ -260,7 +315,13 @@ SUBROUTINE force_hub( forceh )
    CALL deallocate_bec_type( proj )
    !
    IF (lda_plus_u_kind.EQ.0) THEN
+   ! ------------------- LUCA -------------------------
+   IF (noncolin) THEN
+      DEALLOCATE(dns_nc)
+   ELSE        
       DEALLOCATE(dns)
+   ENDIF   
+   ! --------------------------------------------------   
       IF (ALLOCATED(dnsb)) DEALLOCATE(dnsb)
    ELSEIF (lda_plus_u_kind.EQ.2) THEN
       DEALLOCATE(dnsg)
@@ -473,6 +534,172 @@ SUBROUTINE dndtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
 END SUBROUTINE dndtau_k
 !
+! ------------------------------- LUCA -----------------------------------------
+SUBROUTINE dndtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
+                      nb_e, mykey, lpuk, dns_nc )
+   !---------------------------------------------------------------------------
+   !! This routine computes the derivative of the ns with respect to the ionic
+   !! displacement \(u(\text{alpha,ipol})\) used to obtain the Hubbard 
+   !! contribution to the atomic forces.
+   !
+   USE kinds,                ONLY : DP
+   USE ions_base,            ONLY : nat, ityp
+   USE lsda_mod,             ONLY : nspin, current_spin
+   USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, offsetU, &
+                                    is_hubbard_back, offsetU_back, ldim_u, &
+                                    offsetU_back1, ldim_back, Hubbard_l_back, &
+                                    backall, U_projection, wfcU
+   USE noncollin_module,     ONLY : npol                            
+   USE wvfct,                ONLY : nbnd, npwx, wg
+   USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
+   USE mp_bands,             ONLY : intra_bgrp_comm
+   USE mp,                   ONLY : mp_sum
+   USE wavefunctions,        ONLY : evc
+   USE uspp,                 ONLY : okvan
+   USE force_mod,            ONLY : doverlap_inv
+   USE basis,                ONLY : natomwfc
+   !
+   IMPLICIT NONE
+   !
+   ! I/O variables
+   !
+   INTEGER, INTENT(IN) :: ldim
+   !! ldim = 2*Hubbard_lmax+1
+   COMPLEX (DP), INTENT(IN) :: proj(nwfcU,nbnd)
+   !! projection
+   ! ----------- LUCA (added npol to the size of spsi) -----------------------
+   COMPLEX(DP), INTENT(IN) :: spsi(npwx*npol,nbnd)
+   !! \(S|\ \text{evc}\rangle\)
+   INTEGER, INTENT(IN) :: alpha
+   !! the displaced atom index
+   INTEGER, INTENT(IN) :: jkb0
+   !! positions of beta functions for atom alpha
+   INTEGER, INTENT(IN) :: ipol
+   !! the component of displacement
+   INTEGER, INTENT(IN) :: ik
+   !! k-point index
+   INTEGER, INTENT(IN) :: nb_s
+   !! starting band number (for band parallelization)
+   INTEGER, INTENT(IN) :: nb_e
+   !! ending band number (for band parallelization)
+   INTEGER, INTENT(IN) :: mykey
+   !! If each band appears more than once
+   !! compute its contribution only once (i.e. when mykey=0)
+   INTEGER, INTENT(IN) :: lpuk
+   !! index to control the standard (lpuk=1) or 
+   !! background (lpuk=2) contribution to the force
+   COMPLEX(DP), INTENT(OUT) :: dns_nc(ldim,ldim,nspin,nat)
+   !! the derivative of the atomic occupations
+   !
+   ! ... local variables
+   !
+   INTEGER ::  ibnd, is1, is2, na, nt, m1, m2, off1, off2, m11, m22, ldim1, i, j
+   REAL(DP) :: psum 
+   COMPLEX(DP), ALLOCATABLE :: dproj(:,:), dproj_us(:,:)
+   !
+   CALL start_clock( 'dndtau' )
+   !
+   ALLOCATE ( dproj(nwfcU,nb_s:nb_e) )
+   !
+   ! Compute the derivative of occupation matrices (the quantities dns_nc(m1,m2,i))
+   ! of the atomic orbitals. They are complex quantities as well as dns_nc(m1,m2,i).
+   !
+   dns_nc(:,:,:,:) = 0.d0
+   !
+   ! Band parallelization. If each band appears more than once
+   ! compute its contribution only once (i.e. when mykey=0)
+   !
+   IF ( mykey /= 0 ) GO TO 10
+   !
+   ! Compute the USPP contribution to dproj:
+   ! <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
+   !
+   IF (okvan) THEN
+      ALLOCATE ( dproj_us(nwfcU,nb_s:nb_e) )
+      CALL matrix_element_of_dSdtau (alpha, ipol, ik, jkb0, &
+                       nwfcU, wfcU, nbnd, evc, dproj_us, nb_s, nb_e, mykey)
+   ENDIF
+   !
+   ! In the 'ortho-atomic' case calculate d[(O^{-1/2})^T]
+   !
+   IF (U_projection.EQ."ortho-atomic") THEN
+      ALLOCATE ( doverlap_inv(natomwfc,natomwfc) )
+      CALL calc_doverlap_inv (alpha, ipol, ik, jkb0)
+   ENDIF
+   !
+! !omp parallel do default(shared) private(na,nt,m1,m2,ibnd)
+   DO na = 1, nat
+      nt = ityp(na)
+      IF ( is_hubbard(nt) ) THEN
+         !
+         ! Compute the second contribution to dproj due to the derivative of 
+         ! (ortho-)atomic orbitals
+         CALL dprojdtau_k ( spsi, alpha, na, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
+         IF (okvan) dproj = dproj + dproj_us
+         !
+         ldim1 = 2*Hubbard_l(nt)+1
+         DO is1 = 1, npol
+            DO is2 = 1, npol
+               i = npol*(is1-1) + is2
+               DO m1 = 1, ldim1
+                  DO m2 = 1, ldim1
+                     DO ibnd = nb_s, nb_e
+                        dns_nc(m1,m2,i,na) = dns_nc(m1,m2,i,na) + &
+                            wg(ibnd,ik) * dcmplx(CONJG(dproj(offsetU(na)+m2+ldim1*(is2-1),ibnd) )* &
+                                                       proj(offsetU(na)+m1+ldim1*(is1-1),ibnd)  + &
+                                                 CONJG(proj(offsetU(na)+m2+ldim1*(is2-1),ibnd) )* &
+                                                       dproj(offsetU(na)+m1+ldim1*(is1-1),ibnd)) 
+                     ENDDO                        
+                  ENDDO
+               ENDDO   
+            ENDDO
+         ENDDO
+      ENDIF
+   ENDDO
+! !omp end parallel do
+   !
+10 DEALLOCATE( dproj )
+   IF (ALLOCATED(doverlap_inv)) DEALLOCATE( doverlap_inv )
+   IF (okvan) DEALLOCATE (dproj_us)
+   !
+   CALL mp_sum( dns_nc, intra_pool_comm )
+   !
+   ! Impose hermiticity of dns_nc{m1,m2,i}
+   !
+! !omp parallel do default(shared) private(na,is,m1,m2)
+   DO na = 1, nat
+      nt = ityp (na)
+      IF ( is_hubbard(nt) ) THEN
+         DO is1 = 1, npol
+           DO is2 = 1, npol
+             i = npol*(is1-1) + is2
+             j = is1 + npol*(is2-1)
+             ldim1 = 2*Hubbard_l(nt)+1
+             DO m1 = 1, ldim1
+               DO m2 = 1, ldim1
+                  psum = ABS( dns_nc(m1,m2,i,na) - CONJG(dns_nc(m2,m1,j,na)) )
+                  IF (psum.GT.1.d-10) THEN
+                      ! print*, na, m1, m2, is1, is2
+                      ! print*, dns_nc(m1,m2,i,na)
+                      ! print*, dns_nc(m2,m1,j,na)
+                     CALL errore( 'dns_nc', 'non hermitean matrix', 1 )
+                  ELSE
+                     dns_nc(m2,m1,j,na) = CONJG( dns_nc(m1,m2,i,na) )
+                  ENDIF
+               ENDDO
+             ENDDO
+           ENDDO
+         ENDDO
+      ENDIF
+   ENDDO
+! !omp end parallel do
+   !
+   CALL stop_clock( 'dndtau' )
+   !
+   RETURN
+   !
+END SUBROUTINE dndtau_k_nc
+!-------------------------------------------------------------------------------
 !-----------------------------------------------------------------------
 SUBROUTINE dndtau_gamma ( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
                           nb_s, nb_e, mykey, lpuk, dns )
@@ -1012,6 +1239,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
                                     is_hubbard_back, Hubbard_l_back, offsetU_back, &
                                     offsetU_back1, ldim_u, backall, lda_plus_u_kind, &
                                     U_projection, oatwfc
+   USE noncollin_module,     ONLY : noncolin, npol                         
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE uspp_param,           ONLY : nh
@@ -1023,12 +1251,14 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    USE basis,                ONLY : natomwfc, wfcatom, swfcatom
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv, doverlap_inv
    USE wavefunctions_gpum,   ONLY : using_evc
+   USE ldaU,                 ONLY : is_hubbard, Hubbard_l, offsetU
    !
    IMPLICIT NONE
    !
    ! I/O variables
    !
-   COMPLEX(DP), INTENT(IN) :: spsi(npwx,nbnd)
+   ! ---------------- LUCA (added npol to the size of spsi) ---------------------
+   COMPLEX(DP), INTENT(IN) :: spsi(npwx*npol,nbnd)
    !! \(S\ |\text{evc}\rangle\)
    INTEGER, INTENT(IN) :: alpha
    !! the displaced atom
@@ -1080,7 +1310,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       ! localized nature of atomic wfc).
       ! Note: parallelization here is over plane waves, not over bands!
       !
-      ALLOCATE ( dwfc(npwx,ldim) )
+      ALLOCATE ( dwfc(npwx*npol,ldim*npol) )
       dwfc(:,:) = (0.d0, 0.d0)
       !
       ! DFT+U: In the expression of dwfc we don't need (k+G) but just G; k always
@@ -1107,15 +1337,27 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
                           - ldim_std - 2*Hubbard_l_back(nt) - 1
             ENDIF
             dwfc(ig,m1) = (0.d0,-1.d0) * gvec * wfcU(ig,offpm)
+            ! --------------------- LUCA -------------------
+            IF (noncolin) dwfc(ig+npwx,m1+ldim) = (0.d0,-1.d0) * gvec * wfcU(ig+npwx,offpm+ldim)
+            ! -------------------------------------------
          ENDDO
          !
       ENDDO
 !!omp end parallel do
       !
-      ALLOCATE ( dproj0(ldim,nbnd) )
-      CALL ZGEMM('C','N',ldim, nbnd, npw, (1.d0,0.d0), &
-                  dwfc, npwx, spsi, npwx, (0.d0,0.d0), &
-                  dproj0, ldim)
+      ! ------------------- LUCA -------------------------
+      IF (noncolin) THEN
+         ALLOCATE ( dproj0(ldim*npol,nbnd) )
+         CALL ZGEMM('C','N',ldim*npol, nbnd, npwx*npol, (1.d0,0.d0), &
+                     dwfc, npwx*npol, spsi, npwx*npol, (0.d0,0.d0), &
+                     dproj0, ldim*npol)         
+      ELSE
+         ALLOCATE ( dproj0(ldim,nbnd) )   
+         CALL ZGEMM('C','N',ldim, nbnd, npw, (1.d0,0.d0), &
+                     dwfc, npwx, spsi, npwx, (0.d0,0.d0), &
+                     dproj0, ldim)
+      ENDIF        
+      ! --------------------------------------------------
       !
       DEALLOCATE ( dwfc )
       CALL mp_sum( dproj0, intra_bgrp_comm )
@@ -1133,6 +1375,9 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
                        - ldim_std - 2*Hubbard_l_back(nt) - 1
          ENDIF
          dproj(offpm, :) = dproj0(m1, nb_s:nb_e)
+         ! ----------------- LUCA --------------------------------
+         IF (noncolin) dproj(offpm+ldim, :) = dproj0(m1+ldim, nb_s:nb_e)
+         ! -------------------------------------------------------
         ENDDO
       ENDIF
       DEALLOCATE ( dproj0 )
@@ -1152,7 +1397,8 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       IF (is_hubbard_back(nt)) CALL errore("dprojdtau_k", &
                  " Forces with background and  ortho-atomic are not supported",1)
       !
-      ALLOCATE (dwfc(npwx,ldim))
+      ! ------------- LUCA (added npol) -------------------------------
+      ALLOCATE (dwfc(npwx*npol,ldim*npol))
       dwfc(:,:) = (0.d0, 0.d0)
       !
       ! Determine how many atomic wafefunctions there are for atom 'alpha'
@@ -1172,10 +1418,14 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       offpm = oatwfc(na) ! offset
       DO ig = 1, npw
          gvec = (g(ipol,igk_k(ig,ik)) + xk(ipol,ik)) * tpiba
-         DO m1 = 1, ldim
+         DO m1 = 1, ldim*npol
             DO m2 = m_start, m_end
                dwfc(ig,m1) = dwfc(ig,m1) + (0.d0,-1.d0) * gvec * &
                          overlap_inv(offpm+m1,m2) * wfcatom(ig,m2)
+               ! ---------- LUCA -----------------  
+               !
+               IF (noncolin) dwfc(ig+npwx,m1) = dwfc(ig+npwx,m1) + (0.d0,-1.d0) * gvec * &
+                         overlap_inv(offpm+m1,m2) * wfcatom(ig+npwx,m2)
             ENDDO
          ENDDO
       ENDDO
@@ -1192,17 +1442,17 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       ! dwfc(ig,m1) = dwfc(ig,m1) + wfcatom(ig,m2) * doverlap_inv(m2,offpm+m1)
       ! where m1=1,ldim; m2=1,natomwfc; ig=1,npw
       !
-      CALL ZGEMM('N','N', npw, ldim, natomwfc, (1.d0,0.d0), &
-                  wfcatom, npwx, doverlap_inv(:,offpm+1:offpm+ldim), &
-                  natomwfc, (1.d0,0.d0), dwfc, npwx)
+      CALL ZGEMM('N','N', npwx*npol, ldim*npol, natomwfc, (1.d0,0.d0), &
+                  wfcatom, npwx*npol, doverlap_inv(:,offpm+1:offpm+ldim*npol), &
+                  natomwfc, (1.d0,0.d0), dwfc, npwx*npol)
       !
       ! 3. Final step: compute dproj0 = <dwfc|spsi>
       !
-      ALLOCATE ( dproj0(ldim,nbnd) )
+      ALLOCATE ( dproj0(ldim*npol,nbnd) )
       dproj0(:,:) = (0.0d0, 0.0d0)
-      CALL ZGEMM('C','N',ldim, nbnd, npw, (1.d0,0.d0), &
-                  dwfc, npwx, spsi, npwx, (0.d0,0.d0), &
-                  dproj0, ldim)
+      CALL ZGEMM('C','N',ldim*npol, nbnd, npwx*npol, (1.d0,0.d0), &
+                  dwfc, npwx*npol, spsi, npwx*npol, (0.d0,0.d0), &
+                  dproj0, ldim*npol)
       CALL mp_sum( dproj0, intra_bgrp_comm )
       !
       ! Copy to dproj results for the bands treated by this processor
@@ -1211,6 +1461,9 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       IF (mykey==0) THEN
          DO m1 = 1, ldim
             dproj( offpm+m1, :) = dproj0(m1, nb_s:nb_e)
+            ! ----------------- LUCA --------------------------------
+            IF (noncolin) dproj(offpm+m1+ldim, :) = dproj0(m1+ldim, nb_s:nb_e)
+            ! -------------------------------------------------------
          ENDDO
       ENDIF
       !
@@ -1218,7 +1471,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       DEALLOCATE (dwfc)
       !
    ENDIF
-   !
+   ! 
    CALL stop_clock('dprojdtau')
    !
    RETURN
@@ -1235,6 +1488,7 @@ SUBROUTINE natomwfc_per_atom(alpha, m_start, m_end)
    USE uspp_param,   ONLY : upf
    USE ldaU,         ONLY : Hubbard_l
    USE io_global,    ONLY : stdout
+   USE noncollin_module,     ONLY : noncolin, npol   
    !
    IMPLICIT NONE
    !
@@ -1255,7 +1509,15 @@ SUBROUTINE natomwfc_per_atom(alpha, m_start, m_end)
       DO nb = 1, upf(nt)%nwfc
          IF (upf(nt)%oc(nb) >= 0.d0) THEN
             l = upf(nt)%lchi(nb)
-            counter = counter + 2*l + 1
+            ! ----------------- LUCA -----------------------
+            IF (noncolin.and.(.not.upf(nt)%has_so)) THEN
+               counter = counter + 2*(2*l + 1)        
+            ELSEIF (upf(nt)%has_so.and.(l==0)) THEN
+               counter = counter + 2
+            ELSE        
+               counter = counter + 2*l + 1
+            ENDIF
+            ! -----------------------------------
          ENDIF
       ENDDO
       IF (na == alpha) THEN
@@ -1280,6 +1542,8 @@ SUBROUTINE calc_doverlap_inv (alpha, ipol, ik, ijkb0)
    ! This routine computes the derivative of O^{-1/2} transposed 
    !
    USE kinds,          ONLY : DP
+   USE wvfct,             ONLY : npwx
+   USE noncollin_module,  ONLY : noncolin
    USE cell_base,      ONLY : tpiba
    USE gvect,          ONLY : g
    USE uspp,           ONLY : okvan
@@ -1330,13 +1594,19 @@ SUBROUTINE calc_doverlap_inv (alpha, ipol, ik, ijkb0)
          DO m2 = 1, natomwfc
             doverlap(m1,m2) = doverlap(m1,m2) + (0.d0,1.d0) * gvec &
                               * CONJG(wfcatom(ig,m1))  * swfcatom(ig,m2)
-         ENDDO
+            ! --------- LUCA -------------------
+            IF (noncolin) doverlap(m1,m2) = doverlap(m1,m2) + (0.d0,1.d0) * gvec &
+                              * CONJG(wfcatom(ig+npwx,m1))  * swfcatom(ig+npwx,m2)         
+         ENDDO 
       ENDDO
       ! Calculate < phi_I | S | dphi_J/d\tau(alpha,ipol) >
       DO m1 = 1, natomwfc
          DO m2 = m_start, m_end
             doverlap(m1,m2) = doverlap(m1,m2) + (0.d0,-1.d0) * gvec &
                               * CONJG(swfcatom(ig,m1))  * wfcatom(ig,m2)
+            ! --------------------- LUCA -------------------
+            IF (noncolin) doverlap(m1,m2) = doverlap(m1,m2) + (0.d0,-1.d0) * gvec &
+                              * CONJG(swfcatom(ig+npwx,m1))  * wfcatom(ig+npwx,m2)          
          ENDDO
       ENDDO
    ENDDO
@@ -1348,8 +1618,9 @@ SUBROUTINE calc_doverlap_inv (alpha, ipol, ik, ijkb0)
    !
    IF (okvan) THEN
       ALLOCATE(doverlap_us(natomwfc,natomwfc))
+      ! -------------------- LUCA (added flag = .true.)--------------------
       CALL matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, &
-               natomwfc, wfcatom, natomwfc, wfcatom, doverlap_us, 1, natomwfc, 0)
+               natomwfc, wfcatom, natomwfc, wfcatom, doverlap_us, 1, natomwfc, 0, .true.)
       doverlap = doverlap + doverlap_us
       DEALLOCATE(doverlap_us)
    ENDIF
@@ -1368,22 +1639,26 @@ SUBROUTINE calc_doverlap_inv (alpha, ipol, ik, ijkb0)
    !
 END SUBROUTINE calc_doverlap_inv
 !
-SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_B, lB_s, lB_e, mykey)
+SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_B, lB_s, lB_e, mykey, flag)
    !
    ! This routine computes the matrix element < A | dS/d\tau(alpha,ipol) | B >
    ! Written by I. Timrov (2020)
    !
+   USE ldaU,                 ONLY : is_hubbard, hubbard_l, offsetU   
    USE kinds,                ONLY : DP
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE cell_base,            ONLY : tpiba
    USE gvect,                ONLY : g
    USE wvfct,                ONLY : npwx, wg
-   USE uspp,                 ONLY : nkb, vkb, qq_at, okvan
-   USE uspp_param,           ONLY : nh
+   USE uspp,                 ONLY : nkb, vkb, qq_at, qq_so, okvan
+   USE uspp_param,           ONLY : nh, upf
    USE klist,                ONLY : igk_k, ngk
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : calbec
    USE wavefunctions_gpum,   ONLY : using_evc
+   USE noncollin_module,     ONLY : noncolin, npol, lspinorb  
+   USE mp,                   ONLY : mp_sum   
+   USE mp_bands,             ONLY : intra_bgrp_comm
    !
    IMPLICIT NONE
    !
@@ -1396,14 +1671,18 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    INTEGER, INTENT(IN)      :: lA, lB, lB_s, lB_e
    ! There is a possibility to parallelize over lB,
    ! where lB_s (start) and lB_e (end)
-   COMPLEX(DP), INTENT(IN)  :: A(npwx,lA)
-   COMPLEX(DP), INTENT(IN)  :: B(npwx,lB)
+   ! ------------------ LUCA (added npol to the size of A and B) ----------------------
+   LOGICAL, OPTIONAL        :: flag  ! noncollinear: controlling whether 
+                                     ! calculating <phi|dS|PSI> 
+                                     ! or          <phi|dS|PHI> (= .true.)
+   COMPLEX(DP), INTENT(IN)  :: A(npwx*npol,lA)
+   COMPLEX(DP), INTENT(IN)  :: B(npwx*npol,lB)
    COMPLEX(DP), INTENT(OUT) :: A_dS_B(lA,lB_s:lB_e)
    INTEGER,     INTENT(IN)  :: mykey
    !
    ! Local variables
    !
-   INTEGER :: npw, nt, ih, jh, ig, iA, iB
+   INTEGER :: npw, nt, ih, jh, ig, iA, iB, mU, mD, nt1, ldim, na
    REAL(DP) :: gvec
    COMPLEX (DP), ALLOCATABLE :: Adbeta(:,:), Abeta(:,:), &
                                 dbetaB(:,:), betaB(:,:), &
@@ -1416,66 +1695,166 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    nt = ityp(alpha)
    npw = ngk(ik)
    !
-   ALLOCATE ( Adbeta(lA,nh(nt)) )
-   ALLOCATE ( Abeta(lA,nh(nt)) )
-   ALLOCATE ( dbetaB(nh(nt),lB) )
-   ALLOCATE ( betaB(nh(nt),lB) )
-   ALLOCATE ( qq(nh(nt),nh(nt)) )
+   ! ------------------- LUCA (added npol) -------------------------------
+   ALLOCATE ( Adbeta(lA,npol*nh(nt)) )
+   ALLOCATE ( Abeta(lA,npol*nh(nt)) )
+   ALLOCATE ( dbetaB(npol*nh(nt),lB) )
+   ALLOCATE ( betaB(npol*nh(nt),lB) )
+   ALLOCATE ( qq(nh(nt)*npol,nh(nt)*npol) )
    !
-   qq(:,:) = CMPLX(qq_at(1:nh(nt),1:nh(nt),alpha), 0.0d0, kind=DP)
+   ! ----------- LUCA ----------------------------
+   IF (noncolin) THEN
+      IF ( upf(nt)%has_so ) THEN     
+         qq(1:nh(nt),1:nh(nt)) = qq_so(:,:,1,nt)
+         qq(1:nh(nt),1+nh(nt):nh(nt)*npol) = qq_so(:,:,2,nt)
+         qq(1+nh(nt):nh(nt)*npol,1:nh(nt)) = qq_so(:,:,3,nt)
+         qq(1+nh(nt):nh(nt)*npol,1+nh(nt):nh(nt)*npol) = qq_so(:,:,4,nt)
+      ELSE
+         qq(1:nh(nt),1:nh(nt)) = qq_at(1:nh(nt),1:nh(nt),alpha)
+         qq(1:nh(nt),1+nh(nt):nh(nt)*npol) = (0.0,0.0)
+         qq(1+nh(nt):nh(nt)*npol,1:nh(nt)) = (0.0,0.0)
+         qq(1+nh(nt):nh(nt)*npol,1+nh(nt):nh(nt)*npol) = qq_at(1:nh(nt),1:nh(nt),alpha)     
+      ENDIF   
+   ELSE        
+      qq(:,:) = CMPLX(qq_at(1:nh(nt),1:nh(nt),alpha), 0.0d0, kind=DP)
+   ENDIF   
    !
    ! aux is used as a workspace
-   ALLOCATE ( aux(npwx,nh(nt)) )
+   ! ------------------ LUCA (added npol to the size of aux) ----------------------
+   ALLOCATE ( aux(npwx*npol,nh(nt)*npol) )
    aux(:,:) = (0.0d0, 0.0d0)
-   !
    !
 !!omp parallel do default(shared) private(ig,ih)
    ! Beta function
    DO ih = 1, nh(nt)
       DO ig = 1, npw
          aux(ig,ih) = vkb(ig,ijkb0+ih)
+         ! ------------------ LUCA ------------------
+         IF (noncolin) aux(ig+npwx,ih+nh(nt)) = vkb(ig,ijkb0+ih)
+         ! ------------------------------------------
       ENDDO
    ENDDO
 !!omp end parallel do
    !
-   ! Calculate Abeta = <A|beta>
-   CALL calbec ( npw, A, aux, Abeta )
-   !
-   ! Calculate betaB = <beta|B>
-   CALL calbec( npw, aux, B, betaB )
-   !
+   ! ------------------------------- LUCA ---------------------------
+   IF (noncolin) THEN
+      ! Calculate Abeta = <A|beta>
+      ! Abeta(:,1       : nh(nt))      = spin up
+      ! Abeta(:,1+nh(nt): nh(nt)*npol) = spin down      
+      !
+      Abeta=(0.0,0.0)
+      CALL ZGEMM ('C', 'N', lA, nh(nt)*npol, npwx*npol, (1.0_DP, 0.0_DP), A, &
+                 npwx*npol, aux, npwx*npol, (0.0_DP, 0.0_DP), Abeta, lA)
+      CALL mp_sum( Abeta(:, 1:nh(nt)*npol) , intra_bgrp_comm )
+      !
+      ! Calculate betaB = <beta|B>
+      ! betaB(:,1       : nh(nt))      = spin up
+      ! betaB(:,1+nh(nt): nh(nt)*npol) = spin down
+      !      
+      betaB=(0.0,0.0)
+      CALL ZGEMM ('C', 'N', nh(nt)*npol, lB, npwx*npol, (1.0_DP, 0.0_DP), aux, &
+                 npwx*npol, B, npwx*npol, (0.0_DP, 0.0_DP), betaB, nh(nt)*npol)
+      CALL mp_sum( betaB(:, 1:lB) , intra_bgrp_comm )
+   ELSE        
+      ! Calculate Abeta = <A|beta>
+      CALL calbec ( npw, A, aux, Abeta )
+      !
+      ! Calculate betaB = <beta|B>
+      CALL calbec( npw, aux, B, betaB )
+   ENDIF   
+      ! ---------------------------------------------------------------------------
 !!omp parallel do default(shared) private(ig,ih)
    ! Calculate the derivative of the beta function
    DO ih = 1, nh(nt)
       DO ig = 1, npw
          gvec = g(ipol,igk_k(ig,ik)) * tpiba
          aux(ig,ih) = (0.d0,-1.d0) * aux(ig,ih) * gvec
+         ! -------------------------- LUCA ---------------------------
+         IF (noncolin) aux(ig+npwx,ih+nh(nt)) = &
+                    (0.d0,-1.d0) * aux(ig+npwx,ih+nh(nt)) * gvec
+         ! -------------------------------------------------------------------
       ENDDO
    ENDDO
 !!omp end parallel do
-   !
-   ! Calculate Adbeta = <A|dbeta> 
-   CALL calbec ( npw, A, aux, Adbeta )
-   !
-   ! Calculate dbetaB = <dbeta|B>
-   CALL calbec ( npw, aux, B, dbetaB )
-   !
+   ! ------------------------------- LUCA ---------------------------
+   IF (noncolin) THEN
+      ! Calculate Adbeta = <A|dbeta>      
+      ! (same as Abeta)
+      !
+      Adbeta=(0.0,0.0)
+      CALL ZGEMM ('C', 'N', lA, nh(nt)*npol, npwx*npol, (1.0_DP, 0.0_DP), A, &
+                 npwx*npol, aux, npwx*npol, (0.0_DP, 0.0_DP), Adbeta, lA)
+      CALL mp_sum( Adbeta(:, 1:nh(nt)*npol) , intra_bgrp_comm )
+      !
+      ! Calculate dbetaB = <dbeta|B>
+      ! (same as betaB)
+      !
+      dbetaB=(0.0,0.0)
+      CALL ZGEMM ('C', 'N', nh(nt)*npol, lB, npwx*npol, (1.0_DP, 0.0_DP), aux, &
+                 npwx*npol, B, npwx*npol, (0.0_DP, 0.0_DP), dbetaB, nh(nt)*npol)
+      CALL mp_sum( dbetaB(:, 1:lB) , intra_bgrp_comm )
+   ELSE        
+      ! Calculate Adbeta = <A|dbeta> 
+      CALL calbec ( npw, A, aux, Adbeta )
+      !
+      ! Calculate dbetaB = <dbeta|B>
+      CALL calbec ( npw, aux, B, dbetaB )
+   ENDIF
+   ! ---------------------------------------------------------------------------
    DEALLOCATE ( aux )
    !
    ! Here starts a parallelization over lB_s and lB_e
    !
-   ALLOCATE ( aux(nh(nt),lB) )
+   ! ------------ LUCA (added npol)------------------
+   ALLOCATE ( aux(nh(nt)*npol,lB) )
+   aux(:,:)=(0.0,0.0)
    !
-   ! Calculate \sum_jh qq_at(ih,jh) * dbetaB(jh)
-   CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
-              qq, nh(nt), dbetaB(1,lB_s),   nh(nt), (0.0d0,0.0d0), &
-              aux(1,lB_s), nh(nt))
+   ! ----------------------- LUCA ----------------------------
+   IF (noncolin) THEN    
+      ! aux(:, 1:nh(nt))             = \sum_jh qq(1,jh)*dbetaB(1,jh) + qq(2,jh)*dbetaB(2,jh)     
+      ! aux(:, 1+nh(nt):nh(nt)*npol) = \sum_jh qq(3,jh)*dbetaB(1,jh) + qq(4,jh)*dbetaB(2,jh)
+      !
+      ! spin up
+      CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
+                 qq(1, 1), nh(nt)*npol, &
+                 dbetaB(1, lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
+                 aux(1, lB_s), nh(nt)*npol)
+      ! spin down   
+      CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
+                 qq(1+nh(nt), 1), nh(nt)*npol, &
+                 dbetaB(1, lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
+                 aux(1+nh(nt), lB_s), nh(nt)*npol)
+   ELSE        
+      ! Calculate \sum_jh qq_at(ih,jh) * dbetaB(jh)     
+      CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                 qq, nh(nt), dbetaB(1,lB_s), nh(nt), (0.0d0,0.0d0), &
+                 aux(1,lB_s), nh(nt))
+   ENDIF   
+   ! ----------------------------------------------------------
    dbetaB(:,:) = aux(:,:)
    !
-   ! Calculate \sum_jh qq_at(ih,jh) * betaB(jh)
-   CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
-              qq, nh(nt), betaB(1,lB_s),    nh(nt), (0.0d0,0.0d0), &
-              aux(1,lB_s), nh(nt))
+   aux(:,:)=(0.0,0.0)
+   ! ----------------------- LUCA ----------------------------
+   IF (noncolin) THEN
+      ! (same as dbetaB)     
+      !
+      ! spin up 
+      CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
+                 qq(1, 1), nh(nt)*npol, &
+                 betaB(1, lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
+                 aux(1, lB_s), nh(nt)*npol)
+      ! spin down   
+      CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
+                 qq(1+nh(nt), 1), nh(nt)*npol, &
+                 betaB(1, lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
+                 aux(1+nh(nt), lB_s), nh(nt)*npol)
+   ELSE        
+      ! Calculate \sum_jh qq_at(ih,jh) * betaB(jh)
+      CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                 qq, nh(nt), betaB(1,lB_s), nh(nt), (0.0d0,0.0d0), &
+                 aux(1,lB_s), nh(nt))
+   ENDIF      
+   ! ----------------------------------------------------------
    betaB(:,:) = aux(:,:)
    !
    DEALLOCATE ( aux )
@@ -1485,20 +1864,61 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    ! Only A_dS_B(:,lB_s:lB_e) are calculated
    !
    IF ( mykey == 0 ) THEN
-      CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
-                 Adbeta, lA, betaB(1,lB_s), nh(nt), (0.0d0,0.0d0), &
-                 A_dS_B(1,lB_s), lA)
-      CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
-                 Abeta, lA, dbetaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
-                 A_dS_B(1,lB_s), lA)
-   ENDIF
+      ! ----------------------- LUCA ----------------------------
+      IF (noncolin) THEN
+         nt1 = nh(nt) + 1
+         IF ( .NOT.PRESENT(flag) ) THEN
+           DO na = 1, nat
+               IF ( is_hubbard(ityp(na)) ) THEN
+                  ldim = 2*hubbard_l(ityp(na)) + 1
+                  mU = offsetU(na) + 1
+                  mD = mU + ldim 
+                  !
+                  ! spin up
+                  CALL ZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                             Adbeta(mU,1), lA, &
+                             betaB(1, lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
+                             A_dS_B(mU, lB_s), lA)
+                  CALL ZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                             Abeta(mU,1), lA, &
+                             dbetaB(1, lB_s), nh(nt)*npol, (1.0d0,0.0d0), &
+                             A_dS_B(mU, lB_s), lA)        
+                  ! spin down
+                  CALL ZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                              Adbeta(mD, nt1), lA, &
+                              betaB(nt1, lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
+                              A_dS_B(mD,lB_s), lA)
+                  CALL ZGEMM('N', 'N', ldim, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                              Abeta(mD, nt1), lA, &
+                              dbetaB(nt1, lB_s), nh(nt)*npol, (1.0d0,0.0d0), &
+                              A_dS_B(mD,lB_s), lA)   
+               ENDIF    
+            ENDDO 
+          ELSEIF ( PRESENT(flag) ) THEN
+            CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
+                         Adbeta, lA, betaB(1,lB_s), nh(nt)*npol, (0.0d0,0.0d0), &
+                         A_dS_B(1,lB_s), lA)
+            CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt)*npol, (1.0d0,0.0d0), &
+                         Abeta, lA, dbetaB(1,lB_s), nh(nt)*npol, (1.0d0,0.0d0), &
+                         A_dS_B(1,lB_s), lA)
+          ENDIF        
+       ELSE
+          CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                     Adbeta, lA, betaB(1,lB_s), nh(nt), (0.0d0,0.0d0), &
+                     A_dS_B(1,lB_s), lA)
+          CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                     Abeta, lA, dbetaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
+                     A_dS_B(1,lB_s), lA)
+       ENDIF
+   ENDIF   
+   ! ----------------------------------------------------------      
    !
    DEALLOCATE ( Abeta )
    DEALLOCATE ( Adbeta )
    DEALLOCATE ( dbetaB )
    DEALLOCATE ( betaB )
    DEALLOCATE ( qq )
-   !    
+   !
    RETURN
    !
 END SUBROUTINE matrix_element_of_dSdtau

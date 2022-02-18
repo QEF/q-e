@@ -45,6 +45,8 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
                                    conv_thr_chi_best, iter_best
   USE ldaU_lr,              ONLY : swfcatomk, swfcatomkpq
   USE efermi_shift,         ONLY : def
+  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, domag
+  USE qpoint_aux,           ONLY : ikmks
   !
   IMPLICIT NONE
   !
@@ -60,7 +62,8 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
   !
   INTEGER ::  ik, ikk, ikq, i, j, k, ios, icar, &
               counter, nt, na, l, ih, jkb2, n, &
-              ihubst, ihubst1, ihubst2, m, m1, m2, ibnd, is, ldim
+              ihubst, ihubst1, ihubst2, m, m1, m2, ibnd, is, ldim, &
+              ikmk, isolv, nsolv, nrec, is1, is2, isp1, isp2
   INTEGER :: npw, npwq
   ! number of plane waves at k and k+q
   COMPLEX(DP), ALLOCATABLE :: dpsi(:, :), proj1(:,:), proj2(:,:)
@@ -76,7 +79,8 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
   !
   ios = 0 
   ! 
-  ALLOCATE (dpsi(npwx,nbnd))
+  ! ---------- LUCA (added npol) ----------------
+  ALLOCATE (dpsi(npwx*npol,nbnd))
   ALLOCATE (proj1(nbnd,nwfcU))
   ALLOCATE (proj2(nbnd,nwfcU))
   ALLOCATE (trace_dns_tot(nat))
@@ -100,102 +104,149 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
      ENDIF
   ENDDO
   ! 
+  ! ----------------------- LUCA -----------------
+  nsolv = 1 
+  IF (noncolin.AND.domag) nsolv = 2
+  ! ----------------------------------------------
   DO ik = 1, nksq
      !
      ikk  = ikks(ik)
      ikq  = ikqs(ik)
      npw  = ngk(ikk)
      npwq = ngk(ikq)
-     !
-     IF (lsda) current_spin = isk (ikk)
-     !
-     ! Read unperturbed KS wfc's psi(k)
-     !
-     IF (nksq.GT.1) CALL get_buffer (evc, lrwfc, iuwfc, ikk)
-     !
-     ! Read atomic wfc's : S(k)*phi(k) and S(k+q)*phi(k+q) 
-     !
-     CALL get_buffer (swfcatomk, nwordwfcU, iuatswfc, ikk)
-     IF (.NOT.lgamma) CALL get_buffer (swfcatomkpq, nwordwfcU, iuatswfc, ikq)
-     !
-     ! At each SCF iteration for each ik read dpsi from file
-     !
-     CALL get_buffer (dpsi, lrdwf, iudwf, ik)
-     ! 
-     ! Loop on Hubbard atoms
-     !
-     DO na = 1, nat
+     ! ------------ LUCA --------------------
+     DO isolv = 1, nsolv
+        IF (isolv == 2) THEN
+           ikmk = ikmks(ik)
+        ELSE
+           ikmk = ikk
+        ENDIF
         !
+        IF (lsda) current_spin = isk (ikk)
+        !
+        ! Read unperturbed KS wfc's psi(k)
+        ! ---------- LUCA (ikmk instead of ikk) -----------------
+        IF (nksq.GT.1) CALL get_buffer (evc, lrwfc, iuwfc, ikmk)
+        !
+        ! Read atomic wfc's : S(k)*phi(k) and S(k+q)*phi(k+q) 
+        CALL get_buffer (swfcatomk, nwordwfcU, iuatswfc, ikk)
+        IF (.NOT.lgamma) CALL get_buffer (swfcatomkpq, nwordwfcU, iuatswfc, ikq)
+        !
+        ! At each SCF iteration for each ik read dpsi from file
+        nrec = ik + (isolv - 1) * nksq 
+        CALL get_buffer (dpsi, lrdwf, iudwf, nrec)
+        ! 
+        ! Loop on Hubbard atoms
+        proj1 = (0.d0, 0.d0) 
+        proj2 = (0.d0, 0.d0) 
+        DO na = 1, nat
         nt = ityp(na)
-        !
         IF (is_hubbard(nt)) THEN
-           !
-           DO m = 1, 2 * Hubbard_l(nt) + 1
-              ! 
+           ldim = (2*Hubbard_l(nt) + 1) * npol
+           DO m = 1, ldim
               ihubst = offsetU(na) + m   ! I m index
               !
               !  proj1(ibnd, ihubst) = < S(k)*phi(k) | psi(k) >
               !  proj2(ibnd, ihubst) = < S(k+q)*phi(k+q) | dpsi(k+q) > 
               ! FIXME: use ZGEMM instead of dot_product
-              !                
               DO ibnd = 1, nbnd_occ(ikk)
-                 proj1(ibnd, ihubst) = DOT_PRODUCT( swfcatomk(1:npw,ihubst), evc(1:npw,ibnd) )
-                 proj2(ibnd, ihubst) = DOT_PRODUCT( swfcatomkpq(1:npwq,ihubst), dpsi(1:npwq,ibnd) )
+                 ! --------------------- LUCA ----------------------
+!                 IF (noncolin) then
+                    proj1(ibnd, ihubst) = DOT_PRODUCT( swfcatomk(1:npwx*npol,ihubst), &
+                                                evc(1:npwx*npol,ibnd) )
+                    proj2(ibnd, ihubst) = DOT_PRODUCT( swfcatomkpq(1:npwx*npol,ihubst), &
+                                                dpsi(1:npwx*npol,ibnd) )
+!                 ELSE
+!                    proj1(ibnd, ihubst) = DOT_PRODUCT( swfcatomk(1:npw,ihubst), &
+!                                                evc(1:npw,ibnd) )
+!                    proj2(ibnd, ihubst) = DOT_PRODUCT( swfcatomkpq(1:npwq,ihubst), &
+!                                                dpsi(1:npwq,ibnd) )
+                 ENDIF
+                 !-------------------------------------------
               ENDDO
-              !
            ENDDO 
-           !
         ENDIF
         !
      ENDDO
      !
+
      CALL mp_sum(proj1, intra_pool_comm)  
      CALL mp_sum(proj2, intra_pool_comm)
+
      ! 
-     DO na = 1, nat
-        !
-        nt = ityp(na)
-        !
-        IF (is_hubbard(nt)) THEN
-           !  
-           DO m1 = 1, 2 * Hubbard_l(nt) + 1
-              !
-              ihubst1 = offsetU(na) + m1
-              !
-              DO m2 = m1, 2 * Hubbard_l(nt) + 1
-                 !          
-                 ihubst2 = offsetU(na) + m2
-                 !
-                 DO ibnd = 1, nbnd_occ(ikk)
-                    ! 
-                    dnsq(m1, m2, current_spin, na) = dnsq(m1, m2, current_spin, na) +    &
-                         wk(ikk) * ( CONJG(proj1(ibnd,ihubst1)) * proj2(ibnd,ihubst2) + &
-                                     CONJG(proj1(ibnd,ihubst2)) * proj2(ibnd,ihubst1) )
-                    !
-                    ! Correction for metals at q=0
-                    !
-                    IF (lmetq0) THEN
+     IF (noncolin) then
+        ! --------------------- LUCA ----------------------------
+        ! NB: put the following in a subroutine
+        DO na = 1, nat
+           nt = ityp(na)
+           IF ( is_hubbard(nt) ) THEN
+              ldim = 2*Hubbard_l(nt)+1
+              DO is1 = 1, npol
+                 DO is2 = 1, npol
+                    is = npol*(is1-1) + is2 
+                    isp1 = is1 + (is2 - is1)*(isolv - 1)
+                    isp2 = is2 + (is1 - is2)*(isolv - 1)
+                    DO m1 = 1, ldim
+                       DO m2 = 1, ldim
+                          ihubst2 = offsetU(na) + m2 + (m1 - m2)*(isolv - 1)
+                          ihubst1 = offsetU(na) + m1 + (m2 - m1)*(isolv - 1)
+                          DO ibnd = 1, nbnd_occ(ikk) 
+                             dnsq(m1,m2,is,na) = dnsq(m1,m2,is,na) + &
+                                wk(ikk) * CONJG(proj1(ibnd,ihubst1+ldim*(isp1-1)) ) * &
+                                                proj2(ibnd,ihubst2+ldim*(isp2-1))
+                             ! 
+                             ! to be added the correction for metals at q=0
+                             IF (lmetq0.and.isolv==1) then
+                                  !
+                                  ! wdelta: smeared delta function at the Fermi level
+                                  wdelta = w0gauss ( (ef-et(ibnd,ikk)) / degauss, ngauss) / degauss
+                                  weight = wk(ikk)  
+                                  w1 = weight * wdelta
+                                  !
+                                  dnsq(m1, m2, is, na) = dnsq(m1, m2, is, na) +  &
+                                         w1 * def(1) * CONJG(proj1(ibnd,ihubst1+ldim*(is1-1))) &
+                                                     * proj1(ibnd,ihubst2+ldim*(is2-1))
+                             ENDIF
+                          ENDDO
+                       ENDDO
+                    ENDDO
+                 ENDDO
+              ENDDO
+           ENDIF
+        ENDDO
+        ! --------------------------------------------------------
+     ELSE
+        DO na = 1, nat
+           nt = ityp(na)
+           IF (is_hubbard(nt)) THEN
+              DO m1 = 1, 2 * Hubbard_l(nt) + 1
+                 ihubst1 = offsetU(na) + m1
+                 DO m2 = m1, 2 * Hubbard_l(nt) + 1
+                    ihubst2 = offsetU(na) + m2
+                    DO ibnd = 1, nbnd_occ(ikk)
+                       dnsq(m1, m2, current_spin, na) = dnsq(m1, m2, current_spin, na) +    &
+                             wk(ikk) * ( CONJG(proj1(ibnd,ihubst1)) * proj2(ibnd,ihubst2) + &
+                                         CONJG(proj1(ibnd,ihubst2)) * proj2(ibnd,ihubst1) )
                        !
-                       ! wdelta: smeared delta function at the Fermi level
-                       !
-                       wdelta = w0gauss ( (ef-et(ibnd,ikk)) / degauss, ngauss) / degauss
-                       weight = wk(ikk)  
-                       w1 = weight * wdelta
-                       !
-                       dnsq(m1, m2, current_spin, na) = dnsq(m1, m2, current_spin, na) +  &
-                          w1 * def(1) * CONJG(proj1(ibnd,ihubst1)) * proj1(ibnd,ihubst2)
-                       !
-                    ENDIF
-                    ! 
-                 ENDDO 
-                 !
-              ENDDO 
-              !
+                       ! Correction for metals at q=0
+                       IF (lmetq0) THEN
+                          !
+                          ! wdelta: smeared delta function at the Fermi level
+                          wdelta = w0gauss ( (ef-et(ibnd,ikk)) / degauss, ngauss) / degauss
+                          weight = wk(ikk)  
+                          w1 = weight * wdelta
+                          !
+                          dnsq(m1, m2, current_spin, na) = dnsq(m1, m2, current_spin, na) +  &
+                             w1 * def(1) * CONJG(proj1(ibnd,ihubst1)) * proj1(ibnd,ihubst2)
+                          !
+                          ENDIF
+                       ENDDO 
+                    ENDDO 
+                 ENDDO
+              ENDIF 
            ENDDO
-           ! 
-        ENDIF 
-        !
-     ENDDO
+        ENDIF
+     ENDDO ! isolv 
      ! 
   ENDDO ! ik 
   !
@@ -205,11 +256,15 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
   !
   ! dnsq is symmetric: filling the m1 m2 lower triangular part 
   !
-  DO m1 = 2, ldim
-     DO m2 = 1, m1-1
-        dnsq(m1,m2,:,:) = dnsq(m2,m1,:,:)
+  ! --------------- LUCA -------------
+  IF (.not.noncolin) then
+     ldim = 2 * Hubbard_lmax + 1
+     DO m1 = 2, ldim
+        DO m2 = 1, m1-1
+           dnsq(m1,m2,:,:) = dnsq(m2,m1,:,:)
+        ENDDO
      ENDDO
-  ENDDO
+  ENDIF
   !
   ! If nspin=1, k-point's weight wk is normalized to 2 el/band in the whole BZ,
   ! but we are interested in dnsq of one spin component
@@ -221,11 +276,12 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
      DO na = 1, nat
         nt = ityp(na)
         IF (is_hubbard(nt)) THEN
+         ldim = 2*Hubbard_l(nt)+1
            DO is = 1, nspin
               WRITE(stdout,'(5x,a,1x,i2,2x,a,1x,i2)') ' Hubbard atom', na, 'spin', is
-              DO m1 = 1, 2*Hubbard_l(nt)+1
+              DO m1 = 1, ldim 
                  WRITE(stdout,'(3x,10(f15.10,1x))') (DBLE(dnsq(m1,m2,is,na)), &
-                                                         m2=1,2*Hubbard_l(nt)+1)
+                                                         m2=1,ldim)
               ENDDO
            ENDDO
         ENDIF
@@ -241,11 +297,12 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
      DO na = 1, nat
         nt = ityp(na)
         IF (is_hubbard(nt)) THEN
+         ldim = 2*Hubbard_l(nt)+1
            DO is = 1, nspin
               WRITE(stdout,'(5x,a,1x,i2,2x,a,1x,i2)') ' Hubbard atom', na, 'spin', is
-              DO m1 = 1, 2*Hubbard_l(nt)+1
+              DO m1 = 1, ldim
                  WRITE(stdout,'(3x,10(f15.10,1x))') (DBLE(dnsq(m1,m2,is,na)), &
-                                                         m2=1,2*Hubbard_l(nt)+1)
+                                                         m2=1,ldim)
               ENDDO
            ENDDO
         ENDIF
@@ -266,13 +323,15 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
      nt = ityp(na)
      ! 
      IF (is_hubbard(nt)) THEN 
+        ldim = 2*Hubbard_l(nt)+1
         !
         ! Divide by rytoev -> conversion of units from Ry to eV
         !
         trace_dns(:) = 0.d0
-        DO is = 1, nspin
-           DO m = 1, 2 * Hubbard_l(nt) + 1
-              trace_dns(is) = trace_dns(is) + dnsq(m,m,is,na)/rytoev
+        DO is = 1, nspin/npol
+           DO m = 1, ldim
+            ! ------------ LUCA (added npol) -------------------
+              trace_dns(is) = trace_dns(is) + dnsq(m,m,is**npol,na)/rytoev
            ENDDO
            trace_dns_tot(na) = trace_dns_tot(na) + trace_dns(is)
         ENDDO

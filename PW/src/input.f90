@@ -1311,10 +1311,12 @@ SUBROUTINE iosys()
   reserv_                     = reserv
   reserv_back_                = reserv_back
   !
-  IF ( lda_plus_u .AND. lda_plus_u_kind == 0 .AND. noncolin ) THEN
-     CALL errore('iosys', 'simplified LDA+U not implemented with &
-                          &noncol. magnetism, use lda_plus_u_kind = 1', 1)
-  END IF
+  ! --- LUCA -----
+  ! IF ( lda_plus_u .AND. lda_plus_u_kind == 0 .AND. noncolin ) THEN
+  !   CALL errore('iosys', 'simplified LDA+U not implemented with &
+  !                        &noncol. magnetism, use lda_plus_u_kind = 1', 1)
+  !  END IF
+  ! ------------------
   IF ( lda_plus_u .AND. lda_plus_u_kind == 2 ) THEN
      IF ( nat > SIZE(Hubbard_V,1) ) CALL errore('input', &
           & 'Too many atoms. The dimensions of Hubbard_V must be increased.',1)

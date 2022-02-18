@@ -237,7 +237,7 @@ SUBROUTINE write_ns_nc
   USE io_global,         ONLY : stdout
   USE scf,               ONLY : rho
   USE ldaU,              ONLY : Hubbard_lmax, Hubbard_l, Hubbard_alpha, &
-                                Hubbard_U, Hubbard_J
+                                Hubbard_U, Hubbard_J, Hubbard_alpha
   !
   IMPLICIT NONE
   !
@@ -254,6 +254,10 @@ SUBROUTINE write_ns_nc
      IF (Hubbard_U(nt) /= 0.d0) THEN
         IF (Hubbard_l(nt)==0) THEN
            WRITE(stdout,'(5x,a,i3,a,f12.8)') 'U(',nt,') =', Hubbard_U(nt) * rytoev
+           ! --------------- LUCA ----------------------
+           IF (Hubbard_alpha(nt) /= 0.d0) WRITE(stdout,'(5x,a,i3,a,f8.4)')      &
+                        'alpha(',nt,') =', Hubbard_alpha(nt)*rytoev
+           ! -------------------------------------------------
         ELSEIF (Hubbard_l(nt)==1) THEN
            WRITE(stdout,'(5x,2(a,i3,a,f9.4,3x))') 'U(',nt,') =', Hubbard_U(nt)*rytoev, &
                                                   'J(',nt,') =', Hubbard_J(1,nt)*rytoev
