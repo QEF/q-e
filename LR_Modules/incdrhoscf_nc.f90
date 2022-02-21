@@ -178,7 +178,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
         dpsic = (0.d0, 0.d0)
         !$acc end kernels
         !
-        !$acc parallel loop private(itmp) present(psi, igk_k)
+        !$acc parallel loop present(psi, igk_k)
         do ig = 1, npw
            itmp = nl_d ( igk_k(ig,ikk) )
 #if defined(__CUDA)
@@ -189,7 +189,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
            psi (itmp, 2) = evc (ig+npwx, ibnd)
 #endif
         enddo
-        !$acc parallel loop private(itmp) present(dpsi, dpsic, igk_k)
+        !$acc parallel loop present(dpsi, dpsic, igk_k)
         do ig = 1, npwq
            itmp = nl_d (igk_k(ig,ikq))
            dpsic (itmp, 1 ) = dpsi (ig, ibnd)

@@ -138,7 +138,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
         u2 = uact (mu + 2)
         u3 = uact (mu + 3)
         gu0 = xq (1) * u1 + xq (2) * u2 + xq (3) * u3
-        !$acc parallel loop private(gtau,gu,itmp) present(eigts1, eigts2, eigts3, mill, g, aux1) 
+        !$acc parallel loop present(eigts1, eigts2, eigts3, mill, g, aux1) 
         do ig = 1, ngms
            gtau = eigts1 (mill(1,ig), na) * eigts2 (mill(2,ig), na) * &
                   eigts3 (mill(3,ig), na)
@@ -179,7 +179,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
            u3 = uact(mu+3)
            gu0 = xq(1)*u1 +xq(2)*u2+xq(3)*u3
            if (upf(nt)%nlcc) then
-              !$acc parallel loop private(itmp,gtau,gu) present(eigts1, eigts2, eigts3, g, mill,drhoc) 
+              !$acc parallel loop present(eigts1, eigts2, eigts3, g, mill,drhoc) 
               do ig = 1,ngm
                  gtau = eigts1(mill(1,ig),na)*   &
                         eigts2(mill(2,ig),na)*   &
@@ -239,7 +239,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
      !$acc kernels present(auxs)
      auxs(:) = (0.d0, 0.d0)
      !$acc end kernels
-     !$acc parallel loop private(itmp, itmpp) present(auxs,aux)
+     !$acc parallel loop present(auxs,aux)
      do ig=1,ngms
         itmp = nl_d(ig)
         itmpp = nlp_d(ig) 
@@ -267,7 +267,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
         aux2(:) = (0.d0, 0.d0)
         !$acc end kernels
         if (ip==1) then
-           !$acc parallel loop private(itmp) present(aux2, igk_k) 
+           !$acc parallel loop present(aux2, igk_k) 
            do ig = 1, npw
               itmp = nl_d (igk_k (ig,ikk) )
 #if defined(__CUDA)
@@ -277,7 +277,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
 #endif
            enddo
         else
-           !$acc parallel loop private(itmp) present(aux2, igk_k)
+           !$acc parallel loop present(aux2, igk_k)
            do ig = 1, npw
               itmp = nl_d (igk_k (ig,ikk) )
 #if defined(__CUDA)
@@ -304,13 +304,13 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
         CALL fwfft ('Wave', aux2, dffts)
         !$acc end host_data
         if (ip==1) then
-           !$acc parallel loop private(itmp) present( aux2, igk_k, dvpsi )
+           !$acc parallel loop present( aux2, igk_k, dvpsi )
            do ig = 1, npwq
               itmp = nl_d (igk_k (ig,ikq) )
               dvpsi (ig, ibnd) = aux2 ( itmp )
            enddo
         else
-           !$acc parallel loop private(itmp) present( aux2, igk_k, dvpsi )
+           !$acc parallel loop present( aux2, igk_k, dvpsi )
            do ig = 1, npwq
               itmp = nl_d (igk_k (ig,ikq) )
               dvpsi (ig+npwx, ibnd) = aux2 ( itmp )
