@@ -101,7 +101,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   ! dpsi contains the   perturbed wavefunctions of this k point
   ! evc  contains the unperturbed wavefunctions of this k point
   !
-  !$acc data copyin(v_siz,wgt,ikk,npw,npwq,nbnd,dpsi(1:npwx,1:nbnd)) copy(drhoscf(1:v_siz)) create(psi(1:v_siz),dpsic(1:v_siz)) present(igk_k) deviceptr(evc_d, nl_d) 
+  !$acc data copyin(dpsi(1:npwx,1:nbnd)) copy(drhoscf(1:v_siz)) create(psi(1:v_siz),dpsic(1:v_siz)) present(igk_k) deviceptr(evc_d, nl_d) 
   do ibnd = 1, nbnd_occ(ikk), incr
      !
      IF ( dffts%has_task_groups ) THEN
@@ -182,7 +182,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
         !
         ! Calculation of the response charge-density
         !
-        !$acc parallel loop present(drhoscf(1:v_siz),psi,dpsic,v_siz,wgt)
+        !$acc parallel loop present(drhoscf(1:v_siz),psi,dpsic)
         do ir = 1, v_siz
            drhoscf (ir) = drhoscf (ir) + wgt * CONJG(psi (ir) ) * dpsic (ir)
         enddo

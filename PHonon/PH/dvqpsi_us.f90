@@ -123,7 +123,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
   npwq= ngk(ikq)
   nnr = dffts%nnr
   ! 
-  !$acc data create(aux1(1:nnr),aux2(1:nnr)) copyout(dvpsi) copyin(vlocq) present( igk_k ) deviceptr(evc_d, nl_d, nlp_d)
+  !$acc data create(aux1(1:nnr),aux2(1:nnr)) copyout(dvpsi) copyin(vlocq,drc,dmuxc) present( igk_k ) deviceptr(evc_d, nl_d, nlp_d)
   !$acc kernels present(dvpsi,aux1)
   dvpsi(:,:) = (0.d0, 0.d0)
   aux1(:) = (0.d0, 0.d0)
@@ -138,7 +138,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
         u2 = uact (mu + 2)
         u3 = uact (mu + 3)
         gu0 = xq (1) * u1 + xq (2) * u2 + xq (3) * u3
-        !$acc parallel loop private(gtau,gu,itmp) present(eigts1, eigts2, eigts3, mill, g, aux1) copyin(fact, u1, u2, u3, gu0)
+        !$acc parallel loop private(gtau,gu,itmp) present(eigts1, eigts2, eigts3, mill, g, aux1) 
         do ig = 1, ngms
            gtau = eigts1 (mill(1,ig), na) * eigts2 (mill(2,ig), na) * &
                   eigts3 (mill(3,ig), na)
@@ -168,7 +168,6 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
      drhoc(:,:) = (0.d0, 0.d0)
      aux(:,:) = (0.0_dp, 0.0_dp)
      !$acc end kernels 
-     !!$acc data copy(drhoc,aux)
      do na = 1,nat
         fact = tpiba*(0.d0,-1.d0)*eigqts(na)
         mu = 3*(na-1)
@@ -180,7 +179,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
            u3 = uact(mu+3)
            gu0 = xq(1)*u1 +xq(2)*u2+xq(3)*u3
            if (upf(nt)%nlcc) then
-              !$acc parallel loop private(itmp,gtau,gu) present(eigts1, eigts2, eigts3, g, mill,drhoc) copyin(u1,u2,u3,drc,fact,mu,gu0)
+              !$acc parallel loop private(itmp,gtau,gu) present(eigts1, eigts2, eigts3, g, mill,drhoc) 
               do ig = 1,ngm
                  gtau = eigts1(mill(1,ig),na)*   &
                         eigts2(mill(2,ig),na)*   &
@@ -196,13 +195,13 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
      CALL invfft ('Rho', drhoc(:,1), dfftp)
      !$acc end host_data
      if (.not.lsda) then
-        !$acc parallel loop present(aux,drhoc) copyin(dmuxc)
+        !$acc parallel loop present(aux,drhoc) 
         do ir=1,nnp
            aux(ir,1) = drhoc(ir,1) * dmuxc(ir,1,1)
         end do
      else
         is=isk(ikk)
-        !$acc parallel loop present(drhoc,aux) copyin(dmuxc,is)
+        !$acc parallel loop present(drhoc,aux) copyin(is)
         do ir=1,nnp
            drhoc(ir,1) = 0.5d0 * drhoc(ir,1)
            drhoc(ir,2) = drhoc(ir,1)
