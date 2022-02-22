@@ -313,7 +313,8 @@ veryclean : clean
 # remove everything not in the original distribution
 distclean : veryclean
 	- cd pseudo; ./clean_ps ; cd -
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+	- (cd install ; $(MAKE) -f plugins_makefile $@)
+	- git submodule deinit --all --force # place deinit at the very end such that makefiles clean up as much as possible.
 
 tar :
 	@if test -f espresso.tar.gz ; then /bin/rm espresso.tar.gz ; fi
