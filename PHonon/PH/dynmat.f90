@@ -77,7 +77,7 @@ program dynmat
   USE io_dyn_mat,  ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                          read_dyn_mat, read_dyn_mat_tail
   USE constants,   ONLY : amu_ry
-  USE dynamical
+  USE dynamical,  ONLY : dyn, m_loc, ityp, tau, zstar, dchi_dtau  
   USE rigid,       ONLY : dyndiag, nonanal
   !
   implicit none
@@ -93,12 +93,12 @@ program dynmat
   real(DP), allocatable :: w2(:)
   integer :: nat, na, nt, ntyp, iout, axis, nspin_mag, ios
   real(DP) :: celldm(6)
-  logical :: xmldyn, lrigid, lraman, lperm, lplasma
+  logical :: xmldyn, lrigid, lraman, lperm, lplasma, remove_interaction_blocks
   logical, external :: has_xml
   integer :: ibrav, nqs
   integer, allocatable :: itau(:)
   namelist /input/ amass, asr, axis, fildyn, filout, filmol, filxsf, &
-                   fileig, lperm, lplasma, q, loto_2d
+                   fileig, lperm, lplasma, q, loto_2d, remove_interaction_blocks 
   !
   ! code is parallel-compatible but not parallel
   !
@@ -119,6 +119,7 @@ program dynmat
   lperm=.false.
   lplasma=.false.
   loto_2d=.false.
+  remove_interaction_blocks = .false. 
   !
   IF (ionode) read (5,input, iostat=ios)
   CALL mp_bcast(ios, ionode_id, world_comm)
@@ -177,6 +178,7 @@ program dynmat
         END DO
      END IF
   ENDIF
+  IF (remove_interaction_blocks)  CALL remove_interaction(dyn, nat) 
   !
   IF (ionode) THEN
      !
@@ -236,4 +238,30 @@ program dynmat
   !
   CALL mp_global_end()
   !
+  CONTAINS 
+    subroutine remove_interaction(d,na_) 
+      !! this routine removes from the dynamical matrix the columsn and the rows 
+      !! for the atoms with vanishing diagonal blocks (i,j,ia,ia) 
+      implicit none 
+      integer,intent(in)      :: na_
+      complex(dp), intent(inout)  :: d(3,3,na_,na_)
+      real(dp)                :: norm 
+      ! 
+      integer ia, ipol, jpol  
+      complex(dp) :: z(3,3) 
+      do ia = 1, na_ 
+        norm = 0._dp 
+        z = d(:,:,ia,ia) 
+        do ipol =1, 3
+          norm = norm + z(ipol,ipol)%re**2  + z(ipol,ipol)%im**2   
+          do jpol =ipol+1, 3
+             norm = norm + 2._dp * z(ipol,jpol)%re**2  + z(ipol,jpol)%im**2
+          end do 
+        end do 
+        if (norm .lt. 1.e-8_dp ) THEN 
+          d(:,:,ia,:) = 0._dp 
+          d(:,:,:,ia)  =  0._dp 
+        end if 
+      end do  
+   end subroutine remove_interaction  
 end program dynmat
