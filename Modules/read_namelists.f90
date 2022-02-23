@@ -207,8 +207,6 @@ MODULE read_namelists_module
        !
        ! We still keep these variables in the input to raise 
        ! an error message if users try to use them in the SYSTEM namelist. 
-       lda_plus_u = .FALSE.    ! obsolete 
-       lda_plus_u_kind = -1    ! obsolete
        U_projection_type = ''  ! obsolete
        Hubbard_parameters = '' ! obsolete
        Hubbard_U = 0.0_DP      ! moved to the HUBBARD card
@@ -1575,7 +1573,7 @@ MODULE read_namelists_module
        !
        ! ... control on DFT+Hubbard variables
        !
-       ! Oboslete input parameters from the SYSTEM namelist
+       ! Obsolete input parameters from the SYSTEM namelist
        allowed = .TRUE.
        IF (lda_plus_u) THEN
           WRITE( stdout, '(/5x,"WARNING!!! The input parameter lda_plus_u is obsolete.")' )

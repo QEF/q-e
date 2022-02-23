@@ -113,7 +113,7 @@ CONTAINS
       CHARACTER(len=256)         :: input_line
       CHARACTER(len=80)          :: card
       CHARACTER(len=1), EXTERNAL :: capital
-      LOGICAL                    :: tend, lflag
+      LOGICAL                    :: tend
       INTEGER                    :: i
       !
       ! read_line reads from unit parse_unit
@@ -131,8 +131,6 @@ CONTAINS
       IF( tend ) GOTO 120
       IF( input_line == ' ' .OR. input_line(1:1) == '#' .OR. &
                                  input_line(1:1) == '!' ) GOTO 100
-      !
-130   CONTINUE
       !
       READ (input_line, *) card
       !
@@ -219,8 +217,7 @@ CONTAINS
          !
       ELSEIF ( trim(card) == 'HUBBARD' ) THEN
          !
-         CALL card_hubbard( input_line, lflag )
-         IF (lflag) GO TO 130
+         CALL card_hubbard( input_line )
          ! 
       ELSE
          !
@@ -1935,7 +1932,7 @@ CONTAINS
                ENDDO
             ENDDO
          ELSE
-         ! oups - that is not our data - lets's move one line up in input file
+         ! oups - that is not our data - let's move one line up in input file
          ! not sure that a direct access to the parce_unit is safe enougth
          BACKSPACE(parse_unit)
          ENDIF
@@ -2039,7 +2036,7 @@ CONTAINS
    !    END manual
    !------------------------------------------------------------------------
    !
-   SUBROUTINE card_hubbard ( input_line, lflag )
+   SUBROUTINE card_hubbard ( input_line )
       !
       USE parameters,  ONLY : natx, sc_size
       USE constants,   ONLY : eps16
@@ -2047,7 +2044,6 @@ CONTAINS
       IMPLICIT NONE
       !
       CHARACTER(LEN=256), INTENT(INOUT) :: input_line
-      LOGICAL, INTENT(OUT) :: lflag ! .T. if input_line is changed on the ouput
       !
       CHARACTER(len=256) :: aux
       LOGICAL, EXTERNAL  :: imatches
@@ -2079,8 +2075,6 @@ CONTAINS
                   hu_l2_, &  ! orbital quantum number
                   hu_n2_, &  ! principal quantum number
                   hu_i       ! Hubbard index
-      !
-      lflag = .FALSE.
       !
       IF ( tahub ) THEN
          CALL errore( 'card_hubbard', 'two occurrences', 2 )
@@ -2166,8 +2160,11 @@ CONTAINS
                CALL errore ('card_hubbard', ' Nothing was read from the HUBBARD card. Stopping... ' &
                           & // TRIM(int_to_char(i)), i)
             ELSE
-               ! All lines were read successfully and we reached the end of the 
-               ! HUBBARD card. Exit smoothly.
+               ! All lines were read successfully and we reached the end of the HUBBARD card. Exit smoothly.
+               ! However, before exiting, we move one line up in the input file for a correct handling of 
+               ! EOF in the parent read_cards subroutine, because otherwise (with gfortran) there will be 
+               ! the read error
+               BACKSPACE (parse_unit)
                GO TO  11
             ENDIF
          ENDIF
@@ -2183,10 +2180,9 @@ CONTAINS
          IF ( LEN_TRIM(hu_param) >= 5 ) THEN
             ! This is the case when most likely we reached the end of the HUBBARD card 
             ! and started reading the next card in the input. So we need to exit smoothly.
-            ! But since we already read the next line we need to keep this information
-            ! and pass it via input_line to read_cards for further reading of the next card. 
             ! This case will not happen if the HUBBARD card is the last in the input file.
-            lflag = .TRUE.
+            ! Let's move one line up in the input file
+            BACKSPACE (parse_unit)
             GO TO 11
          ENDIF
          ! Check whether the length of the Hubbard parameter is within the allowed ranges
