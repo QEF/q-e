@@ -3164,6 +3164,11 @@ CONTAINS
 
 
 
+
+
+
+
+
   ! ####################################################################
   !                          |            |
   !                          |  VDW_INFO  |
@@ -3175,6 +3180,7 @@ CONTAINS
 
   IMPLICIT NONE
   INTEGER, INTENT (IN) :: nspin
+
 
 
 
@@ -3193,19 +3199,21 @@ CONTAINS
   WRITE(stdout,'(5x,"% If you are calculating stress with vdW-DF, please also cite:         %")')
   WRITE(stdout,'(5x,"%                                                                      %")')
   WRITE(stdout,'(5x,"%   R. Sabatini et al., J. Phys.: Condens. Matter 24, 424209 (2012).   %")')
-  IF (nspin > 1) THEN
-    WRITE(stdout,'(5x,"%   C.M. Frostenson et al., IOP Electr. Struct. 4, 014001 (2022).      %")')
-  ENDIF 
+  IF (nspin > 1) WRITE(stdout,'(5x,"%   C.M. Frostenson et al., Electr. Struct. 4, 014001 (2022).          %")')
   WRITE(stdout,'(5x,"%                                                                      %")')
-  WRITE(stdout,'(5x,"% Unscreened and range-separated hybrid-vdW-DFs are discussed in       %")')
-  WRITE(stdout,'(5x,"%                                                                      %")')
-  WRITE(stdout,'(5x,"%   V. Shukla et al., J. Phys.: Condens. Matter 34, 025902 (2022).     %")')
-  IF ( xclib_dft_is('hybrid') ) THEN
-    WRITE(stdout,'(5x,"%   K. Berland et al., J. Chem. Phys. 146, 234106 (2017).              %")')
-  ENDIF
-  WRITE(stdout,'(5x,"%                                                                      %")')
+  WRITE(stdout,'(5x,"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",/)')
   WRITE(stdout,'(5x,"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")')
-  WRITE(stdout,'(/)')
+  WRITE(stdout,'(5x,"%                                                                      %")')
+  WRITE(stdout,'(5x,"%  vdW-DF NEWS!                                                        %")')
+  WRITE(stdout,'(5x,"%                                                                      %")')
+  WRITE(stdout,'(5x,"%  * vdW-DF3 is now available! DOI: 10.1021/acs.jctc.0c00471           %")')
+  WRITE(stdout,'(5x,"%    use with input_dft = ''vdW-DF3-opt1'' or ''vdW-DF3-opt2''             %")')
+  WRITE(stdout,'(5x,"%                                                                      %")')
+  WRITE(stdout,'(5x,"%  * Unscreened and range-separated vdW-DF hybrid functionals          %")')
+  WRITE(stdout,'(5x,"%    DOI: 10.1063/1.4986522 and 10.1088/1361-648X/ac2ad2               %")')
+  WRITE(stdout,'(5x,"%    use with input_dft = ''vdW-DF-cx0'' (etc) and ''vdW-DF-ahcx''         %")')
+  WRITE(stdout,'(5x,"%                                                                      %")')
+  WRITE(stdout,'(5x,"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",//)')
 
   IF ( iverbosity > 0 ) THEN
      WRITE(stdout,'(5x,"Carrying out vdW-DF run using the following parameters:")')
