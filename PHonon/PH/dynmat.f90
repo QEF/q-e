@@ -242,26 +242,26 @@ program dynmat
     subroutine remove_interaction(d,na_) 
       !! this routine removes from the dynamical matrix the columsn and the rows 
       !! for the atoms with vanishing diagonal blocks (i,j,ia,ia) 
-      implicit none 
-      integer,intent(in)      :: na_
-      complex(dp), intent(inout)  :: d(3,3,na_,na_)
-      real(dp)                :: norm 
+      IMPLICIT NONE 
+      INTEGER,INTENT(IN)      :: na_
+      COMPLEX(DP), INTENT(INOUT)  :: d(3,3,na_,na_)
+      REAL(DP)                :: norm 
       ! 
-      integer ia, ipol, jpol  
-      complex(dp) :: z(3,3) 
-      do ia = 1, na_ 
+      INTEGER ia, ipol, jpol  
+      COMPLEX(dp) :: z(3,3) 
+      DO ia = 1, na_ 
         norm = 0._dp 
         z = d(:,:,ia,ia) 
-        do ipol =1, 3
-          norm = norm + z(ipol,ipol)%re**2  + z(ipol,ipol)%im**2   
-          do jpol =ipol+1, 3
-             norm = norm + 2._dp * z(ipol,jpol)%re**2  + z(ipol,jpol)%im**2
-          end do 
-        end do 
-        if (norm .lt. 1.e-8_dp ) THEN 
-          d(:,:,ia,:) = 0._dp 
-          d(:,:,:,ia)  =  0._dp 
-        end if 
-      end do  
-   end subroutine remove_interaction  
+        DO ipol =1, 3
+          norm = norm + REAL(z(ipol,ipol))**2  + AIMAG(z(ipol,ipol))**2   
+          DO jpol =ipol+1, 3
+             norm = norm + 2._DP * REAL(z(ipol,jpol))**2  + AIMAG(z(ipol,jpol))**2
+          END DO 
+        END DO 
+        IF (norm .lt. 1.e-8_DP ) THEN 
+          d(:,:,ia,:) = 0._DP 
+          d(:,:,:,ia)  =  0._DP 
+        END IF 
+      END DO  
+   END SUBROUTINE remove_interaction  
 end program dynmat
