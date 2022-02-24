@@ -1934,13 +1934,13 @@ CONTAINS
          ELSE
          ! oups - that is not our data - let's move one line up in input file
          ! not sure that a direct access to the parce_unit is safe enougth
-         BACKSPACE(parse_unit)
+            IF (ionode) BACKSPACE(parse_unit)
          ENDIF
       ELSE
          ! ok, that's the end of file. But I will move one line up
          ! for a correct handling of EOF in the parent read_cards subroutine
          ! otherwise (at least with gfortran on Mac) there will be the read error
-         BACKSPACE(parse_unit)
+         IF (ionode) BACKSPACE(parse_unit)
       ENDIF
       !
       RETURN
@@ -2164,7 +2164,7 @@ CONTAINS
                ! However, before exiting, we move one line up in the input file for a correct handling of 
                ! EOF in the parent read_cards subroutine, because otherwise (with gfortran) there will be 
                ! the read error
-               BACKSPACE (parse_unit)
+               IF (ionode) BACKSPACE (parse_unit)
                GO TO  11
             ENDIF
          ENDIF
@@ -2182,7 +2182,7 @@ CONTAINS
             ! and started reading the next card in the input. So we need to exit smoothly.
             ! This case will not happen if the HUBBARD card is the last in the input file.
             ! Let's move one line up in the input file
-            BACKSPACE (parse_unit)
+            IF(ionode) BACKSPACE (parse_unit)
             GO TO 11
          ENDIF
          ! Check whether the length of the Hubbard parameter is within the allowed ranges
