@@ -33,7 +33,7 @@ ATOMIC_POSITIONS {crystal}
 K_POINTS {automatic}
 2 2 2 0 0 0
 HUBBARD {atomic}
-U Fe1-3d   4.3
-U Fe2-3d   4.3
-J Fe1-3d 1 1.d-12
-J Fe2-3d 1 1.d-12
+U Fe1-3d 4.3
+U Fe2-3d 4.3
+J Fe1-3d 1.d-12
+J Fe2-3d 1.d-12

@@ -27,6 +27,6 @@ Fe  0.0000000   0.00000000   0.00000000
 K_POINTS {automatic}
 4 4 4 1 1 1
 HUBBARD {atomic}
-U Fe-3d   2.20
-J Fe-3d 1 1.75
-J Fe-3d 2 0.00
+U Fe-3d 2.20
+J Fe-3d 1.75
+B Fe-3d 0.00
