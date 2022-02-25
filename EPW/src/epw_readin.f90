@@ -911,6 +911,9 @@
     WRITE(stdout, '(/,5x,a)') 'Error: degaussw must be > 0.0 eV when using including ionized impurity scattering'
     CALL errore('epw_readin', 'Error: adaptive broadening not implemented yet with impurity scattering', 1)
   ENDIF
+  IF (imp_only) THEN
+    WRITE(stdout, '(/,5x,a)') 'WARNING: imp_only = .TRUE., el-ph elements not interpolated, all set to 0.0d0'
+  ENDIF
   !!!!!
   ! thickness and smearing width of the Fermi surface
   ! from eV to Ryd

@@ -39,7 +39,7 @@
                                !!!!!
                                !omegamin, omegamax, omegastep, mob_nfreq
                                omegamin, omegamax, omegastep, mob_nfreq,           &
-                               impurity_g, impurity_prtgkk, lscreen_imp
+                               impurity_g, impurity_prtgkk, lscreen_imp, imp_only
                                !!!!!
   USE control_flags,    ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
@@ -1322,9 +1322,14 @@
       ! epmat : Wannier el and Wannier ph -> Wannier el and Bloch ph
       ! --------------------------------------------------------------
       !
-      IF (.NOT. longrange) THEN
+      !!!!!
+      !IF (.NOT. longrange) THEN
+      !  CALL ephwan2blochp(nmodes, xxq, irvec_g, ndegen_g, nrr_g, uf, epmatwef, nbndsub, nrr_k, dims, dims2)
+      !ENDIF
+      IF (.NOT. longrange .AND. .NOT. imp_only) THEN
         CALL ephwan2blochp(nmodes, xxq, irvec_g, ndegen_g, nrr_g, uf, epmatwef, nbndsub, nrr_k, dims, dims2)
       ENDIF
+      !!!!!
       !
       ! Number of k points with a band on the Fermi surface
       fermicount = 0
