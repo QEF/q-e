@@ -80,6 +80,8 @@ subroutine addnlcc (imode0, drhoscf, npe)
      call addcore (mode, drhoc)
      do is = 1, nspin_lsda
         call daxpy (2 * dfftp%nnr, fac, drhoc, 1, drhoscf (1, is, ipert), 1)
+     end do
+     do is = 1, nspin_lsda
         dvaux (:,is) = (0.d0, 0.d0)
         do is1 = 1, nspin_mag
            do ir = 1, dfftp%nnr
