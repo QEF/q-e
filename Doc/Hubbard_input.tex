@@ -391,6 +391,8 @@ The meaning of \texttt{Hubbard\_J(i,ityp)} was the following (\texttt{i} runs fr
 \end{itemize}
 (If $B$ or $E2$ or $E3$ were not specified or set to 0 they were calculated from $J$ using atomic ratios.)\\
 
+Where these name conventions come from? There are many possible choices how to parametrize Hubbard interactions: $i)$ Slater integrals $F^0$, $F^2$, $F^4$, ..., $ii)$ standard Racah parameters $A$, $B$, $C$, $D$, ..., $iii)$ another set of Racah parameters $E^0$, ..., $E^3$, $iv)$ more physical choice $U$ and $J$ plus other missing like $B$ for the $d$ shell or $E^2$ and $E^3$ for the $f$ shell. In \qe\ the latter notation is used. Check the following references for further reading~\cite{Liechtenstein:1995, Racah:1942, Racah:1942b, Racah:1943, Racah:1949, Griffith:1961}\\
+
 \noindent
 Below is the example of the new input syntax of DFT+$U$+$J$ (Liechtenstein's formulation) for Ni2MnGa:
 %
@@ -427,14 +429,13 @@ K_POINTS (automatic)
  4 4 4 0 0 0
 \textcolor{red}{HUBBARD (ortho-atomic)}
 \textcolor{red}{U Mn-3d 5.0}
-\textcolor{red}{J Mn-3d 1 1.0}
-\textcolor{red}{J Mn-3d 2 1.1}
-\textcolor{red}{U Ni-3d 6.0}
-\textcolor{red}{J Ni-3d 1 1.2}
-\textcolor{red}{J Ni-3d 2 1.3}
+\textcolor{red}{J Mn-3d 1.0}
+\textcolor{red}{B Mn-3d 1.1}
+\textcolor{blue}{U Ni-3d 6.0}
+\textcolor{blue}{J Ni-3d 1.2}
+\textcolor{blue}{B Ni-3d 1.3}
 \end{alltt}
 %
-Note that when we specify \texttt{J} in the \texttt{HUBBARD} card we need to specify the index (in the range from 1 to 3). This index appears in the 3rd column of the \texttt{J} input. This index has the same meaning as in the old input (please see above).\\
 
 \noindent
 If you want to use DFT+$U$ in the Liechtenstein's formulation (without $J$) then you still need to specify some very small value of $J$ (e.g. \texttt{1.d-12}) so that the automatic algorithm decides that this is the Liechtenstein's formulation. If \texttt{J} is not present in the \texttt{HUBBARD} card that the code will automatically assume that this is DFT+$U$ in the Dudarev's formulation.
@@ -641,6 +642,16 @@ The DFPT method for computing Hubbard parameters is implemented in the \hp\ code
   \bibitem{Bajaj:2017} A. Bajaj, J.P. Janet, and H.J. Kulik, \textit{Communication: Recovering the flat-plane condition in electronic structure theory at semi-local DFT cost}, J. Chem. Phys. {\bf 147}, 191101 (2017).
   
   \bibitem{Linscott:2018} E.B. Linscott, D.J. Cole, M.C. Payne, and D.D. O'Regan, \textit{Role of spin in the calculation of Hubbard $U$ and Hund's $J$ parameters from first principles}, Phys. Rev. B {\bf 98}, 235157 (2018).
+  
+  \bibitem{Racah:1942} G. Racah, \textit{Theory of Complex Spectra. I}, Phys. Rev. {\bf 61}, 186 (1942).
+  
+  \bibitem{Racah:1942b} G. Racah, \textit{Theory of Complex Spectra. II}, Phys. Rev. {\bf 62}, 438 (1942).
+  
+  \bibitem{Racah:1943} G. Racah, \textit{Theory of Complex Spectra. III}, Phys. Rev. {\bf 63}, 367 (1943).
+  
+  \bibitem{Racah:1949} G. Racah, \textit{Theory of Complex Spectra. IV}, Phys. Rev. {\bf 76}, 1352 (1949).
+  
+  \bibitem{Griffith:1961} J. Griffith, \textit{Book ``The Theory of Transition Metal Ions''}, Cambridge University Press (1961).
   
   \bibitem{Campo:2010} V.L. Campo Jr and M. Cococcioni, \textit{Extended DFT+$U$+$V$ method with on-site and inter-site electronic interactions}, J. Phys.: Condens. Matter {\bf 22}, 055602 (2010).
   

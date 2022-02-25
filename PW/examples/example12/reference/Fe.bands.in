@@ -1,8 +1,8 @@
  &control
     calculation = 'bands'
     prefix='Fe',
-    pseudo_dir = '/scratch/timrov/QE_gitlab/tmp1/q-e/pseudo/',
-    outdir='/scratch/timrov/QE_gitlab/tmp1/q-e/tempdir/'
+    pseudo_dir = '/scratch/timrov/QE_gitlab/tmp6/q-e/pseudo/',
+    outdir='/scratch/timrov/QE_gitlab/tmp6/q-e/tempdir/'
  /
  &system    
     ibrav=  3, 
@@ -33,6 +33,6 @@ K_POINTS {tpiba_b}
 0.0 0.0 0.0 40
 0.0 0.0 1.0 1
 HUBBARD {atomic}
-U Fe-3d   2.20
-J Fe-3d 1 1.75
-J Fe-3d 2 0.00
+U Fe-3d 2.20
+J Fe-3d 1.75
+B Fe-3d 0.00
