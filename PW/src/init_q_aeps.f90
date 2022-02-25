@@ -97,7 +97,7 @@ SUBROUTINE init_q_aeps()
             !
             IF (upf(nt)%lll(nb) == lH) THEN
                ! check if chi and pswfc have the same sign or not
-               aux(1:msh(nt)) = upf(nt)%pswfc(:,nb)*upf(nt)%chi(:,nchiH)
+               aux(1:msh(nt)) = upf(nt)%pswfc(1:msh(nt),mb)*upf(nt)%chi(1:msh(nt),nchiH)
                CALL simpson( msh(nt), aux, rgrid(nt)%rab, psint )
                wsgn = SIGN(1.0_DP,psint)
                ! compute norm of the difference [pswfc(r) - chi(r)]
