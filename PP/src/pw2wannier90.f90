@@ -4366,26 +4366,29 @@ SUBROUTINE write_plot
 
    IMPLICIT NONE
    !
-   INTEGER :: ik, npw, ibnd, ibnd1, ikevc, i1, j, spin
-   INTEGER :: ipol, nxxs
+   CHARACTER(LEN=20) :: wfnname
+   INTEGER :: ik, npw, ibnd, ibnd1, ikevc, i1, j, spin, ipol, nxxs
    INTEGER :: nr1, nr2, nr3
    !! Real space grid sizes for the wavefunction data written to file
-   CHARACTER*20 :: wfnname
-
-   ! aam: 1/5/06: for writing smaller unk files
-   INTEGER :: i,k,idx,pos
+   INTEGER :: i, k, idx, pos
+   !! aam: 1/5/06: for writing smaller unk files
    COMPLEX(DP), ALLOCATABLE :: evc_r(:, :)
-   COMPLEX(DP), POINTER :: psic_small(:, :)
+   !! Distributed real-space wavefunction.
    COMPLEX(DP), ALLOCATABLE, TARGET :: psic_all(:, :)
+   !! Gathered real-space wavefunction.
+   COMPLEX(DP), POINTER :: psic_small(:, :)
+   !! Real-space wavefunction written to file.
    !
    CALL start_clock( 'write_unk' )
    !
    nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
    ALLOCATE(psic_all(nxxs, npol) )
    ALLOCATE(evc_r(dffts%nnr, npol))
+   psic_all = (0.0_DP, 0.0_DP)
+   evc_r = (0.0_DP, 0.0_DP)
    !
    IF (reduce_unk) THEN
-      ! TODO: Check if dffts%nr1 is divisible by 2
+      ! FIXME: Check if dffts%nr1 is divisible by 2
       WRITE(stdout,'(3(a,i5))') 'nr1s =',dffts%nr1,'nr2s=',dffts%nr2,'nr3s=',dffts%nr3
       nr1 = (dffts%nr1+1)/2
       nr2 = (dffts%nr2+1)/2
@@ -4399,24 +4402,23 @@ SUBROUTINE write_plot
       nr2 = dffts%nr2
       nr3 = dffts%nr3
    ENDIF
-
+   !
    WRITE(stdout,'(a,i8)') ' UNK: iknum = ',iknum
-
+   !
    DO ik=ikstart,ikstop
-
+      !
       CALL print_progress(ik, ikstop)
-
+      !
       ikevc = ik - ikstart + 1
-
-      !write(wfnname,200) p,spin
-      spin=ispinw
-      IF(ispinw==0) spin=1
+      !
       IF (.NOT.noncolin) THEN
+         spin = ispinw
+         IF (ispinw == 0) spin = 1
          WRITE(wfnname, '("UNK", i5.5, ".", i1)') ikevc, spin
       ELSE
          WRITE(wfnname, '("UNK", i5.5, ".", "NC")') ikevc
       ENDIF
-
+      !
       IF (ionode) THEN
          IF(wvfn_formatted) THEN
             OPEN(NEWUNIT=iun_plot, FILE=wfnname, FORM='formatted')
@@ -4426,10 +4428,11 @@ SUBROUTINE write_plot
             WRITE(iun_plot) nr1, nr2, nr3, ikevc, num_bands
          ENDIF
       ENDIF
-
+      !
       CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
-
+      !
       npw = ngk(ik)
+      !
       ibnd1 = 0
       DO ibnd=1,nbnd
          IF (excluded_band(ibnd)) CYCLE
@@ -4467,20 +4470,18 @@ SUBROUTINE write_plot
          ENDIF
          !
          IF (ionode) THEN
-            IF(wvfn_formatted) THEN
-               DO ipol = 1, npol
-                  WRITE(iun_plot,'(2ES20.10)') (psic_small(j, ipol), j = 1, nr1*nr2*nr3)
-               ENDDO
-            ELSE
-               DO ipol = 1, npol
+            DO ipol = 1, npol
+               IF(wvfn_formatted) THEN
+                  WRITE(iun_plot, '(2ES20.10)') (psic_small(j, ipol), j = 1, nr1*nr2*nr3)
+               ELSE
                   WRITE(iun_plot) (psic_small(j, ipol), j = 1, nr1*nr2*nr3)
-               ENDDO
-            ENDIF
+               ENDIF
+            ENDDO
          ENDIF
       ENDDO !ibnd
-
-      IF(ionode) CLOSE (unit=iun_plot)
-
+      !
+      IF (ionode) CLOSE(iun_plot)
+      !
    ENDDO  !ik
    !
    IF (reduce_unk) THEN
