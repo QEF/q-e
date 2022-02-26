@@ -1146,8 +1146,6 @@ SUBROUTINE read_nnkp
 
   IMPLICIT NONE
   !
-  INTEGER, EXTERNAL :: find_free_unit
-  !
   real(DP) :: g_(3), gg_
   INTEGER :: ik, ib, ig, ipol, iw, idum, indexb
   INTEGER numk, i, j
@@ -1164,8 +1162,7 @@ SUBROUTINE read_nnkp
            &//trim(seedname)//'.nnkp', 1 )
      ENDIF
 
-     iun_nnkp = find_free_unit()
-     OPEN (unit=iun_nnkp, file=trim(seedname)//".nnkp",form='formatted', status="old")
+     OPEN (NEWUNIT=iun_nnkp, file=trim(seedname)//".nnkp",form='formatted', status="old")
 
   ENDIF
 
