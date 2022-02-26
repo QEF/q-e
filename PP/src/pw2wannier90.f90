@@ -553,9 +553,6 @@ PROGRAM pw2wannier90
   IF (npool > 1 .and. wan_mode == 'library') CALL errore('pw2wannier90', &
       'pools not implemented for library mode', 1)
   !
-  IF (npool > 1 .and. (write_unk)) &
-    CALL errore('pw2wannier90', 'pools not implemented for this feature', npool)
-  !
   ! Check: bands distribution not implemented
   IF (nbgrp > 1) CALL errore('pw2wannier90', 'bands (-nb) not implemented', nbgrp)
   !
@@ -4352,22 +4349,26 @@ END SUBROUTINE write_band
 
 SUBROUTINE write_plot
    USE io_global,  ONLY : stdout, ionode
+   USE mp_pools,        ONLY : me_pool, root_pool
    USE wvfct, ONLY : nbnd, npwx
    USE control_flags, ONLY : gamma_only
    USE wavefunctions, ONLY : evc
    USE io_files, ONLY : nwordwfc, iunwfc
    USE wannier
-   USE klist,           ONLY : nkstot, xk, ngk, igk_k
+   USE klist,           ONLY : nkstot, xk, ngk, igk_k, nks
    USE gvect,           ONLY : g, ngm
    USE fft_base,        ONLY : dffts
    USE scatter_mod,     ONLY : gather_grid
    USE fft_interfaces,  ONLY : invfft
    USE noncollin_module,ONLY : noncolin, npol
-
+   USE lsda_mod,        ONLY : lsda, isk
+   !
    IMPLICIT NONE
    !
+   INTEGER, EXTERNAL :: global_kpoint_index
+   !
    CHARACTER(LEN=20) :: wfnname
-   INTEGER :: ik, npw, ibnd, ibnd1, ikevc, i1, j, spin, ipol, nxxs
+   INTEGER :: ik, npw, ibnd, ibnd1, ik_g_w90, i1, j, spin, ipol, nxxs
    INTEGER :: nr1, nr2, nr3
    !! Real space grid sizes for the wavefunction data written to file
    INTEGER :: i, k, idx, pos
@@ -4405,33 +4406,34 @@ SUBROUTINE write_plot
    !
    WRITE(stdout,'(a,i8)') ' UNK: iknum = ',iknum
    !
-   DO ik=ikstart,ikstop
+   DO ik = 1, nks
       !
-      CALL print_progress(ik, ikstop)
+      CALL print_progress(ik, nks)
       !
-      ikevc = ik - ikstart + 1
+      IF (lsda .AND. isk(ik) /= ispinw) CYCLE
+      ik_g_w90 = global_kpoint_index(nkstot, ik) - ikstart + 1
+      !
+      npw = ngk(ik)
       !
       IF (.NOT.noncolin) THEN
          spin = ispinw
          IF (ispinw == 0) spin = 1
-         WRITE(wfnname, '("UNK", i5.5, ".", i1)') ikevc, spin
+         WRITE(wfnname, '("UNK", i5.5, ".", i1)') ik_g_w90, spin
       ELSE
-         WRITE(wfnname, '("UNK", i5.5, ".", "NC")') ikevc
+         WRITE(wfnname, '("UNK", i5.5, ".", "NC")') ik_g_w90
       ENDIF
       !
-      IF (ionode) THEN
+      IF (me_pool == root_pool) THEN
          IF(wvfn_formatted) THEN
             OPEN(NEWUNIT=iun_plot, FILE=wfnname, FORM='formatted')
-            WRITE(iun_plot, *) nr1, nr2, nr3, ikevc, num_bands
+            WRITE(iun_plot, *) nr1, nr2, nr3, ik_g_w90, num_bands
          ELSE
             OPEN(NEWUNIT=iun_plot, FILE=wfnname, FORM='unformatted')
-            WRITE(iun_plot) nr1, nr2, nr3, ikevc, num_bands
+            WRITE(iun_plot) nr1, nr2, nr3, ik_g_w90, num_bands
          ENDIF
       ENDIF
       !
       CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
-      !
-      npw = ngk(ik)
       !
       ibnd1 = 0
       DO ibnd=1,nbnd
@@ -4469,7 +4471,7 @@ SUBROUTINE write_plot
             ENDDO
          ENDIF
          !
-         IF (ionode) THEN
+         IF (me_pool == root_pool) THEN
             DO ipol = 1, npol
                IF(wvfn_formatted) THEN
                   WRITE(iun_plot, '(2ES20.10)') (psic_small(j, ipol), j = 1, nr1*nr2*nr3)
@@ -4480,7 +4482,7 @@ SUBROUTINE write_plot
          ENDIF
       ENDDO !ibnd
       !
-      IF (ionode) CLOSE(iun_plot)
+      IF (me_pool == root_pool) CLOSE(iun_plot)
       !
    ENDDO  !ik
    !
