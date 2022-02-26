@@ -370,6 +370,32 @@ module wannier
    END SUBROUTINE utility_compute_u_kb
    !----------------------------------------------------------------------------
    !
+   !----------------------------------------------------------------------------
+   SUBROUTINE print_progress(i, n)
+      !-------------------------------------------------------------------------
+      !! Print progress of iterations
+      !-------------------------------------------------------------------------
+      !
+      USE io_global,  ONLY : stdout
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: i
+      !! Current iteration
+      INTEGER, INTENT(IN) :: n
+      !! Endpoint of the iteration
+      !
+      WRITE(stdout, '(I8)', ADVANCE='NO') i
+      !! Newline every 10 iterations
+      IF (MOD(i, 10) == 0) WRITE(stdout, *)
+      !! Newline at the end of the iteration if not already done
+      IF ((i == n) .AND. (MOD(n, 10) /= 0)) WRITE(stdout, *)
+      FLUSH(stdout)
+      !
+   !----------------------------------------------------------------------------
+   END SUBROUTINE print_progress
+   !----------------------------------------------------------------------------
+   !
 end module wannier
 !
 
@@ -1989,10 +2015,8 @@ SUBROUTINE compute_dmn
       WRITE(stdout,'(/)')
       WRITE(stdout,'(a,i8)') '  DMN(d_matrix_wann): nir = ', nir
       DO ir = 1, nir
+         CALL print_progress(ir, nir)
          ik = ir2ik(ir)
-         WRITE(stdout,'(i8)', advance='no') ir
-         IF (MOD(ir, 10) == 0) WRITE (stdout,*)
-         FLUSH(stdout)
          DO isym = 1, nsym
             DO iw = 1, n_wannier
                ip = iw2ip(iw)
@@ -2008,7 +2032,6 @@ SUBROUTINE compute_dmn
             WRITE(iun_dmn, '( " (", ES18.10, ",", ES18.10, ")" )') MATMUL(phs, CMPLX(wws(:,:,isym), 0.d0, KIND=DP))
          ENDDO
       ENDDO
-      IF (MOD(nir, 10) /= 0) WRITE(stdout, *)
       WRITE(stdout, *) ' DMN(d_matrix_wann) calculated'
       DEALLOCATE(phs)
    ENDIF ! ionode
@@ -2079,10 +2102,8 @@ SUBROUTINE compute_dmn
    WRITE(stdout,'(a,i8)') '  DMN(d_matrix_band): nir in this pool = ', ir_end - ir_start + 1
    !
    DO ir = ir_start, ir_end
+      CALL print_progress(ir, ir_end)
       ik_global = ir2ik(ir) ! global index of the ir-th irreducible k point
-      WRITE (stdout,'(i8)',advance='no') ir
-      IF( MOD(ir,10) == 0 ) WRITE (stdout,*)
-      FLUSH(stdout)
       !
       ! Read wavefunction and setup npw and igk_k_ik at k
       ikevc = ik_global + ikstart - 1
@@ -2225,7 +2246,7 @@ SUBROUTINE compute_dmn
          ! Write Mkb to file
          !
          IF (me_pool == root_pool) THEN
-            WRITE (iun_dmn,*)
+            WRITE (iun_dmn, *)
             DO n = 1, num_bands
                DO m = 1, num_bands
                   WRITE (iun_dmn, '( " (", ES18.10, ",", ES18.10, ")" )') CONJG(Mkb(n,m))
@@ -2235,7 +2256,6 @@ SUBROUTINE compute_dmn
       ENDDO !isym
    ENDDO  !ik
    !
-   IF (MOD(nir, 10) /= 0) WRITE(stdout, *)
    WRITE(stdout, *) ' DMN(d_matrix_band) calculated'
    !
    IF (me_pool == root_pool .AND. wan_mode=='standalone') CLOSE (iun_dmn, STATUS="KEEP")
@@ -2394,9 +2414,7 @@ SUBROUTINE compute_mmn
    !
    DO ik = 1, nks
       !
-      WRITE (stdout,'(i8)',advance='no') ik
-      IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
-      FLUSH(stdout)
+      CALL print_progress(ik, nks)
       !
       IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       !
@@ -2589,7 +2607,6 @@ SUBROUTINE compute_mmn
       CALL deallocate_bec_type(becp2)
     ENDIF
    !
-   WRITE(stdout,'(/)')
    WRITE(stdout,*) ' MMN calculated'
    !
    CALL stop_clock( 'compute_mmn' )
@@ -2765,9 +2782,7 @@ SUBROUTINE compute_spin
    !
    DO ik = 1, nks
       !
-      WRITE (stdout,'(i8)',advance='no') ik
-      IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
-      FLUSH(stdout)
+      CALL print_progress(ik, nks)
       !
       IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       !
@@ -2901,7 +2916,6 @@ SUBROUTINE compute_spin
       CALL deallocate_bec_type(becp)
    ENDIF
    !
-   WRITE(stdout,'(/)')
    WRITE(stdout,*) ' SPIN calculated'
    !
    CALL stop_clock("compute_spin")
@@ -3042,9 +3056,7 @@ SUBROUTINE compute_orb
    !
    DO ik = 1, nks ! loop over k points
       !
-      WRITE (stdout,'(i8)',advance='no') ik
-      IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
-      FLUSH(stdout)
+      CALL print_progress(ik, nks)
       !
       IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       !
@@ -3177,7 +3189,6 @@ SUBROUTINE compute_orb
       DEALLOCATE(uIu)
    ENDIF ! write_uIu
    !
-   WRITE(stdout,'(/)')
    IF (write_uHu) WRITE(stdout, *) ' uHu calculated'
    IF (write_uIu) WRITE(stdout, *) ' uIu calculated'
    !
@@ -3296,9 +3307,7 @@ SUBROUTINE compute_shc
    !
    DO ik = 1, nks ! loop over k points
       !
-      WRITE(stdout, '(i8)', advance='no') ik
-      IF (MOD(ik, 10) == 0) WRITE (stdout, *)
-      FLUSH(stdout)
+      CALL print_progress(ik, nks)
       !
       IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       !
@@ -3408,7 +3417,6 @@ SUBROUTINE compute_shc
    ENDIF
    IF (write_sIu) DEALLOCATE(sIu)
    !
-   WRITE(stdout,'(/)')
    WRITE(stdout,*) ' shc calculated'
    !
    CALL stop_clock('compute_shc')
@@ -3587,9 +3595,7 @@ SUBROUTINE compute_amn
    !
    DO ik = 1, nks
       !
-      WRITE (stdout,'(i8)',advance='no') ik
-      IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
-      FLUSH(stdout)
+      CALL print_progress(ik, nks)
       !
       IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       !
@@ -3755,7 +3761,6 @@ SUBROUTINE compute_amn
    !
    IF (ionode .AND. wan_mode=='standalone') CLOSE(iun_amn)
    !
-   WRITE(stdout,'(/)')
    WRITE(stdout,*) ' AMN calculated'
    !
    CALL stop_clock( 'compute_amn' )
@@ -4030,9 +4035,8 @@ SUBROUTINE compute_amn_with_scdm
    WRITE(stdout, '(a,i8)') ' Number of local k points = ', nks
    !
    DO ik = 1, nks
-      WRITE(stdout, '(i8)', advance='no') ik
-      IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
-      FLUSH(stdout)
+      !
+      CALL print_progress(ik, nks)
       !
       IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       ik_g_w90 = global_kpoint_index(nkstot, ik) - ikstart + 1
@@ -4158,7 +4162,6 @@ SUBROUTINE compute_amn_with_scdm
    DEALLOCATE(phase_g)
    DEALLOCATE(psic_all)
    !
-   WRITE(stdout,'(/)')
    WRITE(stdout,*) ' AMN calculated'
    CALL stop_clock('compute_amn')
    !
@@ -4408,9 +4411,7 @@ SUBROUTINE write_plot
 
    DO ik=ikstart,ikstop
 
-      WRITE (stdout,'(i8)',advance='no') ik
-      IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
-      FLUSH(stdout)
+      CALL print_progress(ik, ikstop)
 
       ikevc = ik - ikstart + 1
 
@@ -4602,7 +4603,6 @@ SUBROUTINE write_plot
    ENDIF
 #endif
 
-   WRITE(stdout,'(/)')
    WRITE(stdout,*) ' UNK written'
 
    CALL stop_clock( 'write_unk' )
