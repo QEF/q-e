@@ -4387,6 +4387,7 @@ SUBROUTINE write_plot
    !
    IF (reduce_unk) THEN
       ! FIXME: Check if dffts%nr1 is divisible by 2
+      ! FIXME: Is +1 needed?
       WRITE(stdout,'(3(a,i5))') 'nr1s =',dffts%nr1,'nr2s=',dffts%nr2,'nr3s=',dffts%nr3
       nr1 = (dffts%nr1+1)/2
       nr2 = (dffts%nr2+1)/2
@@ -4435,13 +4436,13 @@ SUBROUTINE write_plot
       ibnd1 = 0
       DO ibnd=1,nbnd
          IF (excluded_band(ibnd)) CYCLE
-         ibnd1=ibnd1 + 1
+         ibnd1 = ibnd1 + 1
          !
          ! Transform wavefunction to real space
          !
          evc_r(:, :) = (0.d0, 0.d0)
          DO ipol = 1, npol
-            evc_r(dffts%nl (igk_k (1:npw,ik) ), ipol) = evc(1+npwx*(ipol-1):npw+npwx*(ipol-1), ibnd)
+            evc_r(dffts%nl(igk_k(1:npw,ik)), ipol) = evc(1+npwx*(ipol-1):npw+npwx*(ipol-1), ibnd)
             CALL invfft('Wave', evc_r(:, ipol), dffts)
          ENDDO
          !
@@ -4455,13 +4456,13 @@ SUBROUTINE write_plot
          !
          IF (reduce_unk) THEN
             pos = 0
-            DO k=1,dffts%nr3,2
-               DO j=1,dffts%nr2,2
-                  DO i=1,dffts%nr1,2
+            DO k = 1, dffts%nr3, 2
+               DO j = 1, dffts%nr2, 2
+                  DO i = 1, dffts%nr1, 2
                      idx = (k-1)*dffts%nr2*dffts%nr1 + (j-1)*dffts%nr1 + i
-                     pos=pos+1
+                     pos = pos + 1
                      DO ipol = 1, npol
-                        psic_small(pos,ipol) = psic_all(idx,ipol)
+                        psic_small(pos, ipol) = psic_all(idx, ipol)
                      ENDDO
                   ENDDO
                ENDDO
