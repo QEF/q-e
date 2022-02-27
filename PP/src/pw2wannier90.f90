@@ -2035,7 +2035,7 @@ SUBROUTINE compute_dmn
    ALLOCATE(phase(dffts%nnr))
    ALLOCATE(aux(npwx))
    ALLOCATE(evc_k(npol*npwx, num_bands))
-   ALLOCATE(evc_sk(npol*npwx, nbnd))
+   ALLOCATE(evc_sk(npol*npwx, num_bands))
    !
    !
    !   USPP
@@ -2419,6 +2419,7 @@ SUBROUTINE compute_mmn
       !
       CALL davcio(evc, 2*nwordwfc, iunwfc, ik, -1 )
       !
+      ! Trim excluded bands from evc
       ibnd_m = 0
       DO m = 1, nbnd
          IF (excluded_band(m)) CYCLE
@@ -2722,7 +2723,7 @@ SUBROUTINE compute_spin
    complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
    !
    INTEGER :: npw, ik, ikp, ipol, ib, i, m, n
-   INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, nbt
+   INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, nbt, ibnd_m
    INTEGER :: ikevc, s, counter
    real(DP)                 :: arg, g_(3)
    INTEGER                  :: nn,inn,loop,loop2
@@ -2734,6 +2735,8 @@ SUBROUTINE compute_spin
    integer  :: np, is1, is2, kh, kkb
    complex(dp) :: sigma_x_aug, sigma_y_aug, sigma_z_aug
    COMPLEX(DP), ALLOCATABLE :: be_n(:,:), be_m(:,:)
+   COMPLEX(DP), ALLOCATABLE :: evc_k(:, :)
+   !! Wavefunction at k. Contains only the included bands.
    !
    INTEGER, EXTERNAL :: global_kpoint_index
    !
@@ -2754,6 +2757,7 @@ SUBROUTINE compute_spin
       ALLOCATE(spn_aug(3, (num_bands*(num_bands+1))/2))
    ENDIF
    !
+   ALLOCATE(evc_k(npol*npwx, num_bands))
    ALLOCATE(spn(3, (num_bands*(num_bands+1))/2))
    !
    !ivo
@@ -2783,27 +2787,33 @@ SUBROUTINE compute_spin
       CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
       npw = ngk(ik)
       !
+      ! Trim excluded bands from evc
+      ibnd_m = 0
+      DO m = 1, nbnd
+         IF (excluded_band(m)) CYCLE
+         ibnd_m = ibnd_m + 1
+         evc_k(:, ibnd_m) = evc(:, m)
+      ENDDO
+      !
       !  USPP
       !
       IF(okvan) THEN
          CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
          ! below we compute the product of beta functions with |psi>
-         CALL calbec (npw, vkb, evc, becp)
+         CALL calbec (npw, vkb, evc_k, becp, num_bands)
       ENDIF
       !
       counter = 0
-      DO m = 1, nbnd
-         IF (excluded_band(m)) CYCLE !ivo
+      DO m = 1, num_bands
          DO n = 1, m
-            IF (excluded_band(n)) CYCLE !ivo
             counter = counter + 1
             !
-            cdum1 = dot_product(evc(1:npw, n), evc(npwx+1:npwx+npw, m))
-            cdum2 = dot_product(evc(npwx+1:npwx+npw, n), evc(1:npw, m))
+            cdum1 = dot_product(evc_k(1:npw, n), evc_k(npwx+1:npwx+npw, m))
+            cdum2 = dot_product(evc_k(npwx+1:npwx+npw, n), evc_k(1:npw, m))
             sigma_x = cdum1 + cdum2
             sigma_y = cmplx_i * (cdum2 - cdum1)
-            sigma_z = dot_product(evc(1:npw, n), evc(1:npw, m)) &
-                    - dot_product(evc(npwx+1:npwx+npw, n), evc(npwx+1:npwx+npw, m))
+            sigma_z = dot_product(evc_k(1:npw, n), evc_k(1:npw, m)) &
+                    - dot_product(evc_k(npwx+1:npwx+npw, n), evc_k(npwx+1:npwx+npw, m))
             spn(1, counter) = sigma_x
             spn(2, counter) = sigma_y
             spn(3, counter) = sigma_z
@@ -2903,6 +2913,7 @@ SUBROUTINE compute_spin
    !
    CALL utility_merge_files("spn", spn_formatted, 3*((num_bands*(num_bands+1))/2))
    !
+   DEALLOCATE(evc_k)
    DEALLOCATE(spn)
    IF (okvan) THEN
       DEALLOCATE(spn_aug)
@@ -3786,9 +3797,9 @@ SUBROUTINE compute_amn_with_scdm
    !
    IMPLICIT NONE
    !
-   INTEGER :: ik, npw, ibnd, iw, nrtot, info, lcwork, locibnd, ib, gamma_idx, &
+   INTEGER :: ik, npw, ibnd, iw, nrtot, info, lcwork, ib, gamma_idx, &
               minmn, minmn2, ig, ipool_gamma, ik_gamma_loc, i, j, k, ik_g_w90, &
-              nxxs, count_piv_spin_up
+              nxxs, count_piv_spin_up, m, ibnd_m
    REAL(DP):: norm_psi, focc, arg, tpi_r_dot_g, xk_cry(3), rpos_cart(3)
    COMPLEX(DP) :: tmp_cwork(2)
    COMPLEX(DP) :: nowfc_tmp
@@ -3800,12 +3811,17 @@ SUBROUTINE compute_amn_with_scdm
    !! Spin index of the pivot points. 1 for spin up, 2 for spin down.
    REAL(DP), ALLOCATABLE :: rwork(:), rwork2(:), singval(:), rpos(:,:)
    !! vv: Real array for the QR factorization and SVD
+   REAL(DP), ALLOCATABLE :: et_k(:)
+   !! Energy eigenvalues at k. Contains only the included bands.
    COMPLEX(DP), ALLOCATABLE :: phase(:), nowfc(:,:), psi_gamma(:,:), &
        qr_tau(:), cwork(:), Umat(:,:), VTmat(:,:), Amat(:,:)
    !! vv: complex arrays for the SVD factorization
    COMPLEX(DP), ALLOCATABLE :: phase_g(:,:)
    !! exp(iGr) phase for pivot positions. Used for slow Fourier transformation.
    COMPLEX(DP), ALLOCATABLE :: psic_all(:, :)
+   !!
+   COMPLEX(DP), ALLOCATABLE :: evc_k(:, :)
+   !! Wavefunction at k. Contains only the included bands.
    !
    INTEGER, EXTERNAL :: global_kpoint_index
    !
@@ -3817,14 +3833,17 @@ SUBROUTINE compute_amn_with_scdm
       WRITE(stdout,'(1x,a,a)') 'Case  : ',trim(scdm_entanglement)
       WRITE(stdout,'(1x,a,f10.3,a/,1x,a,f10.3,a/)') 'mu    = ', scdm_mu, ' eV', 'sigma =', scdm_sigma, ' eV'
    ENDIF
-
+   !
    CALL start_clock( 'compute_amn' )
-
+   !
    ! vv: Error for using SCDM with Ultrasoft pseudopotentials
    !IF (okvan) THEN
    !   call errore('pw2wannier90','The SCDM method does not work with Ultrasoft pseudopotential yet.',1)
    !ENDIF
-
+   !
+   ALLOCATE(et_k(num_bands))
+   ALLOCATE(evc_k(npol*npwx, num_bands))
+   !
    ! vv: Error for using SCDM with gamma_only
    IF (gamma_only) THEN
       call errore('pw2wannier90','The SCDM method does not work with gamma_only calculations.',1)
@@ -3891,31 +3910,35 @@ SUBROUTINE compute_amn_with_scdm
    IF (my_pool_id == ipool_gamma) THEN
       !
       ik = ik_gamma_loc
-      locibnd = 0
       CALL davcio(evc, 2*nwordwfc, iunwfc, ik, -1)
       !
-      DO ibnd = 1, nbnd
-         IF(excluded_band(ibnd)) CYCLE
-         locibnd = locibnd + 1
-         IF (locibnd > num_bands) CALL errore('compute_amn', &
-            'Something wrong with the number of bands. Check exclude_bands.', 1)
-         !
+      npw = ngk(ik)
+      !
+      ! Trim excluded bands from evc and et
+      evc_k(:, :) = (0.d0, 0.d0)
+      ibnd_m = 0
+      DO m = 1, nbnd
+         IF (excluded_band(m)) CYCLE
+         ibnd_m = ibnd_m + 1
+         evc_k(:, ibnd_m) = evc(:, m)
+         et_k(ibnd_m) = et(m, ik)
+      ENDDO
+      !
+      DO ibnd = 1, num_bands
          IF(TRIM(scdm_entanglement) == 'isolated') THEN
             focc = 1.0_DP
          ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
-            focc = 0.5_DP*ERFC((et(ibnd,ik)*rytoev - scdm_mu)/scdm_sigma)
+            focc = 0.5_DP*ERFC((et_k(ibnd)*rytoev - scdm_mu)/scdm_sigma)
          ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-            focc = EXP(-1.0_DP*((et(ibnd,ik)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
+            focc = EXP(-1.0_DP*((et_k(ibnd)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
          ELSE
             CALL errore('compute_amn', 'scdm_entanglement value not recognized.', 1)
          END IF
          !
-         npw = ngk(ik)
-         !
          IF (noncolin) THEN
             psic_nc(:, :) = (0.0_DP, 0.0_DP)
-            psic_nc( dffts%nl( igk_k(1:npw, ik) ), 1) = evc(1:npw, ibnd)
-            psic_nc( dffts%nl( igk_k(1:npw, ik) ), 2) = evc(1+npwx:npw+npwx, ibnd)
+            psic_nc( dffts%nl( igk_k(1:npw, ik) ), 1) = evc_k(1:npw, ibnd)
+            psic_nc( dffts%nl( igk_k(1:npw, ik) ), 2) = evc_k(1+npwx:npw+npwx, ibnd)
             CALL invfft('Wave', psic_nc(:,1), dffts)
             CALL invfft('Wave', psic_nc(:,2), dffts)
             !
@@ -3928,13 +3951,13 @@ SUBROUTINE compute_amn_with_scdm
             ! vv: Gamma only
             ! vv: Build Psi_k = Unk * focc
             norm_psi = SQRT(SUM(ABS(psic_all(1:nrtot, 1:2))**2))
-            psi_gamma(1:nrtot,         locibnd) = psic_all(1:nrtot, 1) * focc / norm_psi
-            psi_gamma(1+nrtot:2*nrtot, locibnd) = psic_all(1:nrtot, 2) * focc / norm_psi
+            psi_gamma(1:nrtot,         ibnd) = psic_all(1:nrtot, 1) * focc / norm_psi
+            psi_gamma(1+nrtot:2*nrtot, ibnd) = psic_all(1:nrtot, 2) * focc / norm_psi
          ELSE
             ! spin-collinear case
             ! vv: Compute unk's on a real grid (the fft grid)
             psic(:) = (0.0_DP, 0.0_DP)
-            psic( dffts%nl( igk_k(1:npw,ik) ) ) = evc(1:npw, ibnd)
+            psic( dffts%nl( igk_k(1:npw,ik) ) ) = evc_k(1:npw, ibnd)
             CALL invfft ('Wave', psic, dffts)
             !
             psic_all(:, 1) = (0.0_DP, 0.0_DP)
@@ -3946,7 +3969,7 @@ SUBROUTINE compute_amn_with_scdm
             ! vv: Gamma only
             ! vv: Build Psi_k = Unk * focc
             norm_psi = SQRT(SUM( ABS(psic_all(1:nrtot, 1))**2 ))
-            psi_gamma(1:nrtot, locibnd) = psic_all(1:nrtot, 1) * (focc / norm_psi)
+            psi_gamma(1:nrtot, ibnd) = psic_all(1:nrtot, 1) * (focc / norm_psi)
          ENDIF
          !
       ENDDO
@@ -4039,6 +4062,16 @@ SUBROUTINE compute_amn_with_scdm
       !
       CALL davcio(evc, 2*nwordwfc, iunwfc, ik, -1)
       !
+      ! Trim excluded bands from evc and et
+      evc_k(:, :) = (0.d0, 0.d0)
+      ibnd_m = 0
+      DO m = 1, nbnd
+         IF (excluded_band(m)) CYCLE
+         ibnd_m = ibnd_m + 1
+         evc_k(:, ibnd_m) = evc(:, m)
+         et_k(ibnd_m) = et(m, ik)
+      ENDDO
+      !
       ! vv: SCDM method for generating the Amn matrix
       ! jml: calculate of psi_nk at pivot points using slow FT
       !      This is faster than using invfft because the number of pivot
@@ -4065,24 +4098,21 @@ SUBROUTINE compute_amn_with_scdm
          ENDDO
       ENDDO
       !
-      locibnd = 0
       ! vv: Generate the occupation numbers matrix according to scdm_entanglement
-      DO ibnd = 1, nbnd
-         IF (excluded_band(ibnd)) CYCLE
-         locibnd = locibnd + 1
+      DO ibnd = 1, num_bands
          ! vv: Define the occupation numbers matrix according to scdm_entanglement
          IF(TRIM(scdm_entanglement) == 'isolated') THEN
             focc = 1.0_DP
          ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
-            focc = 0.5_DP*ERFC((et(ibnd,ik)*rytoev - scdm_mu)/scdm_sigma)
+            focc = 0.5_DP*ERFC((et_k(ibnd)*rytoev - scdm_mu)/scdm_sigma)
          ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-            focc = EXP(-1.0_DP*((et(ibnd,ik)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
+            focc = EXP(-1.0_DP*((et_k(ibnd)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
          ELSE
             CALL errore('compute_amn','scdm_entanglement value not recognized.',1)
          END IF
          !
-         norm_psi = SUM( ABS(evc(1:npw, ibnd))**2 )
-         IF (noncolin) norm_psi = norm_psi + SUM( ABS(evc(1+npwx:npw+npwx, ibnd))**2 )
+         norm_psi = SUM( ABS(evc_k(1:npw, ibnd))**2 )
+         IF (noncolin) norm_psi = norm_psi + SUM( ABS(evc_k(1+npwx:npw+npwx, ibnd))**2 )
          CALL mp_sum(norm_psi, intra_pool_comm)
          norm_psi = SQRT(norm_psi)
          !
@@ -4091,16 +4121,16 @@ SUBROUTINE compute_amn_with_scdm
             IF (noncolin) THEN
                IF (piv_spin(iw) == 1) THEN
                   ! spin up
-                  nowfc_tmp = SUM( evc(1:npw, ibnd) * phase_g(1:npw, iw) )
+                  nowfc_tmp = SUM( evc_k(1:npw, ibnd) * phase_g(1:npw, iw) )
                ELSE
                   ! spin down
-                  nowfc_tmp = SUM( evc(1+npwx:npw+npwx, ibnd) * phase_g(1:npw, iw) )
+                  nowfc_tmp = SUM( evc_k(1+npwx:npw+npwx, ibnd) * phase_g(1:npw, iw) )
                ENDIF
             ELSE
                ! spin collinear
-               nowfc_tmp = SUM( evc(1:npw, ibnd) * phase_g(1:npw, iw) )
+               nowfc_tmp = SUM( evc_k(1:npw, ibnd) * phase_g(1:npw, iw) )
             ENDIF
-            nowfc(iw, locibnd) = nowfc_tmp * phase(iw) * focc / norm_psi
+            nowfc(iw, ibnd) = nowfc_tmp * phase(iw) * focc / norm_psi
          ENDDO
          !
       ENDDO
@@ -4365,7 +4395,7 @@ SUBROUTINE write_plot
    INTEGER, EXTERNAL :: global_kpoint_index
    !
    CHARACTER(LEN=20) :: wfnname
-   INTEGER :: ik, npw, ibnd, ibnd1, ik_g_w90, i1, j, spin, ipol, nxxs
+   INTEGER :: ik, npw, ibnd, ik_g_w90, i1, j, spin, ipol, nxxs
    INTEGER :: nr1, nr2, nr3
    !! Real space grid sizes for the wavefunction data written to file
    INTEGER :: i, k, idx, pos
@@ -4431,12 +4461,10 @@ SUBROUTINE write_plot
          ENDIF
       ENDIF
       !
-      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
+      CALL davcio(evc, 2*nwordwfc, iunwfc, ik, -1 )
       !
-      ibnd1 = 0
-      DO ibnd=1,nbnd
+      DO ibnd = 1, nbnd
          IF (excluded_band(ibnd)) CYCLE
-         ibnd1 = ibnd1 + 1
          !
          ! Transform wavefunction to real space
          !
