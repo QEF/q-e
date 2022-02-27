@@ -2552,10 +2552,10 @@ SUBROUTINE compute_mmn
          IF (gamma_only) THEN
             DO m = 1, num_bands
                DO n = 1, m ! Mkb(m,n) is symmetric in m and n for gamma_only case
+                  ! The upper half is filled later by symmetry
                   mmn = dot_product(evc_k(1:npw,m), evc_kb(1:npw, n)) &
                       + CONJG(dot_product(evc_k(1:npw, m), evc_kb_m(1:npw, n)))
-                  Mkb(m,n) = mmn + Mkb(m,n)
-                  IF (m/=n) Mkb(n,m) = Mkb(m,n) ! fill other half of matrix by symmetry
+                  Mkb(m, n) = mmn + Mkb(m, n)
                ENDDO
             ENDDO
          ELSEIF(noncolin) THEN
@@ -2598,6 +2598,7 @@ SUBROUTINE compute_mmn
                         DO m = 1, num_bands
                            IF (gamma_only) THEN
                               DO n = 1, m ! Mkb(m,n) is symmetric in m and n for gamma_only case
+                                 ! The upper half is filled later by symmetry
                                  Mkb(m,n) = Mkb(m,n) + &
                                       phase1 * qb(ih,jh,nt,ib,ik) * &
                                       becp%r(ikb,m) * becp2%r(jkb,n)
@@ -2634,6 +2635,15 @@ SUBROUTINE compute_mmn
                ENDDO  !nat
             ENDDO !ntyp
          ENDIF ! okvan
+         !
+         ! Mkb(m,n) is symmetric in m and n for gamma_only case. Fill the upper half.
+         IF (gamma_only) THEN
+            DO m = 1, num_bands
+               DO n = m + 1, num_bands
+                  Mkb(m, n) = Mkb(n, m)
+               ENDDO
+            ENDDO
+         ENDIF
          !
          IF (wan_mode=='standalone') THEN
             DO n = 1, num_bands
