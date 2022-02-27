@@ -4418,6 +4418,7 @@ SUBROUTINE write_plot
    evc_r = (0.0_DP, 0.0_DP)
    !
    IF (reduce_unk) THEN
+      ! TODO: Enable factor different from 2
       ! FIXME: Check if dffts%nr1 is divisible by 2
       ! FIXME: Is +1 needed?
       WRITE(stdout,'(3(a,i5))') 'nr1s =',dffts%nr1,'nr2s=',dffts%nr2,'nr3s=',dffts%nr3
