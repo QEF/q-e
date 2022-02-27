@@ -3925,15 +3925,7 @@ SUBROUTINE compute_amn_with_scdm
       ENDDO
       !
       DO ibnd = 1, num_bands
-         IF(TRIM(scdm_entanglement) == 'isolated') THEN
-            focc = 1.0_DP
-         ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
-            focc = 0.5_DP*ERFC((et_k(ibnd)*rytoev - scdm_mu)/scdm_sigma)
-         ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-            focc = EXP(-1.0_DP*((et_k(ibnd)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
-         ELSE
-            CALL errore('compute_amn', 'scdm_entanglement value not recognized.', 1)
-         END IF
+         focc = scdm_occupation(et_k(ibnd))
          !
          IF (noncolin) THEN
             psic_nc(:, :) = (0.0_DP, 0.0_DP)
@@ -4098,18 +4090,8 @@ SUBROUTINE compute_amn_with_scdm
          ENDDO
       ENDDO
       !
-      ! vv: Generate the occupation numbers matrix according to scdm_entanglement
       DO ibnd = 1, num_bands
-         ! vv: Define the occupation numbers matrix according to scdm_entanglement
-         IF(TRIM(scdm_entanglement) == 'isolated') THEN
-            focc = 1.0_DP
-         ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
-            focc = 0.5_DP*ERFC((et_k(ibnd)*rytoev - scdm_mu)/scdm_sigma)
-         ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-            focc = EXP(-1.0_DP*((et_k(ibnd)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
-         ELSE
-            CALL errore('compute_amn','scdm_entanglement value not recognized.',1)
-         END IF
+         focc = scdm_occupation(et_k(ibnd))
          !
          norm_psi = SUM( ABS(evc_k(1:npw, ibnd))**2 )
          IF (noncolin) norm_psi = norm_psi + SUM( ABS(evc_k(1+npwx:npw+npwx, ibnd))**2 )
@@ -4188,6 +4170,25 @@ SUBROUTINE compute_amn_with_scdm
    !
    WRITE(stdout,*) ' AMN calculated'
    CALL stop_clock('compute_amn')
+   !
+   CONTAINS
+   !
+   FUNCTION scdm_occupation(e) RESULT(focc)
+      !! vv: Generate the occupation numbers matrix according to scdm_entanglement
+      REAL(DP), INTENT(IN) :: e
+      !! Energy eigenvalue
+      REAL(DP) :: focc
+      !! SCDM occupation for constructing quasi-density matrix
+      IF(TRIM(scdm_entanglement) == 'isolated') THEN
+         focc = 1.0_DP
+      ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
+         focc = 0.5_DP * ERFC((e * rytoev - scdm_mu) / scdm_sigma)
+      ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
+         focc = EXP(-1.0_DP * ((e * rytoev - scdm_mu)**2) / (scdm_sigma**2))
+      ELSE
+         CALL errore('compute_amn_with_scdm', 'scdm_entanglement value not recognized.', 1)
+      ENDIF
+   END FUNCTION scdm_occupation
    !
 END SUBROUTINE compute_amn_with_scdm
 
