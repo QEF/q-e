@@ -371,6 +371,82 @@ module wannier
    !----------------------------------------------------------------------------
    !
    !----------------------------------------------------------------------------
+   SUBROUTINE utility_merge_files(postfix, formatted, ndata)
+      !-------------------------------------------------------------------------
+      !! For pool parallelization, each root_pool writes to different files.
+      !! Here, concatenate all prefix.postfix files
+      !-------------------------------------------------------------------------
+      !
+      USE kinds,           ONLY : DP
+      USE io_global,       ONLY : ionode
+      USE mp_pools,        ONLY : npool
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(LEN=*), INTENT(IN) :: postfix
+      !! postfix for filename
+      LOGICAL, INTENT(IN) :: formatted
+      !! True if formatted file, false if unformatted file.
+      INTEGER, INTENT(IN), OPTIONAL :: ndata
+      !! Used only if formatted = .FALSE. Length of data on each line.
+      !
+      CHARACTER(LEN=256) :: filename
+      CHARACTER(LEN=256) :: line
+      INTEGER :: ipool, iun, iun2, i
+      CHARACTER(LEN=6), EXTERNAL :: int_to_char
+      COMPLEX(DP), ALLOCATABLE :: arr(:)
+      !
+      IF ((.NOT. formatted) .AND. (.NOT. PRESENT(ndata))) THEN
+         CALL errore("utility_merge_files", "If formatted is false, ndata must be provided", 1)
+      ENDIF
+      !
+      IF (npool == 1) RETURN
+      IF (.NOT. ionode) RETURN
+      !
+      IF (formatted) THEN
+         !
+         filename = TRIM(seedname) // "." // TRIM(postfix)
+         OPEN (NEWUNIT=iun, file=TRIM(filename), form='formatted', STATUS="OLD", POSITION="APPEND")
+         !
+         DO ipool = 2, npool
+            filename = TRIM(seedname) // "." // TRIM(postfix) // TRIM(int_to_char(ipool))
+            OPEN(NEWUNIT=iun2, FILE=TRIM(filename), FORM='formatted')
+            DO WHILE (.TRUE.)
+               READ(iun2, '(A)', END=200) line
+               WRITE(iun, '(A)') TRIM(line)
+         ENDDO
+200      CLOSE(iun2, STATUS="DELETE")
+         ENDDO
+         !
+         CLOSE(iun, STATUS="KEEP")
+         !
+      ELSE ! .NOT. formatted
+         !
+         ALLOCATE(arr(ndata))
+         !
+         filename = TRIM(seedname) // "." // TRIM(postfix)
+         OPEN (NEWUNIT=iun, file=TRIM(filename), form='unformatted', STATUS="OLD", POSITION="APPEND")
+         !
+         DO ipool = 2, npool
+            filename = TRIM(seedname) // "." // TRIM(postfix) // TRIM(int_to_char(ipool))
+            OPEN(NEWUNIT=iun2, FILE=TRIM(filename), FORM='unformatted')
+            DO WHILE (.TRUE.)
+               READ(iun2, END=201) (arr(i), i=1, ndata)
+               WRITE(iun) (arr(i), i=1, ndata)
+            ENDDO
+201      CLOSE(iun2, STATUS="DELETE")
+         ENDDO
+         !
+         CLOSE(iun, STATUS="KEEP")
+         !
+         DEALLOCATE(arr)
+         !
+      ENDIF ! formatted
+   !----------------------------------------------------------------------------
+   END SUBROUTINE utility_merge_files
+   !----------------------------------------------------------------------------
+   !
+   !----------------------------------------------------------------------------
    SUBROUTINE print_progress(i, n)
       !-------------------------------------------------------------------------
       !! Print progress of iterations
@@ -2258,7 +2334,7 @@ SUBROUTINE compute_dmn
    !
    ! If using pool parallelization, concatenate files written by other nodes
    ! to the main output.
-   CALL utility_merge_files("dmn", .TRUE., -1)
+   CALL utility_merge_files("dmn", .TRUE.)
    !
    DEALLOCATE (Mkb, phase)
    DEALLOCATE(temppsic_all, psic_all)
@@ -2581,7 +2657,7 @@ SUBROUTINE compute_mmn
    ! If using pool parallelization, concatenate files written by other nodes
    ! to the main output.
    !
-   CALL utility_merge_files("mmn", .TRUE., -1)
+   CALL utility_merge_files("mmn", .TRUE.)
    !
    IF (gamma_only) DEALLOCATE(evc_kb_m)
    DEALLOCATE(Mkb)
@@ -2607,80 +2683,6 @@ SUBROUTINE compute_mmn
    CALL stop_clock( 'compute_mmn' )
    !
 END SUBROUTINE compute_mmn
-
-!--------------------------------------------------------------------------
-SUBROUTINE utility_merge_files(postfix, formatted, ndata)
-   !------------------------------------------------------------------------
-   !! For pool parallelization, each root_pool writes to different files.
-   !! Here, concatenate all prefix.postfix files
-   !------------------------------------------------------------------------
-   !
-   USE kinds,           ONLY : DP
-   USE io_global,       ONLY : ionode
-   USE mp_pools,        ONLY : npool
-   USE wannier,         ONLY : seedname
-   !
-   IMPLICIT NONE
-   !
-   CHARACTER(LEN=*), INTENT(IN) :: postfix
-   !! postfix for filename
-   LOGICAL, INTENT(IN) :: formatted
-   !! True if formatted file, false if unformatted file.
-   INTEGER, INTENT(IN) :: ndata
-   !! Used only if formatted = .FALSE. Length of data on each line.
-   !
-   CHARACTER(LEN=256) :: filename
-   CHARACTER(LEN=256) :: line
-   INTEGER :: ipool, iun, iun2, i
-   CHARACTER(LEN=6), EXTERNAL :: int_to_char
-   COMPLEX(DP), ALLOCATABLE :: arr(:)
-   !
-   IF (npool == 1) RETURN
-   IF (.NOT. ionode) RETURN
-   !
-   IF (formatted) THEN
-      !
-      filename = TRIM(seedname) // "." // TRIM(postfix)
-      OPEN (NEWUNIT=iun, file=TRIM(filename), form='formatted', STATUS="OLD", POSITION="APPEND")
-      !
-      DO ipool = 2, npool
-         filename = TRIM(seedname) // "." // TRIM(postfix) // TRIM(int_to_char(ipool))
-         OPEN(NEWUNIT=iun2, FILE=TRIM(filename), FORM='formatted')
-         DO WHILE (.TRUE.)
-            READ(iun2, '(A)', END=200) line
-            WRITE(iun, '(A)') TRIM(line)
-      ENDDO
-200      CLOSE(iun2, STATUS="DELETE")
-      ENDDO
-      !
-      CLOSE(iun, STATUS="KEEP")
-      !
-   ELSE ! .NOT. formatted
-      !
-      ALLOCATE(arr(ndata))
-      !
-      filename = TRIM(seedname) // "." // TRIM(postfix)
-      OPEN (NEWUNIT=iun, file=TRIM(filename), form='unformatted', STATUS="OLD", POSITION="APPEND")
-      !
-      DO ipool = 2, npool
-         filename = TRIM(seedname) // "." // TRIM(postfix) // TRIM(int_to_char(ipool))
-         OPEN(NEWUNIT=iun2, FILE=TRIM(filename), FORM='unformatted')
-         DO WHILE (.TRUE.)
-            READ(iun2, END=201) (arr(i), i=1, ndata)
-            WRITE(iun) (arr(i), i=1, ndata)
-         ENDDO
-201      CLOSE(iun2, STATUS="DELETE")
-      ENDDO
-      !
-      CLOSE(iun, STATUS="KEEP")
-      !
-      DEALLOCATE(arr)
-      !
-   ENDIF ! formatted
-   !
-!--------------------------------------------------------------------------
-END SUBROUTINE utility_merge_files
-!--------------------------------------------------------------------------
 
 !--------------------------------------------------------------------------
 SUBROUTINE compute_spin
@@ -3470,7 +3472,6 @@ SUBROUTINE utility_write_array(iun, formatted, ndim1, ndim2, arr)
       WRITE(iun) ((arr(m, n), m=1,ndim1), n=1,ndim2)
    ENDIF
    !
-  !
 !--------------------------------------------------------------------------
 END SUBROUTINE utility_write_array
 !--------------------------------------------------------------------------
@@ -3752,7 +3753,7 @@ SUBROUTINE compute_amn
    ! If using pool parallelization, concatenate files written by other nodes
    ! to the main output.
    !
-   CALL utility_merge_files("amn", .TRUE., 0)
+   CALL utility_merge_files("amn", .TRUE.)
    !
    DEALLOCATE(sgf)
    DEALLOCATE(csph)
@@ -4149,7 +4150,7 @@ SUBROUTINE compute_amn_with_scdm
    ! If using pool parallelization, concatenate files written by other nodes
    ! to the main output.
    !
-   CALL utility_merge_files("amn", .TRUE., -1)
+   CALL utility_merge_files("amn", .TRUE.)
    !
    ! vv: Deallocate all the variables for the SCDM method
    DEALLOCATE(psi_gamma)
@@ -4371,7 +4372,7 @@ SUBROUTINE write_band
    !
    CALL mp_barrier(world_comm)
    !
-   CALL utility_merge_files("eig", .TRUE., 0)
+   CALL utility_merge_files("eig", .TRUE.)
    !
 END SUBROUTINE write_band
 
