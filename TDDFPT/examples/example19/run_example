@@ -10,14 +10,14 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use pw.x, turbo_magnons.x, and turbo_spectrum.x"
+$ECHO "This example shows how to use pw.x, turbo_magnon.x, and turbo_spectrum.x"
 $ECHO "to calculate magnon dispersion of bulk iron."
 
 # set the needed environment variables
 . ../../../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pw.x turbo_magnons.x turbo_spectrum.x"
+BIN_LIST="pw.x turbo_magnon.x turbo_spectrum.x"
 PSEUDO_LIST="Fe.lda-pseudoDojo.UPF"
 
 $ECHO
@@ -72,11 +72,11 @@ $ECHO " done"
 
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
-TURBO_MAGNON_COMMAND="$PARA_PREFIX $BIN_DIR/turbo_magnons.x $PARA_POSTFIX"
+TURBO_MAGNON_COMMAND="$PARA_PREFIX $BIN_DIR/turbo_magnon.x $PARA_POSTFIX"
 TURBO_SPECTRUM_COMMAND="$PARA_PREFIX $BIN_DIR/turbo_spectrum.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running pw.x as:             $PW_COMMAND"
-$ECHO "  running turbo_magnons.x as:   $TURBO_MAGNON_COMMAND"
+$ECHO "  running turbo_magnon.x as:   $TURBO_MAGNON_COMMAND"
 $ECHO "  running turbo_spectrum.x as: $TURBO_SPECTRUM_COMMAND"
 $ECHO
 

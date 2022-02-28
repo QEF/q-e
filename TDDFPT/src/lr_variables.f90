@@ -27,7 +27,7 @@ MODULE lr_variables
                                    ! (magnetic GS only)
   INTEGER :: nwordd0psi, nwordrestart, n_ipol
   CHARACTER (len=12), PARAMETER :: code1 = 'turboTDDFT', code2 = 'turboEELS', &
-                                   code3 = 'turboMAGNONS'
+                                   code3 = 'turboMAGNON'
   INTEGER :: size_evc
   CHARACTER (len=24) :: bgz_suffix
   !
