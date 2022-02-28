@@ -165,7 +165,7 @@ subroutine solve_e
            CALL get_buffer(evc, lrwfc, iuwfc, ikk)
         ENDIF
         !
-        CALL init_us_2(npw, igk_k(1, ikk), xk(1, ikk), vkb)
+        CALL init_us_2(npw, igk_k(1, ikk), xk(1, ikk), vkb, .true.)
         !
         ! computes P_c^+ x psi_kpoint, written to buffer iuebar.
         !
