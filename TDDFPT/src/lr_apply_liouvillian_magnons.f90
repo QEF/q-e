@@ -218,6 +218,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
               !
               ! FFT to R-space
               !
+!$acc data copyin(evc, dvrssc) copy(revc, dvpsi)              
               CALL cft_wave(ik, evc(1,ibnd), revc, +1)
               !
               ! Multiply the HXC potential with unperturbed wfct's 
@@ -227,6 +228,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
               ! back-FFT to G-space
               !
               CALL cft_wave(ik, dvpsi(1,ibnd), revc, -1)
+!$acc end data              
               !
            ENDIF
            !
@@ -359,6 +361,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
               !
               ! FFT to R-space
               !
+!$acc data copyin(Tevc, dvrssc) copy(revc, dvpsi)              
               CALL cft_wave(ik, Tevc(1,ibnd), revc, +1)
               !
               ! Multiply the HXC potential with unperturbed wfct's 
@@ -368,6 +371,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
               ! back-FFT to G-space
               !
               CALL cft_wave(ik, dvpsi(1,ibnd), revc, -1)
+!$acc end data
               !
            ENDIF
            !

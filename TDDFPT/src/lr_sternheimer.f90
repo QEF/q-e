@@ -334,7 +334,9 @@ dvpsi =(0.0d0, 0.0d0)
                 ! calculates dvscf_q*psi_k in G_space, for all bands, k=kpoint
                 ! dvscf_q from previous iteration (mix_potential)
                 !
+!$acc data copyin(dvscfins) copy(aux2)
                 CALL apply_dpot_bands(ik, nbnd_occ(ikk), dvscfins(:, :, ipol), evc, aux2)
+!$acc end data
                 !
                 dvpsi=dvpsi+aux2
                 !

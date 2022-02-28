@@ -160,7 +160,9 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
         ! We need to redistribute it so that it is completely contained in the
         ! processors of an orbital TASK-GROUP.
         !
+!$acc data copyin(dvrssc) copy(dvpsi)
         CALL apply_dpot_bands(ik, nbnd_occ(ikk), dvrssc, evc, dvpsi)
+!$acc end data        
         !
         ! In the case of US pseudopotentials there is an additional term.
         ! See the second term in Eq.(11) in J. Chem. Phys. 127, 164106 (2007).
