@@ -4,7 +4,7 @@ HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 HTMLS = INPUT_Lanczos.html \
 	INPUT_Davidson.html \
 	INPUT_EELS.html \
-        INPUT_Magnons.html \
+        INPUT_Magnon.html \
 	INPUT_Spectrum.html
 
 TXTS = $(HTMLS:.html=.txt)
@@ -43,14 +43,14 @@ link_on_main_doc:
 	ln -fs ../TDDFPT/Doc/INPUT_Davidson.html . ; \
 	ln -fs ../TDDFPT/Doc/INPUT_EELS.html . ; \
 	ln -fs ../TDDFPT/Doc/INPUT_Spectrum.html . ; \
-        ln -fs ../TDDFPT/Doc/INPUT_Magnons.html . ; \
+        ln -fs ../TDDFPT/Doc/INPUT_Magnon.html . ; \
 	ln -fs ../TDDFPT/Doc/INPUT_Lanczos.xml . ; \
 	ln -fs ../TDDFPT/Doc/INPUT_Davidson.xml . ; \
 	ln -fs ../TDDFPT/Doc/INPUT_EELS.xml . ; \
 	ln -fs ../TDDFPT/Doc/INPUT_Spectrum.xml . ; \
-        ln -fs ../TDDFPT/Doc/INPUT_Magnons.xml . ; \
+        ln -fs ../TDDFPT/Doc/INPUT_Magnon.xml . ; \
         ln -fs ../TDDFPT/Doc/INPUT_Lanczos.txt . ; \
         ln -fs ../TDDFPT/Doc/INPUT_Davidson.txt . ; \
         ln -fs ../TDDFPT/Doc/INPUT_EELS.txt . ; \
-        ln -fs ../TDDFPT/Doc/INPUT_Magnons.txt . ; \
+        ln -fs ../TDDFPT/Doc/INPUT_Magnon.txt . ; \
 	ln -fs ../TDDFPT/Doc/INPUT_Spectrum.txt .) 
