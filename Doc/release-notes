@@ -20,6 +20,8 @@ Fixed in development version:
     symmetric primitive lattice vectors, was affecting k=0 calculations (not CP)
     since v.6.0. The ultimate fix would require to change routine hpsort_eps; 
     the current workaround consists in not recomputing k+G indices if k=0.
+  * In CMake GPU builds, one routine fftx_threed2oned_gpu was not compiled with
+    a proper GPU compiler option and caused failure in GGA-noncolin calculations.
 
 New in 7.0 version:
   * Unscreened and screened (range-separated) vdW-DF hybrids
