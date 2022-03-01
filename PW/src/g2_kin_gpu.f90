@@ -54,6 +54,8 @@ SUBROUTINE g2_kin_acc ( ik )
      !
   END IF
   !
+  !$acc update self(g2kin)
+  !
   RETURN
   !
 END SUBROUTINE g2_kin_acc
