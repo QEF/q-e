@@ -109,7 +109,7 @@ SUBROUTINE c_bands( iter )
      IF ( lsda ) current_spin = isk(ik)
      !
      IF ( use_gpu ) THEN
-        CALL g2_kin_gpu( ik )
+        CALL g2_kin_acc( ik )
      ELSE
         CALL g2_kin( ik )
      END IF
@@ -223,8 +223,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE xc_lib,               ONLY : exx_is_active
   USE gcscf_module,         ONLY : lgcscf
   USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
-  USE wvfct_gpum,           ONLY : et_d, using_et, using_et_d, &
-                                   g2kin_d, using_g2kin, using_g2kin_d
+  USE wvfct_gpum,           ONLY : et_d, using_et, using_et_d, using_g2kin
   USE becmod_subs_gpum,     ONLY : using_becp_auto
   IMPLICIT NONE
   !
@@ -539,10 +538,14 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                          et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
                          okvan, lrot, exx_is_active(), notconv, rmm_iter )
           ELSE
-             CALL using_evc_d(1);  CALL using_et(1); CALL using_g2kin_d(0) !precontidtion has intent(in)
+             CALL using_evc_d(1);  CALL using_et(1)!precontidtion has intent(in)
+             !$acc data present(g2kin)
+             !$acc host_data use_device(g2kin)
              CALL rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, evc_d, hevc_d, sevc_d, &
-                          et(1,ik), g2kin_d, btype(1,ik), ethr, rmm_ndim, &
+                          et(1,ik), g2kin, btype(1,ik), ethr, rmm_ndim, &
                           okvan, lrot, exx_is_active(), notconv, rmm_iter )
+             !$acc end host_data 
+             !$acc end data
           END IF
           !
           !
@@ -608,10 +611,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        ELSE
           call using_h_diag_d(2); call using_s_diag_d(2);
           !
-          CALL using_g2kin_d(0)
-          !$cuf kernel do(1)
+          !$acc parallel loop present(g2kin, h_diag_d) 
           DO j=1, npw
-             h_diag_d(j, 1) = g2kin_d(j) + v_of_0
+             h_diag_d(j, 1) = g2kin(j) + v_of_0
           END DO
           !
           CALL usnldiag_gpu( npw, h_diag_d, s_diag_d )
@@ -903,10 +905,14 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                              et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
                              okvan, lrot, exx_is_active(), notconv, rmm_iter )
           ELSE
-             CALL using_evc_d(1); CALL using_et(1); CALL using_g2kin_d(0)
+             CALL using_evc_d(1); CALL using_et(1) 
+             !$acc data present(g2kin)
+             !$acc host_data use_device(g2kin)
              CALL crmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, npol, evc_d, hevc_d, sevc_d, &
-                             et(1,ik), g2kin_d(1), btype(1,ik), ethr, rmm_ndim, &
+                             et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
                              okvan, lrot, exx_is_active(), notconv, rmm_iter )
+             !$acc end host_data
+             !$acc end data
           END IF
           !
           IF ( lscf .AND. ( .NOT. rmm_conv ) ) notconv = 0
@@ -975,13 +981,13 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           CALL usnldiag( npw, h_diag, s_diag )
        ELSE
           !
-          CALL using_g2kin_d(0) ;CALL using_h_diag_d(2)
+          CALL using_h_diag_d(2)
           !
           DO ipol = 1, npol
              !
-             !$cuf kernel do(1)
+             !$acc parallel loop present(g2kin, h_diag_d) 
              DO j = 1, npw
-                h_diag_d(j, ipol) = g2kin_d(j) + v_of_0
+                h_diag_d(j, ipol) = g2kin(j) + v_of_0
              END DO
              !
           END DO
@@ -1223,7 +1229,7 @@ SUBROUTINE c_bands_nscf( )
      IF ( lsda ) current_spin = isk(ik)
      !
      IF (.not. use_gpu ) CALL g2_kin( ik )
-     IF (      use_gpu ) CALL g2_kin_gpu( ik )
+     IF (      use_gpu ) CALL g2_kin_acc( ik )
      ! 
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
