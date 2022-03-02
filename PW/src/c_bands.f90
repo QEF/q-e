@@ -108,11 +108,7 @@ SUBROUTINE c_bands( iter )
      !
      IF ( lsda ) current_spin = isk(ik)
      !
-     IF ( use_gpu ) THEN
-        CALL g2_kin_acc( ik )
-     ELSE
-        CALL g2_kin( ik )
-     END IF
+     CALL g2_kin_acc( ik )
      !
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
@@ -1225,8 +1221,7 @@ SUBROUTINE c_bands_nscf( )
      !
      IF ( lsda ) current_spin = isk(ik)
      !
-     IF (.not. use_gpu ) CALL g2_kin( ik )
-     IF (      use_gpu ) CALL g2_kin_acc( ik )
+     CALL g2_kin_acc( ik )
      ! 
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
