@@ -149,7 +149,7 @@ CONTAINS
     USE ions_base,                ONLY : nat_ions_base => nat 
     USE cell_base,                ONLY : tpiba2
     USE cp_main_variables,        ONLY : ema0bg
-    USE gvecw,                    ONLY : gg2kin, ngw 
+    USE gvecw,                    ONLY : g2kin, ngw 
 
     IMPLICIT NONE
 
@@ -245,7 +245,7 @@ CONTAINS
            ! by calling the routine
            ! emass_precond_tpa( ema0bg, tpiba2, emass_cutoff )
            ! so I call here the standard routine to set mu(k)
-           CALL emass_precond( ema0bg, gg2kin, ngw, tpiba2, emass_cutoff)
+           CALL emass_precond( ema0bg, g2kin, ngw, tpiba2, emass_cutoff)
 
        endif
        select case ( electron_dynamics ) 

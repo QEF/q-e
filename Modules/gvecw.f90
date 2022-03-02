@@ -17,8 +17,8 @@
 
      PRIVATE
      PUBLIC :: ngw, ngw_g, ngwx, ecutwfc, gcutw, ekcut, gkcut
-     PUBLIC :: gg2kin, ecfixed, qcutz, q2sigma
-     PUBLIC :: gvecw_init, gg2kin_init, deallocate_gvecw
+     PUBLIC :: g2kin, ecfixed, qcutz, q2sigma
+     PUBLIC :: gvecw_init, g2kin_init, deallocate_gvecw
 
      ! ...   G vectors less than the wave function cut-off ( ecutwfc )
      INTEGER :: ngw  = 0
@@ -49,8 +49,8 @@
      ! array of G vectors module plus penalty function for constant cut-off 
      ! simulation.
      
-     REAL(DP), ALLOCATABLE :: gg2kin(:)
-     !! \(\text{gg2kin} = g + (\text{agg} / \text{tpiba}^2)\cdot(1+\text{erf}
+     REAL(DP), ALLOCATABLE :: g2kin(:)
+     !! \(\text{g2kin} = g + (\text{agg} / \text{tpiba}^2)\cdot(1+\text{erf}
      !! ((\text{tpiba2}\cdot g-\text{e0gg})/\text{sgg}))\)
 
    CONTAINS
@@ -76,14 +76,14 @@
        !
        !  allocate kinetic energy
        !
-       ALLOCATE( gg2kin(ngw) )
-       !$acc enter data create(gg2kin)
+       ALLOCATE( g2kin(ngw) )
+       !$acc enter data create(g2kin)
        !
        RETURN 
        !
      END SUBROUTINE gvecw_init
      !
-     SUBROUTINE gg2kin_init( ggg, tpiba2 )
+     SUBROUTINE g2kin_init( ggg, tpiba2 )
        !! Initialize kinetic energy
        USE gvect, ONLY : gg
        IMPLICIT NONE
@@ -94,22 +94,22 @@
        gcutz  = qcutz / tpiba2
        IF( gcutz > 0.0d0 ) THEN
           DO ig=1,ngw
-             gg2kin(ig) = gg(ig) + gcutz * &
+             g2kin(ig) = gg(ig) + gcutz * &
                      ( 1.0d0 + ERF( ( tpiba2 *gg(ig) - ecfixed )/q2sigma ) )
           ENDDO
        ELSE
-          gg2kin( 1 : ngw ) = gg( 1 : ngw )
+          g2kin( 1 : ngw ) = gg( 1 : ngw )
        END IF
        !
-       !$acc update device(gg2kin)
+       !$acc update device(g2kin)
        !
        RETURN 
        !
-     END SUBROUTINE gg2kin_init
+     END SUBROUTINE g2kin_init
      !
      SUBROUTINE deallocate_gvecw
-       !$acc exit data delete(gg2kin)
-       IF( ALLOCATED( gg2kin ) ) DEALLOCATE( gg2kin )
+       !$acc exit data delete(g2kin)
+       IF( ALLOCATED( g2kin ) ) DEALLOCATE( g2kin )
      END SUBROUTINE deallocate_gvecw
      !=----------------------------------------------------------------------------=!
    END MODULE gvecw

@@ -33,7 +33,7 @@
       USE uspp_param,             ONLY: nhm, nh
       USE constants,              ONLY: pi, fpi
       USE ions_base,              ONLY: nsp, na, nat, ityp
-      USE gvecw,                  ONLY: ngw, gg2kin
+      USE gvecw,                  ONLY: ngw, g2kin
       USE cell_base,              ONLY: tpiba2
       USE ensemble_dft,           ONLY: tens
       USE xc_lib,                 ONLY: xclib_dft_is, exx_is_active
@@ -239,13 +239,13 @@
                                    df(igno:igno+ngw-1), da(igno:igno+ngw-1))
             IF( dffts%has_task_groups ) THEN
                DO ig=1,ngw
-                  df(ig+igno-1)= fi *(tpiba2 * gg2kin(ig) * c(ig,idx+i-1) + df(ig+igno-1))
-                  da(ig+igno-1)= fip*(tpiba2 * gg2kin(ig) * c(ig,idx+i  ) + da(ig+igno-1))
+                  df(ig+igno-1)= fi *(tpiba2 * g2kin(ig) * c(ig,idx+i-1) + df(ig+igno-1))
+                  da(ig+igno-1)= fip*(tpiba2 * g2kin(ig) * c(ig,idx+i  ) + da(ig+igno-1))
                END DO
             ELSE
                DO ig=1,ngw
-                  df(ig)= fi*(tpiba2*gg2kin(ig)* c(ig,idx+i-1)+df(ig))
-                  da(ig)=fip*(tpiba2*gg2kin(ig)* c(ig,idx+i  )+da(ig))
+                  df(ig)= fi*(tpiba2*g2kin(ig)* c(ig,idx+i-1)+df(ig))
+                  da(ig)=fip*(tpiba2*g2kin(ig)* c(ig,idx+i  )+da(ig))
                END DO
             END IF
          END IF
@@ -358,7 +358,7 @@
       USE uspp_param,             ONLY: nhm, nh
       USE constants,              ONLY: pi, fpi
       USE ions_base,              ONLY: nsp, na, nat, ityp
-      USE gvecw,                  ONLY: ngw, gg2kin
+      USE gvecw,                  ONLY: ngw, g2kin
       USE cell_base,              ONLY: tpiba2
       USE ensemble_dft,           ONLY: tens
       USE xc_lib,                 ONLY: xclib_dft_is, exx_is_active
@@ -492,10 +492,10 @@
                fip = -0.5d0*f(i+idx)
             endif
             CALL fftx_psi2c_gamma_gpu( dffts, psi( 1+ioff : ioff+dffts%nnr ), df_d(1+igno:igno+ngw), da_d(1+igno:igno+ngw))
-!$acc parallel loop present(gg2kin, da_d, df_d, c)
+!$acc parallel loop present(g2kin, da_d, df_d, c)
             DO ig=1,ngw
-               df_d(ig+igno)= fi*(tpiba2*gg2kin(ig)* c(ig,idx+i-1)+df_d(ig+igno))
-               da_d(ig+igno)=fip*(tpiba2*gg2kin(ig)* c(ig,idx+i  )+da_d(ig+igno))
+               df_d(ig+igno)= fi*(tpiba2*g2kin(ig)* c(ig,idx+i-1)+df_d(ig+igno))
+               da_d(ig+igno)=fip*(tpiba2*g2kin(ig)* c(ig,idx+i  )+da_d(ig+igno))
             END DO
          END IF
 

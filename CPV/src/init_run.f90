@@ -21,7 +21,7 @@ SUBROUTINE init_run()
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, cdms, ityp
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
                                        vels, velsm, velsp, fion, fionm
-  USE gvecw,                    ONLY : ngw, ngw_g, gg2kin, gg2kin_init
+  USE gvecw,                    ONLY : ngw, ngw_g, g2kin, g2kin_init
   USE smallbox_gvec,            ONLY : ngb
   USE gvect,                    ONLY : gstart, gg, gcutm
   USE fft_base,                 ONLY : dfftp, dffts
@@ -308,17 +308,17 @@ SUBROUTINE init_run()
   IF ( ref_cell ) THEN
     WRITE( stdout,'(/,3X,"Reference cell parameters are used in electron mass preconditioning")' )
     WRITE( stdout,'(3X,"ref_tpiba2=",F14.8)' ) ref_tpiba2
-    CALL gg2kin_init( gg, ref_tpiba2 )
-    CALL emass_precond( ema0bg, gg2kin, ngw, ref_tpiba2, emass_cutoff ) 
+    CALL g2kin_init( gg, ref_tpiba2 )
+    CALL emass_precond( ema0bg, g2kin, ngw, ref_tpiba2, emass_cutoff ) 
     WRITE( stdout,'(3X,"current_tpiba2=",F14.8)' ) tpiba2
-    CALL gg2kin_init( gg, tpiba2 )
+    CALL g2kin_init( gg, tpiba2 )
   ELSE
     WRITE( stdout,'(/,3X,"Cell parameters from input file are used in electron mass preconditioning")' )
     WRITE( stdout,'(3X,"init_tpiba2=",F14.8)' ) init_tpiba2
-    CALL gg2kin_init( gg, init_tpiba2 )
-    CALL emass_precond( ema0bg, gg2kin, ngw, init_tpiba2, emass_cutoff ) 
+    CALL g2kin_init( gg, init_tpiba2 )
+    CALL emass_precond( ema0bg, g2kin, ngw, init_tpiba2, emass_cutoff ) 
     !WRITE( stdout,'(3X,"current_tpiba2=",F14.8)' ) tpiba2 !BS : DEBUG
-    CALL gg2kin_init( gg, tpiba2 )
+    CALL g2kin_init( gg, tpiba2 )
   END IF
   !
   CALL print_legend( )

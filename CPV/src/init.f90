@@ -32,7 +32,7 @@
                                        ecutrho, gcutm, gvect_init, mill,&
                                        ig_l2g, gstart, ngm, ngm_g, gshells
       use gvecs,                only : gcutms, gvecs_init, ngms
-      use gvecw,                only : gkcut, gvecw_init, gg2kin_init
+      use gvecw,                only : gkcut, gvecw_init, g2kin_init
       USE smallbox_subs,        ONLY : ggenb
       USE fft_base,             ONLY : dfftp, dffts, dfftb, fft_base_info
       USE fft_smallbox,         ONLY : cft_b_omp_init
@@ -194,7 +194,7 @@
       ! ... allocate and generate (modified) kinetic energy
       !
       CALL gvecw_init ( ngw_ , intra_bgrp_comm )
-      CALL gg2kin_init ( gg, tpiba2 )
+      CALL g2kin_init ( gg, tpiba2 )
       !
       !     global arrays are no more needed
       !
@@ -393,7 +393,7 @@
       USE constants,             ONLY : tpi
       USE cell_base,             ONLY : at, bg, omega, alat, tpiba2, &
                                         cell_base_reinit
-      USE gvecw,                 ONLY : gg2kin_init
+      USE gvecw,                 ONLY : g2kin_init
       USE gvect,                 ONLY : g, gg, ngm, mill
       USE fft_base,              ONLY : dfftp, dfftb
       USE small_box,             ONLY : small_box_set
@@ -437,7 +437,7 @@
 !$acc end parallel loop 
 !$acc update host(g) 
       !
-      call gg2kin_init ( gg, tpiba2 )
+      call g2kin_init ( gg, tpiba2 )
       !
       IF ( dfftb%nr1 == 0 .OR. dfftb%nr2 == 0 .OR. dfftb%nr3 == 0 ) RETURN
       !
