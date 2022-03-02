@@ -81,14 +81,14 @@ SUBROUTINE fwfft_wave (npwq, igkq, evc_g, evc_r )
   !
   INTEGER :: ig, ik
 
-  #if defined(__CUDA) && defined(_OPENACC)
+#if defined(__CUDA) && defined(_OPENACC)
   INTEGER, POINTER, DEVICE :: nl(:)
   nl => dffts%nl_d
-  #else
+#else
   INTEGER, ALLOCATABLE :: nl(:)
   ALLOCATE( nl(dffts%ngm) )
   nl = dffts%nl
-  #endif
+#endif
 
   !$acc host_data use_device(evc_r)
   CALL fwfft ('Wave', evc_r(:,1), dffts)
@@ -109,9 +109,9 @@ SUBROUTINE fwfft_wave (npwq, igkq, evc_g, evc_r )
      ENDDO
   ENDIF
 
-  #if !defined(__CUDA) || !defined(_OPENACC)
+#if !defined(__CUDA) || !defined(_OPENACC)
   DEALLOCATE(nl)
-  #endif
+#endif
 END SUBROUTINE fwfft_wave
 
 SUBROUTINE invfft_wave (npw, igk, evc_g, evc_r )
@@ -128,14 +128,14 @@ SUBROUTINE invfft_wave (npw, igk, evc_g, evc_r )
   !
   INTEGER :: ig, ik
 
-  #if defined(__CUDA) && defined(_OPENACC)
+#if defined(__CUDA) && defined(_OPENACC)
   INTEGER, POINTER, DEVICE :: nl(:)
   nl => dffts%nl_d
-  #else
+#else
   INTEGER, ALLOCATABLE :: nl(:)
   ALLOCATE( nl(dffts%ngm) )
   nl = dffts%nl
-  #endif
+#endif
 
   !$acc kernels present(evc_r)
   evc_r = (0.0_dp, 0.0_dp)
@@ -159,9 +159,9 @@ SUBROUTINE invfft_wave (npw, igk, evc_g, evc_r )
      !$acc end host_data
   ENDIF
 
-  #if !defined(__CUDA) || !defined(_OPENACC)
+#if !defined(__CUDA) || !defined(_OPENACC)
   DEALLOCATE(nl)
-  #endif
+#endif
 END SUBROUTINE invfft_wave
 !
 !-----------------------------------------------------------------------
