@@ -31,7 +31,7 @@ contains
                               becdiag, fmat0, e0, id_matrix_init
 !---
       use smallbox_gvec, only: ngb
-      use gvecw, only: ngw, g2kin
+      use gvecw, only: ngw, gg2kin
       use gvect, only: gstart
       use ions_base, only: na, nat, nax, nsp, rcmax, ityp
       use cell_base, only: omega, alat, tpiba2
@@ -1422,7 +1422,7 @@ contains
 
    SUBROUTINE emass_precond_tpa(ema0bg, tpiba2, emaec)
       use kinds, ONLY: dp
-      use gvecw, ONLY: g2kin, ngw
+      use gvecw, ONLY: gg2kin, ngw
       IMPLICIT NONE
       REAL(DP), INTENT(OUT) :: ema0bg(ngw)
       REAL(DP), INTENT(IN) ::  tpiba2, emaec
@@ -1433,7 +1433,7 @@ contains
       call start_clock('emass_p_tpa')
       do i = 1, ngw
 
-         x = 0.5d0*tpiba2*g2kin(i)/emaec
+         x = 0.5d0*tpiba2*gg2kin(i)/emaec
          ema0bg(i) = 1.d0/(1.d0 + (16.d0*x**4)/(27.d0 + 18.d0*x + 12.d0*x**2 + 8.d0*x**3))
       end do
       call stop_clock('emass_p_tpa')
@@ -1459,7 +1459,7 @@ contains
       use uspp_param, only: nh, upf
       use uspp, only :nkb, nkbus, qq_nt, ofsbeta
       use electrons_base, only: n => nbsp
-      use gvecw, only: ngw, g2kin
+      use gvecw, only: ngw, gg2kin
       use constants, only: pi, fpi
       use mp, only: mp_sum
       use gvect, only: gstart
@@ -1540,12 +1540,12 @@ contains
       else 
          if (do_k) then
             if (pre_state) then
-               !$acc data copyin(g2kin,ave_ene,tpiba2) copy(c0)
+               !$acc data present(gg2kin) copyin(ave_ene,tpiba2) copy(c0)
                !$acc parallel loop collapse(2) private(x)
                do i = 1, n
                   do ig = 1, ngw
                      ! eq. 5.16 of https://journals.aps.org/rmp/pdf/10.1103/RevModPhys.64.1045
-                     x = tpiba2*g2kin(ig)/ave_ene(i)
+                     x = tpiba2*gg2kin(ig)/ave_ene(i)
                      c0(ig, i) = c0(ig, i)* &
                                  (27.0_dp + 18.0_dp*x + 12.0_dp*x**2 + 8.0_dp*x**3)/ &
                                  (27.0_dp + 18.0_dp*x + 12.0_dp*x**2 + 8.0_dp*x**3 + 16.0_dp*x**4)
@@ -1576,7 +1576,7 @@ contains
       USE constants, ONLY: pi, fpi
       USE gvecw, ONLY: ngw
       USE gvect, ONLY: gstart
-      USE gvecw, ONLY: g2kin
+      USE gvecw, ONLY: gg2kin
       USE mp, ONLY: mp_sum
       USE mp_global, ONLY: intra_bgrp_comm
       USE cell_base, ONLY: tpiba2
@@ -1595,12 +1595,12 @@ contains
       real(kind=dp) :: tmp
 
       !
-      !$acc parallel loop private(tmp) copyin(c,g2kin,gstart,ngw) copyout(ene_ave)
+      !$acc parallel loop private(tmp) present(gg2kin) copyin(c,gstart,ngw) copyout(ene_ave)
       DO i = 1, n
          tmp = 0.d0
          !$acc loop vector reduction(+:tmp)
          DO ig = gstart, ngw
-            tmp = tmp + DBLE(CONJG(c(ig, i))*c(ig, i))*g2kin(ig)
+            tmp = tmp + DBLE(CONJG(c(ig, i))*c(ig, i))*gg2kin(ig)
          END DO
          ene_ave(i) = tmp
       END DO
