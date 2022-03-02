@@ -86,7 +86,7 @@ SUBROUTINE c_bands_nscf_ph( )
      IF ( lsda ) current_spin = isk(ik)
 
      CALL g2_kin( ik )
-     ! 
+     !
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
      IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb, .true. )

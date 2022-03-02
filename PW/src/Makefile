@@ -269,7 +269,6 @@ PWLIBS += \
   s_psi_gpu.o \
   vloc_psi_gpu.o \
   pwcom_gpu.o \
-  g2_kin_gpu.o \
   scf_mod_gpu.o \
   usnldiag_gpu.o \
   add_vuspsi_gpu.o \
