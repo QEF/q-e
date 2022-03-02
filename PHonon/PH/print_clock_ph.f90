@@ -102,6 +102,7 @@ subroutine print_clock_ph
   call print_clock ('solve_linter')
   call print_clock ('dvqpsi_us')
   call print_clock ('sth_kernel')
+  call print_clock ('h_prec')
   call print_clock ('apply_dpot_b')
   call print_clock ('ortho')
   call print_clock ('cgsolve')

@@ -155,6 +155,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      !    compute preconditioned residual vector and convergence check
      !
      lbnd = 0
+     CALL start_clock('loop1')
      do ibnd = n_start, n_end ;  ibnd_ = ibnd - n_start + 1
         if (conv (ibnd) .eq.0) then
            lbnd = lbnd+1
@@ -171,6 +172,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            ENDIF
         endif
      enddo
+     CALL stop_clock('loop1')
      kter_eff = kter_eff + DBLE (lbnd) / DBLE (nbnd)
      call mp_sum( rho(1:lbnd), intra_bgrp_comm )
      do ibnd = n_end, n_start, -1 ; ibnd_ = ibnd - n_start + 1
@@ -192,6 +194,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      !        compute the step direction h. Conjugate it to previous step
      !
      lbnd = 0
+     CALL start_clock('loop2')
      do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
         if (conv (ibnd) .eq.0) then
 !
@@ -212,6 +215,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            eu (lbnd) = e (ibnd)
         endif
      enddo
+     CALL stop_clock('loop2')
      !
      !        compute t = A*h
      !
@@ -220,6 +224,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      !        compute the coefficients a and c for the line minimization
      !        compute step length lambda
      lbnd=0
+     CALL start_clock('loop3')
      do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
@@ -236,9 +241,11 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            ENDIF
         end if
      end do
+     CALL stop_clock('loop3')
      call mp_sum(  a(1:lbnd), intra_bgrp_comm )
      call mp_sum(  c(1:lbnd), intra_bgrp_comm )
      lbnd=0
+     CALL start_clock('loop4')
      do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
@@ -259,6 +266,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            rhoold (ibnd_) = rho (ibnd_)
         endif
      enddo
+     CALL stop_clock('loop4')
   enddo
 100 continue
   ! deallocate workspace not needed anymore

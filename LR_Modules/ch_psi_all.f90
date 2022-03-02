@@ -71,8 +71,8 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   ALLOCATE (ps  ( nbnd , m))
   ALLOCATE (hpsi( npwx*npol , m))
   ALLOCATE (spsi( npwx*npol , m))
-  hpsi (:,:) = (0.d0, 0.d0)
-  spsi (:,:) = (0.d0, 0.d0)
+  !hpsi (:,:) = (0.d0, 0.d0)
+  !spsi (:,:) = (0.d0, 0.d0)
   !
   current_k = ikqs(ik) ! k+q
   !
@@ -98,6 +98,10 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   ! on the h vector (i.e. H*h and S*h, respectively).
   !
   !$acc enter data create(hpsi(1:npwx*npol, 1:m), spsi(1:npwx*npol, 1:m), ps(1:nbnd, 1:m))
+  !$acc kernels present(hpsi,spsi)
+  hpsi (:,:) = (0.d0, 0.d0)
+  spsi (:,:) = (0.d0, 0.d0)
+  !$acc end kernels
 #if defined(__CUDA)
   !$acc data copyin(h) present(hpsi, spsi)
   !$acc host_data use_device(h, hpsi, spsi)

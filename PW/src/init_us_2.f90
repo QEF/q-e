@@ -47,11 +47,7 @@ CONTAINS
     run_on_gpu = .false.
     if(present(run_on_gpu_)) run_on_gpu = run_on_gpu_
     !
-    if(use_gpu.and.run_on_gpu) then
-      CALL start_clock_gpu( 'init_us_2' )
-    else
-      CALL start_clock( 'init_us_2' )
-    endif
+    CALL start_clock( 'init_us_2' )
     if(use_gpu.and.run_on_gpu) then   
       !
       !$acc data present(igk_(1:npw_), mill(:,:), g(:,:), vkb_(1:npwx,1:nkb), eigts1(:,:), eigts2(:,:), eigts3(:,:))
@@ -68,12 +64,8 @@ CONTAINS
               dfftp%nr1, dfftp%nr2, dfftp%nr3, eigts1, eigts2, eigts3, mill, g,&
               vkb_ )
     end if 
+    CALL stop_clock( 'init_us_2' )
     !
-    if(use_gpu.and.run_on_gpu) then
-      CALL stop_clock_gpu( 'init_us_2' )
-    else
-      CALL stop_clock( 'init_us_2' )
-    endif
     !
   END SUBROUTINE init_us_2
   !
