@@ -189,7 +189,7 @@ CONTAINS
 
     k = nbnd_occ (ikqs(ik))
     CALL start_clock_gpu ('ch_psi_all_k')
-    !$acc data copyin(evq) present(ps, hpsi, spsi)
+    !$acc data present(evq, ps, hpsi, spsi)
     !
     !   Here we compute the projector in the valence band
     !

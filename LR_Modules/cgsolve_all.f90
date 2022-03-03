@@ -58,6 +58,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   USE mp,             ONLY : mp_sum, mp_barrier
   USE control_flags,  ONLY : gamma_only
   USE gvect,          ONLY : gstart
+  USE eqv,            ONLY : evq
 
   implicit none
   !
@@ -135,7 +136,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 
   ! bgrp parallelization is done outside h_psi/s_psi. set use_bgrp_in_hpsi temporarily to false
   lsave_use_bgrp_in_hpsi = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .false.
-
+  !$acc enter data copyin(evq)
   do iter = 1, maxter
      !
      !    compute the gradient. can reuse information from previous step
@@ -269,6 +270,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      CALL stop_clock('loop4')
   enddo
 100 continue
+  !$acc exit data delete(evq)
   ! deallocate workspace not needed anymore
   deallocate (eu) ; deallocate (rho, rhoold) ; deallocate (a,c) ; deallocate (g, t, h, hold)
 
