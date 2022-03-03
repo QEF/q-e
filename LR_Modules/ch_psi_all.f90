@@ -71,8 +71,6 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   ALLOCATE (ps  ( nbnd , m))
   ALLOCATE (hpsi( npwx*npol , m))
   ALLOCATE (spsi( npwx*npol , m))
-  !hpsi (:,:) = (0.d0, 0.d0)
-  !spsi (:,:) = (0.d0, 0.d0)
   !
   current_k = ikqs(ik) ! k+q
   !

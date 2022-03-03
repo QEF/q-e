@@ -166,6 +166,7 @@ subroutine solve_e
         ENDIF
         !
         CALL init_us_2(npw, igk_k(1, ikk), xk(1, ikk), vkb, .true.)
+        !$acc update host(vkb)
         !
         ! computes P_c^+ x psi_kpoint, written to buffer iuebar.
         !

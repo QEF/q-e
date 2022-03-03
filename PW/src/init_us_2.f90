@@ -57,7 +57,6 @@ CONTAINS
         vkb_ )
       !$acc end host_data
       !$acc end data
-      !$acc update host(vkb_)
       !
     else
       CALL init_us_2_base(npw_, npwx, igk_, q_, nat, tau, ityp, tpiba, omega, &
