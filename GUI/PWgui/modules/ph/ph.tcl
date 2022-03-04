@@ -160,7 +160,8 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
                         var ahc_dir {
                             -label "Directory for the output ahc files (ahc_dir):"
                             -widget   entrydirselectquote
-                            -fmt      %S -validate string
+                            -fmt      %S
+                            -validate string
                         }
 
                         var ahc_nbnd {
@@ -524,7 +525,7 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
                     -validate string
                     -textvalue {
                         "Davidson with overlap matrix  <david>"
-                        "Conjugate-gradient band-by-band <cg>"
+                        "Conjugate-gradient band-by-band  <cg>"
                     }
                     -value {
                         'david'

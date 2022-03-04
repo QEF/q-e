@@ -112,7 +112,11 @@ help lp -helpfmt helpdoc -helptext {
 <blockquote><pre>
 If .true. matrix elements of the momentum operator p between
 conduction and valence bands are computed and written to file
-specified in "filp"
+specified in "filp".
+The matrix elements include the contribution from the nonlocal
+potential, i*m*[V_nl, x]. In other words, the calculated matrix elements
+are those of the velocity operator i*m*[H, x] times mass, not those of
+the true momentum operator.
          </pre></blockquote>
 </ul>      
       

@@ -13,14 +13,13 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
   !    add nonlocal pseudopotential term to diagonal part of Hamiltonian
   !    compute the diagonal part of the S matrix
   !
-  USE kinds, ONLY: DP
-  USE ions_base,  ONLY : nat, ityp, ntyp => nsp
-  USE wvfct, ONLY: npwx
-  USE lsda_mod, ONLY: current_spin
-  USE uspp,  ONLY: deeq, vkb, qq_at, qq_so, deeq_nc, indv_ijkb0
-  USE uspp_param, ONLY: upf, nh
-  USE spin_orb, ONLY: lspinorb
-  USE noncollin_module, ONLY: noncolin, npol
+  USE kinds,            ONLY: DP
+  USE ions_base,        ONLY: nat, ityp, ntyp => nsp
+  USE wvfct,            ONLY: npwx
+  USE lsda_mod,         ONLY: current_spin
+  USE uspp,             ONLY: deeq, vkb, qq_at, qq_so, deeq_nc, ofsbeta
+  USE uspp_param,       ONLY: upf, nh
+  USE noncollin_module, ONLY: noncolin, npol, lspinorb
   !
   IMPLICIT NONE
   !
@@ -40,6 +39,8 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
   ! setting cache blocking size
   numblock  = (npw+blocksize-1)/blocksize
   !
+  ! initialise s_diag
+  !
 !$omp parallel do private(ikb, jkb, ps1, ps2, ar)
   DO iblock = 1, numblock
      !
@@ -57,7 +58,7 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
         DO na = 1, nat
            IF (ityp (na) == nt) THEN
               DO ih = 1, nh(nt)
-                 ikb = indv_ijkb0(na) + ih
+                 ikb = ofsbeta(na) + ih
                  IF (lspinorb) THEN
                     ps1(1) = deeq_nc (ih, ih, na, 1)
                     ps1(2) = deeq_nc (ih, ih, na, 4)
@@ -82,7 +83,7 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
                  IF ( upf(nt)%tvanp .or.upf(nt)%is_multiproj ) THEN
                     DO jh = 1, nh (nt)
                        IF (jh/=ih) THEN
-                          jkb = indv_ijkb0(na) + jh
+                          jkb = ofsbeta(na) + jh
                           IF (lspinorb) THEN
                              ps1(1) = deeq_nc (ih, jh, na, 1)
                              ps1(2) = deeq_nc (ih, jh, na, 4)

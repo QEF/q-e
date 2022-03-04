@@ -7,6 +7,7 @@ HTMLS = INPUT_PP.html \
 	INPUT_PROJWFC.html \
 	INPUT_DOS.html \
 	INPUT_BANDS.html \
+	INPUT_BAND_INTERPOLATION.html \
         INPUT_pw2bgw.html \
         INPUT_bgw2pw.html \
 	INPUT_molecularpdos.html \
@@ -61,6 +62,9 @@ link_on_main_doc:
 	ln -fs ../PP/Doc/INPUT_BANDS.html . ; \
 	ln -fs ../PP/Doc/INPUT_BANDS.xml . ; \
 	ln -fs ../PP/Doc/INPUT_BANDS.txt . ; \
+	ln -fs ../PP/Doc/INPUT_BAND_INTERPOLATION.html . ; \
+	ln -fs ../PP/Doc/INPUT_BAND_INTERPOLATION.xml . ; \
+	ln -fs ../PP/Doc/INPUT_BAND_INTERPOLATION.txt . ; \
 	ln -fs ../PP/Doc/INPUT_pw2gw.html . ;  \
 	ln -fs ../PP/Doc/INPUT_pw2bgw.html . ; \
 	ln -fs ../PP/Doc/INPUT_pw2bgw.xml . ; \

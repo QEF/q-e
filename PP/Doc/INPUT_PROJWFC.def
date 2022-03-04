@@ -73,6 +73,20 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
             }
         }
 
+        var diag_basis -type LOGICAL {
+            default { .false. }
+            info {
+                if @b .false. the projections of Kohn-Sham states are
+                             done on the orthogonalized atomic orbitals
+                             in the global XYZ coordinate frame.
+                if @b .true. the projections of Kohn-Sham states are
+                             done on the orthogonalized atomic orbitals
+                             that are rotated to the basis in which the
+                             atomic occupation matrix is diagonal 
+                             (i.e. local XYZ coordinate frame).
+            }
+        }
+
         var pawproj -type LOGICAL {
             default { .false. }
             info {

@@ -125,6 +125,7 @@ if(BLAS_FOUND OR LAPACK_FOUND)
                     ${LAPACK_LIBRARIES}
                     ${LAPACK_LINKER_FLAGS})
                 list(REMOVE_DUPLICATES "${VendorFFTW_LIBRARIES}")
+                target_link_libraries(VendorFFTW INTERFACE ${VendorFFTW_LIBRARIES})
                 target_include_directories(VendorFFTW INTERFACE ${VendorFFTW_INCLUDE_DIRS})
                 set(VendorFFTW_ID "IBMESSL")
 

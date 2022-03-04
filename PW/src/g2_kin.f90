@@ -18,6 +18,7 @@ SUBROUTINE g2_kin( ik )
   USE gvect,                ONLY : g
   USE gvecw,                ONLY : ecfixed, qcutz, q2sigma
   USE wvfct,                ONLY : g2kin
+  USE wvfct_gpum,           ONLY : using_g2kin
   !
   IMPLICIT NONE
   !
@@ -26,9 +27,9 @@ SUBROUTINE g2_kin( ik )
   ! ... local variables
   !
   INTEGER :: ig, npw
-  REAL(DP), EXTERNAL :: qe_erf
   !
   !
+  CALL using_g2kin(1)
   npw = ngk(ik)
   g2kin(1:npw) = ( ( xk(1,ik) + g(1,igk_k(1:npw,ik)) )**2 + &
                    ( xk(2,ik) + g(2,igk_k(1:npw,ik)) )**2 + &
@@ -39,7 +40,7 @@ SUBROUTINE g2_kin( ik )
      DO ig = 1, npw
         !
         g2kin(ig) = g2kin(ig) + qcutz * &
-             ( 1.D0 + qe_erf( ( g2kin(ig) - ecfixed ) / q2sigma ) )
+             ( 1.D0 + erf( ( g2kin(ig) - ecfixed ) / q2sigma ) )
         !
      END DO
      !

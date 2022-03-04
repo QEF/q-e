@@ -56,7 +56,8 @@
     USE qpoint,                ONLY : eigqts
     USE klist_epw,             ONLY : isk_loc
     USE gc_lr,                 ONLY : grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
-    USE funct,                 ONLY : dft_is_gradient, dft_is_nonlocc
+    USE funct,                 ONLY : dft_is_nonlocc
+    USE xc_lib,                ONLY : xclib_dft_is
     USE elph2,                 ONLY : lower_band, upper_band, ibndstart
     USE constants_epw,         ONLY : czero, eps12
     !
@@ -207,7 +208,7 @@
         rho%of_r(:, is) = rho%of_r(:, is) + fac * rho_core
       ENDDO
       !
-      IF (dft_is_gradient()) THEN
+      IF (xclib_dft_is('gradient')) THEN
         CALL dgradcorr(dfftp, rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq0, drhoc, &
                        1, nspin_gga, g, aux)
       ENDIF
@@ -315,7 +316,6 @@
     USE gvect,      ONLY : g
     USE ions_base,  ONLY : nat, ityp, ntyp => nsp
     USE lsda_mod,   ONLY : lsda, current_spin, nspin
-    USE spin_orb,   ONLY : lspinorb
     USE wvfct,      ONLY : npwx, et
     USE uspp,       ONLY : okvan, nkb, vkb
     USE uspp_param, ONLY : nh, nhm
@@ -323,7 +323,7 @@
     USE lrus,       ONLY : becp1
     USE eqv,        ONLY : dvpsi
     USE elph2,      ONLY : lower_band, upper_band, ibndstart
-    USE noncollin_module, ONLY : noncolin, npol
+    USE noncollin_module, ONLY : noncolin, npol, lspinorb
     USE constants_epw,    ONLY : czero, zero, cone, eps12
     USE klist_epw,  ONLY : isk_loc
     !
@@ -605,7 +605,6 @@
     !
     USE kinds,            ONLY : DP
     USE ions_base,        ONLY : nat, ityp, ntyp => nsp
-    USE spin_orb,         ONLY : lspinorb
     USE cell_base,        ONLY : tpiba2, omega, tpiba
     USE gvect,            ONLY : ngm, gg, g, eigts1, eigts2, eigts3, mill
     USE scf,              ONLY : v, vltot

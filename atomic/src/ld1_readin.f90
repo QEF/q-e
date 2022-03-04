@@ -47,6 +47,7 @@ subroutine ld1_readin( )
                          rcutv ! LDA-1/2
 
   use funct, only : set_dft_from_name
+  use xc_lib, only : xclib_dft_is_libxc, xclib_init_libxc
   use radial_grids, only: do_mesh, check_mesh
   use atomic_paw, only : paw2us
   implicit none
@@ -62,7 +63,8 @@ subroutine ld1_readin( )
   character(len=6)  :: zval_,zdum_
   character(len=80) :: config, configts(ncmax1)
   character(len=2)  :: atom
-  character(len=25) :: dft, rel_dist
+  character(len=37) :: dft
+  character(len=25) :: rel_dist
   character(len=2), external :: atom_name
   integer, external :: atomic_number
   logical, external :: matches
@@ -241,8 +243,11 @@ subroutine ld1_readin( )
   call mp_bcast(dft, ionode_id, world_comm )
   call mp_bcast(rel_dist, ionode_id, world_comm )
 !
-  IF (iswitch /= 2 ) call set_dft_from_name(dft)
-
+  if (iswitch /= 2 ) then
+    call set_dft_from_name(dft)
+    if (xclib_dft_is_libxc('ANY')) call xclib_init_libxc( lsd+1, .FALSE. )
+  endif
+  
   if (zed == 0.0_dp .and. atom /= ' ') then
      zed = DBLE(atomic_number(atom))
   else if (zed /= 0.0_dp .and. atom == ' ') then
@@ -651,6 +656,7 @@ subroutine ld1_readin( )
              dft,lmax,lloc,zval,nlcc,rhoc,vnl,vpsloc,rel)
         call check_mesh(grid)
         call set_dft_from_name(dft)
+        if (xclib_dft_is_libxc('ANY')) call xclib_init_libxc( lsd+1, .FALSE. )
         !
         do ns=1,lmax+1
            ikk(ns)=grid%mesh

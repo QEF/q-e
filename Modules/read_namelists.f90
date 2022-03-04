@@ -13,9 +13,8 @@
 !----------------------------------------------------------------------------
 MODULE read_namelists_module
   !----------------------------------------------------------------------------
-  !
-  !  ... this module handles the reading of input namelists
-  !  ... written by Carlo Cavazzoni, with many additions
+  !! This module handles the reading of input namelists.  
+  !! Written by Carlo Cavazzoni, with many additions.
   !  --------------------------------------------------
   !
   USE kinds,     ONLY : DP
@@ -29,7 +28,11 @@ MODULE read_namelists_module
   !
   REAL(DP), PARAMETER :: sm_not_set = -20.0_DP
   !
-  PUBLIC :: read_namelists, sm_not_set
+  REAL(DP), PARAMETER :: fcp_not_set = 1.0E+99_DP
+  !
+  REAL(DP), PARAMETER :: gcscf_not_set = 1.0E+99_DP
+  !
+  PUBLIC :: read_namelists, sm_not_set, fcp_not_set, gcscf_not_set
   PUBLIC :: check_namelist_read ! made public upon request of A.Jay
   ! FIXME: should the following ones be public?
   PUBLIC :: control_defaults, system_defaults, &
@@ -46,19 +49,17 @@ MODULE read_namelists_module
   !
   CONTAINS
      !
-     !=-----------------------------------------------------------------------=!
-     !
-     !  Variables initialization for Namelist CONTROL
-     !
-     !=-----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE control_defaults( prog )
        !-----------------------------------------------------------------------
+       !! Variables initialization for Namelist CONTROL.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2) :: prog
+       !! specify the calling program
+       !
        CHARACTER(LEN=20) ::    temp_string 
        !
        !
@@ -86,6 +87,7 @@ MODULE read_namelists_module
        IF( prog == 'PW' ) dt  = 20.0_DP
        IF( prog == 'CP' ) dt  =  1.0_DP
        !
+
        ndr = 50
        ndw = 50
        !
@@ -125,13 +127,11 @@ MODULE read_namelists_module
        lorbm = .FALSE.
        nberrycyc  = 1
        lecrpa   = .FALSE.   
+       lfcp = .FALSE.
        tqmmm = .FALSE.
        !
        saverho = .TRUE.
        memory = 'default'
-       !
-       lfcpopt = .FALSE.
-       lfcpdyn = .FALSE.
        !
        CALL get_environment_variable( 'QEXML', input_xml_schema_file )
        !
@@ -139,19 +139,16 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Variables initialization for Namelist SYSTEM
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE system_defaults( prog )
        !-----------------------------------------------------------------------
+       !! Variables initialization for Namelist SYSTEM.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2) :: prog
+       !! specify the calling program
        !
        !
        ibrav  = -1
@@ -166,7 +163,7 @@ MODULE read_namelists_module
        ntyp   = 0
        nbnd   = 0
        tot_charge = 0.0_DP
-       tot_magnetization = -1
+       tot_magnetization = -10000
        ecutwfc = 0.0_DP
        ecutrho = 0.0_DP
        nr1  = 0
@@ -203,32 +200,36 @@ MODULE read_namelists_module
 
        IF ( prog == 'PW' ) THEN
           starting_ns_eigenvalue = -1.0_DP
-          U_projection_type = 'atomic'
+          Hubbard_projectors = 'atomic'
        END IF
        !
-       ! .. DFT + U and its extensions
+       ! .. DFT + Hubbard
        !
-       lda_plus_U = .FALSE.
-       lda_plus_u_kind = 0
-       Hubbard_U = 0.0_DP
-       Hubbard_U_back = 0.0_DP
-       Hubbard_V = 0.0_DP
-       Hubbard_J0 = 0.0_DP
-       Hubbard_J = 0.0_DP
+       ! We still keep these variables in the input to raise 
+       ! an error message if users try to use them in the SYSTEM namelist. 
+       U_projection_type = ''  ! obsolete
+       Hubbard_parameters = '' ! obsolete
+       Hubbard_U = 0.0_DP      ! moved to the HUBBARD card
+       Hubbard_U_back = 0.0_DP ! replaced by Hubbard_U2 and moved to the HUBBARD card
+       Hubbard_V = 0.0_DP      ! moved to the HUBBARD card
+       Hubbard_J0 = 0.0_DP     ! moved to the HUBBARD card
+       Hubbard_J = 0.0_DP      ! moved to the HUBBARD card
+       lda_plus_u = .FALSE.    ! automatically set in the HUBBARD card 
+       lda_plus_u_kind = -1    ! automatically set in the HUBBARD card
        Hubbard_alpha = 0.0_DP
        Hubbard_alpha_back = 0.0_DP
        Hubbard_beta = 0.0_DP
-       Hubbard_parameters = 'input'
+       Hubbard_occ = -1.0_DP
        reserv = .false.
        reserv_back = .false.
        backall = .false.
-       lback = -1
-       l1back = -1
        hub_pot_fix = .false.
        step_pen=.false.
        A_pen=0.0_DP
        sigma_pen=0.01_DP
        alpha_pen=0.0_DP
+       dmft = .FALSE.
+       dmft_prefix = prefix
        !
        ! ... EXX
        !
@@ -282,7 +283,7 @@ MODULE read_namelists_module
        ! 
        real_space = .false.
        !
-       ! ... DFT-D, Tkatchenko-Scheffler, XDM
+       ! ... DFT-D, Tkatchenko-Scheffler, XDM, MBD
        !
        vdw_corr    = 'none'
        london      = .false.
@@ -291,6 +292,7 @@ MODULE read_namelists_module
        london_c6   = -1.0_DP
        london_rvdw = -1.0_DP
        ts_vdw          = .FALSE.
+       mbd_vdw          = .FALSE.
        ts_vdw_isolated = .FALSE.
        ts_vdw_econv_thr = 1.E-6_DP
        xdm = .FALSE.
@@ -310,16 +312,15 @@ MODULE read_namelists_module
        esm_debug=.FALSE.
        esm_debug_gpmax=0
        !
-       ! ... FCP
+       ! ... GC-SCF
        !
-       fcp_mu          = 0.0_DP
-       fcp_mass        = 10000.0_DP
-       fcp_tempw       = 0.0_DP
-       fcp_relax       = 'lm'
-       fcp_relax_step  = 0.5_DP
-       fcp_relax_crit  = 0.001_DP
-       fcp_mdiis_size  = 4
-       fcp_mdiis_step  = 0.2_DP
+       lgcscf = .FALSE.
+       gcscf_ignore_mun = .FALSE.
+       gcscf_mu = gcscf_not_set
+       gcscf_conv_thr = 1.0E-2_DP
+       gcscf_gk = 0.4_DP
+       gcscf_gh = 1.5_DP
+       gcscf_beta = 0.05_DP
        !
        ! ... Wyckoff
        !
@@ -332,19 +333,16 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Variables initialization for Namelist ELECTRONS
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE electrons_defaults( prog )
        !-----------------------------------------------------------------------
+       !! Variables initialization for Namelist ELECTRONS.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2) :: prog
+       !! specify the calling program
        !
        !
        emass = 400.0_DP
@@ -398,6 +396,9 @@ MODULE read_namelists_module
        diago_cg_maxiter = 20
        diago_ppcg_maxiter = 20
        diago_david_ndim = 2
+       diago_rmm_ndim = 4
+       diago_rmm_conv = .FALSE.
+       diago_gs_nblock = 16
        diago_full_acc = .FALSE.
        !
        sic = 'none'
@@ -421,6 +422,7 @@ MODULE read_namelists_module
        passop  = 0.3_DP
        niter_cg_restart = 20
        etresh  = 1.E-6_DP
+       pre_state = .FALSE.
        !
        epol   = 3
        efield = 0.0_DP
@@ -448,17 +450,16 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Variables initialization for Namelist WANNIER_AC
      !
      !----------------------------------------------------------------------
      SUBROUTINE wannier_ac_defaults( prog )
        !----------------------------------------------------------------------
+       !! Variables initialization for Namelist WANNIER_AC.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2) :: prog
+       !! specify the calling program
        !
        !
        plot_wannier = .FALSE.
@@ -472,20 +473,17 @@ MODULE read_namelists_module
        RETURN
        !
      END SUBROUTINE
-
-     !=----------------------------------------------------------------------=!
      !
-     !  Variables initialization for Namelist IONS
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE ions_defaults( prog )
        !-----------------------------------------------------------------------
+       !! Variables initialization for Namelist IONS.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2) :: prog
+       !! specify the calling program
        !
        ! ... ( 'sd' | 'cg' | 'damp' | 'verlet' | 'none' | 'bfgs' | 'beeman' )
        !
@@ -537,30 +535,28 @@ MODULE read_namelists_module
        w_1              = 0.01_DP
        w_2              = 0.50_DP
        !
-       l_mplathe=.false.
-       n_muller=0
-       np_muller=1
-       l_exit_muller=.false.
-       
-
+       ! FIRE minimization defaults 
+       !
+       fire_nmin = 5 ! minimum number of steps P > 0 before dt increas
+       fire_f_inc = 1.1_DP ! factor for time step increase
+       fire_f_dec = 0.5_DP ! factor for time step decrease 
+       fire_alpha_init = 0.20_DP ! initial value of mixing factor
+       fire_falpha = 0.99_DP ! modification of the mixing factor
+       fire_dtmax = 10.0_DP ! factor for calculating dtmax 
        RETURN
        !
      END SUBROUTINE
      !
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Variables initialization for Namelist CELL
-     !
-     !=----------------------------------------------------------------------=!
-     !
      !-----------------------------------------------------------------------
      SUBROUTINE cell_defaults( prog )
        !-----------------------------------------------------------------------
+       !! Variables initialization for Namelist CELL.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2) :: prog
+       !! specify the calling program
        !
        !
        cell_parameters = 'default'
@@ -596,18 +592,15 @@ MODULE read_namelists_module
      END SUBROUTINE
      !
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Variables initialization for Namelist PRESS_AI
-     !
-     !=----------------------------------------------------------------------=!
-     !
      !----------------------------------------------------------------------
      SUBROUTINE press_ai_defaults( prog )
-     !
+       !---------------------------------------------------------------------
+       !! Variables initialization for Namelist PRESS_AI.
+       !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2) :: prog
+       !! specify the calling program
        !
        abivol = .false.
        abisur = .false.
@@ -637,17 +630,16 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Variables initialization for Namelist WANNIER
      !
      !-----------------------------------------------------------------------
      SUBROUTINE wannier_defaults( prog )
        !-----------------------------------------------------------------------
+       !! Variables initialization for Namelist WANNIER.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2) :: prog
+       !! specify the calling program
        !
        !
        wf_efield = .FALSE.
@@ -699,15 +691,70 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
      !
-     !  Broadcast variables values for Namelist CONTROL
+     !-----------------------------------------------------------------------
+     SUBROUTINE fcp_defaults( prog, ions_are_set )
+       !-----------------------------------------------------------------------
+       !! Variables initialization for Namelist FCP.
+       !
+       IMPLICIT NONE
+       !
+       CHARACTER(LEN=2)    :: prog
+       !! specify the calling program
+       LOGICAL, INTENT(IN) :: ions_are_set
+       !
+       !
+       fcp_mu = fcp_not_set
+       !
+       IF ( .NOT. ions_are_set ) THEN
+          !
+          ! ... ( 'none' | 'lm' | 'newton' | 'bfgs' | 'damp' | 'verlet' | 'velocity-verlet' )
+          !
+          fcp_dynamics = 'none'
+          !
+       END IF
+       !
+       fcp_conv_thr = 1.0E-2_DP
+       fcp_ndiis    = 4
+       fcp_rdiis    = 1.0_DP
+       fcp_mass     = -1.0_DP  ! will initialize at iosys_fcp
+       fcp_velocity = fcp_not_set
+       !
+       IF ( ions_are_set ) THEN
+          !
+          ! ... ( 'rescaling' | 'rescale-v' | 'rescale-T' | 'reduce-T' |
+          !       'berendsen' | 'andersen' | 'initial' | 'not_controlled' )
+          !
+          fcp_temperature = ion_temperature
+          fcp_tempw       = tempw
+          fcp_tolp        = tolp
+          fcp_delta_t     = delta_t
+          fcp_nraise      = nraise
+          !
+       ELSE
+          !
+          ! ... ( 'not_controlled' | 'rescaling' | 'rescale-v' | 'rescale-T' |
+          !       'reduce-T' | 'berendsen' | 'andersen' | 'initial' )
+          !
+          fcp_temperature = 'not_controlled'
+          fcp_tempw       = 300.0_DP
+          fcp_tolp        = 100.0_DP
+          fcp_delta_t     = 1.0_DP
+          fcp_nraise      = 1
+          !
+       END IF
+       !
+       freeze_all_atoms = .FALSE.
+       !
+       RETURN
+       !
+     END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE control_bcast()
        !-----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist CONTROL.
        !
        USE io_global, ONLY : ionode_id
        USE mp,        ONLY : mp_bcast
@@ -752,26 +799,22 @@ MODULE read_namelists_module
        CALL mp_bcast( saverho,       ionode_id, intra_image_comm )
        CALL mp_bcast( lecrpa,        ionode_id, intra_image_comm )
        CALL mp_bcast( tqmmm,         ionode_id, intra_image_comm )
+       CALL mp_bcast( lfcp,          ionode_id, intra_image_comm )
        CALL mp_bcast( vdw_table_name,ionode_id, intra_image_comm )
        CALL mp_bcast( memory,        ionode_id, intra_image_comm )
-       CALL mp_bcast( lfcpopt,       ionode_id, intra_image_comm )
-       CALL mp_bcast( lfcpdyn,       ionode_id, intra_image_comm )
        CALL mp_bcast( input_xml_schema_file, ionode_id, intra_image_comm )
        CALL mp_bcast( gate,          ionode_id, intra_image_comm ) !TB
+       CALL mp_bcast( mbd_vdw,        ionode_id, intra_image_comm ) !GSz
        !
        RETURN
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Broadcast variables values for Namelist SYSTEM
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE system_bcast()
        !-----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist SYSTEM.
        !
        USE io_global, ONLY : ionode_id
        USE mp,        ONLY : mp_bcast
@@ -841,9 +884,11 @@ MODULE read_namelists_module
        CALL mp_bcast( starting_charge,        ionode_id, intra_image_comm )
        CALL mp_bcast( starting_magnetization, ionode_id, intra_image_comm )
        CALL mp_bcast( starting_ns_eigenvalue, ionode_id, intra_image_comm )
-       CALL mp_bcast( U_projection_type,      ionode_id, intra_image_comm )
-       CALL mp_bcast( lda_plus_U,             ionode_id, intra_image_comm )
+       CALL mp_bcast( Hubbard_projectors,     ionode_id, intra_image_comm )
+       CALL mp_bcast( lda_plus_u,             ionode_id, intra_image_comm )
        CALL mp_bcast( lda_plus_u_kind,        ionode_id, intra_image_comm )
+       CALL mp_bcast( U_projection_type,      ionode_id,intra_image_comm )
+       CALL mp_bcast( Hubbard_parameters,     ionode_id,intra_image_comm )
        CALL mp_bcast( Hubbard_U,              ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_U_back,         ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_J0,             ionode_id, intra_image_comm )
@@ -852,17 +897,17 @@ MODULE read_namelists_module
        CALL mp_bcast( Hubbard_alpha,          ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_alpha_back,     ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_beta,           ionode_id, intra_image_comm )
+       CALL mp_bcast( Hubbard_occ,            ionode_id, intra_image_comm )
        CALL mp_bcast( hub_pot_fix,            ionode_id,intra_image_comm )
-       CALL mp_bcast( Hubbard_parameters,     ionode_id,intra_image_comm )
        CALL mp_bcast( reserv,                 ionode_id,intra_image_comm )
        CALL mp_bcast( reserv_back,            ionode_id,intra_image_comm )
        CALL mp_bcast( backall,                ionode_id,intra_image_comm )
-       CALL mp_bcast( lback,                  ionode_id,intra_image_comm )
-       CALL mp_bcast( l1back,                 ionode_id,intra_image_comm )
        CALL mp_bcast( step_pen,               ionode_id, intra_image_comm )
        CALL mp_bcast( A_pen,                  ionode_id, intra_image_comm )
        CALL mp_bcast( sigma_pen,              ionode_id, intra_image_comm )
        CALL mp_bcast( alpha_pen,              ionode_id, intra_image_comm )
+       CALL mp_bcast( dmft,                   ionode_id, intra_image_comm )
+       CALL mp_bcast( dmft_prefix,            ionode_id, intra_image_comm )
        CALL mp_bcast( edir,                   ionode_id, intra_image_comm )
        CALL mp_bcast( emaxpos,                ionode_id, intra_image_comm )
        CALL mp_bcast( eopreg,                 ionode_id, intra_image_comm )
@@ -889,6 +934,7 @@ MODULE read_namelists_module
        !
        CALL mp_bcast( vdw_corr,                  ionode_id, intra_image_comm )
        CALL mp_bcast( ts_vdw,                    ionode_id, intra_image_comm )
+       CALL mp_bcast( mbd_vdw,                   ionode_id, intra_image_comm )
        CALL mp_bcast( ts_vdw_isolated,           ionode_id, intra_image_comm )
        CALL mp_bcast( ts_vdw_econv_thr,          ionode_id, intra_image_comm )
        CALL mp_bcast( london,                    ionode_id, intra_image_comm )
@@ -899,6 +945,8 @@ MODULE read_namelists_module
        CALL mp_bcast( xdm,                       ionode_id, intra_image_comm )
        CALL mp_bcast( xdm_a1,                    ionode_id, intra_image_comm )
        CALL mp_bcast( xdm_a2,                    ionode_id, intra_image_comm )
+       CALL mp_bcast( dftd3_version,             ionode_id, intra_image_comm )
+       CALL mp_bcast( dftd3_threebody,           ionode_id, intra_image_comm )
        !
        CALL mp_bcast( no_t_rev,                  ionode_id, intra_image_comm )
        !
@@ -913,17 +961,15 @@ MODULE read_namelists_module
        CALL mp_bcast( esm_debug,          ionode_id, intra_image_comm )
        CALL mp_bcast( esm_debug_gpmax,    ionode_id, intra_image_comm )
        !
-       ! ... FCP
+       ! ... GC-SCF method broadcast
        !
-       CALL mp_bcast( fcp_mu,          ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_mass,        ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_tempw,       ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_relax,       ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_relax_step,  ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_relax_crit,  ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_mdiis_size,  ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_mdiis_step,  ionode_id, intra_image_comm )
-       !
+       CALL mp_bcast( lgcscf,             ionode_id, intra_image_comm )
+       CALL mp_bcast( gcscf_ignore_mun,   ionode_id, intra_image_comm )
+       CALL mp_bcast( gcscf_mu,           ionode_id, intra_image_comm )
+       CALL mp_bcast( gcscf_conv_thr,     ionode_id, intra_image_comm )
+       CALL mp_bcast( gcscf_gk,           ionode_id, intra_image_comm )
+       CALL mp_bcast( gcscf_gh,           ionode_id, intra_image_comm )
+       CALL mp_bcast( gcscf_beta,         ionode_id, intra_image_comm )
        !
        ! ... space group information
        !
@@ -945,15 +991,11 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Broadcast variables values for Namelist ELECTRONS
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE electrons_bcast()
        !-----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist ELECTRONS
        !
        USE io_global, ONLY : ionode_id
        USE mp,        ONLY : mp_bcast
@@ -1008,6 +1050,9 @@ MODULE read_namelists_module
        CALL mp_bcast( diago_cg_maxiter,     ionode_id, intra_image_comm )
        CALL mp_bcast( diago_ppcg_maxiter,   ionode_id, intra_image_comm )
        CALL mp_bcast( diago_david_ndim,     ionode_id, intra_image_comm )
+       CALL mp_bcast( diago_rmm_ndim,       ionode_id, intra_image_comm )
+       CALL mp_bcast( diago_rmm_conv,       ionode_id, intra_image_comm )
+       CALL mp_bcast( diago_gs_nblock,      ionode_id, intra_image_comm )
        CALL mp_bcast( diago_full_acc,       ionode_id, intra_image_comm )
        CALL mp_bcast( sic,                  ionode_id, intra_image_comm )
        CALL mp_bcast( sic_epsilon ,         ionode_id, intra_image_comm )
@@ -1034,6 +1079,7 @@ MODULE read_namelists_module
        CALL mp_bcast( etresh,  ionode_id, intra_image_comm )
        CALL mp_bcast( passop,  ionode_id, intra_image_comm )
        CALL mp_bcast( niter_cg_restart, ionode_id, intra_image_comm )
+       CALL mp_bcast( pre_state, ionode_id, intra_image_comm )
        !
        ! ... electric field
        !
@@ -1067,15 +1113,10 @@ MODULE read_namelists_module
      END SUBROUTINE
      !
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Broadcast variables values for Namelist IONS
-     !
-     !=----------------------------------------------------------------------=!
-     !
      !-----------------------------------------------------------------------
      SUBROUTINE ions_bcast()
        !-----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist IONS.
        !
        USE io_global, ONLY: ionode_id
        USE mp,        ONLY: mp_bcast
@@ -1119,25 +1160,15 @@ MODULE read_namelists_module
        CALL mp_bcast( w_1,              ionode_id, intra_image_comm )
        CALL mp_bcast( w_2,              ionode_id, intra_image_comm )
        !
-       CALL mp_bcast(l_mplathe,         ionode_id, intra_image_comm )
-       CALL mp_bcast(n_muller,          ionode_id, intra_image_comm ) 
-       CALL mp_bcast(np_muller,         ionode_id, intra_image_comm )
-       CALL mp_bcast(l_exit_muller,     ionode_id, intra_image_comm )
-
-
        RETURN
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Broadcast variables values for Namelist CELL
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE cell_bcast()
        !-----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist CELL.
        !
        USE io_global, ONLY: ionode_id
        USE mp, ONLY: mp_bcast
@@ -1165,15 +1196,11 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Broadcast variables values for Namelist PRESS_AI
-     !
-     !=----------------------------------------------------------------------=!
      !
      !----------------------------------------------------------------------
      SUBROUTINE press_ai_bcast()
        !----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist PRESS_AI
        !
        USE io_global, ONLY: ionode_id
        USE mp,        ONLY: mp_bcast
@@ -1208,15 +1235,11 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------------=!
-     !
-     !  Broadcast variables values for Namelist WANNIER
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE wannier_bcast()
        !-----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist WANNIER.
        !
        USE io_global, ONLY: ionode_id
        USE mp,        ONLY: mp_bcast
@@ -1263,15 +1286,11 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------------=!
-     !
-     !  Broadcast variables values for Namelist WANNIER_NEW
-     !
-     !=----------------------------------------------------------------------------=!
      !
      !----------------------------------------------------------------------
      SUBROUTINE wannier_ac_bcast()
        !----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist WANNIER_NEW.
        !
        USE io_global, ONLY: ionode_id
        USE mp,        ONLY: mp_bcast
@@ -1291,17 +1310,42 @@ MODULE read_namelists_module
        RETURN
        !
      END SUBROUTINE
-
      !
-     !=----------------------------------------------------------------------=!
      !
-     !  Check input values for Namelist CONTROL
+     !-----------------------------------------------------------------------
+     SUBROUTINE fcp_bcast()
+       !-----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist FCP
+       !
+       USE io_global, ONLY: ionode_id
+       USE mp, ONLY: mp_bcast
+       USE mp_images, ONLY : intra_image_comm
+       !
+       IMPLICIT NONE
+       !
+       CALL mp_bcast( fcp_mu,           ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_dynamics,     ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_conv_thr,     ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_ndiis,        ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_rdiis,        ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_mass,         ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_velocity,     ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_temperature,  ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_tempw,        ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_tolp,         ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_delta_t,      ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_nraise,       ionode_id, intra_image_comm )
+       CALL mp_bcast( freeze_all_atoms, ionode_id, intra_image_comm )
+       !
+       RETURN
+       !
+     END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE control_checkin( prog )
        !-----------------------------------------------------------------------
+       !! Check input values for Namelist CONTROL.
        !
        IMPLICIT NONE
        !
@@ -1389,15 +1433,14 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Check input values for Namelist SYSTEM
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE system_checkin( prog )
        !-----------------------------------------------------------------------
+       !! Check input values for Namelist SYSTEM.
+       !
+       USE constants,  ONLY : eps24
+       USE io_global,  ONLY : stdout
        !
        IMPLICIT NONE
        !
@@ -1506,32 +1549,94 @@ MODULE read_namelists_module
        !
        IF ( gate .and. tot_charge == 0 ) &
           CALL errore(sub_name, ' charged plane (gate) to compensate tot_charge of 0', 1)
+       !
+       ! ... control on GC-SCF variables
+       !
+       IF( lgcscf ) THEN
+          !
+          IF( gcscf_mu == gcscf_not_set ) &
+             CALL errore( sub_name,' gcscf_mu is not set ', 1 )
+          !
+          IF( gcscf_conv_thr < 0.0_DP ) &
+             CALL errore( sub_name,' gcscf_conv_thr out of range ',1)
+          !
+          IF( gcscf_gk <= 0.0_DP ) &
+             CALL errore( sub_name,' gcscf_gk out of range ',1)
+          !
+          IF( gcscf_gh <= 0.0_DP ) &
+             CALL errore( sub_name,' gcscf_gh out of range ',1)
+          !
+          IF( gcscf_beta < 0.0_DP .OR. 1.0_DP < gcscf_beta ) &
+             CALL errore( sub_name,' gcscf_beta out of range ',1)
+          !
+       END IF
+       !
+       ! ... control on DFT+Hubbard variables
+       !
+       ! Obsolete input parameters from the SYSTEM namelist
+       allowed = .TRUE.
+       IF (lda_plus_u) THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter lda_plus_u is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (lda_plus_u_kind>-1) THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter lda_plus_u_kind is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (U_projection_type/='') THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter U_projection_type is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (Hubbard_parameters/='') THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter Hubbard_parameters is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (ANY(Hubbard_U(:)>eps24)) THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter Hubbard_U is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (ANY(Hubbard_U_back(:)>eps24)) THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter Hubbard_U_back is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (ANY(Hubbard_J0(:)>eps24)) THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter Hubbard_J0 is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (ANY(Hubbard_J(:,:)>eps24)) THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter Hubbard_J is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (ANY(Hubbard_V(:,:,:)>eps24)) THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter Hubbard_J is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (ANY(backall(:))) THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter backall is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (.NOT.allowed) THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input syntax for DFT+Hubbard codes has &
+               &changed since v7.1")' )
+          WRITE( stdout, '(/5x,"WARNING!!! Check the new documentation!")' )
+          CALL errore( sub_name, 'DFT+Hubbard input syntax has changed since v7.1', 1 )
+       ENDIF
+       !
        RETURN
-       !
-       ! ... control on FCP variables
-       !
-       allowed = .FALSE.
-       DO i = 1, SIZE(fcp_relax_allowed)
-          IF( TRIM(fcp_relax) == fcp_relax_allowed(i) ) allowed = .TRUE.
-       END DO
-       IF( .NOT. allowed ) &
-          CALL errore(sub_name, ' fcp_relax '''//TRIM(fcp_relax)//''' not allowed ', 1)
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Check input values for Namelist ELECTRONS
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE electrons_checkin( prog )
        !-----------------------------------------------------------------------
+       !! Check input values for Namelist ELECTRONS.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2)  :: prog
+       !! specify the calling program
+       !
        CHARACTER(LEN=20) :: sub_name = ' electrons_checkin '
        INTEGER           :: i
        LOGICAL           :: allowed = .FALSE.
@@ -1563,19 +1668,17 @@ MODULE read_namelists_module
        RETURN
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Check input values for Namelist IONS
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE ions_checkin( prog )
        !-----------------------------------------------------------------------
+       !! Check input values for Namelist IONS
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2)  :: prog
+       !! specify the calling program
+       !
        CHARACTER(LEN=20) :: sub_name = ' ions_checkin '
        INTEGER           :: i
        LOGICAL           :: allowed = .FALSE.
@@ -1605,21 +1708,17 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Check input values for Namelist CELL
-     !
-     !=----------------------------------------------------------------------=!
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE cell_checkin( prog )
        !-----------------------------------------------------------------------
+       !! Check input values for Namelist CELL
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2)  :: prog
+       !! specify the calling program
+       !
        CHARACTER(LEN=20) :: sub_name = ' cell_checkin '
        INTEGER           :: i
        LOGICAL           :: allowed = .FALSE.
@@ -1645,19 +1744,17 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Check input values for Namelist WANNIER
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE wannier_checkin( prog )
        !-----------------------------------------------------------------------
+       !! Check input values for Namelist WANNIER.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2)  :: prog
+       !! specify the calling program
+       !
        CHARACTER(LEN=20) :: sub_name = 'wannier_checkin'
        !
        IF ( calwf < 1 .OR. calwf > 5 ) &
@@ -1670,19 +1767,17 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Check input values for Namelist WANNIER_NEW
-     !
-     !=----------------------------------------------------------------------=!
      !
      !----------------------------------------------------------------------
      SUBROUTINE wannier_ac_checkin( prog )
        !--------------------------------------------------------------------
+       !! Check input values for Namelist WANNIER_NEW.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2)  :: prog
+       !! specify the calling program
+       !
        CHARACTER(LEN=20) :: sub_name = 'wannier_new_checkin'
        !
        !
@@ -1699,21 +1794,64 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
      !
-     !  Set values according to the "calculation" variable
+     !-----------------------------------------------------------------------
+     SUBROUTINE fcp_checkin( prog )
+       !-----------------------------------------------------------------------
+       !! Check input values for Namelist FCP.
+       !
+       IMPLICIT NONE
+       !
+       CHARACTER(LEN=2)  :: prog
+       !! specify the calling program
+       !
+       CHARACTER(LEN=20) :: sub_name = ' fcp_checkin '
+       INTEGER           :: i
+       LOGICAL           :: allowed = .FALSE.
+       !
+       !
+       IF( fcp_mu == fcp_not_set ) &
+          CALL errore( sub_name,' fcp_mu is not set ', 1 )
+       !
+       allowed = .FALSE.
+       DO i = 1, SIZE(fcp_dynamics_allowed)
+          IF( TRIM(fcp_dynamics) == fcp_dynamics_allowed(i) ) allowed = .TRUE.
+       END DO
+       IF( .NOT. allowed ) &
+          CALL errore(sub_name, ' fcp_dynamics '''//TRIM(fcp_dynamics)//''' not allowed ', 1)
+       !
+       IF( fcp_conv_thr < 0.0_DP ) &
+          CALL errore( sub_name,' fcp_conv_thr out of range ', 1 )
+       !
+       IF( fcp_ndiis <= 0 ) &
+          CALL errore( sub_name,' fcp_ndiis out of range ', 1 )
+       !
+       IF( fcp_rdiis <= 0.0_DP ) &
+          CALL errore( sub_name,' fcp_rdiis out of range ', 1 )
+       !
+       !IF( fcp_mass <= 0.0_DP ) &
+       !   CALL errore( sub_name,' fcp_mass out of range ', 1 )
+       !
+       IF( fcp_tempw <= 0.0_DP ) &
+          CALL errore( sub_name,' fcp_tempw out of range ', 1 )
+       !
+       RETURN
+       !
+     END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE fixval( prog )
        !-----------------------------------------------------------------------
+       !!  Set values according to the "calculation" variable.
        !
        USE constants, ONLY : e2
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2)  :: prog
+       !! specify the calling program
+       !
        CHARACTER(LEN=20) :: sub_name = ' fixval '
        !
        !
@@ -1763,6 +1901,7 @@ MODULE read_namelists_module
                 ion_dynamics      = 'damp'
              ELSE IF( prog == 'PW' ) THEN
                 ion_dynamics = 'bfgs'
+                IF (lfcp) fcp_dynamics = 'bfgs'
              END IF
           CASE ( 'md', 'cp' )
              IF( prog == 'CP' ) THEN
@@ -1770,6 +1909,7 @@ MODULE read_namelists_module
                 ion_dynamics      = 'verlet'
              ELSE IF( prog == 'PW' ) THEN
                 ion_dynamics = 'verlet'
+                IF (lfcp) fcp_dynamics = 'velocity-verlet'
              END IF
           CASE ('vc-relax')
              IF( prog == 'CP' ) THEN
@@ -1779,6 +1919,7 @@ MODULE read_namelists_module
              ELSE IF( prog == 'PW' ) THEN
                 ion_dynamics = 'bfgs'
                 cell_dynamics= 'bfgs'
+                IF (lfcp) fcp_dynamics = 'bfgs'
              END IF
           CASE ( 'vc-md', 'vc-cp' )
              IF( prog == 'CP' ) THEN
@@ -1831,19 +1972,13 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Namelist parsing main routine
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE read_namelists( prog_, unit )
        !-----------------------------------------------------------------------
-       !
-       !  this routine reads data from standard input and puts them into
-       !  module-scope variables (accessible from other routines by including
-       !  this module, or the one that contains them)
+       !! Namelist parsing main routine. This routine reads data from standard
+       !! input and puts them into module-scope variables (accessible from other
+       !! routines by including this module, or the one that contains them).
        !  ----------------------------------------------
        !
        ! ... declare modules
@@ -1856,10 +1991,11 @@ MODULE read_namelists_module
        !
        ! ... declare variables
        !
-       CHARACTER(LEN=*) :: prog_  ! specifies the calling program, allowed:
-                                  !     prog = 'PW'     pwscf
-                                  !     prog = 'CP'     cp
-                                  !     prog = 'PW+iPi' pwscf + i-Pi
+       CHARACTER(LEN=*) :: prog_
+       !! specifies the calling program, allowed:  
+       !! prog = 'PW'     pwscf  
+       !! prog = 'CP'     cp  
+       !! prog = 'PW+iPi' pwscf + i-Pi
        !
        INTEGER, INTENT(IN), optional :: unit
        !
@@ -1886,6 +2022,7 @@ MODULE read_namelists_module
        CALL electrons_defaults( prog )
        CALL ions_defaults( prog )
        CALL cell_defaults( prog )
+       CALL fcp_defaults( prog, .FALSE. )
        !
        ! ... Here start reading standard input file
        !
@@ -2012,6 +2149,21 @@ MODULE read_namelists_module
        !
        CALL wannier_ac_bcast()
        CALL wannier_ac_checkin( prog )
+       !
+       ! ... FCP namelist
+       !
+       IF( lfcp ) THEN
+          CALL fcp_defaults( prog, .TRUE. )
+          !
+          ios = 0
+          IF( ionode ) THEN
+             READ( unit_loc, fcp, iostat = ios )
+          END IF
+          CALL check_namelist_read(ios, unit_loc, "fcp")
+          !
+          CALL fcp_bcast( )
+          CALL fcp_checkin( prog )
+       END IF
        !
        RETURN
        !

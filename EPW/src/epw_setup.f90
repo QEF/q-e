@@ -27,7 +27,6 @@
                             inverse_s
   USE eqv,           ONLY : dmuxc
   USE uspp_param,    ONLY : upf
-  USE spin_orb,      ONLY : domag
   USE constants_epw, ONLY : zero, eps5, czero, ryd2ev, kelvin2ev
   USE nlcc_ph,       ONLY : drc
   USE uspp,          ONLY : nlcc_any
@@ -36,14 +35,14 @@
   USE lr_symm_base,  ONLY : gi, gimq, irotmq, minus_q, nsymq, invsymq, rtau
   USE qpoint,        ONLY : xq
   USE control_flags, ONLY : modenum, noinv
-  USE funct,         ONLY : dft_is_gradient
+  USE xc_lib,        ONLY : xclib_dft_is
   USE mp_global,     ONLY : world_comm
   USE mp,            ONLY : mp_bcast
   USE epwcom,        ONLY : scattering, nkc1, nkc2, nkc3
   USE klist_epw,     ONLY : xk_cryst
   USE fft_base,      ONLY : dfftp
   USE gvecs,         ONLY : doublegrid
-  USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux, nspin_mag
+  USE noncollin_module, ONLY : noncolin, domag, m_loc, angle1, angle2, ux, nspin_mag
   ! ---------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
   ! Shell implementation for future use.
@@ -104,7 +103,7 @@
       m_loc(3, na) = starting_magnetization(ityp(na)) * COS(angle1(ityp(na)))
     ENDDO
     ux = zero
-    IF (dft_is_gradient()) THEN
+    IF (xclib_dft_is('gradient')) THEN
       CALL compute_ux(m_loc,ux,nat)
     ENDIF
     DEALLOCATE(m_loc, STAT = ierr)

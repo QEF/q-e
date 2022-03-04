@@ -12,21 +12,19 @@
 !----------------------------------------------------------------------------
 MODULE constraints_module
    !----------------------------------------------------------------------------
+   !! Variables and methods for constraint Molecular Dynamics and
+   !! constrained ionic relaxations (the SHAKE algorithm based on
+   !! lagrange multipliers) are defined here.
    !
-   ! ... variables and methods for constraint Molecular Dynamics and
-   ! ... constrained ionic relaxations (the SHAKE algorithm based on
-   ! ... lagrange multipliers) are defined here.
+   !! Most of these variables and methods are also used for meta-dynamics
+   !! and free-energy smd: indeed the collective variables are implemented
+   !! as constraints.
    !
-   ! ... most of these variables and methods are also used for meta-dynamics
-   ! ... and free-energy smd : indeed the collective variables are implemented
-   ! ... as constraints.
+   !! Written by Carlo Sbraccia ( 24/02/2004 ).
+   !! References:
    !
-   ! ... written by Carlo Sbraccia ( 24/02/2004 )
-   !
-   ! ... references :
-   !
-   ! ... 1) M. P. Allen and D. J. Tildesley, Computer Simulations of Liquids,
-   ! ...    Clarendon Press - Oxford (1986)
+   !! 1) M. P. Allen and D. J. Tildesley, Computer Simulations of Liquids,
+   !!    Clarendon Press - Oxford (1986)
    !
    USE kinds,     ONLY : DP
    USE constants, ONLY : eps32, tpi, fpi
@@ -82,10 +80,10 @@ CONTAINS
    SUBROUTINE init_constraint( nat, tau, ityp, tau_units )
       !-----------------------------------------------------------------------
       !
-      ! ... this routine is used to initialize constraints variables and
-      ! ... collective variables (notice that collective variables are
-      ! ... implemented as normal constraints but are read using specific
-      ! ... input variables)
+      !! This routine is used to initialize constraints variables and
+      !! collective variables (notice that collective variables are
+      !! implemented as normal constraints but are read using specific
+      !! input variables).
       !
       USE input_parameters, ONLY : nconstr_inp, constr_tol_inp, &
                                  constr_type_inp, constr_inp, &
@@ -527,8 +525,8 @@ CONTAINS
                               if_pos, ityp, tau_units, g, dg )
       !-----------------------------------------------------------------------
       !
-      ! ... this routine computes the value of the constraint equation and
-      ! ... the corresponding constraint gradient
+      !! This routine computes the value of the constraint equation and
+      !! the corresponding constraint gradient.
       !
       IMPLICIT NONE
       !
@@ -890,16 +888,16 @@ CONTAINS
    SUBROUTINE check_constraint( nat, taup, tau0, &
                                  force, if_pos, ityp, tau_units, dt, massconv )
       !-----------------------------------------------------------------------
+      !! Update taup (predicted positions) so that the constraint equation
+      !! g=0 is satisfied, using the recursion formula:
+      !! $$ \text{taup} = \text{taup} - \frac{g(\text{taup})}{M^{-1}\langle 
+      !! dg(\text{taup})|dg(\text{tau0})\rangle} dg(\text{tau0})$$
+      !! in normal cases the constraint equation should be satisfied at
+      !! the very first iteration.
       !
-      ! ... update taup (predicted positions) so that the constraint equation
-      ! ... g=0 is satisfied, using the recursion formula:
-      !
-      ! ...                       g(taup)
-      ! ... taup = taup - ----------------------- * dg(tau0)
-      ! ...               M^-1<dg(taup)|dg(tau0)>
-      !
-      ! ... in normal cases the constraint equation should be satisfied at
-      ! ... the very first iteration.
+      !                        g(taup)
+      !  taup = taup - ----------------------- * dg(tau0)
+      !                M^-1<dg(taup)|dg(tau0)>
       !
       USE ions_base, ONLY : amass
       !
@@ -1030,9 +1028,9 @@ CONTAINS
                                     if_pos, ityp, tau_units, force )
       !-----------------------------------------------------------------------
       !
-      ! ... the component of the force that is orthogonal to the
-      ! ... ipersurface defined by the constraint equations is removed
-      ! ... and the corresponding value of the lagrange multiplier computed
+      !! The component of the force that is orthogonal to the
+      !! ipersurface defined by the constraint equations is removed
+      !! and the corresponding value of the lagrange multiplier computed.
       !
       IMPLICIT NONE
       !
@@ -1157,9 +1155,9 @@ CONTAINS
                                  if_pos, ityp, tau_units, vec )
       !-----------------------------------------------------------------------
       !
-      ! ... the component of a displacement vector that is orthogonal to the
-      ! ... ipersurface defined by the constraint equations is removed
-      ! ... and the corresponding value of the lagrange multiplier computed
+      !! The component of a displacement vector that is orthogonal to the
+      !! ipersurface defined by the constraint equations is removed
+      !! and the corresponding value of the lagrange multiplier computed.
       !
       IMPLICIT NONE
       !
@@ -1265,8 +1263,7 @@ CONTAINS
    !-----------------------------------------------------------------------
    FUNCTION cross(A,B)
       !-----------------------------------------------------------------------
-      !
-      ! ... cross product
+      !! Cross product.
       !
       IMPLICIT NONE
       !
@@ -1283,8 +1280,8 @@ CONTAINS
    FUNCTION pbc( vect )
       !-----------------------------------------------------------------------
       !
-      ! ... periodic boundary conditions ( vect is assumed to be given
-      ! ... in cartesian coordinates and in atomic units )
+      !! Periodic boundary conditions ( vect is assumed to be given
+      !! in cartesian coordinates and in atomic units )
       !
       USE cell_base, ONLY : at, bg, alat
       !
@@ -1315,7 +1312,7 @@ CONTAINS
    SUBROUTINE compute_dmax()
       !-----------------------------------------------------------------------
       !
-      ! ... dmax corresponds to one half the longest diagonal of the cell
+      !! Dmax corresponds to one half the longest diagonal of the cell.
       !
       USE cell_base, ONLY : at, alat
       !

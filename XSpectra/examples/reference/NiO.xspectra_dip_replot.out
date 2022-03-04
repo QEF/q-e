@@ -1,19 +1,26 @@
 
-     Program XSpectra v.5.2.0 (svn rev. 11610M) starts on 20Aug2015 at 16:29:42 
+     Program XSpectra v.7.0 starts on  7Feb2022 at 15: 9:24 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     1 processors
+     Parallel version (MPI), running on     8 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       8
+     32333 MiB available memory on the printing compute node when the environment starts
+ 
 
      -------------------------------------------------------------------------
                     __  ____                 _
                     \ \/ / _\_ __   ___  ___| |_ _ __ __ _
-                     \  /\ \| '_ \ / _ \/ __| __| '__/ _` |
+                     \  /\ \| '_ \ / _ \/ __| __| \__/ _\ |
                      /  \_\ \ |_) |  __/ (__| |_| | | (_| |
                     /_/\_\__/ .__/ \___|\___|\__|_|  \__,_|
                             |_|
@@ -34,7 +41,7 @@
 
      xonly_plot: TRUE
         => only the spectrum plot
-
+ 
      main plot parameters:
         cut_occ_states: TRUE
         gamma_mode:  constant
@@ -47,7 +54,7 @@
      Fermi level read in x_save_file
      NB: For an insulator (SCF calculated with occupations="fixed")
          the Fermi level will be placed at the position of HOMO.
-
+ 
      WARNING: variable ef_r is obsolete
 
      -------------------------------------------------------------------------
@@ -56,26 +63,26 @@
 
      x_save_file name: NiO.xspectra_dip.sav
      x_save_file version:   2
-
+ 
      nspin: 2
      number of k-points:  16
-
+ 
      final-state angular momentum (xm_r):    1
       => electric-dipole approximation
-
-     Fermi level [eV]:  13.9509
+ 
+     Fermi level [eV]:  13.9550
      core energy [eV]:  8333.000
 
      xepsilon [Cartesian frame]:   0.288675  -0.166667   0.942809
-
+ 
 
      -------------------------------------------------------------------------
                     Starting the calculation of the spectrum
      -------------------------------------------------------------------------
 
      Using the following parameters:
-        energy-zero of the spectrum [eV]:   13.9509
-        the occupied states are cut
+        energy-zero of the spectrum [eV]:   13.9550
+        the occupied states are elimintate from the spectrum
         xemin [eV]: -10.00
         xemax [eV]:  20.00
         xnepoint:  300
@@ -83,9 +90,9 @@
         Core level energy [eV]:  -8333.    
          (from electron binding energy of neutral atoms in X-ray data booklet)
 
-     Cross-section successfully written in xanes.dat
+     Cross-section successfully written in xanes.dat                                                                                                                                                                                                                                                       
 
-     xanes        :      9.15s CPU      9.23s WALL (       1 calls)
+     xanes        :      4.15s CPU      4.16s WALL (       1 calls)
 
      -------------------------------------------------------------------------
                                 END JOB XSpectra

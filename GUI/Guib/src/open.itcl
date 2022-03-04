@@ -152,7 +152,7 @@ itcl::body ::guib::moduleObj::readFileError {errMsg} {
 
 itcl::body ::guib::moduleObj::readFileWrongFormat {formatName {diagnosisText {}}} {
     set readError 1
-    set errMsg "selected file is not a ${formatName}-formatted or contains severe syntax errors."
+    set errMsg "selected file is not ${formatName}-formatted or contains severe syntax errors."
     if { $diagnosisText != "" } {
 	append errMsg "\n\nDiagnosis:\n$diagnosisText"
     }

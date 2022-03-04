@@ -33,17 +33,16 @@ SUBROUTINE potinit()
   USE fft_base,             ONLY : dfftp
   USE gvect,                ONLY : ngm, gstart, g, gg, ig_l2g
   USE gvecs,                ONLY : doublegrid
-  USE control_flags,        ONLY : lscf, gamma_only
+  USE control_flags,        ONLY : lscf, gamma_only, restart
   USE scf,                  ONLY : rho, rho_core, rhog_core, &
                                    vltot, v, vrs, kedtau
-  USE funct,                ONLY : dft_is_meta
+  USE xc_lib,               ONLY : xclib_dft_is
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth, &
                                    niter_with_fixed_ns, lda_plus_u_kind, &
                                    nsg, nsgnew
-  USE noncollin_module,     ONLY : noncolin, report
+  USE noncollin_module,     ONLY : noncolin, domag, report, lforcet
   USE io_files,             ONLY : restart_dir, input_drho, check_file_exist
-  USE spin_orb,             ONLY : domag, lforcet
   USE mp,                   ONLY : mp_sum
   USE mp_bands ,            ONLY : intra_bgrp_comm, root_bgrp
   USE io_global,            ONLY : ionode, ionode_id
@@ -55,6 +54,9 @@ SUBROUTINE potinit()
   USE paw_variables,        ONLY : okpaw, ddd_PAW
   USE paw_init,             ONLY : PAW_atomic_becsum
   USE paw_onecenter,        ONLY : PAW_potential
+  !
+  USE scf_gpum,             ONLY : using_vrs
+  USE pwcom,                ONLY : report_mag 
   !
   IMPLICIT NONE
   !
@@ -86,11 +88,14 @@ SUBROUTINE potinit()
         !
         ! ... 'force theorem' calculation of MAE: read rho only from previous
         ! ... lsda calculation, set noncolinear magnetization from angles
+        ! ... (not if restarting! the charge density saved to file in that
+        ! ...  case has already the required magnetization direction)
         ! ... FIXME: why not calling read_scf also in this case?
         !
         CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
              ig_l2g, nspin, rho%of_g, gamma_only )
-        CALL nc_magnetization_from_lsda ( dfftp%ngm, nspin, rho%of_g )
+        IF ( .NOT. restart ) &
+           CALL nc_magnetization_from_lsda ( dfftp%ngm, nspin, rho%of_g )
      END IF
      !
      IF ( lscf ) THEN
@@ -185,8 +190,8 @@ SUBROUTINE potinit()
   IF ( lscf .AND. ABS( charge - nelec ) > ( 1.D-7 * charge ) ) THEN
      !
      IF ( charge > 1.D-8 .AND. nat > 0 ) THEN
-        WRITE( stdout, '(/,5X,"starting charge ",F10.5, &
-                         & ", renormalised to ",F10.5)') charge, nelec
+        WRITE( stdout, '(/,5X,"starting charge ",F12.4, &
+                         & ", renormalised to ",F12.4)') charge, nelec
         rho%of_g = rho%of_g / charge * nelec
      ELSE 
         WRITE( stdout, '(/,5X,"Starting from uniform charge")')
@@ -204,7 +209,7 @@ SUBROUTINE potinit()
   !
   CALL rho_g2r (dfftp, rho%of_g, rho%of_r)
   !
-  IF  ( dft_is_meta() ) THEN
+  IF  ( xclib_dft_is('meta') ) THEN
      IF (starting_pot /= 'file') THEN
         ! ... define a starting (TF) guess for rho%kin_r from rho%of_r
         ! ... to be verified for LSDA: rho is (tot,magn), rho_kin is (up,down)
@@ -237,15 +242,19 @@ SUBROUTINE potinit()
   !
   ! ... define the total local potential (external+scf)
   !
+  CALL using_vrs(1)
   CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
   !
   ! ... write on output the parameters used in the DFT+U(+V) calculation
   !
   IF ( lda_plus_u ) THEN
      !
-     WRITE( stdout, '(5X,"Number of +U iterations with fixed ns =",I3)') &
+     IF (niter_with_fixed_ns>0) &
+     WRITE( stdout, '(5X,"Number of Hubbard iterations with fixed ns =",I3)') &
          niter_with_fixed_ns
-     WRITE( stdout, '(5X,"Starting occupations:")')
+     !
+     ! ... info about starting occupations
+     WRITE( stdout, '(/5X,"STARTING HUBBARD OCCUPATIONS:")')
      !
      IF (lda_plus_u_kind == 0) THEN
         CALL write_ns()

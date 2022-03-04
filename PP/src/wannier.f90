@@ -35,8 +35,9 @@ module wannier
    ! begin change Lopez, Thonhauser, Souza
    integer  :: iun_nnkp,iun_mmn,iun_amn,iun_band,iun_spn,iun_plot,iun_parity,&
         nnbx,nexband,iun_uhu,&
-        iun_uIu !ivo
+        iun_uIu,& !ivo
    ! end change Lopez, Thonhauser, Souza
+        iun_sHu, iun_sIu ! shc
    integer  :: n_wannier !number of WF
    integer  :: n_proj    !number of projection
    complex(DP), allocatable :: gf(:,:)  ! guding_function(npwx,n_wannier)
@@ -51,6 +52,9 @@ module wannier
                             write_dmn,read_sym, & !YN
                             write_uIu, spn_formatted, uHu_formatted, uIu_formatted, & !ivo
    ! end change Lopez, Thonhauser, Souza
+   ! shc
+                            write_sHu, write_sIu, sHu_formatted, sIu_formatted, &
+   ! end shc
    ! vv: Begin SCDM keywords
                             scdm_proj
    character(LEN=15)     :: scdm_entanglement

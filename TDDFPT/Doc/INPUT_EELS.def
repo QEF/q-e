@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package turboEELS -program turbo_eels.x {
+input_description -distribution {Quantum ESPRESSO} -package turboEELS -program turbo_eels.x {
 
     toc {}
 
@@ -14,20 +14,20 @@ input_description -distribution {Quantum Espresso} -package turboEELS -program t
           fortran code. Comments lines in ``cards'' can be introduced by 
           either a "!" or a "#" character in the first position of a line.
 
-	  Structure of the input data:
+          @b {Structure of the input data:}
 	  ===============================================================================
 
-	  &lr_input
+	  &LR_INPUT
 	    ...
 	  /
 
-	  &lr_control
+	  &LR_CONTROL
 	    ...
 	  /	    
 
     }
 
-    namelist lr_input {
+    namelist LR_INPUT {
 
 	label { This namelist is always needed ! }
 
@@ -85,7 +85,7 @@ input_description -distribution {Quantum Espresso} -package turboEELS -program t
 	    }
 	}
     }
-    namelist lr_control {
+    namelist LR_CONTROL {
 
         var approximation -type CHARACTER {
             default { 'TDDFT' }
@@ -214,6 +214,15 @@ input_description -distribution {Quantum Espresso} -package turboEELS -program t
                 }
         }
 
+        var ethr_nscf  -type REAL {
+            default { 1.D-11 }
+            info {
+                Threshold for the convergence of eigenvalues during
+                the iterative diagonalization of the Hamiltonian in
+                the non-self-consistent-field (NSCF) calculation at
+                k and k+q points. Note, this quantity is NOT extensive.
+            }
+        }
 
     }			
 

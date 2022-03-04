@@ -1,0 +1,10 @@
+phonons of antiferromagnetic insulator NiO at Gamma
+ &inputph
+  tr2_ph    = 1.0d-14
+  prefix    = 'NiO'
+  epsil     = .true.
+  fildyn    = 'NiO.dynG'
+  reduce_io = .true.
+  nmix_ph   = 8
+ /
+0.00000000  0.00000000  0.00000000

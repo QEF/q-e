@@ -8,22 +8,21 @@
 !--------------------------------------------------------------------------
 subroutine add_dkmds(ik, uact, jpol, dvkb)
   !--------=========-------------------------------------------------------
-  !
-  ! This subroutine adds to dvpsi the terms which depend on the augmentation
-  ! charge. It assumes that the variable dpqq, has been set. In the noncollinear
-  ! and spin_orbit case the variable dpqq_so must be set.
-  ! NB: I think this routine is called only for q=0; case q/=0 not implemented
+  !! This subroutine adds to dvpsi the terms which depend on the augmentation
+  !! charge. It assumes that the variable \(\text{dpqq}\), has been set. In the
+  !! noncollinear and spin_orbit case the variable dpqq_so must be set.  
+  !! NB: I think this routine is called only for \(q=0\); case \(q\neq 0\) not
+  !! implemented.
   !
   USE kinds, ONLY : DP
   USE cell_base, ONLY : at, tpiba
   USE gvect, ONLY : g
   USE lsda_mod, ONLY: lsda, current_spin, isk, nspin
   USE klist, ONLY : xk, ngk, igk_k
-  USE spin_orb, ONLY : lspinorb
   USE uspp, ONLY : nkb, qq_nt, qq_so, vkb
   USE wvfct, ONLY : npwx, nbnd
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  USE noncollin_module, ONLY : noncolin, npol
+  USE noncollin_module, ONLY : noncolin, npol, lspinorb
   USE wavefunctions,    ONLY : evc
   USE uspp_param, only: nh
   USE becmod, ONLY: calbec

@@ -1,0 +1,38 @@
+ &control
+    calculation = 'bands'
+    prefix='Fe',
+    pseudo_dir = '/scratch/timrov/QE_gitlab/tmp6/q-e/pseudo/',
+    outdir='/scratch/timrov/QE_gitlab/tmp6/q-e/tempdir/'
+ /
+ &system    
+    ibrav=  3, 
+    celldm(1) =5.42, 
+    nat=  1, 
+    ntyp= 1,
+    noncolin=.true.
+    lspinorb=.true.
+    starting_magnetization(1)=0.5,
+    angle1(1)=90.0
+    angle2(1)=0.0
+    occupations='smearing',
+    smearing='mv',
+    degauss=0.04,
+    ecutwfc =60.0, 
+    ecutrho =400.0
+ /
+ &electrons
+    conv_thr =  1.0d-8
+ /
+ATOMIC_SPECIES
+Fe  0.0    Fe.rel-pbe-spn-rrkjus_psl.0.2.1.UPF
+ATOMIC_POSITIONS {alat}
+Fe  0.0000000   0.00000000   0.00000000  
+K_POINTS {tpiba_b}
+3
+1.0 0.0 0.0 40
+0.0 0.0 0.0 40
+0.0 0.0 1.0 1
+HUBBARD {atomic}
+U Fe-3d 2.20
+J Fe-3d 1.75
+B Fe-3d 0.00

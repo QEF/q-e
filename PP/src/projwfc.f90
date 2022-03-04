@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,17 +21,12 @@ PROGRAM do_projwfc
   USE kinds,      ONLY : DP
   USE klist,      ONLY : nks, nkstot, xk, degauss, ngauss, lgauss, ltetra
   USE io_files,   ONLY : prefix, tmp_dir
-  USE noncollin_module, ONLY : noncolin
+  USE noncollin_module, ONLY : noncolin, lforcet
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE environment,ONLY : environment_start, environment_end
   USE mp,         ONLY : mp_bcast
   USE mp_global,  ONLY : mp_startup
-  USE mp_world,   ONLY : world_comm
   USE mp_images,  ONLY : intra_image_comm
-  USE mp_pools,   ONLY : intra_pool_comm
-  USE mp_bands,   ONLY : intra_bgrp_comm, inter_bgrp_comm
-  USE command_line_options, ONLY : ndiag_
-  USE spin_orb,   ONLY : lforcet
   USE wvfct,      ONLY : et, nbnd
   USE paw_variables, ONLY : okpaw
   ! following modules needed for generation of tetrahedra
@@ -40,35 +35,30 @@ PROGRAM do_projwfc
   USE cell_base,  ONLY : at, bg
   USE start_k,    ONLY : k1, k2, k3, nk1, nk2, nk3
   USE lsda_mod,   ONLY : lsda
+  USE control_flags, ONLY : gamma_only
   !
   IMPLICIT NONE
   !
-  include 'laxlib.fh'
-  !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
-  CHARACTER (len=256) :: filpdos, filproj, outdir
+  CHARACTER (len=256) :: filpdos, filproj, filowdin, outdir
   REAL (DP), allocatable :: xk_collect(:,:)
   REAL (DP) :: Emin, Emax, DeltaE, degauss1, ef_0
   INTEGER :: nks2, ngauss1, ios
   LOGICAL :: lwrite_overlaps, lbinary_data, needwf = .TRUE.
-  LOGICAL :: lsym, kresolveddos, tdosinboxes, plotboxes, pawproj
+  LOGICAL :: lsym, kresolveddos, tdosinboxes, plotboxes, pawproj, diag_basis
   INTEGER, PARAMETER :: N_MAX_BOXES = 999
   INTEGER :: n_proj_boxes, irmin(3,N_MAX_BOXES), irmax(3,N_MAX_BOXES)
   LOGICAL :: lgww  !if .true. use GW QP energies from file bands.dat
   !
   NAMELIST / projwfc / outdir, prefix, ngauss, degauss, lsym, &
-             Emin, Emax, DeltaE, filpdos, filproj, lgww, &
+             Emin, Emax, DeltaE, filpdos, filproj, filowdin, lgww, &
              kresolveddos, tdosinboxes, n_proj_boxes, irmin, irmax, plotboxes, &
-             lwrite_overlaps, lbinary_data, pawproj, lforcet, ef_0
+             lwrite_overlaps, lbinary_data, pawproj, lforcet, ef_0, diag_basis
   !
   ! initialise environment
   !
   CALL mp_startup ( )
-  CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
-          do_distr_diag_inside_bgrp_ = .true. )
-  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
-       inter_bgrp_comm )
   !
   CALL environment_start ( 'PROJWFC' )
   !
@@ -79,11 +69,13 @@ PROGRAM do_projwfc
   IF ( trim( outdir ) == ' ' ) outdir = './'
   filproj= ' '
   filpdos= ' '
+  filowdin= ' '
   Emin   =-1000000.d0
   Emax   =+1000000.d0
   DeltaE = 0.01d0
   ngauss = 0
   lsym   = .true.
+  diag_basis = .false.
   degauss= 0.d0
   lgww   = .false.
   pawproj= .false.
@@ -121,10 +113,12 @@ PROGRAM do_projwfc
   CALL mp_bcast( tmp_dir,   ionode_id, intra_image_comm )
   CALL mp_bcast( prefix,    ionode_id, intra_image_comm )
   CALL mp_bcast( filproj,   ionode_id, intra_image_comm )
+  CALL mp_bcast( filowdin,  ionode_id, intra_image_comm )
   CALL mp_bcast( ngauss1,   ionode_id, intra_image_comm )
   CALL mp_bcast( degauss1,  ionode_id, intra_image_comm )
   CALL mp_bcast( DeltaE,    ionode_id, intra_image_comm )
   CALL mp_bcast( lsym,      ionode_id, intra_image_comm )
+  CALL mp_bcast( diag_basis,ionode_id, intra_image_comm )
   CALL mp_bcast( Emin,      ionode_id, intra_image_comm )
   CALL mp_bcast( Emax,      ionode_id, intra_image_comm )
   CALL mp_bcast( lwrite_overlaps, ionode_id, intra_image_comm )
@@ -155,6 +149,12 @@ PROGRAM do_projwfc
   END IF
   IF ( lforcet .AND. tdosinboxes ) CALL errore ('projwfc','incompatible options',3)
   IF ( lforcet .AND. lsym ) CALL errore ('projwfc','incompatible options',4)
+  !
+  IF (diag_basis) THEN
+     IF ( pawproj ) CALL errore ('projwfc','diag_basis=.true. is not available for pawproj=.true.',1)
+     IF ( noncolin ) CALL errore ('projwfc','diag_basis=.true. is not implemented for noncolin=.true.',1)
+     IF ( gamma_only ) CALL errore ('projwfc','diag_basis=.true. is not implemented for gamma_only',1)
+  ENDIF
   !
   !   Tetrahedron method
   !
@@ -218,7 +218,7 @@ PROGRAM do_projwfc
   ELSE IF ( pawproj ) THEN
      CALL projwave_paw ( )
   ELSE
-     CALL projwave(filproj, lsym, lwrite_overlaps )
+     CALL projwave(filproj, filowdin, lsym, diag_basis, lwrite_overlaps)
      IF ( lforcet ) CALL force_theorem ( ef_0, filproj )
   ENDIF
   !
@@ -234,7 +234,6 @@ PROGRAM do_projwfc
      ENDIF
   ENDIF
   !
-  CALL laxlib_end()
   CALL environment_end ( 'PROJWFC' )
   !
   CALL stop_pp
@@ -278,28 +277,43 @@ SUBROUTINE get_et_from_gww ( nbnd, et )
   ENDIF
 END SUBROUTINE get_et_from_gww
 !
-SUBROUTINE print_lowdin ( nat, lmax_wfc, nspin, charges, charges_lm )
+SUBROUTINE print_lowdin ( unit, nat, lmax_wfc, nspin, diag_basis, charges, charges_lm )
   !
-  USE kinds, ONLY : dp
+  USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout, ionode
-  USE klist, ONLY: nelec
+  USE klist,     ONLY : nelec
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: nat, lmax_wfc, nspin
+  INTEGER, INTENT(IN) :: unit, nat, lmax_wfc, nspin
+  LOGICAL, INTENT(IN) :: diag_basis
   REAL(DP), INTENT(in) :: charges (nat, 0:lmax_wfc, nspin )
   REAL(DP), INTENT(in), OPTIONAL :: charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin )
   !
   INTEGER :: is, l, m, na
   REAL(DP) :: totcharge(2), psum
   CHARACTER (len=1)  :: l_label(0:3)=(/'s','p','d','f'/)
-  CHARACTER (len=7)  :: lm_label(1:7,1:3)=reshape( (/ &
+  CHARACTER (len=7)  :: lm_label(1:7,1:3)
+  CHARACTER (len=7)  :: lm_label_global_frame(1:7,1:3)=reshape( (/ &
     'z      ','x      ','y      ','       ','       ','       ','       ', &
     'z2     ','xz     ','yz     ','x2-y2  ','xy     ','       ','       ', &
     'z3     ','xz2    ','yz2    ','zx2-zy2','xyz    ','x3-3xy2','3yx2-y3' /), (/7,3/) )
+  ! TODO: think of a better way how to automatically label states in the diagonalized basis 
+  ! (i.e. eg, t2g, etc.)
+  CHARACTER (len=7)  :: lm_label_diag(1:7,1:3)=reshape( (/ &
+    '1      ','2      ','3      ','       ','       ','       ','       ', &
+    '1      ','2      ','3      ','4      ','5      ','       ','       ', &
+    '1      ','2      ','3      ','4      ','5      ','6      ','7      ' /), (/7,3/) )
   !
   IF ( ionode ) THEN
-     WRITE( stdout, '(/"Lowdin Charges: "/)')
+     !
+     IF (diag_basis) THEN
+        lm_label = lm_label_diag
+     ELSE
+        lm_label = lm_label_global_frame
+     ENDIF
+     !
+     WRITE( unit, '(/"Lowdin Charges: "/)')
      !
      DO na = 1, nat
         DO is = 1, nspin
@@ -307,45 +321,45 @@ SUBROUTINE print_lowdin ( nat, lmax_wfc, nspin, charges, charges_lm )
         ENDDO
         IF ( nspin == 1) THEN
            DO l = 0, lmax_wfc
-              WRITE(stdout, 2000,advance='no') na, totcharge(1), l_label(l), charges(na,l,1)
+              WRITE(unit, 2000,advance='no') na, totcharge(1), l_label(l), charges(na,l,1)
               IF (l /= 0 .AND. present(charges_lm)) THEN
                  DO m = 1, 2*l+1
-                    WRITE( stdout,'(A1,A,"=",F8.4,", ")',advance='no') &
-                       l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
+                    WRITE( unit,'(A1,A,"=",F8.4,", ")',advance='no') &
+                          l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
                  ENDDO
               ENDIF
-              WRITE(stdout,*)
+              WRITE(unit,*)
            ENDDO
         ELSEIF ( nspin == 2) THEN
-           WRITE( stdout, 2000) na, totcharge(1) + totcharge(2), &
+           WRITE( unit, 2000) na, totcharge(1) + totcharge(2), &
                 ( l_label(l), charges(na,l,1) + charges(na,l,2), l=0,lmax_wfc)
            DO l = 0, lmax_wfc
-              WRITE(stdout,2001,advance='no') totcharge(1), l_label(l), charges(na,l,1)
+              WRITE(unit,2001,advance='no') totcharge(1), l_label(l), charges(na,l,1)
               IF (l /= 0 .AND. present(charges_lm)) THEN
                  DO m = 1, 2*l+1
-                    WRITE( stdout,'(A1,A,"=",F8.4,", ")',advance='no') &
+                    WRITE( unit,'(A1,A,"=",F8.4,", ")',advance='no') &
                        l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
                  ENDDO
               ENDIF
-              WRITE(stdout,*)
+              WRITE(unit,*)
            ENDDO
            DO l = 0, lmax_wfc
-              WRITE(stdout,2002,advance='no') totcharge(2), l_label(l), charges(na,l,2)
+              WRITE(unit,2002,advance='no') totcharge(2), l_label(l), charges(na,l,2)
               IF (l /= 0 .AND. present(charges_lm)) THEN
                  DO m = 1, 2*l+1
-                    WRITE( stdout,'(A1,A,"=",F8.4,", ")',advance='no') &
+                    WRITE( unit,'(A1,A,"=",F8.4,", ")',advance='no') &
                        l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,2)
                  ENDDO
               ENDIF
-              WRITE(stdout,*)
+              WRITE(unit,*)
            ENDDO
-           WRITE( stdout, 2003) totcharge(1) - totcharge(2), &
+           WRITE( unit, 2003) totcharge(1) - totcharge(2), &
                 ( l_label(l), charges(na,l,1) - charges(na,l,2), l=0,lmax_wfc)
         ENDIF
      ENDDO
      !
      psum = SUM(charges(:,:,:)) / nelec
-     WRITE( stdout, '(5x,"Spilling Parameter: ",f8.4)') 1.0d0 - psum
+     WRITE( unit, '(5x,"Spilling Parameter: ",f8.4)') 1.0d0 - psum
      !
      ! Sanchez-Portal et al., Sol. State Commun.  95, 685 (1995).
      ! The spilling parameter measures the ability of the basis provided by
@@ -706,7 +720,7 @@ SUBROUTINE sym_proj_nc ( proj0, proj_out  )
   !
 END SUBROUTINE sym_proj_nc
 !-----------------------------------------------------------------------
-SUBROUTINE print_proj ( lmax_wfc, proj )
+SUBROUTINE print_proj ( lmax_wfc, proj, lowdin_unit, diag_basis )
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
@@ -714,16 +728,16 @@ SUBROUTINE print_proj ( lmax_wfc, proj )
   USE constants,  ONLY : rytoev, eps4
   USE basis,      ONLY : natomwfc
   USE lsda_mod,   ONLY : nspin, isk, current_spin
-  USE noncollin_module, ONLY : noncolin
-  USE spin_orb,   ONLY : lspinorb
+  USE noncollin_module, ONLY : noncolin, lspinorb
   USE klist,      ONLY : nkstot, xk
   USE ions_base,  ONLY : nat, ityp, atm
   USE wvfct,      ONLY : et, wg, nbnd
   USE projections,ONLY : nlmchi
   !
   IMPLICIT NONE
-  INTEGER, INTENT(in) :: lmax_wfc
+  INTEGER, INTENT(in) :: lmax_wfc, lowdin_unit
   REAL(DP), INTENT(IN) :: proj(natomwfc,nbnd,nkstot)
+  LOGICAL, INTENT(IN) :: diag_basis
   !
   INTEGER :: nspin0, nwfc, ibnd, i, j, ik, na, l, m
   INTEGER, ALLOCATABLE :: idx(:)
@@ -733,10 +747,11 @@ SUBROUTINE print_proj ( lmax_wfc, proj )
   REAL (DP), EXTERNAL :: compute_mj
   CHARACTER (len=1) :: plus
   !
-  INTERFACE 
-     SUBROUTINE print_lowdin ( nat, lmax_wfc, nspin, charges, charges_lm )
+  INTERFACE
+     SUBROUTINE print_lowdin ( unit, nat, lmax_wfc, nspin, diag_basis, charges, charges_lm )
        IMPORT  :: DP
-       INTEGER, INTENT(IN) :: nat, lmax_wfc, nspin
+       INTEGER, INTENT(IN) :: unit, nat, lmax_wfc, nspin
+       LOGICAL, INTENT(IN) :: diag_basis
        REAL(DP), INTENT(in) :: charges (nat, 0:lmax_wfc, nspin )
        REAL(DP), INTENT(in), OPTIONAL :: charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin )
      END SUBROUTINE print_lowdin
@@ -838,13 +853,13 @@ SUBROUTINE print_proj ( lmax_wfc, proj )
         DO nwfc = 1, natomwfc
            na= nlmchi(nwfc)%na
            l = nlmchi(nwfc)%l
-	   IF ( noncolin .AND. .NOT. lspinorb ) THEN
-	      IF (nlmchi(nwfc)%ind<=(2*l+1)) THEN
-	         current_spin = 1
+           IF ( noncolin .AND. .NOT. lspinorb ) THEN
+              IF (nlmchi(nwfc)%ind<=(2*l+1)) THEN
+                 current_spin = 1
               ELSE
-	         current_spin = 2
+                 current_spin = 2
               ENDIF
-	   END IF
+           END IF
            charges(na,l,current_spin) = charges(na,l,current_spin) + &
                 wg (ibnd,ik) * proj (nwfc, ibnd, ik)
            IF ( nspin /= 4 ) THEN
@@ -857,10 +872,10 @@ SUBROUTINE print_proj ( lmax_wfc, proj )
   ENDDO
   !
   IF ( nspin /= 4 ) THEN
-     CALL print_lowdin ( nat, lmax_wfc, nspin, charges, charges_lm )
+     CALL print_lowdin ( lowdin_unit, nat, lmax_wfc, nspin, diag_basis, charges, charges_lm )
      DEALLOCATE (charges_lm)
   ELSE
-     CALL print_lowdin ( nat, lmax_wfc, nspin0, charges )
+     CALL print_lowdin ( lowdin_unit, nat, lmax_wfc, nspin0, diag_basis, charges )
   END IF
   DEALLOCATE (charges)
   !
@@ -876,7 +891,7 @@ SUBROUTINE force_theorem ( ef_0, filproj )
   USE basis,      ONLY : natomwfc
   USE wvfct,      ONLY : wg, et, nbnd
   USE mp,         ONLY : mp_sum
-  USE mp_pools,   ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_pools,   ONLY : inter_pool_comm
   USE projections,ONLY : proj, nlmchi
   !
   !---- Force Theorem -- (AlexS)
@@ -992,6 +1007,7 @@ SUBROUTINE projwave_paw( )
   USE wavefunctions, ONLY: evc
   !
   USE projections
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !
@@ -1101,7 +1117,7 @@ END FUNCTION compute_mj
 !  projwave with distributed matrixes
 !
 !-----------------------------------------------------------------------
-SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
+SUBROUTINE projwave( filproj, filowdin, lsym, diag_basis, lwrite_ovp )
   !-----------------------------------------------------------------------
   !
   USE kinds,     ONLY : DP
@@ -1110,28 +1126,30 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   USE basis,     ONLY : natomwfc, swfcatom
   USE klist,     ONLY : xk, nks, nkstot, nelec, ngk, igk_k
   USE lsda_mod,  ONLY : nspin
-  USE noncollin_module, ONLY: noncolin, npol
-  USE spin_orb,  ONLY : lspinorb, domag, lforcet
+  USE noncollin_module, ONLY: noncolin, domag, npol, lspinorb, lforcet
   USE wvfct,     ONLY : npwx, nbnd, et
   USE uspp,      ONLY : nkb, vkb
   USE becmod,    ONLY : bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE io_files,  ONLY : prefix, restart_dir, tmp_dir
-  USE control_flags, ONLY : gamma_only
+  USE control_flags, ONLY : gamma_only, use_para_diag, io_level
   USE pw_restart_new,ONLY : read_collected_wfc
   USE wavefunctions, ONLY : evc
   !
   USE projections, ONLY: nlmchi, fill_nlmchi, proj, proj_aux, ovps_aux
   !
-  USE io_files,  ONLY: nd_nmbr
+  USE io_files,  ONLY: nd_nmbr, nwordatwfc
   USE mp,        ONLY: mp_bcast
   USE mp_pools,  ONLY: me_pool, root_pool, intra_pool_comm
+  USE uspp_init,            ONLY : init_us_2
+  USE buffers,   ONLY : open_buffer, save_buffer, get_buffer, close_buffer
   !
   IMPLICIT NONE
   !
   include 'laxlib.fh'
   !
-  CHARACTER (len=*), INTENT(IN) :: filproj
+  CHARACTER (len=*), INTENT(IN) :: filproj, filowdin
   LOGICAL, INTENT(IN)    :: lsym
+  LOGICAL, INTENT(IN)    :: diag_basis
   LOGICAL, INTENT(INOUT) :: lwrite_ovp
   !
   LOGICAL :: ionode_pool
@@ -1146,9 +1164,9 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   REAL   (DP), ALLOCATABLE ::roverlap_d(:,:)
   !
   INTEGER  :: nksinit, nkslast
-  LOGICAL :: freeswfcatom
+  LOGICAL :: freeswfcatom, exst, lrotated
   !
-  INTEGER :: iunaux
+  INTEGER :: iunaux, lowdin_unit, iuwfc
   INTEGER, EXTERNAL :: find_free_unit
   CHARACTER(len=256) :: auxname
   !
@@ -1158,8 +1176,6 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   ! matrix distribution descriptors
   INTEGER :: nx, nrl, nrlx
   ! maximum local block dimension
-  LOGICAL :: la_para
-  ! flag for parallel linear algebra
   LOGICAL :: la_proc
   ! flag to distinguish procs involved in linear algebra
   INTEGER, ALLOCATABLE :: notcnv_ip( : )
@@ -1176,9 +1192,14 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   !
   ! fill structure nlmchi
   !
-  CALL fill_nlmchi ( natomwfc, nwfc, lmax_wfc )
+  CALL fill_nlmchi ( natomwfc, lmax_wfc )
   !
   ALLOCATE( proj (natomwfc, nbnd, nkstot) )
+  IF (diag_basis) THEN
+     iuwfc = find_free_unit()
+     nwordatwfc = npwx*natomwfc*npol
+     CALL open_buffer( iuwfc,  'wfcrot',  nwordatwfc, io_level, exst )
+  ENDIF
   !
   IF (.not. ALLOCATED(swfcatom)) THEN
      ALLOCATE(swfcatom (npwx*npol , natomwfc ) )
@@ -1198,10 +1219,14 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
      OPEN( unit=iunaux, file=auxname, status='unknown', form='unformatted')
   END IF
   !
+  !   Initialize parallelism for linear algebra
+  !
+  CALL set_para_diag ( natomwfc, use_para_diag )
+  !
   CALL desc_init( natomwfc, nx, la_proc, idesc, rank_ip, idesc_ip )
   CALL laxlib_getval(nproc_ortho=nproc_ortho)
-  la_para = ( nproc_ortho > 1 )
-  IF ( la_para ) THEN
+  use_para_diag = ( nproc_ortho > 1 )
+  IF ( use_para_diag ) THEN
      WRITE( stdout, &
           '(5x,"linear algebra parallelized on ",i3," procs")') nproc_ortho
      IF ( lwrite_ovp ) THEN
@@ -1214,7 +1239,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
      WRITE( stdout, * )
      WRITE( stdout, * ) ' Problem Sizes '
      WRITE( stdout, * ) ' natomwfc = ', natomwfc
-     IF ( la_para ) WRITE( stdout, * ) ' nx       = ', nx
+     IF ( use_para_diag ) WRITE( stdout, * ) ' nx       = ', nx
      WRITE( stdout, * ) ' nbnd     = ', nbnd
      WRITE( stdout, * ) ' nkstot   = ', nkstot
      WRITE( stdout, * ) ' npwx     = ', npwx
@@ -1345,6 +1370,12 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
      ENDIF
      DEALLOCATE( overlap_d )
      !
+     ! Save O^{-1/2} \hat S | phi_j> for a given k
+     IF (diag_basis) THEN
+        CALL save_buffer (wfcatom, nwordatwfc, iuwfc, ik)
+        GOTO 100
+     ENDIF
+     !
      ! make the projection <psi_i| O^{-1/2} \hat S | phi_j>,
      ! symmetrize the projections if required
      !
@@ -1379,8 +1410,37 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
         DEALLOCATE (proj0)
         !
      ENDIF
-     ! on k-points
-  ENDDO
+     !
+100  CONTINUE
+     !
+  ENDDO ! ik
+  !
+  ! Compute the projections in a local frame if requested
+  !
+  IF (diag_basis) THEN
+     CALL rotate_basis (iuwfc, lrotated)
+     ALLOCATE (proj0(natomwfc,nbnd))
+     DO ik = 1, nks
+        npw = ngk(ik)
+        ! Read the KSwavefunction evc at this k
+        CALL read_collected_wfc (restart_dir(), ik, evc)
+        ! Read the rotated orbital wfcatom at this k
+        CALL get_buffer (wfcatom, nwordatwfc, iuwfc, ik)
+        ! Calculate proj0 = <wfcatom|evc> at this k
+        CALL calbec (npw, wfcatom, evc, proj0)
+        IF (ionode_pool) WRITE( iunaux ) proj0
+        ! Symmetrization (lsym=.true.) must not be used here
+        ! if the rotation of orbitals was done because otherwise 
+        ! the results will be wrong
+        IF (lsym .AND. .NOT.lrotated) THEN
+           CALL sym_proj_k (proj0, proj(:,:,ik))
+        ELSE
+           proj(:,:,ik)=abs(proj0(:,:))**2
+        ENDIF
+     ENDDO
+     DEALLOCATE (proj0)
+     CALL close_buffer (iuwfc, 'DELETE')
+  ENDIF
   !
   DEALLOCATE (e)
   DEALLOCATE (wfcatom)
@@ -1399,7 +1459,18 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   !
   IF (ionode) THEN
      !
-     CALL print_proj( lmax_wfc, proj )
+     IF (TRIM(filowdin) /= ' ') THEN
+        lowdin_unit = find_free_unit()
+        OPEN(unit=lowdin_unit, file=trim(filowdin), status='unknown', &
+             form='formatted')
+     ELSE
+        lowdin_unit = stdout
+     END IF
+     !
+     CALL print_proj( lmax_wfc, proj, lowdin_unit, diag_basis )
+     !
+     IF (TRIM(filowdin) /= ' ') CLOSE( unit=lowdin_unit )
+     !
      CALL write_proj_file ( filproj, proj )
      !
   END IF
@@ -1453,6 +1524,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   ENDIF
   !
   IF ( ionode_pool ) DEALLOCATE( proj_aux, ovps_aux )
+  CALL laxlib_end()
   !
   RETURN
   !
@@ -1708,3 +1780,364 @@ CONTAINS
   !
 END SUBROUTINE projwave
 !
+SUBROUTINE rotate_basis (iuwfc, lrotated)
+  !
+  !! This routine rotates the ortho-atomic orbitals to the basis 
+  !! where the occupation matrix is diagonal. This is useful e.g.
+  !! for determining the eg and t2g states in chemical elements 
+  !! containing the d-type electrons.
+  !!
+  !! Input:  wfcatom =   O^{-1/2} \hat S | phi_j>
+  !! Output: wfcatom = T O^{-1/2} \hat S | phi_j>
+  !!
+  !! here: T is the transformation matrix composed of the eigenvectors 
+  !!         of the occupation matrix;
+  !!       O is the orbital overlap matrix;
+  !!       S is the ultrasoft/PAW operator;
+  !!       |phi_j> is the j-th atomic orbital.
+  !!
+  ! Written by I. Timrov (September 2021).
+  !
+  USE kinds,            ONLY : DP
+  USE basis,            ONLY : natomwfc
+  USE wvfct,            ONLY : nbnd, wg, npwx
+  USE symm_base,        ONLY : nsym, irt, d1, d2, d3
+  USE projections,      ONLY : nlmchi
+  USE ions_base,        ONLY : nat
+  USE klist,            ONLY : nks, ngk
+  USE mp,               ONLY : mp_sum
+  USE mp_pools,         ONLY : inter_pool_comm
+  USE lsda_mod,         ONLY : lsda, current_spin, nspin, isk
+  USE io_global,        ONLY : stdout
+  USE pw_restart_new,   ONLY : read_collected_wfc
+  USE wavefunctions,    ONLY : evc
+  USE io_files,         ONLY : restart_dir, nwordatwfc
+  USE becmod,           ONLY : calbec
+  USE buffers,          ONLY : save_buffer, get_buffer
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: iuwfc
+  ! unit from which to read wfcatom
+  LOGICAL, INTENT(OUT) :: lrotated
+  !
+  INTEGER :: ibnd, nwfc, na, nb, l, m, m1, m2, m0, m00, &
+             n, ik, is, isym, ldim, npw, ig
+  COMPLEX(DP), ALLOCATABLE :: proj(:,:), proj_aux(:,:,:,:), f(:,:) , vet(:,:), &
+                              wfcatom_aux(:,:,:,:), wfcatomk_rot(:), &
+                              transformation_matrix(:,:,:,:,:), wfcatom(:,:)
+  REAL(DP), ALLOCATABLE :: ns(:,:,:,:,:), nr(:,:,:,:,:), lambda(:)
+  INTEGER, ALLOCATABLE :: n_max(:), orbital_quantum_number(:,:)
+  LOGICAL, ALLOCATABLE :: diagonalize(:,:)
+  INTEGER, PARAMETER :: nmax = 10, &  ! max number of shells per atom
+                        mmax = 7      ! max number of m's per shell
+  REAL(DP) :: psum
+  !
+  lrotated = .TRUE.
+  !
+  ALLOCATE (n_max(nat))
+  ALLOCATE (orbital_quantum_number(nat,nmax))
+  ALLOCATE (proj_aux(nat,nmax,mmax,nbnd))
+  ALLOCATE (nr(nat,nmax,mmax,mmax,nspin))
+  ALLOCATE (proj(natomwfc,nbnd))
+  ALLOCATE (wfcatom(npwx,natomwfc))
+  ALLOCATE (diagonalize(nat,nmax))
+  nr = 0.0d0
+  !
+  DO ik = 1, nks
+     !
+     IF (lsda) current_spin = isk(ik)
+     !
+     npw = ngk(ik)
+     !
+     ! Read the Kohn-Sham wavefunctions evc at this k
+     CALL read_collected_wfc (restart_dir(), ik, evc)
+     !
+     ! Read the orbitals wfcatom at this k
+     CALL get_buffer (wfcatom, nwordatwfc, iuwfc, ik)
+     !
+     ! Calculate proj = <wfcatom|evc> at this k
+     CALL calbec (npw, wfcatom, evc, proj)
+     !
+     ! Rewrite the arrays proj and wfcatomk in a different way
+     ! (in terms of n,l,m)
+     !
+     n_max(:) = 0
+     orbital_quantum_number = -1
+     proj_aux = (0.0d0, 0.0d0)
+     DO nwfc = 1, natomwfc
+        na= nlmchi(nwfc)%na
+        n = nlmchi(nwfc)%n
+        l = nlmchi(nwfc)%l
+        m = nlmchi(nwfc)%m
+        n_max(na) = MAX(n,n_max(na))
+        orbital_quantum_number(na,n) = l
+        DO ibnd = 1, nbnd
+           proj_aux(na,n,m,ibnd) = proj(nwfc,ibnd)
+        ENDDO
+     ENDDO
+     !
+     ! Compute the occupation matrix
+     !
+     DO na = 1, nat
+        ! n are the shells of atom na
+        DO n = 1, n_max(na)
+           l = orbital_quantum_number(na,n)
+           ldim = 2*l+1 
+           DO m1 = 1, ldim
+              DO m2 = 1, ldim
+                 DO ibnd = 1, nbnd
+                    nr(na,n,m1,m2,current_spin) = nr(na,n,m1,m2,current_spin) +   &
+                                                  wg(ibnd,ik) *                   &
+                                                  DBLE(proj_aux(na,n,m2,ibnd) *  &
+                                                  CONJG(proj_aux(na,n,m1,ibnd)))
+                 ENDDO
+              ENDDO
+           ENDDO
+        ENDDO
+     ENDDO
+     !
+  ENDDO
+  !
+  CALL mp_sum( nr, inter_pool_comm )
+  !
+  DEALLOCATE (proj)
+  DEALLOCATE (proj_aux)
+  ALLOCATE (ns(nat,nmax,mmax,mmax,nspin))
+  ns = 0.0d0
+  !
+  ! Symmetrization
+  !
+  CALL d_matrix (d1, d2, d3)
+  DO na = 1, nat
+     DO n = 1, n_max(na)
+        l = orbital_quantum_number(na,n)
+        ldim = 2*l+1
+        DO is = 1, nspin
+           DO m1 = 1, ldim
+              DO m2 = 1, ldim
+                 DO isym = 1, nsym
+                    nb = irt (isym, na)
+                    DO m0 = 1, ldim
+                       DO m00 = 1, ldim
+                          IF (l == 0) THEN
+                             ns(na,n,m1,m2,is) = ns(na,n,m1,m2,is) +  &
+                                                 nr(nb,n,m0,m00,is) / nsym
+                          ELSEIF (l == 1) THEN
+                             ns(na,n,m1,m2,is) = ns(na,n,m1,m2,is) +  &
+                                                 d1(m0 ,m1,isym) * nr(nb,n,m0,m00,is) * &
+                                                 d1(m00,m2,isym) / nsym
+                          ELSEIF (l == 2) THEN
+                             ns(na,n,m1,m2,is) = ns(na,n,m1,m2,is) +  &
+                                                 d2(m0 ,m1,isym) * nr(nb,n,m0,m00,is) * &
+                                                 d2(m00,m2,isym) / nsym
+                          ELSEIF (l == 3) THEN
+                             ns(na,n,m1,m2,is) = ns(na,n,m1,m2,is) +  &
+                                                 d3(m0 ,m1,isym) * nr(nb,n,m0,m00,is) * &
+                                                 d3(m00,m2,isym) / nsym
+                          ELSE
+                             CALL errore( 'rotate_basis', &
+                                          'angular momentum not implemented', &
+                                          ABS(l) )
+                          ENDIF
+                       ENDDO
+                    ENDDO
+                 ENDDO
+              ENDDO
+           ENDDO
+        ENDDO
+     ENDDO
+  ENDDO 
+  !
+  DEALLOCATE (nr)
+  !
+  ! Now we make the matrix ns strictly Hermitean
+  !
+  DO na = 1, nat
+     DO n = 1, n_max(na)
+        l = orbital_quantum_number(na,n)
+        ldim = 2*l+1
+        DO is = 1, nspin
+           DO m1 = 1, ldim
+              DO m2 = m1, ldim
+                 psum = ABS( ns(na,n,m1,m2,is) - ns(na,n,m2,m1,is) )
+                 IF (psum > 1.d-10) THEN
+                    WRITE( stdout, * ) na, n, m1, m2, is
+                    WRITE( stdout, * ) ns(na,n,m1,m2,is)
+                    WRITE( stdout, * ) ns(na,n,m2,m1,is)
+                    CALL errore( 'rotate_basis', 'non Hermitean matrix', 1 )
+                 ELSE
+                    ns(na,n,m1,m2,is) = 0.5d0 * (ns(na,n,m1,m2,is) + &
+                                                 ns(na,n,m2,m1,is) )
+                    ns(na,n,m2,m1,is) = ns(na,n,m1,m2,is)
+                 ENDIF
+              ENDDO
+           ENDDO
+        ENDDO
+     ENDDO
+  ENDDO
+  !
+  ! Before diagonalizng the occupation matrix we need to check 
+  ! whether there are non-zero off-diagonal matrix elements. If the
+  ! matrix is already diagonal, then we do not diagonalize it.
+  !
+  diagonalize(:,:) = .FALSE.
+  DO na = 1, nat
+     DO n = 1, n_max(na)
+        l = orbital_quantum_number(na,n)
+        IF (l>0) THEN
+           ldim = 2*l+1
+           DO is = 1, nspin
+              DO m1 = 1, ldim-1
+                 DO m2 = m1+1, ldim
+                    ! If any off-diagonal element is non-zero then proceed
+                    IF (ABS(ns(na,n,m1,m2,is)) > 1.d-3) THEN
+                       diagonalize(na,n) = .TRUE.
+                       GO TO 10
+                    ENDIF
+                 ENDDO
+              ENDDO
+           ENDDO
+        ENDIF
+10   CONTINUE
+     ENDDO
+  ENDDO
+  !
+  ! Diagonalization of the occupation matrix ns
+  !
+  ALLOCATE (transformation_matrix(nat,nmax,mmax,mmax,nspin))
+  DO na = 1, nat
+     WRITE( stdout,'(/5x,21("-")," ATOM ",i4,1x,22("-"))') na
+     DO n = 1, n_max(na)
+        l = orbital_quantum_number(na,n)
+        ldim = 2*l+1
+        WRITE( stdout,'(/5x,"Orbital quantum number l = ", i1)') l
+        ALLOCATE (f(ldim,ldim), vet(ldim,ldim), lambda(ldim))
+        DO is = 1, nspin
+           IF (nspin /= 1) WRITE( stdout,'(5x,"SPIN ",i2)') is
+           DO m1 = 1, ldim
+              DO m2 = 1, ldim
+                 f(m1,m2) = ns(na,n,m1,m2,is)
+              ENDDO
+           ENDDO
+           WRITE( stdout,'(5x,"occupation matrix ns (before diag.):")')
+           DO m1 = 1, ldim
+              WRITE( stdout,'(5x,7f7.3)') ( DBLE(ns(na,n,m1,m2,is)), m2=1, ldim )
+           ENDDO
+           IF (diagonalize(na,n)) THEN
+              ! Diagonalize ns
+              CALL cdiagh( ldim, f, ldim, lambda, vet )
+              DO m1 = 1, ldim
+                 DO m2 = 1, ldim
+                    transformation_matrix(na,n,m1,m2,is) = vet(m1,m2)
+                 ENDDO
+              ENDDO
+           ELSE
+              ! Do not diagonalize ns
+              DO m1 = 1, ldim
+                 lambda(m1) = f(m1,m1)
+              ENDDO
+              transformation_matrix(na,n,:,:,is) = (0.0d0, 0.0d0)
+              DO m1 = 1, ldim
+                 transformation_matrix(na,n,m1,m1,is) = (1.0d0, 0.d0)
+              ENDDO
+           ENDIF
+           WRITE( stdout,'(5x,"eigenvalues:")')
+           WRITE( stdout,'(5x,7f7.3)') (lambda(m1), m1=1, ldim)
+           WRITE( stdout,'(5x,"eigenvectors (columns):")')
+           DO m1 = 1, ldim
+              WRITE( stdout,'(5x,7f7.3)') ( DBLE(transformation_matrix(na,n,m1,m2,is)), m2=1, ldim )
+           ENDDO
+        ENDDO
+        DEALLOCATE (f, vet, lambda)
+     ENDDO 
+  ENDDO     
+  !
+  IF (.NOT. ANY(diagonalize(:,:))) THEN
+     WRITE( stdout,'(/5x,"All occupation matrices are already diagonal. No rotation will be performed!")')
+     lrotated = .FALSE.
+     GO TO 11
+  ENDIF
+  !
+  WRITE( stdout,'(/5x,"Rotating the orbitals to the diagonal representation of ns...")')
+  !
+  ! Rotate the orbitals using the transformation matrix composed of 
+  ! the eigenvectors of the occupation matrix
+  !
+  ALLOCATE (wfcatom_aux(npwx,nat,nmax,mmax))
+  DO ik = 1, nks
+     !
+     npw = ngk(ik)
+     !
+     IF (lsda) current_spin = isk(ik)
+     !
+     ! Read the orbitals wfcatom at this k
+     CALL get_buffer (wfcatom, nwordatwfc, iuwfc, ik)
+     !
+     ! Rewrite the array wfcatom in a different way (in terms of na,n,m)
+     !
+     DO nwfc = 1, natomwfc
+        na= nlmchi(nwfc)%na
+        n = nlmchi(nwfc)%n
+        m = nlmchi(nwfc)%m
+        DO ig = 1, npw
+           wfcatom_aux(ig,na,n,m) = wfcatom(ig,nwfc)
+        ENDDO 
+     ENDDO
+     !
+     nwfc = 0
+     wfcatom(:,:) = (0.0d0, 0.0d0)
+     DO na = 1, nat
+        DO n = 1, n_max(na)
+           l = orbital_quantum_number(na,n)
+           ldim = 2*l+1
+           !
+           ! Rotate the orbitals
+           !
+           ALLOCATE (wfcatomk_rot(ldim))
+           DO ig = 1, npw
+              wfcatomk_rot(:) = (0.0d0, 0.0d0)
+              DO m1 = 1, ldim
+                 DO m2 = 1, ldim
+                    wfcatomk_rot(m1) = wfcatomk_rot(m1) + &
+                                       transformation_matrix(na,n,m2,m1,current_spin) * &
+                                       wfcatom_aux(ig,na,n,m2)
+                 ENDDO
+              ENDDO
+              DO m = 1, ldim
+                 wfcatom_aux(ig,na,n,m) = wfcatomk_rot(m)
+              ENDDO
+           ENDDO
+           DEALLOCATE (wfcatomk_rot)
+           !
+           ! Copy wfcatom_aux to the original array wfcatom
+           !
+           DO m = 1, ldim
+              nwfc = nwfc + 1
+              DO ig = 1, npw
+                 wfcatom(ig,nwfc) = wfcatom_aux(ig,na,n,m)
+              ENDDO
+           ENDDO
+           !
+        ENDDO
+     ENDDO
+     !
+     ! Write the rotated orbitals to file
+     CALL save_buffer (wfcatom, nwordatwfc, iuwfc, ik)
+     !
+  ENDDO
+  !
+  DEALLOCATE (wfcatom_aux)
+  !
+11 CONTINUE
+  !
+  DEALLOCATE (transformation_matrix)
+  DEALLOCATE (n_max)
+  DEALLOCATE (orbital_quantum_number)
+  DEALLOCATE (ns)
+  DEALLOCATE (wfcatom)
+  DEALLOCATE (diagonalize)
+  !
+  RETURN
+  !
+END SUBROUTINE rotate_basis        

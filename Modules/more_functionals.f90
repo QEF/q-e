@@ -1588,23 +1588,23 @@
         v2x = V2XA
       END SUBROUTINE wrap_b88
 
-      SUBROUTINE wrap_glyp( rho, grho, sc, v1c, v2c )
-        USE kinds, ONLY: DP
-        USE corr_gga, ONLY: lsd_glyp
-        IMPLICIT NONE
-        REAL(DP) :: rho, grho, sc, v1c, v2c
-        REAL(DP) :: RA,RB,GRHOAA,GRHOAB,GRHOBB
-        REAL(DP) :: V1CA,V2CA,V1CB,V2CB,V2CAB
-        ra = rho * 0.5d0
-        rb = rho * 0.5d0
-        grhoaa = 0.25d0 * grho
-        grhobb = 0.25d0 * grho
-        grhoab = 0.25d0 * grho
-        CALL LSD_GLYP(RA,RB,GRHOAA,GRHOAB,GRHOBB,SC,  &
-                      V1CA,V2CA,V1CB,V2CB,V2CAB)
-        v1c = V1CA
-        v2c = 2.0d0*(v2ca+v2cb+v2cab*2.d0)*0.25d0
-      END SUBROUTINE wrap_glyp
+!       SUBROUTINE wrap_glyp( rho, grho, sc, v1c, v2c ) !--not used--
+!         USE kinds, ONLY: DP
+!         USE xc_lib, ONLY: lsd_glyp  !to add lsd_glyp in xc_lib module if needed
+!         IMPLICIT NONE
+!         REAL(DP) :: rho, grho, sc, v1c, v2c
+!         REAL(DP) :: RA,RB,GRHOAA,GRHOAB,GRHOBB
+!         REAL(DP) :: V1CA,V2CA,V1CB,V2CB,V2CAB
+!         ra = rho * 0.5d0
+!         rb = rho * 0.5d0
+!         grhoaa = 0.25d0 * grho
+!         grhobb = 0.25d0 * grho
+!         grhoab = 0.25d0 * grho
+!         CALL LSD_GLYP(RA,RB,GRHOAA,GRHOAB,GRHOBB,SC,  &
+!                       V1CA,V2CA,V1CB,V2CB,V2CAB)
+!         v1c = V1CA
+!         v2c = 2.0d0*(v2ca+v2cb+v2cab*2.d0)*0.25d0
+!       END SUBROUTINE wrap_glyp
 
 !     ==================================================================
       SUBROUTINE LSD_B88(B1,RHOA,RHOB,GRHOA,GRHOB,sx,V1XA,V2XA,V1XB,V2XB)

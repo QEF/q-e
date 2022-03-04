@@ -5,47 +5,81 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#if defined(__CUDA)
+#define PINMEM ,PINNED
+#else
+#define PINMEM
+#endif
+!
 !------------------------------------------------------------------------------!
   MODULE electrons_base
 !------------------------------------------------------------------------------!
-
+      !! Variables and routines related to electronic configuration.
       USE kinds, ONLY: DP
+#if defined (__CUDA)
+      USE cudafor
+#endif
 !
       IMPLICIT NONE
       SAVE
 
-      INTEGER :: nbnd       = 0    !  number electronic bands, each band contains
-                                   !  two spin states
-      INTEGER :: nbndx      = 0    !  array dimension nbndx >= nbnd
-      INTEGER :: nspin      = 0    !  nspin = number of spins (1=no spin, 2=LSDA)
-      INTEGER :: nel(2)     = 0    !  number of electrons (up, down)
-      INTEGER :: nelt       = 0    !  total number of electrons ( up + down )
-      INTEGER :: nupdwn(2)  = 0    !  number of states with spin up (1) and down (2)
-      INTEGER :: iupdwn(2)  = 0    !  first state with spin (1) and down (2)
-      INTEGER :: nudx       = 0    !  max (nupdw(1),nupdw(2))
-      INTEGER :: nbsp       = 0    !  total number of electronic states 
-                                   !  (nupdwn(1)+nupdwn(2))
-      INTEGER :: nbspx      = 0    !  array dimension nbspx >= nbsp
+      INTEGER :: nbnd       = 0
+      !! number electronic bands, each band contains two spin states
+      INTEGER :: nbndx      = 0
+      !! array dimension nbndx >= nbnd
+      INTEGER :: nspin      = 0
+      !! nspin = number of spins (1=no spin, 2=LSDA)
+      INTEGER :: nel(2)     = 0
+      !! number of electrons (up, down)
+      INTEGER :: nelt       = 0
+      !! total number of electrons ( up + down )
+      INTEGER :: nupdwn(2)  = 0
+      !! number of states with spin up (1) and down (2)
+      INTEGER :: iupdwn(2)  = 0
+      !! first state with spin (1) and down (2)
+      INTEGER :: nudx       = 0
+      !! max (nupdw(1),nupdw(2))
+      INTEGER :: nbsp       = 0
+      !! total number of electronic states nupdwn(1)+nupdwn(2)
+      INTEGER :: nbspx      = 0
+      !! array dimension nbspx >= nbsp
       !
-      INTEGER :: nupdwn_bgrp(2)  = 0    !  number of states with spin up (1) and down (2) in this band group
-      INTEGER :: iupdwn_bgrp(2)  = 0    !  first state with spin (1) and down (2) in this band group
-      INTEGER :: nudx_bgrp       = 0    !  max (nupdw_bgrp(1),nupdw_bgrp(2)) in this band group
-      INTEGER :: nbsp_bgrp       = 0    !  total number of electronic states 
-                                        !  (nupdwn_bgrp(1)+nupdwn_bgrp(2)) in this band group
-      INTEGER :: nbspx_bgrp      = 0    !  array dimension nbspx_bgrp >= nbsp_bgrp local to the band group
-      INTEGER :: i2gupdwn_bgrp(2)= 0    !  global index of the first local band
-
+      INTEGER :: nupdwn_bgrp(2)  = 0
+      !! number of states with spin up (1) and down (2) in this band group
+      INTEGER :: iupdwn_bgrp(2)  = 0
+      !! first state with spin (1) and down (2) in this band group
+      INTEGER :: nudx_bgrp       = 0
+      !! max (nupdw_bgrp(1),nupdw_bgrp(2)) in this band group
+      INTEGER :: nbsp_bgrp       = 0
+      !! total number of electronic states (nupdwn_bgrp(1)+nupdwn_bgrp(2))
+      !! in this band group
+      INTEGER :: nbspx_bgrp      = 0
+      !! array dimension nbspx_bgrp >= nbsp_bgrp local to the band group
+      INTEGER :: i2gupdwn_bgrp(2)= 0
+      !! global index of the first local band
+      !
       LOGICAL :: telectrons_base_initval = .FALSE.
-      LOGICAL :: keep_occ = .FALSE.  ! if .true. when reading restart file keep 
-                                     ! the occupations calculated in initval
-
-      REAL(DP), ALLOCATABLE :: f(:)   ! occupation numbers ( at gamma )
-      REAL(DP) :: qbac = 0.0_DP       ! background neutralizing charge
-      INTEGER, ALLOCATABLE :: ispin(:) ! spin of each state
-
-      REAL(DP), ALLOCATABLE :: f_bgrp(:)     ! occupation numbers ( at gamma )
-      INTEGER, ALLOCATABLE  :: ispin_bgrp(:) ! spin of each state
-      INTEGER, ALLOCATABLE :: ibgrp_g2l(:)    ! local index of the i-th global band index
+      LOGICAL :: keep_occ = .FALSE.
+      !! if TRUE when reading restart file keep the occupations calculated in initval
+      !
+      REAL(DP), ALLOCATABLE :: f(:)
+      !! occupation numbers ( at gamma )
+      REAL(DP) :: qbac = 0.0_DP
+      !! background neutralizing charge
+      INTEGER, ALLOCATABLE :: ispin(:)
+      !! spin of each state
+      !
+      REAL(DP), ALLOCATABLE :: f_bgrp(:)
+      !! occupation numbers ( at gamma )
+      REAL(DP), ALLOCATABLE :: f_d(:)
+      !! occupation numbers ( at gamma )
+      INTEGER, ALLOCATABLE  :: ispin_bgrp(:)
+      !! spin of each state
+      INTEGER, ALLOCATABLE PINMEM :: ibgrp_g2l(:)
+      !! local index of the i-th global band index
+#if defined (__CUDA)
+      ATTRIBUTES( DEVICE ) :: f_d
+#endif
 !
 !------------------------------------------------------------------------------!
   CONTAINS
@@ -54,7 +88,9 @@
 
     SUBROUTINE electrons_base_initval( zv_ , na_ , nsp_ , nbnd_ , nspin_ , &
           occupations_ , f_inp, tot_charge_, tot_magnetization_ )
-
+      !
+      !! Initialize electronic configuration.
+      !
       USE constants,         ONLY   : eps8
       USE io_global,         ONLY   : stdout
 
@@ -337,6 +373,8 @@
 !
     subroutine set_nelup_neldw ( tot_magnetization_, nelec_, nelup_, neldw_ )
       !
+      !! Set number of spin up and spin down electrons.
+      !
       USE kinds,     ONLY : DP
       USE constants, ONLY : eps8
       !
@@ -347,7 +385,7 @@
       !
       integer_charge = ( ABS (nelec_ - NINT(nelec_)) < eps8 )
       !
-      IF ( tot_magnetization_ < 0 ) THEN
+      IF ( tot_magnetization_ < -9999 ) THEN
          ! default when tot_magnetization is unspecified
          IF ( integer_charge) THEN
             nelup_ = INT( nelec_ + 1 ) / 2
@@ -359,7 +397,7 @@
       ELSE
          ! tot_magnetization specified in input
          !
-         if ( (tot_magnetization_ > 0) .and. (nspin==1) ) &
+         if ( (tot_magnetization_ > -9999) .and. (nspin==1) ) &
                  CALL errore(' set_nelup_neldw  ', &
                  'tot_magnetization is inconsistent with nspin=1 ', 2 )
          integer_magnetization = ( ABS( tot_magnetization_ - &
@@ -397,6 +435,7 @@
       IF( ALLOCATED( f ) ) DEALLOCATE( f )
       IF( ALLOCATED( ispin ) ) DEALLOCATE( ispin )
       IF( ALLOCATED( f_bgrp ) ) DEALLOCATE( f_bgrp )
+      IF( ALLOCATED( f_d ) ) DEALLOCATE( f_d )
       IF( ALLOCATED( ispin_bgrp ) ) DEALLOCATE( ispin_bgrp )
       IF( ALLOCATED( ibgrp_g2l ) ) DEALLOCATE( ibgrp_g2l )
       telectrons_base_initval = .FALSE.
@@ -454,6 +493,10 @@
             ilocal = ilocal + 1
          END DO
       END DO
+
+#if defined (__CUDA)
+      ALLOCATE( f_d, SOURCE = f_bgrp )
+#endif
       
       RETURN
 

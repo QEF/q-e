@@ -15,5 +15,5 @@ memory_pw4gww.x: memory_pw4gww.f90
 	$(FC) -o memory_pw4gww.x memory_pw4gww.f90
 
 clean:
-	- /bin/rm -fv *.x
+	- /bin/rm -f *.x
 

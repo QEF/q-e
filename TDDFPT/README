@@ -64,6 +64,14 @@ Source: PHYSICAL REVIEW B 102, 035156 (2020)
 
 -------------------------------------------------------------------------------------------------------------
 
+Magnetic spectroscopy (inelastic neutron scattering)
+
+Spin dynamics from time-dependent density functional perturbation theory
+Authors: T. Gorni, I. Timrov, and S. Baroni,
+Source: The European Physical Journal B   Volume: 91   Article Number: 249   Published: 2018
+
+-------------------------------------------------------------------------------------------------------------
+
 This module uses subroutines from PW, Modules and LR_Modules along with 
 the general infrasturcture provided by Quantum ESPRESSO. 
 
@@ -77,7 +85,3 @@ src      : The source files
 Doc      : The manual
 Examples : Examples and tests. Each example has its own seperate Makefile. 
            Refer to the README under this subdirectory for further information. 
-tools    : Various tools:
-           1) The postprocessing code for calculating absorption spectrum and EELS.
-           2) A script to recover reduced liouvillian in a format comprehensible to postprocessing
-              code from the stdout. 

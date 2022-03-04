@@ -8,9 +8,8 @@
 !--------------------------------------------------------------
 subroutine zstar_eu_us
   !--------------------------------------------------------------
-  !
-  ! Calculates the additional part of the Born effective charges
-  ! in the case of USPP.
+  !! Calculates the additional part of the Born effective charges
+  !! in the case of USPP.
   !
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_sum
@@ -33,9 +32,9 @@ subroutine zstar_eu_us
   USE efield_mod,       ONLY : zstareu0
   USE phus,             ONLY : becsumort
   USE modes,            ONLY : u, npert, nirr
-  USE units_ph,         ONLY : lrdwf, iucom, lrcom, lrebar, iuebar, &
-                               lrdrhous, iudrhous, iudwf
-  USE units_lr,         ONLY : iuwfc, lrwfc
+  USE units_ph,         ONLY : iucom, lrcom, lrebar, iuebar, &
+                               lrdrhous, iudrhous
+  USE units_lr,         ONLY : iuwfc, lrwfc, iudwf, lrdwf
   USE mp_pools,         ONLY : nproc_pool, npool
   USE control_lr,       ONLY : nbnd_occ
   USE lrus,             ONLY : int3, int3_paw
@@ -43,8 +42,10 @@ subroutine zstar_eu_us
   USE qpoint,           ONLY : nksq, ikks
   USE ldaU,             ONLY : lda_plus_u
   USE dv_of_drho_lr
+  USE uspp_init,        ONLY : init_us_2
   !
   implicit none
+  !
   integer :: npw, ibnd, jbnd, ipol, jpol, imode0, irr, imode, nrec, mode
   integer :: ik, ikk, ig, ir, is, i, j, mu, ipert
   integer :: ih, jh, ijh

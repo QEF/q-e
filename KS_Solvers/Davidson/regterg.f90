@@ -22,7 +22,6 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   ! ... where H is an hermitean operator, e is a real scalar,
   ! ... S is an uspp matrix, evc is a complex vector
   ! ... (real wavefunctions with only half plane waves stored)
-  
   USE util_param,    ONLY : DP, stdout
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, &
           nbgrp, my_bgrp_id, me_bgrp, root_bgrp
@@ -725,6 +724,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   END IF
   CALL stop_clock( 'regterg:init' )
   !
+  !
   IF ( lrot ) THEN
      !
      CALL set_e_from_h()
@@ -974,6 +974,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
      END IF
      !
   END DO iterate
+  !
   !
   DEALLOCATE( vl, hl, sl )
   !

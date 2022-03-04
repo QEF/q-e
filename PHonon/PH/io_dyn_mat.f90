@@ -9,9 +9,8 @@
 !----------------------------------------------------------------------------
 MODULE io_dyn_mat
   !----------------------------------------------------------------------------
-  !
-  ! ... this module contains methods to read and write the dynamical
-  !     matrix and the interatomic force constants files in xml format.
+  !! This module contains methods to read and write the dynamical
+  !! matrix and the interatomic force constants files in xml format.
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : ionode, ionode_id
@@ -66,7 +65,7 @@ MODULE io_dyn_mat
        !
        ! ... open XML descriptor
        !
-       iunout = xml_openfile (TRIM( fildyn ) // '.xml' )
+       iunout = xml_open_file (TRIM( fildyn ) // '.xml' )
        !
     ENDIF
     CALL mp_bcast( iunout, ionode_id, intra_image_comm )
@@ -246,9 +245,8 @@ MODULE io_dyn_mat
     !----------------------------------------------------------------------------
     SUBROUTINE read_dyn_mat_param(fildyn, ntyp, nat)
     !----------------------------------------------------------------------------
-    !!
-    !! Read paramters from the dynamical matrix
-    !!
+    !! Read paramters from the dynamical matrix.
+    !
     USE io_global,   ONLY : ionode
     !
     IMPLICIT NONE
@@ -262,7 +260,7 @@ MODULE io_dyn_mat
     !
     ! Open XML descriptor
     !
-    IF (ionode) iunout = xml_openfile( TRIM(fildyn) // '.xml')
+    IF (ionode) iunout = xml_open_file( TRIM(fildyn) // '.xml')
     !
     CALL mp_bcast(iunout, ionode_id, intra_image_comm)
     IF ( iunout == -1 ) &
@@ -289,9 +287,8 @@ MODULE io_dyn_mat
                celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, &
                nqs, lrigid, epsil, zstareu, lraman, ramtns)
     !----------------------------------------------------------------------------
-    !!
-    !! Read the dynamical matrix
-    !!
+    !! Read the dynamical matrix.
+    !
     USE kinds,       ONLY : DP
     USE io_global,   ONLY : ionode
     USE xmltools
@@ -380,7 +377,7 @@ MODULE io_dyn_mat
       !
       IF (PRESENT(epsil)) THEN
         CALL xmlr_opentag("DIELECTRIC_PROPERTIES", ierr)
-        IF (ierr == -1) THEN
+        IF (ierr == 1) THEN
           IF (PRESENT(lrigid))  lrigid = .false.
           IF (PRESENT(lraman))  lraman = .false.
           epsil = 0.0_dp
@@ -453,10 +450,10 @@ MODULE io_dyn_mat
     !----------------------------------------------------------------------------
     SUBROUTINE read_dyn_mat(nat, iq, xq, dyn)
     !----------------------------------------------------------------------------
-    !!
     !! This routine reads the dynamical matrix file. The file is assumed to
-    !! be already opened. iq is the number of the dynamical matrix to read.
-    !!
+    !! be opened already. \(\text{iq}\) is the number of the dynamical matrix 
+    !! to read.
+    !
     USE kinds,       ONLY : DP
     USE io_global,   ONLY : ionode
     !
@@ -473,7 +470,7 @@ MODULE io_dyn_mat
     !
     ! Local variables
     INTEGER :: na, nb
-    !! Number of atoms
+    ! Number of atoms
     !  
     IF (ionode) THEN
       CALL xmlr_opentag("DYNAMICAL_MAT_."//i2c(iq))
@@ -495,9 +492,8 @@ MODULE io_dyn_mat
     !----------------------------------------------------------------------------    
     SUBROUTINE read_dyn_mat_tail(nat, omega, u)
     !----------------------------------------------------------------------------    
-    !!
     !! The output of the routine in a.u.
-    !!
+    !
     USE kinds,     ONLY : DP
     USE constants, ONLY : RY_TO_THZ
     ! 
@@ -510,9 +506,9 @@ MODULE io_dyn_mat
     ! 
     ! Local variables
     REAL(KIND = DP) :: omega_(2)
-    !! Phonon freq
+    ! Phonon freq
     INTEGER :: mu
-    !! 
+    ! 
     ! 
     IF (PRESENT(u) .AND. .NOT. PRESENT(omega)) &
        CALL errore('read_dyn_mat_tail','omega must be present to read u',1)
@@ -540,14 +536,12 @@ MODULE io_dyn_mat
     !----------------------------------------------------------------------------
     SUBROUTINE read_ifc_param(nr1, nr2, nr3)
     !----------------------------------------------------------------------------
-    !!
-    !! Read IFC parameters
-    !!
-    !! The following sequence should be used:
-    !! read_dyn_mat_param
-    !! read_dyn_mat_header
-    !! read_ifc_param
-    !! read_ifc
+    !! Read IFC parameters.  
+    !! The following sequence should be used:  
+    !! * \(\texttt{read_dyn_mat_param}\);
+    !! * \(\texttt{read_dyn_mat_header}\);
+    !! * \(\texttt{read_ifc_param}\);
+    !! * \(\texttt{read_ifc}\).
     !
     IMPLICIT NONE
     !
@@ -575,9 +569,8 @@ MODULE io_dyn_mat
     !----------------------------------------------------------------------------
     SUBROUTINE read_ifc(nr1, nr2, nr3, nat, phid)
     !----------------------------------------------------------------------------
-    !!
-    !! Read IFC in XML format
-    !!
+    !! Read IFC in XML format.
+    !
     USE kinds,       ONLY : DP
     USE io_global,   ONLY : ionode
     !
@@ -587,17 +580,17 @@ MODULE io_dyn_mat
     !! Grid size
     INTEGER, INTENT(in) :: nat
     !! Number of atoms
-    REAL(KIND = DP), INTENT(out) :: phid(nr1 * nr2 * nr3, 3, 3, nat, nat)
+    REAL(KIND = DP), INTENT(out) :: phid(nr1*nr2*nr3,3,3,nat,nat)
     !!
     ! Local variables
     INTEGER :: na, nb
-    !! Atoms
+    ! Atoms
     INTEGER :: nn, ierr
-    !!
+    !
     INTEGER :: m1, m2, m3
-    !! nr dimension
+    ! nr dimension
     REAL(KIND = DP) :: aux(3, 3)
-    !! Auxiliary
+    ! Auxiliary
     ! 
     IF (ionode) THEN
       CALL xmlr_opentag( "INTERATOMIC_FORCE_CONSTANTS", ierr)

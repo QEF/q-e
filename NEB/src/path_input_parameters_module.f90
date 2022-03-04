@@ -114,36 +114,45 @@ MODULE path_input_parameters_module
   !
   REAL (DP)  :: path_thr = 0.05_DP
   !
-  LOGICAL      :: lfcpopt              = .FALSE.
-  REAL(DP)     :: fcp_mu               = 0.0_DP
-  CHARACTER(8) :: fcp_relax            = 'lm'
-  ! 'lm':    line minimisation
-  ! 'mdiis': MDIIS algorithm
-  CHARACTER(len=8) :: fcp_relax_allowed(2)
-  DATA fcp_relax_allowed / 'lm', 'mdiis' /
-  REAL(DP)     :: fcp_relax_step       = 0.1_DP
-  REAL(DP)     :: fcp_relax_crit       = 0.001_DP
-  INTEGER      :: fcp_mdiis_size       = 4
-  REAL(DP)     :: fcp_mdiis_step       = 0.2_DP
-  REAL(DP)     :: fcp_tot_charge_first = 0.0_DP
-  REAL(DP)     :: fcp_tot_charge_last  = 0.0_DP
+  LOGICAL    :: lfcp    = .FALSE.
+  REAL(DP)   :: fcp_mu  = 0.0_DP  ! in eV
+  REAL(DP)   :: fcp_thr = 0.01_DP ! in eV
+  !
+  CHARACTER(len=80) :: fcp_scheme = 'lm'
+  ! fcp_scheme = 'lm' | 'newton' | 'coupled'
+  ! set the minimization algorithm for FCP
+  ! 'lm'          line-minimization
+  ! 'newton'      newton-raphson
+  ! 'coupled'     coupled-method with ionic postions
+  !
+  CHARACTER(len=80) :: fcp_scheme_allowed(8)
+  DATA fcp_scheme_allowed / 'lm', 'line-min', 'line-minimization', 'line-minimisation', &
+                          & 'newton', 'couple', 'coupled', 'coupling' /
+  !
+  INTEGER    :: fcp_ndiis    = 4
+  REAL(DP)   :: fcp_rdiis    = 1.0_DP
+  REAL(DP)   :: fcp_max_volt = 1.0_DP ! in eV
   !
   !
   NAMELIST / PATH / &
-                    restart_mode, &
-                    string_method, nstep_path, num_of_images, & 
-                    CI_scheme, opt_scheme, use_masses,    &
-                    first_last_opt, ds, k_max, k_min, temp_req,          &
+                    restart_mode,                                     &
+                    string_method, nstep_path, num_of_images,         &
+                    CI_scheme, opt_scheme, use_masses,                &
+                    first_last_opt, ds, k_max, k_min, temp_req,       &
                     path_thr, fixed_tan, use_freezing, minimum_image, &
-                    lfcpopt, fcp_mu, fcp_relax, fcp_relax_step, fcp_relax_crit, &
-                    fcp_mdiis_size, fcp_mdiis_step, &
-                    fcp_tot_charge_first, fcp_tot_charge_last
+                    lfcp, fcp_mu, fcp_thr, fcp_scheme,                &
+                    fcp_ndiis, fcp_rdiis, fcp_max_volt
 !
 !    ATOMIC_POSITIONS
 !
         REAL(DP), ALLOCATABLE :: pos(:,:)
         INTEGER, ALLOCATABLE :: typ(:)
         !
+!
+!   TOTAL_CHARGE
+!
+      REAL(DP), ALLOCATABLE :: tot_charge(:)
+      !
 !
 !   CLIMBING_IMAGES
 !
@@ -159,10 +168,16 @@ CONTAINS
     IF ( allocated( pos ) ) DEALLOCATE( pos )
     IF ( allocated( typ ) ) DEALLOCATE( typ )
     !
+    IF ( allocated( tot_charge ) ) DEALLOCATE( tot_charge )
+    !
     ALLOCATE( pos( 3*nat, num_of_images ) )
     ALLOCATE( typ( nat ) )
     !
-    pos(:,:) = 0.0
+    ALLOCATE( tot_charge( num_of_images ) )
+    !
+    pos(:,:) = 0.0_DP
+    !
+    tot_charge = 0.0_DP
     !
     RETURN
     !
@@ -172,6 +187,8 @@ CONTAINS
     !
     IF ( allocated( pos ) ) DEALLOCATE( pos )
     IF ( allocated( typ ) ) DEALLOCATE( typ )
+    !
+    IF ( allocated( tot_charge ) ) DEALLOCATE( tot_charge )
     !
     IF ( allocated( climbing ) ) DEALLOCATE( climbing )
     !

@@ -17,7 +17,11 @@ MODULE klist
   !
   SAVE
   !
-  CHARACTER (LEN=32) :: smearing 
+  !FIXME !TODO variables as igk_k, mill, g and others persist in the device memory
+  ! for the whole duration of the run, their allocation in the device should be
+  ! done using !$acc declare create () instead of using !$acc enter/exit data create/delete().
+  !
+  CHARACTER (LEN=32) :: smearing
   !! smearing type
   REAL(DP) :: xk(3,npk)
   !! coordinates of k points
@@ -43,6 +47,14 @@ MODULE klist
   !! index of G corresponding to a given index of k+G
   INTEGER, ALLOCATABLE :: ngk(:)
   !! number of plane waves for each k point
+  INTEGER, ALLOCATABLE :: igk_k_d(:,:)
+  !! device copy of igk
+  INTEGER, ALLOCATABLE :: ngk_d(:)
+  !! device copy of ngk
+#if defined (__CUDA)
+  attributes(DEVICE) :: igk_k_d, ngk_d
+  attributes(PINNED) :: igk_k
+#endif
   !
   INTEGER :: nks
   !! number of k points in this pool
@@ -78,6 +90,8 @@ CONTAINS
     INTEGER :: ik
     !
     IF (.NOT.ALLOCATED(igk_k)) ALLOCATE( igk_k(npwx,nks) )
+    !$acc enter data create(igk_k(1:npwx,1:nks))
+    !
     IF (.NOT.ALLOCATED(ngk))   ALLOCATE( ngk(nks) )
     !
     ALLOCATE ( gk(npwx) )
@@ -89,16 +103,27 @@ CONTAINS
     DO ik = 1, nks
        CALL gk_sort( xk(1,ik), ngm, g, gcutw, ngk(ik), igk_k(1,ik), gk )
     ENDDO
+    !$acc update device(igk_k)
     !
     DEALLOCATE( gk )
+#if defined (__CUDA)
+    IF(ALLOCATED(igk_k_d)) DEALLOCATE(igk_k_d)
+    IF (nks > 0) ALLOCATE ( igk_k_d, source=igk_k)
+    IF(ALLOCATED(ngk_d)) DEALLOCATE(ngk_d)
+    IF (nks > 0) ALLOCATE ( ngk_d, source=ngk)
+#endif
     !
   END SUBROUTINE init_igk
   !
-  !
-  SUBROUTINE deallocate_igk( ) 
+  SUBROUTINE deallocate_igk( )
     !
     IF (ALLOCATED(ngk))     DEALLOCATE( ngk )
+    !
+    !$acc exit data delete(igk_k)
     IF (ALLOCATED(igk_k))   DEALLOCATE( igk_k )
+    IF (ALLOCATED(igk_k_d)) DEALLOCATE( igk_k_d )
+    !
+    IF (ALLOCATED(ngk_d))   DEALLOCATE( ngk_d )
     !
   END SUBROUTINE deallocate_igk
   !
@@ -132,6 +157,9 @@ MODULE lsda_mod
   !! spin of the current kpoint
   INTEGER :: isk(npk)
   !! for each k-point: 1=spin up, 2=spin down
+  REAL(DP),ALLOCATABLE  :: local_charges(:), local_mag(:,:)
+  !! used to store the local charges and magnetizatiom computed in report_mag 
+  !! (e.g. for printing them in the XML file)
   !
 END MODULE lsda_mod
 !
@@ -191,7 +219,7 @@ MODULE rap_point_group_so
    COMPLEX(DP) :: d_spin(2,2,48)
    !! the rotation in spin space
    !
-   CHARACTER(len=15) :: name_rap_so(12) 
+   CHARACTER(len=15) :: name_rap_so(12)
    !! the name of the representation
    CHARACTER(len=5) :: name_class_so(24)
    !! the name of the class
@@ -274,9 +302,12 @@ MODULE wvfct
   !! the weight of each k point and band
   REAL(DP), ALLOCATABLE :: g2kin(:)
   !! kinetic energy
-  INTEGER, ALLOCATABLE :: btype(:,:) 
+  INTEGER, ALLOCATABLE :: btype(:,:)
   !! one if the corresponding state has to be
   !! converged to full accuracy, zero otherwise
+#if defined(__CUDA)
+  attributes(pinned) :: g2kin, et, wg
+#endif
   !
 END MODULE wvfct
 !
@@ -324,6 +355,8 @@ MODULE ener
   !! the Fermi energy up (if two_fermi_energies=.TRUE.)
   REAL(DP) :: ef_dw
   !! the Fermi energy down (if two_fermi_energies=.TRUE.)
+  REAL(DP) :: egrand
+  !! the Potentiostat contribution for GC-SCF
   !
 END MODULE ener
 !
@@ -341,12 +374,8 @@ MODULE force_mod
   !! the force on each atom
   REAL(DP) :: sumfor
   !! norm of the gradient (forces)
-  REAL(DP) :: sigma(3,3) 
+  REAL(DP) :: sigma(3,3)
   !! the stress acting on the system
-  LOGICAL :: lforce
-  !! if .TRUE. compute the forces
-  LOGICAL :: lstres
-  !! if .TRUE. compute the stress
   REAL(DP), ALLOCATABLE :: eigenval(:)
   !! eigenvalues of the overlap matrix
   COMPLEX(DP), ALLOCATABLE :: eigenvect(:,:)
@@ -416,35 +445,6 @@ MODULE cellmd
 END MODULE cellmd
 !
 !
-!
-MODULE us
-  !
-  !! These parameters are needed with the US pseudopotentials.
-  !
-  USE kinds,      ONLY : DP
-  !
-  SAVE
-  !
-  INTEGER :: nqxq
-  !! size of interpolation table
-  INTEGER :: nqx
-  !! number of interpolation points
-  REAL(DP), PARAMETER:: dq = 0.01D0
-  !! space between points in the pseudopotential tab.
-  REAL(DP), ALLOCATABLE :: qrad(:,:,:,:)
-  !! radial FT of Q functions
-  REAL(DP), ALLOCATABLE :: tab(:,:,:)
-  !! interpolation table for PPs
-  REAL(DP), ALLOCATABLE :: tab_at(:,:,:)
-  !! interpolation table for atomic wfc
-  LOGICAL :: spline_ps = .FALSE.
-  REAL(DP), ALLOCATABLE :: tab_d2y(:,:,:)
-  !! for cubic splines
-  !
-END MODULE us
-!
-!
-!
 MODULE fixed_occ
   !
   !! The quantities needed in calculations with fixed occupations.
@@ -465,34 +465,21 @@ MODULE fixed_occ
 END MODULE fixed_occ
 !
 !
-!
-MODULE spin_orb
-  !
-  !! Variables needed for calculations with spin-orbit
-  !
-  USE kinds,       ONLY : DP
-  USE upf_params,  ONLY : lmaxx, lqmax
-  !! FIXME: rot_ylm could be dynamically allocated
-  !
-  SAVE
-  !
-  LOGICAL :: lspinorb
-  !! if .TRUE. this is a spin-orbit calculation
-  LOGICAL :: lforcet
-  !! if .TRUE. apply Force Theorem to calculate MAE 
-  LOGICAL :: starting_spin_angle
-  !! if .TRUE. the initial wavefunctions are spin-angle functions. 
-  LOGICAL :: domag
-  !! if .TRUE. magnetization is computed
-  COMPLEX (DP) :: rot_ylm(lqmax,lqmax)
-  !! transform real spherical harmonics into complex ones
-  COMPLEX (DP), ALLOCATABLE :: fcoef(:,:,:,:,:)
-  !! function needed to account for spinors.
-  !
-END MODULE spin_orb
-!
-!
-!
+MODULE pw_interfaces 
+  USE kinds, ONLY: DP 
+  IMPLICIT NONE 
+  PUBLIC 
+  INTERFACE 
+    SUBROUTINE report_mag(save_locals)
+      !! This subroutine prints out information about the local magnetization
+      !! and/or charge, integrated around the atomic positions at points which
+      !! are calculated in make_pointlists.
+      LOGICAL,OPTIONAL,INTENT(IN) :: save_locals
+      !! if present and true locals are saved into local_charges and local_mod of lsda_mod 
+    END SUBROUTINE 
+  END INTERFACE 
+END MODULE pw_interfaces 
+! 
 MODULE pwcom
   !
   USE klist
@@ -504,6 +491,6 @@ MODULE pwcom
   USE relax
   USE cellmd
   USE fixed_occ
-  USE spin_orb
+  USE pw_interfaces 
   !
 END MODULE pwcom

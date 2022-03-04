@@ -211,8 +211,7 @@ USE kinds,     ONLY : DP
 USE cell_base, ONLY : at, bg
 USE fft_base,  ONLY : dfftp
 USE symm_base, ONLY : s, sname, invs, t_rev
-USE noncollin_module, ONLY : noncolin, nspin_lsda, nspin_mag
-USE spin_orb,  ONLY : domag
+USE noncollin_module, ONLY : noncolin, domag, nspin_lsda, nspin_mag
 USE lr_symm_base, ONLY : nsymq, gi
 USE scatter_mod, ONLY : cgather_sym
 IMPLICIT NONE

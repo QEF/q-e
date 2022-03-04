@@ -34,7 +34,7 @@ SUBROUTINE beef_energies( )
 !-------------------------------------------------------------------------
 
   USE io_global,         ONLY  : stdout, ionode
-  USE funct,             ONLY  : dft_is_meta
+  USE xc_lib,            ONLY  : xclib_dft_is
   USE control_flags,     ONLY  : io_level
   USE ener,                 ONLY : vtxc, etxc
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
@@ -48,7 +48,7 @@ SUBROUTINE beef_energies( )
   if (.not. allocated(beefxc)) allocate(beefxc(32))
   if (.not. allocated(energies)) allocate(energies(2000))
 
-  if (.not. dft_is_meta()) then
+  if (.not. xclib_dft_is('meta')) then
      do i=1,30
         !calculate exchange contributions in Legendre polynomial
         !basis

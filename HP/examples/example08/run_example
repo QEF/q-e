@@ -101,10 +101,6 @@ cat > $PREFIX.scf.in << EOF
     ntyp = 2,
     ecutwfc = 45.0
     ecutrho = 360.0
-    lda_plus_u = .true.,
-    lda_plus_u_kind = 0,
-    U_projection_type = 'ortho-atomic',
-    Hubbard_U(1) = 1.d-8
  /
  &electrons
     conv_thr =  1.d-15
@@ -123,6 +119,8 @@ CELL_PARAMETERS {angstrom}
   0.0000000000    0.0000000000    21.8824530565
 K_POINTS {automatic}
  4 4 1 0 0 0
+HUBBARD {ortho-atomic}
+U Ni-3d 0.0001
 EOF
 $ECHO "  Running the SCF calculation for $PREFIX..."
 $PW_COMMAND < $PREFIX.scf.in > $PREFIX.scf.out

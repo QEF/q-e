@@ -19,7 +19,7 @@ SUBROUTINE reset_k_points_and_reinit_nscf()
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE uspp_param,         ONLY : upf
   USE ions_base,          ONLY : ntyp => nsp
-  USE ldaU,               ONLY : lda_plus_u, init_lda_plus_u, deallocate_ldaU, &
+  USE ldaU,               ONLY : lda_plus_u, init_hubbard, deallocate_hubbard, &
                                  lda_plus_u_kind
   USE noncollin_module,   ONLY : noncolin
   USE symm_base,          ONLY : d1, d2, d3, fft_fact
@@ -51,12 +51,12 @@ SUBROUTINE reset_k_points_and_reinit_nscf()
      !
      ! ... Deallocate Hubbard-related quantities
      !
-     CALL deallocate_ldaU ( .TRUE. )
+     CALL deallocate_hubbard ( .TRUE. )
      !
      ! ... Reallocate and set-up Hubbard-related quantities
      !
      IF (lda_plus_u_kind == 2) CALL read_V  
-     CALL init_lda_plus_u ( upf(1:ntyp)%psd, nspin, noncolin )
+     CALL init_hubbard ( upf(1:ntyp)%psd, nspin, noncolin )
      !
      ! ... Initialize d1, d2, and d3 to rotate the spherical harmonics
      !

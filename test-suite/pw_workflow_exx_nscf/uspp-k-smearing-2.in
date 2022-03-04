@@ -1,0 +1,19 @@
+ &control
+    calculation='bands'   
+ /
+ &system
+    ibrav=2, celldm(1) =7.50, 
+    nat=1, ntyp=1, 
+    ecutwfc =15.0,
+    occupations='smearing', smearing='marzari-vanderbilt', degauss=0.05
+    nbnd=18
+    input_dft='PBE0'
+ /
+ &electrons
+ /
+ATOMIC_SPECIES
+ Al  26.98 Al.pbe-nl-rrkjus_psl.1.0.0.UPF 
+ATOMIC_POSITIONS {alat}
+ Al 0.00 0.00 0.00
+K_POINTS {automatic}
+ 3 3 3 1 1 1

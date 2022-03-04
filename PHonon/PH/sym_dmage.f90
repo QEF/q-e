@@ -8,23 +8,25 @@
 !---------------------------------------------------------------------
 subroutine sym_dmage (dvsym)
   !---------------------------------------------------------------------
-  !
-  !     This routine symmetrize the change of the potential due to an
-  !     electric field perturbation. It is assumed that the perturbations
-  !     are on the basis of the crystal
-  !
+  !! This routine symmetrize the change of the potential due to an
+  !! electric field perturbation. It is assumed that the perturbations
+  !! are on the basis of the crystal.
   !
   USE kinds, only : DP
   USE cell_base,only : at, bg
   USE fft_base, only : dfftp
   USE symm_base,only : nsym, sname, s, ft, t_rev, invs
   USE lsda_mod, only : nspin
+  !
   implicit none
-
-  complex(DP) :: dvsym (dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin, 3)
+  !
+  complex(DP) :: dvsym(dfftp%nr1x,dfftp%nr2x,dfftp%nr3x,nspin,3)
+  !! the potential to symmetrize
+  !
+  ! ... local variables
+  !
   complex(DP), allocatable ::  aux (:,:,:,:,:)
   complex(DP) ::  dmags(3,3), mag(3), magrot(3)
-  ! the potential to symmetrize
   ! auxiliary quantity
   integer :: ftau(3,nsym), s_scaled(3,3,nsym)
   integer :: is, ri, rj, rk, i, j, k, irot, ipol, jpol, kpol

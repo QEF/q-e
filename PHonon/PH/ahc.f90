@@ -7,63 +7,62 @@
 !
 !----------------------------------------------------------------------------
 MODULE ahc
-!----------------------------------------------------------------------------
-!! In this subroutine, the matrix elements required for AHC temperature-
-!! dependent electronic structure calculation are calculated and written to
-!! file. Three different quantities are computed.
-!!
-!! 1. ahc_gkk(ib, jb, imode)
-!!   = <\psi_ib(k+q)|dV/du_{q,imode}|\psi_jb(k)>
-!!   (Eq.(2) of PHonon/Doc/dfpt_self_energy.pdf)
-!!
-!!   1 <= ib <= nbnd, ib_ahc_min <= jb <= ib_ahc_max
-!!   Needed to calculate the static or dynamic Fan term.
-!!
-!! 2. ahc_upfan(ib,jb,imode,jmode)
-!!   = <P_{c,k+q}^+ d\psi_ib(k+q)/du_{q,imode} | dV/du_{q,jmode} | \psi_jb(k)>
-!!   (Eq.(4) of PHonon/Doc/dfpt_self_energy.pdf)
-!!
-!!   ib_ahc_min <= ib, jb <= ib_ahc_max
-!!   Here, P_{c,k+q} is the orthogonalization to the nbnd lowest-lying bands
-!!   in the k+q subspace. (nbnd may differ from the number of bands used in
-!!   the SCF and phonon calculations.)
-!!
-!!   Needed to compute the "upper Fan" term which approximates the contribution
-!!   of high-energy (unoccpied) bands in the Fan term.
-!!   Ref: X. Gonze, P. Boulanger, and M. Cote, Ann. Phys. 523, 168 (2011)
-!!
-!! 3. ahc_dw(ib, jb, imode, jdir)
-!!   = i * <\psi_ib(k)|[dV_{SCF}/du_{Gamma,imode}, p_jdir]|\psi_jb(k)>
-!!   (Eq.(3) of PHonon/Doc/dfpt_self_energy.pdf)
-!!
-!!   ib_ahc_min <= ib, jb <= ib_ahc_min+ahc_nbnd-1
-!!   Here, p_jdir = -i * d/dr_jdir is the momentum operator.
-!!   Computed only for q = Gamma.
-!!
-!!   Needed to calculate the Debye-Waller term.
-!!   We use the generalized acoustic sum rule for electron-phonon matrix,
-!!   which gives both the diagonal the off-diagonal matrix elements of the
-!!   Debye-Waller term (in the electron eigenbasis).
-!!   Ref: J.-M. Lihm, and C.-H. Park, Phys. Rev. B, 101, 121102(R) (2020)
-!!
-!! In all cases, the imode index is in the Cartesian basis, so that only one
-!! atom with index iatm is displaced along Cartesian direction idir. In this
-!! case, the mode index is imode = 3 * (iatm - 1) + idir.
-!!
-!! ib_ahc_min = ahc_nbndskip + 1
-!! ib_ahc_max = ahc_nbndskip + ahc_nbnd
-!!
-!! Eigenvalues of the ahc_nbnd bands should be well-separated with the nbnd-th
-!! band to avoid problems in solving the Sternheimer equation.
-!!
-!! Not implemented (or not tested) for the following cases:
-!!   - USPP
-!!   - PAW
-!!   - DFPT + U
-!!   - magnetism (both collinear and noncollinear)
-!!   - 2d Coulomb cutoff
-!!
-!----------------------------------------------------------------------------
+  !----------------------------------------------------------------------------
+  !! In this subroutine, the matrix elements required for AHC temperature-
+  !! dependent electronic structure calculation are calculated and written to
+  !! file. Three different quantities are computed.
+  !
+  !! 1. First:
+  !! $$ \text{ahc_gkk}(ib,jb,\text{imode}) = \langle\psi_{ib}(k+q)
+  !!   \|\frac{dV}{du_{q,\text{imode}}\|\psi_{jb}(k)\rangle $$
+  !! (Eq.(2) of \(\texttt{PHonon/Doc/dfpt_self_energy.pdf}\)) with
+  !! \(1\leq ib\leq\text{nbnd}\), \(ib_{\text{ahc}_{min}} \leq jb 
+  !! \leq ib_{\text{ahc}_{max}}\).  
+  !! Needed to calculate the static or dynamic Fan term.
+  !
+  !! 2. Second:
+  !! $$ \text{ahc_upfan}(ib,jb,\text{imode},\text{jmode}) = \langle P_{c,k+q}^+
+  !!   \frac{d\psi_ib(k+q)}{du_{q,\text{imode}} \| \frac{dV}{du_{q,\frac{jmode}}
+  !!   \|\psi_{jb}(k)\rangle $$
+  !! (Eq.(4) of \(\texttt{PHonon/Doc/dfpt_self_energy.pdf}\)) with
+  !! \(\text{ib_ahc_min} \leq \text{ib}\), \(\text{jb} \leq \text{ib_ahc_max}\).
+  !! Here, \(P_{c,k+q}\) is the orthogonalization to the \(\text{nbnd}\) lowest-lying
+  !! bands in the k+q subspace (\(\text{nbnd}\) may differ from the number of bands used
+  !! in the SCF and phonon calculations).  
+  !! Needed to compute the "upper Fan" term which approximates the contribution
+  !! of high-energy (unoccpied) bands in the Fan term.  
+  !! Ref: X. Gonze, P. Boulanger, and M. Cote, Ann. Phys. 523, 168 (2011)
+  !
+  !! 3. Third:
+  !! $$ \text{ahc_dw}(ib, jb, \text{imode}, \text{jdir}) = i \langle \psi_{ib}(k)
+  !!    \|[\frac{dV_{SCF}}{du_{\text{Gamma,imode}}, p_{jdir}\]\|\psi_{jb}(k)\rangle $$
+  !! (Eq.(3) of PHonon/Doc/dfpt_self_energy.pdf ) with
+  !! \(ib_{\text{ahc}_min} \leq ib, jb \leq ib_{\text{ahc}_min}+\text{ahc_nbnd}-1 \).  
+  !! Here, \(p_\text{jdir} = -i d/dr_\text{jdir}\) is the momentum operator.  
+  !! Computed only for \(q = \text{Gamma}\).  
+  !! Needed to calculate the Debye-Waller term.  
+  !! We use the generalized acoustic sum rule for electron-phonon matrix,
+  !! which gives both the diagonal the off-diagonal matrix elements of the
+  !! Debye-Waller term (in the electron eigenbasis).   
+  !! Ref: J.-M. Lihm, and C.-H. Park, Phys. Rev. B, 101, 121102(R) (2020)
+  !
+  !! In all cases, the imode index is in the Cartesian basis, so that only one
+  !! atom with index iatm is displaced along Cartesian direction idir. In this
+  !! case, the mode index is \(\text{imode} = 3(\text{iatm}-1) + \text{idir}\).
+  !
+  !! \(\text{ib_ahc_min} = \text{ahc_nbndskip} + 1 \)  
+  !! \(\text{ib_ahc_max} = \text{ahc_nbndskip} + \text{ahc_nbnd} \)
+  !
+  !! Eigenvalues of the \(\text{ahc_nbnd}\) bands should be well-separated 
+  !! with the nbnd-th band to avoid problems in solving the Sternheimer equation.
+  !
+  !! Not implemented (or not tested) for the following cases:
+  !! - USPP;  
+  !! - PAW;  
+  !! - DFPT + U;  
+  !! - magnetism (both collinear and noncollinear);  
+  !! - 2d Coulomb cutoff.
+  !
   USE kinds, ONLY :  DP
   !
   IMPLICIT NONE
@@ -76,22 +75,22 @@ MODULE ahc
   !! Number of bands for which the electron self-energy is to be computed.
   INTEGER :: ahc_nbndskip
   !! Number of bands to exclude when computing the self-energy. The
-  !! self-energy is computed for ibnd from ahc_nbndskip + 1
-  !! to ahc_nbndskip + ahc_nbnd.
+  !! self-energy is computed for ibnd from \(\text{ahc_nbndskip} + 1\)
+  !! to \(\text{ahc_nbndskip} + \text{ahc_nbnd}\).
   LOGICAL :: skip_upperfan = .FALSE.
-  !! If .true., skip the calculation of upper Fan self-energy,
+  !! If TRUE, skip the calculation of upper Fan self-energy,
   !! which involves solving the Sternheimer equation.
   !
   ! Public variables
   !
   LOGICAL :: elph_ahc
-  !! If .true., calculate ahc e-ph variables.
+  !! If TRUE, calculate ahc e-ph variables.
   INTEGER :: ahc_nbnd_gauge
   !! Number of bands to compute self-energy or bands degenerate with those.
   INTEGER :: ib_ahc_gauge_min
-  !! Minimum band index to compute dvpsi. Needed to deal with degeneracy.
+  !! Minimum band index to compute \(\text{dvpsi}\). Needed to deal with degeneracy.
   INTEGER :: ib_ahc_gauge_max
-  !! Maximum band index to compute dvpsi. Needed to deal with degeneracy.
+  !! Maximum band index to compute \(\text{dvpsi}\). Needed to deal with degeneracy.
   !
   ! Local variables
   !
@@ -100,45 +99,48 @@ MODULE ahc
   INTEGER :: ib_ahc_max
   !! Maximum band index to compute electron self-energy
   INTEGER :: iungkk
-  !! Unit for ahc_gkk (dV_q matrix element) output
+  !! Unit for \(\text{ahc_gkk}\) (\(\text{dV_q}\) matrix element) output
   INTEGER :: iunupfan
-  !! Unit for ahc_upfan (upper Fan by Sternheimer) output
+  !! Unit for \(\text{ahc_upfan}\) (upper Fan by Sternheimer) output
   INTEGER :: iundw
-  !! Unit for ahc_dw (Debye-Waller) output
+  !! Unit for \text{ahc_dw}\) (Debye-Waller) output
   INTEGER :: nbase_ik
-  !! The position in the list of the first point that belong to this npool - 1
+  !! The position in the list of the first point that belong to this \(\text{npool}-1\)
   REAL(DP) :: e_degen_thr = 1.d-4
   !! threshold for degeneracy
   COMPLEX(DP), ALLOCATABLE :: ahc_gkk(:,:,:)
-  !! (nbnd, ahc_nbnd, nmodes) dV_q matrix element
+  !! Usual dimansions: (\(\text{nbnd},\ \text{ahc_nbnd},\ \text{nmodes}\));  
+  !! \(\text{dV_q}\) matrix element.
   COMPLEX(DP), ALLOCATABLE :: ahc_upfan(:,:,:,:)
-  !! (ahc_nbnd, ahc_nbnd, nmodes, nmodes) upper Fan self-energy by Sternheimer
+  !! Usual dimensions: (\(\text{ahc_nbnd},\ \text{ahc_nbnd},\ \text{nmodes},\ \text{nmodes}\));  
+  !! upper Fan self-energy by Sternheimer
   COMPLEX(DP), ALLOCATABLE :: ahc_dw(:,:,:,:)
-  !! (ahc_nbnd, ahc_nbnd, nmodes, 3)
-  !! [dV,p] matrix element for Debye-Waller
+  !! Usual dimensions: (\(\text{ahc_nbnd}, \text{ahc_nbnd}, \text{nmodes}, 3\));  
+  !! \([dV,p]\) matrix element for Debye-Waller
   COMPLEX(DP), ALLOCATABLE :: dvpsi_cart(:,:,:)
-  !! (npwx*npol, ahc_nbnd, nmodes) dV/du_{q, imode} * psi_nk in
-  !! the Cartesian atomic displacement.
+  !! Usual dimensions: (\(\text{npwx}\cdot\text{npol},\ \text{ahc_nbnd},\ \text{nmodes}\));  
+  !! the Cartesian atomic displacement: \(dV/du_{q, \text{imode}}\cdot \psi_nk in\)
   COMPLEX(DP), ALLOCATABLE :: psi_gauge(:,:)
-  !! (ahc_nbnd_gauge, ahc_nbnd) <psi_nk(at q)|psi_mk(at q=gamma)>
-  !! Used to fix gauge of psi_nk computed at different q points
+  !! Usual dimensions: (\(\text{ahc_nbnd_gauge},\ \text{ahc_nbnd}\));  
+  !! \(\langle\psi_{nk}(\text{at q})|\psi_{mk}(\text{at q=gamma})\rangle \);  
+  !! Used to fix gauge of \(\text{psi_nk}\) computed at different q points.
   !
 CONTAINS
 !------------------------------------------------------------------------------
 SUBROUTINE ahc_do_upperfan(ik)
-!------------------------------------------------------------------------------
-!!
-!! Compute ahc_upperfan(ib,jb,imode,jmode)
-!! = <P_{c,k+q}^+ d\psi_ib(k+q)/du_{q,imode} | dV/du_{q,jmode} | \psi_jb(k)>
-!!
-!! Implements Eq.(4) of PHonon/Doc/dfpt_self_energy.pdf
-!!
-!! To do so, compute d\psi_ib(k+q)/du{q,imode} by solving Sternheimer equation
-!! (H - e_ib) dpsi_ib = - P_{c,k+q}^+ dV/du_{q,imode} psi_ib.
-!!
-!! Adapted from solve_linter.f90 with modifications by Jae-Mo Lihm
-!!
-!------------------------------------------------------------------------------
+  !------------------------------------------------------------------------------
+  !! Compute:
+  !! $$ \text{ahc_upperfan}(\text{ib,jb,imode,jmode})
+  !! = \langle P_{c,k+q}^+ d\psi_ib(k+q)/du_{q,\text{imode}} | dV/du_{q,\text{jmode}}
+  !! | \psi_jb(k)\rangle $$.
+  !
+  !! Implements Eq.(4) of \(\texttt{PHonon/Doc/dfpt_self_energy.pdf}\)
+  !
+  !! To do so, compute \(d\psi_ib(k+q)/du{q,\text{imode}}\) by solving Sternheimer 
+  !! equation \((H - e_{ib}) \text{dpsi_ib} = -P_{c,k+q}^+ dV/du_{q,\text{imode}} \psi_{ib}\).
+  !
+  !! Adapted from \(\texttt{solve_linter.f90}\) with modifications by Jae-Mo Lihm.
+  !
   USE kinds,            ONLY : DP
   USE io_global,        ONLY : stdout, ionode
   USE mp,               ONLY : mp_sum
@@ -155,11 +157,12 @@ SUBROUTINE ahc_do_upperfan(ik)
   USE units_lr,         ONLY : lrwfc, iuwfc
   USE control_ph,       ONLY : tr2_ph
   USE control_lr,       ONLY : lgamma
+  USE uspp_init,        ONLY : init_us_2
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: ik
-  !! k point index where dvpsi is calculated
+  !! k point index where \(\text{dvpsi}\) is calculated
   !
   INTEGER :: ikk, ikq, npw, npwq, nrec, ibnd, imode, jmode
   LOGICAL :: conv_root
@@ -301,26 +304,25 @@ SUBROUTINE ahc_do_upperfan(ik)
   CALL stop_clock('ahc_upfan')
   !
 END SUBROUTINE ahc_do_upperfan
-!----------------------------------------------------------------------------
+!
 !
 !------------------------------------------------------------------------------
 SUBROUTINE ahc_do_dw(ik)
-!------------------------------------------------------------------------------
-!!
-!! Compute and write to file the matrix elements of [dV,p]. This quantity is
-!! needed to compute Debye-Waller self-energy within rigid-ion approximation.
-!!
-!! ahc_dw(ib, jb, imode, jdir)
-!!   = i * <\psi_ib(k)|[dV_{SCF}/du_{Gamma, imode}, p_jdir]|\psi_jb(k)>
-!!
-!! Implements Eq.(3) of PHonon/Doc/dfpt_self_energy.pdf
-!!
-!! Here, the "operator-generalized acoustic sum rule" is used to represent
-!! Debye-Waller self-energy as a simple matrix element.
-!! See Eq.(13) of the following reference:
-!! Jae-Mo Lihm and Cheol-Hwan Park, Phys. Rev. B, 101, 121102(R) (2020).
-!!
-!------------------------------------------------------------------------------
+  !------------------------------------------------------------------------------
+  !! Compute and write to file the matrix elements of \([dV,p]\). This quantity is
+  !! needed to compute Debye-Waller self-energy within rigid-ion approximation.
+  !
+  !! $$ \text{ahc_dw}(\text{ib, jb, imode, jdir})
+  !!   = i\cdot \langle\psi_{ib}(k)|[dV_{SCF}/du_{\text{Gamma, imode}}, p_\text{jdir}]|
+  !!   \psi_{jb}(k)\rangle $$
+  !
+  !! Implements Eq.(3) of \(\texttt{PHonon/Doc/dfpt_self_energy.pdf}\)
+  !
+  !! Here, the 'operator-generalized acoustic sum rule' is used to represent
+  !! Debye-Waller self-energy as a simple matrix element.
+  !! See Eq.(13) of the following reference:
+  !! Jae-Mo Lihm and Cheol-Hwan Park, Phys. Rev. B, 101, 121102(R) (2020).
+  !
   USE kinds,            ONLY : DP
   USE io_global,        ONLY : stdout
   USE mp,               ONLY : mp_sum
@@ -340,7 +342,7 @@ SUBROUTINE ahc_do_dw(ik)
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: ik
-  !! k point index where dvpsi is calculated
+  !! k point index where \(\text{dvpsi}\) is calculated
   !
   INTEGER :: ikk
   !! Counter on k-point
@@ -442,21 +444,20 @@ SUBROUTINE ahc_do_dw(ik)
   !
   CALL stop_clock('ahc_dw')
   !
-!------------------------------------------------------------------------------
 END SUBROUTINE ahc_do_dw
-!------------------------------------------------------------------------------
+!
 !
 !------------------------------------------------------------------------------
 SUBROUTINE ahc_do_gkk(ik)
-!------------------------------------------------------------------------------
-!!
-!! Calculate and write to file ahc_gkk.
-!! ahc_gkk(ib, jb, imode) = <\psi_ib(k+q)|dV/du_{q, imode}|\psi_jb(k)>
-!! 1 <= ib <= nbnd, ib_ahc_min <= jb <= ib_ahc_max
-!!
-!! Implements Eq.(2) of PHonon/Doc/dfpt_self_energy.pdf
-!!
-!------------------------------------------------------------------------------
+   !------------------------------------------------------------------------------
+   !! Calculate and write to file \(\text{ahc_gkk}\).
+   !
+   !! $$ \text{ahc_gkk}(\text{ib, jb, imode}) = \langle\psi_{ib}(k+q)|dV/
+   !!    du_{q,\text{imode}}|\psi_{jb}(k)\rangle $$
+   !! with: \(1 \leq ib \leq \text{nbnd}, \text{ib_ahc_min} \leq jb \leq \text{ib_ahc_max}\)
+   !
+   !! Implements Eq.(2) of \(\texttt{PHonon/Doc/dfpt_self_energy.pdf}\)
+   !
    USE kinds,        ONLY : DP
    USE io_global,    ONLY : stdout
    USE mp,           ONLY : mp_sum
@@ -501,30 +502,30 @@ SUBROUTINE ahc_do_gkk(ik)
    CALL stop_clock('ahc_gkk')
    !
 END SUBROUTINE ahc_do_gkk
-!------------------------------------------------------------------------------
+!
 !
 !------------------------------------------------------------------------------
 SUBROUTINE compute_psi_gauge(ik)
-!------------------------------------------------------------------------------
-!! Compute psi_gauge(n, m) = <psi_nk(q) | psi_ref_mk>.
-!! n = ib_ahc_gauge_min, ..., ib_ahc_gauge_max
-!! m = ib_ahc_min, ..., ib_ahc_max
-!!
-!! The range of m is wider than the range of n because of possible degeneracy
-!! at ib_ahc_min or ib_ahc_max.
-!!
-!! The overlap is computed indirectly by comparing psi_nk at a few G vectors.
-!! G vectors with miller indices (Gx, Gy, Gz) with -3 <= Gx, Gy, Gz <= 3
-!! are used.
-!!
-!! P: projection operator to the selected G vectors.
-!! P|psi_ref_m> = P|psi_n> * psi_gauge(n, m)
-!! S_nm = <psi_ref_n|P|psi_ref_m>
-!! A_nm = <psi_n|P|psi_ref_m>
-!! psi_gauge(n, m) = (A * inv(S))_nm
-!!
-!! Implemented only for NCPP case.
-!------------------------------------------------------------------------------
+  !------------------------------------------------------------------------------
+  !! Compute \(\text{psi_gauge}(n, m) = \langle \psi_{nk}(q) | \psi_\text{ref_mk}\rangle\).  
+  !! \( n = \text{ib_ahc_gauge_min}, ..., \text{ib_ahc_gauge_max} \);  
+  !! \( m = \text{ib_ahc_min}, ..., \text{ib_ahc_max} \).
+  !
+  !! The range of m is wider than the range of n because of possible degeneracy
+  !! at \(\text{ib_ahc_min}\) or \(\text{ib_ahc_max}\).
+  !
+  !! The overlap is computed indirectly by comparing \(\psi_{nk}\) at a few G vectors.
+  !! G vectors with Miller indices (Gx, Gy, Gz) with \(-3 \leq Gx, Gy, Gz \leq 3\)
+  !! are used.
+  !
+  !! P: projection operator to the selected G vectors.  
+  !! \(P|\psi_\text{ref_m}\rangle = P|\psi_n\rangle\cdot \psi_\text{gauge}(n,m)\);  
+  !! \(S_{nm} = \langle\psi_\text{ref_n}|P|\psi_\text{ref_m}\rangle\);  
+  !! \(A_{nm} = \langle\psi_n|P|\psi_\text{ref_m}\rangle;  
+  !! \(\psi_\text{gauge}(n, m) = (A\cdot \text{inv}(S))_{nm}\).
+  !
+  !! Implemented only for NCPP case.
+  !
   USE kinds,            ONLY : DP
   USE io_files,         ONLY : seqopn
   USE mp,               ONLY : mp_bcast, mp_sum
@@ -548,7 +549,7 @@ SUBROUTINE compute_psi_gauge(ik)
   !! Current k point index
   !
   INTEGER, PARAMETER :: gmax_search = 3
-  !! Max |G_x,y,z| to use for gauge fixing.
+  !! Max \(|G_x,y,z|\) to use for gauge fixing.
   LOGICAL :: is_last_group
   !! true if at the last degenerate group
   INTEGER :: info
@@ -600,11 +601,11 @@ SUBROUTINE compute_psi_gauge(ik)
   COMPLEX(DP), ALLOCATABLE :: evc_select(:, :, :)
   !! Wavefunction at selected G vectors
   COMPLEX(DP), ALLOCATABLE :: smat(:, :)
-  !! overlap matrix of psi_ref
+  !! overlap matrix of \(\text{psi_ref}\)
   COMPLEX(DP), ALLOCATABLE :: smat_inv(:, :)
   !! inverse of smat
   COMPLEX(DP), ALLOCATABLE :: amat(:, :)
-  !! overlap matrix of psi_ref and psi
+  !! overlap matrix of \(\text{psi_ref}\) and psi
   COMPLEX(DP), ALLOCATABLE :: work(:)
   !! workspace for diagonalization
   !
@@ -943,15 +944,15 @@ SUBROUTINE compute_psi_gauge(ik)
   CALL stop_clock('ahc_gauge')
   !
 END SUBROUTINE compute_psi_gauge
-!------------------------------------------------------------------------------
+!
 !
 !------------------------------------------------------------------------------
 SUBROUTINE elph_ahc_setup()
-!------------------------------------------------------------------------------
-!! Initialize variables for ahc calculation.
-!! Look for degeneracy around ib_ahc_min or ib_ahc_max and set
-!! ahc_nbnd_gauge, the number of bands to compute dvpsi
-!------------------------------------------------------------------------------
+  !------------------------------------------------------------------------------
+  !! Initialize variables for ahc calculation.  
+  !! Look for degeneracy around \(\text{ib_ahc_min}\) or \(\text{ib_ahc_max}\) and
+  !! set \(\text{ahc_nbnd_gauge}\), the number of bands to compute \(\text{dvpsi}\)
+  !
   USE kinds,        ONLY : DP
   USE io_global,    ONLY : ionode, ionode_id
   USE io_files,     ONLY : create_directory
@@ -968,9 +969,9 @@ SUBROUTINE elph_ahc_setup()
   LOGICAL :: exst
   !! True if folder exists
   CHARACTER(LEN=256) :: filoutetk
-  !! Filename for e_n(k) energy eigenvalue output
+  !! Filename for \(e_n(k)\) energy eigenvalue output
   CHARACTER(LEN=256) :: filoutetq
-  !! Filename for e_n(k+q) energy eigenvalue output
+  !! Filename for \(e_n(k+q)\) energy eigenvalue output
   INTEGER :: ik
   !! Counter for k points
   INTEGER :: ikk
@@ -984,9 +985,9 @@ SUBROUTINE elph_ahc_setup()
   INTEGER :: recl
   !! length of the files to be written
   INTEGER :: iunetk
-  !! Unit for e_n(k) energy eigenvalue output
+  !! Unit for \(e_n(k)\) energy eigenvalue output
   INTEGER :: iunetq
-  !! Unit for e_n(k+q) energy eigenvalue output
+  !! Unit for \(e_n(k+q)\) energy eigenvalue output
   REAL(DP), ALLOCATABLE :: et_collect(:, :, :)
   !! energy eigenvalues at k and k+q for all k points
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
@@ -1088,13 +1089,13 @@ SUBROUTINE elph_ahc_setup()
   ENDIF
   !
 END SUBROUTINE elph_ahc_setup
-!------------------------------------------------------------------------------
+!
 !
 !------------------------------------------------------------------------------
 SUBROUTINE elph_do_ahc()
-!------------------------------------------------------------------------------
-!! The main driver of the AHC calculation.
-!------------------------------------------------------------------------------
+  !------------------------------------------------------------------------------
+  !! The main driver of the AHC calculation.
+  !
   USE kinds,        ONLY : DP
   USE io_global,    ONLY : stdout
   USE io_files,     ONLY : diropn
@@ -1113,13 +1114,13 @@ SUBROUTINE elph_do_ahc()
   IMPLICIT NONE
   !
   CHARACTER(LEN=6) :: iq_name
-  !! int_to_char(current_iq)
+  !! \(\text{int_to_char(current_iq)}\)
   CHARACTER(LEN=256) :: filoutgkk
-  !! Filename for ahc_gkk (dV_q matrix element) output
+  !! Filename for \(\text{ahc_gkk}\) (\(\text{dV_q}\) matrix element) output
   CHARACTER(LEN=256) :: filoutdw
-  !! Filename for ahc_dw (Debye-Waller) output
+  !! Filename for \(\text{ahc_dw}\) (Debye-Waller) output
   CHARACTER(LEN=256) :: filoutupfan
-  !! Filename for ahc_upfan (upper Fan by Sternheimer) output
+  !! Filename for \(\text{ahc_upfan}\) (upper Fan by Sternheimer) output
   INTEGER :: ik
   !! Counter for k points
   INTEGER :: imode
@@ -1131,12 +1132,12 @@ SUBROUTINE elph_do_ahc()
   INTEGER :: nrec
   !! record number
   INTEGER :: rest
-  !! integer for calculating nbase_ik
+  !! integer for calculating \(\text{nbase_ik}\)
   INTEGER :: nks1
-  !! integer for calculating nbase_ik
+  !! integer for calculating \(\text{nbase_ik}\)
   ! CHARACTER(LEN=256) :: filename_wf
   COMPLEX(DP), ALLOCATABLE :: dvpsi_gauged(:, :)
-  !! Temporary storage of dvpsi for rotating to Cartesian
+  !! Temporary storage of \(\text{dvpsi}\) for rotating to Cartesian
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   INTEGER, EXTERNAL :: find_free_unit
   !

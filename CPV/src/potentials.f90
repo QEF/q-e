@@ -8,7 +8,9 @@
 !  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
 !  ----------------------------------------------
 !  Car-Parrinello Parallel Program
-
+!----------------------------------------------------------------
+#include<cpv_device_macros.h> 
+!----------------------------------------------------------------
 
 
 
@@ -44,8 +46,6 @@
       REAL(DP), INTENT(IN) :: hg( dfftp%ngm )
       REAL(DP), INTENT(IN) :: omega, hmat( 3, 3 )
       COMPLEX(DP) :: screen_coul( dfftp%ngm )
-
-      REAL(DP), EXTERNAL :: qe_erf
 
       ! ... Locals
       !
@@ -87,7 +87,7 @@
             IF( rmod < gsmall ) THEN
               grr( ir, 1 ) = fact * 2.0d0 * rc / SQRT( pi )
             ELSE
-              grr( ir, 1 ) = fact * qe_erf( rc * rmod ) / rmod
+              grr( ir, 1 ) = fact * erf( rc * rmod ) / rmod
             END IF
           END DO
         END DO
@@ -342,57 +342,79 @@
 
       INTEGER     :: is, ia, ig, ig1, ig2, ig3
       REAL(DP)    :: fpibg
-      COMPLEX(DP) :: cxc, rhet, rhog, vp, rp, gxc, gyc, gzc
-      COMPLEX(DP) :: teigr, cnvg, cvn, tx, ty, tz
+      COMPLEX(DP) :: cxc, rhet, rhog, vp, gxc, gyc, gzc
+      COMPLEX(DP),ALLOCATABLE :: rp(:) 
+      INTEGER                 :: ngm_ 
+      ! 
+      COMPLEX(DP) :: teigr, cnvg, cvn, tx, ty, tz, fx, fy, fz
       COMPLEX(DP), ALLOCATABLE :: ftmp(:,:)
+      INTEGER :: s_ngm_ 
 
-      ! ... Subroutine body ...
+      ! ... Subroutine body ... 
 
-      ALLOCATE( ftmp( 3, SIZE( fion, 2 ) ) )
-      
-      ftmp = 0.0d0
+      s_ngm_ = dffts%ngm
+      ALLOCATE (rp(s_ngm_)) 
+  
+!
 
-      DO ig = gstart, dffts%ngm
+DEV_ACC data present(rhoeg, rhops, mill,g ) copy(fion)  create(rp(1:s_ngm_)) copyin(sfac, screen_coul, gg, vps, ityp,ei1, ei2, ei3) 
+!
+DEV_OMP parallel default(none) &
+DEV_OMP shared(gstart, dffts,sfac, rhops, screen_coul, rhoeg, nsp, gg, tpiba2, tpiba, mill, g, &
+DEV_OMP         nat, ityp, vps, ei1, ei2, ei3, tscreen, rp, fion, omega, s_ngm_ ) &
+DEV_OMP private(ig, is, rhet, rhog, fpibg, ig1, ig2, ig3, gxc, gyc, gzc, ia, cnvg, cvn, tx, &
+DEV_OMP          ty, tz, teigr,fx, fy, fz )
+ 
+ 
+DEV_ACC parallel loop       
+DEV_OMP do  
+   DO ig = gstart, s_ngm_
+      rp( ig) = (0.d0,0.d0) 
+      DO is = 1, nsp 
+         rp( ig)   = rp( ig)  + sfac(ig, is) * rhops( ig, is)
+      END DO 
+   END DO 
 
-        RP   = (0.D0,0.D0)
-        DO IS = 1, nsp
-          RP = RP + sfac( ig, is ) * rhops( ig, is )
-        END DO
-
-        RHET  = RHOEG( ig )
-        RHOG  = RHET + RP
-
-        IF( tscreen ) THEN
-          FPIBG     = fpi / ( gg(ig) * tpiba2 ) + screen_coul(ig)
-        ELSE
-          FPIBG     = fpi / ( gg(ig) * tpiba2 )
-        END IF
-
-        ig1  = mill(1,IG)
-        ig2  = mill(2,IG)
-        ig3  = mill(3,IG)
-        GXC  = CMPLX(0.D0,g(1,IG),kind=DP)
-        GYC  = CMPLX(0.D0,g(2,IG),kind=DP)
-        GZC  = CMPLX(0.D0,g(3,IG),kind=DP)
-        DO ia = 1, nat
-           is = ityp(ia) 
-           CNVG  = RHOPS(IG,is) * FPIBG * CONJG(rhog)
-           CVN   = VPS(ig, is)  * CONJG(rhet)
-           TX = (CNVG+CVN) * GXC
-           TY = (CNVG+CVN) * GYC
-           TZ = (CNVG+CVN) * GZC
-           TEIGR = ei1(IG1,ia) * ei2(IG2,ia) * ei3(IG3,ia)
-           ftmp(1,ia) = ftmp(1,ia) + TEIGR*TX
-           ftmp(2,ia) = ftmp(2,ia) + TEIGR*TY
-           ftmp(3,ia) = ftmp(3,ia) + TEIGR*TZ
-        END DO
-
-      END DO
-      !
-      fion = fion + DBLE(ftmp) * 2.D0 * omega * tpiba
-
-      DEALLOCATE( ftmp )
-       
+DEV_ACC parallel vector_length(128) 
+DEV_ACC loop gang private(is, fx,fy,fz) 
+DEV_OMP do  
+   DO ia = 1, nat
+      is = ityp(ia) 
+      fx = (0.d0, 0.d0) 
+      fy = (0.d0, 0.d0) 
+      fz = (0.d0, 0.d0) 
+DEV_ACC loop vector private(rhet, rhog, fpibg, ig1, ig2, ig3, gxc,gyc,gzc, cnvg, cvn, &
+DEV_ACC&                             tx, ty, tz, teigr) reduction(+:fx,fy,fz)   
+      DO ig = gstart, s_ngm_ 
+         rhet = rhoeg ( ig ) 
+         rhog = rhet + rp ( ig)
+         IF ( tscreen ) THEN 
+            fpibg = fpi / ( gg(ig) * tpiba2  ) + screen_coul (ig) 
+         ELSE  
+            fpibg = fpi / ( gg (ig) * tpiba2 ) 
+         END IF 
+         ig1 = mill (1,ig)
+         ig2 = mill (2,ig) 
+         ig3 = mill (3,ig) 
+         gxc = CMPLX(0.d0,g(1,ig),KIND=DP) 
+         gyc = CMPLX(0.d0,g(2,ig),KIND=DP) 
+         gzc = CMPLX(0.d0,g(3,ig),KIND=DP)
+         cnvg = rhops ( ig, is) * fpibg * CONJG ( rhog ) 
+         cvn  = vps ( ig, is ) * CONJG( rhet) 
+         tx   = (cnvg + cvn) * gxc 
+         ty   = (cnvg + cvn) * gyc 
+         tz   = (cnvg + cvn) * gzc 
+         teigr = ei1( ig1, ia) * ei2 ( ig2, ia) * ei3 (ig3, ia) 
+         fx    = fx + teigr * tx 
+         fy    = fy + teigr * ty 
+         fz    = fz + teigr * tz
+      END DO         
+      fion (:,ia) =  fion(:,ia) + [DBLE(fx),DBLE(fy),DBLE(fz)] * 2.d0 * omega * tpiba
+   END DO
+DEV_ACC end parallel
+DEV_ACC end data 
+DEV_OMP end parallel 
+   DEALLOCATE (rp) 
       RETURN
       END SUBROUTINE force_loc_x
 
@@ -421,8 +443,6 @@
       LOGICAL,  INTENT(IN) :: TSTRESS
       REAL(DP), INTENT(in) :: hmat( 3, 3 )
 
-      REAL(DP), EXTERNAL :: qe_erfc
-
       INTEGER, EXTERNAL :: ldim_block, gind_block
 
       
@@ -443,6 +463,8 @@
 
       INTEGER, DIMENSION(6), PARAMETER :: ALPHA = (/ 1,2,3,2,3,3 /)
       INTEGER, DIMENSION(6), PARAMETER :: BETA  = (/ 1,1,1,2,2,3 /)
+
+      INTEGER :: omp_get_num_threads
 
 ! ... SUBROUTINE BODY 
 
@@ -474,9 +496,13 @@
       IA_S   = gind_block( 1, nat, nproc_bgrp, me_bgrp )
       IA_E   = IA_S + NA_LOC - 1
 
+!$omp parallel do reduction(+:esr,desr) num_threads(min(max(1,na_loc),omp_get_num_threads())) default(none) &
+!$omp private(ia,ib,k,j,zv2_kj,rckj_m1,fact_pre,xlm,ylm,zlm,tzero,xlm0,ylm0,zlm0,ix,iy,iz,sxlm,tshift, &
+!$omp         rxlm,erre2,rlm,arg,esrtzero,addesr,addpre,repand,i,fxx ) &
+!$omp shared(ia_s,ia_e,nat,ityp,zv2,rc,taus,iesr,hmat,fionloc,tstress,na_loc)
       DO ia = ia_s, ia_e
-        k = ityp(ia)
         DO ib = ia, nat
+          k = ityp(ia)
           j = ityp(ib)
 
           zv2_kj   = zv2(k,j)
@@ -513,7 +539,7 @@
                   ELSE
                      ESRTZERO=1.D0
                   END IF
-                  ADDESR = ZV2_KJ * qe_erfc(ARG) / RLM
+                  ADDESR = ZV2_KJ * erfc(ARG) / RLM
                   ESR    = ESR + ESRTZERO*ADDESR
                   ADDPRE = FACT_PRE * EXP(-ARG*ARG)
                   REPAND = ESRTZERO*(ADDESR + ADDPRE)/ERRE2
@@ -536,15 +562,14 @@
           END DO        ! IX
         END DO
       END DO
+!$omp end parallel do
 
 !
 !     each processor add its own contribution to the array FION
 !
-      DO ia = 1, nat
-        FION(1,ia) = FION(1,ia)+FIONLOC(1,ia)
-        FION(2,ia) = FION(2,ia)+FIONLOC(2,ia)
-        FION(3,ia) = FION(3,ia)+FIONLOC(3,ia)
-      END DO
+      !  FION = FION+FIONLOC
+      !
+      CALL daxpy( 3*nat, 1.0d0, fionloc, 1, fion, 1 )
 
       CALL mp_sum(esr, intra_bgrp_comm)
      

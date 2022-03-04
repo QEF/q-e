@@ -9,26 +9,25 @@
 !----------------------------------------------------------------------------
 SUBROUTINE phq_init()
   !----------------------------------------------------------------------------
-  !
-  !     This subroutine computes the quantities necessary to describe the
-  !     local and nonlocal pseudopotential in the phononq program.
-  !     In detail it computes:
-  !     0) initialize the structure factors
-  !     a0) compute rhocore for each atomic-type if needed for nlcc
-  !     a) The local potential at G-G'. Needed for the part of the dynamic
-  !        matrix independent of deltapsi.
-  !     b) The local potential at q+G-G'. Needed for the second
-  !        second part of the dynamical matrix.
-  !     c) The D coefficients for the US pseudopotential or the E_l parame
-  !        of the KB pseudo. In the US case it prepares also the integrals
-  !        qrad and qradq which are needed for computing Q_nm(G) and
-  !        Q_nm(q+G)
-  !     d) The functions vkb(k+G) needed for the part of the dynamical matrix
-  !        independent of deltapsi.
-  !     e) The becp functions for the k points
-  !     e') The derivative of the becp term with respect to a displacement
-  !     f) The functions vkb(k+q+G), needed for the linear system and the
-  !        second part of the dynamical matrix.
+  !! This subroutine computes the quantities necessary to describe the
+  !! local and nonlocal pseudopotential in the phononq program.
+  !! In detail it computes:  
+  !! 0)  initialize the structure factors;  
+  !! a0) compute rhocore for each atomic-type if needed for nlcc;  
+  !! a)  the local potential at G-G'. Needed for the part of the dynamic
+  !!     matrix independent of deltapsi;  
+  !! b)  the local potential at q+G-G'. Needed for the second
+  !!     second part of the dynamical matrix;  
+  !! c)  the D coefficients for the US pseudopotential or the E_l parame
+  !!     of the KB pseudo. In the US case it prepares also the integrals
+  !!     qrad and qradq which are needed for computing \(Q_{nm}(G)\) and
+  !!     \(Q_{nm}(q+G)\);  
+  !! d)  the functions \(\text{vkb}(k+G)\) needed for the part of the 
+  !!     dynamical matrix independent of deltapsi;  
+  !! e)  The becp functions for the k points;  
+  !! e') The derivative of the becp term with respect to a displacement;  
+  !! f)  The functions \(\text{vkb}(k+q+G)\), needed for the linear system
+  !!     and the second part of the dynamical matrix.
   !
   !
   USE kinds,                ONLY : DP
@@ -44,11 +43,10 @@ SUBROUTINE phq_init()
   USE io_global,            ONLY : stdout
   USE atom,                 ONLY : msh, rgrid
   USE vlocal,               ONLY : strf
-  USE spin_orb,             ONLY : lspinorb, domag
   USE wvfct,                ONLY : npwx, nbnd
   USE gvecw,                ONLY : gcutw
   USE wavefunctions,        ONLY : evc
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : noncolin, domag, npol, lspinorb
   USE uspp,                 ONLY : okvan, vkb, nlcc_any, nkb
   USE uspp_param,           ONLY : upf
   USE m_gth,                ONLY : setlocq_gth
@@ -70,6 +68,7 @@ SUBROUTINE phq_init()
   USE eqv,                  ONLY : vlocq, evq
   USE control_lr,           ONLY : nbnd_occ, lgamma
   USE ldaU,                 ONLY : lda_plus_u
+  USE uspp_init,        ONLY : init_us_2
   !
   IMPLICIT NONE
   !

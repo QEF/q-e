@@ -12,7 +12,7 @@ SUBROUTINE delta_sphi (ikk, ikq, na, icart, nah, ihubst, wfcatomk_, wfcatomkpq_,
                        dqsphi, dmqsphi, iflag)  
   !---------------------------------------------------------------------------------
   !
-  ! DFPT+U: This routine calculates a vector at k :
+  !! DFPT+U: This routine calculates a vector at k
   !
   ! |\Delta_{-q}(S_{k+q} \phi_(k+q,I,m)) > = S_{k} | \d^{icart}phi_(k,nah,m) > + 
   !       \sum{l1,l2} [ | \dbeta^{icar_}_(k,na_,l1) > * qq_nt(na_, l1 ,l2) * 
@@ -20,7 +20,7 @@ SUBROUTINE delta_sphi (ikk, ikq, na, icart, nah, ihubst, wfcatomk_, wfcatomkpq_,
   !                      | \beta_(k,na_,l1)> * qq_nt(na_, l1 ,l2) * 
   !                           < \dbeta^{icar_}_(k+q,na_,l2) | phi_(k+q,nah,m) > ]
   !
-  ! and also a vector at k+q :
+  !! and also a vector at k+q.  
   !
   ! |\Delta_q(S_{k} \phi_(k,I,m)) > = S_{k+q}| \d^{icart}phi_(k+q,nah,m) > + 
   !       \sum{l1,l2} [ | \dbeta^{icar_}_(k+q,na_,l1) > * qq_nt(na_, l1 ,l2) * 
@@ -32,20 +32,21 @@ SUBROUTINE delta_sphi (ikk, ikq, na, icart, nah, ihubst, wfcatomk_, wfcatomkpq_,
   !                        |\Delta_{-q}(S_{k+q} \phi_(k+q,I,m)) > 
   !  iflag = 0 : calculate ONLY |\Delta_{-q}(S_{k+q} \phi_(k+q,I,m)) > 
   !
-  ! Written by A. Floris
-  ! Modified by I. Timrov (01.10.2018)
+  !! See source comment for details on the implemented formulas.
+  !
+  !! Written by A. Floris.  
+  !! Modified by I. Timrov (01.10.2018).
   ! 
   USE kinds,      ONLY : DP
   USE uspp_param, ONLY : nh, nhm
   USE ions_base,  ONLY : nat, ityp
-  USE uspp,       ONLY : nkb, qq_nt, okvan
+  USE uspp,       ONLY : nkb, qq_nt, okvan, ofsbeta
   USE ldaU,       ONLY : nwfcU
   USE wvfct,      ONLY : npwx
   USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum 
   USE klist,      ONLY : ngk
   USE io_global,  ONLY : stdout
-  USE control_lr, ONLY : ofsbeta 
   !  
   IMPLICIT NONE
   !

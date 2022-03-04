@@ -52,12 +52,15 @@ SUBROUTINE print_ks_only( )
   USE klist,                ONLY : xk, ngk, nks, nkstot, wk
   USE ener,                 ONLY : ef, eband 
   USE lsda_mod,             ONLY : lsda, nspin
-  USE spin_orb,             ONLY : lforcet
+  USE noncollin_module,     ONLY : lforcet
   USE wvfct,                ONLY : nbnd, et, wg
   USE control_flags,        ONLY : conv_elec, lbands, iverbosity
   USE mp_bands,             ONLY : root_bgrp, intra_bgrp_comm, inter_bgrp_comm
   USE mp,                   ONLY : mp_sum, mp_bcast
   USE mp_pools,             ONLY : inter_pool_comm 
+  USE add_dmft_occ,         ONLY : dmft_updated
+  !
+  USE wvfct_gpum,           ONLY : using_et
   !
   IMPLICIT NONE
   !
@@ -69,6 +72,8 @@ SUBROUTINE print_ks_only( )
       i,            &! counter on polarization
       ik,           &! counter on k points
       ibnd           ! counter on bands
+  !
+  CALL using_et(0)
   !
   IF (nkstot >= 100 .and. iverbosity <= 0 ) THEN
      WRITE( stdout, '(/,5x,a)') &
@@ -109,11 +114,13 @@ SUBROUTINE print_ks_only( )
         !
         IF ( conv_elec ) THEN
            WRITE( stdout, 9021 ) ( xk(i,ik), i = 1, 3 ), ngk_g(ik)
+        ELSEIF ( dmft_updated ) THEN
+           WRITE( stdout, 9019 ) ( xk(i,ik), i = 1, 3 )
         ELSE
            WRITE( stdout, 9020 ) ( xk(i,ik), i = 1, 3 )
         END IF
         !
-        WRITE( stdout, 9030 ) ( et(ibnd,ik) * rytoev, ibnd = 1, nbnd )
+        IF ( .NOT. dmft_updated ) WRITE( stdout, 9030 ) ( et(ibnd,ik) * rytoev, ibnd = 1, nbnd )
         !
         IF( iverbosity > 0 .AND. .NOT. lbands ) THEN
            !
@@ -136,6 +143,7 @@ SUBROUTINE print_ks_only( )
   !
 9015 FORMAT(/' ------ SPIN UP ------------'/ )
 9016 FORMAT(/' ------ SPIN DOWN ----------'/ )
+9019 FORMAT(/'          k =',3F7.4,':' )
 9020 FORMAT(/'          k =',3F7.4,'     band energies (ev):'/ )
 9021 FORMAT(/'          k =',3F7.4,' (',I6,' PWs)   bands (ev):'/ )
 9030 FORMAT( '  ',8F9.4 )
@@ -217,6 +225,8 @@ SUBROUTINE get_homo_lumo ( ehomo, elumo )
   USE wvfct,                ONLY : nbnd, et, wg
   USE io_global,            ONLY : ionode
   !
+  USE wvfct_gpum,           ONLY : using_et
+  !
   IMPLICIT NONE
   !
   REAL(dp), PARAMETER :: eps = 0.001_dp ! threshold for zero occupancy
@@ -226,6 +236,8 @@ SUBROUTINE get_homo_lumo ( ehomo, elumo )
   INTEGER :: &
       kbnd,         &! possible position of HOMO
       ibnd, ik       ! counters on bands and k-points
+  !
+  CALL using_et(0)
   !
   ehomo=-1D+6
   elumo=+1D+6

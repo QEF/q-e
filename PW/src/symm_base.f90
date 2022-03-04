@@ -498,8 +498,8 @@ CONTAINS
               sym(irot) = checksym ( irot, nat, ityp, xau, xau, ft_ )
               IF (sym(irot)) THEN
                  fractional_translations = .FALSE.
-                 WRITE( stdout, '(5x,"Found symmetry operation: I + (",&
-                &   3f8.4, ")",/,5x,"This is a supercell,", &
+                 WRITE( stdout, '(5x,"Found identity + (",&
+                &   3f8.4, ") symmetry",/,5x,"This is a supercell,", &
                 &   " fractional translations are disabled")') ft_
                  GOTO 10
               ENDIF

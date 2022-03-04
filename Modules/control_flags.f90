@@ -8,9 +8,7 @@
 !=----------------------------------------------------------------------------=!
 MODULE control_flags
   !=--------------------------------------------------------------------------=!
-  !
-  ! ... this module contains all basic variables that controls the
-  ! ... execution flow
+  !! This module contains all basic variables that controls the execution flow.
   !----------------------------------------------
   !
   USE kinds
@@ -167,9 +165,10 @@ MODULE control_flags
     llondon =.FALSE., & ! if .TRUE. compute Grimme D2 dispersion corrections
     ldftd3 =.FALSE., & ! if .TRUE. compute Grimme D3 dispersion corrections
     ts_vdw  =.FALSE., & ! as above for Tkatchenko-Scheffler disp.corrections
+    mbd_vdw  =.FALSE., &!as above for MBD correction
     lxdm    =.FALSE., & ! if .TRUE. compute XDM dispersion corrections
     lensemb =.FALSE., &! if .TRUE. compute ensemble energies
-    restart =.FALSE.   ! if .TRUE. restart from results of a preceding run
+    restart =.FALSE. ! if .TRUE. restart from results of a preceding run
   !
   ! ... pw self-consistency
   !
@@ -202,13 +201,17 @@ MODULE control_flags
   REAL(DP), PUBLIC  :: &
     ethr               ! the convergence threshold for eigenvalues
   INTEGER, PUBLIC :: &
-    isolve,           &! index selecting Davidson,  CG , PPCG or ParO diagonalization
+    isolve,           &! index selecting Davidson,  CG, PPCG, ParO or RMM diagonalization
     david,            &! max dimension of subspace in Davidson diagonalization
     max_cg_iter,      &! maximum number of iterations in a CG call
-    max_ppcg_iter      ! maximum number of iterations in a PPCG call
+    max_ppcg_iter,    &! maximum number of iterations in a PPCG call
+    rmm_ndim,         &! max dimension of subspace in RMM-DIIS diagonalization
+    gs_nblock          ! blocking size in Gram-Schmidt orthogonalization
   LOGICAL, PUBLIC :: &
-    diago_full_acc = .FALSE. ! if true,  empty eigenvalues have the same
-                             ! accuracy of the occupied ones
+    rmm_conv,                     &! if true,  RMM-DIIS is performed up to converge
+    rmm_with_davidson  = .TRUE.,  &! if true RMM-DIIS  in alternance with davidson 
+    diago_full_acc     = .FALSE.      ! if true,  empty eigenvalues have the same
+                                   ! accuracy of the occupied ones
   !
   ! ... ionic dynamics
   !
@@ -249,6 +252,12 @@ MODULE control_flags
   LOGICAL, PUBLIC :: &
     do_makov_payne = .FALSE.   ! if .TRUE. makov-payne correction for isolated
                                ! system is used
+  LOGICAL, PUBLIC :: &
+    use_gpu = .FALSE.          ! if .TRUE. selects the accelerated version of the subroutines
+                               ! when available
+  INTEGER, PUBLIC :: &
+    many_fft = 16              ! the size of FFT batches in vloc_psi and
+                               ! sumband. Only use in accelerated subroutines.
   !
   INTEGER  :: ortho_max = 0      ! maximum number of iterations in routine ortho
   REAL(DP) :: ortho_eps = 0.0_DP ! threshold for convergence in routine ortho
@@ -275,6 +284,7 @@ MODULE control_flags
 
   LOGICAL,          PUBLIC :: treinit_gvecs = .FALSE.
 
+  LOGICAL,          PUBLIC :: diagonalize_on_host = .FALSE.
   !
   ! ...  end of module-scope declarations
   !

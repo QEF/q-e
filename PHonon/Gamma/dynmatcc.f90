@@ -9,6 +9,7 @@
 !--------------------------------------------------------------------
 SUBROUTINE dynmatcc(dyncc)
   !--------------------------------------------------------------------
+  !! Calculate dynamical matrix - core correction part.
   !
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : ntyp => nsp, nat, ityp, tau
@@ -25,9 +26,12 @@ SUBROUTINE dynmatcc(dyncc)
   USE cgcom
   USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
-
+  !
   IMPLICIT NONE
+  !
   real(DP):: dyncc(3*nat,nmodes)
+  !
+  ! ... local variables
   !
   INTEGER:: i,j,na,nb,nta,ntb,ir,ig,nt, nu_i,nu_j,mu_i,mu_j
   COMPLEX(DP), POINTER:: vxc(:), work1(:), gc(:,:)
@@ -81,7 +85,7 @@ SUBROUTINE dynmatcc(dyncc)
         ENDDO
         DO i=1,3
            CALL dvb_cc  (nlcc, nt, ngm, dfftp%nnr, &
-                dfftp%nl,igtongl,rhocg,dmuxc,gc(1,i),aux3,gc(1,i))
+                dfftp%nl,igtongl,rhocg,dmuxc(:,1,1),gc(1,i),aux3,gc(1,i))
         ENDDO
         DO nb=1,nat
            ntb=ityp(nb)

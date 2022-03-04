@@ -8,14 +8,12 @@
   iverbosity  = 0
 
   elph        = .true.
-  kmaps       = .false.
   epbwrite    = .true.
   epbread     = .false.
   epwwrite    = .true.
   epwread     = .false.
-
   etf_mem     = 1
-  vme         = .true.
+  vme         = 'wannier'
 
   lpolar      = .true.
   lifc        = .false.
@@ -52,8 +50,8 @@
   phonselfen  = .false.
   a2f         = .false.
 
-  fsthick     = 100.0 ! eV 
-  temps       = 1 ! K 
+  fsthick     = 100.0 ! eV
+  temps       = 1 ! K
   degaussw    = 0.01 ! eV
 
   dvscf_dir   = './save/'
@@ -64,7 +62,7 @@
 
   filkf       = './MGA.txt'
   filqf       = './MGA.txt'
- 
+
   nk1         = 2
   nk2         = 2
   nk3         = 2

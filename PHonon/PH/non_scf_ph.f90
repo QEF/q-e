@@ -9,8 +9,7 @@
 !-----------------------------------------------------------------------
   SUBROUTINE non_scf_ph ( )
   !-----------------------------------------------------------------------
-  !
-  ! ... diagonalization of the KS hamiltonian in the non-scf case
+  !! Diagonalization of the KS hamiltonian in the non-scf case.
   !
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : lelfield, lberry, lorbm

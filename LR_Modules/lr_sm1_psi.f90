@@ -36,7 +36,7 @@ SUBROUTINE lr_sm1_psi (ik, lda, n, m, psi, spsi)
   USE becmod,           ONLY : bec_type, becp, calbec
   USE mp,               ONLY : mp_sum
   USE mp_global,        ONLY : intra_bgrp_comm
-  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE noncollin_module, ONLY : noncolin, npol, nspin_mag, lspinorb
   !
   IMPLICIT NONE
   INTEGER, INTENT(in)      :: ik, lda,n,m
@@ -130,6 +130,7 @@ CONTAINS
     ! outside of this routine.
     !
     USE lrus,      ONLY : bbk
+    USE uspp_init,        ONLY : init_us_2
     !
     IMPLICIT NONE
     !
@@ -200,7 +201,7 @@ SUBROUTINE sm1_psi_nc()
     !
     USE uspp,       ONLY : qq_so
     USE lrus,       ONLY : bbnc
-    USE spin_orb,   ONLY : lspinorb
+    USE uspp_init,        ONLY : init_us_2
     !
     IMPLICIT NONE
     !
@@ -283,9 +284,9 @@ USE uspp_param,       ONLY : nh, upf
 USE ions_base,        ONLY : ityp,nat,ntyp=>nsp
 USE mp,               ONLY : mp_sum
 USE mp_global,        ONLY : intra_bgrp_comm
-USE noncollin_module, ONLY : noncolin, npol
+USE noncollin_module, ONLY : noncolin, npol, lspinorb
 USE matrix_inversion, ONLY : invmat
-USE spin_orb,         ONLY : lspinorb
+USE uspp_init,        ONLY : init_us_2
 
 IMPLICIT NONE
 !

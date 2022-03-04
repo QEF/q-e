@@ -29,7 +29,7 @@
       use ions_base,            only : nat
       USE recvec_subs,          ONLY : ggen, ggens
       USE gvect,                ONLY : mill_g, eigts1,eigts2,eigts3, g, gg, &
-                                       ecutrho, gcutm, gvect_init, mill, &
+                                       ecutrho, gcutm, gvect_init, mill,&
                                        ig_l2g, gstart, ngm, ngm_g, gshells
       use gvecs,                only : gcutms, gvecs_init, ngms
       use gvecw,                only : gkcut, gvecw_init, g2kin_init
@@ -47,7 +47,7 @@
       USE input_parameters,     ONLY : ref_cell, ref_alat
       use cell_base,            ONLY : ref_at, ref_bg
       USE exx_module,           ONLY : h_init
-      USE command_line_options, ONLY : nmany_
+      USE command_line_options, ONLY : nmany_, pencil_decomposition_ 
 
       implicit none
 !
@@ -104,16 +104,16 @@
         WRITE( stdout,'(3X,"ref_cell_a3 =",1X,3f14.8,3x,"ref_cell_b3 =",3f14.8)') ref_at(:,3)*ref_alat,ref_bg(:,3)/ref_alat
         !
         CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, ref_at, ref_bg, &
-                            gkcut, nyfft=nyfft_, nmany=nmany_ )
+                            gkcut, nyfft=nyfft_, nmany=nmany_ , use_pd=pencil_decomposition_)
         CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, ref_at, ref_bg, &
-                            gcutm, nyfft=nyfft_, nmany=nmany_ )
+                            gcutm, nyfft=nyfft_, nmany=nmany_ ,use_pd=pencil_decomposition_ )
         !
       ELSE
         !
         CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, at, bg, &
-                            gkcut, nyfft=nyfft_, nmany=nmany_ )
+                            gkcut, nyfft=nyfft_, nmany=nmany_ , use_pd=pencil_decomposition_ )
         CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, at, bg, &
-                            gcutm, nyfft=nyfft_, nmany=nmany_ )
+                            gcutm, nyfft=nyfft_, nmany=nmany_ , use_pd=pencil_decomposition_ )
         !
       END IF
       ! define the clock labels ( this enables the corresponding fft too ! )
@@ -173,28 +173,22 @@
         WRITE( stdout,'(/,3X,"Reference Cell is Used to Initialize Reciprocal Space Mesh")' )
         WRITE( stdout,'(3X,"Reference Cell alat  =",F14.8,1X,"A.U.")' ) ref_alat
         !
-        IF( smallmem ) THEN
-           CALL ggen( dfftp, gamma_only, ref_at, ref_bg, gcutm, ngm_g, ngm, &
-                g, gg, mill, ig_l2g, gstart, no_global_sort = .TRUE. )
-        ELSE
-           CALL ggen( dfftp, gamma_only, ref_at, ref_bg, gcutm, ngm_g, ngm, &
-                g, gg, mill, ig_l2g, gstart )
-        END IF
+        CALL ggen( dfftp, gamma_only, ref_at, ref_bg, gcutm, ngm_g, ngm, &
+                g, gg, mill, ig_l2g, gstart, no_global_sort = smallmem )
         CALL ggens( dffts, gamma_only, ref_at, g, gg, mill, gcutms, ngms )
         !
       ELSE
         !
-        IF( smallmem ) THEN
-           CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
-                g, gg, mill, ig_l2g, gstart, no_global_sort = .TRUE. )
-        ELSE
-           CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
-                g, gg, mill, ig_l2g, gstart )
-        END IF
+        CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
+                g, gg, mill, ig_l2g, gstart, no_global_sort = smallmem )
         CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
         !
       END IF
-
+!NOTE g and mill already allocate in the device they are initialized below. 
+!$acc data present(g, mill) 
+!$acc update device(g,mill) 
+!$acc end data 
+      !
       CALL gshells (.TRUE.)
       !
       ! ... allocate and generate (modified) kinetic energy
@@ -412,7 +406,7 @@
       INTEGER,  INTENT(IN) :: iverbosity
       !
       REAL(DP) :: rat1, rat2, rat3
-      INTEGER :: ig
+      INTEGER :: ig, dfftp_ngm
       !
       !WRITE( stdout, "(4x,'h from newinit')" )
       !do i=1,3
@@ -425,10 +419,14 @@
       !
       !  re-calculate G-vectors and kinetic energy
       !
-      do ig = 1, dfftp%ngm
+      dfftp_ngm = dfftp%ngm 
+!$acc parallel loop present(g, mill) copyin(bg) copyout(gg)  
+      do ig = 1, dfftp_ngm
          g(:,ig)= mill(1,ig)*bg(:,1) + mill(2,ig)*bg(:,2) + mill(3,ig)*bg(:,3)
-         gg(ig)=g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2
+         gg(ig)=g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2 
       enddo
+!$acc end parallel loop 
+!$acc update host(g) 
       !
       call g2kin_init ( gg, tpiba2 )
       !

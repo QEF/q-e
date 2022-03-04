@@ -9,14 +9,13 @@
 !-----------------------------------------------------------------------
 SUBROUTINE punch_plot_e()
   !-----------------------------------------------------------------------
-  !
-  !     This subroutine writes on output the change of the charge density,
-  !     due to an electric field in a real space mesh which can be read
-  !     by chdens.f which cuts a bidimensional plane to plot contour level
-  !     or selects a line for a usual line plot. The routine produces
-  !     3 files with the change of charge density due to perturbations in
-  !     three cartesian directions. The names of the files are
-  !     in the variable fildrho given in input.
+  !! This subroutine writes on output the change of the charge density,
+  !! due to an electric field in a real space mesh which can be read
+  !! by chdens.f which cuts a bidimensional plane to plot contour level
+  !! or selects a line for a usual line plot. The routine produces
+  !! 3 files with the change of charge density due to perturbations in
+  !! three cartesian directions. The names of the files are
+  !! in the variable \(\text{fildrho}\) given in input.
   !
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, zv, tau

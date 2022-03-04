@@ -7,82 +7,81 @@
 !
 !--------------------------------------------------------------------
 program dynmat
-!--------------------------------------------------------------------
-!
-!  This program
-!  - reads a dynamical matrix file produced by the phonon code
-!  - adds the nonanalytical part (if Z* and epsilon are read from file),
-!    applies the chosen Acoustic Sum Rule (if q=0)
-!  - diagonalise the dynamical matrix
-!  - calculates IR and Raman cross sections (if Z* and Raman tensors
-!    are read from file, respectively)
-!  - writes the results to files, both for inspection and for plotting
-!
-!  Input data (namelist "input")
-!
-!  fildyn  character input file containing the dynamical matrix
-!                    (default: fildyn='matdyn')
-!  q(3)      real    calculate LO modes (add nonanalytic terms) along
-!                    the direction q (cartesian axis, default: q=(0,0,0) )
-!  amass(nt) real    mass for atom type nt, amu
-!                    (default: amass is read from file fildyn)
-!  asr   character   indicates the type of Acoustic Sum Rule imposed
-!                     - 'no': no Acoustic Sum Rules imposed (default)
-!                     - 'simple':  previous implementation of the asr used
-!                     (3 translational asr imposed by correction of
-!                     the diagonal elements of the dynamical matrix)
-!                     - 'crystal': 3 translational asr imposed by optimized
-!                     correction of the dyn. matrix (projection).
-!                     - 'one-dim': 3 translational asr + 1 rotational asr
-!                     imposed by optimized correction of the dyn. mat. (the
-!                     rotation axis is the direction of periodicity; it
-!                     will work only if this axis considered is one of
-!                     the cartesian axis).
-!                     - 'zero-dim': 3 translational asr + 3 rotational asr
-!                     imposed by optimized correction of the dyn. mat.
-!                     Note that in certain cases, not all the rotational asr
-!                     can be applied (e.g. if there are only 2 atoms in a
-!                     molecule or if all the atoms are aligned, etc.).
-!                     In these cases the supplementary asr are cancelled
-!                     during the orthonormalization procedure (see below).
-!                     Finally, in all cases except 'no' a simple correction
-!                     on the effective charges is performed (same as in the
-!                     previous implementation).
-!  axis    integer    indicates the rotation axis for a 1D system
-!                     (1=Ox, 2=Oy, 3=Oz ; default =3)
-!  lperm   logical    .true. to calculate Gamma-point mode contributions to
-!                     dielectric permittivity tensor
-!                     (default: lperm=.false.)
-!  lplasma logical    .true. to calculate Gamma-point mode effective plasma 
-!                     frequencies, automatically triggers lperm = .true. 
-!                     (default: lplasma=.false.)
-!  filout  character output file containing phonon frequencies and normalized
-!                    phonon displacements (i.e. eigenvectors divided by the
-!                    square root of the mass and then normalized; they are
-!                    not orthogonal)
-!                    (default: filout='dynmat.out')
-!  fileig  character output file containing phonon frequencies and eigenvectors
-!                    of the dynamical matrix (they are orthogonal)
-!                    (default: fileig=' ')
-!  filmol  character as above, in a format suitable for 'molden'
-!                    (default: filmol='dynmat.mold')
-!  filxsf  character as above, in axsf format suitable for xcrysden
-!                    (default: filxsf='dynmat.axsf')
-!  loto_2d logical set to .true. to activate two-dimensional treatment of LO-TO splitting.
-!
-  USE kinds, ONLY: DP
-  USE mp,         ONLY : mp_bcast
-  USE mp_global,  ONLY : mp_startup, mp_global_end
-  USE mp_world,   ONLY : world_comm
-  USE io_global,  ONLY : ionode, ionode_id, stdout
+  !--------------------------------------------------------------------
+  !! This program:
+  !
+  !! * reads a dynamical matrix file produced by the phonon code;
+  !! * adds the nonanalytical part (if Z* and epsilon are read from file),
+  !!   applies the chosen Acoustic Sum Rule (if q=0);
+  !! * diagonalise the dynamical matrix; 
+  !! * calculates IR and Raman cross sections (if Z* and Raman tensors
+  !!   are read from file, respectively);
+  !! * writes the results to files, both for inspection and for plotting.
+  !
+  !! Input data (namelist "input"):
+  !
+  !! * \(\text{fildyn} [character]: input file containing the dynamical matrix
+  !!   (default: fildyn='matdyn')
+  !! * \(q(3)) - [real]: calculate LO modes (add nonanalytic terms) along
+  !!   the direction q (cartesian axis, default: q=(0,0,0) )
+  !! * \(\text{amass}(\text{nt})\) - [real]: mass for atom type nt, amu
+  !!   (default: amass is read from file fildyn)
+  !! * \(\text{asr}\) - [character]: indicates the type of Acoustic Sum Rule imposed:
+  !!    * 'no': no Acoustic Sum Rules imposed (default)
+  !!    * 'simple':  previous implementation of the asr used
+  !!      (3 translational asr imposed by correction of
+  !!      the diagonal elements of the dynamical matrix)
+  !!    * 'crystal': 3 translational asr imposed by optimized
+  !!      correction of the dyn. matrix (projection).
+  !!    * 'one-dim': 3 translational asr + 1 rotational asr
+  !!      imposed by optimized correction of the dyn. mat. (the
+  !!      rotation axis is the direction of periodicity; it
+  !!      will work only if this axis considered is one of
+  !!      the cartesian axis).
+  !!    * 'zero-dim': 3 translational asr + 3 rotational asr
+  !!      imposed by optimized correction of the dyn. mat.
+  !!      Note that in certain cases, not all the rotational asr
+  !!      can be applied (e.g. if there are only 2 atoms in a
+  !!      molecule or if all the atoms are aligned, etc.).
+  !!      In these cases the supplementary asr are cancelled
+  !!      during the orthonormalization procedure (see below).
+  !!      Finally, in all cases except 'no' a simple correction
+  !!      on the effective charges is performed (same as in the
+  !!      previous implementation).
+  !! * \(\text{axis}\) - [integer]: indicates the rotation axis for a 1D system
+  !!   (1=Ox, 2=Oy, 3=Oz ; default =3)
+  !! * \(\text{lperm}\) - [logical]: TRUE to calculate Gamma-point mode contributions to
+  !!   dielectric permittivity tensor (default: lperm=.false.)
+  !! * \(\text{lplasma}\) - [logical]: TRUE to calculate Gamma-point mode effective plasma 
+  !!   frequencies, automatically triggers lperm = TRUE
+  !!   (default: lplasma=.false.)
+  !! * \(\text{filout} - [character]: output file containing phonon frequencies and normalized
+  !!   phonon displacements (i.e. eigenvectors divided by the
+  !!   square root of the mass and then normalized; they are
+  !!   not orthogonal). Default: filout='dynmat.out'
+  !! * \(\text{fileig}\) - [character]: output file containing phonon frequencies and eigenvectors
+  !!   of the dynamical matrix (they are orthogonal). Default: fileig=' '
+  !! * \(\text{filmol}\) - [character]: as above, in a format suitable for 'molden'
+  !!   (default: filmol='dynmat.mold')
+  !! * \(\text{filxsf}\) - [character]: as above, in axsf format suitable for xcrysden
+  !!   (default: filxsf='dynmat.axsf')
+  !! * \(\text{loto_2d}\) - [logical]: set to TRUE to activate two-dimensional treatment of
+  !!   LO-TO splitting.
+  !
+  USE kinds,       ONLY : DP
+  USE mp,          ONLY : mp_bcast
+  USE mp_global,   ONLY : mp_startup, mp_global_end
+  USE mp_world,    ONLY : world_comm
+  USE io_global,   ONLY : ionode, ionode_id, stdout
   USE environment, ONLY : environment_start, environment_end
   USE io_dyn_mat,  ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                          read_dyn_mat, read_dyn_mat_tail
   USE constants,   ONLY : amu_ry
-  USE dynamical
-  USE rigid,       ONLY: dyndiag, nonanal
+  USE dynamical,  ONLY : dyn, m_loc, ityp, tau, zstar, dchi_dtau  
+  USE rigid,       ONLY : dyndiag, nonanal
   !
   implicit none
+  !
   integer, parameter :: ntypx = 10
   character(len=256):: fildyn, filout, filmol, filxsf, fileig
   character(len=3) :: atm(ntypx)
@@ -94,12 +93,12 @@ program dynmat
   real(DP), allocatable :: w2(:)
   integer :: nat, na, nt, ntyp, iout, axis, nspin_mag, ios
   real(DP) :: celldm(6)
-  logical :: xmldyn, lrigid, lraman, lperm, lplasma
+  logical :: xmldyn, lrigid, lraman, lperm, lplasma, remove_interaction_blocks
   logical, external :: has_xml
   integer :: ibrav, nqs
   integer, allocatable :: itau(:)
   namelist /input/ amass, asr, axis, fildyn, filout, filmol, filxsf, &
-                   fileig, lperm, lplasma, q, loto_2d
+                   fileig, lperm, lplasma, q, loto_2d, remove_interaction_blocks 
   !
   ! code is parallel-compatible but not parallel
   !
@@ -120,6 +119,7 @@ program dynmat
   lperm=.false.
   lplasma=.false.
   loto_2d=.false.
+  remove_interaction_blocks = .false. 
   !
   IF (ionode) read (5,input, iostat=ios)
   CALL mp_bcast(ios, ionode_id, world_comm)
@@ -178,6 +178,7 @@ program dynmat
         END DO
      END IF
   ENDIF
+  IF (remove_interaction_blocks)  CALL remove_interaction(dyn, nat) 
   !
   IF (ionode) THEN
      !
@@ -237,4 +238,30 @@ program dynmat
   !
   CALL mp_global_end()
   !
+  CONTAINS 
+    subroutine remove_interaction(d,na_) 
+      !! this routine removes from the dynamical matrix the columsn and the rows 
+      !! for the atoms with vanishing diagonal blocks (i,j,ia,ia) 
+      IMPLICIT NONE 
+      INTEGER,INTENT(IN)      :: na_
+      COMPLEX(DP), INTENT(INOUT)  :: d(3,3,na_,na_)
+      REAL(DP)                :: norm 
+      ! 
+      INTEGER ia, ipol, jpol  
+      COMPLEX(dp) :: z(3,3) 
+      DO ia = 1, na_ 
+        norm = 0._dp 
+        z = d(:,:,ia,ia) 
+        DO ipol =1, 3
+          norm = norm + REAL(z(ipol,ipol))**2  + AIMAG(z(ipol,ipol))**2   
+          DO jpol =ipol+1, 3
+             norm = norm + 2._DP * REAL(z(ipol,jpol))**2  + AIMAG(z(ipol,jpol))**2
+          END DO 
+        END DO 
+        IF (norm .lt. 1.e-8_DP ) THEN 
+          d(:,:,ia,:) = 0._DP 
+          d(:,:,:,ia)  =  0._DP 
+        END IF 
+      END DO  
+   END SUBROUTINE remove_interaction  
 end program dynmat

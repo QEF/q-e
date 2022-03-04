@@ -9,6 +9,7 @@
 !-----------------------------------------------------------------------
 PROGRAM phcg
   !-----------------------------------------------------------------------
+  !! Gamma-only PHonon code - main program.
   !
   USE ions_base,     ONLY: nat, tau
   USE io_global,     ONLY: ionode
@@ -95,8 +96,7 @@ END PROGRAM phcg
 !-----------------------------------------------------------------------
 SUBROUTINE cg_dchi(dchi_dtau)
   !-----------------------------------------------------------------------
-  !
-  !  calculate dX/dtau with finite differences
+  !! Calculate \(dX/d\tau\) with finite differences.
   !
   USE constants,  ONLY : bohr_radius_angs
   USE ions_base,  ONLY : nat, tau
@@ -109,7 +109,10 @@ SUBROUTINE cg_dchi(dchi_dtau)
   USE cgcom
 
   IMPLICIT NONE
+  
   REAL(DP) :: dchi_dtau(3,3,3,nat)
+  !
+  ! ... local variables
   !
   REAL(DP) :: delta4(4), coeff4(4), delta2(2), coeff2(2), &
        delta, coeff, convfact
@@ -260,6 +263,7 @@ END SUBROUTINE cg_dchi
 !-----------------------------------------------------------------------
 SUBROUTINE cg_eps0dyn(w2,dynout)
   !-----------------------------------------------------------------------
+  !! Calculate linear response to macroscopic fields and lattice distorsions.
   !
   USE constants,  ONLY : bohr_radius_angs, fpi
   USE cell_base,  ONLY : at, bg, omega
@@ -380,7 +384,7 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
      !
      !   impose asr on the dynamical matrix
      !
-     IF (asr) CALL set_asr(nat,nasr,dyn)
+     IF (asr) CALL set_asr_r(nat,nasr,dyn)
      !
      ! diagonalize the dynamical matrix
      !
@@ -412,8 +416,7 @@ END SUBROUTINE cg_eps0dyn
 !-----------------------------------------------------------------------
 SUBROUTINE cg_neweps
   !-----------------------------------------------------------------------
-  !
-  !!  Recalculate self-consistent potential etc
+  !! Recalculate self-consistent potential etc.
   !
   USE constants, ONLY : bohr_radius_angs, fpi
   USE io_global, ONLY : stdout
@@ -421,21 +424,23 @@ SUBROUTINE cg_neweps
   USE ions_base, ONLY : nat, tau
   USE fft_base,  ONLY : dfftp
   USE scf,       ONLY : rho, rho_core
+  USE xc_lib,    ONLY : xclib_set_threshold
   USE cgcom
   !
   IMPLICIT NONE
   !
   INTEGER :: i, j
   REAL(DP), DIMENSION(3,3) :: chi(3,3)
-  REAL(DP), DIMENSION(dfftp%nnr) ::  rhotot, sign_r
+  REAL(DP), DIMENSION(dfftp%nnr,1) ::  rhotot, sign_r
   !
   CALL newscf
   !
   !  new derivative of the xc potential - NOT IMPLEMENTED FOR LSDA
   !
-  rhotot(:) = rho%of_r(:,1) + rho_core(:)
+  rhotot(:,1) = rho%of_r(:,1) + rho_core(:)
   !
-  CALL dmxc_lda( dfftp%nnr, rhotot, dmuxc )
+  CALL xclib_set_threshold( 'lda', 1.E-10_DP )
+  CALL dmxc( dfftp%nnr, 1, rhotot, dmuxc )
   !
   !
   !  re-initialize data needed for gradient corrections
@@ -473,6 +478,7 @@ END SUBROUTINE cg_neweps
 !-----------------------------------------------------------------------
 SUBROUTINE newscf
   !-----------------------------------------------------------------------
+  !! Set all kind of stuff needed by self-consistent (re-)calculation.
   !
   USE basis, ONLY: starting_wfc 
   USE cellmd,ONLY: lmovecell
@@ -494,8 +500,6 @@ SUBROUTINE newscf
   INTEGER :: iter
   !
   CALL start_clock('PWSCF')
-  !
-  !  set all kind of stuff needed by self-consistent (re-)calculation
   !
 !  dft='Same as Before'
   restart  =.false.
@@ -545,8 +549,7 @@ END SUBROUTINE newscf
 !-----------------------------------------------------------------------
 SUBROUTINE raman_cs(dynout,dchi_dtau)
   !-----------------------------------------------------------------------
-  !
-  !  calculate Raman cross section
+  !! Calculate Raman cross section.
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : amu_ry
@@ -589,8 +592,7 @@ END SUBROUTINE raman_cs
 !-----------------------------------------------------------------------
 SUBROUTINE raman_cs2(w2,dynout)
   !-----------------------------------------------------------------------
-  !
-  !  calculate d X/d u  (u=phonon mode) with finite differences
+  !! Calculate \(dX/du\)  (u=phonon mode) with finite differences.
   !
   USE constants,  ONLY : bohr_radius_angs, ry_to_thz, ry_to_cmm1, amu_ry,&
                          fpi

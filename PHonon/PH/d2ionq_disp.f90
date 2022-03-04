@@ -5,33 +5,47 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! This routine calculates the XDM contribution to the dynamical matrix.
-! It uses the XDM dispersion coefficients and van der Waals radii in
-! the prefix.xdm file, which is written by pw.x.
-! This code is based on the d2ionq_mm.f90 file by Fabrizio Masullo and
-! Paolo Giannozzi.
-!
-SUBROUTINE d2ionq_disp(alat,nat,ityp,at,bg,tau,q,der2disp)
+!---------------------------------------------------------------------------
+SUBROUTINE d2ionq_disp( alat, nat, ityp, at, bg, tau, q, der2disp )
+  !------------------------------------------------------------------------
+  !! This routine calculates the XDM contribution to the dynamical matrix.
+  !! It uses the XDM dispersion coefficients and Van der Waals radii in
+  !! the \(\texttt{prefix.xdm}\) file, which is written by \(\texttt{pw.x}\).
+  !
+  !! This code is based on the \(\texttt{d2ionq_mm.f90}\) file by Fabrizio
+  !! Masullo and Paolo Giannozzi.
+  !
   USE london_module, ONLY: init_london, dealloca_london, mxr, dist2, r_cut, r
-  USE kinds, ONLY: DP
-  USE io_global, ONLY: ionode, ionode_id, stdout
-  USE io_files, ONLY: seqopn, postfix
+  USE kinds,         ONLY: DP
+  USE io_global,     ONLY: ionode, ionode_id, stdout
+  USE io_files,      ONLY: seqopn, postfix
   USE control_flags, ONLY: llondon, lxdm
-  USE constants, ONLY: tpi, eps8
-  USE mp_images, ONLY: me_image , nproc_image , intra_image_comm
-  USE mp, ONLY: mp_sum, mp_bcast
-  USE save_ph, ONLY: tmp_dir_save
+  USE constants,     ONLY: tpi, eps8
+  USE mp_images,     ONLY: me_image , nproc_image , intra_image_comm
+  USE mp,            ONLY: mp_sum, mp_bcast
+  USE save_ph,       ONLY: tmp_dir_save
+  
   IMPLICIT NONE
 
-  INTEGER, INTENT(IN) :: nat ! number of atoms in the unit cell
-  REAL(DP), INTENT(IN) :: alat ! cell parameter (celldm(1))
-  INTEGER, INTENT(IN) :: ityp(nat) ! atomic types for atoms in the unit cell
-  REAL(DP), INTENT(IN) :: at(3,3) ! at(:,i) is lattice vector i in alat units
-  REAL(DP), INTENT(IN) :: bg(3,3) ! bg(:,i) is reciprocal lattice vector i in 2pi/alat units
-  REAL(DP), INTENT(IN) :: tau(3,nat) ! atomic positions in alat units
-  REAL(DP), INTENT(IN) :: q(3) ! wavevector in 2pi/alat units
-  COMPLEX(DP), INTENT(OUT) :: der2disp(3,nat,3,nat) ! dispersion contribution to the (massless) dynamical matrix
-
+  INTEGER, INTENT(IN) :: nat
+  !! number of atoms in the unit cell
+  REAL(DP), INTENT(IN) :: alat
+  !! cell parameter (celldm(1))
+  INTEGER, INTENT(IN) :: ityp(nat)
+  !! atomic types for atoms in the unit cell
+  REAL(DP), INTENT(IN) :: at(3,3)
+  !! at(:,i) is lattice vector i in alat units
+  REAL(DP), INTENT(IN) :: bg(3,3)
+  !! bg(:,i) is reciprocal lattice vector i in 2pi/alat units
+  REAL(DP), INTENT(IN) :: tau(3,nat)
+  !! atomic positions in alat units
+  REAL(DP), INTENT(IN) :: q(3)
+  !! wavevector in 2pi/alat units
+  COMPLEX(DP), INTENT(OUT) :: der2disp(3,nat,3,nat)
+  !! dispersion contribution to the (massless) dynamical matrix
+  
+  ! ... local variables
+  
   INTEGER :: ii, jj, kk ! some indices
   INTEGER :: k, l ! cell atom indices (1 -> nat)
   INTEGER :: aa, bb ! coordinate indices (1 -> 3)

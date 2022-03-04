@@ -26,8 +26,7 @@
       USE electrons_module, ONLY: ei
       USE ensemble_dft,     ONLY: tens
       USE mp,               ONLY: mp_bcast
-      USE control_flags,    ONLY: tksw, ndw, io_level
-      USE electrons_module, ONLY: collect_c
+      USE control_flags,    ONLY: tksw, ndw
       USE gvecw,            ONLY: ngw
       USE wannier_module,   ONLY : wfc ! BS
 

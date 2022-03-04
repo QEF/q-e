@@ -22,7 +22,7 @@ program fd
   USE kinds,      ONLY : dp 
   USE gvecw,      ONLY : ecutwfc
   USE gvect,     ONLY : ecutrho
-  USE wrappers,  ONLY : f_mkdir_safe
+  USE clib_wrappers,  ONLY : f_mkdir_safe
 
   USE symm_base
   USE symme

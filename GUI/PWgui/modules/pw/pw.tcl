@@ -64,7 +64,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                 }
 
                 var wf_collect {
-                    -label     "Make a single restart file (wf_collect):"
+                    -label     "OBSOLETE! Make a single restart file (wf_collect):"
                     -widget    radiobox
                     -textvalue { Yes No }             
                     -value     { .true. .false. }
@@ -92,7 +92,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                 var prefix -label "Prefix for I/O filenames (prefix):" -validate  string
 
                 var lkpoint_dir {
-                    -label "Store each k-point in its own subdirectory (lkpoint_dir):"
+                    -label "OBSOLETE! Store each k-point in its own subdirectory (lkpoint_dir):"
                     -widget    radiobox
                     -textvalue { Yes No }             
                     -value     { .true. .false. }
@@ -101,10 +101,10 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                 var disk_io {
                     -label    "Disk Input/Output (disk_io):"
                     -textvalue {
-                        high default low minimal none
+                        high medium low nowf none
                     }
                     -value {
-                        'high' 'default' 'low' 'none'
+                        'high' 'medium' 'low' 'nowf' 'none'
                     }
                     -widget optionmenu
                 }
@@ -114,15 +114,11 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     -widget    optionmenu
                     -textvalue {
                         high
-                        default
                         low
-                        minimal
                     }
                     -value {
                         'high'
-                        'default'
                         'low'
-                        'minimal'
                     }
                 }
 
@@ -211,8 +207,8 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     -value     { .true. .false. }
                 }
 
-                var lfcpopt {
-                    -label "Perform a constant bias potential calculation with ESM method (lfcpopt):"
+                var lfcp {
+                    -label "Perform a constant bias potential calculation with ESM method (lfcp):"
                     -widget    radiobox
                     -textvalue { Yes No }             
                     -value     { .true. .false. }
@@ -282,21 +278,27 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                         "Cubic P (sc)"
                         "Cubic F (fcc)"
                         "Cubic I (bcc)"
+                        "Cubic I, more symmetric axis (bcc)"
                         "Hexagonal and Trigonal P"
                         "Trigonal R, 3fold axis c"
                         "Trigonal R, 3fold axis <111>"
                         "Tetragonal P (st)"
                         "Tetragonal I (bct)"
                         "Orthorhombic P"
-                        "Orthorhombic base-centered(bco)"
+                        "Orthorhombic base-centered (bco)"
+                        "Orthorhombic base-centered, alternate (bco)"
+                        "Orthorhombic one-face base-centered A-type"
                         "Orthorhombic face-centered"
                         "Orthorhombic body-centered"
                         "Monoclinic P, unique axis c"
                         "Monoclinic P, unique axis b"
                         "Monoclinic base-centered"
+                        "Monoclinic base-centered, unique axis b"
                         "Triclinic P"
                     }
-                    -value {0 1 2 3 4 5 -5 6 7 8 9 10 11 12 -12 13 14}
+                    -value {
+                        0 1 2 3 -3 4 5 -5 6 7 8 9 -9 91 10 11 12 -12 13 -13 14
+                    }
                 }
 
                 group lattice_spec -name "Lattice specification:" -decor normal {
@@ -555,13 +557,13 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     var constrained_magnetization {
                         -label     "Constrained magnetic calculation (constrained_magnetization):"
                         -textvalue {
-                            "no constrain  <none>" 
+                            "no constraint  <none>" 
                             "constrain TOTAL magnetization  <total>"
                             "constrain ATOMIC magnetization  <atomic>"
-                            "constrain magnetization to \"ATOMIC DIRECTION\"  <atomic direction>"
                             "constrain the direction of total magnetization  <total directioin>"
+                            "constrain magnetization to \"ATOMIC DIRECTION\"  <atomic direction>"
                         }
-                        -value     {'none' 'total' 'atomic' {'atomic direction'} {'total direction'}}
+                        -value     {'none' 'total' 'atomic' {'total direction'} {'atomic direction'}}
                         -widget    optionmenu
                     }
                     
@@ -733,6 +735,18 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                             }
                         }
 
+                        var dmft {
+                            -label "DMFT (dmft):"
+                            -widget    radiobox
+                            -textvalue { Yes No }	      
+                            -value     { .true. .false. }
+                        }
+
+                        var dmft_prefix {
+                            -label "DMFT prefix to hdf5 archive (dmft_prefix):"
+                            -validate string
+                        }
+
                         var ensemble_energies {
                             -label "Calculate ensemble of xc energies (ensemble_energies):"
                             -widget    radiobox
@@ -797,9 +811,10 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                         "Makov-Payne <makov-payne>"
                         "Martyna-Tuckerman <martyna-tuckerman>"
                         "Effective Screening Medium <esm>"
+                        "2D <2D>"
                         "No correction <none>"
                     }
-                    -value {'makov-payne' 'martyna-tuckerman' 'esm' 'none'}
+                    -value {'makov-payne' 'martyna-tuckerman' 'esm' '2D' 'none'}
                 }       
 
                 separator -label "--- Effective screening medium ---"
@@ -828,9 +843,29 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                         -label    "Number of z-grid points for the polynomial fit @ cell edge (esm_nfit):"
                         -validate posint
                     }
+                }
+                separator -label "--- Constant-mu calculation with grand-canonical SCF ---"
 
-                    var fcp_mu {
-                        -label "Target Fermi energy \[in Ry\] for constant bias \"lfcpopt\" calculation (fcp_mu):"
+                var lgcscf {
+                    -label "Perform a constant-mu calculation with grand-canonical SCF (lgcscf):"
+                    -widget    radiobox
+                    -textvalue { Yes No }	      
+                    -value     { .true. .false. }
+                }
+
+                group gcscf_group -name "Grand-canonical SCF (GC-SCF) specs" -decor normal {
+                    var gcscf_mu {
+                        -label "The target Fermi energy (in eV) of GC-SCF (gcscf_mu):"
+                        -validate fortranreal
+                    }
+                    
+                    var gcscf_conv_thr {
+                        -label "Convergence threshold of Fermi energy (in eV) for GC-SCF (gcscf_conv_thr):"
+                        -validate fortranreal
+                    }
+                    
+                    var gcscf_beta {
+                        -label "Mixing factor for GC-SCF (gcscf_beta):"
                         -validate fortranreal
                     }
                 }
@@ -841,8 +876,8 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
                     var vdw_corr {
                         -label "Type of Van der Waals correction (vdw_corr):"
-                        -textvalue {Grimme-D2  Grimme-D3  Tkatchenko-Scheffler  XDM  None}
-                        -value     {'grimme-d2' 'grimme-d3' 'ts-vdw' 'xdm' ''}
+                        -textvalue {Grimme-D2  Grimme-D3  Tkatchenko-Scheffler "Many-Body-Dispersion vdW" XDM  None}
+                        -value     {'grimme-d2' 'grimme-d3' 'ts-vdw' 'mbd_vdw' 'xdm' ''}
                         -widget    optionmenu
                     }  
 
@@ -1132,10 +1167,16 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                         -textvalue {
                             "Davidson with overlap matrix  <david>"
                             "Conjugate-gradient band-by-band <cg>"
+                            "PPCG iterative diagonalization <ppcg>"
+                            "ParO iterative diagonalization <paro>"
+                            "RMM-DIIS iterative diagonalization <rmm-davidson>"
                         }
                         -value {
                             'david'
                             'cg'
+                            'ppcg'
+                            'paro'
+                            'rmm-davidson'
                         }
                         -widget optionmenu
                     }
@@ -1149,6 +1190,18 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                         -label "Diagonalize empty states as precise as occupied states (diago_full_acc):"
                         -widget    radiobox
                         -textvalue { Yes No }         
+                        -value     { .true. .false. }
+                    }
+
+                    var diago_rmm_ndim {
+                        -label "Subspace dimension for RMM-DIIS (diago_rmm_ndim):"
+                        -validate int
+                    }
+                    
+                    var diago_rmm_conv {
+                        -label "Reiterate RMM-DIIS until all bands are converged (diago_rmm_conv):"
+                        -widget    radiobox
+                        -textvalue { Yes No }	      
                         -value     { .true. .false. }
                     }
 
@@ -1228,15 +1281,17 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     -textvalue {
                         "BFGS quasi-newton method for structural optimization  <bfgs>"
                         "damped dynamics (quick-min Verlet) for structural optimization  <damp>"
+                        "FIRE minimization algorithm  <fire>"
                         "Verlet algorithm for molecular dynamics  <verlet>"
                         "over-damped Langevin dynamics  <langevin>"
-                        "over-damped Langevin with Smart Monte Carlo <langevin-smc>"
+                        "over-damped Langevin with Smart Monte Carlo  <langevin-smc>"
                         "Beeman algorithm for variable cell damped dynamics  <damp>"
                         "Beeman algorithm for variable cell MD  <beeman>"
                     }
                     -value {
                         'bfgs' 
-                        'damp' 
+                        'damp'
+                        'fire'
                         'verlet'
                         'langevin'
                         'langevin-smc'
@@ -1249,8 +1304,8 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     -label "Which ion positions to use when restarting (ion_positions):"
                     -widget radiobox
                     -textvalue { 
-                        "from restart file"
-                        "from standard input"                   
+                        "from restart file <default>"
+                        "from standard input <from_input>"                   
                     }
                     -value { 'default' 'from_input' }
                 }
@@ -1260,8 +1315,8 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     -validate string
                     -widget radiobox
                     -textvalue { 
-                        "random thermalized"
-                        "from standard input"                   
+                        "random thermalized <default>"
+                        "from standard input <from_input>"                   
                     }
                     -value { 'default' 'from_input' }
                 }
@@ -1306,7 +1361,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
                 group md -decor normal {
                     var ion_temperature {
-                        -label    "Temperature of ions (ion_temperature):"
+                        -label    "Controlling of ions temperature (ion_temperature):"
                         -widget   optionmenu
                         -textvalue {
                             "velocity rescaling via tempw&tolp  <rescaling>"
@@ -1315,7 +1370,8 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                             "reduce ionic temperature via delta_t&nraise  <reduce-T>"
                             "\"soft\" Berendsen velocity rescaling via tempw&nraise  <berendsen>"
                             "use Andersen thermostat via tempw&nraise  <andersen>"
-                            "initialize to temperature \"tempw\" and leave uncontrolled <initial>"
+                            "stochastic-velocity rescaling  <srv>"
+                            "initialize to temperature \"tempw\" and leave uncontrolled  <initial>"
                             "not controlled  <not_controlled>"
                         }
                         -value {
@@ -1325,6 +1381,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                             'reduce-T'
                             'berendsen'
                             'andersen'
+                            'srv'
                             'initial'
                             'not_controlled'
                         }
@@ -1392,7 +1449,41 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                         var w_1 -label "w_1:" -validate fortranreal                     
                         var w_2 -label "w_2:" -validate fortranreal                     
                     }
-                }                               
+                }
+
+                separator -label "--- FIRE Structural Optimization ---"
+
+                group fire -decor normal {
+                    var fire_alpha_init {
+                        -label "Initial alpha mixing factor for FIRE (fire_alpha_init):"
+                        -validate fortranreal
+                    }
+
+                    var fire_falpha {
+                        -label "Scaling of the alpha mixing parameter (fire_falpha):"
+                        -validate fortranreal
+                    }
+                    
+                    var fire_nmin {
+                        -label "Min number of steps with P > 0 before increasing dt (fire_nmin):"
+                        -validate int
+                    }
+                    
+                    var fire_f_inc {
+                        -label "Factor for increasing dt (fire_f_inc):"
+                        -validate fortranreal
+                    }
+                    
+                    var fire_f_dec {
+                        -label "Factor for decreasing dt (fire_f_dec):"
+                        -validate fortranreal
+                    }
+                    
+                    var fire_dtmax {
+                        -label "Maximum scaling of dt during FIRE (fire_dtmax):"
+                        -validate fortranreal
+                    }
+                }
             }
         }
     }
@@ -1494,6 +1585,117 @@ module PW -title "PWSCF GUI: module PW.x" -script {
         }
     }
 
+
+    ########################################################################
+    ##                                                                    ##
+    ##                      &FCP NAMELIST                                ##
+    ##                                                                    ##
+    ########################################################################
+
+    page fcpPage -name "FCP" {
+
+        namelist fcp -name "FCP" {
+            var fcp_mu {
+                -label "Target Fermi energy \[in Ry\] for constant bias \"lfcp\" calculation (fcp_mu):"
+                -validate fortranreal
+            }
+
+            var fcp_dynamics {
+                -label "Type of FCP dynamics for the FCP (fcp_dynamics):"
+                -textvalue {
+                    "BFGS quasi-newton algorithm  <bfgs>"
+                    "Newton-Raphson algorithm with DIIS  <newton>"
+                    "damped (quick-min Verlet) dynamics  <damp>"
+                    "line-minimization algorithm  <lm>"
+                    "Velocity-Verlet algorithm  <velocity-verlet>"
+                    "Verlet algorithm  <verlet>"                
+                }           
+                -value {
+                    'bfgs'     
+                    'newton'   
+                    'damp'     
+                    'lm'       
+                    'velocity-verlet'
+                    'verlet'         
+                }
+                -widget optionmenu
+            }
+
+            var fcp_conv_thr {
+                -label "Convergence threshold on force (in eV) for FCP relaxation (fcp_conv_thr):"
+                -validate fortranreal
+            }
+
+            var fcp_ndiis {
+                -label "Size of DIIS for FCP relaxation (fcp_ndiis):"
+                -validate int
+            }
+            
+            group for_fcp_dynamics -name "FCP dynamics specs:" -decor normal {
+                var fcp_mass {
+                    -label "Mass of the FCP (fcp_mass):"
+                    -validate fortranreal
+                }
+                
+                var fcp_velocity {
+                    -label "Initial velocity of the FCP (fcp_velocity):"
+                    -validate fortranreal
+                }
+                
+                var fcp_temperature {
+                    -label "Controlling of FCP temperature (fcp_temperature):"
+                    -widget   optionmenu
+                    -textvalue {
+                        "velocity rescaling via fpc_tempw and fcp_tolp  <rescaling>"
+                        "velocity rescaling via fcp_tempw and fcp_nraise  <rescale-v>"
+                        "velocity rescaling via fcp_delta_t  <rescale-T>"
+                        "reduce FCP's temperature via fcp_nraise and fcp_delta_t  <reduce-T>"
+                        "\"soft\" Berendsen velocity rescaling via fcp_tempw and fcp_nraise  <berendsen>"
+                        "use Andersen thermostat via fcp_tempw and fcp_nraise  <andersen>"
+                        "initialize to temperature \"fcp_tempw\" and leave uncontrolled  <initial>"
+                        "not controlled  <not_controlled>"
+                    }
+                    -value {
+                        'rescaling'
+                        'rescale-v'
+                        'rescale-T'
+                        'reduce-T'
+                        'berendsen'
+                        'andersen'
+                        'initial'
+                        'not_controlled'
+                    }                
+                }
+                
+                var fcp_tempw {
+                    -label "Starting FCP temperature (fcp_tempw):"
+                    -validate fortranreal
+                }
+                
+                var fcp_tolp {
+                    -label "Tolerance for FCP velocity rescaling (fcp_tolp):"
+                    -validate fortranreal
+                }
+                
+                var fcp_delta_t {
+                    -label "FCP temperature rescaling (fcp_delta_t):"
+                    -validate fortranreal
+                }
+                
+                var fcp_nraise {
+                    -label "FCP rescaling interval (fcp_nraise):"
+                    -validate int
+                }
+            }
+            
+            var freeze_all_atoms {
+                -label "Freeze all atoms in FCP dynamics (freeze_all_atoms):"
+                -widget    radiobox
+                -textvalue { Yes No }	      
+                -value     { .true. .false. }
+            }            
+        }
+    }
 
     ########################################################################
     ##                                                                    ##
@@ -1650,6 +1852,57 @@ module PW -title "PWSCF GUI: module PW.x" -script {
             loaddata kpoints ::pwscf::pwLoadKPoints \
                 "Load K-point coordinates from file ..."        
         }
+        
+        #
+        # ADDITIONAL_K_POINTS
+        #
+        group add_k_points_group -name "Card: ADDITIONAL_K_POINTS" -decor normal {
+
+            auxilvar specify_add_kpoints {
+                -label     "Specify ADDITIONAL_K_POINTS:"
+                -widget    radiobox
+                -textvalue { Yes No }         
+                -value     { .true. .false. }
+            }
+
+            group add_kpoints_specs -decor none {
+                line add_kpoint_type_line -decor none {
+                    keyword add_k_points ADDITIONAL_K_POINTS
+                    var ADDITIONAL_K_POINTS_flags {
+                        -label    "K-points type:" 
+                        -textvalue {
+                            "Manual specification in 2pi/a units  <tpiba>"
+                            "Manual specification in CRYSTAL units  <crystal>"
+                            "Manual \"2pi/a\" specification for band structure plot <tpiba_b>"
+                            "Manual \"crystal\" specification for band structure plot <crystal_b>"
+                            "Manual \"2pi/a\" specification for band structure contour plot <tpiba_c>"
+                            "Manual \"crystal\" specification for band structure contour plot <crystal_c>"
+                        }
+                        -value {
+                            tpiba crystal tpiba_b crystal_b tpiba_c crystal_c
+                        }
+                        -widget radiobox
+                        -default "Manual specification in 2pi/a units  <tpiba>"
+                    }
+                }
+            
+                line add_nks_line -decor none {
+                    var nks_add -label "Number of K-points:" -widget spinint -validate posint -default 1
+                }
+            
+                # elseif nks>0 enetr kpoint coordinates
+                table add_kpoints {
+                    -caption  "Enter the coordinates of the additional K-points below:"
+                    -head     {KX-Coordinate KY-Coordinate KZ-Coordinate Weight}
+                    -cols     4
+                    -rows     1
+                    -validate {fortranreal fortranreal fortranreal fortranreal}
+                    -outfmt   {%14.9f %14.9f %14.9f "  %14.9f"}
+                }
+                loaddata add_kpoints ::pwscf::pwLoadAddKPoints \
+                    "Load additional K-point coordinates from file ..."        
+            }
+        }
     }
 
     ########################################################################
@@ -1712,9 +1965,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                 -readvar ::pwscf::pwscf($this,OCCUPATIONS)
         }
 
-        #
-        # ATOMIC_VELOCITIES
-        #
+        # CARD: ATOMIC_VELOCITIES
 
         group atomic_velocities_group -name "Card: ATOMIC_VELOCITIES" -decor normal {
 
@@ -1733,10 +1984,8 @@ module PW -title "PWSCF GUI: module PW.x" -script {
             loaddata atomic_velocities ::pwscf::pwLoadAtomicVelocities \
                 "Load atomic velocities from file ..."    
         }        
-
-        #
-        # ATOMIC_FORCES
-        #
+        
+        # CARD: ATOMIC_FORCES
 
         group atomic_forces_group -name "Card: ATOMIC_FORCES" -decor normal {
 
@@ -1746,7 +1995,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                 -textvalue { Yes No }         
                 -value     { .true. .false. }
             }
-
+            
             group atomic_forces_specs -decor none {
                 keyword atomic_forces_key ATOMIC_FORCES\n
 

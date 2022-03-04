@@ -23,9 +23,8 @@
 subroutine random_matrix_new (irt, nsymq, minus_q, irotmq, nat, &
      wdyn, lgamma)
   !----------------------------------------------------------------------
-  !
-  !   Create a random hermitian matrix with non zero elements similar to
-  !   the dynamical matrix of the system
+  !! Create a Random hermitian matrix with non zero elements similar to
+  !! the dynamical matrix of the system.
   !
 #if defined (__UNIFORM_DISTRIB)
 #define __RANDOM_DBLE  CMPLX(2.0_DP*randy () - 1.0_DP, 0.d0,kind=DP)
@@ -40,23 +39,24 @@ subroutine random_matrix_new (irt, nsymq, minus_q, irotmq, nat, &
   USE random_numbers, ONLY : randy
   implicit none
   !
-  !    The dummy variables
-  !
-
-  integer :: nat, irt (48, nat), nsymq, irotmq
-  ! input: number of atoms
-  ! input: index of the rotated atom
-  ! input: the small group of q
-  ! input: the order of the small group
-  ! input: the rotation sending q -> -q
+  
+  integer :: nat
+  !! input: number of atoms
+  integer :: irt(48,nat)
+  !! input: index of the rotated atom
+  integer :: nsymq
+  !! input: the order of the small group
+  integer :: irotmq
+  !! input: the rotation sending q -> -q
 
   complex(DP) :: wdyn (3, 3, nat, nat)
-  ! output: random matrix
-  logical :: lgamma, minus_q
-  ! input: if true q=0
-  ! input: if true there is a symmetry
+  !! output: random matrix
+  logical :: lgamma
+  !! input: if TRUE \(q=0\)
+  logical :: minus_q
+  !! input: if TRUE there is a symmetry
   !
-  !    The local variables
+  ! ... local variables
   !
   integer :: na, nb, ipol, jpol, isymq, irot, ira, iramq
   ! counters

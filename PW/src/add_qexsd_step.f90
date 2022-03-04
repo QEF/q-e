@@ -26,7 +26,7 @@ SUBROUTINE add_qexsd_step(i_step)
   USE klist,        ONLY: degauss, tot_charge
   USE force_mod,    ONLY: force, sigma
   USE control_flags,ONLY: nstep, n_scf_steps, scf_error, conv_elec
-  USE fcp_variables,ONLY: fcp_mu, lfcpopt, lfcpdyn 
+  USE fcp_module,   ONLY: fcp_mu, lfcp
   USE extfield,     ONLY: gate, etotgatefield, tefield, etotefield   
   USE control_flags,ONLY: max_xml_steps 
   !-----------------------------------------------------------------------------
@@ -74,16 +74,16 @@ SUBROUTINE add_qexsd_step(i_step)
      degauss_ptr => degauss_tgt
      demet_ptr    => demet_tgt
   END IF
-  IF ( lfcpopt .OR. lfcpdyn ) THEN  
-     potstat_contr_tgt = ef * tot_charge / e2
+  IF ( lfcp ) THEN
+     potstat_contr_tgt = fcp_mu * tot_charge / e2
      potstat_contr_ptr => potstat_contr_tgt
      !
-     fcp_force_tgt = (fcp_mu - ef)/e2 
+     fcp_force_tgt = (fcp_mu - ef)/e2
      fcp_force_ptr  => fcp_force_tgt
      !
      fcp_tot_charge_tgt = tot_charge
      fcp_tot_charge_ptr =>  fcp_tot_charge_tgt
-     ! 
+     !
   END IF
   IF ( gate ) THEN 
      gatefield_en_tgt = etotgatefield/e2

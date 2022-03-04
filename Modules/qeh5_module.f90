@@ -9,15 +9,13 @@
 !------------------------------------------------------
 MODULE qeh5_base_module
   !---------------------------------------------------
+  !! This module contains the basic interface for basic operation for 
+  !! serial I/O in HDF5 format. The parallel interface remains in file
+  !! hdf5_qe.f90 file.
   !
-  ! this module contains the basic interface for basic operation for 
-  ! serial I/O in HDF5 format. The parallel interface remains in file
-  ! hdf5_qe.f90 file. 
-  ! 
-  ! author N. Varini, P. Delugas
-  ! last revision June 2017
-  ! 
-  ! 
+  !! author N. Varini, P. Delugas.
+  !! Last revision June 2017
+  !
 #if defined(__HDF5)
   USE KINDS,   ONLY: DP
   USE hdf5 

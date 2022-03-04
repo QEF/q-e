@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2001-2016 Quantum ESPRESSO group
+# Copyright (C) 2001-2021 Quantum ESPRESSO group
 # 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -28,7 +28,6 @@ MANUAL=" Usage
 
  After configuration, the make.inc file will be created in the
  QE home (current) directory
- NOTE: CUDA Fortran code available only as a separate package
  
  ---------------------------------------------------------------
  Manual from autoconf configure : 
@@ -49,14 +48,6 @@ case $1 in
   ("-h" | "--help" )      echo "$MANUAL"     ; ./install/configure --help ; exit 0 ;;
 esac
 
-
-# run the autoconf configure with the
-# given cong_flags 
-#
-test -e ./install/make.inc       && rm ./install/make.inc
-test -e ./install/configure.msg  && rm ./install/configure.msg
-#test -e ./install/Makefile  && rm ./install/Makefile
-
 # SAFEGUARD: if you run configure without clean everything first there 
 #            are chances that something goes wrong. Forcing veryclean then.
 
@@ -65,7 +56,14 @@ if [[  ($1 =~ "--save") ]] ; then
 elif [[ (-e make.inc) && (-e Makefile) ]] ; then
   make -f Makefile veryclean
 fi
+test -e ./install/make.inc       && rm ./install/make.inc
 
+# compute dependencies (next two lines avoid bogus errors)
+touch ./include/qe_cdefs.h
+touch ./include/configure.h
+./install/makedeps.sh
+
+# run the autoconf configure with the given conf_flags 
 ./install/configure "$@"
 
 # copy make.inc in the home dir

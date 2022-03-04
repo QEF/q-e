@@ -79,7 +79,14 @@ module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
 	    }	    
 
 	    separator -label "--- PROJECTIONS options ---"
-	    
+
+            var diag_basis {
+                -label "Project Kohn-Sham states to local XYZ coordinate frame (diag_basis):"
+                -widget    radiobox
+                -textvalue { Yes No }	      
+                -value     { .true. .false. }
+            }
+
 	    var lwrite_overlaps {
 		-label "Print the overlap matrix of atomic orbitals (lwrite_overlaps):"
 		-value { .true. .false. }
@@ -128,7 +135,7 @@ module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
 		
 		table irmin {
 		    -caption  "First point to be included in the given box (irmin):"
-		    -head     {(1,*) (2,*) (3,*)}
+		    -head     {irmin(1,*) irmin(2,*) irmin(3,*)}
 		    -validate {int int int}
 		    -cols     3
 		    -rows     1
@@ -136,7 +143,7 @@ module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
 		
 		table irmax {
 		    -caption  "Last point to be included in the given box (irmax):"
-		    -head     {(1,*) (2,*) (3,*)}
+		    -head     {irmax(1,*) irmax(2,*) irmax(3,*)}
 		    -validate {int int int}
 		    -cols     3
 		    -rows     1

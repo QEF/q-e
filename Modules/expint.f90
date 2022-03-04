@@ -7,14 +7,14 @@
 !
 !-----------------------------------------------------------------------
       FUNCTION EXPINT(n, x)
-!-----------------------------------------------------------------------
-!
-! Evaluates the exponential integral E_n(x)
-! Parameters: maxit is the maximum allowed number of iterations,
-! eps is the desired relative error, not smaller than the machine precision,
-! big is a number near the largest representable floating-point number,
-! Inspired from Numerical Recipes
-! 
+      !-----------------------------------------------------------------------
+      !! Evaluates the exponential integral \(E_n(x)\).  
+      !! Parameters: \(\textrm{maxit}\) is the maximum allowed number of iterations,
+      !! \(\textrm{eps}\) is the desired relative error, not smaller than the 
+      !! machine precision, \(\textrm{big}\) is a number near the largest 
+      !! representable floating-point number.  
+      !! Inspired by Numerical Recipes.
+      !
       USE kinds, ONLY : DP
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: n

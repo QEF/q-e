@@ -45,7 +45,7 @@ MODULE simple_ip_objects
       INTEGER, DIMENSION(3) :: nkpoints     ! smooth k-points grid on which H(k) is calculated
       INTEGER, DIMENSION(:), POINTER :: ityp ! (nat)
       INTEGER, DIMENSION(:), POINTER :: nh   ! (ntyp)
-      INTEGER, DIMENSION(:), POINTER :: indv_ijkb0 ! (nat)
+      INTEGER, DIMENSION(:), POINTER :: ofsbeta ! (nat)
       REAL(kind=8) :: alat, nelec, omega        ! lattice paramater, number of electrons, volume prim. cell
       REAL(kind=8) :: bg(3,3)     ! reciprocal basis vectors
       REAL(kind=8) :: at(3,3)     ! direct basis vectors
@@ -113,7 +113,7 @@ MODULE simple_ip_objects
       TYPE(shirley) :: element
       nullify(element%ityp)
       nullify(element%nh)
-      nullify(element%indv_ijkb0)
+      nullify(element%ofsbeta)
       nullify(element%h0)
       nullify(element%h1)
       nullify(element%Vloc)
@@ -132,8 +132,8 @@ MODULE simple_ip_objects
       nullify(element%ityp)
       if(associated(element%nh)) deallocate(element%nh)
       nullify(element%nh)
-      if(associated(element%indv_ijkb0)) deallocate(element%indv_ijkb0)
-      nullify(element%indv_ijkb0)
+      if(associated(element%ofsbeta)) deallocate(element%ofsbeta)
+      nullify(element%ofsbeta)
       if(associated(element%h0)) deallocate(element%h0)
       nullify(element%h0)
       if(associated(element%h1)) deallocate(element%h1)
@@ -226,16 +226,16 @@ MODULE simple_ip_objects
       call mp_bcast(sh%npol,ionode_id,world_comm)
       
 
-      allocate(sh%ityp(sh%nat), sh%nh(sh%ntyp), sh%indv_ijkb0(sh%nat))
+      allocate(sh%ityp(sh%nat), sh%nh(sh%ntyp), sh%ofsbeta(sh%nat))
       if(ionode) then
         read(iun) sh%ityp(1:sh%nat)
         read(iun) sh%nh(1:sh%ntyp)
-        read(iun) sh%indv_ijkb0(1:sh%nat)
+        read(iun) sh%ofsbeta(1:sh%nat)
         read(iun) sh%nkpoints
       endif
       call mp_bcast(sh%ityp,ionode_id,world_comm)
       call mp_bcast(sh%nh,ionode_id,world_comm)
-      call mp_bcast(sh%indv_ijkb0,ionode_id,world_comm)
+      call mp_bcast(sh%ofsbeta,ionode_id,world_comm)
       call mp_bcast(sh%nkpoints,ionode_id,world_comm)
       
       nk = (sh%nkpoints(1))*(sh%nkpoints(2))*(sh%nkpoints(3))

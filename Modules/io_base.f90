@@ -9,8 +9,8 @@
 MODULE io_base
   !----------------------------------------------------------------------------
   !
-  ! ... subroutines used to read and write binary data produced by QE
-  ! ... Author: Paolo Giannozzi, based on previous work by Carlo Cavazzoni
+  !! Subroutines used to read and write binary data produced by QE.  
+  !! Author: Paolo Giannozzi, based on previous work by Carlo Cavazzoni
   !
   USE kinds,     ONLY : dp
   !
@@ -648,16 +648,7 @@ MODULE io_base
       TYPE ( qeh5_file)       :: h5file
       TYPE ( qeh5_dataset)    :: h5dset_mill, h5dset_rho_g
       CHARACTER(LEN=10)       :: tempchar, datasets(4)
-      !
-      IF (nspin <= 2) THEN 
-         datasets(1:2) =["rhotot_g  ", "rhodiff_g "]
-      ELSE
-         datasets(1)  = "rhotot_g"
-         datasets(2)  = "m_x"
-         datasets(3)  = "m_y"
-         datasets(4)  = "m_z"
-      END IF
-#endif 
+#endif
       !
       ngm  = SIZE (rho, 1)
       IF (ngm /= SIZE (ig_l2g, 1) ) &
@@ -759,18 +750,25 @@ MODULE io_base
          ALLOCATE( rho_g( 1 ) )
       END IF
       ALLOCATE (rhoaux(ngm))
+#if defined(__HDF5)
+      IF (nspin_ <= 2) THEN 
+        datasets(1:2) =["rhotot_g  ", "rhodiff_g "]
+      ELSE
+        datasets(1)  = "rhotot_g"; datasets(2:4) = ["m_x", "m_y", "m_z"] 
+      END IF
+#endif 
       !
       DO ns = 1, nspin_
          !
          IF ( ionode_in_group ) THEN
 #if defined(__HDF5)
-            CALL qeh5_open_dataset( h5file, h5dset_rho_g, NAME = TRIM(datasets(ns)), ACTION = 'read', ERROR = ierr) 
-            CALL qeh5_read_dataset ( rho_g , h5dset_rho_g )
-            CALL qeh5_close ( h5dset_rho_g )  
+           CALL qeh5_open_dataset( h5file, h5dset_rho_g, NAME = TRIM(datasets(ns)), ACTION = 'read', ERROR = ierr) 
+           CALL qeh5_read_dataset ( rho_g , h5dset_rho_g )
+           CALL qeh5_close ( h5dset_rho_g )  
 #else 
-            READ (iun, iostat=ierr) rho_g(1:ngm_g_)
+           READ (iun, iostat=ierr) rho_g(1:ngm_g_)
 #endif
-            IF ( ngm_g > ngm_g_) rho_g(ngm_g_+1:ngm_g) = cmplx(0.d0,0.d0, KIND = DP) 
+           IF ( ngm_g > ngm_g_) rho_g(ngm_g_+1:ngm_g) = cmplx(0.d0,0.d0, KIND = DP) 
          END IF
          CALL mp_bcast( ierr, root_in_group, intra_group_comm )
          IF ( ierr > 0 ) CALL errore ( 'read_rhog','error reading file ' &
@@ -812,12 +810,12 @@ MODULE io_base
     !
     SUBROUTINE charge_k_to_g ( ngm_g_file, rho_g, mill_g_file, root_in_group, &
          intra_group_comm , this_run_is_gamma_only)
-   !
-   ! this routine reorders G-vectors for the charge density on global mesh
-   ! from the k case to the gamma-only one
-   !
+      !
+      !! This routine reorders G-vectors for the charge density on global mesh
+      !! from the k case to the gamma-only one.
+      !
       USE io_global,     ONLY : stdout
-      USE gvect,         ONLY : ngm, ngm_g, ig_l2g, mill, igtongl, ngl, gl
+      USE gvect,         ONLY : ngm, ngm_g, ig_l2g, mill
       USE mp,            ONLY : mp_size,mp_rank
       USE mp_wave,       ONLY : mergewf, mergekg
      
@@ -832,9 +830,9 @@ MODULE io_base
       COMPLEX(kind=DP), ALLOCATABLE :: rho_aux(:)
       LOGICAL                  :: ionode_in_group
       INTEGER :: nproc_in_group
-      INTEGER, ALLOCATABLE :: mill_g(:,:)
+      INTEGER, ALLOCATABLE :: mill_g(:,:), grid(:,:,:) 
       CHARACTER(len=256)   :: mesg
-      INTEGER :: ig, jg, minus_g_file(3), startjg, old_ig, new_startjg  
+      INTEGER :: ig, jg, nr1b2,nr2b2,nr3b2  
       IF ( .NOT. PRESENT (this_run_is_gamma_only) ) RETURN 
       IF ( this_run_is_gamma_only) THEN 
          call infomsg('read_rhog','Conversion: K charge Gamma charge') 
@@ -872,59 +870,32 @@ MODULE io_base
                IF ( ig .GE. ngm_g ) EXIT  
                END DO
          ELSE ! this run uses full fft mesh 
-            ig = 1 
-            DO jg = 1, ngm_g
-               if (  mill_g (1,jg) == mill_g_file(1,ig) .and. &
-                     mill_g (2,jg) == mill_g_file(2,ig) .and. &
-                     mill_g (3,jg) == mill_g_file(3,ig) )  then 
-                  !
-                  rho_g(jg) = rho_aux(ig) 
-                  ig = ig + 1 
-               end if 
-               if ( ig .GE. ngm_g_file ) EXIT 
+            nr1b2 = MAX(MAXVAL(ABS(mill_g(1,:))),MAXVAL(ABS(mill_g_file(1,:)))) 
+            nr2b2 = MAX(MAXVAL(ABS(mill_g(2,:))),MAXVAL(ABS(mill_g_file(2,:)))) 
+            nr3b2 = MAX(MAXVAL(ABS(mill_g(3,:))),MAXVAL(ABS(mill_g_file(3,:))))   
+            ALLOCATE(grid(-nr1b2-1:nr1b2+1,-nr2b2-1:nr2b2+1,-nr3b2-1:nr3b2+1)) 
+            grid = 10 * ngm_g_file
+            !$omp do   
+            DO ig = 1, ngm_g_file
+               grid ( mill_g_file(1,ig), mill_g_file(2,ig),mill_g_file(3,ig))     = ig
+               grid(-mill_g_file(1,ig),-mill_g_file(2,ig),-mill_g_file(3,ig))     = -ig  
             END DO 
-            WRITE (stdout, *) " Plus vectors done"
-            WRITE (stdout, *) " Search of minus vectors is going to take a while" 
-            ig = 1 
-            minus_g_file = minus_g(ig) 
-            startjg = 1 
-            new_startjg = 1 
-            igloop: DO 
-               old_ig = ig 
-               DO jg = startjg, ngm_g  
-                  if ( mill_g (1,jg) == minus_g_file(1) .and. &
-                       mill_g (2,jg) == minus_g_file(2) .and. &
-                       mill_g (3,jg) == minus_g_file(3)  )  then 
-                       !
-                       rho_g(jg) = dconjg(rho_aux(ig))
-                       ig = ig + 1 
-                       if ( ig .le. ngm_g_file) minus_g_file = minus_g(ig) 
-                       if (jg == new_startjg) new_startjg = new_startjg+1 
-                  end if 
-                  if ( ig .GT. ngm_g_file ) EXIT igloop
-               END DO 
-               startjg =  new_startjg    
-               IF ( ig == old_ig) THEN 
-                  WRITE(mesg,*)  "minus_g for ig = ", old_ig,":" , minus_g_file,  "-->", mill_g_file(:,ig), " not found" 
-                  CALL infomsg("read_rhog:" , TRIM(mesg)) 
-                  ig = ig +1 
-                  minus_g_file = minus_g(ig) 
-                  startjg = 1 
+            !$omp do private(ig) 
+            DO jg =1, ngm_g
+               ig = grid(mill_g(1,jg),mill_g(2,jg),mill_g(3,jg))
+               IF (ig .LE. ngm_g_file) THEN  
+                 IF (ig .GE. 0 ) THEN 
+                   rho_g(jg) = rho_aux(ig) 
+                 ELSE 
+                   rho_g(jg) = CONJG(rho_aux(-ig)) 
+                 END IF 
                END IF
-            END DO igloop 
-         END IF
-      ENDIF
-        
-      deallocate(rho_aux,mill_g)
-      
+            END DO 
+            deallocate(grid) 
+         END IF 
+      END IF
+      deallocate(rho_aux,mill_g)  
       return
-      CONTAINS 
-         function minus_g  (imill) result ( minus_mill) 
-            implicit none
-            integer   :: minus_mill(3)  
-            integer   :: ipol, imill 
-            minus_mill = - mill_g_file(:,imill) 
-         end function minus_g 
  
     END SUBROUTINE charge_k_to_g
     !

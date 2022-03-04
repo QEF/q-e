@@ -1,0 +1,38 @@
+&energy_current
+vel_input_units="CP",
+    delta_t=   0.500,
+    file_output= 'current_hz',
+    eta=   0.100,
+    n_max=     5,
+    add_i_current_b= .true.,
+ /
+ &CONTROL
+    calculation='md',
+    restart_mode='from_scratch',
+    pseudo_dir='../../pseudo',
+    outdir='./save',
+    disk_io = 'none',
+/
+ &SYSTEM
+    ibrav=1,
+    celldm(1) = 10.,
+    nat=    1,
+    ntyp=     1,
+    ecutwfc = 40.d0,
+/
+ &ELECTRONS
+    conv_thr = 1.D-15,
+    mixing_beta = 0.7,
+/
+ &IONS
+    ion_velocities = 'from_input',
+/
+ ATOMIC_SPECIES
+   Ar     39.948 Ar.pbe-mt_fhi.UPF
+ATOMIC_POSITIONS (bohr)
+Ar            0.0       0.0       0.0
+ATOMIC_VELOCITIES
+ Ar     1.d-2        1.d-2     1.d-2
+
+ K_POINTS {Gamma}
+

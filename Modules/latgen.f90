@@ -733,19 +733,21 @@ SUBROUTINE celldm2abc ( ibrav, celldm, a,b,c,cosab,cosac,cosbc )
   !
 END SUBROUTINE celldm2abc
 
-SUBROUTINE remake_cell(ibrav, alat, a1,a2,a3)
+SUBROUTINE remake_cell(ibrav, alat, a1,a2,a3, new_alat)
   USE kinds, ONLY : DP
   USE io_global, ONLY : stdout
   IMPLICIT NONE
   INTEGER,INTENT(in) :: ibrav
-  REAL(DP),INTENT(inout) :: alat, a1(3),a2(3),a3(3)
+  REAL(DP),INTENT(in)  :: alat
+  REAL(DP),INTENT(out) :: new_alat
+  REAL(DP),INTENT(inout) :: a1(3),a2(3),a3(3)
   REAL(DP) :: e1(3), e2(3), e3(3)
   REAL(DP) :: celldm_internal(6), lat_internal, omega
   ! Better not to do the following, or it may cause problems with ibrav=0 from input
 !  ibrav = at2ibrav (a(:,1), a(:,2), a(:,3))
   ! Instead, let's print a warning and do nothing:
   IF(ibrav==0)THEN
-    WRITE(stdout,'(a)') "WARNING! With ibrav=0, cell_dofree='ibrav' does not have any effect. "
+    WRITE(stdout,'(a)') "WARNING! With ibrav=0, cell_dofree='ibrav' has no effect. "
     RETURN
   ENDIF
   !
@@ -782,7 +784,7 @@ SUBROUTINE remake_cell(ibrav, alat, a1,a2,a3)
   a2=a2/alat
   a3=a3/alat
   WRITE(*,'("Discrepancy in bohr = ", 3f12.6)') DSQRT(SUM((a1-e1)**2)), DSQRT(SUM((a2-e2)**2)), DSQRT(SUM((a3-e3)**2))
-
+  new_alat = celldm_internal(1)
 
 END SUBROUTINE
 

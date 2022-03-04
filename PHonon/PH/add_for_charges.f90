@@ -7,9 +7,8 @@
 !
 !----------------------------------------------------------------------
 subroutine add_for_charges (ik, uact)
-!----------===============-----------------------------------------------
-  !
-  ! This subroutine calculates dS/du P_c [x, H-eS] |psi>
+  !----------===============-----------------------------------------------
+  !! This subroutine calculates: \(\frac{dS}{du} P_c [x, H-eS] |\psi\rangle\)
   !
 
   USE kinds, only : DP
@@ -18,11 +17,10 @@ subroutine add_for_charges (ik, uact)
   USE gvect, ONLY : g
   USE lsda_mod, ONLY: lsda, current_spin, isk
   USE klist, ONLY : xk, ngk, igk_k
-  USE spin_orb, ONLY : lspinorb
   USE uspp, ONLY : nkb, qq_nt, qq_so, vkb
   USE wvfct, ONLY : npwx, nbnd
   USE becmod, ONLY: calbec, bec_type, allocate_bec_type, deallocate_bec_type
-  USE noncollin_module, ONLY : noncolin, npol
+  USE noncollin_module, ONLY : noncolin, npol, lspinorb
   USE uspp_param, only: nh
   USE eqv, ONLY : dvpsi, dpsi
   USE control_lr, ONLY : lgamma
@@ -32,11 +30,12 @@ subroutine add_for_charges (ik, uact)
   !   The dummy variables
   !
 
-  integer :: ik, mode
-  ! input: the k point
+  integer :: ik
+  !! input: the k point
+  integer :: mode
   ! input: the actual perturbation
   complex(DP) :: uact (3 * nat)
-  ! input: the pattern of displacements
+  !! input: the pattern of displacements
   !
   !   And the local variables
   !

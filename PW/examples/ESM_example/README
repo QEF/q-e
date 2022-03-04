@@ -1,117 +1,114 @@
-This example shows how to use the Effective Screening Medium Method (ESM) 
-and constant bias potential (constant-mu) method to calculate the total energy, 
-charge density, force, and potential of a polarized or charged slab (which
-can be also be molecules and clusters)
+This example shows how to use the Effective Screening Medium Method (ESM)
+and constant bias potential (constant-mu) method to calculate the total
+energy, charge density, force, and potential of a polarized or charged
+slab (which can also be molecules and clusters)
 
-ESM screens the electronic charge of a polarized/charged medium along one 
-perpendicular direction by introducing a classical charge model and a local 
-relative permittivity into the first-principles calculation framework. This 
-permits calculations using open boundary conditions (OBC). The method is 
-described in detail in M. Otani and O. Sugino, "First-principles calculations 
-of charged surfaces and interfaces: A plane-wave nonrepeated slab approach," 
-PRB 73, 115407 (2006).
+ESM screens the electronic charge of a polarized/charged medium along one
+perpendicular direction by introducing a classical charge model and a local
+relative permittivity into the first-principles calculation framework.
+ESM also permits calculations using open boundary conditions (OBC).
+The method is described in detail in M. Otani and O. Sugino,
+"First-principles calculations of charged surfaces and interfaces:
+A plane-wave nonrepeated slab approach," PRB 73, 115407 (2006).
 
-Using the constant-mu method one can control the Fermi energy, i.e.
-applied bias, during a simulation. The method is described in detail in
-N. Bonnet, T. Morishita, O. Sugino, and M. Otani, "First-Principles Molecular 
-Dynamics at a Constant Electrode Potential", PRL 109, 266101 (2012).
+Using the constant bias potential (constant-mu) method, one can control
+the Fermi energy, i.e. applied bias during a simulation. Two different
+constant-mu schemes are shown: the fictitious charge particle (FCP) method
+and the grand canonical scf (GCSCF) method. The methods are described in
+detail in N. Bonnet, T. Morishita, O. Sugino, and M. Otani,
+"First-Principles Molecular Dynamics at a Constant Electrode Potential",
+PRL 109, 266101 (2012) and R. Sundararaman, W. A. Goddard-III, and
+T. A. Arias, J. Chem. Phys. 146, 114104 (2017), respectively.
 
-In addition to 'pbc' (ordinary periodic boundary conditions with ESM 
-disabled), the code allows three different sets of boundary conditions 
+In addition to 'pbc' (ordinary periodic boundary conditions with ESM
+disabled), the code allows three different sets of boundary conditions
 perpendicular to the polarized slab:
 
-1) 'bc1' : Immerse the slab between two semi-infinite vacuum regions; 
-2) 'bc2' : Immerse the slab between two semi-infinite metallic electrodes, 
-           with optional fixed field applied between them.
-           Constant-mu method is available for controlling the Fermi energy. 
-3) 'bc3' : Immerse the slab between one semi-infinite vacuum region (left-hand
-           side) and one semi-infinite metallic electrode (right-hand side).
-           Constant-mu method is available for controlling the Fermi energy. 
+1) 'bc1': Immerse the slab between two semi-infinite vacuum regions;
+2) 'bc2': Immerse the slab between two semi-infinite metallic electrodes,
+          with an optional fixed field applied between them.
+          Constant-mu method is available for controlling the Fermi energy.
+3) 'bc3': Immerse the slab between one semi-infinite vacuum region (left-hand
+          side) and one semi-infinite metallic electrode (right-hand side).
+          Constant-mu method is available for controlling the Fermi energy.
 
-Two dimensional (xy-plane) average charge density and electrostatic potentials
-are printed out into 'esm1' file.
+Two dimensional (xy-plane) average charge density and electrostatic
+potentials are printed out into the 'esm1' file.
 
-The example calculation proceeds as follows:
+The example calculations are divided into the following three parts,
+1) Example for ESM calculations (run_example_ESM)
+2) Example for FCP calculations (run_example_FCP)
+3) Example for GCSCF calculations (run_example_GCSCF)
 
-esm_bc = 'pbc':
+The 'run_example' file executes the above three calculations.
 
-1) make a self-consistent calculation for H2O with esm_bc = 'pbc' (ESM off)
-   (input=H2O_pbc.in, output=H2O_pbc.out). Using 'pbc' causes the
-   code to print out the density and potential (hartree + local) along z, even
-   though ESM is disabled. Note that the molecule has a z-oriented dipole.
+1) Example for ESM calculations (run_example_ESM)
+1-1) make a self-consistent calculation for H2O with esm_bc = 'pbc' (ESM off)
+     (input=H2O_pbc.in, output=H2O_pbc.out). Using 'pbc' causes the
+     code to print out the density and potential (hartree + local) along z,
+     even though ESM is disabled. Note that the molecule has a z-oriented
+     dipole.
+1-2) make a self-consistent calculation for H2O with esm_bc = 'bc1'
+     (input=H2O_bc1.in, output=H2O_bc1.out). This simulates the water
+     molecule in an infinite vacuum along the z-direction, preventing
+     dipole-dipole interaction between periodic images.
+1-3) make a self-consistent calculation for Al(001) with esm_bc = 'pbc'
+     (input=Al001_pbc.in, output=Al001_pbc.out).
+1-4) make a self-consistent calculation for Al(001) with esm_bc = 'bc1'
+     (input=Al001_bc1.in, output=Al001_bc1.out).
+1-5) make a self-consistent calculation for Al(001) with esm_bc = 'bc2',
+     without an applied field (input=Al001_bc2.in, output=Al001_bc2.out).
+     This simulates the slab sandwiched between two uncharged semi-infinite
+     metal electrodes.
+1-6) make a self-consistent calculation for Al(001) with esm_bc = 'bc2',
+     this time with an applied field (input=Al001_bc2_efield.in,
+     output=Al001_bc2_efield.out). The slab polarizes in response.
+1-7) make a self-consistent calculation for Al(001) with esm_bc = 'bc3' to
+     simulate a slab in contact with semi-infinite  metal electrode (right-
+     hand side).
+     (input=Al001_bc3.in, output=Al001_bc3.out).
+1-8) make a self-consistent calculation for Al(001) with esm_bc = 'bc3' to
+     simulate a slab in contact with semi-infinite metal electrode with
+     a weakly negative (-0.02e) overall charge (input=Al001_bc3_m002.in,
+     output=Al001_bc3_m002.out). Note that the charge migrates to the right
+     surface of the slab.
+1-9) Repeat #1-8 but with a weakly positive (+0.02e) overall charge
+     (input=Al001_bc3_p002.in, output=Al001_bc3_p002.out).
 
-2) make a self-consistent calculation for Al(001) with esm_bc = 'pbc'
-   (input=Al001_pbc.in, output=Al001_pbc.out). 
+2) Example for FCP calculations (run_example_FCP)
+2-1) make a 'relax' calculation on the Fermi energy for Al(001) with
+     esm_bc = 'bc2'. The Fermi energy will be relaxed to targe Fermi energy
+     using FCP scheme. The target Fermi energy is set to that of the neutral
+     surface (#1-5, Vpzc).
+     (input=Al001_bc2_FCP_v00.in, output=Al001_bc2_FCP_v00.out).
+2-2) repeat #2-1 but with a higher target fermi energy (+0.5v vs vpzc).
+     (input=Al001_bc2_FCP_vp05.in, output=Al001_bc2_FCP_vp05.out).
+2-3) repeat #2-1 but with a lower target fermi energy (-0.5v vs vpzc).
+     (input=Al001_bc2_FCP_vm05.in, output=Al001_bc2_FCP_vm05.out).
+2-4) make a 'relax' calculation on the Fermi energy for Al(001) with
+     esm_bc = 'bc3'. The target Fermi energy is set to that of the neutral
+     surface (#1-7, Vpzc).
+     (input=Al001_bc3_FCP_v00.in, output=Al001_bc3_FCP_v00.out).
+2-5) repeat #2-4 but with a higher target fermi energy (+0.5v vs vpzc).
+     (input=Al001_bc3_FCP_vp05.in, output=Al001_bc3_FCP_vp05.out).
+2-6) repeat #2-4 but with a lower target fermi energy (-0.5v vs vpzc).
+     (input=Al001_bc3_FCP_vm05.in, output=Al001_bc3_FCP_vm05.out).
 
-3) make a self-consistent calculation for graphene with esm_bc = 'pbc'
-   Stress calculation is enabled.
-
-esm_bc = 'bc1':
-
-4) make a self-consistent calculation for H2O with esm_bc = 'bc1'
-   (input=H2O_bc1.in, output=H2O_bc1.out). This simulates the water molecule 
-   in an infinite vacuum along the z-direction, preventing dipole-dipole 
-   interaction between periodic images. 
-
-5) make a self-consistent calculation for Al(001) with esm_bc = 'bc1' 
-   (input=Al001_bc1.in, output=Al001_bc1.out). 
-
-6) make a self-consistent calculation for graphene with esm_bc = 'bc1'
-   (input=graphene_bc1.in, output=graphene_bc1.out).
-   Stress calculation is enabled.
-
-7) make a variable cell (vc-relax) calculation for graphene with esm_bc = 'bc1'
-   (input=graphene_bc1_vc-relax.in, output=graphene_bc1_vc-relax.out). 
-   This simulation starts from slightly distorted cell (angle of lattice vector 
-   is 117 degree) and ends with hexagonal cell (angle of lattice vector is 120 
-   degree).
-
-esm_bc = 'bc2':
-
-8) make a self-consistent calculation for Al(001) with esm_bc = 'bc2',
-   without an applied field (input=Al001_bc2.in, output=Al001_bc2.out). 
-   This simulates the slab sandwiched between two uncharged semi-infinite 
-   metal electrodes. 
-
-9) make a self-consistent calculation for Al(001) with esm_bc = 'bc2',
-   this time with an applied field (input=Al001_bc2_efield.in, 
-   output=Al001_bc2_efield.out). The slab polarizes in response.
-
-10) make a self-consistent calculation for graphene with esm_bc = 'bc2',
-   input=graphene_bc2.in, output=graphene_bc2.out).
-   Stress calculation is enabled.
-
-esm_bc = 'bc3':
-
-11) make a self-consistent calculation for Al(001) with esm_bc = 'bc3' to 
-   simulate a slab in contact with semi-infinite  metal electrode (right-
-   hand side).
-   (input=Al001_bc3.in, output=Al001_bc3.out).
-
-12) make a self-consistent calculation for Al(001) with esm_bc = 'bc3' to 
-   simulate a slab in contact with semi-infinite metal electrode with 
-   a weakly negative (-0.02e) overall charge (input=Al001_bc3_m002.in, 
-   output=Al001_bc3_m002.out). Note that the charge migrates to the right
-   surface of the slab.
-
-13) Repeat #6 but with a weakly positive (+0.02e) overall charge 
-   (input=Al001_bc3_p002.in, output=Al001_bc3_p002.out).
-
-14) make a 'relax' calculation on both geometory and Fermi energy for Al(001)
-   with esm_bc = 'bc3' (input=Al001_bc3_v00.in, output=Al001_bc3_v00.out).
-   The target Fermi energy is set to that of the neutral surface (#11, Vpzc).
-   (input=Al001_bc3_v00.in, output=Al001_bc3_v00.out).
-   
-15) Repeat #8 but with a higher target Fermi energy (+0.5V vs Vpzc).
-   (input=Al001_bc3_vp05.in, output=Al001_bc3_vp05.out).
-
-16) Repeat #8 but with a lower target Fermi energy (-0.5V vs Vpzc).
-    (input=Al001_bc3_vm05.in, output=Al001_bc3_vm05.out).
-
-17) make a self-consistent calculation for graphene with esm_bc = 'bc3'
-    (input=graphene_bc3.in, output=graphene_bc3.out).
-
-18) make a variable cell (vc-relax) calculation for graphene with esm_bc = 'bc3'
-    (input=graphene_bc3_vc-relax.in, output=graphene_bc3_vc-relax.out).
-    The graphene is weakly positive (+0.02e) overall charge. The angle of the
-    unit cell is converged to 120 degree.
+3) Example for GCSCF calculations (run_example_GCSCF)
+3-1) make a self-consistent calculation for Al(001) with esm_bc = 'bc2'.
+     The Fermi energy will converge to the target Fermi energy using 
+     the GCSCF schecme. The target Fermi energy is set to that of the neutral
+     surface (#1-5, Vpzc).
+     (input=Al001_bc2_GCSCF_v00.in, output=Al001_bc2_GCSCF_v00.out).
+3-2) repeat #2-1 but with a higher target fermi energy (+0.5v vs vpzc).
+     (input=Al001_bc2_GCSCF_vp05.in, output=Al001_bc2_GCSCF_vp05.out).
+3-3) repeat #2-1 but with a lower target fermi energy (-0.5v vs vpzc).
+     (input=Al001_bc2_GCSCF_vm05.in, output=Al001_bc2_GCSCF_vm05.out).
+3-4) make a 'relax' calculation on the Fermi energy for Al(001) with
+     esm_bc = 'bc3'. The target Fermi energy is set to that of the neutral
+     surface (#1-7, Vpzc).
+     (input=Al001_bc3_GCSCF_v00.in, output=Al001_bc3_GCSCF_v00.out).
+3-5) repeat #2-4 but with a higher target fermi energy (+0.5v vs vpzc).
+     (input=Al001_bc3_GCSCF_vp05.in, output=Al001_bc3_GCSCF_vp05.out).
+3-6) repeat #2-4 but with a lower target fermi energy (-0.5v vs vpzc).
+     (input=Al001_bc3_GCSCF_vm05.in, output=Al001_bc3_GCSCF_vm05.out).

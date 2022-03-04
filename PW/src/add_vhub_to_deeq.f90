@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2010-2013 Quantum ESPRESSO group
+! Copyright (C) 2010-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,7 +8,7 @@
 SUBROUTINE add_vhub_to_deeq( deeq )
 !-----------------------------------------------------------------
   !! Add Hubbard contributions to the integral of V_eff and Q_{nm} when 
-  !! U_projection is pseudo.
+  !! Hubbard_projectors is pseudo.
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
