@@ -9,11 +9,11 @@
 !-----------------------------------------------------------------------
 subroutine addusdynmat (dynwrk)
   !-----------------------------------------------------------------------
-  !
-  !     This routine computes the additional terms which are contained in
-  !     <psi|V"|psi> part of the dynamical matrix and which are due
-  !     to the change of the self consistent D term in the pseudopotential
-  !     There are four additional terms which we compute here.
+  !! This routine computes the additional terms which are contained in
+  !! \(\langle\psi\|V''\|\psi\rangle\) part of the dynamical matrix and 
+  !! which are due to the change of the self consistent D term in the 
+  !! pseudopotential.  
+  !! There are four additional terms which we compute here.
   !
 
   USE kinds, only : DP
@@ -22,8 +22,7 @@ subroutine addusdynmat (dynwrk)
   USE uspp, ONLY: okvan, becsum
   USE uspp_param, only: upf, nh
   USE lsda_mod, ONLY : nspin
-  USE spin_orb, ONLY : lspinorb
-  USE noncollin_module, ONLY : nspin_lsda
+  USE noncollin_module, ONLY : nspin_lsda, lspinorb
 
   USE phus,    ONLY : int1, int1_nc, int2, int2_so, int4, int4_nc, &
                       int5, int5_so, alphasum, alphasum_nc, becsum_nc
@@ -32,7 +31,7 @@ subroutine addusdynmat (dynwrk)
   implicit none
 
   complex(DP) :: dynwrk (3 * nat, 3 * nat)
-  ! inp/out: the dynamical matrix
+  !! inp/out: the dynamical matrix
 
   integer :: ipol, jpol, np, na, nb, nu_i, nu_j, ih, jh, ijh, dim, &
        is, is1, is2, ijs

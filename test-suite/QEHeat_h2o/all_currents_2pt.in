@@ -1,0 +1,51 @@
+ &energy_current
+vel_input_units="CP",
+    delta_t=   0.650,
+    file_output= 'current_hz_2pt',
+    eta=   0.100,
+    n_max=     5,
+    trajdir='traj/cp',
+    first_step=140,
+    last_step=146,
+    re_init_wfc_1 = .true. ,
+    re_init_wfc_2 = .true. ,
+    re_init_wfc_3 = .true. ,
+    three_point_derivative = .false. ,
+    n_repeat_every_step = 2 ,
+    ethr_small_step = 1.d-3
+ /
+ &CONTROL
+    calculation='md',
+    restart_mode='from_scratch',
+    pseudo_dir='../../pseudo',
+    outdir='./save',
+    disk_io = 'none',
+/
+ &SYSTEM
+    ibrav=1,
+    celldm(1) = 10.,
+    nat=    3,
+    ntyp=     2,
+    ecutwfc=  40.0,
+/
+ &ELECTRONS
+    conv_thr = 1.D-17,
+    mixing_beta = 0.7,
+    startingwfc = 'random',
+/
+ &IONS
+    ion_velocities = 'from_input',
+/
+ ATOMIC_SPECIES
+   H      1.00000000 H.pbe-vbc.UPF
+   O     16.00000000 O.pbe-mt.UPF
+ATOMIC_POSITIONS {bohr}
+ H     0.57164238	  0.94335166	  0.96565043
+ H    -0.24339682	 -0.43501513	 -1.37874473
+ O    -0.32824556	 -0.50852550	  0.41309430
+ ATOMIC_VELOCITIES
+ H     0.0	  0.0	  0.0
+ H     0.0	  0.0	  0.0
+ O     0.0	  0.0	  0.0
+ K_POINTS {Gamma}
+

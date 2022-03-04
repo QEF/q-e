@@ -273,8 +273,7 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
   USE wvfct, ONLY: et, nbnd
   USE constants, ONLY: rytoev
   USE ktetra, ONLY: opt_tetra_partialdos
-  !
-  USE spin_orb,   ONLY: lspinorb
+  USE noncollin_module, ONLY: lspinorb
   USE projections
   !
   IMPLICIT NONE

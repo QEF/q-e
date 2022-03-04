@@ -1,0 +1,9 @@
+W2K h2o
+&control
+  prefix='h2o'
+  outdir='./out'
+  kcw_iverbosity = 2
+  kcw_at_ks=.true.
+  read_unitary_matrix = .false.
+  calculation = 'wann2kcw'
+/

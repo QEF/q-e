@@ -35,7 +35,7 @@ MODULE paw_exx
     USE uspp_param,     ONLY : upf, nh
     USE uspp,           ONLY : nkb
     USE paw_variables,  ONLY : okpaw
-    USE uspp,           ONLY : indv_ijkb0
+    USE uspp,           ONLY : ofsbeta
     USE io_global,      ONLY : ionode, ionode_id
     !
     IMPLICIT NONE
@@ -69,7 +69,7 @@ MODULE paw_exx
       ATOMS_LOOP : &
       DO na = 1, nat
       IF (ityp(na)==np) THEN
-        ijkb0 = indv_ijkb0(na)
+        ijkb0 = ofsbeta(na)
         DO uh = 1, nh(np)
           ukb = ijkb0 + uh
           DO oh = 1, nh(np)
@@ -111,7 +111,7 @@ MODULE paw_exx
     !
     USE ions_base,          ONLY : nat, ityp, ntyp => nsp
     USE uspp_param,         ONLY : nh, upf
-    USE uspp,               ONLY : nkb, indv_ijkb0
+    USE uspp,               ONLY : nkb, ofsbeta
     USE io_global,          ONLY : ionode
     !
     IMPLICIT NONE
@@ -132,6 +132,7 @@ MODULE paw_exx
         CALL errore("PAW_xx_energy", "you have to initialize paw paw_fockrnl before", 1)
     !
     CALL start_clock("PAW_xx_nrg")
+    !
     PAW_xx_energy = 0._dp
     IF(ionode) THEN
     !
@@ -140,7 +141,7 @@ MODULE paw_exx
       IF ( upf(np)%tpawp ) THEN
         DO na = 1, nat
         IF (ityp(na)==np) THEN
-          ijkb0 = indv_ijkb0(na)
+          ijkb0 = ofsbeta(na)
           !
           DO uh = 1, nh(np)
             ukb = ijkb0 + uh

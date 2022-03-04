@@ -16,11 +16,6 @@
     ecutrho=280.0,
     angle1(1)=90.0
     angle2(1)=0.0    
-    lda_plus_u=.true.
-    lda_plus_u_kind = 1
-    Hubbard_U(1)   = 2.20
-    Hubbard_J(1,1) = 1.75
-    Hubbard_J(2,1) = 0.00
  /
  &electrons
     conv_thr =  1.0d-10
@@ -31,3 +26,7 @@ ATOMIC_POSITIONS {alat}
 Fe  0.0000000   0.00000000   0.00000000  
 K_POINTS {automatic}
 4 4 4 1 1 1
+HUBBARD {atomic}
+U Fe-3d 2.20
+J Fe-3d 1.75
+B Fe-3d 0.00

@@ -46,7 +46,7 @@ USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
 USE noncollin_module,     ONLY : npol, nspin_mag
-USE spin_orb,             ONLY : fcoef, domag
+USE upf_spinorb,          ONLY : fcoef
 USE lrus,                 ONLY : intq_nc
 !
 IMPLICIT NONE

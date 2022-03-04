@@ -176,13 +176,14 @@ PROGRAM ev
     CONTAINS
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE eqstate(npar,par,chisq)
+      SUBROUTINE eqstate(npar,par,chisq,ediff)
 !-----------------------------------------------------------------------
 !
       IMPLICIT NONE
       INTEGER, INTENT(in) :: npar
       REAL(DP), INTENT(in) :: par(npar)
       REAL(DP), INTENT(out):: chisq
+      REAL(DP), OPTIONAL, INTENT(out):: ediff(npt)
       INTEGER :: i
       REAL(DP) :: k0, dk0, d2k0, c0, c1, x, vol0, ddk
 !
@@ -231,7 +232,8 @@ PROGRAM ev
       DO i = 1,npt
           efit(i) = efit(i)+emin
           chisq   = chisq + (etot(i)-efit(i))**2
-      ENDDO
+          IF(present(ediff)) ediff(i) = efit(i)-etot(i)
+       ENDDO
       chisq = chisq/npt
 !
       RETURN
@@ -366,50 +368,39 @@ PROGRAM ev
 !
       
       ! This subroutine is passed to LMDIF to be minimized
-      SUBROUTINE SCHISQ(m_, n_, par_, f_, i_)
-           IMPLICIT NONE
-           INTEGER,INTENT(in)  :: m_, n_
-           INTEGER,INTENT(inout)   :: i_
-           REAL(DP),INTENT(in)    :: par_(n_)
-           REAL(DP),INTENT(out)   :: f_(m_)
-           REAL(DP) :: chisq_
-           IF(m_/=n_) THEN
-              i_ = -999
-              RETURN
-           ENDIF
-           !
-           CALL eqstate(n_,par_,chisq_)
-           f_=0._dp
-           f_(1) = chisq_
-        END SUBROUTINE
+      ! LMDIF takes as input the difference between f_fit and f_real
+      !       and computes the chi^2 internally.
+      SUBROUTINE EOSDIFF(m_, n_, par_, f_, i_)
+       IMPLICIT NONE
+         INTEGER,INTENT(in)  :: m_, n_
+         INTEGER,INTENT(inout)   :: i_
+         REAL(DP),INTENT(in)    :: par_(n_)
+         REAL(DP),INTENT(out)   :: f_(m_)
+         REAL(DP) :: chisq_
+         !
+         CALL eqstate(n_,par_,chisq_, f_)
+      END SUBROUTINE
 
 !-----------------------------------------------------------------------
       SUBROUTINE find_minimum(npar,par,chisq)
 !-----------------------------------------------------------------------
 !
-      USE lmdif_module, ONLY : lmdif1
+      USE lmdif_module, ONLY : lmdif0
       IMPLICIT NONE
       INTEGER ,INTENT(in)  :: npar
       REAL(DP),INTENT(out) :: par(nmaxpar)
       REAL(DP),INTENT(out) :: chisq
       !
-      REAL(DP) :: xi(npar,npar), vchisq(npar)
+      REAL(DP) :: vchisq(npar)
+      REAL(DP) :: ediff(npt)
       INTEGER :: i
-      INTEGER :: lwa, iwa(npar)
-      REAL(DP),ALLOCATABLE :: wa(:)
       !
-      xi = 0._dp
-      FORALL(i=1:npar) xi(i,i) = 1._dp
       par(1) = v0(npt/2)
       par(2) = 500.0d0
       par(3) = 5.0d0
       par(4) = -0.01d0 ! unused for some eos
-      
-      lwa = npar**2 + 6*npar
-      ALLOCATE(wa(lwa))
-      !
-      CALL lmdif1(SCHISQ, npar, npar, par, vchisq, 1.d-12, i, iwa, wa, lwa)
-      DEALLOCATE(wa)
+      !      
+      CALL lmdif0(EOSDIFF, npt, npar, par, ediff, 1.d-12, i)
       !
       IF(i>0 .and. i<5) THEN
          PRINT*, "Minimization succeeded"
@@ -419,7 +410,6 @@ PROGRAM ev
         PRINT*, "Minimization error"
         STOP
       ENDIF
-      !chisq = vchisq(1)
       !
       CALL eqstate(npar,par,chisq)
 

@@ -33,7 +33,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    USE lsda_mod,             ONLY: nspin
    USE klist,                ONLY: nelec, degauss, nks, xk, wk, ngk, igk_k
    USE wvfct,                ONLY: npwx, nbnd
-   USE noncollin_module,     ONLY: noncolin, npol
+   USE noncollin_module,     ONLY: noncolin, npol, lspinorb
    USE bp,                   ONLY: nppstr_3d, mapgm_global, nx_el,phase_control
    USE fixed_occ
    USE gvect,                ONLY: ig_l2g
@@ -41,8 +41,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    USE mp_bands,             ONLY: intra_bgrp_comm
    USE mp_pools,             ONLY: intra_pool_comm
    USE becmod,               ONLY: calbec,bec_type,allocate_bec_type,deallocate_bec_type
-   USE spin_orb,             ONLY: lspinorb
-   !
+   USE uspp_init,            ONLY : init_us_2
    IMPLICIT NONE
    !
    REAL(DP), INTENT(OUT) :: el_pola
@@ -98,6 +97,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    INTEGER :: nt
    INTEGER :: nspinnc
    REAL(DP) :: dk(3)
+   REAL(DP) :: dk2
    REAL(DP) :: dkmod
    REAL(DP) :: el_loc
    REAL(DP) :: eps
@@ -108,7 +108,6 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    REAL(DP), ALLOCATABLE :: loc_k(:)
    REAL(DP), ALLOCATABLE :: pdl_elec(:)
    REAL(DP), ALLOCATABLE :: phik(:)
-   REAL(DP) :: qrad_dk(nbetam,nbetam,lmaxq,ntyp)
    REAL(DP) :: weight
    REAL(DP) :: pola, pola_ion
    REAL(DP), ALLOCATABLE :: wstring(:)
@@ -307,12 +306,12 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    !                     electronic polarization: form factor                     !
    !  -------------------------------------------------------------------------   !
    IF (okvan) THEN
-      !  --- Calculate Bessel transform of Q_ij(|r|) at dk [Q_ij^L(|r|)] ---
-      CALL calc_btq(dkmod,qrad_dk,0)
+      !  --- Bessel transform of Q_ij(|r|) at dk [Q_ij^L(|r|)] in array qrad ---
+      ! CALL calc_btq(dkmod,qrad_dk,0) is no longer needed, see bp_c_phase
       !
       !  --- Calculate the q-space real spherical harmonics at dk [Y_LM] --- 
-      dkmod = dk(1)**2+dk(2)**2+dk(3)**2
-      CALL ylmr2(lmaxq*lmaxq, 1, dk, dkmod, ylm_dk)
+      dk2 = dk(1)**2+dk(2)**2+dk(3)**2
+      CALL ylmr2(lmaxq*lmaxq, 1, dk, dk2, ylm_dk)
       !
       !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
       q_dk=(0.d0,0.d0)
@@ -320,7 +319,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
          IF ( upf(np)%tvanp ) THEN
             DO iv = 1, nh(np)
                DO jv = iv, nh(np)
-                  CALL qvan3( iv,jv,np,pref,ylm_dk,qrad_dk )
+                  CALL qvan2(1,iv,jv,np,dkmod,pref,ylm_dk)
                   q_dk(iv,jv,np) = omega*pref
                   q_dk(jv,iv,np) = omega*pref
                ENDDO

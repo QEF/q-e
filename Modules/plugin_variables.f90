@@ -8,9 +8,8 @@
 !=----------------------------------------------------------------------------=!
 MODULE plugin_variables
   !=--------------------------------------------------------------------------=!
-  !
-  ! ... this module contains all basic variables possibly
-  ! ... used by plug ins
+  !! This module contains all basic variables possibly
+  !! used by plugins.
   !----------------------------------------------
   !
   USE kinds

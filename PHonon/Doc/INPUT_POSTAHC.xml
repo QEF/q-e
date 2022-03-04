@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="input_xx.xsl"?>
+<!-- FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST -->
+    
+<input_description distribution="Quantum ESPRESSO" package="PHonon" program="postahc.x" >
+   <toc>
+   </toc>
+   <intro>
+<b>Purpose of postahc.x:</b>
+
+- Read the electron-phonon quantities calculated by <b>ph.x</b> with the
+<b>electron_phonon=&apos;ahc&apos;</b> option.
+
+- Calculate the phonon-induced electron self-energy in the full matrix form
+at a given temperature.
+
+<b>Structure of the input data:</b>
+========================================================================
+
+<b>&amp;INPUT</b>
+   ...specs of namelist variables...
+<b>/</b>
+   </intro>
+   <namelist name="INPUT" >
+      <var name="ahc_dir" type="CHARACTER" >
+         <status> REQUIRED
+         </status>
+         <info>
+Directory where the binary files are located.
+         </info>
+      </var>
+      <var name="nk" type="INTEGER" >
+         <status> REQUIRED
+         </status>
+         <info>
+Number of k points. Must be identical to that of the preceding SCF or NSCF run.
+         </info>
+      </var>
+      <var name="nbnd" type="INTEGER" >
+         <status> REQUIRED
+         </status>
+         <info>
+Number of bands. Must be identical to nbnd of the preceding SCF or NSCF run.
+         </info>
+      </var>
+      <var name="nat" type="INTEGER" >
+         <status> REQUIRED
+         </status>
+         <info>
+Number of atoms. Must be identical to nat of the preceding pw.x and ph.x
+runs.
+         </info>
+      </var>
+      <var name="nq" type="INTEGER" >
+         <status> REQUIRED
+         </status>
+         <info>
+Number of q points. Must be identical to that of the preceding ph.x run
+with electron_phonon=&apos;ahc&apos;.
+         </info>
+      </var>
+      <var name="ahc_nbnd" type="INTEGER" >
+         <status> REQUIRED
+         </status>
+         <info>
+Number of bands for which the electron self-energy is to be computed. Must be
+identical to ahc_nbnd of the ph.x run with electron_phonon=&apos;ahc&apos;.
+         </info>
+      </var>
+      <var name="ahc_nbndskip" type="INTEGER" >
+         <default> 0
+         </default>
+         <info>
+Number of bands to exclude when computing the self-energy. Must be identical to
+ahc_nbndskip of the ph.x run with electron_phonon=&apos;ahc&apos;.
+         </info>
+      </var>
+      <var name="flvec" type="CHARACTER" >
+         <status> REQUIRED
+         </status>
+         <info>
+File containing the normalized phonon displacements written by matdyn.x.
+         </info>
+      </var>
+      <var name="eta" type="REAL" >
+         <status> REQUIRED
+         </status>
+         <info>
+Magnitude of the small imaginary component included to smooth the energy
+denominators, in Ry.
+         </info>
+      </var>
+      <var name="temp_kelvin" type="REAL" >
+         <status> REQUIRED
+         </status>
+         <info>
+Temperature in Kelvins at which the electron self-energy is calculated.
+         </info>
+      </var>
+      <var name="efermi" type="REAL" >
+         <status> REQUIRED
+         </status>
+         <info>
+Fermi energy of the electrons in Ry.
+         </info>
+      </var>
+      <dimension name="amass_amu" start="1" end="nat" type="REAL" >
+         <status> REQUIRED
+         </status>
+         <info>
+Mass for each atom in atomic mass unit. In postahc.x, <ref>amass_amu</ref> must be
+set for each atom, not for each atom type as in other programs.
+         </info>
+      </dimension>
+      <var name="skip_upperfan" type="LOGICAL" >
+         <default> .false.
+         </default>
+         <info>
+If .true., skip calculation of the upper Fan self-energy.
+If .false., ahc_upfan_iq#.bin files must be present in <ref>ahc_dir</ref>.
+         </info>
+      </var>
+      <var name="skip_dw" type="LOGICAL" >
+         <default> .false.
+         </default>
+         <info>
+If .true., skip calculation of the Debye-Waller self-energy.
+If .false., ahc_dw.bin file must be present in <ref>ahc_dir</ref>.
+         </info>
+      </var>
+   </namelist>
+</input_description>

@@ -1,4 +1,5 @@
 build/
+/build_*/
 .vscode/
 
 *~
@@ -21,9 +22,8 @@ build/
 
 bin/*
 FoX
-include/fft_defs.h
+MBD
 include/configure.h
-include/c_defs.h
 include/qe_cdefs.h
 install/config.log
 install/config.status
@@ -31,17 +31,21 @@ install/configure.msg
 install/make-*
 install/configure-*
 install/uncompress-*
+*/make.depend
+*/*/make.depend
 test-suite/*/test.err.*
 test-suite/*/test.out.*
+test-suite/*/pwscf*
+test-suite/userconfig
 */results
 S3DE
 D3Q
 W90
-LIBBEEF
-archive/v3.1.0
 archive/wannier90-*tgz
 wannier90-*
+devicexlib
 tempdir
-EPW/src/tags
+tags
 EPW/src/tmp
 LAXlib/*.fh
+KS_Solvers/*.fh

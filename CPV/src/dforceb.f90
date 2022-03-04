@@ -36,7 +36,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
   use ions_base, only : nat, nax, nsp, ityp
   use cell_base, only: at, alat
   use uspp_param, only: nh, nhm, upf
-  use uspp, only : nkb, nkbus, indv_ijkb0
+  use uspp, only : nkb, ofsbeta
   use efield_module, ONLY : ctabin_missing_1,ctabin_missing_2,n_g_missing_m,&
        &      ctabin_missing_rev_1,ctabin_missing_rev_2
   use mp_global, only: intra_bgrp_comm, nproc_bgrp
@@ -201,8 +201,8 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
         IF(upf(is)%tvanp) THEN
            do iv=1,nh(is)      !loop on projectors           
               do jv=1,nh(is)   !loop on projectors                               
-                  inl = indv_ijkb0(ia) + iv
-                  jnl = indv_ijkb0(ia) + jv
+                  inl = ofsbeta(ia) + iv
+                  jnl = ofsbeta(ia) + jv
                   do j=1,n  !loop on states
                      afrc(inl)=afrc(inl)+gqq(iv,jv,ia,is)*bec0(jnl,j)*qmat(j,i)&
                           &     -CONJG(gqq(jv,iv,ia,is))*bec0(jnl,j)*conjg(qmat(i,j))

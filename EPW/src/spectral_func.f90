@@ -1150,8 +1150,9 @@
                     ENDIF
                   ELSE
                     IF (ABS(ekq - ekk1) > eps6) THEN
-                      dipole = REAL(      dmef(1, ibndmin - 1 + jbnd, ibndmin - 1 + ibnd, ikk) *  &
-                                    CONJG(dmef(1, ibndmin - 1 + jbnd, ibndmin - 1 + ibnd, ikk)) / &
+                      ! TODO: Check the expression to confirm that division by 2 is correct.
+                      dipole = REAL(      dmef(1, ibndmin - 1 + jbnd, ibndmin - 1 + ibnd, ikk) / 2.d0 *  &
+                                    CONJG(dmef(1, ibndmin - 1 + jbnd, ibndmin - 1 + ibnd, ikk) / 2.d0) / &
                                     ((ekk1 - ekk)**two + sq_degaussw))
                     ELSE
                       dipole = zero

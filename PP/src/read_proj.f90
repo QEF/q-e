@@ -13,7 +13,7 @@ CONTAINS
      nspin, nelec, ef, xk, wk, et, projs, ovps )
   !-----------------------------------------------------------------------
   USE kinds,    ONLY : dp
-  USE xmltools, ONLY : xml_openfile, xml_closefile, xmlr_readtag,&
+  USE xmltools, ONLY : xml_open_file, xml_closefile, xmlr_readtag,&
                        xmlr_opentag, xmlr_closetag, get_attr
   !
   IMPLICIT NONE
@@ -38,7 +38,7 @@ CONTAINS
      CALL infomsg ('read_xml_proj', 'xml data file not found')
   END IF
   !
-  iun = xml_openfile (filename)
+  iun = xml_open_file (filename)
   IF ( iun == -1 ) THEN
      ierr = 2
      CALL infomsg ('read_xml_proj', 'xml data file not readable')

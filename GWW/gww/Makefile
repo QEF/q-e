@@ -43,9 +43,7 @@ times_gw.o \
 vcprim.o 
 
 
-QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
-         ../../KS_Solvers/libks_solvers.a \
-         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+QEMODS = ../../KS_Solvers/libks_solvers.a $(BASEMODS)
 
 LIBMIN= ../minpack/minpacklib.a
 
@@ -53,14 +51,14 @@ TLDEPS=phlibs
 
 all : tldeps gww.x gww_fit.x libgww.a
 
-gww.x : gww.o $(GWWOBJS) $(LIBOBJS) $(QEMODS)  $(LIBMIN)
+gww.x : gww.o $(GWWOBJS) $(QEMODS)  $(LIBMIN)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		gww.o $(GWWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(QELIBS)
+		gww.o $(GWWOBJS) $(QEMODS) $(LIBMIN) $(QELIBS)
 	- ( cd ../../bin; ln -fs ../GWW/gww/$@ . )
 
-gww_fit.x : gww_fit.o $(GWWOBJS) $(LIBOBJS) $(QEMODS) $(LIBMIN)
+gww_fit.x : gww_fit.o $(GWWOBJS) $(QEMODS) $(LIBMIN)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-	gww_fit.o $(GWWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(QELIBS)
+	gww_fit.o $(GWWOBJS) $(QEMODS) $(LIBMIN) $(QELIBS)
 	- ( cd ../../bin; ln -fs ../GWW/gww/$@ . )
 
 libgww.a : $(GWWOBJS)

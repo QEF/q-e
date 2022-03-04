@@ -26,7 +26,6 @@ SUBROUTINE add_gatefield( vpoten,etotgatefield,linear,quadratic )
   USE extfield,      ONLY : zgate, gate, dipfield, forcegate, mopopla, &
                             relaxz, block, block_height, block_1, block_2, eopreg
   USE klist,         ONLY : nelec
-  USE force_mod,     ONLY : lforce
   USE io_global,     ONLY : stdout,ionode
   USE control_flags, ONLY : mixing_beta
   USE lsda_mod,      ONLY : nspin
@@ -35,7 +34,7 @@ SUBROUTINE add_gatefield( vpoten,etotgatefield,linear,quadratic )
   USE fft_base,      ONLY : dfftp
   USE fft_types,     ONLY : fft_index_to_3d
   USE mp,            ONLY : mp_bcast, mp_sum
-  USE control_flags, ONLY : iverbosity
+  USE control_flags, ONLY : iverbosity, lforce => tprnfor
   
   IMPLICIT NONE
   !

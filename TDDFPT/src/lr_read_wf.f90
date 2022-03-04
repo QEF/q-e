@@ -38,7 +38,7 @@ SUBROUTINE lr_read_wf()
                                    fwfft_orbital_gamma, calbec_rs_gamma,&
                                    add_vuspsir_gamma, v_loc_psir,&
                                    s_psir_gamma
-  USE funct,                ONLY : dft_is_hybrid
+  USE xc_lib,               ONLY : xclib_dft_is
   USE lr_exx_kernel,        ONLY : lr_exx_revc0_init, lr_exx_alloc, &
                                    lr_exx_restart
   USE wavefunctions,        ONLY : evc
@@ -70,7 +70,7 @@ SUBROUTINE lr_read_wf()
   !
   IF (.NOT.eels) evc(:,:) = evc0(:,:,1)
   !
-  IF ( dft_is_hybrid() ) THEN
+  IF ( xclib_dft_is('hybrid') ) THEN
      !
      ! Initialize fft_fact
      ! Warning: If there are fractional translations and 
@@ -117,6 +117,7 @@ SUBROUTINE normal_read()
   USE wavefunctions,     ONLY : psic
   USE realus,                   ONLY : tg_psic
   USE mp_global,                ONLY : me_bgrp
+  USE uspp_init,           ONLY : init_us_2
   !
   IMPLICIT NONE
   !
@@ -296,6 +297,7 @@ SUBROUTINE virt_read()
   !
   USE control_lr,            ONLY : nbnd_occ
   USE becmod,                ONLY : allocate_bec_type, deallocate_bec_type
+  USE uspp_init,             ONLY : init_us_2
   !
   IMPLICIT NONE
   !

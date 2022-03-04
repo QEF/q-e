@@ -12,18 +12,17 @@ SUBROUTINE hp_openfil_q()
   !
   ! This subroutine opens all necessary files necessary. 
   !
-  USE io_files,         ONLY : tmp_dir, nwordwfcU
+  USE io_files,         ONLY : prefix, tmp_dir, iunhub, nwordwfcU
   USE control_flags,    ONLY : io_level
   USE wvfct,            ONLY : nbnd, npwx
-  USE io_files,         ONLY : prefix
   USE noncollin_module, ONLY : npol
   USE buffers,          ONLY : open_buffer
   USE qpoint,           ONLY : nksq
   USE control_lr,       ONLY : lgamma
-  USE units_lr,         ONLY : iuwfc, lrwfc, iuatswfc
+  USE units_lr,         ONLY : iuwfc, lrwfc, iuatswfc, iudwf, lrdwf
   USE ldaU,             ONLY : nwfcU
   USE ldaU_hp,          ONLY : recalc_sym, tmp_dir_save, tmp_dir_hp, &
-                               iudwfc, lrdwfc, iudvwfc, lrdvwfc
+                               iudvwfc, lrdvwfc
   !
   IMPLICIT NONE
   LOGICAL :: exst, exst_mem
@@ -59,15 +58,24 @@ SUBROUTINE hp_openfil_q()
   !
   ! Open a file to write/read a solution of the linear system (dpsi)
   !
-  iudwfc = 22
-  lrdwfc = nbnd * npwx * npol
-  CALL open_buffer (iudwfc, 'dwfc', lrdwfc, io_level, exst_mem, exst, tmp_dir)
+  iudwf = 22
+  lrdwf = nbnd * npwx * npol
+  CALL open_buffer (iudwf, 'dwfc', lrdwf, io_level, exst_mem, exst, tmp_dir)
   !
   ! Open a file to write/read S*phi at k and k+q (atomic wfct's)
   !    
   iuatswfc  = 23
   nwordwfcU = npwx * nwfcU * npol
   CALL open_buffer (iuatswfc, 'satwfc', nwordwfcU, io_level, exst_mem, exst, tmp_dir)
+  !
+  IF (lgamma) THEN
+     !
+     ! If q = Gamma, open unit iunhub which contain S*phi at k.
+     ! Unit iunhub is used in commutator_Vhubx_psi.f90.
+     !
+     CALL open_buffer(iunhub, 'hub', nwordwfcU, io_level, exst_mem, exst, tmp_dir)
+     !
+  ENDIF
   !
   RETURN
   !

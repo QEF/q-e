@@ -8,11 +8,14 @@
 ! Uncomment next line to print compilation info. BEWARE: may occasionally
 ! give compilation errors due to lines too long if paths are very long
 !#define __HAVE_CONFIG_INFO
+#if defined(HAVE_GITREV)
+#include "git-rev.h"
+#endif
 !
 !==-----------------------------------------------------------------------==!
 MODULE environment
   !==-----------------------------------------------------------------------==!
-
+  !! Environment management.
   USE kinds, ONLY: DP
   USE io_files, ONLY: crash_file, nd_nmbr
   USE io_global, ONLY: stdout, meta_ionode
@@ -24,6 +27,7 @@ MODULE environment
   USE global_version, ONLY: version_number
   USE fox_init_module, ONLY: fox_init
   USE command_line_options, ONLY : nmany_
+  USE clib_wrappers, ONLY : get_mem_avail
 #if defined(__HDF5)
   USE qeh5_base_module,   ONLY: initialize_hdf5, finalize_hdf5
 #endif
@@ -42,6 +46,7 @@ MODULE environment
   PUBLIC :: opening_message
   PUBLIC :: compilation_info
   PUBLIC :: parallel_info
+  PUBLIC :: print_cuda_info
 
   !==-----------------------------------------------------------------------==!
 CONTAINS
@@ -54,8 +59,9 @@ CONTAINS
     LOGICAL           :: exst, debug = .false.
     CHARACTER(LEN=80) :: code_version, uname
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
-    INTEGER :: ios, crashunit
-    INTEGER, EXTERNAL :: find_free_unit
+    CHARACTER(LEN=3)           :: env_maxdepth
+    INTEGER :: ios, crashunit, max_depth 
+
 
     ! ... The Intel compiler allocates a lot of stack space
     ! ... Stack limit is often small, thus causing SIGSEGV and crash
@@ -67,8 +73,14 @@ CONTAINS
 #endif
     ! ... use ".FALSE." to disable all clocks except the total cpu time clock
     ! ... use ".TRUE."  to enable clocks
-
-    CALL init_clocks( .TRUE. )
+#if defined(__TRACE)
+    CALL get_environment_variable('ESPRESSO_MAX_DEPTH', env_maxdepth)
+    IF (env_maxdepth .NE. ' ') THEN 
+      READ(env_maxdepth,'(I3)',iostat=ios) max_depth
+      IF (ios == 0 ) CALL set_trace_max_depth( max_depth )
+    END IF
+#endif
+    CALL init_clocks(.TRUE.) 
     CALL start_clock( TRIM(code) )
 
     code_version = TRIM (code) // " v." // TRIM (version_number)
@@ -86,8 +98,7 @@ CONTAINS
 
        INQUIRE( FILE=TRIM(crash_file), EXIST=exst )
        IF( exst ) THEN
-          crashunit = find_free_unit()
-          OPEN( UNIT=crashunit, FILE=TRIM(crash_file), STATUS='OLD',IOSTAT=ios )
+          OPEN( NEWUNIT=crashunit, FILE=TRIM(crash_file), STATUS='OLD',IOSTAT=ios )
           IF (ios==0) THEN
              CLOSE( UNIT=crashunit, STATUS='DELETE', IOSTAT=ios )
           ELSE
@@ -128,6 +139,11 @@ CONTAINS
 #if defined(__HDF5)
     CALL initialize_hdf5()
 #endif
+    !
+    WRITE(stdout,'(5x, I0, A, A)') get_mem_avail()/1024, &
+                &" MiB available memory on the printing compute node ", &
+                &"when the environment starts"
+    WRITE(stdout, *)
   END SUBROUTINE environment_start
 
   !==-----------------------------------------------------------------------==!
@@ -166,6 +182,16 @@ CONTAINS
     !
     WRITE( stdout, '(/5X,"Program ",A," starts on ",A9," at ",A9)' ) &
          TRIM(code_version), cdate, ctime
+#if defined(HAVE_GITREV)
+    WRITE( stdout, '(8X, "Git branch: ", A)' ) &
+      GIT_BRANCH_RAW
+    WRITE( stdout, '(8X, "Last git commit: ", A)' ) &
+      GIT_HASH_RAW
+    WRITE( stdout, '(8X, "Last git commit date: ", A)' ) & 
+      GIT_COMMIT_LAST_CHANGED_RAW
+    WRITE( stdout, '(8X, "Last git commit subject: ", A)' ) & 
+      GIT_COMMIT_SUBJECT_RAW
+#endif
     !
     WRITE( stdout, '(/5X,"This program is part of the open-source Quantum ",&
          &    "ESPRESSO suite", &
@@ -174,6 +200,8 @@ CONTAINS
          &    "395502 (2009);", &
          &/9X,"""P. Giannozzi et al., J. Phys.:Condens. Matter 29 ",&
          &    "465901 (2017);", &
+         &/9X,"""P. Giannozzi et al., J. Chem. Phys. 152 ",&
+         &    "154105 (2020);", &
          &/9X," URL http://www.quantum-espresso.org"", ", &
          &/5X,"in publications or presentations arising from this work. More details at",&
          &/5x,"http://www.quantum-espresso.org/quote")' )
@@ -222,10 +250,8 @@ CONTAINS
          &I5," processors")' ) nproc
 #endif
     !
-#if !defined(__GFORTRAN__) ||  ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
     WRITE( stdout, '(/5X,"MPI processes distributed on ",&
          &I5," nodes")' ) nnode
-#endif
     IF ( nimage > 1 ) WRITE( stdout, &
          '(5X,"path-images division:  nimage    = ",I7)' ) nimage
     IF ( npool > 1 ) WRITE( stdout, &
@@ -298,6 +324,74 @@ __CONF_MASS_LIBS))
      !
 #endif
    END SUBROUTINE compilation_info
+!
+!-----------------------------------------------------------------------
+SUBROUTINE print_cuda_info(check_use_gpu) 
+  !-----------------------------------------------------------------------
+  !
+  USE io_global,       ONLY : stdout
+  USE control_flags,   ONLY : use_gpu_=> use_gpu, iverbosity
+  USE mp_world,        ONLY : nnode, nproc
+  USE mp,              ONLY : mp_sum, mp_max
+#if defined(__CUDA)
+  USE cudafor
+#endif 
+  !
+  IMPLICIT NONE
+  !
+  LOGICAL, OPTIONAL,INTENT(IN)  :: check_use_gpu 
+  !! if present and trues the internal variable use_gpu is checked
+#if defined (__CUDA) 
+  INTEGER :: idev, ndev, ierr
+  TYPE (cudaDeviceProp) :: prop
+  LOGICAL               :: use_gpu = .TRUE. 
+  !
+  IF ( PRESENT(check_use_gpu) ) THEN 
+    IF (check_use_gpu) use_gpu = use_gpu_ 
+  END IF 
+  IF (use_gpu) THEN
+     WRITE( stdout, '(/,5X,"GPU acceleration is ACTIVE.")' )
+#if defined(__GPU_MPI)
+     WRITE( stdout, '(5x, "GPU-aware MPI enabled")')
+#endif
+     WRITE( stdout, '()' )
+  ELSE
+     WRITE( stdout, '(/,5X,"GPU acceleration is NOT ACTIVE.",/)' )
+  END IF
+  !
+  ierr = cudaGetDevice( idev )
+  IF (ierr /= 0) CALL errore('summary', 'cannot get device id', ierr)
+  ierr = cudaGetDeviceCount( ndev )
+  IF (ierr /= 0) CALL errore('summary', 'cannot get device count', ierr)
+  !
+  ! User friendly, approximated warning.
+  ! In order to get this done right, one needs an intra_node communicator
+  !
+  IF (nproc > ndev * nnode * 2) &
+     CALL infomsg('print_cuda_info', &
+      'High GPU oversubscription detected. Are you sure this is what you want?')
+  !
+  ! Verbose information for advanced users
+  IF (iverbosity > 0) THEN
+     WRITE( stdout, '(/,5X,"GPU used by master process:",/)' )
+     ! Device info taken from
+     ! https://devblogs.nvidia.com/how-query-device-properties-and-handle-errors-cuda-fortran/
+     ierr = cudaGetDeviceProperties(prop, idev)
+     WRITE(stdout,"(5X,'   Device Number: ',i0)") idev
+     WRITE(stdout,"(5X,'   Device name: ',a)") trim(prop%name)
+     WRITE(stdout,"(5X,'   Compute capability : ',i0, i0)") prop%major, prop%minor
+     WRITE(stdout,"(5X,'   Ratio of single to double precision performance  : ',i0)") prop%singleToDoublePrecisionPerfRatio
+     WRITE(stdout,"(5X,'   Memory Clock Rate (KHz): ', i0)") &
+       prop%memoryClockRate
+     WRITE(stdout,"(5X,'   Memory Bus Width (bits): ', i0)") &
+       prop%memoryBusWidth
+     WRITE(stdout,"(5X,'   Peak Memory Bandwidth (GB/s): ', f6.2)") &
+       2.0*prop%memoryClockRate*(prop%memoryBusWidth/8)/10.0**6
+  END IF
+  !
+#endif
+  !
+END SUBROUTINE print_cuda_info
 
   !==-----------------------------------------------------------------------==!
 END MODULE environment

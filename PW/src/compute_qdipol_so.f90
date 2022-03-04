@@ -10,14 +10,14 @@
 !----------------------------------------------------------------------
 SUBROUTINE compute_qdipol_so( dpqq, dpqq_so )
   !----------------------------------------------------------------------
-  !! This routine multiplies the dpqq coefficients for the 
-  !! spin orbit fcoef coefficients.
+  !! This routine multiplies the dpqq coefficients with spin-orbit 
+  !! "fcoef" coefficients - to be called in spin-orbit case only.
   !
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : ntyp => nsp
   USE lsda_mod,   ONLY : nspin
   USE uspp_param, ONLY : upf, nh, nhm
-  USE spin_orb,   ONLY : lspinorb, fcoef
+  USE upf_spinorb,ONLY : fcoef
   !
   IMPLICIT NONE
   !
@@ -61,14 +61,12 @@ SUBROUTINE compute_qdipol_so( dpqq, dpqq_so )
           ENDDO
         ELSE
           DO ih = 1, nh (nt)
-            DO jh = ih, nh (nt)
-              IF (lspinorb) THEN
+             DO jh = ih, nh (nt)
                 dpqq_so(ih,jh,1,ipol,nt) = dpqq(ih,jh,ipol,nt)
                 dpqq_so(jh,ih,1,ipol,nt) = dpqq_so(ih,jh,1,ipol,nt)
                 dpqq_so(ih,jh,4,ipol,nt) = dpqq_so(ih,jh,1,ipol,nt)
                 dpqq_so(jh,ih,4,ipol,nt) = dpqq_so(ih,jh,4,ipol,nt)
-              ENDIF
-            ENDDO
+             ENDDO
           ENDDO
         ENDIF
       ENDIF

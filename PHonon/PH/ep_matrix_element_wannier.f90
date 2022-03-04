@@ -9,8 +9,7 @@
 !-----------------------------------------------------------------------
 SUBROUTINE ep_matrix_element_wannier()
   !-----------------------------------------------------------------------
-  !
-  ! Electron-phonon calculation from data saved in fildvscf
+  !! Electron-phonon calculation from data saved in \(\texttt{fildvscf}\).
   !
   USE kinds, ONLY : DP
   USE cell_base, ONLY : celldm, omega, ibrav
@@ -153,11 +152,11 @@ END SUBROUTINE ep_matrix_element_wannier
 !-----------------------------------------------------------------------
 SUBROUTINE elphsum_wannier(q_index)
   !-----------------------------------------------------------------------
+  !! Sum over BZ of the electron-phonon matrix elements \(\text{el_ph_mat}\).
   !
-  !      Sum over BZ of the electron-phonon matrix elements el_ph_mat
-  !      Original routine written by Francesco Mauri
-  !      Adapted to wannier functions by Matteo Calandra
-  !            Dev. Comment: missing calc_sigma_yet
+  !! Original routine written by Francesco Mauri.  
+  !! Adapted to wannier functions by Matteo Calandra.  
+  !! Dev. Comment: missing calc_sigma_yet
   !-----------------------------------------------------------------------
   USE kinds, ONLY : DP
   USE ions_base, ONLY : nat, ityp, tau,amass,tau, ntyp => nsp, atm
@@ -321,10 +320,10 @@ END SUBROUTINE ELPHSUM_WANNIER
 !-----------------------------------------------------------------------
 SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   !-----------------------------------------------------------------------
+  !! Calculation of the electron-phonon matrix elements \(\text{el_ph_mat}\):
+  !! $$ \langle \psi(k+q)|dV_{SCF}/du^q_{i a}|\psi(k)\rangle $$
   !
-  !      Calculation of the electron-phonon matrix elements el_ph_mat
-  !         <\psi(k+q)|dV_{SCF}/du^q_{i a}|\psi(k)>
-  !      Original routine written by Francesco Mauri
+  !! Original routine written by Francesco Mauri.
   !
   USE kinds, ONLY : DP
   USE fft_base, ONLY : dffts
@@ -350,8 +349,12 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   USE eqv,        ONLY : dvpsi!, evq
   USE qpoint,     ONLY : nksq, ikks, ikqs
   USE control_lr, ONLY : lgamma
+  USE units_lr,              ONLY : iuwfc, lrwfc
+  USE buffers,               ONLY : get_buffer
   USE lrus,       ONLY : becp1
   USE phus,       ONLY : alphap
+  USE apply_dpot_mod,   ONLY : apply_dpot_allocate, apply_dpot_deallocate, apply_dpot_bands
+  USE uspp_init,        ONLY : init_us_2
 
   IMPLICIT NONE
   !
@@ -366,15 +369,15 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   INTEGER :: nrec, ik, ikk, ikq, ikqg,ipert, mode, ibnd, jbnd, ir, ig, &
        ios
 
-  COMPLEX(DP) , ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:)
+  COMPLEX(DP) , ALLOCATABLE :: elphmat (:,:,:)
   COMPLEX(DP), EXTERNAL :: zdotc
   INTEGER, EXTERNAL :: find_free_unit
   !
   allocate (evq(npol*npwx,nbnd))
-  ALLOCATE (aux1    (dffts%nnr, npol))
   ALLOCATE (elphmat ( nbnd , nbnd , 3*nat))
+  CALL apply_dpot_allocate()
 
-  
+
 ! iunwfcwann=find_free_unit()
 ! CALL diropn (iunwfcwann, 'wfc', lrwfc, exst, dvscf_dir)
 ! IF (.NOT.exst) THEN
@@ -423,7 +426,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
 !     ENDIF
      !
 
-     call read_wfc_rspace_and_fwfft( evc , ik , lrwfcr , iunwfcwann , npw , igk_k(1,ikk) )
+     call get_buffer (evc, lrwfc, iuwfc, ik)
 
 
      call calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq,xk_gamma, evq, .true.)
@@ -444,12 +447,8 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
         !
         ! calculate dvscf_q*psi_k
         !
-
-        DO ibnd = 1, nbnd
-           CALL cft_wave (ik, evc(1, ibnd), aux1, +1)
-           CALL apply_dpot(dffts%nnr, aux1, dvscfins(1,1,ipert), current_spin)
-           CALL cft_wave (ik, dvpsi(1, ibnd), aux1, -1)
-        END DO
+        CALL apply_dpot_bands(ik, nbnd, dvscfins(:, :, ipert), evc, dvpsi)
+        !
         CALL adddvscf (ipert, ik)
         !
         ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
@@ -481,26 +480,24 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
 
 !  CLOSE( UNIT = iunwfcwann, STATUS = 'KEEP' )
   !
+  CALL apply_dpot_deallocate()
   DEALLOCATE (elphmat)
-  DEALLOCATE (aux1)
   DEALLOCATE(evq)
   !
   RETURN
 END SUBROUTINE elphel_refolded
 !
 subroutine get_equivalent_kpq(xk,xq,kpq,g_kpq, igqg)
-    !==================================================================!
-    !                                                                  !
-    !  Set up the k+q shell for electron-phonon coupling               ! 
-    !                                                                  !
-    !  This routine finds the G vectors such that                      !
-    !  k+q+G=k'  with k and k' belonging to nksq                       !
-    !  for each k, the G vector is stored in g_kpq                     !
-    !  k'=kpq(ik)                                                      !
-    !  and finally igqg(ik) is the index that allows to find           !
-    !  the g vector g_kpq in the list of all the G vectors             !
-    !                                                                  !
-    !       Matteo Calandra                                            !
+    !==================================================================
+    !! Set up the \(k+q\) shell for electron-phonon coupling
+    !
+    !! This routine finds the G vectors such that \(k+q+G=k'\)  with 
+    !! \(k\) and \(k'\) belonging to \(\text{nksq}\) for each \(k\),
+    !! the G vector is stored in \(\text{g_kpq}\) and \(k'=\text{kpq}(ik)\)
+    !! and finally \(\text{igqg}(ik)\) is the index that allows to find
+    !! the g-vector \(\text{g_kpq}\) in the list of all the G-vectors.
+    !
+    !! Matteo Calandra
     !===================================================================  
   USE kinds, ONLY : DP
   USE io_global, ONLY : stdout
@@ -628,6 +625,8 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   USE noncollin_module,     ONLY : npol, noncolin
   USE el_phon, ONLY:iunwfcwann, lrwfcr
 
+  USE buffers,               ONLY : get_buffer
+  USE units_lr,              ONLY : iuwfc, lrwfc
   IMPLICIT NONE
 
   LOGICAL :: lread
@@ -664,7 +663,7 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   call gk_sort (xk_gamma(1,ikqg), ngm, g_scra, gcutw, npw_, igk_, gk)
 
   if(lread) then
-     call read_wfc_rspace_and_fwfft( evq , ikqg , lrwfcr , iunwfcwann , npw_ , igk_ )
+     call get_buffer (evq, lrwfc, iuwfc, ikqg)
   endif
 
   call gk_sort (xkqg, ngm, g_scra, gcutw, npwq_refolded, igkq_, gk)

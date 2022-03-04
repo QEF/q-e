@@ -26,6 +26,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   use ldaU,           ONLY :  lda_plus_u
   USE gvecw,              ONLY :  ecutwfc
   USE klist, ONLY : igk_k
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
 

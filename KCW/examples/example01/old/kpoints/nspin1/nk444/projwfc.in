@@ -1,0 +1,6 @@
+&projwfc
+ outdir = './out'
+ prefix = 'Si_kcwann'
+ degauss = 0.05
+/
+

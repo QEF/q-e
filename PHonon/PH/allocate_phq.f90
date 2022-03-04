@@ -9,9 +9,8 @@
 !-----------------------------------------------------------------------
 subroutine allocate_phq
   !-----------------------------------------------------------------------
-  !
-  ! Dynamical allocation of arrays: quantities needed for the linear
-  ! response problem
+  !! Dynamical allocation of arrays: quantities needed for the linear
+  !! response problem.
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat, ntyp => nsp
@@ -19,10 +18,9 @@ subroutine allocate_phq
   USE wvfct,         ONLY : nbnd, npwx
   USE gvect,         ONLY : ngm
   USE lsda_mod,      ONLY : nspin
-  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE noncollin_module, ONLY : noncolin, domag, npol, nspin_mag, lspinorb
   USE fft_base,      ONLY : dfftp
   USE wavefunctions, ONLY : evc
-  USE spin_orb,      ONLY : lspinorb, domag
   USE nc_mag_aux,    ONLY : int1_nc_save, deeq_nc_save
   USE becmod,        ONLY : bec_type, becp, allocate_bec_type
   USE uspp,          ONLY : okvan, nkb, vkb
@@ -36,18 +34,18 @@ subroutine allocate_phq
   USE units_ph,      ONLY : this_pcxpsi_is_on_file, this_dvkb3_is_on_file
   USE dynmat,        ONLY : dyn00, dyn, dyn_rec, w2
   USE modes,         ONLY : u, npert, name_rap_mode, num_rap_mode
-  USE el_phon,       ONLY : el_ph_mat, elph
+  USE el_phon,       ONLY : el_ph_mat, el_ph_mat_nc_mag, elph
   USE freq_ph,       ONLY : polar, nfs
   USE lrus,          ONLY : becp1, dpqq, dpqq_so
   USE qpoint,        ONLY : nksq, eigqts, xk_col
   USE eqv,           ONLY : dpsi, evq, vlocq, dmuxc, dvpsi
   USE lr_symm_base,  ONLY : rtau
-  USE control_lr,    ONLY : lgamma, ofsbeta
+  USE control_lr,    ONLY : lgamma
   USE ldaU,          ONLY : lda_plus_u, Hubbard_lmax, nwfcU
   USE ldaU_ph,       ONLY : dnsbare, dnsorth, dnsbare_all_modes, wfcatomk, &
                             dwfcatomk, sdwfcatomk, wfcatomkpq, dwfcatomkpq,  &
-                            swfcatomk, swfcatomkpq, sdwfcatomkpq, dvkb, vkbkpq, &
-                            dvkbkpq
+                            sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq
+  USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq
   USE qpoint_aux,    ONLY : becpt, alphapt
 
   IMPLICIT NONE
@@ -155,6 +153,9 @@ subroutine allocate_phq
 
   if (elph) then
     allocate (el_ph_mat( nbnd, nbnd, nksq, 3*nat))
+    if(noncolin .AND. domag) then
+       allocate (el_ph_mat_nc_mag( nbnd, nbnd, nksq, 3*nat))
+    endif
   endif
   allocate ( ramtns (3, 3, 3, nat) )
 
@@ -168,7 +169,6 @@ subroutine allocate_phq
      ALLOCATE (dwfcatomk(npwx,nwfcU,3))
      ALLOCATE (sdwfcatomk(npwx,nwfcU))
      ALLOCATE (dvkb(npwx,nkb,3))
-     ALLOCATE (ofsbeta(nat))
      !
      ALLOCATE (dnsbare(ldim,ldim,nspin,nat,3,nat))
      ALLOCATE (dnsbare_all_modes(ldim,ldim,nspin,nat,3*nat))

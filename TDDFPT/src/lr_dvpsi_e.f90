@@ -84,7 +84,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   !
   CALL allocate_bec_type ( nkb, nbnd, becp2 )
   !
-  CALL commutator_Hx_psi (ik, nbnd_occ(ik), becp1, becp2, ipol, d0psi )
+  CALL commutator_Hx_psi (ik, nbnd_occ(ik), at(:, ipol), becp1, becp2, d0psi(:, 1:nbnd_occ(ik)) )
   !
   IF (okvan) CALL calbec ( npw, vkb, evc, becp, nbnd)
   !

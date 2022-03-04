@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2010 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -28,16 +28,15 @@ SUBROUTINE summary()
   USE fft_base,        ONLY : dffts
   USE vlocal,          ONLY : starting_charge
   USE lsda_mod,        ONLY : lsda, starting_magnetization
-  USE ldaU,            ONLY : lda_plus_U, Hubbard_u, Hubbard_j, Hubbard_alpha, &
-                              Hubbard_l, lda_plus_u_kind, Hubbard_lmax,&
-                              Hubbard_J0, Hubbard_beta
+  USE ldaU,            ONLY : lda_plus_u
   USE klist,           ONLY : degauss, smearing, lgauss, ltetra, nkstot, xk, &
                               wk, nelec, nelup, neldw, two_fermi_energies
   USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, lscf, &
-                              tr2, isolve, lmd, lbfgs, iverbosity, tqr, tq_smoothing, tbeta_smoothing
-  USE noncollin_module,ONLY : noncolin
-  USE spin_orb,        ONLY : domag, lspinorb
-  USE funct,           ONLY : write_dft_name, dft_is_hybrid
+                              tr2, isolve, lmd, lbfgs, iverbosity, tqr, &
+                              tq_smoothing, tbeta_smoothing, llondon, ldftd3
+  USE noncollin_module,ONLY : noncolin, domag, lspinorb
+  USE funct,           ONLY : write_dft_name
+  USE xc_lib,          ONLY : xclib_dft_is
   USE bp,              ONLY : lelfield, gdir, nppstr_3d, efield, nberrycyc, &
                               l3dstring,efield_cart,efield_cry
   USE fixed_occ,       ONLY : f_inp, tfixed_occ
@@ -50,9 +49,12 @@ SUBROUTINE summary()
   USE martyna_tuckerman,ONLY: do_comp_mt
   USE realus,          ONLY : real_space
   USE exx,             ONLY : ecutfock
-  USE fcp_variables,   ONLY : lfcpopt, lfcpdyn
-  USE fcp,             ONLY : fcp_summary
+  USE fcp_module,      ONLY : lfcp, fcp_summary
+  USE gcscf_module,    ONLY : lgcscf, gcscf_summary
   USE relax,           ONLY : epse, epsf, epsp
+  USE environment,     ONLY : print_cuda_info
+  USE london_module,   ONLY : print_london
+  USE dftd3_qe,        ONLY : dftd3_printout, dftd3, dftd3_in
   !
   IMPLICIT NONE
   !
@@ -93,7 +95,7 @@ SUBROUTINE summary()
      WRITE( stdout, 102) nelec
   END IF
   WRITE( stdout, 103) nbnd, ecutwfc, ecutrho
-  IF ( dft_is_hybrid () ) WRITE( stdout, 104) ecutfock
+  IF ( xclib_dft_is('hybrid') ) WRITE( stdout, 104) ecutfock
   IF ( lscf) WRITE( stdout, 105) tr2, mixing_beta, nmix, mixing_style
   IF ( lmd .OR. lbfgs ) WRITE (stdout, 106) epse, epsf
   IF ( lmovecell ) WRITE (stdout, 107) epsp
@@ -154,6 +156,9 @@ SUBROUTINE summary()
   !
   CALL plugin_summary()
   !
+  ! ... CUDA
+  !
+  CALL print_cuda_info(check_use_gpu = .TRUE.)
   !
   ! ... ESM (Effective screening medium)
   !
@@ -161,7 +166,11 @@ SUBROUTINE summary()
   !
   ! ... FCP (Ficticious charge particle)
   !
-  IF ( lfcpopt .or. lfcpdyn )  CALL fcp_summary()
+  IF ( lfcp )  CALL fcp_summary()
+  !
+  ! ... GC-SCF (Grand-Canonical SCF)
+  !
+  IF ( lgcscf )  CALL gcscf_summary()
   !
   IF ( do_comp_mt )  WRITE( stdout, &
             '(5X, "Assuming isolated system, Martyna-Tuckerman method",/)')
@@ -186,6 +195,10 @@ SUBROUTINE summary()
      WRITE(stdout, '("     Number of iterative cycles:", i4)') nberrycyc
      WRITE(stdout, *)
   ENDIF
+  !
+  ! ... DFT+Hubbard 
+  !
+  IF ( lda_plus_u ) CALL hub_summary()
   !
   ! ... and here more detailed information. Description of the unit cell
   !
@@ -231,63 +244,9 @@ SUBROUTINE summary()
      ENDDO
   ENDIF
   !
-  ! Some output for LDA+U
-  !
-  IF ( lda_plus_U ) THEN
-     IF (lda_plus_u_kind == 0) THEN
-        !
-        WRITE( stdout, '(/,/,5x,"Simplified LDA+U calculation (l_max = ",i1, &
-           &") with parameters (eV):")') Hubbard_lmax
-        WRITE( stdout, '(5x,A)') &
-           &"atomic species    L          U    alpha       J0     beta"
-        DO nt = 1, ntyp
-           IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0 .OR. &
-                Hubbard_J0(nt) /= 0.D0 .OR. Hubbard_beta(nt) /= 0.D0 ) THEN
-              WRITE( stdout,'(5x,a6,12x,i1,2x,4f9.4)') atm(nt), Hubbard_L(nt), &
-                 Hubbard_U(nt)*rytoev, Hubbard_alpha(nt)*rytoev, &
-                 Hubbard_J0(nt)*rytoev, Hubbard_beta(nt)*rytoev
-           END IF
-        END DO
-        !
-     ELSEIF(lda_plus_u_kind == 1) THEN
-        !
-        WRITE( stdout, '(/,/,5x,"Full LDA+U calculation (l_max = ",i1, &
-           &") with parameters (eV):")') Hubbard_lmax
-        DO nt = 1, ntyp
-           IF (Hubbard_U(nt) /= 0.d0) THEN
-              IF (Hubbard_l(nt) == 0) THEN
-                 WRITE (stdout,'(5x,a,i2,a,f12.8)') &
-                    'U(',nt,') =', Hubbard_U(nt) * rytoev
-              ELSEIF (Hubbard_l(nt) == 1) THEN
-                 WRITE (stdout,'(5x,2(a,i3,a,f9.4,3x))') &
-                    'U(',nt,') =', Hubbard_U(nt)*rytoev, &
-                    'J(',nt,') =', Hubbard_J(1,nt)*rytoev
-              ELSEIF (Hubbard_l(nt) == 2) THEN
-                 WRITE (stdout,'(5x,3(a,i3,a,f9.4,3x))') &
-                    'U(',nt,') =', Hubbard_U(nt)*rytoev, &
-                    'J(',nt,') =', Hubbard_J(1,nt)*rytoev, &
-                    'B(',nt,') =', Hubbard_J(2,nt)*rytoev
-              ELSEIF (Hubbard_l(nt) == 3) THEN
-                 WRITE (stdout,'(5x,4(a,i3,a,f9.4,3x))') &
-                    'U (',nt,') =', Hubbard_U(nt)*rytoev,   &
-                    'J (',nt,') =', Hubbard_J(1,nt)*rytoev, &
-                    'E2(',nt,') =', Hubbard_J(2,nt)*rytoev, &
-                    'E3(',nt,') =', Hubbard_J(3,nt)*rytoev
-              END IF
-           END IF
-        ENDDO
-        IF (lspinorb) THEN
-           WRITE(stdout, '(5x,"LDA+U on averaged j=l+1/2,l-1/2 radial WFs")')
-        END IF
-        !
-      END IF
-      !
-      WRITE( stdout,'(/)')
-  END IF
-  !
   !   description of symmetries
   !
-  CALL  print_symmetries ( iverbosity, noncolin, domag )
+  CALL print_symmetries ( iverbosity, noncolin, domag )
   !
   !    description of the atoms inside the unit cell
   !
@@ -296,6 +255,10 @@ SUBROUTINE summary()
 
   WRITE( stdout, '(6x,i4,8x,a6," tau(",i4,") = (",3f12.7,"  )")') &
              (na, atm(ityp(na)), na, (tau(ipol,na), ipol=1,3), na=1,nat)
+  !
+  IF ( llondon ) CALL print_london ( )
+  IF ( ldftd3 )  CALL dftd3_printout(dftd3, dftd3_in, stdout, ntyp, atm, &
+       nat, ityp, tau, at, alat )
   !
   !  output of starting magnetization
   !
@@ -415,7 +378,6 @@ SUBROUTINE print_ps_info
   USE ions_base,       ONLY : ntyp => nsp
   USE atom,            ONLY : rgrid
   USE uspp_param,      ONLY : upf
-  USE funct,           ONLY : dft_is_gradient
   IMPLICIT NONE
   !
   INTEGER :: nt, ib, i
@@ -629,3 +591,5 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
   END IF
   !
 END SUBROUTINE print_symmetries
+!
+

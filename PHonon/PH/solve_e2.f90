@@ -9,9 +9,8 @@
 !-----------------------------------------------------------------------
 subroutine solve_e2
   !-----------------------------------------------------------------------
-  !
-  !   Self consistent cycle to compute the second order derivatives
-  !   of the wavefunctions with respect to electric fields
+  !! Self consistent cycle to compute the second order derivatives
+  !! of the wavefunctions with respect to electric fields.
   !
   USe kinds,                 ONLY : DP
   USE io_global,             ONLY : stdout
@@ -43,6 +42,7 @@ subroutine solve_e2
   USE qpoint,    ONLY : nksq, ikks, ikqs
   USE control_lr, ONLY : nbnd_occ, lgamma
   USE dv_of_drho_lr
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
 
@@ -84,6 +84,7 @@ subroutine solve_e2
 
   call start_clock('solve_e2')
   allocate (dvscfin( dfftp%nnr, nspin, 6))
+  dvscfin=(0.0_DP,0.0_DP)
   if (doublegrid) then
      allocate (dvscfins(dffts%nnr, nspin, 6))
   else

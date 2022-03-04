@@ -9,10 +9,9 @@
 !---------------------------------------------------------------------------
 SUBROUTINE set_asr_c(nat,nasr,dyn)
   !---------------------------------------------------------------------------
-  !
-  ! Impose Acoustic Sum Rule on the dynamical matrix
-  ! We assume that (3*nat-1) columns have been calculated
-  ! and that the missing column corresponds to atom nasr
+  !! Impose Acoustic Sum Rule on the dynamical matrix.
+  !! We assume that \((3\text{nat}-1)\) columns have been calculated
+  !! and that the missing column corresponds to atom \(\text{nasr}\).
   !
   USE kinds, ONLY : DP
   IMPLICIT NONE

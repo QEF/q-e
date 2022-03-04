@@ -14,11 +14,10 @@ SUBROUTINE adddvepsi_us(becp1,becp2,ipol,ik,dvpsi)
   ! P^+_c is applied in solve_e.
   !
   USE kinds,             ONLY : DP
-  USE spin_orb,          ONLY : lspinorb
   USE uspp,              ONLY : nkb, vkb, qq_nt, qq_so
   USE wvfct,             ONLY : npwx, nbnd
   USE ions_base,         ONLY : nat, ityp, ntyp => nsp
-  USE noncollin_module,  ONLY : noncolin, npol
+  USE noncollin_module,  ONLY : noncolin, npol, lspinorb
   USE uspp_param,        ONLY : nh
   USE becmod,            ONLY : bec_type
   USE control_flags,     ONLY : gamma_only

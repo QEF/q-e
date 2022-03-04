@@ -5,17 +5,25 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-SUBROUTINE write_modes_out(irr, imode0)
+SUBROUTINE write_modes_out( irr, imode0 )
   !
-  ! This routine writes the displacements on the representation irr that
-  ! starts at mode imode0
+  !! This routine writes the displacements on the representation \(\text{irr}\)
+  !! that starts at mode \(\text{imode0}\).
   !
   USE kinds, ONLY : DP
   USE ions_base, ONLY : nat
   USE modes, ONLY : u, npert
   USE io_global, ONLY : stdout
+  !
   IMPLICIT NONE
-  INTEGER, INTENT(IN) :: imode0, irr
+  !
+  INTEGER, INTENT(IN) :: imode0
+  !! starting mode
+  INTEGER, INTENT(IN) :: irr
+  !! representation index
+  !
+  ! ... local variables
+  !
   INTEGER :: mu, nu
   
   WRITE( stdout, '(5x,"Irreps are as follows:",/)')

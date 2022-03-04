@@ -8,7 +8,6 @@
 !----------------------------------------------------------------------------
 MODULE YAMBO
   !----------------------------------------------------------------------------
-  !
   USE kinds, ONLY :  DP
   !----------------------------------------------------------------------------
   !
@@ -22,8 +21,7 @@ END MODULE YAMBO
 !-----------------------------------------------------------------------
 SUBROUTINE debye_waller(y_grad_at_gamma,y_pol_vec,ibnd,jbnd,ik,mu)
   !-----------------------------------------------------------------------
-  !
-  ! debye_waller term
+  !! Calculates \(\text{debye_waller}\) term.
   !
   USE kinds,      ONLY:DP
   USE wvfct,      ONLY:nbnd
@@ -71,6 +69,7 @@ end subroutine debye_waller
 !-----------------------------------------------------------------------
 SUBROUTINE elph_yambo_eval_and_IO( )
   !-----------------------------------------------------------------------
+  !! Electron-phonon interaction (to be used in \(\texttt{YAMBO}\)).
   !
   USE kinds,       ONLY : DP
   USE ions_base,   ONLY : nat

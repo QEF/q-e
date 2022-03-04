@@ -41,7 +41,6 @@ subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
   !
   real(DP) :: vlcp, g2a, gx
   real(DP), allocatable ::  aux (:), aux1 (:)
-  real(DP), external ::  qe_erf
 
   integer :: i, igl, igl0
   ! counter on erf functions or gaussians
@@ -66,7 +65,7 @@ subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
   !   indipendent of |G| in real space
   !
   do i = 1, msh
-     aux1 (i) = r (i) * vloc_at (i) + zp * e2 * qe_erf (r (i) )
+     aux1 (i) = r (i) * vloc_at (i) + zp * e2 * erf (r (i) )
   enddo
   !
 !$omp parallel private(aux, gx, vlcp, g2a)

@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: cppp.x / CP / Quantum Espresso (version: 6.6)
+Program: cppp.x / CP / Quantum Espresso (version: 7.0)
 ------------------------------------------------------------------------
 
 
@@ -137,6 +137,7 @@ NAMELIST: &INPUTPP
    Type:           INTEGER
    Default:        1
    Description:    Number of replicas of atomic positions along cell parameters.
+                   CURRENTLY DISABLED
                    
                    If np1, np2, np3 are 1 or not specified, cppp.x does not
                    replicate atomic positions in space.
@@ -179,4 +180,4 @@ NAMELIST: &INPUTPP
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Jul 17 10:28:25 CEST 2020
+This file has been created by helpdoc utility on Sat Dec 18 20:08:38 CET 2021

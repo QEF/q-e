@@ -5,10 +5,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! Author: Mitsuaki Kawamura, U. Tokyo
 !----------------------------------------------------------------------------
 MODULE elph_scdft_mod
   !--------------------------------------------------------------------------
+  !! Contains electron-phonon SCDFT routines.
+  !
+  !! Author: Mitsuaki Kawamura, U. Tokyo.
   !
   IMPLICIT NONE
   !
@@ -21,10 +23,9 @@ MODULE elph_scdft_mod
 !----------------------------------------------------------------------------
 SUBROUTINE elph_scdft()
   !--------------------------------------------------------------------------
-  !
-  ! This routine computes the electron-phonon matrix
-  ! in the irreducible Brillouin zone and
-  ! expand that to whole BZ.
+  !! This routine computes the electron-phonon matrix
+  !! in the irreducible Brillouin zone and
+  !! expand that to whole BZ.
   !
   USE kinds, ONLY : dp
   USE parameters,  ONLY : npk
@@ -296,8 +297,7 @@ END SUBROUTINE elph_scdft
 !----------------------------------------------------------
 SUBROUTINE elph_scdft_cnt_and_dsp(comm,npe,mype,nn,cnt,dsp)
   !--------------------------------------------------------
-  !
-  ! This routine compute coutnt and disples for MPI 
+  !! This routine computes coutnt and disples for MPI.
   ! Communicater : comm
   !
   USE mp, ONLY : mp_sum
@@ -326,8 +326,7 @@ END SUBROUTINE elph_scdft_cnt_and_dsp
 !------------------------------------------------------------------------
 SUBROUTINE elph_scdft_gather_r(snd,nsnd,rcv,nrcv,mype,npe,comm)
   !----------------------------------------------------------------------
-  !
-  ! This routine gathers a real matrix to PE 0.
+  !! This routine gathers a real matrix to PE 0.
   !
   USE kinds, ONLY : dp
   USE mp, ONLY : mp_sum, mp_gather
@@ -355,8 +354,8 @@ END SUBROUTINE elph_scdft_gather_r
 !--------------------------------------------------------
 SUBROUTINE elph_scdft_dmuxc()
   !------------------------------------------------------
-  !
-  ! This routine output the f_{XC} for LDA in G space to a file.
+  !! This routine outputs the \(f_{XC}\) for LDA in G space
+  !! to a file.
   !
   USE mp,        ONLY : mp_sum, mp_max, mp_min
   USE kinds,     ONLY : dp
@@ -423,8 +422,7 @@ END SUBROUTINE elph_scdft_dmuxc
 !--------------------------------------------------------------------
 SUBROUTINE elph_scdft_fft(evc_g, evc_r, npw, igk, isw)
   !------------------------------------------------------------------
-  !
-  ! This routine perform inverse-FFT for f_{XC}
+  !! This routine performs inverse-FFT for \(f_{XC}\).
   !
   USE kinds, ONLY : dp
   USE wvfct, ONLY : npwx

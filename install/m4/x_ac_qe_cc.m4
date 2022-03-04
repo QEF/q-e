@@ -9,7 +9,7 @@ case "$arch:$f90_flavor" in
 *:ifort* )
         try_cc="icc ecc $try_cc"
         ;;
-*:pgf90 )
+*:pgf90 | *:nvfortran )
         try_cc="pgcc $try_cc"
         ;;
 cray*:* )
@@ -45,8 +45,9 @@ try_cpp="cpp"
 
 case "$arch:$cc" in
 *:pgcc )
-        # Do I need preprocessing here?
         try_cflags="-fast -Mpreprocess"
+        # Workaround for BEEF compilation with PGI v.19 and previous 
+        if test "$f90_flavor" = "pgf90"; then try_cflags="-c11 $try_cflags"; fi
         ;;
 crayxt*:cc )
         # Actually we need something like is done for ftn to detect 

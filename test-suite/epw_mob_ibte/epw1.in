@@ -3,18 +3,15 @@
   prefix      = 'si'
   amass(1)    = 28.0855
   outdir      = './'
-
   iverbosity  = 0
 
   elph        = .true.
-  kmaps       = .false.
   epbwrite    = .true.
   epbread     = .false.
   epwwrite    = .true.
   epwread     = .false.
-
   etf_mem     = 1
-  vme         = .false.
+  vme         = 'dipole'
 
   lifc        = .true.
   asr_typ     = 'crystal'
@@ -26,7 +23,7 @@
   iprint      = 2
   dis_win_max = 18
   dis_froz_max= 8.5
-  proj(1)     = 'Si : sp3'   
+  proj(1)     = 'Si : sp3'
   wdata(1) = 'bands_plot = .true.'
   wdata(2) = 'begin kpoint_path'
   wdata(3) = 'L 0.50 0.00 0.00 G 0.00 0.00 0.00'
@@ -44,8 +41,8 @@
   phonselfen  = .false.
   a2f         = .false.
 
-  fsthick     = 2.0 ! eV 
-  temps       = 1 ! K 
+  fsthick     = 2.0 ! eV
+  temps       = 1 ! K
   degaussw    = 0.1 ! eV
 
   dvscf_dir   = './save/'
@@ -53,7 +50,7 @@
   band_plot   = .true.
   filkf       = './LGX.txt'
   filqf       = './LGX.txt'
- 
+
   nk1         = 6
   nk2         = 6
   nk3         = 6

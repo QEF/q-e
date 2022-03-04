@@ -43,7 +43,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
   !
   IF( ierr <= 0 ) RETURN
   !
-  ! ... the error message is written un the "*" unit
+  ! ... the error message is written on the "*" unit
   !
   WRITE( cerr, FMT = '(I6)' ) ierr
   WRITE( UNIT = *, FMT = '(/,1X,78("%"))' )
@@ -73,9 +73,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
 #if defined(__INTEL_COMPILER)
     call tracebackqq(user_exit_code=-1)
 #elif __GFORTRAN__
-#if (__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8))
     call backtrace
-#endif
 #else
     WRITE( UNIT = 0, FMT = '(5X,A)' ) "Printing strace..."
     CALL ptrace()

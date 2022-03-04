@@ -6,15 +6,13 @@
   outdir      = './'
 
   elph        = .true.
-  kmaps       = .false.
   epbwrite    = .true.
   epbread     = .false.
-
   epwwrite    = .true.
   epwread     = .false.
-
   etf_mem     = 2
-  vme         = .false. 
+  vme         = 'dipole'
+
   lpolar      = .true.
   lphase      = .true.
 
@@ -25,7 +23,7 @@
   iprint      = 2
   dis_win_max = 12
   dis_froz_max= 7
-  proj(1)     = 'Si:sp3'   
+  proj(1)     = 'Si:sp3'
   wdata(1) = 'bands_plot = .true.'
   wdata(2) = 'begin kpoint_path'
   wdata(3) = 'L 0.50 0.00 0.00 G 0.00 0.00 0.00'

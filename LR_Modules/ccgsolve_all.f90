@@ -103,7 +103,6 @@ subroutine ccgsolve_all (ch_psi, ccg_psi, e, d0psi, dpsi, h_diag, &
   complex(DP) ::  dcgamma, dcgamma1, dclambda, dclambda1
   !  the ratio between rho
   !  step length
-  complex(DP), external :: zdotc
   REAL(kind=dp), EXTERNAL :: ddot
   !  the scalar product
   real(DP), allocatable    :: eu (:)
@@ -194,7 +193,7 @@ subroutine ccgsolve_all (ch_psi, ccg_psi, e, d0psi, dpsi, h_diag, &
                  rho(lbnd)=rho(lbnd)-DBLE(h(1,ibnd_))*DBLE(g(1,ibnd_))
               ENDIF
            ELSE
-              rho(lbnd) = zdotc (ndmx*npol, hs(1,ibnd_), 1, g(1,ibnd_), 1)
+              rho(lbnd) = dot_product (hs(:,ibnd_), g(:,ibnd_))
            ENDIF
 
         endif
@@ -279,8 +278,8 @@ subroutine ccgsolve_all (ch_psi, ccg_psi, e, d0psi, dpsi, h_diag, &
 
               ENDIF
            ELSE
-              a(lbnd) = zdotc (ndmx*npol, hs(1,ibnd_), 1, g(1,ibnd_), 1)
-              c(lbnd) = zdotc (ndmx*npol, hs(1,ibnd_), 1, t(1,lbnd), 1)
+              a(lbnd) = dot_product (hs(:,ibnd_), g(:,ibnd_))
+              c(lbnd) = dot_product (hs(:,ibnd_), t(:,lbnd))
 
            ENDIF
 

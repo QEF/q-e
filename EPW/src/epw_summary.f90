@@ -28,8 +28,7 @@
   USE gvecs,         ONLY : dual, doublegrid, gcutms, ngms
   USE gvecw,         ONLY : ecutwfc
   USE symm_base,     ONLY : s, sname, ft, s_axis_to_cart, sr, t_rev
-  USE noncollin_module, ONLY : noncolin
-  USE spin_orb,      ONLY : lspinorb, domag
+  USE noncollin_module, ONLY : noncolin, domag, lspinorb
   USE funct,         ONLY : write_dft_name
   USE epwcom,        ONLY : title
   USE lr_symm_base,  ONLY : irotmq, minus_q, nsymq

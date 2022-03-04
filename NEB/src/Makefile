@@ -11,13 +11,17 @@ NEBOBJS = \
 neb.o \
 
 NEBLIBS = \
+bcast_file.o \
 compute_scf.o \
 engine_to_path_pos.o \
 engine_to_path_alat.o \
 engine_to_path_nat.o \
 engine_to_path_fix_atom_pos.o \
+engine_to_path_tot_charge.o \
 fcp_opt_routines.o \
-input.o \
+fcp_variables.o \
+gcscf_variables.o \
+neb_input.o \
 path_base.o \
 path_formats.o \
 path_gen_inputs.o \
@@ -34,21 +38,20 @@ path_variables.o \
 set_defaults.o \
 stop_run_path.o 
 
-PWOBJS= ../../PW/src/libpw.a
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
+PWOBJS= ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
+QEMODS = $(BASEMODS)
 TLDEPS=pwlibs
 
 all : tldeps neb.x path_interpolation.x
 
-neb.x : $(NEBOBJS) libneb.a $(LIBOBJS) $(PWOBJS) $(QEMODS)
+neb.x : $(NEBOBJS) libneb.a $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	$(NEBOBJS) libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+	$(NEBOBJS) libneb.a $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin; ln -fs ../NEB/src/$@ . )
 
-path_interpolation.x : path_interpolation.o libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
+path_interpolation.x : path_interpolation.o libneb.a $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	path_interpolation.o libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+	path_interpolation.o libneb.a $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../NEB/src/$@ . )
 
 libneb.a : $(NEBLIBS)

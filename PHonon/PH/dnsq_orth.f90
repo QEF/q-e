@@ -9,20 +9,22 @@
 !-------------------------------------------------------------------------
 SUBROUTINE dnsq_orth() 
   !-----------------------------------------------------------------------
+  !! DFPT+U: This routine calculates, in case of USPP, the bare variation 
+  !! of the occupation matrix due to orthogonality contraints.
   !
-  ! DFPT+U : This routine calculates, in case of USPP, the bare variation 
-  ! of the occupation matrix due to orthogonality contraints.
+  !! $$ \text{dnsorth_cart}(m1,m2,\text{ispin},I,\text{icart},na) = 
+  !!   - \sum_{k,n,n'} \text{wgg}(n,n',k) \cdot \langle\psi(n,k,\text{ispin})|
+  !!       S_{k}\phi_(k,I,m2)\rangle \cdot \langle S_{k+q}\phi_(k+q,I,m1)|
+  !!       \psi(n',k+q,\text{ispin})\rangle \cdot
+  !!     \sum_{l1,l2} [ \langle\psi(n',k+q,\text{ispin})|
+  !!                    d_{L,\text{icart}}\beta(k+q,L,l1)\rangle \cdot q(L,l1,l2) \cdot
+  !!                  \langle\beta(k,L,l2)| \psi(n,k,\text{ispin})\rangle 
+  !!                  + \langle\psi(n',k+q,\text{ispin})| \beta(k+q,L,l1)\rangle\cdot
+  !!                    q(L,l1,l2) \cdot \langle d_{L,\text{icart}}\beta(k,L,l2)|
+  !!                    \psi(n,k,\text{ispin})\rangle ] $$
   !
-  ! dnsorth_cart(m1,m2,ispin,I,icart,na) = 
-  !   - \sum_{k,n,n'} wgg(n,n',k) * <psi(n,k,ispin)| S_{k}\phi_(k,I,m2)>  
-  !                             * < S_{k+q}\phi_(k+q,I,m1)| psi(n',k+q,ispin)> 
-  !    * \sum_{l1,l2} [ <psi(n',k+q,ispin)| d_{L,icart}beta(k+q,L,l1)> * q(L,l1,l2) *
-  !                     <beta(k,L,l2)| psi(n,k,ispin)> 
-  !                   + <psi(n',k+q,ispin)| beta(k+q,L,l1)> * q(L,l1,l2) *
-  !                     <d_{L,icart}beta(k,L,l2)| psi(n,k,ispin)> ]                                !
-  !
-  ! Written  by A. Floris
-  ! Modified by I. Timrov (01.10.2018)
+  !! Written  by A. Floris.  
+  !! Modified by I. Timrov (01.10.2018)-
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout, ionode, ionode_id
@@ -30,19 +32,20 @@ SUBROUTINE dnsq_orth()
   USE units_lr,      ONLY : iuwfc, lrwfc
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp
   USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, offsetU, nwfcU
-  USE ldaU_ph,       ONLY : swfcatomk, swfcatomkpq, dvkb, vkbkpq, dvkbkpq, &
+  USE ldaU_ph,       ONLY : dvkb, vkbkpq, dvkbkpq, &
                             proj1, proj2, dnsorth_cart, &
                             read_dns_bare, dnsorth
+  USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq
   USE klist,         ONLY : xk, wk,  ngk, igk_k
   USE wvfct,         ONLY : npwx, wg, nbnd 
   USE qpoint,        ONLY : nksq, ikks, ikqs
-  USE control_lr,    ONLY : lgamma, ofsbeta
+  USE control_lr,    ONLY : lgamma
   USE units_lr,      ONLY : iuatswfc
   USE uspp_param,    ONLY : nh
   USE lsda_mod,      ONLY : lsda, nspin, current_spin, isk
   USE wavefunctions, ONLY : evc
   USE eqv,           ONLY : evq
-  USE uspp,          ONLY : okvan, nkb, vkb
+  USE uspp,          ONLY : okvan, nkb, vkb, ofsbeta
   USE control_flags, ONLY : iverbosity
   USE mp,            ONLY : mp_sum, mp_bcast 
   USE mp_pools,      ONLY : intra_pool_comm, inter_pool_comm
@@ -50,6 +53,7 @@ SUBROUTINE dnsq_orth()
   USE io_files,      ONLY : seqopn 
   USE buffers,       ONLY : get_buffer
   USE doubleprojqq_module
+  USE uspp_init,        ONLY : init_us_2
   !
   IMPLICIT NONE
   !

@@ -594,6 +594,50 @@ SUBROUTINE MatCheck( Mat, n )
  
 END SUBROUTINE MatCheck 
 !
+!--------------------------------------------------------------------
+SUBROUTINE MatCheck_k(label, Mat, n, m )
+    !--------------------------------------------------------------------
+    ! Compute different quantities of Mat 
+    !
+    USE kinds,     ONLY : dp
+    USE io_global, ONLY : stdout
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, intent(in) :: n, m
+    !! the dimension of the matrix
+    COMPLEX(dp), intent(in) :: Mat(n,m)
+    !! the input matrix
+    CHARACTER(LEN=*) :: label
+    !
+    ! ... local variables
+    !
+    INTEGER :: i, j 
+    REAL(dp) :: tmp, MaxDiag, MaxOff, SumDiag, SumOff
+    !
+    MaxDiag = 0.0d0
+    MaxOff  = 0.0d0
+    SumDiag = 0.0d0
+    SumOff  = 0.0d0
+    tmp = 0.0d0
+    do i = 1, n 
+      do j = 1, m
+        tmp = sqrt(dble(Mat(i,j)*conjg(Mat(i,j))))
+        if(i.eq.j) then 
+          SumDiag = SumDiag + tmp
+          IF(tmp.gt.MaxDiag) MaxDiag = tmp 
+        else
+          SumOff  = SumOff  + tmp
+          IF(tmp.gt.MaxOff) MaxOff = tmp
+        end if
+      end do  
+    end do  
+    write(stdout,'(2A,2(A,I5))') 'Matrix ', TRIM(label), ' n: ', n, ' m: ', m 
+    write(stdout,'(2(A,f12.6))') 'MaxAbsDiag =', MaxDiag, '  SumAbsDiag =', SumDiag
+    write(stdout,'(2(A,f12.6))') 'MaxAbsOff  =', MaxOff,  '  SumAbsOff  =', SumOff 
+ 
+END SUBROUTINE MatCheck_k 
+!
 !---------------------------------------------------------------------
 SUBROUTINE PTSVD( Mat, m )
     !-------------------------------------------------------------------

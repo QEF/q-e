@@ -81,7 +81,7 @@ fi
 # No lapack library found: use internal lapack
 
 if test "$have_lapack" -eq 0  ; then
-    lapack_libs="\$(TOPDIR)/LAPACK/liblapack.a"
+    lapack_libs="\$(TOPDIR)/external/lapack/liblapack.a"
     echo setting LAPACK to internal library ...  $lapack_libs
     lapack_libs_switch="internal"
 else

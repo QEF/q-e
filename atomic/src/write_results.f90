@@ -22,8 +22,9 @@ subroutine write_results
                         core_state, ekinc, ekinv, ae_fc_energy, cau_fact, &
                         relpert, evel, edar, eso, noscf, iswitch, rho, &
                         file_charge, max_out_wfc, vx
-
-  use funct, only :  get_iexch, get_dft_name, write_dft_name
+  use funct,     only : get_dft_name, write_dft_name
+  use xc_lib,    only : xclib_get_id, xclib_dft_is_libxc
+  
   implicit none
 
   integer :: is, i, j, n, m, im(40), ios, counter, ismax
@@ -63,8 +64,8 @@ subroutine write_results
 1000 format(/5x, &
           'n l     nl                  e(Ry) ','         e(Ha)          e(eV)')
 
-     oep = get_iexch() .eq. 4
-     kli = get_iexch() .eq. 10
+     oep = xclib_get_id('LDA','EXCH')== 4 .and. .not.xclib_dft_is_libxc('LDA','EXCH')
+     kli = xclib_get_id('LDA','EXCH')==10 .and. .not.xclib_dft_is_libxc('LDA','EXCH')
      if (oep) enl(1:nwf) = enl(1:nwf) - enzero(isw(1:nwf))
      do n=1,nwf
         if (oc(n)>-eps6) then
@@ -464,9 +465,8 @@ subroutine savetxtv2(filename,x,y)
     ! real(dp) :: data(3, 2)
     ! call savetxt("log.txt", data)
 
-    integer :: s, i, find_free_unit
-    s = find_free_unit()
-    open(unit=s, file=filename, status="replace")
+    integer :: s, i
+    open(newunit=s, file=filename, status="replace")
     do i = 1, size(x, 1)
         write(s, *) x(i), y(i)
     end do

@@ -31,9 +31,8 @@ SUBROUTINE paw_deqsymmetrize(dbecsum)
     USE lsda_mod,          ONLY : nspin
     USE uspp_param,        ONLY : nhm
     USE ions_base,         ONLY : nat, ityp
-    USE noncollin_module,  ONLY : nspin_lsda, nspin_mag
+    USE noncollin_module,  ONLY : domag, nspin_lsda, nspin_mag
     USE cell_base,         ONLY : at, bg
-    USE spin_orb,          ONLY : domag
     USE symm_base,         ONLY : nsym, irt, d1, d2, d3, s, t_rev, sname, &
                                   invs, inverse_s
     USE uspp,              ONLY : nhtolm,nhtol,ijtoh
@@ -55,7 +54,7 @@ SUBROUTINE paw_deqsymmetrize(dbecsum)
     INTEGER :: m_o, m_u     ! counters for sums on m
     INTEGER :: oh, uh, ouh  ! auxiliary indexes corresponding to m_o and m_u
     INTEGER :: isym         ! counter for symmetry operation
-    INTEGER :: ipol, jpol, kpol
+    INTEGER :: jpol, kpol
     INTEGER :: table(48, 48)
 
     ! The following mess is necessary because the symmetrization operation

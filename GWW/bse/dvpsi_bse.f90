@@ -32,6 +32,7 @@ SUBROUTINE dvpsi_e(kpoint,ipol,dvpsi2,l_lr)
   use bse_wannier, ONLY:num_nbndv
   USE gvecw,              ONLY :  ecutwfc
   USE klist, ONLY : igk_k
+  USE uspp_init,        ONLY : init_us_2, gen_us_dj, gen_us_dy
 !  USE cgcom
   !
   IMPLICIT NONE

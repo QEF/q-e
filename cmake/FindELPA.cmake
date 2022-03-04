@@ -11,10 +11,7 @@
 #
 # - Find ELPA include dirs and libraries
 # Use this module by invoking find_package with the form:
-#  find_package(ELPA
-#               [REQUIRED]             # Fail with error if elpa is not found
-#               [COMPONENTS <comp1> <comp2> ...] # dependencies
-#              )
+#  find_package(ELPA [version] [EXACT] [QUIET] [REQUIRED] [COMPONENTS <comp1> ..])
 #
 #  ELPA depends on the following libraries:
 #   - SCALAPACK
@@ -22,25 +19,26 @@
 #  COMPONENTS are optional libraries ELPA could be linked with,
 #  Use it to drive detection of a specific compilation chain
 #  COMPONENTS can be some of the following:
-#   - no components are available for now: maybe PLASMA in the future?
+#   - no components are available for now: maybe OpenMP CUDA in the future?
 #
 # Results are reported in variables:
 #  ELPA_FOUND            - True if headers and requested libraries were found
-#  ELPA_LINKER_FLAGS     - list of required linker flags (excluding -l and -L)
+#  ELPA_VERSION          - Version string
 #  ELPA_INCLUDE_DIRS     - elpa include directories
-#  ELPA_LIBRARY_DIRS     - Link directories for elpa libraries
+#  ELPA_Fortran_MODS_DIR - elpa directory containing Fortran modules
 #  ELPA_LIBRARIES        - elpa libraries
-#  ELPA_INCLUDE_DIRS_DEP - elpa + dependencies include directories
-#  ELPA_LIBRARY_DIRS_DEP - elpa + dependencies link directories
-#  ELPA_LIBRARIES_DEP    - elpa libraries + dependencies
 #
 # The user can give specific paths where to find the libraries adding cmake
-# options at configure (ex: cmake path/to/project -DELPA_DIR=path/to/elpa):
-#  ELPA_DIR              - Where to find the base directory of elpa
-#  ELPA_INCDIR           - Where to find the header files
-#  ELPA_LIBDIR           - Where to find the library files
+# options at configure (ex: cmake path/to/project -DELPA_ROOT=path/to/elpa):
+#  ELPA_ROOT             - Where to find the base directory of elpa
+#  ELPA_DIR(deprecated)  - Where to find the base directory of elpa
 # The module can also look for the following environment variables if paths
-# are not given as cmake variable: ELPA_DIR, ELPA_INCDIR, ELPA_LIBDIR
+# are not given as cmake variable: ELPA_ROOT, ELPA_DIR(deprecated)
+#
+# searching precedence
+# ELPA_ROOT > ENV{ELPA_ROOT} > CMAKE_INCLUDE_PATH/CMAKE_LIBRARY_PATH > CMAKE_PREFIX_PATH
+# > ENV{CMAKE_INCLUDE_PATH}/ENV{CMAKE_LIBRARY_PATH}, ENV{CMAKE_PREFIX_PATH}
+# > PKG_ELPA_INCLUDE_DIRS/PKG_ELPA_LIBRARY_DIRS > system locations
 #
 #=============================================================================
 # Copyright 2012-2013 Inria
@@ -60,373 +58,159 @@
 # (To distribute this file outside of Ecrc, substitute the full
 #  License text for the above reference.)
 
+# Check whether to search static or dynamic libs
+set(CMAKE_FIND_LIBRARY_SUFFIXES_SAV ${CMAKE_FIND_LIBRARY_SUFFIXES})
 
-if(NOT ELPA_FOUND)
-  set(ELPA_DIR "" CACHE PATH "Installation directory of ELPA library")
-  if (NOT ELPA_FIND_QUIETLY)
-    message(STATUS "A cache variable, namely ELPA_DIR, has been set to specify the install directory of ELPA")
-  endif()
-endif(NOT ELPA_FOUND)
-
-# ELPA depends on SCALAPACK anyway, try to find it
-if (NOT SCALAPACK_FOUND)
-  if(ELPA_FIND_REQUIRED)
-    find_package(SCALAPACK REQUIRED)
-  else()
-    find_package(SCALAPACK)
-  endif()
+if(${ELPA_USE_STATIC_LIBS})
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_STATIC_LIBRARY_SUFFIX})
+else()
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES_SAV})
 endif()
 
+# ELPA depends on SCALAPACK anyway, try to find it
+if(NOT SCALAPACK_FOUND)
+    if(ELPA_FIND_REQUIRED)
+        find_package(SCALAPACK REQUIRED)
+    else()
+        find_package(SCALAPACK)
+    endif()
+endif()
 
-set(ENV_ELPA_DIR "$ENV{ELPA_DIR}")
-set(ENV_ELPA_INCDIR "$ENV{ELPA_INCDIR}")
-set(ENV_ELPA_LIBDIR "$ENV{ELPA_LIBDIR}")
-set(ELPA_GIVEN_BY_USER "FALSE")
-if ( ELPA_DIR OR ( ELPA_INCDIR AND ELPA_LIBDIR) OR ENV_ELPA_DIR OR (ENV_ELPA_INCDIR AND ENV_ELPA_LIBDIR) )
-  set(ELPA_GIVEN_BY_USER "TRUE")
+# minimal support of ELPA_DIR ENV{ELPA_DIR}
+if(NOT ELPA_ROOT AND NOT ENV{ELPA_ROOT} AND ELPA_DIR)
+    message(WARNING "CMake variable ELPA_DIR has been deprecated")
+    set(ELPA_ROOT ${ELPA_DIR})
+endif()
+if(NOT ELPA_ROOT AND NOT ENV{ELPA_ROOT} AND ENV{ELPA_DIR})
+    message(WARNING "Environment variable ELPA_DIR has been deprecated")
+    set(ELPA_ROOT $ENV{ELPA_DIR})
+endif()
+
+# When ELPA is manually installed, the header C file elpa.h is placed
+# under the directory INSTALL_PREFIX/include/elpa-20XX/elpa
+# In C source code, an include line uses "elpa/elpa.h".
+# The include directory should be INSTALL_PREFIX/include/elpa-20XX
+# glob_elpa_header_file handles versioned include directories
+macro(glob_elpa_header_file)
+    string(REPLACE ":" ";" ARGN_EXPANDED "${ARGN}")
+    foreach(DIR ${ARGN_EXPANDED})
+        message(DEBUG "globing ${DIR}")
+        if(NOT ELPA_elpa.h_FILEPATH AND DIR)
+            file(GLOB ELPA_elpa.h_FILEPATH "${DIR}/include/elpa-20*/elpa/elpa.h")
+        endif()
+    endforeach()
+endmacro()
+
+glob_elpa_header_file("${ELPA_ROOT}" "$ENV{ELPA_ROOT}" "${CMAKE_INCLUDE_PATH}" "${CMAKE_PREFIX_PATH}"
+                      "$ENV{CMAKE_INCLUDE_PATH}" "$ENV{CMAKE_PREFIX_PATH}")
+
+if(ELPA_elpa.h_FILEPATH)
+    string(REGEX REPLACE "/elpa/elpa.h$" "" ELPA_elpa.h_INCLUDE_DIR "${ELPA_elpa.h_FILEPATH}")
+    if(NOT ELPA_FIND_QUIETLY)
+        message(STATUS "Globing elpa.h on versioned paths found ${ELPA_elpa.h_FILEPATH}")
+    endif()
+    find_path(
+        ELPA_INCLUDE_DIRS
+        NAMES "elpa/elpa.h"
+        HINTS ${ELPA_elpa.h_INCLUDE_DIR}
+        NO_DEFAULT_PATH)
 endif()
 
 # Optionally use pkg-config to detect include/library dirs (if pkg-config is available)
 # -------------------------------------------------------------------------------------
-include(FindPkgConfig)
-find_package(PkgConfig QUIET)
-if(PKG_CONFIG_EXECUTABLE AND NOT ELPA_GIVEN_BY_USER)
-
-  pkg_search_module(ELPA elpa)
-  if (NOT ELPA_FIND_QUIETLY)
-    if (ELPA_FOUND AND ELPA_LIBRARIES)
-      message(STATUS "Looking for ELPA - found using PkgConfig")
-      #if(NOT ELPA_INCLUDE_DIRS)
-      #    message("${Magenta}ELPA_INCLUDE_DIRS is empty using PkgConfig."
-      #        "Perhaps the path to elpa headers is already present in your"
-      #        "C(PLUS)_INCLUDE_PATH environment variable.${ColourReset}")
-      #endif()
-    else()
-      message(STATUS "${Magenta}Looking for ELPA - not found using PkgConfig. "
-	"\n   Perhaps you should add the directory containing elpa.pc "
-	"\n   to the PKG_CONFIG_PATH environment variable.${ColourReset}")
+if(NOT ELPA_INCLUDE_DIRS)
+    find_package(PkgConfig QUIET)
+    if(PKG_CONFIG_FOUND)
+        if(NOT PKG_ELPA_FOUND AND ELPA_PKGCONFIG_VERSION)
+            pkg_search_module(PKG_ELPA elpa-${ELPA_PKGCONFIG_VERSION})
+        endif()
+        if(NOT PKG_ELPA_FOUND)
+            pkg_search_module(PKG_ELPA elpa)
+        endif()
+        if(NOT ELPA_FIND_QUIETLY)
+            if(PKG_ELPA_FOUND)
+                message(STATUS "Looking for ELPA - info found by PkgConfig")
+                message("     PkgConfig found include directory: ${PKG_ELPA_INCLUDE_DIRS}")
+                message("     PkgConfig found library directory: ${PKG_ELPA_LIBRARY_DIRS}")
+            else()
+                message(STATUS "Looking for ELPA - info not found by PkgConfig")
+            endif()
+        endif()
     endif()
-  endif()
-
-  if (ELPA_FIND_VERSION_EXACT)
-    if( NOT (ELPA_FIND_VERSION_MAJOR STREQUAL ELPA_VERSION_MAJOR) OR
-	NOT (ELPA_FIND_VERSION_MINOR STREQUAL ELPA_VERSION_MINOR) )
-      if(NOT ELPA_FIND_QUIETLY)
-	message(FATAL_ERROR
-	  "ELPA version found is ${ELPA_VERSION_STRING} "
-	  "when required is ${ELPA_FIND_VERSION}")
-      endif()
-    endif()
-  else()
-    # if the version found is older than the required then error
-    if( (ELPA_FIND_VERSION_MAJOR STRGREATER ELPA_VERSION_MAJOR) OR
-	(ELPA_FIND_VERSION_MINOR STRGREATER ELPA_VERSION_MINOR) )
-      if(NOT ELPA_FIND_QUIETLY)
-	message(FATAL_ERROR
-	  "ELPA version found is ${ELPA_VERSION_STRING} "
-	  "when required is ${ELPA_FIND_VERSION} or newer")
-      endif()
-    endif()
-  endif()
-
-  # if pkg-config is used: these variables are empty
-  # the pkg_search_module call will set the following:
-  # ELPA_LDFLAGS: all required linker flags
-  # ELPA_CFLAGS:  all required cflags
-  set(ELPA_INCLUDE_DIRS_DEP "")
-  set(ELPA_LIBRARY_DIRS_DEP "")
-  set(ELPA_LIBRARIES_DEP "")
-  # replace it anyway: we should update it with dependencies given by pkg-config
-  set(ELPA_INCLUDE_DIRS_DEP "${ELPA_INCLUDE_DIRS}")
-  set(ELPA_LIBRARY_DIRS_DEP "${ELPA_LIBRARY_DIRS}")
-  set(ELPA_LIBRARIES_DEP "${ELPA_LIBRARIES}")
-
-endif(PKG_CONFIG_EXECUTABLE AND NOT ELPA_GIVEN_BY_USER)
-
-# if ELPA is not found using pkg-config
-if( (NOT PKG_CONFIG_EXECUTABLE) OR (PKG_CONFIG_EXECUTABLE AND NOT ELPA_FOUND) OR (ELPA_GIVEN_BY_USER) )
-
-  if (NOT ELPA_FIND_QUIETLY)
-    message(STATUS "Looking for ELPA - PkgConfig not used")
-  endif()
-
-  # Looking for include
-  # -------------------
-
-  # Add system include paths to search include
-  # ------------------------------------------
-  unset(_inc_env)
-  set(ENV_ELPA_DIR "$ENV{ELPA_DIR}")
-  set(ENV_ELPA_INCDIR "$ENV{ELPA_INCDIR}")
-  if(ENV_ELPA_INCDIR)
-    list(APPEND _inc_env "${ENV_ELPA_INCDIR}")
-  elseif(ENV_ELPA_DIR)
-    list(APPEND _inc_env "${ENV_ELPA_DIR}")
-    list(APPEND _inc_env "${ENV_ELPA_DIR}/include")
-    list(APPEND _inc_env "${ENV_ELPA_DIR}/include/elpa")
-  else()
-    if(WIN32)
-      string(REPLACE ":" ";" _inc_env "$ENV{INCLUDE}")
-    else()
-      string(REPLACE ":" ";" _path_env "$ENV{INCLUDE}")
-      list(APPEND _inc_env "${_path_env}")
-      string(REPLACE ":" ";" _path_env "$ENV{C_INCLUDE_PATH}")
-      list(APPEND _inc_env "${_path_env}")
-      string(REPLACE ":" ";" _path_env "$ENV{CPATH}")
-      list(APPEND _inc_env "${_path_env}")
-      string(REPLACE ":" ";" _path_env "$ENV{INCLUDE_PATH}")
-      list(APPEND _inc_env "${_path_env}")
-    endif()
-  endif()
-  list(APPEND _inc_env "${CMAKE_PLATFORM_IMPLICIT_INCLUDE_DIRECTORIES}")
-  list(APPEND _inc_env "${CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES}")
-  list(REMOVE_DUPLICATES _inc_env)
-
-
-  # Try to find the elpa header in the given paths
-  # -------------------------------------------------
-  # call cmake macro to find the header path
-  if(ELPA_INCDIR)
-    set(ELPA_elpa.h_DIRS "ELPA_elpa.h_DIRS-NOTFOUND")
-    find_path(ELPA_elpa.h_DIRS
-      NAMES elpa.h
-      HINTS ${ELPA_INCDIR})
-  else()
-    if(ELPA_DIR)
-      set(ELPA_elpa.h_DIRS "ELPA_elpa.h_DIRS-NOTFOUND")
-      find_path(ELPA_elpa.h_DIRS
-	NAMES elpa.h
-	HINTS ${ELPA_DIR}
-	PATH_SUFFIXES "include" "include/elpa")
-      if(NOT ELPA_elpa.h_DIRS)
-        file(GLOB ELPA_elpa.h_PATH "${ELPA_DIR}/include/elpa-20*/elpa/elpa.h")
-        get_filename_component(ELPA_elpa.h_DIRS "${ELPA_elpa.h_PATH}" PATH)
-      endif()
-    else()
-      set(ELPA_elpa.h_DIRS "ELPA_elpa.h_DIRS-NOTFOUND")
-      find_path(ELPA_elpa.h_DIRS
-	NAMES elpa.h
-	HINTS ${_inc_env})
-    endif()
-  endif()
-  mark_as_advanced(ELPA_elpa.h_DIRS)
-
-  # If found, add path to cmake variable
-  # ------------------------------------
-  if (ELPA_elpa.h_DIRS)
-    message(STATUS "elpa.h found in ${ELPA_elpa.h_DIRS}")
-    set(ELPA_INCLUDE_DIRS "${ELPA_elpa.h_DIRS}")
-  else ()
-    set(ELPA_INCLUDE_DIRS "ELPA_INCLUDE_DIRS-NOTFOUND")
-    if(NOT ELPA_FIND_QUIETLY)
-      message(STATUS "Looking for elpa -- elpa.h not found")
-    endif()
-  endif()
-
-  # If not defined, guess the version string
-  if(NOT ELPA_VERSION_STRING)
-    string(REGEX MATCH "elpa-20[0-9][0-9]\.[0-9][0-9]\.[0-9][0-9][0-9]" CMAKE_MATCH_ELPA_VER "${ELPA_INCLUDE_DIRS}")
-    string(REGEX MATCH "20[0-9][0-9]\.[0-9][0-9]\.[0-9][0-9][0-9]" ELPA_VERSION_STRING "${CMAKE_MATCH_ELPA_VER}")
-    message(STATUS "ELPA version ${ELPA_VERSION_STRING}")
-  endif()
-
-  # Looking for lib
-  # ---------------
-
-  # Add system library paths to search lib
-  # --------------------------------------
-  unset(_lib_env)
-  set(ENV_ELPA_LIBDIR "$ENV{ELPA_LIBDIR}")
-  if(ENV_ELPA_LIBDIR)
-    list(APPEND _lib_env "${ENV_ELPA_LIBDIR}")
-  elseif(ENV_ELPA_DIR)
-    list(APPEND _lib_env "${ENV_ELPA_DIR}")
-    list(APPEND _lib_env "${ENV_ELPA_DIR}/lib")
-  else()
-    if(WIN32)
-      string(REPLACE ":" ";" _lib_env "$ENV{LIB}")
-    else()
-      if(APPLE)
-	string(REPLACE ":" ";" _lib_env "$ENV{DYLD_LIBRARY_PATH}")
-      else()
-	string(REPLACE ":" ";" _lib_env "$ENV{LD_LIBRARY_PATH}")
-      endif()
-      list(APPEND _lib_env "${CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES}")
-      list(APPEND _lib_env "${CMAKE_C_IMPLICIT_LINK_DIRECTORIES}")
-    endif()
-  endif()
-  list(REMOVE_DUPLICATES _lib_env)
-
-  # Try to find the elpa lib in the given paths
-  # ----------------------------------------------
-
-  # call cmake macro to find the lib path
-  if(ELPA_LIBDIR)
-    set(ELPA_elpa_LIBRARY "ELPA_elpa_LIBRARY-NOTFOUND")
-    find_library(ELPA_elpa_LIBRARY
-      NAMES elpa
-      HINTS ${ELPA_LIBDIR})
-  else()
-    if(ELPA_DIR)
-      set(ELPA_elpa_LIBRARY "ELPA_elpa_LIBRARY-NOTFOUND")
-      find_library(ELPA_elpa_LIBRARY
-	NAMES elpa
-	HINTS ${ELPA_DIR}
-	PATH_SUFFIXES lib lib32 lib64)
-    else()
-      set(ELPA_elpa_LIBRARY "ELPA_elpa_LIBRARY-NOTFOUND")
-      find_library(ELPA_elpa_LIBRARY
-	NAMES elpa
-	HINTS ${_lib_env})
-    endif()
-  endif()
-  mark_as_advanced(ELPA_elpa_LIBRARY)
-
-  # If found, add path to cmake variable
-  # ------------------------------------
-  if (ELPA_elpa_LIBRARY)
-    get_filename_component(elpa_lib_path "${ELPA_elpa_LIBRARY}" PATH)
-    # set cmake variables
-    set(ELPA_LIBRARIES    "${ELPA_elpa_LIBRARY}")
-    set(ELPA_LIBRARY_DIRS "${elpa_lib_path}")
-  else ()
-    set(ELPA_LIBRARIES    "ELPA_LIBRARIES-NOTFOUND")
-    set(ELPA_LIBRARY_DIRS "ELPA_LIBRARY_DIRS-NOTFOUND")
-    if(NOT ELPA_FIND_QUIETLY)
-      message(STATUS "Looking for elpa -- lib elpa not found")
-    endif()
-  endif ()
-
-  # check a function to validate the find
-  if (ELPA_LIBRARIES)
-
-    set(REQUIRED_LDFLAGS)
-    set(REQUIRED_INCDIRS)
-    set(REQUIRED_LIBDIRS)
-    set(REQUIRED_LIBS)
-
-    # ELPA
-    if (ELPA_INCLUDE_DIRS)
-      set(REQUIRED_INCDIRS "${ELPA_INCLUDE_DIRS}")
-    endif()
-    if (ELPA_LIBRARY_DIRS)
-      set(REQUIRED_LIBDIRS "${ELPA_LIBRARY_DIRS}")
-    endif()
-    set(REQUIRED_LIBS "${ELPA_LIBRARIES}")
-    # CBLAS
-    if (CBLAS_INCLUDE_DIRS_DEP)
-      list(APPEND REQUIRED_INCDIRS "${CBLAS_INCLUDE_DIRS_DEP}")
-    elseif (CBLAS_INCLUDE_DIRS)
-      list(APPEND REQUIRED_INCDIRS "${CBLAS_INCLUDE_DIRS}")
-    endif()
-    if(CBLAS_LIBRARY_DIRS_DEP)
-      list(APPEND REQUIRED_LIBDIRS "${CBLAS_LIBRARY_DIRS_DEP}")
-    elseif(CBLAS_LIBRARY_DIRS)
-      list(APPEND REQUIRED_LIBDIRS "${CBLAS_LIBRARY_DIRS}")
-    endif()
-    if (CBLAS_LIBRARIES_DEP)
-      list(APPEND REQUIRED_LIBS "${CBLAS_LIBRARIES_DEP}")
-    elseif(CBLAS_LIBRARIES)
-      list(APPEND REQUIRED_LIBS "${CBLAS_LIBRARIES}")
-    endif()
-    if (BLAS_LINKER_FLAGS)
-      list(APPEND REQUIRED_LDFLAGS "${BLAS_LINKER_FLAGS}")
-    endif()
-    # LAPACK
-    if (LAPACK_INCLUDE_DIRS)
-      list(APPEND REQUIRED_INCDIRS "${LAPACK_INCLUDE_DIRS}")
-    endif()
-    if(LAPACK_LIBRARY_DIRS)
-      list(APPEND REQUIRED_LIBDIRS "${LAPACK_LIBRARY_DIRS}")
-    endif()
-    list(APPEND REQUIRED_LIBS "${LAPACK_LIBRARIES}")
-    if (LAPACK_LINKER_FLAGS)
-      list(APPEND REQUIRED_LDFLAGS "${LAPACK_LINKER_FLAGS}")
-    endif()
-    # CUDA
-    if (CUDA_INCLUDE_DIRS)
-      list(APPEND REQUIRED_INCDIRS "${CUDA_INCLUDE_DIRS}")
-    endif()
-    if(CUDA_LIBRARY_DIRS)
-      list(APPEND REQUIRED_LIBDIRS "${CUDA_LIBRARY_DIRS}")
-    endif()
-    list(APPEND REQUIRED_LIBS "${CUDA_CUBLAS_LIBRARIES};${CUDA_LIBRARIES}")
-
-    # set required libraries for link
-    set(CMAKE_REQUIRED_INCLUDES "${REQUIRED_INCDIRS}")
-    set(CMAKE_REQUIRED_LIBRARIES)
-    list(APPEND CMAKE_REQUIRED_LIBRARIES "${REQUIRED_LDFLAGS}")
-    foreach(lib_dir ${REQUIRED_LIBDIRS})
-      list(APPEND CMAKE_REQUIRED_LIBRARIES "-L${lib_dir}")
-    endforeach()
-    list(APPEND CMAKE_REQUIRED_LIBRARIES "${REQUIRED_LIBS}")
-    string(REGEX REPLACE "^ -" "-" CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES}")
-
-    # test link
-    unset(ELPA_WORKS CACHE)
-    include(CheckFunctionExists)
-    if(ELPA_VERSION_STRING AND ELPA_VERSION_STRING VERSION_LESS "2017")
-      set(ELPA_TEST_FUNCTION get_elpa_row_col_comms)
-    else()
-      set(ELPA_TEST_FUNCTION elpa_init)
-    endif()
-    check_function_exists(${ELPA_TEST_FUNCTION} ELPA_WORKS)
-    mark_as_advanced(ELPA_WORKS)
-
-    if(ELPA_WORKS)
-      # save link with dependencies
-      set(ELPA_LIBRARIES_DEP    "${REQUIRED_LIBS}")
-      set(ELPA_LIBRARY_DIRS_DEP "${REQUIRED_LIBDIRS}")
-      set(ELPA_INCLUDE_DIRS_DEP "${REQUIRED_INCDIRS}")
-      set(ELPA_LINKER_FLAGS     "${REQUIRED_LDFLAGS}")
-      list(REMOVE_DUPLICATES ELPA_LIBRARY_DIRS_DEP)
-      list(REMOVE_DUPLICATES ELPA_INCLUDE_DIRS_DEP)
-      list(REMOVE_DUPLICATES ELPA_LINKER_FLAGS)
-    else()
-      if(NOT ELPA_FIND_QUIETLY)
-	message(STATUS "Looking for elpa : test of ${ELPA_TEST_FUNCTION} with
-		elpa, cblas, cuda and lapack libraries fails")
-	message(STATUS "CMAKE_REQUIRED_LIBRARIES: ${CMAKE_REQUIRED_LIBRARIES}")
-	message(STATUS "CMAKE_REQUIRED_INCLUDES: ${CMAKE_REQUIRED_INCLUDES}")
-	message(STATUS "Check in CMakeFiles/CMakeError.log to figure out why it fails")
-      endif()
-    endif()
-    set(CMAKE_REQUIRED_INCLUDES)
-    set(CMAKE_REQUIRED_FLAGS)
-    set(CMAKE_REQUIRED_LIBRARIES)
-  endif(ELPA_LIBRARIES)
-
-endif( (NOT PKG_CONFIG_EXECUTABLE) OR (PKG_CONFIG_EXECUTABLE AND NOT ELPA_FOUND) OR (ELPA_GIVEN_BY_USER) )
-
-if (ELPA_LIBRARIES)
-  if (ELPA_LIBRARY_DIRS)
-    foreach(dir ${ELPA_LIBRARY_DIRS})
-      if ("${dir}" MATCHES "elpa")
-	set(first_lib_path "${dir}")
-      endif()
-    endforeach()
-  else()
-    list(GET ELPA_LIBRARIES 0 first_lib)
-    get_filename_component(first_lib_path "${first_lib}" PATH)
-  endif()
-  if (${first_lib_path} MATCHES "/lib(32|64)?$")
-    string(REGEX REPLACE "/lib(32|64)?$" "" not_cached_dir "${first_lib_path}")
-    set(ELPA_DIR_FOUND "${not_cached_dir}" CACHE PATH "Installation directory of ELPA library" FORCE)
-  else()
-    set(ELPA_DIR_FOUND "${first_lib_path}" CACHE PATH "Installation directory of ELPA library" FORCE)
-  endif()
 endif()
-mark_as_advanced(ELPA_DIR)
-mark_as_advanced(ELPA_DIR_FOUND)
 
-# check that ELPA has been found
-# -------------------------------
-include(FindPackageHandleStandardArgs)
-if (PKG_CONFIG_EXECUTABLE AND ELPA_FOUND)
-  find_package_handle_standard_args(ELPA DEFAULT_MSG
-    ELPA_LIBRARIES)
-else()
-  find_package_handle_standard_args(ELPA DEFAULT_MSG
+# search for "elpa/elpa.h" again
+# ELPA_INCLUDE_DIRS is a cached variable, if it has been found before, this find_path is no-op
+find_path(
+    ELPA_INCLUDE_DIRS
+    NAMES "elpa/elpa.h"
+    HINTS ${PKG_ELPA_INCLUDE_DIRS}
+    PATH_SUFFIXES "include" "include/elpa")
+
+if(ELPA_INCLUDE_DIRS)
+    # Looking for module directory based on elpa.mod
+    find_path(
+        ELPA_Fortran_MODS_DIR
+        NAMES elpa.mod
+        HINTS ${ELPA_INCLUDE_DIRS}
+        PATH_SUFFIXES "modules" NO_DEFAULT_PATH)
+
+    # Looking for elpa1.mod if elpa.mod was not found
+    find_path(
+        ELPA_Fortran_MODS_DIR
+        NAMES elpa1.mod
+        HINTS ${ELPA_INCLUDE_DIRS}
+        PATH_SUFFIXES "modules" NO_DEFAULT_PATH)
+endif()
+
+find_library(
     ELPA_LIBRARIES
-    ELPA_WORKS)
+    NAMES elpa
+    HINTS ${PKG_ELPA_LIBRARY_DIRS}
+    PATH_SUFFIXES "lib" "lib64")
+
+# extract version string from ELPA_INCLUDE_DIRS
+if(ELPA_INCLUDE_DIRS)
+    string(REGEX MATCH "elpa-20[0-9][0-9]\.[0-9][0-9]\.[0-9][0-9][0-9]" CMAKE_MATCH_ELPA_VER "${ELPA_INCLUDE_DIRS}")
+    string(REGEX MATCH "20[0-9][0-9]\.[0-9][0-9]\.[0-9][0-9][0-9]" ELPA_VERSION_FROM_INCLUDE_DIRS
+                 "${CMAKE_MATCH_ELPA_VER}")
 endif()
+if(NOT ELPA_FIND_QUIETLY)
+    if(ELPA_VERSION_FROM_INCLUDE_DIRS)
+        message(STATUS "ELPA version string extracted from ELPA_INCLUDE_DIRS : ${ELPA_VERSION_FROM_INCLUDE_DIRS}")
+    else()
+        message(STATUS "Extracting ELPA version string from ELPA_INCLUDE_DIRS failed.")
+    endif()
+endif()
+
+# If ELPA_VERSION is not defined, use ELPA_VERSION_FROM_INCLUDE_DIRS
+if(ELPA_VERSION_FROM_INCLUDE_DIRS)
+    if(NOT ELPA_VERSION)
+        message(DEBUG "setting ELPA_VERSION by ELPA_VERSION_FROM_INCLUDE_DIRS")
+        set(ELPA_VERSION ${ELPA_VERSION_FROM_INCLUDE_DIRS})
+    elseif(NOT ELPA_VERSION_FROM_INCLUDE_DIRS STREQUAL ELPA_VERSION)
+        message(
+            WARNING "Confusing elpa versions exist in the environement. "
+                    "Found ${ELPA_VERSION_FROM_INCLUDE_DIRS} through ELPA_INCLUDE_DIRS "
+                    "but version string ${ELPA_VERSION} is in use. "
+                    "Check carefully if the desired version got picked up.")
+    endif()
+endif()
+
+# If ELPA_VERSION is not defined, use PKG_ELPA_VERSION
+if(PKG_ELPA_VERSION)
+    if(NOT ELPA_VERSION)
+        message(DEBUG "setting ELPA_VERSION by PKG_ELPA_VERSION")
+        set(ELPA_VERSION ${PKG_ELPA_VERSION})
+    elseif(NOT PKG_ELPA_VERSION STREQUAL ELPA_VERSION)
+        message(WARNING "Confusing elpa versions exist in the environement. "
+                        "pkg-config found ${PKG_ELPA_VERSION} but version string ${ELPA_VERSION} is in use. "
+                        "Check carefully if the desired version got picked up.")
+    endif()
+endif()
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(
+    ELPA
+    REQUIRED_VARS ELPA_LIBRARIES ELPA_INCLUDE_DIRS ELPA_Fortran_MODS_DIR ELPA_VERSION
+    VERSION_VAR ELPA_VERSION)

@@ -1,4 +1,4 @@
-! Copyright (C) 2002-2015 Quantum ESPRESSO group
+! Copyright (C) 2002-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,11 +24,15 @@
                                 ip_atomic_positions => atomic_positions, lspinorb, ip_nqx1 => nqx1, ip_nqx2 => nqx2,  &
                                 ip_nqx3 => nqx3, ip_ecutfock => ecutfock, ip_ecutvcut => ecutvcut, localization_thr,  &
                                 screening_parameter, exx_fraction, x_gamma_extrapolation, exxdiv_treatment,           &
-                                ip_lda_plus_u=>lda_plus_u, ip_lda_plus_u_kind => lda_plus_u_kind,                     & 
-                                ip_hubbard_u => hubbard_u, ip_hubbard_u_back => hubbard_u_back, lback, l1back,        &
+                                ip_lda_plus_u=>lda_plus_u, ip_lda_plus_u_kind => lda_plus_u_kind,                     &
+                                ip_hubbard_u => hubbard_u, ip_hubbard_u2 => hubbard_u2,                               &
                                 ip_hubbard_j0 => hubbard_j0,  ip_hubbard_beta => hubbard_beta, ip_backall => backall, &
+                                ip_hubbard_n => hubbard_n, ip_hubbard_l => hubbard_l,                                 &
+                                ip_hubbard_n2 => hubbard_n2, ip_hubbard_l2 => hubbard_l2,                             &
+                                ip_hubbard_n3 => hubbard_n3, ip_hubbard_l3 => hubbard_l3,                             &
                                 ip_hubbard_alpha => hubbard_alpha, ip_Hubbard_alpha_back => hubbard_alpha_back,       &
-                                ip_hubbard_j => hubbard_j,  starting_ns_eigenvalue, u_projection_type,                &
+                                ip_hubbard_j => hubbard_j,  starting_ns_eigenvalue,                                   &
+                                ip_hubbard_projectors => hubbard_projectors,                                          &
                                 vdw_corr, london, london_s6, london_c6, london_rcut, london_c6, xdm_a1, xdm_a2,       &
                                 ts_vdw_econv_thr, ts_vdw_isolated, dftd3_threebody,dftd3_version,                     &
                                 ip_noncolin => noncolin, ip_spinorbit => lspinorb,                                    &
@@ -40,6 +44,7 @@
                                 mixing_ndim, tqr, tq_smoothing, tbeta_smoothing, electron_maxstep,                    &
                                 diago_thr_init, diago_full_acc,                                                       & 
                                 diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim,                               &
+                                diago_rmm_ndim, diago_rmm_conv, diago_gs_nblock,                                      &
                                 nk1, nk2, nk3, k1, k2, k3, nkstot, ip_xk => xk, ip_wk => wk,                          &
                                 ion_dynamics, upscale, remove_rigid_rot, refold_pos, pot_extrapolation,               &
                                 wfc_extrapolation, ion_temperature, tempw, tolp, delta_t, nraise, ip_dt => dt,        &
@@ -48,7 +53,7 @@
                                 ip_nosym => nosym, ip_noinv => noinv, ip_nosym_evc => nosym_evc,                      & 
                                 ip_no_t_rev => no_t_rev, ip_force_symmorphic => force_symmorphic,                     &
                                 ip_use_all_frac=>use_all_frac, assume_isolated, esm_bc, esm_w, esm_nfit, esm_efield,  & 
-                                ip_lfcpopt => lfcpopt, ip_fcp_mu => fcp_mu,                                           &
+                                ip_lfcp => lfcp, ip_fcp_mu => fcp_mu,                                           &
                                 ecfixed, qcutz, q2sigma,                                                              &    
                                 tforces, rd_for,                                                                      &
                                 rd_if_pos,                                                                               &
@@ -67,8 +72,8 @@
   USE constants,         ONLY:   e2,bohr_radius_angs
   USE ions_base,         ONLY:   iob_tau=>tau
   USE cell_base,         ONLY:   cb_at => at, cb_alat => alat, cb_iforceh => iforceh
-  USE funct,             ONLY:   get_dft_is_hybrid => dft_is_hybrid, &
-                                 get_dft_is_nonlocc => dft_is_nonlocc, get_nonlocc_name, get_dft_short
+  USE funct,             ONLY:   get_dft_is_nonlocc => dft_is_nonlocc, get_nonlocc_name, get_dft_short
+  USE xc_lib,            ONLY:   xclib_dft_is
   USE uspp_param,        ONLY:   upf
   USE control_flags,     ONLY:   cf_nstep => nstep 
   USE qes_types_module
@@ -88,9 +93,8 @@
   INTEGER                                  ::   nt
   LOGICAL                                  ::   lsda,dft_is_hybrid,  dft_is_nonlocc,  is_hubbard(ntypx)=.FALSE.,&
                                                 is_hubbard_back(ntypx) = .FALSE.,  ibrav_lattice 
-  INTEGER                                  ::   Hubbard_l=0,hublmax=0
+  INTEGER                                  ::   hublmax=0
   INTEGER                                  ::   iexch, icorr, igcx, igcc, imeta, my_vec(6) 
-  INTEGER,EXTERNAL                         ::   set_hubbard_l, set_hubbard_l_back 
   INTEGER                                  ::   lung,l 
   CHARACTER(LEN=8),  EXTERNAL              ::   schema_smearing
   CHARACTER(LEN=8)                         ::   smearing_loc
@@ -106,21 +110,22 @@
   TYPE(dftU_type),POINTER                  ::  dftU_
   TYPE(vdW_type),POINTER                   ::  vdW_
   REAL(DP),TARGET                          ::  xdm_a1_, xdm_a2_, lond_s6_, lond_rcut_, ts_vdw_econv_thr_,&
-                                               scr_par_, exx_frc_, ecutvcut_, ecut_fock_, loc_thr_     
+                                               scr_par_, exx_frc_, ecutvcut_, ecut_fock_, loc_thr_, cell_factor_tg      
   REAL(DP),POINTER                         ::  xdm_a1_pt=>NULL(), xdm_a2_pt=>NULL(), lond_s6_pt=>NULL(), &
                                                lond_rcut_pt=>NULL(), ts_vdw_econv_thr_pt=>NULL(),& 
                                                ecut_fock_opt=>NULL(), scr_par_opt=>NULL(), exx_frc_opt=>NULL(), &
-                                               ecutvcut_opt=>NULL(), loc_thr_p => NULL()  
+                                               ecutvcut_opt=>NULL(), loc_thr_p => NULL(), cell_factor_pt => NULL()  
   LOGICAL,TARGET                           ::  empirical_vdw, ts_vdw_isolated_, dftd3_threebody_
   LOGICAL,POINTER                          ::  ts_vdw_isolated_pt=>NULL(), dftd3_threebody_pt=>NULL()
   INTEGER,TARGET                           :: dftd3_version_, spin_ns, nbnd_tg, nq1_tg, nq2_tg, nq3_tg  
   INTEGER,POINTER                          :: dftd3_version_pt=>NULL(), nbnd_pt => NULL(), nq1_pt=>NULL(),&
                                               nq2_pt=>NULL(), nq3_pt=>NULL()  
-  REAL(DP),ALLOCATABLE                     :: london_c6_(:), hubbard_U_(:), hubbard_U_back_(:), hubbard_alpha_(:), &
+  REAL(DP),ALLOCATABLE                     :: london_c6_(:), hubbard_U_(:), hubbard_U2_(:), hubbard_alpha_(:), &
                                               hubbard_alpha_back_(:), hubbard_J_(:,:), hubbard_J0_(:), hubbard_beta_(:), &
                                               starting_ns_(:,:,:)
   LOGICAL, ALLOCATABLE                     :: backall_(:)
-  INTEGER, ALLOCATABLE                     :: Hubbard_l_back_(:), Hubbard_l1_back_(:) 
+  INTEGER, ALLOCATABLE                     :: hubbard_l2_(:), hubbard_n2_(:), hubbard_l3_(:), hubbard_n3_(:), &
+                                              hubbard_l_(:), hubbard_n_(:) 
   CHARACTER(LEN=3),ALLOCATABLE             :: species_(:)
   INTEGER, POINTER                         :: nr_1,nr_2, nr_3, nrs_1, nrs_2, nrs_3, nrb_1, nrb_2, nrb_3 
   INTEGER,ALLOCATABLE                      :: nr_(:), nrs_(:), nrb_(:) 
@@ -188,7 +193,9 @@
      dft_name=TRIM(dft_shortname)
   END IF
 
-  dft_is_hybrid=get_dft_is_hybrid()
+  !dft_is_hybrid=get_dft_is_hybrid()
+  dft_is_hybrid = xclib_dft_is('hybrid')
+  
   IF ( dft_is_hybrid) THEN
      ALLOCATE(hybrid_)
      IF (screening_parameter > 0.0_DP) THEN 
@@ -283,25 +290,26 @@
      DO nt = 1, ntyp
        !
        is_hubbard(nt) = ip_Hubbard_U(nt)/= 0.0_dp .OR. &
-                        ip_Hubbard_U_back(nt) /= 0.0_DP .OR. &
+                        ip_Hubbard_U2(nt) /= 0.0_DP .OR. &
                         ip_Hubbard_alpha(nt) /= 0.0_dp .OR. &
                         ip_Hubbard_alpha_back(nt) /= 0.0_DP .OR. &
                         ip_Hubbard_J0(nt) /= 0.0_dp .OR. &
                         ip_Hubbard_beta(nt)/= 0.0_dp .OR. &
                         ANY(ip_Hubbard_J(:,nt) /= 0.0_DP)
-       IF (is_hubbard(nt)) hublmax = MAX (hublmax, set_hubbard_l(upf(nt)%psd))
+       IF (is_hubbard(nt)) hublmax = MAX (hublmax, ip_Hubbard_l(nt))
        !
-       is_hubbard_back(nt) = ip_Hubbard_U_back(nt) /= 0.0_DP .OR. &
+       is_hubbard_back(nt) = ip_Hubbard_U2(nt) /= 0.0_DP .OR. &
                              ip_Hubbard_alpha_back(nt) /= 0.0_DP  
        !
      END DO
+     ! IT: It seems all the arrays below are never deallocated
      IF ( ANY(ip_hubbard_u(1:ntyp) /=0.0_DP)) THEN
         ALLOCATE(hubbard_U_(ntyp))
         hubbard_U_(1:ntyp) = ip_hubbard_u(1:ntyp)
      END IF
-     IF ( ANY(ip_hubbard_u_back(1:ntyp) /=0.0_DP)) THEN
-        ALLOCATE(hubbard_U_back_(ntyp))
-        hubbard_U_back_(1:ntyp) = ip_hubbard_u_back(1:ntyp)
+     IF ( ANY(ip_hubbard_u2(1:ntyp) /=0.0_DP)) THEN
+        ALLOCATE(hubbard_U2_(ntyp))
+        hubbard_U2_(1:ntyp) = ip_hubbard_u2(1:ntyp)
      END IF
      IF (ANY (ip_hubbard_J0 /=0.0_DP)) THEN
         ALLOCATE(hubbard_J0_(ntyp))
@@ -335,31 +343,41 @@
          starting_ns_eigenvalue(1:2*hublmax+1, 1:spin_ns, 1:ntyp)
      END IF
      !
+     IF ( ANY(ip_hubbard_n(1:ntyp) > -1)) THEN
+        ALLOCATE(hubbard_n_(ntyp))
+        hubbard_n_(1:ntyp) = ip_hubbard_n(1:ntyp)
+     END IF
+     IF ( ANY(ip_hubbard_l(1:ntyp) > -1)) THEN
+        ALLOCATE(hubbard_l_(ntyp))
+        hubbard_l_(1:ntyp) = ip_hubbard_l(1:ntyp)
+     END IF
+     !
      IF (ANY(is_hubbard_back(1:ntyp))) THEN 
-        ALLOCATE (Hubbard_l_back_(ntyp)) 
-        IF (ANY(lback>=0)) THEN
-          Hubbard_l_back_(1:ntyp) = lback(1:ntyp) 
-        ELSE 
-          DO nt = 1, ntyp 
-             Hubbard_l_back_(nt) = set_hubbard_l_back(upf(nt)%psd)
-          END DO 
-        END IF
+        ALLOCATE (hubbard_n2_(ntyp)) 
+        ALLOCATE (hubbard_l2_(ntyp)) 
+        DO nt = 1, ntyp 
+           hubbard_n2_(1:ntyp) = ip_hubbard_n2(1:ntyp) ! not passed to qexsd_init_dftU
+           hubbard_l2_(1:ntyp) = ip_hubbard_l2(1:ntyp)
+        END DO 
         IF (ANY(ip_backall) ) THEN 
            ALLOCATE(backall_(ntyp))
            backall_ (1:ntyp) = ip_backall(1:ntyp)
-           IF (ANY(l1back >=0)) THEN
-              ALLOCATE(Hubbard_l1_back_(ntyp))
-              Hubbard_l1_back_ (1:ntyp) = l1back(1:ntyp)
-           ENDIF
+           ALLOCATE(hubbard_n3_(ntyp))
+           ALLOCATE(hubbard_l3_(ntyp))
+           DO nt = 1, ntyp
+              hubbard_n3_(1:ntyp) = ip_hubbard_n3(1:ntyp) ! not passed to qexsd_init_dftU
+              hubbard_l3_(1:ntyp) = ip_hubbard_l3(1:ntyp)
+           END DO
         END IF 
      END IF 
      !
      CALL qexsd_init_dftU(dftU_, NSP = ntyp, PSD = upf(1:ntyp)%psd, SPECIES = atm(1:ntyp), ITYP = ip_ityp(1:ntyp), &
                            IS_HUBBARD = is_hubbard(1:ntyp), IS_HUBBARD_BACK= is_hubbard_back(1:ntyp),               &
                            NONCOLIN=ip_noncolin, LDA_PLUS_U_KIND = ip_lda_plus_u_kind, &
-                           U_PROJECTION_TYPE=u_projection_type, &
-                           U=hubbard_U_, U_back=hubbard_U_back_, HUBB_L_BACK = Hubbard_l_back_, &
-                           HUBB_L1_BACK= Hubbard_l1_back_, J0=hubbard_J0_, J = hubbard_J_, &
+                           U_PROJECTION_TYPE=ip_hubbard_projectors, &
+                           U=hubbard_U_, U2=hubbard_U2_, HUBB_L2 = hubbard_l2_, &
+                           HUBB_L3= hubbard_l3_, J0=hubbard_J0_, J = hubbard_J_, &
+                           n=hubbard_n_, l=hubbard_l_, &
                            ALPHA = hubbard_alpha_, BETA = hubbard_beta_, ALPHA_BACK = hubbard_alpha_back_, &
                            STARTING_NS = starting_ns_, BACKALL = backall_ )
   END IF
@@ -406,7 +424,7 @@
                 ip_occupations, tot_charge, ip_nspin, input_occupations=f_inp(:,1) )
      END SELECT    
   ELSE 
-     IF ( tot_magnetization .LT. 0 ) THEN 
+     IF ( tot_magnetization .LT. -9999.0 ) THEN 
         CALL qexsd_init_bands(obj%bands, nbnd_pt, smearing_loc, degauss/e2, ip_occupations, tot_charge, ip_nspin)
      ELSE
         CALL qexsd_init_bands(obj%bands, nbnd_pt, smearing_loc, degauss/e2, ip_occupations, tot_charge, ip_nspin, &
@@ -440,7 +458,8 @@
   END IF
   CALL qexsd_init_electron_control(obj%electron_control, diagonalization, mixing_mode, mixing_beta, conv_thr/e2,         &
                                    mixing_ndim, electron_maxstep, tqr, real_space, tq_smoothing, tbeta_smoothing, diago_thr_init, &
-                                   diago_full_acc, diago_cg_maxiter,  diago_ppcg_maxiter, diago_david_ndim )
+                                   diago_full_acc, diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim, &
+                                   diago_rmm_ndim, diago_rmm_conv, diago_gs_nblock)
   !--------------------------------------------------------------------------------------------------------------------------------
   !                                                   K POINTS IBZ ELEMENT
   !------------------------------------------------------------------------------------------------------------------------------ 
@@ -448,11 +467,11 @@
       gamma_xk(:,1)=[0._DP, 0._DP, 0._DP]
       gamma_wk(1)=1._DP
       CALL qexsd_init_k_points_ibz( obj%k_points_ibz, ip_k_points, calculation, nk1, nk2, nk3, k1, k2, k3, 1,         &
-                                    gamma_xk, gamma_wk ,alat,a1,ibrav_lattice) 
+                                    alat,a1,ibrav_lattice, gamma_xk, gamma_wk) 
 
   ELSE 
      CALL qexsd_init_k_points_ibz(obj%k_points_ibz, ip_k_points, calculation, nk1, nk2, nk3, k1, k2, k3, nkstot,      &
-                                   ip_xk, ip_wk,alat,a1, ibrav_lattice)
+                                   alat,a1, ibrav_lattice,ip_xk, ip_wk)
 
   END IF
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -463,8 +482,12 @@
                               ip_dt, bfgs_ndim, trust_radius_min, trust_radius_max, trust_radius_ini, w_1, w_2)
   !--------------------------------------------------------------------------------------------------------------------------------
   !                                                        CELL CONTROL ELEMENT
-  !-------------------------------------------------------------------------------------------------------------------------------
-  CALL qexsd_init_cell_control(obj%cell_control, cell_dynamics, press, wmass, cell_factor, cell_dofree, cb_iforceh)
+  !-----------------------------------------------------------------------------------------------------------------------------
+  IF (cell_factor > 0.d0 ) THEN
+    cell_factor_tg = cell_factor 
+    cell_factor_pt => cell_factor_tg  
+  END IF
+  CALL qexsd_init_cell_control(obj%cell_control, cell_dynamics, press, wmass, cell_factor_pt, cell_dofree, cb_iforceh)
   !---------------------------------------------------------------------------------------------------------------------------------
   !                                SYMMETRY FLAGS
   !------------------------------------------------------------------------------------------------------------------------ 
@@ -480,13 +503,17 @@
      obj%boundary_conditions_ispresent = .TRUE.
      IF ( TRIM ( assume_isolated) .EQ. "esm") THEN 
         SELECT CASE (TRIM(esm_bc)) 
-          CASE ('pbc', 'bc1' ) 
+          CASE ('pbc' )
              CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc,&
                                                  ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield)
-          CASE ('bc2', 'bc3' ) 
-            CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc, &
-                                                 FCP_OPT = ip_lfcpopt, FCP_MU = ip_fcp_mu, &
-                                                 ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield)
+          CASE ('bc1' )
+             CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc,&
+                                                 ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield, &
+                                                 FCP = ip_lfcp, FCP_MU = ip_fcp_mu)
+          CASE ('bc2', 'bc3', 'bc4' )
+             CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc, &
+                                                 ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield, &
+                                                 FCP = ip_lfcp, FCP_MU = ip_fcp_mu)
         END SELECT 
      ELSE 
         CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated) 

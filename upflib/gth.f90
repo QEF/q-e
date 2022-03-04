@@ -13,8 +13,8 @@ module m_gth
   implicit none
   !
   private
-  public :: gth_parameters, readgth, vloc_gth, dvloc_gth, setlocq_gth, &
-       mk_ffnl_gth, mk_dffnl_gth, deallocate_gth
+  public :: gth_parameters, readgth, vloc_gth, dvloc_gth, &
+       dvloc_gth_gpu, setlocq_gth, mk_ffnl_gth, mk_dffnl_gth, deallocate_gth
   !
   type gth_parameters
      integer  :: itype, lloc, lmax
@@ -266,6 +266,7 @@ contains
     dvq(:)=fact*dvq(:) 
     !
   end subroutine mk_dffnl_gth
+  !
 !-----------------------------------------------------------------------
 subroutine vloc_gth(itype, zion, tpiba2, ngl, gl, omega, vloc)
   !-----------------------------------------------------------------------
@@ -423,6 +424,103 @@ subroutine dvloc_gth(itype, zion, tpiba2, ngl, gl, omega, dvloc)
   dvloc (:) = dvloc(:) * fact
   !
 end subroutine dvloc_gth
+!
+!
+!-------------------------------------------------------------------------------
+SUBROUTINE dvloc_gth_gpu( itype, zion, tpiba2, ngl, gl_d, omega, dvloc_d )
+  !------------------------------------------------------------------------------
+  !! GPU version of 'dvloc_gth' from 'Modules/gth.f90'
+  !! dvloc = D Vloc (g^2) / D g^2 = (1/2g) * D Vloc(g) / D g
+  !
+  USE upf_kinds,    ONLY : DP
+  USE upf_const,    ONLY : pi, tpi, e2, eps8
+  !
+  IMPLICIT NONE
+  !
+  ! I/O
+  INTEGER, INTENT(IN) :: itype, ngl
+  REAL(DP), INTENT(IN) :: zion, tpiba2, omega
+  !
+  REAL(DP), INTENT(IN) :: gl_d(ngl)
+  REAL(DP), INTENT(OUT) :: dvloc_d(ngl)
+  !
+  ! Local variables
+  INTEGER :: ii, my_gth, igl, igl0
+  REAL(DP) :: cc1, cc2, cc3, cc4, rloc, gl1, &
+              gx, gx2, gx3, rl2, rl3, rq2, r2q, r4g3, r6g5, e_rq2h, fact
+  !
+#if defined(__CUDA)
+  attributes(DEVICE) ::  dvloc_d, gl_d
+#endif
+  !
+! IF ( do_comp_esm ) call upf_error('vloc_gth', 'ESM not implemented', itype)
+  !
+  ! Find gtp param. set for type itype
+  my_gth = 0
+  DO ii = 1, SIZE(gth_p)
+    IF (gth_p(ii)%itype==itype) THEN
+      my_gth = ii
+      EXIT
+    ENDIF
+  ENDDO
+  !
+  IF ( my_gth==0 ) CALL upf_error( 'dvloc_gth', 'cannot map itype in some gtp param. set', itype )
+  rloc = gth_p(my_gth)%rloc
+  cc1  = gth_p(my_gth)%cc(1)
+  cc2  = gth_p(my_gth)%cc(2)
+  cc3  = gth_p(my_gth)%cc(3)
+  cc4  = gth_p(my_gth)%cc(4)
+  !
+  ! Compute vloc(q)
+  gl1 = gl_d(1)
+  IF (gl1 < eps8) THEN
+     !
+     ! first the G=0 term
+     !
+     dvloc_d(1) = 0.0_DP
+     igl0 = 2
+  ELSE
+     igl0 = 1
+  ENDIF
+  !
+  !   here the G<>0 terms, we first compute the part of the integrand 
+  !   function independent of |G| in real space
+  !
+  fact = tpi * e2 / omega
+  !
+  !$cuf kernel do (1) <<<*,*>>>
+  DO igl = igl0, ngl
+     gx     = SQRT(gl_d(igl) * tpiba2)
+     gx2    = gx**2
+     gx3    = gx*gx2
+     rl2    = rloc**2
+     rl3    = rloc*rl2
+     rq2    = gx2*rl2
+     r2q    = gx*rl2
+     r4g3   = rl2*rl2*gx3
+     r6g5   = r4g3*rl2*gx2
+     e_rq2h = EXP(-0.5_DP*rq2)
+     dvloc_d(igl) = fact * &
+         e_rq2h*(zion*(rq2+2._DP)/gx3 + SQRT(pi/2._DP)*rl3* &
+           ( &
+             ( &
+               - 2._DP*r2q* (cc2+10._DP*cc3+105._DP*cc4) &
+               + 4._DP*r4g3*(cc3+21._DP*cc4) &
+               - 6._DP*r6g5* cc4 &
+             ) - r2q*( &
+               cc1 + &
+               cc2*(3._DP-rq2) + &
+               cc3*(15._DP-10._DP*rq2+rq2**2) + &
+               cc4*(105._DP-rq2*(105._DP-rq2*(21._DP-rq2))) &
+             ) &
+           ) &
+        )/gx 
+  ENDDO
+  !
+  !
+END SUBROUTINE dvloc_gth_gpu
+!
+!
 !-----------------------------------------------------------------------
 subroutine setlocq_gth(itype, xq, zion, tpiba2, ngm, g, omega, vloc)
 !----------------------------------------------------------------------

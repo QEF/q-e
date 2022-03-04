@@ -163,8 +163,7 @@ MODULE exx_base
     !
     USE symm_base,         ONLY : nsym, s
     USE cell_base,         ONLY : bg, at, tpiba
-    USE spin_orb,          ONLY : domag
-    USE noncollin_module,  ONLY : nspin_lsda
+    USE noncollin_module,  ONLY : nspin_lsda, domag
     USE klist,             ONLY : xk, wk, nkstot, nks, qnorm
     USE wvfct,             ONLY : nbnd
     USE start_k,           ONLY : nk1,nk2,nk3
@@ -494,7 +493,7 @@ MODULE exx_base
     !! EXX singularity treatment.
     !
     USE cell_base,  ONLY : at, alat
-    USE funct,      ONLY : get_screening_parameter
+    USE xc_lib,     ONLY : get_screening_parameter
     !
     IMPLICIT NONE
     !

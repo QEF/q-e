@@ -46,7 +46,7 @@ subroutine read_pseudo_ncpp (file_pseudo,zed,grid,ndmx,&
 
   character ::   &
        file_pseudo*20, &    ! input: the file with the pseudopotential
-       dft*20              ! output: the type of xc
+       dft*37               ! output: the type of xc
 
   integer :: &
        ios, i, l, k, ir, iunps, nbeta,nlc,nnl   
@@ -54,7 +54,6 @@ subroutine read_pseudo_ncpp (file_pseudo,zed,grid,ndmx,&
   real(DP) :: &
        vnloc, a_core, b_core, alfa_core, &
        cc(2),alpc(2),alc(6,0:3),alps(3,0:3)
-  real(DP), external :: qe_erf 
 
   logical :: &
        bhstype, numeric
@@ -154,8 +153,8 @@ subroutine read_pseudo_ncpp (file_pseudo,zed,grid,ndmx,&
      enddo
      do ir=1,mesh
         vpsloc(ir) = -2.0_dp*zval/grid%r(ir)* &
-                   ( cc(1)*qe_erf(grid%r(ir)*sqrt(alpc(1))) &
-                   + cc(2)*qe_erf(grid%r(ir)*sqrt(alpc(2))) )
+                   ( cc(1)*erf(grid%r(ir)*sqrt(alpc(1))) &
+                   + cc(2)*erf(grid%r(ir)*sqrt(alpc(2))) )
      end do
   endif
 

@@ -1,9 +1,8 @@
-set(sources
+set(src_modules
     additional_kpoints.f90 
     autopilot.f90 
     basic_algebra_routines.f90 
     becmod.f90 
-    beef_interface.f90 
     bfgs_module.f90 
     bspline.f90 
     bz_form.f90 
@@ -14,18 +13,10 @@ set(sources
     constants.f90 
     constraints_module.f90 
     control_flags.f90 
-    correlation_lda_lsda.f90 
-    correlation_gga.f90 
-    coulomb_vcut.f90 
-    dgcxc_drivers.f90 
+    coulomb_vcut.f90  
     dist.f90 
-    dmxc_drivers.f90 
-    dgcxc_drivers.f90 
     electrons_base.f90 
     environment.f90 
-    exchange_lda_lsda.f90 
-    exchange_gga.f90 
-    fcp_variables.f90 
     fd_gradient.f90 
     fft_base.f90 
     fft_rho.f90 
@@ -40,6 +31,7 @@ set(sources
     io_global.f90  
     ions_base.f90 
     kind.f90 
+    lmdif.f90
     mdiis.f90 
     mm_dispersion.f90 
     mp_bands.f90 
@@ -53,11 +45,9 @@ set(sources
     open_close_input_file.f90 
     parameters.f90 
     parser.f90 
-    paw_variables.f90 
     plugin_flags.f90 
     plugin_arguments.f90 
     plugin_variables.f90 
-    lmdif.f90  
     pw_dot.f90 
     qmmm.f90 
     random_numbers.f90 
@@ -69,23 +59,20 @@ set(sources
     recvec_subs.f90 
     run_info.f90 
     space_group.f90 
+    set_para_diag.f90 
     set_signal.f90 
     set_vdw_corr.f90 
     setqf.f90 
     timestep.f90
     tsvdw.f90
+    mbdlib.f90
     version.f90 
     wannier_gw.f90
     wannier_new.f90 
-    wave_base.f90 
     wavefunctions.f90 
-    wrappers.f90
     ws_base.f90 
     xc_vdW_DF.f90 
     xc_rVV10.f90 
-    xc_lda_lsda_drivers.f90 
-    xc_gga_drivers.f90 
-    xc_mgga_drivers.f90 
     io_base.f90 
     qes_types_module.f90 
     qes_libs_module.f90  
@@ -93,7 +80,6 @@ set(sources
     qes_read_module.f90 
     qes_reset_module.f90 
     qes_init_module.f90 
-    qes_read_module.f90 
     qes_bcast_module.f90 
     qexsd.f90   
     qexsd_copy.f90   
@@ -106,13 +92,11 @@ set(sources
     wyckoff.f90 
     wypos.f90 
     zvscal.f90 
-    # list of subroutines and functions (not modules) previously found in flib/
+    wave_gauge.f90
+    # subroutines and functions (not modules) previously found in flib
     atom_weight.f90 
     capital.f90 
-    correlation_gga.f90 
-    cryst_to_car.f90 
-    erf.f90 
-    exchange_gga.f90 
+    cryst_to_car.f90
     expint.f90 
     generate_k_along_lines.f90 
     more_functionals.f90 
@@ -121,43 +105,67 @@ set(sources
     int_to_char.f90 
     latgen.f90 
     linpack.f90 
-    metagga.f90 
     matches.f90 
     plot_io.f90 
     radial_gradients.f90 
     rgen.f90 
     recips.f90 
     remove_tot_torque.f90
-    set_hubbard_l.f90 
-    set_hubbard_n.f90 
     sort.f90 
-    sph_bes.f90 
-    sph_dbes.f90 
     trimcheck.f90 
     test_input_file.f90 
     date_and_tim.f90 
     volume.f90 
-    dylmr2.f90 
     wgauss.f90 
     w0gauss.f90
     w1gauss.f90
-    deviatoric.f90)
+    deviatoric.f90
+    # GPU
+    wavefunctions_gpu.f90
+    becmod_gpu.f90
+    becmod_subs_gpu.f90
+    random_numbers_gpu.f90
+    cuda_subroutines.f90)
+qe_enable_cuda_fortran("${src_modules}")
+qe_add_library(qe_modules ${src_modules})
 
-qe_add_library(qe_modules ${sources})
-add_library(QE::Modules ALIAS qe_modules)
+# subroutines and functions (not modules) previously found in clib
+set(src_modules_c
+    customize_signals.c
+    qmmm_aux.c
+    sockets.c
+    stack.c)
+qe_add_library(qe_modules_c ${src_modules_c})
+
+if(TARGET gitrev)
+   add_dependencies(qe_modules gitrev)
+   target_compile_definitions(qe_modules PRIVATE HAVE_GITREV)
+   target_include_directories(qe_modules PRIVATE ${qe_BINARY_DIR})
+endif()
+
 target_link_libraries(qe_modules
     PRIVATE
-        QE::HDF5_Fortran
-        QE::OpenMP_Fortran
-        QE::FFTX
-        QE::LAX
-        QE::UPF
-        QE::CLIB # this is needed only by wrappers.f90
-        QE::libbeef
-        QE::MPI_Fortran
-        QE::FOX
-        QE::UTILX)
+        qe_modules_c
+        qe_openmp_fortran
+        qe_fftx
+        qe_lax
+        qe_mpi_fortran
+        qe_mbd
+        qe_xclib
+        qe_devxlib
+    PUBLIC
+        qe_openacc_fortran
+        qe_hdf5_fortran
+        qe_upflib
+        qe_fox
+        qe_utilx
+        qe_openacc_fortran)
+if(QE_ENABLE_CUDA)
+    target_link_libraries(qe_modules
+        PRIVATE
+            CUDA::curand)
+endif()
 
 ###########################################################
 
-qe_install_targets(qe_modules)
+qe_install_targets(qe_modules qe_modules_c)

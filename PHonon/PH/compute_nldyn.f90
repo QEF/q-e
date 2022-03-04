@@ -9,45 +9,45 @@
 !-----------------------------------------------------------------------
 subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   !-----------------------------------------------------------------------
+  !! This routine computes the term of the dynamical matrix due to
+  !! the orthogonality constraint. Only the part which is due to
+  !! the nonlocal terms is computed here.
   !
-  !  This routine computes the term of the dynamical matrix due to
-  !  the orthogonality constraint. Only the part which is due to
-  !  the nonlocal terms is computed here
-  !
-  USE kinds,     ONLY : DP
-  USE klist,     ONLY : wk
-  USE lsda_mod,  ONLY : lsda, current_spin, isk, nspin
-  USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  USE noncollin_module, ONLY : noncolin, npol
-  USE uspp,      ONLY : nkb, qq_nt, qq_so
-  USE uspp_param,ONLY : nh, nhm
-  USE spin_orb,  ONLY : lspinorb
-  USE wvfct,     ONLY : nbnd, et
+  USE kinds,            ONLY : DP
+  USE klist,            ONLY : wk
+  USE lsda_mod,         ONLY : lsda, current_spin, isk, nspin
+  USE ions_base,        ONLY : nat, ityp, ntyp => nsp
+  USE noncollin_module, ONLY : noncolin, npol, lspinorb
+  USE uspp,             ONLY : nkb, qq_nt, qq_so
+  USE uspp_param,       ONLY : nh, nhm
+  USE wvfct,            ONLY : nbnd, et
 
-  USE modes,     ONLY : u
-  USE phus,      ONLY : alphap, int1, int2, &
-                        int2_so, int1_nc
-  USE control_ph, ONLY : rec_code_read
+  USE modes,            ONLY : u
+  USE phus,             ONLY : alphap, int1, int2, &
+                               int2_so, int1_nc
+  USE control_ph,       ONLY : rec_code_read
 
-  USE lrus,       ONLY : becp1
-  USE qpoint,     ONLY : nksq, ikks, ikqs
-  USE control_lr, ONLY : nbnd_occ
+  USE lrus,             ONLY : becp1
+  USE qpoint,           ONLY : nksq, ikks, ikqs
+  USE control_lr,       ONLY : nbnd_occ
 
-  USE mp_bands,  ONLY: intra_bgrp_comm
-  USE mp,        ONLY: mp_sum
-  USE becmod,    ONLY : bec_type
+  USE mp_bands,         ONLY : intra_bgrp_comm
+  USE mp,               ONLY : mp_sum
+  USE becmod,           ONLY : bec_type
 
   implicit none
 
-  type (bec_type) :: becq (nksq),   & ! input: the becp with psi_{k+q}
-                     alpq(3, nksq)
-  complex(DP) :: wdyn (3 * nat, 3 * nat)
-  ! input: the alphap with psi_{k}
-  ! output: the term of the dynamical matrix
-
-  real(DP) :: wgg (nbnd, nbnd, nksq)
-  ! input: the weights
-
+  type (bec_type) :: becq(nksq)
+  !! input: the becp with \(\text{psi}_{k+q}\)
+  type (bec_type) :: alpq(3,nksq)
+  !! input: the alphap with \(\text{psi}_{k}\)
+  complex(DP) :: wdyn(3*nat,3*nat)
+  !! output: the term of the dynamical matrix
+  real(DP) :: wgg(nbnd,nbnd,nksq)
+  !! input: the weights
+  
+  ! ... local variables
+  
   complex(DP) :: ps, aux1 (nbnd), aux2 (nbnd)
   complex(DP), allocatable ::  ps1 (:,:), ps2 (:,:,:), ps3 (:,:), ps4 (:,:,:)
   complex(DP), allocatable ::  ps1_nc(:,:,:), ps2_nc(:,:,:,:), &

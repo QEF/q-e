@@ -9,26 +9,27 @@
 !----------------------------------------------------------------------
 subroutine dvpsi_e (ik, ipol)
   !----------------------------------------------------------------------
+  !! On output: \(\text{dvpsi}\) contains \(P_c^+ x | \psi_{ik}\rangle\)
+  !! in crystal axis (projected on \(\text{at}(*,\text{ipol})\)).
   !
-  ! On output: dvpsi contains P_c^+ x | psi_ik > in crystal axis
-  !            (projected on at(*,ipol) )
-  !
-  ! dvpsi is READ from file if this_pcxpsi_is_on_file(ik,ipol)=.true.
-  ! otherwise dvpsi is COMPUTED and WRITTEN on file (vkb and evc must be set)
+  !! \(\text{dvpsi}\) is read from file if
+  !! \(\text{this_pcxpsi_is_on_file}(\text{ik},\text{ipol})=\text{TRUE}\),
+  !! otherwise \(\text{dvpsi}\) is COMPUTED and WRITTEN on file 
+  !! (\(\text{vkb}\) and \(\text{evc}\) must be set).
   !
   USE kinds,           ONLY : DP
-  USE cell_base,       ONLY : tpiba2
+  USE cell_base,       ONLY : tpiba2, at
   USE io_global,       ONLY : stdout
   USE klist,           ONLY : xk, ngk, igk_k
   USE gvect,           ONLY : g
-  USE wvfct,           ONLY : npwx, nbnd, g2kin, et
+  USE wvfct,           ONLY : npwx, nbnd, et
   USE wavefunctions, ONLY: evc
   USE buffers,         ONLY : save_buffer, get_buffer
   USE noncollin_module,ONLY : noncolin, npol
   USE becmod,          ONLY : bec_type, becp, calbec, &
                               allocate_bec_type, deallocate_bec_type
   USE mp_bands,        ONLY : use_bgrp_in_hpsi, inter_bgrp_comm
-  USE funct,           ONLY : exx_is_active
+  USE xc_lib,          ONLY : exx_is_active
   USE uspp,            ONLY : okvan, nkb, vkb
   USE uspp_param,      ONLY : nh, nhm
   USE ramanm,          ONLY : eth_rps
@@ -44,7 +45,7 @@ subroutine dvpsi_e (ik, ipol)
   !
   integer, intent(IN) :: ipol, ik
   !
-  ! Local variables
+  ! ... Local variables
   !
   integer :: npw
   integer :: ig, na, ibnd, jbnd, ikb, jkb, nt, lter, ih, jh, ijkb0,  &
@@ -79,7 +80,7 @@ subroutine dvpsi_e (ik, ipol)
 
   ! calculate the commutator [H,x_ipol]  psi > and store it in dpsi
 
-  call commutator_Hx_psi (ikk, nbnd_occ(ikk), becp1(ik), becp2, ipol, dpsi )
+  call commutator_Hx_psi (ikk, nbnd_occ(ikk), at(:, ipol), becp1(ik), becp2, dpsi(:, 1:nbnd_occ(ikk)) )
   !
   !    orthogonalize dpsi to the valence subspace: ps = <evc|dpsi>
   !    Apply -P^+_c

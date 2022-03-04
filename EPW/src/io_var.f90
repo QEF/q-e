@@ -20,26 +20,27 @@
   PRIVATE
   SAVE
   !
-  PUBLIC :: lambda_phself, linewidth_phself, linewidth_elself, iospectral, &
-            iua2ffil, iudosfil, iufillambda, iuqdos, iufe, iufilker, &
-            iufilgap, iospectral_sup, iua2ftrfil, iufilgapFS, iufillambdaFS, &
+  PUBLIC :: lambda_phself, linewidth_phself, linewidth_elself, iospectral,    &
+            iua2ffil, iudosfil, iufillambda, iuqdos, iufe, iufilker, iuquad,  &
+            iufilgap, iospectral_sup, iua2ftrfil, iufilgapFS, iufillambdaFS,  &
             iospectral_cum, iuwanep, iuwane, iunukk, iudvscf, iuqpeig, iures, &
             iuint3paw
-  PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb,&
+  PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb, &
             iufilfreq, iufilegnv, iufileph, iufilkqmap, iunpattern, iufilmu_q, &
-            iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, &
-            iufileig, iukmap, crystal, iunifc, iunimem, iunepmatwp2, iufilFS
+            iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, iufilFS,  &
+            iufileig, iukmap, crystal, iunifc, iunimem, iunepmatwp2
   PUBLIC :: iuwinfil, iun_plot, iuprojfil, iudecayH, iudecayP, &
             iudecaydyn, iudecayv, iunnkp, iuamn, iummn, iubvec
-  PUBLIC :: iufilsigma, iufilseebeck, iufilkappael, iufilkappa, iufilscatt_rate,&
+  PUBLIC :: iufilsigma, iufilseebeck, iufilkappael, iufilkappa, iufilscatt_rate,   &
             iufilFi_all, iufilsigma_all, iufiltau_all, iuindabs, iuntau, iuntaucb, &
-            iufilesigma_all, epwbib
+            iufilesigma_all, epwbib, iuindabs_all, iudirabs
   PUBLIC :: iunsparseq, iunsparsek, iunsparsei, iunsparsej, iunsparset, iunselecq, &
-            iunsparseqcb, iunsparsekcb, iunsparseicb, iunsparsejcb, iunsparsetcb, &
-            iunrestart, iufilibtev_sup, iunepmat, iunepmatcb, iufilF, iufilmu_nk, iunepmat_merge,&
+            iunsparseqcb, iunsparsekcb, iunsparseicb, iunsparsejcb, iunsparsetcb,  &
+            iunrestart, iufilibtev_sup, iunepmat, iunepmatcb, iufilF, iufilmu_nk,  &
             iunsparseq_merge, iunsparsek_merge, iunsparsei_merge,iunsparsej_merge, &
-            iunsparset_merge, iunepmatcb_merge, iunsparseqcb_merge, iunsparsekcb_merge,&
-            iunsparseicb_merge, iunsparsejcb_merge, iunsparsetcb_merge
+            iunsparset_merge, iunepmatcb_merge, iunsparseqcb_merge,                &
+            iunsparseicb_merge, iunsparsejcb_merge, iunsparsetcb_merge,            &
+            iunsparsekcb_merge, iunepmat_merge
 
   !
   ! Output of physically relevant quantities (60-100)
@@ -67,9 +68,8 @@
   INTEGER :: iufillambdaFS   = 74  ! Electron-phonon coupling strength on FS with k-points
   INTEGER :: iospectral_cum  = 75  ! Electronic spectral function with the cumulant method
                                    ! [specfun_cum##.elself]
-!DBSP : iukgmap was 96. Should be the same as set_kplusq.f90.
   INTEGER :: iunukk          = 77  ! Unit with rotation matrix U(k) from wannier code
-  INTEGER :: iures           = 78  ! Resistivity in metals using Ziman formula [.res]
+  INTEGER :: iuquad          = 78  ! Unit to read the quadrupole tensor from file
   INTEGER :: iudvscf         = 80  ! Unit for the dvscf_q file
   INTEGER :: iudyn           = 81  ! Unit for the dynamical matrix file
   INTEGER :: iufilkqmap      = 82  ! Map of k+q
@@ -159,12 +159,15 @@
   INTEGER :: iufilesigma_all = 260 ! Sigmar_all and Sigmai_all file to retart spectral calculation
   INTEGER :: iufilmu_nk      = 261 ! $\mu_{nk}^{\alpha\beta}$ in mobility_nk.fmt file
   INTEGER :: iufilmu_q       = 262 ! $\mu_{\nu q}^{\alpha\beta}$ in mobility_nuq.fmt mode
+  INTEGER :: iures           = 263 ! Resistivity in metals using Ziman formula [.res]
   !
   ! Output quantities related to Indirect absorption (301-325)
   INTEGER :: iuindabs        = 301 ! Indirect absorption data
+  INTEGER :: iuindabs_all    = 302 ! Indirect absorption read/write
+  INTEGER :: iudirabs        = 303 ! Direct absorption data
   ! 
   ! Miscellaneous (326-350)
-  INTEGER :: epwbib          = 326 ! EPW bibliographic file.       
+  INTEGER :: epwbib          = 326 ! EPW bibliographic file.
   !
   ! Merging of files (400-450)
   INTEGER :: iunepmat_merge    = 400

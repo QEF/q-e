@@ -10,16 +10,17 @@
 SUBROUTINE d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
      at,bg,g,gg,ngm,nmodes,u,has_equivalent,dyn)
   !-----------------------------------------------------------------------
-  !
-  !      calculate the ionic contribution to the dynamical matrix
-  !      (both real- and reciprocal-space contributions are present)
+  !! Calculate the ionic contribution to the dynamical matrix
+  !! (both real- and reciprocal-space contributions are present).
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : tpi, fpi, e2
   USE io_global,  ONLY : stdout
   USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
+  !
   IMPLICIT NONE
+  !
   INTEGER :: nat, ntyp, ngm, ityp(nat), nmodes, has_equivalent(nat)
   real(DP)::  tau(3,nat), g(3,ngm), gg(ngm), zv(ntyp), &
        u(3*nat,nmodes), dyn(3*nat,nmodes), at(3,3), bg(3,3), omega, alat
@@ -28,7 +29,6 @@ SUBROUTINE d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   PARAMETER(mxr=50)
   real(DP) :: facg(nat), arg, tpiba2, alpha,  r(3,mxr), r2(mxr), dtau(3), &
               rmax, rr, upperbound, charge, gt2, fac, fnat, df, d2f, ar
-  real(DP), EXTERNAL:: qe_erfc
   !
   !
   tpiba2 = (tpi/alat)**2
@@ -55,7 +55,7 @@ SUBROUTINE d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
      ! upperbound is a safe upper bound for the error ON THE ENERGY
      !
      upperbound=e2*charge**2*sqrt(2.0d0*alpha/tpi)*             &
-          &              qe_erfc(sqrt(tpiba2*gg(ng)/4.d0/alpha))
+          &              erfc(sqrt(tpiba2*gg(ng)/4.d0/alpha))
      IF(upperbound<1.0d-6) GOTO 20
      !
      gt2 = gg(ng)*tpiba2
@@ -130,9 +130,9 @@ SUBROUTINE d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
            DO nr=1, nrm
               rr=sqrt(r2(nr))*alat
               ar = sqrt(alpha)*rr
-              d2f = ( 3.d0*qe_erfc(ar) + sqrt(8.d0/tpi)*ar*              &
+              d2f = ( 3.d0*erfc(ar) + sqrt(8.d0/tpi)*ar*              &
                      (3.d0+2.d0*ar**2)*exp(-ar**2) ) / rr**5
-              df  = (    -qe_erfc(ar) - sqrt(8.d0/tpi)*ar*exp(-ar**2) ) / rr**3
+              df  = (    -erfc(ar) - sqrt(8.d0/tpi)*ar*exp(-ar**2) ) / rr**3
               DO nu_i = 1,nmodes
                  IF (has_equivalent( (nu_i-1)/3+1 )==1 ) GOTO 25
                  arg = r(1,nr)*u(mu_i+1,nu_i) + &

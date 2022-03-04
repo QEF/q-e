@@ -126,6 +126,9 @@ Selects what to save in filplot:
         For PAW calculations only; requires a very dense real-space grid.
 
    22 = kinetic energy density (for meta-GGA and XDM only)
+
+  123 = DORI: density overlap regions indicator
+        ("doi: 10.1021/ct500490b") Implemented by D. Yang &amp; Q.Liu
          </pre></blockquote>
 </ul>      
       
