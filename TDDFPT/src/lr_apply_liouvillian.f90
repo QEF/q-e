@@ -64,6 +64,11 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE dv_of_drho_lr
   USE xc_lib,               ONLY : start_exx, stop_exx
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,         ONLY : use_environ
+  USE environ_td_module,    ONLY : calc_environ_dpotential
+#endif
+  !
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(IN)  :: evc1(npwx*npol,nbnd,nks)
@@ -159,7 +164,9 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
            !
            DEALLOCATE(dvrs_temp)
            !
-           CALL plugin_tddfpt_potential(rho_1,dvrs)
+#if defined (__ENVIRON)
+           IF (use_environ) CALL calc_environ_dpotential(rho_1, dvrs)
+#endif
            !
         ELSE
            !

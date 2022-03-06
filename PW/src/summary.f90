@@ -56,6 +56,11 @@ SUBROUTINE summary()
   USE london_module,   ONLY : print_london
   USE dftd3_qe,        ONLY : dftd3_printout, dftd3, dftd3_in
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,        ONLY : use_environ
+  USE environ_base_module, ONLY : print_environ_summary
+#endif
+  !
   IMPLICIT NONE
   !
   ! ... declaration of the local variables
@@ -153,8 +158,10 @@ SUBROUTINE summary()
           &  'width of the smooth step-function  =',F21.4,' Ry',/ )
      !
   END IF
-  !
-  CALL plugin_summary()
+  !  
+#if defined (__ENVIRON)
+  IF (use_environ) CALL print_environ_summary()
+#endif
   !
   ! ... CUDA
   !

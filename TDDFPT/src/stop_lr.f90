@@ -29,6 +29,11 @@ SUBROUTINE stop_lr( full_run  )
   USE klist,                ONLY : nelec
   USE buffers,              ONLY : close_buffer
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,        ONLY : use_environ
+  USE environ_base_module, ONLY : clean_environ
+#endif
+  !
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN) :: full_run
@@ -157,7 +162,9 @@ SUBROUTINE stop_lr( full_run  )
   !
   CALL lr_dealloc()
   !
-  CALL plugin_clean( 'TD', .TRUE. )
+#if defined (__ENVIRON)
+  IF (use_environ) CALL clean_environ('TD', .TRUE.)
+#endif
   !
   IF (eels) THEN
      CALL environment_end(code2)

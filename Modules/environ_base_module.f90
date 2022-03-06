@@ -111,11 +111,11 @@ CONTAINS
         nr(2) = dfftp%nr2
         nr(3) = dfftp%nr3
         !
-        CALL environ%setup%init_cell(gcutm, intra_bgrp_comm, at, nr)
+        CALL environ%setup%init_cell(intra_bgrp_comm, at, gcutm=gcutm, nr=nr)
         !
-        CALL environ%setup%init_cores(gcutm)
+        CALL environ%setup%init_cores()
         !
-        CALL environ%main%init(1, nat, nsp, atm, ityp, zv)
+        CALL environ%main%init(nat, nsp, atm, ityp, zv)
         !
         !--------------------------------------------------------------------------------
     END SUBROUTINE init_environ_base

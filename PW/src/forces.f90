@@ -62,6 +62,11 @@ SUBROUTINE forces()
   USE device_memcpy_m,     ONLY : dev_memcpy
 #endif
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,        ONLY : use_environ
+  USE environ_base_module, ONLY : calc_environ_force
+#endif
+  !
   IMPLICIT NONE
   !
   REAL(DP), ALLOCATABLE :: forcenl(:,:),         &
@@ -231,7 +236,9 @@ SUBROUTINE forces()
   !
   ! ... call void routine for user define/ plugin patches on internal forces
   !
-  CALL plugin_int_forces()
+#if defined (__ENVIRON)
+  IF (use_environ) CALL calc_environ_force(force)
+#endif
   !
   ! ... Berry's phase electric field terms
   !

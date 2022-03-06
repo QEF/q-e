@@ -67,6 +67,7 @@ dynamics_module.o \
 efermig.o \
 efermit.o \
 electrons.o \
+environ_pw_module.o \
 eqvect.o \
 esm.o \
 esm_common_mod.o \

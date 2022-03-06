@@ -28,6 +28,7 @@ electrons.o \
 electrons_nose.o \
 energies.o \
 ensemble_dft.o \
+environ_cp_module.o \
 exch_corr.o \
 exx_cg.o \
 exx_es.o \

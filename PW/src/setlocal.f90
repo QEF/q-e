@@ -36,6 +36,11 @@ SUBROUTINE setlocal
   USE qmmm,              ONLY : qmmm_add_esf
   USE Coul_cut_2D,       ONLY : do_cutoff_2D, cutoff_local 
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,      ONLY : use_environ
+  USE environ_pw_module, ONLY : update_environ_potential
+#endif
+  !
   IMPLICIT NONE
   !
   COMPLEX(DP), ALLOCATABLE :: aux(:), v_corr(:)
@@ -114,7 +119,9 @@ SUBROUTINE setlocal
   !
   ! ... Save vltot for possible modifications in plugins
   !
-  CALL plugin_init_potential( vltot )
+#if defined (__ENVIRON)
+  IF (use_environ) CALL update_environ_potential(vltot)
+#endif
   !
   DEALLOCATE( aux )
   !

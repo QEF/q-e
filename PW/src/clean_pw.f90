@@ -71,6 +71,11 @@ SUBROUTINE clean_pw( lflag )
   USE wvfct_gpum,           ONLY : deallocate_wvfct_gpu
   USE scf_gpum,             ONLY : deallocate_scf_gpu
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,         ONLY : use_environ
+  USE environ_base_module,  ONLY : clean_environ
+#endif
+  !
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN) :: lflag
@@ -209,7 +214,9 @@ SUBROUTINE clean_pw( lflag )
   IF (ts_vdw .or. mbd_vdw) CALL tsvdw_finalize()
   IF (mbd_vdw) CALL clean_mbd()
   !
-  CALL plugin_clean( 'PW', lflag )
+#if defined (__ENVIRON)
+  IF (use_environ) CALL clean_environ('PW', lflag)
+#endif
   !
   RETURN
   !

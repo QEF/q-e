@@ -437,6 +437,12 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE device_fbuff_m,       ONLY : dev_buf, pin_buf
   USE pwcom,                ONLY : report_mag 
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,         ONLY : use_environ
+  USE environ_base_module,  ONLY : calc_environ_energy, print_environ_energies
+  USE environ_pw_module,    ONLY : calc_environ_potential
+#endif
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT (IN) :: printout
@@ -879,9 +885,12 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      plugin_etot = 0.0_dp
      !
-     CALL plugin_scf_energy(plugin_etot,rhoin)
-     !
-     CALL plugin_scf_potential(rhoin,conv_elec,dr2,vltot)
+#if defined (__ENVIRON)
+     IF (use_environ) THEN
+        CALL calc_environ_energy(plugin_etot, .TRUE.)
+        CALL calc_environ_potential(rhoin, conv_elec, dr2, vltot)
+     END IF
+#endif
      !
      ! ... define the total local potential (external + scf)
      !
@@ -1542,7 +1551,9 @@ SUBROUTINE electrons_scf ( printout, exxen )
           !
        ENDIF
        !
-       CALL plugin_print_energies()
+#if defined (__ENVIRON)
+       IF (use_environ) CALL print_environ_energies('PW')
+#endif
        !
        IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
        !
