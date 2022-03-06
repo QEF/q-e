@@ -1471,7 +1471,7 @@ SUBROUTINE iosys()
 #if defined (__ENVIRON)
   IF (use_environ) THEN
      CALL read_environ_input()
-     CALL init_environ_setup('PW', do_comp_mt)
+     CALL init_environ_setup('PW')
   END IF
 #endif
   !

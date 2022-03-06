@@ -69,19 +69,18 @@ CONTAINS
     !>
     !!
     !------------------------------------------------------------------------------------
-    SUBROUTINE init_environ_setup(prog, do_comp_mt)
+    SUBROUTINE init_environ_setup(prog)
         !--------------------------------------------------------------------------------
         !
         IMPLICIT NONE
         !
         CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: prog
-        LOGICAL, OPTIONAL, INTENT(IN) :: do_comp_mt
         !
         CHARACTER(LEN=80) :: sub_name = 'init_environ_setup'
         !
         !--------------------------------------------------------------------------------
         !
-        CALL environ%setup%init(do_comp_mt)
+        CALL environ%setup%init()
         !
         IF (PRESENT(prog)) THEN
             IF (prog == 'TD') CALL environ%setup%set_tddfpt(.TRUE.)
@@ -93,13 +92,14 @@ CONTAINS
     !>
     !!
     !------------------------------------------------------------------------------------
-    SUBROUTINE init_environ_base(at, gcutm)
+    SUBROUTINE init_environ_base(at, gcutm, do_comp_mt)
         !--------------------------------------------------------------------------------
         !
         IMPLICIT NONE
         !
         REAL(DP), INTENT(IN) :: at(3, 3)
         REAL(DP), INTENT(IN) :: gcutm
+        LOGICAL, OPTIONAL, INTENT(IN) :: do_comp_mt
         !
         INTEGER :: nr(3)
         !
@@ -113,7 +113,7 @@ CONTAINS
         !
         CALL environ%setup%init_cell(intra_bgrp_comm, at, gcutm=gcutm, nr=nr)
         !
-        CALL environ%setup%init_cores()
+        CALL environ%setup%init_numerical(do_comp_mt)
         !
         CALL environ%main%init(nat, nsp, atm, ityp, zv)
         !
@@ -131,9 +131,17 @@ CONTAINS
         CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: prog
         LOGICAL, OPTIONAL, INTENT(IN) :: lflag
         !
+        LOGICAL :: local_flag
+        !
         CHARACTER(LEN=80) :: sub_name = 'clean_environ'
         !
         !--------------------------------------------------------------------------------
+        !
+        IF (PRESENT(lflag)) THEN
+            local_flag = lflag
+        ELSE
+            local_flag = .FALSE.
+        END IF
         !
         IF (PRESENT(prog)) THEN
             !
@@ -148,7 +156,11 @@ CONTAINS
                 ! during the PW run and not the ones initialized while processing the
                 ! input. This allows NEB simulations
                 !
-                IF (.NOT. environ%setup%is_tddfpt()) CALL environ%destroy()
+                IF (local_flag) THEN
+                    CALL environ%destroy(1) ! NEB image reading phase
+                ELSE IF (.NOT. environ%setup%is_tddfpt()) THEN
+                    CALL environ%destroy(2)
+                END IF
                 !
             CASE ('TD')
                 !
@@ -157,16 +169,10 @@ CONTAINS
                 ! to clean the PW variables or the TD variables. In both cases, the
                 ! variables are fully cleaned (no NEB with TD)
                 !
-                IF (PRESENT(lflag)) THEN
-                    !
-                    IF (.NOT. lflag) THEN
-                        CALL environ%destroy(1)
-                    ELSE
-                        CALL environ%destroy(2)
-                    END IF
-                    !
+                IF (.NOT. local_flag) THEN
+                    CALL environ%destroy(3)
                 ELSE
-                    CALL errore(sub_name, "Missing TDDFPT clean flag", 1)
+                    CALL environ%destroy(4)
                 END IF
                 !
             CASE DEFAULT

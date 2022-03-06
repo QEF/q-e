@@ -33,6 +33,7 @@ SUBROUTINE init_run()
   USE recvec_subs,        ONLY : ggen, ggens
   USE wannier_new,        ONLY : use_wannier    
   USE dfunct,             ONLY : newd
+  USE martyna_tuckerman,  ONLY : do_comp_mt
   USE esm,                ONLY : do_comp_esm, esm_init
   USE tsvdw_module,       ONLY : tsvdw_initialize
   USE libmbd_interface,   ONLY : init_mbd
@@ -125,7 +126,7 @@ SUBROUTINE init_run()
   IF (alat < 1.D-8) CALL errore('init_run', "Wrong alat", 1)
   at_scaled = at * alat
   gcutm_scaled = gcutm / alat**2
-  IF (use_environ) call init_environ_base(at_scaled, gcutm_scaled)
+  IF (use_environ) call init_environ_base(at_scaled, gcutm_scaled, do_comp_mt)
 #endif
   !
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ), btype( nbnd, nkstot ) )

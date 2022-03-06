@@ -461,8 +461,8 @@ SUBROUTINE lr_readin
      ALLOCATE (tau_scaled(3, nat))
      tau_scaled = tau * alat
      CALL read_environ_input()
-     CALL init_environ_setup('TD', do_comp_mt)
-     CALL init_environ_base(at_scaled, gcutm_scaled)
+     CALL init_environ_setup('TD')
+     CALL init_environ_base(at_scaled, gcutm_scaled, do_comp_mt)
      CALL update_environ_ions(tau_scaled)
      DEALLOCATE (tau_scaled)
      CALL update_environ_cell(at_scaled)
