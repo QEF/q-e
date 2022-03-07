@@ -70,8 +70,8 @@ CUDA_PATH := $(if $(GPU_ARCH),$(CUDA_PATH),no)
 libcuda_devxlib :
 	$(call update_submodule,external,devxlib)
 	cd $(TOPDIR)/external/devxlib/src; \
-   	ln -fs $(TOPDIR)/make.inc; \
-    	$(MAKE) all; \
+	ln -fs $(TOPDIR)/make.inc ../; \
+	$(MAKE) all; \
 	touch $(TOPDIR)/install/libcuda_devxlib # do not download and configure again
 
 libcuda_devxlib_clean:
