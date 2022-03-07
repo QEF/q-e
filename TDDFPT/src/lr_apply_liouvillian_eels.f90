@@ -137,8 +137,10 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      ! The vkb's are needed for the non-local potential in h_psi,
      ! and for the ultrasoft term.
      !
-     CALL init_us_2 (npwq, igk_k(1,ikq), xk(1,ikq), vkb)
+     CALL init_us_2 (npwq, igk_k(1,ikq), xk(1,ikq), vkb, .true.)
      !
+     !$acc update host(vkb)
+     ! 
      ! Read unperturbed wavefuctions evc (wfct at k) 
      ! and evq (wfct at k+q)
      !
@@ -192,8 +194,9 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      ! Apply the operator ( H - \epsilon S + alpha_pv P_v) to evc1
      ! where alpha_pv = 0
      !
+     !$acc enter data copyin(evq)
      CALL ch_psi_all (npwq, evc1(:,:,ik), sevc1_new(:,:,ik), et(:,ikk), ik, nbnd_occ(ikk)) 
-     !
+     !$acc exit data delete(evq)
      IF (noncolin) THEN
         IF (ALLOCATED(psic_nc)) DEALLOCATE(psic_nc)
      !ELSE

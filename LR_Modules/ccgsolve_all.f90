@@ -56,6 +56,7 @@ subroutine ccgsolve_all (ch_psi, ccg_psi, e, d0psi, dpsi, h_diag, &
   USE mp,             ONLY : mp_sum, mp_barrier
   USE control_flags,  ONLY : gamma_only
   USE gvect,          ONLY : gstart
+  USE eqv,            ONLY : evq
 
   implicit none
   !
@@ -153,6 +154,7 @@ subroutine ccgsolve_all (ch_psi, ccg_psi, e, d0psi, dpsi, h_diag, &
   enddo
 
   eu = e
+  !$acc enter data copyin(evq)
   do iter = 1, maxter
      !
      !    compute the gradient. can reuse information from previous step
@@ -322,6 +324,7 @@ subroutine ccgsolve_all (ch_psi, ccg_psi, e, d0psi, dpsi, h_diag, &
   enddo
 
 100 continue
+  !$acc exit data delete(evq)
   ! deallocate workspace not needed anymore
   deallocate (eu) ; deallocate (rho, rhoold) ; deallocate (a,c) ; deallocate (g, t, h, hold)
   deallocate (euc)

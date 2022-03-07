@@ -166,8 +166,8 @@ SUBROUTINE one_sternheimer_step(iu, flag)
     CALL apply_dpot_allocate()
     IF (okpaw) mixin=(0.0_DP,0.0_DP)
     !
-
-dvpsi =(0.0d0, 0.0d0)
+    !$acc enter data create(aux2, dvscfins)
+    dvpsi =(0.0d0, 0.0d0)
 
 !    IF (rec_code_read == -20.AND.ext_recover) then
 !       ! restarting in Electric field calculation
@@ -237,8 +237,9 @@ dvpsi =(0.0d0, 0.0d0)
           ! The vkb's are needed for the non-local potential in h_psi,
           ! and for the ultrasoft term.
           !
-          CALL init_us_2 (npwq, igk_k(1,ikq), xk(1,ikq), vkb)
+          CALL init_us_2 (npwq, igk_k(1,ikq), xk(1,ikq), vkb, .true.)
           !
+          !$acc update host(vkb)
           ! Read unperturbed wavefuctions evc (wfct at k) 
           ! and evq (wfct at k+q)
           !
@@ -334,9 +335,9 @@ dvpsi =(0.0d0, 0.0d0)
                 ! calculates dvscf_q*psi_k in G_space, for all bands, k=kpoint
                 ! dvscf_q from previous iteration (mix_potential)
                 !
-!$acc data copyin(dvscfins) copy(aux2)
+!!!!!$acc data copyin(dvscfins) copy(aux2)
                 CALL apply_dpot_bands(ik, nbnd_occ(ikk), dvscfins(:, :, ipol), evc, aux2)
-!$acc end data
+!!!!!!$acc end data
                 !
                 dvpsi=dvpsi+aux2
                 !
@@ -673,6 +674,7 @@ dvpsi =(0.0d0, 0.0d0)
        DEALLOCATE(mixout)
     ENDIF
     deallocate (drhoscfout)
+    !$acc exit data delete(aux2, dvscfins)
     if (doublegrid) deallocate (dvscfins)
     deallocate (dvscfin)
     if (noncolin) deallocate(dbecsum_nc)
@@ -681,6 +683,7 @@ dvpsi =(0.0d0, 0.0d0)
 !    CLOSE( unit = iund0psi)
 !    CLOSE( unit = iudwf)
 !    CLOSE( unit = iu1dwf)
+
 
     alpha_pv=alpha_pv0
     !

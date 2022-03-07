@@ -71,8 +71,6 @@ SUBROUTINE ch_psi_all_complex (n, h, ah, e, ik, m)
   ALLOCATE (ps  ( nbnd , m))
   ALLOCATE (hpsi( npwx*npol , m))
   ALLOCATE (spsi( npwx*npol , m))
-  hpsi (:,:) = (0.d0, 0.d0)
-  spsi (:,:) = (0.d0, 0.d0)
   !
   current_k = ikqs(ik) ! k+q
   !
@@ -96,10 +94,11 @@ SUBROUTINE ch_psi_all_complex (n, h, ah, e, ik, m)
   ! on the h vector (i.e. H*h and S*h, respectively).
   !
   !$acc enter data create(hpsi(1:npwx*npol, 1:m), spsi(1:npwx*npol, 1:m), ps(1:nbnd, 1:m))
+  !$acc kernels present(hpsi,spsi)
+  hpsi (:,:) = (0.d0, 0.d0)
+  spsi (:,:) = (0.d0, 0.d0)
+  !$acc end kernels
 #if defined(__CUDA)
-  CALL start_clock_gpu('equalch')
-  !$acc update device(vkb)
-  CALL stop_clock_gpu('equalch')
   !$acc data copyin(h) present(hpsi, spsi)
   !$acc host_data use_device(h, hpsi, spsi)
   CALL h_psi_gpu (npwx, n, m, h, hpsi)
@@ -135,7 +134,7 @@ SUBROUTINE ch_psi_all_complex (n, h, ah, e, ik, m)
   ENDDO
   IF (noncolin) THEN
      CALL start_clock ('Hesh:noncolin')
-     !$acc parallel loop collapse(2) present(hpsi, spsi, ah, e)     
+     !$acc parallel loop collapse(2) present(hpsi, spsi, ah, e)
      DO ibnd = 1, m
         DO ig = 1, n
            ah(ig+npwx, ibnd) = hpsi(ig+npwx, ibnd) - e(ibnd) * spsi(ig+npwx, ibnd)
@@ -186,18 +185,18 @@ CONTAINS
 
     k = nbnd_occ (ikqs(ik))
     CALL start_clock_gpu ('ch_psi_all_k_complex')
-    !$acc data copyin(evq) present(ps, hpsi, spsi)
+    !$acc data present(evq, ps, hpsi, spsi)
     !
     !   Here we compute the projector in the valence band
     !
-    !$acc kernels present(ps)    
+    !$acc kernels present(ps)
     ps (:,:) = (0.d0, 0.d0)
-    !$acc end kernels    
+    !$acc end kernels
     !
     ! ikqs(ik) is the index of the point k+q if q\=0
     !          is the index of the point k   if q=0
     !
-    !$acc host_data use_device(spsi, ps, evq)    
+    !$acc host_data use_device(spsi, ps, evq)
     IF (noncolin) THEN
        CALL zgemm ('C', 'N', k, m, npwx*npol, (1.d0, 0.d0) , evq, &
             npwx*npol, spsi, npwx*npol, (0.d0, 0.d0) , ps, nbnd)
@@ -206,7 +205,7 @@ CONTAINS
             npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
     ENDIF
     !$acc end host_data
-    !$acc kernels present(ps,hpsi)
+    !$acc kernels present(ps,hpsi) 
     ps (:,:) = ps(:,:) * alpha_pv
     hpsi (:,:) = (0.d0, 0.d0)
     !$acc end kernels
@@ -267,15 +266,15 @@ CONTAINS
           ah (ig, ibnd) = ah (ig, ibnd) + spsi (ig, ibnd)
        ENDDO
     ENDDO
-    !$acc end parallel loop     
+    !$acc end parallel loop 
     IF (noncolin) THEN
-       !$acc parallel loop collapse(2) present(ah, spsi)            
+       !$acc parallel loop collapse(2) present(ah, spsi)
        DO ibnd = 1, m
           DO ig = 1, n
              ah (ig+npwx, ibnd) = ah (ig+npwx, ibnd) + spsi (ig+npwx, ibnd)
           ENDDO
        ENDDO
-       !$acc end parallel loop       
+       !$acc end parallel loop
     END IF
     CALL stop_clock_gpu ('ch_psi_all_k_complex')
     return
