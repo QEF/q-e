@@ -69,18 +69,10 @@ libcuda : $(addprefix libcuda_,$(CUDA_EXTLIBS))
 CUDA_PATH := $(if $(GPU_ARCH),$(CUDA_PATH),no)
 libcuda_devxlib :
 	$(call update_submodule,external,devxlib)
-	cd ../external/devxlib; \
-    touch make.inc; \
-    $(MAKE) clean; \
-    export F90FLAGS="$(FOX_FLAGS)"; \
-    ./configure FC=$(F90) F90=$(F90) CC=$(CC) \
-                --with-cuda=$(CUDA_PATH) \
-                --with-cuda-cc=$(GPU_ARCH) \
-                --with-cuda-runtime=$(CUDA_RUNTIME) \
-                --disable-parallel \
-                --enable-cuda-env-check=no; \
-    make all
-	touch ../install/libcuda_devxlib # do not download and configure again
+	cd $(TOPDIR)/external/devxlib/src; \
+   	ln -fs $(TOPDIR)/make.inc; \
+    	$(MAKE) all; \
+	touch $(TOPDIR)/install/libcuda_devxlib # do not download and configure again
 
 libcuda_devxlib_clean:
 	if test -f libcuda_devxlib; then rm libcuda_devxlib; fi
