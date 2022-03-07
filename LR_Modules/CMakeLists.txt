@@ -71,7 +71,8 @@ target_link_libraries(qe_lr_modules
         qe_pw
         qe_upflib
         qe_fftx
-        qe_xclib)
+        qe_xclib
+	qe_device_lapack)
 
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_modules
