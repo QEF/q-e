@@ -142,7 +142,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   IF (ionode) THEN
      CLOSE(iunout)
   ENDIF
-
+  call deallocate_bec_type(becp)
   DEALLOCATE(matp)
   !
   RETURN
