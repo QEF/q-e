@@ -61,7 +61,7 @@ AC_ARG_ENABLE([openacc],
    [enable_openacc=yes])
 
 # NVHPC v. 21.11-22.2 buggy
-if (test "$f90_major_version" -eq 21 && test "$f90_minor_version" -ge 11) &&
+if (test "$f90_major_version" -eq 21 && test "$f90_minor_version" -ge 11) ||
    (test "$f90_major_version" -eq 22 && test "$f90_minor_version" -lt 3 ) ; then
    AC_MSG_ERROR([Buggy compiler version, upgrade to 22.3 or downgrade to 21.9])
 fi
