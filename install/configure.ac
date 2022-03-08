@@ -27,7 +27,7 @@ X_AC_QE_ARCH()
 try_dflags=""
 
 # Add needed include directories
-try_iflags="-I\$(TOPDIR)/include -I\$(TOPDIR)/FoX/finclude "
+try_iflags="-I. -I\$(TOPDIR)/include -I\$(TOPDIR)/FoX/finclude "
 
 # Checking archiver...
 X_AC_QE_AR()
