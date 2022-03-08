@@ -227,6 +227,10 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   !
   DEALLOCATE(ps)
   !
+  IF (gamma_only) THEN
+     DEALLOCATE(ps_r)
+  ENDIF
+  !
   CALL stop_clock ('ortho')
   !
   RETURN
