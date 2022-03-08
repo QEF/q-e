@@ -817,7 +817,7 @@ MODULE io_base
       USE io_global,     ONLY : stdout
       USE gvect,         ONLY : ngm, ngm_g, ig_l2g, mill
       USE mp,            ONLY : mp_size,mp_rank
-      USE mp_wave,       ONLY : mergewf, mergekg
+      USE mp_wave,       ONLY : mergekg
      
       IMPLICIT NONE
       INTEGER, INTENT(in) :: intra_group_comm,root_in_group
