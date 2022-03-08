@@ -139,16 +139,18 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 
   ! bgrp parallelization is done outside h_psi/s_psi. set use_bgrp_in_hpsi temporarily to false
   lsave_use_bgrp_in_hpsi = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .false.
-  !$acc enter data copyin(evq)
+  !$acc enter data copyin(evq,g(1:ndmx*npol,1:my_nbnd),h(1:ndmx*npol,1:my_nbnd),h_diag(1:ndmx*npol,1:nbnd),d0psi(1:ndmx*npol,1:nbnd), hold(1:ndmx*npol,1:my_nbnd), t(1:ndmx*npol,1:my_nbnd)) 
   do iter = 1, maxter
      !
      !    compute the gradient. can reuse information from previous step
      !
      if (iter == 1) then
+        !$acc data copy(dpsi(1:ndmx*npol, 1:nbnd),e(1:nbnd)) present(g)
         call ch_psi (ndim, dpsi(1,n_start), g, e(n_start), ik, my_nbnd)
+        !$acc end data 
         do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
         
-           !$acc data copy(g(1:ndmx*npol,1:my_nbnd),d0psi(1:ndmx*npol,1:nbnd))
+           !$acc data present(g,d0psi)
            !$acc host_data use_device(d0psi,g)
            call zaxpy (ndim, (-1.d0,0.d0), d0psi(1,ibnd), 1, g(1,ibnd_), 1)
            !$acc end host_data
@@ -156,7 +158,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
         enddo
         IF (npol==2) THEN
            do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
-              !$acc data copy(g(1:ndmx*npol,1:my_nbnd),d0psi(1:ndmx*npol,1:nbnd))
+              !$acc data present(g,d0psi)
               !$acc host_data use_device(d0psi,g)
               call zaxpy (ndim, (-1.d0,0.d0), d0psi(ndmx+1,ibnd), 1, g(ndmx+1,ibnd_), 1)
               !$acc end host_data
@@ -172,7 +174,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      do ibnd = n_start, n_end ;  ibnd_ = ibnd - n_start + 1
         if (conv (ibnd) .eq.0) then
            lbnd = lbnd+1
-           !$acc data copy(g(1:ndmx*npol,1:my_nbnd),h(1:ndmx*npol,1:my_nbnd))
+           !$acc data present(g,h) 
            !$acc host_data use_device(g,h)
            call zcopy (ndmx*npol, g (1, ibnd_), 1, h (1, ibnd_), 1)
            !$acc end host_data
@@ -180,16 +182,17 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            call cg_psi(ndmx, ndim, 1, h(1,ibnd_), h_diag(1,ibnd) )
            
            IF (gamma_only) THEN
-              !$acc data copy(g(1:ndmx*npol,1:my_nbnd),h(1:ndmx*npol,1:my_nbnd))
+              !$acc data present(g,h)
               !$acc host_data use_device(g,h)
               rho(lbnd)=2.0d0*myddot(2*ndmx*npol,h(1,ibnd_),1,g(1,ibnd_),1)
               !$acc end host_data
               !$acc end data
               IF(gstart==2) THEN
+                !$acc update host(h,g)
                  rho(lbnd)=rho(lbnd)-DBLE(h(1,ibnd_))*DBLE(g(1,ibnd_))
               ENDIF
            ELSE
-              !$acc data copy(g(1:ndmx*npol,1:my_nbnd),h(1:ndmx*npol,1:my_nbnd))
+              !$acc data present(g,h)
               !$acc host_data use_device(g,h)
               rho(lbnd) = myddot (2*ndmx*npol, h(1,ibnd_), 1, g(1,ibnd_), 1)
               !$acc end host_data
@@ -225,11 +228,13 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 !
 !          change sign to h
 !
-           h(:,ibnd_)=-1.0d0*h(:,ibnd_)     
+           !$acc kernels present(h)
+           h(:,ibnd_)=-1.0d0*h(:,ibnd_)    
+           !$acc end kernels 
            !call dscal (2 * ndmx * npol, - 1.d0, h (1, ibnd_), 1)
            if (iter.ne.1) then
               dcgamma = rho (ibnd_) / rhoold (ibnd_)
-              !$acc data copy(hold(1:ndmx*npol,1:my_nbnd),h(1:ndmx*npol,1:my_nbnd))
+              !$acc data present(h,hold)
               !$acc host_data use_device(hold,h)
               call zaxpy (ndmx*npol, dcgamma, hold (1, ibnd_), 1, h (1, ibnd_), 1)
               !$acc end host_data
@@ -241,7 +246,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 ! it is later set to the current (becoming old) value of h
 !
            lbnd = lbnd+1
-           !$acc data copy(hold(1:ndmx*npol,1:my_nbnd),h(1:ndmx*npol,1:my_nbnd))
+           !$acc data present(h,hold)
            !$acc host_data use_device(hold,h)
            call zcopy (ndmx*npol, h (1, ibnd_), 1, hold (1, lbnd), 1)
            !$acc end host_data
@@ -253,7 +258,9 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      !
      !        compute t = A*h
      !
+     !$acc enter data copyin(eu)
      call ch_psi (ndim, hold, t, eu, ik, lbnd)
+     !$acc exit data delete(eu)
      !
      !        compute the coefficients a and c for the line minimization
      !        compute step length lambda
@@ -263,14 +270,19 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
            IF (gamma_only) THEN
+              !$acc data present(g,h,t) 
+              !$acc host_data use_device(g,h,t)
               a(lbnd) = 2.0d0*myddot(2*ndmx*npol,h(1,ibnd_),1,g(1,ibnd_),1)
               c(lbnd) = 2.0d0*myddot(2*ndmx*npol,h(1,ibnd_),1,t(1,lbnd),1)
+              !$acc end host_data
+              !$acc end data
               IF (gstart == 2) THEN
+                 !$acc update host(h,g,t)
                  a(lbnd)=a(lbnd)-DBLE(h(1,ibnd_))*DBLE(g(1,ibnd_))
                  c(lbnd)=c(lbnd)-DBLE(h(1,ibnd_))*DBLE(t(1,lbnd))
               ENDIF
            ELSE
-              !$acc data copy(g(1:ndmx*npol,1:my_nbnd),h(1:ndmx*npol,1:my_nbnd),t(1:ndmx*npol,1:my_nbnd))
+              !$acc data present(g,h,t) 
               !$acc host_data use_device(g,h,t)
               a(lbnd) = myddot (2*ndmx*npol, h(1,ibnd_), 1, g(1,ibnd_), 1)
               c(lbnd) = myddot (2*ndmx*npol, h(1,ibnd_), 1, t(1,lbnd), 1)
@@ -291,7 +303,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            !
            !    move to new position
            !
-           !$acc data copy(dpsi(1:ndmx*npol,1:nbnd),h(1:ndmx*npol,1:my_nbnd))
+           !$acc data copy(dpsi(1:ndmx*npol,1:nbnd)) present(h)
            !$acc host_data use_device(dpsi,h)
            call zaxpy (ndmx*npol, dclambda, h(1,ibnd_), 1, dpsi(1,ibnd), 1)
            !$acc end host_data
@@ -300,7 +312,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            !    update to get the gradient
            !
            !g=g+lam
-           !$acc data copy(t(1:ndmx*npol,1:my_nbnd),g(1:ndmx*npol,1:my_nbnd))
+           !$acc data present(t,g)
            !$acc host_data use_device(t,g)
            call zaxpy (ndmx*npol, dclambda, t(1,lbnd), 1, g(1,ibnd_), 1)
            !$acc end host_data
@@ -308,7 +320,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            !
            !    save current (now old) h and rho for later use
            !
-           !$acc data copy(h(1:ndmx*npol,1:my_nbnd),hold(1:ndmx*npol,1:my_nbnd))
+           !$acc data present(hold,h)
            !$acc host_data use_device(h,hold)
            call zcopy (ndmx*npol, h(1,ibnd_), 1, hold(1,ibnd_), 1)
            !$acc end host_data
@@ -319,7 +331,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      CALL stop_clock('loop4')
   enddo
 100 continue
-  !$acc exit data delete(evq)
+  !$acc exit data delete(evq,g,h,h_diag,d0psi,hold,t)
   ! deallocate workspace not needed anymore
   deallocate (eu) ; deallocate (rho, rhoold) ; deallocate (a,c) ; deallocate (g, t, h, hold)
 

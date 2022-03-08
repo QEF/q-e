@@ -101,7 +101,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   spsi (:,:) = (0.d0, 0.d0)
   !$acc end kernels
 #if defined(__CUDA)
-  !$acc data copyin(h) present(hpsi, spsi)
+  !$acc data present(h, hpsi, spsi)
   !$acc host_data use_device(h, hpsi, spsi)
   CALL h_psi_gpu (npwx, n, m, h, hpsi)
   CALL s_psi_gpu (npwx, n, m, h, spsi)
@@ -121,8 +121,8 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   !   and put the result in ah
   !
   CALL start_clock ('Hesh')
-  !$acc enter data create(ah(1:npwx*npol, 1:m))
-  !$acc data copyin(e)
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!$acc enter data create(ah(1:npwx*npol, 1:m))
+  !$acc data present(e)
 
   !$acc kernels present(ah)
   ah=(0.d0,0.d0)
@@ -158,8 +158,8 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
         CALL ch_psi_all_k()
      ENDIF
   ENDIF
-  !$acc exit data copyout(ah) delete(ps)
-  !$acc exit data delete(hpsi, spsi)
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!$acc exit data copyout(ah) delete(ps)
+  !$acc exit data delete(hpsi, spsi, ps)
   DEALLOCATE (spsi)
   DEALLOCATE (hpsi)
   DEALLOCATE (ps)
