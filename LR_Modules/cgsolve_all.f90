@@ -279,20 +279,17 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      !        compute step length lambda
      lbnd=0
      CALL start_clock('loop3')
+     !$acc host_data use_device(g,h,t,a,c)
      do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
            IF (gamma_only) THEN
-              !$acc data present(g,h,t,a,c) 
-              !$acc host_data use_device(g,h,t) 
               addot = 2.0d0*myddot(2*ndmx*npol,h(1,ibnd_),1,g(1,ibnd_),1)
               cddot = 2.0d0*myddot(2*ndmx*npol,h(1,ibnd_),1,t(1,lbnd),1)
-              !$acc end host_data
               !$acc kernels present(a,c)
               a(lbnd) = addot
               c(lbnd) = cddot
               !$acc end kernels
-              !$acc end data
               IF (gstart == 2) THEN
                  !$acc kernels present(a,c,h,g,t)
                  a(lbnd)=a(lbnd)-DBLE(h(1,ibnd_))*DBLE(g(1,ibnd_))
@@ -300,23 +297,14 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
                  !$acc end kernels
               ENDIF
            ELSE
-              !$acc data present(g,h,t,a,c) 
-              !$acc host_data use_device(g,h,a)
               !!!!!!!!!!!!!!!!addot = myddotv2 (2*ndmx*npol, h(1,ibnd_), 1, g(1,ibnd_), 1)
               !!!!!!!!!!!!!!!!!!cddot = myddotv2 (2*ndmx*npol, h(1,ibnd_), 1, t(1,lbnd), 1)
               CALL MYDDOTV3(2*ndmx*npol, h(1,ibnd_), 1, g(1,ibnd_), 1, a(lbnd))
-              !$acc end host_data
-              !$acc host_data use_device(h,t,c)
               CALL MYDDOTV3(2*ndmx*npol, h(1,ibnd_), 1, t(1,lbnd), 1, c(lbnd))
-              !$acc end host_data
-              !!!!!!!!!!!!!!!!!$acc serial present(a,c,addot,cddot)
-              !!!!!!!!!!!!!!!!!!!a(lbnd) = addot
-              !!!!!!!!!!!!!!!!!!c(lbnd) = cddot
-              !!!!!!!!!!!!!!!!!!!!!!$acc end serial
-              !$acc end data
            ENDIF
         end if
      end do
+     !$acc end host_data
      CALL stop_clock('loop3')
      !$acc host_data use_device(a,c)
      call mp_sum(  a(1:lbnd), intra_bgrp_comm )
@@ -324,10 +312,10 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      !$acc end host_data
      lbnd=0
      CALL start_clock('loop4')
+     !$acc update host(a,c)
      do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
-           !$acc update host(a,c)
            dclambda = CMPLX( - a(lbnd) / c(lbnd), 0.d0,kind=DP)
            !
            !    move to new position
