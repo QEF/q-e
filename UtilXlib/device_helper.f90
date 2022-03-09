@@ -141,7 +141,10 @@ implicit none
 #if defined(__CUDA)
   attributes(device) :: dx, dy
   attributes(device) :: MYDDOTv2
-  MYDDOTv2=cublasDDOT(n, dx, incx, dy, incy)
+  type(cublashandle) :: h
+  integer :: ierr
+  h = cublasGetHandle()
+  ierr = cublasDDOT_v2(h, n, dx, incx, dy, incy, MYDDOTv2)
 #else
   MYDDOTv2=DDOT(n, dx, incx, dy, incy)
 #endif
@@ -149,3 +152,22 @@ implicit none
   return
 end function MYDDOTv2
 
+subroutine MYDDOTv3 (n, dx, incx, dy, incy, result)
+USE cudafor
+USE cublas
+  implicit none
+  integer :: n, incx, incy
+  DOUBLE PRECISION, dimension(*)  :: dx, dy
+#if defined(__CUDA)
+  attributes(device) :: dx, dy
+  DOUBLE PRECISION, device :: result
+  type(cublashandle) :: h
+  integer :: ierr
+  h = cublasGetHandle()
+  ierr = cublasDDOT_v2(h, n, dx, incx, dy, incy, result)
+#else
+  result=DDOT(n, dx, incx, dy, incy)
+#endif
+
+  return
+end subroutine MYDDOTv3

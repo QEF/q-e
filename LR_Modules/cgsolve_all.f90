@@ -107,7 +107,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !  the ratio between rho
   !  step length
   REAL(kind=dp), EXTERNAL :: myddot
-  REAL(kind=dp), EXTERNAL :: myddotv2
+  REAL(kind=dp), EXTERNAL :: myddotv2, myddotv4
   !  the scalar product
   real(DP), allocatable :: rho (:), rhoold (:), eu (:), a(:), c(:)
   ! the residue
@@ -301,14 +301,18 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
               ENDIF
            ELSE
               !$acc data present(g,h,t,a,c) 
-              !$acc host_data use_device(g,h,t)
-              addot = myddot (2*ndmx*npol, h(1,ibnd_), 1, g(1,ibnd_), 1)
-              cddot = myddot (2*ndmx*npol, h(1,ibnd_), 1, t(1,lbnd), 1)
+              !$acc host_data use_device(g,h,a)
+              !!!!!!!!!!!!!!!!addot = myddotv2 (2*ndmx*npol, h(1,ibnd_), 1, g(1,ibnd_), 1)
+              !!!!!!!!!!!!!!!!!!cddot = myddotv2 (2*ndmx*npol, h(1,ibnd_), 1, t(1,lbnd), 1)
+              CALL MYDDOTV3(2*ndmx*npol, h(1,ibnd_), 1, g(1,ibnd_), 1, a(lbnd))
               !$acc end host_data
-              !$acc serial present(a,c)
-              a(lbnd) = addot
-              c(lbnd) = cddot
-              !$acc end serial
+              !$acc host_data use_device(h,t,c)
+              CALL MYDDOTV3(2*ndmx*npol, h(1,ibnd_), 1, t(1,lbnd), 1, c(lbnd))
+              !$acc end host_data
+              !!!!!!!!!!!!!!!!!$acc serial present(a,c,addot,cddot)
+              !!!!!!!!!!!!!!!!!!!a(lbnd) = addot
+              !!!!!!!!!!!!!!!!!!c(lbnd) = cddot
+              !!!!!!!!!!!!!!!!!!!!!!$acc end serial
               !$acc end data
            ENDIF
         end if

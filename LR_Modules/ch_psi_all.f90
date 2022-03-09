@@ -293,6 +293,8 @@ CONTAINS
     INTEGER :: m_start, m_end
     CALL start_clock ('ch_psi_all_gamma')
 
+    CALL errore('ch_psi_all', 'gamma point to be fixed ( DtoH copies missing)',1)
+
     ps (:,:) = 0.d0
     
     IF (noncolin) THEN
