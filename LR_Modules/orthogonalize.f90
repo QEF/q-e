@@ -74,7 +74,7 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   ALLOCATE(ps(nbnd,nbnd))
   ps = (0.0_DP, 0.0_DP)
   !
-  !$acc data copyin(evq, dpsi) copy(dvpsi) create(ps, ps_r)
+  !$acc data copyin(evq) copy(dvpsi) create(ps, ps_r, dpsi)
   !
   IF (ltetra .OR. lgauss) THEN
      !
