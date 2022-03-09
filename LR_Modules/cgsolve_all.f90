@@ -107,6 +107,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !  the ratio between rho
   !  step length
   REAL(kind=dp), EXTERNAL :: myddot
+  REAL(kind=dp), EXTERNAL :: myddotv2
   !  the scalar product
   real(DP), allocatable :: rho (:), rhoold (:), eu (:), a(:), c(:)
   ! the residue
@@ -118,6 +119,8 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   ! bgrp parallelization auxiliary variables
   INTEGER :: n_start, n_end, my_nbnd
   logical :: lsave_use_bgrp_in_hpsi
+  !auxiliary for ddot
+  real(DP) :: ddotval, addot, cddot
   !
   call start_clock ('cgsolve')
 
@@ -135,21 +138,26 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 
   kter_eff = 0.d0 ; conv (1:nbnd) = 0
 
-  g=(0.d0,0.d0); t=(0.d0,0.d0); h=(0.d0,0.d0); hold=(0.d0,0.d0)
+  !g=(0.d0,0.d0); t=(0.d0,0.d0); h=(0.d0,0.d0); hold=(0.d0,0.d0)
 
   ! bgrp parallelization is done outside h_psi/s_psi. set use_bgrp_in_hpsi temporarily to false
   lsave_use_bgrp_in_hpsi = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .false.
-  !$acc enter data copyin(evq,g(1:ndmx*npol,1:my_nbnd),h(1:ndmx*npol,1:my_nbnd),h_diag(1:ndmx*npol,1:nbnd),d0psi(1:ndmx*npol,1:nbnd), hold(1:ndmx*npol,1:my_nbnd), t(1:ndmx*npol,1:my_nbnd)) 
+  !$acc enter data create(a(1:my_nbnd),c(1:my_nbnd),eu(1:my_nbnd),t(1:ndmx*npol,1:my_nbnd),g(1:ndmx*npol,1:my_nbnd),h(1:ndmx*npol,1:my_nbnd), hold(1:ndmx*npol,1:my_nbnd)) copyin(e(1:nbnd),dpsi(1:ndmx*npol,1:nbnd),evq,h_diag(1:ndmx*npol,1:nbnd),d0psi(1:ndmx*npol,1:nbnd))
+  !$acc kernels present(g,t,h,hold)
+  g=(0.d0,0.d0)
+  t=(0.d0,0.d0)
+  h=(0.d0,0.d0)
+  hold=(0.d0,0.d0)
+  !$acc end kernels 
   do iter = 1, maxter
      !
      !    compute the gradient. can reuse information from previous step
      !
      if (iter == 1) then
-        !$acc data copy(dpsi(1:ndmx*npol, 1:nbnd),e(1:nbnd)) present(g)
+        !$acc data present(e,g)
         call ch_psi (ndim, dpsi(1,n_start), g, e(n_start), ik, my_nbnd)
         !$acc end data 
         do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
-        
            !$acc data present(g,d0psi)
            !$acc host_data use_device(d0psi,g)
            call zaxpy (ndim, (-1.d0,0.d0), d0psi(1,ibnd), 1, g(1,ibnd_), 1)
@@ -184,19 +192,22 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            IF (gamma_only) THEN
               !$acc data present(g,h)
               !$acc host_data use_device(g,h)
-              rho(lbnd)=2.0d0*myddot(2*ndmx*npol,h(1,ibnd_),1,g(1,ibnd_),1)
+              ddotval=2.0d0*myddot(2*ndmx*npol,h(1,ibnd_),1,g(1,ibnd_),1)
               !$acc end host_data
               !$acc end data
+              rho(lbnd) = ddotval
               IF(gstart==2) THEN
-                !$acc update host(h,g)
+                !$acc kernels present(h,g) copy(rho(1:my_nbnd))
                  rho(lbnd)=rho(lbnd)-DBLE(h(1,ibnd_))*DBLE(g(1,ibnd_))
+                !$acc end kernels
               ENDIF
            ELSE
-              !$acc data present(g,h)
-              !$acc host_data use_device(g,h)
-              rho(lbnd) = myddot (2*ndmx*npol, h(1,ibnd_), 1, g(1,ibnd_), 1)
+              !$acc data present(g,h) 
+              !$acc host_data use_device(g,h) 
+              ddotval = myddot (2*ndmx*npol, h(1,ibnd_), 1, g(1,ibnd_), 1)
               !$acc end host_data
               !$acc end data
+              rho(lbnd) = ddotval
            ENDIF
         endif
      enddo
@@ -251,16 +262,18 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            call zcopy (ndmx*npol, h (1, ibnd_), 1, hold (1, lbnd), 1)
            !$acc end host_data
            !$acc end data
+           !$acc kernels present(eu,e)
            eu (lbnd) = e (ibnd)
+           !$acc end kernels
         endif
      enddo
      CALL stop_clock('loop2')
      !
      !        compute t = A*h
      !
-     !$acc enter data copyin(eu)
+     !$acc data present(eu, hold, t)
      call ch_psi (ndim, hold, t, eu, ik, lbnd)
-     !$acc exit data delete(eu)
+     !$acc end data
      !
      !        compute the coefficients a and c for the line minimization
      !        compute step length lambda
@@ -270,40 +283,52 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
            IF (gamma_only) THEN
-              !$acc data present(g,h,t) 
-              !$acc host_data use_device(g,h,t)
-              a(lbnd) = 2.0d0*myddot(2*ndmx*npol,h(1,ibnd_),1,g(1,ibnd_),1)
-              c(lbnd) = 2.0d0*myddot(2*ndmx*npol,h(1,ibnd_),1,t(1,lbnd),1)
+              !$acc data present(g,h,t,a,c) 
+              !$acc host_data use_device(g,h,t) 
+              addot = 2.0d0*myddot(2*ndmx*npol,h(1,ibnd_),1,g(1,ibnd_),1)
+              cddot = 2.0d0*myddot(2*ndmx*npol,h(1,ibnd_),1,t(1,lbnd),1)
               !$acc end host_data
+              !$acc kernels present(a,c)
+              a(lbnd) = addot
+              c(lbnd) = cddot
+              !$acc end kernels
               !$acc end data
               IF (gstart == 2) THEN
-                 !$acc update host(h,g,t)
+                 !$acc kernels present(a,c,h,g,t)
                  a(lbnd)=a(lbnd)-DBLE(h(1,ibnd_))*DBLE(g(1,ibnd_))
                  c(lbnd)=c(lbnd)-DBLE(h(1,ibnd_))*DBLE(t(1,lbnd))
+                 !$acc end kernels
               ENDIF
            ELSE
-              !$acc data present(g,h,t) 
+              !$acc data present(g,h,t,a,c) 
               !$acc host_data use_device(g,h,t)
-              a(lbnd) = myddot (2*ndmx*npol, h(1,ibnd_), 1, g(1,ibnd_), 1)
-              c(lbnd) = myddot (2*ndmx*npol, h(1,ibnd_), 1, t(1,lbnd), 1)
+              addot = myddot (2*ndmx*npol, h(1,ibnd_), 1, g(1,ibnd_), 1)
+              cddot = myddot (2*ndmx*npol, h(1,ibnd_), 1, t(1,lbnd), 1)
               !$acc end host_data
+              !$acc serial present(a,c)
+              a(lbnd) = addot
+              c(lbnd) = cddot
+              !$acc end serial
               !$acc end data
            ENDIF
         end if
      end do
      CALL stop_clock('loop3')
+     !$acc host_data use_device(a,c)
      call mp_sum(  a(1:lbnd), intra_bgrp_comm )
      call mp_sum(  c(1:lbnd), intra_bgrp_comm )
+     !$acc end host_data
      lbnd=0
      CALL start_clock('loop4')
      do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
+           !$acc update host(a,c)
            dclambda = CMPLX( - a(lbnd) / c(lbnd), 0.d0,kind=DP)
            !
            !    move to new position
            !
-           !$acc data copy(dpsi(1:ndmx*npol,1:nbnd)) present(h)
+           !$acc data present(dpsi,h)
            !$acc host_data use_device(dpsi,h)
            call zaxpy (ndmx*npol, dclambda, h(1,ibnd_), 1, dpsi(1,ibnd), 1)
            !$acc end host_data
@@ -331,7 +356,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      CALL stop_clock('loop4')
   enddo
 100 continue
-  !$acc exit data delete(evq,g,h,h_diag,d0psi,hold,t)
+  !$acc exit data delete(evq,a,c,g,h,h_diag,d0psi,hold,t,eu,e) copyout(dpsi)
   ! deallocate workspace not needed anymore
   deallocate (eu) ; deallocate (rho, rhoold) ; deallocate (a,c) ; deallocate (g, t, h, hold)
 

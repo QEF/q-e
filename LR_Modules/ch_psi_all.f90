@@ -121,7 +121,6 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   !   and put the result in ah
   !
   CALL start_clock ('Hesh')
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!$acc enter data create(ah(1:npwx*npol, 1:m))
   !$acc data present(e)
 
   !$acc kernels present(ah)
@@ -158,7 +157,6 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
         CALL ch_psi_all_k()
      ENDIF
   ENDIF
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!$acc exit data copyout(ah) delete(ps)
   !$acc exit data delete(hpsi, spsi, ps)
   DEALLOCATE (spsi)
   DEALLOCATE (hpsi)
