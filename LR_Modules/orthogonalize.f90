@@ -43,6 +43,9 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   USE gvect,            ONLY : gstart
   USE control_lr,       ONLY : alpha_pv, nbnd_occ
   USE dfpt_tetra_mod,   ONLY : dfpt_tetra_beta
+#if defined(__CUDA)
+ USE cublas
+#endif
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ikk, ikq   ! the index of the k and k+q points
@@ -69,6 +72,8 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   ALLOCATE(ps(nbnd,nbnd))
   ps = (0.0_DP, 0.0_DP)
   !
+  !$acc data copyin(evq, dpsi) copy(dvpsi) create(ps, ps_r)
+  !
   IF (ltetra .OR. lgauss) THEN
      !
      !  metallic case
@@ -76,6 +81,7 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
      IF (gamma_only) CALL errore ('orthogonalize', 'smearing or tetrahedra &
          & with gamma-point algorithm?',1)
      !
+     !$acc host_data use_device(evq, dvpsi, ps)
      IF (noncolin) THEN
         CALL zgemm( 'C', 'N', nbnd, nbnd_occ (ikk), npwx*npol, (1.d0,0.d0), &
              evq, npwx*npol, dvpsi, npwx*npol, (0.d0,0.d0), ps, nbnd )
@@ -83,6 +89,7 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
         CALL zgemm( 'C', 'N', nbnd, nbnd_occ (ikk), npwq, (1.d0,0.d0), &
              evq, npwx, dvpsi, npwx, (0.d0,0.d0), ps, nbnd )
      END IF
+     !$acc end host_data
      !
      DO ibnd = 1, nbnd_occ (ikk)
         !
@@ -107,7 +114,9 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
                  ENDIF
               ENDIF
               !
+              !$acc kernels present(ps)
               ps(jbnd,ibnd) = wwg * ps(jbnd,ibnd)
+              !$acc end kernels
               !
            ENDDO
            !
@@ -119,16 +128,24 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
               !
               wwg = dfpt_tetra_beta(jbnd,ibnd,ikk)
               !
+              !$acc kernels present(ps)
               ps(jbnd,ibnd) = wwg * ps(jbnd,ibnd)
+              !$acc end kernels
               !
            ENDDO
            !
         ENDIF
         !
         IF (noncolin) THEN
-           CALL dscal (2*npwx*npol, wg1, dvpsi(1,ibnd), 1)
+           !CALL dscal (2*npwx*npol, wg1, dvpsi(1,ibnd), 1)
+           !$acc kernels present(dvpsi)
+           dvpsi(1:2*npwx*npol, ibnd) = wg1 * dvpsi(1:2*npwx*npol, ibnd)
+           !$acc end kernels
         ELSE
-           call dscal (2*npwq, wg1, dvpsi(1,ibnd), 1)
+           !call dscal (2*npwq, wg1, dvpsi(1,ibnd), 1)
+           !$acc kernels present(dvpsi)
+           dvpsi(1:2*npwq, ibnd) = wg1 * dvpsi(1:2*npwq, ibnd)
+           !$acc end kernels
         END IF
         !
      END DO
@@ -139,38 +156,47 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
      !
      !  insulators
      !
+     !$acc host_data use_device(evq, dvpsi, ps)
      IF (noncolin) THEN
         CALL zgemm( 'C', 'N',nbnd_occ(ikq), nbnd_occ(ikk), npwx*npol, &
              (1.d0,0.d0), evq, npwx*npol, dvpsi, npwx*npol, &
              (0.d0,0.d0), ps, nbnd )
      ELSEIF (gamma_only) THEN
+        !$acc host_data use_device(ps_r)
         CALL dgemm( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), 2*npwq, &
              2.0_DP, evq, 2*npwx, dvpsi, 2*npwx, &
              0.0_DP, ps_r, nbnd )
         IF (gstart == 2 ) THEN
-           CALL DGER( nbnd_occ(ikq), nbnd_occ (ikk), -1.0_DP, evq, &
+           CALL mydger( nbnd_occ(ikq), nbnd_occ (ikk), -1.0_DP, evq, &
                 & 2*npwq, dvpsi, 2*npwx, ps_r, nbnd )
         ENDIF
+        !$acc end host_data
      ELSE
         CALL zgemm( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), npwq, &
              (1.d0,0.d0), evq, npwx, dvpsi, npwx, &
              (0.d0,0.d0), ps, nbnd )
      END IF
+     !$acc end host_data
      !
      nbnd_eff=nbnd_occ(ikk)
      !
   END IF
   !
   IF (gamma_only) THEN
+     !$acc host_data use_device(ps_r)
      CALL mp_sum(ps_r(:,:),intra_bgrp_comm)
+     !$acc end host_data
   ELSE
+     !$acc host_data use_device(ps)
      CALL mp_sum(ps(:,1:nbnd_eff),intra_bgrp_comm)
+     !$acc end host_data
   ENDIF
   !
   ! dpsi is used as work space to store S*evq
   !
   IF (.NOT.dpsi_computed) THEN
      !
+     !$acc update self(dpsi)
      IF (okvan) then
         if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. nbnd_eff > 1) then
            call divide(inter_bgrp_comm,nbnd_eff, n_start, n_end)
@@ -185,11 +211,13 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
      end if
      !
      CALL s_psi (npwx, npwq, nbnd_eff, evq, dpsi)
+     !$acc update device(dpsi)
      !
   ENDIF
   !
   ! |dvspi> =  -(|dvpsi> - S|evq><evq|dvpsi>)
   !
+  !$acc host_data use_device(dpsi, ps, dvpsi)
   IF (lgauss .OR. ltetra ) THEN
      !
      !  metallic case
@@ -213,7 +241,9 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
              (1.d0,0.d0),dpsi,npwx*npol,ps,nbnd,(-1.0d0,0.d0), &
              dvpsi, npwx*npol )
      ELSEIF (gamma_only) THEN
+        !$acc kernels present(ps, ps_r)
         ps = CMPLX (ps_r,0.0_DP, KIND=DP)
+        !$acc end kernels
         CALL ZGEMM( 'N', 'N', npwq, nbnd_occ(ikk), nbnd_occ(ikk), &
              (1.d0,0.d0), dpsi, npwx, ps, nbnd, (-1.0d0,0.d0), &
              dvpsi, npwx )
@@ -224,6 +254,9 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
      END IF
      !
   ENDIF
+  !$acc end host_data
+  !
+  !$acc end data
   !
   DEALLOCATE(ps)
   !
