@@ -44,7 +44,9 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   USE control_lr,       ONLY : alpha_pv, nbnd_occ
   USE dfpt_tetra_mod,   ONLY : dfpt_tetra_beta
 #if defined(__CUDA)
- USE cublas
+  USE becmod_subs_gpum, ONLY : calbec_gpu, using_becp_d_auto
+  USE becmod_gpum,      ONLY : becp_d
+  USE cublas
 #endif
   !
   IMPLICIT NONE
@@ -196,22 +198,42 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   !
   IF (.NOT.dpsi_computed) THEN
      !
-     !$acc update self(dpsi)
      IF (okvan) then
         if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. nbnd_eff > 1) then
            call divide(inter_bgrp_comm,nbnd_eff, n_start, n_end)
-           if ( n_end >= n_start) then
-                   CALL using_becp_auto(2)
-                   CALL calbec ( npwq, vkb, evq(:,n_start:n_end), becp, n_end - n_start + 1 )
+#if defined(__CUDA)
+           if (n_end >= n_start) then
+              CALL using_becp_d_auto(2)
+              !$acc host_data use_device(vkb, evq)
+              CALL calbec_gpu (npwq, vkb, evq(:,n_start:n_end), becp_d, n_end- n_start + 1)    !
+              !$acc end host_data
            endif
+#else
+           if ( n_end >= n_start) then
+              CALL using_becp_auto(2)
+              CALL calbec ( npwq, vkb, evq(:,n_start:n_end), becp, n_end - n_start + 1 )
+           endif
+#endif
         else
+#if defined(__CUDA)
+           CALL using_becp_d_auto(2)
+           !$acc host_data use_device(vkb, evq)
+           CALL calbec_gpu(npwq, vkb, evq, becp_d, nbnd_eff)
+           !$acc end host_data
+#else
            CALL using_becp_auto(2)
            CALL calbec ( npwq, vkb, evq, becp, nbnd_eff )
+#endif
         end if
      end if
      !
+#if defined(__CUDA)
+     !$acc host_data use_device(evq, dpsi)
+     CALL s_psi_gpu (npwx, npwq, nbnd_eff, evq, dpsi)
+     !$acc end host_data
+#else
      CALL s_psi (npwx, npwq, nbnd_eff, evq, dpsi)
-     !$acc update device(dpsi)
+#endif
      !
   ENDIF
   !
