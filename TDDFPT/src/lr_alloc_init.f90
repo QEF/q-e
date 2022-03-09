@@ -274,6 +274,9 @@ CONTAINS
     IF (nkb > 0) THEN
        !
        IF (.not. allocated(becp%r)) CALL allocate_bec_type(nkb,nbnd,becp)
+#if defined(__CUDA)
+       CALL allocate_bec_type_gpu(nkb,nbnd,becp_d)
+#endif       
        !
        ALLOCATE(becp_1(nkb,nbnd))
        becp_1(:,:) = 0.0d0

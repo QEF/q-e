@@ -133,8 +133,10 @@ SUBROUTINE lr_solve_e
            !
            ! US case: calculate beta-functions vkb.
            !
-           CALL init_us_2(ngk(ik), igk_k(:,ik), xk(:,ik), vkb)
+           CALL init_us_2(ngk(ik), igk_k(:,ik), xk(:,ik), vkb, .true.)
+           !$acc update host(vkb)
            !
+           !$acc data copyin(evc)
            ! Compute d0psi = P_c^+ r psi_k 
            !
            IF ( n_ipol==3 ) THEN
@@ -145,6 +147,7 @@ SUBROUTINE lr_solve_e
               CALL lr_dvpsi_e(ik,LR_polarization,d0psi(:,:,ik,1))
            ENDIF
            !
+           !$acc end data 
         ENDDO
         !
       ELSE
