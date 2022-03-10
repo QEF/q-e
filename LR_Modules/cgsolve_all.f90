@@ -142,7 +142,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 
   ! bgrp parallelization is done outside h_psi/s_psi. set use_bgrp_in_hpsi temporarily to false
   lsave_use_bgrp_in_hpsi = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .false.
-  !$acc enter data create(a(1:my_nbnd),c(1:my_nbnd),eu(1:my_nbnd),t(1:ndmx*npol,1:my_nbnd),g(1:ndmx*npol,1:my_nbnd),h(1:ndmx*npol,1:my_nbnd), hold(1:ndmx*npol,1:my_nbnd)) copyin(e(1:nbnd),dpsi(1:ndmx*npol,1:nbnd),evq,h_diag(1:ndmx*npol,1:nbnd),d0psi(1:ndmx*npol,1:nbnd))
+  !$acc enter data create(rho(1:my_nbnd),a(1:my_nbnd),c(1:my_nbnd),eu(1:my_nbnd),t(1:ndmx*npol,1:my_nbnd),g(1:ndmx*npol,1:my_nbnd),h(1:ndmx*npol,1:my_nbnd), hold(1:ndmx*npol,1:my_nbnd)) copyin(e(1:nbnd),dpsi(1:ndmx*npol,1:nbnd),evq,h_diag(1:ndmx*npol,1:nbnd),d0psi(1:ndmx*npol,1:nbnd))
   !$acc kernels present(g,t,h,hold)
   g=(0.d0,0.d0)
   t=(0.d0,0.d0)
@@ -185,20 +185,22 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
               !$acc host_data use_device(g,h)
               ddotval=2.0d0*myddot(2*ndmx*npol,h(1,ibnd_),1,g(1,ibnd_),1)
               !$acc end host_data
+              !$acc serial present(rho)
               rho(lbnd) = ddotval
+              !$acc end serial
               IF(gstart==2) THEN
-                !$acc kernels present(h,g) copy(rho(1:my_nbnd))
+                !$acc kernels present(h,g,rho) 
                  rho(lbnd)=rho(lbnd)-DBLE(h(1,ibnd_))*DBLE(g(1,ibnd_))
                 !$acc end kernels
               ENDIF
            ELSE
-              !$acc host_data use_device(g,h) 
-              ddotval = myddot (2*ndmx*npol, h(1,ibnd_), 1, g(1,ibnd_), 1)
+              !$acc host_data use_device(g,h,rho) 
+              CALL MYDDOTV3 (2*ndmx*npol, h(1,ibnd_), 1, g(1,ibnd_), 1, rho(lbnd))
               !$acc end host_data
-              rho(lbnd) = ddotval
            ENDIF
         endif
      enddo
+     !$acc update host(rho)
      CALL stop_clock('loop1')
      kter_eff = kter_eff + DBLE (lbnd) / DBLE (nbnd)
      call mp_sum( rho(1:lbnd), intra_bgrp_comm )
@@ -325,7 +327,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      CALL stop_clock('loop4')
   enddo
 100 continue
-  !$acc exit data delete(evq,a,c,g,h,h_diag,d0psi,hold,t,eu,e) copyout(dpsi)
+  !$acc exit data delete(rho,evq,a,c,g,h,h_diag,d0psi,hold,t,eu,e) copyout(dpsi)
   ! deallocate workspace not needed anymore
   deallocate (eu) ; deallocate (rho, rhoold) ; deallocate (a,c) ; deallocate (g, t, h, hold)
 
