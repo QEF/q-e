@@ -28,9 +28,13 @@ MODULE wannier2odd
   COMPLEX(DP), ALLOCATABLE :: evcw(:)
   COMPLEX(DP), ALLOCATABLE :: ewan(:,:)
   COMPLEX(DP), ALLOCATABLE :: psicx(:)
-  COMPLEX(DP), ALLOCATABLE :: rhor(:), rhow(:)         ! real space supercell density
+  COMPLEX(DP), ALLOCATABLE :: rhor(:,:), rhow(:,:)     ! real space supercell density
   COMPLEX(DP), ALLOCATABLE :: rhog(:,:), rhowg(:,:)    ! G-space supercell density
   !
+  INTERFACE check_rho
+    MODULE PROCEDURE :: check_rho_single
+    MODULE PROCEDURE :: check_rho_double
+  END INTERFACE check_rho
   !
   CONTAINS
   !
@@ -92,6 +96,7 @@ MODULE wannier2odd
     INTEGER :: ik, ikevc, ibnd, iw, ip
     INTEGER :: i, j, k, ir, n, counter
     INTEGER :: num_inc
+    INTEGER :: nks
     INTEGER :: npw
     INTEGER :: iunwfcx = 24                         ! unit for supercell wfc file
     INTEGER :: io_level = 1
@@ -103,6 +108,7 @@ MODULE wannier2odd
     LOGICAL :: exst, opnd
     LOGICAL :: calc_rho=.true.
     LOGICAL :: wf_is_cmplx
+    COMPLEX(DP), ALLOCATABLE :: rhog_(:,:)
     !
     !
     CALL start_clock( TRIM(wan_mode) )
@@ -117,19 +123,21 @@ MODULE wannier2odd
       CALL read_wannier_chk( )
       !
       ! ... if any non-occupied state is included the density is not calculated
+      ! ... NB: for spin-polarized calcs calc_rho is false, so nelec/2 is the actual
+      ! ...     number of occupied bands)
       !
       IF ( calc_rho .and. ANY(excluded_band(1:nelec/2)) ) calc_rho = .false.
       !
     ELSE
       !
       num_bands = nbnd
-      num_kpts = iknum
+      num_kpts = iknum / nspin
       kgrid(:) = mp_grid(:)
       !
     ENDIF
     !
     gamma_only_x = gamma_trick
-    IF ( gamma_trick ) WRITE( stdout, 10 ) 
+    IF ( gamma_trick ) WRITE( stdout, 10 )
     CALL setup_scell_fft( )
     !
     CALL alloc_w2odd( ks_only, calc_rho )
@@ -157,6 +165,7 @@ MODULE wannier2odd
       DO ik = 1, num_kpts
         !
         ikevc = ik + ikstart - 1
+        IF ( ks_only ) ikevc = ikevc + ( is - 1 ) * num_kpts
         CALL davcio( evc, 2*nwordwfc, iunwfc, ikevc, -1 )
         npw = ngk(ik)
         kvec(:) = xk(:,ik)
@@ -184,16 +193,10 @@ MODULE wannier2odd
           CALL extend_wfc( psic, psicx, dfftcp, kvec )
           !
           ! ... calculate the total density in the supercell
-          ! NB: for some reason the weights wg sum up to 2 (and not to 1!),
-          !     maybe it includes the spin (?). The result is that, although
-          !     here we are considering only the psicx of one spin channel,
-          !     the charge corresponding to this density is total and so it 
-          !     matches directly nelec (and not simply nelup).
-          !     Keep in mind that wg=0 for empty states.
           !
           IF ( calc_rho ) &
-            rhor(:) = rhor(:) + ( DBLE( psicx(:) )**2 + &
-                                AIMAG( psicx(:) )**2 ) * wg(ibnd,ik) / omega
+            rhor(:,is) = rhor(:,is) + ( DBLE( psicx(:) )**2 + &
+                                AIMAG( psicx(:) )**2 ) * wg(ibnd,ikevc) / omega
           !
           CALL fwfft( 'Wave', psicx, dfftcp )
           evcx(1:npwxcp,counter) = psicx( dfftcp%nl(1:npwxcp) )
@@ -213,10 +216,10 @@ MODULE wannier2odd
       IF ( calc_rho ) THEN
         !
         rhog(:,is) = ( 0.D0, 0.D0 )
-        CALL fwfft( 'Rho', rhor, dfftcp )
-        rhog(1:ngmcp,is) = rhor( dfftcp%nl(1:ngmcp) )
+        CALL fwfft( 'Rho', rhor(:,is), dfftcp )
+        rhog(1:ngmcp,is) = rhor( dfftcp%nl(1:ngmcp), is )
         !
-        CALL check_rho( is, rhog(:,is) )
+        IF ( iss == 1 ) CALL check_rho( is, rhog(:,is) )
         !
       ENDIF
       !
@@ -317,7 +320,7 @@ MODULE wannier2odd
                   psicx( dfftcp%nl(1:npwxcp) ) = ewan(1:npwxcp,iw)
                   IF( gamma_only_x ) psicx( dfftcp%nlm(1:npwxcp) ) = CONJG(ewan(1:npwxcp,iw))
                   CALL invfft( 'Wave', psicx, dfftcp )
-                  rhow(:) = rhow(:) + DBLE( psicx(:) )**2 + AIMAG( psicx(:) )**2
+                  rhow(:,is) = rhow(:,is) + DBLE( psicx(:) )**2 + AIMAG( psicx(:) )**2
                   !
                 ENDIF
                 !
@@ -338,16 +341,16 @@ MODULE wannier2odd
         IF ( calc_rho ) THEN
           !
           rhowg(:,is) = ( 0.D0, 0.D0 )
-          CALL fwfft( 'Rho', rhow, dfftcp )
-          rhowg(1:ngmcp,is) = rhow( dfftcp%nl(1:ngmcp) ) / omega_cp
-          IF ( nspin == 1 ) rhowg(:,1) = rhowg(:,1) * 2    !!! factor 2 for the other spin-component
+          CALL fwfft( 'Rho', rhow(:,is), dfftcp )
+          rhowg(1:ngmcp,is) = rhow( dfftcp%nl(1:ngmcp), is ) / omega_cp
+          IF ( nspin == 1 ) rhowg(:,is) = rhowg(:,is) * 2    !!! factor 2 for the other spin-component
           CALL check_rho( is, rhowg(:,is), rhog(:,is) )
           !
         ENDIF
         !
         ! ... write the WFs to CP-Koopmans-readable files
         !
-        CALL write_wannier_cp( iunwann, nwordwann, num_wann, ks_only )
+        CALL write_wannier_cp( iunwann, nwordwann, num_wann, is, ks_only )
         !
         IF ( .not. wannier_plot ) CALL close_buffer( iunwann, 'delete' )
         !
@@ -355,14 +358,36 @@ MODULE wannier2odd
         !
         ! ... write KS orbitals to CP-Koopmans-readable files
         !
-        CALL write_wannier_cp( iunwfcx, nwordwfcx, num_bands, ks_only, 'occ' )
-        CALL write_wannier_cp( iunwfcx, nwordwfcx, num_bands, ks_only, 'emp' )
+        CALL write_wannier_cp( iunwfcx, nwordwfcx, num_bands, is, ks_only, 'occ' )
+        CALL write_wannier_cp( iunwfcx, nwordwfcx, num_bands, is, ks_only, 'emp' )
         !
         CALL close_buffer( iunwfcx, 'delete' )
         !
       ENDIF
       !
     ENDDO ! is
+    !
+    IF ( calc_rho ) THEN
+      !
+      ALLOCATE( rhog_( size(rhog,1), size(rhog,2) ) )
+      !
+      IF ( iss == 1 ) THEN
+        !
+        rhog_ = rhog
+        !
+      ELSE
+        !
+        CALL check_rho( rhog )
+        !
+        ! write rhog_ in the PW format:
+        ! - component 1 contains the total up+down density
+        ! - component 2 contains the magnetization (rho_up - rho_down)
+        rhog_(:,1) = rhog(:,1) + rhog(:,2)
+        rhog_(:,2) = rhog(:,1) - rhog(:,2)
+        !
+      ENDIF
+      !
+    ENDIF
     !
     IF ( print_rho ) THEN
       !
@@ -374,7 +399,7 @@ MODULE wannier2odd
           CALL write_rhog( TRIM(dirname) // "charge-density-x", &
           root_bgrp, intra_bgrp_comm, &
           bg_cp(:,1)*tpiba, bg_cp(:,2)*tpiba, bg_cp(:,3)*tpiba, &
-          gamma_only_x, mill_cp, ig_l2g_cp, rhog(:,:) )
+          gamma_only_x, mill_cp, ig_l2g_cp, rhog_(:,:) )
       !
     ENDIF
     !
@@ -391,8 +416,10 @@ MODULE wannier2odd
   !
   !
   !---------------------------------------------------------------------
-  SUBROUTINE check_rho( ispin, rhog, rhogref )
+  SUBROUTINE check_rho_single( ispin, rhog, rhogref )
     !-------------------------------------------------------------------
+    !
+    ! ... SPIN UNPOLARISED CASE
     !
     ! ...  this routine performs some checks on the supercell total density:
     ! ...  1) the total charge
@@ -410,7 +437,7 @@ MODULE wannier2odd
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: ispin
-    COMPLEX(DP), INTENT(IN) :: rhog(:) 
+    COMPLEX(DP), INTENT(IN) :: rhog(:)
     COMPLEX(DP), INTENT(IN), OPTIONAL :: rhogref(:)
     !
     REAL(DP) :: nelec_, charge
@@ -456,7 +483,82 @@ MODULE wannier2odd
     ENDIF
     !
     !
-  END SUBROUTINE check_rho
+  END SUBROUTINE check_rho_single
+  !
+  !
+  !---------------------------------------------------------------------
+  SUBROUTINE check_rho_double( rhog, rhogref )
+    !-------------------------------------------------------------------
+    !
+    ! ... SPIN POLARISED CASE
+    !
+    ! ...  this routine performs some checks on the supercell total density:
+    ! ...  1) the total charge
+    ! ...  2) (if rhogref is present) it checks that rhog matches with rhogref
+    !
+    USE mp,                  ONLY : mp_sum
+    USE mp_bands,            ONLY : intra_bgrp_comm
+    USE klist,               ONLY : nelec
+    USE lsda_mod,            ONLY : nspin
+    USE scf,                 ONLY : rho
+    USE constants,           ONLY : eps6
+    USE fft_supercell,       ONLY : gstart_cp, omega_cp, check_fft, ngmcp
+    USE read_wannier,        ONLY : num_kpts
+    !
+    !
+    IMPLICIT NONE
+    !
+    COMPLEX(DP), INTENT(IN) :: rhog(:,:) 
+    COMPLEX(DP), INTENT(IN), OPTIONAL :: rhogref(:,:)
+    !
+    REAL(DP) :: nelec_, charge
+    INTEGER :: ik, is
+    !
+    !
+    ! ... check the total charge
+    !
+    charge = 0.D0
+    IF ( gstart_cp == 2 ) THEN
+      charge = SUM(rhog(1,:)) * omega_cp
+    ENDIF
+    !
+    CALL mp_sum( charge, intra_bgrp_comm )
+    !
+    nelec_ = nelec * num_kpts
+    IF ( check_fft ) nelec_ = nelec
+    IF ( ABS( charge - nelec_ ) > 1.D-3 * charge ) &
+         CALL errore( 'wan2odd', 'wrong total charge', 1 )
+    !
+    !
+    ! ... check rho(G) when dfftcp is taken equal to dffts
+    !
+    IF ( check_fft ) THEN
+      DO is = 1, nspin
+        DO ik = 1, ngmcp
+          IF ( ABS( DBLE(rhog(ik,is) - rho%of_g(ik,is)) ) .ge. eps6 .or. &
+              ABS( AIMAG(rhog(ik,is) - rho%of_g(ik,is)) ) .ge. eps6 ) THEN
+            CALL errore( 'wan2odd', 'rhog and rho%of_g differ', ik )
+          ENDIF
+        ENDDO
+      ENDDO
+    ENDIF
+    !
+    !
+    ! ... when present, rhogref is compared to rhog
+    !
+    IF ( PRESENT(rhogref) ) THEN
+      DO is = 1, nspin
+        DO ik = 1, ngmcp
+          IF ( ABS( DBLE(rhog(ik,is) - rhogref(ik,is)) ) .ge. eps6 .or. &
+              ABS( AIMAG(rhog(ik,is) - rhogref(ik,is)) ) .ge. eps6 ) THEN
+            CALL errore( 'wan2odd', 'rhog and rhogref differ', ik )
+          ENDIF
+        ENDDO
+      ENDDO
+    ENDIF
+    !
+    !
+  END SUBROUTINE check_rho_double
   !
   !
   !---------------------------------------------------------------------
@@ -468,7 +570,7 @@ MODULE wannier2odd
     ! ...  of the wavefunction on the real grid is bigger the chosen
     ! ...  threshold, evc is considered complex
     !
-    ! ... WIP: NOT ABLE TO REPRODUCE WANNIER90  maximum Im/Re ratio yet !!!
+    ! ... WIP: NOT ABLE TO REPRODUCE WANNIER90 maximum Im/Re ratio yet !!!
     !
     USE mp_bands,            ONLY : intra_bgrp_comm
     USE mp,                  ONLY : mp_max
@@ -532,13 +634,13 @@ MODULE wannier2odd
     !
     IF ( calc_rho ) THEN
       !
-      ALLOCATE( rhor(dfftcp%nnr) )
+      ALLOCATE( rhor(dfftcp%nnr,nspin) )
       ALLOCATE( rhog(ngmcp,nspin) )
-      rhor(:) = ( 0.D0, 0.D0 )
+      rhor(:,:) = ( 0.D0, 0.D0 )
       !
-      ALLOCATE( rhow(dfftcp%nnr) )
+      ALLOCATE( rhow(dfftcp%nnr,nspin) )
       ALLOCATE( rhowg(ngmcp,nspin) )
-      rhow(:) = ( 0.D0, 0.D0 )
+      rhow(:,:) = ( 0.D0, 0.D0 )
       !
     ENDIF
     !
