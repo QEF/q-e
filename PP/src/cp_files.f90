@@ -23,7 +23,7 @@ MODULE cp_files
   CONTAINS
   !
   !-------------------------------------------------------------------
-  SUBROUTINE write_wannier_cp( iun, nword, norb, ks_only, typ )
+  SUBROUTINE write_wannier_cp( iun, nword, norb, ispin, ks_only, typ )
     !-----------------------------------------------------------------
     !
     ! ...  This routine takes the Wannier/KS functions in input and 
@@ -69,7 +69,8 @@ MODULE cp_files
     !
     INTEGER, INTENT(IN) :: iun                     ! unit to the WFs buffer
     INTEGER, INTENT(IN) :: nword                   ! record length WF file
-    INTEGER, INTENT(IN) :: norb                    ! num of (primitive cell) WFs
+    INTEGER, INTENT(IN) :: norb                    ! num of (primitive cell) WFs/KS states
+    INTEGER, INTENT(IN) :: ispin                   ! spin component
     LOGICAL, INTENT(IN) :: ks_only
     CHARACTER(LEN=3), OPTIONAL, INTENT(IN) :: typ  ! required when ks_only=.true.
     !
@@ -78,28 +79,33 @@ MODULE cp_files
     INTEGER :: cp_unit = 125
     INTEGER :: num_files
     INTEGER :: npw_g                             ! global number of PWs
-    INTEGER :: ir, ir_, ibnd, ibnd_, ifile, ipw
-    INTEGER :: norbx, nrtot
+    INTEGER :: ir, ibnd, ibnd_, ifile, ipw
+    INTEGER :: norbx, nrtot, nelec_
     COMPLEX(DP), ALLOCATABLE :: evc(:,:)
     COMPLEX(DP), ALLOCATABLE :: evc_g(:)
     !
     !
     ALLOCATE( evc(npwxcp*npol,norb) )
+    nrtot = num_kpts
     !
     IF ( ks_only ) THEN
       !
       IF ( .not. PRESENT(typ) ) &
         CALL errore( 'write_wannier_cp', 'ks_only=.true. needs typ', 1 )
       !
-      nrtot = num_kpts / nspin
+      IF ( nspin == 2 ) THEN
+        CALL set_nelec( ispin, nrtot, nelec_ )
+      ELSE
+        nelec_ = INT(nelec) / 2
+      ENDIF
       !
       IF ( typ == 'occ' ) THEN
         !
-        norbx = nelec / 2 * nrtot
+        norbx = nelec_ * nrtot
         !
       ELSEIF ( typ == 'emp' ) THEN
         !
-        norbx = ( norb - nelec / 2 ) * nrtot
+        norbx = ( norb - nelec_ ) * nrtot
         !
       ELSE
         !
@@ -109,7 +115,6 @@ MODULE cp_files
       !
     ELSE
       !
-      nrtot = num_kpts
       norbx = norb * nrtot
       !
     ENDIF
@@ -132,7 +137,7 @@ MODULE cp_files
     ! ...     or a file written independently depending on the value
     ! ...     of nspin
     !
-    IF ( nspin == 1 .or. ks_only ) THEN
+    IF ( nspin == 1 ) THEN
       num_files = 2
     ELSE
       num_files = 1
@@ -146,9 +151,9 @@ MODULE cp_files
       IF ( ks_only ) THEN
         !
         IF ( typ == 'occ' ) THEN
-          WRITE( filename, 101 ) ifile
+          WRITE( filename, 101 ) ifile + ispin - 1
         ELSE
-          WRITE( filename, 102 ) ifile
+          WRITE( filename, 102 ) ifile + ispin - 1
         ENDIF
         !
       ELSE
@@ -169,19 +174,13 @@ MODULE cp_files
       !
       DO ir = 1, nrtot
         !
-        IF ( ks_only .and. nspin == 2 ) THEN
-          ir_ = ir + (ifile-1)*nrtot
-        ELSE
-          ir_ = ir
-        ENDIF
-        !
-        CALL get_buffer( evc, nword, iun, ir_ )
+        CALL get_buffer( evc, nword, iun, ir )
         !
         DO ibnd = 1, norbx/nrtot
           !
           ibnd_ = ibnd
           IF ( ks_only ) THEN
-            IF ( typ == 'emp' ) ibnd_ = ibnd + nelec / 2
+            IF ( typ == 'emp' ) ibnd_ = ibnd + nelec_
           ENDIF
           !
           evc_g(:) = ( 0.D0, 0.D0 )
@@ -209,6 +208,43 @@ MODULE cp_files
     !
     !
   END SUBROUTINE write_wannier_cp
+  !
+  !
+  !-------------------------------------------------------------------
+  SUBROUTINE set_nelec( ispin, nrtot, nelec )
+    !-----------------------------------------------------------------
+    !
+    ! ...  This routine calculates the number of electrons in the specified
+    ! ...  spin channel.
+    !
+    USE kinds,               ONLY : DP
+    USE constants,           ONLY : eps8
+    USE electrons_base,      ONLY : nupdwn
+    USE wvfct,               ONLY : wg
+    !
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN) :: ispin, nrtot
+    INTEGER, INTENT(OUT) :: nelec
+    !
+    INTEGER :: ibnd, ik
+    INTEGER :: counter
+    !
+    !
+    counter = 0
+    ik = nrtot * ( ispin - 1 ) + 1
+    !
+    DO ibnd = 1, nupdwn(ispin)
+      !
+      IF ( wg(ibnd,ik) .gt. eps8 ) counter = counter + 1
+      !
+    ENDDO
+    !
+    nelec = counter
+    !
+    !
+  END SUBROUTINE set_nelec
   !
   !
 END MODULE cp_files

@@ -473,12 +473,6 @@ PROGRAM pw2wannier90
      CALL openfil_pp
      CALL mp_grid_ks2odd
      !
-     IF ( nspin == 2 ) THEN
-         WRITE( stdout, * )
-         WRITE( stdout, * ) ' WARNING: case nupdwn(1) != nupdwn(2) not implemented yet!'
-         WRITE( stdout, * )
-     ENDIF
-     !
      CALL wan2odd( ks_only=.true. )
      !
      IF ( ionode ) WRITE( stdout, *  )
@@ -5840,7 +5834,7 @@ SUBROUTINE mp_grid_ks2odd( )
    LOGICAL :: ks_only
    !
    !
-   iknum = iknum / nspin         ! momentarily change the value of iknum
+   iknum = iknum / nspin         ! momentarily change the value of iknum (needed by find_mp_grid)
    ALLOCATE( kpt_latt(3,iknum) )
    kpt_latt(:,1:iknum) = xk(:,1:iknum)
    CALL cryst_to_cart( iknum, kpt_latt, at, -1 )
