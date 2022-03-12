@@ -106,8 +106,6 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   complex(DP) ::  dcgamma, dclambda
   !  the ratio between rho
   !  step length
-  REAL(kind=dp), EXTERNAL :: myddot
-  REAL(kind=dp), EXTERNAL :: myddotv2, myddotv4
   !  the scalar product
   real(DP), allocatable :: rho (:), rhoold (:), eu (:), a(:), c(:)
   ! the residue
@@ -137,8 +135,6 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !      WRITE( stdout,*) g,t,h,hold
 
   kter_eff = 0.d0 ; conv (1:nbnd) = 0
-
-  !g=(0.d0,0.d0); t=(0.d0,0.d0); h=(0.d0,0.d0); hold=(0.d0,0.d0)
 
   ! bgrp parallelization is done outside h_psi/s_psi. set use_bgrp_in_hpsi temporarily to false
   lsave_use_bgrp_in_hpsi = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .false.
@@ -172,7 +168,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      !    compute preconditioned residual vector and convergence check
      !
      lbnd = 0
-     CALL start_clock('loop1')
+     !CALL start_clock('loop1')
      do ibnd = n_start, n_end ;  ibnd_ = ibnd - n_start + 1
         if (conv (ibnd) .eq.0) then
            lbnd = lbnd+1
@@ -201,7 +197,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
         endif
      enddo
      !$acc update host(rho)
-     CALL stop_clock('loop1')
+     !CALL stop_clock('loop1')
      kter_eff = kter_eff + DBLE (lbnd) / DBLE (nbnd)
      call mp_sum( rho(1:lbnd), intra_bgrp_comm )
      do ibnd = n_end, n_start, -1 ; ibnd_ = ibnd - n_start + 1
@@ -223,7 +219,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      !        compute the step direction h. Conjugate it to previous step
      !
      lbnd = 0
-     CALL start_clock('loop2')
+     !CALL start_clock('loop2')
      do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
         if (conv (ibnd) .eq.0) then
 !
@@ -255,7 +251,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            !$acc end serial
         endif
      enddo
-     CALL stop_clock('loop2')
+     !CALL stop_clock('loop2')
      !
      !        compute t = A*h
      !
@@ -264,17 +260,17 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      !        compute the coefficients a and c for the line minimization
      !        compute step length lambda
      lbnd=0
-     CALL start_clock('loop3')
+     !CALL start_clock('loop3')
      !$acc host_data use_device(g,h,t,a,c)
      do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
            IF (gamma_only) THEN
-              addot = 2.0d0*myddot(2*ndmx*npol,h(1,ibnd_),1,g(1,ibnd_),1)
-              cddot = 2.0d0*myddot(2*ndmx*npol,h(1,ibnd_),1,t(1,lbnd),1)
+              CALL MYDDOTV3(2*ndmx*npol,h(1,ibnd_),1,g(1,ibnd_),1,a(lbnd)) 
+              CALL MYDDOTV3(2*ndmx*npol,h(1,ibnd_),1,t(1,lbnd),1,c(lbnd)) 
               !$acc kernels 
-              a(lbnd) = addot
-              c(lbnd) = cddot
+              a(lbnd) = a(lbnd)*2.0d0
+              c(lbnd) = c(lbnd)*2.0d0
               !$acc end kernels
               IF (gstart == 2) THEN
                  !$acc kernels 
@@ -290,11 +286,11 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      end do
      !$acc end host_data
      !$acc update host(a,c)
-     CALL stop_clock('loop3')
+     !CALL stop_clock('loop3')
      call mp_sum(  a(1:lbnd), intra_bgrp_comm )
      call mp_sum(  c(1:lbnd), intra_bgrp_comm )
      lbnd=0
-     CALL start_clock('loop4')
+     !CALL start_clock('loop4')
      do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
@@ -321,7 +317,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            rhoold (ibnd_) = rho (ibnd_)
         endif
      enddo
-     CALL stop_clock('loop4')
+     !CALL stop_clock('loop4')
   enddo
 100 continue
   !$acc exit data delete(rho,evq,a,c,g,h,h_diag,d0psi,hold,t,eu,e) copyout(dpsi)

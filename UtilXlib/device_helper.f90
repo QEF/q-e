@@ -173,26 +173,3 @@ USE cublas
   return
 end subroutine MYDDOTv3
 
-subroutine MYDDOTv4 (n, dx, incx, dy, incy, result)
-#if defined(__CUDA)
-USE cudafor
-USE cublas
-#endif
-  implicit none
-  integer :: n, incx, incy
-  DOUBLE PRECISION dx(1,*), dy(1,*)
-  DOUBLE PRECISION :: result
-  !DOUBLE PRECISION dx(*,1), dy(*,1)
-#if defined(__CUDA)
-  attributes(device) :: dx, dy
-  attributes(device) :: result
-  !DOUBLE PRECISION, dimension(1,1), device :: dz
-  !type(cublashandle) :: h
-  !integer :: ierr
-  !h = cublasGetHandle()
-  !ierr=cublasdgemm('T', 'N', 1, 1, n, 1.0d0, dx, n, dy, n, 0.0d0, dz, 1)
-#else
-  result=DDOT(n, dx, incx, dy, incy)
-#endif
-end subroutine MYDDOTv4
-
