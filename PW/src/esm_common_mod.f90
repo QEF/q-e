@@ -293,7 +293,7 @@ CONTAINS
       END IF
       z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
-      IF (do_comp_esm) THEN
+      IF (do_comp_esm .AND. ( esm_bc /= 'pbc' )) THEN
         !! BC1 terms
         Vhar0r(iz) = Vhar0r(iz) &
                      - tpi*z**2*rg3 &
@@ -364,7 +364,7 @@ CONTAINS
           za = za - L
         END IF
 
-        IF (do_comp_esm) THEN
+        IF (do_comp_esm .AND. ( esm_bc /= 'pbc' )) THEN
           !! BC1 terms
           Vloc0r(iz) = Vloc0r(iz) - tpi*Qa/S &
                        *((z - za)*erf(salp*(z - za)) &
