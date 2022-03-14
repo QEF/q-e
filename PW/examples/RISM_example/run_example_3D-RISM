@@ -139,7 +139,7 @@ cat > H2O.NaCl_aq.in << EOF
     ! 3D-RISM's setting
     starting3d      = 'zero'
     rism3d_maxstep  = 2000
-    rism3d_conv_thr = 1.0e-3
+    rism3d_conv_thr = 1.0e-5
     mdiis3d_size    = 10
     mdiis3d_step    = 0.8
  /
