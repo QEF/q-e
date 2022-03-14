@@ -293,21 +293,22 @@ CONTAINS
       END IF
       z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
-      IF (esm_bc == 'bc1') THEN
+      IF (do_comp_esm) THEN
         !! BC1 terms
         Vhar0r(iz) = Vhar0r(iz) &
                      - tpi*z**2*rg3 &
                      - tpi*z0**2*rg3 &
                      - fpi*z*sum1c &
                      - fpi*sum2c
-      ELSE IF (esm_bc == 'bc2') THEN
-        !! BC2 terms
-        Vhar0r(iz) = Vhar0r(iz) &
-                     + tpi*z1*2*z0*rg3 - tpi*(-z/z1)*2*z0*sum1c
-      ELSE IF (esm_bc == 'bc3') THEN
-        !! BC3 terms
-        Vhar0r(iz) = Vhar0r(iz) &
-                     - tpi*(z - 2*z1)*2*z0*rg3 + fpi*z0*sum1c
+        IF (esm_bc == 'bc2') THEN
+          !! BC2 terms
+          Vhar0r(iz) = Vhar0r(iz) &
+                       + tpi*z1*2*z0*rg3 - tpi*(-z/z1)*2*z0*sum1c
+        ELSE IF (esm_bc == 'bc3') THEN
+          !! BC3 terms
+          Vhar0r(iz) = Vhar0r(iz) &
+                       - tpi*(z - 2*z1)*2*z0*rg3 + fpi*z0*sum1c
+        END IF
       END IF
     END DO ! iz
 
@@ -363,19 +364,20 @@ CONTAINS
           za = za - L
         END IF
 
-        IF (esm_bc == 'bc1') THEN
+        IF (do_comp_esm) THEN
           !! BC1 terms
           Vloc0r(iz) = Vloc0r(iz) - tpi*Qa/S &
                        *((z - za)*erf(salp*(z - za)) &
                        + exp(-alpha*(z - za)**2)*sqrtpm1/salp)
-        ELSE IF (esm_bc == 'bc2') THEN
-          !! BC2 terms
-          Vloc0r(iz) = Vloc0r(iz) &
-                       + tpi*Qa/S*(-z*za + z1*z1)/z1
-        ELSE IF (esm_bc == 'bc3') THEN
-          !! BC3 terms
-          Vloc0r(iz) = Vloc0r(iz) &
-                       + tpi*Qa/S*(-z + 2*z1 - za)
+          IF (esm_bc == 'bc2') THEN
+            !! BC2 terms
+            Vloc0r(iz) = Vloc0r(iz) &
+                         + tpi*Qa/S*(-z*za + z1*z1)/z1
+          ELSE IF (esm_bc == 'bc3') THEN
+            !! BC3 terms
+            Vloc0r(iz) = Vloc0r(iz) &
+                         + tpi*Qa/S*(-z + 2*z1 - za)
+          END IF
         END IF
 
       END DO ! ia
