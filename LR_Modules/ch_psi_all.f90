@@ -288,66 +288,103 @@ CONTAINS
     USE realus, ONLY : real_space, invfft_orbital_gamma, &
                        fwfft_orbital_gamma, calbec_rs_gamma,  s_psir_gamma
     use gvect,  only : gstart
+#if defined(__CUDA)
+    USE becmod_gpum, ONLY : becp_d
+    USE becmod_subs_gpum, ONLY : calbec_gpu,  using_becp_d_auto
+    USE cublas
+#endif
 
     IMPLICIT NONE
-    INTEGER :: m_start, m_end
-    CALL start_clock ('ch_psi_all_gamma')
+    INTEGER :: m_start, m_end ,ntemp
 
-    CALL errore('ch_psi_all', 'gamma point to be fixed ( DtoH copies missing)',1)
-
+    ntemp = nbnd_occ (ik)
+    CALL start_clock_gpu ('ch_psi_all_gamma')
+    !$acc data present(evc, ps, hpsi, spsi)
+    !$acc kernels present(ps)
     ps (:,:) = 0.d0
-    
+    !$acc end kernels
     IF (noncolin) THEN
        CALL errore('ch_psi_all', 'non collin in gamma point not implemented',1)
     ELSE
+            
+#if defined(__CUDA)            
+       !$acc host_data use_device(spsi, ps, evc)     
+       CALL DGEMM( 'C', 'N', nbnd, m, 2*n, 2.D0,evc, 2*npwx*npol, spsi, 2*npwx*npol, 0.D0, ps, nbnd )
+       if(gstart==2) CALL gpu_DGER(nbnd, m, -1.0_DP, evc, 2*npwx, spsi, 2*npwx, ps, nbnd )
+       !$acc end host_data
+#else
        CALL DGEMM( 'C', 'N', nbnd, m, 2*n, 2.D0,evc, 2*npwx*npol, spsi, 2*npwx*npol, 0.D0, ps, nbnd )
        if(gstart==2) CALL DGER(nbnd, m, -1.0_DP, evc, 2*npwx, spsi, 2*npwx, ps, nbnd )
+#endif
     ENDIF
+    !$acc kernels present(ps,hpsi)
     ps (:,:) = ps(:,:) * alpha_pv
-    CALL mp_sum ( ps, intra_bgrp_comm )
-
     hpsi (:,:) = (0.d0, 0.d0)
-
-    IF (noncolin) THEN
-       CALL ZGEMM ('N', 'N', npwx*npol, m, nbnd_occ (ik) , (1.d0, 0.d0) , evc, &
-            npwx*npol, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx*npol)
-    ELSE
-       CALL DGEMM ('N', 'N', 2*n, m, nbnd_occ (ik) , 1.d0 , evc, &
-            2*npwx, ps, nbnd, 1.d0 , hpsi, 2*npwx)
-    ENDIF
+    !$acc end kernels
+    !$acc host_data use_device(ps)
+    CALL mp_sum ( ps, intra_bgrp_comm )
+    !$acc end host_data
+    !$acc host_data use_device(hpsi, ps, evc)
+    CALL DGEMM ('N', 'N', 2*n, m, ntemp , 1.d0 , evc, &
+         2*npwx, ps, nbnd, 1.d0 , hpsi, 2*npwx)
+    !$acc end host_data
+    !$acc kernels present(spsi, hpsi)
     spsi(:,:) = hpsi(:,:)
+    !$acc end  kernels
+    !$acc end data
     !
     !    And apply S again
     !
     IF (real_space ) THEN
+       !$acc update host(hpsi)!, spsi)     
        DO ibnd=1,m,2
           CALL invfft_orbital_gamma(hpsi,ibnd,m)
           CALL calbec_rs_gamma(ibnd,m,becp%r)
           CALL s_psir_gamma(ibnd,m)
           CALL fwfft_orbital_gamma(spsi,ibnd,m)
        ENDDO
+       !$acc update device(hpsi)!, spsi)
     ELSE
+       CALL start_clock_gpu ('ch_psi_calbec')
        if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
           call divide( inter_bgrp_comm, m, m_start, m_end)
+#if defined(__CUDA)
+          if (m_end >= m_start) then
+             CALL using_becp_d_auto(2)
+             !$acc host_data use_device(hpsi(:,m_start:m_end),vkb)
+             CALL calbec_gpu (n, vkb(:,:), hpsi(:,m_start:m_end), becp_d, m_end- m_start + 1)    !
+             !$acc end host_data
+          endif
+       else
+          CALL using_becp_d_auto(2)
+          !$acc host_data use_device(hpsi,vkb)
+          CALL calbec_gpu (n, vkb(:,:), hpsi, becp_d, m)
+          !$acc end host_data
+       endif
+#else          
           if (m_end >= m_start) CALL calbec (n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
+
        else
           CALL calbec (n, vkb, hpsi, becp, m)
        end if
+#endif 
+       CALL stop_clock_gpu ('ch_psi_calbec')
+#if defined(__CUDA)
+       !$acc host_data use_device(hpsi, spsi)
+       CALL s_psi_gpu (npwx, n, m, hpsi, spsi)
+       !$acc end host_data
+#else       
        CALL s_psi (npwx, n, m, hpsi, spsi)
+#endif       
     ENDIF
+    !$acc parallel loop collapse(2) present(ah, spsi)
     DO ibnd = 1, m
        DO ig = 1, n
           ah (ig, ibnd) = ah (ig, ibnd) + spsi (ig, ibnd)
        ENDDO
     ENDDO
-    IF (noncolin) THEN
-       DO ibnd = 1, m
-          DO ig = 1, n
-             ah (ig+npwx, ibnd) = ah (ig+npwx, ibnd) + spsi (ig+npwx, ibnd)
-          ENDDO
-       ENDDO
-    ENDIF
-    CALL stop_clock ('ch_psi_all_gamma')
+    !$acc end parallel loop
+    CALL stop_clock_gpu ('ch_psi_all_gamma')
     return
   END SUBROUTINE ch_psi_all_gamma
  

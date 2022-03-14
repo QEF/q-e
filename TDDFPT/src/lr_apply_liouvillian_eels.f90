@@ -194,9 +194,9 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      ! Apply the operator ( H - \epsilon S + alpha_pv P_v) to evc1
      ! where alpha_pv = 0
      !
-     !$acc enter data copyin(evq)
+     !$acc data copyin(evq) copy(evc1(1:npwx*npol,1:nbnd,ik),sevc1_new(1:npwx*npol,1:nbnd,ik), et)
      CALL ch_psi_all (npwq, evc1(:,:,ik), sevc1_new(:,:,ik), et(:,ikk), ik, nbnd_occ(ikk)) 
-     !$acc exit data delete(evq)
+     !$acc end data
      IF (noncolin) THEN
         IF (ALLOCATED(psic_nc)) DEALLOCATE(psic_nc)
      !ELSE

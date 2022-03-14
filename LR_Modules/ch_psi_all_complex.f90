@@ -99,7 +99,7 @@ SUBROUTINE ch_psi_all_complex (n, h, ah, e, ik, m)
   spsi (:,:) = (0.d0, 0.d0)
   !$acc end kernels
 #if defined(__CUDA)
-  !$acc data copyin(h) present(hpsi, spsi)
+  !$acc data present(h, hpsi, spsi)
   !$acc host_data use_device(h, hpsi, spsi)
   CALL h_psi_gpu (npwx, n, m, h, hpsi)
   CALL s_psi_gpu (npwx, n, m, h, spsi)
