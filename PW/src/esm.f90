@@ -46,34 +46,6 @@ MODULE esm
             esm_stres_har, esm_stres_ewa, esm_stres_loclong, &
             esm_printpot, esm_summary
   !
-  LOGICAL :: do_comp_esm = .FALSE.
-  !
 CONTAINS
-  !
-  ! Checks inversion symmetry along z-axis
-  !
-  LOGICAL FUNCTION esm_z_inv(lrism)
-    !
-    USE constants, ONLY : eps14
-    !
-    IMPLICIT NONE
-    !
-    LOGICAL, INTENT(IN) :: lrism
-    !
-    esm_z_inv = .TRUE.
-    !
-    IF (do_comp_esm) THEN
-      IF (TRIM(esm_bc) == 'bc1') THEN
-        esm_z_inv = (.NOT. lrism)
-      ELSE IF (TRIM(esm_bc) == 'bc2') THEN
-        esm_z_inv = (ABS(esm_efield) < eps14)
-      ELSE IF (TRIM(esm_bc) == 'bc3') THEN
-        esm_z_inv = .FALSE.
-      ELSE IF (TRIM(esm_bc) == 'bc4') THEN
-        esm_z_inv = .FALSE.
-      END IF
-    END IF
-    !
-  END FUNCTION esm_z_inv
   !
 END MODULE esm

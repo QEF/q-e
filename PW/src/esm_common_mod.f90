@@ -8,6 +8,7 @@ MODULE esm_common_mod
   CHARACTER(LEN=3)         :: esm_bc
   INTEGER, ALLOCATABLE     :: mill_2d(:, :), imill_2d(:, :)
   INTEGER                  :: ngm_2d = 0
+  LOGICAL                  :: do_comp_esm = .FALSE.
 
 CONTAINS
 
@@ -1634,5 +1635,31 @@ CONTAINS
     ENDDO
     RETURN
   END SUBROUTINE polint
+  !
+  ! Checks inversion symmetry along z-axis
+  !
+  LOGICAL FUNCTION esm_z_inv(lrism)
+    !
+    USE constants, ONLY : eps14
+    !
+    IMPLICIT NONE
+    !
+    LOGICAL, INTENT(IN) :: lrism
+    !
+    esm_z_inv = .TRUE.
+    !
+    IF (do_comp_esm) THEN
+      IF (TRIM(esm_bc) == 'bc1') THEN
+        esm_z_inv = (.NOT. lrism)
+      ELSE IF (TRIM(esm_bc) == 'bc2') THEN
+        esm_z_inv = (ABS(esm_efield) < eps14)
+      ELSE IF (TRIM(esm_bc) == 'bc3') THEN
+        esm_z_inv = .FALSE.
+      ELSE IF (TRIM(esm_bc) == 'bc4') THEN
+        esm_z_inv = .FALSE.
+      END IF
+    END IF
+    !
+  END FUNCTION esm_z_inv
 
 END MODULE esm_common_mod
