@@ -305,18 +305,17 @@ CONTAINS
     !$acc end kernels
     IF (noncolin) THEN
        CALL errore('ch_psi_all', 'non collin in gamma point not implemented',1)
-    ELSE
+    ENDIF
             
 #if defined(__CUDA)            
-       !$acc host_data use_device(spsi, ps, evc)     
-       CALL DGEMM( 'C', 'N', nbnd, m, 2*n, 2.D0,evc, 2*npwx*npol, spsi, 2*npwx*npol, 0.D0, ps, nbnd )
-       if(gstart==2) CALL gpu_DGER(nbnd, m, -1.0_DP, evc, 2*npwx, spsi, 2*npwx, ps, nbnd )
-       !$acc end host_data
+    !$acc host_data use_device(spsi, ps, evc)     
+    CALL DGEMM( 'C', 'N', nbnd, m, 2*n, 2.D0,evc, 2*npwx*npol, spsi, 2*npwx*npol, 0.D0, ps, nbnd )
+    if(gstart==2) CALL gpu_DGER(nbnd, m, -1.0_DP, evc, 2*npwx, spsi, 2*npwx, ps, nbnd )
+    !$acc end host_data
 #else
-       CALL DGEMM( 'C', 'N', nbnd, m, 2*n, 2.D0,evc, 2*npwx*npol, spsi, 2*npwx*npol, 0.D0, ps, nbnd )
-       if(gstart==2) CALL DGER(nbnd, m, -1.0_DP, evc, 2*npwx, spsi, 2*npwx, ps, nbnd )
+    CALL DGEMM( 'C', 'N', nbnd, m, 2*n, 2.D0,evc, 2*npwx*npol, spsi, 2*npwx*npol, 0.D0, ps, nbnd )
+    if(gstart==2) CALL DGER(nbnd, m, -1.0_DP, evc, 2*npwx, spsi, 2*npwx, ps, nbnd )
 #endif
-    ENDIF
     !$acc kernels present(ps,hpsi)
     ps (:,:) = ps(:,:) * alpha_pv
     hpsi (:,:) = (0.d0, 0.d0)
@@ -336,14 +335,14 @@ CONTAINS
     !    And apply S again
     !
     IF (real_space ) THEN
-       !$acc update host(hpsi)!, spsi)     
+       !$acc update host(hpsi, spsi)     
        DO ibnd=1,m,2
           CALL invfft_orbital_gamma(hpsi,ibnd,m)
           CALL calbec_rs_gamma(ibnd,m,becp%r)
           CALL s_psir_gamma(ibnd,m)
           CALL fwfft_orbital_gamma(spsi,ibnd,m)
        ENDDO
-       !$acc update device(hpsi)!, spsi)
+       !$acc update device(hpsi, spsi)
     ELSE
        CALL start_clock_gpu ('ch_psi_calbec')
        if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
