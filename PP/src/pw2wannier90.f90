@@ -2542,7 +2542,7 @@ SUBROUTINE compute_mmn
          ! loops on bands
          !
          IF (wan_mode=='standalone') THEN
-            IF (me_pool == root_pool) WRITE (iun_mmn, '(5i5)') &
+            IF (me_pool == root_pool) WRITE (iun_mmn, '(5i10)') &
                ik_g_w90, kpb(ik_g_w90, ib), (g_kpb(ipol, ik_g_w90, ib), ipol=1,3)
          ENDIF
          !
@@ -3742,7 +3742,7 @@ SUBROUTINE compute_amn
       IF (wan_mode == 'standalone') THEN
          DO iw = 1, n_proj
             DO ibnd = 1, num_bands
-               IF (me_pool == root_pool) WRITE(iun_amn,'(3i5,2f18.12)') &
+               IF (me_pool == root_pool) WRITE(iun_amn,'(3i10,2f18.12)') &
                   ibnd, iw, ik_g_w90, amn(ibnd, iw)
             ENDDO
          ENDDO
@@ -4147,7 +4147,7 @@ SUBROUTINE compute_amn_with_scdm
          Amat = MATMUL(Umat, VTmat)
          DO iw = 1, n_wannier
             DO ibnd = 1, num_bands
-               WRITE(iun_amn,'(3i5,2f18.12)') ibnd, iw, ik_g_w90, REAL(Amat(ibnd,iw)), AIMAG(Amat(ibnd,iw))
+               WRITE(iun_amn,'(3i10,2f18.12)') ibnd, iw, ik_g_w90, REAL(Amat(ibnd,iw)), AIMAG(Amat(ibnd,iw))
             ENDDO
          ENDDO
       ENDIF ! root_pool
@@ -4368,7 +4368,7 @@ SUBROUTINE write_band
          IF (excluded_band(ibnd)) CYCLE
          ibnd1 = ibnd1 + 1
          IF (wan_mode == 'standalone') THEN
-            IF (me_pool == root_pool) WRITE (iun_band,'(2i5,f18.12)') ibnd1, ikevc_g, et(ibnd,ik)*rytoev
+            IF (me_pool == root_pool) WRITE (iun_band,'(2i10,f18.12)') ibnd1, ikevc_g, et(ibnd,ik)*rytoev
          ELSEIF (wan_mode == 'library') THEN
             eigval(ibnd1,ikevc_g) = et(ibnd,ik)*rytoev
          ENDIF
