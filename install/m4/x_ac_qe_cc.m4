@@ -49,7 +49,7 @@ case "$arch:$cc" in
         # Workaround for BEEF compilation with PGI v.19 and previous 
         if test "$f90_flavor" = "pgf90"; then try_cflags="-c11 $try_cflags"; fi
         ;;
-crayxt*:cc )
+crayxe*:cc )
         # Actually we need something like is done for ftn to detect 
         # the proper compiler used (NdFilippo)
         try_cflags="-O3"
