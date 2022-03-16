@@ -31,7 +31,6 @@ ggen1d.o \
 local_dos.o \
 local_dos_mag.o \
 local_dos1d.o \
-merge_evc.o \
 openfil_pp.o\
 partialdos.o \
 paw_postproc.o \
@@ -46,7 +45,6 @@ sum_band_kin.o \
 sym_band.o \
 vasp_read_chgcar_mod.o \
 vasp_xml_module.o \
-wannier.o \
 wannier_proj.o \
 wannier_enrg.o \
 work_function.o \
@@ -62,9 +60,6 @@ xc_vdW_scale_mod.o   # added by Yang Jiao
 PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a 
 QEMODS = $(BASEMODS)
 
-WAN2ODD_OBJS = read_wannier.o fft_supercell.o scell_wfc.o plot_wan2odd.o \
-               cp_files.o wannier2odd.o
-
 MODULES = $(PWOBJS) $(QEMODS)
 
 TLDEPS= pwlibs
@@ -72,7 +67,7 @@ TLDEPS= pwlibs
 all : tldeps open_grid.x average.x bands.x band_interpolation.x dos.x epsilon.x initial_state.x fs.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x pw2wannier90.x pw2critic.x pw2gw.x pw2gt.x \
-      wannier_ham.x wannier_plot.x molecularpdos.x merge_evc.x \
+      wannier_ham.x wannier_plot.x molecularpdos.x \
       pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x
 
 
@@ -108,12 +103,7 @@ dos.x : dos.o libpp.a $(MODULES)
 		dos.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-merge_evc.x : merge_evc.o libpp.a $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ \
-	merge_evc.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
-	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
-
-pawplot.x : pawplot.o libpp.a libpp.a $(MODULES)
+pawplot.x : pawplot.o libpp.a libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
 		pawplot.o libpp.a $(MODULES) $(QELIBS)
 
@@ -155,9 +145,9 @@ projwfc.x : projwfc.o libpp.a $(MODULES)
 		projwfc.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-pw2wannier90.x : pw2wannier90.o libpp.a $(WAN2ODD_OBJS) $(MODULES)
+pw2wannier90.x : pw2wannier90.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		pw2wannier90.o libpp.a $(WAN2ODD_OBJS) $(MODULES) $(QELIBS)
+		pw2wannier90.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 pw2critic.x : pw2critic.o libpp.a $(MODULES) 

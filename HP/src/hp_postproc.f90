@@ -261,7 +261,7 @@ SUBROUTINE equiv_types_and_determine_spin
   !
   IMPLICIT NONE
   !
-  IF ( find_atpert == 2 .OR. find_atpert == 3 ) THEN
+  IF ( find_atpert /= 1 ) THEN
      !
      ! If it was requested in the input, re-assign the specific type
      ! to another type (e.g., Ni_down to Ni_up)

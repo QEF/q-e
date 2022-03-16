@@ -16,20 +16,20 @@ SUBROUTINE kcw_pp_readin()
   !    by the self-consistent program.
   !
   !
-  USE kinds,         ONLY : DP
-  USE io_global,     ONLY : ionode_id, stdout
-  USE mp,            ONLY : mp_bcast
-  USE run_info,      ONLY : title
-  USE io_files,      ONLY : tmp_dir, prefix, check_tempdir
-  USE noncollin_module, ONLY : noncolin
+  USE kinds,             ONLY : DP
+  USE io_global,         ONLY : ionode_id, stdout
+  USE mp,                ONLY : mp_bcast
+  USE run_info,          ONLY : title
+  USE io_files,          ONLY : tmp_dir, prefix, check_tempdir
+  USE noncollin_module,  ONLY : noncolin
   USE read_cards_module, ONLY : read_cards
-  USE io_global,     ONLY : ionode
-  USE mp_global,     ONLY :  intra_image_comm 
-  USE paw_variables, ONLY : okpaw
-  USE uspp,          ONLY : okvan
+  USE io_global,         ONLY : ionode
+  USE mp_global,         ONLY :  intra_image_comm 
+  USE paw_variables,     ONLY : okpaw
+  USE uspp,              ONLY : okvan
   USE control_kcw
-  USE control_flags, ONLY : iverbosity
-  USE mp_pools,      ONLY : npool
+  USE control_flags,     ONLY : iverbosity
+  USE mp_pools,          ONLY : npool
   !
   IMPLICIT NONE
   !
@@ -132,7 +132,7 @@ SUBROUTINE kcw_pp_readin()
   IF (kcw_iverbosity .gt. 1) iverbosity = 1
   
   IF (npool .gt. 1) &
-      CALL errore ('kcw_readin','Pool Parallelization not implemented. Re-run without pools.',1)
+      CALL errore ('kcw_pp_readin','Pool Parallelization not implemented. Re-run without pools.',1)
   !
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.
@@ -149,11 +149,11 @@ SUBROUTINE kcw_pp_readin()
   WRITE( stdout, '(/,5X,"INFO: Reading Hamiltonian",/)')
   CALL read_hr ( )
   !
-  IF (okpaw.or.okvan) CALL errore('kcw_readin',&
-     'The kcw_wann code with US or PAW is not available yet',1)
+  IF (okpaw.or.okvan) CALL errore('kcw_pp_readin',&
+     'The kcw code with US or PAW is not available yet',1)
 
-  IF (noncolin) CALL errore('kcw_readin',&
-   'The kcw_wann code with non colliner spin is not available yet',1)
+  IF (noncolin) CALL errore('kcw_pp_readin',&
+   'The kcw code with non colliner spin is not available yet',1)
   !
   RETURN
   !

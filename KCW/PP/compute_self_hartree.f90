@@ -109,8 +109,8 @@ PROGRAM compute_self_hartree
   WRITE( stdout, '(5X,"INFO: Reading pwscf data")')
   CALL read_file ( )
   !
-  IF (calculation /= 'wann2kcw' .AND. (mp1*mp2*mp3 /= nkstot/nspin) ) &
-     CALL errore('kcw_readin', ' WRONG number of k points from input, check mp1, mp2, mp3', 1)
+  IF ( mp1*mp2*mp3 /= nkstot/nspin ) &
+     CALL errore('compute_self_hartree', ' WRONG number of k points from input, check mp1, mp2, mp3', 1)
   !
   CALL sh_setup () 
   !

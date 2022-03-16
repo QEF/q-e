@@ -35,20 +35,13 @@ set(src_pp
     src/sym_band.f90
     src/vasp_read_chgcar_mod.f90
     src/vasp_xml_module.f90
-    src/wannier.f90
     src/wannier_proj.f90
     src/wannier_enrg.f90
     src/work_function.f90
     src/write_p_avg.f90
     src/write_io_header.f90
     src/write_hamiltonians.f90
-    src/xc_vdW_scale_mod.f90
-    src/read_wannier.f90
-    src/fft_supercell.f90
-    src/scell_wfc.f90
-    src/plot_wan2odd.f90
-    src/cp_files.f90
-    src/wannier2odd.f90)
+    src/xc_vdW_scale_mod.f90)
 qe_enable_cuda_fortran("${src_pp}")
 
 qe_add_library(qe_pp ${src_pp})

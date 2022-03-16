@@ -20,13 +20,13 @@ try_f90="gfortran f90"
 # candidate compilers and flags based on architecture
 case $arch in
 ia32 | ia64 | x86_64 )
-        try_f90="ifort nvfortran pgf90 nagfor $try_f90"
-        try_mpif90="mpiifort $try_mpif90"
+        try_f90="ifort nvfortran pgf90 nagfor ftn $try_f90"
+        try_mpif90="mpiifort ftn $try_mpif90"
         ;;
 arm )
         try_f90="nvfortran pgf90 armflang $try_f90"
         ;;
-crayxt* )
+craype* )
         try_f90="ftn"
         try_mpif90="ftn"
         ;;
@@ -116,81 +116,83 @@ mpif90=$FC
 
 # check which compiler does mpif90 wrap
 
-case "$arch" in
-        * )
-        echo $ECHO_N "checking version of $mpif90... $ECHO_C"
-        ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
-        pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
-        nvfortran_version=`$mpif90 -V 2>&1 | grep "^nvfortran"`
-        gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
-        nagfor_version=`$mpif90 -v 2>&1 | grep "NAG Fortran"`
-        xlf_version=`$mpif90 -v 2>&1 | grep "xlf"`
-        armflang_version=`$mpif90 -v 2>&1 | grep "Arm C/C++/Fortran Compiler version"`
-        frt_version=`$mpif90 -v 2>&1 | grep "Fujitsu Fortran Compiler"`
-        #
-        if test "$ifort_version" != ""
-        then
-                version=`$mpif90 --version 2>&1 | grep "IFORT" | cut -d ' ' -f3`
-                f90_major_version=`echo $version | cut -d. -f1`
-                echo "${ECHO_T}ifort $f90_major_version"
-                f90_in_mpif90="ifort"
-        elif test "$nvfortran_version" != ""
-        then
-                version=`echo $nvfortran_version | cut -d ' ' -f2`
-                f90_major_version=`echo $version | cut -d. -f1`
-		f90_minor_version=`echo $version | cut -d. -f2 | cut -d- -f1`
-                echo "${ECHO_T}nvfortran $version"
-                f90_in_mpif90="nvfortran"
-        elif test "$pgf_version" != ""
-        then
-                version=`echo $pgf_version | cut -d ' ' -f2`
-                f90_major_version=`echo $version | cut -d. -f1`
-                echo "${ECHO_T}pgf90 $version"
-                f90_in_mpif90="pgf90"
-        elif test "$gfortran_version" != ""
-        then
-                version=`echo $gfortran_version | cut -d ' ' -f3`
-                f90_major_version=`echo $version | cut -d. -f1`
-                f90_minor_version=`echo $version | cut -d. -f2`
-                echo "${ECHO_T}gfortran $f90_major_version.$f90_minor_version"
-                f90_in_mpif90="gfortran"
-        elif test "$nagfor_version" != ""
-        then
-                # NAG 6.0 has the codename attached to version number... annoying
-                version=`echo $nagfor_version | cut -d ' ' -f5`
-                echo "${ECHO_T}nagfor $version"
-                f90_in_mpif90="nagfor"
-        elif test "$xlf_version" != ""
-        then
-                echo "${ECHO_T}xlf (version unknonw)"
-                f90_in_mpif90="xlf90_r"
-                try_dflags="-D__XLF"
-        elif test "$armflang_version" != "" 
-        then 
-                version=`echo $armflang_version | cut -d" " -f 5`
-                f90_major_version=`echo $version | cut -d. -f1` 
-                f90_minor_version=`echo $version | cut -d. -f2` 
-                f90_in_mpif90="armflang"
-                try_foxflags="-D__PGI"  
-        elif test "$frt_version" != ""
-        then
-                version=`echo $frt_version | cut -d" " -f 5`
-                echo "${ECHO_T}frt $version"
-                f90_in_mpif90="frt"
-                try_foxflags="-D__FUJITSU"
-        else
-                echo "${ECHO_T}unknown, assuming gfortran"
-                f90_in_mpif90="gfortran"
-        fi
-        # notify if serial and parallel compiler are the same
-	if test "$set_use_parallel" -eq 1 ; then
-	   if test "$mpif90" = "$f90_in_mpif90"; then
-              AC_MSG_WARN([parallel and serial compiler are the same])
-	   fi
-	fi
-	f90=$f90_in_mpif90
-        ;;
-esac
+echo $ECHO_N "checking version of $mpif90... $ECHO_C"
+ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
+pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
+nvfortran_version=`$mpif90 -V 2>&1 | grep "^nvfortran"`
+gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
+nagfor_version=`$mpif90 -v 2>&1 | grep "NAG Fortran"`
+xlf_version=`$mpif90 -v 2>&1 | grep "xlf"`
+armflang_version=`$mpif90 -v 2>&1 | grep "Arm C/C++/Fortran Compiler version"`
+frt_version=`$mpif90 -v 2>&1 | grep "Fujitsu Fortran Compiler"`
+ftn_version=`$mpif90 --version 2>&1 | grep "Cray Fortran"`
+#
+if test "$ifort_version" != ""
+then
+        version=`$mpif90 --version 2>&1 | grep "IFORT" | cut -d ' ' -f3`
+        f90_major_version=`echo $version | cut -d. -f1`
+        echo "${ECHO_T}ifort $f90_major_version"
+        f90_in_mpif90="ifort"
+elif test "$nvfortran_version" != ""
+then
+        version=`echo $nvfortran_version | cut -d ' ' -f2`
+        f90_major_version=`echo $version | cut -d. -f1`
+	f90_minor_version=`echo $version | cut -d. -f2 | cut -d- -f1`
+        echo "${ECHO_T}nvfortran $version"
+        f90_in_mpif90="nvfortran"
+elif test "$pgf_version" != ""
+then
+        version=`echo $pgf_version | cut -d ' ' -f2`
+        f90_major_version=`echo $version | cut -d. -f1`
+        echo "${ECHO_T}pgf90 $version"
+        f90_in_mpif90="pgf90"
+elif test "$gfortran_version" != ""
+then
+        version=`echo $gfortran_version | cut -d ' ' -f3`
+        f90_major_version=`echo $version | cut -d. -f1`
+        f90_minor_version=`echo $version | cut -d. -f2`
+        echo "${ECHO_T}gfortran $f90_major_version.$f90_minor_version"
+        f90_in_mpif90="gfortran"
+elif test "$nagfor_version" != ""
+then
+        # NAG 6.0 has the codename attached to version number... annoying
+        version=`echo $nagfor_version | cut -d ' ' -f5`
+        echo "${ECHO_T}nagfor $version"
+        f90_in_mpif90="nagfor"
+elif test "$xlf_version" != ""
+then
+        echo "${ECHO_T}xlf (version unknonw)"
+        f90_in_mpif90="xlf90_r"
+        try_dflags="-D__XLF"
+elif test "$armflang_version" != "" 
+then 
+        version=`echo $armflang_version | cut -d" " -f 5`
+        f90_major_version=`echo $version | cut -d. -f1` 
+        f90_minor_version=`echo $version | cut -d. -f2` 
+        f90_in_mpif90="armflang"
+        try_foxflags="-D__PGI"  
+elif test "$frt_version" != ""
+then
+        version=`echo $frt_version | cut -d" " -f 5`
+        echo "${ECHO_T}frt $version"
+        f90_in_mpif90="frt"
+        try_foxflags="-D__FUJITSU"
+elif test "$ftn_version" != ""
+then
+        version=`echo $fnt_version | cut -d" " -f 5`
+        echo "${ECHO_T}ftn $version"
+        f90_in_mpif90="ftn"
+else
+        echo "${ECHO_T}unknown, assuming gfortran"
+        f90_in_mpif90="gfortran"
+fi
+# notify if serial and parallel compiler are the same
+if test "$set_use_parallel" -eq 1 ; then
+   if test "$mpif90" = "$f90_in_mpif90" && test "$mpif90" != "ftn"; then
+      AC_MSG_WARN([parallel and serial compiler are the same])
+   fi
+fi
+f90=$f90_in_mpif90
 AC_FC_SRCEXT(f90)
 
 echo setting F90... $f90

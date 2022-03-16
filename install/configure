@@ -736,7 +736,6 @@ infodir
 docdir
 oldincludedir
 includedir
-runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -834,7 +833,6 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
-runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1087,15 +1085,6 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
-  -runstatedir | --runstatedir | --runstatedi | --runstated \
-  | --runstate | --runstat | --runsta | --runst | --runs \
-  | --run | --ru | --r)
-    ac_prev=runstatedir ;;
-  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
-  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
-  | --run=* | --ru=* | --r=*)
-    runstatedir=$ac_optarg ;;
-
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1233,7 +1222,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir runstatedir
+		libdir localedir mandir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1386,7 +1375,6 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
-  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -2335,14 +2323,14 @@ then
 $as_echo "$as_me: WARNING: Unrecognized build architecture" >&2;}
         ;;
         esac
-            # workaround for Cray-XT machines
-        test -d /proc/cray_xt && arch=crayxt
+            # workaround for Cray machines
+        test -d /proc/cray_xt && arch=craype
             # workaround for IBM BG machines
         test -d /bgsys && arch=ppc64-bg
         test -f /bgsys/drivers/ppcfloor/bin/runjob && arch=ppc64-bgq
 fi
 	case $arch in
-	ia32 | ia64 | necsx | crayxt | ppc64-bg )
+	ia32 | ia64 | necsx | ppc64-bg )
             { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Obsolete architecture? $arch" >&5
 $as_echo "$as_me: WARNING: Obsolete architecture? $arch" >&2;}
 	    ;;
@@ -2357,7 +2345,7 @@ $as_echo "${arch}" >&6; }
 try_dflags=""
 
 # Add needed include directories
-try_iflags="-I\$(TOPDIR)/include -I\$(TOPDIR)/FoX/finclude "
+try_iflags="-I. -I\$(TOPDIR)/include -I\$(TOPDIR)/FoX/finclude "
 
 # Checking archiver...
 
@@ -2875,13 +2863,13 @@ try_f90="gfortran f90"
 # candidate compilers and flags based on architecture
 case $arch in
 ia32 | ia64 | x86_64 )
-        try_f90="ifort nvfortran pgf90 nagfor $try_f90"
-        try_mpif90="mpiifort $try_mpif90"
+        try_f90="ifort nvfortran pgf90 nagfor ftn $try_f90"
+        try_mpif90="mpiifort ftn $try_mpif90"
         ;;
 arm )
         try_f90="nvfortran pgf90 armflang $try_f90"
         ;;
-crayxt* )
+craype* )
         try_f90="ftn"
         try_mpif90="ftn"
         ;;
@@ -3184,82 +3172,84 @@ mpif90=$FC
 
 # check which compiler does mpif90 wrap
 
-case "$arch" in
-        * )
-        echo $ECHO_N "checking version of $mpif90... $ECHO_C"
-        ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
-        pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
-        nvfortran_version=`$mpif90 -V 2>&1 | grep "^nvfortran"`
-        gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
-        nagfor_version=`$mpif90 -v 2>&1 | grep "NAG Fortran"`
-        xlf_version=`$mpif90 -v 2>&1 | grep "xlf"`
-        armflang_version=`$mpif90 -v 2>&1 | grep "Arm C/C++/Fortran Compiler version"`
-        frt_version=`$mpif90 -v 2>&1 | grep "Fujitsu Fortran Compiler"`
-        #
-        if test "$ifort_version" != ""
-        then
-                version=`$mpif90 --version 2>&1 | grep "IFORT" | cut -d ' ' -f3`
-                f90_major_version=`echo $version | cut -d. -f1`
-                echo "${ECHO_T}ifort $f90_major_version"
-                f90_in_mpif90="ifort"
-        elif test "$nvfortran_version" != ""
-        then
-                version=`echo $nvfortran_version | cut -d ' ' -f2`
-                f90_major_version=`echo $version | cut -d. -f1`
-		f90_minor_version=`echo $version | cut -d. -f2 | cut -d- -f1`
-                echo "${ECHO_T}nvfortran $version"
-                f90_in_mpif90="nvfortran"
-        elif test "$pgf_version" != ""
-        then
-                version=`echo $pgf_version | cut -d ' ' -f2`
-                f90_major_version=`echo $version | cut -d. -f1`
-                echo "${ECHO_T}pgf90 $version"
-                f90_in_mpif90="pgf90"
-        elif test "$gfortran_version" != ""
-        then
-                version=`echo $gfortran_version | cut -d ' ' -f3`
-                f90_major_version=`echo $version | cut -d. -f1`
-                f90_minor_version=`echo $version | cut -d. -f2`
-                echo "${ECHO_T}gfortran $f90_major_version.$f90_minor_version"
-                f90_in_mpif90="gfortran"
-        elif test "$nagfor_version" != ""
-        then
-                # NAG 6.0 has the codename attached to version number... annoying
-                version=`echo $nagfor_version | cut -d ' ' -f5`
-                echo "${ECHO_T}nagfor $version"
-                f90_in_mpif90="nagfor"
-        elif test "$xlf_version" != ""
-        then
-                echo "${ECHO_T}xlf (version unknonw)"
-                f90_in_mpif90="xlf90_r"
-                try_dflags="-D__XLF"
-        elif test "$armflang_version" != ""
-        then
-                version=`echo $armflang_version | cut -d" " -f 5`
-                f90_major_version=`echo $version | cut -d. -f1`
-                f90_minor_version=`echo $version | cut -d. -f2`
-                f90_in_mpif90="armflang"
-                try_foxflags="-D__PGI"
-        elif test "$frt_version" != ""
-        then
-                version=`echo $frt_version | cut -d" " -f 5`
-                echo "${ECHO_T}frt $version"
-                f90_in_mpif90="frt"
-                try_foxflags="-D__FUJITSU"
-        else
-                echo "${ECHO_T}unknown, assuming gfortran"
-                f90_in_mpif90="gfortran"
-        fi
-        # notify if serial and parallel compiler are the same
-	if test "$set_use_parallel" -eq 1 ; then
-	   if test "$mpif90" = "$f90_in_mpif90"; then
-              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: parallel and serial compiler are the same" >&5
+echo $ECHO_N "checking version of $mpif90... $ECHO_C"
+ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
+pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
+nvfortran_version=`$mpif90 -V 2>&1 | grep "^nvfortran"`
+gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
+nagfor_version=`$mpif90 -v 2>&1 | grep "NAG Fortran"`
+xlf_version=`$mpif90 -v 2>&1 | grep "xlf"`
+armflang_version=`$mpif90 -v 2>&1 | grep "Arm C/C++/Fortran Compiler version"`
+frt_version=`$mpif90 -v 2>&1 | grep "Fujitsu Fortran Compiler"`
+ftn_version=`$mpif90 --version 2>&1 | grep "Cray Fortran"`
+#
+if test "$ifort_version" != ""
+then
+        version=`$mpif90 --version 2>&1 | grep "IFORT" | cut -d ' ' -f3`
+        f90_major_version=`echo $version | cut -d. -f1`
+        echo "${ECHO_T}ifort $f90_major_version"
+        f90_in_mpif90="ifort"
+elif test "$nvfortran_version" != ""
+then
+        version=`echo $nvfortran_version | cut -d ' ' -f2`
+        f90_major_version=`echo $version | cut -d. -f1`
+	f90_minor_version=`echo $version | cut -d. -f2 | cut -d- -f1`
+        echo "${ECHO_T}nvfortran $version"
+        f90_in_mpif90="nvfortran"
+elif test "$pgf_version" != ""
+then
+        version=`echo $pgf_version | cut -d ' ' -f2`
+        f90_major_version=`echo $version | cut -d. -f1`
+        echo "${ECHO_T}pgf90 $version"
+        f90_in_mpif90="pgf90"
+elif test "$gfortran_version" != ""
+then
+        version=`echo $gfortran_version | cut -d ' ' -f3`
+        f90_major_version=`echo $version | cut -d. -f1`
+        f90_minor_version=`echo $version | cut -d. -f2`
+        echo "${ECHO_T}gfortran $f90_major_version.$f90_minor_version"
+        f90_in_mpif90="gfortran"
+elif test "$nagfor_version" != ""
+then
+        # NAG 6.0 has the codename attached to version number... annoying
+        version=`echo $nagfor_version | cut -d ' ' -f5`
+        echo "${ECHO_T}nagfor $version"
+        f90_in_mpif90="nagfor"
+elif test "$xlf_version" != ""
+then
+        echo "${ECHO_T}xlf (version unknonw)"
+        f90_in_mpif90="xlf90_r"
+        try_dflags="-D__XLF"
+elif test "$armflang_version" != ""
+then
+        version=`echo $armflang_version | cut -d" " -f 5`
+        f90_major_version=`echo $version | cut -d. -f1`
+        f90_minor_version=`echo $version | cut -d. -f2`
+        f90_in_mpif90="armflang"
+        try_foxflags="-D__PGI"
+elif test "$frt_version" != ""
+then
+        version=`echo $frt_version | cut -d" " -f 5`
+        echo "${ECHO_T}frt $version"
+        f90_in_mpif90="frt"
+        try_foxflags="-D__FUJITSU"
+elif test "$ftn_version" != ""
+then
+        version=`echo $fnt_version | cut -d" " -f 5`
+        echo "${ECHO_T}ftn $version"
+        f90_in_mpif90="ftn"
+else
+        echo "${ECHO_T}unknown, assuming gfortran"
+        f90_in_mpif90="gfortran"
+fi
+# notify if serial and parallel compiler are the same
+if test "$set_use_parallel" -eq 1 ; then
+   if test "$mpif90" = "$f90_in_mpif90" && test "$mpif90" != "ftn"; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: parallel and serial compiler are the same" >&5
 $as_echo "$as_me: WARNING: parallel and serial compiler are the same" >&2;}
-	   fi
-	fi
-	f90=$f90_in_mpif90
-        ;;
-esac
+   fi
+fi
+f90=$f90_in_mpif90
 ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
 ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
@@ -3381,7 +3371,7 @@ try_cc="cc gcc"
 
 case "$arch:$f90_flavor" in
 *:ifort* )
-        try_cc="icc ecc $try_cc"
+        try_cc="icc $try_cc"
         ;;
 *:pgf90 | *:nvfortran )
         try_cc="pgcc $try_cc"
@@ -3769,7 +3759,7 @@ case "$arch:$cc" in
         # Workaround for BEEF compilation with PGI v.19 and previous
         if test "$f90_flavor" = "pgf90"; then try_cflags="-c11 $try_cflags"; fi
         ;;
-crayxt*:cc )
+craype*:cc )
         # Actually we need something like is done for ftn to detect
         # the proper compiler used (NdFilippo)
         try_cflags="-O3"
@@ -3899,6 +3889,42 @@ arm:armflang )
         try_ldflags_static="-static -static-flang-libs"
 
         ;;
+*:pgf* | *:nvfortran )
+	try_fflags_nomain="-Mnomain"
+        try_fflags="-fast"
+        try_fflags_openmp="-mp"
+        if test "$use_debug" -eq 1; then
+           try_f90flags="-g -C -Ktrap=fp -Mcache_align -Mpreprocess -Mlarge_arrays"
+        else
+           try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
+        fi
+        try_foxflags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
+        try_fflags_noopt="-O0"
+        try_ldflags=""
+        try_ldflags_openmp="-mp"
+        try_ldflags_static="-Bstatic"
+        try_dflags="$try_dflags -D__PGI"
+        have_cpp=1
+        ;;
+*:*gfortran )
+	try_fflags="-O3 -g"
+        if test "$f90_major_version" -ge "10"; then
+ 	   try_fflags="$try_fflags -fallow-argument-mismatch"
+        fi
+        if test "$use_debug" -eq 1; then
+            try_fflags="-O3 -g  -Wall -fbounds-check -frange-check -finit-integer=987654321 -finit-real=nan -finit-logical=true -finit-character=64"
+        fi
+        if test "$use_pedantic" -eq 1; then
+            try_fflags="-O2 -g -pedantic -Wall -Wextra -Wconversion -fimplicit-none -fbacktrace -ffree-line-length-0 -fcheck=all"
+        fi
+        try_fflags_openmp="-fopenmp"
+        try_f90flags="\$(FFLAGS) -cpp"
+        try_fflags_noopt="-O0 -g"
+        try_ldflags="-g"
+        try_ldflags_openmp="-pthread -fopenmp"
+        try_ldflags_static="-static"
+        ;;
+# from now on: likely obsolete cases
 x86_64:nagfor* )
         try_fflags="-O3 -kind=byte -dcfuns -mismatch"
         if test "$use_debug" -eq 1; then
@@ -3914,7 +3940,7 @@ x86_64:nagfor* )
         try_dflags="$try_dflags -D__NAG"
         have_cpp=0
         ;;
-crayxt*:cray* )
+craype*:cray* )
         try_fflags_nomain=""
         #NOTE: by default OpenMP is always ON (see crayftn man page)
         try_fflags_openmp="-homp"
@@ -3930,16 +3956,16 @@ crayxt*:cray* )
         try_dflags="$try_dflags -D__CRAY"
         have_cpp=0
         ;;
-crayxt*:pgf* )
+craype*:pgf* )
 # see comment above for pgf*
-	    try_fflags_nomain="-Mnomain"
+        try_fflags_nomain="-Mnomain"
         try_fflags_openmp="-mp"
         try_fflags="-O3"
         try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
         try_fflags_noopt="-O0"
         try_ldflags_openmp="-mp"
         try_ldflags="-v"
-        try_dflags="$try_dflags -D__PGI -D__IOTK_WORKAROUND1"
+        try_dflags="$try_dflags -D__PGI"
         have_cpp=1
         ;;
 necsx:* )
@@ -4014,41 +4040,6 @@ ppc64-bgq:*xlf* )
         try_dflags="-D__XLF"
         pre_fdflags="-WF,"
         xlf_flags=1
-        ;;
-*:pgf* | *:nvfortran )
-	try_fflags_nomain="-Mnomain"
-        try_fflags="-fast"
-        try_fflags_openmp="-mp"
-        if test "$use_debug" -eq 1; then
-           try_f90flags="-g -C -Ktrap=fp -Mcache_align -Mpreprocess -Mlarge_arrays"
-        else
-           try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
-        fi
-        try_foxflags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
-        try_fflags_noopt="-O0"
-        try_ldflags=""
-        try_ldflags_openmp="-mp"
-        try_ldflags_static="-Bstatic"
-        try_dflags="$try_dflags -D__PGI"
-        have_cpp=1
-        ;;
-*:*gfortran )
-	try_fflags="-O3 -g"
-        if test "$f90_major_version" -ge "10"; then
- 	   try_fflags="$try_fflags -fallow-argument-mismatch"
-        fi
-        if test "$use_debug" -eq 1; then
-            try_fflags="-O3 -g  -Wall -fbounds-check -frange-check -finit-integer=987654321 -finit-real=nan -finit-logical=true -finit-character=64"
-        fi
-        if test "$use_pedantic" -eq 1; then
-            try_fflags="-O2 -g -pedantic -Wall -Wextra -Wconversion -fimplicit-none -fbacktrace -ffree-line-length-0 -fcheck=all"
-        fi
-        try_fflags_openmp="-fopenmp"
-        try_f90flags="\$(FFLAGS) -cpp"
-        try_fflags_noopt="-O0 -g"
-        try_ldflags="-g"
-        try_ldflags_openmp="-pthread -fopenmp"
-        try_ldflags_static="-static"
         ;;
 
 * )
@@ -4211,18 +4202,24 @@ else
 fi
 
 
-if test "$f90_major_version" -gt 20 || (test "$f90_major_version" -eq 20 && test "$f90_minor_version" -ge 7); then
-   # NVHPC v. 20.7 and later
-   mMcuda="-cuda -gpu"
-   mMcudalib="-cudalib"
-else
-   # NVHPC previous to v. 20.7
-   mMcuda="-Mcuda"
-   mMcudalib="-Mcudalib"
-fi
-
 if test "x$with_cuda" != "xno"
 then
+   # NVHPC v. 21.11-22.2 buggy
+   if (test "$f90_major_version" -eq 21 && test "$f90_minor_version" -ge 11) ||
+      (test "$f90_major_version" -eq 22 && test "$f90_minor_version" -lt 3 ) ; then
+      as_fn_error $? "Buggy compiler version, upgrade to 22.3 or downgrade to 21.9" "$LINENO" 5
+   fi
+
+   if test "$f90_major_version" -gt 20 || (test "$f90_major_version" -eq 20 && test "$f90_minor_version" -ge 7); then
+      # NVHPC v. 20.7 and later
+      mMcuda="-cuda -gpu"
+      mMcudalib="-cudalib"
+   else
+      # NVHPC previous to v. 20.7
+      mMcuda="-Mcuda"
+      mMcudalib="-Mcudalib"
+   fi
+
    # -----------------------------------------
    # Check compiler
    # -----------------------------------------
@@ -4684,7 +4681,8 @@ else
       		    mkl_lib="mkl_intel_lp64"
       		    mkl_omp="mkl_intel_thread"
 		    if test "$arch" == "mac686"; then
-		       add_mkl_flag="-openmp"
+                       # for ifort v.15 or later
+		       add_mkl_flag="-qopenmp"
 		       add_mkl_lib="-lpthread"
 		       add_mkl_omp="-lpthread"
 		    fi
@@ -6066,7 +6064,7 @@ fi
                         orig_fflags="$FFLAGS"
                         for inc in $try_incdir
                         do
-                           FFLAGS="$orig_fflags -I$inc -ffree-form"
+                           FFLAGS="$orig_fflags -I$inc"
                            cat > conftest.$ac_ext <<_ACEOF
 use iso_c_binding
 include "fftw3.f03"

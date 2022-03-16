@@ -635,8 +635,8 @@
     ENDIF
     IF (ios2 /= 0) CALL errore('epw_readin', 'Could not find namelist &inputepw', 2)
     IF (ios /= 0) THEN
-      CALL errore('epw_readin', 'Bad line in namelist &inputepw'&
-                 ': "'//TRIM(line)//'" (error could be in the previous line)', 1)
+      CALL errore('epw_readin', 'Bad line in namelist &inputepw: "' &
+                 & //TRIM(line)//'" (error could be in the previous line)', 1)
     ENDIF
     ios = close_input_file ( )
   ENDIF ! meta_ionode
