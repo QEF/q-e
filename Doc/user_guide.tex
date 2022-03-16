@@ -1309,10 +1309,12 @@ properly. On another CRAY [...] there is also Intel compiler as option
 and the system is slightly different compared to the other.
 So my recipe should work, 99\% of the cases.'' (info by Filippo Spiga)
 
-For Cray XT machines, use \texttt{./configure ARCH=crayxt4} or else
-\configure\ will not recognize the Cray-specific software environment.
+For recent Cray machines and "PrgEnv-cray" environment,
+\texttt{./configure ARCH=craype} should do the job.
+In case of internal compiler error, reduce the optimization level
+for the compilation that fails.
 
-Older Cray machines: T3D, T3E, X1, are no longer supported.
+Old Cray machines: T3D, T3E, X1, etc, are no longer supported.
 
 \subsubsection{Obsolescent architectures}
 
