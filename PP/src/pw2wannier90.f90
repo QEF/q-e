@@ -22,6 +22,78 @@
 !       nnkp files but should be removed soon.
 !
 !
+module wannier
+   USE kinds, only : DP
+   !integer, allocatable :: nnb(:)       ! #b  (ik)
+   integer              :: nnb          ! #b
+   integer, allocatable :: kpb(:,:)     ! k+b (ik,ib)
+   integer, allocatable :: g_kpb(:,:,:) ! G_k+b (ipol,ik,ib)
+   integer, allocatable :: ig_(:,:)     ! G_k+b (ipol,ik,ib)
+   integer, allocatable :: lw(:,:), mw(:,:) ! l and m of wannier (16,n_wannier)
+   integer, allocatable :: num_sph(:)   ! num. func. in lin. comb., (n_wannier)
+   logical, allocatable :: excluded_band(:)
+   ! begin change Lopez, Thonhauser, Souza
+   integer  :: iun_nnkp,iun_mmn,iun_amn,iun_band,iun_spn,iun_plot,iun_parity,&
+        nnbx,nexband,iun_uhu,&
+        iun_uIu,& !ivo
+   ! end change Lopez, Thonhauser, Souza
+        iun_sHu, iun_sIu ! shc
+   integer  :: n_wannier !number of WF
+   integer  :: n_proj    !number of projection
+   complex(DP), allocatable :: gf(:,:)  ! guding_function(npwx,n_wannier)
+   complex(DP), allocatable :: gf_spinor(:,:)
+   complex(DP), allocatable :: sgf_spinor(:,:)
+   integer               :: ispinw, ikstart, ikstop, iknum
+   character(LEN=15)     :: wan_mode    ! running mode
+   logical               :: logwann, wvfn_formatted, write_unk, write_eig, &
+   ! begin change Lopez, Thonhauser, Souza
+                            write_amn,write_mmn,reduce_unk,write_spn,&
+                            write_unkg,write_uhu,&
+                            write_dmn,read_sym, & !YN
+                            write_uIu, spn_formatted, uHu_formatted, uIu_formatted, & !ivo
+   ! end change Lopez, Thonhauser, Souza
+   ! shc
+                            write_sHu, write_sIu, sHu_formatted, sIu_formatted, &
+   ! end shc
+   ! vv: Begin SCDM keywords
+                            scdm_proj
+   character(LEN=15)     :: scdm_entanglement
+   real(DP)              :: scdm_mu, scdm_sigma
+   ! vv: End SCDM keywords
+   ! run check for regular mesh
+   logical               :: regular_mesh = .true.
+   ! input data from nnkp file
+   real(DP), allocatable :: center_w(:,:)     ! center_w(3,n_wannier)
+   integer,  allocatable :: spin_eig(:)
+   real(DP), allocatable :: spin_qaxis(:,:)
+   integer, allocatable  :: l_w(:), mr_w(:) ! l and mr of wannier (n_wannier) as from table 3.1,3.2 of spec.
+   integer, allocatable  :: r_w(:)      ! index of radial function (n_wannier) as from table 3.3 of spec.
+   real(DP), allocatable :: xaxis(:,:),zaxis(:,:) ! xaxis and zaxis(3,n_wannier)
+   real(DP), allocatable :: alpha_w(:)  ! alpha_w(n_wannier) ( called zona in wannier spec)
+   !
+   real(DP), allocatable :: csph(:,:)    ! expansion coefficients of gf on QE ylm function (16,n_wannier)
+   CHARACTER(len=256) :: seedname  = 'wannier'  ! prepended to file names in wannier90
+   ! For implementation of wannier_lib
+   integer               :: mp_grid(3)            ! dimensions of MP k-point grid
+   real(DP)              :: rlatt(3,3),glatt(3,3) ! real and recip lattices (Cartesian co-ords, units of Angstrom)
+   real(DP), allocatable :: kpt_latt(:,:)  ! k-points in crystal co-ords. kpt_latt(3,iknum)
+   real(DP), allocatable :: atcart(:,:)    ! atom centres in Cartesian co-ords and Angstrom units. atcart(3,nat)
+   integer               :: num_bands      ! number of bands left after exclusions
+   character(len=3), allocatable :: atsym(:) ! atomic symbols. atsym(nat)
+   integer               :: num_nnmax=12
+   complex(DP), allocatable :: m_mat(:,:,:,:), a_mat(:,:,:)
+   complex(DP), allocatable :: u_mat(:,:,:), u_mat_opt(:,:,:)
+   logical, allocatable     :: lwindow(:,:)
+   real(DP), allocatable    :: wann_centers(:,:),wann_spreads(:)
+   real(DP)                 :: spreads(3)
+   real(DP), allocatable    :: eigval(:,:)
+   logical                  :: old_spinor_proj  ! for compatability for nnkp files prior to W90v2.0
+   integer,allocatable :: rir(:,:)
+   logical,allocatable :: zerophase(:,:)
+end module wannier
+!
+
+
 !------------------------------------------------------------------------
 PROGRAM pw2wannier90
   ! This is the interface to the Wannier90 code: see http://www.wannier.org
@@ -35,13 +107,11 @@ PROGRAM pw2wannier90
   USE mp_world,   ONLY : world_comm
   USE cell_base,  ONLY : at, bg
   USE lsda_mod,   ONLY : nspin, isk
-  USE klist,      ONLY : nkstot, xk
+  USE klist,      ONLY : nkstot
   USE io_files,   ONLY : prefix, tmp_dir
   USE noncollin_module, ONLY : noncolin
   USE control_flags,    ONLY : gamma_only
   USE environment,ONLY : environment_start, environment_end
-  USE wannier2odd,      ONLY : wan2odd
-  USE plot_wan2odd,     ONLY : plot_wann
   USE wannier
   !
   IMPLICIT NONE
@@ -65,9 +135,8 @@ PROGRAM pw2wannier90
    ! end shc
        regular_mesh,& !gresch
    ! begin change Vitale
-       scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma,&
+       scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma
    ! end change Vitale
-       wannier_plot, wannier_plot_list, gamma_trick, print_rho
   !
   ! initialise environment
   !
@@ -123,10 +192,6 @@ PROGRAM pw2wannier90
      scdm_entanglement = 'isolated'
      scdm_mu = 0.0_dp
      scdm_sigma = 1.0_dp
-     wannier_plot = .false.
-     wannier_plot_list = 'all'
-     gamma_trick = .false.
-     print_rho = .false.
      !
      !     reading the namelist inputpp
      !
@@ -171,10 +236,6 @@ PROGRAM pw2wannier90
   CALL mp_bcast(scdm_entanglement,ionode_id, world_comm)
   CALL mp_bcast(scdm_mu,ionode_id, world_comm)
   CALL mp_bcast(scdm_sigma,ionode_id, world_comm)
-  CALL mp_bcast(wannier_plot,ionode_id, world_comm)
-  CALL mp_bcast(wannier_plot_list,ionode_id, world_comm)
-  CALL mp_bcast(gamma_trick,ionode_id, world_comm)
-  CALL mp_bcast(print_rho,ionode_id, world_comm)
   !
   ! Check: kpoint distribution with pools not implemented
   !
@@ -237,11 +298,6 @@ PROGRAM pw2wannier90
   WRITE(stdout,*)
   WRITE(stdout,*) ' Wannier mode is: ',wan_mode
   WRITE(stdout,*)
-  !
-  IF ( wannier_plot .and. wan_mode .ne. 'wannier2odd' ) THEN
-     WRITE(stdout,*) ' Warning: wannier_plot IGNORED: supported only by the wannier2odd mode'
-     WRITE(stdout,*)
-  ENDIF
   !
   IF(wan_mode=='standalone') THEN
      !
@@ -444,44 +500,6 @@ PROGRAM pw2wannier90
      !
      CALL read_nnkp
      CALL wan2sic
-     !
-  ENDIF
-  !
-  IF ( wan_mode == 'wannier2odd' ) THEN
-     !
-     CALL read_nnkp
-     CALL get_wannier_to_plot
-     CALL openfil_pp
-     !
-     CALL wan2odd( ks_only=.false. )
-     !
-     IF ( wannier_plot ) CALL plot_wann( wann_to_plot, iknum, n_wannier )
-     !
-     IF ( ionode ) WRITE(stdout,*)
-     CALL print_clock( 'init_pw2wan' )
-     CALL print_clock( 'wannier2odd' )
-     IF ( wannier_plot ) CALL print_clock( 'plot_wann' )
-     CALL environment_end ( 'PW2WANNIER' )
-     IF ( ionode ) WRITE( stdout, * )
-     !
-     CALL stop_pp
-     !
-  ENDIF
-  !
-  IF ( wan_mode == 'ks2odd' ) THEN
-     !
-     CALL openfil_pp
-     CALL mp_grid_ks2odd
-     !
-     CALL wan2odd( ks_only=.true. )
-     !
-     IF ( ionode ) WRITE( stdout, *  )
-     CALL print_clock( 'init_pw2wan' )
-     CALL print_clock( 'ks2odd' )
-     CALL environment_end ( 'PW2WANNIER' )
-     IF ( ionode ) WRITE( stdout, * )
-     !
-     CALL stop_pp
      !
   ENDIF
   !
@@ -5689,157 +5707,3 @@ SUBROUTINE radialpart(ng, q, alfa, rvalue, lmax, radial)
   DEALLOCATE (bes, func_r, r, rij, aux )
   RETURN
 END SUBROUTINE radialpart
-!
-!
-!-----------------------------------------------------------------------
-SUBROUTINE get_wannier_to_plot
-  !-----------------------------------------------------------------------
-  !
-  ! ... gets the list of Wannier functions to plot
-  !
-  USE kinds,           ONLY : DP
-  USE wannier,         ONLY : n_wannier, iknum, wannier_plot_list, wann_to_plot
-  !
-  IMPLICIT NONE
-  !
-  CHARACTER(LEN=1), EXTERNAL :: capital
-  !
-  CHARACTER(LEN=10), PARAMETER :: c_digit = '0123456789'
-  CHARACTER(LEN=2), PARAMETER :: c_range = '-:'
-  CHARACTER(LEN=3), PARAMETER :: c_sep = ' ,;'
-  CHARACTER(LEN=5), PARAMETER :: c_punc = ' ,:-:'
-  CHARACTER(LEN=5), PARAMETER :: c_punc_nospace = ',:-:'
-  CHARACTER(LEN=15), PARAMETER :: allchar = '0123456789 ,:-:'
-  !
-  CHARACTER(LEN=255) :: c_wlist, c_iwann
-  INTEGER :: i, check, iwann, range_size, counter
-  INTEGER :: i_punc, i_digit
-  INTEGER :: nwannx
-  INTEGER, ALLOCATABLE :: aux(:)
-  !
-  !
-  nwannx = n_wannier * iknum       ! num WFs in the supercell
-  ALLOCATE( aux(nwannx) )
-  !
-  c_wlist = wannier_plot_list
-  !
-  IF ( len_trim(c_wlist) == 0 ) &
-    CALL errore( 'get_wannier_to_plot', 'wannier_plot_list is blank', 1 )
-  !
-  DO i = 1, len_trim(c_wlist)
-    c_wlist(i:i) = capital(c_wlist(i:i))
-  ENDDO
-  !
-  IF ( trim(c_wlist) == 'ALL' ) THEN
-    ALLOCATE( wann_to_plot(nwannx) )
-    DO i = 1, nwannx
-      wann_to_plot(i) = i
-    ENDDO
-    !
-    RETURN
-  ELSE
-    check = VERIFY( c_wlist, allchar )
-    IF ( check .ne. 0 ) CALL errore( 'get_wannier_to_plot', &
-                'Unrecognised character in wannier_plot_list', check ) 
-  ENDIF
-  !
-  c_wlist = ADJUSTL( c_wlist )
-  !
-  IF ( SCAN( c_wlist, c_punc ) == 0 ) THEN
-    READ( c_wlist, *, ERR=101, END=101 ) iwann
-    IF ( iwann > nwannx ) &
-      CALL errore( 'get_wannier_to_plot', 'wannier_plot_list out of range', iwann )
-    !
-    ALLOCATE( wann_to_plot(1) )
-    wann_to_plot(1) = iwann
-    !
-    RETURN
-  ENDIF
-  !
-  !
-  counter = 0
-  DO
-    i_punc = SCAN( c_wlist, c_punc )
-    !
-    IF ( i_punc == 1 ) & 
-      CALL errore( 'get_wannier_to_plot', 'Error parsing keyword wannier_plot_list', 2 )
-    !
-    counter = counter + 1
-    c_iwann = c_wlist(1:i_punc-1)
-    READ( c_iwann, *, ERR=101, END=101 ) iwann
-    aux(counter) = iwann
-    IF ( iwann > nwannx ) &
-      CALL errore( 'get_wannier_to_plot', 'wannier_plot_list out of range', iwann )
-    !
-    c_wlist = ADJUSTL( c_wlist(i_punc:) )
-    !
-    IF ( SCAN( c_wlist, c_range ) == 1 ) THEN
-      i_digit = SCAN( c_wlist, c_digit )
-      IF ( SCAN( ADJUSTL( c_wlist(2:i_digit) ), c_punc_nospace ) /= 0 ) &
-        CALL errore( 'get_wannier_to_plot', 'Error parsing keyword wannier_plot_list', 3 )
-      c_wlist = ADJUSTL( c_wlist(i_digit:) )
-      i_punc = SCAN( c_wlist, c_punc )
-      !
-      c_iwann = c_wlist(1:i_punc-1)
-      READ( c_iwann, *, ERR=101, END=101 ) iwann
-      IF ( iwann > nwannx ) &
-        CALL errore( 'get_wannier_to_plot', 'wannier_plot_list out of range', iwann )
-      !
-      range_size = iwann - aux(counter)
-      IF ( range_size <= 0 ) CALL errore( 'get_wannier_to_plot', &
-                          'Error parsing keyword wannier_plot_list: incorrect range', 1)
-      !
-      DO i = 1, range_size
-        counter = counter + 1
-        aux(counter) = aux(counter-1) + 1
-      ENDDO
-      !
-      c_wlist = ADJUSTL( c_wlist(i_punc:) )
-    ENDIF
-    !
-    IF ( SCAN( c_wlist, c_sep ) == 1 ) c_wlist = ADJUSTL( c_wlist(2:) )
-    IF ( SCAN( c_wlist, c_range ) == 1 ) &
-      CALL errore( 'get_wannier_to_plot', 'Error parsing keyword wannier_plot_list', 4 )
-    !
-    IF ( INDEX( c_wlist, ' ' ) == 1 ) EXIT
-  ENDDO
-  !
-  ALLOCATE( wann_to_plot(counter) )
-  wann_to_plot(:) = aux(1:counter)
-  !
-  RETURN
-  !
-101 CALL errore( 'get_wannier_to_plot', 'Error parsing keyword wannier_plot_list', 1 ) 
-  !
-  ! 
-END SUBROUTINE get_wannier_to_plot
-!
-!
-!----------------------------------------------------------------------------
-SUBROUTINE mp_grid_ks2odd( )
-   !---------------------------------------------------------------------------------
-   !
-   ! ...  This routine generate mp_grid for the ks2odd mode.
-   ! ...  It is necessary to momentarily change the definition of
-   ! ...  iknum in order to properly define mp_grid.
-   !
-   USE wannier,           ONLY : kpt_latt, iknum
-   USE lsda_mod,          ONLY : nspin
-   USE cell_base,         ONLY : at
-   USE klist,             ONLY : xk
-   !
-   !
-   IMPLICIT NONE
-   !
-   LOGICAL :: ks_only
-   !
-   !
-   iknum = iknum / nspin         ! momentarily change the value of iknum (needed by find_mp_grid)
-   ALLOCATE( kpt_latt(3,iknum) )
-   kpt_latt(:,1:iknum) = xk(:,1:iknum)
-   CALL cryst_to_cart( iknum, kpt_latt, at, -1 )
-   CALL find_mp_grid( )
-   iknum = iknum * nspin         ! restore the initial value of iknum
-   !
-   !
- END SUBROUTINE mp_grid_ks2odd

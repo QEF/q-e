@@ -9,6 +9,7 @@ Incompatible changes in development version:
   * DFT+Hubbard codes have new input syntax (check Doc/Hubbard_input.pdf)
 
 Fixed in development version:
+  * `divide_class_so` routine could yield  the  wrong irreducible representations         classification in the  D3_h  group (G.J. Ferreira, A. Dal Corso) 
   * XSPECTRA gave incorrect results with k-point parallelization, since
     at least v. 6.6, due to missing broadcast of recomputed Fermi energy
   * Makov-Payne correction wasn't working with ibrav=0 and cubic cell (A. Fonari)  

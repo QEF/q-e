@@ -18,8 +18,6 @@ default :
 	@echo '  make [-j] target'
 	@echo ' '
 	@echo 'where target identifies one or multiple CORE PACKAGES:'
-	@echo '  kc           programs needed for Koopmans-CP workflow'
-	@echo '  kcw          KCW code: implementation of Koopmans functionals in primitive cell'
 	@echo '  pw           basic code for scf, structure optimization, MD'
 	@echo '  ph           phonon code, Gamma-only and third-order derivatives'
 	@echo '  hp           calculation of the Hubbard parameters from DFPT'
@@ -35,6 +33,7 @@ default :
 	@echo '  xspectra     X-ray core-hole spectroscopy calculations'
 	@echo '  couple       Library interface for coupling to external codes'
 	@echo '  epw          Electron-Phonon Coupling with Wannier functions'
+	@echo '  kcw          KCW code: implementation of Koopmans functionals in primitive cell'
 	@echo '  gui          Graphical User Interface'
 	@echo '  all          same as "make pwall cp ld1 tddfpt xspectra hp"'
 	@echo ' '
@@ -139,8 +138,6 @@ travis : pwall epw
 	if test -d test-suite ; then \
 	( cd test-suite ; make run-travis || exit 1 ) ; fi
 
-kc : pw pp w90 kcw
-
 kcw : pw lrmods pp w90
 	if test -d KCW ; then \
 	( cd KCW ; $(MAKE) all || exit 1 ) ; fi
@@ -166,7 +163,7 @@ gui : bindir
 
 pwall : pw neb ph pp pwcond acfdt
 
-all   : pwall cp ld1 tddfpt hp xspectra gwl kc
+all   : pwall cp ld1 tddfpt hp xspectra gwl kcw
 
 ###########################################################
 # Auxiliary targets used by main targets:
@@ -295,8 +292,8 @@ clean :
 		CPV LAXlib FFTXlib XClib UtilXlib upflib Modules PP PW EPW KS_Solvers \
 		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
 		atomic LR_Modules upflib \
-		dev-tools extlibs Environ TDDFPT PHonon HP GWW Doc GUI KC_WANN \
-		QEHeat \
+		dev-tools extlibs Environ TDDFPT PHonon HP GWW Doc GUI \
+		QEHeat KCW \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
