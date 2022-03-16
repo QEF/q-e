@@ -1682,7 +1682,7 @@ SUBROUTINE iosys()
   !
   ! ... End of reading input parameters
   !
-#if ! defined (__INTEL_COMPILER) || (__INTEL_COMPILER >= 1300) 
+#if ( ! defined (__INTEL_COMPILER) || (__INTEL_COMPILER >= 1300) ) && ! defined (__CRAY)
   CALL pw_init_qexsd_input(qexsd_input_obj, obj_tagname="input")
 #endif
   CALL deallocate_input_parameters ()  

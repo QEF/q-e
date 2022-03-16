@@ -736,7 +736,6 @@ infodir
 docdir
 oldincludedir
 includedir
-runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -834,7 +833,6 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
-runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1087,15 +1085,6 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
-  -runstatedir | --runstatedir | --runstatedi | --runstated \
-  | --runstate | --runstat | --runsta | --runst | --runs \
-  | --run | --ru | --r)
-    ac_prev=runstatedir ;;
-  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
-  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
-  | --run=* | --ru=* | --r=*)
-    runstatedir=$ac_optarg ;;
-
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1233,7 +1222,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir runstatedir
+		libdir localedir mandir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1386,7 +1375,6 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
-  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -2335,14 +2323,14 @@ then
 $as_echo "$as_me: WARNING: Unrecognized build architecture" >&2;}
         ;;
         esac
-            # workaround for Cray-XT machines
-        test -d /proc/cray_xt && arch=crayxt
+            # workaround for Cray machines
+        test -d /proc/cray_xt && arch=craype
             # workaround for IBM BG machines
         test -d /bgsys && arch=ppc64-bg
         test -f /bgsys/drivers/ppcfloor/bin/runjob && arch=ppc64-bgq
 fi
 	case $arch in
-	ia32 | ia64 | necsx | crayxt | ppc64-bg )
+	ia32 | ia64 | necsx | ppc64-bg )
             { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Obsolete architecture? $arch" >&5
 $as_echo "$as_me: WARNING: Obsolete architecture? $arch" >&2;}
 	    ;;
@@ -2881,7 +2869,7 @@ ia32 | ia64 | x86_64 )
 arm )
         try_f90="nvfortran pgf90 armflang $try_f90"
         ;;
-crayxt* )
+craype* )
         try_f90="ftn"
         try_mpif90="ftn"
         ;;
@@ -3771,7 +3759,7 @@ case "$arch:$cc" in
         # Workaround for BEEF compilation with PGI v.19 and previous
         if test "$f90_flavor" = "pgf90"; then try_cflags="-c11 $try_cflags"; fi
         ;;
-crayxt*:cc )
+craype*:cc )
         # Actually we need something like is done for ftn to detect
         # the proper compiler used (NdFilippo)
         try_cflags="-O3"
@@ -3952,7 +3940,7 @@ x86_64:nagfor* )
         try_dflags="$try_dflags -D__NAG"
         have_cpp=0
         ;;
-crayxt*:cray* )
+craype*:cray* )
         try_fflags_nomain=""
         #NOTE: by default OpenMP is always ON (see crayftn man page)
         try_fflags_openmp="-homp"
@@ -3968,7 +3956,7 @@ crayxt*:cray* )
         try_dflags="$try_dflags -D__CRAY"
         have_cpp=0
         ;;
-crayxt*:pgf* )
+craype*:pgf* )
 # see comment above for pgf*
         try_fflags_nomain="-Mnomain"
         try_fflags_openmp="-mp"
@@ -4214,24 +4202,24 @@ else
 fi
 
 
-# NVHPC v. 21.11-22.2 buggy
-if (test "$f90_major_version" -eq 21 && test "$f90_minor_version" -ge 11) ||
-   (test "$f90_major_version" -eq 22 && test "$f90_minor_version" -lt 3 ) ; then
-   as_fn_error $? "Buggy compiler version, upgrade to 22.3 or downgrade to 21.9" "$LINENO" 5
-fi
-
-if test "$f90_major_version" -gt 20 || (test "$f90_major_version" -eq 20 && test "$f90_minor_version" -ge 7); then
-   # NVHPC v. 20.7 and later
-   mMcuda="-cuda -gpu"
-   mMcudalib="-cudalib"
-else
-   # NVHPC previous to v. 20.7
-   mMcuda="-Mcuda"
-   mMcudalib="-Mcudalib"
-fi
-
 if test "x$with_cuda" != "xno"
 then
+   # NVHPC v. 21.11-22.2 buggy
+   if (test "$f90_major_version" -eq 21 && test "$f90_minor_version" -ge 11) ||
+      (test "$f90_major_version" -eq 22 && test "$f90_minor_version" -lt 3 ) ; then
+      as_fn_error $? "Buggy compiler version, upgrade to 22.3 or downgrade to 21.9" "$LINENO" 5
+   fi
+
+   if test "$f90_major_version" -gt 20 || (test "$f90_major_version" -eq 20 && test "$f90_minor_version" -ge 7); then
+      # NVHPC v. 20.7 and later
+      mMcuda="-cuda -gpu"
+      mMcudalib="-cudalib"
+   else
+      # NVHPC previous to v. 20.7
+      mMcuda="-Mcuda"
+      mMcudalib="-Mcudalib"
+   fi
+
    # -----------------------------------------
    # Check compiler
    # -----------------------------------------
@@ -6076,7 +6064,7 @@ fi
                         orig_fflags="$FFLAGS"
                         for inc in $try_incdir
                         do
-                           FFLAGS="$orig_fflags -I$inc -ffree-form"
+                           FFLAGS="$orig_fflags -I$inc"
                            cat > conftest.$ac_ext <<_ACEOF
 use iso_c_binding
 include "fftw3.f03"

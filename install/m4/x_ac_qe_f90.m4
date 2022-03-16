@@ -139,7 +139,7 @@ x86_64:nagfor* )
         try_dflags="$try_dflags -D__NAG"
         have_cpp=0
         ;;
-crayxt*:cray* )
+craype*:cray* )
         try_fflags_nomain=""
         #NOTE: by default OpenMP is always ON (see crayftn man page)
         try_fflags_openmp="-homp"
@@ -155,7 +155,7 @@ crayxt*:cray* )
         try_dflags="$try_dflags -D__CRAY"
         have_cpp=0
         ;;
-crayxt*:pgf* )
+craype*:pgf* )
 # see comment above for pgf*
         try_fflags_nomain="-Mnomain"
         try_fflags_openmp="-mp"
