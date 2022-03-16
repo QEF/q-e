@@ -6064,7 +6064,7 @@ fi
                         orig_fflags="$FFLAGS"
                         for inc in $try_incdir
                         do
-                           FFLAGS="$orig_fflags -I$inc -ffree-form"
+                           FFLAGS="$orig_fflags -I$inc"
                            cat > conftest.$ac_ext <<_ACEOF
 use iso_c_binding
 include "fftw3.f03"
