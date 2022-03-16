@@ -26,7 +26,7 @@ ia32 | ia64 | x86_64 )
 arm )
         try_f90="nvfortran pgf90 armflang $try_f90"
         ;;
-crayxe* )
+craype* )
         try_f90="ftn"
         try_mpif90="ftn"
         ;;

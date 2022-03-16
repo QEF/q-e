@@ -40,7 +40,7 @@ then
         ;;
         esac
             # workaround for Cray machines
-        test -d /proc/cray_xt && arch=crayxe
+        test -d /proc/cray_xt && arch=craype
             # workaround for IBM BG machines
         test -d /bgsys && arch=ppc64-bg
         test -f /bgsys/drivers/ppcfloor/bin/runjob && arch=ppc64-bgq
