@@ -20,8 +20,8 @@ try_f90="gfortran f90"
 # candidate compilers and flags based on architecture
 case $arch in
 ia32 | ia64 | x86_64 )
-        try_f90="ifort nvfortran pgf90 nagfor ftn $try_f90"
-        try_mpif90="mpiifort ftn $try_mpif90"
+        try_f90="ifort nvfortran pgf90 nagfor $try_f90"
+        try_mpif90="mpiifort $try_mpif90"
         ;;
 arm )
         try_f90="nvfortran pgf90 armflang $try_f90"
