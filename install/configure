@@ -2335,9 +2335,12 @@ then
 $as_echo "$as_me: WARNING: Unrecognized build architecture" >&2;}
         ;;
         esac
-            # workaround for Cray machines
-        test -d /proc/cray_xt && arch=craype
-            # workaround for IBM BG machines
+        # check for Cray machines
+        if test -d /proc/cray_xt && test "$arch" != "craype"; then
+            { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: This seems to be a cray but ARCH is not \"craype\"" >&5
+$as_echo "$as_me: WARNING: This seems to be a cray but ARCH is not \"craype\"" >&2;}
+        fi
+        # workaround for IBM BG machines
         test -d /bgsys && arch=ppc64-bg
         test -f /bgsys/drivers/ppcfloor/bin/runjob && arch=ppc64-bgq
 fi
@@ -3261,7 +3264,35 @@ if test "$set_use_parallel" -eq 1 ; then
 $as_echo "$as_me: WARNING: parallel and serial compiler are the same" >&2;}
    fi
 fi
-f90=$f90_in_mpif90
+
+case "$mpif90" in
+ftn )
+    # For cray compiler, mpif90=f90=ftn, f90_flavor used to select flags
+    echo $ECHO_N "checking version wrapped by $mpif90 command... $ECHO_C"
+    if $mpif90 -V 2>&1 | grep -q "Intel(R)" ; then
+        f90_flavor=ifort
+    elif $mpif90 -V 2>&1 | grep -q "^pgf" ; then
+        f90_flavor=pgf
+    elif $mpif90 -v 2>&1 | grep -q "gcc version" ; then
+        f90_flavor=gfortran
+    elif $mpif90 -V 2>&1 | grep -q "Cray Fortran" ; then
+        f90_flavor=crayftn
+    elif $mpif90 -version 2>&1 | grep -q "NAG Fortran" ; then
+        f90_flavor=nagfor
+    else
+        echo $ECHO_N "unknown, leaving as ... $ECHO_C"
+        f90_flavor=$mpif90
+    fi
+    echo $f90_flavor
+    f90=ftn
+    ;;
+* )
+    # For all other cases f90=f90_flavor=f90_in_mpif90
+    f90=$f90_in_mpif90
+    f90_flavor=$f90
+    ;;
+esac
+
 ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
 ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
@@ -3320,32 +3351,6 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 echo setting F90... $f90
 echo setting MPIF90... $mpif90
-
-# For cray compiler
-case "$f90" in
-f90 | fc | ftn )
-    echo $ECHO_N "checking version wrapped by $f90 command... $ECHO_C"
-
-    if $f90 -V 2>&1 | grep -q "Intel(R)" ; then
-        f90_flavor=ifort
-    elif $f90 -V 2>&1 | grep -q "^pgf" ; then
-        f90_flavor=pgf
-    elif $f90 -v 2>&1 | grep -q "gcc version" ; then
-        f90_flavor=gfortran
-    elif $f90 -V 2>&1 | grep -q "Cray Fortran" ; then
-        f90_flavor=crayftn
-    elif $f90 -version 2>&1 | grep -q "NAG Fortran" ; then
-        f90_flavor=nagfor
-    else
-        echo $ECHO_N "unknown, leaving as... $ECHO_C"
-        f90_flavor=$f90
-    fi
-    echo $f90_flavor
-    ;;
-* )
-    f90_flavor=$f90
-    ;;
-esac
 
 
 
