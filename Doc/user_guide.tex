@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{7.0}
+\def\version{7.1}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -231,8 +231,11 @@ and let us apologize to everybody we have forgotten.
 \subsection{Contacts}
 \label{SubSec:Contacts}
 
-The main entry point for \qe\ users is the web site
-\texttt{http://www.quantum-espresso.org/}. There you find
+The main entry point for \qe\ users is the web site:
+\begin{quote}
+\texttt{http://www.quantum-espresso.org/}. 
+\end{quote}
+There you find
 the stable releases for download, general information and
 documentation.
 
@@ -483,7 +486,8 @@ path, as specified in the PATH environment variable.
 	\texttt{include/qe\_cdefs.h} &  (previously: \texttt{include/c\_defs.h})
 	a few definitions used by C files\\
 \texttt{include/configure.h} &  optional: info on compilation flags
-	(to enable its usage, \\ & uncomment \verb|#define __HAVE_CONFIG_INFO|
+	(to enable it, uncomment \\ &
+	\verb|#define __HAVE_CONFIG_INFO|
 	 in Modules/environment.f90)\\
 \end{tabular}\\
 In addition, \configure\ generates (since v.7) files \texttt{make.depend},
@@ -560,7 +564,7 @@ for NEC SX6 on a PC). Currently supported architectures are:
 \begin{tabular}{ll}
 \texttt{x86\_64}   & Intel and AMD 64-bit running Linux\\
 \texttt{arm}       & ARM machines (with gfortran or armflang)\\
-\texttt{crayxt4}   & Cray XT4/XT5/XE machines\\
+\texttt{craype}    & Cray machines using Cray PE\\
 \texttt{mac686}    & Apple Intel machines running Mac OS X\\
 \texttt{mingw32}   & Cross-compilation for MS-Windows, using mingw, 32 bits\\
 \texttt{mingw64}   & As above, 64 bits\\
@@ -641,6 +645,7 @@ available:\\
                                   & CUDA Toolkit installed on the workstation \\
                                   & or available on the compute nodes of the HPC facility.\\
 \texttt{--with-cuda-mpi=value}    & enable usage of a CUDA-aware MPI library (default: no).\\
+\end{tabular}{ll}
 
 To modify or extend \configure, see the Wiki pages on GitLab:
 \texttt{https://gitlab.com/QEF/q-e/-/wikis}.
@@ -1296,23 +1301,27 @@ paragraph.
 
 \subsubsection{Cray machines}
 
-For Cray XE machines:
-\begin{verbatim}
-$ module swap PrgEnv-cray PrgEnv-pgi
-$ ./configure --enable-openmp --enable-parallel --with-scalapack
-\end{verbatim}
+For recent Cray machines, use \texttt{./configure ARCH=craype}.
+This selects the \texttt{ftn} compiler, that typically uses
+the \texttt{crayftn} compiler but may also use other ones,
+depending upon the site and personal environment.
 
 ''Now, despite what people can imagine, every CRAY machine deployed can
 have different environment. For example on the machine I usually use
 for tests [...] I do have to unload some modules to make QE running
 properly. On another CRAY [...] there is also Intel compiler as option
-and the system is slightly different compared to the other.
-So my recipe should work, 99\% of the cases.'' (info by Filippo Spiga)
+and the system is slightly different compared to the other.'' 
+(info by Filippo Spiga)
 
-For recent Cray machines and "PrgEnv-cray" environment,
-\texttt{./configure ARCH=craype} should do the job.
-In case of internal compiler error, reduce the optimization level
-for the compilation that fails.
+With the \verb|PrgEnv-cray| module, v.6.0.10, you get an internal compiler 
+error in \verb|esm_stres_mod.f90|. If so, reduce the optimization level
+for that specific routine from \verb|-O3| to \verb|-O1|.
+
+If you want to use the Intel compiler instead, try something like:
+\begin{verbatim}
+$ module swap PrgEnv-cray PrgEnv-intel
+$ ./configure ARCH=craype [--enable-openmp --enable-parallel --with-scalapack]
+\end{verbatim}
 
 Old Cray machines: T3D, T3E, X1, etc, are no longer supported.
 

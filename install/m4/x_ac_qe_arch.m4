@@ -39,9 +39,11 @@ then
                 * )                     AC_MSG_WARN(Unrecognized build architecture)
         ;;
         esac
-            # workaround for Cray machines
-        test -d /proc/cray_xt && arch=craype
-            # workaround for IBM BG machines
+        # check for Cray machines
+        if test -d /proc/cray_xt && test "$arch" != "craype"; then
+            AC_MSG_WARN(This seems to be a cray but ARCH is not "craype")
+        fi
+        # workaround for IBM BG machines
         test -d /bgsys && arch=ppc64-bg
         test -f /bgsys/drivers/ppcfloor/bin/runjob && arch=ppc64-bgq
 fi

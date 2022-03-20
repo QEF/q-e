@@ -707,6 +707,7 @@ subroutine readgth (iunps, np, upf)
   ENDIF
   !
   cc(:)=0._dp
+  !! FIXME: dangerous syntax, are we sure nn has the expected value?
   read (iunps, *, err=400) rloc,nn,(cc(jj),jj=1,nn)
   gth_p(ns)%rloc =rloc
   gth_p(ns)%cc(:)=cc(:)
@@ -719,6 +720,7 @@ subroutine readgth (iunps, np, upf)
   ! Read and echo the coefficients of non-local projectors
   upf%nbeta=0
   prjloop: do ll=0,lmax
+    !! FIXME: dangerous syntax, are we sure nprl has the expected value?
     read (iunps, *, err=400) rrl,nprl,(hij(ll,1,jj),jj=1,nprl)
     upf%nbeta = upf%nbeta + nprl
     gth_p(ns)%rrl(ll)=rrl
