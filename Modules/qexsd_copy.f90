@@ -565,6 +565,10 @@ CONTAINS
             CALL errore ('qexsd_copy_band_structure: ','both nbnd and nbnd_up+nbnd_dw missing', 1)  
          END IF
          !
+         ! the quantity used below (not sure about the logic ...):
+         !    band_struct_obj%ks_energies(ik)%eigenvalues%size
+         ! should be the same for all k-points so ik=1 does the job
+         ik = 1
          IF ( band_struct_obj%nbnd_up_ispresent .AND. &
               band_struct_obj%nbnd_dw_ispresent ) THEN
             nbnd_up = band_struct_obj%nbnd_up

@@ -1278,6 +1278,7 @@ contains
     if (.not.noabc)then
 
       if (echo)write(*,*) 'doing analytical gradient O(N^3) ...'
+      eabc = 0.d0
       do iat=1,n
         do jat=1,iat-1
           linij=lin(iat,jat)

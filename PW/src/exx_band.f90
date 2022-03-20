@@ -28,7 +28,7 @@ MODULE exx_band
   !
   COMPLEX(DP), ALLOCATABLE :: evc_exx(:,:)
   COMPLEX(DP), ALLOCATABLE :: psi_exx(:,:), hpsi_exx(:,:)
-  INTEGER :: lda_original, n_original
+  INTEGER :: lda_original
   INTEGER :: nwordwfc_exx
   INTEGER, ALLOCATABLE :: igk_exx(:,:)
   INTEGER, ALLOCATABLE :: igk_exx_d(:,:)
@@ -323,10 +323,9 @@ MODULE exx_band
        ALLOCATE(lda_exx(nproc_egrp,nks))
     END IF
     !
-    ! store the original values of lda and n
+    ! store the original values of lda FIXME: why?
     !
     lda_original = lda
-    n_original = n
     !
     ! construct the local map
     !
