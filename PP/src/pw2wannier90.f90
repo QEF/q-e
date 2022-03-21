@@ -220,6 +220,7 @@ module wannier
       USE noncollin_module,ONLY : npol
       USE becmod,          ONLY : bec_type, calbec
       USE uspp,            ONLY : vkb
+      USE uspp_init,       ONLY : init_us_2
       !
       IMPLICIT NONE
       !
@@ -1718,8 +1719,8 @@ SUBROUTINE compute_dmn
    USE wannier
    USE symm_base,       ONLY : nsymin=>nsym,srin=>sr,ftin=>ft,invsin=>invs
    USE fft_base,        ONLY : dffts
-   USE scatter_mod, ONLY : gather_grid, scatter_grid
-   USE uspp_init,            ONLY : init_us_2
+   USE scatter_mod,     ONLY : gather_grid, scatter_grid
+   USE uspp_init,       ONLY : init_us_2
    IMPLICIT NONE
    !
    complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
@@ -3578,6 +3579,7 @@ SUBROUTINE compute_amn
    USE noncollin_module,ONLY : noncolin, npol
    USE lsda_mod,        ONLY : lsda, isk
    USE constants,       ONLY : eps6
+   USE uspp_init,       ONLY : init_us_2
    USE wannier
    !
    IMPLICIT NONE
