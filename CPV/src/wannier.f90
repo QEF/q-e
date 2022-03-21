@@ -106,12 +106,11 @@ END MODULE tune
 !--------------------------------------------------------------------------
 MODULE wannier_module
   !--------------------------------------------------------------------------
-  !
-  ! ... In the presence of an electric field every wannier state feels a 
-  ! ... different potantial, which depends on the position of its center. 
-  ! ... RHOS is read in as the charge density in subrouting vofrho and 
-  ! ... overwritten to be the potential.
-  ! ...                                                             -M.S
+  !! In the presence of an electric field every wannier state feels a different
+  !! potential, which depends on the position of its center.  
+  !! \(\text{rhos}\) is read in as the charge density in subroutine \(texttt{vofrho}\)
+  !! and overwritten to be the potential.
+  ! -M.S
   !
   USE kinds, ONLY : DP
   !

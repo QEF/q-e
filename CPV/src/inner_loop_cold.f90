@@ -145,7 +145,7 @@
 
          ! operates the Hamiltonian on the wavefunction c0
          h0c0( :, : )= 0.D0
-         DO i= 1, n, 2                      
+         DO i= 1, n, 2
             CALL dforce( i, bec, betae, c0, h0c0(:,i), h0c0(:,i+1), rhos, dffts%nnr, ispin, f, n, nspin )
          END DO
 
