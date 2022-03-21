@@ -15,17 +15,20 @@ MODULE uspp_data
   SAVE
   PRIVATE
   !
-  PUBLIC :: nqxq, nqx, dq, spline_ps
-  PUBLIC :: qrad,   tab,   tab_at,   tab_d2y
-  PUBLIC :: qrad_d, tab_d, tab_at_d, tab_d2y_d
+  PUBLIC :: nqxq, nqx, dq
+  PUBLIC :: qrad,   tab,   tab_at
+  PUBLIC :: qrad_d, tab_d, tab_at_d
   !
   PUBLIC :: allocate_uspp_data
   PUBLIC :: deallocate_uspp_data
   PUBLIC :: scale_uspp_data
+  ! Next variables for compatibility only, to be removed
+  LOGICAL, PUBLIC :: spline_ps=.TRUE.
+  REAL(DP), ALLOCATABLE, PUBLIC :: tab_d2y(:,:,:)
   !
   INTEGER :: nqxq
   !! size of interpolation table
-  INTEGER :: nqx 
+  INTEGER :: nqx
   !! number of interpolation points
   REAL(DP), PARAMETER:: dq = 0.01D0
   !! space between points in the pseudopotential tab.
@@ -35,19 +38,15 @@ MODULE uspp_data
   !! interpolation table for PPs
   REAL(DP), ALLOCATABLE :: tab_at(:,:,:)
   !! interpolation table for atomic wfc
-  LOGICAL :: spline_ps = .FALSE.
-  REAL(DP), ALLOCATABLE :: tab_d2y(:,:,:)
-  !! for cubic splines
   !
   ! GPUs vars
   !
   REAL(DP), ALLOCATABLE :: qrad_d(:,:,:,:)
   REAL(DP), ALLOCATABLE :: tab_d(:,:,:)
   REAL(DP), ALLOCATABLE :: tab_at_d(:,:,:)
-  REAL(DP), ALLOCATABLE :: tab_d2y_d(:,:,:)
-  !   
+  !
 #if defined(__CUDA)
-  attributes (DEVICE) :: qrad_d, tab_d, tab_at_d, tab_d2y_d
+  attributes (DEVICE) :: qrad_d, tab_d, tab_at_d
 #endif
   !
 contains
@@ -57,13 +56,12 @@ contains
      logical, intent(in) :: use_gpu
      integer, intent(in) :: nqxq_,nqx_,nbetam,nwfcm,lmaxq,nsp
      !
-     if (nqxq_/=nqxq) call errore("allocate_uspp_data","invalid nqxq_",1)
-     if (nqx_/=nqx)   call errore("allocate_uspp_data","invalid nqx_",1)
+     if (nqxq_/=nqxq) call upf_error("allocate_uspp_data","invalid nqxq_",1)
+     if (nqx_/=nqx)   call upf_error("allocate_uspp_data","invalid nqx_",1)
      !
      if (lmaxq>0) allocate(qrad(nqxq_,nbetam*(nbetam+1)/2, lmaxq, nsp))
      allocate(tab(nqx_,nbetam,nsp))
      allocate(tab_at(nqx_,nwfcm,nsp))
-     if (spline_ps) allocate(tab_d2y(nqx_,nbetam,nsp))
      !
      IF (use_gpu) then
         ! allocations with zero size protected
@@ -72,7 +70,6 @@ contains
                        allocate(qrad_d(nqxq_,nbetam*(nbetam+1)/2, lmaxq, nsp))
         if (nbetam>0)  allocate(tab_d(nqx_,nbetam,nsp))
         if (nwfcm>0)   allocate(tab_at_d(nqx_,nwfcm,nsp))
-        if (spline_ps) allocate(tab_d2y_d(nqx_,nbetam,nsp))
      endif
      !
   end subroutine allocate_uspp_data
@@ -82,13 +79,11 @@ contains
      if( allocated( qrad ) )      deallocate( qrad )
      if( allocated( tab ) )       deallocate( tab )
      if( allocated( tab_at ) )    deallocate( tab_at )
-     if( allocated( tab_d2y ) )   deallocate( tab_d2y )
      !
      if( allocated( qrad_d ) )    deallocate( qrad_d )
      if( allocated( tab_d ) )     deallocate( tab_d )
      if( allocated( tab_at_d ) )  deallocate( tab_at_d )
-     if( allocated( tab_d2y_d ) ) deallocate( tab_d2y_d )
-  end subroutine 
+  end subroutine
   !
   subroutine scale_uspp_data( vol_ratio_m1 )
      ! vol_ratio_m1 = omega_old / omega
@@ -99,9 +94,10 @@ contains
      qrad(:,:,:,:) = qrad(:,:,:,:) * vol_ratio_m1
      tab_at(:,:,:) = tab_at(:,:,:) * SQRT(vol_ratio_m1)
 #if defined __CUDA
-     tab_d=tab
-     qrad_d=qrad
-     tab_at_d=tab_at
+     ! CUDA Fortran safeguard
+     if(size(tab) > 0) tab_d = tab
+     if(size(qrad) > 0) qrad_d = qrad
+     if(size(tab_at) > 0) tab_at_d = tab_at
 #endif
   end subroutine scale_uspp_data
   !

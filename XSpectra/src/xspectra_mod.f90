@@ -57,7 +57,6 @@ module xspectra
    CHARACTER (LEN=4)   :: verbosity 
    character(LEN=256) :: x_save_file
    character(LEN=256) :: xanes_file
-   character(LEN=16) :: U_projection_type
    CHARACTER (LEN=256) ::  filecore
 
    integer :: save_file_version          ! versionning of save file

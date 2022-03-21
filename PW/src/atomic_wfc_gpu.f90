@@ -17,14 +17,13 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   USE cell_base,        ONLY : omega, tpiba
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau
   USE basis,            ONLY : natomwfc
-  !USE gvect,            ONLY : mill, eigts1, eigts2, eigts3, g
-  USE gvect_gpum,       ONLY : mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
+  USE gvect,            ONLY : mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
   USE klist,            ONLY : xk, ngk, igk_k_d !, igk_k
   USE wvfct,            ONLY : npwx
   USE uspp_param,       ONLY : upf, nwfcm
-  USE noncollin_module, ONLY : noncolin, npol, angle1, angle2
-  USE spin_orb,         ONLY : lspinorb, rot_ylm, fcoef, lmaxx, domag, &
+  USE noncollin_module, ONLY : noncolin, domag, npol, angle1, angle2, &
                                starting_spin_angle
+  USE upf_spinorb,      ONLY : rot_ylm, lmaxx
   !
   IMPLICIT NONE
   !
@@ -91,7 +90,7 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   !
   ! chiq = radial fourier transform of atomic orbitals chi
   !
-  CALL interp_at_wfc_gpu ( npw, qg_d, nwfcm, chiq_d )
+  CALL interp_atwfc_gpu ( npw, qg_d, nwfcm, chiq_d )
   !
   DEALLOCATE( qg_d, gk_d )
   !

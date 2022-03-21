@@ -65,6 +65,11 @@ SUBROUTINE qvan2( ngy, ih, jh, np, qmod, qg, ylmk0 )
   ! auxiliary variables for intepolation
   ! auxiliary variables
   !
+  ! This should not happen, but better to check
+  !
+  IF ( INT(qmod(ngy)/dq)+4 > size(qrad,1) ) CALL upf_error &
+       ('qvan2', 'internal error: dimension of interpolation table', 1 )
+  !
   ! ... computes the indices which correspond to ih,jh
   !
   dqi = 1.0_DP / dq
@@ -81,9 +86,9 @@ SUBROUTINE qvan2( ngy, ih, jh, np, qmod, qg, ylmk0 )
   jvl = nhtolm(jh,np)
   !
   IF (nb > nbetam .OR. mb > nbetam) &
-       CALL errore( ' qvan2 ', ' wrong dimensions (1)', MAX(nb,mb) )
+       CALL upf_error( ' qvan2 ', ' wrong dimensions (1)', MAX(nb,mb) )
   IF (ivl > nlx .OR. jvl > nlx) &
-       CALL errore( ' qvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl) )
+       CALL upf_error( ' qvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl) )
   !
   qg = 0.0_DP
   !
@@ -91,7 +96,7 @@ SUBROUTINE qvan2( ngy, ih, jh, np, qmod, qg, ylmk0 )
   !
   DO lm = 1, lpx(ivl,jvl)
      lp = lpl(ivl,jvl,lm)
-     IF ( lp < 1 .OR. lp > 49 ) CALL errore( 'qvan2', ' lp wrong ', MAX(lp,1) )
+     IF ( lp < 1 .OR. lp > 49 ) CALL upf_error( 'qvan2', ' lp wrong ', MAX(lp,1) )
      !
      ! ... finds angular momentum l corresponding to combined index lp (l is 
      !     actually l+1 because this is the way qrad is stored, check init_us_1)

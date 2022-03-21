@@ -1,0 +1,10 @@
+#Install LIBXC 4.3.4 (followed similar instruction as done in README.txt for hdf5)
+
+wget --trust-server-names http://www.tddft.org/programs/libxc/down.php?file=5.1.2/libxc-5.1.2.tar.gz
+
+./configure --prefix=/home/buildbot/local/libxc-512-gcc102
+
+make -j 4
+make install
+
+

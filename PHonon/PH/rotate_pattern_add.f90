@@ -5,25 +5,14 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!  This file provides the following routines:
-!  rotate_pattern_add transfrom a dynamical matrix from the cartesian
-!                     basis to the pattern basis and adds it to a
-!                     matrix given in input.
-!
-!  dyn_pattern_to_cart Dynamical matrix from the pattern basis to the
-!                     cartesian basis.
-!
-!  compact_dyn Dynamical matrix from a 3,3,nat,nat format to a 3xnat, 3xnat
-!              format
-!
-!  scompact_dyn The opposite of compact dyn.
-!
 !----------------------------------------------------------------------
   SUBROUTINE rotate_pattern_add(nat, u, dyn, dynwrk)
-  ! This routine rotates the dynamical matrix dynwork written
-  ! in cartesian basis to the basis of the patterns u and adds it to
-  ! the dynamical matrix dyn that is supposed to be in the basis of the
-  ! patterns.
+  !--------------------------------------------------------------------
+  !! This routine rotates the dynamical matrix dynwork written
+  !! in cartesian basis to the basis of the patterns u and adds it to
+  !! the dynamical matrix dyn that is supposed to be in the basis of the
+  !! patterns.
+  !
   USE kinds, ONLY : DP
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: nat
@@ -53,8 +42,10 @@
 !
 !----------------------------------------------------------------------
   SUBROUTINE dyn_pattern_to_cart(nat, u, dyn, phi)
-  ! This routine transforms the dynamical matrix dyn, written in the basis
-  ! of the pattern, in the dynamical matrix phi, in the cartesian basis.
+  !---------------------------------------------------------------------
+  !! This routine transforms the dynamical matrix dyn, written in the basis
+  !! of the pattern, in the dynamical matrix phi, in the cartesian basis.
+  !
   USE kinds, ONLY : DP
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: nat
@@ -86,11 +77,10 @@
 !
 !-----------------------------------------------------------------------
   SUBROUTINE compact_dyn(nat, dyn, phi)
-!-----------------------------------------------------------------------
-!
-!  This routine writes the dynamical matrix from a 3,3,nat,nat array
-!  to a 3*nat,3*nat array. 
-!
+  !-----------------------------------------------------------------------
+  !! This routine writes the dynamical matrix from a 3,3,nat,nat array
+  !! to a 3*nat,3*nat array.
+  !
   USE kinds, ONLY : DP
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: nat
@@ -112,14 +102,13 @@
   END DO
   RETURN
   END SUBROUTINE compact_dyn
-
+!
 !-----------------------------------------------------------------------
   SUBROUTINE scompact_dyn(nat, dyn, phi)
-!-----------------------------------------------------------------------
-!
-!  This routine writes the dynamical matrix from a 3*nat,3*nat array
-!  to a 3,3,nat,nat array.
-!
+  !-----------------------------------------------------------------------
+  !! This routine writes the dynamical matrix from a 3*nat,3*nat array
+  !! to a 3,3,nat,nat array.
+  !
 
   USE kinds, ONLY : DP
   IMPLICIT NONE

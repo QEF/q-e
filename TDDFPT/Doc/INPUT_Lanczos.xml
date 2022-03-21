@@ -2,7 +2,7 @@
 <?xml-stylesheet type="text/xsl" href="input_xx.xsl"?>
 <!-- FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST -->
     
-<input_description distribution="Quantum Espresso" package="turboTDDFPT" program="turbo_lanczos.x" >
+<input_description distribution="Quantum ESPRESSO" package="turboTDDFPT" program="turbo_lanczos.x" >
    <toc>
    </toc>
    <intro>
@@ -17,22 +17,22 @@ Comment lines in namelists can be introduced by a &quot;!&quot;, exactly as in
 fortran code. Comments lines in ``cards&apos;&apos; can be introduced by
 either a &quot;!&quot; or a &quot;#&quot; character in the first position of a line.
 
-Structure of the input data:
+<b>Structure of the input data:</b>
 ===============================================================================
 
-&amp;lr_input
+&amp;LR_INPUT
   ...
 /
 
-&amp;lr_control
+&amp;LR_CONTROL
   ...
 /
 
-[ &amp;lr_post
+[ &amp;LR_POST
   ...
  / ]
    </intro>
-   <namelist name="lr_input" >
+   <namelist name="LR_INPUT" >
       <label> This namelist is always needed !
       </label>
       <var name="prefix" type="CHARACTER" >
@@ -99,7 +99,7 @@ the &apos;default&apos; mode.
          </info>
       </var>
    </namelist>
-   <namelist name="lr_control" >
+   <namelist name="LR_CONTROL" >
       <var name="itermax" type="INTEGER" >
          <default> 500
          </default>
@@ -216,7 +216,7 @@ centered wrt the center of the molecule.
          </info>
       </var>
    </namelist>
-   <namelist name="lr_post" >
+   <namelist name="LR_POST" >
       <var name="omeg" type="REAL" >
          <default> 0.0
          </default>

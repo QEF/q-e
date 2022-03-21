@@ -154,7 +154,24 @@ program gwl_punch
                                 l_no_GW_just_screening,& ! JDE
                                 l_no_GW_bare_Coulomb,&   ! JDE
                                 no_GW_cg_maxit,&         ! JDE
-                                no_GW_cg_threshold       ! JDE
+                                no_GW_cg_threshold,&       ! JDE
+                                l_easy, &  
+                                l_easy_lanczos_g, &
+                                easy_grid_type, &
+                                easy_grid_param, &
+                                easy_average_type, &
+                                easy_psi_thrs,&
+                                l_easy_update_basis_w, &
+                                l_easy_dielectric_constant, &
+                                easy_w_update_alpha, &
+                                easy_w_update_lanczos, &
+                                easy_w_thrs, &
+                                s_first_spin,&
+                                s_last_spin, &
+                                easy_split_calc_n, &
+                                easy_split_calc_i, &
+                                l_easy_w_disk
+
                  
  
   USE exchange_custom, ONLY : exchange_fast_dual
@@ -192,7 +209,13 @@ program gwl_punch
                                l_cond_pol_base,l_semicore,n_semicore,l_semicore_read, l_verbose, l_contour,&
                                l_real,exchange_fast_dual,l_bse,s_bse,dual_bse,l_big_system,extra_pw_cutoff,&
                                l_list,l_scissor,scissor,l_full,n_full,l_simple,&
-                               l_no_GW_just_screening, l_no_GW_bare_Coulomb, no_GW_cg_maxit, no_GW_cg_threshold ! JDE
+                               l_no_GW_just_screening, l_no_GW_bare_Coulomb, no_GW_cg_maxit, no_GW_cg_threshold,&
+                               l_easy, easy_grid_type, easy_grid_param,easy_average_type, easy_psi_thrs,&
+                               l_easy_lanczos_g, &
+                               l_easy_update_basis_w, l_easy_dielectric_constant, easy_w_update_alpha, &
+                               easy_w_update_lanczos, easy_w_thrs, s_first_spin, s_last_spin, easy_split_calc_n,&
+                               easy_split_calc_i, l_easy_w_disk
+
                     
 
   !
@@ -294,6 +317,28 @@ program gwl_punch
   l_no_GW_bare_coulomb=.false.   ! JDE
   no_GW_cg_maxit=30              ! JDE
   no_GW_cg_threshold=1.d-10      ! JDE
+  l_easy=.false.
+  l_easy_lanczos_g=.false.
+  easy_grid_type=0
+  easy_grid_param(1)=0
+  easy_grid_param(2)=0
+  easy_grid_param(3)=0
+  easy_grid_param(4)=5
+  easy_grid_param(5)=100000
+  easy_average_type=0
+  easy_psi_thrs=0.d0
+  l_easy_update_basis_w=.false.
+  l_easy_dielectric_constant=.false.
+  easy_w_update_alpha=0.1d0
+  easy_w_update_lanczos=0.5
+  easy_w_thrs=1d-20
+  s_first_spin=0
+  s_last_spin=0
+  easy_split_calc_n=1
+  easy_split_calc_i=1
+  l_easy_w_disk=.false.
+
+  
   !
   !    Reading input file
   !
@@ -418,7 +463,26 @@ program gwl_punch
   CALL mp_bcast(l_no_GW_bare_coulomb, ionode_id, world_comm)    ! JDE
   CALL mp_bcast(no_GW_cg_maxit, ionode_id, world_comm)          ! JDE
   CALL mp_bcast(no_GW_cg_threshold, ionode_id, world_comm)      ! JDE
+  CALL mp_bcast(l_easy, ionode_id, world_comm)
+  CALL mp_bcast(l_easy_lanczos_g, ionode_id, world_comm)
+  CALL mp_bcast(easy_grid_type, ionode_id, world_comm)
+  CALL mp_bcast(easy_grid_param, ionode_id, world_comm)
+  CALL mp_bcast(easy_average_type, ionode_id, world_comm)
+  CALL mp_bcast(easy_psi_thrs, ionode_id, world_comm)
+  CALL mp_bcast(l_easy_update_basis_w, ionode_id,world_comm)
+  CALL mp_bcast(l_easy_dielectric_constant, ionode_id,world_comm)
+  CALL mp_bcast(easy_w_update_alpha, ionode_id,world_comm)
+  CALL mp_bcast(easy_w_update_lanczos , ionode_id,world_comm)
+  CALL mp_bcast(easy_w_thrs, ionode_id,world_comm)
+  CALL mp_bcast(s_first_spin, ionode_id, world_comm)
+  CALL mp_bcast(s_last_spin, ionode_id, world_comm)
+  CALL mp_bcast(easy_split_calc_n, ionode_id, world_comm)
+  CALL mp_bcast(easy_split_calc_i, ionode_id, world_comm)
+  CALL mp_bcast( l_easy_w_disk, ionode_id, world_comm)
+  if(s_first_spin==0) s_first_spin=1
+  if(s_last_spin==0) s_first_spin=nspin
 
+ 
   call read_file 
 
 
@@ -443,9 +507,11 @@ program gwl_punch
 
   call summary()
 
+  
 !
 ! init some quantities ...
 !
+  CALL hinit0()
   if(lda_plus_u) then 
     CALL init_ns()
   endif
@@ -498,14 +564,12 @@ program gwl_punch
   ENDIF
 
 
- 
+   if(l_easy) then
+     CALL easy_gw()
+  else
+     CALL produce_wannier_gamma
+  endif
 
-  if(l_verbose) write(stdout,*) 'BEFORE produce_wannier_gamma'
-  FLUSH( stdout )
-  CALL produce_wannier_gamma
-  if(l_verbose) write(stdout,*) 'AFTER produce_wannier_gamma'
-  FLUSH( stdout )
-!     ENDIF
  
 !
 !
@@ -546,6 +610,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   use mp_world,       ONLY : world_comm, nproc, mpime
   use ldaU,           ONLY : lda_plus_u
   USE basis,          ONLY : swfcatom
+  USE uspp_init,      ONLY : init_us_2
 
   implicit none
 
@@ -748,6 +813,9 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
        ALLOCATE( sevc(npwx,nbnd), STAT=ierr )
        IF (ierr/=0) CALL errore( ' read_export ',' Unable to allocate SEVC ', ABS(ierr) )
+
+       call errore('pw4gww','init_us_1 incorrectly called',1)
+       CALL init_us_1
 
        CALL allocate_bec_type (nkb,nbnd,becp)
 

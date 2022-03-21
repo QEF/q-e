@@ -56,7 +56,6 @@ SUBROUTINE init_us_0(ecutrho,intra_bgrp_comm)
   ! q-point grid for interpolation
   REAL(DP), ALLOCATABLE :: ylmk0(:)
   ! the spherical harmonics
-  INTEGER, EXTERNAL :: sph_ind
   INTEGER :: lnb, lmb
   REAL(DP) :: qmax, rcut, drcut
   REAL(DP) :: target_ratio, ratio, ratio_s, fac
@@ -180,7 +179,7 @@ SUBROUTINE init_us_0(ecutrho,intra_bgrp_comm)
            ENDDO
            !
            ! 2) compute the fourier transform of the Qs and their integrated power spectum in
-           !    reciprocal space - FIXME: use routine compute_qrad in init_us_1
+           !    reciprocal space - FIXME: use routine init_tab_qrad
            !
            DO iq = startq, lastq
               !

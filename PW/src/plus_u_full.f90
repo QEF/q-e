@@ -4,7 +4,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! Set of subroutines needed for full LDA+U calculations
+! Set of subroutines needed for full DFT+U(+J) calculations
 ! after Liechtenstein and co-workers (PRB 52, R5467 (1995)). 
 ! Works with two-component spinor WFs and with fully-relativistic
 ! pseudopotentials. 
@@ -300,8 +300,6 @@ SUBROUTINE atomic_wfc_nc_updown( ik, wfcatom )
   USE wvfct,             ONLY : npwx, nbnd
   USE uspp_param,        ONLY : upf, nwfcm
   USE noncollin_module,  ONLY : noncolin, npol, angle1, angle2
-  USE spin_orb,          ONLY : lspinorb, rot_ylm, fcoef, domag, &
-                                starting_spin_angle
   !
   IMPLICIT NONE
   !
@@ -349,7 +347,7 @@ SUBROUTINE atomic_wfc_nc_updown( ik, wfcatom )
      qg(ig) = SQRT(qg(ig))*tpiba
   ENDDO
   !
-  CALL interp_at_wfc ( npw, qg, nwfcm, chiq )
+  CALL interp_atwfc ( npw, qg, nwfcm, chiq )
   !
   DEALLOCATE( qg, gk )
   ALLOCATE( aux(npw), sk(npw) )

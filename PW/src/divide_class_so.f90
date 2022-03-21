@@ -650,7 +650,7 @@ ELSEIF (code_group==21) THEN
       ELSE IF (ts==4) THEN
          which_irr(iclass)=5
       ELSE IF (ts==5) THEN
-         IF (nelem(iclass)>1) THEN
+         IF (nelem(iclass)>2) THEN
             which_irr(iclass)=9
          ELSE 
             which_irr(iclass)=6
@@ -3416,8 +3416,7 @@ USE rap_point_group_so,   ONLY : nrap, nelem_so, elem_so, has_e, &
                                  name_class_so,d_spin, name_class_so1,  &
                                  elem_name_so
 USE rap_point_group_is,   ONLY : code_group_is, gname_is
-USE spin_orb,             ONLY : domag
-USE noncollin_module,     ONLY : noncolin
+USE noncollin_module,     ONLY : noncolin, domag
 USE io_global,            ONLY : stdout
 !
 IMPLICIT NONE
@@ -3621,7 +3620,7 @@ IF (cosa < -eps ) u=-u
 !   IF (ax(1)*ax(3) < -eps) u=-u
 !ENDIF
 !
-!   Here compute the 3x3 rotation matrix starting form the axis, angle
+!   Here compute the 3x3 rotation matrix starting from the axis, angle
 !   or from the rotation in spin space for consistency check.
 !
 !angle=angle*2.d0

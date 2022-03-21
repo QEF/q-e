@@ -149,7 +149,9 @@ help nmix_ph -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> Number of iterations used in potential mixing.
+<blockquote><pre>
+Number of iterations used in potential mixing. Using a larger value (8~20)
+can significantly speed up convergence, at the cost of using more memory.
          </pre></blockquote>
 </ul>      
       
@@ -195,7 +197,12 @@ help reduce_io -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> Reduce I/O to the strict minimum.
+<blockquote><pre>
+Reduce I/O to the strict minimum.
+
+<b>BEWARE:</b> If the input flag "reduce_io"=.true. was
+used, it is not allowed to restart from an interrupted
+run.
          </pre></blockquote>
 </ul>      
       
@@ -350,9 +357,11 @@ help trans -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If .true. the phonons are computed.
-If "trans" .and. "epsil" are .true. effective charges are
-calculated.
+If .false. the phonons are not computed.
+If "trans" .and. "epsil" are both .true.,
+the effective charges are calculated.
+If "ldisp" is .true., "trans"=.false. is overridden
+(except for the case of electron-phonon calculations)
          </pre></blockquote>
 </ul>      
       
@@ -566,7 +575,7 @@ Options are:
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
 Electron-phonon lambda coefficients are computed
 for a given q and a grid of k-points specified by
-the variables nk1, nk2, nk3, k1, k2, k3.
+the variables "nk1", "nk2", "nk3", "k1", "k2", "k3".
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
@@ -1007,8 +1016,8 @@ When these parameters are specified the phonon program
 runs a pw non-self consistent calculation with a different
 k-point grid thant that used for the charge density.
 This occurs even in the Gamma case.
-nk1,nk2,nk3 are the parameters of the Monkhorst-Pack grid
-with offset determined by k1,k2,k3.
+"nk1", "nk2", "nk3" are the parameters of the Monkhorst-Pack grid
+with offset determined by "k1", "k2", "k3".
          </pre></blockquote>
 </ul>
     
@@ -1109,8 +1118,8 @@ help wpot_dir -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Directory where the w_pot binary files are written.
-Must be the same with wpot_dir used in dvscf_q2r.x.
-The real space potential files are stored in wpot_dir
+Must be the same with "wpot_dir" used in dvscf_q2r.x.
+The real space potential files are stored in "wpot_dir"
 with names ${prefix}.wpot.irc${irc}//"1".
             </pre></blockquote>
 </ul>      

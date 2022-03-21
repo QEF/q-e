@@ -1,14 +1,23 @@
 !
-MODULE corr_gga                       !<GPU:corr_gga=>corr_gga_gpu>
+! Copyright (C) 2020 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!---------------------------------------------------------------------------------
+MODULE corr_gga
+  !-------------------------------------------------------------------------------
+  !! GGA correlation functionals.
   !
-  USE corr_lda, ONLY: pw, pw_spin   !<GPU:pw_spin=>pw_spin_d,pw=>pw_d,corr_lda=>corr_lda_gpu>
+  USE corr_lda, ONLY: pw, pw_spin
   !
 CONTAINS
 !
-
-
+!
 !-----------------------------------------------------------------------
-SUBROUTINE perdew86( rho, grho, sc, v1c, v2c )                    !<GPU:DEVICE>
+SUBROUTINE perdew86( rho, grho, sc, v1c, v2c )
+!$acc routine (perdew86) seq
   !-----------------------------------------------------------------------
   !! Perdew gradient correction on correlation: PRB 33, 8822 (1986).
   !
@@ -59,7 +68,8 @@ END SUBROUTINE perdew86
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE ggac( rho, grho, sc, v1c, v2c )                    !<GPU:DEVICE>
+SUBROUTINE ggac( rho, grho, sc, v1c, v2c )
+!$acc routine (ggac) seq
   !-----------------------------------------------------------------------
   !! Perdew-Wang GGA (PW91) correlation part
   !
@@ -89,7 +99,7 @@ SUBROUTINE ggac( rho, grho, sc, v1c, v2c )                    !<GPU:DEVICE>
   !
   rs = pi34 / rho**third
   !
-  CALL pw( rs, 1, ec, vc )                                  !<GPU:pw=>pw_d>
+  CALL pw( rs, 1, ec, vc )
   !
   rs1 = rs
   rs2 = rs1 * rs1
@@ -137,7 +147,8 @@ END SUBROUTINE ggac
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE glyp( rho, grho, sc, v1c, v2c )                    !<GPU:DEVICE>
+SUBROUTINE glyp( rho, grho, sc, v1c, v2c )
+!$acc routine (glyp) seq
   !-----------------------------------------------------------------------
   !! Lee Yang Parr: gradient correction part.
   !
@@ -178,7 +189,8 @@ END SUBROUTINE glyp
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE pbec( rho, grho, iflag, sc, v1c, v2c )                    !<GPU:DEVICE>
+SUBROUTINE pbec( rho, grho, iflag, sc, v1c, v2c )
+!$acc routine (pbec) seq
   !---------------------------------------------------------------
   !! PBE correlation (without LDA part)
   !
@@ -190,7 +202,7 @@ SUBROUTINE pbec( rho, grho, iflag, sc, v1c, v2c )                    !<GPU:DEVIC
   !
   IMPLICIT NONE
   !
-  INTEGER,  INTENT(IN) :: iflag              !<GPU:VALUE>
+  INTEGER,  INTENT(IN) :: iflag
   REAL(DP), INTENT(IN) :: rho, grho
   ! input: charge and squared gradient
   REAL(DP), INTENT(OUT) :: sc, v1c, v2c
@@ -210,7 +222,7 @@ SUBROUTINE pbec( rho, grho, iflag, sc, v1c, v2c )                    !<GPU:DEVIC
   !
   rs = pi34 / rho**third
   !
-  CALL pw( rs, 1, ec, vc )                      !<GPU:pw=>pw_d>
+  CALL pw( rs, 1, ec, vc )
   !
   kf = xkf / rs
   ks = xks * SQRT(kf)
@@ -232,7 +244,7 @@ SUBROUTINE pbec( rho, grho, iflag, sc, v1c, v2c )                    !<GPU:DEVIC
   v2c = ddh0
   ! q2D
   IF (iflag == 3) THEN
-     CALL cpbe2d( rho, grho, sc2D, v1c2D, v2c2D )       !<GPU:cpbe2d=>cpbe2d_d>
+     CALL cpbe2d( rho, grho, sc2D, v1c2D, v2c2D )
      sc  = sc  + sc2D
      v1c = v1c + v1c2D
      v2c = v2c + v2c2D
@@ -246,7 +258,8 @@ END SUBROUTINE pbec
 ! ===========> SPIN <===========
 !
 !-----------------------------------------------------------------------
-SUBROUTINE perdew86_spin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c )                    !<GPU:DEVICE>
+SUBROUTINE perdew86_spin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c )
+!$acc routine (perdew86_spin) seq
   !---------------------------------------------------------------------
   !! Perdew gradient correction on correlation: PRB 33, 8822 (1986)
   !! spin-polarized case.
@@ -318,7 +331,8 @@ END SUBROUTINE perdew86_spin
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE ggac_spin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c )                    !<GPU:DEVICE>
+SUBROUTINE ggac_spin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c )
+!$acc routine (ggac_spin) seq
   !---------------------------------------------------------------------
   !! Perdew-Wang GGA (PW91) correlation part - spin-polarized
   !
@@ -359,7 +373,7 @@ SUBROUTINE ggac_spin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c )                
   !
   rs = pi34 / rho**third
   !
-  CALL pw_spin( rs, zeta, ec, vc_up, vc_dn )                                 !<GPU:pw_spin=>pw_spin_d>
+  CALL pw_spin( rs, zeta, ec, vc_up, vc_dn )
   !
   rs2 = rs * rs
   rs3 = rs * rs2
@@ -423,7 +437,8 @@ END SUBROUTINE ggac_spin
 !
 !
 !-------------------------------------------------------------------
-SUBROUTINE pbec_spin( rho, zeta, grho, iflag, sc, v1c_up, v1c_dw, v2c )                    !<GPU:DEVICE>
+SUBROUTINE pbec_spin( rho, zeta, grho, iflag, sc, v1c_up, v1c_dw, v2c )
+!$acc routine (pbec_spin) seq
   !-----------------------------------------------------------------
   !! PBE correlation (without LDA part) - spin-polarized.
   !
@@ -434,7 +449,7 @@ SUBROUTINE pbec_spin( rho, zeta, grho, iflag, sc, v1c_up, v1c_dw, v2c )         
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: iflag        !<GPU:VALUE>
+  INTEGER, INTENT(IN) :: iflag
   !! see main comments
   REAL(DP), INTENT(IN) :: rho
   !! the total charge density
@@ -467,7 +482,7 @@ SUBROUTINE pbec_spin( rho, zeta, grho, iflag, sc, v1c_up, v1c_dw, v2c )         
   !
   rs = pi34 / rho**third
   !
-  CALL pw_spin( rs, zeta, ec, vc_up, vc_dn )                                 !<GPU:pw_spin=>pw_spin_d>
+  CALL pw_spin( rs, zeta, ec, vc_up, vc_dn )
   !
   kf = xkf / rs
   ks = xks * SQRT(kf)
@@ -520,7 +535,8 @@ END SUBROUTINE pbec_spin
 !
 !
 !------------------------------------------------------------------------
-SUBROUTINE lsd_glyp( rho_in_up, rho_in_dw, grho_up, grho_dw, grho_ud, sc, v1c_up, v1c_dw, v2c_up, v2c_dw, v2c_ud )                     !<GPU:DEVICE>
+SUBROUTINE lsd_glyp( rho_in_up, rho_in_dw, grho_up, grho_dw, grho_ud, sc, v1c_up, v1c_dw, v2c_up, v2c_dw, v2c_ud )
+!$acc routine (lsd_glyp) seq
   !----------------------------------------------------------------------
   !! Lee, Yang, Parr: gradient correction part.
   !
@@ -597,7 +613,8 @@ END SUBROUTINE lsd_glyp
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE cpbe2d( rho, grho, sc, v1c, v2c )                    !<GPU:DEVICE>
+SUBROUTINE cpbe2d( rho, grho, sc, v1c, v2c )
+!$acc routine (cpbe2d) seq
   !---------------------------------------------------------------
   !! 2D correction (last term of Eq. 5, PRL 108, 126402 (2012))
   !
@@ -615,7 +632,7 @@ SUBROUTINE cpbe2d( rho, grho, sc, v1c, v2c )                    !<GPU:DEVICE>
   REAL(DP), PARAMETER :: ex3=ex2+1.0_DP
   REAL(DP) :: fac1, fac2, zeta, phi, gr, rs, drsdn, akf, aks, t, dtdn, dtdgr
   REAL(DP) :: p, a, g, alpha1, beta1,beta2,beta3,beta4, dgdrs, epsc, depscdrs
-  REAL(DP) :: c, gamma1, beta, aa, cg, adddepsc, h, dhdaa, dhdt, dhdrs
+  REAL(DP) :: c, gamma1, beta, aa, cg, h, dhdaa, dhdt, dhdrs
   REAL(DP) :: epscpbe, depscpbedrs, depscpbedt, a0,a1,a2, b0,b1,b2, c0,c1,c2
   REAL(DP) :: e0,e1,e2, f0,f1,f2, g0,g1,g2, h0,h1,h2, d0,d1,d2, ff, dffdt
   REAL(DP) :: rs3d, rs2d, drs2ddrs3d, eps2d, deps2ddrs2, depsGGAdrs, depsGGAdt

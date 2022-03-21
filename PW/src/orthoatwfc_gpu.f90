@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,7 @@ SUBROUTINE orthoUwfc_gpu
   ! associated Hubbard U term * S, for DFT+U(+V) calculations. Same for 
   ! "iunhub2" but without S (this is then used to computed Hubbard forces 
   ! and stresses). Atomic wavefunctions
-  ! are orthogonalized if desired, depending upon the value of "U_projection"
+  ! are orthogonalized if desired, depending upon the value of "Hubbard_projectors"
   ! "swfcatom" must NOT be allocated on input.
   !
   USE kinds,      ONLY : DP
@@ -29,10 +29,10 @@ SUBROUTINE orthoUwfc_gpu
   USE io_files,   ONLY : iunhub, nwordwfcU
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc, swfcatom
-  USE klist,      ONLY : nks, xk, ngk, igk_k, igk_k_d
-  USE ldaU,       ONLY : U_projection, wfcU, nwfcU, copy_U_wfc
+  USE klist,      ONLY : nks, xk, ngk, igk_k
+  USE ldaU,       ONLY : Hubbard_projectors, wfcU, nwfcU, copy_U_wfc
   USE wvfct,      ONLY : npwx
-  USE uspp,       ONLY : nkb, vkb, vkb_d, using_vkb_d
+  USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
                          bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
@@ -42,6 +42,7 @@ SUBROUTINE orthoUwfc_gpu
   USE becmod_gpum,      ONLY : becp_d
   USE becmod_subs_gpum, ONLY : using_becp_auto, using_becp_d_auto, &
                                calbec_gpu
+  USE uspp_init,        ONLY : init_us_2
   ! 
   IMPLICIT NONE
   !
@@ -60,38 +61,38 @@ SUBROUTINE orthoUwfc_gpu
   attributes(DEVICE) :: wfcatom_d, swfcatom_d
 #endif  
   !
-  IF ( U_projection == "pseudo" ) THEN
-     WRITE( stdout,*) 'Beta functions used for LDA+U Projector'
+  IF ( Hubbard_projectors == "pseudo" ) THEN
+     WRITE( stdout,*) 'Beta functions used for Hubbard projectors'
      RETURN
-  ELSE IF (U_projection=="file") THEN
+  ELSE IF (Hubbard_projectors=="wf") THEN
      !
-     ! Read atomic wavefunctions from file (produced by pmw.x). In this case,
-     ! U-specific atomic wavefunctions wfcU coincide with atomic wavefunctions 
+     ! Read Wannier functions from file (produced by pmw.x).
      !
-     WRITE( stdout,*) 'LDA+U Projector read from file '
+     WRITE( stdout,*) 'Hubbard projectors are read from file produced by pmw.x'
      DO ik = 1, nks
         CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
      END DO
      RETURN
-  ELSE IF (U_projection=="atomic") THEN
+     !
+  ELSE IF (Hubbard_projectors=="atomic") THEN
      orthogonalize_wfc = .FALSE.
      normalize_only = .FALSE.
-     WRITE( stdout,*) 'Atomic wfc used for LDA+U Projector are NOT orthogonalized'
-  ELSE IF (U_projection=="ortho-atomic") THEN
+     WRITE( stdout,'(/5x,a,/)') 'Atomic wfc used for Hubbard projectors are NOT orthogonalized'
+  ELSE IF (Hubbard_projectors=="ortho-atomic") THEN
      orthogonalize_wfc = .TRUE.
      normalize_only = .FALSE.    
-     WRITE( stdout,*) 'Atomic wfc used for LDA+U Projector are orthogonalized'
+     WRITE( stdout,'(/5x,a,/)') 'Atomic wfc used for Hubbard projectors are orthogonalized'
      IF (gamma_only) CALL errore('orthoUwfc', &
           'Gamma-only calculation for this case not implemented', 1 )
-  ELSE IF (U_projection=="norm-atomic") THEN
+  ELSE IF (Hubbard_projectors=="norm-atomic") THEN
      orthogonalize_wfc = .TRUE.
      normalize_only = .TRUE.
-     WRITE( stdout,*) 'Atomic wfc used for LDA+U Projector are normalized but NOT orthogonalized'
+     WRITE( stdout,'(/5x,a,/)') 'Atomic wfc used for Hubbard projectors are normalized but NOT orthogonalized'
      IF (gamma_only) CALL errore('orthoUwfc', &
           'Gamma-only calculation for this case not implemented', 1 )
   ELSE
-     WRITE( stdout,*) "U_projection_type =", U_projection
-     CALL errore ("orthoUwfc"," this U_projection_type is not valid",1)
+     WRITE(stdout,'(/5x,"Hubbard_projectors = ",a)') Hubbard_projectors
+     CALL errore ("orthoUwfc"," This type of Hubbard projectors is not valid",1)
   END IF
   !
   ALLOCATE( wfcatom(npwx*npol,natomwfc), swfcatom(npwx*npol,natomwfc) )
@@ -112,11 +113,15 @@ SUBROUTINE orthoUwfc_gpu
      ENDIF
      !
      npw = ngk(ik)
-     CALL using_vkb_d(2)
-     CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+     !
+     CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
      !
      CALL using_becp_d_auto(2)
-     CALL calbec_gpu( npw, vkb_d, wfcatom_d, becp_d )
+!$acc data present(vkb(:,:))
+!$acc host_data use_device(vkb)
+     CALL calbec_gpu( npw, vkb, wfcatom_d, becp_d )
+!$acc end host_data
+!$acc end data
      !
      CALL s_psi_gpu( npwx, npw, natomwfc, wfcatom_d, swfcatom_d )
      !
@@ -163,7 +168,7 @@ SUBROUTINE orthoatwfc_gpu( orthogonalize_wfc )
   USE basis,      ONLY : natomwfc, swfcatom
   USE klist,      ONLY : nks, xk, ngk, igk_k, igk_k_d
   USE wvfct,      ONLY : npwx
-  USE uspp,       ONLY : nkb, vkb, vkb_d, using_vkb_d
+  USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
                          bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
@@ -171,6 +176,7 @@ SUBROUTINE orthoatwfc_gpu( orthogonalize_wfc )
   USE becmod_gpum,      ONLY : becp_d
   USE becmod_subs_gpum, ONLY : using_becp_auto, using_becp_d_auto, &
                                calbec_gpu
+  USE uspp_init,        ONLY : init_us_2
   ! 
   IMPLICIT NONE
   !
@@ -206,12 +212,16 @@ SUBROUTINE orthoatwfc_gpu( orthogonalize_wfc )
      ENDIF
      !
      npw = ngk(ik)
-     CALL using_vkb_d(2)
-     CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+     !
+     CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
      !
      CALL using_becp_auto(2)
      CALL using_becp_d_auto(2)
-     CALL calbec_gpu( npw, vkb_d, wfcatom_d, becp_d )
+!$acc data present(vkb(:,:))
+!$acc host_data use_device(vkb)
+     CALL calbec_gpu( npw, vkb, wfcatom_d, becp_d )
+!$acc end host_data
+!$acc end data
      !
      CALL s_psi_gpu( npwx, npw, natomwfc, wfcatom_d, swfcatom_d )
      !
@@ -405,6 +415,7 @@ SUBROUTINE calculate_doverlap_inv_gpu (m, e, work, doverlap, doverlap_inv)
   !! Note, on the input this routine requires dO (not transposed).
   !! The solution is written in a closed form by solving the Lyapunov
   !! equation (a particular case of the Sylvester equation).
+  !! See Eq. (32) in PRB 102, 235159 (2020).
   !! Written by I. Timrov (June 2020)
   !
 #if defined(__CUDA)  

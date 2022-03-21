@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,18 +18,19 @@ SUBROUTINE hinit0()
   USE cellmd,           ONLY : omega_old, at_old, lmovecell
   USE fft_base,         ONLY : dfftp
   USE gvect,            ONLY : ecutrho, ngm, g, gg, eigts1, eigts2, eigts3
+#if defined (__CUDA)
+  USE gvect,            ONLY : eigts1_d, eigts2_d, eigts3_d
+#endif
   USE gvecw,            ONLY : ecutwfc
   USE vlocal,           ONLY : strf
   USE realus,           ONLY : generate_qpointlist, betapointlist, &
                                init_realspace_vars, real_space
-  USE ldaU,             ONLY : lda_plus_U, U_projection
+  USE ldaU,             ONLY : lda_plus_U, Hubbard_projectors
   USE control_flags,    ONLY : tqr, tq_smoothing, tbeta_smoothing, restart
   USE io_global,        ONLY : stdout
   USE noncollin_module, ONLY : report
   USE mp_bands,         ONLY : intra_bgrp_comm
   !
-  USE gvect_gpum,   ONLY : using_eigts1, using_eigts2, using_eigts3, &
-                           using_eigts1_D, using_eigts2_d, using_eigts3_d
   !
   IMPLICIT NONE
   REAL (dp) :: alat_old
@@ -45,8 +46,8 @@ SUBROUTINE hinit0()
   IF (tbeta_smoothing) CALL init_us_b0(ecutwfc,intra_bgrp_comm)
   IF (tq_smoothing) CALL init_us_0(ecutrho,intra_bgrp_comm)
   CALL init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
-  IF ( lda_plus_U .AND. ( U_projection == 'pseudo' ) ) CALL init_q_aeps()
-  CALL init_at_1(omega, intra_bgrp_comm)
+  IF ( lda_plus_U .AND. ( Hubbard_projectors == 'pseudo' ) ) CALL init_q_aeps()
+  CALL init_tab_atwfc (omega, intra_bgrp_comm)
   !
   IF ( restart .AND. startingconfig == 'file' ) THEN
      !
@@ -77,9 +78,11 @@ SUBROUTINE hinit0()
                    strf, eigts1, eigts2, eigts3 )
   ! sync duplicated version
 #if defined(__CUDA)
-  CALL using_eigts1(2);   CALL using_eigts2(2);   CALL using_eigts3(2);
-  CALL using_eigts1_d(0); CALL using_eigts2_d(0); CALL using_eigts3_d(0);
+  eigts1_d = eigts1
+  eigts2_d = eigts2
+  eigts3_d = eigts3
 #endif
+  !$acc update device(eigts1, eigts2, eigts3) 
   !
   ! these routines can be used to patch quantities that are dependent
   ! on the ions and cell parameters

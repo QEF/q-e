@@ -167,8 +167,8 @@ subroutine import_upf ( )
     call allocate_pseudo_paw( pawsetup, grid%mesh, nbeta, lmax )
     CALL nullify_radial_grid( pawsetup%grid )
     call allocate_radial_grid(pawsetup%grid,grid%mesh)
-    call set_pawsetup( pawsetup, upf )
     CALL radial_grid_copy(grid, pawsetup%grid)
+    call set_pawsetup( pawsetup, upf )
   endif
 
   CALL deallocate_pseudo_upf( upf )

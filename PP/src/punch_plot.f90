@@ -37,6 +37,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE wvfct,            ONLY : nbnd, wg
   USE gvecw,            ONLY : ecutwfc
   USE noncollin_module, ONLY : noncolin
+  USE adduscore,        ONLY : US_make_ae_charge
   USE paw_postproc,     ONLY : PAW_make_ae_charge
 
   IMPLICIT NONE
@@ -288,6 +289,29 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
         raux(:) = rho%kin_r(:,1)
      ENDIF
 
+  ELSEIF (plot_num == 23) THEN
+     !
+     ! plot of the charge density of states between emin & emax
+     !
+     WRITE (title, '("Density for spins between",f8.4, " eV and ",f8.4," eV")') emin*rytoev, emax*rytoev
+     CALL local_dos (4, lsign, kpoint, kband, spin_component, emin, emax, raux)
+
+  ELSEIF (plot_num == 24) THEN
+
+     WRITE(stdout, '(7x,a)') "Reconstructing all-electron charge."
+     ! code partially duplicate from plot_num=21 (so 0)
+     CALL US_make_ae_charge(rho)
+     raux(:) = rho%of_r(:, 1)
+     IF ( lsda ) THEN
+        IF ( spin_component==1 ) THEN
+           raux(:) = ( raux(:) + rho%of_r(:,nspin) )/2.0_dp
+        ELSE IF ( spin_component==2 ) THEN
+           raux(:) = ( raux(:) - rho%of_r(:,nspin) )/2.0_dp
+        ELSE
+           CALL errore('punch_plot','spin_component not allowed',3)
+        ENDIF
+     ENDIF
+     !
   ELSEIF (plot_num == 123) THEN
      !
      ! Density Overlap Regions Indicator

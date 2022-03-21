@@ -8,19 +8,20 @@
 !  - SiGeK1.bin
 !  - SiGeK2.bin
 !
-! If the scalacpak or ELPA driver is used, the test is skipped.
+! If the scalapack or ELPA driver is used, the test is skipped.
 !
 #if ! defined(__SCALAPACK)
 program test_diaghg_4
-#if defined(__MPI)
-    USE MPI
-#endif
+
+    USE laxlib_parallel_include
     USE mp,            ONLY : mp_bcast
     USE mp_world,      ONLY : mp_world_start, mp_world_end, mpime, &
-                              root, nproc, world_comm
+                              root, world_comm
     USE mp_bands_util, ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
     USE tester
     IMPLICIT NONE
+    include 'laxlib_kinds.fh'
+    include 'laxlib_param.fh'
     !
     TYPE(tester_t) :: test
     INTEGER :: world_group = 0
@@ -50,14 +51,14 @@ program test_diaghg_4
   SUBROUTINE parallel_real_1(test)
     USE mp_world,    ONLY : mpime
     USE LAXlib
-    USE descriptors, ONLY : la_descriptor, descla_init, descla_local_dims
-    USE la_param,    ONLY : DP
+    USE laxlib_descriptor, ONLY : la_descriptor, descla_init, laxlib_desc_to_intarray
     USE test_io
     implicit none
     !
     TYPE(tester_t) :: test
     !
     TYPE(la_descriptor) :: desc
+    INTEGER :: idesc(LAX_DESC_SIZE)
     integer :: ldh, n, m
     real(DP), allocatable :: h(:,:), hdst(:,:) !< full and distributed Hpsi
     real(DP), allocatable :: h_save(:,:)       !< full Hpsi, used to check consistence across calls
@@ -115,21 +116,23 @@ program test_diaghg_4
             END DO
         END IF
         !
-        CALL pdiaghg( n, hdst, sdst, nrdst, e, vdst, desc, .false. )
+        CALL laxlib_desc_to_intarray( idesc, desc )
         !
-        DO j = 1, m
+        CALL pdiaghg( n, hdst, sdst, nrdst, e, vdst, idesc, .false. )
+        !
+!        DO j = 1, m
             !CALL test%assert_close( v(1:n, j), v_save(1:n, j))
-        END DO
+!        END DO
         CALL test%assert_close( e(1:m), e_save(1:m) )
         !
         !
         v = (0.d0, 0.d0)
         e = 0.d0
-        CALL pdiaghg( n, hdst, sdst, nrdst, e, vdst, desc, .true. )
+        CALL pdiaghg( n, hdst, sdst, nrdst, e, vdst, idesc, .true. )
         !
-        DO j = 1, m
+ !       DO j = 1, m
             !CALL test%assert_close( v(1:n, j), v_save(1:n, j))
-        END DO
+ !       END DO
         CALL test%assert_close( e(1:m), e_save(1:m))
         !
         DEALLOCATE(h,s,e,v,h_save,s_save,e_save,v_save, hdst, sdst, vdst)
@@ -139,9 +142,8 @@ program test_diaghg_4
   !
   SUBROUTINE parallel_complex_1(test)
     USE mp_world, ONLY : mpime
-    USE descriptors, ONLY : la_descriptor, descla_init, descla_local_dims
+    USE laxlib_descriptor, ONLY : la_descriptor, descla_init, laxlib_desc_to_intarray
     USE LAXlib
-    USE la_param, ONLY : DP
     USE test_io
     implicit none
     !
@@ -157,6 +159,7 @@ program test_diaghg_4
     real(DP), allocatable    :: e_save(:)         !< full set of eigenvalues, used for checks
     complex(DP), allocatable :: v_save(:,:)       !< full set of eigenvectors, used for checks
     TYPE(la_descriptor)      :: desc
+    INTEGER :: idesc(LAX_DESC_SIZE)
     !
     character(len=20)        :: inputs(4)
     integer                  :: l, i, j, ii, jj, info, nrdst
@@ -208,7 +211,9 @@ program test_diaghg_4
             END DO
         END IF
         !
-        CALL pdiaghg( n, hdst, sdst, nrdst, e, vdst, desc, .false. )
+        CALL laxlib_desc_to_intarray( idesc, desc )
+        !
+        CALL pdiaghg( n, hdst, sdst, nrdst, e, vdst, idesc, .false. )
         !
         DO j = 1, m
             !CALL test%assert_close( v(1:n, j), v_save(1:n, j))
@@ -218,7 +223,7 @@ program test_diaghg_4
         !
         v = (0.d0, 0.d0)
         e = 0.d0
-        CALL pdiaghg( n, hdst, sdst, nrdst, e, vdst, desc, .true. )
+        CALL pdiaghg( n, hdst, sdst, nrdst, e, vdst, idesc, .true. )
         !
         DO j = 1, m
             !CALL test%assert_close( v(1:n, j), v_save(1:n, j))
@@ -233,10 +238,9 @@ program test_diaghg_4
   SUBROUTINE init_parallel_diag(desc, n)
   
       USE mp_world, ONLY : mpime, nproc, world_comm
-      USE mp_diag,  ONLY : ortho_parent_comm
-      USE descriptors, ONLY : la_descriptor, descla_init, descla_local_dims
+      USE laxlib_processors_grid, ONLY : ortho_parent_comm
+      USE laxlib_descriptor, ONLY : la_descriptor, descla_init
       USE LAXlib
-      USE la_param, ONLY : DP
       implicit none
       !
       TYPE(la_descriptor) :: desc

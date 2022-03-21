@@ -24,16 +24,27 @@ AC_ARG_ENABLE(pedantic,
    fi],
    [use_pedantic=0])
 
-# shared library flags are implemented only for a few (untested) cases
+# yet to be implemented
 AC_ARG_ENABLE(shared,
    [AS_HELP_STRING([--enable-shared],
-       [use shared libraries if available (default: yes)])],
+       [produce object files suitable for shared libraries (default: no)])],
    [if   test "$enableval" = "yes" ; then
       use_shared=1
    else
       use_shared=0
    fi],
-   [use_shared=1])
+   [use_shared=0])
+
+# build static executables (implemented only for a few untested cases)
+AC_ARG_ENABLE(static,
+   [AS_HELP_STRING([--enable-static],
+       [build static executables if possible (default: no)])],
+   [if   test "$enableval" = "yes" ; then
+      use_static=1
+   else
+      use_static=0
+   fi],
+   [use_static=0])
 
 # check Fortran compiler flags
 # have_cpp=0: use external C preprocessing for fortran code
@@ -61,7 +72,7 @@ case "$arch:$f90_flavor" in
             try_fflags_openmp="-openmp"
             try_ldflags_openmp="-openmp"
         fi
-        pre_fdflags="-fpp "
+        pre_fdflags="-fpp -allow nofpp_comments "
         ;;
 arm:armflang )
         try_fflags="-O3 -mcpu=native $try_fflags"
@@ -77,6 +88,42 @@ arm:armflang )
         try_ldflags_static="-static -static-flang-libs"
 
         ;;
+*:pgf* | *:nvfortran )
+	try_fflags_nomain="-Mnomain"
+        try_fflags="-fast"
+        try_fflags_openmp="-mp"
+        if test "$use_debug" -eq 1; then
+           try_f90flags="-g -C -Ktrap=fp -Mcache_align -Mpreprocess -Mlarge_arrays"
+        else
+           try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
+        fi
+        try_foxflags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
+        try_fflags_noopt="-O0"
+        try_ldflags=""
+        try_ldflags_openmp="-mp"
+        try_ldflags_static="-Bstatic"
+        try_dflags="$try_dflags -D__PGI"
+        have_cpp=1
+        ;;
+*:*gfortran )
+	try_fflags="-O3 -g"
+        if test "$f90_major_version" -ge "10"; then
+ 	   try_fflags="$try_fflags -fallow-argument-mismatch"
+        fi
+        if test "$use_debug" -eq 1; then
+            try_fflags="-O3 -g  -Wall -fbounds-check -frange-check -finit-integer=987654321 -finit-real=nan -finit-logical=true -finit-character=64"
+        fi
+        if test "$use_pedantic" -eq 1; then
+            try_fflags="-O2 -g -pedantic -Wall -Wextra -Wconversion -fimplicit-none -fbacktrace -ffree-line-length-0 -fcheck=all"
+        fi
+        try_fflags_openmp="-fopenmp"
+        try_f90flags="\$(FFLAGS) -cpp"
+        try_fflags_noopt="-O0 -g"
+        try_ldflags="-g"
+        try_ldflags_openmp="-pthread -fopenmp"
+        try_ldflags_static="-static"
+        ;;
+# from now on: likely obsolete cases
 x86_64:nagfor* )
         try_fflags="-O3 -kind=byte -dcfuns -mismatch"
         if test "$use_debug" -eq 1; then
@@ -92,7 +139,7 @@ x86_64:nagfor* )
         try_dflags="$try_dflags -D__NAG"
         have_cpp=0
         ;;
-crayxt*:cray* )
+craype*:cray* )
         try_fflags_nomain=""
         #NOTE: by default OpenMP is always ON (see crayftn man page)
         try_fflags_openmp="-homp"
@@ -100,24 +147,24 @@ crayxt*:cray* )
         #NOTE: add '-rm' to get messages from crayftn about why
         #      optimizations have not been applied
         #      -x dir disable directives introduced by !DIR$
-        try_f90flags="-O3,fp3 -f free -x dir"
+        try_f90flags="-eF -O3,fp3 -f free -x dir"
         try_fflags_noopt="-O0"
         try_ldflags_openmp="-homp"
         try_ldflags="-v"
         try_ldflags_static="-static"
         try_dflags="$try_dflags -D__CRAY"
-        have_cpp=0
+        have_cpp=1
         ;;
-crayxt*:pgf* )
+craype*:pgf* )
 # see comment above for pgf*
-	    try_fflags_nomain="-Mnomain"
+        try_fflags_nomain="-Mnomain"
         try_fflags_openmp="-mp"
         try_fflags="-O3"
         try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
         try_fflags_noopt="-O0"
         try_ldflags_openmp="-mp"
         try_ldflags="-v"
-        try_dflags="$try_dflags -D__PGI -D__IOTK_WORKAROUND1"
+        try_dflags="$try_dflags -D__PGI"
         have_cpp=1
         ;;
 necsx:* )
@@ -193,41 +240,6 @@ ppc64-bgq:*xlf* )
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
-*:pgf* | *:nvfortran )
-	try_fflags_nomain="-Mnomain"
-        try_fflags="-fast"
-        try_fflags_openmp="-mp"
-        if test "$use_debug" -eq 1; then
-           try_f90flags="-g -C -Mcache_align -Mpreprocess -Mlarge_arrays"
-        else
-           try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
-        fi
-        try_foxflags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
-        try_fflags_noopt="-O0"
-        try_ldflags=""
-        try_ldflags_openmp="-mp"
-        try_ldflags_static="-Bstatic"
-        try_dflags="$try_dflags -D__PGI"
-        have_cpp=1
-        ;;
-*:*gfortran )
-	try_fflags="-O3 -g"
-        if test "$f90_major_version" -ge "10"; then
- 	   try_fflags="$try_fflags -fallow-argument-mismatch"
-        fi
-        if test "$use_debug" -eq 1; then
-            try_fflags="-O3 -g  -Wall -fbounds-check -frange-check -finit-integer=987654321 -finit-real=nan -finit-logical=true -finit-character=64"
-        fi
-        if test "$use_pedantic" -eq 1; then
-            try_fflags="-O2 -g -pedantic -Wall -Wextra -Wconversion -fimplicit-none -fbacktrace -ffree-line-length-0 -fcheck=all"
-        fi
-        try_fflags_openmp="-fopenmp"
-        try_f90flags="\$(FFLAGS) -cpp"
-        try_fflags_noopt="-O0 -g"
-        try_ldflags="-g"
-        try_ldflags_openmp="-pthread -fopenmp"
-        try_ldflags_static="-static"
-        ;;
 
 * )
         # unknown, try these
@@ -240,7 +252,7 @@ ppc64-bgq:*xlf* )
 
 esac
 
-if test "$use_shared" -eq 0 ; then
+if test "$use_static" -eq 1 ; then
   try_ldflags="$try_ldflags $try_ldflags_static" ; fi
 
 # Flags are repeated, need better way to handle this ...

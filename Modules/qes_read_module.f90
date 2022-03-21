@@ -12,7 +12,11 @@ MODULE qes_read_module
   !
   ! Quantum Espresso XSD namespace: http://www.quantum-espresso.org/ns/qes/qes-1.0
   !
+#if defined (__outfoxed)
+  USE     dom
+#else
   USE FoX_dom
+#endif
   USE qes_types_module
   !
   IMPLICIT NONE
@@ -44,7 +48,9 @@ MODULE qes_read_module
     MODULE PROCEDURE qes_read_qpoint_grid
     MODULE PROCEDURE qes_read_dftU
     MODULE PROCEDURE qes_read_HubbardCommon
+    MODULE PROCEDURE qes_read_SiteMoment
     MODULE PROCEDURE qes_read_HubbardJ
+    MODULE PROCEDURE qes_read_SitMag
     MODULE PROCEDURE qes_read_starting_ns
     MODULE PROCEDURE qes_read_Hubbard_ns
     MODULE PROCEDURE qes_read_HubbardBack
@@ -99,6 +105,17 @@ MODULE qes_read_module
     MODULE PROCEDURE qes_read_band_structure
     MODULE PROCEDURE qes_read_ks_energies
     MODULE PROCEDURE qes_read_closed
+    MODULE PROCEDURE qes_read_cpstatus
+    MODULE PROCEDURE qes_read_cpnumstep
+    MODULE PROCEDURE qes_read_cptimesteps
+    MODULE PROCEDURE qes_read_cpstep
+    MODULE PROCEDURE qes_read_cp_ionPos
+    MODULE PROCEDURE qes_read_cp_ionsNose
+    MODULE PROCEDURE qes_read_cp_elecNose
+    MODULE PROCEDURE qes_read_cp_cell
+    MODULE PROCEDURE qes_read_cp_cellNose
+    MODULE PROCEDURE qes_read_scalmags
+    MODULE PROCEDURE qes_read_d3mags
     MODULE PROCEDURE qes_read_vector
     MODULE PROCEDURE qes_read_integerVector
     MODULE PROCEDURE qes_read_matrix
@@ -122,8 +139,7 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "Units")) THEN
       CALL extractDataAttribute(xml_node, "Units", obj%Units)
       obj%Units_ispresent = .TRUE.
@@ -131,18 +147,15 @@ MODULE qes_read_module
       obj%Units_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "general_info")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:espressoType","general_info: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:espressoType","general_info: too many occurrences",10)
         END IF
     END IF
@@ -159,10 +172,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:espressoType","parallel_info: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:espressoType","parallel_info: too many occurrences",10)
         END IF
     END IF
@@ -179,10 +192,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:espressoType","input: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:espressoType","input: wrong number of occurrences",10)
         END IF
     END IF
@@ -211,10 +224,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:espressoType","output: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:espressoType","output: too many occurrences",10)
         END IF
     END IF
@@ -227,42 +240,82 @@ MODULE qes_read_module
        obj%output_ispresent = .FALSE.
     END IF
     !
-    tmp_node_list => getElementsByTagname(xml_node, "status")
+    tmp_node_list => getElementsByTagname(xml_node, "STATUS")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:espressoType","status: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
-           CALL errore("qes_read:espressoType","status: too many occurrences",10)
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:espressoType","STATUS: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:espressoType","STATUS: too many occurrences",10)
         END IF
     END IF
     !
     IF (tmp_node_list_size>0) THEN
-      obj%status_ispresent = .TRUE.
+      obj%STATUS_ispresent = .TRUE.
       tmp_node => item(tmp_node_list, 0)
-      CALL extractDataContent(tmp_node, obj%status , IOSTAT = iostat_)
+      CALL qes_read_cpstatus(tmp_node, obj%STATUS, ierr )
+    ELSE
+       obj%STATUS_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "TIMESTEPS")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:espressoType","TIMESTEPS: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:espressoType","TIMESTEPS: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%TIMESTEPS_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_cptimesteps(tmp_node, obj%TIMESTEPS, ierr )
+    ELSE
+       obj%TIMESTEPS_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "exit_status")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:espressoType","exit_status: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:espressoType","exit_status: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%exit_status_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%exit_status , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
-            CALL infomsg("qes_read:espressoType","error reading status")
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:espressoType","error reading exit_status")
             ierr = ierr + 1
-         ELSE 
-            CALL errore ("qes_read:espressoType","error reading status",10)
+         ELSE
+            CALL errore ("qes_read:espressoType","error reading exit_status",10)
          END IF
       END IF
     ELSE
-       obj%status_ispresent = .FALSE.
+       obj%exit_status_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "cputime")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:espressoType","cputime: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:espressoType","cputime: too many occurrences",10)
         END IF
     END IF
@@ -272,10 +325,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%cputime , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:espressoType","error reading cputime")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:espressoType","error reading cputime",10)
          END IF
       END IF
@@ -287,10 +340,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:espressoType","timing_info: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:espressoType","timing_info: too many occurrences",10)
         END IF
     END IF
@@ -307,10 +360,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:espressoType","closed: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:espressoType","closed: too many occurrences",10)
         END IF
     END IF
@@ -343,19 +396,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "xml_format")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:general_infoType","xml_format: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:general_infoType","xml_format: wrong number of occurrences",10)
         END IF
     END IF
@@ -368,10 +417,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:general_infoType","creator: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:general_infoType","creator: wrong number of occurrences",10)
         END IF
     END IF
@@ -384,10 +433,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:general_infoType","created: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:general_infoType","created: wrong number of occurrences",10)
         END IF
     END IF
@@ -400,10 +449,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:general_infoType","job: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:general_infoType","job: wrong number of occurrences",10)
         END IF
     END IF
@@ -412,10 +461,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%job, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:general_infoType","error reading job")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:general_infoType","error reading job",10)
        END IF
     END IF
@@ -440,19 +489,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "nprocs")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:parallel_infoType","nprocs: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:parallel_infoType","nprocs: wrong number of occurrences",10)
         END IF
     END IF
@@ -461,10 +506,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%nprocs, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:parallel_infoType","error reading nprocs")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:parallel_infoType","error reading nprocs",10)
        END IF
     END IF
@@ -473,10 +518,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:parallel_infoType","nthreads: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:parallel_infoType","nthreads: wrong number of occurrences",10)
         END IF
     END IF
@@ -485,10 +530,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%nthreads, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:parallel_infoType","error reading nthreads")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:parallel_infoType","error reading nthreads",10)
        END IF
     END IF
@@ -497,10 +542,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:parallel_infoType","ntasks: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:parallel_infoType","ntasks: wrong number of occurrences",10)
         END IF
     END IF
@@ -509,10 +554,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%ntasks, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:parallel_infoType","error reading ntasks")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:parallel_infoType","error reading ntasks",10)
        END IF
     END IF
@@ -521,10 +566,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:parallel_infoType","nbgrp: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:parallel_infoType","nbgrp: wrong number of occurrences",10)
         END IF
     END IF
@@ -533,10 +578,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%nbgrp, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:parallel_infoType","error reading nbgrp")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:parallel_infoType","error reading nbgrp",10)
        END IF
     END IF
@@ -545,10 +590,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:parallel_infoType","npool: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:parallel_infoType","npool: wrong number of occurrences",10)
         END IF
     END IF
@@ -557,10 +602,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%npool, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:parallel_infoType","error reading npool")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:parallel_infoType","error reading npool",10)
        END IF
     END IF
@@ -569,10 +614,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:parallel_infoType","ndiag: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:parallel_infoType","ndiag: wrong number of occurrences",10)
         END IF
     END IF
@@ -581,10 +626,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%ndiag, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:parallel_infoType","error reading ndiag")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:parallel_infoType","error reading ndiag",10)
        END IF
     END IF
@@ -609,19 +654,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "control_variables")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","control_variables: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","control_variables: wrong number of occurrences",10)
         END IF
     END IF
@@ -634,10 +675,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","atomic_species: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","atomic_species: wrong number of occurrences",10)
         END IF
     END IF
@@ -650,10 +691,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","atomic_structure: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","atomic_structure: wrong number of occurrences",10)
         END IF
     END IF
@@ -666,10 +707,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","dft: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","dft: wrong number of occurrences",10)
         END IF
     END IF
@@ -682,10 +723,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","spin: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","spin: wrong number of occurrences",10)
         END IF
     END IF
@@ -698,10 +739,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","bands: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","bands: wrong number of occurrences",10)
         END IF
     END IF
@@ -714,10 +755,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","basis: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","basis: wrong number of occurrences",10)
         END IF
     END IF
@@ -730,10 +771,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","electron_control: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","electron_control: wrong number of occurrences",10)
         END IF
     END IF
@@ -746,10 +787,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","k_points_IBZ: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","k_points_IBZ: wrong number of occurrences",10)
         END IF
     END IF
@@ -762,10 +803,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","ion_control: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","ion_control: wrong number of occurrences",10)
         END IF
     END IF
@@ -778,10 +819,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","cell_control: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","cell_control: wrong number of occurrences",10)
         END IF
     END IF
@@ -794,10 +835,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","symmetry_flags: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","symmetry_flags: too many occurrences",10)
         END IF
     END IF
@@ -814,10 +855,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","boundary_conditions: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","boundary_conditions: too many occurrences",10)
         END IF
     END IF
@@ -834,10 +875,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","ekin_functional: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","ekin_functional: too many occurrences",10)
         END IF
     END IF
@@ -854,10 +895,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","external_atomic_forces: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","external_atomic_forces: too many occurrences",10)
         END IF
     END IF
@@ -874,10 +915,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","free_positions: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","free_positions: too many occurrences",10)
         END IF
     END IF
@@ -894,10 +935,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","starting_atomic_velocities: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","starting_atomic_velocities: too many occurrences",10)
         END IF
     END IF
@@ -914,10 +955,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","electric_field: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","electric_field: too many occurrences",10)
         END IF
     END IF
@@ -934,10 +975,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","atomic_constraints: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","atomic_constraints: too many occurrences",10)
         END IF
     END IF
@@ -954,10 +995,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:inputType","spin_constraints: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:inputType","spin_constraints: too many occurrences",10)
         END IF
     END IF
@@ -989,33 +1030,23 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "n_step")) THEN
       CALL extractDataAttribute(xml_node, "n_step", obj%n_step)
+      obj%n_step_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: stepType",&
-                        "required attribute n_step not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: stepType",&
-                      "required attribute n_step not found", 10 )
-      END IF
+      obj%n_step_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "scf_conv")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:stepType","scf_conv: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:stepType","scf_conv: wrong number of occurrences",10)
         END IF
     END IF
@@ -1028,10 +1059,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:stepType","atomic_structure: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:stepType","atomic_structure: wrong number of occurrences",10)
         END IF
     END IF
@@ -1044,10 +1075,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:stepType","total_energy: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:stepType","total_energy: wrong number of occurrences",10)
         END IF
     END IF
@@ -1060,10 +1091,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:stepType","forces: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:stepType","forces: wrong number of occurrences",10)
         END IF
     END IF
@@ -1076,10 +1107,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:stepType","stress: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:stepType","stress: too many occurrences",10)
         END IF
     END IF
@@ -1096,10 +1127,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:stepType","FCP_force: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:stepType","FCP_force: too many occurrences",10)
         END IF
     END IF
@@ -1109,10 +1140,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%FCP_force , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:stepType","error reading FCP_force")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:stepType","error reading FCP_force",10)
          END IF
       END IF
@@ -1124,10 +1155,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:stepType","FCP_tot_charge: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:stepType","FCP_tot_charge: too many occurrences",10)
         END IF
     END IF
@@ -1137,10 +1168,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%FCP_tot_charge , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:stepType","error reading FCP_tot_charge")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:stepType","error reading FCP_tot_charge",10)
          END IF
       END IF
@@ -1168,19 +1199,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "convergence_info")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputType","convergence_info: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputType","convergence_info: too many occurrences",10)
         END IF
     END IF
@@ -1197,10 +1224,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputType","algorithmic_info: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputType","algorithmic_info: wrong number of occurrences",10)
         END IF
     END IF
@@ -1213,10 +1240,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputType","atomic_species: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputType","atomic_species: wrong number of occurrences",10)
         END IF
     END IF
@@ -1229,10 +1256,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputType","atomic_structure: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputType","atomic_structure: wrong number of occurrences",10)
         END IF
     END IF
@@ -1245,10 +1272,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputType","symmetries: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputType","symmetries: too many occurrences",10)
         END IF
     END IF
@@ -1265,10 +1292,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputType","basis_set: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputType","basis_set: wrong number of occurrences",10)
         END IF
     END IF
@@ -1281,10 +1308,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputType","dft: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputType","dft: wrong number of occurrences",10)
         END IF
     END IF
@@ -1297,10 +1324,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputType","boundary_conditions: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputType","boundary_conditions: too many occurrences",10)
         END IF
     END IF
@@ -1316,27 +1343,31 @@ MODULE qes_read_module
     tmp_node_list => getElementsByTagname(xml_node, "magnetization")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:outputType","magnetization: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
-           CALL errore("qes_read:outputType","magnetization: wrong number of occurrences",10)
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:outputType","magnetization: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:outputType","magnetization: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL qes_read_magnetization(tmp_node, obj%magnetization, ierr )
+    IF (tmp_node_list_size>0) THEN
+      obj%magnetization_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_magnetization(tmp_node, obj%magnetization, ierr )
+    ELSE
+       obj%magnetization_ispresent = .FALSE.
+    END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "total_energy")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputType","total_energy: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputType","total_energy: wrong number of occurrences",10)
         END IF
     END IF
@@ -1349,10 +1380,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputType","band_structure: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputType","band_structure: wrong number of occurrences",10)
         END IF
     END IF
@@ -1365,10 +1396,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputType","forces: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputType","forces: too many occurrences",10)
         END IF
     END IF
@@ -1385,10 +1416,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputType","stress: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputType","stress: too many occurrences",10)
         END IF
     END IF
@@ -1405,10 +1436,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputType","electric_field: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputType","electric_field: too many occurrences",10)
         END IF
     END IF
@@ -1425,10 +1456,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputType","FCP_force: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputType","FCP_force: too many occurrences",10)
         END IF
     END IF
@@ -1438,10 +1469,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%FCP_force , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:outputType","error reading FCP_force")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:outputType","error reading FCP_force",10)
          END IF
       END IF
@@ -1453,10 +1484,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputType","FCP_tot_charge: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputType","FCP_tot_charge: too many occurrences",10)
         END IF
     END IF
@@ -1466,10 +1497,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%FCP_tot_charge , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:outputType","error reading FCP_tot_charge")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:outputType","error reading FCP_tot_charge",10)
          END IF
       END IF
@@ -1497,19 +1528,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "total")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:timingType","total: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:timingType","total: wrong number of occurrences",10)
         END IF
     END IF
@@ -1553,8 +1580,7 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "label")) THEN
       CALL extractDataAttribute(xml_node, "label", obj%label)
     ELSE
@@ -1567,7 +1593,7 @@ MODULE qes_read_module
                       "required attribute label not found", 10 )
       END IF
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "calls")) THEN
       CALL extractDataAttribute(xml_node, "calls", obj%calls)
       obj%calls_ispresent = .TRUE.
@@ -1575,18 +1601,15 @@ MODULE qes_read_module
       obj%calls_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "cpu")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:clockType","cpu: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:clockType","cpu: wrong number of occurrences",10)
         END IF
     END IF
@@ -1595,10 +1618,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%cpu, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:clockType","error reading cpu")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:clockType","error reading cpu",10)
        END IF
     END IF
@@ -1607,10 +1630,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:clockType","wall: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:clockType","wall: wrong number of occurrences",10)
         END IF
     END IF
@@ -1619,10 +1642,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%wall, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:clockType","error reading wall")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:clockType","error reading wall",10)
        END IF
     END IF
@@ -1647,19 +1670,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "title")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:control_variablesType","title: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:control_variablesType","title: wrong number of occurrences",10)
         END IF
     END IF
@@ -1668,10 +1687,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%title, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:control_variablesType","error reading title")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:control_variablesType","error reading title",10)
        END IF
     END IF
@@ -1680,10 +1699,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:control_variablesType","calculation: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:control_variablesType","calculation: wrong number of occurrences",10)
         END IF
     END IF
@@ -1692,10 +1711,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%calculation, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:control_variablesType","error reading calculation")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:control_variablesType","error reading calculation",10)
        END IF
     END IF
@@ -1704,10 +1723,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:control_variablesType","restart_mode: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:control_variablesType","restart_mode: wrong number of occurrences",10)
         END IF
     END IF
@@ -1716,10 +1735,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%restart_mode, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:control_variablesType","error reading restart_mode")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:control_variablesType","error reading restart_mode",10)
        END IF
     END IF
@@ -1728,10 +1747,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:control_variablesType","prefix: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:control_variablesType","prefix: wrong number of occurrences",10)
         END IF
     END IF
@@ -1740,10 +1759,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%prefix, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:control_variablesType","error reading prefix")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:control_variablesType","error reading prefix",10)
        END IF
     END IF
@@ -1752,10 +1771,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:control_variablesType","pseudo_dir: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:control_variablesType","pseudo_dir: wrong number of occurrences",10)
         END IF
     END IF
@@ -1764,10 +1783,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%pseudo_dir, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:control_variablesType","error reading pseudo_dir")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:control_variablesType","error reading pseudo_dir",10)
        END IF
     END IF
@@ -1776,10 +1795,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:control_variablesType","outdir: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:control_variablesType","outdir: wrong number of occurrences",10)
         END IF
     END IF
@@ -1788,10 +1807,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%outdir, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:control_variablesType","error reading outdir")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:control_variablesType","error reading outdir",10)
        END IF
     END IF
@@ -1800,10 +1819,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:control_variablesType","stress: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:control_variablesType","stress: wrong number of occurrences",10)
         END IF
     END IF
@@ -1812,10 +1831,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%stress, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:control_variablesType","error reading stress")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:control_variablesType","error reading stress",10)
        END IF
     END IF
@@ -1824,10 +1843,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:control_variablesType","forces: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:control_variablesType","forces: wrong number of occurrences",10)
         END IF
     END IF
@@ -1836,10 +1855,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%forces, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:control_variablesType","error reading forces")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:control_variablesType","error reading forces",10)
        END IF
     END IF
@@ -1848,10 +1867,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:control_variablesType","wf_collect: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:control_variablesType","wf_collect: wrong number of occurrences",10)
         END IF
     END IF
@@ -1860,10 +1879,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%wf_collect, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:control_variablesType","error reading wf_collect")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:control_variablesType","error reading wf_collect",10)
        END IF
     END IF
@@ -1872,10 +1891,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:control_variablesType","disk_io: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:control_variablesType","disk_io: wrong number of occurrences",10)
         END IF
     END IF
@@ -1884,10 +1903,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%disk_io, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:control_variablesType","error reading disk_io")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:control_variablesType","error reading disk_io",10)
        END IF
     END IF
@@ -1896,10 +1915,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:control_variablesType","max_seconds: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:control_variablesType","max_seconds: wrong number of occurrences",10)
         END IF
     END IF
@@ -1908,10 +1927,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%max_seconds, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:control_variablesType","error reading max_seconds")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:control_variablesType","error reading max_seconds",10)
        END IF
     END IF
@@ -1920,10 +1939,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:control_variablesType","nstep: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:control_variablesType","nstep: too many occurrences",10)
         END IF
     END IF
@@ -1933,10 +1952,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%nstep , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:control_variablesType","error reading nstep")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:control_variablesType","error reading nstep",10)
          END IF
       END IF
@@ -1948,10 +1967,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:control_variablesType","etot_conv_thr: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:control_variablesType","etot_conv_thr: wrong number of occurrences",10)
         END IF
     END IF
@@ -1960,10 +1979,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%etot_conv_thr, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:control_variablesType","error reading etot_conv_thr")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:control_variablesType","error reading etot_conv_thr",10)
        END IF
     END IF
@@ -1972,10 +1991,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:control_variablesType","forc_conv_thr: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:control_variablesType","forc_conv_thr: wrong number of occurrences",10)
         END IF
     END IF
@@ -1984,10 +2003,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%forc_conv_thr, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:control_variablesType","error reading forc_conv_thr")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:control_variablesType","error reading forc_conv_thr",10)
        END IF
     END IF
@@ -1996,10 +2015,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:control_variablesType","press_conv_thr: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:control_variablesType","press_conv_thr: wrong number of occurrences",10)
         END IF
     END IF
@@ -2008,10 +2027,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%press_conv_thr, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:control_variablesType","error reading press_conv_thr")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:control_variablesType","error reading press_conv_thr",10)
        END IF
     END IF
@@ -2020,10 +2039,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:control_variablesType","verbosity: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:control_variablesType","verbosity: wrong number of occurrences",10)
         END IF
     END IF
@@ -2032,10 +2051,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%verbosity, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:control_variablesType","error reading verbosity")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:control_variablesType","error reading verbosity",10)
        END IF
     END IF
@@ -2044,10 +2063,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:control_variablesType","print_every: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:control_variablesType","print_every: wrong number of occurrences",10)
         END IF
     END IF
@@ -2056,10 +2075,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%print_every, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:control_variablesType","error reading print_every")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:control_variablesType","error reading print_every",10)
        END IF
     END IF
@@ -2083,37 +2102,21 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "NAME")) THEN
       CALL extractDataAttribute(xml_node, "NAME", obj%NAME)
+      obj%NAME_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: xml_formatType",&
-                        "required attribute NAME not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: xml_formatType",&
-                      "required attribute NAME not found", 10 )
-      END IF
+      obj%NAME_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "VERSION")) THEN
       CALL extractDataAttribute(xml_node, "VERSION", obj%VERSION)
+      obj%VERSION_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: xml_formatType",&
-                        "required attribute VERSION not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: xml_formatType",&
-                      "required attribute VERSION not found", 10 )
-      END IF
+      obj%VERSION_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     CALL extractDataContent(xml_node, obj%xml_format )
@@ -2136,37 +2139,21 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "NAME")) THEN
       CALL extractDataAttribute(xml_node, "NAME", obj%NAME)
+      obj%NAME_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: creatorType",&
-                        "required attribute NAME not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: creatorType",&
-                      "required attribute NAME not found", 10 )
-      END IF
+      obj%NAME_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "VERSION")) THEN
       CALL extractDataAttribute(xml_node, "VERSION", obj%VERSION)
+      obj%VERSION_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: creatorType",&
-                        "required attribute VERSION not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: creatorType",&
-                      "required attribute VERSION not found", 10 )
-      END IF
+      obj%VERSION_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     CALL extractDataContent(xml_node, obj%creator )
@@ -2189,37 +2176,21 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "DATE")) THEN
       CALL extractDataAttribute(xml_node, "DATE", obj%DATE)
+      obj%DATE_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: createdType",&
-                        "required attribute DATE not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: createdType",&
-                      "required attribute DATE not found", 10 )
-      END IF
+      obj%DATE_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "TIME")) THEN
       CALL extractDataAttribute(xml_node, "TIME", obj%TIME)
+      obj%TIME_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: createdType",&
-                        "required attribute TIME not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: createdType",&
-                      "required attribute TIME not found", 10 )
-      END IF
+      obj%TIME_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     CALL extractDataContent(xml_node, obj%created )
@@ -2242,21 +2213,14 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "ntyp")) THEN
       CALL extractDataAttribute(xml_node, "ntyp", obj%ntyp)
+      obj%ntyp_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: atomic_speciesType",&
-                        "required attribute ntyp not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: atomic_speciesType",&
-                      "required attribute ntyp not found", 10 )
-      END IF
+      obj%ntyp_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "pseudo_dir")) THEN
       CALL extractDataAttribute(xml_node, "pseudo_dir", obj%pseudo_dir)
       obj%pseudo_dir_ispresent = .TRUE.
@@ -2264,18 +2228,15 @@ MODULE qes_read_module
       obj%pseudo_dir_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "species")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size < 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:atomic_speciesType","species: not enough elements")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:atomic_speciesType","species: not enough elements",10)
         END IF
     END IF
@@ -2306,33 +2267,23 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "name")) THEN
       CALL extractDataAttribute(xml_node, "name", obj%name)
+      obj%name_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: speciesType",&
-                        "required attribute name not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: speciesType",&
-                      "required attribute name not found", 10 )
-      END IF
+      obj%name_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "mass")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:speciesType","mass: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:speciesType","mass: too many occurrences",10)
         END IF
     END IF
@@ -2342,10 +2293,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%mass , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:speciesType","error reading mass")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:speciesType","error reading mass",10)
          END IF
       END IF
@@ -2357,10 +2308,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:speciesType","pseudo_file: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:speciesType","pseudo_file: wrong number of occurrences",10)
         END IF
     END IF
@@ -2369,10 +2320,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%pseudo_file, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:speciesType","error reading pseudo_file")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:speciesType","error reading pseudo_file",10)
        END IF
     END IF
@@ -2381,10 +2332,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:speciesType","starting_magnetization: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:speciesType","starting_magnetization: too many occurrences",10)
         END IF
     END IF
@@ -2394,10 +2345,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%starting_magnetization , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:speciesType","error reading starting_magnetization")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:speciesType","error reading starting_magnetization",10)
          END IF
       END IF
@@ -2409,10 +2360,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:speciesType","spin_teta: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:speciesType","spin_teta: too many occurrences",10)
         END IF
     END IF
@@ -2422,10 +2373,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%spin_teta , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:speciesType","error reading spin_teta")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:speciesType","error reading spin_teta",10)
          END IF
       END IF
@@ -2437,10 +2388,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:speciesType","spin_phi: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:speciesType","spin_phi: too many occurrences",10)
         END IF
     END IF
@@ -2450,10 +2401,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%spin_phi , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:speciesType","error reading spin_phi")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:speciesType","error reading spin_phi",10)
          END IF
       END IF
@@ -2480,35 +2431,28 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "nat")) THEN
       CALL extractDataAttribute(xml_node, "nat", obj%nat)
+      obj%nat_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: atomic_structureType",&
-                        "required attribute nat not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: atomic_structureType",&
-                      "required attribute nat not found", 10 )
-      END IF
+      obj%nat_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "alat")) THEN
       CALL extractDataAttribute(xml_node, "alat", obj%alat)
       obj%alat_ispresent = .TRUE.
     ELSE
       obj%alat_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "bravais_index")) THEN
       CALL extractDataAttribute(xml_node, "bravais_index", obj%bravais_index)
       obj%bravais_index_ispresent = .TRUE.
     ELSE
       obj%bravais_index_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "alternative_axes")) THEN
       CALL extractDataAttribute(xml_node, "alternative_axes", obj%alternative_axes)
       obj%alternative_axes_ispresent = .TRUE.
@@ -2516,18 +2460,15 @@ MODULE qes_read_module
       obj%alternative_axes_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "atomic_positions")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:atomic_structureType","atomic_positions: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:atomic_structureType","atomic_positions: too many occurrences",10)
         END IF
     END IF
@@ -2544,10 +2485,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:atomic_structureType","wyckoff_positions: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:atomic_structureType","wyckoff_positions: too many occurrences",10)
         END IF
     END IF
@@ -2564,10 +2505,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:atomic_structureType","crystal_positions: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:atomic_structureType","crystal_positions: too many occurrences",10)
         END IF
     END IF
@@ -2584,10 +2525,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:atomic_structureType","cell: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:atomic_structureType","cell: wrong number of occurrences",10)
         END IF
     END IF
@@ -2616,19 +2557,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "atom")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size < 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:atomic_positionsType","atom: not enough elements")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:atomic_positionsType","atom: not enough elements",10)
         END IF
     END IF
@@ -2659,28 +2596,21 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "name")) THEN
       CALL extractDataAttribute(xml_node, "name", obj%name)
+      obj%name_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: atomType",&
-                        "required attribute name not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: atomType",&
-                      "required attribute name not found", 10 )
-      END IF
+      obj%name_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "position")) THEN
       CALL extractDataAttribute(xml_node, "position", obj%position)
       obj%position_ispresent = .TRUE.
     ELSE
       obj%position_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "index")) THEN
       CALL extractDataAttribute(xml_node, "index", obj%index)
       obj%index_ispresent = .TRUE.
@@ -2688,9 +2618,6 @@ MODULE qes_read_module
       obj%index_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     CALL extractDataContent(xml_node, obj%atom )
@@ -2713,21 +2640,14 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "space_group")) THEN
       CALL extractDataAttribute(xml_node, "space_group", obj%space_group)
+      obj%space_group_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: wyckoff_positionsType",&
-                        "required attribute space_group not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: wyckoff_positionsType",&
-                      "required attribute space_group not found", 10 )
-      END IF
+      obj%space_group_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "more_options")) THEN
       CALL extractDataAttribute(xml_node, "more_options", obj%more_options)
       obj%more_options_ispresent = .TRUE.
@@ -2735,18 +2655,15 @@ MODULE qes_read_module
       obj%more_options_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "atom")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size < 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:wyckoff_positionsType","atom: not enough elements")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:wyckoff_positionsType","atom: not enough elements",10)
         END IF
     END IF
@@ -2778,19 +2695,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "a1")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:cellType","a1: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:cellType","a1: wrong number of occurrences",10)
         END IF
     END IF
@@ -2799,10 +2712,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%a1, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:cellType","error reading a1")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:cellType","error reading a1",10)
        END IF
     END IF
@@ -2811,10 +2724,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:cellType","a2: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:cellType","a2: wrong number of occurrences",10)
         END IF
     END IF
@@ -2823,10 +2736,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%a2, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:cellType","error reading a2")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:cellType","error reading a2",10)
        END IF
     END IF
@@ -2835,10 +2748,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:cellType","a3: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:cellType","a3: wrong number of occurrences",10)
         END IF
     END IF
@@ -2847,10 +2760,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%a3, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:cellType","error reading a3")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:cellType","error reading a3",10)
        END IF
     END IF
@@ -2875,19 +2788,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "functional")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:dftType","functional: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:dftType","functional: wrong number of occurrences",10)
         END IF
     END IF
@@ -2896,10 +2805,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%functional, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:dftType","error reading functional")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:dftType","error reading functional",10)
        END IF
     END IF
@@ -2908,10 +2817,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:dftType","hybrid: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:dftType","hybrid: too many occurrences",10)
         END IF
     END IF
@@ -2928,10 +2837,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:dftType","dftU: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:dftType","dftU: too many occurrences",10)
         END IF
     END IF
@@ -2948,10 +2857,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:dftType","vdW: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:dftType","vdW: too many occurrences",10)
         END IF
     END IF
@@ -2984,19 +2893,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "qpoint_grid")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:hybridType","qpoint_grid: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:hybridType","qpoint_grid: too many occurrences",10)
         END IF
     END IF
@@ -3013,10 +2918,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:hybridType","ecutfock: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:hybridType","ecutfock: too many occurrences",10)
         END IF
     END IF
@@ -3026,10 +2931,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%ecutfock , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:hybridType","error reading ecutfock")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:hybridType","error reading ecutfock",10)
          END IF
       END IF
@@ -3041,10 +2946,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:hybridType","exx_fraction: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:hybridType","exx_fraction: too many occurrences",10)
         END IF
     END IF
@@ -3054,10 +2959,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%exx_fraction , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:hybridType","error reading exx_fraction")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:hybridType","error reading exx_fraction",10)
          END IF
       END IF
@@ -3069,10 +2974,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:hybridType","screening_parameter: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:hybridType","screening_parameter: too many occurrences",10)
         END IF
     END IF
@@ -3082,10 +2987,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%screening_parameter , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:hybridType","error reading screening_parameter")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:hybridType","error reading screening_parameter",10)
          END IF
       END IF
@@ -3097,10 +3002,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:hybridType","exxdiv_treatment: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:hybridType","exxdiv_treatment: too many occurrences",10)
         END IF
     END IF
@@ -3110,10 +3015,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%exxdiv_treatment , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:hybridType","error reading exxdiv_treatment")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:hybridType","error reading exxdiv_treatment",10)
          END IF
       END IF
@@ -3125,10 +3030,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:hybridType","x_gamma_extrapolation: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:hybridType","x_gamma_extrapolation: too many occurrences",10)
         END IF
     END IF
@@ -3138,10 +3043,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%x_gamma_extrapolation , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:hybridType","error reading x_gamma_extrapolation")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:hybridType","error reading x_gamma_extrapolation",10)
          END IF
       END IF
@@ -3153,10 +3058,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:hybridType","ecutvcut: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:hybridType","ecutvcut: too many occurrences",10)
         END IF
     END IF
@@ -3166,10 +3071,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%ecutvcut , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:hybridType","error reading ecutvcut")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:hybridType","error reading ecutvcut",10)
          END IF
       END IF
@@ -3181,10 +3086,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:hybridType","localization_threshold: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:hybridType","localization_threshold: too many occurrences",10)
         END IF
     END IF
@@ -3194,10 +3099,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%localization_threshold , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:hybridType","error reading localization_threshold")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:hybridType","error reading localization_threshold",10)
          END IF
       END IF
@@ -3224,50 +3129,28 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "nqx1")) THEN
       CALL extractDataAttribute(xml_node, "nqx1", obj%nqx1)
+      obj%nqx1_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: qpoint_gridType",&
-                        "required attribute nqx1 not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: qpoint_gridType",&
-                      "required attribute nqx1 not found", 10 )
-      END IF
+      obj%nqx1_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "nqx2")) THEN
       CALL extractDataAttribute(xml_node, "nqx2", obj%nqx2)
+      obj%nqx2_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: qpoint_gridType",&
-                        "required attribute nqx2 not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: qpoint_gridType",&
-                      "required attribute nqx2 not found", 10 )
-      END IF
+      obj%nqx2_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "nqx3")) THEN
       CALL extractDataAttribute(xml_node, "nqx3", obj%nqx3)
+      obj%nqx3_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: qpoint_gridType",&
-                        "required attribute nqx3 not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: qpoint_gridType",&
-                      "required attribute nqx3 not found", 10 )
-      END IF
+      obj%nqx3_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     CALL extractDataContent(xml_node, obj%qpoint_grid )
@@ -3291,19 +3174,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "lda_plus_u_kind")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:dftUType","lda_plus_u_kind: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:dftUType","lda_plus_u_kind: too many occurrences",10)
         END IF
     END IF
@@ -3313,10 +3192,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%lda_plus_u_kind , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:dftUType","error reading lda_plus_u_kind")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:dftUType","error reading lda_plus_u_kind",10)
          END IF
       END IF
@@ -3440,10 +3319,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:dftUType","U_projection_type: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:dftUType","U_projection_type: too many occurrences",10)
         END IF
     END IF
@@ -3453,10 +3332,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%U_projection_type , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:dftUType","error reading U_projection_type")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:dftUType","error reading U_projection_type",10)
          END IF
       END IF
@@ -3547,21 +3426,14 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "specie")) THEN
       CALL extractDataAttribute(xml_node, "specie", obj%specie)
+      obj%specie_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: HubbardCommonType",&
-                        "required attribute specie not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: HubbardCommonType",&
-                      "required attribute specie not found", 10 )
-      END IF
+      obj%specie_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "label")) THEN
       CALL extractDataAttribute(xml_node, "label", obj%label)
       obj%label_ispresent = .TRUE.
@@ -3569,9 +3441,6 @@ MODULE qes_read_module
       obj%label_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     CALL extractDataContent(xml_node, obj%HubbardCommon )
@@ -3579,6 +3448,50 @@ MODULE qes_read_module
     obj%lwrite = .TRUE.
     !
   END SUBROUTINE qes_read_HubbardCommon
+  !
+  !
+  SUBROUTINE qes_read_SiteMoment(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(SiteMoment_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    ! 
+    IF (hasAttribute(xml_node, "species")) THEN
+      CALL extractDataAttribute(xml_node, "species", obj%species)
+      obj%species_ispresent = .TRUE.
+    ELSE
+      obj%species_ispresent = .FALSE.
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "atom")) THEN
+      CALL extractDataAttribute(xml_node, "atom", obj%atom)
+      obj%atom_ispresent = .TRUE.
+    ELSE
+      obj%atom_ispresent = .FALSE.
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "charge")) THEN
+      CALL extractDataAttribute(xml_node, "charge", obj%charge)
+      obj%charge_ispresent = .TRUE.
+    ELSE
+      obj%charge_ispresent = .FALSE.
+    END IF
+    !
+    !
+    !
+    CALL extractDataContent(xml_node, obj%SiteMoment )
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_SiteMoment
   !
   !
   SUBROUTINE qes_read_HubbardJ(xml_node, obj, ierr )
@@ -3594,37 +3507,21 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "specie")) THEN
       CALL extractDataAttribute(xml_node, "specie", obj%specie)
+      obj%specie_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: HubbardJType",&
-                        "required attribute specie not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: HubbardJType",&
-                      "required attribute specie not found", 10 )
-      END IF
+      obj%specie_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "label")) THEN
       CALL extractDataAttribute(xml_node, "label", obj%label)
+      obj%label_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: HubbardJType",&
-                        "required attribute label not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: HubbardJType",&
-                      "required attribute label not found", 10 )
-      END IF
+      obj%label_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     CALL extractDataContent(xml_node, obj%HubbardJ )
@@ -3632,6 +3529,50 @@ MODULE qes_read_module
     obj%lwrite = .TRUE.
     !
   END SUBROUTINE qes_read_HubbardJ
+  !
+  !
+  SUBROUTINE qes_read_SitMag(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(SitMag_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    ! 
+    IF (hasAttribute(xml_node, "species")) THEN
+      CALL extractDataAttribute(xml_node, "species", obj%species)
+      obj%species_ispresent = .TRUE.
+    ELSE
+      obj%species_ispresent = .FALSE.
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "atom")) THEN
+      CALL extractDataAttribute(xml_node, "atom", obj%atom)
+      obj%atom_ispresent = .TRUE.
+    ELSE
+      obj%atom_ispresent = .FALSE.
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "charge")) THEN
+      CALL extractDataAttribute(xml_node, "charge", obj%charge)
+      obj%charge_ispresent = .TRUE.
+    ELSE
+      obj%charge_ispresent = .FALSE.
+    END IF
+    !
+    !
+    !
+    CALL extractDataContent(xml_node, obj%SitMag )
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_SitMag
   !
   !
   SUBROUTINE qes_read_starting_ns(xml_node, obj, ierr )
@@ -3647,56 +3588,41 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
+    IF (hasAttribute(xml_node, "size")) THEN
+      CALL extractDataAttribute(xml_node, "size", obj%size)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: starting_nsType",&
+                        "required attribute size not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: starting_nsType",&
+                      "required attribute size not found", 10 )
+      END IF
+    END IF
+    ! 
     IF (hasAttribute(xml_node, "specie")) THEN
       CALL extractDataAttribute(xml_node, "specie", obj%specie)
+      obj%specie_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: starting_nsType",&
-                        "required attribute specie not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: starting_nsType",&
-                      "required attribute specie not found", 10 )
-      END IF
+      obj%specie_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "label")) THEN
       CALL extractDataAttribute(xml_node, "label", obj%label)
+      obj%label_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: starting_nsType",&
-                        "required attribute label not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: starting_nsType",&
-                      "required attribute label not found", 10 )
-      END IF
+      obj%label_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "spin")) THEN
       CALL extractDataAttribute(xml_node, "spin", obj%spin)
+      obj%spin_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: starting_nsType",&
-                        "required attribute spin not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: starting_nsType",&
-                      "required attribute spin not found", 10 )
-      END IF
+      obj%spin_ispresent = .FALSE.
     END IF
     !
-
-    IF (hasAttribute(xml_node, "size"))  THEN
-        CALL extractDataAttribute(xml_node, "size", obj%size)
-    ELSE
-        CALL errore ("qes_read: starting_nsType", &
-                     "mandatory size attribute not found in "//TRIM(obj%tagname), 12)
-    END IF
-    !
-
     !
     !
     ALLOCATE (obj%starting_ns(obj%size))
@@ -3721,81 +3647,55 @@ MODULE qes_read_module
     INTEGER :: i, length
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
+    IF (hasAttribute(xml_node, "rank")) THEN 
+       CALL extractDataAttribute(xml_node, "rank", obj%rank) 
+    ELSE
+       CALL errore ("qes_read: Hubbard_nsType",&
+                    "required attribute rank not found, can't read further, stopping", 10) 
+    END IF 
+    ALLOCATE (obj%dims(obj%rank))
+    IF (hasAttribute(xml_node, "dims")) THEN 
+      CALL extractDataAttribute(xml_node, "dims", obj%dims) 
+    ELSE 
+      CALL errore ("qes_read: Hubbard_nsType",&
+                      "required attribute dims not found, can't read further, stopping", 10 )
+    END IF 
+    IF (hasAttribute(xml_node, "order")) THEN
+      CALL extractDataAttribute(xml_node, "order", obj%order)
+      obj%order_ispresent = .TRUE.
+    ELSE
+      obj%order_ispresent = .FALSE.
+    END IF
+    ! 
     IF (hasAttribute(xml_node, "specie")) THEN
       CALL extractDataAttribute(xml_node, "specie", obj%specie)
+      obj%specie_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: Hubbard_nsType",&
-                        "required attribute specie not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: Hubbard_nsType",&
-                      "required attribute specie not found", 10 )
-      END IF
+      obj%specie_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "label")) THEN
       CALL extractDataAttribute(xml_node, "label", obj%label)
+      obj%label_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: Hubbard_nsType",&
-                        "required attribute label not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: Hubbard_nsType",&
-                      "required attribute label not found", 10 )
-      END IF
+      obj%label_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "spin")) THEN
       CALL extractDataAttribute(xml_node, "spin", obj%spin)
+      obj%spin_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: Hubbard_nsType",&
-                        "required attribute spin not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: Hubbard_nsType",&
-                      "required attribute spin not found", 10 )
-      END IF
+      obj%spin_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "index")) THEN
       CALL extractDataAttribute(xml_node, "index", obj%index)
+      obj%index_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: Hubbard_nsType",&
-                        "required attribute index not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: Hubbard_nsType",&
-                      "required attribute index not found", 10 )
-      END IF
+      obj%index_ispresent = .FALSE.
     END IF
     !
-
-    IF (hasAttribute(xml_node, "rank"))  THEN
-        CALL extractDataAttribute(xml_node, "rank", obj%rank)
-    ELSE
-        CALL errore ("qes_read: Hubbard_nsType",&
-                      "required attribute rank not found, can't read further, stopping", 10 )
-    END IF
-    ALLOCATE (obj%dims(obj%rank))
-    IF (hasAttribute(xml_node, "dims")) THEN
-        CALL extractDataAttribute(xml_node, "dims", obj%dims)
-    ELSE
-        CALL errore ("qes_read: Hubbard_nsType",&
-                      "required attribute dims not found, can't read further, stopping", 10 )
-    END IF
-    IF (hasAttribute(xml_node,"order")) THEN
-        CALL extractDataAttribute(xml_node, "order", obj%order)
-    ELSE
-        obj%order = "F"
-    END IF
-    !
-
     !
     !
     length = 1
@@ -3823,33 +3723,23 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "species")) THEN
       CALL extractDataAttribute(xml_node, "species", obj%species)
+      obj%species_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: HubbardBackType",&
-                        "required attribute species not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: HubbardBackType",&
-                      "required attribute species not found", 10 )
-      END IF
+      obj%species_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "background")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:HubbardBackType","background: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:HubbardBackType","background: wrong number of occurrences",10)
         END IF
     END IF
@@ -3858,10 +3748,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%background, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:HubbardBackType","error reading background")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:HubbardBackType","error reading background",10)
        END IF
     END IF
@@ -3870,10 +3760,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size < 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:HubbardBackType","l_number: not enough elements")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:HubbardBackType","l_number: not enough elements",10)
         END IF
     END IF
@@ -3904,24 +3794,14 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "l_index")) THEN
       CALL extractDataAttribute(xml_node, "l_index", obj%l_index)
+      obj%l_index_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: backLType",&
-                        "required attribute l_index not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: backLType",&
-                      "required attribute l_index not found", 10 )
-      END IF
+      obj%l_index_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     CALL extractDataContent(xml_node, obj%backL )
@@ -3945,19 +3825,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "vdw_corr")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:vdWType","vdw_corr: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:vdWType","vdw_corr: too many occurrences",10)
         END IF
     END IF
@@ -3967,10 +3843,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%vdw_corr , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:vdWType","error reading vdw_corr")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:vdWType","error reading vdw_corr",10)
          END IF
       END IF
@@ -3982,10 +3858,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:vdWType","dftd3_version: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:vdWType","dftd3_version: too many occurrences",10)
         END IF
     END IF
@@ -3995,10 +3871,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%dftd3_version , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:vdWType","error reading dftd3_version")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:vdWType","error reading dftd3_version",10)
          END IF
       END IF
@@ -4010,10 +3886,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:vdWType","dftd3_threebody: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:vdWType","dftd3_threebody: too many occurrences",10)
         END IF
     END IF
@@ -4023,10 +3899,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%dftd3_threebody , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:vdWType","error reading dftd3_threebody")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:vdWType","error reading dftd3_threebody",10)
          END IF
       END IF
@@ -4038,10 +3914,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:vdWType","non_local_term: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:vdWType","non_local_term: too many occurrences",10)
         END IF
     END IF
@@ -4051,10 +3927,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%non_local_term , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:vdWType","error reading non_local_term")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:vdWType","error reading non_local_term",10)
          END IF
       END IF
@@ -4066,10 +3942,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:vdWType","functional: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:vdWType","functional: too many occurrences",10)
         END IF
     END IF
@@ -4079,10 +3955,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%functional , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:vdWType","error reading functional")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:vdWType","error reading functional",10)
          END IF
       END IF
@@ -4094,10 +3970,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:vdWType","total_energy_term: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:vdWType","total_energy_term: too many occurrences",10)
         END IF
     END IF
@@ -4107,10 +3983,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%total_energy_term , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:vdWType","error reading total_energy_term")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:vdWType","error reading total_energy_term",10)
          END IF
       END IF
@@ -4122,10 +3998,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:vdWType","london_s6: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:vdWType","london_s6: too many occurrences",10)
         END IF
     END IF
@@ -4135,10 +4011,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%london_s6 , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:vdWType","error reading london_s6")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:vdWType","error reading london_s6",10)
          END IF
       END IF
@@ -4150,10 +4026,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:vdWType","ts_vdw_econv_thr: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:vdWType","ts_vdw_econv_thr: too many occurrences",10)
         END IF
     END IF
@@ -4163,10 +4039,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%ts_vdw_econv_thr , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:vdWType","error reading ts_vdw_econv_thr")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:vdWType","error reading ts_vdw_econv_thr",10)
          END IF
       END IF
@@ -4178,10 +4054,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:vdWType","ts_vdw_isolated: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:vdWType","ts_vdw_isolated: too many occurrences",10)
         END IF
     END IF
@@ -4191,10 +4067,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%ts_vdw_isolated , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:vdWType","error reading ts_vdw_isolated")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:vdWType","error reading ts_vdw_isolated",10)
          END IF
       END IF
@@ -4206,10 +4082,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:vdWType","london_rcut: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:vdWType","london_rcut: too many occurrences",10)
         END IF
     END IF
@@ -4219,10 +4095,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%london_rcut , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:vdWType","error reading london_rcut")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:vdWType","error reading london_rcut",10)
          END IF
       END IF
@@ -4234,10 +4110,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:vdWType","xdm_a1: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:vdWType","xdm_a1: too many occurrences",10)
         END IF
     END IF
@@ -4247,10 +4123,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%xdm_a1 , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:vdWType","error reading xdm_a1")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:vdWType","error reading xdm_a1",10)
          END IF
       END IF
@@ -4262,10 +4138,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:vdWType","xdm_a2: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:vdWType","xdm_a2: too many occurrences",10)
         END IF
     END IF
@@ -4275,10 +4151,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%xdm_a2 , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:vdWType","error reading xdm_a2")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:vdWType","error reading xdm_a2",10)
          END IF
       END IF
@@ -4322,19 +4198,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "lsda")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:spinType","lsda: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:spinType","lsda: wrong number of occurrences",10)
         END IF
     END IF
@@ -4343,10 +4215,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%lsda, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:spinType","error reading lsda")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:spinType","error reading lsda",10)
        END IF
     END IF
@@ -4355,10 +4227,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:spinType","noncolin: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:spinType","noncolin: wrong number of occurrences",10)
         END IF
     END IF
@@ -4367,10 +4239,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%noncolin, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:spinType","error reading noncolin")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:spinType","error reading noncolin",10)
        END IF
     END IF
@@ -4379,10 +4251,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:spinType","spinorbit: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:spinType","spinorbit: wrong number of occurrences",10)
         END IF
     END IF
@@ -4391,10 +4263,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%spinorbit, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:spinType","error reading spinorbit")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:spinType","error reading spinorbit",10)
        END IF
     END IF
@@ -4419,19 +4291,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "nbnd")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:bandsType","nbnd: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:bandsType","nbnd: too many occurrences",10)
         END IF
     END IF
@@ -4441,10 +4309,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%nbnd , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:bandsType","error reading nbnd")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:bandsType","error reading nbnd",10)
          END IF
       END IF
@@ -4456,10 +4324,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:bandsType","smearing: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:bandsType","smearing: too many occurrences",10)
         END IF
     END IF
@@ -4476,10 +4344,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:bandsType","tot_charge: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:bandsType","tot_charge: too many occurrences",10)
         END IF
     END IF
@@ -4489,10 +4357,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%tot_charge , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:bandsType","error reading tot_charge")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:bandsType","error reading tot_charge",10)
          END IF
       END IF
@@ -4504,10 +4372,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:bandsType","tot_magnetization: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:bandsType","tot_magnetization: too many occurrences",10)
         END IF
     END IF
@@ -4517,10 +4385,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%tot_magnetization , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:bandsType","error reading tot_magnetization")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:bandsType","error reading tot_magnetization",10)
          END IF
       END IF
@@ -4532,10 +4400,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:bandsType","occupations: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:bandsType","occupations: wrong number of occurrences",10)
         END IF
     END IF
@@ -4548,10 +4416,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 2) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:bandsType","inputOccupations: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:bandsType","inputOccupations: too many occurrences",10)
         END IF
     END IF
@@ -4587,24 +4455,14 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "degauss")) THEN
       CALL extractDataAttribute(xml_node, "degauss", obj%degauss)
+      obj%degauss_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: smearingType",&
-                        "required attribute degauss not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: smearingType",&
-                      "required attribute degauss not found", 10 )
-      END IF
+      obj%degauss_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     CALL extractDataContent(xml_node, obj%smearing )
@@ -4627,8 +4485,7 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "spin")) THEN
       CALL extractDataAttribute(xml_node, "spin", obj%spin)
       obj%spin_ispresent = .TRUE.
@@ -4636,9 +4493,6 @@ MODULE qes_read_module
       obj%spin_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     CALL extractDataContent(xml_node, obj%occupations )
@@ -4662,19 +4516,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "gamma_only")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:basisType","gamma_only: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:basisType","gamma_only: too many occurrences",10)
         END IF
     END IF
@@ -4684,10 +4534,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%gamma_only , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:basisType","error reading gamma_only")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:basisType","error reading gamma_only",10)
          END IF
       END IF
@@ -4699,10 +4549,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:basisType","ecutwfc: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:basisType","ecutwfc: wrong number of occurrences",10)
         END IF
     END IF
@@ -4711,10 +4561,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%ecutwfc, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:basisType","error reading ecutwfc")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:basisType","error reading ecutwfc",10)
        END IF
     END IF
@@ -4723,10 +4573,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:basisType","ecutrho: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:basisType","ecutrho: too many occurrences",10)
         END IF
     END IF
@@ -4736,10 +4586,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%ecutrho , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:basisType","error reading ecutrho")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:basisType","error reading ecutrho",10)
          END IF
       END IF
@@ -4751,10 +4601,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:basisType","fft_grid: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:basisType","fft_grid: too many occurrences",10)
         END IF
     END IF
@@ -4771,10 +4621,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:basisType","fft_smooth: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:basisType","fft_smooth: too many occurrences",10)
         END IF
     END IF
@@ -4791,10 +4641,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:basisType","fft_box: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:basisType","fft_box: too many occurrences",10)
         END IF
     END IF
@@ -4827,19 +4677,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "gamma_only")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:basis_setType","gamma_only: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:basis_setType","gamma_only: too many occurrences",10)
         END IF
     END IF
@@ -4849,10 +4695,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%gamma_only , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:basis_setType","error reading gamma_only")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:basis_setType","error reading gamma_only",10)
          END IF
       END IF
@@ -4864,10 +4710,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:basis_setType","ecutwfc: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:basis_setType","ecutwfc: wrong number of occurrences",10)
         END IF
     END IF
@@ -4876,10 +4722,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%ecutwfc, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:basis_setType","error reading ecutwfc")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:basis_setType","error reading ecutwfc",10)
        END IF
     END IF
@@ -4888,10 +4734,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:basis_setType","ecutrho: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:basis_setType","ecutrho: too many occurrences",10)
         END IF
     END IF
@@ -4901,10 +4747,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%ecutrho , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:basis_setType","error reading ecutrho")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:basis_setType","error reading ecutrho",10)
          END IF
       END IF
@@ -4916,10 +4762,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:basis_setType","fft_grid: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:basis_setType","fft_grid: wrong number of occurrences",10)
         END IF
     END IF
@@ -4932,10 +4778,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:basis_setType","fft_smooth: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:basis_setType","fft_smooth: too many occurrences",10)
         END IF
     END IF
@@ -4952,10 +4798,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:basis_setType","fft_box: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:basis_setType","fft_box: too many occurrences",10)
         END IF
     END IF
@@ -4972,10 +4818,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:basis_setType","ngm: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:basis_setType","ngm: wrong number of occurrences",10)
         END IF
     END IF
@@ -4984,10 +4830,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%ngm, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:basis_setType","error reading ngm")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:basis_setType","error reading ngm",10)
        END IF
     END IF
@@ -4996,10 +4842,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:basis_setType","ngms: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:basis_setType","ngms: too many occurrences",10)
         END IF
     END IF
@@ -5009,10 +4855,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%ngms , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:basis_setType","error reading ngms")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:basis_setType","error reading ngms",10)
          END IF
       END IF
@@ -5024,10 +4870,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:basis_setType","npwx: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:basis_setType","npwx: wrong number of occurrences",10)
         END IF
     END IF
@@ -5036,10 +4882,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%npwx, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:basis_setType","error reading npwx")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:basis_setType","error reading npwx",10)
        END IF
     END IF
@@ -5048,10 +4894,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:basis_setType","reciprocal_lattice: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:basis_setType","reciprocal_lattice: wrong number of occurrences",10)
         END IF
     END IF
@@ -5079,50 +4925,28 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "nr1")) THEN
       CALL extractDataAttribute(xml_node, "nr1", obj%nr1)
+      obj%nr1_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: basisSetItemType",&
-                        "required attribute nr1 not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: basisSetItemType",&
-                      "required attribute nr1 not found", 10 )
-      END IF
+      obj%nr1_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "nr2")) THEN
       CALL extractDataAttribute(xml_node, "nr2", obj%nr2)
+      obj%nr2_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: basisSetItemType",&
-                        "required attribute nr2 not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: basisSetItemType",&
-                      "required attribute nr2 not found", 10 )
-      END IF
+      obj%nr2_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "nr3")) THEN
       CALL extractDataAttribute(xml_node, "nr3", obj%nr3)
+      obj%nr3_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: basisSetItemType",&
-                        "required attribute nr3 not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: basisSetItemType",&
-                      "required attribute nr3 not found", 10 )
-      END IF
+      obj%nr3_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     CALL extractDataContent(xml_node, obj%basisSetItem )
@@ -5146,19 +4970,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "b1")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:reciprocal_latticeType","b1: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:reciprocal_latticeType","b1: wrong number of occurrences",10)
         END IF
     END IF
@@ -5167,10 +4987,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%b1, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:reciprocal_latticeType","error reading b1")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:reciprocal_latticeType","error reading b1",10)
        END IF
     END IF
@@ -5179,10 +4999,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:reciprocal_latticeType","b2: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:reciprocal_latticeType","b2: wrong number of occurrences",10)
         END IF
     END IF
@@ -5191,10 +5011,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%b2, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:reciprocal_latticeType","error reading b2")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:reciprocal_latticeType","error reading b2",10)
        END IF
     END IF
@@ -5203,10 +5023,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:reciprocal_latticeType","b3: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:reciprocal_latticeType","b3: wrong number of occurrences",10)
         END IF
     END IF
@@ -5215,10 +5035,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%b3, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:reciprocal_latticeType","error reading b3")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:reciprocal_latticeType","error reading b3",10)
        END IF
     END IF
@@ -5243,19 +5063,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "diagonalization")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electron_controlType","diagonalization: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electron_controlType","diagonalization: wrong number of occurrences",10)
         END IF
     END IF
@@ -5264,10 +5080,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%diagonalization, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:electron_controlType","error reading diagonalization")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:electron_controlType","error reading diagonalization",10)
        END IF
     END IF
@@ -5276,10 +5092,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electron_controlType","mixing_mode: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electron_controlType","mixing_mode: wrong number of occurrences",10)
         END IF
     END IF
@@ -5288,10 +5104,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%mixing_mode, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:electron_controlType","error reading mixing_mode")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:electron_controlType","error reading mixing_mode",10)
        END IF
     END IF
@@ -5300,10 +5116,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electron_controlType","mixing_beta: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electron_controlType","mixing_beta: wrong number of occurrences",10)
         END IF
     END IF
@@ -5312,10 +5128,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%mixing_beta, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:electron_controlType","error reading mixing_beta")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:electron_controlType","error reading mixing_beta",10)
        END IF
     END IF
@@ -5324,10 +5140,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electron_controlType","conv_thr: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electron_controlType","conv_thr: wrong number of occurrences",10)
         END IF
     END IF
@@ -5336,10 +5152,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%conv_thr, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:electron_controlType","error reading conv_thr")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:electron_controlType","error reading conv_thr",10)
        END IF
     END IF
@@ -5348,10 +5164,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electron_controlType","mixing_ndim: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electron_controlType","mixing_ndim: wrong number of occurrences",10)
         END IF
     END IF
@@ -5360,10 +5176,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%mixing_ndim, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:electron_controlType","error reading mixing_ndim")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:electron_controlType","error reading mixing_ndim",10)
        END IF
     END IF
@@ -5372,10 +5188,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electron_controlType","max_nstep: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electron_controlType","max_nstep: wrong number of occurrences",10)
         END IF
     END IF
@@ -5384,10 +5200,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%max_nstep, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:electron_controlType","error reading max_nstep")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:electron_controlType","error reading max_nstep",10)
        END IF
     END IF
@@ -5396,10 +5212,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electron_controlType","real_space_q: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electron_controlType","real_space_q: too many occurrences",10)
         END IF
     END IF
@@ -5409,10 +5225,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%real_space_q , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:electron_controlType","error reading real_space_q")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:electron_controlType","error reading real_space_q",10)
          END IF
       END IF
@@ -5424,10 +5240,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electron_controlType","real_space_beta: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electron_controlType","real_space_beta: too many occurrences",10)
         END IF
     END IF
@@ -5437,10 +5253,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%real_space_beta , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:electron_controlType","error reading real_space_beta")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:electron_controlType","error reading real_space_beta",10)
          END IF
       END IF
@@ -5452,10 +5268,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electron_controlType","tq_smoothing: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electron_controlType","tq_smoothing: wrong number of occurrences",10)
         END IF
     END IF
@@ -5464,10 +5280,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%tq_smoothing, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:electron_controlType","error reading tq_smoothing")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:electron_controlType","error reading tq_smoothing",10)
        END IF
     END IF
@@ -5476,10 +5292,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electron_controlType","tbeta_smoothing: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electron_controlType","tbeta_smoothing: wrong number of occurrences",10)
         END IF
     END IF
@@ -5488,10 +5304,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%tbeta_smoothing, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:electron_controlType","error reading tbeta_smoothing")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:electron_controlType","error reading tbeta_smoothing",10)
        END IF
     END IF
@@ -5500,10 +5316,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electron_controlType","diago_thr_init: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electron_controlType","diago_thr_init: wrong number of occurrences",10)
         END IF
     END IF
@@ -5512,10 +5328,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%diago_thr_init, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:electron_controlType","error reading diago_thr_init")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:electron_controlType","error reading diago_thr_init",10)
        END IF
     END IF
@@ -5524,10 +5340,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electron_controlType","diago_full_acc: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electron_controlType","diago_full_acc: wrong number of occurrences",10)
         END IF
     END IF
@@ -5536,10 +5352,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%diago_full_acc, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:electron_controlType","error reading diago_full_acc")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:electron_controlType","error reading diago_full_acc",10)
        END IF
     END IF
@@ -5548,10 +5364,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electron_controlType","diago_cg_maxiter: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electron_controlType","diago_cg_maxiter: too many occurrences",10)
         END IF
     END IF
@@ -5561,10 +5377,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%diago_cg_maxiter , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:electron_controlType","error reading diago_cg_maxiter")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:electron_controlType","error reading diago_cg_maxiter",10)
          END IF
       END IF
@@ -5576,10 +5392,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electron_controlType","diago_ppcg_maxiter: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electron_controlType","diago_ppcg_maxiter: too many occurrences",10)
         END IF
     END IF
@@ -5589,10 +5405,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%diago_ppcg_maxiter , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:electron_controlType","error reading diago_ppcg_maxiter")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:electron_controlType","error reading diago_ppcg_maxiter",10)
          END IF
       END IF
@@ -5604,10 +5420,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electron_controlType","diago_david_ndim: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electron_controlType","diago_david_ndim: too many occurrences",10)
         END IF
     END IF
@@ -5617,16 +5433,101 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%diago_david_ndim , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:electron_controlType","error reading diago_david_ndim")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:electron_controlType","error reading diago_david_ndim",10)
          END IF
       END IF
     ELSE
        obj%diago_david_ndim_ispresent = .FALSE.
     END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "diago_rmm_ndim")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:electron_controlType","diago_rmm_ndim: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:electron_controlType","diago_rmm_ndim: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%diago_rmm_ndim_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%diago_rmm_ndim , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:electron_controlType","error reading diago_rmm_ndim")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:electron_controlType","error reading diago_rmm_ndim",10)
+         END IF
+      END IF
+    ELSE
+       obj%diago_rmm_ndim_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "diago_gs_nblock")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:electron_controlType","diago_gs_nblock: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:electron_controlType","diago_gs_nblock: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%diago_gs_nblock_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%diago_gs_nblock , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:electron_controlType","error reading diago_gs_nblock")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:electron_controlType","error reading diago_gs_nblock",10)
+         END IF
+      END IF
+    ELSE
+       obj%diago_gs_nblock_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "diago_rmm_conv")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:electron_controlType","diago_rmm_conv: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:electron_controlType","diago_rmm_conv: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%diago_rmm_conv_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%diago_rmm_conv , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:electron_controlType","error reading diago_rmm_conv")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:electron_controlType","error reading diago_rmm_conv",10)
+         END IF
+      END IF
+    ELSE
+       obj%diago_rmm_conv_ispresent = .FALSE.
+    END IF
+    !
     !
     obj%lwrite = .TRUE.
     !
@@ -5647,19 +5548,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "monkhorst_pack")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:k_points_IBZType","monkhorst_pack: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:k_points_IBZType","monkhorst_pack: too many occurrences",10)
         END IF
     END IF
@@ -5676,10 +5573,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:k_points_IBZType","nk: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:k_points_IBZType","nk: too many occurrences",10)
         END IF
     END IF
@@ -5689,10 +5586,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%nk , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:k_points_IBZType","error reading nk")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:k_points_IBZType","error reading nk",10)
          END IF
       END IF
@@ -5735,89 +5632,49 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "nk1")) THEN
       CALL extractDataAttribute(xml_node, "nk1", obj%nk1)
+      obj%nk1_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: monkhorst_packType",&
-                        "required attribute nk1 not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: monkhorst_packType",&
-                      "required attribute nk1 not found", 10 )
-      END IF
+      obj%nk1_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "nk2")) THEN
       CALL extractDataAttribute(xml_node, "nk2", obj%nk2)
+      obj%nk2_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: monkhorst_packType",&
-                        "required attribute nk2 not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: monkhorst_packType",&
-                      "required attribute nk2 not found", 10 )
-      END IF
+      obj%nk2_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "nk3")) THEN
       CALL extractDataAttribute(xml_node, "nk3", obj%nk3)
+      obj%nk3_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: monkhorst_packType",&
-                        "required attribute nk3 not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: monkhorst_packType",&
-                      "required attribute nk3 not found", 10 )
-      END IF
+      obj%nk3_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "k1")) THEN
       CALL extractDataAttribute(xml_node, "k1", obj%k1)
+      obj%k1_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: monkhorst_packType",&
-                        "required attribute k1 not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: monkhorst_packType",&
-                      "required attribute k1 not found", 10 )
-      END IF
+      obj%k1_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "k2")) THEN
       CALL extractDataAttribute(xml_node, "k2", obj%k2)
+      obj%k2_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: monkhorst_packType",&
-                        "required attribute k2 not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: monkhorst_packType",&
-                      "required attribute k2 not found", 10 )
-      END IF
+      obj%k2_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "k3")) THEN
       CALL extractDataAttribute(xml_node, "k3", obj%k3)
+      obj%k3_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: monkhorst_packType",&
-                        "required attribute k3 not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: monkhorst_packType",&
-                      "required attribute k3 not found", 10 )
-      END IF
+      obj%k3_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     CALL extractDataContent(xml_node, obj%monkhorst_pack )
@@ -5840,15 +5697,14 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "weight")) THEN
       CALL extractDataAttribute(xml_node, "weight", obj%weight)
       obj%weight_ispresent = .TRUE.
     ELSE
       obj%weight_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "label")) THEN
       CALL extractDataAttribute(xml_node, "label", obj%label)
       obj%label_ispresent = .TRUE.
@@ -5856,9 +5712,6 @@ MODULE qes_read_module
       obj%label_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     CALL extractDataContent(xml_node, obj%k_point )
@@ -5882,19 +5735,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "ion_dynamics")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:ion_controlType","ion_dynamics: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:ion_controlType","ion_dynamics: wrong number of occurrences",10)
         END IF
     END IF
@@ -5903,10 +5752,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%ion_dynamics, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:ion_controlType","error reading ion_dynamics")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:ion_controlType","error reading ion_dynamics",10)
        END IF
     END IF
@@ -5915,10 +5764,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:ion_controlType","upscale: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:ion_controlType","upscale: too many occurrences",10)
         END IF
     END IF
@@ -5928,10 +5777,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%upscale , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:ion_controlType","error reading upscale")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:ion_controlType","error reading upscale",10)
          END IF
       END IF
@@ -5943,10 +5792,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:ion_controlType","remove_rigid_rot: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:ion_controlType","remove_rigid_rot: too many occurrences",10)
         END IF
     END IF
@@ -5956,10 +5805,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%remove_rigid_rot , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:ion_controlType","error reading remove_rigid_rot")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:ion_controlType","error reading remove_rigid_rot",10)
          END IF
       END IF
@@ -5971,10 +5820,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:ion_controlType","refold_pos: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:ion_controlType","refold_pos: too many occurrences",10)
         END IF
     END IF
@@ -5984,10 +5833,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%refold_pos , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:ion_controlType","error reading refold_pos")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:ion_controlType","error reading refold_pos",10)
          END IF
       END IF
@@ -5999,10 +5848,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:ion_controlType","bfgs: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:ion_controlType","bfgs: too many occurrences",10)
         END IF
     END IF
@@ -6019,10 +5868,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:ion_controlType","md: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:ion_controlType","md: too many occurrences",10)
         END IF
     END IF
@@ -6055,19 +5904,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "ndim")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:bfgsType","ndim: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:bfgsType","ndim: wrong number of occurrences",10)
         END IF
     END IF
@@ -6076,10 +5921,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%ndim, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:bfgsType","error reading ndim")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:bfgsType","error reading ndim",10)
        END IF
     END IF
@@ -6088,10 +5933,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:bfgsType","trust_radius_min: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:bfgsType","trust_radius_min: wrong number of occurrences",10)
         END IF
     END IF
@@ -6100,10 +5945,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%trust_radius_min, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:bfgsType","error reading trust_radius_min")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:bfgsType","error reading trust_radius_min",10)
        END IF
     END IF
@@ -6112,10 +5957,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:bfgsType","trust_radius_max: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:bfgsType","trust_radius_max: wrong number of occurrences",10)
         END IF
     END IF
@@ -6124,10 +5969,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%trust_radius_max, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:bfgsType","error reading trust_radius_max")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:bfgsType","error reading trust_radius_max",10)
        END IF
     END IF
@@ -6136,10 +5981,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:bfgsType","trust_radius_init: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:bfgsType","trust_radius_init: wrong number of occurrences",10)
         END IF
     END IF
@@ -6148,10 +5993,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%trust_radius_init, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:bfgsType","error reading trust_radius_init")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:bfgsType","error reading trust_radius_init",10)
        END IF
     END IF
@@ -6160,10 +6005,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:bfgsType","w1: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:bfgsType","w1: wrong number of occurrences",10)
         END IF
     END IF
@@ -6172,10 +6017,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%w1, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:bfgsType","error reading w1")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:bfgsType","error reading w1",10)
        END IF
     END IF
@@ -6184,10 +6029,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:bfgsType","w2: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:bfgsType","w2: wrong number of occurrences",10)
         END IF
     END IF
@@ -6196,13 +6041,14 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%w2, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:bfgsType","error reading w2")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:bfgsType","error reading w2",10)
        END IF
     END IF
+    !
     !
     obj%lwrite = .TRUE.
     !
@@ -6223,19 +6069,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "pot_extrapolation")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:mdType","pot_extrapolation: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:mdType","pot_extrapolation: wrong number of occurrences",10)
         END IF
     END IF
@@ -6244,10 +6086,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%pot_extrapolation, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:mdType","error reading pot_extrapolation")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:mdType","error reading pot_extrapolation",10)
        END IF
     END IF
@@ -6256,10 +6098,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:mdType","wfc_extrapolation: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:mdType","wfc_extrapolation: wrong number of occurrences",10)
         END IF
     END IF
@@ -6268,10 +6110,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%wfc_extrapolation, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:mdType","error reading wfc_extrapolation")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:mdType","error reading wfc_extrapolation",10)
        END IF
     END IF
@@ -6280,10 +6122,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:mdType","ion_temperature: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:mdType","ion_temperature: wrong number of occurrences",10)
         END IF
     END IF
@@ -6292,10 +6134,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%ion_temperature, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:mdType","error reading ion_temperature")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:mdType","error reading ion_temperature",10)
        END IF
     END IF
@@ -6304,10 +6146,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:mdType","timestep: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:mdType","timestep: wrong number of occurrences",10)
         END IF
     END IF
@@ -6316,10 +6158,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%timestep, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:mdType","error reading timestep")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:mdType","error reading timestep",10)
        END IF
     END IF
@@ -6328,10 +6170,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:mdType","tempw: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:mdType","tempw: wrong number of occurrences",10)
         END IF
     END IF
@@ -6340,10 +6182,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%tempw, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:mdType","error reading tempw")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:mdType","error reading tempw",10)
        END IF
     END IF
@@ -6352,10 +6194,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:mdType","tolp: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:mdType","tolp: wrong number of occurrences",10)
         END IF
     END IF
@@ -6364,10 +6206,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%tolp, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:mdType","error reading tolp")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:mdType","error reading tolp",10)
        END IF
     END IF
@@ -6376,10 +6218,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:mdType","deltaT: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:mdType","deltaT: wrong number of occurrences",10)
         END IF
     END IF
@@ -6388,10 +6230,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%deltaT, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:mdType","error reading deltaT")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:mdType","error reading deltaT",10)
        END IF
     END IF
@@ -6400,10 +6242,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:mdType","nraise: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:mdType","nraise: wrong number of occurrences",10)
         END IF
     END IF
@@ -6412,10 +6254,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%nraise, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:mdType","error reading nraise")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:mdType","error reading nraise",10)
        END IF
     END IF
@@ -6440,19 +6282,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "cell_dynamics")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:cell_controlType","cell_dynamics: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:cell_controlType","cell_dynamics: wrong number of occurrences",10)
         END IF
     END IF
@@ -6461,10 +6299,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%cell_dynamics, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:cell_controlType","error reading cell_dynamics")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:cell_controlType","error reading cell_dynamics",10)
        END IF
     END IF
@@ -6473,10 +6311,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:cell_controlType","pressure: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:cell_controlType","pressure: wrong number of occurrences",10)
         END IF
     END IF
@@ -6485,10 +6323,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%pressure, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:cell_controlType","error reading pressure")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:cell_controlType","error reading pressure",10)
        END IF
     END IF
@@ -6497,10 +6335,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:cell_controlType","wmass: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:cell_controlType","wmass: too many occurrences",10)
         END IF
     END IF
@@ -6510,10 +6348,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%wmass , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:cell_controlType","error reading wmass")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:cell_controlType","error reading wmass",10)
          END IF
       END IF
@@ -6525,10 +6363,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:cell_controlType","cell_factor: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:cell_controlType","cell_factor: too many occurrences",10)
         END IF
     END IF
@@ -6538,10 +6376,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%cell_factor , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:cell_controlType","error reading cell_factor")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:cell_controlType","error reading cell_factor",10)
          END IF
       END IF
@@ -6549,14 +6387,42 @@ MODULE qes_read_module
        obj%cell_factor_ispresent = .FALSE.
     END IF
     !
+    tmp_node_list => getElementsByTagname(xml_node, "cell_do_free")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cell_controlType","cell_do_free: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cell_controlType","cell_do_free: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%cell_do_free_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%cell_do_free , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:cell_controlType","error reading cell_do_free")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:cell_controlType","error reading cell_do_free",10)
+         END IF
+      END IF
+    ELSE
+       obj%cell_do_free_ispresent = .FALSE.
+    END IF
+    !
     tmp_node_list => getElementsByTagname(xml_node, "fix_volume")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:cell_controlType","fix_volume: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:cell_controlType","fix_volume: too many occurrences",10)
         END IF
     END IF
@@ -6566,10 +6432,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%fix_volume , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:cell_controlType","error reading fix_volume")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:cell_controlType","error reading fix_volume",10)
          END IF
       END IF
@@ -6581,10 +6447,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:cell_controlType","fix_area: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:cell_controlType","fix_area: too many occurrences",10)
         END IF
     END IF
@@ -6594,10 +6460,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%fix_area , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:cell_controlType","error reading fix_area")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:cell_controlType","error reading fix_area",10)
          END IF
       END IF
@@ -6609,10 +6475,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:cell_controlType","isotropic: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:cell_controlType","isotropic: too many occurrences",10)
         END IF
     END IF
@@ -6622,10 +6488,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%isotropic , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:cell_controlType","error reading isotropic")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:cell_controlType","error reading isotropic",10)
          END IF
       END IF
@@ -6637,10 +6503,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:cell_controlType","free_cell: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:cell_controlType","free_cell: too many occurrences",10)
         END IF
     END IF
@@ -6673,19 +6539,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "nosym")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:symmetry_flagsType","nosym: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:symmetry_flagsType","nosym: wrong number of occurrences",10)
         END IF
     END IF
@@ -6694,10 +6556,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%nosym, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:symmetry_flagsType","error reading nosym")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:symmetry_flagsType","error reading nosym",10)
        END IF
     END IF
@@ -6706,10 +6568,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:symmetry_flagsType","nosym_evc: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:symmetry_flagsType","nosym_evc: wrong number of occurrences",10)
         END IF
     END IF
@@ -6718,10 +6580,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%nosym_evc, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:symmetry_flagsType","error reading nosym_evc")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:symmetry_flagsType","error reading nosym_evc",10)
        END IF
     END IF
@@ -6730,10 +6592,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:symmetry_flagsType","noinv: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:symmetry_flagsType","noinv: wrong number of occurrences",10)
         END IF
     END IF
@@ -6742,10 +6604,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%noinv, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:symmetry_flagsType","error reading noinv")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:symmetry_flagsType","error reading noinv",10)
        END IF
     END IF
@@ -6754,10 +6616,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:symmetry_flagsType","no_t_rev: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:symmetry_flagsType","no_t_rev: wrong number of occurrences",10)
         END IF
     END IF
@@ -6766,10 +6628,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%no_t_rev, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:symmetry_flagsType","error reading no_t_rev")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:symmetry_flagsType","error reading no_t_rev",10)
        END IF
     END IF
@@ -6778,10 +6640,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:symmetry_flagsType","force_symmorphic: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:symmetry_flagsType","force_symmorphic: wrong number of occurrences",10)
         END IF
     END IF
@@ -6790,10 +6652,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%force_symmorphic, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:symmetry_flagsType","error reading force_symmorphic")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:symmetry_flagsType","error reading force_symmorphic",10)
        END IF
     END IF
@@ -6802,10 +6664,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:symmetry_flagsType","use_all_frac: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:symmetry_flagsType","use_all_frac: wrong number of occurrences",10)
         END IF
     END IF
@@ -6814,10 +6676,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%use_all_frac, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:symmetry_flagsType","error reading use_all_frac")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:symmetry_flagsType","error reading use_all_frac",10)
        END IF
     END IF
@@ -6842,19 +6704,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "assume_isolated")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:boundary_conditionsType","assume_isolated: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:boundary_conditionsType","assume_isolated: wrong number of occurrences",10)
         END IF
     END IF
@@ -6863,10 +6721,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%assume_isolated, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:boundary_conditionsType","error reading assume_isolated")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:boundary_conditionsType","error reading assume_isolated",10)
        END IF
     END IF
@@ -6875,10 +6733,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:boundary_conditionsType","esm: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:boundary_conditionsType","esm: too many occurrences",10)
         END IF
     END IF
@@ -6891,42 +6749,42 @@ MODULE qes_read_module
        obj%esm_ispresent = .FALSE.
     END IF
     !
-    tmp_node_list => getElementsByTagname(xml_node, "fcp")
+    tmp_node_list => getElementsByTagname(xml_node, "fcp_opt")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:boundary_conditionsType","fcp: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
-           CALL errore("qes_read:boundary_conditionsType","fcp: too many occurrences",10)
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:boundary_conditionsType","fcp_opt: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:boundary_conditionsType","fcp_opt: too many occurrences",10)
         END IF
     END IF
     !
     IF (tmp_node_list_size>0) THEN
-      obj%fcp_ispresent = .TRUE.
+      obj%fcp_opt_ispresent = .TRUE.
       tmp_node => item(tmp_node_list, 0)
-      CALL extractDataContent(tmp_node, obj%fcp , IOSTAT = iostat_)
+      CALL extractDataContent(tmp_node, obj%fcp_opt , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
-            CALL infomsg("qes_read:boundary_conditionsType","error reading fcp")
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:boundary_conditionsType","error reading fcp_opt")
             ierr = ierr + 1
-         ELSE 
-            CALL errore ("qes_read:boundary_conditionsType","error reading fcp",10)
+         ELSE
+            CALL errore ("qes_read:boundary_conditionsType","error reading fcp_opt",10)
          END IF
       END IF
     ELSE
-       obj%fcp_ispresent = .FALSE.
+       obj%fcp_opt_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "fcp_mu")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:boundary_conditionsType","fcp_mu: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:boundary_conditionsType","fcp_mu: too many occurrences",10)
         END IF
     END IF
@@ -6936,10 +6794,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%fcp_mu , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:boundary_conditionsType","error reading fcp_mu")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:boundary_conditionsType","error reading fcp_mu",10)
          END IF
       END IF
@@ -6967,19 +6825,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "bc")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:esmType","bc: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:esmType","bc: wrong number of occurrences",10)
         END IF
     END IF
@@ -6988,10 +6842,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%bc, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:esmType","error reading bc")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:esmType","error reading bc",10)
        END IF
     END IF
@@ -7000,10 +6854,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:esmType","nfit: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:esmType","nfit: wrong number of occurrences",10)
         END IF
     END IF
@@ -7012,10 +6866,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%nfit, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:esmType","error reading nfit")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:esmType","error reading nfit",10)
        END IF
     END IF
@@ -7024,10 +6878,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:esmType","w: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:esmType","w: wrong number of occurrences",10)
         END IF
     END IF
@@ -7036,10 +6890,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%w, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:esmType","error reading w")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:esmType","error reading w",10)
        END IF
     END IF
@@ -7048,10 +6902,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:esmType","efield: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:esmType","efield: wrong number of occurrences",10)
         END IF
     END IF
@@ -7060,10 +6914,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%efield, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:esmType","error reading efield")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:esmType","error reading efield",10)
        END IF
     END IF
@@ -7088,19 +6942,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "ecfixed")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:ekin_functionalType","ecfixed: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:ekin_functionalType","ecfixed: wrong number of occurrences",10)
         END IF
     END IF
@@ -7109,10 +6959,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%ecfixed, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:ekin_functionalType","error reading ecfixed")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:ekin_functionalType","error reading ecfixed",10)
        END IF
     END IF
@@ -7121,10 +6971,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:ekin_functionalType","qcutz: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:ekin_functionalType","qcutz: wrong number of occurrences",10)
         END IF
     END IF
@@ -7133,10 +6983,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%qcutz, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:ekin_functionalType","error reading qcutz")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:ekin_functionalType","error reading qcutz",10)
        END IF
     END IF
@@ -7145,10 +6995,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:ekin_functionalType","q2sigma: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:ekin_functionalType","q2sigma: wrong number of occurrences",10)
         END IF
     END IF
@@ -7157,10 +7007,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%q2sigma, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:ekin_functionalType","error reading q2sigma")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:ekin_functionalType","error reading q2sigma",10)
        END IF
     END IF
@@ -7185,19 +7035,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "spin_constraints")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:spin_constraintsType","spin_constraints: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:spin_constraintsType","spin_constraints: wrong number of occurrences",10)
         END IF
     END IF
@@ -7206,10 +7052,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%spin_constraints, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:spin_constraintsType","error reading spin_constraints")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:spin_constraintsType","error reading spin_constraints",10)
        END IF
     END IF
@@ -7218,10 +7064,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:spin_constraintsType","lagrange_multiplier: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:spin_constraintsType","lagrange_multiplier: wrong number of occurrences",10)
         END IF
     END IF
@@ -7230,10 +7076,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%lagrange_multiplier, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:spin_constraintsType","error reading lagrange_multiplier")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:spin_constraintsType","error reading lagrange_multiplier",10)
        END IF
     END IF
@@ -7242,10 +7088,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:spin_constraintsType","target_magnetization: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:spin_constraintsType","target_magnetization: too many occurrences",10)
         END IF
     END IF
@@ -7255,10 +7101,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%target_magnetization , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:spin_constraintsType","error reading target_magnetization")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:spin_constraintsType","error reading target_magnetization",10)
          END IF
       END IF
@@ -7286,19 +7132,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "electric_potential")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electric_fieldType","electric_potential: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electric_fieldType","electric_potential: wrong number of occurrences",10)
         END IF
     END IF
@@ -7307,10 +7149,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%electric_potential, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:electric_fieldType","error reading electric_potential")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:electric_fieldType","error reading electric_potential",10)
        END IF
     END IF
@@ -7319,10 +7161,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electric_fieldType","dipole_correction: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electric_fieldType","dipole_correction: too many occurrences",10)
         END IF
     END IF
@@ -7332,10 +7174,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%dipole_correction , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:electric_fieldType","error reading dipole_correction")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:electric_fieldType","error reading dipole_correction",10)
          END IF
       END IF
@@ -7347,10 +7189,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electric_fieldType","gate_settings: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electric_fieldType","gate_settings: too many occurrences",10)
         END IF
     END IF
@@ -7367,10 +7209,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electric_fieldType","electric_field_direction: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electric_fieldType","electric_field_direction: too many occurrences",10)
         END IF
     END IF
@@ -7380,10 +7222,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%electric_field_direction , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:electric_fieldType","error reading electric_field_direction")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:electric_fieldType","error reading electric_field_direction",10)
          END IF
       END IF
@@ -7395,10 +7237,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electric_fieldType","potential_max_position: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electric_fieldType","potential_max_position: too many occurrences",10)
         END IF
     END IF
@@ -7408,10 +7250,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%potential_max_position , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:electric_fieldType","error reading potential_max_position")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:electric_fieldType","error reading potential_max_position",10)
          END IF
       END IF
@@ -7423,10 +7265,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electric_fieldType","potential_decrease_width: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electric_fieldType","potential_decrease_width: too many occurrences",10)
         END IF
     END IF
@@ -7436,10 +7278,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%potential_decrease_width , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:electric_fieldType","error reading potential_decrease_width")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:electric_fieldType","error reading potential_decrease_width",10)
          END IF
       END IF
@@ -7451,10 +7293,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electric_fieldType","electric_field_amplitude: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electric_fieldType","electric_field_amplitude: too many occurrences",10)
         END IF
     END IF
@@ -7464,10 +7306,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%electric_field_amplitude , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:electric_fieldType","error reading electric_field_amplitude")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:electric_fieldType","error reading electric_field_amplitude",10)
          END IF
       END IF
@@ -7479,10 +7321,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electric_fieldType","electric_field_vector: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electric_fieldType","electric_field_vector: too many occurrences",10)
         END IF
     END IF
@@ -7492,10 +7334,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%electric_field_vector , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:electric_fieldType","error reading electric_field_vector")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:electric_fieldType","error reading electric_field_vector",10)
          END IF
       END IF
@@ -7507,10 +7349,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electric_fieldType","nk_per_string: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electric_fieldType","nk_per_string: too many occurrences",10)
         END IF
     END IF
@@ -7520,10 +7362,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%nk_per_string , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:electric_fieldType","error reading nk_per_string")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:electric_fieldType","error reading nk_per_string",10)
          END IF
       END IF
@@ -7535,10 +7377,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electric_fieldType","n_berry_cycles: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electric_fieldType","n_berry_cycles: too many occurrences",10)
         END IF
     END IF
@@ -7548,10 +7390,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%n_berry_cycles , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:electric_fieldType","error reading n_berry_cycles")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:electric_fieldType","error reading n_berry_cycles",10)
          END IF
       END IF
@@ -7579,19 +7421,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "use_gate")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:gate_settingsType","use_gate: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:gate_settingsType","use_gate: wrong number of occurrences",10)
         END IF
     END IF
@@ -7600,10 +7438,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%use_gate, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:gate_settingsType","error reading use_gate")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:gate_settingsType","error reading use_gate",10)
        END IF
     END IF
@@ -7612,10 +7450,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:gate_settingsType","zgate: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:gate_settingsType","zgate: too many occurrences",10)
         END IF
     END IF
@@ -7625,10 +7463,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%zgate , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:gate_settingsType","error reading zgate")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:gate_settingsType","error reading zgate",10)
          END IF
       END IF
@@ -7640,10 +7478,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:gate_settingsType","relaxz: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:gate_settingsType","relaxz: too many occurrences",10)
         END IF
     END IF
@@ -7653,10 +7491,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%relaxz , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:gate_settingsType","error reading relaxz")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:gate_settingsType","error reading relaxz",10)
          END IF
       END IF
@@ -7668,10 +7506,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:gate_settingsType","block: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:gate_settingsType","block: too many occurrences",10)
         END IF
     END IF
@@ -7681,10 +7519,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%block , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:gate_settingsType","error reading block")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:gate_settingsType","error reading block",10)
          END IF
       END IF
@@ -7696,10 +7534,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:gate_settingsType","block_1: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:gate_settingsType","block_1: too many occurrences",10)
         END IF
     END IF
@@ -7709,10 +7547,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%block_1 , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:gate_settingsType","error reading block_1")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:gate_settingsType","error reading block_1",10)
          END IF
       END IF
@@ -7724,10 +7562,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:gate_settingsType","block_2: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:gate_settingsType","block_2: too many occurrences",10)
         END IF
     END IF
@@ -7737,10 +7575,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%block_2 , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:gate_settingsType","error reading block_2")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:gate_settingsType","error reading block_2",10)
          END IF
       END IF
@@ -7752,10 +7590,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:gate_settingsType","block_height: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:gate_settingsType","block_height: too many occurrences",10)
         END IF
     END IF
@@ -7765,10 +7603,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%block_height , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:gate_settingsType","error reading block_height")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:gate_settingsType","error reading block_height",10)
          END IF
       END IF
@@ -7796,19 +7634,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "num_of_constraints")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:atomic_constraintsType","num_of_constraints: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:atomic_constraintsType","num_of_constraints: wrong number of occurrences",10)
         END IF
     END IF
@@ -7817,10 +7651,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%num_of_constraints, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:atomic_constraintsType","error reading num_of_constraints")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:atomic_constraintsType","error reading num_of_constraints",10)
        END IF
     END IF
@@ -7829,10 +7663,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:atomic_constraintsType","tolerance: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:atomic_constraintsType","tolerance: wrong number of occurrences",10)
         END IF
     END IF
@@ -7841,10 +7675,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%tolerance, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:atomic_constraintsType","error reading tolerance")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:atomic_constraintsType","error reading tolerance",10)
        END IF
     END IF
@@ -7853,10 +7687,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size < 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:atomic_constraintsType","atomic_constraint: not enough elements")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:atomic_constraintsType","atomic_constraint: not enough elements",10)
         END IF
     END IF
@@ -7888,19 +7722,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "constr_parms")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:atomic_constraintType","constr_parms: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:atomic_constraintType","constr_parms: wrong number of occurrences",10)
         END IF
     END IF
@@ -7909,10 +7739,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%constr_parms, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:atomic_constraintType","error reading constr_parms")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:atomic_constraintType","error reading constr_parms",10)
        END IF
     END IF
@@ -7921,10 +7751,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:atomic_constraintType","constr_type: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:atomic_constraintType","constr_type: wrong number of occurrences",10)
         END IF
     END IF
@@ -7933,10 +7763,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%constr_type, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:atomic_constraintType","error reading constr_type")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:atomic_constraintType","error reading constr_type",10)
        END IF
     END IF
@@ -7945,10 +7775,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:atomic_constraintType","constr_target: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:atomic_constraintType","constr_target: wrong number of occurrences",10)
         END IF
     END IF
@@ -7957,10 +7787,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%constr_target, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:atomic_constraintType","error reading constr_target")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:atomic_constraintType","error reading constr_target",10)
        END IF
     END IF
@@ -7984,43 +7814,34 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
+    IF (hasAttribute(xml_node, "size")) THEN
+      CALL extractDataAttribute(xml_node, "size", obj%size)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: inputOccupationsType",&
+                        "required attribute size not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: inputOccupationsType",&
+                      "required attribute size not found", 10 )
+      END IF
+    END IF
+    ! 
     IF (hasAttribute(xml_node, "ispin")) THEN
       CALL extractDataAttribute(xml_node, "ispin", obj%ispin)
+      obj%ispin_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: inputOccupationsType",&
-                        "required attribute ispin not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: inputOccupationsType",&
-                      "required attribute ispin not found", 10 )
-      END IF
+      obj%ispin_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "spin_factor")) THEN
       CALL extractDataAttribute(xml_node, "spin_factor", obj%spin_factor)
+      obj%spin_factor_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: inputOccupationsType",&
-                        "required attribute spin_factor not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: inputOccupationsType",&
-                      "required attribute spin_factor not found", 10 )
-      END IF
+      obj%spin_factor_ispresent = .FALSE.
     END IF
     !
-
-    IF (hasAttribute(xml_node, "size"))  THEN
-        CALL extractDataAttribute(xml_node, "size", obj%size)
-    ELSE
-        CALL errore ("qes_read: inputOccupationsType", &
-                     "mandatory size attribute not found in "//TRIM(obj%tagname), 12)
-    END IF
-    !
-
     !
     !
     ALLOCATE (obj%inputOccupations(obj%size))
@@ -8045,19 +7866,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "BerryPhase")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputElectricFieldType","BerryPhase: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputElectricFieldType","BerryPhase: too many occurrences",10)
         END IF
     END IF
@@ -8074,10 +7891,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputElectricFieldType","finiteElectricFieldInfo: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputElectricFieldType","finiteElectricFieldInfo: too many occurrences",10)
         END IF
     END IF
@@ -8094,10 +7911,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputElectricFieldType","dipoleInfo: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputElectricFieldType","dipoleInfo: too many occurrences",10)
         END IF
     END IF
@@ -8114,10 +7931,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputElectricFieldType","gateInfo: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputElectricFieldType","gateInfo: too many occurrences",10)
         END IF
     END IF
@@ -8150,19 +7967,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "totalPolarization")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:BerryPhaseOutputType","totalPolarization: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:BerryPhaseOutputType","totalPolarization: wrong number of occurrences",10)
         END IF
     END IF
@@ -8175,10 +7988,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:BerryPhaseOutputType","totalPhase: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:BerryPhaseOutputType","totalPhase: wrong number of occurrences",10)
         END IF
     END IF
@@ -8191,10 +8004,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size < 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:BerryPhaseOutputType","ionicPolarization: not enough elements")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:BerryPhaseOutputType","ionicPolarization: not enough elements",10)
         END IF
     END IF
@@ -8210,10 +8023,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size < 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:BerryPhaseOutputType","electronicPolarization: not enough elements")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:BerryPhaseOutputType","electronicPolarization: not enough elements",10)
         END IF
     END IF
@@ -8245,19 +8058,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "idir")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:dipoleOutputType","idir: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:dipoleOutputType","idir: wrong number of occurrences",10)
         END IF
     END IF
@@ -8266,10 +8075,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%idir, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:dipoleOutputType","error reading idir")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:dipoleOutputType","error reading idir",10)
        END IF
     END IF
@@ -8278,10 +8087,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:dipoleOutputType","dipole: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:dipoleOutputType","dipole: wrong number of occurrences",10)
         END IF
     END IF
@@ -8294,10 +8103,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:dipoleOutputType","ion_dipole: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:dipoleOutputType","ion_dipole: wrong number of occurrences",10)
         END IF
     END IF
@@ -8310,10 +8119,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:dipoleOutputType","elec_dipole: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:dipoleOutputType","elec_dipole: wrong number of occurrences",10)
         END IF
     END IF
@@ -8326,10 +8135,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:dipoleOutputType","dipoleField: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:dipoleOutputType","dipoleField: wrong number of occurrences",10)
         END IF
     END IF
@@ -8342,10 +8151,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:dipoleOutputType","potentialAmp: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:dipoleOutputType","potentialAmp: wrong number of occurrences",10)
         END IF
     END IF
@@ -8358,10 +8167,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:dipoleOutputType","totalLength: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:dipoleOutputType","totalLength: wrong number of occurrences",10)
         END IF
     END IF
@@ -8390,19 +8199,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "electronicDipole")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:finiteFieldOutType","electronicDipole: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:finiteFieldOutType","electronicDipole: wrong number of occurrences",10)
         END IF
     END IF
@@ -8411,10 +8216,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%electronicDipole, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:finiteFieldOutType","error reading electronicDipole")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:finiteFieldOutType","error reading electronicDipole",10)
        END IF
     END IF
@@ -8423,10 +8228,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:finiteFieldOutType","ionicDipole: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:finiteFieldOutType","ionicDipole: wrong number of occurrences",10)
         END IF
     END IF
@@ -8435,10 +8240,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%ionicDipole, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:finiteFieldOutType","error reading ionicDipole")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:finiteFieldOutType","error reading ionicDipole",10)
        END IF
     END IF
@@ -8463,19 +8268,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "polarization")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:polarizationType","polarization: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:polarizationType","polarization: wrong number of occurrences",10)
         END IF
     END IF
@@ -8488,10 +8289,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:polarizationType","modulus: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:polarizationType","modulus: wrong number of occurrences",10)
         END IF
     END IF
@@ -8500,10 +8301,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%modulus, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:polarizationType","error reading modulus")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:polarizationType","error reading modulus",10)
        END IF
     END IF
@@ -8512,10 +8313,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:polarizationType","direction: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:polarizationType","direction: wrong number of occurrences",10)
         END IF
     END IF
@@ -8524,10 +8325,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%direction, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:polarizationType","error reading direction")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:polarizationType","error reading direction",10)
        END IF
     END IF
@@ -8552,19 +8353,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "ion")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:ionicPolarizationType","ion: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:ionicPolarizationType","ion: wrong number of occurrences",10)
         END IF
     END IF
@@ -8577,10 +8374,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:ionicPolarizationType","charge: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:ionicPolarizationType","charge: wrong number of occurrences",10)
         END IF
     END IF
@@ -8589,10 +8386,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%charge, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:ionicPolarizationType","error reading charge")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:ionicPolarizationType","error reading charge",10)
        END IF
     END IF
@@ -8601,10 +8398,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:ionicPolarizationType","phase: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:ionicPolarizationType","phase: wrong number of occurrences",10)
         END IF
     END IF
@@ -8633,19 +8430,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "firstKeyPoint")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electronicPolarizationType","firstKeyPoint: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electronicPolarizationType","firstKeyPoint: wrong number of occurrences",10)
         END IF
     END IF
@@ -8658,10 +8451,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electronicPolarizationType","spin: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electronicPolarizationType","spin: too many occurrences",10)
         END IF
     END IF
@@ -8671,10 +8464,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%spin , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:electronicPolarizationType","error reading spin")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:electronicPolarizationType","error reading spin",10)
          END IF
       END IF
@@ -8686,10 +8479,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:electronicPolarizationType","phase: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:electronicPolarizationType","phase: wrong number of occurrences",10)
         END IF
     END IF
@@ -8717,22 +8510,21 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "ionic")) THEN
       CALL extractDataAttribute(xml_node, "ionic", obj%ionic)
       obj%ionic_ispresent = .TRUE.
     ELSE
       obj%ionic_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "electronic")) THEN
       CALL extractDataAttribute(xml_node, "electronic", obj%electronic)
       obj%electronic_ispresent = .TRUE.
     ELSE
       obj%electronic_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "modulus")) THEN
       CALL extractDataAttribute(xml_node, "modulus", obj%modulus)
       obj%modulus_ispresent = .TRUE.
@@ -8740,9 +8532,6 @@ MODULE qes_read_module
       obj%modulus_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     CALL extractDataContent(xml_node, obj%phase )
@@ -8766,19 +8555,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "pot_prefactor")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:gateInfoType","pot_prefactor: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:gateInfoType","pot_prefactor: wrong number of occurrences",10)
         END IF
     END IF
@@ -8787,10 +8572,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%pot_prefactor, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:gateInfoType","error reading pot_prefactor")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:gateInfoType","error reading pot_prefactor",10)
        END IF
     END IF
@@ -8799,10 +8584,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:gateInfoType","gate_zpos: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:gateInfoType","gate_zpos: wrong number of occurrences",10)
         END IF
     END IF
@@ -8811,10 +8596,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%gate_zpos, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:gateInfoType","error reading gate_zpos")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:gateInfoType","error reading gate_zpos",10)
        END IF
     END IF
@@ -8823,10 +8608,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:gateInfoType","gate_gate_term: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:gateInfoType","gate_gate_term: wrong number of occurrences",10)
         END IF
     END IF
@@ -8835,10 +8620,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%gate_gate_term, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:gateInfoType","error reading gate_gate_term")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:gateInfoType","error reading gate_gate_term",10)
        END IF
     END IF
@@ -8847,10 +8632,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:gateInfoType","gatefieldEnergy: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:gateInfoType","gatefieldEnergy: wrong number of occurrences",10)
         END IF
     END IF
@@ -8859,10 +8644,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%gatefieldEnergy, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:gateInfoType","error reading gatefieldEnergy")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:gateInfoType","error reading gatefieldEnergy",10)
        END IF
     END IF
@@ -8887,19 +8672,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "scf_conv")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:convergence_infoType","scf_conv: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:convergence_infoType","scf_conv: wrong number of occurrences",10)
         END IF
     END IF
@@ -8912,10 +8693,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:convergence_infoType","opt_conv: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:convergence_infoType","opt_conv: too many occurrences",10)
         END IF
     END IF
@@ -8948,19 +8729,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "convergence_achieved")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:scf_convType","convergence_achieved: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:scf_convType","convergence_achieved: wrong number of occurrences",10)
         END IF
     END IF
@@ -8969,10 +8746,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%convergence_achieved, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:scf_convType","error reading convergence_achieved")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:scf_convType","error reading convergence_achieved",10)
        END IF
     END IF
@@ -8981,10 +8758,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:scf_convType","n_scf_steps: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:scf_convType","n_scf_steps: wrong number of occurrences",10)
         END IF
     END IF
@@ -8993,10 +8770,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%n_scf_steps, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:scf_convType","error reading n_scf_steps")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:scf_convType","error reading n_scf_steps",10)
        END IF
     END IF
@@ -9005,10 +8782,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:scf_convType","scf_error: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:scf_convType","scf_error: wrong number of occurrences",10)
         END IF
     END IF
@@ -9017,10 +8794,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%scf_error, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:scf_convType","error reading scf_error")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:scf_convType","error reading scf_error",10)
        END IF
     END IF
@@ -9045,19 +8822,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "convergence_achieved")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:opt_convType","convergence_achieved: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:opt_convType","convergence_achieved: wrong number of occurrences",10)
         END IF
     END IF
@@ -9066,10 +8839,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%convergence_achieved, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:opt_convType","error reading convergence_achieved")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:opt_convType","error reading convergence_achieved",10)
        END IF
     END IF
@@ -9078,10 +8851,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:opt_convType","n_opt_steps: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:opt_convType","n_opt_steps: wrong number of occurrences",10)
         END IF
     END IF
@@ -9090,10 +8863,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%n_opt_steps, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:opt_convType","error reading n_opt_steps")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:opt_convType","error reading n_opt_steps",10)
        END IF
     END IF
@@ -9102,10 +8875,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:opt_convType","grad_norm: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:opt_convType","grad_norm: wrong number of occurrences",10)
         END IF
     END IF
@@ -9114,10 +8887,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%grad_norm, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:opt_convType","error reading grad_norm")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:opt_convType","error reading grad_norm",10)
        END IF
     END IF
@@ -9142,19 +8915,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "real_space_q")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:algorithmic_infoType","real_space_q: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:algorithmic_infoType","real_space_q: wrong number of occurrences",10)
         END IF
     END IF
@@ -9163,10 +8932,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%real_space_q, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:algorithmic_infoType","error reading real_space_q")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:algorithmic_infoType","error reading real_space_q",10)
        END IF
     END IF
@@ -9175,10 +8944,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:algorithmic_infoType","real_space_beta: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:algorithmic_infoType","real_space_beta: too many occurrences",10)
         END IF
     END IF
@@ -9188,10 +8957,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%real_space_beta , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:algorithmic_infoType","error reading real_space_beta")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:algorithmic_infoType","error reading real_space_beta",10)
          END IF
       END IF
@@ -9203,10 +8972,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:algorithmic_infoType","uspp: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:algorithmic_infoType","uspp: wrong number of occurrences",10)
         END IF
     END IF
@@ -9215,10 +8984,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%uspp, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:algorithmic_infoType","error reading uspp")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:algorithmic_infoType","error reading uspp",10)
        END IF
     END IF
@@ -9227,10 +8996,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:algorithmic_infoType","paw: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:algorithmic_infoType","paw: wrong number of occurrences",10)
         END IF
     END IF
@@ -9239,10 +9008,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%paw, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:algorithmic_infoType","error reading paw")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:algorithmic_infoType","error reading paw",10)
        END IF
     END IF
@@ -9267,19 +9036,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "nsym")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:symmetriesType","nsym: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:symmetriesType","nsym: wrong number of occurrences",10)
         END IF
     END IF
@@ -9288,10 +9053,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%nsym, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:symmetriesType","error reading nsym")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:symmetriesType","error reading nsym",10)
        END IF
     END IF
@@ -9300,10 +9065,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:symmetriesType","nrot: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:symmetriesType","nrot: wrong number of occurrences",10)
         END IF
     END IF
@@ -9312,10 +9077,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%nrot, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:symmetriesType","error reading nrot")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:symmetriesType","error reading nrot",10)
        END IF
     END IF
@@ -9324,10 +9089,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:symmetriesType","space_group: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:symmetriesType","space_group: wrong number of occurrences",10)
         END IF
     END IF
@@ -9336,10 +9101,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%space_group, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:symmetriesType","error reading space_group")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:symmetriesType","error reading space_group",10)
        END IF
     END IF
@@ -9348,18 +9113,18 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size < 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:symmetriesType","symmetry: not enough elements")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:symmetriesType","symmetry: not enough elements",10)
         END IF
     END IF
     IF (tmp_node_list_size > 48) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:symmetriesType","symmetry: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:symmetriesType","symmetry: too many occurrences",10)
         END IF
     END IF
@@ -9391,19 +9156,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "info")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:symmetryType","info: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:symmetryType","info: wrong number of occurrences",10)
         END IF
     END IF
@@ -9416,10 +9177,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:symmetryType","rotation: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:symmetryType","rotation: wrong number of occurrences",10)
         END IF
     END IF
@@ -9432,10 +9193,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:symmetryType","fractional_translation: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:symmetryType","fractional_translation: too many occurrences",10)
         END IF
     END IF
@@ -9445,10 +9206,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%fractional_translation , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:symmetryType","error reading fractional_translation")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:symmetryType","error reading fractional_translation",10)
          END IF
       END IF
@@ -9460,10 +9221,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:symmetryType","equivalent_atoms: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:symmetryType","equivalent_atoms: too many occurrences",10)
         END IF
     END IF
@@ -9495,30 +9256,27 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
-    IF (hasAttribute(xml_node, "nat")) THEN
-      CALL extractDataAttribute(xml_node, "nat", obj%nat)
+    ! 
+    IF (hasAttribute(xml_node, "size")) THEN
+      CALL extractDataAttribute(xml_node, "size", obj%size)
     ELSE
       IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: equivalent_atomsType",&
-                        "required attribute nat not found" )
+                        "required attribute size not found" )
          ierr = ierr + 1
       ELSE
          CALL errore ("qes_read: equivalent_atomsType",&
-                      "required attribute nat not found", 10 )
+                      "required attribute size not found", 10 )
       END IF
     END IF
-    !
-
-    IF (hasAttribute(xml_node, "size"))  THEN
-        CALL extractDataAttribute(xml_node, "size", obj%size)
+    ! 
+    IF (hasAttribute(xml_node, "nat")) THEN
+      CALL extractDataAttribute(xml_node, "nat", obj%nat)
+      obj%nat_ispresent = .TRUE.
     ELSE
-        CALL errore ("qes_read: equivalent_atomsType", &
-                     "mandatory size attribute not found in "//TRIM(obj%tagname), 12)
+      obj%nat_ispresent = .FALSE.
     END IF
     !
-
     !
     !
     ALLOCATE (obj%equivalent_atoms(obj%size))
@@ -9542,22 +9300,21 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "name")) THEN
       CALL extractDataAttribute(xml_node, "name", obj%name)
       obj%name_ispresent = .TRUE.
     ELSE
       obj%name_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "class")) THEN
       CALL extractDataAttribute(xml_node, "class", obj%class)
       obj%class_ispresent = .TRUE.
     ELSE
       obj%class_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "time_reversal")) THEN
       CALL extractDataAttribute(xml_node, "time_reversal", obj%time_reversal)
       obj%time_reversal_ispresent = .TRUE.
@@ -9565,9 +9322,6 @@ MODULE qes_read_module
       obj%time_reversal_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     CALL extractDataContent(xml_node, obj%info )
@@ -9591,19 +9345,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "assume_isolated")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:outputPBCType","assume_isolated: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:outputPBCType","assume_isolated: wrong number of occurrences",10)
         END IF
     END IF
@@ -9612,10 +9362,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%assume_isolated, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:outputPBCType","error reading assume_isolated")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:outputPBCType","error reading assume_isolated",10)
        END IF
     END IF
@@ -9640,19 +9390,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "lsda")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:magnetizationType","lsda: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:magnetizationType","lsda: wrong number of occurrences",10)
         END IF
     END IF
@@ -9661,10 +9407,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%lsda, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:magnetizationType","error reading lsda")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:magnetizationType","error reading lsda",10)
        END IF
     END IF
@@ -9673,10 +9419,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:magnetizationType","noncolin: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:magnetizationType","noncolin: wrong number of occurrences",10)
         END IF
     END IF
@@ -9685,10 +9431,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%noncolin, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:magnetizationType","error reading noncolin")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:magnetizationType","error reading noncolin",10)
        END IF
     END IF
@@ -9697,10 +9443,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:magnetizationType","spinorbit: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:magnetizationType","spinorbit: wrong number of occurrences",10)
         END IF
     END IF
@@ -9709,10 +9455,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%spinorbit, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:magnetizationType","error reading spinorbit")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:magnetizationType","error reading spinorbit",10)
        END IF
     END IF
@@ -9720,35 +9466,67 @@ MODULE qes_read_module
     tmp_node_list => getElementsByTagname(xml_node, "total")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:magnetizationType","total: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
-           CALL errore("qes_read:magnetizationType","total: wrong number of occurrences",10)
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:magnetizationType","total: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:magnetizationType","total: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL extractDataContent(tmp_node, obj%total, IOSTAT = iostat_ )
-    IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
-          CALL infomsg("qes_read:magnetizationType","error reading total")
-          ierr = ierr + 1
-       ELSE 
-          CALL errore ("qes_read:magnetizationType","error reading total",10)
-       END IF
+    IF (tmp_node_list_size>0) THEN
+      obj%total_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%total , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:magnetizationType","error reading total")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:magnetizationType","error reading total",10)
+         END IF
+      END IF
+    ELSE
+       obj%total_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "total_vec")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:magnetizationType","total_vec: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:magnetizationType","total_vec: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%total_vec_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%total_vec , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:magnetizationType","error reading total_vec")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:magnetizationType","error reading total_vec",10)
+         END IF
+      END IF
+    ELSE
+       obj%total_vec_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "absolute")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:magnetizationType","absolute: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:magnetizationType","absolute: wrong number of occurrences",10)
         END IF
     END IF
@@ -9757,22 +9535,62 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%absolute, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:magnetizationType","error reading absolute")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:magnetizationType","error reading absolute",10)
        END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "Scalar_Site_Magnetic_Moments")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:magnetizationType","Scalar_Site_Magnetic_Moments: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:magnetizationType","Scalar_Site_Magnetic_Moments: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%Scalar_Site_Magnetic_Moments_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_scalmags(tmp_node, obj%Scalar_Site_Magnetic_Moments, ierr )
+    ELSE
+       obj%Scalar_Site_Magnetic_Moments_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "Site_Magnetizations")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:magnetizationType","Site_Magnetizations: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:magnetizationType","Site_Magnetizations: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%Site_Magnetizations_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_d3mags(tmp_node, obj%Site_Magnetizations, ierr )
+    ELSE
+       obj%Site_Magnetizations_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "do_magnetization")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:magnetizationType","do_magnetization: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:magnetizationType","do_magnetization: too many occurrences",10)
         END IF
     END IF
@@ -9782,10 +9600,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%do_magnetization , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:magnetizationType","error reading do_magnetization")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:magnetizationType","error reading do_magnetization",10)
          END IF
       END IF
@@ -9813,19 +9631,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "etot")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:total_energyType","etot: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:total_energyType","etot: wrong number of occurrences",10)
         END IF
     END IF
@@ -9834,10 +9648,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%etot, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:total_energyType","error reading etot")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:total_energyType","error reading etot",10)
        END IF
     END IF
@@ -9846,10 +9660,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:total_energyType","eband: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:total_energyType","eband: too many occurrences",10)
         END IF
     END IF
@@ -9859,10 +9673,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%eband , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:total_energyType","error reading eband")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:total_energyType","error reading eband",10)
          END IF
       END IF
@@ -9874,10 +9688,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:total_energyType","ehart: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:total_energyType","ehart: too many occurrences",10)
         END IF
     END IF
@@ -9887,10 +9701,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%ehart , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:total_energyType","error reading ehart")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:total_energyType","error reading ehart",10)
          END IF
       END IF
@@ -9902,10 +9716,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:total_energyType","vtxc: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:total_energyType","vtxc: too many occurrences",10)
         END IF
     END IF
@@ -9915,10 +9729,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%vtxc , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:total_energyType","error reading vtxc")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:total_energyType","error reading vtxc",10)
          END IF
       END IF
@@ -9930,10 +9744,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:total_energyType","etxc: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:total_energyType","etxc: too many occurrences",10)
         END IF
     END IF
@@ -9943,10 +9757,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%etxc , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:total_energyType","error reading etxc")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:total_energyType","error reading etxc",10)
          END IF
       END IF
@@ -9958,10 +9772,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:total_energyType","ewald: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:total_energyType","ewald: too many occurrences",10)
         END IF
     END IF
@@ -9971,10 +9785,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%ewald , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:total_energyType","error reading ewald")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:total_energyType","error reading ewald",10)
          END IF
       END IF
@@ -9986,10 +9800,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:total_energyType","demet: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:total_energyType","demet: too many occurrences",10)
         END IF
     END IF
@@ -9999,10 +9813,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%demet , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:total_energyType","error reading demet")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:total_energyType","error reading demet",10)
          END IF
       END IF
@@ -10014,10 +9828,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:total_energyType","efieldcorr: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:total_energyType","efieldcorr: too many occurrences",10)
         END IF
     END IF
@@ -10027,10 +9841,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%efieldcorr , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:total_energyType","error reading efieldcorr")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:total_energyType","error reading efieldcorr",10)
          END IF
       END IF
@@ -10042,10 +9856,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:total_energyType","potentiostat_contr: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:total_energyType","potentiostat_contr: too many occurrences",10)
         END IF
     END IF
@@ -10055,10 +9869,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%potentiostat_contr , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:total_energyType","error reading potentiostat_contr")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:total_energyType","error reading potentiostat_contr",10)
          END IF
       END IF
@@ -10070,10 +9884,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:total_energyType","gatefield_contr: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:total_energyType","gatefield_contr: too many occurrences",10)
         END IF
     END IF
@@ -10083,10 +9897,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%gatefield_contr , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:total_energyType","error reading gatefield_contr")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:total_energyType","error reading gatefield_contr",10)
          END IF
       END IF
@@ -10098,10 +9912,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:total_energyType","vdW_term: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:total_energyType","vdW_term: too many occurrences",10)
         END IF
     END IF
@@ -10111,10 +9925,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%vdW_term , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:total_energyType","error reading vdW_term")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:total_energyType","error reading vdW_term",10)
          END IF
       END IF
@@ -10142,19 +9956,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "lsda")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:band_structureType","lsda: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:band_structureType","lsda: wrong number of occurrences",10)
         END IF
     END IF
@@ -10163,10 +9973,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%lsda, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:band_structureType","error reading lsda")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:band_structureType","error reading lsda",10)
        END IF
     END IF
@@ -10175,10 +9985,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:band_structureType","noncolin: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:band_structureType","noncolin: wrong number of occurrences",10)
         END IF
     END IF
@@ -10187,10 +9997,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%noncolin, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:band_structureType","error reading noncolin")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:band_structureType","error reading noncolin",10)
        END IF
     END IF
@@ -10199,10 +10009,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:band_structureType","spinorbit: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:band_structureType","spinorbit: wrong number of occurrences",10)
         END IF
     END IF
@@ -10211,10 +10021,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%spinorbit, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:band_structureType","error reading spinorbit")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:band_structureType","error reading spinorbit",10)
        END IF
     END IF
@@ -10223,10 +10033,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:band_structureType","nbnd: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:band_structureType","nbnd: too many occurrences",10)
         END IF
     END IF
@@ -10236,10 +10046,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%nbnd , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:band_structureType","error reading nbnd")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:band_structureType","error reading nbnd",10)
          END IF
       END IF
@@ -10251,10 +10061,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:band_structureType","nbnd_up: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:band_structureType","nbnd_up: too many occurrences",10)
         END IF
     END IF
@@ -10264,10 +10074,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%nbnd_up , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:band_structureType","error reading nbnd_up")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:band_structureType","error reading nbnd_up",10)
          END IF
       END IF
@@ -10279,10 +10089,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:band_structureType","nbnd_dw: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:band_structureType","nbnd_dw: too many occurrences",10)
         END IF
     END IF
@@ -10292,10 +10102,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%nbnd_dw , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:band_structureType","error reading nbnd_dw")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:band_structureType","error reading nbnd_dw",10)
          END IF
       END IF
@@ -10307,10 +10117,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:band_structureType","nelec: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:band_structureType","nelec: wrong number of occurrences",10)
         END IF
     END IF
@@ -10319,10 +10129,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%nelec, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:band_structureType","error reading nelec")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:band_structureType","error reading nelec",10)
        END IF
     END IF
@@ -10331,10 +10141,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:band_structureType","num_of_atomic_wfc: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:band_structureType","num_of_atomic_wfc: too many occurrences",10)
         END IF
     END IF
@@ -10344,10 +10154,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%num_of_atomic_wfc , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:band_structureType","error reading num_of_atomic_wfc")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:band_structureType","error reading num_of_atomic_wfc",10)
          END IF
       END IF
@@ -10359,10 +10169,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:band_structureType","wf_collected: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:band_structureType","wf_collected: wrong number of occurrences",10)
         END IF
     END IF
@@ -10371,10 +10181,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%wf_collected, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:band_structureType","error reading wf_collected")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:band_structureType","error reading wf_collected",10)
        END IF
     END IF
@@ -10383,10 +10193,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:band_structureType","fermi_energy: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:band_structureType","fermi_energy: too many occurrences",10)
         END IF
     END IF
@@ -10396,10 +10206,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%fermi_energy , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:band_structureType","error reading fermi_energy")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:band_structureType","error reading fermi_energy",10)
          END IF
       END IF
@@ -10411,10 +10221,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:band_structureType","highestOccupiedLevel: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:band_structureType","highestOccupiedLevel: too many occurrences",10)
         END IF
     END IF
@@ -10424,10 +10234,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%highestOccupiedLevel , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:band_structureType","error reading highestOccupiedLevel")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:band_structureType","error reading highestOccupiedLevel",10)
          END IF
       END IF
@@ -10439,10 +10249,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:band_structureType","lowestUnoccupiedLevel: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:band_structureType","lowestUnoccupiedLevel: too many occurrences",10)
         END IF
     END IF
@@ -10452,10 +10262,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%lowestUnoccupiedLevel , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:band_structureType","error reading lowestUnoccupiedLevel")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:band_structureType","error reading lowestUnoccupiedLevel",10)
          END IF
       END IF
@@ -10467,10 +10277,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:band_structureType","two_fermi_energies: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:band_structureType","two_fermi_energies: too many occurrences",10)
         END IF
     END IF
@@ -10480,10 +10290,10 @@ MODULE qes_read_module
       tmp_node => item(tmp_node_list, 0)
       CALL extractDataContent(tmp_node, obj%two_fermi_energies , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN 
+         IF ( PRESENT (ierr ) ) THEN
             CALL infomsg("qes_read:band_structureType","error reading two_fermi_energies")
             ierr = ierr + 1
-         ELSE 
+         ELSE
             CALL errore ("qes_read:band_structureType","error reading two_fermi_energies",10)
          END IF
       END IF
@@ -10495,10 +10305,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:band_structureType","starting_k_points: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:band_structureType","starting_k_points: wrong number of occurrences",10)
         END IF
     END IF
@@ -10511,10 +10321,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:band_structureType","nks: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:band_structureType","nks: wrong number of occurrences",10)
         END IF
     END IF
@@ -10523,10 +10333,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%nks, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:band_structureType","error reading nks")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:band_structureType","error reading nks",10)
        END IF
     END IF
@@ -10535,10 +10345,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:band_structureType","occupations_kind: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:band_structureType","occupations_kind: wrong number of occurrences",10)
         END IF
     END IF
@@ -10551,10 +10361,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:band_structureType","smearing: too many occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:band_structureType","smearing: too many occurrences",10)
         END IF
     END IF
@@ -10571,10 +10381,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size < 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:band_structureType","ks_energies: not enough elements")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:band_structureType","ks_energies: not enough elements",10)
         END IF
     END IF
@@ -10606,19 +10416,15 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
-
-
-
-
     !
     tmp_node_list => getElementsByTagname(xml_node, "k_point")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:ks_energiesType","k_point: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:ks_energiesType","k_point: wrong number of occurrences",10)
         END IF
     END IF
@@ -10631,10 +10437,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:ks_energiesType","npw: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:ks_energiesType","npw: wrong number of occurrences",10)
         END IF
     END IF
@@ -10643,10 +10449,10 @@ MODULE qes_read_module
     IF (ASSOCIATED(tmp_node))&
        CALL extractDataContent(tmp_node, obj%npw, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
+       IF ( PRESENT (ierr ) ) THEN
           CALL infomsg("qes_read:ks_energiesType","error reading npw")
           ierr = ierr + 1
-       ELSE 
+       ELSE
           CALL errore ("qes_read:ks_energiesType","error reading npw",10)
        END IF
     END IF
@@ -10655,10 +10461,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:ks_energiesType","eigenvalues: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:ks_energiesType","eigenvalues: wrong number of occurrences",10)
         END IF
     END IF
@@ -10671,10 +10477,10 @@ MODULE qes_read_module
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
-        IF (PRESENT(ierr) ) THEN 
+        IF (PRESENT(ierr) ) THEN
            CALL infomsg("qes_read:ks_energiesType","occupations: wrong number of occurrences")
-           ierr = ierr + 1 
-        ELSE 
+           ierr = ierr + 1
+        ELSE
            CALL errore("qes_read:ks_energiesType","occupations: wrong number of occurrences",10)
         END IF
     END IF
@@ -10702,37 +10508,21 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "DATE")) THEN
       CALL extractDataAttribute(xml_node, "DATE", obj%DATE)
+      obj%DATE_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: closedType",&
-                        "required attribute DATE not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: closedType",&
-                      "required attribute DATE not found", 10 )
-      END IF
+      obj%DATE_ispresent = .FALSE.
     END IF
-    !
+    ! 
     IF (hasAttribute(xml_node, "TIME")) THEN
       CALL extractDataAttribute(xml_node, "TIME", obj%TIME)
+      obj%TIME_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: closedType",&
-                        "required attribute TIME not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: closedType",&
-                      "required attribute TIME not found", 10 )
-      END IF
+      obj%TIME_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     CALL extractDataContent(xml_node, obj%closed )
@@ -10740,6 +10530,1089 @@ MODULE qes_read_module
     obj%lwrite = .TRUE.
     !
   END SUBROUTINE qes_read_closed
+  !
+  !
+  SUBROUTINE qes_read_cpstatus(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(cpstatus_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "STEP")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstatusType","STEP: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstatusType","STEP: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_cpnumstep(tmp_node, obj%STEP, ierr )
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "TIME")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstatusType","TIME: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstatusType","TIME: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scalarQuantity(tmp_node, obj%TIME, ierr )
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "TITLE")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstatusType","TITLE: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstatusType","TITLE: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%TITLE, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN
+          CALL infomsg("qes_read:cpstatusType","error reading TITLE")
+          ierr = ierr + 1
+       ELSE
+          CALL errore ("qes_read:cpstatusType","error reading TITLE",10)
+       END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "KINETIC_ENERGY")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstatusType","KINETIC_ENERGY: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstatusType","KINETIC_ENERGY: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scalarQuantity(tmp_node, obj%KINETIC_ENERGY, ierr )
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "HARTREE_ENERGY")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstatusType","HARTREE_ENERGY: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstatusType","HARTREE_ENERGY: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scalarQuantity(tmp_node, obj%HARTREE_ENERGY, ierr )
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "EWALD_TERM")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstatusType","EWALD_TERM: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstatusType","EWALD_TERM: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scalarQuantity(tmp_node, obj%EWALD_TERM, ierr )
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "GAUSS_SELFINT")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstatusType","GAUSS_SELFINT: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstatusType","GAUSS_SELFINT: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scalarQuantity(tmp_node, obj%GAUSS_SELFINT, ierr )
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "LPSP_ENERGY")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstatusType","LPSP_ENERGY: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstatusType","LPSP_ENERGY: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scalarQuantity(tmp_node, obj%LPSP_ENERGY, ierr )
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "NLPSP_ENERGY")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstatusType","NLPSP_ENERGY: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstatusType","NLPSP_ENERGY: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scalarQuantity(tmp_node, obj%NLPSP_ENERGY, ierr )
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "EXC_ENERGY")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstatusType","EXC_ENERGY: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstatusType","EXC_ENERGY: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scalarQuantity(tmp_node, obj%EXC_ENERGY, ierr )
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "AVERAGE_POT")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstatusType","AVERAGE_POT: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstatusType","AVERAGE_POT: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scalarQuantity(tmp_node, obj%AVERAGE_POT, ierr )
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "ENTHALPY")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstatusType","ENTHALPY: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstatusType","ENTHALPY: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scalarQuantity(tmp_node, obj%ENTHALPY, ierr )
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_cpstatus
+  !
+  !
+  SUBROUTINE qes_read_cpnumstep(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(cpnumstep_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    ! 
+    IF (hasAttribute(xml_node, "ITERATION")) THEN
+      CALL extractDataAttribute(xml_node, "ITERATION", obj%ITERATION)
+      obj%ITERATION_ispresent = .TRUE.
+    ELSE
+      obj%ITERATION_ispresent = .FALSE.
+    END IF
+    !
+    !
+    !
+    CALL extractDataContent(xml_node, obj%cpnumstep )
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_cpnumstep
+  !
+  !
+  SUBROUTINE qes_read_cptimesteps(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(cptimesteps_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    ! 
+    IF (hasAttribute(xml_node, "nt")) THEN
+      CALL extractDataAttribute(xml_node, "nt", obj%nt)
+      obj%nt_ispresent = .TRUE.
+    ELSE
+      obj%nt_ispresent = .FALSE.
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "STEP0")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cptimestepsType","STEP0: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cptimestepsType","STEP0: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_cpstep(tmp_node, obj%STEP0, ierr )
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "STEPM")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cptimestepsType","STEPM: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cptimestepsType","STEPM: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_cpstep(tmp_node, obj%STEPM, ierr )
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_cptimesteps
+  !
+  !
+  SUBROUTINE qes_read_cpstep(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(cpstep_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "ACCUMULATORS")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstepType","ACCUMULATORS: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstepType","ACCUMULATORS: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%ACCUMULATORS_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%ACCUMULATORS , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:cpstepType","error reading ACCUMULATORS")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:cpstepType","error reading ACCUMULATORS",10)
+         END IF
+      END IF
+    ELSE
+       obj%ACCUMULATORS_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "IONS_POSITIONS")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstepType","IONS_POSITIONS: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstepType","IONS_POSITIONS: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_cp_ionPos(tmp_node, obj%IONS_POSITIONS, ierr )
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "IONS_NOSE")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstepType","IONS_NOSE: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstepType","IONS_NOSE: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_cp_ionsNose(tmp_node, obj%IONS_NOSE, ierr )
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "ekincm")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstepType","ekincm: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstepType","ekincm: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%ekincm_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%ekincm , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:cpstepType","error reading ekincm")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:cpstepType","error reading ekincm",10)
+         END IF
+      END IF
+    ELSE
+       obj%ekincm_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "ELECTRONS_NOSE")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstepType","ELECTRONS_NOSE: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstepType","ELECTRONS_NOSE: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_cp_elecNose(tmp_node, obj%ELECTRONS_NOSE, ierr )
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "CELL_PARAMETERS")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstepType","CELL_PARAMETERS: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstepType","CELL_PARAMETERS: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_cp_cell(tmp_node, obj%CELL_PARAMETERS, ierr )
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "CELL_NOSE")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cpstepType","CELL_NOSE: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cpstepType","CELL_NOSE: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_cp_cellNose(tmp_node, obj%CELL_NOSE, ierr )
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_cpstep
+  !
+  !
+  SUBROUTINE qes_read_cp_ionPos(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(cp_ionPos_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "stau")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cp_ionPosType","stau: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cp_ionPosType","stau: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%stau, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN
+          CALL infomsg("qes_read:cp_ionPosType","error reading stau")
+          ierr = ierr + 1
+       ELSE
+          CALL errore ("qes_read:cp_ionPosType","error reading stau",10)
+       END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "svel")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cp_ionPosType","svel: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cp_ionPosType","svel: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%svel, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN
+          CALL infomsg("qes_read:cp_ionPosType","error reading svel")
+          ierr = ierr + 1
+       ELSE
+          CALL errore ("qes_read:cp_ionPosType","error reading svel",10)
+       END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "taui")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cp_ionPosType","taui: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cp_ionPosType","taui: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%taui_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%taui , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:cp_ionPosType","error reading taui")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:cp_ionPosType","error reading taui",10)
+         END IF
+      END IF
+    ELSE
+       obj%taui_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "cdmi")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cp_ionPosType","cdmi: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cp_ionPosType","cdmi: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%cdmi_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%cdmi , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:cp_ionPosType","error reading cdmi")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:cp_ionPosType","error reading cdmi",10)
+         END IF
+      END IF
+    ELSE
+       obj%cdmi_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "force")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cp_ionPosType","force: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cp_ionPosType","force: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%force_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%force , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:cp_ionPosType","error reading force")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:cp_ionPosType","error reading force",10)
+         END IF
+      END IF
+    ELSE
+       obj%force_ispresent = .FALSE.
+    END IF
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_cp_ionPos
+  !
+  !
+  SUBROUTINE qes_read_cp_ionsNose(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(cp_ionsNose_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "nhpcl")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cp_ionsNoseType","nhpcl: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cp_ionsNoseType","nhpcl: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%nhpcl, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN
+          CALL infomsg("qes_read:cp_ionsNoseType","error reading nhpcl")
+          ierr = ierr + 1
+       ELSE
+          CALL errore ("qes_read:cp_ionsNoseType","error reading nhpcl",10)
+       END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "nhpdim")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cp_ionsNoseType","nhpdim: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cp_ionsNoseType","nhpdim: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%nhpdim, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN
+          CALL infomsg("qes_read:cp_ionsNoseType","error reading nhpdim")
+          ierr = ierr + 1
+       ELSE
+          CALL errore ("qes_read:cp_ionsNoseType","error reading nhpdim",10)
+       END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "xnhp")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cp_ionsNoseType","xnhp: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cp_ionsNoseType","xnhp: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%xnhp, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN
+          CALL infomsg("qes_read:cp_ionsNoseType","error reading xnhp")
+          ierr = ierr + 1
+       ELSE
+          CALL errore ("qes_read:cp_ionsNoseType","error reading xnhp",10)
+       END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "vnhp")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cp_ionsNoseType","vnhp: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cp_ionsNoseType","vnhp: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%vnhp_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%vnhp , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:cp_ionsNoseType","error reading vnhp")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:cp_ionsNoseType","error reading vnhp",10)
+         END IF
+      END IF
+    ELSE
+       obj%vnhp_ispresent = .FALSE.
+    END IF
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_cp_ionsNose
+  !
+  !
+  SUBROUTINE qes_read_cp_elecNose(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(cp_elecNose_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "xnhe")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cp_elecNoseType","xnhe: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cp_elecNoseType","xnhe: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%xnhe, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN
+          CALL infomsg("qes_read:cp_elecNoseType","error reading xnhe")
+          ierr = ierr + 1
+       ELSE
+          CALL errore ("qes_read:cp_elecNoseType","error reading xnhe",10)
+       END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "vnhe")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cp_elecNoseType","vnhe: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cp_elecNoseType","vnhe: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%vnhe_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%vnhe , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:cp_elecNoseType","error reading vnhe")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:cp_elecNoseType","error reading vnhe",10)
+         END IF
+      END IF
+    ELSE
+       obj%vnhe_ispresent = .FALSE.
+    END IF
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_cp_elecNose
+  !
+  !
+  SUBROUTINE qes_read_cp_cell(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(cp_cell_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "ht")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cp_cellType","ht: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cp_cellType","ht: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%ht, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN
+          CALL infomsg("qes_read:cp_cellType","error reading ht")
+          ierr = ierr + 1
+       ELSE
+          CALL errore ("qes_read:cp_cellType","error reading ht",10)
+       END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "htvel")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cp_cellType","htvel: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cp_cellType","htvel: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%htvel_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%htvel , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:cp_cellType","error reading htvel")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:cp_cellType","error reading htvel",10)
+         END IF
+      END IF
+    ELSE
+       obj%htvel_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "gvel")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cp_cellType","gvel: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cp_cellType","gvel: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%gvel_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%gvel , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:cp_cellType","error reading gvel")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:cp_cellType","error reading gvel",10)
+         END IF
+      END IF
+    ELSE
+       obj%gvel_ispresent = .FALSE.
+    END IF
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_cp_cell
+  !
+  !
+  SUBROUTINE qes_read_cp_cellNose(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(cp_cellNose_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "xnhh")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cp_cellNoseType","xnhh: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cp_cellNoseType","xnhh: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%xnhh, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN
+          CALL infomsg("qes_read:cp_cellNoseType","error reading xnhh")
+          ierr = ierr + 1
+       ELSE
+          CALL errore ("qes_read:cp_cellNoseType","error reading xnhh",10)
+       END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "vnhh")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:cp_cellNoseType","vnhh: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:cp_cellNoseType","vnhh: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%vnhh_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%vnhh , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:cp_cellNoseType","error reading vnhh")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:cp_cellNoseType","error reading vnhh",10)
+         END IF
+      END IF
+    ELSE
+       obj%vnhh_ispresent = .FALSE.
+    END IF
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_cp_cellNose
+  !
+  !
+  SUBROUTINE qes_read_scalmags(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(scalmags_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    ! 
+    IF (hasAttribute(xml_node, "nat")) THEN
+      CALL extractDataAttribute(xml_node, "nat", obj%nat)
+      obj%nat_ispresent = .TRUE.
+    ELSE
+      obj%nat_ispresent = .FALSE.
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "SiteMagnetization")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size < 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:scalmagsType","SiteMagnetization: not enough elements")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:scalmagsType","SiteMagnetization: not enough elements",10)
+        END IF
+    END IF
+    !
+    obj%ndim_SiteMagnetization = tmp_node_list_size
+    ALLOCATE(obj%SiteMagnetization(tmp_node_list_size))
+    DO index=1,tmp_node_list_size
+        tmp_node => item( tmp_node_list, index-1 )
+        CALL qes_read_SiteMoment(tmp_node, obj%SiteMagnetization(index), ierr )
+    END DO
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_scalmags
+  !
+  !
+  SUBROUTINE qes_read_d3mags(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(d3mags_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    ! 
+    IF (hasAttribute(xml_node, "nat")) THEN
+      CALL extractDataAttribute(xml_node, "nat", obj%nat)
+      obj%nat_ispresent = .TRUE.
+    ELSE
+      obj%nat_ispresent = .FALSE.
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "SiteMagnetization")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size < 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:d3magsType","SiteMagnetization: not enough elements")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:d3magsType","SiteMagnetization: not enough elements",10)
+        END IF
+    END IF
+    !
+    obj%ndim_SiteMagnetization = tmp_node_list_size
+    ALLOCATE(obj%SiteMagnetization(tmp_node_list_size))
+    DO index=1,tmp_node_list_size
+        tmp_node => item( tmp_node_list, index-1 )
+        CALL qes_read_SitMag(tmp_node, obj%SiteMagnetization(index), ierr )
+    END DO
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_d3mags
   !
   !
   SUBROUTINE qes_read_vector(xml_node, obj, ierr )
@@ -10755,17 +11628,20 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-    IF (hasAttribute(xml_node, "size"))  THEN
-        CALL extractDataAttribute(xml_node, "size", obj%size)
+    ! 
+    IF (hasAttribute(xml_node, "size")) THEN
+      CALL extractDataAttribute(xml_node, "size", obj%size)
     ELSE
-        CALL errore ("qes_read: vectorType", &
-                     "mandatory size attribute not found in "//TRIM(obj%tagname), 12)
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: vectorType",&
+                        "required attribute size not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: vectorType",&
+                      "required attribute size not found", 10 )
+      END IF
     END IF
     !
-
-
-
     !
     !
     ALLOCATE (obj%vector(obj%size))
@@ -10789,17 +11665,20 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-    IF (hasAttribute(xml_node, "size"))  THEN
-        CALL extractDataAttribute(xml_node, "size", obj%size)
+    ! 
+    IF (hasAttribute(xml_node, "size")) THEN
+      CALL extractDataAttribute(xml_node, "size", obj%size)
     ELSE
-        CALL errore ("qes_read: integerVectorType", &
-                     "mandatory size attribute not found in "//TRIM(obj%tagname), 12)
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: integerVectorType",&
+                        "required attribute size not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: integerVectorType",&
+                      "required attribute size not found", 10 )
+      END IF
     END IF
     !
-
-
-
     !
     !
     ALLOCATE (obj%integerVector(obj%size))
@@ -10824,29 +11703,27 @@ MODULE qes_read_module
     INTEGER :: i, length
     !
     obj%tagname = getTagName(xml_node)
-    !
-    IF (hasAttribute(xml_node, "rank"))  THEN
-        CALL extractDataAttribute(xml_node, "rank", obj%rank)
+    ! 
+    IF (hasAttribute(xml_node, "rank")) THEN 
+       CALL extractDataAttribute(xml_node, "rank", obj%rank) 
     ELSE
-        CALL errore ("qes_read: matrixType",&
-                      "required attribute rank not found, can't read further, stopping", 10 )
-    END IF
+       CALL errore ("qes_read: matrixType",&
+                    "required attribute rank not found, can't read further, stopping", 10) 
+    END IF 
     ALLOCATE (obj%dims(obj%rank))
-    IF (hasAttribute(xml_node, "dims")) THEN
-        CALL extractDataAttribute(xml_node, "dims", obj%dims)
-    ELSE
-        CALL errore ("qes_read: matrixType",&
+    IF (hasAttribute(xml_node, "dims")) THEN 
+      CALL extractDataAttribute(xml_node, "dims", obj%dims) 
+    ELSE 
+      CALL errore ("qes_read: matrixType",&
                       "required attribute dims not found, can't read further, stopping", 10 )
-    END IF
-    IF (hasAttribute(xml_node,"order")) THEN
-        CALL extractDataAttribute(xml_node, "order", obj%order)
+    END IF 
+    IF (hasAttribute(xml_node, "order")) THEN
+      CALL extractDataAttribute(xml_node, "order", obj%order)
+      obj%order_ispresent = .TRUE.
     ELSE
-        obj%order = "F"
+      obj%order_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     length = 1
@@ -10875,29 +11752,27 @@ MODULE qes_read_module
     INTEGER :: i, length
     !
     obj%tagname = getTagName(xml_node)
-    !
-    IF (hasAttribute(xml_node, "rank"))  THEN
-        CALL extractDataAttribute(xml_node, "rank", obj%rank)
+    ! 
+    IF (hasAttribute(xml_node, "rank")) THEN 
+       CALL extractDataAttribute(xml_node, "rank", obj%rank) 
     ELSE
-        CALL errore ("qes_read: integerMatrixType",&
-                      "required attribute rank not found, can't read further, stopping", 10 )
-    END IF
+       CALL errore ("qes_read: integerMatrixType",&
+                    "required attribute rank not found, can't read further, stopping", 10) 
+    END IF 
     ALLOCATE (obj%dims(obj%rank))
-    IF (hasAttribute(xml_node, "dims")) THEN
-        CALL extractDataAttribute(xml_node, "dims", obj%dims)
-    ELSE
-        CALL errore ("qes_read: integerMatrixType",&
+    IF (hasAttribute(xml_node, "dims")) THEN 
+      CALL extractDataAttribute(xml_node, "dims", obj%dims) 
+    ELSE 
+      CALL errore ("qes_read: integerMatrixType",&
                       "required attribute dims not found, can't read further, stopping", 10 )
-    END IF
-    IF (hasAttribute(xml_node,"order")) THEN
-        CALL extractDataAttribute(xml_node, "order", obj%order)
+    END IF 
+    IF (hasAttribute(xml_node, "order")) THEN
+      CALL extractDataAttribute(xml_node, "order", obj%order)
+      obj%order_ispresent = .TRUE.
     ELSE
-        obj%order = "F"
+      obj%order_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     length = 1
@@ -10925,24 +11800,14 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
-    !
-
+    ! 
     IF (hasAttribute(xml_node, "Units")) THEN
       CALL extractDataAttribute(xml_node, "Units", obj%Units)
+      obj%Units_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN
-         CALL infomsg ( "qes_read: scalarQuantityType",&
-                        "required attribute Units not found" )
-         ierr = ierr + 1
-      ELSE
-         CALL errore ("qes_read: scalarQuantityType",&
-                      "required attribute Units not found", 10 )
-      END IF
+      obj%Units_ispresent = .FALSE.
     END IF
     !
-
-
-
     !
     !
     CALL extractDataContent(xml_node, obj%scalarQuantity )

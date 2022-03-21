@@ -5,10 +5,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! Author: Mitsuaki Kawamura, U. Tokyo
 !----------------------------------------------------------------------------
 MODULE elph_tetra_mod
   !--------------------------------------------------------------------------
+  !! Module for electron-phonon - tetrahedra method.
+  !
+  !! Author: Mitsuaki Kawamura, U. Tokyo
   !
   IMPLICIT NONE
   !
@@ -28,10 +30,9 @@ MODULE elph_tetra_mod
 !----------------------------------------------------------------------------
 SUBROUTINE elph_tetra_lambda()
   !--------------------------------------------------------------------------
-  !
-  ! This routine computes the electron-phonon matrix
-  ! in the irreducible Brillouin zone and
-  ! expand that to whole BZ.
+  !! This routine computes the electron-phonon matrix
+  !! in the irreducible Brillouin zone and
+  !! expand that to whole BZ.
   !
   USE ener, ONLY : ef
   USE constants, ONLY : pi, ry_to_cmm1, ry_to_ghz, rytoev
@@ -270,8 +271,7 @@ END SUBROUTINE elph_tetra_lambda
 !-----------------------------------------------------------------------
 SUBROUTINE elph_tetra_delta1(nbnd_fs,iq,tfst,tlst,et_col,wght)
   !---------------------------------------------------------------------
-  !
-  ! This routine computed the weight for the double-delta function.
+  !! This routine computes the weight for the double-delta function.
   !
   USE kinds, ONLY : dp
   USE mp, ONLY : mp_sum
@@ -437,8 +437,7 @@ END SUBROUTINE elph_tetra_delta1
 !-------------------------------------------------------------------------------
 SUBROUTINE elph_tetra_delta2(nbnd_fs,ej0,w)
   !-----------------------------------------------------------------------------
-  !
-  ! 2nd step of tetrahedra method.
+  !! Second step of tetrahedra method.
   !
   USE kinds, ONLY : dp
   !
@@ -491,10 +490,9 @@ END SUBROUTINE elph_tetra_delta2
 !----------------------------------------------------------------------------
 SUBROUTINE elph_tetra_gamma()
   !--------------------------------------------------------------------------
-  !
-  ! This routine computes the electron-phonon matrix
-  ! in the irreducible Brillouin zone and
-  ! expand that to whole BZ.
+  !! This routine computes the electron-phonon matrix
+  !! in the irreducible Brillouin zone and
+  !! expands that to whole BZ.
   !
   USE ener, ONLY : ef
   USE constants, ONLY : pi, ry_to_cmm1, ry_to_ghz, rytoev, amu_ry
@@ -738,8 +736,7 @@ END SUBROUTINE elph_tetra_gamma
 !-----------------------------------------------------------------------
 SUBROUTINE elph_tetra_step1(nbnd_fs,iq,tfst,tlst,et_col,wght)
   !---------------------------------------------------------------------
-  !
-  ! This routine computed the weight for the double-delta function.
+  !! This routine computes the weight for the double-delta function.
   !
   USE kinds, ONLY : dp
   USE mp, ONLY : mp_sum
@@ -1014,8 +1011,7 @@ END SUBROUTINE elph_tetra_step1
 !------------------------------------------------------------------------------------------------
 SUBROUTINE elph_tetra_step2(nbnd_fs,ei0,ej0,w)
   !------------------------------------------------------------------------------------------------
-  !
-  ! This routine compute the second step function in the gamma
+  !! This routine computes the second step function in the gamma.
   !
   USE kinds, ONLY : dp
   USE ions_base, ONLY : nat
@@ -1263,8 +1259,7 @@ END SUBROUTINE elph_tetra_delta3
 !--------------------------------------------------------------------------
 SUBROUTINE elph_tetra_average_weight(nmode,nbnd_fs,wght)
   !--------------------------------------------------------------------------
-  !
-  ! Average weights of degenerated states
+  !! Average weights of degenerated states.
   !
   USE kinds, ONLY : dp
   USE wvfct, ONLY : et

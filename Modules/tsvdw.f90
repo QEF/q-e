@@ -19,7 +19,8 @@ USE cell_base,          ONLY: ainv               !h^-1 matrix for converting bet
 USE cell_base,          ONLY: omega              !cell volume (in au^3)
 USE constants,          ONLY: pi                 !pi in double-precision
 USE fft_base,           ONLY: dfftp              !FFT derived data type 
-USE xc_lib,             ONLY: xclib_get_id
+USE xc_lib,             ONLY: xclib_get_id, &
+                              xclib_dft_is_libxc
 
 !correction to correlation utilized in functional
 USE io_global,          ONLY: stdout             !print/write argument for standard output (to output file)
@@ -202,6 +203,10 @@ PRIVATE :: GetVdWParam
   igcx  = xclib_get_id('GGA','EXCH')
   igcc  = xclib_get_id('GGA','CORR')
   !
+  IF ( xclib_dft_is_libxc('LDA','EXCH') .OR. xclib_dft_is_libxc('LDA','CORR') .OR.&
+       xclib_dft_is_libxc('GGA','EXCH') .OR. xclib_dft_is_libxc('GGA','CORR') )   &
+       CALL errore( 'tsvdw','TS-vdW sR parameter not available for libxc functionals', 1 )
+  !
   IF( iexch==1 .AND. icorr==4 .AND. igcx==3 .AND. igcc==4) THEN
     !
     sR=0.94_DP !PBE=sla+pw+pbx+pbc
@@ -212,7 +217,7 @@ PRIVATE :: GetVdWParam
     !
   ELSE 
     !
-    CALL errore('tsvdw','TS-vdW sR parameter only available for PBE and PBE0 functionals...',1)
+    CALL errore( 'tsvdw','TS-vdW sR parameter only available for PBE and PBE0 functionals...', 2 )
     !
   END IF
   !

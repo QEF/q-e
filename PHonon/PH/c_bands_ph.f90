@@ -13,9 +13,8 @@
 !
 SUBROUTINE c_bands_nscf_ph( )
   !----------------------------------------------------------------------------
-  !
-  ! ... Driver routine for Hamiltonian diagonalization routines
-  ! ... specialized to non-self-consistent calculations (no electric field)
+  !! Driver routine for Hamiltonian diagonalization routines
+  !! specialized to non-self-consistent calculations (no electric field).
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
@@ -28,22 +27,22 @@ SUBROUTINE c_bands_nscf_ph( )
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_lr,           ONLY : lgamma
   USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity
-  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
+  USE ldaU,                 ONLY : lda_plus_u, Hubbard_projectors, wfcU
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions,        ONLY : evc
   USE mp_pools,             ONLY : npool, kunit, inter_pool_comm
   USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now
-  USE noncollin_module,     ONLY : noncolin, npol
-  USE spin_orb,             ONLY : domag
+  USE noncollin_module,     ONLY : noncolin, npol, domag
   USE save_ph,              ONLY : tmp_dir_save
   USE io_files,             ONLY : tmp_dir, prefix
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !
   REAL(DP) :: avg_iter, ethr_
   ! average number of H*psi products
-  INTEGER :: ik_, ik, nkdum, ios, iuawfc, lrawfc
+  INTEGER :: ik_, ik, nkdum, ios
   ! ik_: k-point already done in a previous run
   ! ik : counter on k points
   LOGICAL :: exst, exst_mem
@@ -71,15 +70,6 @@ SUBROUTINE c_bands_nscf_ph( )
   ELSE
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
   END IF
-  IF (tmp_dir /= tmp_dir_save) THEN
-     iuawfc = 20
-     lrawfc = nbnd * npwx * npol
-     CALL open_buffer (iuawfc, 'wfc', lrawfc, io_level, exst_mem, exst, &
-                                                         tmp_dir_save)
-     IF (.NOT.exst.AND..NOT.exst_mem) THEN
-        CALL errore ('c_bands_ph', 'file '//trim(prefix)//'.wfc not found', 1)
-     END IF
-  ENDIF
   !
   ! ... For each k point (except those already calculated if restarting)
   ! ... diagonalizes the hamiltonian
@@ -98,7 +88,7 @@ SUBROUTINE c_bands_nscf_ph( )
      !
      ! ... Needed for LDA+U
      !
-     IF ( nks > 1 .AND. lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
+     IF ( nks > 1 .AND. lda_plus_u .AND. (Hubbard_projectors .NE. 'pseudo') ) &
           CALL get_buffer ( wfcU, nwordwfcU, iunhub, ik )
      !
      ! ... calculate starting  wavefunctions
@@ -165,7 +155,6 @@ SUBROUTINE c_bands_nscf_ph( )
   !
   WRITE( stdout, '(/,5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1)' ) &
        ethr, avg_iter
-  IF (tmp_dir /= tmp_dir_save) CALL close_buffer(iuawfc,'keep')
   !
   CALL stop_clock( 'c_bands' )
   !

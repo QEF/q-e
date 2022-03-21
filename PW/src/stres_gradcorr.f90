@@ -12,8 +12,8 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
   !----------------------------------------------------------------------------
   !
   USE kinds,            ONLY: DP
-  USE xc_lib,           ONLY: xclib_dft_is, xclib_get_id, xc_gcx
-  USE spin_orb,         ONLY: domag
+  USE xc_lib,           ONLY: xclib_dft_is, xclib_get_id, xc_gcx, xc_metagcx
+  USE noncollin_module, ONLY: domag
   USE mp_bands,         ONLY: intra_bgrp_comm
   USE mp,               ONLY: mp_sum
   USE fft_types,        ONLY: fft_type_descriptor
@@ -38,7 +38,7 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
   COMPLEX(DP), ALLOCATABLE :: rhogaux(:,:)
   !
   REAL(DP), ALLOCATABLE :: sx(:), sc(:)
-  REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:), v3x(:,:), rhos(:)
+  REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:), v3x(:,:)
   REAL(DP), ALLOCATABLE :: v1c(:,:), v2c(:,:,:), v3c(:,:), v2c_ud(:)
   !
   REAL(DP), PARAMETER :: epsr = 1.0d-6, epsg = 1.0d-10, e2 = 2.d0

@@ -2,29 +2,28 @@
 
 include ../../make.inc
 
-MODFLAGS= $(MOD_FLAG).. $(MOD_FLAG).
+MODFLAGS = $(MOD_FLAG)../src $(MOD_FLAG).
 
 SRCS = test_fft_scalar_gpu.f90 \
-				test_fft_scatter_mod_gpu.f90 \
-				test_fwinv_gpu.f90
+       test_fft_scatter_mod_gpu.f90 \
+       test_fwinv_gpu.f90
 
 EXECS = $(SRCS:.f90=.x)
 
 all: common $(EXECS)
 
-common: tester.o utils.o
+common: sort.o tester.o utils.o recips.o
 
 %.x: %.o
-	$(LD) $(LDFLAGS) $< utils.o tester.o -o $@ ../libqefft.a $(QELIBS)
+	$(LD) $(LDFLAGS) -Mcudalib=cufft $< utils.o tester.o sort.o recips.o -o $@ ../src/libqefft.a $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(LD_LIBS)
 
-clean :
-	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x
+test : fft_test.o ../src/libqefft.a
+	$(LD) $(LDFLAGS) -o fft_test.x fft_test.o ../src/libqefft.a $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(LD_LIBS)
 
-# .PHONY forces execution of a rule irrespective of the presence of an
-# updated file with the same name of the rule. In this way, the script 
-# that generates version.f90 always runs, updating the version if you 
-# execute "svn update". The update_version script takes care of not
-# changing the file if the svn version did not change
+TEST : test # compatibility
+
+clean:
+	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x rnd_seed*
 
 .PHONY: all clean
 

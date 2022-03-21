@@ -18,7 +18,8 @@ SUBROUTINE hp_read_dnsq()
   USE io_files,      ONLY : prefix, tmp_dir
   USE lsda_mod,      ONLY : nspin
   USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, is_hubbard
-  USE ldaU_hp,       ONLY : nah_pert, dns0, dnsscf, nqs, tmp_dir_hp
+  USE ldaU_lr,       ONLY : dnsscf
+  USE ldaU_hp,       ONLY : nah_pert, dns0, nqs, tmp_dir_hp
   !
   IMPLICIT NONE
   !

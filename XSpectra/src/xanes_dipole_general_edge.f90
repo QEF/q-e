@@ -44,11 +44,14 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
   USE coef_CG
   USE atom,            ONLY : rgrid, msh
   USE radin_mod
-  USE uspp,   ONLY : vkb, nkb, okvan !CG
-  USE ldaU,   ONLY : lda_plus_u, lda_plus_u_kind
+  USE basis,           ONLY : natomwfc, wfcatom, swfcatom
+  USE uspp,            ONLY : vkb, nkb, okvan !CG
+  USE ldaU,            ONLY : lda_plus_u, lda_plus_u_kind
+  USE noncollin_module, ONLY : npol
   !<CG>
   USE xspectra_paw_variables, ONLY : xspectra_paw_nhm
   !</CG>
+  USE uspp_init,        ONLY : init_us_2
 
   IMPLICIT NONE
   REAL(dp) core_wfn(ndmx)
@@ -304,13 +307,15 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
         !<CG>        
         CALL init_gipaw_2(npw,igk_k(1,ik),xk(1,ik),paw_vkb)
         !</CG>
-        
+       
+        CALL init_us_2(npw,igk_k(1,ik),xk(1,ik),vkb)
+
         IF (lda_plus_u) THEN
-           CALL orthoUwfc_k(ik)
+           ALLOCATE (wfcatom(npwx*npol,natomwfc), swfcatom(npwx*npol,natomwfc))
+           CALL orthoUwfc_k (ik, .FALSE.)
+           DEALLOCATE (wfcatom,swfcatom)
            ! Compute the phase factor for each k point in the case of DFT+U+V
            IF (lda_plus_u_kind.EQ.2) CALL phase_factor(ik)
-        ELSE
-           CALL init_us_2(npw,igk_k(1,ik),xk(1,ik),vkb)
         ENDIF 
         
         ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$

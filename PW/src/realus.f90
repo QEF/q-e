@@ -1584,7 +1584,7 @@ MODULE realus
     if (.not.allocated ( xkphase ) ) call errore ('set_xkphase',' array not allocated yes',1)
     if (ik .eq. current_phase_kpoint ) return
     !
-    !$omp parallel do
+    !$omp parallel do private(arg)
     do box_ir =1, boxtot
        arg = ( xk(1,ik) * xyz_beta(1,box_ir) + &
                xk(2,ik) * xyz_beta(2,box_ir) + &
@@ -1631,7 +1631,7 @@ MODULE realus
     USE fft_base,              ONLY : dffts
     USE mp_bands,              ONLY : intra_bgrp_comm
     USE mp,                    ONLY : mp_sum
-    USE uspp,                  ONLY : indv_ijkb0
+    USE uspp,                  ONLY : ofsbeta
     !
     IMPLICIT NONE
     !
@@ -1680,7 +1680,7 @@ MODULE realus
              !
              mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
              !
-             ijkb0 = indv_ijkb0(ia)
+             ijkb0 = ofsbeta(ia)
              !$omp parallel default(shared) private(ih,ikb,ir,bcr,bci)
              !$omp do 
              DO ir =1, mbia
@@ -1749,7 +1749,7 @@ MODULE realus
     USE fft_base,              ONLY : dffts
     USE mp_bands,              ONLY : intra_bgrp_comm
     USE mp,                    ONLY : mp_sum
-    USE uspp,                  ONLY : indv_ijkb0
+    USE uspp,                  ONLY : ofsbeta
     USE becmod_gpum,           ONLY : using_becp_k
     !
     IMPLICIT NONE
@@ -1796,7 +1796,7 @@ MODULE realus
              !
              mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
              !
-             ijkb0 = indv_ijkb0(ia)
+             ijkb0 = ofsbeta(ia)
              !
              !$omp parallel default(shared) private(ih,ikb,ir,bcr,bci)
              !$omp do
@@ -1847,7 +1847,7 @@ MODULE realus
       USE cell_base,              ONLY : omega
       USE ions_base,              ONLY : nat, nsp, ityp
       USE uspp_param,             ONLY : nh, nhm
-      USE uspp,                   ONLY : qq_at, indv_ijkb0
+      USE uspp,                   ONLY : qq_at, ofsbeta
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : dffts
       USE becmod_gpum,            ONLY : using_becp_r
@@ -1881,7 +1881,7 @@ MODULE realus
                mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
                !print *, "mbia=",mbia
                !
-               ijkb0 = indv_ijkb0(ia)
+               ijkb0 = ofsbeta(ia)
                !
                !$omp parallel
                !$omp do
@@ -1927,7 +1927,7 @@ MODULE realus
       USE cell_base,              ONLY : omega
       USE ions_base,              ONLY : nat, nsp, ityp
       USE uspp_param,             ONLY : nh, nhm
-      USE uspp,                   ONLY : qq_at, indv_ijkb0
+      USE uspp,                   ONLY : qq_at, ofsbeta
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : dffts
       USE becmod_gpum,            ONLY : using_becp_k
@@ -1964,7 +1964,7 @@ MODULE realus
                mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
                !print *, "mbia=",mbia
                !
-               ijkb0 = indv_ijkb0(ia)
+               ijkb0 = ofsbeta(ia)
                !
                !$omp parallel
                !$omp do
@@ -2013,7 +2013,7 @@ MODULE realus
   USE ions_base,              ONLY : nat, nsp, ityp
   USE uspp_param,             ONLY : nh, nhm
   USE lsda_mod,               ONLY : current_spin
-  USE uspp,                   ONLY : deeq, indv_ijkb0
+  USE uspp,                   ONLY : deeq, ofsbeta
   USE becmod,                 ONLY : bec_type, becp
   USE fft_base,               ONLY : dffts
   USE becmod_gpum,            ONLY : using_becp_r
@@ -2045,7 +2045,7 @@ MODULE realus
            !
            mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
            !
-           ijkb0 = indv_ijkb0(ia)
+           ijkb0 = ofsbeta(ia)
            !
            !$omp parallel
            !$omp do
@@ -2096,7 +2096,7 @@ MODULE realus
   USE ions_base,              ONLY : nat, nsp, ityp
   USE uspp_param,             ONLY : nh, nhm
   USE lsda_mod,               ONLY : current_spin
-  USE uspp,                   ONLY : deeq, indv_ijkb0
+  USE uspp,                   ONLY : deeq, ofsbeta
   USE becmod,                 ONLY : bec_type, becp
   USE fft_base,               ONLY : dffts
   USE becmod_gpum,            ONLY : using_becp_k
@@ -2129,7 +2129,7 @@ MODULE realus
            !
            mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
 
-           ijkb0 = indv_ijkb0(ia)
+           ijkb0 = ofsbeta(ia)
 
            !$omp parallel
            !$omp do
@@ -2396,7 +2396,7 @@ MODULE realus
            ! two ffts at the same time
 
            IF( add_to_orbital_ ) THEN
-              !$omp parallel do 
+              !$omp parallel do private(fp, fm)
               DO j = 1, ngk(1)
                  fp = (psic (dffts%nl(igk_k(j,1))) + psic (dffts%nlm(igk_k(j,1))))*0.5d0
                  fm = (psic (dffts%nl(igk_k(j,1))) - psic (dffts%nlm(igk_k(j,1))))*0.5d0
@@ -2405,7 +2405,7 @@ MODULE realus
               ENDDO
               !$omp end parallel do
            ELSE
-              !$omp parallel do
+              !$omp parallel do private(fp, fm)
               DO j = 1, ngk(1)
                  fp = (psic (dffts%nl(igk_k(j,1))) + psic (dffts%nlm(igk_k(j,1))))*0.5d0
                  fm = (psic (dffts%nl(igk_k(j,1))) - psic (dffts%nlm(igk_k(j,1))))*0.5d0

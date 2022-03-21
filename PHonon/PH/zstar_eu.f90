@@ -8,11 +8,9 @@
 !-----------------------------------------------------------------------
 subroutine zstar_eu
   !-----------------------------------------------------------------------
-  !
-  ! Calculate the effective charges Z(E,Us) (E=scf,Us=bare)
-  !
-  ! epsil =.true. is needed for this calculation to be meaningful
-  !
+  !! Calculate the effective charges Z(E,Us) (E=scf,Us=bare).  
+  !! NOTE: \(\text{epsil}=\text{TRUE}\) is needed for this calculation to
+  !! be meaningful.
   !
   USE kinds,            ONLY : DP
   USE cell_base,        ONLY : bg
@@ -28,8 +26,7 @@ subroutine zstar_eu
   USE qpoint,           ONLY : npwq, nksq, ikks
   USE eqv,              ONLY : dvpsi, dpsi
   USE efield_mod,       ONLY : zstareu0, zstareu
-  USE units_ph,         ONLY : iudwf, lrdwf
-  USE units_lr,         ONLY : iuwfc, lrwfc
+  USE units_lr,         ONLY : iuwfc, lrwfc, iudwf, lrdwf
   USE control_lr,       ONLY : nbnd_occ
   USE control_ph,       ONLY : done_zeu
   USE ph_restart,       ONLY : ph_writefile
@@ -39,6 +36,7 @@ subroutine zstar_eu
   USE ldaU,             ONLY : lda_plus_u
   USE lrus,             ONLY : becp1
   USE phus,             ONLY : alphap
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
 

@@ -76,8 +76,6 @@ MODULE london_module
       USE mp,                  ONLY : mp_bcast
       USE mp_images,           ONLY : intra_image_comm
       !
-      IMPLICIT NONE
-      !
       INTEGER, PARAMETER :: maxZ = 86
       REAL (DP) :: vdw_coeffs(2,maxZ)
       !
@@ -195,7 +193,7 @@ MODULE london_module
          !
          ! and some buffers on ionode
          !
-         ALLOCATE ( R_vdw ( ntyp )   )
+         IF (.NOT. ALLOCATED( R_vdw) ) ALLOCATE ( R_vdw ( ntyp )   )
          !
          ! here we initialize parameters to unphysical values
          !
@@ -254,21 +252,6 @@ MODULE london_module
            !
          END DO
          !
-         WRITE ( stdout ,'( /, 5X, "-------------------------------------------------" , &
-                          & /, 5X, "Parameters for Dispersion (Grimme-D2) Correction:" , &
-                          & /, 5X, "-------------------------------------------------" , &
-                          & /, 5X, "  atom      VdW radius       C_6     " , / )' )
-         DO ata = 1 , ntyp
-            !
-            WRITE (stdout , '( 8X, A3 , 6X , F7.3 , 6X , F9.3 )' ) &
-                               atom_label ( ata ) , R_vdw ( ata ) , C6_i ( ata )
-            !
-         END DO
-         !
-         ! ... atomic parameters are deallocated
-         !
-         DEALLOCATE ( R_vdw )
-         !
          ! ... cutoff radius in alat units
          !
          r_cut = lon_rcut / alat
@@ -292,6 +275,27 @@ MODULE london_module
       !
    END SUBROUTINE init_london
    !
+   SUBROUTINE print_london
+      !
+      USE io_global,           ONLY : ionode, stdout
+      USE ions_base ,          ONLY : ntyp => nsp, atom_label => atm
+      INTEGER :: ata
+      !
+      IF ( ionode ) THEN
+         WRITE ( stdout ,'( /, 5X, "-------------------------------------------------" , &
+                          & /, 5X, "Parameters for Dispersion (Grimme-D2) Correction:" , &
+                          & /, 5X, "-------------------------------------------------" , &
+                          & /, 5X, "  atom      VdW radius       C_6     " , / )' )
+         DO ata = 1 , ntyp
+            !
+            WRITE (stdout , '( 8X, A3 , 6X , F7.3 , 6X , F9.3 )' ) &
+                               atom_label ( ata ) , R_vdw ( ata ) , C6_i ( ata )
+            !
+         END DO
+      END IF
+      !
+   END SUBROUTINE print_london
+   !
    !---------------------------------------------------------------------------
    ! Compute dispersion energy
    !---------------------------------------------------------------------------
@@ -306,8 +310,6 @@ MODULE london_module
     !
     USE mp_images,    ONLY : me_image , nproc_image, intra_image_comm
     USE mp,           ONLY : mp_sum
-    !
-    IMPLICIT NONE
     !
     INTEGER , INTENT ( IN ) :: nat
     !! number of atoms
@@ -340,6 +342,7 @@ MODULE london_module
     ! dist6         : distance**6
     !
     !
+    CALL start_clock('energy_london')
     energy_london = 0.d0
     !
     ! poor-man parallelization over atoms
@@ -395,6 +398,7 @@ MODULE london_module
     !
     CALL mp_sum ( energy_london , intra_image_comm )
     !
+    CALL stop_clock('energy_london')
     RETURN
     !
    END FUNCTION energy_london
@@ -407,8 +411,6 @@ MODULE london_module
     !
     USE mp_images,    ONLY : me_image , nproc_image , intra_image_comm
     USE mp,           ONLY : mp_sum
-    !
-    IMPLICIT NONE
     !
     INTEGER , INTENT ( IN ) :: nat
     !! number of atoms
@@ -444,6 +446,7 @@ MODULE london_module
     ! dist7        :  dist**7
     ! ...  and some buffers
     !
+    CALL start_clock('force_london')
     !
     ! parallelization: divide atoms across processors of this image
     ! (different images have different atomic positions)
@@ -512,6 +515,7 @@ MODULE london_module
     !
     CALL mp_sum ( force_london , intra_image_comm )
     !
+    CALL stop_clock('force_london')
     RETURN
     !
    END FUNCTION force_london
@@ -525,8 +529,6 @@ MODULE london_module
     !
     USE mp_images,    ONLY : me_image , nproc_image , intra_image_comm
     USE mp,           ONLY : mp_sum
-    !
-    IMPLICIT NONE
     !
     INTEGER , INTENT ( IN ) :: nat
     !! number of atoms
@@ -564,6 +566,7 @@ MODULE london_module
     ! dist7        : dist**7
     !       and some buffers
     !
+    CALL start_clock('stres_london')
     !
     ! parallelization: divide atoms across processors of this image
     ! (different images have different atomic positions)
@@ -641,6 +644,7 @@ MODULE london_module
     !
     CALL mp_sum ( stres_london , intra_image_comm )
     !
+    CALL stop_clock('stres_london')
     RETURN
     !
    END FUNCTION stres_london
@@ -650,8 +654,6 @@ MODULE london_module
    SUBROUTINE dealloca_london
    !
    !! Clean memory.
-   !
-   IMPLICIT NONE
    !
    IF ( ALLOCATED ( R_vdw ) ) DEALLOCATE ( R_vdw )
    IF ( ALLOCATED ( C6_ij ) ) DEALLOCATE ( C6_ij )

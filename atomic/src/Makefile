@@ -107,16 +107,15 @@ atomic_paw.o \
 ld1inc.o \
 parameters.o
 
-QEMODS=../../Modules/libqemod.a ../../upflib/libupf.a \
-       ../../FFTXlib/libqefft.a ../../UtilXlib/libutil.a  ../../XClib/xc_lib.a
+QEMODS=$(BASEMODS)
 
-TLDEPS= bindir libs mods
+TLDEPS= bindir mods
 
 all: tldeps ld1.x
 
-ld1.x: $(LD1OBJS) ld1.o $(LD1MODS) $(QEMODS) $(LIBOBJS)
+ld1.x: $(LD1OBJS) ld1.o $(LD1MODS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o ld1.x \
-		ld1.o $(LD1OBJS) $(LD1MODS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+		ld1.o $(LD1OBJS) $(LD1MODS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../atomic/src/ld1.x . )
 
 tldeps :

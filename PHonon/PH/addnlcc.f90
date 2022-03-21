@@ -7,8 +7,8 @@
 !
 subroutine addnlcc (imode0, drhoscf, npe)
   !
-  !     This routine adds a contribution to the dynamical matrix due
-  !     to the NLCC
+  !! This routine adds a contribution to the dynamical matrix due
+  !! to the NLCC.
   !
 
   USE kinds, only : DP
@@ -33,12 +33,12 @@ subroutine addnlcc (imode0, drhoscf, npe)
 
   implicit none
 
-  integer :: imode0, npe
-  ! input: the starting mode
-  ! input: the number of perturbations
-  ! input: the change of density due to perturbation
-
+  integer :: imode0
+  !! input: the starting mode
+  integer :: npe
+  !! input: the number of perturbations
   complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe)
+  !! input: the change of density due to perturbation
 
   integer :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1
   ! the total number of points
@@ -77,12 +77,12 @@ subroutine addnlcc (imode0, drhoscf, npe)
 !
   do ipert = 1, npe
      mode = imode0 + ipert
-     dvaux (:,:) = (0.d0, 0.d0)
      call addcore (mode, drhoc)
      do is = 1, nspin_lsda
         call daxpy (2 * dfftp%nnr, fac, drhoc, 1, drhoscf (1, is, ipert), 1)
-     enddo
+     end do
      do is = 1, nspin_lsda
+        dvaux (:,is) = (0.d0, 0.d0)
         do is1 = 1, nspin_mag
            do ir = 1, dfftp%nnr
               dvaux (ir, is) = dvaux (ir, is) + dmuxc (ir, is, is1) * &

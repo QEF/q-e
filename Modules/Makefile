@@ -3,8 +3,7 @@
 include ../make.inc
 
 # location of needed modules
-MODFLAGS=$(BASEMOD_FLAGS) \
-         $(MOD_FLAG)../ELPA/src
+MODFLAGS=$(BASEMOD_FLAGS)
 
 # list of modules
 
@@ -80,7 +79,6 @@ version.o \
 wannier_gw.o\
 wannier_new.o \
 wavefunctions.o \
-wrappers.o\
 ws_base.o \
 xc_vdW_DF.o \
 xc_rVV10.o \
@@ -91,7 +89,6 @@ qes_write_module.o \
 qes_read_module.o \
 qes_reset_module.o \
 qes_init_module.o \
-qes_read_module.o \
 qes_bcast_module.o \
 qexsd.o   \
 qexsd_copy.o   \
@@ -103,9 +100,10 @@ fox_init_module.o \
 xsf.o \
 wyckoff.o \
 wypos.o \
-zvscal.o 
+zvscal.o \
+wave_gauge.o
 
-# list of subroutines and functions (not modules) previously found in flib/
+# list of subroutines and functions (not modules) previously found in flib/clib
 
 OBJS = \
 atom_weight.o \
@@ -124,31 +122,27 @@ radial_gradients.o \
 rgen.o \
 recips.o \
 remove_tot_torque.o \
-set_hubbard_l.o \
-set_hubbard_n.o \
 sort.o \
-sph_bes.o \
-sph_dbes.o \
 trimcheck.o \
 test_input_file.o \
 date_and_tim.o \
 volume.o \
-dylmr2.o \
 wgauss.o \
 w0gauss.o \
 w1gauss.o \
-deviatoric.o
+deviatoric.o \
+customize_signals.o \
+qmmm_aux.o \
+sockets.o \
+stack.o
 
 # GPU versions of modules
 MODULES += \
   wavefunctions_gpu.o \
-  recvec_gpu.o \
   becmod_gpu.o \
   becmod_subs_gpu.o \
   cuda_subroutines.o \
-  dylmr2_gpu.o \
-  random_numbers_gpu.o \
-  sph_bes_gpu.o
+  random_numbers_gpu.o
 
 TLDEPS= libfox libutil libla libfft librxc
 

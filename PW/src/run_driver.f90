@@ -6,10 +6,39 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE run_driver ( srvaddress, exit_status ) 
+
+SUBROUTINE run_driver ( srvaddress, exit_status )
   !!
-  !! Driver for IPI
+  !! Driver for i-PI and i-PI compatible drivers. Q-E will connect to an internet or
+  !! UNIX-domain socket, communicating positions, cell, energy and forces back and forth
+  !! from the driver. For an overview of the philosophy of the driver mode, and a
+  !! documentation of the communication protocol please see https://ipi-code.org.
   !!
+  !! If you find this interface useful for your research, you may want to acknowledge
+  !! the most-recent i-PI release
+  !!
+  !!  I-PI 2.0: A Universal Force Engine for Advanced Molecular Simulations
+  !!  V. Kapil et al, Comp. Phys. Comm. 236, 214 (2019) DOI: 10.1016/j.cpc.2018.09.020
+  !!
+  !! ** Please do not modify the logic or the communication pattern without coordinating
+  !! with the i-PI developers team. **
+  !!
+  !! The basic communication pattern involves:
+  !!
+  !! 1. handshake - q-e starts and connects through the socket to a running server that
+  !!    implements the i-PI protocol
+  !! 2. initialization - just once, or before each step, q-e can request an int that indicates
+  !!    the UID of the system being computed (e.g. when handling multiple replicas) and a string
+  !!    containing initialization parameters, in a JSON dictionary format.
+  !! 3. positions - q-e receives atomic positions and cells. the atomic types must match between
+  !!    the q-e input and the server side simulation. no check is performed
+  !! 4. getforce - q-e returns forces, stress, potential, and optionally a JSON formatted string
+  !!    containing additional properties. no convention is established for the ontology, only the
+  !!    JSON format is recommended to facilitate processing the extra data
+  !!
+  !! 2-4 are repeated in a MD-like loop, and q-e has to run any calculation between 3 and 4.
+  !!
+
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk
   USE upf_params,       ONLY : lmaxx
@@ -17,8 +46,7 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   USE mp,               ONLY : mp_bcast
   USE mp_images,        ONLY : intra_image_comm
   USE control_flags,    ONLY : gamma_only, conv_elec, istep, ethr, lscf, lmd, &
-       treinit_gvecs, lensemb
-  USE force_mod,        ONLY : lforce, lstres
+       treinit_gvecs, lensemb, lforce => tprnfor, tstress
   USE ions_base,        ONLY : tau
   USE cell_base,        ONLY : alat, at, omega, bg
   USE cellmd,           ONLY : omega_old, at_old, calc, lmovecell
@@ -34,12 +62,12 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   INTEGER, INTENT(OUT) :: exit_status
   !! Gives the exit status at the end
   CHARACTER(*), INTENT(IN) :: srvaddress
-  !! Gives the socket address 
+  !! Gives the socket address
   !
   ! Local variables
   INTEGER, PARAMETER :: MSGLEN=12
   REAL*8, PARAMETER :: gvec_omega_tol=1.0D-1
-  LOGICAL :: isinit=.false., hasdata=.false., exst, firststep, hasensemb=.false. 
+  LOGICAL :: isinit=.false., hasdata=.false., exst, firststep, hasensemb=.false.
   CHARACTER*12 :: header
   CHARACTER*1024 :: parbuffer
   CHARACTER(LEN=256) :: dirname
@@ -48,10 +76,20 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   REAL *8 :: cellh(3,3), cellih(3,3), vir(3,3), pot, mtxbuffer(9)
   REAL*8, ALLOCATABLE :: combuf(:)
   REAL*8 :: dist_ang(6), dist_ang_reset(6)
+
   !----------------------------------------------------------------------------
+  ! "compute everything" defaults, so that q-e can react to a change in supercell
+  ! and returns everything that could be useful on the driver side. this is most
+  ! consistent with the i-PI "philosophy", in which the client is a black box that
+  ! gets positions and returns energies and derivatives
   !
+  lscf      = .true.
+  lforce    = .true.
+  tstress    = .true.
+  lmd       = .true.
+  lmovecell = .true.
   firststep = .true.
-  lflags  = -1 
+  lflags  = -1
   !
   omega_reset = 0.d0
   !
@@ -78,10 +116,14 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   CALL check_stop_init()
   CALL setup()
   !
+  ! creates a socket and connects. the server must be already active
   IF ( ionode ) CALL create_socket(srvaddress)
   !
+  ! main loop
   driver_loop: DO
      !
+     ! the communication protocol is controlled by short strings that indicate
+     ! the state of the server and ensures synchronization
      IF ( ionode ) CALL readbuffer(socket, header, MSGLEN)
      CALL mp_bcast( header, ionode_id, intra_image_comm )
      !
@@ -90,7 +132,7 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
      SELECT CASE ( trim( header ) )
      CASE( "STATUS" )
         !
-        IF ( ionode ) THEN  
+        IF ( ionode ) THEN
            IF ( hasdata ) THEN
               CALL writebuffer( socket, "HAVEDATA    ", MSGLEN )
            ELSE IF ( isinit ) THEN
@@ -137,7 +179,7 @@ CONTAINS
   !
   !
   SUBROUTINE create_socket (srvaddress)
-    USE f90sockets,       ONLY : open_socket 
+    USE f90sockets,       ONLY : open_socket
     IMPLICIT NONE
     CHARACTER(*), INTENT(IN)  :: srvaddress
     CHARACTER(256) :: address
@@ -166,10 +208,16 @@ CONTAINS
   !
   !
   SUBROUTINE driver_init()
+    IMPLICIT NONE
+    CHARACTER(256) flag_id, flag_spacer
+    INTEGER flag_val, str_idx
     !
     ! ... Check if the replica id (rid) is the same as in the last run
-    !
-    IF ( ionode ) CALL readbuffer( socket, rid ) 
+    !     This is a way to handle the presence of multiple-replica simulations
+    !     that could lead to discontinuous changes. The general idea is that
+    !     same replica ID guarantees that positions have changed little from
+    !     the previous call
+    IF ( ionode ) CALL readbuffer( socket, rid )
     CALL mp_bcast( rid, ionode_id, intra_image_comm )
     !
     IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Receiving replica", rid, rid_old
@@ -181,10 +229,56 @@ CONTAINS
     END IF
     !
     rid_old = rid
-    ! 
-    CALL update_flags( )
     !
-    ! ... this is a better place for initialization or 
+    ! ... Now we can read a string that contains initialization parameters
+    !     at the moment this only sets calculation flags different from the
+    !     "compute everything" defaults.
+    ! ... Length of parameter string
+    !
+    IF ( ionode ) CALL readbuffer( socket, nat )
+    CALL mp_bcast( nat, ionode_id, intra_image_comm )
+    IF ( nat > 0 ) THEN
+        IF ( ionode) THEN
+           ! Reads initialization string
+           CALL readbuffer( socket, parbuffer, nat )
+           WRITE(*,*) " @ DRIVER MODE: Receiving parameter string", parbuffer(:nat)
+        ENDIF
+        CALL mp_bcast( parbuffer, ionode_id, intra_image_comm )
+        ! parse the string into parameters (a rudimentary and rigid JSON parser)
+        ! assuming flag_name : int, ...  format
+        str_idx=1
+        DO WHILE (SCAN(parbuffer(str_idx:), ',')>0 )
+           READ(parbuffer(str_idx:), *)  flag_id, flag_spacer, flag_val
+           str_idx = str_idx + SCAN(parbuffer(str_idx:), ',')
+           SELECT CASE (TRIM(flag_id))
+              CASE ('lstress')
+                 ! syntax in next line ensure safe int to logical conversion  
+                 tstress = merge (.false., .true., flag_val == 0)
+              CASE ('lscf')
+                 lscf = merge (.false., .true., flag_val == 0)
+              CASE ('lforce')
+                 lforce = merge (.false., .true., flag_val == 0)
+              CASE ('lmovecell')
+                 lmovecell = merge (.false., .true., flag_val == 0)
+              CASE ('lmd')
+                 lmd = merge (.false., .true., flag_val == 0)
+              CASE ('lensemb')
+                 lensemb = merge (.false., .true., flag_val == 0)
+              CASE DEFAULT
+                  WRITE(*,*) " @ DRIVER MODE: UNSUPPORTED PARAMETER FLAG:  ", TRIM(flag_id)
+           ENDSELECT
+        ENDDO
+        IF ( firststep .OR. ( hasensemb .AND. ( lforce .OR. tstress .OR. lmovecell ))) THEN
+            !
+            ! ... BEEF-vdw ensembles corrupt the wavefunction and, therefore, forces,
+            !     stresses .Right now the workaround is to run an SCF cycle at the
+            !     beginning in case  ensembles have been generated.
+            !
+            lscf = .TRUE.
+            hasensemb = .FALSE.
+        ENDIF
+    END IF
+    ! ... this is a better place for initialization or
     !     reinitialization if lflags change
     IF (firststep) CALL init_run( )
     !
@@ -206,7 +300,7 @@ CONTAINS
     !
     ! ... Recompute cell data
     !
-    IF ( lmovecell ) THEN 
+    IF ( lmovecell ) THEN
        CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
        CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
        !
@@ -244,36 +338,40 @@ CONTAINS
     ELSE
        IF (.NOT. firststep ) THEN
            CALL update_pot()
-           CALL hinit1() 
+           CALL hinit1()
        ENDIF
     END IF
     !
     ! ... Compute everything
-    !  
+    !
     IF ( lscf ) CALL electrons()
     IF ( .NOT. conv_elec ) THEN
        CALL punch( 'all' )
        CALL stop_run( conv_elec )
     ENDIF
-    IF ( lforce ) CALL forces()
-    IF ( lstres ) CALL stress(sigma)
-    IF ( lensemb .AND. .NOT. hasensemb ) THEN 
-       IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: BEEF-vdw "
-       CALL beef_energies( )
-       hasensemb = .TRUE.
+    IF ( lforce ) THEN
+        CALL forces()
+        combuf=RESHAPE(force, (/ 3 * nat /) ) * 0.5   ! force in a.u.
+    ELSE
+        combuf = 0.0
+    ENDIF
+    IF ( tstress ) THEN
+        CALL stress(sigma)
+        vir=TRANSPOSE( sigma ) * omega * 0.5          ! virial in a.u & no omega scal
+    ELSE
+        vir = 0.0
+    ENDIF
+    IF ( lensemb .AND. .NOT. hasensemb ) THEN
+        IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: BEEF-vdw "
+        CALL beef_energies( )
+        hasensemb = .TRUE.
     ENDIF
     firststep = .false.
     !
     ! ... Converts energy & forces to the format expected by i-pi
     ! ... (so go from Ry to Ha)
     !
-    IF ( lforce ) THEN
-       combuf=RESHAPE(force, (/ 3 * nat /) ) * 0.5   ! force in a.u.
-    ENDIF
     pot=etot * 0.5                                ! potential in a.u.
-    IF ( lstres ) THEN
-       vir=TRANSPOSE( sigma ) * omega * 0.5          ! virial in a.u & no omega scal.
-    ENDIF
     !
     ! ... Updates history
     !
@@ -284,22 +382,21 @@ CONTAINS
   !
   !
   SUBROUTINE driver_getforce()
+    IMPLICIT NONE
+    CHARACTER(LEN=64) :: tmpstr
+    CHARACTER(LEN=32768) :: retbuffer
+
+    INTEGER i
     !
     ! ... communicates energy info back to i-pi
     !
     !
-    IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Returning v,forces,stress,ensemble "
-    IF ( ionode ) CALL writebuffer( socket, "FORCEREADY  ", MSGLEN)         
-    !
+    IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Returning v,forces,stress "
+    IF ( ionode ) CALL writebuffer( socket, "FORCEREADY  ", MSGLEN)
     IF ( ionode ) CALL writebuffer( socket, pot)
     IF ( ionode ) CALL writebuffer( socket, nat)
-    IF ( ionode .AND. lforce ) CALL writebuffer( socket, combuf, 3 * nat)
-    IF ( ionode .AND. lstres ) CALL writebuffer( socket, RESHAPE( vir, (/9/) ), 9)
-    IF ( lensemb .AND. ionode ) THEN
-       WRITE(*,*) " @ DRIVE MODE: Returning Ensemble Energies  "
-       CALL writebuffer( socket, energies, 2000)
-       CALL writebuffer( socket, beefxc, 32)
-    ENDIF
+    IF ( ionode ) CALL writebuffer( socket, combuf, 3 * nat)
+    IF ( ionode ) CALL writebuffer( socket, RESHAPE( vir, (/9/) ), 9)
     !
     ! ... Note: i-pi can also receive an arbitrary string, that will be printed
     ! ... out to the "extra" trajectory file. This is useful if you want to
@@ -307,8 +404,34 @@ CONTAINS
     ! ... etc. one must return the number of characters, then the string. Here
     ! .... we just send back zero characters.
     !
-    nat = 0
-    IF ( ionode ) CALL writebuffer( socket, nat )
+
+    IF ( lensemb) THEN
+       WRITE(*,*) " @ DRIVE MODE: Returning Ensemble Energies  "
+       !CALL writebuffer( socket, energies, 2000)
+       !CALL writebuffer( socket, beefxc, 32)
+       retbuffer = '{ "beefxc" : [ '
+       DO i=1,32
+           write(tmpstr, '(f15.8)')  beefxc(i)
+           retbuffer = TRIM(retbuffer) // TRIM(tmpstr) // ","
+       ENDDO
+
+       ! removes final comma in the array
+       retbuffer = retbuffer(1:LEN_TRIM(retbuffer)-1) // ' ],  "energies" : [ '
+       DO i=1,2000
+           write(tmpstr, '(f15.8)')  energies(i)
+           retbuffer = TRIM(retbuffer) // TRIM(tmpstr) // ","
+       ENDDO
+
+       retbuffer = retbuffer(1:LEN_TRIM(retbuffer)-1) // '] }'
+       nat = LEN_TRIM(retbuffer)
+       IF ( ionode ) THEN
+           CALL writebuffer( socket, nat )
+           CALL writebuffer( socket, retbuffer, nat)
+       ENDIF
+    ELSE
+       nat = 0
+       IF ( ionode ) CALL writebuffer( socket, nat )
+    ENDIF
     !
     CALL punch( 'config' )
     !
@@ -318,18 +441,14 @@ CONTAINS
   SUBROUTINE read_and_share()
     ! ... First reads cell and the number of atoms
     !
-    IF ( lmovecell .OR. firststep) THEN
-       IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Reading and sharing cell "
-       IF ( ionode ) CALL readbuffer(socket, mtxbuffer, 9)
-       cellh = RESHAPE(mtxbuffer, (/3,3/))         
-       IF ( ionode ) CALL readbuffer(socket, mtxbuffer, 9)
-       cellih = RESHAPE(mtxbuffer, (/3,3/))
-       !
-       ! ... Share the received data 
-       !
-       CALL mp_bcast( cellh,  ionode_id, intra_image_comm )  
-       CALL mp_bcast( cellih, ionode_id, intra_image_comm )
-    ENDIF
+    IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Reading and sharing cell "
+    IF ( ionode ) CALL readbuffer(socket, mtxbuffer, 9)
+    cellh = RESHAPE(mtxbuffer, (/3,3/))
+    IF ( ionode ) CALL readbuffer(socket, mtxbuffer, 9)
+    cellih = RESHAPE(mtxbuffer, (/3,3/))
+    CALL mp_bcast( cellh,  ionode_id, intra_image_comm )
+    CALL mp_bcast( cellih, ionode_id, intra_image_comm )
+
     IF ( ionode ) CALL readbuffer(socket, nat)
     CALL mp_bcast(    nat, ionode_id, intra_image_comm )
     !
@@ -345,13 +464,10 @@ CONTAINS
     !
     ! ... Convert the incoming configuration to the internal pwscf format
     !
-    IF ( lmovecell .OR. firststep ) THEN
-       cellh  = TRANSPOSE(  cellh )                 ! row-major to column-major 
-       cellih = TRANSPOSE( cellih )         
-       at = cellh / alat                            ! and so the cell
-    ENDIF
-    tau = RESHAPE( combuf, (/ 3 , nat /) )/alat  ! internally positions are in alat 
-    !
+    cellh  = TRANSPOSE(  cellh )                 ! row-major to column-major
+    cellih = TRANSPOSE( cellih )
+    tau = RESHAPE( combuf, (/ 3 , nat /) )/alat  ! internally positions are in alat
+    at = cellh / alat                            ! and so the cell
     !
   END SUBROUTINE read_and_share
   !
@@ -366,7 +482,7 @@ CONTAINS
     !
     CALL reset_starting_magnetization()
     !
-    ! ... recasted from run_pwscf.f90 reset_gvectors 
+    ! ... recasted from run_pwscf.f90 reset_gvectors
     ! ... clean everything (FIXME: clean only what has to be cleaned)
     !
     CALL clean_pw( .FALSE. )
@@ -427,80 +543,11 @@ CONTAINS
     CALL update_file()
     !
   END SUBROUTINE
-  !
-  SUBROUTINE update_flags()
-     !     
-     if ( ionode ) THEN
-        !
-        ! ... A hacky enconding to allow overriding redundant calculations
-        !
-        ! ... by Gabriel S. Gusmao :: gusmaogabriels@gmail.com (2020)
-        ! ... Medford Group @ ChBE, Georgia Institute of Technology
-        !
-        lflags_old = lflags
-        !
-        CALL readbuffer( socket, lflags )
-        !
-        WRITE(*,*) " @ DRIVER MODE: Receiving encoded integer", lflags
-        WRITE(*,*) " @ DRIVER MODE: "," SCF: ", lscf," FORCE: ", lforce, &
-                     " STRESS: ", lstres, " VC: ",lmovecell," ENSEMBLE: ", lensemb
-        !
-        lflags = lflags - 1 ! ... making it ASE compliant since it send a one.   
-        !
-        IF (lflags .NE. lflags_old) THEN
-           !
-           IF ( lflags > 0 ) THEN
-              !
-              lscf      = MOD(INT(lflags/(2**4)),2) == 1
-              lforce    = MOD(INT(lflags/(2**3)),2) == 1
-              lstres    = MOD(INT(lflags/(2**2)),2) == 1
-              lmovecell = MOD(INT(lflags/(2**1)),2) == 1
-              lensemb   = MOD(INT(lflags/(2**0)),2) == 1
-              IF ( firststep .OR. ( hasensemb .AND. ( lforce .OR. lstres .OR. lmovecell ))) THEN
-                 !
-                 ! ... BEEF-vdw ensembles corrupt the wavefunction and, therefore, forces, 
-                 !     stresses .Right now the workaround is to run an SCF cycle at the 
-                 !     beginning in case  ensembles have been generated.
-                 !
-                 lscf = .TRUE.
-                 hasensemb = .FALSE.
-              ENDIF
-           ELSE
-              lscf      = .true.
-              lforce    = .true.
-              lstres    = .true.
-              lmovecell = .true.
-              lmd       = .true.
-              lensemb   = .false.
-           ENDIF
-        ENDIF
-        !
-        WRITE(*,*) " @ DRIVER MODE: "," SCF: ", lscf," FORCE: ", lforce, &
-                     " STRESS: ", lstres, " VC: ",lmovecell," ENSEMBLE: ", lensemb
-        !
-        CALL readbuffer( socket, parbuffer, 1 )
-        !
-     END IF
-     !
-     CALL mp_bcast( lflags,      ionode_id, intra_image_comm )
-     CALL mp_bcast( lflags_old,  ionode_id, intra_image_comm )
-     !
-     ! ... broadcat flags if they have changed
-     !
-     IF ( lflags .NE. lflags_old .OR. firststep) THEN
-        CALL mp_bcast( lscf,      ionode_id, intra_image_comm )
-        CALL mp_bcast( lforce,    ionode_id, intra_image_comm )       
-        CALL mp_bcast( lstres,    ionode_id, intra_image_comm )   
-        CALL mp_bcast( lmovecell, ionode_id, intra_image_comm )   
-        CALL mp_bcast( lensemb,   ionode_id, intra_image_comm )   
-     ENDIF
-     !
-  END SUBROUTINE
-!   
+!
 END SUBROUTINE run_driver
 
 FUNCTION get_server_address ( command_line ) RESULT ( srvaddress )
-  ! 
+  !
   ! checks for the presence of a command-line option of the form
   ! -server_ip "srvaddress" or --server_ip "srvaddress";
   ! returns "srvaddress", used to run pw.x in driver mode.

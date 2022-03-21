@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -30,7 +30,7 @@ SUBROUTINE lr_sym_eels (dvtosym)
   COMPLEX(DP) :: dvtosym(dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin_mag)
   ! the charge density response to be symmetrized
   INTEGER, ALLOCATABLE :: ftau(:,:), s_scaled(:,:,:)
-  INTEGER :: is, ri, rj, rk, i, j, k, ipol, isym, irot
+  INTEGER :: is, ri, rj, rk, i, j, k, isym, irot
   ! counters
   REAL(DP) :: gf(3), n(3)
   ! temp variables

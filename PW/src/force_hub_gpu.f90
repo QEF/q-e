@@ -1,11 +1,12 @@
 !
-! Copyright (C) 2002-2020 Quantum ESPRESSO group
+! Copyright (C) 2002-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
+#if defined(__CUDA)
 !----------------------------------------------------------------------
 SUBROUTINE force_hub_gpu( forceh )
    !----------------------------------------------------------------------
@@ -20,12 +21,12 @@ SUBROUTINE force_hub_gpu( forceh )
    USE kinds,                ONLY : DP
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE cell_base,            ONLY : at, bg
-   USE ldaU,                 ONLY : hubbard_lmax, hubbard_l, U_projection, &
+   USE ldaU,                 ONLY : hubbard_lmax, hubbard_l, Hubbard_projectors, &
                                     nwfcU, wfcU, is_hubbard, lda_plus_u_kind, &
                                     copy_U_wfc, offsetU, is_hubbard_back, &
-                                    ldim_back, ldmx_b, ldmx_tot, ll, Hubbard_l_back, &
+                                    ldim_back, ldmx_b, ldmx_tot, ll, Hubbard_l2, &
                                     nsg, v_nsg, max_num_neighbors, ldim_u, Hubbard_V, &
-                                    at_sc, neighood
+                                    at_sc, neighood, Hubbard_J
    USE basis,                ONLY : natomwfc, wfcatom, swfcatom
    USE symme,                ONLY : symvector
    USE io_files,             ONLY : prefix
@@ -38,10 +39,10 @@ SUBROUTINE force_hub_gpu( forceh )
    USE mp,                   ONLY : mp_sum
    USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type, &
                                     deallocate_bec_type
-   USE uspp,                 ONLY : nkb, vkb, vkb_d, indv_ijkb0, using_vkb_d
+   USE uspp,                 ONLY : nkb, vkb, ofsbeta
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
-   USE klist,                ONLY : nks, xk, ngk, igk_k, igk_k_d
+   USE klist,                ONLY : nks, xk, ngk, igk_k
    USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU
    USE buffers,              ONLY : get_buffer
    USE mp_bands,             ONLY : use_bgrp_in_hpsi
@@ -53,6 +54,8 @@ SUBROUTINE force_hub_gpu( forceh )
                                     allocate_bec_type_gpu, deallocate_bec_type_gpu
    USE device_memcpy_m,      ONLY : dev_memcpy, dev_memset
    USE device_fbuff_m,       ONLY : dev_buf
+   USE uspp_init,            ONLY : init_us_2
+   USE constants,            ONLY : eps16
    !
    IMPLICIT NONE
    !
@@ -73,7 +76,6 @@ SUBROUTINE force_hub_gpu( forceh )
    INTEGER :: na1, na2, equiv_na2, nt1, nt2, ldim1, ldim2, viz
    INTEGER :: nb_s, nb_e, mykey, ldimb
    LOGICAL :: lhubb
-   INTEGER, EXTERNAL :: type_interaction
    LOGICAL :: save_flag
    !
    ! Additional GPU data
@@ -87,14 +89,14 @@ SUBROUTINE force_hub_gpu( forceh )
    !
    save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .false.
    !
-   IF (.NOT.((U_projection.EQ."atomic") .OR. (U_projection.EQ."ortho-atomic"))) &
+   IF (.NOT.((Hubbard_projectors.EQ."atomic") .OR. (Hubbard_projectors.EQ."ortho-atomic"))) &
       CALL errore("force_hub", &
-                   " forces for this U_projection_type not implemented",1)
-   !
-   IF (lda_plus_u_kind == 1) CALL errore("force_hub", &
-                   " forces in full LDA+U scheme are not yet implemented", 1 )
+                   " forces for this Hubbard_projectors type not implemented",1)
    !
    IF (noncolin) CALL errore ("forceh","Noncollinear case is not supported",1)
+   !
+   IF (ANY(Hubbard_J(:,:)>eps16)) CALL errore("force_hub", &
+                   " forces in the DFT+U+J scheme are not implemented", 1 )
    !
    IF (lda_plus_u_kind.EQ.0) THEN
       ! DFT+U
@@ -116,7 +118,7 @@ SUBROUTINE force_hub_gpu( forceh )
    !
    ALLOCATE( spsi_d(npwx,nbnd)          ) 
    ALLOCATE (wfcatom(npwx,natomwfc))
-   IF (U_projection.EQ."ortho-atomic") THEN
+   IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ALLOCATE (swfcatom(npwx,natomwfc))
       ALLOCATE (eigenval(natomwfc))
       ALLOCATE (eigenvect(natomwfc,natomwfc)) 
@@ -140,7 +142,7 @@ SUBROUTINE force_hub_gpu( forceh )
    CALL using_evc_d(0)
    !
    CALL dev_buf%lock_buffer( wfcU_d, SHAPE(wfcU) , ierr )
-   IF ( ierr /= 0 ) CALL errore( 'force_hub_gpu', 'cannot allocate buffers', ierr )
+   IF ( ierr /= 0 ) CALL errore( 'force_hub_gpu', 'cannot allocate buffers', ABS(ierr) )
 
    DO ik = 1, nks
       !
@@ -152,13 +154,20 @@ SUBROUTINE force_hub_gpu( forceh )
          CALL get_buffer( evc, nwordwfc, iunwfc, ik )
       CALL using_evc_d(0)
       !
-      CALL using_vkb_d(2)
-      CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+      CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
+      !FIXME check if this update is actually needed and in case comment indicating why. 
+      !$acc update self(vkb)
+      !
       ! Compute spsi = S * psi
       CALL allocate_bec_type ( nkb, nbnd, becp)
       CALL using_becp_auto(2) ; CALL using_becp_d_auto(2)
-      CALL using_vkb_d(0)
-      CALL calbec_gpu( npw, vkb_d, evc_d, becp_d )
+      !
+      !$acc data present(vkb(:,:))
+      !$acc host_data use_device(vkb)
+      CALL calbec_gpu( npw, vkb, evc_d, becp_d )
+      !$acc end host_data
+      !$acc end data
+      !
       CALL s_psi_gpu( npwx, npw, nbnd, evc_d, spsi_d )
       CALL deallocate_bec_type (becp) 
       CALL using_becp_auto(2); CALL using_becp_d_auto(2)
@@ -166,7 +175,7 @@ SUBROUTINE force_hub_gpu( forceh )
       !
       ! Set up various quantities, in particular wfcU which 
       ! contains Hubbard-U (ortho-)atomic wavefunctions (without ultrasoft S)
-      CALL orthoUwfc2 (ik)
+      CALL orthoUwfc_k (ik, .TRUE.)
       CALL dev_memcpy( wfcU_d , wfcU )
       !
       ! proj=<wfcU|S|evc>
@@ -176,7 +185,7 @@ SUBROUTINE force_hub_gpu( forceh )
       !
       DO alpha = 1, nat  ! forces are calculated by displacing atom alpha ...
          !
-         ijkb0 = indv_ijkb0(alpha) ! positions of beta functions for atom alpha
+         ijkb0 = ofsbeta(alpha) ! positions of beta functions for atom alpha
          !
          IF (lda_plus_u_kind.EQ.0) THEN
             !
@@ -292,7 +301,7 @@ SUBROUTINE force_hub_gpu( forceh )
    !
    DEALLOCATE(spsi_d)
    DEALLOCATE (wfcatom)
-   IF (U_projection.EQ."ortho-atomic") THEN
+   IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       DEALLOCATE (swfcatom) 
       DEALLOCATE (eigenval)
       DEALLOCATE (eigenvect)
@@ -331,8 +340,8 @@ SUBROUTINE dndtau_k_gpu ( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
    USE lsda_mod,             ONLY : nspin, current_spin
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, offsetU, &
                                     is_hubbard_back, offsetU_back, ldim_u, &
-                                    offsetU_back1, ldim_back, Hubbard_l_back, &
-                                    backall, U_projection, wfcU
+                                    offsetU_back1, ldim_back, Hubbard_l2, &
+                                    backall, Hubbard_projectors, wfcU
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
@@ -406,7 +415,7 @@ SUBROUTINE dndtau_k_gpu ( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
    !
    IF (okvan) THEN
       CALL dev_buf%lock_buffer( wfcU_d, SHAPE(wfcU) , ierr )
-      IF ( ierr /= 0 ) CALL errore( 'force_hub_gpu', 'cannot allocate buffers', ierr )
+      IF ( ierr /= 0 ) CALL errore( 'force_hub_gpu', 'cannot allocate buffers', ABS(ierr) )
       CALL dev_memcpy( wfcU_d , wfcU )
       ALLOCATE ( dproj_us_d(nwfcU,nb_s:nb_e) )
       CALL using_evc_d(0)
@@ -417,7 +426,7 @@ SUBROUTINE dndtau_k_gpu ( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
    !
    ! In the 'ortho-atomic' case calculate d[(O^{-1/2})^T]
    !
-   IF (U_projection.EQ."ortho-atomic") THEN
+   IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ALLOCATE ( doverlap_inv(natomwfc,natomwfc) )
       CALL calc_doverlap_inv (alpha, ipol, ik, jkb0)
    ENDIF
@@ -463,16 +472,16 @@ SUBROUTINE dndtau_k_gpu ( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
           DO m1 = 1, ldim_back(nt) 
             off1 = offsetU_back(na)
             m11 = m1
-            IF (backall(nt) .AND. m1.GT.2*Hubbard_l_back(nt)+1) THEN
+            IF (backall(nt) .AND. m1.GT.2*Hubbard_l2(nt)+1) THEN
                off1 = offsetU_back1(na)
-               m11 = m1 - 2*Hubbard_l_back(nt)-1
+               m11 = m1 - 2*Hubbard_l2(nt)-1
             ENDIF
             DO m2 = m1, ldim_back(nt) 
                off2 = offsetU_back(na)
                m22 = m2
-               IF (backall(nt) .AND. m2.GT.2*Hubbard_l_back(nt)+1) THEN
+               IF (backall(nt) .AND. m2.GT.2*Hubbard_l2(nt)+1) THEN
                   off2 = offsetU_back1(na)
-                  m22 = m2 - 2*Hubbard_l_back(nt)-1
+                  m22 = m2 - 2*Hubbard_l2(nt)-1
                ENDIF
                DO ibnd = nb_s, nb_e
                   dns(m1,m2,current_spin,na) = dns(m1,m2,current_spin,na) + &
@@ -533,7 +542,7 @@ SUBROUTINE dndtau_gamma_gpu ( ldim, rproj_d, spsi_d, alpha, jkb0, ipol, ik, &
    USE lsda_mod,             ONLY : nspin, current_spin
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, offsetU, &
                                     is_hubbard_back, ldim_back, offsetU_back, &
-                                    Hubbard_l_back, offsetU_back1
+                                    Hubbard_l2, offsetU_back1
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
@@ -626,16 +635,16 @@ SUBROUTINE dndtau_gamma_gpu ( ldim, rproj_d, spsi_d, alpha, jkb0, ipol, ik, &
          DO m1 = 1, ldim_back(nt) 
             off1 = offsetU_back(na)
             m11 = m1
-            IF (m1.GT.2*Hubbard_l_back(nt)+1) THEN
+            IF (m1.GT.2*Hubbard_l2(nt)+1) THEN
                off1 = offsetU_back1(na)
-               m11 = m1 - 2*Hubbard_l_back(nt)-1
+               m11 = m1 - 2*Hubbard_l2(nt)-1
             ENDIF
             DO m2 = m1, ldim_back(nt) 
                off2 = offsetU_back(na)
                m22 = m2
-               IF (m2.GT.2*Hubbard_l_back(nt)+1) THEN
+               IF (m2.GT.2*Hubbard_l2(nt)+1) THEN
                   off2 = offsetU_back1(na)
-                  m22 = m2 - 2*Hubbard_l_back(nt)-1
+                  m22 = m2 - 2*Hubbard_l2(nt)-1
                ENDIF
                DO ibnd = nb_s, nb_e
                   dns(m1,m2,current_spin,na) = dns(m1,m2,current_spin,na) + &
@@ -695,9 +704,9 @@ SUBROUTINE dngdtau_k_gpu ( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
    USE ions_base,            ONLY : nat, ityp
    USE lsda_mod,             ONLY : nspin, current_spin
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, offsetU, at_sc,  &
-                                    offsetU_back, offsetU_back1, Hubbard_l_back,   &
+                                    offsetU_back, offsetU_back1, Hubbard_l2,   &
                                     backall, max_num_neighbors, phase_fac, ldim_u, &
-                                    neighood, U_projection, wfcU
+                                    neighood, Hubbard_projectors, wfcU
    USE wvfct,                ONLY : nbnd, npwx, npw, wg
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
@@ -784,7 +793,7 @@ SUBROUTINE dngdtau_k_gpu ( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
    IF (okvan) THEN
       ALLOCATE ( dproj_us_d(nwfcU,nb_s:nb_e) )
       CALL dev_buf%lock_buffer( wfcU_d, SHAPE(wfcU) , ierr )
-      IF ( ierr /= 0 ) CALL errore( 'force_hub_gpu', 'cannot allocate buffers', ierr )
+      IF ( ierr /= 0 ) CALL errore( 'force_hub_gpu', 'cannot allocate buffers', ABS(ierr) )
       CALL dev_memcpy(wfcU_d, wfcU)
       CALL using_evc_d(0)
       CALL matrix_element_of_dSdtau_gpu (alpha, ipol, ik, jkb0, &
@@ -792,12 +801,12 @@ SUBROUTINE dngdtau_k_gpu ( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
       CALL dev_buf%release_buffer( wfcU_d, ierr )
    ENDIF
    !
-   IF (U_projection.EQ."atomic") THEN
+   IF (Hubbard_projectors.EQ."atomic") THEN
       ! In the 'atomic' case the calculation must be performed only once (when na=alpha)
       CALL dprojdtau_k_gpu ( spsi_d, alpha, alpha, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj1_d )
       IF (okvan) CALL dev_mem_addscal(dproj1_d, dproj_us_d) ! adds dproj_us to dproj_d with scaling 1.
       CALL dev_memcpy( dproj2_d, dproj1_d )
-   ELSEIF (U_projection.EQ."ortho-atomic") THEN
+   ELSEIF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ! In the 'ortho-atomic' case calculate d[(O^{-1/2})^T]
       ALLOCATE ( doverlap_inv(natomwfc,natomwfc) )
       CALL calc_doverlap_inv (alpha, ipol, ik, jkb0)
@@ -812,7 +821,7 @@ SUBROUTINE dngdtau_k_gpu ( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
       IF ( is_hubbard(nt1) ) THEN
          ! Compute the second contribution to dproj1 due to the derivative of 
          ! ortho-atomic orbitals
-         IF (U_projection.EQ."ortho-atomic") THEN
+         IF (Hubbard_projectors.EQ."ortho-atomic") THEN
             CALL dprojdtau_k_gpu ( spsi_d, alpha, na1, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj1_d )
             IF (okvan) CALL dev_mem_addscal(dproj1_d, dproj_us_d)
          ENDIF
@@ -825,7 +834,7 @@ SUBROUTINE dngdtau_k_gpu ( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
             ldim2 = ldim_u(nt2)
             ! Compute the second contribution to dproj2 due to the derivative of 
             ! ortho-atomic orbitals
-            IF (U_projection.EQ."ortho-atomic") THEN
+            IF (Hubbard_projectors.EQ."ortho-atomic") THEN
                CALL dprojdtau_k_gpu ( spsi_d, alpha, eq_na2, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj2_d )
                IF (okvan) CALL dev_mem_addscal( dproj2_d, dproj_us_d)
             ENDIF
@@ -844,17 +853,17 @@ SUBROUTINE dngdtau_k_gpu ( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
                   IF (m1.GT.2*Hubbard_l(nt1)+1) &
                      off1 = offsetU_back(na1) + m1 - 2*Hubbard_l(nt1) - 1
                   IF (backall(nt1) .AND. &
-                     m1.GT.2*(Hubbard_l(nt1)+Hubbard_l_back(nt1)+1) ) &
+                     m1.GT.2*(Hubbard_l(nt1)+Hubbard_l2(nt1)+1) ) &
                      off1 = offsetU_back1(na1) + m1 - &
-                            2*(Hubbard_l(nt1)+Hubbard_l_back(nt1)+1)
+                            2*(Hubbard_l(nt1)+Hubbard_l2(nt1)+1)
                   DO m2 = 1, ldim2
                       off2 = offsetU(eq_na2) + m2
                       IF (m2.GT.2*Hubbard_l(nt2)+1) & 
                          off2 = offsetU_back(eq_na2) + m2 - 2*Hubbard_l(nt2) - 1
                       IF (backall(nt2) .AND. &
-                         m2.GT.2*(Hubbard_l(nt2)+Hubbard_l_back(nt2)+1) ) &
+                         m2.GT.2*(Hubbard_l(nt2)+Hubbard_l2(nt2)+1) ) &
                          off2 = offsetU_back1(eq_na2) + m2 - &
-                                2*(Hubbard_l(nt2)+Hubbard_l_back(nt2)+1)
+                                2*(Hubbard_l(nt2)+Hubbard_l2(nt2)+1)
                       DO ibnd = nb_s, nb_e
                          dnsg(m2,m1,viz,na1,current_spin) =                 &
                              dnsg(m2,m1,viz,na1,current_spin) +             &
@@ -933,7 +942,7 @@ SUBROUTINE dngdtau_gamma_gpu ( ldim, rproj_d, spsi_d, alpha, jkb0, ipol, ik, nb_
    USE ions_base,            ONLY : nat, ityp
    USE lsda_mod,             ONLY : nspin, current_spin
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, offsetU, at_sc,  &
-                                    offsetU_back, offsetU_back1, Hubbard_l_back,   &
+                                    offsetU_back, offsetU_back1, Hubbard_l2,   &
                                     backall, max_num_neighbors, phase_fac, ldim_u, &
                                     neighood
    USE wvfct,                ONLY : nbnd, npwx, npw, wg
@@ -1032,17 +1041,17 @@ SUBROUTINE dngdtau_gamma_gpu ( ldim, rproj_d, spsi_d, alpha, jkb0, ipol, ik, nb_
                   IF (m1.GT.2*Hubbard_l(nt1)+1) &
                       off1 = offsetU_back(na1) + m1 - 2*Hubbard_l(nt1) - 1
                   IF (backall(nt1) .AND. &
-                      m1.GT.2*(Hubbard_l(nt1)+Hubbard_l_back(nt1)+1) ) &
+                      m1.GT.2*(Hubbard_l(nt1)+Hubbard_l2(nt1)+1) ) &
                       off1 = offsetU_back1(na1) + m1 - &
-                            2*(Hubbard_l(nt1)+Hubbard_l_back(nt1)+1)
+                            2*(Hubbard_l(nt1)+Hubbard_l2(nt1)+1)
                   DO m2 = 1, ldim2
                      off2 = offsetU(eq_na2) + m2
                       IF (m2.GT.2*Hubbard_l(nt2)+1) & 
                          off2 = offsetU_back(eq_na2) + m2 - 2*Hubbard_l(nt2) - 1
                       IF (backall(nt2) .AND. &
-                         m2.GT.2*(Hubbard_l(nt2)+Hubbard_l_back(nt2)+1) ) &
+                         m2.GT.2*(Hubbard_l(nt2)+Hubbard_l2(nt2)+1) ) &
                          off2 = offsetU_back1(eq_na2) + m2 - &
-                                2*(Hubbard_l(nt2)+Hubbard_l_back(nt2)+1)
+                                2*(Hubbard_l(nt2)+Hubbard_l2(nt2)+1)
                       DO ibnd = nb_s, nb_e
                          dnsg(m2,m1,viz,na1,current_spin) =              &
                              dnsg(m2,m1,viz,na1,current_spin) +          &
@@ -1118,14 +1127,14 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    USE kinds,                ONLY : DP
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE cell_base,            ONLY : tpiba
-   USE gvect_gpum,           ONLY : g_d
+   USE gvect,                ONLY : g_d
    USE klist,                ONLY : nks, xk, ngk, igk_k_d, igk_k
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, wfcU, offsetU, &
-                                    is_hubbard_back, Hubbard_l_back, offsetU_back, &
+                                    is_hubbard_back, Hubbard_l2, offsetU_back, &
                                     offsetU_back1, ldim_u, backall, lda_plus_u_kind, &
-                                    U_projection, oatwfc
+                                    Hubbard_projectors, oatwfc
    USE wvfct,                ONLY : nbnd, npwx, wg
-   USE uspp,                 ONLY : okvan, nkb, vkb_d, qq_at_d
+   USE uspp,                 ONLY : okvan, nkb, qq_at_d
    USE uspp_param,           ONLY : nh
    USE becmod_subs_gpum,     ONLY : calbec_gpu
    USE mp_bands,             ONLY : intra_bgrp_comm
@@ -1199,12 +1208,12 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    nh_nt = nh(nt)
    !
    CALL dev_buf%lock_buffer( wfcU_d, SHAPE(wfcU) , ierr )
-   IF ( ierr /= 0 ) CALL errore( 'dprojdtau_k_gpu', 'cannot allocate buffers', ierr )
+   IF ( ierr /= 0 ) CALL errore( 'dprojdtau_k_gpu', 'cannot allocate buffers', ABS(ierr) )
    CALL dev_memcpy( wfcU_d , wfcU )
    !
    CALL dev_memset( dproj_d , (0.d0, 0.d0) )
    !
-   IF ((U_projection.EQ."atomic") .AND. (na==alpha) .AND. &
+   IF ((Hubbard_projectors.EQ."atomic") .AND. (na==alpha) .AND. &
        (is_hubbard(nt).OR.is_hubbard_back(nt))) THEN
       !
       !!!!!!!!!!!!!!!!!!!! ATOMIC CASE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1216,7 +1225,7 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
       ! Note: parallelization here is over plane waves, not over bands!
       !
       CALL dev_buf%lock_buffer( dwfc_d, [npwx,ldim] , ierr ) ! ALLOCATE( dwfc_d(npwx,ldim) )
-      IF ( ierr /= 0 ) CALL errore('dprojdtau_k_gpu', ' Buffers allocation failed', ierr)
+      IF ( ierr /= 0 ) CALL errore('dprojdtau_k_gpu', ' Buffers allocation failed', ABS(ierr))
       CALL dev_memset( dwfc_d , (0.d0, 0.d0) )
       !
       ! DFT+U: In the expression of dwfc we don't need (k+G) but just G; k always
@@ -1229,9 +1238,9 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
             offpm = offsetU(alpha) + m1
          ELSE
             offpm = offsetU_back(alpha) + m1 - ldim_std
-            IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l_back(nt)+1) &
+            IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l2(nt)+1) &
                offpm = offsetU_back1(alpha) + m1 &
-                       - ldim_std - 2*Hubbard_l_back(nt) - 1
+                       - ldim_std - 2*Hubbard_l2(nt) - 1
          ENDIF
 !$cuf kernel do
          DO ig = 1, npw
@@ -1261,9 +1270,9 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
             offpm = offsetU(na)+m1
          ELSE
             offpm = offsetU_back(alpha) + m1 - ldim_std
-            IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l_back(nt)+1) &
+            IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l2(nt)+1) &
                offpm = offsetU_back1(alpha) + m1 &
-                       - ldim_std - 2*Hubbard_l_back(nt) - 1
+                       - ldim_std - 2*Hubbard_l2(nt) - 1
          ENDIF
          !
          !$cuf kernel do
@@ -1273,7 +1282,7 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
       ENDDO
       CALL dev_buf%release_buffer(dproj0_d, ierr) ! DEALLOCATE(dproj0_d) 
       !
-   ELSEIF (U_projection.EQ."ortho-atomic") THEN
+   ELSEIF (Hubbard_projectors.EQ."ortho-atomic") THEN
       !
       !!!!!!!!!!!!!!!!! ORTHO-ATOMIC CASE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !
@@ -1293,7 +1302,7 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
       CALL dev_buf%lock_buffer( overlap_inv_d, SHAPE(overlap_inv) , ierr )
       !
       CALL dev_buf%lock_buffer( dwfc_d, [npwx, ldim], ierr ) ! ALLOCATE (dwfc_d(npwx,ldim))
-      IF ( ierr /= 0 ) CALL errore('dprojdtau_k_gpu', ' Buffers allocation failed', ierr)
+      IF ( ierr /= 0 ) CALL errore('dprojdtau_k_gpu', ' Buffers allocation failed', ABS(ierr))
       dwfc_d(:,:) = (0.d0, 0.d0)
       !
       ! Determine how many atomic wafefunctions there are for atom 'alpha'
@@ -1387,14 +1396,14 @@ SUBROUTINE calc_doverlap_inv_gpu (alpha, ipol, ik, ijkb0)
    !
    USE kinds,            ONLY : DP
    USE cell_base,        ONLY : tpiba
-   USE gvect_gpum,       ONLY : g_d
+   USE gvect,            ONLY : g_d
    USE uspp,             ONLY : okvan
    USE klist,            ONLY : xk, ngk, igk_k_d
    USE basis,            ONLY : natomwfc, wfcatom, swfcatom
    USE force_mod,        ONLY : eigenval, eigenvect, overlap_inv, doverlap_inv
    USE mp_bands,         ONLY : intra_bgrp_comm
    USE mp,               ONLY : mp_sum
-   USE ldaU,             ONLY : U_projection
+   USE ldaU,             ONLY : Hubbard_projectors
    USE device_memcpy_m,  ONLY : dev_memcpy, dev_memset
    USE device_auxfunc_m, ONLY : dev_mem_addscal
    USE device_fbuff_m,   ONLY : dev_buf
@@ -1423,7 +1432,7 @@ SUBROUTINE calc_doverlap_inv_gpu (alpha, ipol, ik, ijkb0)
    !
    CALL start_clock( 'calc_doverlap_inv' )
    !
-   IF (U_projection.NE."ortho-atomic") RETURN
+   IF (Hubbard_projectors.NE."ortho-atomic") RETURN
    !
    xk_d = xk(ipol,ik)
    !
@@ -1521,11 +1530,11 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE cell_base,            ONLY : tpiba
    USE wvfct,                ONLY : npwx, wg
-   USE uspp,                 ONLY : nkb, okvan, vkb_d, qq_at_d, using_vkb_d
+   USE uspp,                 ONLY : nkb, okvan, vkb, qq_at_d
    USE uspp_param,           ONLY : nh
    USE klist,                ONLY : igk_k_d, ngk
    USE becmod_subs_gpum,     ONLY : calbec_gpu
-   USE gvect_gpum,           ONLY : g_d
+   USE gvect,                ONLY : g_d
    USE device_memcpy_m,      ONLY : dev_memcpy, dev_memset
    USE device_fbuff_m,       ONLY : dev_buf
    !
@@ -1589,17 +1598,18 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    !aux(:,:) = (0.0d0, 0.0d0) ! done below
    !
    !
-   CALL using_vkb_d(0)
    ! Beta function
 !!omp parallel do default(shared) private(ig,ih)
-!$cuf kernel do(2)
+!$acc parallel loop collapse(2) present(vkb(:,:))
    DO ih = 1, nh_nt
-      DO ig = 1, npwx
-         IF (ig <= npw) THEN
-            aux(ig,ih) = vkb_d(ig,ijkb0+ih)
-         ELSE
-            aux(ig,ih) = (0.0d0, 0.0d0)
-         ENDIF
+      DO ig = 1, npw
+         aux(ig,ih) = vkb(ig,ijkb0+ih)
+      ENDDO
+   ENDDO
+!$acc parallel loop collapse(2) 
+   DO ih = 1, nh_nt
+      DO ig = npw+1, npwx
+         aux(ig,ih) = (0.0d0, 0.0d0)
       ENDDO
    ENDDO
 !!omp end parallel do
@@ -1686,14 +1696,14 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    USE kinds,                ONLY : DP
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE cell_base,            ONLY : tpiba
-   USE gvect_gpum,           ONLY : g_d
+   USE gvect,                ONLY : g_d
    USE klist,                ONLY : nks, xk, ngk, igk_k_d
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, wfcU, offsetU, &
-                                    is_hubbard_back, Hubbard_l_back, offsetU_back, &
+                                    is_hubbard_back, Hubbard_l2, offsetU_back, &
                                     offsetU_back, offsetU_back1, ldim_u, backall, &
-                                    U_projection 
+                                    Hubbard_projectors
    USE wvfct,                ONLY : nbnd, npwx,  wg
-   USE uspp,                 ONLY : nkb, vkb_d, qq_at_d, using_vkb_d
+   USE uspp,                 ONLY : nkb, vkb, qq_at_d
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE becmod_gpum,          ONLY : bec_type_d, becp_d
@@ -1761,7 +1771,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    attributes(DEVICE) :: wfcU_d, becpr_d
 #endif
    !
-   IF (U_projection.EQ."ortho-atomic") CALL errore("dprojdtau_gamma", &
+   IF (Hubbard_projectors.EQ."ortho-atomic") CALL errore("dprojdtau_gamma", &
                     " Forces with gamma-only and ortho-atomic are not supported",1)
    !
    CALL start_clock_gpu( 'dprojdtau' )
@@ -1772,7 +1782,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    ldim_std = 2*Hubbard_l(nt)+1
    nh_nt = nh(nt)
    CALL dev_buf%lock_buffer( wfcU_d, SHAPE(wfcU) , ierr )
-   IF ( ierr /= 0 ) CALL errore( 'dprojdtau_gamma_gpu', 'cannot allocate buffers', ierr )
+   IF ( ierr /= 0 ) CALL errore( 'dprojdtau_gamma_gpu', 'cannot allocate buffers', ABS(ierr) )
    CALL dev_memcpy( wfcU_d , wfcU )
    !
    dproj_d(:,:) = 0.0_dp
@@ -1784,7 +1794,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
       !
       CALL dev_buf%lock_buffer( dproj0_d, [ldim,nbnd], ierr ) ! ALLOCATE( dproj0_d(ldim,nbnd) )
       CALL dev_buf%lock_buffer( dwfc_d, [npwx,ldim], ierr ) ! ALLOCATE( dwfc_d(npwx,ldim)
-      IF ( ierr /= 0 ) CALL errore('dprojdtau_gamma_gpu','Buffers allocation failed',ierr)
+      IF ( ierr /= 0 ) CALL errore('dprojdtau_gamma_gpu','Buffers allocation failed', ABS(ierr))
       dproj0_d(:,:) =  0.d0
       dwfc_d(:,:)   = (0.d0,0.d0)
       !
@@ -1799,9 +1809,9 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
             offpm = offsetU(alpha) + m1
          ELSE
             offpm = offsetU_back(alpha) + m1 - ldim_std 
-            IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l_back(nt)+1) &
+            IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l2(nt)+1) &
                offpm = offsetU_back1(alpha) + m1 &
-                       - ldim_std - 2*Hubbard_l_back(nt) - 1
+                       - ldim_std - 2*Hubbard_l2(nt) - 1
          ENDIF
          !$cuf kernel do
          DO ig = 1, npw
@@ -1828,9 +1838,9 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
             offpm = offsetU(alpha) + m1
          ELSE
             offpm = offsetU_back(alpha) + m1 - ldim_std
-            IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l_back(nt)+1) &
+            IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l2(nt)+1) &
                offpm = offsetU_back1(alpha) + m1 &
-                       - ldim_std - 2*Hubbard_l_back(nt) - 1
+                       - ldim_std - 2*Hubbard_l2(nt) - 1
          ENDIF
          !$cuf kernel do
          DO ibnd=nb_s, nb_e
@@ -1855,17 +1865,14 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    CALL dev_buf%lock_buffer(wfatdbeta_d,[nwfcU,nh(nt)] , ierr)  ! ALLOCATE( wfatdbeta_d(nwfcU,nh(nt)) )
    CALL dev_buf%lock_buffer(wfatbeta_d, [nwfcU,nh(nt)] , ierr)  ! ALLOCATE( wfatbeta_d(nwfcU,nh(nt))  )
    CALL dev_buf%lock_buffer(dbeta_d,    [npwx,nh(nt)]  , ierr)  ! ALLOCATE( dbeta_d(npwx,nh(nt))      )
-   IF ( ierr /= 0 ) CALL errore('dprojdtau_gamma_gpu','Buffers allocation failed',ierr)
+   IF ( ierr /= 0 ) CALL errore('dprojdtau_gamma_gpu','Buffers allocation failed', ABS(ierr))
    !
-   CALL using_vkb_d(0)
-   !
-!$cuf kernel do(2)
-   DO ih = 1, nh(nt)
+!$acc parallel loop collapse(2) present(vkb(:,:))
+   DO ih = 1, nh_nt
       DO ig = 1, npw
-         dbeta_d(ig,ih) = vkb_d(ig,ijkb0+ih)
+         dbeta_d(ig,ih) = vkb(ig,ijkb0+ih)
       ENDDO
    ENDDO
-! !omp end parallel do
    !
    CALL calbec_gpu( npw, wfcU_d, dbeta_d, wfatbeta_d ) 
    CALL using_evc_d(0)
@@ -1888,7 +1895,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    ! betapsi is used here as work space 
    !
    CALL dev_buf%lock_buffer( betapsi_d, [nh(nt), nbnd] , ierr ) ! ALLOCATE( betapsi_d(nh(nt), nbnd) )
-   IF ( ierr /= 0 ) CALL errore('dprojdtau_gamma_gpu','Buffers allocation failed',ierr)
+   IF ( ierr /= 0 ) CALL errore('dprojdtau_gamma_gpu','Buffers allocation failed', ABS(ierr))
    ! TODO : CAN WE RESET ONLY from nb_s to nb_e ??
    CALL dev_memset ( betapsi_d,  0.0_dp )
    !
@@ -1947,3 +1954,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    RETURN
    !
 END SUBROUTINE dprojdtau_gamma_gpu
+#else
+SUBROUTINE force_hub_gpu( )
+END
+#endif

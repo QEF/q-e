@@ -4,7 +4,6 @@ set(src_cpv
     src/cell_nose.f90
     src/cg.f90
     src/cg_sub.f90
-    src/cglib.f90
     src/chargedensity.f90
     src/cp_autopilot.f90
     src/cp_emass.f90
@@ -116,7 +115,10 @@ target_link_libraries(qe_cpv
         qe_openmp_fortran
         qe_mpi_fortran
         qe_xclib
-        qe_devxlib)
+        qe_device_lapack
+        qe_devxlib
+     PUBLIC 
+        qe_openacc_fortran)
 
 ###########################################################
 # cp.x
@@ -132,7 +134,6 @@ target_link_libraries(qe_cpv_exe
         qe_modules
         qe_lax
         qe_cpv
-        qe_lapack
         qe_xclib)
 
 ###########################################################
@@ -149,7 +150,6 @@ target_link_libraries(qe_cpv_manycp_exe
         qe_lax
         qe_modules
         qe_cpv
-        qe_lapack
         qe_xclib)
 
 ###########################################################
@@ -164,8 +164,6 @@ target_link_libraries(qe_cpv_cppp_exe
     PRIVATE
         qe_modules
         qe_cpv
-        qe_clib
-        qe_lapack
         qe_xclib)
 
 ###########################################################
@@ -178,10 +176,10 @@ set_target_properties(qe_cpv_wfdd_exe
         OUTPUT_NAME wfdd.x)
 target_link_libraries(qe_cpv_wfdd_exe
     PRIVATE
-        qe_lapack
         qe_modules
         qe_cpv
-        qe_xclib)
+        qe_xclib
+        qe_lapack)
 
 ###########################################################
 
@@ -193,3 +191,12 @@ qe_install_targets(
     qe_cpv_manycp_exe
     qe_cpv_cppp_exe
     qe_cpv_wfdd_exe)
+
+add_custom_target(cp
+    DEPENDS
+        qe_cpv_exe
+        qe_cpv_manycp_exe
+        qe_cpv_cppp_exe
+        qe_cpv_wfdd_exe
+    COMMENT
+        "CP code: Car-Parrinello molecular dynamics")

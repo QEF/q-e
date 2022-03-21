@@ -200,9 +200,9 @@ subroutine qvan2_gpu (ngy, ih, jh, np, qmod_d, qg_d, ylmk0_d)
   ivl = nhtolm(ih, np)
   jvl = nhtolm(jh, np)
   if (nb > nbetam .OR. mb > nbetam) &
-       call errore (' qvan2 ', ' wrong dimensions (1)', MAX(nb,mb))
+       call upf_error (' qvan2 ', ' wrong dimensions (1)', MAX(nb,mb))
   if (ivl > nlx .OR. jvl > nlx) &
-       call errore (' qvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
+       call upf_error (' qvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
   !
 #if defined(__CUDA)
   tBlock = dim3(256,1,1)
@@ -211,7 +211,7 @@ subroutine qvan2_gpu (ngy, ih, jh, np, qmod_d, qg_d, ylmk0_d)
   !
 #else
   ! possibly change this to call to CPU version...
-  CALL errore('qvan2_gpu', 'Trying to use device subroutine but code was not compiled with device support!', 1)
+  CALL upf_error('qvan2_gpu', 'Trying to use device subroutine but code was not compiled with device support!', 1)
 #endif
   !
 end subroutine qvan2_gpu

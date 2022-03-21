@@ -1,47 +1,46 @@
 !
-! Copyright (C) 2001-2011 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-! TB
-! included gate related forces
-!----------------------------------------------------------------------------
-!
-!----------------------------------------------------------------------------
 SUBROUTINE forces()
   !----------------------------------------------------------------------------
   !! This routine is a driver routine which computes the forces
   !! acting on the atoms. The complete expression of the forces
-  !! contains four parts which are computed by different routines:
+  !! contains many parts which are computed by different routines:
   !
-  !! a) force_lc: local contribution to the forces;  
-  !! b) force_cc: contribution due to NLCC;  
-  !! c) force_ew: contribution due to the electrostatic ewald term;  
-  !! d) force_us: contribution due to the non-local potential;  
-  !! e) force_corr: correction term for incomplete self-consistency;  
-  !! f) force_hub: contribution due to the Hubbard term;  
-  !! g) force_london: semi-empirical correction for dispersion forces;  
-  !! h) force_d3: Grimme-D3 (DFT-D3) correction to dispersion forces.
+  !! - force_lc: local potential contribution 
+  !! - force_us: non-local potential contribution
+  !! - (esm_)force_ew: (ESM) electrostatic ewald term
+  !! - force_cc: nonlinear core correction contribution
+  !! - force_corr: correction term for incomplete self-consistency
+  !! - force_hub: contribution due to the Hubbard term;
+  !! - force_london: Grimme DFT+D dispersion forces
+  !! - force_d3: Grimme-D3 (DFT-D3) dispersion forces
+  !! - force_xdm: XDM dispersion forces
+  !! - more terms from external electric fields, Martyna-Tuckerman, etc.
   !
   USE kinds,             ONLY : DP
   USE io_global,         ONLY : stdout
   USE cell_base,         ONLY : at, bg, alat, omega  
   USE ions_base,         ONLY : nat, ntyp => nsp, ityp, tau, zv, amass, extfor, atm
   USE fft_base,          ONLY : dfftp
-  USE gvect,             ONLY : ngm, gstart, ngl, igtongl, igtongl_d, g,  gg, gcutm
+  USE gvect,             ONLY : ngm, gstart, ngl, igtongl, igtongl_d, g, gg, &
+                                g_d, gcutm
   USE lsda_mod,          ONLY : nspin
   USE symme,             ONLY : symvector
   USE vlocal,            ONLY : strf, vloc
-  USE force_mod,         ONLY : force, lforce, sumfor
+  USE force_mod,         ONLY : force, sumfor
   USE scf,               ONLY : rho
   USE ions_base,         ONLY : if_pos
-  USE ldaU,              ONLY : lda_plus_u, U_projection
+  USE ldaU,              ONLY : lda_plus_u, Hubbard_projectors
   USE extfield,          ONLY : tefield, forcefield, gate, forcegate, relaxz
   USE control_flags,     ONLY : gamma_only, remove_rigid_rot, textfor, &
-                                iverbosity, llondon, ldftd3, lxdm, ts_vdw, mbd_vdw
+                                iverbosity, llondon, ldftd3, lxdm, ts_vdw, &
+                                mbd_vdw, lforce => tprnfor
   USE plugin_flags
   USE bp,                ONLY : lelfield, gdir, l3dstring, efield_cart, &
                                 efield_cry,efield
@@ -58,9 +57,10 @@ SUBROUTINE forces()
   USE qmmm,              ONLY : qmmm_mode
   !
   USE control_flags,     ONLY : use_gpu
+#if defined(__CUDA)
   USE device_fbuff_m,          ONLY : dev_buf
-  USE gvect_gpum,        ONLY : g_d
   USE device_memcpy_m,     ONLY : dev_memcpy
+#endif
   !
   IMPLICIT NONE
   !
@@ -92,26 +92,33 @@ SUBROUTINE forces()
   INTEGER :: atnum(1:nat)
   REAL(DP) :: stress_dftd3(3,3)
   !
-  ! TODO: get rid of this !!!! Use standard method for duplicated global data
-  REAL(DP), POINTER :: vloc_d (:, :)
   INTEGER :: ierr
 #if defined(__CUDA)
+  ! TODO: get rid of this !!!! Use standard method for duplicated global data
+  REAL(DP), POINTER :: vloc_d (:, :)
   attributes(DEVICE) :: vloc_d
 #endif
   !
+  force(:,:)    = 0.D0
+  !
+  ! Early return if all forces to be set to zero
+  !
+  IF ( ALL( if_pos == 0 ) ) RETURN
   !
   CALL start_clock( 'forces' )
-  !
-  ! Cleanup scratch space used in previous SCF iterations. This will reduce memory footprint.
+#if defined(__CUDA)
+  ! Cleanup scratch space used in previous SCF iterations.
+  ! This will reduce memory footprint.
   CALL dev_buf%reinit(ierr)
-  IF (ierr .ne. 0) CALL errore('forces', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr))
+  IF (ierr .ne. 0) CALL infomsg('forces', 'Cannot reset GPU buffers! Some buffers still locked.')
+#endif
+  !
   !
   ALLOCATE( forcenl(3,nat), forcelc(3,nat), forcecc(3,nat), &
             forceh(3,nat), forceion(3,nat), forcescc(3,nat) )
   !    
   forcescc(:,:) = 0.D0
   forceh(:,:)   = 0.D0
-  force(:,:)    = 0.D0
   !
   ! ... The nonlocal contribution is computed here
   !
@@ -127,6 +134,7 @@ SUBROUTINE forces()
      CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
                  g, rho%of_r(:,1), dfftp%nl, gstart, gamma_only, vloc, &
                  forcelc )
+#if defined(__CUDA)
   IF (      use_gpu) THEN ! On the GPU
      ! move these data to the GPU
      CALL dev_buf%lock_buffer(vloc_d, (/ ngl, ntyp /) , ierr)
@@ -137,6 +145,7 @@ SUBROUTINE forces()
                    forcelc )
      CALL dev_buf%release_buffer(vloc_d, ierr)
   END IF
+#endif
   call stop_clock('frc_lc') 
   !
   ! ... The NLCC contribution
@@ -151,9 +160,9 @@ SUBROUTINE forces()
   !     (included by force_us if using beta as local projectors)
   !
   IF (.not. use_gpu) THEN
-     IF ( lda_plus_u .AND. U_projection.NE.'pseudo' ) CALL force_hub( forceh )
+     IF ( lda_plus_u .AND. Hubbard_projectors.NE.'pseudo' ) CALL force_hub( forceh )
   ELSE
-     IF ( lda_plus_u .AND. U_projection.NE.'pseudo' ) CALL force_hub_gpu( forceh )
+     IF ( lda_plus_u .AND. Hubbard_projectors.NE.'pseudo' ) CALL force_hub_gpu( forceh )
   ENDIF
   !
   ! ... The ionic contribution is computed here
@@ -179,6 +188,7 @@ SUBROUTINE forces()
   !
   IF ( ldftd3 ) THEN
     !
+    CALL start_clock('force_dftd3')
     ALLOCATE( force_d3(3, nat) )
     force_d3(:,:) = 0.0_DP
     latvecs(:,:) = at(:,:)*alat
@@ -188,6 +198,7 @@ SUBROUTINE forces()
                           force_d3, stress_dftd3 )
     force_d3 = -2.d0*force_d3
     tau(:,:) = tau(:,:)/alat
+    CALL stop_clock('force_dftd3')
   ENDIF
   !
   !
@@ -200,10 +211,12 @@ SUBROUTINE forces()
   ! ... The SCF contribution
   !
   call start_clock('frc_scc')
+#if defined(__CUDA)
   ! Cleanup scratch space again, next subroutines uses a lot of memory.
   ! In an ideal world this should be done only if really needed (TODO).
   CALL dev_buf%reinit(ierr)
   IF (ierr .ne. 0) CALL errore('forces', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr))
+#endif
   !
   IF ( .not. use_gpu ) CALL force_corr( forcescc )
   IF (       use_gpu ) CALL force_corr_gpu( forcescc )
@@ -460,6 +473,9 @@ SUBROUTINE forces()
   IF ( ldftd3   ) DEALLOCATE( force_d3         )
   IF ( lxdm     ) DEALLOCATE( force_disp_xdm   ) 
   IF ( lelfield ) DEALLOCATE( forces_bp_efield )
+  IF(ALLOCATED(force_mt))   DEALLOCATE( force_mt )
+  !
+  ! FIXME: what is the following line good for?
   !
   lforce = .TRUE.
   !
@@ -468,9 +484,6 @@ SUBROUTINE forces()
   IF ( ( sumfor < 10.D0*sumscf ) .AND. ( sumfor > nat*eps ) ) &
   WRITE( stdout,'(5x,"SCF correction compared to forces is large: ", &
                    &  "reduce conv_thr to get better values")')
-  !
-  IF(ALLOCATED(force_mt))   DEALLOCATE( force_mt )
-
   RETURN
   !
 9035 FORMAT(5X,'atom ',I4,' type ',I2,'   force = ',3F14.8)

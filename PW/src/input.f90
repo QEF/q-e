@@ -1,5 +1,5 @@
 
-! Copyright (C) 2002-2020 Quantum ESPRESSO group
+! Copyright (C) 2002-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,7 +22,6 @@ SUBROUTINE iosys()
   USE control_flags, ONLY : adapt_thr, tr2_init, tr2_multi  
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
                             ry_kbar, amu_ry, bohr_radius_angs, eps8
-  USE mp_pools,      ONLY : npool
   !
   USE io_global,     ONLY : stdout, ionode, ionode_id
   !
@@ -40,7 +39,7 @@ SUBROUTINE iosys()
                             press_       => press, &
                             wmass_       => wmass
   !
-  USE ions_base,     ONLY : if_pos, ityp, tau, extfor, &
+  USE ions_base,     ONLY : if_pos, ityp, tau, extfor, atm, &
                             ntyp_ => nsp, &
                             nat_  => nat, &
                             amass, tau_format
@@ -56,7 +55,13 @@ SUBROUTINE iosys()
                               dt_         => dt, &
                               delta_t_    => delta_t, &
                               nraise_     => nraise, &
-                              refold_pos_ => refold_pos
+                              refold_pos_ => refold_pos, &
+                              fire_nmin_ => fire_nmin, &
+                              fire_f_inc_ => fire_f_inc, &
+                              fire_f_dec_ => fire_f_dec,  &
+                              fire_alpha_init_ => fire_alpha_init, &  
+                              fire_falpha_ => fire_falpha, &
+                              fire_dtmax_ => fire_dtmax
   !
   USE extfield,      ONLY : tefield_  => tefield, &
                             dipfield_ => dipfield, &
@@ -81,8 +86,6 @@ SUBROUTINE iosys()
                             pseudo_dir_cur, restart_dir, &
                             check_tempdir, clean_tempdir, nd_nmbr
   !
-  USE force_mod,     ONLY : lforce, lstres
-  !
   USE fft_base, ONLY : dfftp
   USE fft_base, ONLY : dffts
   !
@@ -94,25 +97,33 @@ SUBROUTINE iosys()
   USE ktetra,        ONLY : tetra_type
   USE start_k,       ONLY : init_start_k
   !
-  USE ldaU,          ONLY : Hubbard_U_     => hubbard_u, &
+  USE ldaU,          ONLY : Hubbard_U_  => hubbard_u, &
                             Hubbard_J0_ => hubbard_j0, &
                             Hubbard_J_ => hubbard_j, &
+                            Hubbard_n_ => hubbard_n, &
+                            Hubbard_l_ => hubbard_l, &
                             Hubbard_alpha_ => hubbard_alpha, &
                             Hubbard_beta_ => hubbard_beta, &
                             lda_plus_u_    => lda_plus_u, &
                             lda_plus_u_kind_    => lda_plus_u_kind, &
-                            Hubbard_parameters_ => Hubbard_parameters, &
+                            Hubbard_projectors_ => hubbard_projectors, &
                             iso_sys_    => iso_sys, &
-                            niter_with_fixed_ns, starting_ns, U_projection, &
-                            Hubbard_U_back_ => hubbard_u_back, &
+                            niter_with_fixed_ns, starting_ns, &
+                            Hubbard_U2_ => hubbard_u2, &
+                            Hubbard_n2_ => hubbard_n2, &
+                            Hubbard_l2_ => hubbard_l2, &
+                            Hubbard_n3_ => hubbard_n3, &
+                            Hubbard_l3_ => hubbard_l3, &
                             Hubbard_alpha_back_ => hubbard_alpha_back, &
                             Hubbard_V_ => hubbard_v , &
+                            Hubbard_occ_ => hubbard_occ, &
                             hub_pot_fix_ => hub_pot_fix, &
                             reserv_ => reserv, &
                             backall_ => backall, &
-                            lback_ => lback, &
-                            l1back_ => l1back, &
                             reserv_back_ => reserv_back
+  !
+  USE add_dmft_occ,  ONLY : dmft_ => dmft, &
+                            dmft_prefix_ => dmft_prefix
   !
   USE martyna_tuckerman, ONLY: do_comp_mt
   !
@@ -144,12 +155,14 @@ SUBROUTINE iosys()
   !
   USE extrapolation, ONLY : pot_order, wfc_order
   USE control_flags, ONLY : isolve, max_cg_iter, max_ppcg_iter, david, &
+                            rmm_ndim, rmm_conv, gs_nblock, rmm_with_davidson, &
                             tr2, imix, gamma_only, &
                             nmix, iverbosity, smallmem, niter, &
                             io_level, ethr, lscf, lbfgs, lmd, &
                             lbands, lconstrain, restart, &
                             llondon, ldftd3, do_makov_payne, lxdm, &
-                            lensemb, &
+                            lensemb, lforce   => tprnfor, &
+                            tstress_          => tstress, &
                             remove_rigid_rot_ => remove_rigid_rot, &
                             diago_full_acc_   => diago_full_acc, &
                             tolp_             => tolp, &
@@ -182,12 +195,10 @@ SUBROUTINE iosys()
                                lambda_    => lambda, &
                                angle1_    => angle1, &
                                angle2_    => angle2, &
-                               report_    => report
-  !
-  USE spin_orb, ONLY : lspinorb_ => lspinorb,  &
-                       lforcet_ => lforcet,    &
-                       starting_spin_angle_ => starting_spin_angle
-
+                               report_    => report, &
+                               lspinorb_ => lspinorb,  &
+                               lforcet_ => lforcet,    &
+                               starting_spin_angle_ => starting_spin_angle
   !
   USE symm_base, ONLY : no_t_rev_ => no_t_rev, nofrac, allfrac, &
                         nosym_ => nosym, nosym_evc_=> nosym_evc
@@ -234,14 +245,11 @@ SUBROUTINE iosys()
                                use_all_frac, force_symmorphic,              &
                                starting_charge, starting_magnetization,     &
                                occupations, degauss, smearing, nspin,       &
-                               ecfixed, qcutz, q2sigma, lda_plus_U,         &
-                               lda_plus_U_kind, Hubbard_U, Hubbard_J,       &
-                               Hubbard_J0, Hubbard_beta,                    &
-                               Hubbard_alpha, Hubbard_parameters,           &
-                               Hubbard_U_back, Hubbard_alpha_back,          &
-                               Hubbard_V, hub_pot_fix, reserv, reserv_back, &
-                               backall, lback, l1back, input_dft, la2F,     &
-                               starting_ns_eigenvalue, U_projection_type,   &
+                               ecfixed, qcutz, q2sigma,                     &
+                               dmft, dmft_prefix, Hubbard_beta, Hubbard_occ,&
+                               Hubbard_alpha, Hubbard_alpha_back,           &
+                               hub_pot_fix, reserv, reserv_back, backall,   &
+                               input_dft, la2F, starting_ns_eigenvalue,     &
                                x_gamma_extrapolation, nqx1, nqx2, nqx3,     &
                                exxdiv_treatment, yukawa, ecutvcut,          &
                                exx_fraction, screening_parameter, ecutfock, &
@@ -269,8 +277,10 @@ SUBROUTINE iosys()
                                tqr, tq_smoothing, tbeta_smoothing,         &
                                diago_thr_init,                             &
                                diago_cg_maxiter, diago_ppcg_maxiter,       &
-                               diago_david_ndim, diagonalization,          &
-                               diago_full_acc, startingwfc, startingpot,   &
+                               diago_david_ndim, diago_rmm_ndim,           &
+                               diago_rmm_conv, diago_gs_nblock,            &
+                               diagonalization, diago_full_acc,            &
+                               startingwfc, startingpot,                   &
                                real_space, scf_must_converge
   USE input_parameters, ONLY : adaptive_thr, conv_thr_init, conv_thr_multi
   !
@@ -281,7 +291,9 @@ SUBROUTINE iosys()
                                refold_pos, remove_rigid_rot, upscale,          &
                                pot_extrapolation,  wfc_extrapolation,          &
                                w_1, w_2, trust_radius_max, trust_radius_min,   &
-                               trust_radius_ini, bfgs_ndim
+                               trust_radius_ini, bfgs_ndim, &
+                               fire_nmin, fire_f_inc, fire_f_dec, &
+                               fire_alpha_init, fire_falpha, fire_dtmax
   !
   ! ... CELL namelist
   !
@@ -302,13 +314,19 @@ SUBROUTINE iosys()
                                     f_inp
   USE input_parameters,      ONLY : deallocate_input_parameters
   !
+  ! Hubbard
+  USE input_parameters,      ONLY : Hubbard_U, Hubbard_J, Hubbard_J0, Hubbard_V, Hubbard_U2, &
+                                    Hubbard_n, Hubbard_l, Hubbard_projectors, &
+                                    Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, &
+                                    lda_plus_u, lda_plus_u_kind
+
   USE constraints_module,    ONLY : init_constraint
   USE read_namelists_module, ONLY : read_namelists, sm_not_set
   USE london_module,         ONLY : init_london, lon_rcut, scal6, in_c6, in_rvdw
   USE dftd3_api,             ONLY : dftd3_init, dftd3_set_params, &
                                     dftd3_set_functional, dftd3_calc, &
                                     dftd3_input
-  USE dftd3_qe,              ONLY : dftd3_printout, dftd3_xc, dftd3, dftd3_in
+  USE dftd3_qe,              ONLY : dftd3_xc, dftd3, dftd3_in
   USE xdm_module,            ONLY : init_xdm, a1i, a2i
   USE tsvdw_module,          ONLY : vdw_isolated, vdw_econv_thr
   USE uspp_data,             ONLY : spline_ps_ => spline_ps
@@ -329,10 +347,11 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   CHARACTER(LEN=256):: dft_
   !
-  INTEGER  :: ia, nt, tempunit, i, j
+  INTEGER  :: ia, nt, tempunit, i, j, ibrav_mp
   LOGICAL  :: exst, parallelfs, domag, stop_on_error
   REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, V
   CHARACTER(len=256) :: tempfile
+  INTEGER, EXTERNAL :: at2ibrav
   !
   ! MAIN CONTROL VARIABLES, MD AND RELAX
   !
@@ -383,6 +402,20 @@ SUBROUTINE iosys()
         !
         lmd     = .true.
         calc    = 'vm'
+        !
+        ntcheck = nstep + 1
+        !
+     CASE ( 'fire' )
+        !
+        lmd     = .true.
+        calc    = 'fi'
+        ! set fire variables
+        fire_nmin_ = fire_nmin
+        fire_f_inc_ = fire_f_inc
+        fire_f_dec_ = fire_f_dec
+        fire_alpha_init_ = fire_alpha_init
+        fire_falpha_ = fire_falpha
+        fire_dtmax_ = fire_dtmax
         !
         ntcheck = nstep + 1
         !
@@ -523,7 +556,7 @@ SUBROUTINE iosys()
   !
   dt_    = dt
   nstep_ = nstep
-  lstres = lmovecell .OR. ( tstress .and. lscf )
+  tstress_ = lmovecell .OR. ( tstress .and. lscf )
   !
   ! ELECTRIC FIELDS (SAWTOOTH), GATE FIELDS
   !
@@ -559,7 +592,7 @@ SUBROUTINE iosys()
   ENDIF
   !
   IF ( (tefield.or.gate) .and. tstress ) THEN
-     lstres = .false.
+     tstress_ = .false.
      WRITE( stdout, &
             '(5x,"Presently stress not available with electric field and gates",/)' )
   ENDIF
@@ -617,15 +650,15 @@ SUBROUTINE iosys()
   IF( ltetra ) THEN
      IF( lforce ) CALL infomsg( 'iosys', &
        'BEWARE:  force calculation with tetrahedra (not recommanded)')
-     IF( lstres ) CALL infomsg( 'iosys', &
+     IF( tstress_ ) CALL infomsg( 'iosys', &
        'BEWARE: stress calculation with tetrahedra (not recommanded)')
   END IF
   IF( nbnd < 1 ) CALL errore( 'iosys', 'nbnd less than 1', nbnd ) 
   nbnd_    = nbnd
   !
-  two_fermi_energies = ( tot_magnetization /= -1._DP)
-  IF ( two_fermi_energies .and. tot_magnetization < 0._DP) &
-     CALL errore( 'iosys', 'tot_magnetization only takes positive values', 1 )
+  two_fermi_energies = ( tot_magnetization /= -10000._DP)
+  IF ( two_fermi_energies .and. tot_magnetization < -9999._DP) &
+     CALL errore( 'iosys', 'tot_magnetization only larger than -9999 is allowed', 1 )
   IF ( two_fermi_energies .and. .not. lsda ) &
      CALL errore( 'iosys', 'tot_magnetization requires nspin=2', 1 )
   !
@@ -978,6 +1011,21 @@ SUBROUTINE iosys()
      !
      isolve = 3
      !
+  CASE ( 'rmm', 'rmm-diis', 'rmm-davidson' )
+     !
+     isolve = 4
+     rmm_ndim  = diago_rmm_ndim
+     rmm_conv  = diago_rmm_conv
+     gs_nblock = diago_gs_nblock
+     rmm_with_davidson = .TRUE. 
+     !
+  CASE  ( 'rmm-paro')
+     !
+     isolve = 4
+     rmm_ndim = diago_rmm_ndim 
+     rmm_conv = diago_rmm_conv 
+     gs_nblock = diago_gs_nblock 
+     rmm_with_davidson = .FALSE.  
   CASE DEFAULT
      !
      CALL errore( 'iosys', 'diagonalization ' // &
@@ -1168,8 +1216,6 @@ SUBROUTINE iosys()
   ! ELECTRIC FIELDS AND BERRY PHASE
   !
   IF ( lberry .OR. lelfield .OR. lorbm ) THEN
-     IF ( npool > 1 ) CALL errore( 'iosys', &
-          'Berry Phase/electric fields not implemented with pools', 1 )
      IF ( lgauss .OR. ltetra ) CALL errore( 'iosys', &
           'Berry Phase/electric fields only for insulators!', 1 )
      IF ( lmovecell ) CALL errore( 'iosys', &
@@ -1195,82 +1241,51 @@ SUBROUTINE iosys()
         CALL errore( 'iosys', 'Unknown efield_phase', 1 )
   END SELECT
   !
-  ! Hubbard parameters for DFT+U+V
+  ! DMFT
   !
-  IF ( lda_plus_u_kind == 0 .OR. lda_plus_u_kind == 1 ) THEN
-     !
-     ! In this case the Hubbard parameters can be read only directly
-     ! from the PWscf input
-     !
-     IF ( Hubbard_parameters /= 'input' ) &
-        CALL errore( 'iosys', 'Not allowed value of Hubbard_parameters', 1 )
-     !
-  ELSEIF ( lda_plus_u_kind == 2 ) THEN
-     !
-     IF ( Hubbard_parameters == 'input' ) THEN
-        !
-        WRITE( stdout, '(/5x,"Reading Hubbard V parameters from the input...",/)')
-        !
-     ELSEIF ( Hubbard_parameters == 'file' ) THEN
-        !
-        WRITE( stdout, '(/5x,"Reading Hubbard V parameters from the file parameters.in...",/)')
-        !
-        tempfile = TRIM("parameters.in")
-        !
-        INQUIRE (file = tempfile, exist = exst)
-        IF (.NOT.exst) CALL errore('iosys','File parameters.in was not found...',1)
-        !
-        ! Nullify all Hubbard_V, just in case if they were specified in the PWscf input
-        !
-        Hubbard_V(:,:,:) = 0.0d0
-        !
-        ! Open the file parameters.in and read Hubbard_V from there
-        !
-        OPEN( NEWUNIT = tempunit, FILE = tempfile, FORM = 'formatted', STATUS = 'unknown' )
-        READ(tempunit,*)
-10      READ(tempunit,*,END=11) i, j, V
-        Hubbard_V(i,j,1) = V
-        GO TO 10
-11      CLOSE( UNIT = tempunit, STATUS = 'KEEP' )
-        !
-     ELSEIF ( Hubbard_parameters /= 'input' .AND. Hubbard_parameters /= 'file' ) THEN
-        !
-        CALL errore( 'iosys', 'Not allowed value of Hubbard_parameters', 1 )
-        !  
-     ENDIF
-     !
+  dmft_             = dmft
+  dmft_prefix_      = dmft_prefix
+  !
+#if defined __HDF5
+  IF ( dmft) THEN
+     IF ( nspin > 1 ) CALL errore( 'iosys', &
+          'DMFT update not implemented with nspin > 1', 1 )
+  ENDIF
+#else
+  IF ( dmft) THEN
+      CALL errore( 'iosys', 'DMFT update not implemented without HDF5 library', 1 )
+  ENDIF
+#endif
+  !
+  lda_plus_u_      = lda_plus_u
+  lda_plus_u_kind_ = lda_plus_u_kind
+  !
+  IF ( lda_plus_u .AND. (lda_plus_u_kind==0 .OR. lda_plus_u_kind==2) .AND. noncolin ) THEN
+     CALL errore('iosys', 'simplified DFT+U(+V) is not implemented with &
+                          &noncol. magnetism, use DFT+U+J', 1)
   ENDIF
   !
   Hubbard_U_(1:ntyp)          = hubbard_u(1:ntyp) / rytoev
   Hubbard_J_(1:3,1:ntyp)      = hubbard_j(1:3,1:ntyp) / rytoev
   Hubbard_J0_(1:ntyp)         = hubbard_j0(1:ntyp) / rytoev
   Hubbard_V_(:,:,:)           = hubbard_V(:,:,:) / rytoev
-  Hubbard_U_back_(:)          = hubbard_U_back(:) / rytoev
+  Hubbard_U2_(:)              = hubbard_U2(:) / rytoev
+  Hubbard_n_(1:ntyp)          = hubbard_n(1:ntyp)
+  Hubbard_l_(1:ntyp)          = hubbard_l(1:ntyp)
+  Hubbard_n2_(1:ntyp)         = hubbard_n2(1:ntyp)
+  Hubbard_l2_(1:ntyp)         = hubbard_l2(1:ntyp)
+  Hubbard_n3_(1:ntyp)         = hubbard_n3(1:ntyp)
+  Hubbard_l3_(1:ntyp)         = hubbard_l3(1:ntyp)
+  Hubbard_projectors_         = hubbard_projectors
   Hubbard_alpha_(1:ntyp)      = hubbard_alpha(1:ntyp) / rytoev
   Hubbard_beta_(1:ntyp)       = hubbard_beta(1:ntyp) / rytoev
+  Hubbard_occ_(1:ntyp,1:3)    = hubbard_occ(1:ntyp,1:3)
   Hubbard_alpha_back_(1:ntyp) = hubbard_alpha_back(1:ntyp) / rytoev
-  U_projection                = U_projection_type
   starting_ns                 = starting_ns_eigenvalue
   backall_(1:ntyp)            = backall(1:ntyp)
-  lback_(1:ntyp)              = lback(1:ntyp)
-  l1back_(1:ntyp)             = l1back(1:ntyp)
   hub_pot_fix_                = hub_pot_fix
   reserv_                     = reserv
   reserv_back_                = reserv_back
-  !
-  IF ( lda_plus_u .AND. lda_plus_u_kind == 0 .AND. noncolin ) THEN
-     CALL errore('iosys', 'simplified LDA+U not implemented with &
-                          &noncol. magnetism, use lda_plus_u_kind = 1', 1)
-  END IF
-  IF ( lda_plus_u .AND. lda_plus_u_kind == 2 ) THEN
-     IF ( nat > SIZE(Hubbard_V,1) ) CALL errore('input', &
-          & 'Too many atoms. The dimensions of Hubbard_V must be increased.',1)
-     ! In order to increase the dimensions of the Hubbard_V array,
-     ! change the parameter natx in Modules/parameters.f90 from 50 to the 
-     ! number of atoms in your system.
-  END IF
-  lda_plus_u_             = lda_plus_u
-  lda_plus_u_kind_        = lda_plus_u_kind
   !
   ! REAL-SPACE TREATMENT
   !
@@ -1365,7 +1380,21 @@ SUBROUTINE iosys()
   !
   IF (.NOT. tqmmm) CALL qmmm_config( mode=-1 )
   !
-  ! BOUNDARY CONDITIONS, ESM
+  ! ATOMIC POSITIONS
+  !
+  ! init_pos replaces old "read_cards_pw
+  !
+  CALL init_pos ( psfile, tau_format )
+  ! next two lines should be moved out from here
+  IF ( tefield ) ALLOCATE( forcefield( 3, nat_ ) )
+  IF ( gate ) ALLOCATE( forcegate( 3, nat_ ) ) 
+  !
+  ! CRYSTAL LATTICE
+  !
+  call cell_base_init ( ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
+                        trd_ht, rd_ht, cell_units )
+  !
+  ! BOUNDARY CONDITIONS (MP correction depends on at set in cell_base_init), ESM
   !
   do_makov_payne  = .false.
   do_comp_mt      = .false.
@@ -1377,7 +1406,9 @@ SUBROUTINE iosys()
     CASE( 'makov-payne', 'm-p', 'mp' )
       !
       do_makov_payne = .true.
-      IF ( ibrav < 1 .OR. ibrav > 3 ) CALL errore(' iosys', &
+      ibrav_mp = ibrav
+      IF ( ibrav .EQ. 0 ) ibrav_mp = at2ibrav(at(:, 1), at(:, 2), at(:, 3))
+      IF ( ibrav_mp < 1 .OR. ibrav_mp > 3 ) CALL errore(' iosys', &
               'Makov-Payne correction defined only for cubic lattices', 1)
       !
     CASE( 'martyna-tuckerman', 'm-t', 'mt' )
@@ -1403,8 +1434,8 @@ SUBROUTINE iosys()
       !
   END SELECT
   !
-  IF ( do_comp_mt .AND. lstres ) THEN
-     lstres = .false.
+  IF ( do_comp_mt .AND. tstress_ ) THEN
+     tstress_ = .false.
      WRITE( stdout, &
           '(5x,"Stress calculation not meaningful in isolated systems",/)' )
   END IF
@@ -1414,7 +1445,7 @@ SUBROUTINE iosys()
   esm_bc_ = esm_bc
   esm_efield_ = esm_efield
   esm_w_ = esm_w
-  esm_nfit_ = esm_nfit 
+  esm_nfit_ = esm_nfit
   esm_a_ = esm_a
   !
   IF ( esm_bc .EQ. 'bc4' ) THEN
@@ -1429,21 +1460,6 @@ SUBROUTINE iosys()
       CALL errore ('iosys','smoothness parameter for bc4 too big',1)
     ENDIF
   ENDIF
-  !
-  !
-  ! ATOMIC POSITIONS
-  !
-  ! init_pos replaces old "read_cards_pw
-  !
-  CALL init_pos ( psfile, tau_format )
-  ! next two lines should be moved out from here
-  IF ( tefield ) ALLOCATE( forcefield( 3, nat_ ) )
-  IF ( gate ) ALLOCATE( forcegate( 3, nat_ ) ) 
-  !
-  ! CRYSTAL LATTICE
-  !
-  call cell_base_init ( ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
-                        trd_ht, rd_ht, cell_units )
   !
   ! ... once input variables have been stored, read optional plugin input files
   !
@@ -1597,8 +1613,6 @@ SUBROUTINE iosys()
           'ecutfock can not be < ecutwfc or > ecutrho!', 1) 
      ecutfock_ = ecutfock
   END IF
-  IF ( lstres .AND. xclib_dft_is('hybrid') .AND. npool > 1 )  CALL errore('iosys', &
-         'stress for hybrid functionals not available with pools', 1)
   IF ( lmovecell.AND. xclib_dft_is('hybrid') ) CALL infomsg('iosys',&
          'Variable cell and hybrid XC little tested')
   !
@@ -1641,7 +1655,6 @@ SUBROUTINE iosys()
       if (dftd3_version==2) dftd3_threebody=.false.
       dftd3_in%threebody = dftd3_threebody
       CALL dftd3_init(dftd3, dftd3_in)
-      CALL dftd3_printout(dftd3, dftd3_in)
       dft_ = get_dft_short( )
       dft_ = dftd3_xc ( dft_ )
       CALL dftd3_set_functional(dftd3, func=dft_, version=dftd3_version,tz=.false.)
@@ -1669,7 +1682,7 @@ SUBROUTINE iosys()
   !
   ! ... End of reading input parameters
   !
-#if ! defined (__INTEL_COMPILER) || (__INTEL_COMPILER >= 1300) 
+#if ( ! defined (__INTEL_COMPILER) || (__INTEL_COMPILER >= 1300) ) && ! defined (__CRAY)
   CALL pw_init_qexsd_input(qexsd_input_obj, obj_tagname="input")
 #endif
   CALL deallocate_input_parameters ()  

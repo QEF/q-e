@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2019 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -28,7 +28,6 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
   USE uspp,                 ONLY : okvan
   USE mp_bands,             ONLY : ntask_groups, me_bgrp
-  USE spin_orb,             ONLY : domag
   USE buffers,              ONLY : get_buffer
   USE qpoint,               ONLY : ikks, ikqs, nksq
   USE eqv,                  ONLY : evq, dpsi, dvpsi
@@ -38,6 +37,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   USE fft_interfaces,       ONLY : fft_interpolate
   USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate, &
                                    apply_dpot_bands
+  USE uspp_init,            ONLY : init_us_2
  
   IMPLICIT NONE
   !
@@ -48,7 +48,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   ! Local variables
   !
   LOGICAL :: interaction1
-  INTEGER :: i,j,ir, ibnd, ig, ia, ios, is, ipol
+  INTEGER :: i,j,ir, ibnd, ig, ia, ios, is
   INTEGER :: ik,  &
              ikk, & ! index of the point k
              ikq, & ! index of the point k+q

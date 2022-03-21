@@ -8,9 +8,8 @@
 !-----------------------------------------------------------------------
 subroutine allocate_part ( nat )
   !-----------------------------------------------------------------------
-  !
-  ! dynamical allocation of arrays for the control of partial computation
-  ! of the dynamical matrix
+  !! Dynamical allocation of arrays for the control of partial computation
+  !! of the dynamical matrix.
   !
   USE partial, ONLY : comp_irr, done_irr, atomo
   USE el_phon, ONLY : comp_elph, done_elph, elph

@@ -8,19 +8,20 @@
 !  - SiGeK1.bin
 !  - SiGeK2.bin
 !
-! If the scalacpak or ELPA driver is used, the test is skipped.
+! If the scalapack or ELPA driver is used, the test is skipped.
 !
 #if ( ! defined(__SCALAPACK) ) && defined(__CUDA) 
 program test_diaghg_gpu_4
-#if defined(__MPI)
-    USE MPI
-#endif
+
+    USE laxlib_parallel_include
     USE mp,            ONLY : mp_bcast
     USE mp_world,      ONLY : mp_world_start, mp_world_end, mpime, &
                               root, nproc, world_comm
     USE mp_bands_util, ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
     USE tester
     IMPLICIT NONE
+    include 'laxlib_kinds.fh'
+    include 'laxlib_param.fh'
     !
     TYPE(tester_t) :: test
     INTEGER :: world_group = 0
@@ -51,14 +52,14 @@ program test_diaghg_gpu_4
     USE cudafor
     USE mp_world,    ONLY : mpime
     USE LAXlib
-    USE descriptors, ONLY : la_descriptor, descla_init, descla_local_dims
-    USE la_param,    ONLY : DP
+    USE laxlib_descriptor, ONLY : la_descriptor, descla_init, laxlib_desc_to_intarray
     USE test_io
     implicit none
     !
     TYPE(tester_t) :: test
     !
     TYPE(la_descriptor) :: desc
+    INTEGER :: idesc(LAX_DESC_SIZE)
     integer :: ldh, n, m
     real(DP), allocatable         :: h(:,:), hdst(:,:)   !< full and distributed Hpsi
     real(DP), allocatable, device :: hdst_d(:,:)         !< distributed Hpsi on device
@@ -128,7 +129,9 @@ program test_diaghg_gpu_4
         e(1:n)   = 0.d0
         e_d(1:n) = 0.d0
         !
-        CALL pdiaghg( n, hdst_d, sdst_d, nrdst, e_d, vdst_d, desc, .false. )
+        CALL laxlib_desc_to_intarray( idesc, desc )
+        !
+        CALL pdiaghg( n, hdst_d, sdst_d, nrdst, e_d, vdst_d, idesc, .false. )
         !
         e(1:n) = e_d
         !
@@ -141,7 +144,7 @@ program test_diaghg_gpu_4
         e(1:n) = 0.d0
         e_d(1:n) = 0.d0
         !
-        CALL pdiaghg( n, hdst_d, sdst_d, nrdst, e_d, vdst_d, desc, .true. )
+        CALL pdiaghg( n, hdst_d, sdst_d, nrdst, e_d, vdst_d, idesc, .true. )
         !
         e(1:n) = e_d
         !
@@ -159,9 +162,8 @@ program test_diaghg_gpu_4
   SUBROUTINE parallel_complex_1(test)
     USE cudafor
     USE mp_world, ONLY : mpime
-    USE descriptors, ONLY : la_descriptor, descla_init, descla_local_dims
+    USE laxlib_descriptor, ONLY : la_descriptor, descla_init, laxlib_desc_to_intarray
     USE LAXlib
-    USE la_param, ONLY : DP
     USE test_io
     implicit none
     !
@@ -181,6 +183,7 @@ program test_diaghg_gpu_4
     real(DP), allocatable            :: e_save(:)           !< full set of eigenvalues, used for checks
     complex(DP), allocatable         :: v_save(:,:)         !< full set of eigenvectors, used for checks
     TYPE(la_descriptor)              :: desc
+    INTEGER :: idesc(LAX_DESC_SIZE)
     !
     character(len=20)        :: inputs(4)
     integer                  :: l, i, j, ii, jj, info, nrdst
@@ -238,8 +241,10 @@ program test_diaghg_gpu_4
         ALLOCATE(sdst_d, SOURCE=sdst)
         ALLOCATE(vdst_d( nrdst , nrdst ), e_d(n))
         !
+        CALL laxlib_desc_to_intarray( idesc, desc )
+        !
         e_d(1:n) = 0.d0
-        CALL pdiaghg( n, hdst_d, sdst_d, nrdst, e_d, vdst_d, desc, .false. )
+        CALL pdiaghg( n, hdst_d, sdst_d, nrdst, e_d, vdst_d, idesc, .false. )
         e = e_d
         !
         DO j = 1, m
@@ -249,7 +254,7 @@ program test_diaghg_gpu_4
         !
         !
         e_d(1:n) = 0.d0
-        CALL pdiaghg( n, hdst_d, sdst_d, nrdst, e_d, vdst_d, desc, .true. )
+        CALL pdiaghg( n, hdst_d, sdst_d, nrdst, e_d, vdst_d, idesc, .true. )
         !
         e = e_d
         DO j = 1, m
@@ -266,10 +271,9 @@ program test_diaghg_gpu_4
   SUBROUTINE init_parallel_diag(desc, n)
   
       USE mp_world, ONLY : mpime, nproc, world_comm
-      USE mp_diag,  ONLY : ortho_parent_comm
-      USE descriptors, ONLY : la_descriptor, descla_init, descla_local_dims
+      USE laxlib_processors_grid, ONLY : ortho_parent_comm
+      USE laxlib_descriptor, ONLY : la_descriptor, descla_init
       USE LAXlib
-      USE la_param, ONLY : DP
       implicit none
       !
       TYPE(la_descriptor) :: desc

@@ -530,8 +530,7 @@ SUBROUTINE cutoff_stres_sigmaloc_gpu( psicG_d, strf_d, sigmaloc )
   USE ions_base,   ONLY : ntyp => nsp
   USE vlocal,      ONLY : strf
   USE constants,   ONLY : eps8
-  USE gvect,       ONLY : ngm, gstart !, g, gg
-  USE gvect_gpum,  ONLY : g_d, gg_d
+  USE gvect,       ONLY : ngm, gstart, g_d, gg_d
   USE cell_base,   ONLY : tpiba, tpiba2, alat, omega
   USE io_global,   ONLY : stdout
   USE fft_base,    ONLY : dfftp
@@ -684,7 +683,7 @@ SUBROUTINE cutoff_stres_sigmahar_gpu( psicG_d, sigmahar )
   USE cell_base,  ONLY: tpiba2, alat, tpiba
   USE io_global,  ONLY: stdout
   USE fft_base,   ONLY: dfftp
-  USE gvect_gpum, ONLY: g_d, gg_d
+  USE gvect,      ONLY: g_d, gg_d
   !
   IMPLICIT NONE
   !
@@ -852,11 +851,9 @@ SUBROUTINE cutoff_stres_sigmaewa_gpu( alpha, sdewald, sigmaewa )
   USE kinds
   USE ions_base,   ONLY : nat, zv, tau, ityp
   USE constants,   ONLY : e2, eps8
-  USE gvect,       ONLY : ngm, gstart
+  USE gvect,       ONLY : ngm, gstart, g_d, gg_d
   USE cell_base,   ONLY : tpiba2, alat, omega, tpiba
   USE io_global,   ONLY : stdout
-  !
-  USE gvect_gpum,  ONLY : g_d, gg_d
   !
   IMPLICIT NONE
   !

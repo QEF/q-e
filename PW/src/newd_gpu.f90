@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -37,13 +37,14 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions,        ONLY : psic
   USE wavefunctions_gpum,   ONLY : psic_d
-  USE spin_orb,             ONLY : lspinorb, domag
   USE noncollin_module,     ONLY : nspin_mag
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
+#if defined(__CUDA)
   USE device_fbuff_m,       ONLY : buffer=>dev_buf
   IMPLICIT NONE
+#endif
   !
   !
   ! Input: potential , output: contribution to integral
@@ -76,7 +77,6 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   INTEGER, POINTER     :: na_to_nab_d(:)
 #if defined(__CUDA)
   attributes(DEVICE) :: na_to_nab_d
-#endif
   !
   ALLOCATE(na_to_nab_h(nat))
   CALL buffer%lock_buffer(na_to_nab_d, nat, ierr)
@@ -223,6 +223,7 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   ! REPLACE THIS WITH THE NEW allgather with type or use CPU variable! OPTIMIZE HERE
   CALL mp_sum( deeq_d( :, :, :, 1:nspin_mag ), inter_pool_comm )
   CALL mp_sum( deeq_d( :, :, :, 1:nspin_mag ), intra_bgrp_comm )
+#endif
   !
 END SUBROUTINE newq_gpu
   !
@@ -233,23 +234,22 @@ SUBROUTINE newd_gpu( )
   !! the Q function and adds it to the bare ionic D term which is used
   !! to compute the non-local term in the US scheme.
   !
-#if defined(__CUDA)
-  use cudafor
-  use cublas
-#endif
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE lsda_mod,             ONLY : nspin
   USE uspp,                 ONLY : deeq, okvan, deeq, deeq_d, deeq_nc, deeq_nc_d, dvan_d, dvan_so_d
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
-  USE spin_orb,             ONLY : lspinorb, domag
-  USE noncollin_module,     ONLY : noncolin, nspin_mag
+  USE noncollin_module,     ONLY : noncolin, domag, nspin_mag, lspinorb
   USE uspp,                 ONLY : nhtol, nhtolm
   USE scf,                  ONLY : v
   USE realus,               ONLY : newq_r
   USE control_flags,        ONLY : tqr
-  USE ldaU,                 ONLY : lda_plus_U, U_projection
+  USE ldaU,                 ONLY : lda_plus_U, Hubbard_projectors
+#if defined(__CUDA)
+  use cudafor
+  use cublas
   USE device_fbuff_m,       ONLY : buffer=>dev_buf
+#endif
   !
   IMPLICIT NONE
   !
@@ -260,7 +260,6 @@ SUBROUTINE newd_gpu( )
   INTEGER, POINTER :: ityp_d(:)
 #if defined(__CUDA)
   attributes(DEVICE) :: ityp_d
-#endif
   !
   IF ( .NOT. okvan ) THEN
      !
@@ -392,7 +391,7 @@ SUBROUTINE newd_gpu( )
   !
   IF (.NOT.noncolin) CALL add_paw_to_deeq_gpu(deeq_d)
   !
-  IF (lda_plus_U .AND. (U_projection == 'pseudo')) CALL add_vhub_to_deeq_gpu(deeq_d)
+  IF (lda_plus_U .AND. (Hubbard_projectors == 'pseudo')) CALL add_vhub_to_deeq_gpu(deeq_d)
   !
   CALL buffer%release_buffer(ityp_d, ierr)
   CALL stop_clock_gpu( 'newd' )
@@ -567,6 +566,7 @@ SUBROUTINE newd_gpu( )
       !
     RETURN
     END SUBROUTINE newd_nc_gpu
+#endif
     !
 END SUBROUTINE newd_gpu
 

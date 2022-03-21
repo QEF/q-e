@@ -40,7 +40,8 @@ else
       		    mkl_lib="mkl_intel_lp64"
       		    mkl_omp="mkl_intel_thread"
 		    if test "$arch" == "mac686"; then
-		       add_mkl_flag="-openmp"
+                       # for ifort v.15 or later
+		       add_mkl_flag="-qopenmp"
 		       add_mkl_lib="-lpthread"
 		       add_mkl_omp="-lpthread"
 		    fi
@@ -350,7 +351,7 @@ fi
 
 if test "$have_blas" -eq 0  ; then
     # No blas library found: use internal one (in lapack)
-    blas_libs="\$(TOPDIR)/LAPACK/libblas.a" 
+    blas_libs="\$(TOPDIR)/external/lapack/libblas.a"
 else
     echo setting BLAS_LIBS... $blas_libs
 fi

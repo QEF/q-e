@@ -13,7 +13,6 @@ set(src_hp
     src/hp_dealloc_1.f90
     src/hp_dealloc_2.f90
     src/hp_dvpsi_pert.f90
-    src/hp_efermi_shift.f90
     src/hp_find_inequiv_sites.f90
     src/hp_generate_grids.f90
     src/hp_init.f90
@@ -75,3 +74,9 @@ target_link_libraries(qe_hp_exe
 qe_install_targets(
     qe_hp
     qe_hp_exe)
+
+add_custom_target(hp
+    DEPENDS
+        qe_hp_exe
+    COMMENT
+        "calculation of the Hubbard parameters from DFPT")

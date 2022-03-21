@@ -55,17 +55,29 @@ IFLAGS         = @iflags@
 MOD_FLAG      = @imod@
 
 # BASEMOD_FLAGS points to directories containing basic modules,
-# while BASEMODS points to the corresponding module libraries
-# Each Makefile can add directories to MODFLAGS and libraries to QEMODS
+# while BASEMODS points to the corresponding module libraries.
+# More package-specific directories can be added in each Makefile
+# and stored into MODFLAGS, and the same for module libraries in QEMODS
 
 BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
                $(MOD_FLAG)$(TOPDIR)/XClib \
                $(MOD_FLAG)$(TOPDIR)/Modules \
-               $(MOD_FLAG)$(TOPDIR)/FFTXlib \
+               $(MOD_FLAG)$(TOPDIR)/FFTXlib/src \
 	       $(MOD_FLAG)$(TOPDIR)/LAXlib \
 	       $(MOD_FLAG)$(TOPDIR)/UtilXlib \
 	       $(MOD_FLAG)$(TOPDIR)/MBD \
+	       $(MOD_FLAG)$(TOPDIR)/KS_Solvers \
 	       $(MOD_FLAG)$(TOPDIR)/FoX/finclude
+
+# If A depends upon B, A should come before B in the list below
+# (most compilers don't care but some don't resolve cross links)
+BASEMODS= $(TOPDIR)/Modules/libqemod.a \
+          $(TOPDIR)/upflib/libupf.a \
+          $(TOPDIR)/XClib/xc_lib.a \
+          $(TOPDIR)/FFTXlib/src/libqefft.a \
+          $(TOPDIR)/LAXlib/libqela.a \
+          $(TOPDIR)/UtilXlib/libutil.a \
+          $(TOPDIR)/MBD/libmbd.a
 
 # Compilers: fortran-90, fortran-77, C
 # If a parallel compilation is desired, MPIF90 should be a fortran-90
@@ -77,17 +89,17 @@ MPIF90         = @mpif90@
 F90           = @f90@
 CC             = @cc@
 
-# CUDA Toolkit path
-CUDA_PATH=@cuda_path@
-
 # GPU architecture (Kepler: 35, Pascal: 60, Volta: 70 )
 GPU_ARCH=@gpu_arch@
 
 # CUDA runtime (Pascal: 8.0, Volta: 9.0)
-CUDA_RUNTIME=@gpu_runtime@
+CUDA_RUNTIME=@cuda_runtime@
 
 # CUDA F90 Flags
 CUDA_F90FLAGS=@cuda_fflags@ $(MOD_FLAG)$(TOPDIR)/external/devxlib/src
+
+# CUDA C Flags
+CUDA_CFLAGS=@cuda_cflags@
 
 # C preprocessor and preprocessing flags - for explicit preprocessing,
 # if needed (see the compilation rules above)
@@ -100,7 +112,7 @@ CPPFLAGS       = @cppflags@ $(DFLAGS) $(IFLAGS)
 # C flags must include DFLAGS and IFLAGS
 # F90 flags must include MODFLAGS, IFLAGS, and FDFLAGS with appropriate syntax
 
-CFLAGS         = @cflags@ $(DFLAGS) $(IFLAGS)
+CFLAGS         = @cflags@ $(DFLAGS) $(IFLAGS) $(CUDA_CFLAGS)
 F90FLAGS       = @f90flags@ @pre_fdflags@$(FDFLAGS) $(CUDA_F90FLAGS) $(IFLAGS) $(MODFLAGS)
 
 # compiler flags with and without optimization for fortran-77
@@ -125,13 +137,13 @@ LD_LIBS        = @ld_libs@
 # External Libraries (if any) : blas, lapack, fft, MPI
 
 # If you have nothing better, use the local copy
-# BLAS_LIBS = $(TOPDIR)/LAPACK/libblas.a
+# BLAS_LIBS = $(TOPDIR)/external/lapack/libblas.a
 
 BLAS_LIBS      = @blas_libs@
 
 # If you have nothing better, use the local copy
 # LAPACK_LIBS_SWITCH = internal
-# LAPACK_LIBS = $(TOPDIR)/LAPACK/liblapack.a
+# LAPACK_LIBS = $(TOPDIR)/external/lapack/liblapack.a
 
 LAPACK_LIBS    = @lapack_libs@
 LAPACK_LIBS_SWITCH = @lapack_libs_switch@
@@ -157,13 +169,9 @@ MPI_LIBS       = @mpi_libs@
 
 MASS_LIBS      = @mass_libs@
 
-# library for many-body dispersion
-
-MBD_LIBS= $(TOPDIR)/MBD/libmbd.a
-
 # CUDA libraries
 CUDA_LIBS=@cuda_libs@ -L$(TOPDIR)/external/devxlib/src -ldevXlib
-CUDA_EXTLIBS = devxlib @cuda_extlibs@
+CUDA_EXTLIBS = @cuda_extlibs@
 
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
 
@@ -179,9 +187,8 @@ RANLIB         = @ranlib@
 
 FLIB_TARGETS   = all
 
-LIBOBJS        = $(TOPDIR)/clib/clib.a
 LIBXC_LIBS     = @LIBS_LIBXC@
-QELIBS         = $(MBD_LIBS) $(LIBXC_LIBS) \
+QELIBS         = $(LIBXC_LIBS) \
                  $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) \
 		 $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LD_LIBS)
 

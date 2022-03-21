@@ -212,7 +212,7 @@ MODULE input
         orthogonalization, electron_velocities, nat, rd_if_pos,                &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
         iesr, saverho, rd_for, assume_isolated, wf_collect,                    &
-        memory, ref_cell, tcpbo, max_seconds
+        memory, ref_cell, tcpbo, max_seconds, pre_state
      USE xc_lib,             ONLY : xclib_dft_is
      !
      IMPLICIT NONE
@@ -738,7 +738,7 @@ MODULE input
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nbnd,                   &
            press, cell_damping, cell_dofree, tf_inp,                           &
            refg, greash, grease, greasp, epol, efield, tcg, maxiter, conv_thr, &
-           passop, tot_charge, tot_magnetization, niter_cg_restart
+           passop, tot_charge, tot_magnetization, niter_cg_restart, pre_state
      !
      USE input_parameters, ONLY : wf_efield, wf_switch, sw_len, efx0, efy0,    &
                                   efz0, efx1, efy1, efz1, wfsd, wfdt, maxwfdt, &
@@ -763,7 +763,7 @@ MODULE input
                                   step_rad, Surf_t, dthr, R_j, h_j,   &
                                   delta_eps, delta_sigma, n_cntr,     &
                                   axis
-     USE input_parameters, ONLY : lda_plus_u, Hubbard_U
+     USE input_parameters, ONLY : lda_plus_u, Hubbard_U, Hubbard_l, Hubbard_n
      USE input_parameters, ONLY : step_pen, A_pen, alpha_pen, sigma_pen
      USE input_parameters, ONLY : vdw_corr, london, london_s6, london_rcut, &
                                   ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr
@@ -877,8 +877,7 @@ MODULE input
 
      CALL efield_init( epol, efield )
 
-     CALL cg_init( tcg , maxiter , conv_thr , passop ,niter_cg_restart)
-
+     CALL cg_init( tcg, maxiter, conv_thr, passop, niter_cg_restart, pre_state)
      !
      IF( ( TRIM( sic ) /= 'none' ) .and. ( tpre .or. thdyn ) ) &
         CALL errore( ' module setup ', ' Stress is not yet implemented with SIC ', 1 )
@@ -932,7 +931,7 @@ MODULE input
      !
      ! ... initialize variables for lda+U calculations
      !
-     CALL ldaU_init0 ( ntyp, lda_plus_u, Hubbard_U )
+     CALL ldaU_init0 ( ntyp, lda_plus_u, Hubbard_U, Hubbard_l, Hubbard_n )
      CALL ldaUpen_init( SIZE(sigma_pen), step_pen, sigma_pen, alpha_pen, A_pen )
      !
      !  ... initialize variables for vdW (dispersions) corrections

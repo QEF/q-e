@@ -10,9 +10,17 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
    !----------------------------------------------------------------------------
    !! Sorts k+g in order of increasing magnitude, up to ecut.
    !
-   !! NB: this version should yield the same ordering for different ecut
-   !!     and the same ordering in all machines AS LONG AS INPUT DATA
-   !!     IS EXACTLY THE SAME
+   !! NB1: this version should yield the same ordering for different ecut
+   !!      and the same ordering in all machines AS LONG AS INPUT DATA
+   !!      IS EXACTLY THE SAME
+   !! NB2: this version assumes that input G-vectors are ordered by the same
+   !!      routine, "hpsort_eps", used here. In principle for k=0 this should
+   !!      guarantee that the ordering of k+G is the same as for G-vectors.
+   !!      In practice, in some special cases (primitive lattice vectors that
+   !!      are close to but not exactly equal to a symmetric Bravais lattice)
+   !!      this does not hold, presumably due to a limitation of "hpsort_eps".
+   !!      This is a source of trouble for Gamma-only calculations, so here
+   !!      we explicitly set igk(i)=i for k=0.
    !
    USE kinds,      ONLY: DP
    USE constants,  ONLY: eps8
@@ -75,13 +83,16 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
       CALL infomsg( 'gk_sort', 'unexpected exit from do-loop' )
    !
    ! ... order vector gk keeping initial position in index
+   ! ... see comments above about the k=0 case
    !
-   CALL hpsort_eps( ngk, gk, igk, eps8 )
-   !
-   ! ... now order true |k+G|
-   !
-   DO nk = 1, ngk
-      gk(nk) = SUM( (k(:) + g(:,igk(nk)) )**2 )
-   ENDDO
+   IF ( k(1)**2 + k(2)**2 + k(3)**2 > eps8 ) THEN
+      CALL hpsort_eps( ngk, gk, igk, eps8 )
+      !
+      ! ... now order true |k+G|
+      !
+      DO nk = 1, ngk
+         gk(nk) = SUM( (k(:) + g(:,igk(nk)) )**2 )
+      ENDDO
+   END IF
    !
 END SUBROUTINE gk_sort

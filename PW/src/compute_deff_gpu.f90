@@ -72,8 +72,7 @@ SUBROUTINE compute_deff_nc_gpu( deff_d, et )
   !
   USE kinds,            ONLY: DP
   USE ions_base,        ONLY: nsp, nat, ityp
-  USE spin_orb,         ONLY: lspinorb
-  USE noncollin_module, ONLY: noncolin, npol
+  USE noncollin_module, ONLY: noncolin, npol, lspinorb
   USE uspp,             ONLY: okvan, deeq_nc_d, qq_so_d, qq_at_d
   USE uspp_param,       ONLY: nhm
   USE lsda_mod,         ONLY: nspin

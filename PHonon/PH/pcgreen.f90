@@ -9,14 +9,13 @@
 !-----------------------------------------------------------------------
 subroutine pcgreen (avg_iter, thresh, ik, et_ )
   !-----------------------------------------------------------------------
-  !
-  ! Solve the linear system which defines the change of the wavefunctions
-  ! due to the electric field for a given k_point in a non self-consistent
-  ! way. The self-consistent variation of the potential has been computed
-  ! previously and is in the common variable dvscfs
+  !! Solve the linear system which defines the change of the wavefunctions
+  !! due to the electric field for a given k_point in a non self-consistent
+  !! way. The self-consistent variation of the potential has been computed
+  !! previously and is in the common variable \(\text{dvscfs}\).
   !
   use kinds, only : DP
-  USE wvfct,     ONLY : nbnd, npwx, g2kin
+  USE wvfct,     ONLY : nbnd, npwx
   USE klist,     ONLY : ngk
   USE wavefunctions,  ONLY: evc
   USE mp_bands,  ONLY: intra_bgrp_comm
@@ -24,20 +23,17 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   USE eqv,       ONLY: dpsi, dvpsi
   USE control_lr,ONLY : nbnd_occ
   implicit none
-
-  !
-  ! Input variables
   !
   integer :: ik
-  ! input: k-point under consideration
-
-  real(DP) :: avg_iter, thresh, et_ (nbnd)
-  ! in/out: # of diagonalization iterations
-  ! input: convergence threshold
-  ! input: eigenvalues of the hamiltonian
-
+  !! input: k-point under consideration
+  real(DP) :: avg_iter
+  !! in/out: number of diagonalization iterations
+  real(DP) :: thresh
+  !! input: convergence threshold
+  real(DP) :: et_ (nbnd)
+  !! input: eigenvalues of the hamiltonian
   !
-  ! Local variables
+  ! ... local variables
   !
   logical :: conv_root
   ! .true. if linter is converged

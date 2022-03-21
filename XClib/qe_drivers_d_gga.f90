@@ -15,8 +15,8 @@ MODULE qe_drivers_d_gga
   !! Module with QE driver routines that calculates the derivatives of XC
   !! potential.
   !
-  USE kind_l,       ONLY: DP
-  USE dft_par_mod,  ONLY: igcx, igcc, is_libxc
+  USE kind_l,             ONLY: DP
+  USE dft_setting_params, ONLY: igcx, igcc, is_libxc
   !
   IMPLICIT NONE
   !
@@ -90,7 +90,11 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   raux(i3:f3) = r_in     ;   s2aux(i3:f3) = (s+ds)**2
   raux(i4:f4) = r_in     ;   s2aux(i4:f4) = (s-ds)**2
   !
+  !$acc data copyin( raux, s2aux ) copyout( sx, sc, v1x, v2x, v1c, v2c )
+  !$acc host_data use_device( raux, s2aux, sx, sc, v1x, v2x, v1c, v2c )
   CALL gcxc( length*4, raux, s2aux, sx, sc, v1x, v2x, v1c, v2c )
+  !$acc end host_data
+  !$acc end data
   !
   ! ... to avoid NaN in the next operations
   WHERE( r_in<=small .OR. s2_in<=small )
@@ -236,7 +240,11 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   raux(i8:f8,:) = r      ;  s2aux(i8:f8,:) = (s-dsdw)**2
   !
   !
+  !$acc data copyin( raux, s2aux ) copyout( sx, v1x, v2x )
+  !$acc host_data use_device( raux, s2aux, sx, v1x, v2x )
   CALL gcx_spin( length*8, raux, s2aux, sx, v1x, v2x )
+  !$acc end host_data
+  !$acc end data
   !
   ! ... up
   vrrx(:,1) = 0.5_DP  *  (v1x(i1:f1,1) - v1x(i2:f2,1)) / drup(:,1)
@@ -307,7 +315,11 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   rtaux(i5:f5) = rt    ;  s2taux(i5:f5) = s2t        ;  zetaux(i5:f5) = zeta+dz
   rtaux(i6:f6) = rt    ;  s2taux(i6:f6) = s2t        ;  zetaux(i6:f6) = zeta-dz
   !
+  !$acc data copyin( rtaux, zetaux, s2taux ) copyout( sc, v1c, v2c )
+  !$acc host_data use_device( rtaux, zetaux, s2taux, sc, v1c, v2c )
   CALL gcc_spin( length*6, rtaux, zetaux, s2taux, sc, v1c, v2c )
+  !$acc end host_data
+  !$acc end data
   !
   vrrc(:,1) = 0.5_DP * (v1c(i1:f1,1) - v1c(i2:f2,1)) / dr    * null_v(:,1)
   vrrc(:,2) = 0.5_DP * (v1c(i1:f1,2) - v1c(i2:f2,2)) / dr    * null_v(:,1)

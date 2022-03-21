@@ -16,8 +16,7 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   !  Noncollinear is allowed. ADC (June 2007)
   !
   USE kinds,            ONLY : DP
-  USE noncollin_module, ONLY : noncolin
-  USE spin_orb,         ONLY : domag
+  USE noncollin_module, ONLY : noncolin, domag
   USE gc_lr,            ONLY : gmag, vsgga, segni
   USE fft_types,        ONLY : fft_type_descriptor
   !

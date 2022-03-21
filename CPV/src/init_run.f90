@@ -26,7 +26,8 @@ SUBROUTINE init_run()
   USE gvect,                    ONLY : gstart, gg
   USE fft_base,                 ONLY : dfftp, dffts
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
-  USE uspp,                     ONLY : nkb, vkb, vkb_d, deeq, becsum,nkbus
+  USE pseudo_base,              ONLY : vkb_d
+  USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
   USE core,                     ONLY : rhoc
   USE wavefunctions,            ONLY : c0_bgrp, cm_bgrp, allocate_cp_wavefunctions
   USE ensemble_dft,             ONLY : tens, z0t
@@ -49,6 +50,7 @@ SUBROUTINE init_run()
   USE electrons_nose,           ONLY : xnhe0, xnhem, vnhe
   USE electrons_base,           ONLY : nbspx_bgrp
   USE cell_nose,                ONLY : xnhh0, xnhhm, vnhh
+  USE xc_lib,                   ONLY : xclib_dft_is_libxc, xclib_init_libxc
   USE xc_lib,                   ONLY : xclib_dft_is
   USE metagga_cp,               ONLY : crosstaus, dkedtaus, gradwfc
   !
@@ -70,7 +72,7 @@ SUBROUTINE init_run()
   USE ions_base,                ONLY : ions_reference_positions, cdmi
   USE mp_bands,                 ONLY : nbgrp
   USE mp,                       ONLY : mp_barrier
-  USE wrappers
+  USE clib_wrappers
   USE ldaU_cp
   USE control_flags,            ONLY : lwfpbe0nscf         ! exx_wf related 
   USE wavefunctions,     ONLY : cv0                 ! exx_wf related
@@ -168,6 +170,10 @@ SUBROUTINE init_run()
   !
   IF (mbd_vdw) CALL errore('init_run','mbd_vdw not yet supported for CP',1)
   !
+  !=======================================================================
+  !     Initialization of the libxc
+  !=======================================================================
+  IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin, .FALSE. )
   !=======================================================================
   !     Initialization of the exact exchange code (exx_module)
   !=======================================================================

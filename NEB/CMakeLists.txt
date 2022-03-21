@@ -1,4 +1,5 @@
 set(src_neb
+    src/bcast_file.f90
     src/compute_scf.f90
     src/engine_to_path_pos.f90
     src/engine_to_path_alat.f90
@@ -8,7 +9,7 @@ set(src_neb
     src/fcp_opt_routines.f90
     src/fcp_variables.f90
     src/gcscf_variables.f90
-    src/input.f90
+    src/neb_input.f90
     src/path_base.f90
     src/path_formats.f90
     src/path_gen_inputs.f90
@@ -72,3 +73,10 @@ qe_install_targets(
     # Executables
     qe_neb_exe
     qe_neb_pathinterpolation_exe)
+
+add_custom_target(neb
+    DEPENDS
+        qe_neb_exe
+        qe_neb_pathinterpolation_exe
+    COMMENT
+        "code for Nudged Elastic Band method")

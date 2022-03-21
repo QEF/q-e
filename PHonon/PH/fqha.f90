@@ -5,10 +5,11 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!     Calculate Free Energy F
-!     Given phonon DOS, calculate F at various temperatures
 !
 program fqha
+  !
+  !! Calculate Free Energy F.  
+  !! Given phonon DOS, calculate F at various temperatures.
   !
   implicit none
   integer, parameter:: ndivx=10000

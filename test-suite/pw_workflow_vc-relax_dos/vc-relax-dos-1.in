@@ -4,9 +4,12 @@
  /
  &SYSTEM
    ibrav = 14,
-   A = 3.70971016 ,
-   B = 3.70971016 ,
-   C = 3.70971016 ,
+!   A = 3.70971016 ,
+!   B = 3.70971016 ,
+!   C = 3.70971016 ,
+   A = 4.0 ,
+   B = 4.0 ,
+   C = 4.0 ,
    cosAB = 0.49517470 ,
    cosAC = 0.49517470 ,
    cosBC = 0.49517470 ,
@@ -25,9 +28,8 @@
    ! ion_positions = 'from_file'
  /
  &CELL
-   cell_dynamics = 'damp-w' ,
-   press = 0.00 ,
-   wmass =  0.00700000 
+   cell_dynamics = 'bfgs' ,
+   press = 0.00 
  /
 ATOMIC_SPECIES
    As   74.90000  As.pz-bhs.UPF

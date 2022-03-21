@@ -58,7 +58,7 @@ CONTAINS
         !
         INTEGER, INTENT (IN) :: iq, nrr_k, nrr_q, nrr_g
         INTEGER, INTENT (IN) :: irvec_q(:,:), irvec_g(:,:)
-        INTEGER, INTENT (IN) :: ndegen_k(:,:,:), ndegen_q(:,:,:), ndegen_g(:,:,:,:)
+        INTEGER, INTENT (IN) :: ndegen_k(:,:,:), ndegen_q(:,:,:), ndegen_g(:,:,:)
         REAL(KIND=dp), INTENT (INOUT) :: w2(3*nat)
         COMPLEX(KIND=dp), INTENT (INOUT) :: uf ( nmodes, nmodes), epmatwef( nbndsub, nbndsub, nrr_k, nmodes)
         REAL(KIND=dp), INTENT (IN) :: irvec_r(3,nrr_k)
@@ -675,7 +675,7 @@ CONTAINS
         !
         INTEGER, INTENT (IN) :: iq, nrr_k, nrr_q, nrr_g
         INTEGER, INTENT (IN) :: irvec_q(:,:), irvec_g(:,:)
-        INTEGER, INTENT (IN) :: ndegen_k(:,:,:), ndegen_q(:,:,:), ndegen_g(:,:,:,:)
+        INTEGER, INTENT (IN) :: ndegen_k(:,:,:), ndegen_q(:,:,:), ndegen_g(:,:,:)
         REAL(KIND=dp), INTENT (INOUT) :: w2(3*nat)
         COMPLEX(KIND=dp), INTENT (INOUT) :: uf ( nmodes, nmodes), epmatwef( nbndsub, nbndsub, nrr_k, nmodes)
         REAL(KIND=dp), INTENT (IN) :: irvec_r(3,nrr_k)
@@ -937,7 +937,7 @@ CONTAINS
         REAL(KIND=dp), INTENT (INOUT) :: w2(3*nat)
         INTEGER, INTENT (IN) :: irvec_q(:,:), irvec_g(:,:)
         REAL(KIND=dp), ALLOCATABLE :: irvec_r(:,:)
-        INTEGER, INTENT (IN) :: ndegen_k(:,:,:), ndegen_q(:,:,:), ndegen_g(:,:,:,:)
+        INTEGER, INTENT (IN) :: ndegen_k(:,:,:), ndegen_q(:,:,:), ndegen_g(:,:,:)
         COMPLEX(KIND=dp), INTENT (INOUT) :: uf ( nmodes, nmodes), epmatwef( nbndsub, nbndsub, nrr_k, nmodes)
         INTEGER, INTENT (IN) :: dims
         !! Dims is either nbndsub if use_ws or 1 if not

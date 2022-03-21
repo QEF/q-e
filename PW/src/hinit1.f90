@@ -83,10 +83,10 @@ SUBROUTINE hinit1()
   CALL newd()
   !
   ! ... and recalculate the products of the S with the atomic wfcs used 
-  ! ... in LDA+U calculations
+  ! ... in DFT+Hubbard calculations
   !
   IF (.NOT. use_gpu) THEN
-    IF ( lda_plus_u  ) CALL orthoUwfc() 
+    IF ( lda_plus_u  ) CALL orthoUwfc(.FALSE.)
     IF ( use_wannier ) CALL orthoatwfc( .TRUE. )
   ELSE
     IF ( lda_plus_u  ) CALL orthoUwfc_gpu() 

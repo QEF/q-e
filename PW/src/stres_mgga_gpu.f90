@@ -31,8 +31,10 @@ SUBROUTINE stres_mgga_gpu( sigmaxc )
   USE mp_bands,               ONLY : intra_bgrp_comm
   USE wavefunctions_gpum,     ONLY : using_evc
   !
+#if defined(__CUDA)
   USE device_fbuff_m ,              ONLY : dev_buf
   USE device_memcpy_m,          ONLY : dev_memcpy, dev_memset
+#endif
   !
   IMPLICIT NONE
   !
@@ -56,7 +58,6 @@ SUBROUTINE stres_mgga_gpu( sigmaxc )
   !
 #if defined(__CUDA)
   attributes(DEVICE) :: gradwfc_d, crosstaus_d, vkin_d, rhokin_d, ix_d, iy_d
-#endif
   !
   if ( .not. xclib_dft_is('meta') ) return
   !
@@ -71,7 +72,7 @@ SUBROUTINE stres_mgga_gpu( sigmaxc )
   !
   CALL dev_buf%lock_buffer( gradwfc_d, (/ dffts%nnr, 3 /), ierrs(1) )
   CALL dev_buf%lock_buffer( crosstaus_d, (/ dffts%nnr, 6, nspin /), ierrs(2) )
-  IF (ANY(ierrs(1:2) /= 0)) CALL errore( 'stres_mgga_gpu', 'cannot allocate buffers', -1 )
+  IF (ANY(ierrs(1:2) /= 0)) CALL errore( 'stres_mgga_gpu', 'cannot allocate buffers', ABS(MAXVAL(ierrs(1:2))) )
   !
   CALL dev_memset(crosstaus_d , (0._DP,0._DP) )
   !
@@ -160,7 +161,7 @@ SUBROUTINE stres_mgga_gpu( sigmaxc )
   !
   CALL dev_buf%lock_buffer( vkin_d, dffts%nnr, ierrs(3) )
   CALL dev_buf%lock_buffer( rhokin_d, dffts%nnr, ierrs(4) )
-  IF (ANY(ierrs(3:4) /= 0)) CALL errore( 'stres_mgga_gpu', 'cannot allocate buffers', -1 )
+  IF (ANY(ierrs(3:4) /= 0)) CALL errore( 'stres_mgga_gpu', 'cannot allocate buffers', ABS(MAXVAL(ierrs(3:4)))  )
   !
   ! metagga contribution to the stress tensor
   sigma_mgga(:,:) = 0._DP
@@ -207,6 +208,7 @@ SUBROUTINE stres_mgga_gpu( sigmaxc )
   sigmaxc(:,:) = sigmaxc(:,:) + sigma_mgga(:,:) / &
                  (dffts%nr1 * dffts%nr2 * dffts%nr3)
   !
+#endif
   RETURN
   !
 END SUBROUTINE stres_mgga_gpu
@@ -222,16 +224,18 @@ SUBROUTINE wfc_gradient_gpu( ibnd, ik, npw, gradpsi_d )
   USE control_flags,          ONLY: gamma_only
   USE wvfct,                  ONLY: npwx, nbnd
   USE cell_base,              ONLY: omega, tpiba
-  USE klist,                  ONLY: xk, igk_k
+  USE klist,                  ONLY: xk, igk_k_d
   
   USE fft_base,               ONLY: dffts
   USE fft_interfaces,         ONLY: invfft
   !
-  USE gvect_gpum,             ONLY: g_d
+  USE gvect,                  ONLY: g_d
   USE wavefunctions_gpum,     ONLY: using_evc, using_evc_d, evc_d, &
                                     using_psic, using_psic_d, psic_d
+#if defined(__CUDA)
   USE device_fbuff_m,               ONLY: dev_buf
   USE device_memcpy_m,          ONLY: dev_memcpy
+#endif  
   !
   IMPLICIT NONE 
   !
@@ -243,21 +247,16 @@ SUBROUTINE wfc_gradient_gpu( ibnd, ik, npw, gradpsi_d )
   INTEGER  :: ipol, j
   REAL(DP) :: kplusg
   INTEGER, POINTER :: nl_d(:), nlm_d(:)
-  INTEGER, ALLOCATABLE :: igk_k_d(:)
   REAL(DP) :: xk_d(3)
   !
 #if defined(__CUDA)
-  attributes(DEVICE) :: gradpsi_d, nl_d, nlm_d, xk_d, igk_k_d
-#endif  
+  attributes(DEVICE) :: gradpsi_d, nl_d, nlm_d, xk_d
   !
   CALL using_evc_d(0)
   CALL using_psic_d(2)
   !
   nl_d    => dffts%nl_d
   nlm_d   => dffts%nlm_d
-  !
-  ALLOCATE( igk_k_d(npwx) )
-  igk_k_d = igk_k(:,ik)
   !
   xk_d(1:3) = xk(1:3,ik)
   !
@@ -275,7 +274,7 @@ SUBROUTINE wfc_gradient_gpu( ibnd, ik, npw, gradpsi_d )
            !
            !$cuf kernel do (1) <<<*,*>>>
            DO j = 1, npw
-              kplusg = (xk_d(ipol)+g_d(ipol,igk_k_d(j))) * tpiba
+              kplusg = (xk_d(ipol)+g_d(ipol,igk_k_d(j,ik))) * tpiba
               !
               psic_d(nl_d(j))  = CMPLX(0._DP, kplusg, kind=DP) * &
                                    ( evc_d(j,ibnd) + &
@@ -290,7 +289,7 @@ SUBROUTINE wfc_gradient_gpu( ibnd, ik, npw, gradpsi_d )
            !
            !$cuf kernel do (1) <<<*,*>>>
            DO j = 1, npw
-              kplusg = (xk_d(ipol)+g_d(ipol,igk_k_d(j))) * tpiba
+              kplusg = (xk_d(ipol)+g_d(ipol,igk_k_d(j,ik))) * tpiba
               !
               psic_d(nl_d(j))  = CMPLX(0._DP, kplusg, kind=DP) * &
                                        evc_d(j,ibnd)
@@ -317,7 +316,7 @@ SUBROUTINE wfc_gradient_gpu( ibnd, ik, npw, gradpsi_d )
          !
          !$cuf kernel do(1) <<<*,*>>>
          DO j = 1, npw
-            kplusg = (xk_d(ipol)+g_d(ipol,igk_k_d(j))) * tpiba
+            kplusg = (xk_d(ipol)+g_d(ipol,igk_k_d(j,ik))) * tpiba
             !
             psic_d(nl_d(j)) = CMPLX(0._DP,kplusg,kind=DP)*evc_d(j,ibnd)
          ENDDO
@@ -331,7 +330,6 @@ SUBROUTINE wfc_gradient_gpu( ibnd, ik, npw, gradpsi_d )
      ENDDO 
      !
   ENDIF
-  !
-  DEALLOCATE( igk_k_d )
+#endif  
   !
 END SUBROUTINE wfc_gradient_gpu

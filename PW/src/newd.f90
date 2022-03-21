@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -201,13 +201,12 @@ SUBROUTINE newd( )
   USE lsda_mod,             ONLY : nspin
   USE uspp,                 ONLY : deeq, deeq_d, dvan, deeq_nc, deeq_nc_d, dvan_so, okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
-  USE spin_orb,             ONLY : lspinorb, domag
-  USE noncollin_module,     ONLY : noncolin, nspin_mag
+  USE noncollin_module,     ONLY : noncolin, domag, nspin_mag, lspinorb
   USE uspp,                 ONLY : nhtol, nhtolm
   USE scf,                  ONLY : v
   USE realus,               ONLY : newq_r
   USE control_flags,        ONLY : tqr
-  USE ldaU,                 ONLY : lda_plus_U, U_projection
+  USE ldaU,                 ONLY : lda_plus_U, Hubbard_projectors
   !
   IMPLICIT NONE
   !
@@ -309,7 +308,7 @@ SUBROUTINE newd( )
   !
   IF (.NOT.noncolin) CALL add_paw_to_deeq( deeq )
   !
-  IF (lda_plus_U .AND. (U_projection == 'pseudo')) CALL add_vhub_to_deeq( deeq )
+  IF (lda_plus_U .AND. (Hubbard_projectors == 'pseudo')) CALL add_vhub_to_deeq( deeq )
   !
   ! sync with GPUs
 #if defined __CUDA
@@ -330,7 +329,7 @@ SUBROUTINE newd( )
     SUBROUTINE newd_so( na )
       !------------------------------------------------------------------------
       !
-      USE spin_orb,      ONLY : fcoef
+      USE upf_spinorb,      ONLY : fcoef
       !
       IMPLICIT NONE
       !

@@ -401,8 +401,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                    ldim_u, is_hubbard_back
   USE extfield,             ONLY : tefield, etotefield, gate, etotgatefield !TB
   USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
-                                   lambda, report
-  USE spin_orb,             ONLY : domag
+                                   lambda, report, domag
   USE io_rho_xml,           ONLY : write_scf
   USE uspp,                 ONLY : okvan
   USE mp_bands,             ONLY : intra_bgrp_comm
@@ -427,15 +426,16 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE esm,                  ONLY : do_comp_esm, esm_printpot, esm_ewald
   USE fcp_module,           ONLY : lfcp, fcp_mu
   USE gcscf_module,         ONLY : lgcscf, gcscf_mu, gcscf_ignore_mun, gcscf_set_nelec
-  USE wrappers,             ONLY : memstat
-  USE iso_c_binding,        ONLY : c_int
+  USE clib_wrappers,        ONLY : memstat
   !
   USE plugin_variables,     ONLY : plugin_etot
   USE libmbd_interface,     ONLY : EmbdvdW
+  USE add_dmft_occ,         ONLY : dmft, dmft_update, v_dmft, dmft_updated
   !
   USE wvfct_gpum,           ONLY : using_et
   USE scf_gpum,             ONLY : using_vrs
-  USE device_fbuff_m,             ONLY : dev_buf, pin_buf
+  USE device_fbuff_m,       ONLY : dev_buf, pin_buf
+  USE pwcom,                ONLY : report_mag 
   !
   IMPLICIT NONE
   !
@@ -531,6 +531,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   ! Grimme-D3 correction to the energy
   !
   IF (ldftd3) THEN
+     CALL start_clock('energy_dftd3')
      latvecs(:,:)=at(:,:)*alat
      tau(:,:)=tau(:,:)*alat
      DO na = 1, nat
@@ -539,6 +540,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
      call dftd3_pbc_dispersion(dftd3,tau,atnum,latvecs,energy_dftd3)
      edftd3=energy_dftd3*2.d0
      tau(:,:)=tau(:,:)/alat
+     CALL stop_clock('energy_dftd3')
   ELSE
      edftd3= 0.0
   ENDIF
@@ -645,8 +647,26 @@ SUBROUTINE electrons_scf ( printout, exxen )
         ! ... sum_band computes new becsum (stored in uspp modules)
         ! ... and a subtly different copy in rho%bec (scf module)
         !
+        ! ... for charge self-consistent calculations call update
+        ! ... of Fermi weights from DMFT here
+        !
+        IF ( dmft .AND. idum == 1) THEN
+            CALL weights()
+            CALL dmft_update()
+        ELSEIF ( dmft .AND. idum > 1) THEN
+            WRITE( stdout, '(5X,"WARNING: electron_maxstep > 1 not recommended for dmft = .true.")')
+        END IF
+        !
         IF (.not. use_gpu) CALL sum_band()
         IF (      use_gpu) CALL sum_band_gpu()
+        !
+        ! ... if DMFT update was made, make sure it is only done in the first iteration
+        ! ... (generally in this mode it should only run a single iteration, but just to make sure!)
+        !
+        IF ( dmft .AND. idum == 1) THEN
+            dmft_updated = .TRUE.
+            DEALLOCATE(v_dmft)
+        END IF
         !
         ! ... the Harris-Weinert-Foulkes energy is computed here using only
         ! ... quantities obtained from the input density
@@ -885,7 +905,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
      IF ( report > 0 ) THEN
         IF ( conv_elec .OR.  MOD(iter,report) == 0 ) CALL report_mag()
      ELSE IF ( report < 0 ) THEN
-        IF ( conv_elec ) CALL report_mag()
+        IF ( conv_elec ) CALL report_mag(SAVE_LOCALS=.TRUE.)
      END IF
      !
      WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
@@ -898,7 +918,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
      ENDIF  
 
      !
-     IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
+     IF ( conv_elec .OR. MOD( iter, iprint ) == 0 .OR. dmft_updated ) THEN
         !
         ! iverbosity == 0 for the PW code
         ! iverbosity >  2 for the HP code
@@ -1161,7 +1181,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !
        ! ... delta_e =  - \int rho%of_r(r)  v%of_r(r)
        !                - \int rho%kin_r(r) v%kin_r(r) [for Meta-GGA]
-       !                - \sum rho%ns       v%ns       [for LDA+U]
+       !                - \sum rho%ns       v%ns       [for DFT+Hubbard]
        !                - \sum becsum       D1_Hxc     [for PAW]
        !
        USE xc_lib,  ONLY : xclib_dft_is
@@ -1246,7 +1266,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !
        ! ... delta_escf = - \int \delta rho%of_r(r)  v%of_r(r)
        !                  - \int \delta rho%kin_r(r) v%kin_r(r) [for Meta-GGA]
-       !                  - \sum \delta rho%ns       v%ns       [for LDA+U]
+       !                  - \sum \delta rho%ns       v%ns       [for DFT+Hubbard]
        !                  - \sum \delta becsum       D1         [for PAW] 
        !
        USE xc_lib, ONLY : xclib_dft_is

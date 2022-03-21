@@ -1295,7 +1295,7 @@ SUBROUTINE PADX(nd,nb,coeke,d,Ad)
 #ifdef __CUDA
     !$cuf kernel do (3)
 #else
-    !$omp parallel do default(shared) private(ktr,jtr,itr) schedule(guided)
+    !$omp parallel do collapse(3) default(shared) private(ktr,jtr,itr)
 #endif
     DO ktr=nd(3),nd(6)
         DO jtr=nd(2),nd(5)

@@ -1,14 +1,14 @@
 #if defined(__CUDA)
 program test_diaghg_gpu_2
-#if defined(__MPI)
-    USE MPI
-#endif
+
+    USE laxlib_parallel_include
     USE mp,            ONLY : mp_bcast
     USE mp_world,      ONLY : mp_world_start, mp_world_end, mpime, &
                               root, nproc, world_comm
     USE mp_bands_util, ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
     USE tester
     IMPLICIT NONE
+    include 'laxlib_kinds.fh'
     !
     TYPE(tester_t) :: test
     INTEGER :: world_group = 0
@@ -34,7 +34,6 @@ program test_diaghg_gpu_2
   !
   SUBROUTINE complex_1(test)
     USE LAXlib
-    USE la_param, ONLY : DP
     USE cudafor
     implicit none
     !
@@ -54,6 +53,7 @@ program test_diaghg_gpu_2
     complex(DP), DEVICE :: v_d(m_size,m_size)
     real(DP) :: e_save(m_size)
     complex(DP) :: v_save(m_size,m_size)
+    integer :: j
     !
     CALL hermitian(m_size, h)
     CALL hermitian(m_size, s)
@@ -69,17 +69,20 @@ program test_diaghg_gpu_2
     e_d = 0.d0
     !
     ! 1. Compare same algorithm starting from data on device ...
-    CALL diaghg(  m_size, m_size-1, h_d, s_d, m_size, e_d, v_d )
+    CALL diaghg(  m_size, m_size, h_d, s_d, m_size, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm )
     e_save = e_d
     v_save = v_d
     ! 2. ... and on the host, this will trigger the same subroutine used above
-    CALL diaghg(  m_size, m_size-1, h, s, m_size, e, v, .true. )
+    CALL diaghg(  m_size, m_size, h, s, m_size, e, v, me_bgrp, root_bgrp, intra_bgrp_comm, .true.)
     !
-    CALL test%assert_close( RESHAPE(h, [m_size*m_size]), RESHAPE(h_save, [m_size*m_size]))
-    CALL test%assert_close( RESHAPE(s, [m_size*m_size]), RESHAPE(s_save, [m_size*m_size]))
+    DO j = 1, m_size
+       CALL test%assert_close( h(1:m_size, j), h_save(1:m_size, j))
+       CALL test%assert_close( s(1:m_size, j), s_save(1:m_size, j))
+    END DO
+
     test%tolerance32=1.d-5
     test%tolerance64=1.d-10
-    DO i=1, m_size-1
+    DO i=1, m_size
         CALL test%assert_close( v(1:m_size,i), v_save(1:m_size,i))
         CALL test%assert_close( e(i), e_save(i) )
     END DO
@@ -94,7 +97,7 @@ program test_diaghg_gpu_2
     !  note that it uses a different algorithm and produces slightly 
     !  different eigenvectors.
     !
-    CALL diaghg( m_size, m_size-1, h, s, m_size, e, v )
+    CALL diaghg( m_size, m_size, h, s, m_size, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
     h = h_save; s = s_save
     !
     ! Solve-again, with the same algorithm used in the GPU version.
@@ -103,7 +106,7 @@ program test_diaghg_gpu_2
     !
     test%tolerance32=1.d-5
     test%tolerance64=1.d-10
-    DO i=1, m_size-1
+    DO i=1, m_size
         ! compare eigenvectors obtained in 1. with LAPACK zhegvd
         CALL test%assert_close( v_save(1:m_size,i), h(1:m_size,i) )
         ! compare eigenvalues obtained with zhegvd, 1. and 3.
@@ -114,7 +117,6 @@ program test_diaghg_gpu_2
   END SUBROUTINE complex_1
   !
   SUBROUTINE hermitian(mSize, M)
-    USE la_param, ONLY : DP
     IMPLICIT NONE
     integer, intent(in) :: msize
     complex(dp), intent(out) :: M(:,:)

@@ -6,14 +6,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
-     alpq, mode)
+subroutine incdrhous_nc( drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
+                         alpq, mode )
   !-----------------------------------------------------------------------
-  !
-  !     This routine computes the change of the charge density
-  !     and of the magnetization due
-  !     to the displacement of the augmentation charge. Only the
-  !     smooth part is computed here.
+  !! This routine computes the change of the charge density and of the
+  !! magnetization due to the displacement of the augmentation charge.  
+  !! Only the smooth part is computed here.
   !
   USE kinds,     ONLY : DP
   USE cell_base, ONLY : omega
@@ -21,8 +19,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE fft_base,  ONLY : dffts, dfftp
   USE fft_interfaces, ONLY: invfft
   USE lsda_mod,  ONLY : nspin
-  USE spin_orb,  ONLY : lspinorb, domag
-  USE noncollin_module, ONLY : npol, nspin_mag
+  USE noncollin_module, ONLY : npol, domag, nspin_mag, lspinorb
   USE uspp,      ONLY : nkb, qq_nt, qq_so
   USE uspp_param,ONLY : nhm, nh
   USE wvfct,     ONLY : nbnd, npwx
@@ -39,26 +36,31 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
 
   implicit none
 
-  integer :: ik, mode
-  ! input: the k point
-  ! input: the mode which is computed
+  integer :: ik
+  !! input: the k point
+  integer :: mode
+  !! input: the mode which is computed
+  
   ! input: the quantity to compute (1 charge, 2-4 magnetization)
 
-  real(DP) :: weight, wgg (nbnd, nbnd, nksq)
-  ! input: the weight of the k point
-  ! input: the weights
+  real(DP) :: weight
+  !! input: the weight of the k point
+  real(DP) :: wgg (nbnd, nbnd, nksq)
+  !! input: the weights
 
-  complex(DP) :: evcr (dffts%nnr, npol, nbnd), drhoscf(dfftp%nnr,nspin_mag), &
-       dbecsum(nhm, nhm, nat, nspin)
-  ! input: the wavefunctions at k in real
-  ! output: the change of the charge densi
-  ! inp/out: the accumulated dbec
-  type (bec_type) :: becq(nksq), & ! nkb, nbnd)
-                     alpq (3, nksq)
-  ! input: the becp with psi_{k+q}
-  ! input: the alphap with psi_{k+q}
+  complex(DP) :: evcr(dffts%nnr,npol,nbnd)
+  !! input: the wavefunctions at k in real
+  complex(DP) :: drhoscf(dfftp%nnr,nspin_mag)
+  !! output: the change of the charge densi
+  complex(DP) :: dbecsum(nhm, nhm, nat, nspin)
+  !! inp/out: the accumulated dbec
   !
-  !   here the local variable
+  type (bec_type) :: becq(nksq)  ! nkb, nbnd)
+  !! input: the becp with \(\psi_{k+q}\)
+  type (bec_type) :: alpq(3,nksq)
+  !! input: the alphap with \(\psi_{k+q}\)
+  !
+  ! ... local variables
   !
   real(DP) :: wgt
   ! the effective weight of the k point

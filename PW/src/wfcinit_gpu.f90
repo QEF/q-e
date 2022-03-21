@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,15 +17,15 @@ SUBROUTINE wfcinit_gpu()
   USE io_global,            ONLY : stdout, ionode, ionode_id
   USE basis,                ONLY : natomwfc, starting_wfc
   USE bp,                   ONLY : lelfield
-  USE klist,                ONLY : xk, nks, ngk, igk_k_d
+  USE klist,                ONLY : xk, nks, ngk, igk_k
   USE control_flags,        ONLY : io_level, lscf
   USE fixed_occ,            ONLY : one_atom_occupations
-  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU, lda_plus_u_kind
+  USE ldaU,                 ONLY : lda_plus_u, Hubbard_projectors, wfcU, lda_plus_u_kind
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
                                    diropn, xmlfile, restart_dir
   USE buffers,              ONLY : open_buffer, close_buffer, get_buffer, save_buffer
-  USE uspp,                 ONLY : nkb, vkb, vkb_d, using_vkb_d
+  USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions,        ONLY : evc
   USE wvfct,                ONLY : nbnd, current_k
   USE wannier_new,          ONLY : use_wannier
@@ -36,10 +36,11 @@ SUBROUTINE wfcinit_gpu()
   USE qes_types_module,     ONLY : output_type
   USE qes_libs_module,      ONLY : qes_reset
   USE wavefunctions_gpum,   ONLY : using_evc_d, using_evc
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !
-  INTEGER :: ik, ierr, exst_sum 
+  INTEGER :: ik, ierr, exst_sum
   LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file
   CHARACTER (LEN=256)  :: dirname
   TYPE ( output_type ) :: output_obj
@@ -49,6 +50,8 @@ SUBROUTINE wfcinit_gpu()
   !
   ! ... Orthogonalized atomic functions needed for DFT+U and other cases
   !
+  IF ( (use_wannier .OR. one_atom_occupations ) .AND. lda_plus_u ) &
+       CALL errore ( 'wfcinit', 'currently incompatible options', 1 )
   IF ( use_wannier .OR. one_atom_occupations ) CALL orthoatwfc_gpu( use_wannier )
   IF ( lda_plus_u ) CALL orthoUwfc_gpu()
   !
@@ -67,12 +70,12 @@ SUBROUTINE wfcinit_gpu()
      CALL mp_sum (exst_sum, intra_image_comm)
      !
      ! Check whether wavefunctions are collected (info in xml file)
-     dirname = restart_dir ( ) 
+     dirname = restart_dir ( )
      IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
      CALL mp_bcast(ierr, ionode_id, intra_image_comm)
      IF ( ierr <= 0 ) THEN
         ! xml file is valid
-        IF (ionode) twfcollect_file = output_obj%band_structure%wf_collected   
+        IF (ionode) twfcollect_file = output_obj%band_structure%wf_collected
         CALL mp_bcast(twfcollect_file, ionode_id, intra_image_comm)
         CALL qes_reset  ( output_obj )
      ELSE
@@ -91,7 +94,7 @@ SUBROUTINE wfcinit_gpu()
         !
         WRITE( stdout, '(5X,"Cannot read wfcs: file not found")' )
         IF (exst_file) THEN
-           CALL close_buffer(iunwfc, 'delete') 
+           CALL close_buffer(iunwfc, 'delete')
            CALL open_buffer(iunwfc,'wfc', nwordwfc, io_level, exst_mem, exst_file)
         END IF
         starting_wfc = 'atomic+random'
@@ -145,7 +148,7 @@ SUBROUTINE wfcinit_gpu()
   END IF
   !
   ! ... exit here if starting from file or for non-scf calculations.
-  ! ... In the latter case the starting wavefunctions are not 
+  ! ... In the latter case the starting wavefunctions are not
   ! ... calculated here but just before diagonalization (to reduce I/O)
   !
   IF (  ( .NOT. lscf .AND. .NOT. lelfield ) .OR. TRIM(starting_wfc) == 'file' ) THEN
@@ -167,12 +170,11 @@ SUBROUTINE wfcinit_gpu()
      !
      ! ... More Hpsi initialization: nonlocal pseudopotential projectors |beta>
      !
-     IF ( nkb > 0 ) CALL using_vkb_d(1)
-     IF ( nkb > 0 ) CALL init_us_2_gpu( ngk(ik), igk_k_d(1,ik), xk(1,ik), vkb_d )
+     IF (nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb, .true. )
      !
      ! ... Needed for DFT+U
      !
-     IF ( nks > 1 .AND. lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
+     IF ( nks > 1 .AND. lda_plus_u .AND. (Hubbard_projectors .NE. 'pseudo') ) &
         CALL get_buffer( wfcU, nwordwfcU, iunhub, ik )
      !
      ! DFT+U+V: calculate the phase factor at a given k point
@@ -222,10 +224,11 @@ SUBROUTINE init_wfc_gpu ( ik )
   USE mp,                   ONLY : mp_bcast
   USE xc_lib,               ONLY : xclib_dft_is, stop_exx
   !
-  USE gvect_gpum,           ONLY : g_d
+  USE gvect,                ONLY : g_d
   USE wavefunctions_gpum,   ONLY : evc_d, using_evc_d
   USE wvfct_gpum,           ONLY : et_d, using_et_d
   USE becmod_subs_gpum,     ONLY : using_becp_auto, using_becp_d_auto
+  USE control_flags,        ONLY : lscf
   !
   IMPLICIT NONE
   !
@@ -238,7 +241,6 @@ SUBROUTINE init_wfc_gpu ( ik )
   REAL(DP), ALLOCATABLE :: etatom_d(:) ! atomic eigenvalues
   !
   COMPLEX(DP), ALLOCATABLE :: wfcatom_d(:,:,:) ! atomic wfcs for initialization (device)
-  COMPLEX(DP), ALLOCATABLE :: wfcatom_h(:,:,:) ! atomic wfcs for initialization (host)
   REAL(DP),    ALLOCATABLE :: randy_d(:) ! data for random
   !
   ! Auxiliary variables for CUDA version
@@ -271,16 +273,11 @@ SUBROUTINE init_wfc_gpu ( ik )
   ALLOCATE( wfcatom_d( npwx, npol, n_starting_wfc ) )
   ALLOCATE(randy_d(2 * n_starting_wfc * npol * ngk(ik)))
   !
-  IF ( starting_wfc(1:6) == 'atomic' ) THEN
+  IF ( n_starting_atomic_wfc > 0 ) THEN
      !
-     ALLOCATE( wfcatom_h( npwx, npol, n_starting_wfc ) )
      CALL start_clock_gpu( 'wfcinit:atomic' ); !write(*,*) 'start wfcinit:atomic' ; FLUSH(6)
-     CALL atomic_wfc( ik, wfcatom_h )
+     CALL atomic_wfc_gpu( ik, wfcatom_d )
      CALL stop_clock_gpu( 'wfcinit:atomic' ); !write(*,*) 'stop wfcinit:atomic' ; FLUSH(6)
-     !
-     ! Sync to GPU
-     wfcatom_d = wfcatom_h
-     DEALLOCATE( wfcatom_h )
      !
      IF ( starting_wfc == 'atomic+random' .AND. &
          n_starting_wfc == n_starting_atomic_wfc ) THEN
@@ -373,13 +370,13 @@ SUBROUTINE init_wfc_gpu ( ik )
   ! ... by setting lelfield = .false. one prevents the calculation of
   ! ... electric enthalpy in the Hamiltonian (cannot be calculated
   ! ... at this stage: wavefunctions at previous step are missing)
-  ! 
+  !
   lelfield_save = lelfield
   lelfield = .FALSE.
   !
   ! ... subspace diagonalization (calls Hpsi)
   !
-  IF ( xclib_dft_is('hybrid')  ) CALL stop_exx() 
+  IF ( xclib_dft_is('hybrid') .and. lscf  ) CALL stop_exx()
   CALL start_clock_gpu( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
   CALL using_evc_d(2)  ! rotate_wfc_gpu (..., evc_d, etatom_d) -> evc : out (not specified)
   CALL rotate_wfc_gpu ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom_d, npol, okvan, evc_d, etatom_d )

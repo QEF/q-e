@@ -70,7 +70,7 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, n
   !
   IMPLICIT NONE
   !
-  ! Following varibales are temporary
+  ! Following variables are temporary
   COMPLEX(DP), INTENT(IN) :: psi0_d(npwx,nbnd)  ! psi0  needed to compute the Pv projection
   COMPLEX(DP), INTENT(IN) :: spsi0_d(npwx,nbnd) ! Spsi0  needed to compute the Pv projection
   !

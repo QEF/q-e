@@ -77,7 +77,7 @@ SUBROUTINE gen_at_dy( ik, u, dwfcat )
    DEALLOCATE( dylm )
    !
    q(:) = SQRT(q(:))*tpiba
-   CALL interp_at_wfc ( npw, q, nwfcm, chiq )
+   CALL interp_atwfc ( npw, q, nwfcm, chiq )
    !
    ALLOCATE( sk(npw) )
    !

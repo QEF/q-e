@@ -1719,6 +1719,7 @@ SUBROUTINE compute_dmn
    USE symm_base,       ONLY : nsymin=>nsym,srin=>sr,ftin=>ft,invsin=>invs
    USE fft_base,        ONLY : dffts
    USE scatter_mod, ONLY : gather_grid, scatter_grid
+   USE uspp_init,            ONLY : init_us_2
    IMPLICIT NONE
    !
    complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
@@ -2380,11 +2381,11 @@ SUBROUTINE compute_mmn
                                allocate_bec_type, deallocate_bec_type
    USE mp_pools,        ONLY : intra_pool_comm, root_pool, my_pool_id, me_pool, npool
    USE mp,              ONLY : mp_sum, mp_barrier
-   USE noncollin_module,ONLY : noncolin, npol
+   USE noncollin_module,ONLY : noncolin, npol, lspinorb
    USE lsda_mod,        ONLY : lsda, isk
-   USE spin_orb,             ONLY : lspinorb
    USE gvecw,           ONLY : gcutw
    USE wannier
+   USE uspp_init,            ONLY : init_us_2
 
    IMPLICIT NONE
    !
@@ -2727,7 +2728,8 @@ SUBROUTINE compute_spin
    USE constants,       ONLY : rytoev
    USE uspp_param,      ONLY : upf, nh, nhm
    USE uspp,            ONLY : qq_nt, nhtol, nhtoj, indv
-   USE spin_orb,        ONLY : fcoef
+   USE upf_spinorb,     ONLY : fcoef
+   USE uspp_init,       ONLY : init_us_2
    USE wannier
 
    IMPLICIT NONE
@@ -2973,6 +2975,7 @@ SUBROUTINE compute_orb
    USE gvecs,           ONLY : doublegrid
    USE lsda_mod,        ONLY : lsda, nspin, isk, current_spin
    USE constants,       ONLY : rytoev
+   USE uspp_init,       ONLY : init_us_2
    !
    IMPLICIT NONE
    !
@@ -3247,6 +3250,7 @@ SUBROUTINE compute_shc
    USE lsda_mod,        ONLY : nspin, lsda, isk
    USE scf,             ONLY : vrs, vltot, v, kedtau
    USE wannier
+   USE uspp_init,            ONLY : init_us_2
    !
    IMPLICIT NONE
    !

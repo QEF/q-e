@@ -32,11 +32,10 @@ SUBROUTINE sum_band_gpu()
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
   USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, nhtol, nhtoj, indv, okvan, &
-                                   becsum_d, ebecsum_d, vkb_d, using_vkb, using_vkb_d
+                                   becsum_d, ebecsum_d
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions,        ONLY : evc, psic
-  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
-  USE spin_orb,             ONLY : lspinorb, domag, fcoef
+  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, domag
   USE wvfct,                ONLY : nbnd, npwx, wg, et, btype
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
@@ -69,6 +68,8 @@ SUBROUTINE sum_band_gpu()
   CALL start_clock_gpu( 'sum_band' )
   !
   if ( nhm > 0 ) then
+     becsum(:,:,:) = 0.D0
+     if (tqr) ebecsum(:,:,:) = 0.D0
      becsum_d(:,:,:) = 0.D0
      if (tqr) ebecsum_d(:,:,:) = 0.D0
   end if
@@ -98,7 +99,7 @@ SUBROUTINE sum_band_gpu()
      !
   END IF
   !
-  ! ... Needed for LDA+U: compute occupations of Hubbard states
+  ! ... Needed for DFT+Hubbard: compute occupations of Hubbard states
   !
   IF (lda_plus_u) THEN
     IF (lda_plus_u_kind.EQ.0) THEN
@@ -279,6 +280,7 @@ SUBROUTINE sum_band_gpu()
        USE mp_bands,      ONLY : me_bgrp
        USE mp,            ONLY : mp_sum, mp_get_comm_null
        USE fft_helper_subroutines
+       USE uspp_init,     ONLY : init_us_2
        !
        IMPLICIT NONE
        !
@@ -343,9 +345,9 @@ SUBROUTINE sum_band_gpu()
           CALL stop_clock_gpu( 'sum_band:buffer' )
           !
           CALL start_clock_gpu( 'sum_band:init_us_2' )
-
-          IF ( nkb > 0 ) CALL using_vkb_d(2)
-          IF ( nkb > 0 ) CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+          !
+          IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
+          !
           CALL stop_clock_gpu( 'sum_band:init_us_2' )
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
@@ -567,6 +569,7 @@ SUBROUTINE sum_band_gpu()
        USE mp,                 ONLY : mp_sum, mp_get_comm_null
        USE control_flags,      ONLY : many_fft
        USE fft_helper_subroutines
+       USE uspp_init,          ONLY : init_us_2
        !
        IMPLICIT NONE
        !
@@ -655,9 +658,9 @@ SUBROUTINE sum_band_gpu()
           CALL stop_clock_gpu( 'sum_band:buffer' )
           !
           CALL start_clock_gpu( 'sum_band:init_us_2' )
-          IF ( nkb > 0 ) CALL using_vkb_d(2)
-          IF ( nkb > 0 ) &
-             CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+          !
+          IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
+          !
           CALL stop_clock_gpu( 'sum_band:init_us_2' )
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
@@ -1062,8 +1065,8 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   USE becmod,             ONLY : becp, calbec, allocate_bec_type
   USE control_flags,      ONLY : gamma_only, tqr
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp
-  USE uspp,               ONLY : nkb, becsum, ebecsum, indv_ijkb0, &
-                                 vkb_d, becsum_d, ebecsum_d, indv_ijkb0_d, using_vkb_d
+  USE uspp,               ONLY : nkb, becsum, ebecsum, ofsbeta, &
+                                 becsum_d, ebecsum_d, ofsbeta_d, vkb
   USE uspp_param,         ONLY : upf, nh, nhm
   USE wvfct,              ONLY : nbnd, wg, et, current_k
   USE klist,              ONLY : ngk, nkstot
@@ -1092,7 +1095,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   attributes(DEVICE) :: auxk1_d, auxk2_d, aux_nc_d
   attributes(DEVICE) :: auxg_d, aux_gk_d, aux_egk_d
 #endif
-  INTEGER :: ibnd, ibnd_loc, nbnd_loc, ibnd_begin  ! counters on bands
+  INTEGER :: ibnd, kbnd, ibnd_loc, nbnd_loc, ibnd_begin  ! counters on bands
   INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js, nhnt
   ! counters on beta functions, atoms, atom types, spin, and auxiliary vars
   !
@@ -1108,10 +1111,13 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN
      CALL using_evc_d(0) 
-     CALL using_vkb_d(0) 
      CALL using_becp_d_auto(2)
      ! calbec computes becp = <vkb_i|psi_j>
-     CALL calbec_gpu( npw, vkb_d, evc_d, becp_d )
+!$acc data present(vkb(:,:))
+!$acc host_data use_device(vkb)
+     CALL calbec_gpu( npw, vkb, evc_d(:,ibnd_start:ibnd_end), becp_d )
+!$acc end host_data
+!$acc end data
   ELSE
      CALL using_evc(0) 
      CALL using_becp_auto(2)
@@ -1164,7 +1170,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
         END IF
         !
         !   In becp=<vkb_i|psi_j> terms corresponding to atom na of type nt
-        !   run from index i=indv_ijkb0(na)+1 to i=indv_ijkb0(na)+nh(nt)
+        !   run from index i=ofsbeta(na)+1 to i=ofsbeta(na)+nh(nt)
         !
         nhnt = nh(np)
         DO na = 1, nat
@@ -1180,11 +1186,12 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  !$cuf kernel do(2)
                  DO is = 1, npol
                     DO ih = 1, nhnt
-                       ikb = indv_ijkb0_d(na) + ih
-                       DO ibnd = ibnd_start, ibnd_end
-                          auxk1_d(ibnd,ih+(is-1)*nhnt)= becp_d_nc_d(ikb,is,ibnd)
+                       ikb = ofsbeta_d(na) + ih
+                       DO kbnd = 1, this_bgrp_nbnd 
+                          ibnd = ibnd_start + kbnd -1 
+                          auxk1_d(ibnd,ih+(is-1)*nhnt)= becp_d_nc_d(ikb,is,kbnd)
                           auxk2_d(ibnd,ih+(is-1)*nhnt)= wg_d(ibnd,ik) * &
-                                                        becp_d_nc_d(ikb,is,ibnd)
+                                                        becp_d_nc_d(ikb,is,kbnd)
                        END DO
                     END DO
                  END DO
@@ -1200,33 +1207,27 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  !$cuf kernel do(2)
                  DO ih = 1, nhnt
                     DO ibnd_loc = 1, nbnd_loc
-                       ikb = indv_ijkb0_d(na) + ih
-                       ibnd = ibnd_loc + ibnd_begin - 1
+                       ikb = ofsbeta_d(na) + ih
+                       ibnd = (ibnd_start -1) + ibnd_loc + ibnd_begin - 1
                        auxg_d(ibnd_loc,ih) = becp_d_r_d(ikb,ibnd_loc) * wg_d(ibnd,ik)
                     END DO
                  END DO
-                 !
-                 ! NB: band parallelizazion has not been performed in this case because 
-                 !     bands were already distributed across R&G processors.
-                 !     Contribution to aux_gk is scaled by 1.d0/nbgrp so that the becsum
-                 !     summation across bgrps performed outside will gives the right value.
-                 !
                  CALL cublasDgemm ( 'N', 'N', nhnt, nhnt, nbnd_loc, &
-                      1.0_dp/nbgrp, becp_d%r_d(indv_ijkb0(na)+1,1), nkb,    &
+                      1.0_dp, becp_d%r_d(ofsbeta(na)+1,1), nkb,    &
                       auxg_d, nbnd_loc, 0.0_dp, aux_gk_d, nhnt )
                  !
                  if (tqr) then
                    CALL using_et_d(0)
                    !$cuf kernel do(1)
                    DO ih = 1, nhnt
-                      ikb = indv_ijkb0_d(na) + ih
+                      ikb = ofsbeta_d(na) + ih
                       DO ibnd_loc = 1, nbnd_loc
                       auxg_d(ibnd_loc,ih) = et_d(ibnd_loc,ik) * auxg_d(ibnd_loc,ih)
                       END DO
                    END DO
 
                    CALL cublasDgemm ( 'N', 'N', nhnt, nhnt, nbnd_loc, &
-                        1.0_dp/nbgrp, becp_d%r_d(indv_ijkb0(na)+1,1), nkb,    &
+                        1.0_dp, becp_d%r_d(ofsbeta(na)+1,1), nkb,    &
                         auxg_d, nbnd_loc, 0.0_dp, aux_egk_d, nhnt )
                  end if
                  !
@@ -1235,10 +1236,11 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  becp_d_k_d => becp_d%k_d
                  !$cuf kernel do(2) <<<*,*>>>
                  DO ih = 1, nhnt
-                    DO ibnd = ibnd_start, ibnd_end
-                       ikb = indv_ijkb0_d(na) + ih
-                       auxk1_d(ibnd,ih) = becp_d_k_d(ikb,ibnd) 
-                       auxk2_d(ibnd,ih) = wg_d(ibnd,ik)*becp_d_k_d(ikb,ibnd)
+                    DO kbnd = 1, this_bgrp_nbnd ! ibnd_start, ibnd_end
+                       ibnd = ibnd_start + kbnd -1 
+                       ikb = ofsbeta_d(na) + ih
+                       auxk1_d(ibnd,ih) = becp_d_k_d(ikb,kbnd) 
+                       auxk2_d(ibnd,ih) = wg_d(ibnd,ik)*becp_d_k_d(ikb,kbnd)
                     END DO
                  END DO
                  !
@@ -1253,7 +1255,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                    !$cuf kernel do(2)
                    DO ih = 1, nhnt
                       DO ibnd = ibnd_start, ibnd_end
-                         ikb = indv_ijkb0_d(na) + ih
+                         ikb = ofsbeta_d(na) + ih
                          auxk2_d(ibnd,ih) = et_d(ibnd,ik)*auxk2_d(ibnd,ih)
                       END DO
                    END DO
@@ -1341,8 +1343,7 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc_d, becsum_d )
   USE uspp_param,           ONLY : nh, nhm
   USE uspp,                 ONLY : ijtoh_d
   USE lsda_mod,             ONLY : nspin
-  USE noncollin_module,     ONLY : npol, nspin_mag
-  USE spin_orb,             ONLY : domag
+  USE noncollin_module,     ONLY : npol, nspin_mag, domag
   !
   IMPLICIT NONE
   !
@@ -1400,8 +1401,7 @@ SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc_d, becsum_d )
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,           ONLY : nh, nhm
-  USE noncollin_module,     ONLY : npol, nspin_mag
-  USE spin_orb,             ONLY : domag
+  USE noncollin_module,     ONLY : npol, nspin_mag, domag
   USE uspp,                 ONLY : ijtoh_d, nhtol_d, nhtoj_d, indv_d
   USE upf_spinorb,          ONLY : fcoef_d
   IMPLICIT NONE

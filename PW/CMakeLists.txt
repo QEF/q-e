@@ -2,6 +2,7 @@ set(src_pw
    src/a2fmod.f90 
    src/add_bfield.f90 
    src/add_efield.f90 
+   src/add_dmft_occ.f90 
    src/add_vuspsi.f90 
    src/add_gatefield.f90 
    src/add_paw_to_deeq.f90 
@@ -22,8 +23,6 @@ set(src_pw
    src/beef.f90 
    src/bp_mod.f90 
    src/bp_c_phase.f90 
-   src/bp_calc_btq.f90 
-   src/bp_qvan3.f90 
    src/bp_strings.f90 
    src/buffers.f90 
    src/c_bands.f90 
@@ -32,6 +31,8 @@ set(src_pw
    src/cdiagh.f90 
    src/clean_pw.f90 
    src/close_files.f90 
+   src/commutator_Hx_psi.f90
+   src/commutator_Vhubx_psi.f90
    src/compute_becsum.f90 
    src/compute_deff.f90 
    src/compute_dip.f90 
@@ -92,8 +93,6 @@ set(src_pw
    src/g_psi_mod.f90 
    src/gen_at_dj.f90 
    src/gen_at_dy.f90 
-   src/gen_us_dj.f90 
-   src/gen_us_dy.f90 
    src/get_locals.f90 
    src/gk_sort.f90 
    src/gradcorr.f90 
@@ -107,6 +106,7 @@ set(src_pw
    src/h_psi_meta.f90 
    src/hinit0.f90 
    src/hinit1.f90 
+   src/hubbard.f90 
    src/init_ns.f90 
    src/init_q_aeps.f90 
    src/init_run.f90 
@@ -178,7 +178,7 @@ set(src_pw
    src/read_conf_from_file.f90 
    src/read_file_new.f90 
    src/realus.f90 
-   src/remove_atomic_rho.f90 
+   src/remove_atomic_rho.f90
    src/report_mag.f90 
    src/restart_in_electrons.f90 
    src/rho2zeta.f90 
@@ -200,8 +200,6 @@ set(src_pw
    src/set_vrs.f90 
    src/setlocal.f90 
    src/setup.f90 
-   src/spinor.f90 
-   src/sph_ind.f90 
    src/stop_run.f90 
    src/stres_cc.f90 
    src/stres_ewa.f90 
@@ -222,7 +220,6 @@ set(src_pw
    src/symme.f90 
    src/symm_base.f90 
    src/symmetrize_at.f90 
-   src/tabd.f90 
    src/tetra.f90 
    src/transform_becsum_so.f90 
    src/transform_becsum_nc.f90 
@@ -275,8 +272,6 @@ set(src_pw
    src/g_psi_gpu.f90
    src/stres_mgga_gpu.f90
    src/atomic_wfc_gpu.f90
-   src/gen_us_dj_gpu.f90
-   src/gen_us_dy_gpu.f90
    src/dvloc_of_g_gpu.f90
    src/stres_ewa_gpu.f90
    src/stres_knl_gpu.f90
@@ -305,6 +300,8 @@ target_link_libraries(qe_pw
         qe_kssolver_cg
         qe_kssolver_ppcg
         qe_kssolver_paro
+        qe_kssolver_rmmdiis
+        qe_kssolver_dense
         qe_upflib # TODO turn to vendorized library from MaX gitrepo ? 
         qe_modules
         qe_fftx
@@ -313,7 +310,9 @@ target_link_libraries(qe_pw
         qe_mpi_fortran
         qe_xclib
         qe_devxlib
-        qe_ext_prof_tool)
+        qe_mbd
+    PUBLIC
+        qe_openacc_fortran)
 
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_pw
@@ -335,7 +334,6 @@ target_link_libraries(qe_pw_exe
         qe_pw
         qe_modules
         qe_lax
-        qe_lapack
         qe_upflib)
 
 ###########################################################
@@ -349,8 +347,7 @@ set_target_properties(qe_pw_tools_ibrav2cell_exe
 target_link_libraries(qe_pw_tools_ibrav2cell_exe
     PRIVATE
         qe_pw
-        qe_modules
-        qe_lapack)
+        qe_modules)
 
 ###########################################################
 # cell2ibrav.x
@@ -363,8 +360,7 @@ set_target_properties(qe_pw_tools_cell2ibrav_exe
 target_link_libraries(qe_pw_tools_cell2ibrav_exe
     PRIVATE
         qe_pw
-        qe_modules
-        qe_lapack)
+        qe_modules)
 
 ###########################################################
 # ev.x
@@ -377,8 +373,7 @@ set_target_properties(qe_pw_tools_ev_exe
 target_link_libraries(qe_pw_tools_ev_exe
     PRIVATE
         qe_pw
-        qe_modules
-        qe_lapack)
+        qe_modules)
 
 ###########################################################
 # kpoints.x
@@ -391,8 +386,7 @@ set_target_properties(qe_pw_tools_kpoints_exe
 target_link_libraries(qe_pw_tools_kpoints_exe
     PRIVATE
         qe_pw
-        qe_modules
-        qe_lapack)
+        qe_modules)
 
 ###########################################################
 # pwi2xsf.x
@@ -405,18 +399,40 @@ set_target_properties(qe_pw_tools_pwi2xsf_exe
 target_link_libraries(qe_pw_tools_pwi2xsf_exe
     PRIVATE
         qe_pw
-        qe_modules
-        qe_lapack)
+        qe_modules)
+
+###########################################################
+# scan_ibrav.x
+###########################################################
+set(src_scan_ibrav_x tools/scan_ibrav.f90)
+qe_add_executable(qe_pw_tools_scan_ibrav_exe ${src_scan_ibrav_x})
+set_target_properties(qe_pw_tools_scan_ibrav_exe
+    PROPERTIES
+        OUTPUT_NAME scan_ibrav.x)
+target_link_libraries(qe_pw_tools_scan_ibrav_exe
+    PRIVATE
+        qe_pw
+        qe_modules)
 
 ###########################################################
 
-qe_install_targets(
-    # Libraries
-    qe_pw
-    # Executables
+set(PW_EXE_TARGETS
     qe_pw_exe
     qe_pw_tools_ibrav2cell_exe
     qe_pw_tools_cell2ibrav_exe
     qe_pw_tools_ev_exe
     qe_pw_tools_kpoints_exe
-    qe_pw_tools_pwi2xsf_exe)
+    qe_pw_tools_pwi2xsf_exe
+    qe_pw_tools_scan_ibrav_exe)
+
+qe_install_targets(
+    # Libraries
+    qe_pw
+    # Executables
+    ${PW_EXE_TARGETS})
+
+add_custom_target(pw
+    DEPENDS
+        ${PW_EXE_TARGETS}
+    COMMENT
+        "basic code for scf, structure optimization, MD")

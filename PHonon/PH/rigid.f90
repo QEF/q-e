@@ -13,12 +13,12 @@ MODULE rigid
 !-----------------------------------------------------------------------
 SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat, loto_2d, sign)
   !-----------------------------------------------------------------------
-  ! Compute the rigid-ion (long-range) term for q
-  ! The long-range term used here, to be added to or subtracted from the
-  ! dynamical matrices, is exactly the same of the formula introduced in:
-  ! X. Gonze et al, PRB 50. 13035 (1994) . Only the G-space term is
-  ! implemented: the Ewald parameter alpha must be large enough to
-  ! have negligible r-space contribution
+  !! Compute the rigid-ion (long-range) term for q.  
+  !! The long-range term used here, to be added to or subtracted from the
+  !! dynamical matrices, is exactly the same of the formula introduced in:  
+  !! X. Gonze et al, PRB 50. 13035 (1994).  
+  !! Only the G-space term is implemented: the Ewald parameter alpha must
+  !! be large enough to have negligible r-space contribution.
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : pi, tpi, fpi, e2

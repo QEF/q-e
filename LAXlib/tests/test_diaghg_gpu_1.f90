@@ -1,14 +1,14 @@
 #if defined(__CUDA)
 program test_diaghg_gpu
-#if defined(__MPI)
-    USE MPI
-#endif
+
+    USE laxlib_parallel_include
     USE mp,            ONLY : mp_bcast
     USE mp_world,      ONLY : mp_world_start, mp_world_end, mpime, &
                               root, nproc, world_comm
     USE mp_bands_util, ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
     USE tester
     IMPLICIT NONE
+    include 'laxlib_kinds.fh'
     !
     TYPE(tester_t) :: test
     INTEGER :: world_group = 0
@@ -36,7 +36,6 @@ program test_diaghg_gpu
   !
   SUBROUTINE real_1(test)
     USE LAXlib
-    USE la_param, ONLY : DP
     USE cudafor
     implicit none
     !
@@ -64,7 +63,7 @@ program test_diaghg_gpu
     !
     v_d = 0.d0
     e_d = 0.d0
-    CALL diaghg(  2, 2, h_d, s_d, 2, e_d, v_d, .false. )
+    CALL diaghg(  2, 2, h_d, s_d, 2, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm, .false. )
     v_h = v_d
     e_h = e_d
     h_h = h_d
@@ -77,7 +76,7 @@ program test_diaghg_gpu
     !
     v_d = 0.d0
     e_d = 0.d0
-    CALL diaghg(  2, 2, h_d, s_d, 2, e_d, v_d, .true. )
+    CALL diaghg(  2, 2, h_d, s_d, 2, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm, .true. )
     v_h = v_d
     e_h = e_d
     h_h = h_d
@@ -92,7 +91,6 @@ program test_diaghg_gpu
   !
   SUBROUTINE complex_1(test)
     USE LAXlib
-    USE la_param, ONLY : DP
     USE cudafor
     implicit none
     !
@@ -135,7 +133,7 @@ program test_diaghg_gpu
     e_h = 0.d0
     v_d = v_h; e_d = e_h
     !
-    CALL diaghg(  2, 2, h_d, s_d, 2, e_d, v_d, .false. )
+    CALL diaghg(  2, 2, h_d, s_d, 2, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm, .false. )
     v_h = v_d
     e_h = e_d
     h_h = h_d
@@ -155,7 +153,7 @@ program test_diaghg_gpu
     h_d = h_h
     s_d = s_h
     v_d = v_h; e_d = e_h
-    CALL diaghg(  2, 2, h_d, s_d, 2, e_d, v_d, .true. )
+    CALL diaghg(  2, 2, h_d, s_d, 2, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm, .true. )
     v_h = v_d
     e_h = e_d
     h_h = h_d

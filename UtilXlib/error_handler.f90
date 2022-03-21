@@ -73,9 +73,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
 #if defined(__INTEL_COMPILER)
     call tracebackqq(user_exit_code=-1)
 #elif __GFORTRAN__
-#if (__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8))
     call backtrace
-#endif
 #else
     WRITE( UNIT = 0, FMT = '(5X,A)' ) "Printing strace..."
     CALL ptrace()
@@ -98,8 +96,8 @@ SUBROUTINE errore( calling_routine, message, ierr )
   WRITE( UNIT = crashunit, FMT = '(/,1X,78("%"))' )
   WRITE( UNIT = crashunit, FMT = '(5X,"task #",I10)' ) mpime
   WRITE( UNIT = crashunit, &
-         FMT = '(5X,"from ",A," : error #",I10)' ) calling_routine, ierr
-  WRITE( UNIT = crashunit, FMT = '(5X,A)' ) message
+         FMT = '(5X,"from ",A," : error #",I10)' ) TRIM(calling_routine), ierr
+  WRITE( UNIT = crashunit, FMT = '(5X,A)' ) TRIM(message)
   WRITE( UNIT = crashunit, FMT = '(1X,78("%"),/)' )
   !
   CLOSE( UNIT = crashunit )

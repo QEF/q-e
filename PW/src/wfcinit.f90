@@ -1,10 +1,68 @@
-! 
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+!
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
+!----------------------------------------------------------------------------
+SUBROUTINE aceinit0()
+  !----------------------------------------------------------------------------
+  !
+  ! ... This routine reads the ACE potential from files in non-scf calculations
+  !
+  USE io_global,            ONLY : stdout
+  USE klist,                ONLY : nks, nkstot
+  USE control_flags,        ONLY : lscf
+  USE io_files,             ONLY : restart_dir
+  USE wvfct,                ONLY : nbnd
+  USE pw_restart_new,       ONLY : read_collected_wfc
+  USE exx,                  ONLY : xi, domat
+  USE xc_lib,               ONLY : start_exx, exx_is_active
+  USE noncollin_module,     ONLY : npol
+  USE wvfct,                ONLY : npwx
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: ik
+  CHARACTER (LEN=256)  :: dirname
+  !
+  CALL start_clock( 'aceinit0' )
+  !
+  IF(lscf) THEN
+    !
+    WRITE( stdout, '(5X,"EXX: ACE will be initialized later")' )
+    !
+  ELSE
+    !
+    WRITE( stdout, '(5X,"EXX: initializing ACE and reading from file")' )
+    WRITE( stdout, '(5X,"WARNING: this will crash or be completely wrong if a compliant ACE potential & 
+                             from a previous SCF run is not found on file")' )
+    !
+    Call start_exx()
+    !
+    IF (.NOT. ALLOCATED(xi)) ALLOCATE( xi(npwx*npol,nbnd,nkstot) )
+    !
+    xi=(0.0d0, 0.0d0)
+    !
+    dirname = restart_dir ( )
+    !
+    DO ik = 1, nks
+       CALL read_collected_wfc ( dirname, ik, xi(:,:,ik), "ace" )
+    END DO
+    !
+    WRITE( stdout, '(5X,"Starting ACE correctly read from file")' )
+    !
+  END IF 
+  !
+  domat = .FALSE.
+  !
+  CALL stop_clock( 'aceinit0' )  
+  !
+  RETURN
+  !
+END SUBROUTINE aceinit0
 !
 !----------------------------------------------------------------------------
 SUBROUTINE wfcinit()
@@ -20,12 +78,12 @@ SUBROUTINE wfcinit()
   USE klist,                ONLY : xk, nks, ngk, igk_k
   USE control_flags,        ONLY : io_level, lscf
   USE fixed_occ,            ONLY : one_atom_occupations
-  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU, lda_plus_u_kind
+  USE ldaU,                 ONLY : lda_plus_u, Hubbard_projectors, wfcU, lda_plus_u_kind
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
                                    diropn, xmlfile, restart_dir
   USE buffers,              ONLY : open_buffer, close_buffer, get_buffer, save_buffer
-  USE uspp,                 ONLY : nkb, vkb, using_vkb
+  USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions,        ONLY : evc
   USE wvfct,                ONLY : nbnd, current_k
   USE wannier_new,          ONLY : use_wannier
@@ -36,10 +94,11 @@ SUBROUTINE wfcinit()
   USE qes_types_module,     ONLY : output_type
   USE qes_libs_module,      ONLY : qes_reset
   USE wavefunctions_gpum,   ONLY : using_evc
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !
-  INTEGER :: ik, ierr, exst_sum 
+  INTEGER :: ik, ierr, exst_sum
   LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file
   CHARACTER (LEN=256)  :: dirname
   TYPE ( output_type ) :: output_obj
@@ -49,8 +108,10 @@ SUBROUTINE wfcinit()
   !
   ! ... Orthogonalized atomic functions needed for DFT+U and other cases
   !
+  IF ( (use_wannier .OR. one_atom_occupations ) .AND. lda_plus_u ) &
+       CALL errore ( 'wfcinit', 'currently incompatible options', 1 )
   IF ( use_wannier .OR. one_atom_occupations ) CALL orthoatwfc ( use_wannier )
-  IF ( lda_plus_u ) CALL orthoUwfc()
+  IF ( lda_plus_u ) CALL orthoUwfc(.FALSE.)
   !
   ! ... open files/buffer for wavefunctions (nwordwfc set in openfil)
   ! ... io_level > 1 : open file, otherwise: open buffer
@@ -67,12 +128,12 @@ SUBROUTINE wfcinit()
      CALL mp_sum (exst_sum, intra_image_comm)
      !
      ! Check whether wavefunctions are collected (info in xml file)
-     dirname = restart_dir ( ) 
+     dirname = restart_dir ( )
      IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
      CALL mp_bcast(ierr, ionode_id, intra_image_comm)
      IF ( ierr <= 0 ) THEN
         ! xml file is valid
-        IF (ionode) twfcollect_file = output_obj%band_structure%wf_collected   
+        IF (ionode) twfcollect_file = output_obj%band_structure%wf_collected
         CALL mp_bcast(twfcollect_file, ionode_id, intra_image_comm)
         CALL qes_reset  ( output_obj )
      ELSE
@@ -91,7 +152,7 @@ SUBROUTINE wfcinit()
         !
         WRITE( stdout, '(5X,"Cannot read wfcs: file not found")' )
         IF (exst_file) THEN
-           CALL close_buffer(iunwfc, 'delete') 
+           CALL close_buffer(iunwfc, 'delete')
            CALL open_buffer(iunwfc,'wfc', nwordwfc, io_level, exst_mem, exst_file)
         END IF
         starting_wfc = 'atomic+random'
@@ -145,7 +206,7 @@ SUBROUTINE wfcinit()
   END IF
   !
   ! ... exit here if starting from file or for non-scf calculations.
-  ! ... In the latter case the starting wavefunctions are not 
+  ! ... In the latter case the starting wavefunctions are not
   ! ... calculated here but just before diagonalization (to reduce I/O)
   !
   IF (  ( .NOT. lscf .AND. .NOT. lelfield ) .OR. TRIM(starting_wfc) == 'file' ) THEN
@@ -167,12 +228,11 @@ SUBROUTINE wfcinit()
      !
      ! ... More Hpsi initialization: nonlocal pseudopotential projectors |beta>
      !
-     IF ( nkb > 0 ) CALL using_vkb(1)
      IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
      ! ... Needed for DFT+U
      !
-     IF ( nks > 1 .AND. lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
+     IF ( nks > 1 .AND. lda_plus_u .AND. (Hubbard_projectors .NE. 'pseudo') ) &
         CALL get_buffer( wfcU, nwordwfcU, iunhub, ik )
      !
      ! DFT+U+V: calculate the phase factor at a given k point
@@ -223,6 +283,7 @@ SUBROUTINE init_wfc ( ik )
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto
+  USE control_flags,        ONLY : lscf
   !
   IMPLICIT NONE
   !
@@ -258,7 +319,7 @@ SUBROUTINE init_wfc ( ik )
   !
   ALLOCATE( wfcatom( npwx, npol, n_starting_wfc ) )
   !
-  IF ( starting_wfc(1:6) == 'atomic' ) THEN
+  IF ( n_starting_atomic_wfc > 0 ) THEN
      !
      CALL start_clock( 'wfcinit:atomic' ); !write(*,*) 'start wfcinit:atomic' ; FLUSH(6)
      CALL atomic_wfc( ik, wfcatom )
@@ -280,7 +341,7 @@ SUBROUTINE init_wfc ( ik )
                   arg = tpi * randy()
                   !
                   wfcatom(ig,ipol,ibnd) = wfcatom(ig,ipol,ibnd) * &
-                     ( 1.0_DP + 0.05_DP * CMPLX( rr*COS(arg), rr*SIN(arg) ,kind=DP) ) 
+                     ( 1.0_DP + 0.05_DP * CMPLX( rr*COS(arg), rr*SIN(arg) ,kind=DP) )
                   !
                END DO
                !
@@ -298,7 +359,7 @@ SUBROUTINE init_wfc ( ik )
   DO ibnd = n_starting_atomic_wfc + 1, n_starting_wfc
      !
      DO ipol = 1, npol
-        ! 
+        !
         wfcatom(:,ipol,ibnd) = (0.0_dp, 0.0_dp)
         !
         DO ig = 1, ngk(ik)
@@ -316,7 +377,7 @@ SUBROUTINE init_wfc ( ik )
      END DO
      !
   END DO
-  
+
   ! when band parallelization is active, the first band group distributes
   ! the wfcs to the others making sure all bgrp have the same starting wfc
   ! FIXME: maybe this should be done once evc are computed, not here?
@@ -336,13 +397,13 @@ SUBROUTINE init_wfc ( ik )
   ! ... by setting lelfield = .false. one prevents the calculation of
   ! ... electric enthalpy in the Hamiltonian (cannot be calculated
   ! ... at this stage: wavefunctions at previous step are missing)
-  ! 
+  !
   lelfield_save = lelfield
   lelfield = .FALSE.
   !
   ! ... subspace diagonalization (calls Hpsi)
   !
-  IF ( xclib_dft_is('hybrid')  ) CALL stop_exx() 
+  IF ( xclib_dft_is('hybrid') .and. lscf  ) CALL stop_exx()
   CALL start_clock( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
   CALL rotate_wfc ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
   CALL using_evc(1)  ! rotate_wfc (..., evc, etatom) -> evc : out (not specified)

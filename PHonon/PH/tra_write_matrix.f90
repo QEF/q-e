@@ -8,10 +8,9 @@
 !-----------------------------------------------------------------------
 subroutine tra_write_matrix (alpha, adyn, u, nat)
   !-----------------------------------------------------------------------
-  !
-  ! This routine writes on output the symmetrized dynamical matrix in
-  ! cartesian coordinates. The input matrix adyn is in the basis of
-  ! the modes. On output adyn is unchanged.
+  !! This routine writes on output the symmetrized dynamical matrix in
+  !! cartesian coordinates. The input matrix \(\text{adyn}\) is in the
+  !! basis of the modes. On output \(\text{adyn}\) is unchanged.
   !
   USE io_global,    ONLY : stdout
   USE kinds,        ONLY : DP
@@ -21,9 +20,10 @@ subroutine tra_write_matrix (alpha, adyn, u, nat)
   USE qpoint,       ONLY : xq
 
   implicit none
+  
   integer :: i, j, na, nb, nat
-  complex(DP) :: adyn (3 * nat, 3 * nat), u (3 * nat, 3 * nat)
-  complex(DP) :: auxdyn (3*nat, 3*nat)
+  complex(DP) :: adyn(3*nat,3*nat), u(3*nat,3*nat)
+  complex(DP) :: auxdyn(3*nat,3*nat)
   character (len=*) :: alpha
 
   auxdyn=adyn
@@ -45,18 +45,22 @@ end subroutine tra_write_matrix
 !-----------------------------------------------------------------------
 subroutine tra_write_matrix_no_sym (alpha, adyn, nat)
   !-----------------------------------------------------------------------
-  !
-  ! This routine writes on output the symmetrized dynamical matrix in
-  ! cartesian coordinates. The input matrix adyn is in the basis of
-  ! the modes. On output adyn is unchanged.
-  !
+  !! This routine writes on output the symmetrized dynamical matrix in
+  !! cartesian coordinates. The input matrix \(\text{adyn}\) is in the 
+  !! basis of the modes. On output \(\text{adyn}\) is unchanged.
+  
   USE io_global,    ONLY : stdout
   USE kinds,        ONLY : DP
 
   implicit none
-  integer :: i, j, na, nb, nat
-  complex(DP) :: adyn (3 * nat, 3 * nat)
+  
+  integer :: nat
+  complex(DP) :: adyn(3*nat,3*nat)
   character (len=*) :: alpha
+  
+  ! ... local variables
+  
+  integer :: i, j, na, nb
 
   WRITE( stdout, '(a)') alpha
   do na = 1, nat

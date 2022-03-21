@@ -1,0 +1,43 @@
+  &CONTROL
+    calculation='cp',
+    title="WATER",
+    restart_mode='from_scratch',
+    nstep=300, iprint=1000, isave=1000,
+    tstress=.FALSE.,
+    dt = 3.,
+    ndr=90,
+    ndw=91,
+    pseudo_dir='../pseudo',
+    outdir='./traj',
+  /
+  &SYSTEM
+    ibrav = 1,
+    celldm(1) = 10.,
+    nat =3,
+    ntyp =2,
+    ecutwfc =80.0,
+  /
+  &ELECTRONS
+    emass = 50.,
+    emass_cutoff = 3.,
+    orthogonalization = 'ortho',
+    electron_dynamics= 'cg',
+    startingwfc='random'
+  /
+  &IONS
+    ion_dynamics    = 'verlet',
+    ion_velocities= 'random',
+    tempw=800,
+  /
+AUTOPILOT
+    on_step = 100 : electron_dynamics = 'verlet'
+    on_step = 110 : iprint = 3
+ENDRULES
+ATOMIC_SPECIES
+   H      1.00000000 H_HSCV_PBE-1.0.upf
+   O     16.00000000 O_HSCV_PBE-1.0.upf
+ATOMIC_POSITIONS {bohr}
+ H     0.57164238	  0.94335166	  0.96565043
+ H    -0.24339682	 -0.43501513	 -1.37874473
+ O    -0.32824556	 -0.50852550	  0.41309430
+

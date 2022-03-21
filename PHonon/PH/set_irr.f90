@@ -7,28 +7,26 @@
 !
 !---------------------------------------------------------------------
 subroutine set_irr_new (xq, u, npert, nirr, eigen) 
-!---------------------------------------------------------------------
-!
-!     This subroutine computes a basis for all the irreducible
-!     representations of the small group of q, which are contained
-!     in the representation which has as basis the displacement vectors.
-!     This is achieved by building a random hermitean matrix,
-!     symmetrizing it and diagonalizing the result. The eigenvectors
-!     give a basis for the irreducible representations of the
-!     small group of q.
-!
-!     Original routine was from C. Bungaro.
-!     Revised Oct. 1995 by Andrea Dal Corso.
-!     April 1997: parallel stuff added (SdG)
-!
+  !---------------------------------------------------------------------
+  !! This subroutine computes a basis for all the irreducible
+  !! representations of the small group of q, which are contained
+  !! in the representation which has as basis the displacement vectors.
+  !! This is achieved by building a random hermitian matrix,
+  !! symmetrizing it and diagonalizing the result. The eigenvectors
+  !! give a basis for the irreducible representations of the
+  !! small group of q.
+  !
+  !     Original routine was from C. Bungaro.
+  !     Revised Oct. 1995 by Andrea Dal Corso.
+  !     April 1997: parallel stuff added (SdG)
+  !
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   USE ions_base, ONLY : nat, tau, ntyp => nsp, ityp, amass
   USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, sr, invs, nsym, irt, t_rev
   USE modes,     ONLY : num_rap_mode, name_rap_mode
-  USE noncollin_module, ONLY : noncolin, nspin_mag
-  USE spin_orb,  ONLY : domag
+  USE noncollin_module, ONLY : noncolin, domag, nspin_mag
   USE constants, ONLY: tpi
   USE control_ph, ONLY : search_sym
   USE control_flags, ONLY : iverbosity
@@ -44,9 +42,7 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
 
   implicit none
 !
-!   first the dummy variables
-!
-  real(DP), INTENT(IN) :: xq (3)
+  real(DP), INTENT(IN) :: xq(3)
 ! input: the q point
 
   complex(DP), INTENT(OUT) :: u(3*nat, 3*nat)
@@ -56,7 +52,7 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
   REAL(DP), INTENT(OUT) :: eigen(3*nat)
   
 !
-!   here the local variables
+!   ... local variables
 !
   integer :: na, nb, imode, jmode, ipert, jpert, nsymtot, imode0, &
        irr, ipol, jpol, isymq, irot, sna, isym

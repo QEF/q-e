@@ -9,10 +9,12 @@
 MODULE read_pseudo_mod
 !=----------------------------------------------------------------------------=!
   !
-  !! read pseudopotential files and store the data on internal variables of the 
-  !! program. Note that all processors read the same file!
+  !! read pseudopotential files and store the data in a few internal variables
+  !! (mainly in the "upf" structure). The files are read only by one processor.
+  !! The data is subsequently broadcast to all other processors.
+  !! FIXME: files with old PP formats are still read by all processors.
   !
-  USE io_files,     ONLY: pseudo_dir, pseudo_dir_cur, psfile, tmp_dir
+  USE io_files,     ONLY: pseudo_dir, pseudo_dir_cur, psfile
   USE ions_base,    ONLY: ntyp => nsp
   !! global variables  required on input 
   !
@@ -47,7 +49,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   USE funct,        ONLY: enforce_input_dft, set_dft_from_name, get_inlc
   USE xc_lib,       ONLY: xclib_get_id
   USE radial_grids, ONLY: deallocate_radial_grid, nullify_radial_grid
-  USE wrappers,     ONLY: md5_from_file
+  USE clib_wrappers,     ONLY: md5_from_file
   USE read_upf_v1_module,   ONLY: read_upf_v1
   USE read_upf_new_module,  ONLY: read_upf_new
   USE upf_auxtools, ONLY: upf_get_pp_format, upf_check_atwfc_norm

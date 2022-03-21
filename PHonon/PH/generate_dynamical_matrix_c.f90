@@ -11,9 +11,9 @@ subroutine generate_dynamical_matrix   &
      (nat, nsym, s, invs, irt, at, bg, n_diff_sites, equiv_atoms, &
      has_equivalent, dyn)
   !-----------------------------------------------------------------------
-  !
-  !  generate the complete dynamical matrix from independent modes only
-  !  Input: dyn = irreducible dyn.mat.  Output: dyn = complete dyn.mat.
+  !! Generate the complete dynamical matrix from independent modes only.  
+  !! Input: dyn = irreducible dyn.mat.  
+  !! Output: dyn = complete dyn.mat.
   !
   USE kinds, only : DP
   implicit none

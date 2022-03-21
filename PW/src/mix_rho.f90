@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -39,11 +39,11 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
                              mix_type_AXPY, davcio_mix_type, rho_ddot, &
                              high_frequency_mixing, nsg_ddot, &
                              mix_type_COPY, mix_type_SCAL
-  USE io_global,     ONLY : stdout
+  USE io_global,      ONLY : stdout
   USE gcscf_module,   ONLY : lgcscf, gcscf_gh, gcscf_mu, gcscf_eps
-  USE ldaU,          ONLY : lda_plus_u, lda_plus_u_kind, ldim_u, &
-                            max_num_neighbors, nsg, nsgnew
-  USE io_files,      ONLY : diropn
+  USE ldaU,           ONLY : lda_plus_u, lda_plus_u_kind, ldim_u, &
+                             max_num_neighbors, nsg, nsgnew
+  USE buffers,        ONLY : open_buffer, close_buffer, get_buffer, save_buffer
   !
   IMPLICIT NONE
   !
@@ -82,12 +82,13 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
     info,          &! flag saying if the exec. of libr. routines was ok
     ldim,          &! 2 * Hubbard_lmax + 1
     iunmix_nsg,    &! the unit for Hubbard mixing within DFT+U+V
-    nt              ! index of the atomic type
+    nt,            &! index of the atomic type
+    nword           ! size the DFT+U+V-related arrays
   REAL(DP),ALLOCATABLE :: betamix(:,:), work(:)
   INTEGER, ALLOCATABLE :: iwork(:)
   COMPLEX(DP), ALLOCATABLE :: nsginsave(:,:,:,:,:),  nsgoutsave(:,:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: deltansg(:,:,:,:,:)
-  LOGICAL :: exst
+  LOGICAL :: exst, exst_mem, exst_file
   REAL(DP) :: gamma0
 #if defined(__NORMALIZE_BETAMIX)
   REAL(DP) :: norm2, obn
@@ -107,7 +108,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   !
   INTEGER, EXTERNAL :: find_free_unit
   !
-  COMPLEX(DP), ALLOCATABLE, SAVE :: df_nsg(:,:,:,:,:,:), dv_nsg(:,:,:,:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: df_nsg(:,:,:,:,:,:), dv_nsg(:,:,:,:,:,:)
   !
   CALL start_clock( 'mix_rho' )
   !
@@ -198,7 +199,10 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   !
   IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) THEN
      iunmix_nsg = find_free_unit()
-     CALL diropn( iunmix_nsg, 'mix.nsg', ldim*ldim*nspin*nat*max_num_neighbors, exst)
+     nword = ldim * ldim * max_num_neighbors * nat * nspin * n_iter
+     CALL open_buffer( iunmix_nsg, 'mix.nsg', nword, io_level, exst_mem, exst_file)
+     ALLOCATE( df_nsg(ldim,ldim,max_num_neighbors,nat,nspin,n_iter) )
+     ALLOCATE( dv_nsg(ldim,ldim,max_num_neighbors,nat,nspin,n_iter) )
   ENDIF
   !
   IF ( .NOT. ALLOCATED( df ) ) THEN
@@ -213,13 +217,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
         CALL create_mix_type( dv(i) )
      END DO
   END IF
-  !
-  IF (lda_plus_u .AND. lda_plus_u_kind .EQ. 2) THEN 
-     IF ( .NOT. ALLOCATED( df_nsg ) ) &
-        ALLOCATE( df_nsg(ldim,ldim,max_num_neighbors,nat,nspin,n_iter) )
-     IF ( .NOT. ALLOCATED( dv_nsg ) ) &
-        ALLOCATE( dv_nsg(ldim,ldim,max_num_neighbors,nat,nspin,n_iter) )
-  ENDIF
   !
   ! ... iter_used = mixrho_iter-1  if  mixrho_iter <= n_iter
   ! ... iter_used = n_iter         if  mixrho_iter >  n_iter
@@ -240,7 +237,9 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
      call mix_type_AXPY ( -1.d0, rhoin_m, dv(ipos) )
      !
      IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) THEN
-        df_nsg(:,:,:,:,:,ipos) = df_nsg(:,:,:,:,:,ipos) - deltansg !nsgnew
+        CALL get_buffer ( df_nsg, nword, iunmix_nsg, 1 )
+        CALL get_buffer ( dv_nsg, nword, iunmix_nsg, 2 )
+        df_nsg(:,:,:,:,:,ipos) = df_nsg(:,:,:,:,:,ipos) - deltansg
         dv_nsg(:,:,:,:,:,ipos) = dv_nsg(:,:,:,:,:,ipos) - nsg
      ENDIF
      !
@@ -325,13 +324,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
         !
     END DO
     !
-    !   allocate(e(iter_used), v(iter_used, iter_used))
-    !   CALL rdiagh(iter_used, betamix, iter_used, e, v)
-    !   write(*,'(1e11.3)') e(:)
-    !   write(*,*)
-    !   deallocate(e,v)
     allocate(work(iter_used), iwork(iter_used))
-    !write(*,*) betamix(:,:)
     CALL DSYTRF( 'U', iter_used, betamix, iter_used, iwork, work, iter_used, info )
     CALL errore( 'broyden', 'factorization', abs(info) )
     !
@@ -426,7 +419,11 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   call destroy_mix_type(rhoin_m)
   !
   IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) THEN
-     CLOSE( iunmix_nsg, STATUS = 'KEEP' )
+     CALL save_buffer ( df_nsg, nword, iunmix_nsg, 1 )
+     CALL save_buffer ( dv_nsg, nword, iunmix_nsg, 2 )
+     DEALLOCATE( dv_nsg )
+     DEALLOCATE( df_nsg )
+     CALL close_buffer(iunmix_nsg, 'keep')
   ENDIF
   !
   CALL stop_clock( 'mix_rho' )

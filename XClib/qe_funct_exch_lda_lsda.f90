@@ -6,14 +6,15 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------
-MODULE exch_lda  !<GPU:exch_lda=>exch_lda_gpu>
+MODULE exch_lda
 !----------------------------------------------------------------------
 !! LDA exchange functionals.
 !
 CONTAINS
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slater( rs, ex, vx )                  !<GPU:DEVICE>
+SUBROUTINE slater( rs, ex, vx )
+!$acc routine (slater) seq
   !---------------------------------------------------------------------
   !! Slater exchange with alpha=2/3
   !
@@ -41,7 +42,8 @@ END SUBROUTINE slater
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slater1( rs, ex, vx )                 !<GPU:DEVICE>
+SUBROUTINE slater1( rs, ex, vx )
+!$acc routine (slater1) seq
   !---------------------------------------------------------------------
   !! Slater exchange with alpha=1, corresponding to -1.374/r_s Ry.
   !! Used to recover old results.
@@ -70,7 +72,8 @@ END SUBROUTINE slater1
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slater_rxc( rs, ex, vx )                 !<GPU:DEVICE>
+SUBROUTINE slater_rxc( rs, ex, vx )
+!$acc routine (slater_rxc) seq
   !---------------------------------------------------------------------
   !! Slater exchange with alpha=2/3 and Relativistic exchange.
   !
@@ -123,7 +126,8 @@ END SUBROUTINE slater_rxc
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slaterKZK( rs, ex, vx, vol )                 !<GPU:DEVICE>
+SUBROUTINE slaterKZK( rs, ex, vx, vol )
+!$acc routine (slaterKZK) seq
   !---------------------------------------------------------------------
   !! Slater exchange with alpha=2/3, Kwee, Zhang and Krakauer KE
   !! correction.
@@ -138,7 +142,7 @@ SUBROUTINE slaterKZK( rs, ex, vx, vol )                 !<GPU:DEVICE>
   !! Exchange energy (per unit volume)
   REAL(DP), INTENT(OUT) :: vx
   !! Exchange potential
-  REAL(DP) :: vol                                         !<GPU:VALUE>
+  REAL(DP) :: vol
   !! Finite size volume element
   !
   ! ... local variables
@@ -177,7 +181,8 @@ END SUBROUTINE slaterKZK
 !  ... LSDA
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slater_spin( rho, zeta, ex, vx_up, vx_dw )                 !<GPU:DEVICE>
+SUBROUTINE slater_spin( rho, zeta, ex, vx_up, vx_dw )
+!$acc routine (slater_spin) seq
   !-----------------------------------------------------------------------
   !! Slater exchange with alpha=2/3, spin-polarized case.
   !
@@ -218,7 +223,8 @@ END SUBROUTINE slater_spin
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slater_rxc_spin( rho, z, ex, vx_up, vx_dw )                 !<GPU:DEVICE>
+SUBROUTINE slater_rxc_spin( rho, z, ex, vx_up, vx_dw )
+!$acc routine (slater_rxc_spin) seq
   !-----------------------------------------------------------------------
   !! Slater exchange with alpha=2/3, relativistic exchange case.
   !! Spin-polarized case.
@@ -284,7 +290,8 @@ END SUBROUTINE slater_rxc_spin
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slater1_spin( rho, zeta, ex, vx_up, vx_dw )                 !<GPU:DEVICE>
+SUBROUTINE slater1_spin( rho, zeta, ex, vx_up, vx_dw )
+!$acc routine (slater1_spin) seq
   !-----------------------------------------------------------------------
   !! Slater exchange with alpha=2/3, spin-polarized case
   !

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE move_ions( idone, ions_status )
+SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   !----------------------------------------------------------------------------
   !! Perform a ionic step, according to the requested scheme:
   !
@@ -45,8 +45,10 @@ SUBROUTINE move_ions( idone, ions_status )
   USE mp,                     ONLY : mp_bcast
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
   USE basic_algebra_routines, ONLY : norm
-  USE dynamics_module,        ONLY : verlet, terminate_verlet, proj_verlet
-  USE dynamics_module,        ONLY : smart_MC, langevin_md
+  USE dynamics_module,        ONLY : verlet, terminate_verlet, proj_verlet, fire
+  USE dynamics_module,        ONLY : smart_MC, langevin_md, dt
+  USE dynamics_module,        ONLY : fire_nmin, fire_f_inc, fire_f_dec, &
+                                     fire_alpha_init, fire_falpha, fire_dtmax
   USE klist,                  ONLY : nelec, tot_charge
   USE fcp_module,             ONLY : lfcp, fcp_eps, fcp_mu, fcp_relax, &
                                      fcp_verlet, fcp_terminate, output_fcp
@@ -57,6 +59,7 @@ SUBROUTINE move_ions( idone, ions_status )
   !! idone: see run_pwscf
   INTEGER,  INTENT(INOUT):: ions_status
   !! ions_status: see run_pwscf
+  LOGICAL,  INTENT(OUT):: optimizer_failed
   !
   ! ... local variables
   !
@@ -67,6 +70,8 @@ SUBROUTINE move_ions( idone, ions_status )
   REAL(DP)              :: relec, felec, helec, capacitance, tot_charge_
   LOGICAL               :: conv_ions
   CHARACTER(LEN=320)    :: filebfgs
+  !
+  optimizer_failed = .FALSE.
   !
   ! ... only one node does the calculation in the parallel case
   !
@@ -126,9 +131,11 @@ SUBROUTINE move_ions( idone, ions_status )
         IF ( ANY( if_pos(:,:) == 1 ) .OR. lmovecell .OR. lfcp ) THEN
            !
            filebfgs = TRIM(tmp_dir) // TRIM(prefix) // '.bfgs'
-           CALL bfgs( filebfgs, pos, h, relec, etot, grad, fcell, iforceh, felec, epse, &
-                      epsf, epsp1, fcp_eps, energy_error, gradient_error, cell_error, fcp_error, &
-                      lmovecell, lfcp, capacitance, helec, step_accepted, conv_ions, istep )
+           CALL bfgs( filebfgs, pos, h, relec, etot, grad, fcell, iforceh, &
+                      felec, epse, epsf, epsp1, fcp_eps, energy_error, &
+                      gradient_error, cell_error, fcp_error, lmovecell, lfcp, &
+                      capacitance, helec, step_accepted, conv_ions, &
+                      optimizer_failed, istep )
            !
         ELSE
            !
@@ -208,7 +215,7 @@ SUBROUTINE move_ions( idone, ions_status )
               IF ( ANY( if_pos(:,:) == 1 ) .OR. lmovecell .OR. lfcp ) THEN
                  !
                  CALL terminate_bfgs ( etot, epse, epsf, epsp, fcp_eps, &
-                                       lmovecell, lfcp )
+                                       lmovecell, lfcp, optimizer_failed )
                  !
               END IF
               !
@@ -217,7 +224,7 @@ SUBROUTINE move_ions( idone, ions_status )
         ELSEIF ( idone == nstep ) THEN
            !
            CALL terminate_bfgs( etot, epse, epsf, epsp, fcp_eps, &
-                                lmovecell, lfcp )
+                                lmovecell, lfcp, optimizer_failed )
            !
         ELSE
            !
@@ -294,6 +301,16 @@ SUBROUTINE move_ions( idone, ions_status )
               !
            ENDIF
            !
+        ELSEIF ( calc == 'fi' ) THEN
+           !
+           CALL fire( conv_ions)
+           ! 
+           IF ( .NOT. conv_ions .AND. idone >= nstep ) THEN
+              WRITE( UNIT = stdout, FMT =  &
+                   '(/,5X,"The maximum number of steps has been reached.")' )
+              WRITE( UNIT = stdout, &
+                   FMT = '(/,5X,"End of FIRE minimization")' )
+           ENDIF
         ELSEIF ( calc(1:1) == 'l' ) THEN
            !
            ! ... for smart monte carlo method
@@ -374,6 +391,7 @@ SUBROUTINE move_ions( idone, ions_status )
   !
   !
   CALL mp_bcast( ions_status, ionode_id, intra_image_comm )
+  CALL mp_bcast( optimizer_failed, ionode_id, intra_image_comm )
   !
   !
   ! ... broadcast calculated quantities to all nodes

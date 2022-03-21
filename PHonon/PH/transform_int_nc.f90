@@ -9,15 +9,13 @@
 !----------------------------------------------------------------------------
 SUBROUTINE transform_int1_nc(int1,na,iflag)
 !----------------------------------------------------------------------------
-!
-! This routine multiply int1 by the identity and the Pauli
-! matrices and saves it in int1_nc.
+!! This routine multiply \(\text{int1}\) by the identity and the Pauli
+!! matrices and saves it in \(\text{int1_nc}\).
 !
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
-USE spin_orb,             ONLY : domag
-USE noncollin_module,     ONLY : nspin_mag
+USE noncollin_module,     ONLY : nspin_mag, domag
 USE phus,                 ONLY : int1_nc
 !
 IMPLICIT NONE
@@ -72,9 +70,8 @@ END SUBROUTINE transform_int1_nc
 !----------------------------------------------------------------------------
 SUBROUTINE transform_int2_nc(int2, nb, iflag)
 !----------------------------------------------------------------------------
-!
-! This routine sets int2_so for the atomic species which do not
-! have a spin-orbit pseudopotential
+!! This routine sets \(\text{int2_so}\) for the atomic species which do not
+!! have a spin-orbit pseudopotential.
 !
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
@@ -112,16 +109,14 @@ END SUBROUTINE transform_int2_nc
 !----------------------------------------------------------------------------
 SUBROUTINE transform_int4_nc(int4,na)
 !----------------------------------------------------------------------------
-!
-! This routine multiply int4 by the identity and the Pauli
-! matrices and saves it in int4_nc.
+!! This routine multiply \(\text{int4}\) by the identity and the Pauli
+!! matrices and saves it in \(\text{int4_nc}\).
 !
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
 USE uspp,                 ONLY : ijtoh
-USE noncollin_module,     ONLY : nspin_mag
-USE spin_orb,             ONLY : domag
+USE noncollin_module,     ONLY : nspin_mag, domag
 USE phus,                 ONLY : int4_nc
 !
 IMPLICIT NONE
@@ -164,9 +159,8 @@ END SUBROUTINE transform_int4_nc
 !----------------------------------------------------------------------------
 SUBROUTINE transform_int5_nc(int5, nb)
 !----------------------------------------------------------------------------
-!
-! This routine sets int5_so for the atomic species which do not
-! have a spin-orbit pseudopotential
+!! This routine sets \(\text{int5_so}\) for the atomic species which do not
+!! have a spin-orbit pseudopotential.
 !
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp

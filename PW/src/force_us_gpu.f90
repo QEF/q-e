@@ -15,10 +15,9 @@ SUBROUTINE force_us_gpu( forcenl )
   USE control_flags,        ONLY : gamma_only
   USE cell_base,            ONLY : at, bg, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE klist,                ONLY : nks, xk, ngk, igk_k, igk_k_d
-  USE gvect_gpum,           ONLY : g_d
-  USE uspp,                 ONLY : nkb, vkb_d, qq_at, deeq, qq_so, deeq_nc, indv_ijkb0, &
-                                   using_vkb, using_vkb_d
+  USE klist,                ONLY : nks, xk, ngk, igk_k
+  USE gvect,                ONLY : g_d
+  USE uspp,                 ONLY : nkb, vkb, qq_at, deeq, qq_so, deeq_nc, ofsbeta
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
@@ -26,7 +25,6 @@ SUBROUTINE force_us_gpu( forcenl )
   USE wavefunctions,        ONLY : evc
   USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
   USE noncollin_module,     ONLY : npol, noncolin
-  USE spin_orb,             ONLY : lspinorb
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
   USE becmod,               ONLY : calbec, becp, bec_type, allocate_bec_type, &
@@ -40,8 +38,11 @@ SUBROUTINE force_us_gpu( forcenl )
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto, allocate_bec_type_gpu, &
                                    synchronize_bec_type_gpu
+  USE uspp_init,            ONLY : init_us_2
+#if defined(__CUDA)
   USE device_fbuff_m,       ONLY : dev_buf
   USE control_flags,        ONLY : use_gpu
+#endif
   !
   IMPLICIT NONE
   !
@@ -50,16 +51,16 @@ SUBROUTINE force_us_gpu( forcenl )
   !
   ! ... local variables
   !
-  COMPLEX(DP), POINTER     :: vkb1_d(:,:)   ! contains g*|beta>
-#if defined(__CUDA)
-  attributes(DEVICE) :: vkb1_d
-#endif
+  COMPLEX(DP), ALLOCATABLE :: vkb1(:,:)   ! contains g*|beta>
+  !$acc declare device_resident(vkb1)  
+  !
   COMPLEX(DP), ALLOCATABLE :: deff_nc(:,:,:,:)
   REAL(DP), ALLOCATABLE :: deff(:,:,:)
   TYPE(bec_type)           :: dbecp                 ! contains <dbeta|psi>
   TYPE(bec_type_d), TARGET :: dbecp_d               ! contains <dbeta|psi>
   INTEGER    :: npw, ik, ipol, ig, jkb
   INTEGER    :: ierr
+#if defined(__CUDA)
   !
   forcenl(:,:) = 0.D0
   !
@@ -69,7 +70,8 @@ SUBROUTINE force_us_gpu( forcenl )
   CALL allocate_bec_type ( nkb, nbnd, dbecp, intra_bgrp_comm )
   CALL allocate_bec_type_gpu ( nkb, nbnd, dbecp_d, intra_bgrp_comm )
   !
-  CALL dev_buf%lock_buffer( vkb1_d, (/ npwx, nkb /), ierr )
+  ALLOCATE( vkb1(npwx, nkb) )
+  !
   IF (noncolin) THEN
      ALLOCATE( deff_nc(nhm,nhm,nat,nspin) )
   ELSEIF (.NOT. gamma_only ) THEN
@@ -89,24 +91,36 @@ SUBROUTINE force_us_gpu( forcenl )
      IF ( nks > 1 ) THEN
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
         CALL using_evc(1)
-        IF ( nkb > 0 ) CALL using_vkb_d(1)
-        IF ( nkb > 0 ) CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+        IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
      ENDIF
      !
-     CALL using_evc_d(0); CALL using_vkb_d(0); 
+     CALL using_evc_d(0)
      CALL using_becp_d_auto(2)
-     CALL calbec_gpu ( npw, vkb_d, evc_d, becp_d )
+     !
+     !$acc data present(vkb(:,:))
+     !$acc host_data use_device(vkb)
+     CALL calbec_gpu ( npw, vkb, evc_d, becp_d )
+     !$acc end host_data
+     !$acc end data
      !
      CALL using_evc_d(0)
      DO ipol = 1, 3
-!$cuf kernel do(2) <<<*,*>>>
+       !
+       !$acc data present(vkb(:,:), vkb1(1:npwx,1:nkb), igk_k(:,:))
+       !$acc parallel loop collapse(2) 
         DO jkb = 1, nkb
            DO ig = 1, npw
-              vkb1_d(ig,jkb) = vkb_d(ig,jkb) * (0.D0,-1.D0) * g_d(ipol,igk_k_d(ig,ik))
+              vkb1(ig,jkb) = vkb(ig,jkb) * (0.D0,-1.D0) * g_d(ipol,igk_k(ig,ik))
            ENDDO
         ENDDO
+        !$acc end data
         !
-        CALL calbec_gpu ( npw, vkb1_d, evc_d, dbecp_d )
+        !$acc data present(vkb1(1:npwx,1:nkb)) 
+        !$acc host_data use_device(vkb1)
+        CALL calbec_gpu ( npw, vkb1, evc_d, dbecp_d )
+        !$acc end host_data 
+        !$acc end data
+        !
         CALL synchronize_bec_type_gpu(dbecp_d, dbecp, 'h')
         !
         IF ( gamma_only ) THEN
@@ -131,7 +145,9 @@ SUBROUTINE force_us_gpu( forcenl )
   ELSEIF ( .NOT. GAMMA_ONLY) THEN
      DEALLOCATE( deff )
   ENDIF
-  CALL dev_buf%release_buffer( vkb1_d, ierr )
+  !
+  DEALLOCATE( vkb1 )
+  !
   CALL deallocate_bec_type ( dbecp ) 
   CALL deallocate_bec_type ( becp )
   CALL using_becp_auto(2)
@@ -152,6 +168,7 @@ SUBROUTINE force_us_gpu( forcenl )
   ! ... BZ we have to symmetrize the forces.
   !
   CALL symvector ( nat, forcenl )
+#endif
   !
   RETURN
   !
@@ -160,7 +177,7 @@ SUBROUTINE force_us_gpu( forcenl )
      !-----------------------------------------------------------------------
      SUBROUTINE force_us_gamma_gpu( forcenl )
        !-----------------------------------------------------------------------
-       !! Nonlocal contributiuon. Calculation at gamma.
+       !! Nonlocal contribution. Calculation at gamma.
        !
 #if defined(__CUDA)
        USE cublas
@@ -187,7 +204,6 @@ SUBROUTINE force_us_gpu( forcenl )
        REAL(DP) :: forcenl_ipol
 #if defined(__CUDA)
        attributes(DEVICE) :: dbecp_d_r_d, becp_d_r_d
-#endif
        !
        ! ... Important notice about parallelization over the band group of processors:
        ! ... 1) internally, "calbec" parallelises on plane waves over the band group
@@ -212,7 +228,7 @@ SUBROUTINE force_us_gpu( forcenl )
           
           DO na = 1, nat
              IF ( ityp(na) == nt ) THEN
-                ijkb0 = indv_ijkb0(na)
+                ijkb0 = ofsbeta(na)
                 ! this is \sum_j q_{ij} <beta_j|psi>
                 CALL DGEMM ('N','N', nh(nt), becp_d%nbnd_loc, nh(nt), &
                      1.0_dp, qq_at_d(1,1,na), nhm, becp_d%r_d(ijkb0+1,1),&
@@ -248,6 +264,7 @@ SUBROUTINE force_us_gpu( forcenl )
           ENDDO
           CALL dev_buf%release_buffer(aux_d, ierr)
        ENDDO
+#endif
        !
      END SUBROUTINE force_us_gamma_gpu
      !     
@@ -265,6 +282,7 @@ SUBROUTINE force_us_gpu( forcenl )
        !
        REAL(DP) :: fac
        INTEGER  :: ibnd, ih, jh, na, nt, ikb, jkb, ijkb0, is, js, ijs !counters
+#if defined(__CUDA)
        !
        CALL using_et(0)
        CALL using_becp_auto(0);
@@ -280,7 +298,7 @@ SUBROUTINE force_us_gpu( forcenl )
           !
           DO nt = 1, ntyp
              DO na = 1, nat
-                ijkb0 = indv_ijkb0(na)
+                ijkb0 = ofsbeta(na)
                 IF ( ityp(na) == nt ) THEN
                    DO ih = 1, nh(nt)
                       ikb = ijkb0 + ih
@@ -349,6 +367,7 @@ SUBROUTINE force_us_gpu( forcenl )
           ENDDO ! ntyp
        ENDDO ! nbnd
        !
+#endif
        !
      END SUBROUTINE force_us_k_gpu
      !

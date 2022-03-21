@@ -413,6 +413,7 @@ subroutine read_pseudo_nl (upf, iunps)
   call scan_begin (iunps, "DIJ", .false.)  
   read (iunps, *, err = 101, end = 101) nd, dummy  
   do icon = 1, nd
+     !! FIXME: dangerous syntax, are we sure mb has the expected value?
      read (iunps, *, err = 101, end = 101) nb, mb, upf%dion(nb,mb)
      upf%dion (mb,nb) = upf%dion (nb,mb)  
   enddo
@@ -523,7 +524,7 @@ subroutine read_pseudo_pswfc (upf, iunps)
   character (len=75) :: dummy  
   integer :: nb, ir
 
-  ALLOCATE( upf%chi( upf%mesh, MAX( upf%nwfc, 1 ) ) )
+  ALLOCATE( upf%chi( upf%mesh, upf%nwfc ) )
   upf%chi = 0.0_DP
   do nb = 1, upf%nwfc  
      read (iunps, *, err=100, end=100) dummy  !Wavefunction labels

@@ -40,12 +40,12 @@ CONTAINS
     !! ierr=0  : xml schema, ierr=-2: UPF v.2
     !! ierr=-81: error reading PP file
     !
-    iun = xml_openfile ( filename )
+    iun = xml_open_file ( filename )
     IF ( iun == -1 ) CALL upf_error('read_upf', 'cannot open file',1)
     call xmlr_opentag ( 'qe_pp:pseudo', IERR = ierr )
     if ( ierr == 0 ) then
        v2 =.false.
-    else if ( ierr == -1 ) then
+    else if ( ierr == 1 ) then
        rewind (iun) 
        call xmlr_opentag ( 'UPF', IERR = ierr )
        if ( ierr == 0 ) then
@@ -239,11 +239,9 @@ CONTAINS
        continue
 #endif
     else if ( mesh /= upf%mesh ) THEN
-#if defined (__debug)
        call upf_error('read_pp_mesh',&
          'mismatch in mesh size, discarding the one in header',-1)
        upf%mesh = mesh
-#endif
     end if
     CALL get_attr ( 'dx'  , upf%dx   )
     CALL get_attr ( 'xmin', upf%xmin )
@@ -363,6 +361,12 @@ CONTAINS
        CALL get_attr('cutoff_radius_index', upf%kbeta(nb))
        CALL get_attr('cutoff_radius', upf%rcut(nb))
        CALL get_attr('ultrasoft_cutoff_radius', upf%rcutus(nb))
+       !
+       ! Old version of UPF PPs v.2 contained an error in the tag.
+       ! To be able to read the old PPs we need the following
+       ! Copied from read_upf_v2.f90 :: read_upf_nonlocal
+       IF ( upf%rcutus(nb) .EQ. 0._DP ) &
+          CALL get_attr('norm_conserving_radius', upf%rcutus(nb))
        !
     END DO
     !
@@ -618,11 +622,16 @@ CONTAINS
        CALL get_attr( 'index' , nb )
        ! not-so-strict test: index absent or incorrect in some UPF v.2 files
        IF ( .NOT. v2 .AND. nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',1)
-       CALL get_attr( 'els',   upf%els(nw) )
        CALL get_attr( 'nn',    upf%nn(nw) )
-       CALL get_attr( 'lchi',  upf%lchi(nw) )
        CALL get_attr( 'jchi',  upf%jchi(nw) )
-       CALL get_attr( 'oc',    upf%oc(nw) )
+       !
+       ! the following data is already known and was not read in old versions
+       ! of UPF-reading code. upf%oc is actually missing in some UPF files:
+       ! reading it here may spoil the value read earlier and break DFT+U
+       !
+       ! CALL get_attr( 'lchi',  upf%lchi(nw) )
+       ! CALL get_attr( 'els',   upf%els(nw) )
+       ! CALL get_attr( 'oc',    upf%oc(nw) )
     ENDDO
     !
     DO nb = 1,upf%nbeta
@@ -631,7 +640,7 @@ CONTAINS
        ! existing PP files may have pp_relbeta first, pp_relwfc later,
        ! but also the other way round - check that everything was right
        !
-       if ( ierr /= 0 ) then
+       if ( ierr > 0 ) then
           ierr = -81
           return
        end if
@@ -723,7 +732,7 @@ CONTAINS
     IMPLICIT NONE
     TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
     !
-    INTEGER :: nb, mb
+    INTEGER :: nb, mb, ierr
     CHARACTER(LEN=24) :: tag
     !
     IF (.NOT. upf%has_gipaw) RETURN
@@ -731,7 +740,9 @@ CONTAINS
     CALL xmlr_opentag( capitalize_if_v2('pp_gipaw') )
     CALL get_attr ('gipaw_data_format', upf%gipaw_data_format ) 
     IF ( v2 ) THEN
-       CALL xmlr_opentag( 'PP_GIPAW_CORE_ORBITALS')
+       CALL xmlr_opentag( 'PP_GIPAW_CORE_ORBITALS', IERR=ierr )
+       ! ierr= 0 for case <PP_GIPAW_CORE_ORBITALS>...</PP_GIPAW_CORE_ORBITALS>
+       ! ierr=-1 for case <PP_GIPAW_CORE_ORBITALS ... />
        CALL get_attr ('number_of_core_orbitals', upf%gipaw_ncore_orbitals)
     ELSE
        CALL xmlr_readtag ('number_of_core_orbitals', upf%gipaw_ncore_orbitals) 
@@ -755,7 +766,8 @@ CONTAINS
        CALL get_attr ('n', upf%gipaw_core_orbital_n(nb) )
        CALL get_attr ('l', upf%gipaw_core_orbital_l(nb) )
     END DO
-    IF ( v2 ) CALL xmlr_closetag ( )
+    ! close only for case <PP_GIPAW_CORE_ORBITALS> ... </PP_GIPAW_CORE_ORBITALS>
+    IF ( v2 .AND. ierr == 0  ) CALL xmlr_closetag ( )
     !
     IF ( upf%paw_as_gipaw) THEN
        !
@@ -800,8 +812,6 @@ CONTAINS
        ALLOCATE ( upf%gipaw_wfs_rcutus(upf%gipaw_wfs_nchannels) )
        ALLOCATE ( upf%gipaw_wfs_ae(upf%mesh,upf%gipaw_wfs_nchannels) )
        ALLOCATE ( upf%gipaw_wfs_ps(upf%mesh,upf%gipaw_wfs_nchannels) )
-       ALLOCATE ( upf%gipaw_vlocal_ae(upf%mesh) )
-       ALLOCATE ( upf%gipaw_vlocal_ps(upf%mesh) )
        DO nb = 1,upf%gipaw_wfs_nchannels
           IF ( v2 ) THEN
              tag = "PP_GIPAW_ORBITAL."//i2c(nb)
@@ -825,6 +835,8 @@ CONTAINS
        !
        ! Read all-electron and pseudo local potentials
        !
+       ALLOCATE ( upf%gipaw_vlocal_ae(upf%mesh) )
+       ALLOCATE ( upf%gipaw_vlocal_ps(upf%mesh) )
        CALL xmlr_opentag( capitalize_if_v2('pp_gipaw_vlocal') )
        CALL xmlr_readtag( capitalize_if_v2('pp_gipaw_vlocal_ae'), &
             upf%gipaw_vlocal_ae(1:upf%mesh) )

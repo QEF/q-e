@@ -3,38 +3,35 @@
   prefix      = 'si'
   amass(1)    = 28.0855
   outdir      = './'
-
   iverbosity  = 0
 
   elph        = .true.
-  kmaps       = .true.
-  epbwrite    = .false.
-  epbread     = .false.
   epwwrite    = .false.
   epwread     = .true.
+  etf_mem     = 1
+  vme         = 'wannier'
 
-  scattering  = .true.
+
+  scattering       = .true.
   scattering_serta = .true.
-  int_mob     = .false.
-  carrier     = .true.
-  ncarrier    =  1E13
-  mp_mesh_k   = .true.
-  iterative_bte = .true.
-  epmatkqread = .true.
-  mob_maxiter = 20
-  broyden_beta= 1.0
+  iterative_bte    = .true.
+  int_mob          = .false.
+  carrier          = .true.
+  ncarrier         =  1E13
+  mp_mesh_k        = .true.
+  epmatkqread      = .true.
+  mob_maxiter      = 20
+  broyden_beta     = 1.0
 
-  scissor     =  0.7
-  nstemp      =   2
+  scissor     = 0.7
+  nstemp      = 2
   temps       = 400 500
 
   restart      = .true.
   restart_step = 50
   selecqread   = .true.
 
-  etf_mem     = 1
   lpolar      = .false.
-  vme         = .true.
   use_ws      = .false.
   lphase      = .true.
 
@@ -45,7 +42,7 @@
   iprint      = 2
   dis_win_max = 18
   dis_froz_max= 8.5
-  proj(1)     = 'Si : sp3'   
+  proj(1)     = 'Si : sp3'
   wdata(1) = 'bands_plot = .true.'
   wdata(2) = 'begin kpoint_path'
   wdata(3) = 'L 0.50 0.00 0.00 G 0.00 0.00 0.00'
@@ -70,7 +67,7 @@
 
   efermi_read  = .true
   fermi_energy = 7.560801 ! 7.660801
-  
+
   nkf1        = 7
   nkf2        = 7
   nkf3        = 7

@@ -22,7 +22,9 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   USE fft_base,      ONLY : dffts
   USE fft_interfaces,ONLY : fwfft, invfft
   USE fft_helper_subroutines
+#if defined(__CUDA)
   USE device_fbuff_m,      ONLY : dev_buf
+#endif
   !
   IMPLICIT NONE
   !
@@ -45,7 +47,6 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   INTEGER,     POINTER :: dffts_nl_d(:), dffts_nlm_d(:)
 #if defined(__CUDA)
   attributes(DEVICE) :: psic_d, tg_v_d, tg_psic_d, dffts_nl_d, dffts_nlm_d
-#endif
   INTEGER :: v_siz, idx, ioff
   INTEGER :: ierr
   ! Variables to handle batched FFT
@@ -300,6 +301,7 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      CALL dev_buf%release_buffer( psic_d, ierr )
   END IF
   CALL stop_clock_gpu ('vloc_psi')
+#endif
   !
   RETURN
 END SUBROUTINE vloc_psi_gamma_gpu
@@ -326,8 +328,9 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   USE fft_interfaces,ONLY : fwfft, invfft
   USE fft_helper_subroutines
   USE wavefunctions, ONLY: psic_h => psic
-  !USE wavefunctions_gpum, ONLY: psic_d
+#if defined(__CUDA)
   USE device_fbuff_m,    ONLY : dev_buf
+#endif
   !
   IMPLICIT NONE
   !
@@ -350,7 +353,6 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   INTEGER,     POINTER :: dffts_nl_d(:)
 #if defined(__CUDA)
   attributes(DEVICE) :: psic_d, tg_v_d, tg_psic_d, dffts_nl_d
-#endif
   !
   REAL(DP) :: v_tmp
   INTEGER :: v_siz, idx, ioff
@@ -530,6 +532,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   ENDIF
   !
   CALL stop_clock_gpu ('vloc_psi')
+#endif
   !
 99 format ( 20 ('(',2f12.9,')') )
 
@@ -551,8 +554,7 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
   USE fft_base,      ONLY : dffts, dfftp
   USE fft_interfaces,ONLY : fwfft, invfft
   USE lsda_mod,      ONLY : nspin
-  USE spin_orb,      ONLY : domag
-  USE noncollin_module,     ONLY: npol
+  USE noncollin_module,    ONLY: npol, domag
   USE wavefunctions_gpum,  ONLY: psic_nc_d
   USE fft_helper_subroutines
   !
@@ -576,7 +578,6 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
   INTEGER,     POINTER      :: dffts_nl_d(:)
 #if defined(__CUDA)
   attributes(DEVICE) :: tg_v_d, tg_psic_d, dffts_nl_d
-#endif
   INTEGER :: v_siz, idx, ioff
   INTEGER :: right_nnr, right_nr3, right_inc
   INTEGER :: ierr
@@ -745,6 +746,7 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
   ENDIF
   !
   CALL stop_clock_gpu ('vloc_psi')
+#endif
   !
   RETURN
 END SUBROUTINE vloc_psi_nc_gpu

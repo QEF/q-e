@@ -16,9 +16,15 @@
 #define DEVICEATTR
 #endif
 
+#if defined(__CUDA)
+#define PINMEM 
+#else
+#define PINMEM
+#endif
+
 
    SUBROUTINE runcp_uspp_x &
-      ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, c0_d, cm_bgrp, cm_d, fromscra, restart )
+      ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, c0_d, cm_bgrp, cm_d, fromscra, restart, compute_only_gradient )
       !
       !  This subroutine performs a Car-Parrinello or Steepest-Descent step
       !  on the electronic variables, computing forces on electrons
@@ -30,6 +36,8 @@
       !  on output:
       !  cm_bgrp  wave functions at time t + dt, not yet othogonalized 
       !
+      ! if compute_only_gradient is true, this routine only puts the gradient
+      ! in the array cm_*
       USE parallel_include
       USE kinds,               ONLY : DP
       USE mp_global,           ONLY : me_bgrp, &
@@ -38,9 +46,10 @@
       USE fft_base,            ONLY : dffts
       use wave_base,           only : wave_steepest, wave_verlet
       use control_flags,       only : lwf, tsde, many_fft
-      use uspp,                only : deeq, vkb, vkb_d
+      use pseudo_base,         only : vkb_d
+      use uspp,                only : deeq, vkb
       use gvect,               only : gstart
-      use electrons_base,      only : nbsp_bgrp, ispin_bgrp, f_bgrp, nspin, nupdwn_bgrp, iupdwn_bgrp
+      use electrons_base,      only : nbsp_bgrp, ispin_bgrp, f_bgrp , nspin, nupdwn_bgrp, iupdwn_bgrp
       use wannier_subroutines, only : ef_potential
       use efield_module,       only : dforce_efield, tefield, dforce_efield2, tefield2
       use gvecw,               only : ngw, ngwx
@@ -59,6 +68,7 @@
       COMPLEX(DP) DEVICEATTR :: c0_d(:,:), cm_d(:,:)
       LOGICAL, OPTIONAL, INTENT(IN) :: fromscra
       LOGICAL, OPTIONAL, INTENT(IN) :: restart
+      LOGICAL, OPTIONAL, INTENT(IN) :: compute_only_gradient
       !
       !
      real(DP) ::  verl1, verl2, verl3
@@ -69,7 +79,7 @@
 #endif
      real(DP),    allocatable :: emadt2(:)
      real(DP),    allocatable :: emaver(:)
-     complex(DP), allocatable :: c2(:), c3(:), c2tmp(:), c3tmp(:)
+     complex(DP), allocatable PINMEM :: c2(:), c3(:), c2tmp(:), c3tmp(:)
      REAL(DP),    ALLOCATABLE :: tg_rhos(:,:), ftmp(:)
 #if defined (__CUDA)
      REAL(DP),    ALLOCATABLE, DEVICE :: rhos_d(:,:)
@@ -78,9 +88,10 @@
      integer :: i, nsiz, incr, idx, idx_in, ierr
      integer :: iwfc, nwfc, is, ii, tg_rhos_siz, c2_siz
      integer :: iflag
-     logical :: ttsde
+     logical :: ttsde, only_gradient
      INTEGER :: omp_get_num_threads
 
+     call start_clock('runcp_uspp')
 #if defined (__CUDA)
      IF( dffts%has_task_groups ) THEN
         CALL errore(' runcp_uspp ', ' task groups not implemented on GPU ',1)
@@ -95,6 +106,12 @@
      END IF
      IF( PRESENT( restart ) ) THEN
        IF( restart ) iflag = 2
+     END IF
+ 
+     IF(PRESENT( compute_only_gradient) ) then
+       only_gradient = compute_only_gradient
+     ELSE
+       only_gradient = .false.
      END IF
 
      IF( dffts%has_task_groups ) THEN
@@ -115,12 +132,14 @@
      verl2 = 1.0d0 - verl1
      verl3 = 1.0d0 * fccc
 
-     ALLOCATE( emadt2( ngw ) )
-     ALLOCATE( emaver( ngw ) )
 
-     ccc    = fccc * dt2bye
-     emadt2 = dt2bye * ema0bg
-     emaver = emadt2 * verl3
+     IF( .not. only_gradient) then
+        ALLOCATE( emadt2( ngw ) )
+        ALLOCATE( emaver( ngw ) )
+        ccc    = fccc * dt2bye
+        emadt2 = dt2bye * ema0bg
+        emaver = emadt2 * verl3
+     END IF
 
      IF( iflag == 0 ) THEN
        ttsde  = tsde
@@ -279,7 +298,7 @@
              CALL dforce_efield2 ( bec_bgrp, i, c0_bgrp, c2, c3, rhos)
            END IF
 
-           IF( iflag == 2 ) THEN
+           IF( iflag == 2 .and. .not. only_gradient ) THEN
               DO idx = 1, incr, 2
                  IF( i + idx - 1 <= nbsp_bgrp ) THEN
                     cm_bgrp( :, i+idx-1) = c0_bgrp(:,i+idx-1)
@@ -293,16 +312,25 @@
            DO idx = 1, incr, 2
               idx_in = idx/2+1
               IF( i + idx - 1 <= nbsp_bgrp ) THEN
-                 IF (tsde) THEN
-                    CALL wave_steepest( cm_bgrp(:, i+idx-1 ), c0_bgrp(:, i+idx-1 ), emaver, c2(:), ngw, idx_in )
-                    CALL wave_steepest( cm_bgrp(:, i+idx   ), c0_bgrp(:, i+idx   ), emaver, c3(:), ngw, idx_in )
+                 IF( .not. only_gradient) then
+                    IF (tsde) THEN
+                       CALL wave_steepest( cm_bgrp(:, i+idx-1 ), c0_bgrp(:, i+idx-1 ), emaver, c2(:), ngw, idx_in )
+                       CALL wave_steepest( cm_bgrp(:, i+idx   ), c0_bgrp(:, i+idx   ), emaver, c3(:), ngw, idx_in )
+                    ELSE
+                       CALL wave_verlet( cm_bgrp(:, i+idx-1 ), c0_bgrp(:, i+idx-1 ), verl1, verl2, emaver, c2(:), ngw, idx_in )
+                       CALL wave_verlet( cm_bgrp(:, i+idx   ), c0_bgrp(:, i+idx   ), verl1, verl2, emaver, c3(:), ngw, idx_in )
+                    ENDIF
+                    IF ( gstart == 2 ) THEN
+                       cm_bgrp(1,i+idx-1) = CMPLX(real(cm_bgrp(1,i+idx-1)),0.0d0,kind=dp)
+                       cm_bgrp(1,i+idx  ) = CMPLX(real(cm_bgrp(1,i+idx  )),0.0d0,kind=dp)
+                    END IF
                  ELSE
-                    CALL wave_verlet( cm_bgrp(:, i+idx-1 ), c0_bgrp(:, i+idx-1 ), verl1, verl2, emaver, c2(:), ngw, idx_in )
-                    CALL wave_verlet( cm_bgrp(:, i+idx   ), c0_bgrp(:, i+idx   ), verl1, verl2, emaver, c3(:), ngw, idx_in )
-                 ENDIF
-                 IF ( gstart == 2 ) THEN
-                    cm_bgrp(1,i+idx-1) = CMPLX(real(cm_bgrp(1,i+idx-1)),0.0d0,kind=dp)
-                    cm_bgrp(1,i+idx  ) = CMPLX(real(cm_bgrp(1,i+idx  )),0.0d0,kind=dp)
+                    cm_bgrp(:, i+idx-1) = c2((idx_in-1)*ngw+1:idx_in*ngw)
+                    cm_bgrp(:, i+idx) = c3((idx_in-1)*ngw+1:idx_in*ngw)
+                    IF ( gstart == 2 ) THEN
+                       cm_bgrp(1, i+idx-1) = CMPLX(dble(cm_bgrp(1, i+idx-1)), 0.0d0, kind=dp) 
+                       cm_bgrp(1, i+idx) = CMPLX(dble(cm_bgrp(1, i+idx)), 0.0d0, kind=dp) 
+                    END IF
                  END IF
               END IF
            END DO
@@ -319,12 +347,14 @@
         END IF
 
      END IF
-
-     DEALLOCATE( emadt2 )
-     DEALLOCATE( emaver )
+     IF (.not. only_gradient) then
+        DEALLOCATE( emadt2 )
+        DEALLOCATE( emaver )
+     END IF
 #if defined (__CUDA)
      DEALLOCATE( rhos_d )
 #endif
+     call stop_clock('runcp_uspp')
 !
    END SUBROUTINE runcp_uspp_x
 
@@ -373,7 +403,7 @@
       REAL(DP) ::  verl1, verl2, verl3
       REAL(DP), ALLOCATABLE:: emadt2(:)
       REAL(DP), ALLOCATABLE:: emaver(:)
-      COMPLEX(DP), ALLOCATABLE:: c2(:), c3(:)
+      COMPLEX(DP), ALLOCATABLE PINMEM :: c2(:), c3(:)
       INTEGER :: i
       INTEGER :: iflag
       LOGICAL :: ttsde
@@ -382,7 +412,7 @@
        REAL(DP)    :: ei_unp_mem, ei_unp_wfc
        COMPLEX(DP) :: intermed3
        REAL(DP),    ALLOCATABLE :: occ(:)
-       COMPLEX(DP), ALLOCATABLE :: c4(:), c5(:)
+       COMPLEX(DP), ALLOCATABLE PINMEM :: c4(:), c5(:)
 !
 ! ... Controlling on sic applicability
 !

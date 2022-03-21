@@ -31,6 +31,7 @@ set(src_modules
     io_global.f90  
     ions_base.f90 
     kind.f90 
+    lmdif.f90
     mdiis.f90 
     mm_dispersion.f90 
     mp_bands.f90 
@@ -47,7 +48,6 @@ set(src_modules
     plugin_flags.f90 
     plugin_arguments.f90 
     plugin_variables.f90 
-    lmdif.f90  
     pw_dot.f90 
     qmmm.f90 
     random_numbers.f90 
@@ -70,7 +70,6 @@ set(src_modules
     wannier_gw.f90
     wannier_new.f90 
     wavefunctions.f90 
-    wrappers.f90
     ws_base.f90 
     xc_vdW_DF.f90 
     xc_rVV10.f90 
@@ -81,7 +80,6 @@ set(src_modules
     qes_read_module.f90 
     qes_reset_module.f90 
     qes_init_module.f90 
-    qes_read_module.f90 
     qes_bcast_module.f90 
     qexsd.f90   
     qexsd_copy.f90   
@@ -94,7 +92,8 @@ set(src_modules
     wyckoff.f90 
     wypos.f90 
     zvscal.f90 
-    # list of subroutines and functions (not modules) previously found in flib/
+    wave_gauge.f90
+    # subroutines and functions (not modules) previously found in flib
     atom_weight.f90 
     capital.f90 
     cryst_to_car.f90
@@ -112,48 +111,61 @@ set(src_modules
     rgen.f90 
     recips.f90 
     remove_tot_torque.f90
-    set_hubbard_l.f90 
-    set_hubbard_n.f90 
     sort.f90 
-    sph_bes.f90 
-    sph_dbes.f90 
     trimcheck.f90 
     test_input_file.f90 
     date_and_tim.f90 
     volume.f90 
-    dylmr2.f90 
     wgauss.f90 
     w0gauss.f90
     w1gauss.f90
     deviatoric.f90
     # GPU
-    recvec_gpu.f90
     wavefunctions_gpu.f90
     becmod_gpu.f90
     becmod_subs_gpu.f90
-    dylmr2_gpu.f90
-    sph_bes_gpu.f90
     random_numbers_gpu.f90
     cuda_subroutines.f90)
 qe_enable_cuda_fortran("${src_modules}")
-
 qe_add_library(qe_modules ${src_modules})
+
+# subroutines and functions (not modules) previously found in clib
+set(src_modules_c
+    customize_signals.c
+    qmmm_aux.c
+    sockets.c
+    stack.c)
+qe_add_library(qe_modules_c ${src_modules_c})
+
+if(TARGET gitrev)
+   add_dependencies(qe_modules gitrev)
+   target_compile_definitions(qe_modules PRIVATE HAVE_GITREV)
+   target_include_directories(qe_modules PRIVATE ${qe_BINARY_DIR})
+endif()
+
 target_link_libraries(qe_modules
     PRIVATE
+        qe_modules_c
         qe_openmp_fortran
         qe_fftx
         qe_lax
-        qe_clib # this is needed only by wrappers.f90
         qe_mpi_fortran
         qe_mbd
         qe_xclib
         qe_devxlib
     PUBLIC
+        qe_openacc_fortran
         qe_hdf5_fortran
         qe_upflib
         qe_fox
-        qe_utilx)
+        qe_utilx
+        qe_openacc_fortran)
+if(QE_ENABLE_CUDA)
+    target_link_libraries(qe_modules
+        PRIVATE
+            CUDA::curand)
+endif()
 
 ###########################################################
 
-qe_install_targets(qe_modules)
+qe_install_targets(qe_modules qe_modules_c)

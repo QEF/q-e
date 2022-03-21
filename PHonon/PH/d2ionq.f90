@@ -7,56 +7,63 @@
 !
 !
 !-----------------------------------------------------------------------
-
-subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
-     bg, g, gg, ngm, gcutm, nmodes, u, dyn)
+subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
+                   bg, g, gg, ngm, gcutm, nmodes, u, dyn )
   !-----------------------------------------------------------------------
+  !! This routine computes the contribution of the ions to the
+  !! dynamical matrix. Both the real and reciprocal space terms
+  !! are included.
   !
-  !    This routine computes the contribution of the ions to the
-  !    dynamical matrix. Both the real and reciprocal space terms
-  !    are included.
+  !! The original routine was from C. Bungaro.
+  !! Revised 16 oct. 1995 by Andrea Dal Corso.
+  !! April 1997: parallel stuff added (SdG).
   !
-  !    The original routine was from C. Bungaro.
-  !    Revised 16 oct. 1995 by Andrea Dal Corso.
-  !    April 1997: parallel stuff added (SdG)
-  !
-  USE io_global,  ONLY : stdout
-  USE kinds, only : DP
-  USE constants, ONLY: e2, tpi, fpi
-  USE mp_bands, ONLY: intra_bgrp_comm
-  USE mp,        ONLY: mp_sum
-  USE Coul_cut_2D, ONLY : do_cutoff_2D, cutoff_2D 
+  USE io_global,      ONLY : stdout
+  USE kinds,          ONLY : DP
+  USE constants,      ONLY : e2, tpi, fpi
+  USE mp_bands,       ONLY : intra_bgrp_comm
+  USE mp,             ONLY : mp_sum
+  USE Coul_cut_2D,    ONLY : do_cutoff_2D, cutoff_2D 
   USE Coul_cut_2D_ph, ONLY : cutoff_2D_qg
-
+  !
   implicit none
   !
-  !  first the dummy variables
+  integer :: nat
+  !! input: the number of atoms
+  integer :: ntyp
+  !! input: the number of types of atoms
+  integer :: ngm
+  !! input: the number of G vectors
+  integer :: ityp(nat)
+  !! input: the type of each atom
+  integer :: nmodes
+  !! input: the number of modes
+  real(DP) :: tau(3,nat)
+  !! input: the positions of the atoms
+  real(DP) :: g(3,ngm)
+  !! input: the coordinates of g vectors
+  real(DP) :: gg(ngm)
+  !! input: the modulus of g vectors
+  real(DP) :: zv(ntyp)
+  !! input: the charge of each type
+  real(DP) :: at(3,3)
+  !! input: the direct lattice vectors
+  real(DP) :: bg(3,3)
+  !! input: the reciprocal lattice vectors
+  real(DP) :: omega
+  !! input: the volume of the unit cell
+  real(DP) :: alat
+  !! input: the length scale
+  real(DP) :: gcutm
+  !! input: cut-off of g vectors
+  real(DP) :: q(3)
+  !! input: the q vector
+  complex(DP) :: dyn(3*nat,nmodes)
+  !! output: the ionic part of the dynamical matrix
+  complex(DP) :: u(3*nat,nmodes)
+  !! input: the pattern of the modes
   !
-
-  integer :: nat, ntyp, ngm, ityp (nat), nmodes
-  ! input: the number of atoms
-  ! input: the number of types of atoms
-  ! input: the number of G vectors
-  ! input: the type of each atom
-  ! input: the number of modes
-
-  real(DP) :: tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
-       at (3, 3), bg (3, 3), omega, alat, gcutm, q (3)
-  ! input: the positions of the atoms
-  ! input: the coordinates of g vectors
-  ! input: the modulus of g vectors
-  ! input: the charge of each type
-  ! input: the direct lattice vectors
-  ! input: the reciprocal lattice vectors
-  ! input: the volume of the unit cell
-  ! input: the length scale
-  ! input: cut-off of g vectors
-  ! input: the q vector
-  complex(DP) :: dyn (3 * nat, nmodes), u (3 * nat, nmodes)
-  ! output: the ionic part of the dyn. mat
-  ! input: the pattern of the modes
-  !
-  !   Local variables
+  ! ... local variables
   !
   integer, parameter :: mxr = 100
   ! the maximum number of r shells

@@ -7,12 +7,8 @@
   iverbosity  = 3
 
   elph        = .true.
-  kmaps       = .true.
-  epbwrite    = .false.
-  epbread     = .false.
-
   etf_mem     = 0
-  vme         = .false.
+  vme         = 'dipole'
 
   epwwrite    = .false.
   epwread     = .true.
@@ -24,7 +20,7 @@
   iprint      = 2
   dis_win_max = 12
   dis_froz_max= 7
-  proj(1)     = 'f=0,0,0:l=-3'   
+  proj(1)     = 'f=0,0,0:l=-3'
 
   elecselfen  = .false.
   nest_fn     = .false.
@@ -36,7 +32,7 @@
   wmax_specfun = 1
   nw_specfun   = 20
 
-  fsthick     = 15 ! eV 
+  fsthick     = 15 ! eV
   temps       = 300 ! K (same as PRB 76, 165108)
   degaussw    = 1.0 ! eV
 
@@ -44,12 +40,12 @@
 
   nkf1        = 6
   nkf2        = 6
-  nkf3        = 6 
+  nkf3        = 6
 
   nqf1        = 6
   nqf2        = 6
   nqf3        = 6
-  
+
   nk1         = 3
   nk2         = 3
   nk3         = 3

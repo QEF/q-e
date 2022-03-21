@@ -7,14 +7,12 @@
 
   ep_coupling = .true.
   elph        = .true.
-  kmaps       = .false.
   epbwrite    = .true.
   epbread     = .false.
   epwwrite    = .true.
   epwread     = .false.
-
   etf_mem     = 1
-  vme         = .false.
+  vme         = 'dipole'
 
   nbndsub     =  5,
 
@@ -35,38 +33,34 @@
   degaussq    = 0.5 ! meV
   nqstep      = 500
 
-  eliashberg  = .true.
-
+  eliashberg = .true.
+  mp_mesh_k  = .true.
   laniso = .true.
-  limag = .true.
-  lpade = .true.
+  limag  = .true.
+  lpade  = .true.
 
   conv_thr_iaxis = 1.0d-2
+  wscut          = 0.5 ! eV   Upper limit over frequency integration/summation in the Elisashberg eq
 
-  wscut = 0.5   ! eV   Upper limit over frequency integration/summation in the Elisashberg eq
-
-  nstemp   = 1     ! Nr. of temps 
+  nstemp   = 1     ! Nr. of temps
   temps    = 15.00 ! K  provide list of temperetures OR (nstemp and temps = tempsmin  tempsmax for even space mode)
 
   nsiter   = 500
   muc      = 0.16
 
   dvscf_dir   = './save'
- 
-  nk1         = 3
-  nk2         = 3
-  nk3         = 3
 
-  nq1         = 3
-  nq2         = 3
-  nq3         = 3
- 
-  mp_mesh_k = .true.
-  nkf1        = 6
-  nkf2        = 6
-  nkf3        = 6
+  nk1  = 3
+  nk2  = 3
+  nk3  = 3
+  nq1  = 3
+  nq2  = 3
+  nq3  = 3
 
-  nqf1        = 6
-  nqf2        = 6
-  nqf3        = 6
+  nkf1 = 6
+  nkf2 = 6
+  nkf3 = 6
+  nqf1 = 6
+  nqf2 = 6
+  nqf3 = 6
  /

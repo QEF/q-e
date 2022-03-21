@@ -221,7 +221,8 @@ MODULE qexsd_input
                                           conv_thr, mixing_ndim, max_nstep, tqr, real_space, &
                                           tq_smoothing, tbeta_smoothing, & 
                                           diago_thr_init, diago_full_acc, &
-                                          diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim)
+                                          diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim, &
+                                          diago_rmm_ndim, diago_rmm_conv, diago_gs_nblock)
   !-------------------------------------------------------------------------------------------
   !
   IMPLICIT NONE
@@ -230,8 +231,11 @@ MODULE qexsd_input
   CHARACTER(LEN=*),INTENT(IN)             :: diagonalization,mixing_mode
   REAL(DP),INTENT(IN)                     :: mixing_beta, conv_thr, diago_thr_init
   INTEGER,INTENT(IN)                      :: mixing_ndim,max_nstep, diago_cg_maxiter, &
-                                             diago_ppcg_maxiter, diago_david_ndim
-  LOGICAL,OPTIONAL,INTENT(IN)             :: diago_full_acc,tqr, real_space, tq_smoothing, tbeta_smoothing
+                                             diago_ppcg_maxiter, diago_david_ndim, &
+
+                                             diago_rmm_ndim, diago_gs_nblock
+  LOGICAL,OPTIONAL,INTENT(IN)             :: diago_full_acc,tqr, real_space, tq_smoothing, tbeta_smoothing, &
+                                             diago_rmm_conv
   !
   CHARACTER(LEN=*),PARAMETER              :: TAGNAME="electron_control"
   !
@@ -241,7 +245,9 @@ MODULE qexsd_input
                                 TQ_SMOOTHING= tq_smoothing, TBETA_SMOOTHING = tbeta_smoothing,& 
                                 REAL_SPACE_Q=tqr, REAL_SPACE_BETA = real_space, DIAGO_THR_INIT=diago_thr_init,& 
                                 DIAGO_FULL_ACC=diago_full_acc,DIAGO_CG_MAXITER=diago_cg_maxiter, &
-                                DIAGO_PPCG_MAXITER=diago_ppcg_maxiter)
+                                DIAGO_PPCG_MAXITER=diago_ppcg_maxiter, &
+                                DIAGO_RMM_NDIM=diago_rmm_ndim, DIAGO_RMM_CONV=diago_rmm_conv, &
+                                DIAGO_GS_NBLOCK=diago_gs_nblock)
    !
    END SUBROUTINE qexsd_init_electron_control
    !
@@ -418,7 +424,7 @@ MODULE qexsd_input
    IF (ASSOCIATED (free_cell_ptr)) CALL  qes_init (free_cell_obj,"free_cell",[3,3],my_forceh, ORDER = 'F' )
    !
    CALL qes_init (obj,TAGNAME, PRESSURE = pressure, CELL_DYNAMICS=cell_dynamics, WMASS=wmass, CELL_FACTOR=cell_factor,&
-                  FIX_VOLUME=fix_volume, FIX_AREA=fix_area, ISOTROPIC=isotropic, FREE_CELL=free_cell_ptr)
+                 CELL_DO_FREE = cell_dofree)
    IF( ASSOCIATED(free_cell_ptr))   CALL qes_reset (free_cell_obj)
    END SUBROUTINE  qexsd_init_cell_control
    !
@@ -470,7 +476,7 @@ MODULE qexsd_input
    !
    IF (esm_ispresent) THEN
       IF (PRESENT(fcp)) THEN
-         CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated, ESM=esm_obj, FCP=fcp, FCP_MU=fcp_mu)
+         CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated, ESM=esm_obj, FCP_OPT=fcp, FCP_MU=fcp_mu)
       ELSE
          CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated, ESM=esm_obj)
       END IF

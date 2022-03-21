@@ -18,9 +18,8 @@ SUBROUTINE lr_dv_setup
   USE ions_base,             ONLY : ntyp => nsp
   USE fft_base,              ONLY : dfftp
   USE uspp_param,            ONLY : upf
-  USE spin_orb,              ONLY : domag
   USE uspp,                  ONLY : nlcc_any
-  USE noncollin_module,      ONLY : noncolin
+  USE noncollin_module,      ONLY : noncolin, domag
   USE eqv,                   ONLY : dmuxc
   USE lr_variables,          ONLY : lr_exx
   USE xc_lib,                ONLY : exx_is_active, xclib_dft_is

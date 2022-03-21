@@ -11,7 +11,7 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
   !     ===================
   !--------------------------------------------------------------------
   use kinds,   only: dp
-  use xc_lib,  only: xclib_set_threshold, xclib_get_id
+  use xc_lib,  only: xclib_set_threshold, xc_metagcx
   !
   IMPLICIT NONE
   !
@@ -24,11 +24,9 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
   REAL(dp) :: zeta, rh, grh2
   INTEGER :: k, ipol, is
   REAL(dp), PARAMETER :: epsr = 1.0d-6, epsg = 1.0d-10
-  INTEGER :: imeta
   !
   etxc = 0.d0
   ! calculate the gradient of rho+rho_core in real space
-  imeta = xclib_get_id('MGGA','EXCH')
   !
   call exch_corr_meta() !HK/MCA
   !
@@ -65,7 +63,6 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
       do ipol = 1, 3  
          grho(ipol,:,1) = (v2x(:,1) + v2c(1,:,1))*grho(ipol,:,1) 
       enddo
-      etxc = SUM( (sx(:) + sc(:)) * SIGN(1.d0,rho(:,1)) )
       !
     else
       !
@@ -86,9 +83,9 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
       !
       kedtau(:,1) = (v3x(:,1) + v3c(:,1)) * 0.5d0
       kedtau(:,2) = (v3x(:,2) + v3c(:,2)) * 0.5d0
-      etxc = etxc + SUM( sx(:) + sc(:) )
       !
     endif
+    etxc = etxc + SUM( sx(:) + sc(:) )
     !
     deallocate( sx, v1x, v2x, v3x )
     deallocate( sc, v1c, v2c, v3c )

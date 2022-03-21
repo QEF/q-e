@@ -19,8 +19,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
   USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : invfft
   USE lsda_mod,             ONLY : nspin
-  USE spin_orb,             ONLY : domag
-  USE noncollin_module,     ONLY : npol, nspin_mag
+  USE noncollin_module,     ONLY : npol, domag, nspin_mag
   USE uspp_param,           ONLY : nhm
   USE wvfct,                ONLY : npwx, nbnd
   USE wavefunctions, ONLY : evc

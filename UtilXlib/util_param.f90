@@ -19,6 +19,9 @@ CHARACTER(LEN = 5), PARAMETER :: crash_file = 'CRASH'
 INTEGER, PARAMETER :: DP = selected_real_kind(14, 200)
 INTEGER, PARAMETER :: i8b = selected_int_kind(18)
 INTEGER, PARAMETER :: stdout = 6    ! unit connected to standard output
+!
+REAL(DP), PARAMETER :: eps14 = 1.0E-14_DP
+REAL(DP), PARAMETER :: eps16 = 1.0E-16_DP
 ! 
 !------------------------------------------------------------------------------!
 END MODULE util_param

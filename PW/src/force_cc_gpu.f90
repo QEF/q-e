@@ -19,8 +19,8 @@ SUBROUTINE force_cc_gpu( forcecc )
   USE cell_base,            ONLY : alat, omega, tpiba, tpiba2
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : ngm, gstart, g, gg, ngl, gl, gl_d, igtongl, igtongl_d
-  USE gvect_gpum,           ONLY : g_d
+  USE gvect,                ONLY : ngm, gstart, g, g_d, gg, ngl, gl, gl_d, &
+                                   igtongl, igtongl_d
   USE ener,                 ONLY : etxc, vtxc
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho, rho_core, rhog_core
@@ -29,8 +29,10 @@ SUBROUTINE force_cc_gpu( forcecc )
   USE wavefunctions, ONLY : psic
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
+#if defined(__CUDA)
   USE device_fbuff_m,             ONLY : dev_buf
   USE device_memcpy_m,        ONLY : dev_memcpy
+#endif
   !
   IMPLICIT NONE
   !
@@ -58,7 +60,6 @@ SUBROUTINE force_cc_gpu( forcecc )
   integer           :: maxmesh
 #if defined(__CUDA)
   attributes(DEVICE) :: rhocg_d, psic_d, nl_d, r_d, rab_d, rhoc_d 
-#endif
   !
   nl_d => dfftp%nl_d
   !
@@ -94,7 +95,7 @@ SUBROUTINE force_cc_gpu( forcecc )
   DEALLOCATE( vxc )
   !
   CALL dev_buf%lock_buffer(psic_d, dfftp%nnr, ierrs(1))
-  IF (ierrs(1) /= 0) CALL errore( 'force_cc_gpu', 'cannot allocate buffers', -1 )
+  IF (ierrs(1) /= 0) CALL errore( 'force_cc_gpu', 'cannot allocate buffers', ABS(ierrs(1)) )
   CALL dev_memcpy( psic_d, psic, (/ 1, dfftp%nnr /) )
   CALL fwfft ('Rho', psic_d, dfftp)
   !
@@ -110,7 +111,7 @@ SUBROUTINE force_cc_gpu( forcecc )
   CALL dev_buf%lock_buffer(r_d, maxmesh, ierrs(3) )
   CALL dev_buf%lock_buffer(rab_d, maxmesh, ierrs(4) )
   CALL dev_buf%lock_buffer(rhoc_d, maxmesh, ierrs(5) )
-  IF (ANY(ierrs /= 0)) CALL errore('force_cc_gpu', 'cannot allocate buffers', -1)
+  IF (ANY(ierrs /= 0)) CALL errore('force_cc_gpu', 'cannot allocate buffers', ABS(MAXVAL(ierrs)) )
   !
   ! ... core correction term: sum on g of omega*ig*exp(-i*r_i*g)*n_core(g)*vxc
   ! g = 0 term gives no contribution
@@ -161,6 +162,7 @@ SUBROUTINE force_cc_gpu( forcecc )
   CALL dev_buf%release_buffer(r_d, ierrs(3) )
   CALL dev_buf%release_buffer(rab_d, ierrs(4) )
   CALL dev_buf%release_buffer(rhoc_d, ierrs(5) )
+#endif
   !
   RETURN
   !

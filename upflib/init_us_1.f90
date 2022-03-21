@@ -28,17 +28,14 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : fpi, sqrt2
   USE atom,         ONLY : rgrid
-  USE uspp_data,    ONLY : nqxq, dq, nqx, spline_ps, tab, tab_d2y, qrad, &
-                           tab_d, tab_d2y_d, qrad_d
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv, &
-                           ap, aainit, qq_so, dvan_so, okvan, indv_ijkb0, &
+                           ap, aainit, qq_so, dvan_so, okvan, ofsbeta, &
                            nhtol_d, nhtoj_d, nhtolm_d, ijtoh_d, dvan_d, qq_at_d, &
-                           qq_nt_d, indv_d, qq_so_d, dvan_so_d, indv_ijkb0_d
-  USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nbetam, nsp
-  USE upf_spinorb,  ONLY : lspinorb, rot_ylm, fcoef, fcoef_d, lmaxx
+                           qq_nt_d, indv_d, qq_so_d, dvan_so_d, ofsbeta_d
+  USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nsp
+  USE upf_spinorb,  ONLY : is_spinorbit, rot_ylm, fcoef, fcoef_d, lmaxx
   USE paw_variables,ONLY : okpaw
   USE mp,           ONLY : mp_sum
-  USE splinelib
   implicit none
   !
   integer,  intent(in) :: nat
@@ -50,25 +47,17 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   !
   !     here a few local variables
   !
-  integer :: nt, ih, jh, nb, mb, ijv, l, m, ir, iq, is, startq, &
-             lastq, ilast, ndm, ia
+  integer :: nt, ih, jh, nb, mb, ijv, l, m, ir, iq, is, ia
   ! various counters
-  real(DP), allocatable :: aux (:), besr (:)
-  ! various work space
-  real(DP) :: pref, qi
-  ! the prefactor of the beta functions
-  ! q-point grid for interpolation
   real(DP), allocatable :: ylmk0 (:)
   ! the spherical harmonics
-  real(DP) ::  vqint, j
-  ! interpolated value
+  real(DP) ::  j
   ! J=L+S (noninteger!)
   integer :: n1, m0, m1, n, li, mi, vi, vj, ijs, is1, is2, &
              lk, mk, vk, kh, lh, ijkb0, na
   integer, external :: sph_ind
   complex(DP) :: coeff, qgm(1)
-  real(DP) :: ji, jk, d1
-  real(DP), allocatable :: xdata(:)
+  real(DP) :: ji, jk
   real(DP), EXTERNAL :: spinor
   !
   call start_clock ('init_us_1')
@@ -90,7 +79,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      IF ( upf(nt)%nqlc < 0 )  upf(nt)%nqlc = 0
   end do
 
-  if (lspinorb) then
+  if (is_spinorbit) then
      !
      !  In the spin-orbit case we need the unitary matrix u which rotates the
      !  real spherical harmonics and yields the complex ones.
@@ -109,7 +98,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      enddo
   endif
   if ( nhm > 0 ) then
-     if (lspinorb) then
+     if (is_spinorbit) then
         fcoef=(0.d0,0.d0)
         dvan_so = (0.d0,0.d0)
         qq_so=(0.d0,0.d0)
@@ -165,7 +154,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      !      atom ia in the global list of beta functions (ijkb0=0 for ia=1)
      do ia = 1,nat
        IF ( ityp(ia) == nt ) THEN
-          indv_ijkb0(ia) = ijkb0
+          ofsbeta(ia) = ijkb0
           ijkb0 = ijkb0 + nh(nt)
         END IF
      enddo
@@ -230,7 +219,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
               nhtolm(ih, nt) == nhtolm(jh, nt) ) then
               ir = indv (ih, nt)
               is = indv (jh, nt)
-              if (lspinorb) then
+              if (is_spinorbit) then
                  dvan_so (ih, jh, 1, nt) = upf(nt)%dion (ir, is)
                  dvan_so (ih, jh, 4, nt) = upf(nt)%dion (ir, is)
               else
@@ -249,7 +238,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   !   here for the US types we compute the Fourier transform of the
   !   Q functions.
   !
-  IF ( lmaxq > 0 ) CALL compute_qrad(omega, intra_bgrp_comm)
+  IF ( lmaxq > 0 ) CALL init_tab_qrad(omega, intra_bgrp_comm)
   !
   !   and finally we compute the qq coefficients by integrating the Q.
   !   The qq are the g=0 components of Q
@@ -287,7 +276,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
         do ih = 1, nh (nt)
           do jh = ih, nh (nt)
              call qvan2 (1, ih, jh, nt, gg, qgm, ylmk0)
-             if (lspinorb) then
+             if (is_spinorbit) then
                  qq_so (ih, jh, 1, nt) = omega *  DBLE (qgm (1) )
                  qq_so (jh, ih, 1, nt) = qq_so (ih, jh, 1, nt)
                  qq_so (ih, jh, 4, nt) = qq_so (ih, jh, 1, nt)
@@ -303,7 +292,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   deallocate (ylmk0)
 #if defined(__MPI)
 100 continue
-  if (lspinorb) then
+  if (is_spinorbit) then
     call mp_sum(  qq_so , intra_bgrp_comm )
     call mp_sum(  qq_nt, intra_bgrp_comm )
   else
@@ -317,60 +306,13 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      end do
   end if
   !
-  !     fill the interpolation table tab
+  ! fill interpolation table tab
   !
-  ndm = MAXVAL ( upf(:)%kkbeta )
-  allocate( aux (ndm) )
-  allocate (besr( ndm))
-  pref = fpi / sqrt (omega)
-  call divide (intra_bgrp_comm, nqx, startq, lastq)
-  tab (:,:,:) = 0.d0
-  do nt = 1, nsp
-     if ( upf(nt)%is_gth ) cycle
-     do nb = 1, upf(nt)%nbeta
-        l = upf(nt)%lll (nb)
-        do iq = startq, lastq
-           qi = (iq - 1) * dq
-           call sph_bes (upf(nt)%kkbeta, rgrid(nt)%r, qi, l, besr)
-           do ir = 1, upf(nt)%kkbeta
-              aux (ir) = upf(nt)%beta (ir, nb) * besr (ir) * rgrid(nt)%r(ir)
-           enddo
-           call simpson (upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
-           tab (iq, nb, nt) = vqint * pref
-        enddo
-     enddo
-  enddo
-  deallocate (besr)
-  deallocate (aux)
+  CALL init_tab_beta ( omega, intra_bgrp_comm )
   !
-  call mp_sum(  tab, intra_bgrp_comm )
-  !
-  !
-  ! initialize spline interpolation
-  if (spline_ps) then
-     allocate( xdata(nqx) )
-     do iq = 1, nqx
-        xdata(iq) = (iq - 1) * dq
-     enddo
-     do nt = 1, nsp
-        do nb = 1, upf(nt)%nbeta 
-           d1 = (tab(2,nb,nt) - tab(1,nb,nt)) / dq
-           call spline(xdata, tab(:,nb,nt), 0.d0, d1, tab_d2y(:,nb,nt))
-        enddo
-     enddo
-     deallocate(xdata)
-     !
-  endif
-
 #if defined __CUDA
   !
   ! update GPU memory (taking care of zero-dim allocations)
-  !
-  if (nbetam>0) then
-      if (lmaxq>0) qrad_d=qrad
-      tab_d=tab
-      if (spline_ps) tab_d2y_d=tab_d2y
-  endif
   !
   if (nhm>0) then
      indv_d=indv
@@ -380,7 +322,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      ijtoh_d=ijtoh
      qq_at_d=qq_at
      qq_nt_d=qq_nt
-     if (lspinorb) then
+     if (is_spinorbit) then
         qq_so_d=qq_so
         dvan_so_d=dvan_so
         fcoef_d=fcoef
@@ -388,7 +330,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
         dvan_d=dvan
      endif
   endif
-  indv_ijkb0_d=indv_ijkb0
+  ofsbeta_d=ofsbeta
   !
 #endif
   !
@@ -396,89 +338,3 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   return
   !
 end subroutine init_us_1
-
-!----------------------------------------------------------------------
-SUBROUTINE compute_qrad (omega, intra_bgrp_comm)
-  !----------------------------------------------------------------------
-  !
-  ! Compute interpolation table qrad(i,nm,l+1,nt) = Q^{(L)}_{nm,nt}(q_i)
-  ! of angular momentum L, for atom of type nt, on grid q_i, where
-  ! nm = combined index for n,m=1,nh(nt)
-  !
-  USE upf_kinds,    ONLY : dp
-  USE upf_const,    ONLY : fpi
-  USE atom,         ONLY : rgrid
-  USE uspp_param,   ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb, nsp
-  USE uspp_data,    ONLY : nqxq, dq, qrad, qrad_d
-  USE mp,           ONLY : mp_sum
-  !
-  IMPLICIT NONE
-  !
-  real(DP), intent(in) :: omega
-  integer,  intent(in) :: intra_bgrp_comm
-  !
-  INTEGER :: ndm, startq, lastq, nt, l, nb, mb, ijv, iq, ir
-  ! various indices
-  REAL(dp) :: prefr
-  ! the prefactor of the Q functions
-  REAL(dp) :: q
-  REAL(dp), ALLOCATABLE :: aux (:), besr (:)
-  ! various work space
-  !
-  prefr = fpi / omega
-  ndm = MAXVAL ( upf(:)%kkbeta )
-  ALLOCATE (aux ( ndm))
-  ALLOCATE (besr( ndm))
-  !
-  CALL divide (intra_bgrp_comm, nqxq, startq, lastq)
-  !
-  qrad(:,:,:,:)= 0.d0
-  DO nt = 1, nsp
-     if ( upf(nt)%tvanp ) then
-        DO l = 0, upf(nt)%nqlc -1
-           !
-           !     note that l is the true (combined) angular momentum
-           !     and that the arrays have dimensions 0..l (no more 1..l+1)
-           !
-           DO iq = startq, lastq
-              !
-              q = (iq - 1) * dq
-              !
-              !     here we compute the spherical bessel function for each q_i
-              !
-              CALL sph_bes ( upf(nt)%kkbeta, rgrid(nt)%r, q, l, besr)
-              !
-              DO nb = 1, upf(nt)%nbeta
-                 !
-                 !    the Q are symmetric with respect to indices
-                 !
-                 DO mb = nb, upf(nt)%nbeta
-                    ijv = mb * (mb - 1) / 2 + nb
-                    IF ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .AND. &
-                         ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .AND. &
-                         (mod(l+upf(nt)%lll(nb)+upf(nt)%lll(mb),2)==0) ) THEN
-                       DO ir = 1, upf(nt)%kkbeta
-                          aux  (ir) = besr (ir) * upf(nt)%qfuncl(ir,ijv,l)
-                       ENDDO
-                       !
-                       !   and then we integrate with all the Q functions
-                       !
-                       CALL simpson ( upf(nt)%kkbeta, aux, rgrid(nt)%rab, &
-                                     qrad(iq,ijv,l+1, nt) )
-                    ENDIF
-                 ENDDO
-              ENDDO
-              ! igl
-           ENDDO
-           ! l
-        ENDDO
-        qrad (:, :, :, nt) = qrad (:, :, :, nt)*prefr
-        CALL mp_sum ( qrad (:, :, :, nt), intra_bgrp_comm )
-     ENDIF
-     ! nsp
-  ENDDO
-  !
-  DEALLOCATE (besr)
-  DEALLOCATE (aux)
-  !
-END SUBROUTINE compute_qrad

@@ -13,9 +13,8 @@ SUBROUTINE compute_vsgga( rhoout, grho, vsgga )
   USE constants,            ONLY : e2
   USE kinds,                ONLY : DP
   USE gvect,                ONLY : ngm, g
-  USE noncollin_module,     ONLY : noncolin, nspin_gga
-  USE xc_lib,               ONLY : xclib_dft_is, xclib_get_id, xc_gcx
-  USE spin_orb,             ONLY : domag
+  USE noncollin_module,     ONLY : noncolin, domag, nspin_gga
+  USE xc_lib,               ONLY : xclib_dft_is, xclib_get_id, xc_gcx, xclib_dft_is_libxc
   USE fft_base,             ONLY : dfftp
   !
   IMPLICIT NONE
@@ -45,7 +44,7 @@ SUBROUTINE compute_vsgga( rhoout, grho, vsgga )
   IF ( .NOT. (noncolin.and.domag) ) &
      call errore('compute_vsgga','routine called in the wrong case',1)
 
-  igcc_is_lyp = (xclib_get_id('GGA','CORR') == 3)
+  igcc_is_lyp = (xclib_get_id('GGA','CORR')==3 .AND. .NOT.xclib_dft_is_libxc('GGA','CORR') )
   !
   ALLOCATE( h(3,dfftp%nnr,nspin_gga)  )
   ALLOCATE( vaux(dfftp%nnr,nspin_gga) )

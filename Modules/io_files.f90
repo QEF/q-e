@@ -85,6 +85,8 @@ MODULE io_files
   !! unit for saving mixing information
   INTEGER :: iunwfc_exx  = 16
   !! unit with exx wavefunctions
+  INTEGER :: iunhub_noS  = 17
+  !! unit for saving Hubbard-U atomic wfcs
   !
   INTEGER :: iunexit     = 26
   !! unit for a soft exit  
@@ -131,7 +133,7 @@ CONTAINS
   SUBROUTINE create_directory( dirname )
     !------------------------------------------------------------------------
     !
-    USE wrappers,  ONLY : f_mkdir_safe
+    USE clib_wrappers, ONLY : f_mkdir_safe
     !
     CHARACTER(LEN=*), INTENT(IN) :: dirname
     !
@@ -175,7 +177,7 @@ CONTAINS
     !-----------------------------------------------------------------------
     !! Verify if \(\text{tmp_dir}\) exists, creates it if not.
     !
-    USE wrappers,      ONLY : f_mkdir_safe
+    USE clib_wrappers, ONLY : f_mkdir_safe
     !
     IMPLICIT NONE
     !
@@ -236,6 +238,7 @@ CONTAINS
        CALL delete_if_present( trim( file_path ) // '.update' )
        CALL delete_if_present( trim( file_path ) // '.md' )
        CALL delete_if_present( trim( file_path ) // '.bfgs' )
+       CALL delete_if_present( trim( file_path ) // '.fire' )
     ENDIF
     !
     RETURN
@@ -596,3 +599,67 @@ SUBROUTINE davcio( vect, nword, unit, nrec, io )
   !
 END SUBROUTINE davcio
 
+FUNCTION spdf_to_l (spdf) RESULT(l)
+  !
+  ! Returns the value of the orbital quantum number
+  !
+  IMPLICIT NONE
+  CHARACTER(len=1), INTENT(IN) :: spdf
+  INTEGER :: l
+  !
+  IF ( spdf == 's' .OR. spdf == 'S' ) THEN
+     l = 0
+  ELSEIF ( spdf == 'p' .OR. spdf == 'P' ) THEN
+     l = 1
+  ELSEIF ( spdf == 'd' .or. spdf == 'D' ) THEN
+     l = 2
+  ELSEIF ( spdf == 'f' .OR. spdf == 'F' ) THEN
+     l = 3
+  ELSE
+     l =-1
+  ENDIF
+  !
+  RETURN
+  !
+END FUNCTION spdf_to_l
+
+FUNCTION l_to_spdf (l, flag) RESULT(spdf)
+  !
+  ! Convert the value of the orbital quantum number into a character
+  ! flag=.TRUE.  returns capital letters
+  ! flag=.FALSE. returns small letters
+  !
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: l
+  LOGICAL, INTENT(IN) :: flag
+  CHARACTER(LEN=1) :: spdf
+  !
+  IF (flag) THEN
+     IF (l == 0) THEN
+        spdf = 'S'
+     ELSEIF (l == 1) THEN
+        spdf = 'P'
+     ELSEIF (l == 2) THEN
+        spdf = 'D'
+     ELSEIF (l == 3) THEN
+        spdf = 'F'
+     ELSE
+        CALL errore( 'l_to_spdf', 'Incorrect value of the orbital quantum number l', l )
+     ENDIF
+  ELSE
+     IF (l == 0) THEN
+        spdf = 's'
+     ELSEIF (l == 1) THEN
+        spdf = 'p'
+     ELSEIF (l == 2) THEN
+        spdf = 'd'
+     ELSEIF (l == 3) THEN
+        spdf = 'f'
+     ELSE
+        CALL errore( 'l_to_spdf', 'Incorrect value of the orbital quantum number l', l )
+     ENDIF
+  ENDIF
+  !
+  RETURN
+  !
+END FUNCTION l_to_spdf

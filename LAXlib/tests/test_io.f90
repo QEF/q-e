@@ -1,6 +1,7 @@
 MODULE test_io
     !
     IMPLICIT NONE
+    include 'laxlib_kinds.fh'
     !
     INTERFACE read_problem
        MODULE PROCEDURE read_cmplx_problem, read_real_problem
@@ -9,7 +10,6 @@ MODULE test_io
     CONTAINS
     !
     SUBROUTINE read_cmplx_problem(fname, ldh, n, m, h, s, e, v, info)
-        USE la_param, ONLY : DP
         IMPLICIT NONE
         character(len=*), intent(in) :: fname
         integer, intent(out) :: ldh, n, m
@@ -19,8 +19,7 @@ MODULE test_io
         complex(dp), allocatable, intent(inout) :: v(:,:)
         integer, intent(out)                    :: info
         !
-        real(dp) :: aux1, aux2
-        integer :: i, j, t
+        integer :: t
         logical :: exist
         !
         character(len=20):: fname_
@@ -56,7 +55,6 @@ MODULE test_io
     END SUBROUTINE read_cmplx_problem
     !
     SUBROUTINE read_real_problem(fname, ldh, n, m, h, s, e, v, info)
-        USE la_param, ONLY : DP
         IMPLICIT NONE
         character(len=*), intent(in) :: fname
         integer, intent(out) :: ldh, n, m
@@ -66,8 +64,7 @@ MODULE test_io
         real(dp), allocatable, intent(inout) :: v(:,:)
         integer, intent(out)                 :: info
         !
-        real(dp) :: aux1, aux2
-        integer :: i, j, t
+        integer :: t
         logical :: exist
         !
         character(len=20):: fname_    

@@ -8,9 +8,9 @@
 !---------------------------------------------------------------------
 subroutine set_drhoc (q,drc)
   !---------------------------------------------------------------------
-  ! calculate the fourier transform of the core charge for all pseudo
-  ! without structure factor and put it in drc, at q point
-  ! used to calculate derivatives of the core charge
+  !! Calculate the Fourier transform of the core charge for all pseudo
+  !! without structure factor and put it in \(\text{drc}\), at \(\text{q}\)
+  !! point used to calculate derivatives of the core charge.
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : fpi
@@ -22,11 +22,14 @@ subroutine set_drhoc (q,drc)
   USE uspp,      ONLY : nlcc_any
   !
   IMPLICIT NONE
-  ! input/output
-  REAL(DP),INTENT(in)  :: q(3)          ! the q-point used for structure factor
-  COMPLEX(DP),INTENT(inout) :: drc(ngm,ntyp) ! fourier-transform of core charge at q
   !
-  ! local variables
+  REAL(DP),INTENT(in) :: q(3)
+  !! the q-point used for structure factor
+  COMPLEX(DP),INTENT(inout) :: drc(ngm,ntyp)
+  !! Fourier-transform of core charge at q
+  !
+  ! ... local variables
+  !
   REAL(DP) :: gq2,    & ! |q+g|**2 (atomic units)
               gx,     & ! |q+g|
               rhocgip,& ! workspace

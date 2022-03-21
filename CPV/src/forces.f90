@@ -9,6 +9,12 @@
 ! Written and revised by Carlo Cavazzoni
 ! Task Groups parallelization by C. Bekas (IBM Research Zurich).
 !
+#if defined(__CUDA)
+#define PINMEM 
+#else
+#define PINMEM
+#endif
+!
 !-------------------------------------------------------------------------
       SUBROUTINE dforce_x ( i, bec, vkb, c, df, da, v, ldv, ispin, f, n, nspin, v1 )
 !-----------------------------------------------------------------------
@@ -23,7 +29,7 @@
       USE parallel_include
       USE kinds,                  ONLY: dp
       USE control_flags,          ONLY: iprint
-      USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq, indv_ijkb0
+      USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq, ofsbeta
       USE uspp_param,             ONLY: nhm, nh
       USE constants,              ONLY: pi, fpi
       USE ions_base,              ONLY: nsp, na, nat, ityp
@@ -64,7 +70,7 @@
 !dir$ attributes align: 4096 :: af, aa, psi, exx_a, exx_b
 #endif
 #endif
-      REAL(DP),    ALLOCATABLE :: af( :, : ), aa( :, : )
+      REAL(DP),    ALLOCATABLE PINMEM :: af( :, : ), aa( :, : )
       COMPLEX(DP), ALLOCATABLE :: psi(:)
       REAL(DP)    :: tmp1, tmp2                      ! Lingzhu Kong
       REAL(DP),    ALLOCATABLE :: exx_a(:), exx_b(:) ! Lingzhu Kong      
@@ -295,8 +301,8 @@
                   DO iv = 1, nh(is)
                      DO jv = 1, nh(is)
                         dv = dvan(iv,jv,is)
-                        inl = indv_ijkb0(ia) + iv
-                        jnl = indv_ijkb0(ia) + jv
+                        inl = ofsbeta(ia) + iv
+                        jnl = ofsbeta(ia) + jv
                         IF( i + idx - 1 /= n ) THEN
                            dd = deeq(iv,jv,ia,iss1) + dv
                            af(inl,igrp) = af(inl,igrp) - fi  * dd * bec(jnl,i+idx-1)
@@ -348,7 +354,7 @@
       USE parallel_include
       USE kinds,                  ONLY: dp
       USE control_flags,          ONLY: iprint
-      USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq, indv_ijkb0
+      USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq, ofsbeta
       USE uspp_param,             ONLY: nhm, nh
       USE constants,              ONLY: pi, fpi
       USE ions_base,              ONLY: nsp, na, nat, ityp
@@ -371,7 +377,7 @@
       REAL(DP)                   :: bec(:,:)
       COMPLEX(DP), DEVICE        :: vkb(:,:)
       COMPLEX(DP), DEVICE        :: c(:,:)
-      COMPLEX(DP)                :: df(:), da(:)
+      COMPLEX(DP)  PINMEM        :: df(:), da(:)
       INTEGER,     INTENT(IN)    :: ldv
       REAL(DP), DEVICE           :: v( :, : )
       INTEGER                    :: ispin( : )
@@ -388,7 +394,7 @@
       COMPLEX(DP) :: fp, fm
       complex(DP), parameter :: ci=(0.0d0,1.0d0)
 
-      REAL(DP),    ALLOCATABLE :: af( :, : ), aa( :, : )
+      REAL(DP),    ALLOCATABLE  PINMEM :: af( :, : ), aa( :, : )
       REAL(DP),    ALLOCATABLE, DEVICE :: af_d( :, : ), aa_d( :, : )
       COMPLEX(DP), ALLOCATABLE, DEVICE :: psi(:)
       COMPLEX(DP), ALLOCATABLE, DEVICE :: df_d(:)
@@ -508,7 +514,7 @@
          ALLOCATE( af_d( nhsa, many_fft ), aa_d( nhsa, many_fft ) )
          !
 !$omp parallel do default(none), &
-!$omp shared(many_fft,i,n,tens,f,nat,ityp,nh,dvan,indv_ijkb0,deeq,af,aa,bec,ispin), &
+!$omp shared(many_fft,i,n,tens,f,nat,ityp,nh,dvan,ofsbeta,deeq,af,aa,bec,ispin), &
 !$omp private(idx,igrp,fi,fip,ia,is,iv,jv,inl,jnl,dv,dd,iss1,iss2)
          DO idx = 1, 2*many_fft , 2
 
@@ -537,8 +543,8 @@
                   DO iv = 1, nh(is)
                      DO jv = 1, nh(is)
                         dv = dvan(iv,jv,is)
-                        inl = indv_ijkb0(ia) + iv
-                        jnl = indv_ijkb0(ia) + jv
+                        inl = ofsbeta(ia) + iv
+                        jnl = ofsbeta(ia) + jv
                         IF( i + idx - 1 /= n ) THEN
                            dd = deeq(iv,jv,ia,iss1) + dv
                            af(inl,igrp) = af(inl,igrp) - fi  * dd * bec(jnl,i+idx-1)

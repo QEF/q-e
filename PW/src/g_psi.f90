@@ -19,17 +19,17 @@ SUBROUTINE g_psi( lda, n, m, npol, psi, e )
   !
   IMPLICIT NONE
   !
-  INTEGER :: lda
+  INTEGER, intent(in) :: lda
   !! input: the leading dimension of psi
-  INTEGER :: n
+  INTEGER,intent(in) :: n
   !! input: the real dimension of psi
-  INTEGER :: m
+  INTEGER,intent(in) :: m
   !! input: the number of coordinates of psi
-  INTEGER :: npol
+  INTEGER, intent(in) :: npol
   !! input: the number of bands
   COMPLEX(DP) :: psi(lda, npol, m)
   !! inp/out: the psi vector
-  REAL(DP) :: e(m)
+  REAL(DP), intent(in) :: e(m)
   !! input: the eigenvectors
   !
   !  ... local variables
@@ -100,22 +100,22 @@ END SUBROUTINE g_psi
 subroutine g_1psi (lda, n, psi, e)
   !-----------------------------------------------------------------------
   !
-  !    This routine computes an estimate of the inverse Hamiltonian
-  !    and applies it to one wavefunction
+  !    As g_psi, for a single wavefunction
   !
   USE kinds
   USE noncollin_module,     ONLY : npol
 
   implicit none
 
-  integer :: lda, & ! input: the leading dimension of psi
-             n      ! input: the real dimension of psi
+  integer, intent(in) :: lda, & ! input: the leading dimension of psi
+                         n      ! input: the real dimension of psi
   complex(DP) :: psi (lda, npol) ! inp/out: the psi vector
-  real(DP) :: e     ! input: the eigenvectors
+  real(DP), intent(in) :: e     ! input: the eigenvector
   !
   call start_clock ('g_1psi')
 
-  CALL g_psi (lda, n, 1, npol, psi, e)
+  ! convert scalar e to size-1 vector [e] to exactly match g_psi argument type
+  CALL g_psi (lda, n, 1, npol, psi, [e])
 
   call stop_clock ('g_1psi')
 

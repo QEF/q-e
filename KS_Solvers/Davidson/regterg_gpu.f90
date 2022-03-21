@@ -9,7 +9,12 @@
 #define ONE  ( 1.D0, 0.D0 )
 #if !defined(__CUDA)
 #define cublasDgemm dgemm
-#endif
+! workaround for some old compilers that don't like CUDA fortran code
+SUBROUTINE regterg_gpu( )
+end SUBROUTINE regterg_gpu
+SUBROUTINE pregterg_gpu( )
+end SUBROUTINE pregterg_gpu
+#else
 !----------------------------------------------------------------------------
 SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
                     npw, npwx, nvec, nvecx, evc_d, ethr, &
@@ -1729,5 +1734,4 @@ SUBROUTINE KScudaDGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
     CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
 
 END SUBROUTINE KScudaDGER
-
-
+#endif

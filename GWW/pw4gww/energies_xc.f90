@@ -9,7 +9,7 @@
 
 !
 !----------------------------------------------------------------------------
-SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
+SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin, v_states )
   !----------------------------------------------------------------------------
   !
   ! computes the expectation values of the exchange and correlation potential
@@ -45,6 +45,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
   USE exx,    ONLY : vexx !Suriano
   USE xc_lib, ONLY : exx_is_active, xclib_dft_is
   USE klist, ONLY : igk_k
+  
 
   !
   IMPLICIT NONE
@@ -56,6 +57,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
   COMPLEX(DP) :: psi(lda,m)
   REAL(kind=DP) :: e_xc(m), e_h(m)
   INTEGER, INTENT(in) :: ispin !spin 1,2
+  REAL(kind=DP), OPTIONAL :: v_states(dffts%nnr,m, nspin)
 
   REAL(kind=DP), ALLOCATABLE :: vr(:,:)
   !
@@ -215,7 +217,8 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        USE cell_base,            ONLY : tpiba2
        USE io_global, ONLY : ionode
        USE io_files, ONLY :prefix,tmp_dir
-     USE exx, ONLY : exxalfa
+       USE exx, ONLY : exxalfa
+       USE uspp_init,        ONLY : init_us_2
 
        implicit none
 
@@ -347,8 +350,9 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        allocate(psi_r(dfftp%nnr),psi_rs(dfftp%nnr))
 
        iunwfcreal=find_free_unit()
-       CALL diropn( iunwfcreal, 'real_whole', dffts%nnr, exst )
-
+       if(.not. present(v_states)) then
+          CALL diropn( iunwfcreal, 'real_whole', dffts%nnr, exst )
+       endif
 
 !calculate xc potential on fine grid
 
@@ -404,16 +408,19 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 
        do ibnd=1,m!loop on states
 !read from disk wfc on coarse grid
-         CALL davcio( psi_rs,dffts%nnr,iunwfcreal,ibnd+(ispin-1)*nbnd,-1)
-         if(doublegrid) then
-           call fft_interpolate(dffts, psi_rs, dfftp, psi_r) ! interpolate from smooth to dense
-         else
-           psi_r(:)=psi_rs(:)
-         endif
-
-         do ir=1,dfftp%nnr
-            psi_r(ir)=psi_r(ir)**2.d0
-         enddo
+          if(.not. present(v_states)) then
+             CALL davcio( psi_rs,dffts%nnr,iunwfcreal,ibnd+(ispin-1)*nbnd,-1)
+             if(doublegrid) then
+                call fft_interpolate(dffts, psi_rs, dfftp, psi_r) ! interpolate from smooth to dense
+             else
+                psi_r(:)=psi_rs(:)
+             endif
+          else
+             psi_r(1:dffts%nnr)=v_states(1:dffts%nnr,ibnd,ispin)
+          endif
+          do ir=1,dfftp%nnr
+             psi_r(ir)=psi_r(ir)**2.d0
+          enddo
 
          !if(okvan) call adduspos_gamma_r(ibnd,ibnd,psi_r,1,becp_gw(:,ibnd),becp_gw(:,ibnd))
 
@@ -454,11 +461,15 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 
         do ibnd=1,m!loop on states
 !read from disk wfc on coarse grid
-           CALL davcio( psi_rs,dffts%nnr,iunwfcreal,ibnd+(ispin-1)*nbnd,-1)
-           if(doublegrid) then
-              call fft_interpolate(dffts, psi_rs, dfftp, psi_r) ! interpolate from smooth to dense
+           if(.not. present(v_states)) then
+              CALL davcio( psi_rs,dffts%nnr,iunwfcreal,ibnd+(ispin-1)*nbnd,-1)
+              if(doublegrid) then
+                 call fft_interpolate(dffts, psi_rs, dfftp, psi_r) ! interpolate from smooth to dense
+              else
+                 psi_r(:)=psi_rs(:)
+              endif
            else
-              psi_r(:)=psi_rs(:)
+              psi_r(1:dffts%nnr)=v_states(1:dffts%nnr,ibnd,ispin)
            endif
 
            do ir=1,dfftp%nnr
@@ -487,7 +498,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 
        deallocate(psi_r,psi_rs)
        deallocate(exact_x)
-      close(iunwfcreal)
+       if(.not. present(v_states) ) close(iunwfcreal)
       deallocate(e_hub)
       if(l_whole_s) then
 !NOT_TO_BE_INCLUDED_START

@@ -162,6 +162,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   USE mp_images,            ONLY : intra_image_comm
   USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
                                    deallocate_bec_type, becp
+  USE uspp_init,            ONLY : init_us_2
 
   IMPLICIT NONE
   CHARACTER (len=*) :: filband
@@ -349,16 +350,14 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
      CALL punch_plottable_bands ( filband, nks1tot, nks2tot, nkstot, nbnd, &
                                   xk, et_ )
      !
-     DO ik=nks1tot,nks2tot
-        IF (ik == nks1) THEN
-           WRITE (iunpun, '(" &plot nbnd=",i4,", nks=",i6," /")') &
+     WRITE (iunpun, '(" &plot nbnd=",i4,", nks=",i6," /")') &
              nbnd, nks2tot-nks1tot+1
-           DO ipol=1,4
-              IF (lsigma(ipol)) WRITE(iunpun_sigma(ipol), &
-                            '(" &plot nbnd=",i4,", nks=",i6," /")') &
-                             nbnd, nks2tot-nks1tot+1
-           ENDDO
-        ENDIF
+     DO ipol=1,4
+        IF (lsigma(ipol)) WRITE(iunpun_sigma(ipol), &
+                         '(" &plot nbnd=",i4,", nks=",i6," /")') &
+                          nbnd, nks2tot-nks1tot+1
+     ENDDO
+     DO ik=nks1tot,nks2tot
         WRITE (iunpun, '(10x,3f10.6)') xk(1,ik),xk(2,ik),xk(3,ik)
         WRITE (iunpun, '(10f9.3)') (et_(ibnd, ik), ibnd = 1, nbnd)
         DO ipol=1,4

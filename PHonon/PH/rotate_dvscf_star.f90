@@ -8,10 +8,8 @@
 !-----------------------------------------------------------------------
 subroutine rotate_dvscf_star(iq_)
   !-----------------------------------------------------------------------
-  !
-  !
-  ! Given dvscf or drho, this routine obtains dvscf or drho
-  ! over the star{q} and writes it on a file. 
+  !! Given dvscf or drho, this routine obtains dvscf or drho
+  !! over the star of q and writes it on a file.
   !
 
   USE kinds,         ONLY : DP
@@ -24,7 +22,11 @@ subroutine rotate_dvscf_star(iq_)
   USE units_ph,      ONLY : iudrho, iudvscf
   USE modes,         ONLY : u
 
-  INTEGER :: nq,  isq (48), imq, iq_
+  INTEGER :: iq_
+  !
+  ! ... local variables
+  !
+  INTEGER :: nq,  isq (48), imq
   LOGICAL :: opnd
   REAL(DP) :: sxq (3, 48)
 

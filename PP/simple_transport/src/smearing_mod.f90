@@ -26,7 +26,6 @@
          !
          !
          double precision function w1gauss(x,ngauss)
-            use kinds
             implicit none
             double precision, intent(in) :: x
             integer, intent(in) :: ngauss

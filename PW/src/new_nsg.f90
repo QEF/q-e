@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,9 +20,9 @@ SUBROUTINE new_nsg()
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
   USE klist,                ONLY : nks, ngk
-  USE ldaU,                 ONLY : Hubbard_l, q_ae, U_projection, wfcU, nwfcU,     &
+  USE ldaU,                 ONLY : Hubbard_l, q_ae, Hubbard_projectors, wfcU, nwfcU,     &
                                    ldim_u, ll, neighood, at_sc, nsgnew, phase_fac, &
-                                   max_num_neighbors, Hubbard_l_back, backall,     &
+                                   max_num_neighbors, Hubbard_l2, backall,     &
                                    offsetU, offsetU_back, offsetU_back1, is_hubbard_back
   USE symm_base,            ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
@@ -50,7 +50,7 @@ SUBROUTINE new_nsg()
   ! in the nwfcU ordering
   COMPLEX(DP), ALLOCATABLE :: nrg(:,:,:,:,:)
   COMPLEX(DP) :: phase
-  INTEGER, EXTERNAL :: find_viz, type_interaction
+  INTEGER, EXTERNAL :: find_viz
   !
   CALL start_clock('new_nsg')
   !
@@ -84,8 +84,8 @@ SUBROUTINE new_nsg()
      !
      ! make the projection
      !
-     IF ( U_projection == 'pseudo' ) THEN
-        CALL errore('new_nsg', 'U_projection = pseudo is not supported',1)
+     IF ( Hubbard_projectors == 'pseudo' ) THEN
+        CALL errore('new_nsg', 'Hubbard_projectors = pseudo is not supported',1)
         !CALL compute_pproj( ik, q_ae, proj )
      ELSE
         IF (nks > 1) CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
@@ -139,9 +139,9 @@ SUBROUTINE new_nsg()
                           off1 = offsetU_back(na1) + m1 - 2*Hubbard_l(nt1) - 1
                           !
                           IF ( backall(nt1) .AND. &
-                               m1.GT.2*(Hubbard_l(nt1)+Hubbard_l_back(nt1)+1)) &
+                               m1.GT.2*(Hubbard_l(nt1)+Hubbard_l2(nt1)+1)) &
                              off1 = offsetU_back1(na1) + m1 - &
-                                    2*(Hubbard_l(nt1)+Hubbard_l_back(nt1)+1)
+                                    2*(Hubbard_l(nt1)+Hubbard_l2(nt1)+1)
                           !
                        ENDIF
                        !
@@ -154,9 +154,9 @@ SUBROUTINE new_nsg()
                              off2 = offsetU_back(eq_na2) + m2 - 2*Hubbard_l(nt2) - 1
                              !
                              IF ( backall(nt2) .AND. & 
-                                  m2.GT.2*(Hubbard_l(nt2)+Hubbard_l_back(nt2)+1)) &
+                                  m2.GT.2*(Hubbard_l(nt2)+Hubbard_l2(nt2)+1)) &
                                 off2 = offsetU_back1(eq_na2) + m2 - &
-                                       2*(Hubbard_l(nt2)+Hubbard_l_back(nt2)+1)
+                                       2*(Hubbard_l(nt2)+Hubbard_l2(nt2)+1)
                              !
                           ENDIF
                           !
@@ -257,10 +257,10 @@ SUBROUTINE new_nsg()
                     IF ( is_hubbard_back(nt1) .AND. m1.GT.ldim_std1 ) THEN
                        !
                        off  = ldim_std1 + 1
-                       off2 = ldim_std1 + 2*Hubbard_l_back(nt1) + 1 
+                       off2 = ldim_std1 + 2*Hubbard_l2(nt1) + 1 
                        !
-                       IF ( backall(nt1) .AND. m1.GT.(ldim_std1+2*Hubbard_l_back(nt1)+1) ) THEN
-                          off  = ldim_std1 + 2*Hubbard_l_back(nt1) + 2
+                       IF ( backall(nt1) .AND. m1.GT.(ldim_std1+2*Hubbard_l2(nt1)+1) ) THEN
+                          off  = ldim_std1 + 2*Hubbard_l2(nt1) + 2
                           off2 = ldim_u(nt1)
                        ENDIF
                        !
@@ -274,10 +274,10 @@ SUBROUTINE new_nsg()
                        IF ( is_hubbard_back(nt2) .AND. m2.GT.ldim_std2 ) THEN
                           !
                           off1 = ldim_std2 + 1
-                          off3 = ldim_std2 + 2*Hubbard_l_back(nt2) + 1
+                          off3 = ldim_std2 + 2*Hubbard_l2(nt2) + 1
                           !
-                          IF ( backall(nt2) .AND. m2.GT.(ldim_std2+2*Hubbard_l_back(nt2)+1) ) THEN
-                             off1 = ldim_std2 + 2*Hubbard_l_back(nt2) + 2
+                          IF ( backall(nt2) .AND. m2.GT.(ldim_std2+2*Hubbard_l2(nt2)+1) ) THEN
+                             off1 = ldim_std2 + 2*Hubbard_l2(nt2) + 2
                              off3 = ldim_u(nt2)
                           ENDIF
                           !

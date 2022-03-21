@@ -8,18 +8,18 @@
 !-----------------------------------------------------------------------
 subroutine drhodv (nu_i0, nper, drhoscf)
   !-----------------------------------------------------------------------
-  !
-  !    This subroutine computes the electronic term
-  !    2 <dpsi|dv - e ds|psi> of the dynamical matrix.
-  !    Eq. B35 of PRB 64, 235118 (2001). The contribution of
-  !    the nonlocal potential is calculated in drhodvnl, the
-  !    contribution of the local potential in drhodvloc.
-  !    Note that drhoscf contain only the smooth part of the
-  !    induced charge density, calculated in solve linter.
-  !    February 2020: the routine has been generalized to 
-  !    address also the case noncolin.and.domag. For the 
-  !    theoretical background please refer to: 
-  !    Phys. Rev. B 100, 045115 (2019)
+  !! This subroutine computes the electronic term
+  !! \( 2\langle d\psi|dv - e ds|\psi\rangle \)
+  !! of the dynamical matrix - Eq. (B35) of PRB 64, 235118 (2001).
+  !! The contribution of the nonlocal potential is calculated in
+  !! \(\texttt{drhodvnl}\), the contribution of the local potential
+  !! in \(\texttt{drhodvloc}\).  
+  !! Note that \(\text{drhoscf}\) contain only the smooth part of the
+  !! induced charge density, calculated in solve linter.  
+  !! February 2020: the routine has been generalized to 
+  !! address also the case noncolin.and.domag. For the 
+  !! theoretical background please refer to: 
+  !! Phys. Rev. B 100, 045115 (2019).
   !
   !
   USE kinds,     ONLY : DP
@@ -35,16 +35,15 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE fft_base,  ONLY : dfftp
   USE io_global, ONLY : stdout
   USE buffers,   ONLY : get_buffer
-  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE noncollin_module, ONLY : noncolin, domag, npol, nspin_mag
 
   USE dynmat,   ONLY : dyn, dyn_rec
   USE modes,    ONLY : u
-  USE units_ph, ONLY : lrdwf, iudwf
+  USE units_lr, ONLY : lrdwf, iudwf
 
   USE eqv,      ONLY : dpsi
   USE qpoint,   ONLY : nksq, ikks, ikqs
   USE control_lr, ONLY : lgamma
-  USE spin_orb, ONLY : domag
   USE lrus,     ONLY : becp1
   USE phus,     ONLY : alphap, int1_nc
   USE qpoint_aux, ONLY : becpt, alphapt
@@ -52,16 +51,19 @@ subroutine drhodv (nu_i0, nper, drhoscf)
 
   USE mp_pools,         ONLY : inter_pool_comm
   USE mp,               ONLY : mp_sum
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
 
-  integer :: nper, nu_i0
-  ! input: number of perturbations of this represent
-  ! input: the initial position of the mode
-
-  complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, nper)
-  ! the change of density due to perturbations
-
+  integer :: nper
+  !! input: number of perturbations of this represent
+  integer :: nu_i0
+  !! input: the initial position of the mode
+  complex(DP) :: drhoscf(dfftp%nnr,nspin_mag,nper)
+  !! the change of density due to perturbations
+  !
+  ! ... local variables
+  !
   integer :: mu, ik, ikq, ig, nu_i, nu_j, na_jcart, ibnd, nrec, &
        ipol, ikk, ipert, npw, npwq, isolv, nsolv
   ! counters

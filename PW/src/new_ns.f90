@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,7 +24,7 @@ SUBROUTINE new_ns( ns )
   USE ions_base,            ONLY : nat, ityp
   USE klist,                ONLY : nks, ngk
   USE ldaU,                 ONLY : ldmx, Hubbard_l, q_ae, wfcU, &
-                                   U_projection, is_hubbard, nwfcU, offsetU
+                                   Hubbard_projectors, is_hubbard, nwfcU, offsetU
   USE symm_base,            ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
   USE symm_base,            ONLY : nsym, irt
@@ -82,7 +82,7 @@ SUBROUTINE new_ns( ns )
      !
      ! make the projection
      !
-     IF ( U_projection == 'pseudo' ) THEN
+     IF ( Hubbard_projectors == 'pseudo' ) THEN
         CALL compute_pproj( ik, q_ae, proj )
      ELSE
         IF (nks > 1) CALL get_buffer( wfcU, nwordwfcU, iunhub, ik )
@@ -231,7 +231,7 @@ SUBROUTINE compute_pproj( ik, q, p )
     USE ions_base,            ONLY : nat, ityp, ntyp => nsp
     USE klist,                ONLY : xk, igk_k, ngk
     USE becmod,               ONLY : becp
-    USE uspp,                 ONLY : nkb, vkb, indv_ijkb0, using_vkb
+    USE uspp,                 ONLY : nkb, vkb, ofsbeta
     USE uspp_param,           ONLY : nhm, nh
     USE wvfct,                ONLY : nbnd
     USE wavefunctions,        ONLY : evc
@@ -241,6 +241,7 @@ SUBROUTINE compute_pproj( ik, q, p )
                                      allocate_bec_type, deallocate_bec_type
     USE wavefunctions_gpum,   ONLY : using_evc
     USE becmod_subs_gpum,     ONLY : using_becp_auto
+    USE uspp_init,            ONLY : init_us_2
     !
     IMPLICIT NONE
     !
@@ -265,7 +266,6 @@ SUBROUTINE compute_pproj( ik, q, p )
     !
     CALL allocate_bec_type( nkb, nbnd, becp )
     CALL using_becp_auto(2)
-    CALL using_vkb(1)
     CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
     CALL using_evc(0)
     CALL calbec( npw, vkb, evc, becp )
@@ -284,7 +284,7 @@ SUBROUTINE compute_pproj( ik, q, p )
              IF ( is_hubbard(nt) ) THEN
                 DO ib = 1, nbnd
                    DO ih = 1, nh(nt)
-                      ikb = indv_ijkb0(na) + ih
+                      ikb = ofsbeta(na) + ih
                       DO iw = 1, nwfcU
                          IF ( gamma_only ) THEN
                             p%r(iw,ib) = p%r(iw,ib) + q(iw,ih,na)*becp%r(ikb,ib)

@@ -29,9 +29,9 @@
 /* ---------------------------------------------------------------------- */
 /* ###################################################################### */
 /* ---------------------------------------------------------------------- */
-/* Subroutine */ static void gcor2(double a, double a1, double b1, 
-	double b2, double b3, double b4, double rtrs, 
-	double *gg, double *ggrs)
+/* Subroutine */ 
+#pragma acc routine seq
+static void gcor2(double a, double a1, double b1, double b2, double b3, double b4, double rtrs, double *gg, double *ggrs)
 {
     /* Local variables */
     double q0, q1, q2, q3;
@@ -61,14 +61,13 @@
 
 /* ###################################################################### */
 /* ---------------------------------------------------------------------- */
-/* Subroutine */ void corpbe(double rs, double t, 
-	int lgga, 
-	int lpot, double *ec, double *vc, 
-	double *h__, double *dvc, double *dv2rho)
+/* Subroutine */ 
+#pragma acc routine seq
+void corpbe(double rs, double t, int lgga, int lpot, double *ec, double *vc, double *h__, double *dvc, double *dv2rho)
 {
     /* Local variables */
     double b, b2, q4, t2, q5, t4,
-	    ep, eu, pon,
+	    eu, pon,
 	    eurs, rtrs;
     double tmp1,tmp2,tmp3;
 
@@ -168,7 +167,9 @@
 
 /* ###################################################################### */
 /* ---------------------------------------------------------------------- */
-/* Subroutine */ void corpbespin(double rs, double t, double zet,
+/* Subroutine */ 
+#pragma acc routine seq
+void corpbespin(double rs, double t, double zet,
 	int lgga, 
 	int lpot, double *ec, double *vcup, double *vcdown,
 	double *h__, double *dvcup, double *dvcdown, double *dv2rho)
