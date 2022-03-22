@@ -16,6 +16,7 @@ set(src_modules
     coulomb_vcut.f90  
     dist.f90 
     electrons_base.f90 
+    environ_base_module.f90
     environment.f90 
     fd_gradient.f90 
     fft_base.f90 
@@ -159,7 +160,8 @@ target_link_libraries(qe_modules
         qe_upflib
         qe_fox
         qe_utilx
-        qe_openacc_fortran)
+        qe_openacc_fortran
+        qe_environ)
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_modules
         PRIVATE

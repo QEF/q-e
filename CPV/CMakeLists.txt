@@ -21,6 +21,7 @@ set(src_cpv
     src/electrons_nose.f90
     src/energies.f90
     src/ensemble_dft.f90
+    src/environ_cp_module.f90
     src/exch_corr.f90
     src/exx_cg.f90
     src/exx_es.f90
@@ -117,6 +118,7 @@ target_link_libraries(qe_cpv
         qe_xclib
         qe_device_lapack
         qe_devxlib
+        qe_environ
      PUBLIC 
         qe_openacc_fortran)
 
@@ -134,7 +136,8 @@ target_link_libraries(qe_cpv_exe
         qe_modules
         qe_lax
         qe_cpv
-        qe_xclib)
+        qe_xclib
+        qe_environ)
 
 ###########################################################
 # manycp.x

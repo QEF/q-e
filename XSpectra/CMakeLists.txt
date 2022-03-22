@@ -61,7 +61,8 @@ target_link_libraries(qe_xspectra_exe
         qe_modules
         qe_xspectra
         qe_xspectra_gipaw
-        qe_upflib)
+        qe_upflib
+        qe_environ)
 
 ###########################################################
 # spectra_correction.x

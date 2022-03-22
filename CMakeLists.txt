@@ -104,6 +104,8 @@ option(QE_ENABLE_LIBXC
     "enable LIBXC execution units" OFF)
 option(QE_ENABLE_HDF5
     "enable HDF5 data collection" OFF)
+option(QE_ENABLE_ENVIRON
+    "enable coupling with Environ continuum solvation library" OFF)
 option(QE_ENABLE_STATIC_BUILD
     "enable fully static build of executables" OFF)
 option(QE_ENABLE_DOC
@@ -174,6 +176,19 @@ if(QE_ENABLE_SCALAPACK)
 endif()
 if(QE_ENABLE_HDF5)
     qe_add_global_compile_definitions(__HDF5)
+endif()
+if(QE_ENABLE_ENVIRON)
+    qe_add_global_compile_definitions(__ENVIRON)
+    add_library(qe_environ INTERFACE)
+    qe_install_targets(qe_environ)
+    if(DEFINED ENVIRON_ROOT)
+        target_link_libraries(qe_environ 
+            INTERFACE 
+                ${ENVIRON_ROOT}/libs/libenv
+                ${ENVIRON_ROOT}/libs/libfft
+                ${ENVIRON_ROOT}/libs/libutil)
+        target_include_directories(qe_environ INTERFACE ${ENVIRON_ROOT}/src)
+    endif()
 endif()
 
 # Feature checks

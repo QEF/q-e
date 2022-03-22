@@ -1,4 +1,5 @@
 set(src_tddfpt
+    src/environ_td_module.f90
     src/lr_variables.f90
     src/lr_charg_resp.f90
     src/bcast_lr_input.f90
@@ -66,7 +67,8 @@ target_link_libraries(qe_tddfpt
         qe_modules
         qe_upflib
         qe_fftx
-        qe_xclib)
+        qe_xclib
+        qe_environ)
 
 ###########################################################
 # turbo_lanczos.x
@@ -83,7 +85,8 @@ target_link_libraries(qe_tddfpt_turbolanczos_exe
         qe_tddfpt
         qe_upflib
         qe_fftx
-        qe_xclib)
+        qe_xclib
+        qe_environ)
 
 ###########################################################
 # turbo_davidson.x
@@ -100,7 +103,8 @@ target_link_libraries(qe_tddfpt_turbodavidson_exe
         qe_tddfpt
         qe_upflib
         qe_fftx
-        qe_xclib)
+        qe_xclib
+        qe_environ)
 
 ###########################################################
 # turbo_eels.x

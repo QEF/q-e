@@ -55,7 +55,8 @@ set(src_pw
    src/dynamics_module.f90 
    src/efermig.f90 
    src/efermit.f90 
-   src/electrons.f90 
+   src/electrons.f90
+   src/environ_pw_module.f90 
    src/eqvect.f90 
    src/esm.f90 
    src/esm_common_mod.f90 
@@ -311,6 +312,7 @@ target_link_libraries(qe_pw
         qe_xclib
         qe_devxlib
         qe_mbd
+        qe_environ
     PUBLIC
         qe_openacc_fortran)
 
@@ -334,7 +336,8 @@ target_link_libraries(qe_pw_exe
         qe_pw
         qe_modules
         qe_lax
-        qe_upflib)
+        qe_upflib
+        qe_environ)
 
 ###########################################################
 # ibrav2cell.x
