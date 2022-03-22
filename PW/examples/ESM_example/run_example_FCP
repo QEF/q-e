@@ -160,7 +160,7 @@ cat > Al001_bc2_FCP_vp05.in << EOF
   ion_dynamics = 'bfgs'
 /
 &fcp
-  fcp_mu = -3.7510,
+  fcp_mu = -4.7510,
   fcp_dynamics = 'bfgs',
   fcp_conv_thr = 1.d-2,
   freeze_all_atoms = .TRUE.
@@ -213,7 +213,7 @@ cat > Al001_bc2_FCP_vm05.in << EOF
   ion_dynamics = 'bfgs'
 /
 &fcp
-  fcp_mu = -4.7510,
+  fcp_mu = -3.7510,
   fcp_dynamics = 'bfgs',
   fcp_conv_thr = 1.d-2,
   freeze_all_atoms = .TRUE.
@@ -319,7 +319,7 @@ cat > Al001_bc3_FCP_vp05.in << EOF
   ion_dynamics = 'bfgs'
 /
 &fcp
-  fcp_mu = -3.7490,
+  fcp_mu = -4.7490,
   fcp_dynamics = 'bfgs',
   fcp_conv_thr = 1.d-2,
   freeze_all_atoms = .TRUE.
@@ -372,7 +372,7 @@ cat > Al001_bc3_FCP_vm05.in << EOF
   ion_dynamics = 'bfgs'
 /
 &fcp
-  fcp_mu = -4.7490,
+  fcp_mu = -3.7490,
   fcp_dynamics = 'bfgs',
   fcp_conv_thr = 1.d-2,
   freeze_all_atoms = .TRUE.
