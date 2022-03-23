@@ -45,6 +45,7 @@ Parallel execution:
 *     __MPI       	MPI parallelization
       __MPI_MODULE      Compile with "USE mpi" instead of "include 'mpif.h'"
       __MPI_NONBLOCKING Use nonblocking routines (e.g. mpi_ibcast, mpi_igatherv)
+      __GPU_MPI       	MPI via NVlink between GPUs (if your hd supports it)
 
 Libraries:
 *     __FFTW        FFT routines from internal FFTW library (default)
