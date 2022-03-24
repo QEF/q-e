@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2021 Quantum ESPRESSO group
+# Copyright (C) 2001-2022 Quantum ESPRESSO group
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -6,12 +6,12 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-AC_INIT(ESPRESSO, 7.0, , espresso)
+AC_INIT(ESPRESSO, 7.1, , espresso)
 
 AC_PREREQ(2.64)
 AC_CONFIG_MACRO_DIR([m4/])
 
-# Initialize variables, filling with one comes from the environment...
+# Initialize variables, filling with what comes from the environment...
 X_AC_QE_DEFAULT_ENV()
 
 # configure for current directory by default
@@ -124,7 +124,6 @@ AC_SUBST(extlib_flags)
 AC_CONFIG_HEADERS([include/qe_cdefs.h:include/qe_cdefs.h.in])
 AC_CONFIG_FILES([include/configure.h:include/configure.h.in])
 
-#AC_CONFIG_FILES(Makefile.cpu)
 AC_CONFIG_FILES(make.inc)
 AC_CONFIG_FILES(configure.msg)
 AC_CONFIG_FILES(install/make_wannier90.inc)

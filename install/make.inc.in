@@ -142,11 +142,11 @@ LD_LIBS        = @ld_libs@
 BLAS_LIBS      = @blas_libs@
 
 # If you have nothing better, use the local copy
-# LAPACK_LIBS_SWITCH = internal
+# LAPACK = liblapack
 # LAPACK_LIBS = $(TOPDIR)/external/lapack/liblapack.a
 
-LAPACK_LIBS    = @lapack_libs@
-LAPACK_LIBS_SWITCH = @lapack_libs_switch@
+LAPACK      = @lapack_target@
+LAPACK_LIBS = @lapack_libs@
 
 SCALAPACK_LIBS = @scalapack_libs@
 

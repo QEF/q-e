@@ -191,7 +191,7 @@ mods : libfox libutil libla libfft libupf libmbd librxc
 libks_solvers : libutil libla
 	( cd KS_Solvers ; $(MAKE) TLDEPS= all || exit 1 )
 
-libla : liblapack libutil libcuda
+libla : $(LAPACK) libutil libcuda
 	( cd LAXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libfft : 
@@ -235,13 +235,13 @@ libmbd:
 # plugins
 #########################################################
 
-w90: bindir liblapack
+w90: bindir $(LAPACK)
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-want: liblapack
+want: $(LAPACK)
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-yambo: liblapack
+yambo: $(LAPACK)
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #########################################################
