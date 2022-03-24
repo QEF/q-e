@@ -18,7 +18,9 @@ MODULE environ_base_module
     !
     USE fft_base, ONLY: dfftp
     !
-    USE ions_base, ONLY: nat, nsp, ityp, atm, zv
+    USE ions_base, ONLY: nat, nsp, ityp, zv
+    !
+    USE uspp_param, ONLY: upf
     !
     !------------------------------------------------------------------------------------
     !
@@ -115,7 +117,7 @@ CONTAINS
         !
         CALL environ%setup%init_numerical(do_comp_mt)
         !
-        CALL environ%main%init(nat, nsp, atm, ityp, zv)
+        CALL environ%main%init(nat, nsp, upf%psd, ityp, zv)
         !
         !--------------------------------------------------------------------------------
     END SUBROUTINE init_environ_base
