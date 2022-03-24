@@ -47,7 +47,7 @@ SUBROUTINE forces()
   USE uspp,              ONLY : okvan
   USE martyna_tuckerman, ONLY : do_comp_mt, wg_corr_force
   USE london_module,     ONLY : force_london
-  USE dftd3_api,         ONLY : get_atomic_number, dftd3_calc
+  USE dftd3_api,         ONLY : get_atomic_number
   USE dftd3_qe,          ONLY : dftd3_pbc_gdisp, dftd3
 
   USE xdm_module,        ONLY : force_xdm
