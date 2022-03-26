@@ -28,7 +28,7 @@ SUBROUTINE stress( sigma )
   USE bp,               ONLY : lelfield
   USE uspp,             ONLY : okvan
   USE london_module,    ONLY : stres_london
-  USE dftd3_api,        ONLY : get_atomic_number, dftd3_calc
+  USE dftd3_api,        ONLY : get_atomic_number
   USE dftd3_qe,         ONLY : dftd3_pbc_gdisp, dftd3
   USE xdm_module,       ONLY : stress_xdm
   USE exx,              ONLY : exx_stress

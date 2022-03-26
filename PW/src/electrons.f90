@@ -410,11 +410,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE mp,                   ONLY : mp_sum, mp_bcast
   !
   USE london_module,        ONLY : energy_london
-  USE dftd3_api,            ONLY : dftd3_pbc_dispersion, &
-                                   dftd3_init, dftd3_set_functional, &
-                                   get_atomic_number, dftd3_input, &
-                                   dftd3_calc
-  USE dftd3_qe,             ONLY : dftd3, dftd3_in, energy_dftd3
+  USE dftd3_api,            ONLY : dftd3_pbc_dispersion, get_atomic_number
+  USE dftd3_qe,             ONLY : dftd3
   USE xdm_module,           ONLY : energy_xdm
   USE tsvdw_module,         ONLY : EtsvdW
   !
@@ -537,8 +534,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
      DO na = 1, nat
         atnum(na) = get_atomic_number(TRIM(atm(ityp(na))))
      ENDDO
-     call dftd3_pbc_dispersion(dftd3,tau,atnum,latvecs,energy_dftd3)
-     edftd3=energy_dftd3*2.d0
+     call dftd3_pbc_dispersion(dftd3,tau,atnum,latvecs,edftd3)
+     edftd3=edftd3*2.d0
      tau(:,:)=tau(:,:)/alat
      CALL stop_clock('energy_dftd3')
   ELSE
