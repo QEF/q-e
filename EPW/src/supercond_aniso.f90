@@ -26,31 +26,33 @@
     !!
     !! SH: Modified to allow for fbw calculations (Nov 2021).
     !!
-    USE kinds,             ONLY : DP
-    USE io_global,         ONLY : stdout
-    USE control_flags,     ONLY : iverbosity
-    USE epwcom,            ONLY : nsiter, nstemp, broyden_beta, broyden_ndim, &
-                                  limag, lpade, lacon, fsthick, imag_read, npade, &
-                                  fbw
-    USE elph2,             ONLY : gtemp
-    USE eliashbergcom,     ONLY : nsw, nsiw, adelta, adeltap, adeltai, adeltaip, &
-                                  aznormi, aznormip, ashifti, ashiftip, &
-                                  nkfs, nbndfs, ekfs, ef0
-    USE supercond,         ONLY : free_energy, dos_quasiparticle, gen_freqgrid_iaxis, &
-                                  eliashberg_grid
-    USE constants_epw,     ONLY : kelvin2eV, ci, zero
-    USE io_global,         ONLY : ionode_id
-    USE mp_global,         ONLY : inter_pool_comm
-    USE mp,                ONLY : mp_bcast, mp_barrier
-    USE mp_world,          ONLY : mpime
-    USE io_eliashberg,     ONLY : eliashberg_read_aniso_iaxis
-    USE utilities,         ONLY : mix_wrap
-    USE low_lvl,           ONLY : mem_size_eliashberg
-    USE printing,          ONLY : prtheader_supercond
+    USE kinds,         ONLY : DP
+    USE control_flags, ONLY : iverbosity
+    USE epwcom,        ONLY : nsiter, nstemp, broyden_beta, broyden_ndim, &
+                              limag, lpade, lacon, fsthick, imag_read, npade, &
+                              fbw 
+    USE elph2,         ONLY : gtemp
+    USE eliashbergcom, ONLY : nsw, nsiw, adelta, adeltap, adeltai, adeltaip, &
+                              aznormi, aznormip, ashifti, ashiftip, &
+                              nkfs, nbndfs, ekfs, ef0, agap
+    USE supercond,     ONLY : dos_quasiparticle, gen_freqgrid_iaxis, &
+                              eliashberg_grid
+    USE constants_epw, ONLY : kelvin2eV, ci, zero, czero
+    USE io_global,     ONLY : stdout
+    USE mp_global,     ONLY : inter_pool_comm, my_pool_id
+    USE mp,            ONLY : mp_barrier, mp_sum
+    USE io_eliashberg, ONLY : eliashberg_write_iaxis, eliashberg_read_aniso_iaxis, &
+                              eliashberg_write_raxis
+    USE utilities,     ONLY : mix_wrap
+    USE low_lvl,       ONLY : mem_size_eliashberg
+    USE printing,      ONLY : prtheader_supercond
+    USE division,      ONLY : fkbounds
     !
     IMPLICIT NONE
     !
     ! Local variables
+    CHARACTER(LEN = 256) :: cname
+    !! character in file name
     LOGICAL :: conv
     !! True if calculation is converged
     INTEGER :: itemp
@@ -63,6 +65,10 @@
     !! Counter on k-points
     INTEGER :: ibnd
     !! Counter on bands
+    INTEGER :: lower_bnd, upper_bnd
+    !! Lower/upper bound index after k paral   
+    INTEGER :: nks
+    !! Number of k points per pool  
     INTEGER(8) :: imelt
     !! Counter memory
     INTEGER :: ierr
@@ -87,136 +93,160 @@
     !
     CALL eliashberg_grid()
     !
+    CALL fkbounds(nkfs, lower_bnd, upper_bnd)
+    !
+    nks = upper_bnd - lower_bnd + 1
+    !
     DO itemp = 1, nstemp ! loop over temperature
       !
       CALL prtheader_supercond(itemp, 1)
       CALL start_clock('iaxis_imag')
       CALL gen_freqgrid_iaxis(itemp)
       !
+      IF (itemp == 1) THEN 
+        ALLOCATE(agap(nbndfs, nkfs), STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating agap', 1)
+        agap(:, :) = zero
+      ENDIF
+      ! 
       IF ((limag .AND. .NOT. imag_read) .OR. (limag .AND. imag_read .AND. itemp /= 1)) THEN
         !
-        IF (mpime == ionode_id) THEN
-          IF (fbw) THEN
-            ! SH: initiate variables for fbw runs
-            ALLOCATE(df1(nbndfs, nkfs, nsiw(itemp), broyden_ndim), STAT = ierr)
-            IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating df1', 1)
-            ALLOCATE(dv1(nbndfs, nkfs, nsiw(itemp), broyden_ndim), STAT = ierr)
-            IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating dv1', 1)
-            ALLOCATE(df2(nbndfs, nkfs, nsiw(itemp), broyden_ndim), STAT = ierr)
-            IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating df2', 1)
-            ALLOCATE(dv2(nbndfs, nkfs, nsiw(itemp), broyden_ndim), STAT = ierr)
-            IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating dv2', 1)
-            ALLOCATE(df3(nbndfs, nkfs, nsiw(itemp), broyden_ndim), STAT = ierr)
-            IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating df3', 1)
-            ALLOCATE(dv3(nbndfs, nkfs, nsiw(itemp), broyden_ndim), STAT = ierr)
-            IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating dv3', 1)
-            df1(:, :, :, :) = zero
-            dv1(:, :, :, :) = zero
-            df2(:, :, :, :) = zero
-            dv2(:, :, :, :) = zero
-            df3(:, :, :, :) = zero
-            dv3(:, :, :, :) = zero
-          ELSE
-            ALLOCATE(df1(nbndfs, nkfs, nsiw(itemp), broyden_ndim), STAT = ierr)
-            IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating df1', 1)
-            ALLOCATE(dv1(nbndfs, nkfs, nsiw(itemp), broyden_ndim), STAT = ierr)
-            IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating dv1', 1)
-            df1(:, :, :, :) = zero
-            dv1(:, :, :, :) = zero
-          ENDIF
-        ENDIF
+        ! get the size of required memory for df1, dv1
+        imelt = 2 * nbndfs * nks * broyden_ndim * nsiw(itemp)
+        CALL mem_size_eliashberg(2, imelt)
+        !
+        ! RM - df1, dv1 are defined per k-points per pool        
+        ALLOCATE(df1(nbndfs, lower_bnd:upper_bnd, nsiw(itemp), broyden_ndim), STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating df1', 1)
+        ALLOCATE(dv1(nbndfs, lower_bnd:upper_bnd, nsiw(itemp), broyden_ndim), STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating dv1', 1)
+        df1(:, :, :, :) = zero
+        dv1(:, :, :, :) = zero
+        !
+        IF (fbw) THEN
+          !
+          ! get the size of required memory for df2, dv2, df3, dv3
+          imelt = 4 * nbndfs * nks * broyden_ndim * nsiw(itemp)
+          CALL mem_size_eliashberg(2, imelt)
+          !
+          ! RM - df2, dv2, df3, dv3 are defined per k-points per pool
+          ALLOCATE(df2(nbndfs, lower_bnd:upper_bnd, nsiw(itemp), broyden_ndim), STAT = ierr)
+          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating df2', 1)
+          ALLOCATE(dv2(nbndfs, lower_bnd:upper_bnd, nsiw(itemp), broyden_ndim), STAT = ierr)
+          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating dv2', 1)
+          ALLOCATE(df3(nbndfs, lower_bnd:upper_bnd, nsiw(itemp), broyden_ndim), STAT = ierr)
+          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating df3', 1)
+          ALLOCATE(dv3(nbndfs, lower_bnd:upper_bnd, nsiw(itemp), broyden_ndim), STAT = ierr)
+          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating dv3', 1)
+          df2(:, :, :, :) = zero
+          dv2(:, :, :, :) = zero
+          df3(:, :, :, :) = zero
+          dv3(:, :, :, :) = zero
+        ENDIF ! fbw
         !
         iter = 1
         conv = .FALSE.
         DO WHILE (.NOT. conv .AND. iter <= nsiter)
           CALL sum_eliashberg_aniso_iaxis(itemp, iter, conv)
-          IF (mpime == ionode_id) THEN
-            ! SH: performs mixings for the case of fbw runs
-            IF (fbw) THEN
-              DO ik = 1, nkfs
-                DO ibnd = 1, nbndfs
-                  IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
-                    ! SH: mix_wrap is used to allow for linear mixing
-                    CALL mix_wrap(nsiw(itemp), adeltai(:, ibnd, ik), adeltaip(:, ibnd, ik), &
-                                  broyden_beta, iter, broyden_ndim, conv, &
-                                  df1(ibnd, ik, :, :), dv1(ibnd, ik, :, :))
-                    CALL mix_wrap(nsiw(itemp), aznormi(:, ibnd, ik), aznormip(:, ibnd, ik), &
-                                  broyden_beta, iter, broyden_ndim, conv, &
-                                  df2(ibnd, ik, :, :), dv2(ibnd, ik, :, :))
-                    CALL mix_wrap(nsiw(itemp), ashifti(:, ibnd, ik), ashiftip(:, ibnd, ik), &
-                                  broyden_beta, iter, broyden_ndim, conv, &
-                                  df3(ibnd, ik, :, :), dv3(ibnd, ik, :, :))
-                  ENDIF
-                ENDDO
-              ENDDO
-            ELSE ! not fbw
-              DO ik = 1, nkfs
-                DO ibnd = 1, nbndfs
-                  IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
-                    CALL mix_wrap(nsiw(itemp), adeltai(:, ibnd, ik), adeltaip(:, ibnd, ik), &
-                                  broyden_beta, iter, broyden_ndim, conv, &
-                                  df1(ibnd, ik, :, :), dv1(ibnd, ik, :, :))
-                  ENDIF
-                ENDDO
-              ENDDO
-            ENDIF ! fbw
-          ENDIF ! mpime
-          ! SH: bcast of fbw runs' arrays
           IF (fbw) THEN
-            CALL mp_bcast(aznormi,  ionode_id, inter_pool_comm)
-            CALL mp_bcast(aznormip, ionode_id, inter_pool_comm)
-            CALL mp_bcast(ashifti,  ionode_id, inter_pool_comm)
-            CALL mp_bcast(ashiftip, ionode_id, inter_pool_comm)
-            CALL mp_bcast(adeltai,  ionode_id, inter_pool_comm)
-            CALL mp_bcast(adeltaip, ionode_id, inter_pool_comm)
+            DO ik = lower_bnd, upper_bnd
+              DO ibnd = 1, nbndfs
+                IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
+                  CALL mix_wrap(nsiw(itemp), adeltai(:, ibnd, ik), adeltaip(:, ibnd, ik), &
+                                broyden_beta, iter, broyden_ndim, conv, &
+                                df1(ibnd, ik, :, :), dv1(ibnd, ik, :, :))
+                  CALL mix_wrap(nsiw(itemp), aznormi(:, ibnd, ik), aznormip(:, ibnd, ik), &
+                                broyden_beta, iter, broyden_ndim, &
+                                conv, df2(ibnd, ik, :, :), dv2(ibnd, ik, :, :))
+                  CALL mix_wrap(nsiw(itemp), ashifti(:, ibnd, ik), ashiftip(:, ibnd, ik), &
+                                broyden_beta, iter, broyden_ndim, conv, &
+                                df3(ibnd, ik, :, :), dv3(ibnd, ik, :, :))
+                ENDIF
+              ENDDO
+            ENDDO
+            ! Make everything 0 except the range of k-points we are working on
+            aznormip(:, :, 1:lower_bnd - 1) = zero
+            ashiftip(:, :, 1:lower_bnd - 1) = zero
+            adeltaip(:, :, 1:lower_bnd - 1) = zero
+            aznormip(:, :, lower_bnd + nks:nkfs) = zero
+            ashiftip(:, :, lower_bnd + nks:nkfs) = zero
+            adeltaip(:, :, lower_bnd + nks:nkfs) = zero
+            !
+            ! collect contributions from all pools
+            CALL mp_sum(aznormip, inter_pool_comm)
+            CALL mp_sum(ashiftip, inter_pool_comm)
+            CALL mp_sum(adeltaip, inter_pool_comm)
             CALL mp_barrier(inter_pool_comm)
-          ELSE
-            CALL mp_bcast(adeltai,  ionode_id, inter_pool_comm)
-            CALL mp_bcast(adeltaip, ionode_id, inter_pool_comm)
+            !
+          ELSE ! not fbw
+            DO ik = lower_bnd, upper_bnd
+              DO ibnd = 1, nbndfs
+                IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
+                  CALL mix_wrap(nsiw(itemp), adeltai(:, ibnd, ik), adeltaip(:, ibnd, ik), &
+                                broyden_beta, iter, broyden_ndim, conv, &
+                                df1(ibnd, ik, :, :), dv1(ibnd, ik, :, :))
+                ENDIF
+              ENDDO
+            ENDDO
+            ! Make everything 0 except the range of k-points we are working on
+            adeltaip(:, :, 1:lower_bnd - 1) = zero
+            adeltaip(:, :, lower_bnd + nks:nkfs) = zero
+            !
+            ! collect contributions from all pools
+            CALL mp_sum(adeltaip, inter_pool_comm)
             CALL mp_barrier(inter_pool_comm)
-          ENDIF
+          ENDIF ! fbw
           iter = iter + 1
         ENDDO ! iter
         !
-        IF (mpime == ionode_id) THEN
-          IF (fbw) THEN
-            ! SH: deallocating fbw runs' arrays
-            DEALLOCATE(df1, STAT = ierr)
-            IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating df1', 1)
-            DEALLOCATE(dv1, STAT = ierr)
-            IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating dv1', 1)
-            DEALLOCATE(df2, STAT = ierr)
-            IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating df2', 1)
-            DEALLOCATE(dv2, STAT = ierr)
-            IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating dv2', 1)
-            DEALLOCATE(df3, STAT = ierr)
-            IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating df3', 1)
-            DEALLOCATE(dv3, STAT = ierr)
-            IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating dv3', 1)
-          ELSE 
-            DEALLOCATE(df1, STAT = ierr)
-            IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating df1', 1)
-            DEALLOCATE(dv1, STAT = ierr)
-            IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating dv1', 1)
-          ENDIF
-        ENDIF
+        DEALLOCATE(df1, STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating df1', 1)
+        DEALLOCATE(dv1, STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating dv1', 1)
         !
+        ! remove memory allocated for df1, dv1
+        imelt = 2 * nbndfs * nks * broyden_ndim * nsiw(itemp)
+        CALL mem_size_eliashberg(2, -imelt)
+        !
+        IF (fbw) THEN
+          DEALLOCATE(df2, STAT = ierr)
+          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating df2', 1)
+          DEALLOCATE(dv2, STAT = ierr)
+          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating dv2', 1)
+          DEALLOCATE(df3, STAT = ierr)
+          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating df3', 1)
+          DEALLOCATE(dv3, STAT = ierr)
+          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating dv3', 1)
+          !
+          ! remove memory allocated for df2, dv2, df3, dv3
+          imelt = 4 * nbndfs * nks * broyden_ndim * nsiw(itemp)
+          CALL mem_size_eliashberg(2, -imelt)
+        ENDIF ! fbw
+        !        
         IF (conv) THEN
-          IF (iverbosity == 2) THEN
-            IF (mpime == ionode_id) THEN
-              CALL free_energy(itemp)
-            ENDIF
-            CALL mp_barrier(inter_pool_comm)
+          CALL deallocate_aniso_iaxis(1)
+          !
+          ! remove memory allocated for deltai, znormi, adeltaip
+          imelt = (2 + nbndfs * nkfs) * nsiw(itemp)
+          CALL mem_size_eliashberg(2, -imelt)
+          !
+          IF (fbw) THEN
+            ! remove memory allocated for shifti, aznormip, ashiftip
+            imelt = (1 + 2 * nbndfs * nkfs) * nsiw(itemp)
+            CALL mem_size_eliashberg(2, -imelt)
           ENDIF
+          !
+          CALL eliashberg_write_iaxis(itemp)
+          !
           CALL stop_clock('iaxis_imag')
           CALL print_clock('iaxis_imag')
-          WRITE(stdout,'(a)') ' '
+          WRITE(stdout, '(a)') ' '
         ELSEIF (.NOT. conv .AND. (iter - 1) == nsiter) THEN
-          CALL deallocate_aniso_iaxis()
+          CALL deallocate_aniso_iaxis(3)
           CALL deallocate_aniso()
           CALL stop_clock('iaxis_imag')
           CALL print_clock('iaxis_imag')
-          WRITE(stdout,'(a)') ' '
+          WRITE(stdout, '(a)') ' '
           RETURN
         ENDIF
       ELSEIF (limag .AND. imag_read .AND. itemp == 1) THEN
@@ -230,145 +260,163 @@
         IF (mod(N, 2) /= 0 ) N = N + 1
         CALL pade_cont_aniso(itemp, N)
         !
-        IF (mpime == ionode_id) THEN
-          CALL dos_quasiparticle(itemp)
-        ENDIF
-        CALL mp_barrier(inter_pool_comm)
+        cname = 'pade'
+        CALL eliashberg_write_raxis(itemp, cname)
+        !
+        CALL dos_quasiparticle(itemp)
+        !
         CALL stop_clock('raxis_pade')
         CALL print_clock('raxis_pade')
         WRITE(stdout, '(a)') ' '
       ENDIF ! lpade
       !
-      IF (lacon) THEN
+      ! HP: lacon is not implemented for fbw runs
+      IF (.NOT. fbw .AND. lacon) THEN
         CALL prtheader_supercond(itemp, 3)
         CALL start_clock('raxis_acon')
         !
         iter = 1
         conv = .FALSE.
-        IF (mpime == ionode_id) THEN
-          ALLOCATE(rdeltain(nsw), STAT = ierr)
-          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating rdeltain', 1)
-          ALLOCATE(cdeltain(nsw), STAT = ierr)
-          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating cdeltain', 1)
-          ALLOCATE(rdeltaout(nsw), STAT = ierr)
-          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating rdeltaout', 1)
-          ALLOCATE(cdeltaout(nsw), STAT = ierr)
-          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating cdeltaout', 1)
-          ALLOCATE(df1(nbndfs, nkfs, nsw, broyden_ndim), STAT = ierr)
-          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating df1', 1)
-          ALLOCATE(dv1(nbndfs, nkfs, nsw, broyden_ndim), STAT = ierr)
-          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating dv1', 1)
-          ALLOCATE(df2(nbndfs, nkfs, nsw, broyden_ndim), STAT = ierr)
-          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating df2', 1)
-          ALLOCATE(dv2(nbndfs, nkfs, nsw, broyden_ndim), STAT = ierr)
-          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating dv2', 1)
-          rdeltain(:)  = zero
-          cdeltain(:)  = zero
-          rdeltaout(:) = zero
-          cdeltaout(:) = zero
-          df1(:, :, :, :) = zero
-          dv1(:, :, :, :) = zero
-          df2(:, :, :, :) = zero
-          dv2(:, :, :, :) = zero
-        ENDIF
+        !
+        ! get the size of required memory for rdeltain, cdeltain, cdeltaout, rdeltaout, 
+        ! df1, dv1, df2, dv2
+        imelt = 4 * (1 + nbndfs * nks * broyden_ndim) * nsw
+        CALL mem_size_eliashberg(2, imelt)
+        !        
+        ALLOCATE(rdeltain(nsw), STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating rdeltain', 1)
+        ALLOCATE(cdeltain(nsw), STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating cdeltain', 1)
+        ALLOCATE(rdeltaout(nsw), STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating rdeltaout', 1)
+        ALLOCATE(cdeltaout(nsw), STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating cdeltaout', 1)
+        ! RM - df1, dv1, df2, dv2 are defined per k-points per pool
+        ALLOCATE(df1(nbndfs, lower_bnd:upper_bnd, nsw, broyden_ndim), STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating df1', 1)
+        ALLOCATE(dv1(nbndfs, lower_bnd:upper_bnd, nsw, broyden_ndim), STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating dv1', 1)
+        ALLOCATE(df2(nbndfs, lower_bnd:upper_bnd, nsw, broyden_ndim), STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating df2', 1)
+        ALLOCATE(dv2(nbndfs, lower_bnd:upper_bnd, nsw, broyden_ndim), STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error allocating dv2', 1)
+        rdeltain(:)  = zero
+        cdeltain(:)  = zero
+        rdeltaout(:) = zero
+        cdeltaout(:) = zero
+        df1(:, :, :, :) = zero
+        dv1(:, :, :, :) = zero
+        df2(:, :, :, :) = zero
+        dv2(:, :, :, :) = zero
         !
         DO WHILE (.NOT. conv .AND. iter <= nsiter)
           CALL analytic_cont_aniso(itemp, iter, conv)
-          IF (mpime == ionode_id) THEN
-            DO ik = 1, nkfs
-              DO ibnd = 1, nbndfs
-                IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
-                  rdeltain(:)  = REAL(adeltap(:, ibnd, ik))
-                  cdeltain(:)  = AIMAG(adeltap(:, ibnd, ik))
-                  rdeltaout(:) = REAL(adelta(:, ibnd, ik))
-                  cdeltaout(:) = AIMAG(adelta(:, ibnd, ik))
-                  ! SH: mix_wrap is used to allow for linear mixing
-                  CALL mix_wrap(nsw, rdeltaout, rdeltain, broyden_beta, iter, broyden_ndim, &
-                                   conv, df1(ibnd, ik, :, :), dv1(ibnd, ik, :, :))
-                  CALL mix_wrap(nsw, cdeltaout, cdeltain, broyden_beta, iter, broyden_ndim, &
-                                   conv, df2(ibnd, ik, :, :), dv2(ibnd, ik, :, :))
-                  adeltap(:, ibnd, ik) = rdeltain(:) + ci * cdeltain(:)
-                ENDIF
-              ENDDO
+          DO ik = lower_bnd, upper_bnd
+            DO ibnd = 1, nbndfs
+              IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
+                rdeltain(:)  = REAL(adeltap(:, ibnd, ik))
+                cdeltain(:)  = AIMAG(adeltap(:, ibnd, ik))
+                rdeltaout(:) = REAL(adelta(:, ibnd, ik))
+                cdeltaout(:) = AIMAG(adelta(:, ibnd, ik))
+                CALL mix_wrap(nsw, rdeltaout, rdeltain, broyden_beta, iter, broyden_ndim, &
+                              conv, df1(ibnd, ik, :, :), dv1(ibnd, ik, :, :))
+                CALL mix_wrap(nsw, cdeltaout, cdeltain, broyden_beta, iter, broyden_ndim, &
+                              conv, df2(ibnd, ik, :, :), dv2(ibnd, ik, :, :))
+                adeltap(:, ibnd, ik) = rdeltain(:) + ci * cdeltain(:)
+              ENDIF
             ENDDO
-          ENDIF
-          CALL mp_bcast(adelta,  ionode_id, inter_pool_comm)
-          CALL mp_bcast(adeltap, ionode_id, inter_pool_comm)
+          ENDDO
+          ! Make everything 0 except the range of k-points we are working on
+          adeltap(:, :, 1:lower_bnd - 1) = czero
+          adeltap(:, :, lower_bnd + nks:nkfs) = czero
+          !
+          ! collect contributions from all pools          
+          CALL mp_sum(adeltap, inter_pool_comm)
           CALL mp_barrier(inter_pool_comm)
           iter = iter + 1
         ENDDO ! iter
         !
-        IF (mpime == ionode_id) THEN
-          DEALLOCATE(rdeltain, STAT = ierr)
-          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating rdeltain', 1)
-          DEALLOCATE(cdeltain, STAT = ierr)
-          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating cdeltain', 1)
-          DEALLOCATE(rdeltaout, STAT = ierr)
-          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating rdeltaout', 1)
-          DEALLOCATE(cdeltaout, STAT = ierr)
-          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating cdeltaout', 1)
-          DEALLOCATE(df1, STAT = ierr)
-          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating df1', 1)
-          DEALLOCATE(dv1, STAT = ierr)
-          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating dv1', 1)
-          DEALLOCATE(df2, STAT = ierr)
-          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating df2', 1)
-          DEALLOCATE(dv2, STAT = ierr)
-          IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating dv2', 1)
-        ENDIF
+        DEALLOCATE(rdeltain, STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating rdeltain', 1)
+        DEALLOCATE(cdeltain, STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating cdeltain', 1)
+        DEALLOCATE(rdeltaout, STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating rdeltaout', 1)
+        DEALLOCATE(cdeltaout, STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating cdeltaout', 1)
+        DEALLOCATE(df1, STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating df1', 1)
+        DEALLOCATE(dv1, STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating dv1', 1)
+        DEALLOCATE(df2, STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating df2', 1)
+        DEALLOCATE(dv2, STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_aniso_iaxis', 'Error deallocating dv2', 1)
         !
+        ! remove memory allocated for rdeltain, cdeltain, cdeltaout, rdeltaout, df1, dv1, df2, dv2
+        imelt = 4 * (1 + nbndfs * nks * broyden_ndim) * nsw
+        CALL mem_size_eliashberg(2, -imelt)
+        !  
         IF (conv) THEN
-          IF (mpime == ionode_id) THEN
-            CALL dos_quasiparticle(itemp)
-          ENDIF
-          CALL mp_barrier(inter_pool_comm)
+          CALL deallocate_aniso_iaxis(2)
+          !
+          ! remove memory allocated for wsi, wsn, adeltai, aznormi
+          imelt = (2 + 2 * nbndfs * nks) * nsiw(itemp)
+          CALL mem_size_eliashberg(2, -imelt)
+          !                
+          CALL deallocate_aniso_raxis(1)
+          !
+          ! remove memory allocated for adeltap, aznormp
+          imelt = 2 * nbndfs * nkfs * nsw
+          CALL mem_size_eliashberg(2, -imelt)
+          !
+          cname = 'acon'
+          CALL eliashberg_write_raxis(itemp, cname) 
+          !
+          CALL dos_quasiparticle(itemp) ! - change to work on pool
+          !
           CALL stop_clock('raxis_acon')
           CALL print_clock('raxis_acon')
           WRITE(stdout, '(a)') ' '
         ELSEIF (.NOT. conv .AND. (iter - 1) == nsiter) THEN
-          CALL deallocate_aniso_iaxis()
-          CALL deallocate_aniso_raxis()
+          CALL deallocate_aniso_iaxis(2)      
+          CALL deallocate_aniso_raxis(3)
           CALL deallocate_aniso()
           CALL stop_clock('raxis_acon')
           CALL print_clock('raxis_acon')
           WRITE(stdout, '(a)') ' '
           RETURN
         ENDIF
-        !
       ENDIF ! lacon
       !
-      CALL deallocate_aniso_iaxis()
-      !
-      IF (fbw) THEN
-        ! SH: adjustment to the amount of allocated memory - following list plus shifti, ashifti
-        imelt = (5 + 4 * nbndfs * nkfs) * nsiw(itemp)
-      ELSE
-        ! remove memory allocated for wsi, wsn, deltai, znormi, adeltai, aznormi, naznormi
-        imelt = (4 + 3 * nbndfs * nkfs) * nsiw(itemp)
+      IF (.NOT. lacon) THEN 
+        CALL deallocate_aniso_iaxis(2)
+        !
+        IF (fbw) THEN
+          ! remove memory allocated for wsi, wsn, adeltai, aznormi, ashifti
+          imelt = (2 + 3 * nbndfs * nks) * nsiw(itemp)
+        ELSE
+          ! remove memory allocated for wsi, adeltai, aznormi
+          imelt = (1 + 2 * nbndfs * nks) * nsiw(itemp)
+        ENDIF
+        CALL mem_size_eliashberg(2, -imelt)
       ENDIF
-      CALL mem_size_eliashberg(2, -imelt)
       !
       tcpu = get_clock('aniso_iaxis')
       WRITE(stdout, '(5x, a, i3, a, f18.2, a)') 'itemp = ', itemp, '   total cpu time :', tcpu, ' secs'
       WRITE(stdout, '(a)') ' '
       !
-      IF (lpade .OR. lacon) CALL deallocate_aniso_raxis()
-      !
-      IF (lpade) THEN
+      IF (lpade .OR. lacon) THEN
+        CALL deallocate_aniso_raxis(2)
         IF (fbw) THEN
-          ! SH: adjustment to the amount of allocated memory - following list, plus shift, ashift
-          imelt = nsw + 2 * (3 + 3 * nbndfs * nkfs) * nsw
+          ! remove memory allocated for ws, delta, znorm, shift, adelta, aznorm, ashift
+          imelt = nsw + 2 * (3 + 3 * nbndfs * nks) * nsw
         ELSE
           ! remove memory allocated for ws, delta, znorm, adelta, aznorm
-          imelt = nsw + 2 * (2 + 2 * nbndfs * nkfs) * nsw
+          imelt = nsw + 2 * (2 + 2 * nbndfs * nks) * nsw
         ENDIF
         CALL mem_size_eliashberg(2, -imelt)
-      ELSEIF (lacon) THEN
-        ! remove memory allocated for ws, delta, adelta, adeltap, znorm, aznorm, aznormp
-        imelt = nsw + 2 * (2 + 4 * nbndfs * nkfs) * nsw
-        CALL mem_size_eliashberg(2, -imelt)
       ENDIF
-      !
     ENDDO ! itemp
     !
     CALL deallocate_aniso()
@@ -392,19 +440,17 @@
     !!
     USE kinds,             ONLY : DP
     USE elph2,             ONLY : wqf, gtemp
-    USE epwcom,            ONLY : nsiter, nstemp, muc, conv_thr_iaxis, fsthick, fbw, muchem, imag_read 
-    USE eliashbergcom,     ONLY : nsiw, gap0, gap, agap, wsi, akeri, limag_fly, &
-                                  deltai, znormi, adeltai, adeltaip, & 
-                                  aznormi, naznormi, wsphmax, nkfs, nbndfs, dosef, ef0, & 
-                                  ixkqf, ixqfs, nqfs, wkfs, w0g, ekfs, wsn, &
-                                  aznormip, ashifti, ashiftip, muintr, shifti
-    USE constants_epw,     ONLY : zero, one
+    USE epwcom,            ONLY : nsiter, nstemp, muc, conv_thr_iaxis, fsthick, fbw, muchem, imag_read
+    USE eliashbergcom,     ONLY : ixkqf, ixqfs, nqfs, wkfs, w0g, ekfs, nkfs, nbndfs, dosef, ef0, &
+                                  nsiw, wsn, wsi, wsphmax, gap0, agap, akeri, limag_fly, &
+                                  deltai, znormi, shifti, adeltai, adeltaip, aznormi, aznormip, &
+                                  naznormi, ashifti, ashiftip, muintr
+    USE constants_epw,     ONLY : kelvin2eV, zero, one
     USE constants,         ONLY : pi
     USE io_global,         ONLY : stdout, ionode_id
     USE mp_global,         ONLY : inter_pool_comm
     USE mp_world,          ONLY : mpime
     USE mp,                ONLY : mp_bcast, mp_barrier, mp_sum
-    USE io_eliashberg,     ONLY : eliashberg_write_iaxis
     USE division,          ONLY : fkbounds
     USE low_lvl,           ONLY : mem_size_eliashberg, memlt_eliashberg
     !
@@ -428,6 +474,8 @@
     !! Index of iq on full q-mesh
     INTEGER :: lower_bnd, upper_bnd
     !! Lower/upper bound index after k paral
+    INTEGER :: nks
+    !! Number of k points per pool
     INTEGER :: ibnd
     !! Counter on bands at k
     INTEGER :: jbnd
@@ -447,52 +495,35 @@
     !! kernelp = lambdam + lambdap
     REAL(KIND = DP) :: absdelta, reldelta, errdelta
     !! Errors in supercond. gap
-    REAL(KIND = DP) :: esqrt
-    !! Temporary variable
     REAL(KIND = DP) :: weight
     !! Factor in supercond. equations
+    REAL(KIND = DP) :: esqrt, zesqrt, desqrt, sesqrt
+    !! Temporary variables
     REAL(KIND = DP), SAVE :: nelbnd, nstate
     !! mu_inter parameters
-    REAL(KIND = DP), EXTERNAL :: wgauss
-    !! for Fermi-Dirac distribution
-    REAL(KIND = DP), ALLOCATABLE :: zesqrt(:, :, :), desqrt(:, :, :), sesqrt(:, :, :)
-    !! Temporary variables
+    REAL(KIND = DP) :: inv_dos
+    !! Invese dos inv_dos = 1/dosef. Defined for efficiency reason
+    REAL(KIND = DP) :: omega
+    !! sqrt{w^2+\delta^2}
+    REAL(KIND = DP) :: dFE
+    !! free energy difference between supercond and normal states
+    REAL(KIND = DP), ALLOCATABLE, SAVE :: inv_wsi(:)
+    !! Invese imaginary freq. inv_wsi = 1/wsi. Defined for efficiency reason
     REAL(KIND = DP), ALLOCATABLE, SAVE :: deltaold(:)
     !! supercond. gap from previous iteration
     !
-    IF (fbw) THEN
-      ! allocate/initiate the remaining fbw-specific variables
-      ALLOCATE(zesqrt(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
-      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating zesqrt', 1)
-      ALLOCATE(desqrt(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
-      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating desqrt', 1)
-      ALLOCATE(sesqrt(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
-      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating sesqrt', 1)
-      zesqrt(:, :, :) = zero
-      desqrt(:, :, :) = zero
-      sesqrt(:, :, :) = zero
-    ELSE
-      ALLOCATE(zesqrt(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
-      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating zesqrt', 1)
-      ALLOCATE(desqrt(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
-      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating desqrt', 1)
-      zesqrt(:, :, :) = zero
-      desqrt(:, :, :) = zero
-    ENDIF
+    inv_dos = one / dosef
+    !
+    CALL fkbounds(nkfs, lower_bnd, upper_bnd)
+    !
+    nks = upper_bnd - lower_bnd + 1
     !
     IF (iter == 1) THEN
-      !
-      IF (itemp == 1) THEN
-        ! get the size of required memory for gap, agap
-        imelt = (1 + nbndfs * nkfs) * nstemp
-        CALL mem_size_eliashberg(2, imelt)
-      ENDIF
-      !
-      IF (fbw .AND. (itemp == 1 .OR. (itemp == 2 .AND. imag_read))) THEN
+      IF (itemp == 1 .OR. (itemp == 2 .AND. imag_read)) THEN
         ! SH: calculate the input parameters for mu_inter
         nelbnd = zero
         nstate = zero
-        DO ik = 1, nkfs
+        DO ik = lower_bnd, upper_bnd
           DO ibnd = 1, nbndfs
             IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
               ! HP: The initial guess is based on the FD dist. at 0 K.
@@ -501,83 +532,68 @@
             ENDIF
           ENDDO
         ENDDO
+        CALL mp_sum(nstate, inter_pool_comm)
+        CALL mp_sum(nelbnd, inter_pool_comm)
+        CALL mp_barrier(inter_pool_comm)
+        !    
         nelbnd = nelbnd / nstate
-        WRITE(stdout, '(5x,a,2f15.8)') &
-          'Avg. tot. electron per band and Nr. of states (Fermi window weighted) = ', nelbnd, nstate 
+        WRITE(stdout, '(5x, a, f15.6)') 'Average nr. of electron per band = ', nelbnd
+        WRITE(stdout, '(5x, a, f15.8)') 'Nr. of states (Fermi window weighted) = ', nstate
+        !
       ENDIF
       !
+      ! RM - adeltai, aznormi, naznormi, are defined per k-points per pool
+      !
+      ! get the size of required memory for inv_wsi, deltaold, deltai, znormi, 
+      ! adeltai, adeltaip, aznormi, naznormi
+      imelt = (4 + 3 * nbndfs * nks + nbndfs * nkfs) * nsiw(itemp)
+      CALL mem_size_eliashberg(2, imelt)
+      !
+      ALLOCATE(inv_wsi(nsiw(itemp)), STAT = ierr)
+      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating inv_wsi', 1)
+      !      
+      ALLOCATE(deltai(nsiw(itemp)), STAT = ierr)
+      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating deltai', 1)
+      ALLOCATE(znormi(nsiw(itemp)), STAT = ierr)
+      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating znormi', 1)
+      !
+      ALLOCATE(adeltai(nsiw(itemp), nbndfs, lower_bnd:upper_bnd), STAT = ierr)
+      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating adeltai', 1)
+      ALLOCATE(aznormi(nsiw(itemp), nbndfs, lower_bnd:upper_bnd), STAT = ierr)
+      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating aznormi', 1)
+      ALLOCATE(naznormi(nsiw(itemp), nbndfs, lower_bnd:upper_bnd), STAT = ierr)
+      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating naznormi', 1)
+      !
+      ALLOCATE(adeltaip(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
+      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating adeltaip', 1)
+      !
+      adeltaip(:, :, :) = zero
       IF (fbw) THEN
-        ! get the size of required memory for
-        ! zesqrt, desqrt, deltai, znormi, adeltai, adeltaip, aznormi, naznormi, deltaold
-        ! SH: plus: sesqrt, aznormip, ashifti, ashiftip, shifti
-        imelt = (4 + 10 * nbndfs * nkfs) * nsiw(itemp)
+        ! get the size of required memory for shifti, aznormip, ashifti, ashiftip
+        imelt = (1 + 1 * nbndfs * nks + 2 * nbndfs * nkfs) * nsiw(itemp)
         CALL mem_size_eliashberg(2, imelt)
-        !
-        ALLOCATE(gap(nstemp), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating gap', 1)
-        ALLOCATE(agap(nbndfs, nkfs, nstemp), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating agap', 1)
-        ALLOCATE(deltai(nsiw(itemp)), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating deltai', 1)
-        ALLOCATE(znormi(nsiw(itemp)), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating znormi', 1)
-        !
-        ALLOCATE(adeltai(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating adeltai', 1)
-        ALLOCATE(adeltaip(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating adeltaip', 1)
-        ALLOCATE(aznormi(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating aznormi', 1)
-        ALLOCATE(naznormi(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating naznormi', 1)
         !
         ! SH: to allocate and initiate the fbw run variables
-        ALLOCATE(aznormip(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating aznormip', 1)
-        ALLOCATE(ashifti(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating ashifti', 1)
-        ALLOCATE(ashiftip(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating ashiftip', 1)
         ALLOCATE(shifti(nsiw(itemp)), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating shifti', 1)
+        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis_fbw', 'Error allocating shifti', 1)
+        ALLOCATE(ashifti(nsiw(itemp), nbndfs, lower_bnd:upper_bnd), STAT = ierr)
+        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis_fbw', 'Error allocating ashifti', 1)
+        ALLOCATE(aznormip(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
+        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis_fbw', 'Error allocating aznormip', 1)
+        ALLOCATE(ashiftip(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
+        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis_fbw', 'Error allocating ashiftip', 1)
         !
-        adeltaip(:, :, :) = zero
-        aznormip(:, :, :) = 1.d0
+        aznormip(:, :, :) = one
         ashiftip(:, :, :) = zero
-        agap(:, :, itemp) = zero
-        gap(itemp)        = zero
-        !
-        ! SH: set the initial value of superconducting chemical potential;
-        !       will be used only for the fbw calculations!
-        muintr = ef0
-      ELSE
-        ! get the size of required memory for
-        ! zesqrt, desqrt, deltai, znormi, adeltai, adeltaip, aznormi, naznormi, deltaold
-        imelt = (3 + 6 * nbndfs * nkfs) * nsiw(itemp)
-        CALL mem_size_eliashberg(2, imelt)
-        !
-        ALLOCATE(gap(nstemp), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating gap', 1)
-        ALLOCATE(agap(nbndfs, nkfs, nstemp), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating agap', 1)
-        ALLOCATE(deltai(nsiw(itemp)), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating deltai', 1)
-        ALLOCATE(znormi(nsiw(itemp)), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating znormi', 1)
-        !
-        ALLOCATE(adeltai(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating adeltai', 1)
-        ALLOCATE(adeltaip(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating adeltaip', 1)
-        ALLOCATE(aznormi(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating aznormi', 1)
-        ALLOCATE(naznormi(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
-        IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating naznormi', 1)
-        !
-        adeltaip(:, :, :) = zero
-        agap(:, :, itemp) = zero
-        gap(itemp)        = zero
-      ENDIF
+      ENDIF ! fbw
+      !
+      ! SH: set the initial value of superconducting chemical potential;
+      !     will be used only for the fbw calculations!
+      muintr = ef0
+      !
+      DO iw = 1, nsiw(itemp) 
+        inv_wsi(iw) = one / wsi(iw)
+      ENDDO  
       !
       DO ik = 1, nkfs
         DO ibnd = 1, nbndfs
@@ -600,20 +616,13 @@
     !
     ! SH: for the case of fbw runs
     IF (fbw) THEN
-      !
       ! SH: update the chemical potential from the inital guess
-      IF (muchem ) CALL mu_inter_aniso(itemp, muintr, nelbnd, nstate)
+      IF (muchem) CALL mu_inter_aniso(itemp, muintr, nelbnd, nstate)
       !
       naznormi(:, :, :) = zero
       adeltai(:, :, :)  = zero
       aznormi(:, :, :)  = zero
       ashifti(:, :, :)  = zero
-      deltai(:) = zero
-      znormi(:) = zero
-      shifti(:) = zero
-      !
-      CALL fkbounds(nkfs, lower_bnd, upper_bnd)
-      !
       DO ik = lower_bnd, upper_bnd
         DO ibnd = 1, nbndfs
           IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
@@ -623,22 +632,15 @@
               DO jbnd = 1, nbndfs
                 IF (ABS(ekfs(jbnd, ixkqf(ik, iq0)) - ef0) < fsthick) THEN
                   !! this is for FBW case
-                  weight = wqf(iq) / dosef
-                  DO iw = 1, nsiw(itemp) ! loop over omega
-                    DO iwp = 1, nsiw(itemp) ! loop over omega_prime
-                      !
-                      ! this step is performed at each iter step only for iw=1
-                      IF (iw == 1) THEN
-                        esqrt = 1.d0 / ((wsi(iwp) * aznormip(iwp, jbnd, ixkqf(ik, iq0)))**2.d0 &
+                  weight = wqf(iq) * inv_dos
+                  DO iwp = 1, nsiw(itemp) ! loop over omega_prime
+                    esqrt = weight / ((wsi(iwp) * aznormip(iwp, jbnd, ixkqf(ik, iq0)))**2.d0 &
                               + (ekfs(jbnd, ixkqf(ik, iq0)) - muintr + ashiftip(iwp, jbnd, ixkqf(ik, iq0)))**2.d0 &
                               + (adeltaip(iwp, jbnd, ixkqf(ik, iq0)) * aznormip(iwp, jbnd, ixkqf(ik, iq0)))**2.d0)
-                        zesqrt(iwp, jbnd, ixkqf(ik, iq0)) = esqrt &
-                              * wsi(iwp) * aznormip(iwp, jbnd, ixkqf(ik, iq0))
-                        desqrt(iwp, jbnd, ixkqf(ik, iq0)) = esqrt &
-                              * adeltaip(iwp, jbnd, ixkqf(ik, iq0)) * aznormip(iwp, jbnd, ixkqf(ik, iq0))
-                        sesqrt(iwp, jbnd, ixkqf(ik, iq0)) = esqrt &
-                              * (ekfs(jbnd, ixkqf(ik, iq0)) - muintr + ashiftip(iwp, jbnd, ixkqf(ik, iq0)))
-                      ENDIF
+                    zesqrt = esqrt * wsi(iwp) * aznormip(iwp, jbnd, ixkqf(ik, iq0))
+                    desqrt = esqrt * adeltaip(iwp, jbnd, ixkqf(ik, iq0)) * aznormip(iwp, jbnd, ixkqf(ik, iq0))
+                    sesqrt = esqrt * (ekfs(jbnd, ixkqf(ik, iq0)) - muintr + ashiftip(iwp, jbnd, ixkqf(ik, iq0)))
+                    DO iw = 1, nsiw(itemp) ! loop over omega
                       IF (limag_fly) THEN
                         CALL lambdar_aniso_ver1(ik, iq, ibnd, jbnd, wsi(iw) - wsi(iwp), lambdam)
                         CALL lambdar_aniso_ver1(ik, iq, ibnd, jbnd, wsi(iw) + wsi(iwp), lambdap)
@@ -655,42 +657,49 @@
                       ! Eqs.(15-17) in Margine and Giustino, PRB 87, 024505 (2013)
                       ! using kernelm and kernelp the sum over |wp| < wscut
                       ! is rewritten as a sum over iwp = 1, nsiw(itemp)
-                      aznormi(iw, ibnd, ik) = aznormi(iw, ibnd, ik) + weight * zesqrt(iwp, jbnd, ixkqf(ik, iq0)) &
-                                            * kernelm
-                      adeltai(iw, ibnd, ik) = adeltai(iw, ibnd, ik) + weight * desqrt(iwp, jbnd, ixkqf(ik, iq0)) &
-                                            * (kernelp - 2.d0 * muc)
-                      ashifti(iw, ibnd, ik) = ashifti(iw, ibnd, ik) + weight * sesqrt(iwp, jbnd, ixkqf(ik, iq0)) &
-                                            * kernelp
-                    ENDDO ! iwp
-                  ENDDO ! iw
+                      aznormi(iw, ibnd, ik) = aznormi(iw, ibnd, ik) + zesqrt * kernelm
+                      adeltai(iw, ibnd, ik) = adeltai(iw, ibnd, ik) + desqrt * (kernelp - 2.d0 * muc)
+                      ashifti(iw, ibnd, ik) = ashifti(iw, ibnd, ik) + sesqrt * kernelp
+                    ENDDO ! iw
+                  ENDDO ! iwp
                 ENDIF
               ENDDO ! jbnd
             ENDDO ! iq
           ENDIF
         ENDDO ! ibnd
       ENDDO ! ik
-      DEALLOCATE(zesqrt, STAT = ierr)
-      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error deallocating zesqrt', 1)
-      DEALLOCATE(desqrt, STAT = ierr)
-      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error deallocating desqrt', 1)
-      DEALLOCATE(sesqrt, STAT = ierr)
-      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error deallocating sesqrt', 1)
-      ! collect contributions from all pools
-      CALL mp_sum(naznormi, inter_pool_comm)
-      CALL mp_sum(aznormi,  inter_pool_comm)
-      CALL mp_sum(adeltai,  inter_pool_comm)
-      CALL mp_sum(ashifti,  inter_pool_comm)
-      CALL mp_barrier(inter_pool_comm)
-    ELSE ! not fbw 
       !
+      deltai(:) = zero
+      znormi(:) = zero
+      shifti(:) = zero
+      DO iw = 1, nsiw(itemp) ! loop over omega
+        DO ik = lower_bnd, upper_bnd
+          DO ibnd = 1, nbndfs
+            IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
+              weight     = 0.5d0 * wkfs(ik) * w0g(ibnd, ik) * inv_dos
+              znormi(iw) = znormi(iw) + weight * aznormi(iw, ibnd, ik)
+              deltai(iw) = deltai(iw) + weight * adeltai(iw, ibnd, ik)
+              shifti(iw) = shifti(iw) + weight * ashifti(iw, ibnd, ik)
+              naznormi(iw, ibnd, ik) = 1.d0 + gtemp(itemp) * naznormi(iw, ibnd, ik) * inv_wsi(iw)
+              ! Eqs.(21)-(22) in Margine and Giustino, PRB 87, 024505 (2013)
+              aznormi(iw, ibnd, ik) = 1.d0 + gtemp(itemp) * aznormi(iw, ibnd, ik) * inv_wsi(iw)
+              adeltai(iw, ibnd, ik) = gtemp(itemp) * adeltai(iw, ibnd, ik) / aznormi(iw, ibnd, ik)
+              ashifti(iw, ibnd, ik) = - gtemp(itemp) * ashifti(iw, ibnd, ik)
+            ENDIF
+          ENDDO ! ibnd
+        ENDDO ! ik
+      ENDDO ! iw    
+      !
+      ! collect contributions from all pools
+      CALL mp_sum(deltai,   inter_pool_comm)
+      CALL mp_sum(znormi,   inter_pool_comm)
+      CALL mp_sum(shifti,   inter_pool_comm)
+      CALL mp_barrier(inter_pool_comm)
+      !
+    ELSE ! not fbw
       naznormi(:, :, :) = zero
       adeltai(:, :, :)  = zero
       aznormi(:, :, :)  = zero
-      deltai(:) = zero
-      znormi(:) = zero
-      !
-      CALL fkbounds(nkfs, lower_bnd, upper_bnd)
-      !
       DO ik = lower_bnd, upper_bnd
         DO ibnd = 1, nbndfs
           IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
@@ -699,16 +708,13 @@
               iq0 = ixqfs(ik, iq)
               DO jbnd = 1, nbndfs
                 IF (ABS(ekfs(jbnd, ixkqf(ik, iq0)) - ef0) < fsthick) THEN
-                  weight = wqf(iq) * w0g(jbnd, ixkqf(ik, iq0)) / dosef
-                  DO iw = 1, nsiw(itemp) ! loop over omega
-                    DO iwp = 1, nsiw(itemp) ! loop over omega_prime
-                      !
-                      ! this step is performed at each iter step only for iw=1
-                      IF (iw == 1) THEN
-                        esqrt = 1.d0 / DSQRT(wsi(iwp)**2.d0 + adeltaip(iwp, jbnd, ixkqf(ik, iq0))**2.d0)
-                        zesqrt(iwp, jbnd, ixkqf(ik, iq0)) = esqrt * wsi(iwp)
-                        desqrt(iwp, jbnd, ixkqf(ik, iq0)) = esqrt * adeltaip(iwp, jbnd, ixkqf(ik, iq0))
-                      ENDIF
+                  weight = wqf(iq) * w0g(jbnd, ixkqf(ik, iq0)) * inv_dos
+                  DO iwp = 1, nsiw(itemp) ! loop over omega_prime
+                    esqrt  = weight / DSQRT(wsi(iwp)**2.d0 + adeltaip(iwp, jbnd, ixkqf(ik, iq0))**2.d0)
+                    zesqrt = esqrt * wsi(iwp)
+                    desqrt = esqrt * adeltaip(iwp, jbnd, ixkqf(ik, iq0))
+                    !
+                    DO iw = 1, nsiw(itemp) ! loop over omega
                       IF (limag_fly) THEN
                         CALL lambdar_aniso_ver1(ik, iq, ibnd, jbnd, wsi(iw) - wsi(iwp), lambdam)
                         CALL lambdar_aniso_ver1(ik, iq, ibnd, jbnd, wsi(iw) + wsi(iwp), lambdap)
@@ -725,12 +731,10 @@
                       ! Eqs.(21)-(22) in Margine and Giustino, PRB 87, 024505 (2013)
                       ! using kernelm and kernelp the sum over |wp| < wscut in Eqs. (21)-(22)
                       ! is rewritten as a sum over iwp = 1, nsiw(itemp)
-                      aznormi(iw, ibnd, ik) = aznormi(iw, ibnd, ik) + weight * zesqrt(iwp, jbnd, ixkqf(ik, iq0)) &
-                                            * kernelm
-                      adeltai(iw, ibnd, ik) = adeltai(iw, ibnd, ik) + weight * desqrt(iwp, jbnd, ixkqf(ik, iq0)) &
-                                            * (kernelp - 2.d0 * muc)
-                    ENDDO ! iwp
-                  ENDDO ! iw
+                      aznormi(iw, ibnd, ik) = aznormi(iw, ibnd, ik) + zesqrt * kernelm
+                      adeltai(iw, ibnd, ik) = adeltai(iw, ibnd, ik) + desqrt * (kernelp - 2.d0 * muc)
+                    ENDDO ! iw
+                  ENDDO ! iwp
                 ENDIF
               ENDDO ! jbnd
             ENDDO ! iq
@@ -738,17 +742,28 @@
         ENDDO ! ibnd
       ENDDO ! ik
       !
-      DEALLOCATE(zesqrt, STAT = ierr)
-      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error deallocating zesqrt', 1)
-      DEALLOCATE(desqrt, STAT = ierr)
-      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error deallocating desqrt', 1)
+      deltai(:) = zero
+      znormi(:) = zero
+      DO iw = 1, nsiw(itemp) ! loop over omega
+        DO ik = lower_bnd, upper_bnd
+          DO ibnd = 1, nbndfs
+            IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
+              weight     = 0.5d0 * wkfs(ik) * w0g(ibnd, ik) * inv_dos
+              znormi(iw) = znormi(iw) + weight * aznormi(iw, ibnd, ik)
+              deltai(iw) = deltai(iw) + weight * adeltai(iw, ibnd, ik)
+              naznormi(iw, ibnd, ik) = 1.d0 + pi * gtemp(itemp) * naznormi(iw, ibnd, ik) * inv_wsi(iw)
+              ! Eqs.(21)-(22) in Margine and Giustino, PRB 87, 024505 (2013)
+              aznormi(iw, ibnd, ik) = 1.d0 + pi * gtemp(itemp) * aznormi(iw, ibnd, ik) * inv_wsi(iw)
+              adeltai(iw, ibnd, ik) = pi * gtemp(itemp) * adeltai(iw, ibnd, ik) / aznormi(iw, ibnd, ik)
+            ENDIF
+          ENDDO ! ibnd
+        ENDDO ! ik
+      ENDDO ! iw
       !
       ! collect contributions from all pools
-      CALL mp_sum(naznormi, inter_pool_comm)
-      CALL mp_sum(aznormi,  inter_pool_comm)
-      CALL mp_sum(adeltai,  inter_pool_comm)
+      CALL mp_sum(deltai, inter_pool_comm)
+      CALL mp_sum(znormi, inter_pool_comm)
       CALL mp_barrier(inter_pool_comm)
-      !
     ENDIF ! fbw
     !
     IF (mpime == ionode_id) THEN
@@ -758,61 +773,28 @@
         IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating deltaold', 1)
         deltaold(:) = gap0
       ENDIF
-      !
+      !      
       absdelta = zero
       reldelta = zero
-      !
-      ! SH: for the case of fbw runs
-      IF (fbw) THEN
-        DO iw = 1, nsiw(itemp) ! loop over omega
-          DO ik = 1, nkfs
-            DO ibnd = 1, nbndfs
-              IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
-                weight     = 0.5d0 * wkfs(ik) * w0g(ibnd, ik) / dosef
-                znormi(iw) = znormi(iw)  + weight * aznormi(iw, ibnd, ik)
-                deltai(iw) = deltai(iw)  + weight * adeltai(iw, ibnd, ik)
-                shifti(iw) = shifti(iw)  + weight * ashifti(iw, ibnd, ik)
-                naznormi(iw, ibnd, ik) = 1.d0 + gtemp(itemp) * naznormi(iw, ibnd, ik) / wsi(iw)
-                ! Eqs.(21)-(22) in Margine and Giustino, PRB 87, 024505 (2013)
-                aznormi(iw, ibnd, ik)  = 1.d0 + gtemp(itemp) * aznormi(iw, ibnd, ik) / wsi(iw)
-                adeltai(iw, ibnd, ik)  = gtemp(itemp) * adeltai(iw, ibnd, ik) / aznormi(iw, ibnd, ik)
-                ashifti(iw, ibnd, ik)  = - gtemp(itemp) * ashifti(iw, ibnd, ik)
-              ENDIF
-            ENDDO ! ibnd
-          ENDDO ! ik
-          znormi(iw) = 1.d0 + gtemp(itemp) * znormi(iw) / wsi(iw)
+      DO iw = 1, nsiw(itemp) ! loop over omega
+        IF (fbw) THEN
+          znormi(iw) = 1.d0 + gtemp(itemp) * znormi(iw) * inv_wsi(iw)
           deltai(iw) = gtemp(itemp) * deltai(iw) / znormi(iw)
           shifti(iw) = - gtemp(itemp) * shifti(iw)
-          reldelta   = reldelta + ABS(deltai(iw) - deltaold(iw))
-          absdelta   = absdelta + ABS(deltai(iw))
-        ENDDO ! iw
-      ELSE
-        DO iw = 1, nsiw(itemp) ! loop over omega
-          DO ik = 1, nkfs
-            DO ibnd = 1, nbndfs
-              IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
-                weight     = 0.5d0 * wkfs(ik) * w0g(ibnd, ik) / dosef
-                znormi(iw) = znormi(iw)  + weight * aznormi(iw, ibnd, ik)
-                deltai(iw) = deltai(iw)  + weight * adeltai(iw, ibnd, ik)
-                naznormi(iw, ibnd, ik) = 1.d0 + pi * gtemp(itemp) * naznormi(iw, ibnd, ik) / wsi(iw)
-                ! Eqs.(21)-(22) in Margine and Giustino, PRB 87, 024505 (2013)
-                aznormi(iw, ibnd, ik)  = 1.d0 + pi * gtemp(itemp) * aznormi(iw, ibnd, ik) / wsi(iw)
-                adeltai(iw, ibnd, ik)  = pi * gtemp(itemp) * adeltai(iw, ibnd, ik) / aznormi(iw, ibnd, ik)
-              ENDIF
-            ENDDO ! ibnd
-          ENDDO ! ik
-          znormi(iw) = 1.d0 + pi * gtemp(itemp) * znormi(iw) / wsi(iw)
+        ELSE
+          znormi(iw) = 1.d0 + pi * gtemp(itemp) * znormi(iw) * inv_wsi(iw)
           deltai(iw) = pi * gtemp(itemp) * deltai(iw) / znormi(iw)
-          reldelta   = reldelta + ABS(deltai(iw) - deltaold(iw))
-          absdelta   = absdelta + ABS(deltai(iw))
-        ENDDO ! iw
-      ENDIF
+        ENDIF
+        !
+        reldelta   = reldelta + ABS(deltai(iw) - deltaold(iw))
+        absdelta   = absdelta + ABS(deltai(iw))
+      ENDDO ! iw
       !
-      errdelta    = reldelta / absdelta
+      errdelta = reldelta / absdelta
       deltaold(:) = deltai(:)
       !
       IF (iter == 1 .AND. fbw)       WRITE(stdout, '(5x, a)') &
-        '   iter      ethr          znormi      deltai [meV]   shifti [meV]     mu [eV]'
+        '   iter      ethr          znormi      deltai [meV]   shifti [meV]       mu [eV]'
       IF (iter == 1 .AND. .NOT. fbw) WRITE(stdout, '(5x, a)') &
         '   iter      ethr          znormi      deltai [meV]'
       IF (fbw)                       WRITE(stdout, '(5x, i6, 5ES15.6)') &
@@ -825,9 +807,7 @@
       !
       IF (errdelta < conv_thr_iaxis) conv = .TRUE.
       IF (conv .OR. iter == nsiter) THEN
-        gap(itemp) = deltai(1)
-        gap0 = gap(itemp)
-        CALL eliashberg_write_iaxis(itemp)
+        gap0 = deltai(1)
       ENDIF
       !
       IF (conv .OR. iter == nsiter) THEN
@@ -843,50 +823,50 @@
         WRITE(stdout, '(5x, a)') 'Increase nsiter or reduce conv_thr_iaxis'
         WRITE(stdout, '(a)') ' '
       ENDIF
-    ENDIF ! ionode_id
-    !
-    ! SH: to bcast fbw runs' arrays
-    IF (fbw) THEN
-      CALL mp_bcast(shifti,   ionode_id, inter_pool_comm)
-      CALL mp_bcast(ashifti,  ionode_id, inter_pool_comm)
-      CALL mp_bcast(deltai,   ionode_id, inter_pool_comm)
-      CALL mp_bcast(znormi,   ionode_id, inter_pool_comm)
-      CALL mp_bcast(adeltai,  ionode_id, inter_pool_comm)
-      CALL mp_bcast(aznormi,  ionode_id, inter_pool_comm)
-      CALL mp_bcast(naznormi, ionode_id, inter_pool_comm)
-      CALL mp_bcast(gap0,     ionode_id, inter_pool_comm)
-      CALL mp_bcast(gap,      ionode_id, inter_pool_comm)
-      CALL mp_bcast(agap,     ionode_id, inter_pool_comm)
-      CALL mp_bcast(conv,     ionode_id, inter_pool_comm)
-      CALL mp_barrier(inter_pool_comm)
-    ELSE
-      CALL mp_bcast(deltai,   ionode_id, inter_pool_comm)
-      CALL mp_bcast(znormi,   ionode_id, inter_pool_comm)
-      CALL mp_bcast(adeltai,  ionode_id, inter_pool_comm)
-      CALL mp_bcast(aznormi,  ionode_id, inter_pool_comm)
-      CALL mp_bcast(naznormi, ionode_id, inter_pool_comm)
-      CALL mp_bcast(gap0,     ionode_id, inter_pool_comm)
-      CALL mp_bcast(gap,      ionode_id, inter_pool_comm)
-      CALL mp_bcast(agap,     ionode_id, inter_pool_comm)
-      CALL mp_bcast(conv,     ionode_id, inter_pool_comm)
-      CALL mp_barrier(inter_pool_comm)
-    ENDIF
+    ENDIF  
+    CALL mp_bcast(gap0, ionode_id, inter_pool_comm)
+    CALL mp_bcast(conv, ionode_id, inter_pool_comm)
+    CALL mp_barrier(inter_pool_comm)
     !
     IF (conv .OR. iter == nsiter) THEN
-      ! SH: write the chemical potential for fbw runs
-      IF (fbw) THEN
-        WRITE(stdout, '(5x, a, i6, a, ES20.10, a)') &
-          'Chemical potential (itemp = ',itemp,' ) : ', muintr, ' eV'
-        WRITE(stdout, '(a)') ' '
-      ENDIF
       !
-      IF (fbw) THEN
-        ! remove memory of the following list, plus: sesqrt, ashiftip, aznormip
-        imelt = (1 + 6 * nbndfs * nkfs) * nsiw(itemp)
-      ELSE
-        ! remove memory allocated for zesqrt, desqrt, adeltaip, deltaold
-        imelt = (1 + 3 * nbndfs * nkfs) * nsiw(itemp)
-      ENDIF
+      ! SH: write the chemical potential for fbw runs
+      WRITE(stdout, '(5x, a, i3, a, ES20.10, a)') &
+        'Chemical potential (itemp = ', itemp, ') = ', muintr, ' eV'
+      WRITE(stdout, '(a)') ' '
+      !
+      ! Compute the free energy difference between the superconducting and normal states      
+      dFE = zero
+      DO ik = lower_bnd, upper_bnd
+        DO ibnd = 1, nbndfs
+          IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
+            DO iw = 1, nsiw(itemp)
+              weight = 0.5d0 * wkfs(ik) * w0g(ibnd,ik)
+              omega = DSQRT(wsi(iw) * wsi(iw) + adeltai(iw, ibnd, ik) * adeltai(iw, ibnd, ik))
+              dFE = dFE - weight * (omega - wsi(iw)) &
+                * (aznormi(iw, ibnd, ik) - naznormi(iw, ibnd, ik) * wsi(iw) / omega)
+            ENDDO
+          ENDIF
+        ENDDO
+      ENDDO
+      ! collect contributions from all pools
+      CALL mp_sum(dFE, inter_pool_comm)
+      CALL mp_barrier(inter_pool_comm)
+      !
+      dFE = dFE * pi * gtemp(itemp)
+      !
+      WRITE(stdout, '(5x, a, i3, a, f8.3, a, a, f12.6, a)') &
+              'Temp (itemp = ', itemp, ') = ', gtemp(itemp) / kelvin2eV, ' K', &
+              '  Free energy = ', dFE * 1000.0, ' meV'
+      WRITE(stdout, '(a)') ' '
+      !
+      DEALLOCATE(inv_wsi, STAT = ierr)
+      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error deallocating inv_wsi', 1)
+      DEALLOCATE(naznormi, STAT = ierr)
+      IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error deallocating naznormi', 1)      
+      !      
+      ! remove memory allocated for inv_wsi, deltaold, naznormi
+      imelt = (2 + nbndfs * nks) * nsiw(itemp) 
       CALL mem_size_eliashberg(2, -imelt)
       !
       IF (.NOT. limag_fly) THEN
@@ -895,7 +875,7 @@
         IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error deallocating akeri', 1)
         !
         ! remove memory allocated for akeri (SH: this is adjusted for sparse sampling) 
-        imelt = (upper_bnd - lower_bnd + 1) * MAXVAL(nqfs(:)) * nbndfs**2 * 2 * (wsn(nsiw(itemp)) + 1)
+        imelt = nks * MAXVAL(nqfs(:)) * nbndfs**2 * 2 * (wsn(nsiw(itemp)) + 1)
         CALL mem_size_eliashberg(2, -imelt)
         !
       ENDIF
@@ -921,17 +901,16 @@
     USE elph2,         ONLY : wqf, wf, gtemp
     USE epwcom,        ONLY : nqstep, nstemp, degaussq, nsiter, conv_thr_racon, fsthick, &
                               lpade, eps_acustic
-    USE eliashbergcom, ONLY : nsw, dwsph, ws, wsph, gap, agap, gp, gm, adsumi, azsumi, &
-                              delta, znorm, adelta, adeltap, aznorm, aznormp, g2, lacon_fly, &
-                              a2fij, wkfs, dosef, ixkqf, ixqfs, nqfs, w0g, nkfs, nbndfs, ef0, ekfs
+    USE eliashbergcom, ONLY : ixkqf, ixqfs, nqfs, wkfs, w0g, ekfs, nkfs, nbndfs, dosef, ef0, &
+                              nsw, dwsph, ws, wsph, gap0, agap, gp, gm, adsumi, azsumi, a2fij, &
+                              g2, lacon_fly, delta, znorm, adelta, adeltap, aznorm, aznormp
     USE supercond,     ONLY : gamma_acont
     USE constants_epw, ONLY : ci, zero, one, czero, cone
     USE constants,     ONLY : pi
     USE io_global,     ONLY : stdout, ionode_id
-    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_global,     ONLY : inter_pool_comm, my_pool_id
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
-    USE io_eliashberg, ONLY : eliashberg_write_raxis
     USE division,      ONLY : fkbounds
     USE low_lvl,       ONLY : mem_size_eliashberg, memlt_eliashberg
     !
@@ -945,9 +924,6 @@
     !! Counter on the iteration number
     !
     ! Local variables
-    CHARACTER(LEN = 256) :: cname
-    !! character in file name
-    !
     INTEGER :: i, iw, iwp
     !! Counter on frequency real-axis
     INTEGER :: ik
@@ -958,6 +934,8 @@
     !! Index of iq on full q-mesh
     INTEGER :: lower_bnd, upper_bnd
     !! Lower/upper bound index after k paral
+    INTEGER :: nks
+    !! Number of k points per pool
     INTEGER :: ibnd
     !! Counter on bands at k
     INTEGER :: jbnd
@@ -966,8 +944,6 @@
     !! Counter on frequency in a2f
     INTEGER :: imode
     !! Counter on phonon modes
-    REAL(KIND = DP) :: inv_degaussq
-    !! 1.0/degaussq. Defined for efficiency reasons
     INTEGER(8) :: imelt
     !! Counter memory
     INTEGER :: ierr
@@ -981,6 +957,12 @@
     !! Errors in supercond. gap
     REAL(KIND = DP) :: weight
     !! Factor in supercond. equations
+    REAL(KIND = DP) :: inv_degaussq
+    !! 1.0/degaussq. Defined for efficiency reasons    
+    REAL(KIND = DP) :: inv_dos
+    !! Invese dos inv_dos = 1/dosef. Defined for efficiency reason   
+    REAL(KIND = DP) :: inv_ws
+    !! Invese real frequency inv_ws = 1/ws. Defined for efficiency reason    
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function
     !!RM - updated 
@@ -994,25 +976,33 @@
     !
     inv_degaussq = one / degaussq
     !
+    inv_dos = one / dosef
+    !
+    CALL fkbounds(nkfs, lower_bnd, upper_bnd)
+    !
+    nks = upper_bnd - lower_bnd + 1
+    !    
     IF (iter == 1) THEN
       !
+      ! RM - adelta, aznorm are defined per k-points per pool
+      !
       ! get the size of required allocated memory for
-      ! delta, znorm, deltaold, adelta, adeltap, aznorm, aznormp, gp, gm
+      ! delta, znorm, deltaold, adelta, aznorm, adeltap, aznormp, gp, gm
       IF (lpade) THEN
-        imelt = 2 * ( 1 + 2 * nbndfs * nkfs ) * nsw + 2 * nqstep * nsw
+        imelt = 2 * (1 + 2 * nbndfs * nkfs) * nsw + 2 * nqstep * nsw
       ELSE
-        imelt = 2 * ( 3 + 4 * nbndfs * nkfs ) * nsw + 2 * nqstep * nsw
+        imelt = 2 * (3 + 2 * nbndfs * nks + 2 * nbndfs * nkfs) * nsw + 2 * nqstep * nsw
       ENDIF
       CALL mem_size_eliashberg(2, imelt)
       !
       IF (.NOT. lpade) THEN
         ALLOCATE(delta(nsw), STAT = ierr)
         IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error allocating delta', 1)
-        ALLOCATE(adelta(nsw, nbndfs, nkfs), STAT = ierr)
-        IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error allocating adelta', 1)
         ALLOCATE(znorm(nsw), STAT = ierr)
         IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error allocating znorm', 1)
-        ALLOCATE(aznorm(nsw, nbndfs, nkfs), STAT = ierr)
+        ALLOCATE(adelta(nsw, nbndfs, lower_bnd:upper_bnd), STAT = ierr)
+        IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error allocating adelta', 1)
+        ALLOCATE(aznorm(nsw, nbndfs, lower_bnd:upper_bnd), STAT = ierr)
         IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error allocating aznorm', 1)
       ENDIF
       ALLOCATE(adeltap(nsw, nbndfs, nkfs), STAT = ierr)
@@ -1025,26 +1015,29 @@
       IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error allocating gp', 1)
       ALLOCATE(gm(nsw, nqstep), STAT = ierr)
       IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error allocating gm', 1)
+      !
       adeltap(:, :, :) = czero
-      aznormp(:, :, :) = cone
+      aznormp(:, :, :) = czero
       deltaold(:) = czero
       IF (lpade) THEN
-        adeltap(:, :, :) = adelta(:, :, :)
+        adeltap(:, :, lower_bnd:upper_bnd) = adelta(:, :, lower_bnd:upper_bnd)
         deltaold(:) = delta(:)
       ELSE
-        DO ik = 1, nkfs
-          DO ibnd = 1, nbndfs
-            IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
-              adeltap(:, ibnd, ik) = agap(ibnd, ik, itemp)
-            ENDIF
-          ENDDO ! ibnd
-        ENDDO ! ik
-        deltaold(:) = gap(itemp)
+        DO iw = 1, nsw     
+          adeltap(iw, :, lower_bnd:upper_bnd) = agap(:, lower_bnd:upper_bnd)
+        ENDDO
+        deltaold(:) = gap0
       ENDIF
+      ! collect contributions from all pools 
+      ! (only at iter=1 since for iter>1 it is done in eliashberg_aniso_iaxis)
+      CALL mp_sum(adeltap, inter_pool_comm)
+      CALL mp_barrier(inter_pool_comm)
+      !
+      aznormp(:, :, lower_bnd:upper_bnd) = cone
       !
       !! Eq.(28) in Margine and Giustino, PRB 87, 024505 (2013)
-      DO iw = 1, nsw ! loop over omega
-        DO iwp = 1, nqstep ! loop over omega_prime
+      DO iwp = 1, nqstep ! loop over omega_prime
+        DO iw = 1, nsw ! loop over omega
           CALL gamma_acont(ws(iw), ws(iwp), gtemp(itemp), rgammap, rgammam)
           gp(iw, iwp) = rgammap
           gm(iw, iwp) = rgammam
@@ -1055,21 +1048,38 @@
       IF (.NOT. lacon_fly) CALL evaluate_a2fij()
     ENDIF ! iter
     !
-    delta(:) = czero
-    znorm(:) = czero
+    ! RM - calculate esqrt (esqrt is stored as aznormp to avoid allocation of a new large array)
+    ! Z(ik, ibnd, w \pm w') / sqrt{[Z(ik, ibnd, w \pm w')]^2 * [(w \pm w')^2] - [D(ik, ibnd, w \pm w')]^2]}
+    DO ik = lower_bnd, upper_bnd
+      DO ibnd = 1, nbndfs
+        IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
+          !
+          DO iw = 1, nsw ! loop over omega
+            az2 = aznormp(iw, ibnd, ik) * aznormp(iw, ibnd, ik)
+            ad2 = adeltap(iw, ibnd, ik) * adeltap(iw, ibnd, ik)
+            root = SQRT(az2 * (ws(iw) * ws(iw) - ad2))
+            IF (AIMAG(root) < zero) & 
+              root = CONJG(root)
+            esqrt = aznormp(iw, ibnd, ik) / root
+            aznormp(iw, ibnd, ik) = esqrt
+          ENDDO
+        ENDIF ! fsthick
+      ENDDO ! ibnd
+    ENDDO ! ik
+    !
+    ! collect contributions from all pools
+    CALL mp_sum(aznormp, inter_pool_comm)
+    CALL mp_barrier(inter_pool_comm)
+    !
     adelta(:, :, :) = czero
     aznorm(:, :, :) = czero
-    !!RM - updated
     a2f_tmp(:) = zero
-    !
-    CALL fkbounds(nkfs, lower_bnd, upper_bnd)
-    !
     DO ik = lower_bnd, upper_bnd
       DO ibnd = 1, nbndfs
         IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
           DO iq = 1, nqfs(ik)
             ! iq0 - index of q-point on the full q-mesh
-            iq0 = ixqfs(ik,iq)
+            iq0 = ixqfs(ik, iq)
             DO jbnd = 1, nbndfs
               IF (ABS(ekfs(jbnd, ixkqf(ik, iq0)) - ef0) < fsthick) THEN
                 !
@@ -1088,44 +1098,25 @@
                   a2f_tmp(:) = a2fij(:, jbnd, iq, ibnd, ik)      
                 ENDIF ! lacon_fly
                 !
-                weight = wqf(iq) * w0g(jbnd, ixkqf(ik, iq0)) / dosef
+                weight = wqf(iq) * w0g(jbnd, ixkqf(ik, iq0)) * inv_dos
                 DO iw = 1, nsw ! loop over omega
                   DO iwp = 1, nqstep ! loop over omega_prime
                     !
-                    i = iw + iwp - 1
-                    IF (i <= nsw) THEN
-                      az2 = aznormp(i, jbnd, ixkqf(ik, iq0)) * aznormp(i, jbnd, ixkqf(ik, iq0))
-                      ad2 = adeltap(i, jbnd, ixkqf(ik, iq0)) * adeltap(i, jbnd, ixkqf(ik, iq0))
-                      root = SQRT(az2 * (ws(i) * ws(i) - ad2))
-                      IF (AIMAG(root) < zero) THEN
-                        esqrt = aznormp(i, jbnd, ixkqf(ik, iq0)) / CONJG(root)
-                      ELSE
-                        esqrt = aznormp(i, jbnd, ixkqf(ik, iq0)) / root
-                      ENDIF
-                      !!RM - updated
-                      esqrt = esqrt * weight * gp(iw, iwp) * a2f_tmp(iwp)
+                    i = iw + iwp 
+                    IF (i <= nsw) THEN                            
+                      esqrt = weight * gp(iw, iwp) * a2f_tmp(iwp) * aznormp(i, jbnd, ixkqf(ik, iq0))
                       !
-                      aznorm(iw, ibnd, ik) = aznorm(iw, ibnd, ik) - ws(i) * esqrt
-                      adelta(iw, ibnd, ik) = adelta(iw, ibnd, ik) - adeltap(i, jbnd, ixkqf(ik, iq0)) * esqrt
+                      aznorm(iw, ibnd, ik) = aznorm(iw, ibnd, ik) - esqrt * ws(i) 
+                      adelta(iw, ibnd, ik) = adelta(iw, ibnd, ik) - esqrt * adeltap(i, jbnd, ixkqf(ik, iq0))
                     ENDIF
                     !
-                    i = ABS(iw - iwp) + 1
-                    az2 = aznormp(i, jbnd, ixkqf(ik, iq0)) * aznormp(i, jbnd, ixkqf(ik, iq0))
-                    ad2 = adeltap(i, jbnd, ixkqf(ik, iq0)) * adeltap(i, jbnd, ixkqf(ik, iq0))
-                    root = SQRT(az2 * (ws(i) * ws(i) - ad2))
-                    IF (AIMAG(root) < zero) THEN
-                      esqrt = aznormp(i, jbnd, ixkqf(ik, iq0)) / CONJG(root)
-                    ELSE
-                      esqrt = aznormp(i, jbnd, ixkqf(ik, iq0)) / root
-                    ENDIF
-                    !!RM - updated
-                    esqrt = esqrt * weight * gm(iw, iwp) * a2f_tmp(iwp)
-                    IF (iw < iwp) THEN
-                      aznorm(iw, ibnd, ik) = aznorm(iw, ibnd, ik) - ws(i) * esqrt
-                    ELSE
-                      aznorm(iw, ibnd, ik) = aznorm(iw, ibnd, ik) + ws(i) * esqrt
-                    ENDIF
-                    adelta(iw, ibnd, ik) = adelta(iw, ibnd, ik) + adeltap(i, jbnd, ixkqf(ik, iq0)) * esqrt
+                    i = ABS(iw - iwp) 
+                    IF (i > 0) THEN
+                      esqrt = weight * gm(iw, iwp) * a2f_tmp(iwp) * aznormp(i, jbnd, ixkqf(ik, iq0))
+                      !
+                      aznorm(iw, ibnd, ik) = aznorm(iw, ibnd, ik) + esqrt * ws(i) * SIGN(1, iw - iwp)
+                      adelta(iw, ibnd, ik) = adelta(iw, ibnd, ik) + esqrt * adeltap(i, jbnd, ixkqf(ik, iq0)) 
+                    ENDIF  
                   ENDDO ! iwp
                 ENDDO ! iw
               ENDIF ! fsthick
@@ -1140,35 +1131,49 @@
       ENDDO ! ibnd
     ENDDO ! ik
     !
+    delta(:) = czero
+    znorm(:) = czero
+    DO iw = 1, nsw ! loop over omega
+      inv_ws = one / ws(iw)
+      DO ik = lower_bnd, upper_bnd
+        DO ibnd = 1, nbndfs
+          IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
+            weight = 0.5d0 * wkfs(ik) * w0g(ibnd, ik) * inv_dos
+            znorm(iw) = znorm(iw) + weight * aznorm(iw, ibnd, ik)
+            delta(iw) = delta(iw) + weight * adelta(iw, ibnd, ik)
+            ! Eqs.(26)-(27) in Margine and Giustino, PRB 87, 024505 (2013)
+            aznorm(iw, ibnd, ik) = 1.d0 + pi * aznorm(iw, ibnd, ik) * inv_ws
+            adelta(iw, ibnd, ik) = pi * adelta(iw, ibnd, ik) / aznorm(iw, ibnd, ik)
+          ENDIF
+        ENDDO ! ibnd
+      ENDDO ! ik
+    ENDDO ! iw
+    !
     ! collect contributions from all pools
-    CALL mp_sum(aznorm, inter_pool_comm)
-    CALL mp_sum(adelta, inter_pool_comm)
+    CALL mp_sum(delta, inter_pool_comm)
+    CALL mp_sum(znorm, inter_pool_comm)
     CALL mp_barrier(inter_pool_comm)
     !
-    IF (mpime == ionode_id) THEN
+    ! RM - update aznormp for next iteration
+    ! Make everything 0 except the range of k-points we are working on
+    ! In principle aznormp can be mixed as done for adeltap 
+    aznormp(:, :, :) = czero
+    aznormp(:, :, lower_bnd:upper_bnd) = aznorm(:, :, lower_bnd:upper_bnd)
+    !    
+    IF (mpime == ionode_id) THEN   
+      !
       absdelta = zero
       reldelta = zero
-      DO iw = 1, nsw ! loop over omega
-        DO ik = 1, nkfs
-          DO ibnd = 1, nbndfs
-            IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
-              weight = 0.5d0 * wkfs(ik) * w0g(ibnd, ik) / dosef
-              znorm(iw) = znorm(iw) + weight * aznorm(iw, ibnd, ik)
-              delta(iw) = delta(iw) + weight * adelta(iw, ibnd, ik)
-              ! Eqs.(26)-(27) in Margine and Giustino, PRB 87, 024505 (2013)
-              aznorm(iw, ibnd, ik) = 1.d0 + pi * aznorm(iw, ibnd, ik) / ws(iw)
-              adelta(iw, ibnd, ik) = pi * adelta(iw, ibnd, ik) / aznorm(iw, ibnd, ik)
-            ENDIF
-          ENDDO ! ibnd
-        ENDDO ! ik
-        znorm(iw) = 1.0d0 + pi * znorm(iw) / ws(iw)
+      DO iw = 1, nsw
+        inv_ws = one / ws(iw)
+        znorm(iw) = 1.0d0 + pi * znorm(iw) * inv_ws
         delta(iw) = pi * delta(iw) / znorm(iw)
         reldelta = reldelta + ABS(delta(iw) - deltaold(iw))
         absdelta = absdelta + ABS(delta(iw))
-      ENDDO ! iw
+      ENDDO
       errdelta = reldelta / absdelta
       deltaold(:) = delta(:)
-      !
+      !      
       IF (iter == 1) &
         WRITE(stdout, '(5x, a)') '   iter      ethr         Re[znorm]   Re[delta] [meV]'
       WRITE(stdout, '(5x, i6, 3ES15.6)') iter, errdelta, REAL(znorm(1)), REAL(delta(1)) * 1000.d0
@@ -1177,10 +1182,6 @@
 !                    '   Re[delta(1)] = ', REAL(delta(1))
       !
       IF (errdelta < conv_thr_racon) conv = .TRUE.
-      IF (conv .OR. iter == nsiter) THEN
-        cname = 'acon'
-        CALL eliashberg_write_raxis(itemp, cname)
-      ENDIF
       !
       IF (conv) THEN
         WRITE(stdout, '(5x, a, i6)') 'Convergence was reached in nsiter = ', iter
@@ -1190,10 +1191,7 @@
         WRITE(stdout, '(5x, a)') 'Increase nsiter or reduce conv_thr_racon'
         WRITE(stdout, '(a)') ' '
       ENDIF
-    ENDIF
-    CALL mp_bcast(delta, ionode_id, inter_pool_comm)
-    CALL mp_bcast(znorm, ionode_id, inter_pool_comm)
-    CALL mp_bcast(aznorm, ionode_id, inter_pool_comm)
+    ENDIF !mpime
     CALL mp_bcast(conv, ionode_id, inter_pool_comm)
     CALL mp_barrier(inter_pool_comm)
     !
@@ -1202,12 +1200,12 @@
       IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error deallocating deltaold', 1)
       !
       ! remove memory allocated for deltaold, gp, gm, adsumi, azsumi
-      imelt = 2 * nsw + 2 * nqstep * nsw + 2 * (upper_bnd - lower_bnd + 1) * nbndfs * nsw
+      imelt = 2 * (1 + nqstep + nks * nbndfs) * nsw
       CALL mem_size_eliashberg(2, -imelt)
       !
       IF (.NOT. lacon_fly) THEN
         ! remove memory allocated for a2fij
-        imelt = (upper_bnd - lower_bnd + 1) * MAXVAL(nqfs(:)) * nbndfs**2 * nqstep
+        imelt = nks * MAXVAL(nqfs(:)) * nbndfs**2 * nqstep
         CALL mem_size_eliashberg(2, -imelt)
       ENDIF
     ENDIF
@@ -1225,6 +1223,8 @@
     !! This routine uses pade approximants to continue the anisotropic Eliashberg equations
     !! from the imaginary-axis to the real-axis
     !!
+    !! SH: Adopted for the full-bandwidth calculations (Nov 2021).
+    !!
     !
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : fsthick, fbw
@@ -1233,12 +1233,11 @@
                               wkfs, dosef, w0g, nkfs, nbndfs, ef0, ekfs, &
                               shift, ashift, ashifti
     USE utilities,     ONLY : pade_coeff, pade_eval
-    USE constants_epw, ONLY : cone, ci, zero, czero
+    USE constants_epw, ONLY : cone, ci, zero, czero, one
     USE io_global,     ONLY : stdout, ionode_id
-    USE mp_global,     ONLY : inter_pool_comm, my_pool_id, npool
+    USE mp_global,     ONLY : inter_pool_comm
     USE mp_world,      ONLY : mpime
-    USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
-    USE io_eliashberg, ONLY : eliashberg_write_raxis
+    USE mp,            ONLY : mp_barrier, mp_sum
     USE division,      ONLY : fkbounds
     USE low_lvl,       ONLY : mem_size_eliashberg
     !
@@ -1250,8 +1249,6 @@
     !! Nr. of frequency points in the Pade approx
     !
     ! Local variable
-    CHARACTER(LEN = 256) :: cname
-    !! character in file name
     !
     INTEGER :: iw
     !! Counter on frequency imag- and real-axis
@@ -1259,6 +1256,8 @@
     !! Counter on k-points
     INTEGER :: lower_bnd, upper_bnd
     !! Lower/upper bound index after k paral
+    INTEGER :: nks
+    !! Number of k points per pool
     INTEGER :: ibnd
     !! Counter on bands
     INTEGER(8) :: imelt
@@ -1268,6 +1267,8 @@
     !
     REAL(KIND = DP) :: weight
     !! Temporary variable
+    REAL(KIND = DP) :: inv_dos
+    !! Invese dos inv_dos = 1/dosef. Defined for efficiency reason    
     !
     ! arrays used in pade_coeff and pade_eval
     COMPLEX(KIND = DP) :: omega
@@ -1289,92 +1290,71 @@
     COMPLEX(KIND = DP), ALLOCATABLE :: w(:)
     !! w - shifti
     !
-    ! SH: allocate/initiate variables for fbw-type runs
-    IF (fbw) THEN
-      ! get the size of required allocated memory for
-      ! a, b, z, u, v, delta, znorm, adelta, aznorm
-      ! SH: plus: c, w, shift, ashift
-      imelt = 2 * 7 * N + 2 * (3 + 3 * nbndfs * nkfs) * nsw
-      CALL mem_size_eliashberg(2, imelt)
-      ALLOCATE(delta(nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating delta', 1)
-      ALLOCATE(znorm(nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating znorm', 1)
-      ALLOCATE(adelta(nsw, nbndfs, nkfs), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating adelta', 1)
-      ALLOCATE(aznorm(nsw, nbndfs, nkfs), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating aznorm', 1)
-      ALLOCATE(a(N), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating a', 1)
-      ALLOCATE(b(N), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating b', 1)
-      ALLOCATE(z(N), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating z', 1)
-      ALLOCATE(u(N), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating u', 1)
-      ALLOCATE(v(N), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating v', 1)
-      ALLOCATE(shift(nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating shift', 1)
-      ALLOCATE(ashift(nsw, nbndfs, nkfs), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating ashift', 1)
-      ALLOCATE(c(N), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating c', 1)
-      ALLOCATE(w(N), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating w', 1)
-      adelta(:, :, :) = czero
-      aznorm(:, :, :) = czero
-      ashift(:, :, :) = czero
-      delta(:) = czero
-      znorm(:) = czero
-      shift(:) = czero
-      a(:) = czero
-      b(:) = czero
-      z(:) = czero
-      u(:) = czero
-      v(:) = czero
-      c(:) = czero
-      w(:) = czero
-    ELSE
-      ! get the size of required allocated memory for
-      ! a, b, z, u, v, delta, znorm, adelta, aznorm
-      imelt = 2 * 5 * N + 2 * (2 + 2 * nbndfs * nkfs) * nsw
-      CALL mem_size_eliashberg(2, imelt)
-      ALLOCATE(delta(nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating delta', 1)
-      ALLOCATE(znorm(nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating znorm', 1)
-      ALLOCATE(adelta(nsw, nbndfs, nkfs), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating adelta', 1)
-      ALLOCATE(aznorm(nsw, nbndfs, nkfs), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating aznorm', 1)
-      ALLOCATE(a(N), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating a', 1)
-      ALLOCATE(b(N), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating b', 1)
-      ALLOCATE(z(N), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating z', 1)
-      ALLOCATE(u(N), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating u', 1)
-      ALLOCATE(v(N), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating v', 1)
-      delta(:) = czero
-      znorm(:) = czero
-      adelta(:, :, :) = czero
-      aznorm(:, :, :) = czero
-      a(:) = czero
-      b(:) = czero
-      z(:) = czero
-      u(:) = czero
-      v(:) = czero
-    ENDIF
+    inv_dos = one / dosef
+    !
+    CALL fkbounds(nkfs, lower_bnd, upper_bnd)
+    !
+    nks = upper_bnd - lower_bnd + 1
+    !
+    ! RM - adelta, aznorm are defined per k-points per pool
+    ! get the size of required allocated memory for
+    ! a, b, z, u, v, delta, znorm, adelta, aznorm
+    imelt = 2 * 5 * N + 2 * (2 + 2 * nbndfs * nks) * nsw
+    CALL mem_size_eliashberg(2, imelt)
+    !
+    ALLOCATE(delta(nsw), STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating delta', 1)
+    ALLOCATE(znorm(nsw), STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating znorm', 1)
+    ALLOCATE(adelta(nsw, nbndfs, lower_bnd:upper_bnd), STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating adelta', 1)
+    ALLOCATE(aznorm(nsw, nbndfs, lower_bnd:upper_bnd), STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating aznorm', 1)
+    ALLOCATE(a(N), STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating a', 1)
+    ALLOCATE(b(N), STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating b', 1)
+    ALLOCATE(z(N), STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating z', 1)
+    ALLOCATE(u(N), STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating u', 1)
+    ALLOCATE(v(N), STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating v', 1)
+    delta(:) = czero
+    znorm(:) = czero
+    adelta(:, :, :) = czero
+    aznorm(:, :, :) = czero
+    a(:) = czero
+    b(:) = czero
+    z(:) = czero
+    u(:) = czero
+    v(:) = czero
     !
     IF (fbw) THEN
-      CALL fkbounds(nkfs, lower_bnd, upper_bnd)
+      ! get the size of required allocated memory for
+      ! c, w, shift, ashift
+      imelt = 2 * 2 * N + 2 * (1 + 1 * nbndfs * nks) * nsw
+      CALL mem_size_eliashberg(2, imelt)
       !
+      ALLOCATE(shift(nsw), STAT = ierr)
+      IF (ierr /= 0) CALL errore('pade_cont_aniso_fbw', 'Error allocating shift', 1)
+      ALLOCATE(ashift(nsw, nbndfs, lower_bnd:upper_bnd), STAT = ierr)
+      IF (ierr /= 0) CALL errore('pade_cont_aniso_fbw', 'Error allocating ashift', 1)
+      ALLOCATE(c(N), STAT = ierr)
+      IF (ierr /= 0) CALL errore('pade_cont_aniso_fbw', 'Error allocating c', 1)
+      ALLOCATE(w(N), STAT = ierr)
+      IF (ierr /= 0) CALL errore('pade_cont_aniso_fbw', 'Error allocating w', 1)
+      shift(:) = czero
+      ashift(:, :, :) = czero
+      c(:) = czero
+      w(:) = czero
+    ENDIF
+      !
+    IF (fbw) THEN
       DO ik = lower_bnd, upper_bnd
         DO ibnd = 1, nbndfs
           IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
+            weight = 0.5d0 * wkfs(ik) * w0g(ibnd, ik) * inv_dos
             DO iw = 1, N
               z(iw) = ci * wsi(iw)
               u(iw) = cone * adeltai(iw, ibnd, ik)
@@ -1392,21 +1372,24 @@
               aznorm(iw, ibnd, ik) = padapp
               CALL pade_eval(N, z, c, omega, padapp)
               ashift(iw, ibnd, ik) = padapp
+              !
+              znorm(iw) = znorm(iw) + weight * aznorm(iw, ibnd, ik)
+              delta(iw) = delta(iw) + weight * adelta(iw, ibnd, ik)
+              shift(iw) = shift(iw) + weight * ashift(iw, ibnd, ik)
             ENDDO
           ENDIF
         ENDDO ! ibnd
       ENDDO ! ik
       ! collect contributions from all pools
-      CALL mp_sum(aznorm, inter_pool_comm)
-      CALL mp_sum(adelta, inter_pool_comm)
-      CALL mp_sum(ashift, inter_pool_comm)
+      CALL mp_sum(znorm,  inter_pool_comm)
+      CALL mp_sum(delta,  inter_pool_comm)
+      CALL mp_sum(shift,  inter_pool_comm)
       CALL mp_barrier(inter_pool_comm)
     ELSE
-      CALL fkbounds(nkfs, lower_bnd, upper_bnd)
-      !
       DO ik = lower_bnd, upper_bnd
         DO ibnd = 1, nbndfs
           IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
+            weight = 0.5d0 * wkfs(ik) * w0g(ibnd, ik) * inv_dos      
             DO iw = 1, N
               z(iw) = ci * wsi(iw)
               u(iw) = cone * adeltai(iw, ibnd, ik)
@@ -1420,103 +1403,58 @@
               adelta(iw, ibnd, ik) = padapp
               CALL pade_eval(N, z, b, omega, padapp)
               aznorm(iw, ibnd, ik) = padapp
+              !
+              znorm(iw) = znorm(iw) + weight * aznorm(iw, ibnd, ik)
+              delta(iw) = delta(iw) + weight * adelta(iw, ibnd, ik)
             ENDDO
           ENDIF
         ENDDO ! ibnd
       ENDDO ! ik
       ! collect contributions from all pools
-      CALL mp_sum(aznorm, inter_pool_comm)
-      CALL mp_sum(adelta, inter_pool_comm)
+      CALL mp_sum(znorm,  inter_pool_comm)
+      CALL mp_sum(delta,  inter_pool_comm)
       CALL mp_barrier(inter_pool_comm)
-    ENDIF
-    !
+    ENDIF ! fbw
     !
     IF (mpime == ionode_id) THEN
       IF (fbw) THEN
-        DO ik = 1, nkfs
-          DO ibnd = 1, nbndfs
-            IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
-              weight = 0.5d0 * wkfs(ik) * w0g(ibnd, ik) / dosef
-              DO iw = 1, nsw ! loop over omega
-                znorm(iw) = znorm(iw) + weight * aznorm(iw, ibnd, ik)
-                delta(iw) = delta(iw) + weight * adelta(iw, ibnd, ik)
-                shift(iw) = shift(iw) + weight * ashift(iw, ibnd, ik)
-              ENDDO ! iw
-            ENDIF
-          ENDDO ! ibnd
-        ENDDO ! ik
         WRITE(stdout, '(5x, a)') '   pade    Re[znorm]   Re[delta] [meV]   Re[shift] [meV]'
         WRITE(stdout, '(5x, i6, 3ES15.6)') N, REAL(znorm(1)), REAL(delta(1)) * 1000.d0, REAL(shift(1)) * 1000.d0
       ELSE
-        DO ik = 1, nkfs
-          DO ibnd = 1, nbndfs
-            IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
-              weight = 0.5d0 * wkfs(ik) * w0g(ibnd, ik) / dosef
-              DO iw = 1, nsw ! loop over omega
-                znorm(iw) = znorm(iw) + weight * aznorm(iw, ibnd, ik)
-                delta(iw) = delta(iw) + weight * adelta(iw, ibnd, ik)
-              ENDDO ! iw
-            ENDIF
-          ENDDO ! ibnd
-        ENDDO ! ik
         WRITE(stdout, '(5x, a)') '   pade    Re[znorm]   Re[delta] [meV]'
         WRITE(stdout, '(5x, i6, 2ES15.6)') N, REAL(znorm(1)), REAL(delta(1)) * 1000.d0
+        !
+        !      WRITE(stdout, '(5x, a, i6, a, ES15.6, a, ES15.6)') 'pade = ', N, &
+        !                    '   Re[znorm(1)] = ', REAL(znorm(1)), &
+        !                    '   Re[delta(1)] = ', REAL(delta(1))
       ENDIF
       !
-!      WRITE(stdout, '(5x, a, i6, a, ES15.6, a, ES15.6)') 'pade = ', N, &
-!                    '   Re[znorm(1)] = ', REAL(znorm(1)), &
-!                    '   Re[delta(1)] = ', REAL(delta(1))
       WRITE(stdout, '(a)') ' '
-      !
       WRITE(stdout, '(5x, a, i6, a)') 'Convergence was reached for N = ', N, ' Pade approximants'
       WRITE(stdout, '(a)') ' '
-      !
-      cname = 'pade'
-      CALL eliashberg_write_raxis(itemp, cname)
     ENDIF
-    ! SH: for the fbw case
-    IF (fbw) THEN 
-      CALL mp_bcast(shift, ionode_id, inter_pool_comm)
-      CALL mp_bcast(delta, ionode_id, inter_pool_comm)
-      CALL mp_bcast(znorm, ionode_id, inter_pool_comm)
-      CALL mp_barrier(inter_pool_comm)
-    ELSE
-      CALL mp_bcast(delta, ionode_id, inter_pool_comm)
-      CALL mp_bcast(znorm, ionode_id, inter_pool_comm)
-      CALL mp_barrier(inter_pool_comm)
-    ENDIF
+    !
+    DEALLOCATE(a, STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating a', 1)
+    DEALLOCATE(b, STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating b', 1)
+    DEALLOCATE(z, STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating z', 1)
+    DEALLOCATE(u, STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating u', 1)
+    DEALLOCATE(v, STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating v', 1)
+    ! remove memory allocated for a, b, z, u, v
+    imelt = 2 * 5 * N
+    CALL mem_size_eliashberg(2, -imelt)
     !
     IF (fbw) THEN
       DEALLOCATE(c, STAT = ierr)
       IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating c', 1)
       DEALLOCATE(w, STAT = ierr)
       IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating w', 1)
-      DEALLOCATE(a, STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating a', 1)
-      DEALLOCATE(b, STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating b', 1)
-      DEALLOCATE(z, STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating z', 1)
-      DEALLOCATE(u, STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating u', 1)
-      DEALLOCATE(v, STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating v', 1)
-      ! above list, plus: c and w
-      imelt = 2 * 7 * N
-      CALL mem_size_eliashberg(2, -imelt)
-    ELSE
-      DEALLOCATE(a, STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating a', 1)
-      DEALLOCATE(b, STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating b', 1)
-      DEALLOCATE(z, STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating z', 1)
-      DEALLOCATE(u, STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating u', 1)
-      DEALLOCATE(v, STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating v', 1)
-      ! remove memory allocated for a, b, z, u, v
-      imelt = 2 * 5 * N
+      ! remove memory allocated for c, w
+      imelt = 2 * 2 * N
       CALL mem_size_eliashberg(2, -imelt)
     ENDIF
     !
@@ -1573,9 +1511,9 @@
     REAL(KIND = DP) :: lambda_eph
     !! electron-phonon coupling
     !
-    !! SH: nsiw is replaced with "1+largest matsubara index"
-    !!       for compatibility with the general case of sparse sampling
-    !! RM: n = nsiw(itemp) for uniform sampling
+    ! SH: nsiw is replaced with "1+largest Matsubara index"
+    !       for compatibility with the general case of sparse sampling
+    ! RM: n = nsiw(itemp) for uniform samplin
     !
     n = wsn(nsiw(itemp)) + 1
     !
@@ -1724,8 +1662,9 @@
     USE epwcom,        ONLY : muc, fsthick
     USE eliashbergcom, ONLY : nsw, nsiw, ws, wsi, adeltai, nkfs, nbndfs, dosef, ixkqf, ixqfs, nqfs, &
                               w0g, ekfs, ef0, adsumi, azsumi
-    USE constants_epw, ONLY : zero
-    USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
+    USE constants_epw, ONLY : zero, one
+    USE mp,            ONLY : mp_barrier, mp_sum
+    USE mp_global,     ONLY : inter_pool_comm
     USE division,      ONLY : fkbounds
     USE low_lvl,       ONLY : mem_size_eliashberg
     !
@@ -1758,38 +1697,46 @@
     !
     REAL(KIND = DP) :: esqrt
     !! 1 / sqrt{w^2+\delta^2}
+    REAL(KIND = DP) :: zesqrt
+    !! w / sqrt{w^2+\delta^2}
+    REAL(KIND = DP) :: desqrt
+    !! \delta / sqrt{w^2+\delta^2}
     REAL(KIND = DP) :: kernelr
     !! 2 * Re[lambda(w - iw_n)]
     REAL(KIND = DP) :: kerneli
     !! 2 * Im[lambda(w - iw_n)]
     REAL(KIND = DP) :: weight
     !! factor in supercond. gap equations
-    REAL(KIND = DP), ALLOCATABLE :: wesqrt(:, :, :)
-    !! w / sqrt{w^2+\delta^2}
-    REAL(KIND = DP), ALLOCATABLE :: desqrt(:, :, :)
-    !! \delta / sqrt{w^2+\delta^2}
+    REAL(KIND = DP) :: inv_dos
+    !! Invese dos inv_dos = 1/dosef. Defined for efficiency reason
+    REAL(KIND = DP), ALLOCATABLE :: adeltai_tmp(:, :, :)
+    !! Temporary array to collect adeltai from all pools
     !
     COMPLEX(KIND = DP) :: lambda_eph
     !! electron-phonon coupling lambda_ij(k, k+q; w-iw_n)
     !
     CALL fkbounds(nkfs, lower_bnd, upper_bnd)
     !
-    ! get memory size required for wesqrt, desqrt, adsumi, azsumi
-    imelt = 2 * nbndfs * nkfs * nsiw(itemp) + 2 * (upper_bnd - lower_bnd + 1) * nbndfs * nsw
+    ! get memory size required for adsumi, azsumi
+    imelt = 2 * (upper_bnd - lower_bnd + 1) * nbndfs * nsw
     CALL mem_size_eliashberg(2, imelt)
     !
-    ALLOCATE(wesqrt(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
-    IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error allocating wesqrt', 1)
-    ALLOCATE(desqrt(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
-    IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error allocating desqrt', 1)
+    ALLOCATE(adeltai_tmp(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
+    IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error allocating adeltai_tmp', 1)
+    adeltai_tmp(:, :, :)  = zero
+    adeltai_tmp(:, :, lower_bnd:upper_bnd) = adeltai(:, :, lower_bnd:upper_bnd)
+    ! collect contributions from all pools
+    CALL mp_sum(adeltai_tmp, inter_pool_comm)
+    CALL mp_barrier(inter_pool_comm)
+    !
     ALLOCATE(adsumi(nsw, nbndfs, lower_bnd:upper_bnd), STAT = ierr)
     IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error allocating adsumi', 1)
     ALLOCATE(azsumi(nsw, nbndfs, lower_bnd:upper_bnd), STAT = ierr)
     IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error allocating azsumi', 1)
-    wesqrt(:, :, :) = zero
-    desqrt(:, :, :) = zero
     adsumi(:, :, :) = zero
     azsumi(:, :, :) = zero
+    !
+    inv_dos = one / dosef
     !
     ! RM - if lambdai_aniso_ver2 is used then one needs to CALL evaluate_a2fij
     !
@@ -1801,26 +1748,23 @@
             iq0 = ixqfs(ik, iq)
             DO jbnd = 1, nbndfs
               IF (ABS(ekfs(jbnd, ixkqf(ik, iq0)) - ef0) < fsthick) THEN
-                weight = wqf(iq) * w0g(jbnd, ixkqf(ik, iq0)) / dosef
-                DO iw = 1, nsw ! loop over omega
-                  DO iwp = 1, nsiw(itemp) ! loop over iw_n
+                weight = wqf(iq) * w0g(jbnd, ixkqf(ik, iq0)) * inv_dos
+                DO iwp = 1, nsiw(itemp) ! loop over iw_n
+                  esqrt = weight / DSQRT(wsi(iwp) * wsi(iwp) + &
+!                          adeltai(iwp, jbnd, ixkqf(ik, iq0)) * adeltai(iwp, jbnd, ixkqf(ik, iq0)))
+                          adeltai_tmp(iwp, jbnd, ixkqf(ik, iq0)) * adeltai_tmp(iwp, jbnd, ixkqf(ik, iq0))) 
+                  zesqrt =  esqrt * wsi(iwp) 
+!                  desqrt =  esqrt * adeltai(iwp, jbnd, ixkqf(ik, iq0))            
+                  desqrt =  esqrt * adeltai_tmp(iwp, jbnd, ixkqf(ik, iq0))
+                  DO iw = 1, nsw ! loop over omega
                     CALL lambdai_aniso_ver1(ik, iq, ibnd, jbnd, ws(iw), wsi(iwp), lambda_eph)
                     !CALL lambdai_aniso_ver2(ik, iq, ibnd, jbnd, ws(iw), wsi(iwp), lambda_eph)
                     kernelr = 2.d0 * REAL(lambda_eph)
                     kerneli = 2.d0 * AIMAG(lambda_eph)
-                    IF (iw == 1) THEN
-                      esqrt = 1.d0 / DSQRT(wsi(iwp) * wsi(iwp) + &
-                                           adeltai(iwp, jbnd, ixkqf(ik, iq0)) * &
-                                           adeltai(iwp, jbnd, ixkqf(ik, iq0)))
-                      wesqrt(iwp, jbnd, ixkqf(ik, iq0)) =  wsi(iwp) * esqrt
-                      desqrt(iwp, jbnd, ixkqf(ik, iq0)) =  adeltai(iwp, jbnd, ixkqf(ik, iq0)) * esqrt
-                    ENDIF
-                    azsumi(iw, ibnd, ik) = azsumi(iw, ibnd, ik) &
-                                         + weight * wesqrt(iwp, jbnd, ixkqf(ik, iq0)) * kerneli
-                    adsumi(iw, ibnd, ik) = adsumi(iw, ibnd, ik) &
-                                         + weight * desqrt(iwp, jbnd, ixkqf(ik, iq0)) * (kernelr - 2.d0 * muc)
-                  ENDDO ! iwp
-                ENDDO ! iw
+                    azsumi(iw, ibnd, ik) = azsumi(iw, ibnd, ik) + zesqrt * kerneli
+                    adsumi(iw, ibnd, ik) = adsumi(iw, ibnd, ik) + desqrt * (kernelr - 2.d0 * muc)
+                  ENDDO ! iw
+                ENDDO ! iwp
               ENDIF
             ENDDO ! jbnd
           ENDDO ! iq
@@ -1828,14 +1772,8 @@
       ENDDO ! ibnd
     ENDDO ! ik
     !
-    DEALLOCATE(wesqrt, STAT = ierr)
-    IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error deallocating wesqrt', 1)
-    DEALLOCATE(desqrt, STAT = ierr)
-    IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error deallocating desqrt', 1)
-    !
-    ! remove memory allocated for wesqrt, desqrt
-    imelt = 2 * nbndfs * nkfs * nsiw(itemp)
-    CALL mem_size_eliashberg (2, -imelt)
+    DEALLOCATE(adeltai_tmp, STAT = ierr)
+    IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error deallocating adeltai_tmp', 1)
     !
     RETURN
     !
@@ -2086,7 +2024,7 @@
       ! SH: Here, we have an explicit summation over full range of frequencies
       !      for even functions, and multiply that by two (loop over iw).
       !
-      DO ik = 1, nkfs 
+      DO ik = 1, nkfs
         DO ibnd = 1, nbndfs
           IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
             DO iw = 1, nsiw(itemp)
@@ -2128,56 +2066,62 @@
     !-----------------------------------------------------------------------
     !
     !----------------------------------------------------------------------
-    SUBROUTINE deallocate_aniso_iaxis()
+    SUBROUTINE deallocate_aniso_iaxis(iset)
     !----------------------------------------------------------------------
     !!
     !!  deallocates the variables allocated for imag-axis solutions
     !!
     !
-    USE eliashbergcom, ONLY : wsi, gap, agap, deltai, znormi, &
-                              adeltai, adeltaip, aznormi, naznormi, &
-                              aznormip, shifti, ashifti, ashiftip, wsn
     USE epwcom,        ONLY : fbw
+    USE eliashbergcom, ONLY : wsi, wsn, deltai, znormi, adeltai, adeltaip, & 
+                              aznormi, aznormip, shifti, ashifti, ashiftip
     !
     IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: iset
+    !! Define what set of variables are deallocated
     !
     INTEGER :: ierr
     !! Error status
     !
-    ! gen_freqgrid_iaxis
-    DEALLOCATE(wsi, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating wsi', 1)
-    DEALLOCATE(wsn, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating wsn', 1)
-    ! sum_eliashberg_aniso_iaxis
-    DEALLOCATE(gap, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating gap', 1)
-    DEALLOCATE(agap, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating agap', 1)
-    DEALLOCATE(deltai, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating deltai', 1)
-    DEALLOCATE(znormi, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating znormi', 1)
+    IF (iset == 1 .OR. iset == 3) THEN
+      ! sum_eliashberg_aniso_iaxis
+      DEALLOCATE(deltai, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating deltai', 1)
+      DEALLOCATE(znormi, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating znormi', 1)
+      DEALLOCATE(adeltaip, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating adeltaip', 1)
+      !
+      IF (fbw) THEN
+        ! SH: deallocate fbw-related arrays in sum_eliashberg_aniso_iaxis
+        DEALLOCATE(shifti, STAT = ierr)
+        IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis_fbw', 'Error deallocating shifti', 1)
+        DEALLOCATE(aznormip, STAT = ierr)
+        IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis_fbw', 'Error deallocating aznormip', 1)
+        DEALLOCATE(ashiftip, STAT = ierr)
+        IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis_fbw', 'Error deallocating ashiftip', 1)
+      ENDIF
+    ENDIF
     !
-    DEALLOCATE(adeltai, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating adeltai', 1)
-    DEALLOCATE(adeltaip, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating adeltaip', 1)
-    DEALLOCATE(aznormi, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating aznormi', 1)
-    DEALLOCATE(naznormi, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating naznormi', 1)
-    !
-    ! SH: deallocate fbw-related arrays
-    IF (fbw) THEN
-      DEALLOCATE(aznormip, STAT = ierr)
-      IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating aznormip', 1)
-      DEALLOCATE(shifti, STAT = ierr)
-      IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating shifti', 1)
-      DEALLOCATE(ashifti, STAT = ierr)
-      IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating ashifti', 1)
-      DEALLOCATE(ashiftip, STAT = ierr)
-      IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating ashiftip', 1)
+    IF (iset == 2 .OR. iset == 3) THEN
+      ! gen_freqgrid_iaxis
+      DEALLOCATE(wsi, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating wsi', 1)
+      DEALLOCATE(wsn, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating wsn', 1)      
+      ! 
+      ! sum_eliashberg_aniso_iaxis
+      DEALLOCATE(adeltai, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating adeltai', 1)
+      DEALLOCATE(aznormi, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating aznormi', 1)
+      !
+      IF (fbw) THEN
+        ! SH: deallocate fbw-related arrays in sum_eliashberg_aniso_iaxis
+        DEALLOCATE(ashifti, STAT = ierr)
+        IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis_fbw', 'Error deallocating ashifti', 1)
+      ENDIF
     ENDIF
     !
     RETURN
@@ -2187,62 +2131,72 @@
     !-----------------------------------------------------------------------
     !
     !----------------------------------------------------------------------
-    SUBROUTINE deallocate_aniso_raxis()
+    SUBROUTINE deallocate_aniso_raxis(iset)
     !----------------------------------------------------------------------
     !!
     !!  deallocates the variables allocated for real-axis solutions
     !!
-    USE epwcom,        ONLY : lacon, fbw
+    USE epwcom,        ONLY : fbw, lacon
     USE eliashbergcom, ONLY : ws, delta, znorm, adelta, adeltap, & 
                               aznorm, aznormp, gp, gm, adsumi, & 
                               azsumi, a2fij, lacon_fly, shift, ashift
     !
     IMPLICIT NONE
     !
+    INTEGER, INTENT(in) :: iset
+    !! Define what set of variables are deallocated
+    !
     INTEGER :: ierr
     !! Error status
     !
-    ! gen_freqgrid_iaxis
-    DEALLOCATE(ws, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating ws', 1)
+    IF (iset == 1 .OR. iset == 3) THEN
+      IF (lacon) THEN
+        ! analytic_cont_aniso      
+        DEALLOCATE(adeltap, STAT = ierr)
+        IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating adeltap', 1)
+        DEALLOCATE(aznormp, STAT = ierr)
+        IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating aznormp', 1)
+        DEALLOCATE(gp, STAT = ierr)
+        IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating gp', 1)
+        DEALLOCATE(gm, STAT = ierr)
+        IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating gm', 1)
+        ! kernel_aniso_analytic_cont
+        DEALLOCATE(adsumi, STAT = ierr)
+        IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating adsumi', 1)
+        DEALLOCATE(azsumi, STAT = ierr)
+        IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating azsumi', 1)
+        ! evaluate_a2fij
+        IF (.NOT. lacon_fly) THEN
+          DEALLOCATE(a2fij, STAT = ierr)
+          IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating a2fij', 1)
+        ENDIF
+      ENDIF  
+    ENDIF        
     !
-    ! pade_cont_iso or analytic_cont_aniso
-    DEALLOCATE(delta, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating delta', 1)
-    DEALLOCATE(adelta, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating adelta', 1)
-    DEALLOCATE(znorm, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating znorm', 1)
-    DEALLOCATE(aznorm, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating aznorm', 1)
-    ! SH: fbw-related arrays in the Pade approximation
-    IF (fbw) THEN
-      DEALLOCATE(ashift, STAT = ierr)
-      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating ashift', 1)
-      DEALLOCATE(shift, STAT = ierr)
-      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating shift', 1)
-    ENDIF
-    ! analytic_cont_aniso
-    IF (lacon) THEN
-      DEALLOCATE(adeltap, STAT = ierr)
-      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating adeltap', 1)
-      DEALLOCATE(aznormp, STAT = ierr)
-      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating aznormp', 1)
-      DEALLOCATE(gp, STAT = ierr)
-      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating gp', 1)
-      DEALLOCATE(gm, STAT = ierr)
-      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating gm', 1)
-      ! kernel_aniso_analytic_cont
-      DEALLOCATE(adsumi, STAT = ierr)
-      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating adsumi', 1)
-      DEALLOCATE(azsumi, STAT = ierr)
-      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating azsumi', 1)
-      ! evaluate_a2fij
-      IF (.NOT. lacon_fly) THEN
-        DEALLOCATE(a2fij, STAT = ierr)
-        IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating a2fij', 1)
+    IF (iset == 2 .OR. iset == 3) THEN
+      ! gen_freqgrid_iaxis
+      DEALLOCATE(ws, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating ws', 1)
+      !
+      ! pade_cont_aniso or analytic_cont_aniso
+      DEALLOCATE(delta, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating delta', 1)
+      DEALLOCATE(adelta, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating adelta', 1)
+      DEALLOCATE(znorm, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating znorm', 1)
+      DEALLOCATE(aznorm, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating aznorm', 1)
+      !
+      IF (fbw) THEN
+        ! pade_cont_aniso fbw-related arrays
+        DEALLOCATE(shift, STAT = ierr)
+        IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating shift', 1)
+        DEALLOCATE(ashift, STAT = ierr)
+        IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating ashift', 1)
       ENDIF
-    ENDIF
+      !
+    ENDIF  
     !
     RETURN
     !
@@ -2261,7 +2215,7 @@
     USE elph2,         ONLY : wf, wqf, xqf, gtemp
     USE eliashbergcom, ONLY : ekfs, xkfs, wkfs, g2, w0g, a2f_iso, &
                               ixkff, ixkqf, ixqfs, nqfs, memlt_pool, &
-                              wsph, nsiw
+                              wsph, nsiw, agap
     !
     IMPLICIT NONE
     !
@@ -2275,8 +2229,6 @@
     DEALLOCATE(nsiw, STAT = ierr)
     IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating nsiw', 1)
     ! read_frequencies
-    DEALLOCATE(wsph, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating wsph', 1)
     DEALLOCATE(wf, STAT = ierr)
     IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating wf', 1)
     DEALLOCATE(wqf, STAT = ierr)
@@ -2306,9 +2258,14 @@
     ! read_ephmat
     DEALLOCATE(g2, STAT = ierr)
     IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating g2', 1)
-    ! evaluate_a2f_lambda
+    ! read_a2f
+    DEALLOCATE(wsph, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating wsph', 1)
     DEALLOCATE(a2f_iso, STAT = ierr)
     IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating a2f_iso', 1)
+    ! sum_eliashberg_aniso_iaxis
+    DEALLOCATE(agap, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating agap', 1)
     !
     RETURN
     !

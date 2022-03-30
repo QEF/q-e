@@ -46,6 +46,8 @@
     INTEGER :: ios
     !! Contains the state of the opened file
     !
+    IF (eliashberg .AND. MINVAL(gtemp(:)) <= 0) &
+      CALL errore('eliashberg_init', 'eliashberg requires min temperature > 0', 1)
     IF (eliashberg .AND. liso .AND. laniso) &
       CALL errore('eliashberg_init', 'liso or laniso needs to be true', 1)
     IF (.NOT. eliashberg .AND. liso) &
@@ -101,7 +103,7 @@
       CALL errore('eliashberg_init', 'tc_linear_solver must be either lapack or power', 1)
     !
     ! Ryd to eV
-    gtemp(:) = gtemp * ryd2ev
+    gtemp(:) = gtemp(:) * ryd2ev
     !
     IF (.NOT. elph .AND. .NOT. ep_coupling) THEN
       !
@@ -236,7 +238,7 @@
     USE epwcom,        ONLY : fsthick, eps_acustic, nqstep, degaussq, delta_qsmear, nqsmear, &
                               degaussw, nkf1, nkf2, nkf3
     USE eliashbergcom, ONLY : nkfs, nbndfs, g2, ixkqf, ixqfs, nqfs, w0g, ekfs, ef0, dosef, wsph, &
-                              wkfs, dwsph, a2f_iso, ixkff
+                              wkfs, dwsph, ixkff
     USE constants_epw, ONLY : ryd2ev, eps2, zero, eps16
     USE io_global,     ONLY : stdout, ionode_id
     USE mp_global,     ONLY : inter_pool_comm, my_pool_id, npool
@@ -320,13 +322,10 @@
     !
     CALL fkbounds(nkfs, lower_bnd, upper_bnd)
     !
-    ALLOCATE(a2f_iso(nqstep), STAT = ierr)
-    IF (ierr /= 0) CALL errore('evaluate_a2f_lambda', 'Error allocating a2f_iso', 1)
     ALLOCATE(a2f(nqstep, nqsmear), STAT = ierr)
     IF (ierr /= 0) CALL errore('evaluate_a2f_lambda', 'Error allocating a2f', 1)
     ALLOCATE(a2f_modeproj(nmodes, nqstep), STAT = ierr)
     IF (ierr /= 0) CALL errore('evaluate_a2f_lambda', 'Error allocating a2f_modeproj', 1)
-    a2f_iso(:) = zero
     a2f(:, :) = zero
     a2f_modeproj(:, :) = zero
     !
@@ -431,8 +430,6 @@
       WRITE(iua2ffil, '("Summed el-ph coupling ", f12.7)') l_sum
       CLOSE(iua2ffil)
       !
-      a2f_iso(:) = a2f(:, 1)
-      !
       name1 = TRIM(prefix) // '.a2f_proj'
       OPEN(UNIT = iua2ffil, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
       IF (ios /= 0) CALL errore('evaluate_a2f_lambda', 'error opening file ' // name1, iua2ffil)
@@ -440,7 +437,7 @@
       WRITE(iua2ffil, '("w[meV] a2f a2f_modeproj")')
       DO iwph = 1, nqstep
         ! wsph in meV (from eV)
-        WRITE(iua2ffil, '(f12.7, 100f12.7)') wsph(iwph) * 1000.d0, a2f_iso(iwph), a2f_modeproj(:, iwph)
+        WRITE(iua2ffil, '(f12.7, 100f12.7)') wsph(iwph) * 1000.d0, a2f(iwph, 1), a2f_modeproj(:, iwph)
       ENDDO
       WRITE(iua2ffil, '(a, f18.7, a, f18.7)') 'lambda_int = ', l_a2f(nqstep, 1), '   lambda_sum = ',l_sum
       CLOSE(iua2ffil)
@@ -449,9 +446,6 @@
       IF (ierr /= 0) CALL errore('evaluate_a2f_lambda', 'Error deallocating l_a2f', 1)
       !
     ENDIF
-    !
-    CALL mp_bcast(a2f_iso, ionode_id, inter_pool_comm)
-    CALL mp_barrier(inter_pool_comm)
     !
     DEALLOCATE(a2f, STAT = ierr)
     IF (ierr /= 0) CALL errore('evaluate_a2f_lambda', 'Error deallocating a2f', 1)
@@ -766,88 +760,55 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    FUNCTION gap_from_a2f()
+    SUBROUTINE find_a2f()
     !-----------------------------------------------------------------------
     !!
-    !! SH: Read the eliashberg spectral function from a2f file
-    !!       and estimate the Tc and initial gap value from there.
-    !!     This is to save time once starting the aniso runs (Nov 2021).
+    !! HP: Read the eliashberg spectral function from a2f file if present,
+    !!     otherwise evaluate it and estimate the Tc and initial gap value.
+    !!     This is to save time once starting the iso/aniso runs (3/2022).
     !!
     USE kinds,         ONLY : DP
-    USE io_global,     ONLY : ionode_id, stdout
+    USE io_global,     ONLY : stdout
     USE io_files,      ONLY : prefix
-    USE mp_global,     ONLY : inter_pool_comm, my_pool_id, npool
-    USE mp,            ONLY : mp_bcast, mp_barrier
-    USE mp_world,      ONLY : mpime
-    USE eliashbergcom, ONLY : a2f_iso
-    USE epwcom,        ONLY : nqstep, fila2f, degaussq, delta_qsmear
-    USE io_var,        ONLY : iua2ffil
-    USE constants_epw, ONLY : zero, ryd2ev
+    USE epwcom,        ONLY : fila2f, degaussq, delta_qsmear
+    USE eliashbergcom, ONLY : wsphmax, wsph
+    USE constants_epw, ONLY : ryd2ev
     !
     IMPLICIT NONE
     !
     ! Local variables
-    CHARACTER(LEN = 256) :: fa2f
-    !! File name
-    !
-    LOGICAL :: gap_from_a2f
-    !! Output value of the function
-    LOGICAL :: file_exists
-    !! Status of file
-    !
-    INTEGER :: iwph
-    !! Counter over frequncy
-    INTEGER :: ios
-    !! IO error message
+    LOGICAL :: exst
+    !! Does the file exist
     INTEGER :: ierr
     !! Error status
-    REAL(KIND = DP) :: tmpwsph
-    !! Temporary variable for phonon energies
     !
-    IF (fila2f == ' ') WRITE(fa2f, '(a, a4)') TRIM(prefix), '.a2f'
-    ! Check if a2f file exists
-    INQUIRE(FILE=fa2f, EXIST=file_exists)
-    !
-    IF (.NOT. file_exists) THEN
-      WRITE(stdout, '(5x,a)') &
-        'a2f file was not found to estimate initial gap: calculating a2f files'
+    IF (fila2f == ' ') WRITE(fila2f, '(a, a4)') TRIM(prefix), '.a2f'
+    INQUIRE(FILE = fila2f, EXIST = exst)
+    IF (exst) THEN
+      WRITE(stdout, '(5x,a)') 'a2f file is found and will be used to estimate initial gap'
       WRITE(stdout, '(a)')    ' '
-      gap_from_a2f = .FALSE.
-      RETURN
+      !
+      ! This is needed because we do not call evaluate_a2f_lambda
+      degaussq = degaussq * ryd2ev
+      delta_qsmear = delta_qsmear * ryd2ev
+    ELSE
+      WRITE(stdout, '(5x,a)') &
+        'a2f file is not found to estimate initial gap: calculating a2f files'
+      WRITE(stdout, '(a)')    ' '
+      CALL evaluate_a2f_lambda
     ENDIF
     !
-    !
-    WRITE(stdout, '(5x,a)') 'a2f file is found and will be used to estimate initial gap'
-    WRITE(stdout, '(a)')    ' '
-    !
-    ALLOCATE(a2f_iso(nqstep), STAT = ierr)
-    IF (ierr /= 0) CALL errore('gap_from_a2f', 'Error allocating a2f_iso', 1)
-    a2f_iso(:) = zero
-    IF (mpime == ionode_id) THEN
-      OPEN(UNIT = iua2ffil, FILE = fa2f, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
-      IF (ios /= 0) CALL errore('gap_from_a2f', 'error opening file ' // fa2f, iua2ffil)
-      READ(iua2ffil, *)
-      DO iwph = 1, nqstep
-        READ(iua2ffil, *) tmpwsph, a2f_iso(iwph) ! freq from meV to eV
-      ENDDO
-      CLOSE(iua2ffil)
+    ! HP: this is requred to make consistient in iso/aniso calculation
+    IF (wsphmax > 0.d0) THEN
+      ! read_frequencies
+      DEALLOCATE(wsph, STAT = ierr)
+      IF (ierr /= 0) CALL errore('find_a2f', 'Error deallocating wsph', 1)
     ENDIF
-    !
-    CALL mp_bcast(a2f_iso, ionode_id, inter_pool_comm)
-    CALL mp_barrier(inter_pool_comm)
-    !
-    WRITE(stdout, '(/5x, a/)') 'Finish reading a2f file'
-    !
-    ! This is needed since this function replaces evaluate_a2f_lambda
-    degaussq = degaussq * ryd2ev
-    delta_qsmear = delta_qsmear * ryd2ev
-    !
-    gap_from_a2f = .TRUE.
     !
     RETURN
     !
     !-----------------------------------------------------------------------
-    END FUNCTION gap_from_a2f
+    END SUBROUTINE find_a2f
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
@@ -858,8 +819,7 @@
     !!
     !
     USE io_global,     ONLY : stdout
-    USE epwcom,        ONLY : wscut, nqstep
-    USE eliashbergcom, ONLY : nsw, ws, wsph, dwsph, wsphmax
+    USE eliashbergcom, ONLY : nsw, ws, dwsph
     USE constants_epw, ONLY : zero
     !
     IMPLICIT NONE
@@ -874,11 +834,7 @@
     ws(:) = zero
     !
     DO iw = 1, nsw
-      IF (iw <= nqstep) THEN
-        ws(iw) = wsph(iw)
-      ELSE
-        ws(iw) = wsphmax + DBLE(iw - nqstep) * dwsph
-      ENDIF
+      ws(iw) = DBLE(iw) * dwsph
     ENDDO
     !
     RETURN
@@ -929,9 +885,9 @@
     !! =====================================================================
     !!
     !
-    USE epwcom,        ONLY : nqstep, lpade, lacon, laniso, gridsamp, griddens
+    USE epwcom,        ONLY : lpade, lacon, laniso, gridsamp, griddens, tc_linear
     USE elph2,         ONLY : gtemp
-    USE eliashbergcom, ONLY : nsw, nsiw, ws, wsi, wsph, dwsph, wsphmax, wsn
+    USE eliashbergcom, ONLY : nsw, nsiw, ws, wsi, dwsph, wsn
     USE constants_epw, ONLY : zero
     USE constants,     ONLY : pi
     USE low_lvl,       ONLY : mem_size_eliashberg
@@ -1029,6 +985,7 @@
       IF (iverbosity == 2) CALL write_matsubara_freq(itemp)
       !
       ! print actual number of Matsubara frequencies
+      IF (.NOT. tc_linear) &
       WRITE(stdout, '(5x, a, i6, a, i6, a, a, a)') 'Actual number of frequency points (', &
         itemp, ') = ', nsiw(itemp), ' for ', schm, ' sampling'
       !
@@ -1046,12 +1003,7 @@
       IF (ierr /= 0) CALL errore('gen_freqgrid_iaxis', 'Error allocating ws', 1)
       ws(:) = zero
       DO iw = 1, nsw
-        IF (iw <= nqstep) THEN
-          ws(iw) = wsph(iw)
-        ELSE
-          ws(iw) = wsphmax + DBLE(iw - nqstep) * dwsph
-        ENDIF
-       !WRITE(*, *) iw, ws(iw), wsph(iw)
+        ws(iw) = DBLE(iw) * dwsph
       ENDDO
     ENDIF
     !
@@ -1070,7 +1022,6 @@
     !!
     !
     USE kinds, ONLY : DP
-    USE constants_epw, ONLY : eps6, zero, one
     !
     IMPLICIT NONE
     !
@@ -1085,17 +1036,20 @@
     REAL(KIND = DP), INTENT(out) :: rgammam
     !! bose_einstein(w') + fermi_dirac(-w + w')
     !
-    rgammap = zero
-    rgammam = zero
-    IF (ABS(temp) < eps6) THEN
-      rgammap = zero
-      rgammam = one
-    ELSEIF (omegap > zero) THEN
-      rgammap = 0.5d0 * (TANH(0.5d0 * (omega + omegap) / temp) &
-                         - 1.d0 / TANH(0.5d0 * omegap / temp))
-      rgammam = 0.5d0 * (TANH(0.5d0 * (omega - omegap) / temp) &
-                         + 1.d0 / TANH(0.5d0 * omegap / temp))
-    ENDIF
+    ! Local variables
+    !
+    REAL(KIND = DP) :: inv_temp
+    !! Invese temperature inv_etemp = 1/temp. Defined for efficiency reason
+    REAL(KIND = DP) :: coth
+    !! coth = 1/tanh
+    !
+    inv_temp = 1.d0 / temp
+    !
+    coth = 1.d0 / TANH(0.5d0 * omegap * inv_temp)
+    !
+    rgammap = 0.5d0 * (TANH(0.5d0 * (omega + omegap) * inv_temp) - coth)
+    rgammam = 0.5d0 * (TANH(0.5d0 * (omega - omegap) * inv_temp) + coth)
+    !
     !
     RETURN
     !
@@ -1117,6 +1071,11 @@
     USE eliashbergcom, ONLY : nsw, dwsph, ws, delta, adelta, &
                               wkfs, w0g, nkfs, nbndfs, ef0, ekfs
     USE constants_epw, ONLY : kelvin2eV, zero, ci
+    USE io_global,     ONLY : ionode_id
+    USE mp_global,     ONLY : inter_pool_comm
+    USE mp,            ONLY : mp_barrier, mp_sum
+    USE mp_world,      ONLY : mpime
+    USE division,      ONLY : fkbounds
     !
     IMPLICIT NONE
     !
@@ -1132,6 +1091,8 @@
     !! Counter on k-points
     INTEGER :: ibnd
     !! Counter on bands
+    INTEGER :: lower_bnd, upper_bnd
+    !! Lower/upper bound index after k paral
     INTEGER :: ios
     !! IO error message
     INTEGER :: ierr
@@ -1159,37 +1120,47 @@
     ELSEIF (temp >= 100.d0) THEN
       WRITE(fildos, '(a, a6, f6.2)') TRIM(prefix), '.qdos_', temp
     ENDIF
-    OPEN(iuqdos, FILE = fildos, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
-    IF (ios /= 0) CALL errore('dos_quasiparticle', 'error opening file ' // fildos, iuqdos)
     !
     ALLOCATE(dos_qp(nsw), STAT = ierr)
     IF (ierr /= 0) CALL errore('dos_quasiparticle', 'Error allocating dos_qp', 1)
     dos_qp(:) = zero
     !
     IF (laniso) THEN
-      WRITE(iuqdos, '(5a20)') 'w [eV]', 'N_S/N_F'
-      DO iw = 1, nsw
-        omega = ws(iw) + ci * degaussw0
-        DO ik = 1, nkfs
-          DO ibnd = 1, nbndfs
-            IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
-              weight = 0.5d0 * wkfs(ik) * w0g(ibnd, ik)
+      !
+      CALL fkbounds(nkfs, lower_bnd, upper_bnd)    
+      !  
+      DO ik = lower_bnd, upper_bnd
+        DO ibnd = 1, nbndfs
+          IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
+            weight = 0.5d0 * wkfs(ik) * w0g(ibnd, ik)
+            DO iw = 1, nsw
+              omega = ws(iw) + ci * degaussw0
               dos_qp(iw) = dos_qp(iw) + weight &
                          * REAL(omega / SQRT(omega * omega - adelta(iw, ibnd, ik) * adelta(iw, ibnd, ik)))
-            ENDIF
-          ENDDO
+            ENDDO
+          ENDIF
         ENDDO
-        WRITE(iuqdos, '(2ES20.10)') ws(iw), dos_qp(iw)
       ENDDO
+      ! collect contributions from all pools
+      CALL mp_sum(dos_qp, inter_pool_comm)
+      CALL mp_barrier(inter_pool_comm)
+      !
     ELSEIF (liso) THEN
-      WRITE(iuqdos, '(5a20)') 'w [eV]', 'N_S/N_F'
       DO iw = 1, nsw
         omega = ws(iw) + ci * degaussw0
         dos_qp(iw) = dos_qp(iw) + REAL(omega / SQRT(omega * omega - delta(iw) * delta(iw)))
-        WRITE(iuqdos, '(2ES20.10)') ws(iw), dos_qp(iw)
       ENDDO
     ENDIF
-    CLOSE(iuqdos)
+    !
+    IF (mpime == ionode_id) THEN
+      OPEN(iuqdos, FILE = fildos, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
+      IF (ios /= 0) CALL errore('dos_quasiparticle', 'error opening file ' // fildos, iuqdos)      
+      WRITE(iuqdos, '(5a20)') 'w [eV]', 'N_S/N_F'
+      DO iw = 1, nsw
+        WRITE(iuqdos, '(2ES20.10)') ws(iw), dos_qp(iw)
+      ENDDO
+      CLOSE(iuqdos)
+    ENDIF
     !
     DEALLOCATE(dos_qp, STAT = ierr)
     IF (ierr /= 0) CALL errore('dos_quasiparticle', 'Error deallocating dos_qp', 1)
@@ -1198,94 +1169,6 @@
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE dos_quasiparticle
-    !-----------------------------------------------------------------------
-    !
-    !-----------------------------------------------------------------------
-    SUBROUTINE free_energy(itemp)
-    !-----------------------------------------------------------------------
-    !!
-    !! Computes the free energy difference between the superconducting and
-    !! normal states
-    !!
-    !
-    USE kinds,         ONLY : DP
-    USE io_var,        ONLY : iufe
-    USE io_files,      ONLY : prefix
-    USE epwcom,        ONLY : liso, laniso, fsthick
-    USE elph2,         ONLY : gtemp
-    USE eliashbergcom, ONLY : wsi, nsiw, adeltai, aznormi, naznormi, &
-                              deltai, znormi, nznormi, &
-                              wkfs, w0g, nkfs, nbndfs, ef0, ekfs
-    USE constants_epw, ONLY : kelvin2eV, zero
-    USE constants,     ONLY : pi
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(in) :: itemp
-    !! Counter on temperature
-    !
-    ! Local variables
-    CHARACTER(LEN = 256) :: filfe
-    !! name dos file
-
-    INTEGER :: iw
-    !! Counter over frequency real-axis
-    INTEGER :: ik
-    !! Counter on k-points
-    INTEGER :: ibnd
-    !! Counter on bands
-    INTEGER :: ios
-    !! IO error message
-    !
-    REAL(KIND = DP) :: omega
-    !! sqrt{w^2+\delta^2}
-    REAL(KIND = DP) :: weight
-    !! free energy factor
-    REAL(KIND = DP) :: temp
-    !! temperature in K
-    REAL(KIND = DP) :: dFE
-    !! free energy difference between supercond and normal states
-    !
-    temp = gtemp(itemp) / kelvin2eV
-    IF (temp < 10.d0) THEN
-      WRITE(filfe, '(a, a6, f4.2)') TRIM(prefix), '.fe_00', temp
-    ELSEIF (temp >= 10.d0 .AND. temp < 100.d0) THEN
-      WRITE(filfe,'(a, a5, f5.2)') TRIM(prefix), '.fe_0', temp
-    ELSEIF (temp >= 100.d0) THEN
-      WRITE(filfe,'(a, a4, f6.2)') TRIM(prefix), '.fe_', temp
-    ENDIF
-    OPEN(iufe, FILE = filfe, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
-    IF (ios /= 0) CALL errore('dos_quasiparticle', 'error opening file ' // filfe, iufe)
-    !
-    dFE = zero
-    IF (laniso) THEN
-      DO ik = 1, nkfs
-        DO ibnd = 1, nbndfs
-          IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
-            DO iw = 1, nsiw(itemp)
-              weight = 0.5d0 * wkfs(ik) * w0g(ibnd,ik)
-              omega = DSQRT(wsi(iw) * wsi(iw) + adeltai(iw, ibnd, ik) * adeltai(iw, ibnd, ik))
-              dFE = dFE - weight * (omega - wsi(iw)) &
-                * (aznormi(iw, ibnd, ik) - naznormi(iw, ibnd, ik) * wsi(iw) / omega)
-            ENDDO
-          ENDIF
-        ENDDO
-      ENDDO
-    ELSEIF (liso) THEN
-      DO iw = 1, nsiw(itemp)
-        omega = DSQRT(wsi(iw) * wsi(iw) + deltai(iw) * deltai(iw))
-        dFE = dFE - (omega - wsi(iw)) &
-            * (znormi(iw) - nznormi(iw) * wsi(iw) / omega)
-      ENDDO
-    ENDIF
-    dFE = dFE * pi * gtemp(itemp)
-    WRITE(iufe, '(2ES20.10)') temp, dFE
-    CLOSE(iufe)
-    !
-    RETURN
-    !
-    !-----------------------------------------------------------------------
-    END SUBROUTINE free_energy
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
@@ -1472,8 +1355,8 @@
     !!
     USE epwcom,        ONLY : liso, laniso
     USE elph2,         ONLY : wf, wqf, xqf, gtemp
-    USE eliashbergcom, ONLY : ekfs, xkfs, wkfs, g2, a2f_iso, w0g, &
-                              ixkff, ixkqf, ixqfs, nqfs, wsph, memlt_pool
+    USE eliashbergcom, ONLY : ekfs, xkfs, wkfs, g2, w0g, &
+                              ixkff, ixkqf, ixqfs, nqfs, memlt_pool
     !
     IMPLICIT NONE
     !
@@ -1486,8 +1369,6 @@
       IF (ierr /= 0) CALL errore('deallocate_eliashberg_aniso', 'Error deallocating gtemp', 1)
     ENDIF
     ! read_frequencies
-    DEALLOCATE(wsph, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_eliashberg_elphon', 'Error deallocating wsph', 1)
     DEALLOCATE(wf, STAT = ierr)
     IF (ierr /= 0) CALL errore('deallocate_eliashberg_elphon', 'Error deallocating wf', 1)
     DEALLOCATE(wqf, STAT = ierr)
@@ -1517,9 +1398,6 @@
     ! read_ephmat
     DEALLOCATE(g2, STAT = ierr)
     IF (ierr /= 0) CALL errore('deallocate_eliashberg_elphon', 'Error deallocating g2', 1)
-    ! evaluate_a2f_lambda
-    DEALLOCATE(a2f_iso, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_eliashberg_elphon', 'Error deallocating a2f_iso', 1)
     !
     RETURN
     !

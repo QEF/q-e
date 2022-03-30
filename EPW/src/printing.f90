@@ -906,7 +906,7 @@
       !IF (laniso .AND. .NOT. imag_read) &
       !  WRITE(stdout, '(5x, a)') 'Solve anisotropic Eliashberg equations on imaginary-axis'
       !IF (laniso .AND. imag_read) &
-      !  WRITE(stdout, '(5x, a)') 'Read from file delta and znorm on imaginary-axis '
+      !  WRITE(stdout, '(5x, a)') 'Read from file delta and znorm on imaginary-axis'
       IF (liso .AND. .NOT. fbw) &
         WRITE(stdout, '(5x, a)') 'Solve isotropic Eliashberg equations on imaginary-axis'
       IF (liso .AND. fbw) &
@@ -915,9 +915,9 @@
         WRITE(stdout, '(5x, a)') 'Solve anisotropic Eliashberg equations on imaginary-axis'
       IF (laniso .AND. fbw .AND. .NOT. imag_read) &
         WRITE(stdout, '(5x, a)') 'Solve full-bandwidth anisotropic Eliashberg equations on imaginary-axis'
-      IF (laniso .AND. .NOT. fbw .AND. imag_read) &
+      IF (laniso .AND. .NOT. fbw .AND. imag_read .AND. itemp == 1) &
         WRITE(stdout, '(5x, a)') 'Read from file delta and znorm on imaginary-axis'
-      IF (laniso .AND. fbw .AND. imag_read) &
+      IF (laniso .AND. fbw .AND. imag_read .AND. itemp == 1) &
         WRITE(stdout, '(5x, a)') 'Read from file delta and znorm and shift on imaginary-axis'
       !!!!
       WRITE(stdout, '(a)') '    '

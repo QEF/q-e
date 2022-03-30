@@ -16,9 +16,8 @@
   USE epwcom,            ONLY : liso, fila2f, gap_edge, lreal, limag, laniso, &
                                 tc_linear, fbw
   USE eliashbergcom,     ONLY : gap0
-  USE supercond,         ONLY : eliashberg_init, evaluate_a2f_lambda, &
-                                estimate_tc_gap, deallocate_eliashberg_elphon, &
-                                gap_from_a2f
+  USE supercond,         ONLY : eliashberg_init, estimate_tc_gap, find_a2f, &
+                                deallocate_eliashberg_elphon
   USE io_eliashberg,     ONLY : read_a2f, read_frequencies, read_eigenvalues, &
                                 read_ephmat, read_kqmap
   USE supercond_iso,     ONLY : eliashberg_iso_iaxis, eliashberg_iso_raxis, &
@@ -43,7 +42,7 @@
       CALL read_eigenvalues()
       CALL read_kqmap()
       CALL read_ephmat()
-      CALL evaluate_a2f_lambda()
+      CALL find_a2f()
       CALL deallocate_eliashberg_elphon()
     ENDIF
     !
@@ -71,7 +70,8 @@
     CALL read_eigenvalues()
     CALL read_kqmap()
     CALL read_ephmat()
-    IF (.NOT. gap_from_a2f()) CALL evaluate_a2f_lambda()
+    CALL find_a2f()
+    CALL read_a2f()
     CALL estimate_tc_gap()
     IF (gap_edge > 0.d0) THEN
       gap0 = gap_edge
@@ -88,7 +88,8 @@
     CALL read_eigenvalues()
     CALL read_kqmap()
     CALL read_ephmat()
-    CALL evaluate_a2f_lambda()
+    CALL find_a2f()
+    CALL read_a2f()
     CALL estimate_tc_gap()
     CALL deallocate_eliashberg_elphon()
   ENDIF
