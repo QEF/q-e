@@ -459,6 +459,7 @@ CONTAINS
     !! structural minimization paths. All quantities must be provided directly in Hartree atomic units. 
     !! @Note updated on April 10th 2018 by Pietro Delugas
     USE qexsd_init, ONLY : qexsd_init_atomic_structure, qexsd_init_total_energy
+    USE control_flags, ONLY : tstress
     ! 
     INTEGER ,INTENT(IN)             :: i_step, max_steps, ntyp, nat, n_scf_steps, ityp(:)
     REAL(DP),INTENT(IN)             :: tau(3,nat), alat, a1(3), a2(3), a3(3), etot, eband, ehart, vtxc, &
@@ -503,6 +504,9 @@ CONTAINS
     ! 
     CALL qes_init( mat_stress, "stress", [3, 3], stress ) 
     step_obj%stress = mat_stress
+    IF( tstress ) THEN
+       step_obj%stress_ispresent = .TRUE.
+    END IF
     CALL qes_reset ( mat_stress ) 
     IF ( PRESENT ( fcp_force ) ) THEN 
        step_obj%FCP_force = fcp_force
