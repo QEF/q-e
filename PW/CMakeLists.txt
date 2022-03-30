@@ -312,7 +312,6 @@ target_link_libraries(qe_pw
         qe_xclib
         qe_devxlib
         qe_mbd
-        qe_environ
     PUBLIC
         qe_openacc_fortran)
 
@@ -320,6 +319,12 @@ if(QE_ENABLE_CUDA)
     target_link_libraries(qe_pw
         PRIVATE
             CUDA::cublas)
+endif()
+
+if(QE_ENABLE_ENVIRON)
+    target_link_libraries(qe_pw
+    PRIVATE
+        qe_environ)
 endif()
 
 ###########################################################
@@ -336,8 +341,13 @@ target_link_libraries(qe_pw_exe
         qe_pw
         qe_modules
         qe_lax
-        qe_upflib
+        qe_upflib)
+
+if(QE_ENABLE_ENVIRON)
+    target_link_libraries(qe_pw_exe
+    PRIVATE
         qe_environ)
+endif()
 
 ###########################################################
 # ibrav2cell.x

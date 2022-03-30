@@ -160,12 +160,17 @@ target_link_libraries(qe_modules
         qe_upflib
         qe_fox
         qe_utilx
-        qe_openacc_fortran
-        qe_environ)
+        qe_openacc_fortran)
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_modules
         PRIVATE
             CUDA::curand)
+endif()
+
+if(QE_ENABLE_ENVIRON)
+    target_link_libraries(qe_modules
+    PUBLIC
+        qe_environ)
 endif()
 
 ###########################################################

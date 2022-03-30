@@ -104,8 +104,6 @@ option(QE_ENABLE_LIBXC
     "enable LIBXC execution units" OFF)
 option(QE_ENABLE_HDF5
     "enable HDF5 data collection" OFF)
-option(QE_ENABLE_ENVIRON
-    "enable coupling with Environ continuum solvation library" OFF)
 option(QE_ENABLE_STATIC_BUILD
     "enable fully static build of executables" OFF)
 option(QE_ENABLE_DOC
@@ -134,6 +132,13 @@ if(DEVICEXLIB_ROOT)
 endif()
 option(QE_DEVICEXLIB_INTERNAL
     "enable DeviceXlib intenal library" ON)
+if(ENVIRON_ROOT)
+    set(ENVIRON_DEFAULT "EXTERNAL")
+else()
+    set(ENVIRON_DEFAULT "NO")
+endif()
+set(QE_ENABLE_ENVIRON "${ENVIRON_DEFAULT}" CACHE
+    STRING "select a specific Environ library [NO, EXTERNAL, INTERNAL]")
 
 # TODO change all ifdefs throughout code base to match
 # cmake options
@@ -179,16 +184,6 @@ if(QE_ENABLE_HDF5)
 endif()
 if(QE_ENABLE_ENVIRON)
     qe_add_global_compile_definitions(__ENVIRON)
-    add_library(qe_environ INTERFACE)
-    qe_install_targets(qe_environ)
-    if(DEFINED ENVIRON_ROOT)
-        target_link_libraries(qe_environ 
-            INTERFACE 
-                ${ENVIRON_ROOT}/libs/libenv
-                ${ENVIRON_ROOT}/libs/libfft
-                ${ENVIRON_ROOT}/libs/libutil)
-        target_include_directories(qe_environ INTERFACE ${ENVIRON_ROOT}/src)
-    endif()
 endif()
 
 # Feature checks

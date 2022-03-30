@@ -67,8 +67,13 @@ target_link_libraries(qe_tddfpt
         qe_modules
         qe_upflib
         qe_fftx
-        qe_xclib
+        qe_xclib)
+
+if(QE_ENABLE_ENVIRON)
+    target_link_libraries(qe_tddfpt
+    PRIVATE
         qe_environ)
+endif()
 
 ###########################################################
 # turbo_lanczos.x
@@ -85,8 +90,13 @@ target_link_libraries(qe_tddfpt_turbolanczos_exe
         qe_tddfpt
         qe_upflib
         qe_fftx
-        qe_xclib
+        qe_xclib)
+
+if(QE_ENABLE_ENVIRON)
+    target_link_libraries(qe_tddfpt_turbolanczos_exe
+    PRIVATE
         qe_environ)
+endif()
 
 ###########################################################
 # turbo_davidson.x
@@ -103,8 +113,13 @@ target_link_libraries(qe_tddfpt_turbodavidson_exe
         qe_tddfpt
         qe_upflib
         qe_fftx
-        qe_xclib
+        qe_xclib)
+
+if(QE_ENABLE_ENVIRON)
+    target_link_libraries(qe_tddfpt_turbodavidson_exe
+    PRIVATE
         qe_environ)
+endif()
 
 ###########################################################
 # turbo_eels.x

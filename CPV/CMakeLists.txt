@@ -118,9 +118,14 @@ target_link_libraries(qe_cpv
         qe_xclib
         qe_device_lapack
         qe_devxlib
-        qe_environ
      PUBLIC 
         qe_openacc_fortran)
+
+if(QE_ENABLE_ENVIRON)
+    target_link_libraries(qe_cpv
+    PRIVATE
+        qe_environ)
+endif()
 
 ###########################################################
 # cp.x
@@ -136,8 +141,13 @@ target_link_libraries(qe_cpv_exe
         qe_modules
         qe_lax
         qe_cpv
-        qe_xclib
+        qe_xclib)
+
+if(QE_ENABLE_ENVIRON)
+    target_link_libraries(qe_cpv_exe
+    PRIVATE
         qe_environ)
+endif()
 
 ###########################################################
 # manycp.x
