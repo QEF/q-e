@@ -123,10 +123,12 @@ SUBROUTINE init_run()
   CALL bp_global_map()
   !
 #if defined (__ENVIRON)
-  IF (alat < 1.D-8) CALL errore('init_run', "Wrong alat", 1)
-  at_scaled = at * alat
-  gcutm_scaled = gcutm / alat**2
-  IF (use_environ) call init_environ_base(at_scaled, gcutm_scaled, do_comp_mt)
+  IF (use_environ) THEN
+    IF (alat < 1.D-8) CALL errore('init_run', "Wrong alat", 1)
+    at_scaled = at * alat
+    gcutm_scaled = gcutm / alat**2
+    call init_environ_base(at_scaled, gcutm_scaled, do_comp_mt)
+  END IF
 #endif
   !
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ), btype( nbnd, nkstot ) )
