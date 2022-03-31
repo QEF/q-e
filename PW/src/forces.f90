@@ -41,7 +41,6 @@ SUBROUTINE forces()
   USE control_flags,     ONLY : gamma_only, remove_rigid_rot, textfor, &
                                 iverbosity, llondon, ldftd3, lxdm, ts_vdw, &
                                 mbd_vdw, lforce => tprnfor
-  USE plugin_flags
   USE bp,                ONLY : lelfield, gdir, l3dstring, efield_cart, &
                                 efield_cry,efield
   USE uspp,              ONLY : okvan
@@ -65,6 +64,7 @@ SUBROUTINE forces()
 #if defined (__ENVIRON)
   USE plugin_flags,        ONLY : use_environ
   USE environ_base_module, ONLY : calc_environ_force
+  USE environ_pw_module,   ONLY : is_ms_gcs, run_ms_gcs
 #endif
   !
   IMPLICIT NONE
@@ -331,7 +331,11 @@ SUBROUTINE forces()
   !
   ! ... call void routine for user define/ plugin patches on external forces
   !
-  CALL plugin_ext_forces()
+#if defined (__ENVIRON)
+  IF (use_environ) THEN
+     IF (is_ms_gcs()) CALL run_ms_gcs()
+  END IF
+#endif
   !
   ! ... write on output the forces
   !
