@@ -645,11 +645,10 @@ available:\\
                                   & CUDA Toolkit installed on the workstation \\
                                   & or available on the compute nodes of the HPC facility.\\
 \texttt{--with-cuda-mpi=value}    & enable usage of a CUDA-aware MPI library (default: no).\\
-\end{tabular}{ll}
+\end{tabular}
 
-To modify or extend \configure, see the Wiki pages on GitLab:
-\texttt{https://gitlab.com/QEF/q-e/-/wikis}.
-For advanced users only!
+To modify or extend \configure\ (advanced users only!), see the Wiki pages
+on GitLab: \texttt{https://gitlab.com/QEF/q-e/-/wikis}.
 
 \subsubsection{Manual configuration}
 \label{SubSec:manconf}
@@ -665,7 +664,8 @@ if you want to link internal FFTW). For a correct choice of preprocessing
 flags, refer to the documentation in \texttt{include/defs.h.README}.
 
 Even if \configure\ works, you may need to tweak the \texttt{make.inc}
-file. It is very simple, but please note that if you change any settings
+file. It is very simple, but please note that a) you must know what you are
+doing, and b) if you change any settings
 (e.g. preprocessing, compilation flags)
 after a previous, successful or failed, compilation, you must run
 \texttt{make clean} before recompiling, unless you know exactly which
@@ -676,7 +676,7 @@ unless you use option \texttt{--save}.
 \subsection{Libraries}
 \label{Sec:Libraries}
 
-\qe\ contains a copy of some needed external libraries:
+\qe\ downloads a copy of the following external libraries if needed:
 \begin{itemize}
  \item FoX for reading and writing xml files;
  \item BLAS (\texttt{http://www.netlib.org/blas/}) and LAPACK
