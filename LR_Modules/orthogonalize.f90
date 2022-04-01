@@ -202,7 +202,6 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   !
   ! dpsi is used as work space to store S*evq
   !
-  rint *, 'dpsi_computed'
   IF (.NOT.dpsi_computed) THEN
      !
      IF (okvan) then
