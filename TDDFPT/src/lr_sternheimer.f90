@@ -438,9 +438,9 @@ SUBROUTINE one_sternheimer_step(iu, flag)
 
                 ltaver = ltaver + lter
                 lintercall = lintercall + 1
-                IF (.not.conv_root) WRITE( stdout, "(5x,'kpoint',i4,' ibnd',i4, &
+                IF (.not.conv_root) WRITE( stdout, "(5x,'kpoint',i4, &
                   &         ' solve_e: root not converged ',es10.3)") ik &
-                  &, ibnd, anorm
+                  &, anorm
                 !
                 ! writes delta_psi on iunit iudwf, k=kpoint,
                 !

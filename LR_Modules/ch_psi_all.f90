@@ -296,6 +296,7 @@ CONTAINS
 
     IMPLICIT NONE
     INTEGER :: m_start, m_end ,ntemp
+    INTEGER :: ibnd, ig
 
     ntemp = nbnd_occ (ik)
     CALL start_clock_gpu ('ch_psi_all_gamma')
@@ -308,7 +309,7 @@ CONTAINS
     ENDIF
             
 #if defined(__CUDA)            
-    !$acc host_data use_device(spsi, ps, evc)     
+    !$acc host_data use_device(spsi, ps, evc)
     CALL DGEMM( 'C', 'N', nbnd, m, 2*n, 2.D0,evc, 2*npwx*npol, spsi, 2*npwx*npol, 0.D0, ps, nbnd )
     if(gstart==2) CALL gpu_DGER(nbnd, m, -1.0_DP, evc, 2*npwx, spsi, 2*npwx, ps, nbnd )
     !$acc end host_data
@@ -324,8 +325,7 @@ CONTAINS
     CALL mp_sum ( ps, intra_bgrp_comm )
     !$acc end host_data
     !$acc host_data use_device(hpsi, ps, evc)
-    CALL DGEMM ('N', 'N', 2*n, m, ntemp , 1.d0 , evc, &
-         2*npwx, ps, nbnd, 1.d0 , hpsi, 2*npwx)
+    CALL DGEMM ('N', 'N', 2*n, m, ntemp , 1.d0 , evc, 2*npwx, ps, nbnd, 1.d0 , hpsi, 2*npwx)
     !$acc end host_data
     !$acc kernels present(spsi, hpsi)
     spsi(:,:) = hpsi(:,:)
@@ -376,7 +376,7 @@ CONTAINS
        CALL s_psi (npwx, n, m, hpsi, spsi)
 #endif       
     ENDIF
-    !$acc parallel loop collapse(2) present(ah, spsi)
+    !$acc parallel loop collapse(2) present(ah)
     DO ibnd = 1, m
        DO ig = 1, n
           ah (ig, ibnd) = ah (ig, ibnd) + spsi (ig, ibnd)

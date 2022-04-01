@@ -59,6 +59,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   USE control_flags,  ONLY : gamma_only
   USE gvect,          ONLY : gstart
   USE eqv,            ONLY : evq
+  USE wavefunctions,  ONLY : evc
 #if defined(__CUDA)
  USE cublas
 #endif
@@ -138,7 +139,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 
   ! bgrp parallelization is done outside h_psi/s_psi. set use_bgrp_in_hpsi temporarily to false
   lsave_use_bgrp_in_hpsi = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .false.
-  !$acc enter data create(rho(1:my_nbnd),a(1:my_nbnd),c(1:my_nbnd),eu(1:my_nbnd),t(1:ndmx*npol,1:my_nbnd),g(1:ndmx*npol,1:my_nbnd),h(1:ndmx*npol,1:my_nbnd), hold(1:ndmx*npol,1:my_nbnd)) copyin(e(1:nbnd),dpsi(1:ndmx*npol,1:nbnd),evq,h_diag(1:ndmx*npol,1:nbnd),d0psi(1:ndmx*npol,1:nbnd))
+  !$acc enter data create(rho(1:my_nbnd),a(1:my_nbnd),c(1:my_nbnd),eu(1:my_nbnd),t(1:ndmx*npol,1:my_nbnd),g(1:ndmx*npol,1:my_nbnd),h(1:ndmx*npol,1:my_nbnd),hold(1:ndmx*npol,1:my_nbnd)) copyin(e(1:nbnd),dpsi(1:ndmx*npol,1:nbnd),evq,evc,h_diag(1:ndmx*npol,1:nbnd),d0psi(1:ndmx*npol,1:nbnd))
   !$acc kernels present(g,t,h,hold)
   g=(0.d0,0.d0)
   t=(0.d0,0.d0)
@@ -261,30 +262,32 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      !        compute step length lambda
      lbnd=0
      !CALL start_clock('loop3')
-     !$acc host_data use_device(g,h,t,a,c)
      do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
            IF (gamma_only) THEN
+              !$acc host_data use_device(g,h,t,a,c)
               CALL MYDDOTV3(2*ndmx*npol,h(1,ibnd_),1,g(1,ibnd_),1,a(lbnd)) 
               CALL MYDDOTV3(2*ndmx*npol,h(1,ibnd_),1,t(1,lbnd),1,c(lbnd)) 
-              !$acc kernels 
+              !$acc end host_data
+              !$acc serial
               a(lbnd) = a(lbnd)*2.0d0
               c(lbnd) = c(lbnd)*2.0d0
-              !$acc end kernels
+              !$acc end serial
               IF (gstart == 2) THEN
-                 !$acc kernels 
+                 !$acc serial 
                  a(lbnd)=a(lbnd)-DBLE(h(1,ibnd_))*DBLE(g(1,ibnd_))
                  c(lbnd)=c(lbnd)-DBLE(h(1,ibnd_))*DBLE(t(1,lbnd))
-                 !$acc end kernels
+                 !$acc end serial
               ENDIF
            ELSE
+              !$acc host_data use_device(g,h,t,a,c)
               CALL MYDDOTV3(2*ndmx*npol, h(1,ibnd_), 1, g(1,ibnd_), 1, a(lbnd))
               CALL MYDDOTV3(2*ndmx*npol, h(1,ibnd_), 1, t(1,lbnd), 1, c(lbnd))
+              !$acc end host_data
            ENDIF
         end if
      end do
-     !$acc end host_data
      !$acc update host(a,c)
      !CALL stop_clock('loop3')
      call mp_sum(  a(1:lbnd), intra_bgrp_comm )
@@ -320,7 +323,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      !CALL stop_clock('loop4')
   enddo
 100 continue
-  !$acc exit data delete(rho,evq,a,c,g,h,h_diag,d0psi,hold,t,eu,e) copyout(dpsi)
+  !$acc exit data delete(rho,evq,evc,a,c,g,h,h_diag,d0psi,hold,t,eu,e) copyout(dpsi)
   ! deallocate workspace not needed anymore
   deallocate (eu) ; deallocate (rho, rhoold) ; deallocate (a,c) ; deallocate (g, t, h, hold)
 

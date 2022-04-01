@@ -68,13 +68,19 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   !
   IF (gamma_only) THEN
      ALLOCATE(ps_r(nbnd,nbnd))
-     ps_r = 0.0_DP
   ENDIF
   !
   ALLOCATE(ps(nbnd,nbnd))
-  ps = (0.0_DP, 0.0_DP)
   !
-  !$acc data copyin(evq) copy(dvpsi) create(ps, ps_r, dpsi)
+  !$acc data copyin(evq) copy(dvpsi,dpsi) create(ps(1:nbnd, 1:nbnd), ps_r(1:nbnd, 1:nbnd))
+  IF (gamma_only) THEN
+     !$acc kernels
+     ps_r(:,:) = 0.0d0
+     !$acc end kernels
+  ENDIF        
+  !$acc kernels
+  ps(:,:) = (0.0d0, 0.0d0)
+  !$acc end kernels
   !
   IF (ltetra .OR. lgauss) THEN
      !
@@ -239,11 +245,18 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   !
   ! |dvspi> =  -(|dvpsi> - S|evq><evq|dvpsi>)
   !
+  IF (gamma_only) THEN
+     !$acc kernels present(ps, ps_r)
+     ps = CMPLX (ps_r,0.0_DP, KIND=DP)
+     !$acc end kernels
+  ENDIF        
+  !
   !$acc host_data use_device(dpsi, ps, dvpsi)
   IF (lgauss .OR. ltetra ) THEN
      !
      !  metallic case
      !
+     !$acc host_data use_device(dpsi, ps, dvpsi)
      IF (noncolin) THEN
         CALL zgemm( 'N', 'N', npwx*npol, nbnd_occ(ikk), nbnd, &
              (1.d0,0.d0), dpsi, npwx*npol, ps, nbnd, (-1.0d0,0.d0), &
@@ -253,6 +266,7 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
              (1.d0,0.d0), dpsi, npwx, ps, nbnd, (-1.0d0,0.d0), &
              dvpsi, npwx )
      END IF
+     !$acc end host_data
      !
   ELSE
      !
@@ -262,10 +276,7 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
         CALL zgemm( 'N', 'N', npwx*npol, nbnd_occ(ikk), nbnd_occ(ikk), &
              (1.d0,0.d0),dpsi,npwx*npol,ps,nbnd,(-1.0d0,0.d0), &
              dvpsi, npwx*npol )
-     ELSEIF (gamma_only) THEN
-        !$acc kernels present(ps, ps_r)
-        ps = CMPLX (ps_r,0.0_DP, KIND=DP)
-        !$acc end kernels
+     ELSEIF (gamma_only) THEN             
         CALL ZGEMM( 'N', 'N', npwq, nbnd_occ(ikk), nbnd_occ(ikk), &
              (1.d0,0.d0), dpsi, npwx, ps, nbnd, (-1.0d0,0.d0), &
              dvpsi, npwx )

@@ -42,7 +42,7 @@ SUBROUTINE lr_solve_e
   USE uspp_param,           ONLY : nhm
   USE ions_base,            ONLY : nat
   USE lrus,                 ONLY : intq, intq_nc
-  USE uspp_init,             ONLY : init_us_2
+  USE uspp_init,            ONLY : init_us_2
 
   !
   IMPLICIT NONE
@@ -136,7 +136,6 @@ SUBROUTINE lr_solve_e
            CALL init_us_2(ngk(ik), igk_k(:,ik), xk(:,ik), vkb, .true.)
            !$acc update host(vkb)
            !
-           !$acc data copyin(evc)
            ! Compute d0psi = P_c^+ r psi_k 
            !
            IF ( n_ipol==3 ) THEN
@@ -147,7 +146,6 @@ SUBROUTINE lr_solve_e
               CALL lr_dvpsi_e(ik,LR_polarization,d0psi(:,:,ik,1))
            ENDIF
            !
-           !$acc end data 
         ENDDO
         !
       ELSE
@@ -164,7 +162,8 @@ SUBROUTINE lr_solve_e
         !
         IF (gamma_only) THEN
            CALL g2_kin(1)
-           CALL init_us_2(ngk(1), igk_k(:,1), xk(:,1), vkb)
+           CALL init_us_2(ngk(1), igk_k(:,1), xk(:,1), vkb, .true.)
+           !$acc update host(vkb)
         ENDIF
         !
       ENDIF 
