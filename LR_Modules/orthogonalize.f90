@@ -202,6 +202,7 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   !
   ! dpsi is used as work space to store S*evq
   !
+  rint *, 'dpsi_computed'
   IF (.NOT.dpsi_computed) THEN
      !
      IF (okvan) then
@@ -256,7 +257,6 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
      !
      !  metallic case
      !
-     !$acc host_data use_device(dpsi, ps, dvpsi)
      IF (noncolin) THEN
         CALL zgemm( 'N', 'N', npwx*npol, nbnd_occ(ikk), nbnd, &
              (1.d0,0.d0), dpsi, npwx*npol, ps, nbnd, (-1.0d0,0.d0), &
@@ -266,7 +266,6 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
              (1.d0,0.d0), dpsi, npwx, ps, nbnd, (-1.0d0,0.d0), &
              dvpsi, npwx )
      END IF
-     !$acc end host_data
      !
   ELSE
      !
