@@ -316,7 +316,7 @@ SUBROUTINE vhpsi_UV ()
                     ! - \sum_IJ (J\=I) \sum_{m1,m2} V_IJ/2 
                     !      * n^IJ_{m1,m2} * |phi^I_m1><phi^J_m2|psi_nk> 
                     ! where
-                    ! - V_IJ/2 * n^IJ_{m1,m2} = CONJG(v_nsg)
+                    ! - V_IJ * n^IJ_{m1,m2}   = CONJG(v_nsg)
                     !      <phi^J_m2|Psi_nk>  = proj%r (or proj%k) 
                     !         |phi^I_m1>      = wfcU
                     !
@@ -425,7 +425,7 @@ SUBROUTINE vhpsi_UV ()
                     ! Compute the second part of the Hubbard potential, namely:
                     ! - \sum_IJ (J\=I) \sum_m1m2 V_IJ/2 * n^JI_m2m1 * |phi^J_m2><phi^I_m1|Psi_nk>
                     ! where
-                    ! - V_IJ/2 * n^JI_m2m1 = v_nsg
+                    ! - V_IJ * n^JI_m2m1   = v_nsg
                     !   <phi^I_m1|Psi_nk>  = proj%r (or proj%k) 
                     !      |phi^J_m2>      = wfcU
                     !
