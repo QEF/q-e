@@ -29,6 +29,7 @@ hp_init_q.o \
 hp_load_q.o \
 hp_ns_trace.o \
 hp_openfil_q.o \
+hp_psym_dmag.o \
 hp_psymdvscf.o \
 hp_postproc.o \
 hp_prepare_q.o \
@@ -43,6 +44,7 @@ hp_run_nscf.o \
 hp_solve_linear_system.o \
 hp_symdnsq.o \
 hp_symdvscf.o \
+hp_sym_dmag.o \
 hp_setup_q.o \
 hp_summary.o \
 hp_summary_q.o \
@@ -53,6 +55,7 @@ hp_write_dnsq.o
 
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
+PHOBJS = ../../PHonon/PH/libph.a
 QEMODS = $(BASEMODS)
 
 TLDEPS= hplibs
@@ -61,9 +64,9 @@ all : tldeps libs-hp hp.x
 
 libs-hp : libhp.a 
 
-hp.x : hp_main.o libhp.a $(PWOBJS) $(LRMODS)
+hp.x : hp_main.o libhp.a $(PWOBJS) $(PHOBJS) $(LRMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ hp_main.o libhp.a \
-		$(LRMODS) $(PWOBJS) $(QEMODS) $(QELIBS)
+		$(LRMODS) $(PWOBJS) $(PHOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../HP/src/hp.x . )
 
 tldeps :

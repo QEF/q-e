@@ -27,6 +27,7 @@ SUBROUTINE hp_readin()
                                skip_equivalence_q, tmp_dir_save, niter_max, dist_thr,  &
                                disable_type_analysis, docc_thr, num_neigh, lmin, rmax, &
                                nmix, nq1, nq2, nq3, alpha_mix, start_q, last_q, maxter
+  USE paw_variables,    ONLY : okpaw
   !
   IMPLICIT NONE
   !
@@ -199,8 +200,12 @@ SUBROUTINE input_sanity()
   IF (U_projection.NE."atomic" .AND. U_projection.NE."ortho-atomic") &
      CALL errore("hp_readin", &
      " The HP code for this U_projection_type is not implemented",1)
-  !
-  IF (noncolin) CALL errore('hp_readin','Noncolliner case is not supported',1)
+  !   
+  ! ---------- LUCA -----------------------------
+  !IF (noncolin) CALL errore('hp_readin','Noncolliner case is not supported',1)
+  IF ((noncolin.and.okpaw)) CALL errore('hp_readin','HP with PAW and noncolin &
+                                         not available yet',1) 
+  ! -------------------------------------------------                                         
   !
   IF (lmovecell) CALL errore('hp_readin','The HP code is not working after vc-relax',1)
   !

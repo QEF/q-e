@@ -113,7 +113,7 @@ SUBROUTINE write_ns
         IF (nspin==1) THEN
            WRITE( stdout,'(5x,"Tr[ns] = ",f9.5)') 2.d0*nsuma(1)
         ELSE
-           WRITE( stdout,'(5x,"Tr[ns] (up, down, total) = ",3f9.5)') &
+           WRITE( stdout,'(5x,"Tr[ns] (up, down, total) = ",3f13.9)') &
                               nsuma(1), nsuma(2), nsuma(1)+nsuma(2)
            WRITE( stdout,'(5x,"Atomic magnetic moment = ",f9.5)') nsuma(1) - nsuma(2)
         ENDIF 
@@ -300,7 +300,10 @@ SUBROUTINE write_ns_nc
         ENDDO
         nsum = nsum + nsuma(1) + nsuma(2) 
         !
-        WRITE( stdout,'(5x,"Tr[ns] (up, down, total) = ",3f9.5)') &
+        ! ----- LUCA (modified write for finite-difference) --------
+        !WRITE( stdout,'(5x,"Tr[ns] (up, down, total) = ",3f9.5)') &
+        !                      nsuma(1), nsuma(2), nsuma(1) + nsuma(2)
+        WRITE( stdout,'(5x,"Tr[ns] (up, down, total) = ",3f15.12)') &
                               nsuma(1), nsuma(2), nsuma(1) + nsuma(2)  
         !
         ALLOCATE (f(2*ldim,2*ldim), vet(2*ldim,2*ldim), lambda(2*ldim))

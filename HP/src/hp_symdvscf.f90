@@ -16,7 +16,7 @@ SUBROUTINE hp_symdvscf (dvtosym)
   USE constants,        ONLY : tpi
   USE fft_base,         ONLY : dfftp
   USE cell_base,        ONLY : at
-  USE symm_base,        ONLY : s, ft
+  USE symm_base,        ONLY : s, ft, t_rev
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag
   USE ions_base,        ONLY : tau
   USE qpoint,           ONLY : xq
@@ -150,7 +150,15 @@ SUBROUTINE hp_symdvscf (dvtosym)
                  !
                  ! Calculate drho(S^-1 * r - ftau) * exp(iG*(r-tau_pert))
                  !
-                 dvsym(i,j,k) = dvsym(i,j,k) + dvtosym(ri,rj,rk,is) * phase(isym) * phase2(isym)
+                 ! ------------ LUCA ------------------
+                 IF ( t_rev(isym) == 0 ) then
+                    dvsym(i,j,k) = dvsym(i,j,k) + & 
+                              dvtosym(ri,rj,rk,is) * phase(isym) * phase2(isym) 
+                 ELSE
+                    dvsym(i,j,k) = dvsym(i,j,k) + & 
+                       conjg( dvtosym(ri,rj,rk,is) * phase(isym) * phase2(isym) )
+                 ENDIF
+                 ! ------------------------------------------
                  !
               enddo
               !
