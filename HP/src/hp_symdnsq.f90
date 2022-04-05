@@ -24,6 +24,7 @@ SUBROUTINE hp_symdnsq (dnsq)
   USE lr_symm_base, ONLY : nsymq, minus_q, irotmq, rtau, gi
   USE ldaU,         ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, nwfcU
   USE ldaU_hp,      ONLY : nah_pert
+  USE noncollin_module, ONLY: npol, noncolin, domag
 
   IMPLICIT NONE
   ! 
@@ -32,7 +33,7 @@ SUBROUTINE hp_symdnsq (dnsq)
   ! Local variables
   !
   INTEGER :: nt, n, counter, l
-  INTEGER :: na, nb, is, m1, m2, m0, m00, ldim
+  INTEGER :: na, nb, is, is2, i, j, m1, m2, m0, m00, ldim
   INTEGER :: isym, irot
   COMPLEX(DP), ALLOCATABLE :: dnr(:,:,:,:), dnraux(:,:,:,:)
   COMPLEX(DP) :: phase, phase2
@@ -54,8 +55,28 @@ SUBROUTINE hp_symdnsq (dnsq)
      IF (.NOT.is_hubbard(nt)) CYCLE
      DO n = 1, upf(nt)%nwfc
         l = upf(nt)%lchi(n)
-        IF (upf(nt)%oc(n) > 0.d0 .AND. l == Hubbard_l(nt)) &
-           counter = counter + 2 * l + 1
+        ! ------------- LUCA ---------------------
+        IF (upf(nt)%oc(n) > 0.d0 .AND. l == Hubbard_l(nt)) then
+           !     
+           IF (noncolin) then
+              IF ( upf(nt)%has_so ) THEN
+                 !     
+                 ! j = l-1/2, degeneracy 2l
+                 counter = counter + 2 * l
+                 !
+                 ! j = l+1/2, degeneracy 2*l+2
+                 IF (ABS( upf(nt)%jchi(n)-l-0.5D0 ) < 1.D-6) then
+                    counter = counter + 2
+                 ENDIF
+                 counter = counter + 2*l + 2
+              ELSE
+                 counter = counter + 2 * ( 2 * l + 1 )     
+              ENDIF
+           ELSE
+              counter = counter + 2 * l + 1
+           ENDIF
+        ENDIF
+        ! ----------------------------------
      ENDDO
   ENDDO
   IF (counter.NE.nwfcU) CALL errore ('hp_symdnsq', 'nwfcU<>counter', 1)
@@ -72,16 +93,40 @@ SUBROUTINE hp_symdnsq (dnsq)
   ! and put it in dnr zeroing dnsq
   ! IT: Hermiticity is already imposed by construction
   !
-  DO na = 1, nat  
-     nt = ityp(na)
-     DO is = 1, nspin  
-        DO m1 = 1, 2 * Hubbard_l(nt) + 1
-           DO m2 = 1, 2 * Hubbard_l(nt) + 1  
-              dnr(m1, m2, is, na) = 0.5d0 * ( dnsq(m1, m2, is, na) + dnsq(m2, m1, is, na) )
+  ! ------------ LUCA ---------------
+  IF (noncolin) then
+    DO na = 1, nat
+       nt = ityp (na)
+       IF ( is_hubbard(nt) ) THEN
+          DO is = 1, npol
+            DO is2 = 1, npol
+              i = npol*(is-1) + is2
+              j = is + npol*(is2-1)
+              ldim = 2*Hubbard_l(nt)+1
+              DO m1 = 1, ldim
+                DO m2 = 1, ldim
+                  !
+                  ! Enforce hermiticity: if time-reversal symmetry is broken 
+                  ! the occupancy matrix is hermitian (complex), not symmetric (real)  
+                   dnr(m2,m1,i,na) =  0.5d0 * ( dnsq(m1, m2, i, na) + CONJG(dnsq(m2, m1, j, na)) )
+                ENDDO
+              ENDDO
+            ENDDO
+          ENDDO
+       ENDIF
+    ENDDO
+  ELSE
+     DO na = 1, nat  
+        nt = ityp(na)
+        DO is = 1, nspin  
+           DO m1 = 1, 2 * Hubbard_l(nt) + 1
+              DO m2 = 1, 2 * Hubbard_l(nt) + 1  
+                 dnr(m1, m2, is, na) = 0.5d0 * ( dnsq(m1, m2, is, na) + dnsq(m2, m1, is, na) )
+              ENDDO
            ENDDO
         ENDDO
      ENDDO
-  ENDDO
+  ENDIF
   !
   ! Symmetrize with -q if present (output overwritten on dnr)
   !

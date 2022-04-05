@@ -16,7 +16,7 @@ subroutine hp_allocate_q
   USE ions_base,            ONLY : nat
   USE wvfct,                ONLY : nbnd, npwx
   USE lsda_mod,             ONLY : nspin
-  USE noncollin_module,     ONLY : npol, nspin_mag, domag
+  USE noncollin_module,     ONLY : npol, nspin_mag, noncolin, domag
   USE fft_base,             ONLY : dfftp
   USE wavefunctions,        ONLY : evc
   USE becmod,               ONLY : allocate_bec_type

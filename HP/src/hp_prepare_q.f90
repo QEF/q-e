@@ -23,6 +23,7 @@ SUBROUTINE hp_prepare_q (iq, do_iq, setup_pw)
   USE qpoint,          ONLY : xq
   USE control_lr,      ONLY : lgamma
   USE ldaU_hp,         ONLY : recalc_sym, x_q, comp_iq
+  USE noncollin_module,     ONLY : noncolin, npol, domag
   !
   IMPLICIT NONE
   !
@@ -53,9 +54,10 @@ SUBROUTINE hp_prepare_q (iq, do_iq, setup_pw)
   !
   ! Check if the NSCF calculation must be performed
   !
+  ! --------------- LUCA (added condition noncolin.and.domag) ------------------------
   setup_pw = .NOT.lgamma .OR. &            ! perform NCSF calculation for all q\=0
-             (lgamma .AND. recalc_sym)     ! perform NCSF calculation also for q=0
-                                           ! only if the number of symmetries was reduced
+             (lgamma .AND. recalc_sym) &   ! perform NCSF calculation also for q=0
+             .OR.(noncolin.and.domag)      ! only if the number of symmetries was reduced
                                            ! (which may lead to the increase in the number of k points)
   !
   ! If setup_pw=.TRUE. then tetra is initialized through setup_nscf.

@@ -29,6 +29,8 @@ SUBROUTINE hp_run_nscf (do_band)
   USE lr_symm_base,    ONLY : nsymq, invsymq
   USE ldaU_hp,         ONLY : tmp_dir_save, tmp_dir_hp
   USE rism_module,     ONLY : lrism, rism_set_restart
+  USE noncollin_module,     ONLY : noncolin, domag
+  USE ldaU,                 ONLY : lda_plus_u_kind
   !
   IMPLICIT NONE
   !
@@ -80,7 +82,17 @@ SUBROUTINE hp_run_nscf (do_band)
   CALL init_run()
   !
   IF (do_band) THEN
-     CALL non_scf()
+     ! ------------- LUCA  ---------------------
+     IF (noncolin.AND.domag) THEN
+        ! this subroutine calls c_bands_ph.f90 within PH, which applies 
+        ! the time-reversal operator.
+        ! NOTE: this subroutine does not call of phase_factor()
+        IF (lda_plus_u_kind.NE.0) CALL errore("hp_run_nscf", &
+                "Noncollinear with this lda_plus_u_kind is not implemented",1)
+        CALL non_scf_ph()
+     ELSE     
+        CALL non_scf()
+     ENDIF   
      CALL punch( 'all' )
   ENDIF
   !

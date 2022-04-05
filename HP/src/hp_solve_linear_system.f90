@@ -26,20 +26,21 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE fft_base,             ONLY : dfftp, dffts
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE wvfct,                ONLY : nbnd, npwx
-  USE uspp,                 ONLY : okvan, nkb
+  USE uspp,                 ONLY : okvan, nkb, deeq_nc
   USE uspp_param,           ONLY : nhm
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, becp
   USE buffers,              ONLY : save_buffer, get_buffer
-  USE noncollin_module,     ONLY : npol, nspin_mag
+  USE noncollin_module,     ONLY : npol, nspin_mag, noncolin, domag
   USE paw_variables,        ONLY : okpaw
   USE paw_onecenter,        ONLY : paw_dpotential
   USE paw_symmetry,         ONLY : paw_dusymmetrize, paw_dumqsymmetrize
   USE mp_pools,             ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   USE qpoint,               ONLY : nksq, ikks, xq
   USE control_lr,           ONLY : lgamma
   USE units_lr,             ONLY : iuwfc, lrwfc
-  USE lrus,                 ONLY : int3, int3_paw
+  USE lrus,                 ONLY : int3, int3_nc, int3_paw, becp1
   USE dv_of_drho_lr,        ONLY : dv_of_drho
   USE fft_helper_subroutines
   USE fft_interfaces,       ONLY : fft_interpolate
@@ -51,6 +52,10 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate
   USE efermi_shift,         ONLY : ef_shift, def
   USE response_kernels,     ONLY : sternheimer_kernel
+  USE hp_nc_mag_aux,        ONLY : deeq_nc_save, int3_save   
+  USE qpoint_aux,           ONLY : ikmks, ikmkmqs, becpt  
+  USE lsda_mod,             ONLY : nspin     
+  USE scf,                  ONLY : vrs    
   !
   IMPLICIT NONE
   !
@@ -83,6 +88,10 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      ldos (:,:),             & ! local density of states at Ef
      ldoss (:,:),            & ! as above, without augmentation charges
      dbecsum (:,:,:,:),      & ! the derivative of becsum
+     ! ---------------- LUCA -------------------------------
+     dbecsum_nc(:,:,:,:,:,:), &
+     dbecsum_aux (:,:,:,:),   &
+     ! ------------------------------------------------------
      aux2 (:,:),             & ! auxiliary arrays
      mixin(:), mixout(:)       ! auxiliary arrays for mixing of the response potential
  
@@ -101,7 +110,11 @@ SUBROUTINE hp_solve_linear_system (na, iq)
              ik, ikk,    & ! counter on k points
              ndim,       &
              is,         & ! counter on spin polarizations
-             npw           ! number of plane waves at k
+             npw,        & ! number of plane waves at k
+             nsolv,      & ! number of linear systems
+             isolv,      & ! counter on linear systems    
+             ikmk,       & ! index of mk
+             nrec        & ! the record number for dvpsi
 
   REAL(DP) :: tcpu, get_clock ! timing variables
   CHARACTER(LEN=256) :: flmixdpot = 'mixd'
@@ -114,7 +127,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   !
   ! Allocate arrays for the SCF density/potential
   !
-  ALLOCATE (drhoscf (dfftp%nnr, nspin_mag))
+  ALLOCATE (drhoscf (dfftp%nnr, nspin_mag)) 
   ALLOCATE (drhoscfh(dfftp%nnr, nspin_mag))
   ALLOCATE (dvscfin (dfftp%nnr, nspin_mag))
   ALLOCATE (dvscfout(dfftp%nnr, nspin_mag))
@@ -133,6 +146,19 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   CALL allocate_bec_type (nkb, nbnd, becp)
   !
   ALLOCATE (dbecsum((nhm*(nhm+1))/2, nat, nspin_mag, 1))
+  !
+  ! -------------- LUCA -----------------------
+  nsolv=1
+  IF (noncolin.AND.domag) nsolv=2   
+  !
+  IF (okvan.and.noncolin) ALLOCATE(int3_nc( nhm, nhm, nat, nspin, 1))
+  IF (noncolin) ALLOCATE (dbecsum_nc (nhm,nhm, nat , nspin , 1, nsolv))
+  !
+  IF (noncolin.and.domag.and.okvan) THEN
+    ALLOCATE (int3_save( nhm, nhm, nat, nspin_mag, 1, 2))
+    ALLOCATE (dbecsum_aux ( (nhm * (nhm + 1))/2 , nat , nspin_mag , 1))
+  ENDIF
+  ! ----------------------------------------------
   !
   IF (okpaw) THEN
      !
@@ -177,19 +203,33 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      npw  = ngk(ikk)
      !
      IF (lsda) current_spin = isk(ikk)
-     !
-     ! Read unperturbed KS wavefuctions psi(k) and psi(k+q)
-     !
-     IF (nksq > 1) THEN
-        CALL get_buffer(evc, lrwfc, iuwfc, ikk)
-     ENDIF
-     !
-     ! Computes (iter=1) or reads (iter>1) the action of the perturbing
-     ! potential on the unperturbed KS wavefunctions: |dvpsi> = dV_pert * |evc>
-     ! See Eq. (46) in Ref. [1]
-     !
-     CALL hp_dvpsi_pert(ik)
-     !
+     ! -------------- LUCA ---------------
+     DO isolv = 1, nsolv
+      IF (isolv == 1) THEN
+         ikmk = ikks(ik)
+      ELSE
+         ikmk = ikmks(ik)
+      ENDIF
+      ! ----------- LUCA ----------------
+      !
+      ! Read unperturbed KS wavefuctions psi(k) and psi(k+q)
+      !
+      ! --------- LUCA (changed ikk with ikmk) ------------
+      IF (nksq > 1 .OR. nsolv == 2) THEN
+         CALL get_buffer(evc, lrwfc, iuwfc, ikmk)
+      ENDIF
+      !
+      !
+      ! Computes (iter=1) or reads (iter>1) the action of the perturbing
+      ! potential on the unperturbed KS wavefunctions: |dvpsi> = dV_pert * |evc>
+      ! See Eq. (46) in Ref. [1]
+      !
+      ! ------------ LUCA (added nrec) -------------
+      nrec = ik + (isolv - 1) * nksq
+      CALL hp_dvpsi_pert(ik, nrec)
+      ! ----------------------------------
+      !
+   ENDDO ! isolv
   ENDDO ! ik
   !
   ! The loop of the linear-response calculation
@@ -201,32 +241,82 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      drhoscf(:,:)     = (0.d0, 0.d0)
      dvscfout(:,:)    = (0.d0, 0.d0)
      dbecsum(:,:,:,:) = (0.d0, 0.d0)
+     ! ------------- LUCA -------------------
+     IF (noncolin) dbecsum_nc = (0.d0, 0.d0)
+     ! --------------------------------------
      !
-     IF ( iter == 1 ) THEN
-        ! Starting threshold for iterative solution of the linear system.
-        ! A strickt threshold for the first iteration is needed,
-        ! because we need dns0 to very high precision.
-        thresh = thresh_init * nelec
-     ELSE
-        ! Threshold for iterative solution of the linear system.
-        ! We start with not a strict threshold for iter=2, and then
-        ! it decreases with iterations.
-        thresh = MIN (1.D-1 * SQRT(dr2), 1.D-2)
+     DO isolv = 1, nsolv
+        !
+        ! -------------------- LUCA -----------------
+        !  change the sign of the magnetic field if required
+        !
+        IF (isolv == 2) THEN
+           IF ( iter > 1 ) THEN
+              dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
+              IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,2)
+           ENDIF
+           vrs(:, 2:4) = -vrs(:, 2:4)
+           IF (okvan) deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,2)
+        ENDIF
+        !
+        ! set threshold for iterative solution of the linear system
+        !
+        ! ---------------------------------------
+        IF ( iter == 1 ) THEN
+           ! Starting threshold for iterative solution of the linear system.
+           ! A strickt threshold for the first iteration is needed,
+           ! because we need dns0 to very high precision.
+           thresh = thresh_init * nelec
+        ELSE
+           ! Threshold for iterative solution of the linear system.
+           ! We start with not a strict threshold for iter=2, and then
+           ! it decreases with iterations.
+           thresh = MIN (1.D-1 * SQRT(dr2), 1.D-2)
+         ENDIF
+        !
+        ! Compute drhoscf, the charge density response to the total potential
+        !
+        ! ---------------- LUCA (added condition on isolv and dbecsum_nc) ------------ 
+         CALL sternheimer_kernel(iter==1, isolv==2, 1, lrdvwfc, iudvwfc, &
+            thresh, dvscfins, all_conv, averlt, drhoscf, dbecsum,&
+            dbecsum_nc(:,:,:,:,:,isolv), exclude_hubbard=.TRUE.)
+        ! ------------------------------------ 
+        !
+        IF ((.NOT. all_conv) .AND. (iter == 1)) THEN
+           WRITE(stdout, '(6x, "sternheimer_kernel not converged. Try to increase thresh_init.")')
+        ENDIF
+        !
+        ! ---------------- LUCA ------------------------
+        !  reset the original magnetic field if it was changed
+        !
+        IF (isolv == 2) THEN
+           IF ( iter > 1 ) THEN
+              dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
+              IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,1)
+           ENDIF
+           vrs(:, 2:4) = -vrs(:, 2:4)
+           IF (okvan) deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,1)
+        ENDIF
+     ENDDO ! isolv
+     !
+     IF (nsolv==2) THEN
+        drhoscf = drhoscf / 2.0_DP
+        dbecsum = dbecsum / 2.0_DP
+        dbecsum_nc = dbecsum_nc / 2.0_DP
      ENDIF
-     !
-     ! Compute drhoscf, the charge density response to the total potential
-     !
-     CALL sternheimer_kernel(iter==1, .FALSE., 1, lrdvwfc, iudvwfc, &
-         thresh, dvscfins, all_conv, averlt, drhoscf, dbecsum, exclude_hubbard=.TRUE.)
-     !
-     IF ((.NOT. all_conv) .AND. (iter == 1)) THEN
-        WRITE(stdout, '(6x, "sternheimer_kernel not converged. Try to increase thresh_init.")')
-     ENDIF
+     ! --------------------------------------------
      !
      ! USPP: The calculation of dbecsum is distributed across processors (see addusdbec)
      ! Sum over processors the contributions coming from each slice of bands
      !
-     CALL mp_sum ( dbecsum, intra_pool_comm )
+     ! --------------- LUCA -----------------
+     IF (noncolin) then
+        ! TO BE CHECKED: compare with the same in PHonon/PH/solve_linter.f90 
+        CALL mp_sum ( dbecsum_nc, intra_pool_comm )
+     ELSE
+        CALL mp_sum ( dbecsum, intra_pool_comm )
+     ENDIF
+     ! ---------------------------------------------------
      !
      ! Copy/interpolate the response density drhoscf -> drhoscfh
      !
@@ -237,6 +327,20 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      ELSE
         CALL zcopy (nspin_mag*dfftp%nnr, drhoscf, 1, drhoscfh, 1)
      ENDIF
+     !
+     ! ---------- LUCA ----------------------
+     !  In the noncolinear, spin-orbit case rotate dbecsum
+     !
+     IF (noncolin.and.okvan) THEN
+        CALL set_dbecsum_nc(dbecsum_nc, dbecsum, 1)
+        IF (nsolv==2) THEN
+           dbecsum_aux=(0.0_DP,0.0_DP)
+           CALL set_dbecsum_nc(dbecsum_nc(1,1,1,1,1,2), dbecsum_aux, 1)
+           dbecsum(:,:,1,:) = dbecsum(:,:,1,:) + dbecsum_aux(:,:,1,:)
+           dbecsum(:,:,2:4,:) = dbecsum(:,:,2:4,:) - dbecsum_aux(:,:,2:4,:)
+        ENDIF
+     ENDIF
+     !---------------------------------------------------------
      !
      ! USPP: Compute the total response charge density (standard term + US term)
      !
@@ -289,6 +393,9 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      ! Symmetrization of the response charge density.
      !
      CALL hp_psymdvscf (drhoscfh)
+     ! ---------- LUCA --------------
+     IF ( noncolin.and.domag ) CALL hp_psym_dmag( drhoscfh )
+     ! -------------------------------------
      !
      ! Symmetrize dbecsum
      !
@@ -344,7 +451,33 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      ! int3 = \int Q(r) dV_HXC(r) dr
      ! PAW: int3_paw is added to int3 inside of the routine newdq
      !
-     IF (okvan) CALL newdq (dvscfin, 1)
+     ! ----------------- LUCA ---------------
+     IF (okvan) then
+        CALL newdq (dvscfin, 1)
+        IF (noncolin.AND.domag) then
+           int3_save(:,:,:,:,:,1)=int3_nc(:,:,:,:,:)
+           ! IF (okpaw) rho%bec(:,:,2:4)=-rho%bec(:,:,2:4)
+           dvscfin(:,2:4)=-dvscfin(:,2:4)
+           ! IF (okpaw) dbecsum(:,:,2:4,1)=-dbecsum(:,:,2:4,1)
+           !   if needed recompute the paw coeffients with the opposite sign of
+           !   the magnetic field
+           !
+           !
+           CALL newdq (dvscfin, 1)
+           int3_save(:,:,:,:,:,2)=int3_nc(:,:,:,:,:)
+           !
+           !  restore the correct sign of the magnetic field.
+           !
+           dvscfin(:,2:4)=-dvscfin(:,2:4)
+           IF (okpaw) dbecsum(:,:,2:4,1)=-dbecsum(:,:,2:4,1)
+           IF (okpaw) rho%bec(:,:,2:4)=-rho%bec(:,:,2:4)
+           !
+           !  put into int3_nc the coefficient with +B
+           !
+           int3_nc(:,:,:,:,:)=int3_save(:,:,:,:,:,1)
+        ENDIF
+     ENDIF
+     ! -------------------------------------------
      !
      ! Calculate the response occupation matrix
      ! See Eq. (43) in Ref. [1]
@@ -389,6 +522,16 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   DEALLOCATE (dvscfin)
   DEALLOCATE (dvscfout)
   DEALLOCATE (trace_dns_tot_old)
+  ! --------------- LUCA --------------------------
+  IF (noncolin) THEN
+     DEALLOCATE (dbecsum_nc)
+     DEALLOCATE(int3_nc)
+  ENDIF  
+  IF (noncolin.AND.domag.AND.okvan) THEN
+     DEALLOCATE (int3_save)
+     DEALLOCATE (dbecsum_aux)
+  ENDIF
+! -----------------------------------------------
   IF (doublegrid)       DEALLOCATE (dvscfins)
   IF (ALLOCATED(ldoss)) DEALLOCATE (ldoss)
   IF (ALLOCATED(ldos))  DEALLOCATE (ldos)

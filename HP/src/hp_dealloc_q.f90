@@ -47,9 +47,6 @@ SUBROUTINE hp_dealloc_q()
   ! --------------------------------
   if (allocated(m_loc))     deallocate (m_loc)
   !
-  if (allocated(this_pert_is_on_file)) &
-         & deallocate (this_pert_is_on_file)
-  ! 
   IF (okvan) THEN 
      if (allocated(eigqts)) deallocate (eigqts)
      !

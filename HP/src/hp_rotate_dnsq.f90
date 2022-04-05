@@ -26,6 +26,7 @@ SUBROUTINE hp_rotate_dnsq (dnr, dns, isym, sxq)
   USE lr_symm_base, ONLY : rtau, gi, minus_q, irotmq
   USE ldaU,         ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, nwfcU
   USE ldaU_hp,      ONLY : nah_pert
+  USE noncollin_module, ONLY : npol, noncolin, domag
   !
   IMPLICIT NONE
   !
@@ -36,7 +37,7 @@ SUBROUTINE hp_rotate_dnsq (dnr, dns, isym, sxq)
   !
   ! Local variables
   !
-  INTEGER :: counter, n, l, na, sna, nt, ism1, is, m1, m2, m0, m00
+  INTEGER :: counter, n, l, na, sna, nt, ism1, is, m1, m2, m0, m00, ldim
   COMPLEX(DP) :: phase, phase2
   REAL(DP) :: arg, arg2
   !
@@ -54,8 +55,28 @@ SUBROUTINE hp_rotate_dnsq (dnr, dns, isym, sxq)
      IF (.NOT.is_hubbard(nt)) CYCLE
      DO n = 1, upf(nt)%nwfc
         l = upf(nt)%lchi(n)
-        IF (upf(nt)%oc(n) > 0.d0 .AND. l == Hubbard_l(nt)) &
-           counter = counter + 2 * l + 1
+        ! ------------- LUCA ---------------------
+        IF (upf(nt)%oc(n) > 0.d0 .AND. l == Hubbard_l(nt)) then
+           !     
+           IF (noncolin) then
+              IF ( upf(nt)%has_so ) THEN
+                 !     
+                 ! j = l-1/2, degeneracy 2l
+                 counter = counter + 2 * l
+                 !
+                 ! j = l+1/2, degeneracy 2*l+2
+                 IF (ABS( upf(nt)%jchi(n)-l-0.5D0 ) < 1.D-6) then
+                    counter = counter + 2
+                 ENDIF
+                 counter = counter + 2*l + 2
+              ELSE
+                 counter = counter + 2 * ( 2 * l + 1 )
+              ENDIF
+           ELSE
+              counter = counter + 2 * l + 1
+           ENDIF
+        ENDIF
+        ! ----------------------------------------
      ENDDO
   ENDDO
   IF (counter.NE.nwfcU) CALL errore ('hp_rotate_dnsq', 'nwfcU<>counter', 1)
@@ -92,12 +113,14 @@ SUBROUTINE hp_rotate_dnsq (dnr, dns, isym, sxq)
                 (sxq(3) - xq(3)) * tau(3,nah_pert) ) * tpi
         phase2 = CMPLX (cos(arg2), -sin(arg2), kind=DP)
         !
+        ! ------------- LUCA (added nspin_mag) --------------------
         DO is = 1, nspin
            !
-           DO m1 = 1, 2 * Hubbard_l(nt) + 1
-              DO m2 = 1, 2 * Hubbard_l(nt) + 1
-                 DO m0 = 1, 2 * Hubbard_l(nt) + 1
-                    DO m00 = 1, 2 * Hubbard_l(nt) + 1
+           ldim = 2 * Hubbard_l(nt) + 1
+           DO m1 = 1, ldim
+              DO m2 = 1, ldim
+                 DO m0 = 1, ldim
+                    DO m00 = 1, ldim
                        !
                        IF (Hubbard_l(nt).EQ.0) THEN
                           dns(m1,m2,is,sna) = dns(m1,m2,is,sna) + &

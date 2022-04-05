@@ -33,14 +33,15 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   USE wavefunctions,    ONLY : evc, psic, psic_nc
   USE uspp,             ONLY : okvan, nkb, vkb
   USE uspp_param,       ONLY : upf, nh, nhm
-  USE qpoint,           ONLY : nksq
+  USE qpoint,           ONLY : nksq, ikks
   USE control_lr,       ONLY : nbnd_occ
   USE units_lr,         ONLY : iuwfc, lrwfc
   USE mp_pools,         ONLY : inter_pool_comm
   USE mp,               ONLY : mp_sum
   USE dfpt_tetra_mod,   ONLY : dfpt_tetra_delta
   USE uspp_init,        ONLY : init_us_2
-
+  USE io_global,            ONLY : stdout
+  USE fft_interfaces,        ONLY : fwfft
   implicit none
 
   complex(DP) :: ldos (dfftp%nnr, nspin_mag), ldoss (dffts%nnr, nspin_mag)
@@ -48,7 +49,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   ! output: the local density of states at Ef without augmentation
   REAL(DP) :: becsum1 ((nhm * (nhm + 1))/2, nat, nspin_mag)
   ! output: the local becsum at ef
-  real(DP) :: dos_ef
+  real(DP) :: dos_ef, check
   ! output: the density of states at Ef
   !
   !    local variables for Ultrasoft PP's
@@ -87,22 +88,23 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   !  loop over kpoints
   !
   do ik = 1, nksq
-     if (lsda) current_spin = isk (ik)
-     npw = ngk(ik)
-     weight = wk (ik)
+   ! ------------ LUCA (added ikks(ik) instead of ik)---------------
+     if (lsda) current_spin = isk (ikks(ik))
+     npw = ngk(ikks(ik))
+     weight = wk (ikks(ik))
      !
      ! unperturbed wfs in reciprocal space read from unit iuwfc
      !
-     if (nksq > 1) call get_buffer (evc, lrwfc, iuwfc, ik)
-     call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
+     if (nksq > 1) call get_buffer (evc, lrwfc, iuwfc, ikks(ik))
+     call init_us_2 (npw, igk_k(1,ikks(ik)), xk (1, ikks(ik)), vkb)
      !
      call calbec ( npw, vkb, evc, becp)
-     do ibnd = 1, nbnd_occ (ik)
+     do ibnd = 1, nbnd_occ (ikks(ik))
         !
         if(ltetra) then
-           wdelta = dfpt_tetra_delta(ibnd,ik)
+           wdelta = dfpt_tetra_delta(ibnd,ikks(ik))
         else
-           wdelta = w0gauss ( (ef-et(ibnd,ik)) / degauss, ngauss) / degauss
+           wdelta = w0gauss ( (ef-et(ibnd,ikks(ik))) / degauss, ngauss) / degauss
         end if
         !
         w1 = weight * wdelta / omega
@@ -112,8 +114,8 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
         IF (noncolin) THEN
            psic_nc = (0.d0, 0.d0)
            do ig = 1, npw
-              psic_nc (dffts%nl (igk_k(ig,ik)), 1 ) = evc (ig, ibnd)
-              psic_nc (dffts%nl (igk_k(ig,ik)), 2 ) = evc (ig+npwx, ibnd)
+              psic_nc (dffts%nl (igk_k(ig,ikks(ik))), 1 ) = evc (ig, ibnd)
+              psic_nc (dffts%nl (igk_k(ig,ikks(ik))), 2 ) = evc (ig+npwx, ibnd)
            enddo
            CALL invfft ('Rho', psic_nc(:,1), dffts)
            CALL invfft ('Rho', psic_nc(:,2), dffts)
@@ -142,7 +144,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
         ELSE
            psic (:) = (0.d0, 0.d0)
            do ig = 1, npw
-              psic (dffts%nl (igk_k(ig,ik) ) ) = evc (ig, ibnd)
+              psic (dffts%nl (igk_k(ig,ikks(ik)) ) ) = evc (ig, ibnd)
            enddo
            CALL invfft ('Rho', psic, dffts)
            do j = 1, dffts%nnr
