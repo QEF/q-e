@@ -16,3 +16,6 @@
 [submodule "external/d3q"]
 	path = external/d3q
 	url = https://github.com/anharmonic/d3q.git
+[submodule "external/pw2qmcpack"]
+	path = external/pw2qmcpack
+	url = https://github.com/QMCPACK/pw2qmcpack.git
