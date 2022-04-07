@@ -38,9 +38,6 @@ X_AC_QE_OPENMP()
 # Checking MPIF90...
 X_AC_QE_MPIF90()
 
-# Check environ...
-X_AC_QE_ENVIRON()
-
 # Checking CC...
 X_AC_QE_CC()
 
@@ -90,6 +87,9 @@ X_AC_QE_ELPA()
 
 # Setting HDF5...
 X_AC_QE_HDF5()
+
+# Checking environ...
+X_AC_QE_ENVIRON()
 
 # Checking SIGNAL...
 X_AC_QE_SIGNAL()

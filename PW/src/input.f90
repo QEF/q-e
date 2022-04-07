@@ -332,6 +332,11 @@ SUBROUTINE iosys()
   USE qexsd_input,           ONLY : qexsd_input_obj
   USE qes_types_module,      ONLY : input_type
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,          ONLY : use_environ
+  USE environ_base_module,   ONLY : read_environ_input, init_environ_setup
+#endif
+  !
   IMPLICIT NONE
   !
   INTERFACE  
@@ -1461,7 +1466,12 @@ SUBROUTINE iosys()
   !
   ! ... once input variables have been stored, read optional plugin input files
   !
-  CALL plugin_read_input("PW")
+#if defined (__ENVIRON)
+  IF (use_environ) THEN
+     CALL read_environ_input()
+     CALL init_environ_setup('PW')
+  END IF
+#endif
   !
   ! ... Files (for compatibility) and directories
   !     Must be set before calling read_conf_from_file

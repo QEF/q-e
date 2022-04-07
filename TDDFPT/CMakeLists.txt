@@ -1,4 +1,5 @@
 set(src_tddfpt
+    src/environ_td_module.f90
     src/lr_variables.f90
     src/lr_charg_resp.f90
     src/bcast_lr_input.f90

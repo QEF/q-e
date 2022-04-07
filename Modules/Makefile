@@ -25,6 +25,7 @@ control_flags.o \
 coulomb_vcut.o \
 dist.o \
 electrons_base.o \
+environ_base_module.o \
 environment.o \
 fd_gradient.o \
 fft_base.o \

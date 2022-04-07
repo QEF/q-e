@@ -58,6 +58,11 @@ SUBROUTINE potinit()
   USE scf_gpum,             ONLY : using_vrs
   USE pwcom,                ONLY : report_mag 
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,         ONLY : use_environ
+  USE environ_pw_module,    ONLY : calc_environ_potential
+#endif
+  !
   IMPLICIT NONE
   !
   REAL(DP)                  :: charge           ! the starting charge
@@ -232,7 +237,9 @@ SUBROUTINE potinit()
   !
   ! ... plugin contribution to local potential
   !
-  CALL plugin_scf_potential(rho,.FALSE.,-1.d0,vltot)
+#if defined (__ENVIRON)
+  IF (use_environ) CALL calc_environ_potential(rho, .FALSE., -1.D0, vltot)
+#endif
   !
   ! ... compute the potential and store it in v
   !

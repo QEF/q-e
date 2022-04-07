@@ -46,6 +46,11 @@ PROGRAM lr_main
   USE uspp,                  ONLY : okvan
   USE mp_bands,              ONLY : ntask_groups
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,          ONLY : use_environ
+  USE environ_base_module,   ONLY : print_environ_summary
+#endif
+  !
   IMPLICIT NONE
   !
   ! Local variables
@@ -80,7 +85,9 @@ PROGRAM lr_main
   !
   ! Writing a summary of plugin variables
   !
-  CALL plugin_summary()
+#if defined (__ENVIRON)
+  IF (use_environ) CALL print_environ_summary()
+#endif
   !
   CALL check_stop_init()
   !

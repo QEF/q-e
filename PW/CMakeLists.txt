@@ -55,7 +55,8 @@ set(src_pw
    src/dynamics_module.f90 
    src/efermig.f90 
    src/efermit.f90 
-   src/electrons.f90 
+   src/electrons.f90
+   src/environ_pw_module.f90 
    src/eqvect.f90 
    src/esm.f90 
    src/esm_common_mod.f90 

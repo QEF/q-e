@@ -652,6 +652,7 @@ dflags
 git
 wget
 ranlib
+environ_libs
 hdf5_line
 hdf5_libs
 elpa_line
@@ -761,7 +762,6 @@ ac_user_opts='
 enable_option_checking
 enable_openmp
 enable_parallel
-enable_environment
 enable_debug
 enable_pedantic
 enable_shared
@@ -781,6 +781,7 @@ with_elpa_version
 with_hdf5
 with_hdf5_libs
 with_hdf5_include
+with_environ
 enable_signals
 '
       ac_precious_vars='build_alias
@@ -1423,7 +1424,6 @@ Optional Features:
                           no)
   --enable-parallel       compile for parallel execution if possible (default:
                           yes)
-  --enable-environment    compile solvent-related stuff (default: no)
   --enable-debug          compile Fortran with debug flags (default: no)
   --enable-pedantic       compile Fortran with pedantic flags (default: no)
   --enable-shared         produce object files suitable for shared libraries
@@ -1471,6 +1471,7 @@ Optional Packages:
   --with-hdf5-include     Specify full path the HDF5 include folder containing
                           module and headers files. Use it if configure fails
                           to detect the path by itself. (default: no)
+  --with-environ          path to Environ root directory
 
 Some influential environment variables:
   EXTLIB_FLAGS
@@ -3353,29 +3354,6 @@ echo setting F90... $f90
 echo setting MPIF90... $mpif90
 
 
-
-
-
-
-# Check environ...
-
-
-	# Check whether --enable-environment was given.
-if test "${enable_environment+set}" = set; then :
-  enableval=$enable_environment; if   test "$enableval" = "yes" ; then
-			enable_environment=1
-		else
-			enable_environment=0
-		fi
-else
-  enable_environment=0
-fi
-
-
-	if test "$enable_environment" -eq 1 ;
-	then
-		try_dflags="$try_dflags -D__ENVIRONMENT"
-	fi
 
 
 
@@ -7572,6 +7550,45 @@ $as_echo "$as_me: WARNING: *** HDF5 version must be 1.8.16 or later" >&2;};
   fi
 
 #    AC_MSG_WARN([HDF5 support is for parallel execution only])
+fi
+
+
+
+
+
+
+# Checking environ...
+
+
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Environ" >&5
+$as_echo_n "checking for Environ... " >&6; }
+
+
+# Check whether --with-environ was given.
+if test "${with_environ+set}" = set; then :
+  withval=$with_environ;
+			if test "$withval" != yes ;
+		 	then
+		 	 	environ_root="$withval"
+		 	else
+				environ_root="$topdir/Environ"
+		 	fi
+
+			if test -d $environ_root; then
+				environ_libs="$environ_root/libs/*"
+				try_iflags="$try_iflags -I$environ_root/src"
+		 		try_dflags="$try_dflags -D__ENVIRON"
+				{ $as_echo "$as_me:${as_lineno-$LINENO}: result: found at $environ_root" >&5
+$as_echo "found at $environ_root" >&6; }
+			else
+			    as_fn_error $? "$environ_root is not a valid path" "$LINENO" 5
+			fi
+
+
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: not used" >&5
+$as_echo "not used" >&6; }
+
 fi
 
 

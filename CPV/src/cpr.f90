@@ -123,6 +123,11 @@ USE cp_main_variables,        ONLY : eigr_d
   USE xc_lib,                   ONLY : xclib_dft_is, start_exx, exx_is_active
   USE device_memcpy_m,          ONLY : dev_memcpy
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,             ONLY : use_environ
+  USE environ_base_module,      ONLY : update_environ_ions
+#endif
+  !
   IMPLICIT NONE
   !
   include 'laxlib.fh'
@@ -314,7 +319,9 @@ USE cp_main_variables,        ONLY : eigr_d
      !
      ! ... pass ions information to plugins
      !
-     CALL plugin_init_ions( tau0 )
+#if defined (__ENVIRON)
+     IF (use_environ) CALL update_environ_ions(tau0)
+#endif
      !
      IF ( lda_plus_u ) then
         ! forceh    ! Forces on ions due to Hubbard U 
@@ -845,7 +852,9 @@ USE cp_main_variables,        ONLY : eigr_d
            IF ( tefield )  CALL efield_update( eigr )
            IF ( tefield2 ) CALL efield_update2( eigr )
            !
-           CALL plugin_init_ions( tau0 )
+#if defined (__ENVIRON)
+           IF (use_environ) CALL update_environ_ions(tau0)
+#endif
            !
            lambdam = lambda
            !
@@ -1018,6 +1027,11 @@ SUBROUTINE terminate_run()
   USE exx_module,        ONLY : exx_finalize
   USE xc_lib,     ONLY : xclib_dft_is, exx_is_active
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,        ONLY : use_environ
+  USE environ_base_module, ONLY : print_environ_clocks
+#endif
+  !
   IMPLICIT NONE
   !
   ! ...  print statistics
@@ -1166,7 +1180,9 @@ SUBROUTINE terminate_run()
   !
   IF (tcg) call print_clock_tcg()
   !
-  CALL plugin_clock()
+#if defined (__ENVIRON)
+  IF (use_environ) CALL print_environ_clocks()
+#endif
   !
   CALL mp_report()
   !

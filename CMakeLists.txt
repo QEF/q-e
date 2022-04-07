@@ -132,6 +132,13 @@ if(DEVICEXLIB_ROOT)
 endif()
 option(QE_DEVICEXLIB_INTERNAL
     "enable DeviceXlib intenal library" ON)
+if(ENVIRON_ROOT)
+    set(ENVIRON_DEFAULT "EXTERNAL")
+else()
+    set(ENVIRON_DEFAULT "NO")
+endif()
+set(QE_ENABLE_ENVIRON "${ENVIRON_DEFAULT}" CACHE
+    STRING "select a specific Environ library [NO, EXTERNAL, INTERNAL]")
 
 # TODO change all ifdefs throughout code base to match
 # cmake options
@@ -174,6 +181,9 @@ if(QE_ENABLE_SCALAPACK)
 endif()
 if(QE_ENABLE_HDF5)
     qe_add_global_compile_definitions(__HDF5)
+endif()
+if(QE_ENABLE_ENVIRON)
+    qe_add_global_compile_definitions(__ENVIRON)
 endif()
 
 # Feature checks
