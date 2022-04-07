@@ -2280,6 +2280,8 @@ SUBROUTINE compute_mmn
                                        Mkb(m,n) = Mkb(m,n) + &
                                             phase1 * qb(ih,jh,nt,ind) * &
                                             becp%r(ikb,m) * rbecp2(jkb,n)
+                                       ! fill other half of matrix by symmetry
+                                       IF (m/=n) Mkb(n,m) = Mkb(m,n)
                                     ENDDO
                                  else if (noncolin) then
                                     DO n=1,nbnd
@@ -4822,6 +4824,7 @@ SUBROUTINE write_parity
    USE gvect,                ONLY : g, ngm
    USE cell_base,            ONLY : at
    USE constants,            ONLY : eps6
+   USE lsda_mod,             ONLY : lsda, isk
 
    IMPLICIT NONE
    !
@@ -4843,19 +4846,13 @@ SUBROUTINE write_parity
    !
    IF (.not. gamma_only) THEN
       DO ik=ikstart,ikstop
-         IF ( (xk(1,ik)/= 0.d0) .or. (xk(2,ik)/= 0.d0) .or. (xk(3,ik)/= 0.d0) ) THEN
-            IF (ik == ikstop) CALL errore('write_parity',&
-                 ' parity calculation may only be performed at the gamma point.',1)
-            CYCLE
-         ELSE
-            ! NP: spin unpolarized or "up" component of spin
-            IF (ispinw == 0 .or. ispinw == 1) THEN
-               kgamma=ik
-            ELSE ! NP: "down" component
-               kgamma=ik+1
-            ENDIF
-            exit
+         IF ( (xk(1,ik) == 0.d0) .AND. (xk(2,ik) == 0.d0) .AND. (xk(3,ik) == 0.d0) &
+              .AND. (ispinw == 0 .OR. isk(ik) == ispinw) ) THEN
+            kgamma = ik
+            EXIT
          ENDIF
+         IF (ik == ikstop) CALL errore('write_parity',&
+              ' parity calculation may only be performed at the gamma point',1)
       ENDDO
    ELSE
       ! NP: spin unpolarized or "up" component of spin

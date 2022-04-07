@@ -20,8 +20,8 @@ try_f90="gfortran f90"
 # candidate compilers and flags based on architecture
 case $arch in
 ia32 | ia64 | x86_64 )
-        try_f90="ifort nvfortran pgf90 nagfor ftn $try_f90"
-        try_mpif90="mpiifort ftn $try_mpif90"
+        try_f90="ifort nvfortran pgf90 nagfor $try_f90"
+        try_mpif90="mpiifort $try_mpif90"
         ;;
 arm )
         try_f90="nvfortran pgf90 armflang $try_f90"
@@ -192,37 +192,39 @@ if test "$set_use_parallel" -eq 1 ; then
       AC_MSG_WARN([parallel and serial compiler are the same])
    fi
 fi
-f90=$f90_in_mpif90
+
+case "$mpif90" in
+ftn )
+    # For cray compiler, mpif90=f90=ftn, f90_flavor used to select flags
+    echo $ECHO_N "checking version wrapped by $mpif90 command... $ECHO_C"
+    if $mpif90 -V 2>&1 | grep -q "Intel(R)" ; then
+        f90_flavor=ifort
+    elif $mpif90 -V 2>&1 | grep -q "^pgf" ; then
+        f90_flavor=pgf
+    elif $mpif90 -v 2>&1 | grep -q "gcc version" ; then
+        f90_flavor=gfortran
+    elif $mpif90 -V 2>&1 | grep -q "Cray Fortran" ; then
+        f90_flavor=crayftn
+    elif $mpif90 -version 2>&1 | grep -q "NAG Fortran" ; then
+        f90_flavor=nagfor
+    else
+        echo $ECHO_N "unknown, leaving as ... $ECHO_C"
+        f90_flavor=$mpif90
+    fi
+    echo $f90_flavor
+    f90=ftn
+    ;;
+* )
+    # For all other cases f90=f90_flavor=f90_in_mpif90
+    f90=$f90_in_mpif90
+    f90_flavor=$f90
+    ;;
+esac
+
 AC_FC_SRCEXT(f90)
 
 echo setting F90... $f90
 echo setting MPIF90... $mpif90
-
-# For cray compiler
-case "$f90" in
-f90 | fc | ftn )
-    echo $ECHO_N "checking version wrapped by $f90 command... $ECHO_C"
-
-    if $f90 -V 2>&1 | grep -q "Intel(R)" ; then
-        f90_flavor=ifort
-    elif $f90 -V 2>&1 | grep -q "^pgf" ; then
-        f90_flavor=pgf
-    elif $f90 -v 2>&1 | grep -q "gcc version" ; then
-        f90_flavor=gfortran
-    elif $f90 -V 2>&1 | grep -q "Cray Fortran" ; then
-        f90_flavor=crayftn
-    elif $f90 -version 2>&1 | grep -q "NAG Fortran" ; then
-        f90_flavor=nagfor
-    else
-        echo $ECHO_N "unknown, leaving as... $ECHO_C"
-        f90_flavor=$f90
-    fi
-    echo $f90_flavor
-    ;;
-* )
-    f90_flavor=$f90
-    ;;
-esac
 
 AC_SUBST(f90)
 AC_SUBST(mpif90)

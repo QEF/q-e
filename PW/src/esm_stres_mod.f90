@@ -1621,6 +1621,7 @@ CONTAINS
                           + pi/gp*Qb*Qa/S*cosgpr*dgp_deps(:, :)*dexperfcp_dgp
 
           !! BC3 terms
+          call errore('esm_stress_ewg_bc2','FIXME: expm used but not defined',1)
           dE_deps(:, :) = dE_deps(:, :) &
                           - gp*dinvgp_deps(:, :)*tpi/gp*Qb*Qa/S*cosgpr*expm &
                           + tpi/gp*delta(:, :)*Qb*Qa/S*cosgpr*expm &

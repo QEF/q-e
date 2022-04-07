@@ -141,18 +141,31 @@
           IF ( ASSOCIATED( gl ) ) DEALLOCATE ( gl )
        END IF
        !
-       !$acc exit data delete(eigts1,  eigts2,  eigts3)
-       !$acc exit data delete(mill, g)
        !  
        IF( ALLOCATED( gg ) )     DEALLOCATE( gg )
-       IF( ALLOCATED( g ) )      DEALLOCATE( g )
+       IF( ALLOCATED( g ) )  THEN 
+!$acc    exit data delete(g) 
+         DEALLOCATE( g )
+       END IF 
        IF( ALLOCATED( mill_g ) ) DEALLOCATE( mill_g )
-       IF( ALLOCATED( mill ) )   DEALLOCATE( mill )
+       IF( ALLOCATED( mill ) )   THEN 
+!$acc    exit data delete(mill) 
+         DEALLOCATE( mill )
+       END IF 
        IF( ALLOCATED( igtongl )) DEALLOCATE( igtongl )
        IF( ALLOCATED( ig_l2g ) ) DEALLOCATE( ig_l2g )
-       IF( ALLOCATED( eigts1 ) ) DEALLOCATE( eigts1 )
-       IF( ALLOCATED( eigts2 ) ) DEALLOCATE( eigts2 )
-       IF( ALLOCATED( eigts3 ) ) DEALLOCATE( eigts3 )
+       IF( ALLOCATED( eigts1 ) ) THEN
+!$acc    exit data delete(eigts1)         
+         DEALLOCATE( eigts1 )
+       END IF 
+       IF( ALLOCATED( eigts2 ) ) THEN
+!$acc    exit data delete(eigts2)
+         DEALLOCATE( eigts2 )
+       END IF 
+       IF( ALLOCATED( eigts3 ) ) THEN
+!$acc    exit data delete(eigts3)  
+         DEALLOCATE( eigts3 )
+       END IF 
        !
        ! GPU vars
        IF (use_gpu) THEN
@@ -170,8 +183,14 @@
 
      SUBROUTINE deallocate_gvect_exx()
        IF( ALLOCATED( gg ) )      DEALLOCATE( gg )
-       IF( ALLOCATED( g ) )       DEALLOCATE( g )
-       IF( ALLOCATED( mill ) )    DEALLOCATE( mill )
+       IF( ALLOCATED( g ) )  THEN
+!$acc    exit data delete(g) 
+         DEALLOCATE( g )
+       END IF 
+       IF( ALLOCATED( mill ) ) THEN 
+!$acc    exit data delete(mill) 
+         DEALLOCATE( mill )
+       END IF 
        IF( ALLOCATED( igtongl ) ) DEALLOCATE( igtongl )
        IF( ALLOCATED( ig_l2g ) )  DEALLOCATE( ig_l2g )
      END SUBROUTINE deallocate_gvect_exx

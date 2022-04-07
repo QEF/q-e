@@ -565,6 +565,7 @@ CONTAINS
                llmax = SIZE(starting_ns,1) 
                nspin = 1
                ALLOCATE(objs(nsp))
+               ind = 0
                DO i = 1, nsp
                   IF (.NOT. ANY(starting_ns(1:llmax,1:2,i)>0.d0)) CYCLE
                   ind = ind + 1 
@@ -759,6 +760,7 @@ CONTAINS
             ndim_london_c6 = COUNT ( c6data .GT. -eps16) 
             IF ( ndim_london_c6 .GT. 0 ) THEN 
                ALLOCATE (c6objs(ndim_london_c6))
+               ind = 0
                DO isp = 1, nsp
                   IF ( c6data(isp) .GT. -eps16 ) THEN
                      ind  = ind + 1  

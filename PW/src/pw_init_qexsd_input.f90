@@ -333,7 +333,7 @@
      END IF
      !
      IF (ANY(starting_ns_eigenvalue /= -1.0_DP)) THEN
-         IF (lsda) THEN
+         IF (ip_nspin == 2) THEN
             spin_ns = 2
          ELSE
             spin_ns = 1

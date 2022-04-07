@@ -147,13 +147,13 @@ craype*:cray* )
         #NOTE: add '-rm' to get messages from crayftn about why
         #      optimizations have not been applied
         #      -x dir disable directives introduced by !DIR$
-        try_f90flags="-O3,fp3 -f free -x dir"
+        try_f90flags="-eF -O3,fp3 -f free -x dir"
         try_fflags_noopt="-O0"
         try_ldflags_openmp="-homp"
         try_ldflags="-v"
         try_ldflags_static="-static"
         try_dflags="$try_dflags -D__CRAY"
-        have_cpp=0
+        have_cpp=1
         ;;
 craype*:pgf* )
 # see comment above for pgf*
