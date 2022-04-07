@@ -121,12 +121,6 @@ target_link_libraries(qe_cpv
      PUBLIC 
         qe_openacc_fortran)
 
-if(QE_ENABLE_ENVIRON)
-    target_link_libraries(qe_cpv
-    PRIVATE
-        qe_environ)
-endif()
-
 ###########################################################
 # cp.x
 ###########################################################
@@ -142,12 +136,6 @@ target_link_libraries(qe_cpv_exe
         qe_lax
         qe_cpv
         qe_xclib)
-
-if(QE_ENABLE_ENVIRON)
-    target_link_libraries(qe_cpv_exe
-    PRIVATE
-        qe_environ)
-endif()
 
 ###########################################################
 # manycp.x

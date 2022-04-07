@@ -321,12 +321,6 @@ if(QE_ENABLE_CUDA)
             CUDA::cublas)
 endif()
 
-if(QE_ENABLE_ENVIRON)
-    target_link_libraries(qe_pw
-    PRIVATE
-        qe_environ)
-endif()
-
 ###########################################################
 # pw.x
 ###########################################################
@@ -342,12 +336,6 @@ target_link_libraries(qe_pw_exe
         qe_modules
         qe_lax
         qe_upflib)
-
-if(QE_ENABLE_ENVIRON)
-    target_link_libraries(qe_pw_exe
-    PRIVATE
-        qe_environ)
-endif()
 
 ###########################################################
 # ibrav2cell.x
