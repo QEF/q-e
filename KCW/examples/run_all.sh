@@ -1,3 +1,4 @@
+#!/bin/bash
 home=`pwd`
 
 cd example01/
