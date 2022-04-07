@@ -1,5 +1,0 @@
-&dos
- prefix = "h2o"
- outdir = "./out"
- degauss = 0.02
-/
