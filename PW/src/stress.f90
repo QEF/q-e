@@ -267,6 +267,7 @@ SUBROUTINE stress( sigma )
          &   5x,'DFT-D   stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'XDM     stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'dft-nl  stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
-         &   5x,'TS-vdW  stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
+         &   5x,'TS-vdW  stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
+         &   5x,'MBD     stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
   !
 END SUBROUTINE stress
