@@ -392,7 +392,8 @@ MODULE qexsd_input
    ! 
    TYPE (cell_control_type)                     :: obj
    CHARACTER(LEN=*),INTENT(IN)                  :: cell_dynamics, cell_dofree
-   REAL(DP),INTENT(IN)                          :: pressure, wmass, cell_factor
+   REAL(DP),INTENT(IN)                          :: pressure, wmass
+   REAL(DP),INTENT(IN), OPTIONAL                :: cell_factor
    INTEGER,DIMENSION(3,3),INTENT(IN)            :: iforceh
    ! 
    CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="cell_control"

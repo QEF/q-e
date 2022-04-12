@@ -106,9 +106,9 @@
   LOGICAL,POINTER                          ::  gate_ptr, block_ptr, relaxz_ptr
   REAL(DP),TARGET                          ::  block_1_tgt, block_2_tgt, block_height_tgt, zgate_tgt
   REAL(DP),POINTER                         ::  block_1_ptr, block_2_ptr, block_height_ptr, zgate_ptr
-  TYPE(hybrid_type),POINTER                ::  hybrid_
-  TYPE(dftU_type),POINTER                  ::  dftU_
-  TYPE(vdW_type),POINTER                   ::  vdW_
+  TYPE(hybrid_type)                        ::  hybrid_
+  TYPE(dftU_type)                          ::  dftU_
+  TYPE(vdW_type)                           ::  vdW_
   REAL(DP),TARGET                          ::  xdm_a1_, xdm_a2_, lond_s6_, lond_rcut_, ts_vdw_econv_thr_,&
                                                scr_par_, exx_frc_, ecutvcut_, ecut_fock_, loc_thr_, cell_factor_tg      
   REAL(DP),POINTER                         ::  xdm_a1_pt=>NULL(), xdm_a2_pt=>NULL(), lond_s6_pt=>NULL(), &
@@ -133,7 +133,7 @@
   INTEGER                                  :: i 
   !
   ! 
-  NULLIFY (gate_ptr, block_ptr, relaxz_ptr, block_1_ptr, block_2_ptr, block_height_ptr, zgate_ptr, dftU_, vdW_, hybrid_)
+  NULLIFY (gate_ptr, block_ptr, relaxz_ptr, block_1_ptr, block_2_ptr, block_height_ptr, zgate_ptr)
   NULLIFY (nr_1,nr_2,nr_3, nrs_1, nrs_2, nrs_3, nrb_1, nrb_2, nrb_3) 
 
   obj%tagname=TRIM(obj_tagname)
@@ -194,10 +194,8 @@
   END IF
 
   !dft_is_hybrid=get_dft_is_hybrid()
-  dft_is_hybrid = xclib_dft_is('hybrid')
-  
+  dft_is_hybrid = xclib_dft_is('hybrid') 
   IF ( dft_is_hybrid) THEN
-     ALLOCATE(hybrid_)
      IF (screening_parameter > 0.0_DP) THEN 
         scr_par_ = screening_parameter 
         scr_par_opt => scr_par_ 
@@ -231,13 +229,14 @@
                             SCREENING_PARAMETER = scr_par_opt,  EXXDIV_TREATMENT = exxdiv_treatment,&
                             X_GAMMA_EXTRAPOLATION = x_gamma_extrapolation, ECUTVCUT = ecutvcut_opt, &
                             LOCAL_THR = loc_thr_p )
+  ELSE 
+     hybrid_%lwrite=.false. 
   END IF
   dft_is_nonlocc=get_dft_is_nonlocc()
   vdw_corr_ = vdw_corr
   IF (london) vdw_corr_ = 'grimme-d2'
   empirical_vdw = .NOT. ( TRIM(vdw_corr_)  == 'none')
   IF (empirical_vdw .OR. dft_is_nonlocc) THEN
-    ALLOCATE (vdW_)
     IF ( empirical_vdw ) THEN
         vdw_corr_pointer => vdw_corr_
         SELECT CASE ( TRIM(vdw_corr_))
@@ -282,10 +281,11 @@
                              LONDON_S6 = lond_s6_pt, LONDON_RCUT = lond_rcut_pt, SPECIES = species_, &
                              XDM_A1 = xdm_a1_pt, XDM_A2 = xdm_a2_pt, DFTD3_VERSION = dftd3_version_pt, &
                              DFTD3_THREEBODY = dftd3_threebody_pt)
+    ELSE 
+     vdw_%lwrite=.false. 
   END IF
   !
   IF (ip_lda_plus_u) THEN
-     ALLOCATE (dftU_)
      !
      DO nt = 1, ntyp
        !
@@ -380,21 +380,13 @@
                            n=hubbard_n_, l=hubbard_l_, &
                            ALPHA = hubbard_alpha_, BETA = hubbard_beta_, ALPHA_BACK = hubbard_alpha_back_, &
                            STARTING_NS = starting_ns_, BACKALL = backall_ )
+  ELSE
+    dftU_%lwrite = .false. 
   END IF
   CALL qexsd_init_dft(obj%dft, TRIM(dft_name), hybrid_, vdW_, dftU_)
-  IF (ASSOCIATED(hybrid_)) THEN
-    CALL qes_reset(hybrid_)
-    DEALLOCATE(hybrid_)
-  END IF
-  IF (ASSOCIATED(vdW_)) THEN
-    CALL qes_reset(vdW_)
-    DEALLOCATE(vdW_)
-  END IF
-  IF (ASSOCIATED(dftU_)) THEN
-    CALL qes_reset(dftU_)
-    DEALLOCATE(dftU_)
-  END IF
-
+  CALL qes_reset(hybrid_)
+  CALL qes_reset(vdW_)
+  CALL qes_reset(dftU_)
   !
   !------------------------------------------------------------------------------------------------------------------------
   !                                                   SPIN ELEMENT
