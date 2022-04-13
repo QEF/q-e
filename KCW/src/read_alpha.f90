@@ -56,7 +56,7 @@ subroutine read_alpha ( )
       !
     ENDIF
     !
-    WRITE(stdout, '(5X,"INFO: alphas read from:", A)'), filename
+    WRITE(stdout, '(5X,"INFO: alphas read from:", A)') filename
     OPEN (UNIT = 1001, FILE = filename, FORM = 'formatted', STATUS = 'old' )
     READ(1001,*) dim
     !

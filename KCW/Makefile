@@ -1,4 +1,4 @@
-# Makefile for KCWANN
+# Makefile for KCW
 sinclude ../make.inc
 
 default: all
@@ -9,7 +9,7 @@ kcw:
 	( cd src ; $(MAKE) all || exit 1 )
 
 pp:
-	( cd PP; $(MAKE) all || exit 1 )
+	( cd PP ; $(MAKE) all || exit 1 )
 
 clean: kcw_clean pp_clean
 

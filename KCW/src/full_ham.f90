@@ -296,7 +296,7 @@ SUBROUTINE full_ham (ik)
         etmp1 = sum ( vxc_minus1(1:dfftp%nnr,current_spin) * n_r(1:dfftp%nnr) )
         etmp1= etmp1/( dfftp%nr1*dfftp%nr2*dfftp%nr3 )*omega
         CALL mp_sum (etmp1, intra_bgrp_comm)
-        WRITE(stdout , '(8x, "PZ corr const term, sh[n_i], Exc[n_i], int{v_xc[n_i] n_i}, int{v_xc[n_i] n_i}", 4F15.8)'), &
+        WRITE(stdout , '(8x, "PZ corr const term, sh[n_i], Exc[n_i], int{v_xc[n_i] n_i}, int{v_xc[n_i] n_i}", 4F15.8)') &
             sh, etxc_minus1, etmp1, vtxc_minus1
         etmp1 = + sh - etxc_minus1 + etmp1
         !
@@ -508,12 +508,12 @@ SUBROUTINE full_ham (ik)
   IF (ALLOCATED(eigvc_ki)) DEALLOCATE (eigvc_ki)
   IF (ALLOCATED(ham_aux)) DEALLOCATE (ham_aux)
   !
-  WRITE( stdout, '' )
+  WRITE( stdout, '()' )
   WRITE( stdout, '(10x, "KI[Full] ",8F9.4)' ) (et(ibnd,ik)*rytoev, ibnd=1,n_orb) 
-  IF (kcw_at_ks ) WRITE( stdout, '' )
+  IF (kcw_at_ks ) WRITE( stdout, '()' )
   IF (kcw_at_ks ) WRITE( stdout, '(10x, "KI[Pert] ",8F9.4)' ) (et_aux(ibnd,ik)*rytoev, ibnd=1,n_orb)
   !
-  WRITE( stdout, '' )
+  WRITE( stdout, '()' )
   IF ( elumo < 1d+6) THEN
      IF (kcw_at_ks) WRITE( stdout, 9043 ) ehomo_p*rytoev, elumo_p*rytoev
      WRITE( stdout, 9044 ) ehomo*rytoev, elumo*rytoev
