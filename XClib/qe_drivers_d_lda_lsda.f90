@@ -305,10 +305,6 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
         dmuxc(ir,2,2) = dmuxc(ir,2,2) + aa - (1.0_DP + zeta_s) * bb +  &
                                              (1.0_DP + zeta_s)**2 * cc                               
      ENDDO
-#if !defined(_OPENACC)
-!$omp end do
-!$omp end parallel
-#endif
      !
   ELSE
      !
