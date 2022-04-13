@@ -165,14 +165,12 @@ MODULE pw_restart_new
       LOGICAL                  :: opt_conv_ispresent, dft_is_vdw, empirical_vdw
       INTEGER                  :: n_opt_steps, n_scf_steps_, h_band
       REAL(DP),TARGET                 :: h_energy
-      TYPE(gateInfo_type),TARGET      :: gate_info_temp
-      TYPE(gateInfo_type),POINTER     :: gate_info_ptr
-      TYPE(dipoleOutput_type),TARGET  :: dipol_obj 
-      TYPE(dipoleOutput_type),POINTER :: dipol_ptr 
-      TYPE(BerryPhaseOutput_type),  POINTER :: bp_obj_ptr
-      TYPE(hybrid_type), POINTER            :: hybrid_obj 
-      TYPE(vdW_type), POINTER               :: vdw_obj
-      TYPE(dftU_type), POINTER              :: dftU_obj 
+      TYPE(gateInfo_type)          :: gate_info_opt 
+      TYPE(dipoleOutput_type)      :: dipol_opt  
+      TYPE(BerryPhaseOutput_type)   :: bp_obj_opt
+      TYPE(hybrid_type)               :: hybrid_obj_opt
+      TYPE(vdW_type)                  :: vdw_obj_opt
+      TYPE(dftU_type)                 :: dftU_obj_opt 
       REAL(DP), TARGET                      :: lumo_tmp, ef_targ, dispersion_energy_term 
       REAL(DP), POINTER                     :: lumo_energy, ef_point 
       REAL(DP), ALLOCATABLE                 :: ef_updw(:)
@@ -201,16 +199,15 @@ MODULE pw_restart_new
       LOGICAL,TARGET             :: dftd3_threebody_, ts_vdw_isolated_, domag_
       LOGICAL,POINTER            :: ts_isol_pt, dftd3_threebody_pt, ts_vdw_isolated_pt, domag_opt  
       INTEGER,POINTER            :: dftd3_version_pt
-      TYPE(smearing_type),TARGET :: smear_obj 
-      TYPE(smearing_type),POINTER:: smear_obj_ptr
+      TYPE(smearing_type)        :: smear_obj 
 
       NULLIFY( degauss_, demet_, efield_corr, potstat_corr, gatefield_corr) 
-      NULLIFY( gate_info_ptr, dipol_ptr, bp_obj_ptr, hybrid_obj, vdw_obj, dftU_obj, lumo_energy, ef_point)  
+      NULLIFY( lumo_energy, ef_point)  
       NULLIFY ( optimization_has_converged, non_local_term_pt, &
            vdw_corr_pt, vdw_term_pt, ts_thr_pt, london_s6_pt, london_rcut_pt, &
            xdm_a1_pt, xdm_a2_pt, ts_vdw_econv_thr_pt, ts_isol_pt, &
            dftd3_threebody_pt, ts_vdw_isolated_pt, dftd3_version_pt )
-      NULLIFY ( ectuvcut_opt, scr_par_opt, loc_thr_p, h_energy_ptr, smear_obj_ptr, domag_opt) 
+      NULLIFY ( ectuvcut_opt, scr_par_opt, loc_thr_p, h_energy_ptr, domag_opt) 
 
       !
       ! Global PW dimensions need to be properly computed, reducing across MPI tasks
@@ -272,7 +269,7 @@ MODULE pw_restart_new
          END SELECT
          ! 
             call qexsd_init_convergence_info(output_obj%convergence_info,   &
-                        SCf_HAS_CONVERGED = scf_has_converged, &
+                        SCF_HAS_CONVERGED = scf_has_converged, &
                         OPTIMIZATION_HAS_CONVERGED = optimization_has_converged,& 
                         N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error/e2,&
                         N_OPT_STEPS = n_opt_steps, GRAD_NORM = sumfor)
@@ -364,7 +361,6 @@ MODULE pw_restart_new
 !-------------------------------------------------------------------------------
          !
          IF (xclib_dft_is('hybrid') ) THEN 
-            ALLOCATE ( hybrid_obj)
             IF (get_screening_parameter() > 0.0_DP) THEN
                scr_par_ = get_screening_parameter() 
                scr_par_opt=> scr_par_ 
@@ -377,16 +373,18 @@ MODULE pw_restart_new
                loc_thr_ = local_thr 
                loc_thr_p => loc_thr_ 
             END IF 
-            CALL qexsd_init_hybrid(hybrid_obj, DFT_IS_HYBRID = .TRUE., NQ1 = nq1 , NQ2 = nq2, NQ3 =nq3, ECUTFOCK = ecutfock/e2, &
+            CALL qexsd_init_hybrid(hybrid_obj_opt, DFT_IS_HYBRID = .TRUE., NQ1 = nq1 , NQ2 = nq2, NQ3 =nq3, & 
+                                   ECUTFOCK = ecutfock/e2, &
                                    EXX_FRACTION = xclib_get_exx_fraction(), SCREENING_PARAMETER = scr_par_opt, &
                                    EXXDIV_TREATMENT = exxdiv_treatment, X_GAMMA_EXTRAPOLATION = x_gamma_extrapolation,&
                                    ECUTVCUT = ectuvcut_opt, LOCAL_THR = loc_thr_p )
+         ELSE 
+            hybrid_obj_opt%lwrite=.false. 
          END IF 
 
          empirical_vdw = (llondon .OR. ldftd3 .OR. lxdm .OR. ts_vdw .OR. mbd_vdw )
          dft_is_vdw = dft_is_nonlocc() 
          IF ( dft_is_vdw .OR. empirical_vdw ) THEN 
-            ALLOCATE (vdw_obj)
             IF ( empirical_vdw) THEN
                 vdw_term_pt => dispersion_energy_term
                 vdw_corr_ = TRIM(vdw_corr)
@@ -433,13 +431,14 @@ MODULE pw_restart_new
                 dft_nonlocc_ = TRIM(get_nonlocc_name())
                 non_local_term_pt => dft_nonlocc_
             END IF
-            CALL qexsd_init_vdw(vdw_obj, non_local_term_pt, vdw_corr_pt, vdw_term_pt, &
+            CALL qexsd_init_vdw(vdw_obj_opt, non_local_term_pt, vdw_corr_pt, vdw_term_pt, &
                                 ts_thr_pt, ts_isol_pt, london_s6_pt, LONDON_C6 = london_c6_, &
                                 LONDON_RCUT =   london_rcut_pt, XDM_A1 = xdm_a1_pt, XDM_A2 = xdm_a2_pt,&
                                  DFTD3_VERSION = dftd3_version_pt, DFTD3_THREEBODY = dftd3_threebody_pt)
+            ELSE 
+               vdw_obj_opt%lwrite=.false. 
          END IF 
-         IF ( lda_plus_u ) THEN 
-            ALLOCATE (dftU_obj)  
+         IF ( lda_plus_u ) THEN   
             CALL check_and_allocate_real(U_opt, Hubbard_U)
             CALL check_and_allocate_real(J0_opt, Hubbard_J0) 
             CALL check_and_allocate_real(alpha_opt, Hubbard_alpha) 
@@ -458,29 +457,22 @@ MODULE pw_restart_new
             !
             ! Currently Hubbard_V, rho%nsb, and nsg are not written (read) to (from) XML 
             !
-            CALL qexsd_init_dftU (dftU_obj, NSP = nsp, PSD = upf(1:nsp)%psd, SPECIES = atm(1:nsp), ITYP = ityp(1:nat), &
+            CALL qexsd_init_dftU (dftU_obj_opt, NSP = nsp, PSD = upf(1:nsp)%psd, SPECIES = atm(1:nsp), ITYP = ityp(1:nat), &
                                   IS_HUBBARD = is_hubbard, IS_HUBBARD_BACK = is_hubbard_back,  &
                                   BACKALL = backall, HUBB_L2 = l2_opt, HUBB_L3 = l3_opt, &
                                   NONCOLIN = noncolin, LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION_TYPE = Hubbard_projectors, &
                                   U =U_opt, U2 = U2_opt, J0 = J0_opt, J = J_opt, n = n_opt, l = l_opt, &
                                   alpha = alpha_opt, beta = beta_opt, alpha_back = alpha_back_opt,  & 
                                   starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc)
+         ELSE 
+           dftU_obj_opt%lwrite=.false. 
          END IF 
          dft_name = get_dft_short()
          !
-         CALL qexsd_init_dft  (output_obj%dft, dft_name, hybrid_obj, vdw_obj, dftU_obj)
-         IF (ASSOCIATED (hybrid_obj)) THEN
-            CALL qes_reset(hybrid_obj) 
-            DEALLOCATE (hybrid_obj) 
-         END IF 
-         IF (ASSOCIATED (vdw_obj)) THEN
-            CALL qes_reset(vdw_obj) 
-            DEALLOCATE (vdw_obj) 
-         END IF 
-         IF (ASSOCIATED (dftU_obj)) THEN 
-            CALL qes_reset( dftU_obj) 
-            DEALLOCATE (dftU_obj) 
-         END IF 
+         CALL qexsd_init_dft  (output_obj%dft, dft_name, hybrid_obj_opt, vdw_obj_opt, dftU_obj_opt)
+         CALL qes_reset(hybrid_obj_opt) 
+         CALL qes_reset(vdw_obj_opt) 
+         CALL qes_reset( dftU_obj_opt) 
          !
 !-------------------------------------------------------------------------------
 ! ... PERIODIC BOUNDARY CONDITIONS 
@@ -578,12 +570,13 @@ MODULE pw_restart_new
                smearing_loc = schema_smearing( smearing )
                CALL qexsd_init_smearing(smear_obj, smearing_loc, degauss/e2)
             END IF  
-            smear_obj_ptr => smear_obj  
+         ELSE 
+            smear_obj%lwrite=.false.  
          END IF 
          !  
             
          CALL qexsd_init_band_structure(  output_obj%band_structure,lsda,noncolin,lspinorb, nelec, natomwfc, &
-                                 et, wg, nkstot, xk, ngk_g, wk, SMEARING = smear_obj_ptr,  &
+                                 et, wg, nkstot, xk, ngk_g, wk, SMEARING = smear_obj,  &
                                  STARTING_KPOINTS = qexsd_start_k_obj, OCCUPATIONS_KIND = qexsd_occ_obj, &
                                  WF_COLLECTED = wf_collect, NBND = nbnd, FERMI_ENERGY = ef_point, EF_UPDW = ef_updw,& 
                                  HOMO = h_energy_ptr, LUMO = lumo_energy )
@@ -661,35 +654,30 @@ MODULE pw_restart_new
          output_obj%electric_field_ispresent = ( gate .OR. lelfield .OR. lberry .OR. tefield ) 
 
          IF ( gate ) THEN 
-            CALL qexsd_init_gate_info(gate_info_temp,"gateInfo", etotgatefield/e2, zgate, nelec, &
-                   alat, at, bg, zv, ityp) 
-            gate_info_ptr => gate_info_temp    
-         END IF             
+            CALL qexsd_init_gate_info(gate_info_opt,"gateInfo", etotgatefield/e2, zgate, nelec, &
+                   alat, at, bg, zv, ityp)
+         ELSE 
+            gate_info_opt%lwrite=.false. 
+         END IF
          IF ( lelfield ) THEN
             ALLOCATE (bp_el_pol(2), bp_ion_pol(3) )
             bp_el_pol = el_pol 
             bp_ion_pol(1:3) = ion_pol(1:3)
          END IF
          IF ( tefield .AND. dipfield) THEN 
-            CALL qexsd_init_dipole_info(dipol_obj, el_dipole, ion_dipole, edir, eamp, &
+            CALL qexsd_init_dipole_info(dipol_opt, el_dipole, ion_dipole, edir, eamp, &
                                   emaxpos, eopreg )  
-            dipol_ptr => dipol_obj
+         ELSE 
+           dipol_opt%lwrite=.false. 
          END IF
-         IF ( lberry ) bp_obj_ptr => qexsd_bp_obj
+         qexsd_bp_obj%lwrite= lberry 
          IF (output_obj%electric_field_ispresent) &
             CALL qexsd_init_outputElectricField(output_obj%electric_field, lelfield, tefield, dipfield, &
-                 lberry, BP_OBJ = bp_obj_ptr, EL_POL = bp_el_pol, ION_POL = bp_ion_pol,          &
-                 GATEINFO = gate_info_ptr, DIPOLE_OBJ =  dipol_ptr) 
-         ! 
-         IF (ASSOCIATED(gate_info_ptr)) THEN 
-            CALL qes_reset (gate_info_ptr)
-            NULLIFY(gate_info_ptr)
-         ENDIF
-         IF (ASSOCIATED (dipol_ptr) ) THEN
-            CALL qes_reset (dipol_ptr)
-            NULLIFY(dipol_ptr)
-         ENDIF
-         NULLIFY ( bp_obj_ptr) 
+                 lberry, BP_OBJ = qexsd_bp_obj, EL_POL = bp_el_pol, ION_POL = bp_ion_pol,          &
+                 GATEINFO = gate_info_opt, DIPOLE_OBJ =  dipol_opt)
+         !
+         CALL qes_reset (gate_info_opt)
+         CALL qes_reset (dipol_opt)
 !-------------------------------------------------------------------------------
 ! ... CLOCKS
          CALL qexsd_add_all_clocks()
