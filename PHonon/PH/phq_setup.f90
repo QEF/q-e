@@ -65,7 +65,7 @@ subroutine phq_setup
   USE symm_base,     ONLY : nrot, nsym, s, irt, t_rev, time_reversal, &
                             sr, invs, inverse_s, d1, d2, d3, check_grid_sym
   USE uspp_param,    ONLY : upf
-  USE uspp,          ONLY : nlcc_any, deeq_nc, okvan
+  USE uspp,          ONLY : nlcc_any, deeq_nc, deeq_nc_d, okvan
   USE noncollin_module, ONLY : noncolin, domag, m_loc, angle1, angle2, ux
   USE nlcc_ph,       ONLY : drc
   USE control_ph,    ONLY : rec_code, lgamma_gamma, search_sym, start_irr, &
@@ -183,6 +183,9 @@ subroutine phq_setup
         v%of_r(:,2:4)=-v%of_r(:,2:4)
         deeq_nc_save(:,:,:,:,2)=deeq_nc(:,:,:,:)
         deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,1)
+#if defined(__CUDA)
+        deeq_nc_d(:,:,:,:)=deeq_nc(:,:,:,:)
+#endif
      ENDIF
   ENDIF
   !

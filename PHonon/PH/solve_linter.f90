@@ -45,7 +45,12 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, npwx
   USE scf,                  ONLY : rho, vrs
+#if defined(__CUDA)
+  USE scf_gpum,             ONLY : vrs_d
+  USE uspp,                 ONLY : okvan, vkb, deeq_nc, deeq_nc_d
+#else
   USE uspp,                 ONLY : okvan, vkb, deeq_nc
+#endif
   USE uspp_param,           ONLY : nhm
   USE noncollin_module,     ONLY : noncolin, domag, npol, nspin_mag
   USE paw_variables,        ONLY : okpaw
@@ -282,11 +287,17 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
            ELSE
               IF (okvan) THEN
                  deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,2)
+#if defined(__CUDA)
+                 deeq_nc_d(:,:,:,:) = deeq_nc(:,:,:,:) 
+#endif
                  int1_nc(:,:,:,:,:) = int1_nc_save(:,:,:,:,:,2)
               ENDIF
               CALL dvqpsi_us(ik, u(1, mode), .FAlSE., becpt, alphapt)
               IF (okvan) THEN
                  deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,1)
+#if defined(__CUDA)
+                 deeq_nc_d(:,:,:,:) = deeq_nc(:,:,:,:)
+#endif
                  int1_nc(:,:,:,:,:) = int1_nc_save(:,:,:,:,:,1)
               ENDIF
            ENDIF
@@ -326,7 +337,15 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,2)
            ENDIF
            vrs(:, 2:4) = -vrs(:, 2:4)
-           IF (okvan) deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,2)
+#if defined(__CUDA)
+           vrs_d = vrs
+#endif
+           IF (okvan) THEN
+                   deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,2)
+#if defined(__CUDA)
+                   deeq_nc_d(:,:,:,:) = deeq_nc(:,:,:,:)
+#endif
+           ENDIF
         ENDIF
         !
         ! set threshold for iterative solution of the linear system
@@ -351,7 +370,15 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,1)
            ENDIF
            vrs(:, 2:4) = -vrs(:, 2:4)
-           IF (okvan) deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,1)
+#if defined(__CUDA)
+           vrs_d = vrs
+#endif
+           IF (okvan) THEN
+                   deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,1)
+#if defined(__CUDA)
+                   deeq_nc_d(:,:,:,:)=deeq_nc(:,:,:,:)
+#endif
+           ENDIF
         ENDIF
         !
      END DO ! isolv
