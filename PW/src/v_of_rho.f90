@@ -235,9 +235,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
      ENDDO
      !
      IF ( use_gpu ) THEN
-       !$acc host_data use_device( rhogsum, grho )
        CALL fft_gradient_g2r_gpu( dfftp, rhogsum, g_d, grho(:,:,is) )
-       !$acc end host_data
      ELSE
        !$acc update host( rhogsum )
        CALL fft_gradient_g2r( dfftp, rhogsum, g, grho(:,:,is) )
