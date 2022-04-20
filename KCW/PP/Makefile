@@ -3,7 +3,6 @@
 include ../../make.inc
 
 IFLAGS         = -I../../include -I../src
-#LIBOBJS	       = ../../clib/clib.a ../../iotk/src/libiotk.a
 
 # location of needed modules and included files (if any)
 MODFLAGS= $(BASEMOD_FLAGS) \
@@ -19,17 +18,7 @@ kcw_bands.o
 
 SH_OBJS= sh_setup.o 
 
-
-KC_OBJS = \
-../src/kcw_comm.o \
-../src/interpolation.o \
-../src/convert_kpts_names.o \
-../src/self_hartree.o \
-../src/setup_coulomb_exx.o \
-../src/bare_pot.o \
-../src/kcw_io_new.o \
-../src/read_wannier.o\
-../src/coulomb.o
+KC_OBJS = ../src/libkcw.a
 
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a
@@ -38,19 +27,19 @@ QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/
           ../..//MBD/libmbd.a
 
 
-TLDEPS= kcw  #Dependency. To be compiled first
+TLDEPS= kcw-lib  #Dependency. To be compiled first
 
 all : tldeps interp_r_to_k.x sh.x clean_partial
 
-interp_r_to_k.x: interp_r_to_k.o $(PP_OBJS) $(PHOBJS) $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
+interp_r_to_k.x: interp_r_to_k.o $(PP_OBJS) $(LRMODS) $(PWOBJS) $(QEMODS) 
 	$(LD) $(LDFLAGS) -o $@ interp_r_to_k.o \
-        $(PP_OBJS) $(KC_OBJS) $(PHOBJS) $(LRMODS) $(PWOBJS) $(QEMODS)  \
-        $(LIBOBJS) $(LIBS) $(QELIBS)
+        $(PP_OBJS) $(KC_OBJS) $(LRMODS) $(PWOBJS) $(QEMODS)  \
+        $(LIBS) $(QELIBS)
 
-sh.x: compute_self_hartree.o $(SH_OBJS) $(PHOBJS) $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
+sh.x:  compute_self_hartree.o $(SH_OBJS) $(LRMODS) $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ compute_self_hartree.o \
-        $(SH_OBJS) $(KC_OBJS) $(PHOBJS) $(LRMODS) $(PWOBJS) $(QEMODS)  \
-        $(LIBOBJS) $(LIBS) $(QELIBS)
+        $(SH_OBJS) $(KC_OBJS) $(LRMODS) $(PWOBJS) $(QEMODS)  \
+        $(LIBS) $(QELIBS)
 
 tldeps :
 	if test -n "$(TLDEPS)" ; then \

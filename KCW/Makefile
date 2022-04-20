@@ -8,7 +8,10 @@ all: kcw pp
 kcw:
 	( cd src ; $(MAKE) all || exit 1 )
 
-pp:
+kcw-lib:
+	( cd src ; $(MAKE) libs-kcw || exit 1 )
+
+pp: kcw-lib
 	( cd PP ; $(MAKE) all || exit 1 )
 
 clean: kcw_clean pp_clean

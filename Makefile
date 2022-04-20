@@ -138,7 +138,7 @@ travis : pwall epw
 	if test -d test-suite ; then \
 	( cd test-suite ; make run-travis || exit 1 ) ; fi
 
-kcw : pw lrmods pp w90
+kcw : pwlibs lrmods pp w90
 	if test -d KCW ; then \
 	( cd KCW ; $(MAKE) all || exit 1 ) ; fi
 

@@ -68,13 +68,19 @@ QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/
          ../../FFTXlib/src/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a \
           ../..//MBD/libmbd.a
 
-TLDEPS= pw lrmods pp w90 #Dependency. To be compiled first
+TLDEPS= pwlibs lrmods pp w90 #Dependency. To be compiled first
 
-all : tldeps kcw.x clean_partial
+all : tldeps libs-kcw kcw.x clean_partial
 
-kcw.x:  kcw.o $(KI_OBJS) $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ kcw.o \
-        $(KI_OBJS) $(LRMODS) $(PWOBJS) $(QEMODS)  \
+libs-kcw : libkcw.a
+
+libkcw.a : $(KI_OBJS)
+	$(AR) $(ARFLAGS) $@ $?
+	$(RANLIB) $@
+
+kcw.x:  kcw.o libkcw.a $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ kcw.o libkcw.a\
+        $(LRMODS) $(PWOBJS) $(QEMODS)  \
         $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../KCW/src/$@ . )
 
