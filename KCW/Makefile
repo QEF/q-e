@@ -5,7 +5,7 @@ default: all
 
 all: kcw pp
 
-kcw:
+kcw: kcw-lib
 	( cd src ; $(MAKE) all || exit 1 )
 
 kcw-lib:
