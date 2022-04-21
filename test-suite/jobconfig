@@ -225,11 +225,11 @@ inputs_args = ('Fe.scf.in', '2'), ('Fe.hp.in', '4')
 program = HP
 inputs_args = ('LiNiO2.scf.in', '2'), ('LiNiO2.hp.in', '4')
 
-[kcw_nc-wann/]
+[kcw_wann/]
 program = KCW
 inputs_args = ('Si.scf.in', '1'), ('Si.win', '2'), ('Si.pw2wann.in', '3'), ('Si.win', '4'), ('Si.kcw-wann2kcw.in', '5'), ('Si.kcw-screen.in', '6'), ('Si.kcw-ham.in', '7')
 
-[kcw_nc-ks/]
+[kcw_ks/]
 program = KCW
 inputs_args = ('h2o.scf.in', '1'), ('h2o.kcw-wann2kcw.in', '15'), ('h2o.kcw-screen.in', '16'), ('h2o.kcw-ham.in', '7')
 
