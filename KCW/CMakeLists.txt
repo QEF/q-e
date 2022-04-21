@@ -62,11 +62,18 @@ target_link_libraries(qe_kcw
         qe_upflib
         qe_xclib)
 
-set (src_kcwpp_sh PP/sh_setup.f90)
+set (src_kcwpp 
+     PP/bcast_kcw_pp_input.f90
+     PP/input_pp_summary.f90
+     PP/kcw_pp_readin.f90
+     PP/read_hr.f90
+     PP/kcw_bands.f90
+     PP/sh_setup.f90)
+
 add_subdirectory(PP)
 
-qe_add_library(qe_kcwpp_sh ${src_kcwpp_sh})
-target_link_libraries(qe_kcwpp_sh
+qe_add_library(qe_kcwpp ${src_kcwpp})
+target_link_libraries(qe_kcwpp
     PRIVATE
         qe_pw
         qe_lax
@@ -82,7 +89,10 @@ target_link_libraries(qe_kcwpp_sh
 
 qe_install_targets(
     qe_kcw
-    qe_kcw_exe)
+    qe_kcw_exe
+    qe_kcwpp_sh_exe
+    qe_kcwpp_interp_exe)
+
 
 add_custom_target(kcw
     DEPENDS
@@ -90,5 +100,7 @@ add_custom_target(kcw
         pp
         qe_wannierprog_exe
         qe_kcw_exe
+        qe_kcwpp_sh_exe
+        qe_kcwpp_interp_exe
     COMMENT
         "Koopmans spectral functionals")
