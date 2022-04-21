@@ -39,6 +39,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
  
   USE io_global,             ONLY : stdout
   USE uspp_init,             ONLY : init_us_2
+  USE scf_gpum,              ONLY : vrs_d
 
   IMPLICIT NONE
   !
@@ -403,6 +404,9 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      vrs(:,3) = - vrs(:,3)
      vrs(:,4) = - vrs(:,4)     
      !
+#if defined(__CUDA)
+     vrs_d = vrs
+#endif
      ! Apply the operator ( H - \epsilon S + alpha_pv P_v) to evc1
      ! where alpha_pv = 0
      !
@@ -415,6 +419,10 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      vrs(:,2) = - vrs(:,2)
      vrs(:,3) = - vrs(:,3)
      vrs(:,4) = - vrs(:,4)
+     !
+#if defined(__CUDA)
+     vrs_d = vrs
+#endif
      !
      IF (ALLOCATED(psic_nc)) DEALLOCATE(psic_nc)
      !
