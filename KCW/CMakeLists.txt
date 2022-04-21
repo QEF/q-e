@@ -87,7 +87,6 @@ add_custom_target(kcw
     DEPENDS
         pw
         pp
-#        qe_pp_pw2wannier90_exe # compile only pw2wannier
         qe_kcw_exe
     COMMENT
         "Koopmans spectral functionals")
