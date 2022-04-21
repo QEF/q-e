@@ -1596,9 +1596,9 @@ MODULE exx
                 ENDIF
                 !
                 CALL fwfft ('Rho', psi_rhoc_work_d, dfftt)
-                psi_rhoc_work = psi_rhoc_work_d
                 !   >>>> add augmentation in G SPACE here
                 IF(okvan .and. .not. tqr) THEN
+                   psi_rhoc_work = psi_rhoc_work_d
                    ! contribution from one band added to real (in real space) part of rhoc
                    IF(jbnd>=jstart) &
                         CALL addusxx_g(dfftt, psi_rhoc_work, xkq,  xkp, 'r', &
@@ -1611,7 +1611,6 @@ MODULE exx
                 ENDIF
                 !   >>>> charge density done
                 !
-                vc(:,ii) = 0._DP
                 vc_d(:,ii) = 0._DP
                 fac(:) = coulomb_fac(:,iq,current_k)
                 !
