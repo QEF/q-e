@@ -18,7 +18,7 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
   !!
   USE uspp_param,       ONLY : upf
   USE noncollin_module, ONLY : noncolin
-  USE ions_base,        ONLY : nat, ityp
+  USE ions_base,        ONLY : nat, ityp, atm
   USE io_global,        ONLY : stdout
   USE ldaU,             ONLY : Hubbard_l, Hubbard_n, Hubbard_l2, Hubbard_n2,        &
                                Hubbard_l3, Hubbard_n3, is_hubbard, is_hubbard_back, &
@@ -80,6 +80,11 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
         !
         ! Label of the n-th atomic orbital for the atom na of type nt
         label(n) = upf(nt)%els(n)
+        !
+        IF (TRIM(label(n))=='') &
+                CALL errore('offset_atom_wfc', 'The pseudo for ' // atm(nt) // &
+                & ' does not contain labels for atomic orbitals! &
+                &Please add them by hand in the pseudo.',1)
         !
         IF ( upf(nt)%oc(n) >= 0.D0 ) THEN
            !
