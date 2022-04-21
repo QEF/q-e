@@ -61,9 +61,6 @@ PROGRAM lr_magnons_main
   pol_index = 1
   !
   CALL mp_startup ( )
-  CALL laxlib_start ( ndiag_, intra_bgrp_comm, do_distr_diag_inside_bgrp_ = .true. )
-  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
-       inter_bgrp_comm )
   !
   CALL environment_start ( code3 )
   !

@@ -122,7 +122,7 @@ SUBROUTINE lr_Opsi_magnons (ik, ip, dOpsi)
      ELSE
         !
         ! FFT to R-space
-!$acc data copyin(evc) copy(revc, dOpsi)        
+!$acc data copyin(evc(1:npwx*npol,ibnd)) copy(revc, dOpsi(1:npwx*npol,ibnd,1))        
         CALL cft_wave(ik, evc(1,ibnd), revc, +1)
         !
         ! back-FFT to G-space
@@ -174,7 +174,7 @@ SUBROUTINE lr_Opsi_magnons (ik, ip, dOpsi)
      ELSE
         !
         ! FFT to R-space
-!$acc data copyin(Tevc) copy(revc, dOpsi)        
+!$acc data copyin(Tevc(1:npwx*npol,ibnd)) copy(revc, dOpsi(1:npwx*npol,ibnd,2))        
         CALL cft_wave(ik, Tevc(1,ibnd), revc, +1)
         !
         ! back-FFT to G-space
