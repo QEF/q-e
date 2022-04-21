@@ -126,24 +126,24 @@ MODULE exx
     !! onto the new (smaller) grid for \rho=\psi_{k+q}\psi^*_k and vice versa.  
     !! Set up fft descriptors, including parallel stuff: sticks, planes, etc.
     !
-    USE gvecw,          ONLY : ecutwfc
-    USE gvect,          ONLY : ecutrho, ngm, g, gg, gstart, mill
-    USE cell_base,      ONLY : at, bg, tpiba2
-    USE recvec_subs,    ONLY : ggen, ggens
-    USE fft_base,       ONLY : smap
-    USE fft_types,      ONLY : fft_type_init
-    USE symm_base,      ONLY : fft_fact
-    USE mp_exx,         ONLY : nproc_egrp, negrp, intra_egrp_comm
-    USE mp_bands,       ONLY : nproc_bgrp, intra_bgrp_comm, nyfft
+    USE gvecw,                ONLY : ecutwfc
+    USE gvect,                ONLY : ecutrho, ngm, g, gg, gstart, mill
+    USE cell_base,            ONLY : at, bg, tpiba2
+    USE recvec_subs,          ONLY : ggen, ggens
+    USE fft_base,             ONLY : smap
+    USE fft_types,            ONLY : fft_type_init
+    USE symm_base,            ONLY : fft_fact
+    USE mp_exx,               ONLY : nproc_egrp, negrp, intra_egrp_comm
+    USE mp_bands,             ONLY : nproc_bgrp, intra_bgrp_comm, nyfft
     !
-    USE klist,          ONLY : nks, xk
-    USE mp_pools,       ONLY : inter_pool_comm
-    USE mp,             ONLY : mp_max, mp_sum
+    USE klist,                ONLY : nks, xk
+    USE mp_pools,             ONLY : inter_pool_comm
+    USE mp,                   ONLY : mp_max, mp_sum
     !
-    USE control_flags,  ONLY : tqr
-    USE realus,         ONLY : qpointlist, tabxx, tabp
-    USE exx_band,       ONLY : smap_exx
-    USE command_line_options, ONLY : nmany_
+    USE control_flags,        ONLY : tqr
+    USE realus,               ONLY : qpointlist, tabxx, tabp
+    USE exx_band,             ONLY : smap_exx
+    USE command_line_options, ONLY : nmany_, pencil_decomposition_
     !
     IMPLICIT NONE
     !
@@ -193,7 +193,8 @@ MODULE exx
        lpara = ( nproc_bgrp > 1 )
        CALL fft_type_init( dfftt, smap, "rho", gamma_only, lpara,         &
                            intra_bgrp_comm, at, bg, gcutmt, gcutmt/gkcut, &
-                           fft_fact=fft_fact, nyfft=nyfft, nmany=nmany_ )
+                           fft_fact=fft_fact, nyfft=nyfft, nmany=nmany_,  &
+                           use_pd=pencil_decomposition_ )
        CALL ggens( dfftt, gamma_only, at, g, gg, mill, gcutmt, ngmt, gt, ggt )
        gstart_t = gstart
        npwt = n_plane_waves(ecutwfc/tpiba2, nks, xk, gt, ngmt)
@@ -207,7 +208,8 @@ MODULE exx
        lpara = ( nproc_egrp > 1 )
        CALL fft_type_init( dfftt, smap_exx, "rho", gamma_only, lpara,     &
                            intra_egrp_comm, at, bg, gcutmt, gcutmt/gkcut, &
-                           fft_fact=fft_fact, nyfft=nyfft, nmany=nmany_ )
+                           fft_fact=fft_fact, nyfft=nyfft, nmany=nmany_,  &
+                           use_pd=pencil_decomposition_ )
        ngmt = dfftt%ngm
        ngmt_g = ngmt
        CALL mp_sum( ngmt_g, intra_egrp_comm )
@@ -4070,11 +4072,11 @@ end associate
       CALL vexx_loc( nnpw, nbndproj, xitmp, mexx )
       CALL MatSymm( 'S', 'L', mexx,nbndproj )
     ELSE  
-    ! |xi> = Vx[phi]|phi>
-    CALL vexx( nnpw, nnpw, nbndproj, phi, xitmp, becpsi )
-    ! mexx = <phi|Vx[phi]|phi>
-    CALL matcalc( 'exact', .TRUE., 0, nnpw, nbndproj, nbndproj, phi, xitmp, mexx, exxe )
-    ! |xi> = -One * Vx[phi]|phi> * rmexx^T
+      ! |xi> = Vx[phi]|phi>
+      CALL vexx( nnpw, nnpw, nbndproj, phi, xitmp, becpsi )
+      ! mexx = <phi|Vx[phi]|phi>
+      CALL matcalc( 'exact', .TRUE., 0, nnpw, nbndproj, nbndproj, phi, xitmp, mexx, exxe )
+      ! |xi> = -One * Vx[phi]|phi> * rmexx^T
     ENDIF  
     !
     CALL aceupdate( nbndproj, nnpw, xitmp, mexx )
