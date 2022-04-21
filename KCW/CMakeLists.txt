@@ -49,6 +49,8 @@ set(src_kcw
     src/coulomb.f90)
 
 
+add_subdirectory(src)
+
 qe_add_library(qe_kcw ${src_kcw})
 target_link_libraries(qe_kcw
     PRIVATE
@@ -60,22 +62,21 @@ target_link_libraries(qe_kcw
         qe_upflib
         qe_xclib)
 
-###########################################################
-# kcw.x
-###########################################################
-set(src_kcw_x src/kcw.f90)
-qe_enable_cuda_fortran("${src_kcw_x}")
-qe_add_executable(qe_kcw_exe ${src_kcw_x})
-set_target_properties(qe_kcw_exe 
-    PROPERTIES 
-        OUTPUT_NAME kcw.x)
-target_link_libraries(qe_kcw_exe
+set (src_kcwpp_sh PP/sh_setup.f90)
+add_subdirectory(PP)
+
+qe_add_library(qe_kcwpp_sh ${src_kcwpp_sh})
+target_link_libraries(qe_kcwpp_sh
     PRIVATE
         qe_pw
         qe_lax
+        qe_lr_modules
         qe_modules
-        qe_kcw
-        qe_xclib)
+        qe_fftx
+        qe_upflib
+        qe_xclib
+        qe_kcw)
+
 
 ###########################################################
 
@@ -87,6 +88,7 @@ add_custom_target(kcw
     DEPENDS
         pw
         pp
+        qe_wannierprog_exe
         qe_kcw_exe
     COMMENT
         "Koopmans spectral functionals")
