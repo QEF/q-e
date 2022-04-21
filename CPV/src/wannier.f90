@@ -11,6 +11,7 @@
 !----------------------------------------------------------------------------
 MODULE efcalc
   !----------------------------------------------------------------------------
+  !! Module for electric field calculation within Wannier framework.
   !
   USE kinds,        ONLY : DP
   USE io_global,    ONLY : stdout
@@ -27,9 +28,8 @@ MODULE efcalc
   !--------------------------------------------------------------------------
   SUBROUTINE clear_nbeg( nbeg )
     !--------------------------------------------------------------------------
-    !
-    ! ... some more electric field stuff
-    !                              - M.S
+    !! Some more electric field stuff.
+    !  M.S
     !
     INTEGER, INTENT(INOUT) :: nbeg
     !
@@ -57,8 +57,7 @@ MODULE efcalc
   !--------------------------------------------------------------------------
   SUBROUTINE ef_force( fion, ityp, nat, zv )
     !--------------------------------------------------------------------------
-    !
-    ! ... Electric Feild for ions here
+    !! Electric field force for ions.
     !
     IMPLICIT NONE
     !
@@ -84,6 +83,7 @@ MODULE efcalc
   !
   !
   SUBROUTINE deallocate_efcalc()
+     !! Deallocate electric field.
      IF( ALLOCATED( xdist ) ) DEALLOCATE( xdist )
      IF( ALLOCATED( ydist ) ) DEALLOCATE( ydist )
      IF( ALLOCATED( zdist ) ) DEALLOCATE( zdist )
@@ -106,7 +106,7 @@ END MODULE tune
 !--------------------------------------------------------------------------
 MODULE wannier_module
   !--------------------------------------------------------------------------
-  !! In the presence of an electric field every wannier state feels a different
+  !! In the presence of an electric field every Wannier state feels a different
   !! potential, which depends on the position of its center.  
   !! \(\text{rhos}\) is read in as the charge density in subroutine \(texttt{vofrho}\)
   !! and overwritten to be the potential.
@@ -193,6 +193,7 @@ MODULE wannier_subroutines
   !------------------------------------------------------------------------
   SUBROUTINE wannier_startup( ibrav, alat, a1, a2, a3, b1, b2, b3 )
     !------------------------------------------------------------------------
+    !! More Wannier and Field Initialization.
     !
     USE wannier_module,        ONLY : utwf
     USE efcalc,                ONLY : wf_efield, efx0, efy0, efz0, &
@@ -210,8 +211,6 @@ MODULE wannier_subroutines
     CHARACTER(LEN=256) :: fname
     !
     INTEGER :: i
-    !
-    ! ... More Wannier and Field Initialization
     !
     IF (calwf.GT.1) THEN
        IF (calwf.EQ.3 .AND. ionode ) THEN
@@ -296,6 +295,7 @@ MODULE wannier_subroutines
   SUBROUTINE get_wannier_center( tfirst, cm, bec, eigr, &
                                  eigrb, taub, irb, ibrav, b1, b2, b3 )
     !--------------------------------------------------------------------------
+    !! Get Wannier centers for the first step if \(\text{wf_efield}=\text{TRUE}\).
     !
     USE efcalc,         ONLY: wf_efield  
     USE wannier_base,   ONLY: calwf, jwf
@@ -311,8 +311,6 @@ MODULE wannier_subroutines
     REAL(DP)      :: taub(:,:)
     INTEGER             :: ibrav
     REAL(DP)      :: b1(:), b2(:), b3(:)
-    !
-    ! ... Get Wannier centers for the first step if wf_efield=true
     !
     IF ( wf_efield ) THEN
        !
@@ -337,6 +335,7 @@ MODULE wannier_subroutines
   !--------------------------------------------------------------------------
   SUBROUTINE ef_tune( rhog, tau0 )
     !--------------------------------------------------------------------------
+    !! Tune the Electric field.
     !
     USE electric_field_module, ONLY: field_tune, e_tuned
     USE wannier_module, ONLY: rhogdum
@@ -345,8 +344,6 @@ MODULE wannier_subroutines
     !
     COMPLEX(DP) :: rhog(:,:)
     REAL(DP)    :: tau0(:,:)
-    !
-    ! ... Tune the Electric field
     !
     IF ( field_tune ) THEN
        !
@@ -363,14 +360,13 @@ MODULE wannier_subroutines
   !--------------------------------------------------------------------------
   SUBROUTINE write_charge_and_exit( rhog )
     !--------------------------------------------------------------------------
+    !! Write charge density in g-space
     !
     USE wannier_base, ONLY : writev
     !
     IMPLICIT NONE
     !
     COMPLEX(DP) :: rhog(:,:)
-    !
-    ! ... Write chargedensity in g-space
     !
     IF ( writev ) THEN
        !
@@ -389,6 +385,8 @@ MODULE wannier_subroutines
                          taub, irb, ibrav, b1, b2, b3, rhor, drhor, rhog, &
                          drhog ,rhos, enl, ekin  )
     !--------------------------------------------------------------------------
+    !! Wannier Function options.
+    !  M.S
     !
     USE efcalc,         ONLY : wf_efield
     USE wannier_base,   ONLY : nwf, calwf, jwf, wffort, iplot, iwf
@@ -415,9 +413,6 @@ MODULE wannier_subroutines
     REAL(DP)      :: enl, ekin 
     !
     INTEGER :: i, j
-    !
-    !
-    ! ... Wannier Function options            - M.S
     !
     jwf=1
     IF (calwf.EQ.1) THEN
@@ -460,6 +455,7 @@ MODULE wannier_subroutines
   !--------------------------------------------------------------------------
   SUBROUTINE ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, verl1, verl2 )
     !--------------------------------------------------------------------------
+    !! Potential for electric field.
     !
     USE efcalc,                 ONLY : wf_efield, efx, efy, efz, &
                                        efx0, efy0, efz0, efx1, efy1, efz1, &
@@ -490,8 +486,6 @@ MODULE wannier_subroutines
     REAL(DP) :: a1(3), a2(3), a3(3)
     COMPLEX(DP), ALLOCATABLE :: c2( : ), c3( : )
     INTEGER :: i, ir
-    !
-    ! ... Potential for electric field
     !
     ALLOCATE( c2( SIZE( c0, 1 )))
     ALLOCATE( c3( SIZE( c0, 1 )))
@@ -603,6 +597,7 @@ MODULE wannier_subroutines
   !--------------------------------------------------------------------------
   SUBROUTINE ef_enthalpy( enthal, tau0 )
     !--------------------------------------------------------------------------
+    !! Electric Field Implementation for Electric Enthalpy.
     !
     USE efcalc,                ONLY : wf_efield, efx, efy, efz
     USE electric_field_module, ONLY : efe_elec, efe_ion, tt2, tt
@@ -671,6 +666,7 @@ MODULE wannier_subroutines
                                  xnhh0, xnhhm, vnhh, velh, ecut, ecutw, delt, &
                                  celldm, fion, tps, mat_z, occ_f, rho )
     !--------------------------------------------------------------------------
+    !! More Wannier Function options.
     !
     USE efcalc,         ONLY : wf_efield
     USE wannier_base,   ONLY : nwf, calwf, jwf, wffort, iplot, iwf
@@ -706,8 +702,6 @@ MODULE wannier_subroutines
     REAL(DP)    :: mat_z(:,:,:), occ_f(:), rho(:,:)
     !
     CALL start_clock('wf_close_opt')
-    !
-    ! ... More Wannier Function Options
     !
     IF ( calwf == 4 ) THEN
        !
