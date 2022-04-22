@@ -297,13 +297,14 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
         bb = 2.0_DP * fz1 * (vcp - vcu - (ecp - ecu) ) / rhotot(ir)
         cc = fz2 * (ecp - ecu) / rhotot(ir)
         !
-        dmuxc(ir,1,1) = dmuxc(ir,1,1) + aa + (1.0_DP - zeta_s) * bb +  &
-                                             (1.0_DP - zeta_s)**2 * cc
-        dmuxc(ir,2,1) = dmuxc(ir,2,1) + aa + (-zeta_s) * bb +          &
-                                             (zeta_s**2 - 1.0_DP) * cc
-        dmuxc(ir,1,2) = dmuxc(ir,2,1)
-        dmuxc(ir,2,2) = dmuxc(ir,2,2) + aa - (1.0_DP + zeta_s) * bb +  &
-                                             (1.0_DP + zeta_s)**2 * cc                               
+        dmuxc(ir,1,1) = ( dmuxc(ir,1,1) + aa + (1.0_DP - zeta_s) * bb +  &
+                                               (1.0_DP - zeta_s)**2 * cc ) * e2
+        dmuxc(ir,2,1) = ( dmuxc(ir,2,1) + aa + (-zeta_s) * bb +          &
+                                               (zeta_s**2 - 1.0_DP) * cc ) * e2
+        dmuxc(ir,1,2) =   dmuxc(ir,2,1)
+        dmuxc(ir,2,2) = ( dmuxc(ir,2,2) + aa - (1.0_DP + zeta_s) * bb +  &
+                                               (1.0_DP + zeta_s)**2 * cc ) * e2
+                    
      ENDDO
      !
   ELSE

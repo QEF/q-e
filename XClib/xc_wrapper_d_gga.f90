@@ -110,26 +110,13 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     rho_threshold_gga = small ;  grho_threshold_gga = small
   ENDIF
   !
-#if defined(__LIBXC)
+  !$acc kernels
+  dvxc_rr(:,:,:) = 0._DP
+  dvxc_sr(:,:,:) = 0._DP
+  dvxc_ss(:,:,:) = 0._DP
+  !$acc end kernels
   !
-  IF (sp==1) THEN
-    !$acc parallel loop
-    DO k = 1, length
-      dvxc_rr(k,1,1) = 0._DP
-      dvxc_sr(k,1,1) = 0._DP
-      dvxc_ss(k,1,1) = 0._DP
-    ENDDO
-  ELSE
-    !$acc parallel loop
-    DO k = 1, length
-      dvxc_rr(k,1,1) = 0._DP ; dvxc_rr(k,1,2) = 0._DP
-      dvxc_rr(k,2,1) = 0._DP ; dvxc_rr(k,2,2) = 0._DP
-      dvxc_sr(k,1,1) = 0._DP ; dvxc_sr(k,1,2) = 0._DP
-      dvxc_sr(k,2,1) = 0._DP ; dvxc_sr(k,2,2) = 0._DP
-      dvxc_ss(k,1,1) = 0._DP ; dvxc_ss(k,1,2) = 0._DP
-      dvxc_ss(k,2,1) = 0._DP ; dvxc_ss(k,2,2) = 0._DP
-    ENDDO
-  ENDIF
+#if defined(__LIBXC)
   !
   IF ( ANY(is_libxc(3:4)) ) THEN
     !
@@ -261,7 +248,7 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
           dvxc_sr(k,2,1) = dvxc_sr(k,2,1) + e2 * v2rhosigma_c(6*k-1)
           dvxc_ss(k,1,2) = dvxc_ss(k,1,2) + e2 * v2sigma2_c(6*k-2)
           dvxc_ss(k,2,1) = dvxc_ss(k,2,1) + e2 * v2sigma2_c(6*k-2)
-          dvxc_sr(k,2,2) = dvxc_sr(k,2,1) + e2 * v2rhosigma_c(6*k)*2.d0
+          dvxc_sr(k,2,2) = dvxc_sr(k,2,2) + e2 * v2rhosigma_c(6*k)*2.d0
           dvxc_ss(k,2,2) = dvxc_ss(k,2,2) + e2 * v2sigma2_c(6*k)*4.d0
         ENDIF
       ENDDO
@@ -313,10 +300,12 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
          IF (rht > epsr) THEN
            zeta = (r_in(k,1) - r_in(k,2))/rht
            !
-           dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2*(vrrx(k,1) + vrrc(k,1) + vrzc(k,1)*(1.d0 - zeta)/rht)
+           dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2*(vrrx(k,1) + vrrc(k,1) + &
+                                                 vrzc(k,1)*(1.d0 - zeta)/rht)
            dvxc_rr(k,1,2) = dvxc_rr(k,1,2) + e2*(vrrc(k,1) - vrzc(k,1)*(1.d0 + zeta)/rht)
            dvxc_rr(k,2,1) = dvxc_rr(k,2,1) + e2*(vrrc(k,2) + vrzc(k,2)*(1.d0 - zeta)/rht)
-           dvxc_rr(k,2,2) = dvxc_rr(k,2,2) + e2*(vrrx(k,2) + vrrc(k,2) - vrzc(k,2)*(1.d0 + zeta)/rht)
+           dvxc_rr(k,2,2) = dvxc_rr(k,2,2) + e2*(vrrx(k,2) + vrrc(k,2) - &
+                                                 vrzc(k,2)*(1.d0 + zeta)/rht)
          ENDIF
          !
          dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * (vsrx(k,1) + vsrc(k,1))

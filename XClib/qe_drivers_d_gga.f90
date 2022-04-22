@@ -352,7 +352,8 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
     rt = r_in(ir,1)+r_in(ir,2)
     !
     ir_null = .FALSE.
-    IF (rt>eps) zeta = (r_in(ir,1)-r_in(ir,2)) / rt
+    zeta = zeta_trash
+    IF (rt>=eps) zeta = (r_in(ir,1)-r_in(ir,2)) / rt
     IF (rt<eps .OR. ABS(zeta)>1._DP .OR. st(ir)<eps) ir_null = .TRUE.
     !
     drt = MIN(1.D-4, 1.D-2 * rt)
