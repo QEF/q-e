@@ -974,7 +974,7 @@ MODULE exx
                                intra_egrp_comm, me_egrp, &
                                negrp, max_pairs, egrp_pairs, ibands, nibands, &
                                iexx_istart, iexx_iend, &
-                               all_start, all_end, iexx_start, jblock
+                               all_start, all_end, iexx_start, jblock, max_ibands
     USE mp,             ONLY : mp_sum, mp_barrier, mp_circular_shift_left
     USE uspp,           ONLY : nkb, okvan
     USE paw_variables,  ONLY : okpaw
@@ -994,9 +994,9 @@ MODULE exx
     !! input: true dimension of psi and hpsi
     INTEGER :: m
     !! input: number of states psi
-    COMPLEX(DP) :: psi(lda*npol,m)
+    COMPLEX(DP) :: psi(lda*npol,max_ibands)
     !! input: m wavefunctions
-    COMPLEX(DP) :: hpsi(lda*npol,m)
+    COMPLEX(DP) :: hpsi(lda*npol,max_ibands)
     !! output: V_x*psi
     TYPE(bec_type), OPTIONAL :: becpsi ! or call a calbec(...psi) instead
     !! input: <beta|psi>, optional but needed for US and PAW case
@@ -1327,7 +1327,7 @@ MODULE exx
                                intra_egrp_comm, me_egrp, &
                                negrp, max_pairs, egrp_pairs, ibands, nibands, &
                                iexx_istart, iexx_iend, &
-                               all_start, all_end, iexx_start, jblock
+                               all_start, all_end, iexx_start, jblock, max_ibands
     USE mp,             ONLY : mp_sum, mp_barrier, mp_circular_shift_left
     USE uspp,           ONLY : nkb, okvan
     USE paw_variables,  ONLY : okpaw
@@ -1346,8 +1346,8 @@ MODULE exx
     IMPLICIT NONE
     !
     INTEGER                  :: lda, n, m
-    COMPLEX(DP)              :: psi(lda*npol,m)
-    COMPLEX(DP)              :: hpsi(lda*npol,m)
+    COMPLEX(DP)              :: psi(lda*npol,max_ibands)
+    COMPLEX(DP)              :: hpsi(lda*npol,max_ibands)
     TYPE(bec_type), OPTIONAL :: becpsi ! or call a calbec(...psi) instead
     !
     ! local variables
