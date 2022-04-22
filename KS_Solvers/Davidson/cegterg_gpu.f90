@@ -89,15 +89,12 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   INTEGER :: column_section_type
     ! defines a column section for communication
   INTEGER :: ierr
-  COMPLEX(DP), ALLOCATABLE :: hc_d(:,:), sc_d(:,:), vc_d(:,:)
   COMPLEX(DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
     ! the eigenvectors of the Hamiltonian
-  REAL(DP), ALLOCATABLE :: ew_d(:)
   REAL(DP), ALLOCATABLE :: ew(:)
     ! eigenvalues of the reduced hamiltonian
-  COMPLEX(DP), ALLOCATABLE :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
   COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
     ! work space, contains psi
     ! the product of H and psi
@@ -115,11 +112,8 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! auxiliary variables for performing dot product
   INTEGER :: i,j,k, ipol
     !
-#if defined(__CUDA)
-  attributes(DEVICE) :: hc_d, sc_d, vc_d, ew_d, psi_d, hpsi_d, spsi_d
-#endif
   !
-  REAL(DP), EXTERNAL :: KSddot, MYDDOT_VECTOR_GPU
+  REAL(DP), EXTERNAL :: MYDDOT_VECTOR_GPU
   !$acc routine(MYDDOT_VECTOR_GPU) vector
   !
   EXTERNAL  h_psi_gpu,    s_psi_gpu,    g_psi_gpu
@@ -153,45 +147,38 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
   END IF
   !
-  ALLOCATE(  psi_d( npwx*npol, nvecx ), STAT=ierr )
   ALLOCATE(  psi( npwx*npol, nvecx ), STAT=ierr )
   !$acc enter data create(psi)
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate psi ', ABS(ierr) )
-  ALLOCATE( hpsi_d( npwx*npol, nvecx ), STAT=ierr )
   ALLOCATE(   hpsi( npwx*npol, nvecx ), STAT=ierr )
   !$acc enter data create(hpsi)
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate hpsi ', ABS(ierr) )
   !
   IF ( uspp ) THEN
-     ALLOCATE( spsi_d( npwx*npol, nvecx ), STAT=ierr )
      ALLOCATE(   spsi( npwx*npol, nvecx ), STAT=ierr )
      !$acc enter data create(spsi)
      IF( ierr /= 0 ) &
         CALL errore( ' cegterg ',' cannot allocate spsi ', ABS(ierr) )
   END IF
   !
-  ALLOCATE( sc_d( nvecx, nvecx ), STAT=ierr )
   ALLOCATE( sc( nvecx, nvecx ), STAT=ierr )
   !$acc enter data create(sc)
   IF( ierr /= 0 ) &
-     CALL errore( ' cegterg ',' cannot allocate sc_d ', ABS(ierr) )
-  ALLOCATE( hc_d( nvecx, nvecx ), STAT=ierr )
+     CALL errore( ' cegterg ',' cannot allocate sc ', ABS(ierr) )
   ALLOCATE( hc( nvecx, nvecx ), STAT=ierr )
   !$acc enter data create(hc)
   IF( ierr /= 0 ) &
-     CALL errore( ' cegterg ',' cannot allocate hc_d ', ABS(ierr) )
-  ALLOCATE( vc_d( nvecx, nvecx ), STAT=ierr )
+     CALL errore( ' cegterg ',' cannot allocate hc ', ABS(ierr) )
   ALLOCATE( vc( nvecx, nvecx ), STAT=ierr )
   !$acc enter data create(vc)
   IF( ierr /= 0 ) &
-     CALL errore( ' cegterg ',' cannot allocate vc_d ', ABS(ierr) )
-  ALLOCATE( ew_d( nvecx ), STAT=ierr )
+     CALL errore( ' cegterg ',' cannot allocate vc ', ABS(ierr) )
   ALLOCATE( ew( nvecx ), STAT=ierr )
   !$acc enter data create(ew)
   IF( ierr /= 0 ) &
-     CALL errore( ' cegterg ',' cannot allocate ew_d ', ABS(ierr) )
+     CALL errore( ' cegterg ',' cannot allocate ew ', ABS(ierr) )
   ALLOCATE( ew_host( nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate ew_host ', ABS(ierr) )
@@ -241,12 +228,12 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   !
   if (n_start .le. n_end) then
      !
-     !pinned_buffer(1:nbase, n_start:n_end) = hc_d( 1:nbase, n_start:n_end )
-     !ierr = cudaMemcpy2D( pinned_buffer(1, n_start) , nvecx, hc_d( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
+     !pinned_buffer(1:nbase, n_start:n_end) = hc( 1:nbase, n_start:n_end )
+     !ierr = cudaMemcpy2D( pinned_buffer(1, n_start) , nvecx, hc( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
      CALL dev_memcpy( pinned_buffer, hc, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
      CALL mp_sum( pinned_buffer(1:nbase, n_start:n_end), intra_bgrp_comm )
-     !hc_d( 1:nbase, n_start:n_end ) = pinned_buffer(1:nbase, n_start:n_end)
-     !ierr = cudaMemcpy2D( hc_d(1, n_start) , nvecx, pinned_buffer( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
+     !hc( 1:nbase, n_start:n_end ) = pinned_buffer(1:nbase, n_start:n_end)
+     !ierr = cudaMemcpy2D( hc(1, n_start) , nvecx, pinned_buffer( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
      CALL dev_memcpy( hc, pinned_buffer, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
      !
   end if
@@ -267,12 +254,12 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   END IF
   !
   if ((n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 )) then
-     !pinned_buffer(1:nbase, n_start:n_end) = sc_d( 1:nbase, n_start:n_end )
-     !ierr = cudaMemcpy2D( pinned_buffer(1, n_start) , nvecx, sc_d( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
+     !pinned_buffer(1:nbase, n_start:n_end) = sc( 1:nbase, n_start:n_end )
+     !ierr = cudaMemcpy2D( pinned_buffer(1, n_start) , nvecx, sc( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
      CALL dev_memcpy( pinned_buffer, sc, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
      CALL mp_sum( pinned_buffer( 1:nbase, n_start:n_end ), intra_bgrp_comm )
-     !sc_d( 1:nbase, n_start:n_end ) = pinned_buffer(1:nbase, n_start:n_end)
-     !ierr = cudaMemcpy2D( sc_d(1, n_start) , nvecx, pinned_buffer( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
+     !sc( 1:nbase, n_start:n_end ) = pinned_buffer(1:nbase, n_start:n_end)
+     !ierr = cudaMemcpy2D( sc(1, n_start) , nvecx, pinned_buffer( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
      CALL dev_memcpy( sc, pinned_buffer, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
   end if
   CALL mp_gather( sc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
@@ -341,28 +328,6 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   !
   ! ... iterate
   !
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!$acc parallel loop deviceptr(psi_d, hpsi_d, spsi_d)
-DO i = 1, npwx*npol
-  DO j = 1, nvecx
-    psi_d(i,j) = psi(i,j)
-    hpsi_d(i,j) = hpsi(i,j)
-    if(uspp) spsi_d(i,j) = spsi(i,j)
-  END DO 
-END DO 
-!$acc end parallel
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!$acc parallel loop deviceptr(hc_d, sc_d, vc_d)
-DO i = 1, nvecx
-  DO j = 1, nvecx
-    hc_d(i,j) = hc(i,j)
-    sc_d(i,j) = sc(i,j)
-    vc_d(i,j) = vc(i,j)
-  END DO 
-END DO 
-!$acc end parallel
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   iterate: DO kter = 1, maxter
      !
      dav_iter = kter
@@ -384,19 +349,19 @@ END DO
      !      ! ... roots come first. This allows to use quick matrix-matrix 
      !      ! ... multiplications to set a new basis vector (see below)
      !      !
-     !      IF ( np /= n ) vc_d(:,np) = vc_d(:,n)
+     !      IF ( np /= n ) vc(:,np) = vc(:,n)
      !      !
      !      ! ... for use in g_psi
      !      !
-     !      ew_d(nbase+np) = e_d(n)
+     !      ew(nbase+np) = e(n)
      !      !
      !   END IF
      !   !
      !END DO
      ! ========= TO HERE, REPLACED BY =======
 
-     !$acc host_data use_device(ew)
-     CALL reorder_evals_cevecs(nbase, nvec, nvecx, conv, e_d, ew, vc_d)
+     !$acc host_data use_device(ew, vc)
+     CALL reorder_evals_cevecs(nbase, nvec, nvecx, conv, e_d, ew, vc)
      !$acc end host_data
      !
      nb1 = nbase + 1
@@ -406,28 +371,6 @@ END DO
      CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
      my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
      !
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!$acc parallel loop deviceptr(psi_d, hpsi_d, spsi_d)
-DO i = 1, npwx*npol
-  DO j = 1, nvecx
-     psi(i,j) = psi_d(i,j)
-     hpsi(i,j) = hpsi_d(i,j)
-     if(uspp) spsi(i,j) = spsi_d(i,j)
-  END DO 
-END DO 
-!$acc end parallel
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!$acc parallel loop deviceptr(hc_d, sc_d, vc_d)
-DO i = 1, nvecx
-  DO j = 1, nvecx
-    hc(i,j) = hc_d(i,j)
-    sc(i,j) = sc_d(i,j)
-    vc(i,j) = vc_d(i,j)
-  END DO 
-END DO 
-!$acc end parallel
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      !$acc host_data use_device(psi, spsi, vc)
      IF ( uspp ) THEN
         !
@@ -500,7 +443,7 @@ END DO
      !$acc host_data use_device(ew)
      CALL mp_sum( ew( 1:notcnv ), intra_bgrp_comm )
      !$acc end host_data
-     !ew_d(1:notcnv) = ew_host(1:notcnv)
+     !ew(1:notcnv) = ew_host(1:notcnv)
      !
      !$acc parallel loop collapse(3) 
      DO i = 1,notcnv
@@ -530,12 +473,12 @@ END DO
                  ZERO, hc(nb1,n_start), nvecx )
      !
      if ((n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 )) then
-        !pinned_buffer(nb1:nbase+notcnv, n_start:n_end) = hc_d( nb1:nbase+notcnv, n_start:n_end )
-        !ierr = cudaMemcpy2D( pinned_buffer(nb1, n_start) , nvecx, hc_d( nb1, n_start ), nvecx, notcnv, n_end-n_start+1 )
+        !pinned_buffer(nb1:nbase+notcnv, n_start:n_end) = hc( nb1:nbase+notcnv, n_start:n_end )
+        !ierr = cudaMemcpy2D( pinned_buffer(nb1, n_start) , nvecx, hc( nb1, n_start ), nvecx, notcnv, n_end-n_start+1 )
         CALL dev_memcpy( pinned_buffer, hc, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
         CALL mp_sum( pinned_buffer( nb1:nbase+notcnv, n_start:n_end ), intra_bgrp_comm )
-        !hc_d( nb1:nbase+notcnv, n_start:n_end ) = pinned_buffer(nb1:nbase+notcnv, n_start:)
-        !ierr = cudaMemcpy2D(  hc_d( nb1, n_start ), nvecx, pinned_buffer(nb1,n_start), nvecx, notcnv, n_end-n_start+1 )
+        !hc( nb1:nbase+notcnv, n_start:n_end ) = pinned_buffer(nb1:nbase+notcnv, n_start:)
+        !ierr = cudaMemcpy2D(  hc( nb1, n_start ), nvecx, pinned_buffer(nb1,n_start), nvecx, notcnv, n_end-n_start+1 )
         CALL dev_memcpy( hc, pinned_buffer, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
      end if
      CALL mp_gather( hc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
@@ -555,12 +498,12 @@ END DO
      END IF
      !
      if ( (n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 ) ) then
-        !pinned_buffer( nb1:nbase+notcnv, n_start:n_end ) = sc_d( nb1:nbase+notcnv, n_start:n_end )
-        !ierr = cudaMemcpy2D( pinned_buffer(nb1, n_start) , nvecx, sc_d( nb1, n_start ), nvecx, notcnv, n_end-n_start+1 )
+        !pinned_buffer( nb1:nbase+notcnv, n_start:n_end ) = sc( nb1:nbase+notcnv, n_start:n_end )
+        !ierr = cudaMemcpy2D( pinned_buffer(nb1, n_start) , nvecx, sc( nb1, n_start ), nvecx, notcnv, n_end-n_start+1 )
         CALL dev_memcpy( pinned_buffer, sc, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
         CALL mp_sum( pinned_buffer( nb1:nbase+notcnv, n_start:n_end ), intra_bgrp_comm )
-        !sc_d( nb1:nbase+notcnv, n_start:n_end ) = pinned_buffer( nb1:nbase+notcnv, n_start:n_end )
-        !ierr = cudaMemcpy2D(  sc_d( nb1, n_start ), nvecx, pinned_buffer(nb1,n_start), nvecx, notcnv, n_end-n_start+1 )
+        !sc( nb1:nbase+notcnv, n_start:n_end ) = pinned_buffer( nb1:nbase+notcnv, n_start:n_end )
+        !ierr = cudaMemcpy2D(  sc( nb1, n_start ), nvecx, pinned_buffer(nb1,n_start), nvecx, notcnv, n_end-n_start+1 )
         CALL dev_memcpy( sc, pinned_buffer, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
      end if
      CALL mp_gather( sc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
@@ -701,9 +644,9 @@ END DO
         nbase = nvec
         !
         ! These variables are set to ZERO in the CUF Kernel below
-        !hc_d(1:nbase,1:nbase) = ZERO
-        !sc_d(1:nbase,1:nbase) = ZERO
-        !vc_d(1:nbase,1:nbase) = ZERO
+        !hc(1:nbase,1:nbase) = ZERO
+        !sc(1:nbase,1:nbase) = ZERO
+        !vc(1:nbase,1:nbase) = ZERO
         !
         !$acc kernels
         DO n = 1, nbase
@@ -725,28 +668,6 @@ END DO
         CALL stop_clock( 'cegterg:last' )
         !
      END IF
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!$acc parallel loop deviceptr(hc_d, sc_d, vc_d)
-DO i = 1, nvecx
-  DO j = 1, nvecx
-    hc_d(i,j) = hc(i,j)
-    sc_d(i,j) = sc(i,j)
-    vc_d(i,j) = vc(i,j)
-  END DO 
-END DO 
-!$acc end parallel
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!$acc parallel loop deviceptr(psi_d, hpsi_d, spsi_d)
-DO i = 1, npwx*npol
-  DO j = 1, nvecx
-     psi_d(i,j) = psi(i,j)
-     hpsi_d(i,j) = hpsi(i,j)
-     if(uspp) spsi_d(i,j) = spsi(i,j)
-  END DO 
-END DO 
-!$acc end parallel
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      !
   END DO iterate
   !
@@ -756,27 +677,23 @@ END DO
   DEALLOCATE( conv )
   !$acc exit data delete(ew)
   DEALLOCATE( ew )
-  DEALLOCATE( e_host, ew_host, ew_d )
+  DEALLOCATE( e_host, ew_host )
   !$acc exit data delete(vc)
   DEALLOCATE( vc )
-  DEALLOCATE( vc_d )
   !$acc exit data delete(hc)
   DEALLOCATE( hc )
-  DEALLOCATE( hc_d )
   !$acc exit data delete(sc)
   DEALLOCATE( sc )
-  DEALLOCATE( sc_d )
   !
   IF ( uspp ) THEN
     !$acc exit data delete(spsi)
-    DEALLOCATE( spsi_d )
+    DEALLOCATE( spsi )
   END IF 
   !
   !$acc exit data delete(hpsi)
-  DEALLOCATE( hpsi_d )
+  DEALLOCATE( hpsi )
   !$acc exit data delete(psi)
   DEALLOCATE( psi )
-  DEALLOCATE( psi_d )
   !
   CALL stop_clock( 'cegterg' ); !write(*,*) 'stop cegterg' ; FLUSH(6)
   !call print_clock( 'cegterg' )
