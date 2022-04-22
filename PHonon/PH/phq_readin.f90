@@ -913,7 +913,7 @@ SUBROUTINE phq_readin()
   !
   !YAMBO >
   IF (elph .AND. .NOT.(lgauss .OR. ltetra) &
-      .AND. .NOT. (elph_yambo .OR. elph_ahc)) &
+      .AND. .NOT. (elph_yambo .OR. elph_ahc).and..not.elph_mat) &
           CALL errore ('phq_readin', 'Electron-phonon only for metals', 1)
   !YAMBO <
   IF (elph .AND. fildvscf.EQ.' ' .AND. .NOT. ldvscf_interpolate) &
