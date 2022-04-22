@@ -23,6 +23,7 @@ Fixed in development version:
     the current workaround consists in not recomputing k+G indices if k=0.
   * In CMake GPU builds, one routine fftx_threed2oned_gpu was not compiled with
     a proper GPU compiler option and caused failure in GGA-noncolin calculations.
+  * CP with Hubbard U was crashing also when reading the xml file (v.7.0)
 
 New in 7.0 version:
   * Unscreened and screened (range-separated) vdW-DF hybrids
