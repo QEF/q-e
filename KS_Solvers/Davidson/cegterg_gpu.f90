@@ -90,6 +90,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! defines a column section for communication
   INTEGER :: ierr
   COMPLEX(DP), ALLOCATABLE :: hc_d(:,:), sc_d(:,:), vc_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
     ! the eigenvectors of the Hamiltonian
@@ -171,12 +172,18 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   END IF
   !
   ALLOCATE( sc_d( nvecx, nvecx ), STAT=ierr )
+  ALLOCATE( sc( nvecx, nvecx ), STAT=ierr )
+  !$acc enter data create(sc)
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate sc_d ', ABS(ierr) )
   ALLOCATE( hc_d( nvecx, nvecx ), STAT=ierr )
+  ALLOCATE( hc( nvecx, nvecx ), STAT=ierr )
+  !$acc enter data create(hc)
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate hc_d ', ABS(ierr) )
   ALLOCATE( vc_d( nvecx, nvecx ), STAT=ierr )
+  ALLOCATE( vc( nvecx, nvecx ), STAT=ierr )
+  !$acc enter data create(vc)
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate vc_d ', ABS(ierr) )
   ALLOCATE( ew_d( nvecx ), STAT=ierr )
@@ -204,7 +211,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   nbase  = nvec
   conv   = .FALSE.
   !
-  !$acc host_data use_device(psi, hpsi, spsi)
+  !$acc host_data use_device(psi, hpsi, spsi, hc, sc)
   CALL dev_memcpy(psi, evc_d, (/ 1 , npwx*npol /), 1, &
                               (/ 1 , nvec /), 1)
   !
@@ -222,83 +229,88 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   CALL start_clock( 'cegterg:init' )
   !
   CALL divide_all(inter_bgrp_comm,nbase,n_start,n_end,recv_counts,displs)
-  CALL mp_type_create_column_section(sc_d(1,1), 0, nbase, nvecx, column_section_type)
+  CALL mp_type_create_column_section(sc(1,1), 0, nbase, nvecx, column_section_type)
   my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
   !
   if (n_start .le. n_end) &
   CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, hpsi(1,n_start), &
-              kdmx, ZERO, hc_d(1,n_start), nvecx )
+              kdmx, ZERO, hc(1,n_start), nvecx )
   !
   if (n_start .le. n_end) then
      !
      !pinned_buffer(1:nbase, n_start:n_end) = hc_d( 1:nbase, n_start:n_end )
      !ierr = cudaMemcpy2D( pinned_buffer(1, n_start) , nvecx, hc_d( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
-     CALL dev_memcpy( pinned_buffer, hc_d, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
+     CALL dev_memcpy( pinned_buffer, hc, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
      CALL mp_sum( pinned_buffer(1:nbase, n_start:n_end), intra_bgrp_comm )
      !hc_d( 1:nbase, n_start:n_end ) = pinned_buffer(1:nbase, n_start:n_end)
      !ierr = cudaMemcpy2D( hc_d(1, n_start) , nvecx, pinned_buffer( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
-     CALL dev_memcpy( hc_d, pinned_buffer, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
+     CALL dev_memcpy( hc, pinned_buffer, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
      !
   end if
-  CALL mp_gather( hc_d, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
+  CALL mp_gather( hc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
   !
   IF ( uspp ) THEN
      !
      if (n_start .le. n_end) &
      CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, spsi(1,n_start), kdmx, &
-                 ZERO, sc_d(1,n_start), nvecx )
+                 ZERO, sc(1,n_start), nvecx )
      !
   ELSE
      !
      if (n_start .le. n_end) &
      CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, psi(1,n_start), kdmx, &
-                 ZERO, sc_d(1,n_start), nvecx )
+                 ZERO, sc(1,n_start), nvecx )
      !
   END IF
-  !$acc end host_data
   !
   if ((n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 )) then
      !pinned_buffer(1:nbase, n_start:n_end) = sc_d( 1:nbase, n_start:n_end )
      !ierr = cudaMemcpy2D( pinned_buffer(1, n_start) , nvecx, sc_d( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
-     CALL dev_memcpy( pinned_buffer, sc_d, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
+     CALL dev_memcpy( pinned_buffer, sc, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
      CALL mp_sum( pinned_buffer( 1:nbase, n_start:n_end ), intra_bgrp_comm )
      !sc_d( 1:nbase, n_start:n_end ) = pinned_buffer(1:nbase, n_start:n_end)
      !ierr = cudaMemcpy2D( sc_d(1, n_start) , nvecx, pinned_buffer( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
-     CALL dev_memcpy( sc_d, pinned_buffer, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
+     CALL dev_memcpy( sc, pinned_buffer, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
   end if
-  CALL mp_gather( sc_d, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
+  CALL mp_gather( sc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
+  !$acc end host_data
   !
   CALL mp_type_free( column_section_type )
   !
-!$cuf kernel do
+  !$acc parallel vector_length(64) 
+  !$acc loop gang 
   DO n = 1, nbase
      !
      ! ... the diagonal of hc and sc must be strictly real
      !
-     hc_d(n,n) = CMPLX( REAL( hc_d(n,n) ), 0.D0 ,kind=DP)
-     sc_d(n,n) = CMPLX( REAL( sc_d(n,n) ), 0.D0 ,kind=DP)
+     hc(n,n) = CMPLX( REAL( hc(n,n) ), 0.D0 ,kind=DP)
+     sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 ,kind=DP)
      !
+     !$acc loop vector 
      DO m = n + 1, nbase
         !
-        hc_d(n,m) = CONJG( hc_d(m,n) )
-        sc_d(n,m) = CONJG( sc_d(m,n) )
+        hc(n,m) = CONJG( hc(m,n) )
+        sc(n,m) = CONJG( sc(m,n) )
         !
      END DO
      !
   END DO
+  !$acc end parallel
   !
   CALL stop_clock( 'cegterg:init' )
   !
   IF ( lrot ) THEN
      !
-     CALL dev_memset(vc_d, ZERO, (/1, nbase/), 1, (/1, nbase/), 1)
+     !$acc host_data use_device(vc)
+     CALL dev_memset(vc, ZERO, (/1, nbase/), 1, (/1, nbase/), 1)
+     !$acc end host_data
      !
-!$cuf kernel do(1) <<<*,*>>>
+     !$acc parallel loop deviceptr(e_d)
      DO n = 1, nbase
         !
-        e_d(n) = REAL( hc_d(n,n) )
+        e_d(n) = REAL( hc(n,n) )
         !
-        vc_d(n,n) = ONE
+        vc(n,n) = ONE
         !
      END DO
      !
@@ -308,17 +320,19 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      ! ... diagonalize the reduced hamiltonian
      !
+     !$acc host_data use_device(hc, sc, vc)
      CALL start_clock( 'cegterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
-        CALL diaghg( nbase, nvec, hc_d, sc_d, nvecx, ew_d, vc_d, me_bgrp, root_bgrp, intra_bgrp_comm )
+        CALL diaghg( nbase, nvec, hc, sc, nvecx, ew_d, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
      END IF
      IF( nbgrp > 1 ) THEN
-        CALL mp_bcast( vc_d, root_bgrp_id, inter_bgrp_comm )
+        CALL mp_bcast( vc, root_bgrp_id, inter_bgrp_comm )
         CALL mp_bcast( ew_d, root_bgrp_id, inter_bgrp_comm )
      ENDIF
      CALL stop_clock( 'cegterg:diag' )
      !
      CALL dev_memcpy (e_d, ew_d, (/ 1, nvec /), 1 )
+     !$acc end host_data
      !
   END IF
   !
@@ -331,6 +345,17 @@ DO i = 1, npwx*npol
     psi_d(i,j) = psi(i,j)
     hpsi_d(i,j) = hpsi(i,j)
     if(uspp) spsi_d(i,j) = spsi(i,j)
+  END DO 
+END DO 
+!$acc end parallel
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!$acc parallel loop deviceptr(hc_d, sc_d, vc_d)
+DO i = 1, nvecx
+  DO j = 1, nvecx
+    hc_d(i,j) = hc(i,j)
+    sc_d(i,j) = sc(i,j)
+    vc_d(i,j) = vc(i,j)
   END DO 
 END DO 
 !$acc end parallel
@@ -387,17 +412,28 @@ DO i = 1, npwx*npol
 END DO 
 !$acc end parallel
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     !$acc host_data use_device(psi, spsi)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!$acc parallel loop deviceptr(hc_d, sc_d, vc_d)
+DO i = 1, nvecx
+  DO j = 1, nvecx
+    hc(i,j) = hc_d(i,j)
+    sc(i,j) = sc_d(i,j)
+    vc(i,j) = vc_d(i,j)
+  END DO 
+END DO 
+!$acc end parallel
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !$acc host_data use_device(psi, spsi, vc)
      IF ( uspp ) THEN
         !
         if (n_start .le. n_end) &
-        CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, spsi(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
+        CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, spsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                     ZERO, psi(1,nb1), kdmx )
         !     
      ELSE
         !
         if (n_start .le. n_end) &
-        CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, psi(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
+        CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, psi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                     ZERO, psi(1,nb1), kdmx )
         !
      END IF
@@ -414,9 +450,9 @@ END DO
      END DO
      !$acc end parallel 
      !
-     !$acc host_data use_device(psi, hpsi)
+     !$acc host_data use_device(psi, hpsi, vc)
      if (n_start .le. n_end) &
-     CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, hpsi(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
+     CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, hpsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                  ONE, psi(1,nb1), kdmx )
      CALL mp_sum( psi(:,nb1:nbase+notcnv), inter_bgrp_comm )
      !
@@ -437,7 +473,7 @@ END DO
      !
      ! ...         ew = <psi_i|psi_i>,  i = nbase + 1, nbase + notcnv
      !
-     !$acc parallel vector_length(32) deviceptr(ew_d)
+     !$acc parallel vector_length(96) deviceptr(ew_d)
      !$acc loop gang private(nbn)
      DO n = 1, notcnv
         !
@@ -454,7 +490,7 @@ END DO
          ew_d(n) = ew_d(n)  + MYDDOT_VECTOR_GPU( 2*npw, psi(npwx+1,nbn), psi(npwx+1,nbn) ) 
        END DO 
      END IF 
-     !$acc end parallel
+     !$acc end parallel 
      !
      CALL mp_sum( ew_d( 1:notcnv ), intra_bgrp_comm )
      !ew_d(1:notcnv) = ew_host(1:notcnv)
@@ -470,7 +506,7 @@ END DO
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     !$acc host_data use_device(psi, hpsi, spsi)
+     !$acc host_data use_device(psi, hpsi, spsi, hc, sc)
      CALL h_psi_gpu( npwx, npw, notcnv, psi(:,nb1), hpsi(:,nb1) ) ; nhpsi = nhpsi + notcnv
      !
      IF ( uspp ) CALL s_psi_gpu( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
@@ -480,48 +516,48 @@ END DO
      CALL start_clock( 'cegterg:overlap' )
      !
      CALL divide_all(inter_bgrp_comm,nbase+notcnv,n_start,n_end,recv_counts,displs)
-     CALL mp_type_create_column_section(sc_d(1,1), nbase, notcnv, nvecx, column_section_type)
+     CALL mp_type_create_column_section(sc(1,1), nbase, notcnv, nvecx, column_section_type)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      !
      CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, hpsi(1,nb1), kdmx, psi(1,n_start), kdmx, &
-                 ZERO, hc_d(nb1,n_start), nvecx )
+                 ZERO, hc(nb1,n_start), nvecx )
      !
      if ((n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 )) then
         !pinned_buffer(nb1:nbase+notcnv, n_start:n_end) = hc_d( nb1:nbase+notcnv, n_start:n_end )
         !ierr = cudaMemcpy2D( pinned_buffer(nb1, n_start) , nvecx, hc_d( nb1, n_start ), nvecx, notcnv, n_end-n_start+1 )
-        CALL dev_memcpy( pinned_buffer, hc_d, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
+        CALL dev_memcpy( pinned_buffer, hc, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
         CALL mp_sum( pinned_buffer( nb1:nbase+notcnv, n_start:n_end ), intra_bgrp_comm )
         !hc_d( nb1:nbase+notcnv, n_start:n_end ) = pinned_buffer(nb1:nbase+notcnv, n_start:)
         !ierr = cudaMemcpy2D(  hc_d( nb1, n_start ), nvecx, pinned_buffer(nb1,n_start), nvecx, notcnv, n_end-n_start+1 )
-        CALL dev_memcpy( hc_d, pinned_buffer, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
+        CALL dev_memcpy( hc, pinned_buffer, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
      end if
-     CALL mp_gather( hc_d, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
+     CALL mp_gather( hc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
      !
      CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      IF ( uspp ) THEN
         !
         CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, spsi(1,nb1), kdmx, psi(1,n_start), kdmx, &
-                    ZERO, sc_d(nb1,n_start), nvecx )
+                    ZERO, sc(nb1,n_start), nvecx )
         !     
      ELSE
         !
         CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, psi(1,nb1), kdmx, psi(1,n_start), kdmx, &
-                    ZERO, sc_d(nb1,n_start), nvecx )
+                    ZERO, sc(nb1,n_start), nvecx )
         !
      END IF
-     !$acc end host_data
      !
      if ( (n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 ) ) then
         !pinned_buffer( nb1:nbase+notcnv, n_start:n_end ) = sc_d( nb1:nbase+notcnv, n_start:n_end )
         !ierr = cudaMemcpy2D( pinned_buffer(nb1, n_start) , nvecx, sc_d( nb1, n_start ), nvecx, notcnv, n_end-n_start+1 )
-        CALL dev_memcpy( pinned_buffer, sc_d, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
+        CALL dev_memcpy( pinned_buffer, sc, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
         CALL mp_sum( pinned_buffer( nb1:nbase+notcnv, n_start:n_end ), intra_bgrp_comm )
         !sc_d( nb1:nbase+notcnv, n_start:n_end ) = pinned_buffer( nb1:nbase+notcnv, n_start:n_end )
         !ierr = cudaMemcpy2D(  sc_d( nb1, n_start ), nvecx, pinned_buffer(nb1,n_start), nvecx, notcnv, n_end-n_start+1 )
-        CALL dev_memcpy( sc_d, pinned_buffer, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
+        CALL dev_memcpy( sc, pinned_buffer, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
      end if
-     CALL mp_gather( sc_d, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
+     CALL mp_gather( sc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
+     !$acc end host_data
      !
      CALL mp_type_free( column_section_type )
      !
@@ -529,36 +565,41 @@ END DO
      !
      nbase = nbase + notcnv
      !
-!$cuf kernel do(1) <<<*,*>>>
+     !$acc parallel vector_length(64)
+     !$acc loop gang
      DO n = 1, nbase
         !
         ! ... the diagonal of hc and sc must be strictly real
         !
         IF( n>=nb1 ) THEN
-           hc_d(n,n) = CMPLX( REAL( hc_d(n,n) ), 0.D0 ,kind=DP)
-           sc_d(n,n) = CMPLX( REAL( sc_d(n,n) ), 0.D0 ,kind=DP)
+           hc(n,n) = CMPLX( REAL( hc(n,n) ), 0.D0 ,kind=DP)
+           sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 ,kind=DP)
         ENDIF
         !
+        !$acc loop vector
         DO m = MAX(n+1,nb1), nbase
            !
-           hc_d(n,m) = CONJG( hc_d(m,n) )
-           sc_d(n,m) = CONJG( sc_d(m,n) )
+           hc(n,m) = CONJG( hc(m,n) )
+           sc(n,m) = CONJG( sc(m,n) )
            !
         END DO
         !
      END DO
+     !$acc end parallel 
      !
      ! ... diagonalize the reduced hamiltonian
      !
+     !$acc host_data use_device(hc, sc, vc)
      CALL start_clock( 'cegterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
-        CALL diaghg( nbase, nvec, hc_d, sc_d, nvecx, ew_d, vc_d, me_bgrp, root_bgrp, intra_bgrp_comm )
+        CALL diaghg( nbase, nvec, hc, sc, nvecx, ew_d, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
      END IF
      IF( nbgrp > 1 ) THEN
-        CALL mp_bcast( vc_d, root_bgrp_id, inter_bgrp_comm )
+        CALL mp_bcast( vc, root_bgrp_id, inter_bgrp_comm )
         CALL mp_bcast( ew_d, root_bgrp_id, inter_bgrp_comm )
      ENDIF
      CALL stop_clock( 'cegterg:diag' )
+     !$acc end host_data
      !
      ! ... test for convergence (on the CPU)
      !
@@ -593,8 +634,8 @@ END DO
         !
         CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
         my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
-        !$acc host_data use_device(psi)
-        CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, psi(1,n_start), kdmx, vc_d(n_start,1), nvecx, &        
+        !$acc host_data use_device(psi, vc)
+        CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, psi(1,n_start), kdmx, vc(n_start,1), nvecx, &        
                     ZERO, evc_d, kdmx )
         !$acc end host_data
         CALL mp_sum( evc_d, inter_bgrp_comm )
@@ -622,13 +663,13 @@ END DO
         !
         ! ... refresh psi, H*psi and S*psi
         !
-        !$acc host_data use_device(psi, hpsi, spsi)
+        !$acc host_data use_device(psi, hpsi, spsi, vc)
         CALL dev_memcpy(psi, evc_d, (/ 1, npwx*npol /), 1, &
                                       (/ 1, nvec /), 1)
         !
         IF ( uspp ) THEN
            !
-           CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, spsi(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
+           CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, spsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                        ZERO, psi(1,nvec+1), kdmx)
            CALL dev_memcpy(spsi, psi(:,nvec+1:), &
                                         (/1, npwx*npol/), 1, &
@@ -637,7 +678,7 @@ END DO
            !
         END IF
         !
-        CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, hpsi(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
+        CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, hpsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                     ZERO, psi(1,nvec+1), kdmx )
         CALL dev_memcpy(hpsi, psi(:,nvec+1:), &
                                         (/1, npwx*npol/), 1, &
@@ -654,25 +695,37 @@ END DO
         !sc_d(1:nbase,1:nbase) = ZERO
         !vc_d(1:nbase,1:nbase) = ZERO
         !
-        !$cuf kernel do(2) <<<*,*>>>
+        !$acc kernels
         DO n = 1, nbase
-           DO j = 1, nbase
-              !
-              IF ( j == n ) THEN
-                 hc_d(j,n) = CMPLX( e_d(n), 0.0_DP ,kind=DP)
-                 !
-                 sc_d(j,n) = ONE
-                 vc_d(j,n) = ONE
-              ELSE
-                 hc_d(j,n) = ZERO; sc_d(j,n) = ZERO; vc_d(j,n) = ZERO
-              END IF
+           hc(n,n) = CMPLX( e_d(n), 0.0_DP ,kind=DP)
+           sc(n,n) = ONE
+           vc(n,n) = ONE
+           DO j = n+1, nbase
+              hc(j,n) = ZERO
+              hc(n,j) = ZERO
+              sc(j,n) = ZERO
+              sc(n,j) = ZERO
+              vc(j,n) = ZERO
+              vc(n,j) = ZERO
            END DO
            !
         END DO
+        !$acc end kernels
         !
         CALL stop_clock( 'cegterg:last' )
         !
      END IF
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!$acc parallel loop deviceptr(hc_d, sc_d, vc_d)
+DO i = 1, nvecx
+  DO j = 1, nvecx
+    hc_d(i,j) = hc(i,j)
+    sc_d(i,j) = sc(i,j)
+    vc_d(i,j) = vc(i,j)
+  END DO 
+END DO 
+!$acc end parallel
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !$acc parallel loop deviceptr(psi_d, hpsi_d, spsi_d)
 DO i = 1, npwx*npol
@@ -692,8 +745,14 @@ END DO
   DEALLOCATE( displs )
   DEALLOCATE( conv )
   DEALLOCATE( e_host, ew_host, ew_d )
+  !$acc exit data delete(vc)
+  DEALLOCATE( vc )
   DEALLOCATE( vc_d )
+  !$acc exit data delete(hc)
+  DEALLOCATE( hc )
   DEALLOCATE( hc_d )
+  !$acc exit data delete(sc)
+  DEALLOCATE( sc )
   DEALLOCATE( sc_d )
   !
   IF ( uspp ) THEN
