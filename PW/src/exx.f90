@@ -18,11 +18,10 @@ MODULE exx
   !
   USE kinds,                ONLY : DP
   USE noncollin_module,     ONLY : noncolin, npol
-  USE io_global,            ONLY : ionode, stdout
+  USE io_global,            ONLY : stdout
   !
   USE control_flags,        ONLY : gamma_only, tqr, use_gpu, many_fft
   USE fft_types,            ONLY : fft_type_descriptor
-  USE stick_base,           ONLY : sticks_map, sticks_map_deallocate
   !
   IMPLICIT NONE
   !
@@ -893,11 +892,10 @@ MODULE exx
     USE becmod,         ONLY : bec_type
     USE uspp,           ONLY : okvan
     USE paw_variables,  ONLY : okpaw
-    USE us_exx,         ONLY : becxx
     USE mp_exx,         ONLY : negrp, inter_egrp_comm, init_index_over_band
     USE wvfct,          ONLY : nbnd
     USE exx_band,       ONLY : transform_psi_to_exx, transform_hpsi_to_local, &
-                               psi_exx, hpsi_exx, igk_exx
+                               psi_exx, hpsi_exx
     !
     IMPLICIT NONE
     !
@@ -1009,8 +1007,7 @@ MODULE exx
     REAL(DP), ALLOCATABLE :: temppsic_dble (:)
     REAL(DP), ALLOCATABLE :: temppsic_aimag(:)
     !
-    COMPLEX(DP), ALLOCATABLE :: vc(:,:), deexx(:,:)
-    REAL(DP), ALLOCATABLE :: fac(:)
+    COMPLEX(DP), ALLOCATABLE :: vc(:), deexx(:,:)
     INTEGER :: ibnd, ik, im , ikq, iq, ipol
     INTEGER :: ir, ig
     INTEGER :: current_ik
@@ -1031,9 +1028,6 @@ MODULE exx
     INTEGER :: ending_im
     !
     ialloc = nibands(my_egrp_id+1)
-    !
-    ALLOCATE( fac(dfftt%ngm) )
-    !
     nrxxs = dfftt%nnr
     !
     !ALLOCATE( result(nrxxs), temppsic_DBLE(nrxxs), temppsic_aimag(nrxxs) )
@@ -1041,7 +1035,7 @@ MODULE exx
     ALLOCATE( temppsic_aimag(nrxxs) )
     ALLOCATE( psi_rhoc_work(nrxxs) )
     !
-    ALLOCATE( vc(nrxxs,ialloc) )
+    ALLOCATE( vc(nrxxs) )
     IF (okvan) ALLOCATE( deexx(nkb,ialloc) )
     !
     current_ik = global_kpoint_index( nkstot, current_k )
@@ -1202,13 +1196,13 @@ MODULE exx
                 ENDIF
                 !   >>>> charge density done
                 !
-                vc(:,ii) = 0._DP
+                vc = 0._DP
                 !
 !$omp parallel do default(shared), private(ig)
                 DO ig = 1, dfftt%ngm
                    !
-                   vc(dfftt%nl(ig),ii)  = coulomb_fac(ig,iq,current_k) * psi_rhoc_work(dfftt%nl(ig))
-                   vc(dfftt%nlm(ig),ii) = coulomb_fac(ig,iq,current_k) * psi_rhoc_work(dfftt%nlm(ig))
+                   vc(dfftt%nl(ig))  = coulomb_fac(ig,iq,current_k) * psi_rhoc_work(dfftt%nl(ig))
+                   vc(dfftt%nlm(ig)) = coulomb_fac(ig,iq,current_k) * psi_rhoc_work(dfftt%nlm(ig))
                    !
                 ENDDO
 !$omp end parallel do
@@ -1216,22 +1210,22 @@ MODULE exx
                 !   >>>>  compute <psi|H_fock G SPACE here
                 IF (okvan .AND. .NOT. tqr) THEN
                    IF (jbnd >= jstart) &
-                        CALL newdxx_g( dfftt, vc(:,ii), xkq, xkp, 'r', deexx(:,ii), &
+                        CALL newdxx_g( dfftt, vc, xkq, xkp, 'r', deexx(:,ii), &
                            becphi_r=x1*becxx(ikq)%r(:,jbnd) )
                    IF (jbnd<jend) &
-                        CALL newdxx_g( dfftt, vc(:,ii), xkq, xkp, 'i', deexx(:,ii), &
+                        CALL newdxx_g( dfftt, vc, xkq, xkp, 'i', deexx(:,ii), &
                             becphi_r=x2*becxx(ikq)%r(:,jbnd+1) )
                 ENDIF
                 !
                 !brings back v in real space
-                CALL invfft( 'Rho', vc(:,ii), dfftt )
+                CALL invfft( 'Rho', vc, dfftt )
                 !
                 !   >>>>  compute <psi|H_fock REAL SPACE here
                 IF (okvan .AND. tqr) THEN
                    IF (jbnd >= jstart) &
-                        CALL newdxx_r( dfftt,vc(:,ii), _CX(x1*becxx(ikq)%r(:,jbnd)), deexx(:,ii) )
+                        CALL newdxx_r( dfftt,vc, _CX(x1*becxx(ikq)%r(:,jbnd)), deexx(:,ii) )
                    IF (jbnd < jend) &
-                        CALL newdxx_r( dfftt,vc(:,ii), _CY(x2*becxx(ikq)%r(:,jbnd+1)), deexx(:,ii) )
+                        CALL newdxx_r( dfftt,vc, _CY(x2*becxx(ikq)%r(:,jbnd+1)), deexx(:,ii) )
                 ENDIF
                 !
                 IF (okpaw) THEN
@@ -1248,8 +1242,8 @@ MODULE exx
 !$omp parallel do default(shared), private(ir)
                 DO ir = 1, nrxxs
                    result(ir,ii) = result(ir,ii) &
-                                 + x1* DBLE(vc(ir,ii))* DBLE(exxbuff(ir,exxbuff_index,ikq)) &
-                                 + x2*AIMAG(vc(ir,ii))*AIMAG(exxbuff(ir,exxbuff_index,ikq))
+                                 + x1* DBLE(vc(ir))* DBLE(exxbuff(ir,exxbuff_index,ikq)) &
+                                 + x2*AIMAG(vc(ir))*AIMAG(exxbuff(ir,exxbuff_index,ikq))
                 ENDDO
 !$omp end parallel do
                 !
@@ -1311,7 +1305,7 @@ MODULE exx
     DEALLOCATE( big_result )
     DEALLOCATE( result, temppsic_dble, temppsic_aimag )
     DEALLOCATE( psi_rhoc_work )
-    DEALLOCATE( vc, fac )
+    DEALLOCATE( vc )
     IF (okvan) DEALLOCATE( deexx )
     !
   END SUBROUTINE vexx_gamma
@@ -1358,28 +1352,23 @@ MODULE exx
     !
     ! local variables
     COMPLEX(DP), ALLOCATABLE :: psi_d(:,:)
-    COMPLEX(DP), ALLOCATABLE :: hpsi_d(:,:)
 #if defined(__CUDA)
-    attributes(DEVICE)       :: psi_d, hpsi_d
+    attributes(DEVICE)       :: psi_d
 #endif
-    COMPLEX(DP),ALLOCATABLE :: result(:,:)
     COMPLEX(DP),ALLOCATABLE :: result_d(:,:)
 #if defined(__CUDA)
     attributes(DEVICE)       :: result_d
-    attributes(PINNED)       :: result
 #endif
-    REAL(DP),ALLOCATABLE :: temppsic_dble (:)
-    REAL(DP),ALLOCATABLE :: temppsic_aimag(:)
     REAL(DP),ALLOCATABLE :: temppsic_dble_d (:)
     REAL(DP),ALLOCATABLE :: temppsic_aimag_d(:)
 #if defined(__CUDA)
     attributes(DEVICE)   :: temppsic_dble_d, temppsic_aimag_d
 #endif
     !
-    COMPLEX(DP),ALLOCATABLE :: vc(:,:), deexx(:,:), vc_d(:,:)
-    REAL(DP),   ALLOCATABLE :: fac(:)
+    COMPLEX(DP),ALLOCATABLE :: vc(:), deexx(:,:), vc_d(:)
+    REAL(DP),   ALLOCATABLE :: fac_d(:)
 #if defined(__CUDA)
-    attributes(DEVICE)   :: vc_d, fac
+    attributes(DEVICE)   :: vc_d, fac_d
 #endif
     INTEGER          :: ibnd, ik, im , ikq, iq, ipol
     INTEGER          :: ir, ig
@@ -1420,27 +1409,24 @@ MODULE exx
     dfftt__nl=>dfftt%nl_d
     dfftt__nlm=>dfftt%nlm_d
     ALLOCATE(psi_d, source=psi)
-    ALLOCATE(hpsi_d, source=hpsi)
+    !
     !initial copy of exxbuff
     exxbuff_d = exxbuff
     !
     ialloc = nibands(my_egrp_id+1)
     !
-    ALLOCATE( fac(dfftt%ngm) )
+    ALLOCATE( fac_d(dfftt%ngm) )
     nrxxs= dfftt%nnr
     !
-    !ALLOCATE( result(nrxxs), temppsic_dble(nrxxs), temppsic_aimag(nrxxs) )
-    ALLOCATE( result(nrxxs,ialloc), temppsic_dble(nrxxs) )
     ALLOCATE( result_d(nrxxs,ialloc))
     ALLOCATE( temppsic_dble_d(nrxxs) )
-    ALLOCATE( temppsic_aimag(nrxxs) )
     ALLOCATE( temppsic_aimag_d(nrxxs) )
-    
+    !
     ALLOCATE( psi_rhoc_work(nrxxs) )
     ALLOCATE( psi_rhoc_work_d(nrxxs) )
     !
-    ALLOCATE( vc(nrxxs,ialloc))
-    ALLOCATE( vc_d(nrxxs,ialloc)) 
+    ALLOCATE( vc(nrxxs))
+    ALLOCATE( vc_d(nrxxs))
     IF(okvan) ALLOCATE(deexx(nkb,ialloc))
     !
     current_ik = global_kpoint_index ( nkstot, current_k )
@@ -1449,7 +1435,6 @@ MODULE exx
     allocate(big_result(n,m))
     allocate(big_result_d(n,m))
     big_result = 0.0_DP
-    result = 0.0_DP
 #if defined(__CUDA)
     CALL dev_memset(big_result_d,  (0.0_DP, 0.0_DP))
     CALL dev_memset(result_d,  (0.0_DP, 0.0_DP))
@@ -1471,6 +1456,9 @@ MODULE exx
        ! calculate the 1/|r-r'| (actually, k+q+g) factor and place it in fac
        CALL g2_convolution_all(dfftt%ngm, gt, xkp, xkq, iq, current_k)
        IF ( okvan .and..not.tqr ) CALL qvan_init (dfftt%ngm, xkq, xkp)
+       !
+       ! copy coulomb_fac to device
+       fac_d(:) = coulomb_fac(:,iq,current_k)
        !
        DO iegrp=1, negrp
           !
@@ -1611,38 +1599,37 @@ MODULE exx
                 ENDIF
                 !   >>>> charge density done
                 !
-                vc_d(:,ii) = 0._DP
-                fac(:) = coulomb_fac(:,iq,current_k)
+                vc_d = 0._DP
                 !
 !$cuf kernel do
                 DO ig = 1, dfftt%ngm
                    !
-                   vc_d(dfftt__nl(ig),ii)  = fac(ig) * psi_rhoc_work_d(dfftt__nl(ig))
-                   vc_d(dfftt__nlm(ig),ii) = fac(ig) * psi_rhoc_work_d(dfftt__nlm(ig))
+                   vc_d(dfftt__nl(ig))  = fac_d(ig) * psi_rhoc_work_d(dfftt__nl(ig))
+                   vc_d(dfftt__nlm(ig)) = fac_d(ig) * psi_rhoc_work_d(dfftt__nlm(ig))
                    !
                 ENDDO
                 !
                 !   >>>>  compute <psi|H_fock G SPACE here
                 IF(okvan .and. .not. tqr) THEN
-                   vc(:,ii) = vc_d(:,ii)
+                   vc = vc_d
                    IF(jbnd>=jstart) &
-                        CALL newdxx_g(dfftt, vc(:,ii), xkq, xkp, 'r', deexx(:,ii), &
+                        CALL newdxx_g(dfftt, vc, xkq, xkp, 'r', deexx(:,ii), &
                            becphi_r=x1*becxx(ikq)%r(:,jbnd))
                    IF(jbnd<jend) &
-                        CALL newdxx_g(dfftt, vc(:,ii), xkq, xkp, 'i', deexx(:,ii), &
+                        CALL newdxx_g(dfftt, vc, xkq, xkp, 'i', deexx(:,ii), &
                             becphi_r=x2*becxx(ikq)%r(:,jbnd+1))
                 ENDIF
                 !
                 !brings back v in real space
-                CALL invfft ('Rho', vc_d(:,ii), dfftt)
+                CALL invfft ('Rho', vc_d, dfftt)
                 !
                 !   >>>>  compute <psi|H_fock REAL SPACE here
                 IF(okvan .and. tqr) THEN
-                   vc(:,ii) = vc_d(:,ii)
+                   vc = vc_d
                    IF(jbnd>=jstart) &
-                        CALL newdxx_r(dfftt,vc(:,ii), _CX(x1*becxx(ikq)%r(:,jbnd)), deexx(:,ii))
+                        CALL newdxx_r(dfftt,vc, _CX(x1*becxx(ikq)%r(:,jbnd)), deexx(:,ii))
                    IF(jbnd<jend) &
-                        CALL newdxx_r(dfftt,vc(:,ii), _CY(x2*becxx(ikq)%r(:,jbnd+1)), deexx(:,ii))
+                        CALL newdxx_r(dfftt,vc, _CY(x2*becxx(ikq)%r(:,jbnd+1)), deexx(:,ii))
                 ENDIF
                 !
                 IF(okpaw) THEN
@@ -1659,10 +1646,9 @@ MODULE exx
 !$cuf kernel do
                 DO ir = 1, nrxxs
                    result_d(ir,ii) = result_d(ir,ii) &
-                                 + x1* dble(vc_d(ir,ii))* dble(exxbuff_d(ir,exxbuff_index,ikq)) &
-                                 + x2*aimag(vc_d(ir,ii))*aimag(exxbuff_d(ir,exxbuff_index,ikq))
+                                 + x1* dble(vc_d(ir))* dble(exxbuff_d(ir,exxbuff_index,ikq)) &
+                                 + x2*aimag(vc_d(ir))*aimag(exxbuff_d(ir,exxbuff_index,ikq))
                 ENDDO
-                !result(:,ii) = result_d(:,ii)
                 !
              ENDDO &
              IBND_LOOP_GAM
@@ -1692,7 +1678,6 @@ MODULE exx
        ! brings back result in G-space
        !
        CALL fwfft( 'Wave' , result_d(:,ii), dfftt )
-       !result(:,ii) = result_d(:,ii)
        !communicate result
        !$cuf kernel do
        DO ig = 1, n
@@ -1723,13 +1708,15 @@ MODULE exx
     !
     DEALLOCATE(big_result)
     DEALLOCATE(big_result_d)
-    DEALLOCATE( result, result_d, temppsic_dble, temppsic_aimag)
-    DEALLOCATE( temppsic_dble_d, temppsic_aimag_d)
-    DEALLOCATE( psi_rhoc_work_d)
-    DEALLOCATE(psi_d, hpsi_d)
-
-    DEALLOCATE( vc, vc_d, fac )
-    IF(okvan) DEALLOCATE( deexx )
+    DEALLOCATE(result_d)
+    DEALLOCATE(temppsic_dble_d)
+    DEALLOCATE(temppsic_aimag_d)
+    DEALLOCATE(psi_rhoc_work_d)
+    DEALLOCATE(psi_d)
+    DEALLOCATE(vc)
+    DEALLOCATE(vc_d)
+    DEALLOCATE(fac_d)
+    IF(okvan) DEALLOCATE(deexx)
     !
     !-----------------------------------------------------------------------
   END SUBROUTINE vexx_gamma_gpu
