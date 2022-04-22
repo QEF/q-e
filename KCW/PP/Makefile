@@ -29,17 +29,19 @@ QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/
 
 TLDEPS= kcw-lib  #Dependency. To be compiled first
 
-all : tldeps interp_r_to_k.x sh.x clean_partial
+all : tldeps kcwpp_sh.x kcwpp_interp.x clean_partial
 
-interp_r_to_k.x: interp_r_to_k.o $(PP_OBJS) $(LRMODS) $(PWOBJS) $(QEMODS) 
+kcwpp_interp.x: interp_r_to_k.o $(PP_OBJS) $(LRMODS) $(PWOBJS) $(QEMODS) 
 	$(LD) $(LDFLAGS) -o $@ interp_r_to_k.o \
         $(PP_OBJS) $(KC_OBJS) $(LRMODS) $(PWOBJS) $(QEMODS)  \
         $(LIBS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../KCW/PP/$@ . )
 
-sh.x:  compute_self_hartree.o $(SH_OBJS) $(LRMODS) $(PWOBJS) $(QEMODS)
+kcwpp_sh.x:  compute_self_hartree.o $(SH_OBJS) $(LRMODS) $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ compute_self_hartree.o \
         $(SH_OBJS) $(KC_OBJS) $(LRMODS) $(PWOBJS) $(QEMODS)  \
         $(LIBS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../KCW/PP/$@ . )
 
 tldeps :
 	if test -n "$(TLDEPS)" ; then \
