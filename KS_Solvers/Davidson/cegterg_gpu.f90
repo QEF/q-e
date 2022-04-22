@@ -96,6 +96,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   REAL(DP), ALLOCATABLE :: ew_d(:)
     ! eigenvalues of the reduced hamiltonian
   COMPLEX(DP), ALLOCATABLE :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
     ! work space, contains psi
     ! the product of H and psi
     ! the product of S and psi
@@ -116,7 +117,8 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   attributes(DEVICE) :: hc_d, sc_d, vc_d, ew_d, psi_d, hpsi_d, spsi_d
 #endif
   !
-  REAL(DP), EXTERNAL :: KSddot
+  REAL(DP), EXTERNAL :: KSddot, MYDDOT_VECTOR_GPU
+  !$acc routine(MYDDOT_VECTOR_GPU) vector
   !
   EXTERNAL  h_psi_gpu,    s_psi_gpu,    g_psi_gpu
     ! h_psi(npwx,npw,nvec,psi,hpsi)
@@ -150,14 +152,20 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   END IF
   !
   ALLOCATE(  psi_d( npwx*npol, nvecx ), STAT=ierr )
+  ALLOCATE(  psi( npwx*npol, nvecx ), STAT=ierr )
+  !$acc enter data create(psi)
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate psi ', ABS(ierr) )
   ALLOCATE( hpsi_d( npwx*npol, nvecx ), STAT=ierr )
+  ALLOCATE(   hpsi( npwx*npol, nvecx ), STAT=ierr )
+  !$acc enter data create(hpsi)
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate hpsi ', ABS(ierr) )
   !
   IF ( uspp ) THEN
      ALLOCATE( spsi_d( npwx*npol, nvecx ), STAT=ierr )
+     ALLOCATE(   spsi( npwx*npol, nvecx ), STAT=ierr )
+     !$acc enter data create(spsi)
      IF( ierr /= 0 ) &
         CALL errore( ' cegterg ',' cannot allocate spsi ', ABS(ierr) )
   END IF
@@ -196,17 +204,17 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   nbase  = nvec
   conv   = .FALSE.
   !
-  CALL dev_memcpy(psi_d, evc_d, (/ 1 , npwx*npol /), 1, &
-                                (/ 1 , nvec /), 1)
-
+  !$acc host_data use_device(psi, hpsi, spsi)
+  CALL dev_memcpy(psi, evc_d, (/ 1 , npwx*npol /), 1, &
+                              (/ 1 , nvec /), 1)
   !
   ! ... hpsi contains h times the basis vectors
   !
-  CALL h_psi_gpu( npwx, npw, nvec, psi_d, hpsi_d ) ; nhpsi = nhpsi + nvec
+  CALL h_psi_gpu( npwx, npw, nvec, psi, hpsi ) ; nhpsi = nhpsi + nvec
   !
   ! ... spsi contains s times the basis vectors
   !
-  IF ( uspp ) CALL s_psi_gpu( npwx, npw, nvec, psi_d, spsi_d )
+  IF ( uspp ) CALL s_psi_gpu( npwx, npw, nvec, psi, spsi )
   !
   ! ... hc contains the projection of the hamiltonian onto the reduced 
   ! ... space vc contains the eigenvectors of hc
@@ -218,7 +226,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
   !
   if (n_start .le. n_end) &
-  CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi_d, kdmx, hpsi_d(1,n_start), &
+  CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, hpsi(1,n_start), &
               kdmx, ZERO, hc_d(1,n_start), nvecx )
   !
   if (n_start .le. n_end) then
@@ -237,16 +245,17 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   IF ( uspp ) THEN
      !
      if (n_start .le. n_end) &
-     CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi_d, kdmx, spsi_d(1,n_start), kdmx, &
+     CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, spsi(1,n_start), kdmx, &
                  ZERO, sc_d(1,n_start), nvecx )
      !
   ELSE
      !
      if (n_start .le. n_end) &
-     CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi_d, kdmx, psi_d(1,n_start), kdmx, &
+     CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, psi(1,n_start), kdmx, &
                  ZERO, sc_d(1,n_start), nvecx )
      !
   END IF
+  !$acc end host_data
   !
   if ((n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 )) then
      !pinned_buffer(1:nbase, n_start:n_end) = sc_d( 1:nbase, n_start:n_end )
@@ -315,6 +324,17 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   !
   ! ... iterate
   !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!$acc parallel loop deviceptr(psi_d, hpsi_d, spsi_d)
+DO i = 1, npwx*npol
+  DO j = 1, nvecx
+    psi_d(i,j) = psi(i,j)
+    hpsi_d(i,j) = hpsi(i,j)
+    if(uspp) spsi_d(i,j) = spsi(i,j)
+  END DO 
+END DO 
+!$acc end parallel
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   iterate: DO kter = 1, maxter
      !
      dav_iter = kter
@@ -355,44 +375,61 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
      my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
+     !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!$acc parallel loop deviceptr(psi_d, hpsi_d, spsi_d)
+DO i = 1, npwx*npol
+  DO j = 1, nvecx
+     psi(i,j) = psi_d(i,j)
+     hpsi(i,j) = hpsi_d(i,j)
+     if(uspp) spsi(i,j) = spsi_d(i,j)
+  END DO 
+END DO 
+!$acc end parallel
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !$acc host_data use_device(psi, spsi)
      IF ( uspp ) THEN
         !
         if (n_start .le. n_end) &
-        CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, spsi_d(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
-                    ZERO, psi_d(1,nb1), kdmx )
+        CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, spsi(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
+                    ZERO, psi(1,nb1), kdmx )
         !     
      ELSE
         !
         if (n_start .le. n_end) &
-        CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, psi_d(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
-                    ZERO, psi_d(1,nb1), kdmx )
+        CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, psi(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
+                    ZERO, psi(1,nb1), kdmx )
         !
      END IF
+     !$acc end host_data
 ! NB: must not call mp_sum over inter_bgrp_comm here because it is done later to the full correction
      !
-     !$cuf kernel do(3) <<<*,*>>>
+     !$acc parallel loop collapse(3) deviceptr(ew_d)
      DO np=1,notcnv
         DO ipol = 1, npol
            DO k=1,npwx
-             psi_d(k + (ipol-1)*npwx,nbase+np) = - ew_d(nbase+np)*psi_d(k + (ipol-1)*npwx,nbase+np)
+             psi(k + (ipol-1)*npwx,nbase+np) = - ew_d(nbase+np)*psi(k + (ipol-1)*npwx,nbase+np)
            END DO
         END DO
      END DO
+     !$acc end parallel 
      !
+     !$acc host_data use_device(psi, hpsi)
      if (n_start .le. n_end) &
-     CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, hpsi_d(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
-                 ONE, psi_d(1,nb1), kdmx )
-     CALL mp_sum( psi_d(:,nb1:nbase+notcnv), inter_bgrp_comm )
+     CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, hpsi(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
+                 ONE, psi(1,nb1), kdmx )
+     CALL mp_sum( psi(:,nb1:nbase+notcnv), inter_bgrp_comm )
      !
      ! clean up garbage if there is any
-     IF (npw < npwx) CALL dev_memset(psi_d, ZERO, [npw+1,npwx], 1, [nb1, nbase+notcnv])
-     IF (npol == 2)  CALL dev_memset(psi_d, ZERO, [npwx+npw+1,2*npwx], 1, [nb1, nbase+notcnv])
+     IF (npw < npwx) CALL dev_memset(psi, ZERO, [npw+1,npwx], 1, [nb1, nbase+notcnv])
+     IF (npol == 2)  CALL dev_memset(psi, ZERO, [npwx+npw+1,2*npwx], 1, [nb1, nbase+notcnv])
      !
      CALL stop_clock( 'cegterg:update' )
      !
      ! ... approximate inverse iteration
      !
-     CALL g_psi_gpu( npwx, npw, notcnv, npol, psi_d(1,nb1), ew_d(nb1) )
+     CALL g_psi_gpu( npwx, npw, notcnv, npol, psi(1,nb1), ew_d(nb1) )
+     !$acc end host_data
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in
      ! ... order to improve numerical stability of subspace diagonalization
@@ -400,41 +437,43 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      ! ...         ew = <psi_i|psi_i>,  i = nbase + 1, nbase + notcnv
      !
-     !!! == OPTIMIZE HERE ==
+     !$acc parallel vector_length(32) deviceptr(ew_d)
+     !$acc loop gang private(nbn)
      DO n = 1, notcnv
         !
         nbn = nbase + n
         !
-        IF ( npol == 1 ) THEN
-           !
-           ew_host(n) = KSDdot( 2*npw, psi_d(1,nbn), 1, psi_d(1,nbn), 1 )
-           !
-        ELSE
-           !
-           ew_host(n) = KSDdot( 2*npw, psi_d(1,nbn), 1, psi_d(1,nbn), 1 ) + &
-                        KSDdot( 2*npw, psi_d(npwx+1,nbn), 1, psi_d(npwx+1,nbn), 1 )
-           !
-        END IF
+        ew_d(n) = MYDDOT_VECTOR_GPU( 2*npw, psi(1,nbn), psi(1,nbn) )
         !
      END DO
      !
-     CALL mp_sum( ew_host( 1:notcnv ), intra_bgrp_comm )
-     ew_d(1:notcnv) = ew_host(1:notcnv)
+     IF(npol.ne.1) THEN 
+       !$acc loop gang private(nbn)
+       DO n = 1, notcnv 
+         nbn = nbase + n
+         ew_d(n) = ew_d(n)  + MYDDOT_VECTOR_GPU( 2*npw, psi(npwx+1,nbn), psi(npwx+1,nbn) ) 
+       END DO 
+     END IF 
+     !$acc end parallel
      !
-!$cuf kernel do(3) <<<*,*>>>
+     CALL mp_sum( ew_d( 1:notcnv ), intra_bgrp_comm )
+     !ew_d(1:notcnv) = ew_host(1:notcnv)
+     !
+     !$acc parallel loop collapse(3) deviceptr(ew_d)
      DO i = 1,notcnv
         DO ipol = 1,npol
            DO k=1,npw
-             psi_d(k + (ipol-1)*npwx,nbase+i) = psi_d(k+(ipol-1)*npwx,nbase+i)/SQRT( ew_d(i) )
+             psi(k + (ipol-1)*npwx,nbase+i) = psi(k+(ipol-1)*npwx,nbase+i)/SQRT( ew_d(i) )
            END DO
         END DO
      END DO
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     CALL h_psi_gpu( npwx, npw, notcnv, psi_d(:,nb1), hpsi_d(:,nb1) ) ; nhpsi = nhpsi + notcnv
+     !$acc host_data use_device(psi, hpsi, spsi)
+     CALL h_psi_gpu( npwx, npw, notcnv, psi(:,nb1), hpsi(:,nb1) ) ; nhpsi = nhpsi + notcnv
      !
-     IF ( uspp ) CALL s_psi_gpu( npwx, npw, notcnv, psi_d(1,nb1), spsi_d(1,nb1) )
+     IF ( uspp ) CALL s_psi_gpu( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
      !
      ! ... update the reduced hamiltonian
      !
@@ -444,7 +483,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      CALL mp_type_create_column_section(sc_d(1,1), nbase, notcnv, nvecx, column_section_type)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      !
-     CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, hpsi_d(1,nb1), kdmx, psi_d(1,n_start), kdmx, &
+     CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, hpsi(1,nb1), kdmx, psi(1,n_start), kdmx, &
                  ZERO, hc_d(nb1,n_start), nvecx )
      !
      if ((n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 )) then
@@ -462,15 +501,16 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      IF ( uspp ) THEN
         !
-        CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, spsi_d(1,nb1), kdmx, psi_d(1,n_start), kdmx, &
+        CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, spsi(1,nb1), kdmx, psi(1,n_start), kdmx, &
                     ZERO, sc_d(nb1,n_start), nvecx )
         !     
      ELSE
         !
-        CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, psi_d(1,nb1), kdmx, psi_d(1,n_start), kdmx, &
+        CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, psi(1,nb1), kdmx, psi(1,n_start), kdmx, &
                     ZERO, sc_d(nb1,n_start), nvecx )
         !
      END IF
+     !$acc end host_data
      !
      if ( (n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 ) ) then
         !pinned_buffer( nb1:nbase+notcnv, n_start:n_end ) = sc_d( nb1:nbase+notcnv, n_start:n_end )
@@ -553,8 +593,10 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !
         CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
         my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
-        CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, psi_d(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
+        !$acc host_data use_device(psi)
+        CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, psi(1,n_start), kdmx, vc_d(n_start,1), nvecx, &        
                     ZERO, evc_d, kdmx )
+        !$acc end host_data
         CALL mp_sum( evc_d, inter_bgrp_comm )
         !
         IF ( notcnv == 0 ) THEN
@@ -580,26 +622,28 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !
         ! ... refresh psi, H*psi and S*psi
         !
-        CALL dev_memcpy(psi_d, evc_d, (/ 1, npwx*npol /), 1, &
+        !$acc host_data use_device(psi, hpsi, spsi)
+        CALL dev_memcpy(psi, evc_d, (/ 1, npwx*npol /), 1, &
                                       (/ 1, nvec /), 1)
         !
         IF ( uspp ) THEN
            !
-           CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, spsi_d(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
-                       ZERO, psi_d(1,nvec+1), kdmx)
-           CALL dev_memcpy(spsi_d, psi_d(:,nvec+1:), &
+           CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, spsi(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
+                       ZERO, psi(1,nvec+1), kdmx)
+           CALL dev_memcpy(spsi, psi(:,nvec+1:), &
                                         (/1, npwx*npol/), 1, &
                                         (/1, nvec/), 1)
-           CALL mp_sum( spsi_d(:,1:nvec), inter_bgrp_comm )
+           CALL mp_sum( spsi(:,1:nvec), inter_bgrp_comm )
            !
         END IF
         !
-        CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, hpsi_d(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
-                    ZERO, psi_d(1,nvec+1), kdmx )
-        CALL dev_memcpy(hpsi_d, psi_d(:,nvec+1:), &
+        CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, hpsi(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
+                    ZERO, psi(1,nvec+1), kdmx )
+        CALL dev_memcpy(hpsi, psi(:,nvec+1:), &
                                         (/1, npwx*npol/), 1, &
                                         (/1, nvec/), 1)
-        CALL mp_sum( hpsi_d(:,1:nvec), inter_bgrp_comm )
+        CALL mp_sum( hpsi(:,1:nvec), inter_bgrp_comm )
+        !$acc end host_data
         !
         ! ... refresh the reduced hamiltonian 
         !
@@ -629,6 +673,17 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         CALL stop_clock( 'cegterg:last' )
         !
      END IF
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!$acc parallel loop deviceptr(psi_d, hpsi_d, spsi_d)
+DO i = 1, npwx*npol
+  DO j = 1, nvecx
+     psi_d(i,j) = psi(i,j)
+     hpsi_d(i,j) = hpsi(i,j)
+     if(uspp) spsi_d(i,j) = spsi(i,j)
+  END DO 
+END DO 
+!$acc end parallel
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      !
   END DO iterate
   !
@@ -641,9 +696,15 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   DEALLOCATE( hc_d )
   DEALLOCATE( sc_d )
   !
-  IF ( uspp ) DEALLOCATE( spsi_d )
+  IF ( uspp ) THEN
+    !$acc exit data delete(spsi)
+    DEALLOCATE( spsi_d )
+  END IF 
   !
+  !$acc exit data delete(hpsi)
   DEALLOCATE( hpsi_d )
+  !$acc exit data delete(psi)
+  DEALLOCATE( psi )
   DEALLOCATE( psi_d )
   !
   CALL stop_clock( 'cegterg' ); !write(*,*) 'stop cegterg' ; FLUSH(6)
