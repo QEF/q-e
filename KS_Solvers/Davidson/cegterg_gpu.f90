@@ -95,6 +95,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! S matrix on the reduced basis
     ! the eigenvectors of the Hamiltonian
   REAL(DP), ALLOCATABLE :: ew_d(:)
+  REAL(DP), ALLOCATABLE :: ew(:)
     ! eigenvalues of the reduced hamiltonian
   COMPLEX(DP), ALLOCATABLE :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
   COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
@@ -187,6 +188,8 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate vc_d ', ABS(ierr) )
   ALLOCATE( ew_d( nvecx ), STAT=ierr )
+  ALLOCATE( ew( nvecx ), STAT=ierr )
+  !$acc enter data create(ew)
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate ew_d ', ABS(ierr) )
   ALLOCATE( ew_host( nvecx ), STAT=ierr )
@@ -320,18 +323,18 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      ! ... diagonalize the reduced hamiltonian
      !
-     !$acc host_data use_device(hc, sc, vc)
+     !$acc host_data use_device(hc, sc, vc, ew)
      CALL start_clock( 'cegterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
-        CALL diaghg( nbase, nvec, hc, sc, nvecx, ew_d, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
+        CALL diaghg( nbase, nvec, hc, sc, nvecx, ew, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
      END IF
      IF( nbgrp > 1 ) THEN
         CALL mp_bcast( vc, root_bgrp_id, inter_bgrp_comm )
-        CALL mp_bcast( ew_d, root_bgrp_id, inter_bgrp_comm )
+        CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
      ENDIF
      CALL stop_clock( 'cegterg:diag' )
      !
-     CALL dev_memcpy (e_d, ew_d, (/ 1, nvec /), 1 )
+     CALL dev_memcpy (e_d, ew, (/ 1, nvec /), 1 )
      !$acc end host_data
      !
   END IF
@@ -392,7 +395,9 @@ END DO
      !END DO
      ! ========= TO HERE, REPLACED BY =======
 
-     CALL reorder_evals_cevecs(nbase, nvec, nvecx, conv, e_d, ew_d, vc_d)
+     !$acc host_data use_device(ew)
+     CALL reorder_evals_cevecs(nbase, nvec, nvecx, conv, e_d, ew, vc_d)
+     !$acc end host_data
      !
      nb1 = nbase + 1
      !
@@ -440,17 +445,17 @@ END DO
      !$acc end host_data
 ! NB: must not call mp_sum over inter_bgrp_comm here because it is done later to the full correction
      !
-     !$acc parallel loop collapse(3) deviceptr(ew_d)
+     !$acc parallel loop collapse(3) 
      DO np=1,notcnv
         DO ipol = 1, npol
            DO k=1,npwx
-             psi(k + (ipol-1)*npwx,nbase+np) = - ew_d(nbase+np)*psi(k + (ipol-1)*npwx,nbase+np)
+             psi(k + (ipol-1)*npwx,nbase+np) = - ew(nbase+np)*psi(k + (ipol-1)*npwx,nbase+np)
            END DO
         END DO
      END DO
      !$acc end parallel 
      !
-     !$acc host_data use_device(psi, hpsi, vc)
+     !$acc host_data use_device(psi, hpsi, vc, ew)
      if (n_start .le. n_end) &
      CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, hpsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                  ONE, psi(1,nb1), kdmx )
@@ -464,7 +469,7 @@ END DO
      !
      ! ... approximate inverse iteration
      !
-     CALL g_psi_gpu( npwx, npw, notcnv, npol, psi(1,nb1), ew_d(nb1) )
+     CALL g_psi_gpu( npwx, npw, notcnv, npol, psi(1,nb1), ew(nb1) )
      !$acc end host_data
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in
@@ -473,13 +478,13 @@ END DO
      !
      ! ...         ew = <psi_i|psi_i>,  i = nbase + 1, nbase + notcnv
      !
-     !$acc parallel vector_length(96) deviceptr(ew_d)
+     !$acc parallel vector_length(96) 
      !$acc loop gang private(nbn)
      DO n = 1, notcnv
         !
         nbn = nbase + n
         !
-        ew_d(n) = MYDDOT_VECTOR_GPU( 2*npw, psi(1,nbn), psi(1,nbn) )
+        ew(n) = MYDDOT_VECTOR_GPU( 2*npw, psi(1,nbn), psi(1,nbn) )
         !
      END DO
      !
@@ -487,19 +492,21 @@ END DO
        !$acc loop gang private(nbn)
        DO n = 1, notcnv 
          nbn = nbase + n
-         ew_d(n) = ew_d(n)  + MYDDOT_VECTOR_GPU( 2*npw, psi(npwx+1,nbn), psi(npwx+1,nbn) ) 
+         ew(n) = ew(n)  + MYDDOT_VECTOR_GPU( 2*npw, psi(npwx+1,nbn), psi(npwx+1,nbn) ) 
        END DO 
      END IF 
      !$acc end parallel 
      !
-     CALL mp_sum( ew_d( 1:notcnv ), intra_bgrp_comm )
+     !$acc host_data use_device(ew)
+     CALL mp_sum( ew( 1:notcnv ), intra_bgrp_comm )
+     !$acc end host_data
      !ew_d(1:notcnv) = ew_host(1:notcnv)
      !
-     !$acc parallel loop collapse(3) deviceptr(ew_d)
+     !$acc parallel loop collapse(3) 
      DO i = 1,notcnv
         DO ipol = 1,npol
            DO k=1,npw
-             psi(k + (ipol-1)*npwx,nbase+i) = psi(k+(ipol-1)*npwx,nbase+i)/SQRT( ew_d(i) )
+             psi(k + (ipol-1)*npwx,nbase+i) = psi(k+(ipol-1)*npwx,nbase+i)/SQRT( ew(i) )
            END DO
         END DO
      END DO
@@ -589,21 +596,22 @@ END DO
      !
      ! ... diagonalize the reduced hamiltonian
      !
-     !$acc host_data use_device(hc, sc, vc)
+     !$acc host_data use_device(hc, sc, vc, ew)
      CALL start_clock( 'cegterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
-        CALL diaghg( nbase, nvec, hc, sc, nvecx, ew_d, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
+        CALL diaghg( nbase, nvec, hc, sc, nvecx, ew, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
      END IF
      IF( nbgrp > 1 ) THEN
         CALL mp_bcast( vc, root_bgrp_id, inter_bgrp_comm )
-        CALL mp_bcast( ew_d, root_bgrp_id, inter_bgrp_comm )
+        CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
      ENDIF
      CALL stop_clock( 'cegterg:diag' )
      !$acc end host_data
      !
      ! ... test for convergence (on the CPU)
      !
-     ew_host(1:nvec) = ew_d(1:nvec)
+     !$acc update host(ew)
+     ew_host(1:nvec) = ew(1:nvec)
      e_host(1:nvec) = e_d(1:nvec)
      WHERE( btype(1:nvec) == 1 )
         !
@@ -619,7 +627,9 @@ END DO
      !
      notcnv = COUNT( .NOT. conv(:) )
      !
-     CALL dev_memcpy (e_d, ew_d, (/ 1, nvec /) )
+     !$acc host_data use_device(ew)
+     CALL dev_memcpy (e_d, ew, (/ 1, nvec /) )
+     !$acc end host_data
      !
      ! ... if overall convergence has been achieved, or the dimension of
      ! ... the reduced basis set is becoming too large, or in any case if
@@ -744,6 +754,8 @@ END DO
   DEALLOCATE( recv_counts )
   DEALLOCATE( displs )
   DEALLOCATE( conv )
+  !$acc exit data delete(ew)
+  DEALLOCATE( ew )
   DEALLOCATE( e_host, ew_host, ew_d )
   !$acc exit data delete(vc)
   DEALLOCATE( vc )
