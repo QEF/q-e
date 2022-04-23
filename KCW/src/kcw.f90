@@ -29,8 +29,6 @@ PROGRAM kcw
   !
   IMPLICIT NONE
   !
-  include 'laxlib.fh'
-  !
   CHARACTER(LEN=9) :: code='KCW'
   !
   ! 1) Initialize MPI, clocks, print initial messages

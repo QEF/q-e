@@ -24,8 +24,6 @@ SUBROUTINE kcw_screen
   !
   IMPLICIT NONE
   !
-  include 'laxlib.fh'
-  !
   ! 3) Set up for the KC calculation. 
   CALL kcw_setup_screen( )
   !
