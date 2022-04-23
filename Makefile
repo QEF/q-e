@@ -33,6 +33,7 @@ default :
 	@echo '  xspectra     X-ray core-hole spectroscopy calculations'
 	@echo '  couple       Library interface for coupling to external codes'
 	@echo '  epw          Electron-Phonon Coupling with Wannier functions'
+	@echo '  kcw          KCW code: implementation of Koopmans functionals in primitive cell'
 	@echo '  gui          Graphical User Interface'
 	@echo '  all          same as "make pwall cp ld1 tddfpt xspectra hp"'
 	@echo ' '
@@ -137,6 +138,10 @@ travis : pwall epw
 	if test -d test-suite ; then \
 	( cd test-suite ; make run-travis || exit 1 ) ; fi
 
+kcw : pwlibs lrmods pp w90
+	if test -d KCW ; then \
+	( cd KCW ; $(MAKE) all || exit 1 ) ; fi
+
 gui : bindir
 	@if test -d GUI/PWgui ; then \
 	    cd GUI/PWgui ; \
@@ -158,7 +163,7 @@ gui : bindir
 
 pwall : pw neb ph pp pwcond acfdt
 
-all   : pwall cp ld1 tddfpt hp xspectra gwl 
+all   : pwall cp ld1 tddfpt hp xspectra gwl kcw
 
 ###########################################################
 # Auxiliary targets used by main targets:
@@ -288,7 +293,7 @@ clean :
 		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
 		atomic LR_Modules upflib \
 		dev-tools extlibs Environ TDDFPT PHonon HP GWW Doc GUI \
-		QEHeat \
+		QEHeat KCW \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \

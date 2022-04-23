@@ -510,3 +510,19 @@ This test is to compare electron-phonon matrix element produced directly by the 
 and by EPW. It requires modification to the phonon code. 
 Note that this folder is NOT tested in the test-suite but is here as it can be useful. 
 
+#################################################################################################
+# KCW tests
+#################################################################################################
+############################
+# kcw-nc-ks : H2O molecule #
+############################
+The following features of the code are tested:
+- Calculation of screening coefficients for KS orbitals
+- Calculation of KI@KS eigenvalues
+
+############################
+# kcw-nc-wann : Si FCC #
+############################
+The following features of the code are tested:
+- Calculation of screening coefficients for MLWF
+- Calculation of KI@Wann eigenvalues

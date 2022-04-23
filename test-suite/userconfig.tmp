@@ -239,3 +239,26 @@ benchmark = git
 date_fmt = %d%m%y
 diff = vimdiff
 
+[KCW]
+exe = XXXXXX/test-suite/run-kcw.sh
+extract_program = XXXXXX/test-suite/extract-kcw.sh
+inputs_args = ('*.in', '')
+run_cmd_template = tc.program tc.args tc.input tc.output tc.error
+tolerance = ( (5.0e-5, 5.0e-3, 'e1'),
+              (5.0e+0, 5.0e-1, 'n1'),
+              (1.0e-3, 1.0e-5, 'f1'),
+              (5.0e-1, 1.0e-3, 'p1'),
+              (5.0e-6, 1.0e-8, 'nkp1'),
+              (5.0e-6, 1.0e-8, 'nkp2'),
+              (5.0e-6, 1.0e-8, 'nkp3'),
+              (5.0e-5, 1.0e-6, 'omega'),
+              (5.0e-4, 1.0e-5, 'eig1'),
+              (5.0e-3, 1.0e-4, 'sh'),
+              (5.0e-4, 1.0e-5, 'rpi'),
+              (5.0e-4, 1.0e-5, 'upi'),
+              (5.0e-3, 1.0e-4, 'homo_ks'),
+              (5.0e-3, 1.0e-4, 'homo_kc'),
+              (5.0e-3, 1.0e-4, 'gap_ks'),
+              (5.0e-3, 1.0e-4, 'gap_kc'))
+skip_program = grep
+skip_args = 'not present in this version'
