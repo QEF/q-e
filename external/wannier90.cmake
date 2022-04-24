@@ -38,12 +38,12 @@ if(QE_WANNIER90_INTERNAL)
     target_link_libraries(qe_wannier90 PRIVATE qe_lapack)
 
     ###########################################################
-    # wannier_prog.x
+    # wannier90.x
     ###########################################################
     set(sources wannier90/src/wannier_prog.F90)
-    qe_add_executable(qe_wannierprog_exe ${sources})
-    set_target_properties(qe_wannierprog_exe PROPERTIES OUTPUT_NAME wannier_prog.x)
-    target_link_libraries(qe_wannierprog_exe PRIVATE qe_wannier90)
+    qe_add_executable(qe_wannier90_exe ${sources})
+    set_target_properties(qe_wannier90_exe PROPERTIES OUTPUT_NAME wannier90.x)
+    target_link_libraries(qe_wannier90_exe PRIVATE qe_wannier90)
 
     ###########################################################
     # w90chk2chk.x
@@ -63,11 +63,17 @@ if(QE_WANNIER90_INTERNAL)
 
     ###########################################################
 
+    add_custom_target(w90
+        DEPENDS
+            qe_wannier90 qe_wannier90_exe qe_w90chk2chk_exe qe_wannier90_postw90_exe
+        COMMENT
+            "Maximally localised Wannier Functions")
+
     qe_install_targets(
         # Libraries
         qe_wannier90
         # Executables
-        qe_wannierprog_exe qe_w90chk2chk_exe qe_wannier90_postw90_exe)
+        qe_wannier90_exe qe_w90chk2chk_exe qe_wannier90_postw90_exe)
 else()
     add_library(qe_wannier90 INTERFACE)
     qe_install_targets(qe_wannier90)
