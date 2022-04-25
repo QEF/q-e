@@ -389,6 +389,14 @@ SUBROUTINE phq_readin()
   END SELECT
 
   !
+  ! JDE: Catch situation where head crashes because PHonon tries to read u from file
+  !
+  IF (.NOT. trans) THEN
+     trans = .TRUE.
+     WRITE(stdout, '(5x, "CAREFUL: trans reset to TRUE to prevent CRASH")')
+  END IF
+
+  !
   ! ...  broadcast all input variables
   !
   tmp_dir = trimcheck (outdir)
