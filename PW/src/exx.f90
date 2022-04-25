@@ -1327,7 +1327,7 @@ MODULE exx
                                intra_egrp_comm, me_egrp, &
                                negrp, max_pairs, egrp_pairs, ibands, nibands, &
                                iexx_istart, iexx_iend, &
-                               all_start, all_end, iexx_start, jblock, max_ibands
+                               all_start, all_end, iexx_start, jblock
     USE mp,             ONLY : mp_sum, mp_barrier, mp_circular_shift_left
     USE uspp,           ONLY : nkb, okvan
     USE paw_variables,  ONLY : okpaw
@@ -1346,8 +1346,8 @@ MODULE exx
     IMPLICIT NONE
     !
     INTEGER                  :: lda, n, m
-    COMPLEX(DP)              :: psi(lda*npol,max_ibands)
-    COMPLEX(DP)              :: hpsi(lda*npol,max_ibands)
+    COMPLEX(DP)              :: psi(:,:)
+    COMPLEX(DP)              :: hpsi(:,:)
     TYPE(bec_type), OPTIONAL :: becpsi ! or call a calbec(...psi) instead
     !
     ! local variables
