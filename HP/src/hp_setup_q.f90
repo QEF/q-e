@@ -150,18 +150,18 @@ SUBROUTINE hp_setup_q()
   ! by set_nscf, at q=0 it coincides with the point group and we take nsymq=nsym
   !
   ! ---------- LUCA --------------------------
-  IF (noncolin .and. domag) then
+!  IF (noncolin .and. domag) then
       ! NOTE: maybe this (if it works) can be extended
       !       also to the collinear nonrelativistic case 
-      IF (lgamma) THEN
-         nsymq = nsym
-         minus_q = .TRUE.
-      ENDIF
+!      IF (lgamma) THEN
+!         nsymq = nsym
+!         minus_q = .TRUE.
+!      ENDIF
       !
-      modenum = 0
-      IF (nsymq == 0)  CALL set_small_group_of_q (nsymq, invsymq, minus_q)
-      IF (.NOT. time_reversal) minus_q = .FALSE.
-  ELSE 
+!      modenum = 0
+!      IF (nsymq == 0)  CALL set_small_group_of_q (nsymq, invsymq, minus_q)
+!      IF (.NOT. time_reversal) minus_q = .FALSE.
+!  ELSE 
       IF (lgamma) THEN
          !
          nsymq   = nsym
@@ -173,7 +173,8 @@ SUBROUTINE hp_setup_q()
          ENDIF
          !
       ENDIF
-  ENDIF 
+      minus_q = .FALSE.
+ ! ENDIF 
   ! ---------------------------------------------------
   !
   ! Calculate rtau (the Bravais lattice vector associated to a rotation) 

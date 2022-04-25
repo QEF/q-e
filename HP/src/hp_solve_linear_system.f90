@@ -114,7 +114,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
              nsolv,      & ! number of linear systems
              isolv,      & ! counter on linear systems    
              ikmk,       & ! index of mk
-             nrec        & ! the record number for dvpsi
+             nrec          ! the record number for dvpsi
 
   REAL(DP) :: tcpu, get_clock ! timing variables
   CHARACTER(LEN=256) :: flmixdpot = 'mixd'
@@ -218,7 +218,6 @@ SUBROUTINE hp_solve_linear_system (na, iq)
       IF (nksq > 1 .OR. nsolv == 2) THEN
          CALL get_buffer(evc, lrwfc, iuwfc, ikmk)
       ENDIF
-      !
       !
       ! Computes (iter=1) or reads (iter>1) the action of the perturbing
       ! potential on the unperturbed KS wavefunctions: |dvpsi> = dV_pert * |evc>

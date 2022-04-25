@@ -131,7 +131,16 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
         ! Read atomic wfc's : S(k)*phi(k) and S(k+q)*phi(k+q) 
         CALL get_buffer (swfcatomk, nwordwfcU, iuatswfc, ikk)
         IF (.NOT.lgamma) CALL get_buffer (swfcatomkpq, nwordwfcU, iuatswfc, ikq)
+        !write(stdout,*) 'swfcatomk1', swfcatomk(1:10,1)
+        !write(stdout,*) 'swfcatomk2', swfcatomk(1:10,2)
+        ! ---------- LUCA --------------
+        IF( isolv == 2 ) then
+           !CALL apply_trev(swfcatomk, ikk, ikk, size(swfcatomk, 2))
+           !CALL apply_trev(swfcatomkpq, ikq, ikq, size(swfcatomkpq, 2))
+        ENDIF
         !
+        !write(stdout,*) 'swfcatomk3', swfcatomk(1:10,1)
+        !write(stdout,*) 'swfcatomk4', swfcatomk(1:10,2)
         ! At each SCF iteration for each ik read dpsi from file
         nrec = ik + (isolv - 1) * nksq 
         CALL get_buffer (dpsi, lrdwf, iudwf, nrec)
@@ -271,7 +280,7 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
            DO is = 1, nspin
               WRITE(stdout,'(5x,a,1x,i2,2x,a,1x,i2)') ' Hubbard atom', na, 'spin', is
               DO m1 = 1, ldim 
-                 WRITE(stdout,'(3x,10(f15.10,1x))') (DBLE(dnsq(m1,m2,is,na)), &
+                 WRITE(stdout,'(3x,10(f15.10,1x))') ((dnsq(m1,m2,is,na)), &
                                                          m2=1,ldim)
               ENDDO
            ENDDO
