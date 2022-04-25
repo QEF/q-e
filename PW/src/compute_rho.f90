@@ -79,7 +79,7 @@ SUBROUTINE compute_rho_gpu( rho_d, rhoout_d, segni_d, nrxx )
    REAL(DP) :: ux1, ux2, ux3, amag
    INTEGER :: ir ! counter on mesh points
    !
-   !$acc data deviceptr( rho_d(nrxx,4), rhoout_d(nrxx,2), segni_d(nrxx) )
+   !$acc data present( rho_d, rhoout_d, segni_d )
    !
    IF (lsign) THEN
       !

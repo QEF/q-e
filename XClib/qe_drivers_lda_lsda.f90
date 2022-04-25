@@ -90,7 +90,7 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
   !
 #if defined(_OPENACC)
-!$acc data deviceptr( rho_in(length),ex_out(length),vx_out(length),ec_out(length),vc_out(length) )
+!$acc data present( rho_in, ex_out, vx_out, ec_out, vc_out )
 !$acc parallel loop
 #else
 !$omp parallel if(ntids==1) default(none) &
@@ -315,7 +315,7 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
 #endif
   !
 #if defined(_OPENACC)  
-!$acc data deviceptr( rho_in(length), zeta_in(length) ,ex_out(length),vx_out(length,2),ec_out(length),vc_out(length,2) )
+!$acc data present( rho_in, zeta_in, ex_out, vx_out, ec_out, vc_out )
 !$acc parallel loop  
 #else
 !$omp parallel if(ntids==1) default(none) &

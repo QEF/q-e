@@ -71,10 +71,7 @@ SUBROUTINE tau_xc( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
   REAL(DP) :: arho
   !
 #if defined(_OPENACC)
-  !$acc data deviceptr( rho(length), grho2(length), tau(length), ex(length), ec(length),     &
-  !$acc&                v1x(length), v2x(length), v3x(length), v1c(length), v2c(1,length,1), &
-  !$acc&                v3c(length) )
-  !
+  !$acc data present( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   !$acc parallel loop
 #endif
   DO k = 1, length
@@ -164,10 +161,7 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
   REAL(DP) :: v2cup, v2cdw
   !
 #if defined(_OPENACC)
-  !$acc data deviceptr( rho(length,2), grho(3,length,2), tau(length,2), ex(length), &
-  !$acc&                ec(length), v1x(length,2), v2x(length,2), v3x(length,2),    &
-  !$acc&                v1c(length,2), v2c(3,length,2), v3c(length,2) )
-  !
+  !$acc data present( rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   !$acc parallel loop
 #endif
   DO k = 1, length

@@ -506,7 +506,7 @@ CONTAINS
      INTEGER :: ig
 #if defined(__CUDA) && defined(_OPENACC)
      attributes(DEVICE) :: nl_d, nlm_d
-     !$acc data deviceptr( vout1_d(:), vout2_d(:), vin_d(:) )
+     !$acc data present( vout1_d, vout2_d, vin_d )
      nl_d  => desc%nl_d
      nlm_d => desc%nlm_d
      IF( PRESENT( vout2_d ) ) THEN

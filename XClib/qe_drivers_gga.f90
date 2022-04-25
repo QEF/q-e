@@ -81,8 +81,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
 #endif
   !
 #if defined(_OPENACC)
-!$acc data deviceptr( rho_in(length), grho_in(length), sx_out(length), sc_out(length), &
-!$acc&                v1x_out(length), v2x_out(length), v1c_out(length), v2c_out(length) )
+!$acc data present( rho_in, grho_in, sx_out, sc_out, v1x_out, v2x_out, v1c_out, v2c_out )
 !$acc parallel loop  
 #else
 !$omp parallel if(ntids==1) default(none) &
@@ -494,8 +493,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !sx_tot = 0.0_DP
   !
 #if defined(_OPENACC)
-!$acc data deviceptr( rho_in(length,2), grho2_in(length,2), sx_tot(length), &
-!$acc&                v1x_out(length,2), v2x_out(length,2) )
+!$acc data present( rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
 !$acc parallel loop
 #else
 !$omp parallel if(ntids==1) default(none) &
@@ -1036,8 +1034,7 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
 #endif
   !
 #if defined(_OPENACC)
-!$acc data deviceptr( rho_in(length), zeta_io(length), grho_in(length), &
-!$acc&                sc_out(length), v1c_out(length,2), v2c_out(length) )
+!$acc data present( rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out )
 !$acc parallel loop
 #else
 !$omp parallel if(ntids==1) default(none) &
@@ -1151,7 +1148,7 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
   REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v2c
   !! correlation potential (gradient part)
   REAL(DP), INTENT(OUT), DIMENSION(length) :: v2c_ud
-  !!correlation potential (off-diag. term)
+  !! correlation potential (off-diag. term)
   !
   ! ... local variables
   !
@@ -1166,8 +1163,7 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
 #endif    
   !
 #if defined(_OPENACC) 
-!$acc data deviceptr( rho_in(length,2), grho_in(length,2), grho_ud_in(length), &
-!$acc&                sc(length), v1c(length,2), v2c(length,2), v2c_ud(length) )
+!$acc data present( rho_in, grho_in, grho_ud_in, sc, v1c, v2c, v2c_ud )
 !$acc parallel loop
 #else 
 !$omp parallel if(ntids==1) default(none) &

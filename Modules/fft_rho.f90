@@ -118,13 +118,12 @@ CONTAINS
     COMPLEX(dp):: fp, fm
     COMPLEX(dp), ALLOCATABLE :: psi_d(:)
     !
-    !$acc data deviceptr( rhor_d(:,:), rhog_d(:,:), v_d(:) )
+    !$acc data present( rhor_d, rhog_d, v_d )
     !
     nspin= SIZE(rhor_d, 2)
     !
     ALLOCATE( psi_d(desc%nnr) )
     !$acc data create( psi_d(1:desc%nnr) )
-    !$acc host_data use_device( psi_d )
     IF( nspin == 1 ) THEN
        iss=1
        IF( PRESENT( v_d ) ) THEN
@@ -138,7 +137,9 @@ CONTAINS
              psi_d(ir)=CMPLX(rhor_d(ir,iss),0.0_dp,kind=dp)
           END DO
        END IF
+       !$acc host_data use_device( psi_d )
        CALL fwfft('Rho', psi_d, desc )
+       !$acc end host_data
        CALL fftx_threed2oned_gpu( desc, psi_d, rhog_d(:,iss) )
     ELSE
        IF ( gamma_only ) THEN
@@ -157,7 +158,9 @@ CONTAINS
                    psi_d(ir)=CMPLX(rhor_d(ir,isup),rhor_d(ir,isdw),kind=dp)
                 END DO
              END IF
+             !$acc host_data use_device( psi_d )
              CALL fwfft('Rho', psi_d, desc )
+             !$acc end host_data
              CALL fftx_threed2oned_gpu( desc, psi_d, rhog_d(:,isup), rhog_d(:,isdw) )
           END DO
        ELSE
@@ -173,12 +176,13 @@ CONTAINS
                    psi_d(ir)=CMPLX(rhor_d(ir,iss),0.0_dp,kind=dp)
                 END DO
              END IF
+             !$acc host_data use_device( psi_d )
              CALL fwfft('Rho', psi_d, desc )
+             !$acc end host_data
              CALL fftx_threed2oned_gpu( desc, psi_d, rhog_d(:,iss) )
           END DO
        END IF
     ENDIF
-    !$acc end host_data
     !$acc end data
     DEALLOCATE( psi_d )
     !
