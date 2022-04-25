@@ -112,6 +112,10 @@ MODULE dynamics_module
    !
    INTEGER, PARAMETER :: hist_len = 1000
    !
+   ! Restart type
+   INTEGER, PARAMETER :: restart_verlet = 1, restart_proj_verlet = 2, &
+                         restart_fire = 3, restart_langevin = 4
+   !
 CONTAINS
    !
    ! ... public methods
@@ -182,6 +186,7 @@ CONTAINS
       USE ener,               ONLY : etot
       USE force_mod,          ONLY : force
       USE control_flags,      ONLY : istep, lconstrain, tv0rd, tstress
+      USE io_global,          ONLY : ionode
       !
       USE constraints_module, ONLY : nconstr, check_constraint
       USE constraints_module, ONLY : remove_constr_force, remove_constr_vec
@@ -198,10 +203,10 @@ CONTAINS
 #if defined (__NPT)
       REAL(DP) :: chi, press_new
 #endif
-      LOGICAL  :: file_exists, leof
+      LOGICAL  :: is_restart
       REAL(DP), EXTERNAL :: dnrm2
       REAL(DP) :: kstress(3,3)
-      INTEGER :: i, j
+      INTEGER :: i, j, restart_id
       !
       ! ... the number of degrees of freedom
       !
@@ -218,33 +223,30 @@ CONTAINS
       vel_defined  = .TRUE.
       temp_av      = 0.D0
       !
-      CALL seqopn( 4, 'md', 'FORMATTED', file_exists )
+      CALL seqopn( 4, 'md', 'FORMATTED', is_restart )
       !
-      IF ( file_exists ) THEN
+      IF ( is_restart ) THEN
          !
          ! ... the file is read :  simulation is continuing
          !
-         READ( UNIT = 4, FMT = * ) etotold, istep, tau_old(:,:), leof
+         READ( UNIT = 4, FMT = * ) restart_id
          !
-         IF ( leof ) THEN
+         IF ( restart_id .EQ. restart_verlet ) THEN
+            ! Restarting...
+            vel_defined = .TRUE.
             !
-            ! ... the file was created by projected_verlet:  Ignore it
-            !
-            CALL md_init()
-            !
-         ELSE
-            !
-            vel_defined = .FALSE.
-            !
-            READ( UNIT = 4, FMT = * ) &
-               temp_new, temp_av, mass(:), total_mass, elapsed_time, &
+            READ( UNIT = 4, FMT = * ) etotold, istep, tau_old(:,:), &
+               temp_new, temp_av, vel(:,:), mass(:), total_mass, elapsed_time, &
                tau_ref(:,:)
             !
+            CLOSE( UNIT = 4, STATUS = 'KEEP' )
+            !
+         ELSE
+            is_restart = .FALSE.
          ENDIF
-         !
-         CLOSE( UNIT = 4, STATUS = 'KEEP' )
-         !
-      ELSE
+      ENDIF
+
+      IF (.NOT.is_restart) THEN
          !
          CLOSE( UNIT = 4, STATUS = 'DELETE' )
          !
@@ -396,15 +398,15 @@ CONTAINS
       !
       ! ... save all the needed quantities on file
       !
-      CALL seqopn( 4, 'md', 'FORMATTED',  file_exists )
+      CALL seqopn( 4, 'md', 'FORMATTED',  is_restart )
       !
-      leof = .FALSE.
-      WRITE( UNIT = 4, FMT = * ) etot, istep, tau(:,:), leof
-      !
-      WRITE( UNIT = 4, FMT = * ) &
-          temp_new, temp_av, mass(:), total_mass, elapsed_time, tau_ref(:,:)
+      WRITE( UNIT = 4, FMT = * ) restart_verlet
+      WRITE( UNIT = 4, FMT = * ) etot, istep, tau(:,:), temp_new, temp_av, &
+          vel(:,:), mass(:), total_mass, elapsed_time, tau_ref(:,:)
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
+      !
+      IF (ionode) CALL dump_trajectory_frame( istep )
       !
       ! ... here the tau are shifted
       !
@@ -865,8 +867,8 @@ CONTAINS
       !
       REAL(DP), ALLOCATABLE :: step(:,:)
       REAL(DP)              :: norm_step, etotold, delta(3)
-      INTEGER               :: na
-      LOGICAL               :: file_exists,leof
+      INTEGER               :: na, restart_id
+      LOGICAL               :: is_restart
       !
       REAL(DP), PARAMETER :: step_max = 0.6D0  ! bohr
       !
@@ -881,17 +883,25 @@ CONTAINS
       acc(:,:)     = 0.D0
       conv_ions = .FALSE.
       !
-      CALL seqopn( 4, 'md', 'FORMATTED', file_exists )
+      CALL seqopn( 4, 'md', 'FORMATTED', is_restart )
       !
-      IF ( file_exists ) THEN
+      IF ( is_restart ) THEN
          !
          ! ... the file is read
          !
-         READ( UNIT = 4, FMT = * ) etotold, istep, tau_old(:,:)
+         READ( UNIT = 4, FMT = * ) restart_id
          !
-         CLOSE( UNIT = 4, STATUS = 'KEEP' )
-         !
-      ELSE
+         IF ( restart_id .EQ. restart_proj_verlet ) THEN
+            !
+            READ( UNIT = 4, FMT = * ) etotold, istep, tau_old(:,:)
+            CLOSE( UNIT = 4, STATUS = 'KEEP' )
+            !
+         ELSE
+            is_restart = .FALSE.
+         END IF
+      END iF
+      !
+      IF (.NOT.is_restart) THEN
          !
          CLOSE( UNIT = 4, STATUS = 'DELETE' )
          !
@@ -1012,10 +1022,9 @@ CONTAINS
       !
       ! ... save on file all the needed quantities
       !
-      CALL seqopn( 4, 'md', 'FORMATTED',  file_exists )
+      CALL seqopn( 4, 'md', 'FORMATTED',  is_restart )
       !
-      leof = .TRUE.
-      WRITE( UNIT = 4, FMT = * ) etot, istep, tau(:,:), leof
+      WRITE( UNIT = 4, FMT = * ) restart_proj_verlet, etot, istep, tau(:,:)
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
@@ -1081,8 +1090,8 @@ CONTAINS
      !
      REAL(DP), ALLOCATABLE :: step(:,:)
      REAL(DP)              :: norm_step, etotold, delta(3)
-     INTEGER               :: na,i
-     LOGICAL               :: file_exists
+     INTEGER               :: na, i, restart_id
+     LOGICAL               :: is_restart
      !
      REAL(DP), PARAMETER :: step_max = 0.6D0  ! bohr
      ! 
@@ -1121,20 +1130,29 @@ CONTAINS
      ! acc_old and vel_old are here to keep track of acceleration/velocity in the previous time step
      nsteppos = 0
      conv_ions = .FALSE.
-     ! 
-     CALL seqopn( 4, 'fire', 'FORMATTED', file_exists )
      !
+     CALL seqopn( 4, 'fire', 'FORMATTED', is_restart )
      !
-     IF ( file_exists ) THEN
+     IF ( is_restart ) THEN
         !
-        ! ... the file is read ...   
+        ! ... the file is read ...
         !
-        READ( UNIT = 4, FMT = * ) etotold, nsteppos, dt_curr, alpha
-        
+        READ( UNIT = 4, FMT = * ) restart_id
         !
-        CLOSE( UNIT = 4, STATUS = 'KEEP' )
+        IF (restart_id .EQ. restart_fire) THEN
+         !
+         READ( UNIT = 4, FMT = * ) etotold, nsteppos, dt_curr, alpha
+         CLOSE( UNIT = 4, STATUS = 'KEEP' )
+         !
+        ELSE
+         !
+         is_restart = .FALSE.
+         !
+        END IF
         !
-     ELSE
+     END IF
+     !
+     IF (.NOT.is_restart) THEN
         !
         CLOSE( UNIT = 4, STATUS = 'DELETE' )
         !
@@ -1305,7 +1323,7 @@ CONTAINS
      !
      ! ... save the needed quantities to a file 
      !
-     CALL seqopn( 4, 'fire', 'FORMATTED',  file_exists )
+     CALL seqopn( 4, 'fire', 'FORMATTED',  is_restart )
      !
      WRITE( UNIT = 4, FMT = * ) etot, nsteppos, dt_curr, alpha 
      !
@@ -2042,5 +2060,41 @@ CONTAINS
       vel(:,:) = vel(:,:) * aux
       !
    END SUBROUTINE thermalize_resamp_vscaling
+   !
+   !-----------------------------------------------------------------------
+   SUBROUTINE dump_trajectory_frame( istep )
+      !-----------------------------------------------------------------------
+      !! Dump trajectory frame into a file in tmp_dir with name:
+      !! prefix.istep.mdtrj. Don't append, create a new file for each step,
+      !! let the caller worry about merging. Safer for limited wall times,
+      !! when the job can be killed anytime.
+      !
+      USE cell_base,   ONLY : alat, at
+      USE constants,   ONLY : bohr_radius_angs
+      USE io_files,    ONLY : prefix, tmp_dir, seqopn
+      USE ions_base,   ONLY : nat, tau
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, EXTERNAL :: find_free_unit
+      INTEGER, INTENT(in) :: istep
+      INTEGER :: iunit, i, k
+      CHARACTER(LEN=20)    :: istep_str
+      !
+      iunit = find_free_unit()
+      WRITE(istep_str, '(I)') istep
+      !
+      OPEN(UNIT = iunit, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // "." &
+         // TRIM(ADJUSTL(istep_str)) // ".mdtrj" )
+      !
+      ! Unit cell (9 values) in Angstrom followed by
+      ! atom coordinates (3 * nat values) in Angstrom
+      WRITE(iunit, *) &
+         ( ( at(i,k) * alat * bohr_radius_angs, i = 1, 3), k = 1, 3 ), &
+         ( ( tau(i,k) * alat * bohr_radius_angs, i = 1, 3), k = 1, 3 )
+      !
+      CLOSE(iunit)
+      !
+   END SUBROUTINE dump_trajectory_frame
    !
 END MODULE dynamics_module
