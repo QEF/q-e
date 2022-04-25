@@ -2082,7 +2082,7 @@ CONTAINS
       CHARACTER(LEN=20)    :: istep_str
       !
       iunit = find_free_unit()
-      WRITE(istep_str, '(I)') istep
+      WRITE(istep_str, '(I5)') istep
       !
       OPEN(UNIT = iunit, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // "." &
          // TRIM(ADJUSTL(istep_str)) // ".mdtrj" )
