@@ -81,6 +81,10 @@ subroutine hp_dvpsi_pert (ik, nrec)
   CALL get_buffer(swfcatomk, nwordwfcU, iuatswfc, ikk)
   IF (.NOT.lgamma)  CALL get_buffer(swfcatomkpq, nwordwfcU, iuatswfc, ikq)
   !
+  IF ( nrec > nksq ) then
+   !CALL apply_trev(swfcatomk, ikk, ikk, size(swfcatomk, 2))
+   !CALL apply_trev(swfcatomkpq, ikq, ikq, size(swfcatomkpq, 2))
+  ENDIF
   ! Calculate proj(ibnd, ihubst) = < S(k)*phi(k,I,m)| psi(ibnd,k) >
   !
   DO na = 1, nat

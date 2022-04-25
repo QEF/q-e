@@ -27,12 +27,16 @@ subroutine hp_sym_dmag (dmagtosym)
     USE ions_base,  ONLY : tau
     USE lr_symm_base, ONLY : minus_q, irotmq, nsymq, gi, gimq
     USE ldaU_hp, ONLY : nah_pert
+    USE qpoint,           ONLY : xq
+    USE symm_base,        ONLY : s
+    USE cell_base,        ONLY : bg, at
+    USE noncollin_module, ONLY : noncolin
   
     implicit none
   
     complex(DP) :: dmagtosym (dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin_mag)
     ! the magnetization to symmetrize (only 2:4 components)
-  
+    real(DP) :: gi_t(3, 48), aq (3), raq (3), wrk (3)
     integer :: ftau(3,nsymq), s_scaled(3,3,nsymq)
     integer :: is, ri, rj, rk, i, j, k, ipol, isym, irot, kpol
     !  counter on spin polarizations
@@ -164,14 +168,42 @@ subroutine hp_sym_dmag (dmagtosym)
        term (3, isym) = CMPLX(cos (g3 (isym) ), sin (g3 (isym) ) ,kind=DP)
     enddo
     !
+    ! --------- LUCA ---------------
     ! NOTE: could it be written as in sym_dmag.f90 ? 
-    DO isym = 1, nsymq
-      ggf (isym) = 0.d0
-      do ipol = 1, 3
-         ggf (isym) = ggf (isym) + (gi (ipol, isym) * tau(ipol,nah_pert)) * tpi
+   IF (noncolin) then
+      gi_t = 0.d0 
+      aq   = xq
+      call cryst_to_cart (1, aq, at, - 1)
+      do isym = 1, nsymq
+         raq = 0.d0
+         do i = 1, 3
+            do j = 1, 3
+               raq (i) = raq (i) + DBLE (s (i, j, isym) ) * &
+                  aq (j)
+         enddo
+         enddo
+         do i = 1, 3
+            IF (t_rev(isym)==1) wrk (i) = aq (i) - raq (i)
+         enddo
+         call cryst_to_cart (1, wrk, bg, 1)
+         gi_t (:, isym) = wrk (:)
       enddo
+   ENDIF
+   !
+   DO isym = 1, nsymq
+      ggf (isym) = 0.d0
+      IF (t_rev(isym) == 1) then
+         do ipol = 1, 3
+            ggf (isym) = ggf (isym) + (gi_t (ipol, isym) * tau(ipol,nah_pert)) * tpi
+         enddo
+      ELSE
+         do ipol = 1, 3
+            ggf (isym) = ggf (isym) + (gi (ipol, isym) * tau(ipol,nah_pert)) * tpi
+         enddo
+      ENDIF
       phase2 (isym) = CMPLX( cos( ggf(isym) ), -sin( ggf(isym) ), kind=DP)
     ENDDO
+    ! --------------------------
     !
     !
     dmagsym(:,:,:,:) = (0.d0, 0.d0)
@@ -193,7 +225,7 @@ subroutine hp_sym_dmag (dmagtosym)
                 !
                 do is=2,4
                    dmags(is-1)= dmags(is-1) + &
-                        dmagtosym (ri, rj, rk, is) * phase (isym)
+                        dmagtosym (ri, rj, rk, is) * phase (isym) 
                 enddo
                 !
                 do kpol = 1, 3
@@ -220,7 +252,7 @@ subroutine hp_sym_dmag (dmagtosym)
                 enddo
                 !
                 if (t_rev(isym) == 1) then 
-                   mag(:) = conjg(mag(:))
+                   mag(:) = conjg(mag(:)) * phase2 (isym)
                 end if
                 !
                 dmagsym(i,j,k,1)=dmagsym(i,j,k,1)+mag(1)
