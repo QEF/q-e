@@ -198,9 +198,13 @@ SUBROUTINE fft_gradient_g2r( dfft, a, g, ga )
 #else
   INTEGER, ALLOCATABLE :: nl_d(:), nlm_d(:)
   !
-  ALLOCATE( nl_d(dfft%ngm), nlm_d(dfft%ngm) )
+  ALLOCATE( nl_d(dfft%ngm) )
   nl_d = dfft%nl
-  nlm_d = dfft%nlm
+  IF ( dfft%lgamma ) THEN
+    ALLOCATE( nlm_d(dfft%ngm) )
+    nlm_d = dfft%nlm
+  ENDIF
+  !$acc data copyin( nl_d, nlm_d )
 #endif
   !
   !$acc data present_or_copyin( a, g ) present_or_copyout( ga )
@@ -256,7 +260,8 @@ SUBROUTINE fft_gradient_g2r( dfft, a, g, ga )
      !
      !$acc parallel loop
      DO n = 1, dfft%ngm
-        gaux(nl_d(n)) = CMPLX(g(ipol,n),kind=DP) * CMPLX( -AIMAG(a(n)), REAL(a(n)),kind=DP)
+        gaux(nl_d(n)) = CMPLX(g(ipol,n),kind=DP) * &
+                        CMPLX( -AIMAG(a(n)), REAL(a(n)),kind=DP)
         gaux(nlm_d(n)) = CONJG( gaux(nl_d(n)) )
      ENDDO
      !
@@ -287,7 +292,8 @@ SUBROUTINE fft_gradient_g2r( dfft, a, g, ga )
         !
         !$acc parallel loop
         DO n = 1, dfft%ngm
-          gaux(nl_d(n)) = CMPLX(g(ipol,n), kind=DP) * CMPLX( -AIMAG(a(n)), REAL(a(n)), kind=DP)
+          gaux(nl_d(n)) = CMPLX(g(ipol,n), kind=DP) * &
+                          CMPLX( -AIMAG(a(n)), REAL(a(n)), kind=DP)
         ENDDO
         !
         ! ... bring back to R-space, (\grad_ipol a)(r) ...
@@ -313,8 +319,10 @@ SUBROUTINE fft_gradient_g2r( dfft, a, g, ga )
   !$acc end data
   !
 #if !defined(__CUDA) || !defined(_OPENACC)
-  DEALLOCATE( nl_d, nlm_d )
-#endif  
+  !$acc end data
+  DEALLOCATE( nl_d )
+  IF ( dfft%lgamma ) DEALLOCATE( nlm_d )
+#endif
   !
   RETURN
   !
