@@ -23,7 +23,7 @@ MODULE fft_helper_subroutines
 #endif
   END INTERFACE
   PRIVATE
-  PUBLIC :: fftx_threed2oned, fftx_threed2oned_gpu, fftx_oned2threed
+  PUBLIC :: fftx_threed2oned, fftx_oned2threed
   PUBLIC :: tg_reduce_rho
   PUBLIC :: tg_get_nnr, tg_get_recip_inc, fftx_ntgrp, fftx_tgpe, &
        tg_get_group_nr3
@@ -468,63 +468,86 @@ CONTAINS
      END IF
   END SUBROUTINE
 
-  SUBROUTINE fftx_threed2oned( desc, vin, vout1, vout2 )
-     !! Copy charge density from 3D array to 1D array in Fourier
-     !! space.
-     USE fft_param
-     USE fft_types,      ONLY : fft_type_descriptor
-     TYPE(fft_type_descriptor), INTENT(in) :: desc
-     complex(DP), INTENT(OUT) :: vout1(:)
-     complex(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
-     complex(DP), INTENT(IN) :: vin(:)
-     COMPLEX(DP) :: fp, fm
-     INTEGER :: ig
-     IF( PRESENT( vout2 ) ) THEN
-        DO ig=1,desc%ngm
-           fp=vin(desc%nl(ig))+vin(desc%nlm(ig))
-           fm=vin(desc%nl(ig))-vin(desc%nlm(ig))
-           vout1(ig) = 0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
-           vout2(ig) = 0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
-        END DO
-     ELSE
-        DO ig=1,desc%ngm
-           vout1(ig) = vin(desc%nl(ig))
-        END DO
-     END IF
-  END SUBROUTINE
-  
-  SUBROUTINE fftx_threed2oned_gpu( desc, vin_d, vout1_d, vout2_d )
+ SUBROUTINE fftx_threed2oned( desc, vin, vout1, vout2, gpu_args_ )
      !! GPU version of \(\texttt{fftx_threed2oned}\).
      USE fft_param
-     USE fft_types,      ONLY : fft_type_descriptor
-     TYPE(fft_type_descriptor), INTENT(in) :: desc
-     complex(DP), INTENT(OUT) :: vout1_d(:)
-     complex(DP), OPTIONAL, INTENT(OUT) :: vout2_d(:)
-     complex(DP), INTENT(IN) :: vin_d(:)
-     INTEGER, POINTER :: nl_d(:), nlm_d(:)
+     USE fft_types, ONLY : fft_type_descriptor
+     !
+     TYPE(fft_type_descriptor), INTENT(IN) :: desc
+     COMPLEX(DP), INTENT(OUT) :: vout1(:)
+     COMPLEX(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
+     COMPLEX(DP), INTENT(IN) :: vin(:)
+     LOGICAL, INTENT(IN), OPTIONAL :: gpu_args_
+     !
      COMPLEX(DP) :: fp, fm
      INTEGER :: ig
+     LOGICAL :: gpu_args
+     !
 #if defined(__CUDA) && defined(_OPENACC)
-     attributes(DEVICE) :: nl_d, nlm_d
-     !$acc data present( vout1_d, vout2_d, vin_d )
+     INTEGER, POINTER, DEVICE :: nl_d(:), nlm_d(:)
+     !
      nl_d  => desc%nl_d
      nlm_d => desc%nlm_d
-     IF( PRESENT( vout2_d ) ) THEN
-        !$acc parallel loop
-        DO ig=1,desc%ngm
-           fp=vin_d(nl_d(ig))+vin_d(nlm_d(ig))
-           fm=vin_d(nl_d(ig))-vin_d(nlm_d(ig))
-           vout1_d(ig) = CMPLX(0.5d0,0.d0,kind=DP)*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
-           vout2_d(ig) = CMPLX(0.5d0,0.d0,kind=DP)*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
-        END DO
-     ELSE
-        !$acc parallel loop
-        DO ig=1,desc%ngm
-           vout1_d(ig) = vin_d(nl_d(ig))
-        END DO
-     END IF
-     !$acc end data
+#else
+     INTEGER, ALLOCATABLE :: nl_d(:), nlm_d(:)
+     !
+     ALLOCATE( nl_d(desc%ngm) )
+     nl_d = desc%nl
+     IF( PRESENT( vout2 ) ) THEN
+       ALLOCATE( nlm_d(desc%ngm) )
+       nlm_d = desc%nlm
+     ENDIF
+     !$acc data copyin( nl_d, nlm_d )
 #endif
+     gpu_args = .FALSE.
+     IF ( PRESENT(gpu_args_) ) gpu_args = gpu_args_
+     !
+     IF ( .NOT. gpu_args ) THEN
+       !
+       !$acc data copyin( vin ) copyout( vout1, vout2 )
+       IF( PRESENT( vout2 ) ) THEN
+          !$acc parallel loop
+          DO ig = 1, desc%ngm
+             fp = vin(nl_d(ig))+vin(nlm_d(ig))
+             fm = vin(nl_d(ig))-vin(nlm_d(ig))
+             vout1(ig) = CMPLX(0.5d0,0.d0,kind=DP)*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
+             vout2(ig) = CMPLX(0.5d0,0.d0,kind=DP)*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
+          ENDDO
+       ELSE
+          !$acc parallel loop
+          DO ig = 1, desc%ngm
+             vout1(ig) = vin(nl_d(ig))
+          ENDDO
+       ENDIF
+       !$acc end data
+       !
+     ELSE  
+       !
+       !$acc data present( vout1(:), vout2(:), vin(:) )
+       IF( PRESENT( vout2 ) ) THEN
+          !$acc parallel loop
+          DO ig = 1, desc%ngm
+             fp = vin(nl_d(ig))+vin(nlm_d(ig))
+             fm = vin(nl_d(ig))-vin(nlm_d(ig))
+             vout1(ig) = CMPLX(0.5d0,0.d0,kind=DP)*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
+             vout2(ig) = CMPLX(0.5d0,0.d0,kind=DP)*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
+          ENDDO
+       ELSE
+          !$acc parallel loop
+          DO ig = 1, desc%ngm
+            vout1(ig) = vin(nl_d(ig))
+          ENDDO
+       ENDIF
+       !$acc end data
+       !
+     ENDIF
+     !
+#if !defined(__CUDA) || !defined(_OPENACC)
+     !$acc end data
+     DEALLOCATE( nl_d )
+     IF( PRESENT( vout2 ) ) DEALLOCATE( nlm_d )
+#endif     
+     !
   END SUBROUTINE
 
   SUBROUTINE fftx_psi2c_gamma( desc, vin, vout1, vout2 )

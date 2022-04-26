@@ -162,7 +162,6 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE xc_lib,           ONLY : xc_metagcx, xclib_get_ID
   USE mp,               ONLY : mp_sum
   USE mp_bands,         ONLY : intra_bgrp_comm
-  USE control_flags,    ONLY : use_gpu
   !
   IMPLICIT NONE
   !
@@ -367,8 +366,8 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
   IF ( dft_is_nonlocc() ) CALL nlc( rho%of_r, rho_core, nspin, etxc, vtxc, v )
   !
-  CALL mp_sum(  vtxc , intra_bgrp_comm )
-  CALL mp_sum(  etxc , intra_bgrp_comm )
+  CALL mp_sum( vtxc, intra_bgrp_comm )
+  CALL mp_sum( etxc, intra_bgrp_comm )
   !
   !
   ! ... calculate and add LDA+GGA terms separately, if needed (not standard)
@@ -415,7 +414,6 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE xc_lib,           ONLY : xc
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
-  USE control_flags,    ONLY : use_gpu
   !
   IMPLICIT NONE
   !

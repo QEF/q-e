@@ -20,8 +20,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   USE noncollin_module,     ONLY : domag
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE fft_rho,              ONLY : rho_r2g, rho_r2g_gpu
-  USE control_flags,        ONLY : use_gpu
+  USE fft_rho,              ONLY : rho_r2g
   !
   IMPLICIT NONE
   !
@@ -83,16 +82,10 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
     !$acc end data
     !
     ! ... bring starting rhoaux to G-space
-    IF ( use_gpu ) THEN
-      !$acc data copyout( segni )
-      CALL compute_rho( rho, rhoaux, segni, dfftp%nnr )
-      CALL rho_r2g_gpu( dfftp, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
-      !$acc end data
-    ELSE
-      CALL compute_rho( rho, rhoaux, segni, dfftp%nnr )
-      CALL rho_r2g( dfftp, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
-      !$acc update device( rhoaux, rhogaux )
-    ENDIF
+    !$acc data copyout( segni )
+    CALL compute_rho( rho, rhoaux, segni, dfftp%nnr )
+    CALL rho_r2g( dfftp, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
+    !$acc end data
     !
   ELSE
     ! ... for convenience rhoaux and rhogaux are in (up,down) format, when LSDA
