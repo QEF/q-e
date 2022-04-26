@@ -13,7 +13,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   USE constants,            ONLY : e2
   USE kinds,                ONLY : DP
-  USE gvect,                ONLY : ngm, g, g_d
+  USE gvect,                ONLY : ngm, g
   USE lsda_mod,             ONLY : nspin
   USE cell_base,            ONLY : omega
   USE xc_lib,               ONLY : igcc_is_lyp, xclib_dft_is, xc_gcx
@@ -85,7 +85,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
     ! ... bring starting rhoaux to G-space
     IF ( use_gpu ) THEN
       !$acc data copyout( segni )
-      CALL compute_rho_gpu( rho, rhoaux, segni, dfftp%nnr )
+      CALL compute_rho( rho, rhoaux, segni, dfftp%nnr )
       CALL rho_r2g_gpu( dfftp, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
       !$acc end data
     ELSE
