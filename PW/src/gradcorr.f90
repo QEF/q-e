@@ -208,13 +208,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   ! ... \sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )
   !
   DO is = 1, nspin0
-     IF ( use_gpu ) THEN
-       CALL fft_graddot_gpu( dfftp, h(1,1,is), g_d, dh )
-     ELSE
-       !$acc update host( h )
-       CALL fft_graddot( dfftp, h(1,1,is), g, dh )
-       !$acc update device( dh )
-     ENDIF
+     CALL fft_graddot( dfftp, h(1,1,is), g, dh )
      !$acc parallel loop reduction(-:vtxcgc)
      DO k = 1, dfftp%nnr
        v(k,is) = v(k,is) - dh(k)
