@@ -129,13 +129,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   ENDDO
   !
   DO is = 1, nspin0
-    IF ( use_gpu ) THEN
-      CALL fft_gradient_g2r_gpu( dfftp, rhogaux(:,is), g_d, grho(:,:,is) )
-    ELSE
-      !$acc update host( rhogaux )
-      CALL fft_gradient_g2r( dfftp, rhogaux(:,is), g, grho(:,:,is) )
-      !$acc update device( grho )
-    ENDIF
+    CALL fft_gradient_g2r( dfftp, rhogaux(:,is), g, grho(:,:,is) )
   ENDDO
   !
   !$acc end data

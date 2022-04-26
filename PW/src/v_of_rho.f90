@@ -234,13 +234,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
        rhogsum(k) = fac*rhog_core(k) + ( rho%of_g(k,1) + sgn_is*rho%of_g(k,nspin) )*0.5D0
      ENDDO
      !
-     IF ( use_gpu ) THEN
-       CALL fft_gradient_g2r_gpu( dfftp, rhogsum, g_d, grho(:,:,is) )
-     ELSE
-       !$acc update host( rhogsum )
-       CALL fft_gradient_g2r( dfftp, rhogsum, g, grho(:,:,is) )
-       !$acc update device( grho )
-     ENDIF  
+     CALL fft_gradient_g2r( dfftp, rhogsum, g, grho(:,:,is) ) 
      !
   ENDDO
   !
