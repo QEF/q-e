@@ -90,12 +90,15 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! defines a column section for communication
   INTEGER :: ierr
   COMPLEX(DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
+  !$acc declare device_resident(hc, sc, vc)
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
     ! the eigenvectors of the Hamiltonian
   REAL(DP), ALLOCATABLE :: ew(:)
+  !$acc declare device_resident(ew)
     ! eigenvalues of the reduced hamiltonian
   COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
+  !$acc declare device_resident(psi, hpsi, spsi)
     ! work space, contains psi
     ! the product of H and psi
     ! the product of S and psi
@@ -148,35 +151,28 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   END IF
   !
   ALLOCATE(  psi( npwx*npol, nvecx ), STAT=ierr )
-  !$acc enter data create(psi)
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate psi ', ABS(ierr) )
   ALLOCATE(   hpsi( npwx*npol, nvecx ), STAT=ierr )
-  !$acc enter data create(hpsi)
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate hpsi ', ABS(ierr) )
   !
   IF ( uspp ) THEN
      ALLOCATE(   spsi( npwx*npol, nvecx ), STAT=ierr )
-     !$acc enter data create(spsi)
      IF( ierr /= 0 ) &
         CALL errore( ' cegterg ',' cannot allocate spsi ', ABS(ierr) )
   END IF
   !
   ALLOCATE( sc( nvecx, nvecx ), STAT=ierr )
-  !$acc enter data create(sc)
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate sc ', ABS(ierr) )
   ALLOCATE( hc( nvecx, nvecx ), STAT=ierr )
-  !$acc enter data create(hc)
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate hc ', ABS(ierr) )
   ALLOCATE( vc( nvecx, nvecx ), STAT=ierr )
-  !$acc enter data create(vc)
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate vc ', ABS(ierr) )
   ALLOCATE( ew( nvecx ), STAT=ierr )
-  !$acc enter data create(ew)
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate ew ', ABS(ierr) )
   ALLOCATE( ew_host( nvecx ), STAT=ierr )
@@ -675,24 +671,17 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   DEALLOCATE( recv_counts )
   DEALLOCATE( displs )
   DEALLOCATE( conv )
-  !$acc exit data delete(ew)
   DEALLOCATE( ew )
   DEALLOCATE( e_host, ew_host )
-  !$acc exit data delete(vc)
   DEALLOCATE( vc )
-  !$acc exit data delete(hc)
   DEALLOCATE( hc )
-  !$acc exit data delete(sc)
   DEALLOCATE( sc )
   !
   IF ( uspp ) THEN
-    !$acc exit data delete(spsi)
     DEALLOCATE( spsi )
   END IF 
   !
-  !$acc exit data delete(hpsi)
   DEALLOCATE( hpsi )
-  !$acc exit data delete(psi)
   DEALLOCATE( psi )
   !
   CALL stop_clock( 'cegterg' ); !write(*,*) 'stop cegterg' ; FLUSH(6)
