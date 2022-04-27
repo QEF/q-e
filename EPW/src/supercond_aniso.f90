@@ -499,7 +499,7 @@
     !! Factor in supercond. equations
     REAL(KIND = DP) :: esqrt, zesqrt, desqrt, sesqrt
     !! Temporary variables
-    REAL(KIND = DP), SAVE :: nelbnd, nstate
+    REAL(KIND = DP), SAVE :: nel, nstate
     !! mu_inter parameters
     REAL(KIND = DP) :: inv_dos
     !! Invese dos inv_dos = 1/dosef. Defined for efficiency reason
@@ -521,24 +521,20 @@
     IF (iter == 1) THEN
       IF (itemp == 1 .OR. (itemp == 2 .AND. imag_read)) THEN
         ! SH: calculate the input parameters for mu_inter
-        nelbnd = zero
+        nel = zero
         nstate = zero
         DO ik = lower_bnd, upper_bnd
           DO ibnd = 1, nbndfs
             IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
               ! HP: The initial guess is based on the FD dist. at 0 K.
-              nstate = nstate + wkfs(ik)
-              IF ((ekfs(ibnd, ik) - ef0) < zero) nelbnd = nelbnd + 2.d0 * wkfs(ik)
+              nstate = nstate + 0.5d0 * wkfs(ik)
+              IF ((ekfs(ibnd, ik) - ef0) < zero) nel = nel + wkfs(ik)
             ENDIF
           ENDDO
         ENDDO
         CALL mp_sum(nstate, inter_pool_comm)
-        CALL mp_sum(nelbnd, inter_pool_comm)
+        CALL mp_sum(nel, inter_pool_comm)
         CALL mp_barrier(inter_pool_comm)
-        !    
-        nelbnd = nelbnd / nstate
-        WRITE(stdout, '(5x, a, f15.6)') 'Average nr. of electron per band = ', nelbnd
-        WRITE(stdout, '(5x, a, f15.8)') 'Nr. of states (Fermi window weighted) = ', nstate
         !
       ENDIF
       !
@@ -617,7 +613,7 @@
     ! SH: for the case of fbw runs
     IF (fbw) THEN
       ! SH: update the chemical potential from the inital guess
-      IF (muchem) CALL mu_inter_aniso(itemp, muintr, nelbnd, nstate)
+      IF (muchem) CALL mu_inter_aniso(itemp, muintr, nel, nstate)
       !
       naznormi(:, :, :) = zero
       adeltai(:, :, :)  = zero
@@ -1963,7 +1959,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE mu_inter_aniso(itemp,muintr, nelbnd, nstate)
+    SUBROUTINE mu_inter_aniso(itemp, muintr, nel, nstate)
     !-----------------------------------------------------------------------
     !!
     !! SH: To find the superconducting state chemical potential
@@ -1982,10 +1978,11 @@
     !! Temperature
     REAL(KIND = DP) :: muintr
     !! Interacting chemical potential: initial value
-    REAL(KIND = DP) :: nelbnd
-    !! Weighted umber of electrons per band in Fermi ene. window
+    REAL(KIND = DP) :: nel
+    !! Without SOC: Nr. of electrons within Fermi window
+    !! With SOC: 0.5 * Nr. of electrons within Fermi window
     REAL(KIND = DP) :: nstate
-    !! Weighted number of k/band states in Fermi ene. window
+    !! Nr. of states within Fermi window
     !
     ! Local variables
     LOGICAL :: conv
@@ -2039,8 +2036,8 @@
         ENDDO ! ibnd
       ENDDO ! ik
       !
-      fmu = - fmu * (2.d0 * gtemp(itemp) / nstate) + 1.d0 - nelbnd
-      dmu = - dmu * (2.d0 * gtemp(itemp) / nstate)
+      fmu = nstate - 2.d0 * gtemp(itemp) * fmu - nel
+      dmu = - 2.d0 * gtemp(itemp) * dmu
       !
       muout = muin - fmu / dmu
       !

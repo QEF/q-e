@@ -316,7 +316,7 @@
     !! Errors in supercond. gap
     REAL(KIND = DP) :: esqrt, zesqrt, desqrt, sesqrt
     !! Temporary variables
-    REAL(KIND = DP), SAVE :: nelbnd, nstate
+    REAL(KIND = DP), SAVE :: nel, nstate
     !! mu_inter parameters
     REAL(KIND = DP) :: inv_dos
     !! Invese dos inv_dos = 1/dosef. Defined for efficiency reason
@@ -365,17 +365,13 @@
       CALL kernel_iso_iaxis(itemp)
       !
       IF (fbw .AND. itemp == 1) THEN
-        nelbnd = zero
+        nel = zero
         nstate = zero
         DO ie = 1, ndos
           ! HP: one of the 2 factor comes form the spin in DOS
-          nstate = nstate + 2.d0 * dos_del * dosen(ie)
-          IF ((en(ie) - ef0) < zero) nelbnd = nelbnd + 4.d0 * dos_del * dosen(ie)
+          nstate = nstate + dos_del * dosen(ie)
+          IF ((en(ie) - ef0) < zero) nel = nel + 2.d0 * dos_del * dosen(ie)
         ENDDO
-        nelbnd = nelbnd / nstate
-        WRITE(stdout, '(5x, a, f15.6)') 'Average nr. of electron per band = ', nelbnd
-        WRITE(stdout, '(5x, a, f15.8)') 'Nr. of states (Fermi window weighted) = ', nstate
-        !
       ENDIF
       !
       muintr = ef0
@@ -383,7 +379,7 @@
     !
     IF (fbw) THEN
       ! SH: update the chemical potential from the inital guess
-      IF (muchem) CALL mu_inter_iso(itemp, muintr, nelbnd, nstate)
+      IF (muchem) CALL mu_inter_iso(itemp, muintr, nel, nstate)
       !
       inv_dos = one / dosef
       !
@@ -1645,7 +1641,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE mu_inter_iso(itemp, muintr, nelbnd, nstate)
+    SUBROUTINE mu_inter_iso(itemp, muintr, nel, nstate)
     !-----------------------------------------------------------------------
     !!
     !! SH: To find the superconducting state chemical potential
@@ -1655,10 +1651,10 @@
     !!
     USE kinds,          ONLY : DP
     USE eliashbergcom,  ONLY : wsi, nsiw, deltaip, znormip, shiftip, &
-                               en, ndos, dosen
+                               en, ndos, dosen, dosef
     USE elph2,          ONLY : gtemp
     USE epwcom,         ONLY : dos_del, broyden_beta, nsiter
-    USE constants_epw,  ONLY : zero, eps6
+    USE constants_epw,  ONLY : zero, one, eps6
     !
     IMPLICIT NONE
     !
@@ -1666,10 +1662,11 @@
     !! Temperature
     REAL(KIND = DP) :: muintr
     !! Interacting chemical potential: initial value
-    REAL(KIND = DP) :: nelbnd
-    !! Weighted umber of electrons per band in Fermi ene. window
+    REAL(KIND = DP) :: nel
+    !! Without SOC: Nr. of electrons within Fermi window
+    !! With SOC: 0.5 * Nr. of electrons within Fermi window
     REAL(KIND = DP) :: nstate
-    !! Weighted number of k/band states in Fermi ene. window
+    !! Nr. of states within Fermi window
     !
     ! Local variables
     LOGICAL :: conv
@@ -1690,7 +1687,10 @@
     !! To store f(mu) value
     REAL(KIND = DP) :: dmu
     !! To store d_f(mu)/d_mu value
+    REAL(KIND = DP) :: inv_dos
+    !! Invese dos inv_dos = 1/dosef. Defined for efficiency reason
     !
+    inv_dos = one / dosef
     muin = muintr
     !
     iter = 1
@@ -1716,8 +1716,8 @@
         ENDDO ! iw
       ENDDO ! ie
       !
-      fmu = - fmu * (2.d0 * gtemp(itemp) / nstate) + 1.d0 - nelbnd
-      dmu = - dmu * (2.d0 * gtemp(itemp) / nstate)
+      fmu = nstate - 2.d0 * gtemp(itemp) * inv_dos * fmu - nel
+      dmu = - 2.d0 * gtemp(itemp) * inv_dos * dmu
       !
       muout = muin - fmu / dmu
       !
