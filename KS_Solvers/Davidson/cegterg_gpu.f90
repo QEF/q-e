@@ -330,7 +330,6 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      CALL start_clock( 'cegterg:update' )
      !
-     !  ======== FROM HERE =====
      np = 0
      !
      DO n = 1, nvec
@@ -361,9 +360,6 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         END IF
         !
      END DO
-     ! ========= TO HERE, REPLACED BY =======
-     !
-     !CALL reorder_evals_cevecs(nbase, nvec, nvecx, conv, e_d, ew, vc)
      !
      nb1 = nbase + 1
      !
@@ -700,58 +696,6 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   RETURN
   !
 END SUBROUTINE cegterg_gpu
-
-SUBROUTINE reorder_evals_cevecs(nbase, nvec, nvecx, conv, e_d, ew, v)
-   USE util_param,    ONLY : DP
-   implicit none
-   INTEGER, INTENT(IN) :: nbase, nvec, nvecx
-   LOGICAL, INTENT(IN) :: conv(nvec)
-   REAL(DP)            :: e_d(nvecx), ew(nvecx)
-   COMPLEX(DP)         :: v(nvecx,nvecx)
-   !
-   INTEGER :: j, k, n, np, info
-   INTEGER, ALLOCATABLE :: conv_idx(:)
-   !$acc declare create(conv_idx)
-   COMPLEX(DP), ALLOCATABLE :: vtmp(:,:)
-   !$acc declare device_resident(vtmp)
-   !
-   np = 0
-   ALLOCATE(conv_idx(nvec))
-   DO n = 1, nvec
-      conv_idx(n) = -1
-      IF ( .NOT. conv(n) ) THEN
-         np = np + 1
-         conv_idx(n) = np
-      END IF
-   END DO  
-   !$acc update device(conv_idx)
-
-   ALLOCATE( vtmp(nvecx, nvecx) , STAT=info )
-   IF( info /= 0 ) &
-     CALL errore( ' reorder_evals_cevecs ',' cannot allocate vtmp ', ABS(info) )
-
-   !$acc parallel loop collapse(2) present(vtmp, v)
-   DO j=1,nvec
-      DO k=1,nvecx
-         vtmp(k,j) = v(k,j)
-      END DO
-   END DO
-
-   !$acc parallel loop collapse(2) deviceptr(e_d) present(conv_idx, v, ew)
-   DO j=1,nvec
-      DO k=1,nvecx
-         IF(conv_idx(j) /= -1) THEN
-           v(k,conv_idx(j)) = vtmp(k,j)
-           IF(k==1) ew(nbase+conv_idx(j)) = e_d(j)
-         END IF
-      END DO
-   END DO
-   !
-   DEALLOCATE(conv_idx, vtmp)
-   !
-END SUBROUTINE reorder_evals_cevecs
-
-
 !
 !  Wrapper for subroutine with distributed matrixes (written by Carlo Cavazzoni)
 !
