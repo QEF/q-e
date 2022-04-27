@@ -6,9 +6,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
         @b {Purpose of projwfc.x:}
             projects wavefunctions onto orthogonalized atomic wavefunctions, 
             calculates Lowdin charges, spilling parameter, projected DOS 
-            (separated into up and down components for lSDA)
-            alternatively, computes the local DOS(E), integrated in volumes
-            given in input
+            (separated into up and down components for LSDA). Alternatively:
+            computes the local DOS(E) integrated in volumes given in input 
+            (see @ref tdosinboxes) or k-resolved DOS (see @ref kresolveddos).
+            Atomic projections are written to file "atomic_proj.xml".
 
         @b {Structure of the input data:}
         ============================
@@ -115,17 +116,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
             default { .false. }
             info {
                 if @b .true., the overlap matrix of the atomic orbitals
-                prior to orthogonalization is written to the atomic_proj
-		datafile. Does not work together with linear-algebra
-		diagonalization: run as "mpirun -np N projwfc.x -nd 1 ... "
+                prior to orthogonalization is written to "atomic_proj.xml".
+		Does not work together with parallel diagonalization:
+                for parallel runs, use "mpirun -np N projwfc.x -nd 1 ... "
             }
         }
 
         var lbinary_data -type LOGICAL {
             default { .false. }
             info {
-                if @b .true., the atomic_proj datafile is written in binary fmt.
-		Currently disabled.
+		CURRENTLY DISABLED.
+                if @b .true., write atomic projections to a binary file.
             }
         }
 
