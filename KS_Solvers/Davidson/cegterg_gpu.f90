@@ -128,6 +128,8 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   nhpsi = 0
   CALL start_clock( 'cegterg' ); !write(*,*) 'start cegterg' ; FLUSH(6)
   !
+  !$acc data deviceptr(evc_d, e_d)
+  !
   IF ( nvec > nvecx / 2 ) CALL errore( 'cegterg', 'nvecx is too small', 1 )
   !
   ! ... threshold for empty bands
@@ -194,10 +196,8 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   conv   = .FALSE.
   !
   !$acc host_data use_device(psi, hpsi, spsi, hc, sc)
-  !$acc data deviceptr(evc_d)
   CALL dev_memcpy(psi, evc_d, (/ 1 , npwx*npol /), 1, &
                               (/ 1 , nvec /), 1)
-  !$acc end data 
   !
   ! ... hpsi contains h times the basis vectors
   !
@@ -289,7 +289,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      CALL dev_memset(vc, ZERO, (/1, nbase/), 1, (/1, nbase/), 1)
      !$acc end host_data
      !
-     !$acc parallel loop deviceptr(e_d)
+     !$acc parallel loop 
      DO n = 1, nbase
         !
         e_d(n) = REAL( hc(n,n) )
@@ -298,9 +298,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !
      END DO
      !
-     !$acc data deviceptr(e_d)
      CALL mp_bcast( e_d, root_bgrp_id, inter_bgrp_comm )
-     !$acc end data
      !
   ELSE
      !
@@ -317,9 +315,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      ENDIF
      CALL stop_clock( 'cegterg:diag' )
      !
-     !$acc data deviceptr(e_d)
      CALL dev_memcpy (e_d, ew, (/ 1, nvec /), 1 )
-     !$acc end data
      !$acc end host_data
      !
   END IF
@@ -355,7 +351,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
            !
            ! ... for use in g_psi
            !
-           !$acc kernels deviceptr(e_d)
+           !$acc kernels 
            ew(nbase+np) = e_d(n)
            !$acc end kernels 
            !
@@ -552,7 +548,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      ! ... test for convergence (on the CPU)
      !
-     !$acc parallel loop copyout(ew_host, e_host) deviceptr(e_d)
+     !$acc parallel loop copyout(ew_host, e_host) 
      DO i = 1, nvec
        ew_host(i) = ew(i)
        e_host(i) = e_d(i)
@@ -572,11 +568,9 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      notcnv = COUNT( .NOT. conv(:) )
      !
-     !$acc data deviceptr(e_d)
      !$acc host_data use_device(ew)
      CALL dev_memcpy (e_d, ew, (/ 1, nvec /) )
      !$acc end host_data
-     !$acc end data
      !
      ! ... if overall convergence has been achieved, or the dimension of
      ! ... the reduced basis set is becoming too large, or in any case if
@@ -591,13 +585,11 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !
         CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
         my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
-        !$acc data deviceptr(evc_d)
         !$acc host_data use_device(psi, vc)
         CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, psi(1,n_start), kdmx, vc(n_start,1), nvecx, &        
                     ZERO, evc_d, kdmx )
         !$acc end host_data
         CALL mp_sum( evc_d, inter_bgrp_comm )
-        !$acc end data
         !
         IF ( notcnv == 0 ) THEN
            !
@@ -623,10 +615,8 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         ! ... refresh psi, H*psi and S*psi
         !
         !$acc host_data use_device(psi, hpsi, spsi, vc)
-        !$acc data deviceptr(evc_d)
         CALL dev_memcpy(psi, evc_d, (/ 1, npwx*npol /), 1, &
                                       (/ 1, nvec /), 1)
-        !$acc end data
         !
         IF ( uspp ) THEN
            !
@@ -656,7 +646,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !sc(1:nbase,1:nbase) = ZERO
         !vc(1:nbase,1:nbase) = ZERO
         !
-        !$acc kernels deviceptr(e_d)
+        !$acc kernels 
         DO n = 1, nbase
            hc(n,n) = CMPLX( e_d(n), 0.0_DP ,kind=DP)
            sc(n,n) = ONE
@@ -695,6 +685,8 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   !
   DEALLOCATE( hpsi )
   DEALLOCATE( psi )
+  !
+  !$acc end data 
   !
   CALL stop_clock( 'cegterg' ); !write(*,*) 'stop cegterg' ; FLUSH(6)
   !call print_clock( 'cegterg' )
