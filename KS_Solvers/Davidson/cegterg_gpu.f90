@@ -331,34 +331,39 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      CALL start_clock( 'cegterg:update' )
      !
      !  ======== FROM HERE =====
-     !np = 0
+     np = 0
      !
-     !DO n = 1, nvec
-     !   !
-     !   IF ( .NOT. conv(n) ) THEN
-     !      !
-     !      ! ... this root not yet converged ... 
-     !      !
-     !      np = np + 1
-     !      !
-     !      ! ... reorder eigenvectors so that coefficients for unconverged
-     !      ! ... roots come first. This allows to use quick matrix-matrix 
-     !      ! ... multiplications to set a new basis vector (see below)
-     !      !
-     !      IF ( np /= n ) vc(:,np) = vc(:,n)
-     !      !
-     !      ! ... for use in g_psi
-     !      !
-     !      ew(nbase+np) = e(n)
-     !      !
-     !   END IF
-     !   !
-     !END DO
+     DO n = 1, nvec
+        !
+        IF ( .NOT. conv(n) ) THEN
+           !
+           ! ... this root not yet converged ... 
+           !
+           np = np + 1
+           !
+           ! ... reorder eigenvectors so that coefficients for unconverged
+           ! ... roots come first. This allows to use quick matrix-matrix 
+           ! ... multiplications to set a new basis vector (see below)
+           !
+           IF ( np /= n ) THEN
+             !$acc parallel loop 
+             DO i = 1, nvecx
+               vc(i,np) = vc(i,n)
+             END DO 
+           END IF 
+           !
+           ! ... for use in g_psi
+           !
+           !$acc kernels deviceptr(e_d)
+           ew(nbase+np) = e_d(n)
+           !$acc end kernels 
+           !
+        END IF
+        !
+     END DO
      ! ========= TO HERE, REPLACED BY =======
-
-     !$acc host_data use_device(ew, vc)
-     CALL reorder_evals_cevecs(nbase, nvec, nvecx, conv, e_d, ew, vc)
-     !$acc end host_data
+     !
+     !CALL reorder_evals_cevecs(nbase, nvec, nvecx, conv, e_d, ew, vc)
      !
      nb1 = nbase + 1
      !
@@ -696,25 +701,19 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   !
 END SUBROUTINE cegterg_gpu
 
-SUBROUTINE reorder_evals_cevecs(nbase, nvec, nvecx, conv, e_d, ew_d, v_d)
+SUBROUTINE reorder_evals_cevecs(nbase, nvec, nvecx, conv, e_d, ew, v)
    USE util_param,    ONLY : DP
-   USE device_fbuff_m,  ONLY : buffer => dev_buf
    implicit none
    INTEGER, INTENT(IN) :: nbase, nvec, nvecx
    LOGICAL, INTENT(IN) :: conv(nvec)
-   REAL(DP)            :: e_d(nvecx), ew_d(nvecx)
-   COMPLEX(DP)         :: v_d(nvecx,nvecx)
-#if defined(__CUDA)
-   attributes(DEVICE)  :: e_d, ew_d, v_d
-#endif
+   REAL(DP)            :: e_d(nvecx), ew(nvecx)
+   COMPLEX(DP)         :: v(nvecx,nvecx)
    !
    INTEGER :: j, k, n, np, info
    INTEGER, ALLOCATABLE :: conv_idx(:)
-   INTEGER, POINTER     :: conv_idx_d(:)
-   COMPLEX(DP), POINTER :: vtmp_d(:,:)
-#if defined(__CUDA)
-   attributes(DEVICE)   :: conv_idx_d, vtmp_d
-#endif
+   !$acc declare create(conv_idx)
+   COMPLEX(DP), ALLOCATABLE :: vtmp(:,:)
+   !$acc declare device_resident(vtmp)
    !
    np = 0
    ALLOCATE(conv_idx(nvec))
@@ -724,36 +723,32 @@ SUBROUTINE reorder_evals_cevecs(nbase, nvec, nvecx, conv, e_d, ew_d, v_d)
          np = np + 1
          conv_idx(n) = np
       END IF
-   END DO
+   END DO  
+   !$acc update device(conv_idx)
 
-   CALL buffer%lock_buffer(conv_idx_d, nvec, info)
-   CALL buffer%lock_buffer(vtmp_d, (/nvecx, nvecx/), info)
+   ALLOCATE( vtmp(nvecx, nvecx) , STAT=info )
    IF( info /= 0 ) &
-     CALL errore( ' reorder_evals_cevecs ',' cannot allocate vtmp_d ', ABS(info) )
+     CALL errore( ' reorder_evals_cevecs ',' cannot allocate vtmp ', ABS(info) )
 
-   conv_idx_d(1:nvec) = conv_idx(1:nvec)
-
-!$cuf kernel do(2) <<<*,*>>>
+   !$acc parallel loop collapse(2) present(vtmp, v)
    DO j=1,nvec
       DO k=1,nvecx
-         vtmp_d(k,j) = v_d(k,j)
+         vtmp(k,j) = v(k,j)
       END DO
    END DO
 
-!$cuf kernel do(2) <<<*,*>>>
+   !$acc parallel loop collapse(2) deviceptr(e_d) present(conv_idx, v, ew)
    DO j=1,nvec
       DO k=1,nvecx
-         IF(conv_idx_d(j) /= -1) THEN
-           v_d(k,conv_idx_d(j)) = vtmp_d(k,j)
-           IF(k==1) ew_d(nbase+conv_idx_d(j)) = e_d(j)
+         IF(conv_idx(j) /= -1) THEN
+           v(k,conv_idx(j)) = vtmp(k,j)
+           IF(k==1) ew(nbase+conv_idx(j)) = e_d(j)
          END IF
       END DO
    END DO
    !
-   CALL buffer%release_buffer(conv_idx_d, info)
-   CALL buffer%release_buffer(vtmp_d, info)
+   DEALLOCATE(conv_idx, vtmp)
    !
-   DEALLOCATE(conv_idx)
 END SUBROUTINE reorder_evals_cevecs
 
 
