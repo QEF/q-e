@@ -29,7 +29,6 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   ! ... S is an overlap matrix, evc is a complex vector
   !
 #if defined(__CUDA)
-  use cudafor
   use cublas
 #endif
   USE util_param,    ONLY : DP
@@ -68,9 +67,6 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   INTEGER, INTENT(OUT) :: dav_iter, notcnv
     ! integer number of iterations performed
     ! number of unconverged roots
-#if defined(__CUDA)
-  attributes(DEVICE) :: evc_d, e_d
-#endif
   INTEGER, INTENT(OUT) :: nhpsi
     ! total number of indivitual hpsi
   !
@@ -198,8 +194,10 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   conv   = .FALSE.
   !
   !$acc host_data use_device(psi, hpsi, spsi, hc, sc)
+  !$acc data deviceptr(evc_d)
   CALL dev_memcpy(psi, evc_d, (/ 1 , npwx*npol /), 1, &
                               (/ 1 , nvec /), 1)
+  !$acc end data 
   !
   ! ... hpsi contains h times the basis vectors
   !
@@ -300,7 +298,9 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !
      END DO
      !
+     !$acc data deviceptr(e_d)
      CALL mp_bcast( e_d, root_bgrp_id, inter_bgrp_comm )
+     !$acc end data
      !
   ELSE
      !
@@ -317,7 +317,9 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      ENDIF
      CALL stop_clock( 'cegterg:diag' )
      !
+     !$acc data deviceptr(e_d)
      CALL dev_memcpy (e_d, ew, (/ 1, nvec /), 1 )
+     !$acc end data
      !$acc end host_data
      !
   END IF
@@ -550,9 +552,12 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      ! ... test for convergence (on the CPU)
      !
-     !$acc update host(ew)
-     ew_host(1:nvec) = ew(1:nvec)
-     e_host(1:nvec) = e_d(1:nvec)
+     !$acc parallel loop copyout(ew_host, e_host) deviceptr(e_d)
+     DO i = 1, nvec
+       ew_host(i) = ew(i)
+       e_host(i) = e_d(i)
+     END DO 
+     !
      WHERE( btype(1:nvec) == 1 )
         !
         conv(1:nvec) = ( ( ABS( ew_host(1:nvec) - e_host(1:nvec) ) < ethr ) )
@@ -567,9 +572,11 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      notcnv = COUNT( .NOT. conv(:) )
      !
+     !$acc data deviceptr(e_d)
      !$acc host_data use_device(ew)
      CALL dev_memcpy (e_d, ew, (/ 1, nvec /) )
      !$acc end host_data
+     !$acc end data
      !
      ! ... if overall convergence has been achieved, or the dimension of
      ! ... the reduced basis set is becoming too large, or in any case if
@@ -584,11 +591,13 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !
         CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
         my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
+        !$acc data deviceptr(evc_d)
         !$acc host_data use_device(psi, vc)
         CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, psi(1,n_start), kdmx, vc(n_start,1), nvecx, &        
                     ZERO, evc_d, kdmx )
         !$acc end host_data
         CALL mp_sum( evc_d, inter_bgrp_comm )
+        !$acc end data
         !
         IF ( notcnv == 0 ) THEN
            !
@@ -614,8 +623,10 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         ! ... refresh psi, H*psi and S*psi
         !
         !$acc host_data use_device(psi, hpsi, spsi, vc)
+        !$acc data deviceptr(evc_d)
         CALL dev_memcpy(psi, evc_d, (/ 1, npwx*npol /), 1, &
                                       (/ 1, nvec /), 1)
+        !$acc end data
         !
         IF ( uspp ) THEN
            !
@@ -645,7 +656,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !sc(1:nbase,1:nbase) = ZERO
         !vc(1:nbase,1:nbase) = ZERO
         !
-        !$acc kernels
+        !$acc kernels deviceptr(e_d)
         DO n = 1, nbase
            hc(n,n) = CMPLX( e_d(n), 0.0_DP ,kind=DP)
            sc(n,n) = ONE
