@@ -100,12 +100,13 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
 #if defined(__CUDA)
   COMPLEX(DP), POINTER  :: pinned_buffer(:,:)
     ! auxiliary variable for performing MPI operation and overcome CUDAFortran limitations
-  INTEGER :: i,j,k
 #else
   INTEGER, PARAMETER :: blocksize = 256
   INTEGER :: numblock
     ! chunking parameters
 #endif
+  !
+  INTEGER :: i,j,k
   !
   REAL(DP), EXTERNAL :: MYDDOT_VECTOR_GPU
   !$acc routine(MYDDOT_VECTOR_GPU) vector
