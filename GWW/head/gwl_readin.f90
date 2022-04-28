@@ -137,8 +137,8 @@ SUBROUTINE phq_readin()
   ! nat_todo     : number of atom to be displaced
   ! verbosity    : verbosity control (iverbosity is obsolete)
   ! outdir       : directory where input, output, temporary files reside
-  ! epsil        : if true calculate dielectric constant
-  ! trans        : if true calculate phonon
+  ! epsil        : (OBSELETE) if true calculate dielectric constant
+  ! trans        : (OBSELETE) if true calculate phonon
   ! electron-phonon : select the kind of electron-phonon calculation
   ! elph         : if true calculate electron-phonon coefficients
   ! elph_mat     : if true eph coefficients for wannier
@@ -387,6 +387,14 @@ SUBROUTINE phq_readin()
   CASE DEFAULT
      CALL errore('phq_readin','diagonalization '//trim(diagonalization)//' not implemented',1)
   END SELECT
+
+  !
+  ! JDE: Catch situation where head crashes because PHonon tries to read u from file
+  !
+  IF (.NOT. trans) THEN
+     trans = .TRUE.
+     WRITE(stdout, '(5x, "CAREFUL: trans reset to TRUE to prevent CRASH")')
+  END IF
 
   !
   ! ...  broadcast all input variables
