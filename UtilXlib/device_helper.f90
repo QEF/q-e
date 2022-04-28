@@ -107,22 +107,25 @@ END FUNCTION MYDDOT
 
 ! this can be useful inside kernels, as the result is on device
 DOUBLE PRECISION FUNCTION MYDDOT_VECTOR_GPU(N,DX,DY)
+#if defined(__CUDA)
 !$acc routine(MYDDOT_VECTOR_GPU) vector
+#endif
     INTEGER, INTENT(IN) :: N
     DOUBLE PRECISION, INTENT(IN) :: DX(*),DY(*)
-    INTEGER :: I
     DOUBLE PRECISION :: RES
-
+#if defined (__CUDA)
+    INTEGER :: I
     RES = 0.0d0
-
     !$acc data present(DX,DY)
     !$acc loop vector reduction(+:RES)
     DO I = 1, N
       RES = RES + DX(I) * DY(I)
     END DO 
     !$acc end data
-
     MYDDOT_VECTOR_GPU = RES
-
+#else
+    DOUBLE PRECISION DDOT
+    MYDDOT_VECTOR_GPU = DDOT(N,DX,INCX,DY,INCY)
+#endif
 END FUNCTION MYDDOT_VECTOR_GPU
 
