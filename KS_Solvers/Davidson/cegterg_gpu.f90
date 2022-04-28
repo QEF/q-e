@@ -106,9 +106,6 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! receive counts and memory offsets
   COMPLEX(DP), POINTER  :: pinned_buffer(:,:)
     ! auxiliary variable for performing MPI operation and overcome CUDAFortran limitations
-  REAL(DP), ALLOCATABLE :: ew_host(:)
-  REAL(DP), ALLOCATABLE :: e_host(:)
-    ! auxiliary variables for performing dot product
   INTEGER :: i,j,k, ipol
     !
   !
@@ -173,12 +170,6 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   ALLOCATE( ew( nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate ew ', ABS(ierr) )
-  ALLOCATE( ew_host( nvecx ), STAT=ierr )
-  IF( ierr /= 0 ) &
-     CALL errore( ' cegterg ',' cannot allocate ew_host ', ABS(ierr) )
-  ALLOCATE( e_host( nvec ), STAT=ierr )
-  IF( ierr /= 0 ) &
-     CALL errore( ' cegterg ',' cannot allocate e_host ', ABS(ierr) )
   ALLOCATE( conv( nvec ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate conv ', ABS(ierr) )
@@ -438,7 +429,6 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !$acc host_data use_device(ew)
      CALL mp_sum( ew( 1:notcnv ), intra_bgrp_comm )
      !$acc end host_data
-     !ew(1:notcnv) = ew_host(1:notcnv)
      !
      !$acc parallel loop collapse(3) 
      DO i = 1,notcnv
@@ -546,23 +536,17 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      CALL stop_clock( 'cegterg:diag' )
      !$acc end host_data
      !
-     ! ... test for convergence (on the CPU)
+     ! ... test for convergence
      !
-     !$acc parallel loop copyout(ew_host, e_host) 
+     !$acc parallel loop copy(conv(1:nvec)) copyin(btype(1:nvec))
      DO i = 1, nvec
-       ew_host(i) = ew(i)
-       e_host(i) = e_d(i)
+       IF(btype(i) == 1) THEN
+         conv(i) = ( ( ABS( ew(i) - e_d(i) ) < ethr ) )
+       ELSE
+         conv(i) = ( ( ABS( ew(i) - e_d(i) ) < empty_ethr ) )
+       END IF 
      END DO 
      !
-     WHERE( btype(1:nvec) == 1 )
-        !
-        conv(1:nvec) = ( ( ABS( ew_host(1:nvec) - e_host(1:nvec) ) < ethr ) )
-        !
-     ELSEWHERE
-        !
-        conv(1:nvec) = ( ( ABS( ew_host(1:nvec) - e_host(1:nvec) ) < empty_ethr ) )
-        !
-     END WHERE
      ! ... next line useful for band parallelization of exact exchange
      IF ( nbgrp > 1 ) CALL mp_bcast(conv,root_bgrp_id,inter_bgrp_comm)
      !
@@ -674,7 +658,6 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   DEALLOCATE( displs )
   DEALLOCATE( conv )
   DEALLOCATE( ew )
-  DEALLOCATE( e_host, ew_host )
   DEALLOCATE( vc )
   DEALLOCATE( hc )
   DEALLOCATE( sc )
