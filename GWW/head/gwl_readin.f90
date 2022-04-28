@@ -137,8 +137,8 @@ SUBROUTINE phq_readin()
   ! nat_todo     : number of atom to be displaced
   ! verbosity    : verbosity control (iverbosity is obsolete)
   ! outdir       : directory where input, output, temporary files reside
-  ! epsil        : if true calculate dielectric constant
-  ! trans        : if true calculate phonon
+  ! epsil        : (OBSELETE) if true calculate dielectric constant
+  ! trans        : (OBSELETE) if true calculate phonon
   ! electron-phonon : select the kind of electron-phonon calculation
   ! elph         : if true calculate electron-phonon coefficients
   ! elph_mat     : if true eph coefficients for wannier
