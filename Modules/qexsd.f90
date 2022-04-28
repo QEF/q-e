@@ -555,8 +555,9 @@ CONTAINS
     ! 
 
 SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
+      !
       USE mytime,  ONLY: nclock, clock_label, cputime, walltime, called
-      USE qes_libs_module, ONLY: qes_init, qes_reset 
+      !
       TYPE(timing_type),INTENT(INOUT)          :: timing_ 
       CHARACTER(LEN=*),INTENT(IN)             :: total_clock 
       CHARACTER(LEN=*),OPTIONAL,INTENT(IN)    :: partial_clocks(:) 

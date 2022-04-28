@@ -1,15 +1,20 @@
-New in development version:
+New in 7.1 version:
+  * Improved, streamlined and extended porting to NVidia GPUs
+  * KCW package for Koopmans-compliant functionals in a Wannier representation,
+    https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.021051.
+    Developed and maintained by N. Colonna, R. de Gennaro, E. Linscott
   * If no explicit parallelization options -nk, -nt, -nd are provided,
     pw.x will figure out suitable values for optimal, or at least, not
     too bad, parallelization
 
-Incompatible changes in development version:
+Incompatible changes in 7.1 version:
   * Source files previously found in FFTXLIB/ moved to FFTXLIB/src/
   * gen_us_dj, gen_us_dj moved to upflib/ and into module uspp_init
   * DFT+Hubbard codes have new input syntax (check Doc/Hubbard_input.pdf)
 
-Fixed in development version:
-  * `divide_class_so` routine could yield  the  wrong irreducible representations         classification in the  D3_h  group (G.J. Ferreira, A. Dal Corso) 
+Fixed in 7.1 version:
+  * `divide_class_so` routine could yield the wrong irreducible representations
+    classification in the  D3_h  group (G.J. Ferreira, A. Dal Corso) 
   * XSPECTRA gave incorrect results with k-point parallelization, since
     at least v. 6.6, due to missing broadcast of recomputed Fermi energy
   * Makov-Payne correction wasn't working with ibrav=0 and cubic cell (A. Fonari)  

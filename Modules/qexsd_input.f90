@@ -16,7 +16,8 @@ MODULE qexsd_input
   USE kinds, ONLY : dp
   !
   USE qes_types_module
-  USE qes_libs_module
+  USE qes_init_module,  ONLY : qes_init
+  USE qes_reset_module, ONLY : qes_reset
   !
   IMPLICIT NONE
   !

@@ -1,7 +1,7 @@
 project: KCW
 src_dir: ./src
 output_dir: ./Doc_ford
-summary: KCW is an open-source F90/MPI code which calculates spectral properties using the koopmans-complinat framework and Maximally Localized Wannier Functions.
+summary: KCW is an open-source F90/MPI code which calculates spectral properties using the koopmans-compliant framework and Maximally Localized Wannier Functions.
 authors: Nicola Colonna
          Riccardo de Gennaro
          Edward Linscott
@@ -26,7 +26,7 @@ The code consists of 3 programs:
 
 2) a program that computes the screening coefficients as described [here](https://pubs.acs.org/doi/abs/10.1021/acs.jctc.7b01116) (kc_screen.x)
 
-3) a program that computes the KC hamiltonian, eventually interpolate it and finally diagonalize it (kc_ham.x) 
+3) a program that computes the KC hamiltonian, interpolates it if needed, and finally diagonalizes it (kc_ham.x) 
 
 KCW is developed and maintained by [Nicola Colonna](https://www.psi.ch/en/lns/people/nicola-colonna),  [Riccardo de Gennaro](https://people.epfl.ch/riccardo.degennaro), and [Edward Linscott](https://people.epfl.ch/edward.linscott)
 

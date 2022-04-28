@@ -62,10 +62,10 @@ AC_ARG_ENABLE([openacc],
 
 if test "x$with_cuda" != "xno"
 then
-   # NVHPC v. 21.11-22.3 buggy
+   # NVHPC v. 21.11-22.1 buggy
    if (test "$f90_major_version" -eq 21 && test "$f90_minor_version" -ge 11) ||
-      (test "$f90_major_version" -eq 22 && test "$f90_minor_version" -le 3 ) ; then
-      AC_MSG_ERROR([Buggy compiler version, upgrade to 22.4 or downgrade to 21.9])
+      (test "$f90_major_version" -eq 22 && test "$f90_minor_version" -le 1 ) ; then
+      AC_MSG_ERROR([Buggy compiler version, upgrade to 22.3 or downgrade to 21.9])
    fi
 
    if test "$f90_major_version" -gt 20 || (test "$f90_major_version" -eq 20 && test "$f90_minor_version" -ge 7); then

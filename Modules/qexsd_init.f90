@@ -1098,10 +1098,7 @@ CONTAINS
     SUBROUTINE qexsd_init_dipole_info (dipole_info, el_dipole, ion_dipole, edir, eamp, emaxpos, eopreg) 
        !------------------------------------------------------------------------------------------------
        ! 
-       USE kinds,           ONLY : DP
-       USE constants,       ONLY : e2, fpi 
-       USE qes_types_module,ONLY : dipoleOutput_type, scalarQuantity_type
-       USE qes_libs_module, ONLY : qes_init
+       USE constants,       ONLY : fpi 
        USE cell_base,       ONLY : alat, at, omega
        ! 
        IMPLICIT NONE  
@@ -1277,7 +1274,6 @@ CONTAINS
 !-----------------------------------------------------------------------------------
 SUBROUTINE qexsd_init_gate_info(obj, tagname, gatefield_en, zgate_, nelec_, alat_, at_, bg_, zv_, ityp_) 
    !--------------------------------------------------------------------------------
-   USE kinds,         ONLY : DP
    USE constants,     ONLY : tpi
    !
    IMPLICIT NONE
