@@ -184,27 +184,26 @@ SUBROUTINE setup_dgc
      !
   ENDIF
   !
-  ! ... TEMPORARY
-  !$acc update self( rhoout, grho, rho%of_g )
-  !
-  !$acc end data
-  !$acc end data
-  !
-  !$acc end data
-  !$acc end data
-  !
   IF (noncolin .AND. domag) THEN
      CALL compute_vsgga( rhoout, grho, vsgga )
   ELSE
      IF (nlcc_any) THEN
         DO is = 1, nspin_gga
+           !$acc kernels
            rho%of_g(:,is) = rho%of_g(:,is) - fac*rhog_core(:)
+           !$acc end kernels
         ENDDO
      ENDIF
      !
      CALL rhoz_or_updw( rho, 'only_g', '->rhoz' )
      !
   ENDIF
+  !
+  !$acc end data
+  !$acc end data
+  !
+  !$acc end data
+  !$acc end data
   !
   DEALLOCATE( v1x, v2x, v1c, v2c )
   IF (nspin_gga == 2) DEALLOCATE( v2c_ud )
