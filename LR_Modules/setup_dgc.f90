@@ -189,7 +189,7 @@ SUBROUTINE setup_dgc
   ELSE
      IF (nlcc_any) THEN
         DO is = 1, nspin_gga
-           !$acc kernels
+           !$acc kernels present(rho)
            rho%of_g(:,is) = rho%of_g(:,is) - fac*rhog_core(:)
            !$acc end kernels
         ENDDO
