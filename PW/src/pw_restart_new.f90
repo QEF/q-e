@@ -65,7 +65,7 @@ MODULE pw_restart_new
       !                 in binary non-portable form (for checkpointing)
       !                 NB: wavefunctions are not written here in any case
       !
-      USE control_flags,        ONLY : istep, conv_ions, &
+      USE control_flags,        ONLY : istep, conv_elec, conv_ions, &
                                        lscf, scf_error, n_scf_steps, &
                                        tqr, tq_smoothing, tbeta_smoothing, &
                                        gamma_only, noinv, smallmem, &
@@ -138,7 +138,7 @@ MODULE pw_restart_new
       USE rap_point_group_so,   ONLY : elem_so, nelem_so, name_class_so
       USE bfgs_module,          ONLY : bfgs_get_n_iter
       USE fcp_module,           ONLY : lfcp, fcp_mu
-      USE control_flags,        ONLY : conv_elec, conv_ions, ldftd3, do_makov_payne 
+      USE control_flags,        ONLY : ldftd3, do_makov_payne 
       USE Coul_cut_2D,          ONLY : do_cutoff_2D 
       USE esm,                  ONLY : do_comp_esm 
       USE martyna_tuckerman,    ONLY : do_comp_mt 
@@ -164,23 +164,19 @@ MODULE pw_restart_new
       CHARACTER(LEN=15)        :: symop_2_class(48)
       LOGICAL                  :: opt_conv_ispresent, dft_is_vdw, empirical_vdw
       INTEGER                  :: n_opt_steps, n_scf_steps_, h_band
-      REAL(DP),TARGET                 :: h_energy
       TYPE(gateInfo_type)          :: gate_info_opt 
       TYPE(dipoleOutput_type)      :: dipol_opt  
-      TYPE(BerryPhaseOutput_type)   :: bp_obj_opt
-      TYPE(hybrid_type)               :: hybrid_obj_opt
-      TYPE(vdW_type)                  :: vdw_obj_opt
-      TYPE(dftU_type)                 :: dftU_obj_opt 
-      REAL(DP), TARGET                      :: lumo_tmp, ef_targ, dispersion_energy_term 
-      REAL(DP), POINTER                     :: lumo_energy, ef_point 
-      REAL(DP), ALLOCATABLE                 :: ef_updw(:)
+      TYPE(BerryPhaseOutput_type)  :: bp_obj_opt
+      TYPE(hybrid_type)            :: hybrid_obj_opt
+      TYPE(vdW_type)               :: vdw_obj_opt
+      TYPE(dftU_type)              :: dftU_obj_opt 
+      REAL(DP), TARGET             :: homo_tmp, lumo_tmp, ef_targ, dispersion_energy_term 
+      REAL(DP), POINTER            :: homo_energy, lumo_energy, ef_point, ef_updw(:)
       !
       !
       !
       TYPE(output_type)   :: output_obj
       REAL(DP),POINTER    :: degauss_, demet_, efield_corr, potstat_corr,  gatefield_corr  
-      LOGICAL, POINTER    :: optimization_has_converged 
-      LOGICAL, TARGET     :: conv_opt  
       LOGICAL             :: scf_has_converged 
       INTEGER             :: itemp = 1
       REAL(DP),ALLOCATABLE :: london_c6_(:), bp_el_pol(:), bp_ion_pol(:), U_opt(:), J0_opt(:), alpha_opt(:), &
@@ -202,12 +198,12 @@ MODULE pw_restart_new
       TYPE(smearing_type)        :: smear_obj 
 
       NULLIFY( degauss_, demet_, efield_corr, potstat_corr, gatefield_corr) 
-      NULLIFY( lumo_energy, ef_point)  
-      NULLIFY ( optimization_has_converged, non_local_term_pt, &
+      NULLIFY( homo_energy, lumo_energy, ef_point, ef_updw)  
+      NULLIFY ( non_local_term_pt, &
            vdw_corr_pt, vdw_term_pt, ts_thr_pt, london_s6_pt, london_rcut_pt, &
            xdm_a1_pt, xdm_a2_pt, ts_vdw_econv_thr_pt, ts_isol_pt, &
            dftd3_threebody_pt, ts_vdw_isolated_pt, dftd3_version_pt )
-      NULLIFY ( ectuvcut_opt, scr_par_opt, loc_thr_p, h_energy_ptr, domag_opt) 
+      NULLIFY ( ectuvcut_opt, scr_par_opt, loc_thr_p, domag_opt) 
 
       !
       ! Global PW dimensions need to be properly computed, reducing across MPI tasks
@@ -247,10 +243,10 @@ MODULE pw_restart_new
 !-------------------------------------------------------------------------------
 ! ... CONVERGENCE_INFO
 !-------------------------------------------------------------------------------
+         opt_conv_ispresent = .FALSE.
          SELECT CASE (TRIM( calculation )) 
             CASE ( "relax","vc-relax" )
-                conv_opt = conv_ions  
-                optimization_has_converged  => conv_opt
+                opt_conv_ispresent = .TRUE.
                 IF (TRIM( ion_dynamics) == 'bfgs' ) THEN 
                     n_opt_steps = bfgs_get_n_iter('bfgs_iter ') 
                 ELSE 
@@ -268,12 +264,19 @@ MODULE pw_restart_new
                 n_scf_steps_ = n_scf_steps
          END SELECT
          ! 
-            call qexsd_init_convergence_info(output_obj%convergence_info,   &
+         IF ( opt_conv_ispresent) THEN
+             call qexsd_init_convergence_info(output_obj%convergence_info,   &
                         SCF_HAS_CONVERGED = scf_has_converged, &
-                        OPTIMIZATION_HAS_CONVERGED = optimization_has_converged,& 
                         N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error/e2,&
                         N_OPT_STEPS = n_opt_steps, GRAD_NORM = sumfor)
-            output_obj%convergence_info_ispresent = .TRUE.
+         ELSE
+             call qexsd_init_convergence_info(output_obj%convergence_info,   &
+                        SCF_HAS_CONVERGED = scf_has_converged, &
+                        OPTIMIZATION_HAS_CONVERGED = conv_ions, &
+                        N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error/e2,&
+                        N_OPT_STEPS = n_opt_steps, GRAD_NORM = sumfor)
+         END IF
+         output_obj%convergence_info_ispresent = .TRUE.
          !
             
 !-------------------------------------------------------------------------------
@@ -522,9 +525,9 @@ MODULE pw_restart_new
          IF ( only_init ) GO TO 10
          !
          IF ( .NOT. ( lgauss .OR. ltetra )) THEN 
-            CALL get_homo_lumo( h_energy, lumo_tmp)
-            h_energy = h_energy/e2
-            h_energy_ptr => h_energy 
+            CALL get_homo_lumo( homo_tmp, lumo_tmp)
+            homo_tmp = homo_tmp/e2
+            homo_energy => homo_tmp
             IF ( lumo_tmp .LT. 1.d+6 ) THEN
                 lumo_tmp = lumo_tmp/e2
                 lumo_energy => lumo_tmp
@@ -548,18 +551,18 @@ MODULE pw_restart_new
          qexsd_occ_obj%tagname = 'occupations_kind' 
          IF ( two_fermi_energies ) THEN
             ALLOCATE ( ef_updw (2) )
-               IF (TRIM(occupations) == 'fixed') THEN  
-                  ef_updw(1)  = MAXVAL(et(INT(nelup),1:nkstot/2))/e2
-                  ef_updw(2)  = MAXVAL(et(INT(neldw),nkstot/2+1:nkstot))/e2 
-               ELSE 
-                  ef_updw = [ef_up/e2, ef_dw/e2]
-               END IF
+            IF (TRIM(occupations) == 'fixed') THEN  
+               ef_updw(1)  = MAXVAL(et(INT(nelup),1:nkstot/2))/e2
+               ef_updw(2)  = MAXVAL(et(INT(neldw),nkstot/2+1:nkstot))/e2 
+            ELSE 
+               ef_updw = [ef_up/e2, ef_dw/e2]
+            END IF
          ELSE
-               ! The Fermi energy is written also for insulators because it can
-               ! be useful for further postprocessing, especially of bands
-               ! (for an insulator the Fermi energy is equal to the HOMO/VBMax)
-               ef_targ = ef/e2
-               ef_point => ef_targ
+            ! The Fermi energy is written also for insulators because it can
+            ! be useful for further postprocessing, especially of bands
+            ! (for an insulator the Fermi energy is equal to the HOMO/VBMax)
+            ef_targ = ef/e2
+            ef_point => ef_targ
          END IF
 
 
@@ -579,8 +582,9 @@ MODULE pw_restart_new
                                  et, wg, nkstot, xk, ngk_g, wk, SMEARING = smear_obj,  &
                                  STARTING_KPOINTS = qexsd_start_k_obj, OCCUPATIONS_KIND = qexsd_occ_obj, &
                                  WF_COLLECTED = wf_collect, NBND = nbnd, FERMI_ENERGY = ef_point, EF_UPDW = ef_updw,& 
-                                 HOMO = h_energy_ptr, LUMO = lumo_energy )
+                                 HOMO = homo_energy, LUMO = lumo_energy )
          ! 
+         IF ( ASSOCIATED ( ef_updw ) ) DEALLOCATE (ef_updw)
          IF (lgauss)  CALL qes_reset (smear_obj)
          CALL qes_reset (qexsd_start_k_obj)
          CALL qes_reset (qexsd_occ_obj)
