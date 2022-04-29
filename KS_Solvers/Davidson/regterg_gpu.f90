@@ -99,10 +99,6 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! eigenvalues of the reduced hamiltonian
   COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
   !$acc declare device_resident(psi, hpsi, spsi)
-!  COMPLEX(DP), ALLOCATABLE :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
-!#if defined(__CUDA)
-!  attributes(DEVICE) :: psi_d, hpsi_d, spsi_d
-!#endif
     ! work space, contains psi
     ! the product of H and psi
     ! the product of S and psi
@@ -145,17 +141,14 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   npwx2  = 2*npwx
   !
   ALLOCATE(  psi( npwx, nvecx ), STAT=ierr )
-!  ALLOCATE(  psi_d( npwx, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( 'regterg ',' cannot allocate psi ', ABS(ierr) )
   ALLOCATE( hpsi( npwx, nvecx ), STAT=ierr )
-!  ALLOCATE( hpsi_d( npwx, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( 'regterg ',' cannot allocate hpsi ', ABS(ierr) )
   !
   IF ( uspp ) THEN
      ALLOCATE( spsi( npwx, nvecx ), STAT=ierr )
-!     ALLOCATE( spsi_d( npwx, nvecx ), STAT=ierr )
      IF( ierr /= 0 ) &
         CALL errore( ' regterg ',' cannot allocate spsi ', ABS(ierr) )
   END IF
@@ -280,16 +273,6 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      END DO
      !
   END IF
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!  !$acc parallel loop collapse(2) deviceptr(psi_d, hpsi_d, spsi_d)
-!  DO i = 1, npwx
-!    DO j = 1, nvecx
-!      psi_d(i,j) = psi(i,j)
-!      hpsi_d(i,j) = hpsi(i,j)
-!      if(uspp) spsi_d(i,j) = spsi(i,j) 
-!    END DO 
-!  END DO 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !
   ! ... iterate
   !
@@ -298,16 +281,6 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      dav_iter = kter
      !
      CALL start_clock( 'regterg:update' )
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!  !$acc parallel loop collapse(2) deviceptr(psi_d, hpsi_d, spsi_d)
-!  DO i = 1, npwx
-!    DO j = 1, nvecx
-!      psi(i,j) = psi_d(i,j)
-!      hpsi(i,j) = hpsi_d(i,j)
-!      if(uspp) spsi(i,j) = spsi_d(i,j) 
-!    END DO 
-!  END DO 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      !
      !  ======== FROM HERE =====
      !np = 0
@@ -475,16 +448,6 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      CALL mp_sum( sr_d( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
      !$acc end host_data
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!  !$acc parallel loop collapse(2) deviceptr(psi_d, hpsi_d, spsi_d)
-!!  DO i = 1, npwx
-!!    DO j = 1, nvecx
-!!      psi_d(i,j) = psi(i,j)
-!!      hpsi_d(i,j) = hpsi(i,j)
-!!      if(uspp) spsi_d(i,j) = spsi(i,j) 
-!!    END DO 
-!!  END DO 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      !
      CALL stop_clock( 'regterg:overlap' )
      !
@@ -629,7 +592,6 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         CALL mp_sum( psi(:,nvec+1:nvec+nvec), inter_bgrp_comm )
         !$acc end host_data
         !
-        !hpsi_d(:,1:nvec) = psi_d(:,nvec+1:nvec+nvec)
         !$acc parallel loop collapse(2) 
         DO i=1,nvec
            DO k=1, npwx
@@ -657,16 +619,6 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         CALL stop_clock( 'regterg:last' )
         !
      END IF
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!  !$acc parallel loop collapse(2) deviceptr(psi_d, hpsi_d, spsi_d)
-!  DO i = 1, npwx
-!    DO j = 1, nvecx
-!      psi_d(i,j) = psi(i,j)
-!      hpsi_d(i,j) = hpsi(i,j)
-!      if(uspp) spsi_d(i,j) = spsi(i,j) 
-!    END DO 
-!  END DO 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      !
   END DO iterate
   CALL gbuf%release_buffer(pinned_buffer, ierr)
@@ -676,11 +628,6 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   DEALLOCATE( vr_d )
   DEALLOCATE( hr_d )
   DEALLOCATE( sr_d )
-  !
-!  IF ( uspp ) DEALLOCATE( spsi_d )
-!  !
-!  DEALLOCATE( hpsi_d )
-!  DEALLOCATE( psi_d )
   !
   IF ( uspp ) DEALLOCATE( spsi )
   !
