@@ -113,7 +113,7 @@ SUBROUTINE setup_dgc
      !
      sgn(1)=1.d0  ;   sgn(2)=-1.d0
      !
-     !$acc parallel loop collapse(2) copyin(sgn)
+     !$acc parallel loop collapse(2) copyin(sgn) present(rho)
      DO is = 1, nspin_gga
        DO ir = 1, dfftp%nnr
          rhoout(ir,is) = ( rho%of_r(ir,1) + sgn(is)*rho%of_r(ir,nspin_gga) )*0.5d0
@@ -122,13 +122,11 @@ SUBROUTINE setup_dgc
      !
      ! ... if LSDA rho%of_g is temporarily converted in (up,down) format
      !
-     !$acc update host(rho%of_g)
      CALL rhoz_or_updw( rho, 'only_g', '->updw' )
-     !$acc update device(rho%of_g)
      !
      IF (nlcc_any) THEN
         DO is = 1, nspin_gga
-           !$acc kernels
+           !$acc kernels present(rho)
            rhoout(:,is) = fac * rho_core(:) + rhoout(:,is)
            rho%of_g(:,is) = fac * rhog_core(:) + rho%of_g(:,is)
            !$acc end kernels
