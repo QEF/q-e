@@ -192,13 +192,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   nbase  = nvec
   conv   = .FALSE.
   !
-#if defined(__CUDA)
   !$acc host_data use_device(psi, hpsi, spsi, hc, sc)
   CALL dev_memcpy(psi, evc, (/ 1 , npwx*npol /), 1, &
                             (/ 1 , nvec /), 1)
-#else
-  CALL threaded_memcpy(psi, evc, nvec*npol*npwx*2)
-#endif
   !
   ! ... hpsi contains h times the basis vectors
   !
@@ -220,9 +216,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   if (n_start .le. n_end) &
   CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, hpsi(1,n_start), kdmx, ZERO, hc(1,n_start), nvecx )
   !
+  if ((n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 )) then
 #if defined(__CUDA)
-  if (n_start .le. n_end) then
-     !
      !pinned_buffer(1:nbase, n_start:n_end) = hc( 1:nbase, n_start:n_end )
      !ierr = cudaMemcpy2D( pinned_buffer(1, n_start) , nvecx, hc( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
      CALL dev_memcpy( pinned_buffer, hc, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
@@ -231,10 +226,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !ierr = cudaMemcpy2D( hc(1, n_start) , nvecx, pinned_buffer( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
      CALL dev_memcpy( hc, pinned_buffer, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
      !
-  end if
 #else
-  if (n_start .le. n_end) CALL mp_sum( hc( 1:nbase, n_start:n_end ), intra_bgrp_comm )
+     CALL mp_sum( hc( 1:nbase, n_start:n_end ), intra_bgrp_comm )
 #endif
+  end if
   CALL mp_gather( hc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
   !
   IF ( uspp ) THEN
@@ -251,8 +246,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
   END IF
   !
-#if defined(__CUDA)
   if ((n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 )) then
+#if defined(__CUDA)
      !pinned_buffer(1:nbase, n_start:n_end) = sc( 1:nbase, n_start:n_end )
      !ierr = cudaMemcpy2D( pinned_buffer(1, n_start) , nvecx, sc( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
      CALL dev_memcpy( pinned_buffer, sc, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
@@ -260,10 +255,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !sc( 1:nbase, n_start:n_end ) = pinned_buffer(1:nbase, n_start:n_end)
      !ierr = cudaMemcpy2D( sc(1, n_start) , nvecx, pinned_buffer( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
      CALL dev_memcpy( sc, pinned_buffer, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
-  end if
 #else
-  if (n_start .le. n_end) CALL mp_sum( sc( 1:nbase, n_start:n_end ), intra_bgrp_comm )
+     CALL mp_sum( sc( 1:nbase, n_start:n_end ), intra_bgrp_comm )
 #endif
+  end if
   CALL mp_gather( sc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
   !$acc end host_data
   !
@@ -293,13 +288,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   !
   IF ( lrot ) THEN
      !
-#if defined(__CUDA)
      !$acc host_data use_device(vc)
      CALL dev_memset(vc, ZERO, (/1, nbase/), 1, (/1, nbase/), 1)
      !$acc end host_data
-#else
-     vc(1:nbase,1:nbase) = ZERO
-#endif
      !
      !$acc parallel loop 
      DO n = 1, nbase
@@ -327,12 +318,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      ENDIF
      CALL stop_clock( 'cegterg:diag' )
      !
-#if defined(__CUDA)
      CALL dev_memcpy (e, ew, (/ 1, nvec /), 1 )
      !$acc end host_data
-#else
-     e(1:nvec) = ew(1:nvec)
-#endif
      !
   END IF
   !
@@ -432,13 +419,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      CALL mp_sum( psi(:,nb1:nbase+notcnv), inter_bgrp_comm )
      !
      ! clean up garbage if there is any
-#if defined(__CUDA)
      IF (npw < npwx) CALL dev_memset(psi, ZERO, [npw+1,npwx], 1, [nb1, nbase+notcnv])
      IF (npol == 2)  CALL dev_memset(psi, ZERO, [npwx+npw+1,2*npwx], 1, [nb1, nbase+notcnv])
-#else
-     IF (npw < npwx) psi(npw+1:npwx,nb1:nbase+notcnv) = ZERO
-     IF (npol == 2)  psi(npwx+npw+1:2*npwx,nb1:nbase+notcnv) = ZERO
-#endif
      !
      CALL stop_clock( 'cegterg:update' )
      !
@@ -519,8 +501,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, hpsi(1,nb1), kdmx, psi(1,n_start), kdmx, &
                  ZERO, hc(nb1,n_start), nvecx )
      !
-#if defined(__CUDA)
      if ((n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 )) then
+#if defined(__CUDA)
         !pinned_buffer(nb1:nbase+notcnv, n_start:n_end) = hc( nb1:nbase+notcnv, n_start:n_end )
         !ierr = cudaMemcpy2D( pinned_buffer(nb1, n_start) , nvecx, hc( nb1, n_start ), nvecx, notcnv, n_end-n_start+1 )
         CALL dev_memcpy( pinned_buffer, hc, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
@@ -528,10 +510,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !hc( nb1:nbase+notcnv, n_start:n_end ) = pinned_buffer(nb1:nbase+notcnv, n_start:)
         !ierr = cudaMemcpy2D(  hc( nb1, n_start ), nvecx, pinned_buffer(nb1,n_start), nvecx, notcnv, n_end-n_start+1 )
         CALL dev_memcpy( hc, pinned_buffer, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
-     end if
 #else
-     if (n_start .le. n_end) CALL mp_sum( hc( nb1:nbase+notcnv, n_start:n_end ), intra_bgrp_comm )
+     CALL mp_sum( hc( nb1:nbase+notcnv, n_start:n_end ), intra_bgrp_comm )
 #endif
+     end if
      CALL mp_gather( hc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
      !
      CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
@@ -548,8 +530,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !
      END IF
      !
-#if defined(__CUDA)
      if ( (n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 ) ) then
+#if defined(__CUDA)
         !pinned_buffer( nb1:nbase+notcnv, n_start:n_end ) = sc( nb1:nbase+notcnv, n_start:n_end )
         !ierr = cudaMemcpy2D( pinned_buffer(nb1, n_start) , nvecx, sc( nb1, n_start ), nvecx, notcnv, n_end-n_start+1 )
         CALL dev_memcpy( pinned_buffer, sc, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
@@ -557,10 +539,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !sc( nb1:nbase+notcnv, n_start:n_end ) = pinned_buffer( nb1:nbase+notcnv, n_start:n_end )
         !ierr = cudaMemcpy2D(  sc( nb1, n_start ), nvecx, pinned_buffer(nb1,n_start), nvecx, notcnv, n_end-n_start+1 )
         CALL dev_memcpy( sc, pinned_buffer, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
-     end if
 #else
-     if (n_start .le. n_end) CALL mp_sum( sc( nb1:nbase+notcnv, n_start:n_end ), intra_bgrp_comm )
+        CALL mp_sum( sc( nb1:nbase+notcnv, n_start:n_end ), intra_bgrp_comm )
 #endif
+     end if
      CALL mp_gather( sc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
      !$acc end host_data
      !
@@ -622,13 +604,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      notcnv = COUNT( .NOT. conv(:) )
      !
-#if defined(__CUDA)
      !$acc host_data use_device(ew)
      CALL dev_memcpy (e, ew, (/ 1, nvec /) )
      !$acc end host_data
-#else
-     e(1:nvec) = ew(1:nvec)
-#endif
      !
      ! ... if overall convergence has been achieved, or the dimension of
      ! ... the reduced basis set is becoming too large, or in any case if
@@ -672,38 +650,26 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !
         ! ... refresh psi, H*psi and S*psi
         !
-#if defined(__CUDA)
         !$acc host_data use_device(psi, hpsi, spsi, vc)
         CALL dev_memcpy(psi, evc, (/ 1, npwx*npol /), 1, &
                                       (/ 1, nvec /), 1)
-#else
-        CALL threaded_memcpy(psi, evc, nvec*npol*npwx*2)
-#endif
         !
         IF ( uspp ) THEN
            !
            CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, spsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                        ZERO, psi(1,nvec+1), kdmx)
-#if defined(__CUDA)
            CALL dev_memcpy(spsi, psi(:,nvec+1:), &
                                         (/1, npwx*npol/), 1, &
                                         (/1, nvec/), 1)
-#else
-           CALL threaded_memcpy(spsi, psi(1,nvec+1), nvec*npol*npwx*2)
-#endif
            CALL mp_sum( spsi(:,1:nvec), inter_bgrp_comm )
            !
         END IF
         !
         CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, hpsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                     ZERO, psi(1,nvec+1), kdmx )
-#if defined(__CUDA)
         CALL dev_memcpy(hpsi, psi(:,nvec+1:), &
                                         (/1, npwx*npol/), 1, &
                                         (/1, nvec/), 1)
-#else
-        CALL threaded_memcpy(hpsi, psi(1,nvec+1), nvec*npol*npwx*2)
-#endif
         CALL mp_sum( hpsi(:,1:nvec), inter_bgrp_comm )
         !$acc end host_data
         !
