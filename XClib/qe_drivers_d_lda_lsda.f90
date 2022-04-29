@@ -401,7 +401,7 @@ END SUBROUTINE dmxc_lsda
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
+SUBROUTINE dmxc_nc( length, rho_in, dmuxc )
   !-----------------------------------------------------------------------
   !! Computes the derivative of the xc potential with respect to the 
   !! local density and magnetization in the non-collinear case.
@@ -412,10 +412,8 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !
   INTEGER,  INTENT(IN) :: length
   !! Length of the input/output arrays
-  REAL(DP), INTENT(IN), DIMENSION(length) :: rho_in
-  !! Total charge density
-  REAL(DP), INTENT(IN), DIMENSION(length,3) :: m
-  !! Magnetization vector
+  REAL(DP), INTENT(IN), DIMENSION(length,4) :: rho_in
+  !! Total charge density and magnetization vector
   REAL(DP), INTENT(OUT), DIMENSION(length,4,4) :: dmuxc
   !! Derivative of XC functional
   !
@@ -426,7 +424,7 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: rhotot, rhoaux, amag, zeta, &
                                          zetaux, dr, dz
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: aux1, aux2
-  REAL(DP), ALLOCATABLE, DIMENSION(:,:) :: vx, vc
+  REAL(DP), ALLOCATABLE, DIMENSION(:,:) :: m, vx, vc
   REAL(DP) :: dvxc_rho, dbx_rho, dby_rho, dbz_rho
   !
   REAL(DP) :: dvxc_mx, dvxc_my, dvxc_mz, &
@@ -443,18 +441,16 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !
   !$acc data present( rho_in, dmuxc )
   !
-  !$acc parallel loop
-  DO i = 1, length
-    dmuxc(i,1,:) = 0.0_DP ; dmuxc(i,3,:) = 0.0_DP
-    dmuxc(i,2,:) = 0.0_DP ; dmuxc(i,4,:) = 0.0_DP
-  ENDDO
+  !$acc kernels
+  dmuxc(:,:,:) = 0.0_DP
+  !$acc end kernels
   !
   ALLOCATE( rhotot(length), rhoaux(length*5), zetaux(length*5) )
-  ALLOCATE( amag(length), zeta(length), dr(length), dz(length) )
+  ALLOCATE( amag(length), zeta(length), dr(length), dz(length), m(length,3) )
   ALLOCATE( is_null(length) )
   ALLOCATE( aux1(length*5), aux2(length*5) )
   ALLOCATE( vx(length*5,2), vc(length*5,2) )
-  !$acc data create( rhotot, rhoaux, zetaux, amag, zeta, dr, dz, is_null, &
+  !$acc data create( rhotot, rhoaux, zetaux, m, amag, zeta, dr, dz, is_null, &
   !$acc              aux1, aux2, vx, vc )
   !
   i1 = 1     ;   f1 = length    !           five blocks:  [ rho    , zeta    ]   
@@ -465,21 +461,22 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !
   !$acc parallel loop
   DO i = 1, length
+     m(i,:) = rho_in(i,2:4)
      zeta_s = zeta_trash
-     IF (rho_in(i) <= small) THEN
+     IF (rho_in(i,1) <= small) THEN
         rhotot(i) = rho_trash
         is_null(i) = .TRUE.
      ELSE
-        rhotot(i) = rho_in(i)
+        rhotot(i) = rho_in(i,1)
         is_null(i) = .FALSE.
      ENDIF
+     dr(i) = MIN( 1.E-6_DP, 1.E-4_DP * rhotot(i) )
      amag(i) = SQRT( m(i,1)**2 + m(i,2)**2 + m(i,3)**2 )
      IF (rhotot(i) > small) zeta_s = amag(i) / rhotot(i)
      zeta(i) = zeta_s
+     dz(i) = 1.0E-6_DP      !dz = MIN( 1.d-6, 1.d-4*ABS(zeta(i)) )
      zeta_eff = SIGN( MIN( ABS(zeta_s), (1.0_DP-2.0_DP*dz(i)) ), zeta_s )
      IF (ABS(zeta_s) > 1.0_DP) is_null(i) = .TRUE.
-     dz(i) = 1.0E-6_DP      !dz = MIN( 1.d-6, 1.d-4*ABS(zeta(i)) ) 
-     dr(i) = MIN( 1.E-6_DP, 1.E-4_DP * rhotot(i) )
      !
      rhoaux(i1-1+i) = rhotot(i)        ;  zetaux(i1-1+i) = zeta(i)
      rhoaux(i2-1+i) = rhotot(i)+dr(i)  ;  zetaux(i2-1+i) = zeta(i)
@@ -493,28 +490,8 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !$acc parallel loop
   DO i = 1, length
      !
-     IF (amag(i) > 1.E-10_DP) THEN
-       aux0_i = vx(i2-1+i,1) + vc(i2-1+i,1) - vx(i3-1+i,1) - vc(i3-1+i,1) - &
-              ( vx(i2-1+i,2) + vc(i2-1+i,2) - vx(i3-1+i,2) - vc(i3-1+i,2) )
-       !
-       dbx_rho = aux0_i * m(i,1) / (4.0_DP*dr(i)*amag(i))
-       dby_rho = aux0_i * m(i,2) / (4.0_DP*dr(i)*amag(i))
-       dbz_rho = aux0_i * m(i,3) / (4.0_DP*dr(i)*amag(i))
-     ELSE  
-       dbx_rho = 0.d0
-       dby_rho = 0.d0
-       dbz_rho = 0.d0
-     ENDIF
-     !
-     vs = 0.5_DP*( vx(i1-1+i,1)+vc(i1-1+i,1)-vx(i1-1+i,2)-vc(i1-1+i,2) )
-     !
      dvxc_rho = ((vx(i2-1+i,1) + vc(i2-1+i,1) - vx(i3-1+i,1) - vc(i3-1+i,1)) + &
                  (vx(i2-1+i,2) + vc(i2-1+i,2) - vx(i3-1+i,2) - vc(i3-1+i,2))) / (4.0_DP*dr(i))
-     !
-     aux1_i = vx(i4-1+i,1) + vc(i4-1+i,1) - vx(i5-1+i,1) - vc(i5-1+i,1) + &
-              vx(i4-1+i,2) + vc(i4-1+i,2) - vx(i5-1+i,2) - vc(i5-1+i,2)
-     aux2_i = vx(i4-1+i,1) + vc(i4-1+i,1) - vx(i5-1+i,1) - vc(i5-1+i,1) - &
-            ( vx(i4-1+i,2) + vc(i4-1+i,2) - vx(i5-1+i,2) - vc(i5-1+i,2) )
      !
      IF ( is_null(i) ) THEN
         dmuxc(i,:,:) = 0.0_DP
@@ -522,9 +499,23 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
      ENDIF
      !
      IF (amag(i) <= 1.E-10_DP) THEN
-        dmuxc(i,1,1) = dvxc_rho
+        dmuxc(i,1,1) = dvxc_rho * e2
         CYCLE
      ENDIF
+     !
+     aux0_i = vx(i2-1+i,1) + vc(i2-1+i,1) - vx(i3-1+i,1) - vc(i3-1+i,1) - &
+            ( vx(i2-1+i,2) + vc(i2-1+i,2) - vx(i3-1+i,2) - vc(i3-1+i,2) )
+     !
+     dbx_rho = aux0_i * m(i,1) / (4.0_DP*dr(i)*amag(i))
+     dby_rho = aux0_i * m(i,2) / (4.0_DP*dr(i)*amag(i))
+     dbz_rho = aux0_i * m(i,3) / (4.0_DP*dr(i)*amag(i))
+     !
+     vs = 0.5_DP*( vx(i1-1+i,1)+vc(i1-1+i,1)-vx(i1-1+i,2)-vc(i1-1+i,2) )
+     !
+     aux1_i = vx(i4-1+i,1) + vc(i4-1+i,1) - vx(i5-1+i,1) - vc(i5-1+i,1) + &
+              vx(i4-1+i,2) + vc(i4-1+i,2) - vx(i5-1+i,2) - vc(i5-1+i,2)
+     aux2_i = vx(i4-1+i,1) + vc(i4-1+i,1) - vx(i5-1+i,1) - vc(i5-1+i,1) - &
+            ( vx(i4-1+i,2) + vc(i4-1+i,2) - vx(i5-1+i,2) - vc(i5-1+i,2) )
      !
      dvxc_rho = dvxc_rho - aux1_i * zeta(i)/rhotot(i) / (4.0_DP*dz(i))
      !
@@ -559,7 +550,7 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
      dbz_mx = dbx_mz
      dbz_my = dby_mz
      dbz_mz = (aux2_i * m(i,3) * m(i,3) * amag(i)/rhotot(i) / (4.0_DP*dz(i)) + &
-               vs*(m(i,1)**2 + m(i,2)**2)) / amag(i)**3
+               vs * (m(i,1)**2 + m(i,2)**2)) / amag(i)**3
      !
      ! ... assigns values to dmuxc and sets to zero trash points
      !
@@ -583,7 +574,7 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !
   !$acc end data
   DEALLOCATE( rhotot, rhoaux, zetaux )
-  DEALLOCATE( amag, zeta, dr, dz )
+  DEALLOCATE( m, amag, zeta, dr, dz )
   DEALLOCATE( is_null )
   DEALLOCATE( aux1, aux2 )
   DEALLOCATE( vx, vc )

@@ -82,10 +82,8 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
     !$acc end data
     !
     ! ... bring starting rhoaux to G-space
-    !$acc data copyout( segni )
     CALL compute_rho( rho, rhoaux, segni, dfftp%nnr )
     CALL rho_r2g( dfftp, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
-    !$acc end data
     !
   ELSE
     ! ... for convenience rhoaux and rhogaux are in (up,down) format, when LSDA
