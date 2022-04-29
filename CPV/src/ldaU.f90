@@ -462,10 +462,10 @@
                            alpha_s,ipol,offset,nb_s,nb_e,mykey,dproj)
 !-----------------------------------------------------------------------
       !! This routine computes the first derivative of the projection
-      !! \(\langle\fi^{at}_{I,m1}|S|\psi_{k,v,s}\rangle\) with respect to the
+      !! \(\langle\phi^{at}_{I,m1}|S|\psi_{k,v,s}\rangle\) with respect to the
       !! atomic displacement \(u(\alpha,\text{ipol})\) (we remember that 
-      !! \(ns_{m1,m2,s,I} = \sum_{k,v} f_{kv} \langle\fi^{at}_{I,m1}|S|\psi_{k,v,s}
-      !! \rangle\langle \psi_{k,v,s}|S|\fi^{at}_{I,m2}\rangle\) ).
+      !! \(ns_{m1,m2,s,I} = \sum_{k,v} f_{kv} \langle\phi^{at}_{I,m1}|S|\psi_{k,v,s}
+      !! \rangle\langle \psi_{k,v,s}|S|\phi^{at}_{I,m2}\rangle\) ).
       !
       use ions_base, only: nat
       use gvecw, only: ngw

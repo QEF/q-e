@@ -569,7 +569,7 @@ CONTAINS
       !! Used whenever \(\text{tprint}=\text{.TRUE.}\) is needed, e.g. to let CG
       !! calculate wavefunctions at time t and (t - dt) via projections
       !! onto the occupied manifold.  
-      !! This function has to be called after \texttt{call employ_rules}()\)!
+      !! This function has to be called after \(\texttt{call employ_rules}()\)!
       !
       USE cg_module, ONLY : tcg
       !

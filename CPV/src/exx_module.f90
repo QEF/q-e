@@ -2024,7 +2024,8 @@ CONTAINS
   attributes(host,device) &
 #endif
   integer function l2gcb(n,l,t)
-    !! This function is the cube analogue of the `l2goff` function in exx_gs.f90.
+    !! This function is the cube analogue of the \(\texttt{l2goff}\) function in
+    !! \(\texttt{exx_gs.f90}\).  
     !! These functions provides a local to global grid transformation to allow
     !! sparse matrix/vector operations.
     implicit none

@@ -18,7 +18,7 @@
         enl, denl, ekin, dekin, tstress, ndwwf )
 !-----------------------------------------------------------------------
      !! This routine computes the normalized electron density in real space 
-     !! (\(\text{rhor}\)), the kinetic energy ((\text{ekin}\)) and the kinetic
+     !! (\(\text{rhor}\)), the kinetic energy (\(\text{ekin}\)) and the kinetic
      !! energy term of QM stress (\(\text{dekin}\)).
 !
 !    Using quantities in scaled space:

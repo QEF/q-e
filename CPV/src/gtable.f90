@@ -9,7 +9,7 @@
 subroutine gtable( ipol, ctable )
   
   !! This subroutine prepares the correspondence array to
-  !! compute the operator \(\exp(iG_\text{ipol}.r\).
+  !! compute the operator \(\exp(iG_\text{ipol}\cdot r)\).
   
   use kinds, only: dp
   use gvecw, only: ngw  
@@ -109,7 +109,7 @@ end subroutine gtable
 subroutine gtablein( ipol, ctabin)
   
   !! This subroutine prepare the inverse correspondence array to
-  !! compute the operator \(\exp(iG_\text{ipol}.r\).
+  !! compute the operator \(\exp(iG_\text{ipol}\cdot r) \).
 
   use kinds, only: dp
   use gvecw, only: ngw  

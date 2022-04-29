@@ -485,9 +485,9 @@ CONTAINS
 !-----------------------------------------------------------------------
       REAL(8) FUNCTION boxdotgrid_dp( irb, nfft, qv, vr )
 !-----------------------------------------------------------------------
-      !! Calculates \( \sum_i \text{qv}(r_i)*\text{vr}(r_i) \) with \(r_i\)
+      !! Calculates \( \sum_i \text{qv}(r_i)\cdot\text{vr}(r_i) \) with \(r_i\)
       !! on box grid, array \(\text{qv}(r)\) is defined on box grid, array
-      !! \(text{vr}(r)\) on dense grid.  
+      !! \(\text{vr}(r)\) on dense grid.  
       !! Parallel execution: remember to sum the contributions from other
       !! nodes.
 !
@@ -549,9 +549,10 @@ CONTAINS
 !-----------------------------------------------------------------------
 FUNCTION boxdotgridcplx_dp(irb,qv,vr)
   !-----------------------------------------------------------------------
+  !! Calculate \(\sum_i \text{qv}(r_i)\cdot\text{vr}(r_i)\)  with \(r_i\)
+  !! on box grid. Array \(\text{qv}(r)\) is defined on box grid, array 
+  !! \(\text{vr}(r)\) on dense grid.
   !
-  ! Calculate \sum_i qv(r_i)*vr(r_i)  with r_i on box grid
-  ! array qv(r) is defined on box grid, array vr(r)on dense grid
   ! irb   : position of the box in the dense grid
   ! Parallel execution: remember to sum the contributions from other nodes
   !

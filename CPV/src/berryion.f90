@@ -9,7 +9,7 @@
 subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
 
   !! This subroutine returns the Berry phase energy, e.g.:  
-  !! \( L/2\Pi\Im(\text{log} \sum_R \exp(i(2\pi/L)R_i \rho_i)) \)  
+  !! \( L/2\pi\ \text{Im}(\log \sum_R \exp(i(2\pi/L)R_i \rho_i)) \)  
   !! of the ions and the constant force on the ions.
   !! Now only for orthorombic primitive cell.
 

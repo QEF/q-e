@@ -152,8 +152,8 @@
 !  ----------------------------------------------
 
       SUBROUTINE cutoffs_print_info()
-
-        !  Print out information about different cut-offs
+      
+        !!  Print out information about different cut-offs.
 
         USE gvecw, ONLY: ecutwfc,  gcutw
         USE gvect, ONLY: ecutrho,  gcutm
@@ -823,7 +823,7 @@ end subroutine formf
 !-----------------------------------------------------------------------
 SUBROUTINE newnlinit()
   !-----------------------------------------------------------------------
-  !! This routine calculates arrays \(\text{beta}\), \(text{qq}\), \text{qgb}\),
+  !! This routine calculates arrays \(\text{beta}\), \(\text{qq}\), \(\text{qgb}\),
   !! \(\text{rhocb}\) and derivatives w.r.t. cell parameters \(\text{dbeta}\).
   !! See also comments in \(\texttt{nlinit}\).
   !
@@ -1388,9 +1388,9 @@ end subroutine dqvan2b
 subroutine dylmr2_( nylm, ngy, g, gg, ainv, dylm )
   !-----------------------------------------------------------------------
   !! Temporary CP interface for PW routine \(\texttt{dylmr2}\):  
-  !! \(\text{dylmr2}\) calculates \(d Y_{lm} /d G_\text{ipol}\)  
-  !! \(\text{dylmr2}\_\) calculates \(G_\text{ipol}\)\sum_k h^(-1)
-  !!                                  (\text{jpol},k) (dY_{lm} /dG_k)\)
+  !! \(\text{dylmr2}\) calculates \(d Y_{lm} /d G_\text{ipol}\);  
+  !! \(\text{dylmr2}\_\) calculates \(G_\text{ipol} \sum_k h^{-1}
+  !!                                  (\text{jpol},k) (dY_{lm} /dG_k)\).
   !
   USE kinds, ONLY: DP
 
