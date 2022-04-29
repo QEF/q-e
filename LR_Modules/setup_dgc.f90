@@ -30,6 +30,7 @@ SUBROUTINE setup_dgc
   !
   INTEGER :: k, is, ipol, jpol, ir
   !
+  INTEGER,  ALLOCATABLE :: nld(:)
   REAL(DP), ALLOCATABLE :: grh(:,:,:)
   REAL(DP) :: fac, sgn(2)
   !
@@ -42,9 +43,13 @@ SUBROUTINE setup_dgc
   !
   REAL(DP), PARAMETER :: epsr=1.0d-6, epsg=1.0d-10
   !
+  !
   IF ( .NOT. xclib_dft_is('gradient') ) RETURN
   !
   CALL start_clock( 'setup_dgc' )
+  !
+  !$acc data copyin( rho )
+  !$acc data copyin( rho_core, rhog_core, rho%of_r, rho%of_g )
   !
   IF (noncolin .AND. domag) THEN
      ALLOCATE( segni(dfftp%nnr) )
@@ -66,42 +71,67 @@ SUBROUTINE setup_dgc
   ALLOCATE( sx(dfftp%nnr), sc(dfftp%nnr) )
   ALLOCATE( grh(dfftp%nnr,3,nspin_gga) )
   !
+  !$acc data create( rhoout, grh, sx, sc, v1x, v2x, v1c, v2c, v2c_ud )
+  !$acc data copyout( dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, grho, psic )
+  !
+  fac = 1.d0/DBLE(nspin_gga)
+  !
+  !$acc kernels
   dvxc_rr(:,:,:) = 0.d0
   dvxc_sr(:,:,:) = 0.d0
   dvxc_ss(:,:,:) = 0.d0
   dvxc_s(:,:,:)  = 0.d0
   grho(:,:,:) = 0.d0
-  !
-  sgn(1)=1.d0  ;   sgn(2)=-1.d0
-  fac = 1.d0/DBLE(nspin_gga)
+  !$acc end kernels
   !
   IF (noncolin .AND. domag) THEN
      !
-     ALLOCATE( rhogout(ngm,nspin_mag) )
+     ALLOCATE( nld(ngm), rhogout(ngm,nspin_mag) )
+     nld = dfftp%nl
+     !$acc data copyin(nld) create(rhogout)
      !
      CALL compute_rho( rho%of_r, rhoout, segni, dfftp%nnr )
      !
      DO is = 1, nspin_gga
-        IF (nlcc_any) rhoout(:,is) = fac*rho_core(:) + rhoout(:,is)
+        !
+        IF (nlcc_any) THEN
+          !$acc kernels
+          rhoout(:,is) = rhoout(:,is) + fac*rho_core(:)
+          !$acc end kernels
+        ENDIF
+        !
         CALL rho_r2g( dfftp, rhoout(:,is), rhogout(:,is:is) )
         CALL fft_gradient_g2r( dfftp, rhogout(1,is), g, grho(1,1,is) )
+        !
      ENDDO
      !
-     DEALLOCATE( rhogout )
+     !$acc end data
+     DEALLOCATE( nld, rhogout )
      !
   ELSE
      ! ... for convenience, if LSDA, rhoout is kept in (up,down) format
+     !
+     sgn(1)=1.d0  ;   sgn(2)=-1.d0
+     !
+     !$acc parallel loop collapse(2) copyin(sgn)
      DO is = 1, nspin_gga
-        rhoout(:,is) = ( rho%of_r(:,1) + sgn(is)*rho%of_r(:,nspin_gga) )*0.5d0
+       DO ir = 1, dfftp%nnr
+         rhoout(ir,is) = ( rho%of_r(ir,1) + sgn(is)*rho%of_r(ir,nspin_gga) )*0.5d0
+       ENDDO
      ENDDO
      !
      ! ... if LSDA rho%of_g is temporarily converted in (up,down) format
+     !
+     !$acc update host(rho%of_g)
      CALL rhoz_or_updw( rho, 'only_g', '->updw' )
+     !$acc update device(rho%of_g)
      !
      IF (nlcc_any) THEN
         DO is = 1, nspin_gga
-           rhoout(:,is) = fac * rho_core(:)  + rhoout(:,is)
+           !$acc kernels
+           rhoout(:,is) = fac * rho_core(:) + rhoout(:,is)
            rho%of_g(:,is) = fac * rhog_core(:) + rho%of_g(:,is)
+           !$acc end kernels
         ENDDO
      ENDIF
      !
@@ -112,6 +142,7 @@ SUBROUTINE setup_dgc
   ENDIF
   !
   ! ... swap grho indices to match xc_gcx input (waiting for a better fix)
+  !$acc parallel loop
   DO k = 1, dfftp%nnr
      grh(k,1:3,1) = grho(1:3,k,1)
      IF (nspin_gga==2) grh(k,1:3,2) = grho(1:3,k,2)
@@ -120,20 +151,30 @@ SUBROUTINE setup_dgc
   !
   IF (nspin_gga == 1) THEN
      !
-     CALL dgcxc( dfftp%nnr, 1, rhoout, grh, dvxc_rr, dvxc_sr, dvxc_ss )
+     CALL dgcxc( dfftp%nnr, 1, rhoout, grh, dvxc_rr, dvxc_sr, dvxc_ss, &
+                 gpu_args_=.TRUE. )
      !
-     WHERE( rhoout(:,1)<0.d0 ) rhoout(:,1)=0.d0
+     !$acc parallel loop
+     DO ir = 1, dfftp%nnr
+       IF( rhoout(ir,1)<0.d0 ) rhoout(ir,1)=0.d0
+     ENDDO
      !
-     CALL xc_gcx( dfftp%nnr, nspin_gga, rhoout, grho, sx, sc, v1x, v2x, v1c, v2c )
+     CALL xc_gcx( dfftp%nnr, nspin_gga, rhoout, grho, sx, sc, v1x, v2x, v1c, v2c, &
+                  gpu_args_=.TRUE. )
      !
+     !$acc kernels
      dvxc_s(:,1,1)  = e2 * (v2x(:,1) + v2c(:,1))
+     !$acc end kernels
      !
   ELSE
      !
-     CALL dgcxc( dfftp%nnr, nspin_gga, rhoout, grh, dvxc_rr, dvxc_sr, dvxc_ss )
+     CALL dgcxc( dfftp%nnr, nspin_gga, rhoout, grh, dvxc_rr, dvxc_sr, dvxc_ss, &
+                 gpu_args_=.TRUE. )
      !
-     CALL xc_gcx( dfftp%nnr, nspin_gga, rhoout, grho, sx, sc, v1x, v2x, v1c, v2c, v2c_ud )
+     CALL xc_gcx( dfftp%nnr, nspin_gga, rhoout, grho, sx, sc, v1x, v2x, v1c, v2c, &
+                  v2c_ud, gpu_args_=.TRUE. )
      !
+     !$acc parallel loop
      DO k = 1, dfftp%nnr
         IF ( rhoout(k,1)+rhoout(k,2) > epsr) THEN
            dvxc_s(k,1,1) = e2 * (v2x(k,1) + v2c(k,1))
@@ -145,6 +186,14 @@ SUBROUTINE setup_dgc
      !
   ENDIF
   !
+  ! ... TEMPORARY
+  !$acc update self( rhoout, grho, rho%of_g )
+  !
+  !$acc end data
+  !$acc end data
+  !
+  !$acc end data
+  !$acc end data
   !
   IF (noncolin .AND. domag) THEN
      CALL compute_vsgga( rhoout, grho, vsgga )
