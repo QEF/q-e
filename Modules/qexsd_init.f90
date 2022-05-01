@@ -70,28 +70,26 @@ CONTAINS
       !
       CHARACTER(27)       :: subname="qexsd_init_convergence_info"
       TYPE(scf_conv_type) :: scf_conv
-      TYPE(opt_conv_type),POINTER :: opt_conv  
+      TYPE(opt_conv_type) :: opt_conv  
       !
-      NULLIFY(opt_conv) 
       call qes_init (scf_conv, "scf_conv", scf_has_converged, n_scf_steps, scf_error)
       !
       IF ( PRESENT(optimization_has_converged ))  THEN
           !
           IF ( .NOT. PRESENT(n_opt_steps) ) CALL errore(subname,"n_opt_steps not present",10)
           IF ( .NOT. PRESENT(grad_norm) )   CALL errore(subname,"grad_norm not present",10)
-          ALLOCATE ( opt_conv) 
           !
           call qes_init (opt_conv, "opt_conv", optimization_has_converged, n_opt_steps, grad_norm)
+          call qes_init (obj, "convergence_info", scf_conv, opt_conv)
+          call qes_reset (scf_conv)
+          CALL qes_reset (opt_conv)
+          !
+      ELSE 
+          !
+          call qes_init (obj, "convergence_info", scf_conv)
+          call qes_reset (scf_conv)
+          !
       ENDIF
-      !
-      call qes_init (obj, "convergence_info", scf_conv, opt_conv)
-      !
-      call qes_reset (scf_conv)
-      IF (ASSOCIATED(opt_conv)) THEN
-         CALL qes_reset (opt_conv)
-         DEALLOCATE(opt_conv)
-         NULLIFY ( opt_conv) 
-      END IF 
       !
     END SUBROUTINE qexsd_init_convergence_info
     !
@@ -185,34 +183,34 @@ CONTAINS
       TYPE(wyckoff_positions_type) :: wyckoff_pos
       REAL(DP)                     :: new_alat
       INTEGER,TARGET              :: ibrav_tgt
-      INTEGER,POINTER             :: ibrav_ptr 
-      CHARACTER(LEN=256),POINTER  :: use_alt_axes_ 
+      INTEGER,POINTER             :: ibrav_ptr => null ()
       CHARACTER(LEN=256),TARGET   :: use_alt_axes 
+      CHARACTER(LEN=256),POINTER  :: use_alt_axes_ => null ()
       !
       ! atomic positions
       !
-      NULLIFY(use_alt_axes_, ibrav_ptr) 
       IF ( ibrav .ne. 0 ) THEN 
          ibrav_tgt =  abs(ibrav) 
          ibrav_ptr => ibrav_tgt
-         use_alt_axes_ => use_alt_axes 
          SELECT CASE(ibrav)
             CASE(-3)
                use_alt_axes="b:a-b+c:-c"
+               use_alt_axes_ => use_alt_axes 
             CASE(-5)
                use_alt_axes="3fold-111"
+               use_alt_axes_ => use_alt_axes 
             CASE(-9)
                use_alt_axes="-b:a:c"
+               use_alt_axes_ => use_alt_axes 
             CASE (91)
                ibrav_tgt = 9 
                use_alt_axes ="bcoA-type"
+               use_alt_axes_ => use_alt_axes 
             CASE(-12,-13)
                use_alt_axes="unique-axis-b" 
-            CASE default 
-               NULLIFY (use_alt_axes_) 
+               use_alt_axes_ => use_alt_axes 
          END SELECT 
       END IF 
-      
       !
       ALLOCATE(atom(nat))
       DO ia = 1, nat
@@ -1006,8 +1004,8 @@ CONTAINS
     END DO
     CALL qes_reset( starting_k_points_ ) 
     DEALLOCATE (ks_objs,eigenvalues, occupations)
-    END SUBROUTINE qexsd_init_band_structure 
     !
+    END SUBROUTINE qexsd_init_band_structure 
     ! 
     !---------------------------------------------------------------------------------------
     SUBROUTINE qexsd_init_total_energy(obj, etot, eband, ehart, vtxc, etxc, ewald, degauss, demet, &
