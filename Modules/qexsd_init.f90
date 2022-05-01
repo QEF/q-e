@@ -904,7 +904,7 @@ CONTAINS
     INTEGER,INTENT(IN)                      :: nks, n_wfc_at
     INTEGER,OPTIONAL,INTENT(IN)             :: nbnd, nbnd_up, nbnd_dw 
     REAL(DP),INTENT(IN)                     :: nelec 
-    REAL(DP),OPTIONAL,INTENT(IN)            :: fermi_energy, ef_updw(2), homo, lumo
+    REAL(DP),OPTIONAL,INTENT(IN)            :: fermi_energy, ef_updw(:), homo, lumo
     REAL(DP),DIMENSION(:,:),INTENT(IN)      :: et, wg, xk
     REAL(DP),DIMENSION(:),INTENT(IN)        :: wk
     INTEGER,DIMENSION(:),INTENT(IN)         :: ngk      
@@ -913,7 +913,6 @@ CONTAINS
     TYPE(smearing_type),OPTIONAL,INTENT(IN) :: smearing
     LOGICAL,INTENT(IN)                      :: wf_collected                    
     ! 
-    LOGICAL                                 :: n_wfc_at_ispresent = .TRUE.  
     INTEGER                                 :: ndim_ks_energies, ik
     INTEGER,TARGET                          :: nbnd_, nbnd_up_, nbnd_dw_
     INTEGER,POINTER                         :: nbnd_opt, nbnd_up_opt, nbnd_dw_opt 
@@ -921,7 +920,6 @@ CONTAINS
     TYPE(ks_energies_type),ALLOCATABLE      :: ks_objs(:)
     TYPE (k_points_IBZ_type)                :: starting_k_points_ 
     REAL(DP),DIMENSION(:),ALLOCATABLE       :: eigenvalues, occupations
-    TYPE (smearing_type)                    :: smearing_ 
     !
     !
     ndim_ks_energies=nks   
@@ -994,13 +992,10 @@ CONTAINS
     ks_objs%lwrite = .TRUE.
     ks_objs%lread  = .TRUE.
     !
-    IF ( PRESENT(smearing) ) smearing_ = smearing
-!
     starting_k_points_ = starting_kpoints
     starting_k_points_%tagname = "starting_k_points"
-!
-! 
-   CALL qes_init  (obj, TAGNAME, LSDA = lsda, NONCOLIN = noncolin, SPINORBIT = lspinorb, NBND = nbnd_opt,   &
+    !
+    CALL qes_init  (obj, TAGNAME, LSDA = lsda, NONCOLIN = noncolin, SPINORBIT = lspinorb, NBND = nbnd_opt,  &
                    NELEC = nelec, WF_COLLECTED = wf_collected, STARTING_K_POINTS = starting_k_points_,      & 
                    NKS = ndim_ks_energies, OCCUPATIONS_KIND = occupations_kind, KS_ENERGIES = ks_objs,      &
                    NBND_UP = nbnd_up_opt, NBND_DW = nbnd_dw_opt, NUM_OF_ATOMIC_WFC = n_wfc_at,              &

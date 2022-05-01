@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2016 Quantum ESPRESSO group
+! Copyright (C) 2016-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -65,7 +65,7 @@ MODULE pw_restart_new
       !                 in binary non-portable form (for checkpointing)
       !                 NB: wavefunctions are not written here in any case
       !
-      USE control_flags,        ONLY : istep, conv_ions, &
+      USE control_flags,        ONLY : istep, conv_elec, conv_ions, &
                                        lscf, scf_error, n_scf_steps, &
                                        tqr, tq_smoothing, tbeta_smoothing, &
                                        gamma_only, noinv, smallmem, &
@@ -138,7 +138,7 @@ MODULE pw_restart_new
       USE rap_point_group_so,   ONLY : elem_so, nelem_so, name_class_so
       USE bfgs_module,          ONLY : bfgs_get_n_iter
       USE fcp_module,           ONLY : lfcp, fcp_mu
-      USE control_flags,        ONLY : conv_elec, conv_ions, ldftd3, do_makov_payne 
+      USE control_flags,        ONLY : ldftd3, do_makov_payne 
       USE Coul_cut_2D,          ONLY : do_cutoff_2D 
       USE esm,                  ONLY : do_comp_esm 
       USE martyna_tuckerman,    ONLY : do_comp_mt 
@@ -152,63 +152,82 @@ MODULE pw_restart_new
       !
       LOGICAL, INTENT(IN) :: only_init, wf_collect
       !
+      ! Structure containing the output tag
+      !
+      TYPE(output_type)   :: output_obj
+      !
+      ! Auxiliary variables used to format arguments for xml file
+      !
       CHARACTER(LEN=37)     :: dft_name
       CHARACTER(LEN=8)      :: smearing_loc
       CHARACTER(LEN=8), EXTERNAL :: schema_smearing
       CHARACTER(LEN=20)     :: occupations
       CHARACTER(LEN=20), EXTERNAL :: schema_occupations
-      INTEGER               :: i, ig, ngg, ipol
-      INTEGER               :: npwx_g, ispin
+      CHARACTER(LEN=20)     :: pbc_label
+      INTEGER               :: npwx_g
       INTEGER,  ALLOCATABLE :: ngk_g(:)
-      INTEGER                  :: iclass, isym, ielem
-      CHARACTER(LEN=15)        :: symop_2_class(48)
-      LOGICAL                  :: opt_conv_ispresent, dft_is_vdw, empirical_vdw
-      INTEGER                  :: n_opt_steps, n_scf_steps_, h_band
-      REAL(DP),TARGET                 :: h_energy
+      INTEGER               :: iclass, isym, ielem
+      CHARACTER(LEN=15)     :: symop_2_class(48)
+      LOGICAL               :: scf_has_converged 
+      LOGICAL               :: opt_conv_ispresent
+      LOGICAL               :: empirical_vdw
+      INTEGER               :: n_opt_steps
+      INTEGER               :: n_scf_steps_
+      !
+      ! Auxiliary structures containing optional variables
+      !
       TYPE(gateInfo_type)          :: gate_info_opt 
       TYPE(dipoleOutput_type)      :: dipol_opt  
-      TYPE(BerryPhaseOutput_type)   :: bp_obj_opt
-      TYPE(hybrid_type)               :: hybrid_obj_opt
-      TYPE(vdW_type)                  :: vdw_obj_opt
-      TYPE(dftU_type)                 :: dftU_obj_opt 
-      REAL(DP), TARGET                      :: lumo_tmp, ef_targ, dispersion_energy_term 
-      REAL(DP), POINTER                     :: lumo_energy, ef_point 
-      REAL(DP), ALLOCATABLE                 :: ef_updw(:)
+      TYPE(BerryPhaseOutput_type)  :: bp_obj_opt
+      TYPE(hybrid_type)            :: hybrid_obj_opt
+      TYPE(vdW_type)               :: vdw_obj_opt
+      TYPE(dftU_type)              :: dftU_obj_opt
+      TYPE(smearing_type)          :: smear_obj_opt 
       !
+      ! Copies of optional variables (*_tg) and pointers to them (*_pt)
+      ! Pointers are nullified to signal that there is no such variable
       !
+      REAL(DP), TARGET :: homo_tg, lumo_tg, ef_tg, degauss_tg, demet_tg, &
+           efield_corr_tg, potstat_corr_tg, gatefield_corr_tg, &
+           dispersion_energy_tg, &
+           london_rcut_tg, london_s6_tg, ts_vdw_econv_thr_tg, &
+           xdm_a1_tg, xdm_a2_tg, ecutvcut_tg, scr_par_tg, loc_thr_tg  
+      REAL(DP), POINTER :: homo_pt, lumo_pt, ef_pt, degauss_pt, demet_pt, &
+           efield_corr_pt, potstat_corr_pt, gatefield_corr_pt, &
+           vdw_term_pt, &
+           london_rcut_pt, london_s6_pt, ts_vdw_econv_thr_pt, &
+           xdm_a1_pt, xdm_a2_pt, ecutvcut_pt, scr_par_pt, loc_thr_pt
+      INTEGER, TARGET  :: dftd3_version_tg
+      INTEGER,POINTER  :: dftd3_version_pt
+      LOGICAL, TARGET  :: dftd3_threebody_tg, ts_vdw_isolated_tg
+      LOGICAL, POINTER :: dftd3_threebody_pt, ts_vdw_isolated_pt
+      CHARACTER(LEN=20),TARGET   :: vdw_corr_tg, dft_nonlocc_tg
+      CHARACTER(LEN=20),POINTER  :: vdw_corr_pt, non_local_term_pt
+      ! orphaned pointers?
+      REAL(DP), POINTER:: ts_thr_pt
+      LOGICAL, POINTER :: ts_isol_pt
       !
-      TYPE(output_type)   :: output_obj
-      REAL(DP),POINTER    :: degauss_, demet_, efield_corr, potstat_corr,  gatefield_corr  
-      LOGICAL, POINTER    :: optimization_has_converged 
-      LOGICAL, TARGET     :: conv_opt  
-      LOGICAL             :: scf_has_converged 
-      INTEGER             :: itemp = 1
-      REAL(DP),ALLOCATABLE :: london_c6_(:), bp_el_pol(:), bp_ion_pol(:), U_opt(:), J0_opt(:), alpha_opt(:), &
-                              J_opt(:,:), beta_opt(:), U2_opt(:), alpha_back_opt(:)
+      ! Pointers/arrays of optional variables
+      ! Nullified/unallocated to signal that there is no such variable
+      !
+      REAL(DP), POINTER :: ef_updw_pt(:)      
+      REAL(DP), ALLOCATABLE :: london_c6_(:), bp_el_pol(:), bp_ion_pol(:), &
+           U_opt(:), J0_opt(:), alpha_opt(:), J_opt(:,:), beta_opt(:), &
+           U2_opt(:), alpha_back_opt(:)
       INTEGER,ALLOCATABLE :: n_opt(:), l_opt(:), l2_opt(:), l3_opt(:)
       LOGICAL, ALLOCATABLE :: backall_opt(:) 
-      CHARACTER(LEN=3),ALLOCATABLE :: species_(:)
-      CHARACTER(LEN=20),TARGET   :: dft_nonlocc_
-      INTEGER,TARGET             :: dftd3_version_
-      CHARACTER(LEN=20),TARGET   :: vdw_corr_, pbc_label 
-      CHARACTER(LEN=20),POINTER  :: non_local_term_pt, vdw_corr_pt 
-      REAL(DP),TARGET            :: temp(20), lond_rcut_, lond_s6_, ts_vdw_econv_thr_, xdm_a1_, xdm_a2_, ectuvcut_,&
-                                    scr_par_, loc_thr_  
-      REAL(DP),POINTER           :: vdw_term_pt, ts_thr_pt, london_s6_pt, london_rcut_pt, xdm_a1_pt, xdm_a2_pt, &
-                                    ts_vdw_econv_thr_pt, ectuvcut_opt, scr_par_opt, loc_thr_p, h_energy_ptr
-      LOGICAL,TARGET             :: dftd3_threebody_, ts_vdw_isolated_, domag_
-      LOGICAL,POINTER            :: ts_isol_pt, dftd3_threebody_pt, ts_vdw_isolated_pt, domag_opt  
-      INTEGER,POINTER            :: dftd3_version_pt
-      TYPE(smearing_type)        :: smear_obj 
-
-      NULLIFY( degauss_, demet_, efield_corr, potstat_corr, gatefield_corr) 
-      NULLIFY( lumo_energy, ef_point)  
-      NULLIFY ( optimization_has_converged, non_local_term_pt, &
-           vdw_corr_pt, vdw_term_pt, ts_thr_pt, london_s6_pt, london_rcut_pt, &
-           xdm_a1_pt, xdm_a2_pt, ts_vdw_econv_thr_pt, ts_isol_pt, &
-           dftd3_threebody_pt, ts_vdw_isolated_pt, dftd3_version_pt )
-      NULLIFY ( ectuvcut_opt, scr_par_opt, loc_thr_p, h_energy_ptr, domag_opt) 
-
+      !
+      !
+      NULLIFY (homo_pt, lumo_pt, ef_pt, degauss_pt, demet_pt, &
+           efield_corr_pt, potstat_corr_pt, gatefield_corr_pt, &
+           vdw_term_pt, &
+           london_rcut_pt, london_s6_pt, ts_vdw_econv_thr_pt, &
+           xdm_a1_pt, xdm_a2_pt, ecutvcut_pt, scr_par_pt, loc_thr_pt )
+      NULLIFY (dftd3_version_pt)
+      NULLIFY (dftd3_threebody_pt, ts_vdw_isolated_pt)
+      NULLIFY (vdw_corr_pt, non_local_term_pt)
+      NULLIFY (ef_updw_pt)
+      NULLIFY (ts_thr_pt, ts_isol_pt)
       !
       ! Global PW dimensions need to be properly computed, reducing across MPI tasks
       ! If local PW dimensions are not available, set to 0
@@ -247,10 +266,10 @@ MODULE pw_restart_new
 !-------------------------------------------------------------------------------
 ! ... CONVERGENCE_INFO
 !-------------------------------------------------------------------------------
+         opt_conv_ispresent = .FALSE.
          SELECT CASE (TRIM( calculation )) 
             CASE ( "relax","vc-relax" )
-                conv_opt = conv_ions  
-                optimization_has_converged  => conv_opt
+                opt_conv_ispresent = .TRUE.
                 IF (TRIM( ion_dynamics) == 'bfgs' ) THEN 
                     n_opt_steps = bfgs_get_n_iter('bfgs_iter ') 
                 ELSE 
@@ -263,17 +282,24 @@ MODULE pw_restart_new
                 scf_has_converged = .FALSE. 
                 n_scf_steps_ = 1
             CASE default
-                n_opt_steps        = 0 
+                n_opt_steps  = 0 
                 scf_has_converged = conv_elec 
                 n_scf_steps_ = n_scf_steps
          END SELECT
          ! 
-            call qexsd_init_convergence_info(output_obj%convergence_info,   &
+         IF ( opt_conv_ispresent) THEN
+             call qexsd_init_convergence_info(output_obj%convergence_info,   &
                         SCF_HAS_CONVERGED = scf_has_converged, &
-                        OPTIMIZATION_HAS_CONVERGED = optimization_has_converged,& 
                         N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error/e2,&
                         N_OPT_STEPS = n_opt_steps, GRAD_NORM = sumfor)
-            output_obj%convergence_info_ispresent = .TRUE.
+         ELSE
+             call qexsd_init_convergence_info(output_obj%convergence_info,   &
+                        SCF_HAS_CONVERGED = scf_has_converged, &
+                        OPTIMIZATION_HAS_CONVERGED = conv_ions, &
+                        N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error/e2,&
+                        N_OPT_STEPS = n_opt_steps, GRAD_NORM = sumfor)
+         END IF
+         output_obj%convergence_info_ispresent = .TRUE.
          !
             
 !-------------------------------------------------------------------------------
@@ -362,82 +388,80 @@ MODULE pw_restart_new
          !
          IF (xclib_dft_is('hybrid') ) THEN 
             IF (get_screening_parameter() > 0.0_DP) THEN
-               scr_par_ = get_screening_parameter() 
-               scr_par_opt=> scr_par_ 
+               scr_par_tg = get_screening_parameter() 
+               scr_par_pt => scr_par_tg
             END IF 
             IF (ecutvcut > 0.0_DP) THEN 
-               ectuvcut_ = ecutvcut/e2 
-               ectuvcut_opt => ectuvcut_
+               ecutvcut_tg = ecutvcut/e2 
+               ecutvcut_pt => ecutvcut_tg
             END IF 
             IF ( local_thr > 0._DP) THEN 
-               loc_thr_ = local_thr 
-               loc_thr_p => loc_thr_ 
+               loc_thr_tg = local_thr 
+               loc_thr_pt => loc_thr_tg 
             END IF 
             CALL qexsd_init_hybrid(hybrid_obj_opt, DFT_IS_HYBRID = .TRUE., NQ1 = nq1 , NQ2 = nq2, NQ3 =nq3, & 
                                    ECUTFOCK = ecutfock/e2, &
-                                   EXX_FRACTION = xclib_get_exx_fraction(), SCREENING_PARAMETER = scr_par_opt, &
+                                   EXX_FRACTION = xclib_get_exx_fraction(), SCREENING_PARAMETER = scr_par_pt, &
                                    EXXDIV_TREATMENT = exxdiv_treatment, X_GAMMA_EXTRAPOLATION = x_gamma_extrapolation,&
-                                   ECUTVCUT = ectuvcut_opt, LOCAL_THR = loc_thr_p )
+                                   ECUTVCUT = ecutvcut_pt, LOCAL_THR = loc_thr_pt )
          ELSE 
             hybrid_obj_opt%lwrite=.false. 
          END IF 
 
          empirical_vdw = (llondon .OR. ldftd3 .OR. lxdm .OR. ts_vdw .OR. mbd_vdw )
-         dft_is_vdw = dft_is_nonlocc() 
-         IF ( dft_is_vdw .OR. empirical_vdw ) THEN 
+         IF ( dft_is_nonlocc() .OR. empirical_vdw ) THEN 
             IF ( empirical_vdw) THEN
-                vdw_term_pt => dispersion_energy_term
-                vdw_corr_ = TRIM(vdw_corr)
-                vdw_corr_pt => vdw_corr_
-                IF (llondon ) THEN
-                    dispersion_energy_term = elondon/e2
-                    lond_s6_ = scal6
-                    london_s6_pt => lond_s6_
-                    lond_rcut_ = lon_rcut
-                    london_rcut_pt => lond_rcut_
-                    IF (ANY( c6_i(1:nsp) .NE. -1._DP )) THEN
-                       ALLOCATE (london_c6_(nsp), species_(nsp))
-                       london_c6_(1:nsp) = c6_i(1:nsp)
-                       species_(1:nsp)  = atm(1:nsp)
-                   END IF
-                   !
-                ELSE IF ( lxdm ) THEN
-                    dispersion_energy_term = exdm/e2
-                    xdm_a1_ = xdm_a1
-                    xdm_a1_pt => xdm_a1_
-                    xdm_a2_ = xdm_a2
-                    xdm_a2_pt => xdm_a2_
-                    !
-                ELSE IF ( ldftd3) THEN
-                    dispersion_energy_term = edftd3/e2
-                    dftd3_version_ = dftd3_version
-                    dftd3_version_pt => dftd3_version_
-                    dftd3_threebody_ = dftd3_threebody
-                    dftd3_threebody_pt => dftd3_threebody_
-                ELSE IF ( ts_vdw ) THEN
-                    dispersion_energy_term = 2._DP * EtsvdW/e2
-                    ts_vdw_isolated_ = vdw_isolated
-                    ts_vdw_isolated_pt => ts_vdw_isolated_
-                    ts_vdw_econv_thr_ = vdw_econv_thr
-                    ts_vdw_econv_thr_pt => ts_vdw_econv_thr_
-                ELSE IF ( mbd_vdw ) THEN
-                  dispersion_energy_term = 2._DP * EmbdvdW/e2 - 2._DP * EtsvdW/e2 !avoiding double-counting
-                END IF
+               vdw_corr_tg = TRIM(vdw_corr)
+               vdw_corr_pt => vdw_corr_tg
+               IF (llondon ) THEN
+                  dispersion_energy_tg = elondon/e2
+                  london_s6_tg = scal6
+                  london_s6_pt => london_s6_tg
+                  london_rcut_tg = lon_rcut
+                  london_rcut_pt => london_rcut_tg
+                  IF (ANY( c6_i(1:nsp) .NE. -1._DP )) THEN
+                     ALLOCATE (london_c6_(nsp))
+                     london_c6_(1:nsp) = c6_i(1:nsp)
+                  END IF
+                  !
+               ELSE IF ( lxdm ) THEN
+                  dispersion_energy_tg = exdm/e2
+                  xdm_a1_tg = xdm_a1
+                  xdm_a1_pt => xdm_a1_tg
+                  xdm_a2_tg = xdm_a2
+                  xdm_a2_pt => xdm_a2_tg
+                  !
+               ELSE IF ( ldftd3) THEN
+                  dispersion_energy_tg = edftd3/e2
+                  dftd3_version_tg = dftd3_version
+                  dftd3_version_pt => dftd3_version_tg
+                  dftd3_threebody_tg = dftd3_threebody
+                  dftd3_threebody_pt => dftd3_threebody_tg
+               ELSE IF ( ts_vdw ) THEN
+                  dispersion_energy_tg = 2._DP * EtsvdW/e2
+                  ts_vdw_isolated_tg = vdw_isolated
+                  ts_vdw_isolated_pt => ts_vdw_isolated_tg
+                  ts_vdw_econv_thr_tg = vdw_econv_thr
+                  ts_vdw_econv_thr_pt => ts_vdw_econv_thr_tg
+               ELSE IF ( mbd_vdw ) THEN
+                  dispersion_energy_tg = 2._DP * EmbdvdW/e2 - 2._DP * EtsvdW/e2 !avoiding double-counting
+               END IF
+               vdw_term_pt => dispersion_energy_tg
             ELSE
-                vdw_corr_ = 'none'
-                vdw_corr_pt => vdw_corr_
-            END IF 
-            IF (dft_is_vdw) THEN
-                dft_nonlocc_ = TRIM(get_nonlocc_name())
-                non_local_term_pt => dft_nonlocc_
+               vdw_corr_tg = 'none'
+               vdw_corr_pt => vdw_corr_tg
+               dft_nonlocc_tg = TRIM(get_nonlocc_name())
+               non_local_term_pt => dft_nonlocc_tg
             END IF
+            !
             CALL qexsd_init_vdw(vdw_obj_opt, non_local_term_pt, vdw_corr_pt, vdw_term_pt, &
-                                ts_thr_pt, ts_isol_pt, london_s6_pt, LONDON_C6 = london_c6_, &
-                                LONDON_RCUT =   london_rcut_pt, XDM_A1 = xdm_a1_pt, XDM_A2 = xdm_a2_pt,&
-                                 DFTD3_VERSION = dftd3_version_pt, DFTD3_THREEBODY = dftd3_threebody_pt)
-            ELSE 
-               vdw_obj_opt%lwrite=.false. 
-         END IF 
+                 ts_thr_pt, ts_isol_pt, london_s6_pt, LONDON_C6 = london_c6_, &
+                 LONDON_RCUT =   london_rcut_pt, XDM_A1 = xdm_a1_pt, XDM_A2 = xdm_a2_pt,&
+                 DFTD3_VERSION = dftd3_version_pt, DFTD3_THREEBODY = dftd3_threebody_pt)
+            !
+         ELSE 
+            vdw_obj_opt%lwrite=.false. 
+         END IF
          IF ( lda_plus_u ) THEN   
             CALL check_and_allocate_real(U_opt, Hubbard_U)
             CALL check_and_allocate_real(J0_opt, Hubbard_J0) 
@@ -522,12 +546,12 @@ MODULE pw_restart_new
          IF ( only_init ) GO TO 10
          !
          IF ( .NOT. ( lgauss .OR. ltetra )) THEN 
-            CALL get_homo_lumo( h_energy, lumo_tmp)
-            h_energy = h_energy/e2
-            h_energy_ptr => h_energy 
-            IF ( lumo_tmp .LT. 1.d+6 ) THEN
-                lumo_tmp = lumo_tmp/e2
-                lumo_energy => lumo_tmp
+            CALL get_homo_lumo( homo_tg, lumo_tg)
+            homo_tg = homo_tg/e2
+            homo_pt => homo_tg
+            IF ( lumo_tg .LT. 1.d+6 ) THEN
+                lumo_tg = lumo_tg/e2
+                lumo_pt => lumo_tg
             END IF
          END IF
          IF (nks_start == 0 .AND. nk1*nk2*nk3 > 0 ) THEN 
@@ -547,41 +571,42 @@ MODULE pw_restart_new
          END IF 
          qexsd_occ_obj%tagname = 'occupations_kind' 
          IF ( two_fermi_energies ) THEN
-            ALLOCATE ( ef_updw (2) )
-               IF (TRIM(occupations) == 'fixed') THEN  
-                  ef_updw(1)  = MAXVAL(et(INT(nelup),1:nkstot/2))/e2
-                  ef_updw(2)  = MAXVAL(et(INT(neldw),nkstot/2+1:nkstot))/e2 
-               ELSE 
-                  ef_updw = [ef_up/e2, ef_dw/e2]
-               END IF
+            ALLOCATE ( ef_updw_pt (2) )
+            IF (TRIM(occupations) == 'fixed') THEN  
+               ef_updw_pt(1)  = MAXVAL(et(INT(nelup),1:nkstot/2))/e2
+               ef_updw_pt(2)  = MAXVAL(et(INT(neldw),nkstot/2+1:nkstot))/e2 
+            ELSE 
+               ef_updw_pt = [ef_up/e2, ef_dw/e2]
+            END IF
          ELSE
-               ! The Fermi energy is written also for insulators because it can
-               ! be useful for further postprocessing, especially of bands
-               ! (for an insulator the Fermi energy is equal to the HOMO/VBMax)
-               ef_targ = ef/e2
-               ef_point => ef_targ
+            ! The Fermi energy is written also for insulators because it can
+            ! be useful for further postprocessing, especially of bands
+            ! (for an insulator the Fermi energy is equal to the HOMO/VBMax)
+            ef_tg = ef/e2
+            ef_pt => ef_tg
          END IF
 
 
          IF ( lgauss ) THEN
             IF (TRIM(qexsd_input_obj%tagname) == 'input') THEN 
-               smear_obj = qexsd_input_obj%bands%smearing
+               smear_obj_opt = qexsd_input_obj%bands%smearing
             ELSE
                smearing_loc = schema_smearing( smearing )
-               CALL qexsd_init_smearing(smear_obj, smearing_loc, degauss/e2)
+               CALL qexsd_init_smearing(smear_obj_opt, smearing_loc, degauss/e2)
             END IF  
          ELSE 
-            smear_obj%lwrite=.false.  
+            smear_obj_opt%lwrite=.false.  
          END IF 
          !  
             
          CALL qexsd_init_band_structure(  output_obj%band_structure,lsda,noncolin,lspinorb, nelec, natomwfc, &
-                                 et, wg, nkstot, xk, ngk_g, wk, SMEARING = smear_obj,  &
+                                 et, wg, nkstot, xk, ngk_g, wk, SMEARING = smear_obj_opt,  &
                                  STARTING_KPOINTS = qexsd_start_k_obj, OCCUPATIONS_KIND = qexsd_occ_obj, &
-                                 WF_COLLECTED = wf_collect, NBND = nbnd, FERMI_ENERGY = ef_point, EF_UPDW = ef_updw,& 
-                                 HOMO = h_energy_ptr, LUMO = lumo_energy )
+                                 WF_COLLECTED = wf_collect, NBND = nbnd, FERMI_ENERGY = ef_pt, EF_UPDW = ef_updw_pt,& 
+                                 HOMO = homo_pt, LUMO = lumo_pt )
          ! 
-         IF (lgauss)  CALL qes_reset (smear_obj)
+         IF ( ASSOCIATED ( ef_updw_pt ) ) DEALLOCATE (ef_updw_pt)
+         IF (lgauss)  CALL qes_reset (smear_obj_opt)
          CALL qes_reset (qexsd_start_k_obj)
          CALL qes_reset (qexsd_occ_obj)
          !
@@ -591,41 +616,33 @@ MODULE pw_restart_new
          !
          IF ( degauss > 0.0d0 ) THEN
             !
-            itemp = itemp + 1 
-            temp(itemp)  = degauss/e2
-            degauss_ => temp(itemp)
+            degauss_tg = degauss/e2
+            degauss_pt => degauss_tg
             !
-            itemp = itemp+1
-            temp(itemp)   = demet/e2
-            demet_ => temp(itemp) 
+            demet_tg = demet/e2
+            demet_pt => demet_tg
          END IF
          IF ( tefield ) THEN 
-            itemp = itemp+1 
-            temp(itemp) = etotefield/e2
-            efield_corr => temp(itemp) 
+            efield_corr_tg =  etotefield/e2
+            efield_corr_pt => efield_corr_tg
          END IF
          IF (lfcp ) THEN
-            itemp = itemp +1
-            temp(itemp) = fcp_mu * tot_charge / e2
-            potstat_corr => temp(itemp)
+            potstat_corr_tg = fcp_mu * tot_charge / e2
+            potstat_corr_pt => potstat_corr_tg
             output_obj%FCP_tot_charge_ispresent = .TRUE.
             output_obj%FCP_tot_charge = tot_charge
             output_obj%FCP_force_ispresent = .TRUE.
             output_obj%FCP_force = (fcp_mu - ef) / e2
          END IF
          IF ( gate) THEN
-            itemp = itemp + 1 
-            temp(itemp) = etotgatefield/e2
-            gatefield_corr => temp(itemp)  
+            gatefield_corr_tg = etotgatefield/e2
+            gatefield_corr_pt => gatefield_corr_tg
          END IF
 
          CALL  qexsd_init_total_energy(output_obj%total_energy, etot/e2, eband/e2, ehart/e2, vtxc/e2, &
-                                       etxc/e2, ewld/e2, degauss_, demet_, efield_corr, potstat_corr,&
-                                       gatefield_corr, DISPERSION_CONTRIBUTION = vdw_term_pt) 
+                                       etxc/e2, ewld/e2, degauss_pt, demet_pt, efield_corr_pt, potstat_corr_pt,&
+                                       gatefield_corr_pt, DISPERSION_CONTRIBUTION = vdw_term_pt) 
          !
-         NULLIFY(degauss_, demet_, efield_corr, potstat_corr, gatefield_corr)
-         itemp = 0
-          !
 !---------------------------------------------------------------------------------------------
 ! ... FORCES
 !----------------------------------------------------------------------------------------------

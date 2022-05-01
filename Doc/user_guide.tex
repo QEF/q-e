@@ -1642,6 +1642,15 @@ of output. Running several instances of a serial code with
 \texttt{mpirun} or \texttt{mpiexec} produces strange crashes.
 
 \paragraph{Trouble with input files}
+Input files should be plain ASCII text. The presence of CRLF line 
+terminators (may appear as \^{}M, Control-M, characters at the end
+of lines), tabulators, or non-ASCII characters (e.g. non-ASCII
+quotation marks, that at a first glance may look the same as
+the ASCII character) is a frequent source of trouble.
+Typically, this happens with files coming from Windows or produced
+with "smart" editors. Verify with command \texttt{file} and convert
+with command \texttt{iconv} if needed.
+
 Some implementations of the MPI library have problems with input
 redirection in parallel. This typically shows up under the form of
 mysterious errors when reading data. If this happens, use the option
