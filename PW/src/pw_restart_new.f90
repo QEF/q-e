@@ -289,13 +289,12 @@ MODULE pw_restart_new
              call qexsd_init_convergence_info(output_obj%convergence_info,   &
                         SCF_HAS_CONVERGED = scf_has_converged, &
                         N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error/e2,&
+                        OPTIMIZATION_HAS_CONVERGED = conv_ions, &
                         N_OPT_STEPS = n_opt_steps, GRAD_NORM = sumfor)
          ELSE
              call qexsd_init_convergence_info(output_obj%convergence_info,   &
                         SCF_HAS_CONVERGED = scf_has_converged, &
-                        OPTIMIZATION_HAS_CONVERGED = conv_ions, &
-                        N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error/e2,&
-                        N_OPT_STEPS = n_opt_steps, GRAD_NORM = sumfor)
+                        N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error/e2)
          END IF
          output_obj%convergence_info_ispresent = .TRUE.
          !
@@ -494,7 +493,7 @@ MODULE pw_restart_new
          CALL qexsd_init_dft  (output_obj%dft, dft_name, hybrid_obj_opt, vdw_obj_opt, dftU_obj_opt)
          CALL qes_reset(hybrid_obj_opt) 
          CALL qes_reset(vdw_obj_opt) 
-         CALL qes_reset( dftU_obj_opt) 
+         CALL qes_reset(dftU_obj_opt) 
          !
 !-------------------------------------------------------------------------------
 ! ... PERIODIC BOUNDARY CONDITIONS 
