@@ -207,13 +207,12 @@ MODULE pw_restart_new
       REAL(DP), POINTER:: ts_thr_pt
       LOGICAL, POINTER :: ts_isol_pt
       !
-      ! Pointers/arrays of optional variables
-      ! Nullified/unallocated to signal that there is no such variable
+      ! Arrays of optional variables
+      ! If not allocated, there is no such variable
       !
-      REAL(DP), POINTER :: ef_updw_pt(:)      
       REAL(DP), ALLOCATABLE :: london_c6_(:), bp_el_pol(:), bp_ion_pol(:), &
            U_opt(:), J0_opt(:), alpha_opt(:), J_opt(:,:), beta_opt(:), &
-           U2_opt(:), alpha_back_opt(:)
+           U2_opt(:), alpha_back_opt(:), ef_updw(:)
       INTEGER,ALLOCATABLE :: n_opt(:), l_opt(:), l2_opt(:), l3_opt(:)
       LOGICAL, ALLOCATABLE :: backall_opt(:) 
       !
@@ -226,7 +225,6 @@ MODULE pw_restart_new
       NULLIFY (dftd3_version_pt)
       NULLIFY (dftd3_threebody_pt, ts_vdw_isolated_pt)
       NULLIFY (vdw_corr_pt, non_local_term_pt)
-      NULLIFY (ef_updw_pt)
       NULLIFY (ts_thr_pt, ts_isol_pt)
       !
       ! Global PW dimensions need to be properly computed, reducing across MPI tasks
@@ -291,13 +289,12 @@ MODULE pw_restart_new
              call qexsd_init_convergence_info(output_obj%convergence_info,   &
                         SCF_HAS_CONVERGED = scf_has_converged, &
                         N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error/e2,&
+                        OPTIMIZATION_HAS_CONVERGED = conv_ions, &
                         N_OPT_STEPS = n_opt_steps, GRAD_NORM = sumfor)
          ELSE
              call qexsd_init_convergence_info(output_obj%convergence_info,   &
                         SCF_HAS_CONVERGED = scf_has_converged, &
-                        OPTIMIZATION_HAS_CONVERGED = conv_ions, &
-                        N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error/e2,&
-                        N_OPT_STEPS = n_opt_steps, GRAD_NORM = sumfor)
+                        N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error/e2)
          END IF
          output_obj%convergence_info_ispresent = .TRUE.
          !
@@ -496,7 +493,7 @@ MODULE pw_restart_new
          CALL qexsd_init_dft  (output_obj%dft, dft_name, hybrid_obj_opt, vdw_obj_opt, dftU_obj_opt)
          CALL qes_reset(hybrid_obj_opt) 
          CALL qes_reset(vdw_obj_opt) 
-         CALL qes_reset( dftU_obj_opt) 
+         CALL qes_reset(dftU_obj_opt) 
          !
 !-------------------------------------------------------------------------------
 ! ... PERIODIC BOUNDARY CONDITIONS 
@@ -571,12 +568,12 @@ MODULE pw_restart_new
          END IF 
          qexsd_occ_obj%tagname = 'occupations_kind' 
          IF ( two_fermi_energies ) THEN
-            ALLOCATE ( ef_updw_pt (2) )
+            ALLOCATE ( ef_updw (2) )
             IF (TRIM(occupations) == 'fixed') THEN  
-               ef_updw_pt(1)  = MAXVAL(et(INT(nelup),1:nkstot/2))/e2
-               ef_updw_pt(2)  = MAXVAL(et(INT(neldw),nkstot/2+1:nkstot))/e2 
+               ef_updw(1)  = MAXVAL(et(INT(nelup),1:nkstot/2))/e2
+               ef_updw(2)  = MAXVAL(et(INT(neldw),nkstot/2+1:nkstot))/e2 
             ELSE 
-               ef_updw_pt = [ef_up/e2, ef_dw/e2]
+               ef_updw = [ef_up/e2, ef_dw/e2]
             END IF
          ELSE
             ! The Fermi energy is written also for insulators because it can
@@ -602,10 +599,9 @@ MODULE pw_restart_new
          CALL qexsd_init_band_structure(  output_obj%band_structure,lsda,noncolin,lspinorb, nelec, natomwfc, &
                                  et, wg, nkstot, xk, ngk_g, wk, SMEARING = smear_obj_opt,  &
                                  STARTING_KPOINTS = qexsd_start_k_obj, OCCUPATIONS_KIND = qexsd_occ_obj, &
-                                 WF_COLLECTED = wf_collect, NBND = nbnd, FERMI_ENERGY = ef_pt, EF_UPDW = ef_updw_pt,& 
+                                 WF_COLLECTED = wf_collect, NBND = nbnd, FERMI_ENERGY = ef_pt, EF_UPDW = ef_updw, &
                                  HOMO = homo_pt, LUMO = lumo_pt )
          ! 
-         IF ( ASSOCIATED ( ef_updw_pt ) ) DEALLOCATE (ef_updw_pt)
          IF (lgauss)  CALL qes_reset (smear_obj_opt)
          CALL qes_reset (qexsd_start_k_obj)
          CALL qes_reset (qexsd_occ_obj)
