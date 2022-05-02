@@ -104,9 +104,6 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! true if the root is converged
   REAL(DP) :: empty_ethr 
     ! threshold for empty bands
-  REAL(DP), ALLOCATABLE :: ew_host(:)
-  REAL(DP), ALLOCATABLE :: e_host(:)
-    ! auxiliary variables for performing dot product
   INTEGER :: i,j,k
   REAL(DP):: aux
 !civn   
@@ -163,12 +160,6 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   ALLOCATE( ew( nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' regterg ',' cannot allocate ew ', ABS(ierr) )
-  ALLOCATE( e_host( nvec ), STAT=ierr )
-  IF( ierr /= 0 ) &
-     CALL errore( ' regterg ',' cannot allocate e_host ', ABS(ierr) )
-  ALLOCATE( ew_host( nvecx ), STAT=ierr )
-  IF( ierr /= 0 ) &
-     CALL errore( ' regterg ',' cannot allocate ew_host ', ABS(ierr) )
   ALLOCATE( conv( nvec ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( 'regterg ',' cannot allocate conv ', ABS(ierr) )
@@ -496,18 +487,15 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      ! ... test for convergence (on the CPU)
      !
-     !$acc update host(ew)
-     ew_host(1:nvec) = ew(1:nvec)
-     e_host(1:nvec) = e_d(1:nvec)
-     WHERE( btype(1:nvec) == 1 )
-        !
-        conv(1:nvec) = ( ( ABS( ew_host(1:nvec) - e_host(1:nvec) ) < ethr ) )
-        !
-     ELSEWHERE
-        !
-        conv(1:nvec) = ( ( ABS( ew_host(1:nvec) - e_host(1:nvec) ) < empty_ethr ) )
-        !
-     END WHERE
+     !$acc parallel loop copy(conv(1:nvec)) copyin(btype(1:nvec))
+     DO i = 1, nvec
+       IF(btype(i) == 1) THEN
+         conv(i) = ( ( ABS( ew(i) - e_d(i) ) < ethr ) )
+       ELSE
+         conv(i) = ( ( ABS( ew(i) - e_d(i) ) < empty_ethr ) )
+       END IF 
+     END DO 
+     !
      ! ... next line useful for band parallelization of exact exchange
      IF ( nbgrp > 1 ) CALL mp_bcast(conv,root_bgrp_id,inter_bgrp_comm)
      !
@@ -645,7 +633,6 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   CALL gbuf%release_buffer(pinned_buffer, ierr)
   !
   DEALLOCATE( conv )
-  DEALLOCATE( e_host, ew_host )
   DEALLOCATE( hr, sr, vr, ew )
   !
   IF ( uspp ) DEALLOCATE( spsi )
