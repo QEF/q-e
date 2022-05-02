@@ -117,7 +117,7 @@ CONTAINS
         !
         CALL environ%setup%init_numerical(do_comp_mt)
         !
-        CALL environ%main%init(nat, nsp, upf%psd, ityp, zv)
+        CALL environ%main%init(nat, nsp, ityp, zv, label=upf%psd)
         !
         !--------------------------------------------------------------------------------
     END SUBROUTINE init_environ_base
