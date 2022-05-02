@@ -98,11 +98,12 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   REAL(DP) :: empty_ethr 
     ! threshold for empty bands
   INTEGER :: i,j,k
-  REAL(DP):: aux
 !civn   
   COMPLEX(DP), POINTER  :: pinned_buffer(:,:)
     ! auxiliary variable for performing MPI operation and overcome CUDAFortran limitations
   !
+  REAL(DP), EXTERNAL :: MYDDOT_VECTOR_GPU 
+  !$acc routine(MYDDOT_VECTOR_GPU) vector
   !
   EXTERNAL  h_psi_gpu, s_psi_gpu, g_psi_gpu
     ! h_psi_gpu(npwx,npw,nvec,psi,hpsi)
@@ -356,23 +357,18 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      ! ...         ew = <psi_i|psi_i>,  i = nbase + 1, nbase + notcnv
      !
-     ! == TO BE OPTIMIZED == !!!!
-     !$acc parallel vector_length(96) create(aux)
-     !$acc loop seq private(nbn) reduction(+:aux)
+     !$acc parallel vector_length(96) 
+     !$acc loop seq private(nbn) 
      DO n = 1, notcnv
         !
         nbn = nbase + n
-        aux = 0.0_DP
-        !$acc loop vector reduction(+:aux)
-        DO i = 1, npw
-          aux = aux + 2.D0 * DCONJG(psi(i,nbn)) * psi(i, nbn)
-        END DO
         !
-        IF (gstart == 2) aux = aux - DBLE(psi(1,nbn) * psi(1,nbn)) ! psi(1,nbn) * psi(1,nbn)
-        ew(n) = aux
+        ew(n) = 2.D0 * MYDDOT_VECTOR_GPU( npw2, psi(1,nbn), psi(1,nbn) )
+        IF (gstart == 2) ew(n) = ew(n) - DBLE(psi(1,nbn) * psi(1,nbn)) ! psi(1,nbn) * psi(1,nbn)
+        !
      END DO
      !$acc end parallel
-     ! == OPTIMIZE ABOVE ==
+     !
      !$acc host_data use_device(ew)
      CALL mp_sum( ew( 1:notcnv ), intra_bgrp_comm )
      !$acc end host_data
