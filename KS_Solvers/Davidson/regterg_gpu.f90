@@ -89,6 +89,8 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! counter on the bands
   INTEGER :: n_start, n_end, my_n
   INTEGER :: ierr
+  REAL(DP), ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:), ew(:)
+  !$acc declare device_resident(hr, sr, vr, ew)
   REAL(DP), ALLOCATABLE :: hr_d(:,:), sr_d(:,:), vr_d(:,:), ew_d(:)
 #if defined(__CUDA)
   attributes(DEVICE) :: hr_d, sr_d, vr_d, ew_d
@@ -153,18 +155,22 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         CALL errore( ' regterg ',' cannot allocate spsi ', ABS(ierr) )
   END IF
   !
+  ALLOCATE( sr( nvecx, nvecx ), STAT=ierr )
   ALLOCATE( sr_d( nvecx, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
-     CALL errore( ' regterg ',' cannot allocate sr_d ', ABS(ierr) )
+     CALL errore( ' regterg ',' cannot allocate sr ', ABS(ierr) )
+  ALLOCATE( hr( nvecx, nvecx ), STAT=ierr )
   ALLOCATE( hr_d( nvecx, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
-     CALL errore( ' regterg ',' cannot allocate hr_d ', ABS(ierr) )
+     CALL errore( ' regterg ',' cannot allocate hr ', ABS(ierr) )
+  ALLOCATE( vr( nvecx, nvecx ), STAT=ierr )
   ALLOCATE( vr_d( nvecx, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
-     CALL errore( ' regterg ',' cannot allocate vr_d ', ABS(ierr) )
+     CALL errore( ' regterg ',' cannot allocate vr ', ABS(ierr) )
+  ALLOCATE( ew( nvecx ), STAT=ierr )
   ALLOCATE( ew_d( nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
-     CALL errore( ' regterg ',' cannot allocate ew_d ', ABS(ierr) )
+     CALL errore( ' regterg ',' cannot allocate ew ', ABS(ierr) )
   ALLOCATE( e_host( nvec ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' regterg ',' cannot allocate e_host ', ABS(ierr) )
@@ -205,51 +211,55 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   ! ... spsi contains s times the basis vectors
   !
   IF ( uspp ) CALL s_psi_gpu( npwx, npw, nvec, psi, spsi )
+  !$acc end host_data
   !
   ! ... hr contains the projection of the hamiltonian onto the reduced 
   ! ... space vr contains the eigenvectors of hr
   !
   CALL start_clock( 'regterg:init' )
-  hr_d(:,:) = 0.D0
-  sr_d(:,:) = 0.D0
-  vr_d(:,:) = 0.D0
+  !$acc kernels
+  hr(:,:) = 0.D0
+  sr(:,:) = 0.D0
+  vr(:,:) = 0.D0
+  !$acc end kernels
   !
+  !$acc host_data use_device(psi, hpsi, spsi, hr, sr)
   CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
   my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
   if (n_start .le. n_end) &
-  CALL cublasDgemm( 'T','N', nbase, my_n, npw2, 2.D0 , psi, npwx2, hpsi(1,n_start), npwx2, 0.D0, hr_d(1,n_start), nvecx )
-  IF ( gstart == 2 ) CALL KScudaDGER(nbase, my_n, -1.D0, psi, npwx2, hpsi(1,n_start), npwx2, hr_d(1,n_start), nvecx )
-  CALL mp_sum( hr_d( :, 1:nbase ), inter_bgrp_comm )
+  CALL cublasDgemm( 'T','N', nbase, my_n, npw2, 2.D0 , psi, npwx2, hpsi(1,n_start), npwx2, 0.D0, hr(1,n_start), nvecx )
+  IF ( gstart == 2 ) CALL KScudaDGER(nbase, my_n, -1.D0, psi, npwx2, hpsi(1,n_start), npwx2, hr(1,n_start), nvecx )
+  CALL mp_sum( hr( :, 1:nbase ), inter_bgrp_comm )
   !
-  CALL mp_sum( hr_d( :, 1:nbase ), intra_bgrp_comm )
+  CALL mp_sum( hr( :, 1:nbase ), intra_bgrp_comm )
   !
   IF ( uspp ) THEN
      !
      if (n_start .le. n_end) &
-     CALL cublasDgemm( 'T','N', nbase, my_n, npw2, 2.D0, psi, npwx2, spsi(1,n_start), npwx2, 0.D0, sr_d(1,n_start), nvecx )
-     IF ( gstart == 2 ) CALL KScudaDGER(nbase, my_n, -1.D0, psi, npwx2, spsi(1,n_start), npwx2, sr_d(1,n_start), nvecx )
+     CALL cublasDgemm( 'T','N', nbase, my_n, npw2, 2.D0, psi, npwx2, spsi(1,n_start), npwx2, 0.D0, sr(1,n_start), nvecx )
+     IF ( gstart == 2 ) CALL KScudaDGER(nbase, my_n, -1.D0, psi, npwx2, spsi(1,n_start), npwx2, sr(1,n_start), nvecx )
      !
   ELSE
      !
      if (n_start .le. n_end) &
-     CALL cublasDgemm( 'T','N', nbase, my_n, npw2, 2.D0, psi, npwx2, psi(1,n_start), npwx2, 0.D0, sr_d(1,n_start), nvecx )
-     IF ( gstart == 2 ) CALL KScudaDGER(nbase, my_n, -1.D0, psi, npwx2, psi(1,n_start), npwx2, sr_d(1,n_start), nvecx )
+     CALL cublasDgemm( 'T','N', nbase, my_n, npw2, 2.D0, psi, npwx2, psi(1,n_start), npwx2, 0.D0, sr(1,n_start), nvecx )
+     IF ( gstart == 2 ) CALL KScudaDGER(nbase, my_n, -1.D0, psi, npwx2, psi(1,n_start), npwx2, sr(1,n_start), nvecx )
      !
   END IF
-  !$acc end host_data
-  CALL mp_sum( sr_d( :, 1:nbase ), inter_bgrp_comm )
+  CALL mp_sum( sr( :, 1:nbase ), inter_bgrp_comm )
   !
-  CALL mp_sum( sr_d( :, 1:nbase ), intra_bgrp_comm )
-
+  CALL mp_sum( sr( :, 1:nbase ), intra_bgrp_comm )
+  !$acc end host_data
+  !
   CALL stop_clock( 'regterg:init' )
   !
   IF ( lrot ) THEN
      !
-!$cuf kernel do(1) <<<*,*>>>
+     !$acc parallel loop deviceptr(e_d)
      DO n = 1, nbase
         !
-        e_d(n) = hr_d(n,n)
-        vr_d(n,n) = 1.D0
+        e_d(n) = hr(n,n)
+        vr(n,n) = 1.D0
         !
      END DO
      !
@@ -257,22 +267,38 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      ! ... diagonalize the reduced hamiltonian
      !
+     !$acc host_data use_device(hr, sr, vr, ew)
      CALL start_clock( 'regterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
-        CALL diaghg( nbase, nvec, hr_d, sr_d, nvecx, ew_d, vr_d, me_bgrp, root_bgrp, intra_bgrp_comm )
+        CALL diaghg( nbase, nvec, hr, sr, nvecx, ew, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
      END IF
      IF( nbgrp > 1 ) THEN
-        CALL mp_bcast( vr_d, root_bgrp_id, inter_bgrp_comm )
-        CALL mp_bcast( ew_d, root_bgrp_id, inter_bgrp_comm )
+        CALL mp_bcast( vr, root_bgrp_id, inter_bgrp_comm )
+        CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
      ENDIF
      CALL stop_clock( 'regterg:diag' ) 
+     !$acc end host_data
      !
-!$cuf kernel do(1) <<<*,*>>>
+     !$acc parallel loop deviceptr(e_d)
      DO i = 1, nvec
-        e_d(i) = ew_d(i)
+        e_d(i) = ew(i)
      END DO
      !
   END IF
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !$acc parallel deviceptr(hr_d, sr_d, vr_d, ew_d)
+  !$acc loop gang
+  DO i = 1, nvecx
+    ew_d(i) =  ew(i)
+    !$acc loop vector 
+    DO j = 1, nvecx
+     hr_d(i,j) =  hr(i,j)
+     sr_d(i,j) =  sr(i,j)
+     vr_d(i,j) =  vr(i,j)
+    END DO 
+  END DO 
+  !$acc end parallel
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !
   ! ... iterate
   !
@@ -281,6 +307,20 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      dav_iter = kter
      !
      CALL start_clock( 'regterg:update' )
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !$acc parallel deviceptr(hr_d, sr_d, vr_d, ew_d)
+  !$acc loop gang
+  DO i = 1, nvecx
+    ew(i) =  ew_d(i)
+    !$acc loop vector 
+    DO j = 1, nvecx
+     hr(i,j) =  hr_d(i,j)
+     sr(i,j) =  sr_d(i,j)
+     vr(i,j) =  vr_d(i,j)
+    END DO 
+  END DO 
+  !$acc end parallel
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      !
      !  ======== FROM HERE =====
      !np = 0
@@ -307,8 +347,10 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !   !
      !END DO
      ! ========= TO HERE, REPLACED BY =======
-
-     CALL reorder_evals_revecs(nbase, nvec, nvecx, conv, e_d, ew_d, vr_d)
+     !
+     !$acc host_data use_device(ew, vr)
+     CALL reorder_evals_revecs(nbase, nvec, nvecx, conv, e_d, ew, vr)
+     !$acc end host_data
      !
      nb1 = nbase + 1
      !
@@ -322,38 +364,38 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
            psi(k,nbase+i)=ZERO
         END DO
      END DO
-     !$acc host_data use_device(psi, spsi)
+     !$acc host_data use_device(psi, spsi, vr)
      IF ( uspp ) THEN
         !
         if (n_start .le. n_end) &
-        CALL cublasDgemm( 'N','N', npw2, notcnv, my_n, 1.D0, spsi(1,n_start), npwx2, vr_d(n_start,1), nvecx, 0.D0, psi(1,nb1), npwx2 )
+        CALL cublasDgemm( 'N','N', npw2, notcnv, my_n, 1.D0, spsi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, psi(1,nb1), npwx2 )
         !     
      ELSE
         !
         if (n_start .le. n_end) &
-        CALL cublasDgemm( 'N','N', npw2, notcnv, my_n, 1.D0, psi(1,n_start), npwx2, vr_d(n_start,1), nvecx, 0.D0, psi(1,nb1), npwx2 )
+        CALL cublasDgemm( 'N','N', npw2, notcnv, my_n, 1.D0, psi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, psi(1,nb1), npwx2 )
         !
      END IF
      !$acc end host_data
 ! NB: must not call mp_sum over inter_bgrp_comm here because it is done later to the full correction
      !
-     !$acc parallel loop collapse(2) deviceptr(ew_d)
+     !$acc parallel loop collapse(2) 
      DO np=1,notcnv
         DO k=1,npwx
-          psi(k,nbase+np) = - ew_d(nbase+np) * psi(k,nbase+np)
+          psi(k,nbase+np) = - ew(nbase+np) * psi(k,nbase+np)
         END DO
      END DO
      !
-     !$acc host_data use_device(psi, hpsi)
+     !$acc host_data use_device(psi, hpsi, vr, ew)
      if (n_start .le. n_end) &
-     CALL cublasDgemm( 'N','N', npw2, notcnv, my_n, 1.D0, hpsi(1,n_start), npwx2, vr_d(n_start,1), nvecx, 1.D0, psi(1,nb1), npwx2 )
+     CALL cublasDgemm( 'N','N', npw2, notcnv, my_n, 1.D0, hpsi(1,n_start), npwx2, vr(n_start,1), nvecx, 1.D0, psi(1,nb1), npwx2 )
      CALL mp_sum( psi(:,nb1:nbase+notcnv), inter_bgrp_comm )
      !
      CALL stop_clock( 'regterg:update' )
      !
      ! ... approximate inverse iteration
      !
-     CALL g_psi_gpu( npwx, npw, notcnv, 1, psi(1,nb1), ew_d(nb1) )
+     CALL g_psi_gpu( npwx, npw, notcnv, 1, psi(1,nb1), ew(nb1) )
      !$acc end host_data
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in 
@@ -363,7 +405,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      ! ...         ew = <psi_i|psi_i>,  i = nbase + 1, nbase + notcnv
      !
      ! == TO BE OPTIMIZED == !!!!
-     !$acc parallel vector_length(96) deviceptr(ew_d) create(aux)
+     !$acc parallel vector_length(96) create(aux)
      !$acc loop seq private(nbn) reduction(+:aux)
      DO n = 1, notcnv
         !
@@ -375,20 +417,22 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         END DO
         !
         IF (gstart == 2) aux = aux - DBLE(psi(1,nbn) * psi(1,nbn)) ! psi(1,nbn) * psi(1,nbn)
-        ew_d(n) = aux
+        ew(n) = aux
      END DO
      !$acc end parallel
      ! == OPTIMIZE ABOVE ==
-     CALL mp_sum( ew_d( 1:notcnv ), intra_bgrp_comm )
+     !$acc host_data use_device(ew)
+     CALL mp_sum( ew( 1:notcnv ), intra_bgrp_comm )
+     !$acc end host_data
      !
-     !$acc parallel vector_length(96) deviceptr(ew_d)
+     !$acc parallel vector_length(96) 
      !$acc loop gang  
      DO i = 1,notcnv
-        psi(1,nbase+i) = psi(1,nbase+i)/SQRT( ew_d(i) )
+        psi(1,nbase+i) = psi(1,nbase+i)/SQRT( ew(i) )
         IF (gstart == 2) psi(1,nbase+i) = CMPLX( DBLE(psi(1,nbase+i)), 0.D0 ,kind=DP)
         !$acc loop vector 
         DO k=2,npwx
-           psi(k,nbase+i) = psi(k,nbase+i)/SQRT( ew_d(i) )
+           psi(k,nbase+i) = psi(k,nbase+i)/SQRT( ew(i) )
         END DO
      END DO
      !$acc end parallel
@@ -399,87 +443,97 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      CALL h_psi_gpu( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
      !
      IF ( uspp ) CALL s_psi_gpu( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
+     !$acc end host_data
      !
      ! ... update the reduced hamiltonian
      !
      CALL start_clock( 'regterg:overlap' )
      !
-!$cuf kernel do(2) <<<*,*>>>
+     !$acc parallel loop collapse(2)
      DO i=0,notcnv-1
         DO j=1, nvecx
-          hr_d( j, nb1+i )=0.d0
+          hr( j, nb1+i )=0.d0
         END DO
      END DO
+     !
+     !$acc host_data use_device(psi, hpsi, hr)
      CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      CALL cublasDgemm( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, &
-                       hpsi(1,nb1), npwx2, 0.D0, hr_d(n_start,nb1), nvecx )
+                       hpsi(1,nb1), npwx2, 0.D0, hr(n_start,nb1), nvecx )
      IF ( gstart == 2 ) CALL KScudaDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, &
-                                         hpsi(1,nb1), npwx2, hr_d(n_start,nb1), nvecx )
-     CALL mp_sum( hr_d( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
+                                         hpsi(1,nb1), npwx2, hr(n_start,nb1), nvecx )
+     CALL mp_sum( hr( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
      !
-     CALL mp_sum( hr_d( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
+     CALL mp_sum( hr( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
+     !$acc end host_data
      !
-!$cuf kernel do(2) <<<*,*>>>
+     !$acc parallel loop collapse(2)
      DO i=0,notcnv-1
         DO j=1, nvecx
-          sr_d( j, nb1+i )=0.d0
+          sr( j, nb1+i )=0.d0
         END DO
      END DO
+     !
+     !$acc host_data use_device(psi, spsi, sr)
      CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      IF ( uspp ) THEN
         !
         CALL cublasDgemm( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, &
-                           spsi(1,nb1), npwx2, 0.D0, sr_d(n_start,nb1), nvecx )
+                           spsi(1,nb1), npwx2, 0.D0, sr(n_start,nb1), nvecx )
         IF ( gstart == 2 ) CALL KScudaDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, &
-                                            spsi(1,nb1), npwx2, sr_d(n_start,nb1), nvecx )
+                                            spsi(1,nb1), npwx2, sr(n_start,nb1), nvecx )
         !
      ELSE
         !
         CALL cublasDgemm( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, &
-                          psi(1,nb1), npwx2, 0.D0, sr_d(n_start,nb1), nvecx )
+                          psi(1,nb1), npwx2, 0.D0, sr(n_start,nb1), nvecx )
         IF ( gstart == 2 ) CALL KScudaDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, &
-                                            psi(1,nb1), npwx2, sr_d(n_start,nb1), nvecx )
+                                            psi(1,nb1), npwx2, sr(n_start,nb1), nvecx )
 
         !
      END IF
-     CALL mp_sum( sr_d( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
+     CALL mp_sum( sr( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
      !
-     CALL mp_sum( sr_d( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
+     CALL mp_sum( sr( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
      !$acc end host_data
      !
      CALL stop_clock( 'regterg:overlap' )
      !
      nbase = nbase + notcnv
      !
-!$cuf kernel do(1) <<<*,*>>>
+     !$acc serial
      DO n = 1, nbase
         !
         DO m = n + 1, nbase
            !
-           hr_d(m,n) = hr_d(n,m)
-           sr_d(m,n) = sr_d(n,m)
+           hr(m,n) = hr(n,m)
+           sr(m,n) = sr(n,m)
            !
         END DO
         !
      END DO
+     !$acc end serial
      !
      ! ... diagonalize the reduced hamiltonian
      !
      CALL start_clock( 'regterg:diag' )
+     !$acc host_data use_device(hr, sr, ew, vr)
      IF( my_bgrp_id == root_bgrp_id ) THEN
-        CALL diaghg( nbase, nvec, hr_d, sr_d, nvecx, ew_d, vr_d, me_bgrp, root_bgrp, intra_bgrp_comm )
+        CALL diaghg( nbase, nvec, hr, sr, nvecx, ew, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
      END IF
      IF( nbgrp > 1 ) THEN
-        CALL mp_bcast( vr_d, root_bgrp_id, inter_bgrp_comm )
-        CALL mp_bcast( ew_d, root_bgrp_id, inter_bgrp_comm )
+        CALL mp_bcast( vr, root_bgrp_id, inter_bgrp_comm )
+        CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
      ENDIF
+     !$acc end host_data
      CALL stop_clock( 'regterg:diag' )
      !
      ! ... test for convergence (on the CPU)
      !
-     ew_host(1:nvec) = ew_d(1:nvec)
+     !$acc update host(ew)
+     ew_host(1:nvec) = ew(1:nvec)
      e_host(1:nvec) = e_d(1:nvec)
      WHERE( btype(1:nvec) == 1 )
         !
@@ -495,9 +549,9 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      notcnv = COUNT( .NOT. conv(:) )
      !
-!$cuf kernel do(1) <<<*,*>>>
+     !$acc parallel loop deviceptr(e_d)
      DO i=1,nvec
-       e_d(i) = ew_d(i)
+       e_d(i) = ew(i)
      END DO
      !
      ! ... if overall convergence has been achieved, or the dimension of
@@ -506,6 +560,20 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      ! ... the first nvec elements with the current estimate of the
      ! ... eigenvectors;  set the basis dimension to nvec.
      !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !$acc parallel deviceptr(hr_d, sr_d, vr_d, ew_d)
+  !$acc loop gang
+  DO i = 1, nvecx
+    ew_d(i) =  ew(i)
+    !$acc loop vector 
+    DO j = 1, nvecx
+     hr_d(i,j) =  hr(i,j)
+     sr_d(i,j) =  sr(i,j)
+     vr_d(i,j) =  vr(i,j)
+    END DO 
+  END DO 
+  !$acc end parallel
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      IF ( notcnv == 0 .OR. &
           nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
         !
@@ -519,9 +587,9 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         END DO
         CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
         my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
-        !$acc host_data use_device(psi)
+        !$acc host_data use_device(psi, vr)
         CALL cublasDgemm( 'N','N', npw2, nvec, my_n, 1.D0, psi(1,n_start), npwx2, &
-                          vr_d(n_start,1), nvecx, 0.D0, evc_d, npwx2 )
+                          vr(n_start,1), nvecx, 0.D0, evc_d, npwx2 )
         !$acc end host_data
         CALL mp_sum( evc_d, inter_bgrp_comm )
         !
@@ -564,9 +632,9 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
              END DO 
            END DO 
            !
-           !$acc host_data use_device(psi, spsi)
+           !$acc host_data use_device(psi, spsi, vr)
            CALL cublasDgemm( 'N','N', npw2, nvec, my_n, 1.D0, spsi(1,n_start), npwx2, &
-                             vr_d(n_start,1), nvecx, 0.D0, psi(1,nvec+1), npwx2 )
+                             vr(n_start,1), nvecx, 0.D0, psi(1,nvec+1), npwx2 )
 
            !CALL mp_sum( psi(:,nvec+1:nvec+nvec), inter_bgrp_comm )
            CALL dev_memcpy( pinned_buffer, psi, (/ 1, npwx /), 1, (/ nvec+1, nvec+nvec /), 1 )
@@ -586,9 +654,9 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !$acc kernels
         psi(:,nvec+1:nvec+nvec) = ZERO
         !$acc end kernels
-        !$acc host_data use_device(psi, hpsi)
+        !$acc host_data use_device(psi, hpsi, vr)
         CALL cublasDgemm( 'N','N', npw2, nvec, my_n, 1.D0, hpsi(1,n_start), npwx2, &
-                          vr_d(n_start,1), nvecx, 0.D0, psi(1,nvec+1), npwx2 )
+                          vr(n_start,1), nvecx, 0.D0, psi(1,nvec+1), npwx2 )
         CALL mp_sum( psi(:,nvec+1:nvec+nvec), inter_bgrp_comm )
         !$acc end host_data
         !
@@ -601,6 +669,20 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !
         ! ... refresh the reduced hamiltonian
         !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !$acc parallel deviceptr(hr_d, sr_d, vr_d, ew_d)
+  !$acc loop gang
+  DO i = 1, nvecx
+    ew_d(i) =  ew(i)
+    !$acc loop vector 
+    DO j = 1, nvecx
+     hr_d(i,j) =  hr(i,j)
+     sr_d(i,j) =  sr(i,j)
+     vr_d(i,j) =  vr(i,j)
+    END DO 
+  END DO 
+  !$acc end parallel
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         nbase = nvec
         !
         hr_d(:,1:nbase) = 0.D0
@@ -628,6 +710,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   DEALLOCATE( vr_d )
   DEALLOCATE( hr_d )
   DEALLOCATE( sr_d )
+  DEALLOCATE( hr, sr, vr, ew )
   !
   IF ( uspp ) DEALLOCATE( spsi )
   !
