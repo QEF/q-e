@@ -154,7 +154,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE constants,        ONLY : e2, eps8
   USE io_global,        ONLY : stdout
   USE fft_base,         ONLY : dfftp
-  USE gvect,            ONLY : g, g_d, ngm
+  USE gvect,            ONLY : g, ngm
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
   USE funct,            ONLY : dft_is_nonlocc, nlc
@@ -162,7 +162,6 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE xc_lib,           ONLY : xc_metagcx, xclib_get_ID
   USE mp,               ONLY : mp_sum
   USE mp_bands,         ONLY : intra_bgrp_comm
-  USE control_flags,    ONLY : use_gpu
   !
   IMPLICIT NONE
   !
@@ -234,13 +233,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
        rhogsum(k) = fac*rhog_core(k) + ( rho%of_g(k,1) + sgn_is*rho%of_g(k,nspin) )*0.5D0
      ENDDO
      !
-     IF ( use_gpu ) THEN
-       CALL fft_gradient_g2r_gpu( dfftp, rhogsum, g_d, grho(:,:,is) )
-     ELSE
-       !$acc update host( rhogsum )
-       CALL fft_gradient_g2r( dfftp, rhogsum, g, grho(:,:,is) )
-       !$acc update device( grho )
-     ENDIF  
+     CALL fft_gradient_g2r( dfftp, rhogsum, g, grho(:,:,is) ) 
      !
   ENDDO
   !
@@ -340,13 +333,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   ! ... \sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )
   !
   DO is = 1, nspin
-     IF ( use_gpu ) THEN
-       CALL fft_graddot_gpu( dfftp, h(1,1,is), g_d, dh )
-     ELSE
-       !$acc update host( h )
-       CALL fft_graddot( dfftp, h(1,1,is), g, dh )
-       !$acc update device( dh )
-     ENDIF
+     CALL fft_graddot( dfftp, h(1,1,is), g, dh )
      !
      sgn_is = (-1.d0)**(is+1)
      !
@@ -379,14 +366,14 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
   IF ( dft_is_nonlocc() ) CALL nlc( rho%of_r, rho_core, nspin, etxc, vtxc, v )
   !
-  CALL mp_sum(  vtxc , intra_bgrp_comm )
-  CALL mp_sum(  etxc , intra_bgrp_comm )
+  CALL mp_sum( vtxc, intra_bgrp_comm )
+  CALL mp_sum( etxc, intra_bgrp_comm )
   !
   !
   ! ... calculate and add LDA+GGA terms separately, if needed (not standard)
   !
   lda_gga_terms = (xclib_get_ID('LDA','EXCH') + xclib_get_ID('LDA','CORR') + &
-                   xclib_get_ID('GGA','EXCH') + xclib_get_ID('GGA','CORR')) /= 0  
+                   xclib_get_ID('GGA','EXCH') + xclib_get_ID('GGA','CORR')) /= 0
   !
   IF ( lda_gga_terms ) THEN
     ALLOCATE(v0(dfftp%nnr,nspin))
@@ -427,7 +414,6 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE xc_lib,           ONLY : xc
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
-  USE control_flags,    ONLY : use_gpu
   !
   IMPLICIT NONE
   !

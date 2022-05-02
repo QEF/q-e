@@ -95,18 +95,9 @@ SUBROUTINE dmxc_( length, srd, rho_in, dmuxc )
   !
   !$acc data present( rho_in, dmuxc )
   !
-  IF (srd==1) THEN
-    !$acc parallel loop
-    DO ir = 1, length
-      dmuxc(ir,1,1) = 0.0_DP
-    ENDDO
-  ELSE
-    !$acc parallel loop
-    DO ir = 1, length
-      dmuxc(ir,1,1) = 0.0_DP ; dmuxc(ir,2,1) = 0.0_DP
-      dmuxc(ir,1,2) = 0.0_DP ; dmuxc(ir,2,2) = 0.0_DP
-    ENDDO
-  ENDIF
+  !$acc kernels
+  dmuxc(:,:,:) = 0.0_DP
+  !$acc end kernels
   !
 #if defined(__LIBXC)
   !
@@ -183,7 +174,7 @@ SUBROUTINE dmxc_( length, srd, rho_in, dmuxc )
     rho_threshold_lda = small
     IF ( srd == 1 ) CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
     IF ( srd == 2 ) CALL dmxc_lsda( length, rho_in, dmuxc )
-    IF ( srd == 4 ) CALL dmxc_nc( length, rho_in(:,1), rho_in(:,2:4), dmuxc )
+    IF ( srd == 4 ) CALL dmxc_nc( length, rho_in, dmuxc )
   ENDIF
   !
   IF ( ANY(is_libxc(1:2)) ) THEN
@@ -253,10 +244,10 @@ SUBROUTINE dmxc_( length, srd, rho_in, dmuxc )
   CASE( 2 )
      !
      CALL dmxc_lsda( length, rho_in, dmuxc )
-     ! 
+     !
   CASE( 4 )
      !
-     CALL dmxc_nc( length, rho_in(:,1), rho_in(:,2:4), dmuxc )
+     CALL dmxc_nc( length, rho_in, dmuxc )
      !
   CASE DEFAULT
      !
