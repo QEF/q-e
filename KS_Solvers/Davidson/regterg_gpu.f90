@@ -208,7 +208,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
   if (n_start .le. n_end) &
   CALL DGEMM( 'T','N', nbase, my_n, npw2, 2.D0 , psi, npwx2, hpsi(1,n_start), npwx2, 0.D0, hr(1,n_start), nvecx )
-  IF ( gstart == 2 ) CALL KScudaDGER(nbase, my_n, -1.D0, psi, npwx2, hpsi(1,n_start), npwx2, hr(1,n_start), nvecx )
+  IF ( gstart == 2 ) CALL MYDGER(nbase, my_n, -1.D0, psi, npwx2, hpsi(1,n_start), npwx2, hr(1,n_start), nvecx )
   CALL mp_sum( hr( :, 1:nbase ), inter_bgrp_comm )
   !
   CALL mp_sum( hr( :, 1:nbase ), intra_bgrp_comm )
@@ -217,13 +217,13 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      if (n_start .le. n_end) &
      CALL DGEMM( 'T','N', nbase, my_n, npw2, 2.D0, psi, npwx2, spsi(1,n_start), npwx2, 0.D0, sr(1,n_start), nvecx )
-     IF ( gstart == 2 ) CALL KScudaDGER(nbase, my_n, -1.D0, psi, npwx2, spsi(1,n_start), npwx2, sr(1,n_start), nvecx )
+     IF ( gstart == 2 ) CALL MYDGER(nbase, my_n, -1.D0, psi, npwx2, spsi(1,n_start), npwx2, sr(1,n_start), nvecx )
      !
   ELSE
      !
      if (n_start .le. n_end) &
      CALL DGEMM( 'T','N', nbase, my_n, npw2, 2.D0, psi, npwx2, psi(1,n_start), npwx2, 0.D0, sr(1,n_start), nvecx )
-     IF ( gstart == 2 ) CALL KScudaDGER(nbase, my_n, -1.D0, psi, npwx2, psi(1,n_start), npwx2, sr(1,n_start), nvecx )
+     IF ( gstart == 2 ) CALL MYDGER(nbase, my_n, -1.D0, psi, npwx2, psi(1,n_start), npwx2, sr(1,n_start), nvecx )
      !
   END IF
   CALL mp_sum( sr( :, 1:nbase ), inter_bgrp_comm )
@@ -409,7 +409,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      CALL DGEMM( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, &
                        hpsi(1,nb1), npwx2, 0.D0, hr(n_start,nb1), nvecx )
-     IF ( gstart == 2 ) CALL KScudaDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, &
+     IF ( gstart == 2 ) CALL MYDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, &
                                          hpsi(1,nb1), npwx2, hr(n_start,nb1), nvecx )
      CALL mp_sum( hr( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
      !
@@ -430,14 +430,14 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !
         CALL DGEMM( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, &
                            spsi(1,nb1), npwx2, 0.D0, sr(n_start,nb1), nvecx )
-        IF ( gstart == 2 ) CALL KScudaDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, &
+        IF ( gstart == 2 ) CALL MYDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, &
                                             spsi(1,nb1), npwx2, sr(n_start,nb1), nvecx )
         !
      ELSE
         !
         CALL DGEMM( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, &
                           psi(1,nb1), npwx2, 0.D0, sr(n_start,nb1), nvecx )
-        IF ( gstart == 2 ) CALL KScudaDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, &
+        IF ( gstart == 2 ) CALL MYDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, &
                                             psi(1,nb1), npwx2, sr(n_start,nb1), nvecx )
 
         !
@@ -1699,22 +1699,4 @@ CONTAINS
   !
 END SUBROUTINE pregterg_gpu
 
-
-! In principle this can go away .......
-SUBROUTINE KScudaDGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
-#if defined(__CUDA)
-    use cudafor
-    use cublas
-#endif
-!     .. Scalar Arguments ..
-    DOUBLE PRECISION ::  ALPHA
-    INTEGER          ::   INCX, INCY, LDA, M, N
-!     .. Array Arguments ..
-    DOUBLE PRECISION :: A( LDA, * ), X( * ), Y( * )
-#if defined(__CUDA)
-    attributes(device) :: A, X, Y
-#endif
-    CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
-
-END SUBROUTINE KScudaDGER
 #endif
