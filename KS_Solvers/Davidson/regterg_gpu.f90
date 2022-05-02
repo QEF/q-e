@@ -30,7 +30,6 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   ! ... (real wavefunctions with only half plane waves stored)
   !
 #if defined(__CUDA)
-  use cudafor
   use cublas
 #endif
   USE util_param,    ONLY : DP, stdout
@@ -52,9 +51,6 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! maximum dimension of the reduced basis set
     !    (the basis set is refreshed when its dimension would exceed nvecx)
   COMPLEX(DP), INTENT(INOUT) :: evc_d(npwx,nvec)
-#if defined(__CUDA)
-  attributes(DEVICE) :: evc_d
-#endif
     !  evc   contains the  refined estimates of the eigenvectors
   REAL(DP), INTENT(IN) :: ethr
     ! energy threshold for convergence: root improvement is stopped,
@@ -66,9 +62,6 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   LOGICAL, INTENT(IN) :: lrot
     ! .TRUE. if the wfc have already been rotated
   REAL(DP), INTENT(OUT) :: e_d(nvec)
-#if defined(__CUDA)
-  attributes(DEVICE) :: e_d
-#endif
     ! contains the estimated roots.
   INTEGER, INTENT(OUT) :: dav_iter, notcnv
     ! integer  number of iterations performed
@@ -122,6 +115,9 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     !    the first nvec columns contain the trial eigenvectors
   !
   CALL start_clock( 'regterg' )
+  ! 
+  !$acc data deviceptr(evc_d, e_d)
+  !
   CALL gbuf%lock_buffer(pinned_buffer, (/npwx, nvecx/), ierr)
   !
   IF ( nvec > nvecx / 2 ) CALL errore( 'regter', 'nvecx is too small', 1 )
@@ -174,7 +170,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   IF ( uspp ) spsi = ZERO
   !$acc end kernels
   !
-  !$acc parallel vector_length(64) deviceptr(evc_d)
+  !$acc parallel vector_length(64) 
   !$acc loop gang independent
   DO k=1,nvec
      psi(1,k) = evc_d(1,k)
@@ -210,7 +206,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
   my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
   if (n_start .le. n_end) &
-  CALL cublasDgemm( 'T','N', nbase, my_n, npw2, 2.D0 , psi, npwx2, hpsi(1,n_start), npwx2, 0.D0, hr(1,n_start), nvecx )
+  CALL DGEMM( 'T','N', nbase, my_n, npw2, 2.D0 , psi, npwx2, hpsi(1,n_start), npwx2, 0.D0, hr(1,n_start), nvecx )
   IF ( gstart == 2 ) CALL KScudaDGER(nbase, my_n, -1.D0, psi, npwx2, hpsi(1,n_start), npwx2, hr(1,n_start), nvecx )
   CALL mp_sum( hr( :, 1:nbase ), inter_bgrp_comm )
   !
@@ -219,13 +215,13 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   IF ( uspp ) THEN
      !
      if (n_start .le. n_end) &
-     CALL cublasDgemm( 'T','N', nbase, my_n, npw2, 2.D0, psi, npwx2, spsi(1,n_start), npwx2, 0.D0, sr(1,n_start), nvecx )
+     CALL DGEMM( 'T','N', nbase, my_n, npw2, 2.D0, psi, npwx2, spsi(1,n_start), npwx2, 0.D0, sr(1,n_start), nvecx )
      IF ( gstart == 2 ) CALL KScudaDGER(nbase, my_n, -1.D0, psi, npwx2, spsi(1,n_start), npwx2, sr(1,n_start), nvecx )
      !
   ELSE
      !
      if (n_start .le. n_end) &
-     CALL cublasDgemm( 'T','N', nbase, my_n, npw2, 2.D0, psi, npwx2, psi(1,n_start), npwx2, 0.D0, sr(1,n_start), nvecx )
+     CALL DGEMM( 'T','N', nbase, my_n, npw2, 2.D0, psi, npwx2, psi(1,n_start), npwx2, 0.D0, sr(1,n_start), nvecx )
      IF ( gstart == 2 ) CALL KScudaDGER(nbase, my_n, -1.D0, psi, npwx2, psi(1,n_start), npwx2, sr(1,n_start), nvecx )
      !
   END IF
@@ -238,7 +234,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   !
   IF ( lrot ) THEN
      !
-     !$acc parallel loop deviceptr(e_d)
+     !$acc parallel loop 
      DO n = 1, nbase
         !
         e_d(n) = hr(n,n)
@@ -262,7 +258,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      CALL stop_clock( 'regterg:diag' ) 
      !$acc end host_data
      !
-     !$acc parallel loop deviceptr(e_d)
+     !$acc parallel loop 
      DO i = 1, nvec
         e_d(i) = ew(i)
      END DO
@@ -300,7 +296,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
            !
            ! ... for use in g_psi
            !
-           !$acc kernels deviceptr(e_d)
+           !$acc kernels 
            ew(nbase+np) = e_d(n)
            !$acc end kernels
            !
@@ -324,12 +320,12 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      IF ( uspp ) THEN
         !
         if (n_start .le. n_end) &
-        CALL cublasDgemm( 'N','N', npw2, notcnv, my_n, 1.D0, spsi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, psi(1,nb1), npwx2 )
+        CALL DGEMM( 'N','N', npw2, notcnv, my_n, 1.D0, spsi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, psi(1,nb1), npwx2 )
         !     
      ELSE
         !
         if (n_start .le. n_end) &
-        CALL cublasDgemm( 'N','N', npw2, notcnv, my_n, 1.D0, psi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, psi(1,nb1), npwx2 )
+        CALL DGEMM( 'N','N', npw2, notcnv, my_n, 1.D0, psi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, psi(1,nb1), npwx2 )
         !
      END IF
      !$acc end host_data
@@ -344,7 +340,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      !$acc host_data use_device(psi, hpsi, vr, ew)
      if (n_start .le. n_end) &
-     CALL cublasDgemm( 'N','N', npw2, notcnv, my_n, 1.D0, hpsi(1,n_start), npwx2, vr(n_start,1), nvecx, 1.D0, psi(1,nb1), npwx2 )
+     CALL DGEMM( 'N','N', npw2, notcnv, my_n, 1.D0, hpsi(1,n_start), npwx2, vr(n_start,1), nvecx, 1.D0, psi(1,nb1), npwx2 )
      CALL mp_sum( psi(:,nb1:nbase+notcnv), inter_bgrp_comm )
      !
      CALL stop_clock( 'regterg:update' )
@@ -415,7 +411,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !$acc host_data use_device(psi, hpsi, hr)
      CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
-     CALL cublasDgemm( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, &
+     CALL DGEMM( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, &
                        hpsi(1,nb1), npwx2, 0.D0, hr(n_start,nb1), nvecx )
      IF ( gstart == 2 ) CALL KScudaDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, &
                                          hpsi(1,nb1), npwx2, hr(n_start,nb1), nvecx )
@@ -436,14 +432,14 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      IF ( uspp ) THEN
         !
-        CALL cublasDgemm( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, &
+        CALL DGEMM( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, &
                            spsi(1,nb1), npwx2, 0.D0, sr(n_start,nb1), nvecx )
         IF ( gstart == 2 ) CALL KScudaDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, &
                                             spsi(1,nb1), npwx2, sr(n_start,nb1), nvecx )
         !
      ELSE
         !
-        CALL cublasDgemm( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, &
+        CALL DGEMM( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, &
                           psi(1,nb1), npwx2, 0.D0, sr(n_start,nb1), nvecx )
         IF ( gstart == 2 ) CALL KScudaDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, &
                                             psi(1,nb1), npwx2, sr(n_start,nb1), nvecx )
@@ -502,7 +498,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      notcnv = COUNT( .NOT. conv(:) )
      !
-     !$acc parallel loop deviceptr(e_d)
+     !$acc parallel loop 
      DO i=1,nvec
        e_d(i) = ew(i)
      END DO
@@ -518,16 +514,17 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !
         CALL start_clock( 'regterg:last' )
         !
-        !$cuf kernel do(2) <<<*,*>>>
+        !$acc parallel loop collapse(2)  
         DO k=1,nvec
            DO i=1,npwx
               evc_d(i,k) = ZERO
            END DO
         END DO
+        !
         CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
         my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
         !$acc host_data use_device(psi, vr)
-        CALL cublasDgemm( 'N','N', npw2, nvec, my_n, 1.D0, psi(1,n_start), npwx2, &
+        CALL DGEMM( 'N','N', npw2, nvec, my_n, 1.D0, psi(1,n_start), npwx2, &
                           vr(n_start,1), nvecx, 0.D0, evc_d, npwx2 )
         !$acc end host_data
         CALL mp_sum( evc_d, inter_bgrp_comm )
@@ -555,7 +552,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !
         ! ... refresh psi, H*psi and S*psi
         !
-        !$acc parallel loop collapse(2) deviceptr(evc_d) 
+        !$acc parallel loop collapse(2) 
         DO i=1,nvec
            DO k=1,npwx
               psi(k,i) = evc_d(k,i)
@@ -572,7 +569,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
            END DO 
            !
            !$acc host_data use_device(psi, spsi, vr)
-           CALL cublasDgemm( 'N','N', npw2, nvec, my_n, 1.D0, spsi(1,n_start), npwx2, &
+           CALL DGEMM( 'N','N', npw2, nvec, my_n, 1.D0, spsi(1,n_start), npwx2, &
                              vr(n_start,1), nvecx, 0.D0, psi(1,nvec+1), npwx2 )
 
            !CALL mp_sum( psi(:,nvec+1:nvec+nvec), inter_bgrp_comm )
@@ -594,7 +591,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         psi(:,nvec+1:nvec+nvec) = ZERO
         !$acc end kernels
         !$acc host_data use_device(psi, hpsi, vr)
-        CALL cublasDgemm( 'N','N', npw2, nvec, my_n, 1.D0, hpsi(1,n_start), npwx2, &
+        CALL DGEMM( 'N','N', npw2, nvec, my_n, 1.D0, hpsi(1,n_start), npwx2, &
                           vr(n_start,1), nvecx, 0.D0, psi(1,nvec+1), npwx2 )
         CALL mp_sum( psi(:,nvec+1:nvec+nvec), inter_bgrp_comm )
         !$acc end host_data
@@ -619,7 +616,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
           END DO 
         END DO 
         !
-        !$acc parallel loop deviceptr(e_d)
+        !$acc parallel loop 
         DO j = 1, nbase
           hr(j,j) = e_d(j)
           sr(j,j) = 1.D0
@@ -640,6 +637,8 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   !
   DEALLOCATE( hpsi )
   DEALLOCATE( psi )
+  !
+  !$acc end data
   !
   CALL stop_clock( 'regterg' )
   !call print_clock( 'regterg' )
