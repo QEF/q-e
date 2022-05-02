@@ -91,10 +91,6 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   INTEGER :: ierr
   REAL(DP), ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:), ew(:)
   !$acc declare device_resident(hr, sr, vr, ew)
-  REAL(DP), ALLOCATABLE :: hr_d(:,:), sr_d(:,:), vr_d(:,:), ew_d(:)
-#if defined(__CUDA)
-  attributes(DEVICE) :: hr_d, sr_d, vr_d, ew_d
-#endif
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
     ! eigenvectors of the Hamiltonian
@@ -156,19 +152,15 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   END IF
   !
   ALLOCATE( sr( nvecx, nvecx ), STAT=ierr )
-  ALLOCATE( sr_d( nvecx, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' regterg ',' cannot allocate sr ', ABS(ierr) )
   ALLOCATE( hr( nvecx, nvecx ), STAT=ierr )
-  ALLOCATE( hr_d( nvecx, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' regterg ',' cannot allocate hr ', ABS(ierr) )
   ALLOCATE( vr( nvecx, nvecx ), STAT=ierr )
-  ALLOCATE( vr_d( nvecx, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' regterg ',' cannot allocate vr ', ABS(ierr) )
   ALLOCATE( ew( nvecx ), STAT=ierr )
-  ALLOCATE( ew_d( nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' regterg ',' cannot allocate ew ', ABS(ierr) )
   ALLOCATE( e_host( nvec ), STAT=ierr )
@@ -285,20 +277,6 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      END DO
      !
   END IF
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !$acc parallel deviceptr(hr_d, sr_d, vr_d, ew_d)
-  !$acc loop gang
-  DO i = 1, nvecx
-    ew_d(i) =  ew(i)
-    !$acc loop vector 
-    DO j = 1, nvecx
-     hr_d(i,j) =  hr(i,j)
-     sr_d(i,j) =  sr(i,j)
-     vr_d(i,j) =  vr(i,j)
-    END DO 
-  END DO 
-  !$acc end parallel
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !
   ! ... iterate
   !
@@ -307,20 +285,6 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      dav_iter = kter
      !
      CALL start_clock( 'regterg:update' )
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !$acc parallel deviceptr(hr_d, sr_d, vr_d, ew_d)
-  !$acc loop gang
-  DO i = 1, nvecx
-    ew(i) =  ew_d(i)
-    !$acc loop vector 
-    DO j = 1, nvecx
-     hr(i,j) =  hr_d(i,j)
-     sr(i,j) =  sr_d(i,j)
-     vr(i,j) =  vr_d(i,j)
-    END DO 
-  END DO 
-  !$acc end parallel
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      !
      !  ======== FROM HERE =====
      !np = 0
@@ -560,20 +524,6 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      ! ... the first nvec elements with the current estimate of the
      ! ... eigenvectors;  set the basis dimension to nvec.
      !
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !$acc parallel deviceptr(hr_d, sr_d, vr_d, ew_d)
-  !$acc loop gang
-  DO i = 1, nvecx
-    ew_d(i) =  ew(i)
-    !$acc loop vector 
-    DO j = 1, nvecx
-     hr_d(i,j) =  hr(i,j)
-     sr_d(i,j) =  sr(i,j)
-     vr_d(i,j) =  vr(i,j)
-    END DO 
-  END DO 
-  !$acc end parallel
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      IF ( notcnv == 0 .OR. &
           nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
         !
@@ -669,34 +619,23 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !
         ! ... refresh the reduced hamiltonian
         !
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !$acc parallel deviceptr(hr_d, sr_d, vr_d, ew_d)
-  !$acc loop gang
-  DO i = 1, nvecx
-    ew_d(i) =  ew(i)
-    !$acc loop vector 
-    DO j = 1, nvecx
-     hr_d(i,j) =  hr(i,j)
-     sr_d(i,j) =  sr(i,j)
-     vr_d(i,j) =  vr(i,j)
-    END DO 
-  END DO 
-  !$acc end parallel
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         nbase = nvec
         !
-        hr_d(:,1:nbase) = 0.D0
-        sr_d(:,1:nbase) = 0.D0
-        vr_d(:,1:nbase) = 0.D0
+        !$acc parallel loop collapse(2) 
+        DO i = 1, nvecx
+          DO j = 1, nbase
+            hr(i,j) = 0.D0
+            sr(i,j) = 0.D0
+            vr(i,j) = 0.D0
+          END DO 
+        END DO 
         !
-        !$cuf kernel do(1) <<<*,*>>>
-        DO n = 1, nbase
-           !
-           hr_d(n,n) = e_d(n)
-           sr_d(n,n) = 1.D0
-           vr_d(n,n) = 1.D0
-           !
-        END DO
+        !$acc parallel loop deviceptr(e_d)
+        DO j = 1, nbase
+          hr(j,j) = e_d(j)
+          sr(j,j) = 1.D0
+          vr(j,j) = 1.D0
+        END DO 
         !
         CALL stop_clock( 'regterg:last' )
         !
@@ -706,10 +645,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   CALL gbuf%release_buffer(pinned_buffer, ierr)
   !
   DEALLOCATE( conv )
-  DEALLOCATE( e_host, ew_host, ew_d )
-  DEALLOCATE( vr_d )
-  DEALLOCATE( hr_d )
-  DEALLOCATE( sr_d )
+  DEALLOCATE( e_host, ew_host )
   DEALLOCATE( hr, sr, vr, ew )
   !
   IF ( uspp ) DEALLOCATE( spsi )
