@@ -52,7 +52,7 @@ CONTAINS
         !
         REAL(DP), INTENT(IN) :: vltot(dfftp%nnr)
         !
-        CHARACTER(LEN=80) :: sub_name = 'update_environ_potential'
+        CHARACTER(LEN=80) :: routine = 'update_environ_potential'
         !
         !--------------------------------------------------------------------------------
         !
@@ -80,7 +80,7 @@ CONTAINS
         !
         REAL(DP) :: rhoaux(dfftp%nnr)
         !
-        CHARACTER(LEN=80) :: sub_name = 'calc_environ_potential'
+        CHARACTER(LEN=80) :: routine = 'calc_environ_potential'
         !
         !--------------------------------------------------------------------------------
         ! Reduce output at each scf iteration
@@ -198,7 +198,7 @@ CONTAINS
         !
         INTEGER, EXTERNAL :: find_free_unit
         !
-        CHARACTER(LEN=80) :: sub_name = 'run_ms_gcs'
+        CHARACTER(LEN=80) :: routine = 'run_ms_gcs'
         !
         !--------------------------------------------------------------------------------
         !
