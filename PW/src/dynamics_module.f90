@@ -233,10 +233,10 @@ CONTAINS
          !
          IF ( restart_id .EQ. restart_verlet ) THEN
             ! Restarting...
-            vel_defined = .TRUE.
+            vel_defined = .FALSE.
             !
             READ( UNIT = 4, FMT = * ) etotold, istep, tau_old(:,:), &
-               temp_new, temp_av, vel(:,:), mass(:), total_mass, elapsed_time, &
+               temp_new, temp_av, mass(:), total_mass, elapsed_time, &
                tau_ref(:,:)
             !
             CLOSE( UNIT = 4, STATUS = 'KEEP' )
@@ -402,7 +402,7 @@ CONTAINS
       !
       WRITE( UNIT = 4, FMT = * ) restart_verlet
       WRITE( UNIT = 4, FMT = * ) etot, istep, tau(:,:), temp_new, temp_av, &
-          vel(:,:), mass(:), total_mass, elapsed_time, tau_ref(:,:)
+          mass(:), total_mass, elapsed_time, tau_ref(:,:)
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
