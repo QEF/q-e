@@ -11,11 +11,6 @@
 ! search for 'TB' 
 !----------------------------------------------------------------------------
 !
-#undef __NPT
-#if defined (__NPT)
-#define RELAXTIME 2000.D0
-#define TARGPRESS 2.39D0
-#endif
 !
 !----------------------------------------------------------------------------
 MODULE dynamics_module
@@ -167,27 +162,27 @@ CONTAINS
    SUBROUTINE verlet()
       !------------------------------------------------------------------------
       !! This routine performs one step of molecular dynamics evolution
-      !! using the Verlet algorithm.  
-      !! The parameters:
+      !! using the Verlet algorithm. Parameters:
       !
       !! * mass: mass of the atoms;
       !! * dt: time step;
       !! * temperature: starting temperature.
       !
-      !! The starting velocities of atoms are set accordingly
-      !! to the starting temperature, in random directions. 
-      !! The initial velocity distribution is therefore a
-      !! constant.
+      !! The starting velocities of atoms are set accordingly to the
+      !! starting temperature, in random directions. 
+      !! The initial velocity distribution is therefore a constant.
       !
-      !! Dario Alfe' 1997  and  Carlo Sbraccia 2004-2006.
+      !! Must be run on a single processor, results broadcast to all other procs
+      !! Unpredictable behavoiour may otherwise result due to I/O operations
+      !!
+      !! Original code: Dario Alfe' 1997  and  Carlo Sbraccia 2004-2006.
       !
       USE ions_base,          ONLY : nat, nsp, ityp, tau, if_pos, atm
       USE cell_base,          ONLY : alat, omega
       USE ener,               ONLY : etot
       USE force_mod,          ONLY : force
       USE control_flags,      ONLY : istep, lconstrain, tv0rd, tstress
-      USE io_global,          ONLY : ionode
-      !
+      ! istep counts all MD steps, including those of previous runs
       USE constraints_module, ONLY : nconstr, check_constraint
       USE constraints_module, ONLY : remove_constr_force, remove_constr_vec
       !
@@ -199,8 +194,11 @@ CONTAINS
       REAL(DP) :: total_mass, temp_new, temp_av, elapsed_time
       REAL(DP) :: delta(3), ml(3), mlt
       INTEGER  :: na
-      ! istep counts all MD steps, including those of previous runs
+! FIXME: is it useful to keep trace of this possibility?
+#undef __NPT
 #if defined (__NPT)
+#define RELAXTIME 2000.D0
+#define TARGPRESS 2.39D0
       REAL(DP) :: chi, press_new
 #endif
       LOGICAL  :: is_restart
@@ -235,7 +233,7 @@ CONTAINS
             ! Restarting...
             vel_defined = .FALSE.
             !
-            READ( UNIT = 4, FMT = * ) etotold, istep, tau_old(:,:), &
+            READ( UNIT = 4, FMT = * ) istep, etotold, tau_old(:,:), &
                temp_new, temp_av, mass(:), total_mass, elapsed_time, &
                tau_ref(:,:)
             !
@@ -380,6 +378,7 @@ CONTAINS
       !
       kstress = kstress * alat**2 / omega
       !
+      ! FIXME: still useful?
 #if defined (__NPT)
       !
       ! ... find the new pressure (in Kbar)
@@ -401,12 +400,12 @@ CONTAINS
       CALL seqopn( 4, 'md', 'FORMATTED',  is_restart )
       !
       WRITE( UNIT = 4, FMT = * ) restart_verlet
-      WRITE( UNIT = 4, FMT = * ) etot, istep, tau(:,:), temp_new, temp_av, &
+      WRITE( UNIT = 4, FMT = * ) istep, etot, tau(:,:), temp_new, temp_av, &
           mass(:), total_mass, elapsed_time, tau_ref(:,:)
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
-      IF (ionode) CALL dump_trajectory_frame( istep, elapsed_time, temperature )
+      CALL dump_trajectory_frame( istep, elapsed_time, temperature )
       !
       ! ... here the tau are shifted
       !
@@ -893,7 +892,7 @@ CONTAINS
          !
          IF ( restart_id .EQ. restart_proj_verlet ) THEN
             !
-            READ( UNIT = 4, FMT = * ) etotold, istep, tau_old(:,:)
+            READ( UNIT = 4, FMT = * ) istep, etotold, tau_old(:,:)
             CLOSE( UNIT = 4, STATUS = 'KEEP' )
             !
          ELSE
@@ -1024,7 +1023,8 @@ CONTAINS
       !
       CALL seqopn( 4, 'md', 'FORMATTED',  is_restart )
       !
-      WRITE( UNIT = 4, FMT = * ) restart_proj_verlet, etot, istep, tau(:,:)
+      WRITE( UNIT = 4, FMT = * ) restart_proj_verlet
+      WRITE( UNIT = 4, FMT = * ) istep, etot, tau(:,:)
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
@@ -1140,14 +1140,14 @@ CONTAINS
         READ( UNIT = 4, FMT = * ) restart_id
         !
         IF (restart_id .EQ. restart_fire) THEN
-         !
-         READ( UNIT = 4, FMT = * ) etotold, nsteppos, dt_curr, alpha
-         CLOSE( UNIT = 4, STATUS = 'KEEP' )
-         !
+           !
+           READ( UNIT = 4, FMT = * ) etotold, nsteppos, dt_curr, alpha
+           CLOSE( UNIT = 4, STATUS = 'KEEP' )
+           !
         ELSE
-         !
-         is_restart = .FALSE.
-         !
+           !
+           is_restart = .FALSE.
+           !
         END IF
         !
      END IF
@@ -1252,9 +1252,10 @@ CONTAINS
      !
      ! NOTEs:
      ! in original FIRE the condition is P > 0,
-     ! however to prevent the time step decrease in the first step where v=0 (P=0 and etot=etotold)
-     ! the equality was changed to P >= 0
-     ! The energy difference criterion is also added to prevent the minimization from going uphill  
+     ! however to prevent the time step decrease in the first step where v=0
+     ! (P=0 and etot=etotold) the equality was changed to P >= 0
+     ! The energy difference criterion is also added to prevent
+     ! the minimization from going uphill  
      ! 
 
      IF ( P >= 0.0_DP  .AND. (etot - etotold) <= 0.D0 ) THEN
@@ -1325,8 +1326,8 @@ CONTAINS
      !
      CALL seqopn( 4, 'fire', 'FORMATTED',  is_restart )
      !
-     WRITE( UNIT = 4, FMT = * ) etot, nsteppos, dt_curr, alpha 
-     !
+     WRITE( UNIT = 4, FMT = * ) restart_fire
+     WRITE( UNIT = 4, FMT = * ) etot, nsteppos, dt_curr, alpha      !
      CLOSE( UNIT = 4, STATUS = 'KEEP' )
      !
      ! ... displace tau, and output new positions   
@@ -1364,7 +1365,7 @@ CONTAINS
       !
       REAL(DP) :: sigma, kt
       REAL(DP) :: delta(3)
-      INTEGER  :: na
+      INTEGER  :: na, restart_id
       LOGICAL  :: file_exists
       !
       REAL(DP), EXTERNAL :: dnrm2
@@ -1375,13 +1376,18 @@ CONTAINS
          !
          ! ... the file is read :  simulation is continuing
          !
-         READ( UNIT = 4, FMT = * ) istep
+         READ( UNIT = 4, FMT = * ) restart_id
+         IF ( restart_id == restart_langevin ) THEN
+            READ( UNIT = 4, FMT = * ) istep
+            CLOSE( UNIT = 4, STATUS = 'KEEP' )
+         ELSE
+            file_exists = .FALSE.
+            CLOSE( UNIT = 4, STATUS = 'DELETE' )
+         END IF
          !
-         CLOSE( UNIT = 4, STATUS = 'KEEP' )
-         !
-      ELSE
-         !
-         CLOSE( UNIT = 4, STATUS = 'DELETE' )
+      END IF
+      !
+      IF ( .NOT.file_exists ) THEN
          !
          ! ... the file is absent :  simulation is starting from scratch
          !
@@ -1485,6 +1491,7 @@ CONTAINS
       !
       CALL seqopn( 4, 'md', 'FORMATTED',  file_exists )
       !
+      WRITE( UNIT = 4, FMT = * ) restart_langevin
       WRITE( UNIT = 4, FMT = * ) istep
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
@@ -1899,7 +1906,6 @@ CONTAINS
      USE constraints_module,  ONLY : remove_constr_force, check_constraint
      USE random_numbers,      ONLY : randy
      USE io_files,            ONLY : prefix
-     USE io_global,           ONLY : ionode
      USE constants,           ONLY : bohr_radius_angs
      !
      IMPLICIT NONE
@@ -1971,9 +1977,7 @@ CONTAINS
      WRITE (stdout, '(5x,"The current acceptance is :",3x,F10.6)') DBLE(num_accept)/istep
      !
      ! Print the trajectory
-#if defined(__MPI)
-     IF(ionode) THEN
-#endif
+     !
      OPEN(117,file="trajectory-"//TRIM(prefix)//".xyz", STATUS="unknown", POSITION='APPEND')
      WRITE(117,'(I5)') nat
      WRITE(117,'("# Step: ",I5,5x,"Total energy: ",F17.8,5x,"Ry")') istep-1, etot
@@ -1981,9 +1985,6 @@ CONTAINS
         WRITE( 117, '(A3,3X,3F14.9)') atm(ityp(ia)),tau(:,ia)*alat*bohr_radius_angs
      ENDDO
      CLOSE(117)
-#if defined(__MPI)
-     ENDIF
-#endif
      !
      RETURN
      !
@@ -2077,17 +2078,15 @@ CONTAINS
       !
       IMPLICIT NONE
       !
-      INTEGER, EXTERNAL    :: find_free_unit
       INTEGER, INTENT(in)  :: istep
       REAL(DP), INTENT(in) :: time, temp ! in ps, K
       !
       INTEGER              :: iunit, i, k
       CHARACTER(LEN=20)    :: istep_str
       !
-      iunit = find_free_unit()
       WRITE(istep_str, '(I7.7)') istep
       !
-      OPEN(UNIT = iunit, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // "." &
+      OPEN(NEWUNIT = iunit, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // "." &
          // TRIM(ADJUSTL(istep_str)) // ".mdtrj" )
       !
       ! Time (ps), temp (K), total energy (Ry), unit cell (9 values, Ang),
