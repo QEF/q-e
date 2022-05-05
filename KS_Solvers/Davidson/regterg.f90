@@ -31,8 +31,6 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
           nbgrp, my_bgrp_id, me_bgrp, root_bgrp
   USE mp_bands_util, ONLY : gstart
   USE mp,            ONLY : mp_sum, mp_bcast
-  USE device_fbuff_m,      ONLY : gbuf => pin_buf
-  USE device_memcpy_m, ONLY : dev_memcpy, dev_memset
   !
   IMPLICIT NONE
   !
@@ -92,10 +90,6 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   REAL(DP) :: empty_ethr 
     ! threshold for empty bands
   INTEGER :: i,j,k
-#if defined(__CUDA)
-  COMPLEX(DP), POINTER  :: pinned_buffer(:,:)
-    ! auxiliary variable for performing MPI operation and overcome CUDAFortran limitations
-#endif
   !
   REAL(DP), EXTERNAL :: MYDDOT_VECTOR_GPU 
   !$acc routine(MYDDOT_VECTOR_GPU) vector
@@ -113,10 +107,6 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   CALL start_clock( 'regterg' ) !; write(6,*) 'enter regterg' ; FLUSH(6)
   ! 
   !$acc data deviceptr(evc, e)
-  !
-#if defined(__CUDA)
-  CALL gbuf%lock_buffer(pinned_buffer, (/npwx, nvecx/), ierr)
-#endif
   !
   IF ( nvec > nvecx / 2 ) CALL errore( 'regter', 'nvecx is too small', 1 )
   !
@@ -557,13 +547,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
            !
            !$acc host_data use_device(psi, spsi, vr)
            CALL DGEMM( 'N','N', npw2, nvec, my_n, 1.D0, spsi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, psi(1,nvec+1), npwx2 )
-#if defined(__CUDA)
-           CALL dev_memcpy( pinned_buffer, psi, (/ 1, npwx /), 1, (/ nvec+1, nvec+nvec /), 1 )
-           CALL mp_sum( pinned_buffer(1:npwx, nvec+1:nvec+nvec), inter_bgrp_comm )
-           CALL dev_memcpy( psi, pinned_buffer, (/ 1, npwx /), 1, (/ nvec+1, nvec+nvec /), 1 )
-#else
            CALL mp_sum( psi(:,nvec+1:nvec+nvec), inter_bgrp_comm )
-#endif
            !$acc end host_data
            !
            !$acc parallel loop collapse(2) 
@@ -615,9 +599,6 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      END IF
      !
   END DO iterate
-#if defined(__CUDA)
-  CALL gbuf%release_buffer(pinned_buffer, ierr)
-#endif
   !
   DEALLOCATE( conv )
   DEALLOCATE( ew )
