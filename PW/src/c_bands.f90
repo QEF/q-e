@@ -644,8 +644,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 !
              ELSE
                 !
-!civn 
-                !CALL regterg_gpu (  h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
                 CALL regterg (  h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
                          npw, npwx, nbnd, nbndx, evc_d, ethr, &
                          et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call
@@ -1022,7 +1020,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 !
              ELSE
                 !
-!               CALL cegterg_gpu ( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
                 CALL cegterg ( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
                                npw, npwx, nbnd, nbndx, npol, evc_d, ethr, &
                                et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
