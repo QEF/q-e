@@ -5,6 +5,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! NOTE (Ivan Carnimeo, May, 05th, 2022): 
+!   cegterg and regterg have been ported to GPU with OpenACC, 
+!   the previous CUF versions (cegterg_gpu and regterg_gpu) have been removed, 
+!   and now cegterg and regterg are used for both CPU and GPU execution.
+!   If you want to see the previous code checkout to commit: df3080b231c5daf52295c23501fbcaa9bfc4bfcc (on Thu Apr 21 06:18:02 2022 +0000)
+!
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
 !
@@ -201,7 +207,11 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, hpsi(1,n_start), kdmx, ZERO, hc(1,n_start), nvecx )
   !
   if ((n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 )) & 
+#if defined(__CUDA)
         CALL mp_sum( hc, 1, nbase, n_start, n_end , intra_bgrp_comm )
+#else
+        CALL mp_sum( hc(1:nbase, n_start:n_end), intra_bgrp_comm )
+#endif
   CALL mp_gather( hc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
   !
   IF ( uspp ) THEN
@@ -219,7 +229,11 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   END IF
   !
   if ((n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 )) & 
+#if defined(__CUDA)
          CALL mp_sum( sc, 1, nbase, n_start, n_end , intra_bgrp_comm )
+#else
+         CALL mp_sum( sc(1:nbase, n_start:n_end), intra_bgrp_comm )
+#endif
   CALL mp_gather( sc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
   !$acc end host_data
   !
@@ -463,7 +477,11 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
                  ZERO, hc(nb1,n_start), nvecx )
      !
      if ((n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 )) &
+#if defined(__CUDA)
        CALL mp_sum( hc, nb1, nbase+notcnv, n_start, n_end , intra_bgrp_comm )
+#else
+       CALL mp_sum( hc(nb1:nbase+notcnv, n_start:n_end) , intra_bgrp_comm )
+#endif
      CALL mp_gather( hc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
      !
      CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
@@ -481,7 +499,11 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      END IF
      !
      if ( (n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 ) ) & 
+#if defined(__CUDA)
          CALL mp_sum( sc, nb1, nbase+notcnv, n_start, n_end , intra_bgrp_comm )
+#else
+         CALL mp_sum( sc(nb1:nbase+notcnv, n_start:n_end) , intra_bgrp_comm )
+#endif
      CALL mp_gather( sc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
      !$acc end host_data
      !

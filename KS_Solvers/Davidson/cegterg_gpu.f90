@@ -5,6 +5,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! NOTE (Ivan Carnimeo, May, 05th, 2022): 
+!   cegterg and regterg have been ported to GPU with OpenACC, 
+!   the previous CUF versions (cegterg_gpu and regterg_gpu) have been removed, 
+!   and now cegterg and regterg are used for both CPU and GPU execution.
+!   If you want to see the previous code checkout to commit: df3080b231c5daf52295c23501fbcaa9bfc4bfcc (on Thu Apr 21 06:18:02 2022 +0000)
+!
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
 !
