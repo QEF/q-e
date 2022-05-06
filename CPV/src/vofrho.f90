@@ -523,7 +523,7 @@ DEV_ACC exit data delete(rhotmp)
       ELSE
          CALL rho_r2g ( dfftp, rhor, rhog )
       END IF
-DEV_ACC update device (rhog) 
+      !
       IF( nspin == 1 ) THEN
          CALL zaxpy(p_ngm_, (1.0d0,0.0d0) , vtemp, 1, rhog(:,1), 1)
       ELSE
