@@ -86,9 +86,18 @@ SUBROUTINE wfcinit_gpu()
      IF ( twfcollect_file ) THEN
         !
         DO ik = 1, nks
-           CALL read_collected_wfc ( dirname, ik, evc )
+           CALL read_collected_wfc ( dirname, ik, evc, "wfc", ierr )
+           IF ( ierr /= 0 ) GO TO 10
            CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
         END DO
+        !
+10      IF ( ierr /= 0 ) THEN
+           WRITE( stdout, '(5X,"Wavefunctions not found or not readable, ", &
+                & "recomputing them from scratch" )' )
+           CALL close_buffer(iunwfc, 'delete')
+           CALL open_buffer(iunwfc,'wfc', nwordwfc, io_level, exst_mem, exst_file)
+           starting_wfc = 'atomic+random'
+        END IF
         !
      ELSE IF ( exst_sum /= 0 ) THEN
         !

@@ -25,6 +25,7 @@ SUBROUTINE aceinit0()
   !
   IMPLICIT NONE
   !
+  INTEGER :: ierr
   INTEGER :: ik
   CHARACTER (LEN=256)  :: dirname
   !
@@ -37,8 +38,6 @@ SUBROUTINE aceinit0()
   ELSE
     !
     WRITE( stdout, '(5X,"EXX: initializing ACE and reading from file")' )
-    WRITE( stdout, '(5X,"WARNING: this will crash or be completely wrong if a compliant ACE potential & 
-                             from a previous SCF run is not found on file")' )
     !
     Call start_exx()
     !
@@ -49,7 +48,9 @@ SUBROUTINE aceinit0()
     dirname = restart_dir ( )
     !
     DO ik = 1, nks
-       CALL read_collected_wfc ( dirname, ik, xi(:,:,ik), "ace" )
+       CALL read_collected_wfc ( dirname, ik, xi(:,:,ik), "ace", ierr )
+       IF ( ierr /= 0 ) CALL errore ('aceinit0', &
+            'file with ACE potential not found or not readable',ik)
     END DO
     !
     WRITE( stdout, '(5X,"Starting ACE correctly read from file")' )
@@ -144,10 +145,19 @@ SUBROUTINE wfcinit()
      IF ( twfcollect_file ) THEN
         !
         DO ik = 1, nks
-           CALL read_collected_wfc ( dirname, ik, evc )
+           CALL read_collected_wfc ( dirname, ik, evc, "wfc", ierr )
+           IF ( ierr /= 0 ) GO TO 10
            CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
         END DO
         !
+10      IF ( ierr /= 0 ) THEN
+           WRITE( stdout, '(5X,"Wavefunctions not found or not readable, ", &
+                & "recomputing them from scratch" )' )
+           CALL close_buffer(iunwfc, 'delete')
+           CALL open_buffer(iunwfc,'wfc', nwordwfc, io_level, exst_mem, exst_file)
+           starting_wfc = 'atomic+random'
+        END IF
+        !   
      ELSE IF ( exst_sum /= 0 ) THEN
         !
         WRITE( stdout, '(5X,"Cannot read wfcs: file not found")' )

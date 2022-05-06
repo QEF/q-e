@@ -1232,7 +1232,7 @@ MODULE pw_restart_new
     END SUBROUTINE read_xml_file
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_collected_wfc ( dirname, ik, arr, label_ )
+    SUBROUTINE read_collected_wfc ( dirname, ik, arr, label_, ierr_ )
       !------------------------------------------------------------------------
       !
       ! ... reads from directory "dirname" (new file format) for k-point "ik"
@@ -1258,11 +1258,12 @@ MODULE pw_restart_new
       INTEGER, INTENT(IN) :: ik
       COMPLEX(dp), INTENT(OUT) :: arr(:,:)
       CHARACTER(LEN=3), OPTIONAL, INTENT(IN) :: label_
-      CHARACTER(LEN=3) :: label 
-      LOGICAL :: read_ace
+      INTEGER, OPTIONAL, INTENT(OUT)  :: ierr_
       !
       CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
-      CHARACTER(LEN=320)   :: filename, msg
+      CHARACTER(LEN=320)   :: filename, msg 
+      CHARACTER(LEN=3)     :: label 
+      LOGICAL              :: read_ace
       INTEGER              :: i, ik_g, ig, ipol, ik_s
       INTEGER              :: npol_, nbnd_
       INTEGER              :: nupdwn(2), ike, iks, ngk_g, npw_g, ispin
@@ -1275,19 +1276,20 @@ MODULE pw_restart_new
       ! ... decide whether to read wfc or ace
       !
       if(present(label_)) then 
-        label = label_
-        if(label.eq."ace") then 
-          if(.not.exx_is_active()) CALL errore ('pw_restart - read_collected_wfc', "ace but not exx_is_active", 1 ) 
-          read_ace = .true.
-        elseif(label.eq."wfc") then
-          read_ace = .false.
-        else
-          CALL errore ('pw_restart - read_collected_wfc', "wrong label", 1 )
-        end if  
+         label = label_
+         if(label.eq."ace") then 
+            if(.not.exx_is_active()) CALL errore ('pw_restart-read_collected_wfc',&
+                 "ace but not exx_is_active", 1 ) 
+            read_ace = .true.
+         else if(label.eq."wfc") then
+            read_ace = .false.
+         else
+            CALL errore ('pw_restart - read_collected_wfc', "wrong label", 1 )
+         end if
       else
-        label = "wfc"
-        read_ace = .false.
-      end if 
+         label = "wfc"
+         read_ace = .false.
+      end if
       !
       ! ... the root processor of each pool reads
       !
@@ -1352,11 +1354,14 @@ MODULE pw_restart_new
       !
       CALL read_wfc( iunpun, filename, root_bgrp, intra_bgrp_comm, &
            ik_g, xk_, ispin, npol_, arr, npw_g, gamma_only, nbnd_, &
-           igk_l2g_kdip(:), ngk(ik), b1, b2, b3, mill_k, scalef )
-      !
+           igk_l2g_kdip(:), ngk(ik), b1, b2, b3, mill_k, scalef, ierr_ )
       !
       DEALLOCATE ( mill_k )
       DEALLOCATE ( igk_l2g_kdip )
+      !
+      IF ( PRESENT (ierr_) ) THEN
+         IF ( ierr_ /= 0 ) RETURN
+      END IF
       !
       ! ... here one should check for consistency between what is read
       ! ... and what is expected
