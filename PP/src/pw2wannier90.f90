@@ -3781,8 +3781,6 @@ SUBROUTINE compute_amn
      CALL deallocate_bec_type (becp)
    ENDIF
    !
-   IF (ionode .AND. wan_mode=='standalone') CLOSE(iun_amn)
-   !
    WRITE(stdout,*) ' AMN calculated'
    !
    CALL stop_clock( 'compute_amn' )
