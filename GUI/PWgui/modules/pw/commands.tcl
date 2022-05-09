@@ -665,7 +665,7 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 		    {'grimme-d2' 'Grimme-D2' 'DFT-D'  'dft-d'}
 		    {'grimme-d3' 'Grimme-D3' 'DFT-D3' 'dft-d3'}
 		    {'ts-vdw'    'TS' 'ts' 'ts-vdW' 'tkatchenko-scheffler'}
-                    {'mbd_vdw'  {'many-body dispersion'}}
+        {'MBD'       'mbd'     'many-body-dispersion' 'mbd_vdw'}
 		    {'xdm'       'XDM'}
 		}
                 diagonalization {
