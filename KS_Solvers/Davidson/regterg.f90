@@ -352,7 +352,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      ! ...         ew = <psi_i|psi_i>,  i = nbase + 1, nbase + notcnv
      !
      !$acc parallel vector_length(96) 
-     !$acc loop seq private(nbn) 
+     !$acc loop gang private(nbn) 
      DO n = 1, notcnv
         !
         nbn = nbase + n
@@ -439,9 +439,11 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !
      nbase = nbase + notcnv
      !
-     !$acc serial
+     !$acc parallel 
+     !$acc loop gang
      DO n = 1, nbase
         !
+        !$acc loop vector 
         DO m = n + 1, nbase
            !
            hr(m,n) = hr(n,m)
@@ -450,7 +452,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         END DO
         !
      END DO
-     !$acc end serial
+     !$acc end parallel 
      !
      ! ... diagonalize the reduced hamiltonian
      !
