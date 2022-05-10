@@ -45,6 +45,7 @@ subroutine deallocate_phq
   USE qpoint_aux,   ONLY : ikmks, ikmkmqs, becpt, alphapt
   USE becmod,       ONLY : deallocate_bec_type
   USE nc_mag_aux,   ONLY : int1_nc_save, deeq_nc_save
+  USE Coul_cut_2D_ph, ONLY : deallocate_2d_arrays
 
   IMPLICIT NONE
   INTEGER :: ik, ipol
@@ -194,6 +195,6 @@ subroutine deallocate_phq
      !
   ENDIF
 
-  RETURN
-
+  call deallocate_2d_arrays ()
+ 
 end subroutine deallocate_phq
