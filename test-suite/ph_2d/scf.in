@@ -4,10 +4,8 @@
     outdir='./'
     pseudo_dir = '../../pseudo'
     restart_mode='from_scratch'
-    wf_collect=.TRUE.
     tprnfor=.TRUE.
     tstress=.TRUE.
-    verbosity = 'high',
  /
  &system
     ibrav=  4,
@@ -22,7 +20,7 @@
  &electrons
     diagonalization='david'
     mixing_beta = 0.7
-    conv_thr = 1.0d-16
+    conv_thr = 1.0d-10
  /
 ATOMIC_SPECIES
 B 10.81    B-PBE.upf
