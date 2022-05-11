@@ -34,8 +34,8 @@ MODULE dynamics_module
    !
    SAVE
    PRIVATE
-   PUBLIC :: verlet, proj_verlet, terminate_verlet, fire, &
-             langevin_md, smart_MC, allocate_dyn_vars, deallocate_dyn_vars
+   PUBLIC :: verlet, verlet_read_tau_from_conf, proj_verlet, terminate_verlet, &
+             fire, langevin_md, smart_MC, allocate_dyn_vars, deallocate_dyn_vars
    PUBLIC :: temperature, refold_pos, vel
    PUBLIC :: dt, delta_t, nraise, control_temp, thermostat
    ! FIRE parameters
@@ -233,9 +233,12 @@ CONTAINS
             ! Restarting...
             vel_defined = .FALSE.
             !
-            READ( UNIT = 4, FMT = * ) istep, etotold, tau_old(:,:), &
-               temp_new, temp_av, mass(:), total_mass, elapsed_time, &
-               tau_ref(:,:)
+            READ( UNIT = 4, FMT = * ) etotold, istep, tau_new(:,:), &
+               tau_old(:,:), temp_new, temp_av, mass(:), total_mass, &
+               elapsed_time, tau_ref(:,:)
+            !
+            ! tau_new is read here but reassigned later. It is used for restart
+            ! in verlet_read_tau_from_conf
             !
             CLOSE( UNIT = 4, STATUS = 'KEEP' )
             !
@@ -400,8 +403,8 @@ CONTAINS
       CALL seqopn( 4, 'md', 'FORMATTED',  is_restart )
       !
       WRITE( UNIT = 4, FMT = * ) restart_verlet
-      WRITE( UNIT = 4, FMT = * ) istep, etot, tau(:,:), temp_new, temp_av, &
-          mass(:), total_mass, elapsed_time, tau_ref(:,:)
+      WRITE( UNIT = 4, FMT = * ) etot, istep, tau_new(:,:), tau(:,:), &
+         temp_new, temp_av, mass(:), total_mass, elapsed_time, tau_ref(:,:)
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
@@ -2099,5 +2102,47 @@ CONTAINS
       CLOSE(iunit)
       !
    END SUBROUTINE dump_trajectory_frame
+   !
+   !--------------------------------------------------------------------------
+   SUBROUTINE verlet_read_tau_from_conf( )
+      !-----------------------------------------------------------------------
+      !! Try to set tau from restart prefix.md file.
+      !
+      USE io_files,  ONLY : prefix, seqopn
+      USE ions_base, ONLY : nat, tau
+      USE io_global, ONLY : ionode
+      !
+      IMPLICIT NONE
+      !
+      LOGICAL  :: is_restart = .FALSE.
+      INTEGER  :: restart_id = 0
+      REAL(DP) :: etotold = 0.0_DP
+      REAL(DP) :: tau_new(3, nat)
+      INTEGER  :: istep
+      !
+      CALL seqopn( 4, 'md', 'FORMATTED', is_restart )
+      !
+      IF ( is_restart ) THEN
+         !
+         READ( UNIT = 4, FMT = * ) restart_id
+         !
+         IF ( restart_id .EQ. restart_verlet ) THEN
+            !
+            READ( UNIT = 4, FMT = * ) etotold, istep, tau_new(:,:)
+            !
+            IF ( SUM ( (tau_new(:,1:nat)-tau(:,1:nat))**2 ) > eps8 ) THEN
+               tau(:, 1:nat) = tau_new(:, 1:nat)
+               !
+               IF ( ionode ) WRITE( stdout, '(/5X,"Atomic positions read &
+                  from:", /,5X,A)') TRIM(prefix) // ".md"
+            END IF
+            !
+         END IF
+         !
+         CLOSE( UNIT = 4 )
+         !
+      END IF
+      !
+   END SUBROUTINE verlet_read_tau_from_conf
    !
 END MODULE dynamics_module

@@ -15,7 +15,8 @@ SUBROUTINE hinit0()
   USE ions_base,        ONLY : nat, nsp, ityp, tau
   USE basis,            ONLY : startingconfig
   USE cell_base,        ONLY : alat, at, bg, omega
-  USE cellmd,           ONLY : omega_old, at_old, lmovecell
+  USE cellmd,           ONLY : omega_old, at_old, lmovecell, calc
+  USE dynamics_module,  ONLY : verlet_read_tau_from_conf
   USE fft_base,         ONLY : dfftp
   USE gvect,            ONLY : ecutrho, ngm, g, gg, eigts1, eigts2, eigts3
 #if defined (__CUDA)
@@ -38,6 +39,7 @@ SUBROUTINE hinit0()
   !
   IMPLICIT NONE
   REAL (dp) :: alat_old
+  LOGICAL   :: is_tau_read = .FALSE.
   !
 #if defined (__ENVIRON)
   REAL(DP) :: at_scaled(3, 3)
@@ -74,7 +76,17 @@ SUBROUTINE hinit0()
         !
      ELSE
         !
-        CALL read_conf_from_file( lmovecell, nat, nsp, tau, alat_old, at_old )
+        CALL read_conf_from_file( lmovecell, nat, nsp, tau, alat_old, at_old, &
+                                  is_tau_read )
+        !
+        IF (.NOT.is_tau_read .AND. calc == 'vd') THEN
+           !
+           ! Restart of Verlet MD is requested. Failed to read coordinates from
+           ! XML. Try to restart from the .md file.
+           !
+           CALL verlet_read_tau_from_conf()
+           !
+        END IF
         !
      END IF
      !

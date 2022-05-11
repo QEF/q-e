@@ -7,7 +7,8 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, alat, at )
+SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, alat, at, &
+                                is_tau_read )
   !-----------------------------------------------------------------------
   !
   USE kinds,           ONLY : DP
@@ -30,6 +31,7 @@ SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, alat, at )
   REAL(DP),INTENT(out)   :: alat
   REAL(DP),INTENT(out)   :: at(3,3)
   REAL(DP),INTENT(inout) :: tau(3,nat)
+  LOGICAL,INTENT(out), OPTIONAL :: is_tau_read
   !
   ! ... local variables
   !
@@ -39,6 +41,8 @@ SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, alat, at )
   INTEGER, ALLOCATABLE :: ityp_(:)
   REAL(dp), ALLOCATABLE :: tau_(:,:)
   CHARACTER (LEN=3) :: atm_(nsp)
+  !
+  IF( PRESENT(is_tau_read) ) is_tau_read = .FALSE.
   !
   WRITE( stdout, '(/5X,"Atomic positions and unit cell read from directory:", &
                 &  /,5X,A)') TRIM(restart_dir())
@@ -66,6 +70,9 @@ SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, alat, at )
      IF ( SUM ( (tau_(:,1:nat)-tau(:,1:nat))**2 ) > eps8 ) THEN
         WRITE( stdout, '(5X,"Atomic positions from file used, from input discarded")' )
         tau(:,1:nat) = tau_(:,1:nat)
+        !
+        IF( PRESENT(is_tau_read) ) is_tau_read = .TRUE.
+        !
      END IF
      DEALLOCATE ( tau_, ityp_ )
      WRITE( stdout, * )
