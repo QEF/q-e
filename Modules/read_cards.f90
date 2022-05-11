@@ -2120,28 +2120,6 @@ CONTAINS
       counter_e2(:) = 0
       ALLOCATE(counter_e3(ntyp))
       counter_e3(:) = 0
-      ALLOCATE(counter_v(natx,natx*(2*sc_size+1)**3))
-      counter_v(:,:) = 0
-      !
-      ! Needed for Hubbard V: initialize the atomic types for 
-      ! the virtual atoms in the same way as it is done in
-      ! PW/src/intersite_V.f90
-      ! sp_pos(na) is the atomic type of the atom na
-      ALLOCATE(ityp(natx*(2*sc_size+1)**3))
-      ityp(1:nat) = sp_pos(1:nat)
-      i = nat
-      DO nx = -sc_size, sc_size
-         DO ny = -sc_size, sc_size
-            DO nz = -sc_size, sc_size
-               IF ( nx.NE.0 .OR. ny.NE.0 .OR. nz.NE.0 ) THEN
-                  DO na = 1, nat
-                     i = i + 1
-                     ityp(i) = sp_pos(na)
-                  ENDDO
-               ENDIF
-            ENDDO
-         ENDDO
-      ENDDO
       !
       ! Read Hubbard parameters, principal and orbital quantum numbers
       !
@@ -2396,6 +2374,33 @@ CONTAINS
             ! Sanity check
             IF (nat>natx) CALL errore('card_hubbard', 'Too many atoms. &
                 Increase the value of natx in Modules/parameters.f90 and recompile the code.',1)
+            !
+            ! Initialize the atomic types for 
+            ! the virtual atoms in the same way as it is done in
+            ! PW/src/intersite_V.f90
+            ! sp_pos(na) is the atomic type of the atom na
+            IF (.NOT.ALLOCATED(ityp)) THEN
+               ALLOCATE(ityp(natx*(2*sc_size+1)**3))
+               ityp(1:nat) = sp_pos(1:nat)
+               i = nat
+               DO nx = -sc_size, sc_size
+                  DO ny = -sc_size, sc_size
+                     DO nz = -sc_size, sc_size
+                        IF ( nx.NE.0 .OR. ny.NE.0 .OR. nz.NE.0 ) THEN
+                           DO na = 1, nat
+                              i = i + 1
+                              ityp(i) = sp_pos(na)
+                           ENDDO
+                        ENDIF
+                     ENDDO
+                  ENDDO
+               ENDDO
+            ENDIF
+            !
+            IF (.NOT.ALLOCATED(counter_v)) THEN
+               ALLOCATE(counter_v(natx,natx*(2*sc_size+1)**3))
+               counter_v(:,:) = 0
+            ENDIF
             !
             ! First of all, we read the indices na and nb that correspond to the location 
             ! of atoms Fe and O in the ATOMIC_POSITIONS card (columns 4 and 5)
@@ -2902,8 +2907,8 @@ CONTAINS
       DEALLOCATE(counter_b)
       DEALLOCATE(counter_e2)
       DEALLOCATE(counter_e3)
-      DEALLOCATE(counter_v)
-      DEALLOCATE(ityp)
+      IF (ALLOCATED(counter_v)) DEALLOCATE(counter_v)
+      IF (ALLOCATED(ityp)) DEALLOCATE(ityp)
       tahub = .true.
       !
       RETURN
