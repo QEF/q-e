@@ -16,7 +16,8 @@ MODULE qexsd_input
   USE kinds, ONLY : dp
   !
   USE qes_types_module
-  USE qes_libs_module
+  USE qes_init_module,  ONLY : qes_init
+  USE qes_reset_module, ONLY : qes_reset
   !
   IMPLICIT NONE
   !
@@ -392,7 +393,8 @@ MODULE qexsd_input
    ! 
    TYPE (cell_control_type)                     :: obj
    CHARACTER(LEN=*),INTENT(IN)                  :: cell_dynamics, cell_dofree
-   REAL(DP),INTENT(IN)                          :: pressure, wmass, cell_factor
+   REAL(DP),INTENT(IN)                          :: pressure, wmass
+   REAL(DP),INTENT(IN), OPTIONAL                :: cell_factor
    INTEGER,DIMENSION(3,3),INTENT(IN)            :: iforceh
    ! 
    CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="cell_control"
@@ -424,7 +426,7 @@ MODULE qexsd_input
    IF (ASSOCIATED (free_cell_ptr)) CALL  qes_init (free_cell_obj,"free_cell",[3,3],my_forceh, ORDER = 'F' )
    !
    CALL qes_init (obj,TAGNAME, PRESSURE = pressure, CELL_DYNAMICS=cell_dynamics, WMASS=wmass, CELL_FACTOR=cell_factor,&
-                  FIX_VOLUME=fix_volume, FIX_AREA=fix_area, ISOTROPIC=isotropic, FREE_CELL=free_cell_ptr)
+                 CELL_DO_FREE = cell_dofree)
    IF( ASSOCIATED(free_cell_ptr))   CALL qes_reset (free_cell_obj)
    END SUBROUTINE  qexsd_init_cell_control
    !
@@ -476,7 +478,7 @@ MODULE qexsd_input
    !
    IF (esm_ispresent) THEN
       IF (PRESENT(fcp)) THEN
-         CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated, ESM=esm_obj, FCP=fcp, FCP_MU=fcp_mu)
+         CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated, ESM=esm_obj, FCP_OPT=fcp, FCP_MU=fcp_mu)
       ELSE
          CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated, ESM=esm_obj)
       END IF

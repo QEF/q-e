@@ -24,74 +24,103 @@ MODULE fft_rho
   !
 CONTAINS
   !
-  SUBROUTINE rho_r2g ( desc, rhor, rhog, v )
+  !-----------------------------------------------------------------
+  SUBROUTINE rho_r2g( desc, rhor, rhog, v )
+    !---------------------------------------------------------------
+    !! Bring charge density rho from real to G- space.
+    !
     USE fft_types,              ONLY: fft_type_descriptor
     USE fft_helper_subroutines, ONLY: fftx_threed2oned
     !
-    TYPE(fft_type_descriptor), INTENT(in) :: desc
-    REAL(dp),    INTENT(in) :: rhor(:,:)
-    COMPLEX(dp), INTENT(OUT):: rhog(:,:)
-    REAL(dp),    OPTIONAL, INTENT(in) :: v(:)
+    TYPE(fft_type_descriptor), INTENT(IN) :: desc
+    REAL(DP), INTENT(IN) :: rhor(:,:)
+    !! rho in real space
+    COMPLEX(DP), INTENT(OUT):: rhog(:,:)
+    !! rho in G-space
+    REAL(DP), INTENT(IN), OPTIONAL :: v(:)
+    !
+    ! ... local variables
     !
     INTEGER :: ir, ig, iss, isup, isdw
     INTEGER :: nspin
-    COMPLEX(dp):: fp, fm
-    COMPLEX(dp), ALLOCATABLE :: psi(:)
-
-    nspin= SIZE (rhor, 2)
-
-    ALLOCATE( psi( desc%nnr ) )
+    COMPLEX(DP):: fp, fm
+    COMPLEX(DP), ALLOCATABLE :: psi(:)
+    !
+    !$acc data present_or_copyin( rhor, v ) present_or_copyout( rhog )
+    !
+    nspin = SIZE(rhor,2)
+    !
+    ALLOCATE( psi(desc%nnr) )
+    !$acc data create( psi )
+    !
     IF( nspin == 1 ) THEN
-       iss=1
-       IF( PRESENT( v ) ) THEN
-          DO ir=1,desc%nnr
-             psi(ir)=CMPLX(rhor(ir,iss)+v(ir),0.0_dp,kind=dp)
-          END DO
+       !
+       iss = 1
+       IF( PRESENT(v) ) THEN
+          !$acc parallel loop
+          DO ir = 1, desc%nnr
+             psi(ir) = CMPLX(rhor(ir,iss)+v(ir),0.0_DP,kind=DP)
+          ENDDO
        ELSE
-          DO ir=1,desc%nnr
-             psi(ir)=CMPLX(rhor(ir,iss),0.0_dp,kind=dp)
-          END DO
-       END IF
-       CALL fwfft('Rho', psi, desc )
-       CALL fftx_threed2oned( desc, psi, rhog(:,iss) )
+          !$acc parallel loop
+          DO ir = 1, desc%nnr
+             psi(ir) = CMPLX(rhor(ir,iss),0.0_DP,kind=DP)
+          ENDDO
+       ENDIF
+       !$acc host_data use_device( psi )
+       CALL fwfft( 'Rho', psi, desc )
+       !$acc end host_data
+       CALL fftx_threed2oned( desc, psi, rhog(:,iss), gpu_args_=.TRUE. )
+       !
     ELSE
        IF ( gamma_only ) THEN
           ! nspin/2 = 1 for LSDA, = 2 for noncolinear
-          DO iss=1,nspin/2
-             isup=1+(iss-1)*nspin/2 ! 1 for LSDA, 1 and 3 for noncolinear
-             isdw=2+(iss-1)*nspin/2 ! 2 for LSDA, 2 and 4 for noncolinear
+          DO iss = 1, nspin/2
+             isup = 1 + (iss-1)*nspin/2 ! 1 for LSDA, 1 and 3 for noncolinear
+             isdw = 2 + (iss-1)*nspin/2 ! 2 for LSDA, 2 and 4 for noncolinear
              IF( PRESENT( v ) ) THEN
-                DO ir=1,desc%nnr
-                    psi(ir)=CMPLX(rhor(ir,isup)+v(ir),rhor(ir,isdw)+v(ir),kind=dp)
-                END DO
+                !$acc parallel loop
+                DO ir = 1, desc%nnr
+                    psi(ir) = CMPLX(rhor(ir,isup)+v(ir),rhor(ir,isdw)+v(ir),kind=DP)
+                ENDDO
              ELSE
-                DO ir=1,desc%nnr
-                   psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=dp)
-                END DO
-             END IF
-             CALL fwfft('Rho', psi, desc )
-             CALL fftx_threed2oned( desc, psi, rhog(:,isup), rhog(:,isdw) )
-          END DO
+                !$acc parallel loop
+                DO ir = 1, desc%nnr
+                   psi(ir) = CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=DP)
+                ENDDO
+             ENDIF
+             !$acc host_data use_device( psi )
+             CALL fwfft( 'Rho', psi, desc )
+             !$acc end host_data
+             CALL fftx_threed2oned( desc, psi, rhog(:,isup), rhog(:,isdw), gpu_args_=.TRUE. )
+          ENDDO
        ELSE
-          DO iss=1,nspin
+          DO iss = 1, nspin
              IF( PRESENT( v ) ) THEN
-                DO ir=1,desc%nnr
-                    psi(ir)=CMPLX(rhor(ir,iss)+v(ir),0.0_dp,kind=dp)
-                END DO
+                !$acc parallel loop
+                DO ir = 1, desc%nnr
+                    psi(ir) = CMPLX(rhor(ir,iss)+v(ir),0.0_DP,kind=DP)
+                ENDDO
              ELSE
-                DO ir=1,desc%nnr
-                   psi(ir)=CMPLX(rhor(ir,iss),0.0_dp,kind=dp)
-                END DO
-             END IF
-             CALL fwfft('Rho', psi, desc )
-             CALL fftx_threed2oned( desc, psi, rhog(:,iss) )
-          END DO
-       END IF
+                !$acc parallel loop
+                DO ir = 1, desc%nnr
+                   psi(ir) = CMPLX(rhor(ir,iss),0.0_DP,kind=DP)
+                ENDDO
+             ENDIF
+             !$acc host_data use_device( psi )
+             CALL fwfft( 'Rho', psi, desc )
+             !$acc end host_data
+             CALL fftx_threed2oned( desc, psi, rhog(:,iss), gpu_args_=.TRUE. )
+          ENDDO
+       ENDIF
     ENDIF
-    
+    !$acc end data
     DEALLOCATE( psi )
-
+    !
+    !$acc end data
+    !
   END SUBROUTINE rho_r2g
+  !
   !
   SUBROUTINE rho_g2r_1 ( desc, rhog, rhor )
     USE fft_types,              ONLY: fft_type_descriptor

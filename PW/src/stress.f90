@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,7 +19,7 @@ SUBROUTINE stress( sigma )
   USE ener,             ONLY : etxc, vtxc
   USE gvect,            ONLY : ngm, gstart, g, gg, gcutm
   USE fft_base,         ONLY : dfftp
-  USE ldaU,             ONLY : lda_plus_u, U_projection
+  USE ldaU,             ONLY : lda_plus_u, Hubbard_projectors
   USE lsda_mod,         ONLY : nspin
   USE scf,              ONLY : rho, rho_core, rhog_core
   USE control_flags,    ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, ts_vdw, mbd_vdw, use_gpu
@@ -28,7 +28,7 @@ SUBROUTINE stress( sigma )
   USE bp,               ONLY : lelfield
   USE uspp,             ONLY : okvan
   USE london_module,    ONLY : stres_london
-  USE dftd3_api,        ONLY : get_atomic_number, dftd3_calc
+  USE dftd3_api,        ONLY : get_atomic_number
   USE dftd3_qe,         ONLY : dftd3_pbc_gdisp, dftd3
   USE xdm_module,       ONLY : stress_xdm
   USE exx,              ONLY : exx_stress
@@ -158,7 +158,7 @@ SUBROUTINE stress( sigma )
   !  (included by stres_knl if using beta as local projectors)
   !
   sigmah(:,:) = 0.d0
-  IF ( lda_plus_u .AND. U_projection /= 'pseudo' ) CALL stres_hub( sigmah )
+  IF ( lda_plus_u .AND. Hubbard_projectors /= 'pseudo' ) CALL stres_hub( sigmah )
   !
   !   Electric field contribution
   !
@@ -267,6 +267,7 @@ SUBROUTINE stress( sigma )
          &   5x,'DFT-D   stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'XDM     stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'dft-nl  stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
-         &   5x,'TS-vdW  stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
+         &   5x,'TS-vdW  stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
+         &   5x,'MBD     stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
   !
 END SUBROUTINE stress

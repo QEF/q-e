@@ -16,6 +16,7 @@ set(src_modules
     coulomb_vcut.f90  
     dist.f90 
     electrons_base.f90 
+    environ_base_module.f90
     environment.f90 
     fd_gradient.f90 
     fft_base.f90 
@@ -80,7 +81,6 @@ set(src_modules
     qes_read_module.f90 
     qes_reset_module.f90 
     qes_init_module.f90 
-    qes_read_module.f90 
     qes_bcast_module.f90 
     qexsd.f90   
     qexsd_copy.f90   
@@ -112,8 +112,6 @@ set(src_modules
     rgen.f90 
     recips.f90 
     remove_tot_torque.f90
-    set_hubbard_l.f90 
-    set_hubbard_n.f90 
     sort.f90 
     trimcheck.f90 
     test_input_file.f90 
@@ -140,6 +138,12 @@ set(src_modules_c
     stack.c)
 qe_add_library(qe_modules_c ${src_modules_c})
 
+if(TARGET gitrev)
+   add_dependencies(qe_modules gitrev)
+   target_compile_definitions(qe_modules PRIVATE HAVE_GITREV)
+   target_include_directories(qe_modules PRIVATE ${qe_BINARY_DIR})
+endif()
+
 target_link_libraries(qe_modules
     PRIVATE
         qe_modules_c
@@ -155,12 +159,18 @@ target_link_libraries(qe_modules
         qe_hdf5_fortran
         qe_upflib
         qe_fox
-        qe_utilx)
-
+        qe_utilx
+        qe_openacc_fortran)
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_modules
         PRIVATE
             CUDA::curand)
+endif()
+
+if(QE_ENABLE_ENVIRON)
+    target_link_libraries(qe_modules
+    PUBLIC
+        qe_environ)
 endif()
 
 ###########################################################

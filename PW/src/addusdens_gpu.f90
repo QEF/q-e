@@ -16,16 +16,27 @@ SUBROUTINE addusdens_gpu(rho)
   USE fft_base,             ONLY : dfftp
   USE kinds,                ONLY : DP
   !
+#if defined(__CUDA)
+  USE device_fbuff_m,       ONLY : dev_buf
+#endif
+  !
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(INOUT) :: rho(dfftp%ngm,nspin_mag)
   !! Charge density in G space
   !
+  INTEGER :: ierr
+  !
+#if defined(__CUDA)
   IF ( tqr ) THEN
      CALL addusdens_r( rho )
   ELSE
      CALL addusdens_g_gpu( rho )
   ENDIF
+  !
+  CALL dev_buf%reinit( ierr )
+  IF ( ierr .ne. 0 ) CALL infomsg( 'addusdens_gpu', 'Cannot reset GPU buffers! Some buffers still locked.' )
+#endif
   !
   RETURN
   !
@@ -58,8 +69,10 @@ SUBROUTINE addusdens_g_gpu(rho)
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : inter_bgrp_comm
   USE mp,                   ONLY : mp_sum
+#if defined(__CUDA)
   USE device_fbuff_m,       ONLY : dev_buf, pin_buf
   USE device_memcpy_m,      ONLY : dev_memcpy, dev_memset
+#endif
   !
   IMPLICIT NONE
   !
@@ -87,7 +100,7 @@ SUBROUTINE addusdens_g_gpu(rho)
   attributes(device) :: tbecsum_d, qmod_d, ylmk0_d, skk_d, &
                         aux2_d, aux_d, qgm_d
   attributes(pinned) :: aux_h
-#endif
+
   IF (.not.okvan) RETURN
 
   CALL start_clock_gpu ('addusdens')
@@ -221,7 +234,8 @@ SUBROUTINE addusdens_g_gpu(rho)
   CALL dev_buf%release_buffer(aux_d, ierr)
   !
   CALL stop_clock_gpu( 'addusdens' )
-  !
+#endif
+ !
   RETURN
 END SUBROUTINE addusdens_g_gpu
 

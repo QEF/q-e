@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,7 +24,7 @@ SUBROUTINE hp_readin()
   USE ldaU_hp,          ONLY : conv_thr_chi, thresh_init, find_atpert, skip_atom, skip_type, &
                                equiv_type, background, compute_hp, tmp_dir_hp,         &
                                perturb_only_atom, sum_pertq, determine_num_pert_only,  &
-                               skip_equivalence_q, tmp_dir_save, niter_max,            &
+                               skip_equivalence_q, tmp_dir_save, niter_max, dist_thr,  &
                                disable_type_analysis, docc_thr, num_neigh, lmin, rmax, &
                                nmix, nq1, nq2, nq3, alpha_mix, start_q, last_q, maxter
   !
@@ -36,7 +36,7 @@ SUBROUTINE hp_readin()
   CHARACTER (LEN=256) :: outdir
   CHARACTER(LEN=6)    :: int_to_char
   !
-  NAMELIST / INPUTHP / prefix, outdir, nq1, nq2, nq3, skip_equivalence_q,             &
+  NAMELIST / INPUTHP / prefix, outdir, nq1, nq2, nq3, skip_equivalence_q, dist_thr,   &
                          conv_thr_chi, skip_atom, skip_type, equiv_type, iverbosity,  &
                          background, thresh_init, find_atpert, max_seconds, rmax,     &
                          niter_max, alpha_mix, nmix, compute_hp, perturb_only_atom,   &
@@ -56,6 +56,7 @@ SUBROUTINE hp_readin()
   thresh_init        = 1.D-14
   ethr_nscf          = 1.D-11
   docc_thr           = 5.D-5
+  dist_thr           = 6.D-4  ! same as eps_dist in PW/src/ldaU.f90
   rmax               = 100.D0
   skip_atom(:)       = .FALSE.
   skip_type(:)       = .FALSE.
@@ -140,7 +141,7 @@ SUBROUTINE input_sanity()
   USE noncollin_module, ONLY : i_cons, noncolin
   USE mp_bands,         ONLY : nbgrp
   USE xc_lib,           ONLY : xclib_dft_is
-  USE ldaU,             ONLY : lda_plus_u, U_projection, lda_plus_u_kind, Hubbard_J0, &
+  USE ldaU,             ONLY : lda_plus_u, Hubbard_projectors, lda_plus_u_kind, Hubbard_J0, &
                                is_hubbard_back, Hubbard_V
   !
   IMPLICIT NONE
@@ -195,9 +196,9 @@ SUBROUTINE input_sanity()
   IF (lda_plus_u_kind.EQ.1) CALL errore("hp_readin", &
      & ' The HP code does not support lda_plus_u_kind=1',1)
   !
-  IF (U_projection.NE."atomic" .AND. U_projection.NE."ortho-atomic") &
+  IF (Hubbard_projectors.NE."atomic" .AND. Hubbard_projectors.NE."ortho-atomic") &
      CALL errore("hp_readin", &
-     " The HP code for this U_projection_type is not implemented",1)
+     " The HP code for this Hubbard_projectors type is not implemented",1)
   !
   IF (noncolin) CALL errore('hp_readin','Noncolliner case is not supported',1)
   !

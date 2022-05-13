@@ -1,11 +1,54 @@
-New in development version:
+New in 7.1 version:
+  * Improved, streamlined and extended porting to NVidia GPUs
+  * KCW package for Koopmans-compliant functionals in a Wannier representation,
+    https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.021051.
+    Developed and maintained by N. Colonna, R. de Gennaro, E. Linscott
+  * If no explicit parallelization options -nk, -nt, -nd are provided,
+    pw.x will figure out suitable values for optimal, or at least, not
+    too bad, parallelization
+
+Incompatible changes in 7.1 version:
+  * Source files previously found in FFTXLIB/ moved to FFTXLIB/src/
+  * gen_us_dj, gen_us_dj moved to upflib/ and into module uspp_init
+  * DFT+Hubbard codes have new input syntax (check Doc/Hubbard_input.pdf)
+
+Fixed in 7.1 version:
+  * `divide_class_so` routine could yield the wrong irreducible representations
+    classification in the  D3_h  group (G.J. Ferreira, A. Dal Corso) 
+  * XSPECTRA gave incorrect results with k-point parallelization, since
+    at least v. 6.6, due to missing broadcast of recomputed Fermi energy
+  * Makov-Payne correction wasn't working with ibrav=0 and cubic cell (A. Fonari)  
+    (found and fixed by Fanchan Meng, Brookhaven)
+  * Bugfix in DFPT+U with PAW pseudos and when fildvscf/=''
+  * Makov-Payne correction wasn't working with ibrav=0 and cubic cell (A. Fonari)
+  * Card ADDITIONAL_KPOINTS wasn't working as expected (Prasenjit Ghosh)
+  * Subtle bug in G-vector ordering, usually triggered by almost-but-not-quite
+    symmetric primitive lattice vectors, was affecting k=0 calculations (not CP)
+    since v.6.0. The ultimate fix would require to change routine hpsort_eps; 
+    the current workaround consists in not recomputing k+G indices if k=0.
+  * In CMake GPU builds, one routine fftx_threed2oned_gpu was not compiled with
+    a proper GPU compiler option and caused failure in GGA-noncolin calculations.
+  * CP with Hubbard U was crashing also when reading the xml file (v.7.0)
+  * Bugfix in turboMagnon for k point grids that have Gamma or points at the
+    Brillouin zone edge (the weights were not correct)
+
+New in 7.0 version:
+  * Unscreened and screened (range-separated) vdW-DF hybrids
+    (Per Hyldgaard and collaborators)
+  * GPU support for PWscf and CP significantly extended
   * RMM-DIIS for CPU (S. Nisihara) and GPU (E. de Paoli, P. Delugas)
   * DFT-D3: MPI parallelization and GPU acceleration with OpenACC
   * projwfc.x can be used to compute the PDOS in a local basis (I. Timrov)
   * Charge self-consistent DFT+DMFT calculations with the TRIQS software package
     via Wannier90 (S. Beck, CCQ Flatiron Institute)
+  * EPW:
+    (1) Addition of spectral decomposition capability in the transport module
+    (2) Support for the frmsf file format of FermiSurfer
+    (3) The cumulant module updated
+    For the full list of new features, bug fixes, and changes leading to backward incompatibility issues,
+    please visit the Releases page of the EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
 
-Fixed in development version:
+Fixed in 7.0 version:
   * Possible out-of-bound error (gfortran only) could crash DFT+U
   * incorrect exx factor multiplication in the gga term of polarized cx0 
     functional (v.6.8 only)
@@ -22,10 +65,16 @@ Fixed in development version:
   * CP with DFT+U could crash when writing the xml file (since v.6.6)
   * Restart of electron-phonon calculations was not working due to a missing
     tag (thanks to Miguel Marques for reporting this)
+  * atomic: the exchange of two lines in import_upf.f90 had broken PAW tests
+    since v.6.5 (thanks to Chiara Biz for reporting, to AdC for fixing)
+  * Calculation of ELF for spin-unpolarized cases was grossly wrong in v.6.8
+  * Changes to the i-Pi interface to adapt it to usage with ASE had broken 
+    the original functionality
 
-Incompatible changes in develoment version:
+Incompatible changes in 7.0 version:
   * Changes to Makefiles and to file "make.inc" (they must be regenerated)
   * clib/ deleted, files clib/*.c moved to UtilXlib/ or to Modules/
+  * Some reshuffling of variables for noncollinear and spin-orbit calculations
 
 Known problems in 6.8 version:
   * electron-phonon calculation in the non-colinear/spinorbit case is broken

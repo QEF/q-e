@@ -11,19 +11,6 @@
     starting_magnetization(3)=-0.5,
     occupations='smearing', smearing='gauss', degauss=0.01,
     nspin=2,
-    lda_plus_u=.true.,
-    lda_plus_u_kind = 0,
-    U_projection_type = 'atomic',
-    Hubbard_U(1)=5.0, 
-    Hubbard_U(2)=5.0,
-    Hubbard_U_back(1) = 2.0
-    Hubbard_U_back(2) = 2.0
-    backall(1) = .true.
-    backall(2) = .true.
-    lback(1)  = 0
-    l1back(1) = 1
-    lback(2)  = 0
-    l1back(2) = 1
  /
  &electrons
     mixing_mode = 'plain'
@@ -45,3 +32,8 @@ CELL_PARAMETERS {alat}
 1.00 0.50 0.50
 K_POINTS {automatic}
 2 2 2 0 0 0
+HUBBARD {atomic}
+U Fe1-3d    5.0
+U Fe1-3p-3s 2.0
+U Fe2-3d    5.0
+U Fe2-3p-3s 2.0

@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.8}
+\def\version{7.1}
 \def\PWscf{\texttt{PWscf}}
 \def\qe{{\sc Quantum ESPRESSO}}
 
@@ -126,6 +126,8 @@ and many others. We quote in particular:
 \end{itemize}
 and the more recent contributors:
 \begin{itemize}
+  \item Sophie Beck (CCQ Flatiron Institute) for interface with DMFT;
+  \item Minkyu Park (KAIST) for magnetic symmetry improvement;
   \item Elena de Paoli (IOM-CNR) for porting to GPU of the RMM-DIIS
         algorithm by Satomichi Nisihara;
   \item Gabriel S. Gusmão (Georgia Tech) and Johannes Voss (ANL)
@@ -235,7 +237,7 @@ or produced via the \texttt{PWgui} graphical interface by Anton Kokalj,
 included in the \qe\ distribution. See \texttt{PWgui-x.y.z/INSTALL}
 (where x.y.z is the version number) for more info on \texttt{PWgui}, 
 or \texttt{GUI/README} if you are using sources from the repository.
-    
+
 You may take the tests (in \texttt{test-suite/}) and examples
 (in \texttt{PW/examples/}) distributed with \qe\ as templates for
 writing your own input files. You may find input files (typically
@@ -974,38 +976,41 @@ achieve good results. Let us summarize the effects of them on CPU:
   called routines; speeds up partially "sum\_band"; does not speed up
   at all "v\_of\_rho", "newd", "mix\_rho".
 \item
-  Linear-algebra parallelization speeds up (not always) "cdiaghg" and "rdiaghg" 
+  Linear-algebra parallelization speeds up (not always) "cdiaghg"
+  and "rdiaghg".
 \item
-  "task-group" parallelization speeds up "fftw"
+  "task-group" parallelization speeds up "fftw".
 \item
   OpenMP parallelization speeds up "fftw", plus selected parts of the 
   calculation, plus (depending on the availability of OpenMP-aware
-  libraries) some linear algebra operations
+  libraries) some linear algebra operations.
 \end{itemize}
 and on RAM:
 \begin{itemize}
 \item
   Parallelization on FFT distributes most arrays across processors
   (i.e. all G-space and R-spaces arrays) but not all of them (in
-  particular, not subspace Hamiltonian and overlap matrices)
+  particular, not subspace Hamiltonian and overlap matrices).
 \item
   Linear-algebra parallelization also distributes subspace Hamiltonian
   and overlap matrices.
 \item
-  All other parallelization levels do not distribute any memory
+  All other parallelization levels do not distribute any memory.
 \end{itemize}
 In an ideally parallelized run, you should observe the following:
 \begin{itemize}
 \item
-  CPU and wall time do not differ by much
+  CPU and wall time do not differ by much, if OpenMP is not active, or:
+  CPU time approaches wall time times the number of OpenMP threads,
+  if OpenMP is active.
 \item
-  Time usage is still dominated by the same routines as for the serial run
+  Time usage is still dominated by the same routines as for the serial run.
 \item
   Routine "fft\_scatter" (called by parallel FFT) takes a sizable part of
   the time spent in FFTs but does not dominate it.
 \end{itemize}
 
-\paragraph{ Quick estimate of parallelization parameters}
+\paragraph{Quick estimate of parallelization parameters}
 
 You need to know
 \begin{itemize}
@@ -1032,6 +1037,26 @@ You will need to experiment a bit to find the best compromise. In order
 to have good load balancing among MPI processes, the number of k-point
 pools should be an integer divisor of $N_k$; the number of processors for
 FFT parallelization should be an integer divisor of $N_3$. 
+
+\paragraph{Automatic guess of parallelization parameters}
+
+Since v.7.1, the code tries to guess a reasonable set of parameters
+for the k-point, linear-algebra, and task-group parallelizations, if
+they are not explicitly provided in the command line. The logic is
+as follows:
+\begin{itemize}
+\item 
+  if the number of processors $N_p$ exceeds $N_3$, one uses k-point
+  parallelization on the smallest number $N_k$ such that
+  $N_p/N_k \le N_3/2$;
+\item
+  if the number of processors $N_p/N_k$ still exceeds $N_3$, one uses
+  task-group parallelization on the smallest $N_t$ that ensures
+  $N_p/N_k/N_t\le N_3/4$;
+\item
+  linear-algebra parallelization is done on $n_d^2$ processors
+  ($n_d^2\le N_p/N_k/N_t$) with $n_d$ such that $M/n_d\sim 100$.
+\end{itemize}
 
 \paragraph{Typical symptoms of bad/inadequate parallelization}
 
@@ -1155,20 +1180,23 @@ reason if the code stops at {\em Waiting for input...}.
 \paragraph{pw.x stops with error while reading data}
 There is an error in the input data, typically a misspelled namelist 
 variable, or an empty input file.
-Unfortunately with most compilers the code just reports {\em Error while
+Unfortunately with most compilers the code often reports {\em Error while
 reading XXX namelist} and no further useful information.
 Here are some more subtle sources of trouble:
 \begin{itemize}
-\item Out-of-bound indices in dimensioned variables read in the namelists;
-\item Input data files containing \^{}M (Control-M) characters at the end
-  of lines, or non-ASCII characters (e.g. non-ASCII quotation marks,
-  that at a first glance may look the same as the ASCII
-  character). Typically, this happens with files coming from Windows
-  or produced with "smart" editors.  
+\item Input files should be plain ASCII text. The presence of CRLF line
+  terminators (may appear as \^{}M, Control-M, characters at the end
+  of lines), tabulators, or non-ASCII characters (e.g. non-ASCII
+  quotation marks, that at a first glance may look the same as
+  the ASCII character) is a frequent source of trouble.
+  Typically, this happens with files coming from Windows or produced
+  with "smart" editors. Verify with command \texttt{file} and convert
+  with command \texttt{iconv} if needed.
 \item The input file ends at the last character (there is no end-of-line
   character).
+\item Out-of-bound indices in dimensioned variables read in the namelists.
 \end{itemize}
-Both may cause the code to crash with rather mysterious error messages.
+These reasons may cause the code to crash with rather mysterious error messages.
 If none of the above applies and the code stops at the first namelist
 (\&CONTROL) and you are running in parallel, see the previous item.
 

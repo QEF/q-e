@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: cp.x / CP / Quantum Espresso (version: 6.7GPU)
+Program: cp.x / CP / Quantum Espresso (version: 7.0)
 ------------------------------------------------------------------------
 
 
@@ -947,7 +947,7 @@ NAMELIST: &ELECTRONS
    Variable:       ortho_max
    
    Type:           INTEGER
-   Default:        20
+   Default:        300
    Description:    maximum number of iterations for orthonormalization
                    meaningful only if orthogonalization = 'ortho'
    +--------------------------------------------------------------------
@@ -1058,6 +1058,15 @@ NAMELIST: &ELECTRONS
    Default:        0.3D0
    Description:    small step used in the  conjugate gradient minimization
                    of the electronic states.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       pre_state
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    if .TRUE. perform the precondition of the CG gradient
+                   using the kinetic energy of the state.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2508,4 +2517,4 @@ CARD: PLOT_WANNIER
 ### END OF SUPERCARD :  AUTOPILOT/ENDRULES #############################
 
 
-This file has been created by helpdoc utility on Tue May 11 14:53:31 CEST 2021
+This file has been created by helpdoc utility on Sat Dec 18 20:08:38 CET 2021

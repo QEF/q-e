@@ -1,18 +1,24 @@
-include(CheckFortranSourceCompiles)
+include(CheckFortranCompilerFlag)
 
 qe_add_global_compile_definitions(__PGI)
 
 # set optimization specific flags
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Mcache_align -Mlarge_arrays")
 
-if(QE_ENABLE_OPENACC)
-    add_library(OpenACC::OpenACC_Fortran INTERFACE IMPORTED)
-    set_target_properties(OpenACC::OpenACC_Fortran PROPERTIES
-                          INTERFACE_COMPILE_OPTIONS "-acc"
-                          INTERFACE_LINK_OPTIONS "-acc")
+if (CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 21.11 AND CMAKE_Fortran_COMPILER_VERSION VERSION_LESS_EQUAL 22.2)
+    if(QE_ENABLE_OPENACC AND QE_ENABLE_OPENMP)
+        message(FATAL_ERROR "NVHPC 21.11-22.2 have a severe bug causing hanging in runs"
+                            " when QE is compiled with both OpenMP and OpenACC. "
+                            "Use a different compiler release or dislable OpenMP with potential performance loss.")
+    endif()
 endif()
 
 if(QE_ENABLE_CUDA)
+    if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19.10)
+        message(FATAL_ERROR "Compiler Version ${CMAKE_Fortran_COMPILER_VERSION}. "
+                            "GPU acceleration requires PGI 19.10 or NVIDIA HPC SDK 20.7 or higher!")
+    endif()
+
     if(CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 20.7)
         set(CUDA_FLAG "-cuda")
     else()
@@ -20,33 +26,30 @@ if(QE_ENABLE_CUDA)
     endif()
 
     set(QE_CUDA_COMPILE_OPTIONS ${CUDA_FLAG})
-    set(QE_CUDA_LINK_OPTIONS ${CUDA_FLAG})
 
+    set(GPU_TARGET_COMPILE_OPTIONS)
     if(DEFINED NVFORTRAN_CUDA_VERSION)
-        set(CMAKE_REQUIRED_FLAGS "-Mfree ${CUDA_FLAG} -gpu=cuda${NVFORTRAN_CUDA_VERSION}")
-        check_fortran_source_compiles("program abc; end program" NVFORTRAN_CUDA_VERSION_VALID)
-        unset(CMAKE_REQUIRED_FLAGS)
-        if(NOT NVFORTRAN_CUDA_VERSION_VALID)
-            unset(NVFORTRAN_CUDA_VERSION_VALID CACHE)
-            message(FATAL_ERROR "nvfortran CUDA version check failed! "
-                                "NVFORTRAN_CUDA_VERSION=${NVFORTRAN_CUDA_VERSION} (-gpu=cuda${NVFORTRAN_CUDA_VERSION}) not accepted")
-        endif()
-        list(APPEND QE_CUDA_COMPILE_OPTIONS "-gpu=cuda${NVFORTRAN_CUDA_VERSION}")
+        list(APPEND GPU_TARGET_COMPILE_OPTIONS "-gpu=cuda${NVFORTRAN_CUDA_VERSION}")
     endif()
 
     if(DEFINED NVFORTRAN_CUDA_CC)
-        set(CMAKE_REQUIRED_FLAGS "-Mfree ${CUDA_FLAG} -gpu=cc${NVFORTRAN_CUDA_CC}")
-        check_fortran_source_compiles("program abc; end program" NVFORTRAN_CUDA_CC_VALID)
-        unset(CMAKE_REQUIRED_FLAGS)
-        if(NOT NVFORTRAN_CUDA_CC_VALID)
-            unset(NVFORTRAN_CUDA_CC_VALID CACHE)
-            message(FATAL_ERROR "nvfortran GPU architecture check failed! "
-                                "NVFORTRAN_CUDA_CC=${NVFORTRAN_CUDA_CC} (-gpu=cc${NVFORTRAN_CUDA_CC}) not accepted")
-        endif()
-        list(APPEND QE_CUDA_COMPILE_OPTIONS "-gpu=cc${NVFORTRAN_CUDA_CC}")
+        list(APPEND GPU_TARGET_COMPILE_OPTIONS "-gpu=cc${NVFORTRAN_CUDA_CC}")
+    endif()
+
+    if(GPU_TARGET_COMPILE_OPTIONS)
+      list(APPEND QE_CUDA_COMPILE_OPTIONS ${GPU_TARGET_COMPILE_OPTIONS})
     endif()
 
     message("   nvfortran CUDA related compile and link options : ${QE_CUDA_COMPILE_OPTIONS}")
+    set(CMAKE_REQUIRED_LINK_OPTIONS ${QE_CUDA_COMPILE_OPTIONS})
+    check_fortran_compiler_flag("${QE_CUDA_COMPILE_OPTIONS}" NVFORTRAN_CUDA_VALID)
+    unset(CMAKE_REQUIRED_LINK_OPTIONS)
+    if(NOT NVFORTRAN_CUDA_VALID)
+        unset(NVFORTRAN_CUDA_VALID CACHE)
+        message(FATAL_ERROR "nvfortran CUDA related option check failed! "
+                            "Please check CMakeError.log for the exact error.")
+    endif()
+
     # CMake default CMAKE_Fortran_FLAGS_RELEASE as -fast -O3
     # -O3 makes the CUDA runs fail at stres_us_gpu.f90, thus override
     set(CMAKE_Fortran_FLAGS_RELEASE "-fast")

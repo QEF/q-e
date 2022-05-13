@@ -68,16 +68,16 @@ then
   fi
 elif [[ "$1" == "6" ]]
 then
-  echo "Running TURBO MAGNONS ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_magnons.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_magnons.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  echo "Running TURBO MAGNON ..."
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_magnon.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_magnon.x ${PARA_SUFFIX} < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
   fi
 elif [[ "$1" == "7" ]]
 then
-  echo "Running TURBO SPECTRUM MAGNONS ..."
+  echo "Running TURBO SPECTRUM MAGNON ..."
   echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4
   cp $3 turbo_spectrum.out

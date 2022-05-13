@@ -32,6 +32,7 @@ MODULE Coul_cut_2D_ph
   ! 
   !
   PUBLIC :: cutoff_fact_qg, cutoff_lr_Vlocq, cutoff_localq
+  PUBLIC :: deallocate_2d_arrays
   
 CONTAINS
 !
@@ -228,4 +229,10 @@ subroutine cutoff_dynmat0 (dynwrk, rhog)
   ENDDO  
   return
 end subroutine cutoff_dynmat0
+
+subroutine deallocate_2d_arrays ()
+  IF ( allocated(cutoff_2D_qg) ) DEALLOCATE(cutoff_2D_qg)
+  IF ( allocated(lr_Vlocq)     ) DEALLOCATE(lr_Vlocq)
+end subroutine deallocate_2d_arrays
+
 END MODULE Coul_cut_2D_ph

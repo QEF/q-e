@@ -106,6 +106,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
                     there are using symmetry. Atoms which have the
                     same type but are not equivalent by symmetry will
                     be distinguished in this case.
+                4 = Perturb all Hubbard atoms (the most expensive option)
              }
         }
 
@@ -298,6 +299,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
                 neighbors (used only at the postprocessing step when 
                 lda_plus_u_kind = 2). This keyword is useful when there 
                 are e.g. defects in the system.
+            }
+        }
+
+        var dist_thr   -type REAL {
+            default { 6.D-4 }
+            info {
+                Threshold (in Bohr) for comparing inter-atomic distances
+                when reconstructing the missing elements of the response 
+                susceptibility in the post-processing step.
             }
         }
 

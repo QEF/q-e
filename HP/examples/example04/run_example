@@ -107,10 +107,6 @@ cat > $PREFIX.scf.in << EOF
     degauss = 0.02,
     nspin = 2,
     starting_magnetization(1) = 0.5,
-    lda_plus_u = .true.,
-    lda_plus_u_kind = 0,
-    U_projection_type = 'ortho-atomic',
-    Hubbard_U(1) = 1.d-8
  /
  &electrons
     conv_thr =  1.d-15
@@ -122,6 +118,8 @@ ATOMIC_POSITIONS {crystal}
  Ni   0.0000000000  0.000000000  0.000000000
 K_POINTS {automatic}
  2 2 2 0 0 0
+HUBBARD {ortho-atomic}
+U Ni-3d 0.0001
 EOF
 $ECHO "  Running the SCF calculation for $PREFIX..."
 $PW_COMMAND < $PREFIX.scf.in > $PREFIX.scf.out

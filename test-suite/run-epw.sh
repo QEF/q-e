@@ -39,8 +39,8 @@ then
 elif [[ "$1" == "2" ]]
 then
   echo "Running PH ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x -input $2 > $3 2> $4"
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x -input $2 > $3 2> $4
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x ${PARA_SUFFIX} -input $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3

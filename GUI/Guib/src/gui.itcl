@@ -55,7 +55,8 @@
 #      addHelp   -- 
 #      newGUI    -- 
 #      component -- 
-#      extra     -- 
+#      extra     --
+#      openInput --
 #      save      -- 
 #      saveAs    -- 
 # 
@@ -130,6 +131,8 @@ itcl::class ::guib::GUI {
     #public method get {what args}
     #public method set {what args}
 
+    public method openInput {moduleIdent moduleName moduleFile inputFile}
+    
     public method save   {{nocomplain 0}}
     public method saveAs {}
 
@@ -950,9 +953,7 @@ itcl::body ::guib::GUI::_newInput {moduleIdent moduleName moduleFile} {
 # ------------------------------------------------------------------------
 
 itcl::body ::guib::GUI::_openInput {moduleIdent moduleName moduleFile} {
-    #return [__openInput $moduleName $moduleFile]
-    #__openInput::
-    
+
     set openTitle "Open $moduleName Input"
         
     # filetypes == { {{definition} {extension}} {...} }
@@ -971,8 +972,19 @@ itcl::body ::guib::GUI::_openInput {moduleIdent moduleName moduleFile} {
     if { $file == {} } {
 	return -code return
     }
- 
-    set fileChannel [open $file r]     
+
+    return [openInput $moduleIdent $moduleName $moduleFile $file]
+}
+
+
+itcl::body ::guib::GUI::openInput {moduleIdent moduleName moduleFile inputFile} {
+    
+    if { ! [file exists $inputFile] } {
+    	::tclu::errorDialog "file \"$inputFile\" does not exists"
+	return
+    }
+    
+    set fileChannel [open $inputFile r]     
 
     # construct the module
     set obj [_newInput $moduleIdent $moduleName $moduleFile]
@@ -991,10 +1003,9 @@ itcl::body ::guib::GUI::_openInput {moduleIdent moduleName moduleFile} {
 
     set index [$widget(notebook) index end]
     set id    $index2tabsCounter($index)
-    #set tabName($index)  "$moduleName Input (File: [file tail $file])"
-    set tabName($id)  "$moduleName: [file tail $file]"
+    set tabName($id)  "$moduleName: [file tail $inputFile]"
     
-    set saveFile($id) $file
+    set saveFile($id) $inputFile
     __setCurrentTabName  $tabName($id)    
     
     return $obj

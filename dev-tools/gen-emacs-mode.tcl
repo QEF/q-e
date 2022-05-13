@@ -31,6 +31,14 @@ proc ::helpdoc::quote_list {lst {prefix {}}} {
 }
 
 
+# Purpose: transform the QE flags list {alat | bohr | angstroms} to emacs list {"alat" "bohr" "angstroms"}
+proc ::helpdoc::flags_to_elist {flags} {
+    foreach f [regsub -all {\|} $flags { }] {
+        append res "\"$f\" "
+    }
+    return $res
+}
+
 # Purpose: store the namelists, variables, cards, etc. that are stated in the def file
 #          (this proc is used by tree's walkproc method; see qe_mode_process_def)
 proc ::helpdoc::getFontlockKeys {tree node action} {    
@@ -72,7 +80,7 @@ proc ::helpdoc::getFontlockKeys {tree node action} {
 		    set bare_name [lindex [split $name \(] 0]; # strips "(index)" from variable's name if var is a dimension
 		    lappend fontlock(vars) $bare_name
 		    lappend defun($module,vars) $bare_name
-		    
+
 		    # is the variable of string-type ?
 		    set type [arr type]
 		    if { "$type" eq "CHARACTER" } {
@@ -106,10 +114,12 @@ proc ::helpdoc::getFontlockKeys {tree node action} {
 			
 			if { $flags_use == "optional" } {
 			    #set fontlock(card_flags,$name) "\{ [string trim $flags_txt { }] \}"
-			    set defun($module,card_flags,$name) "\{ [string trim $flags_txt { }] \}"
+			    #set defun($module,card_flags,$name) "\{ [string trim $flags_txt { }] \}"
+			    set defun($module,card_flags_elist,$name) [flags_to_elist $flags_txt]
 			} else {
 			    #set fontlock(card_flags,$name) [string trim $flags_txt { }]
-			    set defun($module,card_flags,$name) [string trim $flags_txt { }]
+			    #set defun($module,card_flags,$name) [string trim $flags_txt { }]
+			    set defun($module,card_flags_elist,$name) [flags_to_elist $flags_txt]
 			}
 		    }
 		}
@@ -420,10 +430,12 @@ writing Emacs major-mode file : $file
 		set card_uc [string toupper $card]
 		set card_lc [string tolower $card]
 		
-		if { [info exists defun($module,card_flags,$card)] } {
+		#if { [info exists defun($module,card_flags,$card)] } {}
+		if { [info exists defun($module,card_flags_elist,$card)] } {
 		    # it's a card with flags
 		
-		    set card_flags $defun($module,card_flags,$card)
+		    #set card_flags $defun($module,card_flags,$card)
+                    set card_flags_elist $defun($module,card_flags_elist,$card)
 		    append keyword_functions [subst -nocommands -nobackslashes $card_template]\n\n
 		} else {
 		    # it's a flagless card

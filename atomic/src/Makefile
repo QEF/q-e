@@ -109,7 +109,7 @@ parameters.o
 
 QEMODS=$(BASEMODS)
 
-TLDEPS= bindir libs mods
+TLDEPS= bindir mods
 
 all: tldeps ld1.x
 

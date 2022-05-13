@@ -98,6 +98,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        irb, taub, eigrb, rhog, rhos, &
                                        rhor, bephi, becp_bgrp, nfi, idesc, &
                                        drhor, drhog, bec_bgrp, dbec, bec_d, iabox, nabox
+#if defined (__CUDA)
+USE cp_main_variables,        ONLY : eigr_d
+#endif
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
   USE cell_base,                ONLY : s_to_r, r_to_s
@@ -119,6 +122,11 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE input_parameters,         ONLY : tcpbo
   USE xc_lib,                   ONLY : xclib_dft_is, start_exx, exx_is_active
   USE device_memcpy_m,          ONLY : dev_memcpy
+  !
+#if defined (__ENVIRON)
+  USE plugin_flags,             ONLY : use_environ
+  USE environ_base_module,      ONLY : update_environ_ions
+#endif
   !
   IMPLICIT NONE
   !
@@ -311,7 +319,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      ! ... pass ions information to plugins
      !
-     CALL plugin_init_ions( tau0 )
+#if defined (__ENVIRON)
+     IF (use_environ) CALL update_environ_ions(tau0)
+#endif
      !
      IF ( lda_plus_u ) then
         ! forceh    ! Forces on ions due to Hubbard U 
@@ -575,7 +585,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          IF ( tortho ) THEN
 #if defined (__CUDA)
             CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_d, cm_d, idesc )
-            CALL dev_memcpy( bec_bgrp, bec_d )
             CALL dev_memcpy( cm_bgrp, cm_d )
 #else
             CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_bgrp, cm_bgrp, idesc )
@@ -587,15 +596,33 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            cm_bgrp(:,iupdwn(2):nbsp)   =     cm_bgrp(:,1:nupdwn(2))
            !phi(:,iupdwn(2):nbsp)       =    phi(:,1:nupdwn(2))
            CALL dev_memcpy(phi(:,iupdwn(2):), phi, [1, ubound(phi)], 1, [1, nbsp])
+           CALL dev_memcpy(cm_d(:,iupdwn(2):), cm_d, [1, ubound(cm_d)], 1, [1, nbsp])
            lambda(:,:, 2) = lambda(:,:, 1)
          ENDIF
          !
          ! the following compute only on NC pseudo components
+#if defined (__CUDA)
+         CALL dev_memcpy( eigr_d, eigr )
+         !CALL dev_memcpy( cm_d, cm_bgrp )
+         CALL calbec( nbsp_bgrp, vkb_d, cm_d, bec_d, 1 )
+         !CALL dev_memcpy( vkb, vkb_d )
+         !CALL dev_memcpy( bec_bgrp, bec_d )
+#else
          CALL calbec( nbsp_bgrp, vkb, cm_bgrp, bec_bgrp, 1 ) 
+#endif
          !
          IF ( tpre ) THEN
+#if defined (__CUDA)
+           CALL caldbec_bgrp( eigr_d, cm_d, dbec, idesc )
+#else
            CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
+#endif
          END IF
+         !
+#if defined (__CUDA)
+        CALL dev_memcpy( vkb, vkb_d )
+        CALL dev_memcpy( bec_bgrp, bec_d )
+#endif
          !
          IF ( iverbosity > 1 ) CALL dotcsc( vkb, cm_bgrp, ngw, nbsp_bgrp )
          !
@@ -825,7 +852,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            IF ( tefield )  CALL efield_update( eigr )
            IF ( tefield2 ) CALL efield_update2( eigr )
            !
-           CALL plugin_init_ions( tau0 )
+#if defined (__ENVIRON)
+           IF (use_environ) CALL update_environ_ions(tau0)
+#endif
            !
            lambdam = lambda
            !
@@ -998,6 +1027,11 @@ SUBROUTINE terminate_run()
   USE exx_module,        ONLY : exx_finalize
   USE xc_lib,     ONLY : xclib_dft_is, exx_is_active
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,        ONLY : use_environ
+  USE environ_base_module, ONLY : print_environ_clocks
+#endif
+  !
   IMPLICIT NONE
   !
   ! ...  print statistics
@@ -1127,6 +1161,7 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'new_ns' )
   CALL print_clock( 'strucf' )
   CALL print_clock( 'calbec' )
+  CALL print_clock( 'caldbec_bgrp' )
   CALL print_clock( 'exch_corr' )
 !==============================================================
   IF (ts_vdw) THEN
@@ -1145,7 +1180,9 @@ SUBROUTINE terminate_run()
   !
   IF (tcg) call print_clock_tcg()
   !
-  CALL plugin_clock()
+#if defined (__ENVIRON)
+  IF (use_environ) CALL print_environ_clocks()
+#endif
   !
   CALL mp_report()
   !

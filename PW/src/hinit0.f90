@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -25,15 +25,24 @@ SUBROUTINE hinit0()
   USE vlocal,           ONLY : strf
   USE realus,           ONLY : generate_qpointlist, betapointlist, &
                                init_realspace_vars, real_space
-  USE ldaU,             ONLY : lda_plus_U, U_projection
+  USE ldaU,             ONLY : lda_plus_U, Hubbard_projectors
   USE control_flags,    ONLY : tqr, tq_smoothing, tbeta_smoothing, restart
   USE io_global,        ONLY : stdout
   USE noncollin_module, ONLY : report
   USE mp_bands,         ONLY : intra_bgrp_comm
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,        ONLY : use_environ
+  USE environ_base_module, ONLY : update_environ_ions, update_environ_cell
+#endif
   !
   IMPLICIT NONE
   REAL (dp) :: alat_old
+  !
+#if defined (__ENVIRON)
+  REAL(DP) :: at_scaled(3, 3)
+  REAL(DP) :: tau_scaled(3, nat)
+#endif
   !
   CALL start_clock( 'hinit0' )
   !
@@ -46,7 +55,7 @@ SUBROUTINE hinit0()
   IF (tbeta_smoothing) CALL init_us_b0(ecutwfc,intra_bgrp_comm)
   IF (tq_smoothing) CALL init_us_0(ecutrho,intra_bgrp_comm)
   CALL init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
-  IF ( lda_plus_U .AND. ( U_projection == 'pseudo' ) ) CALL init_q_aeps()
+  IF ( lda_plus_U .AND. ( Hubbard_projectors == 'pseudo' ) ) CALL init_q_aeps()
   CALL init_tab_atwfc (omega, intra_bgrp_comm)
   !
   IF ( restart .AND. startingconfig == 'file' ) THEN
@@ -87,8 +96,14 @@ SUBROUTINE hinit0()
   ! these routines can be used to patch quantities that are dependent
   ! on the ions and cell parameters
   !
-  CALL plugin_init_ions()
-  CALL plugin_init_cell()
+#if defined (__ENVIRON)
+  IF (use_environ) THEN
+     at_scaled = at * alat
+     tau_scaled = tau * alat
+     CALL update_environ_ions(tau_scaled)
+     CALL update_environ_cell(at_scaled)
+  END IF
+#endif
   !
   ! ... calculate the total local potential
   !

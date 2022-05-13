@@ -1,6 +1,6 @@
-# generated automatically by aclocal 1.16.2 -*- Autoconf -*-
+# generated automatically by aclocal 1.16.1 -*- Autoconf -*-
 
-# Copyright (C) 1996-2020 Free Software Foundation, Inc.
+# Copyright (C) 1996-2018 Free Software Foundation, Inc.
 
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -38,3 +38,4 @@ m4_include([m4/x_ac_qe_ranlib.m4])
 m4_include([m4/x_ac_qe_scalapack.m4])
 m4_include([m4/x_ac_qe_signal.m4])
 m4_include([m4/x_ac_qe_wget.m4])
+m4_include([m4/x_ac_qe_git.m4])

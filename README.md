@@ -7,8 +7,10 @@ Optimization)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
 ## USAGE
-Quick installation instructions for the impatient. Go to the directory 
-where this file is. Using "make"
+Quick installation instructions for CPU-based machines. For GPU execution, see
+file [README_GPU.md](README_GPU.md). Go to the directory where this file is. 
+
+Using "make"
 (`[]` means "optional"):
 ```
 ./configure [options]
@@ -18,7 +20,7 @@ make all
 `make -jN` runs parallel compilation on `N` processors.
 Link to binaries are found in bin/.
 
-Using "CMake":
+Using "CMake" (v.3.14 or later):
 
 ```
 mkdir ./build
@@ -35,7 +37,8 @@ is prepended onto all install directories.
 
 For more information, see the general documentation in directory Doc/, 
 package-specific documentation in \*/Doc/, and the web site 
-http://www.quantum-espresso.org/. Documentation for developers 
+http://www.quantum-espresso.org/. Technical documentation for users and
+developers 
 can be found on [Wiki page on gitlab](https://gitlab.com/QEF/q-e/-/wikis/home).
 
 ## PACKAGES
@@ -61,9 +64,6 @@ The following libraries have been isolated and partially encapsulated in view of
 - KS Solvers: parallel iterative diagonalization for the Kohn-Sham Hamiltonian (represented as an operator),using block Davidson and band-by-band or block Conjugate-Gradient algorithms.
 - LRlib: performs a variety of tasks connected with (time-dependent) DFPT, to be used also in connection with Many-Body Perturbation Theory.
 - upflib: pseudopotential-related code.
-
-## GPU-enabled version
-Since Feb.2021 this repository also works for GPU's (currently only NVIDIA). See file [README_GPU.md](README_GPU.md).
 
 ## Contributing
 Quantum ESPRESSO is an open project: contributions are welcome.

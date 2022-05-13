@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-PROGRAM turbo_spectrum
+PROGRAM lr_calculate_spectrum
   !---------------------------------------------------------------------
   !
   ! Calculates the spectrum by solving tridiagonal problem for each value 
@@ -15,6 +15,7 @@ PROGRAM turbo_spectrum
   ! Modified by Osman Baris Malcioglu (2008)
   ! Modified by Xiaochuan Ge (2013)
   ! Modified by Iurii Timrov (2015)  
+  ! Modified by Tommaso Gorni (2022)  
   !
   USE kinds,               ONLY : dp
   USE constants,           ONLY : pi,rytoev,evtonm,rytonm
@@ -105,7 +106,6 @@ PROGRAM turbo_spectrum
   prefix = 'pwscf'
   itermax = 1000
   itermax0 = 1000
-  !itermax_actual=1000
   extrapolation = "no"
   end = 2.50d0
   increment = 0.001d0
@@ -152,7 +152,7 @@ PROGRAM turbo_spectrum
      IF (trim(td)=="davidson" .or. trim(td)=='david' .and. eels) &
            & CALL errore ('lr_calculate_spectrum', 'EELS + Davidson is not supported!', abs (ios) )
      !
-     ! X. Ge: calculation of the spectrum when the Davidson algorithm is used.
+     ! Davidson case 
      !
      IF (trim(td)=="davidson" .or. trim(td)=='david') THEN
         !
@@ -161,50 +161,81 @@ PROGRAM turbo_spectrum
         !
      ENDIF
      !
+     ! Lanczos case
+     !
      IF (itermax0 < 151 .and. trim(extrapolation)/="no") THEN
         WRITE(*,*) "Itermax0 is less than 150, no extrapolation scheme can be used!"
         extrapolation="no"
      ENDIF
      !
+     IF (omeg>0 .or. omegmax>0 .or. delta_omeg>0) THEN
+        !
+        WRITE(stdout,'(5x,"Warning, omeg, omegmax and delta_omeg depreciated, &
+                        &  use start,end,increment instead")')
+        ! 
+        start = omeg
+        end = omegmax
+        increment = delta_omeg
+        units = 0
+        !
+     ENDIF
+     !
+     ! Call the proper driver
+     !
+     IF (eels) THEN
+       !
+       CALL compute_eels_spectrum()
+       !
+     ELSEIF (magnons) THEN
+       !
+       CALL compute_magnon_spectrum()
+       !
+     ELSE
+       !
+       CALL compute_optical_spectrum()
+       !
+     ENDIF
+     !
+     CALL environment_end( 'TDDFPT_PP' )
+     !
+  ENDIF
+  !
+555 IF (trim(td)=="davidson" .or. trim(td)=='david') &
+              & print *, "Calculation is finished."
+  !
+#if defined(__MPI)
+  CALL mp_barrier (world_comm)
+  CALL mp_global_end ()
+#endif
+  !
+  STOP
+  !
+CONTAINS
+
+!-----------------------------------------------------------------------
+SUBROUTINE compute_optical_spectrum()
+  !-----------------------------------------------------------------------------
+  !
+  ! Compute the susceptibility in the optical case (dipole-dipole response function)
+  ! 
+  IMPLICIT NONE
+     
      ! Definition of the temporary directory tmp_dir,
      ! where to read the data produced by TDDFPT
      !
      outdir = trimcheck(outdir)
      tmp_dir = outdir
      !
-     ! EELS: Read data from the directory tmp_dir_lr
-     !
-     IF (eels) THEN
-        !
-        tmp_dir_lr = TRIM (tmp_dir) // 'tmp_eels/'
-        tmp_dir = tmp_dir_lr
-        !
-     ELSEIF (magnons) THEN
-        !
-        tmp_dir_lr = TRIM (tmp_dir) // 'tmp_magnons/'
-        tmp_dir = tmp_dir_lr
-        !
-     ENDIF   
-     !
-     IF (eels) THEN
-        n_ipol = 1
-        ipol = 1
+     IF (ipol < 4) THEN
+       n_ipol=1
      ELSE
-        IF (ipol < 4) THEN
-          n_ipol=1
-        ELSE
-          n_ipol=3
-          ipol = 1
-        ENDIF
+       n_ipol=3
+       ipol = 1
      ENDIF
-     !
-     IF (magnons) n_op = 3
      !
      ! Polarization symmetry
      !
      IF ( .not. sym_op == 0 ) THEN
-        !
-        ! CALL errore("tddfpt_pp","Unsupported symmetry operation",1)
         !
         IF (sym_op == 1) THEN
            WRITE(stdout,'(5x,"All polarization axes will be considered to be equal.")')
@@ -234,33 +265,11 @@ PROGRAM turbo_spectrum
         verbosity = 4
      ENDIF
      !
-     IF (omeg>0 .or. omegmax>0 .or. delta_omeg>0) THEN
-        !
-        WRITE(stdout,'(5x,"Warning, omeg, omegmax and delta_omeg depreciated, &
-                        &  use start,end,increment instead")')
-        ! 
-        start = omeg
-        end = omegmax
-        increment = delta_omeg
-        units = 0
-        !
-     ENDIF
-     !
      ! Initialisation of coefficients
      !
      ALLOCATE(beta_store(n_ipol,itermax))
      ALLOCATE(gamma_store(n_ipol,itermax))
-     IF (magnons) THEN
-        ALLOCATE(zeta_store(n_ipol,n_op,itermax))
-        ALLOCATE(alpha_store(n_ipol,itermax))
-        ALLOCATE(gamma_magnons_store(n_ipol, itermax))
-     ELSE
-        ALLOCATE(zeta_store(n_ipol,n_ipol,itermax))
-     ENDIF
-     !
-     !beta_store=0.d0
-     !gamma_store=0.d0
-     !zeta_store=(0.d0,0.d0)
+     ALLOCATE(zeta_store(n_ipol,n_ipol,itermax))
      !
      ALLOCATE(a(itermax))
      ALLOCATE(b(itermax-1))
@@ -287,35 +296,23 @@ PROGRAM turbo_spectrum
      !
      filename = trim(prefix) // ".plot_chi.dat"
      !
-     IF (eels) THEN
-        WRITE (stdout,'(/5x,"Output file name for the susceptibility: ",A20)') filename
-     ELSE
-        WRITE (stdout,'(/5x,"Output file name: ",A20)') filename
-     ENDIF
+     WRITE (stdout,'(/5x,"Output file name: ",A20)') filename
      !
-     IF (eels) THEN
-        filename1 = trim(prefix) // ".plot_eps.dat"
-        WRITE (stdout,'(/5x,"Output file name for the inverse and direct &
-                         &dielectric function: ",A20)') filename1
-     ELSE
-        filename1 = trim(prefix) // ".plot_S.dat"
-        WRITE (stdout,'(/5x,"Output file name for the oscillator strength S &
-                         & ",A20)') filename1
-     ENDIF
+     filename1 = trim(prefix) // ".plot_S.dat"
+     WRITE (stdout,'(/5x,"Output file name for the oscillator strength S &
+                     & ",A20)') filename1
      !
-     IF (.not. eels) WRITE(stdout,'(/,5x,"chi_i_j: dipole polarizability tensor &
+     WRITE(stdout,'(/,5x,"chi_i_j: dipole polarizability tensor &
                                      & in units of e^2*a_0^2/energy")')
      !
-     IF (.not. eels) THEN 
-      IF (n_ipol == 3) THEN
-        WRITE(stdout,'(/,5x,"S: oscillator strength in units of 1/energy")')
-        WRITE(stdout,'(/,5x,"S(\hbar \omega) = 2m/( 3 \pi e^2 \hbar) &
-                               & \omega sum_j chi_j_j")')
-        WRITE(stdout,'(/,5x,"S(\hbar \omega) satisfies the f-sum rule: &
-                               & \int_0^\infty dE S(E) = N_el ")')
-      ELSE
-        WRITE (stdout,'(/,5x,"Insufficent info for S")')
-      ENDIF
+     IF (n_ipol == 3) THEN
+       WRITE(stdout,'(/,5x,"S: oscillator strength in units of 1/energy")')
+       WRITE(stdout,'(/,5x,"S(\hbar \omega) = 2m/( 3 \pi e^2 \hbar) &
+                              & \omega sum_j chi_j_j")')
+       WRITE(stdout,'(/,5x,"S(\hbar \omega) satisfies the f-sum rule: &
+                              & \int_0^\infty dE S(E) = N_el ")')
+     ELSE
+       WRITE (stdout,'(/,5x,"Insufficent info for S")')
      ENDIF
      !
      ! Units
@@ -327,7 +324,6 @@ PROGRAM turbo_spectrum
         WRITE (stdout,'(/,5x,"Functions are reported in \hbar.\omega &
                               & Energy unit is (eV)")')
      ELSEIF (units == 2) THEN  ! nm
-        IF (eels) CALL errore("lr_calculate_spectrum", "Unsupported units (nm).",1) 
         WRITE (stdout,'(/,5x,"Functions are reported in (nm), &
                               & Energy unit is (eV) ")')
      ENDIF
@@ -336,36 +332,20 @@ PROGRAM turbo_spectrum
      !
      IF (verbosity>0) THEN
         !
-        IF (eels .or. magnons) THEN
-          WRITE (stdout,'(/,5x,"Static charge-density susceptibility:")')
-        ELSE
-          WRITE (stdout,'(/,5x,"Static dipole polarizability tensor:")')
-        ENDIF
+        WRITE (stdout,'(/,5x,"Static dipole polarizability tensor:")')
         !
         CALL calc_chi(0.0d0,epsil,green(:,:))
         !
         DO ip=1,n_ipol
-           IF (magnons) THEN
-              DO ip2=1,n_op
-                 !
-                 IF (n_ipol == 3) WRITE(stdout,'(5x,"chi_",i1,"_",i1,"=",2x,e21.15," + i",e21.15)') &
-                                             & ip2, ip, dble(green(ip,ip2)), aimag(green(ip,ip2))
-                 !
-                 IF (n_ipol == 1) WRITE(stdout,'(5x,"chi_",i1,"_",i1,"=",2x,e21.15," + i",e21.15)') &
-                                             & ip2, ipol, dble(green(ip,ip2)), aimag(green(ip,ip2))
-                !
-              ENDDO           
-           ELSE
-              DO ip2=1,n_ipol
-                 !
-                 IF (n_ipol == 3) WRITE(stdout,'(5x,"chi_",i1,"_",i1,"=",2x,e21.15," + i",e21.15)') &
-                                             & ip2, ip, dble(green(ip,ip2)), aimag(green(ip,ip2))
-                 !
-                 IF (n_ipol == 1) WRITE(stdout,'(5x,"chi_",i1,"_",i1,"=",2x,e21.15," + i",e21.15)') &
-                                             & ipol, ipol, dble(green(ip,ip2)), aimag(green(ip,ip2))
-                !
-              ENDDO
-           ENDIF
+          DO ip2=1,n_ipol
+             !
+             IF (n_ipol == 3) WRITE(stdout,'(5x,"chi_",i1,"_",i1,"=",2x,e21.15," + i",e21.15)') &
+                                         & ip2, ip, dble(green(ip,ip2)), aimag(green(ip,ip2))
+             !
+             IF (n_ipol == 1) WRITE(stdout,'(5x,"chi_",i1,"_",i1,"=",2x,e21.15," + i",e21.15)') &
+                                         & ipol, ipol, dble(green(ip,ip2)), aimag(green(ip,ip2))
+            !
+          ENDDO
         ENDDO
         !
      ENDIF
@@ -374,42 +354,7 @@ PROGRAM turbo_spectrum
      !
      OPEN(17,file=filename,status="unknown")
      !
-     IF (magnons) THEN
-        !
-        WRITE(17,'("#",2x,"Chi is reported as CHI_(i)_(j) \hbar \omega (eV) &
-                     & Re(chi) (e^2*a_0^2/eV) Im(chi) (e^2*a_0^2/eV) ")')
-        !
-        !
-        IF (n_ipol==3) THEN
-           OPEN(18,file=filename1,status="unknown")
-           WRITE(18,'("#",8x,"Frequency (eV)",11x, "S(q,omega)",12x)')
-        ENDIF
-        !
-     ELSEIF (eels .and. units==1) THEN
-        !
-        ! TODO: Make an implementation also for units=0.
-        ! 
-        OPEN(18,file=filename1,status="unknown")
-        !
-        WRITE(18,'("#",8x,"\hbar \omega(eV)",11x,"Re(1/eps)",12x, &
-                      & "-Im(1/eps)",15x,"Re(eps)",16x,"Im(eps)")')
-        !
-        ! Calculation of the inverse dielectric function at finite q.
-        !
-        !     1/eps  =  1 + (4*pi/q^2) * chi [1/eV]
-        !
-        ! Hartree atomic units: \hbar=1, e^2=1, m=1 
-        ! 1/2 Hartree = 1 Ry = 13.6057 eV
-        !
-        ! q = (2*pi/a) (q1, q2, q3)
-        !
-        modulus_q = (2.0d0*pi/alat) * sqrt( (q1)**2 + (q2)**2 + (q3)**2 )
-        !
-        factor_eels = (4.0d0*pi/(modulus_q**2)) * (2.0d0*rytoev/volume)
-        !
-        start_save = start
-        !
-     ELSEIF (.NOT.eels .AND. n_ipol==3) THEN
+     IF (n_ipol==3) THEN
         !
         OPEN(18,file=filename1,status="unknown")
         !
@@ -505,31 +450,12 @@ PROGRAM turbo_spectrum
         ENDIF
         !
         DO ip=1,n_ipol
-           IF (magnons) THEN 
-              DO ip2=1,n_op
-                 !
-                 !eps(ip,ip2) = (1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
-                 !
-                 WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                     ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
-
-                 ! write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                 ! ip2, ip, ry*omeg, dble(eps), aimag(eps)
-                 !
-              ENDDO
-           ELSE
-              DO ip2=1,n_ipol
-                 !
-                 !eps(ip,ip2) = (1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
-                 !
-                 WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                     ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
-
-                 ! write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                 ! ip2, ip, ry*omeg, dble(eps), aimag(eps)
-                 !
-              ENDDO
-           ENDIF
+           DO ip2=1,n_ipol
+              !
+              WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                  ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
+              !
+           ENDDO
         ENDDO
         !
         alpha_temp(3) = omega(3) * aimag(green(1,1)+green(2,2)+green(3,3))/(pi*3.d0)
@@ -582,74 +508,15 @@ PROGRAM turbo_spectrum
         ! Writing of chi
         !
         DO ip=1,n_ipol
-           IF (magnons) THEN
-              DO ip2=1,n_op
-                 !
-                 !eps(ip,ip2)=(1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
-                 !
-                 IF (n_ipol == 3) WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                               & ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
-                 IF (n_ipol == 1) WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                               & ip2, ipol, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
-                 !
-                 ! write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                 ! ip2, ip, ry*omeg, dble(eps), aimag(eps)
-                 !
-              ENDDO
-           ELSE
-              DO ip2=1,n_ipol
-                 !
-                 !eps(ip,ip2)=(1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
-                 !
-                 IF (n_ipol == 3) WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                               & ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
-                 IF (n_ipol == 1) WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                               & ipol, ipol, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
-                 !
-                 ! write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                 ! ip2, ip, ry*omeg, dble(eps), aimag(eps)
-                 !
-              ENDDO
-           ENDIF
+          DO ip2=1,n_ipol
+             !
+             IF (n_ipol == 3) WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                           & ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
+             IF (n_ipol == 1) WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                           & ipol, ipol, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
+             !
+          ENDDO
         ENDDO
-      !
-      ! EELS: writing of 1/eps(q)
-      !
-      IF (eels .and. units==1) THEN
-         !
-         ! Calculation of the inverse dielectric function at finite q.
-         !
-         !     1/eps  =  1 + (4*pi/q^2) * chi [1/eV]
-         !
-         epsm1(1,1) = cmplx( 1.0d0 + factor_eels*dble(green(1,1)), factor_eels*aimag(green(1,1)), kind=dp ) 
-         !
-         ! Calculation of the direct macroscopic dielectric function
-         !
-         !     eps = 1/(epsm1)
-         !
-         eps(1,1)   = cmplx( dble(epsm1(1,1))/(dble(epsm1(1,1))**2 + aimag(epsm1(1,1))**2), & 
-                            -aimag(epsm1(1,1))/(dble(epsm1(1,1))**2 + aimag(epsm1(1,1))**2), kind=dp )
-         !
-         !                            frequency       Re(1/eps)       -Im(1/eps)           Re(eps)        Im(eps)
-         WRITE(18,'(5x,5(e21.15,2x))')  start,    dble(epsm1(1,1)), -aimag(epsm1(1,1)), dble(eps(1,1)), aimag(eps(1,1))
-         !
-         ! The f-sum rule (see Eq.(6) in Comput. Phys. Commun. 196, 460 (2015)).
-         ! The f_sum will give the number of valence (and semicore) electrons
-         ! in the unit cell.  
-         !
-         ! Convert the frequency from eV to Hartree
-         start = start/(rytoev*2.0d0)
-         increment = increment/(rytoev*2.0d0) 
-         !
-         integration_function = -aimag(epsm1(1,1)) * start * volume/(2.0d0*pi**2) 
-         !
-         f_sum = f_sum + integrator(increment,integration_function)
-         !
-         ! Convert the frequency back from Hartree to eV
-         start = start*(rytoev*2.0d0)
-         increment = increment*(rytoev*2.0d0)
-         !
-      ENDIF
       !
       IF (n_ipol==3) THEN
         !
@@ -727,31 +594,12 @@ PROGRAM turbo_spectrum
         ENDIF
         !
         DO ip=1,n_ipol
-           IF (magnons) THEN
-              DO ip2=1,n_op
-                 !
-                 !eps(ip,ip2)=(1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
-                 !
-                 WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                      ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
-                 !
-                 ! write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                 ! ip2, ip, ry*omeg, dble(eps), aimag(eps)
-                 !
-              ENDDO
-           ELSE
-              DO ip2=1,n_ipol
-                 !
-                 !eps(ip,ip2)=(1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
-                 !
-                 WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                      ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
-                 !
-                 ! write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                 ! ip2, ip, ry*omeg, dble(eps), aimag(eps)
-                 !
-              ENDDO
-           ENDIF
+          DO ip2=1,n_ipol
+             !
+             WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                  ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
+             !
+          ENDDO
         ENDDO
         !
         ! Absorption coefficient
@@ -773,21 +621,12 @@ PROGRAM turbo_spectrum
      ENDIF
      !
      CLOSE(17)
-     IF (.NOT.eels .AND. n_ipol==3) CLOSE(18)
-     IF (eels .and. units==1) CLOSE(18)
+     IF (n_ipol==3) CLOSE(18)
      !
      IF ( n_ipol==3 .and. verbosity >4 ) THEN
         !
         ! S(w)=2m_e/(pi e^2 hbar)
         WRITE(stdout,'(5x,"Integral of absorbtion coefficient ",F15.8)') f_sum
-        !
-     ELSEIF (eels .and. units==1) THEN
-        !
-        WRITE(stdout,'(/5x,"The f-sum rule is given by Eq.(6) in Comput. Phys. Commun. 196, 460 (2015).")') 
-        WRITE(stdout,'(5x,"Integration in the range from",1x,f6.2,1x,"to",1x,f6.2,1x,"eV."/, &
-                     & 5x,"The number of valence (and semicore) electrons in the unit cell:",1x,f6.2)') start_save, end, f_sum
-        WRITE(stdout,'(5x,"The exact number of electrons:",1x,f6.2)') nelec
-        WRITE(stdout,'(5x,"The violation of the f-sum rule:",1x,f6.2,1x,"%")') 100*abs(f_sum-nelec)/nelec
         !     
      ENDIF
      !
@@ -902,137 +741,428 @@ PROGRAM turbo_spectrum
      DEALLOCATE(b)
      DEALLOCATE(c)
      DEALLOCATE(r)
-     !
-     CALL environment_end( 'TDDFPT_PP' )
-     !
-  ENDIF
-  !
-555 IF (trim(td)=="davidson" .or. trim(td)=='david') &
-              & print *, "Calculation is finished."
-  !
-#if defined(__MPI)
-  CALL mp_barrier (world_comm)
-  CALL mp_global_end ()
-#endif
-  !
-  STOP
-  !
-CONTAINS
- 
-LOGICAL FUNCTION is_peak(omeg,alpha)
+
+     RETURN
+!-----------------------------------------------------------------------
+END SUBROUTINE compute_optical_spectrum
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+SUBROUTINE compute_eels_spectrum()
   !-------------------------------------------------------------------------
   !
-  ! A simple algorithm for detecting peaks.
-  ! Increments of omega between alpha steps should be constant
-  ! omega must increase monothonically
-  ! no checks performed!
-  ! OBM 2010
+  ! Compute the susceptibility in the EELS case (charge-charge response function)
   !
   IMPLICIT NONE
-  !Input and output
-  REAL(kind=dp),INTENT(in) :: omeg, alpha !x and y
-  !
-  ! Local variables
-  !
-  REAL(kind=dp),SAVE :: omeg_save = 0.0d0, &
-                      & thm1, h2m1,&
-                      & first_der_save=9.0d99
-  REAL(kind=dp),SAVE :: alpha_save(3) = 0.0d0
-  INTEGER, SAVE :: current_iter = 0
-  LOGICAL, SAVE :: trigger=.true.
-  REAL(kind=dp) :: first_der, second_der
-  !
-  is_peak = .false.
-  ! counter
-  ! Rotate the variables
-  !   
-  IF (current_iter < 3) THEN
-      current_iter = current_iter + 1
-      omeg_save = omeg
-      alpha_save(current_iter) = alpha
-      RETURN
-  ELSE
-      IF (current_iter == 3) THEN
-         current_iter = current_iter + 1
-         thm1=(omeg-omeg_save)
-         h2m1=1.0d0/(thm1*thm1) !for second derivative
-         thm1=0.5d0/thm1        !for first derivative
-         !thm1=0.083333333333333d0/thm1        !for first derivative
-      ENDIF
-      !alpha_save(1)=alpha_save(2) !t-2h
-      !alpha_save(2)=alpha_save(3) !t-h
-      !alpha_save(3)=alpha_save(4) !t
-      !alpha_save(4)=alpha_save(5) !t+h
-      !alpha_save(5)=alpha         !t+2h
-      alpha_save(1)=alpha_save(2)  !t-h
-      alpha_save(2)=alpha_save(3)  !t
-      alpha_save(3)=alpha          !t+h
-  ENDIF
-  !
-  !The derivatives
-  first_der = (alpha_save(3)-alpha_save(1))*thm1
-  second_der = (alpha_save(3)-2.0d0*alpha_save(2)+alpha_save(1))*h2m1 
-  ! second derivative corresponds to t, 3 steps before
-  !first_der = (-alpha_save(5)+8.0d0*(alpha_save(4)-alpha_save(2))+alpha_save(1))*thm1 
-  !first derivative corresponds to t, 3 steps before
-  !second_der = (alpha_save(4)-2.0d0*alpha_save(3)+alpha_save(2))*h2m1 
-  ! second derivative corresponds to t, 3 steps before
-  !Decide
-  !print *,"w",omeg-0.25d0/thm1,"f=",abs(first_der),"s=",second_der
-  !print *,"w",omeg-0.5d0/thm1,"f=",abs(first_der),"s=",second_der
-  !if (abs(first_der) < 1.0d-8 .and. second_der < 0 ) is_peak=.true.
-  !  
-  IF (second_der < 0) THEN
-     IF (trigger) THEN
-        IF (abs(first_der) <abs(first_der_save)) THEN
-           first_der_save = first_der
-           RETURN
-        ELSE
-           is_peak=.true.
-           trigger=.false.
-           RETURN
-        ENDIF
+
+     outdir = trimcheck(outdir)
+     tmp_dir = outdir
+     !
+     tmp_dir_lr = TRIM (tmp_dir) // 'tmp_eels/'
+     tmp_dir = tmp_dir_lr
+     !
+     n_ipol = 1
+     ipol = 1
+     !
+     ! Terminator scheme
+     !
+     IF (trim(extrapolation)=="no") THEN
+        !
+        itermax = itermax0
+        !
      ENDIF
-  ELSE
-     first_der_save=9.0d99
-     trigger=.true.
-  ENDIF
-  !
-  RETURN
-  !
-END FUNCTION is_peak
+     !
+     ! Check the units (Ry, eV, nm)
+     !
+     IF (units < 0 .or. units >2) CALL errore("lr_calculate_spectrum","Unsupported unit system",1)
+     !
+     IF ( units /= 0 .and. verbosity > 4) THEN
+        WRITE(stdout,'(5x,"Such a high verbosity is not supported when &
+                        & non-default units are used")')
+        verbosity = 4
+     ENDIF
+     !
+     ! Initialisation of coefficients
+     !
+     ALLOCATE(beta_store(n_ipol,itermax))
+     ALLOCATE(gamma_store(n_ipol,itermax))
+     ALLOCATE(zeta_store(n_ipol,n_ipol,itermax))
+     !
+     ALLOCATE(a(itermax))
+     ALLOCATE(b(itermax-1))
+     ALLOCATE(c(itermax-1))
+     ALLOCATE(r(n_ipol,itermax))
+     !
+     a(:) = (0.0d0,0.0d0)
+     b(:) = (0.0d0,0.0d0)
+     c(:) = (0.0d0,0.0d0)
+     r(:,:) = (0.0d0,0.0d0)
+     !
+     ! Read beta, gamma, and zeta coefficients
+     !
+     CALL read_b_g_z_file()
+     !
+     ! Optional: use an extrapolation scheme
+     !
+     CALL extrapolate()
+     !
+     !  Spectrum calculation
+     !
+     WRITE (stdout,'(/5x,"Data ready, starting to calculate observables...")')
+     WRITE (stdout,'(/5x,"Broadening = ",f15.8," Ry")') epsil
+     !
+     filename = trim(prefix) // ".plot_chi.dat"
+     !
+     WRITE (stdout,'(/5x,"Output file name for the susceptibility: ",A20)') filename
+     !
+     filename1 = trim(prefix) // ".plot_eps.dat"
+     WRITE (stdout,'(/5x,"Output file name for the inverse and direct &
+                      &dielectric function: ",A20)') filename1
+     !
+     ! Units
+     !
+     IF (units == 0) THEN      ! Ry
+        WRITE (stdout,'(/,5x,"Functions are reported in \hbar.\omega &
+                              & Energy unit is (Ry)")')
+     ELSEIF (units == 1) THEN  ! eV
+        WRITE (stdout,'(/,5x,"Functions are reported in \hbar.\omega &
+                              & Energy unit is (eV)")')
+     ELSEIF (units == 2) THEN  ! nm
+        CALL errore("lr_calculate_spectrum", "Unsupported units (nm).",1) 
+     ENDIF
+     !
+     ! The static dipole polarizability / static charge-density susceptibility
+     !
+     IF (verbosity>0) THEN
+        !
+        WRITE (stdout,'(/,5x,"Static charge-density susceptibility:")')
+        !
+        CALL calc_chi(0.0d0,epsil,green(:,:))
+        !
+        DO ip=1,n_ipol
+          DO ip2=1,n_ipol
+             !
+             WRITE(stdout,'(5x,"chi_",i1,"_",i1,"=",2x,e21.15," + i",e21.15)') &
+                       & ipol, ipol, dble(green(ip,ip2)), aimag(green(ip,ip2))
+            !
+          ENDDO
+        ENDDO
+        !
+     ENDIF
+     !
+     ! Open the output file
+     !
+     OPEN(17,file=filename,status="unknown")
+     !
+     IF (units==1) THEN
+        !
+        ! TODO: Make an implementation also for units=0.
+        ! 
+        OPEN(18,file=filename1,status="unknown")
+        !
+        WRITE(18,'("#",8x,"\hbar \omega(eV)",11x,"Re(1/eps)",12x, &
+                      & "-Im(1/eps)",15x,"Re(eps)",16x,"Im(eps)")')
+        !
+        ! Calculation of the inverse dielectric function at finite q.
+        !
+        !     1/eps  =  1 + (4*pi/q^2) * chi [1/eV]
+        !
+        ! Hartree atomic units: \hbar=1, e^2=1, m=1 
+        ! 1/2 Hartree = 1 Ry = 13.6057 eV
+        !
+        ! q = (2*pi/a) (q1, q2, q3)
+        !
+        modulus_q = (2.0d0*pi/alat) * sqrt( (q1)**2 + (q2)**2 + (q3)**2 )
+        !
+        factor_eels = (4.0d0*pi/(modulus_q**2)) * (2.0d0*rytoev/volume)
+        !
+        start_save = start
+        !
+     ENDIF
+     !
+     ! Header of the output plot file
+     !
+     IF (units == 0) THEN
+        WRITE (17,'("#",16x,"\hbar \omega(Ry)",5x,"Re(chi) (e^2*a_0^2/Ry)",x,"Im(chi) (e^2*a_0^2/Ry)")')
+     ELSEIF (units == 1) THEN
+        WRITE (17,'("#",16x,"\hbar \omega(eV)",5x,"Re(chi) (e^2*a_0^2/eV)",x,"Im(chi) (e^2*a_0^2/eV)")')
+     ELSEIF (units == 2) THEN
+        WRITE (17,'("#",16x,"wavelength(nm)",5x,"Re(chi) (e^2*a_0^2/eV)",x,"Im(chi) (e^2*a_0^2/eV)")')
+     ENDIF
+     !
+     ! Start a loop on frequency
+     !
+     ! Units conversion and omega history
+     !
+     omega(1) = omega(2)
+     omega(2) = omega(3)
+     !
+     IF (units == 0) THEN
+        omega(3) = start
+     ELSEIF (units == 1) THEN
+        omega(3) = start/rytoev
+     ELSEIF (units == 2) THEN
+        omega(3) = rytonm/start
+     ENDIF
+     !
+     !--------------------------------------------------------------!
+     !                       OMEGA LOOP                             !
+     !--------------------------------------------------------------!
+     !
+     DO WHILE (start < end)
+        !
+        ! Units conversion and omega history
+        !
+        omega(1) = omega(2)
+        omega(2) = omega(3)
+        !
+        IF (units == 0) THEN
+           omega(3) = start
+        ELSEIF (units == 1) THEN
+           omega(3) = start/rytoev
+        ELSEIF (units == 2) THEN
+           omega(3) = rytonm/start
+        ENDIF
+        !
+        ! Calculation of the susceptibility for a given frequency omega.
+        !
+        CALL calc_chi(omega(3),epsil,green(:,:))
+        !
+        IF (units == 1 .or. units == 2) THEN
+           !
+           green(:,:) = green(:,:)/rytoev
+           !
+        ENDIF
+        !
+        ! Writing of chi
+        !
+        DO ip=1,n_ipol
+          DO ip2=1,n_ipol
+             !
+             WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+             & ipol, ipol, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
+             !
+          ENDDO
+        ENDDO
+      !
+      ! EELS: writing of 1/eps(q)
+      !
+      IF (units==1) THEN
+         !
+         ! Calculation of the inverse dielectric function at finite q.
+         !
+         !     1/eps  =  1 + (4*pi/q^2) * chi [1/eV]
+         !
+         epsm1(1,1) = cmplx( 1.0d0 + factor_eels*dble(green(1,1)), factor_eels*aimag(green(1,1)), kind=dp ) 
+         !
+         ! Calculation of the direct macroscopic dielectric function
+         !
+         !     eps = 1/(epsm1)
+         !
+         eps(1,1)   = cmplx( dble(epsm1(1,1))/(dble(epsm1(1,1))**2 + aimag(epsm1(1,1))**2), & 
+                            -aimag(epsm1(1,1))/(dble(epsm1(1,1))**2 + aimag(epsm1(1,1))**2), kind=dp )
+         !
+         !                            frequency       Re(1/eps)       -Im(1/eps)           Re(eps)        Im(eps)
+         WRITE(18,'(5x,5(e21.15,2x))')  start,    dble(epsm1(1,1)), -aimag(epsm1(1,1)), dble(eps(1,1)), aimag(eps(1,1))
+         !
+         ! The f-sum rule (see Eq.(6) in Comput. Phys. Commun. 196, 460 (2015)).
+         ! The f_sum will give the number of valence (and semicore) electrons
+         ! in the unit cell.  
+         !
+         ! Convert the frequency from eV to Hartree
+         start = start/(rytoev*2.0d0)
+         increment = increment/(rytoev*2.0d0) 
+         !
+         integration_function = -aimag(epsm1(1,1)) * start * volume/(2.0d0*pi**2) 
+         !
+         f_sum = f_sum + integrator(increment,integration_function)
+         !
+         ! Convert the frequency back from Hartree to eV
+         start = start*(rytoev*2.0d0)
+         increment = increment*(rytoev*2.0d0)
+         !
+      ENDIF
+      !
+      start = start + increment
+      !
+     ENDDO
+     !
+     !------------------------------------------------------------------!
+     !                      END OF OMEGA LOOP                           !
+     !------------------------------------------------------------------!
+     !
+     CLOSE(17)
+     IF (units==1) CLOSE(18)
+     !
+     IF (units==1) THEN
+        !
+        WRITE(stdout,'(/5x,"The f-sum rule is given by Eq.(6) in Comput. Phys. Commun. 196, 460 (2015).")') 
+        WRITE(stdout,'(5x,"Integration in the range from",1x,f6.2,1x,"to",1x,f6.2,1x,"eV."/, &
+                     & 5x,"The number of valence (and semicore) electrons in the unit cell:",1x,f6.2)') start_save, end, f_sum
+        WRITE(stdout,'(5x,"The exact number of electrons:",1x,f6.2)') nelec
+        WRITE(stdout,'(5x,"The violation of the f-sum rule:",1x,f6.2,1x,"%")') 100*abs(f_sum-nelec)/nelec
+        !     
+     ENDIF
+     !
+     ! Deallocations
+     !
+     IF (allocated(alpha_store)) DEALLOCATE(alpha_store)
+     IF (allocated(beta_store)) DEALLOCATE(beta_store)
+     IF (allocated(gamma_store)) DEALLOCATE(gamma_store)
+     IF (allocated(zeta_store)) DEALLOCATE(zeta_store)
+     !
+     DEALLOCATE(a)
+     DEALLOCATE(b)
+     DEALLOCATE(c)
+     DEALLOCATE(r)
 
-REAL(kind=dp) FUNCTION integrator(dh,alpha)
-  !------------------------------------------------------------------------
+       RETURN
+!-----------------------------------------------------------------------
+END SUBROUTINE compute_eels_spectrum
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+SUBROUTINE compute_magnon_spectrum()
+  !-------------------------------------------------------------------------
   !
-  ! This function calculates an integral every 
-  ! three points, using the Simpson's rule.
+  ! Compute the susceptibility in the magnon case (magnetization-magnetization response function)
   !
   IMPLICIT NONE
-  !Input and output
-  REAL(kind=dp),INTENT(in) :: dh, alpha !x and y
-  !internal
-  LOGICAL,SAVE :: flag=.true.
-  !
-  ! COMPOSITE SIMPSON INTEGRATOR, (precision level ~ float)
-  ! \int a b f(x) dx = ~ h/3 (f(a) + \sum_odd-n 2*f(a+n*h) + \sum_even-n 4*f(a+n*h) +f(b))
-  !
-  integrator = 0.0d0
-  !
-  IF (flag) THEN 
-     ! odd steps
-     integrator = (4.0d0/3.0d0)*dh*alpha
-     flag = .false.
-  ELSE
-     ! even steps
-     integrator = (2.0d0/3.0d0)*dh*alpha
-     flag = .true.
-  ENDIF
-  !
-  RETURN
-  !
-END FUNCTION integrator
 
+     REAL(DP) :: hbarw
+
+     outdir = trimcheck(outdir)
+     tmp_dir = outdir
+     !
+     tmp_dir_lr = TRIM (tmp_dir) // 'tmp_magnons/'
+     tmp_dir = tmp_dir_lr
+     !
+     IF (ipol < 4) THEN
+       n_ipol=1
+     ELSE
+       n_ipol=3
+       ipol = 1
+     ENDIF
+     !
+     n_op = 3
+     !
+     ! Terminator scheme
+     !
+     IF (trim(extrapolation)=="no") THEN
+        !
+        itermax = itermax0
+        !
+     ENDIF
+
+     !
+     ! Initialisation of coefficients
+     !
+     ALLOCATE(beta_store(n_ipol,itermax))
+     ALLOCATE(zeta_store(n_ipol,n_op,itermax))
+     ALLOCATE(alpha_store(n_ipol,itermax))
+     ALLOCATE(gamma_magnons_store(n_ipol, itermax))
+     !
+     ALLOCATE(a(itermax))
+     ALLOCATE(b(itermax-1))
+     ALLOCATE(c(itermax-1))
+     ALLOCATE(r(n_ipol,itermax))
+     !
+     a(:) = (0.0d0,0.0d0)
+     b(:) = (0.0d0,0.0d0)
+     c(:) = (0.0d0,0.0d0)
+     r(:,:) = (0.0d0,0.0d0)
+     !
+     ! Read beta, gamma, and zeta coefficients
+     !
+     CALL read_b_g_z_file()
+     !
+     ! Optional: use an extrapolation scheme
+     !
+     CALL extrapolate()
+     !
+     !  Spectrum calculation
+     !
+     WRITE (stdout,'(/5x,"Data ready, starting to calculate observables...")')
+     WRITE (stdout,'(/5x,"Broadening = ",f15.8," meV")') epsil
+     !
+     filename = trim(prefix) // ".plot_chi.dat"
+     !
+     WRITE (stdout,'(/5x,"Output file name: ",A20)') filename
+     !
+     WRITE(stdout,'(/,5x,"chi_i_j: magnetization-magnetization tensor &
+                        & in units of mu_B^2 / meV")')
+     !
+     ! Open the output file
+     !
+     OPEN(17,file=filename,status="unknown")
+     !
+     !
+     WRITE(17,'("#",2x,"Chi is reported as CHI_(i)_(j) \hbar \omega (meV) &
+                  & Re(chi) (mu_B^2/meV) Im(chi) (mu_B^2/meV) ")')
+     !
+     !--------------------------------------------------------------!
+     !                       OMEGA LOOP                             !
+     !--------------------------------------------------------------!
+     !
+
+     ! calc_chi needs variables in Rydberg 
+     !
+     epsil = epsil/rytoev/1000.d0
+
+     DO WHILE (start < end)
+        !
+        ! Units conversion and omega history
+        !
+        hbarw = start/rytoev/1000.d0
+
+        !
+        ! Calculation of the susceptibility for a given frequency omega.
+        !
+        CALL calc_chi(hbarw,epsil,green(:,:))
+        !
+        green(:,:) = green(:,:)/rytoev/1000.d0
+        !
+        ! Writing of chi
+        !
+        DO ip=1,n_ipol
+          DO ip2=1,n_op
+             !
+             IF (n_ipol == 3) WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                           & ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
+             IF (n_ipol == 1) WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                           & ip2, ipol, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
+             !
+          ENDDO
+        ENDDO
+        !
+        start = start + increment
+        !
+     ENDDO
+     !
+     !------------------------------------------------------------------!
+     !                      END OF OMEGA LOOP                           !
+     !------------------------------------------------------------------!
+     !
+     CLOSE(17)
+     !
+     ! Deallocations
+     !
+     IF (allocated(alpha_store)) DEALLOCATE(alpha_store)
+     IF (allocated(beta_store)) DEALLOCATE(beta_store)
+     IF (allocated(gamma_magnons_store)) DEALLOCATE(gamma_magnons_store)
+     IF (allocated(zeta_store)) DEALLOCATE(zeta_store)
+     !
+     DEALLOCATE(a)
+     DEALLOCATE(b)
+     DEALLOCATE(c)
+     DEALLOCATE(r)
+
+       RETURN
+!-----------------------------------------------------------------------
+END SUBROUTINE compute_magnon_spectrum
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
 SUBROUTINE read_b_g_z_file()
   !------------------------------------------------------------------------
   !
@@ -1221,8 +1351,11 @@ SUBROUTINE read_b_g_z_file()
   !
   RETURN
   !
+!-----------------------------------------------------------------------
 END SUBROUTINE read_b_g_z_file
+!-----------------------------------------------------------------------
 
+!-----------------------------------------------------------------------
 SUBROUTINE extrapolate()
   !-----------------------------------------------------------------------
   !
@@ -1268,8 +1401,8 @@ SUBROUTINE extrapolate()
               !
            ELSE
               !
-              average(ip)=average(ip)+beta_store(ip,i)
-              av_amplitude(ip)=av_amplitude(ip)+beta_store(ip,i)
+              average(ip) = average(ip) + beta_store(ip,i)
+              av_amplitude(ip) = av_amplitude(ip) + beta_store(ip,i)
               !
               IF (magnons) THEN
                  a_av(ip) = a_av(ip) + alpha_store(ip,i)
@@ -1498,8 +1631,11 @@ SUBROUTINE extrapolate()
   !
   RETURN
   !
+!-----------------------------------------------------------------------
 END SUBROUTINE extrapolate
+!-----------------------------------------------------------------------
 
+!-----------------------------------------------------------------------
 SUBROUTINE calc_chi(freq,broad,chi)
   !-----------------------------------------------------------------------------
   !
@@ -1602,8 +1738,11 @@ SUBROUTINE calc_chi(freq,broad,chi)
   !
   RETURN
   !
+!-----------------------------------------------------------------------
 END SUBROUTINE calc_chi
+!-----------------------------------------------------------------------
 
+!-----------------------------------------------------------------------
 SUBROUTINE wl_to_color(wavelength,red,green,blue)
   !----------------------------------------------------------------------------
   !
@@ -1653,8 +1792,11 @@ SUBROUTINE wl_to_color(wavelength,red,green,blue)
   !
   RETURN
   !
+!-----------------------------------------------------------------------
 END SUBROUTINE wl_to_color
+!-----------------------------------------------------------------------
 
+!-----------------------------------------------------------------------
 SUBROUTINE spectrum_david()
   !-----------------------------------------------------------------
   !
@@ -1728,8 +1870,131 @@ SUBROUTINE spectrum_david()
   !
   RETURN
   !
+!-----------------------------------------------------------------------
 END SUBROUTINE spectrum_david
+!-----------------------------------------------------------------------
+ 
+!-----------------------------------------------------------------------
+LOGICAL FUNCTION is_peak(omeg,alpha)
+  !-------------------------------------------------------------------------
+  !
+  ! A simple algorithm for detecting peaks.
+  ! Increments of omega between alpha steps should be constant
+  ! omega must increase monothonically
+  ! no checks performed!
+  ! OBM 2010
+  !
+  IMPLICIT NONE
+  !Input and output
+  REAL(kind=dp),INTENT(in) :: omeg, alpha !x and y
+  !
+  ! Local variables
+  !
+  REAL(kind=dp),SAVE :: omeg_save = 0.0d0, &
+                      & thm1, h2m1,&
+                      & first_der_save=9.0d99
+  REAL(kind=dp),SAVE :: alpha_save(3) = 0.0d0
+  INTEGER, SAVE :: current_iter = 0
+  LOGICAL, SAVE :: trigger=.true.
+  REAL(kind=dp) :: first_der, second_der
+  !
+  is_peak = .false.
+  ! counter
+  ! Rotate the variables
+  !   
+  IF (current_iter < 3) THEN
+      current_iter = current_iter + 1
+      omeg_save = omeg
+      alpha_save(current_iter) = alpha
+      RETURN
+  ELSE
+      IF (current_iter == 3) THEN
+         current_iter = current_iter + 1
+         thm1=(omeg-omeg_save)
+         h2m1=1.0d0/(thm1*thm1) !for second derivative
+         thm1=0.5d0/thm1        !for first derivative
+         !thm1=0.083333333333333d0/thm1        !for first derivative
+      ENDIF
+      !alpha_save(1)=alpha_save(2) !t-2h
+      !alpha_save(2)=alpha_save(3) !t-h
+      !alpha_save(3)=alpha_save(4) !t
+      !alpha_save(4)=alpha_save(5) !t+h
+      !alpha_save(5)=alpha         !t+2h
+      alpha_save(1)=alpha_save(2)  !t-h
+      alpha_save(2)=alpha_save(3)  !t
+      alpha_save(3)=alpha          !t+h
+  ENDIF
+  !
+  !The derivatives
+  first_der = (alpha_save(3)-alpha_save(1))*thm1
+  second_der = (alpha_save(3)-2.0d0*alpha_save(2)+alpha_save(1))*h2m1 
+  ! second derivative corresponds to t, 3 steps before
+  !first_der = (-alpha_save(5)+8.0d0*(alpha_save(4)-alpha_save(2))+alpha_save(1))*thm1 
+  !first derivative corresponds to t, 3 steps before
+  !second_der = (alpha_save(4)-2.0d0*alpha_save(3)+alpha_save(2))*h2m1 
+  ! second derivative corresponds to t, 3 steps before
+  !Decide
+  !print *,"w",omeg-0.25d0/thm1,"f=",abs(first_der),"s=",second_der
+  !print *,"w",omeg-0.5d0/thm1,"f=",abs(first_der),"s=",second_der
+  !if (abs(first_der) < 1.0d-8 .and. second_der < 0 ) is_peak=.true.
+  !  
+  IF (second_der < 0) THEN
+     IF (trigger) THEN
+        IF (abs(first_der) <abs(first_der_save)) THEN
+           first_der_save = first_der
+           RETURN
+        ELSE
+           is_peak=.true.
+           trigger=.false.
+           RETURN
+        ENDIF
+     ENDIF
+  ELSE
+     first_der_save=9.0d99
+     trigger=.true.
+  ENDIF
+  !
+  RETURN
+  !
+!-----------------------------------------------------------------------
+END FUNCTION is_peak
+!-----------------------------------------------------------------------
 
-END PROGRAM turbo_spectrum
+!-----------------------------------------------------------------------
+REAL(kind=dp) FUNCTION integrator(dh,alpha)
+  !------------------------------------------------------------------------
+  !
+  ! This function calculates an integral every 
+  ! three points, using the Simpson's rule.
+  !
+  IMPLICIT NONE
+  !Input and output
+  REAL(kind=dp),INTENT(in) :: dh, alpha !x and y
+  !internal
+  LOGICAL,SAVE :: flag=.true.
+  !
+  ! COMPOSITE SIMPSON INTEGRATOR, (precision level ~ float)
+  ! \int a b f(x) dx = ~ h/3 (f(a) + \sum_odd-n 2*f(a+n*h) + \sum_even-n 4*f(a+n*h) +f(b))
+  !
+  integrator = 0.0d0
+  !
+  IF (flag) THEN 
+     ! odd steps
+     integrator = (4.0d0/3.0d0)*dh*alpha
+     flag = .false.
+  ELSE
+     ! even steps
+     integrator = (2.0d0/3.0d0)*dh*alpha
+     flag = .true.
+  ENDIF
+  !
+  RETURN
+  !
+!-----------------------------------------------------------------------
+END FUNCTION integrator
+!-----------------------------------------------------------------------
+
+
+END PROGRAM lr_calculate_spectrum
 !-----------------------------------------------------------------------
 

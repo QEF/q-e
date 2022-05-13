@@ -163,7 +163,7 @@ MODULE read_namelists_module
        ntyp   = 0
        nbnd   = 0
        tot_charge = 0.0_DP
-       tot_magnetization = -1
+       tot_magnetization = -10000
        ecutwfc = 0.0_DP
        ecutrho = 0.0_DP
        nr1  = 0
@@ -200,27 +200,29 @@ MODULE read_namelists_module
 
        IF ( prog == 'PW' ) THEN
           starting_ns_eigenvalue = -1.0_DP
-          U_projection_type = 'atomic'
+          Hubbard_projectors = 'atomic'
        END IF
        !
-       ! .. DFT + U and its extensions
+       ! .. DFT + Hubbard
        !
-       lda_plus_U = .FALSE.
-       lda_plus_u_kind = 0
-       Hubbard_U = 0.0_DP
-       Hubbard_U_back = 0.0_DP
-       Hubbard_V = 0.0_DP
-       Hubbard_J0 = 0.0_DP
-       Hubbard_J = 0.0_DP
+       ! We still keep these variables in the input to raise 
+       ! an error message if users try to use them in the SYSTEM namelist. 
+       U_projection_type = ''  ! obsolete
+       Hubbard_parameters = '' ! obsolete
+       Hubbard_U = 0.0_DP      ! moved to the HUBBARD card
+       Hubbard_U_back = 0.0_DP ! replaced by Hubbard_U2 and moved to the HUBBARD card
+       Hubbard_V = 0.0_DP      ! moved to the HUBBARD card
+       Hubbard_J0 = 0.0_DP     ! moved to the HUBBARD card
+       Hubbard_J = 0.0_DP      ! moved to the HUBBARD card
+       lda_plus_u = .FALSE.    ! automatically set in the HUBBARD card 
+       lda_plus_u_kind = -1    ! automatically set in the HUBBARD card
        Hubbard_alpha = 0.0_DP
        Hubbard_alpha_back = 0.0_DP
        Hubbard_beta = 0.0_DP
-       Hubbard_parameters = 'input'
+       Hubbard_occ = -1.0_DP
        reserv = .false.
        reserv_back = .false.
        backall = .false.
-       lback = -1
-       l1back = -1
        hub_pot_fix = .false.
        step_pen=.false.
        A_pen=0.0_DP
@@ -420,6 +422,7 @@ MODULE read_namelists_module
        passop  = 0.3_DP
        niter_cg_restart = 20
        etresh  = 1.E-6_DP
+       pre_state = .FALSE.
        !
        epol   = 3
        efield = 0.0_DP
@@ -532,6 +535,14 @@ MODULE read_namelists_module
        w_1              = 0.01_DP
        w_2              = 0.50_DP
        !
+       ! FIRE minimization defaults 
+       !
+       fire_nmin = 5 ! minimum number of steps P > 0 before dt increas
+       fire_f_inc = 1.1_DP ! factor for time step increase
+       fire_f_dec = 0.5_DP ! factor for time step decrease 
+       fire_alpha_init = 0.20_DP ! initial value of mixing factor
+       fire_falpha = 0.99_DP ! modification of the mixing factor
+       fire_dtmax = 10.0_DP ! factor for calculating dtmax 
        RETURN
        !
      END SUBROUTINE
@@ -873,9 +884,11 @@ MODULE read_namelists_module
        CALL mp_bcast( starting_charge,        ionode_id, intra_image_comm )
        CALL mp_bcast( starting_magnetization, ionode_id, intra_image_comm )
        CALL mp_bcast( starting_ns_eigenvalue, ionode_id, intra_image_comm )
-       CALL mp_bcast( U_projection_type,      ionode_id, intra_image_comm )
-       CALL mp_bcast( lda_plus_U,             ionode_id, intra_image_comm )
+       CALL mp_bcast( Hubbard_projectors,     ionode_id, intra_image_comm )
+       CALL mp_bcast( lda_plus_u,             ionode_id, intra_image_comm )
        CALL mp_bcast( lda_plus_u_kind,        ionode_id, intra_image_comm )
+       CALL mp_bcast( U_projection_type,      ionode_id,intra_image_comm )
+       CALL mp_bcast( Hubbard_parameters,     ionode_id,intra_image_comm )
        CALL mp_bcast( Hubbard_U,              ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_U_back,         ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_J0,             ionode_id, intra_image_comm )
@@ -884,13 +897,11 @@ MODULE read_namelists_module
        CALL mp_bcast( Hubbard_alpha,          ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_alpha_back,     ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_beta,           ionode_id, intra_image_comm )
+       CALL mp_bcast( Hubbard_occ,            ionode_id, intra_image_comm )
        CALL mp_bcast( hub_pot_fix,            ionode_id,intra_image_comm )
-       CALL mp_bcast( Hubbard_parameters,     ionode_id,intra_image_comm )
        CALL mp_bcast( reserv,                 ionode_id,intra_image_comm )
        CALL mp_bcast( reserv_back,            ionode_id,intra_image_comm )
        CALL mp_bcast( backall,                ionode_id,intra_image_comm )
-       CALL mp_bcast( lback,                  ionode_id,intra_image_comm )
-       CALL mp_bcast( l1back,                 ionode_id,intra_image_comm )
        CALL mp_bcast( step_pen,               ionode_id, intra_image_comm )
        CALL mp_bcast( A_pen,                  ionode_id, intra_image_comm )
        CALL mp_bcast( sigma_pen,              ionode_id, intra_image_comm )
@@ -1068,6 +1079,7 @@ MODULE read_namelists_module
        CALL mp_bcast( etresh,  ionode_id, intra_image_comm )
        CALL mp_bcast( passop,  ionode_id, intra_image_comm )
        CALL mp_bcast( niter_cg_restart, ionode_id, intra_image_comm )
+       CALL mp_bcast( pre_state, ionode_id, intra_image_comm )
        !
        ! ... electric field
        !
@@ -1427,6 +1439,9 @@ MODULE read_namelists_module
        !-----------------------------------------------------------------------
        !! Check input values for Namelist SYSTEM.
        !
+       USE constants,  ONLY : eps24
+       USE io_global,  ONLY : stdout
+       !
        IMPLICIT NONE
        !
        CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
@@ -1555,6 +1570,57 @@ MODULE read_namelists_module
              CALL errore( sub_name,' gcscf_beta out of range ',1)
           !
        END IF
+       !
+       ! ... control on DFT+Hubbard variables
+       !
+       ! Obsolete input parameters from the SYSTEM namelist
+       allowed = .TRUE.
+       IF (lda_plus_u) THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter lda_plus_u is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (lda_plus_u_kind>-1) THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter lda_plus_u_kind is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (U_projection_type/='') THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter U_projection_type is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (Hubbard_parameters/='') THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter Hubbard_parameters is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (ANY(Hubbard_U(:)>eps24)) THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter Hubbard_U is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (ANY(Hubbard_U_back(:)>eps24)) THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter Hubbard_U_back is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (ANY(Hubbard_J0(:)>eps24)) THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter Hubbard_J0 is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (ANY(Hubbard_J(:,:)>eps24)) THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter Hubbard_J is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (ANY(Hubbard_V(:,:,:)>eps24)) THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter Hubbard_J is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (ANY(backall(:))) THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter backall is obsolete.")' )
+          allowed = .FALSE.
+       ENDIF
+       IF (.NOT.allowed) THEN
+          WRITE( stdout, '(/5x,"WARNING!!! The input syntax for DFT+Hubbard codes has &
+               &changed since v7.1")' )
+          WRITE( stdout, '(/5x,"WARNING!!! Check the new documentation!")' )
+          CALL errore( sub_name, 'DFT+Hubbard input syntax has changed since v7.1', 1 )
+       ENDIF
        !
        RETURN
        !

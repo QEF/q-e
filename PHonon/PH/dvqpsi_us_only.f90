@@ -25,9 +25,8 @@ subroutine dvqpsi_us_only (ik, uact, becp1, alphap)
   USE klist,     ONLY : xk, ngk, igk_k
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE lsda_mod,  ONLY : lsda, current_spin, isk, nspin
-  USE spin_orb,  ONLY : lspinorb
   USE wvfct,     ONLY : nbnd, npwx, et
-  USE noncollin_module, ONLY : noncolin, npol
+  USE noncollin_module, ONLY : noncolin, npol, lspinorb
   USE uspp, ONLY: okvan, nkb, vkb
   USE uspp_param, ONLY: nh, nhm
   USE phus,      ONLY : int1, int1_nc, int2, int2_so

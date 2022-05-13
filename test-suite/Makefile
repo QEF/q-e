@@ -16,9 +16,9 @@ default :
 	@echo 'where <target> identifies an action'
 	@echo ' run-tests                   : run-tests-serial (default)'
 	@echo ' run-tests-serial            : run all tests in SERIAL'
-	@echo ' run-tests-XX-serial         : run tests for XX={pw,cp,ph,epw,hp,tddfpt} only, as above'
+	@echo ' run-tests-XX-serial         : run tests for XX={pw,cp,ph,epw,hp,tddfpt kcw} only, as above'
 	@echo ' run-tests-parallel          : run all tests in PARALLEL (4 MPI)'
-	@echo ' run-tests-XX-parallel       : run tests for XX={pw,cp,ph,epw,hp,tddfpt} only, as above'
+	@echo ' run-tests-XX-parallel       : run tests for XX={pw,cp,ph,epw,hp,tddfpt kcw} only, as above'
 	@echo ' run-custom-test testdir=DIR : run test in DIR only (serial)'
 	@echo ' run-custom-test-parallel testdir=DIR : run test in DIR only (parallel 4 MPI)'
 	@echo ' compare                     : compare last output with reference'
@@ -39,10 +39,11 @@ pseudo :
 	@./check_pseudo.sh hp_
 	@./check_pseudo.sh ph_
 	@./check_pseudo.sh QEHeat_
+	@./check_pseudo.sh kcw_
 
 run-tests : run-tests-serial
 
-run-tests-serial : run-tests-pw-serial run-tests-cp-serial run-tests-ph-serial run-tests-epw-serial run-tests-hp-serial run-tests-tddfpt-serial
+run-tests-serial : run-tests-pw-serial run-tests-cp-serial run-tests-ph-serial run-tests-epw-serial run-tests-hp-serial run-tests-tddfpt-serial run-tests-kcw-serial
 
 run-tests-parallel : run-tests-pw-parallel run-tests-cp-parallel run-tests-ph-parallel run-tests-epw-parallel run-tests-hp-parallel run-tests-tddfpt-parallel
 
@@ -97,12 +98,21 @@ run-tests-tddfpt-serial : prolog pseudo
 run-tests-tddfpt-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=tddfpt_all
 
+run-tests-image-parallel : prolog pseudo
+	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=image_all
+
+run-tests-kcw-serial : prolog pseudo
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose  --category=kcw_all
+
+run-tests-kcw-parallel : prolog pseudo
+	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose  --category=kcw_all
+
 run-tests-all_currents-serial : prolog pseudo
-	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi 
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=all_currents_all
 
 run-tests-all_currents-parallel : prolog pseudo
-	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi 
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=all_currents_all
 
 
@@ -169,9 +179,9 @@ compare-all_currents : prolog pseudo
 
 clean:
 # output files
-	@rm -rf pw_*/test* ph_*/test* cp_*/test* hp_*/test* pp_*/test* epw_*/test* zg_*/test* tddfpt_*/test*
+	@rm -rf pw_*/test* ph_*/test* cp_*/test* hp_*/test* pp_*/test* epw_*/test* zg_*/test* tddfpt_*/test* kcw_*/test*
 # error files
-	@rm -rf pw_*/CRASH ph_*/CRASH* cp_*/CRASH hp_*/CRASH pp_*/CRASH epw_*/CRASH zg_*/CRASH tddfpt_*/CRASH
+	@rm -rf pw_*/CRASH ph_*/CRASH* cp_*/CRASH hp_*/CRASH pp_*/CRASH epw_*/CRASH zg_*/CRASH tddfpt_*/CRASH kcw_*/CRASH
 # pwscf data files
 	@rm -rf pw_*/pwscf.* ph_*/pwscf.* pp_*/pwscf.* epw_*/pwscf.*
 # cp data files
@@ -197,6 +207,9 @@ clean:
 # Cleaning HP final files
 	@rm -rf hp_*/HP hp_*/*hub* hp_*/*.xml hp_*/*.wfc* hp_*/*.save hp_*/*Hubbard_parameters* \
 		hp_*/*HubbardV* hp_*/*mix* hp_*/*parameters.out
+# Cleaning KCW final files
+	@rm -rf	kcw_*/out kcw_*/*.nnkp kcw_*/*.wout kcw_*/*.amn kcw_*/*.mmn kcw_*/*.eig kcw_*/*band* kcw_*/*chk \
+                kcw_*/*.dat kcw_*/*.xyz kcw_*/*.mat 
 # Cleaning EPW final files
 	@rm -rf epw_*/_ph0 epw_*/*.save epw_*/*.wfc* epw_*/*.dyn* \
 		epw_*/*.qdos_* epw_*/*.P epw_*/*.wout epw_*/crystal.fmt epw_*/*.pade* \
@@ -223,6 +236,10 @@ clean:
 	@rm -rf epw_base/save epw_super/save epw_pl/save/ epw_polar/save/ \
                 epw_trev/save epw_trev_uspp/save epw_trev_paw/save \
 		epw_mob/save epw_mob_ibte/save epw_mob_ibte_sym/save epw_mob_polar/save
+
+# Cleaning IMAGE final files
+	@rm -rf image_*/_ph0 image_*/*.save image_*/*.xml image_*/*.dyn? image_*/*.dyn??  \
+                image_*/*.wfc*
 
 # Cleaning ZG final files
 	@rm -f zg_conf/equil_pos.txt zg_conf/ZG-*_0.020.dat

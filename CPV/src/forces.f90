@@ -9,6 +9,12 @@
 ! Written and revised by Carlo Cavazzoni
 ! Task Groups parallelization by C. Bekas (IBM Research Zurich).
 !
+#if defined(__CUDA)
+#define PINMEM 
+#else
+#define PINMEM
+#endif
+!
 !-------------------------------------------------------------------------
       SUBROUTINE dforce_x ( i, bec, vkb, c, df, da, v, ldv, ispin, f, n, nspin, v1 )
 !-----------------------------------------------------------------------
@@ -64,7 +70,7 @@
 !dir$ attributes align: 4096 :: af, aa, psi, exx_a, exx_b
 #endif
 #endif
-      REAL(DP),    ALLOCATABLE :: af( :, : ), aa( :, : )
+      REAL(DP),    ALLOCATABLE PINMEM :: af( :, : ), aa( :, : )
       COMPLEX(DP), ALLOCATABLE :: psi(:)
       REAL(DP)    :: tmp1, tmp2                      ! Lingzhu Kong
       REAL(DP),    ALLOCATABLE :: exx_a(:), exx_b(:) ! Lingzhu Kong      
@@ -371,7 +377,7 @@
       REAL(DP)                   :: bec(:,:)
       COMPLEX(DP), DEVICE        :: vkb(:,:)
       COMPLEX(DP), DEVICE        :: c(:,:)
-      COMPLEX(DP)                :: df(:), da(:)
+      COMPLEX(DP)  PINMEM        :: df(:), da(:)
       INTEGER,     INTENT(IN)    :: ldv
       REAL(DP), DEVICE           :: v( :, : )
       INTEGER                    :: ispin( : )
@@ -388,7 +394,7 @@
       COMPLEX(DP) :: fp, fm
       complex(DP), parameter :: ci=(0.0d0,1.0d0)
 
-      REAL(DP),    ALLOCATABLE :: af( :, : ), aa( :, : )
+      REAL(DP),    ALLOCATABLE  PINMEM :: af( :, : ), aa( :, : )
       REAL(DP),    ALLOCATABLE, DEVICE :: af_d( :, : ), aa_d( :, : )
       COMPLEX(DP), ALLOCATABLE, DEVICE :: psi(:)
       COMPLEX(DP), ALLOCATABLE, DEVICE :: df_d(:)

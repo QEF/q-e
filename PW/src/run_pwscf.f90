@@ -46,7 +46,6 @@ SUBROUTINE run_pwscf( exit_status )
   USE cellmd,               ONLY : lmovecell
   USE command_line_options, ONLY : command_line
   USE force_mod,            ONLY : sigma, force
-  USE ions_base,            ONLY : if_pos
   USE check_stop,           ONLY : check_stop_init, check_stop_now
   USE mp_images,            ONLY : intra_image_comm
   USE extrapolation,        ONLY : update_file, update_pot
@@ -62,6 +61,11 @@ SUBROUTINE run_pwscf( exit_status )
   USE add_dmft_occ,         ONLY : dmft
   !
   USE device_fbuff_m,             ONLY : dev_buf
+  !
+#if defined (__ENVIRON)
+  USE plugin_flags,      ONLY : use_environ
+  USE environ_pw_module, ONLY : is_ms_gcs, init_ms_gcs
+#endif
   !
   IMPLICIT NONE
   !
@@ -115,7 +119,11 @@ SUBROUTINE run_pwscf( exit_status )
   !
   ! call to void routine for user defined / plugin patches initializations
   !
-  CALL plugin_initialization()
+#if defined (__ENVIRON)
+  IF (use_environ) THEN
+     IF (is_ms_gcs()) CALL init_ms_gcs()
+  END IF
+#endif
   !
   CALL check_stop_init()
   !
@@ -185,7 +193,7 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ! ... force calculation
      !
-     IF ( lforce .AND. ANY( if_pos(:,:) == 1 )) CALL forces()
+     IF ( lforce ) CALL forces()
      !
      ! ... stress calculation
      !
@@ -291,7 +299,7 @@ SUBROUTINE run_pwscf( exit_status )
      ethr = 1.0D-6
      !
      CALL dev_buf%reinit( ierr )
-     IF ( ierr .ne. 0 ) CALL errore( 'run_pwscf', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr) )
+     IF ( ierr .ne. 0 ) CALL infomsg( 'run_pwscf', 'Cannot reset GPU buffers! Some buffers still locked.' )
      !
   ENDDO main_loop
   !

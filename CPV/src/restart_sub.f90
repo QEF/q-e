@@ -42,6 +42,11 @@ SUBROUTINE from_restart( )
    USE device_memcpy_m,       ONLY : dev_memcpy
    USE matrix_inversion
    !
+#if defined (__ENVIRON)
+   USE plugin_flags,          ONLY : use_environ
+   USE environ_base_module,   ONLY : update_environ_ions
+#endif
+   !
    IMPLICIT NONE
 
    INTEGER :: iss
@@ -199,7 +204,9 @@ SUBROUTINE from_restart( )
    IF ( tefield  ) CALL efield_berry_setup( eigr, tau0 )
    IF ( tefield2 ) CALL efield_berry_setup2( eigr, tau0 )
    !
-   CALL plugin_init_ions( tau0 )
+#if defined (__ENVIRON)
+   IF (use_environ) CALL update_environ_ions(tau0)
+#endif
    !
    edft%eself = eself
    !

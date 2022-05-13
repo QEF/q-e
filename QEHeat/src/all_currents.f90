@@ -73,7 +73,7 @@ program all_currents
    use ions_base, only: tau, nsp, zv, nat, ityp, amass
    use uspp, ONLY: vkb, nkb, deeq
    use uspp_param, ONLY: upf, nh, nbetam
-   use uspp_data, only: spline_ps, dq, nqxq
+   use uspp_data, only: dq, nqxq
    use klist, only: xk, igk_k
    use wvfct, ONLY: g2kin, et
    use fft_base, only: dffts
@@ -126,9 +126,7 @@ program all_currents
    include 'laxlib.fh'
 
 !from ../PW/src/pwscf.f90
-   CALL mp_startup()
-   CALL laxlib_start(ndiag_, world_comm, intra_bgrp_comm, &
-                     do_distr_diag_inside_bgrp_=.TRUE.)
+   CALL mp_startup( images_only=.true. )
    CALL set_mpi_comm_4_solvers(intra_pool_comm, intra_bgrp_comm, &
                                inter_bgrp_comm)
    CALL environment_start('QEHeat')
@@ -269,7 +267,7 @@ program all_currents
    allocate (H_g(ngm, 3, 3, nsp))
    allocate (tabr(nqxq, nbetam, nsp, 3))
    call init_zero(tabr, H_g, nsp, zv, tpiba2, tpiba, omega, at, alat, &
-                  ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq, &
+                  ngm, gg, gstart, g, igtongl, gl, ngl, dq, &
                   upf, rgrid, nqxq, intra_bgrp_comm, nat, ityp) ! only once per all trajectory
    ! coulomb (ionic) current initialization
    call init_ionic(ionic_data, eta, n_max, ngm, gstart, at, alat, omega, gg, g, tpiba2)

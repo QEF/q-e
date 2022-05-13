@@ -21,8 +21,10 @@ SUBROUTINE force_lc_gpu( nat, tau, ityp, alat, omega, ngm, ngl, &
   USE esm,             ONLY : esm_force_lc, do_comp_esm, esm_bc
   USE Coul_cut_2D,     ONLY : do_cutoff_2D, cutoff_force_lc
   !
+#if defined(__CUDA)
   USE device_fbuff_m,        ONLY : dev_buf
   USE device_memcpy_m,   ONLY : dev_memcpy
+#endif
   !
   IMPLICIT NONE
   !
@@ -75,7 +77,6 @@ SUBROUTINE force_lc_gpu( nat, tau, ityp, alat, omega, ngm, ngl, &
   COMPLEX(DP), POINTER     :: aux_d(:)
 #if defined(__CUDA)
   attributes(DEVICE) :: aux_d
-#endif
   ! auxiliary space for FFT
   REAL(DP) :: arg, fact
   !
@@ -88,7 +89,7 @@ SUBROUTINE force_lc_gpu( nat, tau, ityp, alat, omega, ngm, ngl, &
   !
   ALLOCATE( aux(dfftp%nnr) )
   CALL dev_buf%lock_buffer(aux_d, dfftp%nnr, ierr)
-  IF (ierr /= 0) CALL errore( 'force_lc_gpu', 'cannot allocate buffers', -1 )
+  IF (ierr /= 0) CALL errore( 'force_lc_gpu', 'cannot allocate buffers', ABS(ierr) )
   !
   aux(:) = CMPLX( rho(:), 0.0_DP, KIND=DP )
   CALL dev_memcpy( aux_d, aux )
@@ -147,6 +148,7 @@ SUBROUTINE force_lc_gpu( nat, tau, ityp, alat, omega, ngm, ngl, &
   !
   DEALLOCATE( aux )
   CALL dev_buf%release_buffer(aux_d, ierr)
+#endif
   !
   RETURN
   !

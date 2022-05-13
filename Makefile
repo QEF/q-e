@@ -33,6 +33,7 @@ default :
 	@echo '  xspectra     X-ray core-hole spectroscopy calculations'
 	@echo '  couple       Library interface for coupling to external codes'
 	@echo '  epw          Electron-Phonon Coupling with Wannier functions'
+	@echo '  kcw          KCW code: implementation of Koopmans functionals in primitive cell'
 	@echo '  gui          Graphical User Interface'
 	@echo '  all          same as "make pwall cp ld1 tddfpt xspectra hp"'
 	@echo ' '
@@ -137,26 +138,32 @@ travis : pwall epw
 	if test -d test-suite ; then \
 	( cd test-suite ; make run-travis || exit 1 ) ; fi
 
-gui :
+kcw : pwlibs lrmods pp w90
+	if test -d KCW ; then \
+	( cd KCW ; $(MAKE) all || exit 1 ) ; fi
+
+gui : bindir
 	@if test -d GUI/PWgui ; then \
 	    cd GUI/PWgui ; \
 	    $(MAKE) TLDEPS= init; \
 	    echo ; \
-	    echo "  PWgui has been built in ./GUI/PWgui/. You may try it either as:  "; \
+	    echo "  ------------------------------------------------------------"; \
+	    echo "  PWgui was built in ./GUI/PWgui/ and a link was made in bin/."; \
+	    echo "  ------------------------------------------------------------"; \
+	    echo "  Try it either as:  "; \
 	    echo "         ./GUI/PWgui/pwgui" ; \
 	    echo "     or"; \
-	    echo "         cd ./GUI/PWgui";\
-	    echo "         ./pwgui" ; \
+	    echo "         ./bin/pwgui";\
 	    echo ; \
 	else \
 	    echo ; \
-	    echo "  Sorry, gui works only for git sources !!!" ; \
+	    echo "  Sorry, GUI/PWgui directory does not exist !" ; \
 	    echo ; \
 	fi
 
 pwall : pw neb ph pp pwcond acfdt
 
-all   : pwall cp ld1 tddfpt hp xspectra gwl 
+all   : pwall cp ld1 tddfpt hp xspectra gwl kcw
 
 ###########################################################
 # Auxiliary targets used by main targets:
@@ -189,7 +196,7 @@ mods : libfox libutil libla libfft libupf libmbd librxc
 libks_solvers : libutil libla
 	( cd KS_Solvers ; $(MAKE) TLDEPS= all || exit 1 )
 
-libla : liblapack libutil libcuda
+libla : $(LAPACK) libutil libcuda
 	( cd LAXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libfft : 
@@ -233,13 +240,13 @@ libmbd:
 # plugins
 #########################################################
 
-w90: bindir liblapack
+w90: bindir $(LAPACK)
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-want: liblapack
+want: $(LAPACK)
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-yambo: liblapack
+yambo: $(LAPACK)
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #########################################################
@@ -286,7 +293,7 @@ clean :
 		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
 		atomic LR_Modules upflib \
 		dev-tools extlibs Environ TDDFPT PHonon HP GWW Doc GUI \
-		QEHeat \
+		QEHeat KCW \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
@@ -307,10 +314,12 @@ veryclean : clean
 	- rm -f espresso.tar.gz
 	- rm -rf make.inc
 	- rm -rf FoX
+	- rm -rf MBD 
 # remove everything not in the original distribution
 distclean : veryclean
 	- cd pseudo; ./clean_ps ; cd -
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+	- (cd install ; $(MAKE) -f plugins_makefile $@)
+	- git submodule deinit --all --force # place deinit at the very end such that makefiles clean up as much as possible.
 
 tar :
 	@if test -f espresso.tar.gz ; then /bin/rm espresso.tar.gz ; fi

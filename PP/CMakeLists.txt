@@ -292,6 +292,21 @@ target_link_libraries(qe_pp_pw2gw_exe
         qe_upflib
         qe_mpi_fortran
         qe_xclib)
+###########################################################
+# pw2gt.x
+###########################################################
+set(src_pw2gt_x src/pw2gt.f90)
+qe_add_executable(qe_pp_pw2gt_exe ${src_pw2gt_x})
+set_target_properties(qe_pp_pw2gt_exe PROPERTIES OUTPUT_NAME pw2gt.x)
+target_link_libraries(qe_pp_pw2gt_exe
+    PRIVATE
+        qe_pw
+        qe_modules
+        qe_pp
+        qe_fftx
+        qe_upflib
+        qe_mpi_fortran
+        qe_xclib)
 
 ###########################################################
 # sumpdos.x
@@ -479,10 +494,7 @@ target_link_libraries(qe_pp_st_ef_exe
 
 ###########################################################
 
-qe_install_targets(
-    # Libraries
-    qe_pp
-    # Executables
+set(PP_EXE_TARGETS
     qe_pp_exe
     qe_pp_opengrid_exe
     qe_pp_average_exe
@@ -500,6 +512,7 @@ qe_install_targets(
     qe_pp_wfck2r_exe
     qe_pp_initial_state_exe
     qe_pp_pw2gw_exe
+    qe_pp_pw2gt_exe
     qe_pp_sumpdos_exe
     qe_pp_epsilon_exe
     qe_pp_wannierham_exe
@@ -515,3 +528,15 @@ qe_install_targets(
     qe_pp_st_dos_exe
     qe_pp_st_fermiint0_exe
     qe_pp_st_fermiint1_exe)
+
+qe_install_targets(
+    # Libraries
+    qe_pp
+    # Executables
+    ${PP_EXE_TARGETS})
+
+add_custom_target(pp
+    DEPENDS
+        ${PP_EXE_TARGETS}
+    COMMENT
+        "postprocessing programs")

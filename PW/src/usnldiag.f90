@@ -19,8 +19,7 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
   USE lsda_mod,         ONLY: current_spin
   USE uspp,             ONLY: deeq, vkb, qq_at, qq_so, deeq_nc, ofsbeta
   USE uspp_param,       ONLY: upf, nh
-  USE spin_orb,         ONLY: lspinorb
-  USE noncollin_module, ONLY: noncolin, npol
+  USE noncollin_module, ONLY: noncolin, npol, lspinorb
   !
   IMPLICIT NONE
   !

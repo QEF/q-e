@@ -16,8 +16,7 @@ subroutine transmit(ik, ien, tk_out, left_to_right)
   use io_global,  ONLY :  stdout
   use cond_files,  ONLY :  prefixl, prefixs
   use lsda_mod, only: nspin
-  use noncollin_module, ONLY : noncolin, npol
-  use spin_orb, only : lspinorb
+  use noncollin_module, ONLY : noncolin, npol, lspinorb
  use cond
 implicit none
 

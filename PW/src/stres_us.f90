@@ -22,9 +22,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE uspp_param,           ONLY : upf, lmaxkb, nh, nhm
   USE uspp,                 ONLY : nkb, vkb, deeq, deeq_nc
   USE wavefunctions,        ONLY : evc
-  USE spin_orb,             ONLY : lspinorb
   USE lsda_mod,             ONLY : nspin
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : noncolin, npol, lspinorb
   USE mp_pools,             ONLY : me_pool, root_pool
   USE mp_bands,             ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
@@ -33,7 +32,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto
-  USE uspp_init,            ONLY : init_us_2
+  USE uspp_init,            ONLY : init_us_2, gen_us_dj, gen_us_dy
   !
   IMPLICIT NONE
   !

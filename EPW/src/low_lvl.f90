@@ -1248,7 +1248,7 @@
     INTEGER, INTENT(in) :: v(size_v)
     !! Vector to bisect
     INTEGER, INTENT(in) :: n_intval
-    !! Number of intervals
+    !! Number of intervals indexes (so there are (n_intval - 1) number of intervals)
     INTEGER, INTENT(out) :: val_intval(n_intval)
     !! Value of the first element of each intervals
     INTEGER, INTENT(out) :: pos_intval(n_intval)
@@ -1270,13 +1270,20 @@
     nkl = size_v / (n_intval - 1)
     nkr = size_v - nkl * (n_intval - 1)
     !
-    ! the reminder goes to the first nkr intervals (0...nkr-1)
+    ! The reminder goes to the first nkr intervals (0...nkr-1)
     !
     DO i = 1, n_intval
       pos_intval(i) = nkl * (i - 1)
       IF (i < nkr) pos_intval(i) = pos_intval(i) + i
       IF (i >= nkr) pos_intval(i) = pos_intval(i) + nkr
     ENDDO
+    !
+    ! In case the reminder is 0
+    IF (nkr == 0) THEN
+      DO i = 1, (n_intval - 1)
+        pos_intval(i) = pos_intval(i) + 1
+      ENDDO
+    ENDIF
     !
     DO i = 1, n_intval
       val_intval(i) = v(pos_intval(i))
@@ -1303,7 +1310,7 @@
     INTEGER, INTENT(in) :: v(size_v)
     !! Vector to bisect
     INTEGER, INTENT(in) :: n_intval
-    !! Number of intervals for the pre search
+    !! Number of intervals indexes (so there are (n_intval - 1) number of intervals
     INTEGER, INTENT(in) :: val_intval(n_intval)
     !! Value of the first element of each intervals
     INTEGER, INTENT(in) :: pos_intval(n_intval)

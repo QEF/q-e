@@ -55,8 +55,8 @@ SUBROUTINE addusforce_g_gpu( forcenl )
   USE mp,                 ONLY : mp_sum
   USE control_flags,      ONLY : gamma_only
   USE fft_interfaces,     ONLY : fwfft
-  USE device_fbuff_m,     ONLY : dev_buf
 #if defined(__CUDA) 
+  USE device_fbuff_m,     ONLY : dev_buf
   USE cudafor 
   USE cublas
 #else
@@ -86,7 +86,7 @@ SUBROUTINE addusforce_g_gpu( forcenl )
   REAL(DP)                 :: forceqx, forceqy, forceqz
 #if defined(__CUDA) 
 ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d 
-#endif 
+
   nl_d => dfftp%nl_d
   IF (.NOT.okvan) RETURN
   !
@@ -101,10 +101,10 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
   ! fourier transform of the total effective potential
   !
   CALL dev_buf%lock_buffer( vg_d, [ngm, nspin_mag] , ierr )
-  IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', -1 )
+  IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', ABS(ierr) )
   !
   CALL dev_buf%lock_buffer( aux_d, dfftp%nnr, ierr )
-  IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', -1 )
+  IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', ABS(ierr) )
   !
   DO is = 1, nspin_mag
      IF (nspin_mag==4.AND.is/=1) THEN
@@ -133,12 +133,12 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
   IF ( ngm_l <= 0 ) GO TO 10
   !
   CALL dev_buf%lock_buffer( ylmk0_d, [ngm_l,lmaxq*lmaxq], ierr )
-  IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', -1 )
+  IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', ABS(ierr) )
   !
   CALL ylmr2_gpu( lmaxq * lmaxq, ngm_l, g_d(1,ngm_s), gg_d(ngm_s), ylmk0_d )
   !
   CALL dev_buf%lock_buffer( qmod_d, ngm_l, ierr  )
-  IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', -1 )
+  IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', ABS(ierr) )
   !
   !$cuf kernel do 
   DO ig = 1, ngm_l
@@ -153,7 +153,7 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
         !
         nij = nh(nt)*(nh(nt)+1)/2
         CALL dev_buf%lock_buffer(qgm_d, [ngm_l, nij],ierr) 
-        IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', -1 )
+        IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', ABS(ierr) )
         !
         ijh = 0
         DO ih = 1, nh (nt)
@@ -171,10 +171,10 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
         ENDDO
         !
         CALL dev_buf%lock_buffer(aux1_d, [ngm_l, nab, 3], ierr )
-        IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', -1 )
+        IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', ABS(ierr) )
         !
         CALL dev_buf%lock_buffer( ddeeq_d, [nij, nab, 3, nspin_mag],ierr )
-        IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', -1 )
+        IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', ABS(ierr) )
         !
         DO is = 1, nspin_mag
            nb = 0
@@ -246,6 +246,7 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
   CALL dev_buf%release_buffer(ylmk0_d, ierr)
   CALL dev_buf%release_buffer (vg_d, ierr )
   DEALLOCATE(forceq)
+#endif
   !
   RETURN
   !

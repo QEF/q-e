@@ -46,7 +46,7 @@ PROGRAM X_Spectra
   USE mp,              ONLY : mp_bcast, mp_sum             !parallelization
   USE mp_global,       ONLY : mp_startup, mp_global_end
   USE mp_pools,        ONLY : intra_pool_comm, npool
-  USE mp_world,        ONLY : nproc, world_comm
+  USE mp_world,        ONLY : world_comm
   USE control_flags,   ONLY : gamma_only
   USE environment,     ONLY : environment_start
 
@@ -70,6 +70,11 @@ PROGRAM X_Spectra
   USE xspectra_paw_variables, ONLY : xspectra_paw_nhm, init_xspectra_paw_nhm
   USE edge_energy, ONLY: getE
   !</CG>
+
+#if defined (__ENVIRON)
+  USE plugin_flags,        ONLY : use_environ
+  USE environ_base_module, ONLY : print_environ_clocks
+#endif
 
   IMPLICIT NONE 
   !
@@ -107,6 +112,8 @@ PROGRAM X_Spectra
 #endif
   CALL environment_start ( 'XSpectra' )
 
+  CALL plugin_arguments()
+
   CALL banner_xspectra()
 
   CALL read_input_and_bcast(filerecon, r_paw)
@@ -133,7 +140,8 @@ PROGRAM X_Spectra
      CALL read_file()
 
      CALL calculate_and_write_homo_lumo_to_stdout(ehomo,elumo)
-
+     ! Ef is broadcast to all processors - needed for k-point parallelization
+     CALL mp_bcast( ef, ionode_id, world_comm ) 
      call reset_k_points_and_reinit_nscf()
 
      call check_orthogonality_k_epsilon( xcoordcrys, xang_mom )
@@ -408,6 +416,10 @@ PROGRAM X_Spectra
 
   CALL stop_clock( calculation  )
   CALL print_clock( calculation )
+
+#if defined (__ENVIRON)
+  IF (use_environ) CALL print_environ_clocks()
+#endif
 
   WRITE (stdout, 1000)
   WRITE (stdout,'(5x,a)') '                           END JOB XSpectra'

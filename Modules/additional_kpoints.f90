@@ -61,13 +61,12 @@ MODULE additional_kpoints
      ALLOCATE(wk_old(nkstot_old))
      xk_old = xk(1:3, 1:nkstot)
      wk_old = wk(1:nkstot)
-!     DEALLOCATE(xk,wk)
      nkstot = 0
      !
      ! Simple case: EXX not used or used with self-exchange only: 
      IF( nqx1<=1 .and. nqx2<=1 .and. nqx3<=1 ) THEN
        nkstot = nkstot_old + nkstot_add
-       IF(nkstot>npk) CALL errore("add_kpoint", "Number of k-points exceeded: increase npk in pwcom", 1)
+       IF(nkstot>npk) CALL errore("add_kpoint", "Maximum number of k-points exceeded: increase npk in pwcom", 1)
        xk(:,1:nkstot_old) = xk_old
        xk(:,nkstot_old+1:nkstot_old+nkstot_add) = xk_add
        wk(1:nkstot_old) = wk_old
@@ -79,14 +78,14 @@ MODULE additional_kpoints
      ! Furthermore, the q-point grid is obtained by opening the k-points one, so this would
      ! be a dog wagging its own tails
        nqtot = nqx1*nqx2*nqx3
-       nkstot = nkstot_old + nkstot_add*nqtot
-       IF(nkstot>npk) CALL errore("add_kpoint", "Number of k-points exceeded: increase npk in pwcom", 1)
+       nkstot = nkstot_old + nkstot_add *nqtot
+       IF(nkstot>npk) CALL errore("add_kpoint", "Maximum number of k-points exceeded: increase npk in pwcom", 1)
        xk(:,1:nkstot_old) = xk_old
        wk(1:nkstot_old) = wk_old
        
        rq = (/nqx1,nqx2,nqx3/)
        rq = 1._dp / rq
-       iq = nqtot
+       iq = nkstot_old
        ! 
        DO  i = 0,nqx1-1
        DO  j = 0,nqx2-1
@@ -94,8 +93,9 @@ MODULE additional_kpoints
          xq = rq*(/i,j,k/)
          CALL cryst_to_cart(1,xq,bg,+1)
          DO jq = 1, nkstot_add
-           iq = iq + 1
-           xk(:,iq) = xk_add(:,jq) + xq
+            iq = iq + 1
+           xk(:,iq) = xk_add(:,jq)  + xq
+           wk(iq)=0.0d0
          ENDDO
        ENDDO
        ENDDO

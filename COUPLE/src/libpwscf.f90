@@ -90,7 +90,7 @@ SUBROUTINE f2libpwscf(lib_comm,nim,npt,npl,nta,nbn,ndg,retval,infile)
       nband=nbn, ndiag=ndg )
   CALL mp_startup ( my_world_comm=lib_comm , start_images = .true. )
   ndiag_ = ndg 
-  CALL laxlib_start( ndiag_ , lib_comm, intra_pool_comm, do_distr_diag_inside_bgrp_ = .false.) 
+  CALL laxlib_start( ndiag_, intra_pool_comm, do_distr_diag_inside_bgrp_ = .false.)
   CALL set_mpi_comm_4_solvers ( intra_pool_comm, intra_bgrp_comm, inter_bgrp_comm)  
   CALL environment_start ( 'PWSCF' )
   !

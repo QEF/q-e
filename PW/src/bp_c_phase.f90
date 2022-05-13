@@ -175,8 +175,7 @@ SUBROUTINE c_phase
    USE bp,                   ONLY : gdir, nppstr, mapgm_global, pdl_tot
    USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
                                     deallocate_bec_type
-   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda
-   USE spin_orb,             ONLY : lspinorb
+   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, lspinorb
    USE mp_bands,             ONLY : intra_bgrp_comm, nproc_bgrp
    USE mp,                   ONLY : mp_sum
    USE qes_libs_module,      ONLY : qes_reset

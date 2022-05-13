@@ -43,11 +43,10 @@ SUBROUTINE phq_init()
   USE io_global,            ONLY : stdout
   USE atom,                 ONLY : msh, rgrid
   USE vlocal,               ONLY : strf
-  USE spin_orb,             ONLY : lspinorb
   USE wvfct,                ONLY : npwx, nbnd
   USE gvecw,                ONLY : gcutw
   USE wavefunctions,        ONLY : evc
-  USE noncollin_module,     ONLY : noncolin, domag, npol
+  USE noncollin_module,     ONLY : noncolin, domag, npol, lspinorb
   USE uspp,                 ONLY : okvan, vkb, nlcc_any, nkb
   USE uspp_param,           ONLY : upf
   USE m_gth,                ONLY : setlocq_gth
@@ -131,7 +130,7 @@ SUBROUTINE phq_init()
   ! component of the cutoff of the COulomb interaction
   IF (do_cutoff_2D) call cutoff_fact_qg() 
   !  in 2D calculations the long range part of vlocq(g) (erf/r part)
-  ! was not re-added in g-space because everything is caclulated in
+  ! was not re-added in g-space because everything is calculated in
   ! radial coordinates, which is not compatible with 2D cutoff. 
   ! It will be re-added each time vlocq(g) is used in the code. 
   ! Here, this cutoff long-range part of vlocq(g) is computed only once

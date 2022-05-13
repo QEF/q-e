@@ -5,71 +5,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-MODULE uspp_param
-  !
-  ! ... Ultrasoft and Norm-Conserving pseudopotential parameters
-  !  
-  USE pseudo_types, ONLY : pseudo_upf
-  IMPLICIT NONE
-  SAVE
-  !
-  INTEGER :: nsp = 0 
-  TYPE (pseudo_upf),  ALLOCATABLE, TARGET :: upf(:)
-  !! the upf structure contains all info on atomic pseudopotential parameters
-  INTEGER, ALLOCATABLE :: nh(:)
-  !! number of beta functions, with angular parts, per atomic type 
-  INTEGER :: nhm
-  !! max number of beta functions, including angular parts, across atoms
-  INTEGER :: nbetam
-  !! max number of radial beta functions
-  INTEGER :: nwfcm
-  !! max number of radial atomic wavefunctions across atoms
-  INTEGER :: lmaxkb
-  !! max angular momentum of beta functions
-  INTEGER :: lmaxq
-  !! max angular momentum + 1 for Q functions
-  !
-CONTAINS
-  !
-  SUBROUTINE init_uspp_dims ()
-    !
-    !!     calculates the number of beta functions for each atomic type
-    !
-    IMPLICIT NONE
-    !
-    INTEGER :: nt, nb
-    !
-    ! Check is needed, may be called more than once (but it shouldn't be!)
-    ! Maybe nh should be allocated when upf is, when upf is read ?
-    !
-    IF ( .NOT. ALLOCATED(nh) ) ALLOCATE ( nh(nsp) )
-    !
-    lmaxkb = - 1
-    DO nt = 1, nsp
-       !
-       nh (nt) = 0
-       !
-       ! do not add any beta projector if pseudo in 1/r fmt (AF)
-       !
-       IF ( upf(nt)%tcoulombp ) CYCLE 
-       !
-       DO nb = 1, upf(nt)%nbeta
-          nh (nt) = nh (nt) + 2 * upf(nt)%lll(nb) + 1
-          lmaxkb = MAX (lmaxkb, upf(nt)%lll(nb) )
-       ENDDO
-       !
-    ENDDO
-    lmaxq = 2*lmaxkb+1
-    !
-    ! calculate max numbers of beta functions and of atomic wavefunctions
-    !
-    nhm    = MAXVAL (nh (1:nsp))
-    nbetam = MAXVAL (upf(1:nsp)%nbeta)
-    nwfcm  = MAXVAL (upf(1:nsp)%nwfc)
-    !
-  END SUBROUTINE init_uspp_dims
-  !
-END MODULE uspp_param
+
+#if defined(__CUDA)
+#define PINMEM ,PINNED 
+#else
+#define PINMEM
+#endif
 !
 !
 MODULE uspp
@@ -122,7 +63,7 @@ MODULE uspp
   INTEGER :: nkb,        &! total number of beta functions, with struct.fact.
              nkbus        ! as above, for US-PP only
   !
-  INTEGER, ALLOCATABLE ::&
+  INTEGER, ALLOCATABLE PINMEM ::&
        indv(:,:),        &! indes linking  atomic beta's to beta's in the solid
        nhtol(:,:),       &! correspondence n <-> angular momentum l
        nhtolm(:,:),      &! correspondence n <-> combined lm index for (l,m)
@@ -145,13 +86,14 @@ MODULE uspp
        nlcc_any=.FALSE.   ! if .TRUE. at least one pseudo has core corrections
   ! 
   !FIXME use !$acc declare create(vkb) to create and delete it automatically in the device
-  COMPLEX(DP), ALLOCATABLE, TARGET :: &
+  !           be carefull cp still uses  vkb_d for device  
+  COMPLEX(DP), ALLOCATABLE, TARGET PINMEM :: &
        vkb(:,:)                ! all beta functions in reciprocal space
   REAL(DP), ALLOCATABLE :: &
        becsum(:,:,:)           ! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
   REAL(DP), ALLOCATABLE :: &
        ebecsum(:,:,:)          ! \sum_i f(i) et(i) <psi(i)|beta_l><beta_m|psi(i)>
-  REAL(DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE PINMEM :: &
        dvan(:,:,:),           &! the D functions of the solid
        deeq(:,:,:,:),         &! the integral of V_eff and Q_{nm} 
        qq_nt(:,:,:),          &! the integral of q functions in the solid (ONE PER NTYP) used to be the qq array
@@ -184,9 +126,9 @@ MODULE uspp
   ! spin-orbit coupling: qq and dvan are complex, qq has additional spin index
   ! noncolinear magnetism: deeq is complex (even in absence of spin-orbit)
   !
-  REAL(DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE PINMEM :: &
        beta(:,:,:)           ! beta functions for CP (without struct.factor)
-  REAL(DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE PINMEM :: &
        dbeta(:,:,:,:,:)      ! derivative of beta functions w.r.t. cell for CP (without struct.factor)
   !
 CONTAINS

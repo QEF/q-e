@@ -1,0 +1,58 @@
+--
+&inputepw
+  prefix      = 'diam'
+  amass(1)    = 12.01078
+  outdir      = './'
+
+  iverbosity  = 0
+
+  ep_coupling = .false.
+  elph        = .false.
+  epbwrite    = .false.
+  epbread     = .false.
+  epwwrite    =  .false.
+  epwread     =  .true.
+
+  efermi_read = .true. 
+  fermi_energy = 13.209862
+
+  nbndsub     =  1
+
+  wannierize  = .false.
+  num_iter    = 300
+  iprint      = 2
+  dis_win_max = 12
+  dis_froz_max= 7
+  proj(1)     = 'f=0,0,0:l=-3'   
+
+  elecselfen  = .true. 
+  phonselfen  = .false. 
+  a2f         = .false.
+
+  specfun_el   = .true. 
+  wmin_specfun = -4
+  wmax_specfun = 4
+  nw_specfun   = 801
+  
+  cumulant = .true.
+  bnd_cum = 1
+
+  fsthick     = 1.36056981 ! eV 
+  temps       = 300 ! K
+  degaussw    = 0.005 ! eV
+
+  dvscf_dir   = '../phonons/save'
+  filukk      = './diam.ukk'
+  filkf       = 'meshes/path.dat'
+  nqf1        = 50
+  nqf2        = 50
+  nqf3        = 50
+  
+  nk1         = 6
+  nk2         = 6
+  nk3         = 6
+
+  nq1         = 6
+  nq2         = 6
+  nq3         = 6
+ /

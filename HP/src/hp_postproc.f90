@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,14 +20,15 @@ SUBROUTINE hp_postproc
   USE control_flags,  ONLY : iverbosity
   USE lsda_mod,       ONLY : nspin
   USE matrix_inversion
-  USE ldaU,           ONLY : Hubbard_l, Hubbard_lmax, is_hubbard, num_uc, &
-                             lda_plus_u_kind, dist_s, ityp_s, eps_dist
+  USE ldaU,           ONLY : Hubbard_n, Hubbard_l, Hubbard_lmax, is_hubbard, &
+                             lda_plus_u_kind, dist_s, ityp_s, &
+                             Hubbard_projectors, num_uc
   USE ldaU_hp,        ONLY : nath, nath_sc, todo_atom, background,   &
                              skip_type, equiv_type, skip_atom,       &
                              tmp_dir_save, find_atpert, magn,        &
                              nath_pert, ityp_new, ntyp_new, atm_new, &
                              num_neigh, lmin, rmax, nq1, nq2, nq3,   &
-                             determine_num_pert_only
+                             determine_num_pert_only, dist_thr
   !
   IMPLICIT NONE
   !
@@ -46,7 +47,8 @@ SUBROUTINE hp_postproc
   INTEGER :: na, nb, nc, nd, & ! dummy indices running over atoms
              ipol,           & ! dummy index running over 3 cartesian coordinates
              nt,             & ! dummy index running over atomic types
-             iunitU,         & ! unit number
+             unithub,        & ! unit number
+             unithub2,       & ! unit number
              na_sc,          & ! dummy index
              nath_scbg         ! the size of chi matrix including the background term
   !
@@ -59,7 +61,7 @@ SUBROUTINE hp_postproc
   !
   REAL(DP), PARAMETER :: eps1 = 4.d-1     ! threshold for the magnetization
   !
-  CHARACTER(len=256) :: filenameU
+  CHARACTER(len=256) :: filenamehub, filenamehub2
   INTEGER, EXTERNAL :: find_free_unit
   LOGICAL :: determine_indices_only
   !
@@ -102,7 +104,7 @@ SUBROUTINE hp_postproc
   CALL atomic_dist()
   !
   IF (determine_indices_only) THEN
-     CALL write_intersite(.false.)   
+     CALL write_uv(.false.)   
      GO TO 15
   ENDIF
   !
@@ -169,9 +171,9 @@ SUBROUTINE alloc_pp
   ALLOCATE ( Hubbard_matrix(nath_scbg, nath_scbg) )
   !
   ! Find and open unit to write info
-  iunitU = find_free_unit()
-  filenameU = trim(prefix) // ".Hubbard_parameters.dat"
-  OPEN(iunitU, file = filenameU, form = 'formatted', status = 'unknown')
+  unithub = find_free_unit()
+  filenamehub = trim(prefix) // ".Hubbard_parameters.dat"
+  OPEN(unithub, file = filenamehub, form = 'formatted', status = 'unknown')
   !
   RETURN 
   !
@@ -200,7 +202,7 @@ SUBROUTINE dealloc_pp
   DEALLOCATE (inv_chi0bg)
   DEALLOCATE (Hubbard_matrix)
   !
-  CLOSE(iunitU)
+  CLOSE(unithub)
   !
   RETURN
   !
@@ -259,7 +261,7 @@ SUBROUTINE equiv_types_and_determine_spin
   !
   IMPLICIT NONE
   !
-  IF ( find_atpert == 2 .OR. find_atpert == 3 ) THEN
+  IF ( find_atpert /= 1 ) THEN
      !
      ! If it was requested in the input, re-assign the specific type
      ! to another type (e.g., Ni_down to Ni_up)
@@ -432,7 +434,7 @@ SUBROUTINE atomic_dist()
         DO nb = 1, nath_sc
            DO nc = 1, dimn
               IF ( ityp_sc0(nb).EQ.ityp_s(nc)                    .AND. &
-                   ABS(dist_sc(na,nb)-dist_s(na,nc)).LT.eps_dist .AND. &
+                   ABS(dist_sc(na,nb)-dist_s(na,nc)).LT.dist_thr .AND. &
                    .NOT.found(nc) ) THEN
                    !
                    ! Mapping of index nb to nc
@@ -492,7 +494,7 @@ SUBROUTINE average_similar_elements(chi_)
                           chi_(nc,nb).NE.0.d0                   .AND. &
                           dist_sc(na,nb).GT.0.d0                .AND. &
                           dist_sc(nc,nb).GT.0.d0                .AND. &
-                          ABS(dist_sc(nc,nb)-dist_sc(na,nb)).LE.eps_dist 
+                          ABS(dist_sc(nc,nb)-dist_sc(na,nb)).LE.dist_thr 
               !
               IF (condition) THEN
                  !
@@ -547,7 +549,7 @@ SUBROUTINE reconstruct_full_chi(chi_)
                     IF ( ityp_sc(nd).EQ.ityp_sc(na) ) THEN
                        !
                        IF (chi_(nd,nc).NE.0.0d0 .AND. &
-                           ABS(dist_sc(nd,nc)-dist_sc(na,nb)).LE.eps_dist  .AND. &
+                           ABS(dist_sc(nd,nc)-dist_sc(na,nb)).LE.dist_thr  .AND. &
                            spin_sc(na)*spin_sc(nb).EQ.spin_sc(nd)*spin_sc(nc)) THEN
                           !
                           chi_(na,nb) = chi_(nd,nc)
@@ -556,7 +558,7 @@ SUBROUTINE reconstruct_full_chi(chi_)
                        ENDIF
                        !
                        IF (chi_(nc,nd).NE.0.0d0 .AND. &
-                           ABS(dist_sc(nc,nd)-dist_sc(na,nb)).LE.eps_dist  .AND. &
+                           ABS(dist_sc(nc,nd)-dist_sc(na,nb)).LE.dist_thr  .AND. &
                            spin_sc(na)*spin_sc(nb).EQ.spin_sc(nc)*spin_sc(nd)) THEN
                           !
                           chi_(na,nb) = chi_(nc,nd)
@@ -598,9 +600,8 @@ SUBROUTINE reconstruct_full_chi(chi_)
      !
      WRITE( stdout, '(/5x,"Possible solutions:")')
      WRITE( stdout, '(5x, "1. Relax better the structure (in order to have more accurate inter-atomic distances)")')
-     WRITE( stdout, '(5x, "2. Increase the value of the parameter eps_dist in PW/src/ldaU.f90,")')
-     WRITE( stdout, '(5x, "   then recompile the pw.x and hp.x codes, and re-run the HP postprocessing step")')
-     WRITE( stdout, '(5x, "   by setting compute_hp=.true. in the HP input.")')
+     WRITE( stdout, '(5x, "2. Increase the value of the parameter dist_thr in the HP input,")')
+     WRITE( stdout, '(5x, "   and re-run the postprocessing step by setting compute_hp=.true. in the HP input.")')
      !
      CALL errore ('reconstruct_full_chi', &
             'Reconstruction problem: some chi were not found', 1)
@@ -709,31 +710,32 @@ SUBROUTINE calculate_Hubbard_parameters()
   ENDDO
   !
   IF ( find_atpert == 1 .AND. ntyp_new > ntyp ) THEN
-     WRITE(iunitU,'(2x,"Warning: The Hubbard parameters listed below were computed by treating some")')
-     WRITE(iunitU,'(2x,"         equivalent (by type) Hubbard atoms as if they were non-equivalent")')
-     WRITE(iunitU,'(2x,"         (when doing the averaging and reconstruction of the response matrices)")')
-     WRITE(iunitU,'(2x,"         because their unperturbed occupations differ. If you want to disable this")')
-     WRITE(iunitU,'(2x,"         option then set disable_type_analysis=.true. and redo the post-processing.")')
+     WRITE(unithub,'(2x,"Warning: The Hubbard parameters listed below were computed by treating some")')
+     WRITE(unithub,'(2x,"         equivalent (by type) Hubbard atoms as if they were non-equivalent")')
+     WRITE(unithub,'(2x,"         (when doing the averaging and reconstruction of the response matrices)")')
+     WRITE(unithub,'(2x,"         because their unperturbed occupations differ. If you want to disable this")')
+     WRITE(unithub,'(2x,"         option then set disable_type_analysis=.true. and redo the post-processing.")')
   ENDIF
   !
   ! Write Hubbard U (i.e. diagonal elements of the Hubbard matrix)
   !
-  WRITE(iunitU,'(/2x,"=-------------------------------------------------------------------=",/)')
-  WRITE(iunitU,'(27x,"Hubbard U parameters:",/)')
-  WRITE(iunitU, '(7x,"site n.",2x,"type",2x,"label",2x,"spin",2x,"new_type",2x,"new_label",2x,"Hubbard U (eV)")')
+  WRITE(unithub,'(/2x,"=-------------------------------------------------------------------=",/)')
+  WRITE(unithub,'(27x,"Hubbard U parameters:",/)')
+  WRITE(unithub, '(7x,"site n.",2x,"type",2x,"label",2x,"spin",2x,"new_type",2x,"new_label",2x,"Hubbard U (eV)")')
   DO na = 1, nat
      nt1 = ityp(na)
      nt2 = ityp_new(na)
      IF ( is_hubbard(nt1) ) THEN
-        WRITE(iunitU,'(7x,i3,6x,i3,3x,a4,4x,i2,4x,i3,9x,a4,3x,f10.4)') &
+        WRITE(unithub,'(7x,i3,6x,i3,3x,a4,4x,i2,4x,i3,9x,a4,3x,f10.4)') &
                 & na, nt1, atm(nt1), spin(na), nt2, atm_new(nt2), Hubbard_matrix(na,na)
      ENDIF
   ENDDO
-  WRITE(iunitU,'(/2x,"=-------------------------------------------------------------------=",/)')
+  WRITE(unithub,'(/2x,"=-------------------------------------------------------------------=",/)')
   !
-  ! Write Hubbard V (i.e. off-diagonal elements of the Hubbard matrix)
+  ! Write Hubbard parameters to file that can be directly used in the pw.x calculation
   !
-  IF ( lda_plus_u_kind.EQ.2 ) CALL write_intersite(.true.)
+  ! Write V
+  IF (lda_plus_u_kind==2) CALL write_uv(.true.)
   !
   ! Write the information about the response matrices chi0 and chi,
   ! about their inverse matrices, and about the entire matrix of 
@@ -753,92 +755,96 @@ SUBROUTINE calculate_Hubbard_parameters()
      ENDIF
      !
      ! Write to file chi0
-     WRITE(iunitU,'(/10x,"chi0 matrix :")')
+     WRITE(unithub,'(/10x,"chi0 matrix :")')
      DO na = 1, nath_scbg
-        WRITE(iunitU,'(8(x,f11.6))') (chi0bg(na,nb), nb=1,nath_scbg)
-        WRITE(iunitU,*)
+        WRITE(unithub,'(8(x,f11.6))') (chi0bg(na,nb), nb=1,nath_scbg)
+        WRITE(unithub,*)
      ENDDO
      !
      ! Write to file chi
-     WRITE(iunitU,'(/10x,"chi matrix :")')
+     WRITE(unithub,'(/10x,"chi matrix :")')
      DO na = 1, nath_scbg
-        WRITE(iunitU,'(8(x,f11.6))') (chibg(na,nb), nb=1,nath_scbg)
-        WRITE(iunitU,*)
+        WRITE(unithub,'(8(x,f11.6))') (chibg(na,nb), nb=1,nath_scbg)
+        WRITE(unithub,*)
      ENDDO
      !
      ! Write to file inv_chi0
-     WRITE(iunitU,'(/8x,"chi0^{-1} matrix :")')
+     WRITE(unithub,'(/8x,"chi0^{-1} matrix :")')
      DO na = 1, nath_scbg
-        WRITE(iunitU,'(8(x,f11.6))') (inv_chi0bg(na,nb), nb=1,nath_scbg)
-        WRITE(iunitU,*)
+        WRITE(unithub,'(8(x,f11.6))') (inv_chi0bg(na,nb), nb=1,nath_scbg)
+        WRITE(unithub,*)
      ENDDO
      !
      ! Write to file inv_chi
-     WRITE(iunitU,'(/8x,"chi^{-1} matrix :")')
+     WRITE(unithub,'(/8x,"chi^{-1} matrix :")')
      DO na = 1, nath_scbg
-        WRITE(iunitU,'(8(x,f11.6))') (inv_chibg(na,nb), nb=1,nath_scbg)
-        WRITE(iunitU,*)
+        WRITE(unithub,'(8(x,f11.6))') (inv_chibg(na,nb), nb=1,nath_scbg)
+        WRITE(unithub,*)
      ENDDO
      !
      ! Write the full Hubbard matrix to file
-     WRITE(iunitU,'(/9x,"Hubbard matrix :")')
+     WRITE(unithub,'(/9x,"Hubbard matrix :")')
      DO na = 1, nath_scbg
-        WRITE(iunitU,'(8(x,f11.6))') (Hubbard_matrix(na,nb), nb=1,nath_scbg)
-        WRITE(iunitU,*)
+        WRITE(unithub,'(8(x,f11.6))') (Hubbard_matrix(na,nb), nb=1,nath_scbg)
+        WRITE(unithub,*)
      ENDDO
      !
   ENDIF
-  !
-  !CLOSE(iunitU)
   !
   RETURN
   !
 END SUBROUTINE calculate_Hubbard_parameters
 
-SUBROUTINE write_intersite (lflag)
+SUBROUTINE write_uv (lflag)
+  !
+  ! Write the Hubbard V parameters to file.
+  ! V's are written in the order of increasing interatomic distances.
   !
   USE parameters,   ONLY : sc_size
   !
-  ! Write information about the Hubbard_V parameters
-  ! in the order of increase of interatomic distances.
-  !
   IMPLICIT NONE
   REAL(DP), ALLOCATABLE :: dist(:), distord(:)
-  INTEGER,  ALLOCATABLE :: typeord(:), indexord(:)
-  INTEGER :: ne, nc_min, ipol, tempunit, counter
-  CHARACTER(len=80) :: tempfile
+  INTEGER,  ALLOCATABLE :: typeord0(:), typeord(:), indexord(:)
+  INTEGER :: ne, nc_min, ipol, counter, nt, nt2
   REAL(DP) :: auxdist
   LOGICAL :: lflag  ! if .true.  then write V to file
                     ! if .false. then do not write V to file
+  CHARACTER(len=2) :: Hubbard_manifold, Hubbard_manifold2
+  CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  CHARACTER(LEN=1), EXTERNAL :: l_to_spdf
   !
-  ! Find and open unit to write Hubbard_V parameters
-  tempunit = find_free_unit()
-  tempfile = TRIM("parameters.out")
-  OPEN(tempunit, file = tempfile, form = 'formatted', status = 'unknown')
+  ! Find and open unit to write info
+  unithub2 = find_free_unit()
+  filenamehub2 = TRIM("HUBBARD.dat")
+  OPEN(unithub2, file = filenamehub2, form = 'formatted', status = 'unknown')
+  WRITE(unithub2,'("# Copy this data in the pw.x input file for DFT+Hubbard calculations")')
+  WRITE(unithub2,'("HUBBARD {",a,"}")') TRIM(Hubbard_projectors)
   !
   IF (lflag) THEN
-     WRITE(iunitU,'(/27x,"Hubbard V parameters:")')
+     WRITE(unithub,'(/27x,"Hubbard V parameters:")')
   ELSE
-     WRITE(iunitU,'(/17x,"Indices and distances for inter-site couples:")')
+     WRITE(unithub,'(/17x,"Indices and distances for inter-site couples:")')
   ENDIF
-  WRITE(iunitU,'(22x,"(adapted for a supercell",1x,i1,"x",i1,"x",i1,")",/)') &
+  WRITE(unithub,'(22x,"(adapted for a supercell",1x,i1,"x",i1,"x",i1,")",/)') &
                        2*sc_size+1, 2*sc_size+1, 2*sc_size+1 
+  !
   IF (lflag) THEN
-     WRITE(iunitU,*) '           Atom 1 ', '    Atom 2 ', '   Distance (Bohr) ', ' Hubbard V (eV)'
-     WRITE(iunitU,*)
-     WRITE(tempunit,*) '# Atom 1 ', ' Atom 2 ', ' Hubbard V (eV)'
+     WRITE(unithub,*) '           Atom 1 ', '    Atom 2 ', '   Distance (Bohr) ', ' Hubbard V (eV)'
+     WRITE(unithub,*)
   ELSE
-     WRITE(iunitU,*) '           Atom 1 ', '    Atom 2 ', '   Distance (Bohr) '
-     WRITE(iunitU,*)
-     WRITE(tempunit,*) '# Atom 1 ', ' Atom 2 '
+     WRITE(unithub,*) '           Atom 1 ', '    Atom 2 ', '   Distance (Bohr) '
+     WRITE(unithub,*)
   ENDIF
   !
   ALLOCATE(dist(nath_sc))
   ALLOCATE(distord(nath_sc))
+  ALLOCATE(typeord0(nath_sc))
   ALLOCATE(typeord(nath_sc))
   ALLOCATE(indexord(nath_sc))
   !
   DO na = 1, nath
+     !
+     nt = ityp_sc0(na)
      !
      ! All distances from the atom na 
      dist(:) = dist_sc(na,:) 
@@ -849,6 +855,7 @@ SUBROUTINE write_intersite (lflag)
      DO nb = 1, nath_sc
         IF ( dist(nb).GT.0.d0 ) THEN
             distord(1)  = dist(nb)
+            typeord0(1) = ityp_sc0(nb)
             typeord(1)  = ityp_sc(nb)
             indexord(1) = nb
             GO TO 10
@@ -861,6 +868,7 @@ SUBROUTINE write_intersite (lflag)
         IF ( dist(nb).GT.distord(1) ) THEN
            nc = nc + 1
            distord(nc)  = dist(nb)
+           typeord0(nc) = ityp_sc0(nb)
            typeord(nc)  = ityp_sc(nb)
            indexord(nc) = nb
            GO TO 11
@@ -869,12 +877,14 @@ SUBROUTINE write_intersite (lflag)
      !
      nc = nc + 1
      distord(nc)  = distord(1)
+     typeord0(nc) = typeord0(1)
      typeord(nc)  = typeord(1)
      indexord(nc) = indexord(1)
      !
      DO nb = 1, nath_sc
         IF ( dist(nb).GT.0.d0 .AND. dist(nb).LT.distord(nc) ) THEN
             distord(1)  = dist(nb)
+            typeord0(1) = ityp_sc0(nb)
             typeord(1)  = ityp_sc(nb)
             indexord(1) = nb
             GO TO 11
@@ -887,6 +897,7 @@ SUBROUTINE write_intersite (lflag)
         IF ( dist(nb).GT.distord(nc) ) THEN
             nc = nc + 1
             distord(nc)  = dist(nb)
+            typeord0(nc) = ityp_sc0(nb)
             typeord(nc)  = ityp_sc(nb)
             indexord(nc) = nb
         ELSEIF ( dist(nb).LE.distord(1) .AND. nb.NE.indexord(1) ) THEN
@@ -894,10 +905,12 @@ SUBROUTINE write_intersite (lflag)
             nc = nc + 1
             DO nd = nc, nc_min, -1
                distord(nd)  = distord(nd-1)
+               typeord0(nd) = typeord0(nd-1)
                typeord(nd)  = typeord(nd-1)
                indexord(nd) = indexord(nd-1)
             ENDDO
             distord(1)  = dist(nb)
+            typeord0(1) = ityp_sc0(nb)
             typeord(1)  = ityp_sc(nb)
             indexord(1) = nb
         ELSE
@@ -908,10 +921,12 @@ SUBROUTINE write_intersite (lflag)
                      nc = nc + 1
                      DO ne = nc, nc_min,-1
                         distord(ne)  = distord(ne-1)
+                        typeord0(ne) = typeord0(ne-1)
                         typeord(ne)  = typeord(ne-1)
                         indexord(ne) = indexord(ne-1)
                      ENDDO
                      distord(nd+1)  = dist(nb)
+                     typeord0(nd+1) = ityp_sc0(nb)
                      typeord(nd+1)  = ityp_sc(nb)
                      indexord(nd+1) = nb 
                      GO TO 12
@@ -928,48 +943,65 @@ SUBROUTINE write_intersite (lflag)
         IF ( auxindex(na,indexord(nb)) > 0 ) THEN
            counter = counter + 1
            IF (lflag) THEN
-              ! Print couples and Hubbard V
-              WRITE(iunitU,'(11x,i3,x,a4,x,i5,x,a4,2x,f12.6,4x,f10.4)') &
+              ! Print Hubbard U and Hubbard V
+              WRITE(unithub,'(11x,i3,x,a4,x,i5,x,a4,2x,f12.6,4x,f10.4)') &
                     na, atm_new(ityp_sc(na)), auxindex(na,indexord(nb)), atm_new(typeord(nb)), &
                     dist_sc(na,indexord(nb)), Hubbard_matrix(na,indexord(nb))
               IF ( nb.LE.(num_neigh+1)              .AND. &     
                    dist_sc(na,indexord(nb)).LE.rmax .AND. & 
                    Hubbard_l(ityp(na)).GE.lmin ) THEN
-                 WRITE(tempunit,'(3x,i3,4x,i5,3x,f10.4)') &
-                       na, auxindex(na,indexord(nb)), Hubbard_matrix(na,indexord(nb))
+                   ! write V
+                   nt2 = typeord0(nb)
+                   Hubbard_manifold = TRIM(int_to_char(Hubbard_n(nt))) // &
+                                              l_to_spdf(Hubbard_l(nt),.FALSE.)
+                   Hubbard_manifold2 = TRIM(int_to_char(Hubbard_n(nt2))) // &
+                                              l_to_spdf(Hubbard_l(nt2),.FALSE.) 
+                   WRITE(unithub2,'("V",2x,a5,"-",a2,2x,a5,"-",a2,1x,i4,1x,i5,1x,f8.4)') &
+                            ADJUSTR(atm_new(nt)),  Hubbard_manifold,  &
+                            ADJUSTR(atm_new(nt2)), Hubbard_manifold2, &
+                            na, auxindex(na,indexord(nb)),         &
+                            Hubbard_matrix(na,indexord(nb))
               ENDIF
            ELSE
               ! Print couples only
-              WRITE(iunitU,'(11x,i3,x,a4,x,i5,x,a4,2x,f12.6)') &
+              WRITE(unithub,'(11x,i3,x,a4,x,i5,x,a4,2x,f12.6)') &
                     na, atm_new(ityp_sc(na)), auxindex(na,indexord(nb)), atm_new(typeord(nb)), &
                     dist_sc(na,indexord(nb))
               IF ( nb.LE.(num_neigh+1)              .AND. &
                    dist_sc(na,indexord(nb)).LE.rmax .AND. &
-                   Hubbard_l(ityp(na)).GE.lmin ) THEN
-                 WRITE(tempunit,'(3x,i3,4x,i5)') &
-                       na, auxindex(na,indexord(nb))
+                   Hubbard_l(ityp(na)).GE.lmin) THEN
+                   !
+                   nt2 = typeord0(nb)
+                   Hubbard_manifold = TRIM(int_to_char(Hubbard_n(nt))) // &
+                                              l_to_spdf(Hubbard_l(nt),.FALSE.)
+                   Hubbard_manifold2 = TRIM(int_to_char(Hubbard_n(nt2))) // &
+                                              l_to_spdf(Hubbard_l(nt2),.FALSE.)
+                   WRITE(unithub2,'("V",2x,a,"-",a,2x,a,"-",a,1x,i4,1x,i5,3x,"V-not-set")') &
+                            TRIM(atm_new(nt)),  Hubbard_manifold,  &
+                            TRIM(atm_new(nt2)), Hubbard_manifold2, &
+                            na, auxindex(na,indexord(nb))
               ENDIF
            ENDIF
         ENDIF
      ENDDO 
-     WRITE(iunitU,'()')
+     WRITE(unithub,'()')
      !
   ENDDO ! na
   !
-  WRITE(iunitU,'(/2x,"=-------------------------------------------------------------------=",/)')
+  WRITE(unithub,'(/2x,"=-------------------------------------------------------------------=",/)')
   !
   IF ((counter-1).GE.num_neigh) &
-    WRITE(iunitU,'(2x,i3,2x,"nearest neighbors of every atom are written to the file parameters.out")') num_neigh
+    WRITE(unithub,'(2x,i3,2x,"nearest neighbors of every atom are written to HUBBARD.dat")') num_neigh
   !
   DEALLOCATE(dist)
   DEALLOCATE(distord)
+  DEALLOCATE(typeord0)
   DEALLOCATE(typeord)
   DEALLOCATE(indexord)
-  !
-  CLOSE(tempunit)
+  CLOSE(unithub2)
   !
   RETURN
   !
-END SUBROUTINE write_intersite
+END SUBROUTINE write_uv
 
 END SUBROUTINE hp_postproc

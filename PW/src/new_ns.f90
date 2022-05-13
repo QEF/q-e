@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,7 +24,7 @@ SUBROUTINE new_ns( ns )
   USE ions_base,            ONLY : nat, ityp
   USE klist,                ONLY : nks, ngk
   USE ldaU,                 ONLY : ldmx, Hubbard_l, q_ae, wfcU, &
-                                   U_projection, is_hubbard, nwfcU, offsetU
+                                   Hubbard_projectors, is_hubbard, nwfcU, offsetU
   USE symm_base,            ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
   USE symm_base,            ONLY : nsym, irt
@@ -82,7 +82,7 @@ SUBROUTINE new_ns( ns )
      !
      ! make the projection
      !
-     IF ( U_projection == 'pseudo' ) THEN
+     IF ( Hubbard_projectors == 'pseudo' ) THEN
         CALL compute_pproj( ik, q_ae, proj )
      ELSE
         IF (nks > 1) CALL get_buffer( wfcU, nwordwfcU, iunhub, ik )

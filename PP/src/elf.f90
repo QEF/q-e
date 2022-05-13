@@ -1,5 +1,5 @@
-   !
-! Copyright (C) 2001-2005 PWSCF group
+!
+! Copyright (C) 2001-2021 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -33,7 +33,7 @@ SUBROUTINE do_elf (elf)
   USE io_files, ONLY: restart_dir
   USE klist, ONLY: nks, xk, ngk, igk_k
   USE lsda_mod, ONLY: nspin
-  USE scf, ONLY: rho
+  USE scf, ONLY: rho, rhoz_or_updw
   USE symme, ONLY: sym_rho, sym_rho_init
   USE wvfct, ONLY: nbnd, wg
   USE control_flags, ONLY: gamma_only
@@ -135,17 +135,16 @@ SUBROUTINE do_elf (elf)
   !          aux --> charge density in Fourier space
   !         aux2 --> iG * rho(G)
   !
-  ALLOCATE ( tbos(dfftp%nnr,2), aux2(dfftp%nnr) )
+  ALLOCATE ( tbos(dfftp%nnr,nspin), aux2(dfftp%nnr) )
   !
   ! set rho%of_r(:,1) = spin up, rho%of_r(:,2) = spin down charge
   !
-  IF (nspin == 1) THEN
-     rho%of_r (:, 2) = 0.d0
-  ENDIF
-  rho%of_r (:, 2) =  (rho%of_r (:, 1) - rho%of_r (:, 2))*0.5d0
-  rho%of_r (:, 1) =  rho%of_r (:, 1) - rho%of_r (:, 2)
-
-  DO k = 1, 2
+  IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', '->updw' )
+  !
+  ! FIXME: the following gradient calculation could be performed
+  !        in a more straightforward way using "fft_gradient_r2r"
+  !
+  DO k = 1, nspin
      tbos(:,k) = 0.d0
      aux(:) = cmplx( rho%of_r(:, k), 0.d0 ,kind=DP)
      CALL fwfft ('Rho', aux, dfftp)
@@ -173,13 +172,21 @@ SUBROUTINE do_elf (elf)
   fac = 5.d0 / (3.d0 * (6.d0 * pi**2) ** (2.d0 / 3.d0) )
   elf(:) = 0.d0
   DO i = 1, dfftp%nnr
-     IF ( (rho%of_r (i,1) > 1.d-30).and.(rho%of_r (i,2) > 1.d-30) ) THEN
-        d = fac / ( rho%of_r(i,1)**(5d0/3d0) + rho%of_r(i,2)**(5d0/3d0) ) &
-             *(kkin(i) - 0.25d0*tbos(i,1)/rho%of_r(i,1) - &
-                         0.25d0*tbos(i,2)/rho%of_r(i,2) + 1.d-5)
-        elf (i) = 1.0d0 / (1.0d0 + d**2)
+     IF ( nspin == 2 ) THEN
+        IF ( (rho%of_r (i,1) > 1.d-30).and.(rho%of_r (i,2) > 1.d-30) ) THEN
+           d = fac / ( rho%of_r(i,1)**(5d0/3d0) + rho%of_r(i,2)**(5d0/3d0) ) &
+                *(kkin(i) - 0.25d0*tbos(i,1)/rho%of_r(i,1) - &
+                0.25d0*tbos(i,2)/rho%of_r(i,2) + 1.d-5)
+           elf (i) = 1.0d0 / (1.0d0 + d**2)
+        ENDIF
+     ELSE
+        IF ( rho%of_r (i,1) > 1.d-30 ) THEN
+           d = fac / ( rho%of_r(i,1)**(5d0/3d0) ) &
+                *(kkin(i) - 0.25d0*tbos(i,1)/rho%of_r(i,1) + 1.d-5)
+           elf (i) = 1.0d0 / (1.0d0 + d**2)
+        END IF
      ENDIF
-  ENDDO
+  END DO
   DEALLOCATE (aux, aux2, tbos, kkin)
   RETURN
 
@@ -270,7 +277,7 @@ SUBROUTINE do_sl2rho (sl2rho)
                   v, 3, work, 24, iwork, ifail, info )
      !
      IF ( info > 0) THEN
-        CALL errore('do_sl2rho','failed to diagonlize',info)
+        CALL errore('do_sl2rho','failed to diagonalize',info)
      ELSEIF (info < 0) THEN
         call errore('do_sl2rho','illegal arguments in DSYEVX',-info)
      ENDIF

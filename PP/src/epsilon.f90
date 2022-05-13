@@ -130,8 +130,59 @@ END SUBROUTINE grid_build
 END SUBROUTINE grid_destroy
 
 END MODULE grid_module
-
-
+!
+MODULE eps_writer
+!------------------------------
+  IMPLICIT NONE
+  !
+  PRIVATE
+  !
+  PUBLIC :: eps_writetofile
+  !
+CONTAINS
+!
+!--------------------------------------------------------------------
+SUBROUTINE eps_writetofile(namein,desc,nw,wgrid,ncol,var,desc2)
+  !------------------------------------------------------------------
+  !
+  USE kinds,          ONLY : DP
+  USE io_files,       ONLY : prefix, tmp_dir
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(LEN=*),   INTENT(IN)           :: namein
+  CHARACTER(LEN=*),   INTENT(IN)           :: desc
+  INTEGER,            INTENT(IN)           :: nw, ncol
+  REAL(DP),           INTENT(IN)           :: wgrid(nw)
+  REAL(DP),           INTENT(IN)           :: var(ncol,nw)
+  CHARACTER(LEN=*),   INTENT(IN), OPTIONAL :: desc2
+  !
+  CHARACTER(256) :: str
+  INTEGER        :: iw
+  !
+  str = TRIM(namein) // "_" // TRIM(prefix) // ".dat"
+  OPEN(40,FILE=TRIM(str))
+  !
+  WRITE(40,"(a)") "# "// TRIM(desc)
+  !
+  IF (PRESENT(desc2)) THEN
+    WRITE(40, "(a)") "# "// TRIM(desc2)
+  ELSE
+    WRITE(40,"(a)") "#"
+  END IF
+  !
+  DO iw = 1, nw
+     !
+     WRITE(40,"(10f15.9)") wgrid(iw), var(1:ncol,iw)
+     !
+  ENDDO
+  !
+  CLOSE(40)
+  !
+END SUBROUTINE eps_writetofile
+!
+END MODULE eps_writer
+!
 !------------------------------
 PROGRAM epsilon
 !------------------------------
@@ -269,7 +320,7 @@ PROGRAM epsilon
 
   IF (lgauss .or. ltetra) THEN
       metalcalc=.TRUE.
-      IF (ionode) WRITE( stdout, "( 5x, 'The system is a metal...' ) " )
+      IF (ionode) WRITE( stdout, "( 5x, 'The system is a metal (occupations are not fixed)...' ) " )
   ELSE
       IF (ionode) WRITE( stdout, "( 5x, 'The system is a dielectric...' ) " )
   ENDIF
@@ -339,6 +390,7 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nbndmin, nbndmax, shift, metalcalc 
   USE io_global,            ONLY : ionode, stdout
   !
   USE grid_module,          ONLY : alpha, focc, full_occ, nw, wgrid, grid_destroy
+  USE eps_writer,           ONLY : eps_writetofile
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
   !
@@ -356,7 +408,7 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nbndmin, nbndmax, shift, metalcalc 
   INTEGER       :: i, ik, iband1, iband2,is
   INTEGER       :: iw, iwp, ierr
   REAL(DP)      :: etrans, const, w, renorm(3)
-  CHARACTER(128):: desc(4)
+  CHARACTER(128):: desc(4), desc2
   !
   REAL(DP),    ALLOCATABLE :: epsr(:,:), epsi(:,:), epsrc(:,:,:), epsic(:,:,:)
   REAL(DP),    ALLOCATABLE :: ieps(:,:), eels(:,:), iepsc(:,:,:), eelsc(:,:,:)
@@ -523,11 +575,13 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nbndmin, nbndmax, shift, metalcalc 
         ! write results on data files
         !
         desc(1) = "energy grid [eV]     epsr_x  epsr_y  epsr_z"
+        WRITE(desc2, "('plasmon frequences [eV]: ',3f15.9)") renorm (:)
+        !
         desc(2) = "energy grid [eV]     epsi_x  epsi_y  epsi_z"
         desc(3) = "energy grid [eV]  eels components [arbitrary units]"
         desc(4) = "energy grid [eV]     ieps_x  ieps_y  ieps_z"
         !
-        CALL eps_writetofile("epsr",desc(1),nw,wgrid,3,epsr)
+        CALL eps_writetofile("epsr",desc(1),nw,wgrid,3,epsr,desc2)
         CALL eps_writetofile("epsi",desc(2),nw,wgrid,3,epsi)
         CALL eps_writetofile("eels",desc(3),nw,wgrid,3,eels)
         CALL eps_writetofile("ieps",desc(4),nw,wgrid,3,ieps)
@@ -553,6 +607,7 @@ SUBROUTINE jdos_calc ( smeartype, intersmear, nbndmin, nbndmax, shift, nspin )
   USE klist,                ONLY : nks
   USE io_global,            ONLY : ionode, stdout
   USE grid_module,          ONLY : alpha, focc, nw, wgrid
+  USE eps_writer,           ONLY : eps_writetofile
   !
   IMPLICIT NONE
 
@@ -1160,39 +1215,3 @@ SUBROUTINE dipole_calc( ik, dipole_aux, metalcalc, nbndmin, nbndmax )
   CALL stop_clock( 'dipole_calc' )
   !
 END SUBROUTINE dipole_calc
-
-
-!--------------------------------------------------------------------
-SUBROUTINE eps_writetofile(namein,desc,nw,wgrid,ncol,var)
-  !------------------------------------------------------------------
-  !
-  USE kinds,          ONLY : DP
-  USE io_files,       ONLY : prefix, tmp_dir
-  !
-  IMPLICIT NONE
-  !
-  CHARACTER(LEN=*),   INTENT(IN) :: namein
-  CHARACTER(LEN=*),   INTENT(IN) :: desc
-  INTEGER,            INTENT(IN) :: nw, ncol
-  REAL(DP),           INTENT(IN) :: wgrid(nw)
-  REAL(DP),           INTENT(IN) :: var(ncol,nw)
-  !
-  CHARACTER(256) :: str
-  INTEGER        :: iw
-  
-  str = TRIM(namein) // "_" // TRIM(prefix) // ".dat"
-  OPEN(40,FILE=TRIM(str))
-  ! 
-  WRITE(40,"(a)") "# "// TRIM(desc)
-  WRITE(40,"(a)") "#"
-  !
-  DO iw = 1, nw
-     !     
-     WRITE(40,"(10f15.9)") wgrid(iw), var(1:ncol,iw)
-     !
-  ENDDO
-  !
-  CLOSE(40)
-  !
-END SUBROUTINE eps_writetofile
-

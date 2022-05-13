@@ -40,7 +40,6 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
   !
 #if defined(__CUDA)
   attributes(DEVICE) :: hpsi_d
-#endif
   !
   !
   CALL start_clock_gpu( 'add_vuspsi' )  
@@ -375,5 +374,6 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        RETURN
        !
      END SUBROUTINE add_vuspsi_nc_gpu
+#endif
      !
 END SUBROUTINE add_vuspsi_gpu

@@ -1,7 +1,7 @@
 MODULE test_io
     !
     IMPLICIT NONE
-    INCLUDE 'laxlib_kinds.fh'
+    include 'laxlib_kinds.fh'
     !
     INTERFACE read_problem
        MODULE PROCEDURE read_cmplx_problem, read_real_problem

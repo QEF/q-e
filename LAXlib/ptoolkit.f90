@@ -14,12 +14,13 @@ CONTAINS
 
 SUBROUTINE laxlib_dsqmred_x_x( na, a, lda, desca, nb, b, ldb, descb )
    !
-   ! Double precision SQuare Matrix REDistribution
-   ! 
-   ! Copy a global "na * na" matrix locally stored in "a",
-   !  and distributed as described by "desca", into a larger
-   !  global "nb * nb" matrix stored in "b" and distributed
-   !  as described in "descb".
+   !! Double precision SQuare Matrix REDistribution
+   !! 
+   !! Copy a global "na * na" matrix locally stored in "a",
+   !! and distributed as described by "desca", into a larger
+   !! global "nb * nb" matrix stored in "b" and distributed
+   !! as described in "descb".
+   !!
    ! 
    ! If you want to read, get prepared for an headache!
    ! Written struggling by Carlo Cavazzoni.
@@ -28,16 +29,24 @@ SUBROUTINE laxlib_dsqmred_x_x( na, a, lda, desca, nb, b, ldb, descb )
    USE laxlib_parallel_include
    !
    IMPLICIT NONE
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    !
    INTEGER, INTENT(IN) :: na
+   !! global dimension of matrix a
    INTEGER, INTENT(IN) :: lda
-   REAL(DP)            :: a(lda,lda)  !  matrix to be redistributed into b
+   !! leading dimension of matrix a
+   REAL(DP)            :: a(lda,lda)  
+   !!  matrix to be redistributed into b
    TYPE(la_descriptor), INTENT(IN) :: desca
+   !! laxlib descriptor of matrix a
    INTEGER, INTENT(IN) :: nb
+   !! global dimension of matrix b   
    INTEGER, INTENT(IN) :: ldb
+   !! leading dimension of matrix b
    REAL(DP)            :: b(ldb,ldb)
+   !! redistributed matrix
    TYPE(la_descriptor), INTENT(IN) :: descb
+   !! laxlib descriptor of matrix b
 
    INTEGER :: ipc, ipr, npc, npr
    INTEGER :: ipr_old, ir_old, nr_old, irx_old
@@ -403,12 +412,13 @@ END SUBROUTINE laxlib_dsqmred_x_x
 
 SUBROUTINE laxlib_zsqmred_x_x( na, a, lda, desca, nb, b, ldb, descb )
    !
-   ! double complex (Z) SQuare Matrix REDistribution
-   ! 
-   ! Copy a global "na * na" matrix locally stored in "a",
-   !  and distributed as described by "desca", into a larger
-   !  global "nb * nb" matrix stored in "b" and distributed
-   !  as described in "descb".
+   !! double complex (Z) SQuare Matrix REDistribution
+   !! 
+   !! Copy a global "na * na" matrix locally stored in "a",
+   !! and distributed as described by "desca", into a larger
+   !! global "nb * nb" matrix stored in "b" and distributed
+   !! as described in "descb".
+   !!
    ! 
    ! If you want to read, get prepared for an headache!
    ! Written struggling by Carlo Cavazzoni.
@@ -417,16 +427,24 @@ SUBROUTINE laxlib_zsqmred_x_x( na, a, lda, desca, nb, b, ldb, descb )
    USE laxlib_parallel_include
    !
    IMPLICIT NONE
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    !
    INTEGER, INTENT(IN) :: na
+   !! global dimension of matrix a
    INTEGER, INTENT(IN) :: lda
-   COMPLEX(DP)         :: a(lda,lda)  !  matrix to be redistributed into b
+   !! leading dimension of matrix a
+   COMPLEX(DP)            :: a(lda,lda)
+   !!  matrix to be redistributed into b
    TYPE(la_descriptor), INTENT(IN) :: desca
+   !! laxlib descriptor of matrix a
    INTEGER, INTENT(IN) :: nb
+   !! global dimension of matrix b   
    INTEGER, INTENT(IN) :: ldb
-   COMPLEX(DP)         :: b(ldb,ldb)
+   !! leading dimension of matrix b
+   COMPLEX(DP)            :: b(ldb,ldb)
+   !! redistributed matrix
    TYPE(la_descriptor), INTENT(IN) :: descb
+   !! laxlib descriptor matrix b
 
    INTEGER :: ipc, ipr, npc, npr
    INTEGER :: ipr_old, ir_old, nr_old, irx_old
@@ -778,21 +796,28 @@ END MODULE laxlib_ptoolkit
 
 SUBROUTINE laxlib_dsqmdst_x( n, ar, ldar, a, lda, desc )
   !
-  !  Double precision SQuare Matrix DiSTribution
-  !  This sub. take a replicated square matrix "ar" and distribute it
-  !  across processors as described by descriptor "desc"
+  !!  Double precision SQuare Matrix DiSTribution
+  !!  This subroutine take a replicated square matrix "ar" and distribute it
+  !!  across processors as described by descriptor "desc"
   !
   USE laxlib_descriptor
   !
   implicit none
-  INCLUDE 'laxlib_kinds.fh'
+  include 'laxlib_kinds.fh'
   !
   INTEGER, INTENT(IN) :: n
+  !! global dimension
   INTEGER, INTENT(IN) :: ldar
-  REAL(DP)            :: ar(ldar,*)  !  matrix to be splitted, replicated on all proc
+  !! leading dimension of matrix ar
+  REAL(DP)            :: ar(ldar,*)  
+  !! matrix to be splitted, replicated on all proc
   INTEGER, INTENT(IN) :: lda
+  !! leading dimension of matrix a
   REAL(DP)            :: a(lda,*)
+  !! distributed matrix a
   TYPE(la_descriptor), INTENT(IN) :: desc
+  !! laxlib descriptor for matrix a
+  !!
   !
   REAL(DP), PARAMETER :: zero = 0_DP
   !
@@ -834,21 +859,28 @@ END SUBROUTINE laxlib_dsqmdst_x
 
 SUBROUTINE laxlib_zsqmdst_x( n, ar, ldar, a, lda, desc )
   !
-  !  double complex (Z) SQuare Matrix DiSTribution
-  !  This sub. take a replicated square matrix "ar" and distribute it
-  !  across processors as described by descriptor "desc"
+  !! double complex (Z) SQuare Matrix DiSTribution
+  !! This subroutine take a replicated square matrix "ar" and distribute it
+  !! across processors as described by descriptor "desc"
   !
   USE laxlib_descriptor
   !
   implicit none
-  INCLUDE 'laxlib_kinds.fh'
+  include 'laxlib_kinds.fh'
   !
   INTEGER, INTENT(IN) :: n
+  !! global dimension
   INTEGER, INTENT(IN) :: ldar
-  COMPLEX(DP)         :: ar(ldar,*)  !  matrix to be splitted, replicated on all proc
+  !! leading dimension of matrix ar
+  COMPLEX(DP)            :: ar(ldar,*)
+  !! matrix to be splitted, replicated on all proc
   INTEGER, INTENT(IN) :: lda
-  COMPLEX(DP)         :: a(lda,*)
+  !! leading dimension of matrix a
+  COMPLEX(DP)            :: a(lda,*)
+  !! distributed matrix a
   TYPE(la_descriptor), INTENT(IN) :: desc
+  !! laxlib descriptor for matrix a
+  !!
   !
   COMPLEX(DP), PARAMETER :: zero = ( 0_DP , 0_DP )
   !
@@ -891,24 +923,32 @@ END SUBROUTINE laxlib_zsqmdst_x
 
 SUBROUTINE laxlib_dsqmcll_x( n, a, lda, ar, ldar, desc, comm )
   !
-  !  Double precision SQuare Matrix CoLLect
-  !  This sub. take a distributed square matrix "a" and collect 
-  !  the block assigned to processors into a replicated matrix "ar",
-  !  matrix is distributed as described by descriptor desc
+  !! Double precision SQuare Matrix CoLLect
+  !! This sub. take a distributed square matrix "a" and collect 
+  !! the block assigned to processors into a replicated matrix "ar",
+  !! matrix is distributed as described by descriptor desc
+  !!
   !
   USE laxlib_descriptor
   USE laxlib_parallel_include
   !
   implicit none
-  INCLUDE 'laxlib_kinds.fh'
+  include 'laxlib_kinds.fh'
   !
   INTEGER, INTENT(IN) :: n
+  !! global dimension
   INTEGER, INTENT(IN) :: ldar
-  REAL(DP)            :: ar(ldar,*)  !  matrix to be merged, replicated on all proc
+  !! leading dimension of matrix ar
+  REAL(DP)            :: ar(ldar,*)
+  !! matrix to be merged, replicated on all proc
   INTEGER, INTENT(IN) :: lda
+  !! leading dimension of matrix a
   REAL(DP)            :: a(lda,*)
+  !! distributed matrix a
   TYPE(la_descriptor), INTENT(IN) :: desc
+  !! laxlib descriptor for matrix a
   INTEGER, INTENT(IN) :: comm
+  !! mpi communicator
   !
   INTEGER :: i, j
 
@@ -993,15 +1033,22 @@ SUBROUTINE laxlib_zsqmcll_x( n, a, lda, ar, ldar, desc, comm )
   USE laxlib_parallel_include
   !
   implicit none
-  INCLUDE 'laxlib_kinds.fh'
+  include 'laxlib_kinds.fh'
   !
   INTEGER, INTENT(IN) :: n
+  !! global dimension
   INTEGER, INTENT(IN) :: ldar
-  COMPLEX(DP)         :: ar(ldar,*)  !  matrix to be merged, replicated on all proc
+  !! leading dimension of matrix ar
+  COMPLEX(DP)            :: ar(ldar,*)
+  !! matrix to be merged, replicated on all proc
   INTEGER, INTENT(IN) :: lda
-  COMPLEX(DP)         :: a(lda,*)
+  !! leading dimension of matrix a
+  COMPLEX(DP)            :: a(lda,*)
+  !! distributed matrix a
   TYPE(la_descriptor), INTENT(IN) :: desc
+  !! laxlib descriptor for matrix a
   INTEGER, INTENT(IN) :: comm
+  !! mpi communicator
   !
   INTEGER :: i, j
 
@@ -1079,17 +1126,22 @@ END SUBROUTINE laxlib_zsqmcll_x
 
 SUBROUTINE laxlib_dsqmwpb_x( n, a, lda, desc )
    !
-   ! Double precision SQuare Matrix WiPe Border subroutine
+   !! Double precision SQuare Matrix WiPe Border subroutine
+   !! initialize to zero the distributed matrix border
    !
    USE laxlib_descriptor
    !
    IMPLICIT NONE
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    !
    INTEGER, INTENT(IN) :: n
+   !! global dimension of matrix a
    INTEGER, INTENT(IN) :: lda
-   REAL(DP)            :: a(lda,*)  !  matrix to be redistributed into b
+   !! leading dimension of matrix a 
+   REAL(DP)            :: a(lda,*)  
+   !! distributed matrix a
    TYPE(la_descriptor), INTENT(IN) :: desc
+   !! laxlib descriptor
    !
    INTEGER :: i, j
    !
@@ -1111,18 +1163,25 @@ END SUBROUTINE laxlib_dsqmwpb_x
 
 SUBROUTINE laxlib_dsqmsym_x( n, a, lda, idesc )
    !
-   ! Double precision SQuare Matrix SYMmetrization
+   !! Double precision SQuare Matrix SYMmetrization
+   !!
    !
    USE laxlib_descriptor
    USE laxlib_parallel_include
    !
    IMPLICIT NONE
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
+   !
    INTEGER, INTENT(IN) :: n
+   !! global dimension of matrix a
    INTEGER, INTENT(IN) :: lda
-   REAL(DP)            :: a(lda,*) 
+   !! leading dimension of matrix a 
+   REAL(DP)            :: a(lda,*)
+   !! distributed matrix a
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !! laxlib descriptor
+   !
    TYPE(la_descriptor) :: desc
 #if defined __MPI
    INTEGER :: istatus( MPI_STATUS_SIZE )
@@ -1222,20 +1281,28 @@ END SUBROUTINE laxlib_dsqmsym_x
 #if defined (__CUDA)
 SUBROUTINE laxlib_dsqmsym_gpu_x( n, a, lda, idesc )
    !
-   ! Double precision SQuare Matrix SYMmetrization
+   !! Double precision SQuare Matrix SYMmetrization
+   !! GPU version
+   !!
    !
    USE laxlib_descriptor
    USE laxlib_parallel_include
    USE cudafor
    !
    IMPLICIT NONE
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
+   !
    INTEGER, INTENT(IN) :: n
+   !! global dimension of matrix a
    INTEGER, INTENT(IN) :: lda
-   REAL(DP), INTENT(INOUT), DEVICE :: a(:,:) 
+   !! leading dimension of matrix a 
+   REAL(DP), INTENT(INOUT), DEVICE :: a(:,:)
    ATTRIBUTES(DEVICE) :: a
+   !! distributed matrix a
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !! laxlib descriptor
+   !
    TYPE(la_descriptor) :: desc
 #if defined __MPI
    INTEGER :: istatus( MPI_STATUS_SIZE )
@@ -1362,18 +1429,24 @@ END SUBROUTINE laxlib_dsqmsym_gpu_x
 
 SUBROUTINE laxlib_zsqmher_x( n, a, lda, idesc )
    !
-   ! double complex (Z) SQuare Matrix HERmitianize
+   !! double complex (Z) SQuare Matrix HERmitianize
+   !!
    !
    USE laxlib_descriptor
    USE laxlib_parallel_include
    !
    IMPLICIT NONE
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
+   !
    INTEGER, INTENT(IN) :: n
+   !! global dimension of matrix a
    INTEGER, INTENT(IN) :: lda
-   COMPLEX(DP)         :: a(lda,lda) 
+   !! leading dimension of matrix a 
+   COMPLEX(DP)            :: a(lda,lda)
+   !! distributed matrix a
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !! laxlib descriptor
    !
    TYPE(la_descriptor) :: desc
 #if defined __MPI
@@ -1515,22 +1588,39 @@ END SUBROUTINE laxlib_zsqmher_x
 ! ---------------------------------------------------------------------------------
 
 SUBROUTINE laxlib_dsqmred_x( na, a, lda, idesca, nb, b, ldb, idescb )
+   !
+   !! Double precision SQuare Matrix REDistribution
+   !! 
+   !! Copy a global "na * na" matrix locally stored in "a",
+   !! and distributed as described by integer "idesca", into a larger
+   !! global "nb * nb" matrix stored in "b" and distributed
+   !! as described in integer "idescb".
+   !
+   !
    USE laxlib_descriptor
    USE laxlib_ptoolkit
    !
    IMPLICIT NONE
    !
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    !
    INTEGER, INTENT(IN) :: na
+   !! global dimension of matrix a
    INTEGER, INTENT(IN) :: lda
-   REAL(DP)            :: a(lda,lda)  !  matrix to be redistributed into b
+   !! leading dimension of matrix a
+   REAL(DP)            :: a(lda,lda)
+   !! matrix to be redistributed into b
    INTEGER, INTENT(IN) :: idesca(LAX_DESC_SIZE)
+   !! integer laxlib descriptor matrix a
    INTEGER, INTENT(IN) :: nb
+   !! global dimension of matrix b   
    INTEGER, INTENT(IN) :: ldb
+   !! leading dimension of matrix b
    REAL(DP)            :: b(ldb,ldb)
+   !! redistributed matrix
    INTEGER, INTENT(IN) :: idescb(LAX_DESC_SIZE)
+   !! integer laxlib descriptor matrix b
    !
    TYPE(la_descriptor) :: desca
    TYPE(la_descriptor) :: descb
@@ -1542,22 +1632,37 @@ END SUBROUTINE
 
 SUBROUTINE laxlib_zsqmred_x( na, a, lda, idesca, nb, b, ldb, idescb )
    !
+   !! double complex (Z) SQuare Matrix REDistribution
+   !! 
+   !! Copy a global "na * na" matrix locally stored in "a",
+   !! and distributed as described by integer "idesca", into a larger
+   !! global "nb * nb" matrix stored in "b" and distributed
+   !! as described in integer "idescb".
+   !!
    USE laxlib_descriptor
    USE laxlib_ptoolkit
    !
    IMPLICIT NONE
    !
    include 'laxlib_param.fh'
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    !
    INTEGER, INTENT(IN) :: na
+   !! global dimension of matrix a
    INTEGER, INTENT(IN) :: lda
-   COMPLEX(DP)         :: a(lda,lda)  !  matrix to be redistributed into b
+   !! leading dimension of matrix a
+   COMPLEX(DP)            :: a(lda,lda)
+   !! matrix to be redistributed into b
    INTEGER, INTENT(IN) :: idesca(LAX_DESC_SIZE)
+   !! integer laxlib descriptor matrix a
    INTEGER, INTENT(IN) :: nb
+   !! global dimension of matrix b   
    INTEGER, INTENT(IN) :: ldb
-   COMPLEX(DP)         :: b(ldb,ldb)
+   !! leading dimension of matrix b
+   COMPLEX(DP)            :: b(ldb,ldb)
+   !! redistributed matrix
    INTEGER, INTENT(IN) :: idescb(LAX_DESC_SIZE)
+   !! integer laxlib descriptor matrix b
    !
    TYPE(la_descriptor) :: desca
    TYPE(la_descriptor) :: descb
@@ -1573,49 +1678,73 @@ END SUBROUTINE
 
 SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC, comm )
   !
-  !  Parallel matrix multiplication with replicated matrix
+  !!  Parallel matrix multiplication with replicated matrix
+  !!
+  !!  DGEMM  PERFORMS ONE OF THE MATRIX-MATRIX OPERATIONS
+  !!
+  !!     C := ALPHA*OP( A )*OP( B ) + BETA*C,
+  !!
+  !!  WHERE  OP( X ) IS ONE OF
+  !!
+  !!     OP( X ) = X   OR   OP( X ) = X',
+  !!
+  !!  ALPHA AND BETA ARE SCALARS, AND A, B AND C ARE MATRICES, WITH OP( A )
+  !!  AN M BY K MATRIX,  OP( B )  A  K BY N MATRIX AND  C AN M BY N MATRIX.
+  !
+  !
   !  written by Carlo Cavazzoni
   !
   USE laxlib_parallel_include
   implicit none
-  INCLUDE 'laxlib_kinds.fh'
+  include 'laxlib_kinds.fh'
   !
-  CHARACTER(LEN=1), INTENT(IN) :: transa, transb
-  INTEGER, INTENT(IN) :: m, n, k
-  REAL(DP), INTENT(IN) :: alpha, beta
-  INTEGER, INTENT(IN) :: lda, ldb, ldc
-  REAL(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
+  CHARACTER(LEN=1), INTENT(IN) :: transa
+  !! specifies the form of op( A ) to be used in the matrix multiplication as follows:
+  !! 'N' or 'n',  op( A ) = A.
+  !! 'T' or 't',  op( A ) = A**T.
+  !! 'C' or 'c',  op( A ) = A**T. 
+  CHARACTER(LEN=1), INTENT(IN) :: transb
+  !! specifies the form of op( B ) to be used in the matrix multiplication as
+  !follows:
+  !! 'N' or 'n',  op( B ) = B.
+  !! 'T' or 't',  op( B ) = B**T.
+  !! 'C' or 'c',  op( B ) = B**T.
+  INTEGER, INTENT(IN) :: m
+  !! number of rows of the matrix A and C
+  INTEGER, INTENT(IN) :: n
+  !! number of columns of the matrix B and C
+  INTEGER, INTENT(IN) :: k
+  !! number of columns of A and rows of B
+  REAL(DP), INTENT(IN) :: alpha
+  !! scalar alpha
+  REAL(DP), INTENT(IN) :: beta
+  !! scalar beta
+  INTEGER, INTENT(IN) :: lda
+  !! leading dimension of A
+  INTEGER, INTENT(IN) :: ldb
+  !! leading dimension of B
+  INTEGER, INTENT(IN) :: ldc
+  !! leading dimension of C
+  REAL(DP) :: a(lda,*)
+  !! matrix A
+  REAL(DP) :: b(ldb,*)
+  !! matrix B
+  REAL(DP) :: c(ldc,*)
+  !! matrix C
   INTEGER, INTENT(IN) :: comm
+  !! mpi communicator
   !
-  !  DGEMM  PERFORMS ONE OF THE MATRIX-MATRIX OPERATIONS
-  !
-  !     C := ALPHA*OP( A )*OP( B ) + BETA*C,
-  !
-  !  WHERE  OP( X ) IS ONE OF
-  !
-  !     OP( X ) = X   OR   OP( X ) = X',
-  !
-  !  ALPHA AND BETA ARE SCALARS, AND A, B AND C ARE MATRICES, WITH OP( A )
-  !  AN M BY K MATRIX,  OP( B )  A  K BY N MATRIX AND  C AN M BY N MATRIX.
-  !
-  !
-  !
-
 #if defined __MPI
-
   !
-
   INTEGER :: ME, I, II, J, JJ, IP, SOUR, DEST, INFO, IERR, ioff, ldx
   INTEGER :: NB, IB_S, NB_SOUR, IB_SOUR, IBUF
   INTEGER :: nproc, mpime, q, r
 
   REAL(DP), ALLOCATABLE :: auxa( : )
   REAL(DP), ALLOCATABLE :: auxc( : )
-
   !
   ! ... BODY
   !
-
   CALL MPI_COMM_SIZE(comm, NPROC, IERR)
   CALL MPI_COMM_RANK(comm, MPIME, IERR)
 
@@ -1739,49 +1868,73 @@ END SUBROUTINE rep_matmul_drv
 
 SUBROUTINE zrep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC, comm )
   !
-  !  Parallel matrix multiplication with replicated matrix
+  !!  Parallel matrix multiplication with replicated matrix
+  !!
+  !!  DGEMM  PERFORMS ONE OF THE MATRIX-MATRIX OPERATIONS
+  !!
+  !!     C := ALPHA*OP( A )*OP( B ) + BETA*C,
+  !!
+  !!  WHERE  OP( X ) IS ONE OF
+  !!
+  !!     OP( X ) = X   OR   OP( X ) = X',
+  !!
+  !!  ALPHA AND BETA ARE SCALARS, AND A, B AND C ARE MATRICES, WITH OP( A )
+  !!  AN M BY K MATRIX,  OP( B )  A  K BY N MATRIX AND  C AN M BY N MATRIX.
+  !!
   !  written by Carlo Cavazzoni
   !
   USE laxlib_parallel_include
   implicit none
-  INCLUDE 'laxlib_kinds.fh'
+  include 'laxlib_kinds.fh'
   !
-  CHARACTER(LEN=1), INTENT(IN) :: transa, transb
-  INTEGER, INTENT(IN) :: m, n, k
-  COMPLEX(DP), INTENT(IN) :: alpha, beta
-  INTEGER, INTENT(IN) :: lda, ldb, ldc
-  COMPLEX(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
+  CHARACTER(LEN=1), INTENT(IN) :: transa
+  !! specifies the form of op( A ) to be used in the matrix multiplication as
+  !follows:
+  !! 'N' or 'n',  op( A ) = A.
+  !! 'T' or 't',  op( A ) = A**T.
+  !! 'C' or 'c',  op( A ) = A**T. 
+  CHARACTER(LEN=1), INTENT(IN) :: transb
+  !! specifies the form of op( B ) to be used in the matrix multiplication as
+  !follows:
+  !! 'N' or 'n',  op( B ) = B.
+  !! 'T' or 't',  op( B ) = B**T.
+  !! 'C' or 'c',  op( B ) = B**T.
+  INTEGER, INTENT(IN) :: m
+  !! number of rows of the matrix A and C
+  INTEGER, INTENT(IN) :: n
+  !! number of columns of the matrix B and C
+  INTEGER, INTENT(IN) :: k
+  !! number of columns of A and rows of B
+  REAL(DP), INTENT(IN) :: alpha
+  !! scalar alpha
+  REAL(DP), INTENT(IN) :: beta
+  !! scalar beta
+  INTEGER, INTENT(IN) :: lda
+  !! leading dimension of A
+  INTEGER, INTENT(IN) :: ldb
+  !! leading dimension of B
+  INTEGER, INTENT(IN) :: ldc
+  !! leading dimension of C
+  COMPLEX(DP) :: a(lda,*)
+  !! matrix A
+  COMPLEX(DP) :: b(ldb,*)
+  !! matrix B
+  COMPLEX(DP) :: c(ldc,*)
+  !! matrix C
   INTEGER, INTENT(IN) :: comm
+  !! mpi communicator
   !
-  !  DGEMM  PERFORMS ONE OF THE MATRIX-MATRIX OPERATIONS
-  !
-  !     C := ALPHA*OP( A )*OP( B ) + BETA*C,
-  !
-  !  WHERE  OP( X ) IS ONE OF
-  !
-  !     OP( X ) = X   OR   OP( X ) = X',
-  !
-  !  ALPHA AND BETA ARE SCALARS, AND A, B AND C ARE MATRICES, WITH OP( A )
-  !  AN M BY K MATRIX,  OP( B )  A  K BY N MATRIX AND  C AN M BY N MATRIX.
-  !
-  !
-  !
-
 #if defined __MPI
-
   !
-
   INTEGER :: ME, I, II, J, JJ, IP, SOUR, DEST, INFO, IERR, ioff, ldx
   INTEGER :: NB, IB_S, NB_SOUR, IB_SOUR, IBUF
   INTEGER :: nproc, mpime, q, r
 
   COMPLEX(DP), ALLOCATABLE :: auxa( : )
   COMPLEX(DP), ALLOCATABLE :: auxc( : )
-
   !
   ! ... BODY
   !
-
   CALL MPI_COMM_SIZE(comm, NPROC, IERR)
   CALL MPI_COMM_RANK(comm, MPIME, IERR)
 
@@ -1915,33 +2068,60 @@ END SUBROUTINE zrep_matmul_drv
 
 SUBROUTINE sqr_dmm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, idesc )
    !
-   !  Parallel square matrix multiplication with Cannon's algorithm
+   !!  
+   !!  Double precision parallel square matrix multiplication with Cannon's algorithm
+   !!  performs one of the matrix-matrix operations
+   !!
+   !!     C := ALPHA*OP( A )*OP( B ) + BETA*C,
+   !!
+   !!  where  op( x ) is one of
+   !!
+   !!     OP( X ) = X   OR   OP( X ) = X',
+   !!
+   !!  alpha and beta are scalars, and a, b and c are square matrices
+   !!
    !
    USE laxlib_descriptor
    USE laxlib_parallel_include
    !
    IMPLICIT NONE
-   INCLUDE 'laxlib_kinds.fh'
-   INCLUDE 'laxlib_param.fh'
+   include 'laxlib_kinds.fh'
+   include 'laxlib_param.fh'
    !
-   CHARACTER(LEN=1), INTENT(IN) :: transa, transb
+   CHARACTER(LEN=1), INTENT(IN) :: transa
+   !! specifies the form of op( A ) to be used in the matrix multiplication as
+   !follows:
+   !! 'N' or 'n',  op( A ) = A.
+   !! 'T' or 't',  op( A ) = A**T.
+   !! 'C' or 'c',  op( A ) = A**T. 
+   CHARACTER(LEN=1), INTENT(IN) :: transb
+   !! specifies the form of op( B ) to be used in the matrix multiplication as
+   !follows:
+   !! 'N' or 'n',  op( B ) = B.
+   !! 'T' or 't',  op( B ) = B**T.
+   !! 'C' or 'c',  op( B ) = B**T.
    INTEGER, INTENT(IN) :: n
-   REAL(DP), INTENT(IN) :: alpha, beta
-   INTEGER, INTENT(IN) :: lda, ldb, ldc
-   REAL(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
+   !! global dimension
+   REAL(DP), INTENT(IN) :: alpha
+   !! scalar alpha
+   REAL(DP), INTENT(IN) :: beta
+   !! scalar beta
+   INTEGER, INTENT(IN) :: lda
+   !! leading dimension of A
+   INTEGER, INTENT(IN) :: ldb
+   !! leading dimension of B
+   INTEGER, INTENT(IN) :: ldc
+   !! leading dimension of C
+   REAL(DP) :: a(lda,*)
+   !! matrix A
+   REAL(DP) :: b(ldb,*)
+   !! matrix B
+   REAL(DP) :: c(ldc,*)
+   !! matrix C
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !! integer laxlib descriptor
    !
    TYPE(la_descriptor) :: desc
-   !
-   !  performs one of the matrix-matrix operations
-   !
-   !     C := ALPHA*OP( A )*OP( B ) + BETA*C,
-   !
-   !  where  op( x ) is one of
-   !
-   !     OP( X ) = X   OR   OP( X ) = X',
-   !
-   !  alpha and beta are scalars, and a, b and c are square matrices
    !
    integer :: ierr
    integer :: np
@@ -2218,7 +2398,20 @@ END SUBROUTINE sqr_dmm_cannon_x
 #if defined (__CUDA)
 SUBROUTINE sqr_dmm_cannon_gpu_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, idesc )
    !
-   !  Parallel square matrix multiplication with Cannon's algorithm
+   !!  
+   !!  Double precision parallel square matrix multiplication with Cannon's algorithm
+   !!  performs one of the matrix-matrix operations 
+   !!
+   !!  GPU version
+   !!
+   !!     C := ALPHA*OP( A )*OP( B ) + BETA*C,
+   !!
+   !!  where  op( x ) is one of
+   !!
+   !!     OP( X ) = X   OR   OP( X ) = X',
+   !!
+   !!  alpha and beta are scalars, and a, b and c are square matrices
+   !!
    !
    USE laxlib_descriptor
    USE laxlib_parallel_include
@@ -2226,27 +2419,43 @@ SUBROUTINE sqr_dmm_cannon_gpu_x( transa, transb, n, alpha, a, lda, b, ldb, beta,
    USE cublas
    !
    IMPLICIT NONE
-   INCLUDE 'laxlib_kinds.fh'
-   INCLUDE 'laxlib_param.fh'
+   include 'laxlib_kinds.fh'
+   include 'laxlib_param.fh'
    !
-   CHARACTER(LEN=1), INTENT(IN) :: transa, transb
+   CHARACTER(LEN=1), INTENT(IN) :: transa
+   !! specifies the form of op( A ) to be used in the matrix multiplication as
+   !follows:
+   !! 'N' or 'n',  op( A ) = A.
+   !! 'T' or 't',  op( A ) = A**T.
+   !! 'C' or 'c',  op( A ) = A**T. 
+   CHARACTER(LEN=1), INTENT(IN) :: transb
+   !! specifies the form of op( B ) to be used in the matrix multiplication as
+   !follows:
+   !! 'N' or 'n',  op( B ) = B.
+   !! 'T' or 't',  op( B ) = B**T.
+   !! 'C' or 'c',  op( B ) = B**T.
    INTEGER, INTENT(IN) :: n
-   REAL(DP), INTENT(IN) :: alpha, beta
-   INTEGER, INTENT(IN) :: lda, ldb, ldc
-   REAL(DP), DEVICE :: a(:,:), b(:,:), c(:,:)
+   !! global dimension
+   REAL(DP), INTENT(IN) :: alpha
+   !! scalar alpha
+   REAL(DP), INTENT(IN) :: beta
+   !! scalar beta
+   INTEGER, INTENT(IN) :: lda
+   !! leading dimension of A
+   INTEGER, INTENT(IN) :: ldb
+   !! leading dimension of B
+   INTEGER, INTENT(IN) :: ldc
+   !! leading dimension of C
+   REAL(DP), DEVICE :: a(lda,*)
+   !! matrix A
+   REAL(DP), DEVICE :: b(ldb,*)
+   !! matrix B
+   REAL(DP), DEVICE :: c(ldc,*)
+   !! matrix C
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !! integer laxlib descriptor
    !
    TYPE(la_descriptor) :: desc
-   !
-   !  performs one of the matrix-matrix operations
-   !
-   !     C := ALPHA*OP( A )*OP( B ) + BETA*C,
-   !
-   !  where  op( x ) is one of
-   !
-   !     OP( X ) = X   OR   OP( X ) = X',
-   !
-   !  alpha and beta are scalars, and a, b and c are square matrices
    !
    integer :: ierr
    integer :: np
@@ -2568,33 +2777,58 @@ END SUBROUTINE sqr_dmm_cannon_gpu_x
 
 SUBROUTINE sqr_smm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, idesc )
    !
-   !  Parallel square matrix multiplication with Cannon's algorithm
+   !!  Single precision parallel square matrix multiplication with Cannon's algorithm
+   !!  performs one of the matrix-matrix operations 
+   !!
+   !!     C := ALPHA*OP( A )*OP( B ) + BETA*C,
+   !!
+   !!  where  op( x ) is one of
+   !!
+   !!     OP( X ) = X   OR   OP( X ) = X',
+   !!
+   !!  alpha and beta are scalars, and a, b and c are square matrices
    !
    USE laxlib_descriptor
    USE laxlib_parallel_include
    !
    IMPLICIT NONE
-   INCLUDE 'laxlib_kinds.fh'
-   INCLUDE 'laxlib_param.fh'
+   include 'laxlib_kinds.fh'
+   include 'laxlib_param.fh'
    !
-   CHARACTER(LEN=1), INTENT(IN) :: transa, transb
+   CHARACTER(LEN=1), INTENT(IN) :: transa
+   !! specifies the form of op( A ) to be used in the matrix multiplication as
+   !follows:
+   !! 'N' or 'n',  op( A ) = A.
+   !! 'T' or 't',  op( A ) = A**T.
+   !! 'C' or 'c',  op( A ) = A**T. 
+   CHARACTER(LEN=1), INTENT(IN) :: transb
+   !! specifies the form of op( B ) to be used in the matrix multiplication as
+   !follows:
+   !! 'N' or 'n',  op( B ) = B.
+   !! 'T' or 't',  op( B ) = B**T.
+   !! 'C' or 'c',  op( B ) = B**T.
    INTEGER, INTENT(IN) :: n
-   REAL(SP), INTENT(IN) :: alpha, beta
-   INTEGER, INTENT(IN) :: lda, ldb, ldc
-   REAL(SP) :: a(lda,*), b(ldb,*), c(ldc,*)
+   !! global dimension
+   REAL(SP), INTENT(IN) :: alpha
+   !! scalar alpha
+   REAL(SP), INTENT(IN) :: beta
+   !! scalar beta
+   INTEGER, INTENT(IN) :: lda
+   !! leading dimension of A
+   INTEGER, INTENT(IN) :: ldb
+   !! leading dimension of B
+   INTEGER, INTENT(IN) :: ldc
+   !! leading dimension of C
+   REAL(SP) :: a(lda,*)
+   !! matrix A
+   REAL(SP) :: b(ldb,*)
+   !! matrix B
+   REAL(SP) :: c(ldc,*)
+   !! matrix C
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !! integer laxlib descriptor
    !
    TYPE(la_descriptor) :: desc
-   !
-   !  performs one of the matrix-matrix operations
-   !
-   !     C := ALPHA*OP( A )*OP( B ) + BETA*C,
-   !
-   !  where  op( x ) is one of
-   !
-   !     OP( X ) = X   OR   OP( X ) = X',
-   !
-   !  alpha and beta are scalars, and a, b and c are square matrices
    !
    integer :: ierr
    integer :: np
@@ -2872,33 +3106,58 @@ END SUBROUTINE sqr_smm_cannon_x
 
 SUBROUTINE sqr_zmm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, idesc )
    !
-   !  Parallel square matrix multiplication with Cannon's algorithm
+   !!  Double precision complex (Z) parallel square matrix multiplication with Cannon's algorithm
+   !!  performs one of the matrix-matrix operations 
+   !!
+   !!     C := ALPHA*OP( A )*OP( B ) + BETA*C,
+   !!
+   !!  where  op( x ) is one of
+   !!
+   !!     OP( X ) = X   OR   OP( X ) = X',
+   !!
+   !!  alpha and beta are scalars, and a, b and c are square matrices
    !
    USE laxlib_descriptor
    !
    USE laxlib_parallel_include
    IMPLICIT NONE
-   INCLUDE 'laxlib_kinds.fh'
-   INCLUDE 'laxlib_param.fh'
+   include 'laxlib_kinds.fh'
+   include 'laxlib_param.fh'
    !
-   CHARACTER(LEN=1), INTENT(IN) :: transa, transb
+   CHARACTER(LEN=1), INTENT(IN) :: transa
+   !! specifies the form of op( A ) to be used in the matrix multiplication as
+   !follows:
+   !! 'N' or 'n',  op( A ) = A.
+   !! 'T' or 't',  op( A ) = A**T.
+   !! 'C' or 'c',  op( A ) = A**T. 
+   CHARACTER(LEN=1), INTENT(IN) :: transb
+   !! specifies the form of op( B ) to be used in the matrix multiplication as
+   !follows:
+   !! 'N' or 'n',  op( B ) = B.
+   !! 'T' or 't',  op( B ) = B**T.
+   !! 'C' or 'c',  op( B ) = B**T.
    INTEGER, INTENT(IN) :: n
-   COMPLEX(DP), INTENT(IN) :: alpha, beta
-   INTEGER, INTENT(IN) :: lda, ldb, ldc
-   COMPLEX(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
+   !! global dimension
+   COMPLEX(DP), INTENT(IN) :: alpha
+   !! scalar alpha
+   COMPLEX(DP), INTENT(IN) :: beta
+   !! scalar beta
+   INTEGER, INTENT(IN) :: lda
+   !! leading dimension of A
+   INTEGER, INTENT(IN) :: ldb
+   !! leading dimension of B
+   INTEGER, INTENT(IN) :: ldc
+   !! leading dimension of C
+   COMPLEX(DP) :: a(lda,*)
+   !! matrix A
+   COMPLEX(DP) :: b(ldb,*)
+   !! matrix B
+   COMPLEX(DP) :: c(ldc,*)
+   !! matrix C
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !! integer laxlib descriptor
    !
    TYPE(la_descriptor) :: desc
-   !
-   !  performs one of the matrix-matrix operations
-   !
-   !     C := ALPHA*OP( A )*OP( B ) + BETA*C,
-   !
-   !  where  op( x ) is one of
-   !
-   !     OP( X ) = X   OR   OP( X ) = X',
-   !
-   !  alpha and beta are scalars, and a, b and c are square matrices
    !
    INTEGER :: ierr
    INTEGER :: np
@@ -3180,19 +3439,27 @@ END SUBROUTINE sqr_zmm_cannon_x
 
 SUBROUTINE sqr_tr_cannon_x( n, a, lda, b, ldb, idesc )
    !
-   !  Parallel square matrix transposition with Cannon's algorithm
-   !
+   !!  Parallel square matrix transposition with Cannon's algorithm
+   !!
    !
    USE laxlib_parallel_include
    IMPLICIT NONE
    !
    include 'laxlib_param.fh'
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    !
    INTEGER, INTENT(IN) :: n
-   INTEGER, INTENT(IN) :: lda, ldb
-   REAL(DP)            :: a(lda,*), b(ldb,*)
+   !! global dimension
+   INTEGER, INTENT(IN) :: lda
+   !! leading dimension of A
+   INTEGER, INTENT(IN) :: ldb
+   !! leading dimension of B
+   REAL(DP)            :: a(lda,*)
+   !! matrix A
+   REAL(DP)            :: b(ldb,*)
+   !! matrix B
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !! integer laxlib descriptor
    !
    INTEGER :: ierr
    INTEGER :: np, rowid, colid
@@ -3314,8 +3581,9 @@ END SUBROUTINE
 #if defined (__CUDA)
 SUBROUTINE sqr_tr_cannon_gpu_x( n, a, lda, b, ldb, idesc )
    !
-   !  Parallel square matrix transposition with Cannon's algorithm
-   !
+   !!  Parallel square matrix transposition with Cannon's algorithm
+   !!  GPU version
+   !!
    !
    USE laxlib_parallel_include
    USE cudafor
@@ -3324,13 +3592,20 @@ SUBROUTINE sqr_tr_cannon_gpu_x( n, a, lda, b, ldb, idesc )
    IMPLICIT NONE
    !
    include 'laxlib_param.fh'
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    !
    INTEGER, INTENT(IN) :: n
-   INTEGER, INTENT(IN) :: lda, ldb
+   !! global dimension
+   INTEGER, INTENT(IN) :: lda
+   !! leading dimension of A
+   INTEGER, INTENT(IN) :: ldb
+   !! leading dimension of B
    REAL(DP), INTENT(IN),  DEVICE :: a(:,:)
+   !! matrix A
    REAL(DP), INTENT(OUT), DEVICE :: b(:,:)
-   INTEGER, INTENT(IN) :: idesc(:)
+   !! matrix B
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !! integer laxlib descriptor
    !
    INTEGER :: ierr
    INTEGER :: np, rowid, colid
@@ -3491,18 +3766,27 @@ END SUBROUTINE sqr_tr_cannon_gpu_x
 
 SUBROUTINE sqr_tr_cannon_sp_x( n, a, lda, b, ldb, idesc )
    !
-   !  Parallel square matrix transposition with Cannon's algorithm
+   !! Parallel square matrix transposition with Cannon's algorithm
+   !! single precision version
    !
    USE laxlib_parallel_include
    IMPLICIT NONE
    !
    include 'laxlib_param.fh'
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    !
    INTEGER, INTENT(IN) :: n
-   INTEGER, INTENT(IN) :: lda, ldb
-   REAL(SP)            :: a(lda,*), b(ldb,*)
+   !! global dimension
+   INTEGER, INTENT(IN) :: lda
+   !! leading dimension of A
+   INTEGER, INTENT(IN) :: ldb
+   !! leading dimension of B
+   REAL(SP)            :: a(lda,*)
+   !! matrix A
+   REAL(SP)            :: b(ldb,*)
+   !! matrix B
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !! integer laxlib descriptor
    !
    INTEGER :: ierr
    INTEGER :: np, rowid, colid
@@ -3624,20 +3908,28 @@ END SUBROUTINE
 
 SUBROUTINE redist_row2col_x( n, a, b, ldx, nx, idesc )
    !
-   !  redistribute a, array whose second dimension is distributed over processor row,
-   !  to obtain b, with the second dim. distributed over processor clolumn 
+   !!  redistribute a, array whose second dimension is distributed over processor row,
+   !!  to obtain b, with the second dim. distributed over processor column 
    !
    !
    USE laxlib_parallel_include
    IMPLICIT NONE
    !
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    !
    INTEGER, INTENT(IN) :: n
-   INTEGER, INTENT(IN) :: ldx, nx
-   REAL(DP)            :: a(ldx,nx), b(ldx,nx)
+   !! global dimension
+   INTEGER, INTENT(IN) :: ldx
+   !! local rows
+   INTEGER, INTENT(IN) :: nx
+   !! local columns
+   REAL(DP)            :: a(ldx,nx)
+   !! matrix A
+   REAL(DP)            :: b(ldx,nx)
+   !! matrix B
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !! integer laxlib descriptor
    !
    INTEGER :: ierr
    INTEGER :: np, rowid, colid
@@ -3706,21 +3998,29 @@ END SUBROUTINE redist_row2col_x
 #if defined (__CUDA)
 SUBROUTINE redist_row2col_gpu_x( n, a, b, ldx, nx, idesc )
    !
-   !  redistribute a, array whose second dimension is distributed over processor row,
-   !  to obtain b, with the second dim. distributed over processor clolumn 
+   !!  redistribute a, array whose second dimension is distributed over processor row,
+   !!  to obtain b, with the second dim. distributed over processor column 
+   !!  GPU version
    !
    USE cudafor
    USE laxlib_parallel_include
    IMPLICIT NONE
    !
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    !
    INTEGER, INTENT(IN) :: n
-   INTEGER, INTENT(IN) :: ldx, nx
+   !! global dimension
+   INTEGER, INTENT(IN) :: ldx
+   !! local rows
+   INTEGER, INTENT(IN) :: nx
+   !! local columns
    REAL(DP), DEVICE    :: a(:,:)
+   !! matrix A
    REAL(DP), DEVICE    :: b(:,:)
+   !! matrix B
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !! integer laxlib descriptor
    !
    REAL(DP), ALLOCATABLE :: a_h(:,:), b_h(:,:)
    INTEGER :: ierr
@@ -3817,22 +4117,35 @@ END SUBROUTINE redist_row2col_gpu_x
 
 SUBROUTINE cyc2blk_redist_x( n, a, lda, nca, b, ldb, ncb, idesc )
    !
-   !  Parallel square matrix redistribution.
-   !  A (input) is cyclically distributed by rows across processors
-   !  B (output) is distributed by block across 2D processors grid
+   !!  Parallel square matrix redistribution. Double precision
+   !!  A (input) is cyclically distributed by rows across processors
+   !!  B (output) is distributed by block across 2D processors grid
+   !!
    !
    USE laxlib_descriptor 
    USE laxlib_parallel_include
    !
    IMPLICIT NONE
    !
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    !
    INTEGER, INTENT(IN) :: n
-   INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
-   REAL(DP) :: a( lda, nca ), b( ldb, ncb )
+   !! global dimension
+   INTEGER, INTENT(IN) :: lda
+   !! local rows of A
+   INTEGER, INTENT(IN) :: nca
+   !! local columns of A
+   INTEGER, INTENT(IN) :: ldb
+   !! local rows of B
+   INTEGER, INTENT(IN) :: ncb
+   !! local columns of B
+   REAL(DP)            :: a(lda,nca)
+   !! matrix A
+   REAL(DP)            :: b(ldb,ncb)
+   !! matrix B
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !! integer laxlib descriptor
    !
    TYPE(la_descriptor) :: desc
    integer :: ierr, itag
@@ -3982,22 +4295,34 @@ END SUBROUTINE cyc2blk_redist_x
 
 SUBROUTINE cyc2blk_zredist_x( n, a, lda, nca, b, ldb, ncb, idesc )
    !
-   !  Parallel square matrix redistribution.
-   !  A (input) is cyclically distributed by rows across processors
-   !  B (output) is distributed by block across 2D processors grid
+   !! Parallel square matrix redistribution. Double precision complex (Z)
+   !! A (input) is cyclically distributed by rows across processors
+   !! B (output) is distributed by block across 2D processors grid
    !
    USE laxlib_descriptor
    USE laxlib_parallel_include
    !
    IMPLICIT NONE
    !
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    !
    INTEGER, INTENT(IN) :: n
-   INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
-   COMPLEX(DP) :: a( lda, nca ), b( ldb, ncb )
+   !! global dimension
+   INTEGER, INTENT(IN) :: lda
+   !! local rows of A
+   INTEGER, INTENT(IN) :: nca
+   !! local columns of A
+   INTEGER, INTENT(IN) :: ldb
+   !! local rows of B
+   INTEGER, INTENT(IN) :: ncb
+   !! local columns of B
+   COMPLEX(DP)            :: a(lda,nca)
+   !! matrix A
+   COMPLEX(DP)            :: b(ldb,ncb)
+   !! matrix B
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !! integer laxlib descriptor
    !
    TYPE(la_descriptor) :: desc
    !
@@ -4142,22 +4467,34 @@ END SUBROUTINE cyc2blk_zredist_x
 
 SUBROUTINE blk2cyc_redist_x( n, a, lda, nca, b, ldb, ncb, idesc )
    !
-   !  Parallel square matrix redistribution.
-   !  A (output) is cyclically distributed by rows across processors
-   !  B (input) is distributed by block across 2D processors grid
+   !!  Parallel square matrix redistribution. Double precision.
+   !!  A (output) is cyclically distributed by rows across processors
+   !!  B (input) is distributed by block across 2D processors grid
    !
    USE laxlib_descriptor
    USE laxlib_parallel_include
    !
    IMPLICIT NONE
    !
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    !
    INTEGER, INTENT(IN) :: n
-   INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
-   REAL(DP) :: a( lda, nca ), b( ldb, ncb )
+   !! global dimension
+   INTEGER, INTENT(IN) :: lda
+   !! local rows of A
+   INTEGER, INTENT(IN) :: nca
+   !! local columns of A
+   INTEGER, INTENT(IN) :: ldb
+   !! local rows of B
+   INTEGER, INTENT(IN) :: ncb
+   !! local columns of B
+   REAL(DP)            :: a(lda,nca)
+   !! matrix A
+   REAL(DP)            :: b(ldb,ncb)
+   !! matrix B
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !! integer laxlib descriptor
    !
    TYPE(la_descriptor) :: desc
    integer :: ierr, itag
@@ -4272,22 +4609,34 @@ END SUBROUTINE blk2cyc_redist_x
 
 SUBROUTINE blk2cyc_zredist_x( n, a, lda, nca, b, ldb, ncb, idesc )
    !
-   !  Parallel square matrix redistribution.
-   !  A (output) is cyclically distributed by rows across processors
-   !  B (input) is distributed by block across 2D processors grid
+   !!  Parallel square matrix redistribution. Double precision complex (Z)
+   !!  A (output) is cyclically distributed by rows across processors
+   !!  B (input) is distributed by block across 2D processors grid
    !
    USE laxlib_descriptor
    USE laxlib_parallel_include
    !
    IMPLICIT NONE
    !
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    !
    INTEGER, INTENT(IN) :: n
-   INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
-   COMPLEX(DP) :: a( lda, nca ), b( ldb, ncb )
+   !! global dimension
+   INTEGER, INTENT(IN) :: lda
+   !! local rows of A
+   INTEGER, INTENT(IN) :: nca
+   !! local columns of A
+   INTEGER, INTENT(IN) :: ldb
+   !! local rows of B
+   INTEGER, INTENT(IN) :: ncb
+   !! local columns of B
+   COMPLEX(DP)            :: a(lda,nca)
+   !! matrix A
+   COMPLEX(DP)            :: b(ldb,ncb)
+   !! matrix B
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !! integer laxlib descriptor
    !
    TYPE(la_descriptor) :: desc
    !
@@ -4410,6 +4759,9 @@ END SUBROUTINE blk2cyc_zredist_x
 
 SUBROUTINE laxlib_pzpotrf_x( sll, ldx, n, idesc )
    !
+   !! Double precision Complex (Z) Cholesky Factorization of
+   !! an Hermitan/Symmetric block distributed matrix
+   !
    USE laxlib_descriptor
    USE laxlib_parallel_include
    !
@@ -4418,10 +4770,17 @@ SUBROUTINE laxlib_pzpotrf_x( sll, ldx, n, idesc )
    include 'laxlib_param.fh'
    include 'laxlib_kinds.fh'
    !
-   integer :: n, ldx
+   integer :: n
+   !! global dimension
+   integer :: ldx
+   !! leading dimension of sll   
    integer, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !! integer laxlib descriptor
+   complex(DP) :: sll( ldx, ldx )
+   !! matrix sll
+   !
    real(DP)  :: one, zero
-   complex(DP) :: sll( ldx, ldx ), cone, czero
+   complex(DP) :: cone, czero
    integer :: myrow, mycol, ierr
    integer :: jb, info, ib, kb
    integer :: jnr, jir, jic, jnc
@@ -4645,6 +5004,9 @@ END SUBROUTINE laxlib_pzpotrf_x
 
 SUBROUTINE laxlib_pdpotrf_x( sll, ldx, n, idesc )
    !
+   !! Double precision Cholesky Factorization of
+   !! an Hermitan/Symmetric block distributed matrix
+   !
    USE laxlib_descriptor
    USE laxlib_parallel_include
    !
@@ -4653,10 +5015,15 @@ SUBROUTINE laxlib_pdpotrf_x( sll, ldx, n, idesc )
    include 'laxlib_param.fh'
    include 'laxlib_kinds.fh'
    !
-   integer  :: n, ldx
+   integer  :: n
+   !! global dimension
+   integer  :: ldx
+   !! leading dimension of sll
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
-   REAL(DP) :: one, zero
+   !! integer laxlib descriptor
    REAL(DP) :: sll( ldx, ldx )
+   !! matrix sll
+   REAL(DP) :: one, zero
    integer  :: myrow, mycol, ierr
    integer  :: jb, info, ib, kb
    integer  :: jnr, jir, jic, jnc
@@ -4877,21 +5244,22 @@ END SUBROUTINE laxlib_pdpotrf_x
 !
 
 SUBROUTINE laxlib_pztrtri_x ( sll, ldx, n, idesc )
-    
-    ! pztrtri computes the parallel inversion of a lower triangular matrix 
-    ! distribuited among the processes using a 2-D block partitioning. 
-    ! The algorithm is based on the schema below and executes the model 
-    ! recursively to each column C2 under the diagonal.     
-    !
-    !     |-------|-------|      |--------------------|--------------------|
-    !     |   A1  |   0   |      |   C1 = trtri(A1)   |          0         |
-    ! A = |-------|-------|  C = |--------------------|--------------------|
-    !     |   A2  |   A3  |      | C2 = -C3 * A2 * C1 |   C3 = trtri(A3)   | 
-    !     |-------|-------|      |--------------------|--------------------|
-    !
-    ! The recursive steps of multiplication (C2 = -C3 * A2 * C1) is based on the Cannon's algorithms 
-    ! for parallel matrix multiplication and is done with BLACS(dgemm)
-    !
+    ! 
+    !! pztrtri computes the parallel inversion of a lower triangular matrix 
+    !! distribuited among the processes using a 2-D block partitioning. 
+    !! The algorithm is based on the schema below and executes the model 
+    !! recursively to each column C2 under the diagonal.     
+    !!
+    !!     |-------|-------|      |--------------------|--------------------|
+    !!     |   A1  |   0   |      |   C1 = trtri(A1)   |          0         |
+    !! A = |-------|-------|  C = |--------------------|--------------------|
+    !!     |   A2  |   A3  |      | C2 = -C3 * A2 * C1 |   C3 = trtri(A3)   | 
+    !!     |-------|-------|      |--------------------|--------------------|
+    !!
+    !! The recursive steps of multiplication (C2 = -C3 * A2 * C1) is based on the Cannon's algorithms 
+    !! for parallel matrix multiplication and is done with BLACS(dgemm)
+    !!
+    !!
     !
     ! Arguments
     ! ============
@@ -4909,12 +5277,17 @@ SUBROUTINE laxlib_pztrtri_x ( sll, ldx, n, idesc )
     USE laxlib_parallel_include
 
     IMPLICIT NONE
-    INCLUDE 'laxlib_kinds.fh'
-    INCLUDE 'laxlib_param.fh'
+    include 'laxlib_kinds.fh'
+    include 'laxlib_param.fh'
 
-    INTEGER, INTENT( IN ) :: n, ldx
+    INTEGER, INTENT(IN)  :: n
+    !! global dimension
+    INTEGER, INTENT(IN)  :: ldx
+    !! leading dimension of sll
     INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+    !! integer laxlib descriptor
     COMPLEX(DP), INTENT( INOUT ) :: sll( ldx, ldx )
+    !! matrix sll
 
     COMPLEX(DP), PARAMETER :: ONE = (1.0_DP, 0.0_DP)
     COMPLEX(DP), PARAMETER :: ZERO = (0.0_DP, 0.0_DP)
@@ -5241,20 +5614,22 @@ END SUBROUTINE laxlib_pztrtri_x
 
 SUBROUTINE laxlib_pdtrtri_x ( sll, ldx, n, idesc )
     
-    ! pdtrtri computes the parallel inversion of a lower triangular matrix 
-    ! distribuited among the processes using a 2-D block partitioning. 
-    ! The algorithm is based on the schema below and executes the model 
-    ! recursively to each column C2 under the diagonal.     
     !
-    !     |-------|-------|      |--------------------|--------------------|
-    !     |   A1  |   0   |      |   C1 = trtri(A1)   |          0         |
-    ! A = |-------|-------|  C = |--------------------|--------------------|
-    !     |   A2  |   A3  |      | C2 = -C3 * A2 * C1 |   C3 = trtri(A3)   | 
-    !     |-------|-------|      |--------------------|--------------------|
-    !
-    ! The recursive steps of multiplication (C2 = -C3 * A2 * C1) is based on the Cannon's algorithms 
-    ! for parallel matrix multiplication and is done with BLACS(dgemm)
-    !
+    !!
+    !! pdtrtri computes the parallel inversion of a lower triangular matrix 
+    !! distribuited among the processes using a 2-D block partitioning. 
+    !! The algorithm is based on the schema below and executes the model 
+    !! recursively to each column C2 under the diagonal.     
+    !!
+    !!     |-------|-------|      |--------------------|--------------------|
+    !!     |   A1  |   0   |      |   C1 = trtri(A1)   |          0         |
+    !! A = |-------|-------|  C = |--------------------|--------------------|
+    !!     |   A2  |   A3  |      | C2 = -C3 * A2 * C1 |   C3 = trtri(A3)   | 
+    !!     |-------|-------|      |--------------------|--------------------|
+    !!
+    !! The recursive steps of multiplication (C2 = -C3 * A2 * C1) is based on the Cannon's algorithms 
+    !! for parallel matrix multiplication and is done with BLACS(dgemm)
+    !!
     !
     ! Arguments
     ! ============
@@ -5262,7 +5637,7 @@ SUBROUTINE laxlib_pdtrtri_x ( sll, ldx, n, idesc )
     ! sll   = local block of data
     ! ldx   = leading dimension of one block
     ! n     = size of the global array diributed among the blocks
-    ! desc  = descriptor of the matrix distribution
+    ! idesc  = descriptor of the matrix distribution
     !
     !
     !  written by Ivan Girotto
@@ -5272,12 +5647,17 @@ SUBROUTINE laxlib_pdtrtri_x ( sll, ldx, n, idesc )
     USE laxlib_parallel_include
 
     IMPLICIT NONE
-    INCLUDE 'laxlib_kinds.fh'
+    include 'laxlib_kinds.fh'
     include 'laxlib_param.fh'
 
-    INTEGER, INTENT( IN ) :: n, ldx
+    INTEGER, INTENT(IN)  :: n
+    !! global dimension
+    INTEGER, INTENT(IN)  :: ldx
+    !! leading dimension of sll
     INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+    !! integer laxlib descriptor
     REAL(DP), INTENT( INOUT ) :: sll( ldx, ldx )
+    !! matrix sll
 
     REAL(DP), PARAMETER :: ONE = 1.0_DP
     REAL(DP), PARAMETER :: ZERO = 0.0_DP
@@ -5608,20 +5988,26 @@ END SUBROUTINE laxlib_pdtrtri_x
 
 
 SUBROUTINE laxlib_pdsyevd_x( tv, n, idesc, hh, ldh, e )
+   !
+   !! Parallel version of the HOUSEHOLDER tridiagonalization Algorithm for simmetric matrix.
+   !! double precision version
+   !
    IMPLICIT NONE
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    include 'laxlib_low.fh'
    LOGICAL, INTENT(IN) :: tv
-       ! if tv is true compute eigenvalues and eigenvectors (not used)
-   INTEGER, INTENT(IN) :: n, ldh
-       ! n = matrix size, ldh = leading dimension of hh
+   !! if true compute eigenvalues and eigenvectors (not used)
+   INTEGER, INTENT(IN) :: n
+   !! global dimension 
+   INTEGER, INTENT(IN) :: ldh
+   !! leading dimension of hh
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
-       ! desc = descrittore della matrice 
+   !! integer laxlib descriptor
    REAL(DP) :: hh( ldh, ldh )
-       ! input:  hh = matrix to be diagonalized
+   !! matrix to be diagonalized and output eigenvectors
    REAL(DP) :: e( n )
-       ! output: hh = eigenvectors, e = eigenvalues
+   !! eigenvalues
 
    INTEGER :: nrlx, nrl, nproc
    REAL(DP), ALLOCATABLE :: diag(:,:), vv(:,:)
@@ -5655,20 +6041,26 @@ END SUBROUTINE
 
 
 SUBROUTINE laxlib_pzheevd_x( tv, n, idesc, hh, ldh, e )
+   !
+   !! Parallel version of the HOUSEHOLDER tridiagonalization Algorithm for simmetric matrix.
+   !! double precision complex(Z) version
+   !
    IMPLICIT NONE
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    include 'laxlib_low.fh'
    LOGICAL, INTENT(IN) :: tv
-       ! if tv is true compute eigenvalues and eigenvectors (not used)
-   INTEGER, INTENT(IN) :: n, ldh
-       ! n = matrix size, ldh = leading dimension of hh
+   !! if true compute eigenvalues and eigenvectors (not used)
+   INTEGER, INTENT(IN) :: n
+   !! global dimensio of matrix 
+   INTEGER, INTENT(IN) :: ldh
+   !! leading dimension of hh
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
-       ! desc = descrittore della matrice 
+   !! integer laxlib descriptor
    COMPLEX(DP) :: hh( ldh, ldh )
-       ! input:  hh = matrix to be diagonalized
+   !! matrix to be diagonalized and output eigenvectors
    REAL(DP) :: e( n )
-       ! output: hh = eigenvectors, e = eigenvalues
+   !! eigenvalues
 
    INTEGER :: nrlx, nrl
    COMPLEX(DP), ALLOCATABLE :: diag(:,:), vv(:,:)
@@ -5700,28 +6092,30 @@ END SUBROUTINE
 
 SUBROUTINE sqr_dsetmat_x( what, n, alpha, a, lda, idesc )
    !
-   !  Set the values of a square distributed matrix 
+   !!
+   !!  Set the double precision values of a square distributed matrix 
+   !!
    !
    IMPLICIT NONE
    !
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    !
    CHARACTER(LEN=1), INTENT(IN) :: what
-     ! what = 'A' set all the values of "a" equal to alpha
-     ! what = 'U' set the values in the upper triangle of "a" equal to alpha
-     ! what = 'L' set the values in the lower triangle of "a" equal to alpha
-     ! what = 'D' set the values in the diagonal of "a" equal to alpha
+   !! 'A' set all the values of "a" equal to alpha
+   !! 'U' set the values in the upper triangle of "a" equal to alpha
+   !! 'L' set the values in the lower triangle of "a" equal to alpha
+   !! 'D' set the values in the diagonal of "a" equal to alpha
    INTEGER, INTENT(IN) :: n
-     ! dimension of the matrix
+   !! global dimension of the matrix
    REAL(DP), INTENT(IN) :: alpha
-     ! value to be assigned to elements of "a"
+   !! value to be assigned to elements of "a"
    INTEGER, INTENT(IN) :: lda
-     ! leading dimension of a
+   !!! leading dimension of a
    REAL(DP) :: a(lda,*)
-     ! matrix whose values have to be set
+   !! matrix whose values have to be set
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
-     ! descriptor of matrix a
+   !! integer laxlib descriptor of matrix a
 
    INTEGER :: i, j
 
@@ -5782,29 +6176,29 @@ END SUBROUTINE sqr_dsetmat_x
 
 SUBROUTINE sqr_zsetmat_x( what, n, alpha, a, lda, idesc )
    !
-   !  Set the values of a square distributed matrix 
+   !!  Set the double precision complex(Z) values of a square distributed matrix 
    !
    IMPLICIT NONE
    !
-   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    !
    CHARACTER(LEN=1), INTENT(IN) :: what
-     ! what = 'A' set all the values of "a" equal to alpha
-     ! what = 'U' set the values in the upper triangle of "a" equal to alpha
-     ! what = 'L' set the values in the lower triangle of "a" equal to alpha
-     ! what = 'D' set the values in the diagonal of "a" equal to alpha
-     ! what = 'H' clear the imaginary part of the diagonal of "a" 
+   !! 'A' set all the values of "a" equal to alpha
+   !! 'U' set the values in the upper triangle of "a" equal to alpha
+   !! 'L' set the values in the lower triangle of "a" equal to alpha
+   !! 'D' set the values in the diagonal of "a" equal to alpha
+   !! 'H' clear the imaginary part of the diagonal of "a" 
    INTEGER, INTENT(IN) :: n
-     ! dimension of the matrix
+   !! global dimension of the matrix
    COMPLEX(DP), INTENT(IN) :: alpha
-     ! value to be assigned to elements of "a"
+   !! value to be assigned to elements of "a"
    INTEGER, INTENT(IN) :: lda
-     ! leading dimension of a
+   !! leading dimension of a
    COMPLEX(DP) :: a(lda,*)
-     ! matrix whose values have to be set
+   !! matrix whose values have to be set
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
-     ! descriptor of matrix a
+   !! integer laxlib descriptor of matrix a
 
    INTEGER :: i, j
 
@@ -5872,7 +6266,7 @@ END SUBROUTINE sqr_zsetmat_x
     SUBROUTINE distribute_lambda_x( lambda_repl, lambda_dist, idesc )
 !------------------------------------------------------------------------
        IMPLICIT NONE
-       INCLUDE 'laxlib_kinds.fh'
+       include 'laxlib_kinds.fh'
        include 'laxlib_param.fh'
        REAL(DP), INTENT(IN)  :: lambda_repl(:,:)
        REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
@@ -5896,7 +6290,7 @@ END SUBROUTINE sqr_zsetmat_x
        USE laxlib_processors_grid,   ONLY: ortho_parent_comm
        USE laxlib_parallel_include
        IMPLICIT NONE
-       INCLUDE 'laxlib_kinds.fh'
+       include 'laxlib_kinds.fh'
        include 'laxlib_param.fh'
        REAL(DP), INTENT(OUT) :: lambda_repl(:,:)
        REAL(DP), INTENT(IN)  :: lambda_dist(:,:)
@@ -5925,7 +6319,7 @@ END SUBROUTINE sqr_zsetmat_x
        USE laxlib_processors_grid,   ONLY: ortho_parent_comm
        USE laxlib_parallel_include
        IMPLICIT NONE
-       INCLUDE 'laxlib_kinds.fh'
+       include 'laxlib_kinds.fh'
        include 'laxlib_param.fh'
        REAL(DP), INTENT(OUT) :: zmat_repl(:,:)
        REAL(DP), INTENT(IN)  :: zmat_dist(:,:)
@@ -5955,7 +6349,7 @@ END SUBROUTINE sqr_zsetmat_x
     SUBROUTINE setval_lambda_x( lambda_dist, i, j, val, idesc )
 !------------------------------------------------------------------------
        IMPLICIT NONE
-       INCLUDE 'laxlib_kinds.fh'
+       include 'laxlib_kinds.fh'
        include 'laxlib_param.fh'
        REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
        INTEGER,  INTENT(IN)  :: i, j
@@ -5978,7 +6372,7 @@ END SUBROUTINE sqr_zsetmat_x
     SUBROUTINE distribute_zmat_x( zmat_repl, zmat_dist, idesc )
 !------------------------------------------------------------------------
        IMPLICIT NONE
-       INCLUDE 'laxlib_kinds.fh'
+       include 'laxlib_kinds.fh'
        include 'laxlib_param.fh'
        REAL(DP), INTENT(IN)  :: zmat_repl(:,:)
        REAL(DP), INTENT(OUT) :: zmat_dist(:,:)

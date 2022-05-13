@@ -5,6 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
+#include <cpv_device_macros.h> 
+
 !-----------------------------------------------------------------------
 SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
                      tlast, ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion )
@@ -63,6 +66,15 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE fft_helper_subroutines
       
       USE plugin_variables, ONLY: plugin_etot
+#if defined(__CUDA) && defined(_OPENACC)
+      USE cublas
+#endif  
+
+#if defined (__ENVIRON)
+      USE plugin_flags,        ONLY : use_environ
+      USE environ_cp_module,   ONLY : add_environ_potential, calc_environ_potential
+      USE environ_base_module, ONLY : calc_environ_energy, calc_environ_force
+#endif
 
       IMPLICIT NONE
 !
@@ -81,6 +93,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       REAL(DP) :: vtxc, vave, ebac, wz, eh, ehpre, enlc
       COMPLEX(DP)  fp, fm, drhop, zpseu, zh
       COMPLEX(DP), ALLOCATABLE :: rhotmp(:), vtemp(:)
+      COMPLEX(DP) :: x_tmp ! (same as rhotmp)
       COMPLEX(DP), ALLOCATABLE :: drhot(:,:)
       REAL(DP), ALLOCATABLE    :: gagb(:,:), rhosave(:,:), newrhosave(:,:), rhocsave(:) 
       !
@@ -105,17 +118,25 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       REAL(DP),  DIMENSION(6), PARAMETER :: dalbe = &
          (/ 1.0_DP, 0.0_DP, 0.0_DP, 1.0_DP, 0.0_DP, 1.0_DP /)
       COMPLEX(DP), PARAMETER :: ci = ( 0.0d0, 1.0d0 )
+      INTEGER  :: p_ngm_, s_ngm_, p_nnr_, s_nnr_
 
+#if defined (__ENVIRON)
+      REAL(DP), ALLOCATABLE :: force_environ(:, :)
+#endif
 
       CALL start_clock( 'vofrho' )
-
+      p_ngm_ = dfftp%ngm 
+      s_ngm_ = dffts%ngm
+      p_nnr_ = dfftp%nnr
+      s_nnr_ = dffts%nnr
+      
       !
       !     TS-vdW calculation (RAD)
       !
       IF (ts_vdw) THEN
         !
         CALL start_clock( 'ts_vdw' )
-        ALLOCATE (stmp(3,nat), rhocsave(dfftp%nnr) )
+        ALLOCATE (stmp(3,nat), rhocsave(p_nnr_) )
         stmp(:,:) = tau0(:,:)
         !
         IF ( nspin==2 ) THEN
@@ -136,33 +157,38 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       wz = 2.0d0
       !
       ht = TRANSPOSE( h )
+      
       !
-      ALLOCATE( vtemp( dfftp%ngm ) )
-      ALLOCATE( rhotmp( dfftp%ngm ) )
+      ALLOCATE( vtemp( p_ngm_ ) )
+      ALLOCATE( rhotmp( p_ngm_ ) )
+DEV_ACC enter data create(rhotmp( 1:p_ngm_ ) )
       !
       IF ( tpre ) THEN
-         ALLOCATE( drhot( dfftp%ngm, 6 ) )
-         ALLOCATE( gagb( 6, dfftp%ngm ) )
-         CALL compute_gagb( gagb, g, dfftp%ngm, tpiba2 )
+         ALLOCATE( drhot( p_ngm_, 6 ) )
+DEV_ACC enter data create(drhot(1:p_ngm_, 1:6))
+         ALLOCATE( gagb( 6, p_ngm_ ) )
+         CALL compute_gagb( gagb, g, p_ngm_, tpiba2 )
       END IF
 !
 !     ab-initio pressure and surface tension contributions to the potential
 !
       if (abivol.or.abisur) call vol_clu(rhor,rhog,nfi)
       !
-      !     compute plugin contributions to the potential, add it later
-      !
-      CALL plugin_get_potential(rhor,nfi)
-      !
-      !     compute plugin contributions to the energy
-      !
       plugin_etot = 0.0_dp
       !
-      CALL plugin_energy(rhor,plugin_etot)
+#if defined (__ENVIRON)
+      IF (use_environ) THEN
+         ! compute plugin contributions to the potential, add it later
+         CALL calc_environ_potential(rhor, nfi)
+         ! compute plugin contributions to the energy
+         CALL calc_environ_energy(plugin_etot)
+         plugin_etot = 0.5D0 * plugin_etot ! Rydberg to Hartree
+      END IF
+#endif
       !
       ttsic = ( ABS( self_interaction ) /= 0 )
       !
-      IF( ttsic ) ALLOCATE( self_vloc( dfftp%ngm ) )
+      IF( ttsic ) ALLOCATE( self_vloc( p_ngm_ ) )
       !
       !     first routine in which fion is calculated: annihilation
       !
@@ -183,63 +209,95 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          DEALLOCATE( stmp )
          !
       END IF
-!
-!$omp parallel default(shared), private(ig,is,ij,i,j,k)
-!$omp workshare
-      rhotmp( 1:dfftp%ngm ) = rhog( 1:dfftp%ngm, 1 )
-!$omp end workshare
+      !
+      zpseu = 0.0_DP 
+      !
+      DEV_ACC  data copyin(rhog,drhog,ht,sfac,vps,gg,rhops) copyout(vtemp) 
+      DEV_OMP  parallel default(shared), private(ig,is,ij,i,j,k)
+      !
+      DEV_OMP do 
+      DEV_ACC parallel loop present(rhotmp, rhog)
+      DO ig = 1, p_ngm_
+        rhotmp( ig ) = rhog( ig, 1 )
+      END DO 
+      DEV_OMP end do
+      !
       IF( nspin == 2 ) THEN
-!$omp workshare
-         rhotmp( 1:dfftp%ngm ) = rhotmp( 1:dfftp%ngm ) + rhog( 1:dfftp%ngm, 2 )
-!$omp end workshare
+        !
+        DEV_OMP do
+        DEV_ACC parallel loop present(rhotmp, rhog)
+        DO ig = 1, p_ngm_
+           rhotmp( ig ) = rhotmp( ig ) + rhog( ig, 2 )
+        END DO 
+        DEV_OMP end do
+        !
       END IF
       !
+
       IF( tpre ) THEN
-!$omp do
+DEV_OMP do
          DO ij = 1, 6
             i = alpha( ij )
             j = beta( ij )
-            drhot( :, ij ) = 0.0d0
+            !
+DEV_ACC parallel loop present(drhot) 
+            DO ig = 1, p_ngm_
+              drhot( ig, ij ) = 0.0d0
+            END DO 
+            !
             DO k = 1, 3
-               drhot( :, ij ) = drhot( :, ij ) +  drhog( :, 1, i, k ) * ht( k, j )
+               !
+DEV_ACC parallel loop present(drhot, drhog, ht) 
+               DO ig = 1, p_ngm_
+                 drhot( ig, ij ) = drhot( ig, ij ) +  drhog( ig, 1, i, k ) * ht( k, j )
+               END DO 
+               !
             END DO
          END DO
-!$omp end do
+DEV_OMP end do
          IF( nspin == 2 ) THEN
-!$omp do
+DEV_OMP do
             DO ij = 1, 6
                i = alpha( ij )
-               j = beta( ij )
+               j = beta( ij ) 
                DO k = 1, 3
-                  drhot( :, ij ) = drhot( :, ij ) +  drhog( :, 2, i, k ) * ht( k, j )
+                  !
+DEV_ACC parallel loop present(drhot, drhog, ht)
+                  DO ig = 1, p_ngm_
+                    drhot( ig, ij ) = drhot( ig, ij ) +  drhog( ig, 2, i, k ) * ht( k, j )
+                  END DO  
+                  !
                END DO
             END DO
-!$omp end do
+DEV_OMP end do
          ENDIF
       END IF
       !
       !     calculation local potential energy
       !
-!$omp master
-      zpseu = 0.0d0
-!$omp end master 
+
       !
-!$omp do
+DEV_OMP do
+DEV_ACC parallel loop 
       DO ig = 1, SIZE(vtemp)
          vtemp(ig)=(0.d0,0.d0)
       END DO
       DO is=1,nsp
-!$omp do
-         DO ig=1,dffts%ngm
+DEV_OMP do
+DEV_ACC parallel loop present(rhotmp)
+         DO ig=1,s_ngm_
             vtemp(ig)=vtemp(ig)+CONJG(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
          END DO
       END DO
-!$omp do reduction(+:zpseu)
-      DO ig=1,dffts%ngm
+
+DEV_OMP do reduction(+:zpseu)
+DEV_ACC parallel loop reduction(+:zpseu) 
+      DO ig=1,s_ngm_
          zpseu = zpseu + vtemp(ig)
       END DO
-!$omp end parallel
-
+DEV_OMP end parallel
+      ! 
+DEV_ACC update self(vtemp(1)) 
       epseu = wz * DBLE(zpseu)
       !
       IF (gstart == 2) epseu = epseu - DBLE( vtemp(1) )
@@ -252,6 +310,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          CALL stress_local( dps6, epseu, gagb, sfac, rhotmp, drhot, omega )
          !
       END IF
+
       !
       !     
       !     calculation hartree energy
@@ -263,33 +322,40 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
 
       zh = 0.0d0
 
-!$omp parallel default(shared), private(ig,is)
-
-      DO is=1,nsp
-!$omp do 
-         DO ig=1,dffts%ngm
-            rhotmp(ig)=rhotmp(ig)+sfac(ig,is)*rhops(ig,is)
+DEV_OMP parallel default(shared), private(ig,is,x_tmp)
+DEV_ACC parallel present(rhotmp) 
+DEV_ACC loop gang private(x_tmp)
+DEV_OMP do 
+      DO ig=1,s_ngm_
+         x_tmp = rhotmp(ig)
+DEV_ACC loop vector reduction(+:x_tmp) 
+         DO is=1,nsp
+            x_tmp=x_tmp+sfac(ig,is)*rhops(ig,is)
          END DO
+         rhotmp(ig)=x_tmp 
       END DO
+DEV_ACC end parallel
       !
-!$omp do
-      DO ig = gstart, dfftp%ngm
+DEV_OMP do
+DEV_ACC parallel loop present(rhotmp)
+      DO ig = gstart, p_ngm_
          vtemp(ig) = CONJG( rhotmp( ig ) ) * rhotmp( ig ) / gg( ig )
       END DO
 
-!$omp do reduction(+:zh)
-      DO ig = gstart, dfftp%ngm
+DEV_OMP do reduction(+:zh)
+DEV_ACC parallel loop reduction(+:zh) 
+      DO ig = gstart, p_ngm_
          zh = zh + vtemp(ig)
       END DO
 
-!$omp end parallel
+DEV_OMP end parallel
 
       eh = DBLE( zh ) * wz * 0.5d0 * fpi / tpiba2
 !
       CALL mp_sum( eh, intra_bgrp_comm )
       !
       IF ( ttsic ) THEN
-         !
+         ! 
          CALL self_vofhar( .false., self_ehte, self_vloc, rhog, omega, h )
          !
          eh = eh - self_ehte / omega
@@ -302,6 +368,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          CALL stress_hartree(dh6, eh*omega, sfac, rhotmp, drhot, gagb, omega )
          !
          DEALLOCATE( gagb )
+DEV_ACC exit data delete(drhot)
          DEALLOCATE( drhot )
          !
       END IF
@@ -313,33 +380,48 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       fion1 = 0.d0
       !
       IF( tprnfor .OR. tfor .OR. tpre) THEN
-          vtemp( 1:dfftp%ngm ) = rhog( 1:dfftp%ngm, 1 )
+START_WSHARE
+          vtemp( 1:p_ngm_ ) = rhog( 1:p_ngm_, 1 )
+END_WSHARE
           IF( nspin == 2 ) THEN
-             vtemp( 1:dfftp%ngm ) = vtemp(1:dfftp%ngm) + rhog( 1:dfftp%ngm, 2 )
+START_WSHARE
+             vtemp( 1:p_ngm_ ) = vtemp(1:p_ngm_) + rhog( 1:p_ngm_, 2 )
+END_WSHARE
           END IF
+          CALL start_clock("force_loc") 
           CALL force_loc( .false., vtemp, fion1, rhops, vps, ei1, ei2, ei3, sfac, omega, screen_coul )
+          CALL stop_clock("force_loc") 
       END IF
+
       !
       !     calculation hartree + local pseudo potential
       !
       !
+DEV_ACC kernels 
       IF (gstart == 2) vtemp(1)=(0.d0,0.d0)
+DEV_ACC end kernels 
 
-!$omp parallel default(shared), private(ig,is)
-!$omp do
-      DO ig=gstart,dfftp%ngm
+!
+DEV_ACC parallel loop present(rhotmp)
+!
+DEV_OMP parallel default(shared), private(ig,is)
+DEV_OMP do
+      DO ig=gstart,p_ngm_
          vtemp(ig)=rhotmp(ig)*fpi/(tpiba2*gg(ig))
       END DO
       !
-      DO is=1,nsp
-!$omp do
-         DO ig=1,dffts%ngm
+DEV_ACC parallel loop 
+DEV_OMP do
+      DO ig=1,s_ngm_
+DEV_ACC loop seq 
+         DO is=1,nsp
             vtemp(ig)=vtemp(ig)+sfac(ig,is)*vps(ig,is)
          END DO
       END DO
-!$omp end parallel
-
+DEV_OMP end parallel
+DEV_ACC exit data delete(rhotmp)
       DEALLOCATE (rhotmp)
+
 !
 !     vtemp = v_loc(g) + v_h(g)
 !
@@ -352,10 +434,10 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       ! ... We also need an allocated rhoc array even in absence of core charge
       !
       IF ( dft_is_nonlocc() ) THEN
-         ALLOCATE ( rhosave(dfftp%nnr,nspin),  rhocsave(dfftp%nnr) )
-         ALLOCATE ( newrhosave(dfftp%nnr,nspin) )
+         ALLOCATE ( rhosave(p_nnr_,nspin),  rhocsave(p_nnr_) )
+         ALLOCATE ( newrhosave(p_nnr_,nspin) )
          rhosave(:,:) = rhor(:,:)
-         IF ( SIZE(rhoc) == dfftp%nnr ) THEN
+         IF ( SIZE(rhoc) == p_nnr_ ) THEN
             rhocsave(:)= rhoc(:)
          ELSE
             rhocsave(:)= 0.0_dp
@@ -425,7 +507,9 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       !     add plugin contributions to potential here... 
       !
-      CALL plugin_add_potential( rhor )
+#if defined (__ENVIRON)
+      IF (use_environ) CALL add_environ_potential(rhor)
+#endif
       !
 !
 !     rhor contains the xc potential in r-space
@@ -439,20 +523,23 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       ELSE
          CALL rho_r2g ( dfftp, rhor, rhog )
       END IF
-       
+      !
       IF( nspin == 1 ) THEN
-         CALL zaxpy(dfftp%ngm, (1.0d0,0.0d0) , vtemp, 1, rhog(1,1), 1)
+         CALL zaxpy(p_ngm_, (1.0d0,0.0d0) , vtemp, 1, rhog(:,1), 1)
       ELSE
          isup=1
          isdw=2
-         CALL zaxpy(dfftp%ngm, (1.0d0,0.0d0) , vtemp, 1, rhog(1,isup), 1)
-         CALL zaxpy(dfftp%ngm, (1.0d0,0.0d0) , vtemp, 1, rhog(1,isdw), 1)
+DEV_ACC host_data use_device(vtemp,rhog) 
+         CALL zaxpy(p_ngm_, (1.0d0,0.0d0) , vtemp, 1, rhog(:,isup), 1)
+         CALL zaxpy(p_ngm_, (1.0d0,0.0d0) , vtemp, 1, rhog(:,isdw), 1)
+DEV_ACC end host_data  
          IF( ttsic ) THEN
-            rhog( 1:dfftp%ngm, isup ) = rhog( 1:dfftp%ngm, isup ) - self_vloc(1:dfftp%ngm) 
-            rhog( 1:dfftp%ngm, isdw ) = rhog( 1:dfftp%ngm, isdw ) - self_vloc(1:dfftp%ngm) 
+            rhog( 1:p_ngm_, isup ) = rhog( 1:p_ngm_, isup ) - self_vloc(1:p_ngm_) 
+            rhog( 1:p_ngm_, isdw ) = rhog( 1:p_ngm_, isdw ) - self_vloc(1:p_ngm_)
          END IF
       END IF
-
+DEV_ACC update self(rhog) 
+DEV_ACC end data  
       DEALLOCATE (vtemp)
       IF( ttsic ) DEALLOCATE( self_vloc )
 !
@@ -478,7 +565,14 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          !
          !     plugin patches on internal forces
          !
-         CALL plugin_int_forces(fion)
+#if defined (__ENVIRON)
+         IF (use_environ) THEN
+            ALLOCATE (force_environ(3, nat))
+            CALL calc_environ_force(force_environ)
+            fion = fion + 0.5D0 * force_environ ! Environ forces in Ry/bohr
+            DEALLOCATE (force_environ)
+         END IF
+#endif
 
       END IF
 

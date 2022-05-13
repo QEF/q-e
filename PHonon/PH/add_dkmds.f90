@@ -19,11 +19,10 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
   USE gvect, ONLY : g
   USE lsda_mod, ONLY: lsda, current_spin, isk, nspin
   USE klist, ONLY : xk, ngk, igk_k
-  USE spin_orb, ONLY : lspinorb
   USE uspp, ONLY : nkb, qq_nt, qq_so, vkb
   USE wvfct, ONLY : npwx, nbnd
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  USE noncollin_module, ONLY : noncolin, npol
+  USE noncollin_module, ONLY : noncolin, npol, lspinorb
   USE wavefunctions,    ONLY : evc
   USE uspp_param, only: nh
   USE becmod, ONLY: calbec

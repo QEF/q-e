@@ -3,44 +3,44 @@
  ==============================================================================
 
 
-*** see INSTALL.svn for how to run SVN version of PWgui !!!
+*** see INSTALL.repository for how to run the repository version of PWgui !!!
 
 
-FOR PWscf DEVELOPERS: UPDATING the PWgui MODULES
---------------------------------------------------
+For QE developers: updating the PWgui modules
+---------------------------------------------
 
-If some new variables have been added to a given PWscf program, please
+If some new variables have been added to a given QE program, please
 update corresponding module definition files, which are located in
 modules/ directory.
 
-Before committing changes to SVN repository, please check that the
-updated module works!!! If you face troubles, please consult
+Before committing changes to the repository, please check that the
+updated module works! If you face troubles, please consult
 tone.kokalj@ijs.si.
 
 
-WHAT IS A "MODULE" IN PWgui
------------------------------
+What is a "module" in PWgui
+---------------------------
 
-A "module" stands for the definition of the input of a given PWscf
-program. The description of the input is specified using the
-GUIB-definition syntax. Such a description provides two items: (i) it
-defines the input-syntax, and concomitantly (ii) defines the GUI.
+A "module" stands for the definition of the input of a given QE
+program. The description of the input syntax is specified using the
+GUIB-definition language. Such a description provides two items: (i)
+it defines the input-syntax and concomitantly (ii) defines the GUI.
 
 The modules are located in the modules/ directory. Each module is
 located in its own directory. For example the PW.X module is located
 in directory modules/pw. The following files are located therein:
 
-	* pw.tcl 	- main module definition file, the rest of the 
-			  files are source from here
-	* pw-event.tcl 	- implementation of event-driven mechanism
+	* pw.tcl 	- the main module definition file, the rest of
+			  the files are sourced from it
+	* pw-event.tcl 	- implementation of the event-driven mechanism
 	* pw-help.tcl	- help file describing all the pw.x variables
 	* commands.tcl	- auxiliary commands used by file pw.tcl
 
 Hereafter such files are called "module definition files".
 
 
-HOW TO ADD A NEW MODULE TO PWgui
-----------------------------------
+How to add a new module to PWgui
+--------------------------------
 
 Let's say we want to add a new module named "mymodule". We have to
 perform two tasks:
@@ -48,12 +48,12 @@ perform two tasks:
 	(i) Write the Module Definition Files 
 
 Create a directory: modules/mymodule, and therein a file
-mymodule.tcl. If needed create also files: mymodule-event.tcl,
+mymodule.tcl. If needed, create also files: mymodule-event.tcl,
 mymodule-help.tcl, and commands.tcl. 
 
 For the syntax of the module definition file see some existing
-modules. For example, see files in modules/pp (easy example), or in
-modules/pw (complex example). For further documentation see also:
+modules. For example, see files in modules/pp (an easy example), or in
+modules/pw (a complex example). For further documentation see also:
 http://www-k3.ijs.si/kokalj/guib/documentation.html.
 
 	(ii) Inform the GUI About New Module
@@ -67,18 +67,16 @@ $gui addModule module mymodule "MyModule.X" \
 }
 
 
-We can also add extra documentation for the module. Let say that we
-have an INPUT_MYMODULE file. We can either copy this file to directory
-doc/pwdoc or alternatively we make a symbolic link. Then we edit a
-Makefile and insert the INPUT_MYMODULE support (the purpose is to
-convert INPUT_MYMODULE to INPUT_MYMODULE.html). Now we execute: make
-input_html (this will create the INPUT_MYMODULE.html file). Finally,
-we can edit the src-tcl/pwscf.itcl, and add the following line on the
-proper place (search for addHelp string):
+We can also add a documentation for the module. Let say that we have
+an INPUT_MYMODULE.txt file. We need to tranform it into a simple
+INPUT_MYMODULE.html file in the doc/ directory by editing the
+doc/Makefile file. Then we sould edit the src-tcl/pwscf.itcl file and
+add the following line on the proper place (search for addHelp
+string):
 
 $gui addHelp help mymodule "MyModule.X Input Syntax"  \
 	[file join $env(PWGUI) doc pwdocs INPUT_MYMODULE.html]
 
 
 --
-Anton Kokalj (tone.kokalj@ijs.si), Tue Feb 17 08:41:05 CET 2004
+Anton Kokalj (tone.kokalj@ijs.si), Jan 2022

@@ -7,7 +7,7 @@
 !
 ! Aug 2020 (PG): streamlined and simplified
 !                open_input_file() may read the file name either from
-!                passed argumet or directly from the command line
+!                passed argument or directly from the command line
 ! Aug 2018 (PG): reading of old xml input file using iotk deleted
 
 MODULE open_close_input_file
@@ -65,7 +65,7 @@ CONTAINS
   !! If optional variable \(\text{is_xml}\) is present, test if the file is a
   !! valid xml file.  
   !! In parallel execution, must be called by a single processor.  
-  !! Module varliable input_file is set to the file name actually read.
+  !! Module variable input_file is set to the file name actually read.
   !---------------------------------------------------------------
   !
   IMPLICIT NONE

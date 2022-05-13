@@ -20,9 +20,6 @@ SUBROUTINE stres_ewa_gpu( alat, nat, ntyp, ityp, zv, at, bg, tau,    &
   USE mp,                  ONLY : mp_sum
   USE Coul_cut_2D,         ONLY : do_cutoff_2D, cutoff_stres_sigmaewa_gpu
   !
-  USE device_fbuff_m,            ONLY : dev_buf
-  USE device_memcpy_m,       ONLY : dev_memcpy
-  !
   IMPLICIT NONE
   !
   INTEGER :: nat

@@ -39,11 +39,11 @@ SUBROUTINE set_para_diag( nbnd, use_para_diag )
   IF( negrp > 1 .OR. do_diag_in_band_group ) THEN
      ! one diag group per bgrp with strict hierarchy: POOL > BAND > DIAG
      ! if using exx groups from mp_exx,  always use this diag method
-     CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, .TRUE. )
+     CALL laxlib_start ( ndiag_, intra_bgrp_comm, .TRUE. )
   ELSE
      ! one diag group per pool ( individual k-point level )
      ! with band group and diag group both being children of POOL comm
-     CALL laxlib_start ( ndiag_, world_comm, intra_pool_comm, .FALSE. )
+     CALL laxlib_start ( ndiag_, intra_pool_comm, .FALSE. )
   END IF
   CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
        inter_bgrp_comm )
@@ -58,8 +58,8 @@ SUBROUTINE set_para_diag( nbnd, use_para_diag )
   !
   IF ( ionode ) THEN
      !
-     WRITE( stdout, '(/,5X,"Subspace diagonalization in iterative solution ",&
-                     &     "of the eigenvalue problem:")' )
+     WRITE( stdout, '(5X,"Subspace diagonalization in iterative solution ",&
+                     &   "of the eigenvalue problem:")' )
      IF ( use_para_diag ) THEN
         IF (ortho_parent_comm == intra_pool_comm) THEN
            WRITE( stdout, '(5X,"one sub-group per k-point group (pool) will be used")' )

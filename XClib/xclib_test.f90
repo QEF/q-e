@@ -31,18 +31,20 @@ PROGRAM xclib_test
   !
   !! See README.TEST file for more details.
   !
-  USE kind_l,      ONLY: DP
-  USE constants_l, ONLY: pi
-  USE xc_lib,      ONLY: xclib_set_dft_from_name, xclib_set_exx_fraction, &
-                         xclib_get_ID, xclib_reset_dft, xc_gcx,           &
-                         xclib_dft_is_libxc, xclib_init_libxc,            &
-                         xclib_finalize_libxc, xclib_set_finite_size_volume, &
-                         xclib_set_auxiliary_flags, xclib_dft_is, start_exx
+  USE kind_l,         ONLY: DP
+  USE constants_l,    ONLY: pi
+  USE beef_interface, ONLY: beefsetmode
+  USE xc_lib,         ONLY: xclib_set_dft_from_name, xclib_set_exx_fraction, &
+                            xclib_get_ID, xclib_reset_dft, xc, xc_gcx,       &
+                            xc_metagcx, xclib_dft_is_libxc, xclib_init_libxc,&
+                            xclib_finalize_libxc, xclib_set_finite_size_volume,&
+                            xclib_set_auxiliary_flags, xclib_dft_is, start_exx,&
+                            set_libxc_ext_param, dmxc
   USE xclib_utils_and_para
   !--xml
-  USE xmltools,    ONLY: xml_open_file, xml_closefile,xmlr_readtag,   &
-                         xmlw_writetag, xmlw_opentag, xmlw_closetag, &
-                         xmlr_opentag, xmlr_closetag, get_attr, add_attr
+  USE xmltools,       ONLY: xml_open_file, xml_closefile,xmlr_readtag,  &
+                            xmlw_writetag, xmlw_opentag, xmlw_closetag, &
+                            xmlr_opentag, xmlr_closetag, get_attr, add_attr
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
@@ -54,6 +56,7 @@ PROGRAM xclib_test
   USE qe_dft_list, ONLY: nxc, ncc, ngcx, ngcc, nmeta, n_dft, &
                          dft_LDAx_name, dft_LDAc_name, dft_GGAx_name, &
                          dft_GGAc_name, dft_MGGA_name, dft_full
+  USE qe_dft_refs
   !
   IMPLICIT NONE
   !
@@ -66,7 +69,9 @@ PROGRAM xclib_test
 #endif
   !
 #if defined(__LIBXC)
-  INTEGER :: major, minor, micro, fkind
+  INTEGER :: major, minor, micro, ifamily, fkind
+  TYPE(xc_f03_func_t) :: xc_func0
+  TYPE(xc_f03_func_info_t) :: xc_info0
 #endif
   !
   INTEGER :: mype, npes, comm, ntgs, root
@@ -84,7 +89,7 @@ PROGRAM xclib_test
   !
   !-------- Input vars -----------------------
   CHARACTER(LEN=15) :: test, family, fam_init
-  CHARACTER(LEN=30) :: dft, dft_init, xc_kind, xmldft, xmlfamily
+  CHARACTER(LEN=32) :: dft, dft_init, dft_lxc, xc_kind, xmldft, xmlfamily
   CHARACTER(LEN=30) :: polarization, xmlpolarization
   CHARACTER(LEN=15) :: input_err_where=''
   CHARACTER(LEN=40) :: input_err=''
@@ -169,7 +174,7 @@ PROGRAM xclib_test
   INTEGER :: tag_err
   CHARACTER(LEN=1) :: dummy
   CHARACTER(LEN=30) :: filename_xml=""
-  CHARACTER(LEN=45) :: xc_data="XC_DATA______________"
+  CHARACTER(LEN=48) :: xc_data="XC_DATA__________"
   ! ... output
   INTEGER :: iunpun, iun, nlen1, nlen2
   LOGICAL :: found, exc_term=.TRUE., cor_term=.TRUE.
@@ -379,6 +384,15 @@ PROGRAM xclib_test
   IF (nr==1) nrpe = mype*nnr
   IF (nr==0) nrpe = npoints-(npoints/npes)*(npes-mype-1)
   !
+  ! ... openacc init (otherwise it offsets the wall time of the first test)
+  !
+#if defined(_OPENACC)
+  !$acc data create( time )
+  !$acc end data
+#endif
+  !
+  ! ... capitalize input vars
+  !
   IF (TRIM(polarization)=='UNPOLARIZED' ) THEN
     is_min = 1  ;  is_max = 1
   ELSEIF (TRIM(polarization)=='POLARIZED' ) THEN
@@ -509,8 +523,42 @@ PROGRAM xclib_test
         IF (mype==root) CALL print_test_status( skipped )
         CYCLE
       ENDIF
-      dft = xc_f03_functional_get_name( id )
-      IF ( TRIM(dft) == '' ) CYCLE
+      !
+      dft_lxc = xc_f03_functional_get_name( id )
+      IF ( TRIM(dft_lxc) == '' ) CYCLE
+      !
+      fkind=-100 ; ifamily=-100
+      CALL xc_f03_func_init( xc_func0, id, 1 )
+      xc_info0 = xc_f03_func_get_info( xc_func0 )
+      fkind = xc_f03_func_info_get_kind( xc_info0 )
+      ifamily = xc_f03_func_info_get_family( xc_info0 )
+      CALL xc_f03_func_end( xc_func0 )
+      !
+      dft = 'XC-000I-000I-000I-000I-000I-000I'
+      IF ( ifamily==XC_FAMILY_LDA .AND. (fkind==XC_EXCHANGE .OR. fkind==XC_KINETIC) ) THEN
+        WRITE( dft(4:6),   '(i3.3)' ) id
+        WRITE( dft(7:7),   '(a)' ) 'L'
+      ELSEIF ( ifamily==XC_FAMILY_LDA .AND. (fkind==XC_CORRELATION .OR. &
+                                        fkind==XC_EXCHANGE_CORRELATION) ) THEN
+        WRITE( dft(9:11),  '(i3.3)' ) id
+        WRITE( dft(12:12), '(a)' ) 'L'
+      ELSEIF ( (ifamily==XC_FAMILY_GGA .OR. ifamily==XC_FAMILY_HYB_GGA) .AND. &
+               (fkind==XC_EXCHANGE .OR. fkind==XC_KINETIC) ) THEN
+        WRITE( dft(14:16), '(i3.3)' ) id
+        WRITE( dft(17:17), '(a)' ) 'L'
+      ELSEIF ( (ifamily==XC_FAMILY_GGA  .OR. ifamily==XC_FAMILY_HYB_GGA) .AND. &
+               (fkind==XC_CORRELATION .OR. fkind==XC_EXCHANGE_CORRELATION) ) THEN
+        WRITE( dft(19:21), '(i3.3)' ) id
+        WRITE( dft(22:22), '(a)' ) 'L'
+      ELSEIF ( (ifamily==XC_FAMILY_MGGA .OR. ifamily==XC_FAMILY_HYB_MGGA) .AND. &
+               (fkind==XC_EXCHANGE .OR. fkind==XC_KINETIC) ) THEN
+        WRITE( dft(24:26), '(i3.3)' ) id
+        WRITE( dft(27:27), '(a)' ) 'L'
+      ELSEIF ( (ifamily==XC_FAMILY_MGGA .OR. ifamily==XC_FAMILY_HYB_MGGA) .AND. &
+               (fkind==XC_CORRELATION .OR. fkind==XC_EXCHANGE_CORRELATION) ) THEN
+        WRITE( dft(29:31), '(i3.3)' ) id
+        WRITE( dft(32:32), '(a)' ) 'L'
+      ENDIF
     ENDIF
 #endif
     !
@@ -534,6 +582,19 @@ PROGRAM xclib_test
     !
 #if defined(__LIBXC)
     IF (xclib_dft_is_libxc( 'ANY' )) CALL xclib_init_libxc( ns, .FALSE. )
+    !
+    IF ( igcc1==428 .AND. is_libxc(4) ) THEN
+      ! Example of how to change an external parameter in a Libxc
+      ! functional (HYB_GGA_XC_HSE06).
+      ! Arguments:
+      ! 1- family-kind index (1:LDAx, 2:LDAc, 3:GGAx, ...);
+      ! 2- parameter index (you find it with xc_infos.x);
+      ! 3- new value of the parameter.
+      CALL set_libxc_ext_param( 4, 0, 0.25d0  )
+      CALL set_libxc_ext_param( 4, 1, 0.106d0 )
+      CALL set_libxc_ext_param( 4, 2, 0.106d0 )
+      !
+    ENDIF
     !
     IF ( xc_kind_error ) THEN
       CALL print_test_status( skipped4 )
@@ -607,10 +668,14 @@ PROGRAM xclib_test
     ELSE
       exc_term = (iexch1+igcx1+imeta1  /= 0)
       cor_term = (icorr1+igcc1+imetac1 /= 0)
+      IF ( exc_term ) xc_kind='X'
+      IF ( cor_term ) xc_kind='C'
+      IF ( exc_term .AND. cor_term ) xc_kind='XC'
     ENDIF
     !
     IF (MGGA) THEN
       IF (.NOT. xc_derivative ) THEN
+        xc_kind ='XC'
         exc_term = .TRUE.
         cor_term = .TRUE.
       ELSE
@@ -622,7 +687,23 @@ PROGRAM xclib_test
     IF (ns == 2 .AND. (.NOT.is_libxc(2)) .AND. icorr1/=0 .AND. &
                icorr1/=1 .AND. icorr1/=2 .AND. icorr1/=4 .AND. &
                icorr1/=8 .AND. icorr1/=3 .AND. icorr1/=7 .AND. &
-               icorr1/=13) CYCLE
+               icorr1/=13) THEN
+      IF (mype==root) CALL print_test_status( skipped )         
+      CYCLE
+    ENDIF
+    !
+    IF (dft_init=='ALL_TERMS') THEN
+      IF ( (LDA  .AND. exc_term .AND. dft_LDAx(iexch1)%wrn(1:12)=='never called') .OR. &
+           (LDA  .AND. cor_term .AND. dft_LDAx(icorr1)%wrn(1:12)=='never called') .OR. &
+           (GGA  .AND. exc_term .AND. dft_GGAx(igcx1)%wrn(1:12) =='never called') .OR. &
+           (GGA  .AND. cor_term .AND. dft_GGAx(igcc1)%wrn(1:12) =='never called') .OR. &
+           (MGGA .AND. exc_term .AND. dft_GGAx(imeta1)%wrn(1:12)=='never called') ) THEN
+        !
+        IF (mype==root) CALL print_test_status( skipped )
+        CYCLE
+        !
+      ENDIF
+    ENDIF
     !
     ! ... index stuff
     !
@@ -734,15 +815,21 @@ PROGRAM xclib_test
     !
     nlen1 = LEN(TRIM(dft))
     nlen2 = LEN(TRIM(family))
-    IF ( dft_init=='ALL_TERMS' .OR. dft_init(1:4)/='ALL_' ) THEN
+    IF ( dft_init=='ALL_TERMS' ) THEN
       WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
       WRITE(xc_data(14:13+nlen2),'(a)') family(1:nlen2)
       IF (is==1) WRITE(xc_data(18:30),'(a)') 'UNP'
       IF (is==2) WRITE(xc_data(18:30),'(a)') 'POL'
-    ELSEIF ( dft_init=='ALL_SHORT'.OR.dft_init=='ALL_LIBXC' ) THEN
+    ELSEIF ( dft_init=='ALL_SHORT' ) THEN
       WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
-      IF (is==1) WRITE(xc_data(8+nlen1:),'(a)') 'UNP'
-      IF (is==2) WRITE(xc_data(8+nlen1:),'(a)') 'POL'
+      IF (is==1) WRITE(xc_data(9+nlen1:),'(a)') 'UNP'
+      IF (is==2) WRITE(xc_data(9+nlen1:),'(a)') 'POL'
+    ELSEIF ( dft_init=='ALL_LIBXC' .OR. dft_init(1:4)/='ALL_' ) THEN
+      xc_data="XC_DATA_______________________________________"
+      WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
+      WRITE(xc_data(42:41+nlen2),'(a)') family(1:nlen2)
+      IF (is==1) WRITE(xc_data(42+nlen2:),'(a)') 'UNP'
+      IF (is==2) WRITE(xc_data(42+nlen2:),'(a)') 'POL'
     ENDIF
     !
     ! ... read data set from xml file
@@ -978,6 +1065,9 @@ PROGRAM xclib_test
         IF ( .NOT. LDA ) THEN
           ex1 = 0.d0  ;  ec1 = 0.d0
         ENDIF
+        !
+        IF ( dft(1:3)=='BEE' ) CALL beefsetmode(-1) !** beeforder can be manually 
+        !                                           !   changed here for other checks
         !
         IF (mype==root) time(3) = get_wall_time()
         CALL xc_gcx( nnr, ns, rho, grho, exg1, ecg1, v1x1, v2x1, v1c1, &
@@ -1759,9 +1849,13 @@ PROGRAM xclib_test
   IMPLICIT NONE
   !
   CHARACTER(LEN=*), INTENT(IN) :: status
+  CHARACTER(LEN=30)  :: dft_out
   CHARACTER(LEN=100) :: test_output_gen
   CHARACTER(LEN=115) :: test_output_exe
   INTEGER :: j, id_term
+  !
+  dft_out = dft
+  IF (dft_init=='ALL_LIBXC') dft_out = dft_lxc
   !
   IF (TRIM(test)=='GENERATE') THEN
     test_output_gen = ''
@@ -1777,7 +1871,7 @@ PROGRAM xclib_test
     ENDIF
     IF (is==1) WRITE(test_output_gen(13:17), '(a)') 'UNPOL'
     IF (is==2) WRITE(test_output_gen(13:15), '(a)') 'POL'
-    WRITE(test_output_gen(19:54), '(a)') TRIM(dft)
+    WRITE(test_output_gen(19:54), '(a)') TRIM(dft_out)
     WRITE(test_output_gen(56:),'(a)') TRIM(status)
     WRITE(stdout,*) test_output_gen
   ELSEIF (TRIM(test)=='EXECUTE') THEN
@@ -1794,13 +1888,13 @@ PROGRAM xclib_test
     ENDIF
     IF (is==1) WRITE(test_output_exe(13:17), '(a)') 'UNPOL'
     IF (is==2) WRITE(test_output_exe(13:15), '(a)') 'POL'
-    WRITE(test_output_exe(19:54), '(a)') TRIM(dft)
+    WRITE(test_output_exe(19:54), '(a)') TRIM(dft_out)
     WRITE(test_output_exe(56:96), '(a)') TRIM(status)
     IF (status==passed .AND. show_time) THEN
       WRITE(test_output_exe(80:85), '(a)') 'time:'
-      WRITE(test_output_exe(86:92), '(F6.3)') time_tot2
+      WRITE(test_output_exe(86:92), '(F6.3)') time_tot1
       WRITE(test_output_exe(93:100), '(a)') 's  incr:'
-      WRITE(test_output_exe(101:110), '(F8.3)') time_tot2/time_tot1*100.d0-100.d0
+      WRITE(test_output_exe(101:110), '(F8.3)') time_tot1/time_tot2*100.d0-100.d0
       WRITE(test_output_exe(111:111), '(a)') '%'
     ENDIF
     WRITE(stdout,*) test_output_exe

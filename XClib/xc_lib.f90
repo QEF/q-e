@@ -14,16 +14,16 @@ MODULE xc_lib
   !
   IMPLICIT NONE
   !
-  SAVE 
-  ! 
+  SAVE
+  !
   PRIVATE
   !
   !
-  !PUBLIC :: xc, dmxc         !LDA
+  PUBLIC :: xc, dmxc          !LDA
   !
-  PUBLIC :: xc_gcx !, dgcxc   !GGA
+  PUBLIC :: xc_gcx, dgcxc     !GGA
   !
-  !PUBLIC :: xc_metagcx       !MGGA
+  PUBLIC :: xc_metagcx        !MGGA
   !
   PUBLIC :: xclib_set_dft_from_name,           &
             xclib_set_dft_IDs,                 &
@@ -57,19 +57,76 @@ MODULE xc_lib
             dft_force_hybrid
   !
   !
-  INTERFACE xc_gcx
-     SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
-       USE kind_l,        ONLY: DP  
+  INTERFACE xc
+     SUBROUTINE xc( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out, gpu_args_ )
+       USE kind_l, ONLY: DP
        IMPLICIT NONE
-       INTEGER,  INTENT(IN) :: length, ns
-       REAL(DP), INTENT(IN) :: rho(:,:), grho(:,:,:)
-       REAL(DP), INTENT(OUT) :: ex(:), ec(:)
-       REAL(DP), INTENT(OUT) :: v1x(:,:), v2x(:,:)
-       REAL(DP), INTENT(OUT) :: v1c(:,:), v2c(:,:)
-       REAL(DP), OPTIONAL, INTENT(OUT) :: v2c_ud(:)
+       INTEGER,  INTENT(IN) :: length, srd, svd
+       REAL(DP), INTENT(IN) :: rho_in(length,srd)
+       REAL(DP), INTENT(OUT) :: ex_out(length), ec_out(length)
+       REAL(DP), INTENT(OUT) :: vx_out(length,svd), vc_out(length,svd)
+       LOGICAL,  OPTIONAL, INTENT(IN) :: gpu_args_
      END SUBROUTINE
   END INTERFACE
   !
+  !
+  INTERFACE xc_gcx
+     SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud, &
+                        gpu_args_ )
+       USE kind_l, ONLY: DP
+       IMPLICIT NONE
+       INTEGER,  INTENT(IN) :: length, ns
+       REAL(DP), INTENT(IN) :: rho(length,ns), grho(3,length,ns)
+       REAL(DP), INTENT(OUT) :: ex(length), ec(length)
+       REAL(DP), INTENT(OUT) :: v1x(length,ns), v2x(length,ns)
+       REAL(DP), INTENT(OUT) :: v1c(length,ns), v2c(length,ns)
+       REAL(DP), OPTIONAL, INTENT(OUT) :: v2c_ud(length)
+       LOGICAL,  OPTIONAL, INTENT(IN)  :: gpu_args_
+     END SUBROUTINE
+  END INTERFACE
+  !
+  !
+  INTERFACE xc_metagcx
+     SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, &
+                            v1c, v2c, v3c, gpu_args_ )
+       USE kind_l, ONLY: DP
+       IMPLICIT NONE
+       INTEGER,  INTENT(IN) :: length, ns, np
+       REAL(DP), INTENT(IN) :: rho(length,ns), grho(3,length,ns), tau(length,ns)
+       REAL(DP), INTENT(OUT) :: ex(length), ec(length)
+       REAL(DP), INTENT(OUT) :: v1x(length,ns), v2x(length,ns), v3x(length,ns)
+       REAL(DP), INTENT(OUT) :: v1c(length,ns), v2c(np,length,ns), v3c(length,ns)
+       LOGICAL,  OPTIONAL, INTENT(IN) :: gpu_args_
+     END SUBROUTINE
+  END INTERFACE
+  !
+  !
+  INTERFACE dmxc
+     SUBROUTINE dmxc( length, srd, rho_in, dmuxc, gpu_args_ )
+       USE kind_l, ONLY: DP
+       IMPLICIT NONE
+       INTEGER,  INTENT(IN) :: length
+       INTEGER,  INTENT(IN) :: srd
+       REAL(DP), INTENT(IN) :: rho_in(length,srd)
+       REAL(DP), INTENT(OUT) :: dmuxc(length,srd,srd)
+       LOGICAL,  OPTIONAL, INTENT(IN) :: gpu_args_
+     END SUBROUTINE
+  END INTERFACE
+  !
+  !
+  INTERFACE dgcxc
+     SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss, gpu_args_ )
+       USE kind_l, ONLY: DP
+       IMPLICIT NONE
+       INTEGER,  INTENT(IN) :: length
+       INTEGER,  INTENT(IN) :: sp
+       REAL(DP), INTENT(IN) :: r_in(length,sp)
+       REAL(DP), INTENT(IN) :: g_in(length,3,sp)
+       REAL(DP), INTENT(OUT) :: dvxc_rr(length,sp,sp), dvxc_sr(length,sp,sp), &
+                                dvxc_ss(length,sp,sp)
+       LOGICAL, OPTIONAL, INTENT(IN) :: gpu_args_
+     END SUBROUTINE
+  END INTERFACE
   !
 END MODULE xc_lib
 !--------------------------------------------------
