@@ -1,6 +1,6 @@
  &lr_input
    prefix = 'Fe',
-   outdir = '/scratch/timrov/QE_gitlab/magnons/q-e/tempdir/',
+   outdir = '/g100_work/Sis22_baroni/obaseggi/q-e-kpoints/tempdir/',
    restart_step = 200,
    restart = .false.
  /

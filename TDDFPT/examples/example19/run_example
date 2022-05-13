@@ -161,12 +161,11 @@ cat > $PREFIX.tddfpt_pp.in << EOF
    itermax0 = 1600,
    itermax = 20000,
    extrapolation='osc',
-   epsil = 0.001,
+   epsil = 0.1,
    ipol = 2,
-   units = 1,
    start = 0.0d0,
-   increment = 0.001d0,
-   end = 1.0d0
+   increment = 0.1d0,
+   end = 15.0d0
  /
 EOF
 $ECHO "  Running the postprocessing spectrum calculation for $PREFIX..."
