@@ -101,6 +101,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
 #endif
   !
   USE kind_l,               ONLY: DP
+  USE xclib_utils_and_para, ONLY: inside_error, error_msg
   USE dft_setting_params,   ONLY: igcx, igcc, is_libxc, rho_threshold_gga, &
                                   grho_threshold_gga, rho_threshold_lda
   USE qe_drivers_gga
@@ -505,6 +506,8 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   DEALLOCATE( grho2 )
   !
 #endif
+  !
+  IF (inside_error/=0) CALL xclib_error( 'xc_gcx_', error_msg(inside_error), 1 )
   !
   !$acc end data
   !

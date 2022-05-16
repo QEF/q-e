@@ -9,7 +9,7 @@
 !-----------------------------------------------------
 MODULE xclib_utils_and_para
 !-----------------------------------------------------
-!! MPI stuff
+!! MPI stuff and error vars.
 !
 #if defined (__MPI)
         !
@@ -26,10 +26,20 @@ MODULE xclib_utils_and_para
         INTEGER, PARAMETER :: MPI_COMM_NULL  = -1
         INTEGER, PARAMETER :: MPI_COMM_SELF  = -2
 #endif
-        ! standard output unit
         INTEGER, PARAMETER :: stdout = 6
+        !! standard output unit
         !
-        ! switch for warning messages
         LOGICAL :: nowarning = .FALSE.
+        !! switch for warning messages
+        !
+        INTEGER :: inside_error = 0
+        !! index to recover error type inside gpu regions (see error_msg)
+        !
+        CHARACTER(LEN=25) :: error_msg(5)
+        DATA error_msg / 'Invalid ID for LDA exch.', &
+                         'Invalid ID for LDA corr.', &
+                         'Invalid ID for GGA exch.', &
+                         'Invalid ID for GGA corr.', &
+                         'Invalid ID for MGGA' /
         !
 END MODULE xclib_utils_and_para

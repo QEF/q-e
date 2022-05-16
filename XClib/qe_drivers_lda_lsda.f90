@@ -14,9 +14,10 @@ MODULE qe_drivers_lda_lsda
   !-----------------------------------------------------------------------
   !! Contains the LDA drivers of QE that calculate XC energy and potential.
   !
-  USE kind_l,             ONLY: DP
-  USE dft_setting_params, ONLY: iexch, icorr, rho_threshold_lda, exx_started, &
-                                exx_fraction, finite_size_cell_volume
+  USE kind_l,               ONLY: DP
+  USE xclib_utils_and_para, ONLY: inside_error
+  USE dft_setting_params,   ONLY: iexch, icorr, rho_threshold_lda, exx_started, &
+                                  exx_fraction, finite_size_cell_volume
   USE exch_lda
   USE corr_lda
   !
@@ -160,6 +161,7 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE DEFAULT
         !
+        inside_error = 1 ! internal error code for 'LDA exch ID not recognized'
         ex = 0.0_DP
         vx = 0.0_DP
         !
@@ -245,6 +247,7 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE DEFAULT
         !
+        inside_error = 2 ! internal error code for 'LDA corr ID not recognized'
         ec = 0.0_DP
         vc = 0.0_DP
         !
@@ -260,7 +263,6 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
 !$omp end do
 !$omp end parallel
 #endif
-  !
   !
   RETURN
   !
@@ -395,6 +397,7 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE DEFAULT
         !
+        inside_error = 1 ! internal error code for 'LDA exch ID not recognized'
         ex = 0.0_DP
         vx_up = 0.0_DP
         vx_dw = 0.0_DP
@@ -464,6 +467,7 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE DEFAULT
         !
+        inside_error = 2 ! internal error code for 'LDA corr ID not recognized'
         ec = 0.0_DP
         vc_up = 0.0_DP
         vc_dw = 0.0_DP

@@ -14,9 +14,10 @@ MODULE qe_drivers_mgga
   !------------------------------------------------------------------------
   !! Contains the mGGA drivers of QE that calculate XC energy and potential.
   !
-  USE kind_l,             ONLY: DP
-  USE dft_setting_params, ONLY: imeta, imetac, rho_threshold_mgga, &
-                                grho2_threshold_mgga, tau_threshold_mgga
+  USE kind_l,               ONLY: DP
+  USE xclib_utils_and_para, ONLY: inside_error
+  USE dft_setting_params,   ONLY: imeta, imetac, rho_threshold_mgga, &
+                                  grho2_threshold_mgga, tau_threshold_mgga
   !
   IMPLICIT NONE
   !
@@ -101,6 +102,7 @@ SUBROUTINE tau_xc( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
        !
     CASE DEFAULT
        !
+       IF (imeta/=0) inside_error = 5 ! internal error code for 'MGGA ID not valid'
        v1x(k)=0.d0 ; v2x(k)=0.d0 ; v3x(k)=0.d0 ; ex(k)=0.d0
        v1c(k)=0.d0 ; v2c(1,k,1)=0.d0 ; v3c(k)=0.d0 ; ec(k)=0.d0
        !
@@ -207,6 +209,7 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
         !
      CASE DEFAULT
         !
+        IF (imeta/=0) inside_error = 5 ! internal error code for 'MGGA ID not valid'
         v1x(k,:)=0.d0 ; v2x(k,:)=0.d0   ; v3x(k,:)=0.d0 ; ex(k)=0.d0
         v1c(k,:)=0.d0 ; v2c(:,k,:)=0.d0 ; v3c(k,:)=0.d0 ; ec(k)=0.d0
         !

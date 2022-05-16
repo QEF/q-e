@@ -14,11 +14,12 @@ MODULE qe_drivers_gga
   !----------------------------------------------------------------------
   !! Contains the GGA drivers that calculate the XC energy and potential.
   !
-  USE kind_l,              ONLY: DP
-  USE dft_setting_params,  ONLY: igcx, igcc, rho_threshold_gga,     &
-                                 grho_threshold_gga, exx_started,   &
-                                 exx_fraction, screening_parameter, &
-                                 gau_parameter
+  USE kind_l,               ONLY: DP
+  USE xclib_utils_and_para, ONLY: inside_error
+  USE dft_setting_params,   ONLY: igcx, igcc, rho_threshold_gga,     &
+                                  grho_threshold_gga, exx_started,   &
+                                  exx_fraction, screening_parameter, &
+                                  gau_parameter
   !
   IMPLICIT NONE
   !
@@ -357,6 +358,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      CASE DEFAULT
         !
+        IF (igcx/=0) inside_error = 3 ! internal error code for 'GGA exch ID not valid'
         sx  = 0.0_DP
         v1x = 0.0_DP
         v2x = 0.0_DP
@@ -421,6 +423,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      CASE DEFAULT
         !
+        IF (igcx/=0) inside_error = 4 ! internal error code for 'GGA corr ID not valid'
         sc = 0.0_DP
         v1c = 0.0_DP
         v2c = 0.0_DP
@@ -538,12 +541,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
      ! ... exchange
      !
      SELECT CASE( igcx )
-     CASE( 0 )
-        !
-        sx_tot(ir) = 0.0_DP
-        v1x_up = 0.0_DP ; v1x_dw = 0.0_DP
-        v2x_up = 0.0_DP ; v2x_dw = 0.0_DP
-        !
      CASE( 1 )
         !
         CALL becke88_spin( rho_up, rho_dw, grho2_up, grho2_dw, sx_up, sx_dw, &
@@ -968,6 +965,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE DEFAULT
         !
+        IF (igcx/=0) inside_error = 3 ! internal error code for 'GGA exch ID not valid'
         sx_tot(ir) = 0.0_DP
         v1x_up = 0.0_DP ; v1x_dw = 0.0_DP
         v2x_up = 0.0_DP ; v2x_dw = 0.0_DP
@@ -986,7 +984,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
 !$omp end do
 !$omp end parallel
 #endif
-  !
   !
   RETURN
   !
@@ -1061,13 +1058,6 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
     ENDIF
     !
     SELECT CASE( igcc )
-    CASE( 0 )
-       !
-       sc  = 0.0_DP
-       v1c_up = 0.0_DP
-       v1c_dw = 0.0_DP
-       v2c = 0.0_DP
-       !
     CASE( 1 )
        !
        CALL perdew86_spin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c )
@@ -1090,6 +1080,7 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
        !
     CASE DEFAULT
        !
+       IF (igcc/=0) inside_error = 4 ! internal error code for 'GGA corr not valid'
        sc = 0.0_DP
        v1c_up = 0.0_DP
        v1c_dw = 0.0_DP
@@ -1222,7 +1213,7 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
        !
     CASE DEFAULT
        !
-       !CALL xclib_error(" gcc_spin_more "," gradient correction not implemented ",1)
+       IF (igcc/=0) inside_error = 4 ! internal error code for 'GGA corr ID not valid'
        !
     END SELECT
     !
