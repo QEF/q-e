@@ -14,7 +14,6 @@ CONTAINS
 !
 !-----------------------------------------------------------------------
 SUBROUTINE becke88( rho, grho, sx, v1x, v2x )
-!$acc routine (becke88) seq
   !-----------------------------------------------------------------------
   !! Becke exchange: A.D. Becke, PRA 38, 3098 (1988)
   !! only gradient-corrected part, no Slater term included
@@ -22,6 +21,8 @@ SUBROUTINE becke88( rho, grho, sx, v1x, v2x )
   USE kind_l, ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -58,7 +59,6 @@ END SUBROUTINE becke88
 !
 !-----------------------------------------------------------------------
 SUBROUTINE ggax( rho, grho, sx, v1x, v2x )
-!$acc routine (ggax) seq
   !-----------------------------------------------------------------------
   !! Perdew-Wang GGA (PW91), exchange part:
   !! J.P. Perdew et al.,PRB 46, 6671 (1992)
@@ -66,6 +66,8 @@ SUBROUTINE ggax( rho, grho, sx, v1x, v2x )
   USE kind_l, ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -107,7 +109,6 @@ END SUBROUTINE ggax
 !
 !---------------------------------------------------------------
 SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )
-!$acc routine (pbex) seq
   !---------------------------------------------------------------
   !! PBE exchange (without Slater exchange):
   !! iflag=1  J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
@@ -123,6 +124,8 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )
   USE kind_l,      ONLY : DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   INTEGER, INTENT(IN) :: iflag
   REAL(DP), INTENT(IN) :: rho, grho
@@ -330,7 +333,6 @@ END SUBROUTINE pbex
 !
 !----------------------------------------------------------------------------
 SUBROUTINE hcth( rho, grho, sx, v1x, v2x )
-!$acc routine (hcth) seq
   !--------------------------------------------------------------------------
   !! HCTH/120, JCP 109, p. 6264 (1998)
   !! Parameters set-up after N.L. Doltsisnis & M. Sprik (1999)
@@ -345,6 +347,8 @@ SUBROUTINE hcth( rho, grho, sx, v1x, v2x )
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -457,12 +461,13 @@ END SUBROUTINE hcth
     !
     !-------------------------------------------------------
     SUBROUTINE pwcorr( r, c, g, dg )
-!$acc routine (pwcorr) seq
       !-----------------------------------------------------
       !
       USE kind_l,   ONLY: DP
       !
       IMPLICIT NONE
+      !
+      !$acc routine seq
       !
       REAL(DP), INTENT(IN)  :: r, c(6)
       REAL(DP), INTENT(OUT) :: g, dg
@@ -487,7 +492,6 @@ END SUBROUTINE hcth
 !
 !-----------------------------------------------------------------------------
 SUBROUTINE optx( rho, grho, sx, v1x, v2x )
-!$acc routine (optx) seq
   !---------------------------------------------------------------------------
   !! OPTX, Handy et al. JCP 116, p. 5411 (2002) and refs. therein
   !! Present release: Mauro Boero, Tsukuba, 10/9/2002
@@ -501,6 +505,8 @@ SUBROUTINE optx( rho, grho, sx, v1x, v2x )
   USE kind_l,   ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -534,7 +540,6 @@ END SUBROUTINE optx
 !
 !---------------------------------------------------------------
 SUBROUTINE wcx( rho, grho, sx, v1x, v2x )
-!$acc routine (wcx) seq
   !---------------------------------------------------------------
   !!  Wu-Cohen exchange (without Slater exchange):
   !!  Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)
@@ -542,6 +547,8 @@ SUBROUTINE wcx( rho, grho, sx, v1x, v2x )
   USE kind_l,   ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -607,12 +614,13 @@ END SUBROUTINE wcx
 !
 !-----------------------------------------------------------------------
 SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega )
-!$acc routine (pbexsr) seq
   !---------------------------------------------------------------------
   ! INCLUDE 'cnst.inc'
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: omega
   REAL(DP), INTENT(IN) :: rho, grho
@@ -662,10 +670,9 @@ END SUBROUTINE pbexsr
 !
 !
 !-----------------------------------------------------------------------     
-      SUBROUTINE axsr(IXC,RHO,GRHO,sx,V1X,V2X,OMEGA)
-!$acc routine (axsr) seq
+      SUBROUTINE axsr( IXC, RHO, GRHO, sx, V1X, V2X, OMEGA )
 !-----------------------------------------------------------------------     
-!!!! Per Hyldgaard, No warranties. adapted from the pbesrx version above
+!*** [Per Hyldgaard, No warranties. adapted from the pbesrx version above]
 !-----------------------------------------------------------------------
 !
 !      INCLUDE 'cnst.inc'
@@ -673,7 +680,9 @@ END SUBROUTINE pbexsr
       use kind_l, ONLY : DP
       !
       IMPLICIT NONE
-
+      !
+      !$acc routine seq
+      !
       INTEGER :: IXC
       REAL(DP):: RHO, GRHO, V1X, V2X, OMEGA
       REAL(DP), PARAMETER :: SMALL=1.D-20, SMAL2=1.D-08
@@ -714,7 +723,6 @@ END SUBROUTINE pbexsr
 !-----------------------------------------------------------------------     
       SUBROUTINE wggax_analy_erfc(rho,s,nggatyp,omega,Fx_wgga, &
                                   dfxdn,dfxds)
-!$acc routine (wggax_analy_erfc) seq
 !--------------------------------------------------------------------
 !
 !     Short-ranged wGGA Enhancement Factor (from erfc, analytical with
@@ -748,6 +756,8 @@ END SUBROUTINE pbexsr
       use kind_l, ONLY : DP
 !      USE constants, ONLY : pi
       Implicit None
+      
+      !$acc routine seq
       
       REAL(DP), PARAMETER :: pi=3.14159265358979323846d0
 
@@ -955,13 +965,14 @@ END SUBROUTINE pbexsr
 !
 !-----------------------------------------------------------------------
 SUBROUTINE rPW86( rho, grho, sx, v1x, v2x )
-!$acc routine (rPW86) seq
   !---------------------------------------------------------------------
   !! PRB 33, 8800 (1986) and J. Chem. Theory comp. 5, 2754 (2009).
   !
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -1000,7 +1011,6 @@ END SUBROUTINE rPW86
 !
 !-----------------------------------------------------------------
 SUBROUTINE c09x( rho, grho, sx, v1x, v2x )
-!$acc routine (c09x) seq
   !---------------------------------------------------------------
   !! Cooper '09 exchange for vdW-DF (without Slater exchange):
   !! V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
@@ -1012,6 +1022,8 @@ SUBROUTINE c09x( rho, grho, sx, v1x, v2x )
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -1072,13 +1084,14 @@ END SUBROUTINE c09x
 !
 !---------------------------------------------------------------
 SUBROUTINE sogga( rho, grho, sx, v1x, v2x )
-!$acc routine (sogga) seq
   !-------------------------------------------------------------
   !! SOGGA exchange
   !
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -1132,13 +1145,14 @@ END SUBROUTINE sogga
 !
 !-------------------------------------------------------------------------
 SUBROUTINE pbexgau( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )
-!$acc routine (pbexgau) seq
   !-----------------------------------------------------------------------
   !! PBEX gaussian.
   !
   USE kind_l,  ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: alpha_gau
   REAL(DP), INTENT(IN) :: rho, grho
@@ -1181,12 +1195,13 @@ END SUBROUTINE pbexgau
     !
     !-----------------------------------------------------------------------
 SUBROUTINE pbe_gauscheme( rho, s, alpha_gau, Fx, dFxdr, dFxds )
-!$acc routine (pbe_gauscheme) seq
        !--------------------------------------------------------------------
        !
        USE kind_l, ONLY: DP
        !
        IMPLICIT NONE
+       !
+       !$acc routine seq
        !
        REAL(dp) :: rho,s,alpha_gau,Fx,dFxdr,dFxds
        ! input: charge and squared gradient and alpha_gau
@@ -1273,10 +1288,10 @@ END SUBROUTINE pbe_gauscheme
 !
 !-------------------------------------------------
 FUNCTION TayExp(X)
-!$acc routine (TayExp) seq
   !-------------------------------------------
   USE kind_l,   ONLY: DP
   IMPLICIT NONE
+  !$acc routine seq
   REAL(DP), INTENT(IN) :: X
   REAL(DP) :: TAYEXP
   INTEGER :: NTERM,I
@@ -1301,13 +1316,14 @@ END FUNCTION TayExp
 !
 !-------------------------------------------------------------------------
 SUBROUTINE PW86( rho, grho, sx, v1x, v2x )
-!$acc routine (PW86) seq
   !-----------------------------------------------------------------------
   !! Perdew-Wang 1986 exchange gradient correction: PRB 33, 8800 (1986)
   !
   USE kind_l,  ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -1346,7 +1362,6 @@ END SUBROUTINE PW86
 !
 !-----------------------------------------------------------------------
 SUBROUTINE becke86b( rho, grho, sx, v1x, v2x )
-!$acc routine (becke86b) seq
   !-----------------------------------------------------------------------
   !! Becke 1986 gradient correction to exchange
   !! A.D. Becke, J. Chem. Phys. 85 (1986) 7184
@@ -1354,6 +1369,8 @@ SUBROUTINE becke86b( rho, grho, sx, v1x, v2x )
   USE kind_l, ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -1387,7 +1404,6 @@ END SUBROUTINE becke86b
 !
 !---------------------------------------------------------------
 SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )
-!$acc routine (b86b) seq
   !-------------------------------------------------------------
   !! Becke exchange (without Slater exchange):
   !! iflag=1: A. D. Becke, J. Chem. Phys. 85, 7184 (1986) (B86b)
@@ -1400,6 +1416,8 @@ SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )
   !
   USE kind_l,     ONLY : DP
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   INTEGER, INTENT(IN) :: iflag
   REAL(DP), INTENT(IN) :: rho, grho
@@ -1458,7 +1476,6 @@ END SUBROUTINE b86b
 !
 !-----------------------------------------------------------------------
 SUBROUTINE cx13( rho, grho, sx, v1x, v2x )
-!$acc routine (cx13) seq
   !-----------------------------------------------------------------------
   !! The new exchange partner for a vdW-DF1-cx suggested
   !! by K. Berland and P. Hyldgaard, see PRB 89, 035412 (2014),
@@ -1467,6 +1484,8 @@ SUBROUTINE cx13( rho, grho, sx, v1x, v2x )
   USE kind_l, ONLY : DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -1516,13 +1535,14 @@ END SUBROUTINE cx13
 !
 !-----------------------------------------------------------------------
 SUBROUTINE becke88_spin( rho_up, rho_dw, grho_up, grho_dw, sx_up, sx_dw, v1x_up, v1x_dw, v2x_up, v2x_dw )
-!$acc routine (becke88_spin) seq
   !-----------------------------------------------------------------------
   !! Becke exchange: A.D. Becke, PRA 38, 3098 (1988) - Spin polarized case
   !
   USE kind_l,    ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho_up, rho_dw
   !! charge
@@ -1577,13 +1597,14 @@ END SUBROUTINE becke88_spin
 !
 !-----------------------------------------------------------------------------
 SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
-!$acc routine (wpbe_analy_erfc_approx_grad) seq
       !-----------------------------------------------------------------------
       !! wPBE Enhancement Factor (erfc approx.,analytical, gradients).
       !
       USE kind_l,    ONLY: DP
       !
       IMPLICIT NONE
+      !
+      !$acc routine seq
       !
       REAL(DP) rho,s,omega,Fx_wpbe,d1sfx,d1rfx
       !
@@ -2170,7 +2191,6 @@ END SUBROUTINE wpbe_analy_erfc_approx_grad
 !
 !------------------------------------------------------------------
 FUNCTION EXPINT(n, x)
-!$acc routine (expint) seq
 !-----------------------------------------------------------------------
 !! Evaluates the exponential integral \(E_n(x)\). 
 !! Inspired by Numerical Recipes.
@@ -2181,6 +2201,7 @@ FUNCTION EXPINT(n, x)
 !
       USE kind_l,   ONLY: DP
       IMPLICIT NONE
+      !$acc routine seq
       INTEGER, INTENT(IN) :: n
       REAL(DP), INTENT(IN) :: x
       REAL(DP) :: expint
