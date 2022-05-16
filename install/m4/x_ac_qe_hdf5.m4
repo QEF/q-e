@@ -68,7 +68,7 @@ if test "$use_parallel" -ne 0; then
            h5cc=$with_hdf5_path/bin/h5cc; 
        elif command -v h5pcc > /dev/null; then 
            h5cc=$(command -v h5pcc) 
-       elif command -v h5cci > /dev/null; then 
+       elif command -v h5cc > /dev/null; then 
            h5cc=$(command -v h5cc) 
        else 
           h5cc=$CC; 
