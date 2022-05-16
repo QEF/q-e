@@ -1471,7 +1471,7 @@ Optional Packages:
   --with-hdf5-include     Specify full path the HDF5 include folder containing
                           module and headers files. Use it if configure fails
                           to detect the path by itself. (default: no)
-  --with-environ          path to Environ root directory
+  --with-environ          absolute path to Environ root directory
 
 Some influential environment variables:
   EXTLIB_FLAGS
@@ -7152,7 +7152,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
            h5cc=$with_hdf5_path/bin/h5cc;
        elif command -v h5pcc > /dev/null; then
            h5cc=$(command -v h5pcc)
-       elif command -v h5cci > /dev/null; then
+       elif command -v h5cc > /dev/null; then
            h5cc=$(command -v h5cc)
        else
           h5cc=$CC;
