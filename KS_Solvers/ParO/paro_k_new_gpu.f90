@@ -210,10 +210,8 @@ SUBROUTINE paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap
 !     write (6,*) ' check nactive = ', lbnd, nactive, nconv
      if (lbnd .ne. nactive+1 ) stop ' nactive check FAILED '
 
-     !$acc host_data use_device(psi, hpsi, spsi, ew)
-     CALL bpcg_k_gpu(hs_psi_gpu, g_1psi_gpu, psi, spsi, npw, npwx, nbnd, npol, how_many, &
+     CALL bpcg_k(hs_psi_gpu, g_1psi_gpu, psi, spsi, npw, npwx, nbnd, npol, how_many, &
                 psi(:,nbase+1), hpsi(:,nbase+1), spsi(:,nbase+1), ethr, ew(1), nhpsi)
-     !$acc end host_data
 !
      CALL start_clock( 'paro:mp_bar' ); 
      CALL mp_barrier(inter_bgrp_comm)
