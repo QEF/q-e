@@ -186,7 +186,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            iflag = 2 ! AHPS for PBEsol-based cross check
         ENDIF
         !
-        IF ( iflag == 0) STOP ! CALL xclib_error( " gcxc ", " Sorting GGA-AHs failed ", 1)
+        IF ( iflag == 0) CALL xc_inside_error( 8 )  ! Sorting GGA-AHs failed
         !
         IF (exx_started) THEN
           CALL axsr( iflag, rho, grho, sxsr, v1xsr, v2xsr, screening_parameter, in_err )
@@ -209,7 +209,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            iflag = 6 ! for test-reserve - analytical sr hole
         ENDIF
         !
-        IF ( iflag == 0) STOP ! CALL xclib_error( " gcxc ", " Sorting vdW-DF-AHs failed ", 1)
+        IF ( iflag == 0) CALL xc_inside_error( 8 )  ! Sorting vdW-DF-AHs failed
         !
         IF (exx_started) THEN
           CALL axsr( iflag, rho, grho, sxsr, v1xsr, v2xsr, screening_parameter, in_err )
@@ -868,7 +868,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         ENDIF
         !
         IF ( iflag == 0) THEN
-           STOP ! CALL xclib_error( " gcx_spin ", " Sorting vdW-DF-AHs failed ", 1)
+          CALL xc_inside_error( 8 )  ! Sorting vdW-DF-AHs failed
         ELSE
           sx_tot(ir) = 0.5_DP * ( sx_up*rnull_up + sx_dw*rnull_dw )
           v2x_up = 2.0_DP * v2x_up
