@@ -70,7 +70,7 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
 #endif
   !
   USE kind_l,               ONLY: DP
-  USE xclib_utils_and_para, ONLY: inside_error, error_msg
+  USE xclib_utils_and_para, ONLY: inside_error, error_msg, nowarning
   USE dft_setting_params,   ONLY: iexch, icorr, is_libxc, rho_threshold_lda, &
                                   finite_size_cell_volume_set
   USE qe_drivers_lda_lsda
@@ -308,7 +308,13 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
   !$acc end data
   !
-  IF (inside_error/=0) CALL xclib_error( 'xc_', error_msg(inside_error), 3 )
+  !$acc update self( inside_error )
+  IF (inside_error/=0 .AND. .NOT.nowarning) THEN
+    CALL xclib_error( 'xc_', error_msg(inside_error), 3 )
+  ELSE
+    inside_error = 0
+    !$acc update device(inside_error)
+  ENDIF
   !
   RETURN
   !

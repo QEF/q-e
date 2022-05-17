@@ -35,6 +35,9 @@ pbecor.o \
 beefun.o
 
 XCT = \
+qe_dft_refs.o
+
+XCT2 = \
 qe_kind.o \
 qe_constants.o \
 xclib_utils_and_para.o \

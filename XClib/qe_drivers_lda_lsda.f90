@@ -15,7 +15,7 @@ MODULE qe_drivers_lda_lsda
   !! Contains the LDA drivers of QE that calculate XC energy and potential.
   !
   USE kind_l,               ONLY: DP
-  USE xclib_utils_and_para, ONLY: inside_error
+  USE xclib_utils_and_para, ONLY: xc_inside_error
   USE dft_setting_params,   ONLY: iexch, icorr, rho_threshold_lda, exx_started, &
                                   exx_fraction, finite_size_cell_volume
   USE exch_lda
@@ -161,7 +161,7 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE DEFAULT
         !
-        inside_error = 1 ! internal error code for 'LDA exch ID not recognized'
+        IF (iexch/=0) CALL xc_inside_error( 1 )  ! LDA exch ID not valid
         ex = 0.0_DP
         vx = 0.0_DP
         !
@@ -247,7 +247,7 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE DEFAULT
         !
-        inside_error = 2 ! internal error code for 'LDA corr ID not recognized'
+        IF (icorr/=0) CALL xc_inside_error( 2 )  ! LDA corr ID not valid
         ec = 0.0_DP
         vc = 0.0_DP
         !
@@ -397,7 +397,7 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE DEFAULT
         !
-        inside_error = 1 ! internal error code for 'LDA exch ID not recognized'
+        IF (iexch/=0) CALL xc_inside_error( 1 )  ! LDA exch ID not valid
         ex = 0.0_DP
         vx_up = 0.0_DP
         vx_dw = 0.0_DP
@@ -408,11 +408,6 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
      ! ... CORRELATION
      !
      SELECT CASE( icorr )
-     CASE( 0 )
-        !
-        ec = 0.0_DP
-        vc_up = 0.0_DP ; vc_dw = 0.0_DP
-        !
      CASE( 1 )
         !
         CALL pz_spin( rs, zeta, ec, vc_up, vc_dw )
@@ -467,7 +462,7 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE DEFAULT
         !
-        inside_error = 2 ! internal error code for 'LDA corr ID not recognized'
+        IF (icorr/=0) CALL xc_inside_error( 2 )  ! LDA corr ID not valid
         ec = 0.0_DP
         vc_up = 0.0_DP
         vc_dw = 0.0_DP

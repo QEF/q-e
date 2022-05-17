@@ -613,7 +613,7 @@ END SUBROUTINE wcx
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega )
+SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega, in_err )
   !---------------------------------------------------------------------
   ! INCLUDE 'cnst.inc'
   USE kind_l,      ONLY: DP
@@ -625,6 +625,7 @@ SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega )
   REAL(DP), INTENT(IN) :: omega
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sxsr, v1xsr, v2xsr
+  INTEGER :: in_err
   !
   ! ... local variables
   !
@@ -651,7 +652,7 @@ SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega )
      s = 8.572844D0 - 18.796223D0/s2
   ENDIF
   !
-  CALL wpbe_analy_erfc_approx_grad( rho, s, omega, fx, d1x, d2x )
+  CALL wpbe_analy_erfc_approx_grad( rho, s, omega, fx, d1x, d2x, in_err )
   !
   sxsr  = ex*fx                        ! - ex
   dsdn  = -4.D0/3.D0*s/rho
@@ -670,7 +671,7 @@ END SUBROUTINE pbexsr
 !
 !
 !-----------------------------------------------------------------------     
-      SUBROUTINE axsr( IXC, RHO, GRHO, sx, V1X, V2X, OMEGA )
+      SUBROUTINE axsr( IXC, RHO, GRHO, sx, V1X, V2X, OMEGA, IN_ERR )
 !-----------------------------------------------------------------------     
 !*** [Per Hyldgaard, No warranties. adapted from the pbesrx version above]
 !-----------------------------------------------------------------------
@@ -683,7 +684,7 @@ END SUBROUTINE pbexsr
       !
       !$acc routine seq
       !
-      INTEGER :: IXC
+      INTEGER :: IXC, IN_ERR
       REAL(DP):: RHO, GRHO, V1X, V2X, OMEGA
       REAL(DP), PARAMETER :: SMALL=1.D-20, SMAL2=1.D-08
       REAL(DP), PARAMETER :: US=0.161620459673995492D0, &
@@ -692,7 +693,7 @@ END SUBROUTINE pbexsr
       REAL(DP), PARAMETER :: f1 = -1.10783814957303361_DP, alpha = 2.0_DP/3.0_DP
       REAL(DP):: RS, VX, FX, AA, RR, EX, S2, S, D1X, D2X, SX, DSDN, DSDG
 !     ==--------------------------------------------------------------==
-
+      
 !      CALL XC(RHO,EX,EC,VX,VC)
       RS = RHO**(1.0_DP/3.0_DP)
       VX = (4.0_DP/3.0_DP)*f1*alpha*RS
@@ -708,7 +709,7 @@ END SUBROUTINE pbexsr
       IF(S.GT.8.3D0) THEN
         S = 8.572844D0 - 18.796223D0/S2
       ENDIF
-      CALL wggax_analy_erfc(RHO,S,IXC,OMEGA,FX,D1X,D2X)
+      CALL wggax_analy_erfc(RHO,S,IXC,OMEGA,FX,D1X,D2X,IN_ERR)
       sx = EX*FX        ! - EX
       DSDN = -4.D0/3.D0*S/RHO
       V1X = VX*FX + (DSDN*D2X+D1X)*EX   ! - VX
@@ -722,7 +723,7 @@ END SUBROUTINE pbexsr
 !
 !-----------------------------------------------------------------------     
       SUBROUTINE wggax_analy_erfc(rho,s,nggatyp,omega,Fx_wgga, &
-                                  dfxdn,dfxds)
+                                  dfxdn,dfxds,in_err)
 !--------------------------------------------------------------------
 !
 !     Short-ranged wGGA Enhancement Factor (from erfc, analytical with
@@ -753,8 +754,8 @@ END SUBROUTINE pbexsr
 !
 !--------------------------------------------------------------------
 
-      use kind_l, ONLY : DP
-!      USE constants, ONLY : pi
+      use kind_l,               only: DP
+      
       Implicit None
       
       !$acc routine seq
@@ -762,6 +763,7 @@ END SUBROUTINE pbexsr
       REAL(DP), PARAMETER :: pi=3.14159265358979323846d0
 
       Real(dp) :: rho,s,omega,Fx_wgga,dfxdn,dfxds
+      integer :: in_err
       integer :: nggatyp
 
       Real(dp) :: Abar,B,C,D,E
@@ -846,18 +848,18 @@ END SUBROUTINE pbexsr
       Real(dp) :: egbars,degbards
 
       Real(dp) :: kf,ny,ny2,dnydn
-
+      
       kf    = (Three*pi2*rho) ** f13
       ny= omega/kf
       ny2=ny*ny
       dnydn= -f13*ny/rho
-
+      
 !      if ((nggatyp.ge.1).or.(nggatyp.le.6)) then
-      if ((nggatyp.ge.1).or.(nggatyp.le.8)) then
+      if ((nggatyp>=1).or.(nggatyp<=8)) then
          i = nggatyp
       else
-         ! call xclib_error('wgga_analy_erfc','Yet to be coded Wcx part',1)
-         stop
+         in_err = 7  ! wgga_analy_erfc: yet to be coded Wcx part
+         return
       endif
 
       s2=s*s
@@ -1596,7 +1598,7 @@ END SUBROUTINE becke88_spin
 !
 !
 !-----------------------------------------------------------------------------
-SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
+SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx, in_err )
       !-----------------------------------------------------------------------
       !! wPBE Enhancement Factor (erfc approx.,analytical, gradients).
       !
@@ -1607,6 +1609,7 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
       !$acc routine seq
       !
       REAL(DP) rho,s,omega,Fx_wpbe,d1sfx,d1rfx
+      INTEGER in_err
       !
       REAL(DP) f12,f13,f14,f18,f23,f43,f32,f72,f34,f94,f1516,f98
       REAL(DP) pi,pi2,pi_23,srpi
@@ -1644,6 +1647,7 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
       REAL(DP) d1spiexperf,d1sexpei
       REAL(DP) d1rpiexperf,d1rexpei
       REAL(DP) expei1,expei2,expei3,expei4
+      REAL(DP) exint
       !
       REAL(DP) DHs,DHs2,DHs3,DHs4,DHs72,DHs92,DHsw,DHsw2,DHsw52,DHsw72
       REAL(DP) d1sDHs,d1rDHsw
@@ -1984,7 +1988,8 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
         !
         piexperf = pi*EXP(HsbwA94)*ERFC(HsbwA9412)
         ! expei    = Exp(HsbwA94)*Ei(-HsbwA94)
-        expei    = EXP(HsbwA94)*(-expint(1,HsbwA94))
+        CALL expint(1,HsbwA94,exint,in_err)
+        expei    = EXP(HsbwA94)*(-exint)
       ELSE
         !
         ! print *,rho,s," LARGE HsbwA94"
@@ -2190,21 +2195,21 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
 END SUBROUTINE wpbe_analy_erfc_approx_grad
 !
 !------------------------------------------------------------------
-FUNCTION EXPINT(n, x)
+SUBROUTINE EXPINT(n, x, exin, in_err)
 !-----------------------------------------------------------------------
 !! Evaluates the exponential integral \(E_n(x)\). 
 !! Inspired by Numerical Recipes.
 ! Parameters: maxit is the maximum allowed number of iterations,
 ! eps is the desired relative error, not smaller than the machine precision,
 ! big is a number near the largest representable floating-point number,
-
 !
-      USE kind_l,   ONLY: DP
+      USE kind_l,               ONLY: DP
       IMPLICIT NONE
       !$acc routine seq
       INTEGER, INTENT(IN) :: n
       REAL(DP), INTENT(IN) :: x
-      REAL(DP) :: expint
+      REAL(DP), INTENT(OUT) :: exin
+      INTEGER :: in_err
       INTEGER, parameter :: maxit=200
       REAL(DP), parameter :: eps=1E-12, big=huge(x)*eps
       REAL(DP), parameter :: euler = 0.577215664901532860606512d0
@@ -2214,17 +2219,17 @@ FUNCTION EXPINT(n, x)
       REAL(DP) :: a,b,c,d,del,fact,h,iarsum
 
       IF (.NOT. ((n >= 0).AND.(x >= 0.0).AND.((x > 0.0).OR.(n > 1)))) THEN
-         !CALL xclib_error('expint','bad arguments', 1)
-         STOP
+         in_err = 6   ! expint: bad arguments
+         RETURN
       END IF
-
+      
       IF (n == 0) THEN
-         expint = exp(-x)/x
+         exin= exp(-x)/x
          RETURN
       END IF
       nm1 = n-1
       IF (x == 0.0d0) THEN
-         expint = 1.0d0/nm1
+         exin = 1.0d0/nm1
       ELSE IF (x > 1.0d0) THEN
          b = x+n
          c = big
@@ -2239,13 +2244,16 @@ FUNCTION EXPINT(n, x)
             h = h*del
             IF (ABS(del-1.0d0) <= EPS) EXIT
          END DO
-         IF (i > maxit) STOP !CALL xclib_error('expint','continued fraction failed',1)
-         expint = h*EXP(-x)
+         IF (i > maxit) THEN
+           in_err = 6   ! expint: continued fraction failed
+           RETURN
+         ENDIF
+         exin = h*EXP(-x)
       ELSE
          IF (nm1 /= 0) THEN
-            expint = 1.0d0/nm1
+            exin = 1.0d0/nm1
          ELSE
-            expint = -LOG(x)-euler
+            exin = -LOG(x)-euler
          END IF
          fact = 1.0d0
          do i=1,maxit
@@ -2262,12 +2270,15 @@ FUNCTION EXPINT(n, x)
                del = fact*(-LOG(x)-euler+iarsum)
 !               del = fact*(-LOG(x)-euler+sum(1.0d0/arth(1,1,nm1)))
             END IF
-            expint = expint + del
-            IF (ABS(del) < ABS(expint)*eps) EXIT
+            exin = exin + del
+            IF (ABS(del) < ABS(exin)*eps) EXIT
          END DO
-         IF (i > maxit) STOP !CALL xclib_error('expint','series failed',1)
+         IF (i > maxit) THEN
+           in_err = 6   ! expint: series failed
+           RETURN
+         ENDIF
       END IF
-END FUNCTION EXPINT
+END SUBROUTINE EXPINT
 !
 END MODULE
 
