@@ -124,9 +124,7 @@ SUBROUTINE paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap
 #if defined(__MPI)
   IF ( nproc_ortho == 1 ) THEN
 #endif
-     !$acc host_data use_device(psi, hpsi, spsi)
-     CALL rotate_HSpsi_k_gpu (  npwx, npw, nbnd, nbnd, npol, psi, hpsi, overlap, spsi, eig )
-     !$acc end host_data
+     CALL rotate_HSpsi_k (  npwx, npw, nbnd, nbnd, npol, psi, hpsi, overlap, spsi, eig )
 #if defined(__MPI)
   ELSE
      Call errore('paro_k_new_gpu','nproc_ortho /= 1 with gpu NYI', 1)
@@ -241,8 +239,8 @@ SUBROUTINE paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap
 #if defined(__MPI)
      IF ( nproc_ortho == 1 ) THEN
 #endif
-        !$acc host_data use_device(psi, hpsi, spsi, ew)
-        CALL rotate_HSpsi_k_gpu ( npwx, npw, ndiag, ndiag, npol, psi, hpsi, overlap, spsi, ew )
+        !$acc host_data use_device(ew)
+        CALL rotate_HSpsi_k ( npwx, npw, ndiag, ndiag, npol, psi, hpsi, overlap, spsi, ew )
         !$acc end host_data
 #if defined(__MPI)
      ELSE
