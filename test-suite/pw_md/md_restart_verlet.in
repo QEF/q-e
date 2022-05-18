@@ -1,3 +1,7 @@
+!
+! This is a restart test. Make sure md_restart_verlet.save folder is not present
+! and md_restart_verlet.md is original file (can use `git status`).
+!
  &control
     restart_mode = 'restart'
     calculation='md'

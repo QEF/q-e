@@ -203,7 +203,7 @@ CONTAINS
 #endif
       LOGICAL  :: is_restart
       REAL(DP), EXTERNAL :: dnrm2
-      REAL(DP) :: kstress(3,3)
+      REAL(DP) :: kstress(3,3), tau_tmp(3, nat)
       INTEGER :: i, j, restart_id
       !
       ! ... the number of degrees of freedom
@@ -227,18 +227,19 @@ CONTAINS
          !
          ! ... the file is read :  simulation is continuing
          !
+         WRITE(*, *) 'MD restart file exists!'
          READ( UNIT = 4, FMT = * ) restart_id
          !
          IF ( restart_id .EQ. restart_verlet ) THEN
             ! Restarting...
             vel_defined = .FALSE.
             !
-            READ( UNIT = 4, FMT = * ) etotold, istep, tau_new(:,:), &
+            READ( UNIT = 4, FMT = * ) istep, etotold, tau_tmp(:,:), &
                tau_old(:,:), temp_new, temp_av, mass(:), total_mass, &
                elapsed_time, tau_ref(:,:)
             !
-            ! tau_new is read here but reassigned later. It is used for restart
-            ! in verlet_read_tau_from_conf
+            ! tau_tmp is read here but not used. It is used for restart in
+            ! verlet_read_tau_from_conf
             !
             CLOSE( UNIT = 4, STATUS = 'KEEP' )
             !
@@ -403,7 +404,7 @@ CONTAINS
       CALL seqopn( 4, 'md', 'FORMATTED',  is_restart )
       !
       WRITE( UNIT = 4, FMT = * ) restart_verlet
-      WRITE( UNIT = 4, FMT = * ) etot, istep, tau_new(:,:), tau(:,:), &
+      WRITE( UNIT = 4, FMT = * ) istep, etot, tau_new(:,:), tau(:,:), &
          temp_new, temp_av, mass(:), total_mass, elapsed_time, tau_ref(:,:)
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
@@ -2117,7 +2118,7 @@ CONTAINS
       LOGICAL  :: is_restart = .FALSE.
       INTEGER  :: restart_id = 0
       REAL(DP) :: etotold = 0.0_DP
-      REAL(DP) :: tau_new(3, nat)
+      REAL(DP) :: tau_tmp(3, nat)
       INTEGER  :: istep
       !
       CALL seqopn( 4, 'md', 'FORMATTED', is_restart )
@@ -2128,10 +2129,11 @@ CONTAINS
          !
          IF ( restart_id .EQ. restart_verlet ) THEN
             !
-            READ( UNIT = 4, FMT = * ) etotold, istep, tau_new(:,:)
+            READ( UNIT = 4, FMT = * ) istep, etotold, tau_tmp(:,:)
             !
-            IF ( SUM ( (tau_new(:,1:nat)-tau(:,1:nat))**2 ) > eps8 ) THEN
-               tau(:, 1:nat) = tau_new(:, 1:nat)
+            IF ( SUM ( (tau_tmp(:,1:nat)-tau(:,1:nat))**2 ) > eps8 ) THEN
+               !
+               tau(:, 1:nat) = tau_tmp(:, 1:nat)
                !
                IF ( ionode ) WRITE( stdout, '(/5X,"Atomic positions read &
                   from:", /,5X,A)') TRIM(prefix) // ".md"
@@ -2140,6 +2142,10 @@ CONTAINS
          END IF
          !
          CLOSE( UNIT = 4 )
+         !
+      ELSE
+         !
+         CLOSE( UNIT = 4, STATUS = 'DELETE' )
          !
       END IF
       !
