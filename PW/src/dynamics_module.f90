@@ -227,19 +227,18 @@ CONTAINS
          !
          ! ... the file is read :  simulation is continuing
          !
-         WRITE(*, *) 'MD restart file exists!'
          READ( UNIT = 4, FMT = * ) restart_id
          !
          IF ( restart_id .EQ. restart_verlet ) THEN
             ! Restarting...
             vel_defined = .FALSE.
             !
+            ! tau_tmp is read here but not used. It is used for restart in
+            ! verlet_read_tau_from_conf
+            !
             READ( UNIT = 4, FMT = * ) istep, etotold, tau_tmp(:,:), &
                tau_old(:,:), temp_new, temp_av, mass(:), total_mass, &
                elapsed_time, tau_ref(:,:)
-            !
-            ! tau_tmp is read here but not used. It is used for restart in
-            ! verlet_read_tau_from_conf
             !
             CLOSE( UNIT = 4, STATUS = 'KEEP' )
             !
