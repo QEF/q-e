@@ -127,7 +127,7 @@ add_subdirectory(src)
 
 target_link_libraries(qe_fftx
     PRIVATE
-        qe_fft
+        qe_ext_fft
 	qe_openacc_fortran
         qe_openmp_fortran
         qe_mpi_fortran)
