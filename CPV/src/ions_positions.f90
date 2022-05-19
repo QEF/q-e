@@ -33,7 +33,12 @@ MODULE ions_positions
   !
   !
   SUBROUTINE allocate_ions_positions( nsp, nat )
-     INTEGER, INTENT(IN) :: nsp, nat
+     !! Allocate ionic dynamics arrays
+     !
+     INTEGER, INTENT(IN) :: nsp
+     !! number of atomic species
+     INTEGER, INTENT(IN) :: nat
+     !! total number of atoms
      !
      IF( ALLOCATED( tau0  ) ) DEALLOCATE( tau0  )
      IF( ALLOCATED( taum  ) ) DEALLOCATE( taum  ) 
@@ -71,6 +76,8 @@ MODULE ions_positions
   !--------------------------------------------------------------------------
 
   SUBROUTINE deallocate_ions_positions( )
+     !! Deallocate ionic dynamics arrays.
+     !
      IF( ALLOCATED( tau0  ) ) DEALLOCATE( tau0  )
      IF( ALLOCATED( taum  ) ) DEALLOCATE( taum  )
      IF( ALLOCATED( taup  ) ) DEALLOCATE( taup  )

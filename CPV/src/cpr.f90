@@ -9,7 +9,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !----------------------------------------------------------------------------
-  !! Main loop for molecular dynamics.
+  !! Main loop for CP molecular dynamics.
   !
   USE kinds,                    ONLY : DP
   USE constants,                ONLY : bohr_radius_angs, amu_au, au_gpa
