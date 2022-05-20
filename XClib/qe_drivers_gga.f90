@@ -89,7 +89,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
 #else
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
-!$omp          v2x, v2x_, v2xsr, sc, v1c, v2c, iflag ) &
+!$omp          v2x, v2x_, v2xsr, sc, v1c, v2c, iflag, in_err ) &
 !$omp shared( rho_in, grho_in, length, igcx, exx_started, &
 !$omp         grho_threshold_gga, rho_threshold_gga, gau_parameter, &
 !$omp         screening_parameter, exx_fraction, igcc, v1x_out, v2x_out, &
@@ -507,7 +507,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
 !$omp private( rho_up, rho_dw, grho2_up, grho2_dw, rnull_up, rnull_dw, &
 !$omp          sx_up, sx_dw, sxsr_up, sxsr_dw, v1xsr_up, v1xsr_dw, &
 !$omp          v1x_up, v1x_dw, v2x_up, v2x_dw, v2xsr_up, v2xsr_dw, &
-!$omp          iflag ) &
+!$omp          iflag, in_err ) &
 !$omp  shared( rho_in, length, grho2_in, sx_tot, v1x_out, v2x_out,  &
 !$omp          igcx, exx_started, exx_fraction, screening_parameter,&
 !$omp          gau_parameter )
