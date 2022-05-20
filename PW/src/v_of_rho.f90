@@ -254,8 +254,8 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
     CALL xc_metagcx( dfftp%nnr, 1, np, rho%of_r, grho, tau, ex, ec, &
                      v1x, v2x, v3x, v1c, v2c, v3c, gpu_args_=.TRUE. )
     !
-    !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
-    !$acc&              reduction(-:rhoneg2) present(rho)
+    !$acc parallel loop reduction(+:etxc,vtxc) reduction(-:rhoneg1,rhoneg2) &
+    !$acc&              present(rho)
     DO k = 1, dfftp%nnr
        !
        v(k,1) = (v1x(k,1)+v1c(k,1)) * e2
@@ -290,8 +290,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
     !
     ! ... first term of the gradient correction : D(rho*Exc)/D(rho)
     !
-    !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
-    !$acc&              reduction(-:rhoneg2)
+    !$acc parallel loop reduction(+:etxc,vtxc) reduction(-:rhoneg1,rhoneg2)
     DO k = 1, dfftp%nnr
        !
        v(k,1) = (v1x(k,1) + v1c(k,1)) * e2
@@ -474,8 +473,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
      !
      CALL xc( dfftp%nnr, 1, 1, rho%of_r, ex, ec, vx, vc, gpu_args_=.TRUE. )
      !
-     !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
-     !$acc&              present(rho)
+     !$acc parallel loop reduction(+:etxc,vtxc) reduction(-:rhoneg1) present(rho)
      DO ir = 1, dfftp%nnr
         v(ir,1) = e2*( vx(ir,1) + vc(ir,1) )
         etxc = etxc + e2*( ex(ir) + ec(ir) )*rho%of_r(ir,1)
@@ -490,8 +488,8 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
      !
      CALL xc( dfftp%nnr, 2, 2, rho%of_r, ex, ec, vx, vc, gpu_args_=.TRUE. )
      !
-     !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
-     !$acc&              reduction(-:rhoneg2) present(rho)
+     !$acc parallel loop reduction(+:etxc,vtxc) reduction(-:rhoneg1,rhoneg2) &
+     !$acc&              present(rho)
      DO ir = 1, dfftp%nnr
         v(ir,1) = e2*( vx(ir,1) + vc(ir,1) )
         v(ir,2) = e2*( vx(ir,2) + vc(ir,2) )
@@ -511,8 +509,8 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
       !
       CALL xc( dfftp%nnr, 4, 2, rho%of_r, ex, ec, vx, vc, gpu_args_=.TRUE. )
       !
-      !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
-      !$acc&              reduction(+:rhoneg2) present(rho)
+      !$acc parallel loop reduction(+:etxc,vtxc) reduction(-:rhoneg1,rhoneg2) &
+      !$acc&              present(rho)
       DO ir = 1, dfftp%nnr
          arho = ABS( rho%of_r(ir,1) )
          IF ( arho < vanishing_charge ) THEN

@@ -587,7 +587,6 @@ END SUBROUTINE dmxc_nc
 !
 !-----------------------------------------------------------------------
 FUNCTION dpz( rs, iflg )
-!$acc routine seq
   !-----------------------------------------------------------------------
   !!  Derivative of the correlation potential with respect to local density
   !!  Perdew and Zunger parameterization of the Ceperley-Alder functional.
@@ -595,6 +594,8 @@ FUNCTION dpz( rs, iflg )
   USE constants_l, ONLY: pi, fpi
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rs
   INTEGER,  INTENT(IN) :: iflg
@@ -627,7 +628,6 @@ END FUNCTION dpz
 !
 !-----------------------------------------------------------------------
 FUNCTION dpz_polarized( rs, iflg )
-!$acc routine seq
   !-----------------------------------------------------------------------
   !! Derivative of the correlation potential with respect to local density
   !! Perdew and Zunger parameterization of the Ceperley-Alder functional.  |
@@ -636,6 +636,8 @@ FUNCTION dpz_polarized( rs, iflg )
   USE constants_l, ONLY: pi, fpi
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rs
   INTEGER,  INTENT(IN) :: iflg

@@ -86,6 +86,7 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
 #endif 
   !
   USE kind_l,               ONLY: DP
+  USE xclib_utils_and_para, ONLY: inside_error, error_msg, nowarning
   USE dft_setting_params,   ONLY: imeta, imetac, is_libxc, rho_threshold_mgga,&
                                   grho2_threshold_mgga, tau_threshold_mgga,   &
                                   scan_exx, exx_started, exx_fraction
@@ -394,6 +395,14 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
 #endif
   !
   !$acc end data
+  !
+  !$acc update self( inside_error )
+  IF (inside_error/=0 .AND. .NOT.nowarning) THEN
+    CALL xclib_error( 'xc_metagcx_', error_msg(inside_error), 1 )
+  ELSE
+    !$acc update device( inside_error )
+    inside_error = 0
+  ENDIF
   !
   RETURN
   !
