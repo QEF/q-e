@@ -52,7 +52,11 @@ MODULE xclib_utils_and_para
         IMPLICIT NONE
         !$acc routine seq
         INTEGER, INTENT(IN) :: in_err
-        !$acc atomic write
+#if defined(_OPENACC)
+!$acc atomic write
+#else
+!$omp atomic write
+#endif
         inside_error = in_err
         RETURN
       END SUBROUTINE
