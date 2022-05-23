@@ -57,15 +57,16 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   !! Wrapper routine. Calls dgcx-driver routines from internal libraries
   !! or from the external libxc, depending on the input choice.
   !
-  USE constants_l,        ONLY: e2
-  USE kind_l,             ONLY: DP
-  USE dft_setting_params, ONLY: igcx, igcc, is_libxc, rho_threshold_gga, &
-                                grho_threshold_gga, rho_threshold_lda
+  USE constants_l,          ONLY: e2
+  USE kind_l,               ONLY: DP
+  USE xclib_utils_and_para, ONLY: inside_error, error_msg, nowarning
+  USE dft_setting_params,   ONLY: igcx, igcc, is_libxc, rho_threshold_gga, &
+                                  grho_threshold_gga, rho_threshold_lda
   USE qe_drivers_d_gga
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_setting_params, ONLY: xc_func, xc_info
+  USE dft_setting_params,   ONLY: xc_func, xc_info
 #endif
   !
   IMPLICIT NONE
@@ -410,6 +411,14 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
 #endif
   !
   !$acc end data
+  !
+  !$acc update self( inside_error )
+  IF (inside_error/=0 .AND. .NOT.nowarning) THEN
+    CALL xclib_error( 'xc_gcx_', error_msg(inside_error), 1 )
+  ELSE
+    inside_error = 0
+    !$acc update device( inside_error )
+  ENDIF
   !
   RETURN
   !

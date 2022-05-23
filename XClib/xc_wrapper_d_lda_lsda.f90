@@ -56,6 +56,7 @@ SUBROUTINE dmxc_( length, srd, rho_in, dmuxc )
   !! ones from Libxc, depending on the input choice.
   !
   USE kind_l,               ONLY: DP
+  USE xclib_utils_and_para, ONLY: inside_error, error_msg, nowarning
   USE dft_setting_params,   ONLY: iexch, icorr, is_libxc, rho_threshold_lda
   USE qe_drivers_d_lda_lsda
   !
@@ -258,6 +259,14 @@ SUBROUTINE dmxc_( length, srd, rho_in, dmuxc )
 #endif
   !
   !$acc end data
+  !
+  !$acc update self( inside_error )
+  IF (inside_error/=0 .AND. .NOT.nowarning) THEN
+    CALL xclib_error( 'xc_', error_msg(inside_error), 1 )
+  ELSE
+    inside_error = 0
+    !$acc update device( inside_error )
+  ENDIF
   !
   RETURN
   !
