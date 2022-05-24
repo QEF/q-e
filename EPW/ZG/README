@@ -1,4 +1,4 @@
-              Marios Zacharias [1] & Feliciano Giustino [2,3], November 2021
+              Marios Zacharias [1] & Feliciano Giustino [2,3], May 2022
 
 [1] Department of Mechanical and Materials Science Engineering, Cyprus University of Technology, 
     P.O. Box 50329, 3603 Limassol, Cyprus 
@@ -34,12 +34,16 @@ disca.x          ---> for calculating one-phonon and all-phonon inelastic scatte
 pp_disca.x       ---> for applying broadening and setting a resolution of scattering patterns
 src/local folder ---> for post-processing. Compile them by "./compile_gfortran.sh"
 
-
 ---------------------------------------------------------------------------------------------------
 
 For full instructions on how to run the exercises in the tarball "tutorial.tar.gz"
 please refer to the EPW documentation site, or send an email to Marios Zacharias:  
 zachariasmarios@gmail.com 
+
+Links for input flags and tutorials:
+
+https://epwdoc.gitlab.io/source/doc/InputsZG.html
+https://epwdoc.gitlab.io/source/doc/TutorialZG.html
 
 ---------------------------------------------------------------------------------------------------
 Instructions for the construction of the Zacharias-Giustino "ZG" displacement following 
@@ -84,6 +88,10 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
     ---------------------------------------------------------------------------------------
     i) "ZG_conf"            : Logical flag that enables the creation of the ZG-displacement. 
                               (default .true.) 
+       "flscf"              : String for the name of the scf input file used to calculate the phonons. The 
+                              code will read information for preparing the input file of the supercell calculation. 
+                              If left empty the code will not generate the input file of the supercell calculation.
+                              (default ' ')
        "T"                  : Real number indicating the temperature at which the calculations will be performed. 
                               "T" essentially defines the amplitude of the normal coordinates. 
                               (default 0.00)
