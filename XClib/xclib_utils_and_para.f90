@@ -32,33 +32,11 @@ MODULE xclib_utils_and_para
         LOGICAL :: nowarning = .FALSE.
         !! switch for warning messages
         !
-        INTEGER :: inside_error = 0
-        !$acc declare copyin( inside_error )
-        !! index to recover error type inside gpu regions (see error_msg)
+        CHARACTER(LEN=35) :: error_msg(5)
+        DATA error_msg / 'Bad args. in EXPINT function       ', &
+                         'Series failed in EXPINT function   ', &
+                         'wgga_analy_erfc: not coded Wcx part', &
+                         'Sorting GGA-AHs failed             ', &
+                         'Sorting vdW-DF-AHs failed          '  /
         !
-        CHARACTER(LEN=28) :: error_msg(7)
-        DATA error_msg / 'Invalid ID for LDA exchange ', &
-                         'Invalid ID for LDA corr.    ', &
-                         'Invalid ID for GGA exchange ', &
-                         'Invalid ID for GGA corr.    ', &
-                         'Invalid ID for MGGA         ', &
-                         'Bad args. in EXPINT function', &
-                         'Bad args in wggax_analy_erfc'  /
-        !
-   CONTAINS
-      !
-      SUBROUTINE xc_inside_error( in_err )
-        !! Recover the error type inside GPU kernel regions.
-        IMPLICIT NONE
-        !$acc routine seq
-        INTEGER, INTENT(IN) :: in_err
-#if defined(_OPENACC)
-!$acc atomic write
-#else
-!$omp atomic write
-#endif
-        inside_error = in_err
-        RETURN
-      END SUBROUTINE
-      !
 END MODULE xclib_utils_and_para

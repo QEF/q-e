@@ -48,7 +48,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss, gpu_args_ )
   ENDIF
   !
   RETURN
-
+  !
 END SUBROUTINE
 !
 !---------------------------------------------------------------------
@@ -59,7 +59,6 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   !
   USE constants_l,          ONLY: e2
   USE kind_l,               ONLY: DP
-  USE xclib_utils_and_para, ONLY: inside_error, error_msg, nowarning
   USE dft_setting_params,   ONLY: igcx, igcc, is_libxc, rho_threshold_gga, &
                                   grho_threshold_gga, rho_threshold_lda
   USE qe_drivers_d_gga
@@ -411,14 +410,6 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
 #endif
   !
   !$acc end data
-  !
-  !$acc update self( inside_error )
-  IF (inside_error/=0 .AND. .NOT.nowarning) THEN
-    CALL xclib_error( 'xc_gcx_', error_msg(inside_error), 1 )
-  ELSE
-    inside_error = 0
-    !$acc update device( inside_error )
-  ENDIF
   !
   RETURN
   !
