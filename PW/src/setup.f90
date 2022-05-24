@@ -731,10 +731,8 @@ SUBROUTINE setup_para ( nr3, nkstot, nbnd )
 pool:   do np = 2, nkstot
            ! npool should be a divisor of the number of processors
            if ( mod(nproc_image, np) /= 0 ) cycle
-           if ( nproc_image/np <= nr3/2 ) then
-              npool_= np
-              exit pool
-           end if
+           npool_= np
+           if ( nproc_image/np <= nr3/2 ) exit pool
         end do pool
      end if
   END IF
