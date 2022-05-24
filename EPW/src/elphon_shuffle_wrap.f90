@@ -265,32 +265,39 @@
   !
   ! Read in external electronic eigenvalues. e.g. GW
   !
-  ALLOCATE(et_ks(nbnd, nks), STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating et_ks', 1)
-  et_ks(:, :) = zero
-  IF (eig_read) THEN
-    IF (meta_ionode) THEN
-      WRITE(stdout, '(5x, a, i5, a, i5, a)') "Reading external electronic eigenvalues (", &
-            nbnd, ",", nkstot,")"
-      tempfile = TRIM(prefix) // '.eig'
-      OPEN(iuqpeig, FILE = tempfile, FORM = 'formatted', ACTION = 'read', IOSTAT = ios)
-      IF (ios /= 0) CALL errore('elphon_shuffle_wrap', 'error opening' // tempfile, 1)
-      READ(iuqpeig, '(a)') line
-      DO ik = 1, nkstot
-        ! We do not save the k-point for the moment ==> should be read and
-        ! tested against the current one
+  IF (.NOT. epbread .AND. .NOT. epwread) THEN
+    ALLOCATE(et_ks(nbnd, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating et_ks', 1)
+    et_ks(:, :) = zero
+    IF (eig_read) THEN
+      IF (meta_ionode) THEN
+        WRITE(stdout, '(5x, a, i5, a, i5, a)') "Reading external electronic eigenvalues (", &
+              nbnd, ",", nkstot,")"
+        tempfile = TRIM(prefix) // '.eig'
+        OPEN(iuqpeig, FILE = tempfile, FORM = 'formatted', ACTION = 'read', IOSTAT = ios)
+        IF (ios /= 0) CALL errore('elphon_shuffle_wrap', 'error opening' // tempfile, 1)
         READ(iuqpeig, '(a)') line
-        READ(iuqpeig, *) et_tmp(:, ik)
-      ENDDO
-      CLOSE(iuqpeig)
-      ! from eV to Ryd
-      et_tmp = et_tmp / ryd2ev
+        DO ik = 1, nkstot
+          ! We do not save the k-point for the moment ==> should be read and
+          ! tested against the current one
+          READ(iuqpeig, '(a)') line
+          READ(iuqpeig, *) et_tmp(:, ik)
+        ENDDO
+        CLOSE(iuqpeig)
+        ! from eV to Ryd
+        et_tmp = et_tmp / ryd2ev
+      ENDIF
+      CALL mp_bcast(et_tmp, meta_ionode_id, world_comm)
+      !
+      CALL fkbounds(nkstot, ik_start, ik_stop)
+      et_ks(:, :)  = et_loc(:, :)
+      et_loc(:, :) = et_tmp(:, ik_start:ik_stop)
     ENDIF
-    CALL mp_bcast(et_tmp, meta_ionode_id, world_comm)
-    !
-    CALL fkbounds(nkstot, ik_start, ik_stop)
-    et_ks(:, :)  = et_loc(:, :)
-    et_loc(:, :) = et_tmp(:, ik_start:ik_stop)
+  ELSE
+    ! if starting from epwread, do not need to get external eigs from file.
+    ! allocate zero sized array so no issues with deallocation at end of execution
+    ALLOCATE(et_ks(0, 0), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating et_ks', 1)
   ENDIF
   !
   !  gather electronic eigenvalues for subsequent shuffle
