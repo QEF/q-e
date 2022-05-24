@@ -69,7 +69,8 @@ SUBROUTINE hinit0()
         at_old    = at
         omega_old = omega
         !
-        CALL read_conf_from_file( lmovecell, nat, nsp, tau, alat, at )
+        CALL read_conf_from_file( lmovecell, nat, nsp, tau, alat, at, &
+                                  is_tau_read )
         CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
         CALL volume (alat, at(:,1), at(:,2), at(:,3), omega)
         CALL scale_h( )

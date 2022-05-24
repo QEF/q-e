@@ -408,7 +408,7 @@ CONTAINS
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
-      CALL dump_trajectory_frame( istep, elapsed_time, temperature )
+      CALL dump_trajectory_frame( elapsed_time, temperature )
       !
       ! ... here the tau are shifted
       !
@@ -2066,7 +2066,7 @@ CONTAINS
    END SUBROUTINE thermalize_resamp_vscaling
    !
    !-----------------------------------------------------------------------
-   SUBROUTINE dump_trajectory_frame( istep, time, temp )
+   SUBROUTINE dump_trajectory_frame( time, temp )
       !-----------------------------------------------------------------------
       !! Dump trajectory frame into a file in tmp_dir with name:
       !! prefix.istep.mdtrj. Don't append, create a new file for each step,
@@ -2081,16 +2081,11 @@ CONTAINS
       !
       IMPLICIT NONE
       !
-      INTEGER, INTENT(in)  :: istep
       REAL(DP), INTENT(in) :: time, temp ! in ps, K
-      !
       INTEGER              :: iunit, i, k
-      CHARACTER(LEN=20)    :: istep_str
       !
-      WRITE(istep_str, '(I7.7)') istep
-      !
-      OPEN(NEWUNIT = iunit, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // "." &
-         // TRIM(ADJUSTL(istep_str)) // ".mdtrj" )
+      OPEN(UNIT = iunit, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // ".mdtrj", &
+         STATUS="unknown", POSITION="APPEND")
       !
       ! Time (ps), temp (K), total energy (Ry), unit cell (9 values, Ang),
       ! atom coordinates (3 * nat values, Ang)
@@ -2098,6 +2093,7 @@ CONTAINS
       WRITE(iunit, *) time, temp, etot, &
          ( ( at(i,k) * alat * bohr_radius_angs, i = 1, 3), k = 1, 3 ), &
          ( ( tau(i,k) * alat * bohr_radius_angs, i = 1, 3), k = 1, nat )
+      WRITE(iunit, *) ! new line
       !
       CLOSE(iunit)
       !
