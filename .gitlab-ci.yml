@@ -1,7 +1,9 @@
 build:pw:
   tags: [docker]
-  image: espressofoundation/ubuntu:latest
+  image: ubuntu:18.04
   script:
+    - apt-get -qq update
+    - apt-get -qq install m4 make wget curl git gfortran gcc libopenblas-dev libfftw3-dev libopenmpi-dev
     - ./configure
     - make pw
 #    - export OMP_NUM_THREADS=1
@@ -12,8 +14,10 @@ build:pw:
 
 build:cp:
   tags: [docker]
-  image: espressofoundation/ubuntu:latest
+  image: ubuntu:18.04
   script:
+    - apt-get -qq update
+    - apt-get -qq install m4 make wget curl git gfortran gcc libopenblas-dev libfftw3-dev libopenmpi-dev
     - ./configure
     - make cp
 #    - export OMP_NUM_THREADS=1
@@ -52,11 +56,14 @@ build:cmake-gnu:
             -DMPIEXEC_PREFLAGS="--allow-run-as-root;--oversubscribe" .. && make
       && make pw ph hp pwcond neb pp pwall cp tddfpt gwl ld1 upf xspectra couple epw all_currents
       && ctest -L unit --output-on-failure
+    - make install DESTDIR=`pwd`/install_root
 
 build:pgi:
   tags: [docker]
-  image: nvcr.io/nvidia/nvhpc:20.9-devel-centos7
+  image: nvcr.io/nvidia/nvhpc:20.9-devel-ubuntu20.04
   script:
+    - apt-get -qq update
+    - apt-get -qq install ca-certificates git m4
     - ./configure FC=pgf90 F90=pgf90 F77=pgfortran MPIF90=mpif90 --enable-openmp --with-cuda=yes --enable-cuda-env-check=no
     - make pw cp ph
 

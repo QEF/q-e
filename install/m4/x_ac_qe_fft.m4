@@ -153,7 +153,7 @@ if test "$fft_libs" = ""; then
                         orig_fflags="$FFLAGS"
                         for inc in $try_incdir
                         do
-                           FFLAGS="$orig_fflags -I$inc -ffree-form"
+                           FFLAGS="$orig_fflags -I$inc"
                            AC_COMPILE_IFELSE([use iso_c_binding
 include "fftw3.f03"
 end],have_fft_include=1,)

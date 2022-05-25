@@ -20,11 +20,6 @@
     degauss = 0.015
     nspin = 2
     starting_magnetization(1) = 0.5
-    lda_plus_u = .true.,
-    lda_plus_u_kind = 2,
-    U_projection_type = 'atomic'
-    Hubbard_V(1,1,1) = 3.0, 
-    Hubbard_V(1,2,1) = 0.7 
  /
  &electrons
     mixing_beta = 0.7
@@ -42,3 +37,6 @@ ATOMIC_POSITIONS {crystal}
  Li  0.5000000000   0.5000000000   0.5000000000
 K_POINTS {automatic}
  2 2 2 0 0 0
+HUBBARD {atomic}
+U Ni-3d 3.0
+V Ni-3d O-2p 1 2 0.7

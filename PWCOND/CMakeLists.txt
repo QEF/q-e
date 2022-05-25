@@ -55,3 +55,9 @@ target_link_libraries(qe_pwcond_exe
 ###########################################################
 
 qe_install_targets(qe_pwcond_exe)
+
+add_custom_target(pwcond
+    DEPENDS
+        qe_pwcond_exe
+    COMMENT
+        "ballistic conductance")

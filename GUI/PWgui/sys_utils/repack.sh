@@ -2,8 +2,7 @@
 
 HERE=$(pwd)
 
-if [ $# -ne 3 ]
-    then
+if test $# -ne 3; then
     echo "Usage: $0 src_filehead dst_filehead dst_dirname"
     exit 1
 fi
@@ -20,14 +19,12 @@ DST_TGZ=$DST_FILEHEAD.tgz
 # directory ...
 TMPDIR=/tmp/$DST_DIR
 
-if [ -d $TMPDIR ]
-    then 
+if test -d $TMPDIR; then 
     rm -rf $TMPDIR
 fi
 mkdir $TMPDIR
 
-if [ -f $SRC_TAR ]; 
-    then
+if test -f $SRC_TAR; then
     cp $SRC_TAR $TMPDIR/
 else
     echo "File: $SRC_TAR does not exists !!!"

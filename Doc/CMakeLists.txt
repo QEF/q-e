@@ -3,7 +3,7 @@ include(UseLATEX)
 # By default the manuals are generated and installed in pdf format
 # To generat the manuals use the following command: make pdf
 
-# It is possible to generate user_guide and developer_man 
+# It is possible to generate user_guide
 # in HTML format with the following command: make html
 
 set(LATEX_DEFAULT_BUILD "pdf")
@@ -30,9 +30,8 @@ add_latex_document(
 install(
     FILES
         ${PROJECT_BINARY_DIR}/Doc/user_guide.pdf 
-        ${PROJECT_BINARY_DIR}/Doc/developer_man.pdf
         ${PROJECT_BINARY_DIR}/Doc/constraints_HOWTO.pdf
         ${PROJECT_BINARY_DIR}/Doc/brillouin_zones.pdf
         ${PROJECT_BINARY_DIR}/Doc/plumed_quick_ref.pdf
     DESTINATION 
-        share/qe)
+        share/Doc)

@@ -69,6 +69,10 @@ inputs_args = ('vc-relax-scf-1.in' ,'1'), ('vc-relax-scf-2.in' ,'2')
 program = PW
 inputs_args = ('scf-dos-1.in' ,'1'), ('scf-dos-2.in' ,'2')
 
+[pw_workflow_exx_nscf/]
+program = PW
+inputs_args = ('ncpp-k-1.in' ,'1'), ('ncpp-k-2.in' ,'2'), ('uspp-gamma-1.in' ,'1'), ('uspp-gamma-2.in' ,'2'), ('uspp-k-smearing-1.in' ,'1'), ('uspp-k-smearing-2.in' ,'2')
+
 [ph_base/]
 program = PH
 inputs_args = ('c.scf.in', '1'), ('c.phG.in', '2'), ('ni.scf.in', '1'), ('ni.phX.in', '2'), ('si.scf.in', '1'), ('si.phG.in', '2'), ('si.phX.in', '2'), ('nipaw.scf.in', '1'), ('nipaw.phX.in', '2')
@@ -112,6 +116,10 @@ inputs_args = ('NiO.scf.1.in', '1'), ('NiO.scf.2.in', '1'), ('NiO.phG.in', '2')
 [ph_insulator_paw_magn/]
 program = PH
 inputs_args = ('O2.scf.1.in', '1'), ('O2.scf.2.in', '1'), ('O2.phG.in', '2')
+
+[ph_2d/]
+program = PH
+inputs_args = ('scf.in', '1'), ('ph.in', '2')
 
 [epw_base/]
 program = EPW
@@ -221,6 +229,14 @@ inputs_args = ('Fe.scf.in', '2'), ('Fe.hp.in', '4')
 program = HP
 inputs_args = ('LiNiO2.scf.in', '2'), ('LiNiO2.hp.in', '4')
 
+[kcw_wann/]
+program = KCW
+inputs_args = ('Si.scf.in', '1'), ('Si.win', '2'), ('Si.pw2wann.in', '3'), ('Si.win', '4'), ('Si.kcw-wann2kcw.in', '5'), ('Si.kcw-screen.in', '6'), ('Si.kcw-ham.in', '7')
+
+[kcw_ks/]
+program = KCW
+inputs_args = ('h2o.scf.in', '1'), ('h2o.kcw-wann2kcw.in', '15'), ('h2o.kcw-screen.in', '16'), ('h2o.kcw-ham.in', '7')
+
 [pp_acf/]
 program = PP
 inputs_args = ('scf_vdw.in', '1'), ('ppacf_fock.in', '2')
@@ -277,3 +293,4 @@ tddfpt_all = tddfpt_*??
 image_all = image_*??
 all_currents_all = QEHeat_*
 _default_ = pw_*?? cp_*?? ph_*?? epw_*?? tddfpt_*?? hp_*?? all_currents_*??
+kcw_all = kcw_*??

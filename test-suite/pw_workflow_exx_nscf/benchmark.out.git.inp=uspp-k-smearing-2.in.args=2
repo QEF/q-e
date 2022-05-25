@@ -1,0 +1,323 @@
+
+     Program PWSCF v.7.0 starts on 10Jan2022 at 15:42: 0 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     13069 MiB available memory on the printing compute node when the environment starts
+
+     Reading input from uspp-k-smearing-bands.in
+
+     Current dimensions of program PWSCF are:
+     Max number of different atomic species (ntypx) = 10
+     Max number of k-points (npk) =  40000
+     Max angular momentum in pseudopotentials (lmaxx) =  4
+
+     Atomic positions and unit cell read from directory:
+     ./pwscf.save/
+
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PBE0
+                           (   6   4   8   4   0   0   0)
+     EXX-fraction              =        0.25
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+     Message from routine setup :
+     BEWARE: nonlinear core correction is not consistent with hybrid XC
+     EXX: q-point mesh:     3    3    3
+     EXX: setup a grid of 27 q-points centered on each k-point
+     (k+q)-points:
+  -0.1666667   0.1666667   0.1666667         1    1
+   0.5000000  -0.5000000   0.8333333         2    1
+   0.1666667  -0.1666667   0.5000000         3    1
+  -0.8333333  -0.5000000  -0.5000000         2   -9
+  -0.1666667  -1.1666667   0.1666667         4    1
+  -0.5000000  -0.8333333  -0.1666667         5    1
+  -0.5000000  -0.1666667  -0.1666667         3   -9
+   0.1666667  -0.8333333   0.5000000         5   -9
+  -0.1666667  -0.5000000   0.1666667         3   14
+   0.5000000   0.8333333  -0.5000000         2  -14
+   1.1666667   0.1666667   0.1666667         4   -5
+   0.8333333   0.5000000  -0.1666667         5   -5
+  -0.1666667   0.1666667  -1.1666667         4  -14
+   0.5000000  -0.5000000  -0.5000000         6    1
+   0.1666667  -0.1666667   1.1666667         4   14
+  -0.8333333  -0.5000000   0.1666667         5    5
+  -1.1666667  -0.1666667  -0.1666667         4    5
+  -0.5000000  -0.8333333   0.5000000         2   14
+   0.1666667   0.5000000  -0.1666667         3  -14
+  -0.1666667   0.8333333  -0.5000000         5    9
+   0.5000000   0.1666667   0.1666667         3    9
+   0.5000000   0.8333333   0.1666667         5   -1
+   0.1666667   1.1666667  -0.1666667         4   -1
+   0.8333333   0.5000000   0.5000000         2    9
+  -0.1666667   0.1666667  -0.5000000         3   -1
+  -0.5000000   0.5000000  -0.8333333         2   -1
+   0.1666667  -0.1666667  -0.1666667         1   -1
+
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     a serial algorithm will be used
+
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         121     121     43                  869      869     181
+
+     Using Slab Decomposition
+
+
+
+     bravais-lattice index     =            2
+     lattice parameter (alat)  =       7.5000  a.u.
+     unit-cell volume          =     105.4688 (a.u.)^3
+     number of atoms/cell      =            1
+     number of atomic types    =            1
+     number of electrons       =         3.00
+     number of Kohn-Sham states=           18
+     kinetic-energy cutoff     =      15.0000  Ry
+     charge density cutoff     =      60.0000  Ry
+     cutoff for Fock operator  =      60.0000  Ry
+     Exchange-correlation= PBE0
+                           (   6   4   8   4   0   0   0)
+     EXX-fraction              =        0.25
+
+     celldm(1)=   7.500000  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (  -0.500000   0.000000   0.500000 )  
+               a(2) = (   0.000000   0.500000   0.500000 )  
+               a(3) = (  -0.500000   0.500000   0.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = ( -1.000000 -1.000000  1.000000 )  
+               b(2) = (  1.000000  1.000000  1.000000 )  
+               b(3) = ( -1.000000  1.000000 -1.000000 )  
+
+
+     PseudoPot. # 1 for Al read from file:
+     /home/ivan/devel/q-e-exx/test-suite/..//pseudo/Al.pbe-nl-rrkjus_psl.1.0.0.UPF
+     MD5 check sum: 6db8691240a1c860ce6448702d298c4b
+     Pseudo is Ultrasoft + core correction, Zval =  3.0
+     Generated using &quot;atomic&quot; code by A. Dal Corso  v.6.3
+     Using radial grid of 1135 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     atomic species   valence    mass     pseudopotential
+        Al             3.00    26.98000     Al( 1.00)
+
+     48 Sym. Ops., with inversion, found
+
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1           Al  tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+
+     number of k points=     6  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
+                       cart. coord. in units 2pi/alat
+        k(    1) = (  -0.1666667   0.1666667   0.1666667), wk =   0.1481481
+        k(    2) = (   0.5000000  -0.5000000   0.8333333), wk =   0.4444444
+        k(    3) = (   0.1666667  -0.1666667   0.5000000), wk =   0.4444444
+        k(    4) = (  -0.1666667  -1.1666667   0.1666667), wk =   0.4444444
+        k(    5) = (  -0.5000000  -0.8333333  -0.1666667), wk =   0.4444444
+        k(    6) = (   0.5000000  -0.5000000  -0.5000000), wk =   0.0740741
+
+     Dense  grid:      869 G-vectors     FFT dimensions: (  15,  15,  15)
+
+     Estimated max dynamical RAM per process >      13.74 MB
+     EXX: initializing ACE and reading from file
+     WARNING: this will crash or be completely wrong if a compliant ACE potential from a previous SCF run is not found on file
+ ACE potential read for            8 bands
+ ACE potential read for            8 bands
+ ACE potential read for            8 bands
+ ACE potential read for            8 bands
+ ACE potential read for            8 bands
+ ACE potential read for            8 bands
+     Starting ACE correctly read from file
+
+     The potential is recalculated from file :
+     ./pwscf.save/charge-density
+
+     Starting wfcs are    4 randomized atomic wfcs +   14 random wfcs
+
+     Band Structure Calculation
+     Davidson diagonalization with overlap
+
+     ethr =  3.33E-08,  avg # of iterations = 17.3
+
+     total cpu time spent up to now is        0.5 secs
+
+     End of band structure calculation
+
+          k =-0.1667 0.1667 0.1667 (   104 PWs)   bands (ev):
+
+    -4.1199  16.6296  21.7074  21.7074  25.1322  27.0316  27.0317  28.0707
+    28.6255  31.5438  33.0085  39.7715  40.5842  40.5877  48.8057  57.6788
+    57.6810  62.1590
+
+          k = 0.5000-0.5000 0.8333 (   103 PWs)   bands (ev):
+
+     0.5880   7.1601  14.9876  20.0072  22.0553  25.6765  28.4480  31.2493
+    32.9651  34.8346  40.8317  44.4506  48.2060  49.3643  51.6448  55.4541
+    55.5578  60.3490
+
+          k = 0.1667-0.1667 0.5000 (   103 PWs)   bands (ev):
+
+    -1.8282  12.4707  18.0310  18.7676  19.9078  25.3116  29.2118  30.9258
+    33.2444  35.1104  39.6364  42.6042  44.9006  47.0615  48.8764  51.7995
+    56.2532  59.4789
+
+          k =-0.1667-1.1667 0.1667 (   102 PWs)   bands (ev):
+
+     2.9086  10.1451  10.9481  16.1085  17.7593  23.6228  32.9074  35.4752
+    37.8803  40.2918  44.9159  45.6119  47.9945  48.1157  50.1478  52.4181
+    52.5747  55.4878
+
+          k =-0.5000-0.8333-0.1667 (   104 PWs)   bands (ev):
+
+     4.7377   5.2490  12.4434  13.4594  24.7273  25.2251  29.9926  31.2474
+    36.4135  37.9403  44.1506  44.7051  48.7131  49.4081  53.7227  54.2733
+    57.3324  58.8213
+
+          k = 0.5000-0.5000-0.5000 (   108 PWs)   bands (ev):
+
+     2.7420   3.2637  21.7147  21.7147  22.0060  22.0060  25.2515  26.2589
+    36.8175  36.8175  42.6581  42.6581  43.6179  49.8878  56.4530  56.4530
+    56.8312  60.4088
+
+     Using ACE for calculation of exact exchange
+
+     EXX grid:      869 G-vectors     FFT dimensions: (  15,  15,  15)
+     ACE projected onto    18 (nbndproj) and applied to    18 (nbnd) bands
+     Calculation (EXX) restarted with the new ACE potential
+     Davidson diagonalization with overlap
+
+     ethr =  3.33E-08,  avg # of iterations = 13.3
+
+     total cpu time spent up to now is       18.0 secs
+
+     End of band structure calculation
+
+          k =-0.1667 0.1667 0.1667 (   104 PWs)   bands (ev):
+
+    -4.1198  16.6296  21.7074  21.7074  25.1323  27.0316  27.0316  28.0707
+    28.0707  31.0197  32.4967  39.3750  40.2055  40.2055  48.4437  57.4149
+    57.4149  61.9194
+
+          k = 0.5000-0.5000 0.8333 (   103 PWs)   bands (ev):
+
+     0.5880   7.1601  14.9876  20.0072  22.0553  25.6765  28.4480  31.2493
+    32.5048  34.3973  40.4214  44.1014  47.8637  49.0446  51.3414  55.1858
+    55.2604  60.0850
+
+          k = 0.1667-0.1667 0.5000 (   103 PWs)   bands (ev):
+
+    -1.8282  12.4707  18.0310  18.7676  19.9078  25.3116  29.2118  30.9258
+    32.7586  34.6886  39.2161  42.2290  44.5472  46.7228  48.5327  51.4805
+    55.9716  59.2279
+
+          k =-0.1667-1.1667 0.1667 (   102 PWs)   bands (ev):
+
+     2.9086  10.1451  10.9481  16.1085  17.7593  23.6228  32.9074  35.4752
+    37.5041  39.8933  44.5503  45.2553  47.6611  47.7896  49.8437  52.1052
+    52.2598  55.2033
+
+          k =-0.5000-0.8333-0.1667 (   104 PWs)   bands (ev):
+
+     4.7377   5.2490  12.4434  13.4594  24.7273  25.2251  29.9926  31.2474
+    35.9974  37.5193  43.7874  44.3446  48.4039  49.0701  53.4470  53.9842
+    57.0298  58.5775
+
+          k = 0.5000-0.5000-0.5000 (   108 PWs)   bands (ev):
+
+     2.7421   3.2637  21.7147  21.7147  22.0060  22.0060  25.2515  26.2589
+    36.4332  36.4332  42.2715  42.2715  43.2622  49.5279  56.1913  56.1913
+    56.5765  60.1338
+
+     Writing all to output data dir ./pwscf.save/
+
+     init_run     :      0.10s CPU      0.10s WALL (       1 calls)
+     electrons    :     17.45s CPU     17.78s WALL (       1 calls)
+
+     Called by init_run:
+     aceinit0     :      0.00s CPU      0.00s WALL (       1 calls)
+     wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
+     potinit      :      0.00s CPU      0.00s WALL (       1 calls)
+     hinit0       :      0.09s CPU      0.09s WALL (       1 calls)
+
+     Called by electrons:
+     c_bands      :      0.26s CPU      0.31s WALL (       2 calls)
+     sum_band     :      0.00s CPU      0.00s WALL (       1 calls)
+     v_of_rho     :      0.00s CPU      0.00s WALL (       2 calls)
+     newd         :      0.00s CPU      0.00s WALL (       1 calls)
+
+     Called by c_bands:
+     init_us_2    :      0.00s CPU      0.00s WALL (     132 calls)
+     init_us_2:cp :      0.00s CPU      0.00s WALL (     132 calls)
+     cegterg      :      0.23s CPU      0.24s WALL (      13 calls)
+
+     Called by *egterg:
+     cdiaghg      :      0.08s CPU      0.12s WALL (     196 calls)
+     h_psi        :      0.15s CPU      0.17s WALL (     209 calls)
+     s_psi        :      0.00s CPU      0.00s WALL (     209 calls)
+     g_psi        :      0.00s CPU      0.00s WALL (     184 calls)
+
+     Called by h_psi:
+     h_psi:calbec :      0.00s CPU      0.00s WALL (     209 calls)
+     vloc_psi     :      0.14s CPU      0.15s WALL (     209 calls)
+     add_vuspsi   :      0.00s CPU      0.00s WALL (     209 calls)
+
+     General routines
+     calbec       :      0.00s CPU      0.01s WALL (     436 calls)
+     fft          :      0.00s CPU      0.00s WALL (      21 calls)
+     ffts         :      0.00s CPU      0.00s WALL (       1 calls)
+     fftw         :      0.12s CPU      0.13s WALL (    4582 calls)
+     fftc         :      2.96s CPU      3.02s WALL (  104976 calls)
+     fftcw        :      0.01s CPU      0.01s WALL (     324 calls)
+     davcio       :      0.00s CPU      0.00s WALL (      36 calls)
+
+     Parallel routines
+
+     EXX routines
+     exx_grid     :      0.00s CPU      0.00s WALL (       1 calls)
+     exxinit      :      0.02s CPU      0.04s WALL (       1 calls)
+     vexx         :     17.16s CPU     17.42s WALL (       6 calls)
+     matcalc      :      0.00s CPU      0.00s WALL (     215 calls)
+     aceupdate    :      0.00s CPU      0.00s WALL (       6 calls)
+     vexxace      :      0.01s CPU      0.01s WALL (     209 calls)
+     aceinit      :     17.16s CPU     17.42s WALL (       6 calls)
+
+     EXX+US  routines
+     becxx        :      0.00s CPU      0.00s WALL (       1 calls)
+     addusxx      :      5.39s CPU      5.48s WALL (   52488 calls)
+     newdxx       :      6.39s CPU      6.49s WALL (   52488 calls)
+     qvan_init    :      0.11s CPU      0.12s WALL (     162 calls)
+     nlxx_pot     :      0.00s CPU      0.00s WALL (     108 calls)
+
+     PWSCF        :     17.72s CPU     18.07s WALL
+
+
+   This run was terminated on:  15:42:18  10Jan2022            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

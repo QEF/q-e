@@ -16,6 +16,7 @@ set(src_modules
     coulomb_vcut.f90  
     dist.f90 
     electrons_base.f90 
+    environ_base_module.f90
     environment.f90 
     fd_gradient.f90 
     fft_base.f90 
@@ -186,8 +187,6 @@ set(src_modules
     rgen.f90 
     recips.f90 
     remove_tot_torque.f90
-    set_hubbard_l.f90 
-    set_hubbard_n.f90 
     sort.f90 
     trimcheck.f90 
     test_input_file.f90 
@@ -241,6 +240,12 @@ if(QE_ENABLE_CUDA)
     target_link_libraries(qe_modules
         PRIVATE
             CUDA::curand)
+endif()
+
+if(QE_ENABLE_ENVIRON)
+    target_link_libraries(qe_modules
+    PUBLIC
+        qe_environ)
 endif()
 
 ###########################################################

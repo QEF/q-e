@@ -42,9 +42,7 @@ SUBROUTINE do_phonon2(auxdyn)
   USE elph_tetra_mod, ONLY : elph_tetra, elph_tetra_lambda, elph_tetra_gamma
   USE elph_scdft_mod, ONLY : elph_scdft
   USE io_global,      ONLY : stdout
-  ! FIXME: see below setup_pw
-  USE noncollin_module, ONLY : noncolin
-  USE spin_orb,         ONLY : domag
+  USE noncollin_module, ONLY : noncolin, domag
   USE ahc,            ONLY : elph_ahc, elph_do_ahc
   USE el_phon2,       ONLY : elph_epw
 

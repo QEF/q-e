@@ -414,11 +414,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE mp,                   ONLY : mp_sum, mp_bcast
   !
   USE london_module,        ONLY : energy_london
-  USE dftd3_api,            ONLY : dftd3_pbc_dispersion, &
-                                   dftd3_init, dftd3_set_functional, &
-                                   get_atomic_number, dftd3_input, &
-                                   dftd3_calc
-  USE dftd3_qe,             ONLY : dftd3, dftd3_in, energy_dftd3
+  USE dftd3_api,            ONLY : dftd3_pbc_dispersion, get_atomic_number
+  USE dftd3_qe,             ONLY : dftd3
   USE xdm_module,           ONLY : energy_xdm
   USE tsvdw_module,         ONLY : EtsvdW
   !
@@ -442,6 +439,12 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE scf_gpum,             ONLY : using_vrs
   USE device_fbuff_m,       ONLY : dev_buf, pin_buf
   USE pwcom,                ONLY : report_mag 
+  !
+#if defined (__ENVIRON)
+  USE plugin_flags,         ONLY : use_environ
+  USE environ_base_module,  ONLY : calc_environ_energy, print_environ_energies
+  USE environ_pw_module,    ONLY : calc_environ_potential
+#endif
   !
   IMPLICIT NONE
   !
@@ -543,8 +546,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
      DO na = 1, nat
         atnum(na) = get_atomic_number(TRIM(atm(ityp(na))))
      ENDDO
-     call dftd3_pbc_dispersion(dftd3,tau,atnum,latvecs,energy_dftd3)
-     edftd3=energy_dftd3*2.d0
+     call dftd3_pbc_dispersion(dftd3,tau,atnum,latvecs,edftd3)
+     edftd3=edftd3*2.d0
      tau(:,:)=tau(:,:)/alat
      CALL stop_clock('energy_dftd3')
   ELSE
@@ -897,9 +900,12 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      plugin_etot = 0.0_dp
      !
-     CALL plugin_scf_energy(plugin_etot,rhoin)
-     !
-     CALL plugin_scf_potential(rhoin,conv_elec,dr2,vltot)
+#if defined (__ENVIRON)
+     IF (use_environ) THEN
+        CALL calc_environ_energy(plugin_etot, .TRUE.)
+        CALL calc_environ_potential(rhoin, conv_elec, dr2, vltot)
+     END IF
+#endif
      !
      ! ... define the total local potential (external + scf)
      !
@@ -1208,7 +1214,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !
        ! ... delta_e =  - \int rho%of_r(r)  v%of_r(r)
        !                - \int rho%kin_r(r) v%kin_r(r) [for Meta-GGA]
-       !                - \sum rho%ns       v%ns       [for LDA+U]
+       !                - \sum rho%ns       v%ns       [for DFT+Hubbard]
        !                - \sum becsum       D1_Hxc     [for PAW]
        !
        USE xc_lib,  ONLY : xclib_dft_is
@@ -1293,7 +1299,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !
        ! ... delta_escf = - \int \delta rho%of_r(r)  v%of_r(r)
        !                  - \int \delta rho%kin_r(r) v%kin_r(r) [for Meta-GGA]
-       !                  - \sum \delta rho%ns       v%ns       [for LDA+U]
+       !                  - \sum \delta rho%ns       v%ns       [for DFT+Hubbard]
        !                  - \sum \delta becsum       D1         [for PAW] 
        !
        USE xc_lib, ONLY : xclib_dft_is
@@ -1576,7 +1582,9 @@ SUBROUTINE electrons_scf ( printout, exxen )
           !
        ENDIF
        !
-       CALL plugin_print_energies()
+#if defined (__ENVIRON)
+       IF (use_environ) CALL print_environ_energies('PW')
+#endif
        !
        IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
        !

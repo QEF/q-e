@@ -14,11 +14,12 @@ MODULE qe_drivers_gga
   !----------------------------------------------------------------------
   !! Contains the GGA drivers that calculate the XC energy and potential.
   !
-  USE kind_l,              ONLY: DP
-  USE dft_setting_params,  ONLY: igcx, igcc, rho_threshold_gga,     &
-                                 grho_threshold_gga, exx_started,   &
-                                 exx_fraction, screening_parameter, &
-                                 gau_parameter
+  USE kind_l,               ONLY: DP
+  USE xclib_utils_and_para, ONLY: xc_inside_error
+  USE dft_setting_params,   ONLY: igcx, igcc, rho_threshold_gga,     &
+                                  grho_threshold_gga, exx_started,   &
+                                  exx_fraction, screening_parameter, &
+                                  gau_parameter
   !
   IMPLICIT NONE
   !
@@ -66,7 +67,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   !
   ! ... local variables
   !
-  INTEGER :: ir, iflag ! Added iflag for AH series
+  INTEGER :: ir, in_err, iflag ! Added iflag for AH series
   REAL(DP) :: rho, grho
   REAL(DP) :: sx, v1x, v2x
   REAL(DP) :: sx_, v1x_, v2x_
@@ -80,12 +81,14 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   ntids = omp_get_num_threads()
 #endif
   !
+  in_err = 0
+  !
 #if defined(_OPENACC)
-!$acc data deviceptr( rho_in(length), grho_in(length), sx_out(length), sc_out(length), &
-!$acc&                v1x_out(length), v2x_out(length), v1c_out(length), v2c_out(length) )
+!$acc data present( rho_in, grho_in, sx_out, sc_out, v1x_out, v2x_out, v1c_out, v2c_out )
 !$acc parallel loop  
 #else
 !$omp parallel if(ntids==1) default(none) &
+!$omp firstprivate( in_err ) &
 !$omp private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
 !$omp          v2x, v2x_, v2xsr, sc, v1c, v2c, iflag ) &
 !$omp shared( rho_in, grho_in, length, igcx, exx_started, &
@@ -167,7 +170,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         CALL pbex( rho, grho, 1, sx, v1x, v2x )
         !
         IF (exx_started) THEN
-          CALL pbexsr( rho, grho, sxsr, v1xsr, v2xsr, screening_parameter )
+          CALL pbexsr( rho, grho, sxsr, v1xsr, v2xsr, screening_parameter, in_err )
           sx  = sx  - exx_fraction * sxsr
           v1x = v1x - exx_fraction * v1xsr
           v2x = v2x - exx_fraction * v2xsr
@@ -184,10 +187,10 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            iflag = 2 ! AHPS for PBEsol-based cross check
         ENDIF
         !
-        IF ( iflag == 0) STOP ! CALL xclib_error( " gcxc ", " Sorting GGA-AHs failed ", 1)
+        IF ( iflag == 0) CALL xc_inside_error( 8 )  ! Sorting GGA-AHs failed
         !
         IF (exx_started) THEN
-          CALL axsr( iflag, rho, grho, sxsr, v1xsr, v2xsr, screening_parameter )
+          CALL axsr( iflag, rho, grho, sxsr, v1xsr, v2xsr, screening_parameter, in_err )
           sx  = sx  - exx_fraction * sxsr
           v1x = v1x - exx_fraction * v1xsr
           v2x = v2x - exx_fraction * v2xsr
@@ -207,10 +210,10 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            iflag = 6 ! for test-reserve - analytical sr hole
         ENDIF
         !
-        IF ( iflag == 0) STOP ! CALL xclib_error( " gcxc ", " Sorting vdW-DF-AHs failed ", 1)
+        IF ( iflag == 0) CALL xc_inside_error( 8 )  ! Sorting vdW-DF-AHs failed
         !
         IF (exx_started) THEN
-          CALL axsr( iflag, rho, grho, sxsr, v1xsr, v2xsr, screening_parameter )
+          CALL axsr( iflag, rho, grho, sxsr, v1xsr, v2xsr, screening_parameter, in_err )
           sx  = sx  - exx_fraction * sxsr
           v1x = v1x - exx_fraction * v1xsr
           v2x = v2x - exx_fraction * v2xsr
@@ -358,12 +361,12 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      CASE DEFAULT
         !
+        IF (igcx/=0) CALL xc_inside_error( 3 )  ! GGA exch ID not valid
         sx  = 0.0_DP
         v1x = 0.0_DP
         v2x = 0.0_DP
         !
      END SELECT
-     !
      !
      ! ... CORRELATION
      !
@@ -422,11 +425,14 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      CASE DEFAULT
         !
+        IF (igcc/=0) CALL xc_inside_error( 4 )  ! GGA corr ID not valid
         sc = 0.0_DP
         v1c = 0.0_DP
         v2c = 0.0_DP
         !
      END SELECT
+     !
+     IF (in_err/=0) CALL xc_inside_error( in_err )
      !
      sx_out(ir)  = sx    ;  sc_out(ir)  = sc
      v1x_out(ir) = v1x   ;  v1c_out(ir) = v1c
@@ -472,7 +478,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !
   ! ... local variables
   !
-  INTEGER :: ir, iflag
+  INTEGER :: ir, iflag, in_err
   REAL(DP) :: rho_up, rho_dw, grho2_up, grho2_dw
   REAL(DP) :: v1x_up, v1x_dw, v2x_up, v2x_dw
   REAL(DP) :: sx_up, sx_dw, rnull_up, rnull_dw
@@ -492,13 +498,14 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
 #endif
   !
   !sx_tot = 0.0_DP
+  in_err = 0
   !
 #if defined(_OPENACC)
-!$acc data deviceptr( rho_in(length,2), grho2_in(length,2), sx_tot(length), &
-!$acc&                v1x_out(length,2), v2x_out(length,2) )
+!$acc data present( rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
 !$acc parallel loop
 #else
 !$omp parallel if(ntids==1) default(none) &
+!$omp firstprivate( in_err ) &
 !$omp private( rho_up, rho_dw, grho2_up, grho2_dw, rnull_up, rnull_dw, &
 !$omp          sx_up, sx_dw, sxsr_up, sxsr_dw, v1xsr_up, v1xsr_dw, &
 !$omp          v1x_up, v1x_dw, v2x_up, v2x_dw, v2xsr_up, v2xsr_dw, &
@@ -540,12 +547,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
      ! ... exchange
      !
      SELECT CASE( igcx )
-     CASE( 0 )
-        !
-        sx_tot(ir) = 0.0_DP
-        v1x_up = 0.0_DP ; v1x_dw = 0.0_DP
-        v2x_up = 0.0_DP ; v2x_dw = 0.0_DP
-        !
      CASE( 1 )
         !
         CALL becke88_spin( rho_up, rho_dw, grho2_up, grho2_dw, sx_up, sx_dw, &
@@ -603,9 +604,9 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         ELSEIF ( igcx == 12 .AND. exx_started ) THEN
            !
            CALL pbexsr( rho_up, grho2_up, sxsr_up, v1xsr_up, &
-                                          v2xsr_up, screening_parameter )
+                                          v2xsr_up, screening_parameter, in_err )
            CALL pbexsr( rho_dw, grho2_dw, sxsr_dw, v1xsr_dw, &
-                                          v2xsr_dw, screening_parameter )
+                                          v2xsr_dw, screening_parameter, in_err )
            !
            sx_tot(ir) = sx_tot(ir) - exx_fraction*0.5_DP*( sxsr_up*rnull_up + &
                                                            sxsr_dw*rnull_dw )
@@ -617,9 +618,9 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         ELSEIF ( igcx == 34 .AND. exx_started ) THEN
            !
            CALL axsr( 1, rho_up, grho2_up, sxsr_up, v1xsr_up, &
-                                          v2xsr_up, screening_parameter )
+                                          v2xsr_up, screening_parameter, in_err )
            CALL axsr( 1, rho_dw, grho2_dw, sxsr_dw, v1xsr_dw, &
-                                          v2xsr_dw, screening_parameter )
+                                          v2xsr_dw, screening_parameter, in_err )
            !
            sx_tot(ir) = sx_tot(ir) - exx_fraction*0.5_DP * ( sxsr_up*rnull_up + &
                                                              sxsr_dw*rnull_dw )
@@ -631,9 +632,9 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         ELSEIF ( igcx == 35 .AND. exx_started ) THEN
            !
            CALL axsr( 2, rho_up, grho2_up, sxsr_up, v1xsr_up, &
-                                          v2xsr_up, screening_parameter )
+                                          v2xsr_up, screening_parameter, in_err )
            CALL axsr( 2, rho_dw, grho2_dw, sxsr_dw, v1xsr_dw, &
-                                          v2xsr_dw, screening_parameter )
+                                          v2xsr_dw, screening_parameter, in_err )
            !
            sx_tot(ir) = sx_tot(ir) - exx_fraction*0.5_DP * ( sxsr_up*rnull_up + &
                                                              sxsr_dw*rnull_dw )
@@ -642,7 +643,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            v2x_up = v2x_up - exx_fraction * v2xsr_up * 2.0_DP
            v2x_dw = v2x_dw - exx_fraction * v2xsr_dw * 2.0_DP
            !
-
         ELSEIF ( igcx == 20 .AND. exx_started ) THEN
            ! gau-pbe
            !CALL pbexgau_lsd( rho, grho2, sxsr, v1xsr, v2xsr, gau_parameter )
@@ -870,7 +870,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         ENDIF
         !
         IF ( iflag == 0) THEN
-           STOP ! CALL xclib_error( " gcx_spin ", " Sorting vdW-DF-AHs failed ", 1)
+          CALL xc_inside_error( 8 )  ! Sorting vdW-DF-AHs failed
         ELSE
           sx_tot(ir) = 0.5_DP * ( sx_up*rnull_up + sx_dw*rnull_dw )
           v2x_up = 2.0_DP * v2x_up
@@ -880,9 +880,9 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         IF ( exx_started ) THEN
            !
            CALL axsr( iflag, rho_up, grho2_up, sxsr_up, v1xsr_up, &
-                                          v2xsr_up, screening_parameter )
+                                          v2xsr_up, screening_parameter, in_err )
            CALL axsr( iflag, rho_dw, grho2_dw, sxsr_dw, v1xsr_dw, &
-                                          v2xsr_dw, screening_parameter )
+                                          v2xsr_dw, screening_parameter, in_err )
            !
            sx_tot(ir) = sx_tot(ir) - exx_fraction*0.5_DP * ( sxsr_up*rnull_up + &
                                                              sxsr_dw*rnull_dw )
@@ -970,11 +970,14 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE DEFAULT
         !
+        IF (igcx/=0) CALL xc_inside_error( 3 )   ! GGA exch ID not valid
         sx_tot(ir) = 0.0_DP
         v1x_up = 0.0_DP ; v1x_dw = 0.0_DP
         v2x_up = 0.0_DP ; v2x_dw = 0.0_DP
         !
      END SELECT
+     !
+     IF (in_err/=0) CALL xc_inside_error( in_err )
      !
      v1x_out(ir,1) = v1x_up * rnull_up
      v1x_out(ir,2) = v1x_dw * rnull_dw
@@ -988,7 +991,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
 !$omp end do
 !$omp end parallel
 #endif
-  !
   !
   RETURN
   !
@@ -1036,8 +1038,7 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
 #endif
   !
 #if defined(_OPENACC)
-!$acc data deviceptr( rho_in(length), zeta_io(length), grho_in(length), &
-!$acc&                sc_out(length), v1c_out(length,2), v2c_out(length) )
+!$acc data present( rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out )
 !$acc parallel loop
 #else
 !$omp parallel if(ntids==1) default(none) &
@@ -1064,13 +1065,6 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
     ENDIF
     !
     SELECT CASE( igcc )
-    CASE( 0 )
-       !
-       sc  = 0.0_DP
-       v1c_up = 0.0_DP
-       v1c_dw = 0.0_DP
-       v2c = 0.0_DP
-       !
     CASE( 1 )
        !
        CALL perdew86_spin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c )
@@ -1093,6 +1087,7 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
        !
     CASE DEFAULT
        !
+       IF (igcc/=0) CALL xc_inside_error( 4 )  ! GGA corr ID not valid
        sc = 0.0_DP
        v1c_up = 0.0_DP
        v1c_dw = 0.0_DP
@@ -1151,7 +1146,7 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
   REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v2c
   !! correlation potential (gradient part)
   REAL(DP), INTENT(OUT), DIMENSION(length) :: v2c_ud
-  !!correlation potential (off-diag. term)
+  !! correlation potential (off-diag. term)
   !
   ! ... local variables
   !
@@ -1166,8 +1161,7 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
 #endif    
   !
 #if defined(_OPENACC) 
-!$acc data deviceptr( rho_in(length,2), grho_in(length,2), grho_ud_in(length), &
-!$acc&                sc(length), v1c(length,2), v2c(length,2), v2c_ud(length) )
+!$acc data present( rho_in, grho_in, grho_ud_in, sc, v1c, v2c, v2c_ud )
 !$acc parallel loop
 #else 
 !$omp parallel if(ntids==1) default(none) &
@@ -1226,7 +1220,7 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
        !
     CASE DEFAULT
        !
-       !CALL xclib_error(" gcc_spin_more "," gradient correction not implemented ",1)
+       IF (igcc/=0) CALL xc_inside_error( 4 )   ! GGA corr ID not valid
        !
     END SELECT
     !

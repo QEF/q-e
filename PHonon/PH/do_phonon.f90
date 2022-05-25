@@ -65,6 +65,7 @@ SUBROUTINE do_phonon(auxdyn)
      !
      !  If necessary the bands are recalculated
      !
+     if (elph_mat.and.(qind.eq.1)) call wfck2r_ep()
      ! Note (A. Urru): This has still to be cleaned (setup_pw 
      ! should be correctly set by prepare_q: here we force it 
      ! to be .true. in order for the code to work properly in 
@@ -157,5 +158,7 @@ SUBROUTINE do_phonon(auxdyn)
 100  CALL clean_pw_ph(iq)
      !
   END DO
+
+  call wfck2r_clean_files()
 
 END SUBROUTINE do_phonon

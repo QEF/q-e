@@ -319,7 +319,7 @@ itcl::body ::guib::moduleObj::_save {obj} {
 				lappend unsetVars $varName
 			    }
 			    if { $varValue != {} } {
-				set string [_validateFmtString "$::guib::settings(NAMELIST.varname_format) = $fmt,\n" \
+				set string [_validateFmtString "$::guib::settings(NAMELIST.varname_format) = $fmt\n" \
 						[list $varName [_quoteValue $varValue]] \
 						"could not write a variable. Please check the entry connected with the $varName variable"]
 				if { $saveError == 0 } {
@@ -360,7 +360,7 @@ itcl::body ::guib::moduleObj::_save {obj} {
 				lappend unsetVars $varName
 			    }
 			    if { $varValue != {} } {
-				set string [_validateFmtString "$::guib::settings(NAMELIST.varname_format) = $fmt,\n" \
+				set string [_validateFmtString "$::guib::settings(NAMELIST.varname_format) = $fmt\n" \
 						[list $varName [_quoteValue $varValue]] \
 						"could not write a variable. Please check the entry connected with the $varName variable"]
 				if { $saveError == 0 } {
@@ -448,7 +448,7 @@ itcl::body ::guib::moduleObj::_save {obj} {
 					set fmt [lindex $_fmt [expr $ic - 1]]
 				    }
 				    if { $varValue != {} } {
-					set string [_validateFmtString "$::guib::settings(NAMELIST.varname_format) = $fmt,\n" \
+					set string [_validateFmtString "$::guib::settings(NAMELIST.varname_format) = $fmt\n" \
 							[list $varName [_quoteValue $varValue]] "could not write a variable. Please check the entry connected with the $varName variable"]
 					if { $saveError == 0 } {
 					    _appendOutput $string

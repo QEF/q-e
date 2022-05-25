@@ -1,17 +1,15 @@
-
 -include make.inc
-include make.versions
+-include make.versions
 
 VFSDIR=pwgui.vfs
 LIBDIR=$(VFSDIR)/lib
 HERE = $(PWD)
 MKDIR = mkdir -p
-#MKDIR = $(HERE)/MakeDir.sh
 
 default: check-default clean tclkit-runtime main.tcl copylib debian_stupid starkit
 
 check-default:
-	@if test -z "$(PWGUI_VERSION)" || -z "$(GUIB_VERSION)" || -f main.tcl.sh; then echo; echo "*** Cannot use this Makefile directly; first do: \"make pwgui-starkit-vfs\" from the PWgui root directory !!!"; echo; exit 1; fi
+	@if test -z "$(PWGUI_VERSION)" -o -z "$(GUIB_VERSION)" -o ! -f main.tcl.sh; then echo; echo "*** Cannot use this Makefile directly; first do: \"make pwgui-starkit-vfs\" from the PWgui root directory !!!"; echo; exit 1; fi
 
 tclkit-runtime:
 	if test -x $(TCLKIT) ; then cp $(TCLKIT) tclkit-runtime ; fi
@@ -47,15 +45,12 @@ debian_stupid:
 
 starkit:
 	-if test -f pwgui; then rm pwgui; fi
-	$(SDX) wrap pwgui.kit -interp $(TCLKIT) -runtime tclkit-runtime
-	$(SDX) mkpack pwgui.kit pwgui
+	$(SDX) wrap pwgui -interp $(TCLKIT) -runtime tclkit-runtime
 	chmod +x pwgui
-	-rm -f tclkit-runtime pwgui.kit
+	-rm -f tclkit-runtime
 
-# -interp tclsh -runtime tclkit-runtime
-#	$(SDX) mkpack oldstar.kit newstar.kit
-#	$(SDX) wrap pwgui -runtime /tmp/starkit/dummy-assam
-#	$(SDX) wrap pwgui -interp $(TCLKIT) -runtime tclkit-runtime
+#       $(SDX) wrap pwgui.kit -interp $(TCLKIT) -runtime tclkit-runtime
+#	$(SDX) mkpack pwgui.kit pwgui
 
 clean:
 	-rm -rf pwgui pwgui.kit *~ pwgui*tgz pwgui*zip 

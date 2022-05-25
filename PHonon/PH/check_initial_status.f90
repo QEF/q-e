@@ -152,7 +152,7 @@ SUBROUTINE check_initial_status(auxdyn)
      !
      !   Initialize the representations and write them on file.
      !
-     IF (trans .OR. epsil .OR. ldvscf_interpolate) THEN
+     IF (trans .OR. epsil .OR. ldvscf_interpolate.or.elph_mat) THEN
         CALL init_representations()
      ELSE
         u_from_file = .TRUE.

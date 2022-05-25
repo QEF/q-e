@@ -16,10 +16,6 @@
     ntyp      = 2,
     ecutwfc   = 30.0
     ecutrho   = 240.0
-    lda_plus_u        = .true.,
-    lda_plus_u_kind   = 0,
-    U_projection_type = 'atomic',
-    Hubbard_U(1)      = 2.0
  /
  &electrons
     conv_thr    = 1.d-12
@@ -33,3 +29,5 @@ ATOMIC_POSITIONS {alat}
  B   0.000000000   0.288675135   0.000000000 
 K_POINTS {automatic} 
  4 4 1 0 0 0
+HUBBARD {atomic}
+U N-2p 2.0

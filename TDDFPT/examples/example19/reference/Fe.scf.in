@@ -2,8 +2,8 @@
     calculation='scf'
     restart_mode='from_scratch',
     prefix='Fe'
-    pseudo_dir = '/scratch/timrov/QE_gitlab/magnons/q-e/pseudo/'
-    outdir='/scratch/timrov/QE_gitlab/magnons/q-e/tempdir/'
+    pseudo_dir = '/g100_work/Sis22_baroni/obaseggi/q-e-kpoints/pseudo/'
+    outdir='/g100_work/Sis22_baroni/obaseggi/q-e-kpoints/tempdir/'
  /
  &system
     nosym           = .true.

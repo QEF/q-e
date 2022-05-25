@@ -3,7 +3,7 @@
 include ../../make.inc
 
 # location of needed modules and included files (if any)
-MODFLAGS= $(MOD_FLAG) ../../ELPA/src $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../UtilXlib $(MOD_FLAG) ../../Modules $(MOD_FLAG).
+MODFLAGS= $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../UtilXlib $(MOD_FLAG) ../../Modules $(MOD_FLAG).
 
 DENSE = \
 rotate_HSpsi_gamma.o \

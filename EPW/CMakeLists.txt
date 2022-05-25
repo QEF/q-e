@@ -133,3 +133,9 @@ qe_install_targets(
     qe_epw_exe qe_zg_exe qe_zg_disca_exe qe_zg_pp_disca_exe qe_zg_bands_unfold_exe qe_zg_pp_spctrlfn_exe qe_zg_epsilon_Gaus_exe)
 
 install(PROGRAMS bin/pp.py TYPE BIN RENAME epw_pp.py)
+
+add_custom_target(epw
+    DEPENDS
+        qe_epw_exe
+    COMMENT
+        "electron-Phonon Coupling with wannier functions")

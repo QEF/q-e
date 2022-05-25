@@ -59,6 +59,11 @@ SUBROUTINE potinit()
   USE pwcom,                ONLY : report_mag 
   USE rism_module,          ONLY : lrism, rism_init3d, rism_calc3d
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,         ONLY : use_environ
+  USE environ_pw_module,    ONLY : calc_environ_potential
+#endif
+  !
   IMPLICIT NONE
   !
   REAL(DP)                  :: charge           ! the starting charge
@@ -237,7 +242,9 @@ SUBROUTINE potinit()
   !
   ! ... plugin contribution to local potential
   !
-  CALL plugin_scf_potential(rho,.FALSE.,-1.d0,vltot)
+#if defined (__ENVIRON)
+  IF (use_environ) CALL calc_environ_potential(rho, .FALSE., -1.D0, vltot)
+#endif
   !
   ! ... compute the potential and store it in v
   !
@@ -258,9 +265,12 @@ SUBROUTINE potinit()
   !
   IF ( lda_plus_u ) THEN
      !
-     WRITE( stdout, '(5X,"Number of +U iterations with fixed ns =",I3)') &
+     IF (niter_with_fixed_ns>0) &
+     WRITE( stdout, '(5X,"Number of Hubbard iterations with fixed ns =",I3)') &
          niter_with_fixed_ns
-     WRITE( stdout, '(5X,"Starting occupations:")')
+     !
+     ! ... info about starting occupations
+     WRITE( stdout, '(/5X,"STARTING HUBBARD OCCUPATIONS:")')
      !
      IF (lda_plus_u_kind == 0) THEN
         CALL write_ns()

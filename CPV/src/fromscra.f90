@@ -62,6 +62,11 @@ SUBROUTINE from_scratch( )
     USE matrix_inversion
     USE device_memcpy_m,        ONLY : dev_memcpy
 
+#if defined (__ENVIRON)
+    USE plugin_flags,         ONLY : use_environ
+    USE environ_base_module,  ONLY : update_environ_ions
+#endif
+
     !
     IMPLICIT NONE
     !
@@ -125,7 +130,9 @@ SUBROUTINE from_scratch( )
     !
     !     pass ions informations to plugins
     !
-    CALL plugin_init_ions( tau0 )
+#if defined (__ENVIRON)
+    IF (use_environ) CALL update_environ_ions(tau0)
+#endif
     !
     !     wfc initialization with random numbers
     !     

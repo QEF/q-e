@@ -650,7 +650,7 @@ ELSEIF (code_group==21) THEN
       ELSE IF (ts==4) THEN
          which_irr(iclass)=5
       ELSE IF (ts==5) THEN
-         IF (nelem(iclass)>1) THEN
+         IF (nelem(iclass)>2) THEN
             which_irr(iclass)=9
          ELSE 
             which_irr(iclass)=6

@@ -99,7 +99,7 @@ SUBROUTINE sum_band_gpu()
      !
   END IF
   !
-  ! ... Needed for LDA+U: compute occupations of Hubbard states
+  ! ... Needed for DFT+Hubbard: compute occupations of Hubbard states
   !
   IF (lda_plus_u) THEN
     IF (lda_plus_u_kind.EQ.0) THEN

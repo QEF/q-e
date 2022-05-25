@@ -4839,7 +4839,7 @@ END SUBROUTINE mp_type_free
 #if  defined(__GPU_MPI)
         msglen = size(msg_d)
         ierr = cudaDeviceSynchronize()            ! This syncs __GPU_MPI
-        CALL reduce_base_real_to_gpu( 2 * msglen, msg_d, res_h, gid, -1 )
+        CALL reduce_base_real_to_gpu( 2 * msglen, msg_d, res_d, gid, -1 )
         RETURN ! Sync not needed after MPI call
 #else
         ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case

@@ -215,6 +215,11 @@ MODULE input
         memory, ref_cell, tcpbo, max_seconds, pre_state
      USE xc_lib,             ONLY : xclib_dft_is
      !
+#if defined (__ENVIRON)
+     USE plugin_flags,        ONLY : use_environ
+     USE environ_base_module, ONLY : read_environ_input, init_environ_setup
+#endif
+     !
      IMPLICIT NONE
      !
      !
@@ -693,7 +698,12 @@ MODULE input
 
       ! ... having set all input keywords, read plugins' input file(s)
 
-      CALL plugin_read_input()
+#if defined (__ENVIRON)
+      IF (use_environ) THEN
+         CALL read_environ_input()
+         CALL init_environ_setup()
+      END IF
+#endif
 
       !
       ! ... the 'ATOMIC_SPECIES' card must be present, check it
@@ -763,7 +773,7 @@ MODULE input
                                   step_rad, Surf_t, dthr, R_j, h_j,   &
                                   delta_eps, delta_sigma, n_cntr,     &
                                   axis
-     USE input_parameters, ONLY : lda_plus_u, Hubbard_U
+     USE input_parameters, ONLY : lda_plus_u, Hubbard_U, Hubbard_l, Hubbard_n
      USE input_parameters, ONLY : step_pen, A_pen, alpha_pen, sigma_pen
      USE input_parameters, ONLY : vdw_corr, london, london_s6, london_rcut, &
                                   ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr
@@ -931,7 +941,7 @@ MODULE input
      !
      ! ... initialize variables for lda+U calculations
      !
-     CALL ldaU_init0 ( ntyp, lda_plus_u, Hubbard_U )
+     CALL ldaU_init0 ( ntyp, lda_plus_u, Hubbard_U, Hubbard_l, Hubbard_n )
      CALL ldaUpen_init( SIZE(sigma_pen), step_pen, sigma_pen, alpha_pen, A_pen )
      !
      !  ... initialize variables for vdW (dispersions) corrections
@@ -1039,6 +1049,10 @@ MODULE input
     USE io_global,            ONLY: ionode, stdout
     USE time_step,            ONLY: delt
     !
+#if defined (__ENVIRON)
+    USE plugin_flags,         ONLY : use_environ
+    USE environ_base_module,  ONLY : print_environ_summary
+#endif
     !
     IMPLICIT NONE
 
@@ -1110,7 +1124,9 @@ MODULE input
       !
       !   CALL sic_info()  ! maybe useful
       !
-      CALL plugin_print_info( )
+#if defined (__ENVIRON)
+      IF (use_environ) CALL print_environ_summary()
+#endif
       !
       IF(tefield) call efield_info( ) 
       IF(tefield2) call efield_info2( )

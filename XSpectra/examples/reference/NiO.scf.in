@@ -1,7 +1,7 @@
  &control
     calculation='scf',
-    pseudo_dir = '/Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/pseudo/',
-    outdir='/Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/results/tmp/',
+    pseudo_dir = '/scratch/timrov/QE_gitlab/tmp1/q-e/XSpectra/examples/pseudo/',
+    outdir='/scratch/timrov/QE_gitlab/tmp1/q-e/XSpectra/examples/results/tmp/',
     prefix='NiO',
  /
  &system
@@ -16,9 +16,6 @@
     starting_magnetization(2)=-1.0,
     tot_magnetization = 0.0
     nbnd=24,
-    lda_plus_u=.true.,
-    Hubbard_U(1)=7.6,
-    Hubbard_U(2)=7.6,
  /
  &electrons
     mixing_beta = 0.3,
@@ -28,9 +25,12 @@ Ni 58.6934   Ni_PBE_TM_2pj.UPF
 NiB  58.6934   Ni_PBE_TM_2pj.UPF
 O  15.9994   O_PBE_TM.UPF
 ATOMIC_POSITIONS crystal
-Ni  0.0000000000  0.0000000000  0.0000000000
-NiB  -.5000000000  1.5000000000  -.5000000000
-O  0.7500000000  -.2500000000  -.2500000000
-O  -.7500000000  0.2500000000  0.2500000000
+Ni    0.0000000000   0.0000000000   0.0000000000
+NiB  -0.5000000000   1.5000000000  -0.5000000000
+O     0.7500000000  -0.2500000000  -0.2500000000
+O    -0.7500000000   0.2500000000   0.2500000000
 K_POINTS automatic
 1 1 1 0 0 0
+HUBBARD {atomic}
+U Ni-3d  7.6
+U NiB-3d 7.6

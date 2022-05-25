@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -37,18 +37,17 @@ SUBROUTINE forces()
   USE force_mod,         ONLY : force, sumfor
   USE scf,               ONLY : rho
   USE ions_base,         ONLY : if_pos
-  USE ldaU,              ONLY : lda_plus_u, U_projection
+  USE ldaU,              ONLY : lda_plus_u, Hubbard_projectors
   USE extfield,          ONLY : tefield, forcefield, gate, forcegate, relaxz
   USE control_flags,     ONLY : gamma_only, remove_rigid_rot, textfor, &
                                 iverbosity, llondon, ldftd3, lxdm, ts_vdw, &
                                 mbd_vdw, lforce => tprnfor
-  USE plugin_flags
   USE bp,                ONLY : lelfield, gdir, l3dstring, efield_cart, &
                                 efield_cry,efield
   USE uspp,              ONLY : okvan
   USE martyna_tuckerman, ONLY : do_comp_mt, wg_corr_force
   USE london_module,     ONLY : force_london
-  USE dftd3_api,         ONLY : get_atomic_number, dftd3_calc
+  USE dftd3_api,         ONLY : get_atomic_number
   USE dftd3_qe,          ONLY : dftd3_pbc_gdisp, dftd3
 
   USE xdm_module,        ONLY : force_xdm
@@ -59,8 +58,16 @@ SUBROUTINE forces()
   USE rism_module,       ONLY : lrism, force_rism
   !
   USE control_flags,     ONLY : use_gpu
+#if defined(__CUDA)
   USE device_fbuff_m,          ONLY : dev_buf
   USE device_memcpy_m,     ONLY : dev_memcpy
+#endif
+  !
+#if defined (__ENVIRON)
+  USE plugin_flags,        ONLY : use_environ
+  USE environ_base_module, ONLY : calc_environ_force
+  USE environ_pw_module,   ONLY : is_ms_gcs, run_ms_gcs
+#endif
   !
   IMPLICIT NONE
   !
@@ -93,10 +100,10 @@ SUBROUTINE forces()
   INTEGER :: atnum(1:nat)
   REAL(DP) :: stress_dftd3(3,3)
   !
-  ! TODO: get rid of this !!!! Use standard method for duplicated global data
-  REAL(DP), POINTER :: vloc_d (:, :)
   INTEGER :: ierr
 #if defined(__CUDA)
+  ! TODO: get rid of this !!!! Use standard method for duplicated global data
+  REAL(DP), POINTER :: vloc_d (:, :)
   attributes(DEVICE) :: vloc_d
 #endif
   !
@@ -107,10 +114,12 @@ SUBROUTINE forces()
   IF ( ALL( if_pos == 0 ) ) RETURN
   !
   CALL start_clock( 'forces' )
+#if defined(__CUDA)
   ! Cleanup scratch space used in previous SCF iterations.
   ! This will reduce memory footprint.
   CALL dev_buf%reinit(ierr)
   IF (ierr .ne. 0) CALL infomsg('forces', 'Cannot reset GPU buffers! Some buffers still locked.')
+#endif
   !
   !
   ALLOCATE( forcenl(3,nat), forcelc(3,nat), forcecc(3,nat), &
@@ -133,6 +142,7 @@ SUBROUTINE forces()
      CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
                  g, rho%of_r(:,1), dfftp%nl, gstart, gamma_only, vloc, &
                  forcelc )
+#if defined(__CUDA)
   IF (      use_gpu) THEN ! On the GPU
      ! move these data to the GPU
      CALL dev_buf%lock_buffer(vloc_d, (/ ngl, ntyp /) , ierr)
@@ -143,6 +153,7 @@ SUBROUTINE forces()
                    forcelc )
      CALL dev_buf%release_buffer(vloc_d, ierr)
   END IF
+#endif
   call stop_clock('frc_lc') 
   !
   ! ... The NLCC contribution
@@ -157,9 +168,9 @@ SUBROUTINE forces()
   !     (included by force_us if using beta as local projectors)
   !
   IF (.not. use_gpu) THEN
-     IF ( lda_plus_u .AND. U_projection.NE.'pseudo' ) CALL force_hub( forceh )
+     IF ( lda_plus_u .AND. Hubbard_projectors.NE.'pseudo' ) CALL force_hub( forceh )
   ELSE
-     IF ( lda_plus_u .AND. U_projection.NE.'pseudo' ) CALL force_hub_gpu( forceh )
+     IF ( lda_plus_u .AND. Hubbard_projectors.NE.'pseudo' ) CALL force_hub_gpu( forceh )
   ENDIF
   !
   ! ... The ionic contribution is computed here
@@ -208,10 +219,12 @@ SUBROUTINE forces()
   ! ... The SCF contribution
   !
   call start_clock('frc_scc')
+#if defined(__CUDA)
   ! Cleanup scratch space again, next subroutines uses a lot of memory.
   ! In an ideal world this should be done only if really needed (TODO).
   CALL dev_buf%reinit(ierr)
   IF (ierr .ne. 0) CALL errore('forces', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr))
+#endif
   !
   IF ( .not. use_gpu ) CALL force_corr( forcescc )
   IF (       use_gpu ) CALL force_corr_gpu( forcescc )
@@ -233,7 +246,9 @@ SUBROUTINE forces()
   !
   ! ... call void routine for user define/ plugin patches on internal forces
   !
-  CALL plugin_int_forces()
+#if defined (__ENVIRON)
+  IF (use_environ) CALL calc_environ_force(force)
+#endif
   !
   ! ... Berry's phase electric field terms
   !
@@ -327,7 +342,11 @@ SUBROUTINE forces()
   !
   ! ... call void routine for user define/ plugin patches on external forces
   !
-  CALL plugin_ext_forces()
+#if defined (__ENVIRON)
+  IF (use_environ) THEN
+     IF (is_ms_gcs()) CALL run_ms_gcs()
+  END IF
+#endif
   !
   ! ... write on output the forces
   !
@@ -507,7 +526,6 @@ SUBROUTINE forces()
   IF ( ( sumfor < 10.D0*sumscf ) .AND. ( sumfor > nat*eps ) ) &
   WRITE( stdout,'(5x,"SCF correction compared to forces is large: ", &
                    &  "reduce conv_thr to get better values")')
-
   RETURN
   !
 9035 FORMAT(5X,'atom ',I4,' type ',I2,'   force = ',3F14.8)

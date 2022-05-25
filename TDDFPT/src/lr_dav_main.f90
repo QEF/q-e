@@ -34,6 +34,11 @@ PROGRAM lr_dav_main
   use lr_dav_variables
   use lr_dav_debug
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,          ONLY : use_environ
+  USE environ_base_module,   ONLY : print_environ_summary
+#endif
+  !
   IMPLICIT NONE
   INTEGER            :: ibnd_occ,ibnd_virt,ibnd,ip
   LOGICAL            :: rflag, nomsg
@@ -55,7 +60,9 @@ PROGRAM lr_dav_main
 
   ! Writing a summary of plugin variables
 
-  CALL plugin_summary()
+#if defined (__ENVIRON)
+  IF (use_environ) CALL print_environ_summary()
+#endif
 
   CALL check_stop_init()
 

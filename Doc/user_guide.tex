@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{7.0}
+\def\version{7.1}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -83,6 +83,8 @@ more specialized calculations:
   \item \texttt{HP}: calculation of Hubbard $U$ parameters using DFPT;
   \item \texttt{QEHeat}: energy current in insulators for thermal
         transport calculations.
+  \item \texttt{KCW}: quasiparticle energies of finite and extended systems
+        using Koopmans-compliant functionals in a Wannier representation.
 \end{itemize}
 The following auxiliary packages are included as well:
 \begin{itemize}
@@ -174,6 +176,8 @@ work of Pietro Bonf\`a (Univ. Parma).
 Contributors to \qe, beyond the authors of the papers
 mentioned in Sec.\ref{SubSec:Terms}, include:
 \begin{itemize}
+  \item Victor Yu (Urbana-Champaign) for various bug fixes and
+	optimizations;
   \item Alexandre Tkatchenko's group, in particular Szabolcs Goger
   (U. Luxembourg), and Robert DiStasio's group, in particular
   Hsin-Yu Ko (Cornell), for Many-Body Dispersion (MBD) correction;
@@ -231,8 +235,11 @@ and let us apologize to everybody we have forgotten.
 \subsection{Contacts}
 \label{SubSec:Contacts}
 
-The main entry point for \qe\ users is the web site
-\texttt{http://www.quantum-espresso.org/}. There you find
+The main entry point for \qe\ users is the web site:
+\begin{quote}
+\texttt{http://www.quantum-espresso.org/}. 
+\end{quote}
+There you find
 the stable releases for download, general information and
 documentation.
 
@@ -428,12 +435,11 @@ formerly PGI compiler, freely available for download.
 
 As a rule, \qe\ tries to keep compatibility with older compilers,
 avoiding nonstandard extensions and newer features that are not
-widespread or stabilized. If however your compiler is older say
-than $\sim 5$ years or so it is quite likely that something will
-not work. The same applies to mathematical and MPI libraries.
-For GPU compilation, get the most recent NVidia HPC SDK you can:
-while compilers from v. 17.4 on should work, several problems and
-limitations are known to exist for old compiler versions.
+widespread or stabilized. If however your compiler is older than
+a few ($\sim 5$) years, it is likely that something will not work.
+The same applies to mathematical and MPI libraries.
+For GPU compilation, you need v.19.10 or later of the NVidia HPC SDK
+(previous versions are no longer supported).
 
 Big computing centers typically provide a Fortran compiler complete
 with all needed libraries. Workstations or ``commodity'' machines
@@ -484,7 +490,8 @@ path, as specified in the PATH environment variable.
 	\texttt{include/qe\_cdefs.h} &  (previously: \texttt{include/c\_defs.h})
 	a few definitions used by C files\\
 \texttt{include/configure.h} &  optional: info on compilation flags
-	(to enable its usage, \\ & uncomment \verb|#define __HAVE_CONFIG_INFO|
+	(to enable it, uncomment \\ &
+	\verb|#define __HAVE_CONFIG_INFO|
 	 in Modules/environment.f90)\\
 \end{tabular}\\
 In addition, \configure\ generates (since v.7) files \texttt{make.depend},
@@ -561,7 +568,7 @@ for NEC SX6 on a PC). Currently supported architectures are:
 \begin{tabular}{ll}
 \texttt{x86\_64}   & Intel and AMD 64-bit running Linux\\
 \texttt{arm}       & ARM machines (with gfortran or armflang)\\
-\texttt{crayxt4}   & Cray XT4/XT5/XE machines\\
+\texttt{craype}    & Cray machines using Cray PE\\
 \texttt{mac686}    & Apple Intel machines running Mac OS X\\
 \texttt{mingw32}   & Cross-compilation for MS-Windows, using mingw, 32 bits\\
 \texttt{mingw64}   & As above, 64 bits\\
@@ -621,10 +628,11 @@ and the following optional packages:\\
 \end{tabular}\\
 \\
 In order to compile the code for GPU's you will need a recent version
--- the more recent, the better -- of the NVidia HPC software development
-kit (SDK). OpenMP must be enabled, and you may want to use a CUDA-aware MPI
-distribution if running on multiple GPUs in order to optimize the
-interprocess data transfer. The following \configure\ options are
+(v.19.10 or later: the more recent, the better) of the NVidia HPC software
+development kit (SDK). OpenMP should be enabled. Enabling faster communications
+between GPUs, via NVlink or Infiniband RDMA, is essential for optimal
+performance. If your MPI library is built to be CUDA-aware, then enable it
+with \texttt{--with-cuda-mpi=yes}. The following \configure\ options are
 available:\\
 \begin{tabular}{ll}
 \texttt{--with-cuda=value}&         enable compilation of GPU-accelerated subroutines.\\
@@ -640,14 +648,11 @@ available:\\
                                   & \texttt{value} must be consistent with the\\
                                   & CUDA Toolkit installed on the workstation \\
                                   & or available on the compute nodes of the HPC facility.\\
-\texttt{--enable-cuda-env-check=[yes]}& if set, sanity checks on the CUDA environment\\
-                                      & are performed (default: no).
-\end{tabular}\\
+\texttt{--with-cuda-mpi=value}    & enable usage of a CUDA-aware MPI library (default: no).\\
+\end{tabular}
 
-
-To modify or extend \configure, see the Wiki pages on GitLab:
-\texttt{https://gitlab.com/QEF/q-e/-/wikis}.
-For advanced users only!
+To modify or extend \configure\ (advanced users only!), see the Wiki pages
+on GitLab: \texttt{https://gitlab.com/QEF/q-e/-/wikis}.
 
 \subsubsection{Manual configuration}
 \label{SubSec:manconf}
@@ -662,8 +667,9 @@ libraries (e.g. you need to add \texttt{-D\_\_FFTW} to \texttt{DFLAGS}
 if you want to link internal FFTW). For a correct choice of preprocessing
 flags, refer to the documentation in \texttt{include/defs.h.README}.
 
-Even if \configure\ works, yuo may need to tweak the \texttt{make.inc}
-file. It is very simple, but please note that if you change any settings
+Even if \configure\ works, you may need to tweak the \texttt{make.inc}
+file. It is very simple, but please note that a) you must know what you are
+doing, and b) if you change any settings
 (e.g. preprocessing, compilation flags)
 after a previous, successful or failed, compilation, you must run
 \texttt{make clean} before recompiling, unless you know exactly which
@@ -674,7 +680,7 @@ unless you use option \texttt{--save}.
 \subsection{Libraries}
 \label{Sec:Libraries}
 
-\qe\ contains a copy of some needed external libraries:
+\qe\ downloads a copy of the following external libraries if needed:
 \begin{itemize}
  \item FoX for reading and writing xml files;
  \item BLAS (\texttt{http://www.netlib.org/blas/}) and LAPACK
@@ -1299,23 +1305,29 @@ paragraph.
 
 \subsubsection{Cray machines}
 
-For Cray XE machines:
-\begin{verbatim}
-$ module swap PrgEnv-cray PrgEnv-pgi
-$ ./configure --enable-openmp --enable-parallel --with-scalapack
-\end{verbatim}
+For recent Cray machines, use \texttt{./configure ARCH=craype}.
+This selects the \texttt{ftn} compiler, that typically uses
+the \texttt{crayftn} compiler but may also use other ones,
+depending upon the site and personal environment.
 
 ''Now, despite what people can imagine, every CRAY machine deployed can
 have different environment. For example on the machine I usually use
 for tests [...] I do have to unload some modules to make QE running
 properly. On another CRAY [...] there is also Intel compiler as option
-and the system is slightly different compared to the other.
-So my recipe should work, 99\% of the cases.'' (info by Filippo Spiga)
+and the system is slightly different compared to the other.'' 
+(info by Filippo Spiga)
 
-For Cray XT machines, use \texttt{./configure ARCH=crayxt4} or else
-\configure\ will not recognize the Cray-specific software environment.
+With the \verb|PrgEnv-cray| module, v.6.0.10, you get an internal compiler 
+error in \verb|esm_stres_mod.f90|. If so, reduce the optimization level
+for that specific routine from \verb|-O3| to \verb|-O1|.
 
-Older Cray machines: T3D, T3E, X1, are no longer supported.
+If you want to use the Intel compiler instead, try something like:
+\begin{verbatim}
+$ module swap PrgEnv-cray PrgEnv-intel
+$ ./configure ARCH=craype [--enable-openmp --enable-parallel --with-scalapack]
+\end{verbatim}
+
+Old Cray machines: T3D, T3E, X1, etc, are no longer supported.
 
 \subsubsection{Obsolescent architectures}
 
@@ -1630,6 +1642,15 @@ of output. Running several instances of a serial code with
 \texttt{mpirun} or \texttt{mpiexec} produces strange crashes.
 
 \paragraph{Trouble with input files}
+Input files should be plain ASCII text. The presence of CRLF line 
+terminators (may appear as \^{}M, Control-M, characters at the end
+of lines), tabulators, or non-ASCII characters (e.g. non-ASCII
+quotation marks, that at a first glance may look the same as
+the ASCII character) is a frequent source of trouble.
+Typically, this happens with files coming from Windows or produced
+with "smart" editors. Verify with command \texttt{file} and convert
+with command \texttt{iconv} if needed.
+
 Some implementations of the MPI library have problems with input
 redirection in parallel. This typically shows up under the form of
 mysterious errors when reading data. If this happens, use the option

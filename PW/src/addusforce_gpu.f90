@@ -55,8 +55,8 @@ SUBROUTINE addusforce_g_gpu( forcenl )
   USE mp,                 ONLY : mp_sum
   USE control_flags,      ONLY : gamma_only
   USE fft_interfaces,     ONLY : fwfft
-  USE device_fbuff_m,     ONLY : dev_buf
 #if defined(__CUDA) 
+  USE device_fbuff_m,     ONLY : dev_buf
   USE cudafor 
   USE cublas
 #else
@@ -86,7 +86,7 @@ SUBROUTINE addusforce_g_gpu( forcenl )
   REAL(DP)                 :: forceqx, forceqy, forceqz
 #if defined(__CUDA) 
 ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d 
-#endif 
+
   nl_d => dfftp%nl_d
   IF (.NOT.okvan) RETURN
   !
@@ -246,6 +246,7 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
   CALL dev_buf%release_buffer(ylmk0_d, ierr)
   CALL dev_buf%release_buffer (vg_d, ierr )
   DEALLOCATE(forceq)
+#endif
   !
   RETURN
   !

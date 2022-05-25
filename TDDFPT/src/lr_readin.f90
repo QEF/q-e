@@ -23,6 +23,7 @@ SUBROUTINE lr_readin
   USE scf,                 ONLY : vltot, v, vrs, vnew, &
                                   & destroy_scf_type, rho
   USE fft_base,            ONLY : dfftp, dffts
+  USE gvect,               ONLY : gcutm
   USE gvecs,               ONLY : doublegrid
   USE wvfct,               ONLY : nbnd, et, wg, current_k
   USE lsda_mod,            ONLY : isk
@@ -31,6 +32,8 @@ SUBROUTINE lr_readin
   USE klist,               ONLY : nks, wk, nelec, lgauss, ltetra
   USE fixed_occ,           ONLY : tfixed_occ
   USE symm_base,           ONLY : nosym
+  USE cell_base,           ONLY : at, alat
+  USE ions_base,           ONLY : nat, tau
   USE check_stop,          ONLY : max_seconds
   USE realus,              ONLY : real_space, init_realspace_vars, generate_qpointlist, &
                                   betapointlist
@@ -52,6 +55,15 @@ SUBROUTINE lr_readin
   USE constants,           ONLY : eps4, rytoev
   USE control_lr,          ONLY : lrpa, alpha_mix, ethr_nscf
   USE mp_world,            ONLY : world_comm
+  
+#if defined (__ENVIRON)
+  USE plugin_flags,          ONLY : use_environ
+  USE environ_base_module,   ONLY : read_environ_input, init_environ_setup, &
+                                    init_environ_base, update_environ_ions, &
+                                    update_environ_cell, clean_environ, &
+                                    check_environ_compatibility
+  USE environ_pw_module,     ONLY : update_environ_potential, calc_environ_potential
+#endif
 
   IMPLICIT NONE
   !
@@ -83,6 +95,12 @@ SUBROUTINE lr_readin
                         & if_check_her,p_nbnd_occ,p_nbnd_virt,poor_of_ram,poor_of_ram2,max_iter,     &
                         & conv_assistant,if_dft_spectrum,no_hxc,d0psi_rs,lshift_d0psi,               &
                         & lplot_drho, vccouple_shift, ltammd
+  !
+#if defined (__ENVIRON)
+  REAL(DP) :: at_scaled(3, 3)
+  REAL(DP) :: gcutm_scaled
+  REAL(DP), ALLOCATABLE :: tau_scaled(:, :)
+#endif
   !
 #if defined(__MPI)
   IF (ionode) THEN
@@ -436,19 +454,23 @@ SUBROUTINE lr_readin
   !
   ! Compute and add plugin contributions to SCF potential
   !
-  CALL plugin_read_input("TD")
-  !
-  CALL plugin_initbase()
-  !
-  CALL plugin_init_ions()
-  !
-  CALL plugin_init_cell()
-  !
-  CALL plugin_init_potential( v%of_r(:,1) )
-  !
-  CALL plugin_scf_potential( rho, .FALSE., -1.D0, v%of_r(:,1) )
-  !
-  CALL plugin_clean( 'TD', .FALSE. )
+#if defined (__ENVIRON)
+  IF (use_environ) THEN
+     at_scaled = at * alat
+     gcutm_scaled = gcutm / alat**2
+     ALLOCATE (tau_scaled(3, nat))
+     tau_scaled = tau * alat
+     CALL read_environ_input()
+     CALL init_environ_setup('TD')
+     CALL init_environ_base(at_scaled, gcutm_scaled, do_comp_mt)
+     CALL update_environ_ions(tau_scaled)
+     DEALLOCATE (tau_scaled)
+     CALL update_environ_cell(at_scaled)
+     CALL update_environ_potential(v%of_r(:, 1))
+     CALL calc_environ_potential(rho, .FALSE., -1.D0, v%of_r(:, 1))
+     CALL clean_environ('TD', .FALSE.)
+  END IF
+#endif
   !
   !  Deallocate some variables created with read_file but not used in TDDFPT
   !
@@ -615,13 +637,18 @@ CONTAINS
        !
        ! EELS + plugins is not supported.
        !
-       CALL plugin_check('lr_readin')
+#if defined (__ENVIRON)
+       IF (use_environ) CALL check_environ_compatibility('lr_readin')
+#endif
        !
     ENDIF
     !
     ! MAgnons restrictions
     !
     IF (magnons) THEN
+       IF (okvan.OR.okpaw) &     
+          CALL errore ('lr_readin', ' Magnons linear response calculation ' // &
+                      & 'not implemented for USPP and PAW', 1 )            
        IF (xclib_dft_is('gradient')) &
           call errore('lr_readin', 'Magnons linear response calculation ' // &
                      & 'does not support GGA', 1 )

@@ -14,9 +14,7 @@ subroutine gen_beta_simple (qk, npw_max, dvkb)
   USE klist,      ONLY : ngk
   USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
-  USE uspp_data,  ONLY : nqx, tab, tab_d2y, dq, spline_ps
-  USE m_gth,      ONLY : mk_dffnl_gth
-  USE splinelib
+  USE uspp_data,  ONLY : nqx, tab, dq
   USE uspp_param, ONLY : upf, lmaxkb, nbetam, nh
   USE io_global, ONLY : stdout
   !
@@ -47,7 +45,6 @@ subroutine gen_beta_simple (qk, npw_max, dvkb)
   real(DP), allocatable :: djl (:,:,:), ylm (:,:), q (:), gk (:,:)
   real(DP) ::  qt
   complex(DP), allocatable :: sk (:)
-  real(DP), allocatable :: xdata(:)
 
   call start_clock('gen_beta1')
 
@@ -73,25 +70,10 @@ subroutine gen_beta_simple (qk, npw_max, dvkb)
   call stop_clock('stres_us32')
   call start_clock('stres_us33')
 
-  if (spline_ps) then
-    allocate(xdata(nqx))
-    do iq = 1, nqx
-      xdata(iq) = (iq - 1) * dq
-    enddo
-  endif
-
   do nt = 1, ntyp
      do nb = 1, upf(nt)%nbeta
-        if ( upf(nt)%is_gth ) then
-           call mk_dffnl_gth( nt, nb, npw_max, omega, tpiba, q, djl(1,nb,nt) )
-           cycle
-        endif
         do ig = 1, npw_max
            qt = sqrt(q (ig)) * tpiba
-           if (spline_ps) then
-             djl(ig,nb,nt) = splint_deriv(xdata, tab(:,nb,nt), &
-                                                 tab_d2y(:,nb,nt), qt)
-           else
              px = qt / dq - int (qt / dq)
              ux = 1.d0 - px
              vx = 2.d0 - px
@@ -108,7 +90,6 @@ subroutine gen_beta_simple (qk, npw_max, dvkb)
              else
                 djl(ig,nb,nt) = 0.d0  ! Approximation
              endif
-           endif
         enddo
      enddo
   enddo
@@ -156,7 +137,6 @@ subroutine gen_beta_simple (qk, npw_max, dvkb)
   deallocate (sk)
   deallocate (ylm)
   deallocate (djl)
-  if (spline_ps) deallocate(xdata)
   return
 end subroutine gen_beta_simple
 
@@ -176,8 +156,7 @@ subroutine gen_beta_simple_2 (qk, npw_max, u, dvkb)
   USE klist,      ONLY : ngk, igk_k
   USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
-  USE uspp_data,  ONLY : nqx, tab, tab_d2y, dq, spline_ps
-  USE splinelib
+  USE uspp_data,  ONLY : nqx, tab, dq
   USE uspp_param, ONLY : upf, lmaxkb, nbetam, nh
   !
   implicit none
@@ -200,7 +179,6 @@ subroutine gen_beta_simple_2 (qk, npw_max, u, dvkb)
   complex(DP) :: phase, pref
 
   integer :: iq
-  real(DP), allocatable :: xdata(:)
   !
   !
   call start_clock('gen_beta2')
@@ -231,21 +209,10 @@ subroutine gen_beta_simple_2 (qk, npw_max, u, dvkb)
      q (ig) = sqrt ( q(ig) ) * tpiba
   end do
 
-  if (spline_ps) then
-    allocate(xdata(nqx))
-    do iq = 1, nqx
-      xdata(iq) = (iq - 1) * dq
-    enddo
-  endif
-
   do nt = 1, ntyp
      ! calculate beta in G-space using an interpolation table
      do nb = 1, upf(nt)%nbeta
         do ig = 1, npw_max
-           if (spline_ps) then
-             vkb0(ig,nb,nt) = splint(xdata, tab(:,nb,nt), &
-                                     tab_d2y(:,nb,nt), q(ig))
-           else
              px = q (ig) / dq - int (q (ig) / dq)
              ux = 1.d0 - px
              vx = 2.d0 - px
@@ -262,7 +229,6 @@ subroutine gen_beta_simple_2 (qk, npw_max, u, dvkb)
              else
                 vkb0 (ig, nb, nt) = 0.d0 ! DEBUG
              endif
-           endif
         enddo
      enddo
   enddo
@@ -308,7 +274,6 @@ subroutine gen_beta_simple_2 (qk, npw_max, u, dvkb)
 
   deallocate ( sk )
   deallocate ( vkb0, dylm_u, gk )
-  if (spline_ps) deallocate(xdata)
 
   return
 end subroutine gen_beta_simple_2

@@ -1,0 +1,44 @@
+project: KCW
+src_dir: ./src
+output_dir: ./Doc_ford
+summary: KCW is an open-source F90/MPI code which calculates spectral properties using the koopmans-compliant framework and Maximally Localized Wannier Functions.
+authors: Nicola Colonna
+         Riccardo de Gennaro
+         Edward Linscott
+         Nicola Marzari
+predocmark: >
+docmark_alt: #
+predocmark_alt: <
+display: public
+         private
+graph: true
+source: false
+
+#### NOTABENE To generate the automatic FORD documentation: "ford -I ../LAXlib kcw.md"
+
+KCW stands for "Koopmans-compliant functionals in a Wannier representation". KCW is an open-source F90/MPI 
+code which calculates quasiparticle energies of finite and extended systems using
+[Koopmans-compliant functionals](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.021051)
+and [Maximally Localized Wannier Functions](http://journals.aps.org/prb/abstract/10.1103/PhysRevB.56.12847).
+The code consists of 3 programs:
+
+1) an interface between Wannier90 and the KCW code (wann_to_kc.x) 
+
+2) a program that computes the screening coefficients as described [here](https://pubs.acs.org/doi/abs/10.1021/acs.jctc.7b01116) (kc_screen.x)
+
+3) a program that computes the KC hamiltonian, interpolates it if needed, and finally diagonalizes it (kc_ham.x) 
+
+KCW is developed and maintained by [Nicola Colonna](https://www.psi.ch/en/lns/people/nicola-colonna),  [Riccardo de Gennaro](https://people.epfl.ch/riccardo.degennaro), and [Edward Linscott](https://people.epfl.ch/edward.linscott)
+
+@Note
+Still in development. This version of the code works with QE7.0
+
+	TODO list: 
+	1) Symmetry: at the moment no symmetry are used. 
+	This was primarely because W90 works on a regular mesh of k points and 
+	does not account for symmetry. Prob need W90 to work in the IBZ.
+	2) Initialize the xc-kernel and KC response as the spin-polarized one 
+	also when nspin=1. This is needed to correctly define the perturbing
+	potentials. At the moment we do a nspin=2 calculation from the beginning
+	(not a big deal since the bottleneck is the LR calculation).
+

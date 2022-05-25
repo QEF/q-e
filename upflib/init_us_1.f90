@@ -306,7 +306,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      end do
   end if
   !
-  ! fill interpolation table tab (and tab_d2y for spline interpolation)
+  ! fill interpolation table tab
   !
   CALL init_tab_beta ( omega, intra_bgrp_comm )
   !

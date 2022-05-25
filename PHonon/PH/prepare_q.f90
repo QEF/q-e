@@ -136,7 +136,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   !
   IF ( ldisp ) THEN
      !
-     IF ( lgamma ) THEN
+     IF ( lgamma .and. .not. elph_mat ) THEN
         !
         IF ( .NOT. (lgauss .OR. ltetra)) THEN
            !

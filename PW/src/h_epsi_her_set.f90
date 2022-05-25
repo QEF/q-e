@@ -18,7 +18,6 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
   USE kinds,              ONLY: DP
   USE noncollin_module,   ONLY: noncolin, npol, lspinorb
   USE wvfct,              ONLY: npwx, nbnd
-  USE ldaU,               ONLY: lda_plus_u
   USE lsda_mod,           ONLY: current_spin, nspin
   USE scf,                ONLY: vrs  
   USE gvect

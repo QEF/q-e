@@ -400,25 +400,33 @@ MODULE input_parameters
         REAL(DP) :: starting_magnetization( nsx ) = 0.0_DP
         !! PW ONLY
 
-        LOGICAL :: lda_plus_u = .false.
-        !! Use DFT+U(+V) method
+        ! DFT+Hubbard
+        ! Old input parameters in the SYSTEM naqmelist (removed since v7.1):
+        CHARACTER(len=80) :: U_projection_type = ''  ! obsolete
+        CHARACTER(len=80) :: Hubbard_parameters = '' ! obsolete
+        REAL(DP) :: Hubbard_U_back(nsx)  = 0.0_DP    ! obsolete
         !
-        ! the following are the needed parameters for DFT+U method
-        INTEGER :: lda_plus_u_kind = 0
-        INTEGER :: lback(nsx) = -1
-        INTEGER :: l1back(nsx) = -1
+        ! the following are the parameters for DFT+Hubbard
+        LOGICAL :: lda_plus_u = .false.              
+        INTEGER :: lda_plus_u_kind = -1              
         INTEGER, PARAMETER :: nspinx=2 ! lqmax is taken from upf_params
         REAL(DP) :: starting_ns_eigenvalue(lqmax,nspinx,nsx) = -1.0_DP
-        REAL(DP) :: hubbard_u(nsx) = 0.0_DP
-        REAL(DP) :: hubbard_u_back(nsx) = 0.0_DP
-        REAL(DP) :: hubbard_v(natx,natx*(2*sc_size+1)**3,4) = 0.0_DP 
-        REAL(DP) :: hubbard_j0(nsx) = 0.0_DP
-        REAL(DP) :: hubbard_j(3,nsx) = 0.0_DP
-        REAL(DP) :: hubbard_alpha(nsx) = 0.0_DP
-        REAL(DP) :: hubbard_alpha_back(nsx) = 0.0_DP
-        REAL(DP) :: hubbard_beta(nsx) = 0.0_DP
-        CHARACTER(len=80) :: U_projection_type = 'atomic'
-        CHARACTER(len=80) :: Hubbard_parameters = 'input'
+        INTEGER  :: Hubbard_l(nsx)  = -1
+        INTEGER  :: Hubbard_n(nsx)  = -1
+        INTEGER  :: Hubbard_l2(nsx) = -1
+        INTEGER  :: Hubbard_n2(nsx) = -1
+        INTEGER  :: Hubbard_l3(nsx) = -1
+        INTEGER  :: Hubbard_n3(nsx) = -1
+        REAL(DP) :: Hubbard_U(nsx)  = 0.0_DP
+        REAL(DP) :: Hubbard_U2(nsx) = 0.0_DP
+        REAL(DP) :: Hubbard_V(natx,natx*(2*sc_size+1)**3,4) = 0.0_DP 
+        REAL(DP) :: Hubbard_J0(nsx) = 0.0_DP
+        REAL(DP) :: Hubbard_J(3,nsx) = 0.0_DP
+        REAL(DP) :: Hubbard_alpha(nsx) = 0.0_DP
+        REAL(DP) :: Hubbard_alpha_back(nsx) = 0.0_DP
+        REAL(DP) :: Hubbard_beta(nsx) = 0.0_DP
+        REAL(DP) :: Hubbard_occ(nsx,3) = -1.0_DP
+        CHARACTER(len=80) :: Hubbard_projectors = ''
         LOGICAL :: reserv(nsx) = .FALSE.
         LOGICAL :: reserv_back(nsx) = .FALSE.
         LOGICAL :: hub_pot_fix = .FALSE.
@@ -642,14 +650,13 @@ MODULE input_parameters
              ntyp, nbnd, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,         &
              nr3s, nr1b, nr2b, nr3b, nosym, nosym_evc, noinv, use_all_frac,   &
              force_symmorphic, starting_charge, starting_magnetization,       &
-             occupations, degauss, nspin, ecfixed,                            &
-             qcutz, q2sigma, lda_plus_U, lda_plus_u_kind,                     &
-             Hubbard_U, Hubbard_U_back, Hubbard_J, Hubbard_alpha,             &
-             Hubbard_alpha_back, Hubbard_J0, Hubbard_beta,                    &
-             hub_pot_fix, Hubbard_V, Hubbard_parameters,                      &
-             backall, lback, l1back, reserv, reserv_back, dmft, dmft_prefix,  &
+             occupations, degauss, nspin, ecfixed, qcutz, q2sigma,            &
+             lda_plus_u, lda_plus_u_kind, U_projection_type, Hubbard_parameters, & ! obsolete
+             Hubbard_U, Hubbard_J0, Hubbard_J, Hubbard_V, Hubbard_U_back,     & ! moved to HUBBARD card 
+             Hubbard_alpha, Hubbard_alpha_back, Hubbard_beta, Hubbard_occ,    &
+             hub_pot_fix, reserv, reserv_back, dmft, dmft_prefix,             &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
-             U_projection_type, input_dft, la2F, assume_isolated,             &
+             input_dft, la2F, assume_isolated,                                &
              nqx1, nqx2, nqx3, ecutfock, localization_thr, scdm, ace,         &
              scdmden, scdmgrd, nscdm, n_proj,                                 &
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
@@ -1850,13 +1857,20 @@ MODULE input_parameters
 !
 !    SOLVENTS
 !
-      CHARACTER(len=10) :: solv_label(nsolx) = 'XX'    ! label of the solvents
-      CHARACTER(len=80) :: solv_mfile(nsolx) = 'YY'    ! molecular file name
-      REAL(DP)          :: solv_dens1(nsolx) = 0.0_DP  ! solvent's density (for the right-hand side)
-      REAL(DP)          :: solv_dens2(nsolx) = 0.0_DP  ! solvent's density (for the left-hand side)
+      CHARACTER(len=10) :: solv_label(nsolx) = 'XX'    
+      !! label of the solvents
+      CHARACTER(len=80) :: solv_mfile(nsolx) = 'YY'    
+      !! molecular file name
+      REAL(DP)          :: solv_dens1(nsolx) = 0.0_DP  
+      !! solvent's density (for the right-hand side)
+      REAL(DP)          :: solv_dens2(nsolx) = 0.0_DP  
+      !! solvent's density (for the left-hand side)
       CHARACTER(len=80) :: solvents_unit = '1/cell'
-        ! solvents_unit = '1/cell' | 'mol/L' | 'g/cm^3'
-        ! select the units for the solvent's densities being read from stdin
+      !! solvents_unit = '1/cell' | 'mol/L' | 'g/cm^3'
+      !! select the units for the solvent's densities being read from stdin
+!   HUBBARD
+!
+      LOGICAL  :: tahub = .false.
 
 !  END manual
 ! ----------------------------------------------------------------------

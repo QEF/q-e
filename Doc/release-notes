@@ -1,6 +1,41 @@
-New in 7.0-rism version:
+New in 7.1 version:
   * DFT+RISM (1D, 3D, Laue) by S. Nishihara & M. Otani [Phys. Rev. B 96, 115429 (2017)].
+  * Improved, streamlined and extended porting to NVidia GPUs
+  * KCW package for Koopmans-compliant functionals in a Wannier representation,
+    https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.021051.
+    Developed and maintained by N. Colonna, R. de Gennaro, E. Linscott
+  * If no explicit parallelization options -nk, -nt, -nd are provided,
+    pw.x will figure out suitable values for optimal, or at least, not
+    too bad, parallelization
+
+Incompatible changes in 7.1 version:
+  * Source files previously found in FFTXLIB/ moved to FFTXLIB/src/
+  * gen_us_dj, gen_us_dj moved to upflib/ and into module uspp_init
+  * DFT+Hubbard codes have new input syntax (check Doc/Hubbard_input.pdf)
+
+Fixed in 7.1 version:
+  * `divide_class_so` routine could yield the wrong irreducible representations
+    classification in the  D3_h  group (G.J. Ferreira, A. Dal Corso) 
+  * XSPECTRA gave incorrect results with k-point parallelization, since
+    at least v. 6.6, due to missing broadcast of recomputed Fermi energy
+  * Makov-Payne correction wasn't working with ibrav=0 and cubic cell (A. Fonari)  
+    (found and fixed by Fanchan Meng, Brookhaven)
+  * Bugfix in DFPT+U with PAW pseudos and when fildvscf/=''
+  * Makov-Payne correction wasn't working with ibrav=0 and cubic cell (A. Fonari)
+  * Card ADDITIONAL_KPOINTS wasn't working as expected (Prasenjit Ghosh)
+  * Subtle bug in G-vector ordering, usually triggered by almost-but-not-quite
+    symmetric primitive lattice vectors, was affecting k=0 calculations (not CP)
+    since v.6.0. The ultimate fix would require to change routine hpsort_eps; 
+    the current workaround consists in not recomputing k+G indices if k=0.
+  * In CMake GPU builds, one routine fftx_threed2oned_gpu was not compiled with
+    a proper GPU compiler option and caused failure in GGA-noncolin calculations.
+  * CP with Hubbard U was crashing also when reading the xml file (v.7.0)
+  * Bugfix in turboMagnon for k point grids that have Gamma or points at the
+    Brillouin zone edge (the weights were not correct)
+
 New in 7.0 version:
+  * Unscreened and screened (range-separated) vdW-DF hybrids
+    (Per Hyldgaard and collaborators)
   * GPU support for PWscf and CP significantly extended
   * RMM-DIIS for CPU (S. Nisihara) and GPU (E. de Paoli, P. Delugas)
   * DFT-D3: MPI parallelization and GPU acceleration with OpenACC

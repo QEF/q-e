@@ -67,6 +67,7 @@ dynamics_module.o \
 efermig.o \
 efermit.o \
 electrons.o \
+environ_pw_module.o \
 eqvect.o \
 esm.o \
 esm_common_mod.o \
@@ -104,8 +105,6 @@ gcscf_input.o \
 gcscf_module.o \
 gen_at_dj.o \
 gen_at_dy.o \
-gen_us_dj.o \
-gen_us_dy.o \
 get_locals.o \
 gk_sort.o \
 gradcorr.o \
@@ -119,6 +118,7 @@ h_psi.o \
 h_psi_meta.o \
 hinit0.o \
 hinit1.o \
+hubbard.o \
 init_ns.o \
 init_q_aeps.o \
 init_run.o \
@@ -233,7 +233,6 @@ summary.o \
 symme.o \
 symm_base.o \
 symmetrize_at.o \
-tabd.o \
 tetra.o \
 transform_becsum_so.o \
 transform_becsum_nc.o \
@@ -302,14 +301,12 @@ PWLIBS += \
   stres_knl_gpu.o \
   stres_us_gpu.o \
   compute_deff_gpu.o \
-  gen_us_dj_gpu.o \
-  gen_us_dy_gpu.o \
   orthoatwfc_gpu.o \
   atomic_wfc_gpu.o
 
 QEMODS=../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a $(BASEMODS)
 
-TLDEPS= bindir libs mods libks_solvers dftd3
+TLDEPS= bindir pwlibs mods libks_solvers dftd3
 
 all : tldeps pw.x
 

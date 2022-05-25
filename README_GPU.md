@@ -9,9 +9,9 @@ Installation
 ============
 
 This version requires the nvfortran (previously PGI) compiler from the
-freely available NVidia HPC SDK. You are advised to use the most recent
-version of NVidia software you can find. While any version later than 17.4
-should work, many glitches are known to exist in older versions. 
+NVidia HPC SDK, v.19.10 or later (freely downloadable from NVidia). 
+Earlier versions may or may not work and are no longer supported. 
+You are advised to use the most recent version of NVidia software you can find. 
 The `configure` script checks for the presence of the nvfortran compiler and 
 of a few cuda libraries. For this reason the path pointing to the cuda toolkit
 must be present in `LD_LIBRARY_PATH`.
@@ -19,7 +19,7 @@ must be present in `LD_LIBRARY_PATH`.
 A template for the configure command is:
 
 ```
-./configure --with-cuda=XX --with-cuda-runtime=YY --with-cuda-cc=ZZ --enable-openmp [--enable-openacc] [ --with-scalapack=no ]
+./configure --with-cuda=XX --with-cuda-runtime=YY --with-cuda-cc=ZZ --enable-openmp [ --with-scalapack=no ][ --with-cuda-mpi=yes ]
 ```
 
 where `XX` is the location of the CUDA Toolkit (in HPC environments is 
@@ -32,14 +32,21 @@ CUDA Driver Version:           11000
 Default Target:                cc70
 ...
 ```
-The version is returned as (1000 major + 10 minor). For example, CUDA 9.2 
-would be represented by 9020. For the above case, configure QE with:
+The version is returned as (1000 major + 10 minor). For example, CUDA 11.0
+is represented by 11000. For the above case, configure QE with:
 ```
 ./configure --with-cuda=$CUDA_HOME --with-cuda-cc=70 --with-cuda-runtime=11.0
 ```
 Alternatively, you may use the (deprecated) tool `get_device_props.py` in
 directory `dev-tools/`.
 
+Enabling faster communications between GPUs, via NVlink or Infiniband RDMA,
+is essential for optimal performance. If your MPI library is built to be
+CUDA-aware, then enable `--with-cuda-mpi=yes` (default: no). 
+
+Serial (no MPI) compilation is also supported: use `--disable-parallel`.
+
+Option --with-openacc is no longer honored: OpenACC is always needed.
 It is generally a good idea to disable Scalapack when running small test
 cases since the serial GPU eigensolver outperforms the parallel CPU
 eigensolver in many circumstances.
@@ -47,8 +54,6 @@ eigensolver in many circumstances.
 From time to time PGI links to the wrong CUDA libraries and fails reporting a 
 problem in `cusolver` missing `GOmp` (GNU Openmp). This problem can be solved
 by removing the cuda toolkit from the `LD_LIBRARY_PATH` before compiling.
-
-Serial compilation is also supported.
 
 Execution
 =========
@@ -59,17 +64,6 @@ the beginning of the output
 ```
      GPU acceleration is ACTIVE.
 ```
-
-GPU acceleration can be switched off by setting the following environment
-variable:
-
-```
-$ export USEGPU=no
-```
-
-
-Testing
-=======
 
 The current GPU version passes all tests with both parallel and serial 
 compilation.

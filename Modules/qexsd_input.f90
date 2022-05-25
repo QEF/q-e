@@ -16,7 +16,8 @@ MODULE qexsd_input
   USE kinds, ONLY : dp
   !
   USE qes_types_module
-  USE qes_libs_module
+  USE qes_init_module,  ONLY : qes_init
+  USE qes_reset_module, ONLY : qes_reset
   !
   IMPLICIT NONE
   !
@@ -150,14 +151,14 @@ MODULE qexsd_input
           inpOcc_size=1
      END SELECT
      ALLOCATE (inpOcc_objs(inpOcc_size))
-     IF ( inpOcc_size .GT. 1) THEN 
+     IF ( inpOcc_size .GT. 1) THEN
         CALL qes_init ( inpOcc_objs(1),"input_occupations", ISPIN = 1, &
-                  SPIN_FACTOR = 1._DP, INPUTOCCUPATIONS = input_occupations(2:nbnd) ) 
-        CALL qes_init ( inpOcc_objs(2),"input_occupations", 2, & 
-                  SPIN_FACTOR = 1._DP , INPUTOCCUPATIONS = input_occupations_minority(2:nbnd))
-     ELSE 
+                  SPIN_FACTOR = 1._DP, INPUTOCCUPATIONS = input_occupations(1:nbnd) )
+        CALL qes_init ( inpOcc_objs(2),"input_occupations", 2, &
+                  SPIN_FACTOR = 1._DP , INPUTOCCUPATIONS = input_occupations_minority(1:nbnd))
+     ELSE
         CALL qes_init ( inpOcc_objs(1),"input_occupations", ISPIN = 1, SPIN_FACTOR = 2._DP , &
-                                                                 INPUTOCCUPATIONS = input_occupations(2:nbnd) )   
+                                                                 INPUTOCCUPATIONS = input_occupations(1:nbnd) )
      END IF
   END IF
   ! 
@@ -396,7 +397,8 @@ MODULE qexsd_input
    ! 
    TYPE (cell_control_type)                     :: obj
    CHARACTER(LEN=*),INTENT(IN)                  :: cell_dynamics, cell_dofree
-   REAL(DP),INTENT(IN)                          :: pressure, wmass, cell_factor
+   REAL(DP),INTENT(IN)                          :: pressure, wmass
+   REAL(DP),INTENT(IN), OPTIONAL                :: cell_factor
    INTEGER,DIMENSION(3,3),INTENT(IN)            :: iforceh
    ! 
    CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="cell_control"

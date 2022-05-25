@@ -13,11 +13,12 @@ MODULE dftd3_qe
 
   IMPLICIT NONE
   !
+  PRIVATE
+  PUBLIC :: dftd3, dftd3_in, dftd3_xc, dftd3_pbc_gdisp, dftd3_printout, dftd3_clean
   SAVE
   !
   type(dftd3_calc) :: dftd3
   type(dftd3_input):: dftd3_in
-  real(wp) :: energy_dftd3
    
   CONTAINS
 
@@ -33,7 +34,6 @@ MODULE dftd3_qe
     
     !> Convert XC labels from QE to those used by DFT-D3
     FUNCTION dftd3_xc ( dft )
-      IMPLICIT NONE
       CHARACTER(LEN=*), INTENT(in) :: dft
       CHARACTER(LEN=256) :: dftd3_xc
       CHARACTER(LEN=1), EXTERNAL :: lowercase

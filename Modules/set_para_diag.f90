@@ -58,8 +58,8 @@ SUBROUTINE set_para_diag( nbnd, use_para_diag )
   !
   IF ( ionode ) THEN
      !
-     WRITE( stdout, '(/,5X,"Subspace diagonalization in iterative solution ",&
-                     &     "of the eigenvalue problem:")' )
+     WRITE( stdout, '(5X,"Subspace diagonalization in iterative solution ",&
+                     &   "of the eigenvalue problem:")' )
      IF ( use_para_diag ) THEN
         IF (ortho_parent_comm == intra_pool_comm) THEN
            WRITE( stdout, '(5X,"one sub-group per k-point group (pool) will be used")' )

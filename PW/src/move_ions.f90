@@ -217,7 +217,7 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
               IF ( ANY( if_pos(:,:) == 1 ) .OR. lmovecell .OR. lfcp ) THEN
                  !
                  CALL terminate_bfgs ( etot, epse, epsf, epsp, fcp_eps, &
-                                       lmovecell, lfcp )
+                                       lmovecell, lfcp, optimizer_failed )
                  !
               END IF
               !
@@ -226,7 +226,7 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
         ELSEIF ( idone == nstep ) THEN
            !
            CALL terminate_bfgs( etot, epse, epsf, epsp, fcp_eps, &
-                                lmovecell, lfcp )
+                                lmovecell, lfcp, optimizer_failed )
            !
         ELSE
            !
