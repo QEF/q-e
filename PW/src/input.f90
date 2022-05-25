@@ -351,7 +351,7 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256):: dft_
   !
   INTEGER  :: ia, nt, tempunit, i, j, ibrav_mp
-  LOGICAL  :: exst, parallelfs, domag, stop_on_error
+  LOGICAL  :: exst, parallelfs, domag, stop_on_error, is_tau_read
   REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, V
   CHARACTER(len=256) :: tempfile
   INTEGER, EXTERNAL :: at2ibrav
@@ -1501,7 +1501,8 @@ SUBROUTINE iosys()
         pseudo_dir_cur = restart_dir()
      END IF
      !
-     CALL read_conf_from_file( stop_on_error, nat_, ntyp, tau, alat, at )
+     CALL read_conf_from_file( stop_on_error, nat_, ntyp, tau, alat, at, &
+                               is_tau_read )
      !
      ! Update reciprocal lattice and volume (may be updated if coming from a vc run)
      !
