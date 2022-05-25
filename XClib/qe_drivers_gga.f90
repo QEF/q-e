@@ -15,7 +15,6 @@ MODULE qe_drivers_gga
   !! Contains the GGA drivers that calculate the XC energy and potential.
   !
   USE kind_l,               ONLY: DP
-  USE xclib_utils_and_para, ONLY: xc_inside_error
   USE dft_setting_params,   ONLY: igcx, igcc, rho_threshold_gga,     &
                                   grho_threshold_gga, exx_started,   &
                                   exx_fraction, screening_parameter, &
@@ -34,7 +33,7 @@ CONTAINS
 !
 !-----------------------------------------------------------------------
 SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
-                                         v2x_out, v1c_out, v2c_out )
+                                        v2x_out, v1c_out, v2c_out, err_out )
   !---------------------------------------------------------------------
   !! Gradient corrections for exchange and correlation - Hartree a.u. 
   !! See comments at the beginning of module for implemented cases
@@ -64,6 +63,8 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   !! Correlation potential (density term)
   REAL(DP), INTENT(OUT), DIMENSION(length) :: v2c_out
   !! Correlation potential (gradient term)
+  INTEGER, INTENT(OUT) :: err_out
+  !! error index
   !
   ! ... local variables
   !
@@ -81,24 +82,24 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   ntids = omp_get_num_threads()
 #endif
   !
-  in_err = 0
+  err_out = 0
   !
 #if defined(_OPENACC)
-!$acc data present( rho_in, grho_in, sx_out, sc_out, v1x_out, v2x_out, v1c_out, v2c_out )
+!$acc data present( rho_in, grho_in, sx_out, sc_out, v1x_out, v2x_out, v1c_out, v2c_out ) copy( err_out )
 !$acc parallel loop  
 #else
 !$omp parallel if(ntids==1) default(none) &
-!$omp firstprivate( in_err ) &
 !$omp private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
-!$omp          v2x, v2x_, v2xsr, sc, v1c, v2c, iflag ) &
+!$omp          v2x, v2x_, v2xsr, sc, v1c, v2c, iflag, in_err ) &
 !$omp shared( rho_in, grho_in, length, igcx, exx_started, &
 !$omp         grho_threshold_gga, rho_threshold_gga, gau_parameter, &
 !$omp         screening_parameter, exx_fraction, igcc, v1x_out, v2x_out, &
-!$omp         v1c_out, v2c_out, sx_out, sc_out )
+!$omp         v1c_out, v2c_out, sx_out, sc_out, err_out )
 !$omp do
 #endif
   DO ir = 1, length  
      !
+     in_err = 0
      grho = grho_in(ir)
      !
      IF ( rho_in(ir) <= rho_threshold_gga .OR. grho <= grho_threshold_gga ) THEN
@@ -187,7 +188,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            iflag = 2 ! AHPS for PBEsol-based cross check
         ENDIF
         !
-        IF ( iflag == 0) CALL xc_inside_error( 8 )  ! Sorting GGA-AHs failed
+        IF ( iflag == 0) in_err = 4 ! Sorting GGA-AHs failed
         !
         IF (exx_started) THEN
           CALL axsr( iflag, rho, grho, sxsr, v1xsr, v2xsr, screening_parameter, in_err )
@@ -210,7 +211,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            iflag = 6 ! for test-reserve - analytical sr hole
         ENDIF
         !
-        IF ( iflag == 0) CALL xc_inside_error( 8 )  ! Sorting vdW-DF-AHs failed
+        IF ( iflag == 0) in_err = 5  ! Sorting vdW-DF-AHs failed
         !
         IF (exx_started) THEN
           CALL axsr( iflag, rho, grho, sxsr, v1xsr, v2xsr, screening_parameter, in_err )
@@ -361,7 +362,6 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      CASE DEFAULT
         !
-        IF (igcx/=0) CALL xc_inside_error( 3 )  ! GGA exch ID not valid
         sx  = 0.0_DP
         v1x = 0.0_DP
         v2x = 0.0_DP
@@ -425,14 +425,20 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      CASE DEFAULT
         !
-        IF (igcc/=0) CALL xc_inside_error( 4 )  ! GGA corr ID not valid
         sc = 0.0_DP
         v1c = 0.0_DP
         v2c = 0.0_DP
         !
      END SELECT
      !
-     IF (in_err/=0) CALL xc_inside_error( in_err )
+     IF (in_err/=0) THEN
+#if defined(_OPENACC)
+!$acc atomic write
+#else
+!$omp atomic write
+#endif
+       err_out = in_err
+     ENDIF
      !
      sx_out(ir)  = sx    ;  sc_out(ir)  = sc
      v1x_out(ir) = v1x   ;  v1c_out(ir) = v1c
@@ -454,7 +460,7 @@ END SUBROUTINE gcxc
 !===============> SPIN <===============!
 !
 !-------------------------------------------------------------------------
-SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
+SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out, err_out )
   !-----------------------------------------------------------------------
   !! Gradient corrections for exchange - Hartree a.u.
   !
@@ -475,6 +481,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !! Exchange potential (density part)
   REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v2x_out
   !! Exchange potantial (gradient part)
+  INTEGER, INTENT(OUT) :: err_out
+  !! error index
   !
   ! ... local variables
   !
@@ -497,25 +505,25 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   ntids = omp_get_num_threads()
 #endif
   !
-  !sx_tot = 0.0_DP
-  in_err = 0
+  err_out = 0
   !
 #if defined(_OPENACC)
-!$acc data present( rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
+!$acc data present( rho_in, grho2_in, sx_tot, v1x_out, v2x_out ) copy( err_out )
 !$acc parallel loop
 #else
 !$omp parallel if(ntids==1) default(none) &
-!$omp firstprivate( in_err ) &
 !$omp private( rho_up, rho_dw, grho2_up, grho2_dw, rnull_up, rnull_dw, &
 !$omp          sx_up, sx_dw, sxsr_up, sxsr_dw, v1xsr_up, v1xsr_dw, &
 !$omp          v1x_up, v1x_dw, v2x_up, v2x_dw, v2xsr_up, v2xsr_dw, &
-!$omp          iflag ) &
+!$omp          iflag, in_err ) &
 !$omp  shared( rho_in, length, grho2_in, sx_tot, v1x_out, v2x_out,  &
 !$omp          igcx, exx_started, exx_fraction, screening_parameter,&
-!$omp          gau_parameter )
+!$omp          gau_parameter, err_out )
 !$omp do
 #endif
   DO ir = 1, length  
+     !
+     in_err = 0
      !
      rho_up = rho_in(ir,1)
      rho_dw = rho_in(ir,2)
@@ -870,7 +878,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         ENDIF
         !
         IF ( iflag == 0) THEN
-          CALL xc_inside_error( 8 )  ! Sorting vdW-DF-AHs failed
+          in_err = 5   ! Sorting vdW-DF-AHs failed
         ELSE
           sx_tot(ir) = 0.5_DP * ( sx_up*rnull_up + sx_dw*rnull_dw )
           v2x_up = 2.0_DP * v2x_up
@@ -970,14 +978,20 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE DEFAULT
         !
-        IF (igcx/=0) CALL xc_inside_error( 3 )   ! GGA exch ID not valid
         sx_tot(ir) = 0.0_DP
         v1x_up = 0.0_DP ; v1x_dw = 0.0_DP
         v2x_up = 0.0_DP ; v2x_dw = 0.0_DP
         !
      END SELECT
      !
-     IF (in_err/=0) CALL xc_inside_error( in_err )
+     IF (in_err/=0) THEN
+#if defined(_OPENACC)
+!$acc atomic write
+#else
+!$omp atomic write
+#endif
+       err_out = in_err
+     ENDIF
      !
      v1x_out(ir,1) = v1x_up * rnull_up
      v1x_out(ir,2) = v1x_dw * rnull_dw
@@ -1087,7 +1101,6 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
        !
     CASE DEFAULT
        !
-       IF (igcc/=0) CALL xc_inside_error( 4 )  ! GGA corr ID not valid
        sc = 0.0_DP
        v1c_up = 0.0_DP
        v1c_dw = 0.0_DP
@@ -1220,7 +1233,7 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
        !
     CASE DEFAULT
        !
-       IF (igcc/=0) CALL xc_inside_error( 4 )   ! GGA corr ID not valid
+       ! ... void
        !
     END SELECT
     !

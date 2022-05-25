@@ -858,7 +858,7 @@ END SUBROUTINE pbexsr
       if ((nggatyp>=1).or.(nggatyp<=8)) then
          i = nggatyp
       else
-         in_err = 7  ! wgga_analy_erfc: yet to be coded Wcx part
+         in_err = 3  ! wgga_analy_erfc: yet to be coded Wcx part
          return
       endif
 
@@ -2219,7 +2219,7 @@ SUBROUTINE EXPINT(n, x, exin, in_err)
       REAL(DP) :: a,b,c,d,del,fact,h,iarsum
 
       IF (.NOT. ((n >= 0).AND.(x >= 0.0).AND.((x > 0.0).OR.(n > 1)))) THEN
-         in_err = 6   ! expint: bad arguments
+         in_err = 1   ! expint: bad arguments
          RETURN
       END IF
       
@@ -2245,7 +2245,7 @@ SUBROUTINE EXPINT(n, x, exin, in_err)
             IF (ABS(del-1.0d0) <= EPS) EXIT
          END DO
          IF (i > maxit) THEN
-           in_err = 6   ! expint: continued fraction failed
+           in_err = 2   ! expint: continued fraction failed
            RETURN
          ENDIF
          exin = h*EXP(-x)
@@ -2274,7 +2274,7 @@ SUBROUTINE EXPINT(n, x, exin, in_err)
             IF (ABS(del) < ABS(exin)*eps) EXIT
          END DO
          IF (i > maxit) THEN
-           in_err = 6   ! expint: series failed
+           in_err = 2   ! expint: series failed
            RETURN
          ENDIF
       END IF

@@ -101,7 +101,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
 #endif
   !
   USE kind_l,               ONLY: DP
-  USE xclib_utils_and_para, ONLY: inside_error, error_msg, nowarning
+  USE xclib_utils_and_para, ONLY: error_msg, nowarning
   USE dft_setting_params,   ONLY: igcx, igcc, is_libxc, rho_threshold_gga, &
                                   grho_threshold_gga, rho_threshold_lda
   USE qe_drivers_gga
@@ -143,7 +143,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   REAL(DP), ALLOCATABLE :: rh(:), zeta(:)
   REAL(DP), ALLOCATABLE :: grho2(:,:), grho_ud(:)
   !
-  INTEGER :: k, is
+  INTEGER :: k, is, ierr
   REAL(DP) :: rho_up, rho_dw, grho_up, grho_dw, sgn1
   REAL(DP), PARAMETER :: small = 1.E-10_DP
   !
@@ -204,7 +204,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   IF ( ns==1 .AND. ANY(.NOT.is_libxc(3:4)) ) THEN
      !
-     CALL gcxc( length, rho_lxc, sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
+     CALL gcxc( length, rho_lxc, sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1), ierr )
      !
      !$acc parallel loop
      DO k = 1, length
@@ -406,7 +406,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
         ENDDO
       ENDDO
       !
-      CALL gcx_spin( length, rho, grho2, ex, v1x, v2x )
+      CALL gcx_spin( length, rho, grho2, ex, v1x, v2x, ierr )
       !$acc end data
       DEALLOCATE( grho2 )
       !
@@ -432,7 +432,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
         grho2(k,1) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
      ENDDO
      !
-     CALL gcxc( length, rh, grho2(:,1), ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
+     CALL gcxc( length, rh, grho2(:,1), ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1), ierr )
      !
      !$acc parallel loop
      DO k = 1, length
@@ -453,7 +453,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
        ENDDO
      ENDDO
      !
-     CALL gcx_spin( length, rho, grho2, ex, v1x, v2x )
+     CALL gcx_spin( length, rho, grho2, ex, v1x, v2x, ierr )
      !
      IF (igcc==3 .OR. igcc==7 .OR. igcc==13 ) THEN
         !
@@ -509,13 +509,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   !$acc end data
   !
-  !$acc update self( inside_error )
-  IF (inside_error/=0 .AND. .NOT.nowarning) THEN
-    CALL xclib_error( 'xc_gcx_', error_msg(inside_error), 1 )
-  ELSE
-    inside_error = 0
-    !$acc update device( inside_error )
-  ENDIF
+  IF (ierr/=0 .AND. .NOT.nowarning) CALL xclib_error( 'xc_gcx_', error_msg(ierr), 1 )
   !
   RETURN
   !

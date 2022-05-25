@@ -564,7 +564,6 @@ END SUBROUTINE tpsscc_spin
 !---------------------------------------------------------------
 SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &
                        tau, sc, v1up, v1dw, v2up, v2dw, v3 )
-!$acc routine seq
   !---------------------------------------------------------------
   !! TPSS meta-GGA correlation energy and potentials - polarized case.
   !
