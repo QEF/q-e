@@ -1,6 +1,7 @@
 !
 ! This is a restart test. Make sure md_restart_verlet.save folder is not present
-! and md_restart_verlet.md is original file (can use `git status`).
+! and md_restart_verlet.md is a copy of md_restart_verlet_original.md.
+! This is taken care of in run-pw.sh
 !
  &control
     restart_mode = 'restart'
