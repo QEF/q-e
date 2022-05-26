@@ -26,7 +26,7 @@ Acknowledgement: We thank Hyungjun Lee, Oden Institute for Computational Enginee
 
 Executables in ZG folder
 ------------------------
-ZG.x             ---> for generating ZG configurations
+ZG.x             ---> for generating ZG configurations, ZG diffuse scattering, phonon unflolding
 bands_unfold.x   ---> for performing band structure unfolding in supercell calculations
 pp_spctrlfn.x    ---> for obtaining the electron spectral function after bands_unfold.x
 epsilon_Gaus.x   ---> for calculating optical properties as in epsilon.x but Gaussian broadening

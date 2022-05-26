@@ -1,4 +1,4 @@
-! Copyright (C) 2016-2020 Marios Zacharias, Feliciano Giustino 
+! Copyright (C) 2016-2022 Marios Zacharias, Feliciano Giustino 
 !                                                                            
 ! This file is distributed under the terms of the GNU General Public         
 ! License. See the file `LICENSE' in the root directory of the               
@@ -115,6 +115,11 @@ PROGRAM ZG
   !                            (default 0,0,0)
   !     "atm_zg(1), etc.."   : String describing the element of each atomic species
   !                            (default "Element")
+  !     "flscf"              : String for the name of the scf input file used to calculate the phonons. The 
+  !                            code will read information for preparing the input file for the supercell 
+  !                            scf calculation. If left empty the code will not generate the input file for
+  !                            the supercell scf calculation.
+  !                            (default ' ')
   !     "synch"              : Logical flag that enables the synchronization of the modes. 
   !                            (default .false.)
   !     "niters"             : Integer for the number of iterations the algorithm needs to 
@@ -161,6 +166,11 @@ PROGRAM ZG
   !                            One can modify the "create_qlist.f90" to generate a different path for consecutive q-points.
   !                            Paste the output of "qlist_AB.txt" to "ZG.in" after namelist &input. Set the flag 
   !                            q_external = .true. for the code to read the list.  
+  ! 
+  !     "ph_unfold"          : Logical flag to activate phonon unfolding procedure. (default: .false.). To perform phonon 
+  !                            unfolding ZG_conf must be set to .false.. If ph_unfold = .true. then q_external = .true. 
+  !     "flfrq"              : Output file for frequencies to printed with unfolding weights (default: 'frequencies.dat')
+  !     "flweights"          : Output file for unfolding weights to printed with frequncies (default: 'unfold_weights.dat')
   !
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum
@@ -189,7 +199,7 @@ PROGRAM ZG
   INTEGER, PARAMETER  :: ntypx= 10, nrwsx=200
   REAL(DP), PARAMETER :: eps = 1.0d-6
   INTEGER             :: nr1, nr2, nr3, nsc, ibrav
-  CHARACTER(LEN=256)  :: flfrc, filename, flscf
+  CHARACTER(LEN=256)  :: flfrc, filename, flscf, flfrq, flweights
   CHARACTER(LEN= 10)  :: asr
   LOGICAL             :: has_zstar, q_in_cryst_coord, loto_disable
   COMPLEX(DP), ALLOCATABLE :: dyn(:, :, :, :), dyn_blk(:, :, :, :), frc_ifc(:, :, :, :)
@@ -242,11 +252,15 @@ PROGRAM ZG
   INTEGER                  :: dim1, dim2, dim3, niters, qpts_strf
   REAL(DP)                 :: error_thresh, T
   REAL(DP)                 :: atmsf_a(ntypx,5), atmsf_b(ntypx,5) 
-  REAL(DP),    ALLOCATABLE :: q_nq_zg(:, :) ! 3, nq
-  COMPLEX(DP), ALLOCATABLE :: z_nq_zg(:, :, :) ! nomdes, nmodes, nq
+  REAL(DP),    ALLOCATABLE :: q_nq(:, :) ! 3, nq
+  COMPLEX(DP), ALLOCATABLE :: z_nq(:, :, :) ! nomdes, nmodes, nq
   ! 
   INTEGER                  :: nrots, kres1, kres2, col1, col2, Np
   REAL(DP)                 :: kmin, kmax
+  !
+  ! for phonon_unfolding
+  LOGICAL                  :: ph_unfold
+  INTEGER                  :: ng1, ng2, ng3
   !
   NAMELIST /input/ flfrc, amass, asr, at, ntyp, loto_2d, loto_disable, &
        &           q_in_band_form, q_in_cryst_coord, point_label_type,  &
@@ -254,10 +268,13 @@ PROGRAM ZG
 ! we add the inputs for generating the ZG-configuration
        &           ZG_conf, dim1, dim2, dim3, niters, error_thresh, q_external, & 
        &           compute_error, synch, atm_zg, T, incl_qA, single_ph_displ, & 
-       &           ZG_strf, flscf
+       &           ZG_strf, flscf, ph_unfold
 !
   NAMELIST /strf_ZG/ atmsf_a, atmsf_b, qpts_strf, &
                      nrots, kres1, kres2, kmin, kmax, col1, col2, Np
+!
+  NAMELIST / phonon_unfold / ng1, ng2, ng3, dim1, dim2, dim3, & 
+                             flfrq, flweights
 ! Last line of inputs are for the ZG structure factor calculation
   !
   CALL mp_startup()
@@ -301,6 +318,7 @@ PROGRAM ZG
      niters          = 15000 
      atm_zg          = "Element"
      ZG_strf         = .FALSE.
+     ph_unfold       = .FALSE.
      !
      nrots           = 1
      kres1           = 250
@@ -314,6 +332,12 @@ PROGRAM ZG
      atmsf_a         = 0.d0
      atmsf_b         = 0.d0
      ! 
+     ng1             = 10
+     ng2             = 10
+     ng3             = 10 
+     flweights       = 'unfold_weights.dat'
+     flfrq           = 'frequencies.dat'
+     ! 
      !
      !
      IF (ionode) READ (5, input, IOSTAT = ios)
@@ -322,6 +346,10 @@ PROGRAM ZG
      IF ((ionode) .AND. (ZG_strf)) READ (5, strf_ZG , IOSTAT = ios)
      CALL mp_bcast(ios, ionode_id, world_comm)
      CALL errore('strf_ZG', 'reading strf_ZG namelist', ABS(ios))
+     IF ((ionode) .AND. (ph_unfold)) READ (5, phonon_unfold , IOSTAT = ios)
+     CALL mp_bcast(ios, ionode_id, world_comm)
+     CALL errore('ph_unfold', 'reading phonon_unfold namelist', ABS(ios))
+     !
      CALL mp_bcast(asr, ionode_id, world_comm)
      CALL mp_bcast(flfrc, ionode_id, world_comm)
      CALL mp_bcast(amass, ionode_id, world_comm)
@@ -351,6 +379,7 @@ PROGRAM ZG
      CALL mp_bcast(niters, ionode_id, world_comm)
      CALL mp_bcast(atm_zg, ionode_id, world_comm)
      CALL mp_bcast(ZG_strf, ionode_id, world_comm)
+     CALL mp_bcast(ph_unfold, ionode_id, world_comm)
      !
      CALL mp_bcast(qpts_strf, ionode_id, world_comm)
      CALL mp_bcast(atmsf_a, ionode_id, world_comm)
@@ -364,15 +393,34 @@ PROGRAM ZG
      CALL mp_bcast(col2, ionode_id, world_comm)
      CALL mp_bcast(Np, ionode_id, world_comm)
      ! 
+     CALL mp_bcast(ng1, ionode_id, world_comm)
+     CALL mp_bcast(ng2, ionode_id, world_comm)
+     CALL mp_bcast(ng3, ionode_id, world_comm)
+     CALL mp_bcast(flfrq, ionode_id, world_comm)
+     CALL mp_bcast(flweights, ionode_id, world_comm)
+     !
      IF (loto_2d .AND. loto_disable) CALL errore('ZG', &
          'loto_2d and loto_disable cannot be both true', 1)
+     ! 
+     IF (ZG_conf .AND. ph_unfold) CALL errore('ZG', &
+         'ZG_conf and ph_unfold cannot be both true', 1)
+     ! 
      ! To check that user specifies supercell dimensions
      IF (ZG_conf) THEN 
-        IF ((dim1 < 1)  .OR. (dim2 < 1) .OR. (dim3 < 1)) CALL errore('ZG', 'reading supercell size', dim1)
-        IF ( single_ph_displ .AND. compute_error  ) CALL errore('ZG', " For single phonon displacements & 
-                                                                            set 'compute_error' to false", dim1)
+        IF (dim1 < 1) CALL errore('ZG', 'reading supercell size, check dim1', 1)
+        IF (dim2 < 1) CALL errore('ZG', 'reading supercell size, check dim2', 1)
+        IF (dim3 < 1) CALL errore('ZG', 'reading supercell size, check dim3', 1)
+        IF ( single_ph_displ .AND. compute_error  ) CALL errore('ZG', & 
+             "for single phonon displacements set 'compute_error' to false", 1)
      ENDIF
-     ! 
+     IF (ph_unfold) THEN 
+       IF ((dim1 < 1)  .OR. (dim2 < 1) .OR. (dim3 < 1)) CALL errore('ph_unfold', &
+            'reading supercell size', 1) 
+       IF ((ng1 < 1)  .OR. (ng2 < 1) .OR. (ng3 < 1)) CALL errore('ph_unfold', & 
+            'wrong g-vectors', 1)
+       q_external = .true.
+       !IF (.NOT. q_external) CALL errore('ph_unfold', 'set q_external = .true.', 1)
+     ENDIF 
      !
      ! read force constants
      !
@@ -492,7 +540,6 @@ PROGRAM ZG
        IF (.NOT.q_in_band_form) THEN
              DO n = 1, nq
                 IF (ionode) READ (5, *) (q(i, n), i = 1, 3)
-       !        IF (ionode) READ (5,'(3F10.6)') q(:, n) 
              ENDDO
              CALL mp_bcast(q, ionode_id, world_comm)
              !
@@ -582,10 +629,10 @@ PROGRAM ZG
      ! 
      ! Have to initialize w2
      w2 = 0.d0
-     IF (ZG_conf) THEN
-       ALLOCATE ( z_nq_zg(3 * nat, 3 * nat, nq), q_nq_zg(3, nq))
-       z_nq_zg(:, :, :) = (0.d0, 0.d0)
-       q_nq_zg(:, :) = 0.d0
+     IF (ZG_conf .OR. ph_unfold) THEN
+       ALLOCATE ( z_nq(3 * nat, 3 * nat, nq), q_nq(3, nq))
+       z_nq(:, :, :) = (0.d0, 0.d0)
+       q_nq(:, :) = 0.d0
      ENDIF
      ! 
 
@@ -599,6 +646,7 @@ PROGRAM ZG
      CALL fkbounds( nq, lower_bnd, upper_bnd )
      !
      DO n = lower_bnd, upper_bnd ! 1, nq
+     !DO n = 1, nq
         dyn(:, :, :, :) = (0.d0, 0.d0)
 
         lo_to_split = .FALSE.
@@ -677,9 +725,9 @@ PROGRAM ZG
         !
         ! Fill a 3D matrix with all eigenvectors
         !
-        IF (ZG_conf) THEN
-           z_nq_zg(:, :, n) = z(:, :)               
-           q_nq_zg(:, n) = q(:, n)
+        IF (ZG_conf .OR. ph_unfold) THEN
+           z_nq(:, :, n) = z(:, :)               
+           q_nq(:, n) = q(:, n)
         ENDIF
         !
         ! Cannot use the small group of \Gamma to analize the symmetry
@@ -698,19 +746,16 @@ PROGRAM ZG
      ENDDO  !nq
      !
      !
-     CALL mp_sum(z_nq_zg, inter_pool_comm)
-     CALL mp_sum(q_nq_zg, inter_pool_comm)
+     CALL mp_sum(z_nq, inter_pool_comm)
+     CALL mp_sum(q_nq, inter_pool_comm)
      CALL mp_sum(w2, inter_pool_comm)
      CALL mp_barrier(inter_pool_comm)
      !
-     !
-     !  If the force constants are in the xml format we WRITE also
-     !  the file with the representations of each mode
-     !
      !  Here is the main subroutine for generating ZG displacements.
      !
-     IF ( ZG_conf ) CALL ZG_configuration(nq, nat, ntyp, amass, &
-                                ityp, q_nq_zg, w2, z_nq_zg, ios, & 
+     IF ( ZG_conf .AND. .NOT. ph_unfold) & 
+          CALL ZG_configuration(nq, nat, ntyp, amass, &
+                                ityp, q_nq, w2, z_nq, ios, & 
                                 dim1, dim2, dim3, niters, error_thresh, &
                                 synch, tau, alat, atm_zg, ntypx, at, &
                                 q_in_cryst_coord, q_external, T, incl_qA, & 
@@ -719,9 +764,15 @@ PROGRAM ZG
                                 nrots, kres1, kres2, kmin, kmax, col1, col2, Np, & 
                                 flscf)
      ! 
+     !
+     IF (ph_unfold .AND. .NOT. ZG_conf) & 
+         CALL phonon_unfolding(nq, tau, nat, ntyp, amass, ityp, & 
+                               dim1, dim2, dim3, ng1, ng2, ng3, q_nq, z_nq, &
+                               flfrq, flweights, w2) 
+     !
      DEALLOCATE (z, w2, dyn, dyn_blk)
      ! 
-     IF (ZG_conf) DEALLOCATE (z_nq_zg, q_nq_zg) 
+     IF (ZG_conf .OR. ph_unfold) DEALLOCATE (z_nq, q_nq) 
      ! 
      !
      !    for a2F
@@ -2373,9 +2424,140 @@ SUBROUTINE  qpoint_gen2(dim1, dim2, dim3, ctrAB, q_AB)
   RETURN
   !
 END SUBROUTINE qpoint_gen2
+!!
+SUBROUTINE phonon_unfolding(nq, tau, nat, ntyp, amass, ityp, & 
+                            dim1, dim2, dim3, ng1, ng2, ng3, q_nq, z_nq, &
+                            flfrq, flweights, w2)
+! author: Marios Zacharias
+! version: v0.1
+! In this subroutine phonon unfolding technique is implemented as described in
+! Refs. [Phys. Rev. B 87, 085322 (2013)] and [Comput. Mat. Sci. 125, 218-223, (2016)].
+!
+  USE cell_base,  ONLY : bg, at
+  USE io_global,  ONLY : ionode, ionode_id, stdout
+  USE kinds,      ONLY : dp
+  USE mp_world,   ONLY : world_comm 
+  USE mp_global,  ONLY : inter_pool_comm
+  USE mp,         ONLY : mp_bcast, mp_barrier, mp_sum
+  USE constants,  ONLY : amu_ry, RY_TO_CMM1, tpi
+!
+  !
+  IMPLICIT NONE
+  ! input
+  CHARACTER(LEN=256), INTENT(in) :: flfrq, flweights
+  INTEGER, INTENT(in)            :: nq, nat, dim1, dim2, dim3, ng1, ng2, ng3 
+  INTEGER, INTENT(in)            :: ntyp, ityp(nat)
+  REAL(DP), INTENT(in)           :: q_nq(3, nq), w2(3 * nat, nq), amass(ntyp), tau(3, nat)
+  COMPLEX(DP), INTENT(in)        :: z_nq(3 * nat, 3 * nat, nq)
+  ! local
+  INTEGER                        :: lower_bnd, upper_bnd ! For parallelization 
+  INTEGER                        :: d1, d2, d3, ctr, ipol, n, i, na
+  REAL(DP)                       :: dotp, pathL, q(3, nq) 
+  REAL(DP)                       :: freq(3 * nat, nq), abc(3, nat), spctrl_weight2(3 * nat,nq)
+  COMPLEX(DP)                    :: spctrl_weight(3 * nat,nq,3)
+  COMPLEX(DP)                    :: imagi  
+  !
+  imagi = (0.0d0, 1.0d0) !imaginary unit
+  abc   = tau
+  q     = q_nq
+  ! to convert tau/abc in crystal coordinates
+  !
+  IF (ionode) WRITE(stdout, *) "=============================================="
+  IF (ionode) WRITE(stdout, *) "Performing phonon unfolding ..."
+  IF (ionode) WRITE(stdout, *) "=============================================="
+  !
+  CALL cryst_to_cart(nat, abc, bg, -1)
+  ! Assuming that we have a one to one correspondence for Q to q
+  CALL cryst_to_cart(nq, q, at, -1) ! convert to crystal
+  !
+  spctrl_weight2(:, :) = 0.d0
+  CALL fkbounds( nq, lower_bnd, upper_bnd )
+  !
+  DO n = lower_bnd, upper_bnd ! 1, nq 
+  ! DO n = 1, nq
+    DO i = 1, 3 * nat ! modes nu 
+     ctr = 0
+     DO d1 = -ng1 * dim1, ng1 * dim1, dim1
+       DO d2 = -ng2 * dim2, ng2 * dim2, dim2
+         DO d3 = -ng3 * dim3, ng3 * dim3, dim3
+           spctrl_weight(i, n, :) = (0.d0, 0.d0)
+             DO ipol = 1, 3
+              DO na = 1, nat
+              !
+                dotp = ( q(1, n) + d1 ) * abc(1, na) &     !
+                     + ( q(2, n) + d2 ) * abc(2, na) &     !
+                     + ( q(3, n) + d3 ) * abc(3, na)  !    !
+                spctrl_weight(i, n, ipol) = spctrl_weight(i, n, ipol) + z_nq((na - 1) * 3 + ipol, i, n) &
+                                      * SQRT(amu_ry * amass(ityp(na))) / SQRT(DBLE(dim1 * dim2 * dim3)) & ! & 
+                                      * EXP( - imagi * tpi * dotp)
+              ENDDO ! na
+              spctrl_weight2(i, n) = spctrl_weight2(i, n) + &
+                                     DBLE(spctrl_weight(i, n, ipol) * CONJG(spctrl_weight(i, n, ipol)))
+            ENDDO ! ipol
+          ctr = ctr + 1
+          ENDDO ! d3
+        ENDDO ! d2
+      ENDDO ! d1
+    ENDDO ! i    
+  ENDDO ! nq
+  CALL mp_sum(spctrl_weight2, inter_pool_comm)
+  CALL cryst_to_cart(nq, q, bg, +1) ! convert back to cartessian
+!
+  DO n=1,nq
+    ! freq(i,n) = frequencies in cm^(-1), with negative sign if omega^2 is
+    ! negative
+    DO i=1,3*nat
+       freq(i,n)= SQRT(ABS(w2(i, n))) * RY_TO_CMM1
+       IF (w2(i, n) < 0.0d0) freq(i, n) = -freq(i,n)
+    END DO
+  END DO
+  !
+  IF(flfrq.NE.' '.and.ionode) THEN
+        OPEN (unit=2,file=flfrq ,status='unknown',form='formatted')
+        WRITE(2, '(" &plot nbnd=",i4,", nks=",i4," /")') 3*nat, nq
+        DO n=1, nq
+           WRITE(2, '(10x,3f10.6)')  q(1,n), q(2,n), q(3,n)
+           WRITE(2,'(6f10.4)') (freq(i,n), i=1,3*nat)
+        END DO
+        CLOSE(unit=2)
 
+        OPEN (unit=2,file=trim(flfrq)//'.gp' ,status='unknown',form='formatted')
+        pathL = 0._dp
+        WRITE(2, '(f10.6,3x,999f10.4)')  pathL,  (freq(i, 1), i = 1, 3 * nat)
+        DO n=2, nq
+           pathL=pathL+(SQRT(SUM(  (q(:,n)-q(:,n-1))**2 )))
+           WRITE(2, '(f10.6,3x,999f10.4)')  pathL,  (freq(i, n), i = 1, 3 * nat)
+        END DO
+        CLOSE(unit=2)
 
-SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, & 
+  END IF
+     ! Print weights 
+  IF(flweights.NE.' '.and.ionode) THEN
+        OPEN (unit=2,file=flweights ,status='unknown',form='formatted')
+        WRITE(2, '(" &plot nbnd=",i4,", nks=",i4," /")') 3*nat, nq
+        DO n=1, nq
+           WRITE(2, '(10x,3f10.6)')  q(1, n) / DBLE(dim1), q(2, n) / DBLE(dim2),q(3, n) / DBLE(dim3)
+           WRITE(2,'(6f10.4)') (spctrl_weight2(i, n) / ctr, i=1,3 * nat)
+        END DO
+        CLOSE(unit=2)
+
+        OPEN (unit=2,file=trim(flweights)//'.gp', status='unknown',form='formatted')
+        pathL = 0._dp
+        WRITE(2, '(f10.6,3x,999f10.4)')  pathL,  (spctrl_weight2(i, 1) / ctr, i = 1, 3 * nat)
+        DO n=2, nq
+           pathL=pathL+(SQRT(SUM(  (q(:, n) - q(:, n - 1))**2 )))
+           WRITE(2, '(f10.6,3x,999f10.4)')  pathL,  (spctrl_weight2(i, n) / ctr, i = 1, 3 * nat)
+        END DO
+        CLOSE(unit=2)
+     !
+  END IF 
+  !
+  RETURN
+  !
+END SUBROUTINE phonon_unfolding
+!!
+!!
+SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq, ios, & 
                       dim1, dim2, dim3, niters, error_thresh, synch, tau, alat, atm, &
                       ntypx, at, q_in_cryst_coord, q_external, T, incl_qA, & 
                       compute_error, single_ph_displ, &
@@ -2413,7 +2595,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   REAL(DP), INTENT(in)         :: error_thresh, alat, T
   REAL(DP), INTENT(in)         :: at(3, 3), atmsf_a(ntypx,5), atmsf_b(ntypx,5)
   REAL(DP), INTENT(in)         :: q(3, nq), w2(3 * nat, nq), amass(ntyp), tau(3, nat)
-  COMPLEX(DP), INTENT(in)      :: z_nq_zg(3 * nat, 3 * nat, nq)
+  COMPLEX(DP), INTENT(in)      :: z_nq(3 * nat, 3 * nat, nq)
   ! 
   ! local
   CHARACTER(len=256)       :: filename, pt_T, pt_1, pt_2, pt_3
@@ -2567,7 +2749,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
       nta = ityp(na)
       DO ipol = 1, 3
         DO qp = 1, nq
-          z_zg((na - 1) * 3 + ipol, i, qp) = z_nq_zg((na - 1) * 3 + ipol, i, qp) * SQRT(amu_ry*amass(nta))
+          z_zg((na - 1) * 3 + ipol, i, qp) = z_nq((na - 1) * 3 + ipol, i, qp) * SQRT(amu_ry*amass(nta))
         ENDDO
       ENDDO
     ENDDO
