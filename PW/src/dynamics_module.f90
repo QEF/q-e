@@ -2076,7 +2076,7 @@ CONTAINS
       USE cell_base,   ONLY : alat, at
       USE constants,   ONLY : bohr_radius_angs
       USE ener,        ONLY : etot
-      USE io_files,    ONLY : prefix, tmp_dir, seqopn
+      USE io_files,    ONLY : prefix, tmp_dir
       USE ions_base,   ONLY : nat, tau
       !
       IMPLICIT NONE
