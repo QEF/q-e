@@ -13,11 +13,12 @@ Incompatible changes in 7.1 version:
   * DFT+Hubbard codes have new input syntax (check Doc/Hubbard_input.pdf)
 
 Fixed in 7.1 version:
+  * Berry phases could in some cases be off by a factor eR/V.
+    Present since v.6.6 (noticed by S. Spreafico, fixed by R. Cohen)
   * `divide_class_so` routine could yield the wrong irreducible representations
-    classification in the  D3_h  group (G.J. Ferreira, A. Dal Corso) 
+    classification in the D3_h  group (G.J. Ferreira, A. Dal Corso) 
   * XSPECTRA gave incorrect results with k-point parallelization, since
     at least v. 6.6, due to missing broadcast of recomputed Fermi energy
-  * Makov-Payne correction wasn't working with ibrav=0 and cubic cell (A. Fonari)  
     (found and fixed by Fanchan Meng, Brookhaven)
   * Bugfix in DFPT+U with PAW pseudos and when fildvscf/=''
   * Makov-Payne correction wasn't working with ibrav=0 and cubic cell (A. Fonari)
