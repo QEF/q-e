@@ -89,7 +89,31 @@ fi
         try_dflags="$try_dflags -D__SCALAPACK"
     fi
 done
- 
+
+# Check Scalapack version with robust routines for computing the QR factorization
+# with column pivoting. (Scalapack >= 2.1.0 or MKL >= 2020)
+AC_ARG_WITH(scalapack_version,
+   [AS_HELP_STRING([--with-scalapack-version=VAL],
+       [Specify the version of Scalapack or MKL library, i.e. "2.1.0" for Scalapack or "2020" for MKL (default: 0, no version provided)])],
+   [],
+   [with_scalapack_version=0])
+
+if test "$have_scalapack" -eq 1 && test "$with_scalapack_version" != "0"; then
+   if test $with_scalapack -eq 1; then
+      scalapack_major_version=`echo $with_scalapack_version | cut -d. -f1`
+      scalapack_minor_version=`echo $with_scalapack_version | cut -d. -f2`
+      if test "$scalapack_major_version" -ge 2 && test "$scalapack_major_version" -le 99; then
+         if test "$scalapack_minor_version" -ge 1; then
+	    try_dflags="$try_dflags -D__SCALAPACK_ROBUST_QR"
+	 fi
+      fi
+   else
+      if test "$with_scalapack_version" -ge 2020; then
+         try_dflags="$try_dflags -D__SCALAPACK_ROBUST_QR"
+      fi
+   fi
+fi
+
 # Configuring output message
 if test "$have_scalapack" -eq 1; then
    scalapack_line="SCALAPACK_LIBS=$scalapack_libs"

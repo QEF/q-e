@@ -3666,7 +3666,7 @@ SUBROUTINE compute_amn_with_scdm
    CHARACTER (len=60) :: header
    LOGICAL            :: any_uspp, found_gamma
 
-#if defined(__SCALAPACK)
+#if defined(__SCALAPACK_ROBUST_QR)
    REAL(DP) :: tmp_rwork(2)
    INTEGER :: lrwork, context, nprow, npcol, myrow, mycol, descG(9)
    INTEGER :: nblocks, rem, nblocks_loc, rem_loc=0, ibl
@@ -3717,7 +3717,7 @@ SUBROUTINE compute_amn_with_scdm
    info = 0
    minmn = MIN(numbands,nrtot)
    ALLOCATE(qr_tau(2*minmn))
-#if defined(__SCALAPACK)
+#if defined(__SCALAPACK_ROBUST_QR)
    ! Dimensions of the process grid
    nprow = 1
    npcol = nproc
@@ -3822,7 +3822,7 @@ SUBROUTINE compute_amn_with_scdm
       CALL gather_grid(dffts,psic,psic_all)
       ! vv: Gamma only
       ! vv: Build Psi_k = Unk * focc
-# if defined(__SCALAPACK)
+# if defined(__SCALAPACK_ROBUST_QR)
       CALL mp_bcast(psic_all,ionode_id,world_comm)
       norm_psi = sqrt(real(sum(psic_all(1:nrtot)*conjg(psic_all(1:nrtot))),kind=DP))
       do ibl=0,nblocks_loc-1
@@ -3844,7 +3844,7 @@ SUBROUTINE compute_amn_with_scdm
    ENDDO
 
    ! vv: Perform QR factorization with pivoting on Psi_Gamma
-# if defined(__SCALAPACK)
+# if defined(__SCALAPACK_ROBUST_QR)
    call PZGEQPF( numbands, nrtot, psi_gamma, 1, 1, descG, piv_p, qr_tau, &
                  tmp_cwork, -1, tmp_rwork, -1, info )
 
@@ -4028,7 +4028,7 @@ SUBROUTINE compute_amn_with_scdm
    DEALLOCATE( psic_all )
 #endif
 
-# if defined(__SCALAPACK)
+# if defined(__SCALAPACK_ROBUST_QR)
    ! Close BLACS environment
    call blacs_gridexit( context )
    call blacs_exit( 1 )
