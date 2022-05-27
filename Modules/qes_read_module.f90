@@ -12,9 +12,9 @@ MODULE qes_read_module
   !
   ! Quantum Espresso XSD namespace: http://www.quantum-espresso.org/ns/qes/qes-1.0
   !
-#if defined (__outfoxed)
-  USE     dom
-#else
+#if defined (__outfoxed) 
+  USE dom
+#else 
   USE FoX_dom
 #endif
   USE qes_types_module
@@ -48,13 +48,13 @@ MODULE qes_read_module
     MODULE PROCEDURE qes_read_qpoint_grid
     MODULE PROCEDURE qes_read_dftU
     MODULE PROCEDURE qes_read_HubbardCommon
+    MODULE PROCEDURE qes_read_HubbardInterSpecieV
     MODULE PROCEDURE qes_read_SiteMoment
     MODULE PROCEDURE qes_read_HubbardJ
     MODULE PROCEDURE qes_read_SitMag
     MODULE PROCEDURE qes_read_starting_ns
     MODULE PROCEDURE qes_read_Hubbard_ns
     MODULE PROCEDURE qes_read_HubbardBack
-    MODULE PROCEDURE qes_read_backL
     MODULE PROCEDURE qes_read_vdW
     MODULE PROCEDURE qes_read_spin
     MODULE PROCEDURE qes_read_bands
@@ -191,18 +191,22 @@ MODULE qes_read_module
     tmp_node_list => getElementsByTagname(xml_node, "input")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
+    IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN
-           CALL infomsg("qes_read:espressoType","input: wrong number of occurrences")
+           CALL infomsg("qes_read:espressoType","input: too many occurrences")
            ierr = ierr + 1
         ELSE
-           CALL errore("qes_read:espressoType","input: wrong number of occurrences",10)
+           CALL errore("qes_read:espressoType","input: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL qes_read_input(tmp_node, obj%input, ierr )
+    IF (tmp_node_list_size>0) THEN
+      obj%input_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_input(tmp_node, obj%input, ierr )
+    ELSE
+       obj%input_ispresent = .FALSE.
+    END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "step")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -3299,6 +3303,22 @@ MODULE qes_read_module
         CALL qes_read_starting_ns(tmp_node, obj%starting_ns(index), ierr )
     END DO
     !
+    tmp_node_list => getElementsByTagname(xml_node, "Hubbard_V")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%Hubbard_V_ispresent = .TRUE.
+    ELSE
+      obj%Hubbard_V_ispresent = .FALSE.
+    END IF
+    obj%ndim_Hubbard_V = tmp_node_list_size
+    ALLOCATE(obj%Hubbard_V(tmp_node_list_size))
+    DO index=1,tmp_node_list_size
+        tmp_node => item( tmp_node_list, index-1 )
+        CALL qes_read_HubbardInterSpecieV(tmp_node, obj%Hubbard_V(index), ierr )
+    END DO
+    !
     tmp_node_list => getElementsByTagname(xml_node, "Hubbard_ns")
     tmp_node_list_size = getLength(tmp_node_list)
     !
@@ -3357,22 +3377,6 @@ MODULE qes_read_module
     DO index=1,tmp_node_list_size
         tmp_node => item( tmp_node_list, index-1 )
         CALL qes_read_HubbardBack(tmp_node, obj%Hubbard_back(index), ierr )
-    END DO
-    !
-    tmp_node_list => getElementsByTagname(xml_node, "Hubbard_U_back")
-    tmp_node_list_size = getLength(tmp_node_list)
-    !
-    !
-    IF (tmp_node_list_size>0) THEN
-      obj%Hubbard_U_back_ispresent = .TRUE.
-    ELSE
-      obj%Hubbard_U_back_ispresent = .FALSE.
-    END IF
-    obj%ndim_Hubbard_U_back = tmp_node_list_size
-    ALLOCATE(obj%Hubbard_U_back(tmp_node_list_size))
-    DO index=1,tmp_node_list_size
-        tmp_node => item( tmp_node_list, index-1 )
-        CALL qes_read_HubbardCommon(tmp_node, obj%Hubbard_U_back(index), ierr )
     END DO
     !
     tmp_node_list => getElementsByTagname(xml_node, "Hubbard_alpha_back")
@@ -3448,6 +3452,95 @@ MODULE qes_read_module
     obj%lwrite = .TRUE.
     !
   END SUBROUTINE qes_read_HubbardCommon
+  !
+  !
+  SUBROUTINE qes_read_HubbardInterSpecieV(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(HubbardInterSpecieV_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    ! 
+    IF (hasAttribute(xml_node, "specie1")) THEN
+      CALL extractDataAttribute(xml_node, "specie1", obj%specie1)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: HubbardInterSpecieVType",&
+                        "required attribute specie1 not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: HubbardInterSpecieVType",&
+                      "required attribute specie1 not found", 10 )
+      END IF
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "index1")) THEN
+      CALL extractDataAttribute(xml_node, "index1", obj%index1)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: HubbardInterSpecieVType",&
+                        "required attribute index1 not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: HubbardInterSpecieVType",&
+                      "required attribute index1 not found", 10 )
+      END IF
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "label1")) THEN
+      CALL extractDataAttribute(xml_node, "label1", obj%label1)
+      obj%label1_ispresent = .TRUE.
+    ELSE
+      obj%label1_ispresent = .FALSE.
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "specie2")) THEN
+      CALL extractDataAttribute(xml_node, "specie2", obj%specie2)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: HubbardInterSpecieVType",&
+                        "required attribute specie2 not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: HubbardInterSpecieVType",&
+                      "required attribute specie2 not found", 10 )
+      END IF
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "index2")) THEN
+      CALL extractDataAttribute(xml_node, "index2", obj%index2)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: HubbardInterSpecieVType",&
+                        "required attribute index2 not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: HubbardInterSpecieVType",&
+                      "required attribute index2 not found", 10 )
+      END IF
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "label2")) THEN
+      CALL extractDataAttribute(xml_node, "label2", obj%label2)
+      obj%label2_ispresent = .TRUE.
+    ELSE
+      obj%label2_ispresent = .FALSE.
+    END IF
+    !
+    !
+    !
+    CALL extractDataContent(xml_node, obj%HubbardInterSpecieV )
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_HubbardInterSpecieV
   !
   !
   SUBROUTINE qes_read_SiteMoment(xml_node, obj, ierr )
@@ -3724,6 +3817,19 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     ! 
+    IF (hasAttribute(xml_node, "background")) THEN
+      CALL extractDataAttribute(xml_node, "background", obj%background)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: HubbardBackType",&
+                        "required attribute background not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: HubbardBackType",&
+                      "required attribute background not found", 10 )
+      END IF
+    END IF
+    ! 
     IF (hasAttribute(xml_node, "species")) THEN
       CALL extractDataAttribute(xml_node, "species", obj%species)
       obj%species_ispresent = .TRUE.
@@ -3732,83 +3838,138 @@ MODULE qes_read_module
     END IF
     !
     !
-    tmp_node_list => getElementsByTagname(xml_node, "background")
+    tmp_node_list => getElementsByTagname(xml_node, "Hubbard_U2")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
         IF (PRESENT(ierr) ) THEN
-           CALL infomsg("qes_read:HubbardBackType","background: wrong number of occurrences")
+           CALL infomsg("qes_read:HubbardBackType","Hubbard_U2: wrong number of occurrences")
            ierr = ierr + 1
         ELSE
-           CALL errore("qes_read:HubbardBackType","background: wrong number of occurrences",10)
+           CALL errore("qes_read:HubbardBackType","Hubbard_U2: wrong number of occurrences",10)
         END IF
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
     IF (ASSOCIATED(tmp_node))&
-       CALL extractDataContent(tmp_node, obj%background, IOSTAT = iostat_ )
+       CALL extractDataContent(tmp_node, obj%Hubbard_U2, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN
-          CALL infomsg("qes_read:HubbardBackType","error reading background")
+          CALL infomsg("qes_read:HubbardBackType","error reading Hubbard_U2")
           ierr = ierr + 1
        ELSE
-          CALL errore ("qes_read:HubbardBackType","error reading background",10)
+          CALL errore ("qes_read:HubbardBackType","error reading Hubbard_U2",10)
        END IF
     END IF
     !
-    tmp_node_list => getElementsByTagname(xml_node, "l_number")
+    tmp_node_list => getElementsByTagname(xml_node, "n2_number")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size < 1) THEN
+    IF (tmp_node_list_size /= 1) THEN
         IF (PRESENT(ierr) ) THEN
-           CALL infomsg("qes_read:HubbardBackType","l_number: not enough elements")
+           CALL infomsg("qes_read:HubbardBackType","n2_number: wrong number of occurrences")
            ierr = ierr + 1
         ELSE
-           CALL errore("qes_read:HubbardBackType","l_number: not enough elements",10)
+           CALL errore("qes_read:HubbardBackType","n2_number: wrong number of occurrences",10)
         END IF
     END IF
     !
-    obj%ndim_l_number = tmp_node_list_size
-    ALLOCATE(obj%l_number(tmp_node_list_size))
-    DO index=1,tmp_node_list_size
-        tmp_node => item( tmp_node_list, index-1 )
-        CALL qes_read_backL(tmp_node, obj%l_number(index), ierr )
-    END DO
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%n2_number, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN
+          CALL infomsg("qes_read:HubbardBackType","error reading n2_number")
+          ierr = ierr + 1
+       ELSE
+          CALL errore ("qes_read:HubbardBackType","error reading n2_number",10)
+       END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "l2_number")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:HubbardBackType","l2_number: wrong number of occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:HubbardBackType","l2_number: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%l2_number, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN
+          CALL infomsg("qes_read:HubbardBackType","error reading l2_number")
+          ierr = ierr + 1
+       ELSE
+          CALL errore ("qes_read:HubbardBackType","error reading l2_number",10)
+       END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "n3_number")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:HubbardBackType","n3_number: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:HubbardBackType","n3_number: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%n3_number_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%n3_number , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:HubbardBackType","error reading n3_number")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:HubbardBackType","error reading n3_number",10)
+         END IF
+      END IF
+    ELSE
+       obj%n3_number_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "l3_number")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:HubbardBackType","l3_number: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:HubbardBackType","l3_number: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%l3_number_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%l3_number , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:HubbardBackType","error reading l3_number")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:HubbardBackType","error reading l3_number",10)
+         END IF
+      END IF
+    ELSE
+       obj%l3_number_ispresent = .FALSE.
+    END IF
     !
     !
     obj%lwrite = .TRUE.
     !
   END SUBROUTINE qes_read_HubbardBack
-  !
-  !
-  SUBROUTINE qes_read_backL(xml_node, obj, ierr )
-    !
-    IMPLICIT NONE
-    !
-    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
-    TYPE(backL_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
-    !
-    TYPE(Node), POINTER :: tmp_node
-    TYPE(NodeList), POINTER :: tmp_node_list
-    INTEGER :: tmp_node_list_size, index, iostat_
-    !
-    obj%tagname = getTagName(xml_node)
-    ! 
-    IF (hasAttribute(xml_node, "l_index")) THEN
-      CALL extractDataAttribute(xml_node, "l_index", obj%l_index)
-      obj%l_index_ispresent = .TRUE.
-    ELSE
-      obj%l_index_ispresent = .FALSE.
-    END IF
-    !
-    !
-    !
-    CALL extractDataContent(xml_node, obj%backL )
-    !
-    obj%lwrite = .TRUE.
-    !
-  END SUBROUTINE qes_read_backL
   !
   !
   SUBROUTINE qes_read_vdW(xml_node, obj, ierr )

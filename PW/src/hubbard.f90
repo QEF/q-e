@@ -62,8 +62,10 @@ SUBROUTINE hub_summary()
            WRITE(stdout, '(5x,"DFT+U on averaged j=l+1/2,l-1/2 radial WFs")')
        ENDIF
     ELSEIF (lda_plus_u_kind == 2) THEN
-       WRITE( stdout, '(5x,"Hubbard parameters of DFT+U+V (Dudarev formulation) in eV:")')
        ! Info about the Hubbard V is printed by the routine alloc_neighborhood
+       IF (ANY(Hubbard_J0(:)/=0.d0) .OR. ANY(Hubbard_alpha(:)/=0.d0) .OR. &
+           ANY(Hubbard_beta(:)/=0.d0) .OR. ANY(Hubbard_alpha_back(:)/=0.d0)) &
+           WRITE( stdout, '(5x,"Hubbard parameters of DFT+U+V (Dudarev formulation) in eV:")')
        DO nt = 1, ntyp
           IF (is_hubbard(nt)) THEN
             CALL write_hub_param (nt, Hubbard_J0(nt), 'J0')

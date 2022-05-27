@@ -142,7 +142,7 @@ SUBROUTINE input_sanity()
   USE mp_bands,         ONLY : nbgrp
   USE xc_lib,           ONLY : xclib_dft_is
   USE ldaU,             ONLY : lda_plus_u, Hubbard_projectors, lda_plus_u_kind, Hubbard_J0, &
-                               is_hubbard_back, Hubbard_V
+                               Hubbard_V, is_hubbard_back
   !
   IMPLICIT NONE
   !
@@ -156,13 +156,13 @@ SUBROUTINE input_sanity()
   IF (compute_hp .AND. ANY(perturb_only_atom(:))) &
      CALL errore ('hp_readin', 'compute_hp and perturb_only_atom are not allowed to be true together', 1)
   !
-  IF (ANY(is_hubbard_back(:))) &
-     CALL errore ('hp_readin', 'Calculation of Hubbard parameters with the background is not implemented', 1)
-  !
   IF ( ANY(Hubbard_V(:,:,2).NE.0.d0) .OR. &
        ANY(Hubbard_V(:,:,3).NE.0.d0) .OR. &
        ANY(Hubbard_V(:,:,4).NE.0.d0) ) &
      CALL errore ('hp_readin', 'The HP code does not support DFT+U+V with the background', 1)
+  !
+  IF (ANY(is_hubbard_back(:))) CALL errore ("hp_readin", &
+          &" Two (or more) Hubbard channels per atomic type is not implemented", 1)
   !
   IF (ANY(Hubbard_J0(:).NE.0.d0)) &
      CALL errore ('hp_readin', 'Hubbard_J0 /= 0 is not allowed.', 1)

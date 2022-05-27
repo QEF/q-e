@@ -71,7 +71,7 @@ MODULE pw_restart_new
                                        gamma_only, noinv, smallmem, &
                                        lforce=> tprnfor, tstress, &
                                        mbd_vdw, llondon, lxdm, ts_vdw
-      USE constants,            ONLY : e2
+      USE constants,            ONLY : e2  
       USE realus,               ONLY : real_space
       USE uspp,                 ONLY : okvan
       USE paw_variables,        ONLY : okpaw
@@ -100,10 +100,10 @@ MODULE pw_restart_new
       USE ktetra,               ONLY : tetra_type
       USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_projectors, &
                                        Hubbard_lmax, Hubbard_l, Hubbard_n, Hubbard_U, Hubbard_J, &
-                                       Hubbard_l2, Hubbard_l3, Hubbard_V, &
+                                       Hubbard_n2, Hubbard_l2, Hubbard_l3, Hubbard_V, &
                                        Hubbard_alpha, Hubbard_alpha_back, nsg, &
-                                       Hubbard_J0, Hubbard_beta, Hubbard_U2, &
-                                       is_hubbard, is_hubbard_back, backall
+                                       Hubbard_J0, Hubbard_beta, Hubbard_U2, ityp_s, &
+                                       is_hubbard, is_hubbard_back, backall, neighood, nsg
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
                                        t_rev, sname, time_reversal, no_t_rev,&
                                        spacegroup
@@ -156,6 +156,10 @@ MODULE pw_restart_new
       !
       TYPE(output_type)   :: output_obj
       !
+      ! Loop counters and other internal auxiliary variables 
+      !
+      INTEGER    :: is, viz, na1, na2, nt1, m1, m2 
+      !
       ! Auxiliary variables used to format arguments for xml file
       !
       CHARACTER(LEN=37)     :: dft_name
@@ -173,6 +177,7 @@ MODULE pw_restart_new
       LOGICAL               :: empirical_vdw
       INTEGER               :: n_opt_steps
       INTEGER               :: n_scf_steps_
+      REAL(DP),PARAMETER    :: Ry_to_Ha = 1 / e2 
       !
       ! Auxiliary structures containing optional variables
       !
@@ -212,8 +217,8 @@ MODULE pw_restart_new
       !
       REAL(DP), ALLOCATABLE :: london_c6_(:), bp_el_pol(:), bp_ion_pol(:), &
            U_opt(:), J0_opt(:), alpha_opt(:), J_opt(:,:), beta_opt(:), &
-           U2_opt(:), alpha_back_opt(:), ef_updw(:)
-      INTEGER,ALLOCATABLE :: n_opt(:), l_opt(:), l2_opt(:), l3_opt(:)
+           U2_opt(:), alpha_back_opt(:), ef_updw(:), nsg_(:,:,:,:)
+      INTEGER,ALLOCATABLE :: n_opt(:), l_opt(:), l2_opt(:), l3_opt(:), n2_opt(:)
       LOGICAL, ALLOCATABLE :: backall_opt(:) 
       !
       !
@@ -460,14 +465,15 @@ MODULE pw_restart_new
             vdw_obj_opt%lwrite=.false. 
          END IF
          IF ( lda_plus_u ) THEN   
-            CALL check_and_allocate_real(U_opt, Hubbard_U)
-            CALL check_and_allocate_real(J0_opt, Hubbard_J0) 
-            CALL check_and_allocate_real(alpha_opt, Hubbard_alpha) 
-            CALL check_and_allocate_real(beta_opt, Hubbard_beta) 
-            CALL check_and_allocate_real(U2_opt, Hubbard_U2)
-            CALL check_and_allocate_real(alpha_back_opt, Hubbard_alpha_back)
+            CALL check_and_allocate_real(U_opt, Hubbard_U, fac = Ry_to_Ha)
+            CALL check_and_allocate_real(J0_opt, Hubbard_J0 , fac = Ry_to_Ha) 
+            CALL check_and_allocate_real(alpha_opt, Hubbard_alpha, fac = Ry_to_Ha) 
+            CALL check_and_allocate_real(beta_opt, Hubbard_beta, fac = Ry_to_Ha) 
+            CALL check_and_allocate_real(U2_opt, Hubbard_U2, fac = Ry_to_Ha )
+            CALL check_and_allocate_real(alpha_back_opt, Hubbard_alpha_back, fac = Ry_to_Ha)
             CALL check_and_allocate_integer(n_opt, Hubbard_n)
             CALL check_and_allocate_integer(l_opt, Hubbard_l)
+            CALL check_and_allocate_integer(n2_opt, Hubbard_n2)
             CALL check_and_allocate_integer(l2_opt, Hubbard_l2)
             CALL check_and_allocate_integer(l3_opt, Hubbard_l3)
             CALL check_and_allocate_logical(backall_opt, backall)
@@ -475,16 +481,40 @@ MODULE pw_restart_new
                ALLOCATE (J_opt(3,nsp)) 
                J_opt(:, 1:nsp) = Hubbard_J(:, 1:nsp) 
             END IF
+            IF (lda_plus_u_kind==2) THEN
+               ALLOCATE (nsg_(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
+               nsg_ = 0.0d0
+               DO na1 = 1, nat
+                  nt1 = ityp(na1)
+                  IF (is_hubbard(nt1)) THEN
+                     DO viz = 1, neighood(na1)%num_neigh
+                        na2 = neighood(na1)%neigh(viz)
+                        IF (na2==na1) THEN
+                           DO is = 1, nspin
+                              DO m1 = 1, 2*Hubbard_l(nt1)+1
+                                 DO m2 = 1, 2*Hubbard_l(nt1)+1
+                                    nsg_(m1,m2,is,na1) = DBLE(nsg(m1,m2,viz,na1,is)) 
+                                 ENDDO
+                              ENDDO
+                           ENDDO   
+                        ENDIF
+                     ENDDO
+                  ENDIF
+               ENDDO
+            ENDIF
             !
-            ! Currently Hubbard_V, rho%nsb, and nsg are not written (read) to (from) XML 
+            ! Currently rho%nsb is not written/read to/from XML 
             !
-            CALL qexsd_init_dftU (dftU_obj_opt, NSP = nsp, PSD = upf(1:nsp)%psd, SPECIES = atm(1:nsp), ITYP = ityp(1:nat), &
-                                  IS_HUBBARD = is_hubbard, IS_HUBBARD_BACK = is_hubbard_back,  &
-                                  BACKALL = backall, HUBB_L2 = l2_opt, HUBB_L3 = l3_opt, &
-                                  NONCOLIN = noncolin, LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION_TYPE = Hubbard_projectors, &
-                                  U =U_opt, U2 = U2_opt, J0 = J0_opt, J = J_opt, n = n_opt, l = l_opt, &
-                                  alpha = alpha_opt, beta = beta_opt, alpha_back = alpha_back_opt,  & 
-                                  starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc)
+            CALL qexsd_init_dftU (dftU_obj_opt, NSP = nsp, PSD = upf(1:nsp)%psd, SPECIES = atm(1:nsp),                & 
+                    ITYP = ityp(1:nat), IS_HUBBARD = is_hubbard, IS_HUBBARD_BACK = is_hubbard_back, BACKALL = backall,& 
+                    HUBB_n2 = n2_opt, HUBB_L2 = l2_opt, HUBB_L3 = l3_opt, NONCOLIN = noncolin,                        & 
+                    LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION_TYPE = Hubbard_projectors, U =U_opt,              &
+                    U2 = U2_opt, J0 = J0_opt, J = J_opt, n = n_opt, l = l_opt, Hubbard_V = Hubbard_V *Ry_to_Ha,       &
+                    alpha = alpha_opt, beta = beta_opt, alpha_back = alpha_back_opt,                                  & 
+                    starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc, Hub_nsg = nsg_)
+            !
+            IF (ALLOCATED(J_opt)) DEALLOCATE(J_opt)
+            IF (ALLOCATED(nsg_))  DEALLOCATE(nsg_)
          ELSE 
            dftU_obj_opt%lwrite=.false. 
          END IF 
@@ -712,13 +742,15 @@ MODULE pw_restart_new
       RETURN
        !
     CONTAINS
-       SUBROUTINE check_and_allocate_real(alloc, mydata)
+       SUBROUTINE check_and_allocate_real(alloc, mydata, fac)
           IMPLICIT NONE
           REAL(DP),ALLOCATABLE  :: alloc(:) 
-          REAL(DP)              :: mydata(:)  
+          REAL(DP)              :: mydata(:)
+          REAL(DP), OPTIONAL    :: fac   
           IF ( ANY(mydata(1:nsp) /= 0.0_DP)) THEN 
              ALLOCATE(alloc(nsp)) 
              alloc(1:nsp) = mydata(1:nsp) 
+             IF (PRESENT(fac))  alloc = alloc * fac 
           END IF 
           RETURN
        END SUBROUTINE check_and_allocate_real 
@@ -999,7 +1031,7 @@ MODULE pw_restart_new
       ! ... starting from scratch should be initialized here when restarting
       !
       USE kinds,           ONLY : dp
-      USE constants,       ONLY : e2
+      USE constants,       ONLY : e2  
       USE gvect,           ONLY : ngm_g, ecutrho
       USE gvecs,           ONLY : ngms_g, dual
       USE gvecw,           ONLY : ecutwfc
@@ -1030,7 +1062,7 @@ MODULE pw_restart_new
            sname, inverse_s, s_axis_to_cart, spacegroup, &
            time_reversal, no_t_rev, nosym, checkallsym
       USE ldaU,            ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax, Hubbard_lmax_back, &
-                                  Hubbard_n, Hubbard_l, Hubbard_l2, Hubbard_l3, backall, &
+                                  Hubbard_n, Hubbard_l, Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, &
                                   Hubbard_U, Hubbard_U2, Hubbard_J, Hubbard_V, Hubbard_alpha, &
                                   Hubbard_alpha_back, Hubbard_J0, Hubbard_beta, Hubbard_projectors
       USE funct,           ONLY : enforce_input_dft
@@ -1135,9 +1167,17 @@ MODULE pw_restart_new
            dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
            lda_plus_u, lda_plus_u_kind, Hubbard_projectors, Hubbard_n, Hubbard_l, Hubbard_lmax, &
-           Hubbard_l2, Hubbard_l3, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
-           Hubbard_U, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
+           Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
+           Hubbard_U, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, Hubbard_V, &
            vdw_corr, scal6, lon_rcut, vdw_isolated )
+      Hubbard_alpha_back = Hubbard_alpha_back * e2 
+      Hubbard_alpha      = Hubbard_alpha      * e2
+      Hubbard_beta       = Hubbard_beta       * e2 
+      Hubbard_U          = Hubbard_U          * e2 
+      Hubbard_U2         = Hubbard_U2         * e2 
+      Hubbard_V          = Hubbard_V          * e2 
+      Hubbard_J0         = Hubbard_J0         * e2 
+      Hubbard_J          = Hubbard_J          * e2  
       !! More DFT initializations
       CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, mbd_vdw, lxdm )
       CALL enforce_input_dft ( dft_name, .TRUE. )

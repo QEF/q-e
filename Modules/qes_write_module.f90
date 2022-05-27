@@ -11,11 +11,11 @@ MODULE qes_write_module
   !
   ! Quantum Espresso XSD namespace: http://www.quantum-espresso.org/ns/qes/qes-1.0
   !
-#if defined (__outfoxed)
-  USE     wxml
-#else
-  USE FoX_wxml
-#endif
+#if defined (__outfoxed) 
+  USE  wxml 
+#else 
+  USE FoX_wxml 
+#endif 
   USE qes_types_module
   !
   IMPLICIT NONE
@@ -47,13 +47,13 @@ MODULE qes_write_module
     MODULE PROCEDURE qes_write_qpoint_grid
     MODULE PROCEDURE qes_write_dftU
     MODULE PROCEDURE qes_write_HubbardCommon
+    MODULE PROCEDURE qes_write_HubbardInterSpecieV
     MODULE PROCEDURE qes_write_SiteMoment
     MODULE PROCEDURE qes_write_HubbardJ
     MODULE PROCEDURE qes_write_SitMag
     MODULE PROCEDURE qes_write_starting_ns
     MODULE PROCEDURE qes_write_Hubbard_ns
     MODULE PROCEDURE qes_write_HubbardBack
-    MODULE PROCEDURE qes_write_backL
     MODULE PROCEDURE qes_write_vdW
     MODULE PROCEDURE qes_write_spin
     MODULE PROCEDURE qes_write_bands
@@ -143,7 +143,9 @@ MODULE qes_write_module
      IF (obj%parallel_info_ispresent) THEN
         CALL qes_write_parallel_info (xp, obj%parallel_info)
      END IF
-     CALL qes_write_input (xp, obj%input)
+     IF (obj%input_ispresent) THEN
+        CALL qes_write_input (xp, obj%input)
+     END IF
      IF (obj%step_ispresent) THEN
         DO i = 1, obj%ndim_step
            CALL qes_write_step(xp, obj%step(i) )
@@ -829,6 +831,11 @@ MODULE qes_write_module
            CALL qes_write_starting_ns(xp, obj%starting_ns(i) )
         END DO
      END IF
+     IF (obj%Hubbard_V_ispresent) THEN
+        DO i = 1, obj%ndim_Hubbard_V
+           CALL qes_write_HubbardInterSpecieV(xp, obj%Hubbard_V(i) )
+        END DO
+     END IF
      IF (obj%Hubbard_ns_ispresent) THEN
         DO i = 1, obj%ndim_Hubbard_ns
            CALL qes_write_Hubbard_ns(xp, obj%Hubbard_ns(i) )
@@ -842,11 +849,6 @@ MODULE qes_write_module
      IF (obj%Hubbard_back_ispresent) THEN
         DO i = 1, obj%ndim_Hubbard_back
            CALL qes_write_HubbardBack(xp, obj%Hubbard_back(i) )
-        END DO
-     END IF
-     IF (obj%Hubbard_U_back_ispresent) THEN
-        DO i = 1, obj%ndim_Hubbard_U_back
-           CALL qes_write_HubbardCommon(xp, obj%Hubbard_U_back(i) )
         END DO
      END IF
      IF (obj%Hubbard_alpha_back_ispresent) THEN
@@ -878,6 +880,27 @@ MODULE qes_write_module
         CALL xml_AddCharacters(xp, obj%HubbardCommon, fmt='s16')
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_HubbardCommon
+
+   SUBROUTINE qes_write_HubbardInterSpecieV(xp, obj)
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(HubbardInterSpecieV_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     CALL xml_addAttribute(xp, 'specie1', TRIM(obj%specie1) )
+     CALL xml_addAttribute(xp, 'index1', obj%index1 )
+     IF (obj%label1_ispresent) CALL xml_addAttribute(xp, 'label1', TRIM(obj%label1) )
+     CALL xml_addAttribute(xp, 'specie2', TRIM(obj%specie2) )
+     CALL xml_addAttribute(xp, 'index2', obj%index2 )
+     IF (obj%label2_ispresent) CALL xml_addAttribute(xp, 'label2', TRIM(obj%label2) )
+        CALL xml_AddCharacters(xp, obj%HubbardInterSpecieV, fmt='s16')
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_HubbardInterSpecieV
 
    SUBROUTINE qes_write_SiteMoment(xp, obj)
      !-----------------------------------------------------------------
@@ -992,31 +1015,29 @@ MODULE qes_write_module
      IF ( .NOT. obj%lwrite ) RETURN 
      ! 
      CALL xml_NewElement(xp, TRIM(obj%tagname))
+     CALL xml_addAttribute(xp, 'background', TRIM(obj%background) )
      IF (obj%species_ispresent) CALL xml_addAttribute(xp, 'species', TRIM(obj%species) )
-     CALL xml_NewElement(xp, 'background')
-        CALL xml_addCharacters(xp, TRIM(obj%background))
-     CALL xml_EndElement(xp, 'background')
-     DO i = 1, obj%ndim_l_number
-        CALL qes_write_backL(xp, obj%l_number(i) )
-     END DO
+     CALL xml_NewElement(xp, 'Hubbard_U2')
+        CALL xml_addCharacters(xp, obj%Hubbard_U2, fmt='s16')
+     CALL xml_EndElement(xp, 'Hubbard_U2')
+     CALL xml_NewElement(xp, 'n2_number')
+        CALL xml_addCharacters(xp, obj%n2_number)
+     CALL xml_EndElement(xp, 'n2_number')
+     CALL xml_NewElement(xp, 'l2_number')
+        CALL xml_addCharacters(xp, obj%l2_number)
+     CALL xml_EndElement(xp, 'l2_number')
+     IF (obj%n3_number_ispresent) THEN
+        CALL xml_NewElement(xp, "n3_number")
+           CALL xml_addCharacters(xp, obj%n3_number)
+        CALL xml_EndElement(xp, "n3_number")
+     END IF
+     IF (obj%l3_number_ispresent) THEN
+        CALL xml_NewElement(xp, "l3_number")
+           CALL xml_addCharacters(xp, obj%l3_number)
+        CALL xml_EndElement(xp, "l3_number")
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_HubbardBack
-
-   SUBROUTINE qes_write_backL(xp, obj)
-     !-----------------------------------------------------------------
-     IMPLICIT NONE
-     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
-     TYPE(backL_type),INTENT(IN)    :: obj
-     ! 
-     INTEGER                                          :: i 
-     ! 
-     IF ( .NOT. obj%lwrite ) RETURN 
-     ! 
-     CALL xml_NewElement(xp, TRIM(obj%tagname))
-     IF (obj%l_index_ispresent) CALL xml_addAttribute(xp, 'l_index', obj%l_index )
-        CALL xml_AddCharacters(xp, obj%backL)
-     CALL xml_EndElement(xp, TRIM(obj%tagname))
-   END SUBROUTINE qes_write_backL
 
    SUBROUTINE qes_write_vdW(xp, obj)
      !-----------------------------------------------------------------

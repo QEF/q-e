@@ -69,7 +69,6 @@ SUBROUTINE reset_k_points_and_reinit_nscf()
      !
      ! ... Reallocate and set-up Hubbard-related quantities
      !
-     IF (lda_plus_u_kind == 2) CALL read_V  
      CALL init_hubbard ( upf(1:ntyp)%psd, nspin, noncolin )
      !
      ! ... Initialize d1, d2, and d3 to rotate the spherical harmonics

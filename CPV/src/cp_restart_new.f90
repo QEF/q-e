@@ -681,7 +681,7 @@ MODULE cp_restart_new
       INTEGER :: nq1, nq2, nq3, lda_plus_U_kind
       REAL(dp):: exx_fraction, screening_parameter, ecutfock, ecutvcut,local_thr
       LOGICAL :: x_gamma_extrapolation
-      REAL(dp):: hubbard_dum(3,nsp), hubba_dum(nsp)
+      REAL(dp):: hubbard_dum(3,nsp), hubba_dum(nsp), hubba_dum_dum(1,1,1) 
       LOGICAL :: backall_dum(nsp)
       INTEGER :: hub_l2_dum(nsp), hub_l3_dum(nsp), hub_lmax_back_dum  
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
@@ -783,9 +783,10 @@ MODULE cp_restart_new
            nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
            lda_plus_U, lda_plus_U_kind, Hubbard_projectors, Hubbard_n, Hubbard_l, Hubbard_lmax,&
-           hub_l2_dum, hub_l3_dum, backall_dum, hub_lmax_back_dum, hubba_dum, & 
+           hub_l2_dum, hub_l2_dum, hub_l2_dum, hub_l2_dum, backall_dum, hub_lmax_back_dum, hubba_dum, & 
            Hubbard_U, hubba_dum, Hubbard_dum(1,:), Hubbard_dum(2,:), Hubbard_dum(3,:), &
-           Hubbard_dum, vdw_corr, scal6, lon_rcut, vdw_isolated )
+           HUBBARD_J = Hubbard_dum, HUBBARD_V = hubba_dum_dum, VDW_CORR = vdw_corr, SCAL6 = scal6,    & 
+           LON_RCUT =lon_rcut, VDW_ISOLATED = vdw_isolated )
       CALL set_vdw_corr (vdw_corr, llondon, ldftd3, ts_vdw, mbd_vdw, lxdm )
       IF ( ldftd3 ) CALL errore('cp_readfile','DFT-D3 not implemented',1)
       !

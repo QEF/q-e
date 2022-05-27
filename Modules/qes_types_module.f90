@@ -110,6 +110,25 @@ MODULE qes_types_module
     !
   END TYPE HubbardCommon_type
   !
+  TYPE :: HubbardInterSpecieV_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    CHARACTER(len=256) :: specie1
+    INTEGER :: index1
+    CHARACTER(len=256) :: label1
+    LOGICAL :: label1_ispresent = .FALSE.
+    CHARACTER(len=256) :: specie2
+    INTEGER :: index2
+    CHARACTER(len=256) :: label2
+    LOGICAL :: label2_ispresent = .FALSE.
+    !
+    REAL(DP) :: HubbardInterSpecieV
+    !
+  END TYPE HubbardInterSpecieV_type
+  !
   TYPE :: SiteMoment_type
     !
     CHARACTER(len=100) :: tagname
@@ -199,19 +218,6 @@ MODULE qes_types_module
     REAL(DP), DIMENSION(:), ALLOCATABLE :: Hubbard_ns
     !
   END TYPE Hubbard_ns_type
-  !
-  TYPE :: backL_type
-    !
-    CHARACTER(len=100) :: tagname
-    LOGICAL  :: lwrite = .FALSE.
-    LOGICAL  :: lread  = .FALSE.
-    !
-    INTEGER :: l_index
-    LOGICAL :: l_index_ispresent = .FALSE.
-    !
-    INTEGER :: backL
-    !
-  END TYPE backL_type
   !
   TYPE :: smearing_type
     !
@@ -611,11 +617,16 @@ MODULE qes_types_module
     LOGICAL  :: lwrite = .FALSE.
     LOGICAL  :: lread  = .FALSE.
     !
+    CHARACTER(len=256) :: background
     CHARACTER(len=256) :: species
     LOGICAL :: species_ispresent = .FALSE.
-    CHARACTER(len=256) :: background
-    TYPE(backL_type), DIMENSION(:), ALLOCATABLE :: l_number
-    INTEGER   :: ndim_l_number
+    REAL(DP) :: Hubbard_U2
+    INTEGER :: n2_number
+    INTEGER :: l2_number
+    LOGICAL  :: n3_number_ispresent = .FALSE.
+    INTEGER :: n3_number
+    LOGICAL  :: l3_number_ispresent = .FALSE.
+    INTEGER :: l3_number
     !
   END TYPE HubbardBack_type
   !
@@ -1292,6 +1303,9 @@ MODULE qes_types_module
     LOGICAL  :: starting_ns_ispresent = .FALSE.
     TYPE(starting_ns_type), DIMENSION(:), ALLOCATABLE :: starting_ns
     INTEGER   :: ndim_starting_ns
+    LOGICAL  :: Hubbard_V_ispresent = .FALSE.
+    TYPE(HubbardInterSpecieV_type), DIMENSION(:), ALLOCATABLE :: Hubbard_V
+    INTEGER   :: ndim_Hubbard_V
     LOGICAL  :: Hubbard_ns_ispresent = .FALSE.
     TYPE(Hubbard_ns_type), DIMENSION(:), ALLOCATABLE :: Hubbard_ns
     INTEGER   :: ndim_Hubbard_ns
@@ -1300,9 +1314,6 @@ MODULE qes_types_module
     LOGICAL  :: Hubbard_back_ispresent = .FALSE.
     TYPE(HubbardBack_type), DIMENSION(:), ALLOCATABLE :: Hubbard_back
     INTEGER   :: ndim_Hubbard_back
-    LOGICAL  :: Hubbard_U_back_ispresent = .FALSE.
-    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_U_back
-    INTEGER   :: ndim_Hubbard_U_back
     LOGICAL  :: Hubbard_alpha_back_ispresent = .FALSE.
     TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_alpha_back
     INTEGER   :: ndim_Hubbard_alpha_back
@@ -1683,6 +1694,7 @@ MODULE qes_types_module
     TYPE(general_info_type) :: general_info
     LOGICAL  :: parallel_info_ispresent = .FALSE.
     TYPE(parallel_info_type) :: parallel_info
+    LOGICAL  :: input_ispresent = .FALSE.
     TYPE(input_type) :: input
     LOGICAL  :: step_ispresent = .FALSE.
     TYPE(step_type), DIMENSION(:), ALLOCATABLE :: step

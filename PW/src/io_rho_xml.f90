@@ -92,8 +92,6 @@ MODULE io_rho_xml
                ENDIF
             ELSEIF (lda_plus_u_kind.EQ.2) THEN
                WRITE( iunocc, * , iostat = ierr) nsg
-               ! Write Hubbard_V to file
-               CALL write_V  
             ENDIF
          ENDIF
          CALL mp_bcast( ierr, ionode_id, intra_image_comm )
