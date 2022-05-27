@@ -203,7 +203,6 @@ SUBROUTINE post_xml_init (  )
   IF ( .NOT. lspinorb ) CALL average_pp ( nsp )
   !! average_pp must be called before init_hubbard
   IF ( lda_plus_u ) THEN
-     IF (lda_plus_u_kind == 2) CALL read_V
      CALL init_hubbard ( upf(1:nsp)%psd, nspin, noncolin )
   ENDIF
   !

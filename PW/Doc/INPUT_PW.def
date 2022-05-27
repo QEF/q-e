@@ -1193,7 +1193,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                        evaluation } 
         } 
 
-        dimension Hubbard_occ -start 1,1 -end ntyp,3 -indexes ityp,i -type REAL {
+        multidimension Hubbard_occ -start 1,1 -end ntyp,3 -indexes ityp,i -type REAL {
             default { read from pseudopotentials }
             info {
                 Hubbard occupations is the number of electrons in the
@@ -1246,7 +1246,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 This is useful to suggest the desired orbital occupations 
                 when the default choice takes another path.
             }
-        }
+        } 
 
         var dmft -type LOGICAL { 
             default { .FALSE. }
@@ -3650,5 +3650,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
             }
         }
+    }
    
 }

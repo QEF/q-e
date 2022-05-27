@@ -45,13 +45,13 @@ MODULE qes_reset_module
     MODULE PROCEDURE qes_reset_qpoint_grid
     MODULE PROCEDURE qes_reset_dftU
     MODULE PROCEDURE qes_reset_HubbardCommon
+    MODULE PROCEDURE qes_reset_HubbardInterSpecieV
     MODULE PROCEDURE qes_reset_SiteMoment
     MODULE PROCEDURE qes_reset_HubbardJ
     MODULE PROCEDURE qes_reset_SitMag
     MODULE PROCEDURE qes_reset_starting_ns
     MODULE PROCEDURE qes_reset_Hubbard_ns
     MODULE PROCEDURE qes_reset_HubbardBack
-    MODULE PROCEDURE qes_reset_backL
     MODULE PROCEDURE qes_reset_vdW
     MODULE PROCEDURE qes_reset_spin
     MODULE PROCEDURE qes_reset_bands
@@ -139,7 +139,9 @@ MODULE qes_reset_module
     IF (obj%parallel_info_ispresent) &
       CALL qes_reset_parallel_info(obj%parallel_info)
     obj%parallel_info_ispresent = .FALSE.
-    CALL qes_reset_input(obj%input)
+    IF (obj%input_ispresent) &
+      CALL qes_reset_input(obj%input)
+    obj%input_ispresent = .FALSE.
     IF (obj%step_ispresent) THEN
       IF (ALLOCATED(obj%step)) THEN
         DO i=1, SIZE(obj%step)
@@ -689,6 +691,16 @@ MODULE qes_reset_module
       obj%ndim_starting_ns = 0
       obj%starting_ns_ispresent = .FALSE.
     ENDIF
+    IF (obj%Hubbard_V_ispresent) THEN
+      IF (ALLOCATED(obj%Hubbard_V)) THEN
+        DO i=1, SIZE(obj%Hubbard_V)
+          CALL qes_reset_HubbardInterSpecieV(obj%Hubbard_V(i))
+        ENDDO
+        DEALLOCATE(obj%Hubbard_V)
+      ENDIF
+      obj%ndim_Hubbard_V = 0
+      obj%Hubbard_V_ispresent = .FALSE.
+    ENDIF
     IF (obj%Hubbard_ns_ispresent) THEN
       IF (ALLOCATED(obj%Hubbard_ns)) THEN
         DO i=1, SIZE(obj%Hubbard_ns)
@@ -709,16 +721,6 @@ MODULE qes_reset_module
       ENDIF
       obj%ndim_Hubbard_back = 0
       obj%Hubbard_back_ispresent = .FALSE.
-    ENDIF
-    IF (obj%Hubbard_U_back_ispresent) THEN
-      IF (ALLOCATED(obj%Hubbard_U_back)) THEN
-        DO i=1, SIZE(obj%Hubbard_U_back)
-          CALL qes_reset_HubbardCommon(obj%Hubbard_U_back(i))
-        ENDDO
-        DEALLOCATE(obj%Hubbard_U_back)
-      ENDIF
-      obj%ndim_Hubbard_U_back = 0
-      obj%Hubbard_U_back_ispresent = .FALSE.
     ENDIF
     IF (obj%Hubbard_alpha_back_ispresent) THEN
       IF (ALLOCATED(obj%Hubbard_alpha_back)) THEN
@@ -757,6 +759,21 @@ MODULE qes_reset_module
     obj%label_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_HubbardCommon
+  !
+  !
+  SUBROUTINE qes_reset_HubbardInterSpecieV(obj)
+    !
+    IMPLICIT NONE
+    TYPE(HubbardInterSpecieV_type),INTENT(INOUT)    :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    obj%label1_ispresent = .FALSE.
+    obj%label2_ispresent = .FALSE.
+    !
+  END SUBROUTINE qes_reset_HubbardInterSpecieV
   !
   !
   SUBROUTINE qes_reset_SiteMoment(obj)
@@ -856,36 +873,16 @@ MODULE qes_reset_module
     !
     IMPLICIT NONE
     TYPE(HubbardBack_type),INTENT(INOUT)    :: obj
-    INTEGER :: i
     !
     obj%tagname = ""
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
-    IF (ALLOCATED(obj%l_number)) THEN
-      DO i=1, SIZE(obj%l_number)
-        CALL qes_reset_backL(obj%l_number(i))
-      ENDDO
-      DEALLOCATE(obj%l_number)
-    ENDIF
-    obj%ndim_l_number = 0
+    obj%n3_number_ispresent = .FALSE.
+    obj%l3_number_ispresent = .FALSE.
     obj%species_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_HubbardBack
-  !
-  !
-  SUBROUTINE qes_reset_backL(obj)
-    !
-    IMPLICIT NONE
-    TYPE(backL_type),INTENT(INOUT)    :: obj
-    !
-    obj%tagname = ""
-    obj%lwrite  = .FALSE.
-    obj%lread  = .FALSE.
-    !
-    obj%l_index_ispresent = .FALSE.
-    !
-  END SUBROUTINE qes_reset_backL
   !
   !
   SUBROUTINE qes_reset_vdW(obj)
