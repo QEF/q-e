@@ -120,6 +120,11 @@ PROGRAM ZG
   !                            scf calculation. If left empty the code will not generate the input file for
   !                            the supercell scf calculation.
   !                            (default ' ')
+  !     "qhat_in"            : Vector with three real entries for specifying the direction qhat 
+  !                            for the non-analytic part when dim1=dim2=dim3=1.
+  !                            Use for example "qhat_in(1) = 0.1, qhat_in(2) =0.0, qhat_in(3) = 0.0"
+  !                            to account for LO-TO splitting from the direction [1 0 0]. 
+  !                            (default 0.1,0.1,0.1)
   !     "synch"              : Logical flag that enables the synchronization of the modes. 
   !                            (default .false.)
   !     "niters"             : Integer for the number of iterations the algorithm needs to 
@@ -155,7 +160,9 @@ PROGRAM ZG
   !     "q_external"         : Logical flag that allows the use of a q-point list specified by the user in the input file. 
   !                            If .false. the q-point list is specified by the supercell dimensions dim1, dim2, and dim3. 
   !                            If .false. any q-point list after the input flags is ignored.
-  !                            If .true. the q-point list must be provided by the user (see "qlist_AB.txt").
+  !                            If .true. the q-point list must be provided by the user (or see "qlist_AB.txt").
+  !                            IF ph_unfold = .true. then q_external = .true. automatically and the q-path is provided as 
+  !                            in a standard phonon dispersion calculation. 
   !                            (default .false.)
   !     "qlist_AB.txt"       : This file contains the external q-list in crystal coordinates as in the "ZG_444.in" example,
   !                            after the input flags. It corresponds to the q-points commensurate to the supercell size. 
@@ -169,8 +176,14 @@ PROGRAM ZG
   ! 
   !     "ph_unfold"          : Logical flag to activate phonon unfolding procedure. (default: .false.). To perform phonon 
   !                            unfolding ZG_conf must be set to .false.. If ph_unfold = .true. then q_external = .true. 
+  !
   !     "flfrq"              : Output file for frequencies to printed with unfolding weights (default: 'frequencies.dat')
+  !
   !     "flweights"          : Output file for unfolding weights to printed with frequncies (default: 'unfold_weights.dat')
+  !
+  !    "ng1","ng2","ng3"     : Integers corresponding to the (h k l) indices of the reciprocal lattice vector g.  
+  !                            Increase their values to check convergence. Default is a good starting point. 
+  !                            (default 10,10,10)
   !
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum
@@ -250,7 +263,7 @@ PROGRAM ZG
   LOGICAL                  :: ZG_conf, synch, incl_qA, q_external
   LOGICAL                  :: ZG_strf, compute_error, single_ph_displ
   INTEGER                  :: dim1, dim2, dim3, niters, qpts_strf
-  REAL(DP)                 :: error_thresh, T
+  REAL(DP)                 :: error_thresh, T, qhat_in(3)
   REAL(DP)                 :: atmsf_a(ntypx,5), atmsf_b(ntypx,5) 
   REAL(DP),    ALLOCATABLE :: q_nq(:, :) ! 3, nq
   COMPLEX(DP), ALLOCATABLE :: z_nq(:, :, :) ! nomdes, nmodes, nq
@@ -268,7 +281,7 @@ PROGRAM ZG
 ! we add the inputs for generating the ZG-configuration
        &           ZG_conf, dim1, dim2, dim3, niters, error_thresh, q_external, & 
        &           compute_error, synch, atm_zg, T, incl_qA, single_ph_displ, & 
-       &           ZG_strf, flscf, ph_unfold
+       &           ZG_strf, flscf, ph_unfold, qhat_in
 !
   NAMELIST /strf_ZG/ atmsf_a, atmsf_b, qpts_strf, &
                      nrots, kres1, kres2, kmin, kmax, col1, col2, Np
@@ -319,6 +332,7 @@ PROGRAM ZG
      atm_zg          = "Element"
      ZG_strf         = .FALSE.
      ph_unfold       = .FALSE.
+     qhat_in         = 0.1
      !
      nrots           = 1
      kres1           = 250
@@ -378,6 +392,7 @@ PROGRAM ZG
      CALL mp_bcast(dim3, ionode_id, world_comm)
      CALL mp_bcast(niters, ionode_id, world_comm)
      CALL mp_bcast(atm_zg, ionode_id, world_comm)
+     CALL mp_bcast(qhat_in, ionode_id, world_comm)
      CALL mp_bcast(ZG_strf, ionode_id, world_comm)
      CALL mp_bcast(ph_unfold, ionode_id, world_comm)
      !
@@ -699,6 +714,19 @@ PROGRAM ZG
                  ! IF the preceding q is npt 0 :
                  qhat(:) = q(:, n) - q(:, n - 1)
               ENDIF
+           ENDIF
+           ! consider qhat from input or default when dim1=dim2=dim3=1 and
+           ! LO-TO splitting needs to be included.
+           IF (dim1 == 1 .AND. dim2 == 1 .AND. dim3 == 1) THEN
+               qhat = qhat_in
+               IF (ionode) THEN
+                  WRITE(*,*) "=============================================="
+                  WRITE(*,*)
+                  WRITE(*,*) "Direction for q is specified from input:"
+                  WRITE(*,'(3F8.4)') qhat
+                  WRITE(*,*)
+                  WRITE(*,*) "=============================================="
+               ENDIF
            ENDIF
            qh = SQRT(qhat(1)**2 + qhat(2)**2 + qhat(3)**2)
            ! WRITE(*,*) ' qh,  has_zstar ',qh,  has_zstar
@@ -2516,7 +2544,7 @@ SUBROUTINE phonon_unfolding(nq, tau, nat, ntyp, amass, ityp, &
         OPEN (unit=2,file=flfrq ,status='unknown',form='formatted')
         WRITE(2, '(" &plot nbnd=",i4,", nks=",i4," /")') 3*nat, nq
         DO n=1, nq
-           WRITE(2, '(10x,3f10.6)')  q(1,n), q(2,n), q(3,n)
+           WRITE(2, '(10x,3f10.6)')  q(1, n) / DBLE(dim1), q(2, n) / DBLE(dim2),q(3, n) / DBLE(dim3)
            WRITE(2,'(6f10.4)') (freq(i,n), i=1,3*nat)
         END DO
         CLOSE(unit=2)
@@ -3046,14 +3074,31 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq, ios, &
   ! 
   ALLOCATE(M_mat(2 * pn, nat3), Mx_mat(pn, nat3), Mx_mat_or(pn, nat3), V_mat(2))
   M_mat = 1 ! initialize M_mat
-  V_mat = (/ 1, -1/) ! initialize V_mat whose entries will generate the sign matrices
+  !
+  ! Initialize sign matrix
+  IF (nat3 .LE. 12) THEN
+    M_mat = 1
+    ! ELSE Initialize with random entries of +1 or -1 that are only used 
+    ! for systems with large unit-cells.
+  ELSE
+    DO i = 1, nat3
+      DO p = 1, 2*pn
+         call random_number(u_rand)
+         IF (u_rand .LE. 0.5) M_mat(p, i) = -1
+         IF (u_rand .GT. 0.5) M_mat(p, i) =  1
+      ENDDO
+    ENDDO
+  ENDIF
+  !
+  ! initialize V_mat whose entries will generate the deterministic sign matrices
+  V_mat = (/ 1, -1/) 
   DO i = 1, nat3
     ctr = 1
     DO p = 1, 2**(i - 1)
       DO qp = 1, 2
         DO k = 1, 2**(nat3 - i)
           IF (ctr > 2 * pn) EXIT ! in case there many branches in the system and 
-                                 ! in that case we do not need to allocate more signs              
+                                 ! we do not need to allocate more signs              
           M_mat(ctr, i) = V_mat(qp)
           ctr = ctr + 1
           IF (ctr > 2 * pn) EXIT              
