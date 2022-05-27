@@ -236,7 +236,6 @@ SUBROUTINE c_phase
    INTEGER :: npw1
    INTEGER :: npw0
    INTEGER :: nstring
-   INTEGER :: nbnd_occ
    INTEGER :: nt
    INTEGER, ALLOCATABLE :: map_g(:)
    LOGICAL :: lodd
@@ -454,10 +453,8 @@ SUBROUTINE c_phase
    DO is=1,nspin_lsda
 
       ! l_cal(n) = .true./.false. if n-th state is occupied/empty
-      nbnd_occ=0
       DO nb = 1, nbnd
          l_cal(nb) = (wg(nb,1+nks*(is-1)/2) > eps)
-         IF (l_cal(nb)) nbnd_occ = nbnd_occ + 1
       END DO
 
 !     --- Start loop over orthogonal k-points ---
