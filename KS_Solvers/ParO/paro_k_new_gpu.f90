@@ -107,7 +107,7 @@ SUBROUTINE paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap
   CALL start_clock( 'paro:init' ); 
   conv(:) =  .FALSE. ; nconv = COUNT ( conv(:) )
 
-!$acc parallel loop collapse(2) 
+  !$acc parallel loop collapse(2) 
   DO ii = 1, npwx*npol
     DO jj = 1, nbnd
       psi(ii,jj) = evc(ii,jj)
