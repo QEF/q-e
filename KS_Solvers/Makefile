@@ -62,7 +62,6 @@ PPCG/ppcg_gamma_gpu.o \
 PPCG/ppcg_k_gpu.o \
 ParO/bpcg_gamma_gpu.o \
 ParO/paro_gamma_new_gpu.o \
-ParO/paro_k_new_gpu.o \
 DENSE/rotate_HSpsi_gamma_gpu.o 
 
 # add here other objects, e.g. ParO/*.o NewSolver/*.o
