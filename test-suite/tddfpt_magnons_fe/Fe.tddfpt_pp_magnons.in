@@ -2,6 +2,7 @@
    prefix = 'Fe',
    outdir = './out',
    magnons = .true.,
+   units = 3,
    itermax0 = 400,
    itermax = 400,
    extrapolation='no',
