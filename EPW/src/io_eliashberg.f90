@@ -144,7 +144,7 @@
       ! anisotropic case
       IF (temp < 10.d0) THEN
         WRITE(name1, 101) TRIM(prefix), '.imag_aniso_00', temp
-      ELSEIF (temp >= 10.d0) THEN
+      ELSEIF (temp >= 10.d0 .AND. temp < 100.d0) THEN
         WRITE(name1, 102) TRIM(prefix), '.imag_aniso_0', temp
       ELSEIF (temp >= 100.d0) THEN
         WRITE(name1, 103) TRIM(prefix), '.imag_aniso_', temp
