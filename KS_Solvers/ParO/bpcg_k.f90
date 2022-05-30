@@ -36,7 +36,7 @@
 !  A Parallel Orbital-updating Based Plane Wave Basis Method. J. Comp. Phys. 348, 482-492 (2017).
 !
 ! The file is written mainly by Stefano de Gironcoli and Yan Pan.
-! * GPU version Ivan Carnimeo
+! * GPU porting Ivan Carnimeo
 !
 ! The following file is for solving step 2 of the parallel orbital updating algorithm.
 !
@@ -145,15 +145,11 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
         !$acc end parallel
 
         ! initial preconditioned gradient 
+        !$acc host_data use_device(z, e)
         do l=nactive+1,nactive+nnew; i=l+done
-#if defined(__CUDA)
-           !$acc host_data use_device(z, e)
-           call g_1psi_gpu(npwx,npw,z(:,l),e(i)) 
-           !$acc end host_data
-#else
            call g_1psi(npwx,npw,z(:,l),e(i))     
-#endif
         end do
+        !$acc end host_data
 
      !- project on conduction bands
         CALL start_clock( 'pcg:ortho' )
@@ -217,13 +213,9 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
 !     do l = 1, nactive  ! THIS COULD/SHOULD BE A GLOBAL CALL (ONLY WITHIN ONE BGRP THOUGH)
 !        CALL hs_1psi( npwx, npw, p(:,l), hp(:,l), sp(:,l) ) ! apply H to a single wavefunction (no bgrp parallelization here!)
 !     end do
-#if defined(__CUDA)
      !$acc host_data use_device(p, hp, sp)
-     CALL hs_psi_gpu( npwx, npw, nactive, p, hp, sp ) ! apply H to a single wavefunction (no bgrp parallelization here!)
-     !$acc end host_data
-#else
      CALL hs_psi( npwx, npw, nactive, p, hp, sp ) ! apply H to a single wavefunction (no bgrp parallelization here!)
-#endif
+     !$acc end host_data
      CALL stop_clock( 'pcg:hs_1psi' )
 
      !$acc parallel loop private(i)     
@@ -268,15 +260,11 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
         END DO 
      end do
 
+     !$acc host_data use_device(z, e)
      do l = 1, nactive; i=l+done                      ! update the preconditioned gradient
-#if defined(__CUDA)
-        !$acc host_data use_device(z, e)
-        call g_1psi_gpu(npwx,npw,z(:,l),e(i))
-        !$acc end host_data
-#else
         call g_1psi(npwx,npw,z(:,l),e(i))
-#endif
      end do
+     !$acc end host_data
 
   !- project on conduction bands
      CALL start_clock( 'pcg:ortho' )

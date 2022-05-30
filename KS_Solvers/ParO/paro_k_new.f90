@@ -37,6 +37,13 @@
 !  A Parallel Orbital-updating Based Plane Wave Basis Method. J. Comp. Phys. 348, 482-492 (2017).
 !
 ! The file is written mainly by Stefano de Gironcoli and Yan Pan.
+! GPU porting by Ivan Carnimeo
+!
+!NOTE (Ivan Carnimeo, May, 30th, 2022): 
+!   paro_k_new and paro_gamma_new have been ported to GPU with OpenACC, 
+!   the previous CUF versions (paro_k_new_gpu and paro_gamma_new_gpu) have been removed, 
+!   and now paro_k_new and paro_gamma_new are used for both CPU and GPU execution.
+!   If you want to see the previous code checkout to commit: 55c4e48ba650745f74bad43175f65f5449fd1273 (on Fri May 13 10:57:23 2022 +0000)
 !
 !-------------------------------------------------------------------------------
 SUBROUTINE paro_k_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
