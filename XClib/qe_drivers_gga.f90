@@ -85,7 +85,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   err_out = 0
   !
 #if defined(_OPENACC)
-!$acc data present( rho_in, grho_in, sx_out, sc_out, v1x_out, v2x_out, v1c_out, v2c_out ) copy( err_out )
+!$acc data present( rho_in, grho_in, sx_out, sc_out, v1x_out, v2x_out, v1c_out, v2c_out )
 !$acc parallel loop  
 #else
 !$omp parallel if(ntids==1) default(none) &
@@ -508,7 +508,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out, err_out
   err_out = 0
   !
 #if defined(_OPENACC)
-!$acc data present( rho_in, grho2_in, sx_tot, v1x_out, v2x_out ) copy( err_out )
+!$acc data present( rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
 !$acc parallel loop
 #else
 !$omp parallel if(ntids==1) default(none) &
