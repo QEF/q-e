@@ -257,7 +257,9 @@ SUBROUTINE compute_optical_spectrum()
      !
      ! Check the units (Ry, eV, nm)
      !
-     IF (units < 0 .or. units >2) CALL errore("lr_calculate_spectrum","Unsupported unit system",1)
+     IF (units < 0 .or. units >3) CALL errore("lr_calculate_spectrum","Unsupported unit system",1)
+     !
+     IF (units==3) CALL errore("lr_calculate_spectrum","meV unit is supported only for magnon= .true.",1)
      !
      IF ( units /= 0 .and. verbosity > 4) THEN
         WRITE(stdout,'(5x,"Such a high verbosity is not supported when &
@@ -774,7 +776,9 @@ SUBROUTINE compute_eels_spectrum()
      !
      ! Check the units (Ry, eV, nm)
      !
-     IF (units < 0 .or. units >2) CALL errore("lr_calculate_spectrum","Unsupported unit system",1)
+     IF (units < 0 .or. units >3) CALL errore("lr_calculate_spectrum","Unsupported unit system",1)
+     !
+     IF (units == 3) CALL errore("lr_calculate_spectrum","meV unit is supported only for magnon= .true.",1) 
      !
      IF ( units /= 0 .and. verbosity > 4) THEN
         WRITE(stdout,'(5x,"Such a high verbosity is not supported when &
@@ -1030,6 +1034,12 @@ SUBROUTINE compute_magnon_spectrum()
   IMPLICIT NONE
 
      REAL(DP) :: hbarw
+
+     ! Check the units (Ry, eV, nm)
+     !
+     IF (units < 0 .or. units >3) CALL errore("lr_calculate_spectrum","Unsupported unit system",1)
+     !
+     IF (units /= 3) CALL errore("lr_calculate_spectrum","only meV unit=3 is supported for magnon= .true.",1)
 
      outdir = trimcheck(outdir)
      tmp_dir = outdir

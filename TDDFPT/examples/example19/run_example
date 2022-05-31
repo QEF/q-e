@@ -158,6 +158,7 @@ cat > $PREFIX.tddfpt_pp.in << EOF
    prefix = '$PREFIX',
    outdir = '$TMP_DIR/',
    magnons = .true.,
+   units = 3
    itermax0 = 1600,
    itermax = 20000,
    extrapolation='osc',
