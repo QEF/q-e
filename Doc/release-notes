@@ -1,4 +1,5 @@
 New in 7.1 version:
+  * DFT+RISM (1D, 3D, Laue) by S. Nishihara & M. Otani [Phys. Rev. B 96, 115429 (2017)].
   * Improved, streamlined and extended porting to NVidia GPUs
   * KCW package for Koopmans-compliant functionals in a Wannier representation,
     https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.021051.

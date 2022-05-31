@@ -13,7 +13,8 @@ All quantities whose dimensions are not explicitly specified are in
 RYDBERG ATOMIC UNITS. Charge is "number" charge (i.e. not multiplied
 by e); potentials are in energy units (i.e. they are multiplied by e).
 
-BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE
+BEWARE: TABS, CRLF, ANY OTHER STRANGE CHARACTER, ARE A SOURCES OF TROUBLE
+USE ONLY PLAIN ASCII TEXT FILES (CHECK THE FILE TYPE WITH UNIX COMMAND "file")
 
 Namelists must appear in the order given below.
 Comment lines in namelists can be introduced by a "!", exactly as in
@@ -22,7 +23,6 @@ either a "!" or a "#" character in the first position of a line.
 Do not start any line in cards with a "/" character.
 Leave a space between card names and card options, e.g.
 ATOMIC_POSITIONS (bohr), not ATOMIC_POSITIONS(bohr)
-Do not start any line in cards with a "/" character.
 
 
 Structure of the input data:
@@ -49,6 +49,10 @@ Structure of the input data:
  / ]
 
 [ &FCP
+  ...
+ / ]
+
+[ &RISM
   ...
  / ]
 
@@ -99,6 +103,12 @@ if (tpipa_b or crystal_b in a 'bands' calculation) see Doc/brillouin_zones.pdf
 
 [ ADDITIONAL_K_POINTS
      see: K_POINTS ]
+
+[ SOLVENTS
+   label(1)     Density(1)     Molecule(1)
+   label(2)     Density(2)     Molecule(2)
+   .....
+   label(nsolv) Density(nsolv) Molecule(nsolv) ]
 
 [ HUBBARD { atomic | ortho-atomic | norm-atomic | wf | pseudo }
 if (DFT+U)
@@ -469,24 +479,6 @@ NAMELIST: &CONTROL
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       lfcp
-   
-   Type:           LOGICAL
-   See:            fcp_mu
-   Default:        .FALSE.
-   Description:    If .TRUE. perform a constant bias potential (constant-mu) calculation
-                   for a system with ESM method. See the header of PW/src/fcp_module.f90
-                   for documentation. To perform the calculation, you must set a namelist FCP.
-                   
-                   NB:
-                   - The total energy displayed in output includes the potentiostat
-                     contribution (-mu*N).
-                   - "calculation" must be 'relax' or 'md'.
-                   - "assume_isolated" = 'esm' and "esm_bc" = 'bc2' or 'bc3' must be set
-                     in "SYSTEM" namelist.
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
    Variable:       gate
    
    Type:           LOGICAL
@@ -504,6 +496,51 @@ NAMELIST: &CONTROL
                    could still use them for symmetric systems (i.e. no dipole correction).
                    For "nosym"=.false. verbosity is set to 'high'.
                    Note: this option was called "monopole" in v6.0 and 6.1 of pw.x
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lfcp
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE. perform a constant bias potential (constant-mu) calculation
+                   for a system with ESM method. See the header of PW/src/fcp_module.f90
+                   for documentation. To perform the calculation, you must set a namelist FCP.
+                   
+                   NB:
+                   - The total energy displayed in output includes the potentiostat
+                     contribution (-mu*N).
+                   - "calculation" must be 'relax' or 'md'.
+                   - "assume_isolated" = 'esm' and "esm_bc" = 'bc2' or 'bc3' must be set
+                     in "SYSTEM" namelist.
+                   - ESM-RISM is also supported ("assume_isolated" = 'esm' and "esm_bc" = 'bc1'
+                     and "trism" = .TRUE.).
+                   - "ignore_wolfe" is always .TRUE., for BFGS.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       trism
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE. perform a 3D-RISM-SCF calculation
+                   [for details see H.Sato et al., JCP 112, 9463 (2000)].
+                   The solvent's distributions are calculated by 3D-RISM,
+                   though solute is treated as SCF. The charge density and
+                   the atomic positions are optimized, simultaneously with
+                   the solvents. To perform the calculation, you must set
+                   a namelist RISM and a card SOLVENTS.
+                   
+                   If "assume_isolated" = 'esm' and "esm_bc" = 'bc1',
+                   Laue-RISM is calculated instead of 3D-RISM
+                   and coupled with ESM method (i.e. ESM-RISM).
+                   [for details see S.Nishihara and M.Otani, PRB 96, 115429 (2017)].
+                   
+                   The default of "mixing_beta" is 0.2
+                   for both 3D-RISM and Laue-RISM.
+                   
+                   For structural relaxation with BFGS,
+                   "ignore_wolfe" is always .TRUE. .
    +--------------------------------------------------------------------
    
 ===END OF NAMELIST======================================================
@@ -1230,7 +1267,7 @@ NAMELIST: &SYSTEM
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       Hubbard_occ(i,typ), (i,typ)=(1,1) ... (ntyp,3)
+   Variable:       Hubbard_occ(ityp,i), (ityp,i)=(1,1) ... (ntyp,3)
    
    Type:           REAL
    Default:        read from pseudopotentials
@@ -2184,6 +2221,33 @@ NAMELIST: &ELECTRONS
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
+   Variable:       diago_rmm_ndim
+   
+   Type:           INTEGER
+   Default:        4
+   Description:    For RMM-DIIS diagonalization: dimension of workspace
+                   (number of wavefunction packets, at least 2 needed).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       diago_rmm_conv
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE., RMM-DIIS is performed up to converge.
+                   If .FALSE., RMM-DIIS is performed only once.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       diago_gs_nblock
+   
+   Type:           INTEGER
+   Default:        16
+   Description:    For RMM-DIIS diagonalization:
+                   blocking size of Gram-Schmidt orthogonalization
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
    Variable:       diago_full_acc
    
    Type:           LOGICAL
@@ -2192,23 +2256,6 @@ NAMELIST: &ELECTRONS
                    of accuracy of the occupied ones. Otherwise the empty states are
                    diagonalized using a larger threshold (this should not affect
                    total energy, forces, and other ground-state properties).
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       diago_rmm_ndim
-   
-   Type:           INTEGER
-   Default:        4
-   Description:    Max dimension  of the iterative subspace for RMM-DIIS diagonalization
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       diago_rmm_conv
-   
-   Type:           LOGICAL
-   Default:        .FALSE.
-   Description:    If .TRUE. during the SCF loop the RMM-DIIS is reiterated until all bands
-                   are converged or up to a max of 8 times.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -3835,6 +3882,120 @@ CARD: ATOMIC_FORCES
 
 
 ========================================================================
+CARD: SOLVENTS { 1/cell | mol/L | g/cm^3 }
+
+   OPTIONAL CARD, USED ONLY IF "TRISM" = .TRUE., IGNORED OTHERWISE !
+   
+   ________________________________________________________________________
+   * IF laue_both_hands = .FALSE. : 
+   
+      /////////////////////////////////////////
+      // Syntax:                             //
+      /////////////////////////////////////////
+      
+         SOLVENTS { 1/cell | mol/L | g/cm^3 }
+            X(1)      Density(1)      Molecule(1)      
+            X(2)      Density(2)      Molecule(2)      
+            . . . 
+            X(nsolv)  Density(nsolv)  Molecule(nsolv)  
+      
+      /////////////////////////////////////////
+      
+       
+   * ELSE IF laue_both_hands = .TRUE. : 
+   
+      /////////////////////////////////////////
+      // Syntax:                             //
+      /////////////////////////////////////////
+      
+         SOLVENTS { 1/cell | mol/L | g/cm^3 }
+            X(1)      Density_Left(1)      Density_Right(1)      Molecule(1)      
+            X(2)      Density_Left(2)      Density_Right(2)      Molecule(2)      
+            . . . 
+            X(nsolv)  Density_Left(nsolv)  Density_Right(nsolv)  Molecule(nsolv)  
+      
+      /////////////////////////////////////////
+      
+       
+   ENDIF
+   ________________________________________________________________________
+   
+   DESCRIPTION OF ITEMS:
+   
+      +--------------------------------------------------------------------
+      Card's flags:   { 1/cell | mol/L | g/cm^3 }
+      
+      Description:   
+                      1/cell :
+                           solvent's densities are specified
+                           as number of molecule in unit cell.
+       
+                      mol/L :
+                           solvent's densities are in molar.
+       
+                      g/cm^3 :
+                           solvent's densities are in gram per cm^3.
+      +--------------------------------------------------------------------
+
+
+      +--------------------------------------------------------------------
+      Variable:       X
+      
+      Type:           CHARACTER
+      Description:    label of the solvent molecule.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       Density
+      
+      Type:           REAL
+      Description:    density of the solvent molecule.
+                      if not positive value is set, density is read from MOL-file.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       Molecule
+      
+      Type:           CHARACTER
+      Description:    MOL-file of the solvent molecule.
+                      in the MOL-file, molecular structure and some other data are written.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       X
+      
+      Type:           CHARACTER
+      Description:    label of the solvent molecule.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       Density_Left
+      
+      Type:           REAL
+      Description:    density of the solvent molecule in the left-hand side.
+                      if not positive value is set, density is read from MOL-file.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       Density_Right
+      
+      Type:           REAL
+      Description:    density of the solvent molecule in the right-hand side.
+                      if not positive value is set, density is read from MOL-file.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       Molecule
+      
+      Type:           CHARACTER
+      Description:    MOL-file of the solvent molecule.
+                      in the MOL-file, molecular structure and some other data are written.
+      +--------------------------------------------------------------------
+      
+===END OF CARD==========================================================
+
+
+========================================================================
 CARD: HUBBARD { atomic | ortho-atomic | norm-atomic | wf | pseudo }
 
    DESCRIPTION OF ITEMS:
@@ -3889,4 +4050,4 @@ CARD: HUBBARD { atomic | ortho-atomic | norm-atomic | wf | pseudo }
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Mon May 23 17:11:23 CEST 2022
+This file has been created by helpdoc utility on Tue May 31 16:05:29 CEST 2022

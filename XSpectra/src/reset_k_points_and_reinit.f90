@@ -26,6 +26,7 @@ SUBROUTINE reset_k_points_and_reinit_nscf()
   USE parameters,         ONLY : npk
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, nspin
   USE constants,          ONLY : degspin
+  USE rism_module,        ONLY : lrism, rism_set_restart
 
 #if defined (__ENVIRON)
   USE plugin_flags,        ONLY : use_environ
@@ -58,6 +59,8 @@ SUBROUTINE reset_k_points_and_reinit_nscf()
   startingconfig    = 'input'
   starting_pot      = 'file'
   starting_wfc      = 'atomic'
+  !
+  IF (lrism) CALL rism_set_restart()
   !
   ! DFT+U(+V) case
   !

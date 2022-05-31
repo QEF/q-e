@@ -1001,21 +1001,21 @@ FUNCTION local_tf_ddot( rho1, rho2, ngm0, g0 )
      !
      !$omp parallel do reduction(+:local_tf_ddot)
      DO ig = gstart, ngm0
-        local_tf_ddot = local_tf_ddot + REAL( CONJG(rho1(ig))*rho2(ig) ) / ( gg(ig) + gg0 )
+        local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(ig))*rho2(ig) ) / ( gg(ig) + gg0 )
      END DO
      !$omp end parallel do
      !
      IF ( gamma_only ) local_tf_ddot = 2.D0 * local_tf_ddot
      !
      IF ( gstart == 2 ) THEN
-        local_tf_ddot = local_tf_ddot + REAL( CONJG(rho1(1))*rho2(1) ) / ( gg(1) + gg0 )
+        local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(1))*rho2(1) ) / ( gg(1) + gg0 )
      END IF
      !
   ELSE
      !
      !$omp parallel do reduction(+:local_tf_ddot)
      DO ig = gstart, ngm0
-        local_tf_ddot = local_tf_ddot + REAL( CONJG(rho1(ig))*rho2(ig) ) / gg(ig)
+        local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(ig))*rho2(ig) ) / gg(ig)
      END DO
      !$omp end parallel do
      !
