@@ -1488,7 +1488,7 @@
     !!!!!
     !
     ! SH: Write the electronic and phonon dos files
-    IF (.NOT. band_plot) THEN
+    IF ((.NOT. band_plot) .AND. eliashberg) THEN
       CALL write_dos(ef, nelec)
       CALL write_phdos()
     ENDIF
