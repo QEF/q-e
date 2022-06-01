@@ -3845,6 +3845,7 @@ SUBROUTINE compute_amn_with_scdm
 
    ! vv: Perform QR factorization with pivoting on Psi_Gamma
 # if defined(__SCALAPACK_ROBUST_QR)
+   WRITE(stdout, '(5x,A,I,A)') "Running QRCP in parallel, using ", nproc, " cores"
    call PZGEQPF( numbands, nrtot, psi_gamma, 1, 1, descG, piv_p, qr_tau, &
                  tmp_cwork, -1, tmp_rwork, -1, info )
 
@@ -3863,6 +3864,13 @@ SUBROUTINE compute_amn_with_scdm
    CALL mp_bcast(piv(1:minmn),ionode_id,world_comm)
    DEALLOCATE(piv_p)
 # else
+   WRITE(stdout, '(5x, "Running QRCP in serial")')
+#if defined(__SCALAPACK)
+   WRITE(stdout, '(10x, A)') "Program compiled with ScaLAPACK but not using it for QRCP."
+   WRITE(stdout, '(10x, A)') "To enable ScaLAPACK for QRCP, use valid versions"
+   WRITE(stdout, '(10x, A)') "(ScaLAPACK >= 2.1.0 or MKL >= 2020) and set the argument"
+   WRITE(stdout, '(10x, A)') "'with-scalapack_version' in configure."
+#endif
    ! vv: Preliminary call to define optimal values for lwork and cwork size
    CALL ZGEQP3(numbands,nrtot,TRANSPOSE(CONJG(psi_gamma)),numbands,piv,qr_tau,tmp_cwork,-1,rwork,info)
    IF(info/=0) call errore('compute_amn','Error in computing the QR factorization',1)
