@@ -190,6 +190,8 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
   !call print_clock('rotHSw:diag')
   !call print_clock('rotHSw:evc')
   !
+  !$acc end data
+
   RETURN
   !
 END SUBROUTINE rotate_HSpsi_gamma
