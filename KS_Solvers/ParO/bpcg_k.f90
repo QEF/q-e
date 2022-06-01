@@ -172,7 +172,7 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
 
         !$acc parallel 
         !$acc loop gang private(i)
-        do l=nactive+1,nactive+nnew
+        do l=nactive+1,nactive+nnew; i=l+done
            !write(6,*) ' l =',l,' i =',i
            ff(l) = 0.d0 ; ff0(l) = ff(l)
            !write (6,*) 0, g0(l), ff(l)
@@ -183,7 +183,6 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
            ethr_cg(l) = max ( 0.01*ethr, ethr_cg(l) * g0(l) ) ! here we set the convergence of the correction
            !write(6,*) 'ethr_cg :', ethr_cg(l)
 
-           i=l+done
            !$acc loop vector 
            do ii = 1, kdmx
              ! zero the trial solution
