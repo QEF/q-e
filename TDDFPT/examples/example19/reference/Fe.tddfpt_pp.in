@@ -1,13 +1,14 @@
  &lr_input
    prefix = 'Fe',
-   outdir = '/g100_work/Sis22_baroni/obaseggi/q-e-kpoints/tempdir/',
+   outdir = '/g100_work/Sis22_baroni/obaseggi/q-e-develop/tempdir/',
    magnons = .true.,
-   itermax0 = 1600,
+   units = 3
+   itermax0 = 100,
    itermax = 20000,
    extrapolation='osc',
    epsil = 0.1,
    ipol = 2,
-   start = 0.0d0,
+   start = 1400.0d0,
    increment = 0.1d0,
-   end = 15.0d0
+   end = 1600.0d0
  /

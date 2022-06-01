@@ -2,8 +2,8 @@
     calculation='scf'
     restart_mode='from_scratch',
     prefix='Fe'
-    pseudo_dir = '/g100_work/Sis22_baroni/obaseggi/q-e-kpoints/pseudo/'
-    outdir='/g100_work/Sis22_baroni/obaseggi/q-e-kpoints/tempdir/'
+    pseudo_dir = '/g100_work/Sis22_baroni/obaseggi/q-e-develop/pseudo/'
+    outdir='/g100_work/Sis22_baroni/obaseggi/q-e-develop/tempdir/'
  /
  &system
     nosym           = .true.
