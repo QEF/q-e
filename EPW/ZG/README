@@ -1,4 +1,4 @@
-              Marios Zacharias [1] & Feliciano Giustino [2,3], November 2021
+              Marios Zacharias [1] & Feliciano Giustino [2,3], May 2022
 
 [1] Department of Mechanical and Materials Science Engineering, Cyprus University of Technology, 
     P.O. Box 50329, 3603 Limassol, Cyprus 
@@ -26,7 +26,7 @@ Acknowledgement: We thank Hyungjun Lee, Oden Institute for Computational Enginee
 
 Executables in ZG folder
 ------------------------
-ZG.x             ---> for generating ZG configurations
+ZG.x             ---> for generating ZG configurations, ZG diffuse scattering, phonon unflolding
 bands_unfold.x   ---> for performing band structure unfolding in supercell calculations
 pp_spctrlfn.x    ---> for obtaining the electron spectral function after bands_unfold.x
 epsilon_Gaus.x   ---> for calculating optical properties as in epsilon.x but Gaussian broadening
@@ -34,12 +34,16 @@ disca.x          ---> for calculating one-phonon and all-phonon inelastic scatte
 pp_disca.x       ---> for applying broadening and setting a resolution of scattering patterns
 src/local folder ---> for post-processing. Compile them by "./compile_gfortran.sh"
 
-
 ---------------------------------------------------------------------------------------------------
 
 For full instructions on how to run the exercises in the tarball "tutorial.tar.gz"
 please refer to the EPW documentation site, or send an email to Marios Zacharias:  
 zachariasmarios@gmail.com 
+
+Links for input flags and tutorials:
+
+https://epwdoc.gitlab.io/source/doc/InputsZG.html
+https://epwdoc.gitlab.io/source/doc/TutorialZG.html
 
 ---------------------------------------------------------------------------------------------------
 Instructions for the construction of the Zacharias-Giustino "ZG" displacement following 
@@ -84,6 +88,10 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
     ---------------------------------------------------------------------------------------
     i) "ZG_conf"            : Logical flag that enables the creation of the ZG-displacement. 
                               (default .true.) 
+       "flscf"              : String for the name of the scf input file used to calculate the phonons. The 
+                              code will read information for preparing the input file of the supercell calculation. 
+                              If left empty the code will not generate the input file of the supercell calculation.
+                              (default ' ')
        "T"                  : Real number indicating the temperature at which the calculations will be performed. 
                               "T" essentially defines the amplitude of the normal coordinates. 
                               (default 0.00)
@@ -94,6 +102,11 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
                               (default 0, 0, 0)
        "atm_zg(1), etc.."   : String describing the element of each atomic species
                               (default "Element")
+       "qhat_in"            : Vector with three real entries for specifying the direction qhat 
+                              for the non-analytic part when dim1=dim2=dim3=1.
+                              Use for example "qhat_in(1) = 0.1, qhat_in(2) =0.0, qhat_in(3) = 0.0"
+                              to account for LO-TO splitting from the direction [1 0 0]. 
+                              (default 0.1,0.1,0.1)
        "synch"              : Logical flag that enables the synchronization of the modes. 
                               (default .false.)
        "niters"             : Integer for the number of iterations the algorithm needs to 
@@ -127,18 +140,32 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
                               (default .false.)
        "q_external"         : Logical flag that allows the use of a q-point list specified by the user in the input file. 
                               If .false. the q-point list is specified by the supercell dimensions dim1, dim2, and dim3. 
-                              If .true. the q-point list must be provided by the user (see "qlist_AB.txt").
+                              If .false. any q-point list after the input flags is ignored.
+                              If .true. the q-point list must be provided by the user (or see "qlist_AB.txt").
+                              IF ph_unfold = .true. then q_external = .true. automatically and the q-path is provided as 
+                              in a standard phonon dispersion calculation. 
                               (default .false.)
        "qlist_AB.txt"       : This file contains the external q-list in crystal coordinates as in the "ZG_444.in" example,
                               after the input flags. It corresponds to the q-points commensurate to the supercell size. 
                               Only one of the q-point time-reversal partners is kept for the construction of the 
                               ZG-displacement. The calculations, for the moment, assume systems with time-reversal symmetry. 
                               For the generation of the "qlist_AB.txt" set the q-gird in file 
-                              "example/silicon/ZG_structure/input/qlist.in" and run "../../../src/create_qlist.x < qlist.in > qlist.out".
+                              "example/silicon/input/qlist.in" and run "../../../src/create_qlist.x < qlist.in > qlist.out".
                               One can modify the "create_qlist.f90" to generate a different path for consecutive q-points.
                               Paste the output of "qlist_AB.txt" to "ZG.in" after namelist &input. Set the flag 
-                              q_external = .true. for the code to read the list. 
-                                          
+                              q_external = .true. for the code to read the list.  
+   
+       "ph_unfold"          : Logical flag to activate phonon unfolding procedure. (default: .false.). To perform phonon 
+                              unfolding ZG_conf must be set to .false.. If ph_unfold = .true. then q_external = .true. 
+  
+       "flfrq"              : Output file for frequencies to printed with unfolding weights (default: 'frequencies.dat')
+  
+       "flweights"          : Output file for unfolding weights to printed with frequncies (default: 'unfold_weights.dat')
+  
+      "ng1","ng2","ng3"     : Integers corresponding to the (h k l) indices of the reciprocal lattice vector g.  
+                              Increase their values to check convergence. Default is a good starting point. 
+                              (default 10,10,10)
+  
     ii)  To generate the ZG-displacement run "/path_to_your_espresso/bin/ZG.x <ZG.in> ZG.out".
          This generates three output files: the "equil_pos.dat", "ZG-configuration.dat" and "ZG-velocities.dat". 
          The first file has the equilibrium coordinates of the nuclei and the second has the optimum set of nuclear coordinates 
