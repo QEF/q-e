@@ -73,7 +73,7 @@ SUBROUTINE paro_k_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   
   ! local variables (used in the call to cegterg )
   !------------------------------------------------------------------------
-  EXTERNAL h_psi, s_psi, hs_psi, g_1psi, h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu
+  EXTERNAL h_psi, s_psi, hs_psi, g_1psi
   ! subroutine h_psi  (npwx,npw,nvec,evc,hpsi)  computes H*evc  using band parallelization
   ! subroutine s_psi  (npwx,npw,nvec,evc,spsi)  computes S*evc  using band parallelization
   ! subroutine hs_1psi(npwx,npw,evc,hpsi,spsi)  computes H*evc and S*evc for a single band
@@ -208,13 +208,8 @@ SUBROUTINE paro_k_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
 !     write (6,*) ' check nactive = ', lbnd, nactive
      if (lbnd .ne. nactive+1 ) stop ' nactive check FAILED '
 
-#if defined (__CUDA)
-     CALL bpcg_k(hs_psi_gpu, g_1psi_gpu, psi, spsi, npw, npwx, nbnd, npol, how_many, &
-                psi(:,nbase+1), hpsi(:,nbase+1), spsi(:,nbase+1), ethr, ew(1), nhpsi)
-#else
      CALL bpcg_k(hs_psi, g_1psi, psi, spsi, npw, npwx, nbnd, npol, how_many, &
                 psi(:,nbase+1), hpsi(:,nbase+1), spsi(:,nbase+1), ethr, ew(1), nhpsi)
-#endif
 
      CALL start_clock( 'paro:mp_bar' ); 
      CALL mp_barrier(inter_bgrp_comm)
