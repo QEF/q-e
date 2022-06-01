@@ -154,9 +154,11 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
      !- project on conduction bands
         CALL start_clock( 'pcg:ortho' )
         !$acc host_data use_device(spsi0, psi0, z, spsi0vec)
-        CALL MYZGEMM( 'C', 'N', nbnd, nnew, kdim, ONE, spsi0, kdmx, z(:,nactive+1), kdmx, ZERO, spsi0vec, nbnd )
+        CALL MYZGEMM( 'C', 'N', nbnd, nnew, kdim, ONE, spsi0, kdmx, z(:,nactive+1), &
+                                          kdmx, ZERO, spsi0vec, nbnd )
         CALL mp_sum( spsi0vec, intra_bgrp_comm )
-        CALL MYZGEMM( 'N', 'N', kdim, nnew, nbnd, (-1.D0,0.D0), psi0, kdmx, spsi0vec, nbnd, ONE, z(:,nactive+1), kdmx )
+        CALL MYZGEMM( 'N', 'N', kdim, nnew, nbnd, (-1.D0,0.D0), psi0, kdmx, spsi0vec, &
+                                          nbnd, ONE, z(:,nactive+1), kdmx )
         !$acc end host_data
         CALL stop_clock( 'pcg:ortho' )
      !-
