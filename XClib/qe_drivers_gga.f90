@@ -85,7 +85,12 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   err_out = 0
   !
 #if defined(_OPENACC)
+! ... workaround for atomic-related bug in hpc_sdk 21.5 and older
+#if defined(__PGI) && (__PGIC__ < 21 || (__PGIC__ == 21 && __PGIC_MINOR__ < 7))
+!$acc data present( rho_in, grho_in, sx_out, sc_out, v1x_out, v2x_out, v1c_out, v2c_out )
+#else
 !$acc data present( rho_in, grho_in, sx_out, sc_out, v1x_out, v2x_out, v1c_out, v2c_out ) copy( err_out )
+#endif
 !$acc parallel loop  
 #else
 !$omp parallel if(ntids==1) default(none) &
@@ -508,7 +513,11 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out, err_out
   err_out = 0
   !
 #if defined(_OPENACC)
+#if defined(__PGI) && (__PGIC__ < 21 || (__PGIC__ == 21 && __PGIC_MINOR__ < 7))
+!$acc data present( rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
+#else
 !$acc data present( rho_in, grho2_in, sx_tot, v1x_out, v2x_out ) copy( err_out )
+#endif
 !$acc parallel loop
 #else
 !$omp parallel if(ntids==1) default(none) &
