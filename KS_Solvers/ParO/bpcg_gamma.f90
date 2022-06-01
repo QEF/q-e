@@ -164,7 +164,7 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
 
         !$acc parallel loop 
         do l=nactive+1,nactive+nnew
-           g0(l) = 2.D0*MYDDOT_VECTOR_GPU(npw2,z(:,l),1,b(:,l),1)
+           g0(l) = 2.D0*MYDDOT_VECTOR_GPU(npw2,z(:,l),b(:,l))
            IF (gstart==2) g0(l)=g0(l)-CONJG(z(1,l))*b(1,l)
         end do
 
@@ -221,8 +221,8 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
 
      !$acc parallel loop private(i)     
      do l = 1, nactive; i=l+done
-        gamma(l) = 2.D0*MYDDOT_VECTOR_GPU(npw2,p(:,l),1,hp(:,l),1) &
-                       - e(i) * 2.D0*MYDDOT_VECTOR_GPU(npw2,p(:,l),1,sp(:,l),1) 
+        gamma(l) = 2.D0*MYDDOT_VECTOR_GPU(npw2,p(:,l),hp(:,l)) &
+                       - e(i) * 2.D0*MYDDOT_VECTOR_GPU(npw2,p(:,l),sp(:,l)) 
         IF (gstart==2) gamma(l) = gamma(l) - CONJG(p(1,l))*hp(1,l) + e(i) * CONJG(p(1,l))*sp(1,l)
      end do
 
@@ -244,9 +244,9 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
           spsi(ii,i) = spsi(ii,i) + alpha(l) * sp(ii,l)    ! updated solution
         END DO 
 
-        g2(l) = 2.D0 * ( MYDDOT_VECTOR_GPU(npw2,z(:,l),1,b(:,l),1) &
-                + e(i) * MYDDOT_VECTOR_GPU(npw2,z(:,l),1,spsi(:,i),1) &
-                - MYDDOT_VECTOR_GPU(npw2,z(:,l),1,hpsi(:,i),1) )
+        g2(l) = 2.D0 * ( MYDDOT_VECTOR_GPU(npw2,z(:,l),b(:,l)) &
+                + e(i) * MYDDOT_VECTOR_GPU(npw2,z(:,l),spsi(:,i)) &
+                - MYDDOT_VECTOR_GPU(npw2,z(:,l),hpsi(:,i)) )
         IF (gstart==2) g2(l) = g2(l) - CONJG(z(1,l))*b(1,l) - e(i)*CONJG(z(1,l))*spsi(1,i) + CONJG(z(1,l))*hpsi(1,i)
      end do
      !$acc end parallel
@@ -281,9 +281,9 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
   !-
      !$acc parallel loop private(i) 
      do l = 1, nactive; i=l+done
-        g1(l) = 2.D0 * ( MYDDOT_VECTOR_GPU(npw2,z(:,l),1,b(:,l),1) &
-                + e(i) * MYDDOT_VECTOR_GPU(npw2,z(:,l),1,spsi(:,i),1) &
-                - MYDDOT_VECTOR_GPU(npw2,z(:,l),1,hpsi(:,i),1) )
+        g1(l) = 2.D0 * ( MYDDOT_VECTOR_GPU(npw2,z(:,l),b(:,l)) &
+                + e(i) * MYDDOT_VECTOR_GPU(npw2,z(:,l),spsi(:,i)) &
+                       - MYDDOT_VECTOR_GPU(npw2,z(:,l),hpsi(:,i)) )
         IF (gstart==2) g1(l) = g1(l) - CONJG(z(1,l)) * ( b(1,l) + e(i) * spsi(1,i) - hpsi(1,i) )
      end do
 
@@ -293,9 +293,9 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
 
      !$acc parallel loop private(i) 
      do l = 1, nactive; i = l + done                 ! evaluate the function ff
-        ff(l) = - ( e(i)*MYDDOT_VECTOR_GPU(npw2,psi(:,i),1,spsi(:,i),1) &
-                        -MYDDOT_VECTOR_GPU(npw2,psi(:,i),1,hpsi(:,i),1) ) &
-                - 2.D0 * MYDDOT_VECTOR_GPU(npw2,psi(:,i),1,b(:,l),1)
+        ff(l) = - ( e(i)*MYDDOT_VECTOR_GPU(npw2,psi(:,i),spsi(:,i)) &
+                        -MYDDOT_VECTOR_GPU(npw2,psi(:,i),hpsi(:,i)) ) &
+                - 2.D0 * MYDDOT_VECTOR_GPU(npw2,psi(:,i),b(:,l))
         if (gstart==2) ff(l) = ff(l) + 0.5D0 * CONJG(psi(1,i))*( e(i)*spsi(1,i) - hpsi(1,i) + 2.D0 * b(1,l) )
      end do
 
