@@ -17,7 +17,7 @@ SUBROUTINE rotate_HSpsi_k( npwx, npw, nstart, nbnd, npol, psi, hpsi, overlap, sp
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
                             me_bgrp, root_bgrp
   USE mp,            ONLY : mp_sum, mp_barrier, mp_allgather, mp_type_create_column_section, mp_type_free
-  USE device_memcpy_m,    ONLY: dev_memcpy, dev_memset
+  USE device_memcpy_m,    ONLY: dev_memcpy
   !
   IMPLICIT NONE
   !
@@ -142,7 +142,6 @@ SUBROUTINE rotate_HSpsi_k( npwx, npw, nstart, nbnd, npol, psi, hpsi, overlap, sp
   if (n_start .le. n_end) &
     CALL MYZGEMM( 'N','N', kdim, my_n, nstart, (1.D0,0.D0), psi, kdmx, vv(1,n_start), nstart, &
                                                                       (0.D0,0.D0), aux(1,n_start), kdmx )
-
   CALL dev_memcpy(psi, aux, [1, kdmx], 1, [n_start,n_end])
 !  call start_clock('rotHSw:ev:b3'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b3')
   call start_clock('rotHSw:ev:s5')
