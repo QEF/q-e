@@ -918,7 +918,7 @@ MODULE pw_restart_new
               igk_l2g_kdip(:), ngk(ik), tpiba*bg(:,1), tpiba*bg(:,2), &
               tpiba*bg(:,3), mill_k, 1.D0 )
          !
-         IF ( (my_bgrp_id == root_bgrp_id) .and. exx_is_active()) then 
+         IF ( (my_bgrp_id == root_bgrp_id) .and. exx_is_active() .and. allocated(xi)) then
               CALL write_wfc( iunpun, &
               filenameace, root_bgrp, intra_bgrp_comm, ik_g, tpiba*xk(:,ik), &
               ispin, nspin, xi(:,:,ik), npw_g, gamma_only, nbnd, &
