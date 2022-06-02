@@ -74,6 +74,7 @@ SUBROUTINE add_qexsd_step(i_step)
      degauss_ptr => degauss_tgt
      demet_ptr    => demet_tgt
   END IF
+  !
   IF ( lfcp ) THEN
      potstat_contr_tgt = fcp_mu * tot_charge / e2
      potstat_contr_ptr => potstat_contr_tgt
@@ -85,10 +86,12 @@ SUBROUTINE add_qexsd_step(i_step)
      fcp_tot_charge_ptr =>  fcp_tot_charge_tgt
      !
   END IF
+  !
   IF ( gate ) THEN 
      gatefield_en_tgt = etotgatefield/e2
      gatefield_en_ptr => gatefield_en_tgt
   END IF
+  !
   IF (tefield) THEN 
      efield_corr_tgt = etotefield/e2 
      efield_corr_ptr => efield_corr_tgt

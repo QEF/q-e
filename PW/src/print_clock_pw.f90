@@ -22,6 +22,7 @@ SUBROUTINE print_clock_pw()
    USE ldaU,               ONLY : lda_plus_u, lda_plus_u_kind, is_hubbard_back
    USE xc_lib,             ONLY : xclib_dft_is
    USE bp,                 ONLY : lelfield
+   USE rism_module,        ONLY : rism_print_clock
    !
 #if defined (__ENVIRON)
    USE plugin_flags,        ONLY : use_environ
@@ -239,6 +240,7 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'fftw' )
    CALL print_clock( 'fftc' )
    CALL print_clock( 'fftcw' )
+   CALL print_clock( 'fftr' )
    CALL print_clock( 'interpolate' )
    CALL print_clock( 'davcio' )
    !    
@@ -334,6 +336,9 @@ SUBROUTINE print_clock_pw()
       call print_clock('c_phase_field')
    END IF
    !
+   CALL rism_print_clock()
+   !
+   CALL plugin_clock()
 #if defined (__ENVIRON)
    IF (use_environ) CALL print_environ_clocks()
 #endif

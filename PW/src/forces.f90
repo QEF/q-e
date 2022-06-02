@@ -22,6 +22,7 @@ SUBROUTINE forces()
   !! - force_d3: Grimme-D3 (DFT-D3) dispersion forces
   !! - force_xdm: XDM dispersion forces
   !! - more terms from external electric fields, Martyna-Tuckerman, etc.
+  !! - force_sol: contribution due to 3D-RISM
   !
   USE kinds,             ONLY : DP
   USE io_global,         ONLY : stdout
@@ -54,6 +55,7 @@ SUBROUTINE forces()
   USE libmbd_interface,  ONLY : FmbdvdW
   USE esm,               ONLY : do_comp_esm, esm_bc, esm_force_ew
   USE qmmm,              ONLY : qmmm_mode
+  USE rism_module,       ONLY : lrism, force_rism
   !
   USE control_flags,     ONLY : use_gpu
 #if defined(__CUDA)
@@ -79,7 +81,8 @@ SUBROUTINE forces()
                            force_mt(:,:),        &
                            forcescc(:,:),        &
                            forces_bp_efield(:,:),&
-                           forceh(:,:)
+                           forceh(:,:), &
+                           force_sol(:,:)
   ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
   !
   ! aux is used to store a possible additional density
@@ -234,6 +237,13 @@ SUBROUTINE forces()
                         rho%of_g(:,1), force_mt )
   ENDIF
   !
+  ! ... The solvation contribution (3D-RISM)
+  !
+  IF (lrism) THEN
+     ALLOCATE ( force_sol ( 3 , nat ) )
+     CALL force_rism( force_sol )
+  END IF
+  !
   ! ... call void routine for user define/ plugin patches on internal forces
   !
 #if defined (__ENVIRON)
@@ -291,6 +301,7 @@ SUBROUTINE forces()
         IF ( gate )     force(ipol,na) = force(ipol,na) + forcegate(ipol,na) ! TB
         IF (lelfield)   force(ipol,na) = force(ipol,na) + forces_bp_efield(ipol,na)
         IF (do_comp_mt) force(ipol,na) = force(ipol,na) + force_mt(ipol,na) 
+        IF ( lrism )    force(ipol,na) = force(ipol,na) + force_sol(ipol,na)
         !
         sumfor = sumfor + force(ipol,na)
         !
@@ -425,6 +436,13 @@ SUBROUTINE forces()
         ENDDO
      END IF
      !
+     IF ( lrism ) THEN
+        WRITE( stdout, '(/,5x,"3D-RISM Solvation contribution to forces:")')
+        DO na = 1, nat
+           WRITE( stdout, 9035) na, ityp(na), (force_sol(ipol,na), ipol = 1, 3)
+        END DO
+     END IF
+     !
   END IF
   !
   sumfor = 0.D0
@@ -479,11 +497,24 @@ SUBROUTINE forces()
      !
   END IF
   !
+  IF ( lrism .AND. iverbosity > 0 ) THEN
+     !
+     sum_mm = 0.D0
+     DO na = 1, nat
+        sum_mm = sum_mm + &
+                 force_sol(1,na)**2 + force_sol(2,na)**2 + force_sol(3,na)**2
+     END DO
+     sum_mm = SQRT( sum_mm )
+     WRITE ( stdout, '(/,5x, "Total 3D-RISM Solvation Force = ",F12.6)') sum_mm
+     !
+  END IF
+  !
   DEALLOCATE( forcenl, forcelc, forcecc, forceh, forceion, forcescc )
   IF ( llondon  ) DEALLOCATE( force_disp       )
   IF ( ldftd3   ) DEALLOCATE( force_d3         )
   IF ( lxdm     ) DEALLOCATE( force_disp_xdm   ) 
   IF ( lelfield ) DEALLOCATE( forces_bp_efield )
+  IF ( lrism    ) DEALLOCATE( force_sol        )
   IF(ALLOCATED(force_mt))   DEALLOCATE( force_mt )
   !
   ! FIXME: what is the following line good for?

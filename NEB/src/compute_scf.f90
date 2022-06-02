@@ -26,6 +26,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE ions_base,        ONLY : tau, nat, ityp, zv
   USE ener,             ONLY : etot, ef
   USE force_mod,        ONLY : force
+  USE rism_module,      ONLY : lrism, rism_set_restart
   USE io_files,         ONLY : prefix, tmp_dir, wfc_dir,  iunupdate, &
                                exit_file, delete_if_present
   USE path_io_units_module, ONLY : iunpath
@@ -204,6 +205,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   !
   starting_pot = 'file'
   starting_wfc = 'file'
+  IF ( lrism ) CALL rism_set_restart()
   !
   ! ... finalization of the job (this point is also reached in case of error
   ! ... condition)
@@ -384,10 +386,15 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       ! ... energy is converted from rydberg to hartree
       !
-      pes(image) = etot / e2
-      !
-      ! ... add potentio-stat contribution
-      IF ( lfcp ) pes(image) = pes(image) + ef / e2 * tot_charge
+      IF ( lfcp ) THEN
+         !
+         pes(image) = etot / e2 + fcp_mu * tot_charge
+         !
+      ELSE
+         !
+         pes(image) = etot / e2
+         !
+      END IF
       !
       ! ... gradients are converted from rydberg/bohr to hartree/bohr
       !

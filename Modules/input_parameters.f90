@@ -29,7 +29,7 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nsx, natx, sc_size
+  USE parameters, ONLY : nsx, natx, sc_size, nsolx
   USE wannier_new,ONLY : wannier_data
   USE upf_params, ONLY : lqmax
   !
@@ -262,6 +262,8 @@ MODULE input_parameters
         LOGICAL :: tqmmm = .FALSE.
         !! QM/MM coupling. enabled if TRUE
 
+        LOGICAL :: trism = .FALSE.    ! 3D-RISM/KS-DFT coupling. enabled if .true.
+
         CHARACTER(len=256) :: vdw_table_name = ' '
 
         CHARACTER(len=10) :: point_label_type='SC'
@@ -286,7 +288,7 @@ MODULE input_parameters
           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
           tefield2, saverho, tabps, use_wannier, lecrpa,                  &
           lfcp, tqmmm, vdw_table_name, lorbm, memory, point_label_type,   &
-          input_xml_schema_file, gate
+          input_xml_schema_file, gate, trism
 !
 !=----------------------------------------------------------------------------=!
 !  SYSTEM Namelist Input Parameters
@@ -1510,6 +1512,215 @@ MODULE input_parameters
 
 !  END manual
 ! ----------------------------------------------------------------------
+!
+!=----------------------------------------------------------------------------=!
+!  RISM Namelist Input Parameters
+!=----------------------------------------------------------------------------=!
+!
+        INTEGER :: nsolv = 0
+          ! number of solvents
+
+        CHARACTER(len=80) :: closure = 'kh'
+          ! closure = 'hnc' | 'kh'*
+          ! select type of closure equation
+          ! 'hnc'  HyperNetted-Chain model
+          ! 'kh'   Kovalenko and Hirata's model
+        CHARACTER(len=80) :: closure_allowed(2)
+        DATA closure_allowed / 'hnc', 'kh' /
+
+        REAL(DP) :: tempv = 300.0_DP
+          ! value of the solvent temperature (in Kelvin)
+          ! during 1D- and 3D-RISM calculations.
+
+        REAL(DP) :: ecutsolv = 0.0_DP
+          ! energy cutoff for 3D-RISM in k-space (in Rydberg)
+          ! by default its value is "4 * ecutwfc"
+
+        CHARACTER(len=80) :: solute_lj(nsx) = 'uff'
+          ! solute_lj = 'none' | 'uff'* | 'clayff' | 'opls-aa'
+          ! select type of Lennard-Jones force fields for solutes
+          ! 'uff'      Universal Force Field
+          ! 'clayff'   Clay's Force Field
+          ! 'opls-aa'  OPLS-AA (generic parameters for QM/MM)
+        CHARACTER(len=80) :: solute_lj_allowed(4)
+        DATA solute_lj_allowed / 'none', 'uff', 'clayff', 'opls-aa' /
+
+        REAL(DP) :: solute_epsilon(nsx) = -1.0_DP
+          ! Lennard-Jones parameters `epsilon' for solutes (in kcal/mol)
+
+        REAL(DP) :: solute_sigma(nsx) = -1.0_DP
+          ! Lennard-Jones parameters `sigma' for solutes (in angstrom)
+
+        REAL(DP) :: rmax_lj = 5.0_DP
+          ! maximum radius of Lennard-Jones for 3D-RISM (in sigma)
+
+        REAL(DP) :: rmax1d = 1000.0_DP
+          ! maximum inter-site radius for 1D-RISM (in bohr)
+
+        CHARACTER(len=80) :: starting1d = 'zero'
+          ! starting1d = 'zero'* | 'file' | 'fix'
+          ! define how the code should initialize the 1D-RISM's correlation function
+          ! 'zero'  start from 0
+          ! 'file'  read from file
+          ! 'fix'   read from file, and fix correlation function
+        CHARACTER(len=80) :: starting1d_allowed(3)
+        DATA starting1d_allowed / 'zero', 'file', 'fix' /
+
+        CHARACTER(len=80) :: starting3d = 'zero'
+          ! starting3d = 'zero'* | 'file'
+          ! define how the code should initialize the 3D-RISM's correlation function
+          ! 'zero'  start from 0
+          ! 'file'  read from file
+        CHARACTER(len=80) :: starting3d_allowed(2)
+        DATA starting3d_allowed / 'zero', 'file' /
+
+        REAL(DP) :: smear1d = 2.0_DP
+          ! smearing radius for 1D-RISM (in bohr)
+
+        REAL(DP) :: smear3d = 2.0_DP
+          ! smearing radius for 3D-RISM (in bohr)
+
+        INTEGER :: rism1d_maxstep = 50000
+          ! maximum number of steps in 1D-RISM calculation
+
+        INTEGER :: rism3d_maxstep = 5000
+          ! maximum number of steps in 3D-RISM calculation
+
+        REAL(DP) :: rism1d_conv_thr = 1.0E-8_DP
+          ! convergence threshold for 1D-RISM calculation
+          ! convergence is achieved when RMS of residual vector < rism1d_conv_thr
+
+        REAL(DP) :: rism3d_conv_thr = 1.0E-5_DP
+          ! convergence threshold for 3D-RISM calculation
+          ! convergence is achieved when RMS of residual vector < rism3d_conv_thr
+
+        INTEGER :: mdiis1d_size = 20
+          ! size of MDIIS algorithm in 1D-RISM calculation
+
+        INTEGER :: mdiis3d_size = 10
+          ! size of MDIIS algorithm in 3D-RISM calculation
+
+        REAL(DP) :: mdiis1d_step = -1.0_DP
+          ! step width of MDIIS algorithm in 1D-RISM calculation
+
+        REAL(DP) :: mdiis3d_step = -1.0_DP
+          ! step width of MDIIS algorithm in 3D-RISM calculation
+
+        REAL(DP) :: rism1d_bond_width = 0.0_DP
+          ! gaussian width of bonds in 1D-RISM calculation
+
+        REAL(DP) :: rism1d_dielectric = -1.0_DP
+          ! dielectric constant for DRISM
+
+        REAL(DP) :: rism1d_molesize = 2.0_DP
+          ! size of solvent molecule for DRISM (in bohr)
+
+        INTEGER :: rism1d_nproc = 128
+          ! number of processes to calculate 1D-RISM
+
+        INTEGER :: rism1d_nproc_switch = 16
+          ! number of processes to calculate 1D-RISM
+
+        REAL(DP) :: rism3d_conv_level = -1.0_DP
+          ! convergence level of 3D-RISM
+
+        LOGICAL :: rism3d_planar_average = .FALSE.
+          ! calculate planar average of solvents after 3D-RISM calculation, or not
+
+        INTEGER :: laue_nfit = 4
+          ! number of fitting points in Laue-RISM calculation
+
+        REAL(DP) :: laue_expand_right = -1.0_DP
+          ! expanding length on right-hand side in Laue-RISM calculation (in bohr)
+
+        REAL(DP) :: laue_expand_left = -1.0_DP
+          ! expanding length on left-hand side in Laue-RISM calculation (in bohr)
+
+        REAL(DP) :: laue_starting_right = 0.0_DP
+          ! starting position on right-hand side in Laue-RISM calculation (in bohr)
+
+        REAL(DP) :: laue_starting_left = 0.0_DP
+          ! starting position on left-hand side in Laue-RISM calculation (in bohr)
+
+        REAL(DP) :: laue_buffer_right = -1.0_DP
+          ! buffering length on right-hand side in Laue-RISM calculation (in bohr)
+
+        REAL(DP) :: laue_buffer_right_solu = -1.0_DP
+          ! additional buffering length on right-hand side
+          ! of solute-ward in Laue-RISM calculation (in bohr)
+
+        REAL(DP) :: laue_buffer_right_solv = -1.0_DP
+          ! additional buffering length on right-hand side
+          ! of solvent-ward in Laue-RISM calculation (in bohr)
+
+        REAL(DP) :: laue_buffer_left = -1.0_DP
+          ! buffering length on left-hand side in Laue-RISM calculation (in bohr)
+
+        REAL(DP) :: laue_buffer_left_solu = -1.0_DP
+          ! additional buffering length on left-hand side
+          ! of solute-ward in Laue-RISM calculation (in bohr)
+
+        REAL(DP) :: laue_buffer_left_solv = -1.0_DP
+          ! additional buffering length on left-hand side
+          ! of solvent-ward in Laue-RISM calculation (in bohr)
+
+        LOGICAL :: laue_both_hands = .FALSE.
+          ! use both-hands method in Laue-RISM calculation, or not
+
+        CHARACTER(len=80) :: laue_reference = 'none'
+          ! laue_reference = 'none'* | 'average' | 'right' | 'left'
+          ! reference of electrostatic potential in Laue-RISM calculation
+          ! (used to evaluate Fermi energy and to calculate FCP)
+          ! 'none'     explicit reference is not defined
+          ! 'average'  average of right-hand side and left-hand side
+          ! 'right'    right-hand side
+          ! 'left'     left-hand side
+        CHARACTER(len=80) :: laue_reference_allowed(4)
+        DATA laue_reference_allowed / 'none', 'average', 'right', 'left' /
+
+        CHARACTER(len=80) :: laue_wall = 'auto'
+          ! laue_wall = 'none' | 'auto'* | 'manual'
+          ! define repulsive wall in Laue-RISM calculation
+          ! 'none'    wall is not defined
+          ! 'auto'    edge position of wall is defined automatically
+          ! 'manual'  edge position of wall is defined manually
+
+        CHARACTER(len=80) :: laue_wall_allowed(3)
+        DATA laue_wall_allowed / 'none', 'manual', 'auto' /
+
+        REAL(DP) :: laue_wall_z = 0.0_DP
+          ! edge position of repulsive wall in Laue-RISM calculation (in bohr)
+
+        REAL(DP) :: laue_wall_rho = 0.01_DP
+          ! density of repulsive wall in Laue-RISM calculation (in 1/bohr^3)
+
+        REAL(DP) :: laue_wall_epsilon = 0.1_DP
+          ! Lennard-Jones parameters `epsilon' for repulsive wall
+          ! in Laue-RISM calculation (in kcal/mol)
+
+        REAL(DP) :: laue_wall_sigma = 4.0_DP
+          ! Lennard-Jones parameters `sigma' for repulsive wall
+          ! in Laue-RISM calculation (in angstrom)
+
+        LOGICAL :: laue_wall_lj6 = .FALSE.
+          ! use attractive term of Lennard-Jones: -(1/r)^6, or not
+
+        NAMELIST / rism / nsolv, closure, tempv, ecutsolv, solute_lj, &
+                          solute_epsilon, solute_sigma, rmax_lj, rmax1d, &
+                          starting1d, starting3d, smear1d, smear3d, &
+                          rism1d_maxstep, rism3d_maxstep, rism1d_conv_thr, rism3d_conv_thr, &
+                          mdiis1d_size, mdiis3d_size, mdiis1d_step, mdiis3d_step, &
+                          rism1d_bond_width, rism1d_dielectric, rism1d_molesize, &
+                          rism1d_nproc, rism1d_nproc_switch, &
+                          rism3d_conv_level, rism3d_planar_average, &
+                          laue_nfit, laue_expand_right, laue_expand_left, &
+                          laue_starting_right, laue_starting_left, &
+                          laue_buffer_right, laue_buffer_right_solu, laue_buffer_right_solv, &
+                          laue_buffer_left, laue_buffer_left_solu, laue_buffer_left_solv, &
+                          laue_both_hands, laue_reference, laue_wall, laue_wall_z, laue_wall_rho, &
+                          laue_wall_epsilon, laue_wall_sigma, laue_wall_lj6
+!  END manual
+! ----------------------------------------------------------------------
 
 
 ! ----------------------------------------------------------------
@@ -1540,6 +1751,7 @@ MODULE input_parameters
         LOGICAL   :: tksout = .false.
         LOGICAL   :: ttemplate = .false.
         LOGICAL   :: twannier = .false.
+        LOGICAL   :: tsolvents = .false.
         LOGICAL   :: ttotcharge = .false.
 
 !
@@ -1643,6 +1855,19 @@ MODULE input_parameters
       TYPE (wannier_data) :: wan_data(nwanx,2)
 
 !
+!    SOLVENTS
+!
+      CHARACTER(len=10) :: solv_label(nsolx) = 'XX'    
+      !! label of the solvents
+      CHARACTER(len=80) :: solv_mfile(nsolx) = 'YY'    
+      !! molecular file name
+      REAL(DP)          :: solv_dens1(nsolx) = 0.0_DP  
+      !! solvent's density (for the right-hand side)
+      REAL(DP)          :: solv_dens2(nsolx) = 0.0_DP  
+      !! solvent's density (for the left-hand side)
+      CHARACTER(len=80) :: solvents_unit = '1/cell'
+      !! solvents_unit = '1/cell' | 'mol/L' | 'g/cm^3'
+      !! select the units for the solvent's densities being read from stdin
 !   HUBBARD
 !
       LOGICAL  :: tahub = .false.
@@ -1674,6 +1899,7 @@ SUBROUTINE reset_input_checks()
   tksout = .false.
   tionvel = .false.
   tcell = .false.
+  tsolvents = .false.
   ttotcharge = .false.
   !
   END SUBROUTINE reset_input_checks

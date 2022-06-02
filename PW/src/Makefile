@@ -194,6 +194,7 @@ remove_atomic_rho.o \
 report_mag.o \
 restart_in_electrons.o \
 rho2zeta.o \
+rism_module.o \
 ruotaijk.o \
 run_pwscf.o \
 s_1psi.o \
