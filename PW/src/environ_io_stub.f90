@@ -10,7 +10,7 @@
 !! Stand-in module for Environ's API
 !!
 !----------------------------------------------------------------------------------------
-MODULE environ_api
-END MODULE environ_api
+MODULE class_io
+END MODULE class_io
 !----------------------------------------------------------------------------------------
 #endif

@@ -40,7 +40,7 @@ CONTAINS
         INTEGER :: i
         REAL(DP) :: dvtot(dfftp%nnr)
         !
-        CHARACTER(LEN=80) :: sub_name = 'add_environ_potential'
+        CHARACTER(LEN=80) :: routine = 'add_environ_potential'
         !
         !--------------------------------------------------------------------------------
         !
@@ -82,7 +82,7 @@ CONTAINS
         LOGICAL :: update_venviron = .FALSE.
         REAL(DP) :: rhoaux(dfftp%nnr)
         !
-        CHARACTER(LEN=80) :: sub_name = 'calc_environ_potential'
+        CHARACTER(LEN=80) :: routine = 'calc_environ_potential'
         !
         !--------------------------------------------------------------------------------
         ! update electrons-related quantities in environ
