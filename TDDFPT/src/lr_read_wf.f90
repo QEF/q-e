@@ -41,6 +41,9 @@ SUBROUTINE lr_read_wf()
   USE xc_lib,               ONLY : xclib_dft_is
   USE lr_exx_kernel,        ONLY : lr_exx_revc0_init, lr_exx_alloc, &
                                    lr_exx_restart
+  USE mp_exx,               ONLY : mp_start_exx
+  USE mp_pools,             ONLY : intra_pool_comm
+  USE command_line_options, ONLY : nband_, ntg_
   USE wavefunctions,        ONLY : evc
   USE buffers,              ONLY : open_buffer
   USE qpoint,               ONLY : nksq
@@ -85,6 +88,7 @@ SUBROUTINE lr_read_wf()
      !
      ! set_ace=.false. disables Lin Lin's ACE for TD-DFPT 
      !
+     CALL mp_start_exx (nband_, ntg_, intra_pool_comm)
      CALL lr_exx_restart( set_ace=.false.)
      !
      IF (.NOT. no_hxc) THEN

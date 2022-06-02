@@ -1,6 +1,6 @@
  Warning: Only a single CPU will be used!
 
-     Program TDDFPT_PP v.7.0 starts on 12May2022 at 15:59:13 
+     Program TDDFPT_PP v.7.0 starts on  1Jun2022 at 15:35:44 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -14,42 +14,25 @@
      Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     230428 MiB available memory on the printing compute node when the environment starts
+     501 MiB available memory on the printing compute node when the environment starts
  
 
-     Reading   1600 Lanczos steps for direction 1
-       1600 steps will be considered
+     Reading    150 Lanczos steps for direction 1
+        150 steps will be considered
 
-
-     Polarization direction:1
-     Lanczos coefficients:
-     Average =    13.88104921
-     Average oscillation amplitude =    -0.01172207
-     Average alpha =     0.00013221     0.00000000
-     Average alpha oscillation amplitude =     0.00186079     0.00000000
-     Average gamma =    13.88104921     0.00000000
-     Average gamma oscillation amplitude =    -0.01172207    -0.00000000
-     Extrapolation =                      osc
-      ip =   1
-     Average beta =    13.88104921
-     Average beta oscillation amplitude =    -0.01172207
-     Average alpha =     0.00000000     0.00000000
-     Average alpha oscillation amplitude =     0.00000000     0.00000000
-     Average gamma =    13.88104921     0.00000000
-     Average gamma oscillation amplitude =    -0.01172207     0.00000000
 
      Data ready, starting to calculate observables...
 
-     Broadening =      0.10000000 meV
+     Broadening =      0.50000000 meV
 
      Output file name: Fe.plot_chi.dat     
 
      chi_i_j: magnetization-magnetization tensor  in units of mu_B^2 / meV
  
-     TDDFPT_PP    :      0.21s CPU      0.26s WALL
+     TDDFPT_PP    :      0.01s CPU      0.01s WALL
 
  
-   This run was terminated on:  15:59:13  12May2022            
+   This run was terminated on:  15:35:44   1Jun2022            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

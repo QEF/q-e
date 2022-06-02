@@ -70,7 +70,10 @@
                             ephbloch2wanp_mem
   USE wigner,        ONLY : wigner_seitz_wrap
   USE io_eliashberg, ONLY : write_ephmat, count_kpoints, kmesh_fine,kqmap_fine, &
-                            check_restart_ephwrite
+                            !!!!!
+                            !check_restart_ephwrite
+                            check_restart_ephwrite, write_dos, write_phdos
+                            !!!!!
   USE transport,     ONLY : transport_coeffs, scattering_rate_q
   USE grid,          ONLY : qwindow
   USE printing,      ONLY : print_gkk, plot_band, plot_fermisurface
@@ -1482,6 +1485,15 @@
         ENDDO ! itempphen
       ENDIF
     ENDIF
+    !!!!!
+    !
+    ! SH: Write the electronic and phonon dos files
+    IF ((.NOT. band_plot) .AND. eliashberg) THEN
+      CALL write_dos(ef, nelec)
+      CALL write_phdos()
+    ENDIF
+    !
+    !!!!!
     IF (band_plot) CALL plot_band()
     !
     IF (fermi_plot) CALL plot_fermisurface()

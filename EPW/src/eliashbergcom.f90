@@ -19,8 +19,12 @@
   !
   INTEGER :: nsw
   !! Nr. of grid points between (0,wscut) for real-axis, analytical continuation and Pade approximants
+  INTEGER :: ndos
+  !! Nr. of energy bins in Fermi window for dos
   INTEGER, ALLOCATABLE :: nsiw(:)
-  !! Nr of grid points at each temperature on imag-axis, nsiw(nstemp)
+  !! Nr. of grid points at each temperature on imag-axis, nsiw(nstemp)
+  INTEGER, ALLOCATABLE :: wsn(:)
+  !! frequency "indices" on imag-axis at iw, wsn(nsiw(nstemp))
   !
   REAL(KIND = DP) :: wsphmax
   !! maximum phonon frequency for evaluation of the integral over Omega (0, wsphmax)
@@ -28,14 +32,18 @@
   !! frequency step for Eliashberg spectral function
   REAL(KIND = DP) :: gap0
   !! initial guess for delta
-  REAL(KIND = DP), ALLOCATABLE :: dws(:)
-  !! grid size at each bin dws(nsw)
+  REAL(KIND = DP) :: muintr
+  !! superconducting (interacting) chemical potential
   REAL(KIND = DP), ALLOCATABLE :: ws(:)
   !! frequency on real-axis, ws(nsw)
   REAL(KIND = DP), ALLOCATABLE :: wsph(:)
   !! frequency on real-axis, wsph(nqstep)
   REAL(KIND = DP), ALLOCATABLE :: wsi(:)
   !! frequency on imag-axis at iw, wi(nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: en(:)
+  !! Energy grid over Fermi window
+  REAL(KIND = DP), ALLOCATABLE :: dosen(:)
+  !! DOS (state/spin/eV/u.c.) over Fermi window
   !
   !--------------------------------------------------------------------------
   END MODULE eliashberg_common
@@ -53,8 +61,6 @@
   !
   REAL(KIND = DP), ALLOCATABLE :: a2f_iso(:)
   !! isotropic Eliashberg spectral function a2f_iso(nqstep)
-  REAL(KIND = DP), ALLOCATABLE :: gap(:)
-  !! superconducting gap edge gap(nstemp)
   REAL(KIND = DP), ALLOCATABLE :: fdwp(:)
   !! Fermi-Dirac distribution at frequency wp, fdwp(nsw)
   REAL(KIND = DP), ALLOCATABLE :: bewph(:)
@@ -77,6 +83,14 @@
   !! -bose(omegap)-fermi( omega+omegap) (eqn for delta and znorm analytic continuation)
   REAL(KIND = DP), ALLOCATABLE :: gm(:, :)
   !! bose(omegap)+fermi(-omega+omegap) (eqn for delta and znorm analytic continuation)
+  REAL(KIND = DP), ALLOCATABLE :: znormip(:)
+  !! renormalization function on imag-axis at iwp, znormip(nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: shifti(:)
+  !! energy shift on imag-axis at iw, shifti(nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: shiftip(:)
+  !! energy shift on imag-axis at iwp, shiftip(nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: orderi(:)
+  !! order paramter on the imag-axis at iw, orderi(nsiw(nstemp))
   !
   COMPLEX(KIND = DP), ALLOCATABLE :: delta(:)
   !! gap function on real-axis at iw
@@ -90,6 +104,8 @@
   !! phonon kernel on real-axis (eqn for delta)
   COMPLEX(KIND = DP), ALLOCATABLE :: km(:, :)
   !! phonon kernel on real-axis (eqn for znorm)
+  COMPLEX(KIND = DP), ALLOCATABLE :: shift(:)
+  !! energy shift on real-axis at iw
   !
   !--------------------------------------------------------------------------
   END MODULE eliashberg_common_iso
@@ -141,36 +157,44 @@
   REAL(KIND = DP), ALLOCATABLE :: wkfs(:)
   !! weights of the irreducible k-points wkf(nkfs)
   REAL(KIND = DP), ALLOCATABLE :: a2fij(:, :, :, :, :)
-  !! spectral function a2fij(nkfs_pool,nqftot,nbndfs,nbndfs,nqstep)
+  !! spectral function a2fij(nqstep,nbndfs,nqftot,nbndfs,nkfs_pool)
   REAL(KIND = DP), ALLOCATABLE :: w0g(:, :)
   !! approximation for delta function w0g(nbndfs,nkfs)
-  REAL(KIND = DP), ALLOCATABLE :: agap(:, :, :)
-  !! superconducting gap edge agap(nkfs,nbndfs,nstemp)
+  REAL(KIND = DP), ALLOCATABLE :: agap(:, :)
+  !! superconducting gap edge agap(nkfs,nbndfs)
   REAL(KIND = DP), ALLOCATABLE :: adeltai(:, :, :)
-  !! gap function on imag-axis at iw, adeltai(nbndfs,nkfs,nsiw(nstemp))
+  !! gap function on imag-axis at iw, adeltai(nsiw(itemp),nbndfs,nkfs)
   REAL(KIND = DP), ALLOCATABLE :: adeltaip(:, :, :)
-  !! gap function on imag-axis at iwp, adeltaip(nbndfs,nkfs,nsiw(nstemp))
+  !! gap function on imag-axis at iwp, adeltaip(nsiw(itemp),nbndfs,nkfs)
   REAL(KIND = DP), ALLOCATABLE :: aznormi(:, :, :)
-  !! renormalization function on imag-axis at iw, aznormi(nbndfs,nkfs,nsiw(nstemp))
+  !! renormalization function on imag-axis at iw, aznormi(nsiw(itemp),nbndfs,nkfs)
   REAL(KIND = DP), ALLOCATABLE :: naznormi(:, :, :)
-  !! normal state renormalization function on imag-axis at iw, naznormi(nbndfs,nkfs,nsiw(nstemp))
+  !! normal state renormalization function on imag-axis at iw, naznormi(nsiw(itemp),nbndfs,nkfs)
   REAL(KIND = DP), ALLOCATABLE :: akeri(:, :, :, :, :)
-  !! phonon kernel on imag-axis, akeri(nkfs,nqftot,nbndfs,nbndfs,2*nsiw(nstemp))
+  !! phonon kernel on imag-axis, akeri(2*nsiw(nstemp),nbndfs,nqftot,nbndfs,nkfs)
   REAL(KIND = DP), ALLOCATABLE :: adsumi(:, :, :)
-  !! contribution to delta eqn from the imaginary-axis in the analytic continuation adsumi(nbndfs,nkfs,nsw)
+  !! contribution to delta eqn from the imaginary-axis in the analytic continuation adsumi(nsw,nbndfs,nkfs)
   REAL(KIND = DP), ALLOCATABLE :: azsumi(:, :, :)
-  !! contribution to znorm eqn from the imaginary-axis in the analytic continuation azsumi(nbndfs,nkfs,nsw)
+  !! contribution to znorm eqn from the imaginary-axis in the analytic continuation azsumi(nsw,nbndfs,nkfs)
   REAL(KIND = DP), ALLOCATABLE :: memlt_pool(:)
   !! maximum allocatable memory per pool
+  REAL(KIND = DP), ALLOCATABLE :: aznormip(:, :, :)
+  !! renormalization function on imag-axis at iwp, aznormip(nsiw(itemp),nbndfs,nkfs)
+  REAL(KIND = DP), ALLOCATABLE :: ashifti(:, :, :)
+  !! energy shift on imag-axis at iw, ashifti(nsiw(itemp),nbndfs,nkfs)
+  REAL(KIND = DP), ALLOCATABLE :: ashiftip(:, :, :)
+  !! energy shift on imag-axis at iwp, ashiftip(nsiw(itemp),nbndfs,nkfs)
   !
   COMPLEX(KIND = DP), ALLOCATABLE :: aznorm(:, :, :)
-  !! renormalization function on real-axis aznorm(nbndfs,nkfs,nsw)
+  !! renormalization function on real-axis aznorm(nsw,nbndfs,nkfs)
   COMPLEX(KIND = DP), ALLOCATABLE :: aznormp(:, :, :)
-  !! renormalization function on real-axis aznormkq(nbndfs,nkfs,nsw)
+  !! renormalization function on real-axis aznormkq(nsw,nbndfs,nkfs)
   COMPLEX(KIND = DP), ALLOCATABLE :: adelta(:, :, :)
-  !! gap function on real-axis adelta(nbndfs,nkfs,nsw)
+  !! gap function on real-axis adelta(nsw,nbndfs,nkfs)
   COMPLEX(KIND = DP), ALLOCATABLE :: adeltap(:, :, :)
-  !! gap function on real-axis adeltap(nbndfs,nkfs,nsw)
+  !! gap function on real-axis adeltap(nsw,nbndfs,nkfs)
+  COMPLEX(KIND = DP), ALLOCATABLE :: ashift(:, :, :)
+  !! energy shift on real-axis ashift(nsw,nbndfs,nkfs)
   !
   !--------------------------------------------------------------------------
   END MODULE eliashberg_common_aniso

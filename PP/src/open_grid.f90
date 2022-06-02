@@ -38,6 +38,9 @@ PROGRAM open_grid
   USE extfield,           ONLY : gate
   USE esm,                ONLY : esm_z_inv
   USE rism_module,        ONLY : lrism
+  USE command_line_options, ONLY : nband_, ntg_ 
+  USE mp_pools,             ONLY : intra_pool_comm 
+  USE mp_exx,               ONLY : mp_start_exx
   ! 
   IMPLICIT NONE
   !
@@ -133,7 +136,8 @@ PROGRAM open_grid
   nq3 = -1
   ecutfock = 4*ecutwfc
   use_ace = .false.
-  
+ 
+  CALL mp_start_exx (nband_, ntg_, intra_pool_comm)
   CALL exx_grid_init()
   CALL exx_mp_init()
   !
