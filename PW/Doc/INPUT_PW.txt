@@ -13,7 +13,8 @@ All quantities whose dimensions are not explicitly specified are in
 RYDBERG ATOMIC UNITS. Charge is "number" charge (i.e. not multiplied
 by e); potentials are in energy units (i.e. they are multiplied by e).
 
-BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE
+BEWARE: TABS, CRLF, ANY OTHER STRANGE CHARACTER, ARE A SOURCES OF TROUBLE
+USE ONLY PLAIN ASCII TEXT FILES (CHECK THE FILE TYPE WITH UNIX COMMAND "file")
 
 Namelists must appear in the order given below.
 Comment lines in namelists can be introduced by a "!", exactly as in
@@ -22,7 +23,6 @@ either a "!" or a "#" character in the first position of a line.
 Do not start any line in cards with a "/" character.
 Leave a space between card names and card options, e.g.
 ATOMIC_POSITIONS (bohr), not ATOMIC_POSITIONS(bohr)
-Do not start any line in cards with a "/" character.
 
 
 Structure of the input data:
@@ -101,32 +101,29 @@ if (tpipa_b or crystal_b in a 'bands' calculation) see Doc/brillouin_zones.pdf
      see: K_POINTS ]
 
 [ HUBBARD { atomic | ortho-atomic | norm-atomic | wf | pseudo }
-if (DFT+U)
-   U  label(1)-manifold(1) u_val(1)
-   ...
-   U  label(n)-manifold(n) u_val(n)
-  [J0 label(1)-manifold(1) j0_val(1)
-   ...
-   J0 label(n)-manifold(n) j0_val(n)]
-if (DFT+U+J)
-   U label(1)-manifold(1) u_val(1)
-   J label(1)-manifold(1) 1 j1_val(1)
-   J label(1)-manifold(1) 2 j2_val(1)
-   J label(1)-manifold(1) 3 j3_val(1)
-   ...
-   U label(n)-manifold(n) u_val(n)
-   J label(n)-manifold(n) 1 j1_val(n)
-   J label(n)-manifold(n) 2 j2_val(n)
-   J label(n)-manifold(n) 3 j3_val(n)
-if (DFT+U+V)
-   U label(I)-manifold(I) u_val(I)
-   V label(I)-manifold(I) label(J)-manifold(J) I J v_val(IJ)
-   ...
-   [J0 label(I)-manifold(I) j0_val(I)
-   ...
-   J0 label(n)-manifold(n) j0_val(n)]
+  if (DFT+U)
+      U  label(1)-manifold(1) u_val(1)
+    [ J0 label(1)-manifold(1) j0_val(1) ]
+      .....
+      U  label(n)-manifold(n) u_val(n)
+    [ J0 label(n)-manifold(n) j0_val(n) ]
+  if (DFT+U+J)
+      paramType(1) label(1)-manifold(1) paramValue(1)
+      .....
+      paramType(n) label(n)-manifold(n) paramValue(n)
+  if (DFT+U+V)
+      U  label(I)-manifold(I) u_val(I)
+    [ J0 label(I)-manifold(I) j0_val(I) ]
+      V  label(I)-manifold(I) label(J)-manifold(J) I J v_val(I,J)
+      .....
+      U  label(N)-manifold(N) u_val(N)
+    [ J0 label(N)-manifold(N) j0_val(N) ]
+      V  label(N)-manifold(N) label(M)-manifold(M) N M v_val(N,M)
+]
 All Hubbard parameters must be specified in eV.
-Check Doc/Hubbard_input.pdf for more details. ]
+manifold  = 3d, 2p, 4f...
+paramType = U, J, B, E2, or E3
+Check Doc/Hubbard_input.pdf for more details.
 
 
 
@@ -675,14 +672,14 @@ NAMELIST: &SYSTEM
                         cosAC = cosine of the angle between axis a and c (beta)
                         cosBC = cosine of the angle between axis b and c (alpha)
                       
-                      The axis are chosen according to the value of @ref ibrav.
-                      Specify either these OR @ref celldm but NOT both.
-                      Only needed values (depending on @ref ibrav) must be specified.
+                      The axis are chosen according to the value of "ibrav".
+                      Specify either these OR "celldm" but NOT both.
+                      Only needed values (depending on "ibrav") must be specified.
                       
                       The lattice parameter alat = A (in ANGSTROM ).
                       
-                      If @ref ibrav == 0, only A is used if present, and
-                      cell vectors are read from card @ref CELL_PARAMETERS.
+                      If "ibrav" == 0, only A is used if present, and
+                      cell vectors are read from card "CELL_PARAMETERS".
       +--------------------------------------------------------------------
       
    \\\---
@@ -832,7 +829,7 @@ NAMELIST: &SYSTEM
    Description:    Three-dimensional FFT mesh (hard grid) for charge
                    density (and scf potential). If not specified
                    the grid is calculated based on the cutoff for
-                   charge density (see also @ref ecutrho)
+                   charge density (see also "ecutrho")
                    Note: you must specify all three dimensions for this setting to
                    be used.
    +--------------------------------------------------------------------
@@ -843,7 +840,7 @@ NAMELIST: &SYSTEM
    Type:           INTEGER
    Description:    Three-dimensional mesh for wavefunction FFT and for the smooth
                    part of charge density ( smooth grid ).
-                   Coincides with @ref nr1, @ref nr2, @ref nr3 if @ref ecutrho = 4 * ecutwfc ( default )
+                   Coincides with "nr1", "nr2", "nr3" if "ecutrho" = 4 * ecutwfc ( default )
                    Note: you must specify all three dimensions for this setting to
                    be used.
    +--------------------------------------------------------------------
@@ -1230,7 +1227,7 @@ NAMELIST: &SYSTEM
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       Hubbard_occ(i,typ), (i,typ)=(1,1) ... (ntyp,3)
+   Variable:       Hubbard_occ(ityp,i), (ityp,i)=(1,1) ... (ntyp,3)
    
    Type:           REAL
    Default:        read from pseudopotentials
@@ -1239,7 +1236,7 @@ NAMELIST: &SYSTEM
                    reading the occupations from pseudopotentials. If specified
                    from the input, then the values read from the pseudopotentials
                    will be overwritten.
-                   The second index of the Hubbard_occ array corrsponds to the
+                   The second index of the Hubbard_occ array corresponds to the
                    Hubbard manifold number. It is possible to specify up to
                    three Hubbard manifolds per Hubbard atom. However, if you want
                    to specify three manifolds then the second and the third manifolds
@@ -3540,7 +3537,7 @@ CARD: ADDITIONAL_K_POINTS { tpiba | crystal | tpiba_b | crystal_b | tpiba_c | cr
       Variables:      k_x, k_y, k_z, wk_
       
       Type:           REAL
-      Description:    for the respective explanation, see the @ref xk_x, @ref xk_y, @ref xk_z, @ref wk
+      Description:    for the respective explanation, see the "xk_x", "xk_y", "xk_z", "wk"
       +--------------------------------------------------------------------
       
 ===END OF CARD==========================================================
@@ -3679,29 +3676,29 @@ CARD: CONSTRAINTS
       
       Description:    These variables have different meanings for different constraint types:
                       
-                      @b 'type_coord' :
-                                     @i constr(1) is the first index of the atomic type involved
-                                     @i constr(2) is the second index of the atomic type involved
-                                     @i constr(3) is the cut-off radius for estimating the coordination
-                                     @i constr(4) is a smoothing parameter
+                      'type_coord' :
+                                     constr(1) is the first index of the atomic type involved
+                                     constr(2) is the second index of the atomic type involved
+                                     constr(3) is the cut-off radius for estimating the coordination
+                                     constr(4) is a smoothing parameter
                       
-                      @b 'atom_coord' :
-                                     @i constr(1) is the atom index of the atom with constrained coordination
-                                     @i constr(2) is the index of the atomic type involved in the coordination
-                                     @i constr(3) is the cut-off radius for estimating the coordination
-                                     @i constr(4) is a smoothing parameter
+                      'atom_coord' :
+                                     constr(1) is the atom index of the atom with constrained coordination
+                                     constr(2) is the index of the atomic type involved in the coordination
+                                     constr(3) is the cut-off radius for estimating the coordination
+                                     constr(4) is a smoothing parameter
                       
-                      @b 'distance' :
+                      'distance' :
                                      atoms indices object of the constraint, as they appear in
-                                     the @ref ATOMIC_POSITIONS card
+                                     the "ATOMIC_POSITIONS" card
                       
-                      @b 'planar_angle', @b 'torsional_angle' :
+                      'planar_angle', 'torsional_angle' :
                                      atoms indices object of the constraint, as they appear in the
-                                     @ref ATOMIC_POSITIONS card (beware the order)
+                                     "ATOMIC_POSITIONS" card (beware the order)
                       
-                      @b 'bennett_proj' :
-                                     @i constr(1) is the index of the atom whose position is constrained.
-                                     @i constr(2:4) are the three coordinates of the vector that specifies
+                      'bennett_proj' :
+                                     constr(1) is the index of the atom whose position is constrained.
+                                     constr(2:4) are the three coordinates of the vector that specifies
                                      the constraint direction.
       +--------------------------------------------------------------------
       
@@ -3835,12 +3832,64 @@ CARD: ATOMIC_FORCES
 
 
 ========================================================================
-CARD: HUBBARD { atomic | ortho-atomic | norm-atomic | wf | pseudo }
+CARD: HUBBARD atomic | ortho-atomic | norm-atomic | wf | pseudo
 
+   ________________________________________________________________________
+   * IF DFT+U : 
+   
+      /////////////////////////////////////////
+      // Syntax:                             //
+      /////////////////////////////////////////
+      
+         HUBBARD  atomic | ortho-atomic | norm-atomic | wf | pseudo 
+            U label(1)-manifold(1) u_val(1)
+            [ J0 label(1)-manifold(1) j0_val(1) ]
+            . . .
+            U label(n)-manifold(n) u_val(n)
+            [ J0 label(n)-manifold(n) j0_val(n) ]
+      
+      /////////////////////////////////////////
+      
+       
+   * ELSE IF DFT+U+J : 
+   
+      /////////////////////////////////////////
+      // Syntax:                             //
+      /////////////////////////////////////////
+      
+         HUBBARD  atomic | ortho-atomic | norm-atomic | wf | pseudo 
+            paramType(1) label(1)-manifold(1) paramValue(1)
+            . . .
+            paramType(n) label(n)-manifold(n) paramValue(n)
+      
+      /////////////////////////////////////////
+      
+       
+   * ELSE IF DFT+U+V : 
+   
+      /////////////////////////////////////////
+      // Syntax:                             //
+      /////////////////////////////////////////
+      
+         HUBBARD  atomic | ortho-atomic | norm-atomic | wf | pseudo 
+            U label(I)-manifold(I) u_val(I)
+            [ J0 label(I)-manifold(I) j0_val(I) ]
+            V label(I)-manifold(I) label(J)-manifold(J) I J v_val(I,J)
+            . . .
+            U label(N)-manifold(N) u_val(N)
+            [ J0 label(N)-manifold(N) j0_val(N) ]
+            V label(N)-manifold(N) label(M)-manifold(M) N M v_val(N,M)
+      
+      /////////////////////////////////////////
+      
+       
+   ENDIF
+   ________________________________________________________________________
+   
    DESCRIPTION OF ITEMS:
    
       +--------------------------------------------------------------------
-      Card's flags:   { atomic | ortho-atomic | norm-atomic | wf | pseudo }
+      Card's flags:   atomic | ortho-atomic | norm-atomic | wf | pseudo
       
       Description:   
                       HUBBARD options are:
@@ -3886,7 +3935,135 @@ CARD: HUBBARD { atomic | ortho-atomic | norm-atomic | wf | pseudo }
       +--------------------------------------------------------------------
 
 
+      +--------------------------------------------------------------------
+      Variables:      label(1)-manifold(1), u_val(1)
+      
+      Type:           CHARACTER-LITERAL, CHARACTER, REAL
+      Description:    Syntax:
+                        U label-manifold u_val
+                      
+                      Where:
+                      U        = string constant "U"; indicates the specs for the U parameter will be given
+                      label    = label of the atom (as defined in "ATOMIC_SPECIES")
+                      manifold = specs of the manifold (e.g., 3d, 2p...)
+                      u_val    = value of the U parameter (in eV)
+                      
+                      Example:
+                      HUBBARD (ortho-atomic)
+                        U Mn-3d 5.0
+                        U Ni-3d 6.0
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      label(1)-manifold(1), j0_val(1)
+      
+      Type:           CHARACTER-LITERAL, CHARACTER, REAL
+      Description:    Remark: specs of J0 parameters are optional
+                      
+                      Syntax:
+                        J0 label-manifold j0_val
+                      
+                      Where:
+                      J0       = string constant "J0"; indicates the specs for the J0 parameter will be given
+                      label    = label of the atom (as defined in "ATOMIC_SPECIES")
+                      manifold = specs of the manifold (e.g., 3d, 2p...)
+                      j0_val   = value of the J0 parameter (in eV)
+                      
+                      Example:
+                        HUBBARD (ortho-atomic)
+                        U  Mn-3d 5.0
+                        J0 Mn-3d 1.0
+                        U  Ni-3d 6.0
+                        J0 Ni-3d 1.2
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      paramType(1), label(1)-manifold(1), paramValue(1)
+      
+      Type:           CHARACTER, CHARACTER, REAL
+      Description:    Syntax of the line:
+                      
+                        paramType label-manifold paramValue
+                      
+                      Where:
+                      paramType  = character describing the type of Hubbard parameter
+                                   allowed values: U, J and either B (for d-orbitals) or E2 and E3 (for f-orbitals)
+                      label      = label of the atom (as defined in "ATOMIC_SPECIES")
+                      manifold   = specs of the manifold (e.g., 3d, 2p...)
+                      paramValue = value of the parameter (in eV)
+                      
+                      Example:
+                        HUBBARD (ortho-atomic)
+                        U Mn-3d 5.0
+                        J Mn-3d 1.0
+                        B Mn-3d 1.1
+                        U Ni-3d 6.0
+                        J Ni-3d 1.2
+                        B Ni-3d 1.3
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      label(I)-manifold(I), u_val(I)
+      
+      Type:           CHARACTER, REAL
+      Description:    Syntax of the line:
+                      
+                        U label-manifold u_val
+                      
+                      Where:
+                      U        = string constant "U"; indicates the specs for the U parameter will be given
+                      label    = label of the atom (as defined in "ATOMIC_SPECIES")
+                      manifold = specs of the manifold (e.g., 3d, 2p...)
+                      u_val    = value of the U parameter (in eV)
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      label(I)-manifold(I), j0_val(I)
+      
+      Type:           CHARACTER, REAL
+      Description:    Remark: specs of J0 parameters are optional
+                      
+                      Syntax of the line:
+                      
+                        J0 label(I)-manifold(I) j0_val(I)
+                      
+                      Where:
+                      J0       = string constant "J0"; indicates the specs for the J0 parameter will be given
+                      label    = label of the atom (as defined in "ATOMIC_SPECIES")
+                      manifold = specs of the manifold (e.g., 3d, 2p...)
+                      j0_val   = value of the J0 parameter (in eV)
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      label(I)-manifold(I), label(J)-manifold(J), I, J, v_val(I,J)
+      
+      Type:           CHARACTER, CHARACTER, INTEGER, INTEGER, REAL
+      Description:    Syntax of the line:
+                      
+                        V label(I)-manifold(J) label(J)-manifold(J) I J v_val(I,J)
+                      
+                      Where:
+                      V           = string constant "V"; indicates the specs for the V parameter will be given
+                      label(I)    = label of the atom I (as defined in "ATOMIC_SPECIES")
+                      manifold(I) = specs of the manifold for atom I (e.g., 3d, 2p...)
+                      label(J)    = label of the atom J (as defined in "ATOMIC_SPECIES")
+                      manifold(J) = specs of the manifold for atom J (e.g., 3d, 2p...)
+                      I           = index of the atom I
+                      J           = index of the atom J
+                      v_val(I,J)  = value of the V parameter for the atom pair I,J (in eV)
+                      
+                      Example:
+                        HUBBARD (ortho-atomic)
+                        U Co-3d 7.70
+                        V Co-3d O-2p 1 19 0.75
+                        V Co-3d O-2p 1 46 0.75
+                        V Co-3d O-2p 1 43 0.75
+                        V Co-3d O-2p 1 54 0.75
+                        V Co-3d O-2p 1 11 0.75
+                        V Co-3d O-2p 1 22 0.75
+      +--------------------------------------------------------------------
+      
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Mon May 23 17:11:23 CEST 2022
+This file has been created by helpdoc utility on Fri Jun 03 14:26:59 CEST 2022

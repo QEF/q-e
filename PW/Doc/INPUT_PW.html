@@ -117,6 +117,8 @@
 <a href="#idm1451">X</a> | <a href="#idm1456">fx</a> | <a href="#idm1457">fy</a> | <a href="#idm1458">fz</a>
 </blockquote>
    <p><a href="#idm1459">HUBBARD</a></p>
+<blockquote>
+<a href="#idm1478">label(1)-manifold(1)</a> | <a href="#idm1479">u_val(1)</a> | <a href="#idm1497">label(1)-manifold(1)</a> | <a href="#idm1498">j0_val(1)</a> | <a href="#idm1531">paramType(1)</a> | <a href="#idm1532">label(1)-manifold(1)</a> | <a href="#idm1533">paramValue(1)</a> | <a href="#idm1561">label(I)-manifold(I)</a> | <a href="#idm1562">u_val(I)</a> | <a href="#idm1579">label(I)-manifold(I)</a> | <a href="#idm1580">j0_val(I)</a> | <a href="#idm1598">label(I)-manifold(I)</a> | <a href="#idm1599">label(J)-manifold(J)</a> | <a href="#idm1600">I</a> | <a href="#idm1601">J</a> | <a href="#idm1602">v_val(I,J)</a> | </blockquote>
 </blockquote>
 </blockquote>
    <blockquote>
@@ -128,7 +130,8 @@ All quantities whose dimensions are not explicitly specified are in
 RYDBERG ATOMIC UNITS. Charge is "number" charge (i.e. not multiplied
 by e); potentials are in energy units (i.e. they are multiplied by e).
 
-<b>BEWARE:</b> TABS, DOS &lt;CR&gt;&lt;LF&gt; CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE
+<b>BEWARE:</b> TABS, CRLF, ANY OTHER STRANGE CHARACTER, ARE A SOURCES OF TROUBLE
+<b>USE</b> ONLY PLAIN ASCII TEXT FILES (CHECK THE FILE TYPE WITH UNIX COMMAND "file")
 
 Namelists must appear in the order given below.
 Comment lines in <i>namelists</i> can be introduced by a "!", exactly as in
@@ -137,7 +140,6 @@ either a "!" or a "#" character in the first position of a line.
 Do not start any line in <i>cards</i> with a "/" character.
 Leave a space between card names and card options, e.g.
 ATOMIC_POSITIONS (bohr), not ATOMIC_POSITIONS(bohr)
-Do not start any line in <i>cards</i> with a "/" character.
 
 
 <b>Structure of the input data:</b>
@@ -216,32 +218,29 @@ if (tpipa_b or crystal_b in a 'bands' calculation) see Doc/brillouin_zones.pdf
      see: K_POINTS ]
 
 [ <b>HUBBARD</b> { atomic | ortho-atomic | norm-atomic | wf | pseudo }
-if (DFT+U)
-   U  label(1)-manifold(1) u_val(1)
-   ...
-   U  label(n)-manifold(n) u_val(n)
-  [J0 label(1)-manifold(1) j0_val(1)
-   ...
-   J0 label(n)-manifold(n) j0_val(n)]
-if (DFT+U+J)
-   U label(1)-manifold(1) u_val(1)
-   J label(1)-manifold(1) 1 j1_val(1)
-   J label(1)-manifold(1) 2 j2_val(1)
-   J label(1)-manifold(1) 3 j3_val(1)
-   ...
-   U label(n)-manifold(n) u_val(n)
-   J label(n)-manifold(n) 1 j1_val(n)
-   J label(n)-manifold(n) 2 j2_val(n)
-   J label(n)-manifold(n) 3 j3_val(n)
-if (DFT+U+V)
-   U label(I)-manifold(I) u_val(I)
-   V label(I)-manifold(I) label(J)-manifold(J) I J v_val(IJ)
-   ...
-   [J0 label(I)-manifold(I) j0_val(I)
-   ...
-   J0 label(n)-manifold(n) j0_val(n)]
+  if (DFT+U)
+      U  label(1)-manifold(1) u_val(1)
+    [ J0 label(1)-manifold(1) j0_val(1) ]
+      .....
+      U  label(n)-manifold(n) u_val(n)
+    [ J0 label(n)-manifold(n) j0_val(n) ]
+  if (DFT+U+J)
+      paramType(1) label(1)-manifold(1) paramValue(1)
+      .....
+      paramType(n) label(n)-manifold(n) paramValue(n)
+  if (DFT+U+V)
+      U  label(I)-manifold(I) u_val(I)
+    [ J0 label(I)-manifold(I) j0_val(I) ]
+      V  label(I)-manifold(I) label(J)-manifold(J) I J v_val(I,J)
+      .....
+      U  label(N)-manifold(N) u_val(N)
+    [ J0 label(N)-manifold(N) j0_val(N) ]
+      V  label(N)-manifold(N) label(M)-manifold(M) N M v_val(N,M)
+]
 All Hubbard parameters must be specified in eV.
-Check Doc/Hubbard_input.pdf for more details. ]
+manifold  = 3d, 2p, 4f...
+paramType = U, J, B, E2, or E3
+Check Doc/Hubbard_input.pdf for more details.
    </pre></blockquote>
 </blockquote>
    <a name="idm33"></a><a name="CONTROL"></a><table border="0" width="100%" style="margin-bottom: 20;">
@@ -1913,7 +1912,7 @@ evaluation
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
       <a name="idm435"></a><a name="Hubbard_occ"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
-<th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">Hubbard_occ(i,typ), (i,typ) = (1,1) ... (ntyp,3)
+<th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">Hubbard_occ(ityp,i), (ityp,i) = (1,1) . . . (ntyp,3)
                     </th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
 </tr>
@@ -1928,7 +1927,7 @@ Hubbard manifold. By default they are initialized by
 reading the occupations from pseudopotentials. If specified
 from the input, then the values read from the pseudopotentials
 will be overwritten.
-The second index of the Hubbard_occ array corrsponds to the
+The second index of the Hubbard_occ array corresponds to the
 Hubbard manifold number. It is possible to specify up to
 three Hubbard manifolds per Hubbard atom. However, if you want
 to specify three manifolds then the second and the third manifolds
@@ -1980,7 +1979,7 @@ Cococcioni and de Gironcoli, <a href="https://journals.aps.org/prb/abstract/10.1
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
       <a name="idm449"></a><a name="starting_ns_eigenvalue"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
-<th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">starting_ns_eigenvalue(m,ispin,ityp), (m,ispin,ityp) = (1,1,1) ... (2*lmax+1,nspin or npol,ntyp)
+<th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">starting_ns_eigenvalue(m,ispin,ityp), (m,ispin,ityp) = (1,1,1) . . . (2*lmax+1,nspin or npol,ntyp)
                     </th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
 </tr>
@@ -6046,9 +6045,35 @@ external force on atom X (cartesian components, Ry/a.u. units)
 </table>
    <a name="idm1459"></a><a name="HUBBARD"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
 <tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
-	    Card: <span class="card">HUBBARD</span> { <span class="flag">atomic</span> | <span class="flag">ortho-atomic</span> | <span class="flag">norm-atomic</span> | <span class="flag">wf</span> | <span class="flag">pseudo</span> } </h2></th></tr>
+	    Card: <span class="card">HUBBARD</span> <span class="flag">atomic</span> | <span class="flag">ortho-atomic</span> | <span class="flag">norm-atomic</span> | <span class="flag">wf</span> | <span class="flag">pseudo</span>
+</h2></th></tr>
 <tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
-<tr><td></td></tr>
+<tr><td><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; width: 100%; padding: 5 5 0 5"><tr><td>
+<b>IF </b><tt><em>DFT+U</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+            <h3>Syntax:</h3>
+<blockquote>
+<b style="white-space: nowrap;">HUBBARD  atomic | ortho-atomic | norm-atomic | wf | pseudo </b><br><div class="syntax">
+<b>U</b>  <i><a href="#idm1478">label(1)-manifold(1)</a></i>  <i><a href="#idm1479">u_val(1)</a></i>  <br> [ <b>J0</b>  <i><a href="#idm1497">label(1)-manifold(1)</a></i>  <i><a href="#idm1498">j0_val(1)</a></i>   ] <br>. . .  <br><b>U</b>  <i>label(n)-manifold(n)</i>  <i>u_val(n)</i>  <br> [ <b>J0</b>  <i>label(n)-manifold(n)</i>  <i>j0_val(n)</i>   ] <br>
+</div>
+</blockquote>
+         </td></tr></table></blockquote>
+<b>ELSEIF </b><tt><em>DFT+U+J</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+            <h3>Syntax:</h3>
+<blockquote>
+<b style="white-space: nowrap;">HUBBARD  atomic | ortho-atomic | norm-atomic | wf | pseudo </b><br><div class="syntax">
+<i><a href="#idm1531">paramType(1)</a></i>  <i><a href="#idm1532">label(1)-manifold(1)</a></i>  <i><a href="#idm1533">paramValue(1)</a></i>  <br>. . .  <br><i>paramType(n)</i>  <i>label(n)-manifold(n)</i>  <i>paramValue(n)</i>  <br>
+</div>
+</blockquote>
+         </td></tr></table></blockquote>
+<b>ELSEIF </b><tt><em>DFT+U+V</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+            <h3>Syntax:</h3>
+<blockquote>
+<b style="white-space: nowrap;">HUBBARD  atomic | ortho-atomic | norm-atomic | wf | pseudo </b><br><div class="syntax">
+<b>U</b>  <i><a href="#idm1561">label(I)-manifold(I)</a></i>  <i><a href="#idm1562">u_val(I)</a></i>  <br> [ <b>J0</b>  <i><a href="#idm1579">label(I)-manifold(I)</a></i>  <i><a href="#idm1580">j0_val(I)</a></i>   ] <br><b>V</b>  <i><a href="#idm1598">label(I)-manifold(I)</a></i>  <i><a href="#idm1599">label(J)-manifold(J)</a></i>  <i><a href="#idm1600">I</a></i>  <i><a href="#idm1601">J</a></i>  <i><a href="#idm1602">v_val(I,J)</a></i>  <br>. . .  <br><b>U</b>  <i>label(N)-manifold(N)</i>  <i>u_val(N)</i>  <br> [ <b>J0</b>  <i>label(N)-manifold(N)</i>  <i>j0_val(N)</i>   ] <br><b>V</b>  <i>label(N)-manifold(N)</i>  <i>label(M)-manifold(M)</i>  <i>N</i>  <i>M</i>  <i>v_val(N,M)</i>  <br>
+</div>
+</blockquote>
+         </td></tr></table></blockquote>
+</td></tr></table></td></tr>
 <tr><td>
 <h3>Description of items:</h3>
 <blockquote>
@@ -6061,7 +6086,7 @@ external force on atom X (cartesian components, Ry/a.u. units)
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote>
 <pre style="margin-bottom: -1em;">
-HUBBARD options are:
+<b>HUBBARD</b> options are:
             </pre>
 <dl style="margin-left: 1.5em;">
 <dt><tt><span class="flag">atomic</span> :</tt></dt>
@@ -6122,6 +6147,158 @@ U, J0, J, V in the HUBBARD card.
 </blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
+<a name="idm1478"></a><a name="label"></a>label(1)-manifold(1), <a name="idm1479"></a><a name="u_val"></a>u_val(1)</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER-LITERAL, CHARACTER, REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+<b>Syntax:</b>
+  <b>U</b> <i>label-manifold u_val</i>
+
+<b>Where:</b>
+<b>U</b>        = string constant "U"; indicates the specs for the <i>U</i> parameter will be given
+<i>label</i>    = label of the atom (as defined in <a href="#ATOMIC_SPECIES">ATOMIC_SPECIES</a>)
+<i>manifold</i> = specs of the manifold (e.g., 3d, 2p...)
+<i>u_val</i>    = value of the <i>U</i> parameter (in eV)
+
+<b>Example:</b>
+HUBBARD (ortho-atomic)
+  U Mn-3d 5.0
+  U Ni-3d 6.0
+                     </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
+<a name="idm1497"></a><a name="label"></a>label(1)-manifold(1), <a name="idm1498"></a><a name="j0_val"></a>j0_val(1)</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER-LITERAL, CHARACTER, REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+<b>Remark:</b> specs of <b>J0</b> parameters are optional
+
+<b>Syntax:</b>
+  <b>J0</b> <i>label-manifold j0_val</i>
+
+<b>Where:</b>
+<b>J0</b>       = string constant "J0"; indicates the specs for the <i>J0</i> parameter will be given
+<i>label</i>    = label of the atom (as defined in <a href="#ATOMIC_SPECIES">ATOMIC_SPECIES</a>)
+<i>manifold</i> = specs of the manifold (e.g., 3d, 2p...)
+<i>j0_val</i>   = value of the <i>J0</i> parameter (in eV)
+
+<b>Example:</b>
+  HUBBARD (ortho-atomic)
+  U  Mn-3d 5.0
+  J0 Mn-3d 1.0
+  U  Ni-3d 6.0
+  J0 Ni-3d 1.2
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
+<a name="idm1531"></a><a name="paramType"></a>paramType(1), <a name="idm1532"></a><a name="label"></a>label(1)-manifold(1), <a name="idm1533"></a><a name="paramValue"></a>paramValue(1)</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER, CHARACTER, REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+<b>Syntax</b> of the line:
+
+  <i>paramType label-manifold paramValue</i>
+
+<b>Where:</b>
+<i>paramType</i>  = character describing the type of Hubbard parameter
+             allowed values: <b>U,</b> <b>J</b> and either <b>B</b> (for d-orbitals) or <b>E2</b> and <b>E3</b> (for f-orbitals)
+<i>label</i>      = label of the atom (as defined in <a href="#ATOMIC_SPECIES">ATOMIC_SPECIES</a>)
+<i>manifold</i>   = specs of the manifold (e.g., 3d, 2p...)
+<i>paramValue</i> = value of the parameter (in eV)
+
+<b>Example:</b>
+  HUBBARD (ortho-atomic)
+  U Mn-3d 5.0
+  J Mn-3d 1.0
+  B Mn-3d 1.1
+  U Ni-3d 6.0
+  J Ni-3d 1.2
+  B Ni-3d 1.3
+                     </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
+<a name="idm1561"></a><a name="label"></a>label(I)-manifold(I), <a name="idm1562"></a><a name="u_val"></a>u_val(I)</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER, REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+<b>Syntax</b> of the line:
+
+  <b>U</b> <i>label-manifold u_val</i>
+
+<b>Where:</b>
+<b>U</b>        = string constant "U"; indicates the specs for the <i>U</i> parameter will be given
+<i>label</i>    = label of the atom (as defined in <a href="#ATOMIC_SPECIES">ATOMIC_SPECIES</a>)
+<i>manifold</i> = specs of the manifold (e.g., 3d, 2p...)
+<i>u_val</i>    = value of the <i>U</i> parameter (in eV)
+                     </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
+<a name="idm1579"></a><a name="label"></a>label(I)-manifold(I), <a name="idm1580"></a><a name="j0_val"></a>j0_val(I)</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER, REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+<b>Remark:</b> specs of <b>J0</b> parameters are optional
+
+<b>Syntax</b> of the line:
+
+  <b>J0</b> <i>label(I)-manifold(I) j0_val(I)</i>
+
+<b>Where:</b>
+<b>J0</b>       = string constant "J0"; indicates the specs for the <i>J0</i> parameter will be given
+<i>label</i>    = label of the atom (as defined in <a href="#ATOMIC_SPECIES">ATOMIC_SPECIES</a>)
+<i>manifold</i> = specs of the manifold (e.g., 3d, 2p...)
+<i>j0_val</i>   = value of the <i>J0</i> parameter (in eV)
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
+<a name="idm1598"></a><a name="label"></a>label(I)-manifold(I), <a name="idm1599"></a><a name="label"></a>label(J)-manifold(J), <a name="idm1600"></a><a name="I"></a>I, <a name="idm1601"></a><a name="J"></a>J, <a name="idm1602"></a><a name="v_val"></a>v_val(I,J)</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER, CHARACTER, INTEGER, INTEGER, REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+<b>Syntax</b> of the line:
+
+  <b>V</b> <i>label(I)-manifold(J) label(J)-manifold(J) I J v_val(I,J)</i>
+
+<b>Where:</b>
+<b>V</b>           = string constant "V"; indicates the specs for the <i>V</i> parameter will be given
+<i>label(I)</i>    = label of the atom <i>I</i> (as defined in <a href="#ATOMIC_SPECIES">ATOMIC_SPECIES</a>)
+<i>manifold(I)</i> = specs of the manifold for atom <i>I</i> (e.g., 3d, 2p...)
+<i>label(J)</i>    = label of the atom <i>J</i> (as defined in <a href="#ATOMIC_SPECIES">ATOMIC_SPECIES</a>)
+<i>manifold(J)</i> = specs of the manifold for atom <i>J</i> (e.g., 3d, 2p...)
+<i>I</i>           = index of the atom <i>I</i>
+<i>J</i>           = index of the atom <i>J</i>
+<i>v_val(I,J)</i>  = value of the <i>V</i> parameter for the atom pair <i>I,J</i> (in eV)
+
+<b>Example:</b>
+  HUBBARD (ortho-atomic)
+  U Co-3d 7.70
+  V Co-3d O-2p 1 19 0.75
+  V Co-3d O-2p 1 46 0.75
+  V Co-3d O-2p 1 43 0.75
+  V Co-3d O-2p 1 54 0.75
+  V Co-3d O-2p 1 11 0.75
+  V Co-3d O-2p 1 22 0.75
+                     </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
 </blockquote>
 </td></tr>
 </tbody></table></td></tr>
@@ -6129,7 +6306,7 @@ U, J0, J, V in the HUBBARD card.
 </td></tr>
 </table>
 <small>
-	  This file has been created by helpdoc utility on Mon May 23 17:11:24 CEST 2022.
+	  This file has been created by helpdoc utility on Fri Jun 03 14:26:59 CEST 2022.
 	</small>
 </body>
 </html>
