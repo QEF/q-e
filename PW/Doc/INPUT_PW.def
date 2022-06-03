@@ -97,32 +97,29 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
              see: K_POINTS ]
         
         [ @b HUBBARD { atomic | ortho-atomic | norm-atomic | wf | pseudo }
-        if (DFT+U)
-           U  label(1)-manifold(1) u_val(1)
-           ...
-           U  label(n)-manifold(n) u_val(n)
-          [J0 label(1)-manifold(1) j0_val(1)
-           ...
-           J0 label(n)-manifold(n) j0_val(n)]
-        if (DFT+U+J)
-           U label(1)-manifold(1) u_val(1)
-           J label(1)-manifold(1) 1 j1_val(1)
-           J label(1)-manifold(1) 2 j2_val(1)
-           J label(1)-manifold(1) 3 j3_val(1)
-           ...
-           U label(n)-manifold(n) u_val(n)
-           J label(n)-manifold(n) 1 j1_val(n)
-           J label(n)-manifold(n) 2 j2_val(n)
-           J label(n)-manifold(n) 3 j3_val(n)
-        if (DFT+U+V)
-           U label(I)-manifold(I) u_val(I)
-           V label(I)-manifold(I) label(J)-manifold(J) I J v_val(IJ)
-           ...
-           [J0 label(I)-manifold(I) j0_val(I)
-           ...
-           J0 label(n)-manifold(n) j0_val(n)]
+          if (DFT+U)
+              U  label(1)-manifold(1) u_val(1)
+            [ J0 label(1)-manifold(1) j0_val(1) ]
+              .....
+              U  label(n)-manifold(n) u_val(n)
+            [ J0 label(n)-manifold(n) j0_val(n) ]            
+          if (DFT+U+J)
+              paramType(1) label(1)-manifold(1) paramValue(1)
+              .....
+              paramType(n) label(n)-manifold(n) paramValue(n)            
+          if (DFT+U+V)
+              U  label(I)-manifold(I) u_val(I)
+            [ J0 label(I)-manifold(I) j0_val(I) ]
+              V  label(I)-manifold(I) label(J)-manifold(J) I J v_val(I,J)
+              .....
+              U  label(N)-manifold(N) u_val(N)
+            [ J0 label(N)-manifold(N) j0_val(N) ]
+              V  label(N)-manifold(N) label(M)-manifold(M) N M v_val(N,M)
+        ]
         All Hubbard parameters must be specified in eV.
-        Check Doc/Hubbard_input.pdf for more details. ]
+        manifold  = 3d, 2p, 4f...
+        paramType = U, J, B, E2, or E3
+        Check Doc/Hubbard_input.pdf for more details. 
 
     }
 
@@ -1201,7 +1198,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 reading the occupations from pseudopotentials. If specified
                 from the input, then the values read from the pseudopotentials
                 will be overwritten.
-                The second index of the Hubbard_occ array corrsponds to the
+                The second index of the Hubbard_occ array corresponds to the
                 Hubbard manifold number. It is possible to specify up to
                 three Hubbard manifolds per Hubbard atom. However, if you want
                 to specify three manifolds then the second and the third manifolds
@@ -3594,11 +3591,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
     # HUBBARD
     #
     card HUBBARD {
-        flag hubbard_type -use optional {
-            enum { atomic | ortho-atomic | norm-atomic | wf | pseudo }
+        set Hflags { atomic | ortho-atomic | norm-atomic | wf | pseudo }
+        flag hubbard_type {
+            enum $Hflags
             options {
                 info {
-                    HUBBARD options are:
+                    @b HUBBARD options are:
                 }
                 opt -val atomic    {
                     use atomic orbitals (read from pseudopotential) to build the 
@@ -3650,6 +3648,250 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
             }
         }
+
+        choose {
+            when -test "DFT+U" {
+                syntax -flag $Hflags {
+
+                    # atom-1 specs
+                    
+                    line {
+                        vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL} {
+                            keyword U
+                            var label(1)-manifold(1)
+                            var u_val(1)
+                            info {
+                                @b Syntax:
+                                  @b U @i {label-manifold u_val}
+
+                                @b Where:
+                                @b U        = string constant "U"; indicates the specs for the @i U parameter will be given
+                                @i label    = label of the atom (as defined in @ref ATOMIC_SPECIES)
+                                @i manifold = specs of the manifold (e.g., 3d, 2p...)
+                                @i u_val    = value of the @i U parameter (in eV)
+                                    
+                                @b Example:
+                                HUBBARD (ortho-atomic)
+                                  U Mn-3d 5.0
+                                  U Ni-3d 6.0
+                            }                                                                
+                        }
+                    }
+                    line {
+                        conditional {
+                            vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL} {
+                                keyword J0
+                                var label(1)-manifold(1)
+                                var j0_val(1)
+                                info {
+                                    @b Remark: specs of @b J0 parameters are optional
+                                    
+                                    @b Syntax:
+                                      @b J0 @i {label-manifold j0_val}
+                                        
+                                    @b Where:
+                                    @b J0       = string constant "J0"; indicates the specs for the @i J0 parameter will be given
+                                    @i label    = label of the atom (as defined in @ref ATOMIC_SPECIES)
+                                    @i manifold = specs of the manifold (e.g., 3d, 2p...)
+                                    @i j0_val   = value of the @i J0 parameter (in eV)
+                                    
+                                    @b Example:
+                                      HUBBARD (ortho-atomic)
+                                      U  Mn-3d 5.0
+                                      J0 Mn-3d 1.0
+                                      U  Ni-3d 6.0
+                                      J0 Ni-3d 1.2
+                                }
+                            }                                
+                        }
+                    }
+                        
+                    # print ". . ." on a separate line
+                        
+                    line { etc }
+                    
+                    line {
+                        vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL} {
+                            keyword U
+                            var label(n)-manifold(n)
+                            var u_val(n)
+                        }
+                    }
+                    line {
+                        conditional {
+                            vargroup -type {CHARACTER-LITERAL, CHARACTER, REAL} {
+                                keyword J0
+                                var label(n)-manifold(n)
+                                var j0_val(n)
+                            }                                
+                        }
+                    }                        
+                }
+            }
+            
+            elsewhen -test "DFT+U+J" { 
+                syntax -flag $Hflags {
+                    
+                    # atom-1 specs
+                    
+                    line {
+                        vargroup -type {CHARACTER, CHARACTER, REAL} {
+                            var paramType(1)
+                            var label(1)-manifold(1)
+                            var paramValue(1)
+                            info {
+                                @b Syntax of the line:
+                                
+                                  @i {paramType label-manifold paramValue}
+
+                                @b Where:
+                                @i paramType  = character describing the type of Hubbard parameter 
+                                             allowed values: @b U, @b J and either @b B (for d-orbitals) or @b E2 and @b E3 (for f-orbitals)
+                                @i label      = label of the atom (as defined in @ref ATOMIC_SPECIES)
+                                @i manifold   = specs of the manifold (e.g., 3d, 2p...)
+                                @i paramValue = value of the parameter (in eV)
+
+                                @b Example:
+                                  HUBBARD (ortho-atomic)
+                                  U Mn-3d 5.0
+                                  J Mn-3d 1.0
+                                  B Mn-3d 1.1
+                                  U Ni-3d 6.0
+                                  J Ni-3d 1.2
+                                  B Ni-3d 1.3
+                            }                        
+                        }
+                    }
+                                            
+                    # print ". . ." on a separate line
+                    line { etc }
+                    
+                    # atom-n specs
+                    
+                    line {
+                        vargroup -type {CHARACTER, CHARACTER, REAL} {
+                            var paramType(n)
+                            var label(n)-manifold(n)
+                            var paramValue(n)
+                        }
+                    }
+                }
+            }
+            elsewhen -test "DFT+U+V" { 
+                syntax -flag $Hflags {
+                    line {
+                        vargroup -type {CHARACTER, REAL} {
+                            keyword U
+                            var label(I)-manifold(I)
+                            var u_val(I)
+                            info {
+                                @b Syntax of the line:
+                                
+                                  @b U @i {label-manifold u_val}
+
+                                @b Where:
+                                @b U        = string constant "U"; indicates the specs for the @i U parameter will be given
+                                @i label    = label of the atom (as defined in @ref ATOMIC_SPECIES)
+                                @i manifold = specs of the manifold (e.g., 3d, 2p...)
+                                @i u_val    = value of the @i U parameter (in eV)
+                            }
+                        }
+                    }
+
+                    line {
+                        conditional {
+                            vargroup -type {CHARACTER, REAL} {
+                                keyword J0
+                                var label(I)-manifold(I)
+                                var j0_val(I)
+                                info {
+                                    @b Remark: specs of @b J0 parameters are optional
+                                        
+                                    @b Syntax of the line:
+                                    
+                                      @b J0 @i {label(I)-manifold(I) j0_val(I)}
+                                        
+                                    @b Where:
+                                    @b J0       = string constant "J0"; indicates the specs for the @i J0 parameter will be given
+                                    @i label    = label of the atom (as defined in @ref ATOMIC_SPECIES)
+                                    @i manifold = specs of the manifold (e.g., 3d, 2p...)
+                                    @i j0_val   = value of the @i J0 parameter (in eV) 
+                                }
+                            }
+                        }
+                    }
+                        
+
+                    line {
+                        vargroup -type {CHARACTER, CHARACTER, INTEGER, INTEGER, REAL} {
+                            keyword V
+                            var label(I)-manifold(I)
+                            var label(J)-manifold(J)
+                            var I
+                            var J
+                            var v_val(I,J)
+                            info {
+                                @b Syntax of the line:
+                                
+                                  @b V @i {label(I)-manifold(J) label(J)-manifold(J) I J v_val(I,J)}
+
+                                @b Where:
+                                @b V           = string constant "V"; indicates the specs for the @i V parameter will be given
+                                @i label(I)    = label of the atom @i I (as defined in @ref ATOMIC_SPECIES)
+                                @i manifold(I) = specs of the manifold for atom @i I (e.g., 3d, 2p...)
+                                @i label(J)    = label of the atom @i J (as defined in @ref ATOMIC_SPECIES)
+                                @i manifold(J) = specs of the manifold for atom @i J (e.g., 3d, 2p...)
+                                @i I           = index of the atom @i I
+                                @i J           = index of the atom @i J
+                                @i v_val(I,J)  = value of the @i V parameter for the atom pair @i I,J (in eV)
+
+                                @b Example:
+                                  HUBBARD (ortho-atomic)
+                                  U Co-3d 7.70
+                                  V Co-3d O-2p 1 19 0.75
+                                  V Co-3d O-2p 1 46 0.75
+                                  V Co-3d O-2p 1 43 0.75
+                                  V Co-3d O-2p 1 54 0.75
+                                  V Co-3d O-2p 1 11 0.75
+                                  V Co-3d O-2p 1 22 0.75
+                            }
+                        }
+                    }
+                    
+                    line { etc }
+                    
+                    line {
+                        vargroup -type {CHARACTER, REAL} {
+                            keyword U
+                            var label(N)-manifold(N)
+                            var u_val(N)
+                        }
+                    }
+
+                    line {
+                        conditional {
+                            vargroup -type {CHARACTER, REAL} {
+                                keyword J0
+                                var label(N)-manifold(N)
+                                var j0_val(N)
+                            }
+                        }
+                    }
+                        
+
+                    line {
+                        vargroup -type {CHARACTER, REAL} {
+                            keyword V
+                            var label(N)-manifold(N)
+                            var label(M)-manifold(M)
+                            var N
+                            var M
+                            var v_val(N,M)
+                        }
+                    }
+                }
+            }
+        }
     }
-   
+   ###
 }
