@@ -8,6 +8,7 @@ namespace eval ::helpdoc::schema {
     proc attribute   {name code} { uplevel 1 [list ::helpdoc::attribute $name $code] }
     proc @           {name code} { uplevel 1 [list ::helpdoc::@ $name $code] }
     
+    proc empty       {}          { uplevel 1 [list ::helpdoc::empty] }
     proc word        {}          { uplevel 1 [list ::helpdoc::word] }
     proc string      {}          { uplevel 1 [list ::helpdoc::String] }
     proc text        {}          { uplevel 1 [list ::helpdoc::text] }
