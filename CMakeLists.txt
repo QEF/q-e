@@ -98,6 +98,9 @@ option(QE_LAPACK_INTERNAL
     "enable internal reference LAPACK" OFF)
 option(QE_ENABLE_SCALAPACK
     "enable SCALAPACK execution units" OFF)
+cmake_dependent_option(QE_ENABLE_SCALAPACK_QRCP
+    "enable SCALAPACK QRCP in pw2wannier90 (requires SCALAPACK>=2.1.0 or Intel MKL>=2020)"
+    OFF "QE_ENABLE_SCALAPACK" OFF)
 option(QE_ENABLE_ELPA
     "enable ELPA execution units" OFF)
 option(QE_ENABLE_LIBXC
@@ -484,11 +487,7 @@ if(QE_ENABLE_SCALAPACK)
         INTERFACE
             ${SCALAPACK_LIBRARIES}
             ${SCALAPACK_LINKER_FLAGS})
-    set(CMAKE_REQUIRED_LIBRARIES "${SCALAPACK_LIBRARIES}")
-    include(CheckFortranFunctionExists)
-    check_fortran_function_exists("pzgeqpf" SCALAPACK_PZGEQPF_WORKS)
-    unset(CMAKE_REQUIRED_LIBRARIES)
-    if(SCALAPACK_PZGEQPF_WORKS)
+    if(QE_ENABLE_SCALAPACK_QRCP)
         message(STATUS "Add SCALAPACK PZGEQPF macro")
         qe_add_global_compile_definitions(__SCALAPACK_ROBUST_QR)
     endif()
