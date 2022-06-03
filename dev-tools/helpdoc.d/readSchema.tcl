@@ -513,9 +513,9 @@ proc ::helpdoc::xml_atTags {content} {
 
 
 proc ::helpdoc::txt_atTags {content} {
-    # PURPOSE: either ignore all specially treat all instances of
-    # @tag's within the $content with as to get read of @tags in the
-    # generated TXT representation
+    # PURPOSE: either ignore or process all instances of @tag's within
+    # the $content as to get read of @tags in the generated TXT
+    # representation
     variable xml_re
 
     # special processing for tag: hr
