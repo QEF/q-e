@@ -292,9 +292,10 @@ MODULE qes_init_module
   !
   SUBROUTINE qes_init_input(obj, tagname, control_variables, atomic_species, atomic_structure,&
                            dft, spin, bands, basis, electron_control, k_points_IBZ, ion_control,&
-                           cell_control, symmetry_flags, boundary_conditions, fcp, rism, solvents,&
-                           ekin_functional, external_atomic_forces, free_positions, starting_atomic_velocities,&
-                           electric_field, atomic_constraints, spin_constraints)
+                           cell_control, symmetry_flags, boundary_conditions, fcp_settings, rism_settings,&
+                           solvents, ekin_functional, external_atomic_forces, free_positions,&
+                           starting_atomic_velocities, electric_field, atomic_constraints, spin_constraints &
+                           )
     !
     IMPLICIT NONE
     !
@@ -313,8 +314,8 @@ MODULE qes_init_module
     TYPE(cell_control_type),INTENT(IN) :: cell_control
     TYPE(symmetry_flags_type),OPTIONAL,INTENT(IN) :: symmetry_flags
     TYPE(boundary_conditions_type),OPTIONAL,INTENT(IN) :: boundary_conditions
-    TYPE(fcp_type),OPTIONAL,INTENT(IN) :: fcp
-    TYPE(rism_type),OPTIONAL,INTENT(IN) :: rism
+    TYPE(fcp_type),OPTIONAL,INTENT(IN) :: fcp_settings
+    TYPE(rism_type),OPTIONAL,INTENT(IN) :: rism_settings
     TYPE(solvents_type),OPTIONAL,INTENT(IN) :: solvents
     TYPE(ekin_functional_type),OPTIONAL,INTENT(IN) :: ekin_functional
     TYPE(matrix_type),OPTIONAL,INTENT(IN) :: external_atomic_forces
@@ -351,17 +352,17 @@ MODULE qes_init_module
     ELSE
       obj%boundary_conditions_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(fcp)) THEN
-      obj%fcp_ispresent = .TRUE. 
-      obj%fcp = fcp
+    IF ( PRESENT(fcp_settings)) THEN
+      obj%fcp_settings_ispresent = .TRUE. 
+      obj%fcp_settings = fcp_settings
     ELSE
-      obj%fcp_ispresent = .FALSE.
+      obj%fcp_settings_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(rism)) THEN
-      obj%rism_ispresent = .TRUE. 
-      obj%rism = rism
+    IF ( PRESENT(rism_settings)) THEN
+      obj%rism_settings_ispresent = .TRUE. 
+      obj%rism_settings = rism_settings
     ELSE
-      obj%rism_ispresent = .FALSE.
+      obj%rism_settings_ispresent = .FALSE.
     END IF
     IF ( PRESENT(solvents)) THEN
       obj%solvents_ispresent = .TRUE. 

@@ -543,7 +543,7 @@ MODULE qexsd_input
    INTEGER,OPTIONAL,INTENT(IN)          :: fcp_nraise
    LOGICAL,OPTIONAL,INTENT(IN)          :: freeze_all_atoms
    !
-   CHARACTER(LEN=*),PARAMETER           :: TAGNAME="fcp"
+   CHARACTER(LEN=*),PARAMETER           :: TAGNAME="fcp_settings"
    !
    CALL qes_init (obj, TAGNAME, fcp_mu, fcp_dynamics, fcp_conv_thr, fcp_ndiis, fcp_rdiis, fcp_mass, &
                   fcp_velocity, fcp_temperature, fcp_tempw, fcp_tolp, fcp_delta_t, fcp_nraise, freeze_all_atoms)
@@ -595,7 +595,7 @@ MODULE qexsd_input
    REAL(DP),OPTIONAL,INTENT(IN)             :: laue_wall_epsilon, laue_wall_sigma
    LOGICAL,OPTIONAL,INTENT(IN)              :: laue_wall_lj6
    !
-   CHARACTER(LEN=*),PARAMETER               :: TAGNAME="rism"
+   CHARACTER(LEN=*),PARAMETER               :: TAGNAME="rism_settings"
    !
    TYPE(solute_type) :: solute_obj(nsp)
    INTEGER :: isol

@@ -237,12 +237,12 @@ MODULE qes_reset_module
     IF (obj%boundary_conditions_ispresent) &
       CALL qes_reset_boundary_conditions(obj%boundary_conditions)
     obj%boundary_conditions_ispresent = .FALSE.
-    IF (obj%fcp_ispresent) &
-      CALL qes_reset_fcp(obj%fcp)
-    obj%fcp_ispresent = .FALSE.
-    IF (obj%rism_ispresent) &
-      CALL qes_reset_rism(obj%rism)
-    obj%rism_ispresent = .FALSE.
+    IF (obj%fcp_settings_ispresent) &
+      CALL qes_reset_fcp(obj%fcp_settings)
+    obj%fcp_settings_ispresent = .FALSE.
+    IF (obj%rism_settings_ispresent) &
+      CALL qes_reset_rism(obj%rism_settings)
+    obj%rism_settings_ispresent = .FALSE.
     IF (obj%solvents_ispresent) &
       CALL qes_reset_solvents(obj%solvents)
     obj%solvents_ispresent = .FALSE.

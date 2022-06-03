@@ -883,44 +883,44 @@ MODULE qes_read_module
        obj%boundary_conditions_ispresent = .FALSE.
     END IF
     !
-    tmp_node_list => getElementsByTagname(xml_node, "fcp")
+    tmp_node_list => getElementsByTagname(xml_node, "fcp_settings")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN
-           CALL infomsg("qes_read:inputType","fcp: too many occurrences")
+           CALL infomsg("qes_read:inputType","fcp_settings: too many occurrences")
            ierr = ierr + 1
         ELSE
-           CALL errore("qes_read:inputType","fcp: too many occurrences",10)
+           CALL errore("qes_read:inputType","fcp_settings: too many occurrences",10)
         END IF
     END IF
     !
     IF (tmp_node_list_size>0) THEN
-      obj%fcp_ispresent = .TRUE.
+      obj%fcp_settings_ispresent = .TRUE.
       tmp_node => item(tmp_node_list, 0)
-      CALL qes_read_fcp(tmp_node, obj%fcp, ierr )
+      CALL qes_read_fcp(tmp_node, obj%fcp_settings, ierr )
     ELSE
-       obj%fcp_ispresent = .FALSE.
+       obj%fcp_settings_ispresent = .FALSE.
     END IF
     !
-    tmp_node_list => getElementsByTagname(xml_node, "rism")
+    tmp_node_list => getElementsByTagname(xml_node, "rism_settings")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN
-           CALL infomsg("qes_read:inputType","rism: too many occurrences")
+           CALL infomsg("qes_read:inputType","rism_settings: too many occurrences")
            ierr = ierr + 1
         ELSE
-           CALL errore("qes_read:inputType","rism: too many occurrences",10)
+           CALL errore("qes_read:inputType","rism_settings: too many occurrences",10)
         END IF
     END IF
     !
     IF (tmp_node_list_size>0) THEN
-      obj%rism_ispresent = .TRUE.
+      obj%rism_settings_ispresent = .TRUE.
       tmp_node => item(tmp_node_list, 0)
-      CALL qes_read_rism(tmp_node, obj%rism, ierr )
+      CALL qes_read_rism(tmp_node, obj%rism_settings, ierr )
     ELSE
-       obj%rism_ispresent = .FALSE.
+       obj%rism_settings_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "solvents")

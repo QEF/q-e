@@ -1891,10 +1891,10 @@ MODULE qes_types_module
     TYPE(symmetry_flags_type) :: symmetry_flags
     LOGICAL  :: boundary_conditions_ispresent = .FALSE.
     TYPE(boundary_conditions_type) :: boundary_conditions
-    LOGICAL  :: fcp_ispresent = .FALSE.
-    TYPE(fcp_type) :: fcp
-    LOGICAL  :: rism_ispresent = .FALSE.
-    TYPE(rism_type) :: rism
+    LOGICAL  :: fcp_settings_ispresent = .FALSE.
+    TYPE(fcp_type) :: fcp_settings
+    LOGICAL  :: rism_settings_ispresent = .FALSE.
+    TYPE(rism_type) :: rism_settings
     LOGICAL  :: solvents_ispresent = .FALSE.
     TYPE(solvents_type) :: solvents
     LOGICAL  :: ekin_functional_ispresent = .FALSE.

@@ -255,12 +255,12 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%boundary_conditions_ispresent, ionode_id, comm)
     IF (obj%boundary_conditions_ispresent) &
       CALL qes_bcast_boundary_conditions(obj%boundary_conditions, ionode_id, comm)
-    CALL mp_bcast(obj%fcp_ispresent, ionode_id, comm)
-    IF (obj%fcp_ispresent) &
-      CALL qes_bcast_fcp(obj%fcp, ionode_id, comm)
-    CALL mp_bcast(obj%rism_ispresent, ionode_id, comm)
-    IF (obj%rism_ispresent) &
-      CALL qes_bcast_rism(obj%rism, ionode_id, comm)
+    CALL mp_bcast(obj%fcp_settings_ispresent, ionode_id, comm)
+    IF (obj%fcp_settings_ispresent) &
+      CALL qes_bcast_fcp(obj%fcp_settings, ionode_id, comm)
+    CALL mp_bcast(obj%rism_settings_ispresent, ionode_id, comm)
+    IF (obj%rism_settings_ispresent) &
+      CALL qes_bcast_rism(obj%rism_settings, ionode_id, comm)
     CALL mp_bcast(obj%solvents_ispresent, ionode_id, comm)
     IF (obj%solvents_ispresent) &
       CALL qes_bcast_solvents(obj%solvents, ionode_id, comm)

@@ -267,11 +267,11 @@ MODULE qes_write_module
      IF (obj%boundary_conditions_ispresent) THEN
         CALL qes_write_boundary_conditions (xp, obj%boundary_conditions)
      END IF
-     IF (obj%fcp_ispresent) THEN
-        CALL qes_write_fcp (xp, obj%fcp)
+     IF (obj%fcp_settings_ispresent) THEN
+        CALL qes_write_fcp (xp, obj%fcp_settings)
      END IF
-     IF (obj%rism_ispresent) THEN
-        CALL qes_write_rism (xp, obj%rism)
+     IF (obj%rism_settings_ispresent) THEN
+        CALL qes_write_rism (xp, obj%rism_settings)
      END IF
      IF (obj%solvents_ispresent) THEN
         CALL qes_write_solvents (xp, obj%solvents)

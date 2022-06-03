@@ -584,19 +584,19 @@
   !                              Ficticious charge particle (FCP)
   !------------------------------------------------------------------------------------------------------------------------
   IF (lfcp) THEN
-     obj%fcp_ispresent = .TRUE.
-     CALL qexsd_init_fcp(obj%fcp, fcp_mu, fcp_dynamics, fcp_conv_thr, fcp_ndiis, fcp_rdiis,&
+     obj%fcp_settings_ispresent = .TRUE.
+     CALL qexsd_init_fcp(obj%fcp_settings, fcp_mu, fcp_dynamics, fcp_conv_thr, fcp_ndiis, fcp_rdiis,&
                          fcp_mass, fcp_velocity, fcp_temperature, fcp_tempw, fcp_tolp, fcp_delta_t,&
                          fcp_nraise, freeze_all_atoms)
   ELSE
-     obj%fcp_ispresent = .FALSE.
+     obj%fcp_settings_ispresent = .FALSE.
   END IF
   !------------------------------------------------------------------------------------------------------------------------
   !                              RISM
   !------------------------------------------------------------------------------------------------------------------------
   IF (trism) THEN
-     obj%rism_ispresent = .TRUE.
-     CALL qexsd_init_rism(obj%rism, nsolv, closure, tempv, ecutsolv, nsp, solute_lj, solute_epsilon, solute_sigma, &
+     obj%rism_settings_ispresent = .TRUE.
+     CALL qexsd_init_rism(obj%rism_settings, nsolv, closure, tempv, ecutsolv, nsp, solute_lj, solute_epsilon, solute_sigma, &
           rmax_lj,rmax1d, starting1d, starting3d, smear1d, smear3d, rism1d_maxstep, rism3d_maxstep, rism1d_conv_thr, &
           rism3d_conv_thr, mdiis1d_size, mdiis3d_size, mdiis1d_step, mdiis3d_step, rism1d_bond_width, rism1d_dielectric, &
           rism1d_molesize, rism1d_nproc, rism1d_nproc_switch, rism3d_conv_level, rism3d_planar_average, laue_nfit, &
@@ -607,7 +607,7 @@
      obj%solvents_ispresent = .TRUE.
      CALL qexsd_init_solvents(obj%solvents, nsolv, solv_label, solv_mfile, solv_dens1, solv_dens2, solvents_unit)
   ELSE
-     obj%rism_ispresent = .FALSE.
+     obj%rism_settings_ispresent = .FALSE.
      obj%solvents_ispresent = .FALSE.
   END IF
   !----------------------------------------------------------------------------------------------------------------------------
