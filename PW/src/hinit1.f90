@@ -45,14 +45,14 @@ SUBROUTINE hinit1()
 #endif
   !
   IMPLICIT NONE
-  !
-  ! ... update solute position for 3D-RISM
-  !
-  IF (lrism) CALL rism_update_pos()
 #if defined (__ENVIRON)
   REAL(DP) :: at_scaled(3, 3)
   REAL(DP) :: tau_scaled(3, nat)
 #endif
+  !
+  ! ... update solute position for 3D-RISM
+  !
+  IF (lrism) CALL rism_update_pos()
   !
   ! these routines can be used to patch quantities that are dependent
   ! on the ions and cell parameters

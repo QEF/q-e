@@ -726,7 +726,9 @@ CONTAINS
       IF (s == ' ') THEN
         CYCLE
       END IF
-      IF (s == '/' .OR. s == '\' .OR. s == '|') THEN
+      ! IF (s == '/' .OR. s == '\' .OR. s == '|') THEN
+      ! PGI/NVHPC doesn't like '\' 
+      IF (s == '/' .OR. s == CHAR(92) .OR. s == '|') THEN
         s = '.'
       END IF
       !
