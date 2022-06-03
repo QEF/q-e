@@ -181,7 +181,6 @@ MODULE io_kcw
 #if defined(__HDF5)
               CALL qeh5_set_file_hyperslab ( rhowann_dset,  OFFSET = [0,k-1], COUNT = [2*nr1*nr2,1] ) 
               CALL qeh5_write_dataset ( rho_plane, rhowann_dset)   
-              write(*,*) "NICOLA", rho_plane(1:3) 
 #else
               !
               IF (rho_binary) THEN 
