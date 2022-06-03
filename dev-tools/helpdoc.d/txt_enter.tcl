@@ -49,6 +49,17 @@ switch -exact -- $tag {
 	    syntaxAppend [arr name]
 	}
     }
+
+    constant {
+        if { [::tclu::lpresent $mode syntax] } {
+	    syntaxAppend $content
+	}
+    }
+    etc {
+        if { [::tclu::lpresent $mode syntax] } {
+	    syntaxAppend ". . ."
+	}
+    }
 }
 
 
@@ -97,7 +108,6 @@ if { ! $vargroup && ! $dimensiongroup && ! $colgroup && ! $rowgroup && ! [::tclu
 
 
 # composite elements
-
 
 switch -exact -- $tag {
     options {
@@ -160,7 +170,7 @@ switch -exact -- $tag {
 	    foreach child [$tree descendants $node] {
 		set _tag  [getFromTree $tree $child tag]
 		set _attr [getFromTree $tree $child attributes]
-		set _text [getFromTree $tree $child text]
+		set _text [txt_atTags [txt_ref_link [getFromTree $tree $child text]]]
 		
 		attr2array_ _arr $_attr
 		
