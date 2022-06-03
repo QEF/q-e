@@ -20,18 +20,19 @@ KCW stands for "Koopmans-compliant functionals in a Wannier representation". KCW
 code which calculates quasiparticle energies of finite and extended systems using
 [Koopmans-compliant functionals](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.021051)
 and [Maximally Localized Wannier Functions](http://journals.aps.org/prb/abstract/10.1103/PhysRevB.56.12847).
-The code consists of 3 programs:
+The details of this implementation are described [here](https://arxiv.org/abs/2202.08155). 
+The code consists of 3 modules specified by the "calculation" variable in CONTROL namelist:
 
-1) an interface between Wannier90 and the KCW code (wann_to_kc.x) 
+1) interface between Wannier90 and the KCW code (calculation="wann_to_kc") 
 
-2) a program that computes the screening coefficients as described [here](https://pubs.acs.org/doi/abs/10.1021/acs.jctc.7b01116) (kc_screen.x)
+2) calcuation of the screening coefficients (calculation="screen")
 
-3) a program that computes the KC hamiltonian, interpolates it if needed, and finally diagonalizes it (kc_ham.x) 
+3) calculation, interpolation and diagonalization of the KC hamiltonian (calculation = "kc_ham") 
 
 KCW is developed and maintained by [Nicola Colonna](https://www.psi.ch/en/lns/people/nicola-colonna),  [Riccardo de Gennaro](https://people.epfl.ch/riccardo.degennaro), and [Edward Linscott](https://people.epfl.ch/edward.linscott)
 
 @Note
-Still in development. This version of the code works with QE7.0
+Still in development. This version of the code works with QE7.1
 
 	TODO list: 
 	1) Symmetry: at the moment no symmetry are used. 
@@ -40,5 +41,6 @@ Still in development. This version of the code works with QE7.0
 	2) Initialize the xc-kernel and KC response as the spin-polarized one 
 	also when nspin=1. This is needed to correctly define the perturbing
 	potentials. At the moment we do a nspin=2 calculation from the beginning
-	(not a big deal since the bottleneck is the LR calculation).
+	(not a big deal since the bottleneck is the LR calculation for which in 
+        any case a spin-polarized response is needed).
 

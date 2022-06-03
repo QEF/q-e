@@ -77,6 +77,7 @@ $ECHO " done"
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 KCW_COMMAND="$PARA_PREFIX $BIN_DIR/kcw.x $PARA_POSTFIX"
+KCW_COMMAND_noPOSTFIX="$PARA_PREFIX $BIN_DIR/kcw.x"
 $ECHO
 $ECHO "  running pw.x as:   $PW_COMMAND"
 $ECHO "  running kcw.x as:   $KCW_COMMAND"
@@ -206,5 +207,5 @@ KCW H2O KI hamiltonian
 EOF
 
 $ECHO "  Running the KI hamiltonian calculation for $PREFIX...\c"
-$KCW_COMMAND -in $PREFIX.kcw-ham.in > $PREFIX.kcw-ham.out
+$KCW_COMMAND_noPOSTFIX -in $PREFIX.kcw-ham.in > $PREFIX.kcw-ham.out
 $ECHO " done"
