@@ -489,7 +489,7 @@ if(QE_ENABLE_SCALAPACK)
             ${SCALAPACK_LINKER_FLAGS})
     if(QE_ENABLE_SCALAPACK_QRCP)
         message(STATUS "Add SCALAPACK PZGEQPF macro")
-        qe_add_global_compile_definitions(__SCALAPACK_ROBUST_QR)
+        qe_add_global_compile_definitions(__SCALAPACK_QRCP)
     endif()
 endif(QE_ENABLE_SCALAPACK)
 

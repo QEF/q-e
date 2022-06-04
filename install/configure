@@ -6982,12 +6982,12 @@ if test "$have_scalapack" -eq 1 && test "$with_scalapack_version" != "0"; then
       scalapack_minor_version=`echo $with_scalapack_version | cut -d. -f2`
       if test "$scalapack_major_version" -ge 2 && test "$scalapack_major_version" -le 99; then
          if test "$scalapack_minor_version" -ge 1; then
-	    try_dflags="$try_dflags -D__SCALAPACK_ROBUST_QR"
+	    try_dflags="$try_dflags -D__SCALAPACK_QRCP"
 	 fi
       fi
    else
       if test "$with_scalapack_version" -ge 2020; then
-         try_dflags="$try_dflags -D__SCALAPACK_ROBUST_QR"
+         try_dflags="$try_dflags -D__SCALAPACK_QRCP"
       fi
    fi
 fi
