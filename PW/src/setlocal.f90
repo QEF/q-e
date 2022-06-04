@@ -35,10 +35,18 @@ SUBROUTINE setlocal
   USE esm,               ONLY : esm_local, esm_bc, do_comp_esm
   USE qmmm,              ONLY : qmmm_add_esf
   USE Coul_cut_2D,       ONLY : do_cutoff_2D, cutoff_local 
+  USE rism_module,       ONLY : lrism, rism_setlocal
+  !
+#if defined (__ENVIRON)
+  USE plugin_flags,      ONLY : use_environ
+  USE environ_pw_module, ONLY : update_environ_potential
+#endif
   !
   IMPLICIT NONE
   !
   COMPLEX(DP), ALLOCATABLE :: aux(:), v_corr(:)
+  COMPLEX(DP), ALLOCATABLE :: vlesm(:)
+  REAL(DP),    ALLOCATABLE :: vrism(:)
   ! auxiliary variable
   INTEGER :: nt, ng
   ! counter on atom types
@@ -46,6 +54,8 @@ SUBROUTINE setlocal
   !
   ALLOCATE( aux(dfftp%nnr) )
   aux(:) = (0.d0,0.d0)
+  ALLOCATE (vlesm(dfftp%nnr))
+  vlesm(:)=(0.d0,0.d0)
   !
   IF (do_comp_mt) THEN
      ALLOCATE( v_corr(ngm) )
@@ -71,7 +81,8 @@ SUBROUTINE setlocal
      !
      ! ... Perform ESM correction to local potential
      !
-     CALL esm_local( aux )
+     CALL esm_local( vlesm )
+     aux = aux + vlesm
      !
   ENDIF
   !
@@ -112,11 +123,34 @@ SUBROUTINE setlocal
   !
   CALL qmmm_add_esf( vltot, dfftp )
   !
+  ! ... set the local potential to rism_module
+  !
+  IF (lrism) THEN
+      IF ( do_comp_esm .AND. ( esm_bc .NE. 'pbc' ) ) THEN
+          !
+          ! ... for Laue-RISM
+          !
+          ALLOCATE(vrism(dfftp%nnr))
+          CALL invfft ('Rho', vlesm, dfftp)
+          vrism(:) = vltot(:) - DBLE(vlesm(:))
+          CALL rism_setlocal(vrism)
+          DEALLOCATE(vrism)
+      ELSE
+          !
+          ! ... for 3D-RISM
+          !
+          CALL rism_setlocal(vltot)
+      END IF
+  END IF
+  !
   ! ... Save vltot for possible modifications in plugins
   !
-  CALL plugin_init_potential( vltot )
+#if defined (__ENVIRON)
+  IF (use_environ) CALL update_environ_potential(vltot)
+#endif
   !
   DEALLOCATE( aux )
+  DEALLOCATE( vlesm )
   !
   !
   RETURN

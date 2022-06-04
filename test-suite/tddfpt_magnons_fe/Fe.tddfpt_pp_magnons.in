@@ -2,14 +2,14 @@
    prefix = 'Fe',
    outdir = './out',
    magnons = .true.,
+   units = 3,
    itermax0 = 400,
    itermax = 400,
    extrapolation='no',
-   epsil = 0.001,
+   epsil = 0.1,
    ipol = 2,
-   units = 1,
    start = 0.0d0,
-   increment = 0.001d0,
-   end = 1.0d0
+   increment = 0.1d0,
+   end = 15.0d0
  /
 

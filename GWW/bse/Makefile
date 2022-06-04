@@ -46,7 +46,7 @@ qpcorrections.o
 
 
 QEMODS = $(BASEMODS)
-PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a
+PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
 PW4GWWOBJ = ../pw4gww/fft_custom.o ../pw4gww/stop_pp.o ../pw4gww/mp_wave_parallel.o
 GWWOBJ = ../gww/libgww.a ../minpack/minpacklib.a
 

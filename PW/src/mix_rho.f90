@@ -33,6 +33,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   ! ... for PAW:
   USE uspp_param,     ONLY : nhm
   USE ener,           ONLY : ef
+  USE gcscf_module,   ONLY : lgcscf, gcscf_gh, gcscf_mu, gcscf_eps
   USE scf,            ONLY : scf_type, create_scf_type, destroy_scf_type, &
                              mix_type, create_mix_type, destroy_mix_type, &
                              assign_scf_to_mix_type, assign_mix_to_scf_type, &
@@ -318,6 +319,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
             IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) &
                betamix(i,j) = betamix(i,j) + &
                   nsg_ddot( df_nsg(1,1,1,1,1,j), df_nsg(1,1,1,1,1,i), nspin )
+            !
             betamix(j,i) = betamix(i,j)
             !
         END DO
@@ -563,6 +565,12 @@ SUBROUTINE approx_screening2( drho, rhobest )
   agg0     = ( 12.D0 / pi )**( 2.D0 / 3.D0 ) / tpiba2 / avg_rsm1
   IF ( lgcscf ) bgg0 = gcscf_gk * gcscf_gk / tpiba2
   !
+  IF ( lgcscf ) THEN
+     !
+     bgg0 = gcscf_gk * gcscf_gk / tpiba2
+     !
+  END IF
+  !
   ! ... calculate deltaV and the first correction vector
   !
   !$omp parallel
@@ -681,6 +689,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
            aa(i,m) = local_tf_ddot( w(1,i), w(1,m), ngm0)
            !
         END IF
+        !
         aa(m,i) = aa(i,m)
         !
      END DO

@@ -759,6 +759,30 @@
               iforceh(2,2) = 1
               iforceh(3,3) = 1
               isotropic    = .TRUE.
+            CASE ('fixa')
+              iforceh      = 1
+              iforceh(1,1) = 0
+              iforceh(2,1) = 0
+              iforceh(3,1) = 0
+            CASE ('fixb')
+              iforceh      = 1
+              iforceh(1,2) = 0
+              iforceh(2,2) = 0
+              iforceh(3,2) = 0
+            CASE ('fixc')
+              iforceh      = 1
+              iforceh(1,3) = 0
+              iforceh(2,3) = 0
+              iforceh(3,3) = 0
+            CASE ('a')
+              iforceh      = 1
+              iforceh(1,1) = 0
+            CASE ('b')
+              iforceh      = 1
+              iforceh(2,2) = 0
+            CASE ('c')
+              iforceh      = 1
+              iforceh(3,3) = 0
             CASE ('x')
               iforceh      = 0
               iforceh(1,1) = 1

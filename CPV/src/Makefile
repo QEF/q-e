@@ -28,6 +28,7 @@ electrons.o \
 electrons_nose.o \
 energies.o \
 ensemble_dft.o \
+environ_cp_module.o \
 exch_corr.o \
 exx_cg.o \
 exx_es.o \
@@ -115,7 +116,7 @@ entropy.o
 
 QEMODS=$(BASEMODS)
 
-TLDEPS= bindir libs mods
+TLDEPS= bindir mods
 
 all : tldeps libcp.a manycp.x cp.x wfdd.x cppp.x
 

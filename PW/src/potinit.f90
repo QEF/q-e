@@ -37,7 +37,7 @@ SUBROUTINE potinit()
   USE scf,                  ONLY : rho, rho_core, rhog_core, &
                                    vltot, v, vrs, kedtau
   USE xc_lib,               ONLY : xclib_dft_is
-  USE ener,                 ONLY : ehart, etxc, vtxc, epaw
+  USE ener,                 ONLY : ehart, etxc, vtxc, epaw, esol, vsol
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth, &
                                    niter_with_fixed_ns, lda_plus_u_kind, &
                                    nsg, nsgnew
@@ -57,6 +57,12 @@ SUBROUTINE potinit()
   !
   USE scf_gpum,             ONLY : using_vrs
   USE pwcom,                ONLY : report_mag 
+  USE rism_module,          ONLY : lrism, rism_init3d, rism_calc3d
+  !
+#if defined (__ENVIRON)
+  USE plugin_flags,         ONLY : use_environ
+  USE environ_pw_module,    ONLY : calc_environ_potential
+#endif
   !
   IMPLICIT NONE
   !
@@ -230,15 +236,25 @@ SUBROUTINE potinit()
      !
   END IF
   !
+  ! ... initialize 3D-RISM
+  !
+  IF (lrism) CALL rism_init3d()
+  !
   ! ... plugin contribution to local potential
   !
-  CALL plugin_scf_potential(rho,.FALSE.,-1.d0,vltot)
+#if defined (__ENVIRON)
+  IF (use_environ) CALL calc_environ_potential(rho, .FALSE., -1.D0, vltot)
+#endif
   !
   ! ... compute the potential and store it in v
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
   IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
+  !
+  ! ... calculate 3D-RISM to get the solvation potential
+  !
+  IF (lrism) CALL rism_calc3d(rho%of_g(:, 1), esol, vsol, v%of_r, -1.0_DP)
   !
   ! ... define the total local potential (external+scf)
   !
@@ -249,9 +265,12 @@ SUBROUTINE potinit()
   !
   IF ( lda_plus_u ) THEN
      !
-     WRITE( stdout, '(5X,"Number of +U iterations with fixed ns =",I3)') &
+     IF (niter_with_fixed_ns>0) &
+     WRITE( stdout, '(5X,"Number of Hubbard iterations with fixed ns =",I3)') &
          niter_with_fixed_ns
-     WRITE( stdout, '(5X,"Starting occupations:")')
+     !
+     ! ... info about starting occupations
+     WRITE( stdout, '(/5X,"STARTING HUBBARD OCCUPATIONS:")')
      !
      IF (lda_plus_u_kind == 0) THEN
         CALL write_ns()

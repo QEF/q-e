@@ -13,7 +13,8 @@ All quantities whose dimensions are not explicitly specified are in
 RYDBERG ATOMIC UNITS. Charge is "number" charge (i.e. not multiplied
 by e); potentials are in energy units (i.e. they are multiplied by e).
 
-BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE
+BEWARE: TABS, CRLF, ANY OTHER STRANGE CHARACTER, ARE A SOURCES OF TROUBLE
+USE ONLY PLAIN ASCII TEXT FILES (CHECK THE FILE TYPE WITH UNIX COMMAND "file")
 
 Namelists must appear in the order given below.
 Comment lines in namelists can be introduced by a "!", exactly as in
@@ -22,7 +23,6 @@ either a "!" or a "#" character in the first position of a line.
 Do not start any line in cards with a "/" character.
 Leave a space between card names and card options, e.g.
 ATOMIC_POSITIONS (bohr), not ATOMIC_POSITIONS(bohr)
-Do not start any line in cards with a "/" character.
 
 
 Structure of the input data:
@@ -49,6 +49,10 @@ Structure of the input data:
  / ]
 
 [ &FCP
+  ...
+ / ]
+
+[ &RISM
   ...
  / ]
 
@@ -99,6 +103,40 @@ if (tpipa_b or crystal_b in a 'bands' calculation) see Doc/brillouin_zones.pdf
 
 [ ADDITIONAL_K_POINTS
      see: K_POINTS ]
+
+[ SOLVENTS
+   label(1)     Density(1)     Molecule(1)
+   label(2)     Density(2)     Molecule(2)
+   .....
+   label(nsolv) Density(nsolv) Molecule(nsolv) ]
+
+[ HUBBARD { atomic | ortho-atomic | norm-atomic | wf | pseudo }
+if (DFT+U)
+   U  label(1)-manifold(1) u_val(1)
+   ...
+   U  label(n)-manifold(n) u_val(n)
+  [J0 label(1)-manifold(1) j0_val(1)
+   ...
+   J0 label(n)-manifold(n) j0_val(n)]
+if (DFT+U+J)
+   U label(1)-manifold(1) u_val(1)
+   J label(1)-manifold(1) 1 j1_val(1)
+   J label(1)-manifold(1) 2 j2_val(1)
+   J label(1)-manifold(1) 3 j3_val(1)
+   ...
+   U label(n)-manifold(n) u_val(n)
+   J label(n)-manifold(n) 1 j1_val(n)
+   J label(n)-manifold(n) 2 j2_val(n)
+   J label(n)-manifold(n) 3 j3_val(n)
+if (DFT+U+V)
+   U label(I)-manifold(I) u_val(I)
+   V label(I)-manifold(I) label(J)-manifold(J) I J v_val(IJ)
+   ...
+   [J0 label(I)-manifold(I) j0_val(I)
+   ...
+   J0 label(n)-manifold(n) j0_val(n)]
+All Hubbard parameters must be specified in eV.
+Check Doc/Hubbard_input.pdf for more details. ]
 
 
 
@@ -441,24 +479,6 @@ NAMELIST: &CONTROL
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       lfcp
-   
-   Type:           LOGICAL
-   See:            fcp_mu
-   Default:        .FALSE.
-   Description:    If .TRUE. perform a constant bias potential (constant-mu) calculation
-                   for a system with ESM method. See the header of PW/src/fcp_module.f90
-                   for documentation. To perform the calculation, you must set a namelist FCP.
-                   
-                   NB:
-                   - The total energy displayed in output includes the potentiostat
-                     contribution (-mu*N).
-                   - "calculation" must be 'relax' or 'md'.
-                   - "assume_isolated" = 'esm' and "esm_bc" = 'bc2' or 'bc3' must be set
-                     in "SYSTEM" namelist.
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
    Variable:       gate
    
    Type:           LOGICAL
@@ -476,6 +496,51 @@ NAMELIST: &CONTROL
                    could still use them for symmetric systems (i.e. no dipole correction).
                    For "nosym"=.false. verbosity is set to 'high'.
                    Note: this option was called "monopole" in v6.0 and 6.1 of pw.x
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lfcp
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE. perform a constant bias potential (constant-mu) calculation
+                   for a system with ESM method. See the header of PW/src/fcp_module.f90
+                   for documentation. To perform the calculation, you must set a namelist FCP.
+                   
+                   NB:
+                   - The total energy displayed in output includes the potentiostat
+                     contribution (-mu*N).
+                   - "calculation" must be 'relax' or 'md'.
+                   - "assume_isolated" = 'esm' and "esm_bc" = 'bc2' or 'bc3' must be set
+                     in "SYSTEM" namelist.
+                   - ESM-RISM is also supported ("assume_isolated" = 'esm' and "esm_bc" = 'bc1'
+                     and "trism" = .TRUE.).
+                   - "ignore_wolfe" is always .TRUE., for BFGS.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       trism
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE. perform a 3D-RISM-SCF calculation
+                   [for details see H.Sato et al., JCP 112, 9463 (2000)].
+                   The solvent's distributions are calculated by 3D-RISM,
+                   though solute is treated as SCF. The charge density and
+                   the atomic positions are optimized, simultaneously with
+                   the solvents. To perform the calculation, you must set
+                   a namelist RISM and a card SOLVENTS.
+                   
+                   If "assume_isolated" = 'esm' and "esm_bc" = 'bc1',
+                   Laue-RISM is calculated instead of 3D-RISM
+                   and coupled with ESM method (i.e. ESM-RISM).
+                   [for details see S.Nishihara and M.Otani, PRB 96, 115429 (2017)].
+                   
+                   The default of "mixing_beta" is 0.2
+                   for both 3D-RISM and Laue-RISM.
+                   
+                   For structural relaxation with BFGS,
+                   "ignore_wolfe" is always .TRUE. .
    +--------------------------------------------------------------------
    
 ===END OF NAMELIST======================================================
@@ -1202,89 +1267,20 @@ NAMELIST: &SYSTEM
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       lda_plus_u
-   
-   Type:           LOGICAL
-   Default:        .FALSE.
-   Status:         DFT+U (formerly known as LDA+U) currently works only for
-                   a few selected elements. Modify Modules/set_hubbard_l.f90 and
-                   PW/src/tabd.f90 if you plan to use DFT+U with an element that
-                   is not configured there.
-   Description:    Specify "lda_plus_u" = .TRUE. to enable DFT+U, DFT+U+V, or DFT+U+J calculations.
-                   See: Anisimov, Zaanen, and Andersen, PRB 44, 943 (1991);
-                        Anisimov et al., PRB 48, 16929 (1993);
-                        Liechtenstein, Anisimov, and Zaanen, PRB 52, R5467 (1994).
-                   You must specify, for each Hubbard atom, the value of
-                   U and (optionally) V, J, alpha of the Hubbard model (all in eV):
-                   see "lda_plus_u_kind", "Hubbard_U", "Hubbard_V",
-                   "Hubbard_J", "Hubbard_alpha"
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       lda_plus_u_kind
-   
-   Type:           INTEGER
-   Default:        0
-   Description:   
-                   Specifies the type of calculation:
-    
-                   lda_plus_u_kind = 0  :
-                        DFT+U simplified version of Cococcioni and de Gironcoli,
-                        PRB 71, 035105 (2005), using "Hubbard_U"
-    
-                   lda_plus_u_kind = 1  :
-                        DFT+U rotationally invariant scheme of Liechtenstein et al.,
-                        using "Hubbard_U" and "Hubbard_J"
-    
-                   lda_plus_u_kind = 2  :
-                        DFT+U+V simplified version of Campo Jr and Cococcioni,
-                        J. Phys.: Condens. Matter 22, 055602 (2010), doi:10.1088/0953-8984/22/5/055602,
-                        using "Hubbard_V"
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       Hubbard_U(i), i=1,ntyp
+   Variable:       Hubbard_occ(ityp,i), (ityp,i)=(1,1) ... (ntyp,3)
    
    Type:           REAL
-   Default:        0.D0 for all species
-   Description:    Hubbard_U(i): U parameter (eV) for species i, DFT+U calculation
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       Hubbard_J0(i), i=1,ntype
-   
-   Type:           REAL
-   Default:        0.D0 for all species
-   Description:    Hubbard_J0(i): J0 parameter (eV) for species i, DFT+U+J calculation,
-                   see PRB 84, 115108 (2011) for details.
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       Hubbard_V(na,nb,k), (na,nb,k)=(1,1,1) ... (natx,27*natx,4)
-   
-   Type:           REAL
-   Default:        0.D0 for all elements
-   Description:    Hubbard_V(na,nb,k): V parameters (eV) between atoms na and nb,
-                   used in DFT+U+V calculations (only for "lda_plus_u_kind"=2).
-                   The atomic indices na and nb correspond to the atomic positions
-                   in the "ATOMIC_POSITIONS" card (this is not the same as Hubbard_U
-                   which is specified for "ATOMIC_SPECIES").
-                   
-                   When na=nb, then "Hubbard_V"(na,na,k) is the on-site "Hubbard_U"
-                   for the atom na.
-                   
-                   natx=50 (if needed it can be changed in /Modules/parameters.f90)
-                   
-                   The index k controls the "interaction type" (k=1 is used for the
-                   simplest DFT+U+V calculation):
-                   k=1 - interaction between standard orbitals (both on na and nb);
-                   k=2 - interaction between standard (on na) and background (on nb) orbitals;
-                   k=3 - interaction between background orbitals (both on na and nb);
-                   k=4 - interaction between background (on na) and standard (on nb) orbitals.
-                   
-                   Standard orbitals correspond to the main Hubbard channel (e.g. d electrons
-                   in transition metals) and background orbitals correspond to the secondary
-                   Hubbard channel (e.g. p electrons in transition metals).
+   Default:        read from pseudopotentials
+   Description:    Hubbard occupations is the number of electrons in the
+                   Hubbard manifold. By default they are initialized by
+                   reading the occupations from pseudopotentials. If specified
+                   from the input, then the values read from the pseudopotentials
+                   will be overwritten.
+                   The second index of the Hubbard_occ array corrsponds to the
+                   Hubbard manifold number. It is possible to specify up to
+                   three Hubbard manifolds per Hubbard atom. However, if you want
+                   to specify three manifolds then the second and the third manifolds
+                   will be considered as one effective manifold (see Doc/Hubbard_input.pdf)
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1316,23 +1312,6 @@ NAMELIST: &SYSTEM
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       Hubbard_J(i,ityp), (i,ityp)=(1,1) ... (3,ntyp)
-   
-   Type:           REAL
-   Default:        0.D0 for all species
-   Description:    Hubbard_J(i,ityp): J parameters (eV) for species ityp,
-                   used in DFT+U calculations (only for "lda_plus_u_kind"=1)
-                   
-                   For p orbitals:  J = Hubbard_J(1,ityp);
-                   For d orbitals:  J = Hubbard_J(1,ityp), B = Hubbard_J(2,ityp);
-                   For f orbitals:  J = Hubbard_J(1,ityp), E2 = Hubbard_J(2,ityp),
-                                    E3= Hubbard_J(3,ityp).
-                   
-                   If B or E2 or E3 are not specified or set to 0 they will be
-                   calculated from J using atomic ratios.
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
    Variable:       starting_ns_eigenvalue(m,ispin,ityp), (m,ispin,ityp)=(1,1,1) ... (2*lmax+1,nspin or npol,ntyp)
    
    Type:           REAL
@@ -1346,69 +1325,6 @@ NAMELIST: &SYSTEM
                    Leave unchanged eigenvalues that are not set.
                    This is useful to suggest the desired orbital occupations
                    when the default choice takes another path.
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       U_projection_type
-   
-   Type:           CHARACTER
-   Default:        'atomic'
-   Description:   
-                   Only active when "lda_plus_U" is .true., specifies the type
-                   of projector on localized orbital to be used in the DFT+U
-                   scheme.
-                   
-                   Currently available choices:
-    
-                   'atomic' :
-                        use atomic wfc's (as they are) to build the projector
-    
-                   'ortho-atomic' :
-                        use Lowdin orthogonalized atomic wfc's
-    
-                   'norm-atomic' :
-                        Lowdin normalization of atomic wfc. Keep in mind:
-                        atomic wfc are not orthogonalized in this case.
-                        This is a "quick and dirty" trick to be used when
-                        atomic wfc from the pseudopotential are not
-                        normalized (and thus produce occupation whose
-                        value exceeds unity). If orthogonalized wfc are
-                        not needed always try 'atomic' first.
-    
-                   'file' :
-                        use the information from file "prefix".atwfc that must
-                        have been generated previously, for instance by pmw.x
-                        (see PP/src/poormanwannier.f90 for details).
-    
-                   'pseudo' :
-                        use the pseudopotential projectors. The charge density
-                        outside the atomic core radii is excluded.
-                        N.B.: for atoms with +U, a pseudopotential with the
-                        all-electron atomic wavefunctions is required (i.e.,
-                        as generated by ld1.x with lsave_wfc flag).
-    
-                   NB: forces and stress currently implemented only for the
-                   'atomic' and 'pseudo' choice.
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       Hubbard_parameters
-   
-   Type:           CHARACTER
-   Default:        'input'
-   Description:   
-                   Available choices:
-    
-                   'input' :
-                        read the "Hubbard_U" (or "Hubbard_V") parameters from
-                        the PW input file
-    
-                   'file' :
-                        read the "Hubbard_V" parameters from the file "parameters.in"
-                        which can be generated after the linear-response calculation
-                        (using the HP code). This option has a higher priority over
-                        the "Hubbard_V" if they are specified in the input. This option
-                        can be used only when "lda_plus_u_kind" = 2.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1828,8 +1744,7 @@ NAMELIST: &SYSTEM
    Type:           CHARACTER
    Default:        'none'
    See:            london_s6, london_rcut, london_c6, london_rvdw,
-                   dftd3_version, dftd3_threebody, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2,
-                   mbd_vdw
+                   dftd3_version, dftd3_threebody, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2
    Description:   
                    Type of Van der Waals correction. Allowed values:
     
@@ -1850,7 +1765,7 @@ NAMELIST: &SYSTEM
                         Optional variables: "ts_vdw_econv_thr", "ts_vdw_isolated"
                         See A. Tkatchenko and M. Scheffler, PRL 102, 073005 (2009).
     
-                   'mbd_vdw', 'many-body dispersion' :
+                   'MBD', 'mbd', 'many-body-dispersion', 'mbd_vdw' :
                         Many-body dipersion (MBD) correction to long-range interactions.
                         Optional variables: "ts_vdw_isolated"
                         A. Ambrosetti, A. M. Reilly, R. A. DiStasio, A. Tkatchenko, J. Chem. Phys. 140
@@ -2306,6 +2221,33 @@ NAMELIST: &ELECTRONS
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
+   Variable:       diago_rmm_ndim
+   
+   Type:           INTEGER
+   Default:        4
+   Description:    For RMM-DIIS diagonalization: dimension of workspace
+                   (number of wavefunction packets, at least 2 needed).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       diago_rmm_conv
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE., RMM-DIIS is performed up to converge.
+                   If .FALSE., RMM-DIIS is performed only once.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       diago_gs_nblock
+   
+   Type:           INTEGER
+   Default:        16
+   Description:    For RMM-DIIS diagonalization:
+                   blocking size of Gram-Schmidt orthogonalization
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
    Variable:       diago_full_acc
    
    Type:           LOGICAL
@@ -2314,23 +2256,6 @@ NAMELIST: &ELECTRONS
                    of accuracy of the occupied ones. Otherwise the empty states are
                    diagonalized using a larger threshold (this should not affect
                    total energy, forces, and other ground-state properties).
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       diago_rmm_ndim
-   
-   Type:           INTEGER
-   Default:        4
-   Description:    Max dimension  of the iterative subspace for RMM-DIIS diagonalization
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       diago_rmm_conv
-   
-   Type:           LOGICAL
-   Default:        .FALSE.
-   Description:    If .TRUE. during the SCF loop the RMM-DIIS is reiterated until all bands
-                   are converged or up to a max of 8 times.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2984,12 +2909,31 @@ NAMELIST: &CELL
                         all axis and angles are moved
     
                    'ibrav' :
-                        all axis and angles are moved, but the lattice remains consistent
-                        with the initial ibrav choice. You can use this option in combination
-                        with any other one by specifying "ibrav+option". Please note that some
-                        combinations do not make sense for some crystals and will guarantee that
-                        the relax will never converge. E.g. 'ibrav+2Dxy' is not a problem for
-                        hexagonal cells, but will never converge for cubic ones.
+                        all axis and angles are moved,
+                                       but the lattice remains consistent
+                                       with the initial ibrav choice. You can use this option in combination
+                                       with any other one by specifying "ibrav+option". Please note that some
+                                       combinations do not make sense for some crystals and will guarantee that
+                                       the relax will never converge. E.g. 'ibrav+2Dxy' is not a problem for
+                                       hexagonal cells, but will never converge for cubic ones.
+    
+                   'a' :
+                        the x component of axis 1 (v1_x) is fixed
+    
+                   'b' :
+                        the y component of axis 2 (v2_y) is fixed
+    
+                   'c' :
+                        the z component of axis 3 (v3_z) is fixed
+    
+                   'fixa' :
+                        axis 1 (v1_x,v1_y,v1_z) is fixed
+    
+                   'fixb' :
+                        axis 1 (v2_x,v2_y,v2_z) is fixed
+    
+                   'fixc' :
+                        axis 1 (v3_x,v3_y,v3_z) is fixed
     
                    'x' :
                         only the x component of axis 1 (v1_x) is moved
@@ -3937,4 +3881,173 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Sat Dec 18 20:33:13 CET 2021
+========================================================================
+CARD: SOLVENTS { 1/cell | mol/L | g/cm^3 }
+
+   OPTIONAL CARD, USED ONLY IF "TRISM" = .TRUE., IGNORED OTHERWISE !
+   
+   ________________________________________________________________________
+   * IF laue_both_hands = .FALSE. : 
+   
+      /////////////////////////////////////////
+      // Syntax:                             //
+      /////////////////////////////////////////
+      
+         SOLVENTS { 1/cell | mol/L | g/cm^3 }
+            X(1)      Density(1)      Molecule(1)      
+            X(2)      Density(2)      Molecule(2)      
+            . . . 
+            X(nsolv)  Density(nsolv)  Molecule(nsolv)  
+      
+      /////////////////////////////////////////
+      
+       
+   * ELSE IF laue_both_hands = .TRUE. : 
+   
+      /////////////////////////////////////////
+      // Syntax:                             //
+      /////////////////////////////////////////
+      
+         SOLVENTS { 1/cell | mol/L | g/cm^3 }
+            X(1)      Density_Left(1)      Density_Right(1)      Molecule(1)      
+            X(2)      Density_Left(2)      Density_Right(2)      Molecule(2)      
+            . . . 
+            X(nsolv)  Density_Left(nsolv)  Density_Right(nsolv)  Molecule(nsolv)  
+      
+      /////////////////////////////////////////
+      
+       
+   ENDIF
+   ________________________________________________________________________
+   
+   DESCRIPTION OF ITEMS:
+   
+      +--------------------------------------------------------------------
+      Card's flags:   { 1/cell | mol/L | g/cm^3 }
+      
+      Description:   
+                      1/cell :
+                           solvent's densities are specified
+                           as number of molecule in unit cell.
+       
+                      mol/L :
+                           solvent's densities are in molar.
+       
+                      g/cm^3 :
+                           solvent's densities are in gram per cm^3.
+      +--------------------------------------------------------------------
+
+
+      +--------------------------------------------------------------------
+      Variable:       X
+      
+      Type:           CHARACTER
+      Description:    label of the solvent molecule.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       Density
+      
+      Type:           REAL
+      Description:    density of the solvent molecule.
+                      if not positive value is set, density is read from MOL-file.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       Molecule
+      
+      Type:           CHARACTER
+      Description:    MOL-file of the solvent molecule.
+                      in the MOL-file, molecular structure and some other data are written.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       X
+      
+      Type:           CHARACTER
+      Description:    label of the solvent molecule.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       Density_Left
+      
+      Type:           REAL
+      Description:    density of the solvent molecule in the left-hand side.
+                      if not positive value is set, density is read from MOL-file.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       Density_Right
+      
+      Type:           REAL
+      Description:    density of the solvent molecule in the right-hand side.
+                      if not positive value is set, density is read from MOL-file.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       Molecule
+      
+      Type:           CHARACTER
+      Description:    MOL-file of the solvent molecule.
+                      in the MOL-file, molecular structure and some other data are written.
+      +--------------------------------------------------------------------
+      
+===END OF CARD==========================================================
+
+
+========================================================================
+CARD: HUBBARD { atomic | ortho-atomic | norm-atomic | wf | pseudo }
+
+   DESCRIPTION OF ITEMS:
+   
+      +--------------------------------------------------------------------
+      Card's flags:   { atomic | ortho-atomic | norm-atomic | wf | pseudo }
+      
+      Description:   
+                      HUBBARD options are:
+       
+                      atomic :
+                           use atomic orbitals (read from pseudopotential) to build the
+                           Hubbard projectors
+       
+                      ortho-atomic :
+                           use Lowdin orthogonalized atomic orbitals. This option is
+                           recommended to be used whenever possible instead of atomic
+                           because it allows to avoid applying Hubbard corrections twice
+                           in the orbital overlap regions.
+       
+                      norm-atomic :
+                           Lowdin normalization of atomic orbitals. Keep in mind:
+                           atomic orbitals are not orthogonalized in this case.
+                           This is a "quick and dirty" trick to be used when
+                           atomic orbitals from the pseudopotential are not
+                           normalized (and thus produce occupation whose
+                           value exceeds unity).
+       
+                      wf :
+                           use Wannier functions to built Hubbard projectors.
+                           The information about the Wannier functionas are read
+                           from file "prefix".hub that must be generated using pmw.x
+                           (see PP/src/poormanwannier.f90 for details).
+                           Note: these are not maximally localized Wannier functions.
+                           (see PP/examples/example05)
+       
+                      pseudo :
+                           use the pseudopotential projectors. The charge density
+                           outside the atomic core radii is excluded.
+                           N.B.: for atoms with +U, a pseudopotential with the
+                           all-electron atomic orbitals are required (i.e.,
+                           as generated by ld1.x with lsave_wfc flag).
+       
+                      NB: forces and stress are currently implemented only for the
+                      'atomic', 'ortho-atomic', and 'pseudo' Hubbard projectors.
+       
+                      Check Doc/Hubbard_input.pdf to see how to specify Hubbard parameters
+                      U, J0, J, V in the HUBBARD card.
+      +--------------------------------------------------------------------
+
+
+===END OF CARD==========================================================
+
+
+This file has been created by helpdoc utility on Tue May 31 16:05:29 CEST 2022

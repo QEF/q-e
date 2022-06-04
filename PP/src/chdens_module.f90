@@ -500,7 +500,7 @@ SUBROUTINE chdens (plot_files,plot_num)
        IF (TRIM(interpolation) == 'fourier') THEN
           CALL plot_1d (nx, m1, x0, e1, ngm, g, rhog, alat, iflag, ounit)
        ELSE
-          CALL plot_1d_bspline (nx, m1, x0, e1, rhor, alat, iflag, ounit)
+          CALL plot_1d_bspline (nx, m1, x0, e1, rhor, alat, iflag, ounit, .FALSE.)
        ENDIF
   
     ELSEIF (iflag == 2) THEN
@@ -510,7 +510,7 @@ SUBROUTINE chdens (plot_files,plot_num)
               at, nat, tau, atm, ityp, output_format, ounit)
        ELSE
          CALL plot_2d_bspline (nx, ny, m1, m2, x0, e1, e2, rhor, alat, &
-              at, nat, tau, atm, ityp, output_format, ounit)
+              at, nat, tau, atm, ityp, output_format, ounit, .FALSE.)
        ENDIF
        IF (output_format == 2.and.ionode) THEN
           WRITE (ounit, '(i4)') nat
@@ -539,7 +539,7 @@ SUBROUTINE chdens (plot_files,plot_num)
           ELSE
              CALL plot_3d_bspline(celldm(1), at, nat, tau, atm, ityp, rhor,&
                   nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, &
-                  ounit, rhotot)
+                  ounit, rhotot, .FALSE.)
           END IF
   
        ELSEIF (ionode) THEN
@@ -563,7 +563,7 @@ SUBROUTINE chdens (plot_files,plot_num)
              ELSE
                 CALL plot_3d_bspline(celldm(1), at, nat, tau, atm, ityp, rhor,&
                      nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, &
-                     ounit, rhotot)
+                     ounit, rhotot, .FALSE.)
              ENDIF
              !
           ENDIF

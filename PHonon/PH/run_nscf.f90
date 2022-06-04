@@ -44,6 +44,7 @@ SUBROUTINE run_nscf(do_band, iq)
   USE ahc,             ONLY : elph_ahc
   USE mp_images,       ONLY : intra_image_comm
   USE mp,              ONLY : mp_barrier
+  USE rism_module,     ONLY : lrism, rism_set_restart
   !
   IMPLICIT NONE
   !
@@ -95,6 +96,8 @@ SUBROUTINE run_nscf(do_band, iq)
   ethr_nscf      = 1.0D-9 / nelec 
   ! threshold for diagonalization ethr_nscf - should be good for all cases
   !
+  IF (lrism) CALL rism_set_restart()
+  !
   CALL fft_type_allocate ( dfftp, at, bg, gcutm,  intra_bgrp_comm, nyfft=nyfft )
   CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft)
   !
@@ -109,7 +112,7 @@ SUBROUTINE run_nscf(do_band, iq)
   ENDIF
 !°°°°°°°°°°°°°°°°°END OF ACFDT TEST °°°°°°°°°°°°°°°°°°°°°°
 !
-  IF (do_band) CALL non_scf_ph ( )
+  IF (do_band.and..not.elph_mat) CALL non_scf_ph ( )
 
 
   IF ( check_stop_now() ) THEN

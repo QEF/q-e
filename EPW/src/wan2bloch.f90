@@ -1868,7 +1868,7 @@
           na = MOD(irn - 1, nat) + 1
           !
           DO iw = 1, dims
-            CALL ZAXPY(nrr_k * 3, cfac(iw, na, ir), epmatwp(iw, :, :, 3 * (na - 1) + 1:3 * na, ir), 1, &
+            CALL ZAXPY(nbnd * nrr_k * 3, cfac(iw, na, ir), epmatwp(iw, :, :, 3 * (na - 1) + 1:3 * na, ir), 1, &
                  eptmp(iw, :, :, 3 * (na - 1) + 1:3 * na), 1)
           ENDDO
         ENDDO

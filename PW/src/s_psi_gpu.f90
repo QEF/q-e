@@ -47,7 +47,6 @@ SUBROUTINE s_psi_gpu( lda, n, m, psi_d, spsi_d )
   !! S matrix dot wavefunctions psi
 #if defined(__CUDA)
   attributes(DEVICE) :: psi_d, spsi_d
-#endif
   !
   ! ... local variables
   !
@@ -77,7 +76,7 @@ SUBROUTINE s_psi_gpu( lda, n, m, psi_d, spsi_d )
   ENDIF
   !
   CALL stop_clock_gpu( 's_psi_bgrp' )
-  !
+#endif
   !
   RETURN
   !
@@ -92,9 +91,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
   !! Requires the products of psi with all beta functions in array 
   !! becp(nkb,m) (calculated in h_psi or by calbec).
   !
-#if defined (__CUDA)
-  USE cublas
-#endif
   USE kinds,            ONLY : DP
   USE becmod_gpum,      ONLY : becp_d
   USE uspp,             ONLY : nkb, okvan, ofsbeta, vkb
@@ -109,7 +105,10 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
   USE wavefunctions,    ONLY : psic
   USE fft_base,         ONLY : dffts
   USE becmod_gpum,      ONLY : using_becp_r_d, using_becp_k_d, using_becp_nc_d
+#if defined (__CUDA)
+  USE cublas
   USE device_memcpy_m,  ONLY : dev_memcpy
+#endif
   !
   IMPLICIT NONE
   !
@@ -128,10 +127,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
   !
   COMPLEX(DP), PINNED, ALLOCATABLE :: psi_host(:,:)
   COMPLEX(DP), PINNED, ALLOCATABLE ::spsi_host(:,:)
-#else
-  COMPLEX(DP), ALLOCATABLE :: psi_host(:,:)
-  COMPLEX(DP), ALLOCATABLE ::spsi_host(:,:)
-#endif
   !
   INTEGER :: ibnd
   !
@@ -205,6 +200,10 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
   ENDIF    
   !
   CALL stop_clock_gpu( 's_psi' )
+#else
+  COMPLEX(DP), ALLOCATABLE :: psi_host(:,:)
+  COMPLEX(DP), ALLOCATABLE ::spsi_host(:,:)
+#endif
   !
   RETURN
   !
@@ -232,7 +231,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        REAL(DP), POINTER :: ps_d(:,:)
 #if defined(__CUDA)
        attributes(DEVICE) :: ps_d
-#endif
          ! the product vkb and psi
        !
        CALL using_becp_r_d(0)
@@ -331,7 +329,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        CALL dev_buf%release_buffer(ps_d, ierr)
        !
-       !
+#endif
        RETURN
        !
      END SUBROUTINE s_psi_gamma_gpu
@@ -354,7 +352,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        COMPLEX(DP), POINTER :: ps_d(:,:)
 #if defined(__CUDA)
        attributes(DEVICE) :: ps_d, qqc_d
-#endif
          ! ps = product vkb and psi ; qqc = complex version of qq
        !
        CALL dev_buf%lock_buffer(ps_d, (/ nkb, m /), ierr)
@@ -416,6 +413,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
 !$acc end data
        !
        CALL dev_buf%release_buffer(ps_d, ierr)
+#endif
        !
        RETURN
        !
@@ -441,7 +439,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        COMPLEX(DP), POINTER :: qqc_d(:,:,:)
 #if defined(__CUDA)
        attributes(DEVICE) :: ps_d, qqc_d
-#endif
        ! the product vkb and psi
        !
        ! sync if needed
@@ -513,6 +510,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
 !$acc end data
 
        CALL dev_buf%release_buffer(ps_d, ierr)
+#endif
 
        RETURN
 

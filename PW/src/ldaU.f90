@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -32,9 +32,9 @@ MODULE ldaU
   REAL(DP) :: eth
   !! the Hubbard contribution to the energy
   REAL(DP) :: Hubbard_U(ntypx)
-  !! the Hubbard U
-  REAL(DP) :: Hubbard_U_back(ntypx)
-  !! the Hubbard U on background states
+  !! the Hubbard U (main Hubbard channel)
+  REAL(DP) :: Hubbard_U2(ntypx)
+  !! the Hubbard U (second (and third) Hubbard channel)
   REAL(DP) :: Hubbard_J0(ntypx)
   !! the Hubbard J, in simplified DFT+U
   REAL(DP) :: Hubbard_J(3,ntypx)
@@ -48,6 +48,8 @@ MODULE ldaU
   !! the Hubbard alpha (used to calculate U on background states)
   REAL(DP) :: Hubbard_beta(ntypx)
   !! the Hubbard beta (used to calculate J0)
+  REAL(DP) :: Hubbard_occ(ntypx,3)
+  !! the Hubbard occupations
   REAL(DP) :: starting_ns(lqmax,2,ntypx)
   !! starting ns
   !! FIXME: allocate dynamically
@@ -58,25 +60,28 @@ MODULE ldaU
   !! total no. of atomic wavefunctions having U term
   INTEGER :: niter_with_fixed_ns
   !! no. of iterations with fixed ns
+  LOGICAL :: lda_plus_u
+  !! .TRUE. if DFT+Hubbard is used
   INTEGER :: lda_plus_u_kind
   !! 0 --> Simplified rotationally-invariant formulation of DFT+U
   !! 1 --> Full formulation of DFT+U
   !! 2 --> Simplified rotationally-invariant formulation of DFT+U+V
+  INTEGER :: Hubbard_n(ntypx)
+  !! the principal quantum number of the first Hubbard manifold
   INTEGER :: Hubbard_l(ntypx)
-  !! the angular momentum of Hubbard states
-  INTEGER :: Hubbard_l_back(ntypx)
-  !! the angular momentum of Hubbard background states
-  INTEGER :: Hubbard_l1_back(ntypx)
-  !! the angular momentum of the second channel of iHubbard background states
+  !! the angular momentum of the first Hubbard manifold
+  INTEGER :: Hubbard_n2(ntypx)
+  !! the principal quantum number of the second Hubbard manifold
+  INTEGER :: Hubbard_l2(ntypx)
+  !! the angular momentum of the second Hubbard manifold
+  INTEGER :: Hubbard_n3(ntypx)
+  !! the principal quantum number of the third Hubbard manifold
+  INTEGER :: Hubbard_l3(ntypx)
+  !! the angular momentum of the third Hubbard manifold
   INTEGER :: Hubbard_lmax = 0 
   !! maximum angular momentum of Hubbard states
   INTEGER :: Hubbard_lmax_back = 0
   !! maximum angular momentum of Hubbard background states
-  INTEGER :: lback(ntypx)
-  !! the angular momentum of background states
-  INTEGER :: l1back(ntypx)
-  !! like above for the second background state
-  !! (there is a possibility to have two background states at the same U)
   INTEGER :: ldmx = -1
   !! max dimension of the manifold where the Hubbard correction
   !! is applied (max of 2*Hubbard_l+1 over all atoms)
@@ -86,22 +91,19 @@ MODULE ldaU
   !! max value of ldim_u(nt) = ldim_u(nt) + ldim_back(nt) over all ntyp
   INTEGER :: l0
   !! index in the array of Hubbard states. 
-  !! for every atom one has 2*Hubbard_l+1 + 2*Hubbard_l_back +1 = ldim_u states for example.
+  !! for every atom one has 2*Hubbard_l+1 + 2*Hubbard_l2 +1 = ldim_u states for example.
   INTEGER :: l0b
   !! like above for background states
   LOGICAL :: is_hubbard(ntypx)
   !! .TRUE. if this atom species has U correction
   LOGICAL :: is_hubbard_back(ntypx)
   !! .TRUE. if this atom species has U correction for background states
-  LOGICAL :: lda_plus_u
-  !! .TRUE. if DFT+U (or extended) calculation is performed
   LOGICAL :: conv_ns
   !! .TRUE. if ns are converged
   LOGICAL :: reserv(ntypx), reserv_back(ntypx)
   !! reservoir states
   LOGICAL :: backall(ntypx)
-  !! if .TRUE. two l channels can be used in the background (lback and l1back should be 
-  !! specified in input for all the types for which backall is .true.)
+  !! if .TRUE. two Hubbard manifolds can be used in the background (Hubbard_l2 and Hubbard_l3)
   LOGICAL :: hub_back
   !! .TRUE. if at least one species has Hubbard_U in the background states
   LOGICAL :: hub_pot_fix
@@ -110,11 +112,8 @@ MODULE ldaU
   LOGICAL :: iso_sys
   !! .TRUE. if the system is isolated (the code diagonalizes
   !! and prints the full occupation matrix)
-  CHARACTER(len=30) :: U_projection
+  CHARACTER(len=30) :: Hubbard_projectors
   !! 'atomic', 'ortho-atomic', 'file'
-  CHARACTER(len=80) :: Hubbard_parameters
-  !! if 'input' then read Hubbard_V from input,
-  !! if 'file' read them from the file called 'parameters.in' (used only with lda_plus_u_kind = 2)
   INTEGER, ALLOCATABLE :: oatwfc(:)
   !! specifies how input coordinates are given
   INTEGER, ALLOCATABLE :: oatwfc_back(:), oatwfc_back1(:)
@@ -128,8 +127,8 @@ MODULE ldaU
   INTEGER, ALLOCATABLE :: ldim_back(:)
   !! number of U background states for each atom
   INTEGER, ALLOCATABLE :: ll(:,:)
-  !! ll(i=1:ldim_u) = Hubbard_l       if 0    <= i <= l0
-  !!                = Hubbard_l_back  if l0+1 <  i <= ldim_u
+  !! ll(i=1:ldim_u) = Hubbard_l   if 0    <= i <= l0
+  !!                = Hubbard_l2  if l0+1 <  i <= ldim_u
   REAL(DP), ALLOCATABLE :: q_ae(:,:,:)
   !! coefficients for projecting onto beta functions
   REAL(DP), ALLOCATABLE :: q_ps(:,:,:)
@@ -200,9 +199,9 @@ MODULE ldaU
   !
 CONTAINS
   !
-  SUBROUTINE init_lda_plus_u ( psd, nspin, noncolin )
+  SUBROUTINE init_hubbard ( psd, nspin, noncolin )
     !
-    !! NOTE: average_pp must be called before init_lda_plus_u
+    !! NOTE: average_pp must be called before init_hubbard
     !
     IMPLICIT NONE
     !
@@ -210,7 +209,6 @@ CONTAINS
     INTEGER, INTENT(IN) :: nspin
     LOGICAL, INTENT(IN) :: noncolin
     !
-    INTEGER, EXTERNAL :: set_Hubbard_l, set_Hubbard_l_back
     INTEGER :: na, nt
     LOGICAL :: lba, lb
     !
@@ -227,15 +225,7 @@ CONTAINS
     ENDIF
     !
     Hubbard_lmax = -1
-    ! Set the default of Hubbard_l for the species which have
-    ! Hubbard_U=0 (in that case set_Hubbard_l will not be called)
-    Hubbard_l(:) = -1
-    !
-    ! Background part
-    !
     Hubbard_lmax_back  = -1
-    Hubbard_l_back(:)  = -1
-    Hubbard_l1_back(:) = -1
     ldmx_tot = -1
     !
     IF (.NOT.ALLOCATED (ldim_u) )    ALLOCATE(ldim_u(ntyp))
@@ -245,22 +235,22 @@ CONTAINS
     !
     IF ( lda_plus_u_kind == 0 ) THEN
        !
-       ! DFT+U (simplified) 
+       ! DFT+U(+J0) : Dudarev's formulation
        !
        DO nt = 1, ntyp
           !
           is_hubbard(nt) = Hubbard_U(nt) /= 0.0_DP          .OR. &
-                           Hubbard_U_back(nt)/= 0.0_dp      .OR. & 
+                           Hubbard_U2(nt)/= 0.0_dp          .OR. & 
                            Hubbard_alpha(nt) /= 0.0_DP      .OR. &
                            Hubbard_alpha_back(nt) /= 0.0_dp .OR. &
                            Hubbard_J0(nt) /= 0.0_DP         .OR. &
                            Hubbard_beta(nt) /= 0.0_DP  
           !
-          is_hubbard_back(nt) = Hubbard_U_back(nt)/= 0.0_dp .OR. &
+          is_hubbard_back(nt) = Hubbard_U2(nt)/= 0.0_dp     .OR. &
                                 Hubbard_alpha_back(nt) /= 0.0_dp                 
           !
           IF ( is_hubbard(nt) ) THEN
-             Hubbard_l(nt) = set_Hubbard_l( psd(nt) )
+             ! Hubbard_l is read from the input file (HUBBARD card)
              Hubbard_lmax = MAX( Hubbard_lmax, Hubbard_l(nt) )
              ldmx = MAX( ldmx, 2*Hubbard_l(nt)+1 )
              ldim_u(nt) = 2*Hubbard_l(nt)+1
@@ -270,29 +260,23 @@ CONTAINS
              lb = .TRUE.
              hub_back = .TRUE.
              !
-             ! if .not.backall set_hubbard_l_back determines the Hubbard_l_back; otherwise
-             ! Hubbard_l_back and Hubbard_l1_back are set from input (by lback and l1back). 
-             !
              IF (.NOT.backall(nt)) THEN
-                ! In this case there is only one Hubbard channel for background states
-                Hubbard_l_back(nt) = set_Hubbard_l_back( psd(nt) )
-                Hubbard_lmax_back = MAX( Hubbard_lmax_back, Hubbard_l_back(nt) )
-                ldmx_b = MAX( ldmx_b, 2*Hubbard_l_back(nt)+1)
-                ldim_back(nt) = 2 * Hubbard_l_back(nt) + 1
+                ! In this case there is one Hubbard channel for background states.
+                ! Hubbard_l2 is read from the input file (HUBBARD card)
+                Hubbard_lmax_back = MAX( Hubbard_lmax_back, Hubbard_l2(nt) )
+                ldmx_b = MAX( ldmx_b, 2*Hubbard_l2(nt)+1)
+                ldim_back(nt) = 2 * Hubbard_l2(nt) + 1
              ELSE
                 ! In this case there are two Hubbard channels for background states.
-                ! Note: the same U_back is used for these two background channels.
+                ! Hubbard_l2 and Hubbard_l3 are read from the input file (HUBBARD card)
+                ! Note: Hubbard_U2 is used for these two background channels.
                 lba = .TRUE.
-                Hubbard_l_back(nt) = lback(nt)
-                Hubbard_l1_back(nt) = l1back(nt)
-                Hubbard_lmax_back = MAX( Hubbard_lmax_back, Hubbard_l1_back(nt) )
-                ldmx_b = MAX( ldmx_b, 2*Hubbard_l_back(nt)+2*Hubbard_l1_back(nt)+2 )
-                ldim_back(nt) = 2 * (Hubbard_l_back(nt) + Hubbard_l1_back(nt) + 1)
+                Hubbard_lmax_back = MAX( Hubbard_lmax_back, Hubbard_l3(nt) )
+                ldmx_b = MAX( ldmx_b, 2*Hubbard_l2(nt)+2*Hubbard_l3(nt)+2 )
+                ldim_back(nt) = 2 * (Hubbard_l2(nt) + Hubbard_l3(nt) + 1)
              ENDIF
-             ldim_u(nt) = ldim_u(nt) + ldim_back(nt) !2 * Hubbard_l1_back(nt) + 1
-             Hubbard_lmax_back = MAX( Hubbard_lmax_back, Hubbard_l_back(nt) )
-          ELSE
-             backall(nt) = .FALSE.
+             ldim_u(nt) = ldim_u(nt) + ldim_back(nt) 
+             Hubbard_lmax_back = MAX( Hubbard_lmax_back, Hubbard_l2(nt) )
           ENDIF
           !
           ldmx_tot = MAX( ldmx_tot, ldim_u(nt) )
@@ -304,8 +288,8 @@ CONTAINS
        !
        ! ll is a label of all the Hubbard states telling the l of that states. 
        ! It is equal to Hubbard_l for the first 2*Hubbard_l+1 states, 
-       ! lback for the next 2*Hubbard_l_back+1, 
-       ! l1back for the next 2*Hubbard_l1_back+1
+       ! to Hubbard_l2 for the next 2*Hubbard_l2+1, 
+       ! to Hubbard_l3 for the next 2*Hubbard_l3+1
        ! (if there are two channels in the background).
        ! 
        ll(:,:) = -1
@@ -316,25 +300,25 @@ CONTAINS
           ELSE
              l0 = 0
           ENDIF
-          IF (Hubbard_l_back(nt).GE.0) THEN
-             ll(l0+1:l0+2*Hubbard_l_back(nt)+1,nt) = &
-             Hubbard_l_back(nt)
-             l0b = l0 + 2*Hubbard_l_back(nt)+1
+          IF (Hubbard_l2(nt).GE.0) THEN
+             ll(l0+1:l0+2*Hubbard_l2(nt)+1,nt) = &
+             Hubbard_l2(nt)
+             l0b = l0 + 2*Hubbard_l2(nt)+1
           ELSE
              l0b = 0
           ENDIF
-          IF (backall(nt) .AND. Hubbard_l1_back(nt).GE.0) THEN
-             ll(l0b+1:l0b+2*Hubbard_l1_back(nt)+1,nt) = &
-             Hubbard_l1_back(nt)
+          IF (backall(nt) .AND. Hubbard_l3(nt).GE.0) THEN
+             ll(l0b+1:l0b+2*Hubbard_l3(nt)+1,nt) = &
+             Hubbard_l3(nt)
           ENDIF
        ENDDO   
        !
     ELSEIF ( lda_plus_u_kind == 1 ) THEN
        !
-       ! DFT+U (full)
+       ! DFT+U(+J) : Liechtenstein's formulation
        ! 
-       IF ( U_projection == 'pseudo' ) CALL errore( 'init_lda_plus_u', &
-            & 'full DFT+U not implemented with pseudo projection type', 1 )
+       IF ( Hubbard_projectors == 'pseudo' ) CALL errore( 'init_hubbard', &
+            & 'full DFT+U not implemented with pseudo Hubbard projectors', 1 )
        !
        IF (noncolin) THEN
           IF ( .NOT. ALLOCATED (d_spin_ldau) ) ALLOCATE( d_spin_ldau(2,2,48) )
@@ -342,7 +326,7 @@ CONTAINS
        ENDIF
        !
        DO nt = 1, ntyp
-          IF (Hubbard_alpha(nt)/=0.d0 ) CALL errore( 'init_lda_plus_u', &
+          IF (Hubbard_alpha(nt)/=0.d0 ) CALL errore( 'init_hubbard', &
                'full DFT+U does not support Hubbard_alpha calculation', 1 )
 
           is_hubbard(nt) = Hubbard_U(nt)/= 0.0_dp .OR. &
@@ -350,7 +334,7 @@ CONTAINS
 
           IF ( is_hubbard(nt) ) THEN
              !
-             Hubbard_l(nt) = set_Hubbard_l( psd(nt) )
+             ! Hubbard_l is read from the input file (HUBBARD card)
              Hubbard_lmax = MAX( Hubbard_lmax, Hubbard_l(nt) )
              ldmx = MAX( ldmx, 2*Hubbard_l(nt)+1 )
              ldim_u(nt) = 2*Hubbard_l(nt)+1
@@ -372,7 +356,7 @@ CONTAINS
        !
     ELSEIF ( lda_plus_u_kind == 2 ) THEN
        !
-       ! DFT+U+V (simplified)
+       ! DFT+U+V(+J0) : Dudarev's formulation
        !
        ! Number of cells in the supercell
        num_uc = (2*sc_size+1)**3
@@ -403,52 +387,34 @@ CONTAINS
                                 Hubbard_alpha_back(nt) /= 0.0_dp
           !
           IF (  is_hubbard(nt) ) THEN
+             ! Hubbard_l is read from the input file (HUBBARD card)
+             Hubbard_lmax = MAX( Hubbard_lmax, Hubbard_l(nt) )
+             ldmx = MAX( ldmx, ldim_u(nt) )
+             ldim_u(nt) = 2*Hubbard_l(nt)+1
+          ENDIF
+          !
+          IF ( is_hubbard_back(nt) ) THEN
              !
-             IF (Hubbard_l(nt).EQ.-1) Hubbard_l(nt) = set_Hubbard_l( psd(nt) )
+             lb = .TRUE.
+             hub_back = .TRUE.
+             !
+             IF (.NOT.backall(nt)) THEN
+                ! In this case there is only one Hubbard channel for background states
+                ! Hubbard_l2 is read from the input file (HUBBARD card)
+                ldim_back(nt) = 2 * Hubbard_l2(nt) + 1
+             ELSE
+                ! In this case there are two Hubbard channels for background states.
+                ! Hubbard_l2 and Hubbard_l3 are read from the input file (HUBBARD card)
+                ! Note: Hubbard_U2 is used for these two background channels.
+                lba = .TRUE.
+                ldim_back(nt) = 2 * Hubbard_l2(nt) + 2 * Hubbard_l3(nt) + 2
+                Hubbard_lmax_back = MAX( Hubbard_lmax_back, Hubbard_l3(nt) )
+             ENDIF
+             !
+             ldim_u(nt) = ldim_u(nt) + ldim_back(nt) 
+             ldmx_b = MAX( ldmx_b, ldim_back(nt) )
+             Hubbard_lmax_back = MAX( Hubbard_lmax_back, Hubbard_l2(nt) )
              ! 
-             IF (Hubbard_l(nt).GE.0) THEN
-                ldim_u(nt) = 2 * Hubbard_l(nt) + 1
-                Hubbard_lmax = MAX( Hubbard_lmax, Hubbard_l(nt) )
-                ldmx = MAX( ldmx, ldim_u(nt) )
-             ENDIF
-             !
-             IF ( is_hubbard_back(nt) ) THEN
-                !
-                lb = .TRUE.
-                hub_back = .TRUE.
-                !
-                ! if .not.backall set_hubbard_l_back determines the Hubbard_l_back; otherwise
-                ! Hubbard_l_back and Hubbard_l1_back are set from input (by lback and l1back).
-                !
-                IF (.NOT.backall(nt)) THEN
-                   ! In this case there is only one Hubbard channel for background states
-                   IF (Hubbard_l_back(nt).EQ.-1) &
-                      Hubbard_l_back(nt) = set_Hubbard_l_back( psd(nt) )
-                   IF (Hubbard_l_back(nt).GE.0)  &
-                      ldim_back(nt) = 2 * Hubbard_l_back(nt) + 1
-                ELSE
-                   ! In this case there are two Hubbard channels for background states.
-                   ! Note: the same Hubbard parameter is used for these two background channels.
-                   lba = .TRUE.
-                   IF (Hubbard_l1_back(nt).EQ.-1) THEN
-                      Hubbard_l_back(nt) = lback(nt)
-                      Hubbard_l1_back(nt) = l1back(nt)
-                   ENDIF
-                   ldim_back(nt) = 2 * Hubbard_l_back(nt) + 2 * Hubbard_l1_back(nt) + 2
-                   Hubbard_lmax_back = MAX( Hubbard_lmax_back, Hubbard_l1_back(nt) )
-                ENDIF
-                !
-                ldim_u(nt) = ldim_u(nt) + ldim_back(nt) ! 2 * Hubbard_l1_back(nt) + 1
-                ldmx_b = MAX( ldmx_b, ldim_back(nt) )
-                Hubbard_lmax_back = MAX( Hubbard_lmax_back, Hubbard_l_back(nt) )
-                ! 
-             ENDIF
-             !
-          ELSE
-             !
-             ldim_u(nt) = 0
-             ldim_back(nt) = 0
-             !
           ENDIF
           !
           ldmx_tot = MAX( ldmx_tot, ldim_u(nt) )
@@ -465,8 +431,8 @@ CONTAINS
        !
        ! ll is a label of all the Hubbard states telling the l of that states. 
        ! It is equal to Hubbard_l for the first 2*Hubbard_l+1 states, 
-       ! lback for the next 2*Hubbard_l_back+1, 
-       ! l1back for the next 2*Hubbard_l1_back+1
+       ! to Hubbard_l2 for the next 2*Hubbard_l2+1, 
+       ! to Hubbard_l3 for the next 2*Hubbard_l3+1
        ! (if there are two channels in the background).
        !
        ll(:,:) = -1
@@ -480,29 +446,29 @@ CONTAINS
              l0 = 0
           ENDIF
           !
-          IF (Hubbard_l_back(nt).GE.0) THEN
-             ll(l0+1:l0+2*Hubbard_l_back(nt)+1,nt) = Hubbard_l_back(nt)
-             l0b = l0 + 2*Hubbard_l_back(nt)+1
+          IF (Hubbard_l2(nt).GE.0) THEN
+             ll(l0+1:l0+2*Hubbard_l2(nt)+1,nt) = Hubbard_l2(nt)
+             l0b = l0 + 2*Hubbard_l2(nt)+1
           ELSE
              l0b = 0
           ENDIF
           !
-          IF (backall(nt) .AND. Hubbard_l1_back(nt).GE.0) &
-             & ll(l0b+1:l0b+2*Hubbard_l1_back(nt)+1,nt) = Hubbard_l1_back(nt)
+          IF (backall(nt) .AND. Hubbard_l3(nt).GE.0) &
+             & ll(l0b+1:l0b+2*Hubbard_l3(nt)+1,nt) = Hubbard_l3(nt)
           ! 
        ENDDO
        !
     ELSE
        !
-       CALL errore( 'init_lda_plus_u', 'Not allowed value of lda_plus_u_kind', 1 )
+       CALL errore( 'init_hubbard', 'Not allowed value of lda_plus_u_kind', 1 )
        !
     ENDIF
     !
-    IF ( Hubbard_lmax == -1 ) CALL errore( 'init_lda_plus_u', &
-         'lda_plus_u calculation but Hubbard_l not set', 1 )
+    IF ( Hubbard_lmax == -1 ) CALL errore( 'init_hubbard', &
+         'DFT+Hubbard calculation but Hubbard_l not set', 1 )
     !
     IF ( Hubbard_lmax > 3 ) &
-         CALL errore( 'init_lda_plus_u', 'Hubbard_l should not be > 3 ', 1 )
+         CALL errore( 'init_hubbard', 'Hubbard_l should not be > 3 ', 1 )
     !
     ! Compute the index of atomic wfcs used as projectors
     !
@@ -541,9 +507,9 @@ CONTAINS
     !
     RETURN
     !
-  END SUBROUTINE init_lda_plus_u
+  END SUBROUTINE init_hubbard
   !
-  SUBROUTINE deallocate_ldaU( flag )
+  SUBROUTINE deallocate_hubbard( flag )
   !
   LOGICAL, INTENT(IN) :: flag
   INTEGER :: na
@@ -585,7 +551,7 @@ CONTAINS
   !
   RETURN
   !
-  END SUBROUTINE deallocate_ldaU
+  END SUBROUTINE deallocate_hubbard
   !
   SUBROUTINE deallocate_at_center_type (neighood_)
   !
@@ -627,12 +593,12 @@ CONTAINS
      ENDIF
      IF (is_hubbard_back(nt)) THEN
         m1 = 1
-        m2 = 2*Hubbard_l_back(nt)+1
+        m2 = 2*Hubbard_l2(nt)+1
         wfcU(:,offsetU_back(na)+m1:offsetU_back(na)+m2) = &
             swfcatom(:,oatwfc_back(na)+m1:oatwfc_back(na)+m2)
         IF (backall(nt)) THEN
            m1 = 1
-           m2 = 2*Hubbard_l1_back(nt)+1
+           m2 = 2*Hubbard_l3(nt)+1
            wfcU(:,offsetU_back1(na)+m1:offsetU_back1(na)+m2) = &
                swfcatom(:,oatwfc_back1(na)+m1:oatwfc_back1(na)+m2)
         ENDIF

@@ -357,6 +357,10 @@ MODULE ener
   !! the Fermi energy down (if two_fermi_energies=.TRUE.)
   REAL(DP) :: egrand
   !! the Potentiostat contribution for GC-SCF
+  REAL(DP) :: esol
+  !! the solvation energy, from 3D-RISM
+  REAL(DP) :: vsol
+  !! another solvation energy, from 3D-RISM
   !
 END MODULE ener
 !

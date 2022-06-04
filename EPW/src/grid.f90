@@ -1463,18 +1463,12 @@
         sa(:, :) = DBLE(s(:, :, nb))
         xkf_rot = MATMUL(sa, xkf_tmp(:, ik + lower_bnd - 1))
         !
-        DO i = 1, 3
-          IF (xkf_rot(1) < - eps8) xkf_rot(1) = xkf_rot(1) + 1.0d0
-          IF (xkf_rot(2) < - eps8) xkf_rot(2) = xkf_rot(2) + 1.0d0
-          IF (xkf_rot(3) < - eps8) xkf_rot(3) = xkf_rot(3) + 1.0d0
-        ENDDO
-        !
         ! Check that the point xkf_rot is part of the orginal xkf_in
         found = .FALSE.
         DO jk = 1, nkpt_bzfst
-          IF ((ABS(xkf_rot(1) - xkf_in(1, jk)) < eps8) .AND. &
-              (ABS(xkf_rot(2) - xkf_in(2, jk)) < eps8) .AND. &
-              (ABS(xkf_rot(3) - xkf_in(3, jk)) < eps8)) THEN
+          IF ((ABS(xkf_rot(1) - xkf_in(1, jk) - NINT(xkf_rot(1) - xkf_in(1, jk))) < eps8) .AND. &
+              (ABS(xkf_rot(2) - xkf_in(2, jk) - NINT(xkf_rot(2) - xkf_in(2, jk))) < eps8) .AND. &
+              (ABS(xkf_rot(3) - xkf_in(3, jk) - NINT(xkf_rot(3) - xkf_in(3, jk))) < eps8)) THEN
              found = .TRUE.
              EXIT
           ENDIF

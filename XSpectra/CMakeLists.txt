@@ -6,7 +6,6 @@ set(src_xspectra
     src/mygetK.f90
     src/ipoolscatter.f90
     src/lr_sm1_psi.f90
-    src/orthoUatwfc_k.f90
     src/read_k_points.f90
     src/reset_k_points_and_reinit.f90
     src/select_nl_init.f90
@@ -103,3 +102,11 @@ qe_install_targets(
     qe_xspectra_exe
     qe_xspectra_spectracorrection_exe
     qe_xspectra_molecularnexafs_exe)
+
+add_custom_target(xspectra
+    DEPENDS
+        qe_xspectra_exe
+        qe_xspectra_spectracorrection_exe
+        qe_xspectra_molecularnexafs_exe
+    COMMENT
+        "X-ray core-hole spectroscopy calculations")

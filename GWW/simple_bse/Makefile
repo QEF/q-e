@@ -21,7 +21,7 @@ build_eemat.o
 
 QEMODS = $(BASEMODS)
 
-TLDEPS=bindir libs mods gwwlib
+TLDEPS=bindir mods gwwlib
 
 all : tldeps simple_bse.x  libsimple_exc.a
 

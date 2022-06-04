@@ -1,4 +1,5 @@
 set(src_tddfpt
+    src/environ_td_module.f90
     src/lr_variables.f90
     src/lr_charg_resp.f90
     src/bcast_lr_input.f90
@@ -123,17 +124,17 @@ target_link_libraries(qe_tddfpt_turboeels_exe
         qe_xclib)
 
 ###########################################################
-# turbo_magnons.x
+# turbo_magnon.x
 ###########################################################
-set(src_turbomagnons_x src/lr_magnons_main.f90)
+set(src_turbomagnon_x src/lr_magnons_main.f90)
 # Because this main file includes laxlib.fh which is preprocessed with __CUDA definition
 # the main file needs to be compiled with consistent definitions.
 qe_enable_cuda_fortran(src/lr_magnons_main.f90)
-qe_add_executable(qe_tddfpt_turbomagnons_exe ${src_turbomagnons_x})
-set_target_properties(qe_tddfpt_turbomagnons_exe
+qe_add_executable(qe_tddfpt_turbomagnon_exe ${src_turbomagnon_x})
+set_target_properties(qe_tddfpt_turbomagnon_exe
     PROPERTIES
-        OUTPUT_NAME turbo_magnons.x)
-target_link_libraries(qe_tddfpt_turbomagnons_exe
+        OUTPUT_NAME turbo_magnon.x)
+target_link_libraries(qe_tddfpt_turbomagnon_exe
     PRIVATE
         qe_tddfpt
         qe_lr_modules
@@ -158,12 +159,21 @@ target_link_libraries(qe_tddfpt_turbospectrum_exe
 
 ###########################################################
 
+set(TDDFPT_EXE_TARGETS
+    qe_tddfpt_turbolanczos_exe
+    qe_tddfpt_turbodavidson_exe
+    qe_tddfpt_turboeels_exe
+    qe_tddfpt_turbomagnon_exe
+    qe_tddfpt_turbospectrum_exe)
+
 qe_install_targets(
     # Libraries
     qe_tddfpt
     # Executables
-    qe_tddfpt_turbolanczos_exe
-    qe_tddfpt_turbodavidson_exe
-    qe_tddfpt_turboeels_exe
-    qe_tddfpt_turbomagnons_exe
-    qe_tddfpt_turbospectrum_exe)
+    ${TDDFPT_EXE_TARGETS})
+
+add_custom_target(tddfpt
+    DEPENDS
+        ${TDDFPT_EXE_TARGETS}
+    COMMENT
+        "time dependent dft code")

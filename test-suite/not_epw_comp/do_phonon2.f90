@@ -8,31 +8,29 @@
 !-----------------------------------------------------------------------
 SUBROUTINE do_phonon2(auxdyn)
   !-----------------------------------------------------------------------
-  !
-  ! ... This is the main driver of the phonon code.
-  ! ... It assumes that the preparatory stuff has been already done.
-  ! ... When the code calls this routine it has already read input
-  ! ... decided which irreducible representations have to be calculated
-  ! ... and it has set the variables that decide which work this routine
-  ! ... will do. The parallel stuff has been already setup by the calling
-  ! ... codes. This routine makes the two loops over
-  ! ... the q points and the irreps and does only the calculations
-  ! ... that have been decided by the driver routine.
-  ! ... At a generic q, if necessary it recalculates the band structure 
-  ! ... calling pwscf again.
-  ! ... Then it can calculate the response to an atomic displacement,
-  ! ... the dynamical matrix at that q, and the electron-phonon
-  ! ... interaction at that q. At q=0 it can calculate the linear response
-  ! ... to an electric field perturbation and hence the dielectric
-  ! ... constant, the Born effective charges and the polarizability
-  ! ... at imaginary frequencies.
-  ! ... At q=0, from the second order response to an electric field,
-  ! ... it can calculate also the electro-optic and the raman tensors.
+  !! This is the main driver of the phonon code. It assumes that the 
+  !! preparatory stuff has been already done.  
+  !! When the code calls this routine it has already read input
+  !! decided which irreducible representations have to be calculated
+  !! and it has set the variables that decide which work this routine
+  !! will do. The parallel stuff has been already setup by the calling
+  !! codes. This routine makes the two loops over
+  !! the q-points and the irreps and does only the calculations
+  !! that have been decided by the driver routine.  
+  !! At a generic q-point, if necessary, it recalculates the band structure 
+  !! calling pwscf again. Then it can calculate the response to an atomic
+  !! displacement, the dynamical matrix at that q-point, and the 
+  !! electron-phonon interaction at that q. At q=0 it can calculate 
+  !! the linear response to an electric field perturbation and hence the
+  !! dielectric constant, the Born effective charges and the polarizability
+  !! at imaginary frequencies.  
+  !! At q=0, from the second order response to an electric field,
+  !! it can calculate also the electro-optic and the raman tensors.
   !
 
   USE disp,            ONLY : nqs
   USE control_ph,      ONLY : epsil, trans, qplot, only_init, &
-                              only_wfc, rec_code, where_rec
+                              only_wfc, rec_code, where_rec, reduce_io
   USE el_phon,         ONLY : elph, elph_mat, elph_simple, elph_epa
   !
   ! YAMBO >
@@ -43,16 +41,19 @@ SUBROUTINE do_phonon2(auxdyn)
   USE elph_scdft_mod, ONLY : elph_scdft
   USE io_global,      ONLY : stdout
   ! FIXME: see below setup_pw
-  USE noncollin_module, ONLY : noncolin
-  USE spin_orb,         ONLY : domag
+  USE noncollin_module, ONLY : noncolin, domag
   USE ahc,            ONLY : elph_ahc, elph_do_ahc
   USE el_phon2,       ONLY : elph_epw
+  USE io_files,       ONLY : iunwfc
+  USE buffers,        ONLY : close_buffer
 
   IMPLICIT NONE
   !
   CHARACTER (LEN=256), INTENT(IN) :: auxdyn
-  INTEGER :: iq
+  INTEGER :: iq, qind
   LOGICAL :: do_band, do_iq, setup_pw
+  !
+  qind = 0
   !
   DO iq = 1, nqs
      !
@@ -61,16 +62,23 @@ SUBROUTINE do_phonon2(auxdyn)
      !  If this q is not done in this run, cycle
      !
      IF (.NOT.do_iq) CYCLE
+     qind = qind + 1
      !
      !  If necessary the bands are recalculated
      !
+     if (elph_mat.and.(qind.eq.1)) call wfck2r_ep()
      ! Note (A. Urru): This has still to be cleaned (setup_pw 
      ! should be correctly set by prepare_q: here we force it 
      ! to be .true. in order for the code to work properly in 
      ! the case SO-MAG).
      !
      setup_pw=setup_pw .OR. (noncolin .AND. domag)
-     IF (setup_pw) CALL run_nscf(do_band, iq)
+     IF (setup_pw) THEN
+        IF (reduce_io .AND. (qind == 1)) THEN
+           CALL close_buffer( iunwfc, 'DELETE' )
+        ENDIF
+        CALL run_nscf(do_band, iq)
+     ENDIF
      !
      !  If only_wfc=.TRUE. the code computes only the wavefunctions 
      !
@@ -153,5 +161,7 @@ SUBROUTINE do_phonon2(auxdyn)
 100  CALL clean_pw_ph(iq)
      !
   END DO
+
+  call wfck2r_clean_files()
 
 END SUBROUTINE do_phonon2

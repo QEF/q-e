@@ -222,7 +222,6 @@ PWOBJS = \
 OTHEROBJ = \
 ../../atomic/src/vxcgc.o \
 ../../upftools/interpolate.o \
-../../flib/set_hubbard_l.o \
 ../../flib/w1gauss.o \
 ../../flib/wgauss.o 
 

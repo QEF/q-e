@@ -62,6 +62,11 @@ SUBROUTINE run_pwscf( exit_status )
   !
   USE device_fbuff_m,             ONLY : dev_buf
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,      ONLY : use_environ
+  USE environ_pw_module, ONLY : is_ms_gcs, init_ms_gcs
+#endif
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(OUT) :: exit_status
@@ -114,7 +119,11 @@ SUBROUTINE run_pwscf( exit_status )
   !
   ! call to void routine for user defined / plugin patches initializations
   !
-  CALL plugin_initialization()
+#if defined (__ENVIRON)
+  IF (use_environ) THEN
+     IF (is_ms_gcs()) CALL init_ms_gcs()
+  END IF
+#endif
   !
   CALL check_stop_init()
   !

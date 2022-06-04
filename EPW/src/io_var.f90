@@ -24,7 +24,10 @@
             iua2ffil, iudosfil, iufillambda, iuqdos, iufe, iufilker, iuquad,  &
             iufilgap, iospectral_sup, iua2ftrfil, iufilgapFS, iufillambdaFS,  &
             iospectral_cum, iuwanep, iuwane, iunukk, iudvscf, iuqpeig, iures, &
-            iuint3paw
+            !!!!!
+            ! iuint3paw
+            iuint3paw, iufildos, iufilmat
+            !!!!!
   PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb, &
             iufilfreq, iufilegnv, iufileph, iufilkqmap, iunpattern, iufilmu_q, &
             iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, iufilFS,  &
@@ -73,6 +76,10 @@
   INTEGER :: iudvscf         = 80  ! Unit for the dvscf_q file
   INTEGER :: iudyn           = 81  ! Unit for the dynamical matrix file
   INTEGER :: iufilkqmap      = 82  ! Map of k+q
+  !!!!!
+  INTEGER :: iufilmat        = 87  ! Matsubara indices
+  INTEGER :: iufildos        = 88  ! electronic DOS in Fermi windows [prefix.dos]
+  !!!!!
   INTEGER :: iukgmap         = 96  ! Map of folding G-vector indexes [.kgmap]
   INTEGER :: iuwanep         = 97  ! Spatial decay of e-p matrix elements in wannier basis
                                    ! Electrons + phonons [epmat_wanep]

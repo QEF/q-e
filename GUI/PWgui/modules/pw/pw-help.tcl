@@ -2845,8 +2845,7 @@ help vdw_corr -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>See: </em>
 london_s6, london_rcut, london_c6, london_rvdw,
-dftd3_version, dftd3_threebody, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2,
-mbd_vdw
+dftd3_version, dftd3_threebody, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2
          </li>
 <br><li> <em>Description:</em>
 </li>
@@ -2881,7 +2880,7 @@ See A. Tkatchenko and M. Scheffler, "PRL 102, 073005 (2009)".
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
-<dt><tt><b>'mbd_vdw'</b>, <b>'many-body dispersion'</b> :</tt></dt>
+<dt><tt><b>'MBD'</b>, <b>'mbd'</b>, <b>'many-body-dispersion'</b>, <b>'mbd_vdw'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
 Many-body dipersion (MBD) correction to long-range interactions.
 Optional variables: "ts_vdw_isolated"

@@ -12,8 +12,8 @@ PROGRAM xclib_test
   !! Testing program for xc\_lib library in QE:
   !
   !! * generate: stores a set of dft benchmark data on xml file;
-  !! * execute:  runs XClib to calculate data and compare them 
-  !!             to benchamrk data in xml file.
+  !! * execute:  runs XClib to calculate data then compares them 
+  !!             to the benchmark set in the xml file.
   !
   !! Choices:
   !
@@ -39,7 +39,7 @@ PROGRAM xclib_test
                             xc_metagcx, xclib_dft_is_libxc, xclib_init_libxc,&
                             xclib_finalize_libxc, xclib_set_finite_size_volume,&
                             xclib_set_auxiliary_flags, xclib_dft_is, start_exx,&
-                            set_libxc_ext_param
+                            set_libxc_ext_param, dmxc
   USE xclib_utils_and_para
   !--xml
   USE xmltools,       ONLY: xml_open_file, xml_closefile,xmlr_readtag,  &

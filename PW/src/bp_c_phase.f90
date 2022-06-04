@@ -144,9 +144,10 @@
 !#                                                                            #!
 !##############################################################################!
 !#     Updated by Ronald Cohen, Carnegie Institution, 2019
-!#     To make sure average over strings is done so that each straing is 
+!#     To make sure average over strings is done so that each string is 
 !#     on the same branch cut. Also computations are kept as phases as long 
 !#     as possible before converting to polarization lattice
+!#     modulus corrected 5/2022
 
 
 !======================================================================!
@@ -235,7 +236,6 @@ SUBROUTINE c_phase
    INTEGER :: npw1
    INTEGER :: npw0
    INTEGER :: nstring
-   INTEGER :: nbnd_occ
    INTEGER :: nt
    INTEGER, ALLOCATABLE :: map_g(:)
    LOGICAL :: lodd
@@ -453,10 +453,8 @@ SUBROUTINE c_phase
    DO is=1,nspin_lsda
 
       ! l_cal(n) = .true./.false. if n-th state is occupied/empty
-      nbnd_occ=0
       DO nb = 1, nbnd
          l_cal(nb) = (wg(nb,1+nks*(is-1)/2) > eps)
-         IF (l_cal(nb)) nbnd_occ = nbnd_occ + 1
       END DO
 
 !     --- Start loop over orthogonal k-points ---
@@ -761,14 +759,12 @@ SUBROUTINE c_phase
         dtheta=atan2(AIMAG(cphik(istring)), DBLE(cphik(istring)))
         phik(istring)=theta0+dtheta
      end do
-!REC First you need to multiply phase by two if only summed over 1 set of bands for non-spin-polarized case NO--summed below
-!     if(nspin_lsda.eq.1)phik(1:istring)=2d0*phik(1:istring)        
-!REC Second you need to take mod so phase is -Pi to Pi
+!REC you need to take mod so phase is -Pi to Pi
       DO kort=1,nkort
         istring=kort+(is-1)*nkort
         phik(istring)=phik(istring)-tpi*nint(phik(istring)/tpi)
      enddo
-!REC Third you need to fix jumps before you take average
+!REC  you need to fix jumps before you take average
      t1=phik(1)/tpi
       DO kort=1,nkort
         istring=kort+(is-1)*nkort
@@ -800,11 +796,12 @@ SUBROUTINE c_phase
 !  -------------------------------------------------------------------------   !
    pdl_elec_up=phiup/tpi
    pdl_elec_dw=phidw/tpi
-   pdl_elec_tot=pdl_elec_up+pdl_elec_dw
-!  you need to do mod again!
-   pdl_elec_tot=pdl_elec_tot-nint(pdl_elec_tot)
+!  you need to do mod again! Mod depends on spin
+! nspin=1 -2Pi to 2Pi
+! nspin>1 -Pi to Pi
    pdl_elec_up=pdl_elec_up-nint(pdl_elec_up)
    pdl_elec_dw=pdl_elec_dw-nint(pdl_elec_dw)
+   pdl_elec_tot=pdl_elec_up+pdl_elec_dw
   
 !  -------------------------------------------------------------------------   !
 !                              ionic polarization                              !
@@ -834,8 +831,6 @@ SUBROUTINE c_phase
    ENDDO
 !  --- Add up the phases modulo 2 iff the ionic charges are even numbers ---
 
-   !REC You don't need a correction for jumps for the ionic part
-   ! This doesn't do anything since there is not an average but a sum
    pdl_ion_tot=SUM(pdl_ion(1:nat))
    IF (lodd) THEN
       pdl_ion_tot=pdl_ion_tot-1.0d0*nint(pdl_ion_tot/1.0d0)

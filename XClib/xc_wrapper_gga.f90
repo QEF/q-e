@@ -55,16 +55,12 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud, &
     !$acc data present( rho, grho, ex, ec, v1x, v2x, v1c, v2c )
     IF (PRESENT(v2c_ud)) THEN
       !$acc data present( v2c_ud )
-      !$acc host_data use_device( rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
       CALL xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
-      !$acc end host_data
       !$acc end data
     ELSE
       ALLOCATE( v2c_dummy(length) )
       !$acc data create( v2c_dummy )
-      !$acc host_data use_device( rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_dummy )
       CALL xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_dummy )
-      !$acc end host_data
       !$acc end data
       DEALLOCATE( v2c_dummy )
     ENDIF
@@ -75,16 +71,12 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud, &
     !$acc data copyin( rho, grho ), copyout( ex, ec, v1x, v2x, v1c, v2c )
     IF (PRESENT(v2c_ud)) THEN
       !$acc data copyout( v2c_ud )
-      !$acc host_data use_device( rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
       CALL xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
-      !$acc end host_data
       !$acc end data
     ELSE
       ALLOCATE( v2c_dummy(length) )
       !$acc data create( v2c_dummy )
-      !$acc host_data use_device( rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_dummy )
       CALL xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_dummy )
-      !$acc end host_data
       !$acc end data
       DEALLOCATE( v2c_dummy )
     ENDIF
@@ -109,6 +101,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
 #endif
   !
   USE kind_l,               ONLY: DP
+  USE xclib_utils_and_para, ONLY: error_msg, nowarning
   USE dft_setting_params,   ONLY: igcx, igcc, is_libxc, rho_threshold_gga, &
                                   grho_threshold_gga, rho_threshold_lda
   USE qe_drivers_gga
@@ -150,13 +143,11 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   REAL(DP), ALLOCATABLE :: rh(:), zeta(:)
   REAL(DP), ALLOCATABLE :: grho2(:,:), grho_ud(:)
   !
-  INTEGER :: k, is
+  INTEGER :: k, is, ierr
   REAL(DP) :: rho_up, rho_dw, grho_up, grho_dw, sgn1
   REAL(DP), PARAMETER :: small = 1.E-10_DP
   !
-  !$acc data deviceptr( rho(length,ns), grho(3,length,ns), ex(length), ec(length),      &
-  !$acc&                v1x(length,ns), v2x(length,ns), v1c(length,ns), v2c(length,ns), &
-  !$acc&                v2c_ud(length) )
+  !$acc data present( rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
 #if defined(__LIBXC)
   !
@@ -193,8 +184,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
     DO k = 1, length
       arho_k = ABS(rho(k,1))
       rho_lxc(k) = arho_k
-      IF ( arho_k > rho_threshold_gga ) &
-         sigma(k) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
+      sigma(k) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
     ENDDO
     !
   ELSE
@@ -214,9 +204,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   IF ( ns==1 .AND. ANY(.NOT.is_libxc(3:4)) ) THEN
      !
-     !$acc host_data use_device( rho_lxc, sigma )
-     CALL gcxc( length, rho_lxc, sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
-     !$acc end host_data
+     CALL gcxc( length, rho_lxc, sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1), ierr )
      !
      !$acc parallel loop
      DO k = 1, length
@@ -305,9 +293,8 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
             grho2(k,2) = sigma(3*k)
             grho_ud(k) = sigma(3*k-1)
           ENDDO
-          !$acc host_data use_device( grho2, grho_ud )
+          !
           CALL gcc_spin_more( length, rho, grho2, grho_ud, ec, v1c, v2c, v2c_ud )
-          !$acc end host_data
           !$acc end data
           DEALLOCATE( grho_ud )
           !
@@ -329,9 +316,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
             grho2(k,2) = grho(1,k,2)**2 + grho(2,k,2)**2 + grho(3,k,2)**2
           ENDDO
           !
-          !$acc host_data use_device( rh, zeta, grho2 )
           CALL gcc_spin( length, rh, zeta, grho2(:,1), ec, v1c, v2c(:,1) )
-          !$acc end host_data
           !
           !$acc parallel loop
           DO k = 1, length
@@ -420,9 +405,8 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
           grho2(k,is) = grho(1,k,is)**2 + grho(2,k,is)**2 + grho(3,k,is)**2
         ENDDO
       ENDDO
-      !$acc host_data use_device( grho2 )
-      CALL gcx_spin( length, rho, grho2, ex, v1x, v2x )
-      !$acc end host_data
+      !
+      CALL gcx_spin( length, rho, grho2, ex, v1x, v2x, ierr )
       !$acc end data
       DEALLOCATE( grho2 )
       !
@@ -442,15 +426,13 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
      !
      ALLOCATE( rh(length) )
      !$acc data create( rh )
-     !$acc host_data use_device( rh, grho2 )
      !$acc parallel loop
      DO k = 1, length
         rh(k) = ABS(rho(k,1))
-        IF ( rh(k) > rho_threshold_gga ) &
-             grho2(k,1) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
+        grho2(k,1) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
      ENDDO
      !
-     CALL gcxc( length, rh, grho2(:,1), ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
+     CALL gcxc( length, rh, grho2(:,1), ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1), ierr )
      !
      !$acc parallel loop
      DO k = 1, length
@@ -459,13 +441,11 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
         ec(k) = ec(k) * sgn1
      ENDDO
      !
-     !$acc end host_data
      !$acc end data
      DEALLOCATE( rh )
      !
   ELSE
      !
-     !$acc host_data use_device( grho2 )
      !$acc parallel loop collapse(2)
      DO is = 1, ns
        DO k = 1, length
@@ -473,14 +453,12 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
        ENDDO
      ENDDO
      !
-     CALL gcx_spin( length, rho, grho2, ex, v1x, v2x )
-     !$acc end host_data
+     CALL gcx_spin( length, rho, grho2, ex, v1x, v2x, ierr )
      !
      IF (igcc==3 .OR. igcc==7 .OR. igcc==13 ) THEN
         !
         ALLOCATE( grho_ud(length) )
         !$acc data create( grho_ud )
-        !$acc host_data use_device( grho_ud, grho2 )
         !$acc parallel loop
         DO k = 1, length
           grho_ud(k) = grho(1,k,1) * grho(1,k,2) + grho(2,k,1) * grho(2,k,2) + &
@@ -489,7 +467,6 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
         !
         CALL gcc_spin_more( length, rho, grho2, grho_ud, ec, v1c, v2c, v2c_ud )
         !
-        !$acc end host_data
         !$acc end data
         DEALLOCATE( grho_ud )
         !
@@ -497,7 +474,6 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
         !
         ALLOCATE( rh(length), zeta(length) )
         !$acc data create( rh, zeta )
-        !$acc host_data use_device( rh, zeta, grho2 )
         !$acc parallel loop
         DO k = 1, length
           rh(k) = rho(k,1) + rho(k,2)
@@ -519,7 +495,6 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
           IF ( ns==2 ) v2c_ud(k) = v2c(k,1)
         ENDDO
         !
-        !$acc end host_data
         !$acc end data
         DEALLOCATE( rh, zeta )
         !
@@ -533,6 +508,8 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
 #endif
   !
   !$acc end data
+  !
+  IF (ierr/=0 .AND. .NOT.nowarning) CALL xclib_error( 'xc_gcx_', error_msg(ierr), 1 )
   !
   RETURN
   !

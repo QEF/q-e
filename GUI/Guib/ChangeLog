@@ -1,3 +1,8 @@
+Sat Jan 08 2022  Anton Kokalj (tone.kokalj@ijs.si)
+	* adding the openInput method to :guib/GUI class. This enables to
+	open an input file from the command line (used for pwgui -o
+	option).
+
 Thu Jan 26 2017  Anton Kokalj (tone.kokalj@ijs.si)
 	* much improved parser of Fortran namelists.  Implicit assigments
 	of one-dimensional arrays is supported, whereas implicit

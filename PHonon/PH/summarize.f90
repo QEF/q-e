@@ -102,7 +102,7 @@ SUBROUTINE summarize_zeu()
      WRITE( stdout, '(6x,"Ez  (",3f15.5," )")')  (zstareu (3, jpol, na), &
             jpol = 1, 3)
   ENDDO
-  WRITE( stdout, '(/,10x,"Effective charges Sum: Mean:",f15.5)'),zstarmeansum
+  WRITE( stdout, '(/,10x,"Effective charges Sum: Mean:",f15.5)') zstarmeansum
   WRITE( stdout, '(6x,3f15.5)')  (zstarsum (:, jpol), &
        jpol = 1, 3)
   DO na = 1, nat

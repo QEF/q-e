@@ -109,7 +109,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   CALL start_clock ('hp_solve_linear_system')
   !
   WRITE( stdout,*) "     =--------------------------------------------="
-  WRITE( stdout, '(13x,"START SOLVING THE LINEAR SYSTEM")')
+  WRITE( stdout, '(13x,"    SOLVE THE LINEAR SYSTEM")')
   WRITE( stdout,*) "     =--------------------------------------------="
   !
   ! Allocate arrays for the SCF density/potential

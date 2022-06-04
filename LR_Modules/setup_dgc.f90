@@ -22,7 +22,7 @@ SUBROUTINE setup_dgc
   USE noncollin_module,     ONLY : noncolin, domag, ux, nspin_gga, nspin_mag
   USE wavefunctions,        ONLY : psic
   USE kinds,                ONLY : DP
-  USE xc_lib,               ONLY : xclib_dft_is, xc_gcx
+  USE xc_lib,               ONLY : xclib_dft_is, xc_gcx, dgcxc
   USE uspp,                 ONLY : nlcc_any
   USE gc_lr,                ONLY : grho, gmag, dvxc_rr, dvxc_sr, &
                                    dvxc_ss, dvxc_s, vsgga, segni

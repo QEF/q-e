@@ -13,15 +13,14 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   USE constants,            ONLY : e2
   USE kinds,                ONLY : DP
-  USE gvect,                ONLY : ngm, g, g_d
+  USE gvect,                ONLY : ngm, g
   USE lsda_mod,             ONLY : nspin
   USE cell_base,            ONLY : omega
   USE xc_lib,               ONLY : igcc_is_lyp, xclib_dft_is, xc_gcx
   USE noncollin_module,     ONLY : domag
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE fft_rho,              ONLY : rho_r2g, rho_r2g_gpu
-  USE control_flags,        ONLY : use_gpu
+  USE fft_rho,              ONLY : rho_r2g
   !
   IMPLICIT NONE
   !
@@ -83,18 +82,8 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
     !$acc end data
     !
     ! ... bring starting rhoaux to G-space
-    IF ( use_gpu ) THEN
-      !$acc data copyout( segni )
-      !$acc host_data use_device( rho, rhoaux, rhogaux, segni )
-      CALL compute_rho_gpu( rho, rhoaux, segni, dfftp%nnr )
-      CALL rho_r2g_gpu( dfftp, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
-      !$acc end host_data
-      !$acc end data
-    ELSE
-      CALL compute_rho( rho, rhoaux, segni, dfftp%nnr )
-      CALL rho_r2g( dfftp, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
-      !$acc update device( rhoaux, rhogaux )
-    ENDIF
+    CALL compute_rho( rho, rhoaux, segni, dfftp%nnr )
+    CALL rho_r2g( dfftp, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
     !
   ELSE
     ! ... for convenience rhoaux and rhogaux are in (up,down) format, when LSDA
@@ -131,15 +120,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   ENDDO
   !
   DO is = 1, nspin0
-    IF ( use_gpu ) THEN
-      !$acc host_data use_device( rhogaux, grho )
-      CALL fft_gradient_g2r_gpu( dfftp, rhogaux(:,is), g_d, grho(:,:,is) )
-      !$acc end host_data
-    ELSE
-      !$acc update host( rhogaux )
-      CALL fft_gradient_g2r( dfftp, rhogaux(:,is), g, grho(:,:,is) )
-      !$acc update device( grho )
-    ENDIF
+    CALL fft_gradient_g2r( dfftp, rhogaux(:,is), g, grho(:,:,is) )
   ENDDO
   !
   !$acc end data
@@ -218,15 +199,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   ! ... \sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )
   !
   DO is = 1, nspin0
-     IF ( use_gpu ) THEN
-       !$acc host_data use_device( h, dh )
-       CALL fft_graddot_gpu( dfftp, h(1,1,is), g_d, dh )
-       !$acc end host_data
-     ELSE
-       !$acc update host( h )
-       CALL fft_graddot( dfftp, h(1,1,is), g, dh )
-       !$acc update device( dh )
-     ENDIF
+     CALL fft_graddot( dfftp, h(1,1,is), g, dh )
      !$acc parallel loop reduction(-:vtxcgc)
      DO k = 1, dfftp%nnr
        v(k,is) = v(k,is) - dh(k)

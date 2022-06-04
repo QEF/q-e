@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2016 Quantum ESPRESSO group
+! Copyright (C) 2002-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -99,7 +99,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE lsda_mod,                ONLY: current_spin
   USE scf_gpum,                ONLY: vrs_d, using_vrs_d
   USE uspp,                    ONLY: nkb, vkb
-  USE ldaU,                    ONLY: lda_plus_u, lda_plus_u_kind, U_projection
+  USE ldaU,                    ONLY: lda_plus_u, lda_plus_u_kind, Hubbard_projectors
   USE gvect,                   ONLY: gstart
   USE control_flags,           ONLY: gamma_only
   USE noncollin_module,        ONLY: npol, noncolin
@@ -143,7 +143,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !
   need_host_copy = ( real_space .and. nkb > 0  ) .OR. &
                      xclib_dft_is('meta') .OR. &
-                    (lda_plus_u .AND. U_projection.NE."pseudo" ) .OR. &
+                    (lda_plus_u .AND. Hubbard_projectors.NE."pseudo" ) .OR. &
                     exx_is_active() .OR. lelfield
 
 
@@ -278,7 +278,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !
   ! ... Here we add the Hubbard potential times psi
   !
-  IF ( lda_plus_u .AND. U_projection.NE."pseudo" ) THEN
+  IF ( lda_plus_u .AND. Hubbard_projectors.NE."pseudo" ) THEN
      !
      CALL dev_memcpy(hpsi_host, hpsi_d )    ! hpsi_host = hpsi_d
      IF ( noncolin ) THEN

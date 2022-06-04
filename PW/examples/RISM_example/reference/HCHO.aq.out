@@ -1,0 +1,772 @@
+
+     Program PWSCF v.7.0 starts on 19Jan2022 at 16:12:33 
+        Git branch: qe-7.0-rism
+        Last git commit: d5c7f6ccf09362a51d79c20f9c303340aa0c716e-dirty
+        Last git commit date: Wed Dec 29 18:18:37 2021 +0900
+        Last git commit subject: update ESM example                                
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     2 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       2
+     0 MiB available memory on the printing compute node when the environment starts
+
+     Waiting for input...
+     Reading input from standard input
+
+     Current dimensions of program PWSCF are:
+     Max number of different atomic species (ntypx) = 10
+     Max number of k-points (npk) =  40000
+     Max angular momentum in pseudopotentials (lmaxx) =  4
+
+     gamma-point specific algorithms are used
+     Message from routine setup:
+     using ibrav=0 with symmetry is DISCOURAGED, use correct ibrav instead
+
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     a serial algorithm will be used
+
+
+     Molecule # 1 for H2O read from file:
+     /Users/otani/Program/q-e/git-worktrees/qe-7.0-rism/pseudo/H2O.spc.MOL
+     Density:
+         0.33427968E+02 cell^-1
+         0.49535138E-02 bohr^-3
+         0.55508435E+02 mol/L
+         0.10000000E+01 g/cm^3
+     Number of atoms:   3
+     Atoms:
+       #  atom      X (angs)      Y (angs)      Z (angs)      Q (e)         E (kcal/mol)  S (angs)
+       1  O/h2o     0.00000000    0.00000000    0.00000000   -0.82000000    0.15540000    3.16600000
+       2  H/h2o     0.81649000    0.57736000    0.00000000    0.41000000    0.04600000    1.00000000
+       3  H/h2o    -0.81649000    0.57736000    0.00000000    0.41000000    0.04600000    1.00000000
+
+
+     1D-RISM info
+     ------------
+     closure equation        =           KH
+     temperature             =     300.0000  kelvin
+     coulomb smearing radius =       2.0000  bohr
+     number of solvent sites =            3
+     number of grids         =         5008
+     maximum of R-space      =     999.8003  bohr
+     maximum of G-space      =      15.7315  bohr^-1
+     number of iterations    =        50000
+     convergence threshold   =      1.0E-08
+     Gaussian width of bonds =       0.0000  bohr
+     size of MDIIS           =           20
+     step of MDIIS           =       0.5000
+     number of processes     =            2
+
+
+     1D-RISM Calculation
+
+     iter. #     1  RMS(g-h-1)= 1.965E-04  nbox=  0  T= 2400.00K
+     iter. #   101  RMS(g-h-1)= 9.995E-05  nbox=  1  T=  474.07K
+     iter. #   201  RMS(g-h-1)= 3.225E-06  nbox=  1  T=  300.00K
+     iter. #   244  RMS(g-h-1)= 9.614E-09  nbox=  1  T=  300.00K
+
+     End of 1D-RISM calculation
+
+
+     convergence has been achieved in   244 iterations
+
+
+     Chemical potential of solvation
+
+     H2O        H2O        Closure     -0.260084E+01 kcal/mol
+                           GaussFluct  -0.612441E+01 kcal/mol
+
+                Total      Closure     -0.260084E+01 kcal/mol
+                           GaussFluct  -0.612441E+01 kcal/mol
+
+
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min        3192    1421    358               192292    56900    7121
+     Max        3193    1424    359               192295    56901    7122
+     Sum        6385    2845    717               384587   113801   14243
+
+     Using Slab Decomposition
+
+
+
+     bravais-lattice index     =            0
+     lattice parameter (alat)  =      18.8973  a.u.
+     unit-cell volume          =    6748.3345 (a.u.)^3
+     number of atoms/cell      =            4
+     number of atomic types    =            3
+     number of electrons       =        12.00
+     number of Kohn-Sham states=            6
+     kinetic-energy cutoff     =      25.0000  Ry
+     charge density cutoff     =     225.0000  Ry
+     scf convergence threshold =      1.0E-06
+     mixing beta               =       0.4000
+     number of iterations used =            8  plain     mixing
+     Exchange-correlation= SLA  PW   PBE  PBE
+                           (   1   4   3   4   0   0   0)
+
+     celldm(1)=  18.897261  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (   1.000000   0.000000   0.000000 )  
+               a(2) = (   0.000000   1.000000   0.000000 )  
+               a(3) = (   0.000000   0.000000   1.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = (  1.000000  0.000000  0.000000 )  
+               b(2) = (  0.000000  1.000000  0.000000 )  
+               b(3) = (  0.000000  0.000000  1.000000 )  
+
+
+     PseudoPot. # 1 for C  read from file:
+     /Users/otani/Program/q-e/git-worktrees/qe-7.0-rism/pseudo/C.pbe-van_ak.UPF
+     MD5 check sum: ecc3b1e1c1ebe006fc976faab44e17a8
+     Pseudo is Ultrasoft, Zval =  4.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  721 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with  8 coefficients,  rinner =    0.800   0.800   0.800
+
+
+     PseudoPot. # 2 for O  read from file:
+     /Users/otani/Program/q-e/git-worktrees/qe-7.0-rism/pseudo/O.pbe-van_ak.UPF
+     MD5 check sum: 572909515f9aa9498032b6eb5528d5f9
+     Pseudo is Ultrasoft, Zval =  6.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  737 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with  8 coefficients,  rinner =    0.800   0.800   0.800
+
+
+     PseudoPot. # 3 for H  read from file:
+     /Users/otani/Program/q-e/git-worktrees/qe-7.0-rism/pseudo/H.pbe-van_ak.UPF
+     MD5 check sum: a537b41238c433fb4068aaff04c6fb4a
+     Pseudo is Ultrasoft, Zval =  1.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  615 points,  1 beta functions with: 
+                l(1) =   0
+     Q(r) pseudized with  8 coefficients,  rinner =    0.800
+
+     atomic species   valence    mass     pseudopotential
+        C              4.00    12.01070     C ( 1.00)
+        O              6.00    15.99940     O ( 1.00)
+        H              1.00     1.00794     H ( 1.00)
+
+      4 Sym. Ops. (no inversion) found
+
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1           C   tau(   1) = (   0.5000000   0.5609000   0.5000000  )
+         2           O   tau(   2) = (   0.5000000   0.4425000   0.5000000  )
+         3           H   tau(   3) = (   0.4075000   0.6191000   0.5000000  )
+         4           H   tau(   4) = (   0.5925000   0.6191000   0.5000000  )
+
+     number of k points=     1
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   2.0000000
+
+     Dense  grid:   192294 G-vectors     FFT dimensions: (  96,  96,  96)
+
+     Smooth grid:    56901 G-vectors     FFT dimensions: (  64,  64,  64)
+
+     Estimated max dynamical RAM per process >     144.06 MB
+
+     Estimated total dynamical RAM >     288.12 MB
+
+     Solute:
+       # atom     E (kcal/mol)  S (angs)
+       1  C       0.07000000    3.55000000    OPLS-AA
+       2  O       0.17000000    3.00000000    OPLS-AA
+       3  H       0.03000000    2.46000000    OPLS-AA
+       4  H       0.03000000    2.46000000    OPLS-AA
+
+
+     3D-RISM info
+     ------------
+     closure equation        =           KH
+     temperature             =     300.0000  kelvin
+     coulomb smearing radius =       2.0000  bohr
+     number of solvent sites =            2
+     solvent sites           =    O/h2o   H/h2o
+     number of iterations    =         5000
+     convergence threshold   =      1.0E-05
+     convergence level       =       0.1000
+     size of MDIIS           =           10
+     step of MDIIS           =       0.8000
+     solvent cutoff          =     144.0000  Ry
+     Custom grid:    98475 G-vectors     FFT dimensions: (  75,  75,  75)
+
+
+     Initial potential from superposition of free atoms
+
+     starting charge      11.9999, renormalised to      12.0000
+
+     negative rho (up, down):  3.887E-03 0.000E+00
+
+     3D-RISM Calculation
+
+     convergence threshold    = 5.012E-03
+     iter. #     1  RMS(g-h-1)= 8.113E-01  nbox=  0
+     iter. #    11  RMS(g-h-1)= 2.247E-02  nbox= 10
+     iter. #    21  RMS(g-h-1)= 9.501E-03  nbox= 10
+     iter. #    25  RMS(g-h-1)= 4.317E-03  nbox= 10
+
+     End of 3D-RISM calculation
+
+
+     convergence has been achieved in    25 iterations
+
+
+     solvent charge    0.13001, renormalised to    0.00000
+
+     Total number of solvent
+     H2O           33.416666
+
+     Total charge of solvent
+     H2O            0.130009 e
+     Total          0.130009 e
+
+     Chemical potential of solvation
+     H2O        Closure      0.981619E+01 kcal/mol
+                GaussFluct   0.692084E+01 kcal/mol
+     Total      Closure      0.981619E+01 kcal/mol
+                GaussFluct   0.692084E+01 kcal/mol
+
+     Starting wfcs are   10 randomized atomic wfcs
+
+     total cpu time spent up to now is        6.4 secs
+
+     Self-consistent Calculation
+
+     iteration #  1     ecut=    25.00 Ry     beta= 0.40
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  2.0
+
+     negative rho (up, down):  2.004E-03 0.000E+00
+
+     3D-RISM Calculation
+
+     convergence threshold    = 5.012E-03
+     iter. #     1  RMS(g-h-1)= 1.454E-01  nbox=  0
+     iter. #    11  RMS(g-h-1)= 9.905E-03  nbox= 10
+     iter. #    19  RMS(g-h-1)= 4.542E-03  nbox= 10
+
+     End of 3D-RISM calculation
+
+
+     convergence has been achieved in    19 iterations
+
+
+     solvent charge   -0.16248, renormalised to    0.00000
+
+     Total number of solvent
+     H2O           33.436818
+
+     Total charge of solvent
+     H2O           -0.162481 e
+     Total         -0.162481 e
+
+     Chemical potential of solvation
+     H2O        Closure      0.790862E+01 kcal/mol
+                GaussFluct   0.491920E+01 kcal/mol
+     Total      Closure      0.790862E+01 kcal/mol
+                GaussFluct   0.491920E+01 kcal/mol
+
+
+     total cpu time spent up to now is        8.1 secs
+
+     total energy              =     -45.67001334 Ry
+     estimated scf accuracy    <       0.42446565 Ry
+
+     iteration #  2     ecut=    25.00 Ry     beta= 0.40
+     Davidson diagonalization with overlap
+     ethr =  3.54E-03,  avg # of iterations =  2.0
+
+     negative rho (up, down):  3.020E-03 0.000E+00
+
+     3D-RISM Calculation
+
+     convergence threshold    = 5.012E-03
+     iter. #     1  RMS(g-h-1)= 6.563E-02  nbox=  0
+     iter. #    11  RMS(g-h-1)= 5.975E-03  nbox= 10
+     iter. #    12  RMS(g-h-1)= 4.836E-03  nbox= 10
+
+     End of 3D-RISM calculation
+
+
+     convergence has been achieved in    12 iterations
+
+
+     solvent charge   -0.20455, renormalised to    0.00000
+
+     Total number of solvent
+     H2O           33.475433
+
+     Total charge of solvent
+     H2O           -0.204555 e
+     Total         -0.204555 e
+
+     Chemical potential of solvation
+     H2O        Closure      0.630726E+01 kcal/mol
+                GaussFluct   0.325431E+01 kcal/mol
+     Total      Closure      0.630726E+01 kcal/mol
+                GaussFluct   0.325431E+01 kcal/mol
+
+
+     total cpu time spent up to now is        9.4 secs
+
+     total energy              =     -45.70370981 Ry
+     estimated scf accuracy    <       0.06180719 Ry
+
+     iteration #  3     ecut=    25.00 Ry     beta= 0.40
+     Davidson diagonalization with overlap
+     ethr =  5.15E-04,  avg # of iterations =  2.0
+
+     negative rho (up, down):  5.407E-03 0.000E+00
+
+     3D-RISM Calculation
+
+     convergence threshold    = 7.687E-04
+     iter. #     1  RMS(g-h-1)= 4.249E-02  nbox=  0
+     iter. #    11  RMS(g-h-1)= 3.680E-03  nbox= 10
+     iter. #    21  RMS(g-h-1)= 1.574E-03  nbox= 10
+     iter. #    25  RMS(g-h-1)= 5.767E-04  nbox= 10
+
+     End of 3D-RISM calculation
+
+
+     convergence has been achieved in    25 iterations
+
+
+     solvent charge   -0.01638, renormalised to    0.00000
+
+     Total number of solvent
+     H2O           33.429276
+
+     Total charge of solvent
+     H2O           -0.016383 e
+     Total         -0.016383 e
+
+     Chemical potential of solvation
+     H2O        Closure      0.531699E+01 kcal/mol
+                GaussFluct   0.238845E+01 kcal/mol
+     Total      Closure      0.531699E+01 kcal/mol
+                GaussFluct   0.238845E+01 kcal/mol
+
+
+     total cpu time spent up to now is       11.5 secs
+
+     total energy              =     -45.70351854 Ry
+     estimated scf accuracy    <       0.01282921 Ry
+
+     iteration #  4     ecut=    25.00 Ry     beta= 0.40
+     Davidson diagonalization with overlap
+     ethr =  1.07E-04,  avg # of iterations =  2.0
+
+     negative rho (up, down):  5.923E-03 0.000E+00
+
+     3D-RISM Calculation
+
+     convergence threshold    = 4.954E-05
+     iter. #     1  RMS(g-h-1)= 1.624E-02  nbox=  0
+     iter. #    11  RMS(g-h-1)= 5.837E-04  nbox= 10
+     iter. #    21  RMS(g-h-1)= 2.346E-04  nbox= 10
+     iter. #    31  RMS(g-h-1)= 1.249E-04  nbox= 10
+     iter. #    41  RMS(g-h-1)= 1.001E-04  nbox= 10
+     iter. #    51  RMS(g-h-1)= 8.523E-05  nbox=  4
+     iter. #    61  RMS(g-h-1)= 7.182E-05  nbox= 10
+     iter. #    71  RMS(g-h-1)= 6.326E-05  nbox=  8
+     iter. #    81  RMS(g-h-1)= 5.729E-05  nbox=  2
+     iter. #    91  RMS(g-h-1)= 5.065E-05  nbox= 10
+     iter. #    95  RMS(g-h-1)= 4.930E-05  nbox= 10
+
+     End of 3D-RISM calculation
+
+
+     convergence has been achieved in    95 iterations
+
+
+     solvent charge    0.00038, renormalised to    0.00000
+
+     Total number of solvent
+     H2O           33.427956
+
+     Total charge of solvent
+     H2O            0.000383 e
+     Total          0.000383 e
+
+     Chemical potential of solvation
+     H2O        Closure      0.426980E+01 kcal/mol
+                GaussFluct   0.133793E+01 kcal/mol
+     Total      Closure      0.426980E+01 kcal/mol
+                GaussFluct   0.133793E+01 kcal/mol
+
+
+     total cpu time spent up to now is       17.7 secs
+
+     total energy              =     -45.70470409 Ry
+     estimated scf accuracy    <       0.00176385 Ry
+
+     iteration #  5     ecut=    25.00 Ry     beta= 0.40
+     Davidson diagonalization with overlap
+     ethr =  1.47E-05,  avg # of iterations =  2.0
+
+     negative rho (up, down):  5.731E-03 0.000E+00
+
+     3D-RISM Calculation
+
+     convergence threshold    = 1.000E-05
+     iter. #     1  RMS(g-h-1)= 9.697E-03  nbox=  0
+     iter. #    11  RMS(g-h-1)= 6.223E-04  nbox= 10
+     iter. #    21  RMS(g-h-1)= 2.315E-04  nbox= 10
+     iter. #    31  RMS(g-h-1)= 6.172E-05  nbox= 10
+     iter. #    41  RMS(g-h-1)= 5.176E-05  nbox= 10
+     iter. #    51  RMS(g-h-1)= 4.857E-05  nbox=  5
+     iter. #    61  RMS(g-h-1)= 4.598E-05  nbox= 10
+     iter. #    71  RMS(g-h-1)= 4.235E-05  nbox=  9
+     iter. #    81  RMS(g-h-1)= 3.965E-05  nbox=  3
+     iter. #    91  RMS(g-h-1)= 3.559E-05  nbox= 10
+     iter. #   101  RMS(g-h-1)= 3.298E-05  nbox=  7
+     iter. #   111  RMS(g-h-1)= 3.101E-05  nbox= 10
+     iter. #   121  RMS(g-h-1)= 2.900E-05  nbox= 10
+     iter. #   131  RMS(g-h-1)= 2.763E-05  nbox=  5
+     iter. #   141  RMS(g-h-1)= 2.651E-05  nbox= 10
+     iter. #   151  RMS(g-h-1)= 2.543E-05  nbox=  9
+     iter. #   161  RMS(g-h-1)= 2.420E-05  nbox=  3
+     iter. #   171  RMS(g-h-1)= 2.298E-05  nbox= 10
+     iter. #   181  RMS(g-h-1)= 2.220E-05  nbox=  7
+     iter. #   191  RMS(g-h-1)= 2.125E-05  nbox= 10
+     iter. #   201  RMS(g-h-1)= 2.054E-05  nbox= 10
+     iter. #   211  RMS(g-h-1)= 1.983E-05  nbox=  5
+     iter. #   221  RMS(g-h-1)= 1.917E-05  nbox= 10
+     iter. #   231  RMS(g-h-1)= 1.843E-05  nbox=  9
+     iter. #   241  RMS(g-h-1)= 1.789E-05  nbox=  3
+     iter. #   251  RMS(g-h-1)= 1.729E-05  nbox= 10
+     iter. #   261  RMS(g-h-1)= 1.671E-05  nbox=  7
+     iter. #   271  RMS(g-h-1)= 1.609E-05  nbox= 10
+     iter. #   281  RMS(g-h-1)= 1.552E-05  nbox= 10
+     iter. #   291  RMS(g-h-1)= 1.506E-05  nbox=  5
+     iter. #   301  RMS(g-h-1)= 1.461E-05  nbox= 10
+     iter. #   311  RMS(g-h-1)= 1.417E-05  nbox=  9
+     iter. #   321  RMS(g-h-1)= 1.387E-05  nbox=  3
+     iter. #   331  RMS(g-h-1)= 1.341E-05  nbox= 10
+     iter. #   341  RMS(g-h-1)= 1.315E-05  nbox=  7
+     iter. #   351  RMS(g-h-1)= 1.295E-05  nbox= 10
+     iter. #   361  RMS(g-h-1)= 1.279E-05  nbox= 10
+     iter. #   371  RMS(g-h-1)= 1.260E-05  nbox=  5
+     iter. #   381  RMS(g-h-1)= 1.228E-05  nbox= 10
+     iter. #   391  RMS(g-h-1)= 1.203E-05  nbox=  9
+     iter. #   401  RMS(g-h-1)= 1.186E-05  nbox=  3
+     iter. #   411  RMS(g-h-1)= 1.165E-05  nbox= 10
+     iter. #   421  RMS(g-h-1)= 1.150E-05  nbox=  7
+     iter. #   431  RMS(g-h-1)= 1.124E-05  nbox= 10
+     iter. #   441  RMS(g-h-1)= 1.104E-05  nbox= 10
+     iter. #   451  RMS(g-h-1)= 1.089E-05  nbox=  5
+     iter. #   461  RMS(g-h-1)= 1.073E-05  nbox= 10
+     iter. #   471  RMS(g-h-1)= 1.064E-05  nbox=  9
+     iter. #   481  RMS(g-h-1)= 1.033E-05  nbox=  3
+     iter. #   491  RMS(g-h-1)= 1.012E-05  nbox= 10
+     iter. #   500  RMS(g-h-1)= 9.992E-06  nbox=  6
+
+     End of 3D-RISM calculation
+
+
+     convergence has been achieved in   500 iterations
+
+
+     solvent charge    0.00000, renormalised to    0.00000
+
+     Total number of solvent
+     H2O           33.427968
+
+     Total charge of solvent
+     H2O            0.000005 e
+     Total          0.000005 e
+
+     Chemical potential of solvation
+     H2O        Closure      0.386581E+01 kcal/mol
+                GaussFluct   0.926881E+00 kcal/mol
+     Total      Closure      0.386581E+01 kcal/mol
+                GaussFluct   0.926881E+00 kcal/mol
+
+
+     total cpu time spent up to now is       45.3 secs
+
+     total energy              =     -45.70493131 Ry
+     estimated scf accuracy    <       0.00021077 Ry
+
+     iteration #  6     ecut=    25.00 Ry     beta= 0.40
+     Davidson diagonalization with overlap
+     ethr =  1.76E-06,  avg # of iterations =  5.0
+
+     negative rho (up, down):  5.675E-03 0.000E+00
+
+     3D-RISM Calculation
+
+     convergence threshold    = 1.000E-05
+     iter. #     1  RMS(g-h-1)= 4.191E-03  nbox=  0
+     iter. #    11  RMS(g-h-1)= 2.306E-04  nbox= 10
+     iter. #    21  RMS(g-h-1)= 8.458E-05  nbox= 10
+     iter. #    31  RMS(g-h-1)= 2.294E-05  nbox= 10
+     iter. #    41  RMS(g-h-1)= 1.136E-05  nbox= 10
+     iter. #    51  RMS(g-h-1)= 1.021E-05  nbox= 10
+     iter. #    61  RMS(g-h-1)= 9.953E-06  nbox=  8
+
+     End of 3D-RISM calculation
+
+
+     convergence has been achieved in    61 iterations
+
+
+     solvent charge   -0.00000, renormalised to    0.00000
+
+     Total number of solvent
+     H2O           33.427964
+
+     Total charge of solvent
+     H2O           -0.000004 e
+     Total         -0.000004 e
+
+     Chemical potential of solvation
+     H2O        Closure      0.397778E+01 kcal/mol
+                GaussFluct   0.104052E+01 kcal/mol
+     Total      Closure      0.397778E+01 kcal/mol
+                GaussFluct   0.104052E+01 kcal/mol
+
+
+     total cpu time spent up to now is       49.6 secs
+
+     total energy              =     -45.70495080 Ry
+     estimated scf accuracy    <       0.00018426 Ry
+
+     iteration #  7     ecut=    25.00 Ry     beta= 0.40
+     Davidson diagonalization with overlap
+     ethr =  1.54E-06,  avg # of iterations =  3.0
+
+     negative rho (up, down):  5.758E-03 0.000E+00
+
+     3D-RISM Calculation
+
+     convergence threshold    = 1.000E-05
+     iter. #     1  RMS(g-h-1)= 2.524E-03  nbox=  0
+     iter. #    11  RMS(g-h-1)= 8.897E-05  nbox= 10
+     iter. #    21  RMS(g-h-1)= 1.830E-05  nbox= 10
+     iter. #    31  RMS(g-h-1)= 1.330E-05  nbox= 10
+     iter. #    41  RMS(g-h-1)= 1.094E-05  nbox= 10
+     iter. #    51  RMS(g-h-1)= 1.058E-05  nbox=  3
+     iter. #    61  RMS(g-h-1)= 1.008E-05  nbox= 10
+     iter. #    67  RMS(g-h-1)= 9.979E-06  nbox=  3
+
+     End of 3D-RISM calculation
+
+
+     convergence has been achieved in    67 iterations
+
+
+     solvent charge   -0.00002, renormalised to    0.00000
+
+     Total number of solvent
+     H2O           33.427965
+
+     Total charge of solvent
+     H2O           -0.000023 e
+     Total         -0.000023 e
+
+     Chemical potential of solvation
+     H2O        Closure      0.378629E+01 kcal/mol
+                GaussFluct   0.846208E+00 kcal/mol
+     Total      Closure      0.378629E+01 kcal/mol
+                GaussFluct   0.846208E+00 kcal/mol
+
+
+     total cpu time spent up to now is       54.7 secs
+
+     total energy              =     -45.70498918 Ry
+     estimated scf accuracy    <       0.00005817 Ry
+
+     iteration #  8     ecut=    25.00 Ry     beta= 0.40
+     Davidson diagonalization with overlap
+     ethr =  4.85E-07,  avg # of iterations =  2.0
+
+     negative rho (up, down):  5.824E-03 0.000E+00
+
+     3D-RISM Calculation
+
+     convergence threshold    = 1.000E-05
+     iter. #     1  RMS(g-h-1)= 1.192E-03  nbox=  0
+     iter. #    11  RMS(g-h-1)= 6.641E-05  nbox= 10
+     iter. #    21  RMS(g-h-1)= 2.192E-05  nbox= 10
+     iter. #    31  RMS(g-h-1)= 1.258E-05  nbox= 10
+     iter. #    41  RMS(g-h-1)= 1.077E-05  nbox= 10
+     iter. #    51  RMS(g-h-1)= 1.007E-05  nbox=  8
+     iter. #    59  RMS(g-h-1)= 9.999E-06  nbox= 10
+
+     End of 3D-RISM calculation
+
+
+     convergence has been achieved in    59 iterations
+
+
+     solvent charge   -0.00000, renormalised to    0.00000
+
+     Total number of solvent
+     H2O           33.427970
+
+     Total charge of solvent
+     H2O           -0.000004 e
+     Total         -0.000004 e
+
+     Chemical potential of solvation
+     H2O        Closure      0.374762E+01 kcal/mol
+                GaussFluct   0.806789E+00 kcal/mol
+     Total      Closure      0.374762E+01 kcal/mol
+                GaussFluct   0.806789E+00 kcal/mol
+
+
+     total cpu time spent up to now is       58.4 secs
+
+     total energy              =     -45.70499312 Ry
+     estimated scf accuracy    <       0.00001666 Ry
+
+     iteration #  9     ecut=    25.00 Ry     beta= 0.40
+     Davidson diagonalization with overlap
+     ethr =  1.39E-07,  avg # of iterations =  2.0
+
+     negative rho (up, down):  5.950E-03 0.000E+00
+
+     3D-RISM Calculation
+
+     convergence threshold    = 1.000E-05
+     iter. #     1  RMS(g-h-1)= 6.093E-04  nbox=  0
+     iter. #    11  RMS(g-h-1)= 2.519E-05  nbox= 10
+     iter. #    21  RMS(g-h-1)= 1.270E-05  nbox= 10
+     iter. #    31  RMS(g-h-1)= 1.038E-05  nbox= 10
+     iter. #    41  RMS(g-h-1)= 1.018E-05  nbox= 10
+     iter. #    51  RMS(g-h-1)= 1.007E-05  nbox= 10
+     iter. #    55  RMS(g-h-1)= 9.999E-06  nbox= 10
+
+     End of 3D-RISM calculation
+
+
+     convergence has been achieved in    55 iterations
+
+
+     solvent charge    0.00002, renormalised to    0.00000
+
+     Total number of solvent
+     H2O           33.427962
+
+     Total charge of solvent
+     H2O            0.000019 e
+     Total          0.000019 e
+
+     Chemical potential of solvation
+     H2O        Closure      0.371645E+01 kcal/mol
+                GaussFluct   0.775094E+00 kcal/mol
+     Total      Closure      0.371645E+01 kcal/mol
+                GaussFluct   0.775094E+00 kcal/mol
+
+
+     total cpu time spent up to now is       62.4 secs
+
+     End of self-consistent calculation
+
+          k = 0.0000 0.0000 0.0000 (  7122 PWs)   bands (ev):
+
+   -27.6537 -16.0058 -12.6506 -11.6844 -10.7730  -6.7154
+
+     highest occupied level (ev):    -6.7154
+
+!    total energy              =     -45.70499484 Ry
+     estimated scf accuracy    <       0.00000080 Ry
+
+     The total energy is the sum of the following terms:
+     one-electron contribution =    -100.76680640 Ry
+     hartree contribution      =      52.14827959 Ry
+     xc contribution           =     -11.83277527 Ry
+     ewald contribution        =      14.73445425 Ry
+     solvation energy (RISM)   =       0.01185300 Ry
+
+     convergence has been achieved in   9 iterations
+
+     Writing all to output data dir /Users/otani/Program/q-e/git-worktrees/qe-7.0-rism/tempdir/HCHO.aq.save/
+
+     init_run     :      3.45s CPU      3.84s WALL (       1 calls)
+     electrons    :     50.01s CPU     56.02s WALL (       1 calls)
+
+     Called by init_run:
+     wfcinit      :      0.07s CPU      0.08s WALL (       1 calls)
+     potinit      :      2.46s CPU      2.75s WALL (       1 calls)
+     hinit0       :      0.78s CPU      0.83s WALL (       1 calls)
+
+     Called by electrons:
+     c_bands      :      0.29s CPU      0.35s WALL (       9 calls)
+     sum_band     :      0.90s CPU      1.12s WALL (       9 calls)
+     v_of_rho     :      1.80s CPU      2.22s WALL (      10 calls)
+     newd         :      0.79s CPU      1.04s WALL (      10 calls)
+     mix_rho      :      0.20s CPU      0.27s WALL (       9 calls)
+
+     Called by c_bands:
+     init_us_2    :      0.01s CPU      0.01s WALL (      19 calls)
+     init_us_2:cp :      0.01s CPU      0.01s WALL (      19 calls)
+     regterg      :      0.27s CPU      0.33s WALL (       9 calls)
+
+     Called by *egterg:
+     rdiaghg      :      0.00s CPU      0.00s WALL (      31 calls)
+     h_psi        :      0.31s CPU      0.36s WALL (      32 calls)
+     s_psi        :      0.00s CPU      0.00s WALL (      32 calls)
+     g_psi        :      0.00s CPU      0.00s WALL (      22 calls)
+
+     Called by h_psi:
+     h_psi:calbec :      0.01s CPU      0.01s WALL (      32 calls)
+     vloc_psi     :      0.29s CPU      0.34s WALL (      32 calls)
+     add_vuspsi   :      0.00s CPU      0.01s WALL (      32 calls)
+
+     General routines
+     calbec       :      0.01s CPU      0.01s WALL (      41 calls)
+     fft          :      1.88s CPU      2.26s WALL (     137 calls)
+     ffts         :      0.32s CPU      0.34s WALL (      19 calls)
+     fftw         :      0.26s CPU      0.31s WALL (     197 calls)
+     fftr         :     20.61s CPU     23.17s WALL (    3702 calls)
+     interpolate  :      0.41s CPU      0.52s WALL (      10 calls)
+
+     Parallel routines
+     fft_scatt_xy :      2.72s CPU      2.91s WALL (    3702 calls)
+     fft_scatt_yz :      7.16s CPU      7.64s WALL (    3702 calls)
+
+     RISM routines
+     1DRISM_pre   :      0.00s CPU      0.00s WALL (       1 calls)
+     1DRISM_run   :      2.16s CPU      2.26s WALL (       1 calls)
+     3DRISM_pre   :      0.52s CPU      0.55s WALL (       1 calls)
+     3DRISM_run   :     47.27s CPU     52.25s WALL (      10 calls)
+     3DRISM_vsol  :      0.10s CPU      0.14s WALL (      10 calls)
+
+     PWSCF        :     55.95s CPU   1m 2.84s WALL
+
+
+   This run was terminated on:  16:13:35  19Jan2022            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

@@ -1,0 +1,135 @@
+
+     Program KCW v.7.0 starts on 17Feb2022 at 10:19: 2 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     1272 MiB available memory on the printing compute node when the environment starts
+ 
+
+     KCW INPUT SUMMARY 
+     ============================================
+
+      CONTROL 
+       # title               =           W2K h2o
+       # out_dir             =            ./out/
+       # prefix              =               h2o
+       # calculation         =          wann2kcw
+       # kcw_iverbosity      =                 2
+       # kcw_at_ks           =                 T
+       # spin_component      =                 1
+       # homo_only           =                 F
+       # read_unitary_matrix =                 F
+       # check_ks            =                 F
+       # l_vcut              =                 F
+       # assume_isolated     =              none
+     ============================================
+
+     INFO: Reading pwscf data
+
+     Reading xml data from directory:
+
+     ./out/h2o.save/
+     file H.pbe-vbc.UPF: wavefunction(s)  0S renormalized
+     file O.pbe-mt.UPF: wavefunction(s)  4f renormalized
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum        2313    2313    579                81617    81617   10189
+ 
+     Using Slab Decomposition
+ 
+     Reading collected, re-writing distributed wavefunctions
+
+     INFO: Buffer for KS wfcs, OPENED
+
+     INFO: Buffer for WFs, OPENED
+
+     INFO: Buffer for WFs ALL-k, OPENED
+
+     INFO: NO ROTATION, using the canonical KS manifold
+
+
+     INFO: Minimizing orbitals DEFINED
+
+
+     INFO: PREPARING THE KCW CALCULATION ...
+
+     INFO: Compute Wannier-orbital Densities ...
+
+        ==============================================================================
+        iq =     1
+        The Wannier density at  q =    0.0000000   0.0000000   0.0000000  [Cart ]
+        The Wannier density at  q =    0.0000000   0.0000000   0.0000000  [Cryst]
+        ==============================================================================
+
+        The map (iq,ik) --> ip + G      (  1  1  )        1        +  0.0000  0.0000  0.0000 [Cryst]
+ 
+        INFO: Map k+q -> p in 1BZ DONE  
+
+        INFO: rho_q(r) DONE 
+
+     INFO: Orbital Self-Hartree (SH)
+     orb     1     SH   0.552892
+     orb     2     SH   0.449496
+     orb     3     SH   0.498185
+     orb     4     SH   0.501956
+     orb     5     SH   0.019389
+
+     INFO: PREPARING THE KCW CALCULATION ... DONE
+
+
+ 
+     KCW          :      0.38s CPU      0.44s WALL
+
+     INITIALIZATION: 
+     map          :      0.00s CPU      0.00s WALL (       1 calls)
+     rho_of_q     :      0.02s CPU      0.03s WALL (       1 calls)
+ 
+     init_vloc    :      0.04s CPU      0.04s WALL (       1 calls)
+     init_us_1    :      0.01s CPU      0.01s WALL (       1 calls)
+ 
+ 
+ 
+ 
+ 
+     h_psi        :      0.02s CPU      0.02s WALL (       1 calls)
+ 
+     h_psi        :      0.02s CPU      0.02s WALL (       1 calls)
+     add_vuspsi   :      0.00s CPU      0.00s WALL (       1 calls)
+ 
+ 
+ 
+      General routines
+     calbec       :      0.00s CPU      0.00s WALL (       1 calls)
+     fft          :      0.02s CPU      0.03s WALL (      18 calls)
+     ffts         :      0.05s CPU      0.05s WALL (      35 calls)
+     fftw         :      0.03s CPU      0.03s WALL (      20 calls)
+     davcio       :      0.00s CPU      0.01s WALL (       9 calls)
+ 
+ 
+     KCW          :      0.38s CPU      0.44s WALL
+
+ 
+   This run was terminated on:  10:19: 2  17Feb2022            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

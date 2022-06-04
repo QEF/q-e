@@ -55,19 +55,15 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   IF ( gpu_args ) THEN
     !
     !$acc data present( rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
-    !$acc host_data use_device( rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
     CALL xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, &
                       v2c, v3c )
-    !$acc end host_data
     !$acc end data
     !
   ELSE
     !
     !$acc data copyin( rho, grho, tau ), copyout( ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
-    !$acc host_data use_device( rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
     CALL xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, &
                       v2c, v3c )
-    !$acc end host_data
     !$acc end data
     !
   ENDIF  
@@ -147,9 +143,7 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
 #endif
 #endif
   !
-  !$acc data deviceptr( rho(length,ns), grho(3,length,ns), tau(length,ns), ex(length), &
-  !$acc&                ec(length), v1x(length,ns), v2x(length,ns), v3x(length,ns),    &
-  !$acc&                v1c(length,ns), v2c(np,length,ns), v3c(length,ns) )
+  !$acc data present( rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   !
 #if defined(__LIBXC)
   lengthxc = length
@@ -225,10 +219,8 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
   IF ( .NOT.is_libxc(5) .AND. imetac==0 ) THEN
     IF (ns == 1) THEN
       !
-      !$acc host_data use_device( sigma )
       CALL tau_xc( length, rho(:,1), sigma, tau(:,1), ex, ec, v1x(:,1), &
                    v2x(:,1), v3x(:,1), v1c(:,1), v2c, v3c(:,1) )
-      !$acc end host_data
       !
     ELSEIF (ns == 2) THEN
       !
@@ -376,7 +368,6 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
   !
   ALLOCATE( grho2(length,ns) )
   !$acc data create( grho2 )
-  !$acc host_data use_device( grho2 )
   !
   !$acc parallel loop collapse(2)
   DO is = 1, ns
@@ -397,7 +388,6 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
      !
   ENDIF
   !
-  !$acc end host_data
   !$acc end data
   DEALLOCATE( grho2 )
   !

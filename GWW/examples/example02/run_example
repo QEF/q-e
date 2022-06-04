@@ -131,7 +131,6 @@ EOF
     cat > si_head.in << EOF
 calculation of head
  &inputph
-  trans=.false.
   l_head=.true.
   tr2_ph=1.d-4,
   prefix='si',

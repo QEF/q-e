@@ -16,7 +16,7 @@ SUBROUTINE do_cond(done)
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau, atm
   USE cell_base,  ONLY : at, bg, tpiba
   USE klist,      ONLY : npk, xk, two_fermi_energies
-  USE ldaU,       ONLY : lda_plus_U, lda_plus_u_kind, U_projection, &
+  USE ldaU,       ONLY : lda_plus_U, lda_plus_u_kind, &
                          Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
                          Hubbard_J0, Hubbard_beta
   USE uspp,       ONLY : okvan

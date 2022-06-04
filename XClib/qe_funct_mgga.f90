@@ -22,7 +22,6 @@ USE corr_gga, ONLY: pbec, pbec_spin
 !
 !-------------------------------------------------------------------------
 SUBROUTINE tpsscxc( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
-!$acc routine seq
   !-----------------------------------------------------------------------
   !! TPSS metaGGA corrections for exchange and correlation - Hartree a.u.  
   !! Definition:  \(E_x = \int E_x(\text{rho},\text{grho}) dr\)
@@ -30,6 +29,8 @@ SUBROUTINE tpsscxc( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
   USE kind_l,            ONLY : DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho
   !! the charge density
@@ -82,7 +83,6 @@ END SUBROUTINE tpsscxc
 !
 !-------------------------------------------------------------------------
 SUBROUTINE metax( rho, grho2, tau, ex, v1x, v2x, v3x )
-!$acc routine seq
   !--------------------------------------------------------------------
   !! TPSS meta-GGA exchange potential and energy.
   !
@@ -98,6 +98,8 @@ SUBROUTINE metax( rho, grho2, tau, ex, v1x, v2x, v3x )
   USE kind_l,       ONLY : DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho
   !! the charge density
@@ -151,13 +153,14 @@ END SUBROUTINE metax
 !
 !------------------------------------------------------------------
 SUBROUTINE metac( rho, grho2, tau, ec, v1c, v2c, v3c )
-!$acc routine seq
   !--------------------------------------------------------------
   !! TPSS meta-GGA correlation energy and potentials.
   !
   USE kind_l,  ONLY : DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho
   !! the charge density
@@ -279,13 +282,14 @@ END SUBROUTINE metac
 !
 !-------------------------------------------------------------------------
 SUBROUTINE metaFX( rho, grho2, tau, fx, f1x, f2x, f3x )
-!$acc routine seq
   !-------------------------------------------------------------------------
   !! FX calculation.
   !
   USE kind_l,           ONLY : DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho
   !! charge density
@@ -404,13 +408,14 @@ END SUBROUTINE metaFX
 !---------------------------------------------------------------------------
 SUBROUTINE tpsscx_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw, sx, &
                         v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw )
-!$acc routine seq
   !-----------------------------------------------------------------------
   !! TPSS metaGGA for exchange - Hartree a.u.
   !
   USE kind_l,            ONLY : DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rhoup
   !! up charge
@@ -480,13 +485,14 @@ END SUBROUTINE tpsscx_spin
 !---------------------------------------------------------------------------
 SUBROUTINE tpsscc_spin( rho, zeta, grhoup, grhodw, &
                         atau, sc, v1cup, v1cdw, v2cup, v2cdw, v3cup, v3cdw )
-!$acc routine seq
   !--------------------------------------------------------------------------
   !! TPSS metaGGA for correlations - Hartree a.u.
   !
   USE kind_l,       ONLY : DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho
   !! the total charge
@@ -558,13 +564,14 @@ END SUBROUTINE tpsscc_spin
 !---------------------------------------------------------------
 SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &
                        tau, sc, v1up, v1dw, v2up, v2dw, v3 )
-!$acc routine seq
   !---------------------------------------------------------------
   !! TPSS meta-GGA correlation energy and potentials - polarized case.
   !
   USE kind_l,    ONLY : DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho
   !! the total charge
@@ -888,13 +895,14 @@ END SUBROUTINE metac_spin
 !
 !-------------------------------------------------------------------------
 SUBROUTINE m06lxc( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
-!$acc routine seq
   !-----------------------------------------------------------------------
   !! Wrapper to M06L exchange+correlation routines (unpolarized).
   !
   USE kind_l,        ONLY : DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho
   !! the total charge
@@ -955,13 +963,14 @@ END SUBROUTINE m06lxc
 SUBROUTINE m06lxc_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &
                         ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
                         v1cup, v1cdw, v2cup, v2cdw, v3cup, v3cdw )
-!$acc routine seq
   !-----------------------------------------------------------------------
   !! Wrapper to M06L exchange+correlation routines (polarized).
   !
   USE kind_l,        ONLY : DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN)  :: rhoup, rhodw, grhoup2, grhodw2, tauup, taudw
   REAL(DP), INTENT(OUT) :: ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
@@ -992,7 +1001,6 @@ END SUBROUTINE m06lxc_spin
 !
 !-------------------------------------------------------------------------------
 SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )
-!$acc routine seq
   !---------------------------------------------------------------------------
   !! M06L exchange.
   !
@@ -1000,6 +1008,8 @@ SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )
   USE constants_l,   ONLY : pi
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho
   !! the total charge
@@ -1159,7 +1169,6 @@ END SUBROUTINE m06lx
 !
 !-------------------------------------------------------------------
 SUBROUTINE pbex_m06l( rho, grho2, sx, v1x, v2x )
-!$acc routine seq
   !---------------------------------------------------------------
   !! PBE exchange (without Slater exchange):
   !! J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996).
@@ -1170,6 +1179,8 @@ SUBROUTINE pbex_m06l( rho, grho2, sx, v1x, v2x )
   USE constants_l,   ONLY : pi
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho
   !! charge density
@@ -1229,7 +1240,6 @@ END SUBROUTINE pbex_m06l
 !---------------------------------------------------------------------------------
 SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &
                   v3c_up, v1c_dw, v2c_dw, v3c_dw )
-!$acc routine seq
   !-------------------------------------------------------------------------------
   !! M06L correlation.
   !
@@ -1237,6 +1247,8 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &
   USE constants_l,    ONLY : pi
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rhoa
   !! charge density up
@@ -1533,12 +1545,13 @@ END SUBROUTINE m06lc
   !
   !-------------------------------------------------------------------
 SUBROUTINE gfunc( cspin, gama, xspin, gs, dgs_dx )
-!$acc routine seq
     !-----------------------------------------------------------------
     !
     USE kind_l,   ONLY : DP
     !
     IMPLICIT NONE
+    !
+    !$acc routine seq
     !
     REAL(DP), INTENT(IN)  :: cspin(0:4)
     REAL(DP), INTENT(IN)  :: xspin, gama
@@ -1564,12 +1577,13 @@ SUBROUTINE gfunc( cspin, gama, xspin, gs, dgs_dx )
 !
 !-------------------------------------------------------------------------
 SUBROUTINE gvt4( x, z, a, b, c, d, e, f, alpha, hg, dh_dx, dh_dz )
-!$acc routine seq
   !----------------------------------------------------------------------
   !
   USE kind_l,    ONLY : DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: X, z, a, b, c, d, e, f, alpha
   REAL(DP), INTENT(OUT) :: hg, dh_dx, dh_dz

@@ -145,7 +145,7 @@ module NEB -title "PWSCF GUI: module NEB.x" -script {
 
 	    group fcp_specs -decor none {	
 		var fcp_mu {
-		    -label "target Fermi energy in Ry (fcp_mu):"	    
+		    -label "Target Fermi energy in Ry (fcp_mu):"	    
 		    -validate fortranreal
 		}
 

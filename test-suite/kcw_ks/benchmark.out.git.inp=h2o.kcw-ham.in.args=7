@@ -1,0 +1,218 @@
+
+     Program KCW v.7.0 starts on 17Feb2022 at 10:19:39 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     1320 MiB available memory on the printing compute node when the environment starts
+ 
+
+     KCW INPUT SUMMARY 
+     ============================================
+
+      CONTROL 
+       # title               =KCW H2O KI hamilto
+       # out_dir             =            ./out/
+       # prefix              =               h2o
+       # calculation         =               ham
+       # kcw_iverbosity      =                 1
+       # kcw_at_ks           =                 T
+       # spin_component      =                 1
+       # homo_only           =                 F
+       # read_unitary_matrix =                 F
+       # check_ks            =                 F
+       # l_vcut              =                 F
+       # assume_isolated     =                mt
+
+      HAM 
+       # qp_symm             =                 F
+       # kipz_corr           =                 F
+       # compute_hf          =                 F
+       # MP grid             =     1     1     1
+       # do_bands            =                 F
+       # use_ws_distance     =                 F
+       # write_hr            =                 T
+       # l_alpha_corr        =                 T
+       # on_site_only        =                 F
+     ============================================
+
+     INFO: Reading pwscf data
+
+     Reading xml data from directory:
+
+     ./out/h2o.save/
+     file H.pbe-vbc.UPF: wavefunction(s)  0S renormalized
+     file O.pbe-mt.UPF: wavefunction(s)  4f renormalized
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum        2313    2313    579                81617    81617   10189
+ 
+     Using Slab Decomposition
+ 
+     Reading collected, re-writing distributed wavefunctions
+
+     INFO: total number of primitive cell    1
+
+     READING SCREENING PARAMETERS
+
+     INFO: alphas read from:./out/kcw/h2o.alpha.dat                                                                                                                                                                                                                                         
+     iwann =     1   alpha =      0.64119390
+     iwann =     2   alpha =      0.71810369
+     iwann =     3   alpha =      0.65382707
+     iwann =     4   alpha =      0.64193563
+     iwann =     5   alpha =      1.03009299
+
+     INFO: MLWF read from file: Reading collected, re-writing distributed wavefunctions
+
+     INFO: Coulomb kernel treated according to MT scheme
+
+     INFO: READING Wannier-orbital Densities ...
+
+        ==============================================================================
+        iq =     1
+        The  Wannier density at  q =    0.0000000   0.0000000   0.0000000  [Cart ]
+        The  Wannier density at  q =    0.0000000   0.0000000   0.0000000  [Cryst]
+        ==============================================================================
+
+     INFO: total number of wannier to compute    5 from     1 to     5
+     INFO: PREPARING THE KCW CALCULATION ... DONE
+
+
+     INFO: KI[2nd, (R=0,i=j)] CALCULATION ...
+
+     The diagonal H(R=0)
+     iwann   alpha       Real(H)       Im(H)
+       1     0.6412    -0.45280031  0.00000000
+       2     0.7181    -0.42403122  0.00000000
+       3     0.6538    -0.41081063  0.00000000
+       4     0.6419    -0.40540367  0.00000000
+       5     1.0301    -0.63521761 -0.00000000
+     INFO: KI[2nd, (R=0,i=j)] CALCULATION ... DONE
+
+     INFO: KC SCALAR TERM CALCULATION ... START
+
+     INFO: KC SCALAR TERM CALCULATION ... END
+
+     INFO: Correction beyond 2nd order ...
+
+     INFO: iwann , e(N), de/df, d2e/df2, e(N-1), delta    1     -8.426170227084     -1.464994518234     -0.130836989736     -7.035963345116     -0.009369141398
+     INFO: iwann, LR-alpha, FD-alpha, alpha  1  0.64119390  0.63636951  0.62792660
+     INFO: alpha RE-DEFINED ...    1  0.62792660
+     INFO: iwann , e(N), de/df, d2e/df2, e(N-1), delta    2     -8.426170227084     -1.314748543804     -0.153343797332     -7.211410901136     -0.023317319189
+     INFO: iwann, LR-alpha, FD-alpha, alpha  2  0.71810369  0.70651446  0.67861544
+     INFO: alpha RE-DEFINED ...    2  0.67861544
+     INFO: iwann , e(N), de/df, d2e/df2, e(N-1), delta    3     -8.426170227084     -1.334206842278     -0.172870622726     -7.211174640166     -0.032775943997
+     INFO: iwann, LR-alpha, FD-alpha, alpha  3  0.65382707  0.63477524  0.60166240
+     INFO: alpha RE-DEFINED ...    3  0.60166240
+     INFO: iwann , e(N), de/df, d2e/df2, e(N-1), delta    4     -8.426170227084     -1.348699213397     -0.172221039062     -7.194248833666     -0.030667300448
+     INFO: iwann, LR-alpha, FD-alpha, alpha  4  0.64193563  0.62366056  0.59337556
+     INFO: alpha RE-DEFINED ...    4  0.59337556
+     INFO: iwann , e(N), de/df, d2e/df2, e(N-1), delta    5     -8.426170227084     -0.263104351209     -1.655734400297     -8.753649567757      0.763492210685
+     INFO: iwann, LR-alpha, FD-alpha, alpha  5  1.03009299  0.87361617 -0.20801496
+     INFO: alpha RE-DEFINED ...    5 -0.20801496
+
+
+     INFO: KI[2nd] HAMILTONIAN CALCULATION ik=    1 ...
+
+        INFO: Map k+q -> p in 1BZ DONE  
+
+
+          k = 0.0000 0.0000 0.0000     band energies (ev):
+
+          KS   -25.6043 -13.1605  -9.2956  -7.1310  -1.2468
+          KI   -31.6374 -18.6125 -14.4390 -12.2295   0.4984
+
+        KS       highest occupied, lowest unoccupied level (ev):    -7.1310   -1.2468
+        KI[2nd]  highest occupied, lowest unoccupied level (ev):   -12.2295    0.4984
+
+     INFO: KI calcualtion: Full Hamiltonian ... 
+
+        INFO: Map k+q -> p in 1BZ DONE  
+
+        self_hatree    1    1    -0.77160162
+        KI corr const term, sh[n_i], Exc[n], Exc[n-n_i], int{v_xc[n] n_i}     0.77160162   -8.42617023   -7.03596335   -1.46499452
+        orbital  1   spin  1     uKI_diag    -0.69681399 Ry   rKI_diag    -0.44343117 Ry   alpha=     0.63636951
+
+        self_hatree    2    1    -0.66715935
+        KI corr const term, sh[n_i], Exc[n], Exc[n-n_i], int{v_xc[n] n_i}     0.66715935   -8.42617023   -7.21141090   -1.31474854
+        orbital  2   spin  1     uKI_diag    -0.56717014 Ry   rKI_diag    -0.40071390 Ry   alpha=     0.70651446
+
+        self_hatree    3    1    -0.71475227
+        KI corr const term, sh[n_i], Exc[n], Exc[n-n_i], int{v_xc[n] n_i}     0.71475227   -8.42617023   -7.21117464   -1.33420684
+        orbital  3   spin  1     uKI_diag    -0.59554101 Ry   rKI_diag    -0.37803469 Ry   alpha=     0.63477524
+
+        self_hatree    4    1    -0.71764373
+        KI corr const term, sh[n_i], Exc[n], Exc[n-n_i], int{v_xc[n] n_i}     0.71764373   -8.42617023   -7.19424883   -1.34869921
+        orbital  4   spin  1     uKI_diag    -0.60086591 Ry   rKI_diag    -0.37473637 Ry   alpha=     0.62366056
+
+        self_hatree    5    1    -0.21120675
+        KI corr const term, sh[n_i], Exc[n], Exc[n+n_i], int{v_xc[n] n_i}     0.21120675   -8.42617023   -8.75364957   -0.26310435
+        orbital  5   spin  1     uKI_diag     0.14683176 Ry   rKI_diag     0.12827460 Ry   alpha=     0.87361617
+
+     INFO: KI calcualtion: Full Hamiltonian ... DONE
+
+        DATA: Empty states spectrum as a function of the # of orbitals
+          1    0.4984
+
+          KI[Full]  -31.6374 -18.6125 -14.4390 -12.2295   0.4984
+
+          KI[Pert]  -31.6374 -18.6125 -14.4390 -12.2295   0.4984
+
+        KI[pert] highest occupied, lowest unoccupied level (ev):   -12.2295    0.4984
+        KI[full] highest occupied, lowest unoccupied level (ev):   -12.2295    0.4984
+
+     Writing all to output data dir ./out/h2o_kcw.save/
+ 
+     KCW          :      2.93s CPU      3.19s WALL
+
+     INITIALIZATION: 
+     map          :      0.00s CPU      0.00s WALL (       2 calls)
+ 
+     init_vloc    :      0.04s CPU      0.04s WALL (       1 calls)
+     init_us_1    :      0.01s CPU      0.01s WALL (       1 calls)
+ 
+ 
+ 
+ 
+ 
+     h_psi        :      0.03s CPU      0.03s WALL (       2 calls)
+ 
+     h_psi        :      0.03s CPU      0.03s WALL (       2 calls)
+     add_vuspsi   :      0.00s CPU      0.00s WALL (       2 calls)
+ 
+ 
+ 
+      General routines
+     calbec       :      0.00s CPU      0.00s WALL (       2 calls)
+     fft          :      0.45s CPU      0.46s WALL (     319 calls)
+     ffts         :      0.14s CPU      0.15s WALL (      93 calls)
+     fftw         :      0.05s CPU      0.05s WALL (      37 calls)
+     davcio       :      0.01s CPU      0.07s WALL (      29 calls)
+ 
+ 
+     KCW          :      2.93s CPU      3.19s WALL
+
+ 
+   This run was terminated on:  10:19:42  17Feb2022            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

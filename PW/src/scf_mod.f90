@@ -836,7 +836,7 @@ FUNCTION ns_ddot( rho1, rho2 )
   !! of the self-consistency error on the DFT+U correction to the energy.
   !
   USE kinds,     ONLY : DP
-  USE ldaU,      ONLY : Hubbard_l, Hubbard_U, Hubbard_U_back, ldim_back, &
+  USE ldaU,      ONLY : Hubbard_l, Hubbard_U, Hubbard_U2, ldim_back, &
                         lda_plus_u_kind, is_hubbard, is_hubbard_back
   USE ions_base, ONLY : nat, ityp
   !
@@ -881,7 +881,7 @@ FUNCTION ns_ddot( rho1, rho2 )
         m1 = ldim_back(nt)
         m2 = ldim_back(nt)
         !
-        ns_ddot = ns_ddot + 0.5D0 * Hubbard_U_back(nt) * &
+        ns_ddot = ns_ddot + 0.5D0 * Hubbard_U2(nt) * &
                 SUM( rho1%nsb(:m1,:m2,:nspin,na)*rho2%nsb(:m1,:m2,:nspin,na) )
         !
      ENDIF
@@ -1001,21 +1001,21 @@ FUNCTION local_tf_ddot( rho1, rho2, ngm0, g0 )
      !
      !$omp parallel do reduction(+:local_tf_ddot)
      DO ig = gstart, ngm0
-        local_tf_ddot = local_tf_ddot + REAL( CONJG(rho1(ig))*rho2(ig) ) / ( gg(ig) + gg0 )
+        local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(ig))*rho2(ig) ) / ( gg(ig) + gg0 )
      END DO
      !$omp end parallel do
      !
      IF ( gamma_only ) local_tf_ddot = 2.D0 * local_tf_ddot
      !
      IF ( gstart == 2 ) THEN
-        local_tf_ddot = local_tf_ddot + REAL( CONJG(rho1(1))*rho2(1) ) / ( gg(1) + gg0 )
+        local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(1))*rho2(1) ) / ( gg(1) + gg0 )
      END IF
      !
   ELSE
      !
      !$omp parallel do reduction(+:local_tf_ddot)
      DO ig = gstart, ngm0
-        local_tf_ddot = local_tf_ddot + REAL( CONJG(rho1(ig))*rho2(ig) ) / gg(ig)
+        local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(ig))*rho2(ig) ) / gg(ig)
      END DO
      !$omp end parallel do
      !

@@ -29,8 +29,10 @@ SUBROUTINE stres_cc_gpu( sigmaxcc )
   !
   USE gvect,                ONLY : g_d, gg_d
   USE wavefunctions_gpum,   ONLY : using_psic, using_psic_d, psic_d
+#if defined(__CUDA)
   USE device_fbuff_m,             ONLY : dev_buf
   USE device_memcpy_m,        ONLY : dev_memcpy
+#endif
   !
   !
   IMPLICIT NONE
@@ -56,7 +58,6 @@ SUBROUTINE stres_cc_gpu( sigmaxcc )
 #if defined(__CUDA)
   attributes(DEVICE) :: rhocg_d, nl_d, r_d, rab_d, rhoc_d, &
                         gl_d, strf_d, nl_d
-#endif
   !
   nl_d => dfftp%nl_d
   !
@@ -183,6 +184,7 @@ SUBROUTINE stres_cc_gpu( sigmaxcc )
   CALL dev_buf%release_buffer( rab_d,  ierrs(4) )
   CALL dev_buf%release_buffer( rhoc_d, ierrs(5) )
   CALL dev_buf%release_buffer( strf_d, ierrs(6) )
+#endif
   !
   RETURN
   !
