@@ -90,28 +90,20 @@ fi
     fi
 done
 
-# Check Scalapack version with robust routines for computing the QR factorization
-# with column pivoting. (Scalapack >= 2.1.0 or MKL >= 2020)
-AC_ARG_WITH(scalapack_version,
-   [AS_HELP_STRING([--with-scalapack-version=VAL],
-       [Specify the version of Scalapack or MKL library, i.e. "2.1.0" for Scalapack or "2020" for MKL (default: 0, no version provided)])],
-   [],
-   [with_scalapack_version=0])
-
-if test "$have_scalapack" -eq 1 && test "$with_scalapack_version" != "0"; then
-   if test $with_scalapack -eq 1; then
-      scalapack_major_version=`echo $with_scalapack_version | cut -d. -f1`
-      scalapack_minor_version=`echo $with_scalapack_version | cut -d. -f2`
-      if test "$scalapack_major_version" -ge 2 && test "$scalapack_major_version" -le 99; then
-         if test "$scalapack_minor_version" -ge 1; then
-	    try_dflags="$try_dflags -D__SCALAPACK_QRCP"
-	 fi
-      fi
+# Enable QRCP with scalapack if --with-scalapack-qrcp==yes is set.
+AC_ARG_WITH(scalapack,
+   [AS_HELP_STRING([--with-scalapack-qrcp],
+       [(yes|no) Run QRCP with scalapack. Requires ScaLAPACK >= 2.1.0 or MKL >= 2020. (default: no)],
+   [if test "$withval" = "yes" ; then
+      with_scalapack_qrcp=1
    else
-      if test "$with_scalapack_version" -ge 2020; then
-         try_dflags="$try_dflags -D__SCALAPACK_QRCP"
-      fi
-   fi
+      with_scalapack_qrcp=0
+   fi],
+   [with_scalapack_qrcp=0]
+)
+
+if test "$have_scalapack" -eq 1 && test "$with_scalapack_qrcp" -eq 1; then
+   try_dflags="$try_dflags -D__SCALAPACK_QRCP"
 fi
 
 # Configuring output message

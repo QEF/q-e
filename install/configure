@@ -775,7 +775,7 @@ with_libxc
 with_libxc_prefix
 with_libxc_include
 with_scalapack
-with_scalapack_version
+with_scalapack_qrcp
 with_elpa_include
 with_elpa_lib
 with_elpa_version
@@ -1450,10 +1450,8 @@ Optional Packages:
   --with-scalapack        (yes|no|intel) Use scalapack if available. Set to
                           "intel" to use Intel MPI and blacs (default: use
                           openMPI)
-  --with-scalapack-version=VAL
-                          Specify the version of Scalapack or MKL library,
-                          i.e. "2.1.0" for Scalapack or "2020" for MKL
-                          (default: 0, no version provided)
+  --with-scalapack-qrcp   (yes|no) Run QRCP with scalapack. Requires ScaLAPACK
+                          >= 2.1.0 or MKL >= 2020. (default: no)
   --with-elpa-include     Specify full path ELPA include and modules headers
                           (default: no)
   --with-elpa-lib         Specify full path ELPA static or dynamic library
@@ -6965,32 +6963,16 @@ fi
     fi
 done
 
-# Check Scalapack version with robust routines for computing the QR factorization
-# with column pivoting. (Scalapack >= 2.1.0 or MKL >= 2020)
-
-# Check whether --with-scalapack_version was given.
-if test "${with_scalapack_version+set}" = set; then :
-  withval=$with_scalapack_version;
-else
-  with_scalapack_version=0
+# Enable QRCP with scalapack if --with-scalapack-qrcp==yes is set.
+# Requires Scalapack >= 2.1.0 or MKL >= 2020, but the version is not checked.
+# If an old version is used, QRCP results might be buggy.
+if test "${with_scalapack_qrcp+set}" = set; then :
+  withval=$with_scalapack_qrcp
+  if test "$withval" = "yes" && test "$have_scalapack" -eq 1; then
+    try_dflags="$try_dflags -D__SCALAPACK_QRCP"
+  fi
 fi
 
-
-if test "$have_scalapack" -eq 1 && test "$with_scalapack_version" != "0"; then
-   if test $with_scalapack -eq 1; then
-      scalapack_major_version=`echo $with_scalapack_version | cut -d. -f1`
-      scalapack_minor_version=`echo $with_scalapack_version | cut -d. -f2`
-      if test "$scalapack_major_version" -ge 2 && test "$scalapack_major_version" -le 99; then
-         if test "$scalapack_minor_version" -ge 1; then
-	    try_dflags="$try_dflags -D__SCALAPACK_QRCP"
-	 fi
-      fi
-   else
-      if test "$with_scalapack_version" -ge 2020; then
-         try_dflags="$try_dflags -D__SCALAPACK_QRCP"
-      fi
-   fi
-fi
 
 # Configuring output message
 if test "$have_scalapack" -eq 1; then
