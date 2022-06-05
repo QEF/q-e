@@ -3845,7 +3845,7 @@ SUBROUTINE compute_amn_with_scdm
 
    ! vv: Perform QR factorization with pivoting on Psi_Gamma
 #if defined(__SCALAPACK_QRCP)
-   WRITE(stdout, '(5x,A,I,A)') "Running QRCP in parallel, using ", nproc, " cores"
+   WRITE(stdout, '(5x,A,I4,A)') "Running QRCP in parallel, using ", nproc, " cores"
    call PZGEQPF( numbands, nrtot, psi_gamma, 1, 1, descG, piv_p, qr_tau, &
                  tmp_cwork, -1, tmp_rwork, -1, info )
 
