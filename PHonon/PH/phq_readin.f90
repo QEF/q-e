@@ -316,7 +316,6 @@ SUBROUTINE phq_readin()
   ahc_nbnd = 0
   ahc_nbndskip = 0
   skip_upperfan = .FALSE.
-  elph_ahc = .FALSE.
   !
   drho_star%open = .FALSE.
   drho_star%basis = 'modes'
@@ -416,79 +415,54 @@ SUBROUTINE phq_readin()
   IF (dek <= 0.d0) CALL errore ( 'phq_readin', ' Wrong dek ', 1)
   !
   !
+  elph_simple= .FALSE.
+  elph_mat   = .FALSE.
+  elph_ahc   = .FALSE.
   elph_tetra = 0
+  elph_epa   = .FALSE.
   SELECT CASE( trim( electron_phonon ) )
   CASE( 'simple'  )
      elph=.true.
-     elph_mat=.false.
      elph_simple=.true.
-     elph_epa=.false.
   CASE( 'epa' )
      elph=.true.
-     elph_mat=.false.
-     elph_simple=.false.
      elph_epa=.true.
   CASE( 'Wannier' )
      elph=.true.
      elph_mat=.true.
-     elph_simple=.false.
-     elph_epa=.false.
      auxdvscf=trim(fildvscf)
   CASE( 'interpolated' )
      elph=.true.
-     elph_mat=.false.
-     elph_simple=.false.
-     elph_epa=.false.
-  ! YAMBO >
   CASE( 'yambo' )
      elph=.true.
-     elph_mat=.false.
-     elph_simple=.false.
-     elph_epa=.false.
      elph_yambo=.true.
      nogg=.true.
      auxdvscf=trim(fildvscf)
+  ! also for Yambo
   CASE( 'dvscf' )
      elph=.false.
-     elph_mat=.false.
-     elph_simple=.false.
-     elph_epa=.false.
-     elph_yambo=.false.
      dvscf_yambo=.true.
      nogg=.true.
      auxdvscf=trim(fildvscf)
-  ! YAMBO <
   CASE( 'lambda_tetra'  )
      elph=.true.
-     elph_mat=.false.
-     elph_simple=.false.
      trans = .false.
      elph_tetra = 1
   CASE( 'gamma_tetra'  )
      elph=.true.
-     elph_mat=.false.
-     elph_simple=.false.
      trans = .false.
      elph_tetra = 2
   CASE( 'scdft_input'  )
      elph=.true.
-     elph_mat=.false.
-     elph_simple=.false.
      trans = .false.
      elph_tetra = 3
   CASE( 'ahc' )
      elph = .true.
      elph_ahc = .true.
-     elph_mat = .false.
-     elph_simple = .false.
-     elph_epa = .false.
      trans = .false.
      nogg = .true.
   CASE DEFAULT
      elph=.false.
-     elph_mat=.false.
-     elph_simple=.false.
-     elph_epa=.false.
   END SELECT
 
   ! YAMBO >
