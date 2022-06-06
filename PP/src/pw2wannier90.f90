@@ -3646,7 +3646,6 @@ SUBROUTINE compute_amn_with_scdm
    USE cell_base,       ONLY : at
    USE ions_base,       ONLY : ntyp => nsp, tau
    USE uspp_param,      ONLY : upf
-   USE mpi,             ONLY : MPI_INTEGER !NS: to be removed
 
    IMPLICIT NONE
 
