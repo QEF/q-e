@@ -516,7 +516,9 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
     set pwscf($moduleObj,inputHeadContent) {}
     #set pwscf($moduleObj,inputTailContent) {}
     set pwscf($moduleObj,OCCUPATIONS)      {}
-
+    set pwscf($moduleObj,HUBBARD)          {}
+    set hubbard_line                       {}
+    
     #
     # Check if input file is a pw.x formatted ...
     #    
@@ -557,13 +559,15 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
     }
 
     foreach record [split $SYSTEM_namelist_content ,\n] {
-	set var [lindex [split $record =] 0]
-	if { [::tclu::stringMatch celldm* $var $::guib::settings(INPUT.nocase)] } {
-	    $moduleObj varset how_lattice -value celldm
-	} elseif  { [::tclu::stringMatch A $var $::guib::settings(INPUT.nocase)] } {
-	    $moduleObj varset how_lattice -value abc
-	}
-    }    
+	set var [string trim [lindex [split $record =] 0] { \t}]
+        if { $var != "" } {
+            if { [string match -nocase celldm* $var] } {
+                $moduleObj varset how_lattice -value celldm
+            } elseif  { [string match -nocase A $var] } {
+                $moduleObj varset how_lattice -value abc
+            }
+        }
+    }
 
     seek $channel 0 start
 
@@ -595,14 +599,15 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
     #   ATOMIC_SPECIES
     #   ATOMIC_POSITIONS
     #   K_POINTS
-    #   ADDITIONAL_K_POINTS ###TODO
+    #   ADDITIONAL_K_POINTS
     #   CONSTRAINTS
+    #   HUBBARD
     #   OCCUPATIONS
     #   ATOMIC_VELOCITIES
     #   ATOMIC_FORCES
 
-    # The content of OCCUPATIONS card is managed by the "text"
-    # keyword, hence we have to store the content of OCCUPATIONS
+    # The content of OCCUPATIONS & HUBBARD cards is managed by the "text"
+    # keyword, hence we have to store the content of OCCUPATIONS & HUBBARD
 
     set what  {}
     set ind   1
@@ -634,6 +639,9 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 	} elseif { [string match "CONSTRAINTS*" $_line] } {
 	    set what CONSTRAINTS
 	    set _line [readFilter::purifyCardLine $_line]
+	} elseif { [string match "HUBBARD*" $_line] } {
+	    set what HUBBARD
+	    set _line [readFilter::purifyCardLine $_line]
 	} elseif { [string match "OCCUPATIONS*" $_line] } {
 	    set what OCCUPATIONS
 	    set _line [readFilter::purifyCardLine $_line]
@@ -664,9 +672,9 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 		vdw_corr {
 		    {'grimme-d2' 'Grimme-D2' 'DFT-D'  'dft-d'}
 		    {'grimme-d3' 'Grimme-D3' 'DFT-D3' 'dft-d3'}
-		    {'ts-vdw'    'TS' 'ts' 'ts-vdW' 'tkatchenko-scheffler'}
-        {'MBD'       'mbd'     'many-body-dispersion' 'mbd_vdw'}
-		    {'xdm'       'XDM'}
+		    {'TS'        'ts'        'ts-vdw' 'ts-vdW' 'tkatchenko-scheffler'}
+                    {'MBD'       'mbd'       'many-body-dispersion' 'mbd_vdw'}
+		    {'XDM'       'xdm' }
 		}
                 diagonalization {
                     'david'
@@ -688,8 +696,11 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 	} else {
 	    # fortranreal --> real translation
 	    regsub -all -nocase {([0-9]|[0-9].)(d)([+-]?[0-9]+)} $_line {\1e\3} _transline
-	    if { ! [string match "OCCUPATIONS*" $_line] } {
-		# the OCCUPATIONS are treated specially (see below)
+
+            # the OCCUPATIONS & HUBBARD are treated specially (see below)            
+            if { [string match "HUBBARD*" $_line] } {
+                set hubbard_line $_line
+            } elseif { ! [string match "OCCUPATIONS*" $_line] } {
 		append $what "$_transline\n"
 	    }
 	}
@@ -733,6 +744,7 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
     }
     # write the CONSTRAINTS
     if { [info exists CONSTRAINTS] } {
+        $moduleObj varset constraints_enable -value Yes
 	puts $newChannel $CONSTRAINTS
     }
     # write the ATOMIC_VELOCITIES
@@ -745,15 +757,24 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 	puts $newChannel $ATOMIC_FORCES
     }
 
+    # store the HUBBARD record
+    if { [info exists HUBBARD] } {
+	puts $newChannel $hubbard_line\n
+        $moduleObj varset hubbard_enable -value Yes
+	set pwscf($moduleObj,HUBBARD) [string trim $HUBBARD \n]
+    }
+
     # store the OCCUPATIONS record
     if { [info exists OCCUPATIONS] } {
 	puts $newChannel "OCCUPATIONS\n"
-	set pwscf($moduleObj,OCCUPATIONS) $OCCUPATIONS
+	set pwscf($moduleObj,OCCUPATIONS) [string trim $OCCUPATIONS \n]
     }
+    
     flush $newChannel
 
     # rewind the newChannel
     seek $newChannel 0 start
+
     return $newChannel
 }
 

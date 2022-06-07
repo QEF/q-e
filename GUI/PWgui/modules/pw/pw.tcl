@@ -297,7 +297,11 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                         "Triclinic P"
                     }
                     -value {
-                        0 1 2 3 -3 4 5 -5 6 7 8 9 -9 91 10 11 12 -12 13 -13 14
+                        0 1 2 3 -3
+                        4 5 -5
+                        6 7 8 9 -9 91
+                        10 11 12 -12
+                        13 -13 14
                     }
                 }
 
@@ -656,104 +660,51 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     }
                 }
                 
-                separator -label "--- LDA + U parameters ---"
+                separator -label "--- Hubbard parameters ---"
 
-                group lda_plus_u_group -decor normal {
+                group hubbard -decor normal {
+                    table Hubbard_occ {
+                        -caption "Hubbard occupations (Hubbard_occ):"
+                        -head {{1st manifold} {2nd manifold} {3rd manifold}}
+                        -validate fortranreal
+                        -cols 3
+                        -rows 1
+                    }
+
+                    dimension Hubbard_alpha {
+                        -label     "Hubbard alpha (Hubbard_alpha):"
+                        -validate  fortranreal
+                        -start 1 -end 1
+                    }
+                        
+                    dimension Hubbard_beta {
+                        -label     "Hubbard beta (Hubbard_beta):"
+                        -validate  fortranreal
+                        -start 1 -end 1
+                    }
+
+                    # cannot handel 3D multidimension: starting_ns_eigenvalue(m,ispin,ityp)
+                }    
+
+                separator -label "--- DMFT ---"
                 
-                    var lda_plus_u {
-                        -label     "Perform LDA + U calculation (lda_plus_u):"
-                        -textvalue {No Yes}
-                        -value     {.false.  .true.}
-                        -widget    radiobox
-                    }
-                    
-                    group hubbard -decor none {
-                        var lda_plus_u_kind {
-                            -label     "Type of LDA + U calculation (lda_plus_u_kind):"
-                            -textvalue {
-                                "simplified version of Cococcioni and de Gironcoli" 
-                                "rotationally invariant scheme of Liechtenstein et al."
-                                "DFT+U+V simplified version of Campo Jr and Cococcioni"
-                            }
-                            -value     {0 1 2}
-                            -widget    radiobox
-                        }
-                        
-                        dimension Hubbard_U {
-                            -label     "Hubbarb U (Hubbard_U):"
-                            -validate  fortranreal
-                            -start 1 -end 1
-                        }
-                        
-                        dimension Hubbard_J0 {
-                            -label     "Hubbarb J0 (Hubbard_J0):"
-                            -validate  fortranreal
-                            -start 1 -end 1
-                        }
-                        
-                        dimension Hubbard_alpha {
-                            -label     "Hubbard alpha (Hubbard_alpha):"
-                            -validate  fortranreal
-                            -start 1 -end 1
-                        }
-                        
-                        dimension Hubbard_beta {
-                            -label     "Hubbard beta (Hubbard_beta):"
-                            -validate  fortranreal
-                            -start 1 -end 1
-                        }
-                        
-                        # can't input Hubbard_V, Hubbard_J, and starting_ns_eigenvalue
-                        
-                        var U_projection_type {
-                            -label  "Type of projector on localized orbital (U_projector_type):"
-                            -widget optionmenu
-                            -textvalue {
-                                "use atomic wfc's (as they are) to build the projector  <atomic>"
-                                "use Lowdin orthogonalized atomic wfc's  <ortho-atomic>"
-                                "use Lowdin normalization of atomic wfc  <norm-atomic>"
-                                "use the information from file \"prefix\".atwfc  <file>"
-                                "use the pseudopotential projectors <pseudo>"
-                            }
-                            -value {
-                                'atomic'
-                                'ortho-atomic'
-                                'norm-atomic'
-                                'file'
-                                'pseudo'
-                            }
-                        }
-
-                        var Hubbard_parameters {
-                            -label "How to read Hubbard parameters (Hubbard_parameters):"
-                            -validate string
-                            -widget radiobox
-                            -value { 'input' 'file' }
-                            -textvalue {
-                                "from input"
-                                "from the file \"parameters.in\""
-                            }
-                        }
-
-                        var dmft {
-                            -label "DMFT (dmft):"
-                            -widget    radiobox
-                            -textvalue { Yes No }	      
-                            -value     { .true. .false. }
-                        }
-
-                        var dmft_prefix {
-                            -label "DMFT prefix to hdf5 archive (dmft_prefix):"
-                            -validate string
-                        }
-
-                        var ensemble_energies {
-                            -label "Calculate ensemble of xc energies (ensemble_energies):"
-                            -widget    radiobox
-                            -textvalue { Yes No }	      
-                            -value     { .true. .false. }
-                        }
-                    }
+                var dmft {
+                    -label "DMFT (dmft):"
+                    -widget    radiobox
+                    -textvalue { Yes No }	      
+                    -value     { .true. .false. }
+                }
+                
+                var dmft_prefix {
+                    -label "DMFT prefix to hdf5 archive (dmft_prefix):"
+                    -validate string
+                }
+                
+                var ensemble_energies {
+                    -label "Calculate ensemble of xc energies (ensemble_energies):"
+                    -widget    radiobox
+                    -textvalue { Yes No }	      
+                    -value     { .true. .false. }
                 }
 
                 separator -label "--- Variable cell parameters ---"
@@ -876,8 +827,8 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
                     var vdw_corr {
                         -label "Type of Van der Waals correction (vdw_corr):"
-                        -textvalue {Grimme-D2  Grimme-D3  Tkatchenko-Scheffler "Many-Body-Dispersion vdW" XDM  None}
-                        -value     {'grimme-d2' 'grimme-d3' 'ts-vdw' 'mbd_vdw' 'xdm' ''}
+                        -textvalue {Grimme-D2  Grimme-D3  Tkatchenko-Scheffler "Many-Body-Dispersion (MBD) vdW" XDM  None}
+                        -value     {'grimme-d2' 'grimme-d3' 'TS' 'MBD' 'XDM' ''}
                         -widget    optionmenu
                     }  
 
@@ -1208,12 +1159,19 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     separator -label "--- Conjugate-Gradient diagonalization ---"
                     
                     var diago_cg_maxiter {
-                        -label    "Max. \# of iterations (diago_cg_maxiter):"
+                        -label    "Max. \# of iterations for CG (diago_cg_maxiter):"
                         -widget   spinint
                         -validate posint
                         -fmt      %d
                     }
-                    
+
+                    var diago_ppcg_maxiter {
+                        -label    "Max. \# of iterations for PPCG (diago_ppcg_maxiter):"
+                        -widget   spinint
+                        -validate posint
+                        -fmt      %d
+                    }
+
                     separator -label "--- Davidson diagonalization ---"
                     
                     var diago_david_ndim {
@@ -1546,6 +1504,12 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                 -value {
                     'all'
                     'ibrav'
+                    'a'
+                    'b'
+                    'c'
+                    'fixa'
+                    'fixb'
+                    'fixc'
                     'x'
                     'y'
                     'z' 
@@ -1565,6 +1529,12 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                 -textvalue {
                     {'all' =    all axis and angles are moved}
                     {'ibrav' =  all axis and angles are moved, but ibrav is kept}
+                    {'a' =      the x component of axis 1 (v1_x) is fixed}
+                    {'b' =      the y component of axis 2 (v2_y) is fixed}
+                    {'c' =      the z component of axis 3 (v3_z) is fixed}
+                    {'fixa' =   axis 1 (v1_x,v1_y,v1_z) is fixed}
+                    {'fixb' =   axis 2 (v2_x,v2_y,v2_z) is fixed}
+                    {'fixc' =   axis 3 (v3_x,v3_y,v3_z) is fixed}
                     {'x' =      only the x component of axis 1 (v1_x) is moved}
                     {'y' =      only the y component of axis 2 (v2_y) is moved}
                     {'z' =      only the z component of axis 3 (v3_z) is moved}
@@ -1911,6 +1881,37 @@ module PW -title "PWSCF GUI: module PW.x" -script {
     ##                                                                    ##
     ########################################################################
     page otherPage -name "Other Cards" {
+
+        # CARD: HUBBARD
+        
+        group hubbard_card -name "Card: HUBBARD" -decor normal {
+            auxilvar hubbard_enable {
+                -label     "Activate the HUBBARD card:"
+                -value     {Yes No}
+                -widget    radiobox
+                -default   No
+            }
+            group hubbard_group -decor none {                
+                line hubbard_line -decor none {
+                    keyword hubbard HUBBARD
+                    var HUBBARD_flags {
+                        -label "HUBBARD's card option:"
+                        -value {
+                            atomic
+                            ortho-atomic
+                            norm-atomic
+                            wf
+                            pseudo
+                        }                    
+                        -widget optionmenu
+                    }
+                }
+                text hubbard_specs \
+                    -label "Specs of the HUBBARD card:" \
+                    -readvar ::pwscf::pwscf($this,HUBBARD)                
+            }
+        }
+
 
         # CARD: CONSTRAINTS
         
