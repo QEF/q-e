@@ -38,9 +38,10 @@ MODULE io_kcw
       ! ... on a single proc.
       !
       USE mp,        ONLY : mp_get, mp_sum, mp_rank, mp_size
-#if defined __HDF5
-      USE hdf5_qe,  ONLY  : write_rho_hdf5, h5fclose_f, &
-                            prepare_for_writing_final, add_attributes_hdf5, rho_hdf5_write  
+#if defined(__HDF5)
+      USE qeh5_base_module,  ONLY  : qeh5_file, qeh5_dataset, qeh5_openfile, qeh5_open_dataset, &
+                             qeh5_add_attribute, qeh5_write_dataset, qeh5_close, qeh5_set_space, &
+                             qeh5_set_file_hyperslab              
 #endif
       USE fft_types
       !
@@ -64,7 +65,12 @@ MODULE io_kcw
                                             io_group_id, io_group2, io_group3
       INTEGER,  EXTERNAL    :: find_free_unit
       !
-
+#if defined(__HDF5) 
+      TYPE (qeh5_file)         :: h5file
+      TYPE (qeh5_dataset)      :: rhowann_dset
+      !  
+#endif 
+      !
       my_group_id = mp_rank( inter_group_comm )
 
       me_group = fft_desc%mype ; me_group2 = fft_desc%mype2 ; me_group3 = fft_desc%mype3
@@ -80,12 +86,11 @@ MODULE io_kcw
       rhounit = find_free_unit ()
       !
       IF ( ionode ) THEN 
-#if defined  __HDF5
-         rho_file_hdf5 = TRIM( file_base ) // '.hdf5'
-         CALL prepare_for_writing_final(rho_hdf5_write, 0 ,rho_file_hdf5)
-         CALL add_attributes_hdf5(rho_hdf5_write,nr1,"nr1")
-         CALL add_attributes_hdf5(rho_hdf5_write,nr2,"nr2")
-         CALL add_attributes_hdf5(rho_hdf5_write,nr3,"nr3")
+#if defined(__HDF5)
+         CALL qeh5_openfile(h5file, TRIM(file_base)//'.hdf5',action = 'write') 
+         CALL qeh5_add_attribute( h5file%id, "nr1", nr1 )
+         CALL qeh5_add_attribute( h5file%id, "nr2", nr2 )
+         CALL qeh5_add_attribute( h5file%id, "nr3", nr3 )
 #else
          IF (rho_binary) OPEN (rhounit, FILE=rho_file, IOSTAT=ierr, FORM='unformatted')
          IF (.NOT. rho_binary) OPEN (rhounit, FILE=rho_file, IOSTAT=ierr, FORM='formatted')
@@ -93,7 +98,7 @@ MODULE io_kcw
 #endif
       END IF 
       !
-#if !defined __HDF5
+#if !defined(__HDF5)
       IF ( ionode ) THEN
          !
          IF (rho_binary) THEN 
@@ -106,7 +111,16 @@ MODULE io_kcw
 #endif
       !
       ALLOCATE( rho_plane( nr1*nr2 ) )
+      rho_plane = (0.D0, 0.D0)
       ALLOCATE( kowner( nr3 ) )
+      !
+#if defined(__HDF5)
+      IF ( ionode ) THEN 
+         CALL qeh5_set_space ( rhowann_dset, rho_plane(1), 2, [nr1*nr2, nr3], MODE = 'f')
+         CALL qeh5_set_space ( rhowann_dset, rho_plane(1), 1, [nr1*nr2], MODE = 'm')
+         CALL qeh5_open_dataset (h5file, rhowann_dset, ACTION = 'write', NAME = 'rhowann' )
+      END IF
+#endif 
       !
       ! ... find the index of the group (pool) that will write rho
       !
@@ -164,8 +178,9 @@ MODULE io_kcw
                CALL mp_get( rho_plane, rho_plane, me_group3, io_group3, kowner(k), k, fft_desc%comm3 )
             !
             IF ( ionode ) THEN
-#if defined __HDF5
-              CALL write_rho_hdf5(rho_hdf5_write,k,rho_plane)
+#if defined(__HDF5)
+              CALL qeh5_set_file_hyperslab ( rhowann_dset,  OFFSET = [0,k-1], COUNT = [2*nr1*nr2,1] ) 
+              CALL qeh5_write_dataset ( rho_plane, rhowann_dset)   
 #else
               !
               IF (rho_binary) THEN 
@@ -187,8 +202,9 @@ MODULE io_kcw
       DEALLOCATE( kowner )
       !
       IF ( ionode ) THEN
-#if defined __HDF5
-         CALL h5fclose_f(rho_hdf5_write%file_id,ierr)
+#if defined(__HDF5)
+         CALL qeh5_close (rhowann_dset) 
+         CALL qeh5_close (h5file)   
 #else
          CLOSE (rhounit, STATUS='keep')
 #endif       
@@ -209,9 +225,8 @@ MODULE io_kcw
      USE io_global, ONLY : ionode, ionode_id
      USE mp_images, ONLY : intra_image_comm
      USE mp,        ONLY : mp_put, mp_sum, mp_rank, mp_size
-#if defined __HDF5
-     USE hdf5_qe,   ONLY : read_rho_hdf5, read_attributes_hdf5, &
-          prepare_for_reading_final, h5fclose_f, rho_hdf5_write, hdf5_type
+#if defined(__HDF5)
+      USE  qeh5_base_module
 #endif
      USE fft_types
      USE io_files,  ONLY : check_file_exist
@@ -232,11 +247,13 @@ MODULE io_kcw
      INTEGER,  ALLOCATABLE :: kowner(:)
      LOGICAL               :: exst
      INTEGER,  EXTERNAL    :: find_free_unit
-#if defined(__HDF5)
-     TYPE(hdf5_type),ALLOCATABLE   :: h5desc
-#endif
      CHARACTER(LEN=256) :: string
      CHARACTER(LEN=10)     :: rho_extension
+#if defined(__HDF5)
+     INTEGER             ::   nr1_, nr2_, nr3_
+     TYPE (qeh5_file)    ::   h5file
+     TYPE (qeh5_dataset) ::   rhowann_dset
+#endif  
      !
      me_group = fft_desc%mype ; me_group2 = fft_desc%mype2 ; me_group3 = fft_desc%mype3
      nproc_group = fft_desc%nproc ; nproc_group2 = fft_desc%nproc2 ; nproc_group3 = fft_desc%nproc3
@@ -259,28 +276,44 @@ MODULE io_kcw
 #endif
      !
      IF ( ionode ) THEN
-#if defined (__HDF5)
-        ALLOCATE ( h5desc)
-        CALL prepare_for_reading_final(h5desc, 0 ,rho_file_hdf5)
-        CALL read_attributes_hdf5(h5desc, nr1_,"nr1")
-        CALL read_attributes_hdf5(h5desc, nr2_,"nr2")
-        CALL read_attributes_hdf5(h5desc, nr3_,"nr3")
+#if defined(__HDF5)
+        !ALLOCATE ( h5desc)
+        !CALL prepare_for_reading_final(h5desc, 0 ,rho_file_hdf5)
+        !CALL read_attributes_hdf5(h5desc, nr1_,"nr1")
+        !CALL read_attributes_hdf5(h5desc, nr2_,"nr2")
+        !CALL read_attributes_hdf5(h5desc, nr3_,"nr3")
+        !nr = [nr1_,nr2_,nr3_]
+        CALL qeh5_openfile( h5file, TRIM(rho_file_hdf5), ACTION = 'read', ERROR = ierr)
+        CALL errore( 'read_rhowann', 'cannot open ' // TRIM( rho_file_hdf5 ) // ' file for reading', ierr )
+        CALL qeh5_read_attribute (h5file%id, "nr1", nr1_)
+        CALL qeh5_read_attribute (h5file%id, "nr2", nr2_)
+        CALL qeh5_read_attribute (h5file%id, "nr3", nr3_)
         nr = [nr1_,nr2_,nr3_]
 #else
         IF (rho_binary) OPEN (rhounit, FILE=rho_file, IOSTAT=ierr, FORM='unformatted', STATUS='old')
         IF (.NOT. rho_binary) OPEN (rhounit, FILE=rho_file, IOSTAT=ierr, FORM='formatted', STATUS='old')
-        CALL errore( 'read_rho_xml', 'cannot open ' // TRIM( rho_file ) // ' file for reading', ierr )
+        CALL errore( 'read_rhowann', 'cannot open ' // TRIM( rho_file ) // ' file for reading', ierr )
         IF (rho_binary) READ(rhounit) nr(1), nr(2), nr(3)
         IF (.NOT. rho_binary) READ(rhounit,*) string,nr(1), nr(2), nr(3)
 #endif
-        !
-        IF ( nr1 /= nr(1) .OR. nr2 /= nr(2) .OR. nr3 /= nr(3) ) &
-           CALL errore( 'read_rhowann', 'dimensions do not match', 1 )
-        !
+     !
      END IF
+     !
+     CALL mp_bcast( nr, ionode_id, intra_image_comm )
+     !
+     IF ( nr1 /= nr(1) .OR. nr2 /= nr(2) .OR. nr3 /= nr(3) ) &
+        CALL errore( 'read_rhowann', 'dimensions do not match', 1 )
+     !
      !
      ALLOCATE( rho_plane( nr1*nr2 ) )
      ALLOCATE( kowner( nr3 ) )
+     !
+#if defined(__HDF5) 
+     IF (ionode ) THEN
+       CALL qeh5_open_dataset( h5file, rhowann_dset, ACTION = 'read', NAME = 'rhowann')
+       CALL qeh5_set_space ( rhowann_dset, rho_plane(1), RANK = 1, DIMENSIONS = [nr1*nr2], MODE = 'm') 
+     ENDIF
+#endif
      !
      DO ip = 1, nproc_group3
         !
@@ -300,8 +333,10 @@ MODULE io_kcw
         ! ... only ionode reads the charge planes
         !
         IF ( ionode ) THEN
-#if defined __HDF5
-           CALL  read_rho_hdf5(h5desc , k,rho_plane)
+#if defined(__HDF5)
+           !CALL  read_rho_hdf5(h5desc , k,rho_plane)
+           CALL qeh5_set_file_hyperslab (rhowann_dset, OFFSET = [0,k-1], COUNT = [2*nr1*nr2,1] )
+           CALL qeh5_read_dataset (rho_plane, rhowann_dset )
 #else
            IF (rho_binary) THEN 
               READ(rhounit) k_
@@ -336,9 +371,11 @@ MODULE io_kcw
      !
      IF ( ionode ) THEN
         !
-#if defined __HDF5
-        CALL h5fclose_f(h5desc%file_id,ierr)
-        DEALLOCATE ( h5desc)
+#if defined(__HDF5)
+        CALL qeh5_close(rhowann_dset) 
+        CALL qeh5_close(h5file)
+        !CALL h5fclose_f(h5desc%file_id,ierr)
+        !DEALLOCATE ( h5desc)
 #else
         CLOSE (rhounit)
 #endif    

@@ -179,6 +179,10 @@ SUBROUTINE post_xml_init (  )
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE realus,               ONLY : betapointlist, generate_qpointlist, &
                                    init_realspace_vars,real_space
+  USE solvmol,              ONLY : nsolV, solVs
+  USE read_solv_module,     ONLY : read_solvents
+  USE rism_module,          ONLY : rism_tobe_alive, rism_pot3d
+  USE rism3d_facade,        ONLY : lrism3d, rism3d_initialize, rism3d_read_to_restart
   !
   IMPLICIT NONE
   !
@@ -190,6 +194,12 @@ SUBROUTINE post_xml_init (  )
   CALL set_gcut()
   if (cell_factor == 0.d0) cell_factor = 1.D0
   nbndx = nbnd
+  !
+  ! ... activate 3D-RISM
+  !
+  IF ( lrism3d ) THEN
+     CALL rism_tobe_alive()
+  END IF
   !
   ! ... read pseudopotentials
   ! ... the following call prevents readpp from setting dft from PP files
@@ -270,6 +280,14 @@ SUBROUTINE post_xml_init (  )
      WRITE (stdout,'(5X,"Real space initialisation completed")')    
   ENDIF
   !
+  ! ... read info needed for 3D-RISM
+  !
+  IF ( lrism3d ) THEN
+     CALL read_solvents( without_density=.TRUE. )
+     CALL rism3d_initialize()
+     CALL rism3d_read_to_restart()
+  END IF
+  !
   ! ... recalculate the potential - FIXME: couldn't make ts-vdw work
   !
   IF ( ts_vdw) THEN
@@ -281,6 +299,12 @@ SUBROUTINE post_xml_init (  )
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
        ehart, etxc, vtxc, eth, etotefield, charge, v )
+  !
+  ! ... recalculate the solvation potential (3D-RISM)
+  !
+  IF ( lrism3d ) THEN
+     CALL rism_pot3d(rho%of_g(:, 1), v%of_r)
+  END IF
   !
   ! ... More PAW and USPP initializations
   !

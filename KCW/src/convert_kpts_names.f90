@@ -51,6 +51,8 @@ SUBROUTINE convert_kpts_names()
   ELSE
     !
     nks_bands = nkstot
+    ALLOCATE( xk_bands(3,nks_bands) )
+    ALLOCATE( wk_bands(nks_bands) )
     xk_bands = xk
     wk_bands = wk
     !

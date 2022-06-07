@@ -99,6 +99,11 @@ foreach(test_category IN LISTS qe_test_categories)
                          ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/${matdyn_input} SYMBOLIC)
     endforeach()
 
+    # handle additional test customization
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/CMakeLists.txt)
+      add_subdirectory(${subfolder_name})
+    endif()
+
     foreach(test_input_file IN LISTS test_input_file_names)
       # skip reference and test run output files which also has filename extension .in
       if (NOT test_input_file MATCHES "^benchmark" AND NOT test_input_file MATCHES "^test")
@@ -189,6 +194,11 @@ foreach(test_category IN LISTS qe_test_categories)
         # add dependency between workflow steps
         if(in_test_series)
           set_property(TEST ${test_name} APPEND PROPERTY DEPENDS "${base_test_name};${last_test_name}")
+        endif()
+
+        # add dependency on test preparation
+        if(${test_name_prefix}--preparation-CREATED)
+          set_property(TEST ${test_name} APPEND PROPERTY DEPENDS ${test_name_prefix}--preparation)
         endif()
 
         # make correctness check depend on the test run

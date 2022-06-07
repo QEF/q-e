@@ -64,6 +64,10 @@ MODULE qes_write_module
     MODULE PROCEDURE qes_write_basisSetItem
     MODULE PROCEDURE qes_write_reciprocal_lattice
     MODULE PROCEDURE qes_write_electron_control
+    MODULE PROCEDURE qes_write_fcp
+    MODULE PROCEDURE qes_write_rism
+    MODULE PROCEDURE qes_write_solute
+    MODULE PROCEDURE qes_write_solvent
     MODULE PROCEDURE qes_write_k_points_IBZ
     MODULE PROCEDURE qes_write_monkhorst_pack
     MODULE PROCEDURE qes_write_k_point
@@ -74,6 +78,8 @@ MODULE qes_write_module
     MODULE PROCEDURE qes_write_symmetry_flags
     MODULE PROCEDURE qes_write_boundary_conditions
     MODULE PROCEDURE qes_write_esm
+    MODULE PROCEDURE qes_write_gcscf
+    MODULE PROCEDURE qes_write_solvents
     MODULE PROCEDURE qes_write_ekin_functional
     MODULE PROCEDURE qes_write_spin_constraints
     MODULE PROCEDURE qes_write_electric_field
@@ -120,6 +126,8 @@ MODULE qes_write_module
     MODULE PROCEDURE qes_write_matrix
     MODULE PROCEDURE qes_write_integerMatrix
     MODULE PROCEDURE qes_write_scalarQuantity
+    MODULE PROCEDURE qes_write_rism3d
+    MODULE PROCEDURE qes_write_rismlaue
   END INTERFACE qes_write
   !
   CONTAINS
@@ -259,6 +267,15 @@ MODULE qes_write_module
      IF (obj%boundary_conditions_ispresent) THEN
         CALL qes_write_boundary_conditions (xp, obj%boundary_conditions)
      END IF
+     IF (obj%fcp_settings_ispresent) THEN
+        CALL qes_write_fcp (xp, obj%fcp_settings)
+     END IF
+     IF (obj%rism_settings_ispresent) THEN
+        CALL qes_write_rism (xp, obj%rism_settings)
+     END IF
+     IF (obj%solvents_ispresent) THEN
+        CALL qes_write_solvents (xp, obj%solvents)
+     END IF
      IF (obj%ekin_functional_ispresent) THEN
         CALL qes_write_ekin_functional (xp, obj%ekin_functional)
      END IF
@@ -302,15 +319,15 @@ MODULE qes_write_module
      IF (obj%stress_ispresent) THEN
         CALL qes_write_matrix (xp, obj%stress)
      END IF
-     IF (obj%FCP_force_ispresent) THEN
-        CALL xml_NewElement(xp, "FCP_force")
-           CALL xml_addCharacters(xp, obj%FCP_force, fmt='s16')
-        CALL xml_EndElement(xp, "FCP_force")
+     IF (obj%fcp_force_ispresent) THEN
+        CALL xml_NewElement(xp, "fcp_force")
+           CALL xml_addCharacters(xp, obj%fcp_force, fmt='s16')
+        CALL xml_EndElement(xp, "fcp_force")
      END IF
-     IF (obj%FCP_tot_charge_ispresent) THEN
-        CALL xml_NewElement(xp, "FCP_tot_charge")
-           CALL xml_addCharacters(xp, obj%FCP_tot_charge, fmt='s16')
-        CALL xml_EndElement(xp, "FCP_tot_charge")
+     IF (obj%fcp_tot_charge_ispresent) THEN
+        CALL xml_NewElement(xp, "fcp_tot_charge")
+           CALL xml_addCharacters(xp, obj%fcp_tot_charge, fmt='s16')
+        CALL xml_EndElement(xp, "fcp_tot_charge")
      END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_step
@@ -354,15 +371,21 @@ MODULE qes_write_module
      IF (obj%electric_field_ispresent) THEN
         CALL qes_write_outputElectricField (xp, obj%electric_field)
      END IF
-     IF (obj%FCP_force_ispresent) THEN
-        CALL xml_NewElement(xp, "FCP_force")
-           CALL xml_addCharacters(xp, obj%FCP_force, fmt='s16')
-        CALL xml_EndElement(xp, "FCP_force")
+     IF (obj%fcp_force_ispresent) THEN
+        CALL xml_NewElement(xp, "fcp_force")
+           CALL xml_addCharacters(xp, obj%fcp_force, fmt='s16')
+        CALL xml_EndElement(xp, "fcp_force")
      END IF
-     IF (obj%FCP_tot_charge_ispresent) THEN
-        CALL xml_NewElement(xp, "FCP_tot_charge")
-           CALL xml_addCharacters(xp, obj%FCP_tot_charge, fmt='s16')
-        CALL xml_EndElement(xp, "FCP_tot_charge")
+     IF (obj%fcp_tot_charge_ispresent) THEN
+        CALL xml_NewElement(xp, "fcp_tot_charge")
+           CALL xml_addCharacters(xp, obj%fcp_tot_charge, fmt='s16')
+        CALL xml_EndElement(xp, "fcp_tot_charge")
+     END IF
+     IF (obj%rism3d_ispresent) THEN
+        CALL qes_write_rism3d (xp, obj%rism3d)
+     END IF
+     IF (obj%rismlaue_ispresent) THEN
+        CALL qes_write_rismlaue (xp, obj%rismlaue)
      END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_output
@@ -473,6 +496,12 @@ MODULE qes_write_module
      CALL xml_NewElement(xp, 'print_every')
         CALL xml_addCharacters(xp, obj%print_every)
      CALL xml_EndElement(xp, 'print_every')
+     CALL xml_NewElement(xp, 'fcp')
+        CALL xml_addCharacters(xp, obj%fcp)
+     CALL xml_EndElement(xp, 'fcp')
+     CALL xml_NewElement(xp, 'rism')
+        CALL xml_addCharacters(xp, obj%rism)
+     CALL xml_EndElement(xp, 'rism')
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_control_variables
 
@@ -1418,6 +1447,376 @@ MODULE qes_write_module
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_electron_control
 
+   SUBROUTINE qes_write_fcp(xp, obj)
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(fcp_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     IF (obj%fcp_mu_ispresent) THEN
+        CALL xml_NewElement(xp, "fcp_mu")
+           CALL xml_addCharacters(xp, obj%fcp_mu, fmt='s16')
+        CALL xml_EndElement(xp, "fcp_mu")
+     END IF
+     IF (obj%fcp_dynamics_ispresent) THEN
+        CALL xml_NewElement(xp, "fcp_dynamics")
+           CALL xml_addCharacters(xp, TRIM(obj%fcp_dynamics))
+        CALL xml_EndElement(xp, "fcp_dynamics")
+     END IF
+     IF (obj%fcp_conv_thr_ispresent) THEN
+        CALL xml_NewElement(xp, "fcp_conv_thr")
+           CALL xml_addCharacters(xp, obj%fcp_conv_thr, fmt='s16')
+        CALL xml_EndElement(xp, "fcp_conv_thr")
+     END IF
+     IF (obj%fcp_ndiis_ispresent) THEN
+        CALL xml_NewElement(xp, "fcp_ndiis")
+           CALL xml_addCharacters(xp, obj%fcp_ndiis)
+        CALL xml_EndElement(xp, "fcp_ndiis")
+     END IF
+     IF (obj%fcp_rdiis_ispresent) THEN
+        CALL xml_NewElement(xp, "fcp_rdiis")
+           CALL xml_addCharacters(xp, obj%fcp_rdiis, fmt='s16')
+        CALL xml_EndElement(xp, "fcp_rdiis")
+     END IF
+     IF (obj%fcp_mass_ispresent) THEN
+        CALL xml_NewElement(xp, "fcp_mass")
+           CALL xml_addCharacters(xp, obj%fcp_mass, fmt='s16')
+        CALL xml_EndElement(xp, "fcp_mass")
+     END IF
+     IF (obj%fcp_velocity_ispresent) THEN
+        CALL xml_NewElement(xp, "fcp_velocity")
+           CALL xml_addCharacters(xp, obj%fcp_velocity, fmt='s16')
+        CALL xml_EndElement(xp, "fcp_velocity")
+     END IF
+     IF (obj%fcp_temperature_ispresent) THEN
+        CALL xml_NewElement(xp, "fcp_temperature")
+           CALL xml_addCharacters(xp, TRIM(obj%fcp_temperature))
+        CALL xml_EndElement(xp, "fcp_temperature")
+     END IF
+     IF (obj%fcp_tempw_ispresent) THEN
+        CALL xml_NewElement(xp, "fcp_tempw")
+           CALL xml_addCharacters(xp, obj%fcp_tempw, fmt='s16')
+        CALL xml_EndElement(xp, "fcp_tempw")
+     END IF
+     IF (obj%fcp_tolp_ispresent) THEN
+        CALL xml_NewElement(xp, "fcp_tolp")
+           CALL xml_addCharacters(xp, obj%fcp_tolp, fmt='s16')
+        CALL xml_EndElement(xp, "fcp_tolp")
+     END IF
+     IF (obj%fcp_delta_t_ispresent) THEN
+        CALL xml_NewElement(xp, "fcp_delta_t")
+           CALL xml_addCharacters(xp, obj%fcp_delta_t, fmt='s16')
+        CALL xml_EndElement(xp, "fcp_delta_t")
+     END IF
+     IF (obj%fcp_nraise_ispresent) THEN
+        CALL xml_NewElement(xp, "fcp_nraise")
+           CALL xml_addCharacters(xp, obj%fcp_nraise)
+        CALL xml_EndElement(xp, "fcp_nraise")
+     END IF
+     IF (obj%freeze_all_atoms_ispresent) THEN
+        CALL xml_NewElement(xp, "freeze_all_atoms")
+           CALL xml_addCharacters(xp, obj%freeze_all_atoms)
+        CALL xml_EndElement(xp, "freeze_all_atoms")
+     END IF
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_fcp
+
+   SUBROUTINE qes_write_rism(xp, obj)
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(rism_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     CALL xml_NewElement(xp, 'nsolv')
+        CALL xml_addCharacters(xp, obj%nsolv)
+     CALL xml_EndElement(xp, 'nsolv')
+     DO i = 1, obj%ndim_solute
+        CALL qes_write_solute(xp, obj%solute(i) )
+     END DO
+     IF (obj%closure_ispresent) THEN
+        CALL xml_NewElement(xp, "closure")
+           CALL xml_addCharacters(xp, TRIM(obj%closure))
+        CALL xml_EndElement(xp, "closure")
+     END IF
+     IF (obj%tempv_ispresent) THEN
+        CALL xml_NewElement(xp, "tempv")
+           CALL xml_addCharacters(xp, obj%tempv, fmt='s16')
+        CALL xml_EndElement(xp, "tempv")
+     END IF
+     IF (obj%ecutsolv_ispresent) THEN
+        CALL xml_NewElement(xp, "ecutsolv")
+           CALL xml_addCharacters(xp, obj%ecutsolv, fmt='s16')
+        CALL xml_EndElement(xp, "ecutsolv")
+     END IF
+     IF (obj%rmax_lj_ispresent) THEN
+        CALL xml_NewElement(xp, "rmax_lj")
+           CALL xml_addCharacters(xp, obj%rmax_lj, fmt='s16')
+        CALL xml_EndElement(xp, "rmax_lj")
+     END IF
+     IF (obj%rmax1d_ispresent) THEN
+        CALL xml_NewElement(xp, "rmax1d")
+           CALL xml_addCharacters(xp, obj%rmax1d, fmt='s16')
+        CALL xml_EndElement(xp, "rmax1d")
+     END IF
+     IF (obj%starting1d_ispresent) THEN
+        CALL xml_NewElement(xp, "starting1d")
+           CALL xml_addCharacters(xp, TRIM(obj%starting1d))
+        CALL xml_EndElement(xp, "starting1d")
+     END IF
+     IF (obj%starting3d_ispresent) THEN
+        CALL xml_NewElement(xp, "starting3d")
+           CALL xml_addCharacters(xp, TRIM(obj%starting3d))
+        CALL xml_EndElement(xp, "starting3d")
+     END IF
+     IF (obj%smear1d_ispresent) THEN
+        CALL xml_NewElement(xp, "smear1d")
+           CALL xml_addCharacters(xp, obj%smear1d, fmt='s16')
+        CALL xml_EndElement(xp, "smear1d")
+     END IF
+     IF (obj%smear3d_ispresent) THEN
+        CALL xml_NewElement(xp, "smear3d")
+           CALL xml_addCharacters(xp, obj%smear3d, fmt='s16')
+        CALL xml_EndElement(xp, "smear3d")
+     END IF
+     IF (obj%rism1d_maxstep_ispresent) THEN
+        CALL xml_NewElement(xp, "rism1d_maxstep")
+           CALL xml_addCharacters(xp, obj%rism1d_maxstep)
+        CALL xml_EndElement(xp, "rism1d_maxstep")
+     END IF
+     IF (obj%rism3d_maxstep_ispresent) THEN
+        CALL xml_NewElement(xp, "rism3d_maxstep")
+           CALL xml_addCharacters(xp, obj%rism3d_maxstep)
+        CALL xml_EndElement(xp, "rism3d_maxstep")
+     END IF
+     IF (obj%rism1d_conv_thr_ispresent) THEN
+        CALL xml_NewElement(xp, "rism1d_conv_thr")
+           CALL xml_addCharacters(xp, obj%rism1d_conv_thr, fmt='s16')
+        CALL xml_EndElement(xp, "rism1d_conv_thr")
+     END IF
+     IF (obj%rism3d_conv_thr_ispresent) THEN
+        CALL xml_NewElement(xp, "rism3d_conv_thr")
+           CALL xml_addCharacters(xp, obj%rism3d_conv_thr, fmt='s16')
+        CALL xml_EndElement(xp, "rism3d_conv_thr")
+     END IF
+     IF (obj%mdiis1d_size_ispresent) THEN
+        CALL xml_NewElement(xp, "mdiis1d_size")
+           CALL xml_addCharacters(xp, obj%mdiis1d_size)
+        CALL xml_EndElement(xp, "mdiis1d_size")
+     END IF
+     IF (obj%mdiis3d_size_ispresent) THEN
+        CALL xml_NewElement(xp, "mdiis3d_size")
+           CALL xml_addCharacters(xp, obj%mdiis3d_size)
+        CALL xml_EndElement(xp, "mdiis3d_size")
+     END IF
+     IF (obj%mdiis1d_step_ispresent) THEN
+        CALL xml_NewElement(xp, "mdiis1d_step")
+           CALL xml_addCharacters(xp, obj%mdiis1d_step, fmt='s16')
+        CALL xml_EndElement(xp, "mdiis1d_step")
+     END IF
+     IF (obj%mdiis3d_step_ispresent) THEN
+        CALL xml_NewElement(xp, "mdiis3d_step")
+           CALL xml_addCharacters(xp, obj%mdiis3d_step, fmt='s16')
+        CALL xml_EndElement(xp, "mdiis3d_step")
+     END IF
+     IF (obj%rism1d_bond_width_ispresent) THEN
+        CALL xml_NewElement(xp, "rism1d_bond_width")
+           CALL xml_addCharacters(xp, obj%rism1d_bond_width, fmt='s16')
+        CALL xml_EndElement(xp, "rism1d_bond_width")
+     END IF
+     IF (obj%rism1d_dielectric_ispresent) THEN
+        CALL xml_NewElement(xp, "rism1d_dielectric")
+           CALL xml_addCharacters(xp, obj%rism1d_dielectric, fmt='s16')
+        CALL xml_EndElement(xp, "rism1d_dielectric")
+     END IF
+     IF (obj%rism1d_molesize_ispresent) THEN
+        CALL xml_NewElement(xp, "rism1d_molesize")
+           CALL xml_addCharacters(xp, obj%rism1d_molesize, fmt='s16')
+        CALL xml_EndElement(xp, "rism1d_molesize")
+     END IF
+     IF (obj%rism1d_nproc_ispresent) THEN
+        CALL xml_NewElement(xp, "rism1d_nproc")
+           CALL xml_addCharacters(xp, obj%rism1d_nproc)
+        CALL xml_EndElement(xp, "rism1d_nproc")
+     END IF
+     IF (obj%rism1d_nproc_switch_ispresent) THEN
+        CALL xml_NewElement(xp, "rism1d_nproc_switch")
+           CALL xml_addCharacters(xp, obj%rism1d_nproc_switch)
+        CALL xml_EndElement(xp, "rism1d_nproc_switch")
+     END IF
+     IF (obj%rism3d_conv_level_ispresent) THEN
+        CALL xml_NewElement(xp, "rism3d_conv_level")
+           CALL xml_addCharacters(xp, obj%rism3d_conv_level, fmt='s16')
+        CALL xml_EndElement(xp, "rism3d_conv_level")
+     END IF
+     IF (obj%rism3d_planar_average_ispresent) THEN
+        CALL xml_NewElement(xp, "rism3d_planar_average")
+           CALL xml_addCharacters(xp, obj%rism3d_planar_average)
+        CALL xml_EndElement(xp, "rism3d_planar_average")
+     END IF
+     IF (obj%laue_nfit_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_nfit")
+           CALL xml_addCharacters(xp, obj%laue_nfit)
+        CALL xml_EndElement(xp, "laue_nfit")
+     END IF
+     IF (obj%laue_expand_right_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_expand_right")
+           CALL xml_addCharacters(xp, obj%laue_expand_right, fmt='s16')
+        CALL xml_EndElement(xp, "laue_expand_right")
+     END IF
+     IF (obj%laue_expand_left_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_expand_left")
+           CALL xml_addCharacters(xp, obj%laue_expand_left, fmt='s16')
+        CALL xml_EndElement(xp, "laue_expand_left")
+     END IF
+     IF (obj%laue_starting_right_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_starting_right")
+           CALL xml_addCharacters(xp, obj%laue_starting_right, fmt='s16')
+        CALL xml_EndElement(xp, "laue_starting_right")
+     END IF
+     IF (obj%laue_starting_left_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_starting_left")
+           CALL xml_addCharacters(xp, obj%laue_starting_left, fmt='s16')
+        CALL xml_EndElement(xp, "laue_starting_left")
+     END IF
+     IF (obj%laue_buffer_right_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_buffer_right")
+           CALL xml_addCharacters(xp, obj%laue_buffer_right, fmt='s16')
+        CALL xml_EndElement(xp, "laue_buffer_right")
+     END IF
+     IF (obj%laue_buffer_right_solu_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_buffer_right_solu")
+           CALL xml_addCharacters(xp, obj%laue_buffer_right_solu, fmt='s16')
+        CALL xml_EndElement(xp, "laue_buffer_right_solu")
+     END IF
+     IF (obj%laue_buffer_right_solv_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_buffer_right_solv")
+           CALL xml_addCharacters(xp, obj%laue_buffer_right_solv, fmt='s16')
+        CALL xml_EndElement(xp, "laue_buffer_right_solv")
+     END IF
+     IF (obj%laue_buffer_left_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_buffer_left")
+           CALL xml_addCharacters(xp, obj%laue_buffer_left, fmt='s16')
+        CALL xml_EndElement(xp, "laue_buffer_left")
+     END IF
+     IF (obj%laue_buffer_left_solu_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_buffer_left_solu")
+           CALL xml_addCharacters(xp, obj%laue_buffer_left_solu, fmt='s16')
+        CALL xml_EndElement(xp, "laue_buffer_left_solu")
+     END IF
+     IF (obj%laue_buffer_left_solv_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_buffer_left_solv")
+           CALL xml_addCharacters(xp, obj%laue_buffer_left_solv, fmt='s16')
+        CALL xml_EndElement(xp, "laue_buffer_left_solv")
+     END IF
+     IF (obj%laue_both_hands_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_both_hands")
+           CALL xml_addCharacters(xp, obj%laue_both_hands)
+        CALL xml_EndElement(xp, "laue_both_hands")
+     END IF
+     IF (obj%laue_reference_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_reference")
+           CALL xml_addCharacters(xp, TRIM(obj%laue_reference))
+        CALL xml_EndElement(xp, "laue_reference")
+     END IF
+     IF (obj%laue_wall_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_wall")
+           CALL xml_addCharacters(xp, TRIM(obj%laue_wall))
+        CALL xml_EndElement(xp, "laue_wall")
+     END IF
+     IF (obj%laue_wall_z_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_wall_z")
+           CALL xml_addCharacters(xp, obj%laue_wall_z, fmt='s16')
+        CALL xml_EndElement(xp, "laue_wall_z")
+     END IF
+     IF (obj%laue_wall_rho_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_wall_rho")
+           CALL xml_addCharacters(xp, obj%laue_wall_rho, fmt='s16')
+        CALL xml_EndElement(xp, "laue_wall_rho")
+     END IF
+     IF (obj%laue_wall_epsilon_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_wall_epsilon")
+           CALL xml_addCharacters(xp, obj%laue_wall_epsilon, fmt='s16')
+        CALL xml_EndElement(xp, "laue_wall_epsilon")
+     END IF
+     IF (obj%laue_wall_sigma_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_wall_sigma")
+           CALL xml_addCharacters(xp, obj%laue_wall_sigma, fmt='s16')
+        CALL xml_EndElement(xp, "laue_wall_sigma")
+     END IF
+     IF (obj%laue_wall_lj6_ispresent) THEN
+        CALL xml_NewElement(xp, "laue_wall_lj6")
+           CALL xml_addCharacters(xp, obj%laue_wall_lj6)
+        CALL xml_EndElement(xp, "laue_wall_lj6")
+     END IF
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_rism
+
+   SUBROUTINE qes_write_solute(xp, obj)
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(solute_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     CALL xml_NewElement(xp, 'solute_lj')
+        CALL xml_addCharacters(xp, TRIM(obj%solute_lj))
+     CALL xml_EndElement(xp, 'solute_lj')
+     CALL xml_NewElement(xp, 'epsilon')
+        CALL xml_addCharacters(xp, obj%epsilon, fmt='s16')
+     CALL xml_EndElement(xp, 'epsilon')
+     CALL xml_NewElement(xp, 'sigma')
+        CALL xml_addCharacters(xp, obj%sigma, fmt='s16')
+     CALL xml_EndElement(xp, 'sigma')
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_solute
+
+   SUBROUTINE qes_write_solvent(xp, obj)
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(solvent_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     CALL xml_NewElement(xp, 'label')
+        CALL xml_addCharacters(xp, TRIM(obj%label))
+     CALL xml_EndElement(xp, 'label')
+     CALL xml_NewElement(xp, 'molec_file')
+        CALL xml_addCharacters(xp, TRIM(obj%molec_file))
+     CALL xml_EndElement(xp, 'molec_file')
+     CALL xml_NewElement(xp, 'density1')
+        CALL xml_addCharacters(xp, obj%density1, fmt='s16')
+     CALL xml_EndElement(xp, 'density1')
+     IF (obj%density2_ispresent) THEN
+        CALL xml_NewElement(xp, "density2")
+           CALL xml_addCharacters(xp, obj%density2, fmt='s16')
+        CALL xml_EndElement(xp, "density2")
+     END IF
+     IF (obj%unit_ispresent) THEN
+        CALL xml_NewElement(xp, "unit")
+           CALL xml_addCharacters(xp, TRIM(obj%unit))
+        CALL xml_EndElement(xp, "unit")
+     END IF
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_solvent
+
    SUBROUTINE qes_write_k_points_IBZ(xp, obj)
      !-----------------------------------------------------------------
      IMPLICIT NONE
@@ -1693,15 +2092,8 @@ MODULE qes_write_module
      IF (obj%esm_ispresent) THEN
         CALL qes_write_esm (xp, obj%esm)
      END IF
-     IF (obj%fcp_opt_ispresent) THEN
-        CALL xml_NewElement(xp, "fcp_opt")
-           CALL xml_addCharacters(xp, obj%fcp_opt)
-        CALL xml_EndElement(xp, "fcp_opt")
-     END IF
-     IF (obj%fcp_mu_ispresent) THEN
-        CALL xml_NewElement(xp, "fcp_mu")
-           CALL xml_addCharacters(xp, obj%fcp_mu, fmt='s16')
-        CALL xml_EndElement(xp, "fcp_mu")
+     IF (obj%gcscf_ispresent) THEN
+        CALL qes_write_gcscf (xp, obj%gcscf)
      END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_boundary_conditions
@@ -1720,17 +2112,104 @@ MODULE qes_write_module
      CALL xml_NewElement(xp, 'bc')
         CALL xml_addCharacters(xp, TRIM(obj%bc))
      CALL xml_EndElement(xp, 'bc')
-     CALL xml_NewElement(xp, 'nfit')
-        CALL xml_addCharacters(xp, obj%nfit)
-     CALL xml_EndElement(xp, 'nfit')
-     CALL xml_NewElement(xp, 'w')
-        CALL xml_addCharacters(xp, obj%w, fmt='s16')
-     CALL xml_EndElement(xp, 'w')
-     CALL xml_NewElement(xp, 'efield')
-        CALL xml_addCharacters(xp, obj%efield, fmt='s16')
-     CALL xml_EndElement(xp, 'efield')
+     IF (obj%nfit_ispresent) THEN
+        CALL xml_NewElement(xp, "nfit")
+           CALL xml_addCharacters(xp, obj%nfit)
+        CALL xml_EndElement(xp, "nfit")
+     END IF
+     IF (obj%w_ispresent) THEN
+        CALL xml_NewElement(xp, "w")
+           CALL xml_addCharacters(xp, obj%w, fmt='s16')
+        CALL xml_EndElement(xp, "w")
+     END IF
+     IF (obj%efield_ispresent) THEN
+        CALL xml_NewElement(xp, "efield")
+           CALL xml_addCharacters(xp, obj%efield, fmt='s16')
+        CALL xml_EndElement(xp, "efield")
+     END IF
+     IF (obj%a_ispresent) THEN
+        CALL xml_NewElement(xp, "a")
+           CALL xml_addCharacters(xp, obj%a, fmt='s16')
+        CALL xml_EndElement(xp, "a")
+     END IF
+     IF (obj%zb_ispresent) THEN
+        CALL xml_NewElement(xp, "zb")
+           CALL xml_addCharacters(xp, obj%zb, fmt='s16')
+        CALL xml_EndElement(xp, "zb")
+     END IF
+     IF (obj%debug_ispresent) THEN
+        CALL xml_NewElement(xp, "debug")
+           CALL xml_addCharacters(xp, obj%debug)
+        CALL xml_EndElement(xp, "debug")
+     END IF
+     IF (obj%debug_gpmax_ispresent) THEN
+        CALL xml_NewElement(xp, "debug_gpmax")
+           CALL xml_addCharacters(xp, obj%debug_gpmax)
+        CALL xml_EndElement(xp, "debug_gpmax")
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_esm
+
+   SUBROUTINE qes_write_gcscf(xp, obj)
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(gcscf_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     IF (obj%ignore_mun_ispresent) THEN
+        CALL xml_NewElement(xp, "ignore_mun")
+           CALL xml_addCharacters(xp, obj%ignore_mun)
+        CALL xml_EndElement(xp, "ignore_mun")
+     END IF
+     IF (obj%mu_ispresent) THEN
+        CALL xml_NewElement(xp, "mu")
+           CALL xml_addCharacters(xp, obj%mu, fmt='s16')
+        CALL xml_EndElement(xp, "mu")
+     END IF
+     IF (obj%conv_thr_ispresent) THEN
+        CALL xml_NewElement(xp, "conv_thr")
+           CALL xml_addCharacters(xp, obj%conv_thr, fmt='s16')
+        CALL xml_EndElement(xp, "conv_thr")
+     END IF
+     IF (obj%gk_ispresent) THEN
+        CALL xml_NewElement(xp, "gk")
+           CALL xml_addCharacters(xp, obj%gk, fmt='s16')
+        CALL xml_EndElement(xp, "gk")
+     END IF
+     IF (obj%gh_ispresent) THEN
+        CALL xml_NewElement(xp, "gh")
+           CALL xml_addCharacters(xp, obj%gh, fmt='s16')
+        CALL xml_EndElement(xp, "gh")
+     END IF
+     IF (obj%beta_ispresent) THEN
+        CALL xml_NewElement(xp, "beta")
+           CALL xml_addCharacters(xp, obj%beta, fmt='s16')
+        CALL xml_EndElement(xp, "beta")
+     END IF
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_gcscf
+
+   SUBROUTINE qes_write_solvents(xp, obj)
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(solvents_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     DO i = 1, obj%ndim_solvent
+        CALL qes_write_solvent(xp, obj%solvent(i) )
+     END DO
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_solvents
 
    SUBROUTINE qes_write_ekin_functional(xp, obj)
      !-----------------------------------------------------------------
@@ -2460,6 +2939,16 @@ MODULE qes_write_module
            CALL xml_addCharacters(xp, obj%vdW_term, fmt='s16')
         CALL xml_EndElement(xp, "vdW_term")
      END IF
+     IF (obj%esol_ispresent) THEN
+        CALL xml_NewElement(xp, "esol")
+           CALL xml_addCharacters(xp, obj%esol, fmt='s16')
+        CALL xml_EndElement(xp, "esol")
+     END IF
+     IF (obj%levelshift_contr_ispresent) THEN
+        CALL xml_NewElement(xp, "levelshift_contr")
+           CALL xml_addCharacters(xp, obj%levelshift_contr, fmt='s16')
+        CALL xml_EndElement(xp, "levelshift_contr")
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_total_energy
 
@@ -2939,6 +3428,118 @@ MODULE qes_write_module
         CALL xml_AddCharacters(xp, obj%scalarQuantity, fmt='s16')
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_scalarQuantity
+
+   SUBROUTINE qes_write_rism3d(xp, obj)
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(rism3d_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     CALL xml_NewElement(xp, 'nmol')
+        CALL xml_addCharacters(xp, obj%nmol)
+     CALL xml_EndElement(xp, 'nmol')
+     IF (obj%molec_dir_ispresent) THEN
+        CALL xml_NewElement(xp, "molec_dir")
+           CALL xml_addCharacters(xp, TRIM(obj%molec_dir))
+        CALL xml_EndElement(xp, "molec_dir")
+     END IF
+     DO i = 1, obj%ndim_solvent
+        CALL qes_write_solvent(xp, obj%solvent(i) )
+     END DO
+     CALL xml_NewElement(xp, 'ecutsolv')
+        CALL xml_addCharacters(xp, obj%ecutsolv, fmt='s16')
+     CALL xml_EndElement(xp, 'ecutsolv')
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_rism3d
+
+   SUBROUTINE qes_write_rismlaue(xp, obj)
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(rismlaue_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     IF (obj%both_hands_ispresent) THEN
+        CALL xml_NewElement(xp, "both_hands")
+           CALL xml_addCharacters(xp, obj%both_hands)
+        CALL xml_EndElement(xp, "both_hands")
+     END IF
+     IF (obj%nfit_ispresent) THEN
+        CALL xml_NewElement(xp, "nfit")
+           CALL xml_addCharacters(xp, obj%nfit)
+        CALL xml_EndElement(xp, "nfit")
+     END IF
+     IF (obj%pot_ref_ispresent) THEN
+        CALL xml_NewElement(xp, "pot_ref")
+           CALL xml_addCharacters(xp, obj%pot_ref)
+        CALL xml_EndElement(xp, "pot_ref")
+     END IF
+     IF (obj%charge_ispresent) THEN
+        CALL xml_NewElement(xp, "charge")
+           CALL xml_addCharacters(xp, obj%charge, fmt='s16')
+        CALL xml_EndElement(xp, "charge")
+     END IF
+     IF (obj%right_start_ispresent) THEN
+        CALL xml_NewElement(xp, "right_start")
+           CALL xml_addCharacters(xp, obj%right_start, fmt='s16')
+        CALL xml_EndElement(xp, "right_start")
+     END IF
+     IF (obj%right_expand_ispresent) THEN
+        CALL xml_NewElement(xp, "right_expand")
+           CALL xml_addCharacters(xp, obj%right_expand, fmt='s16')
+        CALL xml_EndElement(xp, "right_expand")
+     END IF
+     IF (obj%right_buffer_ispresent) THEN
+        CALL xml_NewElement(xp, "right_buffer")
+           CALL xml_addCharacters(xp, obj%right_buffer, fmt='s16')
+        CALL xml_EndElement(xp, "right_buffer")
+     END IF
+     IF (obj%right_buffer_u_ispresent) THEN
+        CALL xml_NewElement(xp, "right_buffer_u")
+           CALL xml_addCharacters(xp, obj%right_buffer_u, fmt='s16')
+        CALL xml_EndElement(xp, "right_buffer_u")
+     END IF
+     IF (obj%right_buffer_v_ispresent) THEN
+        CALL xml_NewElement(xp, "right_buffer_v")
+           CALL xml_addCharacters(xp, obj%right_buffer_v, fmt='s16')
+        CALL xml_EndElement(xp, "right_buffer_v")
+     END IF
+     IF (obj%left_start_ispresent) THEN
+        CALL xml_NewElement(xp, "left_start")
+           CALL xml_addCharacters(xp, obj%left_start, fmt='s16')
+        CALL xml_EndElement(xp, "left_start")
+     END IF
+     IF (obj%left_expand_ispresent) THEN
+        CALL xml_NewElement(xp, "left_expand")
+           CALL xml_addCharacters(xp, obj%left_expand, fmt='s16')
+        CALL xml_EndElement(xp, "left_expand")
+     END IF
+     IF (obj%left_buffer_ispresent) THEN
+        CALL xml_NewElement(xp, "left_buffer")
+           CALL xml_addCharacters(xp, obj%left_buffer, fmt='s16')
+        CALL xml_EndElement(xp, "left_buffer")
+     END IF
+     IF (obj%left_buffer_u_ispresent) THEN
+        CALL xml_NewElement(xp, "left_buffer_u")
+           CALL xml_addCharacters(xp, obj%left_buffer_u, fmt='s16')
+        CALL xml_EndElement(xp, "left_buffer_u")
+     END IF
+     IF (obj%left_buffer_v_ispresent) THEN
+        CALL xml_NewElement(xp, "left_buffer_v")
+           CALL xml_addCharacters(xp, obj%left_buffer_v, fmt='s16')
+        CALL xml_EndElement(xp, "left_buffer_v")
+     END IF
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_rismlaue
 
   !
 END MODULE qes_write_module

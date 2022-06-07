@@ -64,6 +64,10 @@ MODULE qes_init_module
     MODULE PROCEDURE qes_init_basisSetItem
     MODULE PROCEDURE qes_init_reciprocal_lattice
     MODULE PROCEDURE qes_init_electron_control
+    MODULE PROCEDURE qes_init_fcp
+    MODULE PROCEDURE qes_init_rism
+    MODULE PROCEDURE qes_init_solute
+    MODULE PROCEDURE qes_init_solvent
     MODULE PROCEDURE qes_init_k_points_IBZ
     MODULE PROCEDURE qes_init_monkhorst_pack
     MODULE PROCEDURE qes_init_k_point
@@ -74,6 +78,8 @@ MODULE qes_init_module
     MODULE PROCEDURE qes_init_symmetry_flags
     MODULE PROCEDURE qes_init_boundary_conditions
     MODULE PROCEDURE qes_init_esm
+    MODULE PROCEDURE qes_init_gcscf
+    MODULE PROCEDURE qes_init_solvents
     MODULE PROCEDURE qes_init_ekin_functional
     MODULE PROCEDURE qes_init_spin_constraints
     MODULE PROCEDURE qes_init_electric_field
@@ -124,6 +130,8 @@ MODULE qes_init_module
     MODULE PROCEDURE qes_init_integerMatrix_2
     MODULE PROCEDURE qes_init_integerMatrix_3
     MODULE PROCEDURE qes_init_scalarQuantity
+    MODULE PROCEDURE qes_init_rism3d
+    MODULE PROCEDURE qes_init_rismlaue
     !
   END INTERFACE qes_init
   !
@@ -284,9 +292,10 @@ MODULE qes_init_module
   !
   SUBROUTINE qes_init_input(obj, tagname, control_variables, atomic_species, atomic_structure,&
                            dft, spin, bands, basis, electron_control, k_points_IBZ, ion_control,&
-                           cell_control, symmetry_flags, boundary_conditions, ekin_functional,&
-                           external_atomic_forces, free_positions, starting_atomic_velocities,&
-                           electric_field, atomic_constraints, spin_constraints)
+                           cell_control, symmetry_flags, boundary_conditions, fcp_settings, rism_settings,&
+                           solvents, ekin_functional, external_atomic_forces, free_positions,&
+                           starting_atomic_velocities, electric_field, atomic_constraints, spin_constraints &
+                           )
     !
     IMPLICIT NONE
     !
@@ -305,6 +314,9 @@ MODULE qes_init_module
     TYPE(cell_control_type),INTENT(IN) :: cell_control
     TYPE(symmetry_flags_type),OPTIONAL,INTENT(IN) :: symmetry_flags
     TYPE(boundary_conditions_type),OPTIONAL,INTENT(IN) :: boundary_conditions
+    TYPE(fcp_type),OPTIONAL,INTENT(IN) :: fcp_settings
+    TYPE(rism_type),OPTIONAL,INTENT(IN) :: rism_settings
+    TYPE(solvents_type),OPTIONAL,INTENT(IN) :: solvents
     TYPE(ekin_functional_type),OPTIONAL,INTENT(IN) :: ekin_functional
     TYPE(matrix_type),OPTIONAL,INTENT(IN) :: external_atomic_forces
     TYPE(integerMatrix_type),OPTIONAL,INTENT(IN) :: free_positions
@@ -339,6 +351,24 @@ MODULE qes_init_module
       obj%boundary_conditions = boundary_conditions
     ELSE
       obj%boundary_conditions_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(fcp_settings)) THEN
+      obj%fcp_settings_ispresent = .TRUE. 
+      obj%fcp_settings = fcp_settings
+    ELSE
+      obj%fcp_settings_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(rism_settings)) THEN
+      obj%rism_settings_ispresent = .TRUE. 
+      obj%rism_settings = rism_settings
+    ELSE
+      obj%rism_settings_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(solvents)) THEN
+      obj%solvents_ispresent = .TRUE. 
+      obj%solvents = solvents
+    ELSE
+      obj%solvents_ispresent = .FALSE.
     END IF
     IF ( PRESENT(ekin_functional)) THEN
       obj%ekin_functional_ispresent = .TRUE. 
@@ -387,7 +417,7 @@ MODULE qes_init_module
   !
   !
   SUBROUTINE qes_init_step(obj, tagname, n_step, scf_conv, atomic_structure, total_energy, forces,&
-                          stress, FCP_force, FCP_tot_charge)
+                          stress, fcp_force, fcp_tot_charge)
     !
     IMPLICIT NONE
     !
@@ -399,8 +429,8 @@ MODULE qes_init_module
     TYPE(total_energy_type),INTENT(IN) :: total_energy
     TYPE(matrix_type),INTENT(IN) :: forces
     TYPE(matrix_type),OPTIONAL,INTENT(IN) :: stress
-    REAL(DP),OPTIONAL,INTENT(IN) :: FCP_force
-    REAL(DP),OPTIONAL,INTENT(IN) :: FCP_tot_charge
+    REAL(DP),OPTIONAL,INTENT(IN) :: fcp_force
+    REAL(DP),OPTIONAL,INTENT(IN) :: fcp_tot_charge
     !
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
@@ -422,17 +452,17 @@ MODULE qes_init_module
     ELSE
       obj%stress_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(FCP_force)) THEN
-      obj%FCP_force_ispresent = .TRUE. 
-      obj%FCP_force = FCP_force
+    IF ( PRESENT(fcp_force)) THEN
+      obj%fcp_force_ispresent = .TRUE. 
+      obj%fcp_force = fcp_force
     ELSE
-      obj%FCP_force_ispresent = .FALSE.
+      obj%fcp_force_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(FCP_tot_charge)) THEN
-      obj%FCP_tot_charge_ispresent = .TRUE. 
-      obj%FCP_tot_charge = FCP_tot_charge
+    IF ( PRESENT(fcp_tot_charge)) THEN
+      obj%fcp_tot_charge_ispresent = .TRUE. 
+      obj%fcp_tot_charge = fcp_tot_charge
     ELSE
-      obj%FCP_tot_charge_ispresent = .FALSE.
+      obj%fcp_tot_charge_ispresent = .FALSE.
     END IF
     !
   END SUBROUTINE qes_init_step
@@ -441,7 +471,7 @@ MODULE qes_init_module
   SUBROUTINE qes_init_output(obj, tagname, algorithmic_info, atomic_species, atomic_structure,&
                             basis_set, dft, total_energy, band_structure, convergence_info, symmetries,&
                             boundary_conditions, magnetization, forces, stress, electric_field,&
-                            FCP_force, FCP_tot_charge)
+                            fcp_force, fcp_tot_charge, rism3d, rismlaue)
     !
     IMPLICIT NONE
     !
@@ -461,8 +491,10 @@ MODULE qes_init_module
     TYPE(matrix_type),OPTIONAL,INTENT(IN) :: forces
     TYPE(matrix_type),OPTIONAL,INTENT(IN) :: stress
     TYPE(outputElectricField_type),OPTIONAL,INTENT(IN) :: electric_field
-    REAL(DP),OPTIONAL,INTENT(IN) :: FCP_force
-    REAL(DP),OPTIONAL,INTENT(IN) :: FCP_tot_charge
+    REAL(DP),OPTIONAL,INTENT(IN) :: fcp_force
+    REAL(DP),OPTIONAL,INTENT(IN) :: fcp_tot_charge
+    TYPE(rism3d_type),OPTIONAL,INTENT(IN) :: rism3d
+    TYPE(rismlaue_type),OPTIONAL,INTENT(IN) :: rismlaue
     !
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
@@ -517,17 +549,29 @@ MODULE qes_init_module
     ELSE
       obj%electric_field_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(FCP_force)) THEN
-      obj%FCP_force_ispresent = .TRUE. 
-      obj%FCP_force = FCP_force
+    IF ( PRESENT(fcp_force)) THEN
+      obj%fcp_force_ispresent = .TRUE. 
+      obj%fcp_force = fcp_force
     ELSE
-      obj%FCP_force_ispresent = .FALSE.
+      obj%fcp_force_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(FCP_tot_charge)) THEN
-      obj%FCP_tot_charge_ispresent = .TRUE. 
-      obj%FCP_tot_charge = FCP_tot_charge
+    IF ( PRESENT(fcp_tot_charge)) THEN
+      obj%fcp_tot_charge_ispresent = .TRUE. 
+      obj%fcp_tot_charge = fcp_tot_charge
     ELSE
-      obj%FCP_tot_charge_ispresent = .FALSE.
+      obj%fcp_tot_charge_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(rism3d)) THEN
+      obj%rism3d_ispresent = .TRUE. 
+      obj%rism3d = rism3d
+    ELSE
+      obj%rism3d_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(rismlaue)) THEN
+      obj%rismlaue_ispresent = .TRUE. 
+      obj%rismlaue = rismlaue
+    ELSE
+      obj%rismlaue_ispresent = .FALSE.
     END IF
     !
   END SUBROUTINE qes_init_output
@@ -590,7 +634,7 @@ MODULE qes_init_module
   SUBROUTINE qes_init_control_variables(obj, tagname, title, calculation, restart_mode, prefix,&
                                        pseudo_dir, outdir, stress, forces, wf_collect, disk_io,&
                                        max_seconds, etot_conv_thr, forc_conv_thr, press_conv_thr,&
-                                       verbosity, print_every, nstep)
+                                       verbosity, print_every, fcp, rism, nstep)
     !
     IMPLICIT NONE
     !
@@ -613,6 +657,8 @@ MODULE qes_init_module
     REAL(DP),INTENT(IN) :: press_conv_thr
     CHARACTER(LEN=*),INTENT(IN) :: verbosity
     INTEGER,INTENT(IN) :: print_every
+    LOGICAL,INTENT(IN) :: fcp
+    LOGICAL,INTENT(IN) :: rism
     !
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
@@ -640,6 +686,8 @@ MODULE qes_init_module
     obj%press_conv_thr = press_conv_thr
     obj%verbosity = verbosity
     obj%print_every = print_every
+    obj%fcp = fcp
+    obj%rism = rism
     !
   END SUBROUTINE qes_init_control_variables
   !
@@ -2103,6 +2151,501 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_electron_control
   !
   !
+  SUBROUTINE qes_init_fcp(obj, tagname, fcp_mu, fcp_dynamics, fcp_conv_thr, fcp_ndiis, fcp_rdiis,&
+                         fcp_mass, fcp_velocity, fcp_temperature, fcp_tempw, fcp_tolp, fcp_delta_t,&
+                         fcp_nraise, freeze_all_atoms)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(fcp_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    REAL(DP),OPTIONAL,INTENT(IN) :: fcp_mu
+    CHARACTER(LEN=*),OPTIONAL,INTENT(IN) :: fcp_dynamics
+    REAL(DP),OPTIONAL,INTENT(IN) :: fcp_conv_thr
+    INTEGER,OPTIONAL,INTENT(IN) :: fcp_ndiis
+    REAL(DP),OPTIONAL,INTENT(IN) :: fcp_rdiis
+    REAL(DP),OPTIONAL,INTENT(IN) :: fcp_mass
+    REAL(DP),OPTIONAL,INTENT(IN) :: fcp_velocity
+    CHARACTER(LEN=*),OPTIONAL,INTENT(IN) :: fcp_temperature
+    REAL(DP),OPTIONAL,INTENT(IN) :: fcp_tempw
+    REAL(DP),OPTIONAL,INTENT(IN) :: fcp_tolp
+    REAL(DP),OPTIONAL,INTENT(IN) :: fcp_delta_t
+    INTEGER,OPTIONAL,INTENT(IN) :: fcp_nraise
+    LOGICAL,OPTIONAL,INTENT(IN) :: freeze_all_atoms
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    IF ( PRESENT(fcp_mu)) THEN
+      obj%fcp_mu_ispresent = .TRUE. 
+      obj%fcp_mu = fcp_mu
+    ELSE
+      obj%fcp_mu_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(fcp_dynamics)) THEN
+      obj%fcp_dynamics_ispresent = .TRUE. 
+      obj%fcp_dynamics = fcp_dynamics
+    ELSE
+      obj%fcp_dynamics_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(fcp_conv_thr)) THEN
+      obj%fcp_conv_thr_ispresent = .TRUE. 
+      obj%fcp_conv_thr = fcp_conv_thr
+    ELSE
+      obj%fcp_conv_thr_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(fcp_ndiis)) THEN
+      obj%fcp_ndiis_ispresent = .TRUE. 
+      obj%fcp_ndiis = fcp_ndiis
+    ELSE
+      obj%fcp_ndiis_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(fcp_rdiis)) THEN
+      obj%fcp_rdiis_ispresent = .TRUE. 
+      obj%fcp_rdiis = fcp_rdiis
+    ELSE
+      obj%fcp_rdiis_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(fcp_mass)) THEN
+      obj%fcp_mass_ispresent = .TRUE. 
+      obj%fcp_mass = fcp_mass
+    ELSE
+      obj%fcp_mass_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(fcp_velocity)) THEN
+      obj%fcp_velocity_ispresent = .TRUE. 
+      obj%fcp_velocity = fcp_velocity
+    ELSE
+      obj%fcp_velocity_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(fcp_temperature)) THEN
+      obj%fcp_temperature_ispresent = .TRUE. 
+      obj%fcp_temperature = fcp_temperature
+    ELSE
+      obj%fcp_temperature_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(fcp_tempw)) THEN
+      obj%fcp_tempw_ispresent = .TRUE. 
+      obj%fcp_tempw = fcp_tempw
+    ELSE
+      obj%fcp_tempw_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(fcp_tolp)) THEN
+      obj%fcp_tolp_ispresent = .TRUE. 
+      obj%fcp_tolp = fcp_tolp
+    ELSE
+      obj%fcp_tolp_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(fcp_delta_t)) THEN
+      obj%fcp_delta_t_ispresent = .TRUE. 
+      obj%fcp_delta_t = fcp_delta_t
+    ELSE
+      obj%fcp_delta_t_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(fcp_nraise)) THEN
+      obj%fcp_nraise_ispresent = .TRUE. 
+      obj%fcp_nraise = fcp_nraise
+    ELSE
+      obj%fcp_nraise_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(freeze_all_atoms)) THEN
+      obj%freeze_all_atoms_ispresent = .TRUE. 
+      obj%freeze_all_atoms = freeze_all_atoms
+    ELSE
+      obj%freeze_all_atoms_ispresent = .FALSE.
+    END IF
+    !
+  END SUBROUTINE qes_init_fcp
+  !
+  !
+  SUBROUTINE qes_init_rism(obj, tagname, nsolv, solute, closure, tempv, ecutsolv, rmax_lj, rmax1d,&
+                          starting1d, starting3d, smear1d, smear3d, rism1d_maxstep, rism3d_maxstep,&
+                          rism1d_conv_thr, rism3d_conv_thr, mdiis1d_size, mdiis3d_size, mdiis1d_step,&
+                          mdiis3d_step, rism1d_bond_width, rism1d_dielectric, rism1d_molesize,&
+                          rism1d_nproc, rism1d_nproc_switch, rism3d_conv_level, rism3d_planar_average,&
+                          laue_nfit, laue_expand_right, laue_expand_left, laue_starting_right,&
+                          laue_starting_left, laue_buffer_right, laue_buffer_right_solu, laue_buffer_right_solv,&
+                          laue_buffer_left, laue_buffer_left_solu, laue_buffer_left_solv, laue_both_hands,&
+                          laue_reference, laue_wall, laue_wall_z, laue_wall_rho, laue_wall_epsilon,&
+                          laue_wall_sigma, laue_wall_lj6)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(rism_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    INTEGER,INTENT(IN) :: nsolv
+    TYPE(solute_type),DIMENSION(:),INTENT(IN) :: solute
+    CHARACTER(LEN=*),OPTIONAL,INTENT(IN) :: closure
+    REAL(DP),OPTIONAL,INTENT(IN) :: tempv
+    REAL(DP),OPTIONAL,INTENT(IN) :: ecutsolv
+    REAL(DP),OPTIONAL,INTENT(IN) :: rmax_lj
+    REAL(DP),OPTIONAL,INTENT(IN) :: rmax1d
+    CHARACTER(LEN=*),OPTIONAL,INTENT(IN) :: starting1d
+    CHARACTER(LEN=*),OPTIONAL,INTENT(IN) :: starting3d
+    REAL(DP),OPTIONAL,INTENT(IN) :: smear1d
+    REAL(DP),OPTIONAL,INTENT(IN) :: smear3d
+    INTEGER,OPTIONAL,INTENT(IN) :: rism1d_maxstep
+    INTEGER,OPTIONAL,INTENT(IN) :: rism3d_maxstep
+    REAL(DP),OPTIONAL,INTENT(IN) :: rism1d_conv_thr
+    REAL(DP),OPTIONAL,INTENT(IN) :: rism3d_conv_thr
+    INTEGER,OPTIONAL,INTENT(IN) :: mdiis1d_size
+    INTEGER,OPTIONAL,INTENT(IN) :: mdiis3d_size
+    REAL(DP),OPTIONAL,INTENT(IN) :: mdiis1d_step
+    REAL(DP),OPTIONAL,INTENT(IN) :: mdiis3d_step
+    REAL(DP),OPTIONAL,INTENT(IN) :: rism1d_bond_width
+    REAL(DP),OPTIONAL,INTENT(IN) :: rism1d_dielectric
+    REAL(DP),OPTIONAL,INTENT(IN) :: rism1d_molesize
+    INTEGER,OPTIONAL,INTENT(IN) :: rism1d_nproc
+    INTEGER,OPTIONAL,INTENT(IN) :: rism1d_nproc_switch
+    REAL(DP),OPTIONAL,INTENT(IN) :: rism3d_conv_level
+    LOGICAL,OPTIONAL,INTENT(IN) :: rism3d_planar_average
+    INTEGER,OPTIONAL,INTENT(IN) :: laue_nfit
+    REAL(DP),OPTIONAL,INTENT(IN) :: laue_expand_right
+    REAL(DP),OPTIONAL,INTENT(IN) :: laue_expand_left
+    REAL(DP),OPTIONAL,INTENT(IN) :: laue_starting_right
+    REAL(DP),OPTIONAL,INTENT(IN) :: laue_starting_left
+    REAL(DP),OPTIONAL,INTENT(IN) :: laue_buffer_right
+    REAL(DP),OPTIONAL,INTENT(IN) :: laue_buffer_right_solu
+    REAL(DP),OPTIONAL,INTENT(IN) :: laue_buffer_right_solv
+    REAL(DP),OPTIONAL,INTENT(IN) :: laue_buffer_left
+    REAL(DP),OPTIONAL,INTENT(IN) :: laue_buffer_left_solu
+    REAL(DP),OPTIONAL,INTENT(IN) :: laue_buffer_left_solv
+    LOGICAL,OPTIONAL,INTENT(IN) :: laue_both_hands
+    CHARACTER(LEN=*),OPTIONAL,INTENT(IN) :: laue_reference
+    CHARACTER(LEN=*),OPTIONAL,INTENT(IN) :: laue_wall
+    REAL(DP),OPTIONAL,INTENT(IN) :: laue_wall_z
+    REAL(DP),OPTIONAL,INTENT(IN) :: laue_wall_rho
+    REAL(DP),OPTIONAL,INTENT(IN) :: laue_wall_epsilon
+    REAL(DP),OPTIONAL,INTENT(IN) :: laue_wall_sigma
+    LOGICAL,OPTIONAL,INTENT(IN) :: laue_wall_lj6
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    obj%nsolv = nsolv
+    ALLOCATE(obj%solute(SIZE(solute)))
+    obj%ndim_solute = SIZE(solute)
+    obj%solute = solute
+    IF ( PRESENT(closure)) THEN
+      obj%closure_ispresent = .TRUE. 
+      obj%closure = closure
+    ELSE
+      obj%closure_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(tempv)) THEN
+      obj%tempv_ispresent = .TRUE. 
+      obj%tempv = tempv
+    ELSE
+      obj%tempv_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(ecutsolv)) THEN
+      obj%ecutsolv_ispresent = .TRUE. 
+      obj%ecutsolv = ecutsolv
+    ELSE
+      obj%ecutsolv_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(rmax_lj)) THEN
+      obj%rmax_lj_ispresent = .TRUE. 
+      obj%rmax_lj = rmax_lj
+    ELSE
+      obj%rmax_lj_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(rmax1d)) THEN
+      obj%rmax1d_ispresent = .TRUE. 
+      obj%rmax1d = rmax1d
+    ELSE
+      obj%rmax1d_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(starting1d)) THEN
+      obj%starting1d_ispresent = .TRUE. 
+      obj%starting1d = starting1d
+    ELSE
+      obj%starting1d_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(starting3d)) THEN
+      obj%starting3d_ispresent = .TRUE. 
+      obj%starting3d = starting3d
+    ELSE
+      obj%starting3d_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(smear1d)) THEN
+      obj%smear1d_ispresent = .TRUE. 
+      obj%smear1d = smear1d
+    ELSE
+      obj%smear1d_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(smear3d)) THEN
+      obj%smear3d_ispresent = .TRUE. 
+      obj%smear3d = smear3d
+    ELSE
+      obj%smear3d_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(rism1d_maxstep)) THEN
+      obj%rism1d_maxstep_ispresent = .TRUE. 
+      obj%rism1d_maxstep = rism1d_maxstep
+    ELSE
+      obj%rism1d_maxstep_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(rism3d_maxstep)) THEN
+      obj%rism3d_maxstep_ispresent = .TRUE. 
+      obj%rism3d_maxstep = rism3d_maxstep
+    ELSE
+      obj%rism3d_maxstep_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(rism1d_conv_thr)) THEN
+      obj%rism1d_conv_thr_ispresent = .TRUE. 
+      obj%rism1d_conv_thr = rism1d_conv_thr
+    ELSE
+      obj%rism1d_conv_thr_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(rism3d_conv_thr)) THEN
+      obj%rism3d_conv_thr_ispresent = .TRUE. 
+      obj%rism3d_conv_thr = rism3d_conv_thr
+    ELSE
+      obj%rism3d_conv_thr_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(mdiis1d_size)) THEN
+      obj%mdiis1d_size_ispresent = .TRUE. 
+      obj%mdiis1d_size = mdiis1d_size
+    ELSE
+      obj%mdiis1d_size_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(mdiis3d_size)) THEN
+      obj%mdiis3d_size_ispresent = .TRUE. 
+      obj%mdiis3d_size = mdiis3d_size
+    ELSE
+      obj%mdiis3d_size_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(mdiis1d_step)) THEN
+      obj%mdiis1d_step_ispresent = .TRUE. 
+      obj%mdiis1d_step = mdiis1d_step
+    ELSE
+      obj%mdiis1d_step_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(mdiis3d_step)) THEN
+      obj%mdiis3d_step_ispresent = .TRUE. 
+      obj%mdiis3d_step = mdiis3d_step
+    ELSE
+      obj%mdiis3d_step_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(rism1d_bond_width)) THEN
+      obj%rism1d_bond_width_ispresent = .TRUE. 
+      obj%rism1d_bond_width = rism1d_bond_width
+    ELSE
+      obj%rism1d_bond_width_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(rism1d_dielectric)) THEN
+      obj%rism1d_dielectric_ispresent = .TRUE. 
+      obj%rism1d_dielectric = rism1d_dielectric
+    ELSE
+      obj%rism1d_dielectric_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(rism1d_molesize)) THEN
+      obj%rism1d_molesize_ispresent = .TRUE. 
+      obj%rism1d_molesize = rism1d_molesize
+    ELSE
+      obj%rism1d_molesize_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(rism1d_nproc)) THEN
+      obj%rism1d_nproc_ispresent = .TRUE. 
+      obj%rism1d_nproc = rism1d_nproc
+    ELSE
+      obj%rism1d_nproc_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(rism1d_nproc_switch)) THEN
+      obj%rism1d_nproc_switch_ispresent = .TRUE. 
+      obj%rism1d_nproc_switch = rism1d_nproc_switch
+    ELSE
+      obj%rism1d_nproc_switch_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(rism3d_conv_level)) THEN
+      obj%rism3d_conv_level_ispresent = .TRUE. 
+      obj%rism3d_conv_level = rism3d_conv_level
+    ELSE
+      obj%rism3d_conv_level_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(rism3d_planar_average)) THEN
+      obj%rism3d_planar_average_ispresent = .TRUE. 
+      obj%rism3d_planar_average = rism3d_planar_average
+    ELSE
+      obj%rism3d_planar_average_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_nfit)) THEN
+      obj%laue_nfit_ispresent = .TRUE. 
+      obj%laue_nfit = laue_nfit
+    ELSE
+      obj%laue_nfit_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_expand_right)) THEN
+      obj%laue_expand_right_ispresent = .TRUE. 
+      obj%laue_expand_right = laue_expand_right
+    ELSE
+      obj%laue_expand_right_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_expand_left)) THEN
+      obj%laue_expand_left_ispresent = .TRUE. 
+      obj%laue_expand_left = laue_expand_left
+    ELSE
+      obj%laue_expand_left_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_starting_right)) THEN
+      obj%laue_starting_right_ispresent = .TRUE. 
+      obj%laue_starting_right = laue_starting_right
+    ELSE
+      obj%laue_starting_right_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_starting_left)) THEN
+      obj%laue_starting_left_ispresent = .TRUE. 
+      obj%laue_starting_left = laue_starting_left
+    ELSE
+      obj%laue_starting_left_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_buffer_right)) THEN
+      obj%laue_buffer_right_ispresent = .TRUE. 
+      obj%laue_buffer_right = laue_buffer_right
+    ELSE
+      obj%laue_buffer_right_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_buffer_right_solu)) THEN
+      obj%laue_buffer_right_solu_ispresent = .TRUE. 
+      obj%laue_buffer_right_solu = laue_buffer_right_solu
+    ELSE
+      obj%laue_buffer_right_solu_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_buffer_right_solv)) THEN
+      obj%laue_buffer_right_solv_ispresent = .TRUE. 
+      obj%laue_buffer_right_solv = laue_buffer_right_solv
+    ELSE
+      obj%laue_buffer_right_solv_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_buffer_left)) THEN
+      obj%laue_buffer_left_ispresent = .TRUE. 
+      obj%laue_buffer_left = laue_buffer_left
+    ELSE
+      obj%laue_buffer_left_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_buffer_left_solu)) THEN
+      obj%laue_buffer_left_solu_ispresent = .TRUE. 
+      obj%laue_buffer_left_solu = laue_buffer_left_solu
+    ELSE
+      obj%laue_buffer_left_solu_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_buffer_left_solv)) THEN
+      obj%laue_buffer_left_solv_ispresent = .TRUE. 
+      obj%laue_buffer_left_solv = laue_buffer_left_solv
+    ELSE
+      obj%laue_buffer_left_solv_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_both_hands)) THEN
+      obj%laue_both_hands_ispresent = .TRUE. 
+      obj%laue_both_hands = laue_both_hands
+    ELSE
+      obj%laue_both_hands_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_reference)) THEN
+      obj%laue_reference_ispresent = .TRUE. 
+      obj%laue_reference = laue_reference
+    ELSE
+      obj%laue_reference_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_wall)) THEN
+      obj%laue_wall_ispresent = .TRUE. 
+      obj%laue_wall = laue_wall
+    ELSE
+      obj%laue_wall_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_wall_z)) THEN
+      obj%laue_wall_z_ispresent = .TRUE. 
+      obj%laue_wall_z = laue_wall_z
+    ELSE
+      obj%laue_wall_z_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_wall_rho)) THEN
+      obj%laue_wall_rho_ispresent = .TRUE. 
+      obj%laue_wall_rho = laue_wall_rho
+    ELSE
+      obj%laue_wall_rho_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_wall_epsilon)) THEN
+      obj%laue_wall_epsilon_ispresent = .TRUE. 
+      obj%laue_wall_epsilon = laue_wall_epsilon
+    ELSE
+      obj%laue_wall_epsilon_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_wall_sigma)) THEN
+      obj%laue_wall_sigma_ispresent = .TRUE. 
+      obj%laue_wall_sigma = laue_wall_sigma
+    ELSE
+      obj%laue_wall_sigma_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(laue_wall_lj6)) THEN
+      obj%laue_wall_lj6_ispresent = .TRUE. 
+      obj%laue_wall_lj6 = laue_wall_lj6
+    ELSE
+      obj%laue_wall_lj6_ispresent = .FALSE.
+    END IF
+    !
+  END SUBROUTINE qes_init_rism
+  !
+  !
+  SUBROUTINE qes_init_solute(obj, tagname, solute_lj, epsilon, sigma)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(solute_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    CHARACTER(LEN=*),INTENT(IN) :: solute_lj
+    REAL(DP),INTENT(IN) :: epsilon
+    REAL(DP),INTENT(IN) :: sigma
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    obj%solute_lj = solute_lj
+    obj%epsilon = epsilon
+    obj%sigma = sigma
+    !
+  END SUBROUTINE qes_init_solute
+  !
+  !
+  SUBROUTINE qes_init_solvent(obj, tagname, label, molec_file, density1, density2, unit)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(solvent_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    CHARACTER(LEN=*),INTENT(IN) :: label
+    CHARACTER(LEN=*),INTENT(IN) :: molec_file
+    REAL(DP),INTENT(IN) :: density1
+    REAL(DP),OPTIONAL,INTENT(IN) :: density2
+    CHARACTER(LEN=*),OPTIONAL,INTENT(IN) :: unit
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    obj%label = label
+    obj%molec_file = molec_file
+    obj%density1 = density1
+    IF ( PRESENT(density2)) THEN
+      obj%density2_ispresent = .TRUE. 
+      obj%density2 = density2
+    ELSE
+      obj%density2_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(unit)) THEN
+      obj%unit_ispresent = .TRUE. 
+      obj%unit = unit
+    ELSE
+      obj%unit_ispresent = .FALSE.
+    END IF
+    !
+  END SUBROUTINE qes_init_solvent
+  !
+  !
   SUBROUTINE qes_init_k_points_IBZ(obj, tagname, monkhorst_pack, nk, k_point)
     !
     IMPLICIT NONE
@@ -2440,7 +2983,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_symmetry_flags
   !
   !
-  SUBROUTINE qes_init_boundary_conditions(obj, tagname, assume_isolated, esm, fcp_opt, fcp_mu)
+  SUBROUTINE qes_init_boundary_conditions(obj, tagname, assume_isolated, esm, gcscf)
     !
     IMPLICIT NONE
     !
@@ -2448,8 +2991,7 @@ MODULE qes_init_module
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     CHARACTER(LEN=*),INTENT(IN) :: assume_isolated
     TYPE(esm_type),OPTIONAL,INTENT(IN) :: esm
-    LOGICAL,OPTIONAL,INTENT(IN) :: fcp_opt
-    REAL(DP),OPTIONAL,INTENT(IN) :: fcp_mu
+    TYPE(gcscf_type),OPTIONAL,INTENT(IN) :: gcscf
     !
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
@@ -2462,43 +3004,156 @@ MODULE qes_init_module
     ELSE
       obj%esm_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(fcp_opt)) THEN
-      obj%fcp_opt_ispresent = .TRUE. 
-      obj%fcp_opt = fcp_opt
+    IF ( PRESENT(gcscf)) THEN
+      obj%gcscf_ispresent = .TRUE. 
+      obj%gcscf = gcscf
     ELSE
-      obj%fcp_opt_ispresent = .FALSE.
-    END IF
-    IF ( PRESENT(fcp_mu)) THEN
-      obj%fcp_mu_ispresent = .TRUE. 
-      obj%fcp_mu = fcp_mu
-    ELSE
-      obj%fcp_mu_ispresent = .FALSE.
+      obj%gcscf_ispresent = .FALSE.
     END IF
     !
   END SUBROUTINE qes_init_boundary_conditions
   !
   !
-  SUBROUTINE qes_init_esm(obj, tagname, bc, nfit, w, efield)
+  SUBROUTINE qes_init_esm(obj, tagname, bc, nfit, w, efield, a, zb, debug, debug_gpmax)
     !
     IMPLICIT NONE
     !
     TYPE(esm_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     CHARACTER(LEN=*),INTENT(IN) :: bc
-    INTEGER,INTENT(IN) :: nfit
-    REAL(DP),INTENT(IN) :: w
-    REAL(DP),INTENT(IN) :: efield
+    INTEGER,OPTIONAL,INTENT(IN) :: nfit
+    REAL(DP),OPTIONAL,INTENT(IN) :: w
+    REAL(DP),OPTIONAL,INTENT(IN) :: efield
+    REAL(DP),OPTIONAL,INTENT(IN) :: a
+    REAL(DP),OPTIONAL,INTENT(IN) :: zb
+    LOGICAL,OPTIONAL,INTENT(IN) :: debug
+    INTEGER,OPTIONAL,INTENT(IN) :: debug_gpmax
     !
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%bc = bc
-    obj%nfit = nfit
-    obj%w = w
-    obj%efield = efield
+    IF ( PRESENT(nfit)) THEN
+      obj%nfit_ispresent = .TRUE. 
+      obj%nfit = nfit
+    ELSE
+      obj%nfit_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(w)) THEN
+      obj%w_ispresent = .TRUE. 
+      obj%w = w
+    ELSE
+      obj%w_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(efield)) THEN
+      obj%efield_ispresent = .TRUE. 
+      obj%efield = efield
+    ELSE
+      obj%efield_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(a)) THEN
+      obj%a_ispresent = .TRUE. 
+      obj%a = a
+    ELSE
+      obj%a_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(zb)) THEN
+      obj%zb_ispresent = .TRUE. 
+      obj%zb = zb
+    ELSE
+      obj%zb_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(debug)) THEN
+      obj%debug_ispresent = .TRUE. 
+      obj%debug = debug
+    ELSE
+      obj%debug_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(debug_gpmax)) THEN
+      obj%debug_gpmax_ispresent = .TRUE. 
+      obj%debug_gpmax = debug_gpmax
+    ELSE
+      obj%debug_gpmax_ispresent = .FALSE.
+    END IF
     !
   END SUBROUTINE qes_init_esm
+  !
+  !
+  SUBROUTINE qes_init_gcscf(obj, tagname, ignore_mun, mu, conv_thr, gk, gh, beta)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(gcscf_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    LOGICAL,OPTIONAL,INTENT(IN) :: ignore_mun
+    REAL(DP),OPTIONAL,INTENT(IN) :: mu
+    REAL(DP),OPTIONAL,INTENT(IN) :: conv_thr
+    REAL(DP),OPTIONAL,INTENT(IN) :: gk
+    REAL(DP),OPTIONAL,INTENT(IN) :: gh
+    REAL(DP),OPTIONAL,INTENT(IN) :: beta
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    IF ( PRESENT(ignore_mun)) THEN
+      obj%ignore_mun_ispresent = .TRUE. 
+      obj%ignore_mun = ignore_mun
+    ELSE
+      obj%ignore_mun_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(mu)) THEN
+      obj%mu_ispresent = .TRUE. 
+      obj%mu = mu
+    ELSE
+      obj%mu_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(conv_thr)) THEN
+      obj%conv_thr_ispresent = .TRUE. 
+      obj%conv_thr = conv_thr
+    ELSE
+      obj%conv_thr_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(gk)) THEN
+      obj%gk_ispresent = .TRUE. 
+      obj%gk = gk
+    ELSE
+      obj%gk_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(gh)) THEN
+      obj%gh_ispresent = .TRUE. 
+      obj%gh = gh
+    ELSE
+      obj%gh_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(beta)) THEN
+      obj%beta_ispresent = .TRUE. 
+      obj%beta = beta
+    ELSE
+      obj%beta_ispresent = .FALSE.
+    END IF
+    !
+  END SUBROUTINE qes_init_gcscf
+  !
+  !
+  SUBROUTINE qes_init_solvents(obj, tagname, solvent)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(solvents_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    TYPE(solvent_type),DIMENSION(:),INTENT(IN) :: solvent
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    ALLOCATE(obj%solvent(SIZE(solvent)))
+    obj%ndim_solvent = SIZE(solvent)
+    obj%solvent = solvent
+    !
+  END SUBROUTINE qes_init_solvents
   !
   !
   SUBROUTINE qes_init_ekin_functional(obj, tagname, ecfixed, qcutz, q2sigma)
@@ -3309,7 +3964,8 @@ MODULE qes_init_module
   !
   !
   SUBROUTINE qes_init_total_energy(obj, tagname, etot, eband, ehart, vtxc, etxc, ewald, demet,&
-                                  efieldcorr, potentiostat_contr, gatefield_contr, vdW_term)
+                                  efieldcorr, potentiostat_contr, gatefield_contr, vdW_term,&
+                                  esol, levelshift_contr)
     !
     IMPLICIT NONE
     !
@@ -3326,6 +3982,8 @@ MODULE qes_init_module
     REAL(DP),OPTIONAL,INTENT(IN) :: potentiostat_contr
     REAL(DP),OPTIONAL,INTENT(IN) :: gatefield_contr
     REAL(DP),OPTIONAL,INTENT(IN) :: vdW_term
+    REAL(DP),OPTIONAL,INTENT(IN) :: esol
+    REAL(DP),OPTIONAL,INTENT(IN) :: levelshift_contr
     !
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
@@ -3391,6 +4049,18 @@ MODULE qes_init_module
       obj%vdW_term = vdW_term
     ELSE
       obj%vdW_term_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(esol)) THEN
+      obj%esol_ispresent = .TRUE. 
+      obj%esol = esol
+    ELSE
+      obj%esol_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(levelshift_contr)) THEN
+      obj%levelshift_contr_ispresent = .TRUE. 
+      obj%levelshift_contr = levelshift_contr
+    ELSE
+      obj%levelshift_contr_ispresent = .FALSE.
     END IF
     !
   END SUBROUTINE qes_init_total_energy
@@ -4135,6 +4805,151 @@ MODULE qes_init_module
     obj%scalarQuantity = scalarQuantity
     !
   END SUBROUTINE qes_init_scalarQuantity
+  !
+  !
+  SUBROUTINE qes_init_rism3d(obj, tagname, nmol, solvent, ecutsolv, molec_dir)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(rism3d_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    INTEGER,INTENT(IN) :: nmol
+    CHARACTER(LEN=*),OPTIONAL,INTENT(IN) :: molec_dir
+    TYPE(solvent_type),DIMENSION(:),INTENT(IN) :: solvent
+    REAL(DP),INTENT(IN) :: ecutsolv
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    obj%nmol = nmol
+    IF ( PRESENT(molec_dir)) THEN
+      obj%molec_dir_ispresent = .TRUE. 
+      obj%molec_dir = molec_dir
+    ELSE
+      obj%molec_dir_ispresent = .FALSE.
+    END IF
+    ALLOCATE(obj%solvent(SIZE(solvent)))
+    obj%ndim_solvent = SIZE(solvent)
+    obj%solvent = solvent
+    obj%ecutsolv = ecutsolv
+    !
+  END SUBROUTINE qes_init_rism3d
+  !
+  !
+  SUBROUTINE qes_init_rismlaue(obj, tagname, both_hands, nfit, pot_ref, charge, right_start, right_expand,&
+                              right_buffer, right_buffer_u, right_buffer_v, left_start, left_expand,&
+                              left_buffer, left_buffer_u, left_buffer_v)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(rismlaue_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    LOGICAL,OPTIONAL,INTENT(IN) :: both_hands
+    INTEGER,OPTIONAL,INTENT(IN) :: nfit
+    INTEGER,OPTIONAL,INTENT(IN) :: pot_ref
+    REAL(DP),OPTIONAL,INTENT(IN) :: charge
+    REAL(DP),OPTIONAL,INTENT(IN) :: right_start
+    REAL(DP),OPTIONAL,INTENT(IN) :: right_expand
+    REAL(DP),OPTIONAL,INTENT(IN) :: right_buffer
+    REAL(DP),OPTIONAL,INTENT(IN) :: right_buffer_u
+    REAL(DP),OPTIONAL,INTENT(IN) :: right_buffer_v
+    REAL(DP),OPTIONAL,INTENT(IN) :: left_start
+    REAL(DP),OPTIONAL,INTENT(IN) :: left_expand
+    REAL(DP),OPTIONAL,INTENT(IN) :: left_buffer
+    REAL(DP),OPTIONAL,INTENT(IN) :: left_buffer_u
+    REAL(DP),OPTIONAL,INTENT(IN) :: left_buffer_v
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    IF ( PRESENT(both_hands)) THEN
+      obj%both_hands_ispresent = .TRUE. 
+      obj%both_hands = both_hands
+    ELSE
+      obj%both_hands_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(nfit)) THEN
+      obj%nfit_ispresent = .TRUE. 
+      obj%nfit = nfit
+    ELSE
+      obj%nfit_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(pot_ref)) THEN
+      obj%pot_ref_ispresent = .TRUE. 
+      obj%pot_ref = pot_ref
+    ELSE
+      obj%pot_ref_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(charge)) THEN
+      obj%charge_ispresent = .TRUE. 
+      obj%charge = charge
+    ELSE
+      obj%charge_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(right_start)) THEN
+      obj%right_start_ispresent = .TRUE. 
+      obj%right_start = right_start
+    ELSE
+      obj%right_start_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(right_expand)) THEN
+      obj%right_expand_ispresent = .TRUE. 
+      obj%right_expand = right_expand
+    ELSE
+      obj%right_expand_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(right_buffer)) THEN
+      obj%right_buffer_ispresent = .TRUE. 
+      obj%right_buffer = right_buffer
+    ELSE
+      obj%right_buffer_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(right_buffer_u)) THEN
+      obj%right_buffer_u_ispresent = .TRUE. 
+      obj%right_buffer_u = right_buffer_u
+    ELSE
+      obj%right_buffer_u_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(right_buffer_v)) THEN
+      obj%right_buffer_v_ispresent = .TRUE. 
+      obj%right_buffer_v = right_buffer_v
+    ELSE
+      obj%right_buffer_v_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(left_start)) THEN
+      obj%left_start_ispresent = .TRUE. 
+      obj%left_start = left_start
+    ELSE
+      obj%left_start_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(left_expand)) THEN
+      obj%left_expand_ispresent = .TRUE. 
+      obj%left_expand = left_expand
+    ELSE
+      obj%left_expand_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(left_buffer)) THEN
+      obj%left_buffer_ispresent = .TRUE. 
+      obj%left_buffer = left_buffer
+    ELSE
+      obj%left_buffer_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(left_buffer_u)) THEN
+      obj%left_buffer_u_ispresent = .TRUE. 
+      obj%left_buffer_u = left_buffer_u
+    ELSE
+      obj%left_buffer_u_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(left_buffer_v)) THEN
+      obj%left_buffer_v_ispresent = .TRUE. 
+      obj%left_buffer_v = left_buffer_v
+    ELSE
+      obj%left_buffer_v_ispresent = .FALSE.
+    END IF
+    !
+  END SUBROUTINE qes_init_rismlaue
   !
   !
 END MODULE qes_init_module

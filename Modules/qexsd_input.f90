@@ -39,6 +39,9 @@ MODULE qexsd_input
        qexsd_init_cell_control, &
        qexsd_init_symmetry_flags, &
        qexsd_init_boundary_conditions, &
+       qexsd_init_fcp, &
+       qexsd_init_rism, &
+       qexsd_init_solvents, &
        qexsd_init_ekin_functional, &
        qexsd_init_external_atomic_forces, &
        qexsd_init_free_positions, &
@@ -54,13 +57,13 @@ MODULE qexsd_input
   SUBROUTINE  qexsd_init_control_variables(obj,title,calculation,restart_mode,&
                   prefix,pseudo_dir,outdir,stress,forces,wf_collect,disk_io,  &
                   max_seconds,etot_conv_thr,forc_conv_thr,press_conv_thr,verbosity, &
-                  iprint, nstep) 
+                  iprint, fcp, rism, nstep) 
   !---------------------------------------------------------------------------------------------------------------------
   !
   TYPE(control_variables_type)         :: obj
   CHARACTER(LEN=*),INTENT(IN)          :: title,calculation,restart_mode,prefix,&
                                           pseudo_dir,outdir,disk_io,verbosity
-  LOGICAL,INTENT(IN)                   :: stress,forces,wf_collect
+  LOGICAL,INTENT(IN)                   :: stress,forces,wf_collect,fcp,rism
   REAL(DP),INTENT(IN)                  :: max_seconds,etot_conv_thr,forc_conv_thr,&
                                           press_conv_thr   
   INTEGER,INTENT(IN)                   :: iprint, nstep
@@ -91,7 +94,8 @@ MODULE qexsd_input
                                   verbosity=TRIM(verbosity_value),stress=stress,forces=forces,    &
                                   wf_collect=wf_collect,max_seconds=int_max_seconds,  &
                                   etot_conv_thr=etot_conv_thr,forc_conv_thr=forc_conv_thr, &
-                                  press_conv_thr=press_conv_thr,print_every=iprint, NSTEP = nstep )
+                                  press_conv_thr=press_conv_thr,print_every=iprint, fcp=fcp,rism=rism, &
+                                  NSTEP = nstep)
 
   END SUBROUTINE qexsd_init_control_variables
   !
@@ -451,7 +455,9 @@ MODULE qexsd_input
    !
    ! 
    !--------------------------------------------------------------------------------------------
-   SUBROUTINE qexsd_init_boundary_conditions(obj, assume_isolated, esm_bc, esm_nfit, esm_w, esm_efield, fcp, fcp_mu)
+   SUBROUTINE qexsd_init_boundary_conditions(obj, assume_isolated, esm_bc, esm_nfit, esm_w, esm_efield, esm_a, &
+                                             esm_zb, esm_debug, esm_debug_gpmax, lgcscf, gcscf_ignore_mun, &
+                                             gcscf_mu, gcscf_conv_thr, gcscf_gk, gcscf_gh, gcscf_beta)
    !--------------------------------------------------------------------------------------------
    ! 
    IMPLICIT NONE
@@ -459,31 +465,47 @@ MODULE qexsd_input
    TYPE (boundary_conditions_type)              :: obj
    CHARACTER(LEN=*),INTENT(IN)                  :: assume_isolated
    CHARACTER(LEN=*),OPTIONAL,INTENT(IN)         :: esm_bc
-   LOGICAL,OPTIONAL,INTENT(IN)                  :: fcp
-   REAL(DP),OPTIONAL,INTENT(IN)                 :: fcp_mu
    INTEGER,OPTIONAL,INTENT(IN)                  :: esm_nfit
-   REAL(DP),OPTIONAL,INTENT(IN)                 :: esm_w,esm_efield
+   REAL(DP),OPTIONAL,INTENT(IN)                 :: esm_w
+   REAL(DP),OPTIONAL,INTENT(IN)                 :: esm_efield
+   REAL(DP),OPTIONAL,INTENT(IN)                 :: esm_a
+   REAL(DP),OPTIONAL,INTENT(IN)                 :: esm_zb
+   LOGICAL,OPTIONAL,INTENT(IN)                  :: esm_debug
+   INTEGER,OPTIONAL,INTENT(IN)                  :: esm_debug_gpmax
+   LOGICAL,OPTIONAL,INTENT(IN)                  :: lgcscf
+   LOGICAL,OPTIONAL,INTENT(IN)                  :: gcscf_ignore_mun
+   REAL(DP),OPTIONAL,INTENT(IN)                 :: gcscf_mu,gcscf_conv_thr,gcscf_gk,gcscf_gh,gcscf_beta
    ! 
    TYPE (esm_type),POINTER                      :: esm_obj => NULL() 
-   LOGICAL                                      :: esm_ispresent = .FALSE.
+   TYPE (gcscf_type),POINTER                    :: gcscf_obj => NULL()
+   LOGICAL                                      :: esm_ispresent, gcscf_ispresent
    CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="boundary_conditions"
    !
    esm_ispresent = .FALSE.
+   gcscf_ispresent = .FALSE.
    !
-   IF ( TRIM(assume_isolated) .EQ. "esm" ) THEN 
-      esm_ispresent = .TRUE. 
-      ALLOCATE(esm_obj)
-      CALL qes_init (esm_obj, "esm", BC=TRIM(esm_bc), NFIT=esm_nfit, W=esm_w, EFIELD=esm_efield)
-   END IF 
+   IF (PRESENT(lgcscf)) THEN
+     gcscf_ispresent = .TRUE.
+   END IF
+   !
+   IF (TRIM(assume_isolated) .EQ. "esm") THEN
+     esm_ispresent = .TRUE.
+     ALLOCATE(esm_obj)
+     CALL qes_init (esm_obj, "esm", bc=TRIM(esm_bc), nfit=esm_nfit, w=esm_w, efield=esm_efield, a=esm_a, &
+                    zb=esm_zb, debug=esm_debug, debug_gpmax=esm_debug_gpmax)
+   END IF
+   !
+   IF (gcscf_ispresent) THEN
+     ALLOCATE(gcscf_obj)
+     CALL qes_init(gcscf_obj,"gcscf", gcscf_ignore_mun, gcscf_mu, gcscf_conv_thr, gcscf_gk, gcscf_gh, gcscf_beta )
+   END IF
    !
    IF (esm_ispresent) THEN
-      IF (PRESENT(fcp)) THEN
-         CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated, ESM=esm_obj, FCP_OPT=fcp, FCP_MU=fcp_mu)
-      ELSE
-         CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated, ESM=esm_obj)
-      END IF
-   ELSE
-      CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated)
+     IF (gcscf_ispresent) THEN
+       CALL qes_init (obj, TAGNAME, assume_isolated=assume_isolated, esm=esm_obj, gcscf=gcscf_obj)
+     ELSE
+       CALL qes_init (obj, TAGNAME, assume_isolated=assume_isolated, esm=esm_obj)
+     END IF
    END IF
    !
    IF (esm_ispresent) THEN
@@ -491,8 +513,145 @@ MODULE qexsd_input
       DEALLOCATE(esm_obj)
    END IF
    !
+   IF ( gcscf_ispresent ) THEN
+      CALL qes_reset (gcscf_obj)
+      DEALLOCATE(gcscf_obj)
+   END IF
+   !
    END SUBROUTINE qexsd_init_boundary_conditions
    ! 
+   !--------------------------------------------------------------------------------------------
+   SUBROUTINE qexsd_init_fcp(obj, fcp_mu, fcp_dynamics, fcp_conv_thr, fcp_ndiis, fcp_rdiis,&
+                         fcp_mass, fcp_velocity, fcp_temperature, fcp_tempw, fcp_tolp, fcp_delta_t,&
+                         fcp_nraise, freeze_all_atoms)
+   !--------------------------------------------------------------------------------------------
+   ! 
+   IMPLICIT NONE
+   ! 
+   TYPE (fcp_type)                      :: obj
+   REAL(DP),OPTIONAL,INTENT(IN)         :: fcp_mu
+   CHARACTER(LEN=*),OPTIONAL,INTENT(IN) :: fcp_dynamics
+   REAL(DP),OPTIONAL,INTENT(IN)         :: fcp_conv_thr
+   INTEGER,OPTIONAL,INTENT(IN)          :: fcp_ndiis
+   REAL(DP),OPTIONAL,INTENT(IN)         :: fcp_rdiis
+   REAL(DP),OPTIONAL,INTENT(IN)         :: fcp_mass
+   REAL(DP),OPTIONAL,INTENT(IN)         :: fcp_velocity
+   CHARACTER(LEN=*),OPTIONAL,INTENT(IN) :: fcp_temperature
+   REAL(DP),OPTIONAL,INTENT(IN)         :: fcp_tempw
+   REAL(DP),OPTIONAL,INTENT(IN)         :: fcp_tolp
+   REAL(DP),OPTIONAL,INTENT(IN)         :: fcp_delta_t
+   INTEGER,OPTIONAL,INTENT(IN)          :: fcp_nraise
+   LOGICAL,OPTIONAL,INTENT(IN)          :: freeze_all_atoms
+   !
+   CHARACTER(LEN=*),PARAMETER           :: TAGNAME="fcp_settings"
+   !
+   CALL qes_init (obj, TAGNAME, fcp_mu, fcp_dynamics, fcp_conv_thr, fcp_ndiis, fcp_rdiis, fcp_mass, &
+                  fcp_velocity, fcp_temperature, fcp_tempw, fcp_tolp, fcp_delta_t, fcp_nraise, freeze_all_atoms)
+   !
+   END SUBROUTINE qexsd_init_fcp
+
+   SUBROUTINE qexsd_init_rism(obj, nsolv, closure, tempv, ecutsolv, &
+                          nsp, solute_lj, solute_epsilon, solute_sigma, rmax_lj,&
+                          rmax1d, starting1d, starting3d, smear1d, smear3d, rism1d_maxstep, rism3d_maxstep,&
+                          rism1d_conv_thr, rism3d_conv_thr, mdiis1d_size, mdiis3d_size, mdiis1d_step,&
+                          mdiis3d_step, rism1d_bond_width, rism1d_dielectric, rism1d_molesize,&
+                          rism1d_nproc, rism1d_nproc_switch, rism3d_conv_level, rism3d_planar_average,&
+                          laue_nfit, laue_expand_right, laue_expand_left, laue_starting_right,&
+                          laue_starting_left, laue_buffer_right, laue_buffer_right_solu, laue_buffer_right_solv,&
+                          laue_buffer_left, laue_buffer_left_solu, laue_buffer_left_solv, laue_both_hands,&
+                          laue_reference, laue_wall, laue_wall_z, laue_wall_rho, laue_wall_epsilon,&
+                          laue_wall_sigma, laue_wall_lj6 )
+
+   !--------------------------------------------------------------------------------------------
+   !
+   IMPLICIT NONE
+    
+   TYPE (rism_type)                         :: obj
+   INTEGER,INTENT(IN)                       :: nsolv
+   CHARACTER(LEN=*),OPTIONAL,INTENT(IN)     :: closure
+   REAL(DP),OPTIONAL,INTENT(IN)             :: tempv, ecutsolv
+   INTEGER,INTENT(IN)                       :: nsp
+   CHARACTER(LEN=*),DIMENSION(:),INTENT(IN) :: solute_lj
+   REAL(DP),DIMENSION(:),INTENT(IN)         :: solute_epsilon, solute_sigma
+   REAL(DP),OPTIONAL,INTENT(IN)             :: rmax_lj, rmax1d
+   CHARACTER(LEN=*),OPTIONAL,INTENT(IN)     :: starting1d, starting3d
+   REAL(DP),OPTIONAL,INTENT(IN)             :: smear1d, smear3d
+   INTEGER,OPTIONAL,INTENT(IN)              :: rism1d_maxstep, rism3d_maxstep
+   REAL(DP),OPTIONAL,INTENT(IN)             :: rism1d_conv_thr, rism3d_conv_thr
+   INTEGER,OPTIONAL,INTENT(IN)              :: mdiis1d_size, mdiis3d_size
+   REAL(DP),OPTIONAL,INTENT(IN)             :: mdiis1d_step, mdiis3d_step
+   REAL(DP),OPTIONAL,INTENT(IN)             :: rism1d_bond_width, rism1d_dielectric,rism1d_molesize
+   INTEGER,OPTIONAL,INTENT(IN)              :: rism1d_nproc, rism1d_nproc_switch
+   REAL(DP),OPTIONAL,INTENT(IN)             :: rism3d_conv_level
+   LOGICAL,OPTIONAL,INTENT(IN)              :: rism3d_planar_average
+   INTEGER,OPTIONAL,INTENT(IN)              :: laue_nfit
+   REAL(DP),OPTIONAL,INTENT(IN)             :: laue_expand_right, laue_expand_left
+   REAL(DP),OPTIONAL,INTENT(IN)             :: laue_starting_right, laue_starting_left
+   REAL(DP),OPTIONAL,INTENT(IN)             :: laue_buffer_right, laue_buffer_right_solu, laue_buffer_right_solv
+   REAL(DP),OPTIONAL,INTENT(IN)             :: laue_buffer_left, laue_buffer_left_solu, laue_buffer_left_solv
+   LOGICAL,OPTIONAL,INTENT(IN)              :: laue_both_hands
+   CHARACTER(LEN=*),OPTIONAL,INTENT(IN)     :: laue_reference, laue_wall
+   REAL(DP),OPTIONAL,INTENT(IN)             :: laue_wall_z, laue_wall_rho
+   REAL(DP),OPTIONAL,INTENT(IN)             :: laue_wall_epsilon, laue_wall_sigma
+   LOGICAL,OPTIONAL,INTENT(IN)              :: laue_wall_lj6
+   !
+   CHARACTER(LEN=*),PARAMETER               :: TAGNAME="rism_settings"
+   !
+   TYPE(solute_type) :: solute_obj(nsp)
+   INTEGER :: isol
+   
+   DO isol=1, nsp
+     CALL qes_init( solute_obj(isol), "solute", solute_lj(isol), solute_epsilon(isol), solute_sigma(isol) )
+   END DO
+
+   CALL qes_init (obj, TAGNAME, nsolv, solute_obj, closure, tempv, ecutsolv, rmax_lj,&
+     rmax1d, starting1d, starting3d, smear1d, smear3d, rism1d_maxstep, rism3d_maxstep,&
+     rism1d_conv_thr, rism3d_conv_thr, mdiis1d_size, mdiis3d_size, mdiis1d_step,&
+     mdiis3d_step, rism1d_bond_width, rism1d_dielectric, rism1d_molesize,&
+     rism1d_nproc, rism1d_nproc_switch, rism3d_conv_level, rism3d_planar_average,&
+     laue_nfit, laue_expand_right, laue_expand_left, laue_starting_right,&
+     laue_starting_left, laue_buffer_right, laue_buffer_right_solu, laue_buffer_right_solv,&
+     laue_buffer_left, laue_buffer_left_solu, laue_buffer_left_solv, laue_both_hands,&
+     laue_reference, laue_wall, laue_wall_z, laue_wall_rho, laue_wall_epsilon,&
+     laue_wall_sigma, laue_wall_lj6 )
+
+   DO isol=1, nsp
+      CALL qes_reset( solute_obj(isol) )
+   END DO
+   !
+   END SUBROUTINE qexsd_init_rism
+
+   SUBROUTINE qexsd_init_solvents(obj, nsolv, solv_label, solv_mfile, solv_dens1, solv_dens2, solvents_unit )
+   TYPE (solvents_type)                       :: obj
+   INTEGER,INTENT(IN)                         :: nsolv
+   CHARACTER(len=10), DIMENSION(:),INTENT(IN) :: solv_label(:)
+   CHARACTER(len=80), DIMENSION(:),INTENT(IN) :: solv_mfile(:)
+   REAL(DP), DIMENSION(:),INTENT(IN)          :: solv_dens1(:)
+   REAL(DP), DIMENSION(:),INTENT(IN)          :: solv_dens2(:)
+   CHARACTER(len=80), INTENT(IN)              :: solvents_unit
+   !
+   CHARACTER(LEN=*),PARAMETER                 :: TAGNAME="solvents"
+   !
+   TYPE(solvent_type)                         :: solvent_obj(nsolv)
+   INTEGER                                    :: isol
+
+   DO isol=1, nsolv
+     IF(solv_dens2(isol)>0.0d0) THEN
+       CALL qes_init(solvent_obj(isol), "solvent", solv_label(isol), solv_mfile(isol), solv_dens1(isol), &
+                     solv_dens2(isol), unit=solvents_unit)
+     ELSE      
+       CALL qes_init(solvent_obj(isol), "solvent", solv_label(isol), solv_mfile(isol), solv_dens1(isol), &
+                     unit=solvents_unit)
+     END IF
+   END DO
+
+   CALL qes_init (obj, TAGNAME, solvent_obj )
+
+   DO isol=1, nsolv
+      CALL qes_reset( solvent_obj(isol) )
+   END DO
+
+   END SUBROUTINE qexsd_init_solvents
    !
    !--------------------------------------------------------------------------------------
    SUBROUTINE qexsd_init_ekin_functional(obj,ecfixed,qcutz,q2sigma)

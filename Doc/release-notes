@@ -1,11 +1,17 @@
 New in 7.1 version:
+  * DFT+RISM (1D, 3D, Laue) by S. Nishihara & M. Otani [Phys. Rev. B 96, 115429 (2017)].
   * Improved, streamlined and extended porting to NVidia GPUs
-  * KCW package for Koopmans-compliant functionals in a Wannier representation,
-    https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.021051.
+  * KCW package for Koopmans-compliant functionals in a Wannier representation:
+    https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.021051,
+    https://arxiv.org/abs/2202.08155 <https://arxiv.org/abs/2202.08155.
     Developed and maintained by N. Colonna, R. de Gennaro, E. Linscott
   * If no explicit parallelization options -nk, -nt, -nd are provided,
     pw.x will figure out suitable values for optimal, or at least, not
     too bad, parallelization
+  * EPW:
+    (1) The full-bandwidth approach to the Eliashberg equations and the sparse sampling in the superconductivity module
+    For the full list of new features, bug fixes, and changes leading to backward incompatibility issues,
+    please visit the Releases page of the EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
 
 Incompatible changes in 7.1 version:
   * Source files previously found in FFTXLIB/ moved to FFTXLIB/src/
@@ -32,6 +38,7 @@ Fixed in 7.1 version:
   * CP with Hubbard U was crashing also when reading the xml file (v.7.0)
   * Bugfix in turboMagnon for k point grids that have Gamma or points at the
     Brillouin zone edge (the weights were not correct)
+  * Libxc (5.2.x) linking failure when using CMake.
 
 New in 7.0 version:
   * Unscreened and screened (range-separated) vdW-DF hybrids

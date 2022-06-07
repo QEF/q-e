@@ -60,6 +60,8 @@
     USE xc_lib,                ONLY : xclib_dft_is
     USE elph2,                 ONLY : lower_band, upper_band, ibndstart
     USE constants_epw,         ONLY : czero, eps12
+    USE Coul_cut_2D,           ONLY : do_cutoff_2D
+    USE Coul_cut_2D_ph,        ONLY : cutoff_localq
     !
     IMPLICIT NONE
     !
@@ -161,6 +163,10 @@
           gu = gu0 + g(1, ig) * u1 + g(2, ig) * u2 + g(3, ig) * u3
           aux1(dffts%nl(ig)) = aux1(dffts%nl(ig)) + vlocq(ig, nt) * gu * fact * gtau
         ENDDO
+        IF (do_cutoff_2D) THEN
+          CALL cutoff_localq(aux1, fact, u1, u2, u3, gu0, nt, na)
+        ENDIF
+        !
       ENDIF
     ENDDO
     !
@@ -599,6 +605,7 @@
     !!
     !! Roxana Margine - Dec 2018: Updated based on QE 6.3
     !! SP: Sept. 2019 - Cleaning
+    !! SP: Jan. 2022 - Addition 2D Coulomb 
     !!
     !! HL: Mar 2020 - Parallelization over G using intra image communicator 
     !!
@@ -620,6 +627,8 @@
     USE constants_epw,    ONLY : zero, czero
     USE mp_images,        ONLY : intra_image_comm
     USE elph2,            ONLY : veff, ig_s, ig_e
+    USE Coul_cut_2D,      ONLY : do_cutoff_2D
+    USE Coul_cut_2D_ph,   ONLY : lr_Vlocq
     !
     IMPLICIT NONE
     !
@@ -771,12 +780,22 @@
                   !    nb is the atom of the augmentation function
                   !
                   nta = ityp(na)
-                  DO ig = 1, ngvec
-                    sk(ig) = vlocq(ig + ig_s - 1, nta) &
-                             * eigts1(mill(1, ig + ig_s - 1), na) &
-                             * eigts2(mill(2, ig + ig_s - 1), na) &
-                             * eigts3(mill(3, ig + ig_s - 1), na)
-                  ENDDO
+                  !
+                  IF (do_cutoff_2D) THEN
+                    DO ig = 1, ngvec
+                      sk(ig) = (vlocq(ig + ig_s - 1, nta) + lr_Vlocq (ig + ig_s - 1, nta)) &
+                               * eigts1(mill(1, ig + ig_s - 1), na) &
+                               * eigts2(mill(2, ig + ig_s - 1), na) &
+                               * eigts3(mill(3, ig + ig_s - 1), na)
+                    ENDDO
+                  ELSE
+                    DO ig = 1, ngvec
+                      sk(ig) = vlocq(ig + ig_s - 1, nta) &
+                               * eigts1(mill(1, ig + ig_s - 1), na) &
+                               * eigts2(mill(2, ig + ig_s - 1), na) &
+                               * eigts3(mill(3, ig + ig_s - 1), na)
+                    ENDDO
+                  ENDIF
                   !
                   DO ipol = 1, 3
                     DO ig = 1, ngvec

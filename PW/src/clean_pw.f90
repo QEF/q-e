@@ -71,6 +71,7 @@ SUBROUTINE clean_pw( lflag )
   USE wvfct_gpum,           ONLY : deallocate_wvfct_gpu
   USE scf_gpum,             ONLY : deallocate_scf_gpu
   !
+  USE rism_module,          ONLY : deallocate_rism
 #if defined (__ENVIRON)
   USE plugin_flags,         ONLY : use_environ
   USE environ_base_module,  ONLY : clean_environ
@@ -214,6 +215,11 @@ SUBROUTINE clean_pw( lflag )
   IF (ts_vdw .or. mbd_vdw) CALL tsvdw_finalize()
   IF (mbd_vdw) CALL clean_mbd()
   !
+  ! ... arrays for RISM
+  !
+  CALL deallocate_rism( lflag )
+  !
+  CALL plugin_clean( 'PW', lflag )
 #if defined (__ENVIRON)
   IF (use_environ) CALL clean_environ('PW', lflag)
 #endif

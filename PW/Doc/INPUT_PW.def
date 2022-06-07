@@ -48,6 +48,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
           ...
          @b / ]
 
+        [ @b &RISM
+          ...
+         @b / ]
+
         @b ATOMIC_SPECIES
          X  Mass_X  PseudoPot_X
          Y  Mass_Y  PseudoPot_Y
@@ -95,6 +99,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
         [ @b ADDITIONAL_K_POINTS
              see: K_POINTS ]
+
+        [ @b SOLVENTS
+           label(1)     Density(1)     Molecule(1)
+           label(2)     Density(2)     Molecule(2)
+           .....
+           label(nsolv) Density(nsolv) Molecule(nsolv) ]
         
         [ @b HUBBARD { atomic | ortho-atomic | norm-atomic | wf | pseudo }
           if (DFT+U)
@@ -460,23 +470,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
         
-        var lfcp -type LOGICAL {
-            see { fcp_mu }
-            default { .FALSE. }
-            info {
-                If .TRUE. perform a constant bias potential (constant-mu) calculation
-                for a system with ESM method. See the header of PW/src/fcp_module.f90
-                for documentation. To perform the calculation, you must set a namelist FCP.
-
-                NB:
-                - The total energy displayed in output includes the potentiostat
-                  contribution (-mu*N).
-                - @ref calculation must be 'relax' or 'md'.
-                - @ref assume_isolated = 'esm' and @ref esm_bc = 'bc2' or 'bc3' must be set
-                  in @ref SYSTEM namelist.
-            }
-        }
-
         var gate -type LOGICAL {
             default { .FALSE. }
             see { zgate, relaxz, block, block_1, block_2, block_height }
@@ -493,6 +486,49 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 could still use them for symmetric systems (i.e. no dipole correction).
                 For @ref nosym=.false. verbosity is set to 'high'.
                 Note: this option was called "monopole" in v6.0 and 6.1 of pw.x
+            }
+        }
+
+        var lfcp -type LOGICAL {
+            default { .FALSE. }
+            info {
+                If .TRUE. perform a constant bias potential (constant-mu) calculation
+                for a system with ESM method. See the header of PW/src/fcp_module.f90 
+                for documentation. To perform the calculation, you must set a namelist FCP.
+
+                NB:
+                - The total energy displayed in output includes the potentiostat
+                  contribution (-mu*N).
+                - @ref calculation must be 'relax' or 'md'. 
+                - @ref assume_isolated = 'esm' and @ref esm_bc = 'bc2' or 'bc3' must be set
+                  in @ref SYSTEM namelist.
+                - ESM-RISM is also supported (@ref assume_isolated = 'esm' and @ref esm_bc = 'bc1'
+                  and @ref trism = .TRUE.).
+                - @ref ignore_wolfe is always .TRUE., for BFGS.
+            }
+        }
+
+        var trism -type LOGICAL {
+            default { .FALSE. }
+            info {
+                If .TRUE. perform a 3D-RISM-SCF calculation
+                [for details see H.Sato et al., JCP 112, 9463 (2000)].
+                The solvent's distributions are calculated by 3D-RISM,
+                though solute is treated as SCF. The charge density and
+                the atomic positions are optimized, simultaneously with
+                the solvents. To perform the calculation, you must set
+                a namelist RISM and a card SOLVENTS.
+
+                If @ref assume_isolated = 'esm' and @ref esm_bc = 'bc1',
+                Laue-RISM is calculated instead of 3D-RISM
+                and coupled with ESM method (i.e. ESM-RISM).
+                [for details see S.Nishihara and M.Otani, PRB 96, 115429 (2017)].
+
+                The default of @ref mixing_beta is 0.2
+                for both 3D-RISM and Laue-RISM.
+
+                For structural relaxation with BFGS,
+                @ref ignore_wolfe is always .TRUE. .
             }
         }
 
@@ -2100,6 +2136,30 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
+        var diago_rmm_ndim -type INTEGER { 
+            default { 4 }
+            info {
+                For RMM-DIIS diagonalization: dimension of workspace
+                (number of wavefunction packets, at least 2 needed).
+            }
+        }
+
+        var diago_rmm_conv -type LOGICAL { 
+            default { .FALSE. }
+            info {
+                If .TRUE., RMM-DIIS is performed up to converge.
+                If .FALSE., RMM-DIIS is performed only once.
+            }
+        }
+
+        var diago_gs_nblock -type INTEGER { 
+            default { 16 }
+            info {
+                For RMM-DIIS diagonalization:
+                blocking size of Gram-Schmidt orthogonalization
+            }
+        }
+
         var diago_full_acc -type LOGICAL { 
             default { .FALSE. }
             info {
@@ -2110,20 +2170,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
         
-        var diago_rmm_ndim -type INTEGER {
-           default {4}
-           info {
-               Max dimension  of the iterative subspace for RMM-DIIS diagonalization 
-           }
-        }
-       
-       var diago_rmm_conv -type LOGICAL {
-          default { .FALSE. }
-          info {
-             If .TRUE. during the SCF loop the RMM-DIIS is reiterated until all bands 
-             are converged or up to a max of 8 times. 
-          }
-       }
+
         var efield -type REAL {
             default { 0.D0 }
             info {
@@ -3590,6 +3637,91 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                   }
               }
            }
+        }
+    }   
+    
+    #
+    # card SOLVENTS
+    #
+
+    card SOLVENTS {
+        flag solvents_unit -use optional {
+            enum { 1/cell | mol/L | g/cm^3 }
+            options {
+                opt -val 1/cell {
+                    solvent's densities are specified
+                    as number of molecule in unit cell.
+                }
+                opt -val mol/L {
+                    solvent's densities are in molar.
+                }
+                opt -val g/cm^3 {
+                    solvent's densities are in gram per cm^3.
+                }
+            }
+        }
+
+        label {
+            Optional card, used only if @ref trism = .TRUE., ignored otherwise !
+        }
+
+        choose {
+            when -test "laue_both_hands = .FALSE." {
+                syntax {
+                    table solvent {
+                        rows -start 1 -end nsolv {
+                            col X -type CHARACTER {
+                                info {
+                                    label of the solvent molecule.
+                                }
+                            }
+                            col Density -type REAL {
+                                info {
+                                    density of the solvent molecule.
+                                    if not positive value is set, density is read from MOL-file.
+                                }
+                            }
+                            col Molecule -type CHARACTER {
+                                info {
+                                    MOL-file of the solvent molecule.
+                                    in the MOL-file, molecular structure and some other data are written.
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            elsewhen -test "laue_both_hands = .TRUE." {
+                syntax {
+                    table solvent {
+                        rows -start 1 -end nsolv {
+                            col X -type CHARACTER {
+                                info {
+                                    label of the solvent molecule.
+                                }
+                            }
+                            col Density_Left -type REAL {
+                                info {
+                                    density of the solvent molecule in the left-hand side.
+                                    if not positive value is set, density is read from MOL-file.
+                                }
+                            }
+                            col Density_Right -type REAL {
+                                info {
+                                    density of the solvent molecule in the right-hand side.
+                                    if not positive value is set, density is read from MOL-file.
+                                }
+                            }
+                            col Molecule -type CHARACTER {
+                                info {
+                                    MOL-file of the solvent molecule.
+                                    in the MOL-file, molecular structure and some other data are written.
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

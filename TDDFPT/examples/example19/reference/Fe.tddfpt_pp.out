@@ -1,6 +1,6 @@
  Warning: Only a single CPU will be used!
 
-     Program TDDFPT_PP v.7.0 starts on  1Jun2022 at 10:47:17 
+     Program TDDFPT_PP v.7.0 starts on  1Jun2022 at 15:35:44 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -14,26 +14,25 @@
      Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     82973 MiB available memory on the printing compute node when the environment starts
+     501 MiB available memory on the printing compute node when the environment starts
  
- Itermax0 is less than 150, no extrapolation scheme can be used!
 
-     Reading    100 Lanczos steps for direction 1
-        100 steps will be considered
+     Reading    150 Lanczos steps for direction 1
+        150 steps will be considered
 
 
      Data ready, starting to calculate observables...
 
-     Broadening =      0.10000000 meV
+     Broadening =      0.50000000 meV
 
      Output file name: Fe.plot_chi.dat     
 
      chi_i_j: magnetization-magnetization tensor  in units of mu_B^2 / meV
  
-     TDDFPT_PP    :      0.02s CPU      0.06s WALL
+     TDDFPT_PP    :      0.01s CPU      0.01s WALL
 
  
-   This run was terminated on:  10:47:18   1Jun2022            
+   This run was terminated on:  15:35:44   1Jun2022            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

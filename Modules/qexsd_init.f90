@@ -49,7 +49,8 @@ MODULE qexsd_init
             qexsd_init_total_energy, qexsd_init_forces, qexsd_init_stress, &
             qexsd_init_dipole_info, qexsd_init_outputElectricField,   &
             qexsd_init_outputPBC, qexsd_init_gate_info, qexsd_init_hybrid, &
-            qexsd_init_dftU, qexsd_init_vdw, qexsd_init_berryPhaseOutput
+            qexsd_init_dftU, qexsd_init_vdw, qexsd_init_berryPhaseOutput, &
+            qexsd_init_rism3d, qexsd_init_rismlaue
   !
 CONTAINS
   !
@@ -442,6 +443,7 @@ CONTAINS
          TYPE(HubbardBack_type),ALLOCATABLE    :: Hub_back_(:)
          TYPE(HubbardInterSpecieV_type),ALLOCATABLE :: Hub_V_(:) 
          LOGICAL                               :: noncolin_ =.FALSE.
+         INTEGER                               :: icheck 
          !
          IF (PRESENT(n) .AND. PRESENT(l)) THEN
              CALL set_labels (nsp, n, l)
@@ -452,7 +454,11 @@ CONTAINS
          IF ( PRESENT(noncolin)) noncolin_ = noncolin 
          !
          IF (lda_plus_u_kind == 2 ) THEN 
-           IF (PRESENT(hubbard_v))   CALL check_and_init_Hubbard_V (hub_v_, hubbard_v, species, label)
+           IF (PRESENT(hubbard_v))   icheck =  check_and_init_Hubbard_V (hub_v_, hubbard_v, species, label)
+           IF ( icheck == 0) THEN 
+             obj%lwrite = .FALSE. 
+             RETURN
+           END IF 
          ELSE  
            IF (PRESENT(U))           CALL init_hubbard_commons(U, U_, label, "Hubbard_U")
          END IF 
@@ -540,23 +546,28 @@ CONTAINS
             END DO 
          END SUBROUTINE init_hubbard_J
          !
-         SUBROUTINE check_and_init_Hubbard_V (objs, hubbard_v_, specs, labs)
+         FUNCTION check_and_init_Hubbard_V (objs, hubbard_v_, specs, labs) result( ndim ) 
            IMPLICIT NONE 
            TYPE(HubbardInterSpecieV_type), ALLOCATABLE   :: objs(:)
            REAL(DP)                                      :: hubbard_v_(:,:,:) 
            CHARACTER(len=*)                              :: labs(:), specs(:)
+           INTEGER                                       :: ndim 
            !
-           INTEGER    :: nat_, nbt_, ndim, na, nb, idim, nb2isp
+           INTEGER    :: nat_, nbt_, na, nb, idim, nb2isp
            CHARACTER(LEN=4)  :: lab1, spec1, lab2, spec2 
            !
            nat_ = SIZE(ityp) 
            nbt_  = SIZE(hubbard_v_, 2) / SIZE( hubbard_v_, 1) * nat_ 
            !
-           ndim = COUNT( hubbard_v_ > 0._DP ) 
+           ndim = COUNT( hubbard_v_(:,:,1) > 0._DP ) 
+           IF ( COUNT(hubbard_v_(:,:,2:4)  > 0._DP)  > 0 ) THEN 
+              CALL infomsg("qexsd_init:hubbard_v", & 
+                           "XML printout for hubbard_v with background channels is not implemented") 
+              ndim = 0 
+           END IF 
            IF (ndim == 0 ) RETURN 
            ALLOCATE (objs(ndim)) 
-           IF ( COUNT(hubbard_v_(:,:,2:4)  > 0._DP)  > 0 ) CALL infomsg("qexsd_init:hubbard_v", & 
-                                 "XML printout for hubbard_v with background channels is not implemented") 
+
            idim = 0 
            DO na =1, nat_ 
              spec1 = TRIM(species(ityp(na)))
@@ -570,7 +581,7 @@ CONTAINS
                 CALL qes_init(objs(idim), "Hubbard_V", spec1, na, lab1, spec2, nb, lab2, Hubbard_V_(na,nb,1))
              END DO
            END DO
-         END SUBROUTINE check_and_init_Hubbard_V 
+         END FUNCTION check_and_init_Hubbard_V 
            
          
          SUBROUTINE reset_hubbard_commons(objs) 
@@ -1066,7 +1077,8 @@ CONTAINS
     ! 
     !---------------------------------------------------------------------------------------
     SUBROUTINE qexsd_init_total_energy(obj, etot, eband, ehart, vtxc, etxc, ewald, degauss, demet, &
-                       electric_field_corr, potentiostat_contr, gate_contribution, dispersion_contribution )
+                       electric_field_corr, potentiostat_contr, gate_contribution, dispersion_contribution, &
+                       esol, vsol)
     !----------------------------------------------------------------------------------------
     !
     ! 
@@ -1079,12 +1091,14 @@ CONTAINS
     REAL(DP),OPTIONAL               :: potentiostat_contr
     REAL(DP),OPTIONAL               :: gate_contribution
     REAL(DP),OPTIONAL               :: dispersion_contribution  
+    REAL(DP),OPTIONAL               :: esol, vsol
     !
     CHARACTER(LEN=*),PARAMETER      :: TAGNAME="total_energy"
     ! 
     CALL  qes_init (obj, TAGNAME, ETOT = etot, EBAND = eband, EHART = ehart, VTXC = vtxc, ETXC = etxc, & 
                     EWALD = ewald, DEMET = demet, EFIELDCORR = electric_field_corr, POTENTIOSTAT_CONTR = potentiostat_contr,  &
-                                  GATEFIELD_CONTR = gate_contribution, vdW_term = dispersion_contribution ) 
+                    GATEFIELD_CONTR = gate_contribution, vdW_term = dispersion_contribution, ESOL = esol, &
+                    levelshift_contr = vsol)
     
     END SUBROUTINE qexsd_init_total_energy
     ! 
@@ -1343,7 +1357,72 @@ SUBROUTINE qexsd_init_gate_info(obj, tagname, gatefield_en, zgate_, nelec_, alat
                         GATE_ZPOS = zgate_,  GATE_GATE_TERM = gate_gate_term, GATEFIELDENERGY = gatefield_en) 
    ! 
 END SUBROUTINE qexsd_init_gate_info 
-
-
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE qexsd_init_rism3d(obj, nmol, slabel, molfile, dens1, dens2, ecutsolv)
+      !------------------------------------------------------------------------
+      IMPLICIT NONE
+      !
+      TYPE(rism3d_type)            :: obj
+      INTEGER,          INTENT(IN) :: nmol
+      CHARACTER(LEN=*), INTENT(IN) :: slabel(:)
+      CHARACTER(LEN=*), INTENT(IN) :: molfile(:)
+      REAL(DP),         INTENT(IN) :: dens1(:)
+      REAL(DP),         INTENT(IN) :: dens2(:)
+      REAL(DP),         INTENT(IN) :: ecutsolv
+      !
+      TYPE(solvent_type), ALLOCATABLE :: solvents(:)
+      INTEGER :: i
+      !
+      ALLOCATE(solvents(nmol))
+      !
+      DO i = 1, nmol
+          CALL qes_init (solvents(i), "solvent", TRIM(slabel(i)), TRIM(molfile(i)), dens1(i), dens2(i))
+      ENDDO
+      !
+      CALL qes_init (obj, "rism3d", nmol, solvents, ecutsolv)
+      !
+      DO i = 1, nmol
+          CALL qes_reset (solvents(i))
+      ENDDO
+      !
+      DEALLOCATE(solvents)
+      !
+    END SUBROUTINE qexsd_init_rism3d
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE qexsd_init_rismlaue(obj, both_hands, nfit, pot_ref, charge, &
+                                   right_start,  right_expand, &
+                                   right_buffer, right_buffer_u, right_buffer_v, &
+                                   left_start,   left_expand,  &
+                                   left_buffer,  left_buffer_u,  left_buffer_v)
+      !------------------------------------------------------------------------
+      IMPLICIT NONE
+      !
+      TYPE(rismlaue_type)  :: obj
+      LOGICAL,  INTENT(IN) :: both_hands
+      INTEGER,  INTENT(IN) :: nfit
+      INTEGER,  INTENT(IN) :: pot_ref
+      REAL(DP), INTENT(IN) :: charge
+      REAL(DP), INTENT(IN) :: right_start
+      REAL(DP), INTENT(IN) :: right_expand
+      REAL(DP), INTENT(IN) :: right_buffer
+      REAL(DP), INTENT(IN) :: right_buffer_u
+      REAL(DP), INTENT(IN) :: right_buffer_v
+      REAL(DP), INTENT(IN) :: left_start
+      REAL(DP), INTENT(IN) :: left_expand
+      REAL(DP), INTENT(IN) :: left_buffer
+      REAL(DP), INTENT(IN) :: left_buffer_u
+      REAL(DP), INTENT(IN) :: left_buffer_v
+      !
+      CALL qes_init (obj, "rismlaue", both_hands, nfit, pot_ref, charge, &
+                     right_start,  right_expand, &
+                     right_buffer, right_buffer_u, right_buffer_v, &
+                     left_start,   left_expand,  &
+                     left_buffer,  left_buffer_u,  left_buffer_v)
+      !
+    END SUBROUTINE qexsd_init_rismlaue
 
  END MODULE qexsd_init

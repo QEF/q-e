@@ -95,6 +95,10 @@ libparo :
 	if test -d ParO ; then \
         ( cd ParO ; $(MAKE) all || exit 1 ) ; fi
 
+librmm : 
+	if test -d RMM ; then \
+        ( cd RMM ; $(MAKE) all || exit 1 ) ; fi
+
 libdense : 
 	if test -d DENSE ; then \
         ( cd DENSE ; $(MAKE) all || exit 1 ) ; fi
@@ -113,6 +117,7 @@ clean :
 	if test -d CG           ; then ( cd CG ; $(MAKE) clean ) ; fi
 	if test -d PPCG         ; then ( cd PPCG ; $(MAKE) clean ) ; fi
 	if test -d ParO         ; then ( cd ParO ; $(MAKE) clean ) ; fi
+	if test -d RMM          ; then ( cd RMM ; $(MAKE) clean ) ; fi
 	if test -d DENSE        ; then ( cd DENSE ; $(MAKE) clean ) ; fi
 	if test -d RMM          ; then ( cd RMM ; $(MAKE) clean ) ; fi
 	if test -d NewSolver    ; then ( cd NewSolver ; $(MAKE) clean ) ; fi

@@ -31,5 +31,5 @@ depend:
 
 phonon2.o: supp.o
 do_phonon2.o: supp.o
-phq_readin.o: supp.o
+phq_readin2.o: supp.o
 include ../../PHonon/PH/make.depend
