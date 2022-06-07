@@ -453,7 +453,7 @@
   <xsl:template match="optional" mode="syntax">
     <!--<div style="background: #eeeeee; color: #555555;">-->
     <xsl:text> { </xsl:text>
-    <xsl:apply-templates select="line | var | list | keyword | constant | etc | table" mode="syntax"/>
+    <xsl:apply-templates select="line | var | vargroup | list | keyword | constant | etc | table" mode="syntax"/>
     <xsl:text> } </xsl:text>	    
     <!--</div>-->
   </xsl:template>	      
@@ -462,7 +462,7 @@
 
   <xsl:template match="conditional" mode="syntax">
     <xsl:text> [ </xsl:text>
-    <xsl:apply-templates select="line | var | list | keyword | constant | etc | table" mode="syntax"/>
+    <xsl:apply-templates select="line | var | vargroup | list | keyword | constant | etc | table" mode="syntax"/>
     <xsl:text> ] </xsl:text>	    
   </xsl:template>	      
 
