@@ -1768,7 +1768,7 @@ MODULE read_namelists_module
           allowed = .FALSE.
        ENDIF
        IF (ANY(Hubbard_V(:,:,:)>eps24)) THEN
-          WRITE( stdout, '(/5x,"WARNING!!! The input parameter Hubbard_J is obsolete.")' )
+          WRITE( stdout, '(/5x,"WARNING!!! The input parameter Hubbard_V is obsolete.")' )
           allowed = .FALSE.
        ENDIF
        IF (ANY(backall(:))) THEN
@@ -1778,7 +1778,7 @@ MODULE read_namelists_module
        IF (.NOT.allowed) THEN
           WRITE( stdout, '(/5x,"WARNING!!! The input syntax for DFT+Hubbard codes has &
                &changed since v7.1")' )
-          WRITE( stdout, '(/5x,"WARNING!!! Check the new documentation!")' )
+          WRITE( stdout, '(/5x,"WARNING!!! Check the new documentation (Doc/Hubbard_input)!")' )
           CALL errore( sub_name, 'DFT+Hubbard input syntax has changed since v7.1', 1 )
        ENDIF
        !
