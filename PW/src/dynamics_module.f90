@@ -2085,7 +2085,7 @@ CONTAINS
       REAL(DP), INTENT(in) :: time, temp ! in ps, K
       INTEGER              :: iunit, i, k
       !
-      OPEN(UNIT = iunit, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // ".mdtrj", &
+      OPEN(NEWUNIT = iunit, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // ".mdtrj", &
          STATUS="unknown", POSITION="APPEND")
       !
       ! Time (ps), temp (K), total energy (Ry), unit cell (9 values, Ang),
