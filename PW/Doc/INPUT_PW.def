@@ -512,12 +512,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             default { .FALSE. }
             info {
                 If .TRUE. perform a 3D-RISM-SCF calculation
-                [for details see H.Sato et al., JCP 112, 9463 (2000)].
+                [for details see H.Sato et al., JCP 112, 9463 (2000), doi:10.1063/1.481564].
                 The solvent's distributions are calculated by 3D-RISM,
                 though solute is treated as SCF. The charge density and
                 the atomic positions are optimized, simultaneously with
                 the solvents. To perform the calculation, you must set
-                a namelist RISM and a card SOLVENTS.
+                a namelist @ref RISM and a card @ref SOLVENTS.
 
                 If @ref assume_isolated = 'esm' and @ref esm_bc = 'bc1',
                 Laue-RISM is calculated instead of 3D-RISM
@@ -2903,6 +2903,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             var fcp_mass -type REAL {
                 default {
                     5.D+6 / (xy area) for ESM only;
+                    5.D+4 / (xy area) for ESM-RISM
                 }
                 info {
                     Mass of the FCP.
@@ -3022,6 +3023,432 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
     }
+
+    #
+    # namelist RISM
+    #
+
+    namelist RISM {
+        label {
+            Input this namelist only if @ref trism = .TRUE.
+        }
+
+        var nsolv -type INTEGER {
+            status { REQUIRED }
+            info {
+                The number of solvents (i.e. molecular species) in the unit cell
+            }
+        }
+
+        var closure -type CHARACTER {
+            default { 'kh' }
+            options {
+                info {
+                    Specify the type of closure equation:
+                }
+                opt -val 'kh' {
+                    The Kovalenko and Hirata's model.
+                    [A.Kovalenko, F.Hirata, JCP 110, 10095 (1999), doi:10.1063/1.478883]
+                }
+                opt -val 'hnc' {
+                    The HyperNetted-Chain model, which is
+                    suitable only for solvents without charge.
+                    [J.P.Hansen et al., Theory of simple liquids. Academic Press, London, 1990]
+                }
+            }
+        }
+
+        var tempv -type REAL {
+            default { 300.D0 }
+            info {
+                Temperature (Kelvin) of solvents.
+            }
+        }
+
+        var ecutsolv -type REAL {
+            default { 4 * @ref ecutwfc }
+            info {
+                Kinetic energy cutoff (Ry) for solvent's correlation functions.
+                If a solute is an isolated system or slab, you may allowed to
+                use default value. For a frameworked or porous solute (e.g. Zeolite, MOF),
+                it is desirable to apply a larger value. Solvents confined in a framework
+                often have a high frequency.
+            }
+        }
+
+        dimension solute_lj -start 1 -end ntyp -type CHARACTER {
+            default { 'uff' }
+            options {
+                info {
+                    Specify the Lennard-Jones potential of solute on atomic type 'i':
+                }
+                opt -val 'none' {
+                    The Lennard-Jones potential is not specified here.
+                    you must set @ref solute_epsilon and @ref solute_sigma.
+                }
+                opt -val 'uff' {
+                    Universal Force Field.
+                    [A.K.Rappe et al., JACS 144, 10024 (1992), doi:10.1021/ja00051a040]
+                }
+                opt -val 'clayff' {
+                    Clay's Force Field
+                    [R.T.Cygan et al., JPC B 108, 1255 (2004), doi:10.1021/jp0363287]
+                }
+                opt -val 'opls-aa' {
+                    OPLS-AA (generic parameters for QM/MM)
+                }
+            }
+        }
+
+        dimension solute_epsilon -start 1 -end ntyp -type REAL {
+            info {
+                The Lennard-Jones potential of solute on atomic type 'i'.
+                Here, you can set the parameter 'epsilon' (kcal/mol).
+            }
+        }
+
+        dimension solute_sigma -start 1 -end ntyp -type REAL {
+            info {
+                The Lennard-Jones potential of solute on atomic type 'i'.
+                Here, you can set the parameter 'sigma' (Angstrom).
+            }
+        }
+
+        var starting1d -type CHARACTER {
+            options {
+                opt -val 'zero' {
+                    Starting correlation functions of 1D-RISM from zero.
+                    ( default for scf, *relax, *md )
+                }
+                opt -val 'file' {
+                    Start from existing "1d-rism_csvv_r.xml" file in the
+                    directory specified by variables "prefix" and "outdir".
+                }
+                opt -val 'fix' {
+                    Read from existing "1d-rism_csvv_r.xml" file in the
+                    directory specified by variables "prefix" and "outdir",
+                    and never calculate 1D-RISM.
+                    For nscf and bands calculation this is the default.
+                }
+            }
+        }
+
+        var starting3d -type CHARACTER {
+            options {
+                opt -val 'zero' {
+                    Starting correlation functions of 3D-RISM from zero.
+                    ( default for scf, *relax, *md )
+                }
+                opt -val 'file' {
+                    Start from existing "3d-rism_csuv_r.dat" file in the
+                    directory specified by variables "prefix" and "outdir".
+                    For nscf and bands calculation this is the default.
+                }
+            }
+        }
+
+        var smear1d -type REAL {
+            default { 2.D0 }
+            info {
+                Coulomb smearing radius (a.u.) for 1D-RISM.
+            }
+        }
+
+        var smear3d -type REAL {
+            default { 2.D0 }
+            info {
+                Coulomb smearing radius (a.u.) for 3D-RISM.
+            }
+        }
+
+        var rism1d_maxstep -type INTEGER {
+            default { 50000 }
+            info {
+                Maximum number of iterations in a 1D-RISM step.
+            }
+        }
+
+        var rism3d_maxstep -type INTEGER {
+            default { 5000 }
+            info {
+                Maximum number of iterations in a 3D-RISM step.
+            }
+        }
+
+        var rism1d_conv_thr -type REAL {
+            default { 1.D-8 }
+            info {
+                Convergence threshold for 1D-RISM.
+            }
+        }
+
+        var rism3d_conv_thr -type REAL {
+            default {
+                1.D-5 if @ref lgcscf == .FALSE.;
+                5.D-6 if @ref lgcscf == .TRUE.
+            }
+            info {
+                Convergence threshold for 3D-RISM.
+            }
+        }
+
+        var mdiis1d_size -type INTEGER {
+            default { 20 }
+            info {
+                Size of Modified DIIS (MDIIS) for 1D-RISM.
+            }
+        }
+
+        var mdiis3d_size -type INTEGER {
+            default { 10 }
+            info {
+                Size of Modified DIIS (MDIIS) for 3D-RISM.
+            }
+        }
+
+        var mdiis1d_step -type REAL {
+            default { 0.5D0 }
+            info {
+                Step of Modified DIIS (MDIIS) for 1D-RISM.
+            }
+        }
+
+        var mdiis3d_step -type REAL {
+            default { 0.8D0 }
+            info {
+                Step of Modified DIIS (MDIIS) for 3D-RISM.
+            }
+        }
+
+        var rism1d_bond_width -type REAL {
+            info {
+                Gaussian width of bonds to smear intra-molecular correlation for 1D-RISM.
+                If 3D-RISM calculation, default is 0.
+                If Laue-RISM calculation, default is 2 / SQRT(@ref ecutwfc).
+            }
+        }
+
+        var rism1d_dielectric -type REAL {
+            default { -1.0D0 }
+            info {
+                Dielectric constant for 1D-RISM.
+                If @ref rism1d_dielectric > 0, dielectrically consistent RISM (DRISM) is performed.
+
+                For details of DRISM, see:
+                J.S.Perkyns and B.M.Pettitt, CPL 1992, 190, 626, doi:10.1016/0009-2614(92)85201-K
+            }
+        }
+
+        var rism1d_molesize -type REAL {
+            default { 2.0D0 }
+            info {
+                Size of solvent molecules (a.u.) for 1D-RISM.
+                This is used only if @ref rism1d_dielectric > 0.
+                If you have large molecules, you have to set ~ 20 a.u. .
+            }
+        }
+
+        var rism1d_nproc -type INTEGER {
+            default { 128 }
+            info {
+                Number of processes to calculate 1D-RISM.
+            }
+        }
+
+        var rism3d_conv_level -type REAL {
+            default { 
+                0.1 if @ref laue_both_hands == .FALSE. .AND. @ref lgcscf == .FALSE.;
+                0.3 if @ref laue_both_hands == .FALSE. .AND. @ref lgcscf == .TRUE.;
+                0.5 if @ref laue_both_hands == .TRUE.
+            }
+            options {
+                info {
+                    Convergence level of 3D-RISM.
+                }
+                opt -val 0.0 {
+                    Convergence level is 'low'.
+                    Convergence threshold of 3D-RISM is greater than
+                    @ref rism3d_conv_thr, when estimated energy error >> @ref conv_thr .
+                    The threshold becomes @ref rism3d_conv_thr, when
+                    estimated energy error is enough small.
+                }
+                opt -val 0.0<x<1.0 {
+                    Convergence level is 'medium'.
+                    Convergence threshold of 3D-RISM is intermediate value
+                    between 'low' and 'high', where @ref rism3d_conv_level is mixing rate.
+                }
+                opt -val 1.0 {
+                    Convergence level is 'high'.
+                    Convergence threshold of 3D-RISM is always @ref rism3d_conv_thr .
+                }
+            }
+        }
+
+        var rism3d_planar_average -type LOGICAL {
+            info {
+                If .TRUE., planar averages of solvent densities and potentials
+                are calculated and written to 'prefix.rism1'.
+                For 3D-RISM, default is .FALSE.
+                For Laue-RISM, default is .TRUE.
+            }
+        }
+
+        var laue_nfit -type INTEGER {
+            default { 4 }
+            info {
+                The number of z-grid points for the polynomial fit along the cell edge.
+                This is only for Laue-RISM.
+            }
+        }
+
+        var laue_expand_right -type REAL {
+            default { -1.0 }
+            info {
+                If positive value, set the ending position offset [in a.u.]
+                of the solvent region on right-hand side of the unit cell,
+                measured relative to the unit cell edge.
+                (the solvent region ends at z = + [L_z/2 + @ref laue_expand_right].)
+                This is only for Laue-RISM.
+            }
+        }
+
+        var laue_expand_left -type REAL {
+            default { -1.0 }
+            info {
+                If positive value, set the ending position offset [in a.u.]
+                of the solvent region on left-hand side of the unit cell,
+                measured relative to the unit cell edge.
+                (the solvent region ends at z = - [L_z/2 + @ref laue_expand_left].)
+                This is only for Laue-RISM.
+            }
+        }
+
+        var laue_starting_right -type REAL {
+            default { 0.0 }
+            info {
+                Set the starting position [in a.u.] of the solvent region
+                on right-hand side of the unit cell. Then the solvent region is
+                defined as [ @ref laue_starting_right , L_z/2 + @ref laue_expand_right ],
+                where distribution functions are finite.
+                This is only for Laue-RISM.
+            }
+        }
+
+        var laue_starting_left -type REAL {
+            default { 0.0 }
+            info {
+                Set the starting position [in a.u.] of the solvent region
+                on left-hand side of the unit cell. Then the solvent region is
+                defined as [ -L_z/2 - @ref laue_expand_left , @ref laue_starting_left ],
+                where distribution functions are finite.
+                This is only for Laue-RISM.
+            }
+        }
+
+        var laue_buffer_right -type REAL {
+            default {
+                8.0 if @ref laue_expand_right > 0.0;
+               -1.0 if @ref laue_expand_right <= 0.0
+            }
+            info {
+                If positive value, set the buffering length [in a.u.]
+                of the solvent region on right-hand side of the unit cell.
+                Then correlation functions are defined inside of
+                [ @ref laue_starting_right - @ref laue_buffer_right , L_z/2 + @ref laue_expand_right ].
+                This is only for Laue-RISM.
+            }
+        }
+
+        var laue_buffer_left -type REAL {
+            default {
+                8.0 if @ref laue_expand_left > 0.0;
+               -1.0 if @ref laue_expand_left <= 0.0
+            }
+            info {
+                If positive value, set the buffering length [in a.u.]
+                of the solvent region on left-hand side of the unit cell.
+                Then correlation functions are defined inside of
+                [ -L_z/2 - @ref laue_expand_left , @ref laue_starting_left + @ref laue_buffer_left ].
+                This is only for Laue-RISM.
+            }
+        }
+
+        var laue_both_hands -type LOGICAL {
+            default { .FALSE. }
+            info {
+                If .TRUE., you can set different densities
+                to the solvent regions of right-hand side and left-hand side.
+                See @ref SOLVENTS card.
+            }
+        }
+
+        var laue_wall -type CHARACTER {
+            default { 'auto' }
+            options {
+                info {
+                    Set the repulsive wall with (1/r)^12 term of Lennard-Jones potential.
+                    This is only for Laue-RISM.
+                }
+                opt -val 'none' {
+                    The repulsive wall is not defined.
+                }
+                opt -val 'auto' {
+                    The repulsive wall is defined, whose edge position is set automatically.
+                    One does not have to set @ref laue_wall_z (the edge position).
+                }
+                opt -val 'manual' {
+                    The repulsive wall is defined, whose edge position is set manually.
+                    One have to set @ref laue_wall_z (the edge position).
+                }
+            }
+        }
+
+        var laue_wall_z -type REAL {
+            default { 0.0 }
+            info {
+                Set the edge position [in a.u.] of the repulsive wall.
+                If @ref laue_expand_right > 0.0, the repulsive wall is defined on [ -inf , @ref laue_wall_z ].
+                If @ref laue_expand_left > 0.0, the repulsive wall is defined on [ @ref laue_wall_z , inf ].
+                This is only for Laue-RISM and @ref laue_wall == 'manual' .
+            }
+        }
+
+        var laue_wall_rho -type REAL {
+            default { 0.01 }
+            info {
+                The density (1/bohr^3) of the repulsive wall.
+                This is only for Laue-RISM and @ref laue_wall /= 'none' .
+            }
+        }
+
+        var laue_wall_epsilon -type REAL {
+            default { 0.1 }
+            info {
+                The Lennard-Jones potential of the repulsive wall.
+                Here, you can set the parameter 'epsilon' (kcal/mol).
+                This is only for Laue-RISM and @ref laue_wall /= 'none' .
+            }
+        }
+
+        var laue_wall_sigma -type REAL {
+            default { 4.0 }
+            info {
+                The Lennard-Jones potential of the repulsive wall.
+                Here, you can set the parameter 'sigma' (Angstrom).
+                This is only for Laue-RISM and @ref laue_wall /= 'none' .
+            }
+        }
+
+        var laue_wall_lj6 -type LOGICAL {
+            default { .FALSE. }
+            info {
+                If .TRUE., the attractive term -(1/r)^6 of Lennard-Jones potential is added.
+                This is only for Laue-RISM and @ref laue_wall /= 'none' .
+            }
+        }
+    }
+
+
 
     #
     # card ATOMIC_SPECIES
@@ -3650,10 +4077,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             options {
                 opt -val 1/cell {
                     solvent's densities are specified
-                    as number of molecule in unit cell.
+                    as number of molecules in the unit cell.
                 }
                 opt -val mol/L {
-                    solvent's densities are in molar.
+                    solvent's densities are specified as molar concentrations.
                 }
                 opt -val g/cm^3 {
                     solvent's densities are in gram per cm^3.
