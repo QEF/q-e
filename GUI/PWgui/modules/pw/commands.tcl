@@ -36,11 +36,15 @@ proc ::pwscf::pwSelectPseudoDir {moduleObj} {
 
 
 # ------------------------------------------------------------------------
-#  ::pwscf::pwSelectPseudopotential --
-# ------------------------------------------------------------------------
+#  ::pwscf::pwSelectPPFile_
+#
+#  This "master" routine is used by ::pwscf::pwSelectPseudopotential &
+#  ::pwscf::pwSelectMOLfile because both PP and MOL files are read
+#  from pseudo_dir
+#  ------------------------------------------------------------------------
 
-proc ::pwscf::pwSelectPseudopotential {moduleObj variable ir ic} {
-    variable pwscf
+proc ::pwscf::pwSelectPPFile_ {moduleObj variable ir ic label} {
+     variable pwscf
     global env
         
     set _dir [string trim [$moduleObj varvalue pseudo_dir] "'"]
@@ -57,13 +61,20 @@ proc ::pwscf::pwSelectPseudopotential {moduleObj variable ir ic} {
         
     set file [tk_getOpenFile \
 		  -initialdir $dir \
-		  -title      "Select a Pseudopotential File"]    
+		  -title      $label]    
     if { $file == "" } {
 	return
     }
     set pwscf($moduleObj,LASTDIR,pseudopotential) [file dirname $file]
     
-    $moduleObj varset ${variable}($ir,$ic) -value [file tail $file]
+    $moduleObj varset ${variable}($ir,$ic) -value [file tail $file]    
+}
+proc ::pwscf::pwSelectPseudopotential {moduleObj variable ir ic} {
+    ::pwscf::pwSelectPPFile_ $moduleObj $variable $ir $ic "Select a Pseudopotential File" 
+}
+proc ::pwscf::pwSelectMOLfile {moduleObj variable ir ic} {
+    # MOL files are read from psudo_dir, hence use the ::pwscf::pwSelectPPFile_ routine
+    ::pwscf::pwSelectPPFile_ $moduleObj $variable $ir $ic "Select a Pseudopotential File" 
 }
 
 

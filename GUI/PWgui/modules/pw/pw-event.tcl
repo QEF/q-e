@@ -159,7 +159,17 @@ tracevar lfcp w {
 	groupwidget fcp disable
     }
 }
-    
+
+tracevar trism w {
+    if { [vartextvalue trism] == "Yes" } {
+	groupwidget rism enable
+        groupwidget solvents_card enable
+    } else {
+       	groupwidget rism disable
+        groupwidget solvents_card disable
+    } 
+}
+  
 tracevar gate w {
     if { [vartextvalue gate] == "Yes" } {
 	groupwidget gate_group enable
@@ -257,7 +267,7 @@ tracevar nat w {
 
 tracevar ntyp w {
     set ntyp [varvalue ntyp]
-    widgetconfigure atomic_species -rows $ntyp;
+    widgetconfigure atomic_species -rows $ntyp
 
     widgetconfigure starting_charge -end $ntyp
     widgetconfigure starting_magnetization -end $ntyp; # nspin-dependent
@@ -626,12 +636,35 @@ tracevar ion_velocities w {
     }
 }
 
+tracevar laue_both_hands w {
+    if { [vartextvalue laue_both_hands] == "Yes" } {
+        widget laue_one_hand_table forget
+        widget laue_both_hands_table create
+        widget laue_both_hands_table enable
+    } else {
+        widget laue_one_hand_table create
+        widget laue_one_hand_table enable
+        widget laue_both_hands_table forget
+    }
+}
+
+tracevar nsolv w {
+    set nsolv [varvalue nsolv]
+    if { $nsolv == "" || ! [string is integer $nsolv] || $nsolv < 1 } {
+        set nsolv 1
+    }
+    widgetconfigure laue_one_hand_table -rows $nsolv
+    widgetconfigure laue_both_hands_table -rows $nsolv
+}
+
 # ------------------------------------------------------------------------
 # POST-PROCESSING: assign default values for "traced" variables, ...
 # ------------------------------------------------------------------------
 postprocess {    
     varset calculation     -value 'scf'
     varset lfcp            -value {}
+    varset trism           -value {}
+    varset laue_both_hands -value {}
     varset gate            -value {}
     varset ibrav           -value {}
     varset how_lattice     -value celldm
@@ -654,7 +687,7 @@ postprocess {
     # unused variables
     groupwidget unused_1 disable
     #groupwidget vdw_obsolete disable
-
+    
     varset specify_atomic_forces -value .false.
     varset specify_add_kpoints   -value .false.
 }
