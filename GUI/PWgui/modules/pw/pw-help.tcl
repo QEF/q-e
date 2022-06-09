@@ -672,35 +672,6 @@ The same for calculation with finite electric fields
 
 
 # ------------------------------------------------------------------------
-help lfcp -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>lfcp</b></big>
-</li>
-<br><li> <em>Type: </em>LOGICAL</li>
-<br><li> <em>Default: </em> .FALSE.
-         </li>
-<br><li> <em>See: </em> fcp_mu
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-If .TRUE. perform a constant bias potential (constant-mu) calculation
-for a system with ESM method. See the header of PW/src/fcp_module.f90
-for documentation. To perform the calculation, you must set a namelist FCP.
-
-NB:
-- The total energy displayed in output includes the potentiostat
-  contribution (-mu*N).
-- "calculation" must be 'relax' or 'md'.
-- "assume_isolated" = 'esm' and "esm_bc" = 'bc2' or 'bc3' must be set
-  in "SYSTEM" namelist.
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
 help gate -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>gate</b></big>
@@ -725,6 +696,71 @@ that no symmetry is included which maps <i>z</i> to -<i>z</i> even if in princip
 could still use them for symmetric systems (i.e. no dipole correction).
 For "nosym"=.false. verbosity is set to 'high'.
 Note: this option was called "monopole" in v6.0 and 6.1 of pw.x
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help lfcp -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>lfcp</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .TRUE. perform a constant bias potential (constant-mu) calculation
+for a system with ESM method. See the header of PW/src/fcp_module.f90
+for documentation. To perform the calculation, you must set a namelist FCP.
+
+NB:
+- The total energy displayed in output includes the potentiostat
+  contribution (-mu*N).
+- "calculation" must be 'relax' or 'md'.
+- "assume_isolated" = 'esm' and "esm_bc" = 'bc2' or 'bc3' must be set
+  in "SYSTEM" namelist.
+- ESM-RISM is also supported ("assume_isolated" = 'esm' and "esm_bc" = 'bc1'
+  and "trism" = .TRUE.).
+- "ignore_wolfe" is always .TRUE., for BFGS.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help trism -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>trism</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .TRUE. perform a 3D-RISM-SCF calculation
+[for details see H.Sato et al., JCP 112, 9463 (2000), "doi:10.1063/1.481564"].
+The solvent's distributions are calculated by 3D-RISM,
+though solute is treated as SCF. The charge density and
+the atomic positions are optimized, simultaneously with
+the solvents. To perform the calculation, you must set
+a namelist "RISM" and a card "SOLVENTS".
+
+If "assume_isolated" = 'esm' and "esm_bc" = 'bc1',
+Laue-RISM is calculated instead of 3D-RISM
+and coupled with ESM method (i.e. ESM-RISM).
+[for details see S.Nishihara and M.Otani, "PRB 96, 115429 (2017)"].
+
+The default of "mixing_beta" is 0.2
+for both 3D-RISM and Laue-RISM.
+
+For structural relaxation with BFGS,
+"ignore_wolfe" is always .TRUE. .
          </pre></blockquote>
 </ul>      
       
@@ -1876,108 +1912,26 @@ evaluation
 
 
 # ------------------------------------------------------------------------
-help lda_plus_u -helpfmt helpdoc -helptext {
+help Hubbard_occ -helpfmt helpdoc -helptext {
       <ul>
-<li> <em>Variable: </em><big><b>lda_plus_u</b></big>
-</li>
-<br><li> <em>Type: </em>LOGICAL</li>
-<br><li> <em>Default: </em> .FALSE.
-         </li>
-<br><li> <em>Status: </em>
-DFT+U (formerly known as LDA+U) currently works only for
-a few selected elements. Modify <tt>Modules/set_hubbard_l.f90</tt> and
-<tt>PW/src/tabd.f90</tt> if you plan to use DFT+U with an element that
-is not configured there.
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-Specify "lda_plus_u" = .TRUE. to enable <b>DFT+U,</b> <b>DFT+U+V,</b> or <b>DFT+U+J</b> calculations.
-See: Anisimov, Zaanen, and Andersen, "PRB 44, 943 (1991)";
-     Anisimov et al., "PRB 48, 16929 (1993)";
-     Liechtenstein, Anisimov, and Zaanen, "PRB 52, R5467 (1994)".
-You must specify, for each Hubbard atom, the value of
-U and (optionally) V, J, alpha of the Hubbard model (all in eV):
-see "lda_plus_u_kind", "Hubbard_U", "Hubbard_V",
-"Hubbard_J", "Hubbard_alpha"
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help lda_plus_u_kind -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>lda_plus_u_kind</b></big>
-</li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 0
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote>
-<pre> Specifies the type of calculation:
-            </pre>
-<dl style="margin-left: 1.5em;">
-<dt><tt><b>lda_plus_u_kind = 0</b> :</tt></dt>
-<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-DFT+U simplified version of Cococcioni and de Gironcoli,
-"PRB 71, 035105 (2005)", using "Hubbard_U"
-            </pre></dd>
-</dl>
-<dl style="margin-left: 1.5em;">
-<dt><tt><b>lda_plus_u_kind = 1</b> :</tt></dt>
-<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-DFT+U rotationally invariant scheme of Liechtenstein et al.,
-using "Hubbard_U" and "Hubbard_J"
-            </pre></dd>
-</dl>
-<dl style="margin-left: 1.5em;">
-<dt><tt><b>lda_plus_u_kind = 2</b> :</tt></dt>
-<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-DFT+U+V simplified version of Campo Jr and Cococcioni,
-J. Phys.: Condens. Matter 22, 055602 (2010), "doi:10.1088/0953-8984/22/5/055602",
-using "Hubbard_V"
-            </pre></dd>
-</dl>
-</blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help Hubbard_U -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variables: </em><big><b>Hubbard_U(i), i=1,ntyp</b></big>
+<li> <em>Variables: </em><big><b>Hubbard_occ(ityp,i), (ityp,i) = (1,1) ... (ntyp,3)</b></big>
 </li>
 <br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 0.D0 for all species
+<br><li> <em>Default: </em> read from pseudopotentials
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Hubbard_U(i): U parameter (eV) for species i, DFT+U calculation
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help Hubbard_J0 -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variables: </em><big><b>Hubbard_J0(i), i=1,ntype</b></big>
-</li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 0.D0 for all species
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-Hubbard_J0(i): J0 parameter (eV) for species i, DFT+U+J calculation,
-see "PRB 84, 115108 (2011)" for details.
+Hubbard occupations is the number of electrons in the
+Hubbard manifold. By default they are initialized by
+reading the occupations from pseudopotentials. If specified
+from the input, then the values read from the pseudopotentials
+will be overwritten.
+The second index of the Hubbard_occ array corresponds to the
+Hubbard manifold number. It is possible to specify up to
+three Hubbard manifolds per Hubbard atom. However, if you want
+to specify three manifolds then the second and the third manifolds
+will be considered as one effective manifold (see Doc/Hubbard_input.pdf)
          </pre></blockquote>
 </ul>      
       
@@ -2027,111 +1981,6 @@ Cococcioni and de Gironcoli, "PRB 71, 035105 (2005)"
 (only for "lda_plus_u_kind"=0 and 2). See also
 "PRB 84, 115108 (2011)".
          </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help U_projection_type -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>U_projection_type</b></big>
-</li>
-<br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Default: </em> 'atomic'
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote>
-<pre>
-Only active when "lda_plus_U" is .true., specifies the type
-of projector on localized orbital to be used in the DFT+U
-scheme.
-
-Currently available choices:
-            </pre>
-<dl style="margin-left: 1.5em;">
-<dt><tt><b>'atomic'</b> :</tt></dt>
-<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> use atomic wfc's (as they are) to build the projector
-            </pre></dd>
-</dl>
-<dl style="margin-left: 1.5em;">
-<dt><tt><b>'ortho-atomic'</b> :</tt></dt>
-<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> use Lowdin orthogonalized atomic wfc's
-            </pre></dd>
-</dl>
-<dl style="margin-left: 1.5em;">
-<dt><tt><b>'norm-atomic'</b> :</tt></dt>
-<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-Lowdin normalization of atomic wfc. Keep in mind:
-atomic wfc are not orthogonalized in this case.
-This is a "quick and dirty" trick to be used when
-atomic wfc from the pseudopotential are not
-normalized (and thus produce occupation whose
-value exceeds unity). If orthogonalized wfc are
-not needed always try <b>'atomic'</b> first.
-            </pre></dd>
-</dl>
-<dl style="margin-left: 1.5em;">
-<dt><tt><b>'file'</b> :</tt></dt>
-<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-use the information from file "prefix".atwfc that must
-have been generated previously, for instance by pmw.x
-(see PP/src/poormanwannier.f90 for details).
-            </pre></dd>
-</dl>
-<dl style="margin-left: 1.5em;">
-<dt><tt><b>'pseudo'</b> :</tt></dt>
-<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-use the pseudopotential projectors. The charge density
-outside the atomic core radii is excluded.
-N.B.: for atoms with +U, a pseudopotential with the
-all-electron atomic wavefunctions is required (i.e.,
-as generated by ld1.x with lsave_wfc flag).
-            </pre></dd>
-</dl>
-<pre>
-NB: forces and stress currently implemented only for the
-'atomic' and 'pseudo' choice.
-            </pre>
-</blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help Hubbard_parameters -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>Hubbard_parameters</b></big>
-</li>
-<br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Default: </em> 'input'
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote>
-<pre>
-Available choices:
-            </pre>
-<dl style="margin-left: 1.5em;">
-<dt><tt><b>'input'</b> :</tt></dt>
-<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-read the "Hubbard_U" (or "Hubbard_V") parameters from
-the PW input file
-            </pre></dd>
-</dl>
-<dl style="margin-left: 1.5em;">
-<dt><tt><b>'file'</b> :</tt></dt>
-<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-read the "Hubbard_V" parameters from the file "parameters.in"
-which can be generated after the linear-response calculation
-(using the HP code). This option has a higher priority over
-the "Hubbard_V" if they are specified in the input. This option
-can be used only when "lda_plus_u_kind" = 2.
-            </pre></dd>
-</dl>
-</blockquote>
 </ul>      
       
 }
@@ -3706,6 +3555,22 @@ For conjugate gradient diagonalization:  max number of iterations
 
 
 # ------------------------------------------------------------------------
+help diago_ppcg_maxiter -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>diago_ppcg_maxiter</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+For <b>ppcg</b> diagonalization:  max number of iterations
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help diago_david_ndim -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>diago_david_ndim</b></big>
@@ -3731,27 +3596,6 @@ compared to the time spent in h_psi
 
 
 # ------------------------------------------------------------------------
-help diago_full_acc -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>diago_full_acc</b></big>
-</li>
-<br><li> <em>Type: </em>LOGICAL</li>
-<br><li> <em>Default: </em> .FALSE.
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-If .TRUE. all the empty states are diagonalized at the same level
-of accuracy of the occupied ones. Otherwise the empty states are
-diagonalized using a larger threshold (this should not affect
-total energy, forces, and other ground-state properties).
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
 help diago_rmm_ndim -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>diago_rmm_ndim</b></big>
@@ -3762,7 +3606,8 @@ help diago_rmm_ndim -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Max dimension  of the iterative subspace for RMM-DIIS diagonalization
+For RMM-DIIS diagonalization: dimension of workspace
+(number of wavefunction packets, at least 2 needed).
          </pre></blockquote>
 </ul>      
       
@@ -3780,8 +3625,48 @@ help diago_rmm_conv -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If .TRUE. during the SCF loop the RMM-DIIS is reiterated until all bands
-are converged or up to a max of 8 times.
+If .TRUE., RMM-DIIS is performed up to converge.
+If .FALSE., RMM-DIIS is performed only once.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help diago_gs_nblock -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>diago_gs_nblock</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 16
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+For RMM-DIIS diagonalization:
+blocking size of Gram-Schmidt orthogonalization
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help diago_full_acc -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>diago_full_acc</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .TRUE. all the empty states are diagonalized at the same level
+of accuracy of the occupied ones. Otherwise the empty states are
+diagonalized using a larger threshold (this should not affect
+total energy, forces, and other ground-state properties).
          </pre></blockquote>
 </ul>      
       
@@ -4927,12 +4812,43 @@ Select which of the cell parameters should be moved:
 <dl style="margin-left: 1.5em;">
 <dt><tt><b>'ibrav'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-all axis and angles are moved, but the lattice remains consistent
-with the initial ibrav choice. You can use this option in combination
-with any other one by specifying "ibrav+option". Please note that some
-combinations do not make sense for some crystals and will guarantee that
-the relax will never converge. E.g. 'ibrav+2Dxy' is not a problem for
-hexagonal cells, but will never converge for cubic ones.
+all axis and angles are moved,
+               but the lattice remains consistent
+               with the initial ibrav choice. You can use this option in combination
+               with any other one by specifying "ibrav+option". Please note that some
+               combinations do not make sense for some crystals and will guarantee that
+               the relax will never converge. E.g. 'ibrav+2Dxy' is not a problem for
+               hexagonal cells, but will never converge for cubic ones.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'a'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> the x component of axis 1 (v1_x) is fixed
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'b'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> the y component of axis 2 (v2_y) is fixed
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'c'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> the z component of axis 3 (v3_z) is fixed
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'fixa'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> axis 1 (v1_x,v1_y,v1_z) is fixed
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'fixb'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> axis 2 (v2_x,v2_y,v2_z) is fixed
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'fixc'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> axis 3 (v3_x,v3_y,v3_z) is fixed
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
@@ -5148,6 +5064,7 @@ help fcp_mass -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>REAL</li>
 <br><li> <em>Default: </em>
 5.D+6 / (xy area) for ESM only;
+5.D+4 / (xy area) for ESM-RISM
             </li>
 <br><li> <em>Description:</em>
 </li>
@@ -5374,6 +5291,890 @@ to perform relaxation or dynamics only with FCP.
 
 
 # ------------------------------------------------------------------------
+help nsolv -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>nsolv</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Status: </em> REQUIRED
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+The number of solvents (i.e. molecular species) in the unit cell
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help closure -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>closure</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'kh'
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote>
+<pre>
+Specify the type of closure equation:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'kh'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+The Kovalenko and Hirata's model.
+[A.Kovalenko, F.Hirata, JCP 110, 10095 (1999), "doi:10.1063/1.478883"]
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'hnc'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+The HyperNetted-Chain model, which is
+suitable only for solvents without charge.
+[J.P.Hansen et al., Theory of simple liquids. Academic Press, London, 1990]
+            </pre></dd>
+</dl>
+</blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help tempv -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>tempv</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 300.D0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Temperature (Kelvin) of solvents.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help ecutsolv -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>ecutsolv</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 4 * "ecutwfc"
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Kinetic energy cutoff (Ry) for solvent's correlation functions.
+If a solute is an isolated system or slab, you may allowed to
+use default value. For a frameworked or porous solute (e.g. Zeolite, MOF),
+it is desirable to apply a larger value. Solvents confined in a framework
+often have a high frequency.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help solute_lj -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variables: </em><big><b>solute_lj(i), i=1,ntyp</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'uff'
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote>
+<pre>
+Specify the Lennard-Jones potential of solute on atomic type 'i':
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'none'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+The Lennard-Jones potential is not specified here.
+you must set "solute_epsilon" and "solute_sigma".
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'uff'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Universal Force Field.
+[A.K.Rappe et al., JACS 144, 10024 (1992), "doi:10.1021/ja00051a040"]
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'clayff'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Clay's Force Field
+[R.T.Cygan et al., JPC B 108, 1255 (2004), "doi:10.1021/jp0363287"]
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'opls-aa'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+OPLS-AA (generic parameters for QM/MM)
+            </pre></dd>
+</dl>
+</blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help solute_epsilon -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variables: </em><big><b>solute_epsilon(i), i=1,ntyp</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+The Lennard-Jones potential of solute on atomic type 'i'.
+Here, you can set the parameter 'epsilon' (kcal/mol).
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help solute_sigma -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variables: </em><big><b>solute_sigma(i), i=1,ntyp</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+The Lennard-Jones potential of solute on atomic type 'i'.
+Here, you can set the parameter 'sigma' (Angstrom).
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help starting1d -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>starting1d</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'zero'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Starting correlation functions of 1D-RISM from zero.
+( default for scf, *relax, *md )
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'file'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Start from existing "1d-rism_csvv_r.xml" file in the
+directory specified by variables "prefix" and "outdir".
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'fix'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Read from existing "1d-rism_csvv_r.xml" file in the
+directory specified by variables "prefix" and "outdir",
+and never calculate 1D-RISM.
+For nscf and bands calculation this is the default.
+            </pre></dd>
+</dl>
+</blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help starting3d -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>starting3d</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'zero'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Starting correlation functions of 3D-RISM from zero.
+( default for scf, *relax, *md )
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'file'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Start from existing "3d-rism_csuv_r.dat" file in the
+directory specified by variables "prefix" and "outdir".
+For nscf and bands calculation this is the default.
+            </pre></dd>
+</dl>
+</blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help smear1d -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>smear1d</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 2.D0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Coulomb smearing radius (a.u.) for 1D-RISM.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help smear3d -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>smear3d</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 2.D0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Coulomb smearing radius (a.u.) for 3D-RISM.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help rism1d_maxstep -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>rism1d_maxstep</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 50000
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Maximum number of iterations in a 1D-RISM step.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help rism3d_maxstep -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>rism3d_maxstep</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 5000
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Maximum number of iterations in a 3D-RISM step.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help rism1d_conv_thr -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>rism1d_conv_thr</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 1.D-8
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Convergence threshold for 1D-RISM.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help rism3d_conv_thr -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>rism3d_conv_thr</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em>
+1.D-5 if "lgcscf" == .FALSE.;
+5.D-6 if "lgcscf" == .TRUE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Convergence threshold for 3D-RISM.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help mdiis1d_size -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>mdiis1d_size</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 20
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Size of Modified DIIS (MDIIS) for 1D-RISM.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help mdiis3d_size -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>mdiis3d_size</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 10
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Size of Modified DIIS (MDIIS) for 3D-RISM.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help mdiis1d_step -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>mdiis1d_step</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.5D0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Step of Modified DIIS (MDIIS) for 1D-RISM.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help mdiis3d_step -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>mdiis3d_step</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.8D0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Step of Modified DIIS (MDIIS) for 3D-RISM.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help rism1d_bond_width -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>rism1d_bond_width</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Gaussian width of bonds to smear intra-molecular correlation for 1D-RISM.
+If 3D-RISM calculation, default is 0.
+If Laue-RISM calculation, default is 2 / SQRT("ecutwfc").
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help rism1d_dielectric -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>rism1d_dielectric</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> -1.0D0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Dielectric constant for 1D-RISM.
+If "rism1d_dielectric" &gt; 0, dielectrically consistent RISM (DRISM) is performed.
+
+For details of DRISM, see:
+J.S.Perkyns and B.M.Pettitt, CPL 1992, 190, 626, "doi:10.1016/0009-2614(92)85201-K"
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help rism1d_molesize -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>rism1d_molesize</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 2.0D0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Size of solvent molecules (a.u.) for 1D-RISM.
+This is used only if "rism1d_dielectric" &gt; 0.
+If you have large molecules, you have to set ~ 20 a.u. .
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help rism1d_nproc -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>rism1d_nproc</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 128
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Number of processes to calculate 1D-RISM.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help rism3d_conv_level -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>rism3d_conv_level</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em>
+0.1 if "laue_both_hands" == .FALSE. .AND. "lgcscf" == .FALSE.;
+0.3 if "laue_both_hands" == .FALSE. .AND. "lgcscf" == .TRUE.;
+0.5 if "laue_both_hands" == .TRUE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote>
+<pre>
+Convergence level of 3D-RISM.
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>0.0</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Convergence level is 'low'.
+Convergence threshold of 3D-RISM is greater than
+"rism3d_conv_thr", when estimated energy error &gt;&gt; "conv_thr" .
+The threshold becomes "rism3d_conv_thr", when
+estimated energy error is enough small.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>0.0&lt;x&lt;1.0</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Convergence level is 'medium'.
+Convergence threshold of 3D-RISM is intermediate value
+between 'low' and 'high', where "rism3d_conv_level" is mixing rate.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>1.0</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Convergence level is 'high'.
+Convergence threshold of 3D-RISM is always "rism3d_conv_thr" .
+            </pre></dd>
+</dl>
+</blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help rism3d_planar_average -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>rism3d_planar_average</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .TRUE., planar averages of solvent densities and potentials
+are calculated and written to 'prefix.rism1'.
+For 3D-RISM, default is .FALSE.
+For Laue-RISM, default is .TRUE.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help laue_nfit -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>laue_nfit</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 4
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+The number of z-grid points for the polynomial fit along the cell edge.
+This is only for Laue-RISM.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help laue_expand_right -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>laue_expand_right</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> -1.0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If positive value, set the ending position offset [in a.u.]
+of the solvent region on right-hand side of the unit cell,
+measured relative to the unit cell edge.
+(the solvent region ends at z = + [L_z/2 + "laue_expand_right"].)
+This is only for Laue-RISM.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help laue_expand_left -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>laue_expand_left</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> -1.0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If positive value, set the ending position offset [in a.u.]
+of the solvent region on left-hand side of the unit cell,
+measured relative to the unit cell edge.
+(the solvent region ends at z = - [L_z/2 + "laue_expand_left"].)
+This is only for Laue-RISM.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help laue_starting_right -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>laue_starting_right</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Set the starting position [in a.u.] of the solvent region
+on right-hand side of the unit cell. Then the solvent region is
+defined as [ "laue_starting_right" , L_z/2 + "laue_expand_right" ],
+where distribution functions are finite.
+This is only for Laue-RISM.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help laue_starting_left -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>laue_starting_left</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Set the starting position [in a.u.] of the solvent region
+on left-hand side of the unit cell. Then the solvent region is
+defined as [ -L_z/2 - "laue_expand_left" , "laue_starting_left" ],
+where distribution functions are finite.
+This is only for Laue-RISM.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help laue_buffer_right -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>laue_buffer_right</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em>
+ 8.0 if "laue_expand_right" &gt; 0.0;
+-1.0 if "laue_expand_right" &lt;= 0.0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If positive value, set the buffering length [in a.u.]
+of the solvent region on right-hand side of the unit cell.
+Then correlation functions are defined inside of
+[ "laue_starting_right" - "laue_buffer_right" , L_z/2 + "laue_expand_right" ].
+This is only for Laue-RISM.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help laue_buffer_left -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>laue_buffer_left</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em>
+ 8.0 if "laue_expand_left" &gt; 0.0;
+-1.0 if "laue_expand_left" &lt;= 0.0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If positive value, set the buffering length [in a.u.]
+of the solvent region on left-hand side of the unit cell.
+Then correlation functions are defined inside of
+[ -L_z/2 - "laue_expand_left" , "laue_starting_left" + "laue_buffer_left" ].
+This is only for Laue-RISM.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help laue_both_hands -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>laue_both_hands</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .TRUE., you can set different densities
+to the solvent regions of right-hand side and left-hand side.
+See "SOLVENTS" card.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help laue_wall -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>laue_wall</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'auto'
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote>
+<pre>
+Set the repulsive wall with (1/r)^12 term of Lennard-Jones potential.
+This is only for Laue-RISM.
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'none'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+The repulsive wall is not defined.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'auto'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+The repulsive wall is defined, whose edge position is set automatically.
+One does not have to set "laue_wall_z" (the edge position).
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'manual'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+The repulsive wall is defined, whose edge position is set manually.
+One have to set "laue_wall_z" (the edge position).
+            </pre></dd>
+</dl>
+</blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help laue_wall_z -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>laue_wall_z</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Set the edge position [in a.u.] of the repulsive wall.
+If "laue_expand_right" &gt; 0.0, the repulsive wall is defined on [ -inf , "laue_wall_z" ].
+If "laue_expand_left" &gt; 0.0, the repulsive wall is defined on [ "laue_wall_z" , inf ].
+This is only for Laue-RISM and "laue_wall" == 'manual' .
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help laue_wall_rho -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>laue_wall_rho</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.01
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+The density (1/bohr^3) of the repulsive wall.
+This is only for Laue-RISM and "laue_wall" /= 'none' .
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help laue_wall_epsilon -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>laue_wall_epsilon</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.1
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+The Lennard-Jones potential of the repulsive wall.
+Here, you can set the parameter 'epsilon' (kcal/mol).
+This is only for Laue-RISM and "laue_wall" /= 'none' .
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help laue_wall_sigma -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>laue_wall_sigma</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 4.0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+The Lennard-Jones potential of the repulsive wall.
+Here, you can set the parameter 'sigma' (Angstrom).
+This is only for Laue-RISM and "laue_wall" /= 'none' .
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help laue_wall_lj6 -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>laue_wall_lj6</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .TRUE., the attractive term -(1/r)^6 of Lennard-Jones potential is added.
+This is only for Laue-RISM and "laue_wall" /= 'none' .
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help atomic_species -helpfmt helpdoc -helptext {
     <ul>
 <li> <em>Variable: </em><big><b>X</b></big>
@@ -5426,7 +6227,58 @@ none of the above  old PWscf norm-conserving format
 
 # ------------------------------------------------------------------------
 help ATOMIC_POSITIONS_flags -helpfmt helpdoc -helptext {
-      <h2>Description of ATOMIC_POSITIONS card's flags</h2><pre></pre>
+      <h2>Description of ATOMIC_POSITIONS card's flags</h2><li> <em>Description:</em>
+</li><blockquote>
+<pre>
+Units for ATOMIC_POSITIONS:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>alat</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+atomic positions are in cartesian coordinates, in
+units of the lattice parameter (either celldm(1)
+or A). If no option is specified, 'alat' is assumed;
+not specifying units is DEPRECATED and will no
+longer be allowed in the future
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>bohr</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+atomic positions are in cartesian coordinate,
+in atomic units (i.e. Bohr radii)
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>angstrom</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+atomic positions are in cartesian coordinates, in Angstrom
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>crystal</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+atomic positions are in crystal coordinates, i.e.
+in relative coordinates of the primitive lattice
+vectors as defined either in card "CELL_PARAMETERS"
+or via the ibrav + celldm / a,b,c... variables
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>crystal_sg</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+atomic positions are in crystal coordinates, i.e.
+in relative coordinates of the primitive lattice.
+This option differs from the previous one because
+in this case only the symmetry inequivalent atoms
+are given. The variable "space_group" must indicate
+the space group number used to find the symmetry
+equivalent atoms. The other variables that control
+this option are uniqueb, origin_choice, and
+rhombohedral.
+            </pre></dd>
+</dl>
+</blockquote>
       
 }
 
@@ -5513,7 +6365,88 @@ atoms.
 
 # ------------------------------------------------------------------------
 help K_POINTS_flags -helpfmt helpdoc -helptext {
-      <h2>Description of K_POINTS card's flags</h2><pre></pre>
+      <h2>Description of K_POINTS card's flags</h2><li> <em>Description:</em>
+</li><blockquote>
+<pre>
+K_POINTS options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>tpiba</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+read k-points in cartesian coordinates,
+in units of 2 pi/a (default)
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>automatic</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+automatically generated uniform grid of k-points, i.e,
+generates ( nk1, nk2, nk3 ) grid with ( sk1, sk2, sk3 ) offset.
+nk1, nk2, nk3 as in Monkhorst-Pack grids
+k1, k2, k3 must be 0 ( no offset ) or 1 ( grid displaced
+by half a grid step in the corresponding direction )
+BEWARE: only grids having the full symmetry of the crystal
+        work with tetrahedra. Some grids with offset may not work.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>crystal</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+read k-points in crystal coordinates, i.e. in relative
+coordinates of the reciprocal lattice vectors
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>gamma</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+use k = 0 (no need to list k-point specifications after card)
+In this case wavefunctions can be chosen as real,
+and specialized subroutines optimized for calculations
+at the gamma point are used (memory and cpu requirements
+are reduced by approximately one half).
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>tpiba_b</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Used for band-structure plots.
+See Doc/brillouin_zones.pdf for usage of BZ labels;
+otherwise, k-points are in units of  2 pi/a.
+nks points specify nks-1 lines in reciprocal space.
+Every couple of points identifies the initial and
+final point of a line. pw.x generates N intermediate
+points of the line where N is the weight of the first point.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>crystal_b</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+As tpiba_b, but k-points are in crystal coordinates.
+See Doc/brillouin_zones.pdf for usage of BZ labels.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>tpiba_c</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Used for band-structure contour plots.
+k-points are in units of  2 <i>pi/a.</i> nks must be 3.
+3 k-points k_0, k_1, and k_2 specify a rectangle
+in reciprocal space of vertices k_0, k_1, k_2,
+k_1 + k_2 - k_0: k_0 + \alpha (k_1-k_0)+
+\beta (k_2-k_0) with 0 &lt;\alpha,\beta &lt; 1.
+The code produces a uniform mesh n1 x n2
+k points in this rectangle. n1 and n2 are
+the weights of k_1 and k_2. The weight of k_0
+is not used.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>crystal_c</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+As tpiba_c, but k-points are in crystal coordinates.
+            </pre></dd>
+</dl>
+</blockquote>
       
 }
 
@@ -5611,9 +6544,10 @@ half a grid step in the corresponding direction ).
 
 # ------------------------------------------------------------------------
 help ADDITIONAL_K_POINTS_flags -helpfmt helpdoc -helptext {
-      <h2>Description of ADDITIONAL_K_POINTS card's flags</h2><pre>
-for the explanation of the K_POINTS' options, see K_POINTS
-         </pre>
+      <h2>Description of ADDITIONAL_K_POINTS card's flags</h2><li> <em>Description:</em>
+</li><blockquote><pre>
+for the explanation of the K_POINTS' options, see "K_POINTS"
+         </pre></blockquote>
       
 }
 
@@ -5635,21 +6569,22 @@ help nks_add -helpfmt helpdoc -helptext {
 
 # ------------------------------------------------------------------------
 help CELL_PARAMETERS_flags -helpfmt helpdoc -helptext {
-      <h2>Description of CELL_PARAMETERS card's flags</h2><pre>
+      <h2>Description of CELL_PARAMETERS card's flags</h2><li> <em>Description:</em>
+</li><blockquote><pre>
 Unit for lattice vectors; options are:
 
-'bohr' / 'angstrom':
+<b>'bohr'</b> / <b>'angstrom':</b>
                      lattice vectors in bohr-radii / angstrom.
                      In this case the lattice parameter alat = sqrt(v1*v1).
 
-'alat' / nothing specified:
+<b>'alat'</b> / nothing specified:
                      lattice vectors in units of the lattice parameter (either
-                     celldm(1) or A). Not specifying units is DEPRECATED
+                     "celldm"(1) or "A"). Not specifying units is DEPRECATED
                      and will not be allowed in the future.
 
 If neither unit nor lattice parameter are specified,
 'bohr' is assumed - DEPRECATED, will no longer be allowed
-         </pre>
+         </pre></blockquote>
       
 }
 
@@ -5826,5 +6761,101 @@ external force on atom X (cartesian components, Ry/a.u. units)
                   </pre></blockquote>
 </ul>   
     
+}
+
+
+# ------------------------------------------------------------------------
+help SOLVENTS_flags -helpfmt helpdoc -helptext {
+      <h2>Description of SOLVENTS card's flags</h2><li> <em>Description:</em>
+</li><blockquote>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>1/cell</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+solvent's densities are specified
+as number of molecules in the unit cell.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>mol/L</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+solvent's densities are specified as molar concentrations.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>g/cm^3</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+solvent's densities are in gram per cm^3.
+            </pre></dd>
+</dl>
+</blockquote>
+      
+}
+
+
+# ------------------------------------------------------------------------
+help HUBBARD_flags -helpfmt helpdoc -helptext {
+      <h2>Description of HUBBARD card's flags</h2><li> <em>Description:</em>
+</li><blockquote>
+<pre>
+<b>HUBBARD</b> options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>atomic</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+use atomic orbitals (read from pseudopotential) to build the
+Hubbard projectors
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>ortho-atomic</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+use Lowdin orthogonalized atomic orbitals. This option is
+recommended to be used whenever possible instead of atomic
+because it allows to avoid applying Hubbard corrections twice
+in the orbital overlap regions.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>norm-atomic</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Lowdin normalization of atomic orbitals. Keep in mind:
+atomic orbitals are not orthogonalized in this case.
+This is a "quick and dirty" trick to be used when
+atomic orbitals from the pseudopotential are not
+normalized (and thus produce occupation whose
+value exceeds unity).
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>wf</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+use Wannier functions to built Hubbard projectors.
+The information about the Wannier functionas are read
+from file "prefix".hub that must be generated using pmw.x
+(see PP/src/poormanwannier.f90 for details).
+Note: these are not maximally localized Wannier functions.
+(see PP/examples/example05)
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>pseudo</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+use the pseudopotential projectors. The charge density
+outside the atomic core radii is excluded.
+N.B.: for atoms with +U, a pseudopotential with the
+all-electron atomic orbitals are required (i.e.,
+as generated by ld1.x with lsave_wfc flag).
+            </pre></dd>
+</dl>
+<pre>
+NB: forces and stress are currently implemented only for the
+'atomic', 'ortho-atomic', and 'pseudo' Hubbard projectors.
+            </pre>
+<pre>
+Check Doc/Hubbard_input.pdf to see how to specify Hubbard parameters
+U, J0, J, B, E2, E3, V in the HUBBARD card.
+            </pre>
+</blockquote>
+      
 }
 

@@ -221,6 +221,13 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     -value     { .true. .false. }
                 }
 
+                var trism {
+                    -label "Perform a 3D-RISM-SCF calculation (trism):"
+                    -widget    radiobox
+                    -textvalue { Yes No }	      
+                    -value     { .true. .false. }
+                }
+
                 separator -label "--- Berry phase ---"
 
                 var lberry {
@@ -243,7 +250,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     -label "Num. of k-points along each symmetry-reduced string (nppstr):"
                     -validate posint
                 }
-            }
+            }            
         }
     }
     
@@ -297,7 +304,11 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                         "Triclinic P"
                     }
                     -value {
-                        0 1 2 3 -3 4 5 -5 6 7 8 9 -9 91 10 11 12 -12 13 -13 14
+                        0 1 2 3 -3
+                        4 5 -5
+                        6 7 8 9 -9 91
+                        10 11 12 -12
+                        13 -13 14
                     }
                 }
 
@@ -656,104 +667,51 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     }
                 }
                 
-                separator -label "--- LDA + U parameters ---"
+                separator -label "--- Hubbard parameters ---"
 
-                group lda_plus_u_group -decor normal {
+                group hubbard -decor normal {
+                    table Hubbard_occ {
+                        -caption "Hubbard occupations (Hubbard_occ):"
+                        -head {{1st manifold} {2nd manifold} {3rd manifold}}
+                        -validate fortranreal
+                        -cols 3
+                        -rows 1
+                    }
+
+                    dimension Hubbard_alpha {
+                        -label     "Hubbard alpha (Hubbard_alpha):"
+                        -validate  fortranreal
+                        -start 1 -end 1
+                    }
+                        
+                    dimension Hubbard_beta {
+                        -label     "Hubbard beta (Hubbard_beta):"
+                        -validate  fortranreal
+                        -start 1 -end 1
+                    }
+
+                    # cannot handel 3D multidimension: starting_ns_eigenvalue(m,ispin,ityp)
+                }    
+
+                separator -label "--- DMFT ---"
                 
-                    var lda_plus_u {
-                        -label     "Perform LDA + U calculation (lda_plus_u):"
-                        -textvalue {No Yes}
-                        -value     {.false.  .true.}
-                        -widget    radiobox
-                    }
-                    
-                    group hubbard -decor none {
-                        var lda_plus_u_kind {
-                            -label     "Type of LDA + U calculation (lda_plus_u_kind):"
-                            -textvalue {
-                                "simplified version of Cococcioni and de Gironcoli" 
-                                "rotationally invariant scheme of Liechtenstein et al."
-                                "DFT+U+V simplified version of Campo Jr and Cococcioni"
-                            }
-                            -value     {0 1 2}
-                            -widget    radiobox
-                        }
-                        
-                        dimension Hubbard_U {
-                            -label     "Hubbarb U (Hubbard_U):"
-                            -validate  fortranreal
-                            -start 1 -end 1
-                        }
-                        
-                        dimension Hubbard_J0 {
-                            -label     "Hubbarb J0 (Hubbard_J0):"
-                            -validate  fortranreal
-                            -start 1 -end 1
-                        }
-                        
-                        dimension Hubbard_alpha {
-                            -label     "Hubbard alpha (Hubbard_alpha):"
-                            -validate  fortranreal
-                            -start 1 -end 1
-                        }
-                        
-                        dimension Hubbard_beta {
-                            -label     "Hubbard beta (Hubbard_beta):"
-                            -validate  fortranreal
-                            -start 1 -end 1
-                        }
-                        
-                        # can't input Hubbard_V, Hubbard_J, and starting_ns_eigenvalue
-                        
-                        var U_projection_type {
-                            -label  "Type of projector on localized orbital (U_projector_type):"
-                            -widget optionmenu
-                            -textvalue {
-                                "use atomic wfc's (as they are) to build the projector  <atomic>"
-                                "use Lowdin orthogonalized atomic wfc's  <ortho-atomic>"
-                                "use Lowdin normalization of atomic wfc  <norm-atomic>"
-                                "use the information from file \"prefix\".atwfc  <file>"
-                                "use the pseudopotential projectors <pseudo>"
-                            }
-                            -value {
-                                'atomic'
-                                'ortho-atomic'
-                                'norm-atomic'
-                                'file'
-                                'pseudo'
-                            }
-                        }
-
-                        var Hubbard_parameters {
-                            -label "How to read Hubbard parameters (Hubbard_parameters):"
-                            -validate string
-                            -widget radiobox
-                            -value { 'input' 'file' }
-                            -textvalue {
-                                "from input"
-                                "from the file \"parameters.in\""
-                            }
-                        }
-
-                        var dmft {
-                            -label "DMFT (dmft):"
-                            -widget    radiobox
-                            -textvalue { Yes No }	      
-                            -value     { .true. .false. }
-                        }
-
-                        var dmft_prefix {
-                            -label "DMFT prefix to hdf5 archive (dmft_prefix):"
-                            -validate string
-                        }
-
-                        var ensemble_energies {
-                            -label "Calculate ensemble of xc energies (ensemble_energies):"
-                            -widget    radiobox
-                            -textvalue { Yes No }	      
-                            -value     { .true. .false. }
-                        }
-                    }
+                var dmft {
+                    -label "DMFT (dmft):"
+                    -widget    radiobox
+                    -textvalue { Yes No }	      
+                    -value     { .true. .false. }
+                }
+                
+                var dmft_prefix {
+                    -label "DMFT prefix to hdf5 archive (dmft_prefix):"
+                    -validate string
+                }
+                
+                var ensemble_energies {
+                    -label "Calculate ensemble of xc energies (ensemble_energies):"
+                    -widget    radiobox
+                    -textvalue { Yes No }	      
+                    -value     { .true. .false. }
                 }
 
                 separator -label "--- Variable cell parameters ---"
@@ -876,8 +834,8 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
                     var vdw_corr {
                         -label "Type of Van der Waals correction (vdw_corr):"
-                        -textvalue {Grimme-D2  Grimme-D3  Tkatchenko-Scheffler "Many-Body-Dispersion vdW" XDM  None}
-                        -value     {'grimme-d2' 'grimme-d3' 'ts-vdw' 'mbd_vdw' 'xdm' ''}
+                        -textvalue {Grimme-D2  Grimme-D3  Tkatchenko-Scheffler "Many-Body-Dispersion (MBD) vdW" XDM  None}
+                        -value     {'grimme-d2' 'grimme-d3' 'TS' 'MBD' 'XDM' ''}
                         -widget    optionmenu
                     }  
 
@@ -1205,15 +1163,27 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                         -value     { .true. .false. }
                     }
 
+                    var diago_gs_nblock {
+                        -label "RMM-DIIS blocking size of Gram-Schmidt orthogonalization (diago_gs_nblock):"
+                        -validate int
+                    }
+
                     separator -label "--- Conjugate-Gradient diagonalization ---"
                     
                     var diago_cg_maxiter {
-                        -label    "Max. \# of iterations (diago_cg_maxiter):"
+                        -label    "Max. \# of iterations for CG (diago_cg_maxiter):"
                         -widget   spinint
                         -validate posint
                         -fmt      %d
                     }
-                    
+
+                    var diago_ppcg_maxiter {
+                        -label    "Max. \# of iterations for PPCG (diago_ppcg_maxiter):"
+                        -widget   spinint
+                        -validate posint
+                        -fmt      %d
+                    }
+
                     separator -label "--- Davidson diagonalization ---"
                     
                     var diago_david_ndim {
@@ -1546,6 +1516,12 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                 -value {
                     'all'
                     'ibrav'
+                    'a'
+                    'b'
+                    'c'
+                    'fixa'
+                    'fixb'
+                    'fixc'
                     'x'
                     'y'
                     'z' 
@@ -1565,6 +1541,12 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                 -textvalue {
                     {'all' =    all axis and angles are moved}
                     {'ibrav' =  all axis and angles are moved, but ibrav is kept}
+                    {'a' =      the x component of axis 1 (v1_x) is fixed}
+                    {'b' =      the y component of axis 2 (v2_y) is fixed}
+                    {'c' =      the z component of axis 3 (v3_z) is fixed}
+                    {'fixa' =   axis 1 (v1_x,v1_y,v1_z) is fixed}
+                    {'fixb' =   axis 2 (v2_x,v2_y,v2_z) is fixed}
+                    {'fixc' =   axis 3 (v3_x,v3_y,v3_z) is fixed}
                     {'x' =      only the x component of axis 1 (v1_x) is moved}
                     {'y' =      only the y component of axis 2 (v2_y) is moved}
                     {'z' =      only the z component of axis 3 (v3_z) is moved}
@@ -1588,11 +1570,11 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
     ########################################################################
     ##                                                                    ##
-    ##                      &FCP NAMELIST                                ##
+    ##                      &FCP and &RISM NAMELISTS                      ##
     ##                                                                    ##
     ########################################################################
 
-    page fcpPage -name "FCP" {
+    page fcpPage -name "FCP & RISM" {
 
         namelist fcp -name "FCP" {
             var fcp_mu {
@@ -1694,6 +1676,290 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                 -textvalue { Yes No }	      
                 -value     { .true. .false. }
             }            
+        }
+
+        namelist rism -name "RISM" {
+            var nsolv {
+                -label "Number of solvents (nsolv):"
+                -widget spinint
+                -validate posint
+            }            
+
+            var closure {
+                -label "Type of closure equation (closure):"
+                -widget radiobox
+                -textvalue {
+                    "HyperNetted-Chain model <hcn>"
+                    "Kovalenko and Hirata's model <kh>"
+                }
+                -value {
+                    'hcn' 'kh'
+                }
+            }
+            var tempv {
+                -label "Solvent temperature in Kelvin (tempv):"
+                -validate fortranposreal
+            }
+            var ecutsolv {
+                -label "Energy cutoff for 3D-RISM in Rydberg (ecutsolv):"
+                -validate fortranposreal
+            }
+            dimension solute_lj {
+                -label "Type of Lennard-Jones force fields for solutes"
+                -widget optionmenu
+                -textvalue {
+                    "None <none>"
+                    "Universal Force Field <uff>"
+                    "Clay's Force Field <clayff>"
+                    "OPLS-AA (generic parameters for QM/MM) <opls-aa>"
+                }
+                -value {
+                    'none'
+                    'uff'
+                    'clayff'
+                    'opls-aa'
+                }
+                -start 1 -end 1
+            }
+            dimension solute_epsilon {
+                -label "Lennard-Jones `epsilon' parameters for solutes \[in kcal/mol\]"
+                -validate fortranreal
+                -start 1 -end 1
+            }
+            dimension solute_sigma {
+                -label "Lennard-Jones `sigma' parameters for solutes \[in Angstroms\]"
+                -validate fortranreal
+                -start 1 -end 1
+            }
+            var rmax_lj {
+                -label "Maximum radius of Lennard-Jones for 3D-RISM 
+\[in `sigma'\] (rmax_lj):"
+                -validate fortranposreal
+            }
+            page rism_1d -name "1D-RISM" {
+                var rmax1d {
+                    -label "Maximum inter-site radius for 1D-RISM 
+\[in Bohr\] (rmax1d)       :"
+                    -validate fortranposreal
+                }
+                var starting1d {
+                    -label "How to initialize the 1D-RISM's correlation function 
+(starting1d):"      
+                    -widget optionmenu
+                    -textvalue {
+                        "start from 0 <zero>"
+                        "read from file <file>"
+                        "read from file, and fix correlation function <fix>"
+                    }
+                    -value {
+                        'zero'
+                        'file'
+                        'fix'
+                    }
+                }
+                var smear1d {
+                    -label "Smearing radius for 1D-RISM \[in Bohr\] (smear1d):"
+                    -validate fortranposreal
+                }
+                var rism1d_maxstep {
+                    -label "Maximum number of steps for 1D-RISM (rism1d_maxstep)"
+                    -validate posint
+                }
+                var rism1d_conv_thr {
+                    -label "Convergence threshold for 1D-RISM (rism1d_conv_thr):"
+                    -validate fortranposreal
+                }
+                var mdiis1d_size {
+                    -label "Size of MDIIS for 1D-RISM (mdiis1d_size):"
+                    -validate posint
+                }
+                var mdiis1d_step {
+                    -label "Step of MDIIS for 1D-RISM (mdiis1d_step):"
+                    -validate fortranreal
+                }
+                var rism1d_bond_width {
+                    -label "Gaussian width of bonds for 1D-RISM (rism1d_bond_width):"
+                    -validate fortranposreal
+                }
+                var rism1d_dielectric {
+                    -label "Dielectric constant for 1D-RISM (rism1d_dielectric):"
+                    -validate fortranreal
+                }
+                var rism1d_molesize {
+                    -label "Size of solvent molecule for 1D-RISM 
+\[in Bohr\] (rism1d_molesize):"
+                    -validate fortranposreal
+                }
+                var rism1d_nproc {
+                    -label "Number of processes to calculate for 1D-RISM (rism1d_nproc):"
+                    -validate nonnegint
+                }
+                var rism1d_nproc_switch {
+                    -label "Number of processes to calculate for 1D-RISM 
+(rism1d_nproc_switch):"
+                    -validate nonnegint
+                }            
+            }
+            
+            page rism_3d -name "3D-RISM" {
+                var starting3d {
+                    -label "How to initialize the 3D-RISM's correlation function 
+(starting3d):"
+                    -widget optionmenu
+                    -textvalue {
+                        "start from 0 <zero>"
+                        "read from file <file>"
+                    }
+                    -value {
+                        'zero'
+                        'file'
+                    }
+                }
+                var smear3d {
+                    -label "Smearing radius for 3D-RISM \[in Bohr\] (smear1d):"
+                    -validate fortranposreal
+                }
+                var rism3d_maxstep {
+                    -label "Maximum number of steps for 3D-RISM (rism3d_maxstep)"
+                    -validate posint
+                }
+                var rism3d_conv_thr {
+                    -label "Convergence threshold for 3D-RISM (rism3d_conv_thr):"
+                    -validate fortranposreal
+                }
+                var mdiis3d_size {
+                    -label "Size of MDIIS for 3D-RISM (mdiis3d_size):"
+                    -validate posint
+                }
+                var mdiis3d_step {
+                    -label "Step of MDIIS for 3D-RISM (mdiis3d_step):"
+                    -validate fortranreal
+                }
+                var rism3d_conv_level {
+                    -label "Convergence level for 3D-RISM (rism3d_conv_level):"
+                    -validate fortranreal
+                }
+                var rism3d_planar_average {
+                    -label "Calculate planar average of solvents after 3D-RISM 
+calculation (rism3d_planar_average):"
+                    -widget radiobox
+                    -textvalue { Yes No }
+                    -value { .true. .false. }
+                }   
+            }
+
+            page rism_laue -name "Laue-RISM" {
+                var laue_both_hands {
+                    -label "Use both-hands method in Laue-RISM (laue_both_hands):"
+                    -widget    radiobox
+                    -textvalue { Yes No }	      
+                    -value     { .true. .false. }
+                }
+
+                var laue_nfit {
+                    -label "Number of fitting points in Laue-RISM (laue_nfit):"
+                    -widget   spinint
+                    -validate posint
+                }
+                var laue_expand_right {
+                    -label "Expanding length on right-hand side in Laue-RISM 
+\[in Bohr\] (laue_expand_right):"
+                    -validate fortranreal
+                }
+                var laue_expand_left {
+                    -label "Expanding length on left-hand side in Laue-RISM 
+\[in Bohr\] (laue_expand_left):"
+                    -validate fortranreal
+                }
+                
+                var laue_starting_right {
+                    -label "Starting position on right-hand side in Laue-RISM 
+\[in Bohr\] (laue_starting_right):"
+                    -validate fortranreal
+                }
+                var laue_starting_left {
+                    -label "Starting position on left-hand side in Laue-RISM 
+\[in Bohr\] (laue_starting_left):"
+                    -validate fortranreal
+                }
+                
+                var laue_buffer_right {
+                    -label "Buffering length on right-hand side in Laue-RISM 
+\[in Bohr\] (laue_buffer_right):"
+                    -validate fortranreal
+                }
+                var laue_buffer_right_solu {
+                    -label "Additional buffering length on right-hand side of solute-ward 
+in Laue-RISM \[in Bohr\] (laue_buffer_right_solu):"
+                    -validate fortranreal
+                }
+                var laue_buffer_right_solv {
+                    -label "Additional buffering length on right-hand side of solvent-ward 
+in Laue-RISM \[in Bohr\] (laue_buffer_right_solv):"
+                    -validate fortranreal
+                }
+                
+                var laue_buffer_left {
+                    -label "Buffering length on left-hand side in Laue-RISM 
+\[in Bohr\] (laue_buffer_left):"
+                    -validate fortranreal
+                }
+                var laue_buffer_left_solu {
+                    -label "Additional buffering length on left-hand side of solute-ward 
+in Laue-RISM \[in Bohr\] (laue_buffer_left_solu):"
+                    -validate fortranreal
+                }
+                var laue_buffer_left_solv {
+                    -label "Additional buffering length on left-hand side of solvent-ward 
+in Laue-RISM \[in Bohr\] (laue_buffer_left_solv):"
+                    -validate fortranreal
+                }
+
+                var laue_wall {
+                    -label "Repulsive wall with (1/r)^12 term of Lennard-Jones 
+potential (laue_wall):"
+                    -widget radiobox
+                    -textvalue {
+                        "wall is not defined <none>"
+                        "edge position of wall is defined automatically <auto>"
+                        "edge position of wall is defined manually <manual>"
+                    }
+                    -value {
+                        'none'
+                        'auto'
+                        'manual'
+                    }
+                }
+
+                var laue_wall_z {
+                    -label "Edge position of repulsive wall in Laue-RISM 
+\[in Bohr\] (laue_wall_z):"
+                    -validate fortranreal
+                }
+
+                var laue_wall_rho {
+                    -label "Density of repulsive wall in Laue-RISM 
+\[in 1/Bohr^3\] (laue_wall_rho):"
+                    -validate fortranreal
+                }
+
+                var laue_wall_epsilon {
+                    -label "Lennard-Jones parameter `epsilon' for repulsive wall 
+in Laue-RISM \[in kcal/mol\] (laue_wall_epsilon):"
+                    -validate fortranreal
+                }
+                var laue_wall_sigma {
+                    -label "Lennard-Jones parameters `sigma' for repulsive wall 
+in Laue-RISM \[in Angstrom\] (laue_wall_sigma):"
+                    -validate fortranreal
+                }            
+                var laue_wall_lj6 {
+                    -label "Use attractive term of Lennard-Jones (laue_wall_lj6):"
+                    -widget    radiobox
+                    -textvalue { Yes No }	      
+                    -value     { .true. .false. }
+                }            
+            }
         }
     }
 
@@ -1912,96 +2178,104 @@ module PW -title "PWSCF GUI: module PW.x" -script {
     ########################################################################
     page otherPage -name "Other Cards" {
 
-        # CARD: CONSTRAINTS
-        
-        group constraints_group -name "Card: CONSTRAINTS" -decor normal {
-
-            auxilvar constraints_enable {
-                -label     "Use constraints:"
-                -value     {Yes No}
-                -widget    radiobox
-                -default   No
-            }
-
-            group constraints_card -decor none {
-
-                keyword constraints_key CONSTRAINTS\n
-
-                line constraints_line1 -decor none {
-                    var nconstr {
-                        -label    "Number of constraints:"                  
-                        -validate posint
-                        -widget   spinint
-                        -default  1
-                        -outfmt   "  %d "
-                    }
-                    var constr_tol {
-                        -label    "Tolerance for keeping the constraints satisfied:"
-                        -validate fortranposreal
-                    }
+        # CARD: HUBBARD
+        page hubbard_page -name "Hubbard" {
+            group hubbard_card -name "Card: HUBBARD" -decor normal {
+                auxilvar hubbard_enable {
+                    -label     "Activate the HUBBARD card:"
+                    -value     {Yes No}
+                    -widget    radiobox
+                    -default   No
                 }
-
-                table constraints_table {
-                    -caption  "Enter constraints data:\n    constraint-type   constr(1,.)   constr(2,.)   ...   { constr_target(.) }\n\n(see Help for the format of \"constraint-specification\")"
-                    -head     {constraint-type constraint-specifications ... ... ... ...}
-                    -validate {string fortranreal}
-                    -cols     6
-                    -rows     1
-                    -optionalcols 3
-                    -widgets  {{optionmenu {'type_coord' 'atom_coord' 'distance' 'planar_angle' 'torsional_angle' 'bennett_proj'}} entry}
-                    -outfmt   {"  %s  " %S}
-                    -infmt    {%d %S}
+                group hubbard_group -decor none {                
+                    line hubbard_line -decor none {
+                        keyword hubbard HUBBARD
+                        var HUBBARD_flags {
+                            -label "HUBBARD's card option:"
+                            -value {
+                                atomic
+                                ortho-atomic
+                                norm-atomic
+                                wf
+                                pseudo
+                            }                    
+                            -widget optionmenu
+                        }
+                    }
+                    text hubbard_specs \
+                        -label "Specs of the HUBBARD card:" \
+                        -readvar ::pwscf::pwscf($this,HUBBARD)                
                 }
             }
-        }    
-
-        # CARD: OCCUPATIONS
-        
-        group occupations_card -name "Card: OCCUPATIONS" -decor normal {            
-            keyword occupations_key OCCUPATIONS\n
-            text occupations_table \
-                -caption "Syntax for NON-spin polarized case:\n     u(1)  ....   ....   ....  u(10)\n     u(11) .... u(nbnd)\n\nSyntax for spin-polarized case:\n     u(1)  ....   ....   ....  u(10)\n     u(11) .... u(nbnd)\n     d(1)   ....  ....   ....  d(10)\n     d(11) .... d(nbnd)" \
-                -label   "Specify occupation of each state (from 1 to nbnd) such that 10 occupations are written per line:" \
-                -readvar ::pwscf::pwscf($this,OCCUPATIONS)
         }
 
-        # CARD: ATOMIC_VELOCITIES
 
-        group atomic_velocities_group -name "Card: ATOMIC_VELOCITIES" -decor normal {
-
-            keyword atomic_velocities_key ATOMIC_VELOCITIES\n
-            
-            table atomic_velocities {
-                -caption   "Atomic velocities:"
-                -head      {Atomic-label Vx-component Vy-component Vz-component}
-                -validate  {string fortranreal fortranreal fortranreal}
-                -cols      4
-                -rows      1
-                -outfmt    {"  %3s" "  %14.9f" %14.9f %14.9f}
-                -widgets   {entry entry entry entry}
+        # CARD: CONSTRAINTS
+        page constraints_page -name "Constraints" {
+            group constraints_group -name "Card: CONSTRAINTS" -decor normal {
+                
+                auxilvar constraints_enable {
+                    -label     "Use constraints:"
+                    -value     {Yes No}
+                    -widget    radiobox
+                    -default   No
+                }
+                
+                group constraints_card -decor none {
+                    
+                    keyword constraints_key CONSTRAINTS\n
+                    
+                    line constraints_line1 -decor none {
+                        var nconstr {
+                            -label    "Number of constraints:"                  
+                            -validate posint
+                            -widget   spinint
+                            -default  1
+                            -outfmt   "  %d "
+                        }
+                        var constr_tol {
+                            -label    "Tolerance for keeping the constraints satisfied:"
+                            -validate fortranposreal
+                        }
+                    }
+                    
+                    table constraints_table {
+                        -caption  "Enter constraints data:\n    constraint-type   constr(1,.)   constr(2,.)   ...   { constr_target(.) }\n\n(see Help for the format of \"constraint-specification\")"
+                        -head     {constraint-type constraint-specifications ... ... ... ...}
+                        -validate {string fortranreal}
+                        -cols     6
+                        -rows     1
+                        -optionalcols 3
+                        -widgets  {{optionmenu {'type_coord' 'atom_coord' 'distance' 'planar_angle' 'torsional_angle' 'bennett_proj'}} entry}
+                        -outfmt   {"  %s  " %S}
+                        -infmt    {%d %S}
+                    }
+                }
             }
-            
-            loaddata atomic_velocities ::pwscf::pwLoadAtomicVelocities \
-                "Load atomic velocities from file ..."    
-        }        
+        }
         
-        # CARD: ATOMIC_FORCES
-
-        group atomic_forces_group -name "Card: ATOMIC_FORCES" -decor normal {
-
-            auxilvar specify_atomic_forces {
-                -label     "Specify atomic forces:"
-                -widget    radiobox
-                -textvalue { Yes No }         
-                -value     { .true. .false. }
+        # CARD: OCCUPATIONS
+        page occupations_page -name "Occupations" {
+            group occupations_card -name "Card: OCCUPATIONS" -decor normal {            
+                keyword occupations_key OCCUPATIONS\n
+                text occupations_table \
+                    -caption "Syntax for NON-spin polarized case:\n     u(1)  ....   ....   ....  u(10)\n     u(11) .... u(nbnd)\n\nSyntax for spin-polarized case:\n     u(1)  ....   ....   ....  u(10)\n     u(11) .... u(nbnd)\n     d(1)   ....  ....   ....  d(10)\n     d(11) .... d(nbnd)" \
+                    -label   "Specify occupation of each state (from 1 to nbnd) such that 10 occupations are written per line:" \
+                    -readvar ::pwscf::pwscf($this,OCCUPATIONS)
             }
-            
-            group atomic_forces_specs -decor none {
-                keyword atomic_forces_key ATOMIC_FORCES\n
+        }
 
-                table atomic_forces {
-                    -caption   "Atomic forces:"
-                    -head      {Atomic-label Fx-component Fy-component Fz-component}
+        page atm_vel_forces_page -name "Atomic Velocities + Forces" {
+            
+            # CARD: ATOMIC_VELOCITIES
+
+            group atomic_velocities_group -name "Card: ATOMIC_VELOCITIES" -decor normal {
+
+                keyword atomic_velocities_key ATOMIC_VELOCITIES\n
+                
+                table atomic_velocities {
+                    -caption   "Atomic velocities:"
+                    -head      {Atomic-label Vx-component Vy-component Vz-component}
                     -validate  {string fortranreal fortranreal fortranreal}
                     -cols      4
                     -rows      1
@@ -2009,8 +2283,76 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     -widgets   {entry entry entry entry}
                 }
                 
-                loaddata atomic_forces ::pwscf::pwLoadAtomicForces \
-                    "Load atomic forces from file ..."    
+                loaddata atomic_velocities ::pwscf::pwLoadAtomicVelocities \
+                    "Load atomic velocities from file ..."    
+            }        
+        
+            # CARD: ATOMIC_FORCES
+
+            group atomic_forces_group -name "Card: ATOMIC_FORCES" -decor normal {
+
+                auxilvar specify_atomic_forces {
+                    -label     "Specify atomic forces:"
+                    -widget    radiobox
+                    -textvalue { Yes No }         
+                    -value     { .true. .false. }
+                }
+                
+                group atomic_forces_specs -decor none {
+                    keyword atomic_forces_key ATOMIC_FORCES\n
+                    
+                    table atomic_forces {
+                        -caption   "Atomic forces:"
+                        -head      {Atomic-label Fx-component Fy-component Fz-component}
+                        -validate  {string fortranreal fortranreal fortranreal}
+                        -cols      4
+                        -rows      1
+                        -outfmt    {"  %3s" "  %14.9f" %14.9f %14.9f}
+                        -widgets   {entry entry entry entry}
+                    }
+                    
+                    loaddata atomic_forces ::pwscf::pwLoadAtomicForces \
+                        "Load atomic forces from file ..."    
+                }
+            }
+        }
+
+        page solvents_page -name "Solvents" {
+            group solvents_card -name "Card: SOLVENTS" -decor normal {
+                line solvents_line -decor none {
+                    keyword solvents SOLVENTS
+                    var SOLVENTS_flags {
+                        -label    "Solvents' densities are specified as:"
+                        -widget   radiobox
+                        -textvalue {
+                            "number of molecules per unit cell <1/cell>"
+                            "molar concentrations <mol/L>"
+                            "in gram per cm^3 <g/cm^3>"
+                        }
+                        -value {
+                            1/cell
+                            mol/L
+                            g/cm^3
+                        }
+                    }
+                }
+                table laue_one_hand_table \
+                    -caption "Specs of solvents (for laue_both_hands = .false.): " \
+                    -head {{Solvent molecule's label} {its density} {its MOL file}} \
+                    -cols 3 \
+                    -rows 1 \
+                    -outfmt {"  %S" %14.9f "  %S"} \
+                    -validate {whatever fortranreal whatever} \
+                    -widgets  [list entry entry [list entrybutton "MOL file ..." [list ::pwscf::pwSelectMOLfile $this laue_one_hand_table]]]
+                
+                table laue_both_hands_table \
+                    -caption "Specs of solvents (for laue_both_hands = .true.): " \
+                    -head {{Solvent molecule's label} {its left density} {its right density} {its MOL file}} \
+                    -cols 4 \
+                    -rows 1 \
+                    -outfmt {"  %S" %14.9f %14.9f "  %S"} \
+                    -validate {whatever fortranreal fortranreal whatever} \
+                    -widgets  [list entry entry entry [list entrybutton "MOL file ..." [list ::pwscf::pwSelectMOLfile $this laue_both_hands_table]]]                
             }
         }
     }
