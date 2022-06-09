@@ -38,6 +38,7 @@ Fixed in 7.1 version:
   * CP with Hubbard U was crashing also when reading the xml file (v.7.0)
   * Bugfix in turboMagnon for k point grids that have Gamma or points at the
     Brillouin zone edge (the weights were not correct)
+  * Libxc (5.2.x) linking failure when using CMake.
 
 New in 7.0 version:
   * Unscreened and screened (range-separated) vdW-DF hybrids

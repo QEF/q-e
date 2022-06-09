@@ -774,6 +774,7 @@ with_libxc
 with_libxc_prefix
 with_libxc_include
 with_scalapack
+with_scalapack_qrcp
 with_elpa_include
 with_elpa_lib
 with_elpa_version
@@ -1437,6 +1438,8 @@ Optional Packages:
   --with-scalapack        (yes|no|intel) Use scalapack if available. Set to
                           "intel" to use Intel MPI and blacs (default: use
                           openMPI)
+  --with-scalapack-qrcp   (yes|no) Run QRCP with scalapack. Requires ScaLAPACK
+                          >= 2.1.0 or MKL >= 2020. (default: no)
   --with-elpa-include     Specify full path ELPA include and modules headers
                           (default: no)
   --with-elpa-lib         Specify full path ELPA static or dynamic library
@@ -7011,6 +7014,17 @@ fi
         try_dflags="$try_dflags -D__SCALAPACK"
     fi
 done
+
+# Enable QRCP with scalapack if --with-scalapack-qrcp==yes is set.
+# Requires Scalapack >= 2.1.0 or MKL >= 2020, but the version is not checked.
+# If an old version is used, QRCP results might be buggy.
+if test "${with_scalapack_qrcp+set}" = set; then :
+  withval=$with_scalapack_qrcp
+  if test "$withval" = "yes" && test "$have_scalapack" -eq 1; then
+    try_dflags="$try_dflags -D__SCALAPACK_QRCP"
+  fi
+fi
+
 
 # Configuring output message
 if test "$have_scalapack" -eq 1; then
