@@ -122,29 +122,48 @@ CONTAINS
   END SUBROUTINE rho_r2g
   !
   !
-  SUBROUTINE rho_g2r_1 ( desc, rhog, rhor )
+  SUBROUTINE rho_g2r_1( desc, rhog, rhor )
+    !
     USE fft_types,              ONLY: fft_type_descriptor
     USE fft_helper_subroutines, ONLY: fftx_threed2oned, fftx_oned2threed
     !
-    TYPE(fft_type_descriptor), INTENT(in) :: desc
-    COMPLEX(dp), INTENT(in ):: rhog(:)
-    REAL(dp),    INTENT(out):: rhor(:)
+    IMPLICIT NONE
+    !
+    TYPE(fft_type_descriptor), INTENT(IN) :: desc
+    COMPLEX(DP), INTENT(IN):: rhog(:)
+    REAL(DP), INTENT(OUT):: rhor(:)
     !
     INTEGER :: ir
-    COMPLEX(dp), ALLOCATABLE :: psi(:)
-
-    ALLOCATE( psi( desc%nnr ) )
+    COMPLEX(DP), ALLOCATABLE :: psi(:)
+    !
+    ALLOCATE( psi(desc%nnr) )
+    !
+    !$acc data present_or_copyin(rhog) present_or_copyout(rhor) create(psi)
+    !
     CALL fftx_oned2threed( desc, psi, rhog )
-    CALL invfft('Rho',psi, desc )
+    !$acc update device(rhog)
+    !
+    !$acc host_data use_device( psi )
+    CALL invfft( 'Rho', psi, desc )
+    !$acc end host_data
+    !
+#if defined(_OPENACC)
+!$acc parallel loop
+#else
 !$omp parallel do
-    DO ir=1,desc%nnr
-       rhor(ir)=DBLE(psi(ir))
-    END DO
+#endif
+    DO ir = 1, desc%nnr
+       rhor(ir) = DBLE(psi(ir))
+    ENDDO
+#if !defined(_OPENACC)
 !$omp end parallel do
-    
+#endif
+    !
+    !$acc end data
     DEALLOCATE( psi )
-
+    !
   END SUBROUTINE rho_g2r_1
+  !
   !
   SUBROUTINE rho_g2r_2 ( desc, rhog, rhor )
     USE fft_types,              ONLY: fft_type_descriptor
