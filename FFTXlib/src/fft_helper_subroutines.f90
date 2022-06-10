@@ -398,53 +398,133 @@ CONTAINS
      end do
      !
   END SUBROUTINE
-
-  SUBROUTINE fftx_oned2threed( desc, psi, c, ca )
-     !
-     !  Copy charge density from 1D array (c) to 3D array (psi) in Fourier
-     !  space
+  !
+  !
+  SUBROUTINE fftx_oned2threed( desc, psi, c, ca, gpu_args_ )
+     !! Copy charge density from 1D array (c) to 3D array (psi) in Fourier
+     !! space
      !
      USE fft_param
-     USE fft_types,      ONLY : fft_type_descriptor
-     TYPE(fft_type_descriptor), INTENT(in) :: desc
-     complex(DP), INTENT(OUT) :: psi(:)
-     complex(DP), INTENT(IN) :: c(:)
-     complex(DP), OPTIONAL, INTENT(IN) :: ca(:)
-     complex(DP), parameter :: ci=(0.0d0,1.0d0)
-     integer :: ig
+     USE fft_types,  ONLY : fft_type_descriptor
      !
-     psi = 0.0d0
+     IMPLICIT NONE
      !
-     !  nlm and nl array: hold conversion indices from 3D to
+     TYPE(fft_type_descriptor), INTENT(IN) :: desc
+     COMPLEX(DP), INTENT(OUT) :: psi(:)
+     COMPLEX(DP), INTENT(IN) :: c(:)
+     COMPLEX(DP), OPTIONAL, INTENT(IN) :: ca(:)
+     LOGICAL, INTENT(IN), OPTIONAL :: gpu_args_
+     COMPLEX(DP), PARAMETER :: ci=(0.0d0,1.0d0)
+     INTEGER :: ig
+     LOGICAL :: gpu_args
+#if defined(__CUDA) && defined(_OPENACC)
+     INTEGER, POINTER, DEVICE :: nl_d(:), nlm_d(:)
+     !
+     nl_d  => desc%nl_d
+     nlm_d => desc%nlm_d
+#else
+     INTEGER, ALLOCATABLE :: nl_d(:), nlm_d(:)
+     !
+     ALLOCATE( nl_d(desc%ngm) )
+     nl_d = desc%nl
+     IF ( desc%lgamma ) THEN
+       ALLOCATE( nlm_d(desc%ngm) )
+       nlm_d = desc%nlm
+     ENDIF
+     !$acc data copyin( nl_d, nlm_d )
+#endif
+     !
+     ! ... nlm and nl array: hold conversion indices from 3D to
      !     1-D vectors. Columns along the z-direction are stored
-     !     contigiously
-     !  c array: stores the Fourier expansion coefficients
+     !     contigiously.
+     ! ... c array: stores the Fourier expansion coefficients
      !     Loop for all local g-vectors (ngw)
-     IF( PRESENT(ca) ) THEN
-        IF( desc%lgamma ) THEN
-           do ig = 1, desc%ngm
-              psi( desc%nlm( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ))
-              psi( desc%nl( ig ) ) = c( ig ) + ci * ca( ig )
-           end do
-        ELSE
-           do ig = 1, desc%ngm
-              psi( desc%nl( ig ) ) = c( ig ) + ci * ca( ig )
-           end do
-        END IF
+     !
+     gpu_args = .FALSE.
+     IF ( PRESENT(gpu_args_) ) gpu_args = gpu_args_
+     !
+     IF ( .NOT. gpu_args ) THEN
+       !
+       !$acc data copyin(c) copyout(psi)
+       !$acc kernels
+       psi = 0.0d0
+       !$acc end kernels
+       IF( PRESENT(ca) ) THEN
+          IF( desc%lgamma ) THEN
+             !$acc parallel loop copyin(ca)
+             DO ig = 1, desc%ngm
+                psi(nlm_d(ig)) = CONJG(c(ig)) + ci * CONJG(ca(ig))
+                psi(nl_d(ig)) = c(ig) + ci * ca(ig)
+             ENDDO
+          ELSE
+             !$acc parallel loop copyin(ca)
+             DO ig = 1, desc%ngm
+                psi(nl_d(ig)) = c(ig) + ci * ca(ig)
+             ENDDO
+          ENDIF
+       ELSE
+          IF( desc%lgamma ) THEN
+             !$acc parallel loop
+             DO ig = 1, desc%ngm
+                psi(nlm_d(ig)) = CONJG(c(ig))
+                psi(nl_d(ig)) = c(ig)
+             ENDDO
+          ELSE
+             !$acc parallel loop
+             DO ig = 1, desc%ngm
+                psi(nl_d(ig)) = c(ig)
+             ENDDO
+          ENDIF
+       ENDIF
+       !$acc end data
+       !
      ELSE
-        IF( desc%lgamma ) THEN
-           do ig = 1, desc%ngm
-              psi( desc%nlm( ig ) ) = CONJG( c( ig ) )
-              psi( desc%nl( ig ) ) = c( ig )
-           end do
-        ELSE
-           DO ig = 1, desc%ngm
-              psi( desc%nl( ig ) ) = c( ig )
-           END DO
-        END IF
-     END IF
+       !
+       !$acc data present(c,psi)
+       !$acc kernels
+       psi = 0.0d0
+       !$acc end kernels
+       IF( PRESENT(ca) ) THEN
+          IF( desc%lgamma ) THEN
+             !$acc parallel loop present(ca)
+             DO ig = 1, desc%ngm
+                psi(nlm_d(ig)) = CONJG(c(ig)) + ci * CONJG(ca(ig))
+                psi(nl_d(ig)) = c(ig) + ci * ca(ig)
+             ENDDO
+          ELSE
+             !$acc parallel loop present(ca)
+             DO ig = 1, desc%ngm
+                psi(nl_d(ig)) = c(ig) + ci * ca(ig)
+             ENDDO
+          ENDIF
+       ELSE
+          IF( desc%lgamma ) THEN
+             !$acc parallel loop
+             DO ig = 1, desc%ngm
+                psi(nlm_d(ig)) = CONJG(c(ig))
+                psi(nl_d(ig)) = c(ig)
+             ENDDO
+          ELSE
+             !$acc parallel loop
+             DO ig = 1, desc%ngm
+                psi(nl_d(ig)) = c(ig)
+             ENDDO
+          ENDIF
+       ENDIF 
+       !$acc end data
+       !
+     ENDIF
+     !
+#if !defined(__CUDA) || !defined(_OPENACC)
+     !$acc end data
+     DEALLOCATE( nl_d )
+     IF ( desc%lgamma ) DEALLOCATE( nlm_d )
+#endif     
+     !
   END SUBROUTINE
 
+  
+  
   SUBROUTINE fftx_add_threed2oned_gamma( desc, vin, vout1, vout2 )
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
@@ -469,9 +549,13 @@ CONTAINS
   END SUBROUTINE
 
  SUBROUTINE fftx_threed2oned( desc, vin, vout1, vout2, gpu_args_ )
-     !! GPU version of \(\texttt{fftx_threed2oned}\).
+     !! Copy charge density from 3D array to 1D array in Fourier
+     !! space.
+     !
      USE fft_param
      USE fft_types, ONLY : fft_type_descriptor
+     !
+     IMPLICIT NONE
      !
      TYPE(fft_type_descriptor), INTENT(IN) :: desc
      COMPLEX(DP), INTENT(OUT) :: vout1(:)

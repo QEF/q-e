@@ -125,7 +125,7 @@ CONTAINS
   SUBROUTINE rho_g2r_1( desc, rhog, rhor )
     !
     USE fft_types,              ONLY: fft_type_descriptor
-    USE fft_helper_subroutines, ONLY: fftx_threed2oned, fftx_oned2threed
+    USE fft_helper_subroutines, ONLY: fftx_oned2threed
     !
     IMPLICIT NONE
     !
@@ -140,8 +140,7 @@ CONTAINS
     !
     !$acc data present_or_copyin(rhog) present_or_copyout(rhor) create(psi)
     !
-    CALL fftx_oned2threed( desc, psi, rhog )
-    !$acc update device(rhog)
+    CALL fftx_oned2threed( desc, psi, rhog, gpu_args_=.TRUE. )
     !
     !$acc host_data use_device( psi )
     CALL invfft( 'Rho', psi, desc )
@@ -165,9 +164,12 @@ CONTAINS
   END SUBROUTINE rho_g2r_1
   !
   !
-  SUBROUTINE rho_g2r_2 ( desc, rhog, rhor )
+  SUBROUTINE rho_g2r_2( desc, rhog, rhor )
+    !
     USE fft_types,              ONLY: fft_type_descriptor
     USE fft_helper_subroutines, ONLY: fftx_threed2oned, fftx_oned2threed
+    !
+    IMPLICIT NONE
     !
     TYPE(fft_type_descriptor), INTENT(in) :: desc
     COMPLEX(dp), INTENT(in ):: rhog(:,:)
@@ -176,9 +178,9 @@ CONTAINS
     INTEGER :: ir, ig, iss, isup, isdw
     INTEGER :: nspin
     COMPLEX(dp), ALLOCATABLE :: psi(:)
-
+    !
     nspin= SIZE (rhog, 2)
-
+    !
     ALLOCATE( psi( desc%nnr ) )
     IF ( gamma_only ) THEN
        IF( nspin == 1 ) THEN
