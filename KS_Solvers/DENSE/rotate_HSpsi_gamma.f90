@@ -49,8 +49,6 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
   !$acc declare device_resident(en)
   INTEGER :: n_start, n_end, my_n, recv_counts(nbgrp), displs(nbgrp), column_type
   !
-  !$acc data deviceptr(e)
-  !
   IF ( gstart == -1 ) CALL errore( 'rotHSw', 'gstart variable not initialized', 1 )
   IF ( overlap .AND..NOT.present(spsi) ) call errore( 'rotHSw','spsi array needed with overlap=.TRUE.',1)
   !
@@ -62,12 +60,8 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
      !$acc kernels
      psi (1,1:nstart) = CMPLX( DBLE( psi (1,1:nstart) ), 0.D0,kind=DP)
      hpsi(1,1:nstart) = CMPLX( DBLE( hpsi(1,1:nstart) ), 0.D0,kind=DP)
+     if (overlap) spsi(1,1:nstart) = CMPLX( DBLE( spsi(1,1:nstart) ), 0.D0,kind=DP)
      !$acc end kernels
-     if (overlap) then 
-       !$acc kernels
-       spsi(1,1:nstart) = CMPLX( DBLE( spsi(1,1:nstart) ), 0.D0,kind=DP)
-       !$acc end kernels
-     endif 
   END IF
   
   kdim = 2 * npw
@@ -130,7 +124,9 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
   !
   call start_clock('rotHSw:diag'); !write(*,*) 'start rotHSw:diag' ; FLUSH(6)
   CALL diaghg( nstart, nbnd, hh, ss, nstart, en, vv, me_bgrp, root_bgrp, intra_bgrp_comm )
+  !$acc data deviceptr(e)
   CALL dev_memcpy(e, en, [1,nbnd])
+  !$acc end data
   call stop_clock('rotHSw:diag'); !write(*,*) 'stop rotHSw:diag' ; FLUSH(6)
   !
   ! ... update the basis set
@@ -194,8 +190,6 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
   !call print_clock('rotHSw:diag')
   !call print_clock('rotHSw:evc')
   !
-  !$acc end data
-
   RETURN
   !
 END SUBROUTINE rotate_HSpsi_gamma

@@ -47,8 +47,6 @@ SUBROUTINE rotate_HSpsi_k( npwx, npw, nstart, nbnd, npol, psi, hpsi, overlap, sp
   !$acc declare device_resident(en)
   INTEGER :: n_start, n_end, my_n, recv_counts(nbgrp), displs(nbgrp), column_type
   !
-  !$acc data deviceptr(e)
-  !
   IF ( overlap .AND..NOT.present(spsi) ) call errore( 'rotHSw','spsi array needed with overlap=.TRUE.',1)
   !
   call start_clock('rotHSw'); !write(*,*) 'start rotHSw' ; FLUSH(6)
@@ -125,7 +123,9 @@ SUBROUTINE rotate_HSpsi_k( npwx, npw, nstart, nbnd, npol, psi, hpsi, overlap, sp
   !
   call start_clock('rotHSw:diag'); !write(*,*) 'start rotHSw:diag' ; FLUSH(6)
   CALL diaghg( nstart, nbnd, hh, ss, nstart, en, vv, me_bgrp, root_bgrp, intra_bgrp_comm )
+  !$acc data deviceptr(e)
   CALL dev_memcpy(e, en, [1,nbnd])
+  !$acc end data
   call stop_clock('rotHSw:diag'); !write(*,*) 'stop rotHSw:diag' ; FLUSH(6)
   !
   ! ... update the basis set
@@ -205,8 +205,6 @@ SUBROUTINE rotate_HSpsi_k( npwx, npw, nstart, nbnd, npol, psi, hpsi, overlap, sp
     call stop_clock('rotHSw:move'); !write(*,*) 'stop rotHSw:move' ; FLUSH(6)
   end if
   !
-  !$acc end data
-
   RETURN
   !
 END SUBROUTINE rotate_HSpsi_k
