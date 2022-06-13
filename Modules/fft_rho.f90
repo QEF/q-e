@@ -10,12 +10,14 @@ MODULE fft_rho
   !-----------------------------------------------------------------------------
   !! FFT and inverse FFT of rho on the dense grid.
   !
-  USE kinds,     ONLY : DP
+  USE kinds,          ONLY: DP
   USE fft_interfaces, ONLY: fwfft, invfft
   USE control_flags,  ONLY: gamma_only
   !
   IMPLICIT NONE
+  !
   PRIVATE
+  !
   PUBLIC :: rho_r2g, rho_g2r
   !
   INTERFACE rho_g2r
@@ -35,7 +37,7 @@ CONTAINS
     TYPE(fft_type_descriptor), INTENT(IN) :: desc
     REAL(DP), INTENT(IN) :: rhor(:,:)
     !! rho in real space
-    COMPLEX(DP), INTENT(OUT):: rhog(:,:)
+    COMPLEX(DP), INTENT(OUT) :: rhog(:,:)
     !! rho in G-space
     REAL(DP), INTENT(IN), OPTIONAL :: v(:)
     !
@@ -43,7 +45,7 @@ CONTAINS
     !
     INTEGER :: ir, ig, iss, isup, isdw
     INTEGER :: nspin
-    COMPLEX(DP):: fp, fm
+    COMPLEX(DP) :: fp, fm
     COMPLEX(DP), ALLOCATABLE :: psi(:)
     !
     !$acc data present_or_copyin( rhor, v ) present_or_copyout( rhog )
@@ -130,8 +132,8 @@ CONTAINS
     IMPLICIT NONE
     !
     TYPE(fft_type_descriptor), INTENT(IN) :: desc
-    COMPLEX(DP), INTENT(IN):: rhog(:)
-    REAL(DP), INTENT(OUT):: rhor(:)
+    COMPLEX(DP), INTENT(IN)  :: rhog(:)
+    REAL(DP),    INTENT(OUT) :: rhor(:)
     !
     INTEGER :: ir
     COMPLEX(DP), ALLOCATABLE :: psi(:)
@@ -172,8 +174,8 @@ CONTAINS
     IMPLICIT NONE
     !
     TYPE(fft_type_descriptor), INTENT(IN) :: desc
-    COMPLEX(DP), INTENT(IN) :: rhog(:,:)
-    REAL(DP),    INTENT(OUT):: rhor(:,:)
+    COMPLEX(DP), INTENT(IN)  :: rhog(:,:)
+    REAL(DP),    INTENT(OUT) :: rhor(:,:)
     !
     INTEGER :: ir, ig, iss, isup, isdw
     INTEGER :: nspin
@@ -264,68 +266,119 @@ CONTAINS
   END SUBROUTINE rho_g2r_2
   !
   !
-  SUBROUTINE rho_g2r_sum_components ( desc, rhog, rhor )
+  SUBROUTINE rho_g2r_sum_components( desc, rhog, rhor )
+    !
     USE fft_types,              ONLY: fft_type_descriptor
     USE fft_helper_subroutines, ONLY: fftx_threed2oned, fftx_oned2threed
     !
-    TYPE(fft_type_descriptor), INTENT(in) :: desc
-    COMPLEX(dp), INTENT(in ):: rhog(:,:)
-    REAL(dp),    INTENT(out):: rhor(:)
+    IMPLICIT NONE
+    !
+    TYPE(fft_type_descriptor), INTENT(IN) :: desc
+    COMPLEX(DP), INTENT(IN)  :: rhog(:,:)
+    REAL(DP),    INTENT(OUT) :: rhor(:)
     !
     INTEGER :: ir, ig, iss, isup, isdw
     INTEGER :: nspin
-    COMPLEX(dp), ALLOCATABLE :: psi(:)
-
-    nspin= SIZE (rhog, 2)
-
-    ALLOCATE( psi( desc%nnr ) )
+    COMPLEX(DP), ALLOCATABLE :: psi(:)
+    !
+    nspin = SIZE(rhog,2)
+    !
+    ALLOCATE( psi(desc%nnr) )
+    !
+    !$acc data present_or_copyin(rhog) present_or_copyout(rhor) create(psi)
+    !
     IF ( gamma_only ) THEN
        IF( nspin == 1 ) THEN
-          iss=1
-          CALL fftx_oned2threed( desc, psi, rhog(:,iss) )
-          CALL invfft('Rho',psi, desc )
+          iss = 1
+          !
+          CALL fftx_oned2threed( desc, psi, rhog(:,iss), gpu_args_=.TRUE. )
+          !
+          !$acc host_data use_device( psi )
+          CALL invfft( 'Rho', psi, desc )
+          !$acc end host_data
+          !
+#if defined(_OPENACC)
+!$acc parallel loop
+#else
 !$omp parallel do
-          DO ir=1,desc%nnr
-             rhor(ir)=DBLE(psi(ir))
-          END DO
+#endif
+          DO ir = 1, desc%nnr
+             rhor(ir) = DBLE(psi(ir))
+          ENDDO
+#if !defined(_OPENACC)
 !$omp end parallel do
-       ELSE IF ( nspin == 2) THEN
-          isup=1
-          isdw=2
-          CALL fftx_oned2threed( desc, psi, rhog(:,isup), rhog(:,isdw) )
-          CALL invfft('Rho',psi, desc )
+#endif
+          !
+       ELSEIF ( nspin == 2) THEN
+          !
+          isup = 1
+          isdw = 2
+          !
+          CALL fftx_oned2threed( desc, psi, rhog(:,isup), rhog(:,isdw), gpu_args_=.TRUE. )
+          !
+          !$acc host_data use_device( psi )
+          CALL invfft( 'Rho', psi, desc )
+          !$acc end host_data
+          !
+#if defined(_OPENACC)
+!$acc parallel loop
+#else
 !$omp parallel do
-          DO ir=1,desc%nnr
-             rhor(ir)= DBLE(psi(ir))+AIMAG(psi(ir))
-          END DO
+#endif
+          DO ir = 1, desc%nnr
+             rhor(ir) = DBLE(psi(ir)) + AIMAG(psi(ir))
+          ENDDO
+#if !defined(_OPENACC)
 !$omp end parallel do
+#endif
+          !
        ELSE
-          CALL errore('rho_g2r_sum_components','noncolinear case?',nspin)
+          CALL errore( 'rho_g2r_sum_components', 'noncolinear case?', nspin )
        ENDIF
        !
     ELSE
        !
-       DO iss=1, nspin
-          CALL fftx_oned2threed( desc, psi, rhog(:,iss) )
-          CALL invfft('Rho',psi, desc )
+       DO iss = 1, nspin
+          !
+          CALL fftx_oned2threed( desc, psi, rhog(:,iss), gpu_args_=.TRUE. )
+          !
+          !$acc host_data use_device( psi )
+          CALL invfft( 'Rho', psi, desc )
+          !$acc end host_data
+          !
           IF( iss == 1 ) THEN
+#if defined(_OPENACC)
+!$acc parallel loop
+#else
 !$omp parallel do
-             DO ir=1,desc%nnr
-                rhor(ir)=DBLE(psi(ir))
-             END DO
+#endif
+             DO ir = 1, desc%nnr
+                rhor(ir) = DBLE(psi(ir))
+             ENDDO
+#if !defined(_OPENACC)
 !$omp end parallel do
+#endif
           ELSE
+#if defined(_OPENACC)
+!$acc parallel loop
+#else
 !$omp parallel do
-             DO ir=1,desc%nnr
-                rhor(ir)=rhor(ir) + DBLE(psi(ir))
-             END DO
+#endif
+             DO ir = 1, desc%nnr
+                rhor(ir) = rhor(ir) + DBLE(psi(ir))
+             ENDDO
+#if !defined(_OPENACC)
 !$omp end parallel do
-          END IF
-       END DO
-    END IF
-    
+#endif
+          ENDIF
+       ENDDO
+    ENDIF
+    !
+    !$acc end data
+    !
     DEALLOCATE( psi )
-
+    !
   END SUBROUTINE rho_g2r_sum_components
-
+  !
+  !
 END MODULE fft_rho
