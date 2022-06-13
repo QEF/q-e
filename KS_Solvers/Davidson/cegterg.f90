@@ -206,7 +206,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   if (n_start .le. n_end) &
   CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, hpsi(1,n_start), kdmx, ZERO, hc(1,n_start), nvecx )
   !
-  if ((n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 )) & 
+  if (n_start .le. n_end) & 
 #if defined(__CUDA)
         CALL mp_sum( hc, 1, nbase, n_start, n_end , intra_bgrp_comm )
 #else
@@ -228,7 +228,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
   END IF
   !
-  if ((n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 )) & 
+  if (n_start .le. n_end) & 
 #if defined(__CUDA)
          CALL mp_sum( sc, 1, nbase, n_start, n_end , intra_bgrp_comm )
 #else
@@ -476,7 +476,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, hpsi(1,nb1), kdmx, psi(1,n_start), kdmx, &
                  ZERO, hc(nb1,n_start), nvecx )
      !
-     if ((n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 )) &
+     if (n_start .le. n_end) &
 #if defined(__CUDA)
        CALL mp_sum( hc, nb1, nbase+notcnv, n_start, n_end , intra_bgrp_comm )
 #else
@@ -498,7 +498,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !
      END IF
      !
-     if ( (n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 ) ) & 
+     if (n_start .le. n_end) & 
 #if defined(__CUDA)
          CALL mp_sum( sc, nb1, nbase+notcnv, n_start, n_end , intra_bgrp_comm )
 #else
