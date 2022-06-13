@@ -59,11 +59,15 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
   ! ... set Im[ psi(G=0) ] etc -  needed for numerical stability
   !
   IF ( gstart == 2 ) then
-    !$acc kernels
+     !$acc kernels
      psi (1,1:nstart) = CMPLX( DBLE( psi (1,1:nstart) ), 0.D0,kind=DP)
      hpsi(1,1:nstart) = CMPLX( DBLE( hpsi(1,1:nstart) ), 0.D0,kind=DP)
-     if (overlap) spsi(1,1:nstart) = CMPLX( DBLE( spsi(1,1:nstart) ), 0.D0,kind=DP)
-    !$acc end kernels
+     !$acc end kernels
+     if (overlap) then 
+       !$acc kernels
+       spsi(1,1:nstart) = CMPLX( DBLE( spsi(1,1:nstart) ), 0.D0,kind=DP)
+       !$acc end kernels
+     endif 
   END IF
   
   kdim = 2 * npw
