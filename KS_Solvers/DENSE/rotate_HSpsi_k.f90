@@ -135,8 +135,10 @@ SUBROUTINE rotate_HSpsi_k( npwx, npw, nstart, nbnd, npol, psi, hpsi, overlap, sp
   CALL mp_type_create_column_section(psi(1,1), 0, npwx, npwx, column_type)
   CALL divide_all(inter_bgrp_comm,nbnd,n_start,n_end,recv_counts,displs)
 
+  !$acc end host_data
+
   ALLOCATE( aux ( kdmx, nbnd ) )
-  !$acc host_data use_device(aux)
+  !$acc host_data use_device(psi, hpsi, spsi, hh, ss, vv, en, aux)
 
   my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
   if (n_start .le. n_end) &
@@ -173,13 +175,13 @@ SUBROUTINE rotate_HSpsi_k( npwx, npw, nstart, nbnd, npol, psi, hpsi, overlap, sp
      CALL dev_memcpy(spsi, psi, [1, kdmx], 1, [n_start,n_end])
 
   END IF
+  !
   !$acc end host_data
+  !
   DEALLOCATE( aux )
   CALL mp_type_free( column_type )
 
   call stop_clock('rotHSw:evc'); !write(*,*) 'stop rotHSw:evc' ; FLUSH(6)
-  !
-  !$acc end host_data
   !
   DEALLOCATE( vv )
   DEALLOCATE( ss )
