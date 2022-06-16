@@ -94,8 +94,9 @@ module HP\#auto -title "PWSCF GUI: module HP.x" -script {
                 "1 = find atoms by analyzing unperturbed occupations"
                 "2 = find atoms from different Hubbard atomic types"
                 "3 = find atoms by symmetry"
+                "4 = perturb all Hubbard atoms"
             }
-            -value { 1 2 3 }                    
+            -value { 1 2 3 4 }                    
             -widget optionmenu
         }
 

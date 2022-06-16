@@ -107,6 +107,7 @@ switch -exact -- $tag {
 	    append cols(vline) "__optional::end__ "
 	} elseif { [::tclu::lpresent $mode syntax] } {
 	    syntaxAppend "\}"
+            syntaxFlush
 	}
     }
     conditional { 
@@ -116,6 +117,7 @@ switch -exact -- $tag {
 	    append cols(vline) "__conditional::end__ "
 	} elseif { [::tclu::lpresent $mode syntax] } {
 	    syntaxAppend "\]"
+            syntaxFlush
 	}
     }
     group {
