@@ -149,6 +149,8 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   !$acc data present( rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
+  ierr = 0
+  !
 #if defined(__LIBXC)
   !
   fkind_x = -1

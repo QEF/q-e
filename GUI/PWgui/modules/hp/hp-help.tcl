@@ -178,6 +178,7 @@ Method for searching of atoms which must be perturbed.
     there are using symmetry. Atoms which have the
     same type but are not equivalent by symmetry will
     be distinguished in this case.
+4 = Perturb all Hubbard atoms (the most expensive option)
          </pre></blockquote>
 </ul>      
       
