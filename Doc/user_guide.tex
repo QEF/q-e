@@ -370,21 +370,22 @@ The \qe\ distribution contains several directories. Some of them are
 common to all packages:
 
 \begin{tabular}{ll}
-\texttt{Modules/} &  Fortran modules and utilities used by all programs\\
-\texttt{upflib/}  &  pseudopotential-related code, plus conversion tools\\
-\texttt{include/} &  files *.h included by fortran and C source files\\
-\texttt{clib/}    &  libraries and utilities written in C\\
-\texttt{FFTXlib/} &  FFT libraries\\
-\texttt{LAXlib/}  &  Linear Algebra (parallel) libraries\\
-\texttt{KS\_Solvers/}  &  Iterative diagonalization routines\\
-\texttt{UtilXlib/}&  Miscellaneous timing, error handling, MPI utilites\\
-\texttt{XClib/}   &  Exchange-correlation functionals (excepted van der Waals)\\
-\texttt{install/} &  installation scripts and utilities\\
-\texttt{pseudo}/  &  pseudopotential files used by examples\\
-\texttt{Doc/}     &  general documentation\\
-\texttt{archive/} &  external libraries in .tar.gz form\\
-\texttt{external/}&  external libraries downloaded by CMake\\
-\texttt{test-suite/} &  automated tests\\
+\texttt{Modules/}    & Fortran modules and utilities used by all programs\\
+\texttt{upflib/}     & pseudopotential-related code, plus conversion tools\\
+\texttt{include/}    & files *.h included by fortran and C source files\\
+\texttt{FFTXlib/}    & FFT libraries\\
+\texttt{LAXlib/}     & Linear Algebra (parallel) libraries\\
+\texttt{KS\_Solvers/}& Iterative diagonalization routines\\
+\texttt{UtilXlib/}   & Miscellaneous timing, error handling, MPI utilites\\
+\texttt{XClib/}      & Exchange-correlation functionals (excepted van der Waals)\\
+\texttt{MBD/}        & Routines for many-body dispersions
+\texttt{LR\_Modules/}& Fortran modules and utilities used by linear-response codes\\
+\texttt{install/}    & installation scripts and utilities\\
+\texttt{pseudo}/     & pseudopotential files used by examples\\
+\texttt{Doc/}        & general documentation\\
+\texttt{archive/}    & external libraries in .tar.gz form\\
+\texttt{external/}   & external libraries downloaded by CMake\\
+\texttt{test-suite/} & automated tests
 \end{tabular}
 \\
 while others are specific to a single package:
@@ -399,14 +400,14 @@ while others are specific to a single package:
 \texttt{CPV/}     & \CP\ package\\
 \texttt{atomic/}  & \texttt{atomic} package\\
 \texttt{GUI/}     & \texttt{PWGui} package\\
-\texttt{QEHeat/}   & \texttt{QEHeat} package\\
 \texttt{HP/}      & \texttt{HP} package
+\texttt{QEHeat/}  & \texttt{QEHeat} package\\
+\texttt{KCW/}     & \texttt{KCW} package
 \end{tabular}
+\\
 
 Finally, directory \texttt{COUPLE/} contains code and documentation
-that is useful to call \qe\ programs from external codes; directory
-\texttt{LR\_Modules/} contains source files for modules that are common
-to all linear-response codes.
+that is useful to call \qe\ programs from external codes.
 \subsection{Prerequisites}
 \label{Sec:Installation}
 
@@ -450,7 +451,7 @@ software). Note that most commercial compilers are also available
 free of charge under some conditions (e.g. academic or personal usage, no
 support) and may provide MPI libraries and run-time software as well.
 
-\subsection{Building with cMake}
+\subsection{Building with CMake}
 
 See \texttt{https://gitlab.com/QEF/q-e/-/wikis/Developers/CMake-build-system}.
 
