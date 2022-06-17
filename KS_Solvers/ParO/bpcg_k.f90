@@ -86,11 +86,15 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
 
   COMPLEX(DP), ALLOCATABLE ::  spsi0vec (:,:) ! the product of spsi0 and a group of vectors
   !$acc declare device_resident(spsi0vec)
-
+  
   REAL(DP), ALLOCATABLE :: g0(:), g1(:), g2(:), alpha(:), gamma(:), ethr_cg(:), ff(:), ff0(:)
   !$acc declare device_resident(g0, g1, g2, alpha, gamma, ethr_cg, ff, ff0)
   INTEGER, ALLOCATABLE :: cg_iter(:)
   !$acc declare device_resident(cg_iter)
+  INTEGER :: cg_iter_l ! cg_iter(l) (useful for some GPU optimization)
+  !
+  LOGICAL :: ff_check, ff0_check, g1_check, iter_check  ! exit iteration condition checks
+  !
   REAL(DP) :: beta, ee
   INTEGER  :: kdim, kdmx, i, l, block_size, done, nactive, nnew, newdone
   !
@@ -299,14 +303,22 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
      !$acc end host_data
 
      newdone = 0  ! number of correction vectors that converge (or are done) at this iteration
-     CALL start_clock( 'pcg:move' )
-     !$acc parallel copy(newdone, nhpsi)
-     !$acc loop seq 
+     CALL start_clock( 'pcg:move1' )
      do l = 1, nactive; i = l + done
         !write (6,*) cg_iter(l), g1(l), ff(l),  gamma(l)
 
-        IF ( ff(l) > ff0(l) .AND. ff0(l) < 0.d0 ) THEN
-           !$acc loop vector
+        !$acc serial copyout(ff_check, ff0_check, g1_check, cg_iter_l, iter_check) copyin(maxter)
+        ff_check   = ff(l) > ff0(l)  
+        ff0_check  = ff0(l) < 0.d0 
+        g1_check   = ABS ( g1(l) ) < ethr_cg(l)  
+        cg_iter_l  = cg_iter(l)
+        iter_check = cg_iter_l == maxter 
+        !$acc end serial 
+
+        !write (6,*) cg_iter(l), g1(l), ff(l),  gamma(l)
+
+        IF ( ff_check .AND. ff0_check ) THEN
+           !$acc parallel loop 
            DO ii = 1, kdmx
              psi(ii,i)  = psi(ii,i)  - alpha(l) * p(ii,l) ! fallback solution: if last iter failed to improve ff0
              hpsi(ii,i) = hpsi(ii,i) - alpha(l) * hp(ii,l)! exit whitout updating and ...
@@ -316,15 +328,15 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
 
         !write(6,*) 'g0, g1, g2 :', g0(l), g1(l), g2(l)
         !write(6,*) 'ff0, ff : ', ff0(l), ff(l)
-        IF ( ABS ( g1(l) ) < ethr_cg(l) .OR. ( ff(l) > ff0(l) ) .OR. cg_iter(l) == maxter) THEN ! EXIT iterate
+        IF ( g1_check .OR. ff_check .OR. iter_check ) THEN ! EXIT iterate
            !write (6,*) ' exit  pcg loop'
            !write(6,*) ' l =',l,' i =',i
            !if ( cg_iter(l) == maxter.and. ABS(g1(l)) > ethr_cg(l))  write (6,*) 'CG not converged maxter exceeded', cg_iter(l), g1(l), g0(l), ethr_cg(l)
            !IF ( ABS ( g1(l) ) < ethr_cg(l)) write (6,*) 'CG correction converged ', cg_iter(l), g1(l), ethr_cg(l)
            !IF ( ABS ( g1(l) ) > g0(l)     ) write (6,*) 'CG not converged ', cg_iter(l), g1(l), g0(l), ethr_cg(l)
 
-           nhpsi = nhpsi + cg_iter(l)    ! update nhpsi count
-           IF (.NOT. (ABS(g1(l))< ethr_cg(l) .OR. (ff(l)>ff0(l)) ) .AND. cg_iter(l)==maxter) nhpsi = nhpsi + 1 ! because this would be the count
+           nhpsi = nhpsi + cg_iter_l    ! update nhpsi count
+           IF (.NOT. ( g1_check .OR. ff_check ) .AND. iter_check ) nhpsi = nhpsi + 1 ! because this would be the count
 
            newdone = newdone + 1         ! one more solution found (or no more active anyway)
 
@@ -332,7 +344,8 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
 
            !write(6,*) ' swapping converged psi/hpsi/spsi i = ',i, " with i' = ",done+newdone
            ! swap the terminated vector with the first in the list of the active ones
-           !$acc loop vector 
+           !$acc kernels copyin(done, newdone)
+           !$acc loop independent
            DO ii = 1, kdmx
              p (ii,l) = psi (ii,done+newdone) ; psi (ii,done+newdone) = psi (ii,i) ; psi (ii,i) = p (ii,l)
              hp(ii,l) = hpsi(ii,done+newdone) ; hpsi(ii,done+newdone) = hpsi(ii,i) ; hpsi(ii,i) = hp(ii,l)
@@ -345,32 +358,35 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
 
            !write(6,*) ' overwrite converged p/hp/etc l = ',l, ' with newdone = ',newdone
            ! move information of the swapped active vector in the right place to keep going
-           !$acc loop vector 
+           !$acc loop independent
            DO ii = 1, kdmx
              p(ii,l) = p(ii,newdone) ; hp(ii,l) = p(ii,newdone)  ; sp(ii,l) = sp(ii,newdone)
              b(ii,l) = b(ii,newdone) ;  z(ii,l) = z(ii,newdone)
            END DO
+
            ff0(l) = ff0(newdone) ; ff(l) = ff(newdone)
            alpha(l) = alpha(newdone) ; g0(l) = g0(newdone) ; g1(l) = g1(newdone) ; g2(l) = g2(newdone)
            cg_iter(l) = cg_iter(newdone) ; ethr_cg(l) = ethr_cg(newdone)
+           !$acc end kernels
 
         ELSE
 
            !write(6,*) ' l =',l,' i =',i
+           !$acc kernels
            beta   = (g1(l)-g2(l))/g0(l)         ! Polak - Ribiere style update
            g0(l)  = g1(l)                       ! < new z | new gradient >  ->  < old z | old gradient >
-           !$acc loop vector
+           !$acc loop independent
            DO ii = 1, kdmx
              p(ii,l) = z(ii,l) + beta * p(ii,l)      ! updated search direction
            END DO 
            !write(6,*) 'beta :', beta
 
            ff0(l) = ff(l)                       ! updated minimum value reached by the function
+           !$acc end kernels
 
         END IF
      end do
-     !$acc end parallel 
-     CALL stop_clock( 'pcg:move' )
+     CALL stop_clock( 'pcg:move1' )
 
      IF ( newdone > 0 ) THEN
 
@@ -380,25 +396,22 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
         !write(6,*) ' there have been ', newdone, ' new converged solution'
         !write(6,*) ' done = ', done, ' nactive =', nactive
 
-        CALL start_clock( 'pcg:move' )
-        !$acc parallel 
-        !$acc loop seq  
+        CALL start_clock( 'pcg:move2' )
         do l=1, nactive
 
            !write(6,*) ' l+newdone =',l+newdone,'  ->   l =',l
-           !$acc loop vector 
+           !$acc parallel loop 
            DO ii = 1, kdmx
              p(ii,l) = p(ii,l+newdone) ; hp(ii,l) = hp(ii,l+newdone) ; sp(ii,l) = sp(ii,l+newdone)
              b(ii,l) = b(ii,l+newdone) ;  z(ii,l) =  z(ii,l+newdone) 
            END DO 
-
+           !$acc kernels
            ff0(l) = ff0(l+newdone) ; ff(l) = ff(l+newdone)
            g0(l) = g0(l+newdone) ; g1(l) = g1(l+newdone) ; g2(l) = g2(l+newdone)
            cg_iter(l) = cg_iter(l+newdone) ; ethr_cg(l) = ethr_cg(l+newdone)
-
+           !$acc end kernels
         end do
-        !$acc end parallel 
-        CALL stop_clock( 'pcg:move' )
+        CALL stop_clock( 'pcg:move2' )
 
      END IF
 
