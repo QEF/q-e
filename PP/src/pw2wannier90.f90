@@ -55,6 +55,8 @@ module wannier
    ! shc
                             write_sHu, write_sIu, sHu_formatted, sIu_formatted, &
    ! end shc
+   ! irreducible BZ
+                            irr_bz, &
    ! vv: Begin SCDM keywords
                             scdm_proj
    character(LEN=15)     :: scdm_entanglement
@@ -90,6 +92,7 @@ module wannier
    logical                  :: old_spinor_proj  ! for compatability for nnkp files prior to W90v2.0
    integer,allocatable :: rir(:,:)
    logical,allocatable :: zerophase(:,:)
+   real(DP), allocatable :: bvec(:,:), xbvec(:,:)    ! bvectors
 end module wannier
 !
 
@@ -134,6 +137,7 @@ PROGRAM pw2wannier90
        write_sHu, write_sIu, sHu_formatted, sIu_formatted,&
    ! end shc
        regular_mesh,& !gresch
+       irr_bz,& ! Koretsune
    ! begin change Vitale
        scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma
    ! end change Vitale
@@ -188,6 +192,7 @@ PROGRAM pw2wannier90
      write_unkg= .false.
      write_dmn = .false. !YN:
      read_sym  = .false. !YN:
+     irr_bz = .false.
      scdm_proj = .false.
      scdm_entanglement = 'isolated'
      scdm_mu = 0.0_dp
@@ -232,6 +237,7 @@ PROGRAM pw2wannier90
   CALL mp_bcast(write_unkg,ionode_id, world_comm)
   CALL mp_bcast(write_dmn,ionode_id, world_comm)
   CALL mp_bcast(read_sym,ionode_id, world_comm)
+  CALL mp_bcast(irr_bz,ionode_id, world_comm)
   CALL mp_bcast(scdm_proj,ionode_id, world_comm)
   CALL mp_bcast(scdm_entanglement,ionode_id, world_comm)
   CALL mp_bcast(scdm_mu,ionode_id, world_comm)
@@ -267,6 +273,10 @@ PROGRAM pw2wannier90
   ENDIF
   IF (scdm_sigma <= 0._dp) &
     call errore('pw2wannier90','Sigma in the SCDM method must be positive.')
+  IF (irr_bz .and. scdm_proj) CALL errore('pw2wannier90', &
+       "Irreducible BZ and SCDM not implemented", 1)
+  IF (irr_bz .and. (write_uHu .or. write_uIu)) CALL errore('pw2wannier90', &
+       "Irreducible BZ and compute_orb not implemented", 1)
   !
   SELECT CASE ( trim( spin_component ) )
   CASE ( 'up' )
@@ -349,7 +359,11 @@ PROGRAM pw2wannier90
         WRITE(stdout,*) ' *** Compute  M '
         WRITE(stdout,*) ' ---------------'
         WRITE(stdout,*)
-        CALL compute_mmn
+        IF(irr_bz) THEN
+           CALL compute_mmn_ibz
+        ELSE
+           CALL compute_mmn
+        ENDIF
         WRITE(stdout,*)
      ELSE
         WRITE(stdout,*) ' -----------------------------'
@@ -453,6 +467,7 @@ PROGRAM pw2wannier90
      if(write_dmn  )  CALL print_clock( 'compute_dmn'  )!YN:
      IF(write_amn  )  CALL print_clock( 'compute_amn'  )
      IF(write_mmn  )  CALL print_clock( 'compute_mmn'  )
+     IF(irr_bz  )     CALL print_clock( 'compute_mmn_ibz'  )
      IF(write_sHu .OR. write_sIu) CALL print_clock( 'compute_shc'  )
      IF(write_unk  )  CALL print_clock( 'write_unk'    )
      IF(write_unkg )  CALL print_clock( 'write_parity' )
@@ -829,6 +844,7 @@ SUBROUTINE read_nnkp
   real(DP) :: xx(3), xnorm, znorm, coseno
   LOGICAL :: have_nnkp,found
   INTEGER :: tmp_auto ! vv: Needed for the selection of projections with SCDM
+  REAL(DP), ALLOCATABLE :: xkc_full(:,:)
 
   IF (ionode) THEN  ! Read nnkp file on ionode only
 
@@ -901,26 +917,36 @@ SUBROUTINE read_nnkp
            &//trim(seedname)//'.nnkp', 1 )
      endif
      READ(iun_nnkp,*) numk
-     IF(numk/=iknum) THEN
-        WRITE(stdout,*)  ' Something wrong! '
-        WRITE(stdout,*)  ' numk=',numk, ' iknum=',iknum
-        CALL errore( 'pw2wannier90', 'Wrong number of k-points', numk)
-     ENDIF
-     IF(regular_mesh) THEN
+     IF(irr_bz) THEN
+        ALLOCATE(xkc_full(3,numk))
         DO i=1,numk
-           READ(iun_nnkp,*) xx(1), xx(2), xx(3)
-           CALL cryst_to_cart( 1, xx, bg, 1 )
-           IF(abs(xx(1)-xk(1,i))>eps6.or. &
-                abs(xx(2)-xk(2,i))>eps6.or. &
-                abs(xx(3)-xk(3,i))>eps6) THEN
-              WRITE(stdout,*)  ' Something wrong! '
-              WRITE(stdout,*) ' k-point ',i,' is wrong'
-              WRITE(stdout,*) xx(1), xx(2), xx(3)
-              WRITE(stdout,*) xk(1,i), xk(2,i), xk(3,i)
-              CALL errore( 'pw2wannier90', 'problems with k-points', i )
-           ENDIF
-        ENDDO
-     ENDIF ! regular mesh check
+           READ(iun_nnkp,*) xkc_full(:,i)
+        END DO
+        IF(any(abs(xkc_full(:,:)) > 0.5)) THEN
+           CALL errore( 'pw2wannier90', 'kpoints should be -0.5 <= k < 0.5', 1 )
+        ENDIF
+     ELSE
+        IF(numk/=iknum) THEN
+           WRITE(stdout,*)  ' Something wrong! '
+           WRITE(stdout,*)  ' numk=',numk, ' iknum=',iknum
+           CALL errore( 'pw2wannier90', 'Wrong number of k-points', numk)
+        ENDIF
+        IF(regular_mesh) THEN
+           DO i=1,numk
+              READ(iun_nnkp,*) xx(1), xx(2), xx(3)
+              CALL cryst_to_cart( 1, xx, bg, 1 )
+              IF(abs(xx(1)-xk(1,i))>eps6.or. &
+                   abs(xx(2)-xk(2,i))>eps6.or. &
+                   abs(xx(3)-xk(3,i))>eps6) THEN
+                 WRITE(stdout,*)  ' Something wrong! '
+                 WRITE(stdout,*) ' k-point ',i,' is wrong'
+                 WRITE(stdout,*) xx(1), xx(2), xx(3)
+                 WRITE(stdout,*) xk(1,i), xk(2,i), xk(3,i)
+                 CALL errore( 'pw2wannier90', 'problems with k-points', i )
+              ENDIF
+           ENDDO
+        ENDIF ! regular mesh check
+     ENDIF
      WRITE(stdout,*) ' - K-points are ok'
 
   ENDIF ! ionode
@@ -1161,6 +1187,21 @@ SUBROUTINE read_nnkp
   CALL mp_bcast(nexband,ionode_id, world_comm)
   CALL mp_bcast(excluded_band,ionode_id, world_comm)
   CALL mp_bcast(num_bands,ionode_id, world_comm)
+
+  ! 
+  ALLOCATE( bvec(3,nnb), xbvec(3,nnb) )
+  IF (ionode) THEN
+     xbvec = 0
+     IF (irr_bz) THEN
+        DO i=1, nnb
+           xbvec(:,i) = xkc_full(:,kpb(1,i)) - xkc_full(:,1) + g_kpb(:,1,i)
+        END DO
+        DEALLOCATE(xkc_full)
+     ENDIF
+  ENDIF
+  CALL mp_bcast(xbvec, ionode_id, world_comm)
+  bvec = xbvec
+  CALL cryst_to_cart(nnb, bvec, bg, +1)
 
   IF (ionode) CLOSE (iun_nnkp)   ! ionode only
 
@@ -2377,6 +2418,1050 @@ SUBROUTINE compute_mmn
    RETURN
 END SUBROUTINE compute_mmn
 
+SUBROUTINE compute_mmn_ibz
+   !-----------------------------------------------------------------------
+   !
+   USE io_global,       ONLY : stdout, ionode
+   USE kinds,           ONLY : DP
+   USE wvfct,           ONLY : nbnd, npwx
+   USE control_flags,   ONLY : gamma_only
+   USE io_files,        ONLY : nwordwfc, iunwfc
+   USE wavefunctions,   ONLY : evc, psic
+   USE fft_base,        ONLY : dffts
+   !USE klist,           ONLY : nkstot, xk, ngk
+   USE klist,           ONLY : ngk, igk_k, xk
+   USE noncollin_module,ONLY : noncolin, npol, lspinorb
+   USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
+   USE constants,       ONLY : tpi
+   USE cell_base,       ONLY : at
+   USE uspp,            ONLY : nkb, vkb, okvan
+   USE uspp_param,      ONLY : upf, nh, nhm
+   USE becmod,          ONLY : bec_type, becp, calbec, &
+                               allocate_bec_type, deallocate_bec_type
+   USE symm_base,       ONLY : invs
+   USE mp,              ONLY : mp_sum
+   USE mp_pools,        ONLY : intra_pool_comm
+   USE wannier,         ONLY : iknum, ikstart, nnb, nexband, excluded_band, seedname, bvec
+   USE uspp_init,       ONLY : init_us_2
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, EXTERNAL      :: find_free_unit
+   COMPLEX(DP), EXTERNAL  :: zdotc
+   !
+   complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
+   !
+   INTEGER                  :: ik, ib, ikp, ikevc1, ikevc2, isym, m, n, iun_mmn
+   INTEGER                  :: ih, jh, nt, na, ikb, jkb, ijkb0
+   INTEGER                  :: npw, npwq
+   INTEGER, ALLOCATABLE     :: rir(:,:)
+   CHARACTER (len=9)        :: cdate, ctime
+   CHARACTER (len=60)       :: header
+   REAL(DP)                 :: kdiff(3), skp(3), arg, kpb(3)
+   REAL(DP), ALLOCATABLE    :: xkc(:,:)
+   COMPLEX(DP)              :: mmn, phase1
+   COMPLEX(DP), ALLOCATABLE :: Mkb(:,:), evc2(:,:), gpsi(:,:)
+   COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qq_so(:,:,:,:,:)
+   TYPE(bec_type)           :: becp1, becp2
+   ! symmetry operation with timerevarsal symmetry
+   INTEGER                  :: nsym2, s2(3,3,96), invs2(96), t_rev2(96), t_rev_spin(2,2)
+   REAL(DP)                 :: sr2(3,3,96), ft2(3,96)
+   !
+   CALL start_clock( 'compute_mmn_ibz' )
+   !
+   CALL setup_symm_timerevarsal()
+   !
+   CALL pw2wan_set_symm_with_timerevarsal( dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
+   !
+   !
+   CALL save_sym_info()
+   !
+   iun_mmn = find_free_unit()
+   CALL date_and_tim( cdate, ctime )
+   header='IBZ Mmn created on '//cdate//' at '//ctime
+   IF (ionode) THEN
+      OPEN (unit=iun_mmn, file=trim(seedname)//".mmni",form='formatted')
+      WRITE (iun_mmn,*) header
+      WRITE (iun_mmn,*) nbnd-nexband, iknum, nnb
+   ENDIF
+   !
+   WRITE(stdout,'(a,i8)') '  MMN: iknum = ',iknum
+   !
+   IF (okvan) THEN
+      ALLOCATE(qb(nhm, nhm, ntyp, nnb), qq_so(nhm, nhm, 4, ntyp, nnb))
+      CALL init_qb_so(qb, qq_so)
+      CALL allocate_bec_type(nkb, nbnd, becp)
+      CALL allocate_bec_type(nkb, nbnd, becp1)
+      CALL allocate_bec_type(nkb, nbnd, becp2)
+   END IF
+   !
+   ALLOCATE( evc2(npwx*npol,nbnd), gpsi(npwx*npol,nbnd), Mkb(nbnd,nbnd) )
+   !
+   ! calculate <psi_k | e^{-ibr} | psi_k+b>
+   ! ik : <psi_k|
+   DO ik=1, iknum
+      WRITE (stdout,'(i8)',advance='no') ik
+      IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
+      FLUSH(stdout)
+      ikevc1 = ik + ikstart - 1
+      CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc1, -1 )
+      npw = ngk(ik)
+      !
+      !  USPP
+      !
+      IF (okvan) THEN
+         ! becp for k
+         CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
+         CALL calbec (npw, vkb, evc, becp)
+      END IF
+      !
+      ! |psi_k+b>,  k+b = xk(:,ik) + xbvec(:,ib) = s.k + G = s.xk(:,ikp) + kdiff
+      DO ib=1, nnb
+         CALL kpb_search(ik, ib, ikp, isym, kdiff, skp)
+         IF (ionode) WRITE (iun_mmn,'(7i5)') ik, ikp, (nint(kdiff(n)), n=1,3)
+         ikevc2 = ikp + ikstart - 1
+         CALL davcio (evc2, 2*nwordwfc, iunwfc, ikevc2, -1 )
+         CALL rotate_evc(isym, ikp, ik, kdiff, evc2, gpsi)
+         !
+         ! USPP
+         !
+         IF (okvan) THEN
+            ! calculate becp1 = <beta|psi_kp> and rotate => becp2
+            npwq = ngk(ikp)
+            kpb = skp + kdiff
+            call cryst_to_cart(1, kpb, at, 1)
+            call cryst_to_cart(1, skp, at, 1)
+            CALL init_us_2 (npwq, igk_k(1,ikp), xk(1,ikp), vkb)
+            CALL calbec ( npwq, vkb, evc2, becp1 )
+            ! t_rev2(isym) = 0 or 1  ==>  1-2*t_rev2(isym) = 1 or -1
+            CALL rotate_becp(isym, 1-2*t_rev2(isym), xk(1,ikp), skp, becp1, becp2)
+         END IF
+         !
+         ! plane wave part
+         !
+         Mkb = (0.0d0,0.0d0)
+         DO n=1, nbnd
+            IF (excluded_band(n)) CYCLE
+            DO m=1, nbnd
+               IF (excluded_band(m)) CYCLE
+               IF (noncolin) THEN
+                  mmn = zdotc (npw, evc(1,m),1,gpsi(1,n),1) &
+                      + zdotc (npw, evc(npwx+1,m),1,gpsi(npwx+1,n),1)
+               ELSE
+                  mmn = zdotc (npw, evc(1,m),1,gpsi(1,n),1)
+               END IF
+               CALL mp_sum(mmn, intra_pool_comm)
+               Mkb(m,n) = mmn
+            END DO
+         END DO
+         !
+         ! USPP/PAW part
+         !
+         IF (okvan) THEN
+            ijkb0 = 0
+            DO nt = 1, ntyp
+               IF ( upf(nt)%tvanp ) THEN
+                  DO na = 1, nat
+                     !
+                     ! e^{-ibr}
+                     arg = dot_product( bvec(:,ib), tau(:,na) ) * tpi
+                     phase1 = cmplx( cos(arg), -sin(arg) ,kind=DP)
+                     !
+                     IF ( ityp(na) == nt ) THEN
+                        DO jh = 1, nh(nt)
+                           jkb = ijkb0 + jh
+                           DO ih = 1, nh(nt)
+                              ikb = ijkb0 + ih
+                              !
+                              DO m = 1,nbnd
+                                 IF (excluded_band(m)) CYCLE
+                                 DO n = 1,nbnd
+                                    IF (excluded_band(n)) CYCLE
+                                    IF (gamma_only) THEN
+                                       mmn = phase1 * qb(ih,jh,nt,ib) * becp%r(ikb,m) * becp2%r(jkb,n)
+                                    ELSE IF (noncolin) THEN
+                                       IF (lspinorb) THEN
+                                          mmn = phase1 * ( &
+                                               qq_so(ih,jh,1,nt,ib) * conjg( becp%nc(ikb, 1, m) ) * becp2%nc(jkb, 1, n) &
+                                             + qq_so(ih,jh,2,nt,ib) * conjg( becp%nc(ikb, 1, m) ) * becp2%nc(jkb, 2, n) &
+                                             + qq_so(ih,jh,3,nt,ib) * conjg( becp%nc(ikb, 2, m) ) * becp2%nc(jkb, 1, n) &
+                                             + qq_so(ih,jh,4,nt,ib) * conjg( becp%nc(ikb, 2, m) ) * becp2%nc(jkb, 2, n) &
+                                             )
+                                       ELSE
+                                          mmn =  phase1 * qb(ih,jh,nt,ib) * &
+                                            (conjg( becp%nc(ikb, 1, m) ) * becp2%nc(jkb, 1, n) &
+                                           + conjg( becp%nc(ikb, 2, m) ) * becp2%nc(jkb, 2, n) )
+                                       END IF
+                                    ELSE
+                                       mmn = phase1 * qb(ih,jh,nt,ib) * conjg( becp%k(ikb,m) ) * becp2%k(jkb,n)
+                                    END IF
+                                    Mkb(m,n) = Mkb(m,n) + mmn
+                                 ENDDO
+                              ENDDO ! m
+                           ENDDO !ih
+                        ENDDO !jh
+                        ijkb0 = ijkb0 + nh(nt)
+                     ENDIF  !ityp
+                  ENDDO  !nat
+               ELSE  !tvanp or tpanp
+                  DO na = 1, nat
+                     IF ( ityp(na) == nt ) ijkb0 = ijkb0 + nh(nt)
+                  ENDDO
+               ENDIF !tvanp
+            ENDDO !ntyp
+         END IF !okvan
+         !
+         ! write Mkb(m,n) => prefix.mmn
+         !
+         DO n=1, nbnd
+            IF (excluded_band(n)) CYCLE
+            DO m=1, nbnd
+               IF (excluded_band(m)) CYCLE
+               IF (ionode) WRITE (iun_mmn,'(2f18.12)') Mkb(m,n)
+            END DO
+         END DO
+         !
+      END DO !ib
+      !
+   END DO !ik
+   !
+   IF (okvan) THEN
+      CALL deallocate_bec_type(becp)
+      CALL deallocate_bec_type(becp1)
+      CALL deallocate_bec_type(becp2)
+   END IF
+   !
+   IF (ionode) CLOSE(iun_mmn)
+   WRITE(stdout,'(/)')
+   WRITE(stdout,*) ' IBZ MMN calculated'
+   !
+   CALL stop_clock( 'compute_mmn_ibz' )
+   !
+   CONTAINS
+   !
+   SUBROUTINE setup_symm_timerevarsal()
+      ! generate symmetry operation with timerevarsal symmetry
+      ! 1..nsym => 1..2*nsym  if timerevarsal
+      ! nsym, s, ft, t_rev, invs, sr ==> nsym2, s2, ft2, t_rev2, invs2, sr2
+      USE symm_base,       ONLY : nsym, s, ft, time_reversal, t_rev, invs, sr
+      s2(:,:,1:nsym) = s(:,:,1:nsym)
+      sr2(:,:,1:nsym) = sr(:,:,1:nsym)
+      ft2(:,1:nsym) = ft(:,1:nsym)
+      t_rev2(1:nsym) = t_rev(1:nsym)
+      invs2(1:nsym) = invs(1:nsym)
+      nsym2 = nsym
+      ! t_rev_spin = -i sigma_y (for timerevarsal)
+      t_rev_spin = 0
+      t_rev_spin(1,2) = -1
+      t_rev_spin(2,1) = 1
+      IF (time_reversal) THEN
+         nsym2 = 2*nsym
+         s2(:,:,nsym+1:2*nsym) = s(:,:,1:nsym)
+         sr2(:,:,nsym+1:2*nsym) = sr(:,:,1:nsym)
+         ft2(:,nsym+1:2*nsym) = ft(:,1:nsym)
+         t_rev2(nsym+1:2*nsym) = 1
+         invs2(nsym+1:2*nsym) = invs(1:nsym) + nsym
+      END IF
+   END SUBROUTINE
+   !
+   SUBROUTINE save_sym_info()
+      !
+      ! save symmetry information, representation matrix, repmat(nbnd, nbnd, nsym) and rotation matrix, rotmat(nwan, nwan, nsym)
+      ! repmat: representation of little group G_k
+      ! rotmat: rotation matrix for initial Wannier function
+      !
+      USE klist,           ONLY : nkstot
+      USE wvfct,           ONLY : nbnd
+      USE symm_base,       ONLY : nsym, time_reversal, sname
+      USE start_k,         ONLY : k1, k2, k3, nk1, nk2, nk3
+      USE wannier,         ONLY : seedname, n_wannier, nexband
+      !
+      INTEGER, EXTERNAL        :: find_free_unit
+      !
+      INTEGER                  :: i, m, n, iun_sym, mi, ni, a
+      CHARACTER (len=9)        :: cdate,ctime
+      REAL(DP)                 :: srt(3,3)
+      COMPLEX(DP)              :: tr, u_spin(2,2)
+      COMPLEX(DP), ALLOCATABLE :: rotmat(:,:,:), repmat(:,:,:,:)
+      !
+      ALLOCATE( repmat(nbnd, nbnd, nsym2, nkstot) )
+      CALL get_representation_matrix(repmat)
+      !
+      ALLOCATE( rotmat(n_wannier, n_wannier, nsym2) )
+      CALL get_rotation_matrix(rotmat)
+      !
+      ! save repmat
+      !
+      iun_sym = find_free_unit()
+      CALL date_and_tim( cdate, ctime )
+      IF (ionode) THEN
+         OPEN(unit=iun_sym, file=trim(seedname)//"_sym.dat", form='formatted')
+         !
+         ! save symmetry operation
+         !
+         WRITE (iun_sym,*) 'Symmetry information created on  '//cdate//' at '//ctime
+         IF (noncolin) THEN
+            WRITE (iun_sym,*) 'Symmetry operations with spinors'
+         ELSE
+            WRITE (iun_sym,*) 'Symmetry operations'
+         END IF
+         WRITE (iun_sym,*) nsym2
+         DO i=1, nsym2
+            IF (i > nsym) THEN
+               WRITE (iun_sym,'(i3,":  ",a, "+T")') i, sname(i-nsym)
+            ELSE
+               WRITE (iun_sym,'(i3,":  ",a)') i, sname(i)
+            END IF
+            DO a=1, 3
+               write(iun_sym,'(3i10)') s2(a,:,i)
+            END DO
+            write(iun_sym,'(3f20.12)') ft2(:,i)
+            write(iun_sym,*) t_rev2(i)
+            !
+            IF (noncolin) THEN
+               srt = transpose(sr2(:,:,i))
+               CALL find_u(srt, u_spin)
+               write(iun_sym,'(2f20.12)') (u_spin(1,a), a=1,2)
+               write(iun_sym,'(2f20.12)') (u_spin(2,a), a=1,2)
+            END IF
+            !
+            write(iun_sym,*) invs2(i)
+         END DO
+         write(iun_sym,*) time_reversal
+
+         write(iun_sym, *)
+         WRITE (iun_sym,*) 'K points'
+         write(iun_sym,'(3i10)') nk1, nk2, nk3
+         write(iun_sym,'(3i10)') k1, k2, k3
+         write(iun_sym,'(3i10)') iknum
+         DO i=1, iknum
+           write(iun_sym, '(3f16.10)') xkc(:,i)
+         END DO
+         !
+         ! save representation matrix
+         !
+         write(iun_sym, *)
+         WRITE (iun_sym,*) 'Representation matrix of G_k'
+         WRITE (iun_sym,'(3i10)') nbnd - nexband
+         DO ik=1, nkstot
+            DO isym=1, nsym2
+               IF (all(repmat(:,:,isym,ik) == 0)) CYCLE
+               WRITE(iun_sym, *) ik, isym
+               tr = 0
+               DO m=1, nbnd
+                  tr = tr + repmat(m,m,isym,ik)
+               END DO
+               WRITE(iun_sym, '(2f20.10)') real(tr), aimag(tr)
+               mi = 0
+               DO m=1, nbnd
+                  IF (excluded_band(m)) CYCLE
+                  mi = mi + 1
+                  ni = 0
+                  DO n=1, nbnd
+                     IF (excluded_band(n)) CYCLE
+                     ni = ni + 1
+                     IF (repmat(m,n,isym,ik) == 0) CYCLE
+                     WRITE(iun_sym, '(2i5,2f22.15)') mi, ni, real(repmat(m,n,isym,ik)), aimag(repmat(m,n,isym,ik))
+                  END DO
+               END DO
+            END DO
+         END DO
+         !
+         ! save rotation matrix
+         !
+         write(iun_sym, *)
+         WRITE(iun_sym,*) 'Rotation matrix of Wannier functions'
+         WRITE(iun_sym,*) n_wannier
+         DO isym=1, nsym2
+            IF (all(abs(rotmat(:,:,isym)) < 1e-10)) CYCLE
+            WRITE(iun_sym, *) isym
+            DO m=1, n_wannier
+               DO n=1, n_wannier
+                  IF (abs(rotmat(m,n,isym)) < 1e-10) CYCLE
+                  WRITE(iun_sym, '(2i5,2f22.15)') m, n, real(rotmat(m,n,isym)), aimag(rotmat(m,n,isym))
+               END DO
+            END DO
+         END DO
+         CLOSE(iun_sym)
+      END IF
+   END SUBROUTINE
+   !
+   SUBROUTINE get_representation_matrix(repmat)
+      USE klist,           ONLY : nkstot, xk, ngk, igk_k
+      USE wavefunctions,   ONLY : evc
+      USE io_files,        ONLY : nwordwfc, iunwfc
+      USE wvfct,           ONLY : nbnd, npwx, et
+      USE uspp,            ONLY : nkb, vkb, okvan
+      USE becmod,          ONLY : bec_type, becp, calbec, &
+                                  allocate_bec_type, deallocate_bec_type
+      USE cell_base,       ONLY : at
+      USE noncollin_module,ONLY : noncolin, npol
+      USE mp,              ONLY : mp_sum
+      USE mp_pools,        ONLY : intra_pool_comm
+      !
+      COMPLEX(DP), INTENT(OUT) :: repmat(nbnd, nbnd, nsym2, nkstot)
+      INTEGER                  :: i, ik, isym, m, n, npw
+      REAL(DP)                 :: k(3), sk(3), kdiff(3)
+      COMPLEX(DP), ALLOCATABLE :: spsi(:,:), gpsi(:,:)
+      !
+      repmat = 0
+      !
+      ALLOCATE(xkc(3,nkstot))
+      xkc(:,1:nkstot)=xk(:,1:nkstot)
+      CALL cryst_to_cart(nkstot,xkc,at,-1)
+      !
+      IF (okvan) CALL allocate_bec_type(nkb, nbnd, becp)
+      !
+      ALLOCATE (spsi(npwx*npol,nbnd), gpsi(npwx*npol,nbnd))
+      !
+      DO ik=1, nkstot
+         k = xkc(:,ik)
+         npw = ngk(ik)
+         CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
+         IF (okvan) THEN
+            CALL init_us_2(npw, igk_k(1,ik), xk(1,ik), vkb)
+            CALL calbec(npw, vkb, evc, becp)
+            CALL s_psi(npwx, npw, nbnd, evc, spsi)
+         ELSE
+            spsi = evc
+         END IF
+         DO isym=1, nsym2
+            ! check k = s.k + G(kdiff)
+            sk = matmul(s2(:,:,isym), k)
+            if (t_rev2(isym) == 1) sk = -sk
+            kdiff = k - sk
+            IF (any(abs(kdiff - nint(kdiff)) > 1e-5)) CYCLE
+            !
+            CALL rotate_evc(isym, ik, ik, kdiff, evc, gpsi)
+            !
+            DO m=1, nbnd
+               IF (excluded_band(m)) CYCLE
+               DO n=1, nbnd
+                 IF (excluded_band(n)) CYCLE
+                 IF (abs(et(m,ik) - et(n,ik)) < 1e-5) THEN
+                    IF (noncolin) THEN
+                       repmat(m,n,isym,ik) = zdotc(npw, spsi(1,m), 1, gpsi(1,n), 1) &
+                                           + zdotc(npw, spsi(npwx+1,m), 1, gpsi(npwx+1,n), 1)
+                    ELSE
+                       repmat(m,n,isym,ik) = zdotc(npw, spsi(1,m), 1, gpsi(1,n), 1)
+                    END IF
+                 END IF
+               END DO
+            END DO
+         END DO
+      END DO
+      !
+      CALL mp_sum(repmat, intra_pool_comm)
+      !
+      IF (okvan) CALL deallocate_bec_type(becp)
+      !
+   END SUBROUTINE
+   !
+   SUBROUTINE get_rotation_matrix(rotmat)
+      !
+      !  rotmat(m,n) = <g_m| S^-1 |g_n>
+      !
+      USE cell_base,       ONLY : at, bg
+      USE constants,       ONLY : tpi
+      USE wannier,         ONLY : n_wannier, l_w, mr_w, xaxis, zaxis, center_w, &
+                                  spin_eig, spin_qaxis
+      USE symm_base,       ONLY : d1, d2, d3, nsym
+      !
+      COMPLEX(DP), INTENT(OUT) :: rotmat(n_wannier, n_wannier, nsym2)
+      !
+      REAL(DP), parameter :: p12(3,12)=reshape(                            &
+         (/0d0, 0d0, 1.00000000000000d0,                                   &
+           0.894427190999916d0, 0d0, 0.447213595499958d0,                  &
+           0.276393202250021d0, 0.850650808352040d0, 0.447213595499958d0,  &
+          -0.723606797749979d0, 0.525731112119134d0, 0.447213595499958d0,  &
+          -0.723606797749979d0, -0.525731112119134d0, 0.447213595499958d0, &
+           0.276393202250021d0, -0.850650808352040d0, 0.447213595499958d0, &
+           0.723606797749979d0, 0.525731112119134d0, -0.447213595499958d0, &
+          -0.276393202250021d0, 0.850650808352040d0, -0.447213595499958d0, &
+          -0.894427190999916d0, 0d0, -0.447213595499958d0,                 &
+          -0.276393202250021d0, -0.850650808352040d0, -0.447213595499958d0,&
+           0.723606797749979d0, -0.525731112119134d0, -0.447213595499958d0,&
+           0d0, 0d0, -1.00000000000000d0/),(/3,12/))
+      REAL(DP), parameter :: p20(3,20)=reshape(                            &
+         (/0.525731112119134d0, 0.381966011250105d0, 0.850650808352040d0,  &
+          -0.200811415886227d0, 0.618033988749895d0, 0.850650808352040d0,  &
+          -0.649839392465813d0, 0d0, 0.850650808352040d0,                  &
+          -0.200811415886227d0, -0.618033988749895d0, 0.850650808352040d0, &
+           0.525731112119134d0, -0.381966011250105d0, 0.850650808352040d0, &
+           0.850650808352040d0, 0.618033988749895d0, 0.200811415886227d0,  &
+          -0.324919696232906d0, 1.00000000000000d0, 0.200811415886227d0,   &
+          -1.05146222423827d0, 0d0, 0.200811415886227d0,                   &
+         -0.324919696232906d0, -1.00000000000000d0, 0.200811415886227d0,   &
+          0.850650808352040d0, -0.618033988749895d0, 0.200811415886227d0,  &
+          0.324919696232906d0, 1.00000000000000d0, -0.200811415886227d0,   &
+         -0.850650808352040d0, 0.618033988749895d0, -0.200811415886227d0,  &
+         -0.850650808352040d0, -0.618033988749895d0, -0.200811415886227d0, &
+          0.324919696232906d0, -1.00000000000000d0, -0.200811415886227d0,  &
+          1.05146222423827d0, 0d0, -0.200811415886227d0,                   &
+          0.200811415886227d0, 0.618033988749895d0, -0.850650808352040d0,  &
+         -0.525731112119134d0, 0.381966011250105d0, -0.850650808352040d0,  &
+         -0.525731112119134d0, -0.381966011250105d0, -0.850650808352040d0, &
+          0.200811415886227d0, -0.618033988749895d0, -0.850650808352040d0, &
+         0.649839392465813d0, 0d0, -0.850650808352040d0/),(/3,20/))
+      REAL(DP), parameter :: pwg(2)=(/2.976190476190479d-2,3.214285714285711d-2/)
+      !
+      INTEGER               :: ip, jp, isym, iw, jw, np
+      REAL(DP)              :: v1(3), v2(3), v3(3), v4(3), err, srt(3,3), tvec(3,96)
+      REAL(DP)              :: dvec(3,32), dvec_in(3,32), dwgt(32), dylm1(32), dylm2(32)
+      COMPLEX(DP)           :: spin1(2), spin2(2), u_spin(2,2)
+      INTEGER, ALLOCATABLE  :: ip2iw(:), iw2ip(:), ips2p(:,:)
+      REAL(DP), ALLOCATABLE :: vaxis(:,:,:)
+      logical, ALLOCATABLE  :: lfound(:)
+      COMPLEX(DP), ALLOCATABLE :: check_mat(:,:)
+      INTEGER               :: l, m1, m2
+      REAL(DP)              :: mat
+      TYPE symmetrization_tensor
+          REAL(DP), POINTER :: d(:,:,:)
+      END TYPE symmetrization_tensor
+      TYPE(symmetrization_tensor) :: D(0:3)
+      !
+      tvec=matmul(at(:,:),ft2(:,1:nsym2))
+      !
+      ! set dvec and dwgt for integration of spherical harmonics
+      dvec(:,1:12) = p12
+      dvec(:,13:32) = p20
+      DO ip=1,32
+         dvec(:,ip)=dvec(:,ip)/sqrt(sum(dvec(:,ip)**2))
+      END DO
+      dwgt(1:12)=pwg(1)
+      dwgt(13:32)=pwg(2)
+      !
+      !Conversion table between Wannier and position indexes.
+      allocate(iw2ip(n_wannier),ip2iw(n_wannier))
+      np=0
+      do iw=1,n_wannier
+         v1=center_w(:,iw)
+         jp=0
+         do ip=1,np
+            if(sum(abs(v1-center_w(:,ip2iw(ip)))).lt.1d-2) then
+               jp=ip
+               exit
+            end if
+         end do
+         if(jp.eq.0) then
+            np=np+1
+            iw2ip(iw)=np
+            ip2iw(np)=iw
+         else
+            iw2ip(iw)=jp
+         end if
+      end do
+      !
+      allocate(ips2p(np,nsym2),lfound(np))
+      ips2p=-999 ! < 0
+      do isym=1,nsym2
+         lfound=.false.
+         do ip=1,np
+            v1=center_w(:,ip2iw(ip))
+            v2=matmul(v1+tvec(:,isym), sr2(:,:,isym))
+            do jp=1,np
+               if(lfound(jp)) cycle
+               v3=center_w(:,ip2iw(jp))
+               v4=matmul(v3-v2,bg)
+               if(sum(abs(dble(nint(v4))-v4)).lt.1d-2) then
+                  lfound(jp)=.true.
+                  ips2p(ip,isym)=jp
+                  exit !Sym.op.(isym) moves position(ips2p(ip,isym)) to position(ip) + T, where
+               end if                                       !T is given by vps2t(:,ip,isym).
+            end do
+            if(ips2p(ip,isym).le.0) then
+               write(stdout,"(a,3f18.10,a,3f18.10,a)")"  Could not find ",v2,"(",matmul(v2,bg),")"
+               write(stdout,"(a,3f18.10,a,3f18.10,a)")"  coming from    ",v1,"(",matmul(v1,bg),")"
+               write(stdout,"(a,i5,a               )")"  of Wannier site",ip,"."
+               call errore("compute_mmn_sym", "Error: missing Wannier sites, see the output.", 1)
+            end if
+         end do
+      end do
+      !
+      allocate( vaxis(3,3,n_wannier) )
+      rotmat=0.0d0
+      do iw=1,n_wannier
+         call set_u_matrix (xaxis(:,iw),zaxis(:,iw),vaxis(:,:,iw))
+      end do
+      do isym=1,nsym2
+         srt = transpose(sr2(:,:,isym))
+         CALL find_u(srt, u_spin)
+         !IF (t_rev2(isym) == 1) u_spin = matmul(t_rev_spin, conjg(u_spin))
+         do iw=1,n_wannier
+            ip=iw2ip(iw)
+            jp=ips2p(ip,isym)
+            !
+            dvec_in = matmul(vaxis(:,:,iw),dvec)
+            CALL ylm_wannier(dylm1,l_w(iw),mr_w(iw),dvec_in,32)
+            !
+            do jw=1,n_wannier
+               if(iw2ip(jw).ne.jp) cycle
+               !
+               dvec_in = matmul( vaxis(:,:,jw), matmul( srt, dvec ) )
+               CALL ylm_wannier(dylm2,l_w(jw),mr_w(jw),dvec_in,32)
+               !
+               ! <Y(iw) | S(isym)^-1 Y(jw)>
+               rotmat(iw,jw,isym)=sum(dylm1(:)*dylm2(:)*dwgt)*2d0*tpi
+               IF (noncolin) THEN
+                  spin1(:) = spinor( spin_qaxis(:,iw), spin_eig(iw) )
+                  spin2(:) = spinor( spin_qaxis(:,jw), spin_eig(jw) )
+                  IF (t_rev2(isym) == 1) THEN
+                     ! t_rev_spin^-1 = tr(t_rev_spin)
+                     spin2(:) = matmul(transpose(t_rev_spin), conjg(spin2))
+                  END IF
+                  spin2(:) = matmul(transpose(conjg(u_spin)), spin2)
+                  rotmat(iw,jw,isym)=rotmat(iw,jw,isym) * dot_product(spin1,spin2)
+               END IF
+            end do
+         end do
+      end do
+      deallocate(vaxis)
+      deallocate(ips2p, lfound, iw2ip, ip2iw)
+      allocate(check_mat(n_wannier, n_wannier))
+      do isym=1,nsym2
+         if(t_rev2(isym) == 0) then
+            ! rotmat(:,:,isym) is unitary
+            check_mat = matmul(rotmat(:,:,isym), transpose(conjg(rotmat(:,:,isym))))
+         else
+            ! rotmat(:,:,isym) is anti-unitary
+            check_mat = (0.d0, 1.d0) * rotmat(:,:,isym)
+            check_mat = matmul(check_mat(:,:), transpose(conjg(check_mat(:,:))))
+         end if
+         do iw=1,n_wannier
+            do jw=1, n_wannier
+               if( (iw == jw .and. abs(check_mat(iw,jw) - 1) > 1d-3) .or. &
+                   (iw /= jw .and. abs(check_mat(iw,jw)) > 1d-3) ) then
+                  write(stdout,"(a,i5,a,i5,a)") "compute_mmn_ibz: Symmetry operator (", isym, &
+                          ") could not transform Wannier function (", iw, ")."
+                  write(stdout,"(a,f15.7,a  )") "compute_mmn_ibz: The error is ", check_mat(iw,jw) , "."
+                  write(stdout,*) "rotmat(:,:,isym)"
+                  write(stdout,*) rotmat(:,:,isym)
+                  write(stdout,*) "check_mat"
+                  write(stdout,*) check_mat
+                  call errore("compute_mmn_ibz", "Error: missing Wannier functions, see the output.", 1)
+               end if
+            end do
+         end do
+      end do
+      deallocate(check_mat)
+      !
+      ! check d_matrix and this calculation
+      !
+      !write(stdout, *) '  checking d_matrix... \n'
+      !CALL d_matrix(d1, d2, d3)
+      !D(1)%d => d1 ! d1(3,3,48)
+      !D(2)%d => d2 ! d2(5,5,48)
+      !D(3)%d => d3 ! d3(7,7,48)
+      !do isym=1, nsym
+      !   srt = transpose(sr2(:,:,isym))
+      !   l = 1
+      !   do l=1, 3
+      !      do m1 = 1, 2*l+1
+      !         dvec_in = dvec
+      !         CALL ylm_wannier(dylm1,l,m1,dvec_in,32)
+      !         do m2 = 1, 2*l+1
+      !            dvec_in = matmul( srt, dvec )
+      !            CALL ylm_wannier(dylm2,l,m2,dvec_in,32)
+      !            mat = sum(dylm1(:)*dylm2(:)*dwgt)*2d0*tpi  ! rotmat
+      !            if(abs(mat - D(l)%d(m1,m2,isym)) > 1e-8) write(stdout, '(2i5, 2f15.7)') m1, m2, mat, D(l)%d(m1,m2,isym)
+      !         end do
+      !      end do
+      !      do m1 = 1, 2*l+1
+      !         write(stdout, *) dot_product(D(l)%d(m1,1:2*l+1,isym), D(l)%d(m1,1:2*l+1,isym))
+      !      end do
+      !   end do
+      !end do
+   END SUBROUTINE get_rotation_matrix
+   !
+   SUBROUTINE rotate_evc(isym, ik1, ik2, kdiff, psi, gpsi)
+      !-----------------------------------------------------------------------
+      ! g psi_k = e^{ik1.rS} u_k(rS) = e^{iSk1.r} u_k(rS)
+      !         = e^{ik2.r} [ e^{-iGr} u_k(rS) ]
+      ! k2 = s.k1 + G
+      ! S=s(:,:,isym)   G=kdiff
+      ! gvector order is k(:,ik1) for input and k(:,ik2) for output
+      !
+      ! with T  rotation + T (apply rotation and then apply T)
+      ! k2 = -s.k1 + G
+      ! g psi_k = [ e^{iSk1.r} u_k(rS) ]^*
+      !         = e^{ik2.r} e^{-iGr} [ u_k(rS) ]^*
+      !
+      USE wvfct,           ONLY : nbnd, npwx
+      USE wavefunctions,   ONLY : evc, psic, psic_nc
+      USE fft_base,        ONLY : dffts, dfftp
+      USE fft_interfaces,  ONLY : fwfft, invfft
+      USE cell_base,       ONLY : bg
+      USE constants,       ONLY : tpi
+      USE gvect,           ONLY : g, ngm
+      USE klist,           ONLY : igk_k, ngk
+      USE mp,              ONLY : mp_sum
+      USE mp_pools,        ONLY : intra_pool_comm
+      USE fft_interfaces,  ONLY : invfft
+      USE scatter_mod,     ONLY : gather_grid, scatter_grid
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN):: isym, ik1, ik2
+      REAL(DP), INTENT(IN):: kdiff(3)
+      COMPLEX(DP), INTENT(IN):: psi(npwx*npol,nbnd)
+      COMPLEX(DP), INTENT(OUT):: gpsi(npwx*npol,nbnd)
+      !
+      INTEGER:: ig, igk_local, igk_global, npw1, npw2, n, nxxs, ipol, istart, isym0
+      REAL(DP)                 :: kdiff_cart(3), srt(3,3)
+      REAL(DP)                 :: phase_arg
+      COMPLEX(DP)              :: phase_factor, u_spin(2,2), u_spin2(2,2)
+      COMPLEX(DP), ALLOCATABLE :: phase(:), gpsi_tmp(:,:)
+      COMPLEX(DP), ALLOCATABLE :: psic_all(:), temppsic_all(:)
+      !
+      nxxs = dffts%nr1x *dffts%nr2x *dffts%nr3x
+      ALLOCATE( psic_all(nxxs), temppsic_all(nxxs), gpsi_tmp(npwx,2) )
+      ALLOCATE( phase(dffts%nnr) )
+      !
+      ! for spin space rotation (only used for noncollinear case)
+      !
+      srt = transpose(sr2(:,:,isym))
+      CALL find_u(srt, u_spin)
+      !
+      ! kdiff = g(:,igk_global)
+      !
+      kdiff_cart = kdiff
+      CALL cryst_to_cart(1, kdiff_cart, bg, 1)
+      igk_local = 0
+      DO ig = 1, ngm
+         IF ( all (abs(kdiff_cart - g(:,ig)) < 1d-5) ) THEN
+            igk_local = ig
+            exit
+         END IF
+      END DO
+      igk_global = igk_local
+      CALL mp_sum(igk_global, intra_pool_comm)
+      !
+      ! phase = e^{iGr}
+      !
+      IF (igk_global > 0) THEN
+         phase(:) = (0.d0, 0.d0)
+         IF (igk_local > 0) phase( dffts%nl(igk_local) ) = (1.d0, 0.d0)
+         CALL invfft ('Wave', phase, dffts)
+      END IF
+      !
+      gpsi = 0
+      !
+      npw1 = ngk(ik1)
+      npw2 = ngk(ik2)
+      DO n=1, nbnd
+         IF (excluded_band(n)) CYCLE
+         !
+         ! real space rotation
+         !
+         gpsi_tmp = 0
+         DO ipol=1,npol
+            istart = npwx*(ipol-1)
+            psic(:) = (0.d0, 0.d0)
+            psic(dffts%nl (igk_k (1:npw1,ik1) ) ) = psi (istart+1:istart+npw1, n)
+            !
+            IF (igk_global > 0 .or. isym > 1) THEN
+               CALL invfft ('Wave', psic, dffts)
+               IF (isym > 1) THEN
+#if defined(__MPI)
+                  ! gather among all the CPUs
+                  CALL gather_grid(dffts, psic, temppsic_all)
+                  ! apply rotation
+                  psic_all(1:nxxs) = temppsic_all(rir(1:nxxs,isym))
+                  ! scatter back a piece to each CPU
+                  CALL scatter_grid(dffts, psic_all, psic)
+#else
+                  psic(1:nxxs) = psic(rir(1:nxxs,isym))
+#endif
+               ENDIF
+               IF(t_rev2(isym) == 1) psic = conjg(psic)
+               ! apply phase e^{-iGr}
+               IF(igk_global > 0) psic(1:dffts%nnr) = psic(1:dffts%nnr) * conjg(phase(1:dffts%nnr))
+
+               CALL fwfft ('Wave', psic, dffts)
+            END IF
+            !
+            gpsi_tmp(1:npw2,ipol)  = psic(dffts%nl (igk_k(1:npw2,ik2) ) )
+         END DO
+         !
+         ! spin space rotation
+         !
+         DO ipol=1,npol
+            istart = npwx*(ipol-1)
+            IF (noncolin) THEN
+               u_spin2 = u_spin
+               IF (t_rev2(isym) == 1) u_spin2 = matmul(t_rev_spin, conjg(u_spin))
+               gpsi(istart+1:istart+npw2,n) = matmul(gpsi_tmp(1:npw2,:), u_spin2(ipol,:))
+            ELSE
+               gpsi(istart+1:istart+npw2,n) = gpsi_tmp(1:npw2,ipol)
+            END IF
+         END DO
+      END DO
+      !
+      phase_arg = -tpi * dot_product(xkc(:,ik1), ft2(:,isym))
+      IF (t_rev2(isym) == 1) phase_arg = -phase_arg
+      phase_factor = CMPLX(COS(phase_arg), SIN(phase_arg), KIND=DP)
+      gpsi = gpsi * phase_factor
+      !
+      DEALLOCATE( phase, psic_all, temppsic_all, gpsi_tmp )
+   END SUBROUTINE rotate_evc
+   !
+   SUBROUTINE kpb_search(ik, ib, ikp, isym, kdiff, skp)
+      ! input: ik, ib
+      ! output: ikp, isym, kdiff, skp = s.xkc
+      ! xkc(:,ik) + xbvec(:,ib) = s(:,:,isym) . xkc(:,ikp) + kdiff
+      ! if with T
+      ! xkc(:,ik) + xbvec(:,ib) = - s(:,:,isym) . xkc(:,ikp) + kdiff
+      ! 
+      USE kinds,           ONLY : DP
+      USE klist,           ONLY : nkstot
+      USE wannier,         ONLY : xbvec
+      USE io_global,       ONLY : stdout
+      IMPLICIT NONE
+      INTEGER, INTENT(in):: ik, ib
+      INTEGER, INTENT(out):: ikp, isym
+      REAL(DP), INTENT(out):: kdiff(3), skp(3)
+      !
+      REAL(DP):: k(3), kb(3)
+      INTEGER:: i
+      
+      k = xkc(:,ik)
+      kb = xkc(:,ik) + xbvec(:,ib)
+      !write(stdout,*) 'k=', k
+      !write(stdout,*) 'kb=', kb
+      do isym = 1, nsym2
+        do ikp = 1, nkstot
+          skp = matmul(s2(:,:,isym), xkc(:,ikp))
+          IF (t_rev2(isym) == 1) skp = -skp
+          kdiff = kb - skp
+          if ( all( abs(nint(kdiff) - kdiff) < 1d-5 ) ) then
+            return
+          end if
+        end do
+      end do
+      !write(stdout,*) ik, ib
+      !write(stdout,*) xkc
+      !write(stdout,*) xbvec
+      !write(stdout,*) t_rev2
+      CALL errore('kpb_search', 'ikp, isym not found', 1)
+   END SUBROUTINE
+   !
+   SUBROUTINE init_qb_so(qb, qq_so)
+      USE uspp_param,      ONLY : upf, nh, lmaxq, nhm
+      !USE ions_base,       ONLY : nat, ntyp, ityp, tau
+      USE cell_base,       ONLY : omega, tpiba
+      USE ions_base,       ONLY : ntyp => nsp
+      USE noncollin_module,ONLY : lspinorb
+      USE wannier,         ONLY : nnb
+      !
+      COMPLEX(DP), INTENT(out) :: qb(nhm, nhm, ntyp, nnb), qq_so(nhm, nhm, 4, ntyp, nnb)
+      !
+      INTEGER :: ih, jh, nt, ib
+      REAL(DP), ALLOCATABLE    :: qg(:), ylm(:,:)
+      COMPLEX(DP), ALLOCATABLE :: qgm(:), qq_so_tmp(:,:,:,:)
+      !
+      ALLOCATE( ylm(nnb, lmaxq*lmaxq), qg(nnb), qgm(nnb), qq_so_tmp(nhm, nhm, 4, ntyp) )
+      !
+      DO ib=1, nnb
+         qg(ib) = dot_product(bvec(:,ib), bvec(:,ib))
+      END DO
+      CALL ylmr2(lmaxq*lmaxq, nnb, bvec, qg, ylm)
+      qg = sqrt(qg) * tpiba
+      !
+      DO nt =1, ntyp
+         IF( .not. upf(nt)%tvanp ) CYCLE
+         DO ih = 1, nh(nt)
+            DO jh = 1, nh(nt)
+               CALL qvan2(nnb, ih, jh, nt, qg, qgm, ylm)
+               qb(ih, jh, nt, :) = omega * qgm(:)
+            END DO
+         END DO
+      END DO
+      !
+      IF (lspinorb) THEN
+         qq_so = (0.d0, 0.d0)
+         DO ib=1, nnb
+            qq_so_tmp = 0
+            CALL transform_qq_so(qb(:,:,:,ib), qq_so_tmp)
+            qq_so(:,:,:,:,ib) = qq_so_tmp
+         END DO
+      END IF
+      !
+      DEALLOCATE( qg, qgm, ylm, qq_so_tmp )
+      !
+   END SUBROUTINE
+   !
+   SUBROUTINE rotate_becp(isym, sgn_sym, xk0, xk, becp1, becp2)
+      !
+      ! based on becp_rotate_k in us_exx.f90
+      !
+      USE kinds,           ONLY : DP
+      USE cell_base,       ONLY : at, bg
+      USE ions_base,       ONLY : tau, nat, ityp
+      USE symm_base,       ONLY : irt, d1, d2, d3, nsym, invs
+      USE uspp,            ONLY : nkb, ofsbeta, nhtolm, nhtol
+      USE uspp_param,      ONLY : nh, upf
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN)            :: isym, sgn_sym
+      REAL(DP), INTENT(IN)           :: xk0(3), xk(3)
+      TYPE (bec_type), INTENT(IN)    :: becp1
+      TYPE (bec_type), INTENT(INOUT) :: becp2
+      !
+      INTEGER     :: ia, nt, ma, ih, m_o, lm_i, l_i, m_i, ikb, oh, okb, isym0, isym_inv
+      REAL(DP)    :: xau(3,nat), rau(3,nat), tau_phase
+      COMPLEX(DP) :: tau_fact
+      COMPLEX(DP) :: u_spin(2,2)
+      !
+      REAL(DP), TARGET :: d0(1,1,48)
+      TYPE symmetrization_tensor
+          REAL(DP), POINTER :: d(:,:,:)
+      END TYPE symmetrization_tensor
+      TYPE(symmetrization_tensor) :: D(0:3)
+      !
+      !
+      IF ( isym == 1 ) THEN
+         IF (sgn_sym > 0) THEN
+            IF (noncolin) THEN
+               becp2%nc = becp1%nc
+            ELSE
+               becp2%k = becp1%k
+            END IF
+         ELSE
+            IF (noncolin) THEN
+               becp2%nc = CONJG(becp1%nc)
+            ELSE
+               becp2%k = CONJG(becp1%k)
+            END IF
+         ENDIF
+         RETURN
+      ENDIF
+      !
+      CALL d_matrix(d1,d2,d3)
+      d0(1,1,:) = 1._dp
+      D(0)%d => d0 ! d0(1,1,48)
+      D(1)%d => d1 ! d1(3,3,48)
+      D(2)%d => d2 ! d2(5,5,48)
+      D(3)%d => d3 ! d3(7,7,48)
+      ! set isym0 for d0~d3 and irt
+      IF (isym > nsym) THEN
+        isym0 = isym - nsym
+      ELSE
+        isym0 = isym
+      END IF
+      !
+      IF (ABS(sgn_sym) /= 1) CALL errore( "becp_rotate", "sign must be +1 or -1", 1 )
+      !
+      xau = tau
+      CALL cryst_to_cart( nat, xau, bg, -1 )
+      !
+      DO ia = 1,nat
+         rau(:,ia) = matmul(xau(:,ia), s2(:,:,isym)) - ft2(:,isym)
+      ENDDO
+      !
+      CALL cryst_to_cart( nat, rau, at, +1 )
+      !
+      IF (noncolin) THEN
+         becp2%nc = 0._dp
+         call find_u( transpose(sr2(:,:,isym)), u_spin )
+         IF (t_rev2(isym) == 1) u_spin = matmul(t_rev_spin, conjg(u_spin))
+      ELSE
+         becp2%k = 0._dp
+      END IF
+      DO ia = 1,nat
+         nt = ityp(ia)
+         ma = irt(isym0,ia)
+         tau_phase = -tpi*( sgn_sym*SUM((tau(:,ma)-rau(:,ia))*xk0) )
+
+         tau_fact = CMPLX(COS(tau_phase), SIN(tau_phase), KIND=DP)
+         !
+         DO ih = 1, nh(nt)
+            !
+            lm_i  = nhtolm(ih,nt)
+            l_i   = nhtol(ih,nt)
+            m_i   = lm_i - l_i**2
+            ikb = ofsbeta(ma) + ih
+            !
+            DO m_o = 1, 2*l_i +1
+               oh = ih - m_i + m_o
+               okb = ofsbeta(ia) + oh
+               IF (noncolin) THEN
+                  IF (sgn_sym > 0) THEN
+                     becp2%nc(okb, :, :) = becp2%nc(okb, :, :) &
+                       + matmul(u_spin, D(l_i)%d(m_i,m_o, isym0) * tau_fact*becp1%nc(ikb, :, :))
+                  ELSE
+                     becp2%nc(okb, :, :) = becp2%nc(okb, :, :) &
+                       + matmul(u_spin, D(l_i)%d(m_i,m_o, isym0) * tau_fact*CONJG(becp1%nc(ikb, :, :)))
+                  ENDIF
+               ELSE
+                  IF (sgn_sym > 0) THEN
+                     becp2%k(okb, :) = becp2%k(okb, :) &
+                       + D(l_i)%d(m_i,m_o, isym0) * tau_fact*becp1%k(ikb, :)
+                  ELSE
+                     becp2%k(okb, :) = becp2%k(okb, :) &
+                       + D(l_i)%d(m_i,m_o, isym0) * tau_fact*becp1%k(ikb, :)
+                  ENDIF
+               END IF
+            ENDDO ! m_o
+         ENDDO ! ih
+      ENDDO ! nat
+   END SUBROUTINE
+   !
+   FUNCTION spinor(r, eig)
+      COMPLEX(DP):: spinor(2), ci
+      INTEGER:: eig
+      REAL(DP):: r(3), theta, phi
+      ci = (0.d0, 1.d0)
+      theta = acos(r(3)/sqrt(r(1)**2+r(2)**2+r(3)**2))
+      phi = atan2(r(2), r(1))
+      if(eig > 0) then
+         spinor(1) = cos(theta/2)
+         spinor(2) = exp( ci * phi ) * sin(theta/2)
+      else
+         spinor(1) = -exp( -ci * phi ) * sin(theta/2)
+         spinor(2) = cos(theta/2)
+      end if
+      RETURN
+   END FUNCTION
+   !
+   SUBROUTINE pw2wan_set_symm_with_timerevarsal(nr1, nr2, nr3, nr1x, nr2x, nr3x)
+      ! based on exx_set_symm in exx_base.f90
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x 
+      !
+      ! ... local variables
+      !
+      INTEGER :: ikq, isym, i,j,k, ri,rj,rk, ir, nxxs
+      INTEGER, allocatable :: ftau(:,:), s_scaled(:,:,:)
+      !
+      nxxs = nr1x*nr2x*nr3x
+      !
+      ALLOCATE( rir(nxxs,nsym2) )
+      !
+      rir = 0
+      ALLOCATE ( ftau(3,nsym2), s_scaled(3,3,nsym2) )
+      CALL scale_sym_ops (nsym2, s2, ft2, nr1, nr2, nr3, s_scaled, ftau)
+
+      DO isym = 1, nsym2
+         DO k = 1, nr3
+            DO j = 1, nr2
+               DO i = 1, nr1
+                  CALL rotate_grid_point( s_scaled(1,1,isym), ftau(1,isym), &
+                       i, j, k, nr1, nr2, nr3, ri, rj, rk )
+                  ir = i + (j-1)*nr1x + (k-1)*nr1x*nr2x
+                  rir(ir,isym) = ri + (rj-1)*nr1x + (rk-1)*nr1x*nr2x
+               ENDDO
+            ENDDO
+         ENDDO
+      ENDDO
+      !
+      DEALLOCATE ( s_scaled, ftau )
+      !
+   END SUBROUTINE pw2wan_set_symm_with_timerevarsal
+   !
+END SUBROUTINE compute_mmn_ibz
+
 !-----------------------------------------------------------------------
 SUBROUTINE compute_spin
    !-----------------------------------------------------------------------
@@ -3402,7 +4487,13 @@ SUBROUTINE compute_amn
 
    IF (wan_mode=='standalone') THEN
       iun_amn = find_free_unit()
-      IF (ionode) OPEN (unit=iun_amn, file=trim(seedname)//".amn",form='formatted')
+      IF (ionode) THEN
+         IF (irr_bz) THEN
+            OPEN (unit=iun_amn, file=trim(seedname)//".amni",form='formatted')
+         ELSE
+            OPEN (unit=iun_amn, file=trim(seedname)//".amn",form='formatted')
+         ENDIF
+      ENDIF
    ENDIF
 
    WRITE(stdout,'(a,i8)') '  AMN: iknum = ',iknum
@@ -4517,7 +5608,13 @@ SUBROUTINE write_band
 
    IF (wan_mode=='standalone') THEN
       iun_band = find_free_unit()
-      IF (ionode) OPEN (unit=iun_band, file=trim(seedname)//".eig",form='formatted')
+      IF (ionode) THEN
+         IF (irr_bz) THEN
+            OPEN (unit=iun_band, file=trim(seedname)//".eigi",form='formatted')
+         ELSE
+            OPEN (unit=iun_band, file=trim(seedname)//".eig",form='formatted')
+         ENDIF
+      ENDIF
    ENDIF
 
    IF (wan_mode=='library') ALLOCATE(eigval(num_bands,iknum))
