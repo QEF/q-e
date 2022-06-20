@@ -50,6 +50,7 @@ qe_enable_cuda_fortran("${src_device_lapack}")
 qe_add_library(qe_device_lapack ${src_device_lapack})
 target_link_libraries(qe_device_lapack
     PRIVATE
+        qe_openacc_fortran
         qe_lapack
         qe_openmp_fortran
         qe_mpi_fortran)

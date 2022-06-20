@@ -294,6 +294,7 @@ qe_enable_cuda_fortran("${src_pw}")
 qe_add_library(qe_pw ${src_pw})
 target_link_libraries(qe_pw
     PRIVATE
+        qe_device_lapack  
         qe_hdf5_fortran
         qe_elpa
         qe_scalapack
