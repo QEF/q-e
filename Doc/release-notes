@@ -8,10 +8,9 @@ New in 7.1 version:
   * If no explicit parallelization options -nk, -nt, -nd are provided,
     pw.x will figure out suitable values for optimal, or at least, not
     too bad, parallelization
-  * EPW:
-    (1) The full-bandwidth approach to the Eliashberg equations and the sparse sampling in the superconductivity module
-    For the full list of new features, bug fixes, and changes leading to backward incompatibility issues,
-    please visit the Releases page of the EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
+  * EPW v.5.5. For the full list of new features, bug fixes, and changes leading
+    to backward incompatibility issues, please visit the Releases page of the 
+    EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
 
 Incompatible changes in 7.1 version:
   * Source files previously found in FFTXLIB/ moved to FFTXLIB/src/
