@@ -1,9 +1,16 @@
+New in development version:
+  * CUDA Fortran Davidson code removed and replaced by ACC (Ivan Carnimeo)
+
+Incompatible changes in development version:
+
+Fixed in development version:
+  * CP wasn't honoring "exx_fraction" in v.7.1  (fixed by Hsin-Yu Ko)
+
 New in 7.1 version:
   * DFT+RISM (1D, 3D, Laue) by S. Nishihara & M. Otani [Phys. Rev. B 96, 115429 (2017)].
   * Improved, streamlined and extended porting to NVidia GPUs
   * KCW package for Koopmans-compliant functionals in a Wannier representation:
-    https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.021051,
-    https://arxiv.org/abs/2202.08155 <https://arxiv.org/abs/2202.08155.
+    https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.021051.
     Developed and maintained by N. Colonna, R. de Gennaro, E. Linscott
   * If no explicit parallelization options -nk, -nt, -nd are provided,
     pw.x will figure out suitable values for optimal, or at least, not
