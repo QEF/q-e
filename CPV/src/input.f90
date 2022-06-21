@@ -991,6 +991,9 @@ MODULE input
      !
      IF (exx_fraction >= 0.0_DP) CALL xclib_set_exx_fraction (exx_fraction)
      !
+     IF (screening_parameter >= 0.0_DP) &
+       & CALL set_screening_parameter(screening_parameter)
+     !
      RETURN
      !
   END SUBROUTINE modules_setup
