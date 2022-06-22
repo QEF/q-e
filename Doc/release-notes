@@ -4,6 +4,9 @@ New in development version:
 Incompatible changes in development version:
 
 Fixed in development version:
+  * Fully-relativistic PPs generated with QE versions 6.7 to 7.1 may contain
+    an incorrect "PP_AEWFC_rel" tag instead of the correct one "PP_AEWFC_REL" 
+    (noticed by Andrea Dal Corso)
   * CP wasn't honoring "exx_fraction" in v.7.1  (fixed by Hsin-Yu Ko)
 
 New in 7.1 version:
