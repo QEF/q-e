@@ -567,6 +567,9 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !$acc end data
   !$acc end data
   !
+  ! ... to avoid NaN in some rare cases (see summations in subroutine delta_e)
+  IF ( nspin==4 .AND. .NOT.domag ) v(:,2:nspin) = 0.D0
+  !
   ! ... add non local corrections (if any)
   !
   IF ( dft_is_nonlocc() ) CALL nlc( rho%of_r, rho_core, nspin, etxc, vtxc, v )
