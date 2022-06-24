@@ -687,7 +687,8 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	    default { it depends on the specified functional }
 	    info {
 		Fraction of EXX for hybrid functional calculations. In the case of 
-		input_dft='PBE0', the default value is 0.25.
+		input_dft='PBE0', the default value is 0.25. This entry overrides
+    the default (as well as the restart file) value of a given functional.
 	    }
 	}
 
