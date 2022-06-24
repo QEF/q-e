@@ -274,15 +274,16 @@ PROGRAM pw2wannier90
   IF (scdm_sigma <= 0._dp) &
     call errore('pw2wannier90','Sigma in the SCDM method must be positive.')
   IF (irr_bz) THEN
-     IF (write_spn) CALL errore('pw2wannier90', "Irreducible BZ and write_spn not implemented", 1)
-     IF (write_unk) CALL errore('pw2wannier90', "Irreducible BZ and write_unk not implemented", 1)
-     IF (write_uHu) CALL errore('pw2wannier90', "Irreducible BZ and write_uHu not implemented", 1)
-     IF (write_uIu) CALL errore('pw2wannier90', "Irreducible BZ and write_uIu not implemented", 1)
-     IF (write_sHu) CALL errore('pw2wannier90', "Irreducible BZ and write_sHu not implemented", 1)
-     IF (write_sIu) CALL errore('pw2wannier90', "Irreducible BZ and write_sIu not implemented", 1)
-     IF (write_dmn) CALL errore('pw2wannier90', "Irreducible BZ and write_dmn not implemented", 1)
-     IF (scdm_proj) CALL errore('pw2wannier90', "Irreducible BZ and SCDM not implemented", 1)
-     IF (write_unkg) CALL errore('pw2wannier90', "Irreducible BZ and write_unkg not implemented", 1)
+     IF (gamma_only) CALL errore('pw2wannier90', "irr_bz and gamma_only are not compatible", 1)
+     IF (write_spn) CALL errore('pw2wannier90', "irr_bz and write_spn not implemented", 1)
+     IF (write_unk) CALL errore('pw2wannier90', "irr_bz and write_unk not implemented", 1)
+     IF (write_uHu) CALL errore('pw2wannier90', "irr_bz and write_uHu not implemented", 1)
+     IF (write_uIu) CALL errore('pw2wannier90', "irr_bz and write_uIu not implemented", 1)
+     IF (write_sHu) CALL errore('pw2wannier90', "irr_bz and write_sHu not implemented", 1)
+     IF (write_sIu) CALL errore('pw2wannier90', "irr_bz and write_sIu not implemented", 1)
+     IF (write_dmn) CALL errore('pw2wannier90', "irr_bz and write_dmn not implemented", 1)
+     IF (scdm_proj) CALL errore('pw2wannier90', "irr_bz and SCDM not implemented", 1)
+     IF (write_unkg) CALL errore('pw2wannier90', "irr_bz and write_unkg not implemented", 1)
   ENDIF
   !
   SELECT CASE ( trim( spin_component ) )
