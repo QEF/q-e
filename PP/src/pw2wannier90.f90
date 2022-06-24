@@ -474,7 +474,7 @@ PROGRAM pw2wannier90
      CALL print_clock( 'compute_dmn'  )!YN:
      CALL print_clock( 'compute_amn'  )
      CALL print_clock( 'compute_mmn'  )
-     CALL print_clock( 'compute_mmn_ibz'  )
+     CALL print_clock( 'compute_mmni'  )
      CALL print_clock( 'compute_shc'  )
      CALL print_clock( 'write_unk'    )
      CALL print_clock( 'write_parity' )
@@ -2467,14 +2467,14 @@ SUBROUTINE compute_mmn_ibz
    REAL(DP)                 :: kdiff(3), skp(3), arg, kpb(3)
    REAL(DP), ALLOCATABLE    :: xkc(:,:)
    COMPLEX(DP)              :: mmn, phase1
-   COMPLEX(DP), ALLOCATABLE :: Mkb(:,:), evc2(:,:), gpsi(:,:)
+   COMPLEX(DP), ALLOCATABLE :: Mkb(:,:), evc2(:,:), evc_kb(:,:)
    COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qq_so(:,:,:,:,:)
    TYPE(bec_type)           :: becp1, becp2
    ! symmetry operation with time reversal symmetry
    INTEGER                  :: nsym2, s2(3,3,96), invs2(96), t_rev2(96), t_rev_spin(2,2)
    REAL(DP)                 :: sr2(3,3,96), ft2(3,96)
    !
-   CALL start_clock( 'compute_mmn_ibz' )
+   CALL start_clock( 'compute_mmni' )
    !
    CALL setup_symm_time_reversal()
    !
@@ -2502,7 +2502,7 @@ SUBROUTINE compute_mmn_ibz
       CALL allocate_bec_type(nkb, nbnd, becp2)
    END IF
    !
-   ALLOCATE( evc2(npwx*npol,nbnd), gpsi(npwx*npol,nbnd), Mkb(nbnd,nbnd) )
+   ALLOCATE( evc2(npwx*npol,nbnd), evc_kb(npwx*npol,nbnd), Mkb(nbnd,nbnd) )
    !
    ! calculate <psi_k | e^{-ibr} | psi_k+b>
    ! ik : <psi_k|
@@ -2528,7 +2528,7 @@ SUBROUTINE compute_mmn_ibz
          IF (ionode) WRITE (iun_mmn,'(7i5)') ik, ikp, (nint(kdiff(n)), n=1,3)
          ikevc2 = ikp + ikstart - 1
          CALL davcio (evc2, 2*nwordwfc, iunwfc, ikevc2, -1 )
-         CALL rotate_evc(isym, ikp, ik, kdiff, evc2, gpsi)
+         CALL rotate_evc(isym, ikp, ik, kdiff, evc2, evc_kb)
          !
          ! USPP
          !
@@ -2552,10 +2552,10 @@ SUBROUTINE compute_mmn_ibz
             DO m=1, nbnd
                IF (excluded_band(m)) CYCLE
                IF (noncolin) THEN
-                  mmn = zdotc (npw, evc(1,m),1,gpsi(1,n),1) &
-                      + zdotc (npw, evc(npwx+1,m),1,gpsi(npwx+1,n),1)
+                  mmn = zdotc (npw, evc(1,m),1,evc_kb(1,n),1) &
+                      + zdotc (npw, evc(npwx+1,m),1,evc_kb(npwx+1,n),1)
                ELSE
-                  mmn = zdotc (npw, evc(1,m),1,gpsi(1,n),1)
+                  mmn = zdotc (npw, evc(1,m),1,evc_kb(1,n),1)
                END IF
                CALL mp_sum(mmn, intra_pool_comm)
                Mkb(m,n) = mmn
@@ -2642,7 +2642,7 @@ SUBROUTINE compute_mmn_ibz
    WRITE(stdout,'(/)')
    WRITE(stdout,*) ' IBZ MMN calculated'
    !
-   CALL stop_clock( 'compute_mmn_ibz' )
+   CALL stop_clock( 'compute_mmni' )
    !
    CONTAINS
    !
@@ -3229,11 +3229,9 @@ SUBROUTINE compute_mmn_ibz
       !
       REAL(DP):: k(3), kb(3)
       INTEGER:: i
-      
+
       k = xkc(:,ik)
       kb = xkc(:,ik) + xbvec(:,ib)
-      !write(stdout,*) 'k=', k
-      !write(stdout,*) 'kb=', kb
       do isym = 1, nsym2
         do ikp = 1, nkstot
           skp = matmul(s2(:,:,isym), xkc(:,ikp))
@@ -3244,14 +3242,12 @@ SUBROUTINE compute_mmn_ibz
           end if
         end do
       end do
-      !write(stdout,*) ik, ib
-      !write(stdout,*) xkc
-      !write(stdout,*) xbvec
-      !write(stdout,*) t_rev2
+      WRITE(stdout, *) "ikp, isym not found for kb = ", kb
       CALL errore('kpb_search', 'ikp, isym not found', 1)
    END SUBROUTINE
    !
    SUBROUTINE init_qb_so(qb, qq_so)
+      ! TODO: Use this also in compute_mmn
       USE uspp_param,      ONLY : upf, nh, lmaxq, nhm
       !USE ions_base,       ONLY : nat, ntyp, ityp, tau
       USE cell_base,       ONLY : omega, tpiba
