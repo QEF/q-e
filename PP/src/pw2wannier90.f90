@@ -2470,15 +2470,15 @@ SUBROUTINE compute_mmn_ibz
    COMPLEX(DP), ALLOCATABLE :: Mkb(:,:), evc2(:,:), gpsi(:,:)
    COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qq_so(:,:,:,:,:)
    TYPE(bec_type)           :: becp1, becp2
-   ! symmetry operation with timerevarsal symmetry
+   ! symmetry operation with time reversal symmetry
    INTEGER                  :: nsym2, s2(3,3,96), invs2(96), t_rev2(96), t_rev_spin(2,2)
    REAL(DP)                 :: sr2(3,3,96), ft2(3,96)
    !
    CALL start_clock( 'compute_mmn_ibz' )
    !
-   CALL setup_symm_timerevarsal()
+   CALL setup_symm_time_reversal()
    !
-   CALL pw2wan_set_symm_with_timerevarsal( dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
+   CALL pw2wan_set_symm_with_time_reversal( dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
    !
    !
    CALL save_sym_info()
@@ -2646,9 +2646,9 @@ SUBROUTINE compute_mmn_ibz
    !
    CONTAINS
    !
-   SUBROUTINE setup_symm_timerevarsal()
-      ! generate symmetry operation with timerevarsal symmetry
-      ! 1..nsym => 1..2*nsym  if timerevarsal
+   SUBROUTINE setup_symm_time_reversal()
+      ! generate symmetry operation with time reversal symmetry
+      ! 1..nsym => 1..2*nsym  if time reversal
       ! nsym, s, ft, t_rev, invs, sr ==> nsym2, s2, ft2, t_rev2, invs2, sr2
       USE symm_base,       ONLY : nsym, s, ft, time_reversal, t_rev, invs, sr
       s2(:,:,1:nsym) = s(:,:,1:nsym)
@@ -2657,7 +2657,7 @@ SUBROUTINE compute_mmn_ibz
       t_rev2(1:nsym) = t_rev(1:nsym)
       invs2(1:nsym) = invs(1:nsym)
       nsym2 = nsym
-      ! t_rev_spin = -i sigma_y (for timerevarsal)
+      ! t_rev_spin = -i sigma_y (for time reversal)
       t_rev_spin = 0
       t_rev_spin(1,2) = -1
       t_rev_spin(2,1) = 1
@@ -3414,6 +3414,8 @@ SUBROUTINE compute_mmn_ibz
    END SUBROUTINE
    !
    FUNCTION spinor(r, eig)
+      ! Compute a spin-1/2 state polarized along r.
+      ! Return spin up state if eig > 0, spin down state otherwise.
       COMPLEX(DP):: spinor(2), ci
       INTEGER:: eig
       REAL(DP):: r(3), theta, phi
@@ -3430,7 +3432,7 @@ SUBROUTINE compute_mmn_ibz
       RETURN
    END FUNCTION
    !
-   SUBROUTINE pw2wan_set_symm_with_timerevarsal(nr1, nr2, nr3, nr1x, nr2x, nr3x)
+   SUBROUTINE pw2wan_set_symm_with_time_reversal(nr1, nr2, nr3, nr1x, nr2x, nr3x)
       ! based on exx_set_symm in exx_base.f90
       !
       IMPLICIT NONE
@@ -3465,7 +3467,7 @@ SUBROUTINE compute_mmn_ibz
       !
       DEALLOCATE ( s_scaled, ftau )
       !
-   END SUBROUTINE pw2wan_set_symm_with_timerevarsal
+   END SUBROUTINE pw2wan_set_symm_with_time_reversal
    !
 END SUBROUTINE compute_mmn_ibz
 
