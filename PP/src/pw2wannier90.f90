@@ -471,13 +471,13 @@ PROGRAM pw2wannier90
      !
      IF ( ionode ) WRITE( stdout, *  )
      CALL print_clock( 'init_pw2wan' )
-     if(write_dmn  )  CALL print_clock( 'compute_dmn'  )!YN:
-     IF(write_amn  )  CALL print_clock( 'compute_amn'  )
-     IF(write_mmn  )  CALL print_clock( 'compute_mmn'  )
-     IF(irr_bz  )     CALL print_clock( 'compute_mmn_ibz'  )
-     IF(write_sHu .OR. write_sIu) CALL print_clock( 'compute_shc'  )
-     IF(write_unk  )  CALL print_clock( 'write_unk'    )
-     IF(write_unkg )  CALL print_clock( 'write_parity' )
+     CALL print_clock( 'compute_dmn'  )!YN:
+     CALL print_clock( 'compute_amn'  )
+     CALL print_clock( 'compute_mmn'  )
+     CALL print_clock( 'compute_mmn_ibz'  )
+     CALL print_clock( 'compute_shc'  )
+     CALL print_clock( 'write_unk'    )
+     CALL print_clock( 'write_parity' )
      ! not sure if this should be called also in 'library' mode or not !!
      CALL environment_end ( 'PW2WANNIER' )
      IF ( ionode ) WRITE( stdout, *  )
