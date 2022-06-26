@@ -1,13 +1,17 @@
 New in development version:
-  * CUDA Fortran Davidson code removed and replaced by ACC (Ivan Carnimeo)
+  * GPU-accelerated phonon code (CINECA Team)
 
 Incompatible changes in development version:
+  * CUDA Fortran Davidson code removed and replaced by ACC (Ivan Carnimeo)
 
 Fixed in development version:
   * Fully-relativistic PPs generated with QE versions 6.7 to 7.1 may contain
     an incorrect "PP_AEWFC_rel" tag instead of the correct one "PP_AEWFC_REL" 
     (noticed by Andrea Dal Corso)
+  * Non-magnetic spin-orbit calculations could in some rare case produce
+    NaN's in the energy (noticed by Andrea Dal Corso)
   * CP wasn't honoring "exx_fraction" in v.7.1  (fixed by Hsin-Yu Ko)
+  * QEHeat and KCW were not working if compiled for GPU
 
 New in 7.1 version:
   * DFT+RISM (1D, 3D, Laue) by S. Nishihara & M. Otani [Phys. Rev. B 96, 115429 (2017)].

@@ -223,7 +223,7 @@ MODULES += \
   cuda_subroutines.o \
   random_numbers_gpu.o
 
-TLDEPS= libfox libutil libla libfft librxc
+TLDEPS= libfox libla libfft libutil libmbd librxc libupf
 
 all : libqemod.a
 
