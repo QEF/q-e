@@ -26,10 +26,15 @@ PROGRAM kcw
   USE control_kcw,               ONLY : calculation
   USE mp_global,             ONLY : mp_startup
   USE check_stop,            ONLY : check_stop_init
+  USE control_flags,         ONLY : use_gpu
   !
   IMPLICIT NONE
   !
   CHARACTER(LEN=9) :: code='KCW'
+  LOGICAL,EXTERNAL :: check_gpu_support 
+  !
+  use_gpu = check_gpu_support()
+  IF(use_gpu) Call errore('KCW', 'KCW with GPU NYI', 1)
   !
   ! 1) Initialize MPI, clocks, print initial messages
   CALL mp_startup ( )
