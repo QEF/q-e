@@ -405,7 +405,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                    ldim_u, is_hubbard_back
   USE extfield,             ONLY : tefield, etotefield, gate, etotgatefield !TB
   USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
-                                   lambda, report, domag
+                                   lambda, report, domag, nspin_mag
   USE io_rho_xml,           ONLY : write_scf
   USE uspp,                 ONLY : okvan
   USE mp_bands,             ONLY : intra_bgrp_comm
@@ -1235,11 +1235,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
           delta_e = 0.5_DP*delta_e
           !
        ELSE
-          delta_e = - SUM( rho%of_r(:,:)*v%of_r(:,:) )
+          delta_e = - SUM( rho%of_r(:,1:nspin_mag)*v%of_r(:,1:nspin_mag) )
        ENDIF
        !
        IF ( xclib_dft_is('meta') ) &
-          delta_e = delta_e - SUM( rho%kin_r(:,:)*v%kin_r(:,:) )
+          delta_e = delta_e - SUM( rho%kin_r(:,1:nspin_mag)*v%kin_r(:,1:nspin_mag) )
        !
        delta_e = omega * delta_e / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
        !
@@ -1321,7 +1321,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
           delta_escf = 0.5_dp*delta_escf
           !
        ELSE
-         delta_escf = -SUM( ( rhoin%of_r(:,:)-rho%of_r(:,:) )*v%of_r(:,:) )
+         delta_escf = -SUM( ( rhoin%of_r(:,1:nspin_mag)-rho%of_r(:,1:nspin_mag) )*v%of_r(:,1:nspin_mag) )
        ENDIF
        !
        IF ( xclib_dft_is('meta') ) &
