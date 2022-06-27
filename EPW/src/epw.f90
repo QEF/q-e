@@ -21,7 +21,7 @@
   USE mp,              ONLY : mp_bcast, mp_barrier
   USE mp_world,        ONLY : mpime
   USE mp_global,       ONLY : mp_startup, ionode_id, mp_global_end
-  USE control_flags,   ONLY : gamma_only
+  USE control_flags,   ONLY : gamma_only, use_gpu
   USE control_epw,     ONLY : wannierize
   USE global_version,  ONLY : version_number
   USE epwcom,          ONLY : filukk, eliashberg, ep_coupling, epwread, epbread, cumulant
@@ -36,6 +36,7 @@
   IMPLICIT NONE
   !
   CHARACTER(LEN = 12) :: code = 'EPW'
+  LOGICAL,EXTERNAL    :: check_gpu_support 
   !! Name of the program
   !
   version_number = '5.5'
@@ -45,6 +46,8 @@
   CALL start_clock('EPW')
   !
   gamma_only = .FALSE.
+  use_gpu = check_gpu_support()
+  IF(use_gpu) Call errore('EPW', 'EPW with GPU NYI', 1)
   !
   CALL mp_startup(start_images = .TRUE.)
   !

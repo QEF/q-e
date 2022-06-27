@@ -20,7 +20,7 @@ PROGRAM hp_main
   USE environment,       ONLY : environment_start, environment_end
   USE ions_base,         ONLY : nat, ityp, atm, tau, amass
   USE io_files,          ONLY : tmp_dir
-  USE control_flags,     ONLY : dfpt_hub, use_para_diag
+  USE control_flags,     ONLY : dfpt_hub, use_para_diag, use_gpu
   USE ldaU_hp,           ONLY : perturbed_atom, start_q, last_q, nqs, code, &
                                 compute_hp, sum_pertq, perturb_only_atom,   &
                                 determine_num_pert_only, tmp_dir_save
@@ -29,6 +29,9 @@ PROGRAM hp_main
   !
   INTEGER :: iq, na, ipol
   LOGICAL :: do_iq, setup_pw
+  LOGICAL,EXTERNAL :: check_gpu_support 
+  !
+  use_gpu = check_gpu_support()
   !
   ! Initialize MPI, clocks, print initial messages
   !

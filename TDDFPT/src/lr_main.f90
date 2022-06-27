@@ -51,6 +51,8 @@ PROGRAM lr_main
   USE environ_base_module,   ONLY : print_environ_summary
 #endif
   !
+  USE control_flags,         ONLY : use_gpu
+  !
   IMPLICIT NONE
   !
   ! Local variables
@@ -60,8 +62,12 @@ PROGRAM lr_main
   LOGICAL            :: rflag
   COMPLEX(kind=dp)   :: temp
   LOGICAL, EXTERNAL  :: test_restart
+  LOGICAL, EXTERNAL  :: check_gpu_support
   !
   pol_index = 1
+  !
+  use_gpu = check_gpu_support()
+  if(use_gpu) Call errore('lr_main','turbo_lanczos with GPU NYI', 1)
   !
 #if defined(__MPI)
   CALL mp_startup ( )

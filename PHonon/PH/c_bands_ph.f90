@@ -26,7 +26,7 @@ SUBROUTINE c_bands_nscf_ph( )
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_lr,           ONLY : lgamma
-  USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity
+  USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity, use_gpu
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_projectors, wfcU
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions,        ONLY : evc
@@ -37,6 +37,8 @@ SUBROUTINE c_bands_nscf_ph( )
   USE save_ph,              ONLY : tmp_dir_save
   USE io_files,             ONLY : tmp_dir, prefix
   USE uspp_init,            ONLY : init_us_2
+  USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d
+  USE wvfct_gpum,           ONLY : using_et, using_g2kin
   !
   IMPLICIT NONE
   !
@@ -53,10 +55,12 @@ SUBROUTINE c_bands_nscf_ph( )
   !
   ik_ = 0
   avg_iter = 0.D0
+  call using_et(2) 
   IF ( restart ) CALL restart_in_cbands(ik_, ethr, avg_iter, et )
   !
   ! ... If restarting, calculated wavefunctions have to be read from file
   !
+  CALL using_evc(2) 
   DO ik = 1, ik_
      CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
   END DO
@@ -80,11 +84,16 @@ SUBROUTINE c_bands_nscf_ph( )
      !
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
-     call g2_kin( ik )
+     IF ( use_gpu ) THEN
+        CALL g2_kin_gpu( ik )
+     ELSE
+        CALL g2_kin( ik )
+     END IF
      ! 
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
-     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
+     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb, .true. )
+     !$acc update host(vkb)
      !
      ! ... Needed for LDA+U
      !
@@ -97,6 +106,7 @@ SUBROUTINE c_bands_nscf_ph( )
      !
      IF ( TRIM(starting_wfc) == 'file' ) THEN
         !
+        CALL using_evc(2) 
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
         !
      ELSE
@@ -107,6 +117,7 @@ SUBROUTINE c_bands_nscf_ph( )
      !
      ! ... diagonalization of bands for k-point ik
      !
+     call using_evc_d(0) 
      call diag_bands ( 1, ik, avg_iter )
      !
      !  In the noncolinear magnetic case we have k, k+q, -k -k-q and
@@ -114,6 +125,7 @@ SUBROUTINE c_bands_nscf_ph( )
      !  When lgamma is true we have only k and -k
      !
      IF (noncolin.AND.domag) THEN
+        call using_evc(0) 
         IF (lgamma.AND. MOD(ik,2)==0) THEN
            CALL apply_trev(evc, ik, ik-1)
         ELSEIF (.NOT.lgamma.AND.(MOD(ik,4)==3.OR.MOD(ik,4)==0)) THEN
@@ -123,6 +135,7 @@ SUBROUTINE c_bands_nscf_ph( )
      !
      ! ... save wave-functions (unless disabled in input)
      !
+     call using_evc(0)
      IF ( io_level > -1 ) CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
      ! ... beware: with pools, if the number of k-points on different
@@ -136,6 +149,7 @@ SUBROUTINE c_bands_nscf_ph( )
         ! ... save wavefunctions to file
         !
         IF (check_stop_now()) THEN
+           call using_et(0) 
            CALL save_in_cbands(ik, ethr, avg_iter, et )
            RETURN
         END IF

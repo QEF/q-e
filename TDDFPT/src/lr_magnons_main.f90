@@ -43,6 +43,7 @@ PROGRAM lr_magnons_main
   USE uspp,                  ONLY : okvan
   USE clib_wrappers,         ONLY : memstat
   USE klist,                 ONLY : igk_k
+  USE control_flags,         ONLY : use_gpu
   !
   IMPLICIT NONE
   !
@@ -55,6 +56,10 @@ PROGRAM lr_magnons_main
   LOGICAL             :: rflag
   INTEGER             :: kilobytes
   LOGICAL, EXTERNAL   :: test_restart
+  LOGICAL, EXTERNAL   :: check_gpu_support 
+  !
+  use_gpu = check_gpu_support()
+  if(use_gpu) Call errore('turbo_magnons', 'lr_magnons_main with GPU NYI', 1)
   !
   pol_index = 1
   !
