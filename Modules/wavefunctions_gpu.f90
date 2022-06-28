@@ -117,7 +117,7 @@
          ENDIF
          IF (intento > 0)    evc_ood = .true.
 #else
-         CALL errore('using_evc_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_evc_d', 'Trying to use device data without device compiled code!', 1)
 #endif
      END SUBROUTINE using_evc_d
      !
@@ -193,7 +193,7 @@
          ENDIF
          IF (intento > 0)    psic_ood = .true.
 #else
-         CALL errore('using_psic_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_psic_d', 'Trying to use device data without device compiled code!', 1)
 #endif
      END SUBROUTINE using_psic_d
      !
@@ -269,7 +269,7 @@
          ENDIF
          IF (intento > 0)    psic_nc_ood = .true.
 #else
-         CALL errore('using_psic_nc_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_psic_nc_d', 'Trying to use device data without device compiled code!', 1)
 #endif
      END SUBROUTINE using_psic_nc_d
      !
