@@ -114,7 +114,7 @@
          ENDIF
          IF (intento > 0)    h_diag_ood = .true.
 #else
-         CALL errore('using_h_diag_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_h_diag_d', 'Trying to use device data without device compiled code!', 1)
 #endif
      END SUBROUTINE using_h_diag_d
      !
@@ -190,7 +190,7 @@
          ENDIF
          IF (intento > 0)    s_diag_ood = .true.
 #else
-         CALL errore('using_s_diag_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_s_diag_d', 'Trying to use device data without device compiled code!', 1)
 #endif
      END SUBROUTINE using_s_diag_d
      !

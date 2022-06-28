@@ -111,7 +111,7 @@
          ENDIF
          IF (intento > 0)    vrs_ood = .true.
 #else
-         CALL errore('using_vrs_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_vrs_d', 'Trying to use device data without device compiled code!', 1)
 #endif
      END SUBROUTINE using_vrs_d
      !

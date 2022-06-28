@@ -117,7 +117,7 @@
          ENDIF
          IF (intento > 0)    g2kin_ood = .true.
 #else
-         CALL errore('using_g2kin_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_g2kin_d', 'Trying to use device data without device compiled code!', 1)
 #endif
      END SUBROUTINE using_g2kin_d
      !
@@ -193,7 +193,7 @@
          ENDIF
          IF (intento > 0)    et_ood = .true.
 #else
-         CALL errore('using_et_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_et_d', 'Trying to use device data without device compiled code!', 1)
 #endif
      END SUBROUTINE using_et_d
      !
@@ -269,7 +269,7 @@
          ENDIF
          IF (intento > 0)    wg_ood = .true.
 #else
-         CALL errore('using_wg_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_wg_d', 'Trying to use device data without device compiled code!', 1)
 #endif
      END SUBROUTINE using_wg_d
      !

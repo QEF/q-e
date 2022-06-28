@@ -166,7 +166,7 @@
          ENDIF
          IF (intento > 0)    becp_r_ood = .true.
 #else
-         CALL errore('using_becp_d%r_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_becp_d%r_d', 'Trying to use device data without device compiled code!', 1)
 #endif
      END SUBROUTINE using_becp_r_d
      !
@@ -271,7 +271,7 @@
          ENDIF
          IF (intento > 0)    becp_k_ood = .true.
 #else
-         CALL errore('using_becp_d%k_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_becp_d%k_d', 'Trying to use device data without device compiled code!', 1)
 #endif
      END SUBROUTINE using_becp_k_d
      !
@@ -376,7 +376,7 @@
          ENDIF
          IF (intento > 0)    becp_nc_ood = .true.
 #else
-         CALL errore('using_becp_d%nc_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_becp_d%nc_d', 'Trying to use device data without device compiled code!', 1)
 #endif
      END SUBROUTINE using_becp_nc_d
      !     
