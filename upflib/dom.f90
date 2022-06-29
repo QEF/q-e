@@ -127,17 +127,18 @@ CONTAINS
     in_attribute = .false.
     in_data = .false.
     nlevel = -1
+    ierr = 0
     i0 = 1
     !
     readline: do
        !
-       if ( present(iun) ) then
+       if ( present(iun) .and. .not. present(strbuf) ) then
           ! read from file
           read(iun,'(a)',end=10) line
-       else if ( present(strbuf) ) then
+       else if ( present(strbuf) .and. .not. present(iun) ) then
           ! read from buffer
-          ! locate newline (ascii n.10)
           if ( i0 > len(strbuf) ) go to 10
+          ! locate newline (ascii n.10)
           i1= index( strbuf(i0:), char(10))
           if ( i1 > 1 ) then
              !  skip LF and go to next line
@@ -154,7 +155,7 @@ CONTAINS
           end if
        else
           if ( .not.present(ex) ) then
-             print *, 'error: both unit and string are present'
+             print *, 'error: both unit and string, or none, in input'
              stop
           else
              ex%code = 1001
