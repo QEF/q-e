@@ -3,7 +3,7 @@
     restart_mode='from_scratch',
     title = 'TDDFPT-MAGNONS Example fE (NC PP)'
     outdir='./out',
-    prefix='Fe'
+    prefix='Femag'
  /
  &system
     nosym           = .true.
