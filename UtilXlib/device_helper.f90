@@ -146,6 +146,7 @@ implicit none
   h = cublasGetHandle()
   ierr = cublasDDOT_v2(h, n, dx, incx, dy, incy, MYDDOTv2)
 #else
+  DOUBLE PRECISION DDOT
   MYDDOTv2=DDOT(n, dx, incx, dy, incy)
 #endif
 
@@ -153,8 +154,10 @@ implicit none
 end function MYDDOTv2
 
 subroutine MYDDOTv3 (n, dx, incx, dy, incy, result)
+#if defined(__CUDA)
 USE cudafor
 USE cublas
+#endif
   implicit none
   integer :: n, incx, incy
   DOUBLE PRECISION, dimension(*)  :: dx, dy
@@ -167,6 +170,7 @@ USE cublas
   h = cublasGetHandle()
   ierr = cublasDDOT_v2(h, n, dx, incx, dy, incy, result)
 #else
+  DOUBLE PRECISION DDOT
   result=DDOT(n, dx, incx, dy, incy)
 #endif
 

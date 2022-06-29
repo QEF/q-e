@@ -541,7 +541,7 @@ CONTAINS
     !
     ! Compute sevc1_new = H*evc1
     !
-    #if defined(__CUDA)
+#if defined(__CUDA)
     !$acc data copyin(evc1) copyout(sevc1_new)
     !$acc host_data use_device(evc1, sevc1_new)
     CALL h_psi_gpu (npwx,ngk(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1))
@@ -570,7 +570,7 @@ CONTAINS
        !$acc end data
 #else            
        CALL s_psi(npwx,ngk(1),nbnd,evc1(1,1,1),spsi1)
- #endif
+#endif
     ENDIF
     !
     !   Subtract the eigenvalues
