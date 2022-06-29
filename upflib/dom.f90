@@ -63,24 +63,13 @@ module dom
   !
 CONTAINS
   !
-  function parsestring( filestring, ex )
-    ! FIXME - quick-and-dirty workaround
-    character(len=*), intent(in) :: filestring
+  function parsestring( string, ex )
+    !
+    character(len=*), intent(in) :: string
     type(domexception), intent (out), optional :: ex
     type(node), pointer :: parsestring
-    integer :: iun, ierr
     !
-    open(newunit=iun, file='tempfile', form='formatted', status='unknown', &
-         iostat=ierr)
-    if ( ierr == 0 ) then
-       write(iun,'(a)') filestring
-       close(unit=iun, status='keep')
-       parsestring => parsefile ( 'tempfile', ex )
-       open(newunit=iun, file='tempfile', form='formatted', status='old')
-    else
-       if ( present(ex) ) ex%code = 1001
-    end if
-    close(unit=iun, status='delete')
+    parsestring => parse( strbuf=string, ex=ex )
     !
   end function parsestring
   !
@@ -90,7 +79,33 @@ CONTAINS
     character(len=*), intent (in) :: filename
     type(domexception), intent (out), optional :: ex
     type(node), pointer :: parsefile
-    integer :: iun, ierr
+    integer :: iunit, ierr
+    !
+    open(newunit=iunit, file=filename, form='formatted', status='old', &
+         iostat=ierr)
+    !
+    if ( ierr /= 0 ) then
+       if ( present(ex) ) then
+          ex%code = ierr
+       else
+          print *,'error opening file: ierr=',ierr
+          stop
+       end if
+    else
+       !
+       parsefile => parse( iun=iunit, ex=ex )
+       !
+    end if
+    !
+  end function parsefile
+  !
+  function parse ( iun, strbuf, ex )
+    !
+    implicit none
+    character(len=*), intent (in), optional :: strbuf
+    integer, intent(in), optional :: iun
+    type(domexception), intent (inout), optional :: ex
+    type(node), pointer :: parse
     !
     type(node), pointer :: curr, next, prev
     integer, parameter :: maxline=1024, maxdim=maxline+16
@@ -105,25 +120,48 @@ CONTAINS
     logical :: is_found
     logical :: in_attribute
     logical :: in_data
-    integer:: nl, n, n1, n2, m, j
+    integer :: ierr, nl, n, n1, n2, m, j, i0, i1
     !
     curr => null()
     in_comment = .false.
     in_attribute = .false.
     in_data = .false.
     nlevel = -1
-    ierr = 0 
-    if ( present(ex) ) ex%code = ierr
-    !
-    open(newunit=iun, file=filename, form='formatted', status='old', &
-            iostat=ierr)
-    if ( ierr /= 0 ) then
-       ierr = 1001
-       go to 10
-    end if
+    i0 = 1
     !
     readline: do
-       read(iun,'(a)',end=10) line
+       !
+       if ( present(iun) ) then
+          ! read from file
+          read(iun,'(a)',end=10) line
+       else if ( present(strbuf) ) then
+          ! read from buffer
+          ! locate newline (ascii n.10)
+          if ( i0 > len(strbuf) ) go to 10
+          i1= index( strbuf(i0:), char(10))
+          if ( i1 > 1 ) then
+             !  skip LF and go to next line
+             line = strbuf(i0:i0+i1-2)
+             i0=i0+i1
+          else if ( i1 == 1 ) then
+             ! empty line
+             line = strbuf(i0:i0)
+             i0=i0+i1
+          else
+             ! i1=0: last line (if no LF at the end)
+             line = strbuf(i0:)
+             i0 = len(strbuf)+1
+          end if
+       else
+          if ( .not.present(ex) ) then
+             print *, 'error: both unit and string are present'
+             stop
+          else
+             ex%code = 1001
+             return
+          end if
+       end if
+  
        n = 1
        nl = len_trim(line)
        if ( nl > maxline ) then
@@ -281,22 +319,24 @@ CONTAINS
        ! if data extends over more than one line, add space between lines
        if ( in_data ) curr%data = curr%data // ' '
     end do readline
+    !
 10  continue
-    if ( ierr == 0 .and. nlevel /= -1) &
-         print *, 'error: parsing ended with ',nlevel+1,' level(s) open'
+    if (present(iun) ) close(iun)
+    if ( present(ex) ) ex%code = ierr
     !
-    close(iun)
-    if ( ierr > 0 ) then
+    if ( ierr == 0 .and. nlevel /= -1) then
        if ( present(ex) ) then
-          ex%code = ierr
+          ex%code = nlevel
        else
-          print *,'error in parsing: ierr=',ierr
-          stop
+          print *, 'error: parsing ended with ',nlevel+1,' level(s) open'
        end if
+    else if ( ierr > 0 .and. .not. present(ex) ) then
+       print *,'error in parsing: ierr=',ierr
+       stop
     end if
-    parsefile => root
+    parse => root
     !
-  end function parsefile
+  end function parse
   !
   integer function getexceptioncode(ex)
      type(domexception), intent(in):: ex
