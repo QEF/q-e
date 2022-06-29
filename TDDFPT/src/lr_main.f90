@@ -67,9 +67,6 @@ PROGRAM lr_main
   !
   pol_index = 1
   !
-  use_gpu = check_gpu_support()
-  if(use_gpu) Call errore('lr_main','turbo_lanczos with GPU NYI', 1)
-  !
 #if defined(__MPI)
   CALL mp_startup ( )
 #endif
