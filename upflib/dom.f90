@@ -30,11 +30,17 @@ module dom
   integer :: nlevel = -1
   ! The DOM is stored here
   type(node), target, save :: root
+  ! Used to reproduce FoX behavior
+  type :: domexception
+     integer :: code
+  end type domexception
   !
   private
   public :: node, nodelist
   public :: parsefile, item, getelementsbytagname, getlength, destroy
   public :: gettagname, hasattribute, extractdataattribute, extractdatacontent
+  public :: getfirstchild, domexception, getexceptioncode
+  public :: parsestring
   !
   interface extractdataattribute
      module procedure extractdataattribute_c, &
@@ -46,6 +52,7 @@ module dom
   !
   interface extractdatacontent
      module procedure extractdatacontent_c, &
+          extractdatacontent_cv,&
           extractdatacontent_l, &
           extractdatacontent_i, &
           extractdatacontent_iv,&
@@ -56,12 +63,49 @@ module dom
   !
 CONTAINS
   !
-  function parsefile ( filename )
+  function parsestring( string, ex )
+    !
+    character(len=*), intent(in) :: string
+    type(domexception), intent (out), optional :: ex
+    type(node), pointer :: parsestring
+    !
+    parsestring => parse( strbuf=string, ex=ex )
+    !
+  end function parsestring
+  !
+  function parsefile ( filename, ex )
     !
     implicit none
     character(len=*), intent (in) :: filename
+    type(domexception), intent (out), optional :: ex
     type(node), pointer :: parsefile
-    integer :: iun, ierr
+    integer :: iunit, ierr
+    !
+    open(newunit=iunit, file=filename, form='formatted', status='old', &
+         iostat=ierr)
+    !
+    if ( ierr /= 0 ) then
+       if ( present(ex) ) then
+          ex%code = ierr
+       else
+          print *,'error opening file: ierr=',ierr
+          stop
+       end if
+    else
+       !
+       parsefile => parse( iun=iunit, ex=ex )
+       !
+    end if
+    !
+  end function parsefile
+  !
+  function parse ( iun, strbuf, ex )
+    !
+    implicit none
+    character(len=*), intent (in), optional :: strbuf
+    integer, intent(in), optional :: iun
+    type(domexception), intent (inout), optional :: ex
+    type(node), pointer :: parse
     !
     type(node), pointer :: curr, next, prev
     integer, parameter :: maxline=1024, maxdim=maxline+16
@@ -76,23 +120,54 @@ CONTAINS
     logical :: is_found
     logical :: in_attribute
     logical :: in_data
-    integer:: nl, n, n1, n2, m, j
+    integer :: ierr, nl, n, n1, n2, m, j, i0, i1
     !
     curr => null()
     in_comment = .false.
     in_attribute = .false.
     in_data = .false.
     nlevel = -1
-    ierr = 0 
-    !
-    open(newunit=iun, file=filename, form='formatted', status='old')
+    ierr = 0
+    i0 = 1
     !
     readline: do
-       read(iun,'(a)',end=10) line
+       !
+       if ( present(iun) .and. .not. present(strbuf) ) then
+          ! read from file
+          read(iun,'(a)',end=10) line
+       else if ( present(strbuf) .and. .not. present(iun) ) then
+          ! read from buffer
+          if ( i0 > len(strbuf) ) go to 10
+          ! locate newline (ascii n.10)
+          i1= index( strbuf(i0:), char(10))
+          if ( i1 > 1 ) then
+             !  skip LF and go to next line
+             line = strbuf(i0:i0+i1-2)
+             i0=i0+i1
+          else if ( i1 == 1 ) then
+             ! empty line
+             line = strbuf(i0:i0)
+             i0=i0+i1
+          else
+             ! i1=0: last line (if no LF at the end)
+             line = strbuf(i0:)
+             i0 = len(strbuf)+1
+          end if
+       else
+          if ( .not.present(ex) ) then
+             print *, 'error: both unit and string, or none, in input'
+             stop
+          else
+             ex%code = 1001
+             return
+          end if
+       end if
+  
        n = 1
        nl = len_trim(line)
        if ( nl > maxline ) then
-          ! print *, 'error: line exceeds ', maxline, ' characters'
+          if ( .not.present(ex) ) &
+               print *, 'error: line exceeds ', maxline, ' characters'
           ierr = 1
           exit readline
        end if
@@ -143,8 +218,10 @@ CONTAINS
                       curr => prev
                       in_data = .false.
                    else
-                      ! print *, n,m,nlevel,tag
-                      ! print *, 'error: unexpected closing tag </',line(n:nl)'> found'
+                      if ( .not.present(ex) ) then
+                         print *, n,m,nlevel,tag
+                         print *, 'error: unexpected closing tag </',line(n:nl),'> found'
+                      end if
                       ierr = 2
                       exit readline
                    end if
@@ -155,7 +232,8 @@ CONTAINS
                       is_found = .false.
                       if ( line(m:m) == '>' ) then
                          if ( m == n+1 ) then
-                            ! print *, 'error: empty tag <>'
+                            if ( .not.present(ex) ) &
+                                 print *, 'error: empty tag <>'
                             ierr = 3
                             exit readline
                          end if
@@ -164,7 +242,8 @@ CONTAINS
                          in_attribute = .false.
                       else if ( line(m:m) == ' ' .or. m == nl ) then
                          if ( m == n+1 ) then
-                            ! print *, 'error: space after <'
+                            if ( .not.present(ex) ) &
+                                 print *, 'error: space after <'
                             ierr = 4
                             exit readline
                          end if
@@ -191,7 +270,8 @@ CONTAINS
                             curr => next
                          else
                             if ( allocated(root%tag) ) then
-                               ! print *, 'error: more than one root tag'
+                               if ( .not.present(ex) ) &
+                                    print *, 'error: more than one root tag'
                                ierr = 5
                                exit readline
                             end if
@@ -224,7 +304,8 @@ CONTAINS
                    end if
                    in_attribute = .false.
                 else
-                   ! print *, 'error: closed tag that was not open'
+                   if ( .not.present(ex) ) &
+                        print *, 'error: closed tag that was not open'
                    ierr = 6
                    exit readline
                 end if
@@ -239,18 +320,29 @@ CONTAINS
        ! if data extends over more than one line, add space between lines
        if ( in_data ) curr%data = curr%data // ' '
     end do readline
-10  continue
-    if ( ierr == 0 .and. nlevel /= -1) &
-         print *, 'error: parsing ended with ',nlevel+1,' level(s) open'
     !
-    close(iun)
-    if ( ierr > 0 ) then
+10  continue
+    if (present(iun) ) close(iun)
+    if ( present(ex) ) ex%code = ierr
+    !
+    if ( ierr == 0 .and. nlevel /= -1) then
+       if ( present(ex) ) then
+          ex%code = nlevel
+       else
+          print *, 'error: parsing ended with ',nlevel+1,' level(s) open'
+       end if
+    else if ( ierr > 0 .and. .not. present(ex) ) then
        print *,'error in parsing: ierr=',ierr
        stop
     end if
-    parsefile => root
+    parse => root
     !
-  end function parsefile
+  end function parse
+  !
+  integer function getexceptioncode(ex)
+     type(domexception), intent(in):: ex
+     getexceptioncode = ex%code
+  end function getexceptioncode
   !
   subroutine add_to_list(linklist, next)
     type(node), pointer :: next
@@ -347,12 +439,31 @@ CONTAINS
     !
   end function getelementsbytagname
   !
-  function gettagname(root)
+  function getfirstchild(root, ex)
     !
     type(node), pointer, intent(in) :: root
+    type(domexception), intent (out), optional :: ex
+    type(node), pointer :: getfirstchild
+    !
+    if ( associated( root ) ) then
+       getfirstchild => root
+       if ( present(ex) ) ex%code = 0
+    else
+       getfirstchild => null()
+       if ( present(ex) ) ex%code = 1
+    endif
+    !
+  end function getfirstchild
+  !
+  function gettagname(root, ex)
+    !
+    type(node), pointer, intent(in) :: root
+    type(domexception), intent (out), optional :: ex
     character(len=:), allocatable   :: gettagname
     !
     gettagname = root%tag
+    ! ignored
+    if ( present(ex) ) ex%code = 0
     !
   end function gettagname
   !
@@ -434,69 +545,84 @@ scan: do i=la-l0+1,la
     !
   end function hasattribute
   !
-  subroutine extractdataattribute_c(root, attr, cval)
+  subroutine extractdataattribute_c(root, attr, cval, iostat)
     implicit none
     type(node), pointer, intent(in) :: root
     character(len=*), intent(in) :: attr
     character(len=*), intent(out) :: cval
+    integer, intent(out), optional:: iostat
+    if (present(iostat)) iostat=0
     if ( hasattribute(root, attr, cval) ) return
+    if (present(iostat)) iostat=1
     cval = ''
   end subroutine extractdataattribute_c
   !
-  subroutine extractdataattribute_l(root, attr, lval)
+  subroutine extractdataattribute_l(root, attr, lval, iostat)
     implicit none
     type(node), pointer, intent(in) :: root
     character(len=*), intent(in) :: attr
     logical, intent(out) :: lval
     character(len=80) :: val
+    integer, intent(out), optional:: iostat
+    if (present(iostat)) iostat=0
     if ( hasattribute(root, attr, val) ) then
        read(val,*, end=10,err=10) lval
        return
     end if
     ! not found or not readable
 10  lval = .false.
+    if (present(iostat)) iostat=1
   end subroutine extractdataattribute_l
   !
-  subroutine extractdataattribute_i(root, attr, ival)
+  subroutine extractdataattribute_i(root, attr, ival, iostat)
     implicit none
     type(node), pointer, intent(in) :: root
     character(len=*), intent(in) :: attr
     integer, intent(out) :: ival
     character(len=80) :: val
+    integer, intent(out), optional:: iostat
+    if (present(iostat)) iostat=0
     if ( hasattribute(root, attr, val) ) then
        read(val,*, end=10,err=10) ival
        return
     end if
     ! not found or not readable
 10  ival = 0
+    if (present(iostat)) iostat=1
   end subroutine extractdataattribute_i
   !
-  subroutine extractdataattribute_iv(root, attr, ivec)
+  subroutine extractdataattribute_iv(root, attr, ivec, iostat)
     implicit none
     type(node), pointer, intent(in) :: root
     character(len=*), intent(in) :: attr
     integer, intent(out) :: ivec(:)
     character(len=80) :: val
+    integer, intent(out), optional:: iostat
+    if (present(iostat)) iostat=0
     if ( hasattribute(root, attr, val) ) then
        read(val,*, end=10,err=10) ivec
        return
     end if
     ! not found or not readable
 10  ivec = 0
+    if (present(iostat)) iostat=1
   end subroutine extractdataattribute_iv
   !
-  subroutine extractdataattribute_r(root, attr, rval)
+  subroutine extractdataattribute_r(root, attr, rval, iostat)
     implicit none
     type(node), pointer, intent(in) :: root
     character(len=*), intent(in) :: attr
     real(dp), intent(out) :: rval
     character(len=80) :: val
+    integer, intent(out), optional:: iostat
+    if (present(iostat)) iostat=0
     if ( hasattribute(root, attr, val) ) then
        read(val,*, end=10,err=10) rval
        return
     end if
     ! not found or not readable
 10  rval = 0
+    if (present(iostat)) iostat=1
   end subroutine extractdataattribute_r
   !
   subroutine extractdatacontent_c(root, cval, iostat)
@@ -513,6 +639,45 @@ scan: do i=la-l0+1,la
     end if
     if ( present(iostat) ) iostat=ios
   end subroutine extractdatacontent_c
+  !
+  subroutine extractdatacontent_cv(root, cvec, iostat)
+    implicit none
+    type(node), pointer, intent(in) :: root
+    character(len=*), intent(inout), pointer :: cvec(:)
+    integer, intent(out), optional :: iostat
+    integer :: i0, i1, i, ios
+    if ( len_trim(root%data) > 0 ) then
+       i0=0
+       ! ios counts the number of tokens found
+       ios=size(cvec)
+       do i=1,size(cvec)
+  10      i0=i0+1
+          if (i0 > len_trim(root%data) ) exit
+          if (root%data(i0:i0) == ' ' ) go to 10
+          ! i0 points to the first non-space character
+          i1 = index(root%data(i0:),' ')
+          ! i0+i1-2 points to the next non-space character
+          ios = ios-1
+          if ( i1 > 0 ) then
+             ! token found
+             cvec(i)=root%data(i0:i0+i1-2)
+             i0=i0+i1
+          else if ( i1 == 0 .and. i0 < len_trim(root%data) ) then
+             ! last token found
+             cvec(i)=root%data(i0:)
+             exit
+          else
+             ! no more tokens left
+             cvec(i)=' '
+             exit
+          end if
+       end do
+    else
+       cvec(:)=''
+       ios = 0
+    end if
+    if ( present(iostat) ) iostat=ios
+  end subroutine extractdatacontent_cv
   !
   subroutine extractdatacontent_l(root, lval, iostat)
     implicit none
