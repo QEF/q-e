@@ -157,8 +157,10 @@ FFT_LIBS       = @fft_libs@
 
 # HDF5
 HDF5_LIBS = @hdf5_libs@
-FOX_LIB  = -L$(TOPDIR)/FoX/lib  -lFoX_dom -lFoX_sax -lFoX_wxml -lFoX_common\
-            -lFoX_utils -lFoX_fsys 
+
+# FOX
+FOX      = @extfox@
+FOX_LIB  = @foxlibs@
 FOX_FLAGS = @foxflags@
 
 # ENVIRON
