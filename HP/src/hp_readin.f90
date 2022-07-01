@@ -191,10 +191,10 @@ SUBROUTINE input_sanity()
      & 'Cannot start from pw.x data file using Gamma-point tricks',1)
   !
   IF (.NOT.lda_plus_u) CALL errore('hp_readin',&
-     & 'The HP code can be used only when lda_plus_u=.true.',1)
+     & 'The HP code can be used only on top of DFT+Hubbard (i.e. when the HUBBARD card is used in pw.x)',1)
   !
   IF (lda_plus_u_kind.EQ.1) CALL errore("hp_readin", &
-     & ' The HP code does not support lda_plus_u_kind=1',1)
+     & ' The HP code does not support the Liechtenstein formulation of DFT+U',1)
   !
   IF (Hubbard_projectors.NE."atomic" .AND. Hubbard_projectors.NE."ortho-atomic") &
      CALL errore("hp_readin", &

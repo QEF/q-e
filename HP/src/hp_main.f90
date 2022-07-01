@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -243,11 +243,13 @@ SUBROUTINE hp_print_preamble()
   !
   IMPLICIT NONE
   !
-  WRITE( stdout, '(/5x,"=--------------------------------------------------------------------------=")')
-  WRITE( stdout, '(/7x,"Calculation of Hubbard parameters from DFPT; please cite this program as")')
-  WRITE( stdout, '(/7x,"I. Timrov, N. Marzari, and M. Cococcioni, Phys. Rev. B 98,  085127 (2018)")')
-  WRITE( stdout, '(/7x,"I. Timrov, N. Marzari, and M. Cococcioni, Phys. Rev. B 103, 045141 (2021)")')
-  WRITE( stdout, '(/5x,"=--------------------------------------------------------------------------=")')
+  WRITE( stdout, '(/5x,"=---------------------------------------------------------------------------=")')
+  WRITE( stdout, '(/5x,"      Calculation of Hubbard parameters using the HP code based on DFPT      ")')
+  WRITE( stdout, '(/5x,"          Please cite the following papers when using this program:          ")')
+  WRITE( stdout, '(/5x,"            - HP code : Comput. Phys. Commun., in press (2022).              ")')
+  WRITE( stdout, '(/5x,"            - Theory  : Phys. Rev. B 98,  085127 (2018) and                  ")')
+  WRITE( stdout, '(/5x,"                        Phys. Rev. B 103, 045141 (2021).                     ")')
+  WRITE( stdout, '(/5x,"=-----------------------------------------------------------------------------=")')
   !
   RETURN
   !
