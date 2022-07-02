@@ -227,11 +227,6 @@ TLDEPS= libfox libla libfft libutil libmbd librxc libupf
 
 all : libqemod.a
 
-## The following is needed only for lapack compiled from sources
-
-dlamch.o : dlamch.f
-	$(F77) $(FFLAGS_NOOPT) -c $<
-
 libqemod.a: 	$(MODULES) $(OBJS) $(RISMLIB)
 	$(AR) $(ARFLAGS) $@ $?       
 	$(RANLIB) $@    
