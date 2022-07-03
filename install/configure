@@ -5918,8 +5918,7 @@ fi
      foxlibs=""
   else
      extfox="libfox"
-     foxlibs="-L\$(TOPDIR)/FoX/lib  -lFoX_dom -lFoX_sax -lFoX_wxml \
-              -lFoX_common -lFoX_utils -lFoX_fsys "
+     foxlibs="-L\$(TOPDIR)/FoX/lib  -lFoX_dom -lFoX_sax -lFoX_wxml -lFoX_common -lFoX_utils -lFoX_fsys "
      try_iflags="$try_iflags -I\$(TOPDIR)/FoX/finclude "
 fi
 
