@@ -148,8 +148,6 @@ if test "$fft_libs" = ""; then
 
                   if test "$have_fft" -eq 1
                   then
-                        AC_LANG_PUSH([Fortran]) 
-                        AC_FC_SRCEXT(f90) 
                         try_dflags="$try_dflags -D__FFTW3"
                         try_incdir="$FFTW_INCLUDE $FFTW_INC $INCLUDE_PATH $CPATH $FPATH"
                         orig_fflags="$FFLAGS"
@@ -166,7 +164,6 @@ end],have_fft_include=1,)
                            fi
                         done
                         FFLAGS="$orig_fflags"
-                        AC_LANG_POP([Fortran]) 
                         break
                   fi
 

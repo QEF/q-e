@@ -59,7 +59,7 @@ if test "$use_parallel" -ne 0; then
     else
 
       # Test if it is really installed where it has been specified
-      AC_LANG_POP(Fortran 77)
+      AC_LANG_POP(Fortran)
       AC_LANG_PUSH(C)
       
       if test -e $with_hdf5_path/bin/h5pcc; then 
@@ -100,7 +100,7 @@ if test "$use_parallel" -ne 0; then
       done
 
       AC_LANG_POP(C)
-      AC_LANG_PUSH(Fortran 77)
+      AC_LANG_PUSH(Fortran)
 
       if test "$have_hdf5" -eq 1 ; then
           if test "$with_hdf5_include" -eq 1 ; then 
@@ -184,7 +184,7 @@ else
     else
 
       # Test if it is really installed where it has been specified
-      AC_LANG_POP(Fortran 77)
+      AC_LANG_POP(Fortran)
       AC_LANG_PUSH(C)
       
       if test -e $with_hdf5_path/bin/h5cc ; then 
@@ -219,7 +219,7 @@ else
       done
 
       AC_LANG_POP(C)
-      AC_LANG_PUSH(Fortran 77)
+      AC_LANG_PUSH(Fortran)
 
       if test "$have_hdf5" -eq 1 ; then
           AC_CHECK_FILE($with_hdf5_path/include/hdf5.mod,,[
