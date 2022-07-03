@@ -27,7 +27,7 @@ X_AC_QE_ARCH()
 try_dflags=""
 
 # Add needed include directories
-try_iflags="-I. -I\$(TOPDIR)/include -I\$(TOPDIR)/FoX/finclude "
+try_iflags="-I. -I\$(TOPDIR)/include"
 
 # Checking archiver...
 X_AC_QE_AR()
@@ -72,6 +72,9 @@ X_AC_QE_FFT()
 
 # Setting libxc...
 ACX_LIBXC()
+
+# Setting FoX...
+X_AC_QE_FOX()
 
 # Checking for IBM MASS library...
 X_AC_QE_MASS()
