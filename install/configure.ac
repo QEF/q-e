@@ -35,6 +35,9 @@ X_AC_QE_AR()
 # Checking OpenMP...
 X_AC_QE_OPENMP()
 
+AC_LANG_PUSH(Fortran) 
+AC_FC_SRCEXT(f90) 
+
 # Checking MPIF90...
 X_AC_QE_MPIF90()
 
@@ -56,8 +59,6 @@ X_AC_QE_CUDA()
 # Checking F90 rule...
 X_AC_QE_F90RULE()
 
-AC_LANG_PUSH(Fortran 77)
-F77=$f90 # use Fortran 90 actually
 FFLAGS="$test_fflags"
 LDFLAGS="$test_ldflags"
 

@@ -21,7 +21,6 @@ for dummy in x # to allow simple 'break'
 do
     test "$have_mpi" -eq 0 && break
 
-    F77=$mpif90
     LIBS="$mpi_libs"
 
 # look for scalapack if required
