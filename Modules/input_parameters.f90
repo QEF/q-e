@@ -520,8 +520,6 @@ MODULE input_parameters
         REAL(DP) :: sic_alpha   = 0.0_DP
         LOGICAL   :: force_pairing = .false.
 
-        LOGICAL :: spline_ps = .false.
-        !! use spline interpolation for pseudopotential
         LOGICAL :: one_atom_occupations=.false.
 
         CHARACTER(len=80) :: assume_isolated = 'none'
@@ -665,7 +663,7 @@ MODULE input_parameters
              report, lforcet,                                                 &
              constrained_magnetization, B_field, fixed_magnetization,         &
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
-             tot_charge, tot_magnetization, spline_ps, one_atom_occupations,  &
+             tot_charge, tot_magnetization, one_atom_occupations,             &
              vdw_corr, london, london_s6, london_rcut, london_c6, london_rvdw,&
              dftd3_version, dftd3_threebody,                                  &
              ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,                       &
