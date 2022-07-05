@@ -22,8 +22,6 @@ MODULE uspp_data
   PUBLIC :: allocate_uspp_data
   PUBLIC :: deallocate_uspp_data
   PUBLIC :: scale_uspp_data
-  ! Next variables for compatibility only, to be removed
-  LOGICAL, PUBLIC :: spline_ps=.TRUE.
   !
   INTEGER :: nqxq
   !! size of interpolation table

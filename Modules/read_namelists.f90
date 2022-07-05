@@ -280,8 +280,6 @@ MODULE read_namelists_module
        !
        one_atom_occupations=.FALSE.
        !
-       spline_ps = .false.
-       ! 
        real_space = .false.
        !
        ! ... DFT-D, Tkatchenko-Scheffler, XDM, MBD
@@ -1021,7 +1019,6 @@ MODULE read_namelists_module
        !
        CALL mp_bcast( assume_isolated,           ionode_id, intra_image_comm )
        CALL mp_bcast( one_atom_occupations,      ionode_id, intra_image_comm )
-       CALL mp_bcast( spline_ps,                 ionode_id, intra_image_comm )
        !
        CALL mp_bcast( vdw_corr,                  ionode_id, intra_image_comm )
        CALL mp_bcast( ts_vdw,                    ionode_id, intra_image_comm )

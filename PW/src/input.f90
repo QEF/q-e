@@ -260,7 +260,7 @@ SUBROUTINE iosys()
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
-                               starting_spin_angle, assume_isolated,spline_ps,&
+                               starting_spin_angle, assume_isolated,        &
                                vdw_corr, london, london_s6, london_rcut, london_c6, &
                                london_rvdw, dftd3_threebody, dftd3_version,   &
                                ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,     &
@@ -329,7 +329,6 @@ SUBROUTINE iosys()
   USE dftd3_qe,              ONLY : dftd3_xc, dftd3, dftd3_in
   USE xdm_module,            ONLY : init_xdm, a1i, a2i
   USE tsvdw_module,          ONLY : vdw_isolated, vdw_econv_thr
-  USE uspp_data,             ONLY : spline_ps_ => spline_ps
   !
   USE qexsd_input,           ONLY : qexsd_input_obj
   USE qes_types_module,      ONLY : input_type
@@ -1325,7 +1324,6 @@ SUBROUTINE iosys()
   !
   ! MISCELLANEOUS VARIABLES
   !
-  spline_ps_ = spline_ps
   la2F_      = la2F
   max_seconds_ = max_seconds
   !

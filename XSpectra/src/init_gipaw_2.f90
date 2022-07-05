@@ -20,7 +20,7 @@ subroutine init_gipaw_2 (npw_, igk_, q_, vkb_)
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
   USE gvect ,     ONLY : eigts1, eigts2, eigts3, g, mill
   USE paw_gipaw,  ONLY : paw_nkb, paw_recon, paw_lmaxkb
-  USE uspp_data,  ONLY : nqx, dq, spline_ps
+  USE uspp_data,  ONLY : nqx, dq
   USE splinelib
   !
   implicit none
@@ -70,13 +70,6 @@ subroutine init_gipaw_2 (npw_, igk_, q_, vkb_)
   do ig = 1, npw_
      qg(ig) = sqrt(qg(ig))*tpiba
   enddo
-
-  if (spline_ps) then
-    allocate(xdata(nqx))
-    do iq = 1, nqx
-      xdata(iq) = (iq - 1) * dq
-    enddo
-  endif
 
   jkb = 0
   do nt = 1, ntyp
