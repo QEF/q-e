@@ -85,10 +85,6 @@ subroutine init_gipaw_2 (npw_, igk_, q_, vkb_)
      ! calculate beta in G-space using an interpolation table
      do nb = 1, paw_recon(nt)%paw_nbeta
         do ig = 1, npw_
-           if (spline_ps) then
-             vq(ig) = splint ( xdata, paw_recon(nt)%paw_tab(:,nb), &
-                  paw_recon(nt)%paw_tab_d2y(:,nb), qg(ig) )
-           else
              px = qg (ig) / dq - int (qg (ig) / dq)
              ux = 1.d0 - px
              vx = 2.d0 - px
@@ -101,7 +97,6 @@ subroutine init_gipaw_2 (npw_, igk_, q_, vkb_)
                        paw_recon(nt)%paw_tab(i1,nb) * px * vx * wx / 2.d0 - &
                        paw_recon(nt)%paw_tab(i2,nb) * px * ux * wx / 2.d0 + &
                        paw_recon(nt)%paw_tab(i3,nb) * px * ux * vx / 6.d0
-           endif
         enddo
         ! add spherical harmonic part
         do ih = 1, paw_recon(nt)%paw_nh
