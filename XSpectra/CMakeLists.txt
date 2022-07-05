@@ -24,7 +24,6 @@ set(src_xspectra
 
 set(src_gipaw
     src/paw_gipaw.f90
-    src/gipaw_module.f90
     src/init_gipaw_1.f90
     src/init_gipaw_2.f90)
 
