@@ -12,10 +12,10 @@ MODULE qes_read_module
   !
   ! Quantum Espresso XSD namespace: http://www.quantum-espresso.org/ns/qes/qes-1.0
   !
-#if defined (__outfoxed) 
-  USE dom
-#else 
+#if defined (__fox) 
   USE FoX_dom
+#else 
+  USE dom
 #endif
   USE qes_types_module
   !

@@ -62,6 +62,7 @@ Libraries:
                     (obsolete?)
       __SX6         Use MathKeisan libraries for NEC SX machines
       ASL, MICRO    SX-6 specific libraries (obsolescent)
+      __fox         Use true FoX library instead of built-in replacement
 
 Signals:
       __PTRACE        Enable traceback

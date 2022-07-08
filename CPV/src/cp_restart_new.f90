@@ -28,14 +28,14 @@ MODULE cp_restart_new
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
   USE matrix_inversion
-#if defined (__outfoxed)
-    USE     wxml
-    USE     dom,     ONLY : Node, parseFile, item, getElementsByTagname, &
+#if defined (__fox)
+    USE FoX_wxml
+    USE FoX_dom,     ONLY : Node, parseFile, item, getElementsByTagname, &
                             hasAttribute, extractDataAttribute, &
                             extractDataContent, destroy
 #else
-    USE FoX_wxml
-    USE FoX_dom,     ONLY : Node, parseFile, item, getElementsByTagname, &
+    USE     wxml
+    USE     dom,     ONLY : Node, parseFile, item, getElementsByTagname, &
                             hasAttribute, extractDataAttribute, &
                             extractDataContent, destroy
 #endif

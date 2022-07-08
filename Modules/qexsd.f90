@@ -30,17 +30,17 @@ MODULE qexsd_module
   USE qes_reset_module, ONLY : qes_reset
   USE qes_init_module,  ONLY : qes_init
   !
-#if defined (__outfoxed)
-  USE     wxml,  ONLY : xmlf_t, xml_OpenFile, xml_DeclareNamespace, &
-                        xml_NewElement, xml_addAttribute, xml_addComment,&
-                        xml_AddCharacters, xml_EndElement, xml_Close
-  USE     dom,   ONLY : parseFile, item, getElementsByTagname, &
-                        destroy, nodeList, Node
-#else
+#if defined (__fox)
   USE FoX_wxml,  ONLY : xmlf_t, xml_OpenFile, xml_DeclareNamespace, &
                         xml_NewElement, xml_addAttribute, xml_addComment,&
                         xml_AddCharacters, xml_EndElement, xml_Close
   USE FoX_dom,   ONLY : parseFile, item, getElementsByTagname, &
+                        destroy, nodeList, Node
+#else
+  USE     wxml,  ONLY : xmlf_t, xml_OpenFile, xml_DeclareNamespace, &
+                        xml_NewElement, xml_addAttribute, xml_addComment,&
+                        xml_AddCharacters, xml_EndElement, xml_Close
+  USE     dom,   ONLY : parseFile, item, getElementsByTagname, &
                         destroy, nodeList, Node
 #endif
   !
@@ -149,7 +149,7 @@ CONTAINS
       CALL qes_reset (parallel_info) 
       IF ( check_file_exst(input_xml_schema_file) )  THEN
          CALL xml_addComment( XF = qexsd_xf, COMMENT= "")
-#if ! defined(__outfoxed)
+#if defined(__fox)
          CALL qexsd_cp_line_by_line(ounit ,input_xml_schema_file, spec_tag="input")
 #else
          CALL qexsd_cp_line_by_line(qexsd_xf%unit,input_xml_schema_file, spec_tag="input")
