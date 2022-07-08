@@ -45,6 +45,7 @@ PROGRAM lr_main
   USE fft_base,              ONLY : dffts
   USE uspp,                  ONLY : okvan
   USE mp_bands,              ONLY : ntask_groups
+  USE control_flags,         ONLY : use_gpu
   !
 #if defined (__ENVIRON)
   USE plugin_flags,          ONLY : use_environ
@@ -66,9 +67,6 @@ PROGRAM lr_main
   !
   pol_index = 1
   !
-  use_gpu = check_gpu_support()
-  if(use_gpu) Call errore('lr_main','turbo_lanczos with GPU NYI', 1)
-  !
 #if defined(__MPI)
   CALL mp_startup ( )
 #endif
@@ -80,6 +78,8 @@ PROGRAM lr_main
   IF (lr_verbosity > 5) THEN
      WRITE(stdout,'("<lr_main>")')
   ENDIF
+  !
+  use_gpu = check_gpu_support()
   !
   ! Reading input file and PWSCF xml, some initialisation;
   ! Read the input variables for TDDFPT;

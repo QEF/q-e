@@ -46,7 +46,6 @@
       USE fft_base,            ONLY : dffts
       use wave_base,           only : wave_steepest, wave_verlet
       use control_flags,       only : lwf, tsde, many_fft
-      use pseudo_base,         only : vkb_d
       use uspp,                only : deeq, vkb
       use gvect,               only : gstart
       use electrons_base,      only : nbsp_bgrp, ispin_bgrp, f_bgrp , nspin, nupdwn_bgrp, iupdwn_bgrp
@@ -276,8 +275,12 @@
            ELSE
 
 #if defined (__CUDA)
-              CALL dforce( i, bec_bgrp, vkb_d, c0_d, c2, c3, rhos_d, &
+              !$acc data present(vkb)
+              !$acc host_data use_device(vkb)
+              CALL dforce( i, bec_bgrp, vkb, c0_d, c2, c3, rhos_d, &
                            SIZE(rhos_d,1), ispin_bgrp, f_bgrp, nbsp_bgrp, nspin )
+              !$acc end host_data
+              !$acc end data
 #else
               CALL dforce( i, bec_bgrp, vkb, c0_bgrp, c2, c3, rhos, &
                            SIZE(rhos,1), ispin_bgrp, f_bgrp, nbsp_bgrp, nspin )

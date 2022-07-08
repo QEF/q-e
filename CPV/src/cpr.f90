@@ -23,7 +23,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                                      !autopilot work
   USE core,                     ONLY : rhoc
   USE uspp_param,               ONLY : nhm, nh
-  USE pseudo_base,              ONLY : vkb_d
   USE uspp,                     ONLY : nkb, vkb, becsum, deeq, okvan, nlcc_any
   USE energies,                 ONLY : eht, epseu, exc, etot, eself, enl, &
                                        ekin, atot, entropy, egrand, enthal, &
@@ -545,9 +544,8 @@ USE cp_main_variables,        ONLY : eigr_d
         ! ... prefor calculates vkb
         !
         CALL prefor( eigr, vkb )
-#if defined(__CUDA)
-        CALL dev_memcpy( vkb_d, vkb )
-#endif
+        !
+        !$acc update device(vkb)
         !
      END IF
      !
@@ -565,7 +563,11 @@ USE cp_main_variables,        ONLY : eigr_d
          IF ( tortho ) THEN
            !
 #if defined (__CUDA)
-           CALL ortho( vkb_d, cm_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+           !$acc data present(vkb)
+           !$acc host_data use_device(vkb)
+           CALL ortho( vkb, cm_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+           !$acc end host_data
+           !$acc end data
 #else
            CALL ortho( vkb, cm_bgrp, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #endif
@@ -604,8 +606,11 @@ USE cp_main_variables,        ONLY : eigr_d
 #if defined (__CUDA)
          CALL dev_memcpy( eigr_d, eigr )
          !CALL dev_memcpy( cm_d, cm_bgrp )
-         CALL calbec( nbsp_bgrp, vkb_d, cm_d, bec_d, 1 )
-         !CALL dev_memcpy( vkb, vkb_d )
+         !$acc data present(vkb)
+         !$acc host_data use_device(vkb)
+         CALL calbec( nbsp_bgrp, vkb, cm_d, bec_d, 1 )
+         !$acc end host_data
+         !$acc end data
          !CALL dev_memcpy( bec_bgrp, bec_d )
 #else
          CALL calbec( nbsp_bgrp, vkb, cm_bgrp, bec_bgrp, 1 ) 
@@ -619,8 +624,8 @@ USE cp_main_variables,        ONLY : eigr_d
 #endif
          END IF
          !
+         !$acc update host(vkb)
 #if defined (__CUDA)
-        CALL dev_memcpy( vkb, vkb_d )
         CALL dev_memcpy( bec_bgrp, bec_d )
 #endif
          !

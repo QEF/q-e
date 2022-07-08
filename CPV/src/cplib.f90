@@ -1676,7 +1676,7 @@ end subroutine dylmr2_
       USE constants,          ONLY: pi, fpi
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
-      USE gvecw,              ONLY: g2kin_d
+      USE gvecw,              ONLY: g2kin
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm
       USE cell_base,          ONLY: tpiba2
@@ -1696,10 +1696,10 @@ end subroutine dylmr2_
       REAL(DP) :: sk
       !
       sk=0.0d0
-!$cuf kernel do(2) <<<*,*>>>
+!$acc parallel loop collapse(2) present(g2kin, f, c) 
       DO i=1,n
          DO ig=gstart,ngw
-            sk = sk + f(i) * DBLE(CONJG(c(ig,i))*c(ig,i)) * g2kin_d(ig)
+            sk = sk + f(i) * DBLE(CONJG(c(ig,i))*c(ig,i)) * g2kin(ig)
          END DO
       END DO
 

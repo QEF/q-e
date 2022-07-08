@@ -113,7 +113,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE fft_helper_subroutines
   USE device_memcpy_m,         ONLY: dev_memcpy, dev_memset
   !
-  USE wvfct_gpum,              ONLY: g2kin_d, using_g2kin_d
+  USE wvfct,                   ONLY: g2kin  
   USE becmod_subs_gpum,        ONLY: calbec_gpu, using_becp_auto, using_becp_d_auto
   IMPLICIT NONE
   !
@@ -136,7 +136,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   LOGICAL     :: need_host_copy
   !
   CALL start_clock_gpu( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
-  CALL using_g2kin_d(0)
   CALL using_vrs_d(0)
   !
   ! ... Here we add the kinetic energy (k+G)^2 psi and clean up garbage
@@ -153,13 +152,13 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   ENDIF
 
 
-  !$cuf kernel do(2)
+  !$acc parallel loop collapse(2) present(g2kin, hpsi_d, psi_d)
   DO ibnd = 1, m
      DO i=1, lda
         IF (i <= n) THEN
-           hpsi_d (i, ibnd) = g2kin_d (i) * psi_d (i, ibnd)
+           hpsi_d (i, ibnd) = g2kin (i) * psi_d (i, ibnd)
            IF ( noncolin ) THEN
-              hpsi_d (lda+i, ibnd) = g2kin_d (i) * psi_d (lda+i, ibnd)
+              hpsi_d (lda+i, ibnd) = g2kin (i) * psi_d (lda+i, ibnd)
            END IF
         ELSE
            hpsi_d (i, ibnd) = (0.0_dp, 0.0_dp)

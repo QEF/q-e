@@ -266,7 +266,6 @@ set(src_pw
    src/addusforce_gpu.f90
    src/deriv_drhoc_gpu.f90
    src/s_psi_gpu.f90
-   src/g2_kin_gpu.f90
    src/rotate_wfc_gpu.f90
    src/usnldiag_gpu.f90
    src/add_vuspsi_gpu.f90

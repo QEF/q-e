@@ -57,11 +57,16 @@ set(src_tddfpt
     src/lr_dvpsi_magnons.f90
     src/lr_Opsi_magnons.f90
     src/lr_calc_dens_magnons.f90)
+qe_enable_cuda_fortran("${src_tddfpt}")
 
 
 qe_add_library(qe_tddfpt ${src_tddfpt})
 target_link_libraries(qe_tddfpt
     PRIVATE
+        qe_hdf5_fortran
+        qe_openmp_fortran
+        qe_openacc_fortran
+        qe_mpi_fortran
         qe_lr_modules
         qe_pw
         qe_modules
@@ -73,12 +78,16 @@ target_link_libraries(qe_tddfpt
 # turbo_lanczos.x
 ###########################################################
 set(src_turbo_lanczos_x src/lr_main.f90)
+qe_enable_cuda_fortran("${src_turbo_lanczos_x}")
 qe_add_executable(qe_tddfpt_turbolanczos_exe ${src_turbo_lanczos_x})
 set_target_properties(qe_tddfpt_turbolanczos_exe 
     PROPERTIES 
         OUTPUT_NAME turbo_lanczos.x)
 target_link_libraries(qe_tddfpt_turbolanczos_exe
     PRIVATE
+        qe_openacc_fortran
+        qe_openmp_fortran
+        qe_mpi_fortran
         qe_pw
         qe_modules
         qe_tddfpt
@@ -90,12 +99,16 @@ target_link_libraries(qe_tddfpt_turbolanczos_exe
 # turbo_davidson.x
 ###########################################################
 set(src_turbo_davidson_x src/lr_dav_main.f90)
+qe_enable_cuda_fortran("${src_turbo_davidson_x}")
 qe_add_executable(qe_tddfpt_turbodavidson_exe ${src_turbo_davidson_x})
 set_target_properties(qe_tddfpt_turbodavidson_exe 
     PROPERTIES 
         OUTPUT_NAME turbo_davidson.x)
 target_link_libraries(qe_tddfpt_turbodavidson_exe
     PRIVATE
+        qe_openacc_fortran
+        qe_openmp_fortran
+        qe_mpi_fortran
         qe_pw
         qe_modules
         qe_tddfpt
@@ -114,6 +127,9 @@ set_target_properties(qe_tddfpt_turboeels_exe
         OUTPUT_NAME turbo_eels.x)
 target_link_libraries(qe_tddfpt_turboeels_exe
     PRIVATE
+        qe_openacc_fortran
+        qe_openmp_fortran
+        qe_mpi_fortran
         qe_pw
         qe_lax
         qe_modules
@@ -136,6 +152,9 @@ set_target_properties(qe_tddfpt_turbomagnon_exe
         OUTPUT_NAME turbo_magnon.x)
 target_link_libraries(qe_tddfpt_turbomagnon_exe
     PRIVATE
+        qe_openacc_fortran
+        qe_openmp_fortran
+        qe_mpi_fortran
         qe_tddfpt
         qe_lr_modules
         qe_pw

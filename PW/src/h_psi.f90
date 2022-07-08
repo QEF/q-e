@@ -105,7 +105,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE xc_lib,                  ONLY: exx_is_active, xclib_dft_is
   USE fft_helper_subroutines
   !
-  USE wvfct_gpum,              ONLY: using_g2kin
   USE scf_gpum,                ONLY: using_vrs
   USE becmod_subs_gpum,        ONLY: using_becp_auto
   !
@@ -130,7 +129,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
 
-  CALL using_g2kin(0)
   CALL using_vrs(0)   ! vloc_psi_gamma (intent:in)
 
 

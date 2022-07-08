@@ -305,9 +305,6 @@ MODULE wvfct
   INTEGER, ALLOCATABLE :: btype(:,:)
   !! one if the corresponding state has to be
   !! converged to full accuracy, zero otherwise
-#if defined(__CUDA)
-  attributes(pinned) :: g2kin, et, wg
-#endif
   !
 END MODULE wvfct
 !

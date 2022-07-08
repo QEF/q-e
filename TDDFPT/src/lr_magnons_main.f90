@@ -56,17 +56,11 @@ PROGRAM lr_magnons_main
   LOGICAL             :: rflag
   INTEGER             :: kilobytes
   LOGICAL, EXTERNAL   :: test_restart
-  LOGICAL, EXTERNAL   :: check_gpu_support 
-  !
-  use_gpu = check_gpu_support()
-  if(use_gpu) Call errore('turbo_magnons', 'lr_magnons_main with GPU NYI', 1)
+  LOGICAL, EXTERNAL   :: check_gpu_support
   !
   pol_index = 1
   !
   CALL mp_startup ( )
-  CALL laxlib_start ( ndiag_, intra_bgrp_comm, do_distr_diag_inside_bgrp_ = .true. )
-  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
-       inter_bgrp_comm )
   !
   CALL environment_start ( code3 )
   !
@@ -80,6 +74,7 @@ PROGRAM lr_magnons_main
   !
   magnons  = .TRUE.
   !
+  use_gpu = check_gpu_support()
   ! Reading input file and PWSCF xml, some initialisation
   ! Read the input variables for TDDFPT;
   ! allocate space for all quantities already computed

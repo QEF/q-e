@@ -129,3 +129,51 @@ DOUBLE PRECISION FUNCTION MYDDOT_VECTOR_GPU(N,DX,DY)
 #endif
 END FUNCTION MYDDOT_VECTOR_GPU
 
+function MYDDOTv2 (n, dx, incx, dy, incy)
+#if defined(__CUDA)
+USE cudafor
+USE cublas
+#endif
+implicit none
+  DOUBLE PRECISION :: MYDDOTv2
+  integer :: n, incx, incy
+  DOUBLE PRECISION, dimension(*)  :: dx, dy
+#if defined(__CUDA)
+  attributes(device) :: dx, dy
+  attributes(device) :: MYDDOTv2
+  type(cublashandle) :: h
+  integer :: ierr
+  h = cublasGetHandle()
+  ierr = cublasDDOT_v2(h, n, dx, incx, dy, incy, MYDDOTv2)
+#else
+  DOUBLE PRECISION DDOT
+  MYDDOTv2=DDOT(n, dx, incx, dy, incy)
+#endif
+
+  return
+end function MYDDOTv2
+
+subroutine MYDDOTv3 (n, dx, incx, dy, incy, result)
+#if defined(__CUDA)
+USE cudafor
+USE cublas
+#endif
+  implicit none
+  integer :: n, incx, incy
+  DOUBLE PRECISION, dimension(*)  :: dx, dy
+  DOUBLE PRECISION :: result
+#if defined(__CUDA)
+  attributes(device) :: dx, dy
+  attributes(device) :: result
+  type(cublashandle) :: h
+  integer :: ierr
+  h = cublasGetHandle()
+  ierr = cublasDDOT_v2(h, n, dx, incx, dy, incy, result)
+#else
+  DOUBLE PRECISION DDOT
+  result=DDOT(n, dx, incx, dy, incy)
+#endif
+
+  return
+end subroutine MYDDOTv3
+
