@@ -170,13 +170,14 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
      !
      !  insulators
      !
-     !$acc host_data use_device(evq, dvpsi, ps)
      IF (noncolin) THEN
+        !$acc host_data use_device(evq, dvpsi, ps)
         CALL zgemm( 'C', 'N',nbnd_occ(ikq), nbnd_occ(ikk), npwx*npol, &
              (1.d0,0.d0), evq, npwx*npol, dvpsi, npwx*npol, &
              (0.d0,0.d0), ps, nbnd )
+        !$acc end host_data
      ELSEIF (gamma_only) THEN
-        !$acc host_data use_device(ps_r)
+        !$acc host_data use_device(evq, dvpsi, ps_r)
         CALL dgemm( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), 2*npwq, &
              2.0_DP, evq, 2*npwx, dvpsi, 2*npwx, &
              0.0_DP, ps_r, nbnd )
@@ -186,11 +187,12 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
         ENDIF
         !$acc end host_data
      ELSE
+        !$acc host_data use_device(evq, dvpsi, ps)
         CALL zgemm( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), npwq, &
              (1.d0,0.d0), evq, npwx, dvpsi, npwx, &
              (0.d0,0.d0), ps, nbnd )
+        !$acc end host_data
      END IF
-     !$acc end host_data
      !
      nbnd_eff=nbnd_occ(ikk)
      !
