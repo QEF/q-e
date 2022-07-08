@@ -137,9 +137,7 @@
   REAL(DP),ALLOCATABLE                     :: london_c6_(:), hubbard_U_(:), hubbard_U2_(:), hubbard_alpha_(:), &
                                               hubbard_alpha_back_(:), hubbard_J_(:,:), hubbard_J0_(:), hubbard_beta_(:), &
                                               starting_ns_(:,:,:)
-  LOGICAL, ALLOCATABLE                     :: backall_(:)
-  INTEGER, ALLOCATABLE                     :: hubbard_l2_(:), hubbard_n2_(:), hubbard_n3_(:), hubbard_l3_(:), &
-                                              hubbard_l_(:), hubbard_n_(:) 
+  INTEGER, ALLOCATABLE                     :: hubbard_l_(:), hubbard_n_(:) 
   CHARACTER(LEN=3),ALLOCATABLE             :: species_(:)
   INTEGER, POINTER                         :: nr_1,nr_2, nr_3, nrs_1, nrs_2, nrs_3, nrb_1, nrb_2, nrb_3 
   INTEGER,ALLOCATABLE                      :: nr_(:), nrs_(:), nrb_(:)
@@ -324,7 +322,6 @@
         DO nb = 1, nat * (2*sc_size+1)**3
            nt2 = ityp(mod(nb-1,nat)+1)
            is_hubbard(nt1) = is_hubbard(nt1) .OR. ip_Hubbard_V(na,nb,1)/= 0.0_dp
-           is_hubbard_back(nt1) = is_hubbard_back(nt1) .OR. ip_Hubbard_V(na,na,3) /= 0.0_DP
            is_hubbard(nt2) = is_hubbard(nt2) .OR. ip_Hubbard_V(na,nb,1)/= 0.0_dp
         ENDDO
      ENDDO
@@ -378,34 +375,16 @@
         hubbard_l_(1:ntyp) = ip_hubbard_l(1:ntyp)
      END IF
      !
-     IF (ANY(is_hubbard_back(1:ntyp))) THEN 
-        ALLOCATE (hubbard_n2_(ntyp)) 
-        ALLOCATE (hubbard_l2_(ntyp)) 
-        DO nt = 1, ntyp 
-           hubbard_n2_(1:ntyp) = ip_hubbard_n2(1:ntyp) 
-           hubbard_l2_(1:ntyp) = ip_hubbard_l2(1:ntyp)
-        END DO 
-        IF (ANY(ip_backall) ) THEN 
-           ALLOCATE(backall_(ntyp))
-           backall_ (1:ntyp) = ip_backall(1:ntyp)
-           ALLOCATE(hubbard_n3_(ntyp)) 
-           ALLOCATE(hubbard_l3_(ntyp))
-           DO nt = 1, ntyp
-              hubbard_n3_(1:ntyp) = ip_hubbard_n3(1:ntyp)
-              hubbard_l3_(1:ntyp) = ip_hubbard_l3(1:ntyp)
-           END DO
-        END IF 
-     END IF 
      !
      CALL qexsd_init_dftU(dftU_, NSP = ntyp, PSD = upf(1:ntyp)%psd, SPECIES = atm(1:ntyp), ITYP = ip_ityp(1:ip_nat), &
                            IS_HUBBARD = is_hubbard(1:ntyp), IS_HUBBARD_BACK= is_hubbard_back(1:ntyp),               &
                            NONCOLIN=ip_noncolin, LDA_PLUS_U_KIND = ip_lda_plus_u_kind, &
-                           U_PROJECTION_TYPE=ip_hubbard_projectors, &
-                           U=hubbard_U_, U2=hubbard_U2_, HUBB_n2 = hubbard_n2_, HUBB_L2 = hubbard_l2_, &
-                           HUBB_N3 = hubbard_n3_, HUBB_L3= hubbard_l3_, J0=hubbard_J0_, J = hubbard_J_, &
-                           n=hubbard_n_, l=hubbard_l_, HUBBARD_V = ip_hubbard_v * ev_to_Ha, &
+                           U_PROJECTION_TYPE=ip_hubbard_projectors, U=hubbard_U_, U2=hubbard_U2_,  & 
+                           HUBB_n2 = ip_hubbard_n2(1:ntyp), HUBB_L2 = ip_hubbard_l2(1:ntyp), &
+                           HUBB_N3 = ip_hubbard_n3(1:ntyp), HUBB_L3= ip_hubbard_l3(1:ntyp), J0=hubbard_J0_, & 
+                           J = hubbard_J_, n=hubbard_n_, l=hubbard_l_, HUBBARD_V = ip_hubbard_v * ev_to_Ha, &
                            ALPHA = hubbard_alpha_, BETA = hubbard_beta_, ALPHA_BACK = hubbard_alpha_back_, &
-                           STARTING_NS = starting_ns_, BACKALL = backall_ )
+                           STARTING_NS = starting_ns_, BACKALL = ip_backall )
   ELSE
     dftU_%lwrite = .false. 
   END IF
@@ -423,10 +402,6 @@
   IF (ALLOCATED(starting_ns_))        DEALLOCATE(starting_ns_)
   IF (ALLOCATED(hubbard_n_))          DEALLOCATE(hubbard_n_)
   IF (ALLOCATED(hubbard_l_))          DEALLOCATE(hubbard_l_)
-  IF (ALLOCATED(hubbard_n2_))         DEALLOCATE(hubbard_n2_)
-  IF (ALLOCATED(hubbard_l2_))         DEALLOCATE(hubbard_l2_)
-  IF (ALLOCATED(backall_))            DEALLOCATE(backall_)
-  IF (ALLOCATED(hubbard_l3_))         DEALLOCATE(hubbard_l3_)
   !
   !------------------------------------------------------------------------------------------------------------------------
   !                                                   SPIN ELEMENT
