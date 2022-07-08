@@ -301,7 +301,7 @@ CONTAINS
     npw_g     = basis_set%npwx
     !
     b1 =  basis_set%reciprocal_lattice%b1
-    b2 =  basis_set%reciprocal_lattice%b2
+   !  b2 =  basis_set%reciprocal_lattice%b2
     b3 =  basis_set%reciprocal_lattice%b3
     !
   END SUBROUTINE qexsd_copy_basis_set
@@ -500,7 +500,15 @@ CONTAINS
          DO ihub = 1, dft_obj%dftU%ndim_Hubbard_V 
            idx1 = dft_obj%dftU%Hubbard_V(ihub)%index1
            idx2 = dft_obj%dftU%Hubbard_V(ihub)%index2
-           Hubbard_V(idx1, idx2,1) = dft_obj%dftU%Hubbard_V(ihub)%HubbardInterSpecieV  
+           IF (Hubbard_V(idx1, idx2,1 ) == 0._DP ) THEN 
+             Hubbard_V(idx1, idx2,1) = dft_obj%dftU%Hubbard_V(ihub)%HubbardInterSpecieV
+           ELSE IF (Hubbard_V(idx1, idx2, 2) == 0._DP) THEN 
+             Hubbard_V(idx1, idx2,2) = dft_obj%dftU%Hubbard_V(ihub)%HubbardInterSpecieV
+           ELSE IF (Hubbard_V(idx1, idx2, 3) == 0._DP) THEN 
+               Hubbard_V(idx1, idx2,3) = dft_obj%dftU%Hubbard_V(ihub)%HubbardInterSpecieV
+           ELSE IF (Hubbard_V(idx1, idx2, 4) == 0._DP) THEN 
+               Hubbard_V(idx1, idx2,4) = dft_obj%dftU%Hubbard_V(ihub)%HubbardInterSpecieV
+           END IF 
            symbol = TRIM(dft_obj%dftU%Hubbard_V(ihub)%specie1) 
            label  = TRIM(dft_obj%dftU%hubbard_V(ihub)%label1) 
            DO isp = 1, nsp
