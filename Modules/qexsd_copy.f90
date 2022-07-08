@@ -513,15 +513,16 @@ CONTAINS
            symbol = TRIM(dft_obj%dftU%Hubbard_V(ihub)%specie1) 
            label  = TRIM(dft_obj%dftU%hubbard_V(ihub)%label1) 
            DO isp = 1, nsp
-             IF (TRIM(symbol) == TRIM(atm(isp)) .AND. Hubbard_n(isp) == -1 ) THEN 
+             IF (TRIM(symbol) == TRIM(atm(isp)) .AND. & 
+                  ( Hubbard_n(isp) == -1 .OR. Hubbard_n2(isp) == -1 ))  THEN 
                READ (label(1:1),'(i1)', END=14, ERR=15) hu_n
                hu_l = spdf_to_l( label(2:2) )
-               IF ( idx3 == 1 ) THEN 
+               IF ( idx3 == 1 .OR. idx3 == 2 ) THEN 
                  Hubbard_n(isp) = hu_n
                  Hubbard_l(isp) = hu_l
                  IF (Hubbard_n(isp)<0 .OR. Hubbard_l(isp)<0) &
                     CALL errore ("qexsd_copy_dft:", "Problem while reading Hubbard_n and/or Hubbard_l", 1)
-               ELSE IF ( idx3 == 2 ) THEN 
+               ELSE IF ( idx3 == 3 .OR. idx3 == 4 ) THEN 
                  Hubbard_n2 = hu_n 
                  Hubbard_l2 = hu_l 
                END IF 
