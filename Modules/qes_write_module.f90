@@ -11,10 +11,10 @@ MODULE qes_write_module
   !
   ! Quantum Espresso XSD namespace: http://www.quantum-espresso.org/ns/qes/qes-1.0
   !
-#if defined (__outfoxed) 
-  USE  wxml 
-#else 
+#if defined (__fox) 
   USE FoX_wxml 
+#else 
+  USE  wxml 
 #endif 
   USE qes_types_module
   !

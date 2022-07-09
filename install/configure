@@ -665,6 +665,7 @@ mpi_libs
 mass_line
 mass_libs
 foxlibs
+foxmods
 extfox
 libxc_line
 LIBS_LIBXC
@@ -1444,7 +1445,7 @@ Optional Packages:
   --with-libxc-include=DIR
                           Directory where libxc Fortran headers were
                           installed.
-  --with-fox              use FoX library (default: yes)
+  --with-fox              use FoX library (default: no)
   --with-scalapack        (yes|no|intel) Use scalapack if available. Set to
                           "intel" to use Intel MPI and blacs (default: use
                           openMPI)
@@ -5901,26 +5902,29 @@ fi
 
 # Check whether --with-fox was given.
 if test "${with_fox+set}" = set; then :
-  withval=$with_fox; if   test "$withval" = "no" ; then
-        with_fox=0
-     else
+  withval=$with_fox; if   test "$withval" = "yes" ; then
         with_fox=1
+     else
+        with_fox=0
      fi
 else
-  with_fox=1
+  with_fox=0
 fi
 
 
   # Use internal code for xml read/write
   if test "$with_fox" -eq 0 ; then
-     try_dflags="$try_dflags -D__outfoxed"
      extfox=""
+     foxmods=""
      foxlibs=""
   else
      extfox="libfox"
+     foxmods="\$(MOD_FLAG)\$(TOPDIR)/FoX/finclude"
      foxlibs="-L\$(TOPDIR)/FoX/lib  -lFoX_dom -lFoX_sax -lFoX_wxml -lFoX_common -lFoX_utils -lFoX_fsys "
      try_iflags="$try_iflags -I\$(TOPDIR)/FoX/finclude "
+     try_dflags="$try_dflags -D__fox"
 fi
+
 
 
 

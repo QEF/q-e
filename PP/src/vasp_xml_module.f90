@@ -19,12 +19,12 @@ MODULE vasp_xml
   ! vasp_readschema_*          read variables into internal varables
   !
 USE kinds, ONLY : DP
-#if defined (__outfoxed)
-  USE     dom, ONLY : parseFile, item, getElementsByTagname, destroy, &
+#if defined (__fox)
+  USE FoX_dom, ONLY : parseFile, item, getElementsByTagname, destroy, &
                       nodeList, Node, getLength, getTagName, hasAttribute, &
                       extractDataContent, extractDataAttribute
 #else
-  USE FoX_dom, ONLY : parseFile, item, getElementsByTagname, destroy, &
+  USE     dom, ONLY : parseFile, item, getElementsByTagname, destroy, &
                       nodeList, Node, getLength, getTagName, hasAttribute, &
                       extractDataContent, extractDataAttribute
 #endif

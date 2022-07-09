@@ -66,8 +66,7 @@ BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
 	       $(MOD_FLAG)$(TOPDIR)/LAXlib \
 	       $(MOD_FLAG)$(TOPDIR)/UtilXlib \
 	       $(MOD_FLAG)$(TOPDIR)/MBD \
-	       $(MOD_FLAG)$(TOPDIR)/KS_Solvers \
-	       $(MOD_FLAG)$(TOPDIR)/FoX/finclude
+	       $(MOD_FLAG)$(TOPDIR)/KS_Solvers $(FOX_MOD)
 
 # If A depends upon B, A should come before B in the list below
 # (most compilers don't care but some don't resolve cross links)
@@ -160,6 +159,7 @@ HDF5_LIBS = @hdf5_libs@
 
 # FOX
 FOX      = @extfox@
+FOX_MOD  = @foxmods@
 FOX_LIB  = @foxlibs@
 FOX_FLAGS = @foxflags@
 
