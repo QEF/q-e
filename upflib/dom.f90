@@ -661,7 +661,7 @@ scan: do i=la-l0+1,la
           if ( i1 > 0 ) then
              ! token found
              cvec(i)=root%data(i0:i0+i1-2)
-             i0=i0+i1
+             i0=i0+i1-1
           else if ( i1 == 0 .and. i0 < len_trim(root%data) ) then
              ! last token found
              cvec(i)=root%data(i0:)
