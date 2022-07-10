@@ -115,11 +115,22 @@ set(QE_FFTW_VENDOR "AUTO" CACHE
     STRING "select a specific FFTW library [Intel_DFTI, Intel_FFTW3, ArmPL, IBMESSL, FFTW3, Internal]")
 set(QE_ENABLE_SANITIZER "none" CACHE STRING "none,asan,ubsan,tsan,msan")
 set(QE_ENABLE_PLUGINS "" CACHE STRING "Semicolon-separated list of plugins")
-if(FOX_ROOT)
-    set(QE_FOX_INTERNAL OFF)
+
+if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC")
+  set(FOX_DEFAULT ON)
+else()
+  set(FOX_DEFAULT OFF)
 endif()
-option(QE_FOX_INTERNAL
-    "enable FoX intenal library" ON)
+option(QE_ENABLE_FOX
+    "enable XML I/O via Fox library" ${FOX_DEFAULT})
+if(QE_ENABLE_FOX)
+    if(FOX_ROOT)
+        set(QE_FOX_INTERNAL OFF)
+    endif()
+    option(QE_FOX_INTERNAL
+        "enable FoX intenal library" ON)
+endif()
+
 if(WANNIER90_ROOT)
     set(QE_WANNIER90_INTERNAL OFF)
 endif()
