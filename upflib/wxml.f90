@@ -15,8 +15,10 @@ MODULE wxml
   ! A second workaround: use variable "sameline" to keep track of tags
   ! to be written on a single line
   !
-  USE upf_kinds, ONLY : dp
   use xmltools
+#if !defined(__XML_STANDALONE)
+  USE upf_kinds, ONLY : DP_XML => dp
+#endif
   !
   implicit none
   type :: xmlf_t
@@ -120,7 +122,7 @@ CONTAINS
     !
     type(xmlf_t), intent(in) :: xf
     character(len=*), intent(in) :: name
-    real(dp), intent(in) :: value
+    real(DP_XML), intent(in) :: value
     !
     if ( xf%unit == -1 ) then
        print *, 'xml file not opened'
@@ -134,7 +136,7 @@ CONTAINS
     !
     type(xmlf_t), intent(in) :: xf
     character(len=*), intent(in) :: name
-    real(dp), intent(in) :: value(:)
+    real(DP_XML), intent(in) :: value(:)
     character(len=80) :: cvalue
     !
     if ( xf%unit == -1 ) then
@@ -301,7 +303,7 @@ CONTAINS
   subroutine xml_addcharacters_r ( xf, field, fmt )
     !
     type(xmlf_t), intent(in) :: xf
-    real(dp), intent(in) :: field
+    real(DP_XML), intent(in) :: field
     character(len=*), intent(in), optional :: fmt
     !
     integer :: ierr
@@ -326,7 +328,7 @@ CONTAINS
   subroutine xml_addcharacters_rv( xf, field, fmt )
     !
     type(xmlf_t), intent(in) :: xf
-    real(dp), intent(in) :: field(:)
+    real(DP_XML), intent(in) :: field(:)
     character(len=*), intent(in), optional :: fmt
     !
     integer :: ierr, nf
@@ -356,7 +358,7 @@ CONTAINS
   subroutine xml_addcharacters_rm( xf, field, fmt )
     !
     type(xmlf_t), intent(in) :: xf
-    real(dp), intent(in) :: field(:,:)
+    real(DP_XML), intent(in) :: field(:,:)
     character(len=*), intent(in), optional :: fmt
     !
     integer :: ierr
