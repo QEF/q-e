@@ -12,6 +12,8 @@ AC_DEFUN([X_AC_QE_FOX], [
      fi],
      [with_fox=0])
    
+  # Force usage of FoX for PGI/NVHPC (replacement code doesn't compile)
+  if test "$f90" = "pgf90" || test "$f90" = "nvfortran" ; then with_fox=1; fi
   # Use internal code for xml read/write
   if test "$with_fox" -eq 0 ; then
      extfox=""
