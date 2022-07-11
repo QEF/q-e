@@ -5,6 +5,7 @@ Incompatible changes in development version:
   * CUDA Fortran Davidson code removed and replaced by ACC (Ivan Carnimeo)
 
 Fixed in development version:
+  * neb.x was unable to read the HUBBARD card from input since v7.1
   * r2r4 coefficient for Ba in DFT-D3 was incorrect since the original
     release in v.6.2.1 (noticed by Valid Askarpour)
   * Fully-relativistic PPs generated with QE versions 6.7 to 7.1 may contain
