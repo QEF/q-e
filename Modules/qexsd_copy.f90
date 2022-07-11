@@ -301,7 +301,7 @@ CONTAINS
     npw_g     = basis_set%npwx
     !
     b1 =  basis_set%reciprocal_lattice%b1
-    b2 =  basis_set%reciprocal_lattice%b2
+   !  b2 =  basis_set%reciprocal_lattice%b2
     b3 =  basis_set%reciprocal_lattice%b3
     !
   END SUBROUTINE qexsd_copy_basis_set
@@ -348,7 +348,7 @@ CONTAINS
     !
     CHARACTER(LEN=256 ) :: label
     CHARACTER(LEN=3 )   :: symbol
-    INTEGER :: ihub, isp, hu_n, hu_l, idx1, idx2
+    INTEGER :: ihub, isp, hu_n, hu_l, idx1, idx2, idx3
     INTEGER, EXTERNAL :: spdf_to_l
     !
     dft_name = TRIM(dft_obj%functional)
@@ -500,18 +500,32 @@ CONTAINS
          DO ihub = 1, dft_obj%dftU%ndim_Hubbard_V 
            idx1 = dft_obj%dftU%Hubbard_V(ihub)%index1
            idx2 = dft_obj%dftU%Hubbard_V(ihub)%index2
-           Hubbard_V(idx1, idx2,1) = dft_obj%dftU%Hubbard_V(ihub)%HubbardInterSpecieV  
+           IF (Hubbard_V(idx1, idx2,1 ) == 0._DP ) THEN 
+             idx3 = 1 
+           ELSE IF (Hubbard_V(idx1, idx2, 2) == 0._DP) THEN 
+             idx3 = 2 
+           ELSE IF (Hubbard_V(idx1, idx2, 3) == 0._DP) THEN 
+             idx3 = 3 
+           ELSE IF (Hubbard_V(idx1, idx2, 4) == 0._DP) THEN
+             idx3 = 4  
+           END IF 
+           Hubbard_V(idx1, idx2, idx3 ) = dft_obj%dftU%Hubbard_V(ihub)%HubbardInterSpecieV
            symbol = TRIM(dft_obj%dftU%Hubbard_V(ihub)%specie1) 
            label  = TRIM(dft_obj%dftU%hubbard_V(ihub)%label1) 
            DO isp = 1, nsp
-             IF (TRIM(symbol) == TRIM(atm(isp)) .AND. Hubbard_n(isp) == -1 ) THEN 
+             IF (TRIM(symbol) == TRIM(atm(isp)) .AND. & 
+                  ( Hubbard_n(isp) == -1 .OR. Hubbard_n2(isp) == -1 ))  THEN 
                READ (label(1:1),'(i1)', END=14, ERR=15) hu_n
                hu_l = spdf_to_l( label(2:2) )
-               Hubbard_n(isp) = hu_n
-               Hubbard_l(isp) = hu_l
-               IF (Hubbard_n(isp)<0 .OR. Hubbard_l(isp)<0) &
-                  CALL errore ("qexsd_copy_dft:", &
-                     &"Problem while reading Hubbard_n and/or Hubbard_l", 1 )
+               IF ( idx3 == 1 .OR. idx3 == 2 ) THEN 
+                 Hubbard_n(isp) = hu_n
+                 Hubbard_l(isp) = hu_l
+                 IF (Hubbard_n(isp)<0 .OR. Hubbard_l(isp)<0) &
+                    CALL errore ("qexsd_copy_dft:", "Problem while reading Hubbard_n and/or Hubbard_l", 1)
+               ELSE IF ( idx3 == 3 .OR. idx3 == 4 ) THEN 
+                 Hubbard_n2 = hu_n 
+                 Hubbard_l2 = hu_l 
+               END IF 
              END IF 
            END DO
          END DO     
