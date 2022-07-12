@@ -623,8 +623,8 @@ CONTAINS
     INTEGER :: i
     LOGICAL :: indent
     !
-    IF ( nlevel < 0 ) THEN
-      print "('xmlw_closetag: severe error, closing tag that was never opened')"
+    IF ( nlevel < 1 ) THEN
+       IF ( nlevel < 0 ) print "('xmlw_closetag: severe error, closing tag that was never opened')"
       RETURN
     END IF
     IF ( .NOT.PRESENT(tag) ) THEN
