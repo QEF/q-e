@@ -92,6 +92,10 @@ CONTAINS
       !
       tavel = .false.
       !
+      ! ... hubbard_card
+      !
+      tahub = .false. 
+      !
       ! ... solvent's density initialization
       !
       solv_dens1 = 0.0_DP
