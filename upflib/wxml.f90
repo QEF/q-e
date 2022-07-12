@@ -53,23 +53,29 @@ CONTAINS
     !
     character(len=*), intent(in) :: filename
     type(xmlf_t), intent(out) :: xf
-    ! ignored
     integer, intent(in), optional :: unit
     integer, intent(out) :: iostat
-    ! ignored
     logical, intent(in)  :: pretty_print, replace, namespace 
+    ! unit, pretty_print, namespace are ignored 
+    character(len=7) :: writable
     integer :: iun
     !
     iun = xml_open_file ( filename )
     if ( iun == -1 ) then
        iostat = 1
     else
-       iostat = 0
-       ! dirty  trick to have the same format with no changes to qexsd.f90
-       if ( replace) then
-          call add_attr('version','1.0')
-          call add_attr('encoding','UTF-8')
-          call xmlw_writetag ( 'xml', '?' )
+       inquire (unit=iun, write=writable)
+       if ( writable /= 'YES' ) then
+          iostat = 1
+          iun = -1
+       else
+          iostat = 0
+          ! dirty trick to have the same format with no changes to qexsd.f90
+          if ( replace ) then
+             call add_attr('version','1.0')
+             call add_attr('encoding','UTF-8')
+             call xmlw_writetag ( 'xml', '?' )
+          end if
        end if
     end if
     xf%unit = iun
