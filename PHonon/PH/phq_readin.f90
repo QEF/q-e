@@ -772,8 +772,8 @@ SUBROUTINE phq_readin()
   IF (ts_vdw) CALL errore('phq_readin',&
      'The phonon code with TS-VdW is not yet available',1)
 
-  IF (ldftd3) CALL errore('phq_readin',&
-     'The phonon code with Grimme''s DFT-D3 is not yet available',1)
+  !IF (ldftd3) CALL errore('phq_readin',&
+  !   'The phonon code with Grimme''s DFT-D3 is not yet available',1)
 
   IF ( xclib_dft_is('meta') ) CALL errore('phq_readin',&
      'The phonon code with meta-GGA functionals is not yet available',1)

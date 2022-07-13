@@ -6,6 +6,82 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------------
+SUBROUTINE d2ionq_dispd3( alat, nat, ityp, at, bg, tau, q, der2disp )
+  !------------------------------------------------------------------------
+  !! This routine calculates the Grimme-D3 contribution to the dynamical matrix.
+  !
+  USE kinds,            ONLY: DP
+  USE io_global,        ONLY: stdout
+  USE mp,               ONLY: mp_stop
+  USE input_parameters, ONLY: dftd3_version, dftd3_threebody
+  USE funct,            ONLY: get_dft_short
+  USE dftd3_api,        ONLY: dftd3_init, dftd3_set_functional, dftd3_pbc_dispersion, get_atomic_number
+  USE dftd3_qe,         ONLY: dftd3_xc, dftd3, dftd3_in
+  USE ions_base,        ONLY: atm
+  USE ener,             ONLY: edftd3
+  
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: nat
+  !! number of atoms in the unit cell
+  REAL(DP), INTENT(IN) :: alat
+  !! cell parameter (celldm(1))
+  INTEGER, INTENT(IN) :: ityp(nat)
+  !! atomic types for atoms in the unit cell
+  REAL(DP), INTENT(IN) :: at(3,3)
+  !! at(:,i) is lattice vector i in alat units
+  REAL(DP), INTENT(IN) :: bg(3,3)
+  !! bg(:,i) is reciprocal lattice vector i in 2pi/alat units
+  REAL(DP), INTENT(IN) :: tau(3,nat)
+  !! atomic positions in alat units
+  REAL(DP), INTENT(IN) :: q(3)
+  !! wavevector in 2pi/alat units
+  COMPLEX(DP), INTENT(OUT) :: der2disp(3,nat,3,nat)
+  !! dispersion contribution to the (massless) dynamical matrix
+  ! 
+  !  Local variables  
+  CHARACTER(LEN=256):: dft_
+  REAL(DP) :: latvecs(3,3), ee
+  !! auxiliary variables for grimme-d3
+  INTEGER:: atnum(1:nat), na
+  !! auxiliary variables for grimme-d3
+  REAL(DP) :: xyz(3,nat)
+  
+9078 FORMAT( '     DFT-D3 Dispersion         =',F17.8,' Ry' )
+
+  write(stdout,'(A)') 'Adding Grimme-D3 contribution to the dynamical matrix'
+  WRITE ( stdout , 9078 ) edftd3 
+  !
+  ! Setting DFT-D3 functional dependent parameters
+  !
+  if (dftd3_version==2) dftd3_threebody=.false.
+  dftd3_in%threebody = dftd3_threebody
+  CALL dftd3_init(dftd3, dftd3_in)
+  dft_ = get_dft_short( )
+  dft_ = dftd3_xc ( dft_ )
+  CALL dftd3_set_functional(dftd3, func=dft_, version=dftd3_version,tz=.false.)
+
+  der2disp = 0._dp
+
+  CALL start_clock('energy_dftd3')
+  latvecs(:,:)=at(:,:)*alat
+  xyz(:,:)=tau(:,:)*alat
+  DO na = 1, nat
+     atnum(na) = get_atomic_number(TRIM(atm(ityp(na))))
+  ENDDO
+  call dftd3_pbc_dispersion(dftd3,xyz,atnum,latvecs,edftd3)
+  edftd3=edftd3*2.d0
+  !tau(:,:)=tau(:,:)/alat
+  CALL stop_clock('energy_dftd3')
+
+  WRITE ( stdout , 9078 ) edftd3  
+
+  Call mp_stop(555)
+
+  RETURN
+
+END SUBROUTINE d2ionq_dispd3
+!---------------------------------------------------------------------------
 SUBROUTINE d2ionq_disp( alat, nat, ityp, at, bg, tau, q, der2disp )
   !------------------------------------------------------------------------
   !! This routine calculates the XDM contribution to the dynamical matrix.
