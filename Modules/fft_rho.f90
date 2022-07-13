@@ -57,6 +57,9 @@ CONTAINS
     !
     IF( nspin == 1 ) THEN
        !
+       !$acc kernels
+       psi(desc%nnr+1:) = (0.d0,0.d0)
+       !$acc end kernels
        iss = 1
        IF( PRESENT(v) ) THEN
           !$acc parallel loop
@@ -118,6 +121,10 @@ CONTAINS
     ENDIF
     !$acc end data
     DEALLOCATE( psi )
+    !
+    !$acc kernels
+    rhog(desc%ngm+1:,:) = (0.d0,0.d0)
+    !$acc end kernels
     !
     !$acc end data
     !
