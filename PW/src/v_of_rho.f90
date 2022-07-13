@@ -591,7 +591,6 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   USE constants,         ONLY : fpi, e2
   USE kinds,             ONLY : DP
   USE fft_base,          ONLY : dfftp
-  USE fft_interfaces,    ONLY : invfft
   USE fft_rho,           ONLY : rho_g2r
   USE gvect,             ONLY : ngm, gg, gstart
   USE lsda_mod,          ONLY : nspin
