@@ -43,11 +43,14 @@ SUBROUTINE d2ionq_dispd3( alat, nat, ityp, at, bg, tau, q, der2disp )
   CHARACTER(LEN=256):: dft_
   REAL(DP) :: latvecs(3,3), ee
   !! auxiliary variables for grimme-d3
-  INTEGER:: atnum(1:nat), na
+  INTEGER:: atnum(1:nat), na, ipol
   !! auxiliary variables for grimme-d3
   REAL(DP) :: xyz(3,nat)
+  REAL(DP) :: stress_d3(3,3)
+  REAL(DP), ALLOCATABLE :: force_d3(:,:)
   
 9078 FORMAT( '     DFT-D3 Dispersion         =',F17.8,' Ry' )
+9035 FORMAT(5X,'atom ',I4,' type ',I2,'   force = ',3F14.8)
 
   write(stdout,'(A)') 'Adding Grimme-D3 contribution to the dynamical matrix'
   WRITE ( stdout , 9078 ) edftd3 
@@ -63,18 +66,27 @@ SUBROUTINE d2ionq_dispd3( alat, nat, ityp, at, bg, tau, q, der2disp )
 
   der2disp = 0._dp
 
-  CALL start_clock('energy_dftd3')
+  CALL start_clock('force_dftd3')
+  ALLOCATE( force_d3(3, nat) )
+  force_d3(:,:) = 0.0_DP
   latvecs(:,:)=at(:,:)*alat
   xyz(:,:)=tau(:,:)*alat
   DO na = 1, nat
      atnum(na) = get_atomic_number(TRIM(atm(ityp(na))))
   ENDDO
-  call dftd3_pbc_dispersion(dftd3,xyz,atnum,latvecs,edftd3)
+  call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, edftd3, force_d3, stress_d3)
   edftd3=edftd3*2.d0
+  force_d3 = -2.d0*force_d3
   !tau(:,:)=tau(:,:)/alat
-  CALL stop_clock('energy_dftd3')
+  CALL stop_clock('force_dftd3')
 
   WRITE ( stdout , 9078 ) edftd3  
+  WRITE( stdout, '(/,5x,"DFT-D3 dispersion contribution to forces:")')
+  DO na = 1, nat
+     WRITE( stdout, 9035) na, ityp(na), (force_d3(ipol,na), ipol = 1, 3)
+  ENDDO
+
+  DEALLOCATE( force_d3 )
 
   Call mp_stop(555)
 
