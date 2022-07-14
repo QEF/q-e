@@ -52,7 +52,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   complex(DP), allocatable ::  ps1 (:,:), ps2 (:,:,:), ps3 (:,:), ps4 (:,:,:)
   complex(DP), allocatable ::  ps1_nc(:,:,:), ps2_nc(:,:,:,:), &
                                ps3_nc (:,:,:), ps4_nc (:,:,:,:), &
-                               deff_nc(:,:,:,:)
+                               deff_nc(:,:,:,:), auxdyn(:,:) 
   real(DP), allocatable :: deff(:,:,:)
   ! work space
   complex(DP) ::  dynwrk (3 * nat, 3 * nat), ps_nc(2)
@@ -100,6 +100,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
      !
      !   Here we prepare the two terms
      !
+     call start_clock('c_nldynb1')
      do ibnd = 1, nbnd
         IF (noncolin) THEN
            CALL compute_deff_nc(deff_nc,et(ibnd,ikk))
@@ -197,10 +198,12 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
            enddo
         enddo
      END DO
+     call stop_clock('c_nldynb1') 
      !
      !     Here starts the loop on the atoms (rows)
      !
      ijkb0 = 0
+     call start_clock('c_nldynb2')
      do nt = 1, ntyp
         do na = 1, nat
            if (ityp (na) .eq.nt) then
@@ -321,22 +324,16 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
            endif
         enddo
      enddo
+     call stop_clock('c_nldynb2')
   enddo
 
   call mp_sum ( dynwrk, intra_bgrp_comm )
+  allocate(auxdyn(3*nat,3*nat))
+  call zgemm('C', 'N', 3*nat, 3*nat, 3*nat, cmplx(1.d0,0.d0,kind=dp),  u,     3*nat, dynwrk, 3*nat,& 
+                                            cmplx(0.d0,0.d0,kind=dp), auxdyn, 3*nat) 
+  call zgemm('N','N', 3*nat, 3* nat, 3*nat, cmplx(1.d0,0.d0,kind=dp), auxdyn, 3*nat, u     , 3*nat,& 
+                                            cmplx(1.d0,0.d0,kind=dp),  wdyn , 3*nat)
 
-  do nu_i = 1, 3 * nat
-     do nu_j = 1, 3 * nat
-        ps = (0.0d0, 0.0d0)
-        do na_jcart = 1, 3 * nat
-           do na_icart = 1, 3 * nat
-              ps = ps + CONJG(u (na_icart, nu_i) ) * dynwrk (na_icart, &
-                   na_jcart) * u (na_jcart, nu_j)
-           enddo
-        enddo
-        wdyn (nu_i, nu_j) = wdyn (nu_i, nu_j) + ps
-     enddo
-  enddo
   !      call tra_write_matrix('nldyn wdyn',wdyn,u,nat)
   !      call stop_ph(.true.)
   IF (noncolin) THEN
