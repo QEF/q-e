@@ -20,6 +20,10 @@ MODULE fft_rho
   !
   PUBLIC :: rho_r2g, rho_g2r
   !
+  INTERFACE rho_r2g
+    MODULE PROCEDURE rho_r2g_1, rho_r2g_general
+  END INTERFACE
+  !
   INTERFACE rho_g2r
     MODULE PROCEDURE rho_g2r_1, rho_g2r_2, rho_g2r_sum_components
   END INTERFACE
@@ -27,7 +31,64 @@ MODULE fft_rho
 CONTAINS
   !
   !-----------------------------------------------------------------
-  SUBROUTINE rho_r2g( desc, rhor, rhog, v )
+  SUBROUTINE rho_r2g_1( desc, rhor, rhog, v )
+    !---------------------------------------------------------------
+    !! Bring charge density rho from real to G- space.
+    !
+    USE fft_types,              ONLY: fft_type_descriptor
+    USE fft_helper_subroutines, ONLY: fftx_threed2oned
+    !
+    TYPE(fft_type_descriptor), INTENT(IN) :: desc
+    REAL(DP), INTENT(IN) :: rhor(:)
+    !! rho in real space
+    COMPLEX(DP), INTENT(OUT) :: rhog(:,:)
+    !! rho in G-space
+    REAL(DP), INTENT(IN), OPTIONAL :: v(:)
+    !
+    ! ... local variables
+    !
+    INTEGER :: ir
+    COMPLEX(DP) :: fp, fm
+    COMPLEX(DP), ALLOCATABLE :: psi(:)
+    !
+    !$acc data present_or_copyin( rhor, v ) present_or_copyout( rhog )
+    !
+    ALLOCATE( psi(desc%nnr) )
+    !$acc data create( psi )
+    !
+    !$acc kernels
+    psi(desc%nnr+1:) = (0.d0,0.d0)
+    !$acc end kernels
+    !
+    IF( PRESENT(v) ) THEN
+       !$acc parallel loop
+       DO ir = 1, desc%nnr
+          psi(ir) = CMPLX(rhor(ir)+v(ir),0.0_DP,kind=DP)
+       ENDDO
+    ELSE
+       !$acc parallel loop
+       DO ir = 1, desc%nnr
+          psi(ir) = CMPLX(rhor(ir),0.0_DP,kind=DP)
+       ENDDO
+    ENDIF
+    !$acc host_data use_device( psi )
+    CALL fwfft( 'Rho', psi, desc )
+    !$acc end host_data
+    CALL fftx_threed2oned( desc, psi, rhog(:,1), gpu_args_=.TRUE. )
+    !
+    !$acc end data
+    DEALLOCATE( psi )
+    !
+    !$acc kernels
+    rhog(desc%ngm+1:,1) = (0.d0,0.d0)
+    !$acc end kernels
+    !
+    !$acc end data
+    !
+  END SUBROUTINE rho_r2g_1
+  !
+  !-----------------------------------------------------------------
+  SUBROUTINE rho_r2g_general( desc, rhor, rhog, v )
     !---------------------------------------------------------------
     !! Bring charge density rho from real to G- space.
     !
@@ -128,7 +189,7 @@ CONTAINS
     !
     !$acc end data
     !
-  END SUBROUTINE rho_r2g
+  END SUBROUTINE rho_r2g_general
   !
   !
   SUBROUTINE rho_g2r_1( desc, rhog, rhor )

@@ -344,7 +344,7 @@ SUBROUTINE cutoff_force_lc( aux, forcelc )
         DO ipol = 1, 3
            forcelc(ipol,na) = forcelc (ipol,na) + tpi / alat * &
                  g(ipol,ig) * lr_Vloc(ig, ityp(na)) * omega  * &
-                ( SIN(arg)*DBLE(aux(dfftp%nl(ig))) + COS(arg)*AIMAG(aux(dfftp%nl(ig))) )
+                ( SIN(arg)*DBLE(aux(ig)) + COS(arg)*AIMAG(aux(ig)) )
         ENDDO
      ENDDO 
   ENDDO

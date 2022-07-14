@@ -1028,11 +1028,11 @@ CONTAINS
       ng_2d = imill_2d(n1, n2)
       n3 = mill(3, ng) + 1
       IF (n3 < 1) n3 = n3 + dfftp%nr3
-      rhog3(n3, ng_2d) = aux(dfftp%nl(ng))
+      rhog3(n3, ng_2d) = aux(ng)
       IF (gamma_only .and. n1 == 0 .and. n2 == 0) THEN
         n3 = -mill(3, ng) + 1
         IF (n3 < 1) n3 = n3 + dfftp%nr3
-        rhog3(n3, ng_2d) = aux(dfftp%nlm(ng))
+        rhog3(n3, ng_2d) = aux(ng)
       ENDIF
     ENDDO
 
@@ -1192,11 +1192,11 @@ CONTAINS
       ng_2d = imill_2d(n1, n2)
       n3 = mill(3, ng) + 1
       IF (n3 < 1) n3 = n3 + dfftp%nr3
-      rhog3(n3, ng_2d) = aux(dfftp%nl(ng))
+      rhog3(n3, ng_2d) = aux(ng)
       IF (gamma_only .and. n1 == 0 .and. n2 == 0) THEN
         n3 = -mill(3, ng) + 1
         IF (n3 < 1) n3 = n3 + dfftp%nr3
-        rhog3(n3, ng_2d) = aux(dfftp%nlm(ng))
+        rhog3(n3, ng_2d) = aux(ng)
       ENDIF
     ENDDO
 
@@ -1363,11 +1363,11 @@ CONTAINS
       ng_2d = imill_2d(n1, n2)
       n3 = mill(3, ng) + 1
       IF (n3 < 1) n3 = n3 + dfftp%nr3
-      rhog3(n3, ng_2d) = aux(dfftp%nl(ng))
+      rhog3(n3, ng_2d) = aux(ng)
       IF (gamma_only .and. n1 == 0 .and. n2 == 0) THEN
         n3 = -mill(3, ng) + 1
         IF (n3 < 1) n3 = n3 + dfftp%nr3
-        rhog3(n3, ng_2d) = aux(dfftp%nlm(ng))
+        rhog3(n3, ng_2d) = aux(ng)
       ENDIF
     ENDDO
 
@@ -1533,11 +1533,11 @@ CONTAINS
       ng_2d = imill_2d(n1, n2)
       n3 = mill(3, ng) + 1
       IF (n3 < 1) n3 = n3 + dfftp%nr3
-      rhog3(n3, ng_2d) = aux(dfftp%nl(ng))
+      rhog3(n3, ng_2d) = aux(ng)
       IF (gamma_only .and. n1 == 0 .and. n2 == 0) THEN
         n3 = -mill(3, ng) + 1
         IF (n3 < 1) n3 = n3 + dfftp%nr3
-        rhog3(n3, ng_2d) = aux(dfftp%nlm(ng))
+        rhog3(n3, ng_2d) = aux(ng)
       ENDIF
     ENDDO
 
