@@ -148,7 +148,6 @@ SUBROUTINE force_cc_gpu( forcecc )
   !
   !$acc end data
   DEALLOCATE( vxc, vaux )
-  
   CALL dev_buf%release_buffer(rhocg_d, ierrs(1) )
   CALL dev_buf%release_buffer(r_d, ierrs(3) )
   CALL dev_buf%release_buffer(rab_d, ierrs(4) )
