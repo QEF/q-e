@@ -18,7 +18,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   USE lsda_mod,         ONLY : lsda, current_spin, isk, nspin
   USE ions_base,        ONLY : nat, ityp, ntyp => nsp
   USE noncollin_module, ONLY : noncolin, npol, lspinorb
-  USE uspp,             ONLY : nkb, qq_nt, qq_so
+  USE uspp,             ONLY : nkb, qq_nt, qq_so, ofsbeta
   USE uspp_param,       ONLY : nh, nhm
   USE wvfct,            ONLY : nbnd, et
 
@@ -107,10 +107,11 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
         ELSE
            CALL compute_deff(deff,et(ibnd,ikk))
         ENDIF
-        ijkb0 = 0
+        call start_clock('c_nldyn_loop1')
         do nt = 1, ntyp
            do na = 1, nat
               if (ityp (na) == nt) then
+                 ijkb0 = ofsbeta(na) 
                  do ih = 1, nh (nt)
                     ikb = ijkb0 + ih
                     do jh = 1, nh (nt)
@@ -193,20 +194,20 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                        enddo  ! ipol
                     enddo
                  enddo
-                 ijkb0 = ijkb0 + nh (nt)
               endif
            enddo
         enddo
+        call stop_clock('c_nldyn_loop1')
      END DO
      call stop_clock('c_nldynb1') 
      !
      !     Here starts the loop on the atoms (rows)
-     !
-     ijkb0 = 0
+     ! 
      call start_clock('c_nldynb2')
      do nt = 1, ntyp
         do na = 1, nat
            if (ityp (na) .eq.nt) then
+              ijkb0 = ofsbeta(na)
               do ipol = 1, 3
                  mu = 3 * (na - 1) + ipol
                  do ibnd = 1, nbnd_occ (ikk)
@@ -227,10 +228,10 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                           END IF
                        enddo
                     enddo
-                    ijkb0b = 0
                     do ntb = 1, ntyp
                        do nb = 1, nat
                           if (ityp (nb) == ntb) then
+                             ijkb0b = ofsbeta(nb)
                              do ih = 1, nh (ntb)
                                 ikb = ijkb0b + ih
                                 ps_nc =(0.d0,0.d0)
@@ -271,17 +272,16 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                                    END IF
                                 enddo
                              enddo
-                             ijkb0b = ijkb0b + nh (ntb)
                           endif
                        enddo
                     enddo
                     !
                     !     here starts the second loop on the atoms
                     !
-                    ijkb0b = 0
                     do ntb = 1, ntyp
                        do nb = 1, nat
                           if (ityp (nb) == ntb) then
+                             ijkb0b = ofsbeta(nb)
                              do jpol = 1, 3
                                 nu = 3 * (nb - 1) + jpol
                                 aux2 (:) = (0.d0, 0.d0)
@@ -314,13 +314,11 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                                         2.d0*wk(ikk) * aux2(jbnd) * aux1(jbnd)
                                 enddo
                              enddo
-                             ijkb0b = ijkb0b + nh (ntb)
                           endif
                        enddo
                     enddo
                  enddo
               enddo
-              ijkb0 = ijkb0 + nh (nt)
            endif
         enddo
      enddo
