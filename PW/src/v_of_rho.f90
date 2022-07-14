@@ -893,8 +893,11 @@ SUBROUTINE v_hubbard_b (ns, v_hub, eth)
      !
      nt = ityp (na)
      !
-     IF (Hubbard_J0(nt).NE.0.d0 .OR. Hubbard_beta(nt).NE.0.d0) &
-     CALL errore('v_hubbard_b', 'Hubbard_J0 and Hubbard_beta are not supported',1) 
+     IF (Hubbard_J0(nt).NE.0.d0) &
+          CALL errore('v_hubbard_b', 'J0 is not supported in DFT+U with multiple channels per atomic type',1)
+     !
+     IF (Hubbard_beta(nt).NE.0.d0) &
+     CALL errore('v_hubbard_b', 'Hubbard_beta is not supported in DFT+U with multiple channels per atomic type',1) 
      !
      IF (is_hubbard_back(nt)) THEN
         !
