@@ -12,6 +12,7 @@ SUBROUTINE d2ionq_dispd3( alat, nat, ityp, at, bg, tau, q, der2disp )
   !
   USE kinds,            ONLY: DP
   USE io_global,        ONLY: stdout
+  USE symme,            ONLY: symvector
   USE mp,               ONLY: mp_stop
   USE input_parameters, ONLY: dftd3_version, dftd3_threebody
   USE funct,            ONLY: get_dft_short
@@ -40,14 +41,14 @@ SUBROUTINE d2ionq_dispd3( alat, nat, ityp, at, bg, tau, q, der2disp )
   !! dispersion contribution to the (massless) dynamical matrix
   ! 
   !  Local variables  
-  CHARACTER(LEN=256):: dft_
-  REAL(DP) :: latvecs(3,3), ee
-  !! auxiliary variables for grimme-d3
-  INTEGER:: atnum(1:nat), na, ipol
-  !! auxiliary variables for grimme-d3
+  CHARACTER(LEN=256):: dft_ , formt
+  REAL(DP) :: latvecs(3,3)
+  REAL(DP) :: step, eerr, eerl, eelr, eell
+  INTEGER:: atnum(1:nat), iat, ixyz, jat, jxyz
   REAL(DP) :: xyz(3,nat)
   REAL(DP) :: stress_d3(3,3)
-  REAL(DP), ALLOCATABLE :: force_d3(:,:)
+  REAL(DP), ALLOCATABLE :: force_d3(:,:), force_num(:,:)
+  REAL(DP), ALLOCATABLE :: der2disp_ene(:,:,:,:), der2disp_frc(:,:,:,:) 
   
 9078 FORMAT( '     DFT-D3 Dispersion         =',F17.8,' Ry' )
 9035 FORMAT(5X,'atom ',I4,' type ',I2,'   force = ',3F14.8)
@@ -64,29 +65,135 @@ SUBROUTINE d2ionq_dispd3( alat, nat, ityp, at, bg, tau, q, der2disp )
   dft_ = dftd3_xc ( dft_ )
   CALL dftd3_set_functional(dftd3, func=dft_, version=dftd3_version,tz=.false.)
 
-  der2disp = 0._dp
-
   CALL start_clock('force_dftd3')
-  ALLOCATE( force_d3(3, nat) )
+  ALLOCATE( force_d3(3, nat), force_num(3, nat) )
+  force_num = 0._dp
   force_d3(:,:) = 0.0_DP
   latvecs(:,:)=at(:,:)*alat
   xyz(:,:)=tau(:,:)*alat
-  DO na = 1, nat
-     atnum(na) = get_atomic_number(TRIM(atm(ityp(na))))
+  DO iat = 1, nat
+     atnum(iat) = get_atomic_number(TRIM(atm(ityp(iat))))
   ENDDO
   call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, edftd3, force_d3, stress_d3)
   edftd3=edftd3*2.d0
   force_d3 = -2.d0*force_d3
-  !tau(:,:)=tau(:,:)/alat
+  
+  step=1.d-6
+  !step=2.d-5
+
+  do iat = 1, nat
+    do ixyz = 1, 3 
+      xyz(ixyz,iat)=xyz(ixyz,iat)+step
+      call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, eerr)
+      eerr = eerr*2.0d0
+      xyz(ixyz,iat)=xyz(ixyz,iat)-2*step
+      call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, eell)
+      eell = eell*2.0d0
+      force_num(ixyz,iat)=-0.5*(eerr-eell)/step
+      xyz(ixyz,iat)=xyz(ixyz,iat)+step
+    end do 
+  end do 
+  !CALL symvector( nat, force_num )
   CALL stop_clock('force_dftd3')
 
   WRITE ( stdout , 9078 ) edftd3  
-  WRITE( stdout, '(/,5x,"DFT-D3 dispersion contribution to forces:")')
-  DO na = 1, nat
-     WRITE( stdout, 9035) na, ityp(na), (force_d3(ipol,na), ipol = 1, 3)
+  WRITE( stdout, '(/,5x,"DFT-D3 dispersion contribution to forces (analytical):")')
+  DO iat = 1, nat
+     WRITE( stdout, 9035) iat, ityp(iat), (force_d3(ixyz,iat), ixyz = 1, 3)
   ENDDO
 
-  DEALLOCATE( force_d3 )
+  WRITE( stdout, '(/,5x,"DFT-D3 dispersion contribution to forces (numerical):")')
+  DO iat = 1, nat
+     WRITE( stdout, 9035) iat, ityp(iat), (force_num(ixyz,iat), ixyz = 1, 3)
+  ENDDO
+
+  WRITE( stdout, '(/,5x,"DFT-D3 analytical vs numerical err:")')
+  DO iat = 1, nat
+     WRITE( stdout, 9035) iat, ityp(iat), (force_d3(ixyz,iat)-force_num(ixyz,iat), ixyz = 1, 3)
+  ENDDO
+
+  step=2.d-5
+  CALL start_clock('hessian_dftd3')
+  ALLOCATE( der2disp_ene(3,nat,3,nat), der2disp_frc(3,nat,3,nat) )
+  der2disp = 0._dp
+  der2disp_ene = 0._dp
+  der2disp_frc = 0._dp
+  do iat = 1, nat
+    do ixyz = 1, 3 
+      write(*,*) 'displacing forces: ', iat, ixyz
+
+      xyz(ixyz,iat)=xyz(ixyz,iat)+step
+      call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, eerr, force_d3, stress_d3)
+      force_d3 = -2.d0*force_d3
+      xyz(ixyz,iat)=xyz(ixyz,iat)-2*step
+      call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, eell, force_num, stress_d3)
+      force_num = -2.d0*force_num
+
+      der2disp_frc(ixyz,iat,1:3,1:nat) = -0.5 * (force_d3(1:3,1:nat) - force_num(1:3,1:nat) ) / step
+      xyz(ixyz,iat)=xyz(ixyz,iat)+step
+    end do 
+  end do 
+
+  do iat = 1, nat
+    do ixyz = 1, 3 
+      do jat = 1, nat
+        do jxyz = 1, 3 
+
+          write(*,*) 'displacing energy: ', iat, ixyz, jat, jxyz
+
+          xyz(ixyz,iat)=xyz(ixyz,iat)+step
+          xyz(jxyz,jat)=xyz(jxyz,jat)+step
+          call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, eerr)  ! i+s  j+s
+          eerr = eerr*2.0d0
+
+          xyz(ixyz,iat)=xyz(ixyz,iat)-2*step
+          call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, eelr)  ! i-s  j+s
+          eelr = eelr*2.0d0
+
+          xyz(jxyz,jat)=xyz(jxyz,jat)-2*step
+          call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, eell)  ! i-s  j-s
+          eell = eell*2.0d0
+
+          xyz(ixyz,iat)=xyz(ixyz,iat)+2*step
+          call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, eerl)  ! i+s  j-s
+          eerl = eerl*2.0d0
+
+          xyz(ixyz,iat)=xyz(ixyz,iat)-step
+          xyz(jxyz,jat)=xyz(jxyz,jat)+step
+
+          der2disp_ene(ixyz,iat,jxyz,jat) = (eerr - eerl - eelr + eell) / 4.0d0 / step / step
+
+        end do 
+      end do 
+    end do 
+  end do 
+  CALL stop_clock('hessian_dftd3')
+
+  write(formt,'(A,I5,A)') '(',3*nat,'F12.8)'
+  WRITE( stdout, '(/,5x,"DFT-D3 numerical hessian (from Forces):")')
+  DO iat = 1, nat
+     DO ixyz = 1, 3
+       WRITE( stdout, formt) der2disp_frc(ixyz,iat,1:3,1:nat)
+     END DO 
+  ENDDO
+
+  WRITE( stdout, '(/,5x,"DFT-D3 numerical hessian (from Energies):")')
+  DO iat = 1, nat
+     DO ixyz = 1, 3
+       WRITE( stdout, formt) der2disp_ene(ixyz,iat,1:3,1:nat)
+     END DO 
+  ENDDO
+
+
+  WRITE( stdout, '(/,5x,"DFT-D3 numerical hessian (from Forces vs from Energies):")')
+  DO iat = 1, nat
+     DO ixyz = 1, 3
+       WRITE( stdout, formt) der2disp_frc(ixyz,iat,1:3,1:nat)-der2disp_ene(ixyz,iat,1:3,1:nat)
+     END DO 
+  ENDDO
+
+
+  DEALLOCATE( force_d3, force_num, der2disp_ene, der2disp_frc)
 
   Call mp_stop(555)
 
