@@ -672,13 +672,21 @@ CONTAINS
   SUBROUTINE set_screening_parameter( scrparm_ )
     !! Impose input parameter as screening parameter (for pbexsr)
     USE kind_l,             ONLY: DP
-    USE dft_setting_params, ONLY: screening_parameter
+    USE dft_setting_params, ONLY: igcx, is_libxc, screening_parameter
     IMPLICIT NONE
     REAL(DP):: scrparm_
     !! Value to impose as screening parameter
-    screening_parameter = scrparm_
+    IF (ABS(scrparm_)>0.d0.AND.(igcx/=12.AND.(igcx<32.OR.igcx>35) &
+        .AND.igcx/=47).AND. .NOT.is_libxc(3)) THEN
+      CALL xclib_infomsg( 'set_screening_parameter', 'WARNING: the screening &
+                           &parameter seems inconsistent with the chosen inpu&
+                           &t dft and will be set to zero.' )
+      screening_parameter = 0.d0
+    ELSE
+      screening_parameter = scrparm_
+    ENDIF
     WRITE(stdout,'(5x,a,f12.7)') 'EXX Screening parameter changed: ', &
-         & screening_parameter
+                                 & screening_parameter
   END SUBROUTINE set_screening_parameter
   !-----------------------------------------------------------------------
   FUNCTION get_screening_parameter()
@@ -694,11 +702,16 @@ CONTAINS
   SUBROUTINE set_gau_parameter( gauparm_ )
     !! Impose input parameter as gau parameter (for gau-pbe)
     USE kind_l,             ONLY: DP
-    USE dft_setting_params, ONLY: gau_parameter
+    USE dft_setting_params, ONLY: igcx, is_libxc, gau_parameter
     IMPLICIT NONE
     REAL(DP):: gauparm_
     !! Value to impose as gau parameter
     gau_parameter = gauparm_
+    IF (ABS(gauparm_)>0.d0 .AND. igcx/=20 .AND. .NOT.is_libxc(3)) THEN
+      CALL xclib_infomsg( 'set_gau_parameter', 'WARNING: the gaussian paramet&
+                           &er seems inconsistent with the chosen input dft (&
+                           &e.g. different from zero).' )
+    ENDIF
     WRITE(stdout,'(5x,a,f12.7)') 'EXX Gau parameter changed: ', &
          & gau_parameter
   END SUBROUTINE set_gau_parameter

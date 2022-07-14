@@ -81,10 +81,7 @@ then
    # -----------------------------------------
    # Check compiler
    # -----------------------------------------
-   AC_LANG_PUSH([Fortran])
-   AC_FC_SRCEXT([f90])
    AX_CHECK_COMPILE_FLAG([$mMcuda=cuda$with_cuda_runtime], [have_cudafor=yes], [have_cudafor=no], [], [MODULE test; use cudafor; END MODULE])
-   AC_LANG_POP([Fortran])
    if test "x$have_cudafor" != "xyes"
    then
       AC_MSG_ERROR([You do not have the cudafor module. Are you using NVHPC compiler?])

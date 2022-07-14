@@ -257,7 +257,9 @@ SUBROUTINE compute_optical_spectrum()
      !
      ! Check the units (Ry, eV, nm)
      !
-     IF (units < 0 .or. units >2) CALL errore("lr_calculate_spectrum","Unsupported unit system",1)
+     IF (units < 0 .or. units >3) CALL errore("lr_calculate_spectrum","Unsupported unit system",1)
+     !
+     IF (units==3) CALL errore("lr_calculate_spectrum","meV unit is supported only for magnon= .true.",1)
      !
      IF ( units /= 0 .and. verbosity > 4) THEN
         WRITE(stdout,'(5x,"Such a high verbosity is not supported when &
@@ -296,11 +298,11 @@ SUBROUTINE compute_optical_spectrum()
      !
      filename = trim(prefix) // ".plot_chi.dat"
      !
-     WRITE (stdout,'(/5x,"Output file name: ",A20)') filename
+     WRITE (stdout,'(/5x,"Output file name: ",A)') trim(filename)
      !
      filename1 = trim(prefix) // ".plot_S.dat"
      WRITE (stdout,'(/5x,"Output file name for the oscillator strength S &
-                     & ",A20)') filename1
+                     & ",A)') trim(filename1)
      !
      WRITE(stdout,'(/,5x,"chi_i_j: dipole polarizability tensor &
                                      & in units of e^2*a_0^2/energy")')
@@ -774,7 +776,9 @@ SUBROUTINE compute_eels_spectrum()
      !
      ! Check the units (Ry, eV, nm)
      !
-     IF (units < 0 .or. units >2) CALL errore("lr_calculate_spectrum","Unsupported unit system",1)
+     IF (units < 0 .or. units >3) CALL errore("lr_calculate_spectrum","Unsupported unit system",1)
+     !
+     IF (units == 3) CALL errore("lr_calculate_spectrum","meV unit is supported only for magnon= .true.",1) 
      !
      IF ( units /= 0 .and. verbosity > 4) THEN
         WRITE(stdout,'(5x,"Such a high verbosity is not supported when &
@@ -813,11 +817,10 @@ SUBROUTINE compute_eels_spectrum()
      !
      filename = trim(prefix) // ".plot_chi.dat"
      !
-     WRITE (stdout,'(/5x,"Output file name for the susceptibility: ",A20)') filename
+     WRITE (stdout,'(/5x,"Output file name for the susceptibility: ",A)') &
+            trim(filename)
      !
      filename1 = trim(prefix) // ".plot_eps.dat"
-     WRITE (stdout,'(/5x,"Output file name for the inverse and direct &
-                      &dielectric function: ",A20)') filename1
      !
      ! Units
      !
@@ -857,7 +860,10 @@ SUBROUTINE compute_eels_spectrum()
      IF (units==1) THEN
         !
         ! TODO: Make an implementation also for units=0.
-        ! 
+        !
+        WRITE (stdout,'(/5x,"Output file name for the inverse and direct &
+                      &dielectric function: ",A)') trim(filename1)
+        !
         OPEN(18,file=filename1,status="unknown")
         !
         WRITE(18,'("#",8x,"\hbar \omega(eV)",11x,"Re(1/eps)",12x, &
@@ -877,6 +883,11 @@ SUBROUTINE compute_eels_spectrum()
         factor_eels = (4.0d0*pi/(modulus_q**2)) * (2.0d0*rytoev/volume)
         !
         start_save = start
+        !
+     ELSE
+        !
+        WRITE (stdout,'(/5x,"Inverse and direct dielectric function ", &
+                            "requires in the input: units = 1.")')
         !
      ENDIF
      !
@@ -1031,6 +1042,12 @@ SUBROUTINE compute_magnon_spectrum()
 
      REAL(DP) :: hbarw
 
+     ! Check the units (Ry, eV, nm)
+     !
+     IF (units < 0 .or. units >3) CALL errore("lr_calculate_spectrum","Unsupported unit system",1)
+     !
+     IF (units /= 3) CALL errore("lr_calculate_spectrum","only meV unit=3 is supported for magnon= .true.",1)
+
      outdir = trimcheck(outdir)
      tmp_dir = outdir
      !
@@ -1087,7 +1104,7 @@ SUBROUTINE compute_magnon_spectrum()
      !
      filename = trim(prefix) // ".plot_chi.dat"
      !
-     WRITE (stdout,'(/5x,"Output file name: ",A20)') filename
+     WRITE (stdout,'(/5x,"Output file name: ",A)') trim(filename)
      !
      WRITE(stdout,'(/,5x,"chi_i_j: magnetization-magnetization tensor &
                         & in units of mu_B^2 / meV")')
@@ -1185,7 +1202,8 @@ SUBROUTINE read_b_g_z_file()
         !
         INQUIRE (file = filename, exist = exst)
         !
-        IF (.not.exst) CALL errore("read_b_g_z_file", "Error reading file",1)
+        IF (.not.exst) CALL errore("read_b_g_z_file", "Error reading file: " &
+                                   // trim(filename), 1)
         !
         OPEN (158, file = filename, form = 'formatted', status = 'old')
         ! 

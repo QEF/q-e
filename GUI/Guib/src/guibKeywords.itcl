@@ -73,6 +73,11 @@ itcl::body ::guib::moduleObj::valueToTextvalue {varIdent value} {
     }    
 
     set id          [$obj getIdFromVarident $varIdent]   
+    if { $id < 0 } {
+        # perhaps varIdent belongs to dimension or table
+        set varIdent [lindex [split $varIdent ",("] 0]
+        set id [$obj getIdFromVarident $varIdent]
+    }
     set _textvalues [$obj getOptionValue $id textvalue]
     set _values     [$obj getOptionValue $id value]
     	    
@@ -126,10 +131,15 @@ itcl::body ::guib::moduleObj::textvalueToValue {varIdent textvalue} {
 	::tclu::ERROR "failed to locate object from identifier $varIdent"
     }    
 
-    set id          [$obj getIdFromVarident $varIdent]    
+    set id [$obj getIdFromVarident $varIdent]
+    if { $id < 0 } {
+        # perhaps varIdent belongs to dimension or table
+        set varIdent [lindex [split $varIdent ",("] 0]
+        set id [$obj getIdFromVarident $varIdent]
+    }
     set _textvalues [$obj getOptionValue $id textvalue]
     set _values     [$obj getOptionValue $id value]
-
+        
     foreach text $_textvalues val $_values {
 	# take care of case-insensitivity
 	::tclu::DEBUG +++varIdent=$varIdent : text=$text , textvalue=$textvalue

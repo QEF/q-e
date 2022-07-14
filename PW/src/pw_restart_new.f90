@@ -34,13 +34,14 @@ MODULE pw_restart_new
                           qexsd_init_vdw, qexsd_init_forces, qexsd_init_stress,        &
                           qexsd_init_outputElectricField, qexsd_init_outputPBC,        &
                           qexsd_init_gate_info, qexsd_init_hybrid,  qexsd_init_dftU,   &
+                          qexsd_init_rism3d, qexsd_init_rismlaue,                      &
                           qexsd_occ_obj, qexsd_bp_obj, qexsd_start_k_obj
   USE qexsd_copy,      ONLY : qexsd_copy_parallel_info, &
        qexsd_copy_algorithmic_info, qexsd_copy_atomic_species, &
        qexsd_copy_atomic_structure, qexsd_copy_symmetry, &
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_efield, &
        qexsd_copy_band_structure, qexsd_copy_magnetization, &
-       qexsd_copy_kpoints
+       qexsd_copy_kpoints, qexsd_copy_rism3d, qexsd_copy_rismlaue
   USE io_global, ONLY : ionode, ionode_id
   USE io_files,  ONLY : iunpun, xmlfile
   !
@@ -71,7 +72,7 @@ MODULE pw_restart_new
                                        gamma_only, noinv, smallmem, &
                                        lforce=> tprnfor, tstress, &
                                        mbd_vdw, llondon, lxdm, ts_vdw
-      USE constants,            ONLY : e2
+      USE constants,            ONLY : e2  
       USE realus,               ONLY : real_space
       USE uspp,                 ONLY : okvan
       USE paw_variables,        ONLY : okpaw
@@ -79,7 +80,7 @@ MODULE pw_restart_new
       USE cell_base,            ONLY : at, bg, alat, ibrav
       USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, zv, amass
       USE noncollin_module,     ONLY : noncolin, npol
-      USE io_files,             ONLY : psfile, pseudo_dir
+      USE io_files,             ONLY : psfile, molfile, pseudo_dir
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
                                        lgauss, ngauss, smearing, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw, tot_charge, ltetra 
@@ -92,7 +93,7 @@ MODULE pw_restart_new
       USE fft_base,             ONLY : dffts
       USE wvfct,                ONLY : npwx, et, wg, nbnd
       USE ener,                 ONLY : ef, ef_up, ef_dw, vtxc, etxc, ewld, etot, &
-                                       ehart, eband, demet, edftd3, elondon, exdm
+                                       ehart, eband, demet, edftd3, elondon, exdm, esol, vsol
       USE tsvdw_module,         ONLY : EtsvdW
       USE libmbd_interface,     ONLY : EmbdvdW
       USE gvecw,                ONLY : ecutwfc
@@ -100,10 +101,10 @@ MODULE pw_restart_new
       USE ktetra,               ONLY : tetra_type
       USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_projectors, &
                                        Hubbard_lmax, Hubbard_l, Hubbard_n, Hubbard_U, Hubbard_J, &
-                                       Hubbard_l2, Hubbard_l3, Hubbard_V, &
+                                       Hubbard_n2, Hubbard_l2, Hubbard_l3, Hubbard_V, &
                                        Hubbard_alpha, Hubbard_alpha_back, nsg, &
-                                       Hubbard_J0, Hubbard_beta, Hubbard_U2, &
-                                       is_hubbard, is_hubbard_back, backall
+                                       Hubbard_J0, Hubbard_beta, Hubbard_U2, ityp_s, &
+                                       is_hubbard, is_hubbard_back, backall, neighood, nsg
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
                                        t_rev, sname, time_reversal, no_t_rev,&
                                        spacegroup
@@ -147,6 +148,11 @@ MODULE pw_restart_new
       USE wvfct_gpum,           ONLY : using_et, using_wg
       USE wavefunctions_gpum,   ONLY : using_evc
       USE qexsd_module,         ONLY : qexsd_add_all_clocks 
+      USE solvmol,              ONLY : nsolV, solVs
+      USE rism3d_facade,        ONLY : lrism3d, ecutsolv, qsol, laue_nfit, expand_r, expand_l, &
+                                       starting_r, starting_l, buffer_r, buffer_ru, buffer_rv, &
+                                       buffer_l, buffer_lu, buffer_lv, both_hands, &
+                                       ireference, rism3d_is_laue
       !
       IMPLICIT NONE
       !
@@ -155,6 +161,10 @@ MODULE pw_restart_new
       ! Structure containing the output tag
       !
       TYPE(output_type)   :: output_obj
+      !
+      ! Loop counters and other internal auxiliary variables 
+      !
+      INTEGER    :: is, viz, na1, na2, nt1, m1, m2 
       !
       ! Auxiliary variables used to format arguments for xml file
       !
@@ -166,6 +176,16 @@ MODULE pw_restart_new
       CHARACTER(LEN=20)     :: pbc_label
       INTEGER               :: npwx_g
       INTEGER,  ALLOCATABLE :: ngk_g(:)
+      LOGICAL                  :: dft_is_vdw 
+      !
+      ! Variables related to RISM output 
+      !
+      INTEGER               :: isolV
+      CHARACTER(LEN=10), ALLOCATABLE :: slabel(:)
+      REAL(DP), ALLOCATABLE :: solvrho1(:)
+      REAL(DP), ALLOCATABLE :: solvrho2(:)
+      ! 
+      !
       INTEGER               :: iclass, isym, ielem
       CHARACTER(LEN=15)     :: symop_2_class(48)
       LOGICAL               :: scf_has_converged 
@@ -173,6 +193,7 @@ MODULE pw_restart_new
       LOGICAL               :: empirical_vdw
       INTEGER               :: n_opt_steps
       INTEGER               :: n_scf_steps_
+      REAL(DP),PARAMETER    :: Ry_to_Ha = 1 / e2 
       !
       ! Auxiliary structures containing optional variables
       !
@@ -212,8 +233,8 @@ MODULE pw_restart_new
       !
       REAL(DP), ALLOCATABLE :: london_c6_(:), bp_el_pol(:), bp_ion_pol(:), &
            U_opt(:), J0_opt(:), alpha_opt(:), J_opt(:,:), beta_opt(:), &
-           U2_opt(:), alpha_back_opt(:), ef_updw(:)
-      INTEGER,ALLOCATABLE :: n_opt(:), l_opt(:), l2_opt(:), l3_opt(:)
+           U2_opt(:), alpha_back_opt(:), ef_updw(:), nsg_(:,:,:,:)
+      INTEGER,ALLOCATABLE :: n_opt(:), l_opt(:), l2_opt(:), l3_opt(:), n2_opt(:)
       LOGICAL, ALLOCATABLE :: backall_opt(:) 
       !
       !
@@ -460,14 +481,15 @@ MODULE pw_restart_new
             vdw_obj_opt%lwrite=.false. 
          END IF
          IF ( lda_plus_u ) THEN   
-            CALL check_and_allocate_real(U_opt, Hubbard_U)
-            CALL check_and_allocate_real(J0_opt, Hubbard_J0) 
-            CALL check_and_allocate_real(alpha_opt, Hubbard_alpha) 
-            CALL check_and_allocate_real(beta_opt, Hubbard_beta) 
-            CALL check_and_allocate_real(U2_opt, Hubbard_U2)
-            CALL check_and_allocate_real(alpha_back_opt, Hubbard_alpha_back)
+            CALL check_and_allocate_real(U_opt, Hubbard_U, fac = Ry_to_Ha)
+            CALL check_and_allocate_real(J0_opt, Hubbard_J0 , fac = Ry_to_Ha) 
+            CALL check_and_allocate_real(alpha_opt, Hubbard_alpha, fac = Ry_to_Ha) 
+            CALL check_and_allocate_real(beta_opt, Hubbard_beta, fac = Ry_to_Ha) 
+            CALL check_and_allocate_real(U2_opt, Hubbard_U2, fac = Ry_to_Ha )
+            CALL check_and_allocate_real(alpha_back_opt, Hubbard_alpha_back, fac = Ry_to_Ha)
             CALL check_and_allocate_integer(n_opt, Hubbard_n)
             CALL check_and_allocate_integer(l_opt, Hubbard_l)
+            CALL check_and_allocate_integer(n2_opt, Hubbard_n2)
             CALL check_and_allocate_integer(l2_opt, Hubbard_l2)
             CALL check_and_allocate_integer(l3_opt, Hubbard_l3)
             CALL check_and_allocate_logical(backall_opt, backall)
@@ -475,16 +497,40 @@ MODULE pw_restart_new
                ALLOCATE (J_opt(3,nsp)) 
                J_opt(:, 1:nsp) = Hubbard_J(:, 1:nsp) 
             END IF
+            IF (lda_plus_u_kind==2) THEN
+               ALLOCATE (nsg_(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
+               nsg_ = 0.0d0
+               DO na1 = 1, nat
+                  nt1 = ityp(na1)
+                  IF (is_hubbard(nt1)) THEN
+                     DO viz = 1, neighood(na1)%num_neigh
+                        na2 = neighood(na1)%neigh(viz)
+                        IF (na2==na1) THEN
+                           DO is = 1, nspin
+                              DO m1 = 1, 2*Hubbard_l(nt1)+1
+                                 DO m2 = 1, 2*Hubbard_l(nt1)+1
+                                    nsg_(m1,m2,is,na1) = DBLE(nsg(m1,m2,viz,na1,is)) 
+                                 ENDDO
+                              ENDDO
+                           ENDDO   
+                        ENDIF
+                     ENDDO
+                  ENDIF
+               ENDDO
+            ENDIF
             !
-            ! Currently Hubbard_V, rho%nsb, and nsg are not written (read) to (from) XML 
+            ! Currently rho%nsb is not written/read to/from XML 
             !
-            CALL qexsd_init_dftU (dftU_obj_opt, NSP = nsp, PSD = upf(1:nsp)%psd, SPECIES = atm(1:nsp), ITYP = ityp(1:nat), &
-                                  IS_HUBBARD = is_hubbard, IS_HUBBARD_BACK = is_hubbard_back,  &
-                                  BACKALL = backall, HUBB_L2 = l2_opt, HUBB_L3 = l3_opt, &
-                                  NONCOLIN = noncolin, LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION_TYPE = Hubbard_projectors, &
-                                  U =U_opt, U2 = U2_opt, J0 = J0_opt, J = J_opt, n = n_opt, l = l_opt, &
-                                  alpha = alpha_opt, beta = beta_opt, alpha_back = alpha_back_opt,  & 
-                                  starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc)
+            CALL qexsd_init_dftU (dftU_obj_opt, NSP = nsp, PSD = upf(1:nsp)%psd, SPECIES = atm(1:nsp),                & 
+                    ITYP = ityp(1:nat), IS_HUBBARD = is_hubbard, IS_HUBBARD_BACK = is_hubbard_back, BACKALL = backall,& 
+                    HUBB_n2 = n2_opt, HUBB_L2 = l2_opt, HUBB_L3 = l3_opt, NONCOLIN = noncolin,                        & 
+                    LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION_TYPE = Hubbard_projectors, U =U_opt,              &
+                    U2 = U2_opt, J0 = J0_opt, J = J_opt, n = n_opt, l = l_opt, Hubbard_V = Hubbard_V *Ry_to_Ha,       &
+                    alpha = alpha_opt, beta = beta_opt, alpha_back = alpha_back_opt,                                  & 
+                    starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc, Hub_nsg = nsg_)
+            !
+            IF (ALLOCATED(J_opt)) DEALLOCATE(J_opt)
+            IF (ALLOCATED(nsg_))  DEALLOCATE(nsg_)
          ELSE 
            dftU_obj_opt%lwrite=.false. 
          END IF 
@@ -635,9 +681,16 @@ MODULE pw_restart_new
             gatefield_corr_pt => gatefield_corr_tg
          END IF
 
-         CALL  qexsd_init_total_energy(output_obj%total_energy, etot/e2, eband/e2, ehart/e2, vtxc/e2, &
+         IF ( lrism3d) THEN 
+            CALL qexsd_init_total_energy(output_obj%total_energy, etot/e2, eband/e2, ehart/e2, vtxc/e2, & 
+                                       etxc/e2, ewld/e2, degauss_pt, demet_pt, efield_corr_pt, potstat_corr_pt, &
+                                       gatefield_corr_pt, DISPERSION_CONTRIBUTION = vdw_term_pt, ESOL = esol/e2, & 
+                                       VSOL = vsol/e2 )
+         ELSE 
+            CALL  qexsd_init_total_energy(output_obj%total_energy, etot/e2, eband/e2, ehart/e2, vtxc/e2, &
                                        etxc/e2, ewld/e2, degauss_pt, demet_pt, efield_corr_pt, potstat_corr_pt,&
                                        gatefield_corr_pt, DISPERSION_CONTRIBUTION = vdw_term_pt) 
+         END IF 
          !
 !---------------------------------------------------------------------------------------------
 ! ... FORCES
@@ -691,6 +744,54 @@ MODULE pw_restart_new
          !
          CALL qes_reset (gate_info_opt)
          CALL qes_reset (dipol_opt)
+
+
+!------------------------------------------------------------------------------------------------
+! ... 3D-RISM
+!------------------------------------------------------------------------------------------------
+         !
+         IF ( lrism3d ) THEN
+            !
+            IF ( nsolV > 0 ) THEN
+               ALLOCATE( slabel( nsolV ) )
+               ALLOCATE( solvrho1( nsolV ) )
+               ALLOCATE( solvrho2( nsolV ) )
+               DO isolV = 1, nsolV
+                  slabel(isolV)   = solVs(isolV)%name
+                  solvrho1(isolV) = solVs(isolV)%density
+                  solvrho2(isolV) = solVs(isolV)%subdensity
+               END DO
+            ELSE
+               ALLOCATE( solvrho1( 1 ) )
+               ALLOCATE( solvrho2( 1 ) )
+            END IF
+            !
+            output_obj%rism3d_ispresent = .TRUE.
+            CALL qexsd_init_rism3d(output_obj%rism3d, nsolV, slabel, molfile, solvrho1, solvrho2, ecutsolv/e2)
+            !
+            DEALLOCATE( slabel )
+            DEALLOCATE( solvrho1 )
+            DEALLOCATE( solvrho2 )
+            !
+            IF ( rism3d_is_laue() ) THEN
+               output_obj%rismlaue_ispresent = .TRUE.
+               CALL qexsd_init_rismlaue(output_obj%rismlaue, both_hands, laue_nfit, ireference, qsol, &
+                                        starting_r, expand_r, buffer_r, buffer_ru, buffer_rv, &
+                                        starting_l, expand_l, buffer_l, buffer_lu, buffer_lv)
+               !
+            ELSE
+               output_obj%rismlaue_ispresent = .FALSE.
+               output_obj%rismlaue%lwrite    = .FALSE.
+            END IF
+            !
+         ELSE
+            output_obj%rism3d_ispresent = .FALSE.
+            output_obj%rism3d%lwrite    = .FALSE.
+            !
+            output_obj%rismlaue_ispresent = .FALSE.
+            output_obj%rismlaue%lwrite    = .FALSE.
+         END IF
+         !
 !-------------------------------------------------------------------------------
 ! ... CLOCKS
          CALL qexsd_add_all_clocks()
@@ -712,13 +813,15 @@ MODULE pw_restart_new
       RETURN
        !
     CONTAINS
-       SUBROUTINE check_and_allocate_real(alloc, mydata)
+       SUBROUTINE check_and_allocate_real(alloc, mydata, fac)
           IMPLICIT NONE
           REAL(DP),ALLOCATABLE  :: alloc(:) 
-          REAL(DP)              :: mydata(:)  
+          REAL(DP)              :: mydata(:)
+          REAL(DP), OPTIONAL    :: fac   
           IF ( ANY(mydata(1:nsp) /= 0.0_DP)) THEN 
              ALLOCATE(alloc(nsp)) 
              alloc(1:nsp) = mydata(1:nsp) 
+             IF (PRESENT(fac))  alloc = alloc * fac 
           END IF 
           RETURN
        END SUBROUTINE check_and_allocate_real 
@@ -886,7 +989,7 @@ MODULE pw_restart_new
               igk_l2g_kdip(:), ngk(ik), tpiba*bg(:,1), tpiba*bg(:,2), &
               tpiba*bg(:,3), mill_k, 1.D0 )
          !
-         IF ( (my_bgrp_id == root_bgrp_id) .and. exx_is_active()) then 
+         IF ( (my_bgrp_id == root_bgrp_id) .and. exx_is_active() .and. allocated(xi)) then
               CALL write_wfc( iunpun, &
               filenameace, root_bgrp, intra_bgrp_comm, ik_g, tpiba*xk(:,ik), &
               ispin, nspin, xi(:,:,ik), npw_g, gamma_only, nbnd, &
@@ -999,19 +1102,20 @@ MODULE pw_restart_new
       ! ... starting from scratch should be initialized here when restarting
       !
       USE kinds,           ONLY : dp
-      USE constants,       ONLY : e2
+      USE constants,       ONLY : e2  
       USE gvect,           ONLY : ngm_g, ecutrho
       USE gvecs,           ONLY : ngms_g, dual
       USE gvecw,           ONLY : ecutwfc
       USE fft_base,        ONLY : dfftp, dffts
       USE io_global,       ONLY : stdout
       USE io_files,        ONLY : psfile, pseudo_dir, pseudo_dir_cur, &
-           restart_dir
+           restart_dir, molfile
       USE mp_global,       ONLY : nproc_file, nproc_pool_file, &
            nproc_image_file, ntask_groups_file, &
            nproc_bgrp_file, nproc_ortho_file
       USE ions_base,       ONLY : nat, nsp, ityp, amass, atm, tau, extfor
       USE cell_base,       ONLY : alat, at, bg, ibrav, celldm, omega
+      USE fixed_occ,       ONLY : tfixed_occ
       USE force_mod,       ONLY : force
       USE klist,           ONLY : nks, nkstot, xk, wk, tot_magnetization, &
            nelec, nelup, neldw, smearing, degauss, ngauss, lgauss, ltetra,&
@@ -1029,7 +1133,7 @@ MODULE pw_restart_new
            sname, inverse_s, s_axis_to_cart, spacegroup, &
            time_reversal, no_t_rev, nosym, checkallsym
       USE ldaU,            ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax, Hubbard_lmax_back, &
-                                  Hubbard_n, Hubbard_l, Hubbard_l2, Hubbard_l3, backall, &
+                                  Hubbard_n, Hubbard_l, Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, &
                                   Hubbard_U, Hubbard_U2, Hubbard_J, Hubbard_V, Hubbard_alpha, &
                                   Hubbard_alpha_back, Hubbard_J0, Hubbard_beta, Hubbard_projectors
       USE funct,           ONLY : enforce_input_dft
@@ -1053,6 +1157,12 @@ MODULE pw_restart_new
       USE uspp,            ONLY : okvan
       USE paw_variables,   ONLY : okpaw
       !
+      USE solvmol,         ONLY : nsolV, solVs
+      USE rism3d_facade,   ONLY : lrism3d, ecutsolv, qsol, laue_nfit, expand_r, expand_l, &
+                                  starting_r, starting_l, buffer_r, buffer_ru, buffer_rv, &
+                                  buffer_l, buffer_lu, buffer_lv, both_hands, ireference, &
+                                  rism3d_set_laue
+      !
       USE mp_images,       ONLY : intra_image_comm
       USE mp,              ONLY : mp_bcast
       !
@@ -1060,7 +1170,7 @@ MODULE pw_restart_new
       LOGICAL, INTENT(OUT) :: wfc_is_collected
       !
       INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3
-      LOGICAL  :: magnetic_sym, lvalid_input, lfixed
+      LOGICAL  :: magnetic_sym, lvalid_input
       CHARACTER(LEN=37) :: dft_name
       CHARACTER(LEN=20) :: vdw_corr, occupations
       CHARACTER(LEN=320):: filename
@@ -1134,9 +1244,17 @@ MODULE pw_restart_new
            dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
            lda_plus_u, lda_plus_u_kind, Hubbard_projectors, Hubbard_n, Hubbard_l, Hubbard_lmax, &
-           Hubbard_l2, Hubbard_l3, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
-           Hubbard_U, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
+           Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
+           Hubbard_U, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, Hubbard_V, &
            vdw_corr, scal6, lon_rcut, vdw_isolated )
+      Hubbard_alpha_back = Hubbard_alpha_back * e2 
+      Hubbard_alpha      = Hubbard_alpha      * e2
+      Hubbard_beta       = Hubbard_beta       * e2 
+      Hubbard_U          = Hubbard_U          * e2 
+      Hubbard_U2         = Hubbard_U2         * e2 
+      Hubbard_V          = Hubbard_V          * e2 
+      Hubbard_J0         = Hubbard_J0         * e2 
+      Hubbard_J          = Hubbard_J          * e2  
       !! More DFT initializations
       CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, mbd_vdw, lxdm )
       CALL enforce_input_dft ( dft_name, .TRUE. )
@@ -1178,9 +1296,8 @@ MODULE pw_restart_new
       degauss = degauss * e2 
       !
       CALL set_occupations( occupations, smearing, degauss, &
-           lfixed, ltetra, tetra_type, lgauss, ngauss )
+           tfixed_occ, ltetra, tetra_type, lgauss, ngauss )
       IF (ltetra) ntetra = 6* nk1 * nk2 * nk3 
-      IF (lfixed) CALL errore('read_file','bad occupancies',1)
       IF ( lsda ) &
            CALL set_nelup_neldw(tot_magnetization, nelec, nelup, neldw) 
       !! Symmetry section
@@ -1214,6 +1331,32 @@ MODULE pw_restart_new
       END IF
       CALL qexsd_copy_algorithmic_info ( output_obj%algorithmic_info, &
            real_space, tqr, okvan, okpaw )
+      !
+      !! 3D-RISM
+      IF ( output_obj%rism3d_ispresent ) THEN
+         lrism3d = .TRUE.
+         CALL qexsd_copy_rism3d ( output_obj%rism3d, pseudo_dir, nsolV, solVs, molfile, ecutsolv )
+         ecutsolv = ecutsolv * e2
+      ELSE
+         lrism3d  = .FALSE.
+         nsolV    = 0
+         ecutsolv = 0.0_DP
+      END IF
+      !
+      !! Laue-RISM
+      IF ( output_obj%rismlaue_ispresent ) THEN
+         CALL rism3d_set_laue()
+         CALL qexsd_copy_rismlaue ( output_obj%rismlaue, both_hands, laue_nfit, ireference, qsol, &
+                                    starting_r, expand_r, buffer_r, buffer_ru, buffer_rv, &
+                                    starting_l, expand_l, buffer_l, buffer_lu, buffer_lv )
+      ELSE
+         both_hands = .FALSE.
+         laue_nfit  = 0
+         expand_r   = -1.0_DP
+         expand_l   = -1.0_DP
+         starting_r = 0.0_DP
+         starting_l = 0.0_DP
+      END IF
       !
       ! ... xml data no longer needed, can be discarded
       !

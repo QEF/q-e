@@ -16,6 +16,88 @@
   !
   CONTAINS
     !
+    !!!!!
+    !-----------------------------------------------------------------------
+    SUBROUTINE mix_wrap(ndim, deltaout, deltain, alphamix, iter, n_iter, conv, df, dv)
+    !-----------------------------------------------------------------------
+    !!
+    !!  SH: Wrapper for the linear/broyden mixings (Nov 2021).
+    !!        Note: the linear mixing option is implemented for 
+    !!        benchmarking/development purposes and can be invoked by
+    !!        setting the broyden_beta parameter to a negative value.
+    !!        
+    !
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : zero
+    !
+    IMPLICIT NONE
+    !
+    LOGICAL, INTENT(in) :: conv
+    !! If true convergence reached
+    !
+    INTEGER, INTENT(in) :: ndim
+    !! Dimension of arrays deltaout, deltain
+    INTEGER, INTENT(in) :: iter
+    !! Current iteration number
+    INTEGER, INTENT(in) :: n_iter
+    !! Number of iterations used in the mixing
+    !
+    REAL(KIND = DP), INTENT(in) :: alphamix
+    !! Mixing factor (0 < alphamix <= 1)
+    REAL(KIND = DP), INTENT(inout) :: deltaout(ndim)
+    !! output delta at current iteration
+    REAL(KIND = DP), INTENT(inout) :: deltain(ndim)
+    !! delta at previous iteration
+    REAL(KIND = DP), INTENT(inout) :: df(ndim, n_iter)
+    !! arrays containing info from previous iterations
+    REAL(KIND = DP), INTENT(inout) :: dv(ndim, n_iter)
+    !! arrays containing info from previous iterations
+    !
+    IF (alphamix < zero ) THEN
+      CALL mix_linear(ndim, deltaout, deltain, alphamix)
+    ELSE
+      CALL mix_broyden(ndim, deltaout, deltain, alphamix, iter, n_iter, conv, df, dv)
+    ENDIF
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE mix_wrap
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE mix_linear(ndim, arout, arin, mixf)
+    !-----------------------------------------------------------------------
+    !!
+    !!  SH: Simple linear mixing for gap, normalization, shift, etc (Nov 2021).
+    !!
+    !
+    USE kinds,         ONLY : DP
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: ndim
+    !! Dimension of arrays deltaout, deltain
+    !
+    REAL(KIND = DP), INTENT(in) :: mixf
+    !! Mixing factor (0 < alphamix <= 1)
+    REAL(KIND = DP), INTENT(inout) :: arout(ndim)
+    !! output delta at current iteration
+    REAL(KIND = DP), INTENT(inout) :: arin(ndim)
+    !! delta at previous iteration
+    !
+    ! Local variables
+    INTEGER :: i
+    !
+    DO i = 1, ndim
+      arin(i) = DABS(mixf) * arin(i) + (1.d0 - DABS(mixf)) * arout(i)
+    ENDDO
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE mix_linear
+    !-----------------------------------------------------------------------
+    !
+    !!!!!
     !-----------------------------------------------------------------------
     SUBROUTINE mix_broyden(ndim, deltaout, deltain, alphamix, iter, n_iter, conv, df, dv)
     !-----------------------------------------------------------------------

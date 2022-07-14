@@ -88,10 +88,10 @@ set(src_pw
    src/force_lc.f90 
    src/force_us.f90 
    src/forces.f90 
-   src/gcscf_input.f90 
-   src/gcscf_module.f90 
    src/g_psi.f90 
    src/g_psi_mod.f90 
+   src/gcscf_input.f90 
+   src/gcscf_module.f90 
    src/gen_at_dj.f90 
    src/gen_at_dy.f90 
    src/get_locals.f90 
@@ -183,6 +183,7 @@ set(src_pw
    src/report_mag.f90 
    src/restart_in_electrons.f90 
    src/rho2zeta.f90 
+   src/rism_module.f90 
    src/ruotaijk.f90 
    src/run_pwscf.f90 
    src/s_1psi.f90 
@@ -265,7 +266,6 @@ set(src_pw
    src/addusforce_gpu.f90
    src/deriv_drhoc_gpu.f90
    src/s_psi_gpu.f90
-   src/g2_kin_gpu.f90
    src/rotate_wfc_gpu.f90
    src/usnldiag_gpu.f90
    src/add_vuspsi_gpu.f90
@@ -293,7 +293,7 @@ qe_enable_cuda_fortran("${src_pw}")
 qe_add_library(qe_pw ${src_pw})
 target_link_libraries(qe_pw
     PRIVATE
-        qe_device_lapack    
+        qe_device_lapack  
         qe_hdf5_fortran
         qe_elpa
         qe_scalapack

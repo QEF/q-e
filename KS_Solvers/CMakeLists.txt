@@ -83,6 +83,8 @@ set(src_rmmdiis
 qe_add_library(qe_kssolver_davidson ${src_davidson})
 target_link_libraries(qe_kssolver_davidson
     PRIVATE
+        qe_device_lapack
+        qe_openacc_fortran
         qe_openmp_fortran
         qe_lax
         qe_utilx

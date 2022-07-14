@@ -159,7 +159,17 @@ tracevar lfcp w {
 	groupwidget fcp disable
     }
 }
-    
+
+tracevar trism w {
+    if { [vartextvalue trism] == "Yes" } {
+	groupwidget rism enable
+        groupwidget solvents_card enable
+    } else {
+       	groupwidget rism disable
+        groupwidget solvents_card disable
+    } 
+}
+  
 tracevar gate w {
     if { [vartextvalue gate] == "Yes" } {
 	groupwidget gate_group enable
@@ -252,11 +262,12 @@ tracevar nat w {
     widgetconfigure atomic_forces       -rows $nat
     widgetconfigure atomic_velocities   -rows $nat    
     varset specify_atomic_forces -value [varvalue specify_atomic_forces]
+    varset ion_velocities -value [varvalue ion_velocities]
 }
 
 tracevar ntyp w {
     set ntyp [varvalue ntyp]
-    widgetconfigure atomic_species -rows $ntyp;
+    widgetconfigure atomic_species -rows $ntyp
 
     widgetconfigure starting_charge -end $ntyp
     widgetconfigure starting_magnetization -end $ntyp; # nspin-dependent
@@ -266,12 +277,9 @@ tracevar ntyp w {
     widgetconfigure angle2 -end $ntyp
     varset noncolin -value [varvalue noncolin]
     
-    widgetconfigure Hubbard_U     -end $ntyp; # lda_plus_u
-    widgetconfigure Hubbard_J0    -end $ntyp
+    widgetconfigure Hubbard_occ   -rows $ntyp
     widgetconfigure Hubbard_alpha -end $ntyp
     widgetconfigure Hubbard_beta  -end $ntyp
-
-    varset lda_plus_u -value [varvalue lda_plus_u]
 
     widgetconfigure london_c6 -end $ntyp
     widgetconfigure london_rvdw -end $ntyp
@@ -348,13 +356,6 @@ tracevar lelfield w {
     }
 }
 
-tracevar lda_plus_u w {
-    switch -- [vartextvalue lda_plus_u] {
-	Yes     { widget mixing_fixed_ns enable;  groupwidget hubbard enable }
-	default { widget mixing_fixed_ns disable; groupwidget hubbard disable }
-    }
-}
-
 tracevar occupations w {
     if { [varvalue occupations] == "'from_input'" } {
 	groupwidget occupations_card enable
@@ -408,11 +409,11 @@ tracevar vdw_corr w {
 	groupwidget dftdG enable 
     } elseif { [varvalue vdw_corr] == "'grimme-d3'" } {
 	groupwidget dftd3G enable 
-    } elseif { [varvalue vdw_corr] == "'xdm'" } {
+    } elseif { [varvalue vdw_corr] == "'XDM'" } {
 	groupwidget xdmG  enable
-    } elseif { [varvalue vdw_corr] == "'ts-vdw'" } {
+    } elseif { [varvalue vdw_corr] == "'TS'" } {
 	groupwidget tsG   enable
-    } elseif { [varvalue vdw_corr] == "'mbd_vdw'" } {
+    } elseif { [varvalue vdw_corr] == "'MBD'" } {
         widget ts_vdw_isolated enable
     }
 }
@@ -441,22 +442,37 @@ tracevar adaptive_thr w {
 tracevar diagonalization w {
     switch -glob -- [varvalue diagonalization] {
 	'david*' {
-	    widget diago_cg_maxiter disable
 	    widget diago_david_ndim enable
-	    widget ortho_para       enable
-	    #groupwidget diis        disable
+	    widget diago_cg_maxiter disable
+	    widget diago_ppcg_maxiter disable
+            widget diago_rmm_ndim disable
+            widget diago_rmm_conv disable
 	}
 	'cg' {
 	    widget diago_cg_maxiter enable
+	    widget diago_ppcg_maxiter disable
 	    widget diago_david_ndim disable
-	    widget ortho_para       disable
-	    #groupwidget diis        disable
+            widget diago_rmm_ndim disable
+            widget diago_rmm_conv disable
 	}
+        'ppcg' {
+            widget diago_ppcg_maxiter enable
+            widget diago_cg_maxiter disable
+	    widget diago_david_ndim disable
+            widget diago_rmm_ndim disable
+            widget diago_rmm_conv disable
+        }
+        'rmm*' {
+            widget diago_david_ndim enable
+            widget diago_rmm_ndim enable
+            widget diago_rmm_conv enable
+            widget diago_cg_maxiter disable
+            widget diago_ppcg_maxiter disable
+        }
 	default {
+            # 'paro'
 	    widget diago_cg_maxiter disable
 	    widget diago_david_ndim disable
-	    widget ortho_para       disable
-	    #groupwidget diis        disable
 	}
     }
 }
@@ -566,6 +582,14 @@ tracevar nks_add w {
 # Page: Other cards
 # ------------------------------------------------------------------------
 
+tracevar hubbard_enable w {
+    if { [varvalue hubbard_enable] == "Yes" } {
+	groupwidget hubbard_group enable
+    } else {
+	groupwidget hubbard_group disable
+    }
+}
+
 tracevar constraints_enable w {
 
     set calc [varvalue calculation]
@@ -612,18 +636,40 @@ tracevar ion_velocities w {
     }
 }
 
+tracevar laue_both_hands w {
+    if { [vartextvalue laue_both_hands] == "Yes" } {
+        widget laue_one_hand_table forget
+        widget laue_both_hands_table create
+        widget laue_both_hands_table enable
+    } else {
+        widget laue_one_hand_table create
+        widget laue_one_hand_table enable
+        widget laue_both_hands_table forget
+    }
+}
+
+tracevar nsolv w {
+    set nsolv [varvalue nsolv]
+    if { $nsolv == "" || ! [string is integer $nsolv] || $nsolv < 1 } {
+        set nsolv 1
+    }
+    widgetconfigure laue_one_hand_table -rows $nsolv
+    widgetconfigure laue_both_hands_table -rows $nsolv
+}
+
 # ------------------------------------------------------------------------
 # POST-PROCESSING: assign default values for "traced" variables, ...
 # ------------------------------------------------------------------------
 postprocess {    
     varset calculation     -value 'scf'
     varset lfcp            -value {}
+    varset trism           -value {}
+    varset laue_both_hands -value {}
     varset gate            -value {}
     varset ibrav           -value {}
     varset how_lattice     -value celldm
     varset nspin           -value {}
     varset tefield         -value {}
-    varset lda_plus_u      -value {}
     varset occupations     -value {}
     varset assume_isolated -value {}
     varset vdw_corr        -value {}
@@ -636,11 +682,12 @@ postprocess {
     varset ion_velocities  -value {}
     varset K_POINTS_flags  -value automatic
     varset CELL_PARAMETERS_flags -value {}
-
+    varset hubbard_enable -value No
+    varset HUBBARD_flags  -value ortho-atomic
     # unused variables
     groupwidget unused_1 disable
     #groupwidget vdw_obsolete disable
-
+    
     varset specify_atomic_forces -value .false.
-    varset specify_add_kpoints -value .false.
+    varset specify_add_kpoints   -value .false.
 }

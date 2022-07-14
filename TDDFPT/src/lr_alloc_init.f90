@@ -33,6 +33,10 @@ SUBROUTINE lr_alloc_init()
   USE eqv,                  ONLY : dmuxc, evq, dpsi, dvpsi
   USE qpoint,               ONLY : nksq, eigqts
   USE control_lr,           ONLY : nbnd_occ, nbnd_occx
+#if defined(__CUDA)
+  USE becmod_gpum,      ONLY: becp_d
+  USE becmod_subs_gpum, ONLY: allocate_bec_type_gpu
+#endif
   !
   IMPLICIT NONE
   !
@@ -270,6 +274,9 @@ CONTAINS
     IF (nkb > 0) THEN
        !
        IF (.not. allocated(becp%r)) CALL allocate_bec_type(nkb,nbnd,becp)
+#if defined(__CUDA)
+       CALL allocate_bec_type_gpu(nkb,nbnd,becp_d)
+#endif       
        !
        ALLOCATE(becp_1(nkb,nbnd))
        becp_1(:,:) = 0.0d0
@@ -290,6 +297,9 @@ CONTAINS
     IF (nkb > 0) THEN
        !
        IF(.not. allocated(becp%k)) CALL allocate_bec_type(nkb,nbnd,becp)
+#if defined(__CUDA)
+       CALL allocate_bec_type_gpu(nkb,nbnd,becp_d)
+#endif
        !
        IF (.NOT.eels) THEN
           ALLOCATE(becp1_c(nkb,nbnd,nks))

@@ -216,7 +216,7 @@ MODULE control_ph
   !
   SAVE
   !
-  INTEGER, PARAMETER :: maxter = 100
+  INTEGER, PARAMETER :: maxter = 150
   !! maximum number of iterations
   INTEGER :: niter_ph
   !! maximum number of iterations (read from input)

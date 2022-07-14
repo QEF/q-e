@@ -13,6 +13,8 @@
 !
 ! Copyright (C) 2016, Bálint Aradi
 !
+! r2r4 data for Ba corrected by Vahid Askarpour, July 2022
+! removal of unused routines in QE by Paolo Giannozzi, March 2022
 ! MPI parallelization  added by Paolo Giannozzi, June 2021
 ! OpenACC acceleration added by Ivan Carnimeo,   June 2021
 !
@@ -55,7 +57,7 @@ module dftd3_core
     &6.58711862_wp, 6.19536215_wp, 6.01517290_wp, 5.81623410_wp, 5.65710424_wp,&
     &5.52640661_wp, 5.44263305_wp, 5.58285373_wp, 7.02081898_wp, 6.46815523_wp,&
     &5.98089120_wp, 5.81686657_wp, 5.53321815_wp, 5.25477007_wp,11.02204549_wp,&
-    &0.15679528_wp, 9.35167836_wp, 9.06926079_wp, 8.97241155_wp, 8.90092807_wp,&
+    &10.15679528_wp,9.35167836_wp, 9.06926079_wp, 8.97241155_wp, 8.90092807_wp,&
     &8.85984840_wp, 8.81736827_wp, 8.79317710_wp, 7.89969626_wp, 8.80588454_wp,&
     &8.42439218_wp, 8.54289262_wp, 8.47583370_wp, 8.45090888_wp, 8.47339339_wp,&
     &7.83525634_wp, 8.20702843_wp, 7.70559063_wp, 7.32755997_wp, 7.03887381_wp,&

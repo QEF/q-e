@@ -254,8 +254,8 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
     CALL xc_metagcx( dfftp%nnr, 1, np, rho%of_r, grho, tau, ex, ec, &
                      v1x, v2x, v3x, v1c, v2c, v3c, gpu_args_=.TRUE. )
     !
-    !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
-    !$acc&              reduction(-:rhoneg2) present(rho)
+    !$acc parallel loop reduction(+:etxc,vtxc) reduction(-:rhoneg1,rhoneg2) &
+    !$acc&              present(rho)
     DO k = 1, dfftp%nnr
        !
        v(k,1) = (v1x(k,1)+v1c(k,1)) * e2
@@ -290,8 +290,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
     !
     ! ... first term of the gradient correction : D(rho*Exc)/D(rho)
     !
-    !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
-    !$acc&              reduction(-:rhoneg2)
+    !$acc parallel loop reduction(+:etxc,vtxc) reduction(-:rhoneg1,rhoneg2)
     DO k = 1, dfftp%nnr
        !
        v(k,1) = (v1x(k,1) + v1c(k,1)) * e2
@@ -474,8 +473,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
      !
      CALL xc( dfftp%nnr, 1, 1, rho%of_r, ex, ec, vx, vc, gpu_args_=.TRUE. )
      !
-     !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
-     !$acc&              present(rho)
+     !$acc parallel loop reduction(+:etxc,vtxc) reduction(-:rhoneg1) present(rho)
      DO ir = 1, dfftp%nnr
         v(ir,1) = e2*( vx(ir,1) + vc(ir,1) )
         etxc = etxc + e2*( ex(ir) + ec(ir) )*rho%of_r(ir,1)
@@ -490,8 +488,8 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
      !
      CALL xc( dfftp%nnr, 2, 2, rho%of_r, ex, ec, vx, vc, gpu_args_=.TRUE. )
      !
-     !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
-     !$acc&              reduction(-:rhoneg2) present(rho)
+     !$acc parallel loop reduction(+:etxc,vtxc) reduction(-:rhoneg1,rhoneg2) &
+     !$acc&              present(rho)
      DO ir = 1, dfftp%nnr
         v(ir,1) = e2*( vx(ir,1) + vc(ir,1) )
         v(ir,2) = e2*( vx(ir,2) + vc(ir,2) )
@@ -511,8 +509,8 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
       !
       CALL xc( dfftp%nnr, 4, 2, rho%of_r, ex, ec, vx, vc, gpu_args_=.TRUE. )
       !
-      !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
-      !$acc&              reduction(+:rhoneg2) present(rho)
+      !$acc parallel loop reduction(+:etxc,vtxc) reduction(-:rhoneg1,rhoneg2) &
+      !$acc&              present(rho)
       DO ir = 1, dfftp%nnr
          arho = ABS( rho%of_r(ir,1) )
          IF ( arho < vanishing_charge ) THEN
@@ -568,6 +566,9 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !
   !$acc end data
   !$acc end data
+  !
+  ! ... to avoid NaN in some rare cases (see summations in subroutine delta_e)
+  IF ( nspin==4 .AND. .NOT.domag ) v(:,2:nspin) = 0.D0
   !
   ! ... add non local corrections (if any)
   !
@@ -733,6 +734,35 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   !
 END SUBROUTINE v_h
 !
+!----------------------------------------------------------------------------
+SUBROUTINE v_h_without_esm( rhog, ehart, charge, v )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Hartree potential VH(r) from n(G), with do_comp_esm = .FALSE.
+  !
+  USE kinds,    ONLY : DP
+  USE fft_base, ONLY : dfftp
+  USE gvect,    ONLY : ngm
+  USE lsda_mod, ONLY : nspin
+  USE esm,      ONLY : do_comp_esm
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(IN)    :: rhog(ngm)
+  REAL(DP),    INTENT(INOUT) :: v(dfftp%nnr,nspin)
+  REAL(DP),    INTENT(OUT)   :: ehart, charge
+  !
+  LOGICAL :: do_comp_esm_org
+  !
+  do_comp_esm_org = do_comp_esm
+  do_comp_esm = .FALSE.
+  !
+  CALL v_h( rhog, ehart, charge, v )
+  !
+  do_comp_esm = do_comp_esm_org
+  !
+END SUBROUTINE v_h_without_esm
+!
 !-----------------------------------------------------------------------
 SUBROUTINE v_hubbard( ns, v_hub, eth )
   !---------------------------------------------------------------------
@@ -863,8 +893,11 @@ SUBROUTINE v_hubbard_b (ns, v_hub, eth)
      !
      nt = ityp (na)
      !
-     IF (Hubbard_J0(nt).NE.0.d0 .OR. Hubbard_beta(nt).NE.0.d0) &
-     CALL errore('v_hubbard_b', 'Hubbard_J0 and Hubbard_beta are not supported',1) 
+     IF (Hubbard_J0(nt).NE.0.d0) &
+          CALL errore('v_hubbard_b', 'J0 is not supported in DFT+U with multiple channels per atomic type',1)
+     !
+     IF (Hubbard_beta(nt).NE.0.d0) &
+     CALL errore('v_hubbard_b', 'Hubbard_beta is not supported in DFT+U with multiple channels per atomic type',1) 
      !
      IF (is_hubbard_back(nt)) THEN
         !

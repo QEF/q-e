@@ -67,7 +67,7 @@ MODULE qe_dft_list
                        'SCA0', 'xxxx' /                                   ! 6 "   7
   !
   !
-  ! ---- Full DFTs (except vdW-DFs, these are still under Modules) ----
+  ! ---- Full DFTs (except vdW-DFs, those are still under Modules) ----
   !
   DATA dft_full(1)%name      / 'PZ'  /
   DATA dft_full(1)%name2     / 'LDA' /

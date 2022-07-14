@@ -34,6 +34,7 @@ SUBROUTINE stress( sigma )
   USE exx,              ONLY : exx_stress
   USE tsvdw_module,     ONLY : HtsvdW
   USE libmbd_interface, ONLY : HmbdvdW
+  USE rism_module,      ONLY : lrism, stres_rism
   USE esm,              ONLY : do_comp_esm, esm_bc ! for ESM stress
   USE esm,              ONLY : esm_stres_har, esm_stres_ewa, esm_stres_loclong ! for ESM stress
   USE gvect,            ONLY : g_d, gg_d
@@ -51,6 +52,7 @@ SUBROUTINE stress( sigma )
               sigmad23(3,3),  sigmaxdm(3,3), sigma_ts(3,3), sigma_mbd(3,3),&
               sigma_nonloc_dft(3,3), sigmaexx(3,3)
   REAL(DP) :: sigmaloclong(3,3)  ! for ESM stress
+  REAL(DP) :: sigmasol(3,3)      ! for RISM stress
   INTEGER  :: l, m
   !
   ! Auxiliary variables for Grimme-D3
@@ -190,13 +192,19 @@ SUBROUTINE stress( sigma )
   sigma_nonloc_dft(:,:) = 0.d0
   CALL stres_nonloc_dft( rho%of_r, rho_core, nspin, sigma_nonloc_dft )
   !
+  !   The solvation contribution (3D-RISM)
+  !
+  sigmasol(:,:) = 0.d0
+  IF (lrism) CALL stres_rism(sigmasol)
+  !
   ! SUM
   !
   sigma(:,:) = sigmakin(:,:) + sigmaloc(:,:) + sigmahar(:,:) +  &
                sigmaxc(:,:)  + sigmaxcc(:,:) + sigmaewa(:,:) +  &
                sigmanlc(:,:) + sigmah(:,:)   + sigmael(:,:)  +  &
                sigmaion(:,:) + sigmad23(:,:) + sigmaxdm(:,:) + &
-               sigma_nonloc_dft(:,:) + sigma_ts(:,:) + sigma_mbd(:,:)
+               sigma_nonloc_dft(:,:) + sigma_ts(:,:) + sigma_mbd(:,:) + &
+               sigmasol(:,:)
   !
   IF (xclib_dft_is('hybrid')) THEN
      sigmaexx = exx_stress()
@@ -237,7 +245,8 @@ SUBROUTINE stress( sigma )
      (sigmaxdm(l,1)*ry_kbar,sigmaxdm(l,2)*ry_kbar,sigmaxdm(l,3)*ry_kbar, l=1,3), &
      (sigma_nonloc_dft(l,1)*ry_kbar,sigma_nonloc_dft(l,2)*ry_kbar,sigma_nonloc_dft(l,3)*ry_kbar, l=1,3),&
      (sigma_ts(l,1)*ry_kbar,sigma_ts(l,2)*ry_kbar,sigma_ts(l,3)*ry_kbar, l=1,3), &
-     (sigma_mbd(l,1)*ry_kbar,sigma_mbd(l,2)*ry_kbar,sigma_mbd(l,3)*ry_kbar, l=1,3)
+     (sigma_mbd(l,1)*ry_kbar,sigma_mbd(l,2)*ry_kbar,sigma_mbd(l,3)*ry_kbar, l=1,3), &
+     (sigmasol(l,1)*ry_kbar,sigmasol(l,2)*ry_kbar,sigmasol(l,3)*ry_kbar, l=1,3)
 
   IF ( xclib_dft_is('hybrid') .AND. (iverbosity > 0) ) WRITE( stdout, 9006) &
      (sigmaexx(l,1)*ry_kbar,sigmaexx(l,2)*ry_kbar,sigmaexx(l,3)*ry_kbar, l=1,3)
@@ -268,6 +277,7 @@ SUBROUTINE stress( sigma )
          &   5x,'XDM     stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'dft-nl  stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'TS-vdW  stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
-         &   5x,'MBD     stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
+         &   5x,'MDB     stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
+         &   5x,'3D-RISM stress (kbar)',3f10.2/2(26x,3f10.2/)) 
   !
 END SUBROUTINE stress

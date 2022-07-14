@@ -122,7 +122,7 @@ subroutine kcw_setup_ham
     call setup_dmuxc()
     CALL kcw_R_points ()
     CALL read_alpha ()
-    alpha_final_full = alpha_final
+    IF (nkstot/nspin == 1 ) alpha_final_full = alpha_final
   ! CALL setup_dgc()
   ENDIF
   !

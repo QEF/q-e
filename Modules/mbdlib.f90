@@ -57,7 +57,9 @@ SUBROUTINE init_mbd ( nks_start, nk1, nk2, nk3, k1, k2, k3, tprnfor, tstress )
   !
   ! Allocation of variables that depend on the number of atoms
   !
-#if !defined(__NOMBD)
+#if defined(__NOMBD)
+    CALL errore( 'libmbd_interface', 'Many-Body Dispersion not compiled',1)
+#else
   ALLOCATE(inp%atom_types(nat))
   !
   EmbdvdW  = 0.0_dp

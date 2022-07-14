@@ -21,7 +21,6 @@ for dummy in x # to allow simple 'break'
 do
     test "$have_mpi" -eq 0 && break
 
-    F77=$mpif90
     LIBS="$mpi_libs"
 
 # look for scalapack if required
@@ -89,7 +88,23 @@ fi
         try_dflags="$try_dflags -D__SCALAPACK"
     fi
 done
- 
+
+# Enable QRCP with scalapack if --with-scalapack-qrcp==yes is set.
+AC_ARG_WITH(scalapack,
+   [AS_HELP_STRING([--with-scalapack-qrcp],
+       [(yes|no) Run QRCP with scalapack. Requires ScaLAPACK >= 2.1.0 or MKL >= 2020. (default: no)])],
+   [if test "$withval" = "yes" ; then
+      with_scalapack_qrcp=1
+   else
+      with_scalapack_qrcp=0
+   fi],
+   [with_scalapack_qrcp=0]
+)
+
+if test "$have_scalapack" -eq 1 && test "$with_scalapack_qrcp" -eq 1; then
+   try_dflags="$try_dflags -D__SCALAPACK_QRCP"
+fi
+
 # Configuring output message
 if test "$have_scalapack" -eq 1; then
    scalapack_line="SCALAPACK_LIBS=$scalapack_libs"

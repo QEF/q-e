@@ -171,13 +171,13 @@ SUBROUTINE summary()
   !
   IF ( do_comp_esm )  CALL esm_summary()
   !
-  ! ... FCP (Ficticious charge particle)
-  !
-  IF ( lfcp )  CALL fcp_summary()
-  !
   ! ... GC-SCF (Grand-Canonical SCF)
   !
   IF ( lgcscf )  CALL gcscf_summary()
+  !
+  ! ... FCP (Ficticious charge particle)
+  !
+  IF ( lfcp )  CALL fcp_summary()
   !
   IF ( do_comp_mt )  WRITE( stdout, &
             '(5X, "Assuming isolated system, Martyna-Tuckerman method",/)')

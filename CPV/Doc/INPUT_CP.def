@@ -162,8 +162,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
             default { .false. }
 	    info {
 		Write stress tensor to standard output each "iprint" steps.
-                It is set to .TRUE. automatically if
-                calculation='vc-relax'
+                It is set to .TRUE. automatically if calculation='vc-relax'
 	    }
 	}
 	
@@ -688,7 +687,8 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	    default { it depends on the specified functional }
 	    info {
 		Fraction of EXX for hybrid functional calculations. In the case of 
-		input_dft='PBE0', the default value is 0.25.
+		input_dft='PBE0', the default value is 0.25. This entry overrides
+    the default (as well as the restart file) value of a given functional.
 	    }
 	}
 
@@ -1382,7 +1382,9 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 
 
 	var cell_dynamics -type CHARACTER {
-            default { 'none' }
+            default { 'pr'      if @ref calculation = 'vc-md', 'vc'cp', 'vc-cp-wf';
+	              'damp-pr' if  @ref calculation = 'vc-relax';
+		      'none'    otherwise }
 	    info {
                set how cell should be moved
                'none'      : cell is kept fixed

@@ -88,9 +88,6 @@ itcl::body ::guib::moduleObj::_storeModuleItems {obj} {
 		}
 		
 		var - dimension - table - text {
-		    if { $key == "text" } {
-			puts stderr "key = text"
-		    }
 		    __storeItem $key [$obj getOptionValue $id variable] [$obj getOptionValue $id ident] \
 			[_findKeywordObjType $obj namelist]
 		}				

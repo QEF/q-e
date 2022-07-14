@@ -54,7 +54,7 @@ subroutine deallocate_phq
   if (lgamma) then
      if(associated(evq)) nullify(evq)
   else
-     if(associated(evq)) deallocate(evq)
+     if(associated(evq)) deallocate(evq)   !why not if allocated? 
   end if
 
   if(allocated(dvpsi)) deallocate (dvpsi)

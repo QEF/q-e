@@ -376,6 +376,8 @@ CONTAINS
       IF( lmovecell ) WRITE(stdout, &
           '(5X,"Cell gradient error",T30,"= ",1PE12.1," kbar")') &
           cell_error * ry_kbar
+      IF( lfcp ) WRITE(stdout, &
+         '(5X,"FCP gradient error",T30,"= ",1PE12.1,/)') fcp_error
       !
       IF ( conv_bfgs ) GOTO 1000
       !
@@ -696,7 +698,7 @@ CONTAINS
       !! \(\text{inv_hess}\) in re-initialized to the initial guess 
       !! defined as the inverse metric.
       !
-      INTEGER, INTENT(IN) :: n
+      INTEGER,  INTENT(IN) :: n
       LOGICAL,  INTENT(IN) :: lfcp
       REAL(DP), INTENT(IN) :: fcp_hess
       !

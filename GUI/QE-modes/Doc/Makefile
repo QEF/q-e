@@ -1,7 +1,7 @@
 LATEX      = pdflatex
 LATEX2HTML = latex2html
 
-VERSION = 7.0
+VERSION = 7.1
 
 PDFS = user_guide.pdf
 AUXS = $(PDFS:.pdf=.aux)

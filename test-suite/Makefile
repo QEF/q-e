@@ -219,7 +219,7 @@ clean:
 		epw_*/*.win epw_*/*.imag_iso* epw_*/*.chk epw_*/*.freq  \
 		epw_*/*.epmatwp epw_*/*.epwane epw_*/*.ephmat epw_*/epsilon2* \
 		epw_*/*.H epw_*/*.epb* epw_*/*self epw_*/*.res* epw_*/*.01 \
-		epw_*/*.kpt epw_*/*.gnu epw_*/*.eig epw_*/*.lambda_FS epw_*/*.sigma_restart* \
+		epw_*/*.kpt epw_*/*.gnu epw_*/*.lambda_FS epw_*/*.sigma_restart* \
 		epw_*/specfun* epw_*/linewidth.*  epw_*/*.tau_restart* epw_*/lambda.phself* \
 		epw_*/*_elcond_* epw_*/fort.* epw_*/decay.* epw_*/scattering_rate* \
 		epw_*/*.fc.* epw_*/*_band.dat epw_*/*F_restart* epw_*/*F_restart_CB* \

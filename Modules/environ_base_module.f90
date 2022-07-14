@@ -78,7 +78,7 @@ CONTAINS
         !
         CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: prog
         !
-        CHARACTER(LEN=80) :: sub_name = 'init_environ_setup'
+        CHARACTER(LEN=80) :: routine = 'init_environ_setup'
         !
         !--------------------------------------------------------------------------------
         !
@@ -105,7 +105,7 @@ CONTAINS
         !
         INTEGER :: nr(3)
         !
-        CHARACTER(LEN=80) :: sub_name = 'init_environ_base'
+        CHARACTER(LEN=80) :: routine = 'init_environ_base'
         !
         !--------------------------------------------------------------------------------
         !
@@ -117,7 +117,7 @@ CONTAINS
         !
         CALL environ%setup%init_numerical(do_comp_mt)
         !
-        CALL environ%main%init(nat, nsp, upf%psd, ityp, zv)
+        CALL environ%main%init(nat, nsp, ityp, zv, label=upf%psd)
         !
         !--------------------------------------------------------------------------------
     END SUBROUTINE init_environ_base
@@ -135,7 +135,7 @@ CONTAINS
         !
         LOGICAL :: local_flag
         !
-        CHARACTER(LEN=80) :: sub_name = 'clean_environ'
+        CHARACTER(LEN=80) :: routine = 'clean_environ'
         !
         !--------------------------------------------------------------------------------
         !
@@ -178,7 +178,7 @@ CONTAINS
                 END IF
                 !
             CASE DEFAULT
-                CALL errore(sub_name, "Unexpected calling program", 1)
+                CALL errore(routine, "Unexpected calling program", 1)
                 !
             END SELECT
             !
@@ -192,14 +192,14 @@ CONTAINS
     !>
     !!
     !------------------------------------------------------------------------------------
-    SUBROUTINE check_environ_compatibility(routine)
+    SUBROUTINE check_environ_compatibility(calling_routine)
         !--------------------------------------------------------------------------------
         !
         IMPLICIT NONE
         !
-        CHARACTER(LEN=*), INTENT(IN) :: routine
+        CHARACTER(LEN=*), INTENT(IN) :: calling_routine
         !
-        CHARACTER(LEN=80) :: sub_name = 'check_environ_compatibility'
+        CHARACTER(LEN=80) :: routine = 'check_environ_compatibility'
         !
         !--------------------------------------------------------------------------------
         !
@@ -224,7 +224,7 @@ CONTAINS
         !
         REAL(DP), OPTIONAL, INTENT(IN) :: tau(3, nat)
         !
-        CHARACTER(LEN=80) :: sub_name = 'update_environ_ions'
+        CHARACTER(LEN=80) :: routine = 'update_environ_ions'
         !
         !--------------------------------------------------------------------------------
         !
@@ -243,7 +243,7 @@ CONTAINS
         !
         REAL(DP), INTENT(IN) :: at(3, 3)
         !
-        CHARACTER(LEN=80) :: sub_name = 'update_environ_cell'
+        CHARACTER(LEN=80) :: routine = 'update_environ_cell'
         !
         !--------------------------------------------------------------------------------
         !
@@ -272,7 +272,7 @@ CONTAINS
         !
         REAL(DP), INTENT(INOUT) :: plugin_etot
         !
-        CHARACTER(LEN=80) :: sub_name = 'calc_environ_energy'
+        CHARACTER(LEN=80) :: routine = 'calc_environ_energy'
         !
         !--------------------------------------------------------------------------------
         !
@@ -299,7 +299,7 @@ CONTAINS
         !
         INTEGER :: i, j
         !
-        CHARACTER(LEN=80) :: sub_name = 'calc_environ_force'
+        CHARACTER(LEN=80) :: routine = 'calc_environ_force'
         !
         !--------------------------------------------------------------------------------
         !
@@ -352,7 +352,7 @@ CONTAINS
         !
         CHARACTER(LEN=*), INTENT(IN) :: prog
         !
-        CHARACTER(LEN=80) :: sub_name = 'print_environ_energies'
+        CHARACTER(LEN=80) :: routine = 'print_environ_energies'
         !
         !--------------------------------------------------------------------------------
         !

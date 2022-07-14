@@ -78,6 +78,7 @@ $ECHO " done"
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 W90_COMMAND="$BIN_DIR/wannier90.x"
 PW2W90_COMMAND="$PARA_PREFIX $BIN_DIR/pw2wannier90.x"
+KCW_COMMAND_noPOSTFIX="$PARA_PREFIX $BIN_DIR/kcw.x"
 KCW_COMMAND="$PARA_PREFIX $BIN_DIR/kcw.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running pw.x as:   $PW_COMMAND"
@@ -423,5 +424,5 @@ K_POINTS crystal_b
 EOF
 
 $ECHO "  Running the KI hamiltonian calculation for $PREFIX...\c"
-$KCW_COMMAND -in $PREFIX.kcw-ham.in > $PREFIX.kcw-ham.out
+$KCW_COMMAND_noPOSTFIX -in $PREFIX.kcw-ham.in > $PREFIX.kcw-ham.out
 $ECHO " done"

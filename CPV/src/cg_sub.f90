@@ -1540,7 +1540,7 @@ contains
       else 
          if (do_k) then
             if (pre_state) then
-               !$acc data copyin(g2kin,ave_ene,tpiba2) copy(c0)
+               !$acc data present(g2kin) copyin(ave_ene,tpiba2) copy(c0)
                !$acc parallel loop collapse(2) private(x)
                do i = 1, n
                   do ig = 1, ngw
@@ -1595,7 +1595,7 @@ contains
       real(kind=dp) :: tmp
 
       !
-      !$acc parallel loop private(tmp) copyin(c,g2kin,gstart,ngw) copyout(ene_ave)
+      !$acc parallel loop private(tmp) present(g2kin) copyin(c,gstart,ngw) copyout(ene_ave)
       DO i = 1, n
          tmp = 0.d0
          !$acc loop vector reduction(+:tmp)

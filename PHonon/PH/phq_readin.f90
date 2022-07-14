@@ -23,7 +23,7 @@ SUBROUTINE phq_readin()
   USE start_k,       ONLY : reset_grid
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, ltetra
   USE control_flags, ONLY : gamma_only, tqr, restart, io_level, &
-                            ts_vdw, ldftd3, lxdm, isolve
+                            ts_vdw, ldftd3, lxdm, isolve, dfpt_hub
   USE xc_lib,        ONLY : xclib_dft_is
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
@@ -70,7 +70,8 @@ SUBROUTINE phq_readin()
   ! YAMBO <
   USE elph_tetra_mod,ONLY : elph_tetra, lshift_q, in_alpha2f
   USE ktetra,        ONLY : tetra_type
-  USE ldaU,          ONLY : lda_plus_u, Hubbard_projectors, lda_plus_u_kind
+  USE ldaU,          ONLY : lda_plus_u, Hubbard_projectors, lda_plus_u_kind, &
+                            is_hubbard_back
   USE ldaU_ph,       ONLY : read_dns_bare, d2ns_type
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, do_long_range, &
       do_charge_neutral, wpot_dir
@@ -315,7 +316,6 @@ SUBROUTINE phq_readin()
   ahc_nbnd = 0
   ahc_nbndskip = 0
   skip_upperfan = .FALSE.
-  elph_ahc = .FALSE.
   !
   drho_star%open = .FALSE.
   drho_star%basis = 'modes'
@@ -415,79 +415,54 @@ SUBROUTINE phq_readin()
   IF (dek <= 0.d0) CALL errore ( 'phq_readin', ' Wrong dek ', 1)
   !
   !
+  elph_simple= .FALSE.
+  elph_mat   = .FALSE.
+  elph_ahc   = .FALSE.
   elph_tetra = 0
+  elph_epa   = .FALSE.
   SELECT CASE( trim( electron_phonon ) )
   CASE( 'simple'  )
      elph=.true.
-     elph_mat=.false.
      elph_simple=.true.
-     elph_epa=.false.
   CASE( 'epa' )
      elph=.true.
-     elph_mat=.false.
-     elph_simple=.false.
      elph_epa=.true.
   CASE( 'Wannier' )
      elph=.true.
      elph_mat=.true.
-     elph_simple=.false.
-     elph_epa=.false.
      auxdvscf=trim(fildvscf)
   CASE( 'interpolated' )
      elph=.true.
-     elph_mat=.false.
-     elph_simple=.false.
-     elph_epa=.false.
-  ! YAMBO >
   CASE( 'yambo' )
      elph=.true.
-     elph_mat=.false.
-     elph_simple=.false.
-     elph_epa=.false.
      elph_yambo=.true.
      nogg=.true.
      auxdvscf=trim(fildvscf)
+  ! also for Yambo
   CASE( 'dvscf' )
      elph=.false.
-     elph_mat=.false.
-     elph_simple=.false.
-     elph_epa=.false.
-     elph_yambo=.false.
      dvscf_yambo=.true.
      nogg=.true.
      auxdvscf=trim(fildvscf)
-  ! YAMBO <
   CASE( 'lambda_tetra'  )
      elph=.true.
-     elph_mat=.false.
-     elph_simple=.false.
      trans = .false.
      elph_tetra = 1
   CASE( 'gamma_tetra'  )
      elph=.true.
-     elph_mat=.false.
-     elph_simple=.false.
      trans = .false.
      elph_tetra = 2
   CASE( 'scdft_input'  )
      elph=.true.
-     elph_mat=.false.
-     elph_simple=.false.
      trans = .false.
      elph_tetra = 3
   CASE( 'ahc' )
      elph = .true.
      elph_ahc = .true.
-     elph_mat = .false.
-     elph_simple = .false.
-     elph_epa = .false.
      trans = .false.
      nogg = .true.
   CASE DEFAULT
      elph=.false.
-     elph_mat=.false.
-     elph_simple=.false.
-     elph_epa=.false.
   END SELECT
 
   ! YAMBO >
@@ -773,6 +748,8 @@ SUBROUTINE phq_readin()
           " The phonon code for this Hubbard projectors type is not implemented",1)
      IF (lda_plus_u_kind.NE.0) CALL errore("phq_readin", &
           " The phonon code for this lda_plus_u_kind is not implemented",1)
+     IF (ANY(is_hubbard_back(:))) CALL errore ("phq_readin", &
+          " Two (or more) Hubbard channels per atomic type is not implemented", 1)
      IF (elph) CALL errore("phq_readin", &
           " Electron-phonon with Hubbard U is not supported",1)
      IF (lraman) CALL errore("phq_readin", &

@@ -370,21 +370,22 @@ The \qe\ distribution contains several directories. Some of them are
 common to all packages:
 
 \begin{tabular}{ll}
-\texttt{Modules/} &  Fortran modules and utilities used by all programs\\
-\texttt{upflib/}  &  pseudopotential-related code, plus conversion tools\\
-\texttt{include/} &  files *.h included by fortran and C source files\\
-\texttt{clib/}    &  libraries and utilities written in C\\
-\texttt{FFTXlib/} &  FFT libraries\\
-\texttt{LAXlib/}  &  Linear Algebra (parallel) libraries\\
-\texttt{KS\_Solvers/}  &  Iterative diagonalization routines\\
-\texttt{UtilXlib/}&  Miscellaneous timing, error handling, MPI utilites\\
-\texttt{XClib/}   &  Exchange-correlation functionals (excepted van der Waals)\\
-\texttt{install/} &  installation scripts and utilities\\
-\texttt{pseudo}/  &  pseudopotential files used by examples\\
-\texttt{Doc/}     &  general documentation\\
-\texttt{archive/} &  external libraries in .tar.gz form\\
-\texttt{external/}&  external libraries downloaded by CMake\\
-\texttt{test-suite/} &  automated tests\\
+\texttt{Modules/}    & Fortran modules and utilities used by all programs\\
+\texttt{upflib/}     & pseudopotential-related code, plus conversion tools\\
+\texttt{include/}    & files *.h included by fortran and C source files\\
+\texttt{FFTXlib/}    & FFT libraries\\
+\texttt{LAXlib/}     & Linear Algebra (parallel) libraries\\
+\texttt{KS\_Solvers/}& Iterative diagonalization routines\\
+\texttt{UtilXlib/}   & Miscellaneous timing, error handling, MPI utilites\\
+\texttt{XClib/}      & Exchange-correlation functionals (excepted van der Waals)\\
+\texttt{MBD/}        & Routines for many-body dispersions\\
+\texttt{LR\_Modules/}& Fortran modules and utilities used by linear-response codes\\
+\texttt{install/}    & installation scripts and utilities\\
+\texttt{pseudo}/     & pseudopotential files used by examples\\
+\texttt{Doc/}        & general documentation\\
+\texttt{archive/}    & external libraries in .tar.gz form\\
+\texttt{external/}   & external libraries downloaded by CMake\\
+\texttt{test-suite/} & automated tests
 \end{tabular}
 \\
 while others are specific to a single package:
@@ -399,14 +400,14 @@ while others are specific to a single package:
 \texttt{CPV/}     & \CP\ package\\
 \texttt{atomic/}  & \texttt{atomic} package\\
 \texttt{GUI/}     & \texttt{PWGui} package\\
-\texttt{QEHeat/}   & \texttt{QEHeat} package\\
-\texttt{HP/}      & \texttt{HP} package
+\texttt{HP/}      & \texttt{HP} package\\
+\texttt{QEHeat/}  & \texttt{QEHeat} package\\
+\texttt{KCW/}     & \texttt{KCW} package
 \end{tabular}
+\\
 
 Finally, directory \texttt{COUPLE/} contains code and documentation
-that is useful to call \qe\ programs from external codes; directory
-\texttt{LR\_Modules/} contains source files for modules that are common
-to all linear-response codes.
+that is useful to call \qe\ programs from external codes.
 \subsection{Prerequisites}
 \label{Sec:Installation}
 
@@ -450,7 +451,7 @@ software). Note that most commercial compilers are also available
 free of charge under some conditions (e.g. academic or personal usage, no
 support) and may provide MPI libraries and run-time software as well.
 
-\subsection{Building with cMake}
+\subsection{Building with CMake}
 
 See \texttt{https://gitlab.com/QEF/q-e/-/wikis/Developers/CMake-build-system}.
 
@@ -502,10 +503,11 @@ in any \texttt{Makefile}, type \texttt{make depend}, or run
 
 It is convenient to use "parallel make" to speed up compilation:
 \texttt{make -jN} compiles in parallel on N processors. Note that
-if you interrupt \make, depending upon what it was doing
-you may run into trouble the next time you type \make (for instance,
-if \make\ is interrupted while unpacking and compiling the FoX library).
-If so, run \texttt{make clean} before running \make\ again.
+if you interrupt \make, you may run into trouble the next time you 
+type \make (for instance, if \make\ is interrupted while unpacking
+and compiling an external library).
+If so, run \texttt{make clean}, or even \texttt{make distclean}, 
+before running \make\ again.
 
 You should always be able to compile the \qe\ suite
 of programs without having to edit any of the generated files. However you
@@ -528,7 +530,7 @@ Some environment variables that are relevant to \configure\ are:
 
 \begin{tabular}{ll}
 \texttt{ARCH}& label identifying the machine type (see below)\\
-\texttt{F90, F77, CC} &names of Fortran, Fortran-77, and C compilers\\
+\texttt{F90, CC} &names of Fortran and C compilers\\
 \texttt{MPIF90} &       name of parallel Fortran 90 compiler (using MPI)\\
 \texttt{CPP} &          source file preprocessor (defaults to \$CC -E)\\
 \texttt{LD} &           linker (defaults to \$MPIF90)\\
@@ -556,8 +558,8 @@ compilation.
 
 If your machine type is unknown to \configure, you may use the
 \texttt{ARCH}
-variable to suggest an architecture among supported ones. Some large
-parallel machines using a front-end (e.g. Cray XT) will actually
+variable to suggest an architecture among supported ones. Some 
+parallel machines using a front-end may actually
 need it, or else \configure\ will correctly recognize the front-end
 but not the specialized compilation environment of those machines.
 In some cases, cross-compilation requires to specify the target machine
@@ -604,7 +606,8 @@ is between bracket:\\
 \\
 and the following optional packages:\\
 \begin{tabular}{ll}
-\texttt{--with-scalapack}&        (yes$|$no$|$intel) Use scalapack if available. \\
+\texttt{--with-fox} & Use official FoX library instead of built-in replacement (default:no)\\
+\texttt{--with-scalapack}& (yes$|$no$|$intel) Use scalapack if available. \\
       &Set to \texttt{intel} to use Intel MPI and BLACS (default: use OpenMPI)\\
 \texttt{--with-elpa-include}&   Specify full path of ELPA include and modules
   headers (no)\\

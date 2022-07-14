@@ -133,7 +133,10 @@
     !! @ Note:
     !!    If you have 19 kpts and 2 pool, this routine will return
     !!    lower_bnd= 1 and upper_bnd=10 for the first pool
-    !!    lower_bnd= 1 and upper_bnd=9 for the second pool
+    !!!!!    a comment line is replaced with another one!
+    !   !!    lower_bnd= 1 and upper_bnd=9 for the second pool
+    !!    lower_bnd=11 and upper_bnd=19 for the second pool
+    !!!!!
     !-----------------------------------------------------------------------
     !
     USE mp_global,    ONLY : my_pool_id, npool
@@ -194,7 +197,10 @@
     !! @ Note:
     !!    If you have 19 kpts and 2 pool, this routine will return
     !!    lower_bnd= 1 and upper_bnd=10 for the first pool
-    !!    lower_bnd= 1 and upper_bnd=9 for the second pool
+    !!!!!    a comment line is replaced with another one!
+    !   !!    lower_bnd= 1 and upper_bnd=9 for the second pool
+    !!    lower_bnd=11 and upper_bnd=19 for the second pool
+    !!!!!
     !-----------------------------------------------------------------------
     !
     USE mp_global,        ONLY : my_pool_id, npool

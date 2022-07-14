@@ -52,6 +52,7 @@ SUBROUTINE memory_report()
   USE control_flags,    ONLY: isolve, nmix, imix, gamma_only, lscf, io_level, &
        lxdm, smallmem, tqr, iverbosity, rmm_ndim, lforce=>tprnfor, tstress
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
+  USE rism3d_facade, ONLY : lrism3d, rism3t, rism3d_is_laue
   USE mp_bands,  ONLY : nproc_bgrp, nbgrp
   USE mp_pools,  ONLY : npool
   USE mp_images, ONLY : nproc_image  
@@ -167,7 +168,7 @@ SUBROUTINE memory_report()
   ! other (possibly minor) data loads
   lmaxq = 2*lmaxkb+1
   IF (lmaxq > 0) THEN
-     ! not accurate if spline_ps .and. cell_factor <= 1.1d0
+     ! not accurate if cell_factor <= 1.1d0
      nqxq = int( ( (sqrt(ecutrho) + qnorm) / dq + 4) * cell_factor )
      ! allocate_nlpot.f90:87 qrad
      add = real_size * nqxq * nbetam*(nbetam+1)/2 * lmaxq * ntyp
@@ -260,6 +261,36 @@ SUBROUTINE memory_report()
   END IF 
   !=====================================================================
   !
+  !=====================================================================
+  ! RISM calculations
+  !=====================================================================
+  IF ( lrism3d ) THEN
+     IF (.NOT. rism3d_is_laue()) THEN
+        ! in case of 3D-RISM:
+        ! 1D-RISM Susceptibility
+        ram = ram + real_size * rism3t%nsite * rism3t%mp_site%nsite * rism3t%ngs
+        ! R-space
+        ram = ram + real_size * (6 * rism3t%nsite + 2) * rism3t%nr
+        ! G-space
+        ram = ram + complex_size * (3 * rism3t%nsite + 3) * rism3t%ng
+     ELSE
+        ! in case of Laue-RISM:
+        ! 1D-RISM Susceptibility
+        ram = ram + real_size * rism3t%nsite * rism3t%mp_site%nsite * (rism3t%nrzl * rism3t%ngs)
+        ! R-space
+        ram = ram + real_size * (7 * rism3t%nsite + 2) * rism3t%nr
+        ! G-space
+        ram = ram + complex_size * 2 * rism3t%ng
+        ! Laue-rep. (short-range)
+        ram = ram + complex_size * 2 * rism3t%nsite * rism3t%nrzs * rism3t%ngxy
+        ! Laue-rep. (long-range)
+        ram = ram + complex_size * (2 * rism3t%nsite + 3) * rism3t%nrzl * rism3t%ngxy
+     END IF
+  END IF
+  !=====================================================================
+  !
+  !=====================================================================
+  !
   ! compute ram_: scratch space that raises the "high watermark"
   !
   !=====================================================================
@@ -318,6 +349,7 @@ SUBROUTINE memory_report()
         IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'skpsi', add/MB
      END IF
   END IF
+  !
   ram_ = ram1
   !=====================================================================
   !

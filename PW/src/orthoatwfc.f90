@@ -455,7 +455,7 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
   !! Note, on the input this routine requires dO (not transposed).
   !! The solution is written in a closed form by solving the Lyapunov
   !! equation (a particular case of the Sylvester equation).
-  !! See Eq. (32) in PRB 102, 235159 (2020).
+  !! See Eq. (32) in PRB 105, 199901(E) (2022).
   !! Written by I. Timrov (June 2020)
   !
   USE kinds,       ONLY : DP

@@ -49,7 +49,8 @@ MODULE qexsd_init
             qexsd_init_total_energy, qexsd_init_forces, qexsd_init_stress, &
             qexsd_init_dipole_info, qexsd_init_outputElectricField,   &
             qexsd_init_outputPBC, qexsd_init_gate_info, qexsd_init_hybrid, &
-            qexsd_init_dftU, qexsd_init_vdw, qexsd_init_berryPhaseOutput
+            qexsd_init_dftU, qexsd_init_vdw, qexsd_init_berryPhaseOutput, &
+            qexsd_init_rism3d, qexsd_init_rismlaue
   !
 CONTAINS
   !
@@ -407,9 +408,9 @@ CONTAINS
       END SUBROUTINE qexsd_init_hybrid 
       !
       SUBROUTINE qexsd_init_dftU (obj, nsp, psd, species, ityp, is_hubbard, &
-                                  is_hubbard_back, backall, hubb_l2, hubb_l3, & 
-                                  noncolin, lda_plus_u_kind, U_projection_type, U, U2, J0, J, &
-                                  n, l, alpha, beta, alpha_back, starting_ns, Hub_ns, Hub_ns_nc )
+                                  is_hubbard_back, backall, hubb_n2, hubb_l2, hubb_n3, hubb_l3,    & 
+                                  noncolin, lda_plus_u_kind, U_projection_type, U, U2,  J0, J,     &
+                                  n, l, alpha, beta, alpha_back, starting_ns, Hub_ns, Hub_ns_nc, Hub_nsg, Hubbard_V )
          IMPLICIT NONE 
          TYPE(dftU_type),INTENT(INOUT)  :: obj 
          INTEGER,INTENT(IN)             :: nsp
@@ -419,6 +420,8 @@ CONTAINS
          LOGICAL,INTENT(IN)             :: is_hubbard(nsp)
          LOGICAL,OPTIONAL,INTENT(IN)    :: is_hubbard_back(nsp)
          LOGICAL,OPTIONAL,INTENT(IN)    :: backall(nsp)
+         INTEGER,OPTIONAL,INTENT(IN)    :: hubb_n2(nsp)
+         INTEGER,OPTIONAL,INTENT(IN)    :: hubb_n3(nsp)
          INTEGER,OPTIONAL,INTENT(IN)    :: hubb_l2(nsp)
          INTEGER,OPTIONAL,INTENT(IN)    :: hubb_l3(nsp) 
          INTEGER,OPTIONAL,INTENT(IN)    :: n(nsp), l(nsp)
@@ -426,8 +429,9 @@ CONTAINS
          CHARACTER(LEN=*),INTENT(IN)    :: U_projection_type
          LOGICAL,OPTIONAL,INTENT(IN)    :: noncolin 
          REAL(DP),OPTIONAL,INTENT(IN)   :: U(:), U2(:), J0(:), alpha(:), alpha_back(:), &
-                                           beta(:), J(:,:)
-         REAL(DP),OPTIONAL,INTENT(IN)   :: starting_ns(:,:,:), Hub_ns(:,:,:,:)
+                                           beta(:), J(:,:)                            
+         REAL(DP),OPTIONAL,INTENT(IN)   :: hubbard_v(:,:,:)
+         REAL(DP),OPTIONAL,INTENT(IN)   :: starting_ns(:,:,:), Hub_ns(:,:,:,:), Hub_nsg(:,:,:,:)
          COMPLEX(DP),OPTIONAL,INTENT(IN) :: Hub_ns_nc(:,:,:,:)
          !
          CHARACTER(10), ALLOCATABLE            :: label(:)
@@ -436,8 +440,10 @@ CONTAINS
          TYPE(HubbardJ_type),ALLOCATABLE       :: J_(:) 
          TYPE(starting_ns_type),ALLOCATABLE    :: starting_ns_(:) 
          TYPE(Hubbard_ns_type),ALLOCATABLE     :: Hubbard_ns_(:), Hubbard_ns_nc_(:)
-         TYPE(HubbardBack_type),ALLOCATABLE    :: Hub_back_(:) 
+         TYPE(HubbardBack_type),ALLOCATABLE    :: Hub_back_(:)
+         TYPE(HubbardInterSpecieV_type),ALLOCATABLE :: Hub_V_(:) 
          LOGICAL                               :: noncolin_ =.FALSE.
+         INTEGER                               :: icheck 
          !
          IF (PRESENT(n) .AND. PRESENT(l)) THEN
              CALL set_labels (nsp, n, l)
@@ -447,27 +453,36 @@ CONTAINS
          ENDIF
          IF ( PRESENT(noncolin)) noncolin_ = noncolin 
          !
-         IF (PRESENT(U))           CALL init_hubbard_commons(U, U_, label, "Hubbard_U")
-         ! TODO: change Hubbard_U_back to Hubbard_U2 
-         IF (PRESENT(U2))          CALL init_hubbard_commons(U2, U2_, label, "Hubbard_U_back")
+         IF (lda_plus_u_kind == 2 ) THEN 
+           IF (PRESENT(hubbard_v))   icheck =  check_and_init_Hubbard_V (hub_v_, hubbard_v, species, label)
+         ELSE  
+           IF (PRESENT(U))           CALL init_hubbard_commons(U, U_, label, "Hubbard_U")
+           IF (PRESENT(is_hubbard_back)) THEN
+            IF (ANY(is_hubbard_back)) THEN
+              IF (.NOT.PRESENT(hubb_l2) .OR. .NOT.PRESENT(hubb_n2) .OR. .NOT. PRESENT(U2)) &
+                 CALL errore('qexsd_init_dft:',&
+                        'Internal error: second Hubbard channel is present but hubb_n2 or hubb_l2 or U2 is not present',1)
+              CALL init_Hubbard_back(is_hubbard_back, Hub_back_, U2, hubb_n2, hubb_l2, backall, n3 = hubb_n3, l3 = hubb_l3) 
+            ENDIF
+         END IF
+         END IF 
          IF (PRESENT(J0))          CALL init_hubbard_commons(J0, J0_, label, "Hubbard_J0" ) 
          IF (PRESENT(alpha))       CALL init_hubbard_commons(alpha, alpha_,label, "Hubbard_alpha") 
          IF (PRESENT(alpha_back))  CALL init_hubbard_commons(alpha_back, alpha_back_,label, "Hubbard_alpha_back") 
          IF (PRESENT(beta))        CALL init_hubbard_commons(beta, beta_, label, "Hubbard_beta")
          IF (PRESENT(J))           CALL init_hubbard_J (J, J_, label, "Hubbard_J" )
          IF (PRESENT(starting_ns)) CALL init_starting_ns(starting_ns_ , label)
-         IF (PRESENT(Hub_ns))      CALL init_Hubbard_ns(Hubbard_ns_ , label)
-         IF (PRESENT(Hub_ns_nc))   CALL init_Hubbard_ns(Hubbard_ns_nc_ , label)
-         IF (PRESENT(is_hubbard_back)) THEN
-            IF (ANY(is_hubbard_back) .AND.  PRESENT(hubb_l2)) &
-              CALL init_Hubbard_back(is_hubbard_back, Hub_back_, hubb_l2, backall, hubb_l3) 
-            IF (ANY(is_hubbard_back) .AND. .NOT. PRESENT (hubb_l2)) &
-            CALL errore('qexsd_init_dft:',&
-                        'internal error background is set to true but hubb_l2 is not present',1)  
-         END IF
+         IF (PRESENT(Hub_ns))   THEN 
+                                   CALL init_Hubbard_ns(Hubbard_ns_ , label, Hub_ns)
+         ELSE IF (PRESENT(Hub_ns_nc))  THEN 
+                                   CALL init_Hubbard_ns(Hubbard_ns_nc_ , label) 
+         ELSE IF (PRESENT(Hub_nsg)) THEN 
+                                   CALL init_Hubbard_ns(Hubbard_ns_, label, Hub_nsg) 
+         END IF 
+         
          !
-         CALL qes_init (obj, "dftU", lda_plus_u_kind, U_, J0_, alpha_, beta_, J_, starting_ns_, Hubbard_ns_, &
-                        U_projection_type, Hub_back_, U2_, alpha_back_, Hubbard_ns_nc_)
+         CALL qes_init (obj, "dftU", lda_plus_u_kind, U_, J0_, alpha_, beta_,  J_, starting_ns_, Hub_V_,     & 
+                       Hubbard_ns_, U_projection_type, Hub_back_, alpha_back_, Hubbard_ns_nc_)
          ! 
          CALL reset_hubbard_commons(U_)
          CALL reset_hubbard_commons(U2_)
@@ -528,6 +543,62 @@ CONTAINS
             END DO 
          END SUBROUTINE init_hubbard_J
          !
+         FUNCTION check_and_init_Hubbard_V (objs, hubbard_v_, specs, labs) result( ndim ) 
+           IMPLICIT NONE 
+           TYPE(HubbardInterSpecieV_type), ALLOCATABLE   :: objs(:)
+           REAL(DP)                                      :: hubbard_v_(:,:,:) 
+           CHARACTER(len=*)                              :: labs(:), specs(:)
+           INTEGER                                       :: ndim 
+           !
+           INTEGER    :: nat_, nbt_, na, nb, idim, nb2isp
+           CHARACTER(LEN=4)  :: lab1, spec1, lab2, spec2, lab1_bkg = "no_H", lab2_bkg='no_H' 
+           CHARACTER         :: hubbard_shell(4) = ['s','p','d','f'] 
+           !
+           nat_ = SIZE(ityp) 
+           nbt_  = SIZE(hubbard_v_, 2) / SIZE( hubbard_v_, 1) * nat_ 
+           !
+           ndim = COUNT( hubbard_v_(:,:,1:4) > 0._DP ) 
+           IF (ndim == 0 ) RETURN 
+           ALLOCATE (objs(ndim)) 
+
+           idim = 0 
+           DO na =1, nat_ 
+             spec1 = TRIM(species(ityp(na)))
+             lab1  = TRIM(label(ityp(na))) 
+             IF (PRESENT(hubb_n2) .AND.PRESENT(hubb_l2)) THEN  
+               IF (hubb_n2(ityp(na)) /= -1 .AND. hubb_l2(ityp(na)) /= -1) & 
+                  WRITE(lab1_bkg,'(I0,A)') hubb_n2(ityp(na)), hubbard_shell( hubb_l2(ityp(na)) + 1 ) 
+             END IF      
+             DO nb = 1, nbt_ 
+              IF (ALL(hubbard_v(na,nb,:) == 0._DP)) CYCLE 
+              nb2isp = ityp ( mod(nb -1, nat_) +1)  
+              spec2 = TRIM(species(nb2isp))
+              lab2  = TRIM(label (nb2isp)) 
+              IF (PRESENT(hubb_n2) .AND. PRESENT(hubb_l2)) THEN 
+               IF ( hubb_n2(nb2isp) /= -1 .AND. hubb_l2(nb2isp) /= -1 ) & 
+                 WRITE (lab2_bkg, '(I0,A)') hubb_n2(nb2isp), hubbard_shell( hubb_l2(nb2isp)  + 1 )
+              END IF 
+              IF (hubbard_v(na, nb, 1) /= 0._DP) THEN  
+                idim = idim + 1 
+                CALL qes_init(objs(idim), "Hubbard_V", spec1, na, lab1, spec2, nb, lab2, Hubbard_V_(na,nb,1))
+              END IF 
+              IF ( hubbard_v(na, nb, 2) /= 0._DP) THEN 
+                idim = idim + 1 
+                CALL qes_init (objs(idim), "Hubbard_V", spec1, na, lab1, spec2, nb, lab2_bkg, Hubbard_V_(na,nb,2)) 
+              END IF 
+              IF (hubbard_v(na, nb, 3) /= 0._DP  ) THEN 
+               idim = idim + 1 
+               CALL qes_init(objs(idim), "Hubbard_V", spec1, na, lab1_bkg, spec2, nb, lab2_bkg, Hubbard_V_(na,nb,3)) 
+              END IF 
+              IF (hubbard_v(na,nb, 4) /= 0._DP ) THEN 
+               idim = idim + 1 
+               CALL qes_init(objs(idim), "Hubbard_V", spec1, na, lab1_bkg, spec2, nb, lab2, Hubbard_V_(na,nb,4)) 
+              END IF   
+             END DO
+           END DO 
+         END FUNCTION check_and_init_Hubbard_V 
+           
+         
          SUBROUTINE reset_hubbard_commons(objs) 
             IMPLICIT NONE 
             TYPE(HubbardCommon_type),ALLOCATABLE :: objs(:)
@@ -591,10 +662,11 @@ CONTAINS
             END IF 
          END SUBROUTINE init_starting_ns 
          ! 
-         SUBROUTINE init_Hubbard_ns(objs, labs  )
+         SUBROUTINE init_Hubbard_ns(objs, labs, hub_ns_)
             IMPLICIT NONE 
             TYPE (Hubbard_ns_type),ALLOCATABLE  :: objs(:) 
             CHARACTER(LEN=*)                    :: labs(nsp) 
+            REAL(DP),OPTIONAL,INTENT(IN)        :: hub_ns_(:,:,:,:) 
             !
             REAL(DP), ALLOCATABLE               :: Hubb_occ_aux(:,:) 
             INTEGER                             :: i, is,ind, ldim, m1, m2, llmax, nat, nspin
@@ -620,18 +692,19 @@ CONTAINS
                   IF (TRIM(labs(ityp(i))) == 'no Hubbard') objs(i)%lwrite = .FALSE. 
                END DO
                RETURN 
-            ELSE IF (PRESENT (Hub_ns)) THEN
-               llmax = SIZE ( Hub_ns,1) 
-               nat = size(Hub_ns,4)
-               nspin = size(Hub_ns,3)
+            ELSE IF (PRESENT (hub_ns_)) THEN
+               llmax = SIZE ( hub_ns_,1) 
+               nat = size(hub_ns_,4)
+               nspin = size(hub_ns_,3)
                ALLOCATE( objs(nspin*nat) )
                ind = 0 
                DO i = 1, nat
                   DO is = 1, nspin
                      ind = ind+1
                      CALL qes_init(objs(ind),"Hubbard_ns", SPECIE = TRIM(species(ityp(i))), SPIN = is, &
-                        ORDER = 'F', INDEX = ind, LABEL = TRIM(labs(ityp(i))), Hubbard_NS = Hub_ns(:,:,is,i))
+                        ORDER = 'F', INDEX = i, LABEL = TRIM(labs(ityp(i))), Hubbard_NS = hub_ns_(:,:,is,i))
                         IF (TRIM(labs(ityp(i))) =='no Hubbard' )  objs(ind)%lwrite=.FALSE. 
+                        IF (nspin ==1 ) objs(ind)%spin_ispresent = .FALSE.
                   END DO
                END DO
             END IF
@@ -639,19 +712,23 @@ CONTAINS
             !
          END SUBROUTINE init_Hubbard_ns 
          
-         SUBROUTINE init_Hubbard_back(is_back, objs, l2, backall_, l3) 
+         SUBROUTINE init_Hubbard_back(is_back, objs, U2, n2, l2, backall_, n3, l3) 
             IMPLICIT NONE
             LOGICAL, INTENT(IN)                                  :: is_back(nsp) 
+            REAL(DP)                                             :: U2 (nsp)
+            INTEGER, INTENT(IN)                                  :: n2(nsp)
             INTEGER, INTENT(IN)                                  :: l2(nsp)
             TYPE(HubbardBack_type),ALLOCATABLE,INTENT(INOUT)     :: objs(:) 
             LOGICAL,OPTIONAL,INTENT(IN)                          :: backall_(nsp) 
             INTEGER,OPTIONAL,INTENT(IN)                          :: l3(nsp)  
+            INTEGER,OPTIONAL,INTENT(IN)                          :: n3(nsp)
             !
-            INTEGER  :: isp, il, ndimbackL  
+            INTEGER  :: isp, il, ndimbackL, l2_, l3_, n2_, n3_
+            REAL(DP) :: u2_   
             LOGICAL,ALLOCATABLE  :: temp(:) 
-            TYPE(backL_type)     :: backL_objs(2)  
             CHARACTER(LEN=16)    :: backchar
             !
+            l2_ = -1; l3_ = -1; n2_ = -1; n3_ = -1; u2_ = 0._DP  
             ALLOCATE(objs(nsp), temp(nsp)) 
             IF (PRESENT(backall_)) THEN 
                temp(1:nsp)  = backall_(1:nsp)
@@ -659,12 +736,15 @@ CONTAINS
                temp(1:nsp) = .FALSE.
             END IF 
             DO isp =1, nsp 
-               CALL qes_init(backL_objs(1), "l_number", l_index=0, backL = l2(isp))
+               u2_ = U2(isp)
+               l2_ = l2(isp)
+               n2_ = n2(isp) 
                ndimbackL = 1 
                IF (temp(isp) .AND. PRESENT(l3) ) THEN 
                   IF (l3(isp) >=0) THEN
                      ndimbackL=2 
-                     CALL qes_init(backL_objs(2), "l_number", l_index=1, backL  = l3(isp)) 
+                     l3_ = l3(isp) 
+                     IF (PRESENT(n3)) n3_ = n3(isp)
                   ELSE
                      CALL errore ('qexsd_init_dftU:', 'internal error: l3 < 0',1)
                   END IF
@@ -676,12 +756,15 @@ CONTAINS
                ELSE 
                   backchar = 'one_orbital'
                END IF 
-               CALL qes_init(objs(isp), "Hubbard_back", SPECIES = TRIM(species(ityp(isp))), &
-                             background=TRIM(backchar),  l_number = backL_objs(1:ndimbackL))    
-               IF (.NOT. is_back(isp)) objs(isp)%lwrite = .FALSE.
-               DO il = 1, ndimbackL
-                  CALL qes_reset(backL_objs(il))
-               END DO 
+
+               CALL qes_init(objs(isp), "Hubbard_back", SPECIES = TRIM(species(ityp(isp))), Hubbard_U2= u2_ , &
+                             background=TRIM(backchar),  l2_number = l2_, l3_number=l3_, n2_number = n2_, n3_number = n3_)    
+               IF (.NOT. is_back(isp)) THEN 
+                 objs(isp)%lwrite = .FALSE.
+               ELSE IF (.NOT. temp(isp)) THEN 
+                 objs(isp)%l3_number_ispresent = .FALSE. 
+                 objs(isp)%n3_number_ispresent = .FALSE. 
+               END IF 
             END DO 
          END SUBROUTINE init_Hubbard_back 
 
@@ -1009,7 +1092,8 @@ CONTAINS
     ! 
     !---------------------------------------------------------------------------------------
     SUBROUTINE qexsd_init_total_energy(obj, etot, eband, ehart, vtxc, etxc, ewald, degauss, demet, &
-                       electric_field_corr, potentiostat_contr, gate_contribution, dispersion_contribution )
+                       electric_field_corr, potentiostat_contr, gate_contribution, dispersion_contribution, &
+                       esol, vsol)
     !----------------------------------------------------------------------------------------
     !
     ! 
@@ -1022,12 +1106,14 @@ CONTAINS
     REAL(DP),OPTIONAL               :: potentiostat_contr
     REAL(DP),OPTIONAL               :: gate_contribution
     REAL(DP),OPTIONAL               :: dispersion_contribution  
+    REAL(DP),OPTIONAL               :: esol, vsol
     !
     CHARACTER(LEN=*),PARAMETER      :: TAGNAME="total_energy"
     ! 
     CALL  qes_init (obj, TAGNAME, ETOT = etot, EBAND = eband, EHART = ehart, VTXC = vtxc, ETXC = etxc, & 
                     EWALD = ewald, DEMET = demet, EFIELDCORR = electric_field_corr, POTENTIOSTAT_CONTR = potentiostat_contr,  &
-                                  GATEFIELD_CONTR = gate_contribution, vdW_term = dispersion_contribution ) 
+                    GATEFIELD_CONTR = gate_contribution, vdW_term = dispersion_contribution, ESOL = esol, &
+                    levelshift_contr = vsol)
     
     END SUBROUTINE qexsd_init_total_energy
     ! 
@@ -1286,7 +1372,72 @@ SUBROUTINE qexsd_init_gate_info(obj, tagname, gatefield_en, zgate_, nelec_, alat
                         GATE_ZPOS = zgate_,  GATE_GATE_TERM = gate_gate_term, GATEFIELDENERGY = gatefield_en) 
    ! 
 END SUBROUTINE qexsd_init_gate_info 
-
-
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE qexsd_init_rism3d(obj, nmol, slabel, molfile, dens1, dens2, ecutsolv)
+      !------------------------------------------------------------------------
+      IMPLICIT NONE
+      !
+      TYPE(rism3d_type)            :: obj
+      INTEGER,          INTENT(IN) :: nmol
+      CHARACTER(LEN=*), INTENT(IN) :: slabel(:)
+      CHARACTER(LEN=*), INTENT(IN) :: molfile(:)
+      REAL(DP),         INTENT(IN) :: dens1(:)
+      REAL(DP),         INTENT(IN) :: dens2(:)
+      REAL(DP),         INTENT(IN) :: ecutsolv
+      !
+      TYPE(solvent_type), ALLOCATABLE :: solvents(:)
+      INTEGER :: i
+      !
+      ALLOCATE(solvents(nmol))
+      !
+      DO i = 1, nmol
+          CALL qes_init (solvents(i), "solvent", TRIM(slabel(i)), TRIM(molfile(i)), dens1(i), dens2(i))
+      ENDDO
+      !
+      CALL qes_init (obj, "rism3d", nmol, solvents, ecutsolv)
+      !
+      DO i = 1, nmol
+          CALL qes_reset (solvents(i))
+      ENDDO
+      !
+      DEALLOCATE(solvents)
+      !
+    END SUBROUTINE qexsd_init_rism3d
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE qexsd_init_rismlaue(obj, both_hands, nfit, pot_ref, charge, &
+                                   right_start,  right_expand, &
+                                   right_buffer, right_buffer_u, right_buffer_v, &
+                                   left_start,   left_expand,  &
+                                   left_buffer,  left_buffer_u,  left_buffer_v)
+      !------------------------------------------------------------------------
+      IMPLICIT NONE
+      !
+      TYPE(rismlaue_type)  :: obj
+      LOGICAL,  INTENT(IN) :: both_hands
+      INTEGER,  INTENT(IN) :: nfit
+      INTEGER,  INTENT(IN) :: pot_ref
+      REAL(DP), INTENT(IN) :: charge
+      REAL(DP), INTENT(IN) :: right_start
+      REAL(DP), INTENT(IN) :: right_expand
+      REAL(DP), INTENT(IN) :: right_buffer
+      REAL(DP), INTENT(IN) :: right_buffer_u
+      REAL(DP), INTENT(IN) :: right_buffer_v
+      REAL(DP), INTENT(IN) :: left_start
+      REAL(DP), INTENT(IN) :: left_expand
+      REAL(DP), INTENT(IN) :: left_buffer
+      REAL(DP), INTENT(IN) :: left_buffer_u
+      REAL(DP), INTENT(IN) :: left_buffer_v
+      !
+      CALL qes_init (obj, "rismlaue", both_hands, nfit, pot_ref, charge, &
+                     right_start,  right_expand, &
+                     right_buffer, right_buffer_u, right_buffer_v, &
+                     left_start,   left_expand,  &
+                     left_buffer,  left_buffer_u,  left_buffer_v)
+      !
+    END SUBROUTINE qexsd_init_rismlaue
 
  END MODULE qexsd_init

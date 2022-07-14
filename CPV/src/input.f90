@@ -777,6 +777,7 @@ MODULE input
      USE input_parameters, ONLY : step_pen, A_pen, alpha_pen, sigma_pen
      USE input_parameters, ONLY : vdw_corr, london, london_s6, london_rcut, &
                                   ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr
+     USE input_parameters, ONLY : exx_fraction, screening_parameter
      !
      USE constants,        ONLY : amu_au, pi
      USE control_flags,    ONLY : lconstrain, tpre, thdyn, tksw
@@ -806,6 +807,7 @@ MODULE input
      USE control_flags,    ONLY : llondon, ts_vdw_ => ts_vdw
      USE london_module,    ONLY : init_london, scal6, lon_rcut
      USE tsvdw_module,     ONLY : vdw_isolated, vdw_econv_thr
+     USE xc_lib,           ONLY : xclib_set_exx_fraction, set_screening_parameter
      !
      IMPLICIT NONE
      !
@@ -983,6 +985,14 @@ MODULE input
         vdw_isolated = ts_vdw_isolated
         vdw_econv_thr= ts_vdw_econv_thr
      END IF
+     !
+     ! ... must be done AFTER dft is read from PP files and initialized
+     ! ... or else the two following parameters will be overwritten
+     !
+     IF (exx_fraction >= 0.0_DP) CALL xclib_set_exx_fraction (exx_fraction)
+     !
+     IF (screening_parameter >= 0.0_DP) &
+       & CALL set_screening_parameter(screening_parameter)
      !
      RETURN
      !

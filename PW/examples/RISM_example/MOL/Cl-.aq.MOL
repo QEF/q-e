@@ -1,0 +1,40 @@
+<MOL version="1.0.0">
+  <!--
+    Copyright (C) 2015 Satomichi Nishihara [nisihara225@gmail.com]
+  -->
+  <MOL_INFO>
+    Aqueous chloride ion.
+    (D.E.Smith et al., J. Chem. Phys. 1994, 100, 3757)
+  </MOL_INFO>
+  <MOL_HEADER author="S.Nishihara"
+              date="13Apr2015"
+              comment="Cl-(aq)"
+              formula="Cl-"
+              has_charge="T"
+              has_lj="T"
+              number_of_atoms="1"/>
+  <MOL_MASS type="real" size="1" columns="1" UNITS="g/mol">
+    35.4527
+  </MOL_MASS>
+  <MOL_DENSITY type="real" size="1" columns="1" UNITS="mol/L">
+    1.0
+  </MOL_DENSITY>
+  <MOL_ELEMENT type="character" size="1" columns="1" len="2">
+Cl
+  </MOL_ELEMENT>
+  <MOL_XYZ type="real" size="3" columns="3" UNITS="angstrom">
+     0.00000  0.00000  0.00000
+  </MOL_XYZ>
+  <MOL_CHARGE type="real" size="1" columns="1">
+    -1.0000
+  </MOL_CHARGE>
+  <MOL_LJ>
+    <MOL_EPSILON type="real" size="1" columns="1" UNITS="kcal/mol">
+      0.1001
+    </MOL_EPSILON>
+    <MOL_SIGMA type="real" size="1" columns="1" UNITS="angstrom">
+      4.4000
+    </MOL_SIGMA>
+  </MOL_LJ>
+</MOL>
+

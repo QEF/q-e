@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,7 @@ PROGRAM hp_main
   USE environment,       ONLY : environment_start, environment_end
   USE ions_base,         ONLY : nat, ityp, atm, tau, amass
   USE io_files,          ONLY : tmp_dir
-  USE control_flags,     ONLY : dfpt_hub, use_para_diag
+  USE control_flags,     ONLY : dfpt_hub, use_para_diag, use_gpu
   USE ldaU_hp,           ONLY : perturbed_atom, start_q, last_q, nqs, code, &
                                 compute_hp, sum_pertq, perturb_only_atom,   &
                                 determine_num_pert_only, tmp_dir_save
@@ -29,6 +29,9 @@ PROGRAM hp_main
   !
   INTEGER :: iq, na, ipol
   LOGICAL :: do_iq, setup_pw
+  LOGICAL,EXTERNAL :: check_gpu_support 
+  !
+  use_gpu = check_gpu_support()
   !
   ! Initialize MPI, clocks, print initial messages
   !
@@ -240,11 +243,13 @@ SUBROUTINE hp_print_preamble()
   !
   IMPLICIT NONE
   !
-  WRITE( stdout, '(/5x,"=--------------------------------------------------------------------------=")')
-  WRITE( stdout, '(/7x,"Calculation of Hubbard parameters from DFPT; please cite this program as")')
-  WRITE( stdout, '(/7x,"I. Timrov, N. Marzari, and M. Cococcioni, Phys. Rev. B 98,  085127 (2018)")')
-  WRITE( stdout, '(/7x,"I. Timrov, N. Marzari, and M. Cococcioni, Phys. Rev. B 103, 045141 (2021)")')
-  WRITE( stdout, '(/5x,"=--------------------------------------------------------------------------=")')
+  WRITE( stdout, '(/5x,"=---------------------------------------------------------------------------=")')
+  WRITE( stdout, '(/5x,"      Calculation of Hubbard parameters using the HP code based on DFPT      ")')
+  WRITE( stdout, '(/5x,"          Please cite the following papers when using this program:          ")')
+  WRITE( stdout, '(/5x,"            - HP code : Comput. Phys. Commun. 279, 108455 (2022).            ")')
+  WRITE( stdout, '(/5x,"            - Theory  : Phys. Rev. B 98,  085127 (2018) and                  ")')
+  WRITE( stdout, '(/5x,"                        Phys. Rev. B 103, 045141 (2021).                     ")')
+  WRITE( stdout, '(/5x,"=-----------------------------------------------------------------------------=")')
   !
   RETURN
   !

@@ -44,11 +44,11 @@ subroutine read_xml_input ()
 ! 
 use qes_read_module,  ONLY : qes_read 
 use qes_types_module, ONLY : band_structure_type, atomic_structure_type, symmetries_type, basis_set_type
-#if defined (__outfoxed)
-  USE     dom,   ONLY : parseFile, node, item, getElementsByTagname, &
+#if defined (__fox)
+  USE FoX_dom,   ONLY : parseFile, node, item, getElementsByTagname, &
                         destroy
 #else
-  USE FoX_dom,   ONLY : parseFile, node, item, getElementsByTagname, &
+  USE     dom,   ONLY : parseFile, node, item, getElementsByTagname, &
                         destroy
 #endif
 use input_parameters, ONLY : nkstot 

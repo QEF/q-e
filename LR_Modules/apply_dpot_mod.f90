@@ -41,6 +41,8 @@ MODULE apply_dpot_mod
     ALLOCATE(psi_r(dffts%nnr, npol), STAT=ierr)
     IF (ierr /= 0) CALL errore('apply_dpot_allocate', 'Error allocating psi_r', 1)
     !
+    !$acc enter data create(psi_r(1:dffts%nnr, 1:npol))
+    !
     IF (dffts%has_task_groups) THEN
       ALLOCATE(tg_dv(dffts%nnr_tg, nspin_mag), STAT=ierr)
       IF (ierr /= 0) CALL errore('apply_dpot_allocate', 'Error allocating tg_dv', 1)
@@ -65,6 +67,8 @@ MODULE apply_dpot_mod
     !
     IF (.NOT. is_allocated) RETURN
     is_allocated = .FALSE.
+    !
+    !$acc exit data delete(psi_r)
     !
     DEALLOCATE(psi_r, STAT=ierr)
     IF (ierr /= 0) CALL errore('apply_dpot_deallocate', 'Error deallocating psi_r', 1)
@@ -119,6 +123,9 @@ MODULE apply_dpot_mod
     !
     CALL start_clock("apply_dpot_b")
     !
+    !$acc enter data copyin(psi)
+    !$acc update device(dv(1:dffts%nnr, 1:nspin_mag))
+    !
     IF (.NOT. is_allocated) CALL apply_dpot_allocate()
     !
     incr = 1
@@ -141,7 +148,9 @@ MODULE apply_dpot_mod
       ENDIF ! noncolin
     ENDIF ! has_task_groups
     !
+    !$acc kernels present(dvpsi)
     dvpsi = (0.0_DP, 0.0_DP)
+    !$acc end kernels
     !
     DO ibnd = 1, nbnd, incr
       IF (dffts%has_task_groups) THEN
@@ -154,6 +163,9 @@ MODULE apply_dpot_mod
         CALL cft_wave(ik, dvpsi(:, ibnd), psi_r, -1)
       ENDIF ! has_task_groups
     ENDDO ! ibnd
+    !
+    !$acc update self(dvpsi(1:npwx*npol, 1:nbnd))
+    !$acc exit data delete(psi)
     !
     CALL stop_clock("apply_dpot_b")
     !
