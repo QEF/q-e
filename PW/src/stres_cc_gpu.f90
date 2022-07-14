@@ -32,7 +32,6 @@ SUBROUTINE stres_cc_gpu( sigmaxcc )
   USE device_memcpy_m,        ONLY : dev_memcpy
 #endif
   !
-  !
   IMPLICIT NONE
   !
   ! output
@@ -131,7 +130,7 @@ SUBROUTINE stres_cc_gpu( sigmaxcc )
         !
         ! non diagonal term (g=0 contribution missing)
         !
-        !$acc parallel loop
+        !$acc parallel loop reduction(+:sigma1,sigma2,sigma3,sigma4,sigma5,sigma6)
         DO ng = gstart, ngm
           !
           sigma_rid = DBLE(CONJG(vaux(ng,1)) &

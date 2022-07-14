@@ -645,7 +645,7 @@ SUBROUTINE cutoff_stres_sigmahar( psic_G, sigmahar )
         beta = G2lzo2Gp*(1.0d0-cutoff_2D(ng))/cutoff_2D(ng)
      ENDIF
      g2 = gg (ng) * tpiba2
-     shart = psic_G(dfftp%nl(ng)) * CONJG(psic_G(dfftp%nl(ng))) / g2 * cutoff_2D(ng)
+     shart = psic_G(ng) * CONJG(psic_G(ng)) / g2 * cutoff_2D(ng)
      DO l = 1, 3
         IF (l == 3) THEN
            fact = 1.0d0
@@ -689,20 +689,17 @@ SUBROUTINE cutoff_stres_sigmahar_gpu( psicG_d, sigmahar )
   ! ... local variables
   !
   INTEGER :: ng, nt, l, m
-  INTEGER, POINTER :: nl_d(:)
   REAL(DP) :: Gp, G2lzo2Gp, beta, shart, g2, fact
   REAL(DP) :: sigmahar11, sigmahar31, sigmahar21, &
               sigmahar32, sigmahar22, sigmahar33
   REAL(DP), ALLOCATABLE :: cutoff2D_d(:)
   !
 #if defined(__CUDA)
-  attributes(DEVICE) :: psicG_d, cutoff2D_d, nl_d
+  attributes(DEVICE) :: psicG_d, cutoff2D_d
 #endif
   !
   ALLOCATE( cutoff2D_d(ngm) )
   cutoff2D_d = cutoff_2D
-  !
-  nl_d => dfftp%nl_d
   !
   sigmahar11 = 0._DP  ;  sigmahar31 = 0._DP
   sigmahar21 = 0._DP  ;  sigmahar32 = 0._DP
@@ -721,7 +718,7 @@ SUBROUTINE cutoff_stres_sigmahar_gpu( psicG_d, sigmahar )
      !
      g2 = gg_d(ng) * tpiba2
      !
-     shart = DBLE(psicG_d(nl_d(ng))*CONJG(psicG_d(nl_d(ng)))) /&
+     shart = DBLE(psicG_d(ng)*CONJG(psicG_d(ng))) /&
              g2 * cutoff2D_d(ng)
      !
      fact = 1._DP - beta

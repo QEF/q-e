@@ -150,7 +150,7 @@ SUBROUTINE stres_loc_gpu( sigmaloc )
      sigma11 = 0._DP ; sigma21 = 0._DP ; sigma22 = 0._DP
      sigma31 = 0._DP ; sigma32 = 0._DP ; sigma33 = 0._DP
      !
-     !$acc parallel loop
+     !$acc parallel loop reduction(+:sigma11,sigma21,sigma22,sigma31,sigma32,sigma33)
      DO ng = 1, ngm
        spart = DBLE(CONJG(rhog(ng,1)) * strf_d(ng,nt)) * 2.0_DP *&
                dvloc_d(igtongl_d(ng))

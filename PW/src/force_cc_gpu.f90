@@ -123,7 +123,7 @@ SUBROUTINE force_cc_gpu( forcecc )
               forcelc_y = 0.d0
               forcelc_z = 0.d0
 
-              !$acc parallel loop
+              !$acc parallel loop reduction(+:forcelc_x,forcelc_y,forcelc_z)
               do ig = gstart, ngm
                  arg = (g_d (1, ig) * tau1 + g_d (2, ig) * tau2 &
                       + g_d (3, ig) * tau3 ) * tpi
