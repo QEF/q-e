@@ -311,14 +311,20 @@ CONTAINS
                 end if
                 n = n+1
              else
-                if ( in_attribute ) curr%attr = curr%attr // line(n:n) 
-                if ( in_data      ) curr%data = curr%data // line(n:n) 
+                if ( in_attribute ) then
+                   if ( .not. allocated(curr%attr) ) curr%attr = ' '
+                   curr%attr = curr%attr // line(n:n) 
+                end if
+                if ( in_data      ) then
+                   if ( .not. allocated(curr%data) ) curr%data = ' '
+                   curr%data = curr%data // line(n:n) 
+                end if
                 n = n+1
              end if
           end if
        end do scanline
        ! if data extends over more than one line, add space between lines
-       if ( in_data ) curr%data = curr%data // ' '
+       if ( in_data .and. allocated(curr%data) ) curr%data = curr%data // ' '
     end do readline
     !
 10  continue
@@ -367,26 +373,39 @@ CONTAINS
     !
   end subroutine add_to_list
   !
-  recursive subroutine destroy ( curr )
+  recursive subroutine destroy ( curr, iun )
+    !
+    ! optional variable "iun" added for testing and debugging purposes:
+    ! if present, tags are printed to unit iun while they are destroyed
     !
     implicit none
     type(node), pointer :: curr, next
     type(nodelist), pointer :: linklist
+    integer, intent(in), optional :: iun
     !
     nlevel = nlevel + 1
     ! print *, nlevel, '<', curr%tag,'>, ',curr%attr
     ! print *, curr%data(1:min(80,len(curr%data)))
+    if ( present(iun ) ) then
+       if ( allocated(curr%attr) ) then
+          write(iun,'("<",A," ",A,">")') trim(curr%tag),trim(curr%attr)
+       else
+          write(iun,'("<",A,">")') trim(curr%tag)
+       end if
+       if ( allocated(curr%data) ) write(iun,'(A)') trim(curr%data)
+    end if
     if ( allocated( curr%linklist ) ) then
        linklist => curr%linklist
        next  => linklist%node
        lista: do
-          call destroy ( next )
+          call destroy ( next, iun )
           if ( .not. associated( linklist%nextlist ) ) exit lista
           linklist => linklist%nextlist
           next  =>  linklist%node
        end do lista
     end if
     !
+    if ( present(iun ) ) write(iun,'("</",A,">")') trim(curr%tag)
     nlevel = nlevel - 1
     if ( associated(curr%prev) ) then
        next => curr%prev
