@@ -52,15 +52,12 @@ SUBROUTINE force_cc_gpu( forcecc )
   COMPLEX(DP), ALLOCATABLE :: vaux(:,:)
   REAL(DP) ::  prod, arg, fact
   !
-  real(DP), pointer :: rhocg_d (:),r_d(:), rab_d(:), rhoc_d(:) 
-  integer, pointer :: nl_d(:)
+  real(DP), pointer :: rhocg_d (:),r_d(:), rab_d(:), rhoc_d(:)
   real(DP):: forcelc_x, forcelc_y, forcelc_z, tau1, tau2, tau3
   integer           :: ierrs(5)
   integer           :: maxmesh
 #if defined(__CUDA)
-  attributes(DEVICE) :: rhocg_d, nl_d, r_d, rab_d, rhoc_d 
-  !
-  nl_d => dfftp%nl_d
+  attributes(DEVICE) :: rhocg_d, r_d, rab_d, rhoc_d
   !
   forcecc(:,:) = 0.d0
   !
