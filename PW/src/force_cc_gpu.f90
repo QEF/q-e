@@ -54,7 +54,7 @@ SUBROUTINE force_cc_gpu( forcecc )
   !
   real(DP), pointer :: rhocg_d (:),r_d(:), rab_d(:), rhoc_d(:)
   real(DP):: forcelc_x, forcelc_y, forcelc_z, tau1, tau2, tau3
-  integer           :: ierrs(5)
+  integer           :: ierrs(4)
   integer           :: maxmesh
 #if defined(__CUDA)
   attributes(DEVICE) :: rhocg_d, r_d, rab_d, rhoc_d
@@ -96,10 +96,10 @@ SUBROUTINE force_cc_gpu( forcecc )
   ! g = 0 term gives no contribution
   !
   maxmesh = MAXVAL(msh(1:ntyp)) 
-  CALL dev_buf%lock_buffer(rhocg_d, ngl, ierrs(2) )
-  CALL dev_buf%lock_buffer(r_d, maxmesh, ierrs(3) )
-  CALL dev_buf%lock_buffer(rab_d, maxmesh, ierrs(4) )
-  CALL dev_buf%lock_buffer(rhoc_d, maxmesh, ierrs(5) )
+  CALL dev_buf%lock_buffer(rhocg_d, ngl, ierrs(1) )
+  CALL dev_buf%lock_buffer(r_d, maxmesh, ierrs(2) )
+  CALL dev_buf%lock_buffer(rab_d, maxmesh, ierrs(3) )
+  CALL dev_buf%lock_buffer(rhoc_d, maxmesh, ierrs(4) )
   IF (ANY(ierrs /= 0)) CALL errore('force_cc_gpu', 'cannot allocate buffers', ABS(MAXVAL(ierrs)) )
   !
   ! ... core correction term: sum on g of omega*ig*exp(-i*r_i*g)*n_core(g)*vxc
@@ -149,9 +149,9 @@ SUBROUTINE force_cc_gpu( forcecc )
   !$acc end data
   DEALLOCATE( vxc, vaux )
   CALL dev_buf%release_buffer(rhocg_d, ierrs(1) )
-  CALL dev_buf%release_buffer(r_d, ierrs(3) )
-  CALL dev_buf%release_buffer(rab_d, ierrs(4) )
-  CALL dev_buf%release_buffer(rhoc_d, ierrs(5) )
+  CALL dev_buf%release_buffer(r_d, ierrs(2) )
+  CALL dev_buf%release_buffer(rab_d, ierrs(3) )
+  CALL dev_buf%release_buffer(rhoc_d, ierrs(4) )
 #endif
   !
   RETURN
