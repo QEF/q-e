@@ -58,7 +58,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   complex(DP) ::  dynwrk (3 * nat, 3 * nat), ps_nc(2)
   ! auxiliary dynamical matrix
 
-  integer :: ik, ikk, ikq, ibnd, jbnd, ijkb0, ijkb0b, ih, jh, ikb, &
+  integer :: ik, ikk, ikq, ibnd, jbnd, ijkb0, ijkbnh, ijkb0b, ijkbnhb, ih, jh, ikb, &
        jkb, ipol, jpol, startb, lastb, na, nb, nt, ntb, nu_i, nu_j, &
        na_icart, na_jcart, mu, nu, is, js, ijs
   ! counters
@@ -208,28 +208,26 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
         do na = 1, nat
            if (ityp (na) .eq.nt) then
               ijkb0 = ofsbeta(na)
+              ijkbnh = ijkb0 + nh(nt)
               do ipol = 1, 3
                  mu = 3 * (na - 1) + ipol
                  do ibnd = 1, nbnd_occ (ikk)
-                    aux1 (:) = (0.d0, 0.d0)
-                    do ih = 1, nh (nt)
-                       ikb = ijkb0 + ih
-                       do jbnd = startb, lastb
-                          IF (noncolin) THEN
-                             aux1 (jbnd) = aux1 (jbnd) + &
-                            CONJG(alpq(ipol,ik)%nc(ikb,1,jbnd))*ps1_nc(ikb,1,ibnd)+&
-                            CONJG(becq(ik)%nc(ikb,1,jbnd))*ps2_nc(ikb,1,ibnd,ipol)+&
-                            CONJG(alpq(ipol,ik)%nc(ikb,2,jbnd))*ps1_nc(ikb,2,ibnd)+&
-                            CONJG(becq(ik)%nc(ikb,2,jbnd))*ps2_nc(ikb,2,ibnd,ipol)
-                          ELSE
-                             aux1 (jbnd) = aux1 (jbnd) + &
-                               CONJG(alpq(ipol,ik)%k(ikb,jbnd))*ps1(ikb,ibnd)+&
-                               CONJG(becq(ik)%k(ikb,jbnd))*ps2(ikb,ibnd,ipol)
-                          END IF
-                       enddo
-                    enddo
-                    do ntb = 1, ntyp
-                       do nb = 1, nat
+                     aux1 (:) = (0.d0, 0.d0)
+                     do jbnd = startb, lastb
+                        IF (noncolin) THEN
+                           aux1 (jbnd) = aux1 (jbnd) + &
+                           dot_product(alpq(ipol,ik)%nc(ijkb0 + 1 :ijkbnh,1,jbnd),ps1_nc(ijkb0 + 1 :ijkbnh,1, ibnd))+& 
+                           dot_product(becq(ik)%nc(ijkb0 + 1 :ijkbnh,1,jbnd),ps2_nc(ijkb0 + 1 :ijkbnh,1,ibnd,ipol))+& 
+                           dot_product(alpq(ipol,ik)%nc(ijkb0 + 1 :ijkbnh,2,jbnd),ps1_nc(ijkb0 + 1 :ijkbnh,2, ibnd))+&
+                           dot_product(becq(ik)%nc(ijkb0 + 1 :ijkbnh,1,jbnd),ps2_nc(ijkb0 + 1:ijkbnh,1,ibnd,ipol))
+                        ELSE
+                           aux1 (jbnd) = aux1 (jbnd) + &
+                           dot_product(alpq(ipol,ik)%k(ijkb0 + 1:ijkbnh,jbnd),ps1(ijkb0 + 1:ijkbnh,ibnd))+&
+                           dot_product(becq(ik)%k(ijkb0 + 1:ijkbnh,jbnd),ps2(ijkb0 + 1:ijkbnh,ibnd,ipol))
+                        END IF
+                     enddo
+                     do ntb = 1, ntyp
+                        do nb = 1, nat
                           if (ityp (nb) == ntb) then
                              ijkb0b = ofsbeta(nb)
                              do ih = 1, nh (ntb)
