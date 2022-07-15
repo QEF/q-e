@@ -264,7 +264,7 @@ SUBROUTINE phq_readin()
   trans        = .TRUE.
   lrpa         = .FALSE.
   lnoloc       = .FALSE.
-  epsil        = .FALSE.
+  epsil        = .TRUE.
   zeu          = .TRUE.
   zue          = .FALSE.
   fpol         = .FALSE.
