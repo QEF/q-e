@@ -19,7 +19,7 @@ MODULE scf
   USE buffers,         ONLY : open_buffer, close_buffer, get_buffer, save_buffer
   USE xc_lib,          ONLY : xclib_dft_is
   USE fft_base,        ONLY : dfftp
-  USE fft_interfaces,  ONLY : invfft
+  USE fft_rho,         ONLY : rho_g2r
   USE gvect,           ONLY : ngm
   USE gvecs,           ONLY : ngms
   USE ions_base,       ONLY : ntyp => nsp
@@ -308,9 +308,6 @@ CONTAINS
    !! It fills a \(\text{scf_type}\) object starting from a 
    !! \(\text{mix_type}\) one.
    !
-   USE wavefunctions,        ONLY : psic
-   USE control_flags,        ONLY : gamma_only
-   !
    IMPLICIT NONE
    !
    TYPE(mix_type), INTENT(IN) :: rho_m
@@ -319,26 +316,11 @@ CONTAINS
    INTEGER :: is
    !   
    rho_s%of_g(1:ngms,:) = rho_m%of_g(1:ngms,:)
-   ! define rho_s%of_r 
+   CALL rho_g2r( dfftp, rho_s%of_g, rho_s%of_r )
    !
-   DO is = 1, nspin
-      psic(:) = ( 0.D0, 0.D0 )
-      psic(dfftp%nl(:)) = rho_s%of_g(:,is)
-      IF ( gamma_only ) psic(dfftp%nlm(:)) = CONJG( rho_s%of_g(:,is) )
-      CALL invfft( 'Rho', psic, dfftp )
-      rho_s%of_r(:,is) = psic(:)
-   ENDDO
-   !
-   IF (xclib_dft_is('meta') .OR. lxdm) THEN
+   IF ( xclib_dft_is('meta') .OR. lxdm ) THEN
       rho_s%kin_g(1:ngms,:) = rho_m%kin_g(:,:)
-      ! define rho_s%kin_r 
-      DO is = 1, nspin
-         psic(:) = ( 0.D0, 0.D0 )
-         psic(dfftp%nl(:)) = rho_s%kin_g(:,is)
-         IF ( gamma_only ) psic(dfftp%nlm(:)) = CONJG( rho_s%kin_g(:,is) )
-         CALL invfft( 'Rho', psic, dfftp )
-         rho_s%kin_r(:,is) = psic(:)
-      ENDDO
+      CALL rho_g2r( dfftp, rho_s%kin_g, rho_s%kin_r )
    ENDIF
    !
    IF (lda_plus_u_nc)  rho_s%ns_nc(:,:,:,:) = rho_m%ns_nc(:,:,:,:)
@@ -466,9 +448,6 @@ CONTAINS
  SUBROUTINE high_frequency_mixing( rhoin, input_rhout, alphamix )
    !-------------------------------------------------------------------
    !
-   USE wavefunctions,    ONLY : psic
-   USE control_flags,    ONLY : gamma_only
-   !
    IMPLICIT NONE
    !
    TYPE (scf_type), INTENT(INOUT) :: rhoin
@@ -483,26 +462,12 @@ CONTAINS
       !
       rhoin%of_g = rhoin%of_g + alphamix * (input_rhout%of_g-rhoin%of_g)
       rhoin%of_g(1:ngms,1:nspin) = (0.d0,0.d0)
-      ! define rho_s%of_r 
-      DO is = 1, nspin
-         psic(:) = ( 0.D0, 0.D0 )
-         psic(dfftp%nl(:)) = rhoin%of_g(:,is)
-         IF ( gamma_only ) psic(dfftp%nlm(:)) = CONJG( rhoin%of_g(:,is) )
-         CALL invfft( 'Rho', psic, dfftp )
-         rhoin%of_r(:,is) = psic(:)
-      ENDDO
+      CALL rho_g2r( dfftp, rhoin%of_g, rhoin%of_r )
       !
       IF (xclib_dft_is('meta') .OR. lxdm) THEN
          rhoin%kin_g = rhoin%kin_g + alphamix * ( input_rhout%kin_g-rhoin%kin_g)
          rhoin%kin_g(1:ngms,1:nspin) = (0.d0,0.d0)
-         ! define rho_s%of_r 
-         DO is = 1, nspin
-            psic(:) = ( 0.D0, 0.D0 )
-            psic(dfftp%nl(:)) = rhoin%kin_g(:,is)
-            IF ( gamma_only ) psic(dfftp%nlm(:)) = CONJG( rhoin%kin_g(:,is) )
-            CALL invfft( 'Rho', psic, dfftp )
-            rhoin%kin_r(:,is) = psic(:)
-         ENDDO
+         CALL rho_g2r( dfftp, rhoin%kin_g, rhoin%kin_r )
       ENDIF
       !
    ELSE
