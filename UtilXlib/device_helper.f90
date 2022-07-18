@@ -105,7 +105,7 @@ DOUBLE PRECISION FUNCTION MYDDOT(N,DX,INCX,DY,INCY)
 
 END FUNCTION MYDDOT
 
-! this can be useful inside kernels, as the result is on device
+! this is analogus to MYDDOT, but the result is on device
 DOUBLE PRECISION FUNCTION MYDDOT_VECTOR_GPU(N,DX,DY)
 #if defined(__CUDA)
 !$acc routine(MYDDOT_VECTOR_GPU) vector
@@ -114,14 +114,27 @@ DOUBLE PRECISION FUNCTION MYDDOT_VECTOR_GPU(N,DX,DY)
     DOUBLE PRECISION, INTENT(IN) :: DX(*),DY(*)
     DOUBLE PRECISION :: RES
 #if defined (__CUDA)
-    INTEGER :: I
+    INTEGER :: I, M, MP1
     RES = 0.0d0
-    !$acc data present(DX,DY)
+    MYDDOT_VECTOR_GPU = 0.0d0 
+    IF (N.LE.0) RETURN
+    ! code for unequal increments or equal increments not equal to 1 NOT implemented 
+    M = mod(N,5)
+    IF(M.NE.0) THEN
+      !$acc loop vector reduction(+:RES)
+      DO I = 1, M
+        RES = RES + DX(I) * DY(I) 
+      END DO 
+      IF (N.LT.5) THEN
+        MYDDOT_VECTOR_GPU = RES
+        RETURN
+      END IF
+    END IF 
+    MP1 = M + 1 
     !$acc loop vector reduction(+:RES)
-    DO I = 1, N
-      RES = RES + DX(I) * DY(I)
+    DO I = MP1, n, 5
+      RES = RES + DX(I)*DY(I) + DX(I+1)*DY(I+1) + DX(I+2)*DY(I+2) + DX(I+3)*DY(I+3) + DX(I+4)*DY(I+4)
     END DO 
-    !$acc end data
     MYDDOT_VECTOR_GPU = RES
 #else
     DOUBLE PRECISION DDOT

@@ -36,6 +36,7 @@
 !  A Parallel Orbital-updating Based Plane Wave Basis Method. J. Comp. Phys. 348, 482-492 (2017).
 !
 ! The file is written mainly by Stefano de Gironcoli and Yan Pan.
+! * GPU porting Ivan Carnimeo
 !
 ! The following file is for solving step 2 of the parallel orbital updating algorithm.
 !
@@ -81,19 +82,31 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
   !
   COMPLEX(DP), ALLOCATABLE ::  b(:,:),                        & ! RHS for testing
                                p(:,:), hp(:,:), sp(:,:), z(:,:) ! additional working vetors
+  !$acc declare device_resident(b, p, hp, sp, z)
 
   COMPLEX(DP), ALLOCATABLE ::  spsi0vec (:,:) ! the product of spsi0 and a group of vectors
-
+  !$acc declare device_resident(spsi0vec)
+  
   REAL(DP), ALLOCATABLE :: g0(:), g1(:), g2(:), alpha(:), gamma(:), ethr_cg(:), ff(:), ff0(:)
+  !$acc declare device_resident(g0, g1, g2, alpha, gamma, ethr_cg, ff, ff0)
   INTEGER, ALLOCATABLE :: cg_iter(:)
+  !$acc declare device_resident(cg_iter)
+  INTEGER :: cg_iter_l ! cg_iter(l) (useful for some GPU optimization)
+  !
+  LOGICAL :: ff_check, ff0_check, g1_check, iter_check  ! exit iteration condition checks
+  !
   REAL(DP) :: beta, ee
   INTEGER  :: kdim, kdmx, i, l, block_size, done, nactive, nnew, newdone
   !
-  REAL(DP), EXTERNAL :: DDOT
+  REAL(DP), EXTERNAL :: MYDDOT_VECTOR_GPU
+  !$acc routine(MYDDOT_VECTOR_GPU) vector
+  !
 
   EXTERNAL  hs_psi, g_1psi
   ! hs_1psi( npwx, npw, psi, hpsi, spsi )
   ! hs_psi( npwx, npw, nvec, psi, hpsi, spsi )
+  !
+  INTEGER :: ii ! kernel indeces
   !
   CALL start_clock( 'pcg' ); !write (6,*) ' enter pcg' , e(1:2), 'npol = ', npol ; FLUSH(6)
   !
@@ -109,32 +122,62 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
   !
   done    = 0  ! the number of correction vectors already solved
   nactive = 0  ! the number of correction vectors currently being updated
+
+  !$acc kernels 
   cg_iter = 0  ! how many iteration each active vector has completed (<= maxter)
+  !$acc end kernels
 
   MAIN_LOOP: & ! This is a continuous loop. It terminates only when nactive vanishes
   DO
      nnew = min(done+block_size,nvec)-(done+nactive) ! number of new corrections to be added to the seach
-
      if ( nnew > 0 ) then    ! add nnew vectors to the active list
         !write(6,*) ' nnew =', nnew
+        !$acc parallel  
+        !$acc loop gang private(i)
         do l=nactive+1,nactive+nnew; i=l+done
            !write(6,*) ' l =',l,' i =',i
            !write (6,*) ' enter pcg' , e(i), 'npol = ', npol ; FLUSH(6)
-           b(:,l) = e(i) * spsi(:,i) - hpsi(:,i)               ! initial gradient and saved RHS for later
-           z(:,l) = b(:,l); call g_1psi(npwx,npw,z(:,l),e(i)) ! initial preconditioned gradient
+           !$acc loop vector
+           DO ii = 1, kdmx
+             b(ii,l) = e(i) * spsi(ii,i) - hpsi(ii,i)               ! initial gradient and saved RHS for later
+           END DO 
+           !$acc loop vector
+           DO ii = 1, kdmx
+             z(ii,l) = b(ii,l)
+           END DO 
         end do
+        !$acc end parallel
+
+        ! initial preconditioned gradient 
+        !$acc host_data use_device(z, e)
+        do l=nactive+1,nactive+nnew; i=l+done
+           call g_1psi(npwx,npw,z(:,l),e(i))     
+        end do
+        !$acc end host_data
+
      !- project on conduction bands
         CALL start_clock( 'pcg:ortho' )
-        CALL ZGEMM( 'C', 'N', nbnd, nnew, kdim, ONE, spsi0, kdmx, z(:,nactive+1), kdmx, ZERO, spsi0vec, nbnd )
+        !$acc host_data use_device(spsi0, psi0, z, spsi0vec)
+        CALL MYZGEMM( 'C', 'N', nbnd, nnew, kdim, ONE, spsi0, kdmx, z(:,nactive+1), &
+                                          kdmx, ZERO, spsi0vec, nbnd )
         CALL mp_sum( spsi0vec, intra_bgrp_comm )
-        CALL ZGEMM( 'N', 'N', kdim, nnew, nbnd, (-1.D0,0.D0), psi0, kdmx, spsi0vec, nbnd, ONE, z(:,nactive+1), kdmx )
+        CALL MYZGEMM( 'N', 'N', kdim, nnew, nbnd, (-1.D0,0.D0), psi0, kdmx, spsi0vec, &
+                                          nbnd, ONE, z(:,nactive+1), kdmx )
+        !$acc end host_data
         CALL stop_clock( 'pcg:ortho' )
      !-
-        do l=nactive+1,nactive+nnew; i=l+done
-           g0(l) = DDOT( 2*kdim, z(:,l), 1, b(:,l), 1 )
+
+        !$acc parallel loop 
+        do l=nactive+1,nactive+nnew
+           g0(l) = MYDDOT_VECTOR_GPU( 2*kdim, z(:,l), b(:,l) )
         end do
+
+        !$acc host_data use_device(g0)
         CALL mp_sum( g0(nactive+1:nactive+nnew), intra_bgrp_comm ) ! g0 = < initial z | initial gradient b >
-     
+        !$acc end host_data 
+
+        !$acc parallel 
+        !$acc loop gang private(i)
         do l=nactive+1,nactive+nnew; i=l+done
            !write(6,*) ' l =',l,' i =',i
            ff(l) = 0.d0 ; ff0(l) = ff(l)
@@ -146,13 +189,19 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
            ethr_cg(l) = max ( 0.01*ethr, ethr_cg(l) * g0(l) ) ! here we set the convergence of the correction
            !write(6,*) 'ethr_cg :', ethr_cg(l)
 
-           ! zero the trial solution
-           psi(:,i) = ZERO ; hpsi(:,i) = ZERO ; spsi(:,i) = ZERO
-           ! initial search direction
-           p(:,l) = z(:,l)
-
+           !$acc loop vector 
+           do ii = 1, kdmx
+             ! zero the trial solution
+             psi(ii,i) = ZERO 
+             hpsi(ii,i) = ZERO 
+             spsi(ii,i) = ZERO
+             ! initial search direction
+             p(ii,l) = z(ii,l)
+           end do 
            cg_iter(l) = 0 ! this is a new correction vector, reset its interation count
         end do
+        !$acc end parallel
+
         nactive = nactive + nnew
      end if
      !write(6,*) ' done  =',done, ' nactive  =',nactive
@@ -161,108 +210,184 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
 
      if ( nactive == 0 ) EXIT MAIN_LOOP               ! this is the only MAIN_LOOP EXIT condition
 
+     !$acc kernels 
      cg_iter(1:nactive) = cg_iter(1:nactive) + 1      ! update interation counters
+     !$acc end kernels
 
      CALL start_clock( 'pcg:hs_1psi' )
 !     do l = 1, nactive  ! THIS COULD/SHOULD BE A GLOBAL CALL (ONLY WITHIN ONE BGRP THOUGH)
 !        CALL hs_1psi( npwx, npw, p(:,l), hp(:,l), sp(:,l) ) ! apply H to a single wavefunction (no bgrp parallelization here!)
 !     end do
+     !$acc host_data use_device(p, hp, sp)
      CALL hs_psi( npwx, npw, nactive, p, hp, sp ) ! apply H to a single wavefunction (no bgrp parallelization here!)
+     !$acc end host_data
      CALL stop_clock( 'pcg:hs_1psi' )
 
+     !$acc parallel loop private(i)     
      do l = 1, nactive; i=l+done
-        gamma(l) = DDOT( 2*kdim, p(:,l), 1, hp(:,l), 1 ) - e(i) * DDOT( 2*kdim, p(:,l), 1, sp(:,l), 1 ) 
+        gamma(l) = MYDDOT_VECTOR_GPU( 2*kdim, p(:,l), hp(:,l) ) &
+                       - e(i) * MYDDOT_VECTOR_GPU( 2*kdim, p(:,l), sp(:,l) )
      end do
-     CALL mp_sum( gamma(1:nactive), intra_bgrp_comm ) ! gamma = < p | hp - e sp >
 
+     !$acc host_data use_device(gamma)
+     CALL mp_sum( gamma(1:nactive), intra_bgrp_comm ) ! gamma = < p | hp - e sp >
+     !$acc end host_data
+
+     !$acc parallel 
+     !$acc loop gang private(i)
      do l = 1, nactive; i=l+done
         !write(6,*) ' l =',l,' i =',i
 
         alpha(l) = g0(l)/gamma(l)
         !write(6,*) 'g0, gamma, alpha :', g0(l), gamma(l), alpha(l)
+        !$acc loop vector 
+        DO ii = 1, kdmx
+          psi(ii,i)  = psi(ii,i)  + alpha(l) * p(ii,l)     ! updated solution
+          hpsi(ii,i) = hpsi(ii,i) + alpha(l) * hp(ii,l)    ! updated solution
+          spsi(ii,i) = spsi(ii,i) + alpha(l) * sp(ii,l)    ! updated solution
+        END DO 
 
-        psi(:,i)  = psi(:,i)  + alpha(l) * p(:,l)     ! updated solution
-        hpsi(:,i) = hpsi(:,i) + alpha(l) * hp(:,l)    ! updated solution
-        spsi(:,i) = spsi(:,i) + alpha(l) * sp(:,l)    ! updated solution
-
-        g2(l) = DDOT(2*kdim,z(:,l),1,b(:,l),1) + e(i) * DDOT(2*kdim,z(:,l),1,spsi(:,i),1) - DDOT(2*kdim,z(:,l),1,hpsi(:,i),1)
+        g2(l) = MYDDOT_VECTOR_GPU(2*kdim,z(:,l),b(:,l)) &
+                + e(i) * MYDDOT_VECTOR_GPU(2*kdim,z(:,l),spsi(:,i)) &
+                - MYDDOT_VECTOR_GPU(2*kdim,z(:,l),hpsi(:,i))
      end do
+     !$acc end parallel
+
+     !$acc host_data use_device(g2)
      CALL mp_sum( g2(1:nactive), intra_bgrp_comm )    ! g2 = < old z | new gradient b + e spsi - hpsi >
-     do l = 1, nactive; i=l+done                      ! update the preconditioned gradient
-        z(:,l) = b(:,l) + e(i) * spsi(:,i) - hpsi(:,i); call g_1psi(npwx,npw,z(:,l),e(i))
+     !$acc end host_data
+
+     !$acc parallel loop collapse(2) private(i)
+     do l = 1, nactive                                ! update the preconditioned gradient
+        DO ii = 1, kdmx
+          i=l+done
+          z(ii,l) = b(ii,l) + e(i) * spsi(ii,i) - hpsi(ii,i) 
+        END DO 
      end do
+
+     !$acc host_data use_device(z, e)
+     do l = 1, nactive; i=l+done                      ! update the preconditioned gradient
+        call g_1psi(npwx,npw,z(:,l),e(i))
+     end do
+     !$acc end host_data
+
   !- project on conduction bands
      CALL start_clock( 'pcg:ortho' )
-     CALL ZGEMM( 'C', 'N', nbnd, nactive, kdim, ONE, spsi0, kdmx, z, kdmx, ZERO, spsi0vec, nbnd )
+     !$acc host_data use_device(spsi0, psi0, z, spsi0vec)
+     CALL MYZGEMM( 'C', 'N', nbnd, nactive, kdim, ONE, spsi0, kdmx, z, kdmx, ZERO, spsi0vec, nbnd )
      CALL mp_sum( spsi0vec, intra_bgrp_comm )
-     CALL ZGEMM( 'N', 'N', kdim, nactive, nbnd, (-1.D0,0.D0), psi0, kdmx, spsi0vec, nbnd, ONE, z, kdmx )
+     CALL MYZGEMM( 'N', 'N', kdim, nactive, nbnd, (-1.D0,0.D0), psi0, kdmx, spsi0vec, nbnd, ONE, z, kdmx )
+     !$acc end host_data
      CALL stop_clock( 'pcg:ortho' )
   !-
+     !$acc parallel loop private(i) 
      do l = 1, nactive; i=l+done
-        g1(l) = DDOT(2*kdim,z(:,l),1,b(:,l),1) + e(i) * DDOT(2*kdim,z(:,l),1,spsi(:,i),1) - DDOT(2*kdim,z(:,l),1,hpsi(:,i),1)
+        g1(l) = MYDDOT_VECTOR_GPU(2*kdim,z(:,l),b(:,l)) &
+                + e(i) * MYDDOT_VECTOR_GPU(2*kdim,z(:,l),spsi(:,i)) &
+                - MYDDOT_VECTOR_GPU(2*kdim,z(:,l),hpsi(:,i))
      end do
-     CALL mp_sum( g1(1:nactive), intra_bgrp_comm )   ! g1 = < new z | new gradient b + e spsi - hpsi >
 
+     !$acc host_data use_device(g1)
+     CALL mp_sum( g1(1:nactive), intra_bgrp_comm )   ! g1 = < new z | new gradient b + e spsi - hpsi >
+     !$acc end host_data 
+
+     !$acc parallel loop private(i) 
      do l = 1, nactive; i = l + done                 ! evaluate the function ff
-        ff(l) = -0.5_DP * ( e(i)*DDOT(2*kdim,psi(:,i),1,spsi(:,i),1)-DDOT(2*kdim,psi(:,i),1,hpsi(:,i),1) ) &
-                - DDOT(2*kdim,psi(:,i),1,b(:,l),1)
+        ff(l) = -0.5_DP * ( e(i)*MYDDOT_VECTOR_GPU(2*kdim,psi(:,i),spsi(:,i))&
+                                -MYDDOT_VECTOR_GPU(2*kdim,psi(:,i),hpsi(:,i)) ) &
+                - MYDDOT_VECTOR_GPU(2*kdim,psi(:,i),b(:,l))
      end do
+
+     !$acc host_data use_device(ff)
      CALL mp_sum( ff(1:nactive), intra_bgrp_comm )   ! function minimum -0.5 < psi | e spsi - hpsi > - < psi | b >
+     !$acc end host_data
 
      newdone = 0  ! number of correction vectors that converge (or are done) at this iteration
+     CALL start_clock( 'pcg:move1' )
      do l = 1, nactive; i = l + done
         !write (6,*) cg_iter(l), g1(l), ff(l),  gamma(l)
 
-        IF ( ff(l) > ff0(l) .AND. ff0(l) < 0.d0 ) THEN
-           psi(:,i)  = psi(:,i)  - alpha(l) * p(:,l) ! fallback solution: if last iter failed to improve ff0
-           hpsi(:,i) = hpsi(:,i) - alpha(l) * hp(:,l)! exit whitout updating and ...
-           spsi(:,i) = spsi(:,i) - alpha(l) * sp(:,l)! hope next time it'll be better
+        !$acc serial copyout(ff_check, ff0_check, g1_check, cg_iter_l, iter_check) copyin(maxter)
+        ff_check   = ff(l) > ff0(l)  
+        ff0_check  = ff0(l) < 0.d0 
+        g1_check   = ABS ( g1(l) ) < ethr_cg(l)  
+        cg_iter_l  = cg_iter(l)
+        iter_check = cg_iter_l == maxter 
+        !$acc end serial 
+
+        !write (6,*) cg_iter(l), g1(l), ff(l),  gamma(l)
+
+        IF ( ff_check .AND. ff0_check ) THEN
+           !$acc parallel loop 
+           DO ii = 1, kdmx
+             psi(ii,i)  = psi(ii,i)  - alpha(l) * p(ii,l) ! fallback solution: if last iter failed to improve ff0
+             hpsi(ii,i) = hpsi(ii,i) - alpha(l) * hp(ii,l)! exit whitout updating and ...
+             spsi(ii,i) = spsi(ii,i) - alpha(l) * sp(ii,l)! hope next time it'll be better
+           END DO 
         END IF
 
         !write(6,*) 'g0, g1, g2 :', g0(l), g1(l), g2(l)
         !write(6,*) 'ff0, ff : ', ff0(l), ff(l)
-        IF ( ABS ( g1(l) ) < ethr_cg(l) .OR. ( ff(l) > ff0(l) ) .OR. cg_iter(l) == maxter) THEN ! EXIT iterate
+        IF ( g1_check .OR. ff_check .OR. iter_check ) THEN ! EXIT iterate
            !write (6,*) ' exit  pcg loop'
            !write(6,*) ' l =',l,' i =',i
            !if ( cg_iter(l) == maxter.and. ABS(g1(l)) > ethr_cg(l))  write (6,*) 'CG not converged maxter exceeded', cg_iter(l), g1(l), g0(l), ethr_cg(l)
            !IF ( ABS ( g1(l) ) < ethr_cg(l)) write (6,*) 'CG correction converged ', cg_iter(l), g1(l), ethr_cg(l)
            !IF ( ABS ( g1(l) ) > g0(l)     ) write (6,*) 'CG not converged ', cg_iter(l), g1(l), g0(l), ethr_cg(l)
 
-           nhpsi = nhpsi + cg_iter(l)    ! update nhpsi count
-           IF (.NOT. (ABS(g1(l))< ethr_cg(l) .OR. (ff(l)>ff0(l)) ) .AND. cg_iter(l)==maxter) nhpsi = nhpsi + 1 ! because this would be the count
+           nhpsi = nhpsi + cg_iter_l    ! update nhpsi count
+           IF (.NOT. ( g1_check .OR. ff_check ) .AND. iter_check ) nhpsi = nhpsi + 1 ! because this would be the count
 
            newdone = newdone + 1         ! one more solution found (or no more active anyway)
+
            !write(6,*) ' newdone = ', newdone
-       
-           CALL start_clock( 'pcg:move' )
+
            !write(6,*) ' swapping converged psi/hpsi/spsi i = ',i, " with i' = ",done+newdone
            ! swap the terminated vector with the first in the list of the active ones
-           p (:,l) = psi (:,done+newdone) ; psi (:,done+newdone) = psi (:,i) ; psi (:,i) = p (:,l)
-           hp(:,l) = hpsi(:,done+newdone) ; hpsi(:,done+newdone) = hpsi(:,i) ; hpsi(:,i) = hp(:,l)
-           sp(:,l) = spsi(:,done+newdone) ; spsi(:,done+newdone) = spsi(:,i) ; spsi(:,i) = sp(:,l)
-           ee      = e(done+newdone)      ; e(done+newdone)      = e(i)      ; e(i)      = ee
+           !$acc kernels copyin(done, newdone)
+           !$acc loop independent
+           DO ii = 1, kdmx
+             p (ii,l) = psi (ii,done+newdone) ; psi (ii,done+newdone) = psi (ii,i) ; psi (ii,i) = p (ii,l)
+             hp(ii,l) = hpsi(ii,done+newdone) ; hpsi(ii,done+newdone) = hpsi(ii,i) ; hpsi(ii,i) = hp(ii,l)
+             sp(ii,l) = spsi(ii,done+newdone) ; spsi(ii,done+newdone) = spsi(ii,i) ; spsi(ii,i) = sp(ii,l)
+           END DO 
+
+           ee = e(done+newdone)       
+           e(done+newdone) = e(i)      
+           e(i) = ee
 
            !write(6,*) ' overwrite converged p/hp/etc l = ',l, ' with newdone = ',newdone
            ! move information of the swapped active vector in the right place to keep going
-           p(:,l) = p(:,newdone)          ; hp(:,l) = p(:,newdone)           ; sp(:,l) = sp(:,newdone)
-           b(:,l) = b(:,newdone) ; z(:,l) = z(:,newdone) ; ff0(l) = ff0(newdone) ; ff(l) = ff(newdone)
+           !$acc loop independent
+           DO ii = 1, kdmx
+             p(ii,l) = p(ii,newdone) ; hp(ii,l) = p(ii,newdone)  ; sp(ii,l) = sp(ii,newdone)
+             b(ii,l) = b(ii,newdone) ;  z(ii,l) = z(ii,newdone)
+           END DO
+
+           ff0(l) = ff0(newdone) ; ff(l) = ff(newdone)
            alpha(l) = alpha(newdone) ; g0(l) = g0(newdone) ; g1(l) = g1(newdone) ; g2(l) = g2(newdone)
            cg_iter(l) = cg_iter(newdone) ; ethr_cg(l) = ethr_cg(newdone)
-           CALL stop_clock( 'pcg:move' )
+           !$acc end kernels
 
         ELSE
 
            !write(6,*) ' l =',l,' i =',i
+           !$acc kernels
            beta   = (g1(l)-g2(l))/g0(l)         ! Polak - Ribiere style update
            g0(l)  = g1(l)                       ! < new z | new gradient >  ->  < old z | old gradient >
-           p(:,l) = z(:,l) + beta * p(:,l)      ! updated search direction
+           !$acc loop independent
+           DO ii = 1, kdmx
+             p(ii,l) = z(ii,l) + beta * p(ii,l)      ! updated search direction
+           END DO 
            !write(6,*) 'beta :', beta
 
            ff0(l) = ff(l)                       ! updated minimum value reached by the function
+           !$acc end kernels
 
         END IF
      end do
-    
+     CALL stop_clock( 'pcg:move1' )
+
      IF ( newdone > 0 ) THEN
 
         done    = done    + newdone
@@ -271,22 +396,27 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
         !write(6,*) ' there have been ', newdone, ' new converged solution'
         !write(6,*) ' done = ', done, ' nactive =', nactive
 
-        CALL start_clock( 'pcg:move' )
+        CALL start_clock( 'pcg:move2' )
         do l=1, nactive
 
            !write(6,*) ' l+newdone =',l+newdone,'  ->   l =',l
-           p (:,l) = p (:,l+newdone) ; hp(:,l) = hp(:,l+newdone) ; sp(:,l) = sp(:,l+newdone)
-           b(:,l) = b(:,l+newdone) ; z(:,l) = z(:,l+newdone) ; ff0(l) = ff0(l+newdone) ; ff(l) = ff(l+newdone)
+           !$acc parallel loop 
+           DO ii = 1, kdmx
+             p(ii,l) = p(ii,l+newdone) ; hp(ii,l) = hp(ii,l+newdone) ; sp(ii,l) = sp(ii,l+newdone)
+             b(ii,l) = b(ii,l+newdone) ;  z(ii,l) =  z(ii,l+newdone) 
+           END DO 
+           !$acc kernels
+           ff0(l) = ff0(l+newdone) ; ff(l) = ff(l+newdone)
            g0(l) = g0(l+newdone) ; g1(l) = g1(l+newdone) ; g2(l) = g2(l+newdone)
            cg_iter(l) = cg_iter(l+newdone) ; ethr_cg(l) = ethr_cg(l+newdone)
-
+           !$acc end kernels
         end do
-        CALL stop_clock( 'pcg:move' )
+        CALL stop_clock( 'pcg:move2' )
 
      END IF
 
 !  END DO iterate      Here is where the pcg loop would terminate
-
+    
   END DO  MAIN_LOOP
   !write (6,*) ' exit  pcg loop'
 
