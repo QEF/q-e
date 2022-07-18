@@ -48,11 +48,13 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   
   ! ... local variables
   
-  complex(DP) :: ps, aux1 (nbnd), aux2 (nbnd)
+  complex(DP) :: ps 
+  complex(DP),parameter  :: ONE = cmplx(1._DP, 0._DP, kind=DP)
+  complex(DP), allocatable ::  aux1 (:), aux2 (:)
   complex(DP), allocatable ::  ps1 (:,:), ps2 (:,:,:), ps3 (:,:), ps4 (:,:,:)
   complex(DP), allocatable ::  ps1_nc(:,:,:), ps2_nc(:,:,:,:), &
                                ps3_nc (:,:,:), ps4_nc (:,:,:,:), &
-                               deff_nc(:,:,:,:), auxdyn(:,:) 
+                               deff_nc(:,:,:,:), auxdyn(:,:), psv(:), psv_nc(:,:)
   real(DP), allocatable :: deff(:,:,:)
   ! work space
   complex(DP) ::  dynwrk (3 * nat, 3 * nat), ps_nc(2)
@@ -60,7 +62,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
 
   integer :: ik, ikk, ikq, ibnd, jbnd, ijkb0, ijkbnh, ijkb0b, ijkbnhb, ih, jh, ikb, &
        jkb, ipol, jpol, startb, lastb, na, nb, nt, ntb, nu_i, nu_j, &
-       na_icart, na_jcart, mu, nu, is, js, ijs
+       na_icart, na_jcart, mu, nu, is, js, ijs, jbnd_loc, ijkb1b, ijkbnb
   ! counters
 
   IF (rec_code_read >=-20) return
@@ -78,9 +80,10 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
      allocate (ps4 (  nkb, nbnd , 3))
      allocate (deff ( nhm, nhm, nat ))
   END IF
-
+  allocate (psv_nc(npol,nhm), psv(nhm)) 
   dynwrk (:,:) = (0.d0, 0.d0)
   call divide (intra_bgrp_comm, nbnd, startb, lastb)
+  allocate(aux1(lastb - startb + 1), aux2(lastb - startb + 1)) 
   do ik = 1, nksq
      ikk = ikks(ik)
      ikq = ikqs(ik)
@@ -214,14 +217,15 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                  do ibnd = 1, nbnd_occ (ikk)
                      aux1 (:) = (0.d0, 0.d0)
                      do jbnd = startb, lastb
+                        jbnd_loc = jbnd - startb + 1 
                         IF (noncolin) THEN
-                           aux1 (jbnd) = aux1 (jbnd) + &
+                           aux1 (jbnd_loc) = aux1 (jbnd_loc) + &
                            dot_product(alpq(ipol,ik)%nc(ijkb0 + 1 :ijkbnh,1,jbnd),ps1_nc(ijkb0 + 1 :ijkbnh,1, ibnd))+& 
                            dot_product(becq(ik)%nc(ijkb0 + 1 :ijkbnh,1,jbnd),ps2_nc(ijkb0 + 1 :ijkbnh,1,ibnd,ipol))+& 
                            dot_product(alpq(ipol,ik)%nc(ijkb0 + 1 :ijkbnh,2,jbnd),ps1_nc(ijkb0 + 1 :ijkbnh,2, ibnd))+&
                            dot_product(becq(ik)%nc(ijkb0 + 1 :ijkbnh,1,jbnd),ps2_nc(ijkb0 + 1:ijkbnh,1,ibnd,ipol))
                         ELSE
-                           aux1 (jbnd) = aux1 (jbnd) + &
+                           aux1 (jbnd_loc) = aux1 (jbnd_loc) + &
                            dot_product(alpq(ipol,ik)%k(ijkb0 + 1:ijkbnh,jbnd),ps1(ijkb0 + 1:ijkbnh,ibnd))+&
                            dot_product(becq(ik)%k(ijkb0 + 1:ijkbnh,jbnd),ps2(ijkb0 + 1:ijkbnh,ibnd,ipol))
                         END IF
@@ -229,47 +233,44 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                      do ntb = 1, ntyp
                         do nb = 1, nat
                           if (ityp (nb) == ntb) then
+                             psv_nc(:, :) =(0.d0,0.d0)
+                             psv(:) = (0.d0, 0.d0)
                              ijkb0b = ofsbeta(nb)
-                             do ih = 1, nh (ntb)
-                                ikb = ijkb0b + ih
-                                ps_nc =(0.d0,0.d0)
-                                ps = (0.d0, 0.d0)
-                                do jh = 1, nh (ntb)
-                                   jkb = ijkb0b + jh
-                                   IF (noncolin) THEN
-                                      IF (lspinorb) THEN
-                                         ijs=0
-                                         DO is=1,npol
-                                            DO js=1,npol
-                                               ijs=ijs+1
-                                               ps_nc(is) = ps_nc(is) + &
-                                               int2_so(ih,jh,ipol,na,nb,ijs)*&
-                                               becp1(ik)%nc(jkb,js,ibnd)
-                                            END DO
-                                         END DO
-                                      ELSE
-                                         DO is=1,npol
-                                            ps_nc(is) = ps_nc(is) + &
-                                               int2(ih,jh,ipol,na,nb)*&
-                                               becp1(ik)%nc(jkb,is,ibnd)
-                                         END DO
-                                      ENDIF
-                                   ELSE
-                                      ps = ps + int2 (ih, jh, ipol, na, nb) * &
-                                             becp1(ik)%k (jkb, ibnd)
-                                   END IF
-                                enddo
-                                do jbnd = startb, lastb
-                                   IF (noncolin) THEN
-                                      aux1(jbnd) = aux1 (jbnd) + &
-                                        ps_nc(1)*CONJG(becq(ik)%nc(ikb,1,jbnd))+&
-                                        ps_nc(2)*CONJG(becq(ik)%nc(ikb,2,jbnd))
-                                   ELSE
-                                      aux1(jbnd) = aux1 (jbnd) + &
-                                        ps * CONJG(becq(ik)%k(ikb,jbnd))
-                                   END IF
-                                enddo
-                             enddo
+                             IF (noncolin) THEN
+                                 IF (lspinorb) THEN
+                                    ijs=0
+                                    DO is=1,npol
+                                       DO js=1,npol
+                                          ijs=ijs+1
+                                          call zgemv('N', nh(ntb), nh(ntb), ONE, int2_so(1,1,ipol,na,nb,ijs), nhm, & 
+                                                      becp1(ik)%nc(ijkb0b +1, js, ibnd), 1, ONE, psv_nc(is, 1), npol)  
+                                       END DO
+                                    END DO
+                                 ELSE
+                                    DO is=1,npol
+                                       call zgemv('N', nh(ntb), nh(ntb), ONE, int2(1,1,ipol,na,nb), nhm, & 
+                                                       becp1(ik)%nc(ijkb0b + 1, js, ibnd), 1, & 
+                                                       ONE, psv_nc(is,1), npol) 
+                                    END DO
+                                 ENDIF
+                             ELSE
+                                 call zgemv('N', nh(ntb), nh(ntb), ONE, int2(1,1,ipol, na,nb), nhm, & 
+                                                 becp1(ik)%k(ijkb0b + 1, ibnd),1 , ONE,  psv(1), 1) 
+                             END IF
+                             do jbnd = startb, lastb
+                                 jbnd_loc = jbnd - startb + 1 
+                                 IF (noncolin) THEN
+                                    aux1(jbnd_loc) = aux1 (jbnd_loc) + &
+                                    dot_product(becq(ik)%nc(ijkb0b + 1: ijkb0b + nh(ntb), 1, jbnd), & 
+                                                    psv_nc(1,1:nh(ntb))) + & 
+                                    dot_product(becq(ik)%nc(ijkb0b + 1: ijkb0b + nh(ntb), 2, jbnd), & 
+                                                    psv_nc(2,1:nh(ntb)))   
+                                 ELSE
+                                    aux1(jbnd_loc) = aux1 (jbnd_loc) + &
+                                    dot_product(becq(ik)%k(ijkb0b + 1: ijkb0b + nh(ntb),jbnd), & 
+                                                   psv(1:nh(ntb)))
+                                 END IF
+                              enddo
                           endif
                        enddo
                     enddo
@@ -280,36 +281,38 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                        do nb = 1, nat
                           if (ityp (nb) == ntb) then
                              ijkb0b = ofsbeta(nb)
+                             ijkb1b = ijkb0b + 1 
+                             ijkbnb = ijkb0b + nh(ntb)
                              do jpol = 1, 3
                                 nu = 3 * (nb - 1) + jpol
                                 aux2 (:) = (0.d0, 0.d0)
-                                do ih = 1, nh (ntb)
-                                   ikb = ijkb0b + ih
-                                   do jbnd = startb, lastb
-                                      IF (noncolin) THEN
-                                         aux2 (jbnd) = aux2 (jbnd) + &
-                                           wgg(ibnd, jbnd, ik) * &
-                                        (CONJG(alphap(jpol,ik)%nc(ikb,1,ibnd))*&
-                                            ps3_nc (ikb, 1, jbnd) + &
-                                            CONJG(becp1(ik)%nc (ikb,1,ibnd))* &
-                                            ps4_nc (ikb, 1, jbnd, jpol) +  &
-                                         CONJG(alphap(jpol,ik)%nc(ikb,2,ibnd))*&
-                                            ps3_nc (ikb,2,jbnd) + &
-                                            CONJG(becp1(ik)%nc (ikb,2,ibnd)) * &
-                                            ps4_nc (ikb, 2, jbnd, jpol) )
+                                do jbnd = startb, lastb
+                                    jbnd_loc = jbnd - startb + 1 
+                                    IF (noncolin) THEN 
+                                       aux2 (jbnd_loc) = aux2 (jbnd_loc) + &
+                                       wgg(ibnd, jbnd, ik) * ( &
+                                       dot_product(alphap(jpol,ik)%nc(ijkb1b:ijkbnb, 1 ,ibnd), &  
+                                                       ps3_nc(ijkb1b:ijkbnb,1, jbnd)) + & 
+                                       dot_product(becp1(ik)%nc(ijkb1b: ijkbnb, 1, ibnd), &
+                                                        ps4_nc(ijkb1b:ijkbnb, 1, jbnd, jpol)) + & 
+                                       dot_product(alphap(jpol,ik)%nc(ijkb1b:ijkbnb, 2, ibnd), & 
+                                                       ps3_nc(ijkb1b:ijkbnb, 2, jbnd)) + &  
+                                       dot_product(becp1(ik)%nc(ijkb1b:ijkbnb, 2, ibnd), & 
+                                                      ps4_nc(ijkb1b:ijkbnb, 2, jbnd, jpol)))  
                                       ELSE
-                                         aux2 (jbnd) = aux2 (jbnd) + &
-                                           wgg (ibnd, jbnd, ik) * &
-                                           (CONJG(alphap(jpol,ik)%k(ikb,ibnd))*&
-                                            ps3 (ikb, jbnd) + &
-                                            CONJG(becp1(ik)%k (ikb, ibnd) ) * &
-                                            ps4 (ikb, jbnd, jpol) )
+                                         aux2 (jbnd_loc) = aux2 (jbnd_loc) + &
+                                           wgg (ibnd, jbnd, ik) * ( & 
+                                           dot_product(alphap(jpol,ik)%k(ijkb1b:ijkbnb, ibnd), & 
+                                                       ps3(ijkb1b:ijkbnb, jbnd)) + & 
+                                           dot_product(becp1(ik)%k(ijkb1b:ijkbnb, ibnd), & 
+                                                      ps4(ijkb1b:ijkbnb, jbnd, jpol)) & 
+                                           )
                                       END IF
                                    enddo
-                                enddo
                                 do jbnd = startb, lastb
+                                   jbnd_loc = jbnd - startb + 1 
                                    dynwrk (nu, mu) = dynwrk (nu, mu) + &
-                                        2.d0*wk(ikk) * aux2(jbnd) * aux1(jbnd)
+                                        2.d0*wk(ikk) * aux2(jbnd_loc) * aux1(jbnd_loc)
                                 enddo
                              enddo
                           endif
