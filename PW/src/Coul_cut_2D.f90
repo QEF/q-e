@@ -140,24 +140,21 @@ SUBROUTINE cutoff_local( aux )
   !! See Eq. (33) of PRB 96, 075448
   !
   USE kinds
-  USE fft_base,   ONLY : dfftp
   USE gvect,      ONLY : ngm
   USE vlocal,     ONLY : strf
   USE ions_base,  ONLY : nsp
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP), INTENT(INOUT):: aux(dfftp%nnr)
+  COMPLEX(DP), INTENT(INOUT):: aux(ngm)
   !! input: local part of ionic potential 
   !
   ! ... local variables
   !
-  INTEGER :: ng, nt 
+  INTEGER :: nt
   !
   DO nt = 1, nsp
-     DO ng = 1, ngm
-        aux(dfftp%nl(ng)) = aux(dfftp%nl(ng)) + lr_Vloc(ng,nt) * strf(ng,nt)
-     ENDDO
+     aux(1:ngm) = aux(1:ngm) + lr_Vloc(1:ngm,nt) * strf(1:ngm,nt)
   ENDDO
   !
   RETURN
