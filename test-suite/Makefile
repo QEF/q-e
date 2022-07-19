@@ -14,10 +14,10 @@ default :
 	@echo '  make target'
 	@echo ' '
 	@echo 'where <target> identifies an action'
-	@echo ' run-tests-XX [np=N]        : run tests [optionally, on N processors]'
+	@echo ' run-tests-XX [NPROC=N]        : run tests [optionally, on N processors]'
 	@echo ' for XX=pw, cp, ph, epw, hp, tddfpt, kcw, all_currents, pp, zg, xsd-pw'
-	@echo ' run-tests [np=N]           : run all tests above (except the last four)'
-	@echo ' run-custom-test testdir=DIR [np=N]: run test in DIR only'
+	@echo ' run-tests [NPROC=N]           : run all tests above (except the last four)'
+	@echo ' run-custom-test testdir=DIR [NPROC=N]: run test in DIR only'
 	@echo ' compare                     : compare last output with reference'
 	@echo ' pseudo                      : download needed PPs into ESPRESSO_PSEUDO'
 	@echo ' clean                       : clean stdout/sderr of all tests'
@@ -42,66 +42,66 @@ run-tests : run-tests-pw run-tests-cp run-tests-ph run-tests-epw run-tests-hp ru
 
 run-tests-cp : prolog pseudo
 	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
-	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
 
 run-tests-pw : prolog pseudo
-	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
 
 run-tests-ph : prolog pseudo
-	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_all
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_all
 
 run-tests-epw : prolog pseudo
-	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_all
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_all
 
 run-tests-zg : prolog
-	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=zg_all
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=zg_all
 
 run-tests-hp : prolog pseudo
-	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=hp_all
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=hp_all
 
 run-tests-pp : prolog pseudo
-	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pp_all
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pp_all
 
 run-tests-tddfpt : prolog pseudo
-	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=tddfpt_all
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=tddfpt_all
 
 run-tests-image : prolog pseudo
-	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=image_all
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=image_all
 
 run-tests-kcw : prolog pseudo
-	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose  --category=kcw_all
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose  --category=kcw_all
 
 run-tests-all_currents : prolog pseudo
 	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
-	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=all_currents_all
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=all_currents_all
 
 run-travis : clean prolog pseudo
-	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_base
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_base
 
 run-custom-test : prolog pseudo
 	@if test -d $(testdir); then \
-	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
 
 run-tests-xsd-pw : prolog pseudo
 	cd xsd_pw ; for file in ./*.in ; do \
   	echo "Running using $$file" ; \
-		env QE_USE_MPI=$(np) ../run-pw.sh -in $$file &> $$file.out ; \
+		env QE_USE_MPI=$(NPROCS) ../run-pw.sh -in $$file &> $$file.out ; \
 		python ../validate_xsd_pw.py $$file; \
     done ; cd ..
 
 create-reference-cp : pseudo prolog
 	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
-	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --category=cp_all make-benchmarks
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --category=cp_all make-benchmarks
 
 create-reference-pw : pseudo prolog
-	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --category=pw_all make-benchmarks
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --category=pw_all make-benchmarks
 
 create-reference-epw : pseudo prolog
-	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --category=epw_all make-benchmarks
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --category=epw_all make-benchmarks
 
 create-reference-all_currents : pseudo prolog
 	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
-	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --category=all_currents_all make-benchmarks
+	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --category=all_currents_all make-benchmarks
 
 compare : compare-cp compare-pw compare-ph compare-epw compare-tddfpt compare-hp compare-all_currents
 
@@ -230,20 +230,20 @@ run-tests-kcw-serial :
 run-tests-pp-serial :
 	@echo '$@ obsolete, use "make run-tests-pp" instead'
 run-tests-parallel :
-	@echo '$@ obsolete, use "make run-tests np=N" instead'
+	@echo '$@ obsolete, use "make run-tests NPROC=4" instead'
 run-tests-pw-parallel :
-	@echo '$@ obsolete, use "make run-tests-pw np=N" instead'
+	@echo '$@ obsolete, use "make run-tests-pw NPROC=4" instead'
 run-tests-cp-parallel :
-	@echo '$@ obsolete, use "make run-tests-cp np=N" instead'
+	@echo '$@ obsolete, use "make run-tests-cp NPROC=4" instead'
 run-tests-ph-parallel :
-	@echo '$@ obsolete, use "make run-tests-ph np=N" instead'
+	@echo '$@ obsolete, use "make run-tests-ph NPROC=4" instead'
 run-tests-epw-parallel :
-	@echo '$@ obsolete, use "make run-tests-epw np=N" instead'
+	@echo '$@ obsolete, use "make run-tests-epw NPROC=4" instead'
 run-tests-hp-parallel :
-	@echo '$@ obsolete, use "make run-tests-hp np=N" instead'
+	@echo '$@ obsolete, use "make run-tests-hp NPROC=4" instead'
 run-tests-tddfpt-parallel :
-	@echo '$@ obsolete, use "make run-tests-tddfpt np=N" instead'
+	@echo '$@ obsolete, use "make run-tests-tddfpt NPROC=4" instead'
 run-tests-kcw-parallel :
-	@echo '$@ obsolete, use "make run-tests-kcw np=N" instead'
+	@echo '$@ obsolete, use "make run-tests-kcw NPROC=4" instead'
 run-tests-pp-parallel :
-	@echo '$@ obsolete, use "make run-tests-pp np=N" instead'
+	@echo '$@ obsolete, use "make run-tests-pp NPROC=4" instead'
