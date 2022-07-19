@@ -14,10 +14,10 @@ default :
 	@echo '  make target'
 	@echo ' '
 	@echo 'where <target> identifies an action'
-	@echo ' run-tests-XX [NPROC=N]        : run tests [optionally, on N processors]'
+	@echo ' run-tests-XX [NPROCS=N]        : run tests [optionally, on N processors]'
 	@echo ' for XX=pw, cp, ph, epw, hp, tddfpt, kcw, all_currents, pp, zg, xsd-pw'
-	@echo ' run-tests [NPROC=N]           : run all tests above (except the last four)'
-	@echo ' run-custom-test testdir=DIR [NPROC=N]: run test in DIR only'
+	@echo ' run-tests [NPROCS=N]           : run all tests above (except the last four)'
+	@echo ' run-custom-test testdir=DIR [NPROCS=N]: run test in DIR only'
 	@echo ' compare                     : compare last output with reference'
 	@echo ' pseudo                      : download needed PPs into ESPRESSO_PSEUDO'
 	@echo ' clean                       : clean stdout/sderr of all tests'
@@ -230,20 +230,20 @@ run-tests-kcw-serial :
 run-tests-pp-serial :
 	@echo '$@ obsolete, use "make run-tests-pp" instead'
 run-tests-parallel :
-	@echo '$@ obsolete, use "make run-tests NPROC=4" instead'
+	@echo '$@ obsolete, use "make run-tests NPROCS=4" instead'
 run-tests-pw-parallel :
-	@echo '$@ obsolete, use "make run-tests-pw NPROC=4" instead'
+	@echo '$@ obsolete, use "make run-tests-pw NPROCS=4" instead'
 run-tests-cp-parallel :
-	@echo '$@ obsolete, use "make run-tests-cp NPROC=4" instead'
+	@echo '$@ obsolete, use "make run-tests-cp NPROCS=4" instead'
 run-tests-ph-parallel :
-	@echo '$@ obsolete, use "make run-tests-ph NPROC=4" instead'
+	@echo '$@ obsolete, use "make run-tests-ph NPROCS=4" instead'
 run-tests-epw-parallel :
-	@echo '$@ obsolete, use "make run-tests-epw NPROC=4" instead'
+	@echo '$@ obsolete, use "make run-tests-epw NPROCS=4" instead'
 run-tests-hp-parallel :
-	@echo '$@ obsolete, use "make run-tests-hp NPROC=4" instead'
+	@echo '$@ obsolete, use "make run-tests-hp NPROCS=4" instead'
 run-tests-tddfpt-parallel :
-	@echo '$@ obsolete, use "make run-tests-tddfpt NPROC=4" instead'
+	@echo '$@ obsolete, use "make run-tests-tddfpt NPROCS=4" instead'
 run-tests-kcw-parallel :
-	@echo '$@ obsolete, use "make run-tests-kcw NPROC=4" instead'
+	@echo '$@ obsolete, use "make run-tests-kcw NPROCS=4" instead'
 run-tests-pp-parallel :
-	@echo '$@ obsolete, use "make run-tests-pp NPROC=4" instead'
+	@echo '$@ obsolete, use "make run-tests-pp NPROCS=4" instead'
