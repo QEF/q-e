@@ -27,6 +27,7 @@ default :
 
 prolog :
 	@sed "s|XXXXXX|$(ESPRESSO_ROOT)|g" < userconfig.tmp > userconfig
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
 
 pseudo :
 	@./check_pseudo.sh pw_
@@ -41,7 +42,6 @@ pseudo :
 run-tests : run-tests-pw run-tests-cp run-tests-ph run-tests-epw run-tests-hp run-tests-tddfpt run-tests-kcw
 
 run-tests-cp : prolog pseudo
-	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
 
 run-tests-pw : prolog pseudo
@@ -72,7 +72,6 @@ run-tests-kcw : prolog pseudo
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose  --category=kcw_all
 
 run-tests-all_currents : prolog pseudo
-	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=all_currents_all
 
 run-travis : clean prolog pseudo
@@ -84,13 +83,12 @@ run-custom-test : prolog pseudo
 
 run-tests-xsd-pw : prolog pseudo
 	cd xsd_pw ; for file in ./*.in ; do \
-  	echo "Running using $$file" ; \
+	echo "Running using $$file" ; \
 		env QE_USE_MPI=$(NPROCS) ../run-pw.sh -in $$file &> $$file.out ; \
 		python ../validate_xsd_pw.py $$file; \
     done ; cd ..
 
 create-reference-cp : pseudo prolog
-	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --category=cp_all make-benchmarks
 
 create-reference-pw : pseudo prolog
@@ -100,7 +98,6 @@ create-reference-epw : pseudo prolog
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --category=epw_all make-benchmarks
 
 create-reference-all_currents : pseudo prolog
-	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
 	env QE_USE_MPI=$(NPROCS) ${TESTCODE_DIR}/bin/testcode.py --category=all_currents_all make-benchmarks
 
 compare : compare-cp compare-pw compare-ph compare-epw compare-tddfpt compare-hp compare-all_currents
@@ -184,7 +181,7 @@ clean:
 
 # Special cases for EPW
 	@rm -rf epw_base/save epw_super/save epw_pl/save/ epw_polar/save/ \
-                epw_trev/save epw_trev_uspp/save epw_trev_paw/save \
+		epw_trev/save epw_trev_uspp/save epw_trev_paw/save \
 		epw_mob/save epw_mob_ibte/save epw_mob_ibte_sym/save epw_mob_polar/save
 
 # Cleaning IMAGE final files
@@ -211,39 +208,53 @@ purge: clean
 	@for x in `find QEHeat_* -name "benchmark*"`; do rm -rf $$x; done
 
 
-run-tests-serial :
+run-tests-serial : run-tests-pw-serial run-tests-cp-serial run-tests-ph-serial run-tests-epw-serial run-tests-hp-serial run-tests-tddfpt-serial run-tests-kcw-serial
 	@echo '$@ obsolete, use "make run-tests" instead'
-run-tests-pw-serial :
+run-tests-pw-serial : run-tests-pw
 	@echo '$@ obsolete, use "make run-tests-pw" instead'
-run-tests-cp-serial :
+run-tests-cp-serial : run-tests-cp
 	@echo '$@ obsolete, use "make run-tests-cp" instead'
-run-tests-ph-serial : 
+run-tests-ph-serial : run-tests-ph
 	@echo '$@ obsolete, use "make run-tests-ph" instead'
-run-tests-epw-serial :
+run-tests-epw-serial : run-tests-epw
 	@echo '$@ obsolete, use "make run-tests-epw" instead'
-run-tests-hp-serial :
+run-tests-hp-serial : run-tests-hp
 	@echo '$@ obsolete, use "make run-tests-hp" instead'
-run-tests-tddfpt-serial :
+run-tests-tddfpt-serial : run-tests-tddfpt
 	@echo '$@ obsolete, use "make run-tests-tddfpt" instead'
-run-tests-kcw-serial :
+run-tests-kcw-serial : run-tests-kcw
 	@echo '$@ obsolete, use "make run-tests-kcw" instead'
-run-tests-pp-serial :
+run-tests-pp-serial : run-tests-pp
 	@echo '$@ obsolete, use "make run-tests-pp" instead'
-run-tests-parallel :
+run-tests-zg-serial : run-tests-zg
+	@echo '$@ obsolete, use "make run-tests-zg" instead'
+
+run-tests-parallel : run-tests-pw-parallel run-tests-cp-parallel run-tests-ph-parallel run-tests-epw-parallel run-tests-hp-parallel run-tests-tddfpt-parallel run-tests-kcw-parallel
 	@echo '$@ obsolete, use "make run-tests NPROCS=4" instead'
-run-tests-pw-parallel :
+run-tests-pw-parallel : prolog pseudo
 	@echo '$@ obsolete, use "make run-tests-pw NPROCS=4" instead'
-run-tests-cp-parallel :
+	env QE_USE_MPI=4 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
+run-tests-cp-parallel : prolog pseudo
 	@echo '$@ obsolete, use "make run-tests-cp NPROCS=4" instead'
-run-tests-ph-parallel :
+	env QE_USE_MPI=4 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
+run-tests-ph-parallel : prolog pseudo
 	@echo '$@ obsolete, use "make run-tests-ph NPROCS=4" instead'
-run-tests-epw-parallel :
+	env QE_USE_MPI=4 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_all
+run-tests-epw-parallel : prolog pseudo
 	@echo '$@ obsolete, use "make run-tests-epw NPROCS=4" instead'
-run-tests-hp-parallel :
+	env QE_USE_MPI=4 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_all
+run-tests-hp-parallel : prolog pseudo
 	@echo '$@ obsolete, use "make run-tests-hp NPROCS=4" instead'
-run-tests-tddfpt-parallel :
+	env QE_USE_MPI=4 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=hp_all
+run-tests-tddfpt-parallel : prolog pseudo
 	@echo '$@ obsolete, use "make run-tests-tddfpt NPROCS=4" instead'
-run-tests-kcw-parallel :
+	env QE_USE_MPI=4 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=tddfpt_all
+run-tests-kcw-parallel : prolog pseudo
 	@echo '$@ obsolete, use "make run-tests-kcw NPROCS=4" instead'
-run-tests-pp-parallel :
+	env QE_USE_MPI=4 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=kcw_all
+run-tests-pp-parallel : prolog pseudo
 	@echo '$@ obsolete, use "make run-tests-pp NPROCS=4" instead'
+	env QE_USE_MPI=4 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pp_all
+run-tests-zg-parallel : prolog pseudo
+	@echo '$@ obsolete, use "make run-tests-zg NPROCS=4" instead'
+	env QE_USE_MPI=4 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=zg_all
