@@ -38,7 +38,7 @@ PROGRAM do_ppacf
   USE io_global,            ONLY : stdout, ionode, ionode_id
   USE cell_base,            ONLY : omega
   USE mp,                   ONLY : mp_bcast, mp_sum
-  USE mp_world,             ONLY : world_comm
+  USE mp_images,            ONLY : intra_image_comm
   USE mp_global,            ONLY : mp_startup
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE exx,                  ONLY : exxinit, exxenergy2, fock2, ecutfock, & 
@@ -184,9 +184,7 @@ PROGRAM do_ppacf
   !
   ! initialise environment
   !
-#ifdef __MPI
   CALL mp_startup()
-#endif
   !--------------- READ IN PREFIX --------------------------------!
   CALL environment_start( 'ppacf' )
   !
@@ -225,17 +223,17 @@ PROGRAM do_ppacf
   !--------------- READ IN DATA ----------------------------------------------!
   ! 
   ! ... Broadcast variables
-  CALL mp_bcast( code_num,   ionode_id, world_comm )
-  CALL mp_bcast( outdir,     ionode_id, world_comm )
-  CALL mp_bcast( prefix,     ionode_id, world_comm )
-  CALL mp_bcast( n_lambda,   ionode_id, world_comm ) 
-  CALL mp_bcast( lplot,      ionode_id, world_comm )
-  CALL mp_bcast( ltks,       ionode_id, world_comm )
-  CALL mp_bcast( lfock,      ionode_id, world_comm )
-  CALL mp_bcast( vdW_analysis, ionode_id, world_comm )
-  CALL mp_bcast( lecnl_qxln, ionode_id, world_comm )
-  CALL mp_bcast( lecnl_qx,   ionode_id, world_comm )
-  CALL mp_bcast( dcc,        ionode_id, world_comm )
+  CALL mp_bcast( code_num,   ionode_id, intra_image_comm )
+  CALL mp_bcast( outdir,     ionode_id, intra_image_comm )
+  CALL mp_bcast( prefix,     ionode_id, intra_image_comm )
+  CALL mp_bcast( n_lambda,   ionode_id, intra_image_comm ) 
+  CALL mp_bcast( lplot,      ionode_id, intra_image_comm )
+  CALL mp_bcast( ltks,       ionode_id, intra_image_comm )
+  CALL mp_bcast( lfock,      ionode_id, intra_image_comm )
+  CALL mp_bcast( vdW_analysis, ionode_id, intra_image_comm )
+  CALL mp_bcast( lecnl_qxln, ionode_id, intra_image_comm )
+  CALL mp_bcast( lecnl_qx,   ionode_id, intra_image_comm )
+  CALL mp_bcast( dcc,        ionode_id, intra_image_comm )
   !
   SELECT CASE ( vdW_analysis )
   CASE ( 0 ) 
@@ -838,10 +836,7 @@ PROGRAM do_ppacf
     ENDDO
     DEALLOCATE( igk_buf, gk )
     !
-    !  CALL setup()
-    CALL exx_grid_init()
-    CALL exx_mp_init()
-    CALL exx_div_check()
+    CALL setup_exx ()
     !  CALL init_run()
     CALL exxinit( .FALSE. )
     !
