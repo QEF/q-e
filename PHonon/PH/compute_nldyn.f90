@@ -54,7 +54,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   complex(DP), allocatable ::  ps1 (:,:), ps2 (:,:,:), ps3 (:,:), ps4 (:,:,:)
   complex(DP), allocatable ::  ps1_nc(:,:,:), ps2_nc(:,:,:,:), &
                                ps3_nc (:,:,:), ps4_nc (:,:,:,:), &
-                               deff_nc(:,:,:,:), auxdyn(:,:), psv(:), psv_nc(:,:)
+                               deff_nc(:,:,:,:), auxdyn(:,:), psv(:), psv_nc(:,:), mat(:,:), vec(:)
   real(DP), allocatable :: deff(:,:,:)
   ! work space
   complex(DP) ::  dynwrk (3 * nat, 3 * nat), ps_nc(2)
@@ -83,7 +83,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   allocate (psv_nc(npol,nhm), psv(nhm)) 
   dynwrk (:,:) = (0.d0, 0.d0)
   call divide (intra_bgrp_comm, nbnd, startb, lastb)
-  allocate(aux1(lastb - startb + 1), aux2(lastb - startb + 1)) 
+  allocate(aux1(lastb - startb + 1), aux2(lastb - startb + 1), mat(nhm, lastb - startb + 1), vec(nhm)) 
   do ik = 1, nksq
      ikk = ikks(ik)
      ikq = ikqs(ik)
@@ -288,34 +288,42 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                              ijkbnb = ijkb0b + nh(ntb)
                              do jpol = 1, 3
                                 nu = 3 * (nb - 1) + jpol
-                                aux2 (:) = (0.d0, 0.d0)
-                                do jbnd = startb, lastb
-                                    jbnd_loc = jbnd - startb + 1 
-                                    IF (noncolin) THEN 
-                                       aux2 (jbnd_loc) = aux2 (jbnd_loc) + &
-                                       wgg(ibnd, jbnd, ik) * ( &
-                                       dot_product(alphap(jpol,ik)%nc(ijkb1b:ijkbnb, 1 ,ibnd), &  
-                                                       ps3_nc(ijkb1b:ijkbnb,1, jbnd)) + & 
-                                       dot_product(becp1(ik)%nc(ijkb1b: ijkbnb, 1, ibnd), &
-                                                        ps4_nc(ijkb1b:ijkbnb, 1, jbnd, jpol)) + & 
-                                       dot_product(alphap(jpol,ik)%nc(ijkb1b:ijkbnb, 2, ibnd), & 
-                                                       ps3_nc(ijkb1b:ijkbnb, 2, jbnd)) + &  
-                                       dot_product(becp1(ik)%nc(ijkb1b:ijkbnb, 2, ibnd), & 
-                                                      ps4_nc(ijkb1b:ijkbnb, 2, jbnd, jpol)))  
-                                      ELSE
-                                         aux2 (jbnd_loc) = aux2 (jbnd_loc) + &
-                                           wgg (ibnd, jbnd, ik) * ( & 
-                                           dot_product(alphap(jpol,ik)%k(ijkb1b:ijkbnb, ibnd), & 
-                                                       ps3(ijkb1b:ijkbnb, jbnd)) + & 
-                                           dot_product(becp1(ik)%k(ijkb1b:ijkbnb, ibnd), & 
-                                                      ps4(ijkb1b:ijkbnb, jbnd, jpol)) & 
-                                           )
-                                      END IF
-                                   enddo
+                                if (noncolin) then 
+                                    vec(1:nh(ntb))  =   conjg(alphap(jpol,ik)%nc(ijkb1b:ijkbnb, 1 ,ibnd))
+                                    mat(1:nh(ntb), : )    =   ps3_nc(ijkb1b:ijkbnb,1, startb:lastb) 
+                                    call zgemv('T',nh(ntb), lastb - startb +1, ONE, mat, nhm, vec, 1, & 
+                                            (0.d0,0.d0), aux2, 1 )
+                                    !
+                                    vec(1:nh(ntb))  =   conjg(alphap(jpol,ik)%nc(ijkb1b:ijkbnb, 2 ,ibnd))
+                                    mat(1:nh(ntb), : )    =   ps3_nc(ijkb1b:ijkbnb,2, startb :lastb) 
+                                    call zgemv('T',nh(ntb), lastb - startb +1, ONE, mat, nhm, vec, 1, & 
+                                            ONE, aux2, 1 )
+                                    !
+                                    vec(1:nh(ntb)) = conjg(becp1(ik)%nc(ijkb1b: ijkbnb, 1, ibnd))
+                                    mat(1:nh(ntb),:) = ps4_nc(ijkb1b:ijkbnb, 1, startb :lastb , jpol)
+                                    call zgemv('T',nh(ntb), lastb - startb +1, ONE, mat, nhm, vec, 1, & 
+                                               ONE, aux2, 1 )
+                                    !
+                                    vec(1:nh(ntb)) = conjg(becp1(ik)%nc(ijkb1b: ijkbnb, 2, ibnd))
+                                    mat(1:nh(ntb),:) = ps4_nc(ijkb1b:ijkbnb, 2, startb :lastb , jpol)
+                                    call zgemv('T',nh(ntb), lastb - startb +1, ONE, mat, nhm, vec, 1, & 
+                                         ONE, aux2, 1 )
+                                else 
+                                    vec(1:nh(ntb))  =   conjg(alphap(jpol,ik)%k(ijkb1b:ijkbnb,ibnd))
+                                    mat(1:nh(ntb), : )    =   ps3(ijkb1b:ijkbnb, startb :lastb) 
+                                    call zgemv('T',nh(ntb), lastb - startb +1, ONE, mat, nhm, vec, 1, & 
+                                         (0.d0,0.d0), aux2, 1 )
+                                    
+                                    ! 
+                                    vec(1:nh(ntb)) = conjg(becp1(ik)%k(ijkb1b: ijkbnb, ibnd))
+                                    mat(1:nh(ntb),:) = ps4(ijkb1b:ijkbnb, startb :lastb , jpol)
+                                    call zgemv('T',nh(ntb), lastb - startb +1, ONE, mat, nhm, vec, 1, & 
+                                                    ONE, aux2, 1 )
+                                end if      
                                 do jbnd = startb, lastb
                                    jbnd_loc = jbnd - startb + 1 
                                    dynwrk (nu, mu) = dynwrk (nu, mu) + &
-                                        2.d0*wk(ikk) * aux2(jbnd_loc) * aux1(jbnd_loc)
+                                        2.d0*wk(ikk) * wgg(ibnd, jbnd, ik) * aux2(jbnd_loc) * aux1(jbnd_loc)
                                 enddo
                              enddo
                           endif
