@@ -83,7 +83,13 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   allocate (psv_nc(npol,nhm), psv(nhm)) 
   dynwrk (:,:) = (0.d0, 0.d0)
   call divide (intra_bgrp_comm, nbnd, startb, lastb)
-  allocate(aux1(lastb - startb + 1), aux2(lastb - startb + 1), mat(nhm, lastb - startb + 1), vec(nhm)) 
+  allocate(aux1(lastb - startb + 1), aux2(lastb - startb + 1)) 
+  if (noncolin) then 
+    allocate (mat(4*nhm, lastb - startb + 1), vec(4* nhm))
+  else 
+    allocate (mat(2*nhm, lastb - startb + 1), vec(2*nhm ))
+  end if 
+  ! 
   do ik = 1, nksq
      ikk = ikks(ik)
      ikq = ikqs(ik)
@@ -215,21 +221,30 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
               do ipol = 1, 3
                  mu = 3 * (na - 1) + ipol
                  do ibnd = 1, nbnd_occ (ikk)
-                     aux1 (:) = (0.d0, 0.d0)
-                     do jbnd = startb, lastb
-                        jbnd_loc = jbnd - startb + 1 
-                        IF (noncolin) THEN
-                           aux1 (jbnd_loc) = aux1 (jbnd_loc) + &
-                           dot_product(alpq(ipol,ik)%nc(ijkb0 + 1 :ijkbnh,1,jbnd),ps1_nc(ijkb0 + 1 :ijkbnh,1, ibnd))+& 
-                           dot_product(becq(ik)%nc(ijkb0 + 1 :ijkbnh,1,jbnd),ps2_nc(ijkb0 + 1 :ijkbnh,1,ibnd,ipol))+& 
-                           dot_product(alpq(ipol,ik)%nc(ijkb0 + 1 :ijkbnh,2,jbnd),ps1_nc(ijkb0 + 1 :ijkbnh,2, ibnd))+&
-                           dot_product(becq(ik)%nc(ijkb0 + 1 :ijkbnh,1,jbnd),ps2_nc(ijkb0 + 1:ijkbnh,1,ibnd,ipol))
-                        ELSE
-                           aux1 (jbnd_loc) = aux1 (jbnd_loc) + &
-                           dot_product(alpq(ipol,ik)%k(ijkb0 + 1:ijkbnh,jbnd),ps1(ijkb0 + 1:ijkbnh,ibnd))+&
-                           dot_product(becq(ik)%k(ijkb0 + 1:ijkbnh,jbnd),ps2(ijkb0 + 1:ijkbnh,ibnd,ipol))
-                        END IF
-                     enddo
+                     IF (noncolin) THEN
+                        vec(1:nh(nt))             =   ps1_nc(ijkb0+1:ijkbnh,1,ibnd) 
+                        vec(nh(nt)  +1:2*nh(nt))  =   ps1_nc(ijkb0+1:ijkbnh,2,ibnd) 
+                        vec(2*nh(nt)+1:3*nh(nt))  =   ps2_nc(ijkb0+1:ijkbnh,1,ibnd,ipol)
+                        vec(3*nh(nt)+1:4*nh(nt))  =   ps2_nc(ijkb0+1:ijkbnh,2,ibnd,ipol) 
+                        mat(1:nh(nt),1:lastb-startb+1)              =& 
+                                    alpq(ipol,ik)%nc(ijkb0+1:ijkbnh, 1, startb:lastb) 
+                        mat(nh(nt)+1:2*nh(nt)  ,1:lastb-startb+1)  =& 
+                                    alpq(ipol,ik)%nc(ijkb0+1:ijkbnh, 2, startb:lastb) 
+                        mat(2*nh(nt)+1:3*nh(nt),1:lastb-startb+1)  =&
+                                    becq(ik)%nc(ijkb0 + 1 :ijkbnh,1, startb:lastb)
+                        mat(3*nh(nt)+1:4*nh(nt),1:lastb-startb+1)  =&
+                                    becq(ik)%nc(ijkb0 + 1 :ijkbnh,2, startb:lastb) 
+                        call zgemv('C',4*nh(nt), lastb - startb +1, ONE, mat, 4*nhm, vec, 1, & 
+                                    (0.d0,0.d0), aux1, 1 ) 
+                     ELSE
+                        vec(1:nh(nt))               = ps1(ijkb0 + 1:ijkbnh,ibnd)
+                        vec(nh(nt)+1:2*nh(nt))      = ps2(ijkb0 + 1:ijkbnh,ibnd,ipol) 
+                        mat(1:nh(nt),1:lastb-startb+1)  =      alpq(ipol,ik)%k(ijkb0 + 1:ijkbnh,startb:lastb)
+                        mat(nh(nt)+1:2*nh(nt), 1:lastb-startb+1) = becq(ik)%k(ijkb0  + 1:ijkbnh,startb:lastb)
+                        call zgemv('C',2*nh(nt), lastb - startb +1, ONE, mat, 2*nhm, vec, 1, & 
+                                    (0.d0,0.d0), aux1, 1 ) 
+                     END IF
+                     ! 
                      call start_clock('nldyn_b21')
                      do ntb = 1, ntyp
                         do nb = 1, nat
@@ -258,20 +273,21 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                                  call zgemv('N', nh(ntb), nh(ntb), ONE, int2(1,1,ipol, na,nb), nhm, & 
                                                  becp1(ik)%k(ijkb0b + 1, ibnd),1 , ONE,  psv(1), 1) 
                              END IF
-                             do jbnd = startb, lastb
-                                 jbnd_loc = jbnd - startb + 1 
-                                 IF (noncolin) THEN
-                                    aux1(jbnd_loc) = aux1 (jbnd_loc) + &
-                                    dot_product(becq(ik)%nc(ijkb0b + 1: ijkb0b + nh(ntb), 1, jbnd), & 
-                                                    psv_nc(1,1:nh(ntb))) + & 
-                                    dot_product(becq(ik)%nc(ijkb0b + 1: ijkb0b + nh(ntb), 2, jbnd), & 
-                                                    psv_nc(2,1:nh(ntb)))   
-                                 ELSE
-                                    aux1(jbnd_loc) = aux1 (jbnd_loc) + &
-                                    dot_product(becq(ik)%k(ijkb0b + 1: ijkb0b + nh(ntb),jbnd), & 
-                                                   psv(1:nh(ntb)))
-                                 END IF
-                              enddo
+                             !
+                             ijkbnb = ijkb0b + nh(ntb)
+                             IF (noncolin) THEN
+                                 vec(1:nh(ntb))           = psv_nc(1,1:nh(ntb)) 
+                                 vec(nh(ntb)+1:2*nh(ntb)) = psv_nc(2,1:nh(ntb)) 
+                                 mat(1:nh(ntb),          1:lastb-startb+1) &     
+                                                                      = becq(ik)%nc(ijkb0b+1:ijkbnb,1,startb:lastb) 
+                                 mat(nh(ntb)+1:2*nh(ntb),1:lastb-startb+1) & 
+                                                                      = becq(ik)%nc(ijkb0b+1:ijkbnb,2,startb:lastb)
+                                 call zgemv('C',2*nh(ntb),lastb-startb+1,ONE,mat,4*nhm,vec,1,ONE,aux1,1)     
+                             ELSE
+                                 vec(1:nh(ntb))    = psv(1:nh(ntb)) 
+                                 mat(1:nh(ntb),1:lastb-startb+1)  = becq(ik)%k(ijkb0b + 1: ijkbnb,startb:lastb) 
+                                 call zgemv('C',nh(ntb),lastb-startb+1,ONE,mat,2*nhm,vec,1,ONE,aux1,1) 
+                             END IF
                           endif
                        enddo
                     enddo
@@ -289,36 +305,24 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                              do jpol = 1, 3
                                 nu = 3 * (nb - 1) + jpol
                                 if (noncolin) then 
-                                    vec(1:nh(ntb))  =   conjg(alphap(jpol,ik)%nc(ijkb1b:ijkbnb, 1 ,ibnd))
-                                    mat(1:nh(ntb), : )    =   ps3_nc(ijkb1b:ijkbnb,1, startb:lastb) 
-                                    call zgemv('T',nh(ntb), lastb - startb +1, ONE, mat, nhm, vec, 1, & 
+                                    vec(1:nh(ntb))             =   conjg(alphap(jpol,ik)%nc(ijkb1b:ijkbnb, 1 ,ibnd)) 
+                                    vec(  nh(ntb)+1:2*nh(ntb)) =   conjg(alphap(jpol,ik)%nc(ijkb1b:ijkbnb, 2 ,ibnd))
+                                    vec(2*nh(ntb)+1:3*nh(ntb)) =   conjg(becp1(ik)%nc(ijkb1b: ijkbnb, 1, ibnd))
+                                    vec(3*nh(ntb)+1:4*nh(ntb)) =   conjg(becp1(ik)%nc(ijkb1b: ijkbnb, 2, ibnd))
+                                    mat(1:nh(ntb), : )              =  ps3_nc(ijkb1b:ijkbnb,1, startb:lastb) 
+                                    mat(nh(ntb)+1:2*nh(ntb), : )    =  ps3_nc(ijkb1b:ijkbnb,2, startb :lastb) 
+                                    mat(2*nh(ntb)+1:3*nh(ntb),:)    =  ps4_nc(ijkb1b:ijkbnb, 1, startb :lastb , jpol)
+                                    mat(3*nh(ntb)+1:4*nh(ntb),:)    =  ps4_nc(ijkb1b:ijkbnb, 2, startb :lastb , jpol)
+                                    call zgemv('T',4*nh(ntb), lastb - startb +1, ONE, mat, 4*nhm, vec, 1, & 
                                             (0.d0,0.d0), aux2, 1 )
                                     !
-                                    vec(1:nh(ntb))  =   conjg(alphap(jpol,ik)%nc(ijkb1b:ijkbnb, 2 ,ibnd))
-                                    mat(1:nh(ntb), : )    =   ps3_nc(ijkb1b:ijkbnb,2, startb :lastb) 
-                                    call zgemv('T',nh(ntb), lastb - startb +1, ONE, mat, nhm, vec, 1, & 
-                                            ONE, aux2, 1 )
-                                    !
-                                    vec(1:nh(ntb)) = conjg(becp1(ik)%nc(ijkb1b: ijkbnb, 1, ibnd))
-                                    mat(1:nh(ntb),:) = ps4_nc(ijkb1b:ijkbnb, 1, startb :lastb , jpol)
-                                    call zgemv('T',nh(ntb), lastb - startb +1, ONE, mat, nhm, vec, 1, & 
-                                               ONE, aux2, 1 )
-                                    !
-                                    vec(1:nh(ntb)) = conjg(becp1(ik)%nc(ijkb1b: ijkbnb, 2, ibnd))
-                                    mat(1:nh(ntb),:) = ps4_nc(ijkb1b:ijkbnb, 2, startb :lastb , jpol)
-                                    call zgemv('T',nh(ntb), lastb - startb +1, ONE, mat, nhm, vec, 1, & 
-                                         ONE, aux2, 1 )
                                 else 
-                                    vec(1:nh(ntb))  =   conjg(alphap(jpol,ik)%k(ijkb1b:ijkbnb,ibnd))
-                                    mat(1:nh(ntb), : )    =   ps3(ijkb1b:ijkbnb, startb :lastb) 
-                                    call zgemv('T',nh(ntb), lastb - startb +1, ONE, mat, nhm, vec, 1, & 
+                                    vec(1:nh(ntb))             = conjg(alphap(jpol,ik)%k(ijkb1b:ijkbnb,ibnd))
+                                    vec(nh(ntb)+1:2*nh(ntb))   = conjg(becp1(ik)%k(ijkb1b: ijkbnb, ibnd))
+                                    mat(1:nh(ntb), : )         =   ps3(ijkb1b:ijkbnb, startb :lastb) 
+                                    mat(nh(ntb)+1:2*nh(ntb),:) =   ps4(ijkb1b:ijkbnb, startb :lastb , jpol)
+                                    call zgemv('T',2*nh(ntb), lastb - startb +1, ONE, mat, 2*nhm, vec, 1, & 
                                          (0.d0,0.d0), aux2, 1 )
-                                    
-                                    ! 
-                                    vec(1:nh(ntb)) = conjg(becp1(ik)%k(ijkb1b: ijkbnb, ibnd))
-                                    mat(1:nh(ntb),:) = ps4(ijkb1b:ijkbnb, startb :lastb , jpol)
-                                    call zgemv('T',nh(ntb), lastb - startb +1, ONE, mat, nhm, vec, 1, & 
-                                                    ONE, aux2, 1 )
                                 end if      
                                 do jbnd = startb, lastb
                                    jbnd_loc = jbnd - startb + 1 

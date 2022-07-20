@@ -126,6 +126,7 @@ subroutine drho
   allocate (drhous ( dfftp%nnr, nspin_mag , 3 * nat))
   allocate (dbecsum( nhm * (nhm + 1) /2, nat, nspin_mag, 3 * nat))
   dbecsum=(0.d0,0.d0)
+  call start_clock('drhous')
   IF (noncolin) THEN
      allocate (dbecsum_nc( nhm, nhm, nat, nspin, 3 * nat))
      dbecsum_nc=(0.d0,0.d0)
@@ -133,6 +134,7 @@ subroutine drho
   ELSE
      call compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   ENDIF
+  call stop_clock('drhous')
 
   if (.not.lgamma) then
      do ik=1,nksq
