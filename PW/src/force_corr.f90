@@ -37,7 +37,7 @@ subroutine force_corr( forcescc )
   real(DP) :: forcescc(3,nat)
   !
   real(DP), allocatable :: rhocgnt(:), aux(:)
-  real(DP), allocatable :: vauxr(:,:)
+  real(DP), allocatable :: vauxr(:)
   complex(DP), allocatable :: vauxg(:,:)
   ! work space
   real(DP) ::  gx, arg, fact
@@ -47,14 +47,14 @@ subroutine force_corr( forcescc )
   !
   ! vnew is V_out
   !
-  allocate( vauxr(dfftp%nnr,1), vauxg(dfftp%nnr,1) )
+  allocate( vauxr(dfftp%nnr), vauxg(dfftp%nnr,1) )
   !
   if (nspin == 1 .or. nspin == 4) then
-     vauxr(:,1) = vnew%of_r(:,1)
+     vauxr(:) = vnew%of_r(:,1)
   else
      isup = 1
      isdw = 2
-     vauxr(:,1) = (vnew%of_r(:,isup) + vnew%of_r(:,isdw)) * 0.5d0
+     vauxr(:) = (vnew%of_r(:,isup) + vnew%of_r(:,isdw)) * 0.5d0
   endif
   !
   call rho_r2g( dfftp, vauxr, vauxg )

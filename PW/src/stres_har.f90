@@ -40,7 +40,7 @@ SUBROUTINE stres_har( sigmahar )
   !
   ALLOCATE( rhog(dfftp%nnr,1) )
   !
-  CALL rho_r2g( dfftp, rho%of_r(:,1:1), rhog )
+  CALL rho_r2g( dfftp, rho%of_r(:,1), rhog )
   !
   ! rhog contains now the charge density in G space
   ! the  G=0 component is not computed

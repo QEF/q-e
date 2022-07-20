@@ -56,7 +56,7 @@ subroutine stres_cc( sigmaxcc )
      enddo
   endif
   !
-  call rho_r2g( dfftp, vxc(:,1:1), vaux(:,1:1) )
+  call rho_r2g( dfftp, vxc(:,1), vaux(:,1:1) )
   !
   ! vaux contains now Vxc(G)
   !

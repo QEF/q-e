@@ -45,7 +45,7 @@ subroutine force_corr_gpu( forcescc )
   !
 #if defined(__CUDA)
   real(DP), pointer, contiguous :: rhocgnt_d(:),  aux_d(:,:), r_d(:), rab_d(:), rhoat_d(:), tau_d(:,:)
-  real(DP), allocatable :: vauxr(:,:)
+  real(DP), allocatable :: vauxr(:)
   complex(DP), allocatable :: vauxg(:,:)
   ! work space
   real(DP) ::  gx, arg, fact, forcesccx, forcesccy, forcesccz
@@ -66,14 +66,14 @@ subroutine force_corr_gpu( forcescc )
   !
   tau_d(1:3,1:nat) = tau(1:3,1:nat)
   !
-  allocate( vauxr(dfftp%nnr,1), vauxg(dfftp%nnr,1) )
+  allocate( vauxr(dfftp%nnr), vauxg(dfftp%nnr,1) )
   !
   if (nspin == 1 .or. nspin == 4) then
-     vauxr(:,1) = vnew%of_r(:,1)
+     vauxr(:) = vnew%of_r(:,1)
   else
      isup = 1
      isdw = 2
-     vauxr(:,1) = (vnew%of_r(:,isup) + vnew%of_r(:,isdw)) * 0.5d0
+     vauxr(:) = (vnew%of_r(:,isup) + vnew%of_r(:,isdw)) * 0.5d0
   endif
   !
   !$acc data copyin(vauxr) create(vauxg)

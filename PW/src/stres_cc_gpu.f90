@@ -77,7 +77,7 @@ SUBROUTINE stres_cc_gpu( sigmaxcc )
      ENDDO
   ENDIF
   !
-  CALL rho_r2g( dfftp, vxc(:,1:1), vaux(:,1:1) ) 
+  CALL rho_r2g( dfftp, vxc(:,1), vaux(:,1:1) ) 
   !
   ! vaux contains now Vxc(G)
   !
