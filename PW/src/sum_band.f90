@@ -18,7 +18,8 @@ SUBROUTINE sum_band()
   USE cell_base,            ONLY : at, bg, omega, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp, dffts
-  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE fft_interfaces,       ONLY : invfft
+  USE fft_rho,              ONLY : rho_g2r, rho_r2g
   USE gvect,                ONLY : ngm, g
   USE gvecs,                ONLY : doublegrid
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk, igk_k
@@ -49,10 +50,6 @@ SUBROUTINE sum_band()
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto
   !
-  
-  use fft_rho , only: rho_g2r, rho_r2g
-  
-  
   IMPLICIT NONE
   !
   ! ... local variables

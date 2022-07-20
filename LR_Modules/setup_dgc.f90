@@ -20,7 +20,6 @@ SUBROUTINE setup_dgc
   USE gvect,                ONLY : ngm, g
   USE scf,                  ONLY : rho, rho_core, rhog_core, rhoz_or_updw
   USE noncollin_module,     ONLY : noncolin, domag, ux, nspin_gga, nspin_mag
-  USE wavefunctions,        ONLY : psic
   USE kinds,                ONLY : DP
   USE xc_lib,               ONLY : xclib_dft_is, xc_gcx, dgcxc
   USE uspp,                 ONLY : nlcc_any
@@ -84,7 +83,7 @@ SUBROUTINE setup_dgc
      !
      DO is = 1, nspin_gga
         IF (nlcc_any) rhoout(:,is) = fac*rho_core(:) + rhoout(:,is)
-        CALL rho_r2g( dfftp, rhoout(:,is:is), rhogout(:,is:is) )
+        CALL rho_r2g( dfftp, rhoout(:,is), rhogout(:,is:is) )
         CALL fft_gradient_g2r( dfftp, rhogout(1,is), g, grho(1,1,is) )
      ENDDO
      !

@@ -41,7 +41,7 @@ subroutine stres_loc( sigmaloc )
   allocate( dvloc(ngl), rhog(dfftp%nnr,1) )
   sigmaloc(:,:) = 0.d0
   !
-  call rho_r2g( dfftp, rho%of_r(:,1:1), rhog )
+  call rho_r2g( dfftp, rho%of_r(:,1), rhog )
   !
   ! rhog contains the charge density in G space
   if (gamma_only) then

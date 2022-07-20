@@ -65,7 +65,7 @@ SUBROUTINE stres_loc_gpu( sigmaloc )
   ALLOCATE( rhog(dfftp%nnr,1) )
   !$acc data create( rhog )
   !
-  CALL rho_r2g( dfftp, rho%of_r(:,1:1), rhog )
+  CALL rho_r2g( dfftp, rho%of_r(:,1), rhog )
   !
   gl_d = gl ; igtongl_d = igtongl
   !

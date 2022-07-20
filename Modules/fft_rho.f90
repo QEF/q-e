@@ -21,19 +21,20 @@ MODULE fft_rho
   PUBLIC :: rho_r2g, rho_g2r
   !
   INTERFACE rho_r2g
-    MODULE PROCEDURE rho_r2g_1, rho_r2g_general
+    MODULE PROCEDURE rho_r2g_1spin, rho_r2g_Nspin
   END INTERFACE
   !
   INTERFACE rho_g2r
-    MODULE PROCEDURE rho_g2r_1, rho_g2r_2, rho_g2r_sum_components
+    MODULE PROCEDURE rho_g2r_1spin, rho_g2r_Nspin, rho_g2r_sum_spin
   END INTERFACE
   !
 CONTAINS
   !
   !-----------------------------------------------------------------
-  SUBROUTINE rho_r2g_1( desc, rhor, rhog, v )
+  SUBROUTINE rho_r2g_1spin( desc, rhor, rhog, v )
     !---------------------------------------------------------------
-    !! Bring charge density rho from real to G- space.
+    !! Bring charge density rho from real to G- space - 1-dimensional
+    !! input (so 1 spin component only).
     !
     USE fft_types,              ONLY: fft_type_descriptor
     USE fft_helper_subroutines, ONLY: fftx_threed2oned
@@ -85,12 +86,13 @@ CONTAINS
     !
     !$acc end data
     !
-  END SUBROUTINE rho_r2g_1
+  END SUBROUTINE rho_r2g_1spin
   !
   !-----------------------------------------------------------------
-  SUBROUTINE rho_r2g_general( desc, rhor, rhog, v )
+  SUBROUTINE rho_r2g_Nspin( desc, rhor, rhog, v )
     !---------------------------------------------------------------
-    !! Bring charge density rho from real to G- space.
+    !! Bring charge density rho from real to G- space. N-dimensional
+    !! input (unpolarized, polarized, etc.).
     !
     USE fft_types,              ONLY: fft_type_descriptor
     USE fft_helper_subroutines, ONLY: fftx_threed2oned
@@ -189,10 +191,13 @@ CONTAINS
     !
     !$acc end data
     !
-  END SUBROUTINE rho_r2g_general
+  END SUBROUTINE rho_r2g_Nspin
   !
-  !
-  SUBROUTINE rho_g2r_1( desc, rhog, rhor )
+  !------------------------------------------------------------------
+  SUBROUTINE rho_g2r_1spin( desc, rhog, rhor )
+    !----------------------------------------------------------------
+    !! Bring charge density rho from G-space to real space. 1-dimensional
+    !! input (1 spin component only).
     !
     USE fft_types,              ONLY: fft_type_descriptor
     USE fft_helper_subroutines, ONLY: fftx_oned2threed
@@ -231,10 +236,13 @@ CONTAINS
     !$acc end data
     DEALLOCATE( psi )
     !
-  END SUBROUTINE rho_g2r_1
+  END SUBROUTINE rho_g2r_1spin
   !
-  !
-  SUBROUTINE rho_g2r_2( desc, rhog, rhor )
+  !----------------------------------------------------------------------
+  SUBROUTINE rho_g2r_Nspin( desc, rhog, rhor )
+    !---------------------------------------------------------------------
+    !! Bring charge density rho from G- to real space. N-dimensional
+    !! input (unpolarized, polarized, etc.).
     !
     USE fft_types,              ONLY: fft_type_descriptor
     USE fft_helper_subroutines, ONLY: fftx_threed2oned, fftx_oned2threed
@@ -331,10 +339,13 @@ CONTAINS
     !
     DEALLOCATE( psi )
     !
-  END SUBROUTINE rho_g2r_2
+  END SUBROUTINE rho_g2r_Nspin
   !
-  !
-  SUBROUTINE rho_g2r_sum_components( desc, rhog, rhor )
+  !-------------------------------------------------------------------------
+  SUBROUTINE rho_g2r_sum_spin( desc, rhog, rhor )
+    !-----------------------------------------------------------------------
+    !! Bring charge density rho from G- to real space and sum over spin
+    !! components.
     !
     USE fft_types,              ONLY: fft_type_descriptor
     USE fft_helper_subroutines, ONLY: fftx_threed2oned, fftx_oned2threed
@@ -446,7 +457,7 @@ CONTAINS
     !
     DEALLOCATE( psi )
     !
-  END SUBROUTINE rho_g2r_sum_components
+  END SUBROUTINE rho_g2r_sum_spin
   !
   !
 END MODULE fft_rho

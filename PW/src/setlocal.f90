@@ -88,8 +88,8 @@ SUBROUTINE setlocal
   !
   ! ... v_of_0 is (Vloc)(G=0)
   !
-  v_of_0 = 0.0_DP
-  IF (gg(1) < eps8) v_of_0 = DBLE( aux(dfftp%nl(1)) )
+  v_of_0 = 0.0_D
+  IF (gg(1) < eps8) v_of_0 = DBLE( aux(1) )
   !
   CALL mp_sum( v_of_0, intra_bgrp_comm )
   !

@@ -21,7 +21,7 @@ SUBROUTINE sum_band_gpu()
   USE cell_base,            ONLY : at, bg, omega, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp, dffts
-  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE fft_interfaces,       ONLY : invfft
   USE fft_rho,              ONLY : rho_g2r, rho_r2g
   USE gvect,                ONLY : ngm, g
   USE gvecs,                ONLY : doublegrid
