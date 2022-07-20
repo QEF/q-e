@@ -14,13 +14,10 @@ default :
 	@echo '  make target'
 	@echo ' '
 	@echo 'where <target> identifies an action'
-	@echo ' run-tests                   : run-tests-serial (default)'
-	@echo ' run-tests-serial            : run all tests in SERIAL'
-	@echo ' run-tests-XX-serial         : run tests for XX={pw,cp,ph,epw,hp,tddfpt kcw} only, as above'
-	@echo ' run-tests-parallel          : run all tests in PARALLEL (4 MPI)'
-	@echo ' run-tests-XX-parallel       : run tests for XX={pw,cp,ph,epw,hp,tddfpt kcw} only, as above'
-	@echo ' run-custom-test testdir=DIR : run test in DIR only (serial)'
-	@echo ' run-custom-test-parallel testdir=DIR : run test in DIR only (parallel 4 MPI)'
+	@echo ' run-tests-XX [np=N]        : run tests [optionally, on N processors]'
+	@echo ' for XX=pw, cp, ph, epw, hp, tddfpt, kcw, all_currents, pp, zg, xsd-pw'
+	@echo ' run-tests [np=N]           : run all tests above (except the last four)'
+	@echo ' run-custom-test testdir=DIR [np=N]: run test in DIR only'
 	@echo ' compare                     : compare last output with reference'
 	@echo ' pseudo                      : download needed PPs into ESPRESSO_PSEUDO'
 	@echo ' clean                       : clean stdout/sderr of all tests'
@@ -41,117 +38,70 @@ pseudo :
 	@./check_pseudo.sh QEHeat_
 	@./check_pseudo.sh kcw_
 
-run-tests : run-tests-serial
+run-tests : run-tests-pw run-tests-cp run-tests-ph run-tests-epw run-tests-hp run-tests-tddfpt run-tests-kcw
 
-run-tests-serial : run-tests-pw-serial run-tests-cp-serial run-tests-ph-serial run-tests-epw-serial run-tests-hp-serial run-tests-tddfpt-serial run-tests-kcw-serial
-
-run-tests-parallel : run-tests-pw-parallel run-tests-cp-parallel run-tests-ph-parallel run-tests-epw-parallel run-tests-hp-parallel run-tests-tddfpt-parallel
-
-
-run-tests-cp-serial : prolog pseudo
+run-tests-cp : prolog pseudo
 	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
+	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
 
-run-tests-cp-parallel : prolog pseudo
+run-tests-pw : prolog pseudo
+	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
+
+run-tests-ph : prolog pseudo
+	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_all
+
+run-tests-epw : prolog pseudo
+	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_all
+
+run-tests-zg : prolog
+	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=zg_all
+
+run-tests-hp : prolog pseudo
+	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=hp_all
+
+run-tests-pp : prolog pseudo
+	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pp_all
+
+run-tests-tddfpt : prolog pseudo
+	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=tddfpt_all
+
+run-tests-image : prolog pseudo
+	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=image_all
+
+run-tests-kcw : prolog pseudo
+	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose  --category=kcw_all
+
+run-tests-all_currents : prolog pseudo
 	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
-	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
-
-run-tests-pw-serial : prolog pseudo
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
-
-run-tests-pw-parallel : prolog pseudo
-	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
-
-run-tests-ph-serial : prolog pseudo
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_all
-
-run-tests-ph-parallel : prolog pseudo
-	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_all
-
-run-tests-epw-serial : prolog pseudo
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_partial
-
-run-tests-epw-parallel : prolog pseudo
-	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_all
-
-run-tests-zg-serial : prolog
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=zg_all
-
-run-tests-zg-parallel : prolog
-	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=zg_all
-
-run-tests-hp-serial : prolog pseudo
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=hp_all
-
-run-tests-hp-parallel : prolog pseudo
-	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=hp_all
-
-run-tests-pp-serial : prolog pseudo
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pp_all
-
-run-tests-pp-parallel : prolog pseudo
-	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pp_all
-
-run-tests-tddfpt-serial : prolog pseudo
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=tddfpt_all
-
-run-tests-tddfpt-parallel : prolog pseudo
-	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=tddfpt_all
-
-run-tests-image-parallel : prolog pseudo
-	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=image_all
-
-run-tests-kcw-serial : prolog pseudo
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose  --category=kcw_all
-
-run-tests-kcw-parallel : prolog pseudo
-	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose  --category=kcw_all
-
-run-tests-all_currents-serial : prolog pseudo
-	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=all_currents_all
-
-run-tests-all_currents-parallel : prolog pseudo
-	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
-	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=all_currents_all
-
+	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=all_currents_all
 
 run-travis : clean prolog pseudo
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_base
+	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_base
 
-run-custom-test : run-custom-test-serial
-
-run-custom-test-serial : prolog pseudo
+run-custom-test : prolog pseudo
 	@if test -d $(testdir); then \
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
+	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
 
-run-custom-test-parallel : prolog pseudo
-	@if test -d $(testdir); then \
-	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
-
-
-run-tests-xsd-pw-serial : prolog pseudo
+run-tests-xsd-pw : prolog pseudo
 	cd xsd_pw ; for file in ./*.in ; do \
   	echo "Running using $$file" ; \
-		env QE_USE_MPI=0 ../run-pw.sh -in $$file &> $$file.out ; \
+		env QE_USE_MPI=$(np) ../run-pw.sh -in $$file &> $$file.out ; \
 		python ../validate_xsd_pw.py $$file; \
     done ; cd ..
 
 create-reference-cp : pseudo prolog
 	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=cp_all make-benchmarks
+	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --category=cp_all make-benchmarks
 
 create-reference-pw : pseudo prolog
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=pw_all make-benchmarks
+	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --category=pw_all make-benchmarks
 
 create-reference-epw : pseudo prolog
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=epw_all make-benchmarks
+	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --category=epw_all make-benchmarks
 
 create-reference-all_currents : pseudo prolog
 	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=all_currents_all make-benchmarks
-
-
+	env QE_USE_MPI=$(np) ${TESTCODE_DIR}/bin/testcode.py --category=all_currents_all make-benchmarks
 
 compare : compare-cp compare-pw compare-ph compare-epw compare-tddfpt compare-hp compare-all_currents
 
@@ -259,3 +209,41 @@ purge: clean
 	@for x in `find pw_* -name "benchmark*"`; do rm -rf $$x; done
 	@for x in `find cp_* -name "benchmark*"`; do rm -rf $$x; done
 	@for x in `find QEHeat_* -name "benchmark*"`; do rm -rf $$x; done
+
+
+run-tests-serial :
+	@echo '$@ obsolete, use "make run-tests" instead'
+run-tests-pw-serial :
+	@echo '$@ obsolete, use "make run-tests-pw" instead'
+run-tests-cp-serial :
+	@echo '$@ obsolete, use "make run-tests-cp" instead'
+run-tests-ph-serial : 
+	@echo '$@ obsolete, use "make run-tests-ph" instead'
+run-tests-epw-serial :
+	@echo '$@ obsolete, use "make run-tests-epw" instead'
+run-tests-hp-serial :
+	@echo '$@ obsolete, use "make run-tests-hp" instead'
+run-tests-tddfpt-serial :
+	@echo '$@ obsolete, use "make run-tests-tddfpt" instead'
+run-tests-kcw-serial :
+	@echo '$@ obsolete, use "make run-tests-kcw" instead'
+run-tests-pp-serial :
+	@echo '$@ obsolete, use "make run-tests-pp" instead'
+run-tests-parallel :
+	@echo '$@ obsolete, use "make run-tests np=N" instead'
+run-tests-pw-parallel :
+	@echo '$@ obsolete, use "make run-tests-pw np=N" instead'
+run-tests-cp-parallel :
+	@echo '$@ obsolete, use "make run-tests-cp np=N" instead'
+run-tests-ph-parallel :
+	@echo '$@ obsolete, use "make run-tests-ph np=N" instead'
+run-tests-epw-parallel :
+	@echo '$@ obsolete, use "make run-tests-epw np=N" instead'
+run-tests-hp-parallel :
+	@echo '$@ obsolete, use "make run-tests-hp np=N" instead'
+run-tests-tddfpt-parallel :
+	@echo '$@ obsolete, use "make run-tests-tddfpt np=N" instead'
+run-tests-kcw-parallel :
+	@echo '$@ obsolete, use "make run-tests-kcw np=N" instead'
+run-tests-pp-parallel :
+	@echo '$@ obsolete, use "make run-tests-pp np=N" instead'
