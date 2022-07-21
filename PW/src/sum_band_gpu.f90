@@ -21,7 +21,8 @@ SUBROUTINE sum_band_gpu()
   USE cell_base,            ONLY : at, bg, omega, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp, dffts
-  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE fft_interfaces,       ONLY : invfft
+  USE fft_rho,              ONLY : rho_g2r, rho_r2g
   USE gvect,                ONLY : ngm, g
   USE gvecs,                ONLY : doublegrid
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk, igk_k, igk_k_d
@@ -168,14 +169,8 @@ SUBROUTINE sum_band_gpu()
   !
   ! ... bring the unsymmetrized rho(r) to G-space (use psic as work array)
   !
-  DO is = 1, nspin
-     psic(1:dffts%nnr) = rho%of_r(1:dffts%nnr,is)
-     psic(dffts%nnr+1:) = 0.0_dp
-     CALL fwfft ('Rho', psic, dffts)
-     rho%of_g(1:dffts%ngm,is) = psic(dffts%nl(1:dffts%ngm))
-     rho%of_g(dffts%ngm+1:,is) = (0.0_dp,0.0_dp)
-  END DO
-
+  CALL rho_r2g( dffts, rho%of_r, rho%of_g )
+  !
   IF( okvan )  THEN
      !
      ! ... becsum is summed over bands (if bgrp_parallelization is done)
@@ -219,13 +214,7 @@ SUBROUTINE sum_band_gpu()
   !
   ! ... synchronize rho%of_r to the calculated rho%of_g (use psic as work array)
   !
-  DO is = 1, nspin_mag
-     psic(:) = ( 0.D0, 0.D0 )
-     psic(dfftp%nl(:)) = rho%of_g(:,is)
-     IF ( gamma_only ) psic(dfftp%nlm(:)) = CONJG( rho%of_g(:,is) )
-     CALL invfft ('Rho', psic, dfftp)
-     rho%of_r(:,is) = psic(:)
-  END DO
+  CALL rho_g2r( dfftp, rho%of_g, rho%of_r )
   !
   ! ... rho_kin(r): sum over bands, k-points, bring to G-space, symmetrize,
   ! ... synchronize with rho_kin(G)
@@ -234,24 +223,14 @@ SUBROUTINE sum_band_gpu()
      !
      CALL mp_sum( rho%kin_r, inter_pool_comm )
      CALL mp_sum( rho%kin_r, inter_bgrp_comm )
-     DO is = 1, nspin
-        psic(1:dffts%nnr) = rho%kin_r(1:dffts%nnr,is)
-        psic(dffts%nnr+1:) = 0.0_dp
-        CALL fwfft ('Rho', psic, dffts)
-        rho%kin_g(1:dffts%ngm,is) = psic(dffts%nl(1:dffts%ngm))
-     END DO
+     !
+     CALL rho_r2g( dffts, rho%kin_r, rho%kin_g )
      !
      IF (.NOT. gamma_only) CALL sym_rho( nspin, rho%kin_g )
      !
-     DO is = 1, nspin
-        psic(:) = ( 0.D0, 0.D0 )
-        psic(dfftp%nl(:)) = rho%kin_g(:,is)
-        IF ( gamma_only ) psic(dfftp%nlm(:)) = CONJG( rho%kin_g(:,is) )
-        CALL invfft ('Rho', psic, dfftp)
-        rho%kin_r(:,is) = psic(:)
-     END DO
+     CALL rho_g2r( dfftp, rho%kin_g, rho%kin_r )
      !
-  END IF
+  ENDIF
   CALL stop_clock_gpu( 'sum_band:sym_rho' )
   !
   ! ... if LSDA rho%of_r and rho%of_g are converted from (up,dw) to

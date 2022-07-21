@@ -15,7 +15,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE constants, ONLY: tpi, e2, eps6
    USE ener, ONLY: ewld, ehart, etxc, vtxc, etot, etxcc, demet, ef
    USE fft_base,  ONLY: dfftp
-   USE fft_interfaces, ONLY : fwfft
+   USE fft_rho, ONLY: rho_r2g
    USE gvect, ONLY: ngm, gstart, g, gg, gcutm, igtongl
    USE klist , ONLY: nks, nelec, xk, wk, degauss, ngauss, igk_k, ngk
    USE lsda_mod, ONLY: lsda, nspin
@@ -336,12 +336,12 @@ CONTAINS
       !
       IMPLICIT NONE
 
-      COMPLEX(DP), ALLOCATABLE :: aux(:)
+      COMPLEX(DP), ALLOCATABLE :: aux(:,:)
       INTEGER :: npw, ibnd, j, ig, ik,ikk, ispin, na, nt, ijkb0, ikb,jkb, ih,jh
       REAL(dp), ALLOCATABLE :: g2kin(:)
       REAL(DP) :: charge, etotefield, elocg
 
-      ALLOCATE (aux(dfftp%nnr))
+      ALLOCATE (aux(dfftp%nnr,1))
       CALL allocate_bec_type ( nkb, nbnd, becp )
       CALL using_becp_auto(2)
 
@@ -358,13 +358,11 @@ CONTAINS
          !
          !      bring rho to G-space
          !
-         aux(:) = cmplx( rho%of_r(:,ispin), 0.d0,kind=DP)
-         CALL fwfft ('Rho', aux, dfftp)
+         CALL rho_r2g( dfftp, rho%of_r(:,ispin), aux )
          !
-         DO nt=1,ntyp
+         DO nt = 1, ntyp
             DO ig = 1, ngm
-               elocg = vloc(igtongl(ig),nt) * &
-                       dble ( strf(ig,nt) * conjg(aux(dfftp%nl(ig))) )
+               elocg = vloc(igtongl(ig),nt) * dble( strf(ig,nt) * conjg(aux(ig,1)) )
                eloc = eloc + elocg
                IF( gamma_only .and. ig>=gstart) eloc = eloc + elocg
             ENDDO

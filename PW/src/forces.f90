@@ -140,7 +140,7 @@ SUBROUTINE forces()
   CALL start_clock('frc_lc') 
   IF (.not. use_gpu) & ! On the CPU
      CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
-                 g, rho%of_r(:,1), dfftp%nl, gstart, gamma_only, vloc, &
+                 g, rho%of_r(:,1), gstart, gamma_only, vloc, &
                  forcelc )
 #if defined(__CUDA)
   IF (      use_gpu) THEN ! On the GPU
@@ -149,7 +149,7 @@ SUBROUTINE forces()
      IF (ierr /= 0) CALL errore( 'forces', 'cannot allocate buffers', -1 )
      CALL dev_memcpy(vloc_d, vloc)
      CALL force_lc_gpu( nat, tau, ityp, alat, omega, ngm, ngl, igtongl_d, &
-                   g_d, rho%of_r(:,1), dfftp%nl_d, gstart, gamma_only, vloc_d, &
+                   g_d, rho%of_r(:,1), gstart, gamma_only, vloc_d, &
                    forcelc )
      CALL dev_buf%release_buffer(vloc_d, ierr)
   END IF

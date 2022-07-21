@@ -16,50 +16,44 @@ SUBROUTINE stres_cc_gpu( sigmaxcc )
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : alat, omega, tpiba, tpiba2
   USE fft_base,             ONLY : dfftp
-  USE fft_interfaces,       ONLY : fwfft
+  USE fft_rho,              ONLY : rho_r2g
   USE gvect,                ONLY : ngm, gstart, ngl, gl, igtongl, igtongl_d
   USE ener,                 ONLY : etxc, vtxc
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho, rho_core, rhog_core
   USE vlocal,               ONLY : strf
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions,        ONLY : psic
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
   USE gvect,                ONLY : g_d, gg_d
-  USE wavefunctions_gpum,   ONLY : using_psic, using_psic_d, psic_d
 #if defined(__CUDA)
-  USE device_fbuff_m,             ONLY : dev_buf
+  USE device_fbuff_m,         ONLY : dev_buf
   USE device_memcpy_m,        ONLY : dev_memcpy
 #endif
-  !
   !
   IMPLICIT NONE
   !
   ! output
   REAL(DP) :: sigmaxcc(3,3)
   ! local variables
-
+  !
   INTEGER :: nt, ng, l, m, ir
   ! counters
   REAL(DP) :: fact
   REAL(DP), ALLOCATABLE :: vxc(:,:)
+  COMPLEX(DP), ALLOCATABLE :: vaux(:,:)
   !
-  INTEGER,  POINTER :: nl_d(:)
   REAL(DP), POINTER :: rhocg_d(:), r_d(:), rab_d(:), rhoc_d(:), gl_d(:)
   COMPLEX(DP), POINTER :: strf_d(:)
   !
   INTEGER :: maxmesh, ierrs(6)
-  REAL(DP) :: rhocg1(1), sigma_rid, sigmadiag
+  REAL(DP) :: sigma_rid, sigmadiag
   REAL(DP) :: sigma1, sigma2, sigma3, &
               sigma4, sigma5, sigma6
   !
 #if defined(__CUDA)
-  attributes(DEVICE) :: rhocg_d, nl_d, r_d, rab_d, rhoc_d, &
-                        gl_d, strf_d, nl_d
-  !
-  nl_d => dfftp%nl_d
+  attributes(DEVICE) :: rhocg_d, r_d, rab_d, rhoc_d, gl_d, strf_d
   !
   sigmaxcc(:,:) = 0._DP
   IF ( ANY( upf(1:ntyp)%nlcc ) ) GOTO 15
@@ -70,31 +64,22 @@ SUBROUTINE stres_cc_gpu( sigmaxcc )
   !
   ! recalculate the exchange-correlation potential
   !
-  ALLOCATE( vxc(dfftp%nnr,nspin) )
+  ALLOCATE( vxc(dfftp%nnr,nspin), vaux(dfftp%nnr,1) )
   !
   CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, vxc )
   !
-  CALL using_psic(2)
+  !$acc data copyin(vxc) create(vaux)
   !
-  IF (nspin==1 .OR. nspin==4) THEN
+  IF ( nspin==2 ) THEN
+     !$acc parallel loop
      DO ir = 1, dfftp%nnr
-        psic(ir) = CMPLX(vxc(ir,1))
-     ENDDO
-  ELSE
-     DO ir = 1, dfftp%nnr
-        psic(ir) = CMPLX(0.5_DP * (vxc(ir,1) + vxc(ir,2)))
+        vxc(ir,1) = 0.5d0 * ( vxc(ir,1) + vxc(ir,2) )
      ENDDO
   ENDIF
   !
-  DEALLOCATE( vxc )
+  CALL rho_r2g( dfftp, vxc(:,1), vaux(:,1:1) ) 
   !
-  CALL using_psic(0)
-  CALL using_psic_d(1)
-  !
-  CALL fwfft( 'Rho', psic_d, dfftp )
-  !
-  CALL using_psic(0)
-  ! psic contains now Vxc(G)
+  ! vaux contains now Vxc(G)
   !
   sigmadiag = 0._DP
   !
@@ -128,28 +113,27 @@ SUBROUTINE stres_cc_gpu( sigmaxcc )
         !
         ! diagonal term
         IF (gstart==2) THEN
-          rhocg1=rhocg_d(igtongl(1:1))
-          sigmadiag = sigmadiag + DBLE(CONJG(psic(dfftp%nl(1))) * &
-                       strf(1,nt)) * rhocg1(1)
+          !$acc kernels
+          sigmadiag = sigmadiag + DBLE(CONJG(vaux(1,1))*strf_d(1)) * &
+                                  rhocg_d(igtongl_d(1))
+          !$acc end kernels
         ENDIF
         !
-        !$cuf kernel do (1) <<<*,*>>>
+        !$acc parallel loop
         DO ng = gstart, ngm
-           sigmadiag = sigmadiag + DBLE(CONJG(psic_d(nl_d(ng))) * &
-                        strf_d(ng)) * rhocg_d(igtongl_d(ng) ) * fact
+           sigmadiag = sigmadiag + DBLE(CONJG(vaux(ng,1)) * strf_d(ng)) * &
+                                   rhocg_d(igtongl_d(ng)) * fact
         ENDDO
-        !
-        
         !
         CALL deriv_drhoc_gpu( ngl, gl_d, omega, tpiba2, msh(nt), &
                               r_d, rab_d, rhoc_d, rhocg_d )
         !
         ! non diagonal term (g=0 contribution missing)
         !
-        !$cuf kernel do (1) <<<*,*>>>
+        !$acc parallel loop reduction(+:sigma1,sigma2,sigma3,sigma4,sigma5,sigma6)
         DO ng = gstart, ngm
           !
-          sigma_rid = DBLE(CONJG(psic_d(nl_d(ng))) &
+          sigma_rid = DBLE(CONJG(vaux(ng,1)) &
                       * strf_d(ng)) * rhocg_d(igtongl_d(ng)) * tpiba &
                       / SQRT(gg_d(ng)) * fact
           !
@@ -177,7 +161,9 @@ SUBROUTINE stres_cc_gpu( sigmaxcc )
   ENDDO 
   !
   CALL mp_sum( sigmaxcc, intra_bgrp_comm )
-  !  
+  !
+  !$acc end data
+  DEALLOCATE( vxc, vaux )
   CALL dev_buf%release_buffer( gl_d,   ierrs(1) )
   CALL dev_buf%release_buffer( rhocg_d,ierrs(2) )
   CALL dev_buf%release_buffer( r_d,    ierrs(3) )

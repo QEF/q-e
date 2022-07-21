@@ -44,6 +44,7 @@ SUBROUTINE addusforce_g( forcenl )
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp
   USE cell_base,          ONLY : omega, tpiba
   USE fft_base,           ONLY : dfftp
+  USE fft_rho,            ONLY : rho_r2g
   USE gvect,              ONLY : ngm, gg, g, eigts1, eigts2, eigts3, mill
   USE noncollin_module,   ONLY : nspin_mag
   USE scf,                ONLY : v, vltot
@@ -53,7 +54,6 @@ SUBROUTINE addusforce_g( forcenl )
   USE mp_pools,           ONLY : inter_pool_comm
   USE mp,                 ONLY : mp_sum
   USE control_flags,      ONLY : gamma_only
-  USE fft_interfaces,     ONLY : fwfft
   !
   IMPLICIT NONE
   !
@@ -81,26 +81,23 @@ SUBROUTINE addusforce_g( forcenl )
      fact = 1.d0*omega
   ENDIF
   !
-  ! fourier transform of the total effective potential
+  ! Fourier transform of the total effective potential
   !
   ALLOCATE( vg(ngm,nspin_mag) )
-  ALLOCATE( aux(dfftp%nnr) )
   DO is = 1, nspin_mag
-     IF (nspin_mag==4.AND.is/=1) THEN
-        aux(:) = v%of_r(:,is)
-     ELSE
-        aux(:) = vltot (:) + v%of_r (:, is)
-     ENDIF
-     CALL fwfft( 'Rho', aux, dfftp )
-     ! Note the factors -i and 2pi/a *units of G) here in V(G) !
-     vg(:, is) = aux(dfftp%nl(:)) * tpiba * (0.d0, -1.d0)
+    IF ( nspin_mag == 4 .and. is /= 1 ) THEN
+       CALL rho_r2g( dfftp, v%of_r(:,is), vg(:,is:is) )
+    ELSE
+       CALL rho_r2g( dfftp, v%of_r(:,is), vg(:,is:is), vltot(:) )
+    ENDIF
+    ! Note the factors -i and 2pi/a *units of G) here in V(G) !
+    vg(:,is) = vg(:,is) * tpiba * (0.d0, -1.d0)
   ENDDO
-  DEALLOCATE( aux )
   !
   ! With k-point parallelization, distribute G-vectors across processors
   ! ngm_s = index of first G-vector for this processor
   ! ngm_e = index of last  G-vector for this processor
-  ! ngm_l = local number of G-vectors 
+  ! ngm_l = local number of G-vectors
   !
   CALL divide( inter_pool_comm, ngm, ngm_s, ngm_e )
   ngm_l = ngm_e-ngm_s+1

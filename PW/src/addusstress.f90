@@ -59,13 +59,13 @@ SUBROUTINE addusstress_g( sigmanlc )
   USE ions_base,      ONLY : nat, ntyp => nsp, ityp
   USE cell_base,      ONLY : omega, tpiba
   USE fft_base,       ONLY : dfftp
+  USE fft_rho,        ONLY : rho_r2g
   USE gvect,          ONLY : ngm, gg, g, eigts1, eigts2, eigts3, mill
   USE lsda_mod,       ONLY : nspin
   USE scf,            ONLY : v, vltot
   USE uspp,           ONLY : becsum, okvan
   USE uspp_param,     ONLY : upf, lmaxq, nh, nhm
   USE control_flags,  ONLY : gamma_only
-  USE fft_interfaces, ONLY : fwfft
   USE mp_pools,       ONLY : inter_pool_comm
   USE mp,             ONLY : mp_sum
   !
@@ -80,7 +80,7 @@ SUBROUTINE addusstress_g( sigmanlc )
   ! starting/ending indices, local number of G-vectors
   INTEGER :: ig, nt, ih, jh, ijh, ipol, jpol, is, na, nij
   ! counters
-  COMPLEX(DP), ALLOCATABLE :: aux(:), aux1(:,:), aux2(:,:), vg(:,:), qgm(:,:)
+  COMPLEX(DP), ALLOCATABLE :: aux1(:,:), aux2(:,:), vg(:,:), qgm(:,:)
   ! work space (complex)
   COMPLEX(DP)              :: cfac
   REAL(DP)                 :: fac(3,nspin), sus(3,3)
@@ -91,22 +91,17 @@ SUBROUTINE addusstress_g( sigmanlc )
   !
   sus(:,:) = 0.d0
   !
-  ! fourier transform of the total effective potential
+  ! Fourier transform of the total effective potential
   !
-  ALLOCATE( vg(ngm,nspin) )
-  ALLOCATE( aux(dfftp%nnr) )
+  ALLOCATE( vg(ngm,nspin)  )
+  !
   DO is = 1, nspin
-     IF ( nspin == 4 .and. is /= 1 ) THEN
-        aux(:) = v%of_r(:,is)
-     ELSE
-        aux(:) = vltot(:) + v%of_r(:,is)
-     ENDIF
-     CALL fwfft( 'Rho', aux, dfftp )
-     DO ig = 1, ngm
-        vg(ig, is) = aux( dfftp%nl (ig) )
-     ENDDO
+    IF ( nspin == 4 .and. is /= 1 ) THEN
+       CALL rho_r2g( dfftp, v%of_r(:,is), vg(:,is:is) )
+    ELSE
+       CALL rho_r2g( dfftp, v%of_r(:,is), vg(:,is:is), vltot(:) )
+    ENDIF
   ENDDO
-  DEALLOCATE( aux )
   !
   ! With k-point parallelization, distribute G-vectors across processors
   ! ngm_s = index of first G-vector for this processor

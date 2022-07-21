@@ -44,6 +44,7 @@ SUBROUTINE addusforce_g_gpu( forcenl )
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp
   USE cell_base,          ONLY : omega, tpiba
   USE fft_base,           ONLY : dfftp
+  USE fft_rho,            ONLY : rho_r2g
   USE gvect,              ONLY : ngm, gg_d, g_d, eigts1_d, eigts2_d, eigts3_d,&
                                  mill_d
   USE noncollin_module,   ONLY : nspin_mag
@@ -54,7 +55,6 @@ SUBROUTINE addusforce_g_gpu( forcenl )
   USE mp_pools,           ONLY : inter_pool_comm
   USE mp,                 ONLY : mp_sum
   USE control_flags,      ONLY : gamma_only
-  USE fft_interfaces,     ONLY : fwfft
 #if defined(__CUDA) 
   USE device_fbuff_m,     ONLY : dev_buf
   USE cudafor 
@@ -77,17 +77,16 @@ SUBROUTINE addusforce_g_gpu( forcenl )
   REAL(DP) :: fact
   COMPLEX(DP) :: cfac
   ! work space
-  COMPLEX(DP), POINTER :: aux_d(:), aux1_d(:,:,:), vg_d(:,:), qgm_d(:,:)
+  COMPLEX(DP), POINTER :: aux1_d(:,:,:), qgm_d(:,:)
   REAL(DP),    POINTER :: ddeeq_d(:,:,:,:), qmod_d(:), ylmk0_d(:,:) 
-  REAL(DP),    ALLOCATABLE ::  forceq(:,:)
-  INTEGER,POINTER          :: nl_d(:)  
-  INTEGER                  :: ierr 
+  REAL(DP),    ALLOCATABLE :: forceq(:,:)
+  COMPLEX(DP), ALLOCATABLE :: vg(:,:)
+  INTEGER                  :: ierr
   !
   REAL(DP)                 :: forceqx, forceqy, forceqz
 #if defined(__CUDA) 
-ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d 
+ATTRIBUTES (DEVICE) aux1_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d
 
-  nl_d => dfftp%nl_d
   IF (.NOT.okvan) RETURN
   !
   ALLOCATE( forceq(3,nat) )
@@ -98,34 +97,28 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
      fact = 1.d0*omega
   ENDIF
   !
-  ! fourier transform of the total effective potential
+  ! Fourier transform of the total effective potential
   !
-  CALL dev_buf%lock_buffer( vg_d, [ngm, nspin_mag] , ierr )
-  IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', ABS(ierr) )
-  !
-  CALL dev_buf%lock_buffer( aux_d, dfftp%nnr, ierr )
-  IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', ABS(ierr) )
+  ALLOCATE( vg(ngm,nspin_mag) )
+  !$acc data copyin( v, vltot ) create( vg ) 
+  !$acc data copyin( v%of_r )
   !
   DO is = 1, nspin_mag
-     IF (nspin_mag==4.AND.is/=1) THEN
-        aux_d(:) = v%of_r(:,is)
-     ELSE
-        aux_d(:) = vltot (:) + v%of_r (:, is)
-     ENDIF
-     CALL fwfft( 'Rho', aux_d, dfftp )
-     ! Note the factors -i and 2pi/a *units of G) here in V(G) !
-     !
-     !$cuf kernel do
-     do ir=1, ngm  
-        vg_d(ir, is) = aux_d(nl_d(ir)) * tpiba * (0.d0, -1.d0)
-     end do
+    IF ( nspin_mag == 4 .and. is /= 1 ) THEN
+       CALL rho_r2g( dfftp, v%of_r(:,is), vg(:,is:is) )
+    ELSE
+       CALL rho_r2g( dfftp, v%of_r(:,is), vg(:,is:is), vltot )
+    ENDIF
+    ! Note the factors -i and 2pi/a *units of G) here in V(G) !
+    !$acc kernels
+    vg(:,is) = vg(:,is) * tpiba * (0.d0,-1.d0)
+    !$acc end kernels
   ENDDO
-  CALL dev_buf%release_buffer( aux_d, ierr )
   !
   ! With k-point parallelization, distribute G-vectors across processors
   ! ngm_s = index of first G-vector for this processor
   ! ngm_e = index of last  G-vector for this processor
-  ! ngm_l = local number of G-vectors 
+  ! ngm_l = local number of G-vectors
   !
   CALL divide( inter_pool_comm, ngm, ngm_s, ngm_e )
   ngm_l = ngm_e-ngm_s+1
@@ -135,7 +128,7 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
   CALL dev_buf%lock_buffer( ylmk0_d, [ngm_l,lmaxq*lmaxq], ierr )
   IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', ABS(ierr) )
   !
-  CALL ylmr2_gpu( lmaxq * lmaxq, ngm_l, g_d(1,ngm_s), gg_d(ngm_s), ylmk0_d )
+  CALL ylmr2_gpu( lmaxq*lmaxq, ngm_l, g_d(1,ngm_s), gg_d(ngm_s), ylmk0_d )
   !
   CALL dev_buf%lock_buffer( qmod_d, ngm_l, ierr  )
   IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', ABS(ierr) )
@@ -184,15 +177,15 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
                  !
                  ! aux1 = product of potential, structure factor and iG
                  !
-                 !$cuf kernel do 
+                 !$acc parallel loop
                  do ig = 1, ngm_l
-                    cfac = vg_d(ngm_s+ig-1, is) * &
+                    cfac = vg(ngm_s+ig-1, is) * &
                          CONJG(eigts1_d(mill_d(1,ngm_s+ig-1),na) * &
                                eigts2_d(mill_d(2,ngm_s+ig-1),na) * &
                                eigts3_d(mill_d(3,ngm_s+ig-1),na) )
-                    aux1_d(ig, nb, 1) = g_d(1,ngm_s+ig-1) * cfac
-                    aux1_d(ig, nb, 2) = g_d(2,ngm_s+ig-1) * cfac
-                    aux1_d(ig, nb, 3) = g_d(3,ngm_s+ig-1) * cfac
+                    aux1_d(ig,nb,1) = g_d(1,ngm_s+ig-1) * cfac
+                    aux1_d(ig,nb,2) = g_d(2,ngm_s+ig-1) * cfac
+                    aux1_d(ig,nb,3) = g_d(3,ngm_s+ig-1) * cfac
                  enddo
                  !
               ENDIF
@@ -244,7 +237,10 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
   !
   CALL dev_buf%release_buffer(qmod_d, ierr)
   CALL dev_buf%release_buffer(ylmk0_d, ierr)
-  CALL dev_buf%release_buffer (vg_d, ierr )
+  !
+  !$acc end data
+  !$acc end data
+  DEALLOCATE( vg )
   DEALLOCATE(forceq)
 #endif
   !

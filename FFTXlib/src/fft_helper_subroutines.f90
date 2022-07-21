@@ -6,53 +6,65 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!----------------------------------------------------------------------------------------
 MODULE fft_helper_subroutines
-
+  !--------------------------------------------------------------------------------------
+  !! Contains subroutines aimed at rearrange wave and density arrays to/from Fourier 
+  !! space grid.
+  !
   IMPLICIT NONE
+  !
   SAVE
-
+  !
   INTERFACE tg_reduce_rho
     MODULE PROCEDURE tg_reduce_rho_1,tg_reduce_rho_2,tg_reduce_rho_3,tg_reduce_rho_4, &
-&                    tg_reduce_rho_5
+                     tg_reduce_rho_5
   END INTERFACE
-
+  !
   INTERFACE c2psi_gamma
     MODULE PROCEDURE c2psi_gamma_cpu
 #ifdef __CUDA
     MODULE PROCEDURE c2psi_gamma_gpu
 #endif
   END INTERFACE
+  !
   PRIVATE
+  !
   PUBLIC :: fftx_threed2oned, fftx_oned2threed
   PUBLIC :: tg_reduce_rho
   PUBLIC :: tg_get_nnr, tg_get_recip_inc, fftx_ntgrp, fftx_tgpe, &
-       tg_get_group_nr3
+            tg_get_group_nr3
   ! Used only in CP
   PUBLIC :: fftx_add_threed2oned_gamma, fftx_psi2c_gamma, c2psi_gamma, &
-       fftx_add_field, c2psi_gamma_tg
+            fftx_add_field, c2psi_gamma_tg
 #if defined (__CUDA)
   PUBLIC :: fftx_psi2c_gamma_gpu
 #endif
   PUBLIC :: fft_dist_info
   ! Used only in CP+EXX
   PUBLIC :: fftx_tgcomm
-
+  !
 CONTAINS
-
+  !
+  !------------------------------------------------------------------------------------------
   SUBROUTINE tg_reduce_rho_1( rhos, tg_rho_nc, tg_rho, ispin, noncolin, domag, desc )
+     !---------------------------------------------------------------------------------------
+     !! Get charge density by summation over task groups. Non-collinear case enabled.
+     !! Real-space.
+     !
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
-
+     !
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      INTEGER, INTENT(IN) :: ispin
      LOGICAL, INTENT(IN) :: noncolin, domag
      REAL(DP), INTENT(INOUT)  :: tg_rho(:)
      REAL(DP), INTENT(INOUT)  :: tg_rho_nc(:,:)
      REAL(DP), INTENT(OUT) :: rhos(:,:)
-
+     !
      INTEGER :: ierr, ioff, ir3, ir, ipol, ioff_tg, nxyp, npol_
-!     write (*,*) ' enter tg_reduce_rho_1'
-
+     !     write (*,*) ' enter tg_reduce_rho_1'
+     !
 #if defined(__MPI)
      IF( noncolin) THEN
         CALL MPI_ALLREDUCE( MPI_IN_PLACE, tg_rho_nc, SIZE(tg_rho_nc), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
@@ -86,23 +98,26 @@ CONTAINS
 !$omp end parallel do
         END IF
      END DO
-
+     !
   END SUBROUTINE
-
-
-
+  !
+  !----------------------------------------------------------
   SUBROUTINE tg_reduce_rho_2( rhos, tmp_rhos, ispin, desc )
+     !--------------------------------------------------------
+     !! Get charge density by summation over task groups - 1 selected
+     !! spin component only. Real-space.
+     !
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
-
+     !
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      INTEGER, INTENT(IN) :: ispin
      REAL(DP), INTENT(INOUT)  :: tmp_rhos(:)
      REAL(DP), INTENT(OUT) :: rhos(:,:)
-
+     !
      INTEGER :: ierr, ioff, ir3, nxyp, ioff_tg
-!     write (*,*) ' enter tg_reduce_rho_2'
-
+     !     write (*,*) ' enter tg_reduce_rho_2'
+     !
      IF ( desc%nproc2 > 1 ) THEN
 #if defined(__MPI)
         CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
@@ -117,20 +132,25 @@ CONTAINS
         ioff_tg = desc%nr1x * desc%nr2x    * (ir3-1) + desc%nr1x * desc%my_i0r2p
         rhos(ioff+1:ioff+nxyp,ispin) = rhos(ioff+1:ioff+nxyp,ispin) + tmp_rhos(ioff_tg+1:ioff_tg+nxyp)
      END DO
- 
+     !
   END SUBROUTINE
-
+  !
+  !--------------------------------------------------------------
   SUBROUTINE tg_reduce_rho_3( rhos, tmp_rhos, desc )
+     !-----------------------------------------------------------
+     !! Get charge density by summation over task groups - multiple
+     !! spin components. Real space.
+     !
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
-
+     !
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      REAL(DP), INTENT(INOUT)  :: tmp_rhos(:,:)
      REAL(DP), INTENT(OUT) :: rhos(:,:)
-
+     !
      INTEGER :: ierr, from, ir3, ioff, nxyp, ioff_tg
-!     write (*,*) ' enter tg_reduce_rho_3'
-
+     !     write (*,*) ' enter tg_reduce_rho_3'
+     !
      IF ( desc%nproc2 > 1 ) THEN
 #if defined(__MPI)
         CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
@@ -148,20 +168,25 @@ CONTAINS
         ioff_tg = desc%nr1x * desc%nr2x    * (ir3-1) + desc%nr1x * desc%my_i0r2p
         rhos(ioff+1:ioff+nxyp,:) = rhos(ioff+1:ioff+nxyp,:) + tmp_rhos(ioff_tg+1:ioff_tg+nxyp,:)
      END DO
+     !
   END SUBROUTINE
-
-
+  !
+  !-----------------------------------------------------------
   SUBROUTINE tg_reduce_rho_4( rhos, tmp_rhos, desc )
+     !--------------------------------------------------------
+     !! Get charge density by summation over task groups. 1-d
+     !! input arrays only. G-space
+     !
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
-
+     !
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      COMPLEX(DP), INTENT(INOUT)  :: tmp_rhos(:)
      COMPLEX(DP), INTENT(OUT) :: rhos(:)
-
+     !
      INTEGER :: ierr, from, ir3, ioff, nxyp, ioff_tg
-!     write (*,*) ' enter tg_reduce_rho_4'
-
+     !     write (*,*) ' enter tg_reduce_rho_4'
+     !
      IF ( desc%nproc2 > 1 ) THEN
 #if defined(__MPI)
         CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, 2*SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
@@ -179,20 +204,25 @@ CONTAINS
         ioff_tg = desc%nr1x * desc%nr2x    * (ir3-1) + desc%nr1x * desc%my_i0r2p
         rhos(ioff+1:ioff+nxyp) = rhos(ioff+1:ioff+nxyp) + tmp_rhos(ioff_tg+1:ioff_tg+nxyp)
      END DO
+     !
   END SUBROUTINE
-
-
+  !
+  !-------------------------------------------------------
   SUBROUTINE tg_reduce_rho_5( rhos, tmp_rhos, desc )
+     !-----------------------------------------------------
+     !! Get charge density by summation over task groups - multiple
+     !! spin components. G-space.
+     !
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
-
+     !
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      COMPLEX(DP), INTENT(INOUT)  :: tmp_rhos(:,:)
      COMPLEX(DP), INTENT(OUT) :: rhos(:,:)
-
+     !
      INTEGER :: ierr, from, ir3, ioff, nxyp, ioff_tg
-!     write (*,*) ' enter tg_reduce_rho_5'
-
+     !     write (*,*) ' enter tg_reduce_rho_5'
+     !
      IF ( desc%nproc2 > 1 ) THEN
 #if defined(__MPI)
         CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, 2*SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
@@ -210,81 +240,98 @@ CONTAINS
         ioff_tg = desc%nr1x * desc%nr2x    * (ir3-1) + desc%nr1x * desc%my_i0r2p
         rhos(ioff+1:ioff+nxyp,:) = rhos(ioff+1:ioff+nxyp,:) + tmp_rhos(ioff_tg+1:ioff_tg+nxyp,:)
      END DO
+     !
   END SUBROUTINE
-
-
-
+  !
+  !-------------------------------------------------
   SUBROUTINE tg_get_nnr( desc, right_nnr )
+     !----------------------------------------------
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      INTEGER, INTENT(OUT) :: right_nnr
      right_nnr = desc%nnr
   END SUBROUTINE
-
+  !
+  !-------------------------------------------------
   SUBROUTINE tg_get_local_nr3( desc, val )
+     !----------------------------------------------
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      INTEGER, INTENT(OUT) :: val
      val = desc%my_nr3p
   END SUBROUTINE
-
+  !
+  !------------------------------------------------
   SUBROUTINE tg_get_group_nr3( desc, val )
+     !---------------------------------------------
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      INTEGER, INTENT(OUT) :: val
      val = desc%my_nr3p
   END SUBROUTINE
-
+  !
+  !------------------------------------------------
   SUBROUTINE tg_get_recip_inc( desc, val )
+     !---------------------------------------------
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      INTEGER, INTENT(OUT) :: val
      val = desc%nnr
   END SUBROUTINE
-
+  !
+  !------------------------------------------------
   PURE FUNCTION fftx_ntgrp( desc )
+     !---------------------------------------------
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
      INTEGER :: fftx_ntgrp
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      fftx_ntgrp = desc%nproc2
   END FUNCTION
-
+  !
+  !------------------------------------------------
   PURE FUNCTION fftx_tgpe( desc )
+     !---------------------------------------------
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
      INTEGER :: fftx_tgpe
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      fftx_tgpe = desc%mype2
   END FUNCTION
-
+  !
+  !------------------------------------------------
   PURE FUNCTION fftx_tgcomm( desc )
+     !---------------------------------------------
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
      INTEGER :: fftx_tgcomm
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      fftx_tgcomm = desc%comm2
   END FUNCTION
-
+  !
+  !------------------------------------------------
   SUBROUTINE fftx_add_field( r, f, desc )
+     !---------------------------------------------
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
+     !
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      REAL(DP), INTENT(INOUT)  :: r(:,:)
      REAL(DP), INTENT(IN) :: f(:)
      INTEGER :: nspin, ir
+     !
      nspin = SIZE( r, 2 )
-     IF (nspin.EQ.1) THEN
+     IF (nspin==1) THEN
 !$omp parallel do
         DO ir=1,desc%nr1*desc%nr2*desc%my_nr3p
            r(ir,1)=r(ir,1)+f(ir)
         END DO
 !$omp end parallel do
-     ELSE IF (nspin.EQ.2) THEN
+     ELSE IF (nspin==2) THEN
 !$omp parallel do
         DO ir=1,desc%nr1*desc%nr2*desc%my_nr3p
            r(ir,1)=r(ir,1)+f(ir)
@@ -297,11 +344,12 @@ CONTAINS
 !$omp end parallel do
      END IF
   END SUBROUTINE
-
-
+  !
+  !---------------------------------------------------------------------
   SUBROUTINE c2psi_gamma_cpu( desc, psi, c, ca )
-     !
-     !  Copy wave-functions from 1D array (c_bgrp) to 3D array (psi) in Fourier space
+     !------------------------------------------------------------------
+     !! Copy wave-functions from 1D array (c_bgrp) to 3D array (psi) in 
+     !! Fourier space - gamma case.
      !
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
@@ -331,15 +379,17 @@ CONTAINS
         end do
      END IF
   END SUBROUTINE
-
+  !
 #ifdef __CUDA
+  !---------------------------------------------------------------------
   SUBROUTINE c2psi_gamma_gpu( desc, psi, c, ca )
-     !
-     !  Copy wave-functions from 1D array (c_bgrp) to 3D array (psi) in Fourier space,
-     !  GPU implementation.
+     !------------------------------------------------------------------
+     !! Copy wave-functions from 1D array (c_bgrp) to 3D array (psi) in 
+     !! Fourier space, GPU implementation.
      !
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
+     !
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      complex(DP), DEVICE, INTENT(OUT) :: psi(:)
      complex(DP), DEVICE, INTENT(IN) :: c(:)
@@ -347,7 +397,7 @@ CONTAINS
      complex(DP), parameter :: ci=(0.0d0,1.0d0)
      integer :: ig
      integer, device, pointer :: nlm_d(:), nl_d(:)
-
+     !
      nlm_d => desc%nlm_d
      nl_d => desc%nl_d
      !
@@ -373,14 +423,16 @@ CONTAINS
      END IF
   END SUBROUTINE
 #endif
-
-  SUBROUTINE c2psi_k( desc, psi, c, igk, ngk)
-     !
-     !  Copy wave-functions from 1D array (c/evc) ordered according (k+G) index igk 
-     !  to 3D array (psi) in Fourier space
+  !
+  !--------------------------------------------------------------------------------
+  SUBROUTINE c2psi_k( desc, psi, c, igk, ngk )
+     !-----------------------------------------------------------------------------
+     !! Copy wave-functions from 1D array (c/evc) ordered according (k+G) index igk 
+     !! to 3D array (psi) in Fourier space.
      !
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
+     !
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      complex(DP), INTENT(OUT) :: psi(:)
      complex(DP), INTENT(IN) :: c(:)
@@ -398,62 +450,147 @@ CONTAINS
      end do
      !
   END SUBROUTINE
-
-  SUBROUTINE fftx_oned2threed( desc, psi, c, ca )
-     !
-     !  Copy charge density from 1D array (c) to 3D array (psi) in Fourier
-     !  space
+  !
+  !-------------------------------------------------------------------------
+  SUBROUTINE fftx_oned2threed( desc, psi, c, ca, gpu_args_ )
+     !----------------------------------------------------------------------
+     !! Copy charge density from 1D array (c) to 3D array (psi) in Fourier
+     !! space. If gpu_args_ is true it assumes the dummy arrays are present
+     !! on device (openACC porting).
      !
      USE fft_param
-     USE fft_types,      ONLY : fft_type_descriptor
-     TYPE(fft_type_descriptor), INTENT(in) :: desc
-     complex(DP), INTENT(OUT) :: psi(:)
-     complex(DP), INTENT(IN) :: c(:)
-     complex(DP), OPTIONAL, INTENT(IN) :: ca(:)
-     complex(DP), parameter :: ci=(0.0d0,1.0d0)
-     integer :: ig
+     USE fft_types,  ONLY : fft_type_descriptor
      !
-     psi = 0.0d0
+     IMPLICIT NONE
      !
-     !  nlm and nl array: hold conversion indices from 3D to
+     TYPE(fft_type_descriptor), INTENT(IN) :: desc
+     COMPLEX(DP), INTENT(OUT) :: psi(:)
+     COMPLEX(DP), INTENT(IN) :: c(:)
+     COMPLEX(DP), OPTIONAL, INTENT(IN) :: ca(:)
+     LOGICAL, INTENT(IN), OPTIONAL :: gpu_args_
+     COMPLEX(DP), PARAMETER :: ci=(0.0d0,1.0d0)
+     INTEGER :: ig
+     LOGICAL :: gpu_args
+#if defined(__CUDA) && defined(_OPENACC)
+     INTEGER, POINTER, DEVICE :: nl_d(:), nlm_d(:)
+     !
+     nl_d  => desc%nl_d
+     nlm_d => desc%nlm_d
+#else
+     INTEGER, ALLOCATABLE :: nl_d(:), nlm_d(:)
+     !
+     ALLOCATE( nl_d(desc%ngm) )
+     nl_d = desc%nl
+     IF ( desc%lgamma ) THEN
+       ALLOCATE( nlm_d(desc%ngm) )
+       nlm_d = desc%nlm
+     ENDIF
+     !$acc data copyin( nl_d, nlm_d )
+#endif
+     !
+     ! ... nlm and nl array: hold conversion indices from 3D to
      !     1-D vectors. Columns along the z-direction are stored
-     !     contigiously
-     !  c array: stores the Fourier expansion coefficients
+     !     contigiously.
+     ! ... c array: stores the Fourier expansion coefficients
      !     Loop for all local g-vectors (ngw)
-     IF( PRESENT(ca) ) THEN
-        IF( desc%lgamma ) THEN
-           do ig = 1, desc%ngm
-              psi( desc%nlm( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ))
-              psi( desc%nl( ig ) ) = c( ig ) + ci * ca( ig )
-           end do
-        ELSE
-           do ig = 1, desc%ngm
-              psi( desc%nl( ig ) ) = c( ig ) + ci * ca( ig )
-           end do
-        END IF
+     !
+     gpu_args = .FALSE.
+     IF ( PRESENT(gpu_args_) ) gpu_args = gpu_args_
+     !
+     IF ( .NOT. gpu_args ) THEN
+       !
+       !$acc data copyin(c) copyout(psi)
+       !$acc kernels
+       psi = 0.0d0
+       !$acc end kernels
+       IF( PRESENT(ca) ) THEN
+          IF( desc%lgamma ) THEN
+             !$acc parallel loop copyin(ca)
+             DO ig = 1, desc%ngm
+                psi(nlm_d(ig)) = CONJG(c(ig)) + ci * CONJG(ca(ig))
+                psi(nl_d(ig)) = c(ig) + ci * ca(ig)
+             ENDDO
+          ELSE
+             !$acc parallel loop copyin(ca)
+             DO ig = 1, desc%ngm
+                psi(nl_d(ig)) = c(ig) + ci * ca(ig)
+             ENDDO
+          ENDIF
+       ELSE
+          IF( desc%lgamma ) THEN
+             !$acc parallel loop
+             DO ig = 1, desc%ngm
+                psi(nlm_d(ig)) = CONJG(c(ig))
+                psi(nl_d(ig)) = c(ig)
+             ENDDO
+          ELSE
+             !$acc parallel loop
+             DO ig = 1, desc%ngm
+                psi(nl_d(ig)) = c(ig)
+             ENDDO
+          ENDIF
+       ENDIF
+       !$acc end data
+       !
      ELSE
-        IF( desc%lgamma ) THEN
-           do ig = 1, desc%ngm
-              psi( desc%nlm( ig ) ) = CONJG( c( ig ) )
-              psi( desc%nl( ig ) ) = c( ig )
-           end do
-        ELSE
-           DO ig = 1, desc%ngm
-              psi( desc%nl( ig ) ) = c( ig )
-           END DO
-        END IF
-     END IF
+       !
+       !$acc data present(c,psi)
+       !$acc kernels
+       psi = 0.0d0
+       !$acc end kernels
+       IF( PRESENT(ca) ) THEN
+          IF( desc%lgamma ) THEN
+             !$acc parallel loop present(ca)
+             DO ig = 1, desc%ngm
+                psi(nlm_d(ig)) = CONJG(c(ig)) + ci * CONJG(ca(ig))
+                psi(nl_d(ig)) = c(ig) + ci * ca(ig)
+             ENDDO
+          ELSE
+             !$acc parallel loop present(ca)
+             DO ig = 1, desc%ngm
+                psi(nl_d(ig)) = c(ig) + ci * ca(ig)
+             ENDDO
+          ENDIF
+       ELSE
+          IF( desc%lgamma ) THEN
+             !$acc parallel loop
+             DO ig = 1, desc%ngm
+                psi(nlm_d(ig)) = CONJG(c(ig))
+                psi(nl_d(ig)) = c(ig)
+             ENDDO
+          ELSE
+             !$acc parallel loop
+             DO ig = 1, desc%ngm
+                psi(nl_d(ig)) = c(ig)
+             ENDDO
+          ENDIF
+       ENDIF 
+       !$acc end data
+       !
+     ENDIF
+     !
+#if !defined(__CUDA) || !defined(_OPENACC)
+     !$acc end data
+     DEALLOCATE( nl_d )
+     IF ( desc%lgamma ) DEALLOCATE( nlm_d )
+#endif     
+     !
   END SUBROUTINE
-
+  !
+  !-------------------------------------------------------------------
   SUBROUTINE fftx_add_threed2oned_gamma( desc, vin, vout1, vout2 )
+     !----------------------------------------------------------------
+     !
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
+     !
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      complex(DP), INTENT(INOUT) :: vout1(:)
      complex(DP), OPTIONAL, INTENT(INOUT) :: vout2(:)
      complex(DP), INTENT(IN) :: vin(:)
      COMPLEX(DP) :: fp, fm
      INTEGER :: ig
+     !
      IF( PRESENT( vout2 ) ) THEN
         DO ig=1,desc%ngm
            fp=vin(desc%nl(ig))+vin(desc%nlm(ig))
@@ -467,11 +604,18 @@ CONTAINS
         END DO
      END IF
   END SUBROUTINE
-
- SUBROUTINE fftx_threed2oned( desc, vin, vout1, vout2, gpu_args_ )
-     !! GPU version of \(\texttt{fftx_threed2oned}\).
+  !
+  !-----------------------------------------------------------------------------
+  SUBROUTINE fftx_threed2oned( desc, vin, vout1, vout2, gpu_args_ )
+     !--------------------------------------------------------------------------
+     !! Copy charge density from 3D array to 1D array in Fourier space.
+     !! If gpu_args_ is true it assumes the dummy arrays are present
+     !! on device (openACC porting).
+     !
      USE fft_param
      USE fft_types, ONLY : fft_type_descriptor
+     !
+     IMPLICIT NONE
      !
      TYPE(fft_type_descriptor), INTENT(IN) :: desc
      COMPLEX(DP), INTENT(OUT) :: vout1(:)
@@ -549,16 +693,21 @@ CONTAINS
 #endif     
      !
   END SUBROUTINE
-
+  !
+  !------------------------------------------------------------
   SUBROUTINE fftx_psi2c_gamma( desc, vin, vout1, vout2 )
+     !---------------------------------------------------------
+     !
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
+     !
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      complex(DP), INTENT(OUT) :: vout1(:)
      complex(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
      complex(DP), INTENT(IN) :: vin(:)
      COMPLEX(DP) :: fp, fm
      INTEGER :: ig
+     !
      IF( PRESENT( vout2 ) ) THEN
         DO ig=1,desc%ngw
            fp=vin(desc%nl(ig))+vin(desc%nlm(ig))
@@ -572,10 +721,14 @@ CONTAINS
         END DO
      END IF
   END SUBROUTINE
-
+  !
+  !--------------------------------------------------------------------
   SUBROUTINE fftx_psi2c_gamma_gpu( desc, vin, vout1, vout2 )
+     !-----------------------------------------------------------------
+     !
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
+     !
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      complex(DP), INTENT(OUT) :: vout1(:)
      complex(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
@@ -585,6 +738,7 @@ CONTAINS
      attributes(DEVICE) :: vout1, vout2, vin, nl, nlm
 #endif
      INTEGER :: ig
+     !
      nl  => desc%nl_d
      nlm => desc%nlm_d
      IF( PRESENT( vout2 ) ) THEN
@@ -600,12 +754,12 @@ CONTAINS
         END DO
      END IF
   END SUBROUTINE
-
-
-  SUBROUTINE c2psi_gamma_tg(desc, psis, c_bgrp, i, nbsp_bgrp )
-     !
-     !  Copy all wave-functions of an orbital group 
-     !  from 1D array (c_bgrp) to 3D array (psi) in Fourier space
+  !
+  !--------------------------------------------------------------------
+  SUBROUTINE c2psi_gamma_tg( desc, psis, c_bgrp, i, nbsp_bgrp )
+     !-----------------------------------------------------------------
+     !! Copy all wave-functions of an orbital group from 1D array (c_bgrp)
+     !! to 3D array (psi) in Fourier space.
      !
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
@@ -621,12 +775,12 @@ CONTAINS
      !  2*NOGRP eigenstates at each iteration
      !
      CALL tg_get_nnr( desc, right_nnr )
-
+     !
 !$omp  parallel
 !$omp  single
-
+     !
      do eig_index = 1, 2 * fftx_ntgrp(desc), 2
-
+        !
 !$omp task default(none) &
 !$omp          firstprivate( eig_index, i, nbsp_bgrp, right_nnr ) &
 !$omp          private( eig_offset ) &
@@ -657,15 +811,21 @@ CONTAINS
 !$omp  end parallel
      RETURN
   END SUBROUTINE
-
-
+  !
+  !----------------------------------------------------------
   SUBROUTINE fft_dist_info( desc, unit )
+     !-------------------------------------------------------
+     !! Prints infos on fft parallel distribution.
+     !
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
+     !
      INTEGER, INTENT(IN) :: unit
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      INTEGER :: i, j, nr3l
+     !
      CALL tg_get_local_nr3( desc, nr3l )
+     !
      WRITE( stdout,1000) desc%nr1, desc%nr2, desc%nr3, &
                          desc%nr1, desc%my_nr2p, desc%my_nr3p, &
                          1, desc%nproc2, desc%nproc3
@@ -685,5 +845,5 @@ CONTAINS
 1020  FORMAT(3X, 'Local number of cell to store the grid ( nrxx ) = ', 1X, I9 )
      RETURN
   END SUBROUTINE
-
+  !
 END MODULE fft_helper_subroutines

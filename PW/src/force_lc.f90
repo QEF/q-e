@@ -8,7 +8,7 @@
 !
 !----------------------------------------------------------------------
 SUBROUTINE force_lc( nat, tau, ityp, alat, omega, ngm, ngl, &
-                     igtongl, g, rho, nl, gstart, gamma_only, vloc, forcelc )
+                     igtongl, g, rho, gstart, gamma_only, vloc, forcelc )
   !----------------------------------------------------------------------
   !! It calculates the local-potential contribution to forces on atoms.
   !
@@ -17,7 +17,7 @@ SUBROUTINE force_lc( nat, tau, ityp, alat, omega, ngm, ngl, &
   USE mp_bands,        ONLY : intra_bgrp_comm
   USE mp,              ONLY : mp_sum
   USE fft_base,        ONLY : dfftp
-  USE fft_interfaces,  ONLY : fwfft
+  USE fft_rho,         ONLY : rho_r2g
   USE esm,             ONLY : esm_force_lc, do_comp_esm, esm_bc
   USE Coul_cut_2D,     ONLY : do_cutoff_2D, cutoff_force_lc
   !
@@ -34,8 +34,6 @@ SUBROUTINE force_lc( nat, tau, ityp, alat, omega, ngm, ngl, &
   !! module 'gvect' in Modules/recvec.f90)
   INTEGER, INTENT(IN) :: igtongl(ngm)
   !! correspondence G <-> shell of G
-  INTEGER, INTENT(IN) :: nl(ngm)
-  !! correspondence fft mesh <-> G vec
   INTEGER, INTENT(IN) :: ityp(nat)
   !! types of atoms
   LOGICAL, INTENT(IN) :: gamma_only
@@ -61,18 +59,16 @@ SUBROUTINE force_lc( nat, tau, ityp, alat, omega, ngm, ngl, &
   ! counter on polarizations
   ! counter on G vectors
   ! counter on atoms
-  COMPLEX(DP), ALLOCATABLE :: aux(:)
+  COMPLEX(DP), ALLOCATABLE :: aux(:,:)
   ! auxiliary space for FFT
   REAL(DP) :: arg, fact
   !
   ! contribution to the force from the local part of the bare potential
   ! F_loc = Omega \Sum_G n*(G) d V_loc(G)/d R_i
   !
-  ALLOCATE( aux(dfftp%nnr) )
+  ALLOCATE( aux(dfftp%nnr,1) )
   !
-  aux(:) = CMPLX( rho(:), 0.0_DP, KIND=DP )
-  !
-  CALL fwfft( 'Rho', aux, dfftp )
+  CALL rho_r2g( dfftp, rho, aux )
   !
   ! aux contains now  n(G)
   !
@@ -85,14 +81,14 @@ SUBROUTINE force_lc( nat, tau, ityp, alat, omega, ngm, ngl, &
 !$omp parallel do private(arg)
   DO na = 1, nat
      !
-     forcelc (1:3, na) = 0.d0
+     forcelc(1:3,na) = 0.d0
      ! contribution from G=0 is zero
      DO ig = gstart, ngm
         arg = (g(1,ig) * tau(1,na) + g(2,ig) * tau(2,na) + &
                g(3,ig) * tau(3,na) ) * tpi
-        forcelc(1:3,na) = forcelc(1:3, na) + &
+        forcelc(1:3,na) = forcelc(1:3,na) + &
                           g(1:3,ig) * vloc(igtongl(ig),ityp(na) ) * &
-                          (SIN(arg)*DBLE(aux(nl(ig))) + COS(arg)*AIMAG(aux(nl(ig))) )
+                          (SIN(arg)*DBLE(aux(ig,1)) + COS(arg)*AIMAG(aux(ig,1)) )
      ENDDO
      !
      forcelc(1:3,na) = fact * forcelc(1:3,na) * omega * tpi / alat
@@ -102,13 +98,13 @@ SUBROUTINE force_lc( nat, tau, ityp, alat, omega, ngm, ngl, &
   IF ( do_comp_esm .AND. (esm_bc .NE. 'pbc') ) THEN
      !
      ! ... Perform corrections for ESM method (add long-range part)
-     CALL esm_force_lc( aux, forcelc )
+     CALL esm_force_lc( aux(:,1), forcelc )
      !
   ENDIF
   !
   ! IN 2D calculations: re-add the erf/r contribution to the forces. It was substracted from
   ! vloc (in vloc_of_g) and readded to vltot only (in setlocal)
-  IF ( do_cutoff_2D ) CALL cutoff_force_lc( aux, forcelc )
+  IF ( do_cutoff_2D ) CALL cutoff_force_lc( aux(:,1), forcelc )
   !
   CALL mp_sum( forcelc, intra_bgrp_comm )
   !
