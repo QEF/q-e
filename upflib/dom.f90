@@ -408,13 +408,14 @@ CONTAINS
   !
   recursive subroutine destroy ( curr, iun )
     !
+    ! optional variable "iun" added for testing and debugging purposes:
+    ! if present, tags are printed to unit iun while they are destroyed
+    !
     type(node), pointer :: curr, next
     type(nodelist), pointer :: linklist
     integer, intent(in), optional :: iun
     !
     nlevel = nlevel + 1
-    ! print *, nlevel, '<', curr%tag,'>, ',curr%attr
-    ! print *, curr%data(1:min(80,len(curr%data)))
     if ( present(iun ) ) then
        if ( allocated(curr%attr) ) then
           write(iun,'("<",A," ",A,">")') trim(curr%tag),trim(curr%attr)
@@ -738,6 +739,7 @@ scan: do i=la-l0+1,la
     if ( allocated(root%data) ) then
        ! the simple solution fails if root%data > 1024 characters:
        ! read(root%data,*,iostat=ios) ivec
+       ios = 0
        iend = 1
        do n=1,size(ivec)
           call find_token( root%data, ibeg, iend)
@@ -773,6 +775,7 @@ scan: do i=la-l0+1,la
     if ( allocated(root%data) ) then
        ! the simple solution fails if root%data > 1024 characters:
        ! read(root%data,*,iostat=ios) rvec
+       ios = 0
        iend = 1
        do n=1,size(rvec)
           call find_token( root%data, ibeg, iend)
@@ -794,6 +797,7 @@ scan: do i=la-l0+1,la
     if ( allocated(root%data) ) then
        ! the simple solution fails if root%data > 1024 characters:
        ! read(root%data,*,iostat=ios) rmat
+       ios = 0
        iend = 1
        do m=1,size(rmat,2)
           do n=1,size(rmat,1)
