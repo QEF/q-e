@@ -23,6 +23,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   USE wvfct,            ONLY : nbnd, et
 
   USE modes,            ONLY : u
+  USE partial,          ONLY : nat_todo, atomo
   USE phus,             ONLY : alphap, int1, int2, &
                                int2_so, int1_nc
   USE control_ph,       ONLY : rec_code_read
@@ -31,7 +32,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   USE qpoint,           ONLY : nksq, ikks, ikqs
   USE control_lr,       ONLY : nbnd_occ
 
-  USE mp_bands,         ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
   USE mp,               ONLY : mp_sum
   USE becmod,           ONLY : bec_type
 
@@ -59,11 +60,13 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   ! work space
   complex(DP) ::  dynwrk (3 * nat, 3 * nat), ps_nc(2)
   ! auxiliary dynamical matrix
-
+  integer, allocatable :: ifat(:) 
+  ! flags selecting atoms to compute 
   integer :: ik, ikk, ikq, ibnd, jbnd, ijkb0, ijkbnh, ijkb0b, ijkbnhb, ih, jh, ikb, &
-       jkb, ipol, jpol, startb, lastb, na, nb, nt, ntb, nu_i, nu_j, &
+       jkb, ipol, jpol, na, nb, nt, ntb, nu_i, nu_j, &
        na_icart, na_jcart, mu, nu, is, js, ijs, jbnd_loc, ijkb1b, ijkbnb
   ! counters
+  integer :: startb, lastb, ia_s, ia_e, mykey, bna, dummykey  
 
   IF (rec_code_read >=-20) return
 
@@ -82,7 +85,22 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   END IF
   allocate (psv_nc(npol,nhm), psv(nhm)) 
   dynwrk (:,:) = (0.d0, 0.d0)
+#if defined(__nldyn_ion_parallelism) 
+  call block_distribute(nat,me_bgrp, nproc_bgrp, ia_s, ia_e, mykey )
+  if (nproc_bgrp >= nat) then 
+    bna = block_count(ia_s, nat, nproc_bgrp)
+    call block_distribute(nbnd, mykey, bna, startb, lastb, dummykey) 
+  else       
+    startb = 1 
+    lastb  = nbnd 
+  endif 
+#else 
   call divide (intra_bgrp_comm, nbnd, startb, lastb)
+  ia_s = 1
+  ia_e = nat
+  mykey = 0  
+#endif
+ 
   allocate(aux1(lastb - startb + 1), aux2(lastb - startb + 1)) 
   if (noncolin) then 
     allocate (mat(4*nhm, lastb - startb + 1), vec(4* nhm))
@@ -214,8 +232,8 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
      ! 
      call start_clock('c_nldynb2')
      do nt = 1, ntyp
-        do na = 1, nat
-           if (ityp (na) .eq.nt) then
+        do na = ia_s, ia_e
+           if (ityp (na) .eq.nt ) then
               ijkb0 = ofsbeta(na)
               ijkbnh = ijkb0 + nh(nt)
               do ipol = 1, 3
@@ -364,4 +382,15 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
      deallocate (deff)
   END IF
   return
+  contains 
+     FUNCTION block_count(ia, nat, nproc) RESULT (res) 
+        !! counts how many procs have the same ia   
+        IMPLICIT NONE 
+        !
+        INTEGER   :: res
+        INTEGER,INTENT(IN) :: ia, nat, nproc 
+        !            
+        res  = nproc/nat
+        IF (ia <= MOD(nproc,nat)) res = res + 1   
+     END FUNCTION block_count  
 end subroutine compute_nldyn
