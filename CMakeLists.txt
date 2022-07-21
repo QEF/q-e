@@ -115,6 +115,7 @@ set(QE_FFTW_VENDOR "AUTO" CACHE
     STRING "select a specific FFTW library [Intel_DFTI, Intel_FFTW3, ArmPL, IBMESSL, FFTW3, Internal]")
 set(QE_ENABLE_SANITIZER "none" CACHE STRING "none,asan,ubsan,tsan,msan")
 set(QE_ENABLE_PLUGINS "" CACHE STRING "Semicolon-separated list of plugins")
+set (QE_EXTRA_DEFINITIONS "" CACHE STRING "Semicolon-separated list of extra global definitions")
 option(QE_ENABLE_FOX
     "enable XML I/O via Fox library" OFF)
 if(QE_ENABLE_FOX)
@@ -177,6 +178,9 @@ endif()
 if(QE_ENABLE_BARRIER)
     qe_add_global_compile_definitions(__USE_BARRIER)
 endif()
+foreach(DEF IN LISTS QE_EXTRA_DEFINITIONS)
+    qe_add_global_compile_definitions(${DEF})
+endforeach()
 if(QE_ENABLE_MPI)
     # OMPI_SKIP_MPICXX: skip CXX APIs on openmpi, cause trouble to C APIs
     qe_add_global_compile_definitions(__MPI OMPI_SKIP_MPICXX)
