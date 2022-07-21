@@ -57,7 +57,7 @@ SUBROUTINE setlocal
   ALLOCATE (vlesm(ngm))
   vlesm(:)=(0.d0,0.d0)
   !
-  IF (do_comp_mt) THEN                                          !......CHECK
+  IF (do_comp_mt) THEN
      ALLOCATE( v_corr(ngm) )
      CALL wg_corr_loc( omega, ntyp, ngm, zv, strf, v_corr )
      aux(:) = v_corr(:)
@@ -118,7 +118,7 @@ SUBROUTINE setlocal
           ! ... for Laue-RISM
           !
           ALLOCATE(vrism(dfftp%nnr),vlesmr(dfftp%nnr))
-          CALL rho_g2r(dfftp, vlesm, vlesmr)                     !.....CHECK
+          CALL rho_g2r(dfftp, vlesm, vlesmr)
           vrism(:) = vltot(:) - vlesmr(:)
           CALL rism_setlocal(vrism)
           DEALLOCATE(vrism, vlesmr)

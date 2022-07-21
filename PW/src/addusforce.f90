@@ -44,6 +44,7 @@ SUBROUTINE addusforce_g( forcenl )
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp
   USE cell_base,          ONLY : omega, tpiba
   USE fft_base,           ONLY : dfftp
+  USE fft_rho,            ONLY : rho_r2g
   USE gvect,              ONLY : ngm, gg, g, eigts1, eigts2, eigts3, mill
   USE noncollin_module,   ONLY : nspin_mag
   USE scf,                ONLY : v, vltot
@@ -53,7 +54,6 @@ SUBROUTINE addusforce_g( forcenl )
   USE mp_pools,           ONLY : inter_pool_comm
   USE mp,                 ONLY : mp_sum
   USE control_flags,      ONLY : gamma_only
-  USE fft_rho,            ONLY : rho_r2g
   !
   IMPLICIT NONE
   !

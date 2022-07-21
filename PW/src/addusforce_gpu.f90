@@ -44,6 +44,7 @@ SUBROUTINE addusforce_g_gpu( forcenl )
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp
   USE cell_base,          ONLY : omega, tpiba
   USE fft_base,           ONLY : dfftp
+  USE fft_rho,            ONLY : rho_r2g
   USE gvect,              ONLY : ngm, gg_d, g_d, eigts1_d, eigts2_d, eigts3_d,&
                                  mill_d
   USE noncollin_module,   ONLY : nspin_mag
@@ -54,7 +55,6 @@ SUBROUTINE addusforce_g_gpu( forcenl )
   USE mp_pools,           ONLY : inter_pool_comm
   USE mp,                 ONLY : mp_sum
   USE control_flags,      ONLY : gamma_only
-  USE fft_rho,            ONLY : rho_r2g
 #if defined(__CUDA) 
   USE device_fbuff_m,     ONLY : dev_buf
   USE cudafor 
