@@ -75,7 +75,6 @@ CONTAINS
   !
   function parsefile ( filename, ex )
     !
-    implicit none
     character(len=*), intent (in) :: filename
     type(domexception), intent (out), optional :: ex
     type(node), pointer :: parsefile
@@ -101,13 +100,12 @@ CONTAINS
   !
   function parse ( iun, strbuf, ex )
     !
-    implicit none
     character(len=*), intent (in), optional :: strbuf
     integer, intent(in), optional :: iun
     type(domexception), intent (inout), optional :: ex
     type(node), pointer :: parse
     !
-    type(node), pointer :: curr, next, prev
+    type(node), pointer :: curr
     integer, parameter :: maxline=1024, maxdim=maxline+16
     character(len=maxdim) :: line
     integer, parameter :: maxlength=80
@@ -116,11 +114,10 @@ CONTAINS
     ! integer, parameter :: maxlevel=9
     ! character(len=maxlength), dimension(0:maxlevel) :: open_tags
     !
+    integer :: ierr, nl, n, m, i0, i1
     logical :: in_comment
-    logical :: is_found
     logical :: in_attribute
     logical :: in_data
-    integer :: ierr, nl, n, n1, n2, m, j, i0, i1
     !
     curr => null()
     in_comment = .false.
@@ -173,158 +170,11 @@ CONTAINS
        end if
        tag = ' '
        ! print *,'debug:',trim(line)
-       scanline: do while ( n < nl+1 )
-          !print *, 'debug: n=',n, line(n:n)
-          if ( in_comment ) then
-             ! trick to avoid trespassing the EOL
-             n1 = min (n+1,nl)
-             n2 = min (n+2,nl)
-             if ( line(n:n2) == ']]>' ) then
-                in_comment = .false.
-                n = n+3
-                ! print *, 'debug: cdata ended'
-             else if ( line(n:n2) == '-->' ) then
-                in_comment = .false.
-                n = n+3
-                ! print *, 'debug: comment ended'
-             else if ( line(n:n1) == '?>' ) then
-                in_comment = .false.
-                n = n+2
-                ! print *, 'debug: process ended'
-             else
-                n = n+1
-             end if
-          else
-             if ( line(n:n) == '<' ) then
-                ! trick to avoid trespassing the EOL
-                n1 = min (n+1,nl)
-                n2 = min (n+3,nl)
-                if ( line(n1:n2) == '!--' ) then
-                   n = n+4
-                   in_comment = .true.
-                   ! print *, 'debug: comment begin'
-                else if ( line(n1:n1) == '?' ) then
-                   n = n+2
-                   in_comment = .true.
-                   ! print *, 'debug: process begin'
-                else if ( line(n1:n1) == '/' ) then
-                   ! tag = trim( open_tags(nlevel) )
-                   tag = curr%tag
-                   n = n+2
-                   m = min(n+len_trim(tag)+1,nl)
-                   if ( line(n:m) == trim(tag)//'>' ) then
-                      ! print *, 'debug: closing tag </',trim(tag),'> found'
-                      prev => curr%prev
-                      curr => prev
-                      in_data = .false.
-                   else
-                      if ( .not.present(ex) ) then
-                         print *, n,m,nlevel,tag
-                         print *, 'error: unexpected closing tag </',line(n:nl),'> found'
-                      end if
-                      ierr = 2
-                      exit readline
-                   end if
-                   nlevel = nlevel - 1
-                   n = m+1
-                else
-                   scantag: do m = n+1, nl
-                      is_found = .false.
-                      if ( line(m:m) == '>' ) then
-                         if ( m == n+1 ) then
-                            if ( .not.present(ex) ) &
-                                 print *, 'error: empty tag <>'
-                            ierr = 3
-                            exit readline
-                         end if
-                         is_found = .true.
-                         in_data  = .true.
-                         in_attribute = .false.
-                      else if ( line(m:m) == ' ' .or. m == nl ) then
-                         if ( m == n+1 ) then
-                            if ( .not.present(ex) ) &
-                                 print *, 'error: space after <'
-                            ierr = 4
-                            exit readline
-                         end if
-                         is_found = .true.
-                         in_data  = .false.
-                         in_attribute = .true.
-                      end if
-                      if ( is_found ) then
-                         tag = line(n+1:m-1)
-                         !if ( in_attribute ) then
-                         !   print *, 'debug: tag with attributes ',trim(tag),'...'
-                         !else
-                         !   print *, 'debug: tag <',trim(tag),'> found'
-                         !endif
-                         nlevel = nlevel + 1
-                         ! open_tags(nlevel) = trim(tag)
-                         allocate(next)
-                         next%tag  = trim(tag)
-                         if ( in_attribute ) next%attr=' '
-                         if ( in_data      ) next%data=' '
-                         if ( associated(curr) ) then
-                            next%prev => curr
-                            call add_to_list(curr%linklist,next)
-                            curr => next
-                         else
-                            if ( allocated(root%tag) ) then
-                               if ( .not.present(ex) ) &
-                                    print *, 'error: more than one root tag'
-                               ierr = 5
-                               exit readline
-                            end if
-                            curr => root
-                            root = next
-                         end if
-                         !
-                         n = m+1
-                         exit scantag
-                      end if
-                   end do scantag
-                   if ( m > nl) then
-                      tag = ' '
-                      n = nl+1
-                      exit scanline
-                   end if
-                end if
-             else if ( line(n:n) == '>' ) then
-                if ( in_attribute ) then
-                   if ( line(n-1:n-1) == '/' ) then
-                      ! print *, 'info short tag ',trim(tag),' found'
-                      ! remove slash from attribute
-                      curr%attr(len(curr%attr):len(curr%attr)) = ' '
-                      prev => curr%prev
-                      curr => prev
-                      nlevel = nlevel - 1
-                   else
-                      ! print *, 'debug: tag with attributes ',trim(tag),' found'
-                      in_data = .true.
-                   end if
-                   in_attribute = .false.
-                else
-                   if ( .not.present(ex) ) &
-                        print *, 'error: closed tag that was not open'
-                   ierr = 6
-                   exit readline
-                end if
-                n = n+1
-             else
-                if ( in_attribute ) then
-                   if ( .not. allocated(curr%attr) ) curr%attr = ' '
-                   curr%attr = curr%attr // line(n:n) 
-                end if
-                if ( in_data      ) then
-                   if ( .not. allocated(curr%data) ) curr%data = ' '
-                   curr%data = curr%data // line(n:n) 
-                end if
-                n = n+1
-             end if
-          end if
-       end do scanline
-       ! if data extends over more than one line, add space between lines
-       if ( in_data .and. allocated(curr%data) ) curr%data = curr%data // ' '
+       !
+       ierr = parseline ( nl, line, n, in_comment, in_attribute, in_data, tag, &
+            curr, ex ) 
+       if ( ierr /= 0 ) exit readline
+       !
     end do readline
     !
 10  continue
@@ -345,6 +195,189 @@ CONTAINS
     !
   end function parse
   !
+  function parseline ( nl, line, n, in_comment, in_attribute, in_data, tag, &
+       curr, ex )
+    ! result is returned in pointer "root"
+    ! input line to be parsed
+    integer, intent(in)    :: nl
+    character(len=nl), intent(in) :: line
+    ! variables keeping track of parsing status, must be conserved between calls
+    integer, intent(inout) :: n
+    logical, intent(inout) :: in_comment
+    logical, intent(inout) :: in_attribute
+    logical, intent(inout) :: in_data
+    ! actually a local variable, except maybe for debugging purposes
+    character(len=*), intent(inout) :: tag
+    ! pointer to current tag, must be keot between calls
+    type(node), pointer, intent(inout) :: curr
+    ! if exceptions are set, do not print error messages
+    type(domexception), intent (in), optional :: ex
+    ! return code: 0 = success, otherwise parsing failed
+    integer :: parseline
+    ! local variables
+    type(node), pointer :: next, prev
+    integer :: n1, n2, m
+    logical :: is_found
+    !
+    !
+    parseline = 0 
+    scanline: do while ( n < nl+1 )
+       !print *, 'debug: n=',n, line(n:n)
+       if ( in_comment ) then
+          ! trick to avoid trespassing the EOL
+          n1 = min (n+1,nl)
+          n2 = min (n+2,nl)
+          if ( line(n:n2) == ']]>' ) then
+             in_comment = .false.
+             n = n+3
+             ! print *, 'debug: cdata ended'
+          else if ( line(n:n2) == '-->' ) then
+             in_comment = .false.
+             n = n+3
+             ! print *, 'debug: comment ended'
+          else if ( line(n:n1) == '?>' ) then
+             in_comment = .false.
+             n = n+2
+             ! print *, 'debug: process ended'
+          else
+             n = n+1
+          end if
+       else
+          if ( line(n:n) == '<' ) then
+             ! trick to avoid trespassing the EOL
+             n1 = min (n+1,nl)
+             n2 = min (n+3,nl)
+             if ( line(n1:n2) == '!--' ) then
+                n = n+4
+                in_comment = .true.
+                ! print *, 'debug: comment begin'
+             else if ( line(n1:n1) == '?' ) then
+                n = n+2
+                in_comment = .true.
+                ! print *, 'debug: process begin'
+             else if ( line(n1:n1) == '/' ) then
+                ! tag = trim( open_tags(nlevel) )
+                tag = curr%tag
+                n = n+2
+                m = min(n+len_trim(tag)+1,nl)
+                if ( line(n:m) == trim(tag)//'>' ) then
+                   ! print *, 'debug: closing tag </',trim(tag),'> found'
+                   prev => curr%prev
+                   curr => prev
+                   in_data = .false.
+                else
+                   if ( .not.present(ex) ) then
+                      print *, n,m,nlevel,tag
+                      print *, 'error: unexpected closing tag </',line(n:nl),'> found'
+                   end if
+                   parseline = 2
+                   return
+                end if
+                nlevel = nlevel - 1
+                n = m+1
+             else
+                scantag: do m = n+1, nl
+                   is_found = .false.
+                   if ( line(m:m) == '>' ) then
+                      if ( m == n+1 ) then
+                         if ( .not.present(ex) ) &
+                              print *, 'error: empty tag <>'
+                          parseline = 3
+                         return
+                      end if
+                      is_found = .true.
+                      in_data  = .true.
+                      in_attribute = .false.
+                   else if ( line(m:m) == ' ' .or. m == nl ) then
+                      if ( m == n+1 ) then
+                         if ( .not.present(ex) ) &
+                              print *, 'error: space after <'
+                         parseline = 4
+                         return
+                      end if
+                      is_found = .true.
+                      in_data  = .false.
+                      in_attribute = .true.
+                   end if
+                   if ( is_found ) then
+                      tag = line(n+1:m-1)
+                      !if ( in_attribute ) then
+                      !   print *, 'debug: tag with attributes ',trim(tag),'...'
+                      !else
+                      !   print *, 'debug: tag <',trim(tag),'> found'
+                      !endif
+                      nlevel = nlevel + 1
+                      ! open_tags(nlevel) = trim(tag)
+                      allocate(next)
+                      next%tag  = trim(tag)
+                      if ( in_attribute ) next%attr=' '
+                      if ( in_data      ) next%data=' '
+                      if ( associated(curr) ) then
+                         next%prev => curr
+                         call add_to_list(curr%linklist,next)
+                         curr => next
+                      else
+                         if ( allocated(root%tag) ) then
+                            if ( .not.present(ex) ) &
+                                 print *, 'error: more than one root tag'
+                            parseline = 5
+                            return
+                         end if
+                         curr => root
+                         root = next
+                      end if
+                      !
+                      n = m+1
+                      exit scantag
+                   end if
+                end do scantag
+                if ( m > nl) then
+                   tag = ' '
+                   n = nl+1
+                   exit scanline
+                end if
+             end if
+          else if ( line(n:n) == '>' ) then
+             if ( in_attribute ) then
+                if ( line(n-1:n-1) == '/' ) then
+                   ! print *, 'info short tag ',trim(tag),' found'
+                   ! remove slash from attribute
+                   curr%attr(len(curr%attr):len(curr%attr)) = ' '
+                   prev => curr%prev
+                   curr => prev
+                   nlevel = nlevel - 1
+                else
+                   ! print *, 'debug: tag with attributes ',trim(tag),' found'
+                   in_data = .true.
+                end if
+                in_attribute = .false.
+             else
+                if ( .not.present(ex) ) &
+                     print *, 'error: closed tag that was not open'
+                parseline = 6
+                return
+             end if
+             n = n+1
+          else
+             if ( in_attribute ) then
+                if ( .not. allocated(curr%attr) ) curr%attr = ' '
+                curr%attr = curr%attr // line(n:n) 
+             end if
+             if ( in_data      ) then
+                if ( .not. allocated(curr%data) ) curr%data = ' '
+                curr%data = curr%data // line(n:n) 
+             end if
+             n = n+1
+          end if
+       end if
+    end do scanline
+    ! if data extends over more than one line, add space between lines
+    if ( in_data .and. associated(curr) ) then
+       if ( allocated(curr%data) ) curr%data = curr%data // ' '
+    end if
+
+  end function parseline
+  
   integer function getexceptioncode(ex)
      type(domexception), intent(in):: ex
      getexceptioncode = ex%code
@@ -375,10 +408,6 @@ CONTAINS
   !
   recursive subroutine destroy ( curr, iun )
     !
-    ! optional variable "iun" added for testing and debugging purposes:
-    ! if present, tags are printed to unit iun while they are destroyed
-    !
-    implicit none
     type(node), pointer :: curr, next
     type(nodelist), pointer :: linklist
     integer, intent(in), optional :: iun
@@ -423,7 +452,6 @@ CONTAINS
   !
   function getelementsbytagname(root,tag)
     !
-    implicit none
     type(node), pointer, intent(in) :: root
     character(len=*), intent(in) :: tag
     type(nodelist), pointer :: getelementsbytagname
@@ -565,7 +593,6 @@ scan: do i=la-l0+1,la
   end function hasattribute
   !
   subroutine extractdataattribute_c(root, attr, cval, iostat)
-    implicit none
     type(node), pointer, intent(in) :: root
     character(len=*), intent(in) :: attr
     character(len=*), intent(out) :: cval
@@ -577,7 +604,6 @@ scan: do i=la-l0+1,la
   end subroutine extractdataattribute_c
   !
   subroutine extractdataattribute_l(root, attr, lval, iostat)
-    implicit none
     type(node), pointer, intent(in) :: root
     character(len=*), intent(in) :: attr
     logical, intent(out) :: lval
@@ -594,7 +620,6 @@ scan: do i=la-l0+1,la
   end subroutine extractdataattribute_l
   !
   subroutine extractdataattribute_i(root, attr, ival, iostat)
-    implicit none
     type(node), pointer, intent(in) :: root
     character(len=*), intent(in) :: attr
     integer, intent(out) :: ival
@@ -611,7 +636,6 @@ scan: do i=la-l0+1,la
   end subroutine extractdataattribute_i
   !
   subroutine extractdataattribute_iv(root, attr, ivec, iostat)
-    implicit none
     type(node), pointer, intent(in) :: root
     character(len=*), intent(in) :: attr
     integer, intent(out) :: ivec(:)
@@ -628,7 +652,6 @@ scan: do i=la-l0+1,la
   end subroutine extractdataattribute_iv
   !
   subroutine extractdataattribute_r(root, attr, rval, iostat)
-    implicit none
     type(node), pointer, intent(in) :: root
     character(len=*), intent(in) :: attr
     real(dp), intent(out) :: rval
@@ -645,7 +668,6 @@ scan: do i=la-l0+1,la
   end subroutine extractdataattribute_r
   !
   subroutine extractdatacontent_c(root, cval, iostat)
-    implicit none
     type(node), pointer, intent(in) :: root
     character(len=*), intent(out) :: cval
     integer, intent(out), optional :: iostat
@@ -660,46 +682,25 @@ scan: do i=la-l0+1,la
   end subroutine extractdatacontent_c
   !
   subroutine extractdatacontent_cv(root, cvec, iostat)
-    implicit none
     type(node), pointer, intent(in) :: root
     character(len=*), intent(inout), pointer :: cvec(:)
     integer, intent(out), optional :: iostat
-    integer :: i0, i1, i, ios
+    integer :: ibeg, iend, i, ios
     if ( len_trim(root%data) > 0 ) then
-       i0=0
-       ! ios counts the number of tokens found
-       ios=size(cvec)
+       ios=0
+       iend=1
        do i=1,size(cvec)
-  10      i0=i0+1
-          if (i0 > len_trim(root%data) ) exit
-          if (root%data(i0:i0) == ' ' ) go to 10
-          ! i0 points to the first non-space character
-          i1 = index(root%data(i0:),' ')
-          ! i0+i1-2 points to the next non-space character
-          ios = ios-1
-          if ( i1 > 0 ) then
-             ! token found
-             cvec(i)=root%data(i0:i0+i1-2)
-             i0=i0+i1-1
-          else if ( i1 == 0 .and. i0 < len_trim(root%data) ) then
-             ! last token found
-             cvec(i)=root%data(i0:)
-             exit
-          else
-             ! no more tokens left
-             cvec(i)=' '
-             exit
-          end if
+          call find_token( root%data, ibeg, iend)
+          cvec(i) = root%data(ibeg:iend)
        end do
     else
        cvec(:)=''
-       ios = 0
+       ios = -1
     end if
     if ( present(iostat) ) iostat=ios
   end subroutine extractdatacontent_cv
   !
   subroutine extractdatacontent_l(root, lval, iostat)
-    implicit none
     type(node), pointer, intent(in) :: root
     logical, intent(out) :: lval
     integer, intent(out), optional :: iostat
@@ -715,7 +716,6 @@ scan: do i=la-l0+1,la
   end subroutine extractdatacontent_l
   !
   subroutine extractdatacontent_i(root, ival, iostat)
-    implicit none
     type(node), pointer, intent(in) :: root
     integer, intent(out) :: ival
     integer, intent(out), optional :: iostat
@@ -730,7 +730,6 @@ scan: do i=la-l0+1,la
   end subroutine extractdatacontent_i
   !
   subroutine extractdatacontent_iv(root, ivec, iostat)
-    implicit none
     type(node), pointer, intent(in) :: root
     integer, intent(out) :: ivec(:)
     integer, intent(out), optional :: iostat
@@ -752,7 +751,6 @@ scan: do i=la-l0+1,la
   end subroutine extractdatacontent_iv
   !
   subroutine extractdatacontent_r(root, rval, iostat)
-    implicit none
     type(node), pointer, intent(in) :: root
     real(dp), intent(out) :: rval
     integer, intent(out), optional :: iostat
@@ -767,7 +765,6 @@ scan: do i=la-l0+1,la
   end subroutine extractdatacontent_r
   !
   subroutine extractdatacontent_rv(root, rvec, iostat)
-    implicit none
     type(node), pointer, intent(in) :: root
     real(dp), intent(out) :: rvec(:)
     integer, intent(out), optional :: iostat
@@ -789,7 +786,6 @@ scan: do i=la-l0+1,la
   end subroutine extractdatacontent_rv
   !
   subroutine extractdatacontent_rm(root, rmat, iostat)
-    implicit none
     type(node), pointer, intent(in) :: root
     real(dp), intent(out) :: rmat(:,:)
     integer, intent(out), optional :: iostat
