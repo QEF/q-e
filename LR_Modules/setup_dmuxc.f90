@@ -8,7 +8,7 @@
 !-----------------------------------------------------------------------
 SUBROUTINE setup_dmuxc
   !-----------------------------------------------------------------------
-  !! This subroutine computes dmuxc (derivative of the XC potential).
+  !! This subroutine computes dmuxc (derivative of the XC potential - LDA case).
   !
   USE kinds,            ONLY : DP
   USE eqv,              ONLY : dmuxc

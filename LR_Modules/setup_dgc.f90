@@ -8,7 +8,8 @@
 !-----------------------------------------------------------------------
 SUBROUTINE setup_dgc
   !-----------------------------------------------------------------------
-  !! Allocate and set up all variable needed in the gradient correction case.
+  !! This subroutine computes \(\text{dvxc}\), the derivative of the XC 
+  !! potential for the gradient correction (GGA).
   !
   !! GGA+LSDA is allowed. ADC (September 1999);  
   !! GGA+LSDA+NLCC is allowed. ADC (November 1999);  
@@ -30,7 +31,6 @@ SUBROUTINE setup_dgc
   !
   INTEGER :: k, is, ipol, jpol, ir
   !
-  INTEGER,  ALLOCATABLE :: nld(:)
   REAL(DP), ALLOCATABLE :: grh(:,:,:)
   REAL(DP) :: fac, sgn(2)
   !
@@ -72,7 +72,7 @@ SUBROUTINE setup_dgc
   ALLOCATE( grh(dfftp%nnr,3,nspin_gga) )
   !
   !$acc data create( rhoout, grh, sx, sc, v1x, v2x, v1c, v2c, v2c_ud )
-  !$acc data copyout( dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, grho, psic )
+  !$acc data copyout( dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, grho )
   !
   fac = 1.d0/DBLE(nspin_gga)
   !
@@ -86,9 +86,8 @@ SUBROUTINE setup_dgc
   !
   IF (noncolin .AND. domag) THEN
      !
-     ALLOCATE( nld(ngm), rhogout(ngm,nspin_mag) )
-     nld = dfftp%nl
-     !$acc data copyin(nld) create(rhogout)
+     ALLOCATE( rhogout(ngm,nspin_mag) )
+     !$acc data create(rhogout)
      !
      CALL compute_rho( rho%of_r, rhoout, segni, dfftp%nnr )
      !
@@ -106,7 +105,7 @@ SUBROUTINE setup_dgc
      ENDDO
      !
      !$acc end data
-     DEALLOCATE( nld, rhogout )
+     DEALLOCATE( rhogout )
      !
   ELSE
      ! ... for convenience, if LSDA, rhoout is kept in (up,down) format
