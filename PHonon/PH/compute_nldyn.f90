@@ -127,14 +127,12 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
      !
      !   Here we prepare the two terms
      !
-     call start_clock('c_nldynb1')
      do ibnd = 1, nbnd
         IF (noncolin) THEN
            CALL compute_deff_nc(deff_nc,et(ibnd,ikk))
         ELSE
            CALL compute_deff(deff,et(ibnd,ikk))
         ENDIF
-        call start_clock('c_nldyn_loop1')
         do nt = 1, ntyp
            do na = 1, nat
               if (ityp (na) == nt) then
@@ -224,13 +222,10 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
               endif
            enddo
         enddo
-        call stop_clock('c_nldyn_loop1')
      END DO
-     call stop_clock('c_nldynb1') 
      !
      !     Here starts the loop on the atoms (rows)
      ! 
-     call start_clock('c_nldynb2')
      do nt = 1, ntyp
         do na = ia_s, ia_e
            if (ityp (na) .eq.nt ) then
@@ -263,7 +258,6 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                                     (0.d0,0.d0), aux1, 1 ) 
                      END IF
                      ! 
-                     call start_clock('nldyn_b21')
                      do ntb = 1, ntyp
                         do nb = 1, nat
                           if (ityp (nb) == ntb) then
@@ -309,11 +303,9 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                           endif
                        enddo
                     enddo
-                    call stop_clock('nldyn_b21')
                     !
                     !     here starts the second loop on the atoms
                     !
-                    call start_clock("nldyn_b22")
                     do ntb = 1, ntyp
                        do nb = 1, nat
                           if (ityp (nb) == ntb) then
@@ -351,14 +343,12 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                           endif
                        enddo
                     enddo
-                    call stop_clock('nldyn_b22')
                  enddo
               enddo
            endif
         enddo
      enddo
   enddo
-  call stop_clock('c_nldynb2')
   call mp_sum ( dynwrk, intra_bgrp_comm )
   allocate(auxdyn(3*nat,3*nat))
   call zgemm('C', 'N', 3*nat, 3*nat, 3*nat, cmplx(1.d0,0.d0,kind=dp),  u,     3*nat, dynwrk, 3*nat,& 
