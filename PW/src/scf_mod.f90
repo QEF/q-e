@@ -1048,6 +1048,8 @@ SUBROUTINE rhoz_or_updw( rho, sp, dir )
   !
   IF ( nspin /= 2 ) RETURN
   !
+  !$acc data present_or_copy(rho)
+  !
   vi = 0._dp
   IF (dir == '->updw')  vi = 0.5_dp
   IF (dir == '->rhoz')  vi = 1.0_dp
@@ -1055,7 +1057,8 @@ SUBROUTINE rhoz_or_updw( rho, sp, dir )
   !
   IF ( sp /= 'only_g' ) THEN
      !
-     DO ir = 1, dfftp%nnr  
+     !$acc parallel loop present_or_copy(rho%of_r)
+     DO ir = 1, dfftp%nnr
         rho%of_r(ir,1) = ( rho%of_r(ir,1) + rho%of_r(ir,nspin) ) * vi
         rho%of_r(ir,nspin) = rho%of_r(ir,1) - rho%of_r(ir,nspin) * vi * 2._dp
      ENDDO
@@ -1063,12 +1066,15 @@ SUBROUTINE rhoz_or_updw( rho, sp, dir )
   ENDIF
   IF ( sp /= 'only_r' ) THEN
      !
+     !$acc parallel loop present_or_copy(rho%of_g)
      DO ir = 1, ngm
         rho%of_g(ir,1) = ( rho%of_g(ir,1) + rho%of_g(ir,nspin) ) * vi
         rho%of_g(ir,nspin) = rho%of_g(ir,1) - rho%of_g(ir,nspin) * vi * 2._dp
      ENDDO
      !
   ENDIF
+  !
+  !$acc end data
   !
   RETURN
   !
