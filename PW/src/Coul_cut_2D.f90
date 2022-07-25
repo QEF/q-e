@@ -352,7 +352,7 @@ END SUBROUTINE cutoff_force_lc
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE cutoff_stres_evloc( psic_G, strf, evloc )
+SUBROUTINE cutoff_stres_evloc( rho_G, strf, evloc )
   !----------------------------------------------------------------------
   !! This subroutine adds the contribution from the cutoff long-range part
   !! of the local part of the ionic potential to \(\text{evloc}\).  
@@ -363,14 +363,14 @@ SUBROUTINE cutoff_stres_evloc( psic_G, strf, evloc )
   !! to re-compute it here for the stress.
   !
   USE kinds
-  USE ions_base,  ONLY : ntyp => nsp
-  USE gvect,      ONLY : ngm, gstart
-  USE io_global,  ONLY : stdout
-  USE fft_base,   ONLY : dfftp
+  USE ions_base,  ONLY: ntyp => nsp
+  USE gvect,      ONLY: ngm, gstart
+  USE io_global,  ONLY: stdout
+  USE fft_base,   ONLY: dfftp
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP), INTENT(IN) :: psic_G(dfftp%nnr)
+  COMPLEX(DP), INTENT(IN) :: rho_G(dfftp%nnr)
   !! charge density in G space
   COMPLEX(DP), INTENT(IN) :: strf(ngm,ntyp)
   !! the structure factor
@@ -381,71 +381,28 @@ SUBROUTINE cutoff_stres_evloc( psic_G, strf, evloc )
   !
   INTEGER :: ng, nt
   !
-  ! If gstart=2, it means g(1) is G=0, but we have nothing to add for G=0
-  ! So we start at gstart.
+  !$acc data present_or_copyin(rho_G,strf)
+  !
+  ! ... If gstart=2, it means g(1) is G=0, but we have nothing to add for G=0
+  !     So we start at gstart.
+  !
+  !$acc parallel loop collapse(2) reduction(+:evloc) copyin(lr_Vloc)
   DO nt = 1, ntyp
-     DO ng = gstart, ngm
-        evloc = evloc + DBLE( CONJG(psic_G(ng)) * strf(ng,nt) ) &
-                        * lr_Vloc(ng,nt) 
-     ENDDO
+    DO ng = gstart, ngm
+       evloc = evloc + DBLE( CONJG(rho_G(ng)) * strf(ng,nt) ) &
+                       * lr_Vloc(ng,nt)
+    ENDDO
   ENDDO
+  !
+  !$acc end data
   !
   RETURN
   !
 END SUBROUTINE cutoff_stres_evloc
 !
-!----------------------------------------------------------------------
-SUBROUTINE cutoff_stres_evloc_gpu( psicG_d, strf_d, evloc )
-  !----------------------------------------------------------------------
-  !! cutoff_stres_evloc - gpu version
-  !
-  USE kinds
-  USE ions_base,  ONLY : ntyp => nsp
-  !USE vlocal,     ONLY : strf
-  USE gvect,      ONLY : ngm, gstart
-  USE io_global,  ONLY : stdout
-  USE fft_base,   ONLY : dfftp
-  !
-  IMPLICIT NONE
-  !
-  COMPLEX(DP), INTENT(IN) :: psicG_d(dfftp%nnr)
-  !! charge density in G space
-  COMPLEX(DP), INTENT(IN) :: strf_d(ngm,ntyp)
-  REAL(DP), INTENT(INOUT) :: evloc
-  !! the energy of the electrons in the local ionic potential
-  !
-  ! ... local variables
-  !
-  REAL(DP), ALLOCATABLE :: lrVloc_d(:,:)
-  INTEGER :: ng, nt
-  !
-#if defined(__CUDA)
-  attributes(DEVICE) :: psicG_d, strf_d, lrVloc_d
-#endif  
-  !
-  ALLOCATE( lrVloc_d(ngm,ntyp) )
-  lrVloc_d = lr_Vloc
-  !
-  ! If gstart=2, it means g(1) is G=0, but we have nothing to add for G=0
-  ! So we start at gstart.
-  !
-  !$cuf kernel do (2)
-  DO nt = 1, ntyp
-     DO ng = gstart, ngm
-        evloc = evloc + DBLE( CONJG(psicG_d(ng)) * strf_d(ng,nt) ) &
-                        * lrVloc_d(ng,nt) 
-     ENDDO
-  ENDDO
-  !
-  DEALLOCATE( lrVloc_d )
-  !
-  RETURN
-  !
-END SUBROUTINE cutoff_stres_evloc_gpu
-!
 !
 !----------------------------------------------------------------------
-SUBROUTINE cutoff_stres_sigmaloc( psic_G, strf, sigmaloc )
+SUBROUTINE cutoff_stres_sigmaloc( rho_G, strf, sigmaloc )
   !----------------------------------------------------------------------
   !! This subroutine adds the contribution from the cutoff long-range part 
   !! of the local part of the ionic potential to the rest of the 
@@ -454,141 +411,67 @@ SUBROUTINE cutoff_stres_sigmaloc( psic_G, strf, sigmaloc )
   USE kinds
   USE ions_base,   ONLY : ntyp => nsp
   USE constants,   ONLY : eps8
-  USE gvect,       ONLY : ngm, g, gg, gstart
+  USE gvect,       ONLY : ngm, gstart, g, gg
   USE cell_base,   ONLY : tpiba, tpiba2, alat, omega
   USE io_global,   ONLY : stdout
   USE fft_base,    ONLY : dfftp
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP), INTENT(IN) :: psic_G(dfftp%nnr)
+  COMPLEX(DP), INTENT(IN) :: rho_G(dfftp%nnr)
   !! charge density in G space
   COMPLEX(DP), INTENT(IN) :: strf(ngm,ntyp)
-  !! the structure factor
   REAL(DP), INTENT(INOUT) :: sigmaloc(3,3)
   !! stress contribution for the local ionic potential
   !
   ! ... local variables
   !
-  INTEGER :: ng, nt, l, m
-  REAL(DP) :: Gp, G2lzo2Gp, beta, dlr_Vloc
-  !
-  ! no G=0 contribution
-  DO nt = 1, ntyp
-     DO ng = gstart, ngm
-        !
-        Gp = SQRT( g(1,ng)**2 + g(2,ng)**2 )*tpiba
-        ! below is a somewhat cumbersome way to define beta of Eq. (61) of PRB 96, 075448
-        IF (Gp < eps8) THEN
-           ! G^2*lz/2|Gp|
-           G2lzo2Gp = 0.0d0
-           beta = 0.0d0
-        ELSE
-           G2lzo2Gp = gg(ng)*tpiba2*lz/2.0d0/Gp
-           beta = G2lzo2Gp*(1.0d0-cutoff_2D(ng))/cutoff_2D(ng)
-        ENDIF
-        ! dlr_vloc corresponds to the derivative of the long-range local ionic potential
-        ! with respect to G
-        DO l = 1, 3
-           IF (l == 3) THEN
-              dlr_Vloc = - 1.0d0/(gg(ng)*tpiba2) * lr_Vloc(ng,nt)  &
-                               * (1.0d0+ gg(ng)*tpiba2/4.0d0)
-           ELSE
-              dlr_Vloc = - 1.0d0/ (gg(ng)*tpiba2) * lr_Vloc(ng,nt)  &
-                               * (1.0d0- beta + gg(ng)*tpiba2/4.0d0)
-           ENDIF
-           !
-           DO m = 1, l
-              sigmaloc(l,m) = sigmaloc(l,m) +  DBLE( CONJG( psic_G(ng) ) &
-                              * strf(ng,nt) ) * 2.0d0 * dlr_Vloc  &
-                              * tpiba2 * g(l,ng) * g(m,ng) 
-           ENDDO
-        ENDDO
-        !
-     ENDDO
-  ENDDO
-  !
-  RETURN
-  !
-END SUBROUTINE cutoff_stres_sigmaloc
-!
-!
-!----------------------------------------------------------------------
-SUBROUTINE cutoff_stres_sigmaloc_gpu( psicG_d, strf_d, sigmaloc )
-  !----------------------------------------------------------------------
-  !! This subroutine adds the contribution from the cutoff long-range part 
-  !! of the local part of the ionic potential to the rest of the 
-  !! \(\text{sigmaloc}\). That is, the rest of Eq. (63) of PRB 96, 075448.
-  !
-  USE kinds
-  USE ions_base,   ONLY : ntyp => nsp
-  USE vlocal,      ONLY : strf
-  USE constants,   ONLY : eps8
-  USE gvect,       ONLY : ngm, gstart, g_d, gg_d
-  USE cell_base,   ONLY : tpiba, tpiba2, alat, omega
-  USE io_global,   ONLY : stdout
-  USE fft_base,    ONLY : dfftp
-  !
-  IMPLICIT NONE
-  !
-  COMPLEX(DP), INTENT(IN) :: psicG_d(dfftp%nnr)
-  !! charge density in G space
-  COMPLEX(DP), INTENT(IN) :: strf_d(ngm,ntyp)
-  REAL(DP), INTENT(INOUT) :: sigmaloc(3,3)
-  !! stress contribution for the local ionic potential
-  !
-  ! ... local variables
-  !
-  INTEGER :: ng, nt, l, m
-  REAL(DP), ALLOCATABLE :: lrVloc_d(:,:), cutoff2D_d(:)
+  INTEGER  :: ng, nt, l, m
   REAL(DP) :: Gp, G2lzo2Gp, beta, dlr_Vloc1, dlr_Vloc2, dlr_Vloc3, &
               no_lm_dep
   REAL(DP) :: sigmaloc11, sigmaloc31, sigmaloc21, sigmaloc32, &
               sigmaloc22, sigmaloc33
-#if defined(__CUDA)
-  attributes(DEVICE) :: psicG_d, strf_d, lrVloc_d, cutoff2D_d
-#endif
-  !
-  ALLOCATE( lrVloc_d(ngm,ntyp), cutoff2D_d(ngm) )
-  lrVloc_d   = lr_Vloc
-  cutoff2D_d = cutoff_2D
+  ! 
+  !$acc data present_or_copyin(rho_G,strf)
   !
   sigmaloc11 = 0._DP  ;  sigmaloc31 = 0._DP
   sigmaloc21 = 0._DP  ;  sigmaloc32 = 0._DP
   sigmaloc22 = 0._DP  ;  sigmaloc33 = 0._DP
   !
-  ! no G=0 contribution
+  ! ... no G=0 contribution
   !
-  !$cuf kernel do (2) <<<*,*>>>
+  !$acc parallel loop collapse(2) copyin(lr_Vloc,cutoff_2D)         &
+  !$acc     reduction(+:sigmaloc11,sigmaloc21,sigmaloc22,sigmaloc31,&
+  !$acc                 sigmaloc32,sigmaloc33)
   DO nt = 1, ntyp
      DO ng = gstart, ngm
         !
-        Gp = SQRT( g_d(1,ng)**2 + g_d(2,ng)**2 )*tpiba
-        ! below is a somewhat cumbersome way to define beta of Eq. (61) of PRB 96, 075448
+        Gp = SQRT( g(1,ng)**2 + g(2,ng)**2 )*tpiba
+        ! ... below is a somewhat cumbersome way to define beta of Eq. (61) of PRB 96, 075448
         IF (Gp < eps8) THEN
-           ! G^2*lz/2|Gp|
+           ! ... G^2*lz/2|Gp|
            G2lzo2Gp = 0._DP
            beta = 0._DP
         ELSE
-           G2lzo2Gp = gg_d(ng)*tpiba2*lz/2._DP/Gp
-           beta = G2lzo2Gp*(1._DP-cutoff2D_d(ng))/cutoff2D_d(ng)
+           G2lzo2Gp = gg(ng)*tpiba2*lz/2._DP/Gp
+           beta = G2lzo2Gp*(1._DP-cutoff_2D(ng))/cutoff_2D(ng)
         ENDIF
-        ! dlrVloc corresponds to the derivative of the long-range local ionic potential
-        ! with respect to G
-        dlr_Vloc1 = - 1._DP/ (gg_d(ng)*tpiba2) * lrVloc_d(ng,nt)  &
-                               * (1._DP- beta + gg_d(ng)*tpiba2/4._DP)
-        dlr_Vloc2 = - 1._DP/ (gg_d(ng)*tpiba2) * lrVloc_d(ng,nt)  &
-                               * (1._DP- beta + gg_d(ng)*tpiba2/4._DP)
-        dlr_Vloc3 = - 1._DP/ (gg_d(ng)*tpiba2) * lrVloc_d(ng,nt)  &
-                               * (1._DP+ gg_d(ng)*tpiba2/4._DP)
-        no_lm_dep = DBLE( CONJG( psicG_d(ng) ) &
-                              * strf_d(ng,nt) ) * 2._DP * tpiba2
-        sigmaloc11 = sigmaloc11 + no_lm_dep * dlr_Vloc1 * g_d(1,ng) * g_d(1,ng)
-        sigmaloc21 = sigmaloc21 + no_lm_dep * dlr_Vloc2 * g_d(2,ng) * g_d(1,ng)
-        sigmaloc22 = sigmaloc22 + no_lm_dep * dlr_Vloc2 * g_d(2,ng) * g_d(2,ng)
-        sigmaloc31 = sigmaloc31 + no_lm_dep * dlr_Vloc3 * g_d(3,ng) * g_d(1,ng)
-        sigmaloc32 = sigmaloc32 + no_lm_dep * dlr_Vloc3 * g_d(3,ng) * g_d(2,ng)
-        sigmaloc33 = sigmaloc33 + no_lm_dep * dlr_Vloc3 * g_d(3,ng) * g_d(3,ng)
+        ! ... dlrVloc corresponds to the derivative of the long-range local ionic potential
+        !     with respect to G
+        dlr_Vloc1 = -1._DP / (gg(ng)*tpiba2) * lr_Vloc(ng,nt) &
+                               * (1._DP- beta + gg(ng)*tpiba2/4._DP)
+        dlr_Vloc2 = -1._DP / (gg(ng)*tpiba2) * lr_Vloc(ng,nt) &
+                               * (1._DP- beta + gg(ng)*tpiba2/4._DP)
+        dlr_Vloc3 = -1._DP / (gg(ng)*tpiba2) * lr_Vloc(ng,nt) &
+                               * (1._DP+ gg(ng)*tpiba2/4._DP)
+        no_lm_dep = DBLE( CONJG( rho_G(ng) ) &
+                          * strf(ng,nt) ) * 2._DP * tpiba2
+        sigmaloc11 = sigmaloc11 + no_lm_dep * dlr_Vloc1 * g(1,ng) * g(1,ng)
+        sigmaloc21 = sigmaloc21 + no_lm_dep * dlr_Vloc2 * g(2,ng) * g(1,ng)
+        sigmaloc22 = sigmaloc22 + no_lm_dep * dlr_Vloc2 * g(2,ng) * g(2,ng)
+        sigmaloc31 = sigmaloc31 + no_lm_dep * dlr_Vloc3 * g(3,ng) * g(1,ng)
+        sigmaloc32 = sigmaloc32 + no_lm_dep * dlr_Vloc3 * g(3,ng) * g(2,ng)
+        sigmaloc33 = sigmaloc33 + no_lm_dep * dlr_Vloc3 * g(3,ng) * g(3,ng)
         !
      ENDDO
   ENDDO
@@ -600,11 +483,11 @@ SUBROUTINE cutoff_stres_sigmaloc_gpu( psicG_d, strf_d, sigmaloc )
   sigmaloc(3,2) = sigmaloc(3,2) + sigmaloc32
   sigmaloc(3,3) = sigmaloc(3,3) + sigmaloc33
   !
-  DEALLOCATE( lrVloc_d, cutoff2D_d )
+  !$acc end data
   !
   RETURN
   !
-END SUBROUTINE cutoff_stres_sigmaloc_gpu
+END SUBROUTINE cutoff_stres_sigmaloc
 !
 !
 !----------------------------------------------------------------------

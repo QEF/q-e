@@ -17,7 +17,7 @@ SUBROUTINE stress( sigma )
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
   USE constants,        ONLY : ry_kbar
   USE ener,             ONLY : etxc, vtxc
-  USE gvect,            ONLY : ngm, gstart, g, gg, gcutm
+  USE gvect,            ONLY : ngm, gstart, g, gg, gcutm, gl, gl_d
   USE fft_base,         ONLY : dfftp
   USE ldaU,             ONLY : lda_plus_u, Hubbard_projectors
   USE lsda_mod,         ONLY : nspin
@@ -72,12 +72,15 @@ SUBROUTINE stress( sigma )
   !
   ! --------------- ... provisional ... ---------------
   !$acc update device( g, gg )
+  ! ... was in stres_loc .. to cancel for acc only
+#if defined(__CUDA)
+  gl_d = gl
+#endif
   ! -------------------------------------------
   !
-  !   contribution from local potential
+  ! contribution from local potential
   !
-  IF (.NOT. use_gpu) CALL stres_loc( sigmaloc )
-  IF (      use_gpu) CALL stres_loc_gpu( sigmaloc )
+  CALL stres_loc( sigmaloc )
   !
   IF ( do_comp_esm .AND. ( esm_bc /= 'pbc' ) ) THEN
      ! In ESM, sigmaloc has only short-range term: add long-range term
@@ -85,7 +88,7 @@ SUBROUTINE stress( sigma )
      sigmaloc(:,:) = sigmaloc(:,:) + sigmaloclong(:,:)
   END IF
   !
-  !  hartree contribution
+  ! Hartree contribution
   !
   IF ( do_comp_esm .AND. ( esm_bc /= 'pbc' ) )  THEN ! for ESM stress
      CALL esm_stres_har( sigmahar, rho%of_g(:,1) )
@@ -94,14 +97,14 @@ SUBROUTINE stress( sigma )
      IF (      use_gpu) CALL stres_har_gpu( sigmahar )
   ENDIF
   !
-  !  xc contribution (diagonal)
+  ! XC contribution (diagonal)
   !
   sigmaxc(:,:) = 0.d0
   DO l = 1, 3
      sigmaxc(l,l) = - (etxc - vtxc) / omega
   ENDDO
   !
-  !  xc contribution: add gradient corrections (non diagonal)
+  ! XC contribution: add gradient corrections (non diagonal)
   !
   IF (.NOT.xclib_dft_is('meta')) THEN
     CALL stres_gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, &
@@ -111,7 +114,7 @@ SUBROUTINE stress( sigma )
                          nspin, dfftp, g, alat, omega, sigmaxc, rho%kin_r )
   ENDIF
   !
-  !  meta-GGA contribution 
+  ! meta-GGA contribution 
   !
   IF (.NOT. use_gpu) CALL stres_mgga( sigmaxc )
   IF (      use_gpu) CALL stres_mgga_gpu( sigmaxc )
@@ -121,7 +124,7 @@ SUBROUTINE stress( sigma )
   IF (.NOT. use_gpu) CALL stres_cc( sigmaxcc )
   IF (      use_gpu) CALL stres_cc_gpu( sigmaxcc )
   !
-  !  ewald contribution
+  ! Ewald contribution
   !
   IF ( do_comp_esm .AND. ( esm_bc /= 'pbc' ) ) THEN ! for ESM stress
      CALL esm_stres_ewa( sigmaewa )
@@ -151,7 +154,7 @@ SUBROUTINE stress( sigma )
     CALL stop_clock('stres_dftd3')
   END IF
   !
-  !  kinetic + nonlocal contribuition
+  ! kinetic + nonlocal contribuition
   !
   IF (.NOT. use_gpu) CALL stres_knl( sigmanlc, sigmakin )
   IF (      use_gpu) CALL stres_knl_gpu( sigmanlc, sigmakin )

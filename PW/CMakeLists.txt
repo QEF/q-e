@@ -260,7 +260,6 @@ set(src_pw
    src/force_corr_gpu.f90
    src/orthoatwfc_gpu.f90
    src/wfcinit_gpu.f90
-   src/stres_loc_gpu.f90
    src/add_paw_to_deeq_gpu.f90
    src/addusdens_gpu.f90
    src/addusforce_gpu.f90
@@ -273,7 +272,6 @@ set(src_pw
    src/g_psi_gpu.f90
    src/stres_mgga_gpu.f90
    src/atomic_wfc_gpu.f90
-   src/dvloc_of_g_gpu.f90
    src/stres_knl_gpu.f90
    src/compute_deff_gpu.f90
    src/add_vhub_to_deeq_gpu.f90
