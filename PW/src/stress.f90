@@ -122,13 +122,10 @@ SUBROUTINE stress( sigma )
   IF ( do_comp_esm .AND. ( esm_bc /= 'pbc' ) ) THEN ! for ESM stress
      CALL esm_stres_ewa( sigmaewa )
   ELSE
-     IF (.NOT. use_gpu) CALL stres_ewa( alat, nat, ntyp, ityp, zv, at,      &
-                                        bg, tau, omega, g, gg, ngm, gstart, &
-                                        gamma_only, gcutm, sigmaewa )
-     IF (      use_gpu) CALL stres_ewa_gpu( alat, nat, ntyp, ityp, zv, at, bg,&
-                                            tau, omega, g_d,gg_d, ngm, gstart,&
-                                            gamma_only, gcutm, sigmaewa )
-  END IF
+     CALL stres_ewa( alat, nat, ntyp, ityp, zv, at, bg, &
+                     tau, omega, g, gg, ngm, gstart,    &
+                     gamma_only, gcutm, sigmaewa )
+  ENDIF
   !
   ! semi-empirical dispersion contribution: Grimme-D2 and D3
   !

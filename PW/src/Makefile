@@ -296,7 +296,6 @@ PWLIBS += \
   stres_mgga_gpu.o \
   stres_cc_gpu.o \
   deriv_drhoc_gpu.o \
-  stres_ewa_gpu.o \
   stres_knl_gpu.o \
   stres_us_gpu.o \
   compute_deff_gpu.o \
