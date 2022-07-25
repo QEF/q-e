@@ -795,7 +795,7 @@ SUBROUTINE cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
   !
   sdewald = 0._DP
   !
-  !$acc parallel loop copyin(g,gg,cutoff_2D,tau,zv,ityp) &
+  !$acc parallel loop copyin(cutoff_2D,tau,zv,ityp) &
   !$acc& reduction(+:sigma11,sigma21,sigma22,sigma31,sigma32, &
   !$acc&             sigma33)
   DO ng = gstart, ngm

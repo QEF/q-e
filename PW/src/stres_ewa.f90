@@ -87,7 +87,7 @@ SUBROUTINE stres_ewa( alat, nat, ntyp, ityp, zv, at, bg, tau, &
   COMPLEX(DP) :: rhostar
   REAL(DP) :: sigma11, sigma21, sigma22, sigma31, sigma32, sigma33
   !
-  !$acc data present_or_copyin( g, gg )
+  !$acc data present( g, gg )
   !
   tpiba2 = (tpi / alat)**2
   sigmaewa(:,:) = 0.d0
@@ -109,22 +109,21 @@ SUBROUTINE stres_ewa( alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
   IF (upperbound > 1d-7) GOTO 12
   !
-  ! G-space sum here
-  !
-  ! Determine if this processor contains G=0 and set the constant term
-  !
+  ! ... Determine if this processor contains G=0 and set the constant term
+  !     sdewald is the diagonal term
   IF (gstart == 2) THEN
      sdewald = tpi * e2 / 4.d0 / alpha * (charge / omega)**2
   ELSE
      sdewald = 0.d0
   ENDIF
   !
-  ! sdewald is the diagonal term
   IF (gamma_only) THEN
     fact = 2.d0
   ELSE
     fact = 1.d0
   ENDIF
+  !
+  ! ... G-space sum here below
   !
   IF (do_cutoff_2D) THEN 
      !
@@ -189,14 +188,14 @@ SUBROUTINE stres_ewa( alat, nat, ntyp, ityp, zv, at, bg, tau, &
      sigmaewa(l,l) = sigmaewa(l,l) + sdewald
   ENDDO
   !
-  ! R-space sum here (see ewald.f90 for details on parallelization)
+  ! ... R-space sum here (see ewald.f90 for details on parallelization)
   !
   CALL block_distribute( nat, me_bgrp, nproc_bgrp, na_s, na_e, mykey )
   !
   IF ( mykey == 0 ) THEN
      rmax = 4.0d0 / SQRT(alpha) / alat
      !
-     ! with this choice terms up to ZiZj*erfc(5) are counted (erfc(5)=2x10^-1
+     ! ... with this choice terms up to ZiZj*erfc(5) are counted (erfc(5)=2x10^-1
      !
 !$omp parallel do default(none) shared(na_s, na_e, nat, tau, rmax, at, bg, alat, ityp, alpha, omega, zv)&
 !$omp                          &private(nb, dtau, r, r2, nrm, nr, rr, fac, l, m)&
@@ -205,7 +204,7 @@ SUBROUTINE stres_ewa( alat, nat, ntyp, ityp, zv, at, bg, tau, &
         DO nb = 1, nat
            dtau(:) = tau(:,na) - tau(:,nb)
            !
-           !     generates nearest-neighbors shells r(i)=R(i)-dtau(i)
+           ! ... generates nearest-neighbors shells r(i)=R(i)-dtau(i)
            !
            CALL rgen( dtau, rmax, mxr, at, bg, r, r2, nrm )
            !

@@ -70,6 +70,10 @@ SUBROUTINE stress( sigma )
   !
   CALL start_clock( 'stress' )
   !
+  ! --------------- ... provisional ... ---------------
+  !$acc update device( g, gg )
+  ! -------------------------------------------
+  !
   !   contribution from local potential
   !
   IF (.NOT. use_gpu) CALL stres_loc( sigmaloc )
@@ -88,13 +92,13 @@ SUBROUTINE stress( sigma )
   ELSE
      IF (.NOT. use_gpu) CALL stres_har( sigmahar )
      IF (      use_gpu) CALL stres_har_gpu( sigmahar )
-  END IF
+  ENDIF
   !
   !  xc contribution (diagonal)
   !
   sigmaxc(:,:) = 0.d0
   DO l = 1, 3
-     sigmaxc (l, l) = - (etxc - vtxc) / omega
+     sigmaxc(l,l) = - (etxc - vtxc) / omega
   ENDDO
   !
   !  xc contribution: add gradient corrections (non diagonal)
