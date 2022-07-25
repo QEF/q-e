@@ -99,8 +99,13 @@ SUBROUTINE stress( sigma )
   !
   !  xc contribution: add gradient corrections (non diagonal)
   !
-  CALL stres_gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, &
-       nspin, dfftp, g, alat, omega, sigmaxc )
+  IF (.NOT.xclib_dft_is('meta')) THEN
+    CALL stres_gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, &
+                         nspin, dfftp, g, alat, omega, sigmaxc )
+  ELSE
+    CALL stres_gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, &
+                         nspin, dfftp, g, alat, omega, sigmaxc, rho%kin_r )
+  ENDIF
   !
   !  meta-GGA contribution 
   !
