@@ -36,8 +36,7 @@ SUBROUTINE stress( sigma )
   USE libmbd_interface, ONLY : HmbdvdW
   USE rism_module,      ONLY : lrism, stres_rism
   USE esm,              ONLY : do_comp_esm, esm_bc ! for ESM stress
-  USE esm,              ONLY : esm_stres_har, esm_stres_ewa, esm_stres_loclong ! for ESM stress
-  USE gvect,            ONLY : g_d, gg_d
+  USE esm,              ONLY : esm_stres_har, esm_stres_ewa, esm_stres_loclong 
   !
   IMPLICIT NONE
   !
@@ -115,8 +114,7 @@ SUBROUTINE stress( sigma )
   !
   ! meta-GGA contribution 
   !
-  IF (.NOT. use_gpu) CALL stres_mgga( sigmaxc )
-  IF (      use_gpu) CALL stres_mgga_gpu( sigmaxc )
+  CALL stres_mgga( sigmaxc )
   !
   ! core correction contribution
   !

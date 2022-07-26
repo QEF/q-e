@@ -270,7 +270,6 @@ set(src_pw
    src/add_vuspsi_gpu.f90
    src/hs_1psi_gpu.f90
    src/g_psi_gpu.f90
-   src/stres_mgga_gpu.f90
    src/atomic_wfc_gpu.f90
    src/stres_knl_gpu.f90
    src/compute_deff_gpu.f90
