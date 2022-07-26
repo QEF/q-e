@@ -93,8 +93,7 @@ SUBROUTINE stress( sigma )
   IF ( do_comp_esm .AND. ( esm_bc /= 'pbc' ) )  THEN ! for ESM stress
      CALL esm_stres_har( sigmahar, rho%of_g(:,1) )
   ELSE
-     IF (.NOT. use_gpu) CALL stres_har( sigmahar )
-     IF (      use_gpu) CALL stres_har_gpu( sigmahar )
+     CALL stres_har( sigmahar )
   ENDIF
   !
   ! XC contribution (diagonal)
