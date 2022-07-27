@@ -108,7 +108,6 @@ SUBROUTINE stres_cc( sigmaxcc )
         CALL deriv_drhoc( ngl, gl, omega, tpiba2, msh(nt), &
                           rgrid(nt)%r, rgrid(nt)%rab, upf(nt)%rho_atc, &
                           rhocg )
-        !$acc update device(rhocg)
         !
         ! ... non diagonal term (g=0 contribution missing)
         !

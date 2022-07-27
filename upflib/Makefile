@@ -72,7 +72,8 @@ OBJS_GPU= \
   qvan2_gpu.o \
   simpsn_gpu.o \
   sph_bes_gpu.o \
-  ylmr2_gpu.o
+  ylmr2_gpu.o \
+  upf_acc_interfaces.o
 
 OBJS_NODEP+= dom.o wxml.o
 

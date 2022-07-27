@@ -7,6 +7,7 @@
 !
 !-----------------------------------------------------------------------
 SUBROUTINE simpson(mesh, func, rab, asum)
+  !$acc routine seq
   !-----------------------------------------------------------------------
   !
   !     simpson's rule integration. On input:
