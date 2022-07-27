@@ -10,7 +10,7 @@ MODULE upf_acc_interfaces
   !
   INTERFACE sph_bes_acc
     SUBROUTINE sph_bes( msh, r, q, l, jl )
-      !$acc routine vector
+      !$acc routine seq
       IMPLICIT NONE
       INTEGER  :: msh, l
       REAL(8) :: r(msh), q, jl(msh)

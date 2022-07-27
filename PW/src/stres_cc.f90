@@ -86,9 +86,11 @@ SUBROUTINE stres_cc( sigmaxcc )
   DO nt = 1, ntyp
      IF ( upf(nt)%nlcc ) THEN
         !
+        !$acc data copyin(rgrid(nt:nt),upf(nt:nt))
+        !$acc data copyin(rgrid(nt)%r,rgrid(nt)%rab,upf(nt)%rho_atc)
+        
         CALL drhoc( ngl, gl, omega, tpiba2, msh(nt), rgrid(nt)%r, &
                     rgrid(nt)%rab, upf(nt)%rho_atc, rhocg )
-        !$acc update device(rhocg)
         !
         ! ... diagonal term
         IF (gstart==2) THEN
@@ -125,6 +127,9 @@ SUBROUTINE stres_cc( sigmaxcc )
           sigma6 = sigma6 + sigma_rid * g(3,ng)*g(3,ng)
           !
         ENDDO
+        !
+        !$acc end data
+        !$acc end data
         !
      ENDIF
      !
