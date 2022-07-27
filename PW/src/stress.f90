@@ -112,14 +112,13 @@ SUBROUTINE stress( sigma )
                          nspin, dfftp, g, alat, omega, sigmaxc, rho%kin_r )
   ENDIF
   !
-  ! meta-GGA contribution 
+  ! meta-GGA contribution
   !
   CALL stres_mgga( sigmaxc )
   !
   ! core correction contribution
   !
-  IF (.NOT. use_gpu) CALL stres_cc( sigmaxcc )
-  IF (      use_gpu) CALL stres_cc_gpu( sigmaxcc )
+  CALL stres_cc( sigmaxcc )
   !
   ! Ewald contribution
   !
