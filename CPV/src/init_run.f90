@@ -77,10 +77,11 @@ SUBROUTINE init_run()
   USE wavefunctions,     ONLY : cv0                 ! exx_wf related
   USE wannier_base,             ONLY : vnbsp               ! exx_wf related
   !!!USE cp_restart,               ONLY : cp_read_wfc_Kong    ! exx_wf related
-  USE input_parameters,         ONLY : ref_cell
+  USE input_parameters,         ONLY : ref_cell, nextffield
   USE cell_base,                ONLY : ref_tpiba2, init_tpiba2
   USE tsvdw_module,             ONLY : tsvdw_initialize
   USE exx_module,               ONLY : exx_initialize
+  USE extffield,                ONLY : read_extffield
 #if defined (__CUDA)
   USE cudafor
 #endif
@@ -383,6 +384,14 @@ SUBROUTINE init_run()
   IF ( nbeg <= 0 .OR. lwf ) THEN
      !
      CALL ions_reference_positions( tau0 ) ! BS: screws up msd calculation for lwf ...
+     !
+  END IF
+  !
+  !  read external force fields parameters
+  ! 
+  IF ( nextffield > 0 ) THEN
+     !
+     CALL read_extffield( nextffield )
      !
   END IF
   !

@@ -328,6 +328,11 @@ MODULE read_namelists_module
        origin_choice = 1
        rhombohedral = .TRUE.
        !
+       !
+       ! ... Extffield
+       !
+       nextffield = 0
+       !
        RETURN
        !
      END SUBROUTINE
