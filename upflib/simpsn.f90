@@ -33,17 +33,20 @@ SUBROUTINE simpson(mesh, func, rab, asum)
   asum = 0.0d0
   r12 = 1.0d0 / 3.0d0
   !
-  asum = func(1)*rab(1)
   !$acc loop vector reduction(+:asum)
   DO i = 2, mesh-1
     fct = DBLE(ABS(MOD(i,2)-2)*2)
     asum = asum + fct * func(i) * rab(i)
   ENDDO
-  asum = (asum + func(mesh)*rab(mesh)) * r12
+  IF (MOD(mesh,2)==1) THEN
+    asum = (asum + func(1)*rab(1) + func(mesh)*rab(mesh)) * r12
+  ELSE
+    asum = (asum + func(1)*rab(1) - func(mesh-1)*rab(mesh-1)) * r12
+  ENDIF
   !
   ! if mesh is not odd, use open formula instead:
   ! ... 2/3*f(n-5) + 4/3*f(n-4) + 13/12*f(n-3) + 0*f(n-2) + 27/12*f(n-1)
-  !!! Under testing
+  !** Under testing
   !
   !IF ( MOD(mesh,2) == 0 ) THEN
   !   print *, 'mesh even: correction:', f1*5.d0/4.d0-4.d0*f2+23.d0*f3/4.d0, &
