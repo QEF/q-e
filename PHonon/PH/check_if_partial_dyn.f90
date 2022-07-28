@@ -111,7 +111,7 @@ SUBROUTINE set_ifat(nat,   nat_todo, atomo, nsym, irt, ifat)
   !! sets to 1 the value in ifat for each atom in atomo list and for their 
   !! symmetry equivalents. 
   IMPLICIT NONE
-  LOGICAL,INTENT(IN)   :: nat 
+  INTEGER,INTENT(IN)   :: nat 
   !! total of number of atoms, size of ifat 
   INTEGER,INTENT(IN)   :: nat_todo
   !! number of displacicng atoms, size of atomo 
