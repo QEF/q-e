@@ -35,10 +35,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
   USE becmod_gpum,          ONLY : becp_d, bec_type_d
   USE becmod_subs_gpum,     ONLY : using_becp_auto, using_becp_d_auto, &
                                    calbec_gpu
-  USE uspp_init,            ONLY : init_us_2, gen_us_dj_gpu, gen_us_dy_gpu
-#if defined(__CUDA)
-  USE device_fbuff_m,       ONLY : dev_buf
-#endif 
+  USE uspp_init,            ONLY : init_us_2, gen_us_dj, gen_us_dy_gpu
   !
   IMPLICIT NONE
   !
@@ -75,11 +72,12 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
   IF ( nks > 1 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
   !
   CALL allocate_bec_type( nkb, nbnd, becp, intra_bgrp_comm )
+  
+  
   CALL using_becp_auto(2)
   !
   CALL using_evc_d(0)
   CALL using_becp_d_auto(2)
-  !
   !
 #if defined(__CUDA)
   !$acc data present(vkb,evc)
@@ -90,7 +88,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
 #else
   !$acc update self(vkb)
   CALL calbec( npw, vkb, evc, becp )
-  
+  !
 #endif
   !
   !
@@ -207,10 +205,8 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        attributes(DEVICE) :: becpr_d
 #endif
        !
-       
 #if defined(__CUDA)
-       
-       
+       !
        CALL using_becp_auto(0)
        !
        IF( becp%comm /= mp_get_comm_null() ) THEN
@@ -224,11 +220,9 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
           nbnd_begin = 1
        ENDIF
        !
-       
        ALLOCATE( deff(nhm,nhm,nat) )
        ALLOCATE( ps(nkb) )
        !$acc data create(deff,ps)
-       
        !
        ! ... diagonal contribution - if the result from "calbec" are not 
        ! ... distributed, must be calculated on a single processor
@@ -236,10 +230,6 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        ! ... for the moment when using_gpu is true becp is always fully present in all processors
        !
        CALL using_et(0) ! compute_deff : intent(in)
-       !
-       
-       !IF (ANY(ierrs(1:2) /= 0)) CALL errore( 'stres_us_gpu', 'cannot allocate buffers', ABS(MAXVAL(ierrs)) )
-       
        !
        becpr_d => becp_d%r_d 
        !
@@ -269,7 +259,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                  aux = wg_nk * DBLE(deff(ih,ih,na))         &
                                      * ABS(becpr_d(ikb,ibnd_loc))**2  &
                              +  becpr_d(ikb,ibnd_loc)* wg_nk * 2._DP  &
-                                * SUM( DBLE(deff(ih,ih+1:nh_np,na)) &
+                                * SUM( DBLE(deff(ih,ih+1:nh_np,na))   &
                                 * becpr_d(ishift+ih+1:ishift+nh_np,ibnd_loc))
               ENDIF
               evps = evps + aux
@@ -285,18 +275,16 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        !------------------------------------
        ALLOCATE( dvkb(npwx,nkb,4) )
        !$acc data create(dvkb)
-       
        !
+       CALL gen_us_dj( ik, dvkb(:,:,4) )
        !$acc host_data use_device(dvkb)
-       CALL gen_us_dj_gpu( ik, dvkb(:,:,4) )
-       IF ( lmaxkb > 0 ) THEN 
+       IF ( lmaxkb > 0 ) THEN
          DO ipol = 1, 3
            CALL gen_us_dy_gpu( ik, xyz(1,ipol), dvkb(:,:,ipol) )
          ENDDO
        ENDIF
        !$acc end host_data
        !
-       
        DO icyc = 0, nproc -1
           !
           DO ibnd_loc = 1, nbnd_loc
@@ -327,34 +315,34 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
              dot22 = 0._DP ; dot32 = 0._DP ; dot33 = 0._DP
              !
              !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,dot22,dot32,dot33)
-             DO na =1, nat 
+             DO na =1, nat
                 DO i = 1, npw
                    worksum = (0._DP,0._DP)
-                   np = ityp(na) 
+                   np = ityp(na)
                    ijkb0 = shift(na)
                    nh_np = nh(np)
                    DO ih = 1, nh_np
                       ikb = ijkb0 + ih
-                      worksum = worksum + ps(ikb) * dvkb(i,ikb,4) 
+                      worksum = worksum + ps(ikb) * dvkb(i,ikb,4)
                    ENDDO
-                   evci = evc_d(i,ibnd) 
-                   gk1  = gk(i,1) 
-                   gk2  = gk(i,2) 
-                   gk3  = gk(i,3) 
+                   evci = evc_d(i,ibnd)
+                   gk1  = gk(i,1)
+                   gk2  = gk(i,2)
+                   gk3  = gk(i,3)
                    qm1i = qm1(i)
-                   !  
+                   !
                    cv = evci * CMPLX(gk1 * gk1  * qm1i)
-                   dot11 = dot11 + DBLE(worksum)*DBLE(cv) + DIMAG(worksum)*DIMAG(cv) 
-                   !  
+                   dot11 = dot11 + DBLE(worksum)*DBLE(cv) + DIMAG(worksum)*DIMAG(cv)
+                   !
                    cv = evci * CMPLX(gk2 * gk1 * qm1i)
                    dot21 = dot21 + DBLE(worksum)*DBLE(cv) + DIMAG(worksum)*DIMAG(cv)
-                   ! 
+                   !
                    cv = evci * CMPLX(gk3 * gk1 * qm1i)
                    dot31 = dot31 + DBLE(worksum)*DBLE(cv) + DIMAG(worksum)*DIMAG(cv)
-                   ! 
+                   !
                    cv = evci * CMPLX(gk2 * gk2 * qm1i)
                    dot22 = dot22 + DBLE(worksum)*DBLE(cv) + DIMAG(worksum)*DIMAG(cv)
-                   ! 
+                   !
                    cv = evci * CMPLX(gk3 * gk2 * qm1i)
                    dot32 = dot32 + DBLE(worksum)*DBLE(cv) + DIMAG(worksum)*DIMAG(cv)
                    !
@@ -479,8 +467,8 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        ALLOCATE( dvkb(npwx,nkb,4) )
        !$acc data create( dvkb )
        !
+       CALL gen_us_dj( ik, dvkb(:,:,4) )
        !$acc host_data use_device( dvkb )
-       CALL gen_us_dj_gpu( ik, dvkb(:,:,4) )
        IF ( lmaxkb > 0 ) THEN
          DO ipol = 1, 3
            CALL gen_us_dy_gpu( ik, xyz(1,ipol), dvkb(:,:,ipol) )

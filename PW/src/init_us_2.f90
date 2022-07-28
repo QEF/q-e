@@ -9,7 +9,7 @@ MODULE uspp_init
   !
   PRIVATE
   PUBLIC :: init_us_2, gen_us_dj, gen_us_dy
-  PUBLIC :: gen_us_dj_gpu, gen_us_dy_gpu
+  PUBLIC :: gen_us_dy_gpu
   !
 CONTAINS
   !----------------------------------------------------------------------
@@ -69,7 +69,7 @@ CONTAINS
   END SUBROUTINE init_us_2
   !
   !----------------------------------------------------------------------
-  SUBROUTINE gen_us_dj ( ik, dvkb )
+  SUBROUTINE gen_us_dj( ik, dvkb )
     !----------------------------------------------------------------------
     !! wrapper to call gen_us_dj: same as init_us_2, but with the derivative
     !! of the Bessel functions dj_l/dq instead of j_l(qr) in the integral
@@ -80,7 +80,7 @@ CONTAINS
     USE gvect,        ONLY : eigts1, eigts2, eigts3, mill, g
     USE wvfct,        ONLY : npwx
     USE uspp,         ONLY : nkb
-    USE fft_base ,    ONLY : dfftp
+    USE fft_base,     ONLY : dfftp
     USE klist,        ONLY : xk, ngk, igk_k
     !
     IMPLICIT NONE
@@ -92,9 +92,11 @@ CONTAINS
     !
     ! CALL start_clock( 'gen_us_dj' )
     !
-    CALL gen_us_dj_base (ngk(ik), npwx, igk_k(1,ik), xk(1,ik), nat, tau, &
-            ityp, ntyp, tpiba, omega, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
-            eigts1, eigts2, eigts3, mill, g, dvkb )
+    !$acc data present_or_copyout( dvkb )
+    CALL gen_us_dj_base( ngk(ik), npwx, igk_k(1,ik), xk(1,ik), nat, tau, &
+                         ityp, ntyp, tpiba, omega, dfftp%nr1, dfftp%nr2, &
+                         dfftp%nr3, eigts1, eigts2, eigts3, mill, g, dvkb )
+    !$acc end data
     !
     ! CALL stop_clock( 'gen_us_dj' )
     !
@@ -133,42 +135,6 @@ CONTAINS
     ! CALL stop_clock( 'gen_us_d' )
     !
   END SUBROUTINE gen_us_dy
-  !
-  !----------------------------------------------------------------------
-  SUBROUTINE gen_us_dj_gpu ( ik, dvkb )
-    !----------------------------------------------------------------------
-    !! wrapper to call gen_us_dj: same as init_us_2, but with the derivative
-    !! of the Bessel functions dj_l/dq instead of j_l(qr) in the integral
-    !! (GPU version, FIXME: to be merged)
-    !
-    USE kinds,        ONLY : dp
-    USE ions_base,    ONLY : nat, ntyp=>nsp, ityp, tau
-    USE cell_base,    ONLY : tpiba, omega
-    USE gvect,        ONLY : eigts1_d, eigts2_d, eigts3_d, mill_d, g_d
-    USE wvfct,        ONLY : npwx
-    USE uspp,         ONLY : nkb
-    USE fft_base ,    ONLY : dfftp
-    USE klist,        ONLY : xk, ngk, igk_k_d
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(IN) :: ik
-    !! k-point index
-    COMPLEX(DP), INTENT(OUT) :: dvkb(npwx,nkb)
-    !! beta functions computed with dj_l/dq
-#if defined(__CUDA)
-  attributes(DEVICE) :: dvkb
-#endif
-    !
-    ! CALL start_clock( 'gen_us_dj' )
-    !
-    CALL gen_us_dj_gpu_ (ngk(ik), npwx, igk_k_d(1,ik), xk(1,ik), nat, tau, &
-            ityp, ntyp, tpiba, omega, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
-            eigts1_d, eigts2_d, eigts3_d, mill_d, g_d, dvkb )
-    !
-    ! CALL stop_clock( 'gen_us_dj' )
-    !
-  END SUBROUTINE gen_us_dj_gpu
   !
   !----------------------------------------------------------------------
   SUBROUTINE gen_us_dy_gpu ( ik, u, dvkb )
