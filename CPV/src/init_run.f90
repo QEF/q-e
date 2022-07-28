@@ -81,7 +81,7 @@ SUBROUTINE init_run()
   USE cell_base,                ONLY : ref_tpiba2, init_tpiba2
   USE tsvdw_module,             ONLY : tsvdw_initialize
   USE exx_module,               ONLY : exx_initialize
-  USE extffield,                ONLY : read_extffield
+  USE extffield,                ONLY : init_extffield
 #if defined (__CUDA)
   USE cudafor
 #endif
@@ -319,6 +319,14 @@ SUBROUTINE init_run()
     CALL g2kin_init( gg, tpiba2 )
   END IF
   !
+  !  read external force fields parameters
+  ! 
+  IF ( nextffield > 0 .AND. ionode) THEN
+     !
+     CALL init_extffield( nextffield )
+     !
+  END IF
+  !
   CALL print_legend( )
   !
   CALL ldaU_init()
@@ -384,14 +392,6 @@ SUBROUTINE init_run()
   IF ( nbeg <= 0 .OR. lwf ) THEN
      !
      CALL ions_reference_positions( tau0 ) ! BS: screws up msd calculation for lwf ...
-     !
-  END IF
-  !
-  !  read external force fields parameters
-  ! 
-  IF ( nextffield > 0 ) THEN
-     !
-     CALL read_extffield( nextffield )
      !
   END IF
   !

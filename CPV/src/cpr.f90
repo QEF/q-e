@@ -118,9 +118,10 @@ USE cp_main_variables,        ONLY : eigr_d
   USE ldaU_cp,                  ONLY : lda_plus_u, vupsi
   USE fft_base,                 ONLY : dfftp, dffts
   USE london_module,            ONLY : energy_london, force_london, stres_london
-  USE input_parameters,         ONLY : tcpbo
+  USE input_parameters,         ONLY : tcpbo, nextffield
   USE xc_lib,                   ONLY : xclib_dft_is, start_exx, exx_is_active
   USE device_memcpy_m,          ONLY : dev_memcpy
+  USE extffield,                ONLY : apply_extffield
   !
 #if defined (__ENVIRON)
   USE plugin_flags,             ONLY : use_environ
@@ -459,10 +460,20 @@ USE cp_main_variables,        ONLY : eigr_d
            !
         END IF
         !
-        !
         ! ... call void routine for user define/ plugin patches on external forces
         !
         CALL plugin_ext_forces()
+        !
+        ! ... call run_extffield to apply external force fields on ions
+        ! 
+        IF ( nextffield > 0 ) THEN
+           IF ( .NOT.tnosep .OR. CYCLE_NOSE.EQ.0 ) THEN
+              IF ( ionode ) THEN
+                 CALL apply_extffield(nfi,nextffield,nat,tau0,fion,vels)
+              END IF
+              CALL mp_bcast( fion, ionode_id, intra_bgrp_comm )
+           END IF
+        END IF
         !
         !
         CALL ions_move( tausp, taus, tausm, iforce, pmass, fion, ainv, &
