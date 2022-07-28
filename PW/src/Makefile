@@ -290,7 +290,6 @@ PWLIBS += \
   drhoc_gpu.o \
   addusforce_gpu.o \
   force_corr_gpu.o \
-  stres_knl_gpu.o \
   stres_us_gpu.o \
   compute_deff_gpu.o \
   orthoatwfc_gpu.o \
