@@ -99,7 +99,7 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
      !
      !$acc update device(evc)
      !
-     !$acc parallel loop collapse(2)
+     !$acc parallel loop collapse(2) reduction(+:s11,s21,s31,s22,s32,s33)
      DO ibnd = 1, nbnd
         DO i = 1, npw
            wg_nk = wg(ibnd,ik)
@@ -122,10 +122,8 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
      !
      !  ... contribution from the nonlocal part
      !
-#if defined(__OPENACC)
-     !$acc host_data use_device( gk )
+#if defined(_OPENACC)
      CALL stres_us_gpu( ik, gk, sigmanlc )
-     !$acc end host_data
 #else
      CALL stres_us( ik, gk, sigmanlc )
 #endif
