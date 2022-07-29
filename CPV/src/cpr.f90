@@ -121,7 +121,7 @@ USE cp_main_variables,        ONLY : eigr_d
   USE input_parameters,         ONLY : tcpbo, nextffield
   USE xc_lib,                   ONLY : xclib_dft_is, start_exx, exx_is_active
   USE device_memcpy_m,          ONLY : dev_memcpy
-  USE extffield,                ONLY : apply_extffield
+  USE extffield,                ONLY : apply_extffield,close_extffield
   !
 #if defined (__ENVIRON)
   USE plugin_flags,             ONLY : use_environ
@@ -469,7 +469,7 @@ USE cp_main_variables,        ONLY : eigr_d
         IF ( nextffield > 0 ) THEN
            IF ( .NOT.tnosep .OR. CYCLE_NOSE.EQ.0 ) THEN
               IF ( ionode ) THEN
-                 CALL apply_extffield(nfi,nextffield,nat,tau0,fion,vels)
+                 CALL apply_extffield(nfi,nextffield,tau0,fion,vels)
               END IF
               CALL mp_bcast( fion, ionode_id, intra_bgrp_comm )
            END IF
@@ -1021,7 +1021,8 @@ USE cp_main_variables,        ONLY : eigr_d
   IF( iverbosity > 1 ) CALL laxlib_print_matrix( lambda, idesc, nbsp, nbsp, nudx, 1.D0, ionode, stdout )
   !
   IF (lda_plus_u) DEALLOCATE( forceh )
-
+  !
+  IF (ionode .AND. nextffield > 0) CALL close_extffield()
   !
   CALL stop_clock( 'cpr_total' ) ! BS
   !
