@@ -1,6 +1,8 @@
 New in development version:
   * GPU-accelerated phonon code (CINECA Team)
-
+  * Self-consistent calculation with a two-chemical potential approach
+    by G. Marini, M. Calandra [Phys. Rev. B 104, 144103(2021)]. 
+     
 Incompatible changes in development version:
   * CUDA Fortran Davidson code removed and replaced by ACC (Ivan Carnimeo)
 

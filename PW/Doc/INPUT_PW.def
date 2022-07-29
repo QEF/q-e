@@ -489,6 +489,18 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
+        var twochem -type LOGICAL {
+            default { .FALSE. }
+            see { nelec_cond, nbnd_cond, degauss_cond }
+            info {
+             IF .TRUE. , a two chemical potential calculation for the simulation of
+             photoexcited systems is performed. See G. Marini, M. Calandra; 
+             Phys. Rev. B 104, 144103 (2021). 
+            }
+        }
+
+
+
         var lfcp -type LOGICAL {
             default { .FALSE. }
             info {
@@ -743,6 +755,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 Number of electronic states (bands) to be calculated.
                 Note that in spin-polarized calculations the number of
                 k-point, not the number of bands per k-point, is doubled
+            }
+        }
+
+         var nbnd_cond -type INTEGER {
+            default { nbnd_cond = @ref nbnd - # of electrons / 2 in the collinear case;
+                      nbnd_cond = @ref nbnd - # of electrons in the noncollinear case.
+            }
+            info {
+                Number of electronic states in the conduction manifold
+                for a two chemical-potential calculation. 
             }
         }
         
@@ -1050,6 +1072,23 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
+        var degauss_cond -type REAL {
+            default { 0.D0 Ry }
+            info {
+                value of the gaussian spreading (Ry) for brillouin-zone
+                integration in the conduction manifold in a two-chemical
+                potential calculation (@ref twochem=.true.).
+            }
+        }
+
+        var nelec_cond -type REAL {
+            default { 0.D0 }
+            info {
+                Number of electrons in the conduction manifold in a two-chemical 
+                potential calculation (@ref twochem=.true.).
+            }
+        }
+ 
         var degauss -type REAL { 
             default { 0.D0 Ry }
             info {
@@ -1057,7 +1096,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 integration in metals.
             }
         }
-        
+       
         var smearing -type CHARACTER {
             default { 'gaussian' }
 
