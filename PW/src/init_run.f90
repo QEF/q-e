@@ -38,6 +38,7 @@ SUBROUTINE init_run()
   USE tsvdw_module,       ONLY : tsvdw_initialize
   USE libmbd_interface,   ONLY : init_mbd
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
+  USE two_chem,           ONLY : init_twochem, twochem
   USE lsda_mod,           ONLY : nspin
   USE noncollin_module,   ONLY : domag
   USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc, xclib_dft_is 
@@ -105,6 +106,10 @@ SUBROUTINE init_run()
   ! ... setup the 2D cutoff factor
   !
   IF (do_cutoff_2D) CALL cutoff_fact()
+  !
+  ! ... setup two chemical potentials calculation
+  !
+  IF (twochem) CALL init_twochem()
   !
   CALL gshells ( lmovecell )
   !

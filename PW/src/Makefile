@@ -238,6 +238,7 @@ transform_becsum_so.o \
 transform_becsum_nc.o \
 transform_qq_so.o \
 trnvecc.o \
+two_chem.o\
 update_pot.o \
 us_exx.o \
 usnldiag.o \

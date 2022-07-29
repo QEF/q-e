@@ -93,7 +93,9 @@ SUBROUTINE iosys()
                             smearing_          => smearing, &
                             degauss_           => degauss, &
                             tot_charge_        => tot_charge, &
-                            tot_magnetization_ => tot_magnetization
+                            tot_magnetization_ => tot_magnetization, &
+                            degauss_cond_      => degauss_cond, &
+                            nelec_cond_        => nelec_cond
   USE ktetra,        ONLY : tetra_type
   USE start_k,       ONLY : init_start_k
   !
@@ -182,7 +184,11 @@ SUBROUTINE iosys()
                             max_xml_steps_    => max_xml_steps 
   USE check_stop,    ONLY : max_seconds_ => max_seconds
   !
-  USE wvfct,         ONLY : nbnd_ => nbnd
+  USE wvfct,         ONLY : nbnd_ => nbnd, &
+                            nbnd_cond_ => nbnd_cond              
+  !
+  USE two_chem,      ONLY : twochem_ => twochem
+  !  
   USE gvecw,         ONLY : ecfixed_ => ecfixed, &
                             qcutz_   => qcutz, &
                             q2sigma_ => q2sigma
@@ -235,7 +241,8 @@ SUBROUTINE iosys()
                                gdir, nppstr, wf_collect,lelfield,lorbm,efield, &
                                nberrycyc, efield_cart, lecrpa,                 &
                                lfcp, vdw_table_name, memory, max_seconds,      &
-                               tqmmm, efield_phase, gate, max_xml_steps, trism
+                               tqmmm, efield_phase, gate, max_xml_steps,       &
+                               trism, twochem
 
   !
   ! ... SYSTEM namelist
@@ -270,7 +277,8 @@ SUBROUTINE iosys()
                                esm_bc, esm_efield, esm_w, esm_nfit, esm_a,    &
                                lgcscf,                                        &
                                zgate, relaxz, block, block_1, block_2,        &
-                               block_height, lgcscf
+                               block_height, lgcscf, nbnd_cond, nelec_cond,   &
+                               degauss_cond
   !
   ! ... ELECTRONS namelist
   !
@@ -650,6 +658,8 @@ SUBROUTINE iosys()
   !
   degauss_ = degauss
   smearing_ = smearing
+  degauss_cond_ = degauss_cond
+  nelec_cond_ = nelec_cond
   !
   IF( ltetra ) THEN
      IF( lforce ) CALL infomsg( 'iosys', &
@@ -659,6 +669,7 @@ SUBROUTINE iosys()
   END IF
   IF( nbnd < 1 ) CALL errore( 'iosys', 'nbnd less than 1', nbnd ) 
   nbnd_    = nbnd
+  nbnd_cond_ = nbnd_cond
   !
   two_fermi_energies = ( tot_magnetization /= -10000._DP)
   IF ( two_fermi_energies .and. tot_magnetization < -9999._DP) &
@@ -1240,6 +1251,7 @@ SUBROUTINE iosys()
   efield_     = efield
   nberrycyc_  = nberrycyc
   efield_cart_ = efield_cart
+  twochem_    = twochem
   SELECT CASE(efield_phase)
      CASE( 'none' )
         phase_control=0
