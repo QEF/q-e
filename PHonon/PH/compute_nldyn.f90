@@ -23,7 +23,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   USE wvfct,            ONLY : nbnd, et
 
   USE modes,            ONLY : u
-  USE partial,          ONLY : nat_todo, atomo
+  USE partial,          ONLY : nat_todo, nat_todo_input, atomo
   USE phus,             ONLY : alphap, int1, int2, &
                                int2_so, int1_nc
   USE control_ph,       ONLY : rec_code_read
@@ -35,6 +35,8 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   USE mp_bands,         ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
   USE mp,               ONLY : mp_sum
   USE becmod,           ONLY : bec_type
+  USE lr_symm_base,     ONLY : nsymq
+  USE symm_base,        ONLY : irt
 
   implicit none
 
@@ -60,13 +62,14 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   ! work space
   complex(DP) ::  dynwrk (3 * nat, 3 * nat), ps_nc(2)
   ! auxiliary dynamical matrix
-  integer, allocatable :: ifat(:) 
+  integer, allocatable :: ifat(:), atomo_l(:)  
   ! flags selecting atoms to compute 
   integer :: ik, ikk, ikq, ibnd, jbnd, ijkb0, ijkbnh, ijkb0b, ijkbnhb, ih, jh, ikb, &
        jkb, ipol, jpol, na, nb, nt, ntb, nu_i, nu_j, &
-       na_icart, na_jcart, mu, nu, is, js, ijs, jbnd_loc, ijkb1b, ijkbnb
+       na_icart, na_jcart, mu, nu, is, js, ijs, jbnd_loc, ijkb1b, ijkbnb, nat_l, na_l, nb_l
   ! counters
   integer :: startb, lastb, ia_s, ia_e, mykey, bna, dummykey  
+  integer, external :: block_size 
 
   IF (rec_code_read >=-20) return
 
@@ -85,10 +88,24 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   END IF
   allocate (psv_nc(npol,nhm), psv(nhm)) 
   dynwrk (:,:) = (0.d0, 0.d0)
+
+if (nat_todo_input > 0 ) then 
+  call set_local_atomo(nat, nat_todo, atomo, nsymq, irt, nat_l, atomo_l)
+  !allocate(ifat(nat))
+  !call set_ifat(nat, nat_todo, atomo, nsymq, irt, ifat)
+  !nat_l = count(ifat == 1) 
+  !allocate(atomo_l(nat_l))
+  !atomo_l = pack([(na,na=1,nat)],ifat==1)
+  !deallocate(ifat)
+else 
+  nat_l = nat
+end if 
+
+
 #if defined(__nldyn_ion_parallelism) 
-  call block_distribute(nat,me_bgrp, nproc_bgrp, ia_s, ia_e, mykey )
+  call block_distribute(nat_l,me_bgrp, nproc_bgrp, ia_s, ia_e, mykey )
   if (nproc_bgrp >= nat) then 
-    bna = block_count(ia_s, nat, nproc_bgrp)
+    bna = block_size(ia_s, nat, nproc_bgrp)
     call block_distribute(nbnd, mykey, bna, startb, lastb, dummykey) 
   else       
     startb = 1 
@@ -97,7 +114,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
 #else 
   call divide (intra_bgrp_comm, nbnd, startb, lastb)
   ia_s = 1
-  ia_e = nat
+  ia_e = nat_l
   mykey = 0  
 #endif
  
@@ -134,7 +151,12 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
            CALL compute_deff(deff,et(ibnd,ikk))
         ENDIF
         do nt = 1, ntyp
-           do na = 1, nat
+           do na_l = ia_s, ia_e
+              if (nat_l< nat) then 
+                na = atomo_l(na_l)
+              else 
+                na = na_l
+              end if 
               if (ityp (na) == nt) then
                  ijkb0 = ofsbeta(na) 
                  do ih = 1, nh (nt)
@@ -227,7 +249,12 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
      !     Here starts the loop on the atoms (rows)
      ! 
      do nt = 1, ntyp
-        do na = ia_s, ia_e
+        do na_l = ia_s, ia_e
+           if (nat_l < nat) then 
+              na = atomo_l(na_l)
+           else 
+              na = na_l 
+           end if
            if (ityp (na) .eq.nt ) then
               ijkb0 = ofsbeta(na)
               ijkbnh = ijkb0 + nh(nt)
@@ -259,7 +286,12 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                      END IF
                      ! 
                      do ntb = 1, ntyp
-                        do nb = 1, nat
+                        do nb_l = 1, nat_l 
+                          if (nat_l < nat) then 
+                            nb = atomo_l(nb_l)
+                          else 
+                            nb = nb_l
+                          end if
                           if (ityp (nb) == ntb) then
                              psv_nc(:, :) =(0.d0,0.d0)
                              psv(:) = (0.d0, 0.d0)
@@ -307,7 +339,12 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                     !     here starts the second loop on the atoms
                     !
                     do ntb = 1, ntyp
-                       do nb = 1, nat
+                       do nb_l = 1, nat_l
+                          if (nat_l < nat) then 
+                            nb = atomo_l(nb_l)
+                          else 
+                            nb = nb_l
+                          end if
                           if (ityp (nb) == ntb) then
                              ijkb0b = ofsbeta(nb)
                              ijkb1b = ijkb0b + 1 
@@ -372,15 +409,4 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
      deallocate (deff)
   END IF
   return
-  contains 
-     FUNCTION block_count(ia, nat, nproc) RESULT (res) 
-        !! counts how many procs have the same ia   
-        IMPLICIT NONE 
-        !
-        INTEGER   :: res
-        INTEGER,INTENT(IN) :: ia, nat, nproc 
-        !            
-        res  = nproc/nat
-        IF (ia <= MOD(nproc,nat)) res = res + 1   
-     END FUNCTION block_count  
 end subroutine compute_nldyn
