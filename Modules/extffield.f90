@@ -217,6 +217,7 @@ CONTAINS
                 !
                 load(extff_axis(i),i) = load(extff_axis(i),i) + for(extff_axis(i))
                 effion(extff_axis(i),ia) = effion(extff_axis(i),ia) + for(extff_axis(i))
+                print *,ia,ityp(ia),load(extff_axis(i),i),eftau0(extff_axis(i),ia),extff_geo(1,i)
                 !
              ENDDO
              !

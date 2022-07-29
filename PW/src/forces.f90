@@ -36,7 +36,7 @@ SUBROUTINE forces()
   USE vlocal,            ONLY : strf, vloc
   USE force_mod,         ONLY : force, sumfor
   USE scf,               ONLY : rho
-  USE ions_base,         ONLY : if_pos
+  USE ions_base,         ONLY : if_pos, vel
   USE ldaU,              ONLY : lda_plus_u, Hubbard_projectors
   USE extfield,          ONLY : tefield, forcefield, gate, forcegate, relaxz
   USE control_flags,     ONLY : gamma_only, remove_rigid_rot, textfor, &
@@ -56,6 +56,8 @@ SUBROUTINE forces()
   USE esm,               ONLY : do_comp_esm, esm_bc, esm_force_ew
   USE qmmm,              ONLY : qmmm_mode
   USE rism_module,       ONLY : lrism, force_rism
+  USE extffield,         ONLY : apply_extffield
+  USE input_parameters,  ONLY : nextffield
   !
   USE control_flags,     ONLY : use_gpu
 #if defined(__CUDA)
@@ -249,6 +251,10 @@ SUBROUTINE forces()
 #if defined (__ENVIRON)
   IF (use_environ) CALL calc_environ_force(force)
 #endif
+  !
+  ! ... call run_extffield to apply external force fields on ions
+  ! 
+  IF ( nextffield > 0 ) CALL apply_extffield(1,nextffield,tau,force,vel)
   !
   ! ... Berry's phase electric field terms
   !
