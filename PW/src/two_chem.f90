@@ -32,10 +32,13 @@ SUBROUTINE init_twochem()
   USE klist,                ONLY : degauss_cond, nelec, nelec_cond
   USE wvfct,                ONLY : nbnd, nbnd_cond
   USE noncollin_module,     ONLY : noncolin
+  USE io_files,             ONLY : restart_dir
+  USE io_global,            ONLY : ionode
  !
  !
   IMPLICIT NONE
 
+  !
   IF (nbnd_cond==0) THEN
      !
      IF (noncolin) THEN
@@ -70,7 +73,6 @@ SUBROUTINE init_twochem()
   !
   IF (trim(occupations) /= 'smearing') CALL errore( 'init_twochem', &
              & 'two chemical potential calculation requires smearing', 1 )
-  WRITE(stdout,*) occupations
   !
   ! checks that smearing is being employed 
   ! 
@@ -78,13 +80,11 @@ SUBROUTINE init_twochem()
      !
      IF (nbnd_cond.GT.(nbnd - NINT(nelec))) CALL errore( 'init_twochem', &
             & 'non collinear calculation and nbnd_cond > nbnd - NINT(nelec)', 1 )
-     WRITE(stdout,*) nbnd_cond
      !
   ELSE
      ! 
      IF (nbnd_cond.GT.(nbnd - NINT(nelec)/2)) CALL errore( 'init_twochem', &
             & 'collinear calculation and nbnd_cond > nbnd - NINT(nelec)/2', 1 )
-     WRITE(stdout,*) nbnd_cond
      !
   END IF
   ! checks that nbnd_cond <= nbnd - NINT(nelec) (non collinear)
@@ -92,10 +92,9 @@ SUBROUTINE init_twochem()
 
   IF (nelec_cond.GE.nelec) CALL errore( 'init_twochem', &
             & 'nelec_cond greater than nelec', 1 )
-  WRITE(stdout,*) nelec_cond
   ! checks that the number of electrons in the conduction band 
   ! is less than total number of electrons
-
+  !
 9060 FORMAT( '     The conduction manifold is constituted by',I3, ' bands' )
 9061 FORMAT( '    ', F8.4, ' electrons are placed in the conduction manifold' )
   !

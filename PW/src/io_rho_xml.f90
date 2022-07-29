@@ -26,6 +26,7 @@ MODULE io_rho_xml
       !
       USE paw_variables,    ONLY : okpaw
       USE ldaU,             ONLY : lda_plus_u, hub_back, lda_plus_u_kind, nsg
+      USE two_chem,         ONLY : twochem
       USE xc_lib,           ONLY : xclib_dft_is
       USE noncollin_module, ONLY : noncolin, domag
       USE scf,              ONLY : scf_type
@@ -47,7 +48,7 @@ MODULE io_rho_xml
       INTEGER,          INTENT(IN)           :: nspin
       !
       CHARACTER (LEN=256) :: dirname
-      INTEGER :: nspin_, iunocc, iunpaw, ierr
+      INTEGER :: nspin_, iunocc, iunpaw, iuntwochem, ierr
 
       dirname = restart_dir ( )
       CALL create_directory( dirname )
@@ -116,7 +117,19 @@ MODULE io_rho_xml
          ENDIF
          !
       END IF
-
+      !
+      IF ( twochem) THEN
+         !
+         IF ( ionode ) THEN
+            !
+            OPEN ( NEWUNIT=iuntwochem, FILE = TRIM(restart_dir() ) // 'twochem.exst', &
+                 FORM='unformatted', STATUS='unknown' )
+            CLOSE ( UNIT = iuntwochem, STATUS='KEEP' )
+         END IF
+         !
+      END IF
+      ! open empty file in the case of twochem to stop to phonon calculation.
+      !
       RETURN
     END SUBROUTINE write_scf
 
