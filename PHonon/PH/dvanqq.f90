@@ -89,7 +89,7 @@ subroutine dvanqq
   !allocate (aux2(  ngm))
   !allocate (aux3(  ngm))
   !allocate (aux5(  ngm))
-  allocate(aux35(ngm,9))
+  allocate(aux35(9,ngm))
   allocate (qmodg( ngm))
   allocate (ylmk0( ngm , lmaxq * lmaxq))
   allocate (qgm  ( ngm))
@@ -178,34 +178,38 @@ subroutine dvanqq
                        !  
                        IF (do_cutoff_2D) THEN
                           do ig=1, ngm
-                             sk(ig)=(vlocq(ig,nta)+lr_Vlocq (ig, nta)) &
+                             sk(ig)= (vlocq(ig,nta)+lr_Vlocq (ig, nta)) &
                                                * eigts1(mill(1,ig), na) &
                                                * eigts2(mill(2,ig), na) &
                                                * eigts3(mill(3,ig), na)
                           enddo
                        ELSE
                           do ig=1, ngm
-                             sk(ig)=vlocq(ig,nta) * eigts1(mill(1,ig), na) &
+                             sk(ig)=  vlocq(ig,nta) * eigts1(mill(1,ig), na) &
                                                   * eigts2(mill(2,ig), na) &
-                                                  * eigts3(mill(3,ig), na)
+                                                  * eigts3(mill(3,ig), na) 
                            enddo
                        ENDIF
                        ! 
                        ! FIXME: replace zgemv with zgemm
                        !
+                       !$omp parallel do default(shared) private(ig)
                        do ig =1, ngm 
-                          aux35(ig,1:3) = sk(ig) * (g(1:3,ig) + xq (1:3))
-                          aux35(ig,4:6) = aux35(ig,1) *  (g(1:3,ig) + xq (1:3))
-                          aux35(ig,7:8) = aux35(ig,2) *  (g(2:3,ig) + xq (2:3))
-                          aux35(ig, 9)  = aux35(ig,3) *  (g(3,ig) + xq (3))
+                          aux35(1:3,ig) = conjg(sk(ig)) * (g(1:3,ig) + xq (1:3))
+                          aux35(4:6,ig) = aux35(1,ig) *  (g(1:3,ig) + xq (1:3))
+                          aux35(7:8,ig) = aux35(2,ig) *  (g(2:3,ig) + xq (2:3))
+                          aux35(9,ig)  =  aux35(3,ig) *  (g(3,ig) + xq (3))
                        end do 
-                       call zgemv('C', ngm, 9,cmplx(1._dp, 0._dp,kind=dp),aux35,ngm,aux1,1,(0._dp,0._dp),z9aux,1) 
+                       call zgemv('N', 9,ngm,cmplx(1._dp, 0._dp,kind=dp),aux35,9,aux1,1,(0._dp,0._dp),z9aux,1)
+                       z9aux(4:9) = conjg(fact)*tpiba2*omega*z9aux(4:9)
+                       !$omp workshare
                        int2(ih,jh,1:3,na,nb) = conjg(z9aux(1:3)) * fact * fact1 
-                       int5(ijh,1,1:3,na,nb) = conjg(fact)*tpiba2*omega*z9aux(4:6) 
-                       int5(ijh,2:3,1,na,nb) = conjg(fact)*tpiba2*omega*z9aux(5:6)
-                       int5(ijh,2,2:3,na,nb) = conjg(fact)*tpiba2*omega*z9aux(7:8)
-                       int5(ijh,3,2,na,nb)   = conjg(fact)*tpiba2*omega*z9aux(8)
-                       int5(ijh,3,3,na,nb)   = conjg(fact)*tpiba2*omega*z9aux(9)
+                       int5(ijh,1,1:3,na,nb) = z9aux(4:6) 
+                       int5(ijh,2:3,1,na,nb) = z9aux(5:6)
+                       int5(ijh,2,2:3,na,nb) = z9aux(7:8)
+                       int5(ijh,3,2,na,nb)   = z9aux(8)
+                       int5(ijh,3,3,na,nb)   = z9aux(9)
+                       !$omp end workshare 
                     enddo
                     if (.not.lgamma) then
                        do ig = 1, ngm
@@ -215,19 +219,23 @@ subroutine dvanqq
                        enddo
                     endif
                     do is = 1, nspin_mag
+                       !$omp parallel do default(shared) private(ig)
                        do ig = 1, ngm 
-                          aux35(ig,1:3) = veff (dfftp%nl (ig), is) * g (1:3, ig)
-                          aux35(ig,4:6) = aux35(ig,1) * g(1:3,ig)
-                          aux35(ig,7:8) = aux35(ig,2) * g(2:3,ig)
-                          aux35(ig,9)   = aux35(ig,3) * g(3,ig) 
+                          aux35(1:3,ig) = conjg(veff (dfftp%nl (ig), is)) * g (1:3, ig)
+                          aux35(4:6,ig) = aux35(1,ig) * g(1:3,ig)
+                          aux35(7:8,ig) = aux35(2,ig) * g(2:3,ig)
+                          aux35(9,ig)   = aux35(3,ig) * g(3,ig) 
                        end do 
-                       call zgemv('C',ngm,9,cmplx(1._dp, 0._dp,kind=dp), aux35,ngm,aux1,1,(0._dp,0._dp),z9aux,1) 
+                       call zgemv('N',9,ngm,cmplx(1._dp, 0._dp,kind=dp), aux35,9,aux1,1,(0._dp,0._dp),z9aux,1)
+                       z9aux(4:9) = -tpiba2 * omega * z9aux(4:9)
+                       !$omp workshare
                        int1(ih,jh,1:3,nb,is) = -fact1  * conjg(z9aux(1:3)) 
-                       int4(ijh,1,1:3,nb,is) = -tpiba2 * omega * z9aux(4:6) 
-                       int4(ijh,2,2:3,nb,is) = -tpiba2 * omega * z9aux(7:8)
-                       int4(ijh,3,  3,nb,is) = -tpiba2 * omega * z9aux(9)
-                       int4(ijh,2:3,1,nb,is) = -tpiba2 * omega * z9aux(5:6)
-                       int4(ijh,3,  2,nb,is) = -tpiba2 * omega * z9aux(8) 
+                       int4(ijh,1,1:3,nb,is) =  z9aux(4:6) 
+                       int4(ijh,2,2:3,nb,is) =  z9aux(7:8)
+                       int4(ijh,3,  3,nb,is) =  z9aux(9)
+                       int4(ijh,2:3,1,nb,is) =  z9aux(5:6)
+                       int4(ijh,3,  2,nb,is) =  z9aux(8) 
+                       !$omp end workshare 
                     enddo
                  endif
               enddo
