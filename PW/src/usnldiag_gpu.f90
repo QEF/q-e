@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
+SUBROUTINE usnldiag_gpu( npw, h_diag_d, s_diag_d )
   !-----------------------------------------------------------------------
   !! Add nonlocal pseudopotential term to diagonal part of Hamiltonian.  
   !! Compute the diagonal part of the S matrix.
@@ -17,7 +17,7 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
   USE kinds,            ONLY: DP
   USE ions_base,        ONLY: nat, ityp, ntyp => nsp
   USE wvfct,            ONLY: npwx
-  USE uspp,             ONLY: ofsbeta, deeq, qq_at, qq_so_d, &
+  USE uspp,             ONLY: ofsbeta, deeq, qq_at, qq_so, &
                               deeq_nc
   USE uspp_param,       ONLY: upf, nh
   USE noncollin_module, ONLY: noncolin, npol, lspinorb
@@ -134,7 +134,7 @@ CONTAINS
   !
   SUBROUTINE usnldiag_noncollinear()
      USE lsda_mod,  ONLY: current_spin
-     USE uspp,      ONLY: vkb, qq_at, qq_so_d, deeq_nc
+     USE uspp,      ONLY: vkb, qq_at, qq_so, deeq_nc
      
      IMPLICIT NONE
      !
@@ -237,7 +237,7 @@ CONTAINS
   !
   SUBROUTINE usnldiag_spinorb()
      USE lsda_mod, ONLY: current_spin
-     USE uspp,     ONLY: vkb, qq_at, qq_so_d, deeq_nc
+     USE uspp,     ONLY: vkb, qq_at, qq_so, deeq_nc
 
      IMPLICIT NONE
      !
@@ -272,8 +272,8 @@ CONTAINS
                             ar = cv*conjg(vkb(ig,jkb))
                             sum_h1 = sum_h1 + dble(deeq_nc(ih,jh,na,1) * ar)
                             sum_h4 = sum_h4 + dble(deeq_nc(ih,jh,na,4) * ar)
-                            sum_s1 = sum_s1 + dble(qq_so_d(ih,jh,1,nt) * ar)
-                            sum_s4 = sum_s4 + dble(qq_so_d(ih,jh,4,nt) * ar)
+                            sum_s1 = sum_s1 + dble(qq_so(ih,jh,1,nt) * ar)
+                            sum_s4 = sum_s4 + dble(qq_so(ih,jh,4,nt) * ar)
                          END DO
                       END DO
                       !
@@ -315,8 +315,8 @@ CONTAINS
                          ar = vkb (ig, ikb)*conjg(vkb (ig, ikb))
                          sum_h1 = sum_h1 + dble(deeq_nc(ih,ih,na,1) * ar)
                          sum_h4 = sum_h4 + dble(deeq_nc(ih,ih,na,4) * ar)
-                         sum_s1 = sum_s1 + dble(qq_so_d(ih,ih,1,nt) * ar)
-                         sum_s4 = sum_s4 + dble(qq_so_d(ih,ih,4,nt) * ar)
+                         sum_s1 = sum_s1 + dble(qq_so(ih,ih,1,nt) * ar)
+                         sum_s4 = sum_s4 + dble(qq_so(ih,ih,4,nt) * ar)
                       END DO
                       !
                       ! OPTIMIZE HERE : this scattered assign is bad!

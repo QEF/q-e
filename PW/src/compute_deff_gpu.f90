@@ -59,7 +59,7 @@ SUBROUTINE compute_deff_nc_gpu( deff, et )
   USE kinds,            ONLY: DP
   USE ions_base,        ONLY: nsp, nat, ityp
   USE noncollin_module, ONLY: noncolin, npol, lspinorb
-  USE uspp,             ONLY: okvan, deeq_nc, qq_so_d, qq_at
+  USE uspp,             ONLY: okvan, deeq_nc, qq_so, qq_at
   USE uspp_param,       ONLY: nhm
   USE lsda_mod,         ONLY: nspin
   !
@@ -104,7 +104,7 @@ SUBROUTINE compute_deff_nc_gpu( deff, et )
           DO j = 1, nhm
             na = na_v(ias)
             nt = nt_v(ias)
-            deff(i,j,na,:) = deeq_nc(i,j,na,:) - et*qq_so_d(i,j,:,nt)
+            deff(i,j,na,:) = deeq_nc(i,j,na,:) - et*qq_so(i,j,:,nt)
           ENDDO
         ENDDO
       ENDDO

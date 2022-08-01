@@ -29,11 +29,9 @@ SUBROUTINE add_vhub_to_deeq_gpu( deeq_d )
   REAL(KIND=DP), ALLOCATABLE :: deeq_aux_h(:,:,:)
   REAL(KIND=DP), ALLOCATABLE :: deeq_aux_d(:,:,:)
 #if defined(__CUDA)
-  attributes(DEVICE) :: deeq_aux_d
+  attributes(DEVICE) :: deeq_aux_d, deeq_d
 #endif
   INTEGER :: na, nt, ih, jh, ijh, m1, m2, ow1, ow2, is, nhnt
-  !
-  !$acc data deviceptr(deeq_d)
   !
   ! (maybe) OPTIMIZE here ... reorder the loop ?
   !
@@ -82,7 +80,5 @@ SUBROUTINE add_vhub_to_deeq_gpu( deeq_d )
   ENDDO
   !
   DEALLOCATE(deeq_aux_h, deeq_aux_d)
-  !
-  !$acc end data
   !
 END SUBROUTINE add_vhub_to_deeq_gpu

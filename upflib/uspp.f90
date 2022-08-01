@@ -33,7 +33,7 @@ MODULE uspp
             dvan_d, qq_nt_d, nhtoj_d, ijtoh_d, becsum_d, ebecsum_d
   PUBLIC :: okvan, nlcc_any
   PUBLIC :: qq_so,   dvan_so,   deeq_nc,   fcoef 
-  PUBLIC :: qq_so_d, dvan_so_d, fcoef_d
+  PUBLIC :: dvan_so_d, fcoef_d
   PUBLIC :: dbeta
   !
   PUBLIC :: allocate_uspp, deallocate_uspp
@@ -111,12 +111,11 @@ MODULE uspp
   REAL(DP),    ALLOCATABLE :: dvan_d(:,:,:)
   REAL(DP),    ALLOCATABLE :: qq_nt_d(:,:,:)
   REAL(DP),    ALLOCATABLE :: nhtoj_d(:,:)
-  COMPLEX(DP), ALLOCATABLE :: qq_so_d(:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: dvan_so_d(:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: deeq_nc_d(:,:,:,:)
 #if defined(__CUDA)
   attributes (DEVICE) :: becsum_d, ebecsum_d, dvan_d, qq_nt_d, &
-                         nhtoj_d, qq_so_d, dvan_so_d
+                         nhtoj_d, dvan_so_d
 #endif
 
   !
@@ -365,6 +364,7 @@ CONTAINS
     is_spinorbit = lspinorb
     if ( lspinorb ) then
        allocate( qq_so(nhm,nhm,4,nsp) )
+       !$acc enter data create(qq_so)
        allocate( dvan_so(nhm,nhm,nspin,nsp) )
        allocate( fcoef(nhm,nhm,2,2,nsp) )
     else
@@ -388,7 +388,6 @@ CONTAINS
         allocate( ijtoh_d(nhm,nhm,nsp) )
         allocate( qq_nt_d(nhm,nhm,nsp) )
         if ( lspinorb ) then
-           allocate( qq_so_d(nhm,nhm,4,nsp) )
            allocate( dvan_so_d(nhm,nhm,nspin,nsp) )
            allocate( fcoef_d(nhm,nhm,2,2,nsp) )
         else
@@ -433,7 +432,10 @@ CONTAINS
       !$acc exit data delete( deeq )
       DEALLOCATE( deeq )
     ENDIF
-    IF( ALLOCATED( qq_so ) )      DEALLOCATE( qq_so )
+    IF( ALLOCATED( qq_so ) ) THEN
+      !$acc exit data delete( qq_so )
+      DEALLOCATE( qq_so )
+    ENDIF
     IF( ALLOCATED( dvan_so ) )    DEALLOCATE( dvan_so )
     IF( ALLOCATED( deeq_nc ) ) THEN
       !$acc exit data delete( deeq_nc )
@@ -457,7 +459,6 @@ CONTAINS
     IF( ALLOCATED( dvan_d ) )     DEALLOCATE( dvan_d )
     IF( ALLOCATED( qq_nt_d ) )    DEALLOCATE( qq_nt_d )
     IF( ALLOCATED( nhtoj_d ) )    DEALLOCATE( nhtoj_d )
-    IF( ALLOCATED( qq_so_d ) )    DEALLOCATE( qq_so_d )
     IF( ALLOCATED( dvan_so_d ) )  DEALLOCATE( dvan_so_d )
     IF( ALLOCATED( fcoef_d ) )    DEALLOCATE( fcoef_d )
     !

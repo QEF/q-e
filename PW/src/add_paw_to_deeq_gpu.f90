@@ -27,9 +27,8 @@ SUBROUTINE add_paw_to_deeq_gpu(deeq_d)
   INTEGER :: na, nb, nab, nt, ih, jh, ijh, nhnt, is
   REAL(DP), ALLOCATABLE :: ddd_paw_d(:,:,:)
 #if defined(__CUDA)
-  attributes(DEVICE) :: ddd_paw_d
+  attributes(DEVICE) :: ddd_paw_d, deeq_d
 #endif
-  !$acc data deviceptr(deeq_d)
 
 ! OPTIMIZE HERE: squeeze loop on atoms having PAW pseudo
 ! OPTIMIZE HERE: use buffers
@@ -56,8 +55,6 @@ SUBROUTINE add_paw_to_deeq_gpu(deeq_d)
      ENDDO
      DEALLOCATE(ddd_paw_d)
   ENDIF
-  !
-  !$acc end data
   !
   RETURN
   !

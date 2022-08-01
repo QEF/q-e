@@ -430,7 +430,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !! k-points noncolinear/spinorbit version of \(\textrm{s_psi}\) routine.
        !
        USE device_fbuff_m,   ONLY : dev_buf
-       USE uspp,             ONLY : qq_at, qq_so_d
+       USE uspp,             ONLY : qq_at, qq_so
        !
        IMPLICIT NONE
        !
@@ -485,19 +485,21 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
              ELSE
                 DO na = 1, nat
                    IF ( ityp(na) == nt ) THEN
+                      !$acc host_data use_device(qq_so)
                       CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so_d(1,1,1,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,1,1), nkb*npol, &
+                           qq_so(1,1,1,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,1,1), nkb*npol, &
                            (0.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,1,1), nkb*npol )
                       CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so_d(1,1,2,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,2,1), nkb*npol, &
+                           qq_so(1,1,2,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,2,1), nkb*npol, &
                            (1.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,1,1), nkb*npol )
                       !
                       CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so_d(1,1,3,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,1,1), nkb*npol, &
+                           qq_so(1,1,3,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,1,1), nkb*npol, &
                            (0.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,2,1), nkb*npol )
                       CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so_d(1,1,4,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,2,1), nkb*npol, &
+                           qq_so(1,1,4,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,2,1), nkb*npol, &
                            (1.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,2,1), nkb*npol )
+                      !$acc end host_data
                     END IF
                 END DO
              END IF
