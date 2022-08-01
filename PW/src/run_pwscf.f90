@@ -153,7 +153,7 @@ SUBROUTINE run_pwscf( exit_status )
   ! 
   IF ( nextffield > 0 .AND. ionode) THEN
      !
-     CALL init_extffield( nextffield )
+     CALL init_extffield( 'PW', nextffield )
      !
   END IF
   !

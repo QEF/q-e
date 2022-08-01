@@ -323,7 +323,7 @@ SUBROUTINE init_run()
   ! 
   IF ( nextffield > 0 .AND. ionode) THEN
      !
-     CALL init_extffield( nextffield )
+     CALL init_extffield( 'CP', nextffield )
      !
   END IF
   !

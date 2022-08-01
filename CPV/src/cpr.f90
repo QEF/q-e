@@ -121,7 +121,7 @@ USE cp_main_variables,        ONLY : eigr_d
   USE input_parameters,         ONLY : tcpbo, nextffield
   USE xc_lib,                   ONLY : xclib_dft_is, start_exx, exx_is_active
   USE device_memcpy_m,          ONLY : dev_memcpy
-  USE extffield,                ONLY : apply_extffield,close_extffield
+  USE extffield,                ONLY : apply_extffield_CP,close_extffield
   !
 #if defined (__ENVIRON)
   USE plugin_flags,             ONLY : use_environ
@@ -469,7 +469,7 @@ USE cp_main_variables,        ONLY : eigr_d
         IF ( nextffield > 0 ) THEN
            IF ( .NOT.tnosep .OR. CYCLE_NOSE.EQ.0 ) THEN
               IF ( ionode ) THEN
-                 CALL apply_extffield(nfi,nextffield,tau0,fion,vels)
+                 CALL apply_extffield_CP(nfi,nextffield,tau0,vels,fion)
               END IF
               CALL mp_bcast( fion, ionode_id, intra_bgrp_comm )
            END IF

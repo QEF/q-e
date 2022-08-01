@@ -1,4 +1,5 @@
 !
+! Copyright (C) 2002-2022 Quantum ESPRESSO group
 ! Copyright (C) 2022 Laurent Pizzagalli
 !
 ! This file is distributed under the terms of the
@@ -11,6 +12,92 @@ MODULE extffield
   !------------------------------------------------------------------------
   !
   ! Contains variables and subroutines for external force fields 
+  ! 
+  ! This module implements external ionic force fields in cp.x and pw.x
+  ! Activation is obtained by setting the input parameter 'nextffield' in 
+  ! the Namelist &SYSTEM: 
+  !         nextffield = INTEGER
+  ! nextffield is the number of activated external force fields (default = 0, max = 4)
+  ! If nextffield > 0 the file 'extffield.dat' is read
+  !  
+  ! For each force field, two lines are required. The first one is generic 
+  ! for all kinds of force field, with the format:
+  ! NTYP  FLAGS
+  ! NTYP is an integer defining the type of force fields (see below)
+  ! FLAGS is a string of '1' and '0', of length equal to the number of species. 
+  ! It can be used to restrict the application of force fields to certain species only
+  ! For instance, FLAGS = '101' means that this force field is used only for atomic species 1 and 3  
+  ! The second line defines various parameters depending on the force field type.
+  !
+  ! FORCE FIELDS:
+  ! -------------
+  ! 
+  ! -------------------------------------------------------------------------------------------------
+  ! NTYP = 1 : Planar quadratic repulsive force field
+  ! This force field mimics the command 'FIX INDENT PLANE...' in the LAMMPS code
+  ! which is often used in MD studies to model a flat punch indenter
+  ! The force expression is $\pm K(z-zc)^2$
+  ! 
+  ! The second line in 'extffield.dat' for this potential looks like
+  ! AXIS  DIR  POS INC STRENGTH
+  ! AXIS is an integer defining the axis for the plane (1 = X, 2 = Y, 3 = Z)
+  ! DIR is an integer defining the direction of the force (0 is positive, and 1 negative), 
+  ! and the selection of ions.
+  ! POS is a real defining the position of the plane relative to AXIS (zc in the formula)
+  ! INC is a real, added to POS at each iteration (dynamic compression)
+  ! STRENGTH is a real defining the strength of the repulsion (K in the formula)
+  ! Rydberg (Hartree) atomic units are used for pw.x (cp.x). 
+  ! Selected ions are those with a position below POS (DIR = 0) or above POS (DIR = 1)
+  ! 
+  ! For instance, with the following two lines
+  ! 1   10
+  ! 3   0   2.50   0.01   10
+  ! one defines a planar repulsive potential acting on the first atomic specie 
+  ! (but not on the second one). The potential is applied along the axis Z, with a 
+  ! positive direction and an initial position of 2.50 bohrs. All ions of specie 1, 
+  ! with an initial z-coordinate below 2.50 will be subjected to a positive force along this axis.
+  ! The potential strength is 10 a.u.  
+  ! The potential threshold is moved up by 0.01 bohr at each ionic iteration
+  !
+  !
+  ! -------------------------------------------------------------------------------------------------
+  ! NTYP = 2 : Viscous drag force field perpendicular to a plane
+  ! This force field adds a viscous friction for selected atoms, by adding velocity dependent forces in 
+  ! two directions perpendicular to the defined axis 
+  ! It can be used in combination with the previous force field, to prevent an excessive rotation 
+  ! of the system during the dynamics. The force expression is
+  ! $-K*m*v$
+  ! The force is proportional and opposed to the ion velocity, and is also proportional to the ion mass 
+  ! and the constant K
+  ! Selected ions are those with a position below POS (DIR = 0) or above POS (DIR = 1)
+  !
+  ! The second line in 'extffield.dat' for this potential looks like
+  ! AXIS  DIR  POS INC STRENGTH
+  ! all parameters have the same meaning than for NTYP = 1
+  !
+  ! NOTE: NTYP = 2 is only available within pw.x 
+  !
+  ! Formalism and application can be found in L. Pizzagalli, Phys. Rev. B 102, 094102 (2020)
+  !
+  ! 
+  ! -------------------------------------------------------------------------------------------------
+  ! NTYP = 2 : 
+  !
+  ! OUTPUT:
+  ! -------
+  ! 
+  ! Information about the defined force fields is written in the standard output file
+  ! A file with name 'prefix.extffield' is created, including data per iteration for all defined force fields
+  ! For each force field, the position of the plane and the sum of added forces for each axis are written at each step,
+  ! For a planar compression, this corresponds to the compression load. 
+  ! 
+  ! 
+  ! RESTRICTIONS:
+  ! ------------- 
+  ! - No automatic 'restart'. For a follow up calculation, the parameters in 'extffield.dat' have to be set accordingly
+  ! - 4 maximum force fields
+  ! - Minimal testing done, so use at your own risk
+  !
   !
   USE kinds,          ONLY : DP
   USE parser,         ONLY : field_count, read_line, get_field
@@ -55,7 +142,7 @@ MODULE extffield
 CONTAINS
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE init_extffield(nextffield)
+  SUBROUTINE init_extffield(prog, nextffield)
     !------------------------------------------------------------------------
     !! This routine reads external force field parameters 
     !
@@ -70,6 +157,7 @@ CONTAINS
     !
     CHARACTER(len=256)         :: input_line
     CHARACTER(LEN=256)         :: pprefix, extff_outputfile
+    CHARACTER(LEN=2)           :: prog
     !
     LOGICAL                    :: tend
     !
@@ -81,6 +169,15 @@ CONTAINS
     !
     IF (ierr /= 0) THEN
        CALL errore('init_extffield', 'file ' // extff_namefile // ' not found', abs(ierr))
+    END IF
+    !
+    !! print the information in output
+    ! 
+    IF ( ionode ) THEN
+       WRITE( stdout, *) 
+       WRITE( stdout, *) '  External force field information'
+       WRITE( stdout, *) '  --------------------------------'
+       WRITE( stdout, 1020) ntyp 
     END IF
     !
     !! read extffield file
@@ -115,13 +212,20 @@ CONTAINS
              END IF
              IF (extff_dir(i) /= 0 .AND. extff_dir(i) /= 1) THEN
                 CALL errore( 'init_extffield ', 'incorrect direction for external potential', i )
-             END IF             
+             END IF  
+             IF ( ionode) THEN
+                WRITE( stdout, *) i,': Repulsive planar (Fix indent lammps style) potential'
+                WRITE( stdout, 1030)  extff_axis(i), extff_dir(i), extff_geo(1,i), extff_geo(2,i), extff_par(1,i)
+             END IF           
              !
           CASE(2)
              !
              !! 2 : Viscous drag force field perpendicular to plane
              !!     Parameters: axis direction position increment strength
              !
+             IF ( prog == 'PW' ) THEN
+                CALL errore( 'init_extffield ', 'Viscous force field not available for pw.x', 1 )
+             END IF
              READ (extff_tunit, *, iostat=ierr ) extff_axis(i), & 
                      extff_dir(i), extff_geo(1,i), extff_geo(2,i), extff_par(1,i)
              CALL errore( 'init_extffield ', 'cannot read external potential parameters', ierr )
@@ -131,6 +235,10 @@ CONTAINS
              IF (extff_dir(i) /= 0 .AND. extff_dir(i) /= 1) THEN
                 CALL errore( 'init_extffield ', 'incorrect direction for external potential', i )
              END IF             
+             IF ( ionode) THEN
+                WRITE( stdout, *) i,': Viscous drag planar potential'
+                WRITE( stdout, 1030)  extff_axis(i), extff_dir(i), extff_geo(1,i), extff_geo(2,i), extff_par(1,i)
+             END IF           
              !
           CASE DEFAULT
              CALL errore( 'init_extffield ', 'unknown external potential type', 1 )
@@ -140,14 +248,6 @@ CONTAINS
     ENDDO
     !
     CLOSE(extff_unit)
-    !
-    !! print the information in output
-    ! 
-    IF ( ionode ) THEN
-       WRITE( stdout, *) 
-       WRITE( stdout, *) '  External potential activation'
-       WRITE( stdout, *) '  -----------------------------'
-    END IF
     !
     !! open file for printint extffield information
     !
@@ -174,13 +274,110 @@ CONTAINS
     !
 1000  FORMAT(' Iteration',2X,$)
 1010  FORMAT(4(2X,A12),$)
+1020  FORMAT(5X,I1,' external force field(s):')
+1030  FORMAT(13X,'axis = ',I1,'  dir = ',I1,' pos = ',F8.4,' inc = ',F8.4,' Strength = ',F8.4)
   !
   END SUBROUTINE init_extffield
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE apply_extffield(nfi,nextffield,eftau0,effion,efvels)
+  SUBROUTINE apply_extffield_PW(nfi,nextffield,eftau0,effion)
     !------------------------------------------------------------------------
-    !! This routine apply external force field on ions
+    !! This routine apply external force field on ions  (PW code)
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN) :: nfi,nextffield
+    REAL(DP), DIMENSION(3,nat), INTENT(IN):: eftau0
+    REAL(DP), DIMENSION(3,nat), INTENT(INOUT):: effion
+    !
+    INTEGER :: i,ia,j,k
+    REAL(DP), DIMENSION(3,extff_max) :: load = 0.0
+    REAL(DP), DIMENSION(3)           :: for = 0.0
+    ! 
+    !
+    DO i = 1, nextffield
+       !
+       load(1,i) = 0.0
+       load(2,i) = 0.0
+       load(3,i) = 0.0
+       !
+       SELECT CASE (extff_typ(i))
+       !
+          CASE(1)
+             !
+             !! Planar quadratic repulsive force field (Fix indent lammps style)
+             !
+             DO ia = 1, nat
+                !
+                for(extff_axis(i)) = 0.0
+                IF ( extff_dir(i) == 0 .AND. eftau0(extff_axis(i),ia) < extff_geo(1,i) ) THEN
+                   for(extff_axis(i)) =  extff_atyp(ityp(ia),i) * extff_par(1,i) * (eftau0(3,ia) - extff_geo(1,i)) ** 2
+                ELSE IF ( extff_dir(i) == 1 .AND. eftau0(extff_axis(i),ia) > extff_geo(1,i) ) THEN
+                   for(extff_axis(i)) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * (eftau0(3,ia) - extff_geo(1,i)) ** 2
+                END IF
+                !
+                load(extff_axis(i),i) = load(extff_axis(i),i) + for(extff_axis(i))
+                effion(extff_axis(i),ia) = effion(extff_axis(i),ia) + for(extff_axis(i))
+                !print *,ia,ityp(ia),load(extff_axis(i),i),eftau0(extff_axis(i),ia),extff_geo(1,i)
+                !
+             ENDDO
+             !
+!          CASE(2)
+!             !
+!             !! Viscous drag force field perpendicular to plane
+!             !
+!             IF ( extff_axis(i) == 1) THEN
+!                j = 2
+!                k = 3
+!             ELSE IF ( extff_axis(i) == 2) THEN
+!                j = 1
+!                k = 3
+!             ELSE 
+!                j = 1
+!                k = 2
+!             END IF
+!             DO ia = 1, nat
+!                !
+!                for(j) = 0.0
+!                for(k) = 0.0
+!                IF ( extff_dir(i) == 0 .AND. eftau0(extff_axis(i),ia) < extff_geo(1,i) ) THEN
+!                   for(j) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(j,ia) * amass(ityp(ia))
+!                   for(k) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(k,ia) * amass(ityp(ia))
+!                ELSE IF ( extff_dir(i) == 1 .AND. eftau0(extff_axis(i),ia) > extff_geo(1,i) ) THEN
+!                   for(j) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(j,ia) * amass(ityp(ia))
+!                   for(k) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(k,ia) * amass(ityp(ia))
+!                END IF
+!                !
+!                load(j,i) = load(j,i) + for(j)
+!                load(k,i) = load(k,i) + for(k)
+!                effion(j,ia) = effion(j,ia) + for(j)
+!                effion(k,ia) = effion(k,ia) + for(k)                
+!                !
+!             ENDDO
+             !
+       END SELECT 
+    ENDDO
+    !
+    IF( ionode ) THEN
+       CALL print_extffield(nfi,nextffield,load)
+    END IF
+    !
+    DO i = 1, nextffield
+       !
+       !! increment extffield position
+       !
+       extff_geo(1,i) = extff_geo(1,i) + extff_geo(2,i)
+       !
+    ENDDO
+    
+    RETURN
+    !
+  END SUBROUTINE apply_extffield_PW
+  !
+  !--------------------------------------------------------------------------
+  SUBROUTINE apply_extffield_CP(nfi,nextffield,eftau0,efvels,effion)
+    !------------------------------------------------------------------------
+    !! This routine apply external force field on ions  (CP code)
     !
     IMPLICIT NONE
     !
@@ -204,7 +401,7 @@ CONTAINS
        !
           CASE(1)
              !
-             !! Planar force field 
+             !! Planar quadratic repulsive force field (Fix indent lammps style)
              !
              DO ia = 1, nat
                 !
@@ -217,7 +414,7 @@ CONTAINS
                 !
                 load(extff_axis(i),i) = load(extff_axis(i),i) + for(extff_axis(i))
                 effion(extff_axis(i),ia) = effion(extff_axis(i),ia) + for(extff_axis(i))
-                print *,ia,ityp(ia),load(extff_axis(i),i),eftau0(extff_axis(i),ia),extff_geo(1,i)
+                !print *,ia,ityp(ia),load(extff_axis(i),i),eftau0(extff_axis(i),ia),extff_geo(1,i)
                 !
              ENDDO
              !
@@ -240,17 +437,36 @@ CONTAINS
                 for(j) = 0.0
                 for(k) = 0.0
                 IF ( extff_dir(i) == 0 .AND. eftau0(extff_axis(i),ia) < extff_geo(1,i) ) THEN
-                   for(j) =  extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(j,ia) * amass(ityp(ia))
-                   for(k) =  extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(k,ia) * amass(ityp(ia))
+                   for(j) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(j,ia) * amass(ityp(ia))
+                   for(k) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(k,ia) * amass(ityp(ia))
                 ELSE IF ( extff_dir(i) == 1 .AND. eftau0(extff_axis(i),ia) > extff_geo(1,i) ) THEN
-                   for(j) =  extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(j,ia) * amass(ityp(ia))
-                   for(k) =  extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(k,ia) * amass(ityp(ia))
+                   for(j) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(j,ia) * amass(ityp(ia))
+                   for(k) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(k,ia) * amass(ityp(ia))
                 END IF
                 !
                 load(j,i) = load(j,i) + for(j)
                 load(k,i) = load(k,i) + for(k)
                 effion(j,ia) = effion(j,ia) + for(j)
                 effion(k,ia) = effion(k,ia) + for(k)                
+                !
+             ENDDO
+             !
+          CASE(3)
+             !
+             !! Planar Lennard Jones potential
+             !
+             DO ia = 1, nat
+                !
+                for(extff_axis(i)) = 0.0
+                IF ( extff_dir(i) == 0 .AND. eftau0(extff_axis(i),ia) < extff_geo(1,i) ) THEN
+                   for(extff_axis(i)) =  extff_atyp(ityp(ia),i) * extff_par(1,i) * (eftau0(3,ia) - extff_geo(1,i)) ** 2
+                ELSE IF ( extff_dir(i) == 1 .AND. eftau0(extff_axis(i),ia) > extff_geo(1,i) ) THEN
+                   for(extff_axis(i)) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * (eftau0(3,ia) - extff_geo(1,i)) ** 2
+                END IF
+                !
+                load(extff_axis(i),i) = load(extff_axis(i),i) + for(extff_axis(i))
+                effion(extff_axis(i),ia) = effion(extff_axis(i),ia) + for(extff_axis(i))
+                !print *,ia,ityp(ia),load(extff_axis(i),i),eftau0(extff_axis(i),ia),extff_geo(1,i)
                 !
              ENDDO
              !
@@ -271,7 +487,7 @@ CONTAINS
     
     RETURN
     !
-  END SUBROUTINE apply_extffield
+  END SUBROUTINE apply_extffield_CP
   !
   !--------------------------------------------------------------------------
   SUBROUTINE print_extffield(nfi,nextffield,load)
