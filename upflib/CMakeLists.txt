@@ -12,7 +12,6 @@ set(src_upflib
     init_tab_qrad.f90
     interp_atwfc.f90
     init_us_2_base.f90
-    gen_us_dy_gpu.f90
     gth.f90
     paw_variables.f90
     pseudo_types.f90

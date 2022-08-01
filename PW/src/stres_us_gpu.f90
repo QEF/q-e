@@ -35,7 +35,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
   USE becmod_gpum,          ONLY : becp_d, bec_type_d
   USE becmod_subs_gpum,     ONLY : using_becp_auto, using_becp_d_auto, &
                                    calbec_gpu
-  USE uspp_init,            ONLY : init_us_2, gen_us_dj, gen_us_dy_gpu
+  USE uspp_init,            ONLY : init_us_2, gen_us_dj, gen_us_dy
   !
   IMPLICIT NONE
   !
@@ -88,7 +88,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
 #else
   !$acc update self(vkb)
   CALL calbec( npw, vkb, evc, becp )
-  !
+  
 #endif
   !
   !
@@ -227,7 +227,8 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        ! ... diagonal contribution - if the result from "calbec" are not 
        ! ... distributed, must be calculated on a single processor
        !
-       ! ... for the moment when using_gpu is true becp is always fully present in all processors
+       ! ... for the moment when using_gpu is true becp is always fully present
+       !     in all processors
        !
        CALL using_et(0) ! compute_deff : intent(in)
        !
@@ -251,12 +252,11 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
               ishift = ix(i,4)   ; ikb = ishift + ih
               !
               IF (.NOT. is_multinp(i)) THEN
-                 aux = wg_nk * DBLE(deff(ih,ih,na)) * &
-                                       ABS(becpr_d(ikb,ibnd_loc))**2
+                 aux = wg_nk * DBLE(deff(ih,ih,na)) * ABS(becpr_d(ikb,ibnd_loc))**2
               ELSE
                  nh_np = ix(i,3)
                  !
-                 aux = wg_nk * DBLE(deff(ih,ih,na))         &
+                 aux = wg_nk * DBLE(deff(ih,ih,na)) &
                                      * ABS(becpr_d(ikb,ibnd_loc))**2  &
                              +  becpr_d(ikb,ibnd_loc)* wg_nk * 2._DP  &
                                 * SUM( DBLE(deff(ih,ih+1:nh_np,na))   &
@@ -277,13 +277,11 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        !$acc data create(dvkb)
        !
        CALL gen_us_dj( ik, dvkb(:,:,4) )
-       !$acc host_data use_device(dvkb)
        IF ( lmaxkb > 0 ) THEN
          DO ipol = 1, 3
-           CALL gen_us_dy_gpu( ik, xyz(1,ipol), dvkb(:,:,ipol) )
+           CALL gen_us_dy( ik, xyz(1,ipol), dvkb(:,:,ipol) )
          ENDDO
        ENDIF
-       !$acc end host_data
        !
        DO icyc = 0, nproc -1
           !
@@ -468,15 +466,12 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        !$acc data create( dvkb )
        !
        CALL gen_us_dj( ik, dvkb(:,:,4) )
-       !$acc host_data use_device( dvkb )
        IF ( lmaxkb > 0 ) THEN
          DO ipol = 1, 3
-           CALL gen_us_dy_gpu( ik, xyz(1,ipol), dvkb(:,:,ipol) )
+           CALL gen_us_dy( ik, xyz(1,ipol), dvkb(:,:,ipol) )
          ENDDO
        ENDIF
-       !$acc end host_data
        !
-       
        IF (noncolin) THEN
           !
           ALLOCATE( ps_nc(nkb,npol) )
