@@ -182,7 +182,7 @@ SUBROUTINE force_us_gpu( forcenl )
 #if defined(__CUDA)
        USE cublas
 #endif
-       USE uspp,                 ONLY : qq_at, deeq_d
+       USE uspp,                 ONLY : qq_at, deeq
        USE wvfct_gpum,           ONLY : wg_d, using_wg_d, et_d, using_et_d
        !
        IMPLICIT NONE
@@ -245,10 +245,12 @@ SUBROUTINE force_us_gpu( forcenl )
                 END DO
 
                 ! add  \sum_j d_{ij} <beta_j|psi>
+                !$acc host_data use_device(deeq)
                 CALL DGEMM ('N','N', nh(nt), becp_d%nbnd_loc, nh(nt), &
-                     1.0_dp, deeq_d(1,1,na,current_spin), nhm, &
+                     1.0_dp, deeq(1,1,na,current_spin), nhm, &
                      becp_d%r_d(ijkb0+1,1), nkb, 1.0_dp, aux_d, nh(nt) )
-
+                !$acc end host_data
+                !
                 ! Auxiliary variable to perform the reduction with cuf kernels
                 forcenl_ipol = 0.0_dp
 !$cuf kernel do(2)

@@ -15,7 +15,7 @@ SUBROUTINE compute_deff_gpu( deff, et )
   !
   USE kinds,       ONLY: DP
   USE ions_base,   ONLY: nat
-  USE uspp,        ONLY: okvan, deeq_d, qq_at_d
+  USE uspp,        ONLY: okvan, deeq, qq_at
   USE uspp_param,  ONLY: nhm
   USE lsda_mod,    ONLY: current_spin
   !
@@ -34,11 +34,11 @@ SUBROUTINE compute_deff_gpu( deff, et )
   !
   IF (.NOT. okvan) THEN
      !
-     deff(:,:,:) = CMPLX(deeq_d(:,:,:,current_spin))
+     deff(:,:,:) = CMPLX(deeq(:,:,:,current_spin))
      !
   ELSE
      !
-     deff(:,:,:) = CMPLX(deeq_d(:,:,:,current_spin) - et*qq_at_d(:,:,:))
+     deff(:,:,:) = CMPLX(deeq(:,:,:,current_spin) - et*qq_at(:,:,:))
      !
   ENDIF
   !
@@ -59,7 +59,7 @@ SUBROUTINE compute_deff_nc_gpu( deff, et )
   USE kinds,            ONLY: DP
   USE ions_base,        ONLY: nsp, nat, ityp
   USE noncollin_module, ONLY: noncolin, npol, lspinorb
-  USE uspp,             ONLY: okvan, deeq_nc_d, qq_so_d, qq_at_d
+  USE uspp,             ONLY: okvan, deeq_nc, qq_so_d, qq_at
   USE uspp_param,       ONLY: nhm
   USE lsda_mod,         ONLY: nspin
   !
@@ -78,12 +78,12 @@ SUBROUTINE compute_deff_nc_gpu( deff, et )
   !$acc data present_or_copyout( deff )
   !
   !$acc kernels
-  deff(:,:,:,:) = deeq_nc_d(:,:,:,:)
+  deff(:,:,:,:) = deeq_nc(:,:,:,:)
   !$acc end kernels
   !
   IF (okvan) then
     !
-    ! ... set up index arrays to fill deff on gpu
+    ! ... set up index arrays to fill 'deff' in on gpu
     i = 0
     DO nt = 1, nsp
       DO na = 1, nat
@@ -104,7 +104,7 @@ SUBROUTINE compute_deff_nc_gpu( deff, et )
           DO j = 1, nhm
             na = na_v(ias)
             nt = nt_v(ias)
-            deff(i,j,na,:) = deeq_nc_d(i,j,na,:) - et*qq_so_d(i,j,:,nt)
+            deff(i,j,na,:) = deeq_nc(i,j,na,:) - et*qq_so_d(i,j,:,nt)
           ENDDO
         ENDDO
       ENDDO
@@ -119,7 +119,7 @@ SUBROUTINE compute_deff_nc_gpu( deff, et )
             !$acc loop seq
             DO is = 1, npol
               ijs = (is-1)*npol + is
-              deff(i,j,na,ijs) = deeq_nc_d(i,j,na,ijs) - CMPLX(et*qq_at_d(i,j,na))
+              deff(i,j,na,ijs) = deeq_nc(i,j,na,ijs) - CMPLX(et*qq_at(i,j,na))
             ENDDO
           ENDDO
         ENDDO

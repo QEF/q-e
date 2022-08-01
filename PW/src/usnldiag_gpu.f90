@@ -17,8 +17,8 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
   USE kinds,            ONLY: DP
   USE ions_base,        ONLY: nat, ityp, ntyp => nsp
   USE wvfct,            ONLY: npwx
-  USE uspp,             ONLY: ofsbeta, deeq_d, qq_at, qq_so_d, &
-                              deeq_nc_d
+  USE uspp,             ONLY: ofsbeta, deeq, qq_at, qq_so_d, &
+                              deeq_nc
   USE uspp_param,       ONLY: upf, nh
   USE noncollin_module, ONLY: noncolin, npol, lspinorb
   USE device_memcpy_m,  ONLY: dev_memset
@@ -53,7 +53,7 @@ CONTAINS
   
   SUBROUTINE usnldiag_collinear()
      USE lsda_mod, ONLY: current_spin
-     USE uspp,     ONLY: deeq_d, qq_at, vkb
+     USE uspp,     ONLY: deeq, qq_at, vkb
      
      IMPLICIT NONE
      !
@@ -71,7 +71,7 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$acc data present(vkb(:,:)) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
+                   !$acc data present(vkb(:,:),deeq) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
                    !$acc parallel vector_length(32)
                    !$acc loop gang reduction(+:sum_h,sum_s)
                    DO ig = 1, npw 
@@ -81,11 +81,11 @@ CONTAINS
                       DO ih = 1, nh_
                          DO jh = 1, nh_
                             ikb = ijkb_start + ih
-                            cv = vkb (ig, ikb)
+                            cv = vkb(ig,ikb)
                             jkb = ijkb_start + jh
-                            ar = cv*conjg(vkb (ig, jkb))
-                            sum_h = sum_h + dble(deeq_d (ih, jh, na, current_spin) * ar)
-                            sum_s = sum_s + dble(qq_at (ih, jh, na) * ar)
+                            ar = cv*conjg(vkb(ig,jkb))
+                            sum_h = sum_h + dble(deeq(ih,jh,na,current_spin) * ar)
+                            sum_s = sum_s + dble(qq_at(ih,jh,na) * ar)
                          END DO
                       END DO
                       !$acc atomic update 
@@ -104,7 +104,7 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$acc data present(vkb(:,:)) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
+                   !$acc data present(vkb(:,:),deeq) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
                    !$acc parallel vector_length(32)
                    !$acc loop gang reduction(+:sum_h,sum_s)
                    DO ig = 1, npw 
@@ -113,9 +113,9 @@ CONTAINS
                       !$acc loop vector private(ikb,ar) reduction(+:sum_h,sum_s)
                       DO ih = 1, nh_
                          ikb = ijkb_start + ih
-                         ar = vkb (ig, ikb)*conjg(vkb (ig, ikb))
-                         sum_h = sum_h + dble(deeq_d (ih, ih, na, current_spin) * ar)
-                         sum_s = sum_s + dble(qq_at (ih, ih, na) * ar)
+                         ar = vkb(ig,ikb)*conjg(vkb(ig,ikb))
+                         sum_h = sum_h + dble(deeq(ih,ih,na,current_spin) * ar)
+                         sum_s = sum_s + dble(qq_at(ih,ih,na) * ar)
                       END DO
                       !$acc atomic update
                       h_diag_d (ig,1) = h_diag_d (ig,1) + sum_h
@@ -134,7 +134,7 @@ CONTAINS
   !
   SUBROUTINE usnldiag_noncollinear()
      USE lsda_mod,  ONLY: current_spin
-     USE uspp,      ONLY: vkb, qq_at, qq_so_d, deeq_nc_d
+     USE uspp,      ONLY: vkb, qq_at, qq_so_d, deeq_nc
      
      IMPLICIT NONE
      !
@@ -152,7 +152,7 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$acc data present(vkb(:,:)) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
+                   !$acc data present(vkb(:,:),deeq_nc) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
                    !$acc parallel vector_length(32) 
                    !$acc loop gang reduction(+:sum_h1,sum_h4,sum_s)
                    DO ig = 1, npw   ! change this to 2*npw ?
@@ -165,10 +165,10 @@ CONTAINS
                             ikb = ijkb_start + ih
                             cv = vkb (ig, ikb)
                             jkb = ijkb_start + jh
-                            ar = cv*conjg(vkb (ig, jkb))
-                            sum_h1 = sum_h1 + dble(deeq_nc_d (ih, jh, na, 1) * ar)
-                            sum_h4 = sum_h4 + dble(deeq_nc_d (ih, jh, na, 4) * ar)
-                            sum_s  = sum_s  + dble(qq_at (ih, jh, na) * ar)
+                            ar = cv*conjg(vkb(ig,jkb))
+                            sum_h1 = sum_h1 + dble(deeq_nc(ih,jh,na,1) * ar)
+                            sum_h4 = sum_h4 + dble(deeq_nc(ih,jh,na,4) * ar)
+                            sum_s  = sum_s  + dble(qq_at(ih,jh,na) * ar)
                          END DO
                       END DO
                       !
@@ -196,7 +196,7 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$acc data present(vkb(:,:)) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
+                   !$acc data present(vkb(:,:),deeq_nc) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
                    !$acc parallel vector_length(32) 
                    !$acc loop gang reduction(+:sum_h1,sum_h4,sum_s)
                    DO ig = 1, npw 
@@ -206,10 +206,10 @@ CONTAINS
                       !$acc loop vector private(ikb,ar) reduction(+:sum_h1,sum_h4,sum_s)
                       DO ih = 1, nh_
                          ikb = ijkb_start + ih
-                         ar = vkb (ig, ikb)*conjg(vkb (ig, ikb))
-                         sum_h1 = sum_h1 + dble(deeq_nc_d (ih, ih, na, 1) * ar)
-                         sum_h4 = sum_h4 + dble(deeq_nc_d (ih, ih, na, 4) * ar)
-                         sum_s = sum_s + dble(qq_at (ih, ih, na) * ar)
+                         ar = vkb (ig, ikb)*conjg(vkb(ig,ikb))
+                         sum_h1 = sum_h1 + dble(deeq_nc(ih,ih,na,1) * ar)
+                         sum_h4 = sum_h4 + dble(deeq_nc(ih,ih,na,4) * ar)
+                         sum_s = sum_s + dble(qq_at(ih,ih,na) * ar)
                       END DO
                       !
                       ! OPTIMIZE HERE : this scattered assign is bad!
@@ -237,7 +237,7 @@ CONTAINS
   !
   SUBROUTINE usnldiag_spinorb()
      USE lsda_mod, ONLY: current_spin
-     USE uspp,     ONLY: vkb, qq_at, qq_so_d, deeq_nc_d
+     USE uspp,     ONLY: vkb, qq_at, qq_so_d, deeq_nc
 
      IMPLICIT NONE
      !
@@ -255,7 +255,7 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$acc data present(vkb(:,:)) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
+                   !$acc data present(vkb(:,:),deeq_nc) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
                    !$acc parallel vector_length(32)
                    !$acc loop gang reduction(+:sum_h1,sum_h4,sum_s1,sum_s4)
                    DO ig = 1, npw   ! change this to 2*npw ?
@@ -267,13 +267,13 @@ CONTAINS
                       DO ih = 1, nh_
                          DO jh = 1, nh_
                             ikb = ijkb_start + ih
-                            cv = vkb (ig, ikb)
+                            cv = vkb(ig,ikb)
                             jkb = ijkb_start + jh
-                            ar = cv*conjg(vkb (ig, jkb))
-                            sum_h1 = sum_h1 + dble(deeq_nc_d (ih, jh, na, 1) * ar)
-                            sum_h4 = sum_h4 + dble(deeq_nc_d (ih, jh, na, 4) * ar)
-                            sum_s1 = sum_s1  + dble(qq_so_d (ih, jh, 1, nt) * ar)
-                            sum_s4 = sum_s4  + dble(qq_so_d (ih, jh, 4, nt) * ar)
+                            ar = cv*conjg(vkb(ig,jkb))
+                            sum_h1 = sum_h1 + dble(deeq_nc(ih,jh,na,1) * ar)
+                            sum_h4 = sum_h4 + dble(deeq_nc(ih,jh,na,4) * ar)
+                            sum_s1 = sum_s1 + dble(qq_so_d(ih,jh,1,nt) * ar)
+                            sum_s4 = sum_s4 + dble(qq_so_d(ih,jh,4,nt) * ar)
                          END DO
                       END DO
                       !
@@ -301,7 +301,7 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$acc data present(vkb(:,:)) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
+                   !$acc data present(vkb(:,:),deeq_nc) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
                    !$acc parallel vector_length(32)
                    !$acc loop gang reduction(+:sum_h1,sum_h4,sum_s1,sum_s4)
                    DO ig = 1, npw 
@@ -313,10 +313,10 @@ CONTAINS
                       DO ih = 1, nh_
                          ikb = ijkb_start + ih
                          ar = vkb (ig, ikb)*conjg(vkb (ig, ikb))
-                         sum_h1 = sum_h1 + dble(deeq_nc_d (ih, ih, na, 1) * ar)
-                         sum_h4 = sum_h4 + dble(deeq_nc_d (ih, ih, na, 4) * ar)
-                         sum_s1 = sum_s1 + dble(qq_so_d (ih, ih, 1, nt) * ar)
-                         sum_s4 = sum_s4 + dble(qq_so_d (ih, ih, 4, nt) * ar)
+                         sum_h1 = sum_h1 + dble(deeq_nc(ih,ih,na,1) * ar)
+                         sum_h4 = sum_h4 + dble(deeq_nc(ih,ih,na,4) * ar)
+                         sum_s1 = sum_s1 + dble(qq_so_d(ih,ih,1,nt) * ar)
+                         sum_s4 = sum_s4 + dble(qq_so_d(ih,ih,4,nt) * ar)
                       END DO
                       !
                       ! OPTIMIZE HERE : this scattered assign is bad!

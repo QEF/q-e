@@ -20,7 +20,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
   USE wvfct,                ONLY : npwx, nbnd, wg, et
   USE control_flags,        ONLY : gamma_only
   USE uspp_param,           ONLY : upf, lmaxkb, nh, nhm
-  USE uspp,                 ONLY : nkb, vkb, deeq_d
+  USE uspp,                 ONLY : nkb, vkb, deeq
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : noncolin, npol, lspinorb
   USE mp_pools,             ONLY : me_pool, root_pool
@@ -644,7 +644,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                ishift = ix(i,4) ; ikb = ishift + ih
                !
                IF (.NOT. is_multinp(i)) THEN
-                  ps(ikb) = CMPLX(deeq_d(ih,ih,na,current_spin)) * &
+                  ps(ikb) = CMPLX(deeq(ih,ih,na,current_spin)) * &
                                                becpk_d(ikb,ibnd)
                ELSE 
                   nh_np = ix(i,3)

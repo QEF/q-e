@@ -30,10 +30,10 @@ MODULE uspp
             nkb, nkbus, vkb, dvan, deeq, qq_at, qq_nt, nhtoj, ijtoh, beta, &
             becsum, ebecsum
   PUBLIC :: lpx_d, lpl_d, ap_d, indv_d, nhtol_d, nhtolm_d, ofsbeta_d, &
-            dvan_d, deeq_d, qq_nt_d, nhtoj_d, ijtoh_d, becsum_d, ebecsum_d
+            dvan_d, qq_nt_d, nhtoj_d, ijtoh_d, becsum_d, ebecsum_d
   PUBLIC :: okvan, nlcc_any
   PUBLIC :: qq_so,   dvan_so,   deeq_nc,   fcoef 
-  PUBLIC :: qq_so_d, dvan_so_d, deeq_nc_d, fcoef_d
+  PUBLIC :: qq_so_d, dvan_so_d, fcoef_d
   PUBLIC :: dbeta
   !
   PUBLIC :: allocate_uspp, deallocate_uspp
@@ -109,15 +109,14 @@ MODULE uspp
   REAL(DP),    ALLOCATABLE :: becsum_d(:,:,:)
   REAL(DP),    ALLOCATABLE :: ebecsum_d(:,:,:)
   REAL(DP),    ALLOCATABLE :: dvan_d(:,:,:)
-  REAL(DP),    ALLOCATABLE :: deeq_d(:,:,:,:)
   REAL(DP),    ALLOCATABLE :: qq_nt_d(:,:,:)
   REAL(DP),    ALLOCATABLE :: nhtoj_d(:,:)
   COMPLEX(DP), ALLOCATABLE :: qq_so_d(:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: dvan_so_d(:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: deeq_nc_d(:,:,:,:)
 #if defined(__CUDA)
-  attributes (DEVICE) :: becsum_d, ebecsum_d, dvan_d, deeq_d, qq_nt_d, &
-                         nhtoj_d, qq_so_d, dvan_so_d, deeq_nc_d
+  attributes (DEVICE) :: becsum_d, ebecsum_d, dvan_d, qq_nt_d, &
+                         nhtoj_d, qq_so_d, dvan_so_d
 #endif
 
   !
@@ -354,8 +353,10 @@ CONTAINS
     allocate( nhtoj(nhm,nsp)  )
     allocate( ijtoh(nhm,nhm,nsp) )
     allocate( deeq(nhm,nhm,nat,nspin) )
+    !$acc enter data create(deeq)
     if ( noncolin ) then
        allocate( deeq_nc(nhm,nhm,nat,nspin) )
+       !$acc enter data create(deeq_nc)
     endif
     allocate( qq_at(nhm,nhm,nat) )
     !$acc enter data create(qq_at)
@@ -385,10 +386,6 @@ CONTAINS
         allocate( nhtolm_d(nhm,nsp) )
         allocate( nhtoj_d(nhm,nsp)  )
         allocate( ijtoh_d(nhm,nhm,nsp) )
-        allocate( deeq_d(nhm,nhm,nat,nspin) )
-        if ( noncolin ) then
-           allocate( deeq_nc_d(nhm,nhm,nat,nspin) )
-        endif
         allocate( qq_nt_d(nhm,nhm,nsp) )
         if ( lspinorb ) then
            allocate( qq_so_d(nhm,nhm,4,nsp) )
@@ -432,10 +429,16 @@ CONTAINS
     ENDIF
     IF( ALLOCATED( qq_nt ) )      DEALLOCATE( qq_nt )
     IF( ALLOCATED( dvan ) )       DEALLOCATE( dvan )
-    IF( ALLOCATED( deeq ) )       DEALLOCATE( deeq )
+    IF( ALLOCATED( deeq ) ) THEN
+      !$acc exit data delete( deeq )
+      DEALLOCATE( deeq )
+    ENDIF
     IF( ALLOCATED( qq_so ) )      DEALLOCATE( qq_so )
     IF( ALLOCATED( dvan_so ) )    DEALLOCATE( dvan_so )
-    IF( ALLOCATED( deeq_nc ) )    DEALLOCATE( deeq_nc )
+    IF( ALLOCATED( deeq_nc ) ) THEN
+      !$acc exit data delete( deeq_nc )
+      DEALLOCATE( deeq_nc )
+    ENDIF
     IF( ALLOCATED( fcoef ) )      DEALLOCATE( fcoef )
     IF( ALLOCATED( beta ) )       DEALLOCATE( beta )
     IF( ALLOCATED( dbeta ) )      DEALLOCATE( dbeta )
@@ -452,12 +455,10 @@ CONTAINS
     IF( ALLOCATED( becsum_d ) )   DEALLOCATE( becsum_d )
     IF( ALLOCATED( ebecsum_d ) )  DEALLOCATE( ebecsum_d )
     IF( ALLOCATED( dvan_d ) )     DEALLOCATE( dvan_d )
-    IF( ALLOCATED( deeq_d ) )     DEALLOCATE( deeq_d )
     IF( ALLOCATED( qq_nt_d ) )    DEALLOCATE( qq_nt_d )
     IF( ALLOCATED( nhtoj_d ) )    DEALLOCATE( nhtoj_d )
     IF( ALLOCATED( qq_so_d ) )    DEALLOCATE( qq_so_d )
     IF( ALLOCATED( dvan_so_d ) )  DEALLOCATE( dvan_so_d )
-    IF( ALLOCATED( deeq_nc_d ) )  DEALLOCATE( deeq_nc_d )
     IF( ALLOCATED( fcoef_d ) )    DEALLOCATE( fcoef_d )
     !
   END SUBROUTINE deallocate_uspp
