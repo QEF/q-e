@@ -270,7 +270,6 @@ set(src_pw
    src/hs_1psi_gpu.f90
    src/g_psi_gpu.f90
    src/atomic_wfc_gpu.f90
-   src/compute_deff_gpu.f90
    src/add_vhub_to_deeq_gpu.f90
    src/s_1psi_gpu.f90
    src/h_psi_gpu.f90
