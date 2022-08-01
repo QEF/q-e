@@ -182,7 +182,7 @@ SUBROUTINE force_us_gpu( forcenl )
 #if defined(__CUDA)
        USE cublas
 #endif
-       USE uspp,                 ONLY : qq_at_d, deeq_d
+       USE uspp,                 ONLY : qq_at, deeq_d
        USE wvfct_gpum,           ONLY : wg_d, using_wg_d, et_d, using_et_d
        !
        IMPLICIT NONE
@@ -230,9 +230,11 @@ SUBROUTINE force_us_gpu( forcenl )
              IF ( ityp(na) == nt ) THEN
                 ijkb0 = ofsbeta(na)
                 ! this is \sum_j q_{ij} <beta_j|psi>
+                !$acc host_data use_device(qq_at)
                 CALL DGEMM ('N','N', nh(nt), becp_d%nbnd_loc, nh(nt), &
-                     1.0_dp, qq_at_d(1,1,na), nhm, becp_d%r_d(ijkb0+1,1),&
+                     1.0_dp, qq_at(1,1,na), nhm, becp_d%r_d(ijkb0+1,1),&
                      nkb, 0.0_dp, aux_d, nh(nt) )
+                !$acc end host_data
                 ! multiply by -\epsilon_n
 !$cuf kernel do(2)
                 DO ih = 1, nh_nt

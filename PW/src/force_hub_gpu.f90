@@ -1134,7 +1134,7 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
                                     offsetU_back1, ldim_u, backall, lda_plus_u_kind, &
                                     Hubbard_projectors, oatwfc
    USE wvfct,                ONLY : nbnd, npwx, wg
-   USE uspp,                 ONLY : okvan, nkb, qq_at_d
+   USE uspp,                 ONLY : okvan, nkb
    USE uspp_param,           ONLY : nh
    USE becmod_subs_gpum,     ONLY : calbec_gpu
    USE mp_bands,             ONLY : intra_bgrp_comm
@@ -1530,7 +1530,7 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE cell_base,            ONLY : tpiba
    USE wvfct,                ONLY : npwx, wg
-   USE uspp,                 ONLY : nkb, okvan, vkb, qq_at_d
+   USE uspp,                 ONLY : nkb, okvan, vkb, qq_at
    USE uspp_param,           ONLY : nh
    USE klist,                ONLY : igk_k_d, ngk
    USE becmod_subs_gpum,     ONLY : calbec_gpu
@@ -1585,10 +1585,10 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    CALL dev_buf%lock_buffer(qq     , [nh(nt),nh(nt)], ierr) ! ALLOCATE ( qq(nh(nt),nh(nt)) )
    IF ( ierr /= 0 ) CALL errore('matrix_element_of_dSdtau_gpu','Buffers allocation failed',ierr)
    !
-   !$cuf kernel do(2)
+   !$acc parallel loop collapse(2) present(qq_at)
    DO jh=1,nh_nt
       DO ih=1,nh_nt
-         qq(ih,jh) = CMPLX(qq_at_d(ih,jh,alpha), 0.0d0, kind=DP)
+         qq(ih,jh) = CMPLX(qq_at(ih,jh,alpha), 0.0d0, kind=DP)
       ENDDO
    ENDDO
    !
@@ -1703,7 +1703,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
                                     offsetU_back, offsetU_back1, ldim_u, backall, &
                                     Hubbard_projectors
    USE wvfct,                ONLY : nbnd, npwx,  wg
-   USE uspp,                 ONLY : nkb, vkb, qq_at_d
+   USE uspp,                 ONLY : nkb, vkb, qq_at
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE becmod_gpum,          ONLY : bec_type_d, becp_d
@@ -1900,12 +1900,12 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    CALL dev_memset ( betapsi_d,  0.0_dp )
    !
    ! here starts band parallelization
-!$cuf kernel do(2)
+!$acc parallel loop collapse(2) present(qq_at)
    DO ih = 1, nh_nt
       DO ibnd = nb_s, nb_e
          DO jh = 1, nh_nt
             betapsi_d(ih,ibnd) = betapsi_d(ih,ibnd) + &
-                               qq_at_d(ih,jh,alpha) * dbetapsi_d(jh,ibnd)
+                               qq_at(ih,jh,alpha) * dbetapsi_d(jh,ibnd)
          ENDDO
       ENDDO
    ENDDO
@@ -1918,12 +1918,12 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    CALL dev_memset ( betapsi_d,  0.0_dp )
    !
    becpr_d => becp_d%r_d
-!$cuf kernel do(2)
+!$acc parallel loop collapse(2) present(qq_at)
    DO ih = 1, nh_nt
       DO ibnd = nb_s, nb_e
          DO jh = 1, nh_nt
             betapsi_d(ih,ibnd) = betapsi_d(ih,ibnd) + &
-                               qq_at_d(ih,jh,alpha) * betapsi0_d(jh,ibnd)
+                               qq_at(ih,jh,alpha) * betapsi0_d(jh,ibnd)
          ENDDO
       ENDDO
    ENDDO

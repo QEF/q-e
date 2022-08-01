@@ -30,11 +30,10 @@ MODULE uspp
             nkb, nkbus, vkb, dvan, deeq, qq_at, qq_nt, nhtoj, ijtoh, beta, &
             becsum, ebecsum
   PUBLIC :: lpx_d, lpl_d, ap_d, indv_d, nhtol_d, nhtolm_d, ofsbeta_d, &
-            dvan_d, deeq_d, qq_at_d, qq_nt_d, nhtoj_d, ijtoh_d, &
-            becsum_d, ebecsum_d
+            dvan_d, deeq_d, qq_nt_d, nhtoj_d, ijtoh_d, becsum_d, ebecsum_d
   PUBLIC :: okvan, nlcc_any
   PUBLIC :: qq_so,   dvan_so,   deeq_nc,   fcoef 
-  PUBLIC :: qq_so_d, dvan_so_d, deeq_nc_d, fcoef_d 
+  PUBLIC :: qq_so_d, dvan_so_d, deeq_nc_d, fcoef_d
   PUBLIC :: dbeta
   !
   PUBLIC :: allocate_uspp, deallocate_uspp
@@ -112,14 +111,13 @@ MODULE uspp
   REAL(DP),    ALLOCATABLE :: dvan_d(:,:,:)
   REAL(DP),    ALLOCATABLE :: deeq_d(:,:,:,:)
   REAL(DP),    ALLOCATABLE :: qq_nt_d(:,:,:)
-  REAL(DP),    ALLOCATABLE :: qq_at_d(:,:,:)
   REAL(DP),    ALLOCATABLE :: nhtoj_d(:,:)
   COMPLEX(DP), ALLOCATABLE :: qq_so_d(:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: dvan_so_d(:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: deeq_nc_d(:,:,:,:)
 #if defined(__CUDA)
   attributes (DEVICE) :: becsum_d, ebecsum_d, dvan_d, deeq_d, qq_nt_d, &
-                         qq_at_d, nhtoj_d, qq_so_d, dvan_so_d, deeq_nc_d
+                         nhtoj_d, qq_so_d, dvan_so_d, deeq_nc_d
 #endif
 
   !
@@ -360,6 +358,7 @@ CONTAINS
        allocate( deeq_nc(nhm,nhm,nat,nspin) )
     endif
     allocate( qq_at(nhm,nhm,nat) )
+    !$acc enter data create(qq_at)
     allocate( qq_nt(nhm,nhm,nsp) )
     ! set the internal spin-orbit flag
     is_spinorbit = lspinorb
@@ -390,7 +389,6 @@ CONTAINS
         if ( noncolin ) then
            allocate( deeq_nc_d(nhm,nhm,nat,nspin) )
         endif
-        allocate( qq_at_d(nhm,nhm,nat) )
         allocate( qq_nt_d(nhm,nhm,nsp) )
         if ( lspinorb ) then
            allocate( qq_so_d(nhm,nhm,4,nsp) )
@@ -419,16 +417,19 @@ CONTAINS
     IF( ALLOCATED( indv ) )       DEALLOCATE( indv )
     IF( ALLOCATED( nhtolm ) )     DEALLOCATE( nhtolm )
     IF( ALLOCATED( nhtoj ) )      DEALLOCATE( nhtoj )
-    IF( ALLOCATED( ofsbeta ) ) DEALLOCATE( ofsbeta )
+    IF( ALLOCATED( ofsbeta ) )    DEALLOCATE( ofsbeta )
     IF( ALLOCATED( ijtoh ) )      DEALLOCATE( ijtoh )
 !FIXME in order to be created and deleted automatically by using !$acc declare create(vkb) in 
     IF( ALLOCATED( vkb ) ) THEN
-!$acc exit data delete(vkb ) 
+        !$acc exit data delete(vkb ) 
         DEALLOCATE( vkb )
     END IF 
     IF( ALLOCATED( becsum ) )     DEALLOCATE( becsum )
     IF( ALLOCATED( ebecsum ) )    DEALLOCATE( ebecsum )
-    IF( ALLOCATED( qq_at ) )      DEALLOCATE( qq_at )
+    IF( ALLOCATED( qq_at ) ) THEN
+      !$acc exit data delete( qq_at )
+      DEALLOCATE( qq_at )
+    ENDIF
     IF( ALLOCATED( qq_nt ) )      DEALLOCATE( qq_nt )
     IF( ALLOCATED( dvan ) )       DEALLOCATE( dvan )
     IF( ALLOCATED( deeq ) )       DEALLOCATE( deeq )
@@ -453,7 +454,6 @@ CONTAINS
     IF( ALLOCATED( dvan_d ) )     DEALLOCATE( dvan_d )
     IF( ALLOCATED( deeq_d ) )     DEALLOCATE( deeq_d )
     IF( ALLOCATED( qq_nt_d ) )    DEALLOCATE( qq_nt_d )
-    IF( ALLOCATED( qq_at_d ) )    DEALLOCATE( qq_at_d )
     IF( ALLOCATED( nhtoj_d ) )    DEALLOCATE( nhtoj_d )
     IF( ALLOCATED( qq_so_d ) )    DEALLOCATE( qq_so_d )
     IF( ALLOCATED( dvan_so_d ) )  DEALLOCATE( dvan_so_d )
