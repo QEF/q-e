@@ -29,7 +29,6 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                                    bec_type, becp, calbec
   USE mp,                   ONLY : mp_sum, mp_get_comm_null, &
                                    mp_circular_shift_left 
-  USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d, evc_d
   USE wavefunctions,        ONLY : evc
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_gpum,          ONLY : becp_d, bec_type_d
@@ -64,9 +63,6 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
   !
   !$acc data present( gk )
   !
-  CALL using_evc_d(0)
-  CALL using_evc(0)
-  !
   IF ( lsda ) current_spin = isk(ik)
   npw = ngk(ik)
   IF ( nks > 1 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
@@ -76,17 +72,14 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
   
   CALL using_becp_auto(2)
   !
-  CALL using_evc_d(0)
   CALL using_becp_d_auto(2)
   !
 #if defined(__CUDA)
-  !$acc data present(vkb,evc)
-  !$acc host_data use_device(vkb)
-  CALL calbec_gpu( npw, vkb, evc_d, becp_d )
+  !$acc host_data use_device(vkb,evc)
+  CALL calbec_gpu( npw, vkb, evc, becp_d )
   !$acc end host_data
-  !$acc end data
 #else
-  !$acc update self(vkb)
+  !$acc update self(vkb,evc)
   CALL calbec( npw, vkb, evc, becp )
   
 #endif
@@ -140,7 +133,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
         ix(iu,3) = nh_np1             !nh(np)
         ix(iu,4) = ijkb01             !ishift
         is_multinp(iu) = ismulti_np
-      ENDDO 
+      ENDDO
       itot = itot + nh_np1
     ENDDO
   ENDDO
@@ -319,7 +312,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                       ikb = ijkb0 + ih
                       worksum = worksum + ps(ikb) * dvkb(i,ikb,4)
                    ENDDO
-                   evci = evc_d(i,ibnd)
+                   evci = evc(i,ibnd)
                    gk1  = gk(i,1)
                    gk2  = gk(i,2)
                    gk3  = gk(i,3)
@@ -367,7 +360,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                    wsum2 = ps(ikb)*dvkb(i,ikb,2)
                    wsum3 = ps(ikb)*dvkb(i,ikb,3)
                    !
-                   evci = evc_d(i,ibnd)
+                   evci = evc(i,ibnd)
                    gk1 = gk(i,1)
                    gk2 = gk(i,2)
                    gk3 = gk(i,3)
@@ -664,8 +657,8 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
             !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,dot22,dot32,dot33)
             DO ikb = 1, nkb
                DO i = 1, npw
-                  evc1i = evc_d(i, ibnd)
-                  evc2i = evc_d(i+npwx,ibnd)
+                  evc1i = evc(i, ibnd)
+                  evc2i = evc(i+npwx,ibnd)
                   qm1i = CMPLX(qm1(i))
                   gk1 = CMPLX(gk(i,1))
                   gk2 = CMPLX(gk(i,2))
@@ -725,7 +718,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                   !
                   worksum = ps(ikb) *dvkb(i,ikb,4)
                   !
-                  evci = evc_d(i,ibnd)
+                  evci = evc(i,ibnd)
                   qm1i = CMPLX(qm1(i))
                   gk1 = CMPLX(gk(i,1))
                   gk2 = CMPLX(gk(i,2))
@@ -791,8 +784,8 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                   ps2d2 = ps2 * dvkb(i,ikb,2)
                   ps2d3 = ps2 * dvkb(i,ikb,3)
                   !
-                  evc1i = evc_d(i,ibnd)       
-                  evc2i = evc_d(i+npwx,ibnd)       
+                  evc1i = evc(i,ibnd)       
+                  evc2i = evc(i+npwx,ibnd)       
                   !      
                   cv1 = evc1i * gk1
                   cv2 = evc2i * gk1
@@ -842,7 +835,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                  psd1 = pss*dvkb(i,ikb,1)
                  psd2 = pss*dvkb(i,ikb,2)       
                  psd3 = pss*dvkb(i,ikb,3)
-                 evci = evc_d(i,ibnd)
+                 evci = evc(i,ibnd)
                  gk1  = CMPLX(gk(i,1))
                  gk2  = CMPLX(gk(i,2))
                  gk3  = CMPLX(gk(i,3))
