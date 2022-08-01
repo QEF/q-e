@@ -240,9 +240,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
          !
          DO ibnd_loc = 1, nbnd_loc
             ibnd = ibnd_loc + becp%ibnd_begin - 1
-            !$acc host_data use_device(deff)
             CALL compute_deff_gpu( deff, et(ibnd,ik) )
-            !$acc end host_data
             wg_nk = wg(ibnd,ik)
             !
             !$acc parallel loop reduction(+:evps)
@@ -288,9 +286,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
           DO ibnd_loc = 1, nbnd_loc
              !  
              ibnd = ibnd_loc + becp%ibnd_begin - 1
-             !$acc host_data use_device(deff)
              CALL compute_deff_gpu( deff, et(ibnd,ik) )
-             !$acc end host_data
              !
              !$acc parallel loop
              DO i = 1, itot
@@ -499,13 +495,9 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
           fac = wg(ibnd,ik)
           IF (ABS(fac) < 1.d-9) CYCLE
           IF (noncolin) THEN
-             !$acc host_data use_device(deff_nc)
              CALL compute_deff_nc_gpu( deff_nc, et(ibnd,ik) )
-             !$acc end host_data
           ELSE
-             !$acc host_data use_device(deff)
              CALL compute_deff_gpu( deff, et(ibnd,ik) )
-             !$acc end host_data
           ENDIF
           !
           !
@@ -610,9 +602,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
          !
          IF ( noncolin ) THEN
             !
-            !$acc host_data use_device(deff_nc)
             CALL compute_deff_nc_gpu( deff_nc, et(ibnd,ik) )
-            !$acc end host_data
             !
             !$acc parallel loop
             DO i = 1, itot
@@ -645,9 +635,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
             !
          ELSE
             !
-            !$acc host_data use_device( deff )
             CALL compute_deff_gpu( deff, et(ibnd,ik) )
-            !$acc end host_data
             !
             !$acc parallel loop
             DO i = 1, itot

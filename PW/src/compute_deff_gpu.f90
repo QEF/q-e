@@ -5,8 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
 !-------------------------------------------------------------------------
-SUBROUTINE compute_deff_gpu( deff_d, et )
+SUBROUTINE compute_deff_gpu( deff, et )
   !-----------------------------------------------------------------------
   !! This routine computes the effective value of the D-eS coefficients
   !! which appear often in many expressions in the US or PAW case. 
@@ -22,41 +23,26 @@ SUBROUTINE compute_deff_gpu( deff_d, et )
   !
   REAL(DP), INTENT(IN) :: et
   !! The eigenvalues of the hamiltonian
-  COMPLEX(DP), INTENT(OUT) :: deff_d(nhm,nhm,nat)
+  COMPLEX(DP), INTENT(OUT) :: deff(nhm,nhm,nat)
   !! Effective values of the D-eS coefficients
   !
   ! ... local variables
   !
   INTEGER :: nt, na, is, i, j
   !
-#if defined(__CUDA)
-  attributes(DEVICE) ::  deff_d
-#endif  
+  !$acc kernels present_or_copyout(deff)
   !
   IF (.NOT. okvan) THEN
      !
-     !$cuf kernel do (3)  <<<*,*>>>
-     DO na = 1, nat
-       DO i = 1, nhm
-         DO j = 1,nhm
-           deff_d(i,j,na) = CMPLX(deeq_d(i,j,na,current_spin))
-         ENDDO
-       ENDDO
-     ENDDO
+     deff(:,:,:) = CMPLX(deeq_d(:,:,:,current_spin))
      !
   ELSE
      !
-     !$cuf kernel do (3)  <<<*,*>>>
-     DO na = 1, nat
-       DO i = 1, nhm
-         DO j = 1,nhm
-           deff_d(i,j,na) = CMPLX(deeq_d(i,j,na,current_spin) - et*qq_at_d(i,j,na))
-         ENDDO
-       ENDDO
-     ENDDO
+     deff(:,:,:) = CMPLX(deeq_d(:,:,:,current_spin) - et*qq_at_d(:,:,:))
      !
   ENDIF
   !
+  !$acc end kernels
   !
   RETURN
   !
@@ -64,7 +50,7 @@ END SUBROUTINE compute_deff_gpu
 !
 !
 !---------------------------------------------------------------------------
-SUBROUTINE compute_deff_nc_gpu( deff_d, et )
+SUBROUTINE compute_deff_nc_gpu( deff, et )
   !-------------------------------------------------------------------------
   !! This routine computes the effective value of the D-eS coefficients
   !! which appears often in many expressions. This routine is for the
@@ -76,31 +62,28 @@ SUBROUTINE compute_deff_nc_gpu( deff_d, et )
   USE uspp,             ONLY: okvan, deeq_nc_d, qq_so_d, qq_at_d
   USE uspp_param,       ONLY: nhm
   USE lsda_mod,         ONLY: nspin
-  USE device_memcpy_m,  ONLY: dev_memcpy
   !
   IMPLICIT NONE
   !
   REAL(DP), INTENT(IN) :: et
   !! The eigenvalues of the hamiltonian
-  COMPLEX(DP), INTENT(OUT) :: deff_d(nhm,nhm,nat,nspin) 
+  COMPLEX(DP), INTENT(OUT) :: deff(nhm,nhm,nat,nspin) 
   !! Effective values of the D-eS coefficients
   !
   ! ... local variables
   !
-  INTEGER :: nt, na, is, js, ijs, i, j, ias
-  INTEGER :: na_v(nat), nt_v(nat)
-  INTEGER, ALLOCATABLE :: na_d(:), nt_d(:)
+  INTEGER :: nt, na, is, ijs, i, j, ias
+  INTEGER :: nt_v(nat), na_v(nat)
   !
-#if defined(__CUDA)
-  attributes(DEVICE) ::  deff_d, na_d, nt_d
-#endif  
+  !$acc data present_or_copyout( deff )
   !
-  CALL dev_memcpy( deff_d, deeq_nc_d )
+  !$acc kernels
+  deff(:,:,:,:) = deeq_nc_d(:,:,:,:)
+  !$acc end kernels
   !
-  IF ( okvan ) THEN
+  IF (okvan) then
     !
-    ALLOCATE( nt_d(nat), na_d(nat) )
-    !
+    ! ... set up index arrays to fill deff on gpu
     i = 0
     DO nt = 1, nsp
       DO na = 1, nat
@@ -111,33 +94,32 @@ SUBROUTINE compute_deff_nc_gpu( deff_d, et )
       ENDDO
     ENDDO
     !
-    nt_d = nt_v ; na_d = na_v
+    !$acc data copyin( nt_v, na_v )
     !
     IF (lspinorb) THEN
       !
-      !$cuf kernel do (3) <<<*,*>>>
+      !$acc parallel loop collapse(3)
       DO ias = 1, nat
         DO i = 1, nhm
           DO j = 1, nhm
-            na = na_d(ias)
-            nt = nt_d(ias)
-            deff_d(i,j,na,:) = deeq_nc_d(i,j,na,:) - et*qq_so_d(i,j,:,nt)
+            na = na_v(ias)
+            nt = nt_v(ias)
+            deff(i,j,na,:) = deeq_nc_d(i,j,na,:) - et*qq_so_d(i,j,:,nt)
           ENDDO
         ENDDO
       ENDDO
       !
-    ELSE  
+    ELSE
       !
-      !$cuf kernel do (3) <<<*,*>>>
+      !$acc parallel loop collapse(3)
       DO ias = 1, nat
         DO i = 1, nhm
           DO j = 1, nhm
-            na = na_d(ias)
-            nt = nt_d(ias)
+            na = na_v(ias)
+            !$acc loop seq
             DO is = 1, npol
-              ijs = (is-1)*npol+is
-              deff_d(i,j,na,ijs) = deeq_nc_d(i,j,na,ijs) - &
-                                                 et*qq_at_d(i,j,na)
+              ijs = (is-1)*npol + is
+              deff(i,j,na,ijs) = deeq_nc_d(i,j,na,ijs) - CMPLX(et*qq_at_d(i,j,na))
             ENDDO
           ENDDO
         ENDDO
@@ -145,10 +127,11 @@ SUBROUTINE compute_deff_nc_gpu( deff_d, et )
       !
     ENDIF
     !
-    DEALLOCATE( nt_d, na_d )
+    !$acc end data
     !
   ENDIF  
   !
+  !$acc end data
   !
   RETURN
   !
