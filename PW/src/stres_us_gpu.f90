@@ -29,6 +29,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                                    bec_type, becp, calbec
   USE mp,                   ONLY : mp_sum, mp_get_comm_null, &
                                    mp_circular_shift_left 
+  USE wavefunctions_gpum,   ONLY : using_evc
   USE wavefunctions,        ONLY : evc
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_gpum,          ONLY : becp_d, bec_type_d
@@ -56,9 +57,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
   INTEGER, ALLOCATABLE :: shift(:), ix(:,:)
   LOGICAL, ALLOCATABLE :: is_multinp(:)
   !
-  
-#if defined(__CUDA)
-  
+
   IF ( nkb == 0 ) RETURN
   !
   !$acc data present( gk )
@@ -72,9 +71,12 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
   
   CALL using_becp_auto(2)
   !
-  CALL using_becp_d_auto(2)
+  
   !
 #if defined(__CUDA)
+
+  CALL using_becp_d_auto(2)
+
   !$acc host_data use_device(vkb,evc)
   CALL calbec_gpu( npw, vkb, evc, becp_d )
   !$acc end host_data
@@ -162,8 +164,6 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
   CALL using_becp_auto(2)
   !
   
-#endif
-  
   RETURN
   !
   CONTAINS
@@ -187,19 +187,21 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        REAL(DP), ALLOCATABLE :: deff(:,:,:)
        COMPLEX(DP), ALLOCATABLE :: ps(:), dvkb(:,:,:)
        !
-       REAL(DP),    POINTER :: becpr_d(:,:)
-       !
        REAL(DP) :: xyz(3,3)
        INTEGER  :: ierrs(3)
        !
        ! xyz are the three unit vectors in the x,y,z directions
        DATA xyz / 1._DP, 0._DP, 0._DP, 0._DP, 1._DP, 0._DP, 0._DP, 0._DP, &
                   1._DP /
-#if defined(__CUDA)
-       attributes(DEVICE) :: becpr_d
+         
+         
+       ! ..... provisional
+#if defined(__CUDA) && defined(_OPENACC)
+       REAL(DP), POINTER, DEVICE :: becpr(:,:)
+#else
+       REAL(DP), ALLOCATABLE :: becpr(:,:)
 #endif
-       !
-#if defined(__CUDA)
+        
        !
        CALL using_becp_auto(0)
        !
@@ -226,7 +228,16 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        !
        CALL using_et(0) ! compute_deff : intent(in)
        !
-       becpr_d => becp_d%r_d 
+
+       
+       ! ..... provisional
+#if defined(__CUDA) && defined(_OPENACC)
+       becpr => becp_d%r_d 
+#else
+       ALLOCATE( becpr(nkb,nbnd_loc) )
+       becpr = becp%r
+#endif
+       
        !
        evps = 0._DP
        !
@@ -244,14 +255,14 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
               ishift = ix(i,4)   ; ikb = ishift + ih
               !
               IF (.NOT. is_multinp(i)) THEN
-                 aux = wg_nk * deff(ih,ih,na) * ABS(becpr_d(ikb,ibnd_loc))**2
+                 aux = wg_nk * deff(ih,ih,na) * ABS(becpr(ikb,ibnd_loc))**2
               ELSE
                  nh_np = ix(i,3)
                  !
-                 aux = wg_nk * deff(ih,ih,na) * ABS(becpr_d(ikb,ibnd_loc))**2 &
-                             +  becpr_d(ikb,ibnd_loc)* wg_nk * 2._DP  &
-                                * SUM( deff(ih,ih+1:nh_np,na)         &
-                                * becpr_d(ishift+ih+1:ishift+nh_np,ibnd_loc))
+                 aux = wg_nk * deff(ih,ih,na) * ABS(becpr(ikb,ibnd_loc))**2 &
+                             +  becpr(ikb,ibnd_loc)* wg_nk * 2._DP  &
+                                * SUM( deff(ih,ih+1:nh_np,na)       &
+                                * becpr(ishift+ih+1:ishift+nh_np,ibnd_loc))
               ENDIF
               evps = evps + aux
               !
@@ -288,11 +299,11 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                ishift = ix(i,4) ; ikb = ishift + ih
                !
                IF (.NOT. is_multinp(i)) THEN
-                  ps(ikb) =  CMPLX(deff(ih,ih,na) * becpr_d(ikb,ibnd_loc))
+                  ps(ikb) =  CMPLX(deff(ih,ih,na) * becpr(ikb,ibnd_loc))
                ELSE
                   nh_np = ix(i,3)
                   !
-                  ps(ikb) = CMPLX( SUM( becpr_d(ishift+1:ishift+nh_np,ibnd_loc) &
+                  ps(ikb) = CMPLX( SUM( becpr(ishift+1:ishift+nh_np,ibnd_loc) &
                                     * deff(ih,1:nh_np,na) ) )
                ENDIF
                !
@@ -406,7 +417,13 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        DEALLOCATE( deff, ps )
        DEALLOCATE( dvkb )
        !
+       
+       !....... provisional
+#if defined(__CUDA) && defined(_OPENACC)
+#else
+       DEALLOCATE( becpr )
 #endif
+
        !
        RETURN
        !
@@ -433,7 +450,6 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        REAL(DP), ALLOCATABLE :: deff(:,:,:)
        COMPLEX(DP), ALLOCATABLE :: deff_nc(:,:,:,:)
        COMPLEX(DP), ALLOCATABLE :: ps(:), ps_nc(:,:), dvkb(:,:,:)
-       COMPLEX(DP), POINTER :: becpk_d(:,:), becpnc_d(:,:,:)
        INTEGER :: nhmx
        !
        REAL(DP) :: xyz(3,3)
@@ -441,12 +457,16 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        DATA xyz / 1._DP, 0._DP, 0._DP, 0._DP, 1._DP, 0._DP, 0._DP, &
                   0._DP, 1._DP /
        !
-#if defined(__CUDA) 
-       ATTRIBUTES(DEVICE) :: becpnc_d, becpk_d
-#endif
+       
+       
+       ! ..... provisional
+#if defined(__CUDA) && defined(_OPENACC)
+       COMPLEX(DP), POINTER, DEVICE :: becpnc(:,:,:), becpk(:,:)
+#else
+       COMPLEX(DP), ALLOCATABLE :: becpnc(:,:,:), becpk(:,:)
+#endif       
+       
        !
-       !
-#if defined(__CUDA)
        !
        evps = 0._DP
        ! ... diagonal contribution
@@ -466,13 +486,31 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
           ALLOCATE( ps_nc(nkb,npol) )
           ALLOCATE( deff_nc(nhm,nhm,nat,nspin) )
           !
-          becpnc_d => becp_d%nc_d
+
+          
+          ! ..... provisional
+#if defined(__CUDA) && defined(_OPENACC)
+          becpnc => becp_d%nc_d 
+#else
+          ALLOCATE( becpnc(nkb,npol,nbnd) )
+          becpnc = becp%nc
+#endif
+
        ELSE
           !
           ALLOCATE( ps(nkb) )
           ALLOCATE( deff(nhm,nhm,nat) )
           !
-          becpk_d => becp_d%k_d
+          
+          
+          ! ..... provisional
+#if defined(__CUDA) && defined(_OPENACC)
+          becpk => becp_d%k_d 
+#else
+          ALLOCATE( becpk(nkb,nbnd) )
+          becpk = becp%k
+#endif          
+
        ENDIF
        !$acc data create( ps, ps_nc, deff, deff_nc )
        !
@@ -511,8 +549,8 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                    DO js = 1, npol
                       ijs = ijs + 1
                       aux = aux + fac * DBLE(deff_nc(ih,ih,na,ijs) &
-                                         * CONJG(becpnc_d(ikb,is,ibnd)) *   &
-                                                 becpnc_d(ikb,js,ibnd))
+                                         * CONJG(becpnc(ikb,is,ibnd)) *   &
+                                                 becpnc(ikb,js,ibnd))
                    ENDDO
                  ENDDO
                  !
@@ -526,8 +564,8 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                    DO js = 1, npol
                       ijs = ijs + 1
                       aux = aux + fac * DBLE( deff_nc(ih,ih,na,ijs) * &
-                                         CONJG(becpnc_d(ikb,is,ibnd)) * &
-                                               becpnc_d(ikb,js,ibnd) )
+                                         CONJG(becpnc(ikb,is,ibnd)) * &
+                                               becpnc(ikb,js,ibnd) )
                    ENDDO
                  ENDDO
                  !
@@ -541,8 +579,8 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                          ijs = ijs + 1
                          aux = aux + 2._DP*fac * &
                                        DBLE( deff_nc(ih,jh,na,ijs) * &
-                                       (CONJG(becpnc_d(ikb,is,ibnd)) * &
-                                              becpnc_d(jkb,js,ibnd)) )
+                                       (CONJG(becpnc(ikb,is,ibnd)) * &
+                                              becpnc(jkb,js,ibnd)) )
                       ENDDO
                     ENDDO
                  ENDDO
@@ -563,16 +601,16 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
               IF (.NOT. is_multinp(i)) THEN
                  !
                  aux = fac * deff(ih,ih,na) * &
-                               ABS(becpk_d(ikb,ibnd) )**2
+                               ABS(becpk(ikb,ibnd) )**2
                  !
               ELSE
                  !
                  nh_np = ix(i,3)
                  !
-                 aux = fac * deff(ih,ih,na) * ABS(becpk_d(ikb,ibnd) )**2 + &
+                 aux = fac * deff(ih,ih,na) * ABS(becpk(ikb,ibnd) )**2 + &
                              SUM( deff(ih,ih+1:nh_np,na) * &
-                                  fac * 2._DP*DBLE( CONJG(becpk_d(ikb,ibnd)) &
-                                  * becpk_d(ishift+ih+1:ishift+nh_np,ibnd) ) )
+                                  fac * 2._DP*DBLE( CONJG(becpk(ikb,ibnd)) &
+                                  * becpk(ishift+ih+1:ishift+nh_np,ibnd) ) )
                  !
               ENDIF
               evps = evps + aux
@@ -607,7 +645,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                  !$acc loop seq
                  DO is = 1, npol
                    ijs = (is-1)*npol
-                   ps_nc(ikb,is) = SUM( becpnc_d(ikb,1:npol,ibnd) * &
+                   ps_nc(ikb,is) = SUM( becpnc(ikb,1:npol,ibnd) * &
                                         deff_nc(ih,ih,na,ijs+1:ijs+npol) )
                  ENDDO
                  !
@@ -618,7 +656,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                  !$acc loop seq
                  DO is = 1, npol
                    ijs = (is-1)*npol
-                   ps_nc(ikb,is) = SUM( becpnc_d(ishift+1:ishift+nh_np,1:npol,ibnd) * &
+                   ps_nc(ikb,is) = SUM( becpnc(ishift+1:ishift+nh_np,1:npol,ibnd) * &
                                         deff_nc(ih,1:nh_np,na,ijs+1:ijs+npol) )
                  ENDDO
                  !
@@ -637,11 +675,11 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                !
                IF (.NOT. is_multinp(i)) THEN
                   ps(ikb) = CMPLX(deeq(ih,ih,na,current_spin)) * &
-                                               becpk_d(ikb,ibnd)
+                                               becpk(ikb,ibnd)
                ELSE 
                   nh_np = ix(i,3)
                   !
-                  ps(ikb) = SUM( becpk_d(ishift+1:ishift+nh_np,ibnd) * &
+                  ps(ikb) = SUM( becpk(ishift+1:ishift+nh_np,ibnd) * &
                                                deff(ih,1:nh_np,na) )
                ENDIF
                !
@@ -878,7 +916,17 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        ENDIF
        !
 
+       
+       ! ..... provisional       
+#if defined(__CUDA) && defined(_OPENACC)
+#else
+       IF ( noncolin ) THEN
+         DEALLOCATE( becpnc )
+       ELSE
+         DEALLOCATE( becpk )
+       ENDIF
 #endif
+       !
        
        RETURN
        !
