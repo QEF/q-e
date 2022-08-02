@@ -29,6 +29,9 @@ MODULE extffield
   ! For instance, FLAGS = '101' means that this force field is used only for atomic species 1 and 3  
   ! The second line defines various parameters depending on the force field type.
   !
+  ! For a description and an application of the method, see L. Pizzagalli, Phys. Rev. B 102, 094102 (2020)
+  !
+  ! 
   ! FORCE FIELDS:
   ! -------------
   ! 
@@ -77,11 +80,19 @@ MODULE extffield
   !
   ! NOTE: NTYP = 2 is only available within pw.x 
   !
-  ! Formalism and application can be found in L. Pizzagalli, Phys. Rev. B 102, 094102 (2020)
-  !
-  ! 
   ! -------------------------------------------------------------------------------------------------
-  ! NTYP = 2 : 
+  ! NTYP = 3 : Planar Lennard-Jones potential
+  ! This force field allows to model a flat punch indenter, with attractive forces between the indenter 
+  ! and the system of interest. The force expression is derived from the LJ energy
+  ! $V(r) = 4\varepsilon((\sigma/r)^12 - (\sigma/r)^6)$
+  ! 
+  ! The second line in 'extffield.dat' includes the following parameters:
+  ! AXIS  DIR  POS INC \varepsilon \sigma cutoff
+  ! The first 4 have the same meaning than for NTYP = 1
+  ! \varepsilon and \sigma are the LJ potential parameters (with coherent units for cp.x or pw.x)
+  ! cutoff defines the range of the potential
+  ! For instance, with cutoff = 5.0, DIR = 0 and AXIS = 3, an ion will feel the potential only if its 
+  ! z-coordinate is lower than POS+cutoff
   !
   ! OUTPUT:
   ! -------
@@ -240,6 +251,26 @@ CONTAINS
                 WRITE( stdout, 1030)  extff_axis(i), extff_dir(i), extff_geo(1,i), extff_geo(2,i), extff_par(1,i)
              END IF           
              !
+          CASE(3)
+             !
+             !! 3 : Leannard-Jones planar force field
+             !!     Parameters: axis direction position increment \varepsilon \sigma cutoff
+             !
+             READ (extff_tunit, *, iostat=ierr ) extff_axis(i), extff_dir(i), & 
+                     extff_geo(1,i), extff_geo(2,i), extff_par(1,i), extff_par(2,i), extff_par(3,i)
+             CALL errore( 'init_extffield ', 'cannot read external potential parameters', ierr )
+             IF (extff_axis(i) /= 1 .AND. extff_axis(i) /= 2 .AND. extff_axis(i) /= 3) THEN
+                CALL errore( 'init_extffield ', 'incorrect axis for external potential', i )
+             END IF
+             IF (extff_dir(i) /= 0 .AND. extff_dir(i) /= 1) THEN
+                CALL errore( 'init_extffield ', 'incorrect direction for external potential', i )
+             END IF             
+             IF ( ionode) THEN
+                WRITE( stdout, *) i,': Lennard-Jones planar potential'
+                WRITE( stdout, 1040)  extff_axis(i), extff_dir(i), extff_geo(1,i), extff_geo(2,i), &
+                   extff_par(1,i), extff_par(2,i), extff_par(3,i)
+             END IF           
+             !
           CASE DEFAULT
              CALL errore( 'init_extffield ', 'unknown external potential type', 1 )
              !
@@ -276,23 +307,25 @@ CONTAINS
 1010  FORMAT(4(2X,A12),$)
 1020  FORMAT(5X,I1,' external force field(s):')
 1030  FORMAT(13X,'axis = ',I1,'  dir = ',I1,' pos = ',F8.4,' inc = ',F8.4,' Strength = ',F8.4)
+1040  FORMAT(13X,'axis = ',I1,'  dir = ',I1,' pos = ',F8.4,' inc = ',F8.4,' Eps = ',F8.4,' Sigma = ',F8.4,' Cutoff = ',F8.4)
   !
   END SUBROUTINE init_extffield
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE apply_extffield_PW(nfi,nextffield,eftau0,effion)
+  SUBROUTINE apply_extffield_PW(nfi,nextffield,eftau,effion)
     !------------------------------------------------------------------------
     !! This routine apply external force field on ions  (PW code)
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: nfi,nextffield
-    REAL(DP), DIMENSION(3,nat), INTENT(IN):: eftau0
+    REAL(DP), DIMENSION(3,nat), INTENT(IN):: eftau
     REAL(DP), DIMENSION(3,nat), INTENT(INOUT):: effion
     !
     INTEGER :: i,ia,j,k
     REAL(DP), DIMENSION(3,extff_max) :: load = 0.0
     REAL(DP), DIMENSION(3)           :: for = 0.0
+    REAL(DP)                         :: alp = 0.0
     ! 
     !
     DO i = 1, nextffield
@@ -310,15 +343,15 @@ CONTAINS
              DO ia = 1, nat
                 !
                 for(extff_axis(i)) = 0.0
-                IF ( extff_dir(i) == 0 .AND. eftau0(extff_axis(i),ia) < extff_geo(1,i) ) THEN
-                   for(extff_axis(i)) =  extff_atyp(ityp(ia),i) * extff_par(1,i) * (eftau0(3,ia) - extff_geo(1,i)) ** 2
-                ELSE IF ( extff_dir(i) == 1 .AND. eftau0(extff_axis(i),ia) > extff_geo(1,i) ) THEN
-                   for(extff_axis(i)) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * (eftau0(3,ia) - extff_geo(1,i)) ** 2
+                IF ( extff_dir(i) == 0 .AND. eftau(extff_axis(i),ia) < extff_geo(1,i) ) THEN
+                   for(extff_axis(i)) =  extff_atyp(ityp(ia),i) * extff_par(1,i) * (eftau(extff_axis(i),ia) - extff_geo(1,i)) ** 2
+                ELSE IF ( extff_dir(i) == 1 .AND. eftau(extff_axis(i),ia) > extff_geo(1,i) ) THEN
+                   for(extff_axis(i)) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * (eftau(extff_axis(i),ia) - extff_geo(1,i)) ** 2
                 END IF
                 !
                 load(extff_axis(i),i) = load(extff_axis(i),i) + for(extff_axis(i))
                 effion(extff_axis(i),ia) = effion(extff_axis(i),ia) + for(extff_axis(i))
-                !print *,ia,ityp(ia),load(extff_axis(i),i),eftau0(extff_axis(i),ia),extff_geo(1,i)
+                !print *,ia,ityp(ia),load(extff_axis(i),i),eftau(extff_axis(i),ia),extff_geo(1,i)
                 !
              ENDDO
              !
@@ -340,10 +373,10 @@ CONTAINS
 !                !
 !                for(j) = 0.0
 !                for(k) = 0.0
-!                IF ( extff_dir(i) == 0 .AND. eftau0(extff_axis(i),ia) < extff_geo(1,i) ) THEN
+!                IF ( extff_dir(i) == 0 .AND. eftau(extff_axis(i),ia) < extff_geo(1,i) ) THEN
 !                   for(j) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(j,ia) * amass(ityp(ia))
 !                   for(k) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(k,ia) * amass(ityp(ia))
-!                ELSE IF ( extff_dir(i) == 1 .AND. eftau0(extff_axis(i),ia) > extff_geo(1,i) ) THEN
+!                ELSE IF ( extff_dir(i) == 1 .AND. eftau(extff_axis(i),ia) > extff_geo(1,i) ) THEN
 !                   for(j) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(j,ia) * amass(ityp(ia))
 !                   for(k) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(k,ia) * amass(ityp(ia))
 !                END IF
@@ -354,6 +387,31 @@ CONTAINS
 !                effion(k,ia) = effion(k,ia) + for(k)                
 !                !
 !             ENDDO
+             !
+          CASE(3)
+             !
+             !! Planar Lennard-Jones potential
+             !
+             DO ia = 1, nat
+                !
+                for(extff_axis(i)) = 0.0
+                IF ( extff_dir(i) == 0 .AND. eftau(extff_axis(i),ia) < (extff_geo(1,i) + extff_par(3,i)) ) THEN
+                   alp = (extff_par(2,i)/(eftau(extff_axis(i),ia) - extff_geo(1,i)))**6
+                   alp = alp - 2.0 * alp**2
+                   for(extff_axis(i)) =  -24.0 * extff_par(1,i) / (eftau(extff_axis(i),ia) - extff_geo(1,i)) * alp
+                   for(extff_axis(i)) =  extff_atyp(ityp(ia),i) * for(extff_axis(i))
+                ELSE IF ( extff_dir(i) == 1 .AND. eftau(extff_axis(i),ia) > ( extff_geo(1,i) - extff_par(3,i)) ) THEN
+                   alp = (extff_par(2,i)/(eftau(extff_axis(i),ia) - extff_geo(1,i)))**6
+                   alp = alp - 2.0 * alp**2
+                   for(extff_axis(i)) =  -24.0 * extff_par(1,i) / (eftau(extff_axis(i),ia) - extff_geo(1,i)) * alp
+                   for(extff_axis(i)) =  extff_atyp(ityp(ia),i) * for(extff_axis(i))
+                END IF
+                !
+                load(extff_axis(i),i) = load(extff_axis(i),i) + for(extff_axis(i))
+                effion(extff_axis(i),ia) = effion(extff_axis(i),ia) + for(extff_axis(i))
+                !print *,ia,ityp(ia),load(extff_axis(i),i),eftau(extff_axis(i),ia),extff_geo(1,i)
+                !
+             ENDDO
              !
        END SELECT 
     ENDDO
@@ -375,20 +433,21 @@ CONTAINS
   END SUBROUTINE apply_extffield_PW
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE apply_extffield_CP(nfi,nextffield,eftau0,efvels,effion)
+  SUBROUTINE apply_extffield_CP(nfi,nextffield,eftau,efvels,effion)
     !------------------------------------------------------------------------
     !! This routine apply external force field on ions  (CP code)
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: nfi,nextffield
-    REAL(DP), DIMENSION(3,nat), INTENT(IN):: eftau0
+    REAL(DP), DIMENSION(3,nat), INTENT(IN):: eftau
     REAL(DP), DIMENSION(3,nat), INTENT(INOUT):: effion
     REAL(DP), DIMENSION(3,nat), INTENT(IN):: efvels
     !
     INTEGER :: i,ia,j,k
     REAL(DP), DIMENSION(3,extff_max) :: load = 0.0
     REAL(DP), DIMENSION(3)           :: for = 0.0
+    REAL(DP)                         :: alp = 0.0
     ! 
     !
     DO i = 1, nextffield
@@ -406,15 +465,15 @@ CONTAINS
              DO ia = 1, nat
                 !
                 for(extff_axis(i)) = 0.0
-                IF ( extff_dir(i) == 0 .AND. eftau0(extff_axis(i),ia) < extff_geo(1,i) ) THEN
-                   for(extff_axis(i)) =  extff_atyp(ityp(ia),i) * extff_par(1,i) * (eftau0(3,ia) - extff_geo(1,i)) ** 2
-                ELSE IF ( extff_dir(i) == 1 .AND. eftau0(extff_axis(i),ia) > extff_geo(1,i) ) THEN
-                   for(extff_axis(i)) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * (eftau0(3,ia) - extff_geo(1,i)) ** 2
+                IF ( extff_dir(i) == 0 .AND. eftau(extff_axis(i),ia) < extff_geo(1,i) ) THEN
+                   for(extff_axis(i)) =  extff_atyp(ityp(ia),i) * extff_par(1,i) * (eftau(extff_axis(i),ia) - extff_geo(1,i)) ** 2
+                ELSE IF ( extff_dir(i) == 1 .AND. eftau(extff_axis(i),ia) > extff_geo(1,i) ) THEN
+                   for(extff_axis(i)) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * (eftau(extff_axis(i),ia) - extff_geo(1,i)) ** 2
                 END IF
                 !
                 load(extff_axis(i),i) = load(extff_axis(i),i) + for(extff_axis(i))
                 effion(extff_axis(i),ia) = effion(extff_axis(i),ia) + for(extff_axis(i))
-                !print *,ia,ityp(ia),load(extff_axis(i),i),eftau0(extff_axis(i),ia),extff_geo(1,i)
+                !print *,ia,ityp(ia),load(extff_axis(i),i),eftau(extff_axis(i),ia),extff_geo(1,i)
                 !
              ENDDO
              !
@@ -436,10 +495,10 @@ CONTAINS
                 !
                 for(j) = 0.0
                 for(k) = 0.0
-                IF ( extff_dir(i) == 0 .AND. eftau0(extff_axis(i),ia) < extff_geo(1,i) ) THEN
+                IF ( extff_dir(i) == 0 .AND. eftau(extff_axis(i),ia) < extff_geo(1,i) ) THEN
                    for(j) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(j,ia) * amass(ityp(ia))
                    for(k) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(k,ia) * amass(ityp(ia))
-                ELSE IF ( extff_dir(i) == 1 .AND. eftau0(extff_axis(i),ia) > extff_geo(1,i) ) THEN
+                ELSE IF ( extff_dir(i) == 1 .AND. eftau(extff_axis(i),ia) > extff_geo(1,i) ) THEN
                    for(j) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(j,ia) * amass(ityp(ia))
                    for(k) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * efvels(k,ia) * amass(ityp(ia))
                 END IF
@@ -453,20 +512,26 @@ CONTAINS
              !
           CASE(3)
              !
-             !! Planar Lennard Jones potential
+             !! Planar Lennard-Jones potential
              !
              DO ia = 1, nat
                 !
                 for(extff_axis(i)) = 0.0
-                IF ( extff_dir(i) == 0 .AND. eftau0(extff_axis(i),ia) < extff_geo(1,i) ) THEN
-                   for(extff_axis(i)) =  extff_atyp(ityp(ia),i) * extff_par(1,i) * (eftau0(3,ia) - extff_geo(1,i)) ** 2
-                ELSE IF ( extff_dir(i) == 1 .AND. eftau0(extff_axis(i),ia) > extff_geo(1,i) ) THEN
-                   for(extff_axis(i)) =  -extff_atyp(ityp(ia),i) * extff_par(1,i) * (eftau0(3,ia) - extff_geo(1,i)) ** 2
+                IF ( extff_dir(i) == 0 .AND. eftau(extff_axis(i),ia) < (extff_geo(1,i) + extff_par(3,i)) ) THEN
+                   alp = (extff_par(2,i)/(eftau(extff_axis(i),ia) - extff_geo(1,i)))**6
+                   alp = alp - 2.0 * alp**2
+                   for(extff_axis(i)) =  -24.0 * extff_par(1,i) / (eftau(extff_axis(i),ia) - extff_geo(1,i)) * alp
+                   for(extff_axis(i)) =  extff_atyp(ityp(ia),i) * for(extff_axis(i))
+                ELSE IF ( extff_dir(i) == 1 .AND. eftau(extff_axis(i),ia) > ( extff_geo(1,i) - extff_par(3,i)) ) THEN
+                   alp = (extff_par(2,i)/(eftau(extff_axis(i),ia) - extff_geo(1,i)))**6
+                   alp = alp - 2.0 * alp**2
+                   for(extff_axis(i)) =  -24.0 * extff_par(1,i) / (eftau(extff_axis(i),ia) - extff_geo(1,i)) * alp
+                   for(extff_axis(i)) =  extff_atyp(ityp(ia),i) * for(extff_axis(i))
                 END IF
                 !
                 load(extff_axis(i),i) = load(extff_axis(i),i) + for(extff_axis(i))
                 effion(extff_axis(i),ia) = effion(extff_axis(i),ia) + for(extff_axis(i))
-                !print *,ia,ityp(ia),load(extff_axis(i),i),eftau0(extff_axis(i),ia),extff_geo(1,i)
+                !print *,ia,ityp(ia),load(extff_axis(i),i),eftau(extff_axis(i),ia),extff_geo(1,i)
                 !
              ENDDO
              !
