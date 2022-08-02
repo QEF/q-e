@@ -494,8 +494,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             see { nelec_cond, nbnd_cond, degauss_cond }
             info {
              IF .TRUE. , a two chemical potential calculation for the simulation of
-             photoexcited systems is performed. See G. Marini, M. Calandra; 
-             Phys. Rev. B 104, 144103 (2021).  
+             photoexcited systems is performed, constraining a fraction of the 
+             electrons in the conduction manifold. 
+             See G. Marini, M. Calandra; Phys. Rev. B 104, 144103 (2021).  
              Note: requires @ref occupations to be set to 'smearing'.
             }
         }
@@ -765,7 +766,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
             info {
                 Number of electronic states in the conduction manifold
-                for a two chemical-potential calculation. 
+                for a two chemical-potential calculation (@ref twochem=.true.). 
             }
         }
         
@@ -1085,8 +1086,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var nelec_cond -type REAL {
             default { 0.D0 }
             info {
-                Number of electrons in the conduction manifold in a two-chemical 
-                potential calculation (@ref twochem=.true.).
+                Number of electrons placed in the conduction manifold in a two-chemical 
+                potential calculation (@ref twochem=.true.). Of the total # of 
+                electrons nelec, nelec-nelec_cond will occupy the valence 
+                manifold and nelec_cond will be constrained in the conduction manifold. 
             }
         }
  
