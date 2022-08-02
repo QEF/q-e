@@ -495,7 +495,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             info {
              IF .TRUE. , a two chemical potential calculation for the simulation of
              photoexcited systems is performed. See G. Marini, M. Calandra; 
-             Phys. Rev. B 104, 144103 (2021). 
+             Phys. Rev. B 104, 144103 (2021).  
+             Note: requires @ref occupations to be set to 'smearing'.
             }
         }
 
