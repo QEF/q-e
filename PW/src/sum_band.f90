@@ -20,6 +20,7 @@ SUBROUTINE sum_band()
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : invfft
   USE fft_rho,              ONLY : rho_g2r, rho_r2g
+  USE fft_wave,             ONLY : wave_g2r
   USE gvect,                ONLY : ngm, g
   USE gvecs,                ONLY : doublegrid
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk, igk_k
@@ -274,7 +275,7 @@ SUBROUTINE sum_band()
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:)
        LOGICAL :: use_tg
-       INTEGER :: right_nnr, right_nr3, right_inc, ntgrp
+       INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ebnd
        !
        CALL using_evc(0); CALL using_et(0)
        !
@@ -396,25 +397,10 @@ SUBROUTINE sum_band()
                 !
              ELSE
                 !
-                psic(:) = ( 0.D0, 0.D0 )
+                ebnd = ibnd
+                IF ( ibnd < ibnd_end ) ebnd = ebnd + 1
                 !
-                IF ( ibnd < ibnd_end ) THEN
-                   !
-                   ! ... two ffts at the same time
-                   !
-                   psic(dffts%nl(1:npw))  = evc(1:npw,ibnd) + &
-                                           ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1)
-                   psic(dffts%nlm(1:npw)) = CONJG( evc(1:npw,ibnd) - &
-                                           ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1) )
-                   !
-                ELSE
-                   !
-                   psic(dffts%nl (1:npw))  = evc(1:npw,ibnd)
-                   psic(dffts%nlm(1:npw)) = CONJG( evc(1:npw,ibnd) )
-                   !
-                END IF
-                !
-                CALL invfft ('Wave', psic, dffts)
+                CALL wave_g2r( evc(1:npw,ibnd:ebnd), psic, dffts, ebnd-ibnd+1 )
                 !
                 w1 = wg(ibnd,ik) / omega
                 !

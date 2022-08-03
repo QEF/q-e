@@ -36,9 +36,9 @@ MODULE fft_helper_subroutines
             tg_get_group_nr3
   ! Used only in CP
   PUBLIC :: fftx_add_threed2oned_gamma, fftx_psi2c_gamma, c2psi_gamma, &
-            fftx_add_field, c2psi_gamma_tg
+            c2psi_gamma_cpu, fftx_add_field, c2psi_gamma_tg, c2psi_k_cpu
 #if defined (__CUDA)
-  PUBLIC :: fftx_psi2c_gamma_gpu
+  PUBLIC :: fftx_psi2c_gamma_gpu, c2psi_gamma_gpu, c2psi_k_gpu
 #endif
   PUBLIC :: fft_dist_info
   ! Used only in CP+EXX
@@ -401,7 +401,11 @@ CONTAINS
      nlm_d => desc%nlm_d
      nl_d => desc%nl_d
      !
-     psi = 0.0d0
+     !$acc data present( psi, c, ca )
+     !
+     !$acc kernels
+     psi(:) = (0.D0,0.D0)
+     !$acc end kernels
      !
      !  nlm and nl array: hold conversion indices from 3D to
      !     1-D vectors. Columns along the z-direction are stored
@@ -409,23 +413,26 @@ CONTAINS
      !  c array: stores the Fourier expansion coefficients
      !     Loop for all local g-vectors (ngw)
      IF( PRESENT(ca) ) THEN
-        !$cuf kernel do (1)
+        !$acc parallel loop
         do ig = 1, desc%ngw
            psi( nlm_d( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ))
            psi( nl_d( ig ) ) = c( ig ) + ci * ca( ig )
         end do
      ELSE
-        !$cuf kernel do (1)
+        !$acc parallel loop
         do ig = 1, desc%ngw
            psi( nlm_d( ig ) ) = CONJG( c( ig ) )
            psi( nl_d( ig ) ) = c( ig )
         end do
      END IF
+     !
+     !$acc end data
+     !
   END SUBROUTINE
 #endif
   !
   !--------------------------------------------------------------------------------
-  SUBROUTINE c2psi_k( desc, psi, c, igk, ngk )
+  SUBROUTINE c2psi_k_cpu( desc, psi, c, igk, ngk )
      !-----------------------------------------------------------------------------
      !! Copy wave-functions from 1D array (c/evc) ordered according (k+G) index igk 
      !! to 3D array (psi) in Fourier space.
@@ -450,6 +457,46 @@ CONTAINS
      end do
      !
   END SUBROUTINE
+  !
+  !
+#if defined(__CUDA)
+  !--------------------------------------------------------------------------------
+  SUBROUTINE c2psi_k_gpu( desc, psi, c, igk, ngk )
+     !-----------------------------------------------------------------------------
+     !! Copy wave-functions from 1D array (c/evc) ordered according (k+G) index igk 
+     !! to 3D array (psi) in Fourier space.
+     !
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     !
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     complex(DP), INTENT(OUT) :: psi(:)
+     complex(DP), INTENT(IN) :: c(:)
+     INTEGER, INTENT(IN) :: igk(:), ngk
+     ! local variables
+     integer :: ig
+     !
+     !  nl array: hold conversion indices from 3D to 1-D vectors. 
+     !     Columns along the z-direction are stored contigiously
+     !  c array: stores the Fourier expansion coefficients of the wave function
+     !     Loop for all local g-vectors (npw
+     !
+     !$acc data present( psi, c, igk )
+     !
+     !$acc kernels
+     psi = 0.0d0
+     !$acc end kernels
+     !
+     !$acc parallel loop
+     do ig = 1, ngk
+        psi(desc%nl_d(igk(ig))) = c(ig)
+     end do
+     !
+     !$acc end data
+     !
+  END SUBROUTINE
+#endif
+  !
   !
   !-------------------------------------------------------------------------
   SUBROUTINE fftx_oned2threed( desc, psi, c, ca, gpu_args_ )
@@ -720,6 +767,7 @@ CONTAINS
            vout1(ig) = vin(desc%nl(ig))
         END DO
      END IF
+     !
   END SUBROUTINE
   !
   !--------------------------------------------------------------------
