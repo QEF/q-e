@@ -75,7 +75,7 @@ CONTAINS
     !$acc host_data use_device( psi )
     CALL fwfft( 'Rho', psi, desc )
     !$acc end host_data
-    CALL fftx_threed2oned( desc, psi, rhog(:,1), gpu_args_=.TRUE. )
+    CALL fftx_threed2oned( desc, psi, rhog(:,1) )
     !
     !$acc end data
     DEALLOCATE( psi )
@@ -138,7 +138,7 @@ CONTAINS
        !$acc host_data use_device( psi )
        CALL fwfft( 'Rho', psi, desc )
        !$acc end host_data
-       CALL fftx_threed2oned( desc, psi, rhog(:,iss), gpu_args_=.TRUE. )
+       CALL fftx_threed2oned( desc, psi, rhog(:,iss) )
        !
     ELSE
        IF ( gamma_only ) THEN
@@ -160,7 +160,7 @@ CONTAINS
              !$acc host_data use_device( psi )
              CALL fwfft( 'Rho', psi, desc )
              !$acc end host_data
-             CALL fftx_threed2oned( desc, psi, rhog(:,isup), rhog(:,isdw), gpu_args_=.TRUE. )
+             CALL fftx_threed2oned( desc, psi, rhog(:,isup), rhog(:,isdw) )
           ENDDO
        ELSE
           DO iss = 1, nspin
@@ -178,7 +178,7 @@ CONTAINS
              !$acc host_data use_device( psi )
              CALL fwfft( 'Rho', psi, desc )
              !$acc end host_data
-             CALL fftx_threed2oned( desc, psi, rhog(:,iss), gpu_args_=.TRUE. )
+             CALL fftx_threed2oned( desc, psi, rhog(:,iss) )
           ENDDO
        ENDIF
     ENDIF
@@ -215,7 +215,7 @@ CONTAINS
     !
     !$acc data present_or_copyin(rhog) present_or_copyout(rhor) create(psi)
     !
-    CALL fftx_oned2threed( desc, psi, rhog, gpu_args_=.TRUE. )
+    CALL fftx_oned2threed( desc, psi, rhog )
     !
     !$acc host_data use_device( psi )
     CALL invfft( 'Rho', psi, desc )
@@ -267,7 +267,7 @@ CONTAINS
        IF( nspin == 1 ) THEN
           iss=1
           !
-          CALL fftx_oned2threed( desc, psi, rhog(:,iss), gpu_args_=.TRUE. )
+          CALL fftx_oned2threed( desc, psi, rhog(:,iss) )
           !
           !$acc host_data use_device( psi )
           CALL invfft( 'Rho', psi, desc )
@@ -290,7 +290,7 @@ CONTAINS
              isup = 1+(iss-1)*nspin/2 ! 1 for LSDA, 1 and 3 for noncolinear
              isdw = 2+(iss-1)*nspin/2 ! 2 for LSDA, 2 and 4 for noncolinear
              !
-             CALL fftx_oned2threed( desc, psi, rhog(:,isup), rhog(:,isdw), gpu_args_=.TRUE. )
+             CALL fftx_oned2threed( desc, psi, rhog(:,isup), rhog(:,isdw) )
              !
              !$acc host_data use_device( psi )
              CALL invfft( 'Rho', psi, desc )
@@ -315,7 +315,7 @@ CONTAINS
        !
        DO iss = 1, nspin
           !
-          CALL fftx_oned2threed( desc, psi, rhog(:,iss), gpu_args_=.TRUE. )
+          CALL fftx_oned2threed( desc, psi, rhog(:,iss) )
           !
           !$acc host_data use_device( psi )
           CALL invfft( 'Rho', psi, desc )
@@ -370,7 +370,7 @@ CONTAINS
        IF( nspin == 1 ) THEN
           iss = 1
           !
-          CALL fftx_oned2threed( desc, psi, rhog(:,iss), gpu_args_=.TRUE. )
+          CALL fftx_oned2threed( desc, psi, rhog(:,iss) )
           !
           !$acc host_data use_device( psi )
           CALL invfft( 'Rho', psi, desc )
@@ -393,7 +393,7 @@ CONTAINS
           isup = 1
           isdw = 2
           !
-          CALL fftx_oned2threed( desc, psi, rhog(:,isup), rhog(:,isdw), gpu_args_=.TRUE. )
+          CALL fftx_oned2threed( desc, psi, rhog(:,isup), rhog(:,isdw) )
           !
           !$acc host_data use_device( psi )
           CALL invfft( 'Rho', psi, desc )
@@ -419,7 +419,7 @@ CONTAINS
        !
        DO iss = 1, nspin
           !
-          CALL fftx_oned2threed( desc, psi, rhog(:,iss), gpu_args_=.TRUE. )
+          CALL fftx_oned2threed( desc, psi, rhog(:,iss) )
           !
           !$acc host_data use_device( psi )
           CALL invfft( 'Rho', psi, desc )
