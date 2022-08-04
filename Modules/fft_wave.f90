@@ -27,7 +27,7 @@ CONTAINS
   !
   !
   !----------------------------------------------------------------------
-  SUBROUTINE wave_g2r( f_in, f_out, dfft, dim2, igk )
+  SUBROUTINE wave_g2r( f_in, f_out, dfft, dim2, igk, howmany_set )
     !--------------------------------------------------------------------
     !
     USE fft_helper_subroutines, ONLY: c2psi_gamma, c2psi_k
@@ -39,6 +39,7 @@ CONTAINS
     COMPLEX(DP) :: f_in(:,:)
     COMPLEX(DP) :: f_out(:)
     INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
+    INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
     !
     INTEGER :: i2, npw, numblock
     INTEGER :: j, idx, ioff, ntgrp, right_nnr
@@ -54,18 +55,27 @@ CONTAINS
     ELSE
       !$acc data present_or_copyin(igk)
 #if defined(__CUDA)
-      CALL c2psi_k( dfft, f_out, f_in(:,1), igk, npw )
+      IF (PRESENT(howmany_set)) THEN
+        npw = howmany_set(3)
+        CALL c2psi_k( dfft, f_out, f_in, igk, npw, howmany_set )
+      ELSE
+        CALL c2psi_k( dfft, f_out, f_in, igk, npw )
+      ENDIF
 #else
       !$omp parallel
       CALL threaded_barrier_memset( f_out, 0.D0, dfft%nnr*2 )
-      CALL c2psi_k( dfft, f_out, f_in(:,1), igk, npw )
+      CALL c2psi_k( dfft, f_out, f_in, igk, npw )
       !$omp end parallel
 #endif
       !$acc end data
     ENDIF
     !
     !$acc host_data use_device( f_out )
-    CALL invfft( 'Wave', f_out, dfft )
+    IF (PRESENT(howmany_set)) THEN
+      CALL invfft( 'Wave', f_out, dfft, howmany=howmany_set(1) )
+    ELSE
+      CALL invfft( 'Wave', f_out, dfft )
+    ENDIF
     !$acc end host_data
     !
     !$acc end data

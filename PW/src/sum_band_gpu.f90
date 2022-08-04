@@ -23,6 +23,7 @@ SUBROUTINE sum_band_gpu()
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : invfft
   USE fft_rho,              ONLY : rho_g2r, rho_r2g
+  USE fft_wave,             ONLY : wave_g2r
   USE gvect,                ONLY : ngm, g
   USE gvecs,                ONLY : doublegrid
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk, igk_k, igk_k_d
@@ -274,12 +275,15 @@ SUBROUTINE sum_band_gpu()
        REAL(DP),    ALLOCATABLE :: rho_d(:,:)
        INTEGER,     POINTER     :: dffts_nl_d(:), dffts_nlm_d(:)
        LOGICAL :: use_tg
-       INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ierr
+       INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ierr, ebnd
 #if defined(__CUDA)
        attributes(device) :: psic_d, tg_psi_d, tg_rho_d, rho_d
        attributes(device) :: dffts_nl_d, dffts_nlm_d
        attributes(pinned) :: tg_rho_h
 #endif
+       !
+       ! **TEMPORARY**
+       !$acc data copyin(evc) create(psic)
        !
        CALL using_evc_d(0); CALL using_et(0)
        dffts_nl_d  => dffts%nl_d
@@ -410,31 +414,10 @@ SUBROUTINE sum_band_gpu()
                 !
              ELSE
                 !
-                psic_d(:) = ( 0.D0, 0.D0 )
+                ebnd = ibnd
+                IF ( ibnd < ibnd_end ) ebnd = ebnd + 1
                 !
-                IF ( ibnd < ibnd_end ) THEN
-                   !
-                   ! ... two ffts at the same time
-                   !
-                   !$cuf kernel do(1)
-                   DO j=1,npw
-                      psic_d(dffts_nl_d(j))  = evc_d(j,ibnd) + &
-                                              ( 0.D0, 1.D0 ) * evc_d(j,ibnd+1)
-                      psic_d(dffts_nlm_d(j)) = CONJG( evc_d(j,ibnd) - &
-                                              ( 0.D0, 1.D0 ) * evc_d(j,ibnd+1) )
-                   END DO
-                   !
-                ELSE
-                   !
-                   !$cuf kernel do(1)
-                   DO j=1,npw
-                      psic_d(dffts_nl_d (j))  = evc_d(j,ibnd)
-                      psic_d(dffts_nlm_d(j)) = CONJG( evc_d(j,ibnd) )
-                   END DO
-                   !
-                END IF
-                !
-                CALL invfft ('Wave', psic_d, dffts)
+                CALL wave_g2r( evc(1:npw,ibnd:ebnd), psic, dffts, ebnd-ibnd+1 )
                 !
                 w1 = wg(ibnd,ik) / omega
                 !
@@ -452,8 +435,9 @@ SUBROUTINE sum_band_gpu()
                    !
                 END IF
                 !
-                CALL get_rho_gamma_gpu(rho_d(:,current_spin), dffts%nnr, w1, w2, psic_d(:))
-                !
+                !$acc host_data use_device(psic)
+                CALL get_rho_gamma_gpu( rho_d(:,current_spin), dffts%nnr, w1, w2, psic )
+                !$acc end host_data
              END IF
              !
              IF (xclib_dft_is('meta') .OR. lxdm) THEN
@@ -524,6 +508,8 @@ SUBROUTINE sum_band_gpu()
           ebecsum_d=ebecsum
        ENDIF
        !
+       !$acc end data
+       !
        IF( use_tg ) THEN
           DEALLOCATE( tg_psi_d )
           DEALLOCATE( tg_rho_d )
@@ -567,7 +553,7 @@ SUBROUTINE sum_band_gpu()
        INTEGER,     POINTER     :: dffts_nl_d(:)
        LOGICAL  :: use_tg
        INTEGER :: nnr, right_nnr, right_nr3, right_inc, ntgrp, ierr
-       INTEGER :: i, j, group_size
+       INTEGER :: i, j, group_size, hm_vec(3)
        !
 #if defined(__CUDA)
        attributes(device) :: psic_d, tg_psi_d, tg_rho_d, tg_psi_nc_d, tg_rho_nc_d
@@ -578,6 +564,8 @@ SUBROUTINE sum_band_gpu()
        CALL using_evc(0); CALL using_evc_d(0); CALL using_et(0)
        dffts_nl_d => dffts%nl_d
        !
+       ! **TEMPORARY**
+       !$acc data copyin(evc) create(psic)
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -808,28 +796,24 @@ SUBROUTINE sum_band_gpu()
                    !
                 ELSE IF (many_fft > 1 .and. (.not. (xclib_dft_is('meta') .OR. lxdm))) THEN
                    !
-                   !!! == OPTIMIZE HERE == (setting to 0 and setting elements!)
-                   group_size = MIN(many_fft, ibnd_end - (ibnd -1))
-                   psic_d(1: nnr*group_size) = (0.d0, 0.d0)
+                   group_size = MIN(many_fft,ibnd_end-(ibnd-1))
+                   hm_vec(1)=group_size ; hm_vec(2)=ibnd ; hm_vec(3)=npw
                    !
-                   !$cuf kernel do(2) <<<*,*>>>
-                   DO i = 0, group_size-1
-                      DO j = 1, npw
-                         psic_d(dffts_nl_d(igk_k_d(j,ik))+i*nnr) = evc_d(j,ibnd+i)
-                      END DO
-                   END DO
-                   !
-                   CALL invfft ('Wave', psic_d, dffts, howmany=group_size)
+                   CALL wave_g2r( evc, psic, dffts, 1, igk=igk_k(:,ik), &
+                                  howmany_set=hm_vec )
                    !
                    ! ... increment the charge density ...
                    !
-                   DO i = 0, group_size - 1
+                   DO i = 0, group_size-1
                      w1 = wg(ibnd+i,ik) / omega
-                     CALL get_rho_gpu(rho_d(:,current_spin), nnr, w1, psic_d(i*nnr+1:))
+                     !$acc host_data use_device(psic)
+                     CALL get_rho_gpu(rho_d(:,current_spin), nnr, w1, psic(i*nnr+1:))
+                     !$acc end host_data
                    ENDDO
+                   !
                 ELSE
                    !
-                   psic_d(:) = ( 0.D0, 0.D0 )
+                   psic_d(:) = (0.D0,0.D0)
                    !
                    !$cuf kernel do(1)
                    DO j = 1, npw
@@ -841,7 +825,7 @@ SUBROUTINE sum_band_gpu()
                    ! ... increment the charge density ...
                    !
                    CALL get_rho_gpu(rho_d(:,current_spin), dffts%nnr, w1, psic_d(:))
-
+                   !
                 END IF
                 !
                 IF (xclib_dft_is('meta') .OR. lxdm) THEN
@@ -911,6 +895,8 @@ SUBROUTINE sum_band_gpu()
           DEALLOCATE(rho_d) ! OPTIMIZE HERE, use buffers!
           DEALLOCATE(psic_d) ! OPTIMIZE HERE, use buffers!
        END IF
+       !
+       !$acc end data
        !
        RETURN
        !

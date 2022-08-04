@@ -325,6 +325,8 @@ CONTAINS
      !! Copy wave-functions from 1D array (c_bgrp) to 3D array (psi) in 
      !! Fourier space - gamma case.
      !
+     IMPLICIT NONE
+     !
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      !! fft descriptor
      COMPLEX(DP), INTENT(OUT) :: psi(:)
@@ -399,33 +401,55 @@ CONTAINS
 #endif
   !
   !--------------------------------------------------------------------------------
-  SUBROUTINE c2psi_k( desc, psi, c, igk, ngk )
+  SUBROUTINE c2psi_k( desc, psi, c, igk, ngk, howmany_set )
      !-----------------------------------------------------------------------------
      !! Copy wave-functions from 1D array (c/evc) ordered according (k+G) index igk 
      !! to 3D array (psi) in Fourier space.
+     !
+     IMPLICIT NONE
      !
      TYPE(fft_type_descriptor), INTENT(IN) :: desc
      !! fft descriptor
      COMPLEX(DP), INTENT(OUT) :: psi(:)
      !! w.f. 3D array in Fourier space
-     COMPLEX(DP), INTENT(IN) :: c(:)
+     COMPLEX(DP), INTENT(IN) :: c(:,:)
      !! stores the Fourier expansion coefficients of the wave function
      INTEGER, INTENT(IN) :: igk(:), ngk
+     INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
+     ! hm_set(1)=howmany ; hm_set(2)=ibnd
      !
-     INTEGER :: ig
+     INTEGER :: nnr, i, j, ig
      !
      CALL alloc_nl_pntrs( desc )
      !
      !$acc data present_or_copyin(c,igk) present_or_copyout(psi)
      !
-     !$acc kernels
-     psi = (0.d0,0.d0)
-     !$acc end kernels
-     !
-     !$acc parallel loop
-     DO ig = 1, ngk
-       psi(nl_d(igk(ig))) = c(ig)
-     ENDDO
+     IF (PRESENT(howmany_set)) THEN
+        !
+        nnr = desc%nnr
+        ! == OPTIMIZE HERE == (setting to 0 and setting elements!)
+        !$acc kernels
+        psi(1:nnr*howmany_set(1)) = (0.d0,0.d0)
+        !$acc end kernels
+        !
+        !$acc parallel loop collapse(2)
+        DO i = 0, howmany_set(1)-1
+          DO j = 1, ngk
+            psi(nl_d(igk(j))+i*nnr) = c(j,howmany_set(2)+i)
+          ENDDO
+        ENDDO
+        !
+     ELSE
+        !$acc kernels
+        psi = (0.d0,0.d0)
+        !$acc end kernels
+        !
+        !$acc parallel loop
+        DO ig = 1, ngk
+          psi(nl_d(igk(ig))) = c(ig,1)
+        ENDDO
+        !
+     ENDIF
      !
      !$acc end data
      !
