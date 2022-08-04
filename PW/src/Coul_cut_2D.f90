@@ -140,24 +140,21 @@ SUBROUTINE cutoff_local( aux )
   !! See Eq. (33) of PRB 96, 075448
   !
   USE kinds
-  USE fft_base,   ONLY : dfftp
   USE gvect,      ONLY : ngm
   USE vlocal,     ONLY : strf
   USE ions_base,  ONLY : nsp
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP), INTENT(INOUT):: aux(dfftp%nnr)
+  COMPLEX(DP), INTENT(INOUT):: aux(ngm)
   !! input: local part of ionic potential 
   !
   ! ... local variables
   !
-  INTEGER :: ng, nt 
+  INTEGER :: nt
   !
   DO nt = 1, nsp
-     DO ng = 1, ngm
-        aux(dfftp%nl(ng)) = aux(dfftp%nl(ng)) + lr_Vloc(ng,nt) * strf(ng,nt)
-     ENDDO
+     aux(1:ngm) = aux(1:ngm) + lr_Vloc(1:ngm,nt) * strf(1:ngm,nt)
   ENDDO
   !
   RETURN
@@ -344,7 +341,7 @@ SUBROUTINE cutoff_force_lc( aux, forcelc )
         DO ipol = 1, 3
            forcelc(ipol,na) = forcelc (ipol,na) + tpi / alat * &
                  g(ipol,ig) * lr_Vloc(ig, ityp(na)) * omega  * &
-                ( SIN(arg)*DBLE(aux(dfftp%nl(ig))) + COS(arg)*AIMAG(aux(dfftp%nl(ig))) )
+                ( SIN(arg)*DBLE(aux(ig)) + COS(arg)*AIMAG(aux(ig)) )
         ENDDO
      ENDDO 
   ENDDO
@@ -367,7 +364,7 @@ SUBROUTINE cutoff_stres_evloc( psic_G, strf, evloc )
   !
   USE kinds
   USE ions_base,  ONLY : ntyp => nsp
-  USE gvect,      ONLY : ngm , gstart
+  USE gvect,      ONLY : ngm, gstart
   USE io_global,  ONLY : stdout
   USE fft_base,   ONLY : dfftp
   !
@@ -388,7 +385,7 @@ SUBROUTINE cutoff_stres_evloc( psic_G, strf, evloc )
   ! So we start at gstart.
   DO nt = 1, ntyp
      DO ng = gstart, ngm
-        evloc = evloc + DBLE( CONJG(psic_G(dfftp%nl(ng))) * strf(ng,nt) ) &
+        evloc = evloc + DBLE( CONJG(psic_G(ng)) * strf(ng,nt) ) &
                         * lr_Vloc(ng,nt) 
      ENDDO
   ENDDO
@@ -405,7 +402,7 @@ SUBROUTINE cutoff_stres_evloc_gpu( psicG_d, strf_d, evloc )
   USE kinds
   USE ions_base,  ONLY : ntyp => nsp
   !USE vlocal,     ONLY : strf
-  USE gvect,      ONLY : ngm , gstart
+  USE gvect,      ONLY : ngm, gstart
   USE io_global,  ONLY : stdout
   USE fft_base,   ONLY : dfftp
   !
@@ -420,14 +417,11 @@ SUBROUTINE cutoff_stres_evloc_gpu( psicG_d, strf_d, evloc )
   ! ... local variables
   !
   REAL(DP), ALLOCATABLE :: lrVloc_d(:,:)
-  INTEGER, POINTER :: nl_d(:)
   INTEGER :: ng, nt
   !
 #if defined(__CUDA)
-  attributes(DEVICE) :: psicG_d, strf_d, nl_d, lrVloc_d
+  attributes(DEVICE) :: psicG_d, strf_d, lrVloc_d
 #endif  
-  !
-  nl_d => dfftp%nl_d
   !
   ALLOCATE( lrVloc_d(ngm,ntyp) )
   lrVloc_d = lr_Vloc
@@ -438,7 +432,7 @@ SUBROUTINE cutoff_stres_evloc_gpu( psicG_d, strf_d, evloc )
   !$cuf kernel do (2)
   DO nt = 1, ntyp
      DO ng = gstart, ngm
-        evloc = evloc + DBLE( CONJG(psicG_d(nl_d(ng))) * strf_d(ng,nt) ) &
+        evloc = evloc + DBLE( CONJG(psicG_d(ng)) * strf_d(ng,nt) ) &
                         * lrVloc_d(ng,nt) 
      ENDDO
   ENDDO
@@ -505,7 +499,7 @@ SUBROUTINE cutoff_stres_sigmaloc( psic_G, strf, sigmaloc )
            ENDIF
            !
            DO m = 1, l
-              sigmaloc(l,m) = sigmaloc(l,m) +  DBLE( CONJG( psic_G(dfftp%nl(ng) ) ) &
+              sigmaloc(l,m) = sigmaloc(l,m) +  DBLE( CONJG( psic_G(ng) ) &
                               * strf(ng,nt) ) * 2.0d0 * dlr_Vloc  &
                               * tpiba2 * g(l,ng) * g(m,ng) 
            ENDDO
@@ -546,17 +540,14 @@ SUBROUTINE cutoff_stres_sigmaloc_gpu( psicG_d, strf_d, sigmaloc )
   ! ... local variables
   !
   INTEGER :: ng, nt, l, m
-  INTEGER,  POINTER :: nl_d(:)
   REAL(DP), ALLOCATABLE :: lrVloc_d(:,:), cutoff2D_d(:)
   REAL(DP) :: Gp, G2lzo2Gp, beta, dlr_Vloc1, dlr_Vloc2, dlr_Vloc3, &
               no_lm_dep
   REAL(DP) :: sigmaloc11, sigmaloc31, sigmaloc21, sigmaloc32, &
               sigmaloc22, sigmaloc33
 #if defined(__CUDA)
-  attributes(DEVICE) :: psicG_d, strf_d, nl_d, lrVloc_d, cutoff2D_d
+  attributes(DEVICE) :: psicG_d, strf_d, lrVloc_d, cutoff2D_d
 #endif
-  !
-  nl_d => dfftp%nl_d
   !
   ALLOCATE( lrVloc_d(ngm,ntyp), cutoff2D_d(ngm) )
   lrVloc_d   = lr_Vloc
@@ -590,7 +581,7 @@ SUBROUTINE cutoff_stres_sigmaloc_gpu( psicG_d, strf_d, sigmaloc )
                                * (1._DP- beta + gg_d(ng)*tpiba2/4._DP)
         dlr_Vloc3 = - 1._DP/ (gg_d(ng)*tpiba2) * lrVloc_d(ng,nt)  &
                                * (1._DP+ gg_d(ng)*tpiba2/4._DP)
-        no_lm_dep = DBLE( CONJG( psicG_d(nl_d(ng) ) ) &
+        no_lm_dep = DBLE( CONJG( psicG_d(ng) ) &
                               * strf_d(ng,nt) ) * 2._DP * tpiba2
         sigmaloc11 = sigmaloc11 + no_lm_dep * dlr_Vloc1 * g_d(1,ng) * g_d(1,ng)
         sigmaloc21 = sigmaloc21 + no_lm_dep * dlr_Vloc2 * g_d(2,ng) * g_d(1,ng)
@@ -651,7 +642,7 @@ SUBROUTINE cutoff_stres_sigmahar( psic_G, sigmahar )
         beta = G2lzo2Gp*(1.0d0-cutoff_2D(ng))/cutoff_2D(ng)
      ENDIF
      g2 = gg (ng) * tpiba2
-     shart = psic_G(dfftp%nl(ng)) * CONJG(psic_G(dfftp%nl(ng))) / g2 * cutoff_2D(ng)
+     shart = psic_G(ng) * CONJG(psic_G(ng)) / g2 * cutoff_2D(ng)
      DO l = 1, 3
         IF (l == 3) THEN
            fact = 1.0d0
@@ -695,20 +686,17 @@ SUBROUTINE cutoff_stres_sigmahar_gpu( psicG_d, sigmahar )
   ! ... local variables
   !
   INTEGER :: ng, nt, l, m
-  INTEGER, POINTER :: nl_d(:)
   REAL(DP) :: Gp, G2lzo2Gp, beta, shart, g2, fact
   REAL(DP) :: sigmahar11, sigmahar31, sigmahar21, &
               sigmahar32, sigmahar22, sigmahar33
   REAL(DP), ALLOCATABLE :: cutoff2D_d(:)
   !
 #if defined(__CUDA)
-  attributes(DEVICE) :: psicG_d, cutoff2D_d, nl_d
+  attributes(DEVICE) :: psicG_d, cutoff2D_d
 #endif
   !
   ALLOCATE( cutoff2D_d(ngm) )
   cutoff2D_d = cutoff_2D
-  !
-  nl_d => dfftp%nl_d
   !
   sigmahar11 = 0._DP  ;  sigmahar31 = 0._DP
   sigmahar21 = 0._DP  ;  sigmahar32 = 0._DP
@@ -727,7 +715,7 @@ SUBROUTINE cutoff_stres_sigmahar_gpu( psicG_d, sigmahar )
      !
      g2 = gg_d(ng) * tpiba2
      !
-     shart = DBLE(psicG_d(nl_d(ng))*CONJG(psicG_d(nl_d(ng)))) /&
+     shart = DBLE(psicG_d(ng)*CONJG(psicG_d(ng))) /&
              g2 * cutoff2D_d(ng)
      !
      fact = 1._DP - beta

@@ -5912,8 +5912,6 @@ else
 fi
 
 
-  # Force usage of FoX for PGI/NVHPC (replacement code doesn't compile)
-  if test "$f90" = "pgf90" || test "$f90" = "nvfortran" ; then with_fox=1; fi
   # Use internal code for xml read/write
   if test "$with_fox" -eq 0 ; then
      extfox=""

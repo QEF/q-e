@@ -21,7 +21,7 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   USE io_global,      ONLY : stdout
   USE kinds,          ONLY : DP
   USE constants,      ONLY : e2, tpi, fpi
-  USE mp_bands,       ONLY : intra_bgrp_comm
+  USE mp_bands,       ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
   USE mp,             ONLY : mp_sum
   USE Coul_cut_2D,    ONLY : do_cutoff_2D, cutoff_2D 
   USE Coul_cut_2D_ph, ONLY : cutoff_2D_qg
@@ -68,20 +68,28 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   integer, parameter :: mxr = 100
   ! the maximum number of r shells
 
-  integer :: nu_i, nu_j, na, nb, nta, ntb, ng, nrm, nr, icart, &
+  integer :: na, nb, nta, ntb, ng, nrm, nr, icart, &
        jcart, na_icart, na_jcart, nb_icart, nb_jcart
   ! counters
   real(DP) :: arg, argq, tpiba2, alpha, r (3, mxr), r2 (mxr), &
-       dtau (3), rmax, rr, upperbound, charge, fac, df, d2f, ar, &
-       gtq2, gt2, facq, qrg
+       dtau (3), rmax, rr, upperbound, charge, df, d2f, ar, &
+       gtq2, gt2, qrg, zvab
+  real(DP), allocatable :: fac(:), facq(:)
   ! auxiliary variables
 
-  complex(DP) :: dy1 (3 * nat, nmodes), dy2 (3 * nat, nmodes), &
-       dy3 (3 * nat, nmodes), facg, fnat, work
+  complex(DP) ::  dy1(3,3), dy2 (3,3), facg, fnat
+  complex(DP), allocatable :: dy3 (: , :)
   ! work spaces, factors
+  real(DP), external :: qe_erfc
+  integer            :: na_s, na_e, mykey
+  integer            :: na_i, nb_i
+  integer            :: allocstat
 
   call start_clock ('d2ionq')
-
+  !
+  allocate(dy3(3*nat, nmodes) , stat = allocstat)
+  call errore ("d2ionq:", "failed allocation of workspace", allocstat)
+  !
   tpiba2 = (tpi / alat) **2
   charge = 0.d0
   do na = 1, nat
@@ -104,92 +112,90 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   if (upperbound > 1.d-9) goto 11
 
   WRITE( stdout, '(/5x,"Alpha used in Ewald sum = ",f8.4)') alpha
-  dy1 (:,:) = (0.d0, 0.d0)
-  dy2 (:,:) = (0.d0, 0.d0)
   dy3 (:,:) = (0.d0, 0.d0)
+  !
+  ! Prepare coefficients
+  !
+  allocate(facq(ngm))
+  allocate(fac(ngm))
+!$omp parallel do private(gtq2, gt2) shared(facq, fac) if(ngm > 0)
+  do ng = 1, ngm
+     !
+     !
+     gtq2 = dot_product(g(:, ng) + q, g(:, ng) + q) * tpiba2
+     if (abs (gtq2) > 1.d-8) then
+        facq(ng) = - e2*fpi * tpiba2 / omega * exp ( - gtq2 / alpha / 4.d0) / gtq2
+        if (do_cutoff_2D) facq(ng) = facq(ng)*cutoff_2D_qg(ng)
+     else
+        facq(ng) = 0.d0
+     endif
+     !
+     !
+     gt2 = gg (ng) * tpiba2
+     if (abs (gt2) > 1.d-8) then
+        fac(ng) = - e2 * fpi * tpiba2 / omega * exp ( - gt2 / alpha / 4.d0) / gt2
+        if (do_cutoff_2D) fac(ng) = fac(ng)*cutoff_2D(ng)
+     else
+        fac(ng) = 0.d0
+     endif
+  end do
+!$omp end parallel do
   !
   ! G-space sums here
   !
-  do ng = 1, ngm
+!$omp parallel do &
+!$omp private(na, na_i, nta, dy2, nb, nb_i, ntb, zvab, dtau, argq, dy1) &
+!$omp private(ng, arg, fnat, facg, icart, jcart) shared(dy3) &
+!$omp schedule(static) if(ngm > 0)
+  do na = 1, nat
+     na_i = 3 * (na - 1)
+     nta = ityp (na)
      !
-     !     The reciprocal space term has two contributions. The first one
-     !
-     gtq2 = ( (g (1, ng) + q (1) ) **2 + (g (2, ng) + q (2) ) **2 + &
-              (g (3, ng) + q (3) ) **2) * tpiba2
-     if (abs (gtq2) > 1.d-8) then
-        facq = - e2*fpi * tpiba2 / omega * exp ( - gtq2 / alpha / 4.d0) / gtq2
-        if (do_cutoff_2D) facq= facq*cutoff_2D_qg(ng)
-     else
-        facq = 0.d0
-     endif
-     do na = 1, nat
-        nta = ityp (na)
-        do nb = 1, nat
-           ntb = ityp (nb)
-           argq = tpi * ( (g (1, ng) + q (1) ) * (tau (1, na) - tau (1, nb) ) &
-                        + (g (2, ng) + q (2) ) * (tau (2, na) - tau (2, nb) ) &
-                        + (g (3, ng) + q (3) ) * (tau (3, na) - tau (3, nb) ) )
-           facg = facq * zv (nta) * zv (ntb) * CMPLX(cos (argq), sin (argq) ,kind=DP)
+     dy2 (:,:) = (0.d0, 0.d0)
+     do nb = 1, nat
+        nb_i = 3 * (nb - 1)
+        ntb = ityp (nb)
+        zvab = zv (nta)  * zv (ntb)
+        dtau = tau (:, na) - tau (:, nb)
+
+        argq = tpi * dot_product( q , dtau )
+
+        dy1 (:,:) = (0.d0, 0.d0)
+
+        do ng = 1, ngm
+           !
+           !if (fac(ng) == 0.d0  .and. facq(ng) == 0.d0) cycle
+           !
+           arg = tpi * dot_product( g (:, ng) , dtau )
+           !
+           fnat = fac(ng) * zvab * CMPLX(cos (arg), 0.d0, kind=DP)
+           facg = facq(ng) * zvab * CMPLX(cos (arg + argq), sin (arg + argq), kind=DP)
            do icart = 1, 3
-              nu_i = 3 * (na - 1) + icart
               do jcart = 1, 3
-                 nu_j = 3 * (nb - 1) + jcart
-                 dy1 (nu_i, nu_j) = dy1 (nu_i, nu_j) + facg * (q (icart) + &
-                      g (icart, ng) ) * (q (jcart) + g (jcart, ng) )
+                 dy1 (icart, jcart) = dy1 (icart, jcart) + facg * (q (icart) + &
+                   g (icart, ng) ) * (q (jcart) + g (jcart, ng) )
+                 dy2(icart , jcart) = dy2(icart,jcart) +  fnat * g(icart, ng) * g(jcart, ng)
               enddo
            enddo
         enddo
+        dy3( na_i + 1: na_i+3,  nb_i + 1:nb_i+3) = dy3( na_i+1: na_i+3,  nb_i+1:nb_i+3) + dy1(1:3,1:3)
      enddo
-     !
-     !   the second term
-     !
-
-     gt2 = gg (ng) * tpiba2
-     if (abs (gt2) > 1.d-8) then
-        fac = - e2 * fpi * tpiba2 / omega * exp ( - gt2 / alpha / 4.d0) / gt2
-        if (do_cutoff_2D) fac= fac*cutoff_2D(ng)
-     else
-        fac = 0.d0
-     endif
-     do na = 1, nat
-        nta = ityp (na)
-        fnat = (0.d0, 0.d0)
-        do nb = 1, nat
-           ntb = ityp (nb)
-           arg = tpi * ( (g (1, ng) ) * (tau (1, na) - tau (1, nb) ) + &
-                         (g (2, ng) ) * (tau (2, na) - tau (2, nb) ) + &
-                         (g (3, ng) ) * (tau (3, na) - tau (3, nb) ) )
-           facg = fac * zv (nta) * zv (ntb) * CMPLX(cos (arg), 0.d0,kind=DP)
-           fnat = fnat + facg
-        enddo
-        do icart = 1, 3
-           nu_i = 3 * (na - 1) + icart
-           do jcart = 1, 3
-              nu_j = 3 * (na - 1) + jcart
-              dy2 (nu_i, nu_j) = dy2 (nu_i, nu_j) + fnat * g (icart, ng) &
-                   * g (jcart, ng)
-           enddo
-        enddo
-     enddo
-
+     dy3( na_i + 1: na_i+3,  na_i + 1:na_i+3) = dy3( na_i+1: na_i+3,  na_i+1:na_i+3) - dy2(1:3,1:3)
   enddo
-  do nu_i = 1, nmodes
-     do nu_j = 1, nmodes
-        dy3 (nu_i, nu_j) = dy3 (nu_i, nu_j) + dy1 (nu_i, nu_j) - &
-             dy2 (nu_i, nu_j)
-     enddo
-  enddo
+!$omp end parallel do
+  deallocate(facq, fac)
   !
+  CALL block_distribute(nat, me_bgrp, nproc_bgrp, na_s, na_e, mykey )
   !  Then there is also a part in real space which is computed here.
-  !   ... only by the node that contains  G=0
+  !   ... only by the nodes for which mykey == 0 see PW/src/ewald.f90 for more.
   !
-  if (gg (1) > 1.d-8) goto 100
+  if ( mykey>0 ) goto 100
   !
   rmax = 5.d0 / sqrt (alpha) / alat
   !
   ! with this choice terms up to ZiZj*erfc(5) are counted (erfc(5)=2x10^-1
   !
-  do na = 1, nat
+  do na = na_s, na_e
      nta = ityp (na)
      do nb = 1, nat
         ntb = ityp (nb)
@@ -235,13 +241,14 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
 100 continue
   call mp_sum ( dy3, intra_bgrp_comm )
   !
-  !   The dynamical matrix was computed in cartesian axis and now we put
+  !   The dynamical matrix was computed in Cartesian axis and now we put
   !   it on the basis of the modes
   !
   dy3 = -dy3
   !
   CALL rotate_pattern_add(nat, u, dyn, dy3)
   !
+  deallocate(dy3)
   call stop_clock ('d2ionq')
   return
 end subroutine d2ionq

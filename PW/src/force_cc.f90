@@ -18,14 +18,13 @@ SUBROUTINE force_cc( forcecc )
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
   USE cell_base,            ONLY : alat, omega, tpiba, tpiba2
   USE fft_base,             ONLY : dfftp
-  USE fft_interfaces,       ONLY : fwfft
+  USE fft_rho,              ONLY : rho_r2g
   USE gvect,                ONLY : ngm, gstart, g, gg, ngl, gl, igtongl
   USE ener,                 ONLY : etxc, vtxc
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho, rho_core, rhog_core
   USE control_flags,        ONLY : gamma_only
   USE noncollin_module,     ONLY : noncolin
-  USE wavefunctions,        ONLY : psic
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
@@ -45,6 +44,7 @@ SUBROUTINE force_cc( forcecc )
   REAL(DP), ALLOCATABLE :: vxc(:,:), rhocg(:)
   ! exchange-correlation potential
   ! radial fourier transform of rho core
+  COMPLEX(DP), ALLOCATABLE :: vaux(:,:)
   REAL(DP) ::  arg, fact
   !
   !
@@ -62,26 +62,19 @@ SUBROUTINE force_cc( forcecc )
   !
   ! ... recalculate the exchange-correlation potential
   !
-  ALLOCATE( vxc(dfftp%nnr,nspin) )
+  ALLOCATE( vxc(dfftp%nnr,nspin), vaux(dfftp%nnr,1) )
   !
   CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, vxc )
   !
-  psic = (0.0_DP,0.0_DP)
-  IF (nspin == 1 .OR. nspin == 4) THEN
+  IF ( nspin==2 ) THEN
      DO ir = 1, dfftp%nnr
-        psic(ir) = vxc (ir,1)
-     ENDDO
-  ELSE
-     DO ir = 1, dfftp%nnr
-        psic (ir) = 0.5d0 * (vxc (ir, 1) + vxc (ir, 2) )
+        vxc(ir,1) = 0.5d0 * ( vxc(ir,1) + vxc(ir,2) )
      ENDDO
   ENDIF
   !
-  DEALLOCATE( vxc )
+  CALL rho_r2g( dfftp, vxc(:,1:1), vaux(:,1:1) ) 
   !
-  CALL fwfft( 'Rho', psic, dfftp )
-  !
-  ! ... psic contains now Vxc(G)
+  ! ... vaux contains now Vxc(G)
   !
   ALLOCATE( rhocg(ngl) )
   !
@@ -100,7 +93,7 @@ SUBROUTINE force_cc( forcecc )
                  arg = (g(1,ig) * tau(1,na) + g (2, ig) * tau (2, na) &
                       + g(3,ig) * tau(3,na) ) * tpi
                  forcecc (1:3, na) = forcecc(1:3, na) + tpiba * omega * &
-                         rhocg(igtongl(ig)) * CONJG(psic(dfftp%nl(ig) ) ) * &
+                         rhocg(igtongl(ig)) * CONJG(vaux(ig,1)) * &
                          CMPLX( SIN(arg), COS(arg), KIND=DP) * g(1:3,ig) * fact
               ENDDO
            ENDIF
@@ -112,6 +105,7 @@ SUBROUTINE force_cc( forcecc )
   CALL mp_sum( forcecc, intra_bgrp_comm )
   !
   DEALLOCATE( rhocg )
+  DEALLOCATE( vaux, vxc )
   !
   RETURN
   !

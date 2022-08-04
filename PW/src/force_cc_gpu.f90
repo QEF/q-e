@@ -18,7 +18,7 @@ SUBROUTINE force_cc_gpu( forcecc )
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
   USE cell_base,            ONLY : alat, omega, tpiba, tpiba2
   USE fft_base,             ONLY : dfftp
-  USE fft_interfaces,       ONLY : fwfft
+  USE fft_rho,              ONLY : rho_r2g
   USE gvect,                ONLY : ngm, gstart, g, g_d, gg, ngl, gl, gl_d, &
                                    igtongl, igtongl_d
   USE ener,                 ONLY : etxc, vtxc
@@ -26,7 +26,6 @@ SUBROUTINE force_cc_gpu( forcecc )
   USE scf,                  ONLY : rho, rho_core, rhog_core
   USE control_flags,        ONLY : gamma_only
   USE noncollin_module,     ONLY : noncolin
-  USE wavefunctions, ONLY : psic
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
 #if defined(__CUDA)
@@ -50,18 +49,15 @@ SUBROUTINE force_cc_gpu( forcecc )
   REAL(DP), ALLOCATABLE :: vxc(:,:), rhocg(:)
   ! exchange-correlation potential
   ! radial fourier transform of rho core
+  COMPLEX(DP), ALLOCATABLE :: vaux(:,:)
   REAL(DP) ::  prod, arg, fact
   !
-  real(DP), pointer :: rhocg_d (:),r_d(:), rab_d(:), rhoc_d(:) 
-  complex(DP), pointer :: psic_d(:)
-  integer, pointer :: nl_d(:)
+  real(DP), pointer :: rhocg_d (:),r_d(:), rab_d(:), rhoc_d(:)
   real(DP):: forcelc_x, forcelc_y, forcelc_z, tau1, tau2, tau3
-  integer           :: ierrs(5)
+  integer           :: ierrs(4)
   integer           :: maxmesh
 #if defined(__CUDA)
-  attributes(DEVICE) :: rhocg_d, psic_d, nl_d, r_d, rab_d, rhoc_d 
-  !
-  nl_d => dfftp%nl_d
+  attributes(DEVICE) :: rhocg_d, r_d, rab_d, rhoc_d
   !
   forcecc(:,:) = 0.d0
   !
@@ -77,29 +73,22 @@ SUBROUTINE force_cc_gpu( forcecc )
   !
   ! ... recalculate the exchange-correlation potential
   !
-  ALLOCATE( vxc(dfftp%nnr,nspin) )
+  ALLOCATE( vxc(dfftp%nnr,nspin), vaux(dfftp%nnr,1) )
   !
   CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, vxc )
   !
-  psic = (0.0_DP,0.0_DP)
-  IF (nspin == 1 .OR. nspin == 4) THEN
+  !$acc data copyin(vxc) create(vaux)
+  !
+  IF ( nspin==2 ) THEN
+     !$acc parallel loop
      DO ir = 1, dfftp%nnr
-        psic(ir) = vxc (ir,1)
-     ENDDO
-  ELSE
-     DO ir = 1, dfftp%nnr
-        psic (ir) = 0.5d0 * (vxc (ir, 1) + vxc (ir, 2) )
+        vxc(ir,1) = 0.5d0 * ( vxc(ir,1) + vxc(ir,2) )
      ENDDO
   ENDIF
   !
-  DEALLOCATE( vxc )
+  CALL rho_r2g( dfftp, vxc(:,1:1), vaux(:,1:1) ) 
   !
-  CALL dev_buf%lock_buffer(psic_d, dfftp%nnr, ierrs(1))
-  IF (ierrs(1) /= 0) CALL errore( 'force_cc_gpu', 'cannot allocate buffers', ABS(ierrs(1)) )
-  CALL dev_memcpy( psic_d, psic, (/ 1, dfftp%nnr /) )
-  CALL fwfft ('Rho', psic_d, dfftp)
-  !
-  ! ... psic contains now Vxc(G)
+  ! ... vaux contains now Vxc(G)
   !
   ALLOCATE( rhocg(ngl) )
   !
@@ -107,10 +96,10 @@ SUBROUTINE force_cc_gpu( forcecc )
   ! g = 0 term gives no contribution
   !
   maxmesh = MAXVAL(msh(1:ntyp)) 
-  CALL dev_buf%lock_buffer(rhocg_d, ngl, ierrs(2) )
-  CALL dev_buf%lock_buffer(r_d, maxmesh, ierrs(3) )
-  CALL dev_buf%lock_buffer(rab_d, maxmesh, ierrs(4) )
-  CALL dev_buf%lock_buffer(rhoc_d, maxmesh, ierrs(5) )
+  CALL dev_buf%lock_buffer(rhocg_d, ngl, ierrs(1) )
+  CALL dev_buf%lock_buffer(r_d, maxmesh, ierrs(2) )
+  CALL dev_buf%lock_buffer(rab_d, maxmesh, ierrs(3) )
+  CALL dev_buf%lock_buffer(rhoc_d, maxmesh, ierrs(4) )
   IF (ANY(ierrs /= 0)) CALL errore('force_cc_gpu', 'cannot allocate buffers', ABS(MAXVAL(ierrs)) )
   !
   ! ... core correction term: sum on g of omega*ig*exp(-i*r_i*g)*n_core(g)*vxc
@@ -134,12 +123,12 @@ SUBROUTINE force_cc_gpu( forcecc )
               forcelc_y = 0.d0
               forcelc_z = 0.d0
 
-              !$cuf kernel do (1) <<<*, *>>>
+              !$acc parallel loop reduction(+:forcelc_x,forcelc_y,forcelc_z)
               do ig = gstart, ngm
                  arg = (g_d (1, ig) * tau1 + g_d (2, ig) * tau2 &
                       + g_d (3, ig) * tau3 ) * tpi
                  prod = tpiba * omega * &
-                      rhocg_d (igtongl_d (ig) ) * dble(CONJG(psic_d (nl_d (ig) ) ) * &
+                      rhocg_d (igtongl_d (ig) ) * dble(CONJG(vaux(ig,1)) * &
                       CMPLX( sin (arg), cos (arg), kind=DP))* fact
 
                  forcelc_x = forcelc_x + g_d (1, ig) * prod
@@ -157,11 +146,12 @@ SUBROUTINE force_cc_gpu( forcecc )
   !
   CALL mp_sum( forcecc, intra_bgrp_comm )
   !
+  !$acc end data
+  DEALLOCATE( vxc, vaux )
   CALL dev_buf%release_buffer(rhocg_d, ierrs(1) )
-  CALL dev_buf%release_buffer(psic_d, ierrs(2) )
-  CALL dev_buf%release_buffer(r_d, ierrs(3) )
-  CALL dev_buf%release_buffer(rab_d, ierrs(4) )
-  CALL dev_buf%release_buffer(rhoc_d, ierrs(5) )
+  CALL dev_buf%release_buffer(r_d, ierrs(2) )
+  CALL dev_buf%release_buffer(rab_d, ierrs(3) )
+  CALL dev_buf%release_buffer(rhoc_d, ierrs(4) )
 #endif
   !
   RETURN

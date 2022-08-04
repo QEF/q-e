@@ -16,11 +16,10 @@ SUBROUTINE stres_har( sigmahar )
   USE cell_base,       ONLY: omega, tpiba2
   USE ener,            ONLY: ehart
   USE fft_base,        ONLY: dfftp
-  USE fft_interfaces,  ONLY: fwfft
+  USE fft_rho,         ONLY: rho_r2g
   USE gvect,           ONLY: ngm, gstart, g, gg
   USE scf,             ONLY: rho
   USE control_flags,   ONLY: gamma_only
-  USE wavefunctions,   ONLY: psic
   USE mp_bands,        ONLY: intra_bgrp_comm
   USE mp,              ONLY: mp_sum
   USE Coul_cut_2D,     ONLY: do_cutoff_2D, cutoff_stres_sigmahar
@@ -32,22 +31,25 @@ SUBROUTINE stres_har( sigmahar )
   !
   ! ... local variables
   !
+  INTEGER :: ig, l, m
   REAL(DP) :: shart, g2
   REAL(DP), PARAMETER :: eps = 1.d-8
-  INTEGER :: ig, l, m
+  COMPLEX(DP), ALLOCATABLE :: rhog(:,:)
   !
   sigmahar(:,:) = 0.0_DP
-  psic(:) = CMPLX( rho%of_r(:,1), KIND=DP )
   !
-  CALL fwfft('Rho', psic, dfftp)
-  ! psic contains now the charge density in G space
+  ALLOCATE( rhog(dfftp%nnr,1) )
+  !
+  CALL rho_r2g( dfftp, rho%of_r(:,1), rhog )
+  !
+  ! rhog contains now the charge density in G space
   ! the  G=0 component is not computed
-  IF (do_cutoff_2D) THEN  
-     CALL cutoff_stres_sigmahar( psic, sigmahar )
+  IF (do_cutoff_2D) THEN
+     CALL cutoff_stres_sigmahar( rhog, sigmahar )
   ELSE
      DO ig = gstart, ngm
         g2 = gg(ig) * tpiba2
-        shart = psic(dfftp%nl(ig)) * CONJG(psic(dfftp%nl(ig))) / g2
+        shart = rhog(ig,1) * CONJG(rhog(ig,1)) / g2
         DO l = 1, 3
            DO m = 1, l
               sigmahar(l,m) = sigmahar(l,m) + shart * tpiba2 * 2 * &
@@ -56,6 +58,8 @@ SUBROUTINE stres_har( sigmahar )
         ENDDO
      ENDDO
   ENDIF 
+  !
+  DEALLOCATE( rhog )
   !
   CALL mp_sum( sigmahar, intra_bgrp_comm )
   !

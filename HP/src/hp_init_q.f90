@@ -98,7 +98,9 @@ SUBROUTINE hp_init_q()
         !
         ! Compute the beta function vkb(k+G)
         ! 
-        CALL init_us_2 (npw, igk_k(1,ikk), xk(1,ikk), vkb)
+        CALL init_us_2 (npw, igk_k(1,ikk), xk(1,ikk), vkb, .true.)
+        !
+        !$acc update host(vkb)
         !
         ! becp1 = <vkb|evc>
         !

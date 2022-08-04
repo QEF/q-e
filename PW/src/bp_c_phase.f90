@@ -164,7 +164,7 @@ SUBROUTINE c_phase
    USE buffers,              ONLY : get_buffer
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
    USE cell_base,            ONLY : at, alat, tpiba, omega
-   USE constants,            ONLY : pi, tpi
+   USE constants,            ONLY : pi, tpi, electron_si, bohr_radius_si
    USE gvect,                ONLY : ngm, g, gcutm, ngm_g, ig_l2g
    USE fft_base,             ONLY : dfftp
    USE uspp,                 ONLY : nkb, vkb, okvan
@@ -971,7 +971,7 @@ SUBROUTINE c_phase
    WRITE( stdout,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  e/bohr^2')") &
         fac*pdl_tot,fac*DBLE(mod_tot)
 !  --- Give polarization in SI units (C/m^2) ---
-   fac=(rmod/omega)*(1.60097E-19_dp/5.29177E-11_dp**2)
+   fac=(rmod/omega)*(electron_si/bohr_radius_si**2)
    WRITE( stdout,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  C/m^2')") &
         fac*pdl_tot,fac*DBLE(mod_tot)
 !  --- Write polarization direction ---

@@ -1293,9 +1293,8 @@ MODULE realus
       USE uspp,             ONLY : okvan, becsum
       USE uspp_param,       ONLY : upf, nh
       USE noncollin_module, ONLY : nspin_mag
-      USE fft_interfaces,   ONLY : fwfft
+      USE fft_rho,          ONLY : rho_r2g
       USE fft_base,         ONLY : dfftp
-      USE wavefunctions,    ONLY : psic
 #if defined (__DEBUG)
       USE noncollin_module, ONLY : nspin_lsda
       USE constants,        ONLY : eps6
@@ -1311,7 +1310,8 @@ MODULE realus
       COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag)
       !
       INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, mbia
-      REAL(kind=dp), ALLOCATABLE :: rhor(:,:) 
+      REAL(kind=dp), ALLOCATABLE :: rhor(:,:)
+      COMPLEX(kind=dp), ALLOCATABLE :: rhog(:,:)
 #if defined (__DEBUG)
       CHARACTER(len=80) :: msg
       REAL(kind=dp) :: charge
@@ -1322,7 +1322,7 @@ MODULE realus
       !
       CALL start_clock( 'addusdens' )
       !
-      ALLOCATE ( rhor(dfftp%nnr,nspin_mag) )
+      ALLOCATE( rhor(dfftp%nnr,nspin_mag), rhog(dfftp%nnr,nspin_mag) )
       rhor(:,:) = 0.0_dp
       DO is = 1, nspin_mag
          !
@@ -1349,13 +1349,10 @@ MODULE realus
       ENDDO
       !
       !
-      DO is = 1, nspin_mag
-         psic(:) = rhor(:,is)
-         CALL fwfft ('Rho', psic, dfftp)
-         rho(:,is) = rho(:,is) + psic(dfftp%nl(:))
-      END DO
+      CALL rho_r2g( dfftp, rhor, rhog )
+      rho(:,:) = rho(:,:) + rhog(1:dfftp%ngm,:)
       !
-      DEALLOCATE ( rhor )
+      DEALLOCATE( rhor, rhog )
 #if defined (__DEBUG)
       !
       ! ... check the total charge (must not be summed on k-points)
