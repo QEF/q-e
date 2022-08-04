@@ -65,6 +65,7 @@ SUBROUTINE sum_band_gpu()
              npol_,&! auxiliary dimension for noncolin case
              ibnd_start, ibnd_end, this_bgrp_nbnd ! first, last and number of band in this bgrp
   REAL(DP), ALLOCATABLE :: kplusg(:)
+  COMPLEX(DP), ALLOCATABLE :: kplusg_evc(:,:)
   !
   !
   CALL start_clock_gpu( 'sum_band' )
@@ -134,9 +135,11 @@ SUBROUTINE sum_band_gpu()
   !
   ! ... Allocate (and later deallocate) arrays needed in specific cases
   !
-  IF ( okvan ) CALL allocate_bec_type( nkb, this_bgrp_nbnd, becp, intra_bgrp_comm )
-  IF ( okvan ) CALL using_becp_auto( 2 )
-  IF (xclib_dft_is('meta') .OR. lxdm) ALLOCATE( kplusg(npwx) )
+  IF ( okvan ) CALL allocate_bec_type (nkb, this_bgrp_nbnd, becp, intra_bgrp_comm)
+  IF ( okvan ) CALL using_becp_auto(2)
+  IF (xclib_dft_is('meta') .OR. lxdm) THEN
+    ALLOCATE( kplusg(npwx), kplusg_evc(npwx,2) )
+  ENDIF
   !
   ! ... specialized routines are called to sum at Gamma or for each k point 
   ! ... the contribution of the wavefunctions to the charge
@@ -158,7 +161,9 @@ SUBROUTINE sum_band_gpu()
   CALL mp_sum( eband, inter_pool_comm )
   CALL mp_sum( eband, inter_bgrp_comm )
   !
-  IF (xclib_dft_is('meta') .OR. lxdm) DEALLOCATE (kplusg)
+  IF (xclib_dft_is('meta') .OR. lxdm) THEN
+    DEALLOCATE( kplusg, kplusg_evc )
+  ENDIF
   IF ( okvan ) CALL deallocate_bec_type ( becp )
   IF ( okvan ) CALL using_becp_auto(2)
   !
@@ -275,7 +280,8 @@ SUBROUTINE sum_band_gpu()
        REAL(DP),    ALLOCATABLE :: rho_d(:,:)
        INTEGER,     POINTER     :: dffts_nl_d(:), dffts_nlm_d(:)
        LOGICAL :: use_tg
-       INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ierr, ebnd
+       INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ierr, ebnd, i
+       REAL(DP) :: kplusgi
 #if defined(__CUDA)
        attributes(device) :: psic_d, tg_psi_d, tg_rho_d, rho_d
        attributes(device) :: dffts_nl_d, dffts_nlm_d
@@ -350,7 +356,7 @@ SUBROUTINE sum_band_gpu()
              IF( use_tg ) THEN
                 !
                 tg_psi_d(:) = ( 0.D0, 0.D0 )
-                ioff   = 0
+                ioff = 0
                 !
                 CALL tg_get_nnr( dffts, right_nnr )
                 ntgrp = fftx_ntgrp(dffts)
@@ -359,7 +365,7 @@ SUBROUTINE sum_band_gpu()
                    !
                    ! ... 2*ntgrp ffts at the same time
                    !
-                   IF( idx + ibnd - 1 < ibnd_end ) THEN
+                   IF( idx+ibnd-1 < ibnd_end ) THEN
                       !$cuf kernel do(1) <<<*,*>>>
                       DO j = 1, npw
                          tg_psi_d(dffts_nl_d (j)+ioff)=     evc_d(j,idx+ibnd-1)+&
@@ -367,7 +373,7 @@ SUBROUTINE sum_band_gpu()
                          tg_psi_d(dffts_nlm_d(j)+ioff)=CONJG(evc_d(j,idx+ibnd-1) -&
                               (0.0d0,1.d0) * evc_d(j,idx+ibnd) )
                       END DO
-                   ELSE IF( idx + ibnd - 1 == ibnd_end ) THEN
+                   ELSE IF( idx+ibnd-1 == ibnd_end ) THEN
                       !$cuf kernel do(1) <<<*,*>>>
                       DO j = 1, npw
                          tg_psi_d(dffts_nl_d (j)+ioff)=       evc_d(j,idx+ibnd-1)
@@ -441,28 +447,22 @@ SUBROUTINE sum_band_gpu()
              END IF
              !
              IF (xclib_dft_is('meta') .OR. lxdm) THEN
+                !
                 CALL using_evc(0)
-                DO j=1,3
-                   psic(:) = ( 0.D0, 0.D0 )
+                !
+                DO j = 1, 3
                    !
-                   kplusg (1:npw) = (xk(j,ik)+g(j,1:npw)) * tpiba
-
-                   IF ( ibnd < ibnd_end ) THEN
-                      ! ... two ffts at the same time
-                      psic(dffts%nl (1:npw))=CMPLX(0d0, kplusg(1:npw),kind=DP) * &
-                                            ( evc(1:npw,ibnd) + &
-                                            ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1) )
-                      psic(dffts%nlm(1:npw)) = CMPLX(0d0, -kplusg(1:npw),kind=DP) * &
-                                       CONJG( evc(1:npw,ibnd) - &
-                                            ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1) )
-                   ELSE
-                      psic(dffts%nl(1:npw)) = CMPLX(0d0, kplusg(1:npw),kind=DP) * &
-                                              evc(1:npw,ibnd)
-                      psic(dffts%nlm(1:npw)) = CMPLX(0d0, -kplusg(1:npw),kind=DP) * &
-                                       CONJG( evc(1:npw,ibnd) )
-                   END IF
+                   DO i = 1, npw
+                     kplusgi = (xk(j,ik)+g(j,i)) * tpiba
+                     kplusg_evc(i,1) = CMPLX(0.D0,kplusgi) * evc(i,ibnd)
+                     IF ( ibnd < ibnd_end ) kplusg_evc(i,2) = CMPLX(0.d0,kplusgi) * evc(i,ibnd+1)
+                   ENDDO
                    !
-                   CALL invfft ('Wave', psic, dffts)
+                   ebnd = ibnd
+                   IF ( ibnd < ibnd_end ) ebnd = ebnd + 1
+                   !
+                   CALL wave_g2r( kplusg_evc(1:npw,1:ebnd-ibnd+1), psic, dffts, ebnd-ibnd+1 )
+                   !$acc update self(psic)
                    !
                    ! ... increment the kinetic energy density ...
                    !
@@ -565,7 +565,7 @@ SUBROUTINE sum_band_gpu()
        dffts_nl_d => dffts%nl_d
        !
        ! **TEMPORARY**
-       !$acc data copyin(evc) create(psic)
+       !$acc data create(evc)
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -799,6 +799,8 @@ SUBROUTINE sum_band_gpu()
                    group_size = MIN(many_fft,ibnd_end-(ibnd-1))
                    hm_vec(1)=group_size ; hm_vec(2)=ibnd ; hm_vec(3)=npw
                    !
+                   !$acc data create(psic)
+                   !$acc update device(evc)
                    CALL wave_g2r( evc, psic, dffts, 1, igk=igk_k(:,ik), &
                                   howmany_set=hm_vec )
                    !
@@ -810,6 +812,7 @@ SUBROUTINE sum_band_gpu()
                      CALL get_rho_gpu(rho_d(:,current_spin), nnr, w1, psic(i*nnr+1:))
                      !$acc end host_data
                    ENDDO
+                   !$acc end data
                    !
                 ELSE
                    !
