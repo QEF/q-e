@@ -38,7 +38,7 @@ MODULE fft_helper_subroutines
   PUBLIC :: fftx_tgcomm
   !
 #if defined(__CUDA)
-  PUBLIC :: fftx_psi2c_gamma_gpu
+  PUBLIC :: fftx_psi2c_gamma_gpu, c2psi_gamma_gpu
   !
   ! ... nlm and nl array: hold conversion indices from 3D to
   !     1-D vectors. Columns along the z-direction are stored
@@ -363,6 +363,40 @@ CONTAINS
      !
   END SUBROUTINE
   !
+  !
+#ifdef __CUDA
+  !---------------------------------------------------------------------
+  SUBROUTINE c2psi_gamma_gpu( desc, psi, c, ca )
+     !------------------------------------------------------------------
+     !! Provisional gpu double of c2psi_gamma for CPV calls (CPV/src/exx_psi.f90).
+     !! To be removed after porting exx_psi to openacc.
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     complex(DP), DEVICE, INTENT(OUT) :: psi(:)
+     complex(DP), DEVICE, INTENT(IN) :: c(:)
+     complex(DP), DEVICE, OPTIONAL, INTENT(IN) :: ca(:)
+     complex(DP), parameter :: ci=(0.0d0,1.0d0)
+     integer :: ig
+     integer, device, pointer :: nlm_d(:), nl_d(:)
+     nlm_d => desc%nlm_d
+     nl_d => desc%nl_d
+     psi = 0.0d0
+     IF( PRESENT(ca) ) THEN
+        !$cuf kernel do (1)
+        do ig = 1, desc%ngw
+           psi( nlm_d( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ))
+           psi( nl_d( ig ) ) = c( ig ) + ci * ca( ig )
+        end do
+     ELSE
+        !$cuf kernel do (1)
+        do ig = 1, desc%ngw
+           psi( nlm_d( ig ) ) = CONJG( c( ig ) )
+           psi( nl_d( ig ) ) = c( ig )
+        end do
+     END IF
+  END SUBROUTINE
+#endif
   !
   !--------------------------------------------------------------------------------
   SUBROUTINE c2psi_k( desc, psi, c, igk, ngk )
