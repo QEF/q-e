@@ -273,7 +273,6 @@ set(src_pw
    src/add_vhub_to_deeq_gpu.f90
    src/s_1psi_gpu.f90
    src/h_psi_gpu.f90
-   src/stres_us_gpu.f90
    src/utils_gpu.f90
    src/vhpsi_gpu.f90
    src/drhoc_gpu.f90

@@ -122,11 +122,7 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
      !
      !  ... contribution from the nonlocal part
      !
-#if defined(_OPENACC)
-     CALL stres_us_gpu( ik, gk, sigmanlc )
-#else
      CALL stres_us( ik, gk, sigmanlc )
-#endif
      !
   ENDDO
   !
