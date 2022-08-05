@@ -180,7 +180,7 @@ SUBROUTINE print_ks_ef_homolumo ( print_ef_scf, ef_scf, ef_scf_up, ef_scf_dw )
              WRITE( stdout, 9051 ) ef_scf_up*rytoev, ef_scf_dw*rytoev
      ELSE
         WRITE( stdout, 9040 ) ef*rytoev
-        IF (twochem)        WRITE( stdout, 9044) ef_cond*rytoev
+        IF ( print_ef_scf.AND.twochem ) WRITE( stdout, 9044) ef_cond*rytoev
         IF ( print_ef_scf ) WRITE( stdout, 9050 ) ef_scf*rytoev
      END IF
      !
