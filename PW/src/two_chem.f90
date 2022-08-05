@@ -29,7 +29,7 @@ SUBROUTINE init_twochem()
   USE input_parameters,     ONLY : occupations
   USE kinds
   USE io_global,            ONLY : stdout
-  USE klist,                ONLY : degauss_cond, nelec, nelec_cond
+  USE klist,                ONLY : degauss_cond, nelec, nelec_cond, two_fermi_energies
   USE wvfct,                ONLY : nbnd, nbnd_cond
   USE noncollin_module,     ONLY : noncolin
   USE io_files,             ONLY : restart_dir
@@ -94,6 +94,10 @@ SUBROUTINE init_twochem()
             & 'nelec_cond greater than nelec', 1 )
   ! checks that the number of electrons in the conduction band 
   ! is less than total number of electrons
+  !
+  IF (two_fermi_energies) CALL errore( 'init_twochem', &
+            & 'fixed total magnetization with twochem not implemented', 1 )
+  ! checks that total magnetization is not fixed 
   !
 9060 FORMAT( '     The conduction manifold is constituted by',I3, ' bands' )
 9061 FORMAT( '    ', F8.4, ' electrons are placed in the conduction manifold' )
