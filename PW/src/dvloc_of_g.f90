@@ -87,7 +87,7 @@ SUBROUTINE dvloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
 #if defined(_OPENACC)
 !$acc parallel loop gang present(aux,aux1,rab,r,dvloc)
 #else
-!$omp parallel private( aux, gx, vlcp, g2a )
+!$omp parallel private( gx, vlcp, vlcp_1, vlcp_0, g2a )
 !$omp do
 #endif
   DO igl = igl0, ngl

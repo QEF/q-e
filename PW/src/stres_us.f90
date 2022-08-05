@@ -195,15 +195,13 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        ! xyz are the three unit vectors in the x,y,z directions
        DATA xyz / 1._DP, 0._DP, 0._DP, 0._DP, 1._DP, 0._DP, 0._DP, 0._DP, &
                   1._DP /
-       !
-#if defined(__CUDA) && defined(_OPENACC)
-       REAL(DP), POINTER, DEVICE :: becpr(:,:)
-#else
+#if !defined(__CUDA) || !defined(_OPENACC)
        REAL(DP), ALLOCATABLE :: becpr(:,:)
-#endif
+#else
+       REAL(DP), POINTER, DEVICE :: becpr(:,:)
        !
        CALL using_becp_auto(0)
-       !
+#endif
        IF( becp%comm /= mp_get_comm_null() ) THEN
           nproc      = becp%nproc
           nbnd_loc   = becp%nbnd_loc
@@ -227,7 +225,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        CALL using_et(0) ! compute_deff : intent(in)
        !
-#if defined(__CUDA) && defined(_OPENACC)
+#if defined(__CUDA)
        becpr => becp_d%r_d
 #else
        ALLOCATE( becpr(nkb,nbnd_loc) )
@@ -292,7 +290,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              !
              !$acc parallel loop
              DO i = 1, itot
-               ih = ih_list(i)     ; na = na_list(i)
+               ih = ih_list(i)         ; na = na_list(i)
                ishift = ishift_list(i) ; ikb = ishift + ih
                !
                IF (.NOT. is_multinp(i)) THEN
@@ -385,17 +383,23 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              !
              ! ... a factor 2 accounts for the other half of the G-vector sphere
              !
-             sigmanlc(:,1) = sigmanlc(:,1) -4._DP * wg(ibnd, ik) * [dot11, dot21, dot31]
-             sigmanlc(:,2) = sigmanlc(:,2) -4._DP * wg(ibnd, ik) * [0._DP, dot22, dot32]
-             sigmanlc(:,3) = sigmanlc(:,3) -4._DP * wg(ibnd, ik) * [0._DP, 0._DP, dot33]
-             IF ( nproc > 1 ) THEN
-                 CALL errore ('stres_us_gamma_gpu line 303', &
-                       'unexpected error nproc be 1 with GPU acceleration', 100) 
-                !CALL mp_circular_shift_left(becp%r, icyc, becp%comm)
-                !CALL mp_circular_shift_left(becp%ibnd_begin, icyc, becp%comm)
-                !CALL mp_circular_shift_left(nbnd_loc, icyc, becp%comm)
-             ENDIF
+             sigmanlc(:,1) = sigmanlc(:,1) -4._DP * wg(ibnd,ik) * [dot11, dot21, dot31]
+             sigmanlc(:,2) = sigmanlc(:,2) -4._DP * wg(ibnd,ik) * [0._DP, dot22, dot32]
+             sigmanlc(:,3) = sigmanlc(:,3) -4._DP * wg(ibnd,ik) * [0._DP, 0._DP, dot33]
           ENDDO
+          !
+          IF ( nproc > 1 ) THEN
+#if defined(__CUDA) || defined(_OPENACC)
+             CALL errore( 'stres_us_gamma', &
+                          'unexpected error nproc be 1 with GPU acceleration', 100 )
+#else
+             CALL mp_circular_shift_left( becp%r, icyc, becp%comm )
+             becpr = becp%r
+             CALL mp_circular_shift_left( becp%ibnd_begin, icyc, becp%comm )
+             CALL mp_circular_shift_left( nbnd_loc, icyc, becp%comm )
+#endif
+          ENDIF
+          !
        ENDDO
        !
 10     CONTINUE
@@ -408,7 +412,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !$acc end data
        DEALLOCATE( deff, ps )
        DEALLOCATE( dvkb )
-#if !defined(__CUDA) || !defined(_OPENACC)
+#if !defined(__CUDA)
        DEALLOCATE( becpr )
 #endif
        !
@@ -504,15 +508,19 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           !
           IF (noncolin) THEN
             !
+#if defined(_OPENACC)
             !$acc parallel loop reduction(+:evps)
+#else
+            !$omp parallel do reduction(+:evps), private(ih,na,ishift,ikb,aux,&
+            !$omp&            ijs,is,js,nh_np,ijs,jkb)
+#endif
             DO i = 1, itot
               !
-              ih = ih_list(i)     ; na = na_list(i)
+              ih = ih_list(i)         ; na = na_list(i)
               ishift = ishift_list(i) ; ikb = ishift + ih
               aux = 0.d0
               !
               IF (.NOT. is_multinp(i)) THEN
-                 !
                  ijs = 0
                  !$acc loop seq collapse(2) reduction(+:aux)
                  DO is = 1, npol
@@ -523,11 +531,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                              becpnc(ikb,js,ibnd))
                    ENDDO
                  ENDDO
-                 !
               ELSE
-                 !
                  nh_np = nh_list(i)
-                 !
                  ijs = 0
                  !$acc loop seq collapse(2) reduction(+:aux)
                  DO is = 1, npol
@@ -538,7 +543,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                              becpnc(ikb,js,ibnd))
                    ENDDO
                  ENDDO
-                 !
                  !$acc loop seq
                  DO jh = ih+1, nh_np
                     jkb = ishift + jh
@@ -554,20 +558,27 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                       ENDDO
                     ENDDO
                  ENDDO
-                 !
               ENDIF
               !
               evps = evps + aux
               !
             ENDDO
+#if !defined(_OPENACC)
+            !$omp end parallel do
+#endif
             !
           ELSE
             !
             aux = 0.d0
+#if defined(_OPENACC)
             !$acc parallel loop reduction(+:evps)
+#else
+            !$omp parallel do reduction(+:evps) private(ih,na,ishift,ikb,&
+            !$omp&            aux,nh_np)
+#endif
             DO i = 1, itot
               !
-              ih = ih_list(i)     ; na = na_list(i)
+              ih = ih_list(i)         ; na = na_list(i)
               ishift = ishift_list(i) ; ikb = ishift + ih
               !
               IF (.NOT. is_multinp(i)) THEN
@@ -584,6 +595,9 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
               evps = evps + aux
               !
             ENDDO
+#if !defined(_OPENACC)
+            !$omp end parallel do
+#endif
             !
           ENDIF
           !
@@ -607,7 +621,11 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
             !
             CALL compute_deff_nc( deff_nc, et(ibnd,ik) )
             !
+#if defined(_OPENACC)
             !$acc parallel loop
+#else
+            !$omp parallel do private(ih,na,ishift,ikb,is,ijs,nh_np)
+#endif
             DO i = 1, itot
               !
               ih = ih_list(i)         ; na = na_list(i)
@@ -635,15 +653,22 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                  !
               ENDIF
             ENDDO
+#if !defined(_OPENACC)
+            !$omp end parallel do
+#endif
             !
          ELSE
             !
             CALL compute_deff( deff, et(ibnd,ik) )
             !
+#if defined(_OPENACC)
             !$acc parallel loop
+#else
+            !$omp parallel do private(ih,na,ishift,ikb,nh_np)
+#endif
             DO i = 1, itot
                !
-               ih = ih_list(i)     ; na = na_list(i)
+               ih = ih_list(i)         ; na = na_list(i)
                ishift = ishift_list(i) ; ikb = ishift + ih
                !
                IF (.NOT. is_multinp(i)) THEN
@@ -657,15 +682,23 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                ENDIF
                !
             ENDDO
+#if !defined(_OPENACC)
+            !$omp end parallel do
+#endif
             !
          ENDIF
          !
-         dot11 = 0._DP ; dot21 = 0._DP ; dot31 = 0._DP
-         dot22 = 0._DP ; dot32 = 0._DP ; dot33 = 0._DP
+         dot11=0._DP ; dot21=0._DP ; dot31=0._DP
+         dot22=0._DP ; dot32=0._DP ; dot33=0._DP
          !
          IF (noncolin) THEN
+#if defined(_OPENACC)
             !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,&
             !$acc&                                      dot22,dot32,dot33)
+#else
+            !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,&
+            !$omp&    dot32,dot33) shared(evcv,qm1,gk,ps_nc,dvkb)
+#endif
             DO ikb = 1, nkb
                DO i = 1, npw
                   evc1i = evcv(i)
@@ -710,11 +743,19 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                   Re_worksum2*DBLE(cv2) + Im_worksum2*DIMAG(cv2)
                ENDDO
             ENDDO
+#if !defined(_OPENACC)
+            !$omp end parallel do
+#endif
             !
          ELSE
             !
+#if defined(_OPENACC)
             !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,&
             !$acc&                                      dot22,dot32,dot33)
+#else
+            !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,&
+            !$omp&    dot32,dot33) shared(evcv,qm1,gk,ps,dvkb)
+#endif
             DO ikb = 1, nkb
                DO i = 1, npw
                   !
@@ -747,9 +788,9 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                   !
                ENDDO
             ENDDO
-            !
-            !IF ( me_bgrp /= root_bgrp ) stop     
-            !
+#if !defined(_OPENACC)
+            !$omp end parallel do
+#endif
          ENDIF
          !
          sigmanlc(:,1) = sigmanlc(:,1) - 2._DP * wg(ibnd,ik) * [dot11, dot21, dot31]
@@ -766,9 +807,14 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
          dot32 = 0._DP ;  dot33 = 0._DP      
          !
          IF (noncolin) THEN      
-            !      
+            !
+#if defined(_OPENACC)
             !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,&
             !$acc&                                      dot22,dot32,dot33)
+#else
+            !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,&
+            !$omp&    dot32,dot33) shared(evcv,gk,ps_nc,dvkb)
+#endif
             DO ikb =1, nkb
                DO i = 1, npw
                   !       
@@ -816,11 +862,19 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                   !
                ENDDO
             ENDDO
+#if !defined(_OPENACC)
+            !$omp end parallel do
+#endif
             !
          ELSE
             !
+#if defined(_OPENACC)
             !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,&
             !$acc&                                      dot22,dot32,dot33)
+#else
+            !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,&
+            !$omp&    dot32,dot33) shared(evcv,gk,ps,dvkb)
+#endif
             DO ikb = 1, nkb
                DO i = 1, npw
                  pss  = ps(ikb)
@@ -845,6 +899,9 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                  dot33 = dot33 + DBLE(psd3)*DBLE(cv) + DIMAG(psd3)*DIMAG(cv)
                ENDDO
             ENDDO
+#if !defined(_OPENACC)
+            !$omp end parallel do
+#endif
             !   
          ENDIF      
          !       
