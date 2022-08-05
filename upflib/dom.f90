@@ -560,8 +560,13 @@ CONTAINS
     logical :: in_attrval
     character(len=1) :: delimiter
     !
+    if(allocated(root%attr)) then
     la = len_trim(root%attr)
     l0 = len_trim(adjustl(root%attr))
+    else
+      la=0
+      l0=0
+    endif
     in_attrval=.false.
     found = .false.
     i1 = 0
@@ -673,7 +678,10 @@ scan: do i=la-l0+1,la
     character(len=*), intent(out) :: cval
     integer, intent(out), optional :: iostat
     integer :: ios
-    if ( len_trim(root%data) > 0 ) then
+    if(.not.allocated(root%data)) then
+      cval=''
+      ios = 0
+    else if ( len_trim(root%data) > 0 ) then
        read(root%data,*,iostat=ios) cval
     else
        cval=''
