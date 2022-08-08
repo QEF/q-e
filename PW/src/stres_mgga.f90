@@ -14,7 +14,7 @@ SUBROUTINE stres_mgga( sigmaxc )
   USE kinds,                  ONLY : DP
   USE control_flags,          ONLY : gamma_only
   USE noncollin_module,       ONLY : noncolin
-  USE cell_base,              ONLY : alat, at, bg, omega, tpiba
+  USE cell_base,              ONLY : omega
   USE gvect,                  ONLY : g
   USE scf,                    ONLY : rho, v
   USE wavefunctions,          ONLY : evc

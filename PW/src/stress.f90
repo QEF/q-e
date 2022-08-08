@@ -23,7 +23,7 @@ SUBROUTINE stress( sigma )
   USE lsda_mod,         ONLY : nspin
   USE scf,              ONLY : rho, rho_core, rhog_core
   USE control_flags,    ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, &
-                               ts_vdw, mbd_vdw, use_gpu
+                               ts_vdw, mbd_vdw
   USE xc_lib,           ONLY : xclib_dft_is
   USE symme,            ONLY : symmatrix
   USE bp,               ONLY : lelfield
@@ -70,13 +70,10 @@ SUBROUTINE stress( sigma )
   !
   CALL start_clock( 'stress' )
   !
-  ! --------------- ... provisional ... ---------------
   !$acc update device( g, gg )
-  ! ... was in stres_loc .. to cancel for acc only
 #if defined(__CUDA)
   gl_d = gl
 #endif
-  ! -------------------------------------------
   !
   ! ... contribution from local potential
   !

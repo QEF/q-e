@@ -13,7 +13,7 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
   !
   USE kinds,                ONLY: DP
   USE constants,            ONLY: pi, e2
-  USE cell_base,            ONLY: omega, alat, at, bg, tpiba
+  USE cell_base,            ONLY: omega, tpiba
   USE gvect,                ONLY: g
   USE gvecw,                ONLY: qcutz, ecfixed, q2sigma
   USE klist,                ONLY: nks, xk, ngk, igk_k
@@ -21,14 +21,14 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
   USE buffers,              ONLY: get_buffer
   USE symme,                ONLY: symmatrix
   USE wvfct,                ONLY: npwx, nbnd, wg
-  USE control_flags,        ONLY: gamma_only, use_gpu
+  USE control_flags,        ONLY: gamma_only
   USE noncollin_module,     ONLY: noncolin, npol
   USE wavefunctions,        ONLY: evc
   USE mp_pools,             ONLY: inter_pool_comm
   USE mp_bands,             ONLY: intra_bgrp_comm
   USE mp,                   ONLY: mp_sum
 #if defined(__CUDA) 
-  USE wavefunctions_gpum,   ONLY: using_evc, using_evc_d, evc_d  
+  USE wavefunctions_gpum,   ONLY: using_evc, using_evc_d
 #endif   
   !
   IMPLICIT NONE
@@ -43,7 +43,7 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
   REAL(DP), ALLOCATABLE :: gk(:,:), kfac(:)
   REAL(DP) :: twobysqrtpi, gk2, arg, s11, s21, s31, s22, s32, s33, &
               xk1, xk2, xk3, tmpf, wg_nk 
-  INTEGER  :: npw, ik, l, m, i, ibnd, is
+  INTEGER  :: npw, ik, l, m, i, ibnd
   !
 #if defined(__CUDA)
   CALL using_evc(0)
@@ -126,9 +126,9 @@ SUBROUTINE stres_knl( sigmanlc, sigmakin )
      !
   ENDDO
   !
-  sigmakin(:,1) =  [s11,  s21,  s31]
-  sigmakin(:,2) =  [0._DP,s22,  s32]
-  sigmakin(:,3) =  [0._DP,0._DP,s33]
+  sigmakin(:,1) = [s11,  s21,  s31]
+  sigmakin(:,2) = [0._DP,s22,  s32]
+  sigmakin(:,3) = [0._DP,0._DP,s33]
   !
   !$acc end data
   !$acc end data

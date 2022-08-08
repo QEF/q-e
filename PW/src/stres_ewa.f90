@@ -197,9 +197,8 @@ SUBROUTINE stres_ewa( alat, nat, ntyp, ityp, zv, at, bg, tau, &
      !
      ! ... with this choice terms up to ZiZj*erfc(5) are counted (erfc(5)=2x10^-1
      !
-!$omp parallel do default(none) shared(na_s, na_e, nat, tau, rmax, at, bg, alat, ityp, alpha, omega, zv)&
-!$omp                          &private(nb, dtau, r, r2, nrm, nr, rr, fac, l, m)&
-!$omp                          &reduction(+:sigmaewa)
+!$omp parallel do default(none) shared(na_s,na_e,nat,tau,rmax,at,bg,alat,ityp,alpha,omega,zv)&
+!$omp                          &private(nb,dtau,r,r2,nrm,nr,rr,fac,l,m) reduction(+:sigmaewa)
      DO na = na_s, na_e
         DO nb = 1, nat
            dtau(:) = tau(:,na) - tau(:,nb)

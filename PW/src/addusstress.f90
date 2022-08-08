@@ -23,7 +23,7 @@ SUBROUTINE addusstress( sigmanlc )
   ! ... local variables
   !
   REAL(DP) :: sigma_r(3,3), sigma_g(3,3)
-  INTEGER  :: na,ijh, ipol,jpol
+  INTEGER  :: na, ijh, ipol, jpol
   !
   IF ( tqr ) THEN
      sigma_r(:,:) = 0.d0
@@ -56,7 +56,7 @@ SUBROUTINE addusstress_g( sigmanlc )
   !! routine).
   !
   USE kinds,          ONLY : DP
-  USE ions_base,      ONLY : nat, ntyp => nsp, ityp
+  USE ions_base,      ONLY : nat, ntyp=>nsp, ityp
   USE cell_base,      ONLY : omega, tpiba
   USE fft_base,       ONLY : dfftp
   USE fft_rho,        ONLY : rho_r2g
@@ -68,9 +68,6 @@ SUBROUTINE addusstress_g( sigmanlc )
   USE control_flags,  ONLY : gamma_only
   USE mp_pools,       ONLY : inter_pool_comm
   USE mp,             ONLY : mp_sum
-#if defined(__CUDA)
-  USE cublas
-#endif
   !
   IMPLICIT NONE
   !

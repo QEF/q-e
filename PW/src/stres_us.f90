@@ -29,7 +29,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                    bec_type, becp, calbec
   USE mp,                   ONLY : mp_sum, mp_get_comm_null, &
                                    mp_circular_shift_left 
-  USE wavefunctions_gpum,   ONLY : using_evc
   USE wavefunctions,        ONLY : evc
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_gpum,          ONLY : becp_d, bec_type_d
@@ -52,7 +51,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   COMPLEX(DP), ALLOCATABLE :: evcv(:)
   !
   REAL(DP) :: q
-  INTEGER  :: npw , iu, np, ierr
+  INTEGER  :: npw , iu, np
   !
   INTEGER :: na1, np1, nh_np1, ijkb01, itot, levc
   LOGICAL :: ismulti_np
@@ -172,7 +171,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
      !-----------------------------------------------------------------------
      SUBROUTINE stres_us_gamma()
        !-----------------------------------------------------------------------
-       !! nonlocal contribution to the stress - gamma version
+       !! nonlocal contribution to the stress - gamma version.
        !
        IMPLICIT NONE
        !
@@ -180,7 +179,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        INTEGER  :: na, np, nt, ibnd, ipol, jpol, l, i, ikb,  &
                    jkb, ih, jh, ibnd_loc,ijkb0,nh_np, nproc, &
-                   nbnd_loc, nbnd_begin, icyc, ishift, nhmx
+                   nbnd_loc, nbnd_begin, icyc, ishift
        REAL(DP) :: dot11, dot21, dot31, dot22, dot32, dot33,  &
                    qm1i, gk1, gk2, gk3, wg_nk, fac, evps, aux,&
                    Re_worksum, Im_worksum
@@ -190,7 +189,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        COMPLEX(DP), ALLOCATABLE :: ps(:), dvkb(:,:,:)
        !
        REAL(DP) :: xyz(3,3)
-       INTEGER  :: ierrs(3)
        !
        ! xyz are the three unit vectors in the x,y,z directions
        DATA xyz / 1._DP, 0._DP, 0._DP, 0._DP, 1._DP, 0._DP, 0._DP, 0._DP, &
@@ -277,7 +275,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
          ENDDO
        ENDIF
        !
-       DO icyc = 0, nproc -1
+       DO icyc = 0, nproc-1
           !
           DO ibnd_loc = 1, nbnd_loc
              !
@@ -368,16 +366,16 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                    gk3 = gk(i,3)
                    !
                    cv = evci * CMPLX(gk1)
-                   dot11 = dot11 + DBLE( wsum1)* DBLE(cv) + DIMAG(wsum1)*DIMAG(cv)
-                   dot21 = dot21 + DBLE( wsum2)* DBLE(cv) + DIMAG(wsum2)*DIMAG(cv)
-                   dot31 = dot31 + DBLE( wsum3)* DBLE(cv) + DIMAG(wsum3)*DIMAG(cv)
+                   dot11 = dot11 + DBLE(wsum1)* DBLE(cv) + DIMAG(wsum1)*DIMAG(cv)
+                   dot21 = dot21 + DBLE(wsum2)* DBLE(cv) + DIMAG(wsum2)*DIMAG(cv)
+                   dot31 = dot31 + DBLE(wsum3)* DBLE(cv) + DIMAG(wsum3)*DIMAG(cv)
                    !
-                   cv = evci * CMPLX( gk2)
-                   dot22 = dot22 + DBLE( wsum2)* DBLE(cv) + DIMAG(wsum2)*DIMAG(cv) 
-                   dot32 = dot32 + DBLE( wsum3)* DBLE(cv) + DIMAG(wsum3)*DIMAG(cv)
+                   cv = evci * CMPLX(gk2)
+                   dot22 = dot22 + DBLE(wsum2)* DBLE(cv) + DIMAG(wsum2)*DIMAG(cv) 
+                   dot32 = dot32 + DBLE(wsum3)* DBLE(cv) + DIMAG(wsum3)*DIMAG(cv)
                    ! 
-                   cv =  evci * CMPLX( gk3 )
-                   dot33 = dot33 + DBLE( wsum3)* DBLE(cv) + DIMAG(wsum3)*DIMAG(cv)
+                   cv =  evci * CMPLX(gk3)
+                   dot33 = dot33 + DBLE(wsum3)* DBLE(cv) + DIMAG(wsum3)*DIMAG(cv)
                 ENDDO
              ENDDO 
              !
@@ -423,8 +421,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
      !
      !----------------------------------------------------------------------
      SUBROUTINE stres_us_k()
-       !----------------------------------------------------------------------  
-       !! nonlocal contribution to the stress - k-points version       
+       !----------------------------------------------------------------------
+       !! nonlocal contribution to the stress - k-points version.
        !
        IMPLICIT NONE
        !
@@ -443,13 +441,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        REAL(DP), ALLOCATABLE :: deff(:,:,:)
        COMPLEX(DP), ALLOCATABLE :: deff_nc(:,:,:,:)
        COMPLEX(DP), ALLOCATABLE :: ps(:), ps_nc(:,:), dvkb(:,:,:)
-       INTEGER :: nhmx
        !
        REAL(DP) :: xyz(3,3)
        ! xyz are the three unit vectors in the x,y,z directions
        DATA xyz / 1._DP, 0._DP, 0._DP, 0._DP, 1._DP, 0._DP, 0._DP, &
                   0._DP, 1._DP /
-       ! ..... provisional
+       !
 #if defined(__CUDA) && defined(_OPENACC)
        COMPLEX(DP), POINTER, DEVICE :: becpnc(:,:,:), becpk(:,:)
 #else
@@ -707,7 +704,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                   gk1 = CMPLX(gk(i,1))
                   gk2 = CMPLX(gk(i,2))
                   gk3 = CMPLX(gk(i,3))
-                  worksum1 = ps_nc(ikb,1) * dvkb(i,ikb,4)  
+                  worksum1 = ps_nc(ikb,1) * dvkb(i,ikb,4)
                   worksum2 = ps_nc(ikb,2) * dvkb(i,ikb,4)
                   Re_worksum1 = DBLE(worksum1) ;  Im_worksum1 = DIMAG(worksum1)
                   Re_worksum2 = DBLE(worksum2) ;  Im_worksum2 = DIMAG(worksum2)
@@ -796,17 +793,17 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
          sigmanlc(:,1) = sigmanlc(:,1) - 2._DP * wg(ibnd,ik) * [dot11, dot21, dot31]
          sigmanlc(:,2) = sigmanlc(:,2) - 2._DP * wg(ibnd,ik) * [0._DP, dot22, dot32]
          sigmanlc(:,3) = sigmanlc(:,3) - 2._DP * wg(ibnd,ik) * [0._DP, 0._DP, dot33]
-         !      
+         !
          ! ... non diagonal contribution - derivative of the spherical harmonics
          ! ... (no contribution from l=0)
-         !      
-         IF ( lmaxkb == 0 ) CYCLE       
-         !      
-         dot11 = 0._DP ;  dot21 = 0._DP      
-         dot31 = 0._DP ;  dot22 = 0._DP      
-         dot32 = 0._DP ;  dot33 = 0._DP      
          !
-         IF (noncolin) THEN      
+         IF ( lmaxkb == 0 ) CYCLE
+         !
+         dot11 = 0._DP ;  dot21 = 0._DP
+         dot31 = 0._DP ;  dot22 = 0._DP
+         dot32 = 0._DP ;  dot33 = 0._DP
+         !
+         IF (noncolin) THEN
             !
 #if defined(_OPENACC)
             !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,&
@@ -817,7 +814,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
 #endif
             DO ikb =1, nkb
                DO i = 1, npw
-                  !       
+                  !
                   gk1 = CMPLX(gk(i,1))
                   gk2 = CMPLX(gk(i,2))
                   gk3 = CMPLX(gk(i,3))
@@ -826,16 +823,16 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                   ps2 = ps_nc(ikb,2)
                   !
                   ps1d1 = ps1 * dvkb(i,ikb,1)
-                  ps1d2 = ps1 * dvkb(i,ikb,2)       
-                  ps1d3 = ps1 * dvkb(i,ikb,3)       
+                  ps1d2 = ps1 * dvkb(i,ikb,2)
+                  ps1d3 = ps1 * dvkb(i,ikb,3)
                   !
                   ps2d1 = ps2 * dvkb(i,ikb,1)
                   ps2d2 = ps2 * dvkb(i,ikb,2)
                   ps2d3 = ps2 * dvkb(i,ikb,3)
                   !
-                  evc1i = evcv(i)       
-                  evc2i = evcv(i+npwx)       
-                  !      
+                  evc1i = evcv(i)
+                  evc2i = evcv(i+npwx)
+                  !
                   cv1 = evc1i * gk1
                   cv2 = evc2i * gk1
                   dot11 = dot11 + DBLE(ps1d1)*DBLE(cv1) + DIMAG(ps1d1)*DIMAG(cv1) + &
@@ -845,7 +842,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                   DBLE(ps2d2)*DBLE(cv2) + DIMAG(ps2d2)*DIMAG(cv2)
                   !
                   dot31 = dot31 + DBLE(ps1d3)*DBLE(cv1) + DIMAG(ps1d3)*DIMAG(cv1) + &
-                                  DBLE(ps2d3)*DBLE(cv2) + DIMAG(ps2d3)*DIMAG(cv2)       
+                                  DBLE(ps2d3)*DBLE(cv2) + DIMAG(ps2d3)*DIMAG(cv2)
                   !
                   cv1 = evc1i * gk2
                   cv2 = evc2i * gk2
@@ -858,7 +855,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                   cv1 = evc1i * gk3
                   cv2 = evc2i * gk3
                   dot33 = dot33 + DBLE(ps1d3)*DBLE(cv1) + DIMAG(ps1d3)*DIMAG(cv1) + &
-                                  DBLE(ps2d3)*DBLE(cv2) + DIMAG(ps2d3)*DIMAG(cv2)      
+                                  DBLE(ps2d3)*DBLE(cv2) + DIMAG(ps2d3)*DIMAG(cv2)
                   !
                ENDDO
             ENDDO
@@ -879,7 +876,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                DO i = 1, npw
                  pss  = ps(ikb)
                  psd1 = pss*dvkb(i,ikb,1)
-                 psd2 = pss*dvkb(i,ikb,2)       
+                 psd2 = pss*dvkb(i,ikb,2)
                  psd3 = pss*dvkb(i,ikb,3)
                  evci = evcv(i)
                  gk1  = CMPLX(gk(i,1))
@@ -902,22 +899,19 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
 #if !defined(_OPENACC)
             !$omp end parallel do
 #endif
-            !   
-         ENDIF      
-         !       
+            !
+         ENDIF
+         !
          sigmanlc(:,1) = sigmanlc(:,1) -2._DP * wg(ibnd,ik) * [dot11, dot21, dot31]
          sigmanlc(:,2) = sigmanlc(:,2) -2._DP * wg(ibnd,ik) * [0._DP, dot22, dot32]
          sigmanlc(:,3) = sigmanlc(:,3) -2._DP * wg(ibnd,ik) * [0._DP, 0._DP, dot33]
          !
-       ENDDO 
+       ENDDO
        !
 10     CONTINUE
        !
        !$acc end data
-       DEALLOCATE( dvkb )
-       !
-       !$acc end data
-       IF (noncolin) THEN 
+       IF (noncolin) THEN
           DEALLOCATE( ps_nc )
           DEALLOCATE( deff_nc )
        ELSE
@@ -932,6 +926,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
          DEALLOCATE( becpk )
        ENDIF
 #endif
+       !$acc end data
+       DEALLOCATE( dvkb )
        !
        RETURN
        !
