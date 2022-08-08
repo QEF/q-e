@@ -3,7 +3,7 @@
 Introduction
 ============
 
-This guide covers the usage of the `CP` package, version 7.0, a core
+This guide covers the usage of the `CP` package, a core
 component of the Quantum ESPRESSO distribution. Further documentation,
 beyond what is provided in this guide, can be found in the directory
 `CPV/Doc/`, containing a copy of this guide.
@@ -13,10 +13,10 @@ methods it implements. It also assumes that you have already installed,
 or know how to install, Quantum ESPRESSO. If not, please read the
 general User's Guide for Quantum ESPRESSO, found in directory `Doc/` two
 levels above the one containing this guide; or consult the web site:
-`http://www.quantum-espresso.org`.
+[www.quantum-espresso.org](https://www.quantum-espresso.org).
 
 People who want to modify or contribute to `CP` should read the
-Developer Manual: `https://gitlab.com/QEF/q-e/-/wikis/home`.
+Developer Manual: [gitlab.com/QEF/q-e/-/wikis/home](https://gitlab.com/QEF/q-e/-/wikis/home).
 
 `CP` can perform Car-Parrinello molecular dynamics, including
 variable-cell dynamics. The `CP` package is based on the original code
@@ -44,7 +44,7 @@ and others. We quote in particular:
 -   Biswajit Santra, Hsin-Yu Ko, Marcus Calegari Andrade (Princeton) for
     various contribution, notably the SCAN functional;
 
--   Robert DiStasio (Cornell)), Biswajit Santra, and Hsin-Yu Ko for
+-   Robert DiStasio (Cornell), Biswajit Santra, and Hsin-Yu Ko for
     hybrid functionals with MLWF; (maximally localized Wannier
     functions);
 
@@ -64,7 +64,7 @@ The original version of this guide was mostly written by Gerardo Ballabio
 and Carlo Cavazzoni.
 
 `CP` is free software, released under the GNU General Public License.\
-See `http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt`, or the file
+See [www.gnu.org/licenses/old-licenses/gpl-2.0.txt](https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt), or the file
 `License` in the distribution.
 
 We shall greatly appreciate if scientific work done using the Quantum
@@ -1028,7 +1028,7 @@ parallelization can be found by observing the performances of `ortho`
 in the final time report for different numbers of processors in the 
 linear-algebra group (must be a square integer, not larger than the 
 number of processoris for plane-wave parallelization). Linear-algebra
-parallelization distributes `M\times M`$ matrices, with `M` number of
+parallelization distributes $`M\times M`$ matrices, with `M` number of
 bands, so it may be useful if memory-constrained.
 
 Note: optimal serial performances are achieved when the data are as much
