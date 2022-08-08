@@ -212,7 +212,8 @@ DEV_ACC enter data create(drhot(1:p_ngm_, 1:6))
       !
       zpseu = 0.0_DP 
       !
-      DEV_ACC  data copyin(rhog,drhog,ht,sfac,vps,gg,rhops) copyout(vtemp) 
+      DEV_ACC  update device(gg)
+      DEV_ACC  data copyin(rhog,drhog,ht,sfac,vps,rhops) copyout(vtemp) 
       DEV_OMP  parallel default(shared), private(ig,is,ij,i,j,k)
       !
       DEV_OMP do 
@@ -337,7 +338,7 @@ DEV_ACC loop vector reduction(+:x_tmp)
 DEV_ACC end parallel
       !
 DEV_OMP do
-DEV_ACC parallel loop present(rhotmp)
+DEV_ACC parallel loop present(rhotmp,gg)
       DO ig = gstart, p_ngm_
          vtemp(ig) = CONJG( rhotmp( ig ) ) * rhotmp( ig ) / gg( ig )
       END DO
@@ -402,7 +403,7 @@ DEV_ACC kernels
 DEV_ACC end kernels 
 
 !
-DEV_ACC parallel loop present(rhotmp)
+DEV_ACC parallel loop present(rhotmp,gg)
 !
 DEV_OMP parallel default(shared), private(ig,is)
 DEV_OMP do
