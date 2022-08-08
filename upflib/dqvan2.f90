@@ -9,12 +9,13 @@
 SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, tpiba, qmod, ylmk0, dylmk0, dqg )
   !-----------------------------------------------------------------------
   !! This routine computes the derivatives of the Fourier transform of
-  !! the Q function needed in stress assuming that the radial fourier
-  !! transform is already computed and stored in table qrad.
-  !! The formula implemented here is:
-
-  !!     dq(g,i,j) = sum_lm (-i)^l ap(lm,i,j) *
-  !!                ( yr_lm(g^) dqrad(g,l,i,j) + dyr_lm(g^) qrad(g,l,i,j))
+  !! the Q function needed in stress assuming that the radial Fourier
+  !! transform is already computed and stored in table \(\text{qrad}\).
+  !! The implemented formula:
+  !
+  !! \[ \text{dq}(g,i,j) = \sum_lm (-i)^l \text{ap}(lm,i,j) *
+  !!                       ( \text{yr}_{lm}(g^) \text{dqrad}(g,l,i,j) + 
+  !!                          \text{dyr}_{lm}(g') \text{qrad}(g,l,i,j)) \]
   !
   USE upf_kinds,   ONLY: DP
   USE uspp_data,   ONLY: dq, qrad
@@ -48,7 +49,7 @@ SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, tpiba, qmod, ylmk0, dylmk0, dqg )
   !
   ! ... local variables
   !
-  COMPLEX(DP) :: sig
+  COMPLEX(DP) :: sig, dqg_bgr
   ! (-i)^L
   INTEGER :: nb, mb, ijv, ivl, jvl, ig, lp, l, lm, i0, i1, i2, i3
   ! the atomic index corresponding to ih
@@ -71,7 +72,9 @@ SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, tpiba, qmod, ylmk0, dylmk0, dqg )
   ! auxiliary variable
   ! auxiliary variable
   !
-  !     compute the indices which correspond to ih,jh
+  ! ... compute the indices which correspond to ih,jh
+  !
+  !$acc data present_or_copyin(g,qmod,ylmk0,dylmk0) present_or_copyout(dqg)
   !
   sixth = 1.d0 / 6.d0
   dqi = 1 / dq
@@ -91,14 +94,16 @@ SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, tpiba, qmod, ylmk0, dylmk0, dqg )
   IF (ivl > nlx .OR. jvl > nlx) &
        CALL upf_error (' dqvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
   !
+  !$acc kernels
   dqg(:) = (0.d0,0.d0)
+  !$acc end kernels
   !
-  !    and make the sum over the non zero LM
+  ! ... and make the sum over the non zero LM
   !
-  DO lm = 1, lpx(ivl, jvl)
-     lp = lpl(ivl, jvl, lm)
+  DO lm = 1, lpx(ivl,jvl)
+     lp = lpl(ivl,jvl,lm)
      !
-     !     extraction of angular momentum l from lp:
+     ! ... extraction of angular momentum l from lp:
      !
      IF (lp==1) THEN
         l = 1
@@ -119,16 +124,20 @@ SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, tpiba, qmod, ylmk0, dylmk0, dqg )
      ENDIF
      !
      sig = (0.d0, -1.d0)**(l - 1)
-     sig = sig * ap(lp, ivl, jvl)
+     sig = sig * ap(lp,ivl,jvl)
      !
      qm1 = -1.0_dp !  any number smaller than qmod(1)
      !
+#if !defined(_OPENACC)
 !$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(qm,px,ux,vx,wx,i0,i1,i2,i3,uvx,pwx,work,work1)
+#else
+!$acc parallel loop
+#endif
      DO ig = 1, ngy
         !
-        ! calculate quantites depending on the module of G only when needed
+        ! ... calculate quantites depending on the module of G only when needed
         !
-#if !defined(_OPENMP)
+#if !defined(_OPENMP) && !defined(_OPENACC)
         IF ( ABS( qmod(ig) - qm1 ) > 1.0D-6 ) THEN
 #endif
            qm = qmod (ig) * dqi
@@ -141,32 +150,39 @@ SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, tpiba, qmod, ylmk0, dylmk0, dqg )
            i2 = qm + 3
            i3 = qm + 4
            uvx = ux * vx * sixth
-
+           !
            pwx = px * wx * 0.5d0
-
+           !
            work = qrad(i0, ijv, l, np) * uvx * wx + &
                   qrad(i1, ijv, l, np) * pwx * vx - &
                   qrad(i2, ijv, l, np) * pwx * ux + &
                   qrad(i3, ijv, l, np) * px * uvx
-           work1 = - qrad(i0, ijv, l, np) * (ux*vx + vx*wx + ux*wx) * sixth &
-                   + qrad(i1, ijv, l, np) * (wx*vx - px*wx - px*vx) * 0.5d0 &
-                   - qrad(i2, ijv, l, np) * (wx*ux - px*wx - px*ux) * 0.5d0 &
-                   + qrad(i3, ijv, l, np) * (ux*vx - px*ux - px*vx) * sixth
-
-           work1 = work1 * dqi
-
-#if !defined(_OPENMP)
+           work1 = (- qrad(i0, ijv, l, np) * (ux*vx + vx*wx + ux*wx) * sixth &
+                    + qrad(i1, ijv, l, np) * (wx*vx - px*wx - px*vx) * 0.5d0 &
+                    - qrad(i2, ijv, l, np) * (wx*ux - px*wx - px*ux) * 0.5d0 &
+                    + qrad(i3, ijv, l, np) * (ux*vx - px*ux - px*vx) * sixth) * dqi
+           !
+#if !defined(_OPENMP) && !defined(_OPENACC)
            qm1 = qmod(ig)
         ENDIF
 #endif
-
-        dqg(ig) = dqg(ig) + sig * dylmk0(ig, lp) * work / tpiba
-        IF (qmod(ig) > 1.d-9) dqg(ig) = dqg(ig) + &
-            sig * ylmk0(ig, lp) * work1 * tpiba * g(ipol, ig) / qmod(ig)
+        !
+        IF (qmod(ig) > 1.d-9) THEN
+          dqg_bgr = sig * ylmk0(ig,lp) * work1 * tpiba * g(ipol,ig) / qmod(ig)
+        ELSE
+          dqg_bgr = (0.d0,0.d0)
+        ENDIF
+        !
+        dqg(ig) = dqg(ig) + sig * dylmk0(ig,lp) * work / tpiba + dqg_bgr
+        !
      ENDDO
+#if !defined(_OPENACC)
 !$OMP END PARALLEL DO
-  !
+#endif
+     !
   ENDDO
+  !
+  !$acc end data
   !
   RETURN
   !

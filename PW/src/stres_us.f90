@@ -512,7 +512,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
             !$acc parallel loop reduction(+:evps)
 #else
             !$omp parallel do reduction(+:evps), private(ih,na,ishift,ikb,aux,&
-            !$omp&            ijs,is,js,nh_np,ijs,jkb)
+            !$omp&            ijs,is,js,nh_np,jkb)
 #endif
             DO i = 1, itot
               !
