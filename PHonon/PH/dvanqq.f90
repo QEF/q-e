@@ -41,7 +41,7 @@ subroutine dvanqq
 
   USE phus, ONLY : int1, int2, int4, int4_nc, int5, int5_so
   USE control_ph, ONLY : rec_code_read
-  USE partial, ONLY :  nat_todo, nat_todo_input, atomo 
+  USE partial, ONLY :  nat_todo, nat_todo_input, atomo, set_local_atomo
   USE lr_symm_base, ONLY  :  nsymq 
   USE symm_base,    ONLY  :  irt    
 
@@ -117,7 +117,10 @@ subroutine dvanqq
      enddo
   endif
   if (nat_todo_input > 0 ) then 
-     call set_local_atomo(nat, nat_todo, atomo, nsymq, irt, nat_l, atomo_l)
+     !call set_local_atomo(nat, nat_todo, atomo, nsymq, irt, nat_l, atomo_l)
+      allocate(atomo_l(nat))
+      atomo_l  = [(na, na=1,nat)]
+      nat_l = nat
   else 
      nat_l = nat 
   end if 
@@ -246,12 +249,13 @@ subroutine dvanqq
               !
               !    We use the symmetry properties of the integral factor
               !
-              do nb_l = 1, nat_l
-                 if (nat_l < nat) then 
-                    nb = atomo_l(nb_l)
-                 else 
-                    nb = nb_l 
-                 end if 
+              !do nb_l = 1, nat_l
+              do nb =1, nat 
+                 !if (nat_l < nat) then 
+                 !   nb = atomo_l(nb_l)
+                 !else 
+                 !   nb = nb_l 
+                 !end if 
                  if (ityp (nb) == ntb) then
                     do ipol = 1, 3
                        do is = 1, nspin_mag
