@@ -416,7 +416,7 @@ CONTAINS
      !! stores the Fourier expansion coefficients of the wave function
      INTEGER, INTENT(IN) :: igk(:), ngk
      INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
-     ! hm_set(1)=howmany ; hm_set(2)=ibnd
+     ! hm_set(1)=howmany ; hm_set(2)=ibnd ; hm_set(3)=ibnd
      !
      INTEGER :: nnr, i, j, ig
      !
@@ -444,10 +444,19 @@ CONTAINS
         psi = (0.d0,0.d0)
         !$acc end kernels
         !
+#if defined(_OPENACC)
         !$acc parallel loop
+#else
+        !$omp parallel
+        !$omp do
+#endif
         DO ig = 1, ngk
           psi(nl_d(igk(ig))) = c(ig,1)
         ENDDO
+#if !defined(_OPENACC)
+        !$omp end do nowait
+        !$omp end parallel
+#endif
         !
      ENDIF
      !
@@ -455,7 +464,7 @@ CONTAINS
      !
      CALL dealloc_nl_pntrs( desc )
      !
-  END SUBROUTINE
+  END SUBROUTINE c2psi_k
   !
   !
   !-------------------------------------------------------------------------
@@ -514,7 +523,7 @@ CONTAINS
      !
      CALL dealloc_nl_pntrs( desc )
      !
-  END SUBROUTINE
+  END SUBROUTINE fftx_oned2threed
   !
   !-------------------------------------------------------------------
   SUBROUTINE fftx_add_threed2oned_gamma( desc, vin, vout1, vout2 )
@@ -539,7 +548,7 @@ CONTAINS
            vout1(ig) = vout1(ig) + vin(desc%nl(ig))
         END DO
      END IF
-  END SUBROUTINE
+  END SUBROUTINE fftx_add_threed2oned_gamma
   !
   !-----------------------------------------------------------------------------
   SUBROUTINE fftx_threed2oned( desc, vin, vout1, vout2 )
@@ -578,7 +587,7 @@ CONTAINS
      !
      CALL dealloc_nl_pntrs( desc )
      !
-  END SUBROUTINE
+  END SUBROUTINE fftx_threed2oned
   !
   !------------------------------------------------------------
   SUBROUTINE fftx_psi2c_gamma( desc, vin, vout1, vout2 )
@@ -606,7 +615,7 @@ CONTAINS
         END DO
      END IF
      !
-  END SUBROUTINE
+  END SUBROUTINE fftx_psi2c_gamma
   !
   !--------------------------------------------------------------------
   SUBROUTINE fftx_psi2c_gamma_gpu( desc, vin, vout1, vout2 )
@@ -638,7 +647,7 @@ CONTAINS
            vout1(ig) = vin(nl(ig))
         END DO
      END IF
-  END SUBROUTINE
+  END SUBROUTINE fftx_psi2c_gamma_gpu
   !
   !--------------------------------------------------------------------
   SUBROUTINE c2psi_gamma_tg( desc, psis, c_bgrp, i, nbsp_bgrp )
@@ -695,7 +704,7 @@ CONTAINS
 !$omp  end single
 !$omp  end parallel
      RETURN
-  END SUBROUTINE
+  END SUBROUTINE c2psi_gamma_tg
   !
   !----------------------------------------------------------
   SUBROUTINE fft_dist_info( desc, unit )
@@ -728,7 +737,7 @@ CONTAINS
 1010  FORMAT(3X, 'Array leading dimensions ( nr1x, nr2x, nr3x )   = ', 3(1X,I5))
 1020  FORMAT(3X, 'Local number of cell to store the grid ( nrxx ) = ', 1X, I9 )
      RETURN
-  END SUBROUTINE
+  END SUBROUTINE fft_dist_info
   !
   !----------------------------------------------------------------
   SUBROUTINE alloc_nl_pntrs( desc )
@@ -750,7 +759,7 @@ CONTAINS
     !$acc enter data copyin( nl_d, nlm_d )
 #endif
     !
-  END SUBROUTINE
+  END SUBROUTINE alloc_nl_pntrs
   !
   !----------------------------------------------------------------
   SUBROUTINE dealloc_nl_pntrs( desc )
@@ -765,7 +774,7 @@ CONTAINS
     !$acc exit data delete( nl_d, nlm_d )
 #endif
     !
-  END SUBROUTINE
+  END SUBROUTINE dealloc_nl_pntrs
   !
   !
 END MODULE fft_helper_subroutines

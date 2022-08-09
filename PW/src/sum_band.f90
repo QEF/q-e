@@ -64,6 +64,7 @@ SUBROUTINE sum_band()
              npol_,&! auxiliary dimension for noncolin case
              ibnd_start, ibnd_end, this_bgrp_nbnd ! first, last and number of band in this bgrp
   REAL (DP), ALLOCATABLE :: kplusg (:)
+  COMPLEX(DP), ALLOCATABLE :: kplusg_evc(:,:)
   !
   !
   CALL start_clock( 'sum_band' )
@@ -140,7 +141,11 @@ SUBROUTINE sum_band()
   !
   IF ( okvan ) CALL allocate_bec_type (nkb, this_bgrp_nbnd, becp, intra_bgrp_comm)
   IF ( okvan ) CALL using_becp_auto(2)
-  IF (xclib_dft_is('meta') .OR. lxdm) ALLOCATE (kplusg(npwx))
+  !
+  IF (xclib_dft_is('meta') .OR. lxdm) THEN
+     ALLOCATE( kplusg_evc(npwx,2) )
+     ALLOCATE( kplusg(npwx) )
+  ENDIF
   !
   ! ... specialized routines are called to sum at Gamma or for each k point 
   ! ... the contribution of the wavefunctions to the charge
@@ -162,7 +167,10 @@ SUBROUTINE sum_band()
   CALL mp_sum( eband, inter_pool_comm )
   CALL mp_sum( eband, inter_bgrp_comm )
   !
-  IF (xclib_dft_is('meta') .OR. lxdm) DEALLOCATE (kplusg)
+  IF (xclib_dft_is('meta') .OR. lxdm) THEN
+    DEALLOCATE( kplusg_evc )
+    DEALLOCATE( kplusg )
+  ENDIF
   IF ( okvan ) CALL deallocate_bec_type ( becp )
   IF ( okvan ) CALL using_becp_auto(2)
   !
@@ -271,11 +279,13 @@ SUBROUTINE sum_band()
        !
        REAL(DP) :: w1, w2
          ! weights
-       INTEGER  :: npw, idx, ioff, ioff_tg, nxyp, incr, v_siz, j, ir3
+       INTEGER  :: npw, idx, ioff, ioff_tg, nxyp, incr, v_siz, j, ir3, i
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:)
+       !
        LOGICAL :: use_tg
        INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ebnd
+       REAL(DP) :: kplusgi
        !
        CALL using_evc(0); CALL using_et(0)
        !
@@ -423,28 +433,20 @@ SUBROUTINE sum_band()
              END IF
              !
              IF (xclib_dft_is('meta') .OR. lxdm) THEN
+                !
                 CALL using_evc(0)
-                DO j=1,3
-                   psic(:) = ( 0.D0, 0.D0 )
+                !
+                DO j = 1, 3
+                   DO i = 1, npw
+                     kplusgi = (xk(j,ik)+g(j,i)) * tpiba
+                     kplusg_evc(i,1) = CMPLX(0.D0,kplusgi) * evc(i,ibnd)
+                     IF ( ibnd < ibnd_end ) kplusg_evc(i,2) = CMPLX(0.d0,kplusgi) * evc(i,ibnd+1)
+                   ENDDO
                    !
-                   kplusg (1:npw) = (xk(j,ik)+g(j,1:npw)) * tpiba
-
-                   IF ( ibnd < ibnd_end ) THEN
-                      ! ... two ffts at the same time
-                      psic(dffts%nl (1:npw))=CMPLX(0d0, kplusg(1:npw),kind=DP) * &
-                                            ( evc(1:npw,ibnd) + &
-                                            ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1) )
-                      psic(dffts%nlm(1:npw)) = CMPLX(0d0, -kplusg(1:npw),kind=DP) * &
-                                       CONJG( evc(1:npw,ibnd) - &
-                                            ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1) )
-                   ELSE
-                      psic(dffts%nl(1:npw)) = CMPLX(0d0, kplusg(1:npw),kind=DP) * &
-                                              evc(1:npw,ibnd)
-                      psic(dffts%nlm(1:npw)) = CMPLX(0d0, -kplusg(1:npw),kind=DP) * &
-                                       CONJG( evc(1:npw,ibnd) )
-                   END IF
+                   ebnd = ibnd
+                   IF ( ibnd < ibnd_end ) ebnd = ebnd + 1
                    !
-                   CALL invfft ('Wave', psic, dffts)
+                   CALL wave_g2r( kplusg_evc(1:npw,1:ebnd-ibnd+1), psic, dffts, ebnd-ibnd+1 )
                    !
                    ! ... increment the kinetic energy density ...
                    !
@@ -453,16 +455,15 @@ SUBROUTINE sum_band()
                                            rho%kin_r(ir,current_spin) + &
                                            w1 *  DBLE( psic(ir) )**2 + &
                                            w2 * AIMAG( psic(ir) )**2
-                   END DO
-                   !
-                END DO
-             END IF
+                   ENDDO
+                ENDDO
+                !
+             ENDIF
              !
-             !
-          END DO
+          ENDDO
           !
           IF( use_tg ) THEN
-
+             !
              CALL tg_reduce_rho( rho%of_r, tg_rho, current_spin, dffts )
              !
           END IF
@@ -507,7 +508,7 @@ SUBROUTINE sum_band()
        ! weights
        INTEGER :: npw, ipol, na, np
        !
-       INTEGER  :: idx, ioff, ioff_tg, nxyp, incr, v_siz, j, ir3
+       INTEGER  :: idx, ioff, ioff_tg, nxyp, incr, v_siz, j, ir3, i
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:), tg_psi_nc(:,:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:), tg_rho_nc(:,:)
        LOGICAL  :: use_tg
@@ -516,6 +517,7 @@ SUBROUTINE sum_band()
        ! chunking parameters
        INTEGER, PARAMETER :: blocksize = 256
        INTEGER :: numblock
+       REAL(DP) :: kplusgi
        !
        CALL using_evc(0); CALL using_et(0)
        !
@@ -657,9 +659,9 @@ SUBROUTINE sum_band()
                    IF (domag) CALL get_rho_domag(tg_rho_nc(:,:), dffts%nr1x*dffts%nr2x*dffts%my_nr3p, w1, tg_psi_nc(:,:))
                    !
                 ELSE
-!
-!     Noncollinear case without task groups
-!
+                   !
+                   ! Noncollinear case without task groups
+                   !
                    psic_nc = (0.D0,0.D0)
                    DO ig = 1, npw
                       psic_nc(dffts%nl(igk_k(ig,ik)),1)=evc(ig     ,ibnd)
@@ -730,7 +732,7 @@ SUBROUTINE sum_band()
                       w1 = wg( idx + ibnd - 1, ik) / omega
                    ELSE
                       w1 = 0.0d0
-                   END IF
+                   ENDIF
                    !
                    CALL tg_get_group_nr3( dffts, right_nr3 )
                    !
@@ -738,43 +740,32 @@ SUBROUTINE sum_band()
                    !
                 ELSE
                    !
-                !$omp parallel
-                   CALL threaded_barrier_memset(psic, 0.D0, dffts%nnr*2)
-                   !
-                   !$omp do
-                   DO j = 1, npw
-                      psic(dffts%nl(igk_k(j,ik))) = evc(j,ibnd)
-                   ENDDO
-                   !$omp end do nowait
-                !$omp end parallel
-                   !
-                   CALL invfft ('Wave', psic, dffts)
+                   CALL wave_g2r( evc(1:npw,ibnd:ibnd), psic, dffts, 1, igk=igk_k(:,ik) )
                    !
                    ! ... increment the charge density ...
                    !
-                   CALL get_rho(rho%of_r(:,current_spin), dffts%nnr, w1, psic)
-
-                END IF
+                   CALL get_rho( rho%of_r(:,current_spin), dffts%nnr, w1, psic )
+                   !
+                ENDIF
                 !
                 IF (xclib_dft_is('meta') .OR. lxdm) THEN
-                   DO j=1,3
-                      psic(:) = ( 0.D0, 0.D0 )
+                   DO j = 1, 3
+                      DO i = 1, npw
+                        kplusgi = (xk(j,ik)+g(j,igk_k(i,ik))) * tpiba
+                        kplusg_evc(i,1) = CMPLX(0.D0,kplusgi,kind=DP) * evc(i,ibnd)
+                      ENDDO
                       !
-                      kplusg (1:npw) = (xk(j,ik)+g(j,igk_k(1:npw,ik))) * tpiba
-                      psic(dffts%nl(igk_k(1:npw,ik)))=CMPLX(0d0,kplusg(1:npw),kind=DP) * &
-                                              evc(1:npw,ibnd)
-                      !
-                      CALL invfft ('Wave', psic, dffts)
+                      CALL wave_g2r( kplusg_evc(1:npw,1:1), psic, dffts, 1, igk=igk_k(:,ik) )
                       !
                       ! ... increment the kinetic energy density ...
                       !
-                      CALL get_rho(rho%kin_r(:,current_spin), dffts%nnr, w1, psic)
-                   END DO
-                END IF
+                      CALL get_rho( rho%kin_r(:,current_spin), dffts%nnr, w1, psic )
+                   ENDDO
+                ENDIF
                 !
-             END IF
+             ENDIF
              !
-          END DO
+          ENDDO
           !
           IF( use_tg ) THEN
              !

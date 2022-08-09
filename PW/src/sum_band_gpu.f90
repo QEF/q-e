@@ -289,7 +289,7 @@ SUBROUTINE sum_band_gpu()
 #endif
        !
        ! **TEMPORARY**
-       !$acc data copyin(evc) create(psic)
+       !$acc data create(evc,psic)
        !
        CALL using_evc_d(0); CALL using_et(0)
        dffts_nl_d  => dffts%nl_d
@@ -423,6 +423,7 @@ SUBROUTINE sum_band_gpu()
                 ebnd = ibnd
                 IF ( ibnd < ibnd_end ) ebnd = ebnd + 1
                 !
+                !$acc update device(evc)
                 CALL wave_g2r( evc(1:npw,ibnd:ebnd), psic, dffts, ebnd-ibnd+1 )
                 !
                 w1 = wg(ibnd,ik) / omega
@@ -439,19 +440,18 @@ SUBROUTINE sum_band_gpu()
                    !
                    w2 = w1
                    !
-                END IF
+                ENDIF
                 !
                 !$acc host_data use_device(psic)
                 CALL get_rho_gamma_gpu( rho_d(:,current_spin), dffts%nnr, w1, w2, psic )
                 !$acc end host_data
-             END IF
+             ENDIF
              !
              IF (xclib_dft_is('meta') .OR. lxdm) THEN
                 !
                 CALL using_evc(0)
                 !
                 DO j = 1, 3
-                   !
                    DO i = 1, npw
                      kplusgi = (xk(j,ik)+g(j,i)) * tpiba
                      kplusg_evc(i,1) = CMPLX(0.D0,kplusgi) * evc(i,ibnd)
@@ -471,19 +471,17 @@ SUBROUTINE sum_band_gpu()
                                            rho%kin_r(ir,current_spin) + &
                                            w1 *  DBLE( psic(ir) )**2 + &
                                            w2 * AIMAG( psic(ir) )**2
-                   END DO
-                   !
-                END DO
-             END IF
+                   ENDDO
+                ENDDO
+                !
+             ENDIF
              !
-             !
-          END DO
+          ENDDO
           !
           IF( use_tg ) THEN
              tg_rho_h = tg_rho_d
              CALL tg_reduce_rho( rho%of_r, tg_rho_h, current_spin, dffts )
-             !
-          END IF
+          ENDIF
           !
           ! ... If we have a US pseudopotential we compute here the becsum term
           !
@@ -549,11 +547,12 @@ SUBROUTINE sum_band_gpu()
        REAL(DP),    ALLOCATABLE :: tg_rho_d(:), tg_rho_nc_d(:,:)
        REAL(DP),    ALLOCATABLE :: tg_rho_h(:), tg_rho_nc_h(:,:)
        REAL(DP),    ALLOCATABLE :: rho_d(:,:)
-       COMPLEX(DP), ALLOCATABLE :: psic_d(:)
+       COMPLEX(DP), ALLOCATABLE :: psic_d(:), psicd(:)
        INTEGER,     POINTER     :: dffts_nl_d(:)
        LOGICAL  :: use_tg
        INTEGER :: nnr, right_nnr, right_nr3, right_inc, ntgrp, ierr
        INTEGER :: i, j, group_size, hm_vec(3)
+       REAL(DP) :: kplusgi
        !
 #if defined(__CUDA)
        attributes(device) :: psic_d, tg_psi_d, tg_rho_d, tg_psi_nc_d, tg_rho_nc_d
@@ -799,57 +798,61 @@ SUBROUTINE sum_band_gpu()
                    group_size = MIN(many_fft,ibnd_end-(ibnd-1))
                    hm_vec(1)=group_size ; hm_vec(2)=ibnd ; hm_vec(3)=npw
                    !
-                   !$acc data create(psic)
                    !$acc update device(evc)
-                   CALL wave_g2r( evc, psic, dffts, 1, igk=igk_k(:,ik), &
+                   
+                   !....temporary---------------------------------------------
+                   ALLOCATE( psicd(dffts%nnr*many_fft) )
+                   !$acc data create(psicd)
+                   !-----------------------------------------------------------
+                   CALL wave_g2r( evc, psicd, dffts, 1, igk=igk_k(:,ik), &
                                   howmany_set=hm_vec )
                    !
                    ! ... increment the charge density ...
                    !
                    DO i = 0, group_size-1
                      w1 = wg(ibnd+i,ik) / omega
-                     !$acc host_data use_device(psic)
-                     CALL get_rho_gpu(rho_d(:,current_spin), nnr, w1, psic(i*nnr+1:))
+                     !$acc host_data use_device(psicd)
+                     CALL get_rho_gpu(rho_d(:,current_spin), nnr, w1, psicd(i*nnr+1:))
                      !$acc end host_data
                    ENDDO
                    !$acc end data
+                   DEALLOCATE( psicd )
                    !
                 ELSE
                    !
-                   psic_d(:) = (0.D0,0.D0)
-                   !
-                   !$cuf kernel do(1)
-                   DO j = 1, npw
-                      psic_d(dffts_nl_d(igk_k_d(j,ik))) = evc_d(j,ibnd)
-                   END DO
-                   !
-                   CALL invfft ('Wave', psic_d, dffts)
+                   !$acc update device(evc)
+                   !$acc data create(psic)
+                   CALL wave_g2r( evc(1:npw,ibnd:ibnd), psic, dffts, 1, &
+                                  igk=igk_k(:,ik) )
                    !
                    ! ... increment the charge density ...
                    !
-                   CALL get_rho_gpu(rho_d(:,current_spin), dffts%nnr, w1, psic_d(:))
+                   !$acc host_data use_device(psic)
+                   CALL get_rho_gpu( rho_d(:,current_spin), dffts%nnr, w1, psic )
+                   !$acc end host_data
+                   !$acc end data
                    !
-                END IF
+                ENDIF
                 !
                 IF (xclib_dft_is('meta') .OR. lxdm) THEN
                    DO j=1,3
-                      psic(:) = ( 0.D0, 0.D0 )
+                      DO i = 1, npw
+                        kplusgi = (xk(j,ik)+g(j,igk_k(i,ik))) * tpiba
+                        kplusg_evc(i,1) = CMPLX(0.D0,kplusgi,kind=DP) * evc(i,ibnd)
+                      ENDDO
                       !
-                      kplusg (1:npw) = (xk(j,ik)+g(j,igk_k(1:npw,ik))) * tpiba
-                      psic(dffts%nl(igk_k(1:npw,ik)))=CMPLX(0d0,kplusg(1:npw),kind=DP) * &
-                                              evc(1:npw,ibnd)
-                      !
-                      CALL invfft ('Wave', psic, dffts)
+                      CALL wave_g2r( kplusg_evc(1:npw,1:1), psic, dffts, 1, &
+                                     igk=igk_k(:,ik) )
                       !
                       ! ... increment the kinetic energy density ...
                       !
-                      CALL get_rho(rho%kin_r(:,current_spin), dffts%nnr, w1, psic)
-                   END DO
-                END IF
+                      CALL get_rho( rho%kin_r(:,current_spin), dffts%nnr, w1, psic )
+                   ENDDO
+                ENDIF
                 !
-             END IF
+             ENDIF
              !
-          END DO
+          ENDDO
           !
           IF( use_tg ) THEN
              !

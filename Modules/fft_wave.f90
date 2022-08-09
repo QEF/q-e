@@ -62,10 +62,7 @@ CONTAINS
         CALL c2psi_k( dfft, f_out, f_in, igk, npw )
       ENDIF
 #else
-      !$omp parallel
-      CALL threaded_barrier_memset( f_out, 0.D0, dfft%nnr*2 )
       CALL c2psi_k( dfft, f_out, f_in, igk, npw )
-      !$omp end parallel
 #endif
       !$acc end data
     ENDIF
