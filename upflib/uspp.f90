@@ -112,7 +112,6 @@ MODULE uspp
   REAL(DP),    ALLOCATABLE :: qq_nt_d(:,:,:)
   REAL(DP),    ALLOCATABLE :: nhtoj_d(:,:)
   COMPLEX(DP), ALLOCATABLE :: dvan_so_d(:,:,:,:)
-  COMPLEX(DP), ALLOCATABLE :: deeq_nc_d(:,:,:,:)
 #if defined(__CUDA)
   attributes (DEVICE) :: becsum_d, ebecsum_d, dvan_d, qq_nt_d, &
                          nhtoj_d, dvan_so_d
