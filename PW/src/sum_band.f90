@@ -621,15 +621,15 @@ SUBROUTINE sum_band()
                                                        evc( j, idx+ibnd-1 )
                             tg_psi_nc( dffts%nl(igk_k(j,ik) ) + ioff, 2 ) = &
                                                        evc( j+npwx, idx+ibnd-1 )
-                         END DO
-                      END IF
-
+                         ENDDO
+                      ENDIF
+                      !
                       ioff = ioff + right_nnr
-
-                   END DO
+                      !
+                   ENDDO
                    !
-                   CALL invfft ('tgWave', tg_psi_nc(:,1), dffts )
-                   CALL invfft ('tgWave', tg_psi_nc(:,2), dffts)
+                   CALL invfft( 'tgWave', tg_psi_nc(:,1), dffts )
+                   CALL invfft( 'tgWave', tg_psi_nc(:,2), dffts )
                    !
                    ! Now the first proc of the group holds the first band
                    ! of the ntgrp bands that we are processing at the same time,
@@ -648,7 +648,7 @@ SUBROUTINE sum_band()
                       w1 = wg( idx + ibnd - 1, ik) / omega
                    ELSE
                       w1 = 0.0d0
-                   END IF
+                   ENDIF
                    !
                    CALL tg_get_group_nr3( dffts, right_nr3 )
                    !
@@ -662,13 +662,10 @@ SUBROUTINE sum_band()
                    !
                    ! Noncollinear case without task groups
                    !
-                   psic_nc = (0.D0,0.D0)
-                   DO ig = 1, npw
-                      psic_nc(dffts%nl(igk_k(ig,ik)),1)=evc(ig     ,ibnd)
-                      psic_nc(dffts%nl(igk_k(ig,ik)),2)=evc(ig+npwx,ibnd)
-                   END DO
-                   CALL invfft ('Wave', psic_nc(:,1), dffts)
-                   CALL invfft ('Wave', psic_nc(:,2), dffts)
+                   CALL wave_g2r( evc(1:npw,ibnd:ibnd), psic_nc(:,1), dffts, &
+                                  1, igk=igk_k(:,ik) )
+                   CALL wave_g2r( evc(npwx+1:npwx+npw,ibnd:ibnd), &
+                                  psic_nc(:,2), dffts, 1, igk=igk_k(:,ik) )
                    !
                    ! increment the charge density ...
                    !

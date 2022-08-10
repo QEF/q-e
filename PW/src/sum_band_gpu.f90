@@ -547,7 +547,7 @@ SUBROUTINE sum_band_gpu()
        REAL(DP),    ALLOCATABLE :: tg_rho_d(:), tg_rho_nc_d(:,:)
        REAL(DP),    ALLOCATABLE :: tg_rho_h(:), tg_rho_nc_h(:,:)
        REAL(DP),    ALLOCATABLE :: rho_d(:,:)
-       COMPLEX(DP), ALLOCATABLE :: psic_d(:), psicd(:)
+       COMPLEX(DP), ALLOCATABLE :: psic_d(:), psicd(:), psicncd(:,:)
        INTEGER,     POINTER     :: dffts_nl_d(:)
        LOGICAL  :: use_tg
        INTEGER :: nnr, right_nnr, right_nr3, right_inc, ntgrp, ierr
@@ -700,44 +700,50 @@ SUBROUTINE sum_band_gpu()
                    !
                    ! OPTIMIZE HERE : this is a sum of all densities in first spin channel
                    DO ipol=1,npol
-                      CALL get_rho_gpu(tg_rho_nc_d(:,1), dffts%nr1x * dffts%nr2x* right_nr3, w1, tg_psi_nc_d(:,ipol))
+                      CALL get_rho_gpu(tg_rho_nc_d(:,1), dffts%nr1x*dffts%nr2x*right_nr3, w1, tg_psi_nc_d(:,ipol))
                    ENDDO
                    !
                    IF (domag) CALL get_rho_domag_gpu(tg_rho_nc_d(:,:), dffts%nr1x*dffts%nr2x*dffts%my_nr3p, w1, tg_psi_nc_d(:,:))
                    !
                 ELSE
-!
-!     Noncollinear case without task groups
-!
-                   psic_nc_d = (0.D0,0.D0)
-
-                   !$cuf kernel do(1)
-                   DO j = 1, npw
-                      psic_nc_d( dffts_nl_d(igk_k_d(j,ik) ), 1 ) = &
-                                                 evc_d( j, ibnd )
-                      psic_nc_d( dffts_nl_d(igk_k_d(j,ik) ), 2 ) = &
-                                                 evc_d( j+npwx, ibnd )
-                   END DO
                    !
-                   CALL invfft ('Wave', psic_nc_d(:,1), dffts)
-                   CALL invfft ('Wave', psic_nc_d(:,2), dffts)
+                   ! Noncollinear case without task groups
                    !
-                   ! increment the charge density ...
+                   !....temporary---------------------------------------------
+                   !$acc update device(evc)
+                   ALLOCATE( psicncd(dffts%nnr,npol) )
+                   !$acc data create(psicncd)
+                   !-----------------------------------------------------------
+                   CALL wave_g2r( evc(1:npw,ibnd:ibnd), psicncd(:,1), &
+                                  dffts, 1, igk=igk_k(:,ik) )
+                   CALL wave_g2r( evc(npwx+1:npwx+npw,ibnd:ibnd), psicncd(:,2), &
+                                  dffts, 1, igk=igk_k(:,ik) )
                    !
-                   DO ipol=1,npol
-                      CALL get_rho_gpu(rho_d(:,1), dffts%nnr, w1, psic_nc_d(:,ipol))
-                   END DO
+                   ! Increment the charge density ...
+                   !
+                   DO ipol = 1, npol
+                      !$acc host_data use_device(psicncd)
+                      CALL get_rho_gpu( rho_d(:,1), dffts%nnr, w1, psicncd(:,ipol) )
+                      !$acc end host_data
+                   ENDDO
                    !
                    ! In this case, calculate also the three
                    ! components of the magnetization (stored in rho%of_r(ir,2-4))
                    !
                    IF (domag) THEN
-                      CALL get_rho_domag_gpu(rho_d(1:,1:), dffts%nnr, w1, psic_nc_d(1:,1:))
+                      !$acc host_data use_device(psicncd)
+                      CALL get_rho_domag_gpu( rho_d(1:,1:), dffts%nnr, w1, psicncd(1:,1:) )
+                      !$acc end host_data
                    ELSE
                       rho_d(:,2:4)=0.0_DP  ! OPTIMIZE HERE: this memset can be avoided
-                   END IF
+                   ENDIF
                    !
-                END IF
+                   !---------------------------------
+                   !$acc end data
+                   DEALLOCATE( psicncd )
+                   !-----------------------------------
+                   !
+                ENDIF
                 !
              ELSE
                 !
@@ -746,9 +752,9 @@ SUBROUTINE sum_band_gpu()
                    !$cuf kernel do(1)
                    DO j = 1, SIZE( tg_psi_d )
                       tg_psi_d(j) = ( 0.D0, 0.D0 )
-                   END DO
+                   ENDDO
                    !
-                   ioff   = 0
+                   ioff = 0
                    !
                    CALL tg_get_nnr( dffts, right_nnr )
                    ntgrp = fftx_ntgrp( dffts )
