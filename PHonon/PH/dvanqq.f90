@@ -86,9 +86,6 @@ subroutine dvanqq
   int5(:,:,:,:,:) = (0.d0, 0.d0)
   allocate (sk  (  ngm))
   allocate (aux1(  ngm))
-  !allocate (aux2(  ngm))
-  !allocate (aux3(  ngm))
-  !allocate (aux5(  ngm))
   allocate(aux35(9,ngm))
   allocate (qmodg( ngm))
   allocate (ylmk0( ngm , lmaxq * lmaxq))
@@ -117,10 +114,7 @@ subroutine dvanqq
      enddo
   endif
   if (nat_todo_input > 0 ) then 
-     !call set_local_atomo(nat, nat_todo, atomo, nsymq, irt, nat_l, atomo_l)
-      allocate(atomo_l(nat))
-      atomo_l  = [(na, na=1,nat)]
-      nat_l = nat
+      call set_local_atomo(nat, nat_todo, atomo, nsymq, irt, nat_l, atomo_l)
   else 
      nat_l = nat 
   end if 
@@ -249,13 +243,7 @@ subroutine dvanqq
               !
               !    We use the symmetry properties of the integral factor
               !
-              !do nb_l = 1, nat_l
               do nb =1, nat 
-                 !if (nat_l < nat) then 
-                 !   nb = atomo_l(nb_l)
-                 !else 
-                 !   nb = nb_l 
-                 !end if 
                  if (ityp (nb) == ntb) then
                     do ipol = 1, 3
                        do is = 1, nspin_mag
