@@ -27,7 +27,7 @@ CONTAINS
   !
   !
   !----------------------------------------------------------------------
-  SUBROUTINE wave_g2r( f_in, f_out, dfft, dim2, igk, howmany_set )
+  SUBROUTINE wave_g2r( f_in, f_out, dfft, igk, howmany_set )
     !--------------------------------------------------------------------
     !
     USE fft_helper_subroutines, ONLY: c2psi_gamma, c2psi_k
@@ -35,19 +35,19 @@ CONTAINS
     IMPLICIT NONE
     !
     TYPE(fft_type_descriptor), INTENT(IN) :: dfft
-    INTEGER, INTENT(IN) :: dim2
     COMPLEX(DP) :: f_in(:,:)
     COMPLEX(DP) :: f_out(:)
     INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
     INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
     !
     INTEGER :: i2, npw, numblock
-    INTEGER :: j, idx, ioff, ntgrp, right_nnr
+    INTEGER :: j, idx, ioff, ntgrp, right_nnr, dim2
     INTEGER, PARAMETER :: blocksize = 256
     !
     !$acc data present_or_copyin(f_in) present_or_copyout(f_out)
     !
-    npw = SIZE(f_in(:,1))
+    npw  = SIZE(f_in(:,1))
+    dim2 = SIZE(f_in(1,:))
     !
     IF (gamma_only) THEN
       IF ( dim2/=2 ) CALL c2psi_gamma( dfft, f_out, f_in(:,1) )

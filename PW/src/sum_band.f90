@@ -284,7 +284,7 @@ SUBROUTINE sum_band()
        REAL(DP),    ALLOCATABLE :: tg_rho(:)
        !
        LOGICAL :: use_tg
-       INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ebnd
+       INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ebnd, brange
        REAL(DP) :: kplusgi
        !
        CALL using_evc(0); CALL using_et(0)
@@ -410,7 +410,7 @@ SUBROUTINE sum_band()
                 ebnd = ibnd
                 IF ( ibnd < ibnd_end ) ebnd = ebnd + 1
                 !
-                CALL wave_g2r( evc(1:npw,ibnd:ebnd), psic, dffts, ebnd-ibnd+1 )
+                CALL wave_g2r( evc(1:npw,ibnd:ebnd), psic, dffts )
                 !
                 w1 = wg(ibnd,ik) / omega
                 !
@@ -445,8 +445,9 @@ SUBROUTINE sum_band()
                    !
                    ebnd = ibnd
                    IF ( ibnd < ibnd_end ) ebnd = ebnd + 1
+                   brange = ebnd-ibnd+1
                    !
-                   CALL wave_g2r( kplusg_evc(1:npw,1:ebnd-ibnd+1), psic, dffts, ebnd-ibnd+1 )
+                   CALL wave_g2r( kplusg_evc(1:npw,1:brange), psic, dffts )
                    !
                    ! ... increment the kinetic energy density ...
                    !
@@ -576,7 +577,8 @@ SUBROUTINE sum_band()
           IF ( dmft .AND. .NOT. dmft_updated) THEN
              ! 
              DO j = 1, npw
-                CALL ZGEMM('C', 'N', nbnd, 1, nbnd, (1.d0,0.d0), v_dmft(:,:,ik), nbnd, evc(j,:), nbnd, (0.d0,0.d0), evc(j,:), nbnd)
+                CALL ZGEMM( 'C', 'N', nbnd, 1, nbnd, (1.d0,0.d0), v_dmft(:,:,ik), &
+                            nbnd, evc(j,:), nbnd, (0.d0,0.d0), evc(j,:), nbnd )
              ENDDO
              !
              IF ( nks > 1 ) &
@@ -590,10 +592,11 @@ SUBROUTINE sum_band()
              !
              IF( use_tg ) THEN
                 DO idx = 1, fftx_ntgrp(dffts)
-                   IF( idx + ibnd - 1 <= ibnd_end ) eband = eband + et( idx + ibnd - 1, ik ) * wg( idx + ibnd - 1, ik )
+                   IF( idx+ibnd-1 <= ibnd_end ) eband = eband + et(idx+ibnd-1,ik) * &
+                                                                    wg(idx+ibnd-1,ik)
                 END DO
              ELSE
-                eband = eband + et( ibnd, ik ) * wg( ibnd, ik )
+                eband = eband + et(ibnd,ik) * wg(ibnd,ik)
              END IF
              !
              ! ... the sum of eband and demet is the integral for e < ef of
@@ -652,37 +655,39 @@ SUBROUTINE sum_band()
                    !
                    CALL tg_get_group_nr3( dffts, right_nr3 )
                    !
-                   DO ipol=1,npol
-                      CALL get_rho(tg_rho_nc(:,1), dffts%nr1x * dffts%nr2x* right_nr3, w1, tg_psi_nc(:,ipol))
+                   DO ipol = 1, npol
+                      CALL get_rho( tg_rho_nc(:,1), dffts%nr1x*dffts%nr2x* &
+                                     right_nr3, w1, tg_psi_nc(:,ipol) )
                    ENDDO
                    !
-                   IF (domag) CALL get_rho_domag(tg_rho_nc(:,:), dffts%nr1x*dffts%nr2x*dffts%my_nr3p, w1, tg_psi_nc(:,:))
+                   IF (domag) CALL get_rho_domag( tg_rho_nc(:,:), dffts%nr1x* &
+                                        dffts%nr2x*dffts%my_nr3p, w1, tg_psi_nc(:,:) )
                    !
                 ELSE
                    !
                    ! Noncollinear case without task groups
                    !
-                   CALL wave_g2r( evc(1:npw,ibnd:ibnd), psic_nc(:,1), dffts, &
-                                  1, igk=igk_k(:,ik) )
+                   CALL wave_g2r( evc(1:npw,ibnd:ibnd), psic_nc(:,1), &
+                                  dffts, igk=igk_k(:,ik) )
                    CALL wave_g2r( evc(npwx+1:npwx+npw,ibnd:ibnd), &
-                                  psic_nc(:,2), dffts, 1, igk=igk_k(:,ik) )
+                                  psic_nc(:,2), dffts, igk=igk_k(:,ik) )
                    !
                    ! increment the charge density ...
                    !
-                   DO ipol=1,npol
-                      CALL get_rho(rho%of_r(:,1), dffts%nnr, w1, psic_nc(:,ipol))
-                   END DO
+                   DO ipol = 1, npol
+                      CALL get_rho( rho%of_r(:,1), dffts%nnr, w1, psic_nc(:,ipol) )
+                   ENDDO
                    !
                    ! In this case, calculate also the three
                    ! components of the magnetization (stored in rho%of_r(ir,2-4))
                    !
                    IF (domag) THEN
-                      CALL get_rho_domag(rho%of_r(:,:), dffts%nnr, w1, psic_nc(:,:))
+                      CALL get_rho_domag( rho%of_r(:,:), dffts%nnr, w1, psic_nc(:,:) )
                    ELSE
-                      rho%of_r(:,2:4)=0.0_DP
-                   END IF
+                      rho%of_r(:,2:4) = 0.0_DP
+                   ENDIF
                    !
-                END IF
+                ENDIF
                 !
              ELSE
                 !
@@ -737,7 +742,7 @@ SUBROUTINE sum_band()
                    !
                 ELSE
                    !
-                   CALL wave_g2r( evc(1:npw,ibnd:ibnd), psic, dffts, 1, igk=igk_k(:,ik) )
+                   CALL wave_g2r( evc(1:npw,ibnd:ibnd), psic, dffts, igk=igk_k(:,ik) )
                    !
                    ! ... increment the charge density ...
                    !
@@ -752,7 +757,7 @@ SUBROUTINE sum_band()
                         kplusg_evc(i,1) = CMPLX(0.D0,kplusgi,kind=DP) * evc(i,ibnd)
                       ENDDO
                       !
-                      CALL wave_g2r( kplusg_evc(1:npw,1:1), psic, dffts, 1, igk=igk_k(:,ik) )
+                      CALL wave_g2r( kplusg_evc(1:npw,1:1), psic, dffts, igk=igk_k(:,ik) )
                       !
                       ! ... increment the kinetic energy density ...
                       !
