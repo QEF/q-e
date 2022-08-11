@@ -32,7 +32,7 @@ MODULE fft_helper_subroutines
             tg_get_group_nr3
   ! ... Used only in CP
   PUBLIC :: fftx_add_threed2oned_gamma, fftx_psi2c_gamma, c2psi_gamma, &
-            fftx_add_field, c2psi_gamma_tg, c2psi_k
+            fftx_add_field, c2psi_gamma_tg, c2psi_k, c2psi_k_tg
   PUBLIC :: fft_dist_info
   ! ... Used only in CP+EXX
   PUBLIC :: fftx_tgcomm
@@ -418,7 +418,7 @@ CONTAINS
      INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
      ! hm_set(1)=howmany ; hm_set(2)=ibnd ; hm_set(3)=ibnd
      !
-     INTEGER :: nnr, i, j, ig
+     INTEGER :: nnr, i, j, ig, howmany
      !
      CALL alloc_nl_pntrs( desc )
      !
@@ -427,13 +427,14 @@ CONTAINS
      IF (PRESENT(howmany_set)) THEN
         !
         nnr = desc%nnr
+        howmany = howmany_set(1)
         ! == OPTIMIZE HERE == (setting to 0 and setting elements!)
         !$acc kernels
-        psi(1:nnr*howmany_set(1)) = (0.d0,0.d0)
+        psi(1:nnr*howmany) = (0.d0,0.d0)
         !$acc end kernels
         !
         !$acc parallel loop collapse(2)
-        DO i = 0, howmany_set(1)-1
+        DO i = 0, howmany-1
           DO j = 1, ngk
             psi(nl_d(igk(j))+i*nnr) = c(j,howmany_set(2)+i)
           ENDDO
@@ -657,9 +658,9 @@ CONTAINS
      !
      IMPLICIT NONE
      !
-     TYPE(fft_type_descriptor), INTENT(in) :: desc
-     complex(DP), INTENT(OUT) :: psis(:)
-     complex(DP), INTENT(INOUT) :: c_bgrp(:,:)
+     TYPE(fft_type_descriptor), INTENT(IN) :: desc
+     COMPLEX(DP), INTENT(OUT) :: psis(:)
+     COMPLEX(DP), INTENT(INOUT) :: c_bgrp(:,:)
      INTEGER, INTENT(IN) :: i, nbsp_bgrp
      INTEGER :: eig_offset, eig_index, right_nnr
      !
@@ -673,7 +674,7 @@ CONTAINS
 !$omp  parallel
 !$omp  single
      !
-     do eig_index = 1, 2 * fftx_ntgrp(desc), 2
+     DO eig_index = 1, 2*fftx_ntgrp(desc), 2
         !
 !$omp task default(none) &
 !$omp          firstprivate( eig_index, i, nbsp_bgrp, right_nnr ) &
@@ -686,25 +687,72 @@ CONTAINS
         !
         !  important: if n is odd => c(*,n+1)=0.
         !
-        IF ( ( eig_index + i - 1 ) == nbsp_bgrp ) c_bgrp( : , eig_index + i ) = 0.0d0
+        IF ( (eig_index+i-1)==nbsp_bgrp ) c_bgrp(:,eig_index+i) = 0._DP
         !
-        eig_offset = ( eig_index - 1 )/2
+        eig_offset = (eig_index-1)/2
         !
-        IF ( ( i + eig_index - 1 ) <= nbsp_bgrp ) THEN
+        IF ( (i+eig_index-1) <= nbsp_bgrp ) THEN
            !
            !  The  eig_index loop is executed only ONCE when NOGRP=1.
            !
-           CALL c2psi_gamma( desc, psis( eig_offset * right_nnr + 1 : eig_offset * right_nnr + right_nnr ), &
-                       c_bgrp( :, i+eig_index-1 ), c_bgrp( :, i+eig_index ) )
+           CALL c2psi_gamma( desc, psis(eig_offset*right_nnr+1: &
+                             eig_offset*right_nnr+ right_nnr), &
+                             c_bgrp(:,i+eig_index-1), c_bgrp(:,i+eig_index) )
            !
         ENDIF
 !$omp end task
         !
-     end do
+     ENDDO
 !$omp  end single
 !$omp  end parallel
      RETURN
   END SUBROUTINE c2psi_gamma_tg
+  !
+  !
+  !--------------------------------------------------------------------
+  SUBROUTINE c2psi_k_tg( desc, psis, c_bgrp, igk, ngk, i, nbsp_bgrp )
+     !-----------------------------------------------------------------
+     !! Copy all wave-functions of an orbital group from 1D array (c_bgrp)
+     !! to 3D array (psi) in Fourier space.
+     !
+     IMPLICIT NONE
+     !
+     TYPE(fft_type_descriptor), INTENT(IN) :: desc
+     COMPLEX(DP), INTENT(OUT) :: psis(:)
+     COMPLEX(DP), INTENT(INOUT) :: c_bgrp(:,:)
+     INTEGER, INTENT(IN) :: igk(:), ngk, i, nbsp_bgrp
+     INTEGER :: right_nnr, idx, j, js, je, numblock, ntgrp
+     INTEGER, PARAMETER :: blocksize = 256
+     !
+     CALL alloc_nl_pntrs( desc )
+     !
+     CALL tg_get_nnr( desc, right_nnr )
+     !
+     ntgrp = fftx_ntgrp( desc )
+     !
+     ! ... compute the number of chuncks
+     numblock = (ngk+blocksize-1)/blocksize
+     !
+     ! ... ntgrp ffts at the same time
+     !
+     !$omp parallel
+     !$omp do collapse(2)
+     DO idx = 0, MIN(ntgrp-1,nbsp_bgrp-i)
+       DO j = 1, numblock
+          js = (j-1)*blocksize+1
+          je = MIN(j*blocksize,ngk)
+          psis(nl_d(igk(js:je))+right_nnr*idx) = c_bgrp(js:je,idx+i)
+       ENDDO
+     ENDDO
+     !$omp end do nowait
+     !$omp end parallel
+     !
+     CALL dealloc_nl_pntrs( desc )
+     !
+     RETURN
+     !
+  END SUBROUTINE c2psi_k_tg
+  !
   !
   !----------------------------------------------------------
   SUBROUTINE fft_dist_info( desc, unit )
