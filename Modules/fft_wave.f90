@@ -29,6 +29,7 @@ CONTAINS
   !----------------------------------------------------------------------
   SUBROUTINE wave_g2r( f_in, f_out, dfft, igk, howmany_set )
     !--------------------------------------------------------------------
+    !! Wave function FFT from G to R-space.
     !
     USE fft_helper_subroutines, ONLY: c2psi_gamma, c2psi_k
     !
@@ -40,6 +41,8 @@ CONTAINS
     INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
     INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
     !
+    ! ... local variables
+    !
     INTEGER :: i2, npw, numblock
     INTEGER :: j, idx, ioff, ntgrp, right_nnr, dim2
     INTEGER, PARAMETER :: blocksize = 256
@@ -50,20 +53,16 @@ CONTAINS
     dim2 = SIZE(f_in(1,:))
     !
     IF (gamma_only) THEN
-      IF ( dim2/=2 ) CALL c2psi_gamma( dfft, f_out, f_in(:,1) )
-      IF ( dim2==2 ) CALL c2psi_gamma( dfft, f_out, f_in(:,1), f_in(:,2) )
+      IF (dim2/=2) CALL c2psi_gamma( dfft, f_out, f_in(:,1) )
+      IF (dim2==2) CALL c2psi_gamma( dfft, f_out, f_in(:,1), f_in(:,2) )
     ELSE
       !$acc data present_or_copyin(igk)
-#if defined(__CUDA)
-      IF (PRESENT(howmany_set)) THEN
+      IF (PRESENT(howmany_set)) THEN     !only when ACC is active
         npw = howmany_set(3)
         CALL c2psi_k( dfft, f_out, f_in, igk, npw, howmany_set )
       ELSE
         CALL c2psi_k( dfft, f_out, f_in, igk, npw )
       ENDIF
-#else
-      CALL c2psi_k( dfft, f_out, f_in, igk, npw )
-#endif
       !$acc end data
     ENDIF
     !
@@ -81,10 +80,10 @@ CONTAINS
     !
   END SUBROUTINE wave_g2r
   !
-  !
   !----------------------------------------------------------------------
   SUBROUTINE tgwave_g2r( f_in, f_out, dfft, ibnd, ibnd_end, igk )
     !--------------------------------------------------------------------
+    !! Wave function FFT from G to R-space. Task-group case.
     !
     USE fft_helper_subroutines,  ONLY: c2psi_gamma_tg, c2psi_k_tg
     !
@@ -95,6 +94,8 @@ CONTAINS
     COMPLEX(DP) :: f_out(:)
     INTEGER, INTENT(IN) :: ibnd, ibnd_end
     INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
+    !
+    ! ... local variables
     !
     INTEGER :: i2, npw, numblock
     INTEGER :: j, idx, ioff, ntgrp, right_nnr
@@ -109,16 +110,12 @@ CONTAINS
     !$acc end kernels
     !
     IF (gamma_only) THEN
-      !
       CALL c2psi_gamma_tg( dfft, f_out, f_in, ibnd, ibnd_end )
-      !
     ELSE
-      !
       CALL c2psi_k_tg( dfft, f_out, f_in, igk, npw, ibnd, ibnd_end )
-      !
     ENDIF
     !
-    !$acc host_data use_device( f_out )
+    !$acc host_data use_device(f_out)
     CALL invfft( 'tgWave', f_out, dfft )
     !$acc end host_data
     !

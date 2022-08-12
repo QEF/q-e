@@ -669,7 +669,7 @@ CONTAINS
      !  The outer loop goes through i : i + 2*NOGRP to cover
      !  2*NOGRP eigenstates at each iteration
      !
-     CALL tg_get_nnr( desc, right_nnr )
+     right_nnr = desc%nnr
      !
 !$omp  parallel
 !$omp  single
@@ -726,7 +726,7 @@ CONTAINS
      !
      CALL alloc_nl_pntrs( desc )
      !
-     CALL tg_get_nnr( desc, right_nnr )
+     right_nnr = desc%nnr
      !
      ntgrp = fftx_ntgrp( desc )
      !
@@ -735,8 +735,7 @@ CONTAINS
      !
      ! ... ntgrp ffts at the same time
      !
-     !$omp parallel
-     !$omp do collapse(2)
+     !$omp parallel do collapse(2) private(js,je)
      DO idx = 0, MIN(ntgrp-1,nbsp_bgrp-i)
        DO j = 1, numblock
           js = (j-1)*blocksize+1
@@ -744,8 +743,7 @@ CONTAINS
           psis(nl_d(igk(js:je))+right_nnr*idx) = c_bgrp(js:je,idx+i)
        ENDDO
      ENDDO
-     !$omp end do nowait
-     !$omp end parallel
+     !$omp end parallel do
      !
      CALL dealloc_nl_pntrs( desc )
      !
@@ -798,9 +796,11 @@ CONTAINS
     nl_d  => desc%nl_d
     nlm_d => desc%nlm_d
 #else
-    ALLOCATE( nl_d(desc%ngm) )
-    nl_d = desc%nl
-    IF ( desc%lgamma ) THEN
+    IF (.NOT.ALLOCATED(nl_d)) THEN
+      ALLOCATE( nl_d(desc%ngm) )
+      nl_d = desc%nl
+    ENDIF
+    IF ( desc%lgamma .AND. .NOT.ALLOCATED(nlm_d)) THEN
       ALLOCATE( nlm_d(desc%ngm) )
       nlm_d = desc%nlm
     ENDIF
@@ -817,9 +817,14 @@ CONTAINS
     IMPLICIT NONE
     TYPE(fft_type_descriptor), INTENT(IN) :: desc
 #if !defined(__CUDA) || !defined(_OPENACC)
-    DEALLOCATE( nl_d )
-    IF ( desc%lgamma ) DEALLOCATE( nlm_d )
-    !$acc exit data delete( nl_d, nlm_d )
+    IF ( ALLOCATED(nl_d) ) THEN
+      !$acc exit data delete( nl_d )
+      DEALLOCATE( nl_d )
+    ENDIF
+    IF ( desc%lgamma .AND. ALLOCATED(nlm_d) ) THEN
+      !$acc exit data delete( nlm_d )
+      DEALLOCATE( nlm_d )
+    ENDIF
 #endif
     !
   END SUBROUTINE dealloc_nl_pntrs

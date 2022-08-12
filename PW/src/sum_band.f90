@@ -20,7 +20,7 @@ SUBROUTINE sum_band()
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : invfft
   USE fft_rho,              ONLY : rho_g2r, rho_r2g
-  USE fft_wave,             ONLY : wave_g2r
+  USE fft_wave,             ONLY : wave_g2r, tgwave_g2r
   USE gvect,                ONLY : ngm, g
   USE gvecs,                ONLY : doublegrid
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk, igk_k
@@ -344,35 +344,7 @@ SUBROUTINE sum_band()
              !
              IF( use_tg ) THEN
                 !
-                tg_psi(:) = ( 0.D0, 0.D0 )
-                ioff   = 0
-                !
-                CALL tg_get_nnr( dffts, right_nnr )
-                ntgrp = fftx_ntgrp(dffts)
-                !
-                DO idx = 1, 2*ntgrp, 2
-                   !
-                   ! ... 2*ntgrp ffts at the same time
-                   !
-                   IF( idx + ibnd - 1 < ibnd_end ) THEN
-                      DO j = 1, npw
-                         tg_psi(dffts%nl (j)+ioff)=     evc(j,idx+ibnd-1)+&
-                              (0.0d0,1.d0) * evc(j,idx+ibnd)
-                         tg_psi(dffts%nlm(j)+ioff)=CONJG(evc(j,idx+ibnd-1) -&
-                              (0.0d0,1.d0) * evc(j,idx+ibnd) )
-                      END DO
-                   ELSE IF( idx + ibnd - 1 == ibnd_end ) THEN
-                      DO j = 1, npw
-                         tg_psi(dffts%nl (j)+ioff)=       evc(j,idx+ibnd-1)
-                         tg_psi(dffts%nlm(j)+ioff)=CONJG( evc(j,idx+ibnd-1) )
-                      END DO
-                   END IF
-
-                   ioff = ioff + right_nnr
-
-                END DO
-                !
-                CALL invfft ('tgWave', tg_psi, dffts )
+                CALL tgwave_g2r( evc(1:npw,:), tg_psi, dffts, ibnd, ibnd_end )
                 !
                 ! Now the first proc of the group holds the first two bands
                 ! of the 2*ntgrp bands that we are processing at the same time,
@@ -593,7 +565,7 @@ SUBROUTINE sum_band()
              IF( use_tg ) THEN
                 DO idx = 1, fftx_ntgrp(dffts)
                    IF( idx+ibnd-1 <= ibnd_end ) eband = eband + et(idx+ibnd-1,ik) * &
-                                                                    wg(idx+ibnd-1,ik)
+                                                                wg(idx+ibnd-1,ik)
                 END DO
              ELSE
                 eband = eband + et(ibnd,ik) * wg(ibnd,ik)
@@ -602,37 +574,16 @@ SUBROUTINE sum_band()
              ! ... the sum of eband and demet is the integral for e < ef of
              ! ... e n(e) which reduces for degauss=0 to the sum of the
              ! ... eigenvalues
+             !
              w1 = wg(ibnd,ik) / omega
              !
              IF (noncolin) THEN
                 IF( use_tg ) THEN
                    !
-                   tg_psi_nc = ( 0.D0, 0.D0 )
-                   !
-                   CALL tg_get_nnr( dffts, right_nnr )
-                   ntgrp = fftx_ntgrp( dffts )
-                   !
-                   ioff   = 0
-                   !
-                   DO idx = 1, ntgrp
-                      !
-                      ! ... ntgrp ffts at the same time
-                      !
-                      IF( idx + ibnd - 1 <= ibnd_end ) THEN
-                         DO j = 1, npw
-                            tg_psi_nc( dffts%nl(igk_k(j,ik) ) + ioff, 1 ) = &
-                                                       evc( j, idx+ibnd-1 )
-                            tg_psi_nc( dffts%nl(igk_k(j,ik) ) + ioff, 2 ) = &
-                                                       evc( j+npwx, idx+ibnd-1 )
-                         ENDDO
-                      ENDIF
-                      !
-                      ioff = ioff + right_nnr
-                      !
-                   ENDDO
-                   !
-                   CALL invfft( 'tgWave', tg_psi_nc(:,1), dffts )
-                   CALL invfft( 'tgWave', tg_psi_nc(:,2), dffts )
+                   CALL tgwave_g2r( evc(1:npw,:), tg_psi_nc(:,1), dffts, ibnd, &
+                                    ibnd_end, igk_k(:,ik) )
+                   CALL tgwave_g2r( evc(npwx+1:npwx+npw,:), tg_psi_nc(:,2), dffts, &
+                                    ibnd, ibnd_end, igk_k(:,ik) )
                    !
                    ! Now the first proc of the group holds the first band
                    ! of the ntgrp bands that we are processing at the same time,
@@ -692,30 +643,9 @@ SUBROUTINE sum_band()
              ELSE
                 !
                 IF( use_tg ) THEN
-                   !
-                   CALL tg_get_nnr( dffts, right_nnr )
-                   !
-                   ntgrp = fftx_ntgrp( dffts )
-                   !
-                   ! compute the number of chuncks
-                   numblock  = (npw+blocksize-1)/blocksize
-                   !
-                !$omp parallel
-                   CALL threaded_barrier_memset(tg_psi, 0.D0, ntgrp*right_nnr*2)
-                   !
-                   ! ... ntgrp ffts at the same time
-                   !
-                   !$omp do collapse(2)
-                   DO idx = 0, MIN(ntgrp-1, ibnd_end-ibnd)
-                      DO j = 1, numblock
-                         tg_psi( dffts%nl(igk_k((j-1)*blocksize+1:MIN(j*blocksize, npw),ik))+right_nnr*idx ) = &
-                            evc((j-1)*blocksize+1:MIN(j*blocksize, npw),idx+ibnd)
-                      END DO
-                   END DO
-                   !$omp end do nowait
-                !$omp end parallel
-                   !
-                   CALL invfft ('tgWave', tg_psi, dffts)
+                   
+                   CALL tgwave_g2r( evc(1:npw,:), tg_psi, dffts, ibnd, ibnd_end, &
+                                    igk_k(:,ik) )
                    !
                    ! Now the first proc of the group holds the first band
                    ! of the ntgrp bands that we are processing at the same time,
