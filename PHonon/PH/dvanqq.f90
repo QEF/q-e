@@ -199,14 +199,17 @@ subroutine dvanqq
                        end do 
                        call zgemv('N', 9,ngm,cmplx(1._dp, 0._dp,kind=dp),aux35,9,aux1,1,(0._dp,0._dp),z9aux,1)
                        z9aux(4:9) = conjg(fact)*tpiba2*omega*z9aux(4:9)
-                       !$omp workshare
-                       int2(ih,jh,1:3,na,nb) = conjg(z9aux(1:3)) * fact * fact1 
-                       int5(ijh,1,1:3,na,nb) = z9aux(4:6) 
-                       int5(ijh,2:3,1,na,nb) = z9aux(5:6)
-                       int5(ijh,2,2:3,na,nb) = z9aux(7:8)
-                       int5(ijh,3,2,na,nb)   = z9aux(8)
-                       int5(ijh,3,3,na,nb)   = z9aux(9)
-                       !$omp end workshare 
+                       !
+                       int2(ih,jh,1:3,na,nb) = conjg(z9aux(1:3)) * fact * fact1
+                       ! 
+                       z9aux(1:3) = z9aux(4:6)
+                       z9aux( 4)  = z9aux (2)
+                       z9aux(5:6) = z9aux(7:8)
+                       z9aux(7)   = z9aux(3)
+                       z9aux(8)   = z9aux(6)
+                       !
+                       call zcopy(9, z9aux(1),1, int5(ijh,1,1,na,nb), size(int5,1)) 
+                       !
                     enddo
                     if (.not.lgamma) then
                        do ig = 1, ngm
@@ -224,15 +227,18 @@ subroutine dvanqq
                           aux35(9,ig)   = aux35(3,ig) * g(3,ig) 
                        end do 
                        call zgemv('N',9,ngm,cmplx(1._dp, 0._dp,kind=dp), aux35,9,aux1,1,(0._dp,0._dp),z9aux,1)
+                       !
                        z9aux(4:9) = -tpiba2 * omega * z9aux(4:9)
-                       !$omp workshare
-                       int1(ih,jh,1:3,nb,is) = -fact1  * conjg(z9aux(1:3)) 
-                       int4(ijh,1,1:3,nb,is) =  z9aux(4:6) 
-                       int4(ijh,2,2:3,nb,is) =  z9aux(7:8)
-                       int4(ijh,3,  3,nb,is) =  z9aux(9)
-                       int4(ijh,2:3,1,nb,is) =  z9aux(5:6)
-                       int4(ijh,3,  2,nb,is) =  z9aux(8) 
-                       !$omp end workshare 
+                       int1(ih,jh,1:3,nb,is) = -fact1  * conjg(z9aux(1:3))
+                       ! 
+                       z9aux(1:3) = z9aux(4:6)
+                       z9aux( 4)  = z9aux (2)
+                       z9aux(5:6) = z9aux(7:8)
+                       z9aux(7)   = z9aux(3)
+                       z9aux(8)   = z9aux(6)
+                       !
+                       call zcopy(9, z9aux(1),1, int4(ijh,1,1,nb,is), size(int4,1)) 
+                       !
                     enddo
                  endif
               enddo
