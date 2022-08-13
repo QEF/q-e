@@ -8,8 +8,8 @@
 !
 !-----------------------------------------------------------------------
 subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
+   !-----------------------------------------------------------------------
                    bg, g, gg, ngm, gcutm, nmodes, u, dyn )
-  !-----------------------------------------------------------------------
   !! This routine computes the contribution of the ions to the
   !! dynamical matrix. Both the real and reciprocal space terms
   !! are included.
@@ -17,6 +17,8 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   !! The original routine was from C. Bungaro.
   !! Revised 16 oct. 1995 by Andrea Dal Corso.
   !! April 1997: parallel stuff added (SdG).
+  !! 2021-2022: Refactored by P. Bonfa with parallelization over atoms and openMP parallelization
+  !! 2022: restrict outer loops to selected atoms if nat_todo specified in input (P. Delugas)
   !
   USE io_global,      ONLY : stdout
   USE kinds,          ONLY : DP
@@ -25,6 +27,9 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   USE mp,             ONLY : mp_sum
   USE Coul_cut_2D,    ONLY : do_cutoff_2D, cutoff_2D 
   USE Coul_cut_2D_ph, ONLY : cutoff_2D_qg
+  USE partial,        ONLY : atomo, nat_todo, nat_todo_input, set_local_atomo
+  USE symm_base,      ONLY : irt 
+  USE lr_symm_base,   ONLY : nsymq
   !
   implicit none
   !
@@ -67,9 +72,12 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   !
   integer, parameter :: mxr = 100
   ! the maximum number of r shells
-
+  integer ::  nat_l
+  ! total number of effectively displaced atoms 
+  integer, allocatable :: atomo_l(:) 
+  ! list of atoms effectively displaced and work space 
   integer :: na, nb, nta, ntb, ng, nrm, nr, icart, &
-       jcart, na_icart, na_jcart, nb_icart, nb_jcart
+       jcart, na_icart, na_jcart, nb_icart, nb_jcart, na_l, nb_l 
   ! counters
   real(DP) :: arg, argq, tpiba2, alpha, r (3, mxr), r2 (mxr), &
        dtau (3), rmax, rr, upperbound, charge, df, d2f, ar, &
@@ -87,6 +95,12 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
 
   call start_clock ('d2ionq')
   !
+  if (nat_todo_input > 0 ) then 
+    call set_local_atomo(nat, nat_todo, atomo, nsymq, irt, nat_l, atomo_l) 
+  else 
+    nat_l = nat 
+  end if 
+  !  
   allocate(dy3(3*nat, nmodes) , stat = allocstat)
   call errore ("d2ionq:", "failed allocation of workspace", allocstat)
   !
@@ -144,10 +158,15 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   ! G-space sums here
   !
 !$omp parallel do &
-!$omp private(na, na_i, nta, dy2, nb, nb_i, ntb, zvab, dtau, argq, dy1) &
-!$omp private(ng, arg, fnat, facg, icart, jcart) shared(dy3) &
+!$omp private(na, na_l, na_i, nta, dy2, nb, nb_i, ntb, zvab, dtau, argq, dy1) &
+!$omp private(ng, arg, fnat, facg, icart, jcart) shared(dy3,atomo_l) &
 !$omp schedule(static) if(ngm > 0)
-  do na = 1, nat
+  do na_l = 1, nat_l
+     if (nat_l < nat) then 
+       na = atomo_l(na_l) 
+     else 
+       na = na_l 
+     end if 
      na_i = 3 * (na - 1)
      nta = ityp (na)
      !
@@ -185,7 +204,7 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
 !$omp end parallel do
   deallocate(facq, fac)
   !
-  CALL block_distribute(nat, me_bgrp, nproc_bgrp, na_s, na_e, mykey )
+  CALL block_distribute(nat_l, me_bgrp, nproc_bgrp, na_s, na_e, mykey ) 
   !  Then there is also a part in real space which is computed here.
   !   ... only by the nodes for which mykey == 0 see PW/src/ewald.f90 for more.
   !
@@ -195,9 +214,15 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   !
   ! with this choice terms up to ZiZj*erfc(5) are counted (erfc(5)=2x10^-1
   !
-  do na = na_s, na_e
-     nta = ityp (na)
+  
+  do na_l  = na_s, na_e 
      do nb = 1, nat
+        if (nat_l < nat ) then 
+           na = atomo_l(na_l)
+        else 
+           na = na_l
+        end if 
+        nta = ityp (na)
         ntb = ityp (nb)
         do icart = 1, 3
            dtau (icart) = tau (icart, na) - tau (icart, nb)
@@ -234,9 +259,8 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
               dy3 (na_icart, na_icart) = dy3 (na_icart, na_icart) - e2 * &
                    zv (nta) * zv (ntb) * df
            enddo
-        enddo
+        enddo 
      enddo
-
   enddo
 100 continue
   call mp_sum ( dy3, intra_bgrp_comm )

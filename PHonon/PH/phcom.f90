@@ -185,7 +185,21 @@ MODULE partial
   !! TRUE if this irr.rep. has been done
   LOGICAL :: all_comp
   !! if TRUE all representation have been computed
-  !
+  INTERFACE 
+    SUBROUTINE set_local_atomo(nat, nat_todo_, atomo_, nsym, irt,  nat_l, atomo_l) 
+      IMPLICIT NONE 
+      INTEGER,INTENT(IN)               :: nat, nat_todo_, nsym, atomo_(nat_todo_), irt(48,nat)
+      !! :nat: total number of atoms
+      !! :nat_todo: number of atoms effectively displaced 
+      !! :nsym: number of symmetries in the system
+      !! :atomo: list of atoms to be displaced before symmetrization 
+      !! :irt: atoms corresponding atom for each sym operation and atom
+      INTEGER,INTENT(OUT)              :: nat_l 
+      !! actual number of atoms to be displaced considering symmetries
+      INTEGER,ALLOCATABLE,INTENT(OUT)  :: atomo_l(:)
+      !! list with the indeces of all the atoms to be displaced 
+    END SUBROUTINE set_local_atomo
+  END INTERFACE
 END MODULE partial
 !
 MODULE gamma_gamma
