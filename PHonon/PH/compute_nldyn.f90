@@ -23,7 +23,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   USE wvfct,            ONLY : nbnd, et
 
   USE modes,            ONLY : u
-  USE partial,          ONLY : nat_todo, nat_todo_input, atomo
+  USE partial,          ONLY : nat_todo, nat_todo_input, atomo, set_local_atomo
   USE phus,             ONLY : alphap, int1, int2, &
                                int2_so, int1_nc
   USE control_ph,       ONLY : rec_code_read
@@ -90,14 +90,8 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   dynwrk (:,:) = (0.d0, 0.d0)
 
 if (nat_todo_input > 0 ) then 
-  call set_local_atomo(nat, nat_todo, atomo, nsymq, irt, nat_l, atomo_l)
-  !allocate(ifat(nat))
-  !call set_ifat(nat, nat_todo, atomo, nsymq, irt, ifat)
-  !nat_l = count(ifat == 1) 
-  !allocate(atomo_l(nat_l))
-  !atomo_l = pack([(na,na=1,nat)],ifat==1)
-  !deallocate(ifat)
-else 
+   call set_local_atomo(nat, nat_todo, atomo, nsymq, irt, nat_l, atomo_l)
+ else 
   nat_l = nat
 end if 
 
@@ -150,8 +144,9 @@ end if
         ELSE
            CALL compute_deff(deff,et(ibnd,ikk))
         ENDIF
+        !FIXME remove loop on ntyp
         do nt = 1, ntyp
-           do na_l = ia_s, ia_e
+           do na_l = 1, nat_l
               if (nat_l< nat) then 
                 na = atomo_l(na_l)
               else 
@@ -285,13 +280,9 @@ end if
                                     (0.d0,0.d0), aux1, 1 ) 
                      END IF
                      ! 
+                     !FIXME turn into loop on all projectors 
                      do ntb = 1, ntyp
-                        do nb_l = 1, nat_l 
-                          if (nat_l < nat) then 
-                            nb = atomo_l(nb_l)
-                          else 
-                            nb = nb_l
-                          end if
+                        do nb  = 1, nat
                           if (ityp (nb) == ntb) then
                              psv_nc(:, :) =(0.d0,0.d0)
                              psv(:) = (0.d0, 0.d0)
