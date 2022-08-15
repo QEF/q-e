@@ -23,10 +23,10 @@ SUBROUTINE sum_band_gpu()
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : invfft
   USE fft_rho,              ONLY : rho_g2r, rho_r2g
-  USE fft_wave,             ONLY : wave_g2r
+  USE fft_wave,             ONLY : wave_g2r, tgwave_g2r
   USE gvect,                ONLY : ngm, g
   USE gvecs,                ONLY : doublegrid
-  USE klist,                ONLY : nks, nkstot, wk, xk, ngk, igk_k, igk_k_d
+  USE klist,                ONLY : nks, nkstot, wk, xk, ngk, igk_k
   USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, is_hubbard_back
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho, rhoz_or_updw
@@ -280,24 +280,20 @@ SUBROUTINE sum_band_gpu()
        REAL(DP) :: w1, w2
          ! weights
        INTEGER  :: npw, idx, ioff, ioff_tg, nxyp, incr, v_siz, j
-       COMPLEX(DP), ALLOCATABLE :: tg_psi_d(:)
+       COMPLEX(DP), ALLOCATABLE :: tg_psi(:)
        REAL(DP),    ALLOCATABLE :: tg_rho_d(:), tg_rho_h(:)
        REAL(DP),    ALLOCATABLE :: rho_d(:,:)
-       INTEGER,     POINTER     :: dffts_nl_d(:), dffts_nlm_d(:)
        LOGICAL :: use_tg
        INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ierr, ebnd, i, brange
        REAL(DP) :: kplusgi
 #if defined(__CUDA)
-       attributes(device) :: tg_psi_d, tg_rho_d, rho_d
-       attributes(device) :: dffts_nl_d, dffts_nlm_d
+       attributes(device) :: tg_rho_d, rho_d
        attributes(pinned) :: tg_rho_h
 #endif
        !
        !$acc data create(psic)
        !
        CALL using_evc_d(0); CALL using_et(0)
-       dffts_nl_d  => dffts%nl_d
-       dffts_nlm_d => dffts%nlm_d
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -310,7 +306,7 @@ SUBROUTINE sum_band_gpu()
           !
           v_siz = dffts%nnr_tg 
           !
-          ALLOCATE( tg_psi_d( v_siz ) )
+          ALLOCATE( tg_psi( v_siz ) )
           ALLOCATE( tg_rho_d( v_siz ) )
           ALLOCATE( tg_rho_h( v_siz ) )
           !
@@ -359,37 +355,9 @@ SUBROUTINE sum_band_gpu()
              !
              IF( use_tg ) THEN
                 !
-                tg_psi_d(:) = ( 0.D0, 0.D0 )
-                ioff = 0
+                !$acc data create(tg_psi)
                 !
-                CALL tg_get_nnr( dffts, right_nnr )
-                ntgrp = fftx_ntgrp(dffts)
-                !
-                DO idx = 1, 2*ntgrp, 2
-                   !
-                   ! ... 2*ntgrp ffts at the same time
-                   !
-                   IF( idx+ibnd-1 < ibnd_end ) THEN
-                      !$cuf kernel do(1) <<<*,*>>>
-                      DO j = 1, npw
-                         tg_psi_d(dffts_nl_d (j)+ioff)=     evc_d(j,idx+ibnd-1)+&
-                              (0.0d0,1.d0) * evc_d(j,idx+ibnd)
-                         tg_psi_d(dffts_nlm_d(j)+ioff)=CONJG(evc_d(j,idx+ibnd-1) -&
-                              (0.0d0,1.d0) * evc_d(j,idx+ibnd) )
-                      ENDDO
-                   ELSEIF( idx+ibnd-1 == ibnd_end ) THEN
-                      !$cuf kernel do(1) <<<*,*>>>
-                      DO j = 1, npw
-                         tg_psi_d(dffts_nl_d (j)+ioff)=       evc_d(j,idx+ibnd-1)
-                         tg_psi_d(dffts_nlm_d(j)+ioff)=CONJG( evc_d(j,idx+ibnd-1) )
-                      ENDDO
-                   ENDIF
-                   !
-                   ioff = ioff + right_nnr
-                   !
-                ENDDO
-                !
-                CALL invfft ('tgWave', tg_psi_d, dffts )
+                CALL tgwave_g2r( evc(1:npw,:), tg_psi, dffts, ibnd, ibnd_end )
                 !
                 ! Now the first proc of the group holds the first two bands
                 ! of the 2*ntgrp bands that we are processing at the same time,
@@ -405,7 +373,7 @@ SUBROUTINE sum_band_gpu()
                 ! proc 1 has bands ibnd+2 and ibnd+3
                 ! ....
                 !
-                idx = 2 * idx - 1
+                idx = 2*idx - 1
                 !
                 IF( idx + ibnd - 1 < ibnd_end ) THEN
                    w1 = wg( idx + ibnd - 1, ik) / omega
@@ -420,8 +388,11 @@ SUBROUTINE sum_band_gpu()
                 !
                 CALL tg_get_group_nr3( dffts, right_nr3 )
                 !
+                !$acc host_data use_device(tg_psi)
                 CALL get_rho_gamma_gpu( tg_rho_d, dffts%nr1x*dffts%nr2x*right_nr3, &
-                                        w1, w2, tg_psi_d )
+                                        w1, w2, tg_psi )
+                !$acc end host_data
+                !$acc end data
                 !
              ELSE
                 !
@@ -513,7 +484,7 @@ SUBROUTINE sum_band_gpu()
        ENDIF
        !
        IF( use_tg ) THEN
-          DEALLOCATE( tg_psi_d )
+          DEALLOCATE( tg_psi )
           DEALLOCATE( tg_rho_d )
           DEALLOCATE( tg_rho_h )
        ELSE
@@ -548,24 +519,22 @@ SUBROUTINE sum_band_gpu()
        !
        INTEGER  :: idx, ioff, ioff_tg, nxyp, incr, v_siz
        COMPLEX(DP), ALLOCATABLE :: psicd(:)
-       COMPLEX(DP), ALLOCATABLE :: tg_psi_d(:), tg_psi_nc_d(:,:)
+       COMPLEX(DP), ALLOCATABLE :: tg_psi(:), tg_psi_nc(:,:)
        REAL(DP),    ALLOCATABLE :: tg_rho_d(:), tg_rho_nc_d(:,:)
        REAL(DP),    ALLOCATABLE :: tg_rho_h(:), tg_rho_nc_h(:,:)
        REAL(DP),    ALLOCATABLE :: rho_d(:,:)
-       INTEGER,     POINTER     :: dffts_nl_d(:)
        LOGICAL  :: use_tg
        INTEGER :: nnr, right_nnr, right_nr3, right_inc, ntgrp, ierr
        INTEGER :: i, j, group_size, hm_vec(3)
        REAL(DP) :: kplusgi
        !
 #if defined(__CUDA)
-       attributes(device) :: tg_psi_d, tg_rho_d, tg_psi_nc_d, tg_rho_nc_d
-       attributes(device) :: rho_d, dffts_nl_d
+       attributes(device) :: tg_rho_d, tg_rho_nc_d
+       attributes(device) :: rho_d
        attributes(pinned) :: tg_rho_h, tg_rho_nc_h
 #endif
        !
        CALL using_evc(0); CALL using_evc_d(0); CALL using_et(0)
-       dffts_nl_d => dffts%nl_d
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -580,11 +549,11 @@ SUBROUTINE sum_band_gpu()
           v_siz = dffts%nnr_tg
           !
           IF (noncolin) THEN
-             ALLOCATE( tg_psi_nc_d( v_siz, npol ) )
+             ALLOCATE( tg_psi_nc( v_siz, npol ) )
              ALLOCATE( tg_rho_nc_d( v_siz, nspin_mag ) )
              ALLOCATE( tg_rho_nc_h( v_siz, nspin_mag ) )
           ELSE
-             ALLOCATE( tg_psi_d( v_siz ) )
+             ALLOCATE( tg_psi( v_siz ) )
              ALLOCATE( tg_rho_d( v_siz ) )
              ALLOCATE( tg_rho_h( v_siz ) )
           ENDIF
@@ -603,7 +572,6 @@ SUBROUTINE sum_band_gpu()
           ! This is used as reduction variable on the device
           rho_d = 0.0_DP
        ENDIF
-       !$acc data create(psicd)
        !
        k_loop: DO ik = 1, nks
           !
@@ -654,33 +622,12 @@ SUBROUTINE sum_band_gpu()
              IF (noncolin) THEN
                 IF( use_tg ) THEN
                    !
-                   tg_psi_nc_d = ( 0.D0, 0.D0 )
+                   !$acc data create(tg_psi_nc)
                    !
-                   CALL tg_get_nnr( dffts, right_nnr )
-                   ntgrp = fftx_ntgrp( dffts )
-                   !
-                   ioff   = 0
-                   !
-                   DO idx = 1, ntgrp
-                      !
-                      ! ... ntgrp ffts at the same time
-                      !
-                      IF( idx + ibnd - 1 <= ibnd_end ) THEN
-                         !$cuf kernel do(1)
-                         DO j = 1, npw
-                            tg_psi_nc_d( dffts_nl_d(igk_k_d(j,ik) ) + ioff, 1 ) = &
-                                                       evc_d( j, idx+ibnd-1 )
-                            tg_psi_nc_d( dffts_nl_d(igk_k_d(j,ik) ) + ioff, 2 ) = &
-                                                       evc_d( j+npwx, idx+ibnd-1 )
-                         END DO
-                      END IF
-                      !
-                      ioff = ioff + right_nnr
-                      !
-                   END DO
-                   !
-                   CALL invfft ('tgWave', tg_psi_nc_d(:,1), dffts)
-                   CALL invfft ('tgWave', tg_psi_nc_d(:,2), dffts)
+                   CALL tgwave_g2r( evc(1:npw,:), tg_psi_nc(:,1), dffts, ibnd, &
+                                    ibnd_end, igk_k(:,ik) )
+                   CALL tgwave_g2r( evc(npwx+1:npwx+npw,:), tg_psi_nc(:,2), dffts, &
+                                    ibnd, ibnd_end, igk_k(:,ik) )
                    !
                    ! Now the first proc of the group holds the first band
                    ! of the ntgrp bands that we are processing at the same time,
@@ -704,13 +651,17 @@ SUBROUTINE sum_band_gpu()
                    CALL tg_get_group_nr3( dffts, right_nr3 )
                    !
                    ! OPTIMIZE HERE : this is a sum of all densities in first spin channel
+                   
+                   !$acc host_data use_device(tg_psi_nc)
                    DO ipol = 1, npol
                       CALL get_rho_gpu( tg_rho_nc_d(:,1), dffts%nr1x*dffts%nr2x* &
-                                        right_nr3, w1, tg_psi_nc_d(:,ipol) )
+                                        right_nr3, w1, tg_psi_nc(:,ipol) )
                    ENDDO
                    !
                    IF (domag) CALL get_rho_domag_gpu( tg_rho_nc_d(:,:), dffts%nr1x* &
-                                      dffts%nr2x*dffts%my_nr3p, w1, tg_psi_nc_d(:,:) )
+                                      dffts%nr2x*dffts%my_nr3p, w1, tg_psi_nc(:,:) )
+                   !$acc end host_data
+                   !$acc end data
                    !
                 ELSE
                    !
@@ -746,32 +697,10 @@ SUBROUTINE sum_band_gpu()
                 !
                 IF( use_tg ) THEN
                    !
-                   !$cuf kernel do(1)
-                   DO j = 1, SIZE( tg_psi_d )
-                      tg_psi_d(j) = ( 0.D0, 0.D0 )
-                   ENDDO
+                   !$acc data create(tg_psi)
                    !
-                   ioff = 0
-                   !
-                   CALL tg_get_nnr( dffts, right_nnr )
-                   ntgrp = fftx_ntgrp( dffts )
-                   !
-                   DO idx = 1, ntgrp
-                      !
-                      ! ... ntgrp ffts at the same time
-                      !
-                      IF( idx + ibnd - 1 <= ibnd_end ) THEN
-                         !$cuf kernel do(1)
-                         DO j = 1, npw
-                            tg_psi_d( dffts_nl_d(igk_k_d(j,ik))+ioff ) = evc_d(j,idx+ibnd-1)
-                         END DO
-                      END IF
-                      !
-                      ioff = ioff + right_nnr
-                      !
-                   END DO
-                   !
-                   CALL invfft ('tgWave', tg_psi_d, dffts)
+                   CALL tgwave_g2r( evc(1:npw,:), tg_psi, dffts, ibnd, ibnd_end, &
+                                    igk_k(:,ik) )
                    !
                    ! Now the first proc of the group holds the first band
                    ! of the ntgrp bands that we are processing at the same time,
@@ -786,17 +715,22 @@ SUBROUTINE sum_band_gpu()
                    ! proc 1 has bands ibnd+1
                    ! ....
                    !
-                   IF( idx + ibnd - 1 <= ibnd_end ) THEN
-                      w1 = wg( idx + ibnd - 1, ik) / omega
+                   IF( idx+ibnd-1 <= ibnd_end ) THEN
+                      w1 = wg(idx+ibnd-1,ik) / omega
                    ELSE
                       w1 = 0.0d0
                    END IF
                    !
                    CALL tg_get_group_nr3( dffts, right_nr3 )
                    !
-                   CALL get_rho_gpu(tg_rho_d, dffts%nr1x * dffts%nr2x * right_nr3, w1, tg_psi_d)
+                   !$acc host_data use_device(tg_psi)
+                   CALL get_rho_gpu( tg_rho_d, dffts%nr1x*dffts%nr2x*right_nr3, w1, tg_psi )
+                   !$acc end host_data
+                   !$acc end data
                    !
                 ELSEIF (many_fft > 1 .AND. (.NOT. (xclib_dft_is('meta') .OR. lxdm))) THEN
+                   !
+                   !$acc data create(psicd)
                    !
                    group_size = MIN(many_fft,ibnd_end-(ibnd-1))
                    hm_vec(1)=group_size ; hm_vec(2)=ibnd ; hm_vec(3)=npw
@@ -812,6 +746,8 @@ SUBROUTINE sum_band_gpu()
                      CALL get_rho_gpu( rho_d(:,current_spin), nnr, w1, psicd(i*nnr+1:) )
                      !$acc end host_data
                    ENDDO
+                   !
+                   !$acc end data
                    !
                 ELSE
                    !
@@ -863,8 +799,6 @@ SUBROUTINE sum_band_gpu()
           !
        END DO k_loop
        !
-       !$acc end data
-       !
        IF (.not. use_tg ) THEN
           rho%of_r = rho_d
        END IF
@@ -884,11 +818,11 @@ SUBROUTINE sum_band_gpu()
        !
        IF( use_tg ) THEN
           IF (noncolin) THEN
-             DEALLOCATE( tg_psi_nc_d )
+             DEALLOCATE( tg_psi_nc )
              DEALLOCATE( tg_rho_nc_d )
              DEALLOCATE( tg_rho_nc_h )
           ELSE
-             DEALLOCATE( tg_psi_d )
+             DEALLOCATE( tg_psi )
              DEALLOCATE( tg_rho_d )
              DEALLOCATE( tg_rho_h )
           END IF

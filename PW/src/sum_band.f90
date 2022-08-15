@@ -643,7 +643,7 @@ SUBROUTINE sum_band()
              ELSE
                 !
                 IF( use_tg ) THEN
-                   
+                   !
                    CALL tgwave_g2r( evc(1:npw,:), tg_psi, dffts, ibnd, ibnd_end, &
                                     igk_k(:,ik) )
                    !

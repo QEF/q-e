@@ -628,7 +628,8 @@ CONTAINS
      complex(DP), INTENT(OUT) :: vout1(:)
      complex(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
      complex(DP), INTENT(IN) :: vin(:)
-     INTEGER,     POINTER     :: nl(:), nlm(:)
+     !
+     INTEGER, POINTER     :: nl(:), nlm(:)
 #if defined (__CUDA)
      attributes(DEVICE) :: vout1, vout2, vin, nl, nlm
 #endif
@@ -662,6 +663,7 @@ CONTAINS
      COMPLEX(DP), INTENT(OUT) :: psis(:)
      COMPLEX(DP), INTENT(INOUT) :: c_bgrp(:,:)
      INTEGER, INTENT(IN) :: i, nbsp_bgrp
+     !
      INTEGER :: eig_offset, eig_index, right_nnr
      !
      !  the i-th column of c_bgrp corresponds to the i-th state (in this band group)
@@ -671,15 +673,21 @@ CONTAINS
      !
      right_nnr = desc%nnr
      !
+#if defined(_OPENACC)
+!$acc data present_or_copyin(c_bgrp) present_or_copyout(psis)
+#else
 !$omp  parallel
 !$omp  single
+#endif
      !
      DO eig_index = 1, 2*fftx_ntgrp(desc), 2
         !
+#if !defined(_OPENACC)
 !$omp task default(none) &
 !$omp          firstprivate( eig_index, i, nbsp_bgrp, right_nnr ) &
 !$omp          private( eig_offset ) &
 !$omp          shared( c_bgrp, desc, psis )
+#endif
         !
         !  here we pack 2*nogrp electronic states in the psis array
         !  note that if nogrp == nproc_bgrp each proc perform a full 3D
@@ -687,7 +695,11 @@ CONTAINS
         !
         !  important: if n is odd => c(*,n+1)=0.
         !
-        IF ( (eig_index+i-1)==nbsp_bgrp ) c_bgrp(:,eig_index+i) = 0._DP
+        IF ( (eig_index+i-1)==nbsp_bgrp ) THEN
+          !$acc kernels
+          c_bgrp(:,eig_index+i) = (0._DP,0._DP)
+          !$acc end kernels
+        ENDIF
         !
         eig_offset = (eig_index-1)/2
         !
@@ -700,12 +712,20 @@ CONTAINS
                              c_bgrp(:,i+eig_index-1), c_bgrp(:,i+eig_index) )
            !
         ENDIF
+#if !defined(_OPENACC)
 !$omp end task
+#endif
         !
      ENDDO
+#if defined(_OPENACC)
+!$acc end data
+#else
 !$omp  end single
 !$omp  end parallel
+#endif
+     !
      RETURN
+     !
   END SUBROUTINE c2psi_gamma_tg
   !
   !
@@ -721,12 +741,17 @@ CONTAINS
      COMPLEX(DP), INTENT(OUT) :: psis(:)
      COMPLEX(DP), INTENT(INOUT) :: c_bgrp(:,:)
      INTEGER, INTENT(IN) :: igk(:), ngk, i, nbsp_bgrp
+     !
      INTEGER :: right_nnr, idx, j, js, je, numblock, ntgrp
      INTEGER, PARAMETER :: blocksize = 256
      !
      CALL alloc_nl_pntrs( desc )
      !
      right_nnr = desc%nnr
+     !
+#if defined(_OPENACC)
+     !$acc data present_or_copyin(c_bgrp,igk) present_or_copyout(psis)
+#endif
      !
      ntgrp = fftx_ntgrp( desc )
      !
@@ -735,7 +760,11 @@ CONTAINS
      !
      ! ... ntgrp ffts at the same time
      !
+#if !defined(_OPENACC)
      !$omp parallel do collapse(2) private(js,je)
+#else
+     !$acc parallel loop collapse(2)
+#endif
      DO idx = 0, MIN(ntgrp-1,nbsp_bgrp-i)
        DO j = 1, numblock
           js = (j-1)*blocksize+1
@@ -743,7 +772,11 @@ CONTAINS
           psis(nl_d(igk(js:je))+right_nnr*idx) = c_bgrp(js:je,idx+i)
        ENDDO
      ENDDO
+#if !defined(_OPENACC)
      !$omp end parallel do
+#else
+     !$acc end data
+#endif
      !
      CALL dealloc_nl_pntrs( desc )
      !
