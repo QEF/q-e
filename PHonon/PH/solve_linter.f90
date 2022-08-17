@@ -47,10 +47,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE scf,                  ONLY : rho, vrs
 #if defined(__CUDA)
   USE scf_gpum,             ONLY : vrs_d
-  USE uspp,                 ONLY : okvan, vkb, deeq_nc, deeq_nc_d
-#else
-  USE uspp,                 ONLY : okvan, vkb, deeq_nc
 #endif
+  USE uspp,                 ONLY : okvan, vkb, deeq_nc
   USE uspp_param,           ONLY : nhm
   USE noncollin_module,     ONLY : noncolin, domag, npol, nspin_mag
   USE paw_variables,        ONLY : okpaw
@@ -282,22 +280,18 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               ! Hubbard potential dvbare_hub_q * psi_kpoint
               ! is calculated and added to dvpsi.
               !
-              IF (lda_plus_u) CALL dvqhub_barepsi_us(ik, u(1, mode))
+              IF (lda_plus_u) CALL dvqhub_barepsi_us(ik, u(1,mode))
               !
            ELSE
               IF (okvan) THEN
                  deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,2)
-#if defined(__CUDA)
-                 deeq_nc_d(:,:,:,:) = deeq_nc(:,:,:,:) 
-#endif
+                 !$acc update device(deeq_nc)
                  int1_nc(:,:,:,:,:) = int1_nc_save(:,:,:,:,:,2)
               ENDIF
               CALL dvqpsi_us(ik, u(1, mode), .FAlSE., becpt, alphapt)
               IF (okvan) THEN
                  deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,1)
-#if defined(__CUDA)
-                 deeq_nc_d(:,:,:,:) = deeq_nc(:,:,:,:)
-#endif
+                 !$acc update device(deeq_nc)
                  int1_nc(:,:,:,:,:) = int1_nc_save(:,:,:,:,:,1)
               ENDIF
            ENDIF
@@ -342,9 +336,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
 #endif
            IF (okvan) THEN
                    deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,2)
-#if defined(__CUDA)
-                   deeq_nc_d(:,:,:,:) = deeq_nc(:,:,:,:)
-#endif
+                   !$acc update device(deeq_nc)
            ENDIF
         ENDIF
         !
@@ -375,9 +367,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
 #endif
            IF (okvan) THEN
                    deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,1)
-#if defined(__CUDA)
-                   deeq_nc_d(:,:,:,:)=deeq_nc(:,:,:,:)
-#endif
+                   !$acc update device(deeq_nc)
            ENDIF
         ENDIF
         !

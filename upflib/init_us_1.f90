@@ -30,8 +30,8 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   USE atom,         ONLY : rgrid
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv, &
                            ap, aainit, qq_so, dvan_so, okvan, ofsbeta, &
-                           nhtol_d, nhtoj_d, nhtolm_d, ijtoh_d, dvan_d, qq_at_d, &
-                           qq_nt_d, indv_d, qq_so_d, dvan_so_d, ofsbeta_d
+                           nhtol_d, nhtoj_d, nhtolm_d, ijtoh_d, dvan_d, &
+                           qq_nt_d, indv_d, dvan_so_d, ofsbeta_d
   USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nsp
   USE upf_spinorb,  ONLY : is_spinorbit, rot_ylm, fcoef, fcoef_d, lmaxx
   USE paw_variables,ONLY : okpaw
@@ -320,10 +320,8 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      nhtolm_d=nhtolm
      nhtoj_d=nhtoj
      ijtoh_d=ijtoh
-     qq_at_d=qq_at
      qq_nt_d=qq_nt
      if (is_spinorbit) then
-        qq_so_d=qq_so
         dvan_so_d=dvan_so
         fcoef_d=fcoef
      else
@@ -333,6 +331,13 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   ofsbeta_d=ofsbeta
   !
 #endif
+  !
+  if (nhm>0) then
+    !$acc update device(qq_at)
+    if (is_spinorbit) then
+      !$acc update device(qq_so)
+    endif
+  endif
   !
   call stop_clock ('init_us_1')
   return
