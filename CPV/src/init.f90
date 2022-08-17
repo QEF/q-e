@@ -184,9 +184,9 @@
         CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
         !
       END IF
-!NOTE g and mill already allocate in the device they are initialized below. 
-!$acc data present(g, mill) 
-!$acc update device(g,mill) 
+!NOTE g, gg and mill already allocate in the device they are initialized below. 
+!$acc data present(g,gg,mill) 
+!$acc update device(g,gg,mill) 
 !$acc end data 
       !
       CALL gshells (.TRUE.)
@@ -429,13 +429,13 @@
       !  re-calculate G-vectors and kinetic energy
       !
       dfftp_ngm = dfftp%ngm 
-!$acc parallel loop present(g, mill) copyin(bg) copyout(gg)  
+!$acc parallel loop present(g,gg,mill) copyin(bg)
       do ig = 1, dfftp_ngm
          g(:,ig)= mill(1,ig)*bg(:,1) + mill(2,ig)*bg(:,2) + mill(3,ig)*bg(:,3)
          gg(ig)=g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2 
       enddo
-!$acc end parallel loop 
-!$acc update host(g) 
+!$acc end parallel loop
+!$acc update host(g,gg)
       !
       call g2kin_init ( gg, tpiba2 )
       !

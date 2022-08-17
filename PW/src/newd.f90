@@ -184,8 +184,8 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
   ENDDO
   !
   DEALLOCATE( qmod, ylmk0, vaux )
-  CALL mp_sum( deeq( :, :, :, 1:nspin_mag ), inter_pool_comm )
-  CALL mp_sum( deeq( :, :, :, 1:nspin_mag ), intra_bgrp_comm )
+  CALL mp_sum( deeq(:,:,:,1:nspin_mag ), inter_pool_comm )
+  CALL mp_sum( deeq(:,:,:,1:nspin_mag ), intra_bgrp_comm )
   !
 END SUBROUTINE newq
   !
@@ -199,7 +199,7 @@ SUBROUTINE newd( )
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE lsda_mod,             ONLY : nspin
-  USE uspp,                 ONLY : deeq, deeq_d, dvan, deeq_nc, deeq_nc_d, dvan_so, okvan
+  USE uspp,                 ONLY : deeq, dvan, deeq_nc, dvan_so, okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE noncollin_module,     ONLY : noncolin, domag, nspin_mag, lspinorb
   USE uspp,                 ONLY : nhtol, nhtolm
@@ -248,13 +248,15 @@ SUBROUTINE newd( )
         !
      ENDDO
      !
-#if defined __CUDA
-     if (noncolin) then
-        if (nhm>0) deeq_nc_d=deeq_nc
-     else
-        if (nhm>0) deeq_d=deeq
-     endif
-#endif
+     IF (noncolin) THEN
+        IF (nhm>0) THEN
+          !$acc update device(deeq_nc)
+        ENDIF
+     ELSE
+        IF (nhm>0) THEN
+          !$acc update device(deeq)
+        ENDIF
+     ENDIF
      !
      ! ... early return
      !
@@ -311,13 +313,15 @@ SUBROUTINE newd( )
   IF (lda_plus_U .AND. (Hubbard_projectors == 'pseudo')) CALL add_vhub_to_deeq( deeq )
   !
   ! sync with GPUs
-#if defined __CUDA
-  if (noncolin) then
-     if (nhm>0) deeq_nc_d=deeq_nc
-  else
-     if (nhm>0) deeq_d=deeq
-  endif
-#endif
+  IF (noncolin) THEN
+     IF (nhm>0) THEN
+       !$acc update device(deeq_nc)
+     ENDIF
+  ELSE
+     IF (nhm>0) THEN
+       !$acc update device(deeq)
+     ENDIF
+  ENDIF
   !
   CALL stop_clock( 'newd' )
   !

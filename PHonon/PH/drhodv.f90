@@ -29,11 +29,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE cell_base, ONLY : tpiba
   USE lsda_mod,  ONLY : current_spin, lsda, isk, nspin
   USE wvfct,     ONLY : npwx, nbnd
-#if defined(__CUDA)
-  USE uspp,      ONLY : nkb, vkb, deeq_nc, deeq_nc_d, okvan
-#else
   USE uspp,      ONLY : nkb, vkb, deeq_nc, okvan
-#endif
   USE becmod,    ONLY : calbec, bec_type, becscal, allocate_bec_type, &
                         deallocate_bec_type
   USE fft_base,  ONLY : dfftp
@@ -142,18 +138,14 @@ subroutine drhodv (nu_i0, nper, drhoscf)
         ELSE
            IF (okvan) THEN
               deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,2)
-#if defined(__CUDA)
-              deeq_nc_d(:,:,:,:)=deeq_nc(:,:,:,:)
-#endif
+              !$acc update device(deeq_nc)
               int1_nc(:,:,:,:,:)=int1_nc_save(:,:,:,:,:,2)
            ENDIF
            call drhodvnl (ik, ikk, nper, nu_i0, dynwrk, becpt, alphapt, &
                                                          dbecq, dalpq)
            IF (okvan) THEN
               deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,1)
-#if defined(__CUDA)
-              deeq_nc_d(:,:,:,:)=deeq_nc(:,:,:,:)
-#endif
+              !$acc update device(deeq_nc)
               int1_nc(:,:,:,:,:)=int1_nc_save(:,:,:,:,:,1)
            ENDIF
         ENDIF

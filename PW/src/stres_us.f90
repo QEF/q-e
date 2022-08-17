@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2012 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,7 +9,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE stres_us( ik, gk, sigmanlc )
   !----------------------------------------------------------------------------
-  !! nonlocal (separable pseudopotential) contribution to the stress
+  !! Nonlocal (separable pseudopotential) contribution to the stress
   !! NOTICE: sum of partial results over procs is performed in calling routine
   !
   USE kinds,                ONLY : DP
@@ -20,56 +20,124 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE wvfct,                ONLY : npwx, nbnd, wg, et
   USE control_flags,        ONLY : gamma_only
   USE uspp_param,           ONLY : upf, lmaxkb, nh, nhm
-  USE uspp,                 ONLY : nkb, vkb, deeq, deeq_nc
-  USE wavefunctions,        ONLY : evc
+  USE uspp,                 ONLY : nkb, vkb, deeq
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : noncolin, npol, lspinorb
   USE mp_pools,             ONLY : me_pool, root_pool
   USE mp_bands,             ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp, calbec
-  USE mp,                   ONLY : mp_sum, mp_get_comm_null, mp_circular_shift_left 
-  USE wavefunctions_gpum,   ONLY : using_evc
+  USE mp,                   ONLY : mp_sum, mp_get_comm_null, &
+                                   mp_circular_shift_left 
+  USE wavefunctions,        ONLY : evc
   USE wvfct_gpum,           ONLY : using_et
-  USE becmod_subs_gpum,     ONLY : using_becp_auto
+  USE becmod_gpum,          ONLY : becp_d, bec_type_d
+  USE becmod_subs_gpum,     ONLY : using_becp_auto, using_becp_d_auto, &
+                                   calbec_gpu
   USE uspp_init,            ONLY : init_us_2, gen_us_dj, gen_us_dy
   !
   IMPLICIT NONE
   !
-  INTEGER,  INTENT(IN)    :: ik
+  INTEGER,  INTENT(IN) :: ik
   !! k-point index
-  REAL(DP), INTENT(IN)    :: gk(npwx,3)
+  REAL(DP), INTENT(IN) :: gk(npwx,3)
   !! wave function components for fixed k-point
   REAL(DP), INTENT(INOUT) :: sigmanlc(3,3)
   !! stress tensor, non-local contribution
   !
-  REAL(DP), ALLOCATABLE   :: qm1(:)
-  REAL(DP)                :: q
-  INTEGER                 :: npw, i
+  ! ... local variables
   !
-  CALL using_evc(0)
+  REAL(DP), ALLOCATABLE :: qm1(:)
+  COMPLEX(DP), ALLOCATABLE :: evcv(:)
   !
+  REAL(DP) :: q
+  INTEGER  :: npw , iu, np
+  !
+  INTEGER :: na1, np1, nh_np1, ijkb01, itot, levc
+  LOGICAL :: ismulti_np
+  INTEGER, ALLOCATABLE :: shift(:), na_list(:), nh_list(:), ih_list(:), &
+                          ishift_list(:)
+  LOGICAL, ALLOCATABLE :: is_multinp(:)
   !
   IF ( nkb == 0 ) RETURN
   !
   IF ( lsda ) current_spin = isk(ik)
   npw = ngk(ik)
-  IF ( nks > 1 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
   !
-  CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm ) 
-  
+  IF ( nks > 1 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
+  !
+  CALL allocate_bec_type( nkb, nbnd, becp, intra_bgrp_comm )
   CALL using_becp_auto(2)
+#if defined(__CUDA)
+  CALL using_becp_d_auto(2)
+  !$acc host_data use_device(vkb,evc)
+  CALL calbec_gpu( npw, vkb, evc, becp_d )
+  !$acc end host_data
+#else
+  !$acc update self(vkb,evc)
   CALL calbec( npw, vkb, evc, becp )
+#endif
   !
-  ALLOCATE( qm1( npwx ) )
-  DO i = 1, npw
-     q = SQRT( gk(i, 1)**2 + gk(i, 2)**2 + gk(i, 3)**2 )
+  ALLOCATE( qm1(npwx) )
+  !$acc data create(qm1) present(gk)
+  !
+  !$acc parallel loop
+  DO iu = 1, npw
+     q = SQRT( gk(iu,1)**2 + gk(iu,2)**2 + gk(iu,3)**2 )
      IF ( q > eps8 ) THEN
-        qm1(i) = 1.D0 / q
+        qm1(iu) = 1._DP / q
      ELSE
-        qm1(i) = 0.D0
-     END IF
-  END DO
+        qm1(iu) = 0._DP
+     ENDIF
+  ENDDO
+  !
+  ! ... define index arrays (type, atom, etc.) for kernel loops
+  !
+  ALLOCATE( is_multinp(nat*nhm) )
+  ALLOCATE( na_list(nat*nhm), nh_list(nat*nhm), ih_list(nat*nhm), &
+            ishift_list(nat*nhm) )
+  !$acc data create(is_multinp,na_list,nh_list,ih_list,ishift_list) &
+  !$acc&     copyin(ityp,nh)
+  !
+  ALLOCATE( shift(nat) )
+  ijkb01 = 0
+  DO iu = 1, ntyp
+    DO na1 = 1, nat
+      IF (ityp(na1) == iu ) THEN
+         shift(na1) = ijkb01
+         ijkb01 = ijkb01 + nh(iu)
+      ENDIF
+    ENDDO
+  ENDDO
+  !
+  !$acc data copyin(shift)
+  !
+  ijkb01 = 0
+  itot=0
+  DO np = 1, ntyp
+    DO na1 = 1, nat
+      np1 = ityp(na1)
+      IF (np /= np1) CYCLE
+      ijkb01 = shift(na1)
+      nh_np1 = nh(np1)
+      ismulti_np = upf(np1)%tvanp .OR. upf(np1)%is_multiproj
+      IF ( .NOT. ismulti_np .AND. noncolin .AND. lspinorb ) &
+                                   CALL errore('stres_us','wrong case',1)
+      !$acc parallel loop
+      DO iu = itot+1, itot+nh_np1
+        na_list(iu) = na1
+        ih_list(iu) = iu-itot
+        nh_list(iu) = nh_np1
+        ishift_list(iu) = ijkb01
+        is_multinp(iu) = ismulti_np
+      ENDDO
+      itot = itot + nh_np1
+    ENDDO
+  ENDDO
+  !
+  levc = SIZE(evc(:,1))
+  ALLOCATE( evcv(1:levc) )
+  !$acc data create(evcv)
   !
   IF ( gamma_only ) THEN
      !
@@ -79,9 +147,20 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
      !
      CALL stres_us_k()
      !
-  END IF
+  ENDIF
+  !
+  !$acc end data
+  DEALLOCATE( evcv )
+  !
+  !$acc end data
+  !$acc end data
+  !$acc end data
   !
   DEALLOCATE( qm1 )
+  DEALLOCATE( is_multinp )
+  DEALLOCATE( na_list, nh_list, ih_list, ishift_list )
+  DEALLOCATE( shift )
+  !
   CALL deallocate_bec_type( becp ) 
   CALL using_becp_auto(2)
   !
@@ -92,24 +171,35 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
      !-----------------------------------------------------------------------
      SUBROUTINE stres_us_gamma()
        !-----------------------------------------------------------------------
-       !! nonlocal contribution to the stress - gamma version
+       !! nonlocal contribution to the stress - gamma version.
        !
        IMPLICIT NONE
        !
        ! ... local variables
        !
-       INTEGER                  :: na, np, ibnd, ipol, jpol, l, i,    &
-                                   ikb, jkb, ih, jh, ijkb0, ibnd_loc, &
-                                   nproc, nbnd_loc, nbnd_begin, icyc
-       REAL(DP)                 :: fac, xyz(3,3), evps, ddot
-       REAL(DP), ALLOCATABLE    :: deff(:,:,:)
-       COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
-       ! dvkb contains the derivatives of the kb potential
-       COMPLEX(DP)              :: ps
+       INTEGER  :: na, np, nt, ibnd, ipol, jpol, l, i, ikb,  &
+                   jkb, ih, jh, ibnd_loc,ijkb0,nh_np, nproc, &
+                   nbnd_loc, nbnd_begin, icyc, ishift
+       REAL(DP) :: dot11, dot21, dot31, dot22, dot32, dot33,  &
+                   qm1i, gk1, gk2, gk3, wg_nk, fac, evps, aux,&
+                   Re_worksum, Im_worksum
+       COMPLEX(DP) :: worksum, cv, wsum1, wsum2, wsum3, evci
+       !
+       REAL(DP), ALLOCATABLE :: deff(:,:,:)
+       COMPLEX(DP), ALLOCATABLE :: ps(:), dvkb(:,:,:)
+       !
+       REAL(DP) :: xyz(3,3)
+       !
        ! xyz are the three unit vectors in the x,y,z directions
-       DATA xyz / 1.0d0, 0.0d0, 0.0d0, 0.0d0, 1.0d0, 0.0d0, 0.0d0, 0.0d0, 1.0d0 /
+       DATA xyz / 1._DP, 0._DP, 0._DP, 0._DP, 1._DP, 0._DP, 0._DP, 0._DP, &
+                  1._DP /
+#if !defined(__CUDA) || !defined(_OPENACC)
+       REAL(DP), ALLOCATABLE :: becpr(:,:)
+#else
+       REAL(DP), POINTER, DEVICE :: becpr(:,:)
        !
-       !
+       CALL using_becp_auto(0)
+#endif
        IF( becp%comm /= mp_get_comm_null() ) THEN
           nproc      = becp%nproc
           nbnd_loc   = becp%nbnd_loc
@@ -119,523 +209,729 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           nproc      = 1
           nbnd_loc   = nbnd
           nbnd_begin = 1
-       END IF
-
-       ALLOCATE( work1( npwx ), work2( npwx ) ) 
+       ENDIF
+       !
        ALLOCATE( deff(nhm,nhm,nat) )
+       ALLOCATE( ps(nkb) )
+       !$acc data create(deff,ps)
        !
        ! ... diagonal contribution - if the result from "calbec" are not 
        ! ... distributed, must be calculated on a single processor
        !
-       evps = 0.D0
-       IF ( nproc == 1 .AND. me_pool /= root_pool ) GO TO 100
+       ! ... for the moment when using_gpu is true becp is always fully present
+       !     in all processors
        !
        CALL using_et(0) ! compute_deff : intent(in)
-       DO ibnd_loc = 1, nbnd_loc
-          ibnd = ibnd_loc + becp%ibnd_begin - 1 
-          CALL compute_deff ( deff, et(ibnd,ik) )
-          fac = wg(ibnd,ik)
-          ijkb0 = 0
-          DO np = 1, ntyp
-             DO na = 1, nat
-                IF ( ityp(na) == np ) THEN
-                   DO ih = 1, nh(np)
-                      ikb = ijkb0 + ih
-                      evps = evps + fac * deff(ih,ih,na) * &
-                                    ABS( becp%r(ikb,ibnd_loc) )**2
-                      !
-                      IF ( upf(np)%tvanp .OR. upf(np)%is_multiproj ) THEN
-                         !
-                         ! ... only in the US case there is a contribution 
-                         ! ... for jh<>ih
-                         ! ... we use here the symmetry in the interchange of 
-                         ! ... ih and jh
-                         !
-                         DO jh = ( ih + 1 ), nh(np)
-                            jkb = ijkb0 + jh
-                            evps = evps + deff(ih,jh,na) * fac * 2.D0 * &
-                                 becp%r(ikb,ibnd_loc) * becp%r(jkb,ibnd_loc)
-                         END DO
-                      END IF
-                   END DO
-                   ijkb0 = ijkb0 + nh(np)
-                END IF
-             END DO
-          END DO
-       END DO
        !
-100    CONTINUE
+#if defined(__CUDA)
+       becpr => becp_d%r_d
+#else
+       ALLOCATE( becpr(nkb,nbnd_loc) )
+       becpr = becp%r
+#endif
        !
-       ! ... non diagonal contribution - derivative of the bessel function
-       !------------------------------------
-       ALLOCATE( dvkb( npwx, nkb ) )
+       evps = 0._DP
        !
-       CALL gen_us_dj( ik, dvkb )
+       compute_evps: IF ( .NOT. (nproc==1 .AND. me_pool/=root_pool) ) THEN
+         !
+         DO ibnd_loc = 1, nbnd_loc
+            ibnd = ibnd_loc+becp%ibnd_begin-1
+            CALL compute_deff( deff, et(ibnd,ik) )
+            wg_nk = wg(ibnd,ik)
+            !
+            !$acc parallel loop reduction(+:evps)
+            DO i = 1, itot
+              ih = ih_list(i)           ;   na = na_list(i)
+              ishift = ishift_list(i)   ;   ikb = ishift + ih
+              !
+              IF (.NOT. is_multinp(i)) THEN
+                 aux = wg_nk * deff(ih,ih,na) * ABS(becpr(ikb,ibnd_loc))**2
+              ELSE
+                 nh_np = nh_list(i)
+                 !
+                 aux = wg_nk * deff(ih,ih,na) * ABS(becpr(ikb,ibnd_loc))**2 &
+                             +  becpr(ikb,ibnd_loc)* wg_nk * 2._DP  &
+                                * SUM( deff(ih,ih+1:nh_np,na)       &
+                                * becpr(ishift+ih+1:ishift+nh_np,ibnd_loc))
+              ENDIF
+              !
+              evps = evps + aux
+              !
+            ENDDO
+            !
+         ENDDO
+         !
+       ENDIF compute_evps
        !
-       CALL using_et(0) ! compute_deff : intent(in)
-       CALL using_evc(0)
-       DO icyc = 0, nproc -1
+       ! ... non diagonal contribution - derivative of the Bessel function
+       !
+       ALLOCATE( dvkb(npwx,nkb,4) )
+       !$acc data create(dvkb)
+       !
+       CALL gen_us_dj( ik, dvkb(:,:,4) )
+       IF ( lmaxkb > 0 ) THEN
+         DO ipol = 1, 3
+           CALL gen_us_dy( ik, xyz(1,ipol), dvkb(:,:,ipol) )
+         ENDDO
+       ENDIF
+       !
+       DO icyc = 0, nproc-1
           !
           DO ibnd_loc = 1, nbnd_loc
-             !  
-             ibnd = ibnd_loc + becp%ibnd_begin - 1 
-             CALL compute_deff ( deff, et(ibnd,ik) )
-             work2(:) = (0.D0,0.D0)
-             ijkb0 = 0
-             DO np = 1, ntyp
-                DO na = 1, nat
-                   IF ( ityp(na) == np ) THEN
-                      DO ih = 1, nh(np)
-                         ikb = ijkb0 + ih
-                         IF ( .NOT. ( upf(np)%tvanp .OR. upf(np)%is_multiproj ) ) THEN
-                            ps = becp%r(ikb,ibnd_loc) * deff(ih,ih,na)
-                         ELSE
-                            !
-                            ! ... in the US case there is a contribution 
-                            ! ... also for jh<>ih
-                            !
-                            ps = (0.D0,0.D0)
-                            DO jh = 1, nh(np)
-                               jkb = ijkb0 + jh
-                               ps = ps + becp%r(jkb,ibnd_loc) * deff(ih,jh,na)
-                            END DO
-                         END IF
-                         CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
-                      END DO
-                      ijkb0 = ijkb0 + nh(np)
-                   END IF
-                END DO
-             END DO
+             !
+             ibnd = ibnd_loc + becp%ibnd_begin - 1
+             CALL compute_deff( deff, et(ibnd,ik) )
+             !
+             !$acc kernels
+             evcv(:) = evc(:,ibnd)
+             !$acc end kernels
+             !
+             !$acc parallel loop
+             DO i = 1, itot
+               ih = ih_list(i)         ; na = na_list(i)
+               ishift = ishift_list(i) ; ikb = ishift + ih
+               !
+               IF (.NOT. is_multinp(i)) THEN
+                  ps(ikb) =  CMPLX(deff(ih,ih,na) * becpr(ikb,ibnd_loc))
+               ELSE
+                  nh_np = nh_list(i)
+                  !
+                  ps(ikb) = CMPLX( SUM( becpr(ishift+1:ishift+nh_np,ibnd_loc) &
+                                    * deff(ih,1:nh_np,na) ) )
+               ENDIF
+             ENDDO
+             !
+             dot11 = 0._DP ; dot21 = 0._DP ; dot31 = 0._DP
+             dot22 = 0._DP ; dot32 = 0._DP ; dot33 = 0._DP
+             !
+             !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,&
+             !$acc&                                      dot22,dot32,dot33)
+             DO na =1, nat
+                DO i = 1, npw
+                   np = ityp(na)
+                   ijkb0 = shift(na)
+                   nh_np = nh(np)
+                   worksum = (0._DP,0._DP)
+                   DO ih = 1, nh_np
+                      ikb = ijkb0 + ih
+                      worksum = worksum + ps(ikb) * dvkb(i,ikb,4)
+                   ENDDO
+                   Re_worksum = DBLE(worksum) ;  Im_worksum = DIMAG(worksum)
+                   evci = evcv(i)
+                   gk1  = gk(i,1) ;  gk2 = gk(i,2) ;  gk3 = gk(i,3)
+                   qm1i = qm1(i)
+                   !
+                   cv = evci * CMPLX(gk1 * gk1  * qm1i)
+                   dot11 = dot11 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
+                   !
+                   cv = evci * CMPLX(gk2 * gk1 * qm1i)
+                   dot21 = dot21 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
+                   !
+                   cv = evci * CMPLX(gk3 * gk1 * qm1i)
+                   dot31 = dot31 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
+                   !
+                   cv = evci * CMPLX(gk2 * gk2 * qm1i)
+                   dot22 = dot22 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
+                   !
+                   cv = evci * CMPLX(gk3 * gk2 * qm1i)
+                   dot32 = dot32 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
+                   !
+                   cv = evci * CMPLX(gk3 * gk3 * qm1i)
+                   dot33 = dot33 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
+                ENDDO
+             ENDDO
+             ! ... a factor 2 accounts for the other half of the G-vector sphere
+             sigmanlc(:,1) = sigmanlc(:,1) - 4._DP * wg(ibnd,ik) * [dot11, dot21, dot31] 
+             sigmanlc(:,2) = sigmanlc(:,2) - 4._DP * wg(ibnd,ik) * [0._DP, dot22, dot32]
+             sigmanlc(:,3) = sigmanlc(:,3) - 4._DP * wg(ibnd,ik) * [0._DP, 0._DP, dot33]                  
+             !
+             ! ... non diagonal contribution - derivative of the spherical harmonics
+             ! ... (no contribution from l=0)
+             !
+             IF ( lmaxkb == 0 ) CYCLE 
+             !
+             dot11 = 0._DP ; dot21 = 0._DP ; dot31 = 0._DP
+             dot22 = 0._DP ; dot32 = 0._DP ; dot33 = 0._DP
+             !
+             !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,dot22,dot32,dot33)
+             DO ikb = 1, nkb
+                DO i = 1, npw
+                   wsum1 = ps(ikb)*dvkb(i,ikb,1)
+                   wsum2 = ps(ikb)*dvkb(i,ikb,2)
+                   wsum3 = ps(ikb)*dvkb(i,ikb,3)
+                   !
+                   evci = evcv(i)
+                   gk1 = gk(i,1)
+                   gk2 = gk(i,2)
+                   gk3 = gk(i,3)
+                   !
+                   cv = evci * CMPLX(gk1)
+                   dot11 = dot11 + DBLE(wsum1)* DBLE(cv) + DIMAG(wsum1)*DIMAG(cv)
+                   dot21 = dot21 + DBLE(wsum2)* DBLE(cv) + DIMAG(wsum2)*DIMAG(cv)
+                   dot31 = dot31 + DBLE(wsum3)* DBLE(cv) + DIMAG(wsum3)*DIMAG(cv)
+                   !
+                   cv = evci * CMPLX(gk2)
+                   dot22 = dot22 + DBLE(wsum2)* DBLE(cv) + DIMAG(wsum2)*DIMAG(cv) 
+                   dot32 = dot32 + DBLE(wsum3)* DBLE(cv) + DIMAG(wsum3)*DIMAG(cv)
+                   ! 
+                   cv =  evci * CMPLX(gk3)
+                   dot33 = dot33 + DBLE(wsum3)* DBLE(cv) + DIMAG(wsum3)*DIMAG(cv)
+                ENDDO
+             ENDDO 
              !
              ! ... a factor 2 accounts for the other half of the G-vector sphere
              !
-             DO ipol = 1, 3
-                DO jpol = 1, ipol
-                   DO i = 1, npw
-                      work1(i) = evc(i,ibnd) * gk(i, ipol) * gk(i, jpol) * qm1(i)
-                   END DO
-                   sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                        4.D0 * wg(ibnd,ik) * &
-                        ddot( 2 * npw, work1, 1, work2, 1 )
-                END DO
-             END DO
-          END DO
-          IF ( nproc > 1 ) THEN
-             CALL mp_circular_shift_left(becp%r, icyc, becp%comm)
-             CALL mp_circular_shift_left(becp%ibnd_begin, icyc, becp%comm)
-             CALL mp_circular_shift_left(nbnd_loc, icyc, becp%comm)
-          END IF
-       END DO
-       !
-       ! ... non diagonal contribution - derivative of the spherical harmonics
-       ! ... (no contribution from l=0)
-       !
-       IF ( lmaxkb == 0 ) GO TO 10
-       !
-       !------------------------------------
-       CALL using_evc(0); CALL using_et(0) ! compute_deff : intent(in) (this is redundant)
-       DO ipol = 1, 3
-          !
-          CALL gen_us_dy( ik, xyz(1,ipol), dvkb )
-          !
-          DO icyc = 0, nproc -1
-             !
-             DO ibnd_loc = 1, nbnd_loc
-                ibnd = ibnd_loc + becp%ibnd_begin - 1 
-                CALL compute_deff ( deff, et(ibnd,ik) )
-                work2(:) = (0.D0,0.D0)
-                ijkb0 = 0
-                DO np = 1, ntyp
-                   DO na = 1, nat
-                      IF ( ityp(na) == np ) THEN
-                         DO ih = 1, nh(np)
-                            ikb = ijkb0 + ih
-                            IF ( .NOT. ( upf(np)%tvanp .OR. upf(np)%is_multiproj ) ) THEN
-                               ps = becp%r(ikb,ibnd_loc) * deff(ih,ih,na)
-                            ELSE 
-                               !
-                               ! ... in the US case there is a contribution 
-                               ! ... also for jh<>ih
-                               !
-                               ps = (0.D0,0.D0)
-                               DO jh = 1, nh(np)
-                                  jkb = ijkb0 + jh
-                                  ps = ps + becp%r(jkb,ibnd_loc)*deff(ih,jh,na)
-                               END DO
-                            END IF
-                            CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
-                         END DO
-                         ijkb0 = ijkb0 + nh(np)
-                      END IF
-                   END DO
-                END DO
-                !
-                ! ... a factor 2 accounts for the other half of the G-vector sphere
-                !
-                DO jpol = 1, ipol
-                   DO i = 1, npw
-                      work1(i) = evc(i,ibnd) * gk(i, jpol)
-                   END DO
-                   sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                        4.D0 * wg(ibnd,ik) * &
-                        ddot( 2 * npw, work1, 1, work2, 1 )
-                END DO
-             END DO
-
-             IF ( nproc > 1 ) THEN
-                CALL mp_circular_shift_left(becp%r, icyc, becp%comm)
-                CALL mp_circular_shift_left(becp%ibnd_begin, icyc, becp%comm)
-                CALL mp_circular_shift_left(nbnd_loc, icyc, becp%comm)
-             END IF
-
+             sigmanlc(:,1) = sigmanlc(:,1) -4._DP * wg(ibnd,ik) * [dot11, dot21, dot31]
+             sigmanlc(:,2) = sigmanlc(:,2) -4._DP * wg(ibnd,ik) * [0._DP, dot22, dot32]
+             sigmanlc(:,3) = sigmanlc(:,3) -4._DP * wg(ibnd,ik) * [0._DP, 0._DP, dot33]
           ENDDO
-       END DO
-
+          !
+          IF ( nproc > 1 ) THEN
+#if defined(__CUDA) || defined(_OPENACC)
+             CALL errore( 'stres_us_gamma', &
+                          'unexpected error nproc be 1 with GPU acceleration', 100 )
+#else
+             CALL mp_circular_shift_left( becp%r, icyc, becp%comm )
+             becpr = becp%r
+             CALL mp_circular_shift_left( becp%ibnd_begin, icyc, becp%comm )
+             CALL mp_circular_shift_left( nbnd_loc, icyc, becp%comm )
+#endif
+          ENDIF
+          !
+       ENDDO
+       !
 10     CONTINUE
        !
        DO l = 1, 3
           sigmanlc(l,l) = sigmanlc(l,l) - evps
-       END DO
+       ENDDO
        !
+       !$acc end data
+       !$acc end data
+       DEALLOCATE( deff, ps )
        DEALLOCATE( dvkb )
-       DEALLOCATE( deff, work2, work1 )
+#if !defined(__CUDA)
+       DEALLOCATE( becpr )
+#endif
        !
        RETURN
        !
-     END SUBROUTINE stres_us_gamma     
+     END SUBROUTINE stres_us_gamma
      !
      !
      !----------------------------------------------------------------------
      SUBROUTINE stres_us_k()
-       !----------------------------------------------------------------------  
-       !! nonlocal contribution to the stress - k-points version
+       !----------------------------------------------------------------------
+       !! nonlocal contribution to the stress - k-points version.
        !
        IMPLICIT NONE
        !
        ! ... local variables
        !
-       INTEGER                       :: na, np, ibnd, ipol, jpol, l, i, ipw, &
-                                        ikb, jkb, ih, jh, ijkb0, is, js, ijs
-       REAL(DP)                 :: fac, xyz (3, 3), evps, ddot
-       COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
-       COMPLEX(DP), ALLOCATABLE :: work2_nc(:,:)
-       COMPLEX(DP), ALLOCATABLE :: deff_nc(:,:,:,:)
+       INTEGER  :: na, np, ibnd, ipol, jpol, l, i, nt, &
+                   ikb, jkb, ih, jh, is, js, ijs, ishift, nh_np
+       REAL(DP) :: fac, evps, dot11, dot21, dot31, dot22, dot32, dot33, aux, &
+                   Re_worksum, Re_worksum1, Re_worksum2, Im_worksum,         &
+                   Im_worksum1, Im_worksum2
+       COMPLEX(DP) :: qm1i, gk1, gk2, gk3, pss
+       COMPLEX(DP) :: cv, cv1, cv2, worksum, worksum1, worksum2, evci, evc1i, &
+                      evc2i, ps1, ps2, ps1d1, ps1d2, ps1d3, ps2d1, ps2d2,     &
+                      ps2d3, psd1, psd2, psd3
+       !
        REAL(DP), ALLOCATABLE :: deff(:,:,:)
-       ! dvkb contains the derivatives of the kb potential
-       COMPLEX(DP)              :: ps, ps_nc(2)
+       COMPLEX(DP), ALLOCATABLE :: deff_nc(:,:,:,:)
+       COMPLEX(DP), ALLOCATABLE :: ps(:), ps_nc(:,:), dvkb(:,:,:)
+       !
+       REAL(DP) :: xyz(3,3)
        ! xyz are the three unit vectors in the x,y,z directions
-       DATA xyz / 1.0d0, 0.0d0, 0.0d0, 0.0d0, 1.0d0, 0.0d0, 0.0d0, 0.0d0, 1.0d0 /
+       DATA xyz / 1._DP, 0._DP, 0._DP, 0._DP, 1._DP, 0._DP, 0._DP, &
+                  0._DP, 1._DP /
        !
+#if defined(__CUDA) && defined(_OPENACC)
+       COMPLEX(DP), POINTER, DEVICE :: becpnc(:,:,:), becpk(:,:)
+#else
+       COMPLEX(DP), ALLOCATABLE :: becpnc(:,:,:), becpk(:,:)
+#endif
        !
-       if (noncolin) then
-          ALLOCATE( work2_nc(npwx,npol) )
-          ALLOCATE( deff_nc(nhm,nhm,nat,nspin) )
-       else
-          ALLOCATE( deff(nhm,nhm,nat) )
-       endif
-       !
-       ALLOCATE( work1(npwx), work2(npwx) )
-       !
-       evps = 0.D0
+       evps = 0._DP
        ! ... diagonal contribution
        !
-       IF ( me_bgrp /= root_bgrp ) GO TO 100
+       ALLOCATE( dvkb(npwx,nkb,4) )
+       !$acc data create( dvkb )
+       !
+       CALL gen_us_dj( ik, dvkb(:,:,4) )
+       IF ( lmaxkb > 0 ) THEN
+         DO ipol = 1, 3
+           CALL gen_us_dy( ik, xyz(1,ipol), dvkb(:,:,ipol) )
+         ENDDO
+       ENDIF
+       !
+       IF (noncolin) THEN
+          ALLOCATE( ps_nc(nkb,npol) )
+          ALLOCATE( deff_nc(nhm,nhm,nat,nspin) )
+#if defined(__CUDA) && defined(_OPENACC)
+          becpnc => becp_d%nc_d 
+#else
+          ALLOCATE( becpnc(nkb,npol,nbnd) )
+          becpnc = becp%nc
+#endif
+       ELSE
+          ALLOCATE( ps(nkb) )
+          ALLOCATE( deff(nhm,nhm,nat) )
+#if defined(__CUDA) && defined(_OPENACC)
+          becpk => becp_d%k_d 
+#else
+          ALLOCATE( becpk(nkb,nbnd) )
+          becpk = becp%k
+#endif
+       ENDIF
+       !$acc data create( ps, ps_nc, deff, deff_nc )
+       !
+       CALL using_et(0)
        !
        ! ... the contribution is calculated only on one processor because
        ! ... partial results are later summed over all processors
        !
-       CALL using_et(0) ! compute_deff : intent(in)
+       IF ( me_bgrp /= root_bgrp ) GO TO 100
+       !
        DO ibnd = 1, nbnd
           fac = wg(ibnd,ik)
           IF (ABS(fac) < 1.d-9) CYCLE
           IF (noncolin) THEN
-             CALL compute_deff_nc(deff_nc,et(ibnd,ik))
+             CALL compute_deff_nc( deff_nc, et(ibnd,ik) )
           ELSE
-             CALL compute_deff(deff,et(ibnd,ik))
+             CALL compute_deff( deff, et(ibnd,ik) )
           ENDIF
-          ijkb0 = 0
-          DO np = 1, ntyp
-             DO na = 1, nat
-                IF ( ityp(na) == np ) THEN
-                   DO ih = 1, nh(np)
-                      ikb = ijkb0 + ih
-                      IF (noncolin) THEN
-                         ijs=0
-                         DO is=1,npol
-                            DO js=1,npol
-                               ijs=ijs+1
-                               evps=evps+fac*deff_nc(ih,ih,na,ijs)*   &
-                                         CONJG(becp%nc(ikb,is,ibnd))* &
-                                               becp%nc(ikb,js,ibnd)
-                            END DO
-                         END DO
-                      ELSE
-                         evps = evps+fac*deff(ih,ih,na)*ABS(becp%k(ikb,ibnd) )**2
-                      END IF
-                      !
-                      IF ( upf(np)%tvanp .OR. upf(np)%is_multiproj ) THEN
-                         !
-                         ! ... only in the US case there is a contribution 
-                         ! ... for jh<>ih
-                         ! ... we use here the symmetry in the interchange of 
-                         ! ... ih and jh
-                         !
-                         DO jh = ( ih + 1 ), nh(np)
-                            jkb = ijkb0 + jh
-                            IF (noncolin) THEN
-                               ijs=0
-                               DO is=1,npol
-                                  DO js=1,npol
-                                     ijs=ijs+1
-                                     evps = evps+2.d0*fac&
-                                            *DBLE(deff_nc(ih,jh,na,ijs)*      &
-                                            (CONJG( becp%nc(ikb,is,ibnd) ) * &
-                                                    becp%nc(jkb,js,ibnd))  )
-                                  END DO
-                               END DO
-                            ELSE
-                               evps = evps + deff(ih,jh,na) * fac * 2.D0 * &
-                                     DBLE( CONJG( becp%k(ikb,ibnd) ) * &
-                                                  becp%k(jkb,ibnd) )
-                            END IF
-                         END DO
-                      END IF
-                   END DO
-                   ijkb0 = ijkb0 + nh(np)
-                END IF
-             END DO
-          END DO
-       END DO
+          !
+          IF (noncolin) THEN
+            !
+#if defined(_OPENACC)
+            !$acc parallel loop reduction(+:evps)
+#else
+            !$omp parallel do reduction(+:evps), private(ih,na,ishift,ikb,aux,&
+            !$omp&            ijs,is,js,nh_np,jkb)
+#endif
+            DO i = 1, itot
+              !
+              ih = ih_list(i)         ; na = na_list(i)
+              ishift = ishift_list(i) ; ikb = ishift + ih
+              aux = 0.d0
+              !
+              IF (.NOT. is_multinp(i)) THEN
+                 ijs = 0
+                 !$acc loop seq collapse(2) reduction(+:aux)
+                 DO is = 1, npol
+                   DO js = 1, npol
+                      ijs = ijs + 1
+                      aux = aux + fac * DBLE(deff_nc(ih,ih,na,ijs) * &
+                                             CONJG(becpnc(ikb,is,ibnd)) * &
+                                             becpnc(ikb,js,ibnd))
+                   ENDDO
+                 ENDDO
+              ELSE
+                 nh_np = nh_list(i)
+                 ijs = 0
+                 !$acc loop seq collapse(2) reduction(+:aux)
+                 DO is = 1, npol
+                   DO js = 1, npol
+                      ijs = ijs + 1
+                      aux = aux + fac * DBLE(deff_nc(ih,ih,na,ijs) * &
+                                             CONJG(becpnc(ikb,is,ibnd)) * &
+                                             becpnc(ikb,js,ibnd))
+                   ENDDO
+                 ENDDO
+                 !$acc loop seq
+                 DO jh = ih+1, nh_np
+                    jkb = ishift + jh
+                    ijs = 0
+                    !$acc loop seq collapse(2) reduction(+:aux)
+                    DO is = 1, npol
+                      DO js = 1, npol
+                         ijs = ijs + 1
+                         aux = aux + 2._DP*fac * &
+                                       DBLE(deff_nc(ih,jh,na,ijs) * &
+                                            (CONJG(becpnc(ikb,is,ibnd)) * &
+                                             becpnc(jkb,js,ibnd)))
+                      ENDDO
+                    ENDDO
+                 ENDDO
+              ENDIF
+              !
+              evps = evps + aux
+              !
+            ENDDO
+#if !defined(_OPENACC)
+            !$omp end parallel do
+#endif
+            !
+          ELSE
+            !
+            aux = 0.d0
+#if defined(_OPENACC)
+            !$acc parallel loop reduction(+:evps)
+#else
+            !$omp parallel do reduction(+:evps) private(ih,na,ishift,ikb,&
+            !$omp&            aux,nh_np)
+#endif
+            DO i = 1, itot
+              !
+              ih = ih_list(i)         ; na = na_list(i)
+              ishift = ishift_list(i) ; ikb = ishift + ih
+              !
+              IF (.NOT. is_multinp(i)) THEN
+                 aux = fac * deff(ih,ih,na) * &
+                               ABS(becpk(ikb,ibnd) )**2
+              ELSE
+                 nh_np = nh_list(i)
+                 aux = fac * deff(ih,ih,na) * ABS(becpk(ikb,ibnd) )**2 + &
+                             SUM( deff(ih,ih+1:nh_np,na) * &
+                                  fac * 2._DP*DBLE( CONJG(becpk(ikb,ibnd)) &
+                                  * becpk(ishift+ih+1:ishift+nh_np,ibnd) ) )
+              ENDIF
+              !
+              evps = evps + aux
+              !
+            ENDDO
+#if !defined(_OPENACC)
+            !$omp end parallel do
+#endif
+            !
+          ENDIF
+          !
+       ENDDO
+       !
        DO l = 1, 3
           sigmanlc(l,l) = sigmanlc(l,l) - evps
-       END DO
+       ENDDO
        !
 100    CONTINUE
        !
        ! ... non diagonal contribution - derivative of the bessel function
        !
-       ALLOCATE( dvkb( npwx, nkb ) )
-       !
-       CALL gen_us_dj( ik, dvkb )
-       !
-       CALL using_evc(0); CALL using_et(0) ! this is redundant
-       ! 
        DO ibnd = 1, nbnd
-          IF (noncolin) THEN
-             work2_nc = (0.D0,0.D0)
-             CALL compute_deff_nc(deff_nc,et(ibnd,ik))
-          ELSE
-             work2 = (0.D0,0.D0)
-             CALL compute_deff(deff,et(ibnd,ik))
-          ENDIF
-          !$omp parallel private(ijkb0, ikb, ijs, ps_nc, ps, jkb)
-          ijkb0 = 0
-          DO np = 1, ntyp
-             DO na = 1, nat
-                IF ( ityp(na) == np ) THEN
-                   DO ih = 1, nh(np)
-                      ikb = ijkb0 + ih
-                      IF ( .NOT. ( upf(np)%tvanp .OR. upf(np)%is_multiproj ) ) THEN
-                         IF (noncolin) THEN
-                            if (lspinorb) call errore('stres_us','wrong case',1)
-                            ijs=0
-                            ps_nc=(0.D0, 0.D0)
-                            DO is=1,npol
-                               DO js=1,npol
-                                  ijs=ijs+1
-                                  ps_nc(is)=ps_nc(is)+becp%nc(ikb,js,ibnd)* &
-                                         deff_nc(ih,ih,na,ijs)
-                               END DO
-                            END DO
-                         ELSE
-                            ps = becp%k(ikb, ibnd) * deeq(ih,ih,na,current_spin)
-                         ENDIF
-                      ELSE
-                         !
-                         ! ... in the US case there is a contribution 
-                         ! ... also for jh<>ih
-                         !
-                         ps = (0.D0,0.D0)
-                         ps_nc = (0.D0,0.D0)
-                         DO jh = 1, nh(np)
-                            jkb = ijkb0 + jh
-                            IF (noncolin) THEN
-                               ijs=0
-                               DO is=1,npol
-                                  DO js=1,npol
-                                     ijs=ijs+1
-                                     ps_nc(is)=ps_nc(is)+becp%nc(jkb,js,ibnd)* &
-                                           deff_nc(ih,jh,na,ijs)
-                                  END DO
-                               END DO
-                            ELSE
-                               ps = ps + becp%k(jkb,ibnd) * deff(ih,jh,na)
-                            END IF
-                         END DO
-                      END IF
-                      IF (noncolin) THEN
-                         DO is=1,npol
-                            !$omp do
-                            DO ipw = 1, npw
-                               work2_nc(ipw,is) = ps_nc(is) * dvkb(ipw, ikb) + work2_nc(ipw,is)
-                            END DO
-                            !$omp end do nowait
-                         END DO
-                      ELSE
-                         !$omp do
-                         DO ipw = 1, npw
-                            work2(ipw) = ps * dvkb(ipw, ikb) + work2(ipw)
-                         END DO
-                         !$omp end do nowait
-                      END IF
-                   END DO
-                   ijkb0 = ijkb0 + nh(np)
-                END IF
-             END DO
-          END DO
-          !$omp end parallel
-          DO ipol = 1, 3
-             DO jpol = 1, ipol
-                IF (noncolin) THEN
-                   DO i = 1, npw
-                      work1(i) = evc(   i  ,ibnd)*gk(i,ipol)* &
-                                                  gk(i,jpol)*qm1(i)
-                      work2(i) = evc(i+npwx,ibnd)*gk(i,ipol)* &
-                                                  gk(i,jpol)*qm1(i)
-                   END DO
-                   sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                                   2.D0 * wg(ibnd,ik) * &
-                                 ( ddot(2*npw,work1,1,work2_nc(1,1), 1) + &
-                                   ddot(2*npw,work2,1,work2_nc(1,2), 1) )
-                ELSE
-                   DO i = 1, npw
-                      work1(i) = evc(i,ibnd)*gk(i, ipol)*gk(i, jpol)*qm1(i)
-                   END DO
-                   sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                                         2.D0 * wg(ibnd,ik) * &
-                                         ddot( 2*npw, work1, 1, work2, 1 )
-                END IF
-             END DO
-          END DO
-       END DO
-       !
-       ! ... non diagonal contribution - derivative of the spherical harmonics
-       ! ... (no contribution from l=0)
-       !
-       IF ( lmaxkb == 0 ) GO TO 10
-       !
-       DO ipol = 1, 3
-          CALL gen_us_dy( ik, xyz(1,ipol), dvkb )
-          DO ibnd = 1, nbnd
-             IF (noncolin) THEN
-                work2_nc = (0.D0,0.D0)
-                CALL compute_deff_nc( deff_nc, et(ibnd,ik) )
-             ELSE
-                work2 = (0.D0,0.D0)
-                CALL compute_deff( deff, et(ibnd,ik) )
-             ENDIF
-             !$omp parallel private(ijkb0, ikb, ijs, ps_nc, ps, jkb)
-             ijkb0 = 0
-             DO np = 1, ntyp
-                DO na = 1, nat
-                   IF ( ityp(na) == np ) THEN
-                      DO ih = 1, nh(np)
-                         ikb = ijkb0 + ih
-                         IF ( .NOT. ( upf(np)%tvanp .OR. upf(np)%is_multiproj ) ) THEN
-                            IF (noncolin) THEN
-                               ijs=0
-                               ps_nc = (0.D0,0.D0)
-                               DO is=1,npol
-                                  DO js=1,npol
-                                     ijs=ijs+1
-                                     ps_nc(is) = ps_nc(is) + becp%nc( ikb,js,ibnd )* &
-                                                 deff_nc( ih,ih,na,ijs )
-                                  END DO
-                               END DO
-                            ELSE
-                               ps = becp%k(ikb,ibnd) * deeq(ih,ih,na,current_spin)
-                            END IF
-                         ELSE
-                            !
-                            ! ... in the US case there is a contribution 
-                            ! ... also for jh<>ih
-                            !
-                            ps = (0.D0,0.D0)
-                            ps_nc = (0.D0,0.D0)
-                            DO jh = 1, nh(np)
-                               jkb = ijkb0 + jh
-                               IF (noncolin) THEN
-                                  ijs=0
-                                  DO is=1,npol
-                                     DO js=1,npol
-                                        ijs=ijs+1
-                                        ps_nc(is)=ps_nc(is)+ &
-                                               becp%nc(jkb,js,ibnd)* &
-                                               deff_nc(ih,jh,na,ijs)
-                                     END DO
-                                  END DO
-                               ELSE
-                                  ps = ps + becp%k(jkb,ibnd) * deff(ih,jh,na)
-                               END IF
-                            END DO
-                         END IF
-                         IF (noncolin) THEN
-                            DO is=1,npol
-                               !$omp do
-                               DO ipw = 1, npw
-                                  work2_nc(ipw,is) = ps_nc(is) * dvkb(ipw, ikb) + work2_nc(ipw,is)
-                               END DO
-                               !$omp end do nowait
-                            END DO
-                         ELSE
-                            !$omp do
-                            DO ipw = 1, npw
-                               work2(ipw) = ps * dvkb(ipw, ikb) + work2(ipw)
-                            END DO
-                            !$omp end do nowait
-                         END IF
-                      END DO
-                      ijkb0 = ijkb0 + nh(np)
-                   END IF
-                END DO
-             END DO
-             !$omp end parallel
-             DO jpol = 1, ipol
-                IF (noncolin) THEN
-                   DO i = 1, npw
-                      work1(i) = evc(i     ,ibnd) * gk(i, jpol)
-                      work2(i) = evc(i+npwx,ibnd) * gk(i, jpol)
-                   END DO
-                   sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                              2.D0 * wg(ibnd,ik) * & 
-                            ( ddot( 2 * npw, work1, 1, work2_nc(1,1), 1 ) + &
-                              ddot( 2 * npw, work2, 1, work2_nc(1,2), 1 ) )
-                ELSE
-                   DO i = 1, npw
-                      work1(i) = evc(i,ibnd) * gk(i, jpol)
-                   END DO
-                   sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                                      2.D0 * wg(ibnd,ik) * & 
-                                      ddot( 2 * npw, work1, 1, work2, 1 )
-                END IF
-             END DO
-          END DO
-       END DO
+         !
+         !$acc kernels
+         evcv(:) = evc(:,ibnd)
+         !$acc end kernels
+         !
+         IF ( noncolin ) THEN
+            !
+            CALL compute_deff_nc( deff_nc, et(ibnd,ik) )
+            !
+#if defined(_OPENACC)
+            !$acc parallel loop
+#else
+            !$omp parallel do private(ih,na,ishift,ikb,is,ijs,nh_np)
+#endif
+            DO i = 1, itot
+              !
+              ih = ih_list(i)         ; na = na_list(i)
+              ishift = ishift_list(i) ; ikb = ishift + ih
+              !
+              IF (.NOT. is_multinp(i)) THEN
+                 !
+                 !$acc loop seq
+                 DO is = 1, npol
+                   ijs = (is-1)*npol
+                   ps_nc(ikb,is) = SUM( becpnc(ikb,1:npol,ibnd) * &
+                                        deff_nc(ih,ih,na,ijs+1:ijs+npol) )
+                 ENDDO
+                 !
+              ELSE
+                 !
+                 nh_np = nh_list(i)
+                 !
+                 !$acc loop seq
+                 DO is = 1, npol
+                   ijs = (is-1)*npol
+                   ps_nc(ikb,is) = SUM( becpnc(ishift+1:ishift+nh_np,1:npol,ibnd) * &
+                                        deff_nc(ih,1:nh_np,na,ijs+1:ijs+npol) )
+                 ENDDO
+                 !
+              ENDIF
+            ENDDO
+#if !defined(_OPENACC)
+            !$omp end parallel do
+#endif
+            !
+         ELSE
+            !
+            CALL compute_deff( deff, et(ibnd,ik) )
+            !
+#if defined(_OPENACC)
+            !$acc parallel loop
+#else
+            !$omp parallel do private(ih,na,ishift,ikb,nh_np)
+#endif
+            DO i = 1, itot
+               !
+               ih = ih_list(i)         ; na = na_list(i)
+               ishift = ishift_list(i) ; ikb = ishift + ih
+               !
+               IF (.NOT. is_multinp(i)) THEN
+                  ps(ikb) = CMPLX(deeq(ih,ih,na,current_spin)) * &
+                                               becpk(ikb,ibnd)
+               ELSE 
+                  nh_np = nh_list(i)
+                  !
+                  ps(ikb) = SUM( becpk(ishift+1:ishift+nh_np,ibnd) * &
+                                               deff(ih,1:nh_np,na) )
+               ENDIF
+               !
+            ENDDO
+#if !defined(_OPENACC)
+            !$omp end parallel do
+#endif
+            !
+         ENDIF
+         !
+         dot11=0._DP ; dot21=0._DP ; dot31=0._DP
+         dot22=0._DP ; dot32=0._DP ; dot33=0._DP
+         !
+         IF (noncolin) THEN
+#if defined(_OPENACC)
+            !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,&
+            !$acc&                                      dot22,dot32,dot33)
+#else
+            !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,&
+            !$omp&    dot32,dot33) shared(evcv,qm1,gk,ps_nc,dvkb)
+#endif
+            DO ikb = 1, nkb
+               DO i = 1, npw
+                  evc1i = evcv(i)
+                  evc2i = evcv(i+npwx)
+                  qm1i = CMPLX(qm1(i))
+                  gk1 = CMPLX(gk(i,1))
+                  gk2 = CMPLX(gk(i,2))
+                  gk3 = CMPLX(gk(i,3))
+                  worksum1 = ps_nc(ikb,1) * dvkb(i,ikb,4)
+                  worksum2 = ps_nc(ikb,2) * dvkb(i,ikb,4)
+                  Re_worksum1 = DBLE(worksum1) ;  Im_worksum1 = DIMAG(worksum1)
+                  Re_worksum2 = DBLE(worksum2) ;  Im_worksum2 = DIMAG(worksum2)
+                  !
+                  cv1 = evc1i * gk1 * gk1 * qm1i
+                  cv2 = evc2i * gk1 * gk1 * qm1i
+                  dot11 = dot11 + Re_worksum1*DBLE(cv1) + Im_worksum1*DIMAG(cv1) + &
+                                  Re_worksum2*DBLE(cv2) + Im_worksum2*DIMAG(cv2)
+                  !
+                  cv1 = evc1i * gk2 * gk1 * qm1i
+                  cv2 = evc2i * gk2 * gk1 * qm1i
+                  dot21 = dot21 + Re_worksum1*DBLE(cv1) + Im_worksum1*DIMAG(cv1) + &
+                                  Re_worksum2*DBLE(cv2) + Im_worksum2*DIMAG(cv2)
+                  !
+                  cv1 = evc1i * gk3 * gk1 * qm1i
+                  cv2 = evc2i * gk3 * gk1 * qm1i
+                  dot31 = dot31 + Re_worksum1*DBLE(cv1) + Im_worksum1*DIMAG(cv1) + &
+                                  Re_worksum2*DBLE(cv2) + Im_worksum2*DIMAG(cv2)
+                  !
+                  cv1 = evc1i * gk2 * gk2 * qm1i
+                  cv2 = evc2i * gk2 * gk2 * qm1i
+                  dot22 = dot22 + Re_worksum1*DBLE(cv1) + Im_worksum1*DIMAG(cv1) + &
+                                  Re_worksum2*DBLE(cv2) + Im_worksum2*DIMAG(cv2)
+                  !
+                  cv1 = evc1i * gk3 * gk2 * qm1i
+                  cv2 = evc2i * gk3 * gk2 * qm1i
+                  dot32 = dot32 + Re_worksum1*DBLE(cv1) + Im_worksum1*DIMAG(cv1) + &
+                                  Re_worksum2*DBLE(cv2) + Im_worksum2*DIMAG(cv2)
+                  !
+                  cv1  = evc1i * gk3 * gk3 * qm1i
+                  cv2  = evc2i * gk3 * gk3 * qm1i
+                  dot33 = dot33 + Re_worksum1*DBLE(cv1) + Im_worksum1*DIMAG(cv1) + &
+                                  Re_worksum2*DBLE(cv2) + Im_worksum2*DIMAG(cv2)
+               ENDDO
+            ENDDO
+#if !defined(_OPENACC)
+            !$omp end parallel do
+#endif
+            !
+         ELSE
+            !
+#if defined(_OPENACC)
+            !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,&
+            !$acc&                                      dot22,dot32,dot33)
+#else
+            !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,&
+            !$omp&    dot32,dot33) shared(evcv,qm1,gk,ps,dvkb)
+#endif
+            DO ikb = 1, nkb
+               DO i = 1, npw
+                  !
+                  worksum = ps(ikb) *dvkb(i,ikb,4)
+                  Re_worksum = DBLE(worksum) ;  Im_worksum = DIMAG(worksum)
+                  !
+                  evci = evcv(i)
+                  qm1i = CMPLX(qm1(i))
+                  gk1 = CMPLX(gk(i,1))
+                  gk2 = CMPLX(gk(i,2))
+                  gk3 = CMPLX(gk(i,3))
+                  !
+                  cv = evci * gk1 * gk1 * qm1i
+                  dot11 = dot11 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
+                  !
+                  cv = evci * gk2 * gk1 * qm1i
+                  dot21 = dot21 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
+                  !
+                  cv = evci * gk3 * gk1 * qm1i
+                  dot31 = dot31 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
+                  !
+                  cv = evci * gk2 * gk2 * qm1i
+                  dot22 = dot22 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
+                  !
+                  cv = evci * gk3 * gk2 * qm1i
+                  dot32 = dot32 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
+                  !
+                  cv = evci * gk3 * gk3 * qm1i
+                  dot33 = dot33 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
+                  !
+               ENDDO
+            ENDDO
+#if !defined(_OPENACC)
+            !$omp end parallel do
+#endif
+         ENDIF
+         !
+         sigmanlc(:,1) = sigmanlc(:,1) - 2._DP * wg(ibnd,ik) * [dot11, dot21, dot31]
+         sigmanlc(:,2) = sigmanlc(:,2) - 2._DP * wg(ibnd,ik) * [0._DP, dot22, dot32]
+         sigmanlc(:,3) = sigmanlc(:,3) - 2._DP * wg(ibnd,ik) * [0._DP, 0._DP, dot33]
+         !
+         ! ... non diagonal contribution - derivative of the spherical harmonics
+         ! ... (no contribution from l=0)
+         !
+         IF ( lmaxkb == 0 ) CYCLE
+         !
+         dot11 = 0._DP ;  dot21 = 0._DP
+         dot31 = 0._DP ;  dot22 = 0._DP
+         dot32 = 0._DP ;  dot33 = 0._DP
+         !
+         IF (noncolin) THEN
+            !
+#if defined(_OPENACC)
+            !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,&
+            !$acc&                                      dot22,dot32,dot33)
+#else
+            !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,&
+            !$omp&    dot32,dot33) shared(evcv,gk,ps_nc,dvkb)
+#endif
+            DO ikb =1, nkb
+               DO i = 1, npw
+                  !
+                  gk1 = CMPLX(gk(i,1))
+                  gk2 = CMPLX(gk(i,2))
+                  gk3 = CMPLX(gk(i,3))
+                  !
+                  ps1 = ps_nc(ikb,1)
+                  ps2 = ps_nc(ikb,2)
+                  !
+                  ps1d1 = ps1 * dvkb(i,ikb,1)
+                  ps1d2 = ps1 * dvkb(i,ikb,2)
+                  ps1d3 = ps1 * dvkb(i,ikb,3)
+                  !
+                  ps2d1 = ps2 * dvkb(i,ikb,1)
+                  ps2d2 = ps2 * dvkb(i,ikb,2)
+                  ps2d3 = ps2 * dvkb(i,ikb,3)
+                  !
+                  evc1i = evcv(i)
+                  evc2i = evcv(i+npwx)
+                  !
+                  cv1 = evc1i * gk1
+                  cv2 = evc2i * gk1
+                  dot11 = dot11 + DBLE(ps1d1)*DBLE(cv1) + DIMAG(ps1d1)*DIMAG(cv1) + &
+                                  DBLE(ps2d1)*DBLE(cv2) + DIMAG(ps2d1)*DIMAG(cv2)
+                  !
+                  dot21 = dot21 + DBLE(ps1d2)*DBLE(cv1) + DIMAG(ps1d2)*DIMAG(cv1) + &
+                                  DBLE(ps2d2)*DBLE(cv2) + DIMAG(ps2d2)*DIMAG(cv2)
+                  !
+                  dot31 = dot31 + DBLE(ps1d3)*DBLE(cv1) + DIMAG(ps1d3)*DIMAG(cv1) + &
+                                  DBLE(ps2d3)*DBLE(cv2) + DIMAG(ps2d3)*DIMAG(cv2)
+                  !
+                  cv1 = evc1i * gk2
+                  cv2 = evc2i * gk2
+                  dot22 = dot22 + DBLE(ps1d2)*DBLE(cv1) + DIMAG(ps1d2)*DIMAG(cv1) + &
+                                  DBLE(ps2d2)*DBLE(cv2) + DIMAG(ps2d2)*DIMAG(cv2)
+                  !
+                  dot32 = dot32 + DBLE(ps1d3)*DBLE(cv1) + DIMAG(ps1d3)*DIMAG(cv1) + &
+                                  DBLE(ps2d3)*DBLE(cv2) + DIMAG(ps2d3)*DIMAG(cv2)
+                  !
+                  cv1 = evc1i * gk3
+                  cv2 = evc2i * gk3
+                  dot33 = dot33 + DBLE(ps1d3)*DBLE(cv1) + DIMAG(ps1d3)*DIMAG(cv1) + &
+                                  DBLE(ps2d3)*DBLE(cv2) + DIMAG(ps2d3)*DIMAG(cv2)
+                  !
+               ENDDO
+            ENDDO
+#if !defined(_OPENACC)
+            !$omp end parallel do
+#endif
+            !
+         ELSE
+            !
+#if defined(_OPENACC)
+            !$acc parallel loop collapse(2) reduction(+:dot11,dot21,dot31,&
+            !$acc&                                      dot22,dot32,dot33)
+#else
+            !$omp parallel do collapse(2) reduction(+:dot11,dot21,dot31,dot22,&
+            !$omp&    dot32,dot33) shared(evcv,gk,ps,dvkb)
+#endif
+            DO ikb = 1, nkb
+               DO i = 1, npw
+                 pss  = ps(ikb)
+                 psd1 = pss*dvkb(i,ikb,1)
+                 psd2 = pss*dvkb(i,ikb,2)
+                 psd3 = pss*dvkb(i,ikb,3)
+                 evci = evcv(i)
+                 gk1  = CMPLX(gk(i,1))
+                 gk2  = CMPLX(gk(i,2))
+                 gk3  = CMPLX(gk(i,3))
+                 !
+                 cv = evci * gk1
+                 dot11 = dot11 + DBLE(psd1)*DBLE(cv) + DIMAG(psd1)*DIMAG(cv)
+                 dot21 = dot21 + DBLE(psd2)*DBLE(cv) + DIMAG(psd2)*DIMAG(cv)
+                 dot31 = dot31 + DBLE(psd3)*DBLE(cv) + DIMAG(psd3)*DIMAG(cv)
+                 !
+                 cv = evci * gk2
+                 dot22 = dot22 + DBLE(psd2)*DBLE(cv) + DIMAG(psd2)*DIMAG(cv)
+                 dot32 = dot32 + DBLE(psd3)*DBLE(cv) + DIMAG(psd3)*DIMAG(cv)
+                 !
+                 cv = evci * gk3
+                 dot33 = dot33 + DBLE(psd3)*DBLE(cv) + DIMAG(psd3)*DIMAG(cv)
+               ENDDO
+            ENDDO
+#if !defined(_OPENACC)
+            !$omp end parallel do
+#endif
+            !
+         ENDIF
+         !
+         sigmanlc(:,1) = sigmanlc(:,1) -2._DP * wg(ibnd,ik) * [dot11, dot21, dot31]
+         sigmanlc(:,2) = sigmanlc(:,2) -2._DP * wg(ibnd,ik) * [0._DP, dot22, dot32]
+         sigmanlc(:,3) = sigmanlc(:,3) -2._DP * wg(ibnd,ik) * [0._DP, 0._DP, dot33]
+         !
+       ENDDO
        !
 10     CONTINUE
        !
+       !$acc end data
        IF (noncolin) THEN
-           DEALLOCATE( work2_nc )
-           DEALLOCATE( deff_nc )
+          DEALLOCATE( ps_nc )
+          DEALLOCATE( deff_nc )
        ELSE
-           DEALLOCATE( work2 )
-           DEALLOCATE( deff )
+          DEALLOCATE( ps )
+          DEALLOCATE( deff )
        ENDIF
+       !
+#if !defined(__CUDA) || !defined(_OPENACC)
+       IF ( noncolin ) THEN
+         DEALLOCATE( becpnc )
+       ELSE
+         DEALLOCATE( becpk )
+       ENDIF
+#endif
+       !$acc end data
        DEALLOCATE( dvkb )
-       DEALLOCATE( work1 )
        !
        RETURN
        !
      END SUBROUTINE stres_us_k
+     !
      !
 END SUBROUTINE stres_us
