@@ -114,6 +114,9 @@
     sigmai_mode(:, :, :, :),    &!  Mode resolved imaginary electron self-energy
     zi_all(:, :, :),            &!  Z renormalization factor
     eta(:, :, :),               &!  Adaptative smearing
+    !!!!!
+    eta_imp(:, :),              &!  Adaptative smearing for ionized impurity scattering rate integration
+    !!!!! 
     esigmar_all(:, :, :, :),    &!  energy of the real self-energy
     esigmai_all(:, :, :, :),    &!  energy of the imaginary self-energy
     jdos(:),                    &!  j-DOS
@@ -158,7 +161,8 @@
     !Qmat(:, :, :, :)         !  Quadrupole tensor 
     Qmat(:, :, :, :),        &!  Quadrupole tensor
     epstf_therm(:),          &!  Thermal thomas fermi dielectric function
-    qtf2_therm(:)             !  Thermal thomas fermi wavevector
+    qtf2_therm(:),           &!  Thermal thomas fermi wavevector
+    partion(:)                !  fraction of impurities ionized
     !!!!!
   COMPLEX(KIND = DP), ALLOCATABLE :: &
     el_ph_mat(:, :, :, :),    &!  e-p matrix  (nbnd, nbnd, nks, 3*nat)

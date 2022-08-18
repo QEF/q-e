@@ -33,8 +33,8 @@
                               assume_metal, etf_mem, nqf1, nqf2, nqf3, system_2d,    &
                               !!!!!
                               !mob_maxfreq, mob_nfreq
-                              mob_maxfreq, mob_nfreq, impurity_g,                    &
-                              impurity_scattering, impurity_n, degaussimp, imp_only
+                              mob_maxfreq, mob_nfreq, ii_g, ii_scattering, ii_n,     &
+                              ii_only
                               !!!!!
     USE pwcom,         ONLY : ef
     USE elph2,         ONLY : ibndmin, etf, nkf, dmef, vmef, wf, wqf,             &
@@ -45,10 +45,10 @@
                               !!!!!
                               !inv_tau_all_freq, inv_tau_allcb_freq
                               inv_tau_all_freq, inv_tau_allcb_freq, eimpf17,      &
-                              epstf_therm
+                              epstf_therm, partion, eta_imp
                               !!!!!
     USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, eps4, eps8, &
-                              eps6, eps20, bohr2ang, ang2cm, hbarJ, eps160
+                              eps6, eps20, bohr2ang, ang2cm, hbarJ, eps160, cc2cb
     USE constants,     ONLY : electronvolt_si
     USE io_files,      ONLY : diropn
     USE control_flags, ONLY : iverbosity
@@ -192,6 +192,10 @@
     !! Weights from all the cores
     REAL(KIND = DP) :: inv_eta(nmodes, nbndfst, nktotf)
     !! Inverse of the eta for speed purposes
+    !!!!!
+    REAL(KIND = DP) :: inv_eta_imp(nbndfst, nktotf)
+    !! Inverse of the eta impurity for speed purposes
+    !!!!!
     REAL(KIND = DP) :: etf_all(nbndfst, nktotf)
     !! Eigen-energies on the fine grid collected from all pools in parallel case
     REAL(KIND = DP) :: epf2_deg(nbndfst, nbndfst, nmodes)
@@ -231,7 +235,7 @@
     !! $$ \delta[\varepsilon_{nk} - \varepsilon_{mk+q}] $$
     REAL(KIND = DP) :: impurity_density
     !! prefactor, density of impurities per cell
-    REAL(KIND = DP) :: invepsT2
+    REAL(KIND = DP) :: invepst2
     !! squared inverse of the thermal thomas-fermi WV at a given itemp
     REAL(KIND = DP) :: eimpf2_deg(nbndfst, nbndfst)
     !! Eimpc in degeneracies
@@ -261,15 +265,15 @@
       WRITE(stdout, '(5x,"Scattering rate for IBTE")')
       WRITE(stdout, '(5x,a/)') REPEAT('=',67)
       !!!!!
-      IF (impurity_scattering) THEN
+      IF (ii_scattering) THEN
         WRITE(stdout, '(/5x,a)') REPEAT('=',67)
         WRITE(stdout, '(5x,"Including ionized impurity scattering")')
-        WRITE(stdout, '(5x,a,e15.8)' ) 'Using an ionized impurity density of', impurity_n
+        WRITE(stdout, '(5x,a,e15.8)' ) 'Using an ionized impurity density of', ii_n
         WRITE(stdout, '(5x,a/)') REPEAT('=',67)
       ENDIF
-      IF (imp_only) THEN
+      IF (ii_only) THEN
         WRITE(stdout, '(/5x,a)') REPEAT('=',67)
-        WRITE(stdout, '(5x,"Detected imp_only=.true., omitting carrier-phonon scattering")')
+        WRITE(stdout, '(5x,"Detected ii_only=.true., omitting carrier-phonon scattering")')
         WRITE(stdout, '(5x,a/)') REPEAT('=',67)
       ENDIF
       !!!!!
@@ -338,9 +342,15 @@
       !
       ! To avoid if branching in the loop
       inv_eta(:, :, :) = zero
+      !!!!!
+      inv_eta_imp(:, :) = zero
+      !!!!!
       IF (adapt_smearing) THEN
         DO ik = 1, nkf
           DO ibnd = 1, nbndfst
+            !!!!!
+            inv_eta_imp(ibnd, ik) = 1.0d0 / (DSQRT(2.0d0) * eta_imp(ibnd, ik))
+            !!!!!
             DO imode = 1, nmodes
               inv_eta(imode, ibnd, ik) = 1.0d0 / (DSQRT(2d0) * eta(imode, ibnd, ik))
             ENDDO
@@ -349,6 +359,7 @@
       ELSE
         DO ik = 1, nkf
           DO ibnd = 1, nbndfst
+            inv_eta_imp(ibnd, ik) = 1.0d0 / degaussw
             DO imode = 1, nmodes
               inv_eta(imode, ibnd, ik) = 1.0d0 / degaussw
             ENDDO
@@ -409,7 +420,7 @@
         !
         !! average impurity matrix elements
         !
-        IF (impurity_g .AND. impurity_scattering) THEN
+        IF (ii_g .AND. ii_scattering) THEN
           DO jbnd = 1, nbndfst
             DO ibnd = 1, nbndfst
               w_1 = etf(ibndmin - 1 + ibnd, ikk)
@@ -472,17 +483,19 @@
       !!!!!
       !
       ! compute impurities per unit cell
-      impurity_density = impurity_n * omega / 6.74822779181357d24
+      !impurity_density = ii_n * omega / 6.74822779181357d24
       !
       !!!!!
       ! loop over temperatures
       DO itemp = 1, nstemp
-        !
+        !!!!!!
+        impurity_density = partion(itemp)*ii_n*omega / cc2cb
+        !!!!!!
         ! Define the inverse so that we can efficiently multiply instead of dividing
         etemp = gtemp(itemp)
         inv_etemp = 1.0 / etemp
         !!!!!
-        invepsT2 = (1.0 / epstf_therm(itemp))**2.0d0
+        invepst2 = (1.0 / epstf_therm(itemp))**2.0d0
         !!!!!
         !
         ! Now pre-treat phonon modes for efficiency for this specific current q-point.
@@ -535,9 +548,9 @@
                   tmp2 = zero
                   !!!!!
                   tmpimp = zero
-                  IF (impurity_scattering .AND. impurity_g) THEN
-                    w0gimp = w0gauss((ekk - ekq) * (1.0d0 / degaussimp), 0) * (1.0d0 / degaussimp)
-                    tmpimp = tmpimp + two * pi * wqf_loc * impurity_density * invepsT2 * REAL(eimpf17(jbnd, ibnd, ik)) * w0gimp
+                  IF (ii_scattering .AND. ii_g) THEN
+                    w0gimp = w0gauss((ekk - ekq) * inv_eta_imp(ibnd, ik), 0) * inv_eta_imp(ibnd, ik)
+                    tmpimp = tmpimp + two * pi * wqf_loc * impurity_density * invepst2 * REAL(eimpf17(jbnd, ibnd, ik)) * w0gimp
                   ENDIF
                   !!!!!
                   !!!!!
@@ -568,7 +581,7 @@
                   !  tmp2 = tmp2 + two * pi * wqf_loc * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
                   !  !
                   !ENDDO !imode
-                  IF (.NOT. imp_only) THEN
+                  IF (.NOT. ii_only) THEN
                     DO imode = 1, nmodes
                       !
                       ! Here we take into account the zero-point
@@ -699,9 +712,9 @@
                   tmp2 = zero
                   !!!!!
                   tmpimp = zero
-                  IF (impurity_scattering .AND. impurity_g) THEN
-                    w0gimp = w0gauss((ekk - ekq) * (1.0d0 / degaussimp), 0) * (1.0d0 / degaussimp)
-                    tmpimp = tmpimp + two * pi * wqf_loc * impurity_density * invepsT2 * REAL(eimpf17(jbnd, ibnd, ik)) * w0gimp
+                  IF (ii_scattering .AND. ii_g) THEN
+                    w0gimp = w0gauss((ekk - ekq) * inv_eta_imp(ibnd, ik), 0) * inv_eta_imp(ibnd, ik)
+                    tmpimp = tmpimp + two * pi * wqf_loc * impurity_density * invepst2 * REAL(eimpf17(jbnd, ibnd, ik)) * w0gimp
                   ENDIF
                   !!!!!
                   !!!!!
@@ -713,7 +726,7 @@
                   !  tmp = tmp  + two * pi * wqf_loc * g2 * ((fnk + wgq(imode)) * w0g2 + (one - fnk + wgq(imode)) * w0g1)
                   !  tmp2 = tmp2 + two * pi * wqf_loc * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
                   !ENDDO ! imode
-                  IF (.NOT. imp_only) THEN
+                  IF (.NOT. ii_only) THEN
                     DO imode = 1, nmodes
                       ! Same as above but for conduction bands (electrons)
                       g2 = REAL(epf17(jbnd, ibnd, imode, ik)) * inv_wq(imode) * g2_tmp(imode)

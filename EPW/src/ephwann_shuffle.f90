@@ -38,8 +38,8 @@
                                cumulant, eliashberg, nomega, mob_maxfreq, neta,    &
                                !!!!!
                                !omegamin, omegamax, omegastep, mob_nfreq
-                               omegamin, omegamax, omegastep, mob_nfreq,           &
-                               impurity_g, impurity_prtgkk, lscreen_imp, imp_only
+                               omegamin, omegamax, omegastep, mob_nfreq, ii_g,     &
+                               ii_lscreen, ii_eda, ii_partion
                                !!!!!
   USE control_flags,    ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
@@ -67,7 +67,7 @@
                                !!!!!
                                !inv_tau_all_freq, inv_tau_allcb_freq
                                inv_tau_all_freq, inv_tau_allcb_freq,               &
-                               eimpf17, epstf_therm, qtf2_therm
+                               eimpf17, epstf_therm, qtf2_therm, partion, eta_imp
                                !!!!!
   USE wan2bloch,        ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                                ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
@@ -92,7 +92,11 @@
   USE mp_global,        ONLY : inter_pool_comm, npool, my_pool_id
   USE mp_world,         ONLY : mpime, world_comm
   USE low_lvl,          ONLY : system_mem_usage, mem_size
-  USE utilities,        ONLY : compute_dos, broadening, fermicarrier, fermiwindow
+  USE utilities,        ONLY : compute_dos, broadening, fermicarrier, fermiwindow, &
+                               !!!!!
+                               !calcpartion
+                               calcpartion, broadening_imp
+                               !!!!!
   USE grid,             ONLY : loadqmesh_serial, loadkmesh_para, load_rebal
   USE selfen,           ONLY : selfen_phon_q, selfen_elec_q, selfen_pl_q,          &
                                nesting_fn_q
@@ -1247,7 +1251,14 @@
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eta', 1)
       ALLOCATE(vmefp(3, nmodes, nmodes), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating vmefp', 1)
+      !!!!!
+      ALLOCATE(eta_imp(nbndfst, nkf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eta_imp', 1)
+      !!!!!
       eta(:, :, :)   = zero
+      !!!!!
+      eta_imp(:, :)  = zero
+      !!!!!
       vmefp(:, :, :) = czero
       adapt_smearing = .TRUE.
     ENDIF
@@ -1322,14 +1333,9 @@
       ! epmat : Wannier el and Wannier ph -> Wannier el and Bloch ph
       ! --------------------------------------------------------------
       !
-      !!!!!
-      !IF (.NOT. longrange) THEN
-      !  CALL ephwan2blochp(nmodes, xxq, irvec_g, ndegen_g, nrr_g, uf, epmatwef, nbndsub, nrr_k, dims, dims2)
-      !ENDIF
-      IF (.NOT. longrange .AND. .NOT. imp_only) THEN
+      IF (.NOT. longrange) THEN
         CALL ephwan2blochp(nmodes, xxq, irvec_g, ndegen_g, nrr_g, uf, epmatwef, nbndsub, nrr_k, dims, dims2)
       ENDIF
-      !!!!!
       !
       ! Number of k points with a band on the Fermi surface
       fermicount = 0
@@ -1450,6 +1456,9 @@
             IF (adapt_smearing) THEN
               ! Return the value of the adaptative broadening eta
               CALL broadening(ik, ikk, ikq, wf(:, qind), vmefp, eta)
+              !!!!!
+              CALL broadening_imp(ik, ikk, ikq, eta_imp)
+              !!!!!
               !
             ENDIF ! adapt_smearing
             !
@@ -1489,7 +1498,7 @@
             ENDIF
             !!!!!
             !
-            IF (impurity_g) THEN
+            IF (ii_g) THEN
               !
               eimpmatf(:, :) = czero
               !
@@ -1516,7 +1525,7 @@
                    epf17(ibnd - ibndmin + 1, jbnd - ibndmin + 1, :, ik) = epmatf(ibnd, jbnd, :)
                 ENDIF
                 !!!!!
-                IF (impurity_g) THEN
+                IF (ii_g) THEN
                   ! Here we will store the impurity elements in array eimpf17
                   eimpf17(ibnd - ibndmin + 1, jbnd - ibndmin + 1, ik) = eimpmatf(ibnd, jbnd)
                 !!!!!
@@ -1548,8 +1557,25 @@
        ENDDO
        CALL mp_sum(valmin, inter_pool_comm)
        CALL mp_sum(valmax, inter_pool_comm)
-       WRITE(stdout, '(7x, a, f12.6, a)' ) 'Adaptative smearing = Min: ', DSQRT(2.d0) * MINVAL(valmin) * ryd2mev,' meV'
-       WRITE(stdout, '(7x, a, f12.6, a)' ) '                      Max: ', DSQRT(2.d0) * MAXVAL(valmax) * ryd2mev,' meV'
+       WRITE(stdout, '(7x, a, f12.6, a)' ) 'Adaptative smearing el-phonon = Min: ', DSQRT(2.d0) * MINVAL(valmin) * ryd2mev,' meV'
+       WRITE(stdout, '(7x, a, f12.6, a)' ) '                                Max: ', DSQRT(2.d0) * MAXVAL(valmax) * ryd2mev,' meV'
+       valmin(:) = zero
+       valmin(my_pool_id + 1) = 100.0d0
+       valmax(:) = zero
+       DO ik = 1, nkf
+         DO ibnd = 1, nbndfst
+           IF (eta_imp(ibnd, ik) < valmin(my_pool_id + 1) .AND. ABS(eta_imp(ibnd, ik)) > eps16) THEN
+             valmin(my_pool_id + 1) = eta_imp(ibnd, ik)
+           ENDIF
+           IF (eta_imp(ibnd, ik) > valmax(my_pool_id + 1)) THEN
+             valmax(my_pool_id + 1) = eta_imp(ibnd, ik)
+           ENDIF
+         ENDDO
+       ENDDO
+       CALL mp_sum(valmin, inter_pool_comm)
+       CALL mp_sum(valmax, inter_pool_comm)
+       WRITE(stdout, '(7x, a, f12.6, a)' ) 'Adaptative smearing el-impurity = Min: ', DSQRT(2.d0) * MINVAL(valmin) * ryd2mev,' meV'
+       WRITE(stdout, '(7x, a, f12.6, a)' ) '                                  Max: ', DSQRT(2.d0) * MAXVAL(valmax) * ryd2mev,' meV'
       ENDIF
       !
       ! --------------------------------------------------------------------------------------------------
@@ -1609,15 +1635,24 @@
           ! This is only done once for the first iq. Also compute the dos at the same time
           IF (iqq == iq_restart) THEN
             !!!!!
+            ALLOCATE(partion(nstemp), STAT = ierr)
+            IF (ierr /= 0) CALL errore('ephwann_shuffle.f90', 'Error allocating partion', 1)
             ALLOCATE(qtf2_therm(nstemp), STAT = ierr)
             IF (ierr /= 0) CALL errore('ephwann_shuffle.f90', 'Error allocating qtf2_therm', 1)
             qtf2_therm(:) = zero
             !!!!!
             DO itemp = 1, nstemp
               etemp = gtemp(itemp)
+              !!!!!
+              IF (ii_partion) THEN
+                CALL calcpartion(itemp, etemp, ctype)
+              ELSE
+                partion(:) = 1.0d0
+              ENDIF
+              !!!!!
               CALL fermicarrier(itemp, etemp, ef0, efcb, ctype)
               !!!!!
-              IF (lscreen_imp) THEN
+              IF (ii_g .AND. ii_lscreen) THEN
                 CALL calc_qtf2_therm(itemp, etemp, ef0, efcb, ctype, epsi)
               ENDIF
               !!!!!
@@ -1628,7 +1663,7 @@
             ENDDO
           ENDIF
           !!!!!
-          IF (lscreen_imp) THEN
+          IF (ii_g .AND. ii_lscreen) THEN
             epstf_therm(:) = zero
             !WRITE(*,*) 'epstf_therm before calc', epstf_therm(1)
             CALL calc_epstf_therm(xxq, nstemp, epsi)

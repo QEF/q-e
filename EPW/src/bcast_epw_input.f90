@@ -55,10 +55,9 @@
                             epw_crysym, bfieldx, bfieldy, bfieldz, tc_linear, &
                             !!!!!
                             !tc_linear_solver, mob_maxfreq, mob_nfreq
-                            tc_linear_solver, mob_maxfreq, mob_nfreq,         &
-                            impurity_g, impurity_charge, impurity_n, degaussimp, &
-                            impurity_prtgkk, impurity_scattering, imp_only,   &
-                            lscreen_imp 
+                            tc_linear_solver, mob_maxfreq, mob_nfreq, ii_g,   &
+                            ii_charge, ii_n, ii_scattering, ii_only,          &
+                            ii_lscreen, ii_eda, ii_partion, ii_eps0 
                             !!!!!
   USE elph2,         ONLY : elph
   USE mp,            ONLY : mp_bcast
@@ -168,11 +167,11 @@
   CALL mp_bcast(epw_noinv       , meta_ionode_id, world_comm)
   CALL mp_bcast(epw_crysym      , meta_ionode_id, world_comm)
   !!!!!
-  CALL mp_bcast(impurity_g      , meta_ionode_id, world_comm)
-  CALL mp_bcast(impurity_prtgkk , meta_ionode_id, world_comm)
-  CALL mp_bcast(impurity_scattering , meta_ionode_id, world_comm)
-  CALL mp_bcast(imp_only , meta_ionode_id, world_comm)
-  CALL mp_bcast(lscreen_imp , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_g            , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_scattering   , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_only         , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_lscreen      , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_partion      , meta_ionode_id, world_comm)
   !!!!!
   !
   ! integers
@@ -261,9 +260,10 @@
   CALL mp_bcast(bfieldz       , meta_ionode_id, world_comm)
   CALL mp_bcast(mob_maxfreq   , meta_ionode_id, world_comm)
   !!!!!
-  CALL mp_bcast(impurity_charge , meta_ionode_id, world_comm)
-  CALL mp_bcast(impurity_n , meta_ionode_id, world_comm)
-  CALL mp_bcast(degaussimp , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_charge , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_n , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_eda     , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_eps0    , meta_ionode_id, world_comm)
   !!!!!
   !
   ! characters

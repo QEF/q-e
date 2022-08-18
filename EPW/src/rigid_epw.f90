@@ -967,8 +967,8 @@
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : bg, omega, alat
     USE ions_base,     ONLY : tau, nat
-    USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, eps12
-    USE epwcom,        ONLY : shortrange, nbndsub, impurity_n, impurity_charge
+    USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, eps12, cc2cb
+    USE epwcom,        ONLY : shortrange, nbndsub, ii_n, ii_charge, ii_eps0
     !
     IMPLICIT NONE
     !
@@ -1033,13 +1033,33 @@
     !! value of |q - G| to be minimized with respect to choices mNf
     REAL(KIND = DP) :: val
     !! comparison value
+    REAL(KIND = DP) :: eps_loc(3,3)
+    !! local epsilon
     !
     IF (ABS(ABS(signe) - 1.0) > eps12) CALL errore ('rgd_blk_epw_fine', 'Wrong value for signe ', 1)
+    !
+    eps_loc(:, :) = 0.0d0
+    !
+    IF (ii_eps0 == 0.0d0) THEN
+      eps_loc(1,1) = epsil(1,1)
+      eps_loc(2,2) = epsil(2,2)
+      eps_loc(3,3) = epsil(3,3)
+      eps_loc(1,2) = epsil(1,2)
+      eps_loc(2,1) = epsil(2,1)
+      eps_loc(1,3) = epsil(1,3)
+      eps_loc(3,1) = epsil(3,1)
+      eps_loc(2,3) = epsil(2,3)
+      eps_loc(3,2) = epsil(3,2)
+    ELSEIF (ii_eps0 > 0.0d0) THEN
+      eps_loc(1,1) = ii_eps0
+      eps_loc(2,2) = ii_eps0
+      eps_loc(3,3) = ii_eps0
+    ENDIF
     !
     gmax = 14.d0
     alph = 1.0d0
     geg = gmax * alph * 4.0d0
-    fac = signe * e2 * fpi * impurity_charge / omega * ci
+    fac = signe * e2 * fpi * ii_charge / omega * ci
     !
     ! JL : look for G0 that minimizes | q + G | with G = 0
     ! INITIAL VALUES
@@ -1078,13 +1098,13 @@
           g3 = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3) + m1f * bg(3, 1) + &
                   m2f * bg(3, 2) + m3f * bg(3, 3)
           !
-          qeq = (g1 * (epsil(1, 1) * g1 + epsil(1, 2) * g2 + epsil(1, 3) * g3) + &
-                 g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3) + &
-                 g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3)) !*twopi/alat
+          qeq = (g1 * (eps_loc(1, 1) * g1 + eps_loc(1, 2) * g2 + eps_loc(1, 3) * g3) + &
+                 g2 * (eps_loc(2, 1) * g1 + eps_loc(2, 2) * g2 + eps_loc(2, 3) * g3) + &
+                 g3 * (eps_loc(3, 1) * g1 + eps_loc(3, 2) * g2 + eps_loc(3, 3) * g3)) !*twopi/alat
           !
           IF (qeq > 0.0d0) THEN !  .AND. qeq / (alph * 4.0d0) < gmax) THEN
             !
-            qeq = qeq * twopi / alat
+            qeq = qeq * (twopi / alat)**2.0d0
             facqd = fac / qeq !fac * EXP(-qeq / (alph * 4.0d0)) / qeq !/(two*wq)
             !
             facq = facqd * 1.0d0 ! For now add impurty at position 0, 0, 0, JL
@@ -1284,7 +1304,7 @@
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : omega, at, alat
     !
-    USE epwcom,        ONLY : nstemp, nbndsub
+    USE epwcom,        ONLY : nstemp, nbndsub, ii_eps0
     USE elph2,         ONLY : ibndmin, etf, nkf, wkf, &
                               nbndfst, qtf2_therm
     USE constants,     ONLY : pi
@@ -1327,7 +1347,12 @@
     REAL(KIND = DP) :: eps_ave
     !! Average dielectric function (semiconductor/insulator)
     !
-    eps_ave = (epsil(1, 1) + epsil(2, 2) + epsil(3, 3)) / 3.d0
+    IF (ii_eps0 == 0.0) THEN
+      eps_ave = (epsil(1, 1) + epsil(2, 2) + epsil(3, 3)) / 3.d0
+    ELSEIF (ii_eps0 > 0.0) THEN
+      eps_ave = ii_eps0
+    ENDIF
+    !eps_ave = 1.0d0
     !
     IF (ctype==0) THEN
       WRITE(stdout, '(5x,"ctype=0 not supported, keeping epf_tf_therm(:) == 1.0d0")')
@@ -1430,8 +1455,18 @@
     !! test value for finding G that minimizes q+G
     REAL(KIND = DP) :: g1, g2, g3, qeq, qmG 
     !!
+    REAL(KIND = DP) :: eps_loc(3,3)
     !
     eps_ave = (epsil(1, 1) + epsil(2, 2) + epsil(3, 3)) / 3.d0
+    eps_loc(1,1) = 1.0d0
+    eps_loc(2,2) = 1.0d0
+    eps_loc(3,3) = 1.0d0
+    eps_loc(1,2) = 0.0d0
+    eps_loc(2,1) = 0.0d0
+    eps_loc(1,3) = 0.0d0
+    eps_loc(3,1) = 0.0d0
+    eps_loc(2,3) = 0.0d0
+    eps_loc(3,2) = 0.0d0
     !
     IF (first_call) THEN
       first_call = .FALSE.
@@ -1481,9 +1516,12 @@
           g3 = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3) + m1f * bg(3, 1) + &
                   m2f * bg(3, 2) + m3f * bg(3, 3)
           !
-          qeq = (g1 * (epsil(1, 1) * g1 + epsil(1, 2) * g2 + epsil(1, 3) * g3) + &
-                 g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3) + &
-                 g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3)) !*twopi/alat
+          !qeq = (g1 * (epsil(1, 1) * g1 + epsil(1, 2) * g2 + epsil(1, 3) * g3) + &
+          !       g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3) + &
+          !       g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3)) !*twopi/alat
+          qeq = (g1 * (eps_loc(1, 1) * g1 + eps_loc(1, 2) * g2 + eps_loc(1, 3) * g3) + &
+                 g2 * (eps_loc(2, 1) * g1 + eps_loc(2, 2) * g2 + eps_loc(2, 3) * g3) + &
+                 g3 * (eps_loc(3, 1) * g1 + eps_loc(3, 2) * g2 + eps_loc(3, 3) * g3)) !*twopi/alat
           IF (qeq > 0.0d0) THEN 
             q2inv = q2inv + (1.0d0 / qeq)
           ELSE
