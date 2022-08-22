@@ -78,7 +78,7 @@ SUBROUTINE addusstress_g( sigmanlc )
   !
   INTEGER :: ngm_s, ngm_e, ngm_l
   ! starting/ending indices, local number of G-vectors
-  INTEGER :: ig, nt, ih, jh, ijh, ipol, jpol, is, na, nij
+  INTEGER :: ig, igm, nt, ih, jh, ijh, ipol, jpol, is, na, nij
   ! counters
   COMPLEX(DP), ALLOCATABLE :: aux1(:,:), aux2(:,:), vg(:,:), qgm(:,:)
   ! work space (complex)
@@ -185,18 +185,19 @@ SUBROUTINE addusstress_g( sigmanlc )
                     ENDDO
                  ENDDO
 #if defined(_OPENACC)
-!$acc parallel loop
+!$acc parallel loop present(eigts1,eigts2,eigts3,mill,g)
 #else
 !$omp end parallel do
-!$omp parallel do default(shared) private(ig, cfac)
+!$omp parallel do default(shared) private(ig,igm,cfac)
 #endif
                  DO ig = 1, ngm_l
-                    cfac = CONJG( eigts1(mill(1,ngm_s+ig-1),na) * &
-                                  eigts2(mill(2,ngm_s+ig-1),na) * &
-                                  eigts3(mill(3,ngm_s+ig-1),na) ) * tpiba
-                    aux1(ig,1) = cfac * g(1,ngm_s+ig-1)
-                    aux1(ig,2) = cfac * g(2,ngm_s+ig-1)
-                    aux1(ig,3) = cfac * g(3,ngm_s+ig-1)
+                    igm = ngm_s+ig-1
+                    cfac = CONJG( eigts1(mill(1,igm),na) * &
+                                  eigts2(mill(2,igm),na) * &
+                                  eigts3(mill(3,igm),na) ) * tpiba
+                    aux1(ig,1) = cfac * g(1,igm)
+                    aux1(ig,2) = cfac * g(2,igm)
+                    aux1(ig,3) = cfac * g(3,igm)
                  ENDDO
 #if !defined(_OPENACC)
 !$omp end parallel do
