@@ -17,10 +17,10 @@ pdf: $(PDFS)
 user_guide: $(USER_GUIDES)
 
 user_guide.pdf: user_guide.md pandoc_template.tex tp.tex
-	$(shell sed -e '1 i# CP user guide' -e '/[[_TOC_]]/d' -e 's/\$$`/$$/g' -e 's/`\$$/$$/g' $< | $(PANDOC) -N --toc --metadata title='CP user guide' --metadata customtitlepage='tp' --metadata graphics --metadata geometry='top=3cm' --metadata geometry='left=3cm' --metadata geometry='right=3cm' --metadata geometry='bottom=3cm' --metadata hyperrefoptions='linktoc=all' --pdf-engine=xelatex -o $@ --template $(word 2,$^) )
+	$(shell sed -e '/[[_TOC_]]/d' -e 's/\$$`/$$/g' -e 's/`\$$/$$/g' $< | $(PANDOC) -N --toc --metadata title='CP user guide' --metadata customtitlepage='tp' --metadata graphics --metadata geometry='top=3cm' --metadata geometry='left=3cm' --metadata geometry='right=3cm' --metadata geometry='bottom=3cm' --metadata hyperrefoptions='linktoc=all' --pdf-engine=xelatex -o $@ --template $(word 2,$^) )
 
 user_guide.html: user_guide.md
-	$(shell sed -e '1 i# CP user guide' -e '/[[_TOC_]]/d' -e 's/\$$`/$$/g' -e 's/`\$$/$$/g' $< | $(PANDOC) -s --toc --metadata title='CP user guide' --mathml -o $@ )
+	$(shell sed -e '/[[_TOC_]]/d' -e 's/\$$`/$$/g' -e 's/`\$$/$$/g' $< | $(PANDOC) -s --toc --metadata title='CP user guide' --mathml -o $@ )
 
 clean:
 	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) $(USER_GUIDES) *~
