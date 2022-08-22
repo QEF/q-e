@@ -19,7 +19,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
   USE lsda_mod,        ONLY: current_spin
   USE control_flags,   ONLY: gamma_only
   USE noncollin_module
-  USE uspp,            ONLY: ofsbeta, nkb, vkb, deeq_d, deeq_nc_d
+  USE uspp,            ONLY: ofsbeta, nkb, vkb, deeq, deeq_nc
   USE uspp_param,      ONLY: nh, nhm
   USE becmod_gpum,     ONLY: bec_type_d, becp_d, using_becp_r_d, &
                              using_becp_k_d, using_becp_nc_d
@@ -133,10 +133,12 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
                 ! (l'=l+ijkb0, m'=m+ijkb0, indices run from 1 to nh(nt))
                 !
                 IF ( m_loc > 0 ) THEN
+                  !$acc host_data use_device(deeq)
                   CALL DGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
-                           deeq_d(1,1,na,current_spin), nhm, &
+                           deeq(1,1,na,current_spin), nhm, &
                            becp_d%r_d(ofsbeta(na)+1,1), nkb, 0.0_dp, &
                                ps_d(ofsbeta(na)+1,1), nkb )
+                  !$acc end host_data
                 END IF
                 !
              END IF
@@ -240,12 +242,12 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
                 ! deeq is real: copy it into a complex variable to perform
                 ! a zgemm - simple but sub-optimal solution
                 !
-                !deeaux_d(:,:) = CMPLX(deeq_d(1:nh(nt),1:nh(nt),na,current_spin), 0.0_dp, KIND=dp )
+                !deeaux_d(:,:) = CMPLX(deeq(1:nh(nt),1:nh(nt),na,current_spin), 0.0_dp, KIND=dp )
                 !
-!$cuf kernel do(2) <<<*,*>>>
+                !$acc parallel loop collapse(2) present(deeq)
                 DO j = 1, nhnt
                    DO k = 1, nhnt
-                      deeaux_d(k,j) = CMPLX(deeq_d(k,j,na,current_spin), 0.0_dp, KIND=DP )
+                      deeaux_d(k,j) = CMPLX(deeq(k,j,na,current_spin), 0.0_dp, KIND=DP )
                    END DO
                 END DO
                 !
@@ -313,29 +315,31 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
              !
              IF ( ityp(na) == nt ) THEN
                 !
+                !$acc host_data use_device(deeq_nc)
                 CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           deeq_nc_d(1,1,na,1), nhm, becp_d%nc_d(ofsbeta(na)+1,1,1), 2*nkb, &
+                           deeq_nc(1,1,na,1), nhm, becp_d%nc_d(ofsbeta(na)+1,1,1), 2*nkb, &
                           (0.0_dp, 0.0_dp), ps_d(ofsbeta(na)+1,1,1), 2*nkb )
 
                 CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           deeq_nc_d(1,1,na,2), nhm, becp_d%nc_d(ofsbeta(na)+1,2,1), 2*nkb, &
+                           deeq_nc(1,1,na,2), nhm, becp_d%nc_d(ofsbeta(na)+1,2,1), 2*nkb, &
                           (1.0_dp, 0.0_dp), ps_d(ofsbeta(na)+1,1,1), 2*nkb )
 
 
                 CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           deeq_nc_d(1,1,na,3), nhm, becp_d%nc_d(ofsbeta(na)+1,1,1), 2*nkb, &
+                           deeq_nc(1,1,na,3), nhm, becp_d%nc_d(ofsbeta(na)+1,1,1), 2*nkb, &
                           (0.0_dp, 0.0_dp), ps_d(ofsbeta(na)+1,2,1), 2*nkb )
 
 
                 CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           deeq_nc_d(1,1,na,4), nhm, becp_d%nc_d(ofsbeta(na)+1,2,1), 2*nkb, &
+                           deeq_nc(1,1,na,4), nhm, becp_d%nc_d(ofsbeta(na)+1,2,1), 2*nkb, &
                           (1.0_dp, 0.0_dp), ps_d(ofsbeta(na)+1,2,1), 2*nkb )
-
+                !$acc end host_data
+                !
 !                DO ibnd = 1, m
 !                   !
 !                   DO jh = 1, nh(nt)
 !                      !
-!!$cuf kernel do(1) <<<*,*>>>
+!!$acc parallel loop present(deeq_nc)
 !                      DO ih = 1, nh(nt)
 !                         !
 !                         ikb = ijkb0 + ih
@@ -344,11 +348,11 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
 !                         becpdn_jkb = becp_nc_d(jkb,2,ibnd)
 !                         !
 !                         ps_d(ikb,1,ibnd) = ps_d(ikb,1,ibnd) +   & 
-!                              deeq_nc_d(ih,jh,na,1)*becpup_jkb + & 
-!                              deeq_nc_d(ih,jh,na,2)*becpdn_jkb
+!                              deeq_nc(ih,jh,na,1)*becpup_jkb + & 
+!                              deeq_nc(ih,jh,na,2)*becpdn_jkb
 !                         ps_d(ikb,2,ibnd) = ps_d(ikb,2,ibnd) +   & 
-!                              deeq_nc_d(ih,jh,na,3)*becpup_jkb + &
-!                              deeq_nc_d(ih,jh,na,4)*becpdn_jkb
+!                              deeq_nc(ih,jh,na,3)*becpup_jkb + &
+!                              deeq_nc(ih,jh,na,4)*becpdn_jkb
 !                         !
 !                      END DO
 !                      !

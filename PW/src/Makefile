@@ -291,16 +291,6 @@ PWLIBS += \
   drhoc_gpu.o \
   addusforce_gpu.o \
   force_corr_gpu.o \
-  stres_loc_gpu.o \
-  dvloc_of_g_gpu.o \
-  stres_har_gpu.o \
-  stres_mgga_gpu.o \
-  stres_cc_gpu.o \
-  deriv_drhoc_gpu.o \
-  stres_ewa_gpu.o \
-  stres_knl_gpu.o \
-  stres_us_gpu.o \
-  compute_deff_gpu.o \
   orthoatwfc_gpu.o \
   atomic_wfc_gpu.o
 

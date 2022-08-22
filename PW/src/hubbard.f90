@@ -151,12 +151,14 @@ SUBROUTINE determine_hubbard_occ ( nt, lflag )
     INTEGER, INTENT(IN) :: nt          ! atomic type
     INTEGER, INTENT(IN) :: lflag       ! Hubbard channel
     !
+    CHARACTER(LEN=2) :: label_aux
     CHARACTER(LEN=2), ALLOCATABLE :: label(:)
     CHARACTER(LEN=2) :: label_hub
     INTEGER :: i, & ! runs over all pseudo-atomic orbitals for the atomic type nt
                ldim
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
     CHARACTER(LEN=1), EXTERNAL :: l_to_spdf
+    CHARACTER(LEN=1), EXTERNAL :: capital
     LOGICAL :: first
     !
     IF ( upf(nt)%nwfc < 1 ) THEN
@@ -180,7 +182,10 @@ SUBROUTINE determine_hubbard_occ ( nt, lflag )
     !
     first=.true.
     DO i = 1, ldim
-       label(i) = upf(nt)%els(i)
+       ! Label of the i-th atomic orbital for the atomic type nt
+       ! (if lowercase, then capitalize)
+       label_aux = upf(nt)%els(i)
+       label(i) = label_aux(1:1) // capital(label_aux(2:2))
        IF (label(i)==label_hub) THEN
           IF (first) THEN
              hubbard_occ(nt,lflag) = upf(nt)%oc(i)     

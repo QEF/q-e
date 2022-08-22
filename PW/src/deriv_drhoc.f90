@@ -11,7 +11,8 @@ SUBROUTINE deriv_drhoc( ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, drhocg )
   !! Calculates the Fourier transform of \(d\text{Rho}_c/dG\).
   !
   USE kinds
-  USE constants,  ONLY : pi, fpi
+  USE constants,          ONLY : pi, fpi
+  USE upf_acc_interfaces, ONLY : simpson
   !
   IMPLICIT NONE
   !
@@ -46,10 +47,14 @@ SUBROUTINE deriv_drhoc( ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, drhocg )
   ! counter on g shells
   ! lower limit for loop on ngl
   !
+  !$acc data present_or_copyin(gl,r,rab,rhoc) present_or_copyout(drhocg)
+  !
   ! G=0 term
   !
   IF (gl(1) < 1.0d-8) THEN
+     !$acc kernels
      drhocg(1) = 0.0d0
+     !$acc end kernels
      igl0 = 2
   ELSE
      igl0 = 1
@@ -57,12 +62,19 @@ SUBROUTINE deriv_drhoc( ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, drhocg )
   !
   ! G <> 0 term
   !
-!$omp parallel private(aux, gx, rhocg1)
+#if !defined(_OPENACC)
+!$omp parallel private(aux,gx,rhocg1)
+#endif
   !
   ALLOCATE( aux(mesh) )
+#if defined(_OPENACC)
+!$acc parallel loop gang private(aux)
+#else
 !$omp do
+#endif
   DO igl = igl0, ngl
      gx = SQRT( gl(igl) * tpiba2 )
+     !$acc loop vector
      DO ir = 1, mesh
         aux(ir) = r(ir)*rhoc(ir)*( r(ir) * COS(gx*r(ir)) /       &
                                       gx - SIN(gx*r(ir)) / gx**2 )
@@ -70,10 +82,16 @@ SUBROUTINE deriv_drhoc( ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, drhocg )
      CALL simpson( mesh, aux, rab, rhocg1 )
      drhocg(igl) = fpi / omega * rhocg1
   ENDDO
+#if !defined(_OPENACC)
 !$omp end do nowait
-  DEALLOCATE( aux )
+#endif
   !
+  DEALLOCATE( aux )
+  !$acc end data
+  !
+#if !defined(_OPENACC)
 !$omp end parallel
+#endif
   !
   RETURN
   !

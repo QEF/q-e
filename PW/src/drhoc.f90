@@ -12,7 +12,8 @@ SUBROUTINE drhoc( ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, rhocg )
   !! Calculates the Fourier transform of the core charge.
   !
   USE kinds
-  USE constants,   ONLY: pi, fpi
+  USE constants,          ONLY: pi, fpi
+  USE upf_acc_interfaces, ONLY: simpson, sph_bes_acc
   !
   IMPLICIT NONE
   !
@@ -40,51 +41,83 @@ SUBROUTINE drhoc( ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, rhocg )
   REAL(DP) :: gx, rhocg1
   ! the modulus of g for a given shell
   ! the Fourier transform
-  REAL(DP), ALLOCATABLE ::  aux(:)
+  REAL(DP), ALLOCATABLE ::  aux(:), gxv(:)
   ! auxiliary memory for integration
   INTEGER :: ir, igl, igl0
   ! counter on radial mesh points
   ! counter on g shells
   ! lower limit for loop on ngl
   !
+  !--------PROVISIONAL------ gl def needs to be adjusted---------
+  ALLOCATE( gxv(ngl) )
+  DO igl = 1, ngl
+    gxv(igl) = SQRT(gl(igl) * tpiba2)
+  ENDDO
+  !--------------------------------------------------------------
   !
-!$omp parallel private(aux, gx, rhocg1)
+#if !defined(_OPENACC)
+!$omp parallel private(aux,gx,rhocg1)
+#endif
   !
   ALLOCATE( aux(mesh) )
+#if defined(_OPENACC)
+  !$acc data present_or_copyin(gl,r,rab,rhoc) present_or_copyout(rhocg)
+  !$acc data create(aux)
+#endif
   !
   ! G=0 term
   !
+#if !defined(_OPENACC)
 !$omp single
+#endif
   IF ( gl(1) < 1.0d-8 ) THEN
+     !$acc parallel loop
      DO ir = 1, mesh
         aux(ir) = r(ir)**2 * rhoc(ir)
      ENDDO
+     !$acc kernels
      CALL simpson( mesh, aux, rab, rhocg1 )
      rhocg(1) = fpi * rhocg1 / omega
+     !$acc end kernels
      igl0 = 2
   ELSE
      igl0 = 1
   ENDIF
+#if !defined(_OPENACC)
 !$omp end single
+#endif
+!$acc end data
   !
   ! G <> 0 term
   !
+#if defined(_OPENACC)
+!$acc parallel loop gang private(aux) copyin(gxv)
+#else
 !$omp do
+#endif
   DO igl = igl0, ngl
-     gx = SQRT(gl(igl) * tpiba2)
-     CALL sph_bes( mesh, r, gx, 0, aux )
+     gx = gxv(igl)
+     CALL sph_bes_acc( mesh, r, gx, 0, aux )
+     !$acc loop vector
      DO ir = 1, mesh
-        aux(ir) = r(ir)**2 * rhoc(ir) * aux(ir)
+       aux(ir) = r(ir)**2 * rhoc(ir) * aux(ir)
      ENDDO
      CALL simpson( mesh, aux, rab, rhocg1 )
      rhocg(igl) = fpi * rhocg1 / omega
   ENDDO
+#if !defined(_OPENACC)
 !$omp end do nowait
-  DEALLOCATE( aux )
+#endif
   !
-!$omp end parallel
+  !$acc end data
+  !
+  DEALLOCATE( aux )
+#if !defined(_OPENACC)
+  !$omp end parallel
+#endif
+  !
+  DEALLOCATE( gxv )
   !
   RETURN
   !
 END SUBROUTINE drhoc
-

@@ -260,32 +260,22 @@ set(src_pw
    src/force_corr_gpu.f90
    src/orthoatwfc_gpu.f90
    src/wfcinit_gpu.f90
-   src/stres_loc_gpu.f90
    src/add_paw_to_deeq_gpu.f90
    src/addusdens_gpu.f90
    src/addusforce_gpu.f90
-   src/deriv_drhoc_gpu.f90
    src/s_psi_gpu.f90
    src/rotate_wfc_gpu.f90
    src/usnldiag_gpu.f90
    src/add_vuspsi_gpu.f90
    src/hs_1psi_gpu.f90
    src/g_psi_gpu.f90
-   src/stres_mgga_gpu.f90
    src/atomic_wfc_gpu.f90
-   src/dvloc_of_g_gpu.f90
-   src/stres_ewa_gpu.f90
-   src/stres_knl_gpu.f90
-   src/compute_deff_gpu.f90
    src/add_vhub_to_deeq_gpu.f90
    src/s_1psi_gpu.f90
    src/h_psi_gpu.f90
-   src/stres_us_gpu.f90
-   src/stres_cc_gpu.f90
    src/utils_gpu.f90
    src/vhpsi_gpu.f90
    src/drhoc_gpu.f90
-   src/stres_har_gpu.f90
    src/vloc_psi_gpu.f90
    src/hs_psi_gpu.f90)
 qe_enable_cuda_fortran("${src_pw}")
