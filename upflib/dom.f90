@@ -693,9 +693,11 @@ scan: do i=la-l0+1,la
     integer :: ios
     !
     cval=' '
-    ios = 1
+    ios = 0
     if ( allocated(root%data) ) then
        if ( len_trim(root%data) > 0 ) read(root%data,*,iostat=ios) cval
+    else
+       ios = 1
     end if
     if ( present(iostat) ) iostat=ios
     !
@@ -708,7 +710,7 @@ scan: do i=la-l0+1,la
     integer :: ibeg, iend, n, ios
     !
     cvec(:) = ' '
-    ios = 1
+    ios = 0
     if ( allocated(root%data) ) then
        if ( len_trim(root%data) > 0 ) then
           iend = 0
@@ -721,6 +723,8 @@ scan: do i=la-l0+1,la
              end if
           end do
        end if
+    else
+       ios = 1
     end if
     if ( present(iostat) ) iostat=ios
     !
