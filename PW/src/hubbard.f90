@@ -151,8 +151,8 @@ SUBROUTINE determine_hubbard_occ ( nt, lflag )
     INTEGER, INTENT(IN) :: nt          ! atomic type
     INTEGER, INTENT(IN) :: lflag       ! Hubbard channel
     !
-    CHARACTER(LEN=2) :: label_aux
     CHARACTER(LEN=2), ALLOCATABLE :: label(:)
+    CHARACTER(LEN=2) :: label_aux
     CHARACTER(LEN=2) :: label_hub
     INTEGER :: i, & ! runs over all pseudo-atomic orbitals for the atomic type nt
                ldim

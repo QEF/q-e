@@ -43,7 +43,6 @@ SUBROUTINE kcw_pp_readin()
     ! counter on types
   CHARACTER (LEN=256) :: outdir
   !
-  CHARACTER(LEN=1), EXTERNAL :: capital
   INTEGER, EXTERNAL  :: atomic_number
   REAL(DP), EXTERNAL :: atom_weight
   LOGICAL, EXTERNAL  :: imatches
