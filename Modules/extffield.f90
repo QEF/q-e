@@ -21,12 +21,12 @@ MODULE extffield
   ! If nextffield > 0 the file 'extffield.dat' is read
   !  
   ! For each force field, two lines are required. The first one is generic 
-  ! for all kinds of force field, with the format:
+  ! to all kinds of force field, with the format:
   ! NTYP  FLAGS
   ! NTYP is an integer defining the type of force fields (see below)
-  ! FLAGS is a string of '1' and '0', of length equal to the number of species. 
+  ! FLAGS is is an integer composed of 1 or 0, as many as ionic species. 
   ! It can be used to restrict the application of force fields to certain species only
-  ! For instance, FLAGS = '101' means that this force field is used only for atomic species 1 and 3  
+  ! For instance, FLAGS = 101 meansthat ionic species 1 and 3 are subject to the force field, but not ionic specie 2 
   ! The second line defines various parameters depending on the force field type.
   !
   ! For a description and an application of the method, see L. Pizzagalli, Phys. Rev. B 102, 094102 (2020)
@@ -39,26 +39,27 @@ MODULE extffield
   ! NTYP = 1 : Planar quadratic repulsive force field
   ! This force field mimics the command 'FIX INDENT PLANE...' in the LAMMPS code
   ! which is often used in MD studies to model a flat punch indenter
-  ! The force expression is $\pm K(z-zc)^2$
+  ! The force expression is $\pm K(z-z_p)^2$
   ! 
-  ! The second line in 'extffield.dat' for this potential looks like
+  ! The second line in 'extffield.dat' for this potential includes 5 parameters
   ! AXIS  DIR  POS INC STRENGTH
   ! AXIS is an integer defining the axis for the plane (1 = X, 2 = Y, 3 = Z)
   ! DIR is an integer defining the direction of the force (0 is positive, and 1 negative), 
   ! and the selection of ions.
-  ! POS is a real defining the position of the plane relative to AXIS (zc in the formula)
+  ! POS is a real defining the position of the plane relative to AXIS (z_p in the formula)
+  !   Selected ions are those with a position below POS (DIR = 0) or above POS (DIR = 1)
   ! INC is a real, added to POS at each iteration (dynamic compression)
   ! STRENGTH is a real defining the strength of the repulsion (K in the formula)
   ! Rydberg (Hartree) atomic units are used for pw.x (cp.x). 
-  ! Selected ions are those with a position below POS (DIR = 0) or above POS (DIR = 1)
   ! 
   ! For instance, with the following two lines
   ! 1   10
   ! 3   0   2.50   0.01   10
   ! one defines a planar repulsive potential acting on the first atomic specie 
-  ! (but not on the second one). The potential is applied along the axis Z, with a 
-  ! positive direction and an initial position of 2.50 bohrs. All ions of specie 1, 
-  ! with an initial z-coordinate below 2.50 will be subjected to a positive force along this axis.
+  ! (but not on the second one). The potential is applied relatively to a plane normal to Z and of initial position 
+  ! 2.50 bohrs along the Z axis, with a positive directionalong the axis Z, with a 
+  ! positive direction. All ions of specie 1, 
+  ! with an initial z-coordinate below 2.50 will be subject to a positive force along this axis.
   ! The potential strength is 10 a.u.  
   ! The potential threshold is moved up by 0.01 bohr at each ionic iteration
   !
@@ -66,7 +67,7 @@ MODULE extffield
   ! -------------------------------------------------------------------------------------------------
   ! NTYP = 2 : Viscous drag force field perpendicular to a plane
   ! This force field adds a viscous friction for selected atoms, by adding velocity dependent forces in 
-  ! two directions perpendicular to the defined axis 
+  ! the two directions perpendicular to the defined axis 
   ! It can be used in combination with the previous force field, to prevent an excessive rotation 
   ! of the system during the dynamics. The force expression is
   ! $-K*m*v$
@@ -78,15 +79,16 @@ MODULE extffield
   ! AXIS  DIR  POS INC STRENGTH
   ! all parameters have the same meaning than for NTYP = 1
   !
-  ! NOTE: NTYP = 2 is only available within pw.x 
+  ! NOTE: NTYP = 2 is only available when using cw.x 
   !
   ! -------------------------------------------------------------------------------------------------
   ! NTYP = 3 : Planar Lennard-Jones potential
-  ! This force field allows to model a flat punch indenter, with attractive forces between the indenter 
-  ! and the system of interest. The force expression is derived from the LJ energy
+  ! This force field allows to impose an interaction of the system of interest with a semi-infinite slab. 
+  ! The forces are derived from the well known standard LJ energy formula
+  ! 
   ! $V(r) = 4\varepsilon((\sigma/r)^12 - (\sigma/r)^6)$
   ! 
-  ! The second line in 'extffield.dat' includes the following parameters:
+  ! The second line in 'extffield.dat' includes the following 7 parameters:
   ! AXIS  DIR  POS INC \varepsilon \sigma cutoff
   ! The first 4 have the same meaning than for NTYP = 1
   ! \varepsilon and \sigma are the LJ potential parameters (with coherent units for cp.x or pw.x)
@@ -98,7 +100,7 @@ MODULE extffield
   ! -------
   ! 
   ! Information about the defined force fields is written in the standard output file
-  ! A file with name 'prefix.extffield' is created, including data per iteration for all defined force fields
+  ! A file with name 'prefix.extffield' is created, including data per ionic iteration for all defined force fields
   ! For each force field, the position of the plane and the sum of added forces for each axis are written at each step,
   ! For a planar compression, this corresponds to the compression load. 
   ! 

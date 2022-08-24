@@ -1961,7 +1961,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
            default { 0 }
            info {
                Number of activated external ionic force fields. 
-               See Modules/extffield.f90 for further explanation and parameterizations
+               See Doc/ExternalForceFields.tex for further explanation and parameterizations
            }
          }  
     

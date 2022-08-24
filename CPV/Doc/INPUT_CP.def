@@ -797,7 +797,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
           default { 0 }
           info {
               Number of activated external ionic force fields. 
-              See Modules/extffield.f90 for further explanation and parameterizations
+              See Doc/ExternalForceFields.tex for further explanation and parameterizations
           }
         }
 
