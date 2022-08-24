@@ -27,14 +27,14 @@ SUBROUTINE hub_summary()
        WRITE( stdout, '(5x,"Hubbard parameters of DFT+U (Dudarev formulation) in eV:")')
        DO nt = 1, ntyp
           IF (is_hubbard(nt)) THEN
-            CALL write_hub_param (nt, Hubbard_U(nt), 'U')
-            CALL write_hub_param (nt, Hubbard_J0(nt), 'J0')
-            CALL write_hub_param (nt, Hubbard_alpha(nt), 'alpha')
-            CALL write_hub_param (nt, Hubbard_beta(nt), 'beta')
+            CALL write_hub_param (nt, Hubbard_U(nt), 'U', 1)
+            CALL write_hub_param (nt, Hubbard_J0(nt), 'J0', 1)
+            CALL write_hub_param (nt, Hubbard_alpha(nt), 'alpha', 1)
+            CALL write_hub_param (nt, Hubbard_beta(nt), 'beta', 1)
           ENDIF
           IF (is_hubbard_back(nt)) THEN
-            CALL write_hub_param (nt, Hubbard_U2(nt), 'U2')
-            CALL write_hub_param (nt, Hubbard_alpha_back(nt), 'alpha_back')
+            CALL write_hub_param (nt, Hubbard_U2(nt), 'U', 2)
+            CALL write_hub_param (nt, Hubbard_alpha_back(nt), 'alpha', 2)
         ENDIF
        ENDDO
     ELSEIF (lda_plus_u_kind == 1) THEN
@@ -42,19 +42,19 @@ SUBROUTINE hub_summary()
        DO nt = 1, ntyp
           IF (Hubbard_U(nt) /= 0.d0) THEN
              IF (Hubbard_l(nt) == 0) THEN
-                CALL write_hub_param (nt, Hubbard_U(nt), 'U')
+                CALL write_hub_param (nt, Hubbard_U(nt), 'U', 1)
              ELSEIF (Hubbard_l(nt) == 1) THEN
-                CALL write_hub_param (nt, Hubbard_U(nt), 'U')
-                CALL write_hub_param (nt, Hubbard_J(1,nt), 'J')
+                CALL write_hub_param (nt, Hubbard_U(nt), 'U', 1)
+                CALL write_hub_param (nt, Hubbard_J(1,nt), 'J', 1)
              ELSEIF (Hubbard_l(nt) == 2) THEN
-                CALL write_hub_param (nt, Hubbard_U(nt), 'U')
-                CALL write_hub_param (nt, Hubbard_J(1,nt), 'J')
-                CALL write_hub_param (nt, Hubbard_J(2,nt), 'B')
+                CALL write_hub_param (nt, Hubbard_U(nt), 'U', 1)
+                CALL write_hub_param (nt, Hubbard_J(1,nt), 'J', 1)
+                CALL write_hub_param (nt, Hubbard_J(2,nt), 'B', 1)
              ELSEIF (Hubbard_l(nt) == 3) THEN
-                CALL write_hub_param (nt, Hubbard_U(nt), 'U')
-                CALL write_hub_param (nt, Hubbard_J(1,nt), 'J')
-                CALL write_hub_param (nt, Hubbard_J(2,nt), 'E2')
-                CALL write_hub_param (nt, Hubbard_J(3,nt), 'E3')
+                CALL write_hub_param (nt, Hubbard_U(nt), 'U', 1)
+                CALL write_hub_param (nt, Hubbard_J(1,nt), 'J', 1)
+                CALL write_hub_param (nt, Hubbard_J(2,nt), 'E2', 1)
+                CALL write_hub_param (nt, Hubbard_J(3,nt), 'E3', 1)
              ENDIF
           ENDIF
        ENDDO
@@ -68,12 +68,12 @@ SUBROUTINE hub_summary()
            WRITE( stdout, '(5x,"Hubbard parameters of DFT+U+V (Dudarev formulation) in eV:")')
        DO nt = 1, ntyp
           IF (is_hubbard(nt)) THEN
-            CALL write_hub_param (nt, Hubbard_J0(nt), 'J0')
-            CALL write_hub_param (nt, Hubbard_alpha(nt), 'alpha')
-            CALL write_hub_param (nt, Hubbard_beta(nt), 'beta')
+            CALL write_hub_param (nt, Hubbard_J0(nt), 'J0', 1)
+            CALL write_hub_param (nt, Hubbard_alpha(nt), 'alpha', 1)
+            CALL write_hub_param (nt, Hubbard_beta(nt), 'beta', 1)
           ENDIF
           IF (is_hubbard_back(nt)) THEN
-            CALL write_hub_param (nt, Hubbard_alpha_back(nt), 'alpha_back')
+            CALL write_hub_param (nt, Hubbard_alpha_back(nt), 'alpha', 2)
         ENDIF
        ENDDO
     ENDIF
@@ -86,25 +86,45 @@ SUBROUTINE hub_summary()
 END SUBROUTINE hub_summary
 
 !------------------------------------------------------------------------------
-SUBROUTINE write_hub_param (nt, hub_parameter, hub_name)
+SUBROUTINE write_hub_param (nt, hub_parameter, hub_name, flag)
     !--------------------------------------------------------------------------
     !
     USE kinds,          ONLY : DP
     USE ions_base,      ONLY : atm
     USE constants,      ONLY : rytoev
     USE io_global,      ONLY : stdout
-    USE ldaU,           ONLY : Hubbard_n, Hubbard_l
+    USE ldaU,           ONLY : Hubbard_n, Hubbard_l, Hubbard_n2, Hubbard_l2, &
+                               Hubbard_n3, Hubbard_l3, backall
     !
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: nt
     CHARACTER(len=*), INTENT(IN) :: hub_name
+    INTEGER, INTENT(IN) :: flag ! 1: first Hubbard channel
+                                ! 2: second Hubbard channel
     REAL(DP) :: hub_parameter
     CHARACTER(LEN=1), EXTERNAL :: l_to_spdf
     !
-    IF (hub_parameter /= 0.d0) &
-       WRITE(stdout,'(5x,a,i1,a,f8.4)')  &
-            hub_name // '(' // TRIM(atm(nt)) // '-', Hubbard_n(nt), &
-            l_to_spdf(Hubbard_l(nt),.FALSE.) // ') =', hub_parameter*rytoev
+    IF (hub_parameter /= 0.d0) THEN
+       IF (flag==1) THEN
+          WRITE(stdout,'(5x,a,i1,a,f8.4)')  &
+              hub_name // '(' // TRIM(atm(nt)) // '-', Hubbard_n(nt), &
+              l_to_spdf(Hubbard_l(nt),.FALSE.) // ') =', hub_parameter*rytoev
+       ELSEIF (flag==2) THEN
+          IF (.NOT.backall(nt)) THEN
+             ! In this case there is one Hubbard channel for background states.
+             WRITE(stdout,'(5x,a,i1,a,f8.4)')  &
+                hub_name // '(' // TRIM(atm(nt)) // '-', Hubbard_n2(nt), &
+                l_to_spdf(Hubbard_l2(nt),.FALSE.) // ') =', hub_parameter*rytoev
+          ELSE
+             ! In this case there are two Hubbard channels for background states.
+             WRITE(stdout,'(5x,a,i1,a,i1,a,f8.4)')  &
+                hub_name // '(' // TRIM(atm(nt))  // '-', Hubbard_n2(nt), &
+                l_to_spdf(Hubbard_l2(nt),.FALSE.) // '-', Hubbard_n3(nt), &
+                l_to_spdf(Hubbard_l3(nt),.FALSE.) // ') =', hub_parameter*rytoev
+          ENDIF
+       ENDIF
+    ENDIF
+    !
     RETURN
     !
 END SUBROUTINE write_hub_param
@@ -132,11 +152,13 @@ SUBROUTINE determine_hubbard_occ ( nt, lflag )
     INTEGER, INTENT(IN) :: lflag       ! Hubbard channel
     !
     CHARACTER(LEN=2), ALLOCATABLE :: label(:)
+    CHARACTER(LEN=2) :: label_aux
     CHARACTER(LEN=2) :: label_hub
     INTEGER :: i, & ! runs over all pseudo-atomic orbitals for the atomic type nt
                ldim
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
     CHARACTER(LEN=1), EXTERNAL :: l_to_spdf
+    CHARACTER(LEN=1), EXTERNAL :: capital
     LOGICAL :: first
     !
     IF ( upf(nt)%nwfc < 1 ) THEN
@@ -160,7 +182,10 @@ SUBROUTINE determine_hubbard_occ ( nt, lflag )
     !
     first=.true.
     DO i = 1, ldim
-       label(i) = upf(nt)%els(i)
+       ! Label of the i-th atomic orbital for the atomic type nt
+       ! (if lowercase, then capitalize)
+       label_aux = upf(nt)%els(i)
+       label(i) = label_aux(1:1) // capital(label_aux(2:2))
        IF (label(i)==label_hub) THEN
           IF (first) THEN
              hubbard_occ(nt,lflag) = upf(nt)%oc(i)     

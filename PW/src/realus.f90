@@ -228,7 +228,7 @@ MODULE realus
       USE constants,  ONLY : pi, fpi, eps16, eps6
       USE ions_base,  ONLY : nat, nsp, ityp, tau
       USE cell_base,  ONLY : at, bg, alat
-      USE uspp,       ONLY : okvan, qq_at, qq_at_d, qq_nt, nhtol
+      USE uspp,       ONLY : okvan, qq_at, qq_at, qq_nt, nhtol
       USE uspp_param, ONLY : upf, nh
       USE atom,       ONLY : rgrid
       USE fft_types,  ONLY : fft_type_descriptor
@@ -404,9 +404,8 @@ MODULE realus
       ! and sync on GPUs
       !
       CALL mp_sum( qq_at, intra_bgrp_comm )
-#if defined __CUDA
-      qq_at_d=qq_at
-#endif
+      !
+      !$acc update device(qq_at)
       !
       ! and test that they don't differ too much 
       ! from the result computed on the atomic grid
@@ -455,7 +454,7 @@ MODULE realus
       !! Sync with GPU memory is performed outside
       !
       USE constants,  ONLY : eps16, eps6
-      USE uspp,       ONLY : indv, nhtolm, ap, qq_at, qq_at_d
+      USE uspp,       ONLY : indv, nhtolm, ap, qq_at
       USE uspp_param, ONLY : upf, lmaxq, nh
       USE atom,       ONLY : rgrid
       USE splinelib,  ONLY : spline, splint

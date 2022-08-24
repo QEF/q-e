@@ -120,7 +120,7 @@
           ALLOCATE( igtongl_d(ngm) )
           ALLOCATE( gl_d(ngm) )
        ENDIF  
-       !$acc enter data create( mill(1:3, 1:ngm), g(1:3, 1:ngm) ) 
+       !$acc enter data create( mill(1:3,1:ngm), g(1:3,1:ngm), gg(1:ngm) ) 
        !
        RETURN 
        !
@@ -142,7 +142,10 @@
        END IF
        !
        !  
-       IF( ALLOCATED( gg ) )     DEALLOCATE( gg )
+       IF( ALLOCATED( gg ) ) THEN
+!$acc    exit data delete(gg)
+       DEALLOCATE( gg )
+       END IF
        IF( ALLOCATED( g ) )  THEN 
 !$acc    exit data delete(g) 
          DEALLOCATE( g )

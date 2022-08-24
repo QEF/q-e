@@ -216,7 +216,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        USE mp,             ONLY : mp_get_comm_null, mp_circular_shift_left
        USE device_fbuff_m, ONLY : dev_buf
-       USE uspp,           ONLY : qq_at_d
+       USE uspp,           ONLY : qq_at
        !
        IMPLICIT NONE  
        !
@@ -273,9 +273,12 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
                    ! (l'=l+ijkb0, m'=m+ijkb0, indices run from 1 to nh(nt))
                    !
                    IF ( m_loc > 0 ) THEN
+                      !$acc host_data use_device(qq_at)
                       CALL DGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
-                                  qq_at_d(1,1,na), nhm, becp_d%r_d(ofsbeta(na)+1,1),&
+                                  qq_at(1,1,na), nhm, becp_d%r_d(ofsbeta(na)+1,1),&
                                   nkb, 0.0_dp, ps_d(ofsbeta(na)+1,1), nkb )
+                      !$acc end host_data
+
                    END IF
                 END IF
              END DO
@@ -340,7 +343,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !! k-points version of \(\textrm{s_psi}\) routine.
        !
        USE device_fbuff_m,   ONLY : dev_buf
-       USE uspp,             ONLY : qq_at_d
+       USE uspp,             ONLY : qq_at
        !
        IMPLICIT NONE
        !
@@ -367,17 +370,17 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        ! qq is real:  copy it into a complex variable to perform
        ! a zgemm - simple but sub-optimal solution
        !
-       ! here we need to use qq_at_d instead of qq_nt_d otherwise real space augmentation brakes!
+       ! here we need to use qq_at (device) instead of qq_nt_d otherwise real space augmentation brakes!
        !  qq_nt_d would be much faster and works for calculations without real space augmentation
        CALL dev_buf%lock_buffer( qqc_d, (/ nhm, nhm, nat/), ierr )
        IF( ierr /= 0 ) &
           CALL errore( ' s_psi_k_gpu ', ' cannot allocate buffer (qqc_d) ', ABS(ierr) )
 
-!$cuf kernel do(3) <<<*,*>>>
+       !$acc parallel loop collapse(3) present(qq_at)
        DO na = 1, nat
           DO jh = 1, nhm
              DO ih = 1, nhm
-                qqc_d(ih,jh, na) = CMPLX ( qq_at_d(ih,jh, na), 0.0_dp, KIND=dp )
+                qqc_d(ih,jh, na) = CMPLX ( qq_at(ih,jh, na), 0.0_dp, KIND=dp )
              END DO
           END DO
        END DO
@@ -427,7 +430,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !! k-points noncolinear/spinorbit version of \(\textrm{s_psi}\) routine.
        !
        USE device_fbuff_m,   ONLY : dev_buf
-       USE uspp,             ONLY : qq_at_d, qq_so_d
+       USE uspp,             ONLY : qq_at, qq_so
        !
        IMPLICIT NONE
        !
@@ -455,11 +458,11 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
           IF( ierr /= 0 .and. ierr /= -1 ) &
              CALL errore( ' s_psi_nc_gpu ', ' cannot allocate buffer (qqc_d) ', ABS(ierr) )
           ! Possibly convert only what's needed??
-!$cuf kernel do(3) <<<*,*>>>
+          !$acc parallel loop collapse(3) present(qq_at)
           DO na = 1, nat
              DO jh = 1, nhm
                 DO ih = 1, nhm
-                   qqc_d(ih, jh, na) = CMPLX ( qq_at_d(ih,jh, na), 0.0_dp, KIND=dp )
+                   qqc_d(ih, jh, na) = CMPLX ( qq_at(ih,jh, na), 0.0_dp, KIND=dp )
                 END DO
              END DO
           END DO
@@ -482,19 +485,21 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
              ELSE
                 DO na = 1, nat
                    IF ( ityp(na) == nt ) THEN
+                      !$acc host_data use_device(qq_so)
                       CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so_d(1,1,1,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,1,1), nkb*npol, &
+                           qq_so(1,1,1,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,1,1), nkb*npol, &
                            (0.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,1,1), nkb*npol )
                       CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so_d(1,1,2,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,2,1), nkb*npol, &
+                           qq_so(1,1,2,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,2,1), nkb*npol, &
                            (1.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,1,1), nkb*npol )
                       !
                       CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so_d(1,1,3,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,1,1), nkb*npol, &
+                           qq_so(1,1,3,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,1,1), nkb*npol, &
                            (0.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,2,1), nkb*npol )
                       CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so_d(1,1,4,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,2,1), nkb*npol, &
+                           qq_so(1,1,4,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,2,1), nkb*npol, &
                            (1.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,2,1), nkb*npol )
+                      !$acc end host_data
                     END IF
                 END DO
              END IF

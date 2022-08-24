@@ -30,12 +30,13 @@ module dom
   integer :: nlevel = -1
   ! The DOM is stored here
   type(node), target, save :: root
-  ! Used to reproduce FoX behavior
+  ! Used to simulate FoX behavior
   type :: domexception
      integer :: code
   end type domexception
   !
   private
+  ! Callable routines or interfaces
   public :: node, nodelist
   public :: parsefile, item, getelementsbytagname, getlength, destroy
   public :: gettagname, hasattribute, extractdataattribute, extractdatacontent
@@ -99,33 +100,24 @@ CONTAINS
   end function parsefile
   !
   function parse ( iun, strbuf, ex )
-    !
+    ! This is where the action is: parse either from unit "iun"
+    ! of from a buffer "strbuf", returns a pointer to the node "root"
+    ! and optionally an error code in "ex"
     character(len=*), intent (in), optional :: strbuf
     integer, intent(in), optional :: iun
     type(domexception), intent (inout), optional :: ex
     type(node), pointer :: parse
     !
-    type(node), pointer :: curr
     integer, parameter :: maxline=1024, maxdim=maxline+16
     character(len=maxdim) :: line
-    integer, parameter :: maxlength=80
-    character(len=maxlength) :: tag
-    ! for checks, not really needed:
-    ! integer, parameter :: maxlevel=9
-    ! character(len=maxlength), dimension(0:maxlevel) :: open_tags
     !
-    integer :: ierr, nl, n, m, i0, i1
-    logical :: in_comment
-    logical :: in_attribute
-    logical :: in_data
+    integer :: ierr, i0, i1
+    logical :: firstline
     !
-    curr => null()
-    in_comment = .false.
-    in_attribute = .false.
-    in_data = .false.
     nlevel = -1
     ierr = 0
     i0 = 1
+    firstline = .true.
     !
     readline: do
        !
@@ -153,26 +145,21 @@ CONTAINS
        else
           if ( .not.present(ex) ) then
              print *, 'error: both unit and string, or none, in input'
-             stop
           else
-             ex%code = 1001
-             return
+             ierr = 1001
           end if
+          exit readline
        end if
   
-       n = 1
-       nl = len_trim(line)
-       if ( nl > maxline ) then
+       if ( len_trim(line) > maxline ) then
           if ( .not.present(ex) ) &
                print *, 'error: line exceeds ', maxline, ' characters'
           ierr = 1
           exit readline
        end if
-       tag = ' '
        ! print *,'debug:',trim(line)
        !
-       ierr = parseline ( nl, line, n, in_comment, in_attribute, in_data, tag, &
-            curr, ex ) 
+       ierr = parseline ( firstline, line, ex ) 
        if ( ierr /= 0 ) exit readline
        !
     end do readline
@@ -195,30 +182,47 @@ CONTAINS
     !
   end function parse
   !
-  function parseline ( nl, line, n, in_comment, in_attribute, in_data, tag, &
-       curr, ex )
+  function parseline ( firstline, line, ex )
     ! result is returned in pointer "root"
     ! input line to be parsed
-    integer, intent(in)    :: nl
-    character(len=nl), intent(in) :: line
-    ! variables keeping track of parsing status, must be conserved between calls
-    integer, intent(inout) :: n
-    logical, intent(inout) :: in_comment
-    logical, intent(inout) :: in_attribute
-    logical, intent(inout) :: in_data
-    ! actually a local variable, except maybe for debugging purposes
-    character(len=*), intent(inout) :: tag
-    ! pointer to current tag, must be keot between calls
-    type(node), pointer, intent(inout) :: curr
-    ! if exceptions are set, do not print error messages
+    logical, intent(inout) :: firstline
+    character(len=*), intent(in) :: line
+    ! optional exception code - if present, error messages are not printed
     type(domexception), intent (in), optional :: ex
-    ! return code: 0 = success, otherwise parsing failed
+    ! error code: 0 = success, otherwise parsing failed
     integer :: parseline
+    !
+    integer, parameter :: maxlength=80
+    ! for checks, not really needed:
+    ! integer, parameter :: maxlevel=9
+    ! character(len=maxlength), dimension(0:maxlevel) :: open_tags
+    !
+    ! variables keeping track of parsing status, must be conserved between calls
+    ! (tag is actually a local variable, except maybe when used for debugging)
+    logical, save :: in_comment
+    logical, save :: in_attribute
+    logical, save :: in_data
+    character(len=maxlength), save :: tag
+    ! pointer to current node
+    type(node), pointer, save :: curr
+    ! next node: the "root" pointer points to the memory allocated in "next"
+    type(node), pointer :: next
     ! local variables
-    type(node), pointer :: next, prev
-    integer :: n1, n2, m
+    type(node), pointer :: prev
+    integer :: n, nl, n1, n2, m
     logical :: is_found
     !
+    ! Initialization
+    if ( firstline ) then
+       firstline = .false.
+       curr => null()
+       in_comment = .false.
+       in_attribute = .false.
+       in_data = .false.
+       tag = ' '
+    end if
+    n = 1
+    nl= len_trim(line)
     !
     parseline = 0 
     scanline: do while ( n < nl+1 )
@@ -408,14 +412,13 @@ CONTAINS
   !
   recursive subroutine destroy ( curr, iun )
     !
-    ! optional variable "iun" added for testing and debugging purposes:
-    ! if present, tags are printed to unit iun while they are destroyed
-    !
     type(node), pointer :: curr, next
     type(nodelist), pointer :: linklist
     integer, intent(in), optional :: iun
     !
     nlevel = nlevel + 1
+    ! print *, nlevel, '<', curr%tag,'>, ',curr%attr
+    ! print *, curr%data(1:min(80,len(curr%data)))
     if ( present(iun ) ) then
        if ( allocated(curr%attr) ) then
           write(iun,'("<",A," ",A,">")') trim(curr%tag),trim(curr%attr)
@@ -560,8 +563,13 @@ CONTAINS
     logical :: in_attrval
     character(len=1) :: delimiter
     !
-    la = len_trim(root%attr)
-    l0 = len_trim(adjustl(root%attr))
+    if(allocated(root%attr)) then
+       la = len_trim(root%attr)
+       l0 = len_trim(adjustl(root%attr))
+    else
+       la = 0
+       l0 = 0
+    endif
     in_attrval=.false.
     found = .false.
     i1 = 0
@@ -598,10 +606,12 @@ scan: do i=la-l0+1,la
     character(len=*), intent(in) :: attr
     character(len=*), intent(out) :: cval
     integer, intent(out), optional:: iostat
+    !
     if (present(iostat)) iostat=0
     if ( hasattribute(root, attr, cval) ) return
     if (present(iostat)) iostat=1
-    cval = ''
+    cval = ' '
+    !
   end subroutine extractdataattribute_c
   !
   subroutine extractdataattribute_l(root, attr, lval, iostat)
@@ -610,6 +620,7 @@ scan: do i=la-l0+1,la
     logical, intent(out) :: lval
     character(len=80) :: val
     integer, intent(out), optional:: iostat
+    !
     if (present(iostat)) iostat=0
     if ( hasattribute(root, attr, val) ) then
        read(val,*, end=10,err=10) lval
@@ -618,6 +629,7 @@ scan: do i=la-l0+1,la
     ! not found or not readable
 10  lval = .false.
     if (present(iostat)) iostat=1
+    !
   end subroutine extractdataattribute_l
   !
   subroutine extractdataattribute_i(root, attr, ival, iostat)
@@ -626,6 +638,7 @@ scan: do i=la-l0+1,la
     integer, intent(out) :: ival
     character(len=80) :: val
     integer, intent(out), optional:: iostat
+    !
     if (present(iostat)) iostat=0
     if ( hasattribute(root, attr, val) ) then
        read(val,*, end=10,err=10) ival
@@ -634,6 +647,7 @@ scan: do i=la-l0+1,la
     ! not found or not readable
 10  ival = 0
     if (present(iostat)) iostat=1
+    !
   end subroutine extractdataattribute_i
   !
   subroutine extractdataattribute_iv(root, attr, ivec, iostat)
@@ -642,6 +656,7 @@ scan: do i=la-l0+1,la
     integer, intent(out) :: ivec(:)
     character(len=80) :: val
     integer, intent(out), optional:: iostat
+    !
     if (present(iostat)) iostat=0
     if ( hasattribute(root, attr, val) ) then
        read(val,*, end=10,err=10) ivec
@@ -650,6 +665,7 @@ scan: do i=la-l0+1,la
     ! not found or not readable
 10  ivec = 0
     if (present(iostat)) iostat=1
+    !
   end subroutine extractdataattribute_iv
   !
   subroutine extractdataattribute_r(root, attr, rval, iostat)
@@ -658,6 +674,7 @@ scan: do i=la-l0+1,la
     real(dp), intent(out) :: rval
     character(len=80) :: val
     integer, intent(out), optional:: iostat
+    !
     if (present(iostat)) iostat=0
     if ( hasattribute(root, attr, val) ) then
        read(val,*, end=10,err=10) rval
@@ -666,6 +683,7 @@ scan: do i=la-l0+1,la
     ! not found or not readable
 10  rval = 0
     if (present(iostat)) iostat=1
+    !
   end subroutine extractdataattribute_r
   !
   subroutine extractdatacontent_c(root, cval, iostat)
@@ -673,32 +691,43 @@ scan: do i=la-l0+1,la
     character(len=*), intent(out) :: cval
     integer, intent(out), optional :: iostat
     integer :: ios
-    if ( len_trim(root%data) > 0 ) then
-       read(root%data,*,iostat=ios) cval
+    !
+    cval=' '
+    ios = 0
+    if ( allocated(root%data) ) then
+       if ( len_trim(root%data) > 0 ) read(root%data,*,iostat=ios) cval
     else
-       cval=''
-       ios = 0
+       ios = 1
     end if
     if ( present(iostat) ) iostat=ios
+    !
   end subroutine extractdatacontent_c
   !
   subroutine extractdatacontent_cv(root, cvec, iostat)
     type(node), pointer, intent(in) :: root
     character(len=*), intent(inout), pointer :: cvec(:)
     integer, intent(out), optional :: iostat
-    integer :: ibeg, iend, i, ios
-    if ( len_trim(root%data) > 0 ) then
-       ios=0
-       iend=1
-       do i=1,size(cvec)
-          call find_token( root%data, ibeg, iend)
-          cvec(i) = root%data(ibeg:iend)
-       end do
+    integer :: ibeg, iend, n, ios
+    !
+    cvec(:) = ' '
+    ios = 0
+    if ( allocated(root%data) ) then
+       if ( len_trim(root%data) > 0 ) then
+          iend = 0
+          do n=1,size(cvec)
+             ios = find_token( root%data, ibeg, iend)
+             if ( ios == 0 ) then
+                cvec(n) = root%data(ibeg:iend)
+             else
+                cvec(n) = ' '
+             end if
+          end do
+       end if
     else
-       cvec(:)=''
-       ios = -1
+       ios = 1
     end if
     if ( present(iostat) ) iostat=ios
+    !
   end subroutine extractdatacontent_cv
   !
   subroutine extractdatacontent_l(root, lval, iostat)
@@ -710,7 +739,7 @@ scan: do i=la-l0+1,la
        read(root%data,*,iostat=ios) lval
     else
        lval=.false.
-       ios = -1
+       ios = 1
     end if
     if ( present(iostat) ) iostat=ios
     !
@@ -721,13 +750,15 @@ scan: do i=la-l0+1,la
     integer, intent(out) :: ival
     integer, intent(out), optional :: iostat
     integer :: ios
+    !
     if ( allocated(root%data) ) then
        read(root%data,*,iostat=ios) ival
     else
        ival=0
-       ios = -1
+       ios = 1
     end if
     if ( present(iostat) ) iostat=ios
+    !
   end subroutine extractdatacontent_i
   !
   subroutine extractdatacontent_iv(root, ivec, iostat)
@@ -736,20 +767,24 @@ scan: do i=la-l0+1,la
     integer, intent(out), optional :: iostat
     integer :: ios, n, iend, ibeg
     !
+    ios = 1
     if ( allocated(root%data) ) then
        ! the simple solution fails if root%data > 1024 characters:
        ! read(root%data,*,iostat=ios) ivec
-       ios = 0
-       iend = 1
+       iend = 0
        do n=1,size(ivec)
-          call find_token( root%data, ibeg, iend)
-          read(root%data(ibeg:iend),*,iostat=ios) ivec(n)
+          ios = find_token( root%data, ibeg, iend)
+          if ( ios == 0 ) then
+             read(root%data(ibeg:iend),*,iostat=ios) ivec(n)
+          else
+             ivec(n) = 0
+          end if
        end do
     else
-       ivec= 0
-       ios = -1
+       ivec(:) = 0
     end if
     if ( present(iostat) ) iostat=ios
+    !
   end subroutine extractdatacontent_iv
   !
   subroutine extractdatacontent_r(root, rval, iostat)
@@ -757,13 +792,15 @@ scan: do i=la-l0+1,la
     real(dp), intent(out) :: rval
     integer, intent(out), optional :: iostat
     integer :: ios
+    !
     if ( allocated(root%data) ) then
        read(root%data,*,iostat=ios) rval
     else
        rval=0.0_dp
-       ios = -1
+       ios = 1
     end if
     if ( present(iostat) ) iostat=ios
+    !
   end subroutine extractdatacontent_r
   !
   subroutine extractdatacontent_rv(root, rvec, iostat)
@@ -772,20 +809,24 @@ scan: do i=la-l0+1,la
     integer, intent(out), optional :: iostat
     integer :: ios, n, iend, ibeg
     !
+    ios = 1 
     if ( allocated(root%data) ) then
        ! the simple solution fails if root%data > 1024 characters:
        ! read(root%data,*,iostat=ios) rvec
-       ios = 0
-       iend = 1
+       iend = 0
        do n=1,size(rvec)
-          call find_token( root%data, ibeg, iend)
-          read(root%data(ibeg:iend),*,iostat=ios) rvec(n)
+          ios = find_token( root%data, ibeg, iend)
+          if ( ios == 0 ) then
+             read(root%data(ibeg:iend),*,iostat=ios) rvec(n)
+          else
+             rvec(n) = 0.0_dp
+          end if
        end do
     else
-       rvec= 0.0_dp
-       ios = -1
+       rvec(:) = 0.0_dp
     end if
     if ( present(iostat) ) iostat=ios
+    !
   end subroutine extractdatacontent_rv
   !
   subroutine extractdatacontent_rm(root, rmat, iostat)
@@ -794,55 +835,72 @@ scan: do i=la-l0+1,la
     integer, intent(out), optional :: iostat
     integer :: ios, n, m, iend, ibeg
     !
+    ios = 1
     if ( allocated(root%data) ) then
        ! the simple solution fails if root%data > 1024 characters:
        ! read(root%data,*,iostat=ios) rmat
-       ios = 0
-       iend = 1
+       iend = 0
        do m=1,size(rmat,2)
           do n=1,size(rmat,1)
-             call find_token( root%data, ibeg, iend)
-             read(root%data(ibeg:iend),*,iostat=ios) rmat(n,m)
+             ios = find_token( root%data, ibeg, iend)
+             if ( ios == 0 ) then
+                read(root%data(ibeg:iend),*,iostat=ios) rmat(n,m)
+             else
+                rmat(n,m) = 0.0_dp
+             end if
           end do
        end do
     else
-       rmat= 0.0_dp
-       ios = -1
+       rmat = 0.0_dp
     end if
     if ( present(iostat) ) iostat=ios
+    !
   end subroutine extractdatacontent_rm
   !
-  subroutine find_token ( data, ibeg, iend)
-    ! on input:
-    !    data    data to be read
-    !    iend    1 on first run, end position of previous token otherwise
-    ! On output:
-    !    data(ibeg:iend) containing a token (a number)
+  integer function find_token ( data, ibeg, iend )
+    !
+    ! Locate tokens (numbers, fields) in a string
     ! Tokens are assumed to be separated by space or commas
-    ! Beware: will not work if empty tokens and multiple commas and present
+    !
+    ! on input:
+    !    data    string containing tokens
+    !    iend    0 on first run, end position of previous token otherwise
+    ! On output:
+    !    find_token   0 if token found, 1 otherwise
+    !    ibeg, iend   if find_token, data(ibeg:iend) contains a token
+    !                 if not, ibeg=iend, iend unchanged
+    !
+    ! Beware: will not work if empty tokens and multiple commas and present,
+    !         e.g.: "field1, ,field3" where field2 is empty
     !
     character(len=:), allocatable, intent(in) :: data
     integer, intent(out)  :: ibeg
     integer, intent(inout):: iend
-    integer:: iscan
+    integer:: lt
     !
-    do ibeg = iend, len_trim(data) 
+    lt = len_trim(data) 
+    find_token = 1
+    do ibeg = iend+1, lt
        if ( data(ibeg:ibeg) == ' ' .or.  data(ibeg:ibeg) == ','  ) then
           cycle
        else
+          find_token = 0
           exit
        end if
     end do
-    ibeg = min(ibeg, len_trim(data))
-    do iend = ibeg, len_trim(data)
-       if ( data(iend:iend) /= ' ' .and.  data(iend:iend) /= ','  ) then
-          cycle
-       else
-          exit
-       end if
-    end do
-    iend = min(iend, len_trim(data))
+    if ( find_token == 0 ) then
+       do iend = ibeg, lt
+          if ( data(iend:iend) /= ' ' .and.  data(iend:iend) /= ','  ) then
+             cycle
+          else
+             exit
+          end if
+       end do
+       iend = min(iend, lt)
+    else
+       ibeg = iend
+    end if
     !
-  end subroutine find_token
+  end function find_token
   !
 end module dom

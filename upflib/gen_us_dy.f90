@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2021 Quantum ESPRESSO Foundation
+! Copyright (C) 2021 Quantum ESPRESSSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,18 +7,20 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE gen_us_dy_base &
-     ( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
-       omega, nr1, nr2, nr3, eigts1, eigts2, eigts3, mill, g, u, dvkb )
+SUBROUTINE gen_us_dy_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
+                           omega, nr1, nr2, nr3, eigts1, eigts2, eigts3,    &
+                           mill, g, u, dvkb )
   !----------------------------------------------------------------------
-  !! Calculates the beta functions of the pseudopotential with the
-  !! derivative of the spherical harmonics projected on vector u
+  !! Calculates the Kleinman-Bylander pseudopotentials with the
+  !! derivative of the spherical harmonics projected on vector u.
+  !
+  ! AF: more extensive use of GPU-resident vars possible
   !
   USE upf_kinds,   ONLY: dp
   USE upf_const,   ONLY: tpi
   USE uspp,        ONLY: nkb, indv, nhtol, nhtolm
   USE uspp_data,   ONLY: nqx, tab, dq
-  USE uspp_param,  ONLY: upf, lmaxkb, nbetam, nh
+  USE uspp_param,  ONLY: upf, lmaxkb, nbetam, nh, nhm
   !
   IMPLICIT NONE
   !
@@ -55,112 +57,205 @@ SUBROUTINE gen_us_dy_base &
   REAL(DP), INTENT(IN) :: g(3,*)
   !! g vectors (2pi/a units)
   REAL(DP), INTENT(IN) :: u(3)
-  !! input: projection vector
-  COMPLEX(DP), INTENT(OUT) :: dvkb(npwx,nkb)
-  !! output: kleinman-bylander pseudopotential
+  !! projection vector
+  COMPLEX(DP), INTENT(OUT) :: dvkb(npwx, nkb)
+  !! the beta function pseudopotential
   !
   ! ... local variables
   !
   INTEGER :: na, nt, nb, ih, l, lm, ikb, iig, ipol, i0, i1, i2, &
-             i3, ig
-  REAL(DP), ALLOCATABLE :: gk(:,:), q(:)
-  REAL(DP) :: px, ux, vx, wx, arg
+             i3, ig, nbm, iq, mil1, mil2, mil3, ikb_t,     &
+             nht, ina, lmx2
   !
-  REAL(DP), ALLOCATABLE :: vkb0(:,:,:), dylm(:,:), dylm_u(:,:)
+  INTEGER, ALLOCATABLE :: nas(:), ihv(:), nav(:)
+  !
+  REAL(DP), ALLOCATABLE :: dylm(:,:,:), dylm_u(:,:)
+  REAL(DP), ALLOCATABLE :: q(:), gk(:,:), vkb0(:,:,:)
   ! dylm = d Y_lm/dr_i in cartesian axes
   ! dylm_u as above projected on u
+  COMPLEX(DP), ALLOCATABLE :: phase(:), sk(:,:)
   !
-  COMPLEX(DP), ALLOCATABLE :: sk(:)
-  COMPLEX(DP) :: phase, pref
+  REAL(DP) :: px, ux, vx, wx, arg, u_ipol1, u_ipol2, u_ipol3, xk1, xk2, xk3
+  COMPLEX(DP) :: pref
   !
-  INTEGER :: iq
+  !$acc kernels present_or_copyout(dvkb)
+  dvkb = (0._DP,0._DP)
+  !$acc end kernels
   !
-  dvkb(:,:) = (0.d0, 0.d0)
   IF (lmaxkb <= 0) RETURN
   !
-  ALLOCATE( vkb0(npw,nbetam,ntyp), dylm_u(npw,(lmaxkb+1)**2), gk(3,npw) )
-  ALLOCATE( q(npw) )
+  !$acc data present_or_copyin(igk,eigts1,eigts2,eigts3,mill,g) present(dvkb)
   !
+  lmx2 = (lmaxkb+1)**2
+  !
+  ALLOCATE( gk(3,npw) )
+  ALLOCATE( dylm_u(npw,lmx2) )
+  ALLOCATE( vkb0(npw,nbetam,ntyp) )
+  ALLOCATE( q(npw) )
+  !$acc data create( dylm_u, vkb0 )
+  !$acc data create( q, gk )
+  !
+  xk1 = xk(1)
+  xk2 = xk(2)
+  xk3 = xk(3)
+  !
+  !$acc parallel loop
   DO ig = 1, npw
      iig = igk(ig)
-     gk(1, ig) = xk(1) + g(1, iig)
-     gk(2, ig) = xk(2) + g(2, iig)
-     gk(3, ig) = xk(3) + g(3, iig)
-     q(ig) = gk(1, ig)**2 +  gk(2, ig)**2 + gk(3, ig)**2
+     gk(1,ig) = xk1 + g(1,iig)
+     gk(2,ig) = xk2 + g(2,iig)
+     gk(3,ig) = xk3 + g(3,iig)
+     q(ig) = gk(1,ig)**2 + gk(2,ig)**2 + gk(3,ig)**2
   ENDDO
   !
-  ALLOCATE( dylm(npw,(lmaxkb+1)**2) )
-  dylm_u(:,:) = 0.d0
+  ALLOCATE( dylm(npw,(lmaxkb+1)**2,3) )
+  !$acc data create( dylm )
+  !
+#if defined(__CUDA)
+  !$acc host_data use_device( gk, q, dylm )
   DO ipol = 1, 3
-     CALL dylmr2( (lmaxkb+1)**2, npw, gk, q, dylm, ipol )
-     CALL daxpy( npw * (lmaxkb + 1) **2, u(ipol), dylm, 1, dylm_u, 1 )
+     CALL dylmr2_gpu( lmx2, npw, gk, q, dylm(:,:,ipol), ipol )
   ENDDO
+  !$acc end host_data
+#else
+  !$acc update self( gk, q )
+  DO ipol = 1, 3
+     CALL dylmr2( lmx2, npw, gk, q, dylm(:,:,ipol), ipol )
+  ENDDO
+  !$acc update device( dylm )
+#endif
+  !
+  u_ipol1 = u(1) ; u_ipol2 = u(2) ; u_ipol3 = u(3)
+  !
+  !$acc parallel loop collapse(2)
+  DO lm = 1, lmx2
+    DO ig = 1, npw
+      dylm_u(ig,lm) = u_ipol1*dylm(ig,lm,1) + &
+                      u_ipol2*dylm(ig,lm,2) + &
+                      u_ipol3*dylm(ig,lm,3)
+    ENDDO
+  ENDDO
+  !$acc end data
   DEALLOCATE( dylm )
   !
-  DO ig = 1, npw
-     q(ig) = SQRT(q(ig)) * tpiba
-  ENDDO
+  !$acc kernels
+  q(:) = SQRT(q(:)) * tpiba
+  !$acc end kernels
   !
+  !$acc data copyin( tab )
   DO nt = 1, ntyp
-     ! calculate beta in G-space using an interpolation table
-     DO nb = 1, upf(nt)%nbeta
+     nbm = upf(nt)%nbeta
+     !$acc parallel loop collapse(2)
+     DO nb = 1, nbm
         DO ig = 1, npw
-           px = q(ig)/dq - INT(q(ig)/dq)
-           ux = 1.d0 - px
-           vx = 2.d0 - px
-           wx = 3.d0 - px
-           i0 = q(ig)/dq + 1
+           px = q(ig)/dq - DBLE(INT(q(ig)/dq))
+           ux = 1._DP - px
+           vx = 2._DP - px
+           wx = 3._DP - px
+           i0 = INT(q(ig)/dq) + 1
            i1 = i0 + 1
            i2 = i0 + 2
            i3 = i0 + 3
-           vkb0(ig, nb, nt) = tab(i0, nb, nt) * ux * vx * wx / 6.d0 + &
-                              tab(i1, nb, nt) * px * vx * wx / 2.d0 - &
-                              tab(i2, nb, nt) * px * ux * wx / 2.d0 + &
-                              tab(i3, nb, nt) * px * ux * vx / 6.d0
-        ENDDO
-     ENDDO
+           vkb0(ig,nb,nt) = tab(i0,nb,nt) * ux * vx * wx / 6._DP + &
+                            tab(i1,nb,nt) * px * vx * wx / 2._DP - &
+                            tab(i2,nb,nt) * px * ux * wx / 2._DP + &
+                            tab(i3,nb,nt) * px * ux * vx / 6._DP
+       ENDDO
+    ENDDO
   ENDDO
+  !$acc end data
   !
-  DEALLOCATE( q )
+  !$acc end data
+  DEALLOCATE( gk, q )
   !
-  ALLOCATE( sk(npw) )
+  ALLOCATE( nas(nat), phase(nat) )
   !
-  ikb = 0
+  ina = 0
   DO nt = 1, ntyp
-     DO na = 1, nat
-        IF ( ityp(na) == nt ) THEN
-           arg = (xk(1) * tau(1, na) + xk(2) * tau(2, na) &
-                + xk(3) * tau(3, na) ) * tpi
-           phase = CMPLX( COS(arg), -SIN(arg), KIND=DP )
-           DO ig = 1, npw
-              iig = igk(ig)
-              sk(ig) = eigts1(mill (1,iig), na) * &
-                       eigts2(mill (2,iig), na) * &
-                       eigts3(mill (3,iig), na) * phase
-           ENDDO
-           !
-           DO ih = 1, nh(nt)
-              nb = indv(ih, nt)
-              l = nhtol(ih, nt)
-              lm = nhtolm(ih, nt)
-              ikb = ikb + 1
-              pref = (0.d0, -1.d0)**l
-              !
-              DO ig = 1, npw
-                 dvkb(ig, ikb) = vkb0(ig, nb, nt) * sk(ig) * dylm_u(ig, lm) &
-                      * pref / tpiba
-              ENDDO
-           ENDDO
-        ENDIF
-     ENDDO
+  DO na = 1, nat
+    IF ( ityp(na) == nt ) THEN
+      ina = ina + 1
+      nas(ina) = na
+    ENDIF
+  ENDDO
   ENDDO
   !
-  IF (ikb /= nkb) CALL upf_error( 'gen_us_dy', 'unexpected error', 1 )
+  
+  ALLOCATE( sk(npw,nat) )
+  !$acc data create( sk )
   !
+  !$acc data create( phase ) copyin( nas )
+  !
+  !$acc parallel loop copyin( tau )
+  DO ina = 1, nat
+     na = nas(ina)
+     arg = ( xk1 * tau(1,na) + xk2 * tau(2,na) &
+           + xk3 * tau(3,na) ) * tpi
+     phase(na) = CMPLX( COS(arg), -SIN(arg), KIND=DP )
+  ENDDO
+  !
+  !$acc parallel loop collapse(2)
+  DO ina = 1, nat
+    DO ig = 1, npw
+      !
+      na = nas(ina)
+      iig = igk(ig)
+      mil1 = mill(1,iig)
+      mil2 = mill(2,iig)
+      mil3 = mill(3,iig)
+      sk(ig,na) = eigts1(mil1,na) * &
+                  eigts2(mil2,na) * &
+                  eigts3(mil3,na) * phase(na)
+    ENDDO
+  ENDDO
+  !
+  !$acc end data
+  !
+  ALLOCATE( ihv(nat*nhm), nav(nat*nhm) )
+  !$acc data create( ihv, nav )
+  !
+  ikb_t = 0
+  DO ina = 1, nat
+    na = nas(ina)
+    nht = nh(ityp(na))
+    !$acc kernels
+    DO ih = 1, nht
+       ihv(ikb_t+ih) = ih
+       nav(ikb_t+ih) = na
+    ENDDO
+    !$acc end kernels
+    ikb_t = ikb_t + nht
+  ENDDO
+  !
+  !$acc parallel loop collapse(2) copyin(ityp,indv,nhtol,nhtolm)
+  DO ikb = 1, ikb_t
+    DO ig = 1, npw
+      ih = ihv(ikb)
+      na = nav(ikb)
+      nt = ityp(na)
+      nb = indv(ih,nt)
+      l  = nhtol(ih,nt)
+      lm = nhtolm(ih,nt)
+      pref = (0._DP,-1._DP)**l
+      !
+      dvkb(ig,ikb) = CMPLX(vkb0(ig,nb,nt)) * sk(ig,na) * &
+                     CMPLX(dylm_u(ig,lm))  * pref / CMPLX(tpiba) 
+    ENDDO
+  ENDDO  
+  !
+  !$acc end data
+  !$acc end data
+  DEALLOCATE( ihv, nav )
+  DEALLOCATE( phase, nas )
   DEALLOCATE( sk )
-  DEALLOCATE( vkb0, dylm_u, gk )
+  !
+  IF (ikb_t /= nkb) CALL upf_error( 'gen_us_dy', 'unexpected error', 1 )
+  !
+  !$acc end data
+  DEALLOCATE( dylm_u, vkb0 )
+  !
+  !$acc end data
   !
   RETURN
   !
 END SUBROUTINE gen_us_dy_base
-!

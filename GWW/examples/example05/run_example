@@ -93,7 +93,7 @@ SIMPLE_BSE_COMMAND="$PARA_PREFIX $BIN_DIR/simple_bse.x "
 $ECHO
 $ECHO "  running simple_bse.x as: $SIMPLE_BSE_COMMAND"
 $ECHO
-ABCOEFF_TO_EPS_COMMAND="$BIN_DIR/../GWW/util/abcoeff_to_eps.x"
+ABCOEFF_TO_EPS_COMMAND="$BIN_DIR/abcoeff_to_eps.x"
     # self-consistent calculation
     cat > si_scf_k.in << EOF
 &control
@@ -352,9 +352,6 @@ EOF
 #    $ECHO  "copying self-energy files..\c"
 #    cp $TMP_DIR/si-im_on_im* .
 #    cp $TMP_DIR/si-re_on_im* .
- #copy  alpha and beta coefficients
-     cp $TMP_DIR/ab_coeff.dat .	 
-     cp  $TMP_DIR/lanczos.eps*dat .     
 
     # clean TMP_DIR
     $ECHO "  cleaning $TMP_DIR...\c"

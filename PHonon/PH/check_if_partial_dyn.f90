@@ -158,11 +158,10 @@ SUBROUTINE set_local_atomo(nat, nat_todo, atomo, nsym, irt,  nat_l, atomo_l)
    !
    INTEGER,ALLOCATABLE  :: ifat(:)
    INTEGER              :: na
-   ALLOCATE(ifat(na))
+   ALLOCATE(ifat(nat))
    CALL set_ifat(nat, nat_todo, atomo, nsym, irt, ifat)
    nat_l = COUNT(ifat == 1)
    ALLOCATE (atomo_l(nat_l))
    atomo_l = PACK([(na,na=1,nat)], MASK = ifat == 1)
    DEALLOCATE(ifat)
 END SUBROUTINE set_local_atomo 
-  
