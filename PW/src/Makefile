@@ -283,7 +283,6 @@ PWLIBS += \
   hs_psi_gpu.o \
   s_1psi_gpu.o \
   utils_gpu.o \
-  force_lc_gpu.o \
   force_us_gpu.o \
   force_cc_gpu.o \
   force_hub_gpu.o \
