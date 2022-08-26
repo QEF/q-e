@@ -137,9 +137,7 @@ SUBROUTINE forces()
   ! ... The NLCC contribution
   !
   call start_clock('frc_cc') 
-  IF (.not. use_gpu) CALL force_cc( forcecc )
-  IF (      use_gpu) CALL force_cc_gpu( forcecc )
-  !
+  CALL force_cc( forcecc )
   call stop_clock('frc_cc') 
 
   ! ... The Hubbard contribution

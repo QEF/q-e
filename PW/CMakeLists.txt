@@ -254,7 +254,6 @@ set(src_pw
    src/newd_gpu.f90
    src/sum_band_gpu.f90
    src/force_us_gpu.f90
-   src/force_cc_gpu.f90
    src/force_hub_gpu.f90
    src/force_corr_gpu.f90
    src/orthoatwfc_gpu.f90
