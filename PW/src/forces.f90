@@ -136,9 +136,9 @@ SUBROUTINE forces()
   !
   ! ... The NLCC contribution
   !
-  call start_clock('frc_cc') 
+  call start_clock('frc_cc')
   CALL force_cc( forcecc )
-  call stop_clock('frc_cc') 
+  call stop_clock('frc_cc')
 
   ! ... The Hubbard contribution
   !     (included by force_us if using beta as local projectors)
@@ -202,8 +202,7 @@ SUBROUTINE forces()
   IF (ierr .ne. 0) CALL errore('forces', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr))
 #endif
   !
-  IF ( .not. use_gpu ) CALL force_corr( forcescc )
-  IF (       use_gpu ) CALL force_corr_gpu( forcescc )
+  CALL force_corr( forcescc )
   call stop_clock('frc_scc') 
   !
   IF (do_comp_mt) THEN

@@ -46,7 +46,7 @@ SUBROUTINE force_cc( forcecc )
   ! radial fourier transform of rho core
   COMPLEX(DP), ALLOCATABLE :: vaux(:,:)
   REAL(DP) :: prod, arg, fact
-  REAL(DP) :: forcelc_x, forcelc_y, forcelc_z, tau1, tau2, tau3
+  REAL(DP) :: forcecc_x, forcecc_y, forcecc_z, tau1, tau2, tau3
   !
   forcecc(:,:) = 0.d0
   !
@@ -60,7 +60,7 @@ SUBROUTINE force_cc( forcecc )
   !
   ! ... recalculate the exchange-correlation potential
   !
-  ALLOCATE( vxc(dfftp%nnr,nspin) )
+  ALLOCATE( vxc(dfftp%nnr,nspin), vaux(dfftp%nnr,1) )
   !
   CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, vxc )
   !
@@ -94,7 +94,7 @@ SUBROUTINE force_cc( forcecc )
         !$acc end data
         !
 #if !defined(_OPENACC)
-        !$omp parallel do private( tau1,tau2,tau3,forcelc_x,forcelc_y,forcelc_z,&
+        !$omp parallel do private( tau1,tau2,tau3,forcecc_x,forcecc_y,forcecc_z,&
         !$omp                      ig,arg,prod )
 #endif
         DO na = 1, nat
@@ -103,24 +103,24 @@ SUBROUTINE force_cc( forcecc )
              tau1 = tau(1,na)
              tau2 = tau(2,na)
              tau3 = tau(3,na)
-             forcelc_x = 0.d0
-             forcelc_y = 0.d0
-             forcelc_z = 0.d0
+             forcecc_x = 0.d0
+             forcecc_y = 0.d0
+             forcecc_z = 0.d0
              !
-             !$acc parallel loop reduction(+:forcelc_x,forcelc_y,forcelc_z)
+             !$acc parallel loop reduction(+:forcecc_x,forcecc_y,forcecc_z)
              DO ig = gstart, ngm
                 arg = (g(1,ig)*tau1 + g(2,ig)*tau2 + g(3,ig)*tau3) * tpi
                 prod = tpiba * omega * rhocg(igtongl(ig)) * &
                        DBLE( CONJG(vaux(ig,1)) * &
                        CMPLX(SIN(arg), COS(arg), KIND=DP) ) * fact
-                forcelc_x = forcelc_x + g(1,ig) * prod
-                forcelc_y = forcelc_y + g(2,ig) * prod
-                forcelc_z = forcelc_z + g(3,ig) * prod
+                forcecc_x = forcecc_x + g(1,ig) * prod
+                forcecc_y = forcecc_y + g(2,ig) * prod
+                forcecc_z = forcecc_z + g(3,ig) * prod
              ENDDO
              !
-             forcecc(1,na) = forcecc(1,na) + forcelc_x
-             forcecc(2,na) = forcecc(2,na) + forcelc_y
-             forcecc(3,na) = forcecc(3,na) + forcelc_z
+             forcecc(1,na) = forcecc_x
+             forcecc(2,na) = forcecc_y
+             forcecc(3,na) = forcecc_z
              !
           ENDIF
         ENDDO

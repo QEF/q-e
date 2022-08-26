@@ -287,7 +287,6 @@ PWLIBS += \
   force_hub_gpu.o \
   drhoc_gpu.o \
   addusforce_gpu.o \
-  force_corr_gpu.o \
   orthoatwfc_gpu.o \
   atomic_wfc_gpu.o
 
