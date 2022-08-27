@@ -2174,7 +2174,6 @@ CONTAINS
       INTEGER, ALLOCATABLE :: counter_u(:), counter_j0(:), counter_j(:), counter_b(:), &
                               counter_e2(:), counter_e3(:), counter_v(:,:), ityp(:)
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
-      CHARACTER(LEN=1), EXTERNAL :: capital
       INTEGER, EXTERNAL :: spdf_to_l
       !
       ! Output variables
