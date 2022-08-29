@@ -122,17 +122,16 @@ SUBROUTINE forces()
   !
   ! ... The nonlocal contribution is computed here
   !
-  call start_clock('frc_us') 
-  IF (.not. use_gpu) CALL force_us( forcenl )
-  IF (      use_gpu) CALL force_us_gpu( forcenl )
-  call stop_clock('frc_us') 
+  call start_clock('frc_us')
+  CALL force_us( forcenl )
+  call stop_clock('frc_us')
   !
   ! ... The local contribution
   !
   call start_clock('frc_lc')
   CALL force_lc( nat, tau, ityp, ntyp, alat, omega, ngm, ngl, igtongl, &
                  g, rho%of_r(:,1), gstart, gamma_only, vloc, forcelc )
-  call stop_clock('frc_lc') 
+  call stop_clock('frc_lc')
   !
   ! ... The NLCC contribution
   !
