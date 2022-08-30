@@ -13,7 +13,7 @@ SUBROUTINE force_us( forcenl )
   !
   USE kinds,                ONLY : DP
   USE control_flags,        ONLY : gamma_only
-  USE cell_base,            ONLY : at, bg, tpiba
+  USE cell_base,            ONLY : tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g
@@ -23,7 +23,6 @@ SUBROUTINE force_us( forcenl )
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
   USE symme,                ONLY : symvector
   USE wavefunctions,        ONLY : evc
-  USE wavefunctions_gpum,   ONLY : using_evc
   USE noncollin_module,     ONLY : npol, noncolin
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
@@ -34,7 +33,7 @@ SUBROUTINE force_us( forcenl )
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum, mp_get_comm_null
-  USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d, evc_d
+  USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto, allocate_bec_type_gpu, &
                                    synchronize_bec_type_gpu
@@ -48,39 +47,31 @@ SUBROUTINE force_us( forcenl )
   ! ... local variables
   !
   COMPLEX(DP), ALLOCATABLE :: vkb1(:,:)   ! contains g*|beta>
-  !
   COMPLEX(DP), ALLOCATABLE :: deff_nc(:,:,:,:)
-  REAL(DP), ALLOCATABLE :: deff(:,:,:)
+  REAL(DP),    ALLOCATABLE :: deff(:,:,:)
   TYPE(bec_type) :: dbecp                 ! contains <dbeta|psi>
+  INTEGER :: npw, ik, ipol, ig, jkb
+  INTEGER :: itot, nt, na
+  INTEGER, ALLOCATABLE :: nt_list(:), na_list(:)
+  LOGICAL, ALLOCATABLE :: ismulti_np(:)
 #if defined(__CUDA)
   TYPE(bec_type_d), TARGET :: dbecp_d
-#endif
-  INTEGER :: npw, ik, ipol, ig, jkb
-  INTEGER :: itot, ntot, nt, na
-  INTEGER, ALLOCATABLE :: ntv(:), nav(:)
-  LOGICAL, ALLOCATABLE :: ismulti_np(:)
-  !
-#if defined(__CUDA) && defined(_OPENACC)
   COMPLEX(DP), POINTER, DEVICE :: becpnc(:,:,:),  becpk(:,:), &
                                   dbecpnc(:,:,:), dbecpk(:,:)
 #else
-  COMPLEX(DP), ALLOCATABLE :: becpnc(:,:,:), becpk(:,:), &
-                              dbecpnc(:,:,:), dbecpk(:,:)
+  COMPLEX(DP), ALLOCATABLE     :: becpnc(:,:,:),  becpk(:,:), &
+                                  dbecpnc(:,:,:), dbecpk(:,:)
 #endif
   !
   forcenl(:,:) = 0.D0
   !
   CALL allocate_bec_type( nkb, nbnd, becp, intra_bgrp_comm )
-  CALL using_becp_auto(2)
-  !
+  CALL using_becp_auto( 2 )
   CALL allocate_bec_type( nkb, nbnd, dbecp, intra_bgrp_comm )
+  !
 #if defined(__CUDA)
   CALL allocate_bec_type_gpu( nkb, nbnd, dbecp_d, intra_bgrp_comm )
-#endif
   !
-  !
-  ! ..... provisional
-#if defined(__CUDA) && defined(_OPENACC)
   IF (noncolin) THEN
     becpnc => becp_d%nc_d
     dbecpnc => dbecp_d%nc_d
@@ -96,46 +87,31 @@ SUBROUTINE force_us( forcenl )
   ENDIF
 #endif
   !
-  !
   ALLOCATE( vkb1(npwx,nkb) )
-  !$acc data create(vkb1)
-  !
   IF (noncolin) THEN
     ALLOCATE( deff_nc(nhm,nhm,nat,nspin) )
   ELSEIF (.NOT. gamma_only ) THEN
     ALLOCATE( deff(nhm,nhm,nat) )
   ENDIF
-  !$acc data create(deff,deff_nc)
-  !
-  !
-  !---------------TO BE REMOVED...............
-#if defined(__CUDA)
-  CALL using_evc_d(0)
-  evc=evc_d
-  !$acc data copyin(evc)
-#else
   CALL using_evc(0)
-#endif
-  !--------------------------------------------
+  !$acc data create(vkb1,deff,deff_nc) copyin(evc)
   !
-  ntot = 0
+  itot = 0
   DO nt = 1, ntyp
-     DO na = 1, nat
-        IF ( ityp(na) == nt ) THEN
-           ntot = ntot + 1
-        ENDIF
-     ENDDO
+    DO na = 1, nat
+      IF (ityp(na)==nt) itot = itot+1
+    ENDDO
   ENDDO
   !
-  ALLOCATE( ntv(ntot), nav(ntot), ismulti_np(ntot) )
+  ALLOCATE( nt_list(itot), na_list(itot), ismulti_np(itot) )
   !
   itot = 0
   DO nt = 1, ntyp
      DO na = 1, nat
         IF ( ityp(na)==nt ) THEN
            itot = itot + 1
-           ntv(itot) = nt
-           nav(itot) = na
+           nt_list(itot) = nt
+           na_list(itot) = na
            ismulti_np(itot) = upf(nt)%tvanp .OR. upf(nt)%is_multiproj
         ENDIF
      ENDDO
@@ -157,9 +133,7 @@ SUBROUTINE force_us( forcenl )
      !
 #if defined(__CUDA)
      CALL using_becp_d_auto(2)
-     !
      !$acc update device(evc)
-     !
      !$acc host_data use_device(vkb,evc)
      CALL calbec_gpu( npw, vkb, evc, becp_d )
      !$acc end host_data
@@ -173,12 +147,13 @@ SUBROUTINE force_us( forcenl )
        becpk = becp%k
      ENDIF
 #endif
+     !
      DO ipol = 1, 3
         !
 #if defined(_OPENACC)
-!$acc parallel loop collapse(2)
+        !$acc parallel loop collapse(2)
 #else
-!$omp parallel do collapse(2) private(ig)
+        !$omp parallel do collapse(2) private(ig)
 #endif
         DO jkb = 1, nkb
            DO ig = 1, npw
@@ -190,10 +165,8 @@ SUBROUTINE force_us( forcenl )
         !$acc host_data use_device(vkb1,evc)
         CALL calbec_gpu( npw, vkb1, evc, dbecp_d )
         !$acc end host_data
-        !
         CALL synchronize_bec_type_gpu( dbecp_d, dbecp, 'h' )
 #else
-        !$acc update self(vkb1,evc)
         CALL calbec( npw, vkb1, evc, dbecp )
         IF (noncolin) THEN
           dbecpnc = dbecp%nc
@@ -202,7 +175,7 @@ SUBROUTINE force_us( forcenl )
         ENDIF
 #endif
         !
-        !$acc data copyin(ntv,nav,ismulti_np)
+        !$acc data copyin(nt_list,na_list,ismulti_np)
         IF ( gamma_only ) THEN
            !
            CALL force_us_gamma( forcenl )
@@ -217,28 +190,24 @@ SUBROUTINE force_us( forcenl )
      ENDDO
   ENDDO
   !
-  !$acc end data
-  !
   ! ... if sums over bands are parallelized over the band group
   !
-  CALL using_becp_auto(0)
+  CALL using_becp_auto( 0 )
   IF ( becp%comm /= mp_get_comm_null() ) CALL mp_sum( forcenl, becp%comm )
   !
   !$acc end data
-  IF (noncolin) THEN
+  DEALLOCATE( vkb1 )
+  IF ( noncolin ) THEN
      DEALLOCATE( deff_nc )
-  ELSEIF ( .NOT. GAMMA_ONLY) THEN
+  ELSEIF ( .NOT. gamma_only ) THEN
      DEALLOCATE( deff )
   ENDIF
   !
-  !$acc end data
-  DEALLOCATE( vkb1 )
-  !
-  CALL deallocate_bec_type ( dbecp )
-  CALL deallocate_bec_type ( becp )
-  CALL using_becp_auto(2)
+  CALL deallocate_bec_type( dbecp )
+  CALL deallocate_bec_type( becp )
+  CALL using_becp_auto( 2 )
 #if defined(__CUDA)
-  CALL using_becp_d_auto(2)
+  CALL using_becp_d_auto( 2 )
 #endif
   !
   ! ... collect contributions across pools from all k-points
@@ -260,9 +229,8 @@ SUBROUTINE force_us( forcenl )
   !
   CALL symvector( nat, forcenl )
   !
-  DEALLOCATE( ntv, nav, ismulti_np )
-  !
-  ! ..... provisional       
+  DEALLOCATE( nt_list, na_list, ismulti_np )
+  !   
 #if !defined(__CUDA) || !defined(_OPENACC)
   IF ( noncolin ) THEN
     DEALLOCATE( becpnc, dbecpnc )
@@ -278,13 +246,15 @@ SUBROUTINE force_us( forcenl )
      !-----------------------------------------------------------------------
      SUBROUTINE force_us_gamma( forcenl )
        !-----------------------------------------------------------------------
-       !! Nonlocal contribution. Calculation at gamma.
+       !! Nonlocal contribution to the force. Calculation at Gamma.
        !
-#if defined(__CUDA)
-       USE cublas
-#endif
-       USE uspp,                 ONLY : qq_at, deeq
-       USE wvfct_gpum,           ONLY : wg_d, using_wg_d, et_d, using_et_d
+       ! Important notice about parallelization over the band group of processors:
+       ! 1) internally, "calbec" parallelises on plane waves over the band group
+       ! 2) the results of "calbec" are distributed across processors of the band
+       !    group: the band index of becp, dbecp is distributed
+       ! 3) the band group is subsequently used to parallelize over bands
+       !
+       USE uspp,     ONLY : qq_at, deeq
        !
        IMPLICIT NONE
        !
@@ -294,49 +264,35 @@ SUBROUTINE force_us( forcenl )
        ! ... local variables
        !
        REAL(DP), ALLOCATABLE :: aux(:,:)
-       !
-       INTEGER ::  nt, na, ibnd, ibnd_loc, ih, jh, ijkb0 ! counters
-       !
-       ! CUDA Fortran workarounds
-       INTEGER :: nh_nt, becp_ibnd_begin, becp_nbnd_loc, nbnd_siz
-       
        REAL(DP) :: forcenl_ipol
-       !
-#if defined(__CUDA) && defined(_OPENACC)
-       REAL(DP), POINTER, DEVICE :: dbecprd(:,:), becprd(:,:)
-#else
-       REAL(DP), ALLOCATABLE :: dbecprd(:,:), becprd(:,:)
-#endif
-       !
-       ! ... Important notice about parallelization over the band group of processors:
-       ! ... 1) internally, "calbec" parallelises on plane waves over the band group
-       ! ... 2) the results of "calbec" are distributed across processors of the band
-       ! ...    group: the band index of becp, dbecp is distributed
-       ! ... 3) the band group is subsequently used to parallelize over bands
-       !
-       !
-       !$acc data copyin( et, wg )
-       !
-       !**** CHECK becp (set above)
-       becp_ibnd_begin = becp%ibnd_begin
-       becp_nbnd_loc = becp%nbnd_loc
-       !
+       INTEGER :: nt, na, ibnd, ibnd_loc, ih, jh, ijkb0
+       INTEGER :: nh_nt, becp_ibnd_begin, becp_nbnd_loc, nbnd_siz
 #if defined(__CUDA)
+       REAL(DP), POINTER, DEVICE :: dbecprd(:,:), becprd(:,:)
+       !
        dbecprd => dbecp_d%r_d
        becprd  => becp_d%r_d
+       becp_nbnd_loc = becp_d%nbnd_loc
+       becp_ibnd_begin = becp_d%ibnd_begin
 #else
+       REAL(DP), ALLOCATABLE :: dbecprd(:,:), becprd(:,:)
+       !
        nbnd_siz = nbnd / becp%nproc
        ALLOCATE( becprd(nkb,nbnd_siz), dbecprd(nkb,nbnd_siz) )
        !
        dbecprd = dbecp%r
        becprd  = becp%r
+       becp_nbnd_loc = becp%nbnd_loc
+       becp_ibnd_begin = becp%ibnd_begin
 #endif
+       !
+       !$acc data copyin( et, wg )
        !
        DO nt = 1, ntyp
           !
           IF ( nh(nt) == 0 ) CYCLE
           !
-          ALLOCATE( aux(nh(nt),becp%nbnd_loc) )
+          ALLOCATE( aux(nh(nt), becp%nbnd_loc) )
           !$acc data create(aux)
           !
           nh_nt = nh(nt)
@@ -344,22 +300,16 @@ SUBROUTINE force_us( forcenl )
           DO na = 1, nat
              IF ( ityp(na) == nt ) THEN
                 ijkb0 = ofsbeta(na)
-                ! this is \sum_j q_{ij} <beta_j|psi>
-                
-#if defined(__CUDA) && defined(_OPENACC)
+                ! ... this is \sum_j q_{ij} <beta_j|psi>
+                !
                 !$acc host_data use_device(aux, qq_at)
-                CALL DGEMM( 'N','N', nh(nt), becp_d%nbnd_loc, nh(nt),      &
-                            1.0_DP, qq_at(1,1,na), nhm, becprd(ijkb0+1,1), &
-                            nkb, 0.0_DP, aux, nh(nt) )
+                CALL MYDGEMM( 'N','N', nh(nt), becp_nbnd_loc, nh(nt),      &
+                              1.0_DP, qq_at(1,1,na), nhm, becprd(ijkb0+1,1), &
+                              nkb, 0.0_DP, aux, nh(nt) )
                 !$acc end host_data
-#else
-                !$acc update self( aux )
-                CALL DGEMM( 'N','N', nh(nt), becp%nbnd_loc, nh(nt),        &
-                            1.0_DP, qq_at(1,1,na), nhm, becprd(ijkb0+1,1), &
-                            nkb, 0.0_DP, aux, nh(nt) )
-#endif
-                ! multiply by -\epsilon_n
-
+                !
+                ! ... multiply by -\epsilon_n
+                !
 #if defined(_OPENACC)
 !$acc parallel loop collapse(2)
 #else
@@ -375,22 +325,15 @@ SUBROUTINE force_us( forcenl )
 !$omp end parallel do
 #endif
                 !
-                ! add  \sum_j d_{ij} <beta_j|psi>
+                ! ... add  \sum_j d_{ij} <beta_j|psi>
                 !
-#if defined(__CUDA) && defined(_OPENACC)
                 !$acc host_data use_device(aux, deeq)
-                CALL DGEMM( 'N','N', nh(nt), becp_d%nbnd_loc, nh(nt), &
-                            1.0_DP, deeq(1,1,na,current_spin), nhm,   &
-                            becprd(ijkb0+1,1), nkb, 1.0_DP, aux, nh(nt) )
+                CALL MYDGEMM( 'N','N', nh(nt), becp_nbnd_loc, nh(nt), &
+                              1.0_DP, deeq(1,1,na,current_spin), nhm,   &
+                              becprd(ijkb0+1,1), nkb, 1.0_DP, aux, nh(nt) )
                 !$acc end host_data
-#else
-                !$acc update self( aux ) 
-                CALL DGEMM( 'N','N', nh(nt), becp%nbnd_loc, nh(nt), &
-                            1.0_DP, deeq(1,1,na,current_spin), nhm, &
-                            becprd(ijkb0+1,1), nkb, 1.0_DP, aux, nh(nt) )
-#endif
                 !
-                ! Auxiliary variable to perform the reduction with gpu kernels
+                ! ... Auxiliary variable to perform the reduction with gpu kernels
                 forcenl_ipol = 0.0_DP
 #if defined(_OPENACC)
 !$acc parallel loop collapse(2) reduction(-:forcenl_ipol)
@@ -412,10 +355,10 @@ SUBROUTINE force_us( forcenl )
                 !
              ENDIF
           ENDDO
-          
+          !
           !$acc end data
           DEALLOCATE( aux )
-          
+          !
        ENDDO
        !
        !$acc end data
@@ -430,7 +373,7 @@ SUBROUTINE force_us( forcenl )
      !-----------------------------------------------------------------------
      SUBROUTINE force_us_k( forcenl )
        !-----------------------------------------------------------------------
-       !! Nonlocal contributiuon. Calculation for k-points.
+       !! Nonlocal contribution to the force. Calculation for k-points.
        !
        IMPLICIT NONE
        !
@@ -458,11 +401,16 @@ SUBROUTINE force_us( forcenl )
           !
           fac = wg(ibnd,ik)*tpiba
           !
+#if defined(_OPENACC)
           !$acc parallel loop gang reduction(+:forcenl_p2)
+#else
+          !$omp parallel do private(nt,na,ijkb0,nh_nt,forcenl_p1,forcenl_p2,ih,&
+          !$omp                     ikb,is,js,ijs,jkb)
+#endif
           DO it = 1, itot
              !
-             nt = ntv(it)
-             na = nav(it)
+             nt = nt_list(it)
+             na = na_list(it)
              ijkb0 = ofsbeta(na)
              nh_nt = nh(nt)
              !
@@ -495,6 +443,11 @@ SUBROUTINE force_us( forcenl )
                 !
              ENDDO
              !
+#if defined(_OPENACC)
+             !$acc atomic write
+#else
+             !$omp atomic write
+#endif
              forcenl(ipol,na) = forcenl(ipol,na) + forcenl_p2
              !
              IF ( ismulti_np(it) ) THEN
@@ -543,11 +496,19 @@ SUBROUTINE force_us( forcenl )
                    !
                 ENDDO !ih
                 !
+#if defined(_OPENACC)
+                !$acc atomic write
+#else
+                !$omp atomic write
+#endif
                 forcenl(ipol,na) = forcenl(ipol,na) + forcenl_p2
                 !
              ENDIF ! tvanp
              !
-          ENDDO ! nt+na
+          ENDDO ! it=nt+na
+#if !defined(_OPENACC)
+          !$omp end parallel do
+#endif
           !
        ENDDO ! nbnd
        !
