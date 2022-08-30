@@ -22,7 +22,8 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions,        ONLY : psic
   USE fft_base,             ONLY : dffts
-  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE fft_wave,             ONLY : wave_g2r
+  USE fft_interfaces,       ONLY : fwfft
   !
   IMPLICIT NONE
   !
@@ -41,39 +42,47 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
   !
   REAL(DP), ALLOCATABLE :: kplusg(:)
   INTEGER :: im, j, nrxxs
+  
+  INTEGER :: i, ebnd, brange
+  REAL(DP) :: kplusgi
+  
+  COMPLEX(DP), ALLOCATABLE :: kplusg_evc(:,:)
   COMPLEX(DP), PARAMETER :: ci=(0.d0,1.d0)
   !
   CALL start_clock( 'h_psi_meta' )
   !
   nrxxs = dffts%nnr
   ALLOCATE( kplusg(np) )
+  
+  ALLOCATE( kplusg_evc(np,2) )
+  
   !
   IF (gamma_only) THEN
      !
-     ! gamma algorithm
+     ! ... gamma algorithm
      !
      DO im = 1, mp, 2
         DO j = 1, 3
            !
-           psic(1:nrxxs) = ( 0.D0, 0.D0 )
+           DO i = 1, np
+              kplusgi = (xk(j,current_k)+g(j,i)) * tpiba
+              kplusg_evc(i,1) = CMPLX(0.D0,kplusgi) * psip(i,im)
+              IF ( im < mp ) kplusg_evc(i,2) = CMPLX(0.d0,kplusgi) * psip(i,im+1)
+           ENDDO
            !
-           kplusg (1:np) = (xk(j,current_k)+g(j,1:np)) * tpiba
-           IF (im < mp ) THEN
-              psic(dffts%nl (1:np)) =  ci * kplusg(1:np) * &
-                             ( psip (1:np,im) + ci * psip(1:np,im+1) )
-              psic(dffts%nlm(1:np)) = -ci * kplusg(1:np) * &
-                        CONJG( psip (1:np,im) - ci * psip(1:np,im+1) )
-           ELSE
-              psic(dffts%nl (1:np)) =  ci * kplusg(1:np) *       psip(1:np,im) 
-              psic(dffts%nlm(1:np)) = -ci * kplusg(1:np) * CONJG(psip(1:np,im))
-           ENDIF
+           ebnd = im
+           IF ( im < mp ) ebnd = ebnd + 1
+           brange = ebnd-im+1
            !
-           CALL invfft( 'Wave', psic, dffts )
+           CALL wave_g2r( kplusg_evc(1:np,1:brange), psic, dffts )
            !
            psic(1:nrxxs) = kedtau(1:nrxxs,current_spin) * psic(1:nrxxs) 
            !
            CALL fwfft( 'Wave', psic, dffts )
            !
+           
+           kplusg (1:np) = (xk(j,current_k)+g(j,1:np)) * tpiba
+           
            IF ( im < mp ) THEN
               hpsi(1:np,im) = hpsi(1:np,im)   - ci * kplusg(1:np) * 0.5d0 * &
                        ( psic(dffts%nl(1:np)) + CONJG(psic(dffts%nlm(1:np))) )
@@ -94,16 +103,18 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
      DO im = 1, mp
         DO j = 1, 3
            !
-           psic(1:nrxxs) = ( 0.D0, 0.D0 )
+           DO i = 1, np
+              kplusgi = (xk(j,current_k)+g(j,igk_k(i,current_k))) * tpiba
+              kplusg_evc(i,1) = CMPLX(0.D0,kplusgi,kind=DP) * psip(i,im)
+           ENDDO
            !
-           kplusg (1:np) = (xk(j,current_k)+g(j,igk_k(1:np,current_k)))*tpiba
-           psic(dffts%nl(igk_k(1:np,current_k))) = CMPLX(0d0, kplusg(1:np), KIND=DP) &
-                                                   * psip(1:np,im)
-           !
-           CALL invfft( 'Wave', psic, dffts )
+           CALL wave_g2r( kplusg_evc(1:np,1:1), psic, dffts, igk=igk_k(:,current_k) )
            !
            psic(1:nrxxs) = kedtau(1:nrxxs,current_spin) * psic(1:nrxxs) 
            !
+           
+           kplusg (1:np) = (xk(j,current_k)+g(j,igk_k(1:np,current_k)))*tpiba
+           
            CALL fwfft( 'Wave', psic, dffts )
            !
            hpsi(1:np,im) = hpsi(1:np,im) - CMPLX(0d0, kplusg(1:np), KIND=DP) &
@@ -113,6 +124,8 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
      !
   ENDIF
   !
+  DEALLOCATE( kplusg_evc )
+  
   DEALLOCATE( kplusg )
   !
   CALL stop_clock( 'h_psi_meta' )
