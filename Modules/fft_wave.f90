@@ -13,7 +13,7 @@ MODULE fft_wave
   !! This module contains wrapper to FFT and inverse FFTs of w.f.
   !
   USE kinds,           ONLY: DP
-  USE fft_interfaces,  ONLY: invfft
+  USE fft_interfaces,  ONLY: fwfft, invfft
   USE fft_types,       ONLY: fft_type_descriptor
   USE control_flags,   ONLY: gamma_only
   !
@@ -21,9 +21,50 @@ MODULE fft_wave
   !
   PRIVATE
   !
-  PUBLIC :: wave_g2r, tgwave_g2r
+  PUBLIC :: wave_r2g, wave_g2r, tgwave_g2r
   !
 CONTAINS
+  !
+  !
+  !----------------------------------------------------------------------
+  SUBROUTINE wave_r2g( f_in, f_out, dfft, igk )
+    !--------------------------------------------------------------------
+    !! Wave function FFT from R to G-space.
+    !
+    USE fft_helper_subroutines,  ONLY: fftx_psi2c_gamma, fftx_psi2c_k
+    !
+    IMPLICIT NONE
+    !
+    TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+    COMPLEX(DP), INTENT(IN)  :: f_in(:)
+    COMPLEX(DP), INTENT(OUT) :: f_out(:,:)
+    INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
+    !
+    ! ... local variables
+    !
+    COMPLEX(DP), ALLOCATABLE :: psic(:)
+    INTEGER :: dim2, nrxxs
+    !
+    nrxxs = SIZE(f_in)
+    dim2 = SIZE(f_out(1,:))
+    !
+    ALLOCATE( psic(nrxxs) )
+    psic = f_in
+    !
+    CALL fwfft( 'Wave', psic, dfft )
+    !
+    IF (gamma_only) THEN
+      IF (dim2==1) CALL fftx_psi2c_gamma( dfft, psic, f_out(:,1) )
+      IF (dim2==2) CALL fftx_psi2c_gamma( dfft, psic, f_out(:,1), f_out(:,2) )
+    ELSE
+      CALL fftx_psi2c_k( dfft, psic, f_out(:,1), igk )
+    ENDIF
+    !
+    DEALLOCATE( psic )
+    !
+    RETURN
+    !
+  END SUBROUTINE wave_r2g
   !
   !
   !----------------------------------------------------------------------
@@ -79,6 +120,7 @@ CONTAINS
     RETURN
     !
   END SUBROUTINE wave_g2r
+  !
   !
   !----------------------------------------------------------------------
   SUBROUTINE tgwave_g2r( f_in, f_out, dfft, ibnd, ibnd_end, igk )

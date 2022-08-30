@@ -32,7 +32,7 @@ MODULE fft_helper_subroutines
             tg_get_group_nr3
   ! ... Used only in CP
   PUBLIC :: fftx_add_threed2oned_gamma, fftx_psi2c_gamma, c2psi_gamma, &
-            fftx_add_field, c2psi_gamma_tg, c2psi_k, c2psi_k_tg
+            fftx_add_field, c2psi_gamma_tg, c2psi_k, c2psi_k_tg, fftx_psi2c_k
   PUBLIC :: fft_dist_info
   ! ... Used only in CP+EXX
   PUBLIC :: fftx_tgcomm
@@ -597,9 +597,9 @@ CONTAINS
      IMPLICIT NONE
      !
      TYPE(fft_type_descriptor), INTENT(in) :: desc
-     complex(DP), INTENT(OUT) :: vout1(:)
-     complex(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
-     complex(DP), INTENT(IN) :: vin(:)
+     COMPLEX(DP), INTENT(OUT) :: vout1(:)
+     COMPLEX(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
+     COMPLEX(DP), INTENT(IN) :: vin(:)
      COMPLEX(DP) :: fp, fm
      INTEGER :: ig
      !
@@ -650,6 +650,27 @@ CONTAINS
         END DO
      END IF
   END SUBROUTINE fftx_psi2c_gamma_gpu
+  !
+  !------------------------------------------------------------
+  SUBROUTINE fftx_psi2c_k( desc, vin, vout, igk )
+     !---------------------------------------------------------
+     !
+     USE fft_types,      ONLY : fft_type_descriptor
+     !
+     TYPE(fft_type_descriptor), INTENT(IN) :: desc
+     COMPLEX(DP), INTENT(IN) :: vin(:)
+     COMPLEX(DP), INTENT(OUT) :: vout(:)
+     INTEGER, INTENT(IN) :: igk(:)
+     !
+     INTEGER :: ig
+     !
+     DO ig = 1, desc%ngw
+       vout(ig) = vin(desc%nl(igk(ig)))
+     ENDDO  
+     !
+     RETURN
+     !
+  END SUBROUTINE fftx_psi2c_k
   !
   !--------------------------------------------------------------------
   SUBROUTINE c2psi_gamma_tg( desc, psis, c_bgrp, i, nbsp_bgrp )
