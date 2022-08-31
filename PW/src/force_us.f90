@@ -96,14 +96,7 @@ SUBROUTINE force_us( forcenl )
   CALL using_evc(0)
   !$acc data create(vkb1,deff,deff_nc) copyin(evc)
   !
-  itot = 0
-  DO nt = 1, ntyp
-    DO na = 1, nat
-      IF (ityp(na)==nt) itot = itot+1
-    ENDDO
-  ENDDO
-  !
-  ALLOCATE( nt_list(itot), na_list(itot), ismulti_np(itot) )
+  ALLOCATE( nt_list(nat), na_list(nat), ismulti_np(nat) )
   !
   itot = 0
   DO nt = 1, ntyp
@@ -116,6 +109,7 @@ SUBROUTINE force_us( forcenl )
         ENDIF
      ENDDO
   ENDDO
+  IF (itot /= nat) CALL errore( 'force_us', 'Something wrong in atoms counting', 1 )
   !
   ! ... the forces are a sum over the K points and over the bands
   !
@@ -218,11 +212,7 @@ SUBROUTINE force_us( forcenl )
   ! ... augmentation part \int V_eff Q dr, the term deriving from the 
   ! ... derivative of Q is added in the routine addusforce
   !
-#if defined(_CUDA)
-  CALL addusforce_gpu( forcenl )
-#else
   CALL addusforce( forcenl )
-#endif
   !
   ! ... Since our summation over k points was only on the irreducible 
   ! ... BZ we have to symmetrize the forces.
@@ -329,7 +319,7 @@ SUBROUTINE force_us( forcenl )
                 !
                 !$acc host_data use_device(aux, deeq)
                 CALL MYDGEMM( 'N','N', nh(nt), becp_nbnd_loc, nh(nt), &
-                              1.0_DP, deeq(1,1,na,current_spin), nhm,   &
+                              1.0_DP, deeq(1,1,na,current_spin), nhm, &
                               becprd(ijkb0+1,1), nkb, 1.0_DP, aux, nh(nt) )
                 !$acc end host_data
                 !
@@ -393,6 +383,7 @@ SUBROUTINE force_us( forcenl )
        !$acc data copy(forcenl)
        !
        DO ibnd = 1, nbnd
+          !
           IF (noncolin) THEN
              CALL compute_deff_nc( deff_nc, et(ibnd,ik) )
           ELSE
@@ -407,7 +398,7 @@ SUBROUTINE force_us( forcenl )
           !$omp parallel do private(nt,na,ijkb0,nh_nt,forcenl_p1,forcenl_p2,ih,&
           !$omp                     ikb,is,js,ijs,jkb)
 #endif
-          DO it = 1, itot
+          DO it = 1, nat
              !
              nt = nt_list(it)
              na = na_list(it)
@@ -443,11 +434,6 @@ SUBROUTINE force_us( forcenl )
                 !
              ENDDO
              !
-#if defined(_OPENACC)
-             !$acc atomic write
-#else
-             !$omp atomic write
-#endif
              forcenl(ipol,na) = forcenl(ipol,na) + forcenl_p2
              !
              IF ( ismulti_np(it) ) THEN
@@ -496,16 +482,11 @@ SUBROUTINE force_us( forcenl )
                    !
                 ENDDO !ih
                 !
-#if defined(_OPENACC)
-                !$acc atomic write
-#else
-                !$omp atomic write
-#endif
                 forcenl(ipol,na) = forcenl(ipol,na) + forcenl_p2
                 !
              ENDIF ! tvanp
              !
-          ENDDO ! it=nt+na
+          ENDDO ! it=nt|na
 #if !defined(_OPENACC)
           !$omp end parallel do
 #endif
