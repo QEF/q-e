@@ -184,12 +184,13 @@ CONTAINS
       TYPE(wyckoff_positions_type) :: wyckoff_pos
       REAL(DP)                     :: new_alat
       INTEGER,TARGET              :: ibrav_tgt
-      INTEGER,POINTER             :: ibrav_ptr => null ()
+      INTEGER,POINTER             :: ibrav_ptr 
       CHARACTER(LEN=256),TARGET   :: use_alt_axes 
-      CHARACTER(LEN=256),POINTER  :: use_alt_axes_ => null ()
+      CHARACTER(LEN=256),POINTER  :: use_alt_axes_ 
       !
       ! atomic positions
       !
+      NULLIFY(use_alt_axes_, ibrav_ptr) 
       IF ( ibrav .ne. 0 ) THEN 
          ibrav_tgt =  abs(ibrav) 
          ibrav_ptr => ibrav_tgt
@@ -899,9 +900,10 @@ CONTAINS
       !
       INTEGER  :: iobj
       TYPE (scalmags_type),TARGET  :: smag_obj 
-      TYPE (scalmags_type),POINTER :: smag_ptr => NULL()
+      TYPE (scalmags_type),POINTER :: smag_ptr 
       TYPE (d3mags_type),  TARGET  :: vmag_obj 
-      TYPE (d3mags_type),  POINTER :: vmag_ptr => NULL()
+      TYPE (d3mags_type),  POINTER :: vmag_ptr 
+      NULLIFY(smag_ptr, vmag_ptr) 
       IF (PRESENT(site_mag_pol)) THEN 
          CALL qexsd_init_scalmags(smag_obj, SIZE(site_mag_pol,2), site_mag_pol(1,:), ityp, atm, site_charges) 
          smag_ptr => smag_obj 
