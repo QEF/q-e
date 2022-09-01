@@ -123,24 +123,24 @@ if(QE_ENABLE_FOX)
         set(QE_FOX_INTERNAL OFF)
     endif()
     option(QE_FOX_INTERNAL
-        "enable FoX intenal library" ON)
+        "enable FoX internal library" ON)
 endif()
 
 if(WANNIER90_ROOT)
     set(QE_WANNIER90_INTERNAL OFF)
 endif()
 option(QE_WANNIER90_INTERNAL
-    "enable Wannier90 intenal library" ON)
+    "enable Wannier90 internal library" ON)
 if(MBD_ROOT)
     set(QE_MBD_INTERNAL OFF)
 endif()
 option(QE_MBD_INTERNAL
-    "enable LibMBD intenal library" ON)
+    "enable LibMBD internal library" ON)
 if(DEVICEXLIB_ROOT)
     set(QE_DEVICEXLIB_INTERNAL OFF)
 endif()
 option(QE_DEVICEXLIB_INTERNAL
-    "enable DeviceXlib intenal library" ON)
+    "enable DeviceXlib internal library" ON)
 if(ENVIRON_ROOT)
     set(ENVIRON_DEFAULT "EXTERNAL")
 else()
