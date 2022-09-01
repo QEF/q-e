@@ -23,7 +23,6 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
   USE wavefunctions,        ONLY : psic
   USE fft_base,             ONLY : dffts
   USE fft_wave,             ONLY : wave_r2g, wave_g2r
-  USE fft_interfaces,       ONLY : fwfft
   !
   IMPLICIT NONE
   !
@@ -41,15 +40,16 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
   ! ... local variables
   !
   COMPLEX(DP), ALLOCATABLE :: psi_g(:,:)
-  INTEGER :: im, i, j, nrxxs, ebnd, brange
+  INTEGER :: im, i, j, nrxxs, ebnd, brange, psdim
   REAL(DP) :: kplusgi, fac
   COMPLEX(DP), PARAMETER :: ci=(0.d0,1.d0)
   !
   CALL start_clock( 'h_psi_meta' )
   !
   nrxxs = dffts%nnr
+  psdim = SIZE(psic)
   !
-  ALLOCATE( psi_g(np,2) )
+  ALLOCATE( psi_g(psdim,2) )
   !
   IF (gamma_only) THEN
      !
@@ -95,18 +95,18 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
         DO j = 1, 3
            !
            DO i = 1, np
-              kplusgi = (xk(j,current_k)+g(j,igk_k(i,current_k))) * tpiba
+              kplusgi = (xk(j,current_k)+g(j,igk_k(i,current_k)))*tpiba
               psi_g(i,1) = CMPLX(0.D0,kplusgi,kind=DP) * psip(i,im)
            ENDDO
            !
-           CALL wave_g2r( psi_g(:,1:1), psic, dffts, igk=igk_k(:,current_k) )
+           CALL wave_g2r( psi_g(1:np,1:1), psic, dffts, igk=igk_k(:,current_k) )
            !
-           psic(1:nrxxs) = kedtau(1:nrxxs,current_spin) * psic(1:nrxxs) 
+           psic(1:nrxxs) = kedtau(1:nrxxs,current_spin) * psic(1:nrxxs)
            !
-           CALL wave_r2g( psic, psi_g(:,1:1), dffts, igk=igk_k(:,current_k) )
+           CALL wave_r2g( psic, psi_g(1:np,1:1), dffts, igk=igk_k(:,current_k) )
            !
            DO i = 1, np
-              kplusgi = (xk(j,current_k)+g(j,i)) * tpiba
+              kplusgi = (xk(j,current_k)+g(j,igk_k(i,current_k)))*tpiba
               hpsi(i,im) = hpsi(i,im) - CMPLX(0.D0,kplusgi,KIND=DP) * psi_g(i,1)
            ENDDO
            !

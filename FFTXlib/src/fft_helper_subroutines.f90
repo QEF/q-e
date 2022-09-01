@@ -662,9 +662,10 @@ CONTAINS
      COMPLEX(DP), INTENT(OUT) :: vout(:)
      INTEGER, INTENT(IN) :: igk(:)
      !
-     INTEGER :: ig
+     INTEGER :: ig, igmax
      !
-     DO ig = 1, desc%ngw
+     igmax = MIN(desc%ngw,SIZE(vout(:)))
+     DO ig = 1, igmax
        vout(ig) = vin(desc%nl(igk(ig)))
      ENDDO  
      !
