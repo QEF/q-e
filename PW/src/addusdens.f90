@@ -154,7 +154,7 @@ SUBROUTINE addusdens_g(rho)
                  ENDDO
               ENDDO
               !
-              !$acc parallel loop
+              !$acc parallel loop present(eigts1,eigts2,eigts3,mill)
               DO ig = 1, ngm_l
                  skk(ig,nb) = eigts1(mill(1,ngm_s+ig-1),na) * &
                               eigts2(mill(2,ngm_s+ig-1),na) * &

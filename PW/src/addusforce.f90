@@ -173,7 +173,7 @@ SUBROUTINE addusforce_g( forcenl )
                  ! ... aux1 = product of potential, structure factor and iG
                  !
 #if defined(_OPENACC)
-!$acc parallel loop
+!$acc parallel loop present(eigts1,eigts2,eigts3,mill,g)
 #else
 !$omp parallel do default(shared) private(ig,cfac)
 #endif
