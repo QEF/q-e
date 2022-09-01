@@ -257,7 +257,6 @@ set(src_pw
    src/orthoatwfc_gpu.f90
    src/wfcinit_gpu.f90
    src/add_paw_to_deeq_gpu.f90
-   src/addusdens_gpu.f90
    src/s_psi_gpu.f90
    src/rotate_wfc_gpu.f90
    src/usnldiag_gpu.f90
