@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -93,7 +93,7 @@ $ECHO
     ecutwfc =18.0,
     input_dft='HSE'
     nqx1=2, nqx2=2, nqx3=2
-    nbnd=8 
+    nbnd=8
  /
  &electrons
     mixing_mode = 'plain'

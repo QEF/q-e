@@ -13,7 +13,7 @@ then
 fi
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 
 # module, function or subroutine whose dependencies must be computed
 name=$1

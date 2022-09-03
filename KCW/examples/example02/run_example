@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
@@ -118,18 +118,18 @@ cat > $PREFIX.scf.in << EOF
   conv_thr =  0.5d-12
 /
 ATOMIC_SPECIES
-H 1 H_ONCV_PBE-1.0.upf 
-O 1 O_ONCV_PBE-1.0.upf 
+H 1 H_ONCV_PBE-1.0.upf
+O 1 O_ONCV_PBE-1.0.upf
 
 ATOMIC_POSITIONS angstrom
-O 6.7571 6.0000 5.9023166667 
-H 7.5142 6.0000 6.4884166667 
+O 6.7571 6.0000 5.9023166667
+H 7.5142 6.0000 6.4884166667
 H 6.0000 6.0000 6.4884166667
 
 CELL_PARAMETERS angstrom
-9.5142 0.0 0.0 
-0.0 8.0 0.0 
-0.0 0.0 8.5861 
+9.5142 0.0 0.0
+0.0 8.0 0.0
+0.0 0.0 8.5861
 
 K_POINTS automatic
 1 1 1 0 0 0
@@ -191,7 +191,7 @@ KCW H2O KI hamiltonian
   kcw_at_ks=.true.
   homo_only = .false.
   read_unitary_matrix = .false.
-  assume_isolated = 'mt' 
+  assume_isolated = 'mt'
   calculation = 'ham'
   lrpa =.false.
   mp1 = 1
