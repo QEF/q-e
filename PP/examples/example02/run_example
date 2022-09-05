@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -59,7 +59,7 @@ if [ "$GP_COMMAND" = "" ]; then
         $ECHO "gnuplot not in PATH"
         $ECHO "Results will not be plotted"
 fi
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -88,7 +88,7 @@ $ECHO "  running projwfc.x as: $PROJWFC_COMMAND"
 $ECHO "  running gnuplot as:   $GP_COMMAND"
 $ECHO "  running fs.x as:      $FS_COMMAND"
 $ECHO
- 
+
 # self-consistent calculation
 cat > ni.scf.in << EOF
  &control
@@ -106,7 +106,7 @@ cat > ni.scf.in << EOF
  /
  &electrons
     conv_thr = 1.0e-10
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
  Ni 58.69 Ni.pz-nd-rrkjus.UPF
@@ -196,7 +196,7 @@ cat > ni.dos.in << EOF
  /
  &electrons
     conv_thr = 1.0e-10
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
  Ni 58.69 Ni.pz-nd-rrkjus.UPF
@@ -251,22 +251,22 @@ cat > ni.scf_SP.in << EOF
  &system
     ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
     ecutwfc = 24.0, ecutrho = 288.0,
-    occupations='smearing', 
-    smearing='mv', 
+    occupations='smearing',
+    smearing='mv',
     degauss=0.02
-    nspin=2, 
+    nspin=2,
     starting_magnetization(1)=0.8
  /
  &electrons
     conv_thr = 1.0e-10
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
  Ni 58.69 Ni.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS alat
  Ni 0.0 0.0 0.0
 K_POINTS {automatic}
- 8 8 8 0 0 0 
+ 8 8 8 0 0 0
 EOF
 $ECHO "  running the scf calculation  spin-polarization ... \c"
 $PW_COMMAND < ni.scf_SP.in > ni.scf0.SP.out
@@ -281,31 +281,31 @@ cat > ni.fs_SP.in << EOF
     outdir='$TMP_DIR/'
  /
  &system
-    ibrav=2, 
-    celldm(1) =6.48, 
-    nat=1, 
+    ibrav=2,
+    celldm(1) =6.48,
+    nat=1,
     ntyp=1,
-    ecutwfc = 24.0, 
-    ecutrho = 288.0, 
+    ecutwfc = 24.0,
+    ecutrho = 288.0,
     nbnd=8
-    nspin=2, 
+    nspin=2,
     starting_magnetization(1)=0.8
     occupations='tetrahedra'
  /
  &electrons
     conv_thr = 1.0e-10
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
  Ni 58.69 Ni.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS alat
  Ni 0.0 0.0 0.0
 K_POINTS {automatic}
-16 16 16 0 0 0 
+16 16 16 0 0 0
 EOF
 
 $ECHO "  running the Fermi Surface calculation ... \c"
-$PW_COMMAND   < ni.fs_SP.in > ni.fs_SP.out 
+$PW_COMMAND   < ni.fs_SP.in > ni.fs_SP.out
 check_failure $?
 $ECHO " done"
 
@@ -340,20 +340,20 @@ cat > ni.scf_NSP.in << EOF
  &system
     ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
     ecutwfc = 24.0, ecutrho = 288.0,
-    occupations='smearing', 
-    smearing='mv', 
+    occupations='smearing',
+    smearing='mv',
     degauss=0.02
  /
  &electrons
     conv_thr = 1.0e-10
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
  Ni 58.69 Ni.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS alat
  Ni 0.0 0.0 0.0
 K_POINTS {automatic}
- 8 8 8 0 0 0 
+ 8 8 8 0 0 0
 EOF
 $ECHO "  running the scf calculation  non spin-polarized case ... \c"
 $PW_COMMAND < ni.scf_NSP.in > ni.scf0.NSP.out
@@ -368,29 +368,29 @@ cat > ni.fs_NSP.in << EOF
     outdir='$TMP_DIR/'
  /
  &system
-    ibrav=2, 
-    celldm(1) =6.48, 
-    nat=1, 
+    ibrav=2,
+    celldm(1) =6.48,
+    nat=1,
     ntyp=1,
-    ecutwfc = 24.0, 
-    ecutrho = 288.0, 
+    ecutwfc = 24.0,
+    ecutrho = 288.0,
     nbnd=8
     occupations='tetrahedra'
  /
  &electrons
     conv_thr = 1.0e-10
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
  Ni 58.69 Ni.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS alat
  Ni 0.0 0.0 0.0
 K_POINTS automatic
-16 16 16 0 0 0 
+16 16 16 0 0 0
 EOF
 
 $ECHO "  running the Fermi Surface calculation ... \c"
-$PW_COMMAND   < ni.fs_NSP.in > ni.fs_NSP.out 
+$PW_COMMAND   < ni.fs_NSP.in > ni.fs_NSP.out
 check_failure $?
 $ECHO " done"
 

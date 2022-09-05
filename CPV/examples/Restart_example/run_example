@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -12,7 +12,7 @@ $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how pw.x can restart from cp.x data and viceversa."
 
-# set the needed environment variables 
+# set the needed environment variables
 . ../../../environment_variables
 
 # required executables and pseudopotentials
@@ -27,7 +27,7 @@ $ECHO "  checking that needed directories and files exist...\c"
 
 # check for directories
 for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
-    if test ! -d $DIR ; then 
+    if test ! -d $DIR ; then
         $ECHO
         $ECHO "ERROR: $DIR not existent or not a directory"
         $ECHO "Aborting"
@@ -56,7 +56,7 @@ for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
        $ECHO
        $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
-            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null         
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
     fi
     if test $? != 0; then
         $ECHO
@@ -158,7 +158,7 @@ cat >  sio2.pw.restart.in << EOF
  /
 ATOMIC_SPECIES
    O  16.00 O.pz-rrkjus.UPF
-  Si  28.00 Si.pz-vbc.UPF     
+  Si  28.00 Si.pz-vbc.UPF
 ATOMIC_POSITIONS (bohr)
  O  3.18829368  14.83237039   1.22882961
  O  7.83231469   6.78704039   1.22882961
@@ -214,7 +214,7 @@ cat > sio2.cp.restart.in << EOF
  /
 ATOMIC_SPECIES
    O  16.00 O.pz-rrkjus.UPF
-  Si  28.00 Si.pz-vbc.UPF 
+  Si  28.00 Si.pz-vbc.UPF
 ATOMIC_POSITIONS bohr
  O  3.18829368  14.83237039   1.22882961
  O  7.83231469   6.78704039   1.22882961

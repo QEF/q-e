@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -75,8 +75,8 @@ $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO
 
 #
-# In this run the atom with the core-excited PP is the bulk atom (bulk is 
-# intended as the atom in the middle of the slab). This calculation will 
+# In this run the atom with the core-excited PP is the bulk atom (bulk is
+# intended as the atom in the middle of the slab). This calculation will
 # define the energy_GS of the reference atom
 #
 cat > rh011bulk.scf.in << EOF
@@ -102,7 +102,7 @@ CELL_PARAMETERS alat
 0.00000000 0.00000000 2.50000000
 
 ATOMIC_SPECIES
-Rh     1.0    Rh.pbe-rrkjus_lb.UPF 
+Rh     1.0    Rh.pbe-rrkjus_lb.UPF
 Rhs    1.0    Rhs.pbe-rrkjus_lb.UPF
 
 ATOMIC_POSITIONS (alat)
@@ -124,7 +124,7 @@ $ECHO " done"
 #
 # Now we run a calculation exciting everytime one single atom we want to study.
 # The first calculation is for the surface atom.
-# 
+#
 cat > rh011surf.scf.in << EOF
  &control
     calculation='scf',
@@ -148,7 +148,7 @@ CELL_PARAMETERS alat
 0.00000000 0.00000000 2.50000000
 
 ATOMIC_SPECIES
-Rh     1.0    Rh.pbe-rrkjus_lb.UPF 
+Rh     1.0    Rh.pbe-rrkjus_lb.UPF
 Rhs    1.0    Rhs.pbe-rrkjus_lb.UPF
 
 ATOMIC_POSITIONS (alat)
@@ -169,7 +169,7 @@ $ECHO " done"
 
 #
 # Now another simulation for the atom in the first layer under the surface.
-# 
+#
 cat > rh011layer1.scf.in << EOF
  &control
     calculation='scf',
@@ -193,12 +193,12 @@ CELL_PARAMETERS alat
 0.00000000 0.00000000 2.50000000
 
 ATOMIC_SPECIES
-Rh     1.0    Rh.pbe-rrkjus_lb.UPF 
+Rh     1.0    Rh.pbe-rrkjus_lb.UPF
 Rhs    1.0    Rhs.pbe-rrkjus_lb.UPF
 
 ATOMIC_POSITIONS (alat)
 
-Rh     0.25000000    0.35000000    0.50000000 
+Rh     0.25000000    0.35000000    0.50000000
 Rhs    0.00000000    0.00000000    0.25000000 ! Layer1 atom core-excited
 Rh     0.25000000    0.35000000    0.00000000
 Rh     0.00000000    0.00000000   -0.25000000
@@ -219,11 +219,11 @@ enbulk=`cat rh011bulk.scf.out | grep -e ! | egrep -o "([+-])?[0-9]+(\.[0-9]+)?"`
 ensurf=`cat rh011surf.scf.out | grep -e ! | egrep -o "([+-])?[0-9]+(\.[0-9]+)?"`
 enlayer1=`cat rh011layer1.scf.out | grep -e ! | egrep -o "([+-])?[0-9]+(\.[0-9]+)?"`
 
-clssurfry=$(echo "scale=5; ($enbulk)-($ensurf)" | bc) 
-clssurfev=$(echo "scale=5; (($enbulk)-($ensurf))*13.6" | bc) 
+clssurfry=$(echo "scale=5; ($enbulk)-($ensurf)" | bc)
+clssurfev=$(echo "scale=5; (($enbulk)-($ensurf))*13.6" | bc)
 
-clslay1ry=$(echo "scale=5; ($enbulk)-($enlayer1)" | bc) 
-clslay1ev=$(echo "scale=5; (($enbulk)-($enlayer1))*13.6" | bc) 
+clslay1ry=$(echo "scale=5; ($enbulk)-($enlayer1)" | bc)
+clslay1ev=$(echo "scale=5; (($enbulk)-($enlayer1))*13.6" | bc)
 
 $ECHO "" > final-state.txt
 $ECHO "GS energy in the bulk configuration: $enbulk (Ry)" >> final-state.txt

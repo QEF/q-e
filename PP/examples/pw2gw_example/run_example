@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -204,7 +204,7 @@ else
 cat > gnuplot.tmp <<EOF
 #!$GP_COMMAND
 #
-set term pdfcairo enh size 10cm,10cm 
+set term pdfcairo enh size 10cm,10cm
 set output "bn.opt.pdf"
 
 set xrange [0:25]
