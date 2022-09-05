@@ -253,16 +253,10 @@ set(src_pw
    src/g_psi_mod_gpu.f90
    src/newd_gpu.f90
    src/sum_band_gpu.f90
-   src/force_us_gpu.f90
-   src/force_lc_gpu.f90
-   src/force_cc_gpu.f90
    src/force_hub_gpu.f90
-   src/force_corr_gpu.f90
    src/orthoatwfc_gpu.f90
    src/wfcinit_gpu.f90
    src/add_paw_to_deeq_gpu.f90
-   src/addusdens_gpu.f90
-   src/addusforce_gpu.f90
    src/s_psi_gpu.f90
    src/rotate_wfc_gpu.f90
    src/usnldiag_gpu.f90
