@@ -73,14 +73,8 @@ SUBROUTINE stres_hub ( sigmah )
       CALL errore("stres_hub", &
                    " stress for this Hubbard_projectors type not implemented",1)
    !
-   IF (noncolin) CALL errore ("stres_hub","Noncollinear case is not supported",1)
-   !
-<<<<<<< HEAD
    IF (ANY(Hubbard_J(:,:)>eps16)) CALL errore("stres_hub", &
                    " stress in the DFT+U+J scheme is not implemented", 1 ) 
-=======
-   ! IF (noncolin) CALL errore ("forceh","Noncollinear case is not supported",1)
->>>>>>> 0c14430b9 (loaded PW implementation)
    !
    sigmah(:,:) = 0.d0
    !
@@ -89,13 +83,8 @@ SUBROUTINE stres_hub ( sigmah )
    ALLOCATE (wfcatom(npwx*npol,natomwfc))
    ALLOCATE (at_dy(npwx*npol,natomwfc), at_dj(npwx*npol,natomwfc))
    IF (okvan) ALLOCATE (us_dy(npwx,nkb), us_dj(npwx,nkb))
-<<<<<<< HEAD
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
-      ALLOCATE (swfcatom(npwx,natomwfc))
-=======
-   IF (U_projection.EQ."ortho-atomic") THEN
       ALLOCATE (swfcatom(npwx*npol,natomwfc))
->>>>>>> 0c14430b9 (loaded PW implementation)
       ALLOCATE (eigenval(natomwfc))
       ALLOCATE (eigenvect(natomwfc,natomwfc))
       ALLOCATE (overlap_inv(natomwfc,natomwfc))
@@ -1277,26 +1266,10 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
                                                       + at_dj(ig+npwx,offpm+m1+ldim_std)*a2
                      ENDIF
                ENDDO      
-            ELSEIF (U_projection.EQ."ortho-atomic") THEN
+            ELSEIF (Hubbard_projectors.EQ."ortho-atomic") THEN
                DO m1 = 1, ldim_std*npol             
                   offpmU = offsetU(na)
                   offpm  = oatwfc(na)
-<<<<<<< HEAD
-               ELSE
-                  offpmU = offsetU_back(na) - ldim_std
-                  offpm  = oatwfc_back(na)  - ldim_std
-                  IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l2(nt)+1) THEN
-                     offpmU = offsetU_back1(na) - ldim_std - 2*Hubbard_l2(nt) - 1
-                     offpm  = oatwfc_back1(na)  - ldim_std - 2*Hubbard_l2(nt) - 1
-                  ENDIF
-               ENDIF
-               IF (Hubbard_projectors.EQ."atomic") THEN
-                  dwfc(ig,offpmU+m1) = at_dy(ig,offpm+m1) * a1 + at_dj(ig,offpm+m1) * a2
-               ELSEIF (Hubbard_projectors.EQ."ortho-atomic") THEN
-                  IF (m1>ldim_std) CALL errore("dprojdtau_k", &
-                        " Stress with background and ortho-atomic is not supported",1)
-=======
->>>>>>> 0c14430b9 (loaded PW implementation)
                   DO m2 = 1, natomwfc
                      dwfc(ig,offpmU+m1) = dwfc(ig,offpmU+m1) + &
                         overlap_inv(offpm+m1,m2) * ( at_dy(ig,m2) * a1 + at_dj(ig,m2) * a2 )
