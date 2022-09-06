@@ -21,7 +21,7 @@ MODULE fft_wave
   !
   PRIVATE
   !
-  PUBLIC :: wave_r2g, wave_g2r, tgwave_g2r
+  PUBLIC :: wave_r2g, wave_g2r, tgwave_g2r, tgwave_r2g
   !
 CONTAINS
   !
@@ -39,8 +39,6 @@ CONTAINS
     COMPLEX(DP), INTENT(IN)  :: f_in(:)
     COMPLEX(DP), INTENT(OUT) :: f_out(:,:)
     INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
-    !
-    ! ... local variables
     !
     COMPLEX(DP), ALLOCATABLE :: psic(:)
     INTEGER :: dim2, nrxxs
@@ -82,11 +80,7 @@ CONTAINS
     INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
     INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
     !
-    ! ... local variables
-    !
-    INTEGER :: i2, npw, numblock
-    INTEGER :: j, idx, ioff, ntgrp, right_nnr, dim2
-    INTEGER, PARAMETER :: blocksize = 256
+    INTEGER :: npw, dim2
     !
     !$acc data present_or_copyin(f_in) present_or_copyout(f_out)
     !
@@ -125,7 +119,7 @@ CONTAINS
   !----------------------------------------------------------------------
   SUBROUTINE tgwave_g2r( f_in, f_out, dfft, ibnd, ibnd_end, igk )
     !--------------------------------------------------------------------
-    !! Wave function FFT from G to R-space. Task-group case.
+    !! Wave function FFT from G to R-space. Task-group version.
     !
     USE fft_helper_subroutines,  ONLY: c2psi_gamma_tg, c2psi_k_tg
     !
@@ -137,11 +131,7 @@ CONTAINS
     INTEGER, INTENT(IN) :: ibnd, ibnd_end
     INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
     !
-    ! ... local variables
-    !
-    INTEGER :: i2, npw, numblock
-    INTEGER :: j, idx, ioff, ntgrp, right_nnr
-    INTEGER, PARAMETER :: blocksize = 256
+    INTEGER :: npw
     !
     !$acc data present_or_copyin(f_in,igk) present_or_copyout(f_out)
     !
@@ -166,6 +156,44 @@ CONTAINS
     RETURN
     !
   END SUBROUTINE tgwave_g2r
+  !
+  !
+  !----------------------------------------------------------------------
+  SUBROUTINE tgwave_r2g( f_in, f_out, dfft, n, ibnd, ibnd_end, igk )
+    !--------------------------------------------------------------------
+    !! Wave function FFT from R to G-space. Task-group version.
+    !
+    USE fft_helper_subroutines,  ONLY: psi2c_gamma_tg, psi2c_k_tg
+    !
+    IMPLICIT NONE
+    !
+    TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+    COMPLEX(DP), INTENT(IN)  :: f_in(:)
+    COMPLEX(DP), INTENT(OUT) :: f_out(:,:)
+    INTEGER, INTENT(IN) :: ibnd, ibnd_end, n
+    INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
+    !
+    COMPLEX(DP), ALLOCATABLE :: psic(:)
+    INTEGER :: nrxxs
+    !
+    nrxxs = SIZE(f_in)
+    !
+    ALLOCATE( psic(nrxxs) )
+    psic = f_in
+    !
+    CALL fwfft( 'tgWave', psic, dfft )
+    !
+    IF (gamma_only) THEN
+      CALL psi2c_gamma_tg( dfft, psic, f_out, n, ibnd, ibnd_end )
+    ELSE
+      CALL psi2c_k_tg( dfft, psic, f_out, igk, n, ibnd, ibnd_end )
+    ENDIF
+    !
+    DEALLOCATE( psic )
+    !
+    RETURN
+    !
+  END SUBROUTINE tgwave_r2g
   !
   !
 END MODULE fft_wave

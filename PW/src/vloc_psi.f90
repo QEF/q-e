@@ -48,21 +48,21 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
   INTEGER :: v_siz, idx, ioff, ebnd
   !
-  CALL start_clock ('vloc_psi')
+  CALL start_clock( 'vloc_psi' )
   incr = 2
   !
   use_tg = dffts%has_task_groups 
   !
   IF( use_tg ) THEN
      !
-     CALL start_clock ('vloc_psi:tg_gather')
+     CALL start_clock( 'vloc_psi:tg_gather' )
      v_siz =  dffts%nnr_tg
      !
-     ALLOCATE( tg_v( v_siz ) )
-     ALLOCATE( tg_psic( v_siz ) )
+     ALLOCATE( tg_v(v_siz) )
+     ALLOCATE( tg_psic(v_siz) )
      !
      CALL tg_gather( dffts, v, tg_v )
-     CALL stop_clock ('vloc_psi:tg_gather')
+     CALL stop_clock( 'vloc_psi:tg_gather' )
      !
      incr = 2 * fftx_ntgrp(dffts)
      !
@@ -74,7 +74,7 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
      !
      ! ... FFT to real space
      !
-     IF( use_tg ) THEN
+     IF ( use_tg ) THEN
         !
         CALL tg_get_nnr( dffts, right_nnr )
         !
@@ -91,7 +91,7 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
      !
      ! ... product with the potential v on the smooth grid
      !
-     IF( use_tg ) THEN
+     IF ( use_tg ) THEN
         !
         CALL tg_get_group_nr3( dffts, right_nr3 )
         !
@@ -120,7 +120,7 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
         !
         DO idx = 1, 2*fftx_ntgrp(dffts), 2
            !
-           IF( idx + ibnd - 1 < m ) THEN
+           IF( idx+ibnd-1<m ) THEN
               DO j = 1, n
                  fp= ( tg_psic( dffts%nl(j) + ioff ) +  &
                        tg_psic( dffts%nlm(j) + ioff ) ) * 0.5d0
@@ -129,7 +129,7 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
                  hpsi(j,ibnd+idx-1) = hpsi(j,ibnd+idx-1) + &
                                         cmplx( dble(fp), aimag(fm),kind=DP)
                  hpsi(j,ibnd+idx)   = hpsi(j,ibnd+idx) + &
-                                        cmplx(aimag(fp),- dble(fm),kind=DP)
+                                        cmplx(aimag(fp),-dble(fm),kind=DP)
               ENDDO
            ELSEIF( idx + ibnd - 1 == m ) THEN
               DO j = 1, n
@@ -192,10 +192,8 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
   USE klist,                  ONLY : igk_k
   USE mp_bands,               ONLY : me_bgrp
   USE fft_base,               ONLY : dffts
-  USE fft_wave,               ONLY : wave_g2r, tgwave_g2r
-  USE fft_interfaces,         ONLY : fwfft
-  USE fft_helper_subroutines, ONLY : fftx_ntgrp, tg_get_nnr, &
-                                     tg_get_group_nr3, tg_get_recip_inc
+  USE fft_wave
+  USE fft_helper_subroutines, ONLY : fftx_ntgrp, tg_get_nnr, tg_get_group_nr3
   USE wavefunctions,          ONLY : psic
   !
   IMPLICIT NONE
@@ -216,7 +214,8 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
   ! ... local variables
   !
   INTEGER :: ibnd, j, incr
-  INTEGER :: i, right_nnr, right_nr3, right_inc
+  INTEGER :: i, iin, right_nnr, right_nr3, right_inc
+  COMPLEX(DP), ALLOCATABLE :: psicv(:), psi2(:,:)
   !
   ! chunking parameters
   INTEGER, PARAMETER :: blocksize = 256
@@ -232,16 +231,18 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
   use_tg = dffts%has_task_groups 
   !
   IF( use_tg ) THEN
-     !
      CALL start_clock( 'vloc_psi:tg_gather' )
      v_siz =  dffts%nnr_tg
      !
      ALLOCATE( tg_v(v_siz) )
      ALLOCATE( tg_psic(v_siz) )
+     ALLOCATE( psi2(lda,m) )
      !
      CALL tg_gather( dffts, v, tg_v )
      CALL stop_clock( 'vloc_psi:tg_gather' )
-     !
+  ELSE
+     ALLOCATE( psicv(dffts%nnr) )
+     ALLOCATE( psi2(lda,1) )
   ENDIF
   !
   IF( use_tg ) THEN
@@ -253,7 +254,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
      !
      DO ibnd = 1, m, fftx_ntgrp(dffts)
         !
-        CALL tgwave_g2r( psi(:,:), tg_psic, dffts, ibnd, m, igk_k(:,current_k) )
+        CALL tgwave_g2r( psi, tg_psic, dffts, ibnd, m, igk_k(:,current_k) )
         !
         !write (6,*) 'wfc R ' 
         !write (6,99) (tg_psic(i), i=1,400)
@@ -261,26 +262,22 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
         CALL tg_get_group_nr3( dffts, right_nr3 )
         !
 !$omp parallel do
-        DO j = 1, dffts%nr1x*dffts%nr2x* right_nr3
-           tg_psic (j) = tg_psic (j) * tg_v(j)
+        DO j = 1, dffts%nr1x*dffts%nr2x*right_nr3
+           tg_psic(j) = tg_psic(j) * tg_v(j)
         ENDDO
 !$omp end parallel do
         !write (6,*) 'v psi R ' 
         !write (6,99) (tg_psic(i), i=1,400)
         !
-        CALL fwfft ('tgWave',  tg_psic, dffts )
-        !
-        !   addition to the total product
-        !
-        CALL tg_get_recip_inc( dffts, right_inc )
+        CALL tgwave_r2g( tg_psic, psi2, dffts, n, ibnd, m, igk_k(:,current_k) )
         !
 !$omp parallel do collapse(2)
         DO idx = 0, MIN(fftx_ntgrp(dffts)-1, m-ibnd)
            DO j = 1, numblock
-              hpsi ((j-1)*blocksize+1:MIN(j*blocksize, n), ibnd+idx) = &
-                 hpsi ((j-1)*blocksize+1:MIN(j*blocksize, n), ibnd+idx) + &
-                 tg_psic( dffts%nl(igk_k((j-1)*blocksize+1:MIN(j*blocksize, n),current_k)) + right_inc*idx )
-           ENDDO
+              DO iin = (j-1)*blocksize+1, MIN(j*blocksize,n)
+                 hpsi(iin,ibnd+idx) = hpsi(iin,ibnd+idx) + psi2(iin,ibnd+idx)
+              ENDDO
+           ENDDO  
         ENDDO
 !$omp end parallel do
         !
@@ -295,21 +292,20 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
         !
 !$omp parallel do
         DO j = 1, dffts%nnr
-           psic(j) = psic(j) * v(j)
+           psicv(j) = psic(j) * v(j)
         ENDDO
 !$omp end parallel do
         !write (6,*) 'v psi R ' 
         !write (6,99) (psic(i), i=1,400)
         !
-        CALL fwfft ('Wave', psic, dffts)
-        !
-        !   addition to the total product
+        CALL wave_r2g( psicv, psi2(1:n,:), dffts, igk=igk_k(:,current_k) )
         !
 !$omp parallel do
-        DO j = 1, n
-           hpsi(j,ibnd) = hpsi(j,ibnd) + psic(dffts%nl(igk_k(j,current_k)))
+        DO i = 1, n
+           hpsi(i,ibnd) = hpsi(i,ibnd) + psi2(i,1)
         ENDDO
 !$omp end parallel do
+        !
         !write (6,*) 'v psi G ', ibnd
         !write (6,99) (psic(i), i=1,400)
         !
@@ -317,16 +313,19 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
   ENDIF
   !
   IF( use_tg ) THEN
-     !
      DEALLOCATE( tg_psic )
      DEALLOCATE( tg_v )
-     !
+  ELSE
+     DEALLOCATE( psicv )
   ENDIF
+  DEALLOCATE( psi2 )
+  !
   CALL stop_clock ('vloc_psi')
   !
 99 format ( 20 ('(',2f12.9,')') )
-
+  !
   RETURN
+  !
 END SUBROUTINE vloc_psi_k
 !
 !-----------------------------------------------------------------------

@@ -32,7 +32,8 @@ MODULE fft_helper_subroutines
             tg_get_group_nr3
   ! ... Used only in CP
   PUBLIC :: fftx_add_threed2oned_gamma, fftx_psi2c_gamma, c2psi_gamma, &
-            fftx_add_field, c2psi_gamma_tg, c2psi_k, c2psi_k_tg, fftx_psi2c_k
+            fftx_add_field, c2psi_gamma_tg, c2psi_k, c2psi_k_tg, fftx_psi2c_k, &
+            psi2c_gamma_tg, psi2c_k_tg
   PUBLIC :: fft_dist_info
   ! ... Used only in CP+EXX
   PUBLIC :: fftx_tgcomm
@@ -363,7 +364,7 @@ CONTAINS
      !
      CALL dealloc_nl_pntrs( desc )
      !
-  END SUBROUTINE
+  END SUBROUTINE c2psi_gamma
   !
   !
 #ifdef __CUDA
@@ -397,7 +398,7 @@ CONTAINS
            psi( nl_d( ig ) ) = c( ig )
         end do
      END IF
-  END SUBROUTINE
+  END SUBROUTINE c2psi_gamma_gpu
 #endif
   !
   !--------------------------------------------------------------------------------
@@ -696,19 +697,19 @@ CONTAINS
      right_nnr = desc%nnr
      !
 #if defined(_OPENACC)
-!$acc data present_or_copyin(c_bgrp) present_or_copyout(psis)
+     !$acc data present_or_copyin(c_bgrp) present_or_copyout(psis)
 #else
-!$omp  parallel
-!$omp  single
+     !$omp  parallel
+     !$omp  single
 #endif
      !
      DO eig_index = 1, 2*fftx_ntgrp(desc), 2
         !
 #if !defined(_OPENACC)
-!$omp task default(none) &
-!$omp          firstprivate( eig_index, i, nbsp_bgrp, right_nnr ) &
-!$omp          private( eig_offset ) &
-!$omp          shared( c_bgrp, desc, psis )
+        !$omp task default(none) &
+        !$omp          firstprivate( eig_index, i, nbsp_bgrp, right_nnr ) &
+        !$omp          private( eig_offset ) &
+        !$omp          shared( c_bgrp, desc, psis )
 #endif
         !
         !  here we pack 2*nogrp electronic states in the psis array
@@ -735,15 +736,15 @@ CONTAINS
            !
         ENDIF
 #if !defined(_OPENACC)
-!$omp end task
+        !$omp end task
 #endif
         !
      ENDDO
 #if defined(_OPENACC)
-!$acc end data
+     !$acc end data
 #else
-!$omp  end single
-!$omp  end parallel
+     !$omp end single
+     !$omp end parallel
 #endif
      !
      RETURN
@@ -805,6 +806,91 @@ CONTAINS
      RETURN
      !
   END SUBROUTINE c2psi_k_tg
+  !
+  !
+  !--------------------------------------------------------------------
+  SUBROUTINE psi2c_gamma_tg( desc, vin, vout, n, i, nbsp_bgrp )
+     !-----------------------------------------------------------------
+     !! Copy all wave-functions of an orbital group from 3D array (psi)
+     !! in Fourier space to 1D array (c_bgrp). Gamma case.
+     !
+     USE fft_types,   ONLY : fft_type_descriptor
+     !
+     IMPLICIT NONE
+     !
+     TYPE(fft_type_descriptor), INTENT(IN) :: desc
+     COMPLEX(DP), INTENT(IN) :: vin(:)
+     COMPLEX(DP), INTENT(OUT) :: vout(:,:)
+     INTEGER, INTENT(IN) :: n, i, nbsp_bgrp
+     !
+     INTEGER :: right_inc, idx, j, ioff
+     COMPLEX(DP) :: fp, fm
+     !
+     ioff = 0
+     !
+     CALL tg_get_recip_inc( desc, right_inc )
+     !
+     DO idx = 1, 2*fftx_ntgrp(desc), 2
+       !
+       IF ( idx+i-1<nbsp_bgrp ) THEN
+         DO j = 1, n
+           fp = ( vin(desc%nl(j) +ioff) +  &
+                  vin(desc%nlm(j)+ioff) ) * 0.5d0
+           fm = ( vin(desc%nl(j) +ioff) -  &
+                  vin(desc%nlm(j)+ioff) ) * 0.5d0
+           vout(j,i+idx-1) = CMPLX( DBLE(fp),AIMAG(fm),KIND=DP)
+           vout(j,i+idx)   = CMPLX(AIMAG(fp),-DBLE(fm),KIND=DP)
+         ENDDO
+       ELSEIF ( idx+i-1==nbsp_bgrp ) THEN
+         DO j = 1, n
+            vout(j,i+idx-1) = vin(desc%nl(j)+ioff)
+         ENDDO
+       ENDIF
+       !
+       ioff = ioff + right_inc
+       !
+     ENDDO
+     !
+     RETURN
+     !
+  END SUBROUTINE psi2c_gamma_tg
+  !
+  !
+  !--------------------------------------------------------------------
+  SUBROUTINE psi2c_k_tg( desc, vin, vout, igk, n, i, nbsp_bgrp )
+     !-----------------------------------------------------------------
+     !! Copy all wave-functions of an orbital group from 3D array (psi)
+     !! in Fourier space to 1D array (c_bgrp).
+     !
+     USE fft_types,   ONLY : fft_type_descriptor
+     !
+     IMPLICIT NONE
+     !
+     TYPE(fft_type_descriptor), INTENT(IN) :: desc
+     COMPLEX(DP), INTENT(IN) :: vin(:)
+     COMPLEX(DP), INTENT(OUT) :: vout(:,:)
+     INTEGER, INTENT(IN) :: igk(:), n, i, nbsp_bgrp
+     !
+     INTEGER :: right_inc, idx, j, iin, numblock
+     INTEGER, PARAMETER :: blocksize = 256
+     !
+     CALL tg_get_recip_inc( desc, right_inc )
+     !
+     numblock = (n+blocksize-1)/blocksize
+     !
+     !$omp parallel do collapse(2)
+     DO idx = 0, MIN(fftx_ntgrp(desc)-1, nbsp_bgrp-i)
+       DO j = 1, numblock
+          DO iin = (j-1)*blocksize+1, MIN(j*blocksize,n)
+            vout(iin,i+idx) = vin(desc%nl(igk(iin))+right_inc*idx)
+          ENDDO
+       ENDDO
+     ENDDO
+     !$omp end parallel do
+     !
+     RETURN
+     !
+  END SUBROUTINE psi2c_k_tg
   !
   !
   !----------------------------------------------------------
