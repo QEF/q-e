@@ -256,7 +256,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
         !
         CALL tgwave_g2r( psi, tg_psic, dffts, ibnd, m, igk_k(:,current_k) )
         !
-        !write (6,*) 'wfc R ' 
+        !write (6,*) 'wfc R '
         !write (6,99) (tg_psic(i), i=1,400)
         !
         CALL tg_get_group_nr3( dffts, right_nr3 )
@@ -277,7 +277,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
               DO iin = (j-1)*blocksize+1, MIN(j*blocksize,n)
                  hpsi(iin,ibnd+idx) = hpsi(iin,ibnd+idx) + psi2(iin,ibnd+idx)
               ENDDO
-           ENDDO  
+           ENDDO
         ENDDO
 !$omp end parallel do
         !
@@ -287,7 +287,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
         !
         CALL wave_g2r( psi(1:n,ibnd:ibnd), psic, dffts, igk=igk_k(:,current_k) )
         !
-        !write (6,*) 'wfc R ' 
+        !write (6,*) 'wfc R '
         !write (6,99) (psic(i), i=1,400)
         !
 !$omp parallel do
@@ -295,7 +295,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
            psicv(j) = psic(j) * v(j)
         ENDDO
 !$omp end parallel do
-        !write (6,*) 'v psi R ' 
+        !write (6,*) 'v psi R '
         !write (6,99) (psic(i), i=1,400)
         !
         CALL wave_r2g( psicv, psi2(1:n,:), dffts, igk=igk_k(:,current_k) )
@@ -339,8 +339,7 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
   USE klist,                  ONLY : igk_k
   USE mp_bands,               ONLY : me_bgrp
   USE fft_base,               ONLY : dffts, dfftp
-  USE fft_wave,               ONLY : wave_g2r, tgwave_g2r
-  USE fft_interfaces,         ONLY : fwfft, invfft
+  USE fft_wave
   USE lsda_mod,               ONLY : nspin
   USE noncollin_module,       ONLY : npol, domag
   USE wavefunctions,          ONLY : psic_nc
@@ -366,13 +365,14 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
   !
   INTEGER :: ibnd, j,ipol, incr, is, ii, ie
   COMPLEX(DP) :: sup, sdwn
+  COMPLEX(DP), ALLOCATABLE :: psi2(:,:)
   !
   ! Variables for task groups
   LOGICAL :: use_tg
   REAL(DP), ALLOCATABLE :: tg_v(:,:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:,:)
   INTEGER :: v_siz, idx, ioff
-  INTEGER :: right_nnr, right_nr3, right_inc
+  INTEGER :: right_nr3, right_inc
   !
   CALL start_clock ('vloc_psi')
   !
@@ -394,39 +394,41 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
      ENDIF
      ALLOCATE( tg_psic( v_siz, npol ) )
      CALL stop_clock ('vloc_psi:tg_gather')
-
+     !
      incr = fftx_ntgrp(dffts)
+     !
+     ALLOCATE( psi2(lda,m) )
+  ELSE
+     ALLOCATE( psi2(lda,1) )
   ENDIF
   !
   ! ... the local potential V_Loc psi. First the psi in real space
   !
   DO ibnd = 1, m, incr
-
+     !
      IF( use_tg ) THEN
-        !
-        CALL tg_get_nnr( dffts, right_nnr )
         !
         DO ipol = 1, npol
            !
            ii = lda*(ipol-1)+1
            ie = lda*ipol
-           CALL tgwave_g2r( psi(is:ie,:), tg_psic(:,ipol), dffts, ibnd, m, &
+           CALL tgwave_g2r( psi(ii:ie,:), tg_psic(:,ipol), dffts, ibnd, m, &
                             igk_k(:,current_k) )
            !
         ENDDO
         !
      ELSE
         !
-         psic_nc = (0.d0,0.d0)
-         !
-         DO ipol = 1, npol
-            !
-            ii = lda*(ipol-1)+1
-            ie = lda*(ipol-1)+n
-            CALL wave_g2r( psi(ii:ie,ibnd:ibnd), psic_nc(:,ipol), dffts, &
-                           igk=igk_k(:,current_k) )
-            !
-         ENDDO
+        psic_nc = (0.d0,0.d0)
+        !
+        DO ipol = 1, npol
+           !
+           ii = lda*(ipol-1)+1
+           ie = lda*(ipol-1)+n
+           CALL wave_g2r( psi(ii:ie,ibnd:ibnd), psic_nc(:,ipol), dffts, &
+                          igk=igk_k(:,current_k) )
+           !
+        ENDDO
      ENDIF
      !
      ! ... product with the potential v = (vltot+vr) on the smooth grid
@@ -435,8 +437,8 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
         CALL tg_get_group_nr3( dffts, right_nr3 )
         IF (domag) THEN
            DO j = 1, dffts%nr1x*dffts%nr2x*right_nr3
-              sup = tg_psic(j,1) * (tg_v(j,1)+tg_v(j,4)) + &
-                    tg_psic(j,2) * (tg_v(j,2)-(0.d0,1.d0)*tg_v(j,3))
+              sup  = tg_psic(j,1) * (tg_v(j,1)+tg_v(j,4)) + &
+                     tg_psic(j,2) * (tg_v(j,2)-(0.d0,1.d0)*tg_v(j,3))
               sdwn = tg_psic(j,2) * (tg_v(j,1)-tg_v(j,4)) + &
                      tg_psic(j,1) * (tg_v(j,2)+(0.d0,1.d0)*tg_v(j,3))
               tg_psic(j,1) = sup
@@ -449,16 +451,16 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
         ENDIF
      ELSE
         IF (domag) THEN
-           DO j=1, dffts%nnr
-              sup = psic_nc(j,1) * (v(j,1)+v(j,4)) + &
-                    psic_nc(j,2) * (v(j,2)-(0.d0,1.d0)*v(j,3))
+           DO j = 1, dffts%nnr
+              sup  = psic_nc(j,1) * (v(j,1)+v(j,4)) + &
+                     psic_nc(j,2) * (v(j,2)-(0.d0,1.d0)*v(j,3))
               sdwn = psic_nc(j,2) * (v(j,1)-v(j,4)) + &
                      psic_nc(j,1) * (v(j,2)+(0.d0,1.d0)*v(j,3))
-              psic_nc(j,1)=sup
-              psic_nc(j,2)=sdwn
+              psic_nc(j,1) = sup
+              psic_nc(j,2) = sdwn
            ENDDO
         ELSE
-           DO j=1, dffts%nnr
+           DO j = 1, dffts%nnr
               psic_nc(j,:) = psic_nc(j,:) * v(j,1)
            ENDDO
         ENDIF
@@ -470,40 +472,36 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
         !
         DO ipol = 1, npol
            !
-           CALL fwfft( 'tgWave', tg_psic(:,ipol), dffts )
-           !
-           ioff = 0
+           CALL tgwave_r2g( tg_psic(:,ipol), psi2, dffts, n, ibnd, m, igk_k(:,current_k) )
            !
            CALL tg_get_recip_inc( dffts, right_inc )
            !
+           ioff = 0
+!$omp parallel do
            DO idx = 1, fftx_ntgrp(dffts)
-              !
-              IF( idx+ibnd-1<= m ) THEN
-                 DO j = 1, n
-                    hpsi(j,ipol,ibnd+idx-1) = hpsi(j,ipol,ibnd+idx-1) + &
-                                 tg_psic(dffts%nl(igk_k(j,current_k)) + ioff, ipol )
-                 ENDDO
-              ENDIF
-              !
-              ioff = ioff + right_inc
-              !
+             IF ( idx+ibnd-1<=m ) THEN
+               DO j = 1, n
+                 hpsi(j,ipol,ibnd+idx-1) = hpsi(j,ipol,ibnd+idx-1) + psi2(j,ibnd+idx-1)
+               ENDDO
+             ENDIF
+             ioff = ioff + right_inc
            ENDDO
+!$omp end parallel do
            !
         ENDDO
         !
      ELSE
         !
         DO ipol = 1, npol
-           CALL fwfft( 'Wave', psic_nc(:,ipol), dffts )
-        ENDDO
-        !
-        ! ... addition to the total product
-        !
-        DO ipol = 1, npol
+           !
+           CALL wave_r2g( psic_nc(:,ipol), psi2(1:n,:), dffts, igk=igk_k(:,current_k) )
+           !
+!$omp parallel do
            DO j = 1, n
-              hpsi(j,ipol,ibnd) = hpsi(j,ipol,ibnd) + &
-                                  psic_nc(dffts%nl(igk_k(j,current_k)),ipol)
+              hpsi(j,ipol,ibnd) = hpsi(j,ipol,ibnd) + psi2(j,1)
            ENDDO
+!$omp end parallel do
+           !
         ENDDO
         !
      ENDIF
@@ -514,6 +512,7 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
      DEALLOCATE( tg_v )
      DEALLOCATE( tg_psic )
   ENDIF
+  DEALLOCATE( psi2 )
   !
   CALL stop_clock ('vloc_psi')
   !
