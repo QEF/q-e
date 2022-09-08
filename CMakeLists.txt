@@ -118,10 +118,6 @@ set(QE_ENABLE_PLUGINS "" CACHE STRING "Semicolon-separated list of plugins")
 set (QE_EXTRA_DEFINITIONS "" CACHE STRING "Semicolon-separated list of extra global definitions")
 option(QE_ENABLE_FOX
     "enable XML I/O via Fox library" OFF)
-set(QE_ENABLE_GIPAW OFF STRING "download and compile QE-GIPAW")
-if(QE_ENABLE_GIPAW)
-   set(QE_ENABLE_FOX "ON")
-endif()
 if(QE_ENABLE_FOX)
     if(FOX_ROOT)
         set(QE_FOX_INTERNAL OFF)
@@ -249,7 +245,7 @@ if(NOT QE_ENABLE_SANITIZER STREQUAL "none" AND NOT CMAKE_Fortran_COMPILER_ID MAT
 endif()
 
 # valid plugins checks
-set(VALID_QE_PLUGINS "d3q" "pw2qmcpack")
+set(VALID_QE_PLUGINS "d3q" "pw2qmcpack" "qe-gipaw")
 # Perform sanitizer option check, only works in debug mode
 foreach(PLUGIN IN LISTS QE_ENABLE_PLUGINS)
   if(NOT PLUGIN IN_LIST VALID_QE_PLUGINS)

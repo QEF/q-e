@@ -44,8 +44,12 @@ endif()
 ###########################################################
 # QE-GIPAW
 ###########################################################
-if(QE_ENABLE_GIPAW)
-  message(STATUS "Installing qe-gipaw via submodule")
-  qe_git_submodule_update(external/qe-gipaw)
-  add_subdirectory(qe-gipaw)
+if("qe-gipaw" IN_LIST QE_ENABLE_PLUGINS)
+  if(QE_ENABLE_FOX)
+    message(STATUS "Installing qe-gipaw via submodule")
+    qe_git_submodule_update(external/qe-gipaw)
+    add_subdirectory(qe-gipaw)
+  else()
+    message(FATAL_ERROR "QE-GIPAW requires -DQE_ENABLE_FOX=ON")
+  endif()
 endif()
