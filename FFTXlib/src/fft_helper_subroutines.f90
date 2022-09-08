@@ -684,15 +684,18 @@ CONTAINS
      !
      TYPE(fft_type_descriptor), INTENT(IN) :: desc
      COMPLEX(DP), INTENT(OUT) :: psis(:)
-     COMPLEX(DP), INTENT(INOUT) :: c_bgrp(:,:)
+     COMPLEX(DP), INTENT(IN) :: c_bgrp(:,:)
      INTEGER, INTENT(IN) :: i, nbsp_bgrp
      !
-     INTEGER :: eig_offset, eig_index, right_nnr
+     INTEGER :: eig_offset, eig_index, right_nnr, ig, ib, ieg
+     COMPLEX(DP), PARAMETER :: ci=(0.0d0,1.0d0)
      !
-     !  the i-th column of c_bgrp corresponds to the i-th state (in this band group)
+     ! ... the i-th column of c_bgrp corresponds to the i-th state (in this band group)
      !
-     !  The outer loop goes through i : i + 2*NOGRP to cover
-     !  2*NOGRP eigenstates at each iteration
+     ! ... The outer loop goes through i : i + 2*NOGRP to cover
+     ! ... 2*NOGRP eigenstates at each iteration
+     !
+     CALL alloc_nl_pntrs( desc )
      !
      right_nnr = desc%nnr
      !
@@ -708,32 +711,35 @@ CONTAINS
 #if !defined(_OPENACC)
         !$omp task default(none) &
         !$omp          firstprivate( eig_index, i, nbsp_bgrp, right_nnr ) &
-        !$omp          private( eig_offset ) &
-        !$omp          shared( c_bgrp, desc, psis )
+        !$omp          private( eig_offset, ib, ieg, ig ) &
+        !$omp          shared( c_bgrp, desc, psis, nl_d, nlm_d )
 #endif
         !
-        !  here we pack 2*nogrp electronic states in the psis array
-        !  note that if nogrp == nproc_bgrp each proc perform a full 3D
-        !  fft and the scatter phase is local (without communication)
+        ! ... here we pack 2*nogrp electronic states in the psis array
+        ! ... note that if nogrp == nproc_bgrp each proc perform a full 3D
+        ! ... fft and the scatter phase is local (without communication)
         !
-        !  important: if n is odd => c(*,n+1)=0.
-        !
-        IF ( (eig_index+i-1)==nbsp_bgrp ) THEN
-          !$acc kernels
-          c_bgrp(:,eig_index+i) = (0._DP,0._DP)
-          !$acc end kernels
-        ENDIF
+        ! ... important: if n is odd => c(*,n+1)=0.
         !
         eig_offset = (eig_index-1)/2
         !
-        IF ( (i+eig_index-1) <= nbsp_bgrp ) THEN
-           !
-           !  The  eig_index loop is executed only ONCE when NOGRP=1.
-           !
-           CALL c2psi_gamma( desc, psis(eig_offset*right_nnr+1: &
-                             eig_offset*right_nnr+ right_nnr), &
-                             c_bgrp(:,i+eig_index-1), c_bgrp(:,i+eig_index) )
-           !
+        ib = eig_offset*right_nnr
+        ieg = i+eig_index-1
+        !
+        ! ... The eig_index loop is executed only ONCE when NOGRP=1.
+        IF ( ieg < nbsp_bgrp ) THEN
+           !$acc parallel loop
+           DO ig = 1, desc%ngw
+             psis(ib+nlm_d(ig)) = CONJG(c_bgrp(ig,ieg)) + ci * CONJG(c_bgrp(ig,ieg+1))
+             psis(ib+nl_d(ig)) = c_bgrp(ig,ieg) + ci * c_bgrp(ig,ieg+1)
+           ENDDO
+        ELSEIF ( ieg == nbsp_bgrp ) THEN
+           ! ... important: if n is odd => c(*,n+1)=0.
+           !$acc parallel loop
+           DO ig = 1, desc%ngw
+             psis(ib+nlm_d(ig)) = CONJG(c_bgrp(ig,ieg))
+             psis(ib+nl_d(ig)) = c_bgrp(ig,ieg)
+           ENDDO
         ENDIF
 #if !defined(_OPENACC)
         !$omp end task
@@ -746,6 +752,8 @@ CONTAINS
      !$omp end single
      !$omp end parallel
 #endif
+     !
+     CALL dealloc_nl_pntrs( desc )
      !
      RETURN
      !

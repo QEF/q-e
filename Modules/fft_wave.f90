@@ -21,7 +21,7 @@ MODULE fft_wave
   !
   PRIVATE
   !
-  PUBLIC :: wave_r2g, wave_g2r, tgwave_g2r, tgwave_r2g
+  PUBLIC :: wave_r2g, wave_g2r, tgwave_r2g, tgwave_g2r
   !
 CONTAINS
   !
@@ -75,7 +75,7 @@ CONTAINS
     IMPLICIT NONE
     !
     TYPE(fft_type_descriptor), INTENT(IN) :: dfft
-    COMPLEX(DP) :: f_in(:,:)
+    COMPLEX(DP), INTENT(IN) :: f_in(:,:)
     COMPLEX(DP) :: f_out(:)
     INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
     INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
