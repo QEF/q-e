@@ -40,3 +40,12 @@ if("pw2qmcpack" IN_LIST QE_ENABLE_PLUGINS OR QE_ENABLE_PW2QMCPACK)
   qe_git_submodule_update(external/pw2qmcpack)
   add_subdirectory(pw2qmcpack)
 endif()
+
+###########################################################
+# QE-GIPAW
+###########################################################
+if(QE_ENABLE_GIPAW)
+  message(STATUS "Installing qe-gipaw via submodule")
+  qe_git_submodule_update(external/qe-gipaw)
+  add_subdirectory(qe-gipaw)
+endif()
