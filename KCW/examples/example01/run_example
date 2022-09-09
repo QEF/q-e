@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
@@ -127,30 +127,30 @@ Si 0.25 0.25 0.25
 
 K_POINTS crystal
 8
-  0.00000000  0.00000000  0.00000000  1.250000e-01 
-  0.00000000  0.00000000  0.50000000  1.250000e-01 
-  0.00000000  0.50000000  0.00000000  1.250000e-01 
-  0.00000000  0.50000000  0.50000000  1.250000e-01 
-  0.50000000  0.00000000  0.00000000  1.250000e-01 
-  0.50000000  0.00000000  0.50000000  1.250000e-01 
-  0.50000000  0.50000000  0.00000000  1.250000e-01 
-  0.50000000  0.50000000  0.50000000  1.250000e-01 
+  0.00000000  0.00000000  0.00000000  1.250000e-01
+  0.00000000  0.00000000  0.50000000  1.250000e-01
+  0.00000000  0.50000000  0.00000000  1.250000e-01
+  0.00000000  0.50000000  0.50000000  1.250000e-01
+  0.50000000  0.00000000  0.00000000  1.250000e-01
+  0.50000000  0.00000000  0.50000000  1.250000e-01
+  0.50000000  0.50000000  0.00000000  1.250000e-01
+  0.50000000  0.50000000  0.50000000  1.250000e-01
 EOF
 $ECHO "  Running the SCF calculation for $PREFIX...\c"
 $PW_COMMAND < $PREFIX.scf.in > $PREFIX.scf.out
 $ECHO " done"
 
 if [ ! -d wann_occ ]; then  mkdir wann_occ ; fi
-cd wann_occ 
+cd wann_occ
 cat > $SEEDNAME.win << EOF
-num_bands         =   4       
+num_bands         =   4
 num_wann          =   4
 exclude_bands     = 5-20
 spin              = up
 use_ws_distance   = .true.
 
 write_hr = .true.
-conv_window = 5 
+conv_window = 5
 conv_tol = 1D-10
 conv_noise_amp = 10000
 conv_noise_num = 5
@@ -161,11 +161,11 @@ write_u_matrices = .true.
 bands_plot              = .true.
 bands_num_points        = 40
 begin kpoint_path
-G 0.000 0.000 0.000  X 0.500 0.000 0.500 
-X 0.500 0.000 0.500  U 0.625 0.250 0.625 
-K 0.375 0.375 0.750  G 0.000 0.000 0.000 
-G 0.000 0.000 0.000  L 0.500 0.500 0.500 
-L 0.500 0.500 0.500  W 0.500 0.250 0.750 
+G 0.000 0.000 0.000  X 0.500 0.000 0.500
+X 0.500 0.000 0.500  U 0.625 0.250 0.625
+K 0.375 0.375 0.750  G 0.000 0.000 0.000
+G 0.000 0.000 0.000  L 0.500 0.500 0.500
+L 0.500 0.500 0.500  W 0.500 0.250 0.750
 W 0.500 0.250 0.750  U 0.500 0.000 0.500
 end kpoint_path
 
@@ -176,11 +176,11 @@ Begin Atoms_Frac
  Si 0.00 0.00 0.00
  Si 0.25 0.25 0.25
 End Atoms_Frac
-    
-Begin Projections     
-f = 0.0, 0.0, 0.0 : sp3 
-End Projections       
-    
+
+Begin Projections
+f = 0.0, 0.0, 0.0 : sp3
+End Projections
+
 begin unit_cell_cart
 bohr
 -5.1315510  0.00000 5.1315510
@@ -188,7 +188,7 @@ bohr
 -5.1315510  5.1315510 0.00000
 end unit_cell_cart
 
-mp_grid      = 2 2 2  
+mp_grid      = 2 2 2
 
 begin kpoints
   0.00000000  0.00000000  0.00000000
@@ -202,7 +202,7 @@ begin kpoints
 end kpoints
 EOF
 $ECHO "  Running W90 -pp for $PREFIX...\c"
-$W90_COMMAND -pp  $SEEDNAME.win 
+$W90_COMMAND -pp  $SEEDNAME.win
 $ECHO " done"
 
 cat > $PREFIX.pw2wann.in << EOF
@@ -215,20 +215,20 @@ cat > $PREFIX.pw2wann.in << EOF
 /
 EOF
 $ECHO "  Running PW2W90 for $PREFIX...\c"
-$PW2W90_COMMAND < $PREFIX.pw2wann.in > $PREFIX.pw2wann.out 
+$PW2W90_COMMAND < $PREFIX.pw2wann.in > $PREFIX.pw2wann.out
 $ECHO " done"
 
 $ECHO "  Running W90 for $PREFIX...\c"
-$W90_COMMAND  $SEEDNAME.win 
+$W90_COMMAND  $SEEDNAME.win
 $ECHO " done"
 
 cd ../
 if [ ! -d wann_emp ]; then mkdir wann_emp; fi
 cd wann_emp
 
-################### EMPTY WANNIERIZATION 
+################### EMPTY WANNIERIZATION
 cat > ${SEEDNAME}_emp.win << EOF
-num_bands         =   16       
+num_bands         =   16
 num_wann          =   4
 exclude_bands     =  1-4
 spin              = up
@@ -237,7 +237,7 @@ use_ws_distance   = .true.
 dis_froz_max      = 8.0
 dis_win_max       = 20
 
-conv_window = 5 
+conv_window = 5
 conv_tol = 1D-10
 conv_noise_amp = 10000
 conv_noise_num = 5
@@ -249,11 +249,11 @@ write_u_matrices = .true.
 bands_plot              = .true.
 bands_num_points        = 40
 begin kpoint_path
-G 0.000 0.000 0.000  X 0.500 0.000 0.500 
-X 0.500 0.000 0.500  U 0.625 0.250 0.625 
-K 0.375 0.375 0.750  G 0.000 0.000 0.000 
-G 0.000 0.000 0.000  L 0.500 0.500 0.500 
-L 0.500 0.500 0.500  W 0.500 0.250 0.750 
+G 0.000 0.000 0.000  X 0.500 0.000 0.500
+X 0.500 0.000 0.500  U 0.625 0.250 0.625
+K 0.375 0.375 0.750  G 0.000 0.000 0.000
+G 0.000 0.000 0.000  L 0.500 0.500 0.500
+L 0.500 0.500 0.500  W 0.500 0.250 0.750
 W 0.500 0.250 0.750  U 0.500 0.000 0.500
 end kpoint_path
 
@@ -264,11 +264,11 @@ Begin Atoms_Frac
  Si 0.00 0.00 0.00
  Si 0.25 0.25 0.25
 End Atoms_Frac
-    
-Begin Projections     
-f = 0.250, 0.250, 0.250 : sp3 
-End Projections       
-    
+
+Begin Projections
+f = 0.250, 0.250, 0.250 : sp3
+End Projections
+
 begin unit_cell_cart
 bohr
 -5.1315510  0.00000 5.1315510
@@ -276,7 +276,7 @@ bohr
 -5.1315510  5.1315510 0.00000
 end unit_cell_cart
 
-mp_grid      = 2 2 2  
+mp_grid      = 2 2 2
 
 begin kpoints
   0.00000000  0.00000000  0.00000000
@@ -290,7 +290,7 @@ begin kpoints
 end kpoints
 EOF
 $ECHO "  Running W90 -pp for $PREFIX EMPTY...\c"
-$W90_COMMAND -pp ${SEEDNAME}_emp.win 
+$W90_COMMAND -pp ${SEEDNAME}_emp.win
 $ECHO " done"
 
 cat > ${PREFIX}_emp.pw2wann.in << EOF
@@ -303,20 +303,20 @@ cat > ${PREFIX}_emp.pw2wann.in << EOF
 /
 EOF
 $ECHO "  Running PW2W90 for $PREFIX EMPTY...\c"
-$PW2W90_COMMAND < ${PREFIX}_emp.pw2wann.in > ${PREFIX}_emp.pw2wann.out 
+$PW2W90_COMMAND < ${PREFIX}_emp.pw2wann.in > ${PREFIX}_emp.pw2wann.out
 $ECHO " done"
 
 $ECHO "  Running W90 for $PREFIX EMPTY...\c"
-$W90_COMMAND  ${SEEDNAME}_emp.win 
+$W90_COMMAND  ${SEEDNAME}_emp.win
 $ECHO " done"
 
-cd ../ 
+cd ../
 
-rm -fr ${SEEDNAME}_u.mat 
-rm -fr ${SEEDNAME}_emp_u.mat 
-rm -fr ${SEEDNAME}_emp_u_dis.mat 
-rm -fr ${SEEDNAME}_centres.xyz 
-rm -fr ${SEEDNAME}_emp_centres.xyz 
+rm -fr ${SEEDNAME}_u.mat
+rm -fr ${SEEDNAME}_emp_u.mat
+rm -fr ${SEEDNAME}_emp_u_dis.mat
+rm -fr ${SEEDNAME}_centres.xyz
+rm -fr ${SEEDNAME}_emp_centres.xyz
 ln -s wann_occ/${SEEDNAME}_u.mat .
 ln -s wann_emp/${SEEDNAME}_emp_u.mat .
 ln -s wann_emp/${SEEDNAME}_emp_u_dis.mat .
@@ -336,7 +336,7 @@ W2K Silicon
 /
 &wannier
   seedname = 'Si'
-  check_ks = .true. 
+  check_ks = .true.
   num_wann_occ = 4
   num_wann_emp = 4
   have_empty = .true.
@@ -365,7 +365,7 @@ KCW Silicon screen
 /
 &wannier
   seedname = 'Si'
-  check_ks = .true. 
+  check_ks = .true.
   num_wann_occ = 4
   num_wann_emp = 4
   have_empty = .true.
@@ -399,7 +399,7 @@ KI H2O
 /
 &wannier
   seedname = 'Si'
-  check_ks = .true. 
+  check_ks = .true.
   num_wann_occ = 4
   num_wann_emp = 4
   have_empty = .true.

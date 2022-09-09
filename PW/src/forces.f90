@@ -27,10 +27,8 @@ SUBROUTINE forces()
   USE kinds,             ONLY : DP
   USE io_global,         ONLY : stdout
   USE cell_base,         ONLY : at, bg, alat, omega  
-  USE ions_base,         ONLY : nat, ntyp => nsp, ityp, tau, zv, amass, extfor, atm
-  USE fft_base,          ONLY : dfftp
-  USE gvect,             ONLY : ngm, gstart, ngl, igtongl, igtongl_d, g, gg, &
-                                g_d, gcutm
+  USE ions_base,         ONLY : nat, ntyp => nsp,nsp, ityp, tau, zv, amass, extfor, atm
+  USE gvect,             ONLY : ngm, gstart, ngl, igtongl, g, gg, gcutm
   USE lsda_mod,          ONLY : nspin
   USE symme,             ONLY : symvector
   USE vlocal,            ONLY : strf, vloc
@@ -60,7 +58,6 @@ SUBROUTINE forces()
   USE control_flags,     ONLY : use_gpu
 #if defined(__CUDA)
   USE device_fbuff_m,          ONLY : dev_buf
-  USE device_memcpy_m,     ONLY : dev_memcpy
 #endif
   !
 #if defined (__ENVIRON)
@@ -101,11 +98,6 @@ SUBROUTINE forces()
   REAL(DP) :: stress_dftd3(3,3)
   !
   INTEGER :: ierr
-#if defined(__CUDA)
-  ! TODO: get rid of this !!!! Use standard method for duplicated global data
-  REAL(DP), POINTER :: vloc_d (:, :)
-  attributes(DEVICE) :: vloc_d
-#endif
   !
   force(:,:)    = 0.D0
   !
@@ -130,39 +122,22 @@ SUBROUTINE forces()
   !
   ! ... The nonlocal contribution is computed here
   !
-  call start_clock('frc_us') 
-  IF (.not. use_gpu) CALL force_us( forcenl )
-  IF (      use_gpu) CALL force_us_gpu( forcenl )
-  call stop_clock('frc_us') 
+  call start_clock('frc_us')
+  CALL force_us( forcenl )
+  call stop_clock('frc_us')
   !
   ! ... The local contribution
   !
-  CALL start_clock('frc_lc') 
-  IF (.not. use_gpu) & ! On the CPU
-     CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
-                 g, rho%of_r(:,1), gstart, gamma_only, vloc, &
-                 forcelc )
-#if defined(__CUDA)
-  IF (      use_gpu) THEN ! On the GPU
-     ! move these data to the GPU
-     CALL dev_buf%lock_buffer(vloc_d, (/ ngl, ntyp /) , ierr)
-     IF (ierr /= 0) CALL errore( 'forces', 'cannot allocate buffers', -1 )
-     CALL dev_memcpy(vloc_d, vloc)
-     CALL force_lc_gpu( nat, tau, ityp, alat, omega, ngm, ngl, igtongl_d, &
-                   g_d, rho%of_r(:,1), gstart, gamma_only, vloc_d, &
-                   forcelc )
-     CALL dev_buf%release_buffer(vloc_d, ierr)
-  END IF
-#endif
-  call stop_clock('frc_lc') 
+  call start_clock('frc_lc')
+  CALL force_lc( nat, tau, ityp, ntyp, alat, omega, ngm, ngl, igtongl, &
+                 g, rho%of_r(:,1), gstart, gamma_only, vloc, forcelc )
+  call stop_clock('frc_lc')
   !
   ! ... The NLCC contribution
   !
-  call start_clock('frc_cc') 
-  IF (.not. use_gpu) CALL force_cc( forcecc )
-  IF (      use_gpu) CALL force_cc_gpu( forcecc )
-  !
-  call stop_clock('frc_cc') 
+  call start_clock('frc_cc')
+  CALL force_cc( forcecc )
+  call stop_clock('frc_cc')
 
   ! ... The Hubbard contribution
   !     (included by force_us if using beta as local projectors)
@@ -226,8 +201,7 @@ SUBROUTINE forces()
   IF (ierr .ne. 0) CALL errore('forces', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr))
 #endif
   !
-  IF ( .not. use_gpu ) CALL force_corr( forcescc )
-  IF (       use_gpu ) CALL force_corr_gpu( forcescc )
+  CALL force_corr( forcescc )
   call stop_clock('frc_scc') 
   !
   IF (do_comp_mt) THEN

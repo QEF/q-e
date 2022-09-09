@@ -63,28 +63,28 @@ SUBROUTINE sum_band_gpu()
              nt,   &! counter on atomic types
              npol_,&! auxiliary dimension for noncolin case
              ibnd_start, ibnd_end, this_bgrp_nbnd ! first, last and number of band in this bgrp
-  REAL (DP), ALLOCATABLE :: kplusg (:)
+  REAL(DP), ALLOCATABLE :: kplusg(:)
   !
   !
   CALL start_clock_gpu( 'sum_band' )
   !
-  if ( nhm > 0 ) then
+  IF ( nhm > 0 ) THEN
      becsum(:,:,:) = 0.D0
-     if (tqr) ebecsum(:,:,:) = 0.D0
+     IF (tqr) ebecsum(:,:,:) = 0.D0
      becsum_d(:,:,:) = 0.D0
-     if (tqr) ebecsum_d(:,:,:) = 0.D0
-  end if
-  rho%of_r(:,:)      = 0.D0
-  rho%of_g(:,:)      = (0.D0, 0.D0)
-  if ( xclib_dft_is('meta') .OR. lxdm ) then
-     rho%kin_r(:,:)      = 0.D0
-     rho%kin_g(:,:)      = (0.D0, 0.D0)
-  end if
+     IF (tqr) ebecsum_d(:,:,:) = 0.D0
+  ENDIF
+  rho%of_r(:,:) = 0.D0
+  rho%of_g(:,:) = (0.D0, 0.D0)
+  IF ( xclib_dft_is('meta') .OR. lxdm ) THEN
+     rho%kin_r(:,:) = 0.D0
+     rho%kin_g(:,:) = (0.D0, 0.D0)
+  ENDIF
   !
   ! ... calculates weights of Kohn-Sham orbitals used in calculation of rho
   !
   CALL start_clock_gpu( 'sum_band:weights' )
-  CALL weights ( )
+  CALL weights()
   CALL stop_clock_gpu( 'sum_band:weights' )
   !
   ! ... btype, used in diagonalization, is set here: a band is considered empty
@@ -98,28 +98,28 @@ SUBROUTINE sum_band_gpu()
         WHERE( wg(:,ik) / wk(ik) < 0.01D0 ) btype(:,ik) = 0
      END FORALL
      !
-  END IF
+  ENDIF
   !
   ! ... Needed for DFT+Hubbard: compute occupations of Hubbard states
   !
   IF (lda_plus_u) THEN
-    IF (lda_plus_u_kind.EQ.0) THEN
+    IF (lda_plus_u_kind==0) THEN
        !
-       CALL new_ns(rho%ns)
+       CALL new_ns( rho%ns )
        !
        DO nt = 1, ntyp
-          IF (is_hubbard_back(nt)) CALL new_nsb(rho%nsb)
+          IF (is_hubbard_back(nt)) CALL new_nsb( rho%nsb )
        ENDDO
        !
-    ELSEIF (lda_plus_u_kind.EQ.1) THEN
+    ELSEIF (lda_plus_u_kind==1) THEN
        !
        IF (noncolin) THEN
-          CALL new_ns_nc(rho%ns_nc)
+          CALL new_ns_nc( rho%ns_nc )
        ELSE
-          CALL new_ns(rho%ns)
+          CALL new_ns( rho%ns )
        ENDIF
        !
-    ELSEIF (lda_plus_u_kind.EQ.2) THEN 
+    ELSEIF (lda_plus_u_kind==2) THEN 
        !
        CALL new_nsg()
        !
@@ -128,14 +128,14 @@ SUBROUTINE sum_band_gpu()
   !
   ! ... for band parallelization: set band computed by this processor
   !
-  call divide ( inter_bgrp_comm, nbnd, ibnd_start, ibnd_end )
+  CALL divide( inter_bgrp_comm, nbnd, ibnd_start, ibnd_end )
   this_bgrp_nbnd = ibnd_end - ibnd_start + 1
   !
   ! ... Allocate (and later deallocate) arrays needed in specific cases
   !
-  IF ( okvan ) CALL allocate_bec_type (nkb, this_bgrp_nbnd, becp, intra_bgrp_comm)
-  IF ( okvan ) CALL using_becp_auto(2)
-  IF (xclib_dft_is('meta') .OR. lxdm) ALLOCATE (kplusg(npwx))
+  IF ( okvan ) CALL allocate_bec_type( nkb, this_bgrp_nbnd, becp, intra_bgrp_comm )
+  IF ( okvan ) CALL using_becp_auto( 2 )
+  IF (xclib_dft_is('meta') .OR. lxdm) ALLOCATE( kplusg(npwx) )
   !
   ! ... specialized routines are called to sum at Gamma or for each k point 
   ! ... the contribution of the wavefunctions to the charge
@@ -152,7 +152,7 @@ SUBROUTINE sum_band_gpu()
      !
      CALL sum_band_k_gpu()
      !
-  END IF
+  ENDIF
   CALL stop_clock_gpu( 'sum_band:loop' )
   CALL mp_sum( eband, inter_pool_comm )
   CALL mp_sum( eband, inter_bgrp_comm )
@@ -198,19 +198,19 @@ SUBROUTINE sum_band_gpu()
      !
      IF ( okpaw ) THEN
         rho%bec(:,:,:) = becsum(:,:,:)
-        CALL PAW_symmetrize(rho%bec)
-     END IF
+        CALL PAW_symmetrize( rho%bec )
+     ENDIF
      !
      ! ... Here we add the (unsymmetrized) Ultrasoft contribution to the charge
      !
-     CALL addusdens_gpu(rho%of_g(:,:))
+     CALL addusdens( rho%of_g )
      !
   ENDIF
   !
   ! ... symmetrize rho(G) 
   !
   CALL start_clock_gpu( 'sum_band:sym_rho' )
-  CALL sym_rho ( nspin_mag, rho%of_g )
+  CALL sym_rho( nspin_mag, rho%of_g )
   !
   ! ... synchronize rho%of_r to the calculated rho%of_g (use psic as work array)
   !

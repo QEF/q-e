@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -61,7 +61,7 @@ for FILE in $PSEUDO_LIST ; do
        $ECHO
        $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
             wget  http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE \
-                -O $PSEUDO_DIR/$FILE 2> /dev/null 
+                -O $PSEUDO_DIR/$FILE 2> /dev/null
     fi
     if test $? != 0; then
         $ECHO
@@ -106,11 +106,11 @@ cat > graphite.scf.0.in << EOF
 /
 
 &system
-    ibrav           = 4 
+    ibrav           = 4
     celldm(1)       = 4.6411700000
     celldm(3)       = 2.7264000000
-    
-    nat             = 4 
+
+    nat             = 4
     ntyp            = 1
 
     occupations     = 'fixed'
@@ -130,7 +130,7 @@ ATOMIC_SPECIES
 C   12.00   C.pbe-rrkjus.UPF
 
 ATOMIC_POSITIONS {alat}
-C      0.0000000000 0.0000000000 0.0000000000 
+C      0.0000000000 0.0000000000 0.0000000000
 C      0.0000000000 0.5773502692 0.0000000000
 C      0.0000000000 0.0000000000 1.3632000000
 C      0.5000000000 0.2886751346 1.3632000000
@@ -161,11 +161,11 @@ cat > graphite.scf.+1.in << EOF
 /
 
 &system
-    ibrav           = 4 
+    ibrav           = 4
     celldm(1)       = 4.6511700000
     celldm(3)       = 2.7264000000
-    
-    nat             = 4 
+
+    nat             = 4
     ntyp            = 1
 
     occupations     = 'fixed'
@@ -185,7 +185,7 @@ ATOMIC_SPECIES
 C   12.00   C.pbe-rrkjus.UPF
 
 ATOMIC_POSITIONS {alat}
-C      0.0000000000 0.0000000000 0.0000000000 
+C      0.0000000000 0.0000000000 0.0000000000
 C      0.0000000000 0.5773502692 0.0000000000
 C      0.0000000000 0.0000000000 1.3632000000
 C      0.5000000000 0.2886751346 1.3632000000
@@ -215,11 +215,11 @@ cat > graphite.scf.-1.in << EOF
 /
 
 &system
-    ibrav           = 4 
+    ibrav           = 4
     celldm(1)       = 4.6311700000
     celldm(3)       = 2.7264000000
-    
-    nat             = 4 
+
+    nat             = 4
     ntyp            = 1
 
     occupations     = 'fixed'
@@ -240,7 +240,7 @@ ATOMIC_SPECIES
 C   12.00   C.pbe-rrkjus.UPF
 
 ATOMIC_POSITIONS {alat}
-C      0.0000000000 0.0000000000 0.0000000000 
+C      0.0000000000 0.0000000000 0.0000000000
 C      0.0000000000 0.5773502692 0.0000000000
 C      0.0000000000 0.0000000000 1.3632000000
 C      0.5000000000 0.2886751346 1.3632000000
@@ -256,7 +256,7 @@ $ECHO " done"
 
 #
 # self-consistent calculation
-# for water molecules 
+# for water molecules
 #
 cat > water.scf.0.in << EOF
 &control
@@ -290,14 +290,14 @@ cat > water.scf.0.in << EOF
 ATOMIC_SPECIES
    O   15.9994    O.pbe-rrkjus.UPF
    H   1.00794    H.pbe-rrkjus.UPF
- 
+
 ATOMIC_POSITIONS {alat}
-O     0.0000000   0.0016540  -0.0072484  
-H     0.0000000   0.0981485  -0.0826521  
-H     0.0000000   0.0490883   0.1065556  
-O     0.0000000   0.1117595   0.3550478  
-H    -0.0975766   0.0656956   0.4133167  
-H     0.0975766   0.0656956   0.4133167  
+O     0.0000000   0.0016540  -0.0072484
+H     0.0000000   0.0981485  -0.0826521
+H     0.0000000   0.0490883   0.1065556
+O     0.0000000   0.1117595   0.3550478
+H    -0.0975766   0.0656956   0.4133167
+H     0.0975766   0.0656956   0.4133167
 
 
 
@@ -312,7 +312,7 @@ $ECHO " done"
 
 #
 # self-consistent calculation
-# for water molecules 
+# for water molecules
 #
 cat > water.scf.+1.in << EOF
 &control
@@ -346,14 +346,14 @@ cat > water.scf.+1.in << EOF
 ATOMIC_SPECIES
    O   15.9994    O.pbe-rrkjus.UPF
    H   1.00794    H.pbe-rrkjus.UPF
- 
+
 ATOMIC_POSITIONS {alat}
-O     0.0000000   0.0016540  -0.0072484  
-H     0.0000000   0.0981485  -0.0826521  
-H     0.0000000   0.0490883   0.1065556  
-O     0.0000000   0.1117595   0.3550478  
-H    -0.0975766   0.0656956   0.4133167  
-H     0.0975766   0.0656956   0.4133167  
+O     0.0000000   0.0016540  -0.0072484
+H     0.0000000   0.0981485  -0.0826521
+H     0.0000000   0.0490883   0.1065556
+O     0.0000000   0.1117595   0.3550478
+H    -0.0975766   0.0656956   0.4133167
+H     0.0975766   0.0656956   0.4133167
 
 K_POINTS gamma
 
@@ -366,7 +366,7 @@ $ECHO " done"
 
 #
 # self-consistent calculation
-# for water molecules 
+# for water molecules
 #
 cat > water.scf.-1.in << EOF
 &control
@@ -400,14 +400,14 @@ cat > water.scf.-1.in << EOF
 ATOMIC_SPECIES
    O   15.9994    O.pbe-rrkjus.UPF
    H   1.00794    H.pbe-rrkjus.UPF
- 
+
 ATOMIC_POSITIONS {alat}
-O     0.0000000   0.0016540  -0.0072484  
-H     0.0000000   0.0981485  -0.0826521  
-H     0.0000000   0.0490883   0.1065556  
-O     0.0000000   0.1117595   0.3550478  
-H    -0.0975766   0.0656956   0.4133167  
-H     0.0975766   0.0656956   0.4133167  
+O     0.0000000   0.0016540  -0.0072484
+H     0.0000000   0.0981485  -0.0826521
+H     0.0000000   0.0490883   0.1065556
+O     0.0000000   0.1117595   0.3550478
+H    -0.0975766   0.0656956   0.4133167
+H     0.0975766   0.0656956   0.4133167
 
 K_POINTS gamma
 

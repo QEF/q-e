@@ -7,10 +7,10 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE force_lc( nat, tau, ityp, alat, omega, ngm, ngl, &
+SUBROUTINE force_lc( nat, tau, ityp, ntyp, alat, omega, ngm, ngl, &
                      igtongl, g, rho, gstart, gamma_only, vloc, forcelc )
   !----------------------------------------------------------------------
-  !! It calculates the local-potential contribution to forces on atoms.
+  !! It calculates the local potential contribution to forces on atoms.
   !
   USE kinds
   USE constants,       ONLY : tpi
@@ -36,13 +36,15 @@ SUBROUTINE force_lc( nat, tau, ityp, alat, omega, ngm, ngl, &
   !! correspondence G <-> shell of G
   INTEGER, INTENT(IN) :: ityp(nat)
   !! types of atoms
+  INTEGER, INTENT(IN) :: ntyp
+  !! number of types of atoms
   LOGICAL, INTENT(IN) :: gamma_only
   !! gamma only
   REAL(DP), INTENT(IN) :: tau(3,nat)
   !! coordinates of the atoms
   REAL(DP), INTENT(IN) :: g(3,ngm)
   !! coordinates of G vectors
-  REAL(DP), INTENT(IN) :: vloc(ngl,*)
+  REAL(DP), INTENT(IN) :: vloc(ngl,ntyp)
   !! local potential
   REAL(DP), INTENT(IN) :: rho(dfftp%nnr)
   !! valence charge
@@ -50,27 +52,35 @@ SUBROUTINE force_lc( nat, tau, ityp, alat, omega, ngm, ngl, &
   !! lattice parameter
   REAL(DP), INTENT(IN) :: omega
   !! unit cell volume
-  REAL(DP), INTENT(OUT) :: forcelc(3, nat)
-  !! the local-potential contribution to forces on atoms
+  REAL(DP), INTENT(OUT) :: forcelc(3,nat)
+  !! the local potential contribution to forces on atoms
   !
   ! ... local variables
   !
-  INTEGER :: ig, na
-  ! counter on polarizations
+  INTEGER :: ig, na, ityp_na
   ! counter on G vectors
   ! counter on atoms
+  ! atom type index
   COMPLEX(DP), ALLOCATABLE :: aux(:,:)
   ! auxiliary space for FFT
-  REAL(DP) :: arg, fact
+  REAL(DP) :: arg, arg0, fact
+  REAL(DP) :: forcelc_x, forcelc_y, forcelc_z, tau1, tau2, tau3
   !
-  ! contribution to the force from the local part of the bare potential
-  ! F_loc = Omega \Sum_G n*(G) d V_loc(G)/d R_i
+  ! ... contribution to the force from the local part of the bare potential
+  !     F_loc = Omega \Sum_G n*(G) d V_loc(G)/d R_i
+  !
+  !$acc data present_or_copyin( igtongl, g, rho, vloc )
   !
   ALLOCATE( aux(dfftp%nnr,1) )
+  !$acc data create( aux )
   !
   CALL rho_r2g( dfftp, rho, aux )
   !
-  ! aux contains now  n(G)
+  IF ( ( do_comp_esm .AND. (esm_bc .NE. 'pbc') ) .OR. do_cutoff_2D ) THEN
+    !$acc update self(aux)
+  ENDIF
+  !
+  ! ... aux contains now n(G)
   !
   IF (gamma_only) THEN
      fact = 2.d0
@@ -78,22 +88,37 @@ SUBROUTINE force_lc( nat, tau, ityp, alat, omega, ngm, ngl, &
      fact = 1.d0
   ENDIF
   !
-!$omp parallel do private(arg)
+#if !defined(_OPENACC)
+!$omp parallel do private( ityp_na,tau1,tau2,tau3,forcelc_x,forcelc_y,forcelc_z,&
+!$omp                      ig,arg,arg0 )
+#endif
   DO na = 1, nat
      !
-     forcelc(1:3,na) = 0.d0
-     ! contribution from G=0 is zero
+     ityp_na = ityp(na)
+     tau1 = tau(1,na) ; tau2 = tau(2,na) ; tau3 = tau(3,na)
+     forcelc_x = 0.d0 ; forcelc_y = 0.d0 ; forcelc_z = 0.d0
+     !
+     ! ... contribution from G=0 is zero
+     !
+     !$acc parallel loop reduction(+:forcelc_x,forcelc_y,forcelc_z)
      DO ig = gstart, ngm
-        arg = (g(1,ig) * tau(1,na) + g(2,ig) * tau(2,na) + &
-               g(3,ig) * tau(3,na) ) * tpi
-        forcelc(1:3,na) = forcelc(1:3,na) + &
-                          g(1:3,ig) * vloc(igtongl(ig),ityp(na) ) * &
-                          (SIN(arg)*DBLE(aux(ig,1)) + COS(arg)*AIMAG(aux(ig,1)) )
+        arg0 = (g(1,ig)*tau1 + g(2,ig)*tau2 + g(3,ig)*tau3) * tpi
+        !
+        arg = vloc(igtongl(ig),ityp_na) * &
+              ( SIN(arg0)*DBLE(aux(ig,1)) + COS(arg0)*AIMAG(aux(ig,1)) )
+        !
+        forcelc_x = forcelc_x + g(1,ig) * arg
+        forcelc_y = forcelc_y + g(2,ig) * arg
+        forcelc_z = forcelc_z + g(3,ig) * arg
      ENDDO
      !
-     forcelc(1:3,na) = fact * forcelc(1:3,na) * omega * tpi / alat
+     forcelc(1,na) = fact * forcelc_x * omega * tpi / alat
+     forcelc(2,na) = fact * forcelc_y * omega * tpi / alat
+     forcelc(3,na) = fact * forcelc_z * omega * tpi / alat
   ENDDO
+#if !defined(_OPENACC)
 !$omp end parallel do
+#endif
   !
   IF ( do_comp_esm .AND. (esm_bc .NE. 'pbc') ) THEN
      !
@@ -108,7 +133,10 @@ SUBROUTINE force_lc( nat, tau, ityp, alat, omega, ngm, ngl, &
   !
   CALL mp_sum( forcelc, intra_bgrp_comm )
   !
+  !$acc end data
   DEALLOCATE( aux )
+  !
+  !$acc end data
   !
   RETURN
   !
