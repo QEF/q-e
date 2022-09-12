@@ -20,7 +20,7 @@ To launch a calculation with the dipole correction it's important to define the
 correct position (and obviously the direction) where to insert the compensating 
 eletric double layer, a vacuum region where almost no charge is present.
 
-See also the web page -- courtesy Christian Wolf -- 
+See also the web page -- courtesy Christoph Wolf --
 \texttt{https://christoph-wolf.at/tag/dipfield}.
 ----
 
