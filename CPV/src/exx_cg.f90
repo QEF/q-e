@@ -1,11 +1,13 @@
 SUBROUTINE hpotcg(np_in_sp_me, n, rho, pot, fullgrid, mvstep)
     !=======================================================================================
-    ! Code Version 1.0 (Princeton University, September 2014)
+    !! Code Version 1.0 (Princeton University, September 2014)
     !=======================================================================================
     !-------------------------------------------------------------------------------
-    !HPOTCG -- using Conjugate Gradient method to compute the Hartree Potential.
-    ! Modified from the corresponding subroutine in PARSEC, see http://parsec.ices.utexas.edu/
-    ! Lingzhu Kong
+    !! HPOTCG -- using Conjugate Gradient method to compute the Hartree Potential.
+    !! Modified from the corresponding subroutine in PARSEC, see:
+    !! \(\texttt{http://parsec.ices.utexas.edu/}\).
+    !
+    !! Lingzhu Kong
     !-------------------------------------------------------------------------------
     !
     USE kinds,                   ONLY  :  DP
@@ -138,12 +140,12 @@ FUNCTION distdot(n,x,ix,y,iy)
     !
 END FUNCTION distdot
 
-!-----------------------------------------------------------------------------
-! The matrix-vector multiplication routine for HPOTCG(given p, return q)
-! A big assumption is made here: the finite difference neighbors of the
-! point in the sphere is still inside the total box 
 !-----------------------------------------------------------------------
 SUBROUTINE lapmvs(np_in_sp_me, n,p,q)
+    !-----------------------------------------------------------------------------
+    !! The matrix-vector multiplication routine for HPOTCG(given p, return q).  
+    !! A big assumption is made here: the finite difference neighbors of the
+    !! point in the sphere is still inside the total box.
     !
     USE kinds,            ONLY  :  DP
     USE exx_module,       ONLY  :  odtothd_in_sp,  thdtood_in_sp
@@ -639,26 +641,29 @@ END SUBROUTINE lapmvs
 !     convergence tests.
 !-----------------------------------------------------------------------
 subroutine cg(n, rhs, sol, ipar, fpar, w)
+    !-----------------------------------------------------------------------
+    !! This is an implementation of the Conjugate Gradient (CG) method
+    !! for solving linear system.
+    !
+    !! NOTE: This is not the PCG algorithm. It is a regular CG algorithm.
+    !! To be consistent with the other solvers, the preconditioners are
+    !! applied by performing \(\text{Ml}^{-1}\ A\ \text{Mr}^{-1} P \) in 
+    !! place of \(A\ P\) in the CG algorithm. The PCG uses its preconditioners
+    !! very differently.
+    !
+    !! \(\text{fpar}(7)\) is used here internally to store \(\langle r, r\rangle\).
+    !
+    !! * w(:,1) -- residual vector;
+    !! * w(:,2) -- P, the conjugate direction;
+    !! * w(:,3) -- A P, matrix multiply the conjugate direction;
+    !! * w(:,4) -- temporary storage for results of preconditioning;
+    !! * w(:,5) -- change in the solution (sol) is stored here until
+    !!             termination of this solver.
+    !-----------------------------------------------------------------------
     implicit none
     integer n, ipar(16)
     real*8 rhs(n), sol(n), fpar(16), w(n,*)
-    !-----------------------------------------------------------------------
-    !     This is a implementation of the Conjugate Gradient (CG) method
-    !     for solving linear system.
     !
-    !     NOTE: This is not the PCG algorithm. It is a regular CG algorithm.
-    !     To be consistent with the other solvers, the preconditioners are
-    !     applied by performing Ml^{-1} A Mr^{-1} P in place of A P in the
-    !     CG algorithm. The PCG uses its preconditioners very differently.
-    !
-    !     fpar(7) is used here internally to store <r, r>.
-    !     w(:,1) -- residual vector
-    !     w(:,2) -- P, the conjugate direction
-    !     w(:,3) -- A P, matrix multiply the conjugate direction
-    !     w(:,4) -- temporary storage for results of preconditioning
-    !     w(:,5) -- change in the solution (sol) is stored here until
-    !               termination of this solver
-    !-----------------------------------------------------------------------
     !     external functions used
     real*8 distdot
     logical stopbis, brkdn
@@ -837,14 +842,15 @@ end subroutine cg
 
 !-----------------------------------------------------------------------
 logical function stopbis(n,ipar,mvpi,fpar,r,delx,sx)
+    !-----------------------------------------------------------------------
+    !! Function for determining the stopping criteria. Returns value of
+    !! TRUE if the \(\text{stopbis}\) criteria is satisfied.
+    !
     implicit none
     integer n,mvpi,ipar(16)
     real*8 fpar(16), r(n), delx(n), sx, distdot
     external distdot
-    !-----------------------------------------------------------------------
-    !     function for determining the stopping criteria. return value of
-    !     true if the stopbis criteria is satisfied.
-    !-----------------------------------------------------------------------
+    !
     if (ipar(11) .eq. 1) then
       stopbis = .true.
     else
@@ -900,12 +906,13 @@ end function stopbis
 
 !-----------------------------------------------------------------------
 subroutine tidycg(n,ipar,fpar,sol,delx)
+    !-----------------------------------------------------------------------
+    !! Some common operations required before terminating the CG routines.
+    !
     implicit none
     integer i,n,ipar(16)
     real*8 fpar(16),sol(n),delx(n)
-    !-----------------------------------------------------------------------
-    !     Some common operations required before terminating the CG routines
-    !-----------------------------------------------------------------------
+    !
     real*8 zero
     parameter(zero=0.0D0)
     !
@@ -936,17 +943,18 @@ end subroutine tidycg
 
 !-----------------------------------------------------------------------
 logical function brkdn(alpha, ipar)
+    !-----------------------------------------------------------------------
+    !! Test whether alpha is zero or an abnormal number, if yes,
+    !! this routine will return TRUE.
+    !
+    !! If alpha == 0, ipar(1) = -3,
+    !! if alpha is an abnormal number, ipar(1) = -9.
+    !
     implicit none
     integer ipar(16)
     real*8 alpha, beta, zero, one
     parameter (zero=0.0D0, one=1.0D0)
-    !-----------------------------------------------------------------------
-    !     test whether alpha is zero or an abnormal number, if yes,
-    !     this routine will return .true.
-    !
-    !     If alpha == 0, ipar(1) = -3,
-    !     if alpha is an abnormal number, ipar(1) = -9.
-    !-----------------------------------------------------------------------
+    
     brkdn = .false.
     if (alpha.gt.zero) then
       beta = one / alpha
@@ -973,13 +981,14 @@ end function brkdn
 
 !-----------------------------------------------------------------------
 subroutine bisinit(ipar,fpar,wksize,dsc,lp,rp,wk)
+    !-----------------------------------------------------------------------
+    !! Some common initializations for the iterative solvers.
+    !
     implicit none
     integer i,ipar(16),wksize,dsc
     logical lp,rp
     real*8  fpar(16),wk(*)
-    !-----------------------------------------------------------------------
-    !     some common initializations for the iterative solvers
-    !-----------------------------------------------------------------------
+    !
     real*8 zero, one
     parameter(zero=0.0D0, one=1.0D0)
     !
@@ -1043,10 +1052,14 @@ subroutine bisinit(ipar,fpar,wksize,dsc,lp,rp,wk)
 end subroutine bisinit
 !-----end-of-bisinit
 !-----------------------------------------------------------------------
-
-!-----------------------------------------------------------------------
+!
+!------------------------------------------------------------------------
 ! cubic subdomain related subroutines (start)
+!-----------------------------------------------------------------------
 SUBROUTINE CG_CUBE(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
+    !
+    !! Cubic subdomain related subroutine.
+    !
     IMPLICIT NONE
     !------------------------------------------------------------------------
     ! --- pass in variables ---
@@ -1224,15 +1237,15 @@ SUBROUTINE CG_CUBE(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
     END DO
     !------------------------------------------------------------------------
 
-    !!------------------------------------------------------------------------
-    !! print error
-    !!------------------------------------------------------------------------
+    !------------------------------------------------------------------------
+    ! print error
+    !------------------------------------------------------------------------
     !r_d(nd_d(1):nd_d(4),nd_d(2):nd_d(5),nd_d(3):nd_d(6))=rho(:,:,:)
     !CALL PADX_CUDA(nd_d,nb_d,coeke_d,x_d,d0_d) ! TODO
     !call cublasDaxpy(npt,-1.d0,d0_d,1, r_d, 1)
-    !!------------------------------------------------------------------------
-    !! WRITE(*,"(A, E15.7, A, I4, A)") "error: ", DSQRT(PDDOT(nd,nb,r,r)), "  in", iter, "  steps"
-    !!------------------------------------------------------------------------
+    !------------------------------------------------------------------------
+    ! WRITE(*,"(A, E15.7, A, I4, A)") "error: ", DSQRT(PDDOT(nd,nb,r,r)), "  in", iter, "  steps"
+    !------------------------------------------------------------------------
 
 #ifdef __CUDA
     !$cuf kernel do (3)
@@ -1277,6 +1290,8 @@ END SUBROUTINE CG_CUBE
 ! [13] AXPY             2N       3N        12
 
 SUBROUTINE PADX(nd,nb,coeke,d,Ad)
+    !! Cubic subdomain related subroutine.
+    !
     IMPLICIT NONE
     !------------------------------------------------------------------------
     ! --- pass in variables ---

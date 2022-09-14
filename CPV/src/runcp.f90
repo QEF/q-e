@@ -26,8 +26,8 @@
    SUBROUTINE runcp_uspp_x &
       ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, c0_d, cm_bgrp, cm_d, fromscra, restart, compute_only_gradient )
       !
-      !  This subroutine performs a Car-Parrinello or Steepest-Descent step
-      !  on the electronic variables, computing forces on electrons
+      !! This subroutine performs a Car-Parrinello or Steepest-Descent step
+      !! on the electronic variables, computing forces on electrons.
       ! 
       !  on input:
       !  c0_bgrp  wave functions at time t
@@ -370,9 +370,9 @@
        ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, intermed, fromscra, &
          restart )
   !
-!  same as runcp, except that electrons are paired forcedly
-!  i.e. this handles a state dependant Hamiltonian for the paired and unpaired electrons
-!  unpaired is assumed to exist, to be unique, and located in highest index band
+  !! Same as \(\texttt{runcp_uspp_x}\), except that electrons are paired forcedly
+  !! i.e. this handles a state dependent Hamiltonian for the paired and unpaired electrons.
+  !! Unpaired is assumed to exist, to be unique, and located in highest index band.
 
       USE kinds,               ONLY : DP
       USE wave_base,           ONLY : wave_steepest, wave_verlet
@@ -388,9 +388,9 @@
       USE electrons_base,   ONLY: nx=>nbnd, nupdwn, iupdwn, nbspx, nbsp
       USE mp, ONLY: mp_sum 
       USE mp_global, ONLY: intra_bgrp_comm 
-!#@@@
+! # @@@
       USE ldaU_cp
-!#@@@
+! # @@@
   !
       IMPLICIT NONE
       INTEGER, INTENT(in) :: nfi

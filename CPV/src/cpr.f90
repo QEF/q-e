@@ -9,6 +9,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !----------------------------------------------------------------------------
+  !! Main loop for CP molecular dynamics.
   !
   USE kinds,                    ONLY : DP
   USE constants,                ONLY : bohr_radius_angs, amu_au, au_gpa
@@ -134,8 +135,11 @@ USE cp_main_variables,        ONLY : eigr_d
   ! ... input/output variables
   !
   REAL(DP), INTENT(OUT) :: tau_out(3,nat)
+  !! positions of ions
   REAL(DP), INTENT(OUT) :: fion_out(3,nat)
+  !! forces on ions
   REAL(DP), INTENT(OUT) :: etot_out
+  !! total energy
   !
   ! ... control variables
   !
@@ -1021,6 +1025,7 @@ END SUBROUTINE cprmain
 !----------------------------------------------------------------------------
 SUBROUTINE terminate_run()
   !----------------------------------------------------------------------------
+  !! Terminate CP run and print statistics.
   !
   USE io_global,         ONLY : stdout, ionode
   USE control_flags,     ONLY : ts_vdw, thdyn, tortho

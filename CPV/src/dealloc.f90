@@ -9,6 +9,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE deallocate_modules_var()
   !----------------------------------------------------------------------------
+  !! Deallocates all variables in modules.
   !
   USE uspp,       ONLY : beta, dbeta, qq_nt
   USE core,       ONLY : rhocb

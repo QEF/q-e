@@ -5,12 +5,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! ... set ion_positions = 'from_input' and rd_pos = +your_positions+
-! ... to force cprmain to compute forces for +your_position+ configuration
-!
 !----------------------------------------------------------------------------
 SUBROUTINE cpr_loop( nloop )
   !----------------------------------------------------------------------------
+  !! Set \(\text{ion_positions} = \text{from_input}\) and \(\text{rd_pos} = 
+  !! \text{your_positions}\) to force \(\texttt{cprmain}\) to compute forces
+  !! for \(\text{your_position}\) configuration.
   !
   USE kinds,           ONLY : DP
   USE ions_base,       ONLY : nat

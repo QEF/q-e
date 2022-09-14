@@ -12,10 +12,9 @@
 !=----------------------------------------------------------------------=
 MODULE smallbox_subs
 !=----------------------------------------------------------------------=
-
-!  ... subroutines generating G-vectors and variables needed to map
-!  ... G-vector components onto the FFT grid(s) in reciprocal space
-!  ... Small-Box grid
+   !! Subroutines generating G-vectors and variables needed to map
+   !! G-vector components onto the FFT grid(s) in reciprocal space
+   !! Small-Box grid.
 
    USE small_box,     ONLY :  bgb, tpibab
    USE smallbox_gvec, ONLY :  ngb, ngbl, gb, gxb, glb, npb, nmb, mill_b, gcutb
@@ -44,11 +43,10 @@ MODULE smallbox_subs
 CONTAINS
 !=----------------------------------------------------------------------=
   !
-  SUBROUTINE ggenb ( ecutrho, iprsta )
+  SUBROUTINE ggenb( ecutrho, iprsta )
     !-----------------------------------------------------------------------
-    !
-    ! As ggen, for the box grid. A "b" is appended to box variables.
-    ! The documentation for ggen applies
+    !! As \(\texttt{ggen}\), for the box grid. A "b" is appended to box variables.
+    !! The documentation for \(\texttt{ggen}\) applies.
     !
     USE kinds, ONLY: DP
     USE io_global, ONLY: stdout, ionode
@@ -282,9 +280,8 @@ CONTAINS
   END SUBROUTINE gshcount
   !
   !
-  SUBROUTINE gcalb ( )
-    !
-    !     re-generation of little box g-vectors
+  SUBROUTINE gcalb( )
+    !! Re-generation of little box g-vectors
     !
     USE kinds, ONLY: DP
     !
@@ -356,22 +353,27 @@ CONTAINS
 
 
 !-----------------------------------------------------------------------
-      SUBROUTINE box2grid_dp(irb,nfft,qv,vr)
+      SUBROUTINE box2grid_dp( irb, nfft, qv, vr )
 !-----------------------------------------------------------------------
-!
-! add array qv(r) on box grid to array vr(r) on dense grid
-! irb   : position of the box in the dense grid
-! nfft=1  add      real part of qv(r) to real part of array vr(r)
-! nfft=2  add imaginary part of qv(r) to real part of array vr(r)
+      !! Add array \(\text{qv}(r)\) on box grid to array \(\text{vr}(r)\)
+      !! on dense grid.
 !
       USE kinds, ONLY: dp
       USE fft_base, ONLY: dfftp, dfftb
       USE mp_global, ONLY: me_bgrp
-
+!
       IMPLICIT NONE
-      INTEGER, INTENT(in):: nfft, irb(3)
+      INTEGER, INTENT(in):: nfft
+      !! nfft=1 : add real part of qv(r) to real part of array vr(r);  
+      !! nfft=2 : add imaginary part of qv(r) to real part of array vr(r).
+      INTEGER, INTENT(in):: irb(3)
+      !! position of the box in the dense grid
       COMPLEX(dp), INTENT(in):: qv(dfftb%nnr)
+      !! input array on box grid
       COMPLEX(dp), INTENT(inout):: vr(dfftp%nnr)
+      !! array on dense grid
+!
+      ! ... local variables
 !
       INTEGER ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
       INTEGER me
@@ -422,9 +424,8 @@ CONTAINS
 !-----------------------------------------------------------------------
       SUBROUTINE box2grid2_dp(irb,qv,v)
 !-----------------------------------------------------------------------
-!
-! add array qv(r) on box grid to array v(r) on dense grid
-! irb   : position of the box in the dense grid
+      !! Add array \(\text{qv}(r)\) on box grid to array \(\text{v}(r)\)
+      !! on dense grid.
 !
       USE kinds, ONLY: dp
       USE fft_base, ONLY: dfftp, dfftb
@@ -433,8 +434,13 @@ CONTAINS
       IMPLICIT NONE
       !
       INTEGER, INTENT(in):: irb(3)
+      !! position of the box in the dense grid
       COMPLEX(dp), INTENT(in):: qv(dfftb%nnr)
+      !! input array on box grid
       COMPLEX(dp), INTENT(inout):: v(dfftp%nnr)
+      !! array on dense grid
+!
+      ! ... local variables
 !
       INTEGER ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
       INTEGER me
@@ -477,22 +483,28 @@ CONTAINS
 
 
 !-----------------------------------------------------------------------
-      REAL(8) FUNCTION boxdotgrid_dp(irb,nfft,qv,vr)
+      REAL(8) FUNCTION boxdotgrid_dp( irb, nfft, qv, vr )
 !-----------------------------------------------------------------------
-!
-! Calculate \sum_i qv(r_i)*vr(r_i)  with r_i on box grid
-! array qv(r) is defined on box grid, array vr(r)on dense grid
-! irb   : position of the box in the dense grid
-! nfft=1 (2): use real (imaginary) part of qv(r)
-! Parallel execution: remember to sum the contributions from other nodes
+      !! Calculates \( \sum_i \text{qv}(r_i)\cdot\text{vr}(r_i) \) with \(r_i\)
+      !! on box grid, array \(\text{qv}(r)\) is defined on box grid, array
+      !! \(\text{vr}(r)\) on dense grid.  
+      !! Parallel execution: remember to sum the contributions from other
+      !! nodes.
 !
       USE kinds, ONLY: dp
       USE fft_base, ONLY: dfftp, dfftb
       USE mp_global, ONLY: me_bgrp
       IMPLICIT NONE
-      INTEGER, INTENT(in):: nfft, irb(3)
+      INTEGER, INTENT(in):: nfft
+      !! nfft=1 (2): use real (imaginary) part of qv(r)
+      INTEGER, INTENT(in):: irb(3)
+      !! position of the box in the dense grid
       COMPLEX(dp), INTENT(in):: qv(dfftb%nnr)
+      !! box grid array
       REAL(dp), INTENT(in):: vr(dfftp%nnr)
+      !! dense grid array
+!
+      ! ... local variables
 !
       INTEGER ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
       INTEGER me
@@ -537,9 +549,10 @@ CONTAINS
 !-----------------------------------------------------------------------
 FUNCTION boxdotgridcplx_dp(irb,qv,vr)
   !-----------------------------------------------------------------------
+  !! Calculate \(\sum_i \text{qv}(r_i)\cdot\text{vr}(r_i)\)  with \(r_i\)
+  !! on box grid. Array \(\text{qv}(r)\) is defined on box grid, array 
+  !! \(\text{vr}(r)\) on dense grid.
   !
-  ! Calculate \sum_i qv(r_i)*vr(r_i)  with r_i on box grid
-  ! array qv(r) is defined on box grid, array vr(r)on dense grid
   ! irb   : position of the box in the dense grid
   ! Parallel execution: remember to sum the contributions from other nodes
   !

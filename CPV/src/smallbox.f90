@@ -8,25 +8,25 @@
 
 !------------------------------------------------------------------------------!
   MODULE small_box
-!------------------------------------------------------------------------------!
-
-      !  This module contains the basis vector of the small sub-cell 
-      !  (small box) used for charge augmentation process
-
+!-------------------------------------------------------------------------------
+      !! This module contains the basis vector of the small sub-cell 
+      !! (small box) used for charge augmentation process.
+!
       USE kinds, ONLY : DP
 !
       IMPLICIT NONE
       SAVE
-      !  atb: lattice crystal vectors in "alatb" units (equivalent to "at")
+!
       REAL(DP) :: atb(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
-      !  bgb: reciprocal lattice vectors, in 2pi/alatb units (equiv to "bg")
+      !! lattice crystal vectors in 'alatb' units (equivalent to 'at')
       REAL(DP) :: bgb(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
-      !  omegab: volume of the small boxes 
+      !! reciprocal lattice vectors, in 2pi/alatb units (equivalent to 'bg')
       REAl(DP) :: omegab = 0.0_DP
-      !  alatb: lattice parameter of the boxes (the equivalent of "alat")
+      !! volume of the small boxes
       REAL(DP) :: alatb  = 0.0_DP
-      !  tpibab: 2pi/alatb
+      !! lattice parameter of the boxes (the equivalent of 'alat')
       REAL(DP) :: tpibab = 0.0_DP
+      !! 2pi/alatb
 
 !------------------------------------------------------------------------------!
    CONTAINS
@@ -34,6 +34,8 @@
 !
 
      SUBROUTINE small_box_set( alat, omega, at, rat1, rat2, rat3, tprint )
+       !! It sets the unit vectors of box grid cell in real and reciprocal
+       !! space.
        USE constants, ONLY: pi
        USE io_global, ONLY: stdout, ionode
        IMPLICIT NONE

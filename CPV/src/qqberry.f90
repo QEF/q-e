@@ -81,7 +81,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
         ! now the radial part
         do l=1,upf(is)%nqlc
            xg= gmes !only orthorombic cells
-           !!!call bess(xg,l,upf(is)%kkbeta,rgrid(is)%r,jl)
+           ! ! !call bess(xg,l,upf(is)%kkbeta,rgrid(is)%r,jl)
            call sph_bes ( upf(is)%kkbeta, rgrid(is)%r, xg, l-1, jl )
            do iv= 1,upf(is)%nbeta
               do jv=iv,upf(is)%nbeta
