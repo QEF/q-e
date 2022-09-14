@@ -2166,7 +2166,7 @@ MODULE realus
     IMPLICIT NONE
     !
     INTEGER :: ia, box_ir
-
+    !
     !$omp parallel
     DO ia = 1, nat
        !$omp do
@@ -2213,6 +2213,11 @@ MODULE realus
     !
     INTEGER :: ebnd
     !
+    !-------------------TEMPORARY-----------
+    INTEGER :: ngk1
+    LOGICAL :: is_present, acc_is_present
+    !---------------------------------------
+    !
     !Task groups
     !
     !The new task group version based on vloc_psi
@@ -2237,11 +2242,19 @@ MODULE realus
         !
         CALL wave_g2r( orbital(1:ngk(1),ibnd:ebnd), psic, dffts )
         !
+!-------------TEMPORARY---------------------
+        ngk1 = SIZE(psic)
+#if defined(_OPENACC)
+        is_present = acc_is_present(psic,ngk1)
+        !$acc update self(psic) if (is_present)
+#endif
+!-------------------------------------------
+        !
         IF (PRESENT(conserved)) THEN
-         IF (conserved) THEN
-           IF (.NOT. ALLOCATED(psic_temp) ) ALLOCATE( psic_temp(SIZE(psic)) )
-           CALL zcopy( SIZE(psic), psic, 1, psic_temp, 1 )
-         ENDIF
+          IF (conserved) THEN
+            IF (.NOT. ALLOCATED(psic_temp) ) ALLOCATE( psic_temp(SIZE(psic)) )
+            CALL zcopy( SIZE(psic), psic, 1, psic_temp, 1 )
+          ENDIF
         ENDIF
         !
     ENDIF
@@ -2417,6 +2430,11 @@ MODULE realus
     !
     INTEGER :: ik_
     !
+    !-------------------TEMPORARY-----------
+    INTEGER :: ngk1
+    LOGICAL :: is_present, acc_is_present
+    !---------------------------------------    
+    !
     CALL start_clock( 'invfft_orbital' )
     !
     ! ... current_k  variable  must contain the index of the desired kpoint
@@ -2436,6 +2454,14 @@ MODULE realus
     ELSE  ! ... non task_groups version
        !
        CALL wave_g2r( orbital(:,ibnd:ibnd), psic, dffts, igk=igk_k(:,ik_) )
+       !
+!-------------TEMPORARY---------------------
+        ngk1 = SIZE(psic)
+#if defined(_OPENACC)
+        is_present = acc_is_present(psic,ngk1)
+        !$acc update self(psic) if (is_present)
+#endif
+!-------------------------------------------       
        !
        IF (PRESENT(conserved)) THEN
           IF (conserved) THEN

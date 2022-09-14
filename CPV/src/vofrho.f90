@@ -535,7 +535,7 @@ DEV_ACC exit data delete(rhotmp)
 !     -------------------------------------------------------------------
 !
       IF( abivol .or. abisur ) THEN
-         CALL rho_r2g ( dfftp, rhor, rhog, v_vol )
+         CALL rho_r2g ( dfftp, rhor, rhog, v=v_vol )
       ELSE
          CALL rho_r2g ( dfftp, rhor, rhog )
       END IF

@@ -99,7 +99,7 @@ SUBROUTINE addusstress_g( sigmanlc )
     IF ( nspin == 4 .and. is /= 1 ) THEN
        CALL rho_r2g( dfftp, v%of_r(:,is), vg(:,is:is) )
     ELSE
-       CALL rho_r2g( dfftp, v%of_r(:,is), vg(:,is:is), vltot(:) )
+       CALL rho_r2g( dfftp, v%of_r(:,is), vg(:,is:is), v=vltot(:) )
     ENDIF
   ENDDO
   !

@@ -31,7 +31,7 @@ MODULE fft_rho
 CONTAINS
   !
   !-----------------------------------------------------------------
-  SUBROUTINE rho_r2g_1spin( desc, rhor, rhog, v )
+  SUBROUTINE rho_r2g_1spin( desc, rhor, rhog, v, igs )
     !---------------------------------------------------------------
     !! Bring charge density rho from real to G- space - 1-dimensional
     !! input (so 1 spin component only).
@@ -45,6 +45,8 @@ CONTAINS
     COMPLEX(DP), INTENT(OUT) :: rhog(:,:)
     !! rho in G-space
     REAL(DP), INTENT(IN), OPTIONAL :: v(:)
+    INTEGER,  INTENT(IN), OPTIONAL :: igs
+    !! index of first G-vector for this processor
     !
     ! ... local variables
     !
@@ -56,10 +58,6 @@ CONTAINS
     !
     ALLOCATE( psi(desc%nnr) )
     !$acc data create( psi )
-    !
-    !$acc kernels
-    psi(desc%nnr+1:) = (0.d0,0.d0)
-    !$acc end kernels
     !
     IF( PRESENT(v) ) THEN
        !$acc parallel loop
@@ -75,21 +73,27 @@ CONTAINS
     !$acc host_data use_device( psi )
     CALL fwfft( 'Rho', psi, desc )
     !$acc end host_data
-    CALL fftx_threed2oned( desc, psi, rhog(:,1) )
+    IF ( PRESENT(igs) ) THEN
+      CALL fftx_threed2oned( desc, psi, rhog(:,1), iigs=igs )
+    ELSE
+      CALL fftx_threed2oned( desc, psi, rhog(:,1) )
+    ENDIF
     !
     !$acc end data
     DEALLOCATE( psi )
     !
-    !$acc kernels
-    rhog(desc%ngm+1:,1) = (0.d0,0.d0)
-    !$acc end kernels
+    IF (.NOT.PRESENT(igs) .AND. SIZE(rhog,1)>desc%ngm) THEN
+      !$acc kernels
+      rhog(desc%ngm+1:,1) = (0.d0,0.d0)
+      !$acc end kernels
+    ENDIF
     !
     !$acc end data
     !
   END SUBROUTINE rho_r2g_1spin
   !
   !-----------------------------------------------------------------
-  SUBROUTINE rho_r2g_Nspin( desc, rhor, rhog, v )
+  SUBROUTINE rho_r2g_Nspin( desc, rhor, rhog, v, igs )
     !---------------------------------------------------------------
     !! Bring charge density rho from real to G- space. N-dimensional
     !! input (unpolarized, polarized, etc.).
@@ -103,6 +107,8 @@ CONTAINS
     COMPLEX(DP), INTENT(OUT) :: rhog(:,:)
     !! rho in G-space
     REAL(DP), INTENT(IN), OPTIONAL :: v(:)
+    INTEGER,  INTENT(IN), OPTIONAL :: igs
+    !! index of first G-vector for this processor
     !
     ! ... local variables
     !
@@ -120,9 +126,6 @@ CONTAINS
     !
     IF( nspin == 1 ) THEN
        !
-       !$acc kernels
-       psi(desc%nnr+1:) = (0.d0,0.d0)
-       !$acc end kernels
        iss = 1
        IF( PRESENT(v) ) THEN
           !$acc parallel loop
@@ -138,9 +141,14 @@ CONTAINS
        !$acc host_data use_device( psi )
        CALL fwfft( 'Rho', psi, desc )
        !$acc end host_data
-       CALL fftx_threed2oned( desc, psi, rhog(:,iss) )
+       IF ( PRESENT(igs) ) THEN
+         CALL fftx_threed2oned( desc, psi, rhog(:,iss), iigs=igs )
+       ELSE
+         CALL fftx_threed2oned( desc, psi, rhog(:,iss) )
+       ENDIF
        !
     ELSE
+       !
        IF ( gamma_only ) THEN
           ! nspin/2 = 1 for LSDA, = 2 for noncolinear
           DO iss = 1, nspin/2
@@ -160,7 +168,11 @@ CONTAINS
              !$acc host_data use_device( psi )
              CALL fwfft( 'Rho', psi, desc )
              !$acc end host_data
-             CALL fftx_threed2oned( desc, psi, rhog(:,isup), rhog(:,isdw) )
+             IF ( PRESENT(igs) ) THEN
+               CALL fftx_threed2oned( desc, psi, rhog(:,isup), rhog(:,isdw), iigs=igs )
+             ELSE
+               CALL fftx_threed2oned( desc, psi, rhog(:,isup), rhog(:,isdw) )
+             ENDIF
           ENDDO
        ELSE
           DO iss = 1, nspin
@@ -178,16 +190,22 @@ CONTAINS
              !$acc host_data use_device( psi )
              CALL fwfft( 'Rho', psi, desc )
              !$acc end host_data
-             CALL fftx_threed2oned( desc, psi, rhog(:,iss) )
+             IF ( PRESENT(igs) ) THEN
+               CALL fftx_threed2oned( desc, psi, rhog(:,iss), iigs=igs )
+             ELSE
+               CALL fftx_threed2oned( desc, psi, rhog(:,iss) )
+             ENDIF
           ENDDO
        ENDIF
     ENDIF
     !$acc end data
     DEALLOCATE( psi )
     !
-    !$acc kernels
-    rhog(desc%ngm+1:,:) = (0.d0,0.d0)
-    !$acc end kernels
+    IF (.NOT.PRESENT(igs) .AND. SIZE(rhog,1)>desc%ngm) THEN
+      !$acc kernels
+      rhog(desc%ngm+1:,:) = (0.d0,0.d0)
+      !$acc end kernels
+    ENDIF
     !
     !$acc end data
     !

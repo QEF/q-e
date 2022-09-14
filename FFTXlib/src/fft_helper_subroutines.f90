@@ -553,7 +553,7 @@ CONTAINS
   END SUBROUTINE fftx_add_threed2oned_gamma
   !
   !-----------------------------------------------------------------------------
-  SUBROUTINE fftx_threed2oned( desc, vin, vout1, vout2 )
+  SUBROUTINE fftx_threed2oned( desc, vin, vout1, vout2, iigs )
      !--------------------------------------------------------------------------
      !! Copy charge density from 3D array to 1D array in Fourier space.
      !
@@ -563,9 +563,17 @@ CONTAINS
      COMPLEX(DP), INTENT(OUT) :: vout1(:)
      COMPLEX(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
      COMPLEX(DP), INTENT(IN) :: vin(:)
+     INTEGER, INTENT(IN), OPTIONAL :: iigs
      !
      COMPLEX(DP) :: fp, fm
-     INTEGER :: ig
+     INTEGER :: ig, iigs_, nng
+     !
+     iigs_ = 0
+     nng = desc%ngm
+     IF (PRESENT(iigs)) THEN
+        iigs_ = iigs-1
+        nng = SIZE(vout1)
+     ENDIF
      !
      CALL alloc_nl_pntrs( desc )
      !
@@ -573,16 +581,16 @@ CONTAINS
      !
      IF( PRESENT( vout2 ) ) THEN
         !$acc parallel loop present_or_copyout(vout2)
-        DO ig = 1, desc%ngm
-           fp = vin(nl_d(ig))+vin(nlm_d(ig))
-           fm = vin(nl_d(ig))-vin(nlm_d(ig))
+        DO ig = 1, nng
+           fp = vin(nl_d(iigs_+ig))+vin(nlm_d(iigs_+ig))
+           fm = vin(nl_d(iigs_+ig))-vin(nlm_d(iigs_+ig))
            vout1(ig) = CMPLX(0.5d0,0.d0,kind=DP)*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
            vout2(ig) = CMPLX(0.5d0,0.d0,kind=DP)*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
         ENDDO
      ELSE
         !$acc parallel loop
-        DO ig = 1, desc%ngm
-           vout1(ig) = vin(nl_d(ig))
+        DO ig = 1, nng
+           vout1(ig) = vin(nl_d(iigs_+ig))
         ENDDO
      ENDIF
      !$acc end data

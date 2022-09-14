@@ -28,15 +28,13 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE cell_base,            ONLY : omega, tpiba
   USE fft_base,             ONLY : dfftp
-  USE fft_interfaces,       ONLY : fwfft
+  USE fft_rho,              ONLY : rho_r2g
   USE gvect,                ONLY : g, gg, ngm, gstart, mill, eigts1, eigts2, eigts3,&
                                    g_d, gg_d, mill_d, eigts1_d, eigts2_d, eigts3_d
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vltot
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions,        ONLY : psic
-  USE wavefunctions_gpum,   ONLY : psic_d
   USE noncollin_module,     ONLY : nspin_mag
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_pools,             ONLY : inter_pool_comm
@@ -57,17 +55,14 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   INTEGER :: ig, nt, ih, jh, na, is, ijh, nij, nb, nab, nhnt, ierr
   ! counters on g vectors, atom type, beta functions x 2,
   !   atoms, spin, aux, aux, beta func x2 (again)
-  COMPLEX(DP), ALLOCATABLE :: vaux_d(:,:), aux_d(:,:), qgm_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: vaux(:,:), aux_d(:,:), qgm_d(:,:)
     ! work space
   REAL(DP), ALLOCATABLE :: ylmk0_d(:,:), qmod_d(:), deeaux_d(:,:)
     ! spherical harmonics, modulus of G
   REAL(DP) :: fact
   !
-  INTEGER, POINTER :: dfftp_nl_d(:)
-  ! workaround for cuf kernel limitations
-  !
 #if defined(__CUDA)
-  attributes(DEVICE) :: deeq_d, vaux_d, aux_d, qgm_d, ylmk0_d, qmod_d, deeaux_d, dfftp_nl_d
+  attributes(DEVICE) :: deeq_d, aux_d, qgm_d, ylmk0_d, qmod_d, deeaux_d
 #endif
   ! variable to map index of atoms of the same type
   INTEGER, ALLOCATABLE :: na_to_nab_h(:)
@@ -98,41 +93,26 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   ! for the extraordinary unlikely case of more processors than G-vectors
   !
   IF ( ngm_l > 0 ) THEN
-     ALLOCATE( vaux_d(ngm_l,nspin_mag), qmod_d(ngm_l), ylmk0_d( ngm_l, lmaxq*lmaxq ) )
+     ALLOCATE( vaux(ngm_l,nspin_mag), qmod_d(ngm_l), ylmk0_d( ngm_l, lmaxq*lmaxq ) )
      !
-     CALL ylmr2_gpu (lmaxq * lmaxq, ngm_l, g_d(1,ngm_s), gg_d(ngm_s), ylmk0_d)
+     CALL ylmr2_gpu( lmaxq*lmaxq, ngm_l, g_d(1,ngm_s), gg_d(ngm_s), ylmk0_d )
      !$cuf kernel do
      DO ig = 1, ngm_l
         qmod_d (ig) = SQRT(gg_d(ngm_s+ig-1))*tpiba
      ENDDO
   END IF
+  !$acc data create( vaux )
   !
-  ! ... fourier transform of the total effective potential
+  ! ... Fourier transform of the total effective potential
   !
-  dfftp_nl_d => dfftp%nl_d
   DO is = 1, nspin_mag
-     !
-     IF ( (nspin_mag == 4 .AND. is /= 1) .or. skip_vltot ) THEN 
-
-        psic_d(1:dfftp%nnr) = vr(1:dfftp%nnr,is)
-
+     IF ( (nspin_mag==4 .AND. is/=1) .OR. skip_vltot ) THEN
+        CALL rho_r2g( dfftp, vr(:,is:is), vaux(:,is:is), igs=ngm_s )
      ELSE
-        !$omp parallel do default(shared) private(ig)
-        do ig=1,dfftp%nnr
-           psic(ig) = vltot(ig) + vr(ig,is)
-        end do
-        !$omp end parallel do
-        psic_d(1:dfftp%nnr) = psic(1:dfftp%nnr)
+        CALL rho_r2g( dfftp, vr(:,is:is), vaux(:,is:is), v=vltot, igs=ngm_s )
      END IF
-     CALL fwfft ('Rho', psic_d, dfftp)
-     !
-     !$cuf kernel do
-     do ig=1,ngm_l
-        vaux_d(ig, is) = psic_d(dfftp_nl_d(ngm_s+ig-1))
-     end do
-     !
   END DO
-
+  !
   DO nt = 1, ntyp
      !
      IF ( upf(nt)%tvanp ) THEN
@@ -143,9 +123,9 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
         DO na = 1, nat
            IF ( ityp(na) == nt ) nab = nab + 1
            IF ( ityp(na) == nt ) THEN
-              na_to_nab_h(na)           = nab
+              na_to_nab_h(na) = nab
            ELSE
-              na_to_nab_h(na)           = -1
+              na_to_nab_h(na) = -1
            END IF
         END DO
         IF ( nab == 0 ) CYCLE ! No atoms for this type (?!?)
@@ -174,12 +154,12 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
         ! ... Compute and store V(G) times the structure factor e^(-iG*tau)
         !
         DO is = 1, nspin_mag
-           !$cuf kernel do(2)
+           !$acc parallel loop collapse(2)
            DO na = 1, nat
-              DO ig=1,ngm_l
+              DO ig = 1, ngm_l
                  nb = na_to_nab_d(na)
                  IF (nb > 0) &
-                    aux_d(ig, nb) = vaux_d(ig,is) * CONJG ( &
+                    aux_d(ig,nb) = vaux(ig,is) * CONJG ( &
                       eigts1_d(mill_d(1,ngm_s+ig-1),na) * &
                       eigts2_d(mill_d(2,ngm_s+ig-1),na) * &
                       eigts3_d(mill_d(3,ngm_s+ig-1),na) )
@@ -216,7 +196,8 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
      !
   END DO
   !
-  DEALLOCATE( qmod_d, ylmk0_d, vaux_d )
+  !$acc end data
+  DEALLOCATE( qmod_d, ylmk0_d, vaux )
   DEALLOCATE(na_to_nab_h); CALL buffer%release_buffer(na_to_nab_d, ierr)
   !
   ! REPLACE THIS WITH THE NEW allgather with type or use CPU variable! OPTIMIZE HERE
