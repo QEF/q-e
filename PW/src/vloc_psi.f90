@@ -43,7 +43,7 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
   !
   !Variables for task groups
   LOGICAL :: use_tg
-  INTEGER :: v_siz, idx, ioff, ebnd, brange
+  INTEGER :: v_siz, idx, ebnd, brange
   REAL(DP) :: fac
   REAL(DP), ALLOCATABLE :: tg_v(:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
@@ -370,7 +370,7 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
      v_siz = dffts%nnr_tg
      IF (domag) THEN
         ALLOCATE( tg_v( v_siz, 4 ) )
-        DO is=1,nspin
+        DO is = 1, nspin
            CALL tg_gather( dffts, v(:,is), tg_v(:,is) )
         ENDDO
      ELSE

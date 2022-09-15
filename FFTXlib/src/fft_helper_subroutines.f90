@@ -321,7 +321,7 @@ CONTAINS
   END SUBROUTINE
   !
   !---------------------------------------------------------------------
-  SUBROUTINE c2psi_gamma( desc, psi, c, ca )
+  SUBROUTINE c2psi_gamma( desc, psi, c, ca, howmany_set )
      !------------------------------------------------------------------
      !! Copy wave-functions from 1D array (c_bgrp) to 3D array (psi) in 
      !! Fourier space - gamma case.
@@ -332,32 +332,82 @@ CONTAINS
      !! fft descriptor
      COMPLEX(DP), INTENT(OUT) :: psi(:)
      !! w.f. 3D array in Fourier space
-     COMPLEX(DP), INTENT(IN) :: c(:)
+     COMPLEX(DP), INTENT(IN) :: c(:,:)
      !! stores the Fourier expansion coefficients
      COMPLEX(DP), OPTIONAL, INTENT(IN) :: ca(:)
+     INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
+     ! hm_set(1)=group_size ; hm_set(2)=ibnd ; hm_set(3)=npw
+     !
      COMPLEX(DP), PARAMETER :: ci=(0.0d0,1.0d0)
-     INTEGER :: ig
+     INTEGER :: ig, idx, ibnd, n, v_siz, pack_size, remainder, howmany, &
+                group_size
      !
      CALL alloc_nl_pntrs( desc )
      !
      !$acc data present_or_copyin(c) present_or_copyout(psi)
      !
-     !$acc kernels
-     psi = 0.0d0
-     !$acc end kernels
-     !
-     IF( PRESENT(ca) ) THEN
-        !$acc parallel loop present_or_copyin(ca)
-        DO ig = 1, desc%ngw
-          psi(nlm_d(ig)) = CONJG(c(ig)) + ci * CONJG(ca(ig))
-          psi(nl_d(ig)) = c(ig) + ci * ca(ig)
-        ENDDO
+     IF (PRESENT(howmany_set)) THEN
+       !
+       ! ... FFT batching strategy is defined here:
+       ! ...  the buffer in psi_c can contain 2*many_fft bands.
+       ! ...  * group_size: is the number of bands that will be transformed.
+       ! ...  * pack_size:  is the number of slots in psi_c used to store
+       ! ...                the (couples) of bands
+       ! ...  * remainder:  can be 1 or 0, if 1, a spare band should be added
+       ! ...                in the the first slot of psi_c not occupied by
+       ! ...                the couples of bands.
+       !
+       group_size= howmany_set(1)
+       ibnd = howmany_set(2)
+       n = howmany_set(3)
+       v_siz = desc%nnr_tg
+       pack_size = (group_size/2) ! This is FLOOR(group_size/2)
+       remainder = group_size - 2*pack_size
+       howmany   = pack_size + remainder
+       !
+       !$acc kernels
+       psi(1:desc%nnr*howmany) = (0.d0, 0.d0)
+       !$acc end kernels
+       !
+       ! ... two ffts at the same time (remember, v_siz = dffts%nnr)
+       IF ( pack_size > 0 ) THEN
+          !$acc parallel loop
+          DO idx = 0, pack_size-1
+             DO ig = 1, n
+                psi(nl_d(ig) + idx*v_siz) = c(ig,ibnd+2*idx) + (0.d0,1.d0)*c(ig,ibnd+2*idx+1)
+                psi(nlm_d(ig) + idx*v_siz) = CONJG(c(ig,ibnd+2*idx) - (0.d0,1.d0)*c(ig,ibnd+2*idx+1))
+             ENDDO
+          ENDDO
+       ENDIF
+       !
+       IF (remainder > 0) THEN
+          !$acc parallel loop
+          DO ig = 1, n
+             psi(nl_d(ig) + pack_size*v_siz) = c(ig,ibnd+group_size-1)
+             psi(nlm_d(ig) + pack_size*v_siz) = CONJG(c(ig,ibnd+group_size-1))
+          ENDDO
+       ENDIF
+       !
      ELSE
-        !$acc parallel loop
-        DO ig = 1, desc%ngw
-          psi(nlm_d(ig)) = CONJG(c(ig))
-          psi(nl_d(ig)) = c(ig)
-        ENDDO
+       !
+       !$acc kernels
+       psi = 0.0d0
+       !$acc end kernels
+       !
+       IF( PRESENT(ca) ) THEN
+          !$acc parallel loop present_or_copyin(ca)
+          DO ig = 1, desc%ngw
+            psi(nlm_d(ig)) = CONJG(c(ig,1)) + ci * CONJG(ca(ig))
+            psi(nl_d(ig)) = c(ig,1) + ci * ca(ig)
+          ENDDO
+       ELSE
+          !$acc parallel loop
+          DO ig = 1, desc%ngw
+            psi(nlm_d(ig)) = CONJG(c(ig,1))
+            psi(nl_d(ig)) = c(ig,1)
+          ENDDO
+       ENDIF
+       !
      ENDIF
      !
      !$acc end data

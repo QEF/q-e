@@ -86,13 +86,13 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
 #ifdef __CUDA
           CALL c2psi_gamma_gpu( dffts, psis_d, c_d(:,i), ca_d)
 #else
-          CALL c2psi_gamma( dffts, psis, c(:,i), ca)
+          CALL c2psi_gamma( dffts, psis, c(:,i:i), ca)
 #endif
         ELSE
 #ifdef __CUDA
           CALL c2psi_gamma_gpu( dffts, psis_d, c_d(:,i), c_d(:, i+1))
 #else
-          CALL c2psi_gamma( dffts, psis, c(:,i), c(:, i+1))
+          CALL c2psi_gamma( dffts, psis, c(:,i:i), c(:,i+1))
 #endif
         END IF 
         !
@@ -226,7 +226,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
         END DO
       END DO
       !
-      !********************
+      !!!!!!!!!!!!!!!!!!!!
       !
       ALLOCATE ( psitot(nnrtot*my_nbsp(me)) ); psitot=0.0_DP
       !

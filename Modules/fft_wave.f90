@@ -88,8 +88,13 @@ CONTAINS
     dim2 = SIZE(f_in(1,:))
     !
     IF (gamma_only) THEN
-      IF (dim2/=2) CALL c2psi_gamma( dfft, f_out, f_in(:,1) )
-      IF (dim2==2) CALL c2psi_gamma( dfft, f_out, f_in(:,1), f_in(:,2) )
+      !
+      IF (PRESENT(howmany_set)) THEN
+        CALL c2psi_gamma( dfft, f_out, f_in, howmany_set=howmany_set )
+      ELSE
+        IF (dim2/=2) CALL c2psi_gamma( dfft, f_out, f_in(:,1:1) )
+        IF (dim2==2) CALL c2psi_gamma( dfft, f_out, f_in(:,1:1), ca=f_in(:,2) )
+      ENDIF
     ELSE
       !$acc data present_or_copyin(igk)
       IF (PRESENT(howmany_set)) THEN     !only when ACC is active

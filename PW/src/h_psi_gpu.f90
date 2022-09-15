@@ -233,7 +233,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
            ! ... psic -> vrs * psic (psic overwritten will become hpsi)
            CALL v_loc_psir_inplace( ibnd, m )
            ! ... psic (hpsi) -> psic + vusp
-           CALL  add_vuspsir_k( ibnd, m )
+           CALL add_vuspsir_k( ibnd, m )
            ! ... transform psic back in reciprocal space and add it to hpsi
            CALL fwfft_orbital_k( hpsi_host, ibnd, m, add_to_orbital=.TRUE. )
            !

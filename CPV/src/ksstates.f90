@@ -117,7 +117,7 @@ CONTAINS
                   itot = iks + iupdwn_tot(iss) - 1 
                   file_name = TRIM( ks_file ) // &
                             & trim(spin_name(iss)) // trim( int_to_char( iks ) )
-                  CALL print_ks_states( ctot( :, itot ), file_name )
+                  CALL print_ks_states( ctot( :, itot:itot ), file_name )
                 END IF
               END DO
             END IF
@@ -149,7 +149,7 @@ CONTAINS
  
         IMPLICIT NONE
 
-        COMPLEX(DP),      INTENT(IN) :: c(:)
+        COMPLEX(DP),      INTENT(IN) :: c(:,:)
         CHARACTER(LEN=*), INTENT(IN) :: file_name
         COMPLEX(DP), ALLOCATABLE :: psi(:), rhog(:,:)
         REAL(DP), ALLOCATABLE :: rhor(:,:)

@@ -16,7 +16,7 @@
 #endif
 !
 !-------------------------------------------------------------------------
-      SUBROUTINE dforce_x( i, bec, vkb, c, df, da, v, ldv, ispin, f, n, nspin, v1 )
+      SUBROUTINE dforce_x ( i, bec, vkb, c, df, da, v, ldv, ispin, f, n, nspin, v1 )
       !-----------------------------------------------------------------------
       !! Computes: the generalized force df=cmplx(dfr,dfi,kind=DP) acting on the i-th
       !!           electron state at the gamma point of the Brillouin zone
@@ -95,7 +95,7 @@
       END IF
       ALLOCATE( psi( dffts%nnr_tg ) )
       !
-      CALL c2psi_gamma( dffts, psi, c(:,i), c(:,i+1) )
+      CALL c2psi_gamma( dffts, psi, c(:,i:i), c(:,i+1) )
       !
       CALL invfft( 'Wave', psi, dffts )
       !
