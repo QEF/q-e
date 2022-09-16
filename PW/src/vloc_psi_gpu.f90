@@ -118,9 +118,7 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
            tg_psic(j) = tg_psic(j) * tg_v_d(j)
         ENDDO
         !
-        !$acc update self(tg_psic)
         CALL tgwave_r2g( tg_psic, tg_psic2, dffts, n, 1, m-ibnd+1 )
-        !$acc update device(tg_psic2)
         !
         DO idx = 1, 2*fftx_ntgrp(dffts), 2
            IF ( idx+ibnd-1<m ) THEN
@@ -157,6 +155,8 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
           ENDDO
         ENDDO
         !
+        
+        
         !$acc host_data use_device(psic)
         CALL fwfft ('Wave', psic, dffts, howmany=howmany)
         !$acc end host_data
@@ -204,9 +204,7 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
           brange=2 ;  fac=0.5d0
         ENDIF
         !
-        !$acc update self(psic)
         CALL wave_r2g( psic, psic2(:,1:brange), dffts )
-        !$acc update device(psic2)
         !
         !$acc parallel loop
         DO j = 1, n
@@ -239,8 +237,7 @@ END SUBROUTINE vloc_psi_gamma_gpu
 !-----------------------------------------------------------------------
 SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   !-----------------------------------------------------------------------
-  !
-  ! Calculation of Vloc*psi using dual-space technique - k-points
+  !! Calculation of Vloc*psi using dual-space technique - k-points. GPU double.
   !
   !   fft to real space
   !   product with the potential v on the smooth grid
@@ -275,7 +272,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   INTEGER :: i, right_nnr, right_nr3, right_inc
   !
   LOGICAL :: use_tg
-  ! Task Groups
+  ! ... Task Groups
   COMPLEX(DP), POINTER :: psic_d(:)
   REAL(DP),    POINTER :: tg_v_d(:)
   COMPLEX(DP), POINTER :: tg_psic_d(:)

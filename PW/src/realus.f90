@@ -2305,6 +2305,11 @@ MODULE realus
     LOGICAL :: add_to_orbital_
     COMPLEX(DP), ALLOCATABLE :: psio(:,:)
     !
+!-------------------TEMPORARY-----------
+    INTEGER :: ngk1
+    LOGICAL :: is_present, acc_is_present
+!---------------------------------------
+    !
     ! ... Task groups
     !print *, "->Fourier space"
     CALL start_clock( 'fwfft_orbital' )
@@ -2362,6 +2367,14 @@ MODULE realus
         ALLOCATE( psio(ngk(1),brange) )
         !
         CALL wave_r2g( psic, psio, dffts )
+        !
+!-------------TEMPORARY---------------------
+        ngk1 = SIZE(psic)
+#if defined(_OPENACC)
+        is_present = acc_is_present(psic,ngk1)
+        !$acc update self(psic) if (is_present)
+#endif
+!-------------------------------------------
         !
         fac = 1.d0
         IF ( ibnd<last ) fac = 0.5d0
@@ -2429,11 +2442,10 @@ MODULE realus
     !! if this flag is true, the orbital is stored in temporary memory
     !
     INTEGER :: ik_
-    !
-    !-------------------TEMPORARY-----------
+!-------------------TEMPORARY-----------
     INTEGER :: ngk1
     LOGICAL :: is_present, acc_is_present
-    !---------------------------------------    
+!---------------------------------------    
     !
     CALL start_clock( 'invfft_orbital' )
     !
@@ -2456,10 +2468,10 @@ MODULE realus
        CALL wave_g2r( orbital(:,ibnd:ibnd), psic, dffts, igk=igk_k(:,ik_) )
        !
 !-------------TEMPORARY---------------------
-        ngk1 = SIZE(psic)
+       ngk1 = SIZE(psic)
 #if defined(_OPENACC)
-        is_present = acc_is_present(psic,ngk1)
-        !$acc update self(psic) if (is_present)
+       is_present = acc_is_present(psic,ngk1)
+       !$acc update self(psic) if (is_present)
 #endif
 !-------------------------------------------       
        !
@@ -2518,6 +2530,10 @@ MODULE realus
     INTEGER :: idx, ik_ , incr, ig
     LOGICAL :: add_to_orbital_
     COMPLEX(DP), ALLOCATABLE :: psio(:,:)
+!-------------------TEMPORARY-----------
+    INTEGER :: ngk1
+    LOGICAL :: is_present, acc_is_present
+!---------------------------------------    
     !
     CALL start_clock( 'fwfft_orbital' )
     !
@@ -2561,6 +2577,14 @@ MODULE realus
        ALLOCATE( psio(ngk(ik_),1) )
        !
        CALL wave_r2g( psic, psio, dffts, igk_k(:,ik_) )
+       !
+       !-------------TEMPORARY---------------------
+       ngk1 = SIZE(psic)
+#if defined(_OPENACC)
+       is_present = acc_is_present(psic,ngk1)
+       !$acc update self(psic) if (is_present)
+#endif
+!-------------------------------------------   
        !
        IF( add_to_orbital_ ) THEN
           !$omp parallel do default(shared) private(ig)

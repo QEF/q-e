@@ -643,6 +643,7 @@ CONTAINS
            vout1(ig) = vin(nl_d(iigs_+ig))
         ENDDO
      ENDIF
+     !
      !$acc end data
      !
      CALL dealloc_nl_pntrs( desc )
@@ -655,25 +656,35 @@ CONTAINS
      !
      IMPLICIT NONE
      !
-     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     TYPE(fft_type_descriptor), INTENT(IN) :: desc
      COMPLEX(DP), INTENT(OUT) :: vout1(:)
      COMPLEX(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
      COMPLEX(DP), INTENT(IN) :: vin(:)
      COMPLEX(DP) :: fp, fm
      INTEGER :: ig
      !
+     CALL alloc_nl_pntrs( desc )
+     !
+     !$acc data present_or_copyin(vin) present_or_copyout(vout1)
+     !
      IF( PRESENT( vout2 ) ) THEN
-        DO ig=1,desc%ngw
-           fp=vin(desc%nl(ig))+vin(desc%nlm(ig))
-           fm=vin(desc%nl(ig))-vin(desc%nlm(ig))
+        !$acc parallel loop present_or_copyout(vout2)
+        DO ig = 1, desc%ngw
+           fp = vin(nl_d(ig))+vin(nlm_d(ig))
+           fm = vin(nl_d(ig))-vin(nlm_d(ig))
            vout1(ig) = CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
            vout2(ig) = CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
-        END DO
+        ENDDO
      ELSE
-        DO ig=1,desc%ngw
-           vout1(ig) = vin(desc%nl(ig))
-        END DO
-     END IF
+        !$acc parallel loop
+        DO ig = 1, desc%ngw
+           vout1(ig) = vin(nl_d(ig))
+        ENDDO
+     ENDIF
+     !
+     !$acc end data
+     !
+     CALL dealloc_nl_pntrs( desc )
      !
   END SUBROUTINE fftx_psi2c_gamma
   !
@@ -723,10 +734,19 @@ CONTAINS
      !
      INTEGER :: ig, igmax
      !
+     CALL alloc_nl_pntrs( desc )
+     !
+     !$acc data present_or_copyin(vin,igk) present_or_copyout(vout)
+     !
      igmax = MIN(desc%ngw,SIZE(vout(:)))
+     !$acc parallel loop
      DO ig = 1, igmax
-       vout(ig) = vin(desc%nl(igk(ig)))
+       vout(ig) = vin(nl_d(igk(ig)))
      ENDDO  
+     !
+     !$acc end data
+     !
+     CALL dealloc_nl_pntrs( desc )
      !
      RETURN
      !
@@ -893,29 +913,36 @@ CONTAINS
      COMPLEX(DP) :: fp, fm
      !
      ioff = 0
-     !
      CALL tg_get_recip_inc( desc, right_inc )
+     !
+     CALL alloc_nl_pntrs( desc )
+     !
+     !$acc data present_or_copyin(vin) present_or_copyout(vout)
      !
      DO idx = 1, 2*fftx_ntgrp(desc), 2
        !
        IF ( idx+i-1<nbsp_bgrp ) THEN
+         !$acc parallel loop
          DO j = 1, n
-           fp = ( vin(desc%nl(j) +ioff) +  &
-                  vin(desc%nlm(j)+ioff) ) * 0.5d0
-           fm = ( vin(desc%nl(j) +ioff) -  &
-                  vin(desc%nlm(j)+ioff) ) * 0.5d0
+           fp = ( vin(nl_d(j)+ioff) + vin(nlm_d(j)+ioff) ) * 0.5d0
+           fm = ( vin(nl_d(j)+ioff) - vin(nlm_d(j)+ioff) ) * 0.5d0
            vout(j,i+idx-1) = CMPLX( DBLE(fp),AIMAG(fm),KIND=DP)
            vout(j,i+idx)   = CMPLX(AIMAG(fp),-DBLE(fm),KIND=DP)
          ENDDO
        ELSEIF ( idx+i-1==nbsp_bgrp ) THEN
+         !$acc parallel loop
          DO j = 1, n
-            vout(j,i+idx-1) = vin(desc%nl(j)+ioff)
+            vout(j,i+idx-1) = vin(nl_d(j)+ioff)
          ENDDO
        ENDIF
        !
        ioff = ioff + right_inc
        !
      ENDDO
+     !
+     !$acc end data
+     !
+     CALL dealloc_nl_pntrs( desc )
      !
      RETURN
      !

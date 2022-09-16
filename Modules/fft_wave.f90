@@ -47,17 +47,25 @@ CONTAINS
     dim2 = SIZE(f_out(1,:))
     !
     ALLOCATE( psic(nrxxs) )
+    !$acc data present_or_copyin(f_in) present_or_copyout(f_out) create(psic)
+    !$acc kernels
     psic = f_in
+    !$acc end kernels
     !
+    !$acc host_data use_device(psic)
     CALL fwfft( 'Wave', psic, dfft )
+    !$acc end host_data
     !
     IF (gamma_only) THEN
       IF (dim2==1) CALL fftx_psi2c_gamma( dfft, psic, f_out(:,1) )
       IF (dim2==2) CALL fftx_psi2c_gamma( dfft, psic, f_out(:,1), f_out(:,2) )
     ELSE
+      !$acc data present_or_copyin(igk)
       CALL fftx_psi2c_k( dfft, psic, f_out(:,1), igk )
+      !$acc end data
     ENDIF
     !
+    !$acc end data
     DEALLOCATE( psic )
     !
     RETURN
@@ -184,9 +192,14 @@ CONTAINS
     nrxxs = SIZE(f_in)
     !
     ALLOCATE( psic(nrxxs) )
+    !$acc data present_or_copyin(f_in) present_or_copyout(f_out) create(psic)
+    !$acc kernels
     psic = f_in
+    !$acc end kernels
     !
+    !$acc host_data use_device(psic)
     CALL fwfft( 'tgWave', psic, dfft )
+    !$acc end host_data
     !
     IF (gamma_only) THEN
       CALL psi2c_gamma_tg( dfft, psic, f_out, n, ibnd, ibnd_end )
@@ -194,6 +207,7 @@ CONTAINS
       CALL psi2c_k_tg( dfft, psic, f_out, igk, n, ibnd, ibnd_end )
     ENDIF
     !
+    !$acc end data
     DEALLOCATE( psic )
     !
     RETURN
