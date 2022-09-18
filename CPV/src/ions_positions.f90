@@ -8,12 +8,12 @@
 !------------------------------------------------------------------------------!
 MODULE ions_positions
 !------------------------------------------------------------------------------!
+  !! Module containing atomic positions arrays used in the CP codes during
+  !! the dynamics.
   !
   USE kinds,             ONLY : DP
   !
   IMPLICIT NONE
-  !
-  ! ... Atomic positions arrays used in the cp codes during the dynamics
   !
   REAL(DP), TARGET, ALLOCATABLE :: tau0(:,:), taum(:,:),  taup(:,:)
   REAL(DP), TARGET, ALLOCATABLE :: taus(:,:), tausm(:,:), tausp(:,:)
@@ -33,7 +33,12 @@ MODULE ions_positions
   !
   !
   SUBROUTINE allocate_ions_positions( nsp, nat )
-     INTEGER, INTENT(IN) :: nsp, nat
+     !! Allocate ionic dynamics arrays
+     !
+     INTEGER, INTENT(IN) :: nsp
+     !! number of atomic species
+     INTEGER, INTENT(IN) :: nat
+     !! total number of atoms
      !
      IF( ALLOCATED( tau0  ) ) DEALLOCATE( tau0  )
      IF( ALLOCATED( taum  ) ) DEALLOCATE( taum  ) 
@@ -71,6 +76,8 @@ MODULE ions_positions
   !--------------------------------------------------------------------------
 
   SUBROUTINE deallocate_ions_positions( )
+     !! Deallocate ionic dynamics arrays.
+     !
      IF( ALLOCATED( tau0  ) ) DEALLOCATE( tau0  )
      IF( ALLOCATED( taum  ) ) DEALLOCATE( taum  )
      IF( ALLOCATED( taup  ) ) DEALLOCATE( taup  )

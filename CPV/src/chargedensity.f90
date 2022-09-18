@@ -17,18 +17,14 @@
       ( nfi, c_bgrp, c_d, bec_bgrp, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, &
         enl, denl, ekin, dekin, tstress, ndwwf )
 !-----------------------------------------------------------------------
+     !! This routine computes the normalized electron density in real space 
+     !! (\(\text{rhor}\)), the kinetic energy (\(\text{ekin}\)) and the kinetic
+     !! energy term of QM stress (\(\text{dekin}\)).
 !
-!  this routine computes:
-!  rhor  = normalized electron density in real space
-!  ekin  = kinetic energy
-!  dekin = kinetic energy term of QM stress
-!
-!    rhor(r) = (sum over ib) fi(ib) |psi(r,ib)|^2
-!
-!    Using quantities in scaled space
+!    Using quantities in scaled space:
 !    rhor(r) = rhor(s) / Omega
 !    rhor(s) = (sum over ib) fi(ib) |psi(s,ib)|^2 
-!
+!     
 !    fi(ib) = occupation numbers
 !    psi(r,ib) = psi(s,ib) / SQRT( Omega ) 
 !    psi(s,ib) = INV_FFT (  c0(ig,ib)  )
@@ -78,23 +74,26 @@
       USE mp_world,           ONLY: mpime, world_comm
       !
       IMPLICIT NONE
-      INTEGER nfi
-      REAL(DP) bec_bgrp(:,:)
-      REAL(DP) dbec(:,:,:,:)
-      REAL(DP) rhovan(:, :, : )
-      REAL(DP) rhor(:,:)
-      REAL(DP) drhor(:,:,:,:)
-      REAL(DP) rhos(:,:)
-      REAL(DP) enl, ekin
-      REAL(DP) denl(3,3), dekin(6)
-      COMPLEX(DP) rhog( :, : )
-      COMPLEX(DP) drhog( :, :, :, : )
-      COMPLEX(DP) c_bgrp( :, : )
-      COMPLEX(DP) DEVICEATTR :: c_d( :, : )
+      !
+      INTEGER :: nfi
+      REAL(DP) :: bec_bgrp(:,:)
+      REAL(DP) :: dbec(:,:,:,:)
+      REAL(DP) :: rhovan(:,:,:)
+      REAL(DP) :: rhor(:,:)
+      REAL(DP) :: drhor(:,:,:,:)
+      REAL(DP) :: rhos(:,:)
+      REAL(DP) :: enl
+      REAL(DP) :: ekin
+      REAL(DP) :: denl(3,3)
+      REAL(DP) :: dekin(6)
+      COMPLEX(DP) :: rhog(:,:)
+      COMPLEX(DP) :: drhog(:,:,:,:)
+      COMPLEX(DP) :: c_bgrp(:,:)
+      COMPLEX(DP) DEVICEATTR :: c_d(:,:)
       LOGICAL, OPTIONAL, INTENT(IN) :: tstress
       INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
 
-      ! local variables
+      ! ... local variables
 
       INTEGER  :: iss, isup, isdw, iss1, iss2, i, ir, ig, k
       REAL(DP) :: rsumr(2), rsumg(2), sa1, sa2, detmp(6), mtmp(3,3)
@@ -635,7 +634,9 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 ! output
       REAL(DP),    INTENT(OUT) :: drhor(dfftp%nnr,nspin,3,3)
       COMPLEX(DP), INTENT(OUT) :: drhog(dfftp%ngm,nspin,3,3)
-! local
+
+      ! ... local variables
+      
       INTEGER i, j, isup, isdw, iv, jv, ig, ijv, is, iss, ia, ir, ijs, itid
       REAL(DP) :: asumt, dsumt
       COMPLEX(DP) fp, fm, ci

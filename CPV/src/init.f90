@@ -15,7 +15,7 @@
   subroutine init_dimensions(  )
 
       !
-      !     initialize G-vectors and related quantities
+      !! Initialize G-vectors and related quantities.
       !
 
       USE kinds,                ONLY : dp
@@ -384,10 +384,11 @@
 
     subroutine newinit_x( h, iverbosity )
       !
-      !     re-initialization of lattice parameters and g-space vectors.
-      !     Note that direct and reciprocal lattice primitive vectors
-      !     at, ainv, and corresponding quantities for small boxes
-      !     are recalculated according to the value of cell parameter h
+      !! Re-initialization of lattice parameters and g-space vectors.
+      !! Note that direct and reciprocal lattice primitive vectors
+      !! \(\text{at}\), \(\text{ainv}\), and corresponding quantities
+      !! for small boxes are recalculated according to the value of 
+      !! cell parameter h.
       !
       USE kinds,                 ONLY : DP
       USE constants,             ONLY : tpi
@@ -464,7 +465,7 @@
 
     SUBROUTINE realspace_grids_info ( dfftp, dffts )
 
-      !  Print info on local and global dimensions for real space grids
+      !!  Print info on local and global dimensions for real space grids.
 
       USE fft_types, ONLY: fft_type_descriptor
       use io_global, only: stdout, ionode

@@ -117,6 +117,7 @@ MODULE input
    !-------------------------------------------------------------------------
    SUBROUTINE set_control_flags()
      !-------------------------------------------------------------------------
+     !! Set internal flags according to the input.
      !
      USE io_global,     ONLY : stdout
      USE autopilot,     ONLY : auto_check
@@ -728,6 +729,7 @@ MODULE input
    !-------------------------------------------------------------------------
    SUBROUTINE modules_setup()
      !-------------------------------------------------------------------------
+     !! Call the module specific setup routine.
      !
      USE input_parameters, ONLY: ibrav , celldm , trd_ht, dt,                 &
            rd_ht, a, b, c, cosab, cosac, cosbc, ntyp , nat ,                  &
@@ -1004,7 +1006,7 @@ MODULE input
   !
   SUBROUTINE input_info()
 
-    ! this subroutine print to standard output some parameters read from input
+    !! This subroutine print to standard output some parameters read from input.
     ! ----------------------------------------------
 
     USE input_parameters,   ONLY: restart_mode
@@ -1041,6 +1043,8 @@ MODULE input
   !
   SUBROUTINE modules_info()
 
+    !! write to stdout input module information
+  
     USE input_parameters, ONLY: electron_dynamics, electron_temperature, &
       orthogonalization
 

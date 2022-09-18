@@ -1,16 +1,17 @@
 MODULE exx_module
-  !
   !----------------------------------------------------------------------------------------------------------------
-  ! Exact exchange calculation using maximally localized Wannier functions 
-  ! The references for this algorithm are:
-  !    (i)  theory: X. Wu , A. Selloni, and R. Car, Phys. Rev. B 79, 085102 (2009).
-  !    (ii) implementation: H.-Y. Ko, J. Jia, B. Santra, X. Wu, R. Car, and R. A. DiStasio Jr., J. Chem. Theory Comput. 16, 3757 (2020).
-  ! Contributors : 
-  ! Cornell University   - Hsin-Yu Ko, Junteng Jia, Robert A. DiStasio
-  ! Princeton University - Marcos F. Calegari Andrade, Lingzhu Kong, Zhaofeng Li, Roberto Car 
-  ! Temple University    - Biswajit Santra, Xifan Wu, Charles W. Swartz
+  !! Exact exchange calculation using maximally localized Wannier functions 
+  !! The references for this algorithm are:  
+  !! (i)  theory: X. Wu , A. Selloni, and R. Car, Phys. Rev. B 79, 085102 (2009).  
+  !! (ii) implementation: H.-Y. Ko, J. Jia, B. Santra, X. Wu, R. Car, and 
+  !!      R. A. DiStasio Jr., J. Chem. Theory Comput. 16, 3757 (2020).
   !
-  ! Code Version 1.1 (November 2020)
+  !! Contributors:  
+  !! Cornell University   - Hsin-Yu Ko, Junteng Jia, Robert A. DiStasio  
+  !! Princeton University - Marcos F. Calegari Andrade, Lingzhu Kong, Zhaofeng Li, Roberto Car  
+  !! Temple University    - Biswajit Santra, Xifan Wu, Charles W. Swartz
+  !
+  !! Code Version 1.1 (November 2020)
   !
   !----------------------------------------------------------------------------------------------------------------
   ! For the developers: 
@@ -65,51 +66,84 @@ MODULE exx_module
   !
   ! PUBLIC variables 
   !
-  INTEGER, PARAMETER, PUBLIC          :: lmax=6  ! maximum angular momentum ... 
-  INTEGER, PARAMETER, PUBLIC          :: nord1=3 ! order of expansion for first derivatives  ( points on one side) ...
-  INTEGER, PARAMETER, PUBLIC          :: nord2=3 ! order of expansion for second derivatives ( points on one side) ...
+  INTEGER, PARAMETER, PUBLIC          :: lmax=6
+  !! maximum angular momentum
+  INTEGER, PARAMETER, PUBLIC          :: nord1=3
+  !! order of expansion for first derivatives (points on one side)
+  INTEGER, PARAMETER, PUBLIC          :: nord2=3
+  !! order of expansion for second derivatives (points on one side)
   !
-  INTEGER, PUBLIC                     :: n_exx   ! index of exx steps ...
-  INTEGER, PUBLIC                     :: sc_fac  ! scaling factor to parallelize on (nproc_image=integer multiple of nbsp)
-  ! sc_fac=INT(nproc_image/nbsp); the parallelization can be 
-  ! generalized for any number of procesors by using an array of sc_fac(1:nbsp)
-  INTEGER, PUBLIC                     :: np_in_sp_s, np_in_sp_me_s  ! number of grid points in the PS sphere and the ME sphere for self orbital in Full Grid 
-  INTEGER, PUBLIC                     :: np_in_sp_p, np_in_sp_me_p  ! number of grid points in the PS sphere and the ME sphere for pair orbital in Full Grid
+  INTEGER, PUBLIC                     :: n_exx
+  !! index of exx steps
+  INTEGER, PUBLIC                     :: sc_fac
+  !! scaling factor to parallelize on (nproc_image=integer multiple of nbsp)
+  ! sc_fac=INT(nproc_image/nbsp); the parallelization can be generalized
+  ! for any number of procesors by using an array of sc_fac(1:nbsp)
+  INTEGER, PUBLIC                     :: np_in_sp_s
+  !! number of grid points in the PS sphere for self orbital in Full Grid 
+  INTEGER, PUBLIC                     :: np_in_sp_me_s
+  !! number of grid points in the ME sphere for self orbital in Full Grid 
+  INTEGER, PUBLIC                     :: np_in_sp_p
+  !! number of grid points in the PS sphere for pair orbital in Full Grid
+  INTEGER, PUBLIC                     :: np_in_sp_me_p
+  !! number of grid points in the ME sphere for pair orbital in Full Grid
   !
-  INTEGER, PUBLIC                     :: my_nbspx               ! parallelization/distribution of orbitals over processors 
-  INTEGER,  ALLOCATABLE, PUBLIC       :: my_nbsp(:)             ! parallelization/distribution of orbitals over processors 
-  INTEGER,  ALLOCATABLE, PUBLIC       :: my_nxyz(:)             ! parallelization/distribution of orbitals over processors 
-  INTEGER,  ALLOCATABLE, PUBLIC       :: index_my_nbsp(:, :)    ! parallelization/distribution of orbitals over processors 
-  INTEGER,  ALLOCATABLE, PUBLIC       :: rk_of_obtl(:)          ! parallelization/distribution of orbitals over processors 
-  INTEGER,  ALLOCATABLE, PUBLIC       :: lindex_of_obtl(:)      ! parallelization/distribution of orbitals over processors 
-  INTEGER,  ALLOCATABLE, PUBLIC       :: pair_label(:,:)        ! the orbital label of previous pair potential/density
-  INTEGER,  ALLOCATABLE, PUBLIC       :: pair_step(:,:)         ! the last step that we use previous pair potential/density
-  INTEGER,  ALLOCATABLE, PUBLIC       :: pair_status(:,:)       ! the status of this pair for guess
+  INTEGER, PUBLIC                     :: my_nbspx
+  !! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: my_nbsp(:)
+  !! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: my_nxyz(:)
+  !! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: index_my_nbsp(:,:)
+  !! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: rk_of_obtl(:)
+  !! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: lindex_of_obtl(:)
+  !! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: pair_label(:,:)
+  !! the orbital label of previous pair potential/density
+  INTEGER,  ALLOCATABLE, PUBLIC       :: pair_step(:,:)
+  !! the last step that we use previous pair potential/density
+  INTEGER,  ALLOCATABLE, PUBLIC       :: pair_status(:,:)
+  !! the status of this pair for guess
   !
   ! conversion between 3D index (i,j,k) and 1D index 
   ! odthothd_in_sp(3, 1:np_in_sp_p) is for inner sphere (1st shell)
   ! odthothd_in_sp(3, np_in_sp_p+1:np_tmp_1) is for 2nd shell
   ! odthothd_in_sp(3, np_tmp_1+1:np_tmp_2) is for 3rd shell
   ! odthothd_in_sp(3, np_tmp_2:np_in_sp_me_s) is for 4th shell
-  INTEGER,  ALLOCATABLE, PUBLIC       :: odtothd_in_sp(:,:)     ! 1D to 3D index converter in local grid within largest ME sphere
-  INTEGER,  ALLOCATABLE, PUBLIC       :: thdtood_in_sp(:,:,:)   ! 3D to 1D index converter in local grid within largest ME sphere
-  INTEGER,  ALLOCATABLE, PUBLIC       :: thdtood(:,:,:)         ! 3D to 1D index converter in global grid (nr1,nr2,nr3 => nr1*nr2*nr3) 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: odtothd_in_sp(:,:)
+  !! 1D to 3D index converter in local grid within largest ME sphere
+  INTEGER,  ALLOCATABLE, PUBLIC       :: thdtood_in_sp(:,:,:)
+  !! 3D to 1D index converter in local grid within largest ME sphere
+  INTEGER,  ALLOCATABLE, PUBLIC       :: thdtood(:,:,:)
+  !! 3D to 1D index converter in global grid (nr1,nr2,nr3 => nr1*nr2*nr3) 
   !
   REAL(DP), ALLOCATABLE, PUBLIC       :: rhopr(:,:)
   !
-  REAL(DP), ALLOCATABLE, PUBLIC       :: xx_in_sp(:)            ! distance between centre of the simulation box and grid points along X direction .. 
-  REAL(DP), ALLOCATABLE, PUBLIC       :: yy_in_sp(:)            ! distance between centre of the simulation box and grid points along Y direction .. 
-  REAL(DP), ALLOCATABLE, PUBLIC       :: zz_in_sp(:)            ! distance between centre of the simulation box and grid points along Z direction .. 
+  REAL(DP), ALLOCATABLE, PUBLIC       :: xx_in_sp(:)
+  !! distance between centre of the simulation box and grid points along X direction .. 
+  REAL(DP), ALLOCATABLE, PUBLIC       :: yy_in_sp(:)
+  !! distance between centre of the simulation box and grid points along Y direction .. 
+  REAL(DP), ALLOCATABLE, PUBLIC       :: zz_in_sp(:)
+  !! distance between centre of the simulation box and grid points along Z direction .. 
   !
-  REAL(DP), ALLOCATABLE, PUBLIC       :: sc_xx_in_sp(:)         ! scaled distance between centre of the simulation box and grid points along X direction .. 
-  REAL(DP), ALLOCATABLE, PUBLIC       :: sc_yy_in_sp(:)         ! scaled distance between centre of the simulation box and grid points along Y direction .. 
-  REAL(DP), ALLOCATABLE, PUBLIC       :: sc_zz_in_sp(:)         ! scaled distance between centre of the simulation box and grid points along Z direction .. 
+  REAL(DP), ALLOCATABLE, PUBLIC       :: sc_xx_in_sp(:)
+  !! scaled distance between centre of the simulation box and grid points along X direction .. 
+  REAL(DP), ALLOCATABLE, PUBLIC       :: sc_yy_in_sp(:)
+  !! scaled distance between centre of the simulation box and grid points along Y direction .. 
+  REAL(DP), ALLOCATABLE, PUBLIC       :: sc_zz_in_sp(:)
+  !! scaled distance between centre of the simulation box and grid points along Z direction .. 
   !
-  REAL(DP), ALLOCATABLE, PUBLIC       :: selfv(:,:,:)           ! self potential stored in Poisson sphere as guess potential ...
-  REAL(DP), ALLOCATABLE, PUBLIC       :: pair_dist(:,:,:)       ! pair distance stored in order to extrapolate guess potential ...    
-  REAL(DP), ALLOCATABLE, PUBLIC       :: pairv(:,:,:,:)         ! pair potential stored in Poisson sphere as guess potential ...
+  REAL(DP), ALLOCATABLE, PUBLIC       :: selfv(:,:,:)
+  !! self potential stored in Poisson sphere as guess potential ...
+  REAL(DP), ALLOCATABLE, PUBLIC       :: pair_dist(:,:,:)
+  !! pair distance stored in order to extrapolate guess potential ...    
+  REAL(DP), ALLOCATABLE, PUBLIC       :: pairv(:,:,:,:)
+  !! pair potential stored in Poisson sphere as guess potential ...
   !
-  REAL(DP), ALLOCATABLE, PUBLIC       :: exx_potential(:, :)    ! EXX potential which is passed/added to the DFT-GGA potential ... 
+  REAL(DP), ALLOCATABLE, PUBLIC       :: exx_potential(:,:)
+  !! EXX potential which is passed/added to the DFT-GGA potential ... 
   !
   REAL(DP), ALLOCATABLE, PUBLIC       :: clm(:,:)
   REAL(DP), ALLOCATABLE, PUBLIC       :: coeke(:,:,:)           ! coeke(neighbor, d/di, d/dj)
@@ -150,20 +184,28 @@ MODULE exx_module
   INTEGER, PUBLIC                     :: nrg(3)
   INTEGER, PUBLIC                     :: nrgr(3)
   !----------------------------------------------------------------------------------------------------------------
-  REAL(DP), ALLOCATABLE, PUBLIC       :: me_cs(:,:,:,:)         ! coordinate  of every point in ME cube
-  REAL(DP), ALLOCATABLE, PUBLIC       :: me_rs(:,:,:,:)         ! distance^n  of every point in ME cube
-  REAL(DP), ALLOCATABLE, PUBLIC       :: me_ri(:,:,:,:)         ! distance^-n of every point in ME cube
-  COMPLEX(DP), ALLOCATABLE, PUBLIC    :: me_rc(:,:,:,:)         ! exp(i*m*phi_j) of everg point in PS cube
+  REAL(DP), ALLOCATABLE, PUBLIC       :: me_cs(:,:,:,:)
+  !! coordinate  of every point in ME cube
+  REAL(DP), ALLOCATABLE, PUBLIC       :: me_rs(:,:,:,:)
+  !! distance^n  of every point in ME cube
+  REAL(DP), ALLOCATABLE, PUBLIC       :: me_ri(:,:,:,:)
+  !! distance^-n of every point in ME cube
+  COMPLEX(DP), ALLOCATABLE, PUBLIC    :: me_rc(:,:,:,:)
+  !! exp(i*m*phi_j) of everg point in PS cube
 #ifdef __CUDA
   REAL(DP), ALLOCATABLE, PUBLIC   , DEVICE :: me_cs_d(:,:,:,:)       ! coordinate  of every point in ME cube
   REAL(DP), ALLOCATABLE, PUBLIC   , DEVICE :: me_rs_d(:,:,:,:)       ! distance^n  of every point in ME cube
   REAL(DP), ALLOCATABLE, PUBLIC   , DEVICE :: me_ri_d(:,:,:,:)       ! distance^-n of every point in ME cube
   COMPLEX(DP), ALLOCATABLE, PUBLIC, DEVICE :: me_rc_d(:,:,:,:)       ! exp(i*m*phi_j) of everg point in PS cube
 #endif
-  REAL(DP), ALLOCATABLE, PUBLIC       :: selfrho(:,:,:)         ! self density stored in Poisson sphere for guess potential ...
-  REAL(DP), ALLOCATABLE, PUBLIC       :: pairrho(:,:,:,:)       ! pair density stored in Poisson sphere for guess potential ...
-  REAL(DP), PUBLIC                    :: fbsscale               ! coefficient for preconditioner
-  REAL(DP), ALLOCATABLE, PUBLIC       :: coemicf(:,:,:)         ! coefficient for preconditioner
+  REAL(DP), ALLOCATABLE, PUBLIC       :: selfrho(:,:,:)
+  !! self density stored in Poisson sphere for guess potential ...
+  REAL(DP), ALLOCATABLE, PUBLIC       :: pairrho(:,:,:,:)
+  !! pair density stored in Poisson sphere for guess potential ...
+  REAL(DP), PUBLIC                    :: fbsscale
+  !! coefficient for preconditioner
+  REAL(DP), ALLOCATABLE, PUBLIC       :: coemicf(:,:,:)
+  !! coefficient for preconditioner
   real(dp), allocatable, public  :: rho_ps(:)
   real(dp), allocatable, public  :: pot_ps(:)
   INTEGER ::  i, iobtl, gindex_of_iobtl, irank, proc, tmp_iobtl, ndiag_n, ndiag_nx, ndiag_i
@@ -203,8 +245,7 @@ CONTAINS
   !
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE exx_initialize()
-      !
-      !exx_initialize is called in init_run
+      !! EXX initialization called in \(\texttt{init_run}\).
       !
       IMPLICIT NONE
       !
@@ -1983,7 +2024,8 @@ CONTAINS
   attributes(host,device) &
 #endif
   integer function l2gcb(n,l,t)
-    !! This function is the cube analogue of the `l2goff` function in exx_gs.f90.
+    !! This function is the cube analogue of the \(\texttt{l2goff}\) function in
+    !! \(\texttt{exx_gs.f90}\).  
     !! These functions provides a local to global grid transformation to allow
     !! sparse matrix/vector operations.
     implicit none

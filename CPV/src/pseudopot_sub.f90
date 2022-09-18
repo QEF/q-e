@@ -10,8 +10,8 @@
 
    SUBROUTINE compute_dvan_x()
      !     
-     !     calculate array  dvan(iv,jv,is)
-     !    
+     !! Calculate array \(\text{dvan}(\text{iv},\text{jv},\text{is})\).
+     !
      !  rw**2 * vrps   = [ ( Vpsnl(r) - Vpsloc(r) )* Rps(r) * r^2 ]
      !                 = [ DVpsnl(r) * Rps(r) * r^2 ]
      !  dion           = (2l+1) / < Rps(r) | DVpsnl(r) | Rps(r) >
@@ -51,12 +51,12 @@
 
 
    SUBROUTINE pseudopotential_indexes_x( )
-
+      !! Define pseudopotential indexes (beta functions related).
       use upf_params, only: lmaxx    !
       use ions_base,  only: nsp, &   !  number of specie
                             na, &    !  number of atoms for each specie
                             nat, &   !  total number of atom
-                            ityp     !  the atomi specie for each atom
+                            ityp     !  the atomic specie for each atom
       use uspp,       only: nkb, &   !
                             nkbus    !
       use uspp_param, only: upf,    &!
@@ -357,7 +357,7 @@
 
    SUBROUTINE compute_betagx_x( tpre )
       !
-      ! calculation of array  betagx(ig,iv,is)
+      !! Calculation of array  \(\text{betagx}(ig,iv,is)\).
       !
       USE kinds,      ONLY : DP
       USE ions_base,  ONLY : nsp
@@ -459,12 +459,12 @@
 
    SUBROUTINE compute_qradx_x( tpre )
       !
-      !     calculation of array qradx(igb,iv,jv,is) for interpolation table
-      !     (symmetric wrt exchange of iv and jv: a single index ijv is used)
+      !! Calculation of array \(\text{qradx}(\text{igb},\text{iv},\text{jv},\text{is})\)
+      !! for interpolation table (symmetric wrt exchange of iv and jv: a single index
+      !! ijv is used).
       !
-      !       qradx(ig,l,k,is) = 4pi/omega int_0^r dr r^2 j_l(qr) q(r,l,k,is)
+      !  qradx(ig,l,k,is) = 4pi/omega int_0^r dr r^2 j_l(qr) q(r,l,k,is)
       !     
-      !
       !
       USE kinds,         ONLY : DP
       use io_global,     only : stdout
@@ -874,7 +874,7 @@
 
     LOGICAL FUNCTION check_tables_x( gmax )
       !
-      ! check table size against cell variations
+      !! Check table size against cell variations.
       !
       !
       USE kinds,              ONLY : DP
@@ -923,7 +923,7 @@
 
     SUBROUTINE interpolate_beta_x( tpre )
       !
-      ! interpolate array beta(ig,iv,is)
+      !! Interpolate array beta(ig,iv,is).
       !
       !
       USE kinds, ONLY : DP
@@ -1027,7 +1027,8 @@
 
    SUBROUTINE interpolate_qradb_x( tpre )
       !
-      ! interpolate array qradb(ig,iv,is)
+      !! Interpolate array \(\text{qradb}(\text{ig},\text{iv},\text{is})\) with:
+      !! $$ 4\pi/\Omega \int_0^r dr r^2 j_l(qr) q(r,l,k,is) $$
       !
       !
       USE kinds,             ONLY: DP
@@ -1229,7 +1230,7 @@
 
     SUBROUTINE exact_beta_x( tpre )
       !
-      ! compute array beta without interpolation
+      !! Compute array \(\text{beta}\) without interpolation.
       !
       !
       USE control_flags, only : iverbosity

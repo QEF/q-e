@@ -9,9 +9,8 @@
 !----------------------------------------------------------------------------
 SUBROUTINE init_run()
   !----------------------------------------------------------------------------
-  !
-  ! ... this routine initialise the cp code and allocates (calling the
-  ! ... appropriate routines) the memory
+  !! This routine initialise the CP code and allocates (calling the
+  !! appropriate routines) the memory.
   !
   USE kinds,                    ONLY : DP
   USE control_flags,            ONLY : nbeg, nomore, lwf, iverbosity, iprint, &
