@@ -65,7 +65,7 @@ SUBROUTINE d2ionq_dispd3( alat, nat, ityp, at, bg, tau, q, der2disp )
   dft_ = dftd3_xc ( dft_ )
   CALL dftd3_set_functional(dftd3, func=dft_, version=dftd3_version,tz=.false.)
 
-  CALL start_clock('force_dftd3')
+  !CALL start_clock('force_dftd3')
   ALLOCATE( force_d3(3, nat), force_num(3, nat) )
   force_num = 0._dp
   force_d3(:,:) = 0.0_DP
@@ -94,7 +94,7 @@ SUBROUTINE d2ionq_dispd3( alat, nat, ityp, at, bg, tau, q, der2disp )
     end do 
   end do 
   !CALL symvector( nat, force_num )
-  CALL stop_clock('force_dftd3')
+  !CALL stop_clock('force_dftd3')
 
   WRITE ( stdout , 9078 ) edftd3  
   WRITE( stdout, '(/,5x,"DFT-D3 dispersion contribution to forces (analytical):")')
@@ -113,11 +113,14 @@ SUBROUTINE d2ionq_dispd3( alat, nat, ityp, at, bg, tau, q, der2disp )
   ENDDO
 
   step=2.d-5
-  CALL start_clock('hessian_dftd3')
+  !CALL start_clock('dftd3')
   ALLOCATE( der2disp_ene(3,nat,3,nat), der2disp_frc(3,nat,3,nat) )
   der2disp = 0._dp
   der2disp_ene = 0._dp
   der2disp_frc = 0._dp
+
+  !CALL start_clock('dftd3:frc')
+
   do iat = 1, nat
     do ixyz = 1, 3 
       write(*,*) 'displacing forces: ', iat, ixyz
@@ -133,6 +136,9 @@ SUBROUTINE d2ionq_dispd3( alat, nat, ityp, at, bg, tau, q, der2disp )
       xyz(ixyz,iat)=xyz(ixyz,iat)+step
     end do 
   end do 
+
+  !CALL stop_clock('dftd3:frc')
+  !CALL start_clock('dftd3:ene')
 
   do iat = 1, nat
     do ixyz = 1, 3 
@@ -167,7 +173,13 @@ SUBROUTINE d2ionq_dispd3( alat, nat, ityp, at, bg, tau, q, der2disp )
       end do 
     end do 
   end do 
-  CALL stop_clock('hessian_dftd3')
+
+  !CALL stop_clock('dftd3:ene')
+
+  !der2disp = der2disp_ene
+  der2disp = der2disp_frc
+
+  !CALL stop_clock('dftd3')
 
   write(formt,'(A,I5,A)') '(',3*nat,'F12.8)'
   WRITE( stdout, '(/,5x,"DFT-D3 numerical hessian (from Forces):")')
@@ -195,7 +207,7 @@ SUBROUTINE d2ionq_dispd3( alat, nat, ityp, at, bg, tau, q, der2disp )
 
   DEALLOCATE( force_d3, force_num, der2disp_ene, der2disp_frc)
 
-  Call mp_stop(555)
+! Call mp_stop(555)
 
   RETURN
 
