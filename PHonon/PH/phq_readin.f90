@@ -778,9 +778,6 @@ SUBROUTINE phq_readin()
   IF ( xclib_dft_is('hybrid') ) CALL errore('phq_readin',&
      'The phonon code with hybrid functionals is not yet available',1)
 
-  IF (okpaw.and.(lraman.or.elop)) CALL errore('phq_readin',&
-     'The phonon code with paw and raman or elop is not yet available',1)
-
   IF (magnetic_sym) THEN
 
      WRITE(stdout,'(/5x,a)') "Phonon calculation in the non-collinear magnetic case;"
@@ -790,6 +787,9 @@ SUBROUTINE phq_readin()
      IF (okpaw) CALL errore('phq_readin',&
           'The phonon code with paw and domag is not available yet',1)
   ENDIF
+
+  IF (okpaw.and.(lraman.or.elop)) CALL errore('phq_readin',&
+     'The phonon code with paw and raman or elop is not yet available',1)
 
   IF (okvan.and.(lraman.or.elop)) CALL errore('phq_readin',&
      'The phonon code with US-PP and raman or elop not yet available',1)
@@ -807,6 +807,9 @@ SUBROUTINE phq_readin()
 
   IF(elph_mat.and.npool.ne.1) call errore('phq_readin',&
        'el-ph with wannier : pools not implemented',1)
+
+  IF (elph .AND. okpaw) CALL errore('phq_readin',&
+     'Electron-phonon calculations with PAW not tested',1)
 
   IF(elph.and.nimage>1) call errore('phq_readin',&
        'el-ph with images not implemented',1)

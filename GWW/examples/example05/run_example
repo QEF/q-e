@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -134,7 +134,7 @@ EOF
     check_failure $?
     $ECHO " done"
 
-    #calculation of head 
+    #calculation of head
     cat > si_head.in << EOF
 calculation of head
  &inputph
@@ -199,9 +199,9 @@ EOF
 
 
 
-    #pw4gww calculations 
+    #pw4gww calculations
     cat > si_pw4gww.in << EOF
-&inputpw4gww    
+&inputpw4gww
     prefix='si'
     num_nbndv(1)=16
     num_nbnds=32
@@ -298,7 +298,7 @@ prefix='si'
 outdir='$TMP_DIR/'
 calc_mode=0
 num_nbndv=16
-num_val=16     
+num_val=16
 num_cond=24
 s_bands=0.1
 s_product=1.0
@@ -337,7 +337,7 @@ EOF
  cat > abcoeff_to_eps.in << EOF
 100
 100
-0. 
+0.
 5.
 0.2
 2000

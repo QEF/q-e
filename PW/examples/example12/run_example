@@ -7,7 +7,7 @@
 ###############################################################################
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -89,10 +89,10 @@ cat > Fe.scf.in << EOF
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
-    ibrav=  3, 
-    celldm(1) =5.42, 
-    nat=  1, 
+ &system
+    ibrav=  3,
+    celldm(1) =5.42,
+    nat=  1,
     ntyp= 1,
     noncolin=.true.
     lspinorb=.true.
@@ -100,10 +100,10 @@ cat > Fe.scf.in << EOF
     occupations='smearing',
     smearing='mv',
     degauss=0.01,
-    ecutwfc=60.0, 
+    ecutwfc=60.0,
     ecutrho=400.0,
     angle1(1)=90.0
-    angle2(1)=0.0   
+    angle2(1)=0.0
  /
  &electrons
     conv_thr =  1.0d-10
@@ -111,7 +111,7 @@ cat > Fe.scf.in << EOF
 ATOMIC_SPECIES
 Fe  0.0    Fe.rel-pbe-spn-rrkjus_psl.0.2.1.UPF
 ATOMIC_POSITIONS {alat}
-Fe  0.0000000   0.00000000   0.00000000  
+Fe  0.0000000   0.00000000   0.00000000
 K_POINTS {automatic}
 8 8 8 1 1 1
 HUBBARD {atomic}
@@ -132,10 +132,10 @@ cat > Fe.bands.in << EOF
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
-    ibrav=  3, 
-    celldm(1) =5.42, 
-    nat=  1, 
+ &system
+    ibrav=  3,
+    celldm(1) =5.42,
+    nat=  1,
     ntyp= 1,
     noncolin=.true.
     lspinorb=.true.
@@ -145,7 +145,7 @@ cat > Fe.bands.in << EOF
     occupations='smearing',
     smearing='mv',
     degauss=0.04,
-    ecutwfc =60.0, 
+    ecutwfc =60.0,
     ecutrho =400.0
  /
  &electrons
@@ -154,7 +154,7 @@ cat > Fe.bands.in << EOF
 ATOMIC_SPECIES
 Fe  0.0    Fe.rel-pbe-spn-rrkjus_psl.0.2.1.UPF
 ATOMIC_POSITIONS {alat}
-Fe  0.0000000   0.00000000   0.00000000  
+Fe  0.0000000   0.00000000   0.00000000
 K_POINTS {tpiba_b}
 3
 1.0 0.0 0.0 40

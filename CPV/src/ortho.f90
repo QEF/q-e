@@ -447,7 +447,7 @@ CONTAINS
                      CALL DGEMMDRV('N', 'N', nhs, nc, nhs, 1.0d0, qq_nt(1,1,is), SIZE(qq_nt,1), &
                                    bec_col(indv+1,(iss-1)*nrcx+1), SIZE(bec_col,1), 0.0d0, qbecp(indv+1,1,iss), SIZE(qbecp,1))
 #endif
-!!$cuf kernel do (2)
+! !$cuf kernel do (2)
 !                     DO iv=1,nhs
 !                        DO i = 1, nc
 !                           DO jv = 1, nhs

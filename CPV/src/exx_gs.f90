@@ -1,11 +1,13 @@
 SUBROUTINE exx_gs(nfi, c)
     !=======================================================================================
-    ! Code Version 1.0 (Princeton University, September 2014)
+    !! Code Version 1.0 (Princeton University, September 2014).
     !=======================================================================================
-    ! Note:  From this code exx_potential is returned after multiplying mixing parameter exxalfa.
-    !        Later the exx_potential is added with GGA potential in forces.f90.
-    !        In the future, full exx_potential should be returned and the mixing parameter exxalfa
-    !        should be multiplied in forces.f90.
+    !! NOTE: From this code \(\text{exx_potential}\) is returned after multiplying mixing 
+    !!       parameter \(\text{exxalfa}\).  
+    !!       Later the \(\text{exx_potential}\) is added with GGA potential in 
+    !!       \(\texttt{forces.f90}\).  
+    !!       In the future, full \(\text{exx_potential}\) should be returned and the mixing 
+    !!       parameter \(\text{exxalfa}\) should be multiplied in \(\texttt{forces.f90}\).
     !=======================================================================================
     !
     USE kinds,                   ONLY  : DP
@@ -1210,13 +1212,13 @@ SUBROUTINE exx_gs(nfi, c)
     end subroutine exx_gs_setup_cube
 
     subroutine  exx_gs_setup_sphere()
+      !========================================================================
+      !! Compute distances between grid points and the center of the simulation
+      !! cell in R space.  
+      !! This part needs to be done once in constant volume simulation and
+      !! needs to be done every step in variable cell simulationulations.
+      !========================================================================
       implicit none
-      !========================================================================
-      ! Compute distances between grid points and the center of the simulation cell in R space 
-      ! This part needs to be done once in constant volume simulation and
-      ! needs to be done every step in variable cell simulationulations ...
-      !
-      !========================================================================
       DO i=1,np_in_sp_me_s
         xx_in_sp(i)=h(1,1)*sc_xx_in_sp(i)+h(1,2)*sc_yy_in_sp(i)+h(1,3)*sc_zz_in_sp(i)   ! r = h s
         yy_in_sp(i)=h(2,1)*sc_xx_in_sp(i)+h(2,2)*sc_yy_in_sp(i)+h(2,3)*sc_zz_in_sp(i)   ! r = h s

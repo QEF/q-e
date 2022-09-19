@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
@@ -98,10 +98,10 @@ cat > graphite.scf.in << EOF
 /
 
 &system
-    ibrav           = 4 
+    ibrav           = 4
     celldm(1)       = 4.64630333
     celldm(3)       = 2.58254285
-    nat             = 4 
+    nat             = 4
     ntyp            = 1
     ecutwfc         = 30.0
     ecutrho         = 180.0
@@ -154,7 +154,7 @@ phonons of graphite
    amass(1)=12.0107,
    fildyn='graphiteK.dyn',
  /
-0.33333333 0.57735027 0.0 
+0.33333333 0.57735027 0.0
 EOF
 $ECHO "  running the Grimme D2 phonon calculation at K for Graphite...\c"
 $PH_COMMAND < graphite.phK.in > graphite.phK.out
@@ -182,10 +182,10 @@ cat > graphite.scf.in << EOF
 /
 
 &system
-    ibrav           = 4 
+    ibrav           = 4
     celldm(1)       = 4.64630333
     celldm(3)       = 2.58254285
-    nat             = 4 
+    nat             = 4
     ntyp            = 1
     ecutwfc         = 30.0
     ecutrho         = 180.0
@@ -238,7 +238,7 @@ phonons of graphite
    amass(1)=12.0107,
    fildyn='graphiteK.dyn',
  /
-0.33333333 0.57735027 0.0 
+0.33333333 0.57735027 0.0
 EOF
 $ECHO "  running the $VDWDF phonon calculation at K for Graphite...\c"
 $PH_COMMAND < graphite.phK.in > graphite.$VDWDF.phK.out

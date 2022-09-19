@@ -226,7 +226,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
         END DO
       END DO
       !
-      !!!!!!!!!!!!!!!!!!!!
+      !********************
       !
       ALLOCATE ( psitot(nnrtot*my_nbsp(me)) ); psitot=0.0_DP
       !

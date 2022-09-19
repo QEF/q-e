@@ -9,8 +9,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE stop_cp_run()
   !----------------------------------------------------------------------------
-  !
-  ! ... Close all files and synchronize processes before stopping.
+  !! Close all files and synchronize processes before stopping.
   !
   USE environment,        ONLY : environment_end
   USE control_flags,      ONLY : lconstrain

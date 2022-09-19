@@ -10,8 +10,7 @@
 SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
             enthal, enb, enbi, fccc, ccc, dt2bye, stress, l_cprestart )
   !----------------------------------------------------------------------------
-  !
-  ! ... this routine updates the electronic degrees of freedom
+  !! This routine updates the electronic degrees of freedom.
   !
   USE kinds,                ONLY : DP
   USE control_flags,        ONLY : lwf, tfor, tprnfor, thdyn

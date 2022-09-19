@@ -7,7 +7,7 @@
 ###############################################################################
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -114,9 +114,9 @@ cat > al.scf.in << EOF
 /
 ATOMIC_SPECIES
  Al   26.98000  Al.pbe-n-rrkjus_psl.0.1.UPF
-ATOMIC_POSITIONS alat 
- Al      0.000000000    0.000000000    0.000000000    
-K_POINTS automatic 
+ATOMIC_POSITIONS alat
+ Al      0.000000000    0.000000000    0.000000000
+K_POINTS automatic
  8 8 8 0 0 0
 EOF
 $ECHO "  running the scf calculation...\c"
@@ -136,7 +136,7 @@ Al phonon
   fildrho = 'drho',
     ldisp = .true.,
  lshift_q = .true.,
-      nq1 = 4, 
+      nq1 = 4,
       nq2 = 4,
       nq3 = 4,
 /
@@ -158,7 +158,7 @@ Al electron-phonon
          fildrho = 'drho',
            ldisp = .true.,
         lshift_q = .true.,
-             nq1 = 4, 
+             nq1 = 4,
              nq2 = 4,
              nq3 = 4,
  electron_phonon = "lambda_tetra"

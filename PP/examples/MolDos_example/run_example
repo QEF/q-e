@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -58,7 +58,7 @@ if [ "$GP_COMMAND" = "" ]; then
         $ECHO "gnuplot not in PATH"
         $ECHO "Results will not be plotted"
 fi
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -104,7 +104,7 @@ cat <<EOF > chainH2.scf.in
   outdir='$TMP_DIR/'
 /
 &SYSTEM
-  ibrav     = 6, 
+  ibrav     = 6,
   celldm(1) = 7.d0
   celldm(3) = 2.0d0
   nat       = 12,
@@ -156,7 +156,7 @@ cat <<EOF > H2.scf.in
   outdir='$TMP_DIR/'
 /
 &SYSTEM
-  ibrav     = 6, 
+  ibrav     = 6,
   celldm(1) = 7.d0
   celldm(3) = 2.0d0
   nat       = 2,
@@ -243,7 +243,7 @@ cat <<EOF > chainH2.bands.in
   outdir='$TMP_DIR/'
 /
 &SYSTEM
-  ibrav     = 6, 
+  ibrav     = 6,
   celldm(1) = 7.d0
   celldm(3) = 2.0d0
   nat       = 12,
@@ -294,7 +294,7 @@ cat <<EOF > H2.bands.in
   outdir='$TMP_DIR/'
 /
 &SYSTEM
-  ibrav     = 6, 
+  ibrav     = 6,
   celldm(1) = 7.d0
   celldm(3) = 2.0d0
   nat       = 2,

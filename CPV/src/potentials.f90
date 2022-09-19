@@ -588,7 +588,7 @@ DEV_OMP end parallel
    SUBROUTINE self_vofhar_x( tscreen, self_ehte, vloc, rhoeg, omega, hmat )
 !=----------------------------------------------------------------------------=!
 
-      !  adds the hartree part of the self interaction
+      !! Adds the Hartree part of the self interaction.
 
       USE kinds,              ONLY: DP
       USE constants,          ONLY: fpi

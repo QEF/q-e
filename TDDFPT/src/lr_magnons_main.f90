@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2021 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -241,12 +241,11 @@ SUBROUTINE lr_print_preamble_magnons()
 
     IMPLICIT NONE
 
-    WRITE( stdout, '(/5x,"-------------------------------------------------------------------------")' )
+    WRITE( stdout, '(/5x,"--------------------------------------------------------------------------------------------------")' )
     WRITE( stdout, '(/5x,"Please cite this project as:")' )
-    WRITE( stdout, '(/5x,"T. Gorni, I. Timrov, and S. Baroni,", &
-                   & /5x,"Spin dynamics from time-dependent density functional perturbation theory,", &
-                   & /5x,"Eur. Phys. J. B 91, 249 (2018).")')
-    WRITE( stdout, '(/5x,"-------------------------------------------------------------------------")' )
+    WRITE( stdout, '(/5x,"T. Gorni, I. Timrov, S. Baroni, Eur. Phys. J. B 91, 249 (2018).")')
+    WRITE( stdout, '(/5x,"T. Gorni, O. Baseggio, P. Delugas, S. Baroni, I. Timrov, Comput. Phys. Commun. 280, 108500 (2022).")')
+    WRITE( stdout, '(/5x,"--------------------------------------------------------------------------------------------------")' )
     !
     WRITE( stdout, '(/5x,"Using the ' // trim(approximation) // ' approximation.")' )
     !

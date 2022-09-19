@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -96,7 +96,7 @@ $ECHO "#                                         #"
 $ECHO "#   The parameters of this run are not    #"
 $ECHO "#     converged. To obtain converged      #"
 $ECHO "#            parameters see :             #"
-$ECHO "# C. Gougoussis, M.Calandra, A. Seitsonen,#" 
+$ECHO "# C. Gougoussis, M.Calandra, A. Seitsonen,#"
 $ECHO "#  Ch. Brouder, A. Shukla, F. Mauri       #"
 $ECHO "#     Phys. Rev. B 79, 045118 (2009)      #"
 $ECHO "###########################################"
@@ -161,7 +161,7 @@ $ECHO " done"
 
 $ECHO "#"
 $ECHO "# xanes calculations"
-$ECHO "# cutting occupied states " 
+$ECHO "# cutting occupied states "
 $ECHO "#"
 $ECHO "# x-ray absorption spectrum calculation"
 $ECHO "# dipolar part"

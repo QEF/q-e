@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -114,16 +114,16 @@ cat > Cu.scf.in << EOF
     prefix='Cu',
  /
  &system
-    ibrav=  2,  
-    celldm(1) = 6.8048679, 
+    ibrav=  2,
+    celldm(1) = 6.8048679,
     ecutwfc = 20.,
     ecutrho = 200.,
     nat= 1,
     ntyp= 1,
     nbnd=20,
     occupations="smearing",
-    smearing='mp', 
-    degauss=0.03,  
+    smearing='mp',
+    degauss=0.03,
 /
  &electrons
     diagonalization='david',
@@ -155,16 +155,16 @@ cat > Cu_halfh.scf.in << EOF
     prefix='Cu_halfh',
  /
  &system
-    ibrav=  2,  
-    celldm(1) = 20.4146037 
+    ibrav=  2,
+    celldm(1) = 20.4146037
     ecutwfc = 20.,
     ecutrho = 200.,
     nat= 27,
     ntyp= 2,
-    tot_charge = 0.5  
+    tot_charge = 0.5
     occupations="smearing",
-    smearing='mp', 
-    degauss=0.03,  
+    smearing='mp',
+    degauss=0.03,
 /&end
  &electrons
     diagonalization='david',
@@ -229,7 +229,7 @@ cat > Cu_xspectra.in << EOF
      xepsilon(3)=1.0,
      xe0=11.5335,
      xerror=0.01,
-  /  
+  /
   &plot
      xnepoint=1000,
      xgamma=0.5,
@@ -237,12 +237,12 @@ cat > Cu_xspectra.in << EOF
      xemax=80.0,
      terminator=.true.,
      cut_occ_states=.true.,
-  /   
+  /
   &pseudos
      filecore='Cu.wfc',
-     r_paw(0) = 2. 
-     r_paw(2) = 2.   
-  /  
+     r_paw(0) = 2.
+     r_paw(2) = 2.
+  /
   &cut_occ
   /
   3 3 3 0 0 0
@@ -271,7 +271,7 @@ cat > Cu_xspectra_lplus.in << EOF
      xepsilon(3)=1.0,
      xe0=11.5335,
      xerror=0.01,
-  /  
+  /
   &plot
      xnepoint=1000,
      xgamma=0.5,
@@ -279,12 +279,12 @@ cat > Cu_xspectra_lplus.in << EOF
      xemax=80.0,
      terminator=.true.,
      cut_occ_states=.true.,
-  /   
+  /
   &pseudos
      filecore='Cu.wfc',
-     r_paw(0) = 2. 
-     r_paw(2) = 2.   
-  /  
+     r_paw(0) = 2.
+     r_paw(2) = 2.
+  /
   &cut_occ
   /
   3 3 3 0 0 0
@@ -311,7 +311,7 @@ cat > Cu_halfh_xspectra.in << EOF
      xepsilon(3)=1.0,
      ef_r=0.98,
      xerror=0.01,
-  /  
+  /
   &plot
      xnepoint=1000,
      xgamma=0.5,
@@ -319,12 +319,12 @@ cat > Cu_halfh_xspectra.in << EOF
      xemax=80.0,
      terminator=.true.,
      cut_occ_states=.true.,
-  /   
+  /
   &pseudos
      filecore='Cu.wfc',
-     r_paw(0) = 2. 
-     r_paw(2) = 2.   
-  /  
+     r_paw(0) = 2.
+     r_paw(2) = 2.
+  /
   &cut_occ
   /
   1 1 1 0 0 0
@@ -354,7 +354,7 @@ cat > Cu_halfh_xspectra_xonlyplot.in << EOF
      xerror=0.01,
      x_save_file='Cuhalfh_xanes_L2.sav',
      xonly_plot=.true.,
-  /  
+  /
   &plot
      xnepoint=1000,
      xgamma=0.5,
@@ -362,12 +362,12 @@ cat > Cu_halfh_xspectra_xonlyplot.in << EOF
      xemax=80.0,
      terminator=.true.,
      cut_occ_states=.true.,
-  /   
+  /
   &pseudos
      filecore='Cu.wfc',
-     r_paw(0) = 2. 
-     r_paw(2) = 2.   
-  /  
+     r_paw(0) = 2.
+     r_paw(2) = 2.
+  /
   &cut_occ
   /
   1 1 1 0 0 0
