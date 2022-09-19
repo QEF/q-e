@@ -469,7 +469,7 @@ CONTAINS
      INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
      ! hm_set(1)=howmany ; hm_set(2)=ibnd ; hm_set(3)=ibnd
      !
-     INTEGER :: nnr, i, j, ig, howmany
+     INTEGER :: nnr, i, j, ig, howmany, ibnd
      !
      CALL alloc_nl_pntrs( desc )
      !
@@ -479,6 +479,7 @@ CONTAINS
         !
         nnr = desc%nnr
         howmany = howmany_set(1)
+        ibnd = howmany_set(2)
         ! == OPTIMIZE HERE == (setting to 0 and setting elements!)
         !$acc kernels
         psi(1:nnr*howmany) = (0.d0,0.d0)
@@ -487,7 +488,7 @@ CONTAINS
         !$acc parallel loop collapse(2)
         DO i = 0, howmany-1
           DO j = 1, ngk
-            psi(nl_d(igk(j))+i*nnr) = c(j,howmany_set(2)+i)
+            psi(nl_d(igk(j))+i*nnr) = c(j,ibnd+i)
           ENDDO
         ENDDO
         !
@@ -651,35 +652,71 @@ CONTAINS
   END SUBROUTINE fftx_threed2oned
   !
   !------------------------------------------------------------
-  SUBROUTINE fftx_psi2c_gamma( desc, vin, vout1, vout2 )
+  SUBROUTINE fftx_psi2c_gamma( desc, vin, vout1, vout2, howmany_set )
      !---------------------------------------------------------
      !
      IMPLICIT NONE
      !
      TYPE(fft_type_descriptor), INTENT(IN) :: desc
-     COMPLEX(DP), INTENT(OUT) :: vout1(:)
+     COMPLEX(DP), INTENT(OUT) :: vout1(:,:)
      COMPLEX(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
      COMPLEX(DP), INTENT(IN) :: vin(:)
+     INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
+     !
      COMPLEX(DP) :: fp, fm
-     INTEGER :: ig
+     INTEGER :: ig, idx, n, v_siz, pack_size, remainder, howmany, &
+                group_size, ioff
      !
      CALL alloc_nl_pntrs( desc )
      !
      !$acc data present_or_copyin(vin) present_or_copyout(vout1)
      !
-     IF( PRESENT( vout2 ) ) THEN
-        !$acc parallel loop present_or_copyout(vout2)
-        DO ig = 1, desc%ngw
-           fp = vin(nl_d(ig))+vin(nlm_d(ig))
-           fm = vin(nl_d(ig))-vin(nlm_d(ig))
-           vout1(ig) = CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
-           vout2(ig) = CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
-        ENDDO
+     IF (PRESENT(howmany_set)) THEN
+       !
+       group_size = howmany_set(1)
+       n = howmany_set(3)
+       v_siz = desc%nnr
+       pack_size = (group_size/2)
+       remainder = group_size - 2*pack_size
+       howmany = pack_size + remainder
+       !
+       IF ( pack_size > 0 ) THEN
+         ! ... two ffts at the same time
+         !$acc parallel loop collapse(2)
+         DO idx = 0, pack_size-1
+           DO ig = 1, n
+             ioff = idx*v_siz
+             fp = (vin(ioff+nl_d(ig)) + vin(ioff+nlm_d(ig)))*0.5d0
+             fm = (vin(ioff+nl_d(ig)) - vin(ioff+nlm_d(ig)))*0.5d0
+             vout1(ig,idx*2+1)   = CMPLX(DBLE(fp),AIMAG(fm),KIND=DP)
+             vout1(ig,idx*2+2) = CMPLX(AIMAG(fp),-DBLE(fm),KIND=DP)
+           ENDDO
+         ENDDO
+       ENDIF
+       IF (remainder > 0) THEN
+         !$acc parallel loop
+         DO ig = 1, n
+           vout1(ig,group_size) = vin(pack_size*v_siz+nl_d(ig))
+         ENDDO
+       ENDIF
+       !
      ELSE
-        !$acc parallel loop
-        DO ig = 1, desc%ngw
-           vout1(ig) = vin(nl_d(ig))
-        ENDDO
+       !
+       IF( PRESENT(vout2) ) THEN
+          !$acc parallel loop present_or_copyout(vout2)
+          DO ig = 1, desc%ngw
+             fp = vin(nl_d(ig))+vin(nlm_d(ig))
+             fm = vin(nl_d(ig))-vin(nlm_d(ig))
+             vout1(ig,1) = CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
+             vout2(ig) = CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
+          ENDDO
+       ELSE
+          !$acc parallel loop
+          DO ig = 1, desc%ngw
+             vout1(ig,1) = vin(nl_d(ig))
+          ENDDO
+       ENDIF
+       !
      ENDIF
      !
      !$acc end data
@@ -729,7 +766,7 @@ CONTAINS
      !
      TYPE(fft_type_descriptor), INTENT(IN) :: desc
      COMPLEX(DP), INTENT(IN) :: vin(:)
-     COMPLEX(DP), INTENT(OUT) :: vout(:)
+     COMPLEX(DP), INTENT(OUT) :: vout(:,:)
      INTEGER, INTENT(IN) :: igk(:)
      !
      INTEGER :: ig, igmax
@@ -738,11 +775,11 @@ CONTAINS
      !
      !$acc data present_or_copyin(vin,igk) present_or_copyout(vout)
      !
-     igmax = MIN(desc%ngw,SIZE(vout(:)))
+     igmax = MIN(desc%ngw,SIZE(vout(:,1)))
      !$acc parallel loop
      DO ig = 1, igmax
-       vout(ig) = vin(nl_d(igk(ig)))
-     ENDDO  
+       vout(ig,1) = vin(nl_d(igk(ig)))
+     ENDDO
      !
      !$acc end data
      !

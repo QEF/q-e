@@ -27,7 +27,7 @@ CONTAINS
   !
   !
   !----------------------------------------------------------------------
-  SUBROUTINE wave_r2g( f_in, f_out, dfft, igk )
+  SUBROUTINE wave_r2g( f_in, f_out, dfft, igk, howmany_set )
     !--------------------------------------------------------------------
     !! Wave function FFT from R to G-space.
     !
@@ -39,6 +39,7 @@ CONTAINS
     COMPLEX(DP), INTENT(IN)  :: f_in(:)
     COMPLEX(DP), INTENT(OUT) :: f_out(:,:)
     INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
+    INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
     !
     COMPLEX(DP), ALLOCATABLE :: psic(:)
     INTEGER :: dim2, nrxxs
@@ -53,15 +54,28 @@ CONTAINS
     !$acc end kernels
     !
     !$acc host_data use_device(psic)
-    CALL fwfft( 'Wave', psic, dfft )
+    IF (PRESENT(howmany_set)) THEN
+      CALL fwfft( 'Wave', psic, dfft, howmany=howmany_set(1) )
+    ELSE
+      CALL fwfft( 'Wave', psic, dfft )
+    ENDIF
     !$acc end host_data
     !
     IF (gamma_only) THEN
-      IF (dim2==1) CALL fftx_psi2c_gamma( dfft, psic, f_out(:,1) )
-      IF (dim2==2) CALL fftx_psi2c_gamma( dfft, psic, f_out(:,1), f_out(:,2) )
+      IF (PRESENT(howmany_set)) THEN
+        CALL fftx_psi2c_gamma( dfft, psic, f_out, howmany_set=howmany_set )
+      ELSE
+        IF (dim2==1) CALL fftx_psi2c_gamma( dfft, psic, f_out(:,1:1) )
+        IF (dim2==2) CALL fftx_psi2c_gamma( dfft, psic, f_out(:,1:1), &
+                                            vout2=f_out(:,2) )
+      ENDIF
     ELSE
       !$acc data present_or_copyin(igk)
-      CALL fftx_psi2c_k( dfft, psic, f_out(:,1), igk )
+      IF (PRESENT(howmany_set)) THEN 
+        CALL fftx_psi2c_k( dfft, psic, f_out, igk )
+      ELSE
+        CALL fftx_psi2c_k( dfft, psic, f_out(:,1:1), igk )
+      ENDIF
       !$acc end data
     ENDIF
     !

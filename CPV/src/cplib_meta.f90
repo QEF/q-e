@@ -53,7 +53,7 @@
                                 kedtaus(ir,iss2)*AIMAG(psi(ir)),kind=DP)
             end do
             call fwfft('Wave',psi, dffts )
-            CALL fftx_psi2c_gamma( dffts, psi, dc(:,1), dca )
+            CALL fftx_psi2c_gamma( dffts, psi, dc(:,1:1), vout2=dca )
             do ig=1,ngw
                df(ig)= df(ig) - ci*fi *tpiba2*g(ipol,ig) * dc(ig,1)
                da(ig)= da(ig) - ci*fip*tpiba2*g(ipol,ig) * dca(ig) 

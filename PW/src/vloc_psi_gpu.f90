@@ -54,13 +54,6 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   INTEGER :: group_size, pack_size, remainder, howmany, hm_vec(3)
   REAL(DP):: v_tmp, fac
   !
-  
-  INTEGER,     POINTER :: dffts_nl_d(:), dffts_nlm_d(:)
-  attributes(DEVICE) :: dffts_nl_d, dffts_nlm_d
-  
-  
-  
-  
   CALL start_clock_gpu( 'vloc_psi' )
   !
   ALLOCATE( psi(lda,m) )
@@ -71,11 +64,6 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   !
   incr = 2*many_fft
   !
-  
-  dffts_nl_d => dffts%nl_d
-  dffts_nlm_d => dffts%nlm_d
-  
-  
   use_tg = dffts%has_task_groups
   !
   IF ( use_tg ) THEN
@@ -84,7 +72,7 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      v_siz = dffts%nnr_tg
      !
      CALL dev_buf%lock_buffer( tg_v_d, v_siz, ierr )
-     ALLOCATE( tg_psic(v_siz), tg_psic2(v_siz,m) )
+     ALLOCATE( tg_psic(v_siz), tg_psic2(v_siz,incr) )
      !
      CALL tg_gather_gpu( dffts, v_d, tg_v_d )
      CALL stop_clock_gpu( 'vloc_psi:tg_gather' )
@@ -93,8 +81,8 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      !
   ELSE
      !
-     ALLOCATE( psic(dffts%nnr*incr), psic2(dffts%nnr*incr,2) )
      v_siz = dffts%nnr
+     ALLOCATE( psic(v_siz*incr), psic2(v_siz,incr) )
      !
   ENDIF
   !
@@ -141,7 +129,7 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
         group_size = MIN(2*many_fft, m-(ibnd-1))
         pack_size = (group_size/2) ! This is FLOOR(group_size/2)
         remainder = group_size - 2*pack_size
-        howmany   = pack_size + remainder
+        howmany = pack_size + remainder
         hm_vec(1)=group_size ; hm_vec(2)=ibnd ; hm_vec(3)=n
         !
         !$acc data create(psic,psic2)
@@ -155,32 +143,23 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
           ENDDO
         ENDDO
         !
-        
-        
-        !$acc host_data use_device(psic)
-        CALL fwfft ('Wave', psic, dffts, howmany=howmany)
-        !$acc end host_data
+        CALL wave_r2g( psic, psic2, dffts, howmany_set=hm_vec )
         !
         IF ( pack_size > 0 ) THEN
-           ! two ffts at the same time
            !$acc parallel loop collapse(2)
            DO idx = 0, pack_size-1
               DO j = 1, n
-                 ioff = idx*v_siz
-                 fp = (psic (ioff + dffts_nl_d(j)) + psic (ioff + dffts_nlm_d(j)))*0.5d0
-                 fm = (psic (ioff + dffts_nl_d(j)) - psic (ioff + dffts_nlm_d(j)))*0.5d0
-                 hpsi_d (j, ibnd + idx*2)   = hpsi_d (j, ibnd + idx*2)   + &
-                                    cmplx( dble(fp), aimag(fm),kind=DP)
-                 hpsi_d (j, ibnd + idx*2 +1) = hpsi_d (j, ibnd + idx*2 +1) + &
-                                    cmplx(aimag(fp),- dble(fm),kind=DP)
+                 hpsi_d(j,ibnd+idx*2) = hpsi_d(j,ibnd+idx*2) + psic2(j,idx*2+1)
+                 hpsi_d(j,ibnd+idx*2+1) = hpsi_d(j,ibnd+idx*2+1) + psic2(j,idx*2+2)
               ENDDO
            ENDDO
-        END IF
-
+        ENDIF
+        !
         IF (remainder > 0) THEN
            !$acc parallel loop
            DO j = 1, n
-              hpsi_d (j, ibnd + group_size-1)   = hpsi_d (j, ibnd + group_size-1)   + psic(pack_size*v_siz + dffts_nl_d(j))
+              hpsi_d(j,ibnd+group_size-1) = hpsi_d(j,ibnd+group_size-1) + &
+                                             psic2(j,group_size)
            ENDDO
         ENDIF
         !

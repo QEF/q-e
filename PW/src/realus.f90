@@ -2576,7 +2576,7 @@ MODULE realus
        !
        ALLOCATE( psio(ngk(ik_),1) )
        !
-       CALL wave_r2g( psic, psio, dffts, igk_k(:,ik_) )
+       CALL wave_r2g( psic, psio, dffts, igk=igk_k(:,ik_) )
        !
        !-------------TEMPORARY---------------------
        ngk1 = SIZE(psic)
