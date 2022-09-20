@@ -67,36 +67,30 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   use_tg = dffts%has_task_groups
   !
   IF ( use_tg ) THEN
-     !
      CALL start_clock_gpu( 'vloc_psi:tg_gather' )
      v_siz = dffts%nnr_tg
+     incr = 2*fftx_ntgrp(dffts)
      !
      CALL dev_buf%lock_buffer( tg_v_d, v_siz, ierr )
      ALLOCATE( tg_psic(v_siz), tg_psic2(v_siz,incr) )
      !
      CALL tg_gather_gpu( dffts, v_d, tg_v_d )
      CALL stop_clock_gpu( 'vloc_psi:tg_gather' )
-     !
-     incr = 2*fftx_ntgrp(dffts)
-     !
   ELSE
-     !
      v_siz = dffts%nnr
      ALLOCATE( psic(v_siz*incr), psic2(v_siz,incr) )
-     !
   ENDIF
   !
-  ! ... the local potential V_Loc psi. First bring psi to real space
+  ! ... The local potential V_Loc psi:
+  ! ... - fft to real space;
+  ! ... - product with the potential v on the smooth grid;
+  ! ... - back to reciprocal space.
   !
-  DO ibnd = 1, m, incr
+  IF( use_tg ) THEN
      !
-     ! ... fft to real space
-     ! ... product with the potential v on the smooth grid
-     ! ... back to reciprocal space
-     !
-     IF( use_tg ) THEN
+     !$acc data create(tg_psic,tg_psic2)
+     DO ibnd = 1, m, incr
         !
-        !$acc data create(tg_psic,tg_psic2)
         CALL tgwave_g2r( psi(1:n,:), tg_psic, dffts, ibnd, m )
         !
         CALL tg_get_group_nr3( dffts, right_nr3 )
@@ -122,17 +116,20 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
               ENDDO
            ENDIF
         ENDDO
-        !$acc end data
         !
-     ELSE IF (many_fft > 1) THEN
+     ENDDO   
+     !$acc end data
+     !
+  ELSEIF (many_fft > 1) THEN
+     !
+     !$acc data create(psic,psic2)
+     DO ibnd = 1, m, incr
         !
         group_size = MIN(2*many_fft, m-(ibnd-1))
         pack_size = (group_size/2) ! This is FLOOR(group_size/2)
         remainder = group_size - 2*pack_size
         howmany = pack_size + remainder
         hm_vec(1)=group_size ; hm_vec(2)=ibnd ; hm_vec(3)=n
-        !
-        !$acc data create(psic,psic2)
         !
         CALL wave_g2r( psi, psic, dffts, howmany_set=hm_vec )
         !
@@ -163,11 +160,14 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
            ENDDO
         ENDIF
         !
-        !$acc end data
+     ENDDO
+     !$acc end data
+     !
+  ELSE
+     !
+     !$acc data create(psic,psic2)
+     DO ibnd = 1, m, incr
         !
-     ELSE
-        !
-        !$acc data create(psic,psic2)
         ebnd = ibnd
         IF ( ibnd<m ) ebnd = ebnd + 1
         !
@@ -190,11 +190,11 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
           hpsi_d(j,ibnd) = hpsi_d(j,ibnd) + fac*psic2(j,1)
           IF ( ibnd<m ) hpsi_d(j,ibnd+1) = hpsi_d(j,ibnd+1) + fac*psic2(j,2)
         ENDDO
-        !$acc end data
         !
-     ENDIF
+     ENDDO
+     !$acc end data
      !
-  ENDDO
+  ENDIF
   !
   !$acc end data
   DEALLOCATE( psi )
@@ -224,25 +224,25 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   !   addition to the hpsi
   !
   USE parallel_include
-  USE kinds, ONLY : DP
-  USE wvfct, ONLY : current_k
-  USE klist, ONLY : igk_k_d
+  USE kinds,         ONLY : DP
+  USE wvfct,         ONLY : current_k
+  USE klist,         ONLY : igk_k
   USE mp_bands,      ONLY : me_bgrp
   USE control_flags, ONLY : many_fft
   USE fft_base,      ONLY : dffts
-  USE fft_interfaces,ONLY : fwfft, invfft
+  USE fft_wave
   USE fft_helper_subroutines
-  USE wavefunctions, ONLY: psic_h => psic
+  USE wavefunctions, ONLY : psic_h => psic
 #if defined(__CUDA)
   USE device_fbuff_m,    ONLY : dev_buf
 #endif
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in) :: lda, n, m
-  COMPLEX(DP), INTENT(in)   :: psi_d (lda, m)
-  COMPLEX(DP), INTENT(inout):: hpsi_d (lda, m)
-  REAL(DP),    INTENT(in)   :: v_d(dffts%nnr)
+  INTEGER, INTENT(IN) :: lda, n, m
+  COMPLEX(DP), INTENT(IN) :: psi_d(lda,m)
+  COMPLEX(DP), INTENT(INOUT):: hpsi_d(lda,m)
+  REAL(DP), INTENT(IN) :: v_d(dffts%nnr)
 #if defined(__CUDA)
   attributes(DEVICE) :: psi_d, hpsi_d, v_d
 #endif
@@ -250,198 +250,146 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   INTEGER :: ibnd, j, incr
   INTEGER :: i, right_nnr, right_nr3, right_inc
   !
-  LOGICAL :: use_tg
+  COMPLEX(DP), ALLOCATABLE :: psi(:,:)
+  COMPLEX(DP), ALLOCATABLE :: psic(:), psic2(:,:)
   ! ... Task Groups
-  COMPLEX(DP), POINTER :: psic_d(:)
-  REAL(DP),    POINTER :: tg_v_d(:)
-  COMPLEX(DP), POINTER :: tg_psic_d(:)
-  INTEGER,     POINTER :: dffts_nl_d(:)
+  LOGICAL :: use_tg
+  COMPLEX(DP), ALLOCATABLE :: tg_psic(:), tg_psic2(:,:)
+  REAL(DP), POINTER :: tg_v_d(:)
 #if defined(__CUDA)
-  attributes(DEVICE) :: psic_d, tg_v_d, tg_psic_d, dffts_nl_d
+  attributes(DEVICE) :: tg_v_d
   !
-  REAL(DP) :: v_tmp
-  INTEGER :: v_siz, idx, ioff
+  INTEGER :: v_siz, idx, group_size, hm_vec(3)
   INTEGER :: ierr
-  INTEGER :: group_size
-  
+  !
   CALL start_clock_gpu ('vloc_psi')
   use_tg = dffts%has_task_groups
   !
+  ALLOCATE( psi(lda,m) )
+  !$acc data create( psi )
+  !$acc kernels
+  psi = psi_d
+  !$acc end kernels
+  !
+  incr = many_fft
+  !
   IF( use_tg ) THEN
-     !
      CALL start_clock_gpu ('vloc_psi:tg_gather')
      v_siz =  dffts%nnr_tg
+     incr = fftx_ntgrp(dffts)
      !
-     CALL dev_buf%lock_buffer( tg_v_d,    v_siz, ierr )
-     CALL dev_buf%lock_buffer( tg_psic_d, v_siz, ierr )
+     CALL dev_buf%lock_buffer( tg_v_d, v_siz, ierr )
+     ALLOCATE( tg_psic(v_siz), tg_psic2(v_siz,incr) )
      !
      CALL tg_gather_gpu( dffts, v_d, tg_v_d )
      CALL stop_clock_gpu ('vloc_psi:tg_gather')
-     !
   ELSE
-     CALL dev_buf%lock_buffer( psic_d, dffts%nnr*many_fft, ierr )
      v_siz =  dffts%nnr
+     ALLOCATE( psic(v_siz*incr), psic2(v_siz,incr) )
   ENDIF
   !
-  dffts_nl_d => dffts%nl_d
   !
   IF( use_tg ) THEN
-
+     !
      CALL tg_get_nnr( dffts, right_nnr )
-
+     !
+     !$acc data create(tg_psic,tg_psic2)
      DO ibnd = 1, m, fftx_ntgrp(dffts)
         !
-        tg_psic_d = (0.d0, 0.d0)
-        ioff   = 0
-        !
-        DO idx = 1, fftx_ntgrp(dffts)
-
-           IF( idx + ibnd - 1 <= m ) THEN
-!$cuf kernel do(1) <<<,>>>
-              DO j = 1, n
-                 tg_psic_d(dffts_nl_d (igk_k_d(j, current_k))+ioff) =  psi_d(j,idx+ibnd-1)
-              ENDDO
-
-           ENDIF
-
-        !write (6,*) 'wfc G ', idx+ibnd-1
-        !write (6,99) (tg_psic(i+ioff), i=1,400)
-
-           ioff = ioff + right_nnr
-        ENDDO
-        !
-        CALL  invfft ('tgWave', tg_psic_d, dffts )
-        !write (6,*) 'wfc R ' 
-        !write (6,99) (tg_psic(i), i=1,400)
+        CALL tgwave_g2r( psi(1:n,:), tg_psic, dffts, ibnd, m, igk_k(:,current_k) )
         !
         CALL tg_get_group_nr3( dffts, right_nr3 )
         !
-!$cuf kernel do(1) <<<,>>>
+        !$acc parallel loop
         DO j = 1, dffts%nr1x*dffts%nr2x* right_nr3
-           tg_psic_d (j) = tg_psic_d (j) * tg_v_d(j)
+           tg_psic(j) = tg_psic(j) * tg_v_d(j)
         ENDDO
-!
-        !write (6,*) 'v psi R ' 
-        !write (6,99) (tg_psic(i), i=1,400)
         !
-        CALL fwfft ('tgWave',  tg_psic_d, dffts )
-        !
-        !   addition to the total product
-        !
-        ioff   = 0
-        !
-        CALL tg_get_recip_inc( dffts, right_inc )
+        CALL tgwave_r2g( tg_psic, tg_psic2, dffts, n, 1, m-ibnd+1, igk_k(:,current_k) )
         !
         DO idx = 1, fftx_ntgrp(dffts)
-           !
-           IF( idx + ibnd - 1 <= m ) THEN
-!$cuf kernel do(1) <<<,>>>
+           IF ( idx+ibnd-1 <= m ) THEN
+              !$acc parallel loop
               DO j = 1, n
-                 hpsi_d (j, ibnd+idx-1) = hpsi_d (j, ibnd+idx-1) + &
-                    tg_psic_d( dffts_nl_d(igk_k_d(j, current_k)) + ioff )
+                 hpsi_d(j,ibnd+idx-1) = hpsi_d(j,ibnd+idx-1) + tg_psic2(j,idx-1)
               ENDDO
-!
            ENDIF
-           !
-        !write (6,*) 'v psi G ', idx+ibnd-1
-        !write (6,99) (tg_psic(i+ioff), i=1,400)
-
-           ioff = ioff + right_inc
-           !
         ENDDO
         !
      ENDDO
-  ELSE IF (many_fft > 1) THEN
-     DO ibnd = 1, m, many_fft
+     !$acc end data
+     !
+  ELSEIF (many_fft > 1) THEN
+     !
+     !$acc data create(psic,psic2)
+     DO ibnd = 1, m, incr
         !
-        !!! == OPTIMIZE HERE == (setting to 0 and setting elements!)
-        group_size = MIN(many_fft, m - (ibnd -1))
-        psic_d(1: dffts%nnr*group_size) = (0.d0, 0.d0)
-
-!$cuf kernel do(2) <<<,>>>
+        group_size = MIN(many_fft,m-(ibnd-1))
+        hm_vec(1)=group_size ; hm_vec(2)=ibnd ; hm_vec(3)=n
+        !
+        CALL wave_g2r( psi, psic, dffts, igk=igk_k(:,current_k), howmany_set=hm_vec )
+        !
+        !$acc parallel loop collapse(2)
         DO idx = 0, group_size-1
-           DO j = 1, n
-              psic_d (dffts_nl_d (igk_k_d(j, current_k)) + idx*v_siz) = psi_d(j, ibnd+idx)
-           END DO
-        END DO
-        !
-        CALL invfft ('Wave', psic_d, dffts, howmany=group_size)
-        !
-!$cuf kernel do(1) <<<,>>>
-        DO j = 1, v_siz
-           v_tmp = v_d(j)
-           DO idx = 0, group_size-1
-              psic_d (j + idx*v_siz) = psic_d (j + idx*v_siz) * v_tmp
-           END DO
+           DO j = 1, v_siz
+              psic(idx*v_siz+j) = psic(idx*v_siz+j) * v_d(j)
+           ENDDO
         ENDDO
         !
-        CALL fwfft ('Wave', psic_d, dffts, howmany=group_size)
+        CALL wave_r2g( psic, psic2, dffts, igk=igk_k(:,current_k), howmany_set=hm_vec )
         !
-        !   addition to the total product
-        !
-!$cuf kernel do(2) <<<*,*>>>
+        !$acc parallel loop collapse(2)
         DO idx = 0, group_size-1
            DO j = 1, n
-              hpsi_d (j, ibnd + idx)   = hpsi_d (j, ibnd + idx)   + psic_d (dffts_nl_d(igk_k_d(j, current_k)) + idx * v_siz)
+              hpsi_d(j,ibnd+idx) = hpsi_d(j,ibnd+idx) + psic2(j,idx+1)
            ENDDO
         ENDDO
         !
      ENDDO
+     !$acc end data
+     !
   ELSE
+     !
+     !$acc data create(psic,psic2)
      DO ibnd = 1, m
         !
-        !!! == OPTIMIZE HERE == (setting to 0 and setting elements!)
-        psic_d(:) = (0.d0, 0.d0)
-!$cuf kernel do(1) <<<,>>>
-        DO j = 1, n
-          psic_d (dffts_nl_d (igk_k_d(j, current_k))) = psi_d(j, ibnd)
-        END DO
-!
-        !write (6,*) 'wfc G ', ibnd
-        !write (6,99) (psic(i), i=1,400)
+        CALL wave_g2r( psi(1:n,ibnd:ibnd), psic, dffts, igk=igk_k(:,current_k) )
         !
-        CALL invfft ('Wave', psic_d, dffts)
-        !write (6,*) 'wfc R ' 
-        !write (6,99) (psic(i), i=1,400)
-        !
-!$cuf kernel do(1) <<<,>>>
+        !$acc parallel loop
         DO j = 1, v_siz
-           psic_d (j) = psic_d (j) * v_d(j)
+           psic(j) = psic(j) * v_d(j)
         ENDDO
-!
-        !write (6,*) 'v psi R ' 
-        !write (6,99) (psic(i), i=1,400)
         !
-        CALL fwfft ('Wave', psic_d, dffts)
+        CALL wave_r2g( psic, psic2(1:n,:), dffts, igk=igk_k(:,current_k) )
         !
-        !   addition to the total product
-        !
-!$cuf kernel do(1) <<<,>>>
-        DO j = 1, n
-           hpsi_d (j, ibnd)   = hpsi_d (j, ibnd)   + psic_d (dffts_nl_d(igk_k_d(j, current_k)))
+        !$acc parallel loop
+        DO i = 1, n
+           hpsi_d(i,ibnd) = hpsi_d(i,ibnd) + psic2(i,1)
         ENDDO
-!
-        !write (6,*) 'v psi G ', ibnd
-        !write (6,99) (psic(i), i=1,400)
         !
      ENDDO
+     !$acc end data
+     !
   ENDIF
+  !
+  !
+  !$acc end data
+  DEALLOCATE( psi )
   !
   IF( use_tg ) THEN
-     !
-     CALL dev_buf%release_buffer( tg_psic_d, ierr )
+     DEALLOCATE( tg_psic, tg_psic2 )
      CALL dev_buf%release_buffer( tg_v_d, ierr )
-     !
   ELSE
-     CALL dev_buf%release_buffer( psic_d, ierr )
+     DEALLOCATE( psic, psic2 )
   ENDIF
   !
-  CALL stop_clock_gpu ('vloc_psi')
+  CALL stop_clock_gpu( 'vloc_psi' )
 #endif
   !
 99 format ( 20 ('(',2f12.9,')') )
-
+  !
   RETURN
+  !
 END SUBROUTINE vloc_psi_k_gpu
 !
 !@njs: vloc_psi_nc

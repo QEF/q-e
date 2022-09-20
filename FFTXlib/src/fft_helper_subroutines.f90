@@ -759,7 +759,7 @@ CONTAINS
   END SUBROUTINE fftx_psi2c_gamma_gpu
   !
   !------------------------------------------------------------
-  SUBROUTINE fftx_psi2c_k( desc, vin, vout, igk )
+  SUBROUTINE fftx_psi2c_k( desc, vin, vout, igk, howmany_set )
      !---------------------------------------------------------
      !
      USE fft_types,      ONLY : fft_type_descriptor
@@ -768,18 +768,36 @@ CONTAINS
      COMPLEX(DP), INTENT(IN) :: vin(:)
      COMPLEX(DP), INTENT(OUT) :: vout(:,:)
      INTEGER, INTENT(IN) :: igk(:)
+     INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
      !
-     INTEGER :: ig, igmax
+     INTEGER :: ig, igmax, idx, n, group_size, v_siz
      !
      CALL alloc_nl_pntrs( desc )
      !
      !$acc data present_or_copyin(vin,igk) present_or_copyout(vout)
      !
-     igmax = MIN(desc%ngw,SIZE(vout(:,1)))
-     !$acc parallel loop
-     DO ig = 1, igmax
-       vout(ig,1) = vin(nl_d(igk(ig)))
-     ENDDO
+     IF (PRESENT(howmany_set)) THEN
+        !
+        group_size = howmany_set(1)
+        n = howmany_set(3)
+        v_siz = desc%nnr
+        !
+        !$acc parallel loop collapse(2)
+        DO idx = 0, group_size-1
+           DO ig = 1, n
+              vout(ig,idx+1) = vin(idx*v_siz+nl_d(igk(ig)))
+           ENDDO
+        ENDDO
+        !
+     ELSE
+        !
+        igmax = MIN(desc%ngw,SIZE(vout(:,1)))
+        !$acc parallel loop
+        DO ig = 1, igmax
+          vout(ig,1) = vin(nl_d(igk(ig)))
+        ENDDO
+        !
+     ENDIF
      !
      !$acc end data
      !

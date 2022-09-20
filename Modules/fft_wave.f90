@@ -72,7 +72,7 @@ CONTAINS
     ELSE
       !$acc data present_or_copyin(igk)
       IF (PRESENT(howmany_set)) THEN 
-        CALL fftx_psi2c_k( dfft, psic, f_out, igk )
+        CALL fftx_psi2c_k( dfft, psic, f_out, igk, howmany_set )
       ELSE
         CALL fftx_psi2c_k( dfft, psic, f_out(:,1:1), igk )
       ENDIF
