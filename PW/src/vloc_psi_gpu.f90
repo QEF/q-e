@@ -10,21 +10,19 @@
 #define tg_gather_gpu tg_gather
 #endif
 !-----------------------------------------------------------------------
-SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
+SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
   !-----------------------------------------------------------------------
-  !
-  ! Calculation of Vloc*psi using dual-space technique - Gamma point
+  !! Calculation of Vloc*psi using dual-space technique - Gamma point.
   !
   USE parallel_include
-  USE kinds,   ONLY : DP
-  USE control_flags, ONLY : many_fft
-  USE mp_bands,      ONLY : me_bgrp
-  USE fft_base,      ONLY : dffts
-  USE fft_interfaces,ONLY : fwfft, invfft
+  USE kinds,          ONLY : DP
+  USE control_flags,  ONLY : many_fft
+  USE mp_bands,       ONLY : me_bgrp
+  USE fft_base,       ONLY : dffts
   USE fft_wave
   USE fft_helper_subroutines
 #if defined(__CUDA)
-  USE device_fbuff_m,      ONLY : dev_buf
+  USE device_fbuff_m, ONLY : dev_buf
 #endif
   !
   IMPLICIT NONE
@@ -40,11 +38,11 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   INTEGER :: ibnd, j, incr, right_nnr, right_nr3, right_inc
   COMPLEX(DP) :: fp, fm
   !
-  LOGICAL :: use_tg
   COMPLEX(DP), ALLOCATABLE :: psi(:,:)
   COMPLEX(DP), ALLOCATABLE :: psic(:), psic2(:,:)
   ! Variables for task groups
-  REAL(DP),    POINTER :: tg_v_d(:)
+  LOGICAL :: use_tg
+  REAL(DP), POINTER :: tg_v_d(:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:), tg_psic2(:,:)
 #if defined(__CUDA)
   attributes(DEVICE) :: tg_v_d
@@ -52,7 +50,7 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   INTEGER :: ierr, ioff
   ! Variables to handle batched FFT
   INTEGER :: group_size, pack_size, remainder, howmany, hm_vec(3)
-  REAL(DP):: v_tmp, fac
+  REAL(DP):: fac
   !
   CALL start_clock_gpu( 'vloc_psi' )
   !
@@ -372,7 +370,6 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      !
   ENDIF
   !
-  !
   !$acc end data
   DEALLOCATE( psi )
   !
@@ -394,213 +391,191 @@ END SUBROUTINE vloc_psi_k_gpu
 !
 !@njs: vloc_psi_nc
 !-----------------------------------------------------------------------
-SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
+SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v_d, hpsi_d )
   !-----------------------------------------------------------------------
-  !
-  ! Calculation of Vloc*psi using dual-space technique - noncolinear
+  !! Calculation of Vloc*psi using dual-space technique - non-collinear - 
+  !! GPU version.
   !
   USE parallel_include
-  USE kinds,   ONLY : DP
-  USE wvfct, ONLY : current_k
-  USE klist, ONLY : igk_k_d
-  USE mp_bands,      ONLY : me_bgrp
-  USE fft_base,      ONLY : dffts, dfftp
-  USE fft_interfaces,ONLY : fwfft, invfft
-  USE lsda_mod,      ONLY : nspin
-  USE noncollin_module,    ONLY: npol, domag
-  USE wavefunctions_gpum,  ONLY: psic_nc_d
+  USE kinds,               ONLY : DP
+  USE wvfct,               ONLY : current_k
+  USE klist,               ONLY : igk_k
+  USE mp_bands,            ONLY : me_bgrp
+  USE fft_base,            ONLY : dffts, dfftp
+  USE fft_wave
+  USE lsda_mod,            ONLY : nspin
+  USE noncollin_module,    ONLY : npol, domag
   USE fft_helper_subroutines
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in) :: lda, n, m
-  REAL(DP),    INTENT(in)   :: v_d(dfftp%nnr,4) ! beware dimensions!
-  COMPLEX(DP), INTENT(in)   :: psi_d (lda*npol, m)
-  COMPLEX(DP), INTENT(inout):: hpsi_d (lda,npol,m)
+  INTEGER, INTENT(IN) :: lda, n, m
+  REAL(DP), INTENT(IN) :: v_d(dfftp%nnr,4) ! beware dimensions!
+  COMPLEX(DP), INTENT(IN) :: psi_d(lda*npol,m)
+  COMPLEX(DP), INTENT(INOUT):: hpsi_d(lda,npol,m)
 #if defined(__CUDA)
   attributes(DEVICE) :: v_d, psi_d, hpsi_d
 #endif
   !
-  INTEGER :: ibnd, j,ipol, incr, is
+  INTEGER :: ibnd, j, ipol, incr, is
   COMPLEX(DP) :: sup, sdwn
   !
-  LOGICAL :: use_tg
+  COMPLEX(DP), ALLOCATABLE :: psi(:,:), psic_nc(:,:), psic_nc2(:,:)
   ! Variables for task groups
-  REAL(DP),    ALLOCATABLE :: tg_v_d(:,:)
-  COMPLEX(DP), ALLOCATABLE :: tg_psic_d(:,:)
-  INTEGER,     POINTER      :: dffts_nl_d(:)
+  LOGICAL :: use_tg
+  REAL(DP), ALLOCATABLE :: tg_v_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: tg_psic(:,:), tg_psic2(:,:)
 #if defined(__CUDA)
-  attributes(DEVICE) :: tg_v_d, tg_psic_d, dffts_nl_d
-  INTEGER :: v_siz, idx, ioff
+  attributes(DEVICE) :: tg_v_d
+  INTEGER :: v_siz, idx, ioff, ii, ie
   INTEGER :: right_nnr, right_nr3, right_inc
-  INTEGER :: ierr
   !
   CALL start_clock_gpu ('vloc_psi')
   !
   incr = 1
-  !
   use_tg = dffts%has_task_groups 
   !
+  ALLOCATE( psi(lda*npol,m) )
+  !$acc data create( psi )
+  !$acc kernels
+  psi = psi_d
+  !$acc end kernels
+  !
   IF( use_tg ) THEN
-     CALL start_clock_gpu ('vloc_psi:tg_gather')
+     CALL start_clock_gpu( 'vloc_psi:tg_gather' )
      v_siz = dffts%nnr_tg
+     incr = fftx_ntgrp(dffts)
      IF (domag) THEN
-        ALLOCATE( tg_v_d( v_siz, 4 ) )
-        DO is=1,nspin
+        ALLOCATE( tg_v_d(v_siz,4) )
+        DO is = 1, nspin
            CALL tg_gather_gpu( dffts, v_d(:,is), tg_v_d(:,is) )
         ENDDO
      ELSE
-        ALLOCATE( tg_v_d( v_siz, 1 ) )
+        ALLOCATE( tg_v_d(v_siz,1) )
         CALL tg_gather_gpu( dffts, v_d(:,1), tg_v_d(:,1) )
      ENDIF
-     ALLOCATE( tg_psic_d( v_siz, npol ) )
-     CALL stop_clock_gpu ('vloc_psi:tg_gather')
-
-     incr = fftx_ntgrp(dffts)
+     ALLOCATE( tg_psic(v_siz,npol), tg_psic2(lda,incr) )
+     CALL stop_clock_gpu( 'vloc_psi:tg_gather' )
+  ELSE
+     v_siz = dffts%nnr
+     ALLOCATE( psic_nc(v_siz,npol), psic_nc2(lda,1) )
   ENDIF
   !
-  dffts_nl_d => dffts%nl_d
+  ! ... the local potential V_Loc psi. First the psi in real space
   !
-  ! the local potential V_Loc psi. First the psi in real space
-  !
-  DO ibnd = 1, m, incr
-
-     IF( use_tg ) THEN
-        !
-        CALL tg_get_nnr( dffts, right_nnr )
+  IF( use_tg ) THEN
+     !
+     !$acc data create( tg_psic, tg_psic2 )
+     DO ibnd = 1, m, incr
         !
         DO ipol = 1, npol
-           !
-           !  == OPTIMIZE HERE == setting data twice
-           tg_psic_d(:,ipol) = ( 0.D0, 0.D0 )
-           ioff   = 0
-           !
-           DO idx = 1, fftx_ntgrp(dffts)
-              !
-              IF( idx + ibnd - 1 <= m ) THEN
-                 !$cuf kernel do(1) <<<,>>>
-                 DO j = 1, n
-                    tg_psic_d( dffts_nl_d( igk_k_d(j, current_k) ) + ioff, ipol ) = &
-                       psi_d( j +(ipol-1)*lda, idx+ibnd-1 )
-                 ENDDO
-              ENDIF
-
-              ioff = ioff + right_nnr
-
-           ENDDO
-           !
-           CALL invfft ('tgWave', tg_psic_d(:,ipol), dffts )
-           !
+           ii = lda*(ipol-1)+1
+           ie = lda*ipol
+           CALL tgwave_g2r( psi(ii:ie,:), tg_psic(:,ipol), dffts, ibnd, m, &
+                            igk_k(:,current_k) )
         ENDDO
         !
-     ELSE
-        psic_nc_d = (0.d0,0.d0)
-        DO ipol=1,npol
-           !$cuf kernel do(1) <<<,>>>
-           DO j = 1, n
-              psic_nc_d(dffts_nl_d(igk_k_d(j, current_k)),ipol) = psi_d(j+(ipol-1)*lda,ibnd)
-           ENDDO
-           CALL invfft ('Wave', psic_nc_d(:,ipol), dffts)
-        ENDDO
-     ENDIF
-
-     !
-     !   product with the potential v = (vltot+vr) on the smooth grid
-     !
-     IF( use_tg ) THEN
         CALL tg_get_group_nr3( dffts, right_nr3 )
+        !
         IF (domag) THEN
-           !$cuf kernel do(1) <<<,>>>
-           DO j=1, dffts%nr1x*dffts%nr2x*right_nr3
-              sup = tg_psic_d(j,1) * (tg_v_d(j,1)+tg_v_d(j,4)) + &
-                    tg_psic_d(j,2) * (tg_v_d(j,2)-(0.d0,1.d0)*tg_v_d(j,3))
-              sdwn = tg_psic_d(j,2) * (tg_v_d(j,1)-tg_v_d(j,4)) + &
-                     tg_psic_d(j,1) * (tg_v_d(j,2)+(0.d0,1.d0)*tg_v_d(j,3))
-              tg_psic_d(j,1)=sup
-              tg_psic_d(j,2)=sdwn
+           !$acc parallel loop
+           DO j = 1, dffts%nr1x*dffts%nr2x*right_nr3
+              sup  = tg_psic(j,1) * (tg_v_d(j,1)+tg_v_d(j,4)) + &
+                     tg_psic(j,2) * (tg_v_d(j,2)-(0.d0,1.d0)*tg_v_d(j,3))
+              sdwn = tg_psic(j,2) * (tg_v_d(j,1)-tg_v_d(j,4)) + &
+                     tg_psic(j,1) * (tg_v_d(j,2)+(0.d0,1.d0)*tg_v_d(j,3))
+              tg_psic(j,1) = sup
+              tg_psic(j,2) = sdwn
            ENDDO
         ELSE
-           !$cuf kernel do(1) <<<,>>>
-           DO j=1, dffts%nr1x*dffts%nr2x*right_nr3
-              tg_psic_d(j,:) = tg_psic_d(j,:) * tg_v_d(j,1)
+           !$acc parallel loop
+           DO j = 1, dffts%nr1x*dffts%nr2x*right_nr3
+              tg_psic(j,:) = tg_psic(j,:) * tg_v_d(j,1)
            ENDDO
         ENDIF
-     ELSE
-        IF (domag) THEN
-           !$cuf kernel do(1) <<<,>>>
-           DO j=1, dffts%nnr
-              sup = psic_nc_d(j,1) * (v_d(j,1)+v_d(j,4)) + &
-                    psic_nc_d(j,2) * (v_d(j,2)-(0.d0,1.d0)*v_d(j,3))
-              sdwn = psic_nc_d(j,2) * (v_d(j,1)-v_d(j,4)) + &
-                     psic_nc_d(j,1) * (v_d(j,2)+(0.d0,1.d0)*v_d(j,3))
-              psic_nc_d(j,1)=sup
-              psic_nc_d(j,2)=sdwn
-           ENDDO
-        ELSE
-           !$cuf kernel do(1) <<<,>>>
-           DO j=1, dffts%nnr
-              psic_nc_d(j,:) = psic_nc_d(j,:) * v_d(j,1)
-           ENDDO
-        ENDIF
-     ENDIF
-     !
-     !   back to reciprocal space
-     !
-     IF( use_tg ) THEN
         !
         DO ipol = 1, npol
-
-           CALL fwfft ('tgWave', tg_psic_d(:,ipol), dffts )
-           !
-           ioff   = 0
+           CALL tgwave_r2g( tg_psic(:,ipol), tg_psic2, dffts, n, 1, m-ibnd+1, &
+                            igk_k(:,current_k) )
            !
            CALL tg_get_recip_inc( dffts, right_inc )
            !
+           ioff = 0
+           !
            DO idx = 1, fftx_ntgrp(dffts)
-              !
-              IF( idx + ibnd - 1 <= m ) THEN
-                 !$cuf kernel do(1) <<<,>>>
-                 DO j = 1, n
-                    hpsi_d (j, ipol, ibnd+idx-1) = hpsi_d (j, ipol, ibnd+idx-1) + &
-                                 tg_psic_d( dffts_nl_d(igk_k_d(j, current_k)) + ioff, ipol )
-                 ENDDO
-              ENDIF
-              !
-              ioff = ioff + right_inc
-              !
-           ENDDO
-
-        ENDDO
-        !
-     ELSE
-
-        DO ipol=1,npol
-           CALL fwfft ('Wave', psic_nc_d(:,ipol), dffts)
-        ENDDO
-        !
-        !   addition to the total product
-        !
-        DO ipol=1,npol
-           !$cuf kernel do(1) <<<,>>>
-           DO j = 1, n
-              hpsi_d(j,ipol,ibnd) = hpsi_d(j,ipol,ibnd) + &
-                                  psic_nc_d(dffts_nl_d(igk_k_d(j, current_k)),ipol)
+             IF ( idx+ibnd-1<=m ) THEN
+               !$acc parallel loop
+               DO j = 1, n
+                 hpsi_d(j,ipol,ibnd+idx-1) = hpsi_d(j,ipol,ibnd+idx-1) + tg_psic2(j,idx)
+               ENDDO
+             ENDIF
+             ioff = ioff + right_inc
            ENDDO
         ENDDO
-
-     ENDIF
-
-  ENDDO
-
-  IF( use_tg ) THEN
+        !
+     ENDDO
+     !$acc end data
      !
-     DEALLOCATE(tg_v_d, tg_psic_d)
+  ELSE
+     !
+     !$acc data create( psic_nc, psic_nc2 )
+     DO ibnd = 1, m, incr
+        !
+        !$acc kernels
+        psic_nc = (0.d0,0.d0)
+        !$acc end kernels
+        DO ipol = 1, npol
+           ii = lda*(ipol-1)+1
+           ie = lda*(ipol-1)+n
+           CALL wave_g2r( psi(ii:ie,ibnd:ibnd), psic_nc(:,ipol), dffts, &
+                          igk=igk_k(:,current_k) )
+        ENDDO
+        !
+        IF (domag) THEN
+           !$acc parallel loop
+           DO j = 1, dffts%nnr
+              sup  = psic_nc(j,1) * (v_d(j,1)+v_d(j,4)) + &
+                     psic_nc(j,2) * (v_d(j,2)-(0.d0,1.d0)*v_d(j,3))
+              sdwn = psic_nc(j,2) * (v_d(j,1)-v_d(j,4)) + &
+                     psic_nc(j,1) * (v_d(j,2)+(0.d0,1.d0)*v_d(j,3))
+              psic_nc(j,1) = sup
+              psic_nc(j,2) = sdwn
+           ENDDO
+        ELSE
+           !$acc parallel loop
+           DO j = 1, dffts%nnr
+              psic_nc(j,:) = psic_nc(j,:) * v_d(j,1)
+           ENDDO
+        ENDIF
+        !
+        DO ipol = 1, npol
+           CALL wave_r2g( psic_nc(:,ipol), psic_nc2(1:n,:), dffts, igk=igk_k(:,current_k) )
+           !
+           !$acc parallel loop
+           DO j = 1, n
+              hpsi_d(j,ipol,ibnd) = hpsi_d(j,ipol,ibnd) + psic_nc2(j,1)
+           ENDDO
+        ENDDO
+        !
+     ENDDO
+     !$acc end data
      !
   ENDIF
+  !
+  !
+  IF( use_tg ) THEN
+     DEALLOCATE( tg_v_d, tg_psic, tg_psic2 )
+  ELSE
+     DEALLOCATE( psic_nc, psic_nc2 )
+  ENDIF
+  !
+  !$acc end data
+  DEALLOCATE( psi )
   !
   CALL stop_clock_gpu ('vloc_psi')
 #endif
   !
   RETURN
+  !
 END SUBROUTINE vloc_psi_nc_gpu
 
