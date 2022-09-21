@@ -298,7 +298,13 @@ SUBROUTINE potinit()
         ENDIF
      ELSEIF (lda_plus_u_kind == 2) THEN
         nsgnew = nsg
-        CALL write_nsg()
+        ! ---------- LUCA (spawoc) --------------
+        IF(noncolin) THEN
+           CALL write_nsg_nc()
+        ELSE
+           CALL write_nsg()
+        ENDIF
+        !-----------------
      ENDIF
      !
   END IF

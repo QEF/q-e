@@ -559,7 +559,7 @@ SUBROUTINE dndepsilon_k_nc ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,dn
    USE mp,                ONLY : mp_sum
    USE ldaU,              ONLY : nwfcU, offsetU, Hubbard_l, is_hubbard,  &
                                  ldim_back, offsetU_back, offsetU_back1, &
-                                 is_hubbard_back, Hubbard_l_back, backall
+                                 is_hubbard_back, Hubbard_l2, backall
    USE wavefunctions_gpum,ONLY : using_evc
    USE becmod_subs_gpum,  ONLY : using_becp_auto
 
@@ -1245,7 +1245,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
          ldim_std = 2*Hubbard_l(nt)+1
          IF (is_hubbard(nt) .OR. is_hubbard_back(nt)) THEN
             ! --------------------------- LUCA -----------------------
-            IF (U_projection.EQ."atomic") THEN
+            IF (Hubbard_projectors.EQ."atomic") THEN
                DO m1 = 1, ldim_u(nt)
                   IF (m1.LE.ldim_std) THEN
                      offpmU = offsetU(na)
@@ -1253,9 +1253,9 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
                   ELSE
                      offpmU = offsetU_back(na) - ldim_std
                      offpm  = oatwfc_back(na)  - ldim_std
-                     IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l_back(nt)+1) THEN
-                        offpmU = offsetU_back1(na) - ldim_std - 2*Hubbard_l_back(nt) - 1
-                        offpm  = oatwfc_back1(na)  - ldim_std - 2*Hubbard_l_back(nt) - 1
+                     IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l2(nt)+1) THEN
+                        offpmU = offsetU_back1(na) - ldim_std - 2*Hubbard_l2(nt) - 1
+                        offpm  = oatwfc_back1(na)  - ldim_std - 2*Hubbard_l2(nt) - 1
                      ENDIF
                   ENDIF
                      dwfc(ig,offpmU+m1) = at_dy(ig,offpm+m1) * a1 + at_dj(ig,offpm+m1) * a2

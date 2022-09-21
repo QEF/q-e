@@ -1550,7 +1550,124 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
   !
 END SUBROUTINE v_hubbard_extended
 !---------------------------------------------------------------------
-
+! -------------- LUCA (spawoc) ------------------------------
+SUBROUTINE v_hubbard_extended_nc (nsg, v_hub, eth)
+   !-----------------------------------------------------------------------------------
+   !
+   !! Computes extended Hubbard potential and Hubbard energy.
+   !! DFT+U+V: Simplified rotationally-invariant formulation by
+   !! V.L. Campo Jr and M. Cococcioni, J. Phys.: Condens. Matter 22, 055602 (2010).
+   !
+   USE kinds,             ONLY : DP
+   USE ions_base,         ONLY : nat, ityp
+   USE ldaU,              ONLY : Hubbard_l, Hubbard_alpha, Hubbard_J0, Hubbard_beta,   &
+                                 ldim_u, ldmx_tot, max_num_neighbors, at_sc, neighood, &
+                                 Hubbard_V, Hubbard_alpha_back, is_hubbard, is_hubbard_back
+   USE lsda_mod,          ONLY : nspin
+   USE control_flags,     ONLY : iverbosity, dfpt_hub
+   USE io_global,         ONLY : stdout
+   !
+   IMPLICIT NONE
+   !
+   COMPLEX(DP), INTENT(IN)  :: nsg  (ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin)
+   COMPLEX(DP), INTENT(OUT) :: v_hub(ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin)
+   REAL(DP),    INTENT(OUT) :: eth
+   ! 
+   ! Local variables 
+   !
+   INTEGER :: is, is1, isop, na, na1, na2, nt, nt1, nt2, m1, m2, viz, equiv_na2, i_type
+   INTEGER, EXTERNAL :: type_interaction, find_viz
+   !
+   eth  = 0.d0
+   v_hub(:,:,:,:,:) = (0.d0, 0.d0)
+   !
+   DO na1 = 1, nat
+      !
+      nt1 = ityp(na1)
+      !
+      IF ( is_hubbard(nt1) ) THEN
+         !
+         DO is = 1, nspin
+            !
+            IF (is == 2) THEN
+               is1 = 3
+            ELSEIF (is == 3) THEN
+               is1 = 2
+            ELSE
+               is1 = is
+            ENDIF
+            DO viz = 1, neighood(na1)%num_neigh
+               !
+               na2 = neighood(na1)%neigh(viz)
+               equiv_na2 = at_sc(na2)%at
+               nt2 = ityp(equiv_na2)
+               !
+               IF ((is_hubbard(nt2).OR.is_hubbard_back(nt2)) .AND. &
+                   (Hubbard_V(na1,na2,1).NE.0.d0 .OR. &
+                    Hubbard_V(na1,na2,2).NE.0.d0 .OR. &
+                    Hubbard_V(na1,na2,3).NE.0.d0 .OR. &
+                    Hubbard_V(na1,na2,4).NE.0.d0) ) THEN
+                   !
+                   ! Here no need to use is1: complex conjugation is enough
+                   ! For both standard and background states of a center atom
+                   DO m1 = 1, ldim_u(nt1)
+                      ! For both standard and background states of the neighbor atom
+                      DO m2 = 1, ldim_u(nt2)
+                         !
+                         i_type = type_interaction(na1,m1,equiv_na2,m2)
+                         !
+                         v_hub(m2,m1,viz,na1,is) = &
+                            - CONJG(nsg(m2,m1,viz,na1,is)) * Hubbard_V(na1,na2,i_type)
+                         !
+                         eth = eth - nsg(m2,m1,viz,na1,is) * CONJG(nsg(m2,m1,viz,na1,is)) &
+                                     * Hubbard_V(na1,na2,i_type) * 0.5d0
+                         !
+                      ENDDO
+                   ENDDO
+                   !
+                   IF ( na1.EQ.na2 .AND. is1==is) THEN
+                      !
+                      na = find_viz(na1,na1)
+                      !
+                      ! This is the diagonal term (like in the DFT+U only case)
+                      ! 
+                      DO m1 = 1, ldim_u(nt1)
+                         !
+                         i_type = type_interaction(na1,m1,equiv_na2,m1)
+                         !
+                         v_hub(m1,m1,na,na1,is) = v_hub(m1,m1,na,na1,is) &
+                                        + Hubbard_V(na1,na1,i_type) * 0.5d0
+                         ! 
+                         eth = eth + nsg(m1,m1,na,na1,is) &
+                                        * Hubbard_V(na1,na1,i_type) * 0.5d0
+                         !
+                      ENDDO
+                      !
+                   ENDIF
+                   !
+               ENDIF
+               !
+            ENDDO ! viz
+            !
+         ENDDO ! is
+         !  
+      ENDIF
+      !
+      !
+   ENDDO ! na1
+   !
+   IF (nspin.EQ.1) eth = eth * 2.d0
+   !
+   ! Hubbard energy
+   !
+   IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
+      WRITE(stdout,'(/5x,"HUBBARD ENERGY = ",f9.4,1x," (Ry)")') eth
+   ENDIF
+   !
+   RETURN
+   !
+ END SUBROUTINE v_hubbard_extended_nc
+!
 !----------------------------------------------------------------------------
 SUBROUTINE v_h_of_rho_r( rhor, ehart, charge, v )
   !----------------------------------------------------------------------------

@@ -146,6 +146,8 @@ SUBROUTINE run_pwscf( exit_status )
   ENDIF
   !
   CALL init_run()
+  write(stdout,*) "hello worldEND"
+
   !
   IF ( check_stop_now() ) THEN
      exit_status = 255

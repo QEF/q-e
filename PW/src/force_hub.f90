@@ -546,8 +546,8 @@ SUBROUTINE dndtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    USE lsda_mod,             ONLY : nspin, current_spin
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, offsetU, &
                                     is_hubbard_back, offsetU_back, ldim_u, &
-                                    offsetU_back1, ldim_back, Hubbard_l_back, &
-                                    backall, U_projection, wfcU
+                                    offsetU_back1, ldim_back, Hubbard_l2, &
+                                    backall, Hubbard_projectors, wfcU
    USE noncollin_module,     ONLY : npol                            
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
@@ -621,7 +621,7 @@ SUBROUTINE dndtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    ! In the 'ortho-atomic' case calculate d[(O^{-1/2})^T]
    !
-   IF (U_projection.EQ."ortho-atomic") THEN
+   IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ALLOCATE ( doverlap_inv(natomwfc,natomwfc) )
       CALL calc_doverlap_inv (alpha, ipol, ik, jkb0)
    ENDIF

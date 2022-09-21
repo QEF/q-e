@@ -133,7 +133,12 @@ SUBROUTINE sum_band()
        !
     ELSEIF (lda_plus_u_kind.EQ.2) THEN 
        !
-       CALL new_nsg()
+       ! ----LUCA (spawoc)------------
+      IF (noncolin) THEN
+          CALL new_nsg_nc()
+      ELSE
+          CALL new_nsg() 
+      ENDIF
        !
     ENDIF
   ENDIF

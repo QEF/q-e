@@ -2977,8 +2977,10 @@ CONTAINS
          ELSEIF (ANY(Hubbard_V(:,:,:)>eps16)) THEN
             ! DFT+U+V(+J0)
             lda_plus_u_kind = 2
-            IF (noncolin) CALL errore('card_hubbard', &
-                    'Hubbard V is not supported with noncolin=.true.', i)
+           ! ----------- LUCA (spawoc) ------------------------
+           ! IF (noncolin) CALL errore('card_hubbard', &
+           !         'Hubbard V is not supported with noncolin=.true.', i)
+           ! ------------------------------------------
          ELSEIF (ANY(Hubbard_U(:)>eps16) .AND. noncolin) THEN
             ! DFT+U
             lda_plus_u_kind = 1
