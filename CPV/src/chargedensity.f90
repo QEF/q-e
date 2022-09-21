@@ -69,7 +69,7 @@
       USE io_base,            ONLY: read_rhog
       USE io_files,           ONLY: restart_dir
       USE fft_rho
-      USE fft_helper_subroutines, ONLY: c2psi_gamma
+      USE fft_helper_subroutines, ONLY: fftx_c2psi_gamma
       USE mp,                 ONLY: mp_barrier
       USE mp_world,           ONLY: mpime, world_comm
       !
@@ -236,7 +236,7 @@
             !
             ALLOCATE( psis( dffts%nnr ) ) 
             !
-            CALL c2psi_gamma( dffts, psis, c_bgrp(:,iwf:iwf) )
+            CALL fftx_c2psi_gamma( dffts, psis, c_bgrp(:,iwf:iwf) )
             !
             CALL invfft('Wave',psis, dffts )
             !
@@ -387,7 +387,7 @@
 
          do i = 1, nbsp_bgrp, 2 * fftx_ntgrp(dffts)
 
-            CALL c2psi_gamma( dffts, psis, c_bgrp(:,i:i), c_bgrp(:,i+1) )
+            CALL fftx_c2psi_gamma( dffts, psis, c_bgrp(:,i:i), c_bgrp(:,i+1) )
 
             CALL invfft('Wave', psis, dffts )
             !
@@ -504,7 +504,7 @@
                     psis( nl_d( ig )  + ioff) = c_d( ig, ii )
                  end do
               END IF
-              ! CALL c2psi_gamma( dffts, psis, c_bgrp(:,ii:ii), c_bgrp(:,ii+1) )
+              ! CALL fftx_c2psi_gamma( dffts, psis, c_bgrp(:,ii:ii), c_bgrp(:,ii+1) )
               ioff = ioff + dffts%nnr
               
             END DO

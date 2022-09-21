@@ -140,7 +140,7 @@ CONTAINS
         USE io_global, ONLY: ionode, ionode_id, stdout
         USE fft_base, ONLY: dfftp, dffts
         USE fft_interfaces, ONLY: invfft
-        USE fft_helper_subroutines, ONLY: c2psi_gamma
+        USE fft_helper_subroutines, ONLY: fftx_c2psi_gamma
         USE fft_rho, ONLY: rho_r2g
         USE mp_bands, ONLY: intra_bgrp_comm, inter_bgrp_comm, my_bgrp_id,&
              root_bgrp_id, root_bgrp
@@ -160,7 +160,7 @@ CONTAINS
 
         ALLOCATE( rhor(dfftp%nnr,1), psi(dfftp%nnr) )
 
-        CALL c2psi_gamma( dffts, psi, c )
+        CALL fftx_c2psi_gamma( dffts, psi, c )
         CALL invfft( 'Wave', psi, dffts )
 
         ! FIXME: not sure things will work in presence of a double grid

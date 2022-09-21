@@ -101,7 +101,7 @@
       END IF
       ALLOCATE( psi( dffts%nnr_tg ) )
       !
-      CALL c2psi_gamma( dffts, psi, c(:,i:i), c(:,i+1) )
+      CALL fftx_c2psi_gamma( dffts, psi, c(:,i:i), c(:,i+1) )
       !
       CALL invfft( 'Wave', psi, dffts )
       !

@@ -31,15 +31,15 @@ MODULE fft_helper_subroutines
   PUBLIC :: tg_get_nnr, tg_get_recip_inc, fftx_ntgrp, fftx_tgpe, &
             tg_get_group_nr3
   ! ... Used only in CP
-  PUBLIC :: fftx_add_threed2oned_gamma, fftx_psi2c_gamma, c2psi_gamma, &
-            fftx_add_field, c2psi_gamma_tg, c2psi_k, c2psi_k_tg, fftx_psi2c_k, &
+  PUBLIC :: fftx_add_threed2oned_gamma, fftx_psi2c_gamma, fftx_c2psi_gamma, &
+            fftx_add_field, c2psi_gamma_tg, fftx_c2psi_k, c2psi_k_tg, fftx_psi2c_k, &
             psi2c_gamma_tg, psi2c_k_tg
   PUBLIC :: fft_dist_info
   ! ... Used only in CP+EXX
   PUBLIC :: fftx_tgcomm
   !
 #if defined(__CUDA)
-  PUBLIC :: fftx_psi2c_gamma_gpu, c2psi_gamma_gpu
+  PUBLIC :: fftx_psi2c_gamma_gpu, fftx_c2psi_gamma_gpu
   !
   ! ... nlm and nl array: hold conversion indices from 3D to
   !     1-D vectors. Columns along the z-direction are stored
@@ -321,7 +321,7 @@ CONTAINS
   END SUBROUTINE
   !
   !---------------------------------------------------------------------
-  SUBROUTINE c2psi_gamma( desc, psi, c, ca, howmany_set )
+  SUBROUTINE fftx_c2psi_gamma( desc, psi, c, ca, howmany_set )
      !------------------------------------------------------------------
      !! Copy wave-functions from 1D array (c_bgrp) to 3D array (psi) in 
      !! Fourier space - gamma case.
@@ -335,11 +335,11 @@ CONTAINS
      COMPLEX(DP), INTENT(IN) :: c(:,:)
      !! stores the Fourier expansion coefficients
      COMPLEX(DP), OPTIONAL, INTENT(IN) :: ca(:)
-     INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
-     ! hm_set(1)=group_size ; hm_set(2)=ibnd ; hm_set(3)=npw
+     INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(2)
+     ! howmany_set(1)=group_size ; howmany_set(2)=npw
      !
      COMPLEX(DP), PARAMETER :: ci=(0.0d0,1.0d0)
-     INTEGER :: ig, idx, ibnd, n, v_siz, pack_size, remainder, howmany, &
+     INTEGER :: ig, idx, n, v_siz, pack_size, remainder, howmany, &
                 group_size
      !
      CALL alloc_nl_pntrs( desc )
@@ -358,9 +358,8 @@ CONTAINS
        ! ...                the couples of bands.
        !
        group_size= howmany_set(1)
-       ibnd = howmany_set(2)
-       n = howmany_set(3)
-       v_siz = desc%nnr_tg
+       n = howmany_set(2)
+       v_siz = desc%nnr
        pack_size = (group_size/2) ! This is FLOOR(group_size/2)
        remainder = group_size - 2*pack_size
        howmany   = pack_size + remainder
@@ -374,8 +373,8 @@ CONTAINS
           !$acc parallel loop
           DO idx = 0, pack_size-1
              DO ig = 1, n
-                psi(nl_d(ig) + idx*v_siz) = c(ig,ibnd+2*idx) + (0.d0,1.d0)*c(ig,ibnd+2*idx+1)
-                psi(nlm_d(ig) + idx*v_siz) = CONJG(c(ig,ibnd+2*idx) - (0.d0,1.d0)*c(ig,ibnd+2*idx+1))
+                psi(nl_d(ig) + idx*v_siz) = c(ig,2*idx+1) + (0.d0,1.d0)*c(ig,2*idx+2)
+                psi(nlm_d(ig) + idx*v_siz) = CONJG(c(ig,2*idx+1) - (0.d0,1.d0)*c(ig,2*idx+2))
              ENDDO
           ENDDO
        ENDIF
@@ -383,8 +382,8 @@ CONTAINS
        IF (remainder > 0) THEN
           !$acc parallel loop
           DO ig = 1, n
-             psi(nl_d(ig) + pack_size*v_siz) = c(ig,ibnd+group_size-1)
-             psi(nlm_d(ig) + pack_size*v_siz) = CONJG(c(ig,ibnd+group_size-1))
+             psi(nl_d(ig) + pack_size*v_siz) = c(ig,group_size)
+             psi(nlm_d(ig) + pack_size*v_siz) = CONJG(c(ig,group_size))
           ENDDO
        ENDIF
        !
@@ -414,12 +413,12 @@ CONTAINS
      !
      CALL dealloc_nl_pntrs( desc )
      !
-  END SUBROUTINE c2psi_gamma
+  END SUBROUTINE fftx_c2psi_gamma
   !
   !
 #ifdef __CUDA
   !---------------------------------------------------------------------
-  SUBROUTINE c2psi_gamma_gpu( desc, psi, c, ca )
+  SUBROUTINE fftx_c2psi_gamma_gpu( desc, psi, c, ca )
      !------------------------------------------------------------------
      !! Provisional gpu double of c2psi_gamma for CPV calls (CPV/src/exx_psi.f90).
      !! To be removed after porting exx_psi to openacc.
@@ -448,11 +447,11 @@ CONTAINS
            psi( nl_d( ig ) ) = c( ig )
         end do
      END IF
-  END SUBROUTINE c2psi_gamma_gpu
+  END SUBROUTINE fftx_c2psi_gamma_gpu
 #endif
   !
   !--------------------------------------------------------------------------------
-  SUBROUTINE c2psi_k( desc, psi, c, igk, ngk, howmany_set )
+  SUBROUTINE fftx_c2psi_k( desc, psi, c, igk, ngk, howmany )
      !-----------------------------------------------------------------------------
      !! Copy wave-functions from 1D array (c/evc) ordered according (k+G) index igk 
      !! to 3D array (psi) in Fourier space.
@@ -466,20 +465,17 @@ CONTAINS
      COMPLEX(DP), INTENT(IN) :: c(:,:)
      !! stores the Fourier expansion coefficients of the wave function
      INTEGER, INTENT(IN) :: igk(:), ngk
-     INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
-     ! hm_set(1)=howmany ; hm_set(2)=ibnd ; hm_set(3)=ibnd
+     INTEGER, OPTIONAL, INTENT(IN) :: howmany
      !
-     INTEGER :: nnr, i, j, ig, howmany, ibnd
+     INTEGER :: nnr, i, j, ig
      !
      CALL alloc_nl_pntrs( desc )
      !
      !$acc data present_or_copyin(c,igk) present_or_copyout(psi)
      !
-     IF (PRESENT(howmany_set)) THEN
+     IF (PRESENT(howmany)) THEN
         !
         nnr = desc%nnr
-        howmany = howmany_set(1)
-        ibnd = howmany_set(2)
         ! == OPTIMIZE HERE == (setting to 0 and setting elements!)
         !$acc kernels
         psi(1:nnr*howmany) = (0.d0,0.d0)
@@ -488,7 +484,7 @@ CONTAINS
         !$acc parallel loop collapse(2)
         DO i = 0, howmany-1
           DO j = 1, ngk
-            psi(nl_d(igk(j))+i*nnr) = c(j,ibnd+i)
+            psi(nl_d(igk(j))+i*nnr) = c(j,i+1)
           ENDDO
         ENDDO
         !
@@ -517,7 +513,7 @@ CONTAINS
      !
      CALL dealloc_nl_pntrs( desc )
      !
-  END SUBROUTINE c2psi_k
+  END SUBROUTINE fftx_c2psi_k
   !
   !
   !-------------------------------------------------------------------------
@@ -661,7 +657,7 @@ CONTAINS
      COMPLEX(DP), INTENT(OUT) :: vout1(:,:)
      COMPLEX(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
      COMPLEX(DP), INTENT(IN) :: vin(:)
-     INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
+     INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(2)
      !
      COMPLEX(DP) :: fp, fm
      INTEGER :: ig, idx, n, v_siz, pack_size, remainder, howmany, &
@@ -674,7 +670,7 @@ CONTAINS
      IF (PRESENT(howmany_set)) THEN
        !
        group_size = howmany_set(1)
-       n = howmany_set(3)
+       n = howmany_set(2)
        v_siz = desc%nnr
        pack_size = (group_size/2)
        remainder = group_size - 2*pack_size
@@ -768,7 +764,7 @@ CONTAINS
      COMPLEX(DP), INTENT(IN) :: vin(:)
      COMPLEX(DP), INTENT(OUT) :: vout(:,:)
      INTEGER, INTENT(IN) :: igk(:)
-     INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
+     INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(2)
      !
      INTEGER :: ig, igmax, idx, n, group_size, v_siz
      !
@@ -779,7 +775,7 @@ CONTAINS
      IF (PRESENT(howmany_set)) THEN
         !
         group_size = howmany_set(1)
-        n = howmany_set(3)
+        n = howmany_set(2)
         v_siz = desc%nnr
         !
         !$acc parallel loop collapse(2)

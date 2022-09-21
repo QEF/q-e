@@ -22,7 +22,7 @@
       USE metagga_cp,             ONLY : kedtaus
       USE fft_interfaces,         ONLY : fwfft, invfft
       USE fft_base,               ONLY : dffts
-      USE fft_helper_subroutines, ONLY : c2psi_gamma, fftx_psi2c_gamma
+      USE fft_helper_subroutines, ONLY : fftx_c2psi_gamma, fftx_psi2c_gamma
 !
       implicit none
 !
@@ -43,7 +43,7 @@
             
             dc(:,1)  = ci*g(ipol,1:ngw)*c(:)
             dca(:) = ci*g(ipol,1:ngw)*ca(:)
-            CALL c2psi_gamma( dffts, psi, dc, dca )
+            CALL fftx_c2psi_gamma( dffts, psi, dc, dca )
             CALL invfft( 'Wave', psi, dffts )
 
 !           on smooth grids--> grids for charge density
@@ -85,7 +85,7 @@
                              dkedtaus
       USE fft_interfaces, ONLY: fwfft, invfft
       USE fft_base,       ONLY: dffts, dfftp
-      USE fft_helper_subroutines, ONLY : c2psi_gamma
+      USE fft_helper_subroutines, ONLY : fftx_c2psi_gamma
       USE fft_rho
       
       implicit none
@@ -138,7 +138,7 @@
                dc( ig, 1 )  = ci * tpiba * g(ipol,ig) * c(ig,i)
                dca( ig ) = ci * tpiba * g(ipol,ig) * c(ig,i+1)
             end do
-            CALL c2psi_gamma( dffts, psis, dc, dca )
+            CALL fftx_c2psi_gamma( dffts, psis, dc, dca )
             call invfft('Wave',psis, dffts )
             ! on smooth grids--> grids for charge density
             do ir=1, dffts%nnr

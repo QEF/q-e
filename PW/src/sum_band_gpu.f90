@@ -733,9 +733,9 @@ SUBROUTINE sum_band_gpu()
                    !$acc data create(psicd)
                    !
                    group_size = MIN(many_fft,ibnd_end-(ibnd-1))
-                   hm_vec(1)=group_size ; hm_vec(2)=ibnd ; hm_vec(3)=npw
+                   hm_vec(1)=group_size ; hm_vec(2)=npw
                    !
-                   CALL wave_g2r( evc, psicd, dffts, igk=igk_k(:,ik), &
+                   CALL wave_g2r( evc(:,ibnd:ibnd+group_size-1), psicd, dffts, igk=igk_k(:,ik), &
                                   howmany_set=hm_vec )
                    !
                    ! ... increment the charge density ...
