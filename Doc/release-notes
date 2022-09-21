@@ -20,6 +20,8 @@ Fixed in development version:
     NaN's in the energy (noticed by Andrea Dal Corso)
   * CP wasn't honoring "exx_fraction" in v.7.1  (fixed by Hsin-Yu Ko)
   * QEHeat and KCW were not working if compiled for GPU
+  * SCF failure to converge wasn't always exiting with a non-zero code since
+    v7.0 (fixed by A. Fonari)
 
 New in 7.1 version:
   * DFT+RISM (1D, 3D, Laue) by S. Nishihara & M. Otani [Phys. Rev. B 96, 115429 (2017)].
