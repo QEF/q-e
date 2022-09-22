@@ -308,8 +308,8 @@ CONTAINS
 1000  FORMAT(' Iteration',2X,$)
 1010  FORMAT(4(2X,A12),$)
 1020  FORMAT(5X,I1,' external force field(s):')
-1030  FORMAT(13X,'axis = ',I1,'  dir = ',I1,' pos = ',F8.4,' inc = ',F8.4,' Strength = ',F8.4)
-1040  FORMAT(13X,'axis = ',I1,'  dir = ',I1,' pos = ',F8.4,' inc = ',F8.4,' Eps = ',F8.4,' Sigma = ',F8.4,' Cutoff = ',F8.4)
+1030  FORMAT(13X,'axis = ',I1,'  dir = ',I1,' pos = ',F8.4,' inc = ',F8.4,' Strength = ',F10.4)
+1040  FORMAT(13X,'axis = ',I1,'  dir = ',I1,' pos = ',F8.4,' inc = ',F8.4,' Eps = ',F8.4,' Sigma = ',F8.4,' Cutoff = ',F10.4)
   !
   END SUBROUTINE init_extffield
   !
@@ -475,7 +475,7 @@ CONTAINS
                 !
                 load(extff_axis(i),i) = load(extff_axis(i),i) + for(extff_axis(i))
                 effion(extff_axis(i),ia) = effion(extff_axis(i),ia) + for(extff_axis(i))
-                !print *,ia,ityp(ia),load(extff_axis(i),i),eftau(extff_axis(i),ia),extff_geo(1,i)
+                !print *,ia,ityp(ia),eftau(extff_axis(i),ia),extff_geo(1,i),for(extff_axis(i)),effion(extff_axis(i),ia)
                 !
              ENDDO
              !

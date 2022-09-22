@@ -513,7 +513,9 @@ USE cp_main_variables,        ONLY : eigr_d
         !
         CALL ions_cofmass( tausp, pmass, nat, ityp, cdm )
         !
-        IF ( ndfrz == 0 ) &
+        ! ... Center of mass subtraction bypassed if external ionic force fields are activated
+        ! 
+        IF ( ndfrz == 0 .AND. nextffield == 0) &
            CALL ions_cofmsub( tausp, iforce, nat, cdm, cdms )
         !
         CALL s_to_r( tausp, taup, nat, hnew )

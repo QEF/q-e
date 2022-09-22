@@ -102,13 +102,14 @@ The information about the activated force fields is written in the standard outp
 
 \section{Examples}
 
-One example for cp.x and pw.x is included in ...
+One example for cp.x and pw.x is included in both 'CPV/examples/Extffield\_example/' and 'PW/examples/Extffield\_example/', respectively. 
 
 \section{Current limitations}
 
 \begin{itemize}
 \item No automatic 'restart'. For a follow up calculation, the parameters in \texttt{extffield.dat} have to be set accordingly
 \item 4 maximum force fields
+\item In 'cp.x' and 'pw.x', the center of mass motion is (by default) subtracted from the ions motion (if no fixed ions). It is deactivated when an external force field is set (nextffield $>$ 0).
 \item Minimal testing done, so use at your own risk
 \end{itemize}
 
