@@ -357,7 +357,7 @@ SUBROUTINE sum_band_gpu()
                 !
                 !$acc data create(tg_psi)
                 !
-                CALL tgwave_g2r( evc(1:npw,:), tg_psi, dffts, ibnd, ibnd_end )
+                CALL tgwave_g2r( evc(1:npw,:), tg_psi, dffts, npw, ibnd, ibnd_end )
                 !
                 ! Now the first proc of the group holds the first two bands
                 ! of the 2*ntgrp bands that we are processing at the same time,
@@ -624,10 +624,10 @@ SUBROUTINE sum_band_gpu()
                    !
                    !$acc data create(tg_psi_nc)
                    !
-                   CALL tgwave_g2r( evc(1:npw,:), tg_psi_nc(:,1), dffts, ibnd, &
+                   CALL tgwave_g2r( evc(1:npw,:), tg_psi_nc(:,1), dffts, npw, ibnd, &
                                     ibnd_end, igk_k(:,ik) )
                    CALL tgwave_g2r( evc(npwx+1:npwx+npw,:), tg_psi_nc(:,2), dffts, &
-                                    ibnd, ibnd_end, igk_k(:,ik) )
+                                    npw, ibnd, ibnd_end, igk_k(:,ik) )
                    !
                    ! Now the first proc of the group holds the first band
                    ! of the ntgrp bands that we are processing at the same time,
@@ -699,7 +699,7 @@ SUBROUTINE sum_band_gpu()
                    !
                    !$acc data create(tg_psi)
                    !
-                   CALL tgwave_g2r( evc(1:npw,:), tg_psi, dffts, ibnd, ibnd_end, &
+                   CALL tgwave_g2r( evc(1:npw,:), tg_psi, dffts, npw, ibnd, ibnd_end, &
                                     igk_k(:,ik) )
                    !
                    ! Now the first proc of the group holds the first band
@@ -719,7 +719,7 @@ SUBROUTINE sum_band_gpu()
                       w1 = wg(idx+ibnd-1,ik) / omega
                    ELSE
                       w1 = 0.0d0
-                   END IF
+                   ENDIF
                    !
                    CALL tg_get_group_nr3( dffts, right_nr3 )
                    !
@@ -735,8 +735,8 @@ SUBROUTINE sum_band_gpu()
                    group_size = MIN(many_fft,ibnd_end-(ibnd-1))
                    hm_vec(1)=group_size ; hm_vec(2)=npw
                    !
-                   CALL wave_g2r( evc(:,ibnd:ibnd+group_size-1), psicd, dffts, igk=igk_k(:,ik), &
-                                  howmany_set=hm_vec )
+                   CALL wave_g2r( evc(:,ibnd:ibnd+group_size-1), psicd, &
+                                  dffts, igk=igk_k(:,ik), howmany_set=hm_vec )
                    !
                    ! ... increment the charge density ...
                    !
@@ -783,13 +783,14 @@ SUBROUTINE sum_band_gpu()
              !
           ENDDO
           !
-          IF( use_tg ) THEN
+          IF ( use_tg ) THEN
              !
-             ! reduce the charge across task group
+             ! ... reduce the charge across task group
              !
              IF (noncolin)       tg_rho_nc_h = tg_rho_nc_d
-             IF (.not. noncolin) tg_rho_h    = tg_rho_d
-             CALL tg_reduce_rho( rho%of_r, tg_rho_nc_h, tg_rho_h, current_spin, noncolin, domag, dffts )
+             IF (.NOT. noncolin) tg_rho_h    = tg_rho_d
+             CALL tg_reduce_rho( rho%of_r, tg_rho_nc_h, tg_rho_h, current_spin, &
+                                 noncolin, domag, dffts )
              !
           END IF
           !

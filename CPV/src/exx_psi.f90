@@ -176,7 +176,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
       !
       DO i = 1, nbsp, 2*nogrp
         !
-        CALL c2psi_gamma_tg( dffts, psis, c, i, nbsp )
+        CALL fftx_c2psi_gamma_tg( dffts, psis, c, ngw, i, nbsp )
         !
         CALL invfft( 'tgWave', psis, dffts )
         !
@@ -212,8 +212,8 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
         !
       END DO !loop over state i
       !
-      ! the wavefunction is duplicated over number of processors that is integer multiple of bands
-      ! (this part can be improved to distribute wavefunction over any number of processors)
+      ! ... the wavefunction is duplicated over number of processors that is integer multiple of bands
+      ! ... (this part can be improved to distribute wavefunction over any number of processors)
       !
       DO jj=1,nbsp/nogrp
         DO i=1,sc_fac-1
@@ -226,7 +226,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
         END DO
       END DO
       !
-      !!!!!!!!!!!!!!!!!!!!
+      !******************
       !
       ALLOCATE ( psitot(nnrtot*my_nbsp(me)) ); psitot=0.0_DP
       !

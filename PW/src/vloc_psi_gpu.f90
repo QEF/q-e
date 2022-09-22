@@ -89,7 +89,7 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
      !$acc data create(tg_psic,tg_psic2)
      DO ibnd = 1, m, incr
         !
-        CALL tgwave_g2r( psi(1:n,:), tg_psic, dffts, ibnd, m )
+        CALL tgwave_g2r( psi(1:n,:), tg_psic, dffts, n, ibnd, m )
         !
         CALL tg_get_group_nr3( dffts, right_nr3 )
         !
@@ -104,13 +104,13 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
            IF ( idx+ibnd-1<m ) THEN
               !$acc parallel loop
               DO j = 1, n
-                 hpsi_d(j,ibnd+idx-1) = hpsi_d(j,ibnd+idx-1) + fac * tg_psic2(j,idx)
-                 hpsi_d(j,ibnd+idx) = hpsi_d(j,ibnd+idx) + fac * tg_psic2(j,idx+1)
+                 hpsi_d(j,ibnd+idx-1) = hpsi_d(j,ibnd+idx-1) + 0.5d0 * tg_psic2(j,idx)
+                 hpsi_d(j,ibnd+idx) = hpsi_d(j,ibnd+idx) + 0.5d0 * tg_psic2(j,idx+1)
               ENDDO
            ELSEIF ( idx+ibnd-1==m ) THEN
               !$acc parallel loop
               DO j = 1, n
-                 hpsi_d(j,ibnd+idx-1) = hpsi_d(j,ibnd+idx-1) + fac * tg_psic2(j,idx)
+                 hpsi_d(j,ibnd+idx-1) = hpsi_d(j,ibnd+idx-1) + tg_psic2(j,idx)
               ENDDO
            ENDIF
         ENDDO
@@ -293,7 +293,7 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v_d, hpsi_d )
      !$acc data create(tg_psic,tg_psic2)
      DO ibnd = 1, m, fftx_ntgrp(dffts)
         !
-        CALL tgwave_g2r( psi(1:n,:), tg_psic, dffts, ibnd, m, igk_k(:,current_k) )
+        CALL tgwave_g2r( psi(1:n,:), tg_psic, dffts, n, ibnd, m, igk_k(:,current_k) )
         !
         CALL tg_get_group_nr3( dffts, right_nr3 )
         !
@@ -470,7 +470,7 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v_d, hpsi_d )
         DO ipol = 1, npol
            ii = lda*(ipol-1)+1
            ie = lda*ipol
-           CALL tgwave_g2r( psi(ii:ie,:), tg_psic(:,ipol), dffts, ibnd, m, &
+           CALL tgwave_g2r( psi(ii:ie,:), tg_psic(:,ipol),dffts, n, ibnd, m, &
                             igk_k(:,current_k) )
         ENDDO
         !

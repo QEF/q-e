@@ -147,18 +147,18 @@ CONTAINS
   !
   !
   !----------------------------------------------------------------------
-  SUBROUTINE tgwave_g2r( f_in, f_out, dfft, ibnd, ibnd_end, igk )
+  SUBROUTINE tgwave_g2r( f_in, f_out, dfft, n, ibnd, ibnd_end, igk )
     !--------------------------------------------------------------------
     !! Wave function FFT from G to R-space. Task-group version.
     !
-    USE fft_helper_subroutines,  ONLY: c2psi_gamma_tg, c2psi_k_tg
+    USE fft_helper_subroutines,  ONLY: fftx_c2psi_gamma_tg, fftx_c2psi_k_tg
     !
     IMPLICIT NONE
     !
     TYPE(fft_type_descriptor), INTENT(IN) :: dfft
     COMPLEX(DP) :: f_in(:,:)
     COMPLEX(DP) :: f_out(:)
-    INTEGER, INTENT(IN) :: ibnd, ibnd_end
+    INTEGER, INTENT(IN) :: n, ibnd, ibnd_end
     INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
     !
     INTEGER :: npw
@@ -166,15 +166,16 @@ CONTAINS
     !$acc data present_or_copyin(f_in,igk) present_or_copyout(f_out)
     !
     npw = SIZE(f_in(:,1))
+    IF (n/=npw) npw = n
     !
     !$acc kernels
     f_out(:) = (0.D0,0.D0)
     !$acc end kernels
     !
     IF (gamma_only) THEN
-      CALL c2psi_gamma_tg( dfft, f_out, f_in, ibnd, ibnd_end )
+      CALL fftx_c2psi_gamma_tg( dfft, f_out, f_in, npw, ibnd, ibnd_end )
     ELSE
-      CALL c2psi_k_tg( dfft, f_out, f_in, igk, npw, ibnd, ibnd_end )
+      CALL fftx_c2psi_k_tg( dfft, f_out, f_in, igk, npw, ibnd, ibnd_end )
     ENDIF
     !
     !$acc host_data use_device(f_out)
@@ -193,7 +194,7 @@ CONTAINS
     !--------------------------------------------------------------------
     !! Wave function FFT from R to G-space. Task-group version.
     !
-    USE fft_helper_subroutines,  ONLY: psi2c_gamma_tg, psi2c_k_tg
+    USE fft_helper_subroutines,  ONLY: fftx_psi2c_gamma_tg, fftx_psi2c_k_tg
     !
     IMPLICIT NONE
     !
@@ -219,9 +220,9 @@ CONTAINS
     !$acc end host_data
     !
     IF (gamma_only) THEN
-      CALL psi2c_gamma_tg( dfft, psic, f_out, n, ibnd, ibnd_end )
+      CALL fftx_psi2c_gamma_tg( dfft, psic, f_out, n, ibnd, ibnd_end )
     ELSE
-      CALL psi2c_k_tg( dfft, psic, f_out, igk, n, ibnd, ibnd_end )
+      CALL fftx_psi2c_k_tg( dfft, psic, f_out, igk, n, ibnd, ibnd_end )
     ENDIF
     !
     !$acc end data

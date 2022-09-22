@@ -2226,7 +2226,7 @@ MODULE realus
     !
     IF( dffts%has_task_groups ) THEN
         !
-        CALL tgwave_g2r( orbital(1:ngk(1),:), tg_psic, dffts, ibnd, last )
+        CALL tgwave_g2r( orbital(1:ngk(1),:), tg_psic, dffts, ngk(1), ibnd, last )
         !
         IF (PRESENT(conserved)) THEN
           IF (conserved) THEN
@@ -2324,26 +2324,23 @@ MODULE realus
         !
         CALL tgwave_r2g( tg_psic, psio, dffts, ngk(1), 1, last-ibnd+1 )
         !
-        fac = 1.d0
-        IF ( idx+ibnd-1<last ) fac = 0.5d0
-        !
         DO idx = 1, incr, 2
            IF( idx+ibnd-1<last ) THEN
               DO j = 1, ngk(1)
                  IF( add_to_orbital_ ) THEN
-                    orbital(j,ibnd+idx-1) = orbital(j,ibnd+idx-1) + fac * psio(j,idx)
-                    orbital(j,ibnd+idx) = orbital(j,ibnd+idx) + fac * psio(j,idx+1)
+                    orbital(j,ibnd+idx-1) = orbital(j,ibnd+idx-1) + 0.5d0 * psio(j,idx)
+                    orbital(j,ibnd+idx) = orbital(j,ibnd+idx) + 0.5d0 * psio(j,idx+1)
                  ELSE
-                    orbital(j,ibnd+idx-1) = fac * psio(j,idx)
-                    orbital(j,ibnd+idx) = fac * psio(j,idx+1)
+                    orbital(j,ibnd+idx-1) = 0.5d0 * psio(j,idx)
+                    orbital(j,ibnd+idx) = 0.5d0 * psio(j,idx+1)
                  ENDIF
               ENDDO
            ELSEIF( idx+ibnd-1==last ) THEN
               DO j = 1, ngk(1)
                  IF( add_to_orbital_ ) THEN
-                    orbital(j,ibnd+idx-1) = orbital(j,ibnd+idx-1) + fac * psio(j,idx)
+                    orbital(j,ibnd+idx-1) = orbital(j,ibnd+idx-1) + psio(j,idx)
                  ELSE
-                    orbital(j,ibnd+idx-1) = fac * psio(j,idx)
+                    orbital(j,ibnd+idx-1) = psio(j,idx)
                  ENDIF
               ENDDO
            ENDIF
@@ -2352,7 +2349,7 @@ MODULE realus
         DEALLOCATE( psio )
         !
         IF (PRESENT(conserved)) THEN
-         IF (conserved .eqv. .TRUE.) THEN
+         IF (conserved) THEN
           IF (ALLOCATED(tg_psic_temp)) DEALLOCATE( tg_psic_temp )
          ENDIF
         ENDIF
@@ -2454,7 +2451,7 @@ MODULE realus
     !
     IF( dffts%has_task_groups ) THEN
        !
-       CALL tgwave_g2r( orbital, tg_psic, dffts, ibnd, last, igk_k(:,ik_) )
+       CALL tgwave_g2r( orbital, tg_psic, dffts, ngk(1), ibnd, last, igk_k(:,ik_) )
        !
        IF (PRESENT(conserved)) THEN
           IF (conserved) THEN

@@ -30,10 +30,10 @@ MODULE fft_helper_subroutines
   PUBLIC :: tg_reduce_rho
   PUBLIC :: tg_get_nnr, tg_get_recip_inc, fftx_ntgrp, fftx_tgpe, &
             tg_get_group_nr3
-  ! ... Used only in CP
-  PUBLIC :: fftx_add_threed2oned_gamma, fftx_psi2c_gamma, fftx_c2psi_gamma, &
-            fftx_add_field, c2psi_gamma_tg, fftx_c2psi_k, c2psi_k_tg, fftx_psi2c_k, &
-            psi2c_gamma_tg, psi2c_k_tg
+  ! ... Used in CP too
+  PUBLIC :: fftx_add_threed2oned_gamma, fftx_psi2c_gamma, fftx_c2psi_gamma,   &
+            fftx_c2psi_gamma_tg, fftx_c2psi_k, fftx_c2psi_k_tg, fftx_psi2c_k, &
+            fftx_psi2c_gamma_tg, fftx_psi2c_k_tg, fftx_add_field
   PUBLIC :: fft_dist_info
   ! ... Used only in CP+EXX
   PUBLIC :: fftx_tgcomm
@@ -804,7 +804,7 @@ CONTAINS
   END SUBROUTINE fftx_psi2c_k
   !
   !--------------------------------------------------------------------
-  SUBROUTINE c2psi_gamma_tg( desc, psis, c_bgrp, i, nbsp_bgrp )
+  SUBROUTINE fftx_c2psi_gamma_tg( desc, psis, c_bgrp, n, i, nbsp_bgrp )
      !-----------------------------------------------------------------
      !! Copy all wave-functions of an orbital group from 1D array (c_bgrp)
      !! to 3D array (psi) in Fourier space.
@@ -814,7 +814,7 @@ CONTAINS
      TYPE(fft_type_descriptor), INTENT(IN) :: desc
      COMPLEX(DP), INTENT(OUT) :: psis(:)
      COMPLEX(DP), INTENT(IN) :: c_bgrp(:,:)
-     INTEGER, INTENT(IN) :: i, nbsp_bgrp
+     INTEGER, INTENT(IN) :: n, i, nbsp_bgrp
      !
      INTEGER :: eig_offset, eig_index, right_nnr, ig, ib, ieg
      COMPLEX(DP), PARAMETER :: ci=(0.0d0,1.0d0)
@@ -841,7 +841,7 @@ CONTAINS
         !$omp task default(none) &
         !$omp          firstprivate( eig_index, i, nbsp_bgrp, right_nnr ) &
         !$omp          private( eig_offset, ib, ieg, ig ) &
-        !$omp          shared( c_bgrp, desc, psis, nl_d, nlm_d )
+        !$omp          shared( c_bgrp, desc, psis, nl_d, nlm_d, n )
 #endif
         !
         ! ... here we pack 2*nogrp electronic states in the psis array
@@ -858,14 +858,14 @@ CONTAINS
         ! ... The eig_index loop is executed only ONCE when NOGRP=1.
         IF ( ieg < nbsp_bgrp ) THEN
            !$acc parallel loop
-           DO ig = 1, desc%ngw
+           DO ig = 1, n !desc%ngw
              psis(ib+nlm_d(ig)) = CONJG(c_bgrp(ig,ieg)) + ci * CONJG(c_bgrp(ig,ieg+1))
              psis(ib+nl_d(ig)) = c_bgrp(ig,ieg) + ci * c_bgrp(ig,ieg+1)
            ENDDO
         ELSEIF ( ieg == nbsp_bgrp ) THEN
            ! ... important: if n is odd => c(*,n+1)=0.
            !$acc parallel loop
-           DO ig = 1, desc%ngw
+           DO ig = 1, n !desc%ngw
              psis(ib+nlm_d(ig)) = CONJG(c_bgrp(ig,ieg))
              psis(ib+nl_d(ig)) = c_bgrp(ig,ieg)
            ENDDO
@@ -886,11 +886,11 @@ CONTAINS
      !
      RETURN
      !
-  END SUBROUTINE c2psi_gamma_tg
+  END SUBROUTINE fftx_c2psi_gamma_tg
   !
   !
   !--------------------------------------------------------------------
-  SUBROUTINE c2psi_k_tg( desc, psis, c_bgrp, igk, ngk, i, nbsp_bgrp )
+  SUBROUTINE fftx_c2psi_k_tg( desc, psis, c_bgrp, igk, ngk, i, nbsp_bgrp )
      !-----------------------------------------------------------------
      !! Copy all wave-functions of an orbital group from 1D array (c_bgrp)
      !! to 3D array (psi) in Fourier space.
@@ -942,11 +942,11 @@ CONTAINS
      !
      RETURN
      !
-  END SUBROUTINE c2psi_k_tg
+  END SUBROUTINE fftx_c2psi_k_tg
   !
   !
   !--------------------------------------------------------------------
-  SUBROUTINE psi2c_gamma_tg( desc, vin, vout, n, i, nbsp_bgrp )
+  SUBROUTINE fftx_psi2c_gamma_tg( desc, vin, vout, n, i, nbsp_bgrp )
      !-----------------------------------------------------------------
      !! Copy all wave-functions of an orbital group from 3D array (psi)
      !! in Fourier space to 1D array (c_bgrp). Gamma case.
@@ -975,8 +975,8 @@ CONTAINS
        IF ( idx+i-1<nbsp_bgrp ) THEN
          !$acc parallel loop
          DO j = 1, n
-           fp = ( vin(nl_d(j)+ioff) + vin(nlm_d(j)+ioff) ) * 0.5d0
-           fm = ( vin(nl_d(j)+ioff) - vin(nlm_d(j)+ioff) ) * 0.5d0
+           fp = ( vin(nl_d(j)+ioff) + vin(nlm_d(j)+ioff) )
+           fm = ( vin(nl_d(j)+ioff) - vin(nlm_d(j)+ioff) )
            vout(j,i+idx-1) = CMPLX( DBLE(fp),AIMAG(fm),KIND=DP)
            vout(j,i+idx)   = CMPLX(AIMAG(fp),-DBLE(fm),KIND=DP)
          ENDDO
@@ -997,11 +997,11 @@ CONTAINS
      !
      RETURN
      !
-  END SUBROUTINE psi2c_gamma_tg
+  END SUBROUTINE fftx_psi2c_gamma_tg
   !
   !
   !--------------------------------------------------------------------
-  SUBROUTINE psi2c_k_tg( desc, vin, vout, igk, n, i, nbsp_bgrp )
+  SUBROUTINE fftx_psi2c_k_tg( desc, vin, vout, igk, n, i, nbsp_bgrp )
      !-----------------------------------------------------------------
      !! Copy all wave-functions of an orbital group from 3D array (psi)
      !! in Fourier space to 1D array (c_bgrp).
@@ -1034,7 +1034,7 @@ CONTAINS
      !
      RETURN
      !
-  END SUBROUTINE psi2c_k_tg
+  END SUBROUTINE fftx_psi2c_k_tg
   !
   !
   !----------------------------------------------------------

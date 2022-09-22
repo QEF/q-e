@@ -344,7 +344,7 @@ SUBROUTINE sum_band()
              !
              IF( use_tg ) THEN
                 !
-                CALL tgwave_g2r( evc(1:npw,:), tg_psi, dffts, ibnd, ibnd_end )
+                CALL tgwave_g2r( evc(1:npw,:), tg_psi, dffts, npw, ibnd, ibnd_end )
                 !
                 ! Now the first proc of the group holds the first two bands
                 ! of the 2*ntgrp bands that we are processing at the same time,
@@ -580,10 +580,10 @@ SUBROUTINE sum_band()
              IF (noncolin) THEN
                 IF( use_tg ) THEN
                    !
-                   CALL tgwave_g2r( evc(1:npw,:), tg_psi_nc(:,1), dffts, ibnd, &
+                   CALL tgwave_g2r( evc(1:npw,:), tg_psi_nc(:,1), dffts, npw, ibnd, &
                                     ibnd_end, igk_k(:,ik) )
                    CALL tgwave_g2r( evc(npwx+1:npwx+npw,:), tg_psi_nc(:,2), dffts, &
-                                    ibnd, ibnd_end, igk_k(:,ik) )
+                                    npw, ibnd, ibnd_end, igk_k(:,ik) )
                    !
                    ! Now the first proc of the group holds the first band
                    ! of the ntgrp bands that we are processing at the same time,
@@ -644,7 +644,7 @@ SUBROUTINE sum_band()
                 !
                 IF( use_tg ) THEN
                    !
-                   CALL tgwave_g2r( evc(1:npw,:), tg_psi, dffts, ibnd, ibnd_end, &
+                   CALL tgwave_g2r( evc(1:npw,:), tg_psi, dffts, npw, ibnd, ibnd_end, &
                                     igk_k(:,ik) )
                    !
                    ! Now the first proc of the group holds the first band
