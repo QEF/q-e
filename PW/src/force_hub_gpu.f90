@@ -64,11 +64,12 @@ SUBROUTINE force_hub_gpu( forceh )
    !
    ! ... local variables
    !
-   TYPE(bec_type_d) :: proj_d     ! proj(nwfcU,nbnd)
-   COMPLEX(DP), ALLOCATABLE :: spsi_d(:,:) 
 #if defined(__CUDA)
-   attributes(DEVICE) :: spsi_d
+   TYPE(bec_type_d) :: proj     ! proj(nwfcU,nbnd)
+#else
+   TYPE(bec_type) :: proj
 #endif
+   COMPLEX(DP), ALLOCATABLE :: spsi(:,:)
    REAL(DP), ALLOCATABLE :: dns(:,:,:,:), dnsb(:,:,:,:)
    COMPLEX (DP), ALLOCATABLE ::  dnsg(:,:,:,:,:)
    ! dns(ldim,ldim,nspin,nat) ! the derivative of the atomic occupations
@@ -80,106 +81,112 @@ SUBROUTINE force_hub_gpu( forceh )
    !
    ! Additional GPU data
    INTEGER :: ierr
-   COMPLEX(DP), POINTER :: wfcU_d(:,:)
-#if defined(__CUDA)
-   attributes(DEVICE) :: wfcU_d
-#endif
    !
    CALL start_clock_gpu( 'force_hub' )
    !
-   save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .false.
+   save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .FALSE.
    !
    IF (.NOT.((Hubbard_projectors.EQ."atomic") .OR. (Hubbard_projectors.EQ."ortho-atomic"))) &
-      CALL errore("force_hub", &
-                   " forces for this Hubbard_projectors type not implemented",1)
+      CALL errore( "force_hub", &
+                   " forces for this Hubbard_projectors type not implemented", 1 )
    !
-   IF (noncolin) CALL errore ("forceh","Noncollinear case is not supported",1)
+   IF (noncolin) CALL errore( "forceh","Noncollinear case is not supported", 1 )
    !
-   IF (ANY(Hubbard_J(:,:)>eps16)) CALL errore("force_hub", &
+   IF (ANY(Hubbard_J(:,:)>eps16)) CALL errore( "force_hub", &
                    " forces in the DFT+U+J scheme are not implemented", 1 )
    !
-   IF (lda_plus_u_kind.EQ.0) THEN
+   IF (lda_plus_u_kind==0) THEN
       ! DFT+U
       lhubb = .FALSE.
       ldim = 2*Hubbard_lmax + 1
-      ALLOCATE ( dns(ldim, ldim, nspin, nat) )
+      ALLOCATE( dns(ldim,ldim,nspin,nat) )
       DO nt = 1, ntyp
          IF (is_hubbard_back(nt)) lhubb = .TRUE.
       ENDDO
       IF (lhubb) THEN
          ldimb = ldmx_b
-         ALLOCATE ( dnsb(ldimb, ldimb, nspin, nat) )
+         ALLOCATE( dnsb(ldimb,ldimb,nspin,nat) )
       ENDIF
-   ELSEIF (lda_plus_u_kind.EQ.2) THEN
+   ELSEIF (lda_plus_u_kind==2) THEN
       ! DFT+U+V
       ldim = ldmx_tot
-      ALLOCATE( dnsg(ldim, ldim, max_num_neighbors, nat, nspin) )
+      ALLOCATE( dnsg(ldim,ldim,max_num_neighbors,nat,nspin) )
    ENDIF
    !
-   ALLOCATE( spsi_d(npwx,nbnd)          ) 
-   ALLOCATE (wfcatom(npwx,natomwfc))
+   ALLOCATE( spsi(npwx,nbnd) ) 
+   ALLOCATE( wfcatom(npwx,natomwfc) )
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
-      ALLOCATE (swfcatom(npwx,natomwfc))
-      ALLOCATE (eigenval(natomwfc))
-      ALLOCATE (eigenvect(natomwfc,natomwfc)) 
-      ALLOCATE (overlap_inv(natomwfc,natomwfc))
+      ALLOCATE( swfcatom(npwx,natomwfc) )
+      ALLOCATE( eigenval(natomwfc) )
+      ALLOCATE( eigenvect(natomwfc,natomwfc) )
+      ALLOCATE( overlap_inv(natomwfc,natomwfc) )
    ENDIF
    !
-   CALL allocate_bec_type_gpu( nwfcU, nbnd, proj_d )
+   !$acc data create( spsi ) copyin( wfcU )
    !
-   ! poor-man parallelization over bands
-   ! - if nproc_pool=1   : nb_s=1, nb_e=nbnd, mykey=0
-   ! - if nproc_pool<=nbnd:each processor calculates band nb_s to nb_e; mykey=0
-   ! - if nproc_pool>nbnd :each processor takes care of band na_s=nb_e;
-   !   mykey labels how many times each band appears (mykey=0 first time etc.)
+#if defined(__CUDA)
+   CALL allocate_bec_type_gpu( nwfcU, nbnd, proj )
+   CALL using_evc_d(0)
+#else
+   CALL allocate_bec_type( nwfcU, nbnd, proj )
+#endif
+   !
+   ! ... poor-man parallelization over bands:
+   !      - if nproc_pool=1   : nb_s=1, nb_e=nbnd, mykey=0;
+   !      - if nproc_pool<=nbnd:each processor calculates band nb_s to nb_e; mykey=0;
+   !      - if nproc_pool>nbnd :each processor takes care of band na_s=nb_e;
+   !        mykey labels how many times each band appears (mykey=0 first time etc.)
    !
    CALL block_distribute( nbnd, me_pool, nproc_pool, nb_s, nb_e, mykey )
    !
    forceh(:,:) = 0.d0
    !
-   !    we start a loop on k points
+   ! ... we start a loop on k points
    !
-   CALL using_evc_d(0)
-   !
-   CALL dev_buf%lock_buffer( wfcU_d, SHAPE(wfcU) , ierr )
-   IF ( ierr /= 0 ) CALL errore( 'force_hub_gpu', 'cannot allocate buffers', ABS(ierr) )
-
    DO ik = 1, nks
       !
       IF (lsda) current_spin = isk(ik)
       npw = ngk(ik)
       !
-      IF (nks > 1)  CALL using_evc(2)
-      IF (nks > 1) &
-         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-      CALL using_evc_d(0)
+      IF (nks > 1) CALL using_evc(2)
+      IF (nks > 1) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
       !
-      CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
+      CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
       !FIXME check if this update is actually needed and in case comment indicating why. 
       !$acc update self(vkb)
       !
       ! Compute spsi = S * psi
-      CALL allocate_bec_type ( nkb, nbnd, becp)
-      CALL using_becp_auto(2) ; CALL using_becp_d_auto(2)
+      CALL allocate_bec_type( nkb, nbnd, becp )
+      CALL using_becp_auto(2)
       !
-      !$acc data present(vkb(:,:))
-      !$acc host_data use_device(vkb)
+#if defined(__CUDA)
+      CALL using_evc_d(0)
+      CALL using_becp_d_auto(2)
+      !$acc host_data use_device(vkb,spsi)
       CALL calbec_gpu( npw, vkb, evc_d, becp_d )
+      CALL s_psi_gpu( npwx, npw, nbnd, evc_d, spsi )
       !$acc end host_data
-      !$acc end data
-      !
-      CALL s_psi_gpu( npwx, npw, nbnd, evc_d, spsi_d )
-      CALL deallocate_bec_type (becp) 
-      CALL using_becp_auto(2); CALL using_becp_d_auto(2)
-      !
+#else
+      CALL calbec( npw, vkb, evc, becp )
+      CALL s_psi( npwx, npw, nbnd, evc, spsi )
+#endif
+      CALL deallocate_bec_type( becp )
+      CALL using_becp_auto(2)
       !
       ! Set up various quantities, in particular wfcU which 
       ! contains Hubbard-U (ortho-)atomic wavefunctions (without ultrasoft S)
-      CALL orthoUwfc_k (ik, .TRUE.)
-      CALL dev_memcpy( wfcU_d , wfcU )
+      CALL orthoUwfc_k( ik, .TRUE. )
+      !$acc update device(wfcU)
       !
       ! proj=<wfcU|S|evc>
-      CALL calbec_gpu( npw, wfcU_d, spsi_d, proj_d )
+#if defined(__CUDA)
+      CALL using_becp_d_auto(2)
+      !$acc host_data use_device( spsi, wfcU )
+      CALL calbec_gpu( npw, wfcU, spsi, proj )
+      !$acc end host_data
+#else
+      CALL calbec( npw, wfcU, spsi, proj )
+#endif
       !
       ! now we need the first derivative of proj with respect to tau(alpha,ipol)
       !
@@ -187,17 +194,30 @@ SUBROUTINE force_hub_gpu( forceh )
          !
          ijkb0 = ofsbeta(alpha) ! positions of beta functions for atom alpha
          !
-         IF (lda_plus_u_kind.EQ.0) THEN
+         IF (lda_plus_u_kind==0) THEN
             !
             DO ipol = 1, 3  ! forces are calculated for coordinate ipol ...
                !
+#if defined(__CUDA)
+               !$acc host_data use_device( spsi )
                IF ( gamma_only ) THEN
-                  CALL dndtau_gamma_gpu ( ldim, proj_d%r_d, spsi_d, alpha, ijkb0, ipol, ik, &
-                                      nb_s, nb_e, mykey, 1, dns )
+                  CALL dndtau_gamma_gpu( ldim, proj%r_d, spsi, alpha, ijkb0, ipol, ik, &
+                                         nb_s, nb_e, mykey, 1, dns )
                ELSE
-                  CALL dndtau_k_gpu     ( ldim, proj_d%k_d, spsi_d, alpha, ijkb0, ipol, ik, &
-                                      nb_s, nb_e, mykey, 1, dns )
+                  CALL dndtau_k_gpu( ldim, proj%k_d, spsi, alpha, ijkb0, ipol, ik, &
+                                     nb_s, nb_e, mykey, 1, dns )
                ENDIF
+               !$acc end host_data
+#else
+               IF ( gamma_only ) THEN
+                  CALL dndtau_gamma( ldim, proj%r, spsi, alpha, ijkb0, ipol, ik, &
+                                     nb_s, nb_e, mykey, 1, dns )
+               ELSE
+                  CALL dndtau_k( ldim, proj%k, spsi, alpha, ijkb0, ipol, ik, &
+                                 nb_s, nb_e, mykey, 1, dns )
+               ENDIF
+#endif
+               
 ! !omp parallel do default(shared) private(na,nt,m1,m2,is)
                DO na = 1, nat                
                   nt = ityp(na)
@@ -215,13 +235,26 @@ SUBROUTINE force_hub_gpu( forceh )
 ! !omp end parallel do
                !
                IF (lhubb) THEN
+#if defined(__CUDA)
+                  !$acc host_data use_device( spsi )
                   IF ( gamma_only ) THEN
-                     CALL dndtau_gamma_gpu ( ldimb, proj_d%r_d, spsi_d, alpha, ijkb0, ipol, ik, &
-                                         nb_s, nb_e, mykey, 2, dnsb )
+                     CALL dndtau_gamma_gpu( ldimb, proj%r_d, spsi, alpha, ijkb0, ipol, ik, &
+                                            nb_s, nb_e, mykey, 2, dnsb )
                   ELSE
-                     CALL dndtau_k_gpu     ( ldimb, proj_d%k_d, spsi_d, alpha, ijkb0, ipol, ik, &
-                                         nb_s, nb_e, mykey, 2, dnsb )
+                     CALL dndtau_k_gpu( ldimb, proj%k_d, spsi, alpha, ijkb0, ipol, ik, &
+                                        nb_s, nb_e, mykey, 2, dnsb )
                   ENDIF
+                  !$acc end host_data
+#else
+                  IF ( gamma_only ) THEN
+                     CALL dndtau_gamma( ldimb, proj%r, spsi, alpha, ijkb0, ipol, ik, &
+                                        nb_s, nb_e, mykey, 2, dnsb )
+                  ELSE
+                     CALL dndtau_k( ldimb, proj%k, spsi, alpha, ijkb0, ipol, ik, &
+                                    nb_s, nb_e, mykey, 2, dnsb )
+                  ENDIF 
+#endif
+                  
 ! !omp parallel do default(shared) private(na,nt,m1,m2,is)
                   DO na = 1,nat              
                      nt = ityp(na)
@@ -240,17 +273,30 @@ SUBROUTINE force_hub_gpu( forceh )
                ENDIF
             ENDDO ! ipol
             !
-         ELSEIF (lda_plus_u_kind.EQ.2) THEN
+         ELSEIF (lda_plus_u_kind==2) THEN
             !
             DO ipol = 1, 3  ! forces are calculated for coordinate ipol ...
                !
+#if defined(__CUDA)
+               !$acc host_data use_device( spsi )
                IF ( gamma_only ) THEN
-                  CALL dngdtau_gamma_gpu ( ldim, proj_d%r_d, spsi_d, alpha, ijkb0, ipol, ik, &
-                                      nb_s, nb_e, mykey, dnsg )
+                  CALL dngdtau_gamma_gpu( ldim, proj%r_d, spsi, alpha, ijkb0, ipol, ik, &
+                                          nb_s, nb_e, mykey, dnsg )
                ELSE
-                  CALL dngdtau_k_gpu     ( ldim, proj_d%k_d, spsi_d, alpha, ijkb0, ipol, ik, &
+                  CALL dngdtau_k_gpu( ldim, proj%k_d, spsi, alpha, ijkb0, ipol, ik, &
                                       nb_s, nb_e, mykey, dnsg )
                ENDIF
+               !$acc end host_data
+#else
+               IF ( gamma_only ) THEN
+                  CALL dngdtau_gamma( ldim, proj%r, spsi, alpha, ijkb0, ipol, ik, &
+                                      nb_s, nb_e, mykey, dnsg )
+               ELSE
+                  CALL dngdtau_k( ldim, proj%k, spsi, alpha, ijkb0, ipol, ik, &
+                                  nb_s, nb_e, mykey, dnsg )
+               ENDIF
+#endif
+               
                !
                DO is = 1, nspin
                   DO na1 = 1, nat
@@ -262,10 +308,10 @@ SUBROUTINE force_hub_gpu( forceh )
                            equiv_na2 = at_sc(na2)%at
                            nt2 = ityp(equiv_na2)
                            ldim2 = ldim_u(nt2)
-                           IF (Hubbard_V(na1,na2,1).NE.0.d0 .OR. &
-                               Hubbard_V(na1,na2,2).NE.0.d0 .OR. &
-                               Hubbard_V(na1,na2,3).NE.0.d0 .OR. &
-                               Hubbard_V(na1,na2,4).NE.0.d0 ) THEN
+                           IF (Hubbard_V(na1,na2,1)/=0.d0 .OR. &
+                               Hubbard_V(na1,na2,2)/=0.d0 .OR. &
+                               Hubbard_V(na1,na2,3)/=0.d0 .OR. &
+                               Hubbard_V(na1,na2,4)/=0.d0 ) THEN
                                DO m1 = 1, ldim1
                                   DO m2 = 1, ldim2
                                      forceh(ipol,alpha) = forceh(ipol,alpha) &
@@ -286,21 +332,25 @@ SUBROUTINE force_hub_gpu( forceh )
       !
    ENDDO ! ik
    !
-   CALL dev_buf%release_buffer( wfcU_d, ierr )
-   !
    CALL mp_sum( forceh, inter_pool_comm )
    !
-   CALL deallocate_bec_type_gpu( proj_d )
+#if defined(__CUDA)
+   CALL deallocate_bec_type_gpu( proj )
+#else
+   CALL deallocate_bec_type( proj )
+#endif
    !
-   IF (lda_plus_u_kind.EQ.0) THEN
+   IF (lda_plus_u_kind==0) THEN
       DEALLOCATE(dns)
       IF (ALLOCATED(dnsb)) DEALLOCATE(dnsb)
-   ELSEIF (lda_plus_u_kind.EQ.2) THEN
+   ELSEIF (lda_plus_u_kind==2) THEN
       DEALLOCATE(dnsg)
    ENDIF
    !
-   DEALLOCATE(spsi_d)
-   DEALLOCATE (wfcatom)
+   !$acc end data
+   !
+   DEALLOCATE( spsi )
+   DEALLOCATE( wfcatom )
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       DEALLOCATE (swfcatom) 
       DEALLOCATE (eigenval)
@@ -328,8 +378,8 @@ SUBROUTINE force_hub_gpu( forceh )
 END SUBROUTINE force_hub_gpu
 !
 !------------------------------------------------------------------------------
-SUBROUTINE dndtau_k_gpu ( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
-                      nb_e, mykey, lpuk, dns )
+SUBROUTINE dndtau_k_gpu( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
+                         nb_e, mykey, lpuk, dns )
    !---------------------------------------------------------------------------
    !! This routine computes the derivative of the ns with respect to the ionic
    !! displacement \(u(\text{alpha,ipol})\) used to obtain the Hubbard 
@@ -1585,7 +1635,7 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    CALL dev_buf%lock_buffer(qq     , [nh(nt),nh(nt)], ierr) ! ALLOCATE ( qq(nh(nt),nh(nt)) )
    IF ( ierr /= 0 ) CALL errore('matrix_element_of_dSdtau_gpu','Buffers allocation failed',ierr)
    !
-   !$acc parallel loop collapse(2) present(qq_at)
+!$acc parallel loop collapse(2) present(qq_at)
    DO jh=1,nh_nt
       DO ih=1,nh_nt
          qq(ih,jh) = CMPLX(qq_at(ih,jh,alpha), 0.0d0, kind=DP)
