@@ -44,6 +44,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE eqv,      ONLY : dpsi
   USE qpoint,   ONLY : nksq, ikks, ikqs
   USE control_lr, ONLY : lgamma
+  USE control_flags, ONLY : gamma_only
   USE lrus,     ONLY : becp1
   USE phus,     ONLY : alphap, int1_nc
   USE qpoint_aux, ONLY : becpt, alphapt
@@ -52,6 +53,11 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE mp_pools,         ONLY : inter_pool_comm
   USE mp,               ONLY : mp_sum
   USE uspp_init,        ONLY : init_us_2
+#if defined(__CUDA)
+  USE lrus,            ONLY : becp1_d
+  USE becmod_gpum,      ONLY: bec_type_d
+  USE becmod_subs_gpum, ONLY: calbec_gpu, allocate_bec_type_gpu
+#endif
 
   implicit none
 
@@ -74,18 +80,30 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   complex(DP), allocatable ::  aux (:,:)
   ! work space
 
+#if defined(__CUDA)
+  TYPE (bec_type_d), POINTER :: dbecq_d(:), dalpq_d(:,:)
+#endif
   TYPE (bec_type), POINTER :: dbecq(:), dalpq(:,:)
   !
   !   Initialize the auxiliary matrix wdyn
   !
   call start_clock ('drhodv')
-
+#if defined(__CUDA)
+  ALLOCATE (dbecq_d(nper))
+  ALLOCATE (dalpq_d(3,nper))
+#endif
   ALLOCATE (dbecq(nper))
   ALLOCATE (dalpq(3,nper))
   DO ipert=1,nper
      call allocate_bec_type ( nkb, nbnd, dbecq(ipert) )
+#if defined(__CUDA)
+     call allocate_bec_type_gpu ( nkb, nbnd, dbecq_d(ipert) )
+#endif
      DO ipol=1,3
         call allocate_bec_type ( nkb, nbnd, dalpq(ipol,ipert) )
+#if defined(__CUDA)
+        call allocate_bec_type_gpu ( nkb, nbnd, dalpq_d(ipol,ipert) )
+#endif
      ENDDO
   END DO
   allocate (aux   ( npwx*npol , nbnd))
@@ -102,13 +120,29 @@ subroutine drhodv (nu_i0, nper, drhoscf)
      npw = ngk(ikk)
      npwq= ngk(ikq)
      if (lsda) current_spin = isk (ikk)
-     call init_us_2 (npwq, igk_k(1,ikq), xk (1, ikq), vkb)
+     call init_us_2 (npwq, igk_k(1,ikq), xk (1, ikq), vkb, .true.)
+     !$acc update host(vkb)
      DO isolv=1, nsolv
         do mu = 1, nper
            nrec = (mu - 1) * nksq + ik + (isolv-1) * nksq * nper
            if (nksq > 1 .or. nper > 1 .OR. nsolv==2) &
                              call get_buffer(dpsi, lrdwf, iudwf, nrec)
+#if defined(__CUDA)
+           !$acc data copyin(dpsi) 
+           !$acc host_data use_device(vkb, dpsi)
+           call calbec_gpu (npwq, vkb(:,:), dpsi, dbecq_d(mu) )
+           !$acc end host_data
+           !$acc end data
+           IF (gamma_only) THEN
+                dbecq(mu)%r=dbecq_d(mu)%r_d
+           ELSE IF (noncolin) THEN
+                dbecq(mu)%nc=dbecq_d(mu)%nc_d
+           ELSE
+                dbecq(mu)%k=dbecq_d(mu)%k_d
+           ENDIF
+#else
            call calbec (npwq, vkb, dpsi, dbecq(mu) )
+#endif
            do ipol = 1, 3
               aux=(0.d0,0.d0)
               do ibnd = 1, nbnd
@@ -123,7 +157,22 @@ subroutine drhodv (nu_i0, nper, drhoscf)
                     enddo
                  endif
               enddo
+#if defined(__CUDA)
+              !$acc data copyin(aux)
+              !$acc host_data use_device(vkb, aux)
+              call calbec_gpu (npwq, vkb(:,:), aux, dalpq_d(ipol,mu) )
+              !$acc end host_data
+              !$acc end data
+              IF (gamma_only) THEN
+                dalpq(ipol,mu)%r=dalpq_d(ipol,mu)%r_d
+              ELSE IF (noncolin) THEN
+                dalpq(ipol,mu)%nc=dalpq_d(ipol,mu)%nc_d
+              ELSE
+                dalpq(ipol,mu)%k=dalpq_d(ipol,mu)%k_d
+             ENDIF
+#else
               call calbec (npwq, vkb, aux, dalpq(ipol,mu) )
+#endif
            enddo
         enddo
         fact = CMPLX(0.d0, tpiba,kind=DP)
