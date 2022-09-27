@@ -79,6 +79,9 @@ SUBROUTINE force_hub_gpu( forceh )
    LOGICAL :: lhubb
    LOGICAL :: save_flag
    !
+   REAL(DP), ALLOCATABLE :: projrd(:,:)
+   COMPLEX(DP), ALLOCATABLE :: projkd(:,:)
+   !
    ! Additional GPU data
    INTEGER :: ierr
    !
@@ -178,17 +181,36 @@ SUBROUTINE force_hub_gpu( forceh )
       CALL orthoUwfc_k( ik, .TRUE. )
       !$acc update device(wfcU)
       !
+      
+      IF ( gamma_only ) THEN
+         ALLOCATE( projrd(nwfcU,nbnd) )
+      ELSE
+         ALLOCATE( projkd(nwfcU,nbnd) )
+      ENDIF
+      
       ! proj=<wfcU|S|evc>
 #if defined(__CUDA)
       CALL using_becp_d_auto(2)
       !$acc host_data use_device( spsi, wfcU )
       CALL calbec_gpu( npw, wfcU, spsi, proj )
       !$acc end host_data
+      !
+      IF ( gamma_only ) THEN
+         projrd = proj%r_d
+      ELSE
+         projkd = proj%k_d
+      ENDIF
+      !$acc data copyin(projrd,projkd)
 #else
       CALL calbec( npw, wfcU, spsi, proj )
-#endif
       !
-      ! now we need the first derivative of proj with respect to tau(alpha,ipol)
+      IF ( gamma_only ) THEN
+         projrd = proj%r
+      ELSE
+         projkd = proj%k
+      ENDIF
+#endif
+      ! ... now we need the first derivative of proj with respect to tau(alpha,ipol)
       !
       DO alpha = 1, nat  ! forces are calculated by displacing atom alpha ...
          !
@@ -199,21 +221,24 @@ SUBROUTINE force_hub_gpu( forceh )
             DO ipol = 1, 3  ! forces are calculated for coordinate ipol ...
                !
 #if defined(__CUDA)
-               !$acc host_data use_device( spsi )
                IF ( gamma_only ) THEN
-                  CALL dndtau_gamma_gpu( ldim, proj%r_d, spsi, alpha, ijkb0, ipol, ik, &
+                  !$acc host_data use_device( projrd,spsi )
+                  CALL dndtau_gamma_gpu( ldim, projrd, spsi, alpha, ijkb0, ipol, ik, &
                                          nb_s, nb_e, mykey, 1, dns )
+                  !$acc end host_data
                ELSE
-                  CALL dndtau_k_gpu( ldim, proj%k_d, spsi, alpha, ijkb0, ipol, ik, &
+                  !$acc host_data use_device( projkd,spsi )
+                  CALL dndtau_k_gpu( ldim, projkd, spsi, alpha, ijkb0, ipol, ik, &
                                      nb_s, nb_e, mykey, 1, dns )
+                  !$acc end host_data
                ENDIF
-               !$acc end host_data
+               
 #else
                IF ( gamma_only ) THEN
-                  CALL dndtau_gamma( ldim, proj%r, spsi, alpha, ijkb0, ipol, ik, &
+                  CALL dndtau_gamma( ldim, projrd, spsi, alpha, ijkb0, ipol, ik, &
                                      nb_s, nb_e, mykey, 1, dns )
                ELSE
-                  CALL dndtau_k( ldim, proj%k, spsi, alpha, ijkb0, ipol, ik, &
+                  CALL dndtau_k( ldim, projkd, spsi, alpha, ijkb0, ipol, ik, &
                                  nb_s, nb_e, mykey, 1, dns )
                ENDIF
 #endif
@@ -236,21 +261,23 @@ SUBROUTINE force_hub_gpu( forceh )
                !
                IF (lhubb) THEN
 #if defined(__CUDA)
-                  !$acc host_data use_device( spsi )
                   IF ( gamma_only ) THEN
-                     CALL dndtau_gamma_gpu( ldimb, proj%r_d, spsi, alpha, ijkb0, ipol, ik, &
+                     !$acc host_data use_device( projrd,spsi )
+                     CALL dndtau_gamma_gpu( ldimb, projrd, spsi, alpha, ijkb0, ipol, ik, &
                                             nb_s, nb_e, mykey, 2, dnsb )
+                     !$acc end host_data
                   ELSE
-                     CALL dndtau_k_gpu( ldimb, proj%k_d, spsi, alpha, ijkb0, ipol, ik, &
+                     !$acc host_data use_device( projkd,spsi )
+                     CALL dndtau_k_gpu( ldimb, projkd, spsi, alpha, ijkb0, ipol, ik, &
                                         nb_s, nb_e, mykey, 2, dnsb )
+                     !$acc end host_data
                   ENDIF
-                  !$acc end host_data
 #else
                   IF ( gamma_only ) THEN
-                     CALL dndtau_gamma( ldimb, proj%r, spsi, alpha, ijkb0, ipol, ik, &
+                     CALL dndtau_gamma( ldimb, projrd, spsi, alpha, ijkb0, ipol, ik, &
                                         nb_s, nb_e, mykey, 2, dnsb )
                   ELSE
-                     CALL dndtau_k( ldimb, proj%k, spsi, alpha, ijkb0, ipol, ik, &
+                     CALL dndtau_k( ldimb, projkd, spsi, alpha, ijkb0, ipol, ik, &
                                     nb_s, nb_e, mykey, 2, dnsb )
                   ENDIF 
 #endif
@@ -278,21 +305,23 @@ SUBROUTINE force_hub_gpu( forceh )
             DO ipol = 1, 3  ! forces are calculated for coordinate ipol ...
                !
 #if defined(__CUDA)
-               !$acc host_data use_device( spsi )
                IF ( gamma_only ) THEN
-                  CALL dngdtau_gamma_gpu( ldim, proj%r_d, spsi, alpha, ijkb0, ipol, ik, &
+                  !$acc host_data use_device( projrd,spsi )
+                  CALL dngdtau_gamma_gpu( ldim, projrd, spsi, alpha, ijkb0, ipol, ik, &
                                           nb_s, nb_e, mykey, dnsg )
+                  !$acc end host_data
                ELSE
-                  CALL dngdtau_k_gpu( ldim, proj%k_d, spsi, alpha, ijkb0, ipol, ik, &
+                  !$acc host_data use_device( projkd,spsi )
+                  CALL dngdtau_k_gpu( ldim, projkd, spsi, alpha, ijkb0, ipol, ik, &
                                       nb_s, nb_e, mykey, dnsg )
+                  !$acc end host_data
                ENDIF
-               !$acc end host_data
 #else
                IF ( gamma_only ) THEN
-                  CALL dngdtau_gamma( ldim, proj%r, spsi, alpha, ijkb0, ipol, ik, &
+                  CALL dngdtau_gamma( ldim, projrd, spsi, alpha, ijkb0, ipol, ik, &
                                       nb_s, nb_e, mykey, dnsg )
                ELSE
-                  CALL dngdtau_k( ldim, proj%k, spsi, alpha, ijkb0, ipol, ik, &
+                  CALL dngdtau_k( ldim, projkd, spsi, alpha, ijkb0, ipol, ik, &
                                   nb_s, nb_e, mykey, dnsg )
                ENDIF
 #endif
@@ -329,6 +358,15 @@ SUBROUTINE force_hub_gpu( forceh )
          ENDIF
          !
       ENDDO ! alpha
+      !
+      
+      !$acc end data
+      IF ( gamma_only ) THEN
+        DEALLOCATE( projrd )
+      ELSE
+        DEALLOCATE( projkd )
+      ENDIF
+      
       !
    ENDDO ! ik
    !
