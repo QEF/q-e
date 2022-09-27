@@ -51,8 +51,12 @@ SUBROUTINE phq_init()
   USE uspp_param,           ONLY : upf
   USE m_gth,                ONLY : setlocq_gth
   USE phus,                 ONLY : alphap
+#if defined(__CUDA)
+  USE phus,                 ONLY : alphap_d
+#endif
   USE nlcc_ph,              ONLY : drc
   USE control_ph,           ONLY : trans, zue, epsil, all_done
+  USE control_flags,        ONLY : gamma_only
   USE units_lr,             ONLY : lrwfc, iuwfc
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
@@ -63,18 +67,27 @@ SUBROUTINE phq_init()
   USE Coul_cut_2D,          ONLY : do_cutoff_2D     
   USE Coul_cut_2D_ph,       ONLY : cutoff_lr_Vlocq , cutoff_fact_qg 
   USE lrus,                 ONLY : becp1, dpqq, dpqq_so
+#if defined(__CUDA)
+  USE lrus,                 ONLY : becp1_d
+#endif
   USE qpoint,               ONLY : xq, nksq, eigqts, ikks, ikqs
   USE qpoint_aux,           ONLY : becpt, alphapt, ikmks
+#if defined(__CUDA)
+  USE  qpoint_aux,          ONLY : becpt_d, alphapt_d
+#endif
   USE eqv,                  ONLY : vlocq, evq
   USE control_lr,           ONLY : nbnd_occ, lgamma
   USE ldaU,                 ONLY : lda_plus_u
-  USE uspp_init,        ONLY : init_us_2
+  USE uspp_init,            ONLY : init_us_2
+#if defined(__CUDA)
+  USE becmod_subs_gpum,      ONLY : calbec_gpu
+#endif
   !
   IMPLICIT NONE
   !
   ! ... local variables
   !
-  INTEGER :: nt, ik, ikq, ipol, ibnd, ikk, na, ig, irr, imode0
+  INTEGER :: nt, ik, ikq, ipol, ibnd, ikk, na, ig, irr, imode0, itmp
     ! counter on atom types
     ! counter on k points
     ! counter on k+q points
@@ -159,6 +172,7 @@ SUBROUTINE phq_init()
   ALLOCATE( aux1( npwx*npol, nbnd ) )
   IF (noncolin.AND.domag) ALLOCATE(tevc(npwx*npol,nbnd))
   !
+  !$acc data create(aux1,tevc) copyin(xk) present(igk_k,g)
   DO ik = 1, nksq
      !
      ikk  = ikks(ik)
@@ -185,7 +199,8 @@ SUBROUTINE phq_init()
      !
      ! ... d) The functions vkb(k+G)
      !
-     CALL init_us_2( npw, igk_k(1,ikk), xk(1,ikk), vkb )
+     CALL init_us_2( npw, igk_k(1,ikk), xk(1,ikk), vkb, .true. )
+     !$acc update host(vkb)
      !
      ! ... read the wavefunctions at k
      !
@@ -196,55 +211,125 @@ SUBROUTINE phq_init()
         CALL get_buffer( evc, lrwfc, iuwfc, ikk )
         IF (noncolin.AND.domag) THEN
            CALL get_buffer( tevc, lrwfc, iuwfc, ikmks(ik) )
+           !$acc update device(tevc)
+#if defined(__CUDA)
+           !$acc host_data use_device(vkb, tevc)
+           CALL calbec_gpu (npw, vkb(:,:), tevc, becpt_d(ik) )
+           !$acc end host_data
+           IF (gamma_only)  THEN
+              becpt(ik)%r=becpt_d(ik)%r_d
+           ELSE IF (noncolin) THEN
+              becpt(ik)%nc=becpt_d(ik)%nc_d
+           ELSE
+              becpt(ik)%k=becpt_d(ik)%k_d
+           END IF
+#else
            CALL calbec (npw, vkb, tevc, becpt(ik) )
+#endif
         ENDIF
      endif
      !
      ! ... e) we compute the becp terms which are used in the rest of
      ! ...    the code
      !
-     
+     !$acc data copyin(evc)
+#if defined(__CUDA)
+     !$acc host_data use_device(vkb, evc)
+     CALL calbec_gpu (npw, vkb(:,:), evc, becp1_d(ik) )
+     !$acc end host_data
+     IF (gamma_only)  THEN
+        becp1(ik)%r=becp1_d(ik)%r_d
+     ELSE IF (noncolin) THEN
+        becp1(ik)%nc=becp1_d(ik)%nc_d
+     ELSE
+        becp1(ik)%k=becp1_d(ik)%k_d
+     END IF
+#else
      CALL calbec (npw, vkb, evc, becp1(ik) )
+#endif
      
      !
      ! ... e') we compute the derivative of the becp term with respect to an
      !         atomic displacement
      !
      DO ipol = 1, 3
+        !$acc kernels
         aux1=(0.d0,0.d0)
+        !$acc end kernels
+        !$acc parallel loop collapse(2)
         DO ibnd = 1, nbnd
            DO ig = 1, npw
+              itmp = igk_k(ig,ikk)
               aux1(ig,ibnd) = evc(ig,ibnd) * tpiba * ( 0.D0, 1.D0 ) * &
-                   ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
+                   ( xk(ipol,ikk) + g(ipol,itmp) )
            END DO
-           IF (noncolin) THEN
-              DO ig = 1, npw
-                 aux1(ig+npwx,ibnd)=evc(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*&
-                      ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
-              END DO
-           END IF
         END DO
+        IF (noncolin) THEN
+           !$acc parallel loop collapse(2)
+           DO ibnd = 1, nbnd
+              DO ig = 1, npw
+                 itmp = igk_k(ig,ikk)
+                 aux1(ig+npwx,ibnd)=evc(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*&
+                      ( xk(ipol,ikk) + g(ipol,itmp) )
+              END DO
+           END DO
+        END IF
+#if defined(__CUDA)
+        !$acc host_data use_device(vkb,aux1)
+        CALL calbec_gpu (npw, vkb(:,:), aux1, alphap_d(ipol,ik) )
+        !$acc end host_data
+        IF (gamma_only)  THEN
+          alphap(ipol,ik)%r=alphap_d(ipol,ik)%r_d
+        ELSE IF (noncolin) THEN
+          alphap(ipol,ik)%nc=alphap_d(ipol,ik)%nc_d
+        ELSE
+          alphap(ipol,ik)%k=alphap_d(ipol,ik)%k_d
+        END IF
+#else
         CALL calbec (npw, vkb, aux1, alphap(ipol,ik) )
+#endif
      END DO
      !
      IF (noncolin.AND.domag) THEN
         DO ipol = 1, 3
+           !$acc kernels
            aux1=(0.d0,0.d0)
+           !$acc end kernels
+           !$acc parallel loop collapse(2)
            DO ibnd = 1, nbnd
               DO ig = 1, npw
+                 itmp = igk_k(ig,ikk)
                  aux1(ig,ibnd) = tevc(ig,ibnd) * tpiba * ( 0.D0, 1.D0 ) * &
-                      ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
+                      ( xk(ipol,ikk) + g(ipol,itmp) )
               END DO
-              IF (noncolin) THEN
-                 DO ig = 1, npw
-                    aux1(ig+npwx,ibnd)=tevc(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*&
-                         ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
-                 END DO
-              END IF
            END DO
+           IF (noncolin) THEN
+              !$acc parallel loop collapse(2)
+              DO ibnd = 1, nbnd
+                 DO ig = 1, npw
+                    itmp = igk_k(ig,ikk)
+                    aux1(ig+npwx,ibnd)=tevc(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*&
+                         ( xk(ipol,ikk) + g(ipol,itmp) )
+                 END DO
+              END DO
+           END IF
+#if defined(__CUDA)
+           !$acc host_data use_device(vkb, aux1)
+           CALL calbec_gpu (npw, vkb(:,:), aux1, alphapt_d(ipol,ik) )
+           !$acc end host_data
+           IF (gamma_only)  THEN
+              alphapt(ipol,ik)%r=alphapt_d(ipol,ik)%r_d
+           ELSE IF (noncolin) THEN
+              alphapt(ipol,ik)%nc=alphapt_d(ipol,ik)%nc_d
+           ELSE
+              alphapt(ipol,ik)%k=alphapt_d(ipol,ik)%k_d
+           END IF
+#else
            CALL calbec (npw, vkb, aux1, alphapt(ipol,ik) )
-        END DO
-     ENDIF
+#endif
+         END DO
+      ENDIF
+      !$acc end data
 !!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
      IF (acfdt_is_active) THEN
         ! ACFDT -test always read calculated wcf from non_scf calculation
@@ -272,7 +357,9 @@ SUBROUTINE phq_init()
      ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
      !
+
   END DO
+  !$acc end data
   !
   DEALLOCATE( aux1 )
   !
