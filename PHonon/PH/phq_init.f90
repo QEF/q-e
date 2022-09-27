@@ -59,6 +59,7 @@ SUBROUTINE phq_init()
 #endif
   USE nlcc_ph,              ONLY : drc
   USE control_ph,           ONLY : trans, zue, epsil, all_done
+  USE control_flags,        ONLY : gamma_only
   USE units_lr,             ONLY : lrwfc, iuwfc
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
