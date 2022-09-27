@@ -181,13 +181,12 @@ SUBROUTINE force_hub_gpu( forceh )
       CALL orthoUwfc_k( ik, .TRUE. )
       !$acc update device(wfcU)
       !
-      
       IF ( gamma_only ) THEN
          ALLOCATE( projrd(nwfcU,nbnd) )
       ELSE
          ALLOCATE( projkd(nwfcU,nbnd) )
       ENDIF
-      
+      !
       ! proj=<wfcU|S|evc>
 #if defined(__CUDA)
       CALL using_becp_d_auto(2)
@@ -222,17 +221,12 @@ SUBROUTINE force_hub_gpu( forceh )
                !
 #if defined(__CUDA)
                IF ( gamma_only ) THEN
-                  !$acc host_data use_device( projrd,spsi )
                   CALL dndtau_gamma_gpu( ldim, projrd, spsi, alpha, ijkb0, ipol, ik, &
                                          nb_s, nb_e, mykey, 1, dns )
-                  !$acc end host_data
                ELSE
-                  !$acc host_data use_device( projkd,spsi )
                   CALL dndtau_k_gpu( ldim, projkd, spsi, alpha, ijkb0, ipol, ik, &
                                      nb_s, nb_e, mykey, 1, dns )
-                  !$acc end host_data
                ENDIF
-               
 #else
                IF ( gamma_only ) THEN
                   CALL dndtau_gamma( ldim, projrd, spsi, alpha, ijkb0, ipol, ik, &
@@ -262,15 +256,11 @@ SUBROUTINE force_hub_gpu( forceh )
                IF (lhubb) THEN
 #if defined(__CUDA)
                   IF ( gamma_only ) THEN
-                     !$acc host_data use_device( projrd,spsi )
                      CALL dndtau_gamma_gpu( ldimb, projrd, spsi, alpha, ijkb0, ipol, ik, &
                                             nb_s, nb_e, mykey, 2, dnsb )
-                     !$acc end host_data
                   ELSE
-                     !$acc host_data use_device( projkd,spsi )
                      CALL dndtau_k_gpu( ldimb, projkd, spsi, alpha, ijkb0, ipol, ik, &
                                         nb_s, nb_e, mykey, 2, dnsb )
-                     !$acc end host_data
                   ENDIF
 #else
                   IF ( gamma_only ) THEN
@@ -306,12 +296,12 @@ SUBROUTINE force_hub_gpu( forceh )
                !
 #if defined(__CUDA)
                IF ( gamma_only ) THEN
-                  !$acc host_data use_device( projrd,spsi )
+                  !$acc host_data use_device(projrd,spsi)
                   CALL dngdtau_gamma_gpu( ldim, projrd, spsi, alpha, ijkb0, ipol, ik, &
                                           nb_s, nb_e, mykey, dnsg )
                   !$acc end host_data
                ELSE
-                  !$acc host_data use_device( projkd,spsi )
+                  !$acc host_data use_device(projkd,spsi)
                   CALL dngdtau_k_gpu( ldim, projkd, spsi, alpha, ijkb0, ipol, ik, &
                                       nb_s, nb_e, mykey, dnsg )
                   !$acc end host_data
@@ -325,7 +315,6 @@ SUBROUTINE force_hub_gpu( forceh )
                                   nb_s, nb_e, mykey, dnsg )
                ENDIF
 #endif
-               
                !
                DO is = 1, nspin
                   DO na1 = 1, nat
@@ -416,7 +405,7 @@ SUBROUTINE force_hub_gpu( forceh )
 END SUBROUTINE force_hub_gpu
 !
 !------------------------------------------------------------------------------
-SUBROUTINE dndtau_k_gpu( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
+SUBROUTINE dndtau_k_gpu( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
                          nb_e, mykey, lpuk, dns )
    !---------------------------------------------------------------------------
    !! This routine computes the derivative of the ns with respect to the ionic
@@ -448,9 +437,9 @@ SUBROUTINE dndtau_k_gpu( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
    !
    INTEGER, INTENT(IN) :: ldim
    !! ldim = 2*Hubbard_lmax+1
-   COMPLEX (DP), INTENT(IN) :: proj_d(nwfcU,nbnd)
+   COMPLEX(DP), INTENT(IN) :: proj(nwfcU,nbnd)
    !! projection
-   COMPLEX(DP), INTENT(IN) :: spsi_d(npwx,nbnd)
+   COMPLEX(DP), INTENT(IN) :: spsi(npwx,nbnd)
    !! \(S|\ \text{evc}\rangle\)
    INTEGER, INTENT(IN) :: alpha
    !! the displaced atom index
@@ -476,9 +465,9 @@ SUBROUTINE dndtau_k_gpu( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
    ! ... local variables
    !
    INTEGER ::  ibnd, is, na, nt, m1, m2, off1, off2, m11, m22, ldim1
-   COMPLEX(DP), ALLOCATABLE :: dproj(:,:), dproj_d(:,:), proj(:,:),  dproj_us_d(:,:)
+   COMPLEX(DP), ALLOCATABLE :: dproj(:,:),  dproj_us_d(:,:)
 #if defined(__CUDA)
-   attributes(DEVICE) :: dproj_d, proj_d, spsi_d,  dproj_us_d
+   attributes(DEVICE) :: dproj_us_d
 #endif
    ! Additional GPU data
    INTEGER :: ierr
@@ -490,16 +479,16 @@ SUBROUTINE dndtau_k_gpu( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
    CALL start_clock_gpu( 'dndtau' )
    !
    ALLOCATE ( dproj(nwfcU,nb_s:nb_e) )
-   ALLOCATE ( dproj_d(nwfcU,nb_s:nb_e) )
-   ALLOCATE ( proj, source=proj_d )
    !
-   ! Compute the derivative of occupation matrices (the quantities dns(m1,m2))
-   ! of the atomic orbitals. They are real quantities as well as ns(m1,m2).
+   !$acc data present(spsi,proj) create(dproj)
+   !
+   ! ... Compute the derivative of occupation matrices (the quantities dns(m1,m2))
+   ! ... of the atomic orbitals. They are real quantities as well as ns(m1,m2).
    !
    dns(:,:,:,:) = 0.d0
    !
-   ! Compute the USPP contribution to dproj:
-   ! <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
+   ! ... Compute the USPP contribution to dproj:
+   ! ... <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
    !
    IF (okvan) THEN
       CALL dev_buf%lock_buffer( wfcU_d, SHAPE(wfcU) , ierr )
@@ -507,16 +496,16 @@ SUBROUTINE dndtau_k_gpu( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
       CALL dev_memcpy( wfcU_d , wfcU )
       ALLOCATE ( dproj_us_d(nwfcU,nb_s:nb_e) )
       CALL using_evc_d(0)
-      CALL matrix_element_of_dSdtau_gpu (alpha, ipol, ik, jkb0, &
-                        nwfcU, wfcU_d, nbnd, evc_d, dproj_us_d, nb_s, nb_e, mykey)
+      CALL matrix_element_of_dSdtau_gpu( alpha, ipol, ik, jkb0, nwfcU, wfcU_d, &
+                                         nbnd, evc_d, dproj_us_d, nb_s, nb_e, mykey )
       CALL dev_buf%release_buffer( wfcU_d, ierr )
    ENDIF
    !
    ! In the 'ortho-atomic' case calculate d[(O^{-1/2})^T]
    !
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
-      ALLOCATE ( doverlap_inv(natomwfc,natomwfc) )
-      CALL calc_doverlap_inv (alpha, ipol, ik, jkb0)
+      ALLOCATE( doverlap_inv(natomwfc,natomwfc) )
+      CALL calc_doverlap_inv( alpha, ipol, ik, jkb0 )
    ENDIF
    !
    ! Band parallelization. If each band appears more than once
@@ -525,14 +514,25 @@ SUBROUTINE dndtau_k_gpu( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
 ! !omp parallel do default(shared) private(na,nt,m1,m2,ibnd)
    DO na = 1, nat
       nt = ityp(na)
-      IF (is_hubbard(nt) .AND. lpuk.EQ.1) THEN
+      IF (is_hubbard(nt) .AND. lpuk==1) THEN
          !
-         ! Compute the derivative of proj
-         CALL dprojdtau_k_gpu ( spsi_d, alpha, na, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj_d )
-         IF (okvan) CALL dev_mem_addscal(dproj_d, dproj_us_d) ! adds dproj_us to dproj_d with scaling 1.
+         ! ... Compute the derivative of proj
+         !$acc host_data use_device(spsi,dproj)
+         CALL dprojdtau_k_gpu( spsi, alpha, na, jkb0, ipol, ik, nb_s, nb_e, &
+                               mykey, dproj )
+         !$acc end host_data
+         !
+         ! ... adds dproj_us to dproj_d with scaling 1.
+         !IF (okvan) CALL dev_mem_addscal(dproj_d, dproj_us_d) 
+         IF (okvan) THEN
+           !$acc kernels
+           dproj = dproj + dproj_us_d
+           !$acc end kernels
+         ENDIF
          !
          ! TODO : COPY ONLY A SLICE HERE
-         CALL dev_memcpy( dproj , dproj_d )
+         !CALL dev_memcpy( dproj , dproj_d )
+         !$acc update self(dproj)
          IF (mykey==0) THEN
           DO m1 = 1, 2*Hubbard_l(nt)+1
             DO m2 = m1, 2*Hubbard_l(nt)+1
@@ -547,27 +547,37 @@ SUBROUTINE dndtau_k_gpu( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
             ENDDO
           ENDDO
          ENDIF
-      ELSEIF (is_hubbard_back(nt) .AND. lpuk.EQ.2) THEN
+      ELSEIF (is_hubbard_back(nt) .AND. lpuk==2) THEN
          !
-         ! Compute the second contribution to dproj due to the derivative of 
-         ! (ortho-)atomic orbitals
-         CALL dprojdtau_k_gpu ( spsi_d, alpha, na, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj_d )
-         IF (okvan) CALL dev_mem_addscal(dproj_d, dproj_us_d) ! adds dproj_us to dproj_d with scaling 1.
+         ! ... Compute the second contribution to dproj due to the derivative of 
+         ! ... (ortho-)atomic orbitals
+         !$acc host_data use_device(spsi,dproj)
+         CALL dprojdtau_k_gpu( spsi, alpha, na, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
+         !$acc end host_data
+         !
+         ! ... adds dproj_us to dproj_d with scaling 1.
+         !IF (okvan) CALL dev_mem_addscal(dproj_d, dproj_us_d)
+         IF (okvan) THEN
+           !$acc kernels
+           dproj = dproj + dproj_us_d
+           !$acc end kernels
+         ENDIF
          !
          ! TODO : COPY ONLY A SLICE HERE
-         CALL dev_memcpy( dproj , dproj_d )
+         !CALL dev_memcpy( dproj , dproj_d )
+         !$acc update self(dproj)
          IF (mykey==0) THEN
           DO m1 = 1, ldim_back(nt) 
             off1 = offsetU_back(na)
             m11 = m1
-            IF (backall(nt) .AND. m1.GT.2*Hubbard_l2(nt)+1) THEN
+            IF (backall(nt) .AND. m1>2*Hubbard_l2(nt)+1) THEN
                off1 = offsetU_back1(na)
                m11 = m1 - 2*Hubbard_l2(nt)-1
             ENDIF
             DO m2 = m1, ldim_back(nt) 
                off2 = offsetU_back(na)
                m22 = m2
-               IF (backall(nt) .AND. m2.GT.2*Hubbard_l2(nt)+1) THEN
+               IF (backall(nt) .AND. m2>2*Hubbard_l2(nt)+1) THEN
                   off2 = offsetU_back1(na)
                   m22 = m2 - 2*Hubbard_l2(nt)-1
                ENDIF
@@ -586,18 +596,20 @@ SUBROUTINE dndtau_k_gpu( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
    ENDDO
 ! !omp end parallel do
    !
-   DEALLOCATE( dproj , dproj_d, proj )
+   
+   !$acc end data
+   DEALLOCATE( dproj )
    IF (ALLOCATED(doverlap_inv)) DEALLOCATE( doverlap_inv )
-   IF (okvan) DEALLOCATE (dproj_us_d)
+   IF (okvan) DEALLOCATE( dproj_us_d )
    !
    CALL mp_sum( dns, intra_pool_comm )
    !
-   ! In nspin=1 k-point weight wg is normalized to 2 el/band 
-   ! in the whole BZ but we are interested in dns of one spin component
+   ! ... In nspin=1 k-point weight wg is normalized to 2 el/band 
+   ! ... in the whole BZ but we are interested in dns of one spin component
    !
    IF (nspin == 1) dns = 0.5d0 * dns
    !
-   ! Impose hermiticity of dns_{m1,m2}
+   ! ... Impose hermiticity of dns_{m1,m2}
    !
 ! !omp parallel do default(shared) private(na,is,m1,m2)
    DO na = 1, nat
@@ -618,8 +630,8 @@ SUBROUTINE dndtau_k_gpu( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
 END SUBROUTINE dndtau_k_gpu
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dndtau_gamma_gpu ( ldim, rproj_d, spsi_d, alpha, jkb0, ipol, ik, &
-                          nb_s, nb_e, mykey, lpuk, dns )
+SUBROUTINE dndtau_gamma_gpu( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
+                             nb_s, nb_e, mykey, lpuk, dns )
    !-----------------------------------------------------------------------
    !! This routine computes the derivative of the ns with respect to the
    !! ionic displacement \(u(\text{alpha,ipol})\) used to obtain the Hubbard
@@ -644,9 +656,9 @@ SUBROUTINE dndtau_gamma_gpu ( ldim, rproj_d, spsi_d, alpha, jkb0, ipol, ik, &
    !
    INTEGER, INTENT(IN) :: ldim
    !! ldim = 2*Hubbard_lmax+1
-   REAL(DP), INTENT(IN) ::  rproj_d(nwfcU,nbnd)
+   REAL(DP), INTENT(IN) :: rproj(nwfcU,nbnd)
    !! projection
-   COMPLEX(DP), INTENT(IN) :: spsi_d(npwx,nbnd)
+   COMPLEX(DP), INTENT(IN) :: spsi(npwx,nbnd)
    !! \(S\ |\text{evc}\rangle\)
    INTEGER, INTENT(IN) :: alpha
    !! the displaced atom index
@@ -669,44 +681,40 @@ SUBROUTINE dndtau_gamma_gpu ( ldim, rproj_d, spsi_d, alpha, jkb0, ipol, ik, &
    !! background (lpuk=2) contribution to the force
    REAL(DP), INTENT(OUT) :: dns(ldim,ldim,nspin,nat)
    !! the derivative of the atomic occupations
-#if defined(__CUDA)
-   attributes(DEVICE) :: rproj_d, spsi_d
-#endif
    !
    ! ... local variables
    !
    INTEGER ::  ibnd, is, na, nt, m1, m2, off1, off2, m11, m22
-   REAL (DP), ALLOCATABLE :: dproj_d(:,:)
-#if defined(__CUDA)
-   attributes(DEVICE) :: dproj_d
-#endif
-   REAL (DP), ALLOCATABLE :: dproj(:,:)
-   REAL (DP), ALLOCATABLE :: rproj(:,:)
+   REAL(DP), ALLOCATABLE :: dproj(:,:)
    !
    CALL start_clock_gpu( 'dndtau' )
    !
-   ALLOCATE ( dproj_d(nwfcU,nb_s:nb_e) )
-   ALLOCATE ( dproj(nwfcU,nb_s:nb_e) )
-   ALLOCATE ( rproj, source=rproj_d )
+   ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    !
-   ! Compute the derivative of occupation matrices (the quantities dns(m1,m2))
-   ! of the atomic orbitals. They are real quantities as well as ns(m1,m2).
+   !$acc data present(rproj,spsi) create(dproj)
    !
-   CALL dprojdtau_gamma_gpu( spsi_d, alpha, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj_d )
-   CALL dev_memcpy( dproj , dproj_d )
-   ! TODO: Only copy a slice here!!
+   ! ... Compute the derivative of occupation matrices (the quantities dns(m1,m2))
+   ! ... of the atomic orbitals. They are real quantities as well as ns(m1,m2).
+   !
+   !$acc host_data use_device(spsi,dproj)
+   CALL dprojdtau_gamma_gpu( spsi, alpha, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
+   !$acc end host_data
+   !
+   ! TODO: Only copy a slice here
+   !CALL dev_memcpy( dproj, dproj_d )
+   !$acc update self(dproj)
    !
    dns(:,:,:,:) = 0.d0
    !
-   ! Band parallelization. If each band appears more than once
-   ! compute its contribution only once (i.e. when mykey=0)
+   ! ... Band parallelization. If each band appears more than once
+   ! ... compute its contribution only once (i.e. when mykey=0)
    !
    IF ( mykey /= 0 ) GO TO 10
    !
 ! !omp parallel do default(shared) private(na,nt,m1,m2,is)
    DO na = 1, nat
       nt = ityp(na)
-      IF (is_hubbard(nt) .AND. lpuk.EQ.1) THEN
+      IF (is_hubbard(nt) .AND. lpuk==1) THEN
          DO m1 = 1, 2*Hubbard_l(nt)+1
             DO m2 = m1, 2*Hubbard_l(nt)+1
                DO ibnd = nb_s, nb_e
@@ -719,18 +727,18 @@ SUBROUTINE dndtau_gamma_gpu ( ldim, rproj_d, spsi_d, alpha, jkb0, ipol, ik, &
                ENDDO
             ENDDO
          ENDDO
-      ELSEIF (is_hubbard_back(nt) .AND. lpuk.EQ.2) THEN
+      ELSEIF (is_hubbard_back(nt) .AND. lpuk==2) THEN
          DO m1 = 1, ldim_back(nt) 
             off1 = offsetU_back(na)
             m11 = m1
-            IF (m1.GT.2*Hubbard_l2(nt)+1) THEN
+            IF (m1>2*Hubbard_l2(nt)+1) THEN
                off1 = offsetU_back1(na)
                m11 = m1 - 2*Hubbard_l2(nt)-1
             ENDIF
             DO m2 = m1, ldim_back(nt) 
                off2 = offsetU_back(na)
                m22 = m2
-               IF (m2.GT.2*Hubbard_l2(nt)+1) THEN
+               IF (m2>2*Hubbard_l2(nt)+1) THEN
                   off2 = offsetU_back1(na)
                   m22 = m2 - 2*Hubbard_l2(nt)-1
                ENDIF
@@ -748,18 +756,20 @@ SUBROUTINE dndtau_gamma_gpu ( ldim, rproj_d, spsi_d, alpha, jkb0, ipol, ik, &
    ENDDO
 ! !omp end parallel do
    !
-10 DEALLOCATE( dproj_d )
+   
+10 CONTINUE
+   !
+   !$acc end data
    DEALLOCATE( dproj )
-   DEALLOCATE( rproj )
    !
    CALL mp_sum( dns, intra_pool_comm )
    !
-   ! In nspin=1 k-point weight wg is normalized to 2 el/band 
-   ! in the whole BZ but we are interested in dns of one spin component
+   ! ... In nspin=1 k-point weight wg is normalized to 2 el/band 
+   ! ... in the whole BZ but we are interested in dns of one spin component
    !
    IF (nspin == 1) dns = 0.5d0 * dns
    !
-   ! Impose hermiticity of dns_{m1,m2}
+   ! ... Impose hermiticity of dns_{m1,m2}
    !
 ! !omp parallel do default(shared) private(na,is,m1,m2)
    DO na = 1, nat
@@ -780,8 +790,8 @@ SUBROUTINE dndtau_gamma_gpu ( ldim, rproj_d, spsi_d, alpha, jkb0, ipol, ik, &
 END SUBROUTINE dndtau_gamma_gpu
 !
 !----------------------------------------------------------------------------
-SUBROUTINE dngdtau_k_gpu ( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
-                       nb_e, mykey, dnsg)
+SUBROUTINE dngdtau_k_gpu( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
+                          nb_e, mykey, dnsg)
    !-------------------------------------------------------------------------
    !! This routine computes the derivative of the nsg (generalized occupation
    !! matrix of the DFT+U+V scheme) with respect to the ionic
