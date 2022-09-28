@@ -170,9 +170,13 @@ SUBROUTINE phq_init()
   endif
   !
   ALLOCATE( aux1( npwx*npol, nbnd ) )
-  IF (noncolin.AND.domag) ALLOCATE(tevc(npwx*npol,nbnd))
+  !$acc enter data create(aux1)
+  IF (noncolin.AND.domag) THEN
+          ALLOCATE(tevc(npwx*npol,nbnd))
+          !$acc enter data create(tevc(npwx*npol,nbnd))
+  ENDIF
   !
-  !$acc data create(aux1,tevc) copyin(xk) present(igk_k,g)
+  !$acc data copyin(xk) 
   DO ik = 1, nksq
      !
      ikk  = ikks(ik)
@@ -200,15 +204,16 @@ SUBROUTINE phq_init()
      ! ... d) The functions vkb(k+G)
      !
      CALL init_us_2( npw, igk_k(1,ikk), xk(1,ikk), vkb, .true. )
-     !$acc update host(vkb)
      !
      ! ... read the wavefunctions at k
      !
      if(elph_mat) then
         call read_wfc_rspace_and_fwfft( evc, ik, lrwfcr, iunwfcwann, npw, igk_k(1,ikk) )
         !       CALL davcio (evc, lrwfc, iunwfcwann, ik, - 1)
+        !....................!$acc update device(evc)
      else
         CALL get_buffer( evc, lrwfc, iuwfc, ikk )
+        !....................!$acc update device(evc)
         IF (noncolin.AND.domag) THEN
            CALL get_buffer( tevc, lrwfc, iuwfc, ikmks(ik) )
            !$acc update device(tevc)
@@ -253,10 +258,17 @@ SUBROUTINE phq_init()
      !         atomic displacement
      !
      DO ipol = 1, 3
-        !$acc kernels
-        aux1=(0.d0,0.d0)
-        !$acc end kernels
+#if defined(__CUDA)
         !$acc parallel loop collapse(2)
+        DO ibnd = 1, nbnd
+           DO ig = 1, npw
+              aux1(ig,ibnd)=(0.d0,0.d0)
+           END DO
+        END DO
+#else
+        aux1=(0.d0,0.d0)
+#endif
+        !$acc parallel loop collapse(2) 
         DO ibnd = 1, nbnd
            DO ig = 1, npw
               itmp = igk_k(ig,ikk)
@@ -265,7 +277,7 @@ SUBROUTINE phq_init()
            END DO
         END DO
         IF (noncolin) THEN
-           !$acc parallel loop collapse(2)
+           !$acc parallel loop collapse(2) 
            DO ibnd = 1, nbnd
               DO ig = 1, npw
                  itmp = igk_k(ig,ikk)
@@ -292,10 +304,17 @@ SUBROUTINE phq_init()
      !
      IF (noncolin.AND.domag) THEN
         DO ipol = 1, 3
-           !$acc kernels
-           aux1=(0.d0,0.d0)
-           !$acc end kernels
+#if defined(__CUDA)
            !$acc parallel loop collapse(2)
+           DO ibnd = 1, nbnd
+              DO ig = 1, npw
+                 aux1(ig,ibnd)=(0.d0,0.d0)
+              END DO
+           END DO
+#else
+           aux1=(0.d0,0.d0)
+#endif
+           !$acc parallel loop collapse(2) 
            DO ibnd = 1, nbnd
               DO ig = 1, npw
                  itmp = igk_k(ig,ikk)
@@ -304,7 +323,7 @@ SUBROUTINE phq_init()
               END DO
            END DO
            IF (noncolin) THEN
-              !$acc parallel loop collapse(2)
+              !$acc parallel loop collapse(2) 
               DO ibnd = 1, nbnd
                  DO ig = 1, npw
                     itmp = igk_k(ig,ikk)
@@ -361,7 +380,12 @@ SUBROUTINE phq_init()
   END DO
   !$acc end data
   !
+  !$acc exit data delete(aux1)
   DEALLOCATE( aux1 )
+  IF (noncolin.AND.domag) THEN
+          !$acc exit data delete(tevc)
+          DEALLOCATE(tevc(npwx*npol,nbnd))
+  ENDIF
   !
   CALL dvanqq()
   CALL drho()
