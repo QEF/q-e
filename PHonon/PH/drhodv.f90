@@ -234,6 +234,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   dyn (:,:) = dyn (:,:) + wdyn (:,:)
   dyn_rec(:,:) = dyn_rec(:,:) + wdyn(:,:)
 
+  !$acc exit data delete(aux)
   deallocate (aux)
 
   do ipert=1,nper
