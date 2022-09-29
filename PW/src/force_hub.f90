@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE force_hub( forceh )
+SUBROUTINE force_hub_ORIG( forceh )
    !----------------------------------------------------------------------
    !! This routine computes the Hubbard contribution to the force. It gives
    !! as output the product:
@@ -292,10 +292,10 @@ SUBROUTINE force_hub( forceh )
    !
    RETURN
    !
-END SUBROUTINE force_hub
+END SUBROUTINE force_hub_ORIG
 !
 !------------------------------------------------------------------------------
-SUBROUTINE dndtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
+SUBROUTINE dndtau_k_ORIG ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
                       nb_e, mykey, lpuk, dns )
    !---------------------------------------------------------------------------
    !! This routine computes the derivative of the ns with respect to the ionic
@@ -471,10 +471,10 @@ SUBROUTINE dndtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    RETURN
    !
-END SUBROUTINE dndtau_k
+END SUBROUTINE dndtau_k_ORIG
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dndtau_gamma ( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
+SUBROUTINE dndtau_gamma_ORIG( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
                           nb_s, nb_e, mykey, lpuk, dns )
    !-----------------------------------------------------------------------
    !! This routine computes the derivative of the ns with respect to the
@@ -616,10 +616,10 @@ SUBROUTINE dndtau_gamma ( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
    !
    RETURN
    !
-END SUBROUTINE dndtau_gamma
+END SUBROUTINE dndtau_gamma_ORIG
 !
 !----------------------------------------------------------------------------
-SUBROUTINE dngdtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
+SUBROUTINE dngdtau_k_ORIG( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
                        nb_e, mykey, dnsg)
    !-------------------------------------------------------------------------
    !! This routine computes the derivative of the nsg (generalized occupation
@@ -822,10 +822,10 @@ SUBROUTINE dngdtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    RETURN
    !
-END SUBROUTINE dngdtau_k
+END SUBROUTINE dngdtau_k_ORIG
 !
 !-----------------------------------------------------------------------------
-SUBROUTINE dngdtau_gamma ( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
+SUBROUTINE dngdtau_gamma_ORIG( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
                            nb_e, mykey, dnsg)
    !--------------------------------------------------------------------------
    !! This routine computes the derivative of the nsg (generalized occupation
@@ -991,7 +991,7 @@ SUBROUTINE dngdtau_gamma ( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    RETURN
    !
-END SUBROUTINE dngdtau_gamma
+END SUBROUTINE dngdtau_gamma_ORIG
 !
 !-------------------------------------------------------------------------------
 SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
