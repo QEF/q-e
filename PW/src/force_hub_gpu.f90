@@ -512,10 +512,8 @@ SUBROUTINE dndtau_k_gpu( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
       IF (is_hubbard(nt) .AND. lpuk==1) THEN
          !
          ! ... Compute the derivative of proj
-         !$acc host_data use_device(spsi,dproj)
          CALL dprojdtau_k_gpu( spsi, alpha, na, jkb0, ipol, ik, nb_s, nb_e, &
                                mykey, dproj )
-         !$acc end host_data
          !
          ! ... adds dproj_us to dproj_d with scaling 1.
          !IF (okvan) CALL dev_mem_addscal(dproj_d, dproj_us_d) 
@@ -546,9 +544,7 @@ SUBROUTINE dndtau_k_gpu( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
          !
          ! ... Compute the second contribution to dproj due to the derivative of 
          ! ... (ortho-)atomic orbitals
-         !$acc host_data use_device(spsi,dproj)
          CALL dprojdtau_k_gpu( spsi, alpha, na, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
-         !$acc end host_data
          !
          ! ... adds dproj_us to dproj_d with scaling 1.
          !IF (okvan) CALL dev_mem_addscal(dproj_d, dproj_us_d)
@@ -691,9 +687,7 @@ SUBROUTINE dndtau_gamma_gpu( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
    ! ... Compute the derivative of occupation matrices (the quantities dns(m1,m2))
    ! ... of the atomic orbitals. They are real quantities as well as ns(m1,m2).
    !
-   !$acc host_data use_device(spsi,dproj)
    CALL dprojdtau_gamma_gpu( spsi, alpha, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
-   !$acc end host_data
    !
    ! TODO: Only copy a slice here
    !CALL dev_memcpy( dproj, dproj_d )
@@ -893,9 +887,7 @@ SUBROUTINE dngdtau_k_gpu( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
       ! ... In the 'atomic' case the calculation must be performed only 
       ! ... once (when na=alpha)
       !
-      !$acc host_data use_device(spsi,dproj1)
       CALL dprojdtau_k_gpu( spsi, alpha, alpha, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj1 )
-      !$acc end host_data
       !
       ! ... adds dproj_us to dproj with scaling 1.
       !IF (okvan) CALL dev_mem_addscal(dproj1_d, dproj_us_d) 
@@ -923,13 +915,11 @@ SUBROUTINE dngdtau_k_gpu( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    DO na1 = 1, nat
       nt1 = ityp(na1)
       IF ( is_hubbard(nt1) ) THEN
-         ! Compute the second contribution to dproj1 due to the derivative of 
-         ! ortho-atomic orbitals
+         ! ... Compute the second contribution to dproj1 due to the derivative of 
+         ! ... ortho-atomic orbitals
          IF (Hubbard_projectors.EQ."ortho-atomic") THEN
-            !$acc host_data use_device(spsi,dproj1)
             CALL dprojdtau_k_gpu( spsi, alpha, na1, jkb0, ipol, ik, nb_s,&
                                   nb_e, mykey, dproj1 )
-            !$acc end host_data
             !IF (okvan) CALL dev_mem_addscal(dproj1_d, dproj_us_d)
             IF ( okvan ) THEN
                !$acc kernels
@@ -950,9 +940,7 @@ SUBROUTINE dngdtau_k_gpu( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
             ! ... Compute the second contribution to dproj2 due to the derivative of 
             ! ... ortho-atomic orbitals
             IF (Hubbard_projectors.EQ."ortho-atomic") THEN
-               !$acc host_data use_device(spsi,dproj2)
                CALL dprojdtau_k_gpu( spsi, alpha, eq_na2, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj2 )
-               !$acc end host_data
                !IF (okvan) CALL dev_mem_addscal( dproj2_d, dproj_us_d)
                IF ( okvan ) THEN
                   !$acc kernels
@@ -1226,8 +1214,8 @@ SUBROUTINE dngdtau_gamma_gpu( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
 END SUBROUTINE dngdtau_gamma_gpu
 !
-!-------------------------------------------------------------------------------
-SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dproj_d )
+!------------------------------------------------------------------------------
+SUBROUTINE dprojdtau_k_gpu( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
    !-----------------------------------------------------------------------------
    !! This routine computes the first derivative of the projection
    !! \(\langle\phi^{at}_{I,m1}|S|\psi_{k,v,s}\rangle\) with respect to 
@@ -1235,10 +1223,6 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    !! $$ \text{ns}_{I,s,m1,m2} = \sum_{k,v}
    !!    f_{kv} \langle\phi^{at}_{I,m1}|S|\psi_{k,v,s}\rangle
    !!           \langle\psi_{k,v,s}|S|\phi^{at}_{I,m2}\rangle $$
-   !
-#if defined(__CUDA)
-   USE cublas
-#endif
    !
    USE kinds,                ONLY : DP
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
@@ -1265,7 +1249,7 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    !
    ! I/O variables
    !
-   COMPLEX(DP), INTENT(IN) :: spsi_d(npwx,nbnd)
+   COMPLEX(DP), INTENT(IN) :: spsi(npwx,nbnd)
    !! \(S\ |\text{evc}\rangle\)
    INTEGER, INTENT(IN) :: alpha
    !! the displaced atom
@@ -1285,26 +1269,23 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    !! If each band appears more than once compute
    !! its contribution only once (i.e. when
    !! \(\text{mykey}=0)\)
-   COMPLEX(DP), INTENT(OUT) :: dproj_d(nwfcU,nb_s:nb_e)
+   COMPLEX(DP), INTENT(OUT) :: dproj(nwfcU,nb_s:nb_e)
    !! derivative of projection
-#if defined(__CUDA)
-   attributes(DEVICE) :: spsi_d, dproj_d
-#endif
    !
    ! ... local variables
    !
    INTEGER :: npw, nt, ig, m1, m2, m3, ibnd, iwf, nt_, ih, jh, ldim, &
               ldim_std, offpm, i, j, m_start, m_end
-   REAL (DP) :: gvec, xk_d
+   REAL(DP) :: gvec, xk_d
    INTEGER :: nh_nt, ierr
-   COMPLEX(DP), POINTER :: &
-   dproj0_d(:,:),       & ! derivative of the projector
-   dproj_us_d(:,:),     & ! USPP contribution to dproj0
-   dwfc_d(:,:),         & ! USPP contribution to dproj0
-   doverlap_inv_d(:,:)    ! derivative of (O^{-1/2})_JI (note the transposition)
+   COMPLEX(DP), ALLOCATABLE :: dwfc(:,:), &
+                               dproj0(:,:)        !derivative of the projector
+   COMPLEX(DP), POINTER :: dproj_us_d(:,:),     & ! USPP contribution to dproj0
+                           doverlap_inv_d(:,:)    ! derivative of (O^{-1/2})_JI 
+                                                  ! (note the transposition)
    !
 #if defined(__CUDA)
-   attributes(DEVICE) :: dproj0_d, dproj_us_d, dwfc_d, doverlap_inv_d
+   attributes(DEVICE) :: dproj_us_d
 #endif
    COMPLEX(DP), POINTER :: wfcU_d(:,:)
    COMPLEX(DP), POINTER :: becpk_d(:,:)
@@ -1312,9 +1293,11 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    !! (starting) atomic wavefunctions
    COMPLEX(DP), POINTER :: overlap_inv_d(:,:)
 #if defined(__CUDA)
-   attributes(DEVICE) :: wfcU_d, becpk_d, wfcatom_d, overlap_inv_d
+   attributes(DEVICE) :: wfcU_d, becpk_d
 #endif
    CALL start_clock_gpu( 'dprojdtau' )
+   !
+   !$acc data present(spsi,dproj)
    !
    nt  = ityp(na)
    npw = ngk(ik)
@@ -1325,179 +1308,205 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    !
    CALL dev_buf%lock_buffer( wfcU_d, SHAPE(wfcU) , ierr )
    IF ( ierr /= 0 ) CALL errore( 'dprojdtau_k_gpu', 'cannot allocate buffers', ABS(ierr) )
-   CALL dev_memcpy( wfcU_d , wfcU )
+   CALL dev_memcpy( wfcU_d, wfcU )
    !
-   CALL dev_memset( dproj_d , (0.d0, 0.d0) )
+   !$acc kernels
+   dproj = (0.d0,0.d0)
+   !$acc end kernels
    !
    IF ((Hubbard_projectors.EQ."atomic") .AND. (na==alpha) .AND. &
        (is_hubbard(nt).OR.is_hubbard_back(nt))) THEN
       !
-      !!!!!!!!!!!!!!!!!!!! ATOMIC CASE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !********************* ATOMIC CASE *******************************
       !
-      ! Compute the derivative of the atomic wfc 'na' when displacing atom 'alpha'. 
-      ! Note, this derivative is different from zero only when na=alpha, i.e. when 
-      ! the displaced atom is the Hubbard atom itself (this is so due to the 
-      ! localized nature of atomic wfc).
-      ! Note: parallelization here is over plane waves, not over bands!
+      ! ... Compute the derivative of the atomic wfc 'na' when displacing atom 'alpha'. 
+      ! ... Note, this derivative is different from zero only when na=alpha, i.e. when 
+      ! ... the displaced atom is the Hubbard atom itself (this is so due to the 
+      ! ... localized nature of atomic wfc).
+      ! ... Note: parallelization here is over plane waves, not over bands!
       !
-      CALL dev_buf%lock_buffer( dwfc_d, [npwx,ldim] , ierr ) ! ALLOCATE( dwfc_d(npwx,ldim) )
-      IF ( ierr /= 0 ) CALL errore('dprojdtau_k_gpu', ' Buffers allocation failed', ABS(ierr))
-      CALL dev_memset( dwfc_d , (0.d0, 0.d0) )
+      ALLOCATE( dwfc(npwx,ldim) )
+      !$acc data create(dwfc)
       !
-      ! DFT+U: In the expression of dwfc we don't need (k+G) but just G; k always
-      ! multiplies the underived quantity and gives an opposite contribution
-      ! in c.c. term because the sign of the imaginary unit.
-      ! DFT+U+V: the k-point coordinate is needed, i.e. (k+G) instead of just G
+      !$acc kernels
+      dwfc = (0.d0,0.d0)
+      !$acc end kernels
+      !
+      ! ... DFT+U: In the expression of dwfc we don't need (k+G) but just G; k always
+      ! ... multiplies the underived quantity and gives an opposite contribution
+      ! ... in c.c. term because the sign of the imaginary unit.
+      ! ... DFT+U+V: the k-point coordinate is needed, i.e. (k+G) instead of just G.
       !
       DO m1 = 1, ldim
-         IF (m1.LE.ldim_std) THEN
+         IF (m1 <= ldim_std) THEN
             offpm = offsetU(alpha) + m1
          ELSE
             offpm = offsetU_back(alpha) + m1 - ldim_std
-            IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l2(nt)+1) &
-               offpm = offsetU_back1(alpha) + m1 &
-                       - ldim_std - 2*Hubbard_l2(nt) - 1
+            IF (backall(nt) .AND. m1 > ldim_std+2*Hubbard_l2(nt)+1) &
+                 offpm = offsetU_back1(alpha)+m1-ldim_std-2*Hubbard_l2(nt)-1
          ENDIF
-!$cuf kernel do
+         !$acc parallel loop
          DO ig = 1, npw
-            IF (lda_plus_u_kind.EQ.0) THEN
-                gvec = g_d(ipol,igk_k_d(ig,ik)) * tpiba
-            ELSEIF (lda_plus_u_kind.EQ.2) THEN
-                gvec = (g_d(ipol,igk_k_d(ig,ik)) + xk_d) * tpiba
+            IF (lda_plus_u_kind==0) THEN
+               gvec = g_d(ipol,igk_k_d(ig,ik)) * tpiba
+            ELSEIF (lda_plus_u_kind==2) THEN
+               gvec = (g_d(ipol,igk_k_d(ig,ik)) + xk_d) * tpiba
             ENDIF
-            dwfc_d(ig,m1) = (0.d0,-1.d0) * gvec * wfcU_d(ig,offpm)
+            dwfc(ig,m1) = (0.d0,-1.d0) * gvec * wfcU_d(ig,offpm)
          ENDDO
          !
       ENDDO
 ! !omp end parallel do
       !
-      CALL dev_buf%lock_buffer( dproj0_d, [ldim,nbnd] , ierr ) ! ALLOCATE ( dproj0_d(ldim,nbnd) )
-      CALL ZGEMM( 'C','N',ldim, nbnd, npw, (1.d0,0.d0), &
-                  dwfc_d, npwx, spsi_d, npwx, (0.d0,0.d0),  &
-                  dproj0_d, ldim )
+      ALLOCATE ( dproj0(ldim,nbnd) )
+      !$acc data create(dproj0)
+      !$acc host_data use_device(dwfc,spsi,dproj0)
+      CALL MYZGEMM( 'C','N',ldim, nbnd, npw, (1.d0,0.d0), &
+                    dwfc, npwx, spsi, npwx, (0.d0,0.d0),  &
+                    dproj0, ldim )
+      !$acc end host_data
       !
-      CALL dev_buf%release_buffer(dwfc_d, ierr) ! DEALLOCATE(dwfc_d)
-      CALL mp_sum( dproj0_d, intra_bgrp_comm )
+      !$acc host_data use_device(dproj0)
+      CALL mp_sum( dproj0, intra_bgrp_comm )
+      !$acc end host_data
       !
-      ! Copy to dproj results for the bands treated by this processor
+      ! ... Copy to dproj results for the bands treated by this processor.
       !
       DO m1 = 1, ldim
-         IF (m1.le.ldim_std ) THEN
+         IF (m1 <= ldim_std ) THEN
             offpm = offsetU(na)+m1
          ELSE
             offpm = offsetU_back(alpha) + m1 - ldim_std
-            IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l2(nt)+1) &
-               offpm = offsetU_back1(alpha) + m1 &
-                       - ldim_std - 2*Hubbard_l2(nt) - 1
+            IF (backall(nt) .AND. m1 > ldim_std+2*Hubbard_l2(nt)+1) &
+              offpm = offsetU_back1(alpha) + m1 - ldim_std - 2*Hubbard_l2(nt) - 1
          ENDIF
          !
-         !$cuf kernel do
-         DO ibnd=nb_s, nb_e
-            dproj_d(offpm, ibnd) = dproj0_d(m1, ibnd)
+         !$acc parallel loop
+         DO ibnd = nb_s, nb_e
+            dproj(offpm,ibnd) = dproj0(m1,ibnd)
          ENDDO
       ENDDO
-      CALL dev_buf%release_buffer(dproj0_d, ierr) ! DEALLOCATE(dproj0_d) 
+      !
+      !$acc end data
+      !$acc end data
+      DEALLOCATE( dwfc, dproj0 )
       !
    ELSEIF (Hubbard_projectors.EQ."ortho-atomic") THEN
       !
-      !!!!!!!!!!!!!!!!! ORTHO-ATOMIC CASE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      
+      print *, 'qoooooooooo2'
+      
+      !***************** ORTHO-ATOMIC CASE ***********************************
       !
-      ! Compute the derivative of the ortho-atomic wfc 'na' when displacing atom 'alpha'. 
-      ! Note, this derivative is different from zero not only when na=alpha but also 
-      ! when na/=alpha, i.e. when we displace a non-Hubbard atom this will give a non-zero
-      ! contribution to the derivative of the ortho-atomic wfc na. This is so due
-      ! to the definition of the ortho-atomic wfc:
-      ! \phi_ortho_I = \sum_J O^{-1/2}_JI \phi_J
-      ! Note: parallelization here is over plane waves, not over bands!
+      ! ... Compute the derivative of the ortho-atomic wfc 'na' when displacing atom
+      ! ... 'alpha'. 
+      ! ... Note, this derivative is different from zero not only when na=alpha but also 
+      ! ... when na/=alpha, i.e. when we displace a non-Hubbard atom this will give a
+      ! ... non-zero contribution to the derivative of the ortho-atomic wfc na. This 
+      ! ... is so due to the definition of the ortho-atomic wfc:
+      ! ... \phi_ortho_I = \sum_J O^{-1/2}_JI \phi_J
+      ! ... Note: parallelization here is over plane waves, not over bands!
       !
-      IF (is_hubbard_back(nt)) CALL errore("dprojdtau_k", &
-                 " Forces with background and  ortho-atomic are not supported",1)
+      IF (is_hubbard_back(nt)) CALL errore( "dprojdtau_k", &
+                 " Forces with background and  ortho-atomic are not supported", 1 )
       !
-
-      CALL dev_buf%lock_buffer( wfcatom_d, SHAPE(wfcatom) , ierr )
-      CALL dev_buf%lock_buffer( overlap_inv_d, SHAPE(overlap_inv) , ierr )
+      ALLOCATE( dwfc(npwx,ldim) )
+      !$acc data create(dwfc,wfcatom) copyin(overlap_inv)
       !
-      CALL dev_buf%lock_buffer( dwfc_d, [npwx, ldim], ierr ) ! ALLOCATE (dwfc_d(npwx,ldim))
-      IF ( ierr /= 0 ) CALL errore('dprojdtau_k_gpu', ' Buffers allocation failed', ABS(ierr))
-      dwfc_d(:,:) = (0.d0, 0.d0)
+      IF ( ierr/=0 ) CALL errore( 'dprojdtau_k_gpu', ' Buffers allocation failed', &
+                                   ABS(ierr) )
+      !$acc kernels
+      dwfc(:,:) = (0.d0,0.d0)
+      !$acc end kernels
       !
-      ! Determine how many atomic wafefunctions there are for atom 'alpha'
-      ! and determine their position in the list of all atomic 
-      ! wavefunctions of all atoms
-      CALL natomwfc_per_atom(alpha, m_start, m_end)
+      ! ... Determine how many atomic wafefunctions there are for atom 'alpha'
+      ! ... and determine their position in the list of all atomic 
+      ! ... wavefunctions of all atoms.
+      CALL natomwfc_per_atom( alpha, m_start, m_end )
       !
-      ! 1. Derivative of the atomic wavefunctions (the only one which
-      !    is different from zero) times O^-0.5 transposed.
-      !    NOTE: overlap_inv is already transposed (it is O^{-1/2}_JI),
-      !          hence we obtain \sum_J O^{-1/2}_JI \dphi_J/d\tau(alpha,ipol)  
+      ! ... 1. Derivative of the atomic wavefunctions (the only one which
+      ! ...    is different from zero) times O^-0.5 transposed.
+      ! ...    NOTE: overlap_inv is already transposed (it is O^{-1/2}_JI),
+      ! ...         hence we obtain \sum_J O^{-1/2}_JI \dphi_J/d\tau(alpha,ipol)  
       !
 #if defined(__XLF)
       ! IBM XL 16.1.1 gives INTERNAL COMPILER ERROR
-      CALL errore('dprojdtau_k','disabled when it is compiled by xlf.',1)
+      CALL errore( 'dprojdtau_k', 'disabled when it is compiled by xlf.', 1 )
 #else
       offpm = oatwfc(na) ! offset
       !
-      CALL dev_memcpy( overlap_inv_d, overlap_inv )
-      CALL dev_memcpy( wfcatom_d, wfcatom )
-      !$cuf kernel do(1)
+      !$acc update device(wfcatom)
+      !
+      !$acc parallel loop
       DO ig = 1, npw
          gvec = (g_d(ipol,igk_k_d(ig,ik)) + xk_d) * tpiba
          DO m1 = 1, ldim
             DO m2 = m_start, m_end
-               dwfc_d(ig,m1) = dwfc_d(ig,m1) + (0.d0,-1.d0) * gvec * &
-                         overlap_inv_d(offpm+m1,m2) * wfcatom_d(ig,m2)
+               dwfc(ig,m1) = dwfc(ig,m1) + (0.d0,-1.d0) * gvec * &
+                             overlap_inv(offpm+m1,m2) * wfcatom(ig,m2)
             ENDDO
          ENDDO
       ENDDO
 #endif
       !
-      ! 2. Contribution due to the derivative of (O^{-1/2})_JI which
-      !    is multiplied by atomic wavefunctions
+      ! ... 2. Contribution due to the derivative of (O^{-1/2})_JI which
+      ! ...    is multiplied by atomic wavefunctions
       !
-      ! Now compute \sum_J dO^{-1/2}_JI/d\tau(alpha,ipol) \phi_J
-      ! and add it to another term (see above).
-      ! Note, doverlap_inv is d(O^{-1/2}) not transposed. The transposition 
-      ! of d(O^{-1/2}) is taken into account via a proper usage of the order
-      ! of indices in doverlap_inv: 
-      ! dwfc(ig,m1) = dwfc(ig,m1) + wfcatom(ig,m2) * doverlap_inv(m2,offpm+m1)
-      ! where m1=1,ldim; m2=1,natomwfc; ig=1,npw
+      ! ... Now compute \sum_J dO^{-1/2}_JI/d\tau(alpha,ipol) \phi_J
+      ! ... and add it to another term (see above).
+      ! ... Note, doverlap_inv is d(O^{-1/2}) not transposed. The transposition 
+      ! ... of d(O^{-1/2}) is taken into account via a proper usage of the order
+      ! ... of indices in doverlap_inv: 
+      ! ... dwfc(ig,m1) = dwfc(ig,m1) + wfcatom(ig,m2) * doverlap_inv(m2,offpm+m1)
+      ! ... where m1=1,ldim; m2=1,natomwfc; ig=1,npw
       !
-      ALLOCATE (doverlap_inv_d, source=doverlap_inv)
-      CALL ZGEMM('N','N', npw, ldim, natomwfc, (1.d0,0.d0), &
-                  wfcatom_d, npwx, doverlap_inv_d(:,offpm+1:offpm+ldim), &
-                  natomwfc, (1.d0,0.d0), dwfc_d, npwx)
+      !$acc data copyin(doverlap_inv)
+      !$acc host_data use_device(wfcatom,doverlap_inv,dwfc)
+      CALL MYZGEMM( 'N','N', npw, ldim, natomwfc, (1.d0,0.d0), &
+                    wfcatom, npwx, doverlap_inv(:,offpm+1:offpm+ldim), &
+                    natomwfc, (1.d0,0.d0), dwfc, npwx )
+      !$acc end host_data
+      !$acc end data
       !
-      ! 3. Final step: compute dproj0 = <dwfc|spsi>
+      ! ... 3. Final step: compute dproj0 = <dwfc|spsi>
       !
-      ALLOCATE ( dproj0_d(ldim,nbnd) )
-      dproj0_d(:,:) = (0.0d0, 0.0d0)
-      CALL ZGEMM('C','N',ldim, nbnd, npw, (1.d0,0.d0), &
-                  dwfc_d, npwx, spsi_d, npwx, (0.d0,0.d0), &
-                  dproj0_d, ldim)
-      CALL mp_sum( dproj0_d, intra_bgrp_comm )
+      ALLOCATE( dproj0(ldim,nbnd) )
+      !$acc data create(dproj0)
+      !$acc kernels
+      dproj0(:,:) = (0.0d0,0.0d0)
+      !$acc end kernels
+      !$acc host_data use_device(dwfc,spsi,dproj0)
+      CALL MYZGEMM( 'C','N',ldim, nbnd, npw, (1.d0,0.d0), &
+                    dwfc, npwx, spsi, npwx,  (0.d0,0.d0), &
+                    dproj0, ldim )
+      !$acc end host_data
+      !$acc host_data use_device(dproj0)
+      CALL mp_sum( dproj0, intra_bgrp_comm )
+      !$acc end host_data
       !
-      ! Copy to dproj results for the bands treated by this processor
+      ! ... Copy to dproj results for the bands treated by this processor
       !
       offpm = offsetU(na)
       IF (mykey==0) THEN
-         !$cuf kernel do(2)
+         !$acc parallel loop collapse(2)
          DO ibnd = nb_s, nb_e
             DO m1 = 1, ldim
-               dproj_d( offpm+m1, ibnd) = dproj0_d(m1, ibnd)
+               dproj(offpm+m1,ibnd) = dproj0(m1,ibnd)
             ENDDO
          ENDDO
       ENDIF
       !
-      DEALLOCATE (dproj0_d)
-      DEALLOCATE (doverlap_inv_d)
-      CALL dev_buf%release_buffer(dwfc_d, ierr)
-      !
-      CALL dev_buf%release_buffer( wfcatom_d, ierr )
-      CALL dev_buf%release_buffer( overlap_inv_d, ierr )
+      !$acc end data
+      
+      !$acc end data
+      DEALLOCATE( dproj0 )
+      DEALLOCATE( dwfc )
       !
    ENDIF
    !
    CALL dev_buf%release_buffer( wfcU_d, ierr )
+   !
+   !$acc end data
    !
    CALL stop_clock_gpu( 'dprojdtau' )
    !
@@ -1505,10 +1514,10 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    !
 END SUBROUTINE dprojdtau_k_gpu
 !
-!
-SUBROUTINE calc_doverlap_inv_gpu (alpha, ipol, ik, ijkb0)
-   !
-   ! This routine computes the derivative of O^{-1/2} transposed 
+!--------------------------------------------------------------------
+SUBROUTINE calc_doverlap_inv_gpu( alpha, ipol, ik, ijkb0 )
+   !-----------------------------------------------------------------
+   !! This routine computes the derivative of \(O^{-1/2}\) transposed.
    !
    USE kinds,            ONLY : DP
    USE cell_base,        ONLY : tpiba
@@ -1795,8 +1804,8 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
 END SUBROUTINE matrix_element_of_dSdtau_gpu
 
 !-----------------------------------------------------------------------
-SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
-                            mykey, dproj_d )
+SUBROUTINE dprojdtau_gamma_gpu( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
+                                mykey, dproj )
    !-----------------------------------------------------------------------
    !! This routine is the gamma version of \(\texttt{dprojdtau_k}\).
    !! It computes the first derivative of the projection
@@ -1833,9 +1842,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    !
    IMPLICIT NONE
    !
-   ! I/O variables
-   !
-   COMPLEX(DP), INTENT(IN) :: spsi_d(npwx,nbnd)
+   COMPLEX(DP), INTENT(IN) :: spsi(npwx,nbnd)
    !! \(S\ |\text{evc}\rangle\)
    INTEGER, INTENT(IN) :: alpha
    !! the displaced atom
@@ -1852,11 +1859,8 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    INTEGER, INTENT(IN) :: mykey
    !! If each band appears more than once
    !! compute its contribution only once (i.e. when mykey=0)
-   REAL(DP), INTENT(OUT) :: dproj_d(nwfcU,nb_s:nb_e)
+   REAL(DP), INTENT(OUT) :: dproj(nwfcU,nb_s:nb_e)
    !! derivative of projection
-#if defined(__CUDA)
-   attributes(DEVICE) :: spsi_d, dproj_d
-#endif
    !
    ! ... local variables
    !
@@ -1864,10 +1868,14 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
               ldim_std, offpm
    INTEGER :: nh_nt, ierr
    REAL(DP) :: gvec
-   COMPLEX(DP), POINTER :: dwfc_d(:,:), dbeta_d(:,:)
-   REAL(DP), POINTER    :: dproj0_d(:,:), betapsi_d(:,:), dbetapsi_d(:,:), &
-                            wfatbeta_d(:,:), wfatdbeta_d(:,:), bproj_d(:,:), &
-                            betapsi0_d(:,:)
+   !
+   COMPLEX(DP), ALLOCATABLE :: dwfc(:,:)
+   REAL(DP), ALLOCATABLE :: dproj0(:,:)
+   !
+   COMPLEX(DP), POINTER :: dbeta_d(:,:)
+   REAL(DP), POINTER    :: betapsi_d(:,:), dbetapsi_d(:,:), &
+                           wfatbeta_d(:,:), wfatdbeta_d(:,:), bproj_d(:,:), &
+                           betapsi0_d(:,:)
    !      dwfc(npwx,ldim),       ! the derivative of the atomic wavefunction
    !      dbeta(npwx,nhm),       ! the derivative of the beta function
    !      betapsi(nhm,nbnd),     ! <beta|evc>
@@ -1877,8 +1885,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    !
    ! See the implementation in dprojdtau_k
 #if defined(__CUDA)
-   attributes(DEVICE) :: dproj0_d, dwfc_d, dbeta_d, &
-                         betapsi_d, dbetapsi_d, &
+   attributes(DEVICE) :: dbeta_d, betapsi_d, dbetapsi_d, &
                          wfatbeta_d, wfatdbeta_d, bproj_d, betapsi0_d
 #endif
    COMPLEX(DP), POINTER :: wfcU_d(:,:)
@@ -1887,10 +1894,12 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    attributes(DEVICE) :: wfcU_d, becpr_d
 #endif
    !
-   IF (Hubbard_projectors.EQ."ortho-atomic") CALL errore("dprojdtau_gamma", &
-                    " Forces with gamma-only and ortho-atomic are not supported",1)
+   IF (Hubbard_projectors.EQ."ortho-atomic") CALL errore( "dprojdtau_gamma", &
+                " Forces with gamma-only and ortho-atomic are not supported", 1 )
    !
    CALL start_clock_gpu( 'dprojdtau' )
+   !
+   !$acc data present(dproj,spsi)
    !
    nt = ityp(alpha)
    npw = ngk(ik)
@@ -1898,83 +1907,90 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    ldim_std = 2*Hubbard_l(nt)+1
    nh_nt = nh(nt)
    CALL dev_buf%lock_buffer( wfcU_d, SHAPE(wfcU) , ierr )
-   IF ( ierr /= 0 ) CALL errore( 'dprojdtau_gamma_gpu', 'cannot allocate buffers', ABS(ierr) )
+   IF ( ierr /= 0 ) CALL errore( 'dprojdtau_gamma_gpu', 'cannot allocate buffers',&
+                                 ABS(ierr) )
    CALL dev_memcpy( wfcU_d , wfcU )
    !
-   dproj_d(:,:) = 0.0_dp
+   !$acc kernels
+   dproj(:,:) = 0.0_DP
+   !$acc end kernels
    !
-   ! First the derivatives of the atomic wfc and the beta are computed
-   ! Note: parallelization here is over plane waves, not over bands!
+   ! ... First the derivatives of the atomic wfc and the beta are computed
+   ! ... Note: parallelization here is over plane waves, not over bands!
    !
    IF ( is_hubbard(nt) .OR. is_hubbard_back(nt) ) THEN
+      !      
+      ALLOCATE( dproj0(ldim,nbnd) )
+      ALLOCATE( dwfc(npwx,ldim) )
+      !$acc data create(dwfc,dproj0)
       !
-      CALL dev_buf%lock_buffer( dproj0_d, [ldim,nbnd], ierr ) ! ALLOCATE( dproj0_d(ldim,nbnd) )
-      CALL dev_buf%lock_buffer( dwfc_d, [npwx,ldim], ierr ) ! ALLOCATE( dwfc_d(npwx,ldim)
-      IF ( ierr /= 0 ) CALL errore('dprojdtau_gamma_gpu','Buffers allocation failed', ABS(ierr))
-      dproj0_d(:,:) =  0.d0
-      dwfc_d(:,:)   = (0.d0,0.d0)
+      !$acc kernels
+      dproj0(:,:) = 0.d0
+      dwfc(:,:) = (0.d0,0.d0)
+      !$acc end kernels
       !
-      ! In the expression of dwfc we don't need (k+G) but just G; k always
-      ! multiplies the underived quantity and gives an opposite contribution
-      ! in c.c. term because the sign of the imaginary unit. But in any case,
-      ! here we consider the situation when k = 0.
+      ! ... In the expression of dwfc we don't need (k+G) but just G; k always
+      ! ... multiplies the underived quantity and gives an opposite contribution
+      ! ... in c.c. term because the sign of the imaginary unit. But in any case,
+      ! ... here we consider the situation when k = 0.
       !
       !
       DO m1 = 1, ldim
-         IF (m1.LE.ldim_std) THEN
+         IF (m1 <= ldim_std) THEN
             offpm = offsetU(alpha) + m1
          ELSE
             offpm = offsetU_back(alpha) + m1 - ldim_std 
-            IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l2(nt)+1) &
+            IF (backall(nt) .AND. m1 > ldim_std+2*Hubbard_l2(nt)+1) &
                offpm = offsetU_back1(alpha) + m1 &
                        - ldim_std - 2*Hubbard_l2(nt) - 1
          ENDIF
-         !$cuf kernel do
+         !$acc parallel loop
          DO ig = 1, npw
              gvec = g_d(ipol,igk_k_d(ig,ik)) * tpiba
-             dwfc_d(ig,m1) = (0.d0,-1.d0) * gvec * wfcU_d(ig,offpm)
+             dwfc(ig,m1) = (0.d0,-1.d0) * gvec * wfcU_d(ig,offpm)
          ENDDO
          !
      ENDDO
 ! !omp end parallel do
       !
-      ! there is no G=0 term
-      CALL DGEMM('T','N',ldim, nbnd, 2*npw, 2.0_dp,  &
-                  dwfc_d, 2*npwx, spsi_d, 2*npwx, 0.0_dp,&
-                  dproj0_d, ldim)
+      ! ... there is no G=0 term
+      !$acc host_data use_device(spsi,dwfc,dproj0)
+      CALL MYDGEMM( 'T','N',ldim, nbnd, 2*npw, 2.0_DP, dwfc, 2*npwx, spsi,&
+                    2*npwx, 0.0_DP, dproj0, ldim )
+      !$acc end host_data
       !
-      CALL dev_buf%release_buffer( dwfc_d , ierr) ! DEALLOCATE( dwfc_d ) 
+      !$acc host_data use_device(dproj0)
+      CALL mp_sum( dproj0, intra_bgrp_comm )
+      !$acc end host_data
       !
-      CALL mp_sum( dproj0_d, intra_bgrp_comm )
-      !
-      ! copy to dproj results for the bands treated by this processor
+      ! ... copy to dproj results for the bands treated by this processor
       !
       DO m1 = 1, ldim
-         IF (m1.LE.ldim_std) THEN
+         IF (m1<=ldim_std) THEN
             offpm = offsetU(alpha) + m1
          ELSE
             offpm = offsetU_back(alpha) + m1 - ldim_std
-            IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l2(nt)+1) &
-               offpm = offsetU_back1(alpha) + m1 &
-                       - ldim_std - 2*Hubbard_l2(nt) - 1
+            IF (backall(nt) .AND. m1 > ldim_std+2*Hubbard_l2(nt)+1) &
+               offpm = offsetU_back1(alpha)+m1-ldim_std-2*Hubbard_l2(nt)-1
          ENDIF
-         !$cuf kernel do
-         DO ibnd=nb_s, nb_e
-            dproj_d(offpm, ibnd) = dproj0_d(m1, ibnd)
+         !$acc parallel loop
+         DO ibnd = nb_s, nb_e
+            dproj(offpm,ibnd) = dproj0(m1,ibnd)
          ENDDO
       ENDDO
       !
       offpm = offsetU(alpha)
-      !$cuf kernel do(2)
-      DO ibnd=nb_s, nb_e
-         DO m1=1,ldim
-            dproj_d( m1 + offpm, ibnd) = dproj0_d(m1, ibnd)
+      !$acc parallel loop collapse(2)
+      DO ibnd = nb_s, nb_e
+         DO m1 = 1, ldim
+            dproj(m1+offpm,ibnd) = dproj0(m1,ibnd)
          ENDDO
       ENDDO
       !
-      CALL dev_buf%release_buffer( dproj0_d, ierr ) ! DEALLOCATE( dproj0_d ) 
+      !$acc end data
+      DEALLOCATE( dwfc, dproj0 ) 
       !
-   END IF
+   ENDIF
    !
    CALL dev_buf%lock_buffer(betapsi0_d, [nh(nt),nbnd]  , ierr)  ! ALLOCATE( betapsi0_d(nh(nt),nbnd)   )
    CALL dev_buf%lock_buffer(dbetapsi_d, [nh(nt),nbnd]  , ierr)  ! ALLOCATE( dbetapsi_d(nh(nt),nbnd)   )
@@ -1983,7 +1999,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    CALL dev_buf%lock_buffer(dbeta_d,    [npwx,nh(nt)]  , ierr)  ! ALLOCATE( dbeta_d(npwx,nh(nt))      )
    IF ( ierr /= 0 ) CALL errore('dprojdtau_gamma_gpu','Buffers allocation failed', ABS(ierr))
    !
-!$acc parallel loop collapse(2) present(vkb(:,:))
+   !$acc parallel loop collapse(2) present(vkb(:,:))
    DO ih = 1, nh_nt
       DO ig = 1, npw
          dbeta_d(ig,ih) = vkb(ig,ijkb0+ih)
@@ -1994,7 +2010,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    CALL using_evc_d(0)
    CALL calbec_gpu( npw, dbeta_d, evc_d, betapsi0_d )
    !
-!$cuf kernel do(2)
+   !$acc parallel loop collapse(2)
    DO ih = 1, nh(nt)
       DO ig = 1, npw
          gvec = g_d(ipol,igk_k_d(ig,ik)) * tpiba
@@ -2007,16 +2023,16 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    CALL calbec_gpu( npw, wfcU_d, dbeta_d, wfatdbeta_d ) 
    CALL dev_buf%release_buffer( dbeta_d , ierr ) ! DEALLOCATE( dbeta_d )
    !
-   ! calculate \sum_j qq(i,j)*dbetapsi(j)
-   ! betapsi is used here as work space 
+   ! ... calculate \sum_j qq(i,j)*dbetapsi(j)
+   ! ... betapsi is used here as work space 
    !
    CALL dev_buf%lock_buffer( betapsi_d, [nh(nt), nbnd] , ierr ) ! ALLOCATE( betapsi_d(nh(nt), nbnd) )
    IF ( ierr /= 0 ) CALL errore('dprojdtau_gamma_gpu','Buffers allocation failed', ABS(ierr))
    ! TODO : CAN WE RESET ONLY from nb_s to nb_e ??
-   CALL dev_memset ( betapsi_d,  0.0_dp )
+   CALL dev_memset( betapsi_d, 0.0_DP )
    !
-   ! here starts band parallelization
-!$acc parallel loop collapse(2) present(qq_at)
+   ! ... here starts band parallelization
+   !$acc parallel loop collapse(2) present(qq_at)
    DO ih = 1, nh_nt
       DO ibnd = nb_s, nb_e
          DO jh = 1, nh_nt
@@ -2027,34 +2043,36 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    ENDDO
 ! !omp end parallel do
    !
-   CALL dev_memcpy ( dbetapsi_d , betapsi_d )
+   CALL dev_memcpy( dbetapsi_d, betapsi_d )
    !
-   ! calculate \sum_j qq(i,j)*betapsi(j)
+   ! ... calculate \sum_j qq(i,j)*betapsi(j)
    !
-   CALL dev_memset ( betapsi_d,  0.0_dp )
+   CALL dev_memset( betapsi_d, 0.0_DP )
    !
    becpr_d => becp_d%r_d
-!$acc parallel loop collapse(2) present(qq_at)
+   !$acc parallel loop collapse(2) present(qq_at)
    DO ih = 1, nh_nt
       DO ibnd = nb_s, nb_e
          DO jh = 1, nh_nt
             betapsi_d(ih,ibnd) = betapsi_d(ih,ibnd) + &
-                               qq_at(ih,jh,alpha) * betapsi0_d(jh,ibnd)
+                                 qq_at(ih,jh,alpha) * betapsi0_d(jh,ibnd)
          ENDDO
       ENDDO
    ENDDO
 ! !omp end parallel do
    !
-   ! dproj(iwf,ibnd) = \sum_ih wfatdbeta(iwf,ih)*betapsi(ih,ibnd) +
-   !                           wfatbeta(iwf,ih)*dbetapsi(ih,ibnd) 
+   ! ... dproj(iwf,ibnd) = \sum_ih wfatdbeta(iwf,ih)*betapsi(ih,ibnd) +
+   ! ...                           wfatbeta(iwf,ih)*dbetapsi(ih,ibnd) 
    !
-   IF ( mykey == 0 .AND. nh(nt) > 0 ) THEN
-      CALL DGEMM('N','N',nwfcU, nb_e-nb_s+1, nh(nt), 1.0_dp,  &
-           wfatdbeta_d, nwfcU, betapsi_d(1,nb_s), nh(nt), 1.0_dp,&
-           dproj_d(1,nb_s), nwfcU)
-      CALL DGEMM('N','N',nwfcU, nb_e-nb_s+1, nh(nt), 1.0_dp,  &
-           wfatbeta_d, nwfcU, dbetapsi_d(1,nb_s), nh(nt), 1.0_dp,&
-           dproj_d(1,nb_s), nwfcU)
+   IF ( mykey==0 .AND. nh(nt)>0 ) THEN
+      !$acc host_data use_device(dproj)
+      CALL MYDGEMM( 'N', 'N', nwfcU, nb_e-nb_s+1, nh(nt), 1.0_dp,  &
+                    wfatdbeta_d, nwfcU, betapsi_d(1,nb_s), nh(nt), 1.0_dp, &
+                    dproj(1,nb_s), nwfcU )
+      CALL MYDGEMM( 'N', 'N', nwfcU, nb_e-nb_s+1, nh(nt), 1.0_dp,  &
+                    wfatbeta_d, nwfcU, dbetapsi_d(1,nb_s), nh(nt), 1.0_dp, &
+                    dproj(1,nb_s), nwfcU )
+      !$acc end host_data
    ENDIF
    ! end band parallelization - only dproj(1,nb_s:nb_e) are calculated
    CALL dev_buf%release_buffer( betapsi0_d  , ierr ) ! DEALLOCATE ( betapsi0_d )
@@ -2064,6 +2082,8 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    CALL dev_buf%release_buffer( dbetapsi_d  , ierr ) ! DEALLOCATE (dbetapsi_d )
    !
    CALL dev_buf%release_buffer( wfcU_d, ierr )
+   !
+   !$acc end data
    !
    CALL stop_clock_gpu( 'dprojdtau' )
    !
