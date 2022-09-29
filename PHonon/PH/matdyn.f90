@@ -205,7 +205,7 @@ PROGRAM matdyn
 
   INTEGER :: nspin_mag, nqs, ios, ipol
   !
-  LOGICAL :: readtau, la2F, xmlifc, lo_to_split, na_ifc, fd, nosym, loto_2d &
+  LOGICAL :: readtau, la2F, xmlifc, lo_to_split, na_ifc, fd, nosym, loto_2d, &
              huang, read_lr
   !
   REAL(DP) :: qhat(3), qh, DeltaE, Emin=0._dp, Emax, E, qq, degauss

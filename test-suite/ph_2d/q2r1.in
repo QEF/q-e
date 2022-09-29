@@ -1,0 +1,5 @@
+&INPUT
+  fildyn = 'bn.dyn.xml'
+  flfrc = 'bn.frc'
+  zasr = 'crystal'
+/

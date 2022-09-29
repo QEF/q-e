@@ -1,0 +1,6 @@
+&INPUT
+  fildyn = 'bn.dyn.xml'
+  flfrc = 'bn.frc'
+  zasr = 'crystal'
+  write_lr = .true.
+/
