@@ -994,7 +994,7 @@ SUBROUTINE dngdtau_gamma_ORIG( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
 END SUBROUTINE dngdtau_gamma_ORIG
 !
 !-------------------------------------------------------------------------------
-SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
+SUBROUTINE dprojdtau_k_ORIG( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
    !-----------------------------------------------------------------------------
    !! This routine computes the first derivative of the projection
    !! \(\langle\phi^{at}_{I,m1}|S|\psi_{k,v,s}\rangle\) with respect to 
@@ -1223,7 +1223,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    !
    RETURN
    !
-END SUBROUTINE dprojdtau_k
+END SUBROUTINE dprojdtau_k_ORIG
 !
 SUBROUTINE natomwfc_per_atom(alpha, m_start, m_end)
    !
@@ -1504,8 +1504,8 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
 END SUBROUTINE matrix_element_of_dSdtau
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
-                            mykey, dproj )
+SUBROUTINE dprojdtau_gamma_ORIG( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
+                                 mykey, dproj )
    !-----------------------------------------------------------------------
    !! This routine is the gamma version of \(\texttt{dprojdtau_k}\).
    !! It computes the first derivative of the projection
@@ -1740,4 +1740,4 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    !
    RETURN
    !
-END SUBROUTINE dprojdtau_gamma
+END SUBROUTINE dprojdtau_gamma_ORIG
