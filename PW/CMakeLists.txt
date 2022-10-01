@@ -253,7 +253,6 @@ set(src_pw
    src/g_psi_mod_gpu.f90
    src/newd_gpu.f90
    src/sum_band_gpu.f90
-   src/force_hub_gpu.f90
    src/orthoatwfc_gpu.f90
    src/wfcinit_gpu.f90
    src/add_paw_to_deeq_gpu.f90
