@@ -199,8 +199,10 @@ MODULE io_dyn_mat
     RETURN
     END SUBROUTINE write_dyn_mat_tail
 
-    SUBROUTINE write_ifc( nr1, nr2, nr3, nat, phid, phid_lr, write_lr)
-
+    !----------------------------------------------------------------------------
+    SUBROUTINE write_ifc(nr1, nr2, nr3, nat, phid, phid_lr, write_lr)
+    !----------------------------------------------------------------------------
+    !
     INTEGER, INTENT(IN) :: nr1, nr2, nr3, nat
     COMPLEX(DP), INTENT(IN) :: phid(nr1*nr2*nr3,3,3,nat,nat)
     COMPLEX(DP), INTENT(IN) :: phid_lr(nr1*nr2*nr3,3,3,nat,nat)
@@ -589,9 +591,9 @@ MODULE io_dyn_mat
     LOGICAL, INTENT(in) :: read_lr
     !! .true. to read long-range IFC
     REAL(KIND = DP), INTENT(out) :: phid(nr1*nr2*nr3,3,3,nat,nat)
-    !!
+    !! Interatomic force constant in real-space
     REAL(KIND = DP), INTENT(out) :: phid_lr(nr1 * nr2 * nr3, 3, 3, nat, nat)
-    !!
+    !! Long-rage part of the IFC in real-space
     ! Local variables
     INTEGER :: na, nb
     ! Atoms

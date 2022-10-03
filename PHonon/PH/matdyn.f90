@@ -862,10 +862,14 @@ PROGRAM matdyn
      DEALLOCATE(high_sym)
      DEALLOCATE(frc_lr)
   !
-
   CALL environment_end('MATDYN')
   !
   CALL mp_global_end()
+  !
+  IF (asr == 'all') THEN
+     WRITE(stdout, '(/A110/)') "   You are using asr="//'"all"'//", please consider citing "// &
+                               "C. Lin, S. Ponc\'e and N. Marzari, arXiv:2209.09520 (2022)."
+  ENDIF
   !
   STOP
   !
@@ -1222,7 +1226,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, frc_lr, zeu, nat, ibrav, tau_blk, a
   !
   INTEGER :: axis, n, i, j, na, nb, n1,n2,n3, m,p,k,l,q,r, i1,j1,na1, ip,ieq,neq
   INTEGER :: huang_set(4,15)
-  REAL(DP) :: zeu_new(3,3,nat), tau(3,12), rcell(3), r_ws(3), eps
+  REAL(DP) :: zeu_new(3,3,nat), tau(3,48), rcell(3), r_ws(3), eps
   REAL(DP), ALLOCATABLE :: frc_new(:,:,:,:,:,:,:)
   parameter (eps=1.0d-8)
   type vector
@@ -1542,6 +1546,8 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, frc_lr, zeu, nat, ibrav, tau_blk, a
   !
   if (n.eq.21) then
      !
+     !! Please consider citing C. Lin, S. Ponc\'e and N. Marzari, arXiv:2209.09520 (2022) if asr='all' is used.
+     !
      ! Born-Huang invariance conditions
      do i=1,3
         do j=1,3
@@ -1781,15 +1787,17 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, frc_lr, zeu, nat, ibrav, tau_blk, a
         i1=MOD((((k-na1)/nat)-j1+1)/3,3)+1
      else
         q=k-9*nat
-        if (n.eq.4) then
-           na1=MOD(q,nat)
-           if (na1.eq.0) na1=nat
-           i1=MOD((q-na1)/nat,3)+1
-        elseif (k.le.(18*nat)) then
-           na1=MOD(q,nat)
-           if (na1.eq.0) na1=nat
-           j1=MOD((q-na1)/nat,3)+1
-           i1=MOD((((q-na1)/nat)-j1+1)/3,3)+1
+        if (k.le.(18*nat)) then
+           if (n.eq.4) then
+              na1=MOD(q,nat)
+              if (na1.eq.0) na1=nat
+              i1=MOD((q-na1)/nat,3)+1
+           else
+              na1=MOD(q,nat)
+              if (na1.eq.0) na1=nat
+              j1=MOD((q-na1)/nat,3)+1
+              i1=MOD((((q-na1)/nat)-j1+1)/3,3)+1
+           endif
         endif
      endif
      do q=1,k-1
@@ -2018,51 +2026,74 @@ subroutine sp3(u,v,i,na,nr1,nr2,nr3,nat,scal)
 end subroutine sp3
 !
 !-----------------------------------------------------------------------
-subroutine ws_all(tau,neq,nr1,nr2,nr3,r_ws,at_blk)
+SUBROUTINE ws_all(tau,neq,nr1,nr2,nr3,r_ws,at_blk)
   !-----------------------------------------------------------------------
-  ! Used in set_asr
-  ! Determine the nearest periodic image for an atom pair
-  ! Calculte the number of degeneracies as weight when
-  ! on the surface of the optimal Wigner-Seitz cell
+  !! Used in set_asr
+  !! Determine the nearest periodic image for an atom pair
+  !! Calculte the number of degeneracies as weight when
+  !! on the surface of the optimal Wigner-Seitz cell
   !
   USE kinds, ONLY: DP
-  implicit none
-  integer, intent(in) :: nr1,nr2,nr3
-  real(DP), intent(in) :: r_ws(3),at_blk(3,3)
-  integer, intent(out) :: neq
-  real(DP), intent(out) :: tau(3,48)
   !
-  integer :: n1,n2,n3
-  real(DP) :: rnorm,rmin,eps,tau_tmp(3),at(3,3)
-  parameter (eps=1.0d-3)
+  IMPLICIT NONE
   !
-  at(:,1) = at_blk(:,1)*DBLE(nr1)
-  at(:,2) = at_blk(:,2)*DBLE(nr2)
-  at(:,3) = at_blk(:,3)*DBLE(nr3)
+  INTEGER, INTENT(in) :: nr1,nr2,nr3
+  !! Supercell size
+  INTEGER, INTENT(out) :: neq
+  !! Weight of the degeneracy
+  REAL(DP), INTENT(in) :: r_ws(3)
+  !! Original position in the supercell
+  REAL(DP), INTENT(in) :: at_blk(3, 3)
+  !! Lattice vector of the primitive cell
+  REAL(DP), INTENT(out) :: tau(3, 48)
+  !! Nearest periodic atomic position 
   !
-  rmin=HUGE(rmin)
-  do n1=-2,2
-     do n2=-2,2
-        do n3=-2,2
-           tau_tmp=r_ws+n1*at(:,1)+n2*at(:,2)+n3*at(:,3)
-           rnorm=NORM2(tau_tmp)
-           if (abs(rnorm-rmin).gt.eps) then
-              if (rnorm.lt.rmin) then
-                 neq=1
-                 rmin=rnorm
-                 tau(:,neq)=tau_tmp
-              endif
-           else
-              neq=neq+1
-              tau(:,neq)=tau_tmp
-           endif
-        enddo
-     enddo
-  enddo
+  ! Local variable
+  INTEGER :: n1, n2, n3
+  !! Search around the cell to a maximum of 2 around
+  REAL(DP) :: rnorm
+  !! Distance betweem origin cell and current cell
+  REAL(DP) :: eps
+  !! Tolerence
+  REAL(DP) :: tau_tmp(3)
+  !! Position of the current cell 
+  REAL(DP) :: at(3,3)
+  !! Lattice vector of the supercell
+  REAL(DP) :: rmin
+  !! Minimal distance
+  ! 
+  ! Large tolerence to find degeneracy position in case of bad relaxation
+  eps = 1.0d-5
   !
-  return
+  at(:, 1) = at_blk(:, 1) * DBLE(nr1)
+  at(:, 2) = at_blk(:, 2) * DBLE(nr2)
+  at(:, 3) = at_blk(:, 3) * DBLE(nr3)
   !
-end subroutine ws_all
+  rmin = HUGE(rmin)
+  DO n1 = -2,2
+    DO n2 = -2,2
+      DO n3 = -2,2
+        tau_tmp = r_ws + n1 * at(:, 1) + n2 * at(:, 2) + n3 * at(:, 3)
+        rnorm = NORM2(tau_tmp)
+        IF (ABS(rnorm - rmin) .gt. eps) THEN
+          IF (rnorm .lt. rmin) THEN
+            neq = 1
+            rmin = rnorm
+            tau(:, neq) = tau_tmp
+          ENDIF
+        ELSE
+          neq = neq + 1
+          tau(:, neq) = tau_tmp
+        ENDIF
+      ENDDO
+    ENDDO
+  ENDDO
+  !
+  RETURN
+  !
+!-----------------------------------------------------------------------
+END SUBROUTINE ws_all
+!-----------------------------------------------------------------------
 !
 !-----------------------------------------------------------------------
 SUBROUTINE q_gen(nsc,qbid,at_blk,bg_blk,at,bg)
@@ -2441,7 +2472,6 @@ SUBROUTINE a2Fdos &
      CALL readfg ( filea2F, nr1, nr2, nr3, nat, frcg )
      !
      if ( asr /= 'no') then
-        frc_lr = 0.d0
         CALL set_asr (asr, nr1, nr2, nr3, frcg, frc_lr, zeu, nat_blk, ibrav, &
                       tau_blk, at_blk, huang)
      endif
