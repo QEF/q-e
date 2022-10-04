@@ -65,7 +65,7 @@
                             scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, &
                             wannier_plot_supercell, wannier_plot_scale, reduce_unk,    &
                             wannier_plot_radius, fermi_plot, fixsym, epw_no_t_rev,     &
-                            epw_tr, epw_nosym, epw_noinv, epw_crysym,                  &
+                            epw_tr, epw_nosym, epw_noinv, epw_crysym, read_lr,         &
                             !!!!!
                             ! bfieldx, bfieldy, bfieldz, tc_linear, tc_linear_solver,    &
                             bfieldx, bfieldy, bfieldz,                                 &
@@ -178,7 +178,7 @@
        npade, lscreen, scr_typ, fermi_diff, smear_rpa, cumulant, bnd_cum,      &
        !!!!!
        ! lifc, asr_typ, lunif, kerwrite, kerread, imag_read, eliashberg,         &
-       lifc, asr_typ, kerwrite, kerread, imag_read, eliashberg,                &
+       lifc, asr_typ, read_lr, kerwrite, kerread, imag_read, eliashberg,       &
        !!!!!
        ep_coupling, fila2f, max_memlt, efermi_read, fermi_energy,              &
        specfun_el, specfun_ph, wmin_specfun, wmax_specfun, nw_specfun,         &
@@ -342,6 +342,7 @@
   ! lpolar     : if .TRUE. enable the correct Wannier interpolation in the case of polar material.
   ! lifc       : if .TRUE. reads interatomic force constants produced by q2r.x for phonon interpolation
   ! asr_typ    : select type of ASR if lifc=.TRUE. (as in matdyn); otherwise it is the usual simple sum rule
+  ! read_lr    : if .TRUE. read also the long-range part of interatomic force constants produced by q2r.x
   ! lscreen    : if .TRUE. the e-ph matrix elements are screened by the RPA or TF dielectric function
   ! scr_typ    : if 0 calculates the Lindhard screening, if 1 the Thomas-Fermi screening
   ! fermi_diff : difference between Fermi energy and band edge (in eV)
@@ -559,6 +560,7 @@
   lpolar       = .FALSE.
   lifc         = .FALSE.
   asr_typ      = 'simple'
+  read_lr      = .FALSE.
   lscreen      = .FALSE.
   scr_typ      = 0
   fermi_diff   = 1.d0
