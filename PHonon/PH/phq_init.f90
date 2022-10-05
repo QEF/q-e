@@ -56,7 +56,6 @@ SUBROUTINE phq_init()
 #endif
   USE nlcc_ph,              ONLY : drc
   USE control_ph,           ONLY : trans, zue, epsil, all_done
-  USE control_flags,        ONLY : gamma_only
   USE units_lr,             ONLY : lrwfc, iuwfc
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
@@ -80,7 +79,7 @@ SUBROUTINE phq_init()
   USE ldaU,                 ONLY : lda_plus_u
   USE uspp_init,            ONLY : init_us_2
 #if defined(__CUDA)
-  USE becmod_subs_gpum,      ONLY : calbec_gpu
+  USE becmod_subs_gpum,     ONLY : calbec_gpu, synchronize_bec_type_gpu
 #endif
   !
   IMPLICIT NONE
@@ -219,13 +218,7 @@ SUBROUTINE phq_init()
            !$acc host_data use_device(vkb, tevc)
            CALL calbec_gpu (npw, vkb(:,:), tevc, becpt_d(ik) )
            !$acc end host_data
-           IF (gamma_only)  THEN
-              becpt(ik)%r=becpt_d(ik)%r_d
-           ELSE IF (noncolin) THEN
-              becpt(ik)%nc=becpt_d(ik)%nc_d
-           ELSE
-              becpt(ik)%k=becpt_d(ik)%k_d
-           END IF
+           CALL synchronize_bec_type_gpu( becpt_d(ik), becpt(ik), 'h')
 #else
            CALL calbec (npw, vkb, tevc, becpt(ik) )
 #endif
@@ -240,13 +233,7 @@ SUBROUTINE phq_init()
      !$acc host_data use_device(vkb, evc)
      CALL calbec_gpu (npw, vkb(:,:), evc, becp1_d(ik) )
      !$acc end host_data
-     IF (gamma_only)  THEN
-        becp1(ik)%r=becp1_d(ik)%r_d
-     ELSE IF (noncolin) THEN
-        becp1(ik)%nc=becp1_d(ik)%nc_d
-     ELSE
-        becp1(ik)%k=becp1_d(ik)%k_d
-     END IF
+     CALL synchronize_bec_type_gpu( becp1_d(ik), becp1(ik), 'h')
 #else
      CALL calbec (npw, vkb, evc, becp1(ik) )
 #endif
@@ -288,13 +275,7 @@ SUBROUTINE phq_init()
         !$acc host_data use_device(vkb,aux1)
         CALL calbec_gpu (npw, vkb(:,:), aux1, alphap_d(ipol,ik) )
         !$acc end host_data
-        IF (gamma_only)  THEN
-          alphap(ipol,ik)%r=alphap_d(ipol,ik)%r_d
-        ELSE IF (noncolin) THEN
-          alphap(ipol,ik)%nc=alphap_d(ipol,ik)%nc_d
-        ELSE
-          alphap(ipol,ik)%k=alphap_d(ipol,ik)%k_d
-        END IF
+        CALL synchronize_bec_type_gpu( alphap_d(ipol,ik), alphap(ipol,ik), 'h')
 #else
         CALL calbec (npw, vkb, aux1, alphap(ipol,ik) )
 #endif
@@ -334,13 +315,7 @@ SUBROUTINE phq_init()
            !$acc host_data use_device(vkb, aux1)
            CALL calbec_gpu (npw, vkb(:,:), aux1, alphapt_d(ipol,ik) )
            !$acc end host_data
-           IF (gamma_only)  THEN
-              alphapt(ipol,ik)%r=alphapt_d(ipol,ik)%r_d
-           ELSE IF (noncolin) THEN
-              alphapt(ipol,ik)%nc=alphapt_d(ipol,ik)%nc_d
-           ELSE
-              alphapt(ipol,ik)%k=alphapt_d(ipol,ik)%k_d
-           END IF
+           CALL synchronize_bec_type_gpu( alphapt_d(ipol,ik), alphapt(ipol,ik), 'h')
 #else
            CALL calbec (npw, vkb, aux1, alphapt(ipol,ik) )
 #endif

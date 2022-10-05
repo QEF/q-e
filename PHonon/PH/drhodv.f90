@@ -56,7 +56,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
 #if defined(__CUDA)
   USE lrus,            ONLY : becp1_d
   USE becmod_gpum,      ONLY: bec_type_d
-  USE becmod_subs_gpum, ONLY: calbec_gpu, allocate_bec_type_gpu, deallocate_bec_type_gpu
+  USE becmod_subs_gpum, ONLY: calbec_gpu, allocate_bec_type_gpu, deallocate_bec_type_gpu, synchronize_bec_type_gpu
 #endif
 
   implicit none
@@ -134,13 +134,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
            !$acc host_data use_device(vkb, dpsi)
            call calbec_gpu (npwq, vkb(:,:), dpsi, dbecq_d(mu) )
            !$acc end host_data
-           IF (gamma_only) THEN
-                dbecq(mu)%r=dbecq_d(mu)%r_d
-           ELSE IF (noncolin) THEN
-                dbecq(mu)%nc=dbecq_d(mu)%nc_d
-           ELSE
-                dbecq(mu)%k=dbecq_d(mu)%k_d
-           ENDIF
+           CALL synchronize_bec_type_gpu( dbecq_d(mu), dbecq(mu), 'h')
 #else
            call calbec (npwq, vkb, dpsi, dbecq(mu) )
 #endif
@@ -175,13 +169,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
               !$acc host_data use_device(vkb, aux)
               call calbec_gpu (npwq, vkb(:,:), aux, dalpq_d(ipol,mu) )
               !$acc end host_data
-              IF (gamma_only) THEN
-                dalpq(ipol,mu)%r=dalpq_d(ipol,mu)%r_d
-              ELSE IF (noncolin) THEN
-                dalpq(ipol,mu)%nc=dalpq_d(ipol,mu)%nc_d
-              ELSE
-                dalpq(ipol,mu)%k=dalpq_d(ipol,mu)%k_d
-             ENDIF
+              CALL synchronize_bec_type_gpu( dalpq_d(ipol,mu), dalpq(ipol,mu), 'h')
 #else
               call calbec (npwq, vkb, aux, dalpq(ipol,mu) )
 #endif
