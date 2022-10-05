@@ -210,10 +210,8 @@ SUBROUTINE phq_init()
      if(elph_mat) then
         call read_wfc_rspace_and_fwfft( evc, ik, lrwfcr, iunwfcwann, npw, igk_k(1,ikk) )
         !       CALL davcio (evc, lrwfc, iunwfcwann, ik, - 1)
-        !....................!$acc update device(evc)
      else
         CALL get_buffer( evc, lrwfc, iuwfc, ikk )
-        !....................!$acc update device(evc)
         IF (noncolin.AND.domag) THEN
            CALL get_buffer( tevc, lrwfc, iuwfc, ikmks(ik) )
            !$acc update device(tevc)
