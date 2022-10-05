@@ -632,6 +632,7 @@ MODULE io_dyn_mat
       CALL xml_closefile( )
     ENDIF
     CALL mp_bcast(phid, ionode_id, intra_image_comm)
+    CALL mp_bcast(phid_lr, ionode_id, intra_image_comm)
     RETURN
     !----------------------------------------------------------------------------
     END SUBROUTINE read_ifc

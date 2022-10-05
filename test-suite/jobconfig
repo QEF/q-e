@@ -119,7 +119,7 @@ inputs_args = ('O2.scf.1.in', '1'), ('O2.scf.2.in', '1'), ('O2.phG.in', '2')
 
 [ph_2d/]
 program = PH
-inputs_args = ('scf.in', '1'), ('ph.in', '2')
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r1.in', '3'), ('matdyn1.in', '8'), ('q2r2.in', '3'), ('matdyn2.in', '8')
 
 [epw_base/]
 program = EPW

@@ -1,5 +1,5 @@
 &input
-  flfrc='bn.frc.xml'
+  flfrc='bn.frc'
   flfrq='bn.frq'
   asr='all'
   huang=.true.
