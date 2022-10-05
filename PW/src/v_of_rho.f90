@@ -115,8 +115,13 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
         !
         ! DFT+U+V (simplified)
         !
-        CALL v_hubbard_extended (nsg, v_nsg, eth)
-        !
+        ! ------------ LUCA (spawoc) --------------------------
+        IF (noncolin) THEN
+           CALL v_hubbard_extended_nc (nsg, v_nsg, eth)
+        ELSE
+           CALL v_hubbard_extended (nsg, v_nsg, eth)
+        ENDIF
+        ! ------------------------------------
      ELSE
         !
         CALL errore('v_of_rho', 'Not allowed value of lda_plus_u_kind',1)
@@ -793,6 +798,7 @@ SUBROUTINE v_hubbard( ns, v_hub, eth )
   !! Hubbard potential
   REAL(DP), INTENT(OUT) :: eth
   !! Hubbard energy
+  COMPLEX(DP) :: check
   !
   !  ... local variables
   !
@@ -804,6 +810,7 @@ SUBROUTINE v_hubbard( ns, v_hub, eth )
   sgn(2) = -1.d0
   !
   v_hub(:,:,:,:) = 0.d0
+  check = (0.0,0.0)
   !
   DO na = 1, nat
      !
@@ -822,10 +829,12 @@ SUBROUTINE v_hubbard( ns, v_hub, eth )
               eth = eth + ( Hubbard_alpha(nt) + 0.5D0*effU )*ns(m1,m1,is,na)
               v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + &
                                    Hubbard_alpha(nt)  + 0.5D0*effU
+               check = check + Hubbard_alpha(nt)  + 0.5D0*effU
               DO m2 = 1, 2 * Hubbard_l(nt) + 1
                  eth = eth - 0.5D0 * effU * ns(m2,m1,is,na)* ns(m1,m2,is,na)
                  v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - &
                                         effU * ns(m2,m1,is,na)
+                 check = check -effU * ns(m2,m1,is,na)
               ENDDO
            ENDDO
         ENDDO
@@ -858,6 +867,7 @@ SUBROUTINE v_hubbard( ns, v_hub, eth )
   !
   IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
      WRITE(stdout,'(/5x,"HUBBARD ENERGY = ",f9.4,1x," (Ry)")') eth
+     write(stdout,*) "check coll U", check
   ENDIF
   !
   RETURN
@@ -885,7 +895,7 @@ SUBROUTINE v_hubbard_nc( ns, v_hub, eth )
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP) :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
+  COMPLEX(DP) :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat), check
   !! Occupation matrix
   COMPLEX(DP) :: v_hub(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
   !! Hubbard potential
@@ -898,7 +908,9 @@ SUBROUTINE v_hubbard_nc( ns, v_hub, eth )
   !
   eth    = 0.d0
   v_hub(:,:,:,:) = 0.d0
+  check = 0.0
   !
+  !write(stdout,*) ns
   DO na = 1, nat
      !
      nt = ityp (na)
@@ -926,6 +938,7 @@ SUBROUTINE v_hubbard_nc( ns, v_hub, eth )
                  ! Hubbard potential
                  v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + & 
                                       Hubbard_alpha(nt) + 0.5D0*Hubbard_U(nt)
+                 check = check + Hubbard_alpha(nt) + 0.5D0*Hubbard_U(nt)
                  ! 
                  ! NON-diagonal part [spin indexes]
                  DO m2 = 1, 2 * Hubbard_l(nt) + 1
@@ -934,6 +947,7 @@ SUBROUTINE v_hubbard_nc( ns, v_hub, eth )
                     ! Hubbard potential
                     v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - &
                                          Hubbard_U(nt) * ns(m2,m1,is,na)
+                  check = check - Hubbard_U(nt) * ns(m2,m1,is,na)
                  ENDDO
               ENDDO  
            !
@@ -948,6 +962,8 @@ SUBROUTINE v_hubbard_nc( ns, v_hub, eth )
                     ! Hubbard potential
                     v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - &
                                          Hubbard_U(nt) * ns(m2,m1,is1,na)
+
+                     check = check  - Hubbard_U(nt) * ns(m2,m1,is1,na)
                  ENDDO
               ENDDO         
            ENDIF
@@ -961,6 +977,7 @@ SUBROUTINE v_hubbard_nc( ns, v_hub, eth )
   !
   IF ( iverbosity > 0 ) THEN
      WRITE(stdout,'(/5x,"HUBBARD ENERGY = ",f9.4,1x," (Ry)")') eth
+     write(stdout,*) "check", check
   ENDIF
   !
   RETURN
@@ -1400,10 +1417,12 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
   ! Local variables 
   !
   INTEGER :: is, isop, na, na1, na2, nt, nt1, nt2, m1, m2, viz, equiv_na2, i_type
+  COMPLEX(DP) :: check
   INTEGER, EXTERNAL :: type_interaction, find_viz
   !
   eth  = 0.d0
   v_hub(:,:,:,:,:) = (0.d0, 0.d0)
+  check = (0.d0, 0.d0)
   !
   DO na1 = 1, nat
      !
@@ -1434,6 +1453,8 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
                         !
                         v_hub(m2,m1,viz,na1,is) = &
                            - CONJG(nsg(m2,m1,viz,na1,is)) * Hubbard_V(na1,na2,i_type)
+                        check = check  - CONJG(nsg(m2,m1,viz,na1,is)) * Hubbard_V(na1,na2,i_type)
+
                         !
                         eth = eth - nsg(m2,m1,viz,na1,is) * CONJG(nsg(m2,m1,viz,na1,is)) &
                                     * Hubbard_V(na1,na2,i_type) * 0.5d0
@@ -1453,6 +1474,7 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
                         !
                         v_hub(m1,m1,na,na1,is) = v_hub(m1,m1,na,na1,is) &
                                        + Hubbard_V(na1,na1,i_type) * 0.5d0
+                        check = check   + Hubbard_V(na1,na1,i_type) * 0.5d0
                         ! 
                         eth = eth + nsg(m1,m1,na,na1,is) &
                                        * Hubbard_V(na1,na1,i_type) * 0.5d0
@@ -1544,6 +1566,7 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
   !
   IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
      WRITE(stdout,'(/5x,"HUBBARD ENERGY = ",f9.4,1x," (Ry)")') eth
+     write(stdout,*) "check col UV",  check
   ENDIF
   !
   RETURN
@@ -1572,15 +1595,18 @@ SUBROUTINE v_hubbard_extended_nc (nsg, v_hub, eth)
    COMPLEX(DP), INTENT(IN)  :: nsg  (ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin)
    COMPLEX(DP), INTENT(OUT) :: v_hub(ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin)
    REAL(DP),    INTENT(OUT) :: eth
+   COMPLEX(DP) :: check
    ! 
    ! Local variables 
    !
-   INTEGER :: is, is1, isop, na, na1, na2, nt, nt1, nt2, m1, m2, viz, equiv_na2, i_type
-   INTEGER, EXTERNAL :: type_interaction, find_viz
+   INTEGER :: is, is1, isop, na, na1, na2, nt, nt1, nt2, m1, m2, viz, equiv_na2
+   INTEGER, EXTERNAL :: find_viz
    !
    eth  = 0.d0
    v_hub(:,:,:,:,:) = (0.d0, 0.d0)
+   check = 0
    !
+   !write(stdout,*) nsg
    DO na1 = 1, nat
       !
       nt1 = ityp(na1)
@@ -1602,11 +1628,8 @@ SUBROUTINE v_hubbard_extended_nc (nsg, v_hub, eth)
                equiv_na2 = at_sc(na2)%at
                nt2 = ityp(equiv_na2)
                !
-               IF ((is_hubbard(nt2).OR.is_hubbard_back(nt2)) .AND. &
-                   (Hubbard_V(na1,na2,1).NE.0.d0 .OR. &
-                    Hubbard_V(na1,na2,2).NE.0.d0 .OR. &
-                    Hubbard_V(na1,na2,3).NE.0.d0 .OR. &
-                    Hubbard_V(na1,na2,4).NE.0.d0) ) THEN
+               IF (is_hubbard(nt2) .AND. &
+                   (Hubbard_V(na1,na2,1).NE.0.d0) ) THEN
                    !
                    ! Here no need to use is1: complex conjugation is enough
                    ! For both standard and background states of a center atom
@@ -1614,18 +1637,16 @@ SUBROUTINE v_hubbard_extended_nc (nsg, v_hub, eth)
                       ! For both standard and background states of the neighbor atom
                       DO m2 = 1, ldim_u(nt2)
                          !
-                         i_type = type_interaction(na1,m1,equiv_na2,m2)
-                         !
-                         v_hub(m2,m1,viz,na1,is) = &
-                            - CONJG(nsg(m2,m1,viz,na1,is)) * Hubbard_V(na1,na2,i_type)
+                         v_hub(m2,m1,viz,na1,is) = - CONJG(nsg(m2,m1,viz,na1,is)) * Hubbard_V(na1,na2,1)
+                        check = check - CONJG(nsg(m2,m1,viz,na1,is)) * Hubbard_V(na1,na2,1)
                          !
                          eth = eth - nsg(m2,m1,viz,na1,is) * CONJG(nsg(m2,m1,viz,na1,is)) &
-                                     * Hubbard_V(na1,na2,i_type) * 0.5d0
+                                     * Hubbard_V(na1,na2,1) * 0.5d0
                          !
                       ENDDO
                    ENDDO
                    !
-                   IF ( na1.EQ.na2 .AND. is1==is) THEN
+                   IF ( na1.EQ.na2 .AND. is1.EQ.is) THEN
                       !
                       na = find_viz(na1,na1)
                       !
@@ -1633,13 +1654,12 @@ SUBROUTINE v_hubbard_extended_nc (nsg, v_hub, eth)
                       ! 
                       DO m1 = 1, ldim_u(nt1)
                          !
-                         i_type = type_interaction(na1,m1,equiv_na2,m1)
-                         !
                          v_hub(m1,m1,na,na1,is) = v_hub(m1,m1,na,na1,is) &
-                                        + Hubbard_V(na1,na1,i_type) * 0.5d0
+                                        + Hubbard_V(na1,na1,1) * 0.5d0
+                        check = check + Hubbard_V(na1,na1,1) * 0.5d0
                          ! 
                          eth = eth + nsg(m1,m1,na,na1,is) &
-                                        * Hubbard_V(na1,na1,i_type) * 0.5d0
+                                        * Hubbard_V(na1,na1,1) * 0.5d0
                          !
                       ENDDO
                       !
@@ -1662,6 +1682,7 @@ SUBROUTINE v_hubbard_extended_nc (nsg, v_hub, eth)
    !
    IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
       WRITE(stdout,'(/5x,"HUBBARD ENERGY = ",f9.4,1x," (Ry)")') eth
+      write(stdout,*) "check", check
    ENDIF
    !
    RETURN

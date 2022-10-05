@@ -109,11 +109,20 @@ SUBROUTINE init_nsg
             ENDIF
          ELSE  
             ! Atom is non-magnetic
-            DO is = 1, nspin
-               DO m1 = 1, ldim  
-                  nsg (m1,m1,viz,na,is) = totoc /  2.d0 / ldim
+            ! ------------- LUCA (spawoc) -------------
+            IF (noncolin) THEN
+               DO m1 = 1, ldim
+                  nsg (m1,m1,viz,na,1) = totoc / 2.d0 / ldim
+                  nsg (m1,m1,viz,na,4) = totoc / 2.d0 / ldim
+               ENDDO
+            ELSE
+               DO is = 1, nspin
+                  DO m1 = 1, ldim  
+                     nsg (m1,m1,viz,na,is) = totoc /  2.d0 / ldim
+                  ENDDO  
                ENDDO  
-            ENDDO  
+            ENDIF
+            ! --------------------------------------
          ENDIF  
          !
          ! Background part

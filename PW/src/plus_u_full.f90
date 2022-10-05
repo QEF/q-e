@@ -357,7 +357,6 @@ SUBROUTINE atomic_wfc_nc_updown( ik, wfcatom )
   n_starting_wfc = 0
   !
   DO na = 1, nat
-    write(stdout,*), 'na', na
      arg = (xk(1,ik)*tau(1,na) + xk(2,ik)*tau(2,na) + xk(3,ik)*tau(3,na)) * tpi
      kphase = CMPLX(COS(arg), - SIN(arg), KIND=DP)
      !
@@ -391,7 +390,6 @@ SUBROUTINE atomic_wfc_nc_updown( ik, wfcatom )
      !
   ENDDO
   !
-  write(stdout,*), 'n_starting_wfc', ' natomwfc', n_starting_wfc, natomwfc
   IF (n_starting_wfc /= natomwfc) CALL errore( 'atomic_wfc_nc_updown', &
                              'internal error: some wfcs were lost ', 1 )
   !
@@ -470,7 +468,6 @@ CONTAINS
       ENDDO
       !
       n_starting_wfc = n_starting_wfc + 2*l+1
-      write(stdout,*), 'n_starting_wfc', ' l', n_starting_wfc, l
       !
       DEALLOCATE( chiaux )
       !

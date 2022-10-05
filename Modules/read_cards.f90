@@ -2983,7 +2983,13 @@ CONTAINS
            ! ------------------------------------------
          ELSEIF (ANY(Hubbard_U(:)>eps16) .AND. noncolin) THEN
             ! DFT+U
-            lda_plus_u_kind = 1
+            ! ------------ LUCA (spawoc) --------------
+            IF(ANY(Hubbard_J0(:)>eps16)) THEN
+                lda_plus_u_kind = 1
+            ELSE
+                lda_plus_u_kind = 0    
+            ENDIF
+            ! ------------------------------------
          ELSEIF (ANY(Hubbard_U(:)>eps16) .OR. ANY(Hubbard_J0(:)>eps16)) THEN
             ! DFT+U(+J0)
             lda_plus_u_kind = 0

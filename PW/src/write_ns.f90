@@ -647,7 +647,7 @@ SUBROUTINE write_nsg_nc
    USE noncollin_module,   ONLY : npol
    !
    IMPLICIT NONE
-   INTEGER :: is, is1, na, nt, m1, m2, ldim
+   INTEGER :: is, is1, na, nt, m1, m2
    ! counter on spin component
    ! counters on atoms and their type
    ! counters on d components
@@ -707,7 +707,7 @@ SUBROUTINE write_nsg_nc
          !
          ALLOCATE (f(2*ldim1,2*ldim1), vet(2*ldim1,2*ldim1), lambda(2*ldim1))
          !
-         DO is = 1, nspin   
+         !DO is = 1, nspin   
             !
             DO viz = 1, neighood(na1)%num_neigh
                na2 = neighood(na1)%neigh(viz)
@@ -730,24 +730,24 @@ SUBROUTINE write_nsg_nc
             ! The diagonalization will not give components on states of other atoms. 
             ! To be improved for periodic systems.
             !
-            CALL cdiagh(ldim1, f, ldim1, lambda, vet)
+            CALL cdiagh(2*ldim1, f, 2*ldim1, lambda, vet)
             !
-            IF (nspin /= 1) WRITE( stdout,'(5x,"SPIN ",i2)') is
+            !IF (nspin /= 1) WRITE( stdout,'(5x,"SPIN ",i2)') is
             WRITE( stdout,'(5x,"eigenvalues:")')
-            WRITE( stdout,'(5x,7f7.3)') (lambda(m1), m1=1, 2*ldim1)
+            WRITE( stdout,'(5x,14f7.3)') (lambda(m1), m1=1, 2*ldim1)
             !
             WRITE( stdout,'(5x,"eigenvectors (columns):")')
             DO m1 = 1, 2*ldim1
-               WRITE( stdout,'(5x,7f7.3)') ( DBLE(vet(m1,m2)), m2=1, 2*ldim1 )
+               WRITE( stdout,'(5x,14f7.3)') ( DBLE(vet(m1,m2)), m2=1, 2*ldim1 )
             ENDDO
             !
             WRITE( stdout,'(5x,"occupations, | n_(i1, i2)^(sigma1, sigma2) |:")')
             DO m1 = 1, 2*ldim1
-               WRITE( stdout,'(5x,7f7.3)') ( DSQRT(DBLE(f(m1,m2))**2 + &
+               WRITE( stdout,'(5x,14f7.3)') ( DSQRT(DBLE(f(m1,m2))**2 + &
                                              AIMAG(f(m1,m2))**2), m2=1, 2*ldim1)               
             ENDDO
             !
-         ENDDO ! is
+         !ENDDO ! is
          !
          DEALLOCATE (f, vet, lambda)
          !
@@ -756,7 +756,7 @@ SUBROUTINE write_nsg_nc
          mx = 0.d0
          my = 0.d0
          mz = 0.d0
-         DO m1 = 1, ldim
+         DO m1 = 1, ldim1
            mx = mx + DBLE( nsgnew(m1,m1,viz,na1,2) + nsgnew(m1,m1,viz,na1,3) )
            my = my + 2.d0 * AIMAG( nsgnew(m1,m1,viz,na1,2) )
            mz = mz + DBLE( nsgnew(m1,m1,viz,na1,1) - nsgnew(m1,m1,viz,na1,4) )
@@ -850,7 +850,13 @@ SUBROUTINE read_ns()
   !
   IF (lda_plus_u_kind.EQ.0) THEN
      CALL mp_bcast(rho%ns, ionode_id, intra_image_comm)
-     CALL v_hubbard (rho%ns, v%ns, eth)
+     ! ---------- LUCA ---------------------------
+     IF (noncolin) THEN
+        CALL v_hubbard (rho%ns, v%ns, eth)
+     ELSE
+        CALL v_hubbard_nc (rho%ns_nc, v%ns_nc, eth)
+     ENDIF
+     ! --------------------------------------------
      IF (hub_back) THEN
         CALL mp_bcast(rho%nsb, ionode_id, intra_image_comm)
         CALL v_hubbard_b (rho%nsb, v%nsb, eth1)
@@ -866,7 +872,12 @@ SUBROUTINE read_ns()
      ENDIF
   ELSEIF (lda_plus_u_kind.EQ.2) THEN
      CALL mp_bcast(nsg, ionode_id, intra_image_comm)
-     CALL v_hubbard_extended (nsg, v_nsg, eth)
+     ! ------------ LUCA (spawoc) -------------------------
+     IF (noncolin) THEN
+        CALL v_hubbard_extended_nc (nsg, v_nsg, eth)
+     ELSE
+        CALL v_hubbard_extended (nsg, v_nsg, eth)
+     ENDIF
   ENDIF
   !
   RETURN
