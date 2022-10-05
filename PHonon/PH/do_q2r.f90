@@ -92,20 +92,37 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d, write_lr)
   IF (ionode) THEN
      OPEN (unit=1, file=TRIM(fildyn)//'0'//post, status='old', form='formatted', &
           iostat=ierr)
-     lnogridinfo = ( ierr /= 0 )
-     IF (lnogridinfo) THEN
+     IF (ierr /= 0) THEN
         WRITE (stdout,*)
         WRITE (stdout,*) ' file ',TRIM(fildyn)//'0'//post, ' not found'
-        WRITE (stdout,*) ' reading grid info from input'
-        READ (5, *) nr1, nr2, nr3
-        READ (5, *) nfile
+        IF (xmldyn) THEN
+           OPEN (unit=1, file=TRIM(fildyn)//'0', status='old', form='formatted', &
+                 iostat=ierr)
+           IF (ierr /= 0) THEN
+              WRITE (stdout,*) ' file ',TRIM(fildyn)//'0', ' not found'
+              WRITE (stdout,*) ' reading grid info from input'
+              READ (5, *) nr1, nr2, nr3
+              READ (5, *) nfile
+           ELSE
+              WRITE (stdout,'(/,1x," reading grid info from file ",a/)') &
+                     TRIM(fildyn)//'0'
+              READ (1, *) nr1, nr2, nr3
+              READ (1, *) nfile
+              CLOSE (unit=1, status='keep')
+           ENDIF
+        ELSE
+           WRITE (stdout,*) ' reading grid info from input'
+           READ (5, *) nr1, nr2, nr3
+           READ (5, *) nfile
+        ENDIF
      ELSE
-        WRITE (stdout,'(/,4x," reading grid info from file ",a)') &
-                                                          TRIM(fildyn)//'0'//post
+        WRITE (stdout,'(/,1x," reading grid info from file ",a/)') &
+               TRIM(fildyn)//'0'//post
         READ (1, *) nr1, nr2, nr3
         READ (1, *) nfile
         CLOSE (unit=1, status='keep')
      END IF
+     lnogridinfo = ( ierr /= 0 )
   ENDIF
 
 
@@ -783,7 +800,7 @@ subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
       !
       zeu_new(:,:,:)=zeu_new(:,:,:) - zeu_w(:,:,:)
       call sp_zeu(zeu_w,zeu_w,nat,norm2)
-      write(stdout,'("Norm of the difference between old and new effective ", &
+      write(stdout,'(2x,"Norm of the difference between old and new effective ", &
            &  "charges: " , F25.20)') SQRT(norm2)
       !
       ! Check projection
