@@ -20,7 +20,7 @@ MODULE loc_scdm
   USE io_global,            ONLY : stdout
   USE exx,                  ONLY : dfftt, x_nbnd_occ, locbuff, locmat
   USE exx_base,             ONLY : nkqs
-
+  !
   IMPLICIT NONE
   !
   SAVE

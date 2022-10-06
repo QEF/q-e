@@ -94,15 +94,9 @@ SUBROUTINE stres_mgga( sigmaxc )
        w1 = wg(ibnd,ik) / omega 
        !
        IF ( (ibnd < nbnd) .AND. (gamma_only) ) THEN
-          !
-          ! ... two ffts at the same time
-          !
-          w2 = wg(ibnd+1,ik) / omega
-          !
+          w2 = wg(ibnd+1,ik) / omega  ! two ffts at the same time
        ELSE
-          !
           w2 = w1
-          !
        ENDIF
        !
        ! ... Gradient of the wavefunction in real space

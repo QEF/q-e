@@ -359,19 +359,18 @@ SUBROUTINE sum_band_gpu()
                 !
                 CALL tgwave_g2r( evc(1:npw,:), tg_psi, dffts, npw, ibnd, ibnd_end )
                 !
-                ! Now the first proc of the group holds the first two bands
-                ! of the 2*ntgrp bands that we are processing at the same time,
-                ! the second proc. holds the third and fourth band
-                ! and so on
+                ! ... Now the first proc of the group holds the first two bands
+                ! ... of the 2*ntgrp bands that we are processing at the same time,
+                ! ... the second proc. holds the third and fourth band and so on.
                 !
-                ! Compute the proper factor for each band
+                ! ... Compute the proper factor for each band
                 !
                 idx = fftx_tgpe(dffts) + 1
                 !
-                ! Remember two bands are packed in a single array :
-                ! proc 0 has bands ibnd   and ibnd+1
-                ! proc 1 has bands ibnd+2 and ibnd+3
-                ! ....
+                ! ... Remember two bands are packed in a single array :
+                !    - proc 0 has bands ibnd   and ibnd+1
+                !    - proc 1 has bands ibnd+2 and ibnd+3
+                !    - ....
                 !
                 idx = 2*idx - 1
                 !
@@ -836,11 +835,12 @@ SUBROUTINE sum_band_gpu()
        !
      END SUBROUTINE sum_band_k_gpu
      !
-     !
+     !---------------
      SUBROUTINE get_rho_gpu(rho_loc_d, nrxxs_loc, w1_loc, psic_loc_d)
-
+        !------------
+        !
         IMPLICIT NONE
-
+        !
         INTEGER :: nrxxs_loc
         REAL(DP) :: rho_loc_d(:)
         REAL(DP) :: w1_loc
@@ -849,7 +849,7 @@ SUBROUTINE sum_band_gpu()
         attributes(device) :: rho_loc_d, psic_loc_d
 #endif
         INTEGER :: ir
-
+        !
         !$cuf kernel do(1)
         DO ir = 1, nrxxs_loc
            !
@@ -860,30 +860,34 @@ SUBROUTINE sum_band_gpu()
         !
      END SUBROUTINE get_rho_gpu
      !
-     SUBROUTINE get_rho(rho_loc_h, nrxxs_loc, w1_loc, psic_loc_h)
-
+     !-------------
+     SUBROUTINE get_rho( rho_loc_h, nrxxs_loc, w1_loc, psic_loc_h )
+        !----------
+        !
         IMPLICIT NONE
-
+        !
         INTEGER :: nrxxs_loc
         REAL(DP) :: rho_loc_h(nrxxs_loc)
         REAL(DP) :: w1_loc
         COMPLEX(DP) :: psic_loc_h(nrxxs_loc)
         INTEGER :: ir
-
+        !
         DO ir = 1, nrxxs_loc
            !
            rho_loc_h(ir) = rho_loc_h(ir) + &
                          w1_loc * ( DBLE( psic_loc_h(ir) )**2 + &
                                    AIMAG( psic_loc_h(ir) )**2 )
            !
-        END DO
-
+        ENDDO
+        !
      END SUBROUTINE get_rho
-
-     SUBROUTINE get_rho_gamma_gpu(rho_loc_d, nrxxs_loc, w1_loc, w2_loc, psic_loc_d)
-
+     !
+     !-----------------
+     SUBROUTINE get_rho_gamma_gpu( rho_loc_d, nrxxs_loc, w1_loc, w2_loc, psic_loc_d )
+        !--------------
+        !
         IMPLICIT NONE
-
+        !
         INTEGER :: nrxxs_loc
         REAL(DP) :: rho_loc_d(nrxxs_loc)
         REAL(DP) :: w1_loc, w2_loc
@@ -892,7 +896,7 @@ SUBROUTINE sum_band_gpu()
         attributes(device) :: rho_loc_d, psic_loc_d
 #endif
         INTEGER :: ir
-
+        !
         !$cuf kernel do(1)
         DO ir = 1, nrxxs_loc
            !
@@ -901,14 +905,15 @@ SUBROUTINE sum_band_gpu()
                          w2_loc * AIMAG( psic_loc_d(ir) )**2
            !
         END DO
-
+        !
      END SUBROUTINE get_rho_gamma_gpu
-
-
-     SUBROUTINE get_rho_domag_gpu(rho_loc_d, nrxxs_loc, w1_loc, psic_loc_d)
-
+     !
+     !--------------
+     SUBROUTINE get_rho_domag_gpu( rho_loc_d, nrxxs_loc, w1_loc, psic_loc_d )
+        !-----------
+        !
         IMPLICIT NONE
-
+        !
         INTEGER :: nrxxs_loc
         REAL(DP) :: rho_loc_d(:, :)
         REAL(DP) :: w1_loc
@@ -936,7 +941,7 @@ SUBROUTINE sum_band_gpu()
         END DO
 
      END SUBROUTINE get_rho_domag_gpu
-
+     !
 END SUBROUTINE sum_band_gpu
 
 !----------------------------------------------------------------------------

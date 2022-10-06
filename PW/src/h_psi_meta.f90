@@ -40,7 +40,7 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
   ! ... local variables
   !
   COMPLEX(DP), ALLOCATABLE :: psi_g(:,:)
-  INTEGER :: im, i, j, nrxxs, ebnd, brange, psdim
+  INTEGER :: im, i, j, nrxxs, ebnd, brange, psdim, dim_g
   REAL(DP) :: kplusgi, fac
   COMPLEX(DP), PARAMETER :: ci=(0.d0,1.d0)
   !
@@ -48,8 +48,10 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
   !
   nrxxs = dffts%nnr
   psdim = SIZE(psic)
+  dim_g = 1
+  IF (gamma_only) dim_g = 2
   !
-  ALLOCATE( psi_g(psdim,2) )
+  ALLOCATE( psi_g(psdim,dim_g) )
   !
   IF (gamma_only) THEN
      !
@@ -74,7 +76,7 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
            !
            CALL wave_g2r( psi_g(1:np,1:brange), psic, dffts )
            !
-           psic(1:nrxxs) = kedtau(1:nrxxs,current_spin) * psic(1:nrxxs) 
+           psic(1:nrxxs) = kedtau(1:nrxxs,current_spin) * psic(1:nrxxs)
            !
            CALL wave_r2g( psic, psi_g(:,1:brange), dffts )
            !

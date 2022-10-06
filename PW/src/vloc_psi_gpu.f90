@@ -68,10 +68,8 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
      CALL start_clock_gpu( 'vloc_psi:tg_gather' )
      v_siz = dffts%nnr_tg
      incr = 2*fftx_ntgrp(dffts)
-     !
      CALL dev_buf%lock_buffer( tg_v_d, v_siz, ierr )
      ALLOCATE( tg_psic(v_siz), tg_psic2(v_siz,incr) )
-     !
      CALL tg_gather_gpu( dffts, v_d, tg_v_d )
      CALL stop_clock_gpu( 'vloc_psi:tg_gather' )
   ELSE
@@ -80,9 +78,9 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
   ENDIF
   !
   ! ... The local potential V_Loc psi:
-  ! ... - fft to real space;
-  ! ... - product with the potential v on the smooth grid;
-  ! ... - back to reciprocal space.
+  !    - fft to real space;
+  !    - product with the potential v on the smooth grid;
+  !    - back to reciprocal space.
   !
   IF( use_tg ) THEN
      !
@@ -167,7 +165,7 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
      DO ibnd = 1, m, incr
         !
         ebnd = ibnd
-        IF ( ibnd<m ) ebnd = ebnd + 1
+        IF ( ibnd<m ) ebnd = ibnd + 1
         !
         CALL wave_g2r( psi(1:n,ibnd:ebnd), psic, dffts )
         !        
@@ -274,17 +272,14 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v_d, hpsi_d )
      CALL start_clock_gpu ('vloc_psi:tg_gather')
      v_siz =  dffts%nnr_tg
      incr = fftx_ntgrp(dffts)
-     !
      CALL dev_buf%lock_buffer( tg_v_d, v_siz, ierr )
      ALLOCATE( tg_psic(v_siz), tg_psic2(v_siz,incr) )
-     !
      CALL tg_gather_gpu( dffts, v_d, tg_v_d )
      CALL stop_clock_gpu ('vloc_psi:tg_gather')
   ELSE
      v_siz =  dffts%nnr
      ALLOCATE( psic(v_siz*incr), psic2(v_siz,incr) )
   ENDIF
-  !
   !
   IF( use_tg ) THEN
      !
@@ -324,7 +319,8 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v_d, hpsi_d )
         group_size = MIN(many_fft,m-(ibnd-1))
         hm_vec(1)=group_size ; hm_vec(2)=n
         !
-        CALL wave_g2r( psi(:,ibnd:ibnd+group_size-1), psic, dffts, igk=igk_k(:,current_k), howmany_set=hm_vec )
+        CALL wave_g2r( psi(:,ibnd:ibnd+group_size-1), psic, dffts, igk=igk_k(:,current_k), &
+                       howmany_set=hm_vec )
         !
         !$acc parallel loop collapse(2)
         DO idx = 0, group_size-1
@@ -560,7 +556,6 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v_d, hpsi_d )
      !$acc end data
      !
   ENDIF
-  !
   !
   IF( use_tg ) THEN
      DEALLOCATE( tg_v_d, tg_psic, tg_psic2 )
