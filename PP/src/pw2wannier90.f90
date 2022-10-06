@@ -4272,7 +4272,7 @@ SUBROUTINE generate_guiding_functions(ik)
    INTEGER, PARAMETER :: lmax=3, lmax2=(lmax+1)**2
    INTEGER :: npw, iw, ig, bgtau(3), isph, l, mesh_r
    INTEGER :: lmax_iw, lm, ipol, n1, n2, n3, nr1, nr2, nr3, iig
-   real(DP) :: arg, anorm, fac, alpha_w2, yy, alfa, ddot
+   real(DP) :: arg, fac, alpha_w2, yy, alfa, ddot
    COMPLEX(DP) :: zdotc, kphase, lphase, gff, lph
    real(DP), ALLOCATABLE :: gk(:,:), qg(:), ylm(:,:), radial(:,:)
    COMPLEX(DP), ALLOCATABLE :: sk(:)
@@ -4314,15 +4314,6 @@ SUBROUTINE generate_guiding_functions(ik)
          sk(ig) = cmplx(cos(arg), -sin(arg) ,kind=DP)
          gf(ig,iw) = gf(ig,iw) * sk(ig)
       ENDDO
-      IF (gamma_only) THEN
-          anorm = 2.0_dp*ddot(2*npw,gf(1,iw),1,gf(1,iw),1)
-          IF (gstart==2) anorm = anorm - abs(gf(1,iw))**2
-      ELSE
-          anorm = REAL(zdotc(npw,gf(1,iw),1,gf(1,iw),1))
-      ENDIF
-      CALL mp_sum(anorm, intra_pool_comm)
-!      write (stdout,*) ik, iw, anorm
-      gf(:,iw) = gf(:,iw) / dsqrt(anorm)
    ENDDO
    !
    DEALLOCATE ( gk, qg, ylm, sk, radial)
