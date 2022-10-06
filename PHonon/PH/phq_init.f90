@@ -46,6 +46,9 @@ SUBROUTINE phq_init()
   USE wvfct,                ONLY : npwx, nbnd
   USE gvecw,                ONLY : gcutw
   USE wavefunctions,        ONLY : evc
+#if defined(__CUDA)
+  USE wavefunctions_gpum,   ONLY : evc_d
+#endif
   USE noncollin_module,     ONLY : noncolin, domag, npol, lspinorb
   USE uspp,                 ONLY : okvan, vkb, nlcc_any, nkb
   USE uspp_param,           ONLY : upf
@@ -228,10 +231,10 @@ SUBROUTINE phq_init()
      ! ... e) we compute the becp terms which are used in the rest of
      ! ...    the code
      !
-     !$acc data copyin(evc)
 #if defined(__CUDA)
-     !$acc host_data use_device(vkb, evc)
-     CALL calbec_gpu (npw, vkb(:,:), evc, becp1_d(ik) )
+     evc_d = evc
+     !$acc host_data use_device(vkb)
+     CALL calbec_gpu (npw, vkb(:,:), evc_d, becp1_d(ik) )
      !$acc end host_data
      CALL synchronize_bec_type_gpu( becp1_d(ik), becp1(ik), 'h')
 #else
@@ -257,8 +260,13 @@ SUBROUTINE phq_init()
         DO ibnd = 1, nbnd
            DO ig = 1, npw
               itmp = igk_k(ig,ikk)
+#if defined(__CUDA)
+              aux1(ig,ibnd) = evc_d(ig,ibnd) * tpiba * ( 0.D0, 1.D0 ) * &
+                   ( xk(ipol,ikk) + g(ipol,itmp) )
+#else
               aux1(ig,ibnd) = evc(ig,ibnd) * tpiba * ( 0.D0, 1.D0 ) * &
                    ( xk(ipol,ikk) + g(ipol,itmp) )
+#endif
            END DO
         END DO
         IF (noncolin) THEN
@@ -266,8 +274,13 @@ SUBROUTINE phq_init()
            DO ibnd = 1, nbnd
               DO ig = 1, npw
                  itmp = igk_k(ig,ikk)
+#if defined(__CUDA)
+                 aux1(ig+npwx,ibnd)=evc_d(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*&
+                      ( xk(ipol,ikk) + g(ipol,itmp) )
+#else
                  aux1(ig+npwx,ibnd)=evc(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*&
                       ( xk(ipol,ikk) + g(ipol,itmp) )
+#endif
               END DO
            END DO
         END IF
@@ -321,7 +334,6 @@ SUBROUTINE phq_init()
 #endif
          END DO
       ENDIF
-      !$acc end data
 !!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
      IF (acfdt_is_active) THEN
         ! ACFDT -test always read calculated wcf from non_scf calculation
