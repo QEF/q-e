@@ -153,6 +153,12 @@ SUBROUTINE iosys()
   !
   USE relax,         ONLY : epse, epsf, epsp, starting_scf_threshold
   !
+  USE control_flags, ONLY : sic, scissor
+  USE sic_mod,       ONLY : pol_type_ => pol_type, sic_gamma_ => sic_gamma, &
+                            sic_energy_ => sic_energy
+  USE sci_mod,       ONLY : sci_vb_ => sci_vb, sci_cb_ => sci_cb
+ 
+  !
   USE extrapolation, ONLY : pot_order, wfc_order
   USE control_flags, ONLY : isolve, max_cg_iter, max_ppcg_iter, david, &
                             rmm_ndim, rmm_conv, gs_nblock, rmm_with_davidson, &
@@ -254,6 +260,7 @@ SUBROUTINE iosys()
                                input_dft, la2F, starting_ns_eigenvalue,     &
                                x_gamma_extrapolation, nqx1, nqx2, nqx3,     &
                                exxdiv_treatment, yukawa, ecutvcut,          &
+                               pol_type, sic_gamma, sic_energy, sci_vb, sci_cb, &
                                exx_fraction, screening_parameter, ecutfock, &
                                gau_parameter, localization_thr, scdm, ace,  &
                                scdmden, scdmgrd, nscdm, n_proj,             & 
@@ -561,6 +568,15 @@ SUBROUTINE iosys()
   dt_    = dt
   nstep_ = nstep
   tstress_ = lmovecell .OR. ( tstress .and. lscf )
+  !
+  sic_gamma_ = sic_gamma
+  sic_energy_ = sic_energy
+  IF(sic_gamma /= 0.d0 ) sic = .true.
+  pol_type_ = trim(pol_type)
+  sci_vb_ = sci_vb
+  sci_cb_ = sci_cb
+  IF(sci_vb .NE. 0.d0 .or. sci_cb .NE. 0.d0 ) scissor = .true.
+  IF(scissor .and. nspin .ne. 2) CALL errore('allocate_scissor', 'spin polarized calculation required',1)
   !
   ! ELECTRIC FIELDS (SAWTOOTH), GATE FIELDS
   !

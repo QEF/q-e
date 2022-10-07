@@ -14,7 +14,7 @@ SUBROUTINE sum_band()
   !
   USE kinds,                ONLY : DP
   USE ener,                 ONLY : eband
-  USE control_flags,        ONLY : diago_full_acc, gamma_only, lxdm, tqr
+  USE control_flags,        ONLY : diago_full_acc, gamma_only, lxdm, tqr, sic
   USE cell_base,            ONLY : at, bg, omega, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp, dffts
@@ -26,6 +26,7 @@ SUBROUTINE sum_band()
   USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, is_hubbard_back
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho, rhoz_or_updw
+  USE sic_mod,              ONLY : isp, pol_type
   USE symme,                ONLY : sym_rho
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer, save_buffer
@@ -77,6 +78,10 @@ SUBROUTINE sum_band()
      rho%kin_r(:,:) = 0.D0
      rho%kin_g(:,:) = (0.D0, 0.D0)
   ENDIF
+  IF (sic) THEN
+     rho%pol_r(:,:) = 0.d0
+     rho%pol_g(:,:) = (0.d0,0.d0)
+  END IF
   !
   ! ... calculates weights of Kohn-Sham orbitals used in calculation of rho
   !
@@ -176,11 +181,16 @@ SUBROUTINE sum_band()
   !
   CALL mp_sum( rho%of_r, inter_pool_comm )
   CALL mp_sum( rho%of_r, inter_bgrp_comm )
+  IF (sic) then
+     CALL mp_sum( rho%pol_r, inter_pool_comm )
+     CALL mp_sum( rho%pol_r, inter_bgrp_comm )
+  END IF
   IF ( noncolin .AND. .NOT. domag ) rho%of_r(:,2:4)=0.D0
   !
   ! ... bring the unsymmetrized rho(r) to G-space (use psic as work array)
   !
   CALL rho_r2g( dffts, rho%of_r, rho%of_g )
+  IF(sic) CALL rho_r2g( dffts, rho%pol_r, rho%pol_g )
   !
   IF( okvan )  THEN
      !
@@ -219,11 +229,13 @@ SUBROUTINE sum_band()
   ! ... symmetrize rho(G) 
   !
   CALL start_clock( 'sum_band:sym_rho' )
-  CALL sym_rho( nspin_mag, rho%of_g )
+  CALL sym_rho ( nspin_mag, rho%of_g )
+  IF (sic) CALL sym_rho ( nspin_mag, rho%pol_g )
   !
   ! ... synchronize rho%of_r to the calculated rho%of_g (use psic as work array)
   !
   CALL rho_g2r( dfftp, rho%of_g, rho%of_r )
+  IF(sic) CALL rho_g2r( dfftp, rho%pol_g, rho%pol_r )
   !
   ! ... rho_kin(r): sum over bands, k-points, bring to G-space, symmetrize,
   ! ... synchronize with rho_kin(G)
@@ -246,6 +258,10 @@ SUBROUTINE sum_band()
   ! ... (up+dw,up-dw) format.
   !
   IF ( nspin == 2 ) CALL rhoz_or_updw( rho, 'r_and_g', '->rhoz' )
+  IF (sic) THEN
+    rho%pol_r(:,2) = rho%pol_r(:,1) 
+    rho%pol_g(:,2) = rho%pol_g(:,1) 
+  END IF
   !
   ! ... sum number of electrons, for GC-SCF
   !
@@ -454,6 +470,7 @@ SUBROUTINE sum_band()
        USE fft_helper_subroutines, ONLY : fftx_ntgrp, fftx_tgpe, &
                           tg_reduce_rho, tg_get_nnr, tg_get_group_nr3
        USE uspp_init,    ONLY : init_us_2
+       USE klist,        ONLY : nelec
        !
        IMPLICIT NONE
        !
@@ -474,6 +491,11 @@ SUBROUTINE sum_band()
        INTEGER :: numblock
        REAL(DP) :: kplusgi
        !
+       ! polaron calculation
+       COMPLEX(DP), ALLOCATABLE :: psic_p(:)
+       REAL(DP) :: wg_p
+       INTEGER  :: ibnd_p
+       !
        CALL using_evc(0); CALL using_et(0)
        !
        !
@@ -483,6 +505,12 @@ SUBROUTINE sum_band()
        use_tg = ( dffts%has_task_groups ) .AND. ( .NOT. (xclib_dft_is('meta') .OR. lxdm) )
        !
        incr = 1
+       !
+       IF(sic) THEN
+          ALLOCATE(psic_p(dffts%nnr*2))
+          wg_p = 0.0
+          ibnd_p = nelec/2+1 
+       END IF
        !
        IF( use_tg ) THEN
           !
@@ -539,6 +567,23 @@ SUBROUTINE sum_band()
                 CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
              !
           ENDIF
+          !
+          ! ... calculate polaron density
+          !
+          IF(sic .and. current_spin == isp) THEN
+             psic_p(:) = (0.d0, 0.d0)
+             !$omp parallel
+             CALL threaded_barrier_memset(psic_p, 0.D0, dffts%nnr*2)
+             !$omp do
+             DO j = 1, npw
+                psic_p(dffts%nl(igk_k(j,ik))) = evc(j,ibnd_p)
+             ENDDO
+             !$omp end do nowait
+             !$omp end parallel
+             CALL invfft ('Wave', psic_p, dffts)
+             CALL get_rho(rho%pol_r(:,1), dffts%nnr, wg(1,ik)/omega, psic_p)
+             wg_p = wg_p + wg(ibnd_p,ik)
+          END IF
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
           !
@@ -699,6 +744,11 @@ SUBROUTINE sum_band()
        !
        IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL mp_sum( becsum, becp%comm )
        IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr ) CALL mp_sum( ebecsum, becp%comm )
+       !
+       IF(sic .and. pol_type == 'h') THEN
+          wg_p = 1.0 - wg_p
+          DEALLOCATE(psic_p)
+       END IF
        !
        IF( use_tg ) THEN
           IF (noncolin) THEN

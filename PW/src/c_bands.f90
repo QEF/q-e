@@ -221,6 +221,10 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
   USE wvfct_gpum,           ONLY : et_d, using_et, using_et_d
   USE becmod_subs_gpum,     ONLY : using_becp_auto
+  !
+  USE control_flags,        ONLY : scissor
+  USE sci_mod,              ONLY : evcc
+  !
   IMPLICIT NONE
   !
   ! please do not capitalize (FORD rules)
@@ -711,6 +715,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        ENDIF
        !
     ENDIF
+    !
+    IF (scissor) evcc = evc
     !
     !write (*,*) ' current isolve value ( 0 Davidson, 1 CG, 2 PPCG, 3 PARO, 4 RMM)', isolve; FLUSH(6)
     IF ( isolve == 1 .OR. isolve == 2 .OR. isolve == 3 .or. rmm_use_paro(iter)) THEN
