@@ -76,7 +76,7 @@ SUBROUTINE read_file_ph()
   USE io_global,        ONLY : stdout
   USE control_flags,    ONLY : io_level
   USE buffers,          ONLY : open_buffer, close_buffer, save_buffer
-  USE io_files,         ONLY : nwordwfc, iunwfc, restart_dir
+  USE io_files,         ONLY : nwordwfc, iunwfc, wfc_dir, tmp_dir, restart_dir
   USE wvfct,            ONLY : nbnd, npwx, et, wg
   USE noncollin_module, ONLY : npol
   USE klist,            ONLY : nkstot, nks, xk, wk
@@ -132,16 +132,15 @@ SUBROUTINE read_file_ph()
   !
   ! ... Open unit iunwfc, for Kohn-Sham orbitals - we assume that wfcs
   ! ... have been written to tmp_dir, not to a different directory!
-  ! ... io_level = 1 so that a real file is opened
+  !
+  wfc_dir = tmp_dir
   !
   IF ( wfc_is_collected ) THEN
      !
      nwordwfc = nbnd*npwx*npol
-     IF ( io_level /= 0 ) io_level = 1
      CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst )
      !
-     ! ... read wavefunctions in collected format, write them to file
-     ! ... FIXME: must be changed to write to buffer instead!
+     ! ... read wavefunctions in collected format, write them to file or buffer
      !
      WRITE( stdout, '(5x,A)') &
           'Reading collected, re-writing distributed wavefunctions'
@@ -203,7 +202,7 @@ SUBROUTINE read_file_new ( needwf )
      !
      ! ... initialization of KS orbitals
      !
-     wfc_dir = tmp_dir ! this is likely obsolete and no longer used
+     wfc_dir = tmp_dir
      !
      ! ... distribute across pools k-points and related variables.
      ! ... nks is defined by the following routine as the number 
