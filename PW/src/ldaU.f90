@@ -254,6 +254,7 @@ CONTAINS
              Hubbard_lmax = MAX( Hubbard_lmax, Hubbard_l(nt) )
              ldmx = MAX( ldmx, 2*Hubbard_l(nt)+1 )
              ldim_u(nt) = 2*Hubbard_l(nt)+1
+             IF (hubbard_occ(nt,1)<0.0d0) CALL determine_hubbard_occ(nt,1) 
           ENDIF
           !
           IF ( is_hubbard_back(nt) ) THEN
@@ -266,6 +267,7 @@ CONTAINS
                 Hubbard_lmax_back = MAX( Hubbard_lmax_back, Hubbard_l2(nt) )
                 ldmx_b = MAX( ldmx_b, 2*Hubbard_l2(nt)+1)
                 ldim_back(nt) = 2 * Hubbard_l2(nt) + 1
+                IF (hubbard_occ(nt,2)<0.0d0) CALL determine_hubbard_occ(nt,2)
              ELSE
                 ! In this case there are two Hubbard channels for background states.
                 ! Hubbard_l2 and Hubbard_l3 are read from the input file (HUBBARD card)
@@ -274,6 +276,8 @@ CONTAINS
                 Hubbard_lmax_back = MAX( Hubbard_lmax_back, Hubbard_l3(nt) )
                 ldmx_b = MAX( ldmx_b, 2*Hubbard_l2(nt)+2*Hubbard_l3(nt)+2 )
                 ldim_back(nt) = 2 * (Hubbard_l2(nt) + Hubbard_l3(nt) + 1)
+                IF (hubbard_occ(nt,2)<0.0d0) CALL determine_hubbard_occ(nt,2)
+                IF (hubbard_occ(nt,3)<0.0d0) CALL determine_hubbard_occ(nt,3)
              ENDIF
              ldim_u(nt) = ldim_u(nt) + ldim_back(nt) 
              Hubbard_lmax_back = MAX( Hubbard_lmax_back, Hubbard_l2(nt) )
@@ -338,6 +342,7 @@ CONTAINS
              Hubbard_lmax = MAX( Hubbard_lmax, Hubbard_l(nt) )
              ldmx = MAX( ldmx, 2*Hubbard_l(nt)+1 )
              ldim_u(nt) = 2*Hubbard_l(nt)+1
+             IF (hubbard_occ(nt,1)<0.0d0) CALL determine_hubbard_occ(nt,1)
              !
              IF (Hubbard_U(nt) == 0.0_dp) Hubbard_U(nt) = 1.d-14
              !
@@ -391,6 +396,7 @@ CONTAINS
              Hubbard_lmax = MAX( Hubbard_lmax, Hubbard_l(nt) )
              ldmx = MAX( ldmx, ldim_u(nt) )
              ldim_u(nt) = 2*Hubbard_l(nt)+1
+             IF (hubbard_occ(nt,1)<0.0d0) CALL determine_hubbard_occ(nt,1)
           ENDIF
           !
           IF ( is_hubbard_back(nt) ) THEN
@@ -402,6 +408,7 @@ CONTAINS
                 ! In this case there is only one Hubbard channel for background states
                 ! Hubbard_l2 is read from the input file (HUBBARD card)
                 ldim_back(nt) = 2 * Hubbard_l2(nt) + 1
+                IF (hubbard_occ(nt,2)<0.0d0) CALL determine_hubbard_occ(nt,2)
              ELSE
                 ! In this case there are two Hubbard channels for background states.
                 ! Hubbard_l2 and Hubbard_l3 are read from the input file (HUBBARD card)
@@ -409,6 +416,8 @@ CONTAINS
                 lba = .TRUE.
                 ldim_back(nt) = 2 * Hubbard_l2(nt) + 2 * Hubbard_l3(nt) + 2
                 Hubbard_lmax_back = MAX( Hubbard_lmax_back, Hubbard_l3(nt) )
+                IF (hubbard_occ(nt,2)<0.0d0) CALL determine_hubbard_occ(nt,2)
+                IF (hubbard_occ(nt,3)<0.0d0) CALL determine_hubbard_occ(nt,3)
              ENDIF
              !
              ldim_u(nt) = ldim_u(nt) + ldim_back(nt) 
