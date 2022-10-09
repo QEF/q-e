@@ -758,7 +758,7 @@ CONTAINS
                   backchar = 'one_orbital'
                END IF 
 
-               CALL qes_init(objs(isp), "Hubbard_back", SPECIES = TRIM(species(ityp(isp))), Hubbard_U2= u2_ , &
+               CALL qes_init(objs(isp), "Hubbard_back", SPECIES = TRIM(species(isp)), Hubbard_U2= u2_ , &
                              background=TRIM(backchar),  l2_number = l2_, l3_number=l3_, n2_number = n2_, n3_number = n3_)    
                IF (.NOT. is_back(isp)) THEN 
                  objs(isp)%lwrite = .FALSE.

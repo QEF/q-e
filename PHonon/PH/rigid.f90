@@ -38,7 +38,7 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
   REAL(KIND = DP), INTENT(in) :: zeu(3, 3, nat)
   !! effective charges tensor
   REAL(KIND = DP), INTENT(in) :: sign
-  !! signe=+/-1.0 ==> add/subtract rigid-ion term
+  !! sign =+/-1.0 ==> add/subtract rigid-ion term
   REAL(KIND = DP), INTENT(in) :: tau(3, nat)
   !! Atomic positions
   REAL(KIND = DP), INTENT(in) :: bg(3, 3)
@@ -158,14 +158,15 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
                  g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3))             
         ENDIF
         !
-        IF (geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax) THEN        
+        IF (geg > 0.0d0 .AND. geg / (alph * 4) < gmax) THEN        
           !
           IF (loto_2d) THEN
             facgd = fac * (tpi / alat) * EXP(-geg / (alph * 4.0d0)) / (SQRT(geg) * (1.0 + grg * SQRT(geg)))       
           ELSE
-            facgd = fac * EXP(-geg / (alph * 4.0d0)) / geg
+            facgd = fac * EXP(-geg / (alph * 4)) / geg
           ENDIF
           !
+!$OMP PARALLELDO DEFAULT(shared) PRIVATE(zcg,zag,arg,nb,na,i,j,fnat)
           DO na = 1, nat
             zag(:) = g1 * zeu(1, :, na) + g2 * zeu(2, :, na) + g3 * zeu(3, :, na)
             fnat(:) = 0.d0
@@ -181,7 +182,8 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
                 dyn(i, j, na, na) = dyn(i, j, na, na) - facgd * zag(i) * fnat(j)
               ENDDO ! i
             ENDDO ! j
-          ENDDO ! nat 
+          ENDDO ! nat
+!$OMP END PARALLELDO
         ENDIF ! geg
         !
         g1 = g1 + q(1)
@@ -209,6 +211,7 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
             facgd = fac * EXP(-geg / (alph * 4.0d0)) / geg
           ENDIF
           !
+!$OMP PARALLELDO DEFAULT(shared) PRIVATE(zbg,zag,arg,nb,na,i,j,facg)
           DO nb = 1, nat
             zbg(:) = g1 * zeu(1, :, nb) + g2 * zeu(2, :, nb) + g3 * zeu(3, :, nb)
             DO na = 1, nat
@@ -225,6 +228,7 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
               ENDDO ! j
             ENDDO ! na
           ENDDO ! nb
+!$OMP END PARALLELDO
         ENDIF 
       ENDDO ! m3 
     ENDDO ! m2
