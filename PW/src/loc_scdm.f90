@@ -20,7 +20,7 @@ MODULE loc_scdm
   USE io_global,            ONLY : stdout
   USE exx,                  ONLY : dfftt, x_nbnd_occ, locbuff, locmat
   USE exx_base,             ONLY : nkqs
-  !
+
   IMPLICIT NONE
   !
   SAVE
@@ -288,7 +288,7 @@ SUBROUTINE AbsOvG( NBands, IKK, Mat )
   !! for the moduli of the wavefunctions).
   !
   USE noncollin_module,  ONLY : npol
-  USE fft_wave,          ONLY : wave_r2g
+  USE fft_interfaces,    ONLY : fwfft
   USE wvfct,             ONLY : npwx
   !
   IMPLICIT NONE
@@ -305,28 +305,31 @@ SUBROUTINE AbsOvG( NBands, IKK, Mat )
   INTEGER :: jbnd, ig
   REAL(DP) :: tmp
   COMPLEX(DP), ALLOCATABLE :: buffer(:), Gorbt(:,:)
-  !
-  CALL start_clock( 'measure' )
-  !
-  WRITE(stdout,'(5X,A)') ' '
-  WRITE(stdout,'(5X,A)') 'Absolute Overlap calculated in G-space'
-  !
+
+  call start_clock('measure')
+
+  write(stdout,'(5X,A)') ' ' 
+  write(stdout,'(5X,A)') 'Absolute Overlap calculated in G-space'
+
 ! Localized functions to G-space and Overlap matrix onto localized functions
-  ALLOCATE( buffer(dfftt%nnr*npol), Gorbt(npwx,NBands) )
-  !
-  Mat = Zero
+  allocate( buffer(dfftt%nnr * npol), Gorbt(npwx,NBands) )
+
+  Mat = Zero 
   buffer = (Zero,Zero)
-  Gorbt = (Zero,Zero)
-  DO jbnd = 1, NBands
-    buffer(:) = ABS(DBLE(locbuff(:,jbnd,IKK))) + (Zero,One)*Zero
-    CALL wave_r2g( buffer, Gorbt(:,jbnd:jbnd), dfftt )
+  Gorbt = (Zero,Zero) 
+  DO jbnd = 1, NBands 
+    buffer(:) = abs(dble(locbuff(:,jbnd, IKK))) + (Zero,One)*Zero  
+    CALL fwfft( 'Wave' , buffer, dfftt )
+    DO ig = 1, npwx
+      Gorbt(ig,jbnd) = buffer(dfftt%nl(ig))
+    ENDDO
   ENDDO
-  CALL matcalc('Coeff-',.FALSE.,0,npwx,NBands,NBands,Gorbt,Gorbt,Mat,tmp)
-  DEALLOCATE( buffer, Gorbt )
-  !
-  CALL stop_clock('measure')
-  !
-END SUBROUTINE AbsOvG
+  CALL matcalc('Coeff-',.false.,0,npwx,NBands,NBands,Gorbt,Gorbt,Mat,tmp)
+  deallocate ( buffer, Gorbt )
+
+  call stop_clock('measure')
+
+END SUBROUTINE AbsOvG 
 !
 !----------------------------------------------------------------------
 SUBROUTINE AbsOvR( NBands, IKK, Mat )
@@ -604,18 +607,18 @@ SUBROUTINE scdm_points( den, grad_den, ThrDen, ThrGrd, cpu_npt, nptot )
 
   npt = 0
   cpu_npt(:) = 0
-  do ir = 1, ir_end
-    if(den(ir).gt.ThrDen) then
-      grad = sqrt( grad_den(1,ir)**2 +  grad_den(2,ir)**2 +  grad_den(3,ir)**2 )
-      if(grad.lt.ThrGrd) then
+  do ir = 1, ir_end 
+    if(den(ir).gt.ThrDen) then 
+      grad = sqrt( grad_den(1,ir)**2 +  grad_den(2,ir)**2 +  grad_den(3,ir)**2 ) 
+      if(grad.lt.ThrGrd) then    
         npt = npt + 1
-      end if
-    end if
-  end do
+      end if 
+    end if 
+  end do 
   nptot = npt
   cpu_npt(me_bgrp) = npt
   call mp_sum(nptot,intra_bgrp_comm)
-  if(nptot.le.0) call errore('SCDM_PGG', 'No points prescreened. Loose the thresholds', 1)
+  if(nptot.le.0) call errore('SCDM_PGG', 'No points prescreened. Loose the thresholds', 1) 
   call mp_sum(cpu_npt,intra_bgrp_comm)
 ! write(stdout,'(7X,2(A,I8))')  'Max npt = ', maxval(cpu_npt(:)), ' Min npt = ', minval(cpu_npt(:))
 ! write(stdout,'(7X,2(A,I10))') 'Reduced matrix, allocate: ', nptot, ' out of ', dfftt%nr1x *dfftt%nr2x *dfftt%nr3x
@@ -687,11 +690,11 @@ END SUBROUTINE scdm_prescreening
 !--------------------------------------------------------------------------
 SUBROUTINE wave_to_R( psiG, psiR, NGrid, NBands )
   !----------------------------------------------------------------------
-  !! \(\text{psi}\) functions from G- to R-space.
+  !! psi functions from G- to R-space.
   !
   USE cell_base,         ONLY : omega 
   USE kinds,             ONLY : DP
-  USE fft_wave,          ONLY : wave_g2r
+  USE fft_interfaces,    ONLY : fwfft, invfft
   USE wvfct,             ONLY : npwx
   USE exx,               ONLY : npwt
   !
@@ -713,17 +716,20 @@ SUBROUTINE wave_to_R( psiG, psiR, NGrid, NBands )
   COMPLEX(DP), ALLOCATABLE :: buffer(:)
   REAL(DP), ALLOCATABLE :: Mat(:,:)
   !
-  WRITE(stdout,'(A)') 'Wave to R '
+  write(stdout,'(A)') 'Wave to R '
   !
-  ALLOCATE( buffer(NGrid) )
+  allocate( buffer(NGrid) )
   psiR = Zero
-  !
   DO jbnd = 1, NBands 
-    CALL wave_g2r( psiG(1:npwt,jbnd:jbnd), buffer, dfftt )
-    psiR(1:NGrid,jbnd) = DBLE(buffer(1:NGrid))
+    buffer = (Zero,Zero)
+    DO ig=1,npwt
+       buffer(dfftt%nl (ig)) = psiG(ig,jbnd)
+       buffer(dfftt%nlm(ig)) = conjg( psiG(ig,jbnd) )
+    ENDDO
+    CALL invfft( 'Wave' , buffer, dfftt )
+    psiR(1:NGrid,jbnd) = dble(buffer(1:NGrid))
   ENDDO
-  !
-  DEALLOCATE( buffer )
+  deallocate ( buffer )
 ! allocate( buffer(NGrid), Mat(NBands,NBands) )
 ! tmp = One/dble(NGrid)
 ! CALL DGEMM( 'T' , 'N' , NBands, NBands, NGrid, tmp, PsiR, NGrid, PsiR, NGrid, Zero, Mat, NBands) 
@@ -735,11 +741,11 @@ END SUBROUTINE wave_to_R
 !-------------------------------------------------------------------------
 SUBROUTINE wave_to_G( psiR, psiG, NGrid, NBands )
   !----------------------------------------------------------------------
-  !! \(\text{psi}\) functions from R- to G-space.
+  !! psi functions from R- to G-space.
   !
   USE noncollin_module,     ONLY : npol
   USE kinds,                ONLY : DP
-  USE fft_wave,             ONLY : wave_r2g
+  USE fft_interfaces,       ONLY : fwfft, invfft
   USE wvfct,                ONLY : npwx
   !
   IMPLICIT NONE
@@ -759,22 +765,24 @@ SUBROUTINE wave_to_G( psiR, psiG, NGrid, NBands )
   INTEGER :: jbnd, ig
   COMPLEX(DP), ALLOCATABLE :: buffer(:)
   REAL(DP), ALLOCATABLE :: Mat(:,:)
-  !
-  WRITE(stdout,'(A)') 'Wave to G '
-  !
-  ALLOCATE( buffer(NGrid) )
+
+  write(stdout,'(A)') 'Wave to G '
+
+  allocate( buffer(NGrid) )
   buffer = (Zero,Zero)
-  psiG = (Zero,Zero)
-  !
-  DO jbnd = 1, NBands
-    CALL wave_r2g( buffer, psiG(:,jbnd:jbnd), dfftt )
+  psiG = (Zero,Zero) 
+  DO jbnd = 1, NBands 
+    buffer(:) = dble(psiR(:,jbnd)) + (Zero,One)*Zero
+    CALL fwfft( 'Wave' , buffer, dfftt )
+    DO ig = 1, npwx
+      psiG(ig,jbnd) = buffer(dfftt%nl(ig))
+    ENDDO
   ENDDO
-  !
-  DEALLOCATE( buffer )
-  ALLOCATE( Mat(NBands,NBands) )
-  CALL matcalc('Check',.TRUE.,1,npwx,NBands,NBands,psiG,psiG,Mat,tmp)
-  DEALLOCATE( Mat )
-  !
+  deallocate ( buffer )
+  allocate( Mat(NBands,NBands) )
+  CALL matcalc('Check',.true.,1,npwx,NBands,NBands,psiG,psiG,Mat,tmp)
+  deallocate ( Mat )
+
 END SUBROUTINE wave_to_G 
 !
 !

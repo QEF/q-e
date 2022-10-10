@@ -212,7 +212,7 @@ SUBROUTINE AbsOvG_k( NBands, IKQ, JK, loc_diag, loc_off )
   !! accurate for the moduli of the wavefunctions).
   !
   USE noncollin_module,    ONLY : npol
-  USE fft_wave,            ONLY : wave_r2g
+  USE fft_interfaces,      ONLY : fwfft
   USE wvfct,               ONLY : npwx
   USE exx_band,            ONLY : igk_exx
   USE klist,               ONLY : nks, ngk
@@ -248,21 +248,29 @@ SUBROUTINE AbsOvG_k( NBands, IKQ, JK, loc_diag, loc_off )
   ALLOCATE( Mat(NBands,NBands) )
   ALLOCATE( buffer(dfftt%nnr*npol), GorbtI(npwx,NBands), GorbtJ(npwx,NBands) )
   !
-  GorbtJ = (Zero,Zero)
-  GorbtI = (Zero,Zero)
+  GorbtJ = (Zero,Zero) 
+  GorbtI = (Zero,Zero) 
   npw = ngk(JK)
   !
-  DO jbnd = 1, NBands
+  DO jbnd = 1, NBands 
      !
-     buffer(:) = ABS(exxbuff(:,jbnd,JK))
+     buffer(:) = ABS(exxbuff(:,jbnd,JK)) 
      ! buffer(:) = exxbuff(:,jbnd,JK)
      !
-     CALL wave_r2g( buffer, GorbtJ(1:npw,jbnd:jbnd), dfftt, igk=igk_exx(:,kk) )
+     CALL fwfft( 'Wave' , buffer, dfftt )
      !
-     buffer(:) = ABS(exxbuff(:,jbnd,IKQ))
+     DO ig = 1, npw
+       GorbtJ(ig,jbnd) = buffer(dfftt%nl(igk_exx(ig,kk))) 
+     ENDDO
+     !
+     buffer(:) = ABS(exxbuff(:,jbnd,IKQ)) 
      ! buffer(:) = exxbuff(:,jbnd,IKQ)
      !
-     CALL wave_r2g( buffer, GorbtI(1:npw,jbnd:jbnd), dfftt, igk=igk_exx(:,kk) )
+     CALL fwfft( 'Wave' , buffer, dfftt )
+     !
+     DO ig = 1, npw
+       GorbtI(ig,jbnd) = buffer(dfftt%nl(igk_exx(ig,kk)))  
+     ENDDO
      !
   ENDDO
   !
