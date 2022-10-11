@@ -385,6 +385,7 @@ PROGRAM diff_sca
         CALL read_ifc_param(nr1,nr2,nr3)
         ALLOCATE(frc(nr1,nr2,nr3,3,3,nat_blk,nat_blk))
         ALLOCATE(frc_lr(nr1,nr2,nr3,3,3,nat_blk,nat_blk))
+        frc_lr = 0.d0
         CALL read_ifc(nr1,nr2,nr3,nat_blk,frc,frc_lr,read_lr)
      ELSE
         CALL readfc ( flfrc, nr1, nr2, nr3, epsil, nat_blk, &
@@ -794,6 +795,7 @@ PROGRAM diff_sca
      !DEALLOCATE ( freq)
      DEALLOCATE(num_rap_mode)
      DEALLOCATE(high_sym)
+     DEALLOCATE(frc_lr)
   !
 
   CALL environment_end('DISCA')
