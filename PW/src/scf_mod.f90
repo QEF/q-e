@@ -175,8 +175,8 @@ CONTAINS
    ENDIF
    !
    IF (sic) THEN
-      ALLOCATE(rho%pol_r(dfftp%nnr,nspin)) 
-      ALLOCATE(rho%pol_g(ngm,nspin)) 
+      IF(.NOT. ALLOCATED(rho%pol_r)) ALLOCATE(rho%pol_r(dfftp%nnr,nspin)) 
+      IF(.NOT. ALLOCATED(rho%pol_g)) ALLOCATE(rho%pol_g(ngm,nspin)) 
    END IF
    !
    RETURN
