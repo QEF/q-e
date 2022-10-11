@@ -45,7 +45,7 @@ MODULE sci_mod
       !
       IMPLICIT NONE
       !
-      DEALLOCATE(evcc)
+      IF(ALLOCATED(evcc)) DEALLOCATE(evcc)
       !
    END SUBROUTINE deallocate_scissor
    !
