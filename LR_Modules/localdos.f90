@@ -300,6 +300,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
         END IF
      END DO
   END IF
+  !$acc end data
 
   call addusldos (ldos, becsum1)
   !
