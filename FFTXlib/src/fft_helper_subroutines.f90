@@ -804,7 +804,7 @@ CONTAINS
   END SUBROUTINE fftx_psi2c_k
   !
   !--------------------------------------------------------------------
-  SUBROUTINE fftx_c2psi_gamma_tg( desc, psis, c_bgrp, n, i, nbsp_bgrp )
+  SUBROUTINE fftx_c2psi_gamma_tg( desc, psis, c_bgrp, n, dbnd )
      !-----------------------------------------------------------------
      !! Copy all wave-functions of an orbital group from 1D array (c_bgrp)
      !! to 3D array (psi) in Fourier space.
@@ -814,7 +814,7 @@ CONTAINS
      TYPE(fft_type_descriptor), INTENT(IN) :: desc
      COMPLEX(DP), INTENT(OUT) :: psis(:)
      COMPLEX(DP), INTENT(IN) :: c_bgrp(:,:)
-     INTEGER, INTENT(IN) :: n, i, nbsp_bgrp
+     INTEGER, INTENT(IN) :: n, dbnd
      !
      INTEGER :: eig_offset, eig_index, right_nnr, ig, ib, ieg
      COMPLEX(DP), PARAMETER :: ci=(0.0d0,1.0d0)
@@ -839,7 +839,7 @@ CONTAINS
         !
 #if !defined(_OPENACC)
         !$omp task default(none) &
-        !$omp          firstprivate( eig_index, i, nbsp_bgrp, right_nnr ) &
+        !$omp          firstprivate( eig_index, dbnd, right_nnr ) &
         !$omp          private( eig_offset, ib, ieg, ig ) &
         !$omp          shared( c_bgrp, desc, psis, nl_d, nlm_d, n )
 #endif
@@ -853,16 +853,16 @@ CONTAINS
         eig_offset = (eig_index-1)/2
         !
         ib = eig_offset*right_nnr
-        ieg = i+eig_index-1
+        ieg = eig_index
         !
         ! ... The eig_index loop is executed only ONCE when NOGRP=1.
-        IF ( ieg < nbsp_bgrp ) THEN
+        IF ( ieg < dbnd ) THEN
            !$acc parallel loop
            DO ig = 1, n !desc%ngw
              psis(ib+nlm_d(ig)) = CONJG(c_bgrp(ig,ieg)) + ci * CONJG(c_bgrp(ig,ieg+1))
              psis(ib+nl_d(ig)) = c_bgrp(ig,ieg) + ci * c_bgrp(ig,ieg+1)
            ENDDO
-        ELSEIF ( ieg == nbsp_bgrp ) THEN
+        ELSEIF ( ieg == dbnd ) THEN
            ! ... important: if n is odd => c(*,n+1)=0.
            !$acc parallel loop
            DO ig = 1, n !desc%ngw
@@ -890,7 +890,7 @@ CONTAINS
   !
   !
   !--------------------------------------------------------------------
-  SUBROUTINE fftx_c2psi_k_tg( desc, psis, c_bgrp, igk, ngk, i, nbsp_bgrp )
+  SUBROUTINE fftx_c2psi_k_tg( desc, psis, c_bgrp, igk, ngk, dbnd )
      !-----------------------------------------------------------------
      !! Copy all wave-functions of an orbital group from 1D array (c_bgrp)
      !! to 3D array (psi) in Fourier space.
@@ -900,7 +900,7 @@ CONTAINS
      TYPE(fft_type_descriptor), INTENT(IN) :: desc
      COMPLEX(DP), INTENT(OUT) :: psis(:)
      COMPLEX(DP), INTENT(INOUT) :: c_bgrp(:,:)
-     INTEGER, INTENT(IN) :: igk(:), ngk, i, nbsp_bgrp
+     INTEGER, INTENT(IN) :: igk(:), ngk, dbnd
      !
      INTEGER :: right_nnr, idx, j, js, je, numblock, ntgrp
      INTEGER, PARAMETER :: blocksize = 256
@@ -925,11 +925,11 @@ CONTAINS
 #else
      !$acc parallel loop collapse(2)
 #endif
-     DO idx = 0, MIN(ntgrp-1,nbsp_bgrp-i)
+     DO idx = 0, MIN(ntgrp-1,dbnd-1)
        DO j = 1, numblock
           js = (j-1)*blocksize+1
           je = MIN(j*blocksize,ngk)
-          psis(nl_d(igk(js:je))+right_nnr*idx) = c_bgrp(js:je,idx+i)
+          psis(nl_d(igk(js:je))+right_nnr*idx) = c_bgrp(js:je,idx+1)
        ENDDO
      ENDDO
 #if !defined(_OPENACC)
@@ -946,7 +946,7 @@ CONTAINS
   !
   !
   !--------------------------------------------------------------------
-  SUBROUTINE fftx_psi2c_gamma_tg( desc, vin, vout, n, i, nbsp_bgrp )
+  SUBROUTINE fftx_psi2c_gamma_tg( desc, vin, vout, n, dbnd )
      !-----------------------------------------------------------------
      !! Copy all wave-functions of an orbital group from 3D array (psi)
      !! in Fourier space to 1D array (c_bgrp). Gamma case.
@@ -958,7 +958,7 @@ CONTAINS
      TYPE(fft_type_descriptor), INTENT(IN) :: desc
      COMPLEX(DP), INTENT(IN) :: vin(:)
      COMPLEX(DP), INTENT(OUT) :: vout(:,:)
-     INTEGER, INTENT(IN) :: n, i, nbsp_bgrp
+     INTEGER, INTENT(IN) :: n, dbnd
      !
      INTEGER :: right_inc, idx, j, ioff
      COMPLEX(DP) :: fp, fm
@@ -972,18 +972,18 @@ CONTAINS
      !
      DO idx = 1, 2*fftx_ntgrp(desc), 2
        !
-       IF ( idx+i-1<nbsp_bgrp ) THEN
+       IF ( idx<dbnd ) THEN
          !$acc parallel loop
          DO j = 1, n
            fp = ( vin(nl_d(j)+ioff) + vin(nlm_d(j)+ioff) )
            fm = ( vin(nl_d(j)+ioff) - vin(nlm_d(j)+ioff) )
-           vout(j,i+idx-1) = CMPLX( DBLE(fp),AIMAG(fm),KIND=DP)
-           vout(j,i+idx)   = CMPLX(AIMAG(fp),-DBLE(fm),KIND=DP)
+           vout(j,idx)   = CMPLX( DBLE(fp),AIMAG(fm),KIND=DP)
+           vout(j,idx+1) = CMPLX(AIMAG(fp),-DBLE(fm),KIND=DP)
          ENDDO
-       ELSEIF ( idx+i-1==nbsp_bgrp ) THEN
+       ELSEIF ( idx==dbnd ) THEN
          !$acc parallel loop
          DO j = 1, n
-            vout(j,i+idx-1) = vin(nl_d(j)+ioff)
+            vout(j,idx) = vin(nl_d(j)+ioff)
          ENDDO
        ENDIF
        !
@@ -1001,7 +1001,7 @@ CONTAINS
   !
   !
   !--------------------------------------------------------------------
-  SUBROUTINE fftx_psi2c_k_tg( desc, vin, vout, igk, n, i, nbsp_bgrp )
+  SUBROUTINE fftx_psi2c_k_tg( desc, vin, vout, igk, n, dbnd )
      !-----------------------------------------------------------------
      !! Copy all wave-functions of an orbital group from 3D array (psi)
      !! in Fourier space to 1D array (c_bgrp).
@@ -1013,7 +1013,7 @@ CONTAINS
      TYPE(fft_type_descriptor), INTENT(IN) :: desc
      COMPLEX(DP), INTENT(IN) :: vin(:)
      COMPLEX(DP), INTENT(OUT) :: vout(:,:)
-     INTEGER, INTENT(IN) :: igk(:), n, i, nbsp_bgrp
+     INTEGER, INTENT(IN) :: igk(:), n, dbnd
      !
      INTEGER :: right_inc, idx, j, iin, numblock
      INTEGER, PARAMETER :: blocksize = 256
@@ -1023,10 +1023,10 @@ CONTAINS
      numblock = (n+blocksize-1)/blocksize
      !
      !$omp parallel do collapse(2)
-     DO idx = 0, MIN(fftx_ntgrp(desc)-1, nbsp_bgrp-i)
+     DO idx = 0, MIN(fftx_ntgrp(desc)-1, dbnd-1)
        DO j = 1, numblock
           DO iin = (j-1)*blocksize+1, MIN(j*blocksize,n)
-            vout(iin,i+idx) = vin(desc%nl(igk(iin))+right_inc*idx)
+            vout(iin,1+idx) = vin(desc%nl(igk(iin))+right_inc*idx)
           ENDDO
        ENDDO
      ENDDO

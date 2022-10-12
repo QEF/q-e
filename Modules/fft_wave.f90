@@ -226,7 +226,7 @@ CONTAINS
   !
   !
   !----------------------------------------------------------------------
-  SUBROUTINE tgwave_g2r( f_in, f_out, dfft, n, ibnd, ibnd_end, igk )
+  SUBROUTINE tgwave_g2r( f_in, f_out, dfft, n, igk )
     !--------------------------------------------------------------------
     !! Wave function FFT from G to R-space. Task-group version.
     !
@@ -237,14 +237,15 @@ CONTAINS
     TYPE(fft_type_descriptor), INTENT(IN) :: dfft
     COMPLEX(DP) :: f_in(:,:)
     COMPLEX(DP) :: f_out(:)
-    INTEGER, INTENT(IN) :: n, ibnd, ibnd_end
+    INTEGER, INTENT(IN) :: n
     INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
     !
-    INTEGER :: npw
+    INTEGER :: npw, dbnd
     !
     !$acc data present_or_copyin(f_in,igk) present_or_copyout(f_out)
     !
     npw = SIZE(f_in(:,1))
+    dbnd = SIZE(f_in(1,:))
     IF (n/=npw) npw = n
     !
     !$acc kernels
@@ -252,9 +253,9 @@ CONTAINS
     !$acc end kernels
     !
     IF (gamma_only) THEN
-      CALL fftx_c2psi_gamma_tg( dfft, f_out, f_in, npw, ibnd, ibnd_end )
+      CALL fftx_c2psi_gamma_tg( dfft, f_out, f_in, npw, dbnd )
     ELSE
-      CALL fftx_c2psi_k_tg( dfft, f_out, f_in, igk, npw, ibnd, ibnd_end )
+      CALL fftx_c2psi_k_tg( dfft, f_out, f_in, igk, npw, dbnd )
     ENDIF
     !
     !$acc host_data use_device(f_out)
@@ -269,7 +270,7 @@ CONTAINS
   !
   !
   !----------------------------------------------------------------------
-  SUBROUTINE tgwave_r2g( f_in, f_out, dfft, n, ibnd, ibnd_end, igk )
+  SUBROUTINE tgwave_r2g( f_in, f_out, dfft, n, igk )
     !--------------------------------------------------------------------
     !! Wave function FFT from R to G-space. Task-group version.
     !
@@ -280,8 +281,12 @@ CONTAINS
     TYPE(fft_type_descriptor), INTENT(IN) :: dfft
     COMPLEX(DP), INTENT(IN)  :: f_in(:)
     COMPLEX(DP), INTENT(OUT) :: f_out(:,:)
-    INTEGER, INTENT(IN) :: ibnd, ibnd_end, n
+    INTEGER, INTENT(IN) :: n
     INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
+    !
+    INTEGER :: dbnd
+    !
+    dbnd = SIZE(f_out(1,:))
     !
     !$acc data present_or_copyin(f_in) present_or_copyout(f_out)
     !$acc kernels
@@ -293,9 +298,9 @@ CONTAINS
     !$acc end host_data
     !
     IF (gamma_only) THEN
-      CALL fftx_psi2c_gamma_tg( dfft, tg_wpsic, f_out, n, ibnd, ibnd_end )
+      CALL fftx_psi2c_gamma_tg( dfft, tg_wpsic, f_out, n, dbnd )
     ELSE
-      CALL fftx_psi2c_k_tg( dfft, tg_wpsic, f_out, igk, n, ibnd, ibnd_end )
+      CALL fftx_psi2c_k_tg( dfft, tg_wpsic, f_out, igk, n, dbnd )
     ENDIF
     !
     !$acc end data

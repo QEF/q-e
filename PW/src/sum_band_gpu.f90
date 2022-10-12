@@ -357,7 +357,7 @@ SUBROUTINE sum_band_gpu()
                 !
                 !$acc data create(tg_psi)
                 !
-                CALL tgwave_g2r( evc(1:npw,:), tg_psi, dffts, npw, ibnd, ibnd_end )
+                CALL tgwave_g2r( evc(1:npw,ibnd:ibnd_end), tg_psi, dffts, npw )
                 !
                 ! ... Now the first proc of the group holds the first two bands
                 ! ... of the 2*ntgrp bands that we are processing at the same time,
@@ -623,10 +623,10 @@ SUBROUTINE sum_band_gpu()
                    !
                    !$acc data create(tg_psi_nc)
                    !
-                   CALL tgwave_g2r( evc(1:npw,:), tg_psi_nc(:,1), dffts, npw, ibnd, &
-                                    ibnd_end, igk_k(:,ik) )
-                   CALL tgwave_g2r( evc(npwx+1:npwx+npw,:), tg_psi_nc(:,2), dffts, &
-                                    npw, ibnd, ibnd_end, igk_k(:,ik) )
+                   CALL tgwave_g2r( evc(1:npw,ibnd:ibnd_end), tg_psi_nc(:,1), dffts, &
+                                    npw, igk_k(:,ik) )
+                   CALL tgwave_g2r( evc(npwx+1:npwx+npw,ibnd:ibnd_end), tg_psi_nc(:,2), &
+                                    dffts, npw, igk_k(:,ik) )
                    !
                    ! Now the first proc of the group holds the first band
                    ! of the ntgrp bands that we are processing at the same time,
@@ -698,7 +698,7 @@ SUBROUTINE sum_band_gpu()
                    !
                    !$acc data create(tg_psi)
                    !
-                   CALL tgwave_g2r( evc(1:npw,:), tg_psi, dffts, npw, ibnd, ibnd_end, &
+                   CALL tgwave_g2r( evc(1:npw,ibnd:ibnd_end), tg_psi, dffts, npw, &
                                     igk_k(:,ik) )
                    !
                    ! Now the first proc of the group holds the first band

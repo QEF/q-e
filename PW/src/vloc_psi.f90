@@ -71,7 +71,7 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
         !
         ! ... the local potential V_Loc psi. First bring psi to real space
         !
-        CALL tgwave_g2r( psi, tg_psic, dffts, n, ibnd, m )
+        CALL tgwave_g2r( psi(:,ibnd:m), tg_psic, dffts, n )
         !
         CALL tg_get_group_nr3( dffts, right_nr3 )
         !
@@ -84,7 +84,9 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
         ! ... back to reciprocal space
         ! ... addition to the total product
         !
-        CALL tgwave_r2g( tg_psic, tg_vpsi, dffts, n, 1, m-ibnd+1 )
+        brange = m-ibnd+1
+        !
+        CALL tgwave_r2g( tg_psic, tg_vpsi(:,1:brange), dffts, n )
         !
         DO idx = 1, 2*fftx_ntgrp(dffts), 2
            IF ( idx+ibnd-1<m ) THEN
@@ -191,7 +193,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
   LOGICAL :: use_tg
   REAL(DP), ALLOCATABLE :: tg_v(:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:), tg_vpsi(:,:)
-  INTEGER :: v_siz, idx
+  INTEGER :: v_siz, idx, brange
   !
   CALL start_clock( 'vloc_psi' )
   use_tg = dffts%has_task_groups 
@@ -217,7 +219,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
      !
      DO ibnd = 1, m, fftx_ntgrp(dffts)
         !
-        CALL tgwave_g2r( psi, tg_psic, dffts, n, ibnd, m, igk_k(:,current_k) )
+        CALL tgwave_g2r( psi(:,ibnd:m), tg_psic, dffts, n, igk_k(:,current_k) )
         !
 !        write (6,*) 'wfc R '
 !        write (6,99) (tg_psic(i), i=1,400)
@@ -233,7 +235,9 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
 !        write (6,*) 'v psi R ' 
 !        write (6,99) (tg_psic(i), i=1,400)
         !
-        CALL tgwave_r2g( tg_psic, tg_vpsi, dffts, n, 1, m-ibnd+1, igk_k(:,current_k) )
+        brange = m-ibnd+1
+        !
+        CALL tgwave_r2g( tg_psic, tg_vpsi(:,1:brange), dffts, n, igk_k(:,current_k) )
         !
         !$omp parallel do collapse(2)
         DO idx = 0, MIN(fftx_ntgrp(dffts)-1, m-ibnd)
@@ -337,7 +341,7 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
   LOGICAL :: use_tg
   REAL(DP), ALLOCATABLE :: tg_v(:,:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:,:), tg_vpsi(:,:)
-  INTEGER :: v_siz, idx, ioff
+  INTEGER :: v_siz, idx, ioff, brange
   INTEGER :: right_nr3, right_inc
   !
   CALL start_clock( 'vloc_psi' )
@@ -372,7 +376,7 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
         DO ipol = 1, npol
            ii = lda*(ipol-1)+1
            ie = lda*(ipol-1)+n
-           CALL tgwave_g2r( psi(ii:ie,:), tg_psic(:,ipol), dffts, n, ibnd, m, &
+           CALL tgwave_g2r( psi(ii:ie,ibnd:m), tg_psic(:,ipol), dffts, n, &
                             igk_k(:,current_k) )
         ENDDO
         !
@@ -393,9 +397,11 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
            ENDDO
         ENDIF
         !
+        brange = m-ibnd+1
+        !
         DO ipol = 1, npol
            !
-           CALL tgwave_r2g( tg_psic(:,ipol), tg_vpsi, dffts, n, 1, m-ibnd+1, &
+           CALL tgwave_r2g( tg_psic(:,ipol), tg_vpsi(:,1:brange), dffts, n, &
                             igk_k(:,current_k) )
            !
            CALL tg_get_recip_inc( dffts, right_inc )

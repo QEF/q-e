@@ -89,7 +89,7 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
      !$acc data create(tg_psic,tg_vpsi)
      DO ibnd = 1, m, incr
         !
-        CALL tgwave_g2r( psi(1:n,:), tg_psic, dffts, n, ibnd, m )
+        CALL tgwave_g2r( psi(1:n,ibnd:m), tg_psic, dffts, n )
         !
         CALL tg_get_group_nr3( dffts, right_nr3 )
         !
@@ -98,7 +98,9 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
            tg_psic(j) = tg_psic(j) * tg_v_d(j)
         ENDDO
         !
-        CALL tgwave_r2g( tg_psic, tg_vpsi, dffts, n, 1, m-ibnd+1 )
+        brange = m-ibnd+1
+        !
+        CALL tgwave_r2g( tg_psic, tg_vpsi(:,1:brange), dffts, n )
         !
         DO idx = 1, 2*fftx_ntgrp(dffts), 2
            IF ( idx+ibnd-1<m ) THEN
@@ -259,7 +261,7 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v_d, hpsi_d )
   attributes(DEVICE) :: tg_v_d
   !
   INTEGER :: v_siz, idx, group_size, hm_vec(2)
-  INTEGER :: ierr
+  INTEGER :: ierr, brange
   !
   CALL start_clock_gpu ('vloc_psi')
   use_tg = dffts%has_task_groups
@@ -292,7 +294,7 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v_d, hpsi_d )
      !$acc data create(tg_psic,tg_vpsi)
      DO ibnd = 1, m, fftx_ntgrp(dffts)
         !
-        CALL tgwave_g2r( psi(1:n,:), tg_psic, dffts, n, ibnd, m, igk_k(:,current_k) )
+        CALL tgwave_g2r( psi(1:n,ibnd:m), tg_psic, dffts, n, igk_k(:,current_k) )
         !
         CALL tg_get_group_nr3( dffts, right_nr3 )
         !
@@ -301,7 +303,9 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v_d, hpsi_d )
            tg_psic(j) = tg_psic(j) * tg_v_d(j)
         ENDDO
         !
-        CALL tgwave_r2g( tg_psic, tg_vpsi, dffts, n, 1, m-ibnd+1, igk_k(:,current_k) )
+        brange = m-ibnd+1
+        !
+        CALL tgwave_r2g( tg_psic, tg_vpsi(:,1:brange), dffts, n, igk_k(:,current_k) )
         !
         DO idx = 1, fftx_ntgrp(dffts)
            IF ( idx+ibnd-1 <= m ) THEN
@@ -430,7 +434,7 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v_d, hpsi_d )
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:,:), tg_vpsi(:,:)
 #if defined(__CUDA)
   attributes(DEVICE) :: tg_v_d
-  INTEGER :: v_siz, idx, ioff, ii, ie
+  INTEGER :: v_siz, idx, ioff, ii, ie, brange
   INTEGER :: right_nnr, right_nr3, right_inc
   !
   CALL start_clock_gpu ('vloc_psi')
@@ -474,7 +478,7 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v_d, hpsi_d )
         DO ipol = 1, npol
            ii = lda*(ipol-1)+1
            ie = lda*ipol
-           CALL tgwave_g2r( psi(ii:ie,:), tg_psic(:,ipol), dffts, n, ibnd, m, &
+           CALL tgwave_g2r( psi(ii:ie,ibnd:m), tg_psic(:,ipol), dffts, n, &
                             igk_k(:,current_k) )
         ENDDO
         !
@@ -497,9 +501,10 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v_d, hpsi_d )
            ENDDO
         ENDIF
         !
+        brange = m-ibnd+1
+        !
         DO ipol = 1, npol
-           CALL tgwave_r2g( tg_psic(:,ipol), tg_vpsi, dffts, n, 1, m-ibnd+1, &
-                            igk_k(:,current_k) )
+           CALL tgwave_r2g( tg_psic(:,ipol), tg_vpsi(:,1:brange), dffts, n, igk_k(:,current_k) )
            !
            CALL tg_get_recip_inc( dffts, right_inc )
            !

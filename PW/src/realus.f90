@@ -2226,7 +2226,7 @@ MODULE realus
     !
     IF( dffts%has_task_groups ) THEN
         !
-        CALL tgwave_g2r( orbital(1:ngk(1),:), tg_psic, dffts, ngk(1), ibnd, last )
+        CALL tgwave_g2r( orbital(1:ngk(1),ibnd:last), tg_psic, dffts, ngk(1) )
         !
         IF (PRESENT(conserved)) THEN
           IF (conserved) THEN
@@ -2322,7 +2322,9 @@ MODULE realus
         incr = 2*fftx_ntgrp(dffts)
         ALLOCATE( psio(ngk(1),incr) )
         !
-        CALL tgwave_r2g( tg_psic, psio, dffts, ngk(1), 1, last-ibnd+1 )
+        brange = last-ibnd+1
+        !
+        CALL tgwave_r2g( tg_psic, psio(:,1:brange), dffts, ngk(1) )
         !
         DO idx = 1, incr, 2
            IF( idx+ibnd-1<last ) THEN
@@ -2451,7 +2453,7 @@ MODULE realus
     !
     IF( dffts%has_task_groups ) THEN
        !
-       CALL tgwave_g2r( orbital, tg_psic, dffts, ngk(1), ibnd, last, igk_k(:,ik_) )
+       CALL tgwave_g2r( orbital(:,ibnd:last), tg_psic, dffts, ngk(1), igk_k(:,ik_) )
        !
        IF (PRESENT(conserved)) THEN
           IF (conserved) THEN
@@ -2524,7 +2526,7 @@ MODULE realus
     !
     ! ... local variables
     !
-    INTEGER :: idx, ik_ , incr, ig
+    INTEGER :: idx, ik_ , incr, ig, brange
     LOGICAL :: add_to_orbital_
     COMPLEX(DP), ALLOCATABLE :: psio(:,:)
 !-------------------TEMPORARY-----------
@@ -2546,8 +2548,9 @@ MODULE realus
        !
        ALLOCATE( psio(ngk(ik_),incr) )
        !
-       CALL tgwave_r2g( tg_psic, psio, dffts, ngk(ik_), 1, last-ibnd+1, &
-                        igk_k(:,ik_) )
+       brange = last-ibnd+1
+       !
+       CALL tgwave_r2g( tg_psic, psio(:,1:brange), dffts, ngk(ik_), igk_k(:,ik_) )
        !
        DO idx = 1, incr
           !
