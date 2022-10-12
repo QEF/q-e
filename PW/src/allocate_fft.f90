@@ -18,6 +18,7 @@ SUBROUTINE allocate_fft
   USE gvect,            ONLY : ngm, g, gg, mill, igtongl
   USE gvecs,            ONLY : ngms
   USE fft_base,         ONLY : dfftp, dffts
+  USE fft_wave,         ONLY : wave_fft_init
   USE ions_base,        ONLY : nat
   USE lsda_mod,         ONLY : nspin
   USE scf,              ONLY : rho, v, vnew, vltot, vrs, rho_core, rhog_core, &
@@ -83,6 +84,10 @@ SUBROUTINE allocate_fft
      CALL using_psic_nc_d(0)
   END IF
 #endif
+  !
+  ! ... initialize workspace for wave_fft wrappers
+  !
+  CALL wave_fft_init( dffts, .TRUE. )
   !
   IF ( report /= 0 ) THEN
      !

@@ -46,6 +46,7 @@ SUBROUTINE clean_pw( lflag )
   USE fft_base,             ONLY : dfftp, dffts  
   USE fft_base,             ONLY : pstickdealloc
   USE fft_types,            ONLY : fft_type_deallocate
+  USE fft_wave,             ONLY : wave_fft_finalize
   USE noncollin_module,     ONLY : deallocate_noncol
   USE dynamics_module,      ONLY : deallocate_dyn_vars
   USE paw_init,             ONLY : deallocate_paw_internals
@@ -142,6 +143,8 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( psic_nc ) )    DEALLOCATE( psic_nc )
   IF ( ALLOCATED( vrs     ) )    DEALLOCATE( vrs     )
   CALL deallocate_scf_gpu()
+  !
+  CALL wave_fft_finalize( dffts )
   !
   ! ... arrays allocated in allocate_locpot.f90 ( and never deallocated )
   !

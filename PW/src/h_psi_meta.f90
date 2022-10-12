@@ -78,7 +78,7 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
            !
            psic(1:nrxxs) = kedtau(1:nrxxs,current_spin) * psic(1:nrxxs)
            !
-           CALL wave_r2g( psic, psi_g(:,1:brange), dffts )
+           CALL wave_r2g( psic(1:dffts%nnr), psi_g(:,1:brange), dffts )
            !
            DO i = 1, np
               kplusgi = (xk(j,current_k)+g(j,i)) * tpiba
@@ -105,7 +105,7 @@ SUBROUTINE h_psi_meta( ldap, np, mp, psip, hpsi )
            !
            psic(1:nrxxs) = kedtau(1:nrxxs,current_spin) * psic(1:nrxxs)
            !
-           CALL wave_r2g( psic, psi_g(1:np,1:1), dffts, igk=igk_k(:,current_k) )
+           CALL wave_r2g( psic(1:dffts%nnr), psi_g(1:np,1:1), dffts, igk=igk_k(:,current_k) )
            !
            DO i = 1, np
               kplusgi = (xk(j,current_k)+g(j,igk_k(i,current_k)))*tpiba

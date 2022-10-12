@@ -15,16 +15,89 @@ MODULE fft_wave
   USE kinds,           ONLY: DP
   USE fft_interfaces,  ONLY: fwfft, invfft
   USE fft_types,       ONLY: fft_type_descriptor
-  USE control_flags,   ONLY: gamma_only
+  USE control_flags,   ONLY: gamma_only, many_fft
   !
   IMPLICIT NONE
   !
   PRIVATE
   !
+  PUBLIC :: wave_fft_init, wave_fft_finalize
   PUBLIC :: wave_r2g, wave_g2r, tgwave_r2g, tgwave_g2r
+  !
+  ! ... workspace arrays
+  !
+  COMPLEX(DP), ALLOCATABLE :: wpsic(:), wpsic_m(:)
+  !! wave-FFT workspace.
+  COMPLEX(DP), ALLOCATABLE :: tg_wpsic(:)
+  !! task-group wave-FFT workspace.
+  !
   !
 CONTAINS
   !
+  !--------------------------------------------------------------------------
+  SUBROUTINE wave_fft_init( dfft, do_many_fft )
+    !----------------------------------------------------------------------
+    !! Allocation of wave-FFT workspace array.
+    !
+    IMPLICIT NONE
+    !
+    TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+    LOGICAL, INTENT(IN), OPTIONAL :: do_many_fft
+    !
+    INTEGER :: incr
+    !
+    IF (dfft%has_task_groups .AND. .NOT.ALLOCATED(tg_wpsic)) THEN
+      ALLOCATE( tg_wpsic(dfft%nnr_tg) )
+      !$acc enter data create(tg_wpsic)
+    ENDIF
+    !
+    IF (.NOT. ALLOCATED(wpsic)) THEN
+      ALLOCATE( wpsic(dfft%nnr) )
+      !$acc enter data create(wpsic)
+    ENDIF
+    !
+#if defined(__CUDA)
+    IF ((.NOT.ALLOCATED(wpsic_m)).AND.PRESENT(do_many_fft)) THEN
+      IF (do_many_fft) THEN
+        incr = many_fft
+        IF (gamma_only) incr = 2*many_fft
+        ALLOCATE( wpsic_m(dfft%nnr*incr) )
+        !$acc enter data create(wpsic_m)
+      ENDIF
+    ENDIF
+#endif
+    !
+    RETURN
+    !
+  END SUBROUTINE wave_fft_init
+  !
+  !---------------------------------------------------------------------------
+  SUBROUTINE wave_fft_finalize( dfft )
+    !------------------------------------------------------------------------
+    !! Deallocation of wave-FFT workspace array.
+    !
+    IMPLICIT NONE
+    !
+    TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+    !
+    IF (dfft%has_task_groups .AND. ALLOCATED(tg_wpsic)) THEN
+      !$acc exit data delete(tg_wpsic)
+      DEALLOCATE( tg_wpsic )
+    ENDIF
+    !
+    IF (ALLOCATED(wpsic)) THEN
+      !$acc exit data delete(wpsic)
+      DEALLOCATE( wpsic )
+    ENDIF
+    !
+    IF (ALLOCATED(wpsic_m)) THEN
+      !$acc exit data delete(wpsic_m)
+      DEALLOCATE( wpsic_m )
+    ENDIF
+    !
+    RETURN
+    !
+  END SUBROUTINE wave_fft_finalize
   !
   !----------------------------------------------------------------------
   SUBROUTINE wave_r2g( f_in, f_out, dfft, igk, howmany_set )
@@ -32,6 +105,7 @@ CONTAINS
     !! Wave function FFT from R to G-space.
     !
     USE fft_helper_subroutines,  ONLY: fftx_psi2c_gamma, fftx_psi2c_k
+    USE control_flags,           ONLY: many_fft
     !
     IMPLICIT NONE
     !
@@ -39,48 +113,53 @@ CONTAINS
     COMPLEX(DP), INTENT(IN)  :: f_in(:)
     COMPLEX(DP), INTENT(OUT) :: f_out(:,:)
     INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
-    INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
+    INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(2)
     !
-    COMPLEX(DP), ALLOCATABLE :: psic(:)
-    INTEGER :: dim2, nrxxs
+    INTEGER :: dim1, dim2
     !
-    nrxxs = SIZE(f_in)
+    dim1 = SIZE(f_in(:))
     dim2 = SIZE(f_out(1,:))
     !
-    ALLOCATE( psic(nrxxs) )
-    !$acc data present_or_copyin(f_in) present_or_copyout(f_out) create(psic)
-    !$acc kernels
-    psic = f_in
-    !$acc end kernels
-    !
-    !$acc host_data use_device(psic)
+    !$acc data present_or_copyin(f_in) present_or_copyout(f_out)
     IF (PRESENT(howmany_set)) THEN
-      CALL fwfft( 'Wave', psic, dfft, howmany=howmany_set(1) )
+      !$acc kernels
+      wpsic_m(1:dim1) = f_in
+      !$acc end kernels
     ELSE
-      CALL fwfft( 'Wave', psic, dfft )
+      !$acc kernels
+      wpsic(1:dim1) = f_in
+      !$acc end kernels
     ENDIF
-    !$acc end host_data
+    !
+    IF (PRESENT(howmany_set)) THEN
+      !$acc host_data use_device(wpsic_m)
+      CALL fwfft( 'Wave', wpsic_m, dfft, howmany=howmany_set(1) )
+      !$acc end host_data
+    ELSE
+      !$acc host_data use_device(wpsic)
+      CALL fwfft( 'Wave', wpsic, dfft )
+      !$acc end host_data
+    ENDIF
     !
     IF (gamma_only) THEN
       IF (PRESENT(howmany_set)) THEN
-        CALL fftx_psi2c_gamma( dfft, psic, f_out, howmany_set=howmany_set )
+        CALL fftx_psi2c_gamma( dfft, wpsic_m, f_out, howmany_set=howmany_set )
       ELSE
-        IF (dim2==1) CALL fftx_psi2c_gamma( dfft, psic, f_out(:,1:1) )
-        IF (dim2==2) CALL fftx_psi2c_gamma( dfft, psic, f_out(:,1:1), &
-                                            vout2=f_out(:,2) )
+        IF (dim2==1) CALL fftx_psi2c_gamma( dfft, wpsic, f_out(:,1:1) )
+        IF (dim2==2) CALL fftx_psi2c_gamma( dfft, wpsic, f_out(:,1:1), &
+                                                         vout2=f_out(:,2) )             
       ENDIF
     ELSE
       !$acc data present_or_copyin(igk)
-      IF (PRESENT(howmany_set)) THEN 
-        CALL fftx_psi2c_k( dfft, psic, f_out, igk, howmany_set )
+      IF (PRESENT(howmany_set)) THEN
+        CALL fftx_psi2c_k( dfft, wpsic_m, f_out, igk, howmany_set )
       ELSE
-        CALL fftx_psi2c_k( dfft, psic, f_out(:,1:1), igk )
+        CALL fftx_psi2c_k( dfft, wpsic, f_out(:,1:1), igk )
       ENDIF
       !$acc end data
     ENDIF
     !
     !$acc end data
-    DEALLOCATE( psic )
     !
     RETURN
     !
@@ -204,29 +283,22 @@ CONTAINS
     INTEGER, INTENT(IN) :: ibnd, ibnd_end, n
     INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
     !
-    COMPLEX(DP), ALLOCATABLE :: psic(:)
-    INTEGER :: nrxxs
-    !
-    nrxxs = SIZE(f_in)
-    !
-    ALLOCATE( psic(nrxxs) )
-    !$acc data present_or_copyin(f_in) present_or_copyout(f_out) create(psic)
+    !$acc data present_or_copyin(f_in) present_or_copyout(f_out)
     !$acc kernels
-    psic = f_in
+    tg_wpsic = f_in
     !$acc end kernels
     !
-    !$acc host_data use_device(psic)
-    CALL fwfft( 'tgWave', psic, dfft )
+    !$acc host_data use_device(tg_wpsic)
+    CALL fwfft( 'tgWave', tg_wpsic, dfft )
     !$acc end host_data
     !
     IF (gamma_only) THEN
-      CALL fftx_psi2c_gamma_tg( dfft, psic, f_out, n, ibnd, ibnd_end )
+      CALL fftx_psi2c_gamma_tg( dfft, tg_wpsic, f_out, n, ibnd, ibnd_end )
     ELSE
-      CALL fftx_psi2c_k_tg( dfft, psic, f_out, igk, n, ibnd, ibnd_end )
+      CALL fftx_psi2c_k_tg( dfft, tg_wpsic, f_out, igk, n, ibnd, ibnd_end )
     ENDIF
     !
     !$acc end data
-    DEALLOCATE( psic )
     !
     RETURN
     !
