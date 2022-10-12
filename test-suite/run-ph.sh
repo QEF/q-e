@@ -80,5 +80,15 @@ then
   then
     cat $3
   fi
+elif [[ "$1" == "8" ]]
+then
+  echo "Running MATDYN ..."
+# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/matdyn.x < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/matdyn.x < $2 > $3 2> $4
+  cp matdyn.modes $3
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
 fi
 

@@ -199,10 +199,14 @@ MODULE io_dyn_mat
     RETURN
     END SUBROUTINE write_dyn_mat_tail
 
-    SUBROUTINE write_ifc( nr1, nr2, nr3, nat, phid)
-
+    !----------------------------------------------------------------------------
+    SUBROUTINE write_ifc(nr1, nr2, nr3, nat, phid, phid_lr, write_lr)
+    !----------------------------------------------------------------------------
+    !
     INTEGER, INTENT(IN) :: nr1, nr2, nr3, nat
     COMPLEX(DP), INTENT(IN) :: phid(nr1*nr2*nr3,3,3,nat,nat)
+    COMPLEX(DP), INTENT(IN) :: phid_lr(nr1*nr2*nr3,3,3,nat,nat)
+    LOGICAL, INTENT(IN) :: write_lr
 
     INTEGER :: meshfft(3)
     INTEGER :: na, nb, nn, m1, m2, m3
@@ -227,6 +231,10 @@ MODULE io_dyn_mat
                       i2c(nb) //'.'// i2c(m1) //'.'// i2c(m2) //'.'// i2c(m3))
                    aux(:,:)=DBLE(phid(nn,:,:,na,nb))
                    CALL xmlw_writetag( 'IFC', aux )
+                   IF (write_lr) THEN
+                      aux(:,:)=DBLE(phid_lr(nn,:,:,na,nb))
+                      CALL xmlw_writetag( 'IFC_LR', aux )
+                   ENDIF
                    CALL xmlw_closetag( )
                 ENDDO
              ENDDO
@@ -567,7 +575,7 @@ MODULE io_dyn_mat
     !----------------------------------------------------------------------------
     ! 
     !----------------------------------------------------------------------------
-    SUBROUTINE read_ifc(nr1, nr2, nr3, nat, phid)
+    SUBROUTINE read_ifc(nr1, nr2, nr3, nat, phid, phid_lr, read_lr)
     !----------------------------------------------------------------------------
     !! Read IFC in XML format.
     !
@@ -580,8 +588,12 @@ MODULE io_dyn_mat
     !! Grid size
     INTEGER, INTENT(in) :: nat
     !! Number of atoms
+    LOGICAL, INTENT(in) :: read_lr
+    !! .true. to read long-range IFC
     REAL(KIND = DP), INTENT(out) :: phid(nr1*nr2*nr3,3,3,nat,nat)
-    !!
+    !! Interatomic force constant in real-space
+    REAL(KIND = DP), INTENT(out) :: phid_lr(nr1 * nr2 * nr3, 3, 3, nat, nat)
+    !! Long-rage part of the IFC in real-space
     ! Local variables
     INTEGER :: na, nb
     ! Atoms
@@ -605,6 +617,10 @@ MODULE io_dyn_mat
                       i2c(nb) //'.'// i2c(m1) //'.'// i2c(m2) //'.'// i2c(m3))
                 CALL xmlr_readtag( 'IFC', aux)
                 phid(nn, :, :, na, nb) = aux(:, :)
+                IF (read_lr) THEN
+                   CALL xmlr_readtag( 'IFC_LR', aux)
+                   phid_lr(nn, :, :, na, nb) = aux(:, :)
+                ENDIF
                 CALL xmlr_closetag( )
               ENDDO ! m1
             ENDDO ! m2
@@ -616,6 +632,7 @@ MODULE io_dyn_mat
       CALL xml_closefile( )
     ENDIF
     CALL mp_bcast(phid, ionode_id, intra_image_comm)
+    CALL mp_bcast(phid_lr, ionode_id, intra_image_comm)
     RETURN
     !----------------------------------------------------------------------------
     END SUBROUTINE read_ifc

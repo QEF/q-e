@@ -129,6 +129,7 @@
     zi_allvb(:, :, :),       &!  Z-factor in scattering rate
     zi_allcb(:, :, :),       &!  Second Z-factor in scattering rate (for both VB and CB calculations)
     ifc(:,:,:,:,:,:,:),      &!  Interatomic force constant in real space
+    ifc_lr(:,:,:,:,:,:,:),   &!  Long-range part of interatomic force constant in real space
     omegap(:),               &!  Photon energy for phonon-assisted absorption
     epsilon2_abs(:, :, :, :),   &!  Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
     wscache(:, :, :, :, :),  &!  Use as cache when doing IFC when lifc = .TRUE.

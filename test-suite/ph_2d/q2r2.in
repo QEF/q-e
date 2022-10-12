@@ -1,0 +1,6 @@
+&INPUT
+  fildyn = 'bn.dyn'
+  flfrc = 'bn.frc'
+  zasr = 'crystal'
+  write_lr = .true.
+/

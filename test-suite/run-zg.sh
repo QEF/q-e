@@ -18,8 +18,8 @@ echo $0" "$@
 if [[ "$1" == "0" ]]
  then
  echo "Running ZG ..."
- echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ZG.x -input $1 > $2 2> $3"
- ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ZG.x -input $1 > $2 2> $3
+ echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ZG.x -input $2 > $3 2> $4"
+ ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ZG.x -input $2 > $3 2> $4
 fi
 #
 if [[ -e CRASH ]]
