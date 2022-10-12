@@ -128,7 +128,6 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
 #endif
      endif
      call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb, .true.)
-     !$acc update host(vkb)
      !
 #if defined(__CUDA)
      !$acc host_data use_device(vkb)
