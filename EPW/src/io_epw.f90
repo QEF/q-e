@@ -469,8 +469,8 @@
     !!
     !
     USE kinds,     ONLY : DP
-    USE elph2,     ONLY : ifc, ifc_lr, zstar, epsi
-    USE epwcom,    ONLY : asr_typ, dvscf_dir, nqc1, nqc2, nqc3, read_lr
+    USE elph2,     ONLY : ifc, zstar, epsi
+    USE epwcom,    ONLY : asr_typ, dvscf_dir, nqc1, nqc2, nqc3
     USE ions_base, ONLY : nat
     USE cell_base, ONLY : ibrav, omega, at, bg, celldm, alat
     USE io_global, ONLY : stdout
@@ -566,7 +566,7 @@
                tau_, ityp_,  m_loc, nqs, has_zstar, epsi, zstar)
       CALL volume(alat, at(1, 1), at(1, 2), at(1, 3), omega)
       CALL read_ifc_param(nqc1, nqc2, nqc3)
-      CALL read_ifc(nqc1, nqc2, nqc3, nat_, ifc, ifc_lr, read_lr)
+      CALL read_ifc(nqc1, nqc2, nqc3, nat_, ifc)
       DEALLOCATE(m_loc, STAT = ierr)
       IF (ierr /= 0) CALL errore('read_ifc_epw', 'Error deallocating m_loc', 1)
       DEALLOCATE(atm, STAT = ierr)
@@ -613,16 +613,8 @@
                 READ(iunifc, *) ibid, jbid, nabid, nbbid
                 IF (i /= ibid .OR. j /= jbid .OR. na /= nabid .OR. nb /= nbbid)  &
                   CALL errore('read_epw', 'error in reading ifc', 1)
-                IF (read_lr) THEN
-                  READ(iunifc, *) (((m1bid, m2bid, m3bid, &
-                                    ifc(m1, m2, m3, i, j, na, nb), &
-                                    ifc_lr(m1, m2, m3, i, j, na, nb), &
-                                    m1 = 1, nqc1), m2 = 1, nqc2), m3 = 1, nqc3)
-                ELSE
-                  READ(iunifc, *) (((m1bid, m2bid, m3bid, &
-                                    ifc(m1, m2, m3, i, j, na, nb), &
-                                    m1 = 1, nqc1), m2 = 1, nqc2), m3 = 1, nqc3)
-                ENDIF
+                READ(iunifc, *) (((m1bid, m2bid, m3bid, ifc(m1, m2, m3, i, j, na, nb), &
+                           m1 = 1, nqc1), m2 = 1, nqc2), m3 = 1, nqc3)
               ENDDO
             ENDDO
           ENDDO
@@ -636,10 +628,6 @@
             DO nb = 1, nat
               CALL mp_bcast(ifc(:, :, :, i, j, na, nb), ionode_id, inter_pool_comm)
               CALL mp_bcast(ifc(:, :, :, i, j, na, nb), root_pool, intra_pool_comm)
-              if (read_lr) THEN
-                CALL mp_bcast(ifc_lr(:, :, :, i, j, na, nb), ionode_id, inter_pool_comm)
-                CALL mp_bcast(ifc_lr(:, :, :, i, j, na, nb), root_pool, intra_pool_comm)
-              ENDIF
             ENDDO
           ENDDO
         ENDDO

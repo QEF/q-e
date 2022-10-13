@@ -10,10 +10,9 @@ Module ifconstants
   ! All variables read from file that need dynamical allocation
   !
   USE kinds, ONLY: DP
-  REAL(DP), ALLOCATABLE :: frc(:, :, :, :, :, :, :), frc_lr(:, :, :, :, :, :, :), &
-                           tau_blk(:, :),  zeu(:, :, :), m_loc(:, :)
+  REAL(DP), ALLOCATABLE :: frc(:, :, :, :, :, :, :), tau_blk(:, :),  zeu(:, :, :), &
+               m_loc(:, :)
   ! frc : interatomic force constants in REAL space
-  ! frc_lr: long-range part of interatomic force constants in real space
   ! tau_blk : atomic positions for the original cell
   ! zeu : effective charges for the original cell
   ! m_loc: the magnetic moments of each atom
@@ -95,8 +94,6 @@ PROGRAM diff_sca
   !     loto_2d    set to .true. to activate two-dimensional treatment of LO-TO splitting.
   !     loto_disable (logical) if .true. do not apply LO-TO splitting for q=0
   !                  (default: .false.)
-  !     read_lr  set to .true. to read long-range force constants from file,
-  !                when enforcing asr='all' for polar solids in matdyn.
   !
   !  if (readtau) atom types and positions in the supercell follow:
   !     (tau(i,na),i= 1,3), ityp(na)
@@ -132,7 +129,7 @@ PROGRAM diff_sca
   USE rigid,      ONLY : dyndiag, nonanal, nonanal_ifc
   USE parser,     ONLY : read_line
 
-  USE ifconstants, ONLY : frc, frc_lr, atm, zeu, tau_blk, ityp_blk, m_loc
+  USE ifconstants, ONLY : frc, atm, zeu, tau_blk, ityp_blk, m_loc
   !
   IMPLICIT NONE
   !
@@ -147,7 +144,7 @@ PROGRAM diff_sca
   INTEGER :: nr1, nr2, nr3, nsc, nk1, nk2, nk3, ibrav, qstart, qfinal
   CHARACTER(LEN = 256) :: flfrc, filename
   CHARACTER(LEN = 10)  :: asr
-  LOGICAL :: has_zstar, q_in_cryst_coord, eigen_similarity, loto_disable, read_lr
+  LOGICAL :: has_zstar, q_in_cryst_coord, eigen_similarity, loto_disable
   COMPLEX(DP), ALLOCATABLE :: dyn(:, :, :, :), dyn_blk(:, :, :, :)
   COMPLEX(DP), ALLOCATABLE :: z(:,:), frc_ifc(:, :, :, :)
   REAL(DP), ALLOCATABLE:: tau(:, :), q(:, :), w2(:, :), freq(:,:), wq(:)
@@ -214,7 +211,7 @@ PROGRAM diff_sca
        &           nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, &
        &           q_in_band_form, q_in_cryst_coord, &
        &           eigen_similarity, na_ifc, fd, point_label_type, nosym, &
-       &           loto_2d, loto_disable, read_lr, &
+       &           loto_2d, loto_disable, &
   ! mz_b we add the inputs for diffuse scattering
        &           disca, dim1, dim2, dim3, atm_zg, mode_resolved, & 
        &           T, q_external, zero_one_phonon, print_raw_data, & 
@@ -256,7 +253,6 @@ PROGRAM diff_sca
      nosym = .FALSE.
      loto_2d = .FALSE.
      loto_disable = .FALSE.
-     read_lr = .FALSE.
      ! mz_b
      disca = .TRUE.
      T = 0
@@ -322,7 +318,6 @@ PROGRAM diff_sca
      CALL mp_bcast(point_label_type,ionode_id, world_comm)
      CALL mp_bcast(loto_2d,ionode_id, world_comm)
      CALL mp_bcast(loto_disable,ionode_id, world_comm)
-     CALL mp_bcast(read_lr,ionode_id, world_comm)
      ! mz_b
      CALL mp_bcast(disca,ionode_id, world_comm)
      CALL mp_bcast(T,ionode_id, world_comm)
@@ -384,13 +379,11 @@ PROGRAM diff_sca
         CALL volume(alat,at_blk(1,1),at_blk(1,2),at_blk(1,3),omega_blk)
         CALL read_ifc_param(nr1,nr2,nr3)
         ALLOCATE(frc(nr1,nr2,nr3,3,3,nat_blk,nat_blk))
-        ALLOCATE(frc_lr(nr1,nr2,nr3,3,3,nat_blk,nat_blk))
-        frc_lr = 0.d0
-        CALL read_ifc(nr1,nr2,nr3,nat_blk,frc,frc_lr,read_lr)
+        CALL read_ifc(nr1,nr2,nr3,nat_blk,frc)
      ELSE
         CALL readfc ( flfrc, nr1, nr2, nr3, epsil, nat_blk, &
             ibrav, alat, at_blk, ntyp_blk, &
-            amass_blk, omega_blk, has_zstar, read_lr)
+            amass_blk, omega_blk, has_zstar)
      ENDIF
      !
      CALL recips ( at_blk(1,1),at_blk(1,2),at_blk(1,3),  &
@@ -795,7 +788,6 @@ PROGRAM diff_sca
      !DEALLOCATE ( freq)
      DEALLOCATE(num_rap_mode)
      DEALLOCATE(high_sym)
-     DEALLOCATE(frc_lr)
   !
 
   CALL environment_end('DISCA')
@@ -808,11 +800,11 @@ END PROGRAM diff_sca
 !
 !-----------------------------------------------------------------------
 SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
-                    ibrav, alat, at, ntyp, amass, omega, has_zstar, read_lr )
+                    ibrav, alat, at, ntyp, amass, omega, has_zstar )
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
-  USE ifconstants,ONLY : tau => tau_blk, ityp => ityp_blk, frc, frc_lr, zeu
+  USE ifconstants,ONLY : tau => tau_blk, ityp => ityp_blk, frc, zeu
   USE cell_base,  ONLY : celldm
   USE io_global,  ONLY : ionode, ionode_id, stdout
   USE mp,         ONLY : mp_bcast 
@@ -824,7 +816,7 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   CHARACTER(LEN=256) :: flfrc
   INTEGER :: ibrav, nr1,nr2,nr3,nat, ntyp
   REAL(DP) :: alat, at(3,3), epsil(3,3)
-  LOGICAL :: has_zstar, read_lr
+  LOGICAL :: has_zstar
   ! local variables
   INTEGER :: i, j, na, nb, m1,m2,m3
   INTEGER :: ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
@@ -909,8 +901,6 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   !
   ALLOCATE ( frc(nr1,nr2,nr3,3,3,nat,nat) )
   frc(:,:,:,:,:,:,:) = 0.d0
-  ALLOCATE ( frc_lr(nr1,nr2,nr3,3,3,nat,nat) )
-  frc_lr(:,:,:,:,:,:,:) = 0.d0
   DO i= 1,3
      DO j= 1,3
         DO na= 1,nat
@@ -920,19 +910,14 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
               CALL mp_bcast(jbid,ionode_id, world_comm)
               CALL mp_bcast(nabid,ionode_id, world_comm)
               CALL mp_bcast(nbbid,ionode_id, world_comm)
-              IF (read_lr) THEN
-                 IF (ionode) READ (1,*) (((m1bid, m2bid, m3bid,     &
-                             frc(m1,m2,m3,i,j,na,nb),               &
-                             frc_lr(m1,m2,m3,i,j,na,nb),            &
-                             m1=1, nr1), m2=1, nr2), m3=1, nr3)
-              ELSE
-                 IF (ionode) READ (1,*) (((m1bid, m2bid, m3bid,     &
-                             frc(m1,m2,m3,i,j,na,nb),               &
-                             m1=1, nr1), m2=1, nr2), m3=1, nr3)
-              END IF
-              !
+              IF(i .NE.ibid  .OR. j .NE.jbid .OR.                   &
+                 na.NE.nabid .OR. nb.NE.nbbid)                      &
+                 CALL errore  ('readfc','error in reading',1)
+              IF (ionode) READ (1,*) (((m1bid, m2bid, m3bid,        &
+                          frc(m1,m2,m3,i,j,na,nb),                  &
+                           m1= 1,nr1),m2=1,nr2),m3=1,nr3)
+               
               CALL mp_bcast(frc(:,:,:,i,j,na,nb),ionode_id, world_comm)
-              CALL mp_bcast(frc_lr(:,:,:,i,j,na,nb), ionode_id, world_comm)
            ENDDO
         ENDDO
      ENDDO

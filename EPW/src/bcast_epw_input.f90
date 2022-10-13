@@ -36,7 +36,7 @@
                             muc, mp_mesh_q, mp_mesh_k, max_memlt,             &
                             !!!!!
                             lreal, lpolar, lpade, liso, limag, laniso, npade, &
-                            specfun_el, specfun_ph, lifc, asr_typ, read_lr,   &
+                            specfun_el, specfun_ph, lifc, asr_typ,            &
                             lscreen, scr_typ, fermi_diff, smear_rpa,          &
                             !!!!!
                             !rand_q, rand_nq, rand_nk, rand_k, pwc, phonselfen,&
@@ -144,7 +144,6 @@
   !!!!!
   CALL mp_bcast(lpolar          , meta_ionode_id, world_comm)
   CALL mp_bcast(lifc            , meta_ionode_id, world_comm)
-  CALL mp_bcast(read_lr         , meta_ionode_id, world_comm)
   CALL mp_bcast(lscreen         , meta_ionode_id, world_comm)
   CALL mp_bcast(cumulant        , meta_ionode_id, world_comm)
   CALL mp_bcast(kerwrite        , meta_ionode_id, world_comm)

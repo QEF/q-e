@@ -51,11 +51,11 @@
   USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem, vme,     &
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir,       &
                             nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, lpolar,         &
-                            fixsym, epw_noinv, system_2d, read_lr
-  USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, ifc_lr, umat,        &
-                            umat_all, veff, zstar, epsi, cu, cuq, lwin, lwinq,  &
-                            bmat, nbndep, ngxx, exband, wscache, area, ngxxf,   &
-                            ng0vec, shift, gmap, g0vec_all_r, Qmat, qrpl
+                            fixsym, epw_noinv, system_2d
+  USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, umat, umat_all, veff,&
+                            zstar, epsi, cu, cuq, lwin, lwinq, bmat, nbndep,    &
+                            ngxx, exband, wscache, area, ngxxf, ng0vec, shift,  &
+                            gmap, g0vec_all_r, Qmat, qrpl
   USE klist_epw,     ONLY : et_loc, et_all
   USE constants_epw, ONLY : ryd2ev, zero, two, czero, eps6, eps8
   USE fft_base,      ONLY : dfftp
@@ -436,11 +436,6 @@
     ALLOCATE(ifc(nqc1, nqc2, nqc3, 3, 3, nat, nat), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating ifc', 1)
     ifc(:, :, :, :, :, :, :) = zero
-    IF (read_lr) THEN
-      ALLOCATE(ifc_lr(nqc1, nqc2, nqc3, 3, 3, nat, nat), STAT = ierr)
-      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating ifc_lr', 1)
-      ifc_lr(:, :, :, :, :, :, :) = zero
-    ENDIF
   ENDIF
   !
   ! SP: Symmetries needs to be consistent with QE so that the order of the q in the star is the
@@ -1011,10 +1006,6 @@
   IF (lifc) THEN
     DEALLOCATE(ifc, STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating ifc', 1)
-    if (read_lr) THEN
-      DEALLOCATE(ifc_lr, STAT = ierr)
-      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating ifc_lr', 1)
-    ENDIF
   ENDIF
   !
   IF (epwread) THEN

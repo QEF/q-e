@@ -104,8 +104,6 @@
   !! if .TRUE. the e-ph matrix elements are screened by the RPA or TF dielectric function
   LOGICAL :: lifc
   !! if .TRUE. read interatomic force constants produced by q2r.x for phonon interpolation
-  LOGICAL :: read_lr
-  !! if .TRUE. read also the long-range part of interatomic force constants produced by q2r.x
   LOGICAL :: cumulant
   !! if .TRUE. calculate the electron spectral function using the cumulant expansion method
   LOGICAL :: delta_approx
