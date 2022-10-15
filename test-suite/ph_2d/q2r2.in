@@ -2,5 +2,6 @@
   fildyn = 'bn.dyn'
   flfrc = 'bn.frc'
   zasr = 'crystal'
+  loto_2d = .true.
   write_lr = .true.
 /
