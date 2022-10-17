@@ -160,6 +160,7 @@ SUBROUTINE electrons()
         CALL occ_f2fn()
         CALL potinit()
         CALL wfcinit()
+        sic_first = .false.
      END IF
      CALL electrons_scf(printout,exxen)
      CALL save_rhon(rho)
