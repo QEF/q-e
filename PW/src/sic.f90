@@ -31,7 +31,7 @@ MODULE sic_mod
    CHARACTER(len=20) :: pol_type      ! 'e' for electron, 'h' for hole
    REAL(DP)          :: sic_gamma     ! prefactor for localizing potential
    LOGICAL           :: sic_energy    ! calculate sic energy
-   LOGICAL           :: sic_on        ! activate SIC correction
+   LOGICAL           :: sic_first     ! calculate sic energy
    INTEGER           :: isp           ! spin with/without the polaron
    TYPE(scf_type), ALLOCATABLE :: rho_n ! neutral density
    INTEGER           :: fp, fn        ! occupations charged and neutral states
@@ -57,8 +57,8 @@ MODULE sic_mod
       IF (okvan)                    CALL errore('sic_init', 'norm-conserving pseudopotentials required',1)
       IF (xclib_dft_is('meta'))     CALL errore('sic_init', 'meta-GGA not implemented',1)
       IF (xclib_dft_is('hybrid'))   CALL errore('sic_init', 'hybrid not implemented',1)
-      !
-      sic_on = .false.
+      IF (use_gpu)                  CALL errore('sic_init', 'gpus not implemented',1)
+      IF (lbfgs .AND. .NOT. sic_energy) CALL errore('sic_init', 'use damped ion dynamics when sic_energy = .false.',1)
       IF (pol_type == 'e') THEN
          isp = 1
          fp = 1
@@ -69,6 +69,8 @@ MODULE sic_mod
          fp = 0
          fn = 1
       END IF
+      sic_first = .true.
+      esic = 0.d0
       !
    END SUBROUTINE init_SIC
    !

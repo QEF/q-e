@@ -31,7 +31,7 @@ SUBROUTINE electrons()
                                    kedtau, vnew
   USE control_flags,        ONLY : tr2, niter, conv_elec, restart, lmd, &
                                    do_makov_payne, sic
-  USE sic_mod,              ONLY : sic_on, sic_energy, occ_f2fn, occ_fn2f, save_rhon
+  USE sic_mod,              ONLY : sic_energy, occ_f2fn, occ_fn2f, save_rhon, sic_first
   USE io_files,             ONLY : iunres, seqopn
   USE ldaU,                 ONLY : eth
   USE extfield,             ONLY : tefield, etotefield
@@ -156,7 +156,7 @@ SUBROUTINE electrons()
   !
   IF (sic .and. sic_energy) THEN
      WRITE(stdout,'(5x,"Energy calculation for the neutral polaron")')
-     IF( sic_on ) THEN
+     IF( .not. sic_first) THEN
         CALL occ_f2fn()
         CALL potinit()
         CALL wfcinit()
@@ -172,8 +172,6 @@ SUBROUTINE electrons()
   DO idum=1,niter
      !
      iter = iter + 1
-     !
-     IF( sic ) sic_on = .true.
      !
      ! ... Self-consistency loop. For hybrid functionals the exchange potential
      ! ... is calculated with the orbitals at previous step (none at first step)
