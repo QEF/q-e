@@ -202,6 +202,8 @@ CONTAINS
    IF (ALLOCATED(rho%nsb)  )  DEALLOCATE( rho%nsb   )
    IF (ALLOCATED(rho%ns_nc))  DEALLOCATE( rho%ns_nc )
    IF (ALLOCATED(rho%bec)  )  DEALLOCATE( rho%bec   )
+   IF (ALLOCATED(rho%pol_r))  DEALLOCATE( rho%pol_r )
+   IF (ALLOCATED(rho%pol_g))  DEALLOCATE( rho%pol_g )
    !
    RETURN
    !
