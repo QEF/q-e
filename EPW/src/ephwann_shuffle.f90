@@ -1272,7 +1272,7 @@
         ! wf are the interpolated eigenfrequencies
         ! (omega on fine grid)
         !
-        IF (w2(nu) > -eps8) THEN
+        IF (w2(nu) > 0.0d0) THEN
           wf(nu, qind) =  DSQRT(ABS(w2(nu)))
         ELSE
           wf(nu, qind) = -DSQRT(ABS(w2(nu)))
