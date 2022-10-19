@@ -730,7 +730,7 @@ SUBROUTINE sum_band_gpu()
                 ELSEIF (many_fft > 1 .AND. (.NOT. (xclib_dft_is('meta') .OR. lxdm))) THEN
                    !
                    group_size = MIN(many_fft,ibnd_end-(ibnd-1))
-                   hm_vec(1)=group_size ; hm_vec(2)=npw
+                   hm_vec(1)=group_size ; hm_vec(2)=npw ; hm_vec(3)=group_size
                    !
                    CALL wave_g2r( evc(:,ibnd:ibnd+group_size-1), psicd, &
                                   dffts, igk=igk_k(:,ik), howmany_set=hm_vec )

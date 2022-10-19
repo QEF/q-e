@@ -163,7 +163,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
         rdispls1(proc) = rdispls1(proc-1) + recvcount1(proc-1)
       END DO
       !
-      ALLOCATE ( psis(dffts%nnr*nogrp) ); psis=0.0_DP 
+      ALLOCATE ( psis(dffts%nnr*nogrp) ); psis=0.0_DP
       ALLOCATE ( psis1(dffts%nnr*nogrp) ); psis1=0.0_DP
       ALLOCATE ( psis2(dffts%nnr,nproc_image/nogrp)); psis2=0.0_DP
       !
@@ -176,7 +176,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
       !
       DO i = 1, nbsp, 2*nogrp
         !
-        CALL fftx_c2psi_gamma_tg( dffts, psis, c, ngw, i, nbsp )
+        CALL fftx_c2psi_gamma_tg( dffts, psis, c(:,i:nbsp), ngw, nbsp-i+1 )
         !
         CALL invfft( 'tgWave', psis, dffts )
         !

@@ -51,7 +51,7 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
   INTEGER :: v_siz, idx, ebnd, brange
   INTEGER :: ierr, ioff
   ! ... Variables to handle batched FFT
-  INTEGER :: group_size, pack_size, remainder, howmany, hm_vec(2)
+  INTEGER :: group_size, pack_size, remainder, howmany, hm_vec(3)
   REAL(DP):: fac
   !
   CALL start_clock_gpu( 'vloc_psi' )
@@ -117,7 +117,7 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
            ENDIF
         ENDDO
         !
-     ENDDO   
+     ENDDO
      !$acc end data
      !
   ELSEIF (many_fft > 1) THEN
@@ -129,7 +129,7 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
         pack_size = (group_size/2) ! This is FLOOR(group_size/2)
         remainder = group_size - 2*pack_size
         howmany = pack_size + remainder
-        hm_vec(1)=group_size ; hm_vec(2)=n
+        hm_vec(1)=group_size ; hm_vec(2)=n ; hm_vec(3)=howmany
         !
         CALL wave_g2r( psi(:,ibnd:ibnd+group_size-1), psic, dffts, howmany_set=hm_vec )
         !
@@ -260,7 +260,7 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v_d, hpsi_d )
 #if defined(__CUDA)
   attributes(DEVICE) :: tg_v_d
   !
-  INTEGER :: v_siz, idx, group_size, hm_vec(2)
+  INTEGER :: v_siz, idx, group_size, hm_vec(3)
   INTEGER :: ierr, brange
   !
   CALL start_clock_gpu ('vloc_psi')
@@ -325,7 +325,7 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v_d, hpsi_d )
      DO ibnd = 1, m, incr
         !
         group_size = MIN(many_fft,m-(ibnd-1))
-        hm_vec(1)=group_size ; hm_vec(2)=n
+        hm_vec(1)=group_size ; hm_vec(2)=n ; hm_vec(3)=group_size
         ebnd = ibnd+group_size-1
         !
         CALL wave_g2r( psi(:,ibnd:ebnd), psic, dffts, igk=igk_k(:,current_k), &

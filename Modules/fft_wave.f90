@@ -10,7 +10,8 @@
 !
 MODULE fft_wave
   !
-  !! This module contains wrapper to FFT and inverse FFTs of w.f.
+  !! This module contains wrappers to FFT and inverse FFTs of the wave function,
+  !! which it enclose the calls to g-vect/FFT-grid transposition routines too.
   !
   USE kinds,           ONLY: DP
   USE fft_interfaces,  ONLY: fwfft, invfft
@@ -37,11 +38,20 @@ CONTAINS
     IMPLICIT NONE
     !
     TYPE(fft_type_descriptor), INTENT(IN) :: dfft
-    COMPLEX(DP), INTENT(INOUT) :: f_in(:)
+    !! FFT descriptor
+    COMPLEX(DP) :: f_in(:)
+    !! input: r-space wave-function
     COMPLEX(DP), INTENT(OUT) :: f_out(:,:)
+    !! output: g-space wave-function
     INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
-    INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(2)
+    !! index of G corresponding to a given index of k+G
+    INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
+    !! gpu-enabled only (many_fft>1 case):  
+    !! (1) group_size;  
+    !! (2) true dimension of psi;  
+    !! (3) howmany (if gamma) or group_size (if k).
     !
+    ! ... local variables
     INTEGER :: dim1, dim2
     !
     dim1 = SIZE(f_in(:))
@@ -51,7 +61,7 @@ CONTAINS
     !
     !$acc host_data use_device(f_in)
     IF (PRESENT(howmany_set)) THEN
-      CALL fwfft( 'Wave', f_in, dfft, howmany=howmany_set(1) )
+      CALL fwfft( 'Wave', f_in, dfft, howmany=howmany_set(3) )
     ELSE
       CALL fwfft( 'Wave', f_in, dfft )
     ENDIF
@@ -59,7 +69,7 @@ CONTAINS
     !
     IF (gamma_only) THEN
       IF (PRESENT(howmany_set)) THEN
-        CALL fftx_psi2c_gamma( dfft, f_in, f_out, howmany_set=howmany_set )
+        CALL fftx_psi2c_gamma( dfft, f_in, f_out, howmany_set=howmany_set(1:2) )
       ELSE
         IF (dim2==1) CALL fftx_psi2c_gamma( dfft, f_in, f_out(:,1:1) )
         IF (dim2==2) CALL fftx_psi2c_gamma( dfft, f_in, f_out(:,1:1), &
@@ -68,7 +78,7 @@ CONTAINS
     ELSE
       !$acc data present_or_copyin(igk)
       IF (PRESENT(howmany_set)) THEN
-        CALL fftx_psi2c_k( dfft, f_in, f_out, igk, howmany_set )
+        CALL fftx_psi2c_k( dfft, f_in, f_out, igk, howmany_set(1:2) )
       ELSE
         CALL fftx_psi2c_k( dfft, f_in, f_out(:,1:1), igk )
       ENDIF
@@ -92,11 +102,20 @@ CONTAINS
     IMPLICIT NONE
     !
     TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+    !! FFT wave descriptor
     COMPLEX(DP), INTENT(IN) :: f_in(:,:)
+    !! input: g-space wave-function
     COMPLEX(DP) :: f_out(:)
+    !! output: r-space wave-function
     INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
-    INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(2)
+    !! index of G corresponding to a given index of k+G
+    INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(3)
+    !! gpu-enabled only (many_fft>1 case):  
+    !! (1) group_size;  
+    !! (2) true dimension of psi;  
+    !! (3) howmany (if gamma) or group_size (if k).
     !
+    ! ... local variables
     INTEGER :: npw, dim2
     !
     !$acc data present_or_copyin(f_in) present_or_copyout(f_out)
@@ -107,7 +126,7 @@ CONTAINS
     IF (gamma_only) THEN
       !
       IF (PRESENT(howmany_set)) THEN
-        CALL fftx_c2psi_gamma( dfft, f_out, f_in, howmany_set=howmany_set )
+        CALL fftx_c2psi_gamma( dfft, f_out, f_in, howmany_set=howmany_set(1:2) )
       ELSE
         IF (dim2/=2) CALL fftx_c2psi_gamma( dfft, f_out, f_in(:,1:1) )
         IF (dim2==2) CALL fftx_c2psi_gamma( dfft, f_out, f_in(:,1:1), ca=f_in(:,2) )
@@ -128,7 +147,7 @@ CONTAINS
     !
     !$acc host_data use_device( f_out )
     IF (PRESENT(howmany_set)) THEN
-      CALL invfft( 'Wave', f_out, dfft, howmany=howmany_set(1) )
+      CALL invfft( 'Wave', f_out, dfft, howmany=howmany_set(3) )
     ELSE
       CALL invfft( 'Wave', f_out, dfft )
     ENDIF
@@ -151,11 +170,17 @@ CONTAINS
     IMPLICIT NONE
     !
     TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+    !! FFT descriptor
     COMPLEX(DP) :: f_in(:,:)
+    !! input: wave in g-space - task group chunk
     COMPLEX(DP) :: f_out(:)
+    !! output: wave in r-space - task group chunk
     INTEGER, INTENT(IN) :: n
+    !! true dimension of f_in
     INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
+    !! index of G corresponding to a given index of k+G
     !
+    ! ... local variables
     INTEGER :: npw, dbnd
     !
     !$acc data present_or_copyin(f_in,igk) present_or_copyout(f_out)
@@ -195,11 +220,17 @@ CONTAINS
     IMPLICIT NONE
     !
     TYPE(fft_type_descriptor), INTENT(IN) :: dfft
-    COMPLEX(DP), INTENT(INOUT) :: f_in(:)
+    !! FFT descriptor
+    COMPLEX(DP) :: f_in(:)
+    !! input: wave in g-space - task group chunk
     COMPLEX(DP), INTENT(OUT) :: f_out(:,:)
+    !! output: wave in r-space - task group chunk
     INTEGER, INTENT(IN) :: n
+    !! true dimension of f_out
     INTEGER, OPTIONAL, INTENT(IN) :: igk(:)
+    !! index of G corresponding to a given index of k+G
     !
+    ! ... local variables
     INTEGER :: dbnd
     !
     dbnd = SIZE(f_out(1,:))

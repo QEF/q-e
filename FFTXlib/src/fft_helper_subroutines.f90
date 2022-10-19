@@ -459,13 +459,17 @@ CONTAINS
      IMPLICIT NONE
      !
      TYPE(fft_type_descriptor), INTENT(IN) :: desc
-     !! fft descriptor
+     !! FFT descriptor
      COMPLEX(DP), INTENT(OUT) :: psi(:)
      !! w.f. 3D array in Fourier space
      COMPLEX(DP), INTENT(IN) :: c(:,:)
      !! stores the Fourier expansion coefficients of the wave function
-     INTEGER, INTENT(IN) :: igk(:), ngk
+     INTEGER, INTENT(IN) :: igk(:)
+     !! index of G corresponding to a given index of k+G
+     INTEGER, INTENT(IN) :: ngk
+     !! size of c(:,1) or 
      INTEGER, OPTIONAL, INTENT(IN) :: howmany
+     !! 
      !
      INTEGER :: nnr, i, j, ig
      !

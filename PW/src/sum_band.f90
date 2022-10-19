@@ -18,7 +18,6 @@ SUBROUTINE sum_band()
   USE cell_base,            ONLY : at, bg, omega, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp, dffts
-  USE fft_interfaces,       ONLY : invfft
   USE fft_rho,              ONLY : rho_g2r, rho_r2g
   USE fft_wave,             ONLY : wave_g2r, tgwave_g2r
   USE gvect,                ONLY : ngm, g
