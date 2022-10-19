@@ -166,7 +166,7 @@ MODULE funct
   !              "ahps"   PBE-sol based analytic hole    igcx =35 ! PBESOL-AH (rHJS-PBEsol) at 0.20 - PH
   !              "cx14"   Exporations                    igcx =36 reserved PH
   !              "cx15"   Exporations                    igcx =37 reserved PH
-  !              "br0"    vdW-DF2-b86r+HF/4 (b86r-0)     igcx =38 
+  !              "br0"    vdW-DF2-b86r+HF/4 (b86r-0)     igcx =38 ! Tested (2022)
   !              "cx16"   Exporations                    igcx =39 reserved PH
   !              "c090"   vdW-DF-c09+HF/4 (c09-0)        igcx =40 
   !              "b86x"   B86b exchange * 0.75           igcx =41
@@ -175,7 +175,7 @@ MODULE funct
   !              "hhnx"   Hammer-Hansen-Norskov          igcx =44
   !              "w31x"   vdW-DF3-opt1 exchange          igcx =45
   !              "w32x"   vdW-DF3-opt2 exchange          igcx =46
-  !              "ahtr"   vdW-DF2-ahtr exchange          igcx =47 ! Test reserve called by vdW-DF2-ahtr - PH
+  !              "ahbr"   vdW-DF2-ahbr exchange          igcx =47 ! for vdW-DF2-ahbr 
   !              "ehpb"   HSE variant                    igcx =48 ! Reserved PH
   !              "hjpb"   HJS-type PBE cross check       igcx =49 ! Reserved PH
   !              "hjps"   HJS-type PBEsol crosscheck     igcx =50 ! Reserved PH
@@ -473,8 +473,8 @@ CONTAINS
     CASE( 'VDW-DF2-BR0' )
        dft_defined = xclib_set_dft_IDs(6,4,38,0,0,0)
        inlc = 2
-    ! Special case vdW-DF2-AHTR
-    CASE( 'VDW-DF2-AHTR' )
+    ! Special case vdW-DF2-AHBR
+    CASE( 'VDW-DF2-AHBR' )
        dft_defined = xclib_set_dft_IDs(1,4,47,0,0,0)
        inlc = 2
     ! Special case vdW-DF-C090
@@ -809,7 +809,7 @@ CONTAINS
         ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==33 .AND. igcc==0) THEN
            shortname = 'VDW-DF2-AH'
         ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==47 .AND. igcc==0) THEN
-           shortname = 'VDW-DF2-AHTR'
+           shortname = 'VDW-DF2-AHBR'
         ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==38 .AND. igcc==0) THEN
            shortname = 'VDW-DF2-BR0'
         ELSE

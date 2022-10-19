@@ -56,7 +56,7 @@ MODULE qe_dft_list
                        'OB86', 'EVX',  'B86R', 'CX13', 'X3LP', 'CX0',   & !24 "  29
                        'R860', 'CX0P', 'AHCX', 'AHF2', 'AHPB', 'AHPS',  & !30 "  35
                        'CX14', 'CX15', 'BR0',  'CX16', 'C090', 'B86X',  & !36 "  41
-                       'B88X', 'BEEX', 'HHNX', 'W31X', 'W32X', 'AHTR',  & !42 "  47 
+                       'B88X', 'BEEX', 'HHNX', 'W31X', 'W32X', 'AHBR',  & !42 "  47 
                        'EHPB', 'HJPB', 'HJPS' /                           !48 "  50 
   ! GGA correlation terms
   DATA dft_GGAc_name / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH',     & ! 0 to  5
