@@ -117,7 +117,7 @@ CONTAINS
                   itot = iks + iupdwn_tot(iss) - 1 
                   file_name = TRIM( ks_file ) // &
                             & trim(spin_name(iss)) // trim( int_to_char( iks ) )
-                  CALL print_ks_states( ctot( :, itot ), file_name )
+                  CALL print_ks_states( ctot( :, itot:itot ), file_name )
                 END IF
               END DO
             END IF
@@ -140,7 +140,7 @@ CONTAINS
         USE io_global, ONLY: ionode, ionode_id, stdout
         USE fft_base, ONLY: dfftp, dffts
         USE fft_interfaces, ONLY: invfft
-        USE fft_helper_subroutines, ONLY: c2psi_gamma
+        USE fft_helper_subroutines, ONLY: fftx_c2psi_gamma
         USE fft_rho, ONLY: rho_r2g
         USE mp_bands, ONLY: intra_bgrp_comm, inter_bgrp_comm, my_bgrp_id,&
              root_bgrp_id, root_bgrp
@@ -149,7 +149,7 @@ CONTAINS
  
         IMPLICIT NONE
 
-        COMPLEX(DP),      INTENT(IN) :: c(:)
+        COMPLEX(DP),      INTENT(IN) :: c(:,:)
         CHARACTER(LEN=*), INTENT(IN) :: file_name
         COMPLEX(DP), ALLOCATABLE :: psi(:), rhog(:,:)
         REAL(DP), ALLOCATABLE :: rhor(:,:)
@@ -160,7 +160,7 @@ CONTAINS
 
         ALLOCATE( rhor(dfftp%nnr,1), psi(dfftp%nnr) )
 
-        CALL c2psi_gamma( dffts, psi, c )
+        CALL fftx_c2psi_gamma( dffts, psi, c )
         CALL invfft( 'Wave', psi, dffts )
 
         ! FIXME: not sure things will work in presence of a double grid
