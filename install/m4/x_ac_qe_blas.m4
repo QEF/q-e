@@ -166,17 +166,21 @@ else
 	    
     arm:armflang )
 	    # search for ARM libs - ARM compiler
+	    # PG: This section seems to me useless, 
+	    # just add option -armpl to $fflags, set have_blas=1 have_armpl=1
             if test "$use_openmp" -eq 0; then 
                FFLAGS="-armpl"
+               ARMLIB="armpl"
             else 
                FFLAGS="-fopenmp -armpl=parallel" 
+               ARMLIB="armpl_mp"
             fi 
-            AC_SEARCH_LIBS(dgemm, armpl_arm,
+            AC_SEARCH_LIBS(dgemm, $ARMLIB,
                                    have_blas=1 have_armpl=1
                                    blas_libs=""
                                    ldflags="$ldflags \$(FFLAGS)",
-                                   echo "armpl not found",
-                                   yes)
+                                   echo "armpl not found"
+                                   )
             if test "$have_armpl" -eq 1; then 
                if test "$use_openmp" -eq 0; then 
                   fflags="$fflags  -armpl"

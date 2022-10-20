@@ -79,9 +79,7 @@ arm:armflang )
         if test "$use_debug" -eq 1; then 
            try_fflags="$try_fflags -g" 
         fi   
-        try_ldflags="-mcpu=native"
         try_fflags_openmp="-fopenmp"
-        try_ldfflags_openmp="-fopenmp" 
         try_f90flags="\$(FFLAGS) -cpp"
         try_ldflags="-g -mcpu=native"
         try_ldflags_openmp="-fopenmp"
