@@ -24,6 +24,7 @@ MODULE sic_mod
    USE mp,               ONLY : mp_sum
    USE electrons_base,   ONLY : set_nelup_neldw
    USE klist,            ONLY : nelec, tot_magnetization, nelup, neldw
+   USE control_flags,    ONLY : use_gpu, lbfgs
    ! 
    IMPLICIT NONE
    SAVE
