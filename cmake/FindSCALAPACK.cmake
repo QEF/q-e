@@ -339,21 +339,6 @@ if(BLAS_FOUND
     endif(NOT BLA_VENDOR)
   endif($ENV{BLA_VENDOR} MATCHES ".+")
 
-  # Generic SCALAPACK library
-  if(BLA_VENDOR STREQUAL "Generic" OR BLA_VENDOR STREQUAL "All")
-    if(NOT SCALAPACK_LIBRARIES)
-      check_scalapack_libraries(
-        SCALAPACK_LIBRARIES
-        SCALAPACK
-        pdgemm
-        ""
-        "scalapack" # scalapack lib to look for
-        "${LAPACK_LIBRARIES};${BLAS_LIBRARIES}" # blas and lapack libs
-        "${MPI_Fortran_LIBRARIES}" # mpi libs
-        "" # threads libs
-      )
-    endif(NOT SCALAPACK_LIBRARIES)
-  endif()
   # intel scalapack
   if(BLA_VENDOR MATCHES "Intel" OR BLA_VENDOR STREQUAL "All")
     if(UNIX AND NOT WIN32)
@@ -426,6 +411,19 @@ if(BLAS_FOUND
         endif()
       endforeach()
     endif()
+  endif()
+  # vanilla SCALAPACK library
+  if(NOT SCALAPACK_LIBRARIES)
+    check_scalapack_libraries(
+      SCALAPACK_LIBRARIES
+      SCALAPACK
+      pdgemm
+      ""
+      "scalapack" # scalapack lib to look for
+      "${LAPACK_LIBRARIES};${BLAS_LIBRARIES}" # blas and lapack libs
+      "${MPI_Fortran_LIBRARIES}" # mpi libs
+      "" # threads libs
+    )
   endif()
 else(
   BLAS_FOUND
