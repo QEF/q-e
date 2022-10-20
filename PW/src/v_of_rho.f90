@@ -25,9 +25,10 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   USE scf,              ONLY : scf_type
   USE cell_base,        ONLY : alat
   USE io_global,        ONLY : stdout
-  USE control_flags,    ONLY : ts_vdw, mbd_vdw
+  USE control_flags,    ONLY : ts_vdw, mbd_vdw, sic
   USE tsvdw_module,     ONLY : tsvdw_calculate, UtsvdW
   USE libmbd_interface, ONLY : mbd_interface
+  USE sic_mod,          ONLY : add_vsic
   !
   IMPLICIT NONE
   !
@@ -137,6 +138,8 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   IF (mbd_vdw) THEN
     call mbd_interface() ! self-consistent but only up to TS level
   END IF
+  !
+  IF (sic) CALL add_vsic(rho, rho_core, rhog_core, v)
   !
   CALL stop_clock( 'v_of_rho' )
   !

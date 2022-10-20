@@ -95,6 +95,8 @@ SUBROUTINE setup()
   USE gcscf_module,       ONLY : lgcscf
   USE rism_module,        ONLY : lrism, rism_calc1d
   USE additional_kpoints, ONLY : add_additional_kpoints
+  USE control_flags,      ONLY : sic
+  USE sic_mod,            ONLY : init_sic, occ_f2fn, sic_energy
   !
   IMPLICIT NONE
   !
@@ -685,6 +687,13 @@ SUBROUTINE setup()
   ! ... calculate solvent-solvent interaction (1D-RISM).
   !
   IF (lrism) CALL rism_calc1d()
+  !
+  ! ... SIC calculation
+  !
+  IF(sic) THEN
+     CALL init_sic()
+     IF (sic_energy) CALL occ_f2fn()
+  END IF
   !
   RETURN
   !
