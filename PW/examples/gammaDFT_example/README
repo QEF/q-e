@@ -1,0 +1,21 @@
+These examples show how to perform gammaDFT calculations to stabilize
+the hole polaron in MgO according to
+
+S. Falletta and A. Pasquarello, Phys. Rev. Lett. 129, 126401 (2022)
+S. Falletta and A. Pasquarello, Phys. Rev. B 106, 125119, (2022)
+
+The examples show three different practical cases:
+
+- example1: gammaDFT calculation with energy evaluation 
+- example2: gammaDFT atomic relaxation without energy evaluation
+- example3: gammaDFT calculation + scissor operator for bands
+
+For MgO, we use gamma=1.96, which enforces the piece-wise linearity 
+condition and thus suppresses the many-body self-interaction of the 
+polaron state.
+
+The use of the scissor operator is recommended to avoid resonances
+of the polaron level with the bands. For electron polarons, one might
+shift down in energy the valence band. For hole polarons, one might
+shift up in energy the conduction band.
+
