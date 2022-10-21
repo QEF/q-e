@@ -21,6 +21,7 @@ set(src_modules
     fd_gradient.f90 
     fft_base.f90 
     fft_rho.f90 
+    fft_wave.f90 
     fsockets.f90 
     funct.f90 
     generate_function.f90 

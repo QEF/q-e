@@ -25,7 +25,6 @@ SUBROUTINE stres_mgga( sigmaxc )
   USE io_files,               ONLY : iunwfc, nwordwfc
   USE wvfct,                  ONLY : nbnd, npwx, wg 
   USE lsda_mod,               ONLY : lsda, nspin, current_spin, isk
-  USE fft_interfaces,         ONLY : fwfft, invfft
   USE fft_base,               ONLY : dffts
   USE mp,                     ONLY : mp_sum
   USE mp_pools,               ONLY : inter_pool_comm
@@ -95,15 +94,9 @@ SUBROUTINE stres_mgga( sigmaxc )
        w1 = wg(ibnd,ik) / omega 
        !
        IF ( (ibnd < nbnd) .AND. (gamma_only) ) THEN
-          !
-          ! ... two ffts at the same time
-          !
-          w2 = wg(ibnd+1,ik) / omega
-          !
+          w2 = wg(ibnd+1,ik) / omega  ! two ffts at the same time
        ELSE
-          !
           w2 = w1
-          !
        ENDIF
        !
        ! ... Gradient of the wavefunction in real space
@@ -207,9 +200,9 @@ SUBROUTINE wfc_gradient( ibnd, ik, npw, gradpsi )
   USE wvfct,                  ONLY: npwx, nbnd
   USE cell_base,              ONLY: omega, tpiba
   USE klist,                  ONLY: xk, igk_k
-  USE wavefunctions,          ONLY: psic, evc
+  USE wavefunctions,          ONLY: evc
   USE fft_base,               ONLY: dffts
-  USE fft_interfaces,         ONLY: invfft
+  USE fft_wave,               ONLY: wave_g2r
   USE gvect,                  ONLY: ngm, g
   !
   IMPLICIT NONE 
@@ -219,107 +212,62 @@ SUBROUTINE wfc_gradient( ibnd, ik, npw, gradpsi )
   !
   ! ... local variables
   !
-  INTEGER  :: ipol, j
-  REAL(DP) :: kplusg
-  INTEGER, ALLOCATABLE :: nld(:), nlmd(:)
-  REAL(DP) :: xki(3)
+  INTEGER  :: ipol, j, ebnd, brange
+  REAL(DP) :: kplusgi, xki
+  COMPLEX(DP), ALLOCATABLE :: kplusg_evc(:,:)
   !
-  !$acc data present(gradpsi) copyin(evc) create(psic)
+  ALLOCATE( kplusg_evc(npwx,2) )
   !
-  ALLOCATE( nld(npw) )
-  nld = dffts%nl
-  !
-  xki(1:3) = xk(1:3,ik)
+  !$acc data present(gradpsi) create(kplusg_evc)
   !
   ! ... Compute the gradient of the wavefunction in reciprocal space
   !
   IF ( gamma_only ) THEN
      !
-     ALLOCATE( nlmd(npw) )
-     nlmd = dffts%nlm
-     !$acc data copyin(xki,nld,nlmd)
+     ebnd = ibnd
+     IF ( ibnd<nbnd ) ebnd = ebnd+1
+     brange = ebnd-ibnd+1
      !
+     !$acc data copyin(evc(:,ibnd:ibnd+brange-1),igk_k(:,ik:ik))
      DO ipol = 1, 3
         !
-        !$acc kernels
-        psic(:) = (0._DP,0._DP)
-        !$acc end kernels
-        !
-        IF ( ibnd < nbnd ) THEN
-           !
-           ! ... two ffts at the same time
-           !
-           !$acc parallel loop
-           DO j = 1, npw
-              kplusg = (xki(ipol)+g(ipol,igk_k(j,ik))) * tpiba
-              !
-              psic(nld(j))  = CMPLX(0._DP, kplusg, kind=DP) * &
-                              ( evc(j,ibnd) + (0._DP,1._DP) * evc(j,ibnd+1) )
-              !
-              psic(nlmd(j)) = CMPLX(0._DP,-kplusg, kind=DP) * &
-                              CONJG( evc(j,ibnd) - (0._DP,1._DP) * evc(j,ibnd+1) )
-           ENDDO
-           !
-        ELSE
-           !
-           !$acc parallel loop
-           DO j = 1, npw
-              kplusg = (xki(ipol)+g(ipol,igk_k(j,ik))) * tpiba
-              !
-              psic(nld(j))  = CMPLX(0._DP, kplusg, kind=DP) * evc(j,ibnd)
-              !
-              psic(nlmd(j)) = CMPLX(0._DP,-kplusg,kind=DP) * CONJG(evc(j,ibnd))
-           ENDDO
-           !
-        ENDIF
-        !
-        ! ... Gradient of the wavefunction in real space
-        !
-        !$acc host_data use_device(psic)
-        CALL invfft( 'Wave', psic, dffts )
-        !$acc end host_data
-        !
-        !$acc kernels
-        gradpsi(:,ipol) = psic
-        !$acc end kernels
-        !
-     ENDDO
-     !$acc end data
-     DEALLOCATE( nlmd )
-     !
-  ELSE
-     !
-     !$acc data copyin(xki,nld)
-     DO ipol = 1, 3
-        !
-        !$acc kernels
-        psic(:) = (0._DP,0._DP)
-        !$acc end kernels
+        xki = xk(ipol,ik)
         !
         !$acc parallel loop
         DO j = 1, npw
-           kplusg = (xki(ipol)+g(ipol,igk_k(j,ik))) * tpiba
-           !
-           psic(nld(j)) = CMPLX(0._DP,kplusg,kind=DP)*evc(j,ibnd)
+           kplusgi = (xki+g(ipol,igk_k(j,ik))) * tpiba
+           kplusg_evc(j,1) = CMPLX(0.D0,kplusgi) * evc(j,ibnd)
+           IF ( ibnd<nbnd ) kplusg_evc(j,2) = CMPLX(0.d0,kplusgi) * evc(j,ibnd+1)
         ENDDO
         !
-        ! ... Gradient of the wavefunction in real space
-        !
-        !$acc host_data use_device(psic)
-        CALL invfft( 'Wave', psic, dffts )
-        !$acc end host_data
-        !
-        !$acc kernels
-        gradpsi(:,ipol) = psic
-        !$acc end kernels
+        CALL wave_g2r( kplusg_evc(1:npw,1:brange), gradpsi(:,ipol), dffts )
         !
      ENDDO
      !$acc end data
+     !
+  ELSE
+     !
+     !$acc data copyin(evc(:,ibnd:ibnd),igk_k(:,ik:ik))
+     DO ipol = 1, 3
+        !
+        xki = xk(ipol,ik)
+        !
+        !$acc parallel loop
+        DO j = 1, npw
+           kplusgi = (xki+g(ipol,igk_k(j,ik))) * tpiba
+           kplusg_evc(j,1) = CMPLX(0.D0,kplusgi,kind=DP) * evc(j,ibnd)
+        ENDDO
+        !
+        CALL wave_g2r( kplusg_evc(1:npw,1:1), gradpsi(:,ipol), dffts, igk=igk_k(:,ik) )
+        !
+     ENDDO
+     !$acc end data
+     !
   ENDIF 
   !
-  DEALLOCATE( nld )
-  !
   !$acc end data
+  !
+  DEALLOCATE( kplusg_evc )
   !
   RETURN
   !

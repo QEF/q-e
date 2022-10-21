@@ -71,6 +71,10 @@ SUBROUTINE clean_pw( lflag )
   USE wvfct_gpum,           ONLY : deallocate_wvfct_gpu
   USE scf_gpum,             ONLY : deallocate_scf_gpu
   !
+  USE control_flags,        ONLY : sic, scissor
+  USE sic_mod,              ONLY : deallocate_sic
+  USE sci_mod,              ONLY : deallocate_scissor
+  !
   USE rism_module,          ONLY : deallocate_rism
 #if defined (__ENVIRON)
   USE plugin_flags,         ONLY : use_environ
@@ -212,6 +216,9 @@ SUBROUTINE clean_pw( lflag )
   IF (use_wannier) CALL wannier_clean()
   !
   CALL deallocate_exx() 
+  !
+  IF(sic) CALL deallocate_sic()
+  IF(scissor) CALL deallocate_scissor()
   !
   IF (ts_vdw .or. mbd_vdw) CALL tsvdw_finalize()
   IF (mbd_vdw) CALL clean_mbd()

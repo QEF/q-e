@@ -13,6 +13,8 @@
       !! vector c=cmplx(cr,ci)\(c=\text{cmplx}(\text{cr},\text{ci})\).
       !! Contribution from metaGGA.
       !
+!
+!          contribution from metaGGA
       use kinds, only: dp
       use gvect,     only : g
       use gvecw,                  only : ngw
@@ -20,30 +22,28 @@
       USE metagga_cp,             ONLY : kedtaus
       USE fft_interfaces,         ONLY : fwfft, invfft
       USE fft_base,               ONLY : dffts
-      USE fft_helper_subroutines, ONLY : c2psi_gamma, fftx_psi2c_gamma
+      USE fft_helper_subroutines, ONLY : fftx_c2psi_gamma, fftx_psi2c_gamma
 !
       implicit none
 !
       complex(dp) c(ngw), ca(ngw), df(ngw), da(ngw),psi(dffts%nnr)
-      complex(dp), allocatable ::  dc(:), dca(:)
+      complex(dp), allocatable ::  dc(:,:), dca(:)
       integer iss1, iss2
       real(dp) fi, fip
-      !
-      ! ... local variables
-      !
+! local variables
       integer ir,ig, ipol !metagga
       complex(dp) fp,fm,ci
 !
 !
       ci=(0.0d0,1.0d0)
-      allocate( dc( ngw ) )
+      allocate( dc( ngw,1 ) )
       allocate( dca( ngw ) )
 !
          do ipol = 1, 3
             
-            dc(:)  = ci*g(ipol,1:ngw)*c(:)
+            dc(:,1)  = ci*g(ipol,1:ngw)*c(:)
             dca(:) = ci*g(ipol,1:ngw)*ca(:)
-            CALL c2psi_gamma( dffts, psi, dc, dca )
+            CALL fftx_c2psi_gamma( dffts, psi, dc, dca )
             CALL invfft( 'Wave', psi, dffts )
 
 !           on smooth grids--> grids for charge density
@@ -53,9 +53,9 @@
                                 kedtaus(ir,iss2)*AIMAG(psi(ir)),kind=DP)
             end do
             call fwfft('Wave',psi, dffts )
-            CALL fftx_psi2c_gamma( dffts, psi, dc, dca )
+            CALL fftx_psi2c_gamma( dffts, psi, dc(:,1:1), vout2=dca )
             do ig=1,ngw
-               df(ig)= df(ig) - ci*fi *tpiba2*g(ipol,ig) * dc(ig)
+               df(ig)= df(ig) - ci*fi *tpiba2*g(ipol,ig) * dc(ig,1)
                da(ig)= da(ig) - ci*fip*tpiba2*g(ipol,ig) * dca(ig) 
             end do
          end do
@@ -85,14 +85,14 @@
                              dkedtaus
       USE fft_interfaces, ONLY: fwfft, invfft
       USE fft_base,       ONLY: dffts, dfftp
-      USE fft_helper_subroutines, ONLY : c2psi_gamma
+      USE fft_helper_subroutines, ONLY : fftx_c2psi_gamma
       USE fft_rho
       
       implicit none
 
       complex(dp) :: c(ngw,nx)
       complex(dp), allocatable :: psis( : )
-      complex(dp), allocatable :: dc( : ), dca( : )
+      complex(dp), allocatable :: dc( :, : ), dca( : )
 
 ! local variables
       integer iss, isup, isdw, iss1, iss2, ios, i, ir, ig
@@ -101,7 +101,7 @@
       complex(dp) ci,fp,fm
 !
       ALLOCATE( psis( dffts%nnr ) )
-      ALLOCATE( dc( ngw ) )
+      ALLOCATE( dc( ngw, 1 ) )
       ALLOCATE( dca( ngw ) )
 !
       ci=(0.0d0,1.0d0)
@@ -135,10 +135,10 @@
             psis( : ) = (0.d0,0.d0)
             ! gradient of wfc in real space
             do ig=1,ngw
-               dc( ig )  = ci * tpiba * g(ipol,ig) * c(ig,i)
+               dc( ig, 1 )  = ci * tpiba * g(ipol,ig) * c(ig,i)
                dca( ig ) = ci * tpiba * g(ipol,ig) * c(ig,i+1)
             end do
-            CALL c2psi_gamma( dffts, psis, dc, dca )
+            CALL fftx_c2psi_gamma( dffts, psis, dc, dca )
             call invfft('Wave',psis, dffts )
             ! on smooth grids--> grids for charge density
             do ir=1, dffts%nnr
