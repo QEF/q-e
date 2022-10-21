@@ -131,6 +131,8 @@ PROGRAM matdyn
   !                  (default: .false.)
   !     read_lr    set to .true. to read long-range force constants from file,
   !                when enforcing asr='all' for polar solids in matdyn.
+  !     write_frc  set to .true. to write force constants into file.
+  !                The filename would be flfrc+".matdyn".
   !
   !  if (readtau) atom types and positions in the supercell follow:
   !     (tau(i,na),i=1,3), ityp(na)
@@ -206,7 +208,7 @@ PROGRAM matdyn
   INTEGER :: nspin_mag, nqs, ios, ipol
   !
   LOGICAL :: readtau, la2F, xmlifc, lo_to_split, na_ifc, fd, nosym, loto_2d, &
-             huang, read_lr
+             huang, read_lr, write_frc
   !
   REAL(DP) :: qhat(3), qh, DeltaE, Emin=0._dp, Emax, E, qq, degauss
   REAL(DP) :: delta, pathL
@@ -239,7 +241,7 @@ PROGRAM matdyn
        &           la2F, ndos, DeltaE, degauss, q_in_band_form, q_in_cryst_coord, &
        &           eigen_similarity, fldyn, na_ifc, fd, point_label_type, &
        &           nosym, loto_2d, fildyn, fildyn_prefix, el_ph_nsigma, &
-       &           loto_disable, huang, read_lr
+       &           loto_disable, huang, read_lr, write_frc
   !
   CALL mp_startup()
   CALL environment_start('MATDYN')
@@ -288,6 +290,7 @@ PROGRAM matdyn
      loto_disable = .false.
      huang = .true.
      read_lr = .false.
+     write_frc = .false.
      !
      !
      IF (ionode) READ (5,input,IOSTAT=ios)
@@ -330,6 +333,7 @@ PROGRAM matdyn
      CALL mp_bcast(el_ph_nsigma,ionode_id, world_comm)
      CALL mp_bcast(huang,ionode_id, world_comm)
      CALL mp_bcast(read_lr,ionode_id, world_comm)
+     CALL mp_bcast(write_frc,ionode_id, world_comm)
      !
      IF (loto_2d .AND. loto_disable) CALL errore('matdyn', &
          'loto_2d and loto_disable cannot be both true', 1)
@@ -546,6 +550,11 @@ PROGRAM matdyn
      IF (asr /= 'no') THEN
         CALL set_asr (asr, nr1, nr2, nr3, frc, frc_lr, zeu, &
              nat_blk, ibrav, tau_blk, at_blk, huang)
+     END IF
+     !
+     IF (write_frc) THEN
+        CALL writefc(flfrc, xmlifc, has_zstar, nr1, nr2, nr3, ibrav, alat, at_blk, bg_blk, &
+                     ntyp_blk, nat_blk, amass_blk, omega_blk, epsil, nspin_mag, nqs)
      END IF
      !
      IF (flvec.EQ.' ') THEN
@@ -881,7 +890,7 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
-  USE ifconstants,ONLY : tau => tau_blk, ityp => ityp_blk, frc, frc_lr, zeu
+  USE ifconstants,ONLY : tau => tau_blk, ityp => ityp_blk, frc, frc_lr, zeu, atm
   USE cell_base,  ONLY : celldm
   USE io_global,  ONLY : ionode, ionode_id, stdout
   USE mp,         ONLY : mp_bcast 
@@ -899,7 +908,6 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   INTEGER :: ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
   REAL(DP) :: amass(ntyp), amass_from_file, omega
   INTEGER :: nt
-  CHARACTER(LEN=3) :: atm
   !
   !
   IF (ionode) OPEN (unit=1,file=flfrc,status='old',form='formatted')
@@ -927,10 +935,10 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   !
   !  read atomic types, positions and masses
   !
+  ALLOCATE (atm(ntyp))
   DO nt = 1,ntyp
-     IF (ionode) READ(1,*) i,atm,amass_from_file
+     IF (ionode) READ(1,*) i,atm(nt),amass_from_file
      CALL mp_bcast(i,ionode_id, world_comm)
-     CALL mp_bcast(atm,ionode_id, world_comm)
      CALL mp_bcast(amass_from_file,ionode_id, world_comm)
      IF (i.NE.nt) CALL errore ('readfc','wrong data read',nt)
      IF (amass(nt).EQ.0.d0) THEN
@@ -939,6 +947,8 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
         WRITE(stdout,*) 'for atomic type',nt,' mass from file not used'
      END IF
   END DO
+  CALL mp_bcast(atm,ionode_id, world_comm)
+  CALL mp_bcast(amass,ionode_id, world_comm)
   !
   ALLOCATE (tau(3,nat), ityp(nat), zeu(3,3,nat))
   !
@@ -1013,6 +1023,86 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   !
   RETURN
 END SUBROUTINE readfc
+!
+!-----------------------------------------------------------------------
+SUBROUTINE writefc(flfrc, xmlifc, has_zstar, nr1, nr2, nr3, ibrav, alat, &
+                   at, bg, ntyp, nat, amass, omega, epsil, nspin_mag, nqs)
+  !---------------------------------------------------------------------
+  !
+   USE kinds,      ONLY : DP
+   USE io_global,  ONLY : ionode
+   USE io_dyn_mat, ONLY : write_dyn_mat_header, write_ifc
+   USE cell_base,  ONLY : celldm
+   USE constants,  ONLY : amu_ry
+   USE ifconstants,ONLY : tau => tau_blk, ityp => ityp_blk, &
+                          frc, frc_lr, zeu, atm, m_loc
+   !
+   IMPLICIT NONE
+   ! I/O variable
+   CHARACTER(LEN=256) :: flfrc
+   INTEGER :: nr1, nr2, nr3, ibrav, nat, ntyp, nspin_mag, nqs
+   REAL(DP) :: alat, omega, at(3,3), bg(3,3), amass(ntyp), epsil(3,3)
+   LOGICAL :: xmlifc, has_zstar
+   ! local variables
+   INTEGER :: i, j, nt, na, nb, nn, m1, m2, m3, leng
+   CHARACTER(LEN=256) :: flfrc2
+   COMPLEX(DP) :: frc2(nr1*nr2*nr3,3,3,nat,nat)
+   COMPLEX(DP) :: frc_lr2(nr1*nr2*nr3,3,3,nat,nat)
+   !
+   leng = LEN_TRIM(flfrc)
+   flfrc2 = flfrc(1:leng) // ".matdyn"
+   IF (xmlifc) THEN
+      frc2 = RESHAPE(frc, (/nr1*nr2*nr3,3,3,nat,nat/))
+      frc_lr2 = RESHAPE(frc_lr, (/nr1*nr2*nr3,3,3,nat,nat/))
+      IF (has_zstar) THEN
+         CALL write_dyn_mat_header(flfrc2, ntyp, nat, ibrav, nspin_mag, celldm, &
+              at, bg, omega, atm, amass, tau, ityp, m_loc, nqs, epsil, zeu)
+      ELSE
+         CALL write_dyn_mat_header(flfrc2, ntyp, nat, ibrav, nspin_mag, &
+              celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, nqs)
+      ENDIF
+      CALL write_ifc(nr1, nr2, nr3, nat, frc2, frc_lr2, .FALSE.)
+   ELSE IF (ionode) THEN
+      OPEN(unit=1, file=flfrc2, status='unknown', form='formatted')
+      WRITE(1,'(i3,i5,i4,6f11.7)') ntyp, nat, ibrav, celldm
+      IF (ibrav == 0) WRITE(1,'(2x,3f15.9)') ((at(i,j),i=1,3),j=1,3)
+      DO nt = 1, ntyp
+         WRITE(1,*) nt, " '", atm(nt), "' ", amass(nt)*amu_ry
+      END DO
+      DO na = 1, nat
+         WRITE(1,'(2i5,3f18.10)') na, ityp(na), (tau(j,na),j=1,3)
+      END DO
+      WRITE (1,*) has_zstar
+      IF (has_zstar) THEN
+         WRITE(1,'(3f24.12)') ((epsil(i,j),j=1,3),i=1,3)
+         DO na = 1, nat
+            WRITE(1,'(i5)') na
+            WRITE(1,'(3f15.7)') ((zeu(i,j,na),j=1,3),i=1,3)
+         END DO
+      END IF
+      WRITE (1,'(4i4)') nr1, nr2, nr3
+      DO i = 1, 3
+         DO j = 1,3
+            DO na = 1, nat
+               DO nb = 1, nat
+                  WRITE (1,'(4i4)') i, j, na, nb
+                  nn = 0
+                  DO m3 = 1, nr3
+                     DO m2 = 1, nr2
+                        DO m1 = 1, nr1
+                           nn = nn+1
+                           WRITE (1,'(3i4,2x,1pe18.11)')   &
+                                  m1,m2,m3, DBLE(frc(m1,m2,m3,i,j,na,nb))
+                        END DO
+                     END DO
+                  END DO
+               END DO
+            END DO
+         END DO
+      END DO
+      CLOSE(1)
+   END IF
+END SUBROUTINE writefc
 !
 !-----------------------------------------------------------------------
 SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
@@ -1466,37 +1556,9 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, frc_lr, zeu, nat, ibrav, tau_blk, a
   enddo
   ALLOCATE (frc_new(nr1,nr2,nr3,3,3,nat,nat))
   if (asr.eq.'all') then
-     do i=1,3
-        do j=1,3
-           do na=1,nat
-              do nb=1,nat
-                 do n1=1,nr1
-                    do n2=1,nr2
-                       do n3=1,nr3
-                          frc_new(n1,n2,n3,i,j,na,nb)=frc(n1,n2,n3,i,j,na,nb)+frc_lr(n1,n2,n3,i,j,na,nb)
-                       enddo
-                    enddo
-                 enddo
-              enddo
-           enddo
-        enddo
-     enddo
+     frc_new(:,:,:,:,:,:,:)=frc(:,:,:,:,:,:,:)+frc_lr(:,:,:,:,:,:,:)
   else
-     do i=1,3
-        do j=1,3
-           do na=1,nat
-              do nb=1,nat
-                 do n1=1,nr1
-                    do n2=1,nr2
-                       do n3=1,nr3
-                          frc_new(n1,n2,n3,i,j,na,nb)=frc(n1,n2,n3,i,j,na,nb)
-                       enddo
-                    enddo
-                 enddo
-              enddo
-           enddo
-        enddo
-     enddo
+     frc_new(:,:,:,:,:,:,:)=frc(:,:,:,:,:,:,:)
   endif
   !
   p=0
@@ -1876,21 +1938,8 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, frc_lr, zeu, nat, ibrav, tau_blk, a
   !  deallocate(u(k) % vec)
   !enddo
   !
-  do i=1,3
-     do j=1,3
-        do na=1,nat
-           do nb=1,nat
-              do n1=1,nr1
-                 do n2=1,nr2
-                    do n3=1,nr3
-                       frc(n1,n2,n3,i,j,na,nb)=frc_new(n1,n2,n3,i,j,na,nb)
-                    enddo
-                 enddo
-              enddo
-           enddo
-        enddo
-     enddo
-  enddo
+  frc(:,:,:,:,:,:,:)=frc_new(:,:,:,:,:,:,:)
+  !
   deallocate (x, w)
   deallocate (v, ind_v)
   deallocate (frc_new)
