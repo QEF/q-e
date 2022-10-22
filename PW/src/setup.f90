@@ -149,8 +149,12 @@ SUBROUTINE setup()
      IF ( noncolin ) no_t_rev=.true.
   END IF
   !
-  IF ( xclib_dft_is('meta') .AND. noncolin )  CALL errore( 'setup', &
+  IF ( xclib_dft_is('meta') ) THEN
+     IF ( noncolin )  CALL errore( 'setup', &
                                'Non-collinear Meta-GGA not implemented', 1 )
+     IF ( ANY (upf(1:ntyp)%nlcc) ) CALL infomsg( 'setup ', 'BEWARE:' // &
+               & ' nonlinear core correction is not consistent with meta-GGA')
+  END IF
   !
   ! ... Compute the ionic charge for each atom type and the total ionic charge
   !
