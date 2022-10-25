@@ -1,8 +1,13 @@
 New in development version:
+  * Polaron localization with semi-local functionals via correction of
+    self interaction (S. Falletta, A. Pasquarello):
+    https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.129.126401
+    https://journals.aps.org/prb/abstract/10.1103/PhysRevB.106.125119
   * GPU-accelerated phonon code (CINECA Team)
+  * First steps towards GPU acceleration ifor AMD and Intel via OpenMP
+  * More CUDA Fortran code removed and replaced by ACC (Ivan Carnimeo)
 
 Incompatible changes in development version:
-  * CUDA Fortran Davidson code removed and replaced by ACC (Ivan Carnimeo)
 
 Fixed in development version:
   * pw.x was not able to read J0 using the new Hubbard input syntax,
