@@ -244,7 +244,7 @@ MODULE qe_dft_refs
   ! BR0 
   DATA dft_GGAx(38)%ref / 'vdW-DF2-b86r+HF/4: Phys. Rev. B 89, 121103(R) (2014)+&
                            &J. Chem. Phys. 146, 234106 (2017), PRX 12, 041003 (2022)' /
-  DATA dft_GGAx(38)%wrn / 'none'
+  DATA dft_GGAx(38)%wrn / 'none' /
   ! CX16  (reserved P.H.)
   DATA dft_GGAx(39)%ref / 'Reserved, no ref. available' /
   DATA dft_GGAx(39)%wrn / 'none' /
