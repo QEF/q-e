@@ -51,6 +51,8 @@ MODULE qes_read_module
     MODULE PROCEDURE qes_read_HubbardInterSpecieV
     MODULE PROCEDURE qes_read_SiteMoment
     MODULE PROCEDURE qes_read_HubbardJ
+    MODULE PROCEDURE qes_read_ChannelOcc
+    MODULE PROCEDURE qes_read_HubbardOcc
     MODULE PROCEDURE qes_read_SitMag
     MODULE PROCEDURE qes_read_starting_ns
     MODULE PROCEDURE qes_read_Hubbard_ns
@@ -3363,6 +3365,22 @@ MODULE qes_read_module
        obj%lda_plus_u_kind_ispresent = .FALSE.
     END IF
     !
+    tmp_node_list => getElementsByTagname(xml_node, "Hubbard_Occ")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%Hubbard_Occ_ispresent = .TRUE.
+    ELSE
+      obj%Hubbard_Occ_ispresent = .FALSE.
+    END IF
+    obj%ndim_Hubbard_Occ = tmp_node_list_size
+    ALLOCATE(obj%Hubbard_Occ(tmp_node_list_size))
+    DO index=1,tmp_node_list_size
+        tmp_node => item( tmp_node_list, index-1 )
+        CALL qes_read_HubbardOcc(tmp_node, obj%Hubbard_Occ(index), ierr )
+    END DO
+    !
     tmp_node_list => getElementsByTagname(xml_node, "Hubbard_U")
     tmp_node_list_size = getLength(tmp_node_list)
     !
@@ -3778,6 +3796,130 @@ MODULE qes_read_module
     obj%lwrite = .TRUE.
     !
   END SUBROUTINE qes_read_HubbardJ
+  !
+  !
+  SUBROUTINE qes_read_ChannelOcc(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(ChannelOcc_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    ! 
+    IF (hasAttribute(xml_node, "specie")) THEN
+      CALL extractDataAttribute(xml_node, "specie", obj%specie)
+      obj%specie_ispresent = .TRUE.
+    ELSE
+      obj%specie_ispresent = .FALSE.
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "label")) THEN
+      CALL extractDataAttribute(xml_node, "label", obj%label)
+      obj%label_ispresent = .TRUE.
+    ELSE
+      obj%label_ispresent = .FALSE.
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "index")) THEN
+      CALL extractDataAttribute(xml_node, "index", obj%index)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: ChannelOccType",&
+                        "required attribute index not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: ChannelOccType",&
+                      "required attribute index not found", 10 )
+      END IF
+    END IF
+    !
+    !
+    !
+    CALL extractDataContent(xml_node, obj%ChannelOcc )
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_ChannelOcc
+  !
+  !
+  SUBROUTINE qes_read_HubbardOcc(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(HubbardOcc_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    ! 
+    IF (hasAttribute(xml_node, "channels")) THEN
+      CALL extractDataAttribute(xml_node, "channels", obj%channels)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: HubbardOccType",&
+                        "required attribute channels not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: HubbardOccType",&
+                      "required attribute channels not found", 10 )
+      END IF
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "specie")) THEN
+      CALL extractDataAttribute(xml_node, "specie", obj%specie)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: HubbardOccType",&
+                        "required attribute specie not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: HubbardOccType",&
+                      "required attribute specie not found", 10 )
+      END IF
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "channel_occ")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size < 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:HubbardOccType","channel_occ: not enough elements")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:HubbardOccType","channel_occ: not enough elements",10)
+        END IF
+    END IF
+    IF (tmp_node_list_size > 3) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:HubbardOccType","channel_occ: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:HubbardOccType","channel_occ: too many occurrences",10)
+        END IF
+    END IF
+    !
+    obj%ndim_channel_occ = tmp_node_list_size
+    ALLOCATE(obj%channel_occ(tmp_node_list_size))
+    DO index=1,tmp_node_list_size
+        tmp_node => item( tmp_node_list, index-1 )
+        CALL qes_read_ChannelOcc(tmp_node, obj%channel_occ(index), ierr )
+    END DO
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_HubbardOcc
   !
   !
   SUBROUTINE qes_read_SitMag(xml_node, obj, ierr )

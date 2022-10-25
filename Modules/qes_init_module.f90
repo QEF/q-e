@@ -50,6 +50,8 @@ MODULE qes_init_module
     MODULE PROCEDURE qes_init_HubbardInterSpecieV
     MODULE PROCEDURE qes_init_SiteMoment
     MODULE PROCEDURE qes_init_HubbardJ
+    MODULE PROCEDURE qes_init_ChannelOcc
+    MODULE PROCEDURE qes_init_HubbardOcc
     MODULE PROCEDURE qes_init_SitMag
     MODULE PROCEDURE qes_init_starting_ns
     MODULE PROCEDURE qes_init_Hubbard_ns
@@ -1197,15 +1199,16 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_qpoint_grid
   !
   !
-  SUBROUTINE qes_init_dftU(obj, tagname, lda_plus_u_kind, Hubbard_U, Hubbard_J0, Hubbard_alpha,&
-                          Hubbard_beta, Hubbard_J, starting_ns, Hubbard_V, Hubbard_ns, U_projection_type,&
-                          Hubbard_back, Hubbard_alpha_back, Hubbard_ns_nc)
+  SUBROUTINE qes_init_dftU(obj, tagname, lda_plus_u_kind, Hubbard_Occ, Hubbard_U, Hubbard_J0,&
+                          Hubbard_alpha, Hubbard_beta, Hubbard_J, starting_ns, Hubbard_V, Hubbard_ns,&
+                          U_projection_type, Hubbard_back, Hubbard_alpha_back, Hubbard_ns_nc)
     !
     IMPLICIT NONE
     !
     TYPE(dftU_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     INTEGER,OPTIONAL,INTENT(IN) :: lda_plus_u_kind
+    TYPE(HubbardOcc_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_Occ
     TYPE(HubbardCommon_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_U
     TYPE(HubbardCommon_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_J0
     TYPE(HubbardCommon_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_alpha
@@ -1228,6 +1231,14 @@ MODULE qes_init_module
       obj%lda_plus_u_kind = lda_plus_u_kind
     ELSE
       obj%lda_plus_u_kind_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(Hubbard_Occ)) THEN
+      obj%Hubbard_Occ_ispresent = .TRUE.
+      ALLOCATE(obj%Hubbard_Occ(SIZE(Hubbard_Occ)))
+      obj%ndim_Hubbard_Occ = SIZE(Hubbard_Occ) 
+      obj%Hubbard_Occ = Hubbard_Occ
+    ELSE
+      obj%Hubbard_Occ_ispresent = .FALSE.
     END IF
     IF ( PRESENT(Hubbard_U)) THEN
       obj%Hubbard_U_ispresent = .TRUE.
@@ -1465,6 +1476,62 @@ MODULE qes_init_module
     obj%HubbardJ = HubbardJ
     !
   END SUBROUTINE qes_init_HubbardJ
+  !
+  !
+  SUBROUTINE qes_init_ChannelOcc(obj, tagname, specie, label, index, ChannelOcc)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(ChannelOcc_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: specie
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: label
+    INTEGER, INTENT(IN) :: index
+    REAL(DP), INTENT(IN) :: ChannelOcc
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    IF (PRESENT(specie)) THEN
+      obj%specie_ispresent = .TRUE.
+      obj%specie = specie
+    ELSE
+      obj%specie_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(label)) THEN
+      obj%label_ispresent = .TRUE.
+      obj%label = label
+    ELSE
+      obj%label_ispresent = .FALSE.
+    END IF
+    obj%index = index
+    !
+    obj%ChannelOcc = ChannelOcc
+    !
+  END SUBROUTINE qes_init_ChannelOcc
+  !
+  !
+  SUBROUTINE qes_init_HubbardOcc(obj, tagname, channels, specie, channel_occ)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(HubbardOcc_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    INTEGER, INTENT(IN) :: channels
+    CHARACTER(LEN=*), INTENT(IN) :: specie
+    TYPE(ChannelOcc_type),DIMENSION(:),INTENT(IN) :: channel_occ
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    obj%channels = channels
+    obj%specie = specie
+    !
+    ALLOCATE(obj%channel_occ(SIZE(channel_occ)))
+    obj%ndim_channel_occ = SIZE(channel_occ)
+    obj%channel_occ = channel_occ
+    !
+  END SUBROUTINE qes_init_HubbardOcc
   !
   !
   SUBROUTINE qes_init_SitMag(obj, tagname, species, atom, charge, SitMag)

@@ -47,6 +47,8 @@ MODULE qes_bcast_module
     MODULE PROCEDURE qes_bcast_HubbardInterSpecieV
     MODULE PROCEDURE qes_bcast_SiteMoment
     MODULE PROCEDURE qes_bcast_HubbardJ
+    MODULE PROCEDURE qes_bcast_ChannelOcc
+    MODULE PROCEDURE qes_bcast_HubbardOcc
     MODULE PROCEDURE qes_bcast_SitMag
     MODULE PROCEDURE qes_bcast_starting_ns
     MODULE PROCEDURE qes_bcast_Hubbard_ns
@@ -813,6 +815,14 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%lda_plus_u_kind_ispresent, ionode_id, comm)
     IF (obj%lda_plus_u_kind_ispresent) &
       CALL mp_bcast(obj%lda_plus_u_kind, ionode_id, comm)
+    CALL mp_bcast(obj%Hubbard_Occ_ispresent, ionode_id, comm)
+    IF (obj%Hubbard_Occ_ispresent) THEN
+      CALL mp_bcast(obj%ndim_Hubbard_Occ, ionode_id, comm)
+      IF (.NOT.ionode) ALLOCATE(obj%Hubbard_Occ(obj%ndim_Hubbard_Occ))
+      DO i=1, obj%ndim_Hubbard_Occ
+        CALL qes_bcast_HubbardOcc(obj%Hubbard_Occ(i), ionode_id, comm)
+      ENDDO
+    ENDIF
     CALL mp_bcast(obj%Hubbard_U_ispresent, ionode_id, comm)
     IF (obj%Hubbard_U_ispresent) THEN
       CALL mp_bcast(obj%ndim_Hubbard_U, ionode_id, comm)
@@ -1001,6 +1011,52 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%HubbardJ, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_HubbardJ
+  !
+  !
+  SUBROUTINE qes_bcast_ChannelOcc(obj, ionode_id, comm )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(ChannelOcc_type), INTENT(INOUT) :: obj
+    INTEGER, INTENT(IN) :: ionode_id, comm
+    !
+    CALL mp_bcast(obj%tagname, ionode_id, comm)
+    CALL mp_bcast(obj%lwrite, ionode_id, comm)
+    CALL mp_bcast(obj%lread, ionode_id, comm)
+    !
+    CALL mp_bcast(obj%specie_ispresent, ionode_id, comm)
+    IF (obj%specie_ispresent) &
+      CALL mp_bcast(obj%specie, ionode_id, comm)
+    CALL mp_bcast(obj%label_ispresent, ionode_id, comm)
+    IF (obj%label_ispresent) &
+      CALL mp_bcast(obj%label, ionode_id, comm)
+    CALL mp_bcast(obj%index, ionode_id, comm)
+    CALL mp_bcast(obj%ChannelOcc, ionode_id, comm)
+    !
+  END SUBROUTINE qes_bcast_ChannelOcc
+  !
+  !
+  SUBROUTINE qes_bcast_HubbardOcc(obj, ionode_id, comm )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(HubbardOcc_type), INTENT(INOUT) :: obj
+    INTEGER, INTENT(IN) :: ionode_id, comm
+    INTEGER :: i
+    !
+    CALL mp_bcast(obj%tagname, ionode_id, comm)
+    CALL mp_bcast(obj%lwrite, ionode_id, comm)
+    CALL mp_bcast(obj%lread, ionode_id, comm)
+    !
+    CALL mp_bcast(obj%channels, ionode_id, comm)
+    CALL mp_bcast(obj%specie, ionode_id, comm)
+    CALL mp_bcast(obj%ndim_channel_occ, ionode_id, comm)
+    IF (.NOT.ionode) ALLOCATE(obj%channel_occ(obj%ndim_channel_occ))
+    DO i=1, obj%ndim_channel_occ
+      CALL qes_bcast_ChannelOcc(obj%channel_occ(i), ionode_id, comm)
+    ENDDO
+    !
+  END SUBROUTINE qes_bcast_HubbardOcc
   !
   !
   SUBROUTINE qes_bcast_SitMag(obj, ionode_id, comm )
