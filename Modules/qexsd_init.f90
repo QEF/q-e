@@ -812,13 +812,17 @@ CONTAINS
                idx_i = idx(i)
                nchannels = 1 
                lbl_(1) = TRIM(labels_(idx_i))
-               IF (n2_ispresent  .AND. n2(idx_i) > 0  ) THEN 
-                  nchannels = nchannels + 1
-                  WRITE (lbl_(2),'(I0,A)') n2(idx_i),hubbard_shell(l2(idx_i)+1) 
+               IF (n2_ispresent ) THEN  
+                  IF ( n2(idx_i) > 0  ) THEN 
+                    nchannels = nchannels + 1
+                    WRITE (lbl_(nchannels),'(I0,A)') n2(idx_i),hubbard_shell(l2(idx_i)+1) 
+                  END IF
                END IF 
-               IF (n3_ispresent  .AND. n3(idx_i) > 0  ) THEN 
-                  nchannels = nchannels + 1
-                  WRITE (lbl_(3),'(I0,A)') n3(idx_i),hubbard_shell(l3(idx_i)+1) 
+               IF (n3_ispresent ) THEN 
+                  IF ( n3(idx_i) > 0  ) THEN 
+                    nchannels = nchannels + 1
+                    WRITE (lbl_(nchannels),'(I0,A)') n3(idx_i),hubbard_shell(l3(idx_i)+1) 
+                  END IF
                END IF  
                DO ich =1, nchannels 
                   CALL qes_init(channels(ich), 'channel_occ', species(idx_i), lbl_(ich), ich, data(i, ich))
