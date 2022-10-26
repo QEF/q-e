@@ -26,7 +26,7 @@ MODULE read_namelists_module
   !
   PRIVATE
   !
-  REAL(DP), PARAMETER :: sm_not_set = -20.0_DP
+  REAL(DP), PARAMETER :: sm_not_set = -10000.0_DP
   !
   REAL(DP), PARAMETER :: fcp_not_set = 1.0E+99_DP
   !
