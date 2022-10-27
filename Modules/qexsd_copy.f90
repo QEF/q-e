@@ -310,7 +310,7 @@ CONTAINS
   SUBROUTINE qexsd_copy_dft ( dft_obj, nsp, atm, &
        dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
        exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
-       lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_n, Hubbard_l, Hubbard_lmax, &
+       lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_n, Hubbard_l, Hubbard_lmax, Hubbard_occ, &
        Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
        Hubbard_U, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, Hubbard_V, &
        vdw_corr, scal6, lon_rcut, vdw_isolated )
@@ -337,7 +337,7 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(inout) :: U_projection
     INTEGER, INTENT(inout) :: Hubbard_n(:), Hubbard_l(:), Hubbard_n2(:), Hubbard_l2(:), Hubbard_n3(:), Hubbard_l3(:) 
     REAL(dp), INTENT(inout) :: Hubbard_U(:), Hubbard_U2(:), Hubbard_J0(:), Hubbard_J(:,:), Hubbard_V(:,:,:), &
-                               Hubbard_alpha(:), Hubbard_alpha_back(:), Hubbard_beta(:)
+                               Hubbard_alpha(:), Hubbard_alpha_back(:), Hubbard_beta(:), Hubbard_occ(:,:)
     LOGICAL, INTENT(inout) :: backall(:)
     OPTIONAL    :: Hubbard_U2, Hubbard_n2, Hubbard_l2, Hubbard_lmax_back, Hubbard_alpha_back, &
                    Hubbard_l3
@@ -348,7 +348,7 @@ CONTAINS
     !
     CHARACTER(LEN=256 ) :: label
     CHARACTER(LEN=3 )   :: symbol
-    INTEGER :: ihub, isp, hu_n, hu_l, idx1, idx2, idx3
+    INTEGER :: ihub, isp, hu_n, hu_l, idx1, idx2, idx3, ich
     INTEGER, EXTERNAL :: spdf_to_l
     !
     dft_name = TRIM(dft_obj%functional)
@@ -434,8 +434,20 @@ CONTAINS
               END DO loop_on_species_back
             END DO loop_hubbardBack
        END IF
-
-       ! 
+       !
+      IF (dft_obj%dftU%Hubbard_Occ_ispresent) THEN 
+         loop_on_hubbard_occ: DO ihub =1, dft_obj%dftU%ndim_Hubbard_Occ 
+            symbol = TRIM(dft_obj%dftU%Hubbard_Occ(ihub)%specie) 
+            loop_on_species: DO isp = 1, nsp
+               IF (TRIM(symbol) == TRIM(atm(isp))) THEN 
+                  DO ich = 1, dft_obj%dftU%Hubbard_Occ(ihub)%channels 
+                     Hubbard_occ(isp,ich) = dft_obj%dftU%Hubbard_Occ(ihub)%channel_occ(ich)%ChannelOcc 
+                  END DO 
+               END IF 
+            END DO loop_on_species 
+         END DO loop_on_hubbard_occ
+      END IF 
+      ! 
        IF ( dft_obj%dftU%Hubbard_J0_ispresent ) THEN 
             loop_on_hubbardj0:DO ihub =1, dft_obj%dftU%ndim_Hubbard_J0
                symbol = TRIM(dft_obj%dftU%Hubbard_J0(ihub)%specie)

@@ -161,6 +161,22 @@ MODULE qes_types_module
     !
   END TYPE HubbardJ_type
   !
+  TYPE :: ChannelOcc_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    CHARACTER(len=256) :: specie
+    LOGICAL :: specie_ispresent = .FALSE.
+    CHARACTER(len=256) :: label
+    LOGICAL :: label_ispresent = .FALSE.
+    INTEGER :: index
+    !
+    REAL(DP) :: ChannelOcc
+    !
+  END TYPE ChannelOcc_type
+  !
   TYPE :: SitMag_type
     !
     CHARACTER(len=100) :: tagname
@@ -612,6 +628,19 @@ MODULE qes_types_module
     REAL(DP) :: localization_threshold
     !
   END TYPE hybrid_type
+  !
+  TYPE :: HubbardOcc_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    INTEGER :: channels
+    CHARACTER(len=256) :: specie
+    TYPE(ChannelOcc_type), DIMENSION(:), ALLOCATABLE :: channel_occ
+    INTEGER   :: ndim_channel_occ
+    !
+  END TYPE HubbardOcc_type
   !
   TYPE :: HubbardBack_type
     !
@@ -1423,6 +1452,9 @@ MODULE qes_types_module
     !
     LOGICAL  :: lda_plus_u_kind_ispresent = .FALSE.
     INTEGER :: lda_plus_u_kind
+    LOGICAL  :: Hubbard_Occ_ispresent = .FALSE.
+    TYPE(HubbardOcc_type), DIMENSION(:), ALLOCATABLE :: Hubbard_Occ
+    INTEGER   :: ndim_Hubbard_Occ
     LOGICAL  :: Hubbard_U_ispresent = .FALSE.
     TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_U
     INTEGER   :: ndim_Hubbard_U
