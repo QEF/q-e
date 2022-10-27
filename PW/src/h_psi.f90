@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2016 Quantum ESPRESSO group
+! Copyright (C) 2002-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -92,7 +92,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE scf,                     ONLY: vrs  
   USE wvfct,                   ONLY: g2kin
   USE uspp,                    ONLY: vkb, nkb
-  USE ldaU,                    ONLY: lda_plus_u, U_projection
+  USE ldaU,                    ONLY: lda_plus_u, Hubbard_projectors
   USE gvect,                   ONLY: gstart
   USE control_flags,           ONLY: gamma_only
   USE noncollin_module,        ONLY: npol, noncolin
@@ -105,7 +105,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE xc_lib,                  ONLY: exx_is_active, xclib_dft_is
   USE fft_helper_subroutines
   !
-  USE wvfct_gpum,              ONLY: using_g2kin
   USE scf_gpum,                ONLY: using_vrs
   USE becmod_subs_gpum,        ONLY: using_becp_auto
   !
@@ -130,7 +129,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
 
-  CALL using_g2kin(0)
   CALL using_vrs(0)   ! vloc_psi_gamma (intent:in)
 
 
@@ -244,7 +242,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   ! ... Here we add the Hubbard potential times psi
   !
-  IF ( lda_plus_u .AND. U_projection.NE."pseudo" ) THEN
+  IF ( lda_plus_u .AND. Hubbard_projectors.NE."pseudo" ) THEN
      !
      IF ( noncolin ) THEN
         CALL vhpsi_nc( lda, n, m, psi, hpsi )

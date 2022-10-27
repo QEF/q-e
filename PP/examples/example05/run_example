@@ -16,8 +16,8 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use pmw.x to generate better projectors for
-$ECHO  LDA+U calculation on FeO. Read file README for more details"
+$ECHO "This example shows how to use pmw.x to generate WF as Hubbard projectors for
+$ECHO  DFT+U calculation on FeO. Read file README for more details"
 
 # set the needed environment variables
 . ../../../environment_variables
@@ -83,7 +83,7 @@ $ECHO
 
 # self-consistent calculation with standard LDA
 cat > feo_LDA.in << EOF
-FeO Wustite in LDA
+FeO Wustite in DFT-LDA
  &control
     calculation = 'scf'
     restart_mode='from_scratch',
@@ -100,12 +100,11 @@ FeO Wustite in LDA
     starting_magnetization(3)=-0.5,
     occupations='smearing', smearing='mv', degauss=0.01,
     nspin=2,
-    lda_plus_u=.true.  Hubbard_U(2)=1.d-8, Hubbard_U(3)=1.d-8,
  /
  &electrons
     mixing_mode = 'plain'
     mixing_beta = 0.3
-    conv_thr =  1.0d-6
+    conv_thr =  1.0d-10
     mixing_fixed_ns = 0
  /
 CELL_PARAMETERS alat
@@ -123,6 +122,9 @@ ATOMIC_POSITIONS {crystal}
  Fe2 0.5  0.5  0.5
 K_POINTS {automatic}
 2 2 2 0 0 0
+HUBBARD {atomic}
+U Fe1-3d 0.0001
+U Fe2-3d 0.0001
 EOF
 $ECHO "  1) running scf for FeO in LDA ...\c"
 $PW_COMMAND < feo_LDA.in > feo_LDA.out
@@ -144,7 +146,7 @@ $ECHO " done"
 
 # self-consistent calculation with user defined ns + Wannier
 cat > feo_wannier.in << EOF
-FeO Wustite whithin LDA+U with user defined ns + Wannier
+FeO Wustite whithin DFT+U with user defined ns + Wannier
  &control
     calculation = 'scf'
     restart_mode='from_scratch',
@@ -160,15 +162,13 @@ FeO Wustite whithin LDA+U with user defined ns + Wannier
     starting_magnetization(3)=-0.5,
     occupations='smearing', smearing='mv', degauss=0.01,
     nspin=2,
-    lda_plus_u=.true., Hubbard_U(2)=4.3, Hubbard_U(3)=4.3,
-    U_projection_type='file'
-    starting_ns_eigenvalue(3,2,2) = 1.d0
-    starting_ns_eigenvalue(3,1,3) = 1.d0
+    starting_ns_eigenvalue(5,2,2) = 1.d0
+    starting_ns_eigenvalue(5,1,3) = 1.d0
  /
  &electrons
     mixing_mode = 'plain'
     mixing_beta = 0.3
-    conv_thr =  1.0d-6
+    conv_thr =  1.0d-10
     mixing_fixed_ns = 0
  /
 CELL_PARAMETERS alat
@@ -186,8 +186,11 @@ ATOMIC_POSITIONS {crystal}
  Fe2 0.5  0.5  0.5
 K_POINTS {automatic}
 2 2 2 0 0 0
+HUBBARD {wf}
+U Fe1-3d 4.3
+U Fe2-3d 4.3
 EOF
-$ECHO "  3) running scf for FeO in LDA+U using Wannier projectors...\c"
+$ECHO "  3) running scf for FeO in DFT+U using Wannier projectors...\c"
 $PW_COMMAND < feo_wannier.in > feo_wannier.out
 check_failure $?
 $ECHO " done"

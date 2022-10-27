@@ -39,6 +39,7 @@ MODULE gcscf_module
                             & lgauss, degauss, ltetra, two_fermi_energies
   USE mp,              ONLY : mp_sum
   USE mp_pools,        ONLY : inter_pool_comm
+  USE rism_module,     ONLY : lrism
   USE wvfct,           ONLY : nbnd, wg
   !
   IMPLICIT NONE
@@ -94,8 +95,8 @@ CONTAINS
     !
     ! ... cannot use Vacuum/Slab/Vacuum
     !
-    IF (TRIM(esm_bc) == 'bc1') THEN
-       CALL errore('gcscf_check', 'cannot use ESM-BC1, for GC-SCF', 1)
+    IF (TRIM(esm_bc) == 'bc1' .AND. (.NOT. lrism)) THEN
+       CALL errore('gcscf_check', 'cannot use ESM-BC1 without RISM, for GC-SCF', 1)
     END IF
     !
     ! ... correct Vexx(G=0) ?

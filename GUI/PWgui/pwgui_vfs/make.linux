@@ -15,7 +15,7 @@ ITCL_EXACT = -exact
 
 ITCL_VERSION     = 3.4
 ITK_VERSION      = 3.4
-IWIDGETS_VERSION = 4.0.1
+IWIDGETS_VERSION = 4.1.0
 
 # define the library-directories to be copied
 prefix=/usr/share/tcltk

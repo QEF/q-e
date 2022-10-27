@@ -1,3 +1,11 @@
+Jan 08 2022 Anton Kokalj (tone.kokalj@ijs.si)
+	* pwgui_reformat merged into pwgui as pwgui -reformat program input
+
+Jan 06 2022 Anton Kokalj (tone.kokalj@ijs.si)
+	* renaming doc/pwdocs/ to doc/
+
+... ChangeLog discontinued ...
+
 Jan 23 2012 Anton Kokalj (tone.kokalj@ijs.si)
 	* adding bands.x and dos.x modules
 	* editing of ChangeLog has been discontinued and in the meantime,

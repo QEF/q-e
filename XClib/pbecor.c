@@ -67,7 +67,7 @@ void corpbe(double rs, double t, int lgga, int lpot, double *ec, double *vc, dou
 {
     /* Local variables */
     double b, b2, q4, t2, q5, t4,
-	    ep, eu, pon,
+	    eu, pon,
 	    eurs, rtrs;
     double tmp1,tmp2,tmp3;
 

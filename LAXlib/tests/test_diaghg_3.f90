@@ -1,7 +1,6 @@
 program test_diaghg_3
-#if defined(__MPI)
-    USE MPI
-#endif
+
+    USE laxlib_parallel_include
     USE mp,            ONLY : mp_bcast
     USE mp_world,      ONLY : mp_world_start, mp_world_end, mpime, &
                               root, world_comm

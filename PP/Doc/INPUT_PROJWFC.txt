@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: projwfc.x / PWscf / Quantum Espresso (version: 6.8)
+Program: projwfc.x / PWscf / Quantum Espresso (version: 7.0)
 ------------------------------------------------------------------------
 
 
@@ -87,6 +87,21 @@ NAMELIST: &PROJWFC
                               the partial density of states are computed
                    if .false. the projections are not symmetrized, the partial
                               DOS can be computed only in the k-resolved case
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       diag_basis
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    if .false. the projections of Kohn-Sham states are
+                                done on the orthogonalized atomic orbitals
+                                in the global XYZ coordinate frame.
+                   if .true. the projections of Kohn-Sham states are
+                                done on the orthogonalized atomic orbitals
+                                that are rotated to the basis in which the
+                                atomic occupation matrix is diagonal
+                                (i.e. local XYZ coordinate frame).
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -331,4 +346,4 @@ NAMELIST: &PROJWFC
       
 
 
-This file has been created by helpdoc utility on Fri Jul 16 11:56:11 CEST 2021
+This file has been created by helpdoc utility on Sat Dec 18 20:08:46 CET 2021

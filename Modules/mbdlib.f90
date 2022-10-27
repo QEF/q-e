@@ -22,8 +22,9 @@ MODULE libmbd_interface
   USE funct,            ONLY : get_dft_short
   USE control_flags,    ONLY : conv_elec
   USE constants,        ONLY : ry_kbar
+#if !defined(__NOMBD)
   USE mbd,              ONLY : mbd_input_t, mbd_calc_t
-
+#endif
   IMPLICIT NONE
 
   PUBLIC:: mbd_interface, init_mbd, clean_mbd
@@ -35,8 +36,10 @@ MODULE libmbd_interface
 
   INTEGER:: na
   LOGICAL:: do_gradients
+#if !defined(__NOMBD)
   TYPE(mbd_input_t):: inp
   TYPE(mbd_calc_t):: calc
+#endif
   REAL(dp), DIMENSION(:), ALLOCATABLE:: ratios
   REAL(dp), DIMENSION(:,:), ALLOCATABLE:: mbd_gradient
   INTEGER:: code, ierr, my_rank, total
@@ -54,6 +57,9 @@ SUBROUTINE init_mbd ( nks_start, nk1, nk2, nk3, k1, k2, k3, tprnfor, tstress )
   !
   ! Allocation of variables that depend on the number of atoms
   !
+#if defined(__NOMBD)
+    CALL errore( 'libmbd_interface', 'Many-Body Dispersion not compiled',1)
+#else
   ALLOCATE(inp%atom_types(nat))
   !
   EmbdvdW  = 0.0_dp
@@ -121,7 +127,7 @@ SUBROUTINE init_mbd ( nks_start, nk1, nk2, nk3, k1, k2, k3, tprnfor, tstress )
 &  error, please check your system carefully.', 1 )
     STOP
   ENDIF
-
+#endif
 
   END SUBROUTINE init_mbd
 
@@ -131,6 +137,7 @@ SUBROUTINE init_mbd ( nks_start, nk1, nk2, nk3, k1, k2, k3, tprnfor, tstress )
     
   SUBROUTINE mbd_interface()
 
+#if !defined(__NOMBD)
   IF (.NOT.conv_elec) RETURN ! Wavefunction derivatives are still in progress,
 !for now we only can add correction for converged wavefunction
  CALL infomsg('mbdlib','MBD wavefunction derivatives not yet supported. '//&
@@ -162,6 +169,7 @@ SUBROUTINE init_mbd ( nks_start, nk1, nk2, nk3, k1, k2, k3, tprnfor, tstress )
   ENDIF
 
   RETURN
+#endif
   END SUBROUTINE mbd_interface
 
 !#############################################################
@@ -171,12 +179,14 @@ SUBROUTINE init_mbd ( nks_start, nk1, nk2, nk3, k1, k2, k3, tprnfor, tstress )
   SUBROUTINE clean_mbd()
   IMPLICIT NONE
 
+#if !defined(__NOMBD)
   CALL calc%destroy()
   IF(ALLOCATED(inp%atom_types)) DEALLOCATE(inp%atom_types)
   IF(ALLOCATED(ratios)) DEALLOCATE(ratios)
   IF(ALLOCATED(mbd_gradient)) DEALLOCATE(mbd_gradient)
   IF(ALLOCATED(veff_pub)) DEALLOCATE(veff_pub)
   IF(ALLOCATED(vfree_pub)) DEALLOCATE(vfree_pub)
+#endif
 
   END SUBROUTINE clean_mbd
 END MODULE libmbd_interface

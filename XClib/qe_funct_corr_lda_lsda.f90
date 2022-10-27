@@ -14,7 +14,6 @@ CONTAINS
 !
 !-------------------------------------------------------------------------
 SUBROUTINE pz( rs, iflag, ec, vc )
-!$acc routine (pz) seq
   !-----------------------------------------------------------------------
   !! LDA parametrization from Monte Carlo DATA:
   !
@@ -24,6 +23,8 @@ SUBROUTINE pz( rs, iflag, ec, vc )
   USE kind_l,  ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   INTEGER, INTENT(IN) :: iflag
   !! see routine comments
@@ -74,7 +75,6 @@ END SUBROUTINE pz
 !
 !-----------------------------------------------------------------------
 SUBROUTINE pzKZK( rs, ec, vc, vol )
-!$acc routine (pzKZK) seq
   !-----------------------------------------------------------------------
   !! LDA parametrization from Monte Carlo DATA:
   !
@@ -84,6 +84,8 @@ SUBROUTINE pzKZK( rs, ec, vc, vol )
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -190,13 +192,14 @@ END SUBROUTINE pzKZK
 !
 !-----------------------------------------------------------------------
 SUBROUTINE vwn( rs, ec, vc )
-!$acc routine (vwn) seq
   !-----------------------------------------------------------------------
   !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980).
   !
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -237,13 +240,14 @@ END SUBROUTINE vwn
 !
 !-----------------------------------------------------------------------
 SUBROUTINE vwn1_rpa( rs, ec, vc )
-!$acc routine (vwn1_rpa) seq
   !-----------------------------------------------------------------------
   !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980).
   !
   USE kind_l,       ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -283,7 +287,6 @@ END SUBROUTINE vwn1_rpa
 !
 !-----------------------------------------------------------------------
 SUBROUTINE lyp( rs, ec, vc )
-!$acc routine (lyp) seq
   !-----------------------------------------------------------------------
   !! C. Lee, W. Yang, and R.G. Parr, PRB 37, 785 (1988).
   !! LDA part only.
@@ -291,6 +294,8 @@ SUBROUTINE lyp( rs, ec, vc )
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -321,14 +326,15 @@ END SUBROUTINE lyp
 !
 !-----------------------------------------------------------------------
 SUBROUTINE pw( rs, iflag, ec, vc )
-!$acc routine (pw) seq
   !-----------------------------------------------------------------------
-  !! * iflag=1: J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
-  !! * iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
+  !! If \(\text{iflag}=1\): J.P. Perdew and Y. Wang, PRB 45, 13244 (1992);  
+  !! if \(\text{iflag}=2\): G. Ortiz and P. Ballone, PRB 50, 1391 (1994).
   !
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -392,13 +398,14 @@ END SUBROUTINE pw
 !
 !-----------------------------------------------------------------------
 SUBROUTINE wignerc( rs, ec, vc )
-!$acc routine (wignerc) seq
   !-----------------------------------------------------------------------
   !! Wigner correlation.
   !
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -426,13 +433,14 @@ END SUBROUTINE wignerc
 !
 !-----------------------------------------------------------------------
 SUBROUTINE hl( rs, ec, vc )
-!$acc routine (hl) seq
   !-----------------------------------------------------------------------
   !! L. Hedin and  B.I. Lundqvist,  J. Phys. C 4, 2064 (1971).
   !
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -459,13 +467,14 @@ END SUBROUTINE hl
 !
 !-----------------------------------------------------------------------
 SUBROUTINE gl( rs, ec, vc )
-!$acc routine (gl) seq
   !---------------------------------------------------------------------
   !! O. Gunnarsson and B. I. Lundqvist, PRB 13, 4274 (1976).
   !
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -494,7 +503,6 @@ END SUBROUTINE gl
 !
 !-----------------------------------------------------------------------
 SUBROUTINE pz_polarized( rs, ec, vc )
-!$acc routine (pz_polarized) seq
   !-----------------------------------------------------------------------
   !! J.P. Perdew and A. Zunger, PRB 23, 5048 (1981).
   !! spin-polarized energy and potential.
@@ -502,6 +510,8 @@ SUBROUTINE pz_polarized( rs, ec, vc )
   USE kind_l, ONLY : DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -550,13 +560,14 @@ END SUBROUTINE pz_polarized
 !
 !-----------------------------------------------------------------------
 SUBROUTINE pz_spin( rs, zeta, ec, vc_up, vc_dw )
-!$acc routine (pz_spin) seq
   !-----------------------------------------------------------------------
   !! Perdew and Zunger, PRB 23, 5048 (1981). Spin polarized case.
   !
   USE kind_l, ONLY : DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -594,13 +605,14 @@ END SUBROUTINE pz_spin
 !
 !-------------------------------------------------------------------------------
 SUBROUTINE vwn_spin( rs, zeta, ec, vc_up, vc_dw )
-!$acc routine (vwn_spin) seq
    !------------------------------------------------------------------------------
    !! S.H. Vosko, L. Wilk, and M. Nusair.  Spin polarized case.
    !
    USE kind_l,     ONLY: DP
    !
    IMPLICIT NONE
+   !
+   !$acc routine seq
    !
    REAL(DP), INTENT(IN) :: rs
    !! Wigner-Seitz radius
@@ -672,7 +684,6 @@ END SUBROUTINE vwn_spin
 !
 !----
 SUBROUTINE padefit_ParSet1( x, i, fit, dfit )
-!$acc routine (padefit_ParSet1) seq
    !----
    !! It implements formula [4.4] in:
    !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980)
@@ -680,6 +691,8 @@ SUBROUTINE padefit_ParSet1( x, i, fit, dfit )
    USE kind_l, ONLY: DP
    !
    IMPLICIT NONE
+   !
+   !$acc routine seq
    !
    REAL(DP) :: x
    !! input: x is SQRT(r_s)
@@ -723,7 +736,6 @@ SUBROUTINE padefit_ParSet1( x, i, fit, dfit )
    !
 END SUBROUTINE
 SUBROUTINE padefit_ParSet2( x, i, fit, dfit )
-!$acc routine (padefit_ParSet2) seq
    !----
    !! It implements formula [4.4] in:
    !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980)
@@ -731,6 +743,8 @@ SUBROUTINE padefit_ParSet2( x, i, fit, dfit )
    USE kind_l, ONLY: DP
    !
    IMPLICIT NONE
+   !
+   !$acc routine seq
    !
    REAL(DP) :: x
    !! input: x is SQRT(r_s)
@@ -777,12 +791,13 @@ END SUBROUTINE
 !
 !-----------------------------------------------------------------------------------------
 SUBROUTINE vwn1_rpa_spin( rs, zeta, ec, vc_up, vc_dw )
-!$acc routine (vwn1_rpa_spin) seq
    !---------------------------------------------------------------------------------------
    !
    USE kind_l, ONLY: DP
    !
    IMPLICIT NONE
+   !
+   !$acc routine seq
    !
    REAL(DP), INTENT(IN) :: rs
    !! Wigner-Seitz radius
@@ -853,13 +868,14 @@ END SUBROUTINE
 !
 !-----------------------------------------------------------------------
 SUBROUTINE pw_spin( rs, zeta, ec, vc_up, vc_dw )
-!$acc routine (pw_spin) seq
   !-----------------------------------------------------------------------
   !! J.P. Perdew and Y. Wang, PRB 45, 13244 (1992).
   !
   USE kind_l, ONLY : DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -963,15 +979,15 @@ END SUBROUTINE pw_spin
 !
 !-----------------------------------------------------------------------------
 SUBROUTINE lsd_lyp( rho, zeta, elyp, vlyp_up, vlyp_dw )
-!$acc routine (lsd_lyp) seq
-  !==--------------------------------------------------------------==
-  !==  C. LEE, W. YANG, AND R.G. PARR, PRB 37, 785 (1988)          ==
-  !==  THIS IS ONLY THE LDA PART                                   ==
-  !==--------------------------------------------------------------==
+  !---------------------------------------------------------------------------
+  !! C. Lee, W. Yang, and R.G. Parr, PRB 37, 785 (1988). This is only the
+  !! LSDA part.
   !
   USE kind_l,       ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho
   !! total charge density

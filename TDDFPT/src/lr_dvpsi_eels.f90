@@ -104,10 +104,12 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
      ELSE
         !
         ! FFT to R-space
+        !$acc data copyin(evc) copy(revc, dvpsi1)    
         CALL cft_wave(ik, evc(1,ibnd), revc, +1)
         !
         ! back-FFT to G-space
         CALL cft_wave(ik, dvpsi1(1,ibnd), revc, -1) 
+        !$acc end data
         !
      ENDIF
      !

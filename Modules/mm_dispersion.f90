@@ -76,8 +76,6 @@ MODULE london_module
       USE mp,                  ONLY : mp_bcast
       USE mp_images,           ONLY : intra_image_comm
       !
-      IMPLICIT NONE
-      !
       INTEGER, PARAMETER :: maxZ = 86
       REAL (DP) :: vdw_coeffs(2,maxZ)
       !
@@ -195,7 +193,7 @@ MODULE london_module
          !
          ! and some buffers on ionode
          !
-         ALLOCATE ( R_vdw ( ntyp )   )
+         IF (.NOT. ALLOCATED( R_vdw) ) ALLOCATE ( R_vdw ( ntyp )   )
          !
          ! here we initialize parameters to unphysical values
          !
@@ -254,21 +252,6 @@ MODULE london_module
            !
          END DO
          !
-         WRITE ( stdout ,'( /, 5X, "-------------------------------------------------" , &
-                          & /, 5X, "Parameters for Dispersion (Grimme-D2) Correction:" , &
-                          & /, 5X, "-------------------------------------------------" , &
-                          & /, 5X, "  atom      VdW radius       C_6     " , / )' )
-         DO ata = 1 , ntyp
-            !
-            WRITE (stdout , '( 8X, A3 , 6X , F7.3 , 6X , F9.3 )' ) &
-                               atom_label ( ata ) , R_vdw ( ata ) , C6_i ( ata )
-            !
-         END DO
-         !
-         ! ... atomic parameters are deallocated
-         !
-         DEALLOCATE ( R_vdw )
-         !
          ! ... cutoff radius in alat units
          !
          r_cut = lon_rcut / alat
@@ -292,6 +275,27 @@ MODULE london_module
       !
    END SUBROUTINE init_london
    !
+   SUBROUTINE print_london
+      !
+      USE io_global,           ONLY : ionode, stdout
+      USE ions_base ,          ONLY : ntyp => nsp, atom_label => atm
+      INTEGER :: ata
+      !
+      IF ( ionode ) THEN
+         WRITE ( stdout ,'( /, 5X, "-------------------------------------------------" , &
+                          & /, 5X, "Parameters for Dispersion (Grimme-D2) Correction:" , &
+                          & /, 5X, "-------------------------------------------------" , &
+                          & /, 5X, "  atom      VdW radius       C_6     " , / )' )
+         DO ata = 1 , ntyp
+            !
+            WRITE (stdout , '( 8X, A3 , 6X , F7.3 , 6X , F9.3 )' ) &
+                               atom_label ( ata ) , R_vdw ( ata ) , C6_i ( ata )
+            !
+         END DO
+      END IF
+      !
+   END SUBROUTINE print_london
+   !
    !---------------------------------------------------------------------------
    ! Compute dispersion energy
    !---------------------------------------------------------------------------
@@ -306,8 +310,6 @@ MODULE london_module
     !
     USE mp_images,    ONLY : me_image , nproc_image, intra_image_comm
     USE mp,           ONLY : mp_sum
-    !
-    IMPLICIT NONE
     !
     INTEGER , INTENT ( IN ) :: nat
     !! number of atoms
@@ -409,8 +411,6 @@ MODULE london_module
     !
     USE mp_images,    ONLY : me_image , nproc_image , intra_image_comm
     USE mp,           ONLY : mp_sum
-    !
-    IMPLICIT NONE
     !
     INTEGER , INTENT ( IN ) :: nat
     !! number of atoms
@@ -529,8 +529,6 @@ MODULE london_module
     !
     USE mp_images,    ONLY : me_image , nproc_image , intra_image_comm
     USE mp,           ONLY : mp_sum
-    !
-    IMPLICIT NONE
     !
     INTEGER , INTENT ( IN ) :: nat
     !! number of atoms
@@ -656,8 +654,6 @@ MODULE london_module
    SUBROUTINE dealloca_london
    !
    !! Clean memory.
-   !
-   IMPLICIT NONE
    !
    IF ( ALLOCATED ( R_vdw ) ) DEALLOCATE ( R_vdw )
    IF ( ALLOCATED ( C6_ij ) ) DEALLOCATE ( C6_ij )

@@ -7,7 +7,6 @@
 
 TEST-SUITE  v6.4 
 ----------------
-BEWARE: part of the following text is obsolete
 
 Type 'make' for the list of possible options. Currently only PW, CP, PH, 
 HP, EPW, are supported.
@@ -23,6 +22,8 @@ command
 
 REFERENCE OUTPUTS
 -----------------
+
+BEWARE: part of the following text may be obsolete
 
 Most reference outputs have been computed using GCC 4.8.5 with the following
 "configure" options:
@@ -125,6 +126,7 @@ The following features of the code are tested:
 ####################
 # pw_langevin : H2 #
 ####################
+NO LONGER TESTED
 The following features of the code are tested:
 - Langevin dynamics, Smart Monte Carlo algorithm
 
@@ -216,9 +218,9 @@ The following features of the code are tested:
 # pw_pbe : Si #
 ###############
 The following features of the code are tested:
-- BE0 hybrid functional, nq=1
-- BE0 hybrid functional, nq=2
-- BE0 hybrid functional, nq=4
+- PBE0 hybrid functional, nq=1
+- PBE0 hybrid functional, nq=2
+- PBE0 hybrid functional, nq=4
 
 #########################
 # pw_plugin-pw2casino : #
@@ -252,7 +254,7 @@ The following features of the code are tested:
 - disk_io, force_symmorphic, use_all_frac options
 - stress with k-points and at Gamma
 - non-scf calculation
-- old "ncpp" format for pseudopotentials
+- gth and "old ncpp" formats for pseudopotentials
 
 #########################
 # pw_spinorbit : Pt fcc #
@@ -508,3 +510,19 @@ This test is to compare electron-phonon matrix element produced directly by the 
 and by EPW. It requires modification to the phonon code. 
 Note that this folder is NOT tested in the test-suite but is here as it can be useful. 
 
+#################################################################################################
+# KCW tests
+#################################################################################################
+############################
+# kcw-nc-ks : H2O molecule #
+############################
+The following features of the code are tested:
+- Calculation of screening coefficients for KS orbitals
+- Calculation of KI@KS eigenvalues
+
+############################
+# kcw-nc-wann : Si FCC #
+############################
+The following features of the code are tested:
+- Calculation of screening coefficients for MLWF
+- Calculation of KI@Wann eigenvalues

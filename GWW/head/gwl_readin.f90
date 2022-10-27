@@ -71,7 +71,7 @@ SUBROUTINE phq_readin()
   ! YAMBO <
   USE elph_tetra_mod,ONLY : elph_tetra, lshift_q, in_alpha2f
   USE ktetra,        ONLY : tetra_type
-  USE ldaU,          ONLY : lda_plus_u, U_projection, lda_plus_u_kind
+  USE ldaU,          ONLY : lda_plus_u, Hubbard_projectors, lda_plus_u_kind
   USE ldaU_ph,       ONLY : read_dns_bare, d2ns_type
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, do_long_range, &
       do_charge_neutral, wpot_dir
@@ -137,8 +137,8 @@ SUBROUTINE phq_readin()
   ! nat_todo     : number of atom to be displaced
   ! verbosity    : verbosity control (iverbosity is obsolete)
   ! outdir       : directory where input, output, temporary files reside
-  ! epsil        : if true calculate dielectric constant
-  ! trans        : if true calculate phonon
+  ! epsil        : (OBSELETE) if true calculate dielectric constant
+  ! trans        : (OBSELETE) if true calculate phonon
   ! electron-phonon : select the kind of electron-phonon calculation
   ! elph         : if true calculate electron-phonon coefficients
   ! elph_mat     : if true eph coefficients for wannier
@@ -264,7 +264,7 @@ SUBROUTINE phq_readin()
   trans        = .TRUE.
   lrpa         = .FALSE.
   lnoloc       = .FALSE.
-  epsil        = .FALSE.
+  epsil        = .TRUE.
   zeu          = .TRUE.
   zue          = .FALSE.
   fpol         = .FALSE.
@@ -387,6 +387,14 @@ SUBROUTINE phq_readin()
   CASE DEFAULT
      CALL errore('phq_readin','diagonalization '//trim(diagonalization)//' not implemented',1)
   END SELECT
+
+  !
+  ! JDE: Catch situation where head crashes because PHonon tries to read u from file
+  !
+  IF (.NOT. trans) THEN
+     trans = .TRUE.
+     WRITE(stdout, '(5x, "CAREFUL: trans reset to TRUE to prevent CRASH")')
+  END IF
 
   !
   ! ...  broadcast all input variables
@@ -777,8 +785,8 @@ SUBROUTINE phq_readin()
      WRITE(stdout,'(5x,a)')  "A. Floris et al., Phys. Rev. B 101, 064305 (2020)"
      WRITE(stdout,'(5x,a)')  "in publications or presentations arising from this work."
      ! 
-     IF (U_projection.NE."atomic") CALL errore("phq_readin", &
-          " The phonon code for this U_projection_type is not implemented",1)
+     IF (Hubbard_projectors.NE."atomic") CALL errore("phq_readin", &
+          " The phonon code for this Hubbard_projectors type is not implemented",1)
      IF (lda_plus_u_kind.NE.0) CALL errore("phq_readin", &
           " The phonon code for this lda_plus_u_kind is not implemented",1)
      IF (elph) CALL errore("phq_readin", &

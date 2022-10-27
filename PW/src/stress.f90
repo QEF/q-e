@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,7 +19,7 @@ SUBROUTINE stress( sigma )
   USE ener,             ONLY : etxc, vtxc
   USE gvect,            ONLY : ngm, gstart, g, gg, gcutm
   USE fft_base,         ONLY : dfftp
-  USE ldaU,             ONLY : lda_plus_u, U_projection
+  USE ldaU,             ONLY : lda_plus_u, Hubbard_projectors
   USE lsda_mod,         ONLY : nspin
   USE scf,              ONLY : rho, rho_core, rhog_core
   USE control_flags,    ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, ts_vdw, mbd_vdw, use_gpu
@@ -28,12 +28,13 @@ SUBROUTINE stress( sigma )
   USE bp,               ONLY : lelfield
   USE uspp,             ONLY : okvan
   USE london_module,    ONLY : stres_london
-  USE dftd3_api,        ONLY : get_atomic_number, dftd3_calc
+  USE dftd3_api,        ONLY : get_atomic_number
   USE dftd3_qe,         ONLY : dftd3_pbc_gdisp, dftd3
   USE xdm_module,       ONLY : stress_xdm
   USE exx,              ONLY : exx_stress
   USE tsvdw_module,     ONLY : HtsvdW
   USE libmbd_interface, ONLY : HmbdvdW
+  USE rism_module,      ONLY : lrism, stres_rism
   USE esm,              ONLY : do_comp_esm, esm_bc ! for ESM stress
   USE esm,              ONLY : esm_stres_har, esm_stres_ewa, esm_stres_loclong ! for ESM stress
   USE gvect,            ONLY : g_d, gg_d
@@ -51,6 +52,7 @@ SUBROUTINE stress( sigma )
               sigmad23(3,3),  sigmaxdm(3,3), sigma_ts(3,3), sigma_mbd(3,3),&
               sigma_nonloc_dft(3,3), sigmaexx(3,3)
   REAL(DP) :: sigmaloclong(3,3)  ! for ESM stress
+  REAL(DP) :: sigmasol(3,3)      ! for RISM stress
   INTEGER  :: l, m
   !
   ! Auxiliary variables for Grimme-D3
@@ -158,7 +160,7 @@ SUBROUTINE stress( sigma )
   !  (included by stres_knl if using beta as local projectors)
   !
   sigmah(:,:) = 0.d0
-  IF ( lda_plus_u .AND. U_projection /= 'pseudo' ) CALL stres_hub( sigmah )
+  IF ( lda_plus_u .AND. Hubbard_projectors /= 'pseudo' ) CALL stres_hub( sigmah )
   !
   !   Electric field contribution
   !
@@ -190,13 +192,19 @@ SUBROUTINE stress( sigma )
   sigma_nonloc_dft(:,:) = 0.d0
   CALL stres_nonloc_dft( rho%of_r, rho_core, nspin, sigma_nonloc_dft )
   !
+  !   The solvation contribution (3D-RISM)
+  !
+  sigmasol(:,:) = 0.d0
+  IF (lrism) CALL stres_rism(sigmasol)
+  !
   ! SUM
   !
   sigma(:,:) = sigmakin(:,:) + sigmaloc(:,:) + sigmahar(:,:) +  &
                sigmaxc(:,:)  + sigmaxcc(:,:) + sigmaewa(:,:) +  &
                sigmanlc(:,:) + sigmah(:,:)   + sigmael(:,:)  +  &
                sigmaion(:,:) + sigmad23(:,:) + sigmaxdm(:,:) + &
-               sigma_nonloc_dft(:,:) + sigma_ts(:,:) + sigma_mbd(:,:)
+               sigma_nonloc_dft(:,:) + sigma_ts(:,:) + sigma_mbd(:,:) + &
+               sigmasol(:,:)
   !
   IF (xclib_dft_is('hybrid')) THEN
      sigmaexx = exx_stress()
@@ -237,7 +245,8 @@ SUBROUTINE stress( sigma )
      (sigmaxdm(l,1)*ry_kbar,sigmaxdm(l,2)*ry_kbar,sigmaxdm(l,3)*ry_kbar, l=1,3), &
      (sigma_nonloc_dft(l,1)*ry_kbar,sigma_nonloc_dft(l,2)*ry_kbar,sigma_nonloc_dft(l,3)*ry_kbar, l=1,3),&
      (sigma_ts(l,1)*ry_kbar,sigma_ts(l,2)*ry_kbar,sigma_ts(l,3)*ry_kbar, l=1,3), &
-     (sigma_mbd(l,1)*ry_kbar,sigma_mbd(l,2)*ry_kbar,sigma_mbd(l,3)*ry_kbar, l=1,3)
+     (sigma_mbd(l,1)*ry_kbar,sigma_mbd(l,2)*ry_kbar,sigma_mbd(l,3)*ry_kbar, l=1,3), &
+     (sigmasol(l,1)*ry_kbar,sigmasol(l,2)*ry_kbar,sigmasol(l,3)*ry_kbar, l=1,3)
 
   IF ( xclib_dft_is('hybrid') .AND. (iverbosity > 0) ) WRITE( stdout, 9006) &
      (sigmaexx(l,1)*ry_kbar,sigmaexx(l,2)*ry_kbar,sigmaexx(l,3)*ry_kbar, l=1,3)
@@ -267,6 +276,8 @@ SUBROUTINE stress( sigma )
          &   5x,'DFT-D   stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'XDM     stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'dft-nl  stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
-         &   5x,'TS-vdW  stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
+         &   5x,'TS-vdW  stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
+         &   5x,'MDB     stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
+         &   5x,'3D-RISM stress (kbar)',3f10.2/2(26x,3f10.2/)) 
   !
 END SUBROUTINE stress

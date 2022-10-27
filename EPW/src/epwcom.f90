@@ -39,6 +39,10 @@
   CHARACTER(LEN = 10) :: vme
   !! if 'dipole' then computes the velocity as dipole+commutator = <\psi_mk|p+i[V_NL,r]|\psi_nk>
   !! if 'wannier' then computes the velocity as dH_nmk/dk - i(e_nk-e_mk)A_nmk where A is the Berry connection
+  !!!!!
+  CHARACTER(LEN = 10) :: tc_linear_solver
+  !! algorithm to solve T_c eigenvalue problem
+  !!!!!
   !
   LOGICAL :: elecselfen
   !! if .TRUE. calculate electron selfenergy due to e-p interaction
@@ -142,8 +146,10 @@
   !! if .TRUE. solve isotropic case
   LOGICAL :: laniso
   !! if .TRUE. solve anisotropic case
-  LOGICAL :: lunif
-  !! if .TRUE. a uniform grid is defined between wsfc and wc for real-axis calculations
+  !!!!!
+  !  LOGICAL :: lunif
+  !  !! if .TRUE. a uniform grid is defined between wsfc and wc for real-axis calculations
+  !!!!!
   LOGICAL :: kerwrite
   !! if .TRUE. write kp and km to files .ker for real-axis calculations
   LOGICAL :: kerread
@@ -153,9 +159,15 @@
   LOGICAL :: eliashberg
   !! if .TRUE. solve the Eliashberg equations
   LOGICAL :: tc_linear
-  !! if .TRUE.  linearized Eliashberg eqn. for T_c will be solved
-  CHARACTER(LEN = 10) :: tc_linear_solver
-  !! algorithm to solve T_c eigenvalue problem
+  !! if .TRUE. linearized Eliashberg eqn. for T_c will be solved
+  !!!!!
+  ! CHARACTER(LEN = 10) :: tc_linear_solver
+  ! !! algorithm to solve T_c eigenvalue problem
+  LOGICAL :: fbw
+  !! if .TRUE. full-bandwidth calculations will be performed
+  LOGICAL :: muchem
+  !! if .TURE. the chem. pot. is updated in fbw calculations
+  !!!!!
   !
   ! Conductivity
   LOGICAL :: scattering
@@ -241,10 +253,6 @@
   !! input temperature array (units of Kelvin)
   !
   ! Superconductivity
-  INTEGER :: nswfc
-  !! nr. of grid points between (0,wsfc)
-  INTEGER :: nswc
-  !! nr. of grid points between (wsfc,wscut)
   INTEGER :: nswi
   !! nr. of grid points for Eliashberg equations of imaginary axis
   INTEGER :: nsiter
@@ -257,6 +265,10 @@
   !! nr. of bins for frequency in electron spectral function due to e-p interaction
   INTEGER :: restart_step
   !! Create a restart point during the interpolation part every restart_step q/k-points.
+  !!!!!
+  INTEGER :: gridsamp
+  !! Type of the Matsubara freq. sampling (-1= read from file; 0= uniform; 1= sparse)
+  !!!!!
   !
   REAL(KIND = DP) :: degaussw
   !! smearing width for Fermi surface average in e-ph coupling after wann interp
@@ -304,10 +316,12 @@
   !! change in energy for each additional smearing in the a2f
   REAL(KIND = DP) :: muc
   !! effective Coulomb potential in Eliashberg equations
-  REAL(KIND = DP) :: wsfc
-  !! intermediate freqeuncy between (0,wscut)
-  REAL(KIND = DP) :: pwc
-  !! power used to define a non-uniform grid between wsfc and wscut
+  !!!!!
+  !  REAL(KIND = DP) :: wsfc
+  !  !! intermediate freqeuncy between (0,wscut)
+  !  REAL(KIND = DP) :: pwc
+  !  !! power used to define a non-uniform grid between wsfc and wscut
+  !!!!!
   REAL(KIND = DP) :: wscut
   !! upper limit cutoff frequency in Eliashberg equations (at least 5 times wsphmax)
   REAL(KIND = DP) :: broyden_beta
@@ -329,6 +343,12 @@
   !! min frequency in electron spectral function due to e-p interaction
   REAL(KIND = DP) :: wmax_specfun
   !! max frequency in electron spectral function due to e-p `interaction
+  !!!!!
+  REAL(KIND = DP) :: dos_del
+  !! Delta_E in electronic dos for Fermi window (in eV)
+  REAL(KIND = DP) :: griddens
+  !! Measure of sparsity of the grid
+  !!!!!
   !
   ! Conductivity
   INTEGER :: mob_nfreq

@@ -28,6 +28,17 @@ MODULE cp_restart_new
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
   USE matrix_inversion
+#if defined (__fox)
+    USE FoX_wxml
+    USE FoX_dom,     ONLY : Node, parseFile, item, getElementsByTagname, &
+                            hasAttribute, extractDataAttribute, &
+                            extractDataContent, destroy
+#else
+    USE     wxml
+    USE     dom,     ONLY : Node, parseFile, item, getElementsByTagname, &
+                            hasAttribute, extractDataAttribute, &
+                            extractDataContent, destroy
+#endif
   !
   IMPLICIT NONE
   !
@@ -70,7 +81,7 @@ MODULE cp_restart_new
       USE funct,                    ONLY : get_dft_name, dft_is_nonlocc, get_nonlocc_name
       USE xc_lib,                   ONLY : xclib_dft_is, xclib_get_exx_fraction, &
                                            get_screening_parameter
-      USE ldaU_cp,                  ONLY : lda_plus_U, ns, Hubbard_l, &
+      USE ldaU_cp,                  ONLY : lda_plus_U, ns, Hubbard_l, Hubbard_n, &
                                            Hubbard_lmax, Hubbard_U
       USE energies,                 ONLY : enthal, ekin, eht, esr, eself, &
                                            epseu, enl, exc, vave
@@ -95,8 +106,6 @@ MODULE cp_restart_new
       USE qexsd_input, ONLY: qexsd_init_k_points_ibz
       USE qexsd_module, ONLY: qexsd_openschema, qexsd_closeschema, qexsd_xf,  &
                               qexsd_add_all_clocks
-      !
-      IMPLICIT NONE
       !
       INTEGER,               INTENT(IN) :: ndw          !
       LOGICAL,               INTENT(IN) :: ascii        !
@@ -363,8 +372,9 @@ MODULE cp_restart_new
 ! ... MAGNETIZATION
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_init_magnetization(output_obj%magnetization, lsda, .false.,&
-              .false., 0.0_dp, [0.0_dp,0.0_dp, 0.0_dp], 0.0_dp, .false.)
+         CALL qexsd_init_magnetization(output_obj%magnetization, LSDA = lsda, NONCOLIN = .false.,&
+              SPINORBIT = .false., ABSOLUTE_MAG = 0.d0, ATM = atm, ITYP = ityp )
+         output_obj%magnetization_ispresent = lsda
          !
 !-------------------------------------------------------------------------------
 ! ... TOTAL ENERGY
@@ -555,8 +565,6 @@ MODULE cp_restart_new
                             ekincm, c02, cm2, wfc )
       !------------------------------------------------------------------------
       !
-      USE FoX_dom,                  ONLY : parseFile, destroy, item, getElementsByTagname,&
-                                           Node
       USE control_flags,            ONLY : gamma_only, force_pairing, llondon,&
                                            ts_vdw, mbd_vdw, lxdm, iverbosity, lwf
       USE run_info,                 ONLY : title
@@ -568,7 +576,7 @@ MODULE cp_restart_new
                                            ityp, ions_cofmass
       USE gvect,       ONLY : ig_l2g, mill
       USE cp_main_variables,        ONLY : nprint_nfi
-      USE ldaU_cp,                  ONLY : lda_plus_U, ns, Hubbard_l, &
+      USE ldaU_cp,                  ONLY : lda_plus_U, ns, Hubbard_l, Hubbard_n, &
                                            Hubbard_lmax, Hubbard_U
       USE mp,                       ONLY : mp_sum, mp_bcast
       USE mp_global,                ONLY : nproc_file, nproc_pool_file, &
@@ -585,8 +593,6 @@ MODULE cp_restart_new
       USE qexsd_copy, ONLY:  qexsd_copy_geninfo, qexsd_copy_parallel_info, &
            qexsd_copy_atomic_species, qexsd_copy_atomic_structure, &
            qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure
-      !
-      IMPLICIT NONE
       !
       INTEGER,               INTENT(IN)    :: ndr          !  I/O unit number
       LOGICAL,               INTENT(IN)    :: ascii        !
@@ -670,19 +676,17 @@ MODULE cp_restart_new
       TYPE (general_info_type ) :: geninfo_obj 
       TYPE (Node),POINTER       :: root, nodePointer
       CHARACTER(LEN=20) :: dft_name, vdw_corr
-      CHARACTER(LEN=32) :: exxdiv_treatment, U_projection
+      CHARACTER(LEN=32) :: exxdiv_treatment, Hubbard_projectors
       LOGICAL :: ldftd3
       INTEGER :: nq1, nq2, nq3, lda_plus_U_kind
       REAL(dp):: exx_fraction, screening_parameter, ecutfock, ecutvcut,local_thr
       LOGICAL :: x_gamma_extrapolation
-      REAL(dp):: hubbard_dum(3,nsp)
+      REAL(dp):: hubbard_dum(3,nsp), hubba_dum(nsp), hubba_dum_dum(1,1,1) 
+      LOGICAL :: backall_dum(nsp)
+      INTEGER :: hub_l2_dum(nsp), hub_l3_dum(nsp), hub_lmax_back_dum  
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
-      INTEGER, POINTER            :: hub_l_back_dum(:), hub_l1_back_dum(:), hub_lmax_back_dum  
-      LOGICAL, POINTER            :: backall_dum(:)
-      REAL(dp),    POINTER        :: hubba_dum(:)
       !
       !
-      NULLIFY (hub_l_back_dum, hub_l1_back_dum, hub_lmax_back_dum, backall_dum, hubba_dum) 
       dirname = restart_dir(ndr)
       filename= xmlfile(ndr)
       INQUIRE ( file=filename, exist=found )
@@ -778,15 +782,15 @@ MODULE cp_restart_new
       CALL qexsd_copy_dft ( output_obj%dft, nsp, atm, dft_name, &
            nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
-           lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax,&
-           hub_l_back_dum, hub_l1_back_dum, backall_dum, hub_lmax_back_dum, hubba_dum, & 
+           lda_plus_U, lda_plus_U_kind, Hubbard_projectors, Hubbard_n, Hubbard_l, Hubbard_lmax,&
+           hub_l2_dum, hub_l2_dum, hub_l2_dum, hub_l2_dum, backall_dum, hub_lmax_back_dum, hubba_dum, & 
            Hubbard_U, hubba_dum, Hubbard_dum(1,:), Hubbard_dum(2,:), Hubbard_dum(3,:), &
-           Hubbard_dum, &
-           vdw_corr, scal6, lon_rcut, vdw_isolated)
+           HUBBARD_J = Hubbard_dum, HUBBARD_V = hubba_dum_dum, VDW_CORR = vdw_corr, SCAL6 = scal6,    & 
+           LON_RCUT =lon_rcut, VDW_ISOLATED = vdw_isolated )
       CALL set_vdw_corr (vdw_corr, llondon, ldftd3, ts_vdw, mbd_vdw, lxdm )
       IF ( ldftd3 ) CALL errore('cp_readfile','DFT-D3 not implemented',1)
       !
-      lsda_ = output_obj%magnetization%lsda
+      lsda_ = output_obj%magnetization_ispresent .AND. output_obj%magnetization%lsda
       IF ( lsda_ .AND. (nspin /= 2) ) CALL errore('cp_readfile','wrong spin',1)
       !
       nbnd_ = nupdwn(1)
@@ -841,10 +845,7 @@ MODULE cp_restart_new
     !------------------------------------------------------------------------
     ! ... Cell related variables, CP-specific
     !
-    USE FoX_wxml
     USE ions_base, ONLY: nat
-    !
-    IMPLICIT NONE
     !
     TYPE(xmlf_t),  INTENT(INOUT) :: xf
     INTEGER,  INTENT(IN) :: nfi          ! index of the current step
@@ -1071,7 +1072,6 @@ MODULE cp_restart_new
     !
     USE kinds, ONLY : dp
     USE io_global, ONLY : ionode
-    USE FoX_wxml 
     USE cell_base, ONLY : ainv ! what is this? what is the relation with h?
     !
     REAL(DP), INTENT(IN) :: h(:,:), wfc(:,:)
@@ -1126,8 +1126,6 @@ MODULE cp_restart_new
     USE gvecw,              ONLY : ngw, ngw_g
     USE gvect,              ONLY : ig_l2g
     !
-    IMPLICIT NONE
-    !
     INTEGER,               INTENT(IN)  :: ndr
     INTEGER,               INTENT(IN)  :: ik, iss, nk, nspin
     CHARACTER,             INTENT(IN)  :: tag
@@ -1180,9 +1178,6 @@ MODULE cp_restart_new
     ! ... ierr =  1: error reading MD status
     ! ... ierr =  2: error reading timestep info
     !
-    USE FoX_dom
-    !
-    IMPLICIT NONE
     !
     TYPE(Node),POINTER,INTENT(IN) :: root
     INTEGER,  INTENT(IN) :: nat
@@ -1395,7 +1390,6 @@ MODULE cp_restart_new
     !
     USE kinds, ONLY : dp
     USE io_global, ONLY : stdout
-    USE FoX_dom
     !
     TYPE(Node), POINTER, INTENT(IN)  :: root
     REAL(DP), INTENT(OUT):: wfc(:,:)
@@ -1436,12 +1430,8 @@ MODULE cp_restart_new
     !
     USE parameters,  ONLY : ntypx
     USE ions_base,   ONLY : nat
-    USE FoX_dom,     ONLY : Node, parseFile, item, getElementsByTagname, extractDataAttribute, &
-                            extractDataContent, destroy
     USE qexsd_copy,  ONLY : qexsd_copy_atomic_structure
     USE qes_read_module, ONLY : qes_read
-    !
-    IMPLICIT NONE
     !
     INTEGER,          INTENT(IN)    :: ndr
     LOGICAL,          INTENT(IN)    :: ascii
@@ -1584,7 +1574,6 @@ MODULE cp_restart_new
     USE io_global, ONLY : ionode, ionode_id
     USE cp_main_variables, ONLY : idesc
     !
-    IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(in) :: filename
     INTEGER, INTENT(in) :: iunpun, iss, nspin, nudx
     REAL(dp), INTENT(in) :: lambda(:,:)
@@ -1624,8 +1613,6 @@ MODULE cp_restart_new
     USE io_global, ONLY : ionode, ionode_id
     USE cp_main_variables, ONLY : idesc
     !
-    IMPLICIT NONE
-
     include 'laxlib.fh'
 
     CHARACTER(LEN=*), INTENT(in) :: filename
@@ -1670,8 +1657,6 @@ MODULE cp_restart_new
     USE cp_main_variables, ONLY : idesc
     USE electrons_base,ONLY: nspin, nudx
     !
-    IMPLICIT NONE
-
     include 'laxlib.fh'
 
     REAL(dp), INTENT(in) :: mat_z(:,:,:)
@@ -1721,8 +1706,6 @@ MODULE cp_restart_new
     USE cp_main_variables, ONLY : idesc
     USE electrons_base,ONLY: nspin, nudx
     !
-    IMPLICIT NONE
-
     include 'laxlib.fh'
 
     REAL(dp), INTENT(out) :: mat_z(:,:,:)

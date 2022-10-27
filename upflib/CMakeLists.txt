@@ -2,6 +2,8 @@ set(src_upflib
     atom.f90
     atomic_number.f90
     dqvan2.f90
+    gen_us_dj.f90
+    gen_us_dy.f90
     init_us_0.f90
     init_us_b0.f90
     init_us_1.f90
@@ -10,6 +12,8 @@ set(src_upflib
     init_tab_qrad.f90
     interp_atwfc.f90
     init_us_2_base.f90
+    gen_us_dj_gpu.f90
+    gen_us_dy_gpu.f90
     gth.f90
     paw_variables.f90
     pseudo_types.f90
@@ -41,8 +45,8 @@ set(src_upflib
     upf_utils.f90
     uspp.f90
     uspp_data.f90
+    uspp_param.f90
     write_upf_new.f90
-    xmltools.f90
     ylmr2.f90
     dylmr2.f90
     # GPU
@@ -55,15 +59,20 @@ set(src_upflib
     simpsn_gpu.f90)
 qe_enable_cuda_fortran("${src_upflib}")
 
+qe_add_library(qe_xml xmltools.f90 dom.f90 wxml.f90)
+target_compile_definitions(qe_xml PRIVATE __XML_STANDALONE)
+
 qe_add_library(qe_upflib ${src_upflib})
 target_link_libraries(qe_upflib
     PUBLIC
         qe_openacc_fortran
+        qe_xml
     PRIVATE
         qe_devxlib
         qe_mpi_fortran
         qe_lapack
         qe_utilx)
+
 # should the devxlib dependency be permanent or cuda-only?
 #if(QE_ENABLE_CUDA)
 #    target_link_libraries(qe_upflib
@@ -120,8 +129,19 @@ set_target_properties(qe_upflib_hgh2qe_exe
         OUTPUT_NAME hgh2qe.x)
 
 ############################################################################
-qe_install_targets(qe_upflib
+qe_install_targets(qe_xml
+    qe_upflib
     qe_upflib_virtual_v2_exe
     qe_upflib_upfconv_exe
     qe_upflib_casino2upf_exe
     qe_upflib_hgh2qe_exe)
+
+add_custom_target(upf
+    DEPENDS
+        #Library
+        qe_upflib
+        #Executables
+        qe_upflib_virtual_v2_exe
+        qe_upflib_upfconv_exe
+    COMMENT
+        "utilities for pseudopotential conversion")

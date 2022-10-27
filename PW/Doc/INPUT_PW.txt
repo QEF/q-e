@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pw.x / PWscf / Quantum Espresso (version: 6.8)
+Program: pw.x / PWscf / Quantum Espresso (version: 7.1rc)
 ------------------------------------------------------------------------
 
 
@@ -13,7 +13,8 @@ All quantities whose dimensions are not explicitly specified are in
 RYDBERG ATOMIC UNITS. Charge is "number" charge (i.e. not multiplied
 by e); potentials are in energy units (i.e. they are multiplied by e).
 
-BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE
+BEWARE: TABS, CRLF, ANY OTHER STRANGE CHARACTER, ARE A SOURCES OF TROUBLE
+USE ONLY PLAIN ASCII TEXT FILES (CHECK THE FILE TYPE WITH UNIX COMMAND "file")
 
 Namelists must appear in the order given below.
 Comment lines in namelists can be introduced by a "!", exactly as in
@@ -22,7 +23,6 @@ either a "!" or a "#" character in the first position of a line.
 Do not start any line in cards with a "/" character.
 Leave a space between card names and card options, e.g.
 ATOMIC_POSITIONS (bohr), not ATOMIC_POSITIONS(bohr)
-Do not start any line in cards with a "/" character.
 
 
 Structure of the input data:
@@ -52,15 +52,19 @@ Structure of the input data:
   ...
  / ]
 
+[ &RISM
+  ...
+ / ]
+
 ATOMIC_SPECIES
  X  Mass_X  PseudoPot_X
  Y  Mass_Y  PseudoPot_Y
  Z  Mass_Z  PseudoPot_Z
 
-ATOMIC_POSITIONS { alat | bohr | crystal | angstrom | crystal_sg }
+ATOMIC_POSITIONS { alat | bohr | angstrom | crystal | crystal_sg }
   X 0.0  0.0  0.0  {if_pos(1) if_pos(2) if_pos(3)}
   Y 0.5  0.0  0.0
-  Z O.0  0.2  0.2
+  Z 0.0  0.2  0.2
 
 K_POINTS { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c }
 if (gamma)
@@ -87,13 +91,49 @@ if (tpipa_b or crystal_b in a 'bands' calculation) see Doc/brillouin_zones.pdf
    nconstr  { constr_tol }
    constr_type(.)   constr(1,.)   constr(2,.) [ constr(3,.)   constr(4,.) ] { constr_target(.) } ]
 
-[ ATOMIC_FORCES
-   label_1 Fx(1) Fy(1) Fz(1)
+[ ATOMIC_VELOCITIES
+   label(1)  vx(1) vy(1) vz(1)
    .....
-   label_n Fx(n) Fy(n) Fz(n) ]
+   label(n)  vx(n) vy(n) vz(n) ]
+
+[ ATOMIC_FORCES
+   label(1)  Fx(1) Fy(1) Fz(1)
+   .....
+   label(n)  Fx(n) Fy(n) Fz(n) ]
 
 [ ADDITIONAL_K_POINTS
      see: K_POINTS ]
+
+[ SOLVENTS
+   label(1)     Density(1)     Molecule(1)
+   label(2)     Density(2)     Molecule(2)
+   .....
+   label(nsolv) Density(nsolv) Molecule(nsolv) ]
+
+[ HUBBARD { atomic | ortho-atomic | norm-atomic | wf | pseudo }
+  if (DFT+U)
+      U  label(1)-manifold(1) u_val(1)
+    [ J0 label(1)-manifold(1) j0_val(1) ]
+      .....
+      U  label(n)-manifold(n) u_val(n)
+    [ J0 label(n)-manifold(n) j0_val(n) ]
+  if (DFT+U+J)
+      paramType(1) label(1)-manifold(1) paramValue(1)
+      .....
+      paramType(n) label(n)-manifold(n) paramValue(n)
+  if (DFT+U+V)
+      U  label(I)-manifold(I) u_val(I)
+    [ J0 label(I)-manifold(I) j0_val(I) ]
+      V  label(I)-manifold(I) label(J)-manifold(J) I J v_val(I,J)
+      .....
+      U  label(N)-manifold(N) u_val(N)
+    [ J0 label(N)-manifold(N) j0_val(N) ]
+      V  label(N)-manifold(N) label(M)-manifold(M) N M v_val(N,M)
+]
+All Hubbard parameters must be specified in eV.
+manifold  = 3d, 2p, 4f...
+paramType = U, J, B, E2, or E3
+Check Doc/Hubbard_input.pdf for more details.
 
 
 
@@ -436,24 +476,6 @@ NAMELIST: &CONTROL
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       lfcp
-   
-   Type:           LOGICAL
-   See:            fcp_mu
-   Default:        .FALSE.
-   Description:    If .TRUE. perform a constant bias potential (constant-mu) calculation
-                   for a system with ESM method. See the header of PW/src/fcp_module.f90
-                   for documentation. To perform the calculation, you must set a namelist FCP.
-                   
-                   NB:
-                   - The total energy displayed in output includes the potentiostat
-                     contribution (-mu*N).
-                   - "calculation" must be 'relax' or 'md'.
-                   - "assume_isolated" = 'esm' and "esm_bc" = 'bc2' or 'bc3' must be set
-                     in "SYSTEM" namelist.
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
    Variable:       gate
    
    Type:           LOGICAL
@@ -471,6 +493,51 @@ NAMELIST: &CONTROL
                    could still use them for symmetric systems (i.e. no dipole correction).
                    For "nosym"=.false. verbosity is set to 'high'.
                    Note: this option was called "monopole" in v6.0 and 6.1 of pw.x
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lfcp
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE. perform a constant bias potential (constant-mu) calculation
+                   for a system with ESM method. See the header of PW/src/fcp_module.f90
+                   for documentation. To perform the calculation, you must set a namelist FCP.
+                   
+                   NB:
+                   - The total energy displayed in output includes the potentiostat
+                     contribution (-mu*N).
+                   - "calculation" must be 'relax' or 'md'.
+                   - "assume_isolated" = 'esm' and "esm_bc" = 'bc2' or 'bc3' must be set
+                     in "SYSTEM" namelist.
+                   - ESM-RISM is also supported ("assume_isolated" = 'esm' and "esm_bc" = 'bc1'
+                     and "trism" = .TRUE.).
+                   - "ignore_wolfe" is always .TRUE., for BFGS.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       trism
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE. perform a 3D-RISM-SCF calculation
+                   [for details see H.Sato et al., JCP 112, 9463 (2000), doi:10.1063/1.481564].
+                   The solvent's distributions are calculated by 3D-RISM,
+                   though solute is treated as SCF. The charge density and
+                   the atomic positions are optimized, simultaneously with
+                   the solvents. To perform the calculation, you must set
+                   a namelist "RISM" and a card "SOLVENTS".
+                   
+                   If "assume_isolated" = 'esm' and "esm_bc" = 'bc1',
+                   Laue-RISM is calculated instead of 3D-RISM
+                   and coupled with ESM method (i.e. ESM-RISM).
+                   [for details see S.Nishihara and M.Otani, PRB 96, 115429 (2017)].
+                   
+                   The default of "mixing_beta" is 0.2
+                   for both 3D-RISM and Laue-RISM.
+                   
+                   For structural relaxation with BFGS,
+                   "ignore_wolfe" is always .TRUE. .
    +--------------------------------------------------------------------
    
 ===END OF NAMELIST======================================================
@@ -642,14 +709,14 @@ NAMELIST: &SYSTEM
                         cosAC = cosine of the angle between axis a and c (beta)
                         cosBC = cosine of the angle between axis b and c (alpha)
                       
-                      The axis are chosen according to the value of @ref ibrav.
-                      Specify either these OR @ref celldm but NOT both.
-                      Only needed values (depending on @ref ibrav) must be specified.
+                      The axis are chosen according to the value of "ibrav".
+                      Specify either these OR "celldm" but NOT both.
+                      Only needed values (depending on "ibrav") must be specified.
                       
                       The lattice parameter alat = A (in ANGSTROM ).
                       
-                      If @ref ibrav == 0, only A is used if present, and
-                      cell vectors are read from card @ref CELL_PARAMETERS.
+                      If "ibrav" == 0, only A is used if present, and
+                      cell vectors are read from card "CELL_PARAMETERS".
       +--------------------------------------------------------------------
       
    \\\---
@@ -710,7 +777,7 @@ NAMELIST: &SYSTEM
    Variable:       tot_magnetization
    
    Type:           REAL
-   Default:        -1 [unspecified]
+   Default:        -10000 [unspecified]
    Description:    Total majority spin charge - minority spin charge.
                    Used to impose a specific total electronic magnetization.
                    If unspecified then tot_magnetization variable is ignored and
@@ -799,7 +866,7 @@ NAMELIST: &SYSTEM
    Description:    Three-dimensional FFT mesh (hard grid) for charge
                    density (and scf potential). If not specified
                    the grid is calculated based on the cutoff for
-                   charge density (see also @ref ecutrho)
+                   charge density (see also "ecutrho")
                    Note: you must specify all three dimensions for this setting to
                    be used.
    +--------------------------------------------------------------------
@@ -810,7 +877,7 @@ NAMELIST: &SYSTEM
    Type:           INTEGER
    Description:    Three-dimensional mesh for wavefunction FFT and for the smooth
                    part of charge density ( smooth grid ).
-                   Coincides with @ref nr1, @ref nr2, @ref nr3 if @ref ecutrho = 4 * ecutwfc ( default )
+                   Coincides with "nr1", "nr2", "nr3" if "ecutrho" = 4 * ecutwfc ( default )
                    Note: you must specify all three dimensions for this setting to
                    be used.
    +--------------------------------------------------------------------
@@ -1197,89 +1264,20 @@ NAMELIST: &SYSTEM
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       lda_plus_u
-   
-   Type:           LOGICAL
-   Default:        .FALSE.
-   Status:         DFT+U (formerly known as LDA+U) currently works only for
-                   a few selected elements. Modify Modules/set_hubbard_l.f90 and
-                   PW/src/tabd.f90 if you plan to use DFT+U with an element that
-                   is not configured there.
-   Description:    Specify "lda_plus_u" = .TRUE. to enable DFT+U, DFT+U+V, or DFT+U+J calculations.
-                   See: Anisimov, Zaanen, and Andersen, PRB 44, 943 (1991);
-                        Anisimov et al., PRB 48, 16929 (1993);
-                        Liechtenstein, Anisimov, and Zaanen, PRB 52, R5467 (1994).
-                   You must specify, for each Hubbard atom, the value of
-                   U and (optionally) V, J, alpha of the Hubbard model (all in eV):
-                   see "lda_plus_u_kind", "Hubbard_U", "Hubbard_V",
-                   "Hubbard_J", "Hubbard_alpha"
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       lda_plus_u_kind
-   
-   Type:           INTEGER
-   Default:        0
-   Description:   
-                   Specifies the type of calculation:
-    
-                   lda_plus_u_kind = 0  :
-                        DFT+U simplified version of Cococcioni and de Gironcoli,
-                        PRB 71, 035105 (2005), using "Hubbard_U"
-    
-                   lda_plus_u_kind = 1  :
-                        DFT+U rotationally invariant scheme of Liechtenstein et al.,
-                        using "Hubbard_U" and "Hubbard_J"
-    
-                   lda_plus_u_kind = 2  :
-                        DFT+U+V simplified version of Campo Jr and Cococcioni,
-                        J. Phys.: Condens. Matter 22, 055602 (2010), doi:10.1088/0953-8984/22/5/055602,
-                        using "Hubbard_V"
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       Hubbard_U(i), i=1,ntyp
+   Variable:       Hubbard_occ(ityp,i), (ityp,i)=(1,1) ... (ntyp,3)
    
    Type:           REAL
-   Default:        0.D0 for all species
-   Description:    Hubbard_U(i): U parameter (eV) for species i, DFT+U calculation
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       Hubbard_J0(i), i=1,ntype
-   
-   Type:           REAL
-   Default:        0.D0 for all species
-   Description:    Hubbard_J0(i): J0 parameter (eV) for species i, DFT+U+J calculation,
-                   see PRB 84, 115108 (2011) for details.
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       Hubbard_V(na,nb,k), (na,nb,k)=(1,1,1) ... (natx,27*natx,4)
-   
-   Type:           REAL
-   Default:        0.D0 for all elements
-   Description:    Hubbard_V(na,nb,k): V parameters (eV) between atoms na and nb,
-                   used in DFT+U+V calculations (only for "lda_plus_u_kind"=2).
-                   The atomic indices na and nb correspond to the atomic positions
-                   in the "ATOMIC_POSITIONS" card (this is not the same as Hubbard_U
-                   which is specified for "ATOMIC_SPECIES").
-                   
-                   When na=nb, then "Hubbard_V"(na,na,k) is the on-site "Hubbard_U"
-                   for the atom na.
-                   
-                   natx=50 (if needed it can be changed in /Modules/parameters.f90)
-                   
-                   The index k controls the "interaction type" (k=1 is used for the
-                   simplest DFT+U+V calculation):
-                   k=1 - interaction between standard orbitals (both on na and nb);
-                   k=2 - interaction between standard (on na) and background (on nb) orbitals;
-                   k=3 - interaction between background orbitals (both on na and nb);
-                   k=4 - interaction between background (on na) and standard (on nb) orbitals.
-                   
-                   Standard orbitals correspond to the main Hubbard channel (e.g. d electrons
-                   in transition metals) and background orbitals correspond to the secondary
-                   Hubbard channel (e.g. p electrons in transition metals).
+   Default:        read from pseudopotentials
+   Description:    Hubbard occupations is the number of electrons in the
+                   Hubbard manifold. By default they are initialized by
+                   reading the occupations from pseudopotentials. If specified
+                   from the input, then the values read from the pseudopotentials
+                   will be overwritten.
+                   The second index of the Hubbard_occ array corresponds to the
+                   Hubbard manifold number. It is possible to specify up to
+                   three Hubbard manifolds per Hubbard atom. However, if you want
+                   to specify three manifolds then the second and the third manifolds
+                   will be considered as one effective manifold (see Doc/Hubbard_input.pdf)
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1311,23 +1309,6 @@ NAMELIST: &SYSTEM
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       Hubbard_J(i,ityp), (i,ityp)=(1,1) ... (3,ntyp)
-   
-   Type:           REAL
-   Default:        0.D0 for all species
-   Description:    Hubbard_J(i,ityp): J parameters (eV) for species ityp,
-                   used in DFT+U calculations (only for "lda_plus_u_kind"=1)
-                   
-                   For p orbitals:  J = Hubbard_J(1,ityp);
-                   For d orbitals:  J = Hubbard_J(1,ityp), B = Hubbard_J(2,ityp);
-                   For f orbitals:  J = Hubbard_J(1,ityp), E2 = Hubbard_J(2,ityp),
-                                    E3= Hubbard_J(3,ityp).
-                   
-                   If B or E2 or E3 are not specified or set to 0 they will be
-                   calculated from J using atomic ratios.
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
    Variable:       starting_ns_eigenvalue(m,ispin,ityp), (m,ispin,ityp)=(1,1,1) ... (2*lmax+1,nspin or npol,ntyp)
    
    Type:           REAL
@@ -1344,66 +1325,28 @@ NAMELIST: &SYSTEM
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       U_projection_type
+   Variable:       dmft
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Status:         Requires compilation with hdf5 support
+   Description:    If true, nscf calculation will exit in restart mode, scf calculation
+                   will restart from there if DMFT updates are provided as hdf5 archive.
+                   Scf calculation should be used only with "electron_maxstep" = 1.
+                   "K_POINTS" have to be identical and given explicitly with "nosym".
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       dmft_prefix
    
    Type:           CHARACTER
-   Default:        'atomic'
-   Description:   
-                   Only active when "lda_plus_U" is .true., specifies the type
-                   of projector on localized orbital to be used in the DFT+U
-                   scheme.
+   Default:        "prefix"
+   Description:    prepended to hdf5 archive: dmft_prefix.h5
                    
-                   Currently available choices:
-    
-                   'atomic' :
-                        use atomic wfc's (as they are) to build the projector
-    
-                   'ortho-atomic' :
-                        use Lowdin orthogonalized atomic wfc's
-    
-                   'norm-atomic' :
-                        Lowdin normalization of atomic wfc. Keep in mind:
-                        atomic wfc are not orthogonalized in this case.
-                        This is a "quick and dirty" trick to be used when
-                        atomic wfc from the pseudopotential are not
-                        normalized (and thus produce occupation whose
-                        value exceeds unity). If orthogonalized wfc are
-                        not needed always try 'atomic' first.
-    
-                   'file' :
-                        use the information from file "prefix".atwfc that must
-                        have been generated previously, for instance by pmw.x
-                        (see PP/src/poormanwannier.f90 for details).
-    
-                   'pseudo' :
-                        use the pseudopotential projectors. The charge density
-                        outside the atomic core radii is excluded.
-                        N.B.: for atoms with +U, a pseudopotential with the
-                        all-electron atomic wavefunctions is required (i.e.,
-                        as generated by ld1.x with lsave_wfc flag).
-    
-                   NB: forces and stress currently implemented only for the
-                   'atomic' and 'pseudo' choice.
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       Hubbard_parameters
-   
-   Type:           CHARACTER
-   Default:        'input'
-   Description:   
-                   Available choices:
-    
-                   'input' :
-                        read the "Hubbard_U" (or "Hubbard_V") parameters from
-                        the PW input file
-    
-                   'file' :
-                        read the "Hubbard_V" parameters from the file "parameters.in"
-                        which can be generated after the linear-response calculation
-                        (using the HP code). This option has a higher priority over
-                        the "Hubbard_V" if they are specified in the input. This option
-                        can be used only when "lda_plus_u_kind" = 2.
+                   DMFT update should be provided in group/dataset as:
+                   - dft_misc_input/band_window with dimension [1, number of k-points, 2 (real + complex)]
+                   - dft_update/delta_N with dimension [number of k-points, number of correlated orbitals,
+                   number of correlated orbitals, 2 (real + complex)]
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1634,7 +1577,7 @@ NAMELIST: &SYSTEM
                         semi-infinite metal electrodes (use "esm_bc" to
                         choose boundary conditions). If between two
                         electrodes, an optional electric field
-                        ('esm_efield') may be applied. Method described in
+                        ("esm_efield") may be applied. Method described in
                         M. Otani and O. Sugino, "First-principles calculations
                         of charged surfaces and interfaces: A plane-wave
                         nonrepeated slab approach", PRB 73, 115407 (2006).
@@ -1653,7 +1596,7 @@ NAMELIST: &SYSTEM
                              is automatically eliminated.
                         
                            - In case of calculation='vc-relax', use
-                             cell_dofree='2Dxy' or other parameters so that
+                             "cell_dofree"='2Dxy' or other parameters so that
                              c-vector along z-axis should not be moved.
                         
                         See "esm_bc", "esm_efield", "esm_w", "esm_nfit".
@@ -1665,10 +1608,10 @@ NAMELIST: &SYSTEM
                         Linear-response calculations () done on top of a self-consistent
                         calculation with this flag will automatically be performed in
                         the 2D framework as well. Please refer to:
-                        Sohier, T., Calandra, M., & Mauri, F. (2017), Density functional
+                        Sohier, T., Calandra, M., & Mauri, F. (2017), "Density functional
                         perturbation theory for gated two-dimensional heterostructures:
-                        Theoretical developments and application to flexural phonons in graphene.
-                        Physical Review B, 96(7), 75448. https://doi.org/10.1103/PhysRevB.96.075448
+                        Theoretical developments and application to flexural phonons in graphene",
+                        PRB, 96, 075448 (2017).
                         
                         NB:
                            - The length of the unit-cell along the z direction should
@@ -1681,7 +1624,7 @@ NAMELIST: &SYSTEM
                              radius used to read pseudopotentials (see read_pseudo.f90 in Modules).
                         
                            - As for ESM above, only in-plane stresses make sense and one
-                             should use cell_dofree='2Dxy' in a vc-relax calculation.
+                             should use "cell_dofree"= '2Dxy' in a vc-relax calculation.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1798,8 +1741,7 @@ NAMELIST: &SYSTEM
    Type:           CHARACTER
    Default:        'none'
    See:            london_s6, london_rcut, london_c6, london_rvdw,
-                   dftd3_version, dftd3_threebody, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2,
-                   mbd_vdw
+                   dftd3_version, dftd3_threebody, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2
    Description:   
                    Type of Van der Waals correction. Allowed values:
     
@@ -1820,7 +1762,7 @@ NAMELIST: &SYSTEM
                         Optional variables: "ts_vdw_econv_thr", "ts_vdw_isolated"
                         See A. Tkatchenko and M. Scheffler, PRL 102, 073005 (2009).
     
-                   'mbd_vdw', 'many-body dispersion' :
+                   'MBD', 'mbd', 'many-body-dispersion', 'mbd_vdw' :
                         Many-body dipersion (MBD) correction to long-range interactions.
                         Optional variables: "ts_vdw_isolated"
                         A. Ambrosetti, A. M. Reilly, R. A. DiStasio, A. Tkatchenko, J. Chem. Phys. 140
@@ -2128,7 +2070,7 @@ NAMELIST: &ELECTRONS
                    
                    For non-self-consistent calculations, conv_thr is used
                    to set the default value of the threshold (ethr) for
-                   iterative diagonalizazion: see "diago_thr_init"
+                   iterative diagonalization: see "diago_thr_init"
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2227,6 +2169,14 @@ NAMELIST: &ELECTRONS
     
                    'paro', 'ParO' :
                         ParO iterative diagonalization
+    
+                   'rmm-davidson', 'rmm-paro' :
+                        RMM-DIIS iterative diagonalization.
+                        To stabilize the SCF loop
+                        RMM-DIIS is alternated with calls to Davidson or
+                        ParO  solvers depending on the string used.
+                        Other variables that can be used to tune the behavior of
+                        RMM-DIIS are:  "diago_rmm_ndim" and "diago_rmm_conv"
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2253,6 +2203,13 @@ NAMELIST: &ELECTRONS
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
+   Variable:       diago_ppcg_maxiter
+   
+   Type:           INTEGER
+   Description:    For ppcg diagonalization:  max number of iterations
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
    Variable:       diago_david_ndim
    
    Type:           INTEGER
@@ -2265,6 +2222,33 @@ NAMELIST: &ELECTRONS
                    "diago_david_ndim"=4 if you are not tight on memory
                    and if the time spent in subspace diagonalization is small
                    compared to the time spent in h_psi
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       diago_rmm_ndim
+   
+   Type:           INTEGER
+   Default:        4
+   Description:    For RMM-DIIS diagonalization: dimension of workspace
+                   (number of wavefunction packets, at least 2 needed).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       diago_rmm_conv
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE., RMM-DIIS is performed up to converge.
+                   If .FALSE., RMM-DIIS is performed only once.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       diago_gs_nblock
+   
+   Type:           INTEGER
+   Default:        16
+   Description:    For RMM-DIIS diagonalization:
+                   blocking size of Gram-Schmidt orthogonalization
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2459,6 +2443,16 @@ NAMELIST: &IONS
                         Can be used for constrained
                         optimisation: see "CONSTRAINTS" card
     
+                   'fire' :
+                        use the FIRE minimization algorithm employing the
+                        semi-implicit Euler integration scheme
+                        see:
+                           Bitzek et al.,PRL, 97, 170201, (2006), doi: 10.1103/PhysRevLett.97.170201
+                           Guenole et al.,CMS, 175, 109584, (2020), doi: 10.1016/j.commatsci.2020.109584
+                        
+                        Can be used for constrained
+                        optimisation: see "CONSTRAINTS" card
+    
                    CASE ( "calculation" == 'md' )
     
                    'verlet' :
@@ -2477,7 +2471,7 @@ NAMELIST: &IONS
     
                    'bfgs' :
                         (default)  use BFGS quasi-newton algorithm;
-                        cell_dynamics must be 'bfgs' too
+                        "cell_dynamics" must be 'bfgs' too
     
                    'damp' :
                         use damped (Beeman) dynamics for
@@ -2767,6 +2761,61 @@ NAMELIST: &IONS
       
    \\\---
    
+   ///---
+      KEYWORDS USED ONLY IN THE FIRE MINIMIZATION ALGORITHM
+      
+      +--------------------------------------------------------------------
+      Variable:       fire_alpha_init
+      
+      Type:           REAL
+      Default:        0.2D0
+      Description:    Initial value of the alpha mixing factor in the FIRE minimization scheme;
+                      recommended values are between 0.1 and 0.3
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fire_falpha
+      
+      Type:           REAL
+      Default:        0.99D0
+      Description:    Scaling of the alpha mixing parameter for steps with P > 0;
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fire_nmin
+      
+      Type:           INTEGER
+      Default:        5
+      Description:    Minimum number of steps with P > 0 before increase of "dt"
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fire_f_inc
+      
+      Type:           REAL
+      Default:        1.1D0
+      Description:    Factor for increasing "dt"
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fire_f_dec
+      
+      Type:           REAL
+      Default:        0.5D0
+      Description:    Factor for decreasing "dt"
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fire_dtmax
+      
+      Type:           REAL
+      Default:        10.D0
+      Description:    Determines the maximum value of "dt" in the FIRE minimization;
+                      dtmax = fire_dtmax*"dt"
+      +--------------------------------------------------------------------
+      
+   \\\---
+   
 ===END OF NAMELIST======================================================
 
 
@@ -2864,12 +2913,31 @@ NAMELIST: &CELL
                         all axis and angles are moved
     
                    'ibrav' :
-                        all axis and angles are moved, but the lattice remains consistent
-                        with the initial ibrav choice. You can use this option in combination
-                        with any other one by specifying "ibrav+option". Please note that some
-                        combinations do not make sense for some crystals and will guarantee that
-                        the relax will never converge. E.g. 'ibrav+2Dxy' is not a problem for
-                        hexagonal cells, but will never converge for cubic ones.
+                        all axis and angles are moved,
+                                       but the lattice remains consistent
+                                       with the initial ibrav choice. You can use this option in combination
+                                       with any other one by specifying "ibrav+option". Please note that some
+                                       combinations do not make sense for some crystals and will guarantee that
+                                       the relax will never converge. E.g. 'ibrav+2Dxy' is not a problem for
+                                       hexagonal cells, but will never converge for cubic ones.
+    
+                   'a' :
+                        the x component of axis 1 (v1_x) is fixed
+    
+                   'b' :
+                        the y component of axis 2 (v2_y) is fixed
+    
+                   'c' :
+                        the z component of axis 3 (v3_z) is fixed
+    
+                   'fixa' :
+                        axis 1 (v1_x,v1_y,v1_z) is fixed
+    
+                   'fixb' :
+                        axis 2 (v2_x,v2_y,v2_z) is fixed
+    
+                   'fixc' :
+                        axis 3 (v3_x,v3_y,v3_z) is fixed
     
                    'x' :
                         only the x component of axis 1 (v1_x) is moved
@@ -2999,6 +3067,7 @@ NAMELIST: &FCP
       
       Type:           REAL
       Default:        5.D+6 / (xy area) for ESM only;
+                      5.D+4 / (xy area) for ESM-RISM
       Description:    Mass of the FCP.
       +--------------------------------------------------------------------
       
@@ -3122,6 +3191,455 @@ NAMELIST: &FCP
    Default:        .FALSE.
    Description:    If .TRUE., freeze all atoms
                    to perform relaxation or dynamics only with FCP.
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+========================================================================
+NAMELIST: &RISM
+
+   INPUT THIS NAMELIST ONLY IF "TRISM" = .TRUE.
+   
+   +--------------------------------------------------------------------
+   Variable:       nsolv
+   
+   Type:           INTEGER
+   Status:         REQUIRED
+   Description:    The number of solvents (i.e. molecular species) in the unit cell
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       closure
+   
+   Type:           CHARACTER
+   Default:        'kh'
+   Description:   
+                   Specify the type of closure equation:
+    
+                   'kh' :
+                        The Kovalenko and Hirata's model.
+                        [A.Kovalenko, F.Hirata, JCP 110, 10095 (1999), doi:10.1063/1.478883]
+    
+                   'hnc' :
+                        The HyperNetted-Chain model, which is
+                        suitable only for solvents without charge.
+                        [J.P.Hansen et al., Theory of simple liquids. Academic Press, London, 1990]
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       tempv
+   
+   Type:           REAL
+   Default:        300.D0
+   Description:    Temperature (Kelvin) of solvents.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ecutsolv
+   
+   Type:           REAL
+   Default:        4 * "ecutwfc"
+   Description:    Kinetic energy cutoff (Ry) for solvent's correlation functions.
+                   If a solute is an isolated system or slab, you may allowed to
+                   use default value. For a frameworked or porous solute (e.g. Zeolite, MOF),
+                   it is desirable to apply a larger value. Solvents confined in a framework
+                   often have a high frequency.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       solute_lj(i), i=1,ntyp
+   
+   Type:           CHARACTER
+   Default:        'uff'
+   Description:   
+                   Specify the Lennard-Jones potential of solute on atomic type 'i':
+    
+                   'none' :
+                        The Lennard-Jones potential is not specified here.
+                        you must set "solute_epsilon" and "solute_sigma".
+    
+                   'uff' :
+                        Universal Force Field.
+                        [A.K.Rappe et al., JACS 144, 10024 (1992), doi:10.1021/ja00051a040]
+    
+                   'clayff' :
+                        Clay's Force Field
+                        [R.T.Cygan et al., JPC B 108, 1255 (2004), doi:10.1021/jp0363287]
+    
+                   'opls-aa' :
+                        OPLS-AA (generic parameters for QM/MM)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       solute_epsilon(i), i=1,ntyp
+   
+   Type:           REAL
+   Description:    The Lennard-Jones potential of solute on atomic type 'i'.
+                   Here, you can set the parameter 'epsilon' (kcal/mol).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       solute_sigma(i), i=1,ntyp
+   
+   Type:           REAL
+   Description:    The Lennard-Jones potential of solute on atomic type 'i'.
+                   Here, you can set the parameter 'sigma' (Angstrom).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       starting1d
+   
+   Type:           CHARACTER
+   Description:   
+                   'zero' :
+                        Starting correlation functions of 1D-RISM from zero.
+                        ( default for scf, *relax, *md )
+    
+                   'file' :
+                        Start from existing "1d-rism_csvv_r.xml" file in the
+                        directory specified by variables "prefix" and "outdir".
+    
+                   'fix' :
+                        Read from existing "1d-rism_csvv_r.xml" file in the
+                        directory specified by variables "prefix" and "outdir",
+                        and never calculate 1D-RISM.
+                        For nscf and bands calculation this is the default.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       starting3d
+   
+   Type:           CHARACTER
+   Description:   
+                   'zero' :
+                        Starting correlation functions of 3D-RISM from zero.
+                        ( default for scf, *relax, *md )
+    
+                   'file' :
+                        Start from existing "3d-rism_csuv_r.dat" file in the
+                        directory specified by variables "prefix" and "outdir".
+                        For nscf and bands calculation this is the default.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       smear1d
+   
+   Type:           REAL
+   Default:        2.D0
+   Description:    Coulomb smearing radius (a.u.) for 1D-RISM.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       smear3d
+   
+   Type:           REAL
+   Default:        2.D0
+   Description:    Coulomb smearing radius (a.u.) for 3D-RISM.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       rism1d_maxstep
+   
+   Type:           INTEGER
+   Default:        50000
+   Description:    Maximum number of iterations in a 1D-RISM step.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       rism3d_maxstep
+   
+   Type:           INTEGER
+   Default:        5000
+   Description:    Maximum number of iterations in a 3D-RISM step.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       rism1d_conv_thr
+   
+   Type:           REAL
+   Default:        1.D-8
+   Description:    Convergence threshold for 1D-RISM.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       rism3d_conv_thr
+   
+   Type:           REAL
+   Default:        1.D-5 if "lgcscf" == .FALSE.;
+                   5.D-6 if "lgcscf" == .TRUE.
+   Description:    Convergence threshold for 3D-RISM.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       mdiis1d_size
+   
+   Type:           INTEGER
+   Default:        20
+   Description:    Size of Modified DIIS (MDIIS) for 1D-RISM.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       mdiis3d_size
+   
+   Type:           INTEGER
+   Default:        10
+   Description:    Size of Modified DIIS (MDIIS) for 3D-RISM.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       mdiis1d_step
+   
+   Type:           REAL
+   Default:        0.5D0
+   Description:    Step of Modified DIIS (MDIIS) for 1D-RISM.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       mdiis3d_step
+   
+   Type:           REAL
+   Default:        0.8D0
+   Description:    Step of Modified DIIS (MDIIS) for 3D-RISM.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       rism1d_bond_width
+   
+   Type:           REAL
+   Description:    Gaussian width of bonds to smear intra-molecular correlation for 1D-RISM.
+                   If 3D-RISM calculation, default is 0.
+                   If Laue-RISM calculation, default is 2 / SQRT("ecutwfc").
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       rism1d_dielectric
+   
+   Type:           REAL
+   Default:        -1.0D0
+   Description:    Dielectric constant for 1D-RISM.
+                   If "rism1d_dielectric" > 0, dielectrically consistent RISM (DRISM) is performed.
+                   
+                   For details of DRISM, see:
+                   J.S.Perkyns and B.M.Pettitt, CPL 1992, 190, 626, doi:10.1016/0009-2614(92)85201-K
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       rism1d_molesize
+   
+   Type:           REAL
+   Default:        2.0D0
+   Description:    Size of solvent molecules (a.u.) for 1D-RISM.
+                   This is used only if "rism1d_dielectric" > 0.
+                   If you have large molecules, you have to set ~ 20 a.u. .
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       rism1d_nproc
+   
+   Type:           INTEGER
+   Default:        128
+   Description:    Number of processes to calculate 1D-RISM.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       rism3d_conv_level
+   
+   Type:           REAL
+   Default:        0.1 if "laue_both_hands" == .FALSE. .AND. "lgcscf" == .FALSE.;
+                   0.3 if "laue_both_hands" == .FALSE. .AND. "lgcscf" == .TRUE.;
+                   0.5 if "laue_both_hands" == .TRUE.
+   Description:   
+                   Convergence level of 3D-RISM.
+    
+                   0.0 :
+                        Convergence level is 'low'.
+                        Convergence threshold of 3D-RISM is greater than
+                        "rism3d_conv_thr", when estimated energy error >> "conv_thr" .
+                        The threshold becomes "rism3d_conv_thr", when
+                        estimated energy error is enough small.
+    
+                   0.0<x<1.0 :
+                        Convergence level is 'medium'.
+                        Convergence threshold of 3D-RISM is intermediate value
+                        between 'low' and 'high', where "rism3d_conv_level" is mixing rate.
+    
+                   1.0 :
+                        Convergence level is 'high'.
+                        Convergence threshold of 3D-RISM is always "rism3d_conv_thr" .
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       rism3d_planar_average
+   
+   Type:           LOGICAL
+   Description:    If .TRUE., planar averages of solvent densities and potentials
+                   are calculated and written to 'prefix.rism1'.
+                   For 3D-RISM, default is .FALSE.
+                   For Laue-RISM, default is .TRUE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       laue_nfit
+   
+   Type:           INTEGER
+   Default:        4
+   Description:    The number of z-grid points for the polynomial fit along the cell edge.
+                   This is only for Laue-RISM.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       laue_expand_right
+   
+   Type:           REAL
+   Default:        -1.0
+   Description:    If positive value, set the ending position offset [in a.u.]
+                   of the solvent region on right-hand side of the unit cell,
+                   measured relative to the unit cell edge.
+                   (the solvent region ends at z = + [L_z/2 + "laue_expand_right"].)
+                   This is only for Laue-RISM.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       laue_expand_left
+   
+   Type:           REAL
+   Default:        -1.0
+   Description:    If positive value, set the ending position offset [in a.u.]
+                   of the solvent region on left-hand side of the unit cell,
+                   measured relative to the unit cell edge.
+                   (the solvent region ends at z = - [L_z/2 + "laue_expand_left"].)
+                   This is only for Laue-RISM.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       laue_starting_right
+   
+   Type:           REAL
+   Default:        0.0
+   Description:    Set the starting position [in a.u.] of the solvent region
+                   on right-hand side of the unit cell. Then the solvent region is
+                   defined as [ "laue_starting_right" , L_z/2 + "laue_expand_right" ],
+                   where distribution functions are finite.
+                   This is only for Laue-RISM.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       laue_starting_left
+   
+   Type:           REAL
+   Default:        0.0
+   Description:    Set the starting position [in a.u.] of the solvent region
+                   on left-hand side of the unit cell. Then the solvent region is
+                   defined as [ -L_z/2 - "laue_expand_left" , "laue_starting_left" ],
+                   where distribution functions are finite.
+                   This is only for Laue-RISM.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       laue_buffer_right
+   
+   Type:           REAL
+   Default:        8.0 if "laue_expand_right" > 0.0;
+                   -1.0 if "laue_expand_right" <= 0.0
+   Description:    If positive value, set the buffering length [in a.u.]
+                   of the solvent region on right-hand side of the unit cell.
+                   Then correlation functions are defined inside of
+                   [ "laue_starting_right" - "laue_buffer_right" , L_z/2 + "laue_expand_right" ].
+                   This is only for Laue-RISM.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       laue_buffer_left
+   
+   Type:           REAL
+   Default:        8.0 if "laue_expand_left" > 0.0;
+                   -1.0 if "laue_expand_left" <= 0.0
+   Description:    If positive value, set the buffering length [in a.u.]
+                   of the solvent region on left-hand side of the unit cell.
+                   Then correlation functions are defined inside of
+                   [ -L_z/2 - "laue_expand_left" , "laue_starting_left" + "laue_buffer_left" ].
+                   This is only for Laue-RISM.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       laue_both_hands
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE., you can set different densities
+                   to the solvent regions of right-hand side and left-hand side.
+                   See "SOLVENTS" card.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       laue_wall
+   
+   Type:           CHARACTER
+   Default:        'auto'
+   Description:   
+                   Set the repulsive wall with (1/r)^12 term of Lennard-Jones potential.
+                   This is only for Laue-RISM.
+    
+                   'none' :
+                        The repulsive wall is not defined.
+    
+                   'auto' :
+                        The repulsive wall is defined, whose edge position is set automatically.
+                        One does not have to set "laue_wall_z" (the edge position).
+    
+                   'manual' :
+                        The repulsive wall is defined, whose edge position is set manually.
+                        One have to set "laue_wall_z" (the edge position).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       laue_wall_z
+   
+   Type:           REAL
+   Default:        0.0
+   Description:    Set the edge position [in a.u.] of the repulsive wall.
+                   If "laue_expand_right" > 0.0, the repulsive wall is defined on [ -inf , "laue_wall_z" ].
+                   If "laue_expand_left" > 0.0, the repulsive wall is defined on [ "laue_wall_z" , inf ].
+                   This is only for Laue-RISM and "laue_wall" == 'manual' .
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       laue_wall_rho
+   
+   Type:           REAL
+   Default:        0.01
+   Description:    The density (1/bohr^3) of the repulsive wall.
+                   This is only for Laue-RISM and "laue_wall" /= 'none' .
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       laue_wall_epsilon
+   
+   Type:           REAL
+   Default:        0.1
+   Description:    The Lennard-Jones potential of the repulsive wall.
+                   Here, you can set the parameter 'epsilon' (kcal/mol).
+                   This is only for Laue-RISM and "laue_wall" /= 'none' .
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       laue_wall_sigma
+   
+   Type:           REAL
+   Default:        4.0
+   Description:    The Lennard-Jones potential of the repulsive wall.
+                   Here, you can set the parameter 'sigma' (Angstrom).
+                   This is only for Laue-RISM and "laue_wall" /= 'none' .
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       laue_wall_lj6
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE., the attractive term -(1/r)^6 of Lennard-Jones potential is added.
+                   This is only for Laue-RISM and "laue_wall" /= 'none' .
    +--------------------------------------------------------------------
    
 ===END OF NAMELIST======================================================
@@ -3482,7 +4000,7 @@ CARD: K_POINTS { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b | tpi
 
 
 ========================================================================
-CARD: ADDITIONAL_K_POINTS { tpiba | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c }
+CARD: ADDITIONAL_K_POINTS { tpiba | crystal | tpiba_b | crystal_b | tpiba_c | crystal_c }
 
    Optional card. Adds a list of k-points with zero weight, after those used for
    the scf calculation. When doing an EXX calculation and "nq1x", "nq2x" or "nq3x" are
@@ -3505,7 +4023,7 @@ CARD: ADDITIONAL_K_POINTS { tpiba | crystal | gamma | tpiba_b | crystal_b | tpib
    DESCRIPTION OF ITEMS:
    
       +--------------------------------------------------------------------
-      Card's flags:   { tpiba | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c }
+      Card's flags:   { tpiba | crystal | tpiba_b | crystal_b | tpiba_c | crystal_c }
       
       Default:        tbipa
       Description:    for the explanation of the K_POINTS' options, see "K_POINTS"
@@ -3523,7 +4041,7 @@ CARD: ADDITIONAL_K_POINTS { tpiba | crystal | gamma | tpiba_b | crystal_b | tpib
       Variables:      k_x, k_y, k_z, wk_
       
       Type:           REAL
-      Description:    for the respective explanation, see the @ref xk_x, @ref xk_y, @ref xk_z, @ref wk
+      Description:    for the respective explanation, see the "xk_x", "xk_y", "xk_z", "wk"
       +--------------------------------------------------------------------
       
 ===END OF CARD==========================================================
@@ -3662,29 +4180,29 @@ CARD: CONSTRAINTS
       
       Description:    These variables have different meanings for different constraint types:
                       
-                      @b 'type_coord' :
-                                     @i constr(1) is the first index of the atomic type involved
-                                     @i constr(2) is the second index of the atomic type involved
-                                     @i constr(3) is the cut-off radius for estimating the coordination
-                                     @i constr(4) is a smoothing parameter
+                      'type_coord' :
+                                     constr(1) is the first index of the atomic type involved
+                                     constr(2) is the second index of the atomic type involved
+                                     constr(3) is the cut-off radius for estimating the coordination
+                                     constr(4) is a smoothing parameter
                       
-                      @b 'atom_coord' :
-                                     @i constr(1) is the atom index of the atom with constrained coordination
-                                     @i constr(2) is the index of the atomic type involved in the coordination
-                                     @i constr(3) is the cut-off radius for estimating the coordination
-                                     @i constr(4) is a smoothing parameter
+                      'atom_coord' :
+                                     constr(1) is the atom index of the atom with constrained coordination
+                                     constr(2) is the index of the atomic type involved in the coordination
+                                     constr(3) is the cut-off radius for estimating the coordination
+                                     constr(4) is a smoothing parameter
                       
-                      @b 'distance' :
+                      'distance' :
                                      atoms indices object of the constraint, as they appear in
-                                     the @ref ATOMIC_POSITIONS card
+                                     the "ATOMIC_POSITIONS" card
                       
-                      @b 'planar_angle', @b 'torsional_angle' :
+                      'planar_angle', 'torsional_angle' :
                                      atoms indices object of the constraint, as they appear in the
-                                     @ref ATOMIC_POSITIONS card (beware the order)
+                                     "ATOMIC_POSITIONS" card (beware the order)
                       
-                      @b 'bennett_proj' :
-                                     @i constr(1) is the index of the atom whose position is constrained.
-                                     @i constr(2:4) are the three coordinates of the vector that specifies
+                      'bennett_proj' :
+                                     constr(1) is the index of the atom whose position is constrained.
+                                     constr(2:4) are the three coordinates of the vector that specifies
                                      the constraint direction.
       +--------------------------------------------------------------------
       
@@ -3817,4 +4335,353 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Fri Jul 16 11:28:04 CEST 2021
+========================================================================
+CARD: SOLVENTS { 1/cell | mol/L | g/cm^3 }
+
+   OPTIONAL CARD, USED ONLY IF "TRISM" = .TRUE., IGNORED OTHERWISE !
+   
+   ________________________________________________________________________
+   * IF laue_both_hands = .FALSE. : 
+   
+      /////////////////////////////////////////
+      // Syntax:                             //
+      /////////////////////////////////////////
+      
+         SOLVENTS { 1/cell | mol/L | g/cm^3 }
+            X(1)      Density(1)      Molecule(1)      
+            X(2)      Density(2)      Molecule(2)      
+            . . . 
+            X(nsolv)  Density(nsolv)  Molecule(nsolv)  
+      
+      /////////////////////////////////////////
+      
+       
+   * ELSE IF laue_both_hands = .TRUE. : 
+   
+      /////////////////////////////////////////
+      // Syntax:                             //
+      /////////////////////////////////////////
+      
+         SOLVENTS { 1/cell | mol/L | g/cm^3 }
+            X(1)      Density_Left(1)      Density_Right(1)      Molecule(1)      
+            X(2)      Density_Left(2)      Density_Right(2)      Molecule(2)      
+            . . . 
+            X(nsolv)  Density_Left(nsolv)  Density_Right(nsolv)  Molecule(nsolv)  
+      
+      /////////////////////////////////////////
+      
+       
+   ENDIF
+   ________________________________________________________________________
+   
+   DESCRIPTION OF ITEMS:
+   
+      +--------------------------------------------------------------------
+      Card's flags:   { 1/cell | mol/L | g/cm^3 }
+      
+      Description:   
+                      1/cell :
+                           solvent's densities are specified
+                           as number of molecules in the unit cell.
+       
+                      mol/L :
+                           solvent's densities are specified as molar concentrations.
+       
+                      g/cm^3 :
+                           solvent's densities are in gram per cm^3.
+      +--------------------------------------------------------------------
+
+
+      +--------------------------------------------------------------------
+      Variable:       X
+      
+      Type:           CHARACTER
+      Description:    label of the solvent molecule.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       Density
+      
+      Type:           REAL
+      Description:    density of the solvent molecule.
+                      if not positive value is set, density is read from MOL-file.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       Molecule
+      
+      Type:           CHARACTER
+      Description:    MOL-file of the solvent molecule.
+                      in the MOL-file, molecular structure and some other data are written.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       X
+      
+      Type:           CHARACTER
+      Description:    label of the solvent molecule.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       Density_Left
+      
+      Type:           REAL
+      Description:    density of the solvent molecule in the left-hand side.
+                      if not positive value is set, density is read from MOL-file.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       Density_Right
+      
+      Type:           REAL
+      Description:    density of the solvent molecule in the right-hand side.
+                      if not positive value is set, density is read from MOL-file.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       Molecule
+      
+      Type:           CHARACTER
+      Description:    MOL-file of the solvent molecule.
+                      in the MOL-file, molecular structure and some other data are written.
+      +--------------------------------------------------------------------
+      
+===END OF CARD==========================================================
+
+
+========================================================================
+CARD: HUBBARD atomic | ortho-atomic | norm-atomic | wf | pseudo
+
+   ________________________________________________________________________
+   * IF DFT+U : 
+   
+      /////////////////////////////////////////
+      // Syntax:                             //
+      /////////////////////////////////////////
+      
+         HUBBARD  atomic | ortho-atomic | norm-atomic | wf | pseudo 
+            U label(1)-manifold(1) u_val(1)
+            [ J0 label(1)-manifold(1) j0_val(1) ]
+            . . .
+            U label(n)-manifold(n) u_val(n)
+            [ J0 label(n)-manifold(n) j0_val(n) ]
+      
+      /////////////////////////////////////////
+      
+       
+   * ELSE IF DFT+U+J : 
+   
+      /////////////////////////////////////////
+      // Syntax:                             //
+      /////////////////////////////////////////
+      
+         HUBBARD  atomic | ortho-atomic | norm-atomic | wf | pseudo 
+            paramType(1) label(1)-manifold(1) paramValue(1)
+            . . .
+            paramType(n) label(n)-manifold(n) paramValue(n)
+      
+      /////////////////////////////////////////
+      
+       
+   * ELSE IF DFT+U+V : 
+   
+      /////////////////////////////////////////
+      // Syntax:                             //
+      /////////////////////////////////////////
+      
+         HUBBARD  atomic | ortho-atomic | norm-atomic | wf | pseudo 
+            U label(I)-manifold(I) u_val(I)
+            [ J0 label(I)-manifold(I) j0_val(I) ]
+            V label(I)-manifold(I) label(J)-manifold(J) I J v_val(I,J)
+            . . .
+            U label(N)-manifold(N) u_val(N)
+            [ J0 label(N)-manifold(N) j0_val(N) ]
+            V label(N)-manifold(N) label(M)-manifold(M) N M v_val(N,M)
+      
+      /////////////////////////////////////////
+      
+       
+   ENDIF
+   ________________________________________________________________________
+   
+   DESCRIPTION OF ITEMS:
+   
+      +--------------------------------------------------------------------
+      Card's flags:   atomic | ortho-atomic | norm-atomic | wf | pseudo
+      
+      Description:   
+                      HUBBARD options are:
+       
+                      atomic :
+                           use atomic orbitals (read from pseudopotential) to build the
+                           Hubbard projectors
+       
+                      ortho-atomic :
+                           use Lowdin orthogonalized atomic orbitals. This option is
+                           recommended to be used whenever possible instead of atomic
+                           because it allows to avoid applying Hubbard corrections twice
+                           in the orbital overlap regions.
+       
+                      norm-atomic :
+                           Lowdin normalization of atomic orbitals. Keep in mind:
+                           atomic orbitals are not orthogonalized in this case.
+                           This is a "quick and dirty" trick to be used when
+                           atomic orbitals from the pseudopotential are not
+                           normalized (and thus produce occupation whose
+                           value exceeds unity).
+       
+                      wf :
+                           use Wannier functions to built Hubbard projectors.
+                           The information about the Wannier functionas are read
+                           from file "prefix".hub that must be generated using pmw.x
+                           (see PP/src/poormanwannier.f90 for details).
+                           Note: these are not maximally localized Wannier functions.
+                           (see PP/examples/example05)
+       
+                      pseudo :
+                           use the pseudopotential projectors. The charge density
+                           outside the atomic core radii is excluded.
+                           N.B.: for atoms with +U, a pseudopotential with the
+                           all-electron atomic orbitals are required (i.e.,
+                           as generated by ld1.x with lsave_wfc flag).
+       
+                      NB: forces and stress are currently implemented only for the
+                      'atomic', 'ortho-atomic', and 'pseudo' Hubbard projectors.
+       
+                      Check Doc/Hubbard_input.pdf to see how to specify Hubbard parameters
+                      U, J0, J, B, E2, E3, V in the HUBBARD card.
+      +--------------------------------------------------------------------
+
+
+      +--------------------------------------------------------------------
+      Variables:      label(1)-manifold(1), u_val(1)
+      
+      Type:           CHARACTER-LITERAL, CHARACTER, REAL
+      Description:    Syntax:
+                        U label-manifold u_val
+                      
+                      Where:
+                      U        = string constant "U"; indicates the specs for the U parameter will be given
+                      label    = label of the atom (as defined in "ATOMIC_SPECIES")
+                      manifold = specs of the manifold (e.g., 3d, 2p...)
+                      u_val    = value of the U parameter (in eV)
+                      
+                      Example:
+                      HUBBARD (ortho-atomic)
+                        U Mn-3d 5.0
+                        U Ni-3d 6.0
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      label(1)-manifold(1), j0_val(1)
+      
+      Type:           CHARACTER-LITERAL, CHARACTER, REAL
+      Description:    Remark: specs of J0 parameters are optional
+                      
+                      Syntax:
+                        J0 label-manifold j0_val
+                      
+                      Where:
+                      J0       = string constant "J0"; indicates the specs for the J0 parameter will be given
+                      label    = label of the atom (as defined in "ATOMIC_SPECIES")
+                      manifold = specs of the manifold (e.g., 3d, 2p...)
+                      j0_val   = value of the J0 parameter (in eV)
+                      
+                      Example:
+                        HUBBARD (ortho-atomic)
+                        U  Mn-3d 5.0
+                        J0 Mn-3d 1.0
+                        U  Ni-3d 6.0
+                        J0 Ni-3d 1.2
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      paramType(1), label(1)-manifold(1), paramValue(1)
+      
+      Type:           CHARACTER, CHARACTER, REAL
+      Description:    Syntax of the line:
+                      
+                        paramType label-manifold paramValue
+                      
+                      Where:
+                      paramType  = character describing the type of Hubbard parameter
+                                   allowed values: U, J and either B (for d-orbitals) or E2 and E3 (for f-orbitals)
+                      label      = label of the atom (as defined in "ATOMIC_SPECIES")
+                      manifold   = specs of the manifold (e.g., 3d, 2p...)
+                      paramValue = value of the parameter (in eV)
+                      
+                      Example:
+                        HUBBARD (ortho-atomic)
+                        U Mn-3d 5.0
+                        J Mn-3d 1.0
+                        B Mn-3d 1.1
+                        U Ni-3d 6.0
+                        J Ni-3d 1.2
+                        B Ni-3d 1.3
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      label(I)-manifold(I), u_val(I)
+      
+      Type:           CHARACTER, REAL
+      Description:    Syntax of the line:
+                      
+                        U label-manifold u_val
+                      
+                      Where:
+                      U        = string constant "U"; indicates the specs for the U parameter will be given
+                      label    = label of the atom (as defined in "ATOMIC_SPECIES")
+                      manifold = specs of the manifold (e.g., 3d, 2p...)
+                      u_val    = value of the U parameter (in eV)
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      label(I)-manifold(I), j0_val(I)
+      
+      Type:           CHARACTER, REAL
+      Description:    Remark: specs of J0 parameters are optional
+                      
+                      Syntax of the line:
+                      
+                        J0 label(I)-manifold(I) j0_val(I)
+                      
+                      Where:
+                      J0       = string constant "J0"; indicates the specs for the J0 parameter will be given
+                      label    = label of the atom (as defined in "ATOMIC_SPECIES")
+                      manifold = specs of the manifold (e.g., 3d, 2p...)
+                      j0_val   = value of the J0 parameter (in eV)
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      label(I)-manifold(I), label(J)-manifold(J), I, J, v_val(I,J)
+      
+      Type:           CHARACTER, CHARACTER, INTEGER, INTEGER, REAL
+      Description:    Syntax of the line:
+                      
+                        V label(I)-manifold(J) label(J)-manifold(J) I J v_val(I,J)
+                      
+                      Where:
+                      V           = string constant "V"; indicates the specs for the V parameter will be given
+                      label(I)    = label of the atom I (as defined in "ATOMIC_SPECIES")
+                      manifold(I) = specs of the manifold for atom I (e.g., 3d, 2p...)
+                      label(J)    = label of the atom J (as defined in "ATOMIC_SPECIES")
+                      manifold(J) = specs of the manifold for atom J (e.g., 3d, 2p...)
+                      I           = index of the atom I
+                      J           = index of the atom J
+                      v_val(I,J)  = value of the V parameter for the atom pair I,J (in eV)
+                      
+                      Example:
+                        HUBBARD (ortho-atomic)
+                        U Co-3d 7.70
+                        V Co-3d O-2p 1 19 0.75
+                        V Co-3d O-2p 1 46 0.75
+                        V Co-3d O-2p 1 43 0.75
+                        V Co-3d O-2p 1 54 0.75
+                        V Co-3d O-2p 1 11 0.75
+                        V Co-3d O-2p 1 22 0.75
+      +--------------------------------------------------------------------
+      
+===END OF CARD==========================================================
+
+
+This file has been created by helpdoc utility on Wed Jun 08 15:59:56 CEST 2022

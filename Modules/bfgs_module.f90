@@ -376,6 +376,8 @@ CONTAINS
       IF( lmovecell ) WRITE(stdout, &
           '(5X,"Cell gradient error",T30,"= ",1PE12.1," kbar")') &
           cell_error * ry_kbar
+      IF( lfcp ) WRITE(stdout, &
+         '(5X,"FCP gradient error",T30,"= ",1PE12.1,/)') fcp_error
       !
       IF ( conv_bfgs ) GOTO 1000
       !
@@ -696,7 +698,7 @@ CONTAINS
       !! \(\text{inv_hess}\) in re-initialized to the initial guess 
       !! defined as the inverse metric.
       !
-      INTEGER, INTENT(IN) :: n
+      INTEGER,  INTENT(IN) :: n
       LOGICAL,  INTENT(IN) :: lfcp
       REAL(DP), INTENT(IN) :: fcp_hess
       !
@@ -1066,24 +1068,31 @@ CONTAINS
    !
    !------------------------------------------------------------------------
    SUBROUTINE terminate_bfgs( energy, energy_thr, grad_thr, cell_thr, fcp_thr, &
-                              lmovecell, lfcp )
+                              lmovecell, lfcp, failed )
       !------------------------------------------------------------------------
       !
       USE io_files, ONLY : delete_if_present
       !
       IMPLICIT NONE
       REAL(DP),         INTENT(IN) :: energy, energy_thr, grad_thr, cell_thr, fcp_thr
-      LOGICAL,          INTENT(IN) :: lmovecell, lfcp
+      LOGICAL,          INTENT(IN) :: lmovecell, lfcp, failed
       !
       IF ( conv_bfgs ) THEN
          !
-         WRITE( UNIT = stdout, &
+         IF ( failed ) THEN
+            WRITE( UNIT = stdout, &
+              & FMT = '(/,5X,"bfgs failed after ",I3," scf cycles and ", &
+              &         I3," bfgs steps, convergence not achieved")' ) &
+              & scf_iter, bfgs_iter
+         ELSE
+            WRITE( UNIT = stdout, &
               & FMT = '(/,5X,"bfgs converged in ",I3," scf cycles and ", &
               &         I3," bfgs steps")' ) scf_iter, bfgs_iter
+         END IF
          IF ( lmovecell ) THEN
             WRITE( UNIT = stdout, &
               & FMT = '(5X,"(criteria: energy < ",ES8.1," Ry, force < ",ES8.1,&
-              &       "Ry/Bohr, cell < ",ES8.1,"kbar)")') energy_thr, grad_thr, cell_thr
+              &       " Ry/Bohr, cell < ",ES8.1," kbar)")') energy_thr, grad_thr, cell_thr
          ELSE
             WRITE( UNIT = stdout, &
               & FMT = '(5X,"(criteria: energy < ",ES8.1," Ry, force < ",ES8.1,&

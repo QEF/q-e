@@ -45,11 +45,15 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   USE mp,                     ONLY : mp_bcast
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
   USE basic_algebra_routines, ONLY : norm
-  USE dynamics_module,        ONLY : verlet, terminate_verlet, proj_verlet
-  USE dynamics_module,        ONLY : smart_MC, langevin_md
+  USE dynamics_module,        ONLY : verlet, terminate_verlet, proj_verlet, fire
+  USE dynamics_module,        ONLY : smart_MC, langevin_md, dt
+  USE dynamics_module,        ONLY : fire_nmin, fire_f_inc, fire_f_dec, &
+                                     fire_alpha_init, fire_falpha, fire_dtmax
   USE klist,                  ONLY : nelec, tot_charge
+  USE dfunct,                 only : newd
   USE fcp_module,             ONLY : lfcp, fcp_eps, fcp_mu, fcp_relax, &
                                      fcp_verlet, fcp_terminate, output_fcp
+  USE rism_module,            ONLY : lrism, rism_new_conv_thr
   !
   IMPLICIT NONE
   !
@@ -213,7 +217,7 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
               IF ( ANY( if_pos(:,:) == 1 ) .OR. lmovecell .OR. lfcp ) THEN
                  !
                  CALL terminate_bfgs ( etot, epse, epsf, epsp, fcp_eps, &
-                                       lmovecell, lfcp )
+                                       lmovecell, lfcp, optimizer_failed )
                  !
               END IF
               !
@@ -222,7 +226,7 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
         ELSEIF ( idone == nstep ) THEN
            !
            CALL terminate_bfgs( etot, epse, epsf, epsp, fcp_eps, &
-                                lmovecell, lfcp )
+                                lmovecell, lfcp, optimizer_failed )
            !
         ELSE
            !
@@ -299,6 +303,16 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
               !
            ENDIF
            !
+        ELSEIF ( calc == 'fi' ) THEN
+           !
+           CALL fire( conv_ions)
+           ! 
+           IF ( .NOT. conv_ions .AND. idone >= nstep ) THEN
+              WRITE( UNIT = stdout, FMT =  &
+                   '(/,5X,"The maximum number of steps has been reached.")' )
+              WRITE( UNIT = stdout, &
+                   FMT = '(/,5X,"End of FIRE minimization")' )
+           ENDIF
         ELSEIF ( calc(1:1) == 'l' ) THEN
            !
            ! ... for smart monte carlo method
@@ -341,6 +355,7 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
               IF ( lfcp ) CALL fcp_terminate()
               !
               conv_ions = .true.
+              !
            ENDIF
            !
         ELSE
@@ -402,6 +417,15 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   IF ( lfcp ) THEN
      CALL mp_bcast(nelec,      ionode_id, intra_image_comm)
      CALL mp_bcast(tot_charge, ionode_id, intra_image_comm)
+  END IF
+  !
+  !
+  ! ... update convergence threshold of 3D-RISM
+  !
+  IF ( lrism ) THEN
+     IF ( tr2 < starting_scf_threshold ) THEN
+       CALL rism_new_conv_thr()
+     END IF
   END IF
   !
   RETURN

@@ -307,8 +307,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
            raux(:) = ( raux(:) + rho%of_r(:,nspin) )/2.0_dp
         ELSE IF ( spin_component==2 ) THEN
            raux(:) = ( raux(:) - rho%of_r(:,nspin) )/2.0_dp
-        ELSE
-           CALL errore('punch_plot','spin_component not allowed',3)
         ENDIF
      ENDIF
      !

@@ -152,7 +152,7 @@ itcl::body ::guib::moduleObj::readFileError {errMsg} {
 
 itcl::body ::guib::moduleObj::readFileWrongFormat {formatName {diagnosisText {}}} {
     set readError 1
-    set errMsg "selected file is not a ${formatName}-formatted or contains severe syntax errors."
+    set errMsg "selected file is not ${formatName}-formatted or contains severe syntax errors."
     if { $diagnosisText != "" } {
 	append errMsg "\n\nDiagnosis:\n$diagnosisText"
     }
@@ -539,10 +539,23 @@ itcl::body ::guib::moduleObj::_openNamelistAssignVars {obj nmlName varValueArray
     
     foreach {var value} [array get nml] {
 		    
-	# is variable is of scalar-type ?
+	# is variable of scalar-type ?
 	
 	set ident [varnameToVarident $obj $var $::guib::settings(NAMELIST.varname_nocase)]
-		    
+
+        # perhaps we have an implicit dimension assignment, i.e. var = 1 instead of var(1) = 1
+        if { $ident != "" && ! [string match *(* $var] } {
+            set o   [_getObjFromVarident $ident]
+            set id  [$o getIdFromVarident $ident]
+            set key [$o getKey $id]
+
+            if { $key == "dimension" } {
+                set start [$o getOptionValue $id start]
+                if { $start == {} } { set start 1 }
+                set ident ${ident}($start)
+            }
+        }
+                    
 	if { $ident == "" } {
 
 	    # is var of type varName(elem) ?

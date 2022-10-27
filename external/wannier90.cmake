@@ -1,27 +1,9 @@
 ###########################################################
 # WANNIER90
 ###########################################################
-if(WANNIER90_ROOT)
-    add_library(qe_wannier90 INTERFACE)
-    qe_install_targets(qe_wannier90)
-
-    find_library(
-        WANNIER90_LIB
-        NAMES wannier
-        HINTS ${WANNIER90_ROOT}
-        PATH_SUFFIXES "lib")
-
-    if(NOT WANNIER90_LIB)
-        message(FATAL_ERROR "Failed in locating wannier library file at <WANNIER90_ROOT>/lib")
-    endif()
-
-    target_link_libraries(qe_wannier90 INTERFACE "${WANNIER90_LIB}")
-    # FIXME. Wannnier90 "make install" doesn't install module files.
-    # https://github.com/wannier-developers/wannier90/issues/377
-    # Currently need to manually copy w90_io.mod file to <WANNIER90_ROOT>/include
-    target_include_directories(qe_wannier90 INTERFACE "${WANNIER90_ROOT}/include")
-else()
-
+if(QE_WANNIER90_INTERNAL)
+    message(STATUS "Installing Wannier90 via submodule")
+    
     qe_git_submodule_update(external/wannier90)
 
     set(sources
@@ -56,12 +38,12 @@ else()
     target_link_libraries(qe_wannier90 PRIVATE qe_lapack)
 
     ###########################################################
-    # wannier_prog.x
+    # wannier90.x
     ###########################################################
     set(sources wannier90/src/wannier_prog.F90)
-    qe_add_executable(qe_wannierprog_exe ${sources})
-    set_target_properties(qe_wannierprog_exe PROPERTIES OUTPUT_NAME wannier_prog.x)
-    target_link_libraries(qe_wannierprog_exe PRIVATE qe_wannier90)
+    qe_add_executable(qe_wannier90_exe ${sources})
+    set_target_properties(qe_wannier90_exe PROPERTIES OUTPUT_NAME wannier90.x)
+    target_link_libraries(qe_wannier90_exe PRIVATE qe_wannier90)
 
     ###########################################################
     # w90chk2chk.x
@@ -81,10 +63,20 @@ else()
 
     ###########################################################
 
+    add_custom_target(w90
+        DEPENDS
+            qe_wannier90 qe_wannier90_exe qe_w90chk2chk_exe qe_wannier90_postw90_exe
+        COMMENT
+            "Maximally localised Wannier Functions")
+
     qe_install_targets(
         # Libraries
         qe_wannier90
         # Executables
-        qe_wannierprog_exe qe_w90chk2chk_exe qe_wannier90_postw90_exe)
-
+        qe_wannier90_exe qe_w90chk2chk_exe qe_wannier90_postw90_exe)
+else()
+    add_library(qe_wannier90 INTERFACE)
+    qe_install_targets(qe_wannier90)
+    find_package(Wannier90 REQUIRED)
+    target_link_libraries(qe_wannier90 INTERFACE Wannier90::Wannier90)
 endif()

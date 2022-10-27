@@ -139,6 +139,8 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    ALLOCATE(h_diag(npwx*npol, nbnd))
    ALLOCATE(aux2(npwx*npol, nbnd))
    !
+   !$acc enter data create(aux2(1:npwx*npol, 1:nbnd))
+   !
    all_conv = .TRUE.
    tot_num_iter = 0
    tot_cg_calls = 0
@@ -178,7 +180,8 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
       ! compute beta functions and kinetic energy for k-point ik
       ! needed by h_psi, called by ch_psi_all, called by cgsolve_all
       !
-      CALL init_us_2(npwq, igk_k(1, ikq), xk(1, ikq), vkb)
+      CALL init_us_2(npwq, igk_k(1, ikq), xk(1, ikq), vkb, .true.)
+      !$acc update host(vkb)
       CALL g2_kin(ikq)
       !
       ! compute preconditioning matrix h_diag used by cgsolve_all
@@ -274,6 +277,11 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    CALL mp_sum(tot_num_iter, inter_pool_comm)
    CALL mp_sum(tot_cg_calls, inter_pool_comm)
    avg_iter = REAL(tot_num_iter, DP) / REAL(tot_cg_calls, DP)
+   !
+   !$acc exit data delete(aux2)
+   !
+   DEALLOCATE(aux2)
+   DEALLOCATE(h_diag)
    !
    CALL stop_clock("sth_kernel")
    !

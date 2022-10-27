@@ -66,9 +66,15 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE fft_helper_subroutines
       
       USE plugin_variables, ONLY: plugin_etot
-#if defined(__OPENACC)
+#if defined(__CUDA) && defined(_OPENACC)
       USE cublas
 #endif  
+
+#if defined (__ENVIRON)
+      USE plugin_flags,        ONLY : use_environ
+      USE environ_cp_module,   ONLY : add_environ_potential, calc_environ_potential
+      USE environ_base_module, ONLY : calc_environ_energy, calc_environ_force
+#endif
 
       IMPLICIT NONE
 !
@@ -113,6 +119,10 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          (/ 1.0_DP, 0.0_DP, 0.0_DP, 1.0_DP, 0.0_DP, 1.0_DP /)
       COMPLEX(DP), PARAMETER :: ci = ( 0.0d0, 1.0d0 )
       INTEGER  :: p_ngm_, s_ngm_, p_nnr_, s_nnr_
+
+#if defined (__ENVIRON)
+      REAL(DP), ALLOCATABLE :: force_environ(:, :)
+#endif
 
       CALL start_clock( 'vofrho' )
       p_ngm_ = dfftp%ngm 
@@ -164,15 +174,17 @@ DEV_ACC enter data create(drhot(1:p_ngm_, 1:6))
 !
       if (abivol.or.abisur) call vol_clu(rhor,rhog,nfi)
       !
-      !     compute plugin contributions to the potential, add it later
-      !
-      CALL plugin_get_potential(rhor,nfi)
-      !
-      !     compute plugin contributions to the energy
-      !
       plugin_etot = 0.0_dp
       !
-      CALL plugin_energy(rhor,plugin_etot)
+#if defined (__ENVIRON)
+      IF (use_environ) THEN
+         ! compute plugin contributions to the potential, add it later
+         CALL calc_environ_potential(rhor, nfi)
+         ! compute plugin contributions to the energy
+         CALL calc_environ_energy(plugin_etot)
+         plugin_etot = 0.5D0 * plugin_etot ! Rydberg to Hartree
+      END IF
+#endif
       !
       ttsic = ( ABS( self_interaction ) /= 0 )
       !
@@ -495,7 +507,9 @@ DEV_ACC exit data delete(rhotmp)
       !
       !     add plugin contributions to potential here... 
       !
-      CALL plugin_add_potential( rhor )
+#if defined (__ENVIRON)
+      IF (use_environ) CALL add_environ_potential(rhor)
+#endif
       !
 !
 !     rhor contains the xc potential in r-space
@@ -509,7 +523,7 @@ DEV_ACC exit data delete(rhotmp)
       ELSE
          CALL rho_r2g ( dfftp, rhor, rhog )
       END IF
-DEV_ACC update device (rhog) 
+      !
       IF( nspin == 1 ) THEN
          CALL zaxpy(p_ngm_, (1.0d0,0.0d0) , vtemp, 1, rhog(:,1), 1)
       ELSE
@@ -551,7 +565,14 @@ DEV_ACC end data
          !
          !     plugin patches on internal forces
          !
-         CALL plugin_int_forces(fion)
+#if defined (__ENVIRON)
+         IF (use_environ) THEN
+            ALLOCATE (force_environ(3, nat))
+            CALL calc_environ_force(force_environ)
+            fion = fion + 0.5D0 * force_environ ! Environ forces in Ry/bohr
+            DEALLOCATE (force_environ)
+         END IF
+#endif
 
       END IF
 

@@ -13,8 +13,9 @@ SUBROUTINE hinit1()
   !! Important note: it does not recompute structure factors and core charge,
   !! they must be computed before this routine is called.
   !
+  USE kinds,               ONLY : DP
   USE ions_base,           ONLY : nat, nsp, ityp, tau
-  USE cell_base,           ONLY : at, bg, omega, tpiba2
+  USE cell_base,           ONLY : alat, at, bg, omega, tpiba2
   USE fft_base,            ONLY : dfftp
   USE gvecs,               ONLY : doublegrid
   USE ldaU,                ONLY : lda_plus_u
@@ -32,18 +33,38 @@ SUBROUTINE hinit1()
   USE paw_symmetry,        ONLY : paw_symmetrize_ddd
   USE dfunct,              ONLY : newd
   USE exx_base,            ONLY : coulomb_fac, coulomb_done
-
   !
-  USE scf_gpum,      ONLY : using_vrs
-  
+  USE scf_gpum,            ONLY : using_vrs
+  USE ener,                ONLY : esol, vsol
+  USE rism_module,         ONLY : lrism, rism_update_pos, rism_calc3d
+  !
+#if defined (__ENVIRON)
+  USE plugin_flags,        ONLY : use_environ
+  USE environ_base_module, ONLY : update_environ_ions, update_environ_cell
+  USE environ_pw_module,   ONLY : calc_environ_potential
+#endif
   !
   IMPLICIT NONE
+#if defined (__ENVIRON)
+  REAL(DP) :: at_scaled(3, 3)
+  REAL(DP) :: tau_scaled(3, nat)
+#endif
+  !
+  ! ... update solute position for 3D-RISM
+  !
+  IF (lrism) CALL rism_update_pos()
   !
   ! these routines can be used to patch quantities that are dependent
   ! on the ions and cell parameters
   !
-  CALL plugin_init_ions()
-  CALL plugin_init_cell()
+#if defined (__ENVIRON)
+  IF (use_environ) THEN
+     at_scaled = at * alat
+     tau_scaled = tau * alat
+     CALL update_environ_ions(tau_scaled)
+     CALL update_environ_cell(at_scaled)
+  END IF
+#endif
   !
   ! ... calculate the total local potential
   !
@@ -62,9 +83,15 @@ SUBROUTINE hinit1()
   !
   CALL tag_wg_corr_as_obsolete
   !
+  ! ... calculate 3D-RISM to get the solvation potential
+  !
+  IF (lrism) CALL rism_calc3d(rho%of_g(:, 1), esol, vsol, v%of_r, -1.0_DP)
+  !
   ! ... plugin contribution to local potential
   !
-  CALL plugin_scf_potential( rho, .FALSE., -1.d0, vltot )
+#if defined (__ENVIRON)
+  IF (use_environ) CALL calc_environ_potential(rho, .FALSE., -1.D0, vltot)
+#endif
   !
   ! ... define the total local potential (external+scf)
   !
@@ -83,7 +110,7 @@ SUBROUTINE hinit1()
   CALL newd()
   !
   ! ... and recalculate the products of the S with the atomic wfcs used 
-  ! ... in LDA+U calculations
+  ! ... in DFT+Hubbard calculations
   !
   IF (.NOT. use_gpu) THEN
     IF ( lda_plus_u  ) CALL orthoUwfc(.FALSE.)

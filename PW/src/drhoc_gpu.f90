@@ -206,7 +206,9 @@ SUBROUTINE drhoc_gpu( ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, rhocg_
   !
   USE simpsn_gpum,  ONLY: simpsn_gpu_dev
   USE sph_bes_gpum, ONLY : sph_bes_gpu
+#if defined(__CUDA)
   USE device_fbuff_m,     ONLY : dev_buf
+#endif
   implicit none
   !
   !    first the dummy variables
@@ -236,7 +238,6 @@ SUBROUTINE drhoc_gpu( ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, rhocg_
   real(DP), contiguous, pointer :: aux_d (:,:)
 #if defined(__CUDA)
   attributes(DEVICE) :: aux_d
-#endif
   ! auxiliary memory for integration
 
   integer :: ir, igl, ierr
@@ -263,6 +264,7 @@ SUBROUTINE drhoc_gpu( ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, rhocg_
   ENDDO
   !
   CALL dev_buf%release_buffer(aux_d, ierr)
+#endif
   !
   return
 END SUBROUTINE drhoc_gpu

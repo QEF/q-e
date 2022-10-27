@@ -15,3 +15,9 @@ target_link_libraries(qe_couple
 ###########################################################
 
 qe_install_targets(qe_couple)
+
+add_custom_target(couple
+    DEPENDS
+        qe_couple
+    COMMENT
+        "library interface for coupling to external codes")

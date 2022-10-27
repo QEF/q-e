@@ -29,6 +29,7 @@ SUBROUTINE do_phonon(auxdyn)
   !
 
   USE disp,            ONLY : nqs
+  USE control_flags,   ONLY : use_gpu
   USE control_ph,      ONLY : epsil, trans, qplot, only_init, &
                               only_wfc, rec_code, where_rec, reduce_io
   USE el_phon,         ONLY : elph, elph_mat, elph_simple, elph_epa
@@ -45,12 +46,14 @@ SUBROUTINE do_phonon(auxdyn)
   USE ahc,            ONLY : elph_ahc, elph_do_ahc
   USE io_files,       ONLY : iunwfc
   USE buffers,        ONLY : close_buffer
-
+  USE control_flags,   ONLY : use_gpu
+  
   IMPLICIT NONE
   !
   CHARACTER (LEN=256), INTENT(IN) :: auxdyn
   INTEGER :: iq, qind
   LOGICAL :: do_band, do_iq, setup_pw
+  LOGICAL,EXTERNAL :: check_gpu_support
   !
   qind = 0
   !
@@ -65,11 +68,13 @@ SUBROUTINE do_phonon(auxdyn)
      !
      !  If necessary the bands are recalculated
      !
+     if (elph_mat.and.(qind.eq.1)) call wfck2r_ep()
      ! Note (A. Urru): This has still to be cleaned (setup_pw 
      ! should be correctly set by prepare_q: here we force it 
      ! to be .true. in order for the code to work properly in 
      ! the case SO-MAG).
-     !
+     ! 
+     use_gpu = check_gpu_support()
      setup_pw=setup_pw .OR. (noncolin .AND. domag)
      IF (setup_pw) THEN
         IF (reduce_io .AND. (qind == 1)) THEN
@@ -157,5 +162,7 @@ SUBROUTINE do_phonon(auxdyn)
 100  CALL clean_pw_ph(iq)
      !
   END DO
+
+  call wfck2r_clean_files()
 
 END SUBROUTINE do_phonon

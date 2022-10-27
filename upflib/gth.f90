@@ -13,8 +13,8 @@ module m_gth
   implicit none
   !
   private
-  public :: gth_parameters, readgth, vloc_gth, dvloc_gth, dvloc_gth_gpu, setlocq_gth, &
-       mk_ffnl_gth, mk_dffnl_gth, mk_dffnl_gth_gpu, deallocate_gth
+  public :: gth_parameters, readgth, vloc_gth, dvloc_gth, &
+       dvloc_gth_gpu, setlocq_gth, mk_ffnl_gth, mk_dffnl_gth, deallocate_gth
   !
   type gth_parameters
      integer  :: itype, lloc, lmax
@@ -267,159 +267,6 @@ contains
     !
   end subroutine mk_dffnl_gth
   !
-  !-----------------------------------------------------------------------
-  subroutine mk_dffnl_gth_gpu(itype, ibeta, nq, omega, tpiba, qg_d, dvq_d)
-    !-----------------------------------------------------------------------
-    !
-    USE upf_kinds,        ONLY: dp
-    USE upf_const,        ONLY: pi, fpi, e2
-
-    implicit none
-    !  
-    ! I/O 
-    integer,  intent(in)  :: itype, ibeta, nq
-    real(dp), intent(in)  :: omega
-    real(dp), intent(in)  :: tpiba
-    real(dp), intent(in)  :: qg_d(nq)
-    real(dp), intent(out) :: dvq_d(nq)
-    !     
-    ! Local variables
-    integer, parameter :: nprj_max(0:3)=[3, 3, 2, 1]
-    integer  :: ii, my_gth, ll, iproj
-    real(dp) :: rrl, rl2, qt, q1r2, q3r4, q5r6, qr2, qr4, qr6, fact, e_qr2_h
-#if defined(__CUDA)
-    attributes(DEVICE) :: qg_d, dvq_d
-#endif    
-    !
-    my_gth=0
-    do ii=1,size(gth_p)
-       if (gth_p(ii)%itype==itype) then
-          my_gth=ii
-          exit
-       endif
-    enddo
-    if (my_gth==0) call upf_error('mk_dffnl_gth', 'cannot map itype in some gtp param. set', itype)
-    iproj=gth_p(my_gth)%ipr(ibeta)
-    ll=gth_p(my_gth)%lll(ibeta)
-    rrl=gth_p(my_gth)%rrl(ll)
-    if ( ll<0 .or. ll>3  ) call upf_error('mk_dffnl_gth', 'wrong l:', ll)
-    if ( iproj>nprj_max(ll) ) call upf_error('mk_dffnl_gth', 'projector exceeds max. n. of projectors', iproj)
-    !
-    fact = e2 * fpi * pi**0.25_dp * sqrt( 2._dp**(ll+1) * rrl**(2*ll+3) &
-           / omega )
-    !
-    lif: if (ll==0) then     ! s channel
-       !
-       if(iproj==1)then
-          !$cuf kernel do (1) <<<*,*>>>
-          do ii=1,nq
-             qt = sqrt(qg_d(ii))*tpiba
-             rl2= rrl**2
-             qr2= qt*qt*rl2
-             e_qr2_h=exp(-0.5_dp*qr2)
-             !
-             dvq_d(ii)=-fact * qt*rl2*e_qr2_h
-          end do
-       else if(iproj==2)then
-          !$cuf kernel do (1) <<<*,*>>>
-          do ii=1,nq
-             qt = sqrt(qg_d(ii))*tpiba
-             rl2= rrl**2
-             q1r2=qt*rl2
-             qr2= qt*q1r2
-             q3r4=qr2*q1r2
-             e_qr2_h=exp(-0.5_dp*qr2)
-             !
-             dvq_d(ii)=fact * 2._dp/sqrt(15._dp) * e_qr2_h * (-5._dp*q1r2+q3r4)
-          end do
-       else if(iproj==3)then
-          !$cuf kernel do (1) <<<*,*>>>
-          do ii=1,nq
-             qt = sqrt(qg_d(ii))*tpiba
-             rl2= rrl**2
-             q1r2=qt*rl2
-             qr2= qt*q1r2
-             q3r4=qr2*q1r2
-             q5r6=qr2*q3r4
-             e_qr2_h=exp(-0.5_dp*qr2)
-             !
-             dvq_d(ii)=fact * (4._dp/3._dp)/sqrt(105._dp) * e_qr2_h * (-35._dp*q1r2 + 14._dp*q3r4 - q5r6)
-          end do
-       end if
-       !
-    else if (ll==1) then lif ! p channel
-       !
-       if(iproj==1)then
-          !$cuf kernel do (1) <<<*,*>>>
-          do ii=1,nq
-             qt = sqrt(qg_d(ii))*tpiba
-             qr2=(qt*rrl)**2
-             e_qr2_h=exp(-0.5_dp*qr2)
-             !
-             dvq_d(ii)=fact * (1._dp/sqrt(3._dp)) * e_qr2_h * (1._dp - qr2)
-          end do
-       else if(iproj==2)then
-          !$cuf kernel do (1) <<<*,*>>>
-          do ii=1,nq
-             qt = sqrt(qg_d(ii))*tpiba
-             qr2=(qt*rrl)**2
-             qr4=qr2**2
-             e_qr2_h=exp(-0.5_dp*qr2)
-             !
-             dvq_d(ii)=fact * (2._dp/sqrt(105._dp)) * e_qr2_h * (5._dp - 8._dp*qr2 + qr4)
-          end do
-       else if(iproj==3)then
-          !$cuf kernel do (1) <<<*,*>>>
-          do ii=1,nq
-             qt = sqrt(qg_d(ii))*tpiba
-             qr2=(qt*rrl)**2
-             qr4=qr2**2
-             qr6=qr4*qr2
-             e_qr2_h=exp(-0.5_dp*qr2)
-             !
-             dvq_d(ii)=fact * (4._dp/3._dp)/sqrt(1155._dp) * e_qr2_h * (35._dp - 77._dp*qr2 + 19._dp*qr4 - qr6)
-          end do
-       end if
-       !
-    else if (ll==2) then lif ! d channel [ ONLY 2 PROJECTORS!! ]
-       !
-       if(iproj==1)then
-          !$cuf kernel do (1) <<<*,*>>>
-          do ii=1,nq
-             qt = sqrt(qg_d(ii))*tpiba
-             qr2=(qt*rrl)**2
-             e_qr2_h=exp(-0.5_dp*qr2)
-             !
-             dvq_d(ii)=fact * (1._dp/sqrt(15._dp)) * e_qr2_h * qt*(2._dp - qr2)
-          end do
-       else if(iproj==2)then
-          !$cuf kernel do (1) <<<*,*>>>
-          do ii=1,nq
-             qt = sqrt(qg_d(ii))*tpiba
-             qr2=(qt*rrl)**2
-             qr4=qr2**2
-             e_qr2_h=exp(-0.5_dp*qr2)
-             !
-             dvq_d(ii)=fact * (2._dp/3._dp)/sqrt(105._dp) * e_qr2_h * qt*(14._dp - 11._dp*qr2 + qr4)
-          end do
-       end if
-       !
-    else if (ll==3) then lif ! f channel [ ONLY 1 PROJECTOR!! ]
-       !
-       !$cuf kernel do (1) <<<*,*>>>
-       do ii=1,nq
-          qt = qg_d(ii)*tpiba**2
-          qr2=qt*rrl**2
-          e_qr2_h=exp(-0.5_dp*qr2)
-          !
-          dvq_d(ii)=fact * e_qr2_h * qt*(3._dp - qr2) / 105.0_dp
-       end do
-       !
-    end if lif
-    !
-    !
-  end subroutine mk_dffnl_gth_gpu
-  
 !-----------------------------------------------------------------------
 subroutine vloc_gth(itype, zion, tpiba2, ngl, gl, omega, vloc)
   !-----------------------------------------------------------------------
@@ -860,6 +707,7 @@ subroutine readgth (iunps, np, upf)
   ENDIF
   !
   cc(:)=0._dp
+  !! FIXME: dangerous syntax, are we sure nn has the expected value?
   read (iunps, *, err=400) rloc,nn,(cc(jj),jj=1,nn)
   gth_p(ns)%rloc =rloc
   gth_p(ns)%cc(:)=cc(:)
@@ -872,6 +720,7 @@ subroutine readgth (iunps, np, upf)
   ! Read and echo the coefficients of non-local projectors
   upf%nbeta=0
   prjloop: do ll=0,lmax
+    !! FIXME: dangerous syntax, are we sure nprl has the expected value?
     read (iunps, *, err=400) rrl,nprl,(hij(ll,1,jj),jj=1,nprl)
     upf%nbeta = upf%nbeta + nprl
     gth_p(ns)%rrl(ll)=rrl

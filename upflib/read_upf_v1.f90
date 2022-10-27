@@ -413,6 +413,7 @@ subroutine read_pseudo_nl (upf, iunps)
   call scan_begin (iunps, "DIJ", .false.)  
   read (iunps, *, err = 101, end = 101) nd, dummy  
   do icon = 1, nd
+     !! FIXME: dangerous syntax, are we sure mb has the expected value?
      read (iunps, *, err = 101, end = 101) nb, mb, upf%dion(nb,mb)
      upf%dion (mb,nb) = upf%dion (nb,mb)  
   enddo

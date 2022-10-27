@@ -34,7 +34,7 @@
 
   eliashberg = .true.
   mp_mesh_k  = .true.
-  fila2f = 'MgB2.a2f_iso'
+  fila2f = 'MgB2.a2f'
   liso   = .true.
   limag  = .true.
   tc_linear  = .true.

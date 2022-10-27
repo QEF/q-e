@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -93,10 +93,12 @@ SUBROUTINE lr_setup_nscf ()
      !
      CALL kpoint_grid_no_t_rev (bg, npk, k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
      !
-     ! Add k+Q and k-Q to the list of k-points 
-     ! need irreducible_BZ???
+     ! Add  k+Q and  k-Q to the list of k-points, and
+     ! add -k+Q and -k-Q to the list of -k points
      ! 
      CALL set_kplusq_kminusq( xk, wk, xq, nkstot, npk )
+     !
+     ! The irreducible_BZ must not be called!
      !
   ELSE
      !
@@ -197,7 +199,7 @@ SUBROUTINE lr_setup_nscf ()
   RETURN
   CONTAINS
    !
-   SUBROUTINE kpoint_grid_no_t_rev ( bg, npk, k1,k2,k3, nk1,nk2,nk3, nks, xk, wk)
+   SUBROUTINE kpoint_grid_no_t_rev (bg, npk, k1,k2,k3, nk1,nk2,nk3, nks, xk, wk)
      !
      USE kinds, ONLY: DP
      USE io_global,  ONLY : stdout  
@@ -213,14 +215,10 @@ SUBROUTINE lr_setup_nscf ()
      ! LOCAL:
      real(DP), PARAMETER :: eps=1.0d-5
      real(DP) :: xkr(3), fact, xx, yy, zz
-     real(DP), ALLOCATABLE:: xkg(:,:), wkk(:)
+     real(DP), ALLOCATABLE:: xkg(:,:)
      INTEGER :: nkr, i,j,k, ns, n, nk
      INTEGER, ALLOCATABLE :: equiv(:)
      LOGICAL :: in_the_list
-     LOGICAL :: is_gamma
-
-     CHARACTER(len=256) :: filename
-
      !
      nkr=nk1*nk2*nk3
      ALLOCATE (xkg( 3,nkr))
@@ -238,20 +236,16 @@ SUBROUTINE lr_setup_nscf ()
            ENDDO
         ENDDO
      ENDDO
-
-     !if (ionode) write(stdout,*) "nkr =", nkr
-
-
-     DO nk=1,nkr
-        equiv(nk)=nk
+     !
+     !  equiv(nk) =nk : k-point nk is not equivalent to any previous k-point
+     !  equiv(nk)/=nk : k-point nk is equivalent to k-point equiv(nk)
+     DO nk = 1, nkr
+        equiv(nk) = nk
      ENDDO
-
-     DO nk=1,nkr
-     !  check if this k-point has already been found to be minus another
+     !
+     DO nk = 1, nkr
+       ! check if this k point has the -k analogue in the list
        IF (equiv(nk) == nk) THEN
-         !  check if there are equivalent k-point to this in the list
-         !  (excepted those previously found to be equivalent to another)
-         !  check both k and -k
          DO i = 1, 3
            xkr(i) = -xkg(i,nk) + nint( xkg(i,nk) )
          ENDDO
@@ -259,79 +253,72 @@ SUBROUTINE lr_setup_nscf ()
          xx = xkr(1)*nk1 - 0.5d0*k1
          yy = xkr(2)*nk2 - 0.5d0*k2
          zz = xkr(3)*nk3 - 0.5d0*k3
+         !
          in_the_list = abs(xx-nint(xx))<=eps .and. &
                        abs(yy-nint(yy))<=eps .and. &
                        abs(zz-nint(zz))<=eps
+         !
          IF (in_the_list) THEN
+            !     
             i = mod ( nint ( xkr(1)*nk1 - 0.5d0*k1 + 2*nk1), nk1 ) + 1
             j = mod ( nint ( xkr(2)*nk2 - 0.5d0*k2 + 2*nk2), nk2 ) + 1
             k = mod ( nint ( xkr(3)*nk3 - 0.5d0*k3 + 2*nk3), nk3 ) + 1
             n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
-            IF (n>nk .and. equiv(n)==n) THEN
+            !
+            IF (n>nk .AND. equiv(n)==n) THEN
+               ! this is a regular +k point 
+               ! which has the -k analogue in the list
                equiv(n) = nk
+            ELSEIF (n==nk .AND. equiv(n)==n) THEN
+               ! this is a special point (Gamma, edge of BZ) which 
+               ! has no -k analogue in the list
+               equiv(n) = -1
             ELSE
-               IF (equiv(n)/=nk .or. n<nk ) CALL errore('kpoint_grid', &
+               IF (equiv(n)/=nk .or. n<nk ) CALL errore('kpoint_grid_no_t_rev', &
                   'something wrong in the checking algorithm',1)
             ENDIF
          ENDIF
        ENDIF
      ENDDO
-
-     !  count irreducible points and order them
-
-     nks=0
-     fact=0.0d0
-     DO nk=1,nkr
-        IF (equiv(nk)==nk) THEN
-           nks=nks+2
-           is_gamma = abs(xkg(1,nk)-nint(xkg(1,nk)))<=eps .and. &
-                      abs(xkg(2,nk)-nint(xkg(2,nk)))<=eps .and. &
-                      abs(xkg(3,nk)-nint(xkg(3,nk)))<=eps
-           IF (is_gamma) THEN
-             wk(nks-1) = 0.5
-             wk(nks) = 0.5
+     !
+     ! For each +k point generate a -k point and order them such
+     ! that they go in couples (this order is very important for the 
+     ! rest of the turboMagnon code)
+     nks = 0
+     fact = 0.0d0
+     DO nk = 1, nkr
+        IF ((equiv(nk)==nk) .OR. (equiv(nk)==-1)) THEN
+           nks = nks + 2 ! we count +k and -k
+           IF (equiv(nk)==nk) THEN
+              ! regular points (i.e. inside the BZ)
+              wk(nks-1) = 1.0d0
+              wk(nks)   = 1.0d0 
            ELSE
-             wk(nks-1) = 1.0
-             wk(nks) = 1.0 
+              ! special points (i.e. Gamma and/or other points at the edge of BZ)
+              wk(nks-1) = 0.5d0
+              wk(nks)   = 0.5d0
            ENDIF
-           fact = fact+wk(nks-1)+wk(nks)
-           !
-           !IF (nks>npk) CALL errore('kpoint_grid','too many k-points',1)
-           !  bring back into to the first BZ
-           DO i=1,3
-              xk(i,nks-1) = xkg(i,nk)-nint(xkg(i,nk))
-              xk(i,nks) = -xk(i,nks-1) 
+           fact = fact + wk(nks-1) + wk(nks)
+           DO i = 1, 3
+              xk(i,nks-1) =  xkg(i,nk) - nint(xkg(i,nk)) ! +k
+              xk(i,nks)   = -xk(i,nks-1)                 ! -k
            ENDDO
         ENDIF
      ENDDO
-
-     !if (ionode) write(stdout,*) "nks =", nks
-
+     !
      !  go to cartesian axis (in units 2pi/a0)
      CALL cryst_to_cart(nks,xk,bg,1)
      !
      !  normalize weights to one
-     DO nk=1,nks
+     DO nk = 1, nks
         wk(nk) = wk(nk)/fact
      ENDDO
      !
-     !filename = trim(prefix) // '__k_mesh.xyz' 
-     !if (ionode) OPEN (159, file = filename, form = 'formatted', status = 'unknown')
-     !if (ionode) write(159,*) nks
-     !if (ionode) write(159,*) ""
-     !  normalize weights to one
-     !DO nk=1,nks
-     !   if (ionode .and. mod(nk,2) == 0 ) then
-     !     write(159,'("C",3f16.9)') xk(1,nk-1), xk(2,nk-1), xk(3,nk-1)
-     !     write(159,'("F",3f16.9)')  xk(1,nk), xk(2,nk), xk(3,nk)
-     !   endif
-     !ENDDO
-     !if (ionode) close(159)
-
      DEALLOCATE(equiv)
      DEALLOCATE(xkg)
-
+     !
      RETURN
+     !
    END SUBROUTINE kpoint_grid_no_t_rev
    !
    !
@@ -362,7 +349,6 @@ SUBROUTINE lr_setup_nscf ()
      ! counter
      !
      eps = 1.d-12
-     !
      !
      lgamma = abs (xq (1) ) .lt.eps.and.abs (xq (2) ) .lt.eps.and.abs ( &
           xq (3) ) .lt.eps

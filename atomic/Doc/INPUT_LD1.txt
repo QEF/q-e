@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: ld1.x /  / Quantum Espresso (version: 6.8)
+Program: ld1.x /  / Quantum Espresso (version: 7.0)
 ------------------------------------------------------------------------
 
 
@@ -1266,4 +1266,4 @@ CARD:
       
 
 
-This file has been created by helpdoc utility on Fri Jul 16 12:00:46 CEST 2021
+This file has been created by helpdoc utility on Sat Dec 18 20:08:55 CET 2021

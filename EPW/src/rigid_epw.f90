@@ -18,10 +18,15 @@
   IMPLICIT NONE
   SAVE
 
-  INTEGER :: igmin(3)
+  INTEGER :: igmin(3), igmin_qG(3)
   !!
   REAL(KIND = DP) :: qqcut
   !!
+  REAL(KIND = DP), PARAMETER :: alph = 1.d0
+  !! Ewald parameter, units (2pi/alat)^{2}
+  REAL(KIND = DP), PARAMETER :: gmax = 14.d0
+  !! Cutoff criteria for G-sum:
+  !! e^{ - (q+G) \cdot \epsilon \cdot (q+G) / (4 \alpha) } < e^{ - gmax } terms are neglected.
   !
   CONTAINS
     !
@@ -49,6 +54,71 @@
     !
     !--------------------------------------------------------------------------
     END FUNCTION H_eps
+    !--------------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE find_min_qG(q)
+    !-----------------------------------------------------------------------
+    !!
+    !! Find igmin_qG = min_{G}|q+G|
+    !! to shift G-sum in long-range g
+    !! in order to ensure periodicity g(q+G')=g(q)
+    !!
+    USE constants_epw, ONLY : eps8
+    USE cell_base,     ONLY : bg, at
+    USE io_global,     ONLY : stdout
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: q(3)
+    !! q-vector from the full coarse or fine grid, in crystal coords.
+    !
+    ! Local variables
+    INTEGER         :: m1
+    !
+    INTEGER         :: m2
+    !
+    INTEGER         :: m3
+    !! Loop over G-vectors
+    REAL(KIND = DP) :: g1
+    !!
+    REAL(KIND = DP) :: g2
+    !!
+    REAL(KIND = DP) :: g3
+    !! G-vector in cartesian coords.
+    REAL(KIND = DP) :: qq
+    !! |q+G|
+    REAL(KIND = DP) :: qqmin
+    !! min|q+G|
+    REAL(KIND = DP) :: qtmp(3)
+    !!
+    !
+    ! Move q to 1BZ
+    qtmp(:) = q(:) - INT(q(:))
+    ! Transform to cartesian coords
+    CALL cryst_to_cart(1, qtmp, bg, 1)
+    !
+    igmin_qG = 0
+    qqmin = 1E10
+    DO m1 = -2, 2
+      DO m2 = -2, 2
+        DO m3 = -2, 2
+          g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + qtmp(1)
+          g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + qtmp(2)
+          g3 = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + qtmp(3)
+          qq = g1 * g1 + g2 * g2 + g3 * g3
+          IF (qqmin > qq) THEN
+            qqmin = qq
+            igmin_qG(1) = m1 - INT(q(1))
+            igmin_qG(2) = m2 - INT(q(2))
+            igmin_qG(3) = m3 - INT(q(3))
+          ENDIF
+        ENDDO
+      ENDDO
+    ENDDO
+    !
+    !--------------------------------------------------------------------------
+    END SUBROUTINE find_min_qG
     !--------------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
@@ -138,7 +208,7 @@
     !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : pi, fpi, e2
-    USE cell_base,     ONLY : bg, omega, alat
+    USE cell_base,     ONLY : bg, omega, alat, at
     USE constants_epw, ONLY : eps6, ci, zero, czero, twopi, eps8
     USE io_global,     ONLY : ionode_id
     USE mp_world,      ONLY : mpime
@@ -200,8 +270,8 @@
     !! (2*pi/a)^2
     REAL(KIND = DP):: geg
     !! <q+G| epsil | q+G>
-    REAL(KIND = DP) :: alph
-    !! Ewald parameter
+    !REAL(KIND = DP) :: alph
+    !!! Ewald parameter
     REAL(KIND = DP) :: fac
     !! General prefactor
     REAL(KIND = DP) :: gg(3)
@@ -210,8 +280,8 @@
     !! fac * EXP(-geg / (alph * 4.0d0)) / geg
     REAL(KIND = DP) :: arg
     !! Argument of the exponential
-    REAL(KIND = DP) :: gmax
-    !! Maximum G
+    !REAL(KIND = DP) :: gmax
+    !!! Maximum G
     REAL(KIND = DP) :: zag(3)
     !! Z * G
     REAL(KIND = DP) :: qag(3)
@@ -222,6 +292,8 @@
     !! Q * G
     REAL(KIND = DP) :: c
     !! vacuum size (supercell length along the z direction) in case of 2D
+    REAL(KIND = DP) :: qtmp(3)
+    !! Temporary q vector to find min_{G}|q+G|
     COMPLEX(KIND = DP) :: fnat(3)
     !! Z with \delta_kk' summed
     COMPLEX(KIND = DP) :: qnat(3)
@@ -274,8 +346,8 @@
       fac = (signe * e2 * fpi) / omega
     ENDIF
     !
-    gmax = 14.d0
-    alph = 1.0d0
+    !gmax = 14.d0
+    !alph = 1.0d0
     geg = gmax * alph * 4.0d0
     !
     ! Estimate of nr1x,nr2x,nr3x generating all vectors up to G^2 < geg
@@ -314,6 +386,11 @@
     ELSE
       add = 0
     ENDIF
+    !
+    !JLB: Find igmin_qG = min_{G}|q+G|
+    qtmp=q
+    CALL cryst_to_cart(1, qtmp, at, -1)
+    CALL find_min_qG(qtmp)
     !
     dyn_tmp(:, :) = czero
     !
@@ -412,9 +489,15 @@
       ENDIF ! geg
       !
       ! Case q =/ 0
-      gg(1) = gg(1) + q(1) * (twopi / alat)
-      gg(2) = gg(2) + q(2) * (twopi / alat)
-      gg(3) = gg(3) + q(3) * (twopi / alat)
+      !gg(1) = gg(1) + q(1) * (twopi / alat)
+      !gg(2) = gg(2) + q(2) * (twopi / alat)
+      !gg(3) = gg(3) + q(3) * (twopi / alat)
+      !
+      !JLB: shift G-sum and center around min_{G}|q+G|, to ensure periodicity
+      gg(1) = ( (m1+igmin_qG(1)) * bg(1, 1) + (m2+igmin_qG(2)) * bg(1, 2) + (m3+igmin_qG(3)) * bg(1,3) + q(1)) * (twopi / alat)
+      gg(2) = ( (m1+igmin_qG(1)) * bg(2, 1) + (m2+igmin_qG(2)) * bg(2, 2) + (m3+igmin_qG(3)) * bg(2,3) + q(2)) * (twopi / alat)
+      gg(3) = ( (m1+igmin_qG(1)) * bg(3, 1) + (m2+igmin_qG(2)) * bg(3, 2) + (m3+igmin_qG(3)) * bg(3,3) + q(3)) * (twopi / alat)
+      !
       !
       IF (system_2d) THEN
         geg = gg(1)**2 + gg(2)**2 + gg(3)**2
@@ -523,7 +606,7 @@
     !!   \left[ U_{{\bf k}+{\bf q}}\:U_{{\bf k}}^{\dagger} \right]_{mn} $$
     !!
     USE kinds,         ONLY : dp
-    USE cell_base,     ONLY : bg, omega, alat
+    USE cell_base,     ONLY : bg, omega, alat, at
     USE ions_base,     ONLY : tau, nat
     USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, eps12, zero, eps8
     USE epwcom,        ONLY : shortrange, lpolar, system_2d
@@ -566,6 +649,10 @@
     !! Loop over q-points
     INTEGER :: nr1x, nr2x, nr3x
     !! Minimum supercell size to include all vector such that G^2 < geg
+    INTEGER :: mmin(3), mmax(3)
+    !! Shifted G-loop to be centered around min_{G}|q+G|
+    INTEGER :: nGtest
+    !! Number of G-vectors within cutoff (for testing purposes only)
     REAL(KIND = DP):: metric
     !! (2*pi/a)^2
     REAL(KIND = DP) :: qeq
@@ -576,10 +663,10 @@
     !! Z^* \cdot (q+g)
     REAL(KIND = DP) :: gg(3)
     !! G-vector
-    REAL(KIND = DP) :: gmax
-    !! Max G-vector
-    REAL(KIND = DP) :: alph
-    !! Ewald factor (arbitrary, here chosen to be 1)
+    !REAL(KIND = DP) :: gmax
+    !!! Max G-vector
+    !REAL(KIND = DP) :: alph
+    !!! Ewald factor (arbitrary, here chosen to be 1)
     REAL(KIND = DP) :: geg
     !!  <q+G| epsil | q+G>
     REAL(KIND = DP) :: Qqq
@@ -590,6 +677,8 @@
     !! G-vector * reff * G-vector
     REAL(KIND = DP) :: c
     !! vacuum size (supercell length along the z direction) in case of 2D
+    REAL(KIND = DP) :: qtmp(3)
+    !! Temporary q vector to find min_{G}|q+G|
     COMPLEX(KIND = DP) :: fac
     !! General prefactor
     COMPLEX(KIND = DP) :: facqd
@@ -622,8 +711,8 @@
       fac = (signe * e2 * fpi * ci) / omega
     ENDIF
     !
-    gmax = 14.d0
-    alph = 1.0d0
+    !gmax = 14.d0
+    !alph = 1.0d0
     metric = (twopi / alat)**2
     geg = gmax * alph * 4.0d0
     !
@@ -645,10 +734,27 @@
       nr3x = INT(SQRT(geg) / SQRT(bg(1, 3)**2 + bg(2, 3)**2 + bg(3, 3)**2)) + 1
     ENDIF
     !
+    !JLB: Find igmin_qG = min_{G}|q+G|
+    qtmp=q
+    CALL cryst_to_cart(1, qtmp, at, -1)
+    CALL find_min_qG(qtmp)
+    ! shift G-sum and center around min_{G}|q+G|, to ensure periodicity
+    mmin(1) = -nr1x + igmin_qG(1)
+    mmax(1) =  nr1x + igmin_qG(1)
+    mmin(2) = -nr2x + igmin_qG(2)
+    mmax(2) =  nr2x + igmin_qG(2)
+    mmin(3) = -nr3x + igmin_qG(3)
+    mmax(3) =  nr3x + igmin_qG(3)
+    !
     epmatl(:) = czero
-    DO m1 = -nr1x, nr1x
-      DO m2 = -nr2x, nr2x
-        DO m3 = -nr3x, nr3x
+    !DO m1 = -nr1x, nr1x
+    !  DO m2 = -nr2x, nr2x
+    !    DO m3 = -nr3x, nr3x
+    !
+    DO m1 = mmin(1), mmax(1)
+      DO m2 = mmin(2), mmax(2)
+        DO m3 = mmin(3), mmax(3)
+          !
           gg(1) = (m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)) * (twopi / alat)
           gg(2) = (m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)) * (twopi / alat)
           gg(3) = (m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3)) * (twopi / alat)
@@ -671,8 +777,9 @@
             IF (system_2d) THEN
               facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / (SQRT(qeq) * (1.0 + grg * SQRT(qeq)))
             ELSE
-              ! facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / qeq  <-- this is correct
-              facqd = fac * EXP(-qeq * DSQRT(metric) / (metric * alph * 4.0d0)) / qeq ! <-- this is to keep as previous
+              facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / qeq  !<-- this is correct
+              !facqd = fac * EXP(-qeq * DSQRT(metric) / (metric * alph * 4.0d0)) / qeq ! <-- this is to keep as previous
+              !facqd = fac / qeq ! no Ewald
             ENDIF
             !
             DO na = 1, nat
@@ -748,7 +855,7 @@
     !! 10/2016 - SP: Optimization
     !!
     USE kinds,         ONLY : DP
-    USE cell_base,     ONLY : bg, omega, alat
+    USE cell_base,     ONLY : bg, omega, alat, at
     USE ions_base,     ONLY : tau, nat
     USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, eps12, zero, eps8
     USE epwcom,        ONLY : shortrange, nbndsub, lpolar, system_2d
@@ -792,6 +899,10 @@
     !! Mode index
     INTEGER :: nr1x, nr2x, nr3x
     !! Minimum supercell size to include all vector such that G^2 < geg
+    INTEGER :: mmin(3), mmax(3)
+    !! Shifted G-loop to be centered around min_{G}|q+G|
+    INTEGER :: nGtest
+    !! Number of G-vectors within cutoff (for testing purposes only)
     REAL(KIND = DP):: metric
     !! (2*pi/a)^2
     REAL(KIND = DP) :: qeq
@@ -802,10 +913,10 @@
     !! Z^* \cdot (q+g)
     REAL(KIND = DP) :: gg(3)
     !! G-vector
-    REAL(KIND = DP) :: gmax
-    !!  Max G-vector
-    REAL(KIND = DP) :: alph
-    !! Ewald factor (arbitrary, here chosen to be 1)
+    !REAL(KIND = DP) :: gmax
+    !!!  Max G-vector
+    !REAL(KIND = DP) :: alph
+    !!! Ewald factor (arbitrary, here chosen to be 1)
     REAL(KIND = DP) :: geg
     !! <G| epsil | G>
     REAL(KIND = DP) :: reff(2, 2)
@@ -816,6 +927,8 @@
     !! In the case of Si, its a single value
     REAL(KIND = DP) :: c
     !! vacuum size (supercell length along the z direction) in case of 2D
+    REAL(KIND = DP) :: qtmp(3)
+    !! Temporary q vector to find min_{G}|q+G|
     COMPLEX(KIND = DP) :: fac
     !! General prefactor
     COMPLEX(KIND = DP) :: facqd
@@ -848,8 +961,8 @@
       fac = (signe * e2 * fpi * ci) / omega
     ENDIF
     !
-    gmax = 14.d0
-    alph = 1.0d0
+    !gmax = 14.d0
+    !alph = 1.0d0
     metric = (twopi / alat)**2
     geg = gmax * alph * 4.0d0
     !
@@ -871,10 +984,26 @@
       nr3x = INT(SQRT(geg) / SQRT(bg(1, 3)**2 + bg(2, 3)**2 + bg(3, 3)**2)) + 1
     ENDIF
     !
+    !JLB: Find igmin_qG = min_{G}|q+G|
+    qtmp=q
+    CALL cryst_to_cart(1, qtmp, at, -1)
+    CALL find_min_qG(qtmp)
+    ! shift G-sum and center around min_{G}|q+G|, to ensure periodicity
+    mmin(1) = -nr1x + igmin_qG(1)
+    mmax(1) =  nr1x + igmin_qG(1)
+    mmin(2) = -nr2x + igmin_qG(2)
+    mmax(2) =  nr2x + igmin_qG(2)
+    mmin(3) = -nr3x + igmin_qG(3)
+    mmax(3) =  nr3x + igmin_qG(3)
+    !
+    !nGtest = 0
     epmatl(:, :, :) = czero
-    DO m1 = -nr1x, nr1x
-      DO m2 = -nr2x, nr2x
-        DO m3 = -nr3x, nr3x
+    !DO m1 = -nr1x, nr1x
+    !  DO m2 = -nr2x, nr2x
+    !    DO m3 = -nr3x, nr3x
+    DO m1 = mmin(1), mmax(1)
+      DO m2 = mmin(2), mmax(2)
+        DO m3 = mmin(3), mmax(3)
           !
           gg(1) = (m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)) * (twopi / alat)
           gg(2) = (m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)) * (twopi / alat)
@@ -897,11 +1026,14 @@
           !
           IF (qeq > 0.0d0 .AND. qeq / (metric * alph * 4.0d0) < gmax) THEN
             !
+            !nGtest = nGtest + 1
+            !
             IF (system_2d) THEN
               facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / (SQRT(qeq) * (1.0 + grg * SQRT(qeq)))
             ELSE
-              ! facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / qeq  <-- this is correct
-              facqd = fac * EXP(-qeq * DSQRT(metric) / (metric * alph * 4.0d0)) / qeq ! <-- this is to keep as previous
+              facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / qeq  !<-- this is correct
+              !facqd = fac * EXP(-qeq * DSQRT(metric) / (metric * alph * 4.0d0)) / qeq ! <-- this is to keep as previous
+              !facqd = fac / qeq ! no Ewald
             ENDIF
             !
             DO na = 1, nat
@@ -935,6 +1067,8 @@
         ENDDO ! m3
       ENDDO ! m2
     ENDDO ! m1
+    !
+    !write(*,*) "Number of G-vectors within cutoff:", nGtest
     !
     ! In case we want only the short-range we do
     ! g_s = DSQRT(g*g - g_l*g_l)
@@ -1691,8 +1825,8 @@
     !! (2*pi/a)^2
     REAL(KIND = DP):: geg
     !! <q+G| epsil | q+G>
-    REAL(KIND = DP) :: alph
-    !! Ewald parameter
+    !REAL(KIND = DP) :: alph
+    !!! Ewald parameter
     REAL(KIND = DP) :: fac
     !! General prefactor
     REAL(KIND = DP) :: gg(3)
@@ -1701,8 +1835,8 @@
     !! fac * EXP(-geg / (alph * 4.0d0)) / geg
     REAL(KIND = DP) :: arg
     !! Argument of the exponential
-    REAL(KIND = DP) :: gmax
-    !! Maximum G
+    !REAL(KIND = DP) :: gmax
+    !!! Maximum G
     REAL(KIND = DP) :: arg_no_g(3)
     !! Difference of atomic position
     REAL(KIND = DP) :: zag(3)
@@ -1721,15 +1855,15 @@
     ! very rough estimate: geg/4/alph > gmax = 14
     ! (exp (-14) = 10^-6)
     !
-    gmax = 14.d0
-    alph = 1.0d0
+    !gmax = 14.d0
+    !alph = 1.0d0
     metric = (twopi / alat)**2
     geg = gmax * alph * 4.0d0
     !
     IF (ABS(ABS(signe) - 1.0) > eps6) CALL errore('rgd_blk_der', ' wrong value for signe ', 1)
     !
-    gmax = 14.d0
-    alph = 1.0d0
+    !gmax = 14.d0
+    !alph = 1.0d0
     geg = gmax * alph * 4.0d0
     fac = signe * e2 * fpi / omega
     !
@@ -1887,10 +2021,10 @@
     !! Z^* \cdot (q+g)
     REAL(KIND = DP) :: gg(3)
     !! G-vector
-    REAL(KIND = DP) :: gmax
-    !!  Max G-vector
-    REAL(KIND = DP) :: alph
-    !! Ewald factor (arbitrary, here chosen to be 1)
+    !REAL(KIND = DP) :: gmax
+    !!!  Max G-vector
+    !REAL(KIND = DP) :: alph
+    !!! Ewald factor (arbitrary, here chosen to be 1)
     REAL(KIND = DP) :: geg
     !! <G| epsil | G>
     REAL(KIND = DP) :: reff(2, 2)
@@ -1933,8 +2067,8 @@
       fac = (signe * e2 * fpi * ci) / omega
     ENDIF
     !
-    gmax = 14.d0
-    alph = 1.0d0
+    !gmax = 14.d0
+    !alph = 1.0d0
     metric = (twopi / alat)**2
     geg  = gmax * alph * 4.0d0
     !
@@ -1985,8 +2119,8 @@
             IF (system_2d) THEN
               facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / (SQRT(qeq) * (1.0 + grg * SQRT(qeq)))
             ELSE
-              ! facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / qeq  <-- this is correct
-              facqd = fac * EXP(-qeq * DSQRT(metric) / (metric * alph * 4.0d0)) / qeq ! <-- this is to keep as previous
+              facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / qeq  !<-- this is correct
+              !facqd = fac * EXP(-qeq * DSQRT(metric) / (metric * alph * 4.0d0)) / qeq ! <-- this is to keep as previous
             ENDIF
             !
             DO na = 1, nat

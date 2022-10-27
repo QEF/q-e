@@ -22,6 +22,12 @@ SUBROUTINE print_clock_pw()
    USE ldaU,               ONLY : lda_plus_u, lda_plus_u_kind, is_hubbard_back
    USE xc_lib,             ONLY : xclib_dft_is
    USE bp,                 ONLY : lelfield
+   USE rism_module,        ONLY : rism_print_clock
+   !
+#if defined (__ENVIRON)
+   USE plugin_flags,        ONLY : use_environ
+   USE environ_base_module, ONLY : print_environ_clocks
+#endif
    !
    IMPLICIT NONE
    !
@@ -39,6 +45,7 @@ SUBROUTINE print_clock_pw()
    IF (llondon) CALL print_clock('stres_london')
    !
    WRITE( stdout, '(/5x,"Called by init_run:")' )
+   CALL print_clock( 'aceinit0' )
    CALL print_clock( 'wfcinit' )
    IF ( iverbosity > 0 ) THEN
       CALL print_clock( 'wfcinit:atomic' )
@@ -170,7 +177,8 @@ SUBROUTINE print_clock_pw()
          CALL print_clock( 'pcg' )
          CALL print_clock( 'pcg:hs_1psi' )
          CALL print_clock( 'pcg:ortho' )
-         CALL print_clock( 'pcg:move' )
+         CALL print_clock( 'pcg:move1' )
+         CALL print_clock( 'pcg:move2' )
 
          CALL print_clock( 'rotHSw' )
          CALL print_clock( 'rotHSw:move' )
@@ -233,6 +241,7 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'fftw' )
    CALL print_clock( 'fftc' )
    CALL print_clock( 'fftcw' )
+   CALL print_clock( 'fftr' )
    CALL print_clock( 'interpolate' )
    CALL print_clock( 'davcio' )
    !    
@@ -328,7 +337,12 @@ SUBROUTINE print_clock_pw()
       call print_clock('c_phase_field')
    END IF
    !
+   CALL rism_print_clock()
+   !
    CALL plugin_clock()
+#if defined (__ENVIRON)
+   IF (use_environ) CALL print_environ_clocks()
+#endif
    !
    RETURN
    !

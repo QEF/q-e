@@ -17,6 +17,11 @@ SUBROUTINE stop_cp_run()
   USE constraints_module, ONLY : deallocate_constraint
   USE mp_global,          ONLY : mp_global_end
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,        ONLY : use_environ
+  USE environ_base_module, ONLY : clean_environ
+#endif
+  !
   IMPLICIT NONE
   !
   CALL environment_end( 'CP' )
@@ -25,7 +30,9 @@ SUBROUTINE stop_cp_run()
   !
   IF ( lconstrain ) CALL deallocate_constraint()
   !
-  CALL plugin_clean()
+#if defined (__ENVIRON)
+  IF (use_environ) CALL clean_environ()
+#endif
   !
   CALL mp_global_end()
   !

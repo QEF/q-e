@@ -1,0 +1,31 @@
+--------------------------------------------------------------------------
+[[44625,1],0]: A high-performance Open MPI point-to-point messaging module
+was unable to find any relevant network interfaces:
+
+Module: OpenFabrics (openib)
+  Host: bionano2
+
+Another transport will be used instead, although this may result in
+lower performance.
+
+NOTE: You can disable this warning by setting the MCA parameter
+btl_base_warn_component_unused to 0.
+--------------------------------------------------------------------------
+PROGRAM: band_interpolation 
+Interpolation method: idw                                                                             
+The uniform grid contains   864 q-points and     8 bands
+ Crystal lattice vectors found  
+      Ra:      -0.5000      0.0000      0.5000
+      Rb:       0.0000      0.5000      0.5000
+      Rc:      -0.5000      0.5000      0.0000
+ Reciprocal lattice vectors found  
+      Ga:      -1.0000     -1.0000      1.0000
+      Gb:       1.0000      1.0000      1.0000
+      Gc:      -1.0000      1.0000     -1.0000
+    1 symmetry operations found 
+
+--- Inverse distance weighting (IDW) interpolation method ---
+
+The inverse distance to the     7th power will be used in weights
+ 
+writing band structure on idw.dat                                                                                             

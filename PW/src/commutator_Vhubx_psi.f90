@@ -35,6 +35,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, nbnd_calc, vpol, dpsi)
                              is_hubbard, nwfcU, offsetU, oatwfc
   USE uspp,           ONLY : vkb, nkb, okvan
   USE uspp_param,     ONLY : nh, upf
+  USE uspp_init,      ONLY : gen_us_dj, gen_us_dy
   USE lsda_mod,       ONLY : lsda, current_spin, isk, nspin
   USE klist,          ONLY : xk, ngk, igk_k
   USE cell_base,      ONLY : tpiba

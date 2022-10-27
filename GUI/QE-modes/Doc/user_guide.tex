@@ -84,14 +84,16 @@ The \QEmodes\ package was written by Anton Kokalj. The implementation
 of \QEmodes\ was made possible by several useful and helpful resources
 that are gratefully acknowledged, in particular: {\it Mode Tutorial}
 of Scott Andrew Borton
-(\texttt{https://www.emacswiki.org/emacs/ModeTutorial} for
-indentation code), {\it Derived Mode} and {\it Sample Mode} pages
+(\texttt{https://www.emacswiki.org/emacs/ModeTutorial} for indentation
+code), {\it Derived Mode} and {\it Sample Mode} pages
 (\texttt{https://www.emacswiki.org/emacs/DerivedMode},
 \texttt{https://www.emacswiki.org/emacs/SampleMode}) as well as the
 very useful resources of Xah Lee
-(\texttt{http://ergoemacs.org/emacs/elisp\_syntax\_coloring.html}). Last
-but not the least Sebastijan Peljhan is acknowledged for his work on
-\texttt{xsf-mode} that inspired the idea of writing the \QEmodes.
+(\texttt{http://ergoemacs.org/emacs/elisp\_syntax\_coloring.html}). Sebastijan
+Peljhan is acknowledged for his work on \texttt{xsf-mode} that
+inspired the idea of writing the \QEmodes. Last but not the least,
+Hongyi Zhao contributed the \texttt{ido-completion-read} snippet of
+Elisp code for selecting the values for the card's flags.
 
 % TODO: add infro from the net.
 
@@ -115,15 +117,16 @@ editing the \verb+user-init-file+ (typically \verb+$HOME/.emacs+).
 
 \subsection{Installing the \QEmodes\ package}
 Once the \texttt{QE-modes-\version.tar.gz} archive is unpacked and you
-are located in its root directory, the installation is trivial. Simply
-copy the whole \qemodes\ subdirectory to appropriate place. To
-facilitate this copying on Unix-like operating systems, one can use:
+are located in its root directory, the installation is trivial. Simply use:
 \begin{verbatim}
    ./install.sh
 \end{verbatim}
 which will install the package in the \qemodes\ subdirectory of the
-\texttt{\$HOME/.emacs.d/} directory. If you prefer to install it into
-other directory, then use:
+\texttt{\$HOME/.emacs.d/} directory (the script copies the \QEmodes\
+\texttt{*.el} files to \texttt{\$HOME/.emacs.d/} and byte-compiles
+them into \texttt{*.elc} files).
+
+If you prefer to install \QEmodes\ into other directory, use instead:
 \begin{flushleft}
 \verb+   prefix=+\var{where-to-install}\verb+ ./install.sh+
 \end{flushleft}
@@ -279,7 +282,9 @@ The \QEmodes\ package provides the following commands:
   inserts a blank namelist section named \var{NAMELIST}
 
 \item[$\bullet$ \efn{M-x \var{prog-CARD}}]\hfill\\
-  inserts a blank card section named \var{CARD}
+  inserts a blank card section named \var{CARD}; the value of the
+  card's \var{flag} can be selected from the provided list by using
+  the right/left arrow keys
 
 \item[$\bullet$ \efn{M-x \var{prog-variable}}]\hfill\\
   inserts a namelist variable named \var{variable}
@@ -334,6 +339,23 @@ the point position of the current buffer:
 \begin{verbatim}
    calculation = ''
 \end{verbatim}
+
+\subsubsection{Selection of card's flag value}
+
+Another available completion is the selection of the card's flag
+value. For example, by typing:
+\begin{verbatim}
+   M-x pw-K\_P[space][enter]
+\end{verbatim}
+the following list of possible values for the \verb+K_POINTS+'s flag
+appears:
+\begin{flushleft}
+~~~\texttt{Select the flag: \{}\textbf{tpiba}\texttt{ | automatic |
+  crystal | gamma | ...\}}.
+\end{flushleft}
+The currently active value is written in
+bold; to use it press \texttt{[enter]}, whereas to select another
+value use the right ($\rightarrow$) or left ($\leftarrow$) arrow keys.
 
 \subsection{Controlling indentation}
 

@@ -175,8 +175,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
      call mp_sum(f(1,is),world_comm)
   enddo
 
-  write(stdout,*) 'ATTENZIONE1'
-  FLUSH(stdout)
+  
   omat(:,:,:)=(0.d0,0.d0)
   
   do is=1,nstates

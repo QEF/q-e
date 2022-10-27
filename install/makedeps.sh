@@ -17,7 +17,7 @@ then
 # upon include files *.h or *.fh or modules. Note that libraries that are 
 # externally maintained should not go into this list
 
-    dirs=" LAXlib FFTXlib UtilXlib \
+    dirs=" LAXlib FFTXlib/src UtilXlib \
            dft-d3 \
            KS_Solvers/Davidson KS_Solvers/Davidson_RCI KS_Solvers/CG \
 	   KS_Solvers/PPCG KS_Solvers/ParO  KS_Solvers/DENSE  KS_Solvers/RMM \
@@ -25,7 +25,7 @@ then
            PHonon/Gamma PHonon/PH PHonon/FD HP/src atomic/src \
            EPW/src XSpectra/src NEB/src TDDFPT/src \
            GWW/pw4gww GWW/gww GWW/head GWW/bse GWW/simple \
-	   GWW/simple_bse GWW/simple_ip QEHeat/src ACFDT/src " 
+	   GWW/simple_bse GWW/simple_ip QEHeat/src ACFDT/src KCW/src KCW/PP " 
           
 elif
     test $1 = "-addson" 
@@ -60,9 +60,9 @@ for dir in $dirs; do
     # default
     DEPENDS="$LEVEL1/include" 
     # for convenience, used later
-    DEPEND1="$LEVEL1/include $LEVEL1/FFTXlib $LEVEL1/XClib $LEVEL1/LAXlib \
+    DEPEND1="$LEVEL1/include $LEVEL1/FFTXlib/src $LEVEL1/XClib $LEVEL1/LAXlib \
 	     $LEVEL1/UtilXlib $LEVEL1/upflib"
-    DEPEND3="$LEVEL2/include $LEVEL2/FFTXlib $LEVEL2/LAXlib $LEVEL2/UtilXlib"
+    DEPEND3="$LEVEL2/include $LEVEL2/FFTXlib/src $LEVEL2/LAXlib $LEVEL2/UtilXlib"
     DEPEND2="$DEPEND3 $LEVEL2/upflib $LEVEL2/XClib $LEVEL2/Modules"
     case $DIR in 
         upflib )
@@ -85,8 +85,10 @@ for dir in $dirs; do
 	     DEPENDS="$DEPEND3" ;;
 	PW/tools | PP/src | PWCOND/src | GWW/pw4gww | NEB/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src" ;;
-	PHonon/FD | PHonon/PH | PHonon/Gamma | HP/src | TDDFPT/src | XSpectra/src  | GIPAW/src )
+	PHonon/FD | PHonon/PH | PHonon/Gamma | HP/src | TDDFPT/src | XSpectra/src  | GIPAW/src | KCW/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules" ;;
+        KCW/PP )
+	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL1/src" ;;
         EPW/src | QEHeat/src )
              DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL2/PHonon/PH $LEVEL2/Modules" ;; 
 	GWW/head )

@@ -23,5 +23,5 @@ minpacklib.a : $(MINOBJS)
 	$(AR) $(ARFLAGS) $@ $(MINOBJS)
 
 clean :
-	- /bin/rm -fv minpacklib.a *.o 
+	- /bin/rm -f minpacklib.a *.o 
 

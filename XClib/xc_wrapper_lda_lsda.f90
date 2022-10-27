@@ -41,17 +41,13 @@ SUBROUTINE xc( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out, gpu_arg
   IF ( gpu_args ) THEN
     !
     !$acc data present( rho_in, ex_out, ec_out, vx_out, vc_out )
-    !$acc host_data use_device( rho_in, ex_out, ec_out, vx_out, vc_out )
     CALL xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
-    !$acc end host_data
     !$acc end data
     !
   ELSE
     !
     !$acc data copyin( rho_in ), copyout( ex_out, ec_out, vx_out, vc_out )
-    !$acc host_data use_device( rho_in, ex_out, ec_out, vx_out, vc_out )
     CALL xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
-    !$acc end host_data
     !$acc end data
     !
   ENDIF
@@ -73,9 +69,9 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
   USE dft_setting_params, ONLY: xc_func, xc_info, libxc_flags
 #endif
   !
-  USE kind_l,             ONLY: DP
-  USE dft_setting_params, ONLY: iexch, icorr, is_libxc, rho_threshold_lda, &
-                                finite_size_cell_volume_set
+  USE kind_l,               ONLY: DP
+  USE dft_setting_params,   ONLY: iexch, icorr, is_libxc, rho_threshold_lda, &
+                                  finite_size_cell_volume_set
   USE qe_drivers_lda_lsda
   !
   IMPLICIT NONE
@@ -105,8 +101,7 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
   REAL(DP) :: arho_ir
   INTEGER  :: ir
   !
-  !$acc data deviceptr( rho_in(length,srd), ex_out(length), ec_out(length), &
-  !$acc&                vx_out(length,svd), vc_out(length,svd) )
+  !$acc data present( rho_in, ex_out, ec_out, vx_out, vc_out )
   !
 #if defined(__LIBXC)
   !
@@ -203,9 +198,7 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
           arho_ir = ABS(rho_in(ir,1))
           IF (arho_ir > rho_threshold_lda) zeta(ir) = rho_in(ir,2) / arho_ir
         ENDDO
-        !$acc host_data use_device( zeta )
         CALL xc_lsda( length, rho_in(:,1), zeta, ex_out, ec_out, vx_out, vc_out )
-        !$acc end host_data
         !$acc end data
         DEALLOCATE( zeta )
         !
@@ -219,9 +212,7 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
           IF (arho_ir > rho_threshold_lda) zeta(ir) = SQRT( rho_in(ir,2)**2 + rho_in(ir,3)**2 + &
                                                           rho_in(ir,4)**2 ) / arho_ir ! amag/arho
         ENDDO
-        !$acc host_data use_device( zeta )
         CALL xc_lsda( length, rho_in(:,1), zeta, ex_out, ec_out, vx_out, vc_out )
-        !$acc end host_data
         !$acc end data
         DEALLOCATE( zeta )
         !
@@ -288,9 +279,7 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
        arho_ir = ABS(rho_in(ir,1))
        IF (arho_ir > rho_threshold_lda) zeta(ir) = rho_in(ir,2) / arho_ir
      ENDDO
-     !$acc host_data use_device( zeta )
      CALL xc_lsda( length, rho_in(:,1), zeta, ex_out, ec_out, vx_out, vc_out )
-     !$acc end host_data
      !$acc end data
      DEALLOCATE( zeta )
      !
@@ -304,9 +293,7 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
        IF (arho_ir > rho_threshold_lda) zeta(ir) = SQRT( rho_in(ir,2)**2 + rho_in(ir,3)**2 + &
                                                        rho_in(ir,4)**2 ) / arho_ir ! amag/arho
      ENDDO
-     !$acc host_data use_device( zeta )
      CALL xc_lsda( length, rho_in(:,1), zeta, ex_out, ec_out, vx_out, vc_out )
-     !$acc end host_data
      !$acc end data
      DEALLOCATE( zeta )
      !

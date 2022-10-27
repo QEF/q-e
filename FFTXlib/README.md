@@ -74,6 +74,5 @@ Misc. helper routines:
 
 Tests:
 
-    test0.f90
     test.f90
 

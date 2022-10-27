@@ -14,7 +14,6 @@ CONTAINS
 !
 !-----------------------------------------------------------------------
 SUBROUTINE becke88( rho, grho, sx, v1x, v2x )
-!$acc routine (becke88) seq
   !-----------------------------------------------------------------------
   !! Becke exchange: A.D. Becke, PRA 38, 3098 (1988)
   !! only gradient-corrected part, no Slater term included
@@ -22,6 +21,8 @@ SUBROUTINE becke88( rho, grho, sx, v1x, v2x )
   USE kind_l, ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -58,7 +59,6 @@ END SUBROUTINE becke88
 !
 !-----------------------------------------------------------------------
 SUBROUTINE ggax( rho, grho, sx, v1x, v2x )
-!$acc routine (ggax) seq
   !-----------------------------------------------------------------------
   !! Perdew-Wang GGA (PW91), exchange part:
   !! J.P. Perdew et al.,PRB 46, 6671 (1992)
@@ -66,6 +66,8 @@ SUBROUTINE ggax( rho, grho, sx, v1x, v2x )
   USE kind_l, ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -107,7 +109,6 @@ END SUBROUTINE ggax
 !
 !---------------------------------------------------------------
 SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )
-!$acc routine (pbex) seq
   !---------------------------------------------------------------
   !! PBE exchange (without Slater exchange):
   !! iflag=1  J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
@@ -123,6 +124,8 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )
   USE kind_l,      ONLY : DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   INTEGER, INTENT(IN) :: iflag
   REAL(DP), INTENT(IN) :: rho, grho
@@ -330,7 +333,6 @@ END SUBROUTINE pbex
 !
 !----------------------------------------------------------------------------
 SUBROUTINE hcth( rho, grho, sx, v1x, v2x )
-!$acc routine (hcth) seq
   !--------------------------------------------------------------------------
   !! HCTH/120, JCP 109, p. 6264 (1998)
   !! Parameters set-up after N.L. Doltsisnis & M. Sprik (1999)
@@ -345,6 +347,8 @@ SUBROUTINE hcth( rho, grho, sx, v1x, v2x )
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -457,12 +461,13 @@ END SUBROUTINE hcth
     !
     !-------------------------------------------------------
     SUBROUTINE pwcorr( r, c, g, dg )
-!$acc routine (pwcorr) seq
       !-----------------------------------------------------
       !
       USE kind_l,   ONLY: DP
       !
       IMPLICIT NONE
+      !
+      !$acc routine seq
       !
       REAL(DP), INTENT(IN)  :: r, c(6)
       REAL(DP), INTENT(OUT) :: g, dg
@@ -487,7 +492,6 @@ END SUBROUTINE hcth
 !
 !-----------------------------------------------------------------------------
 SUBROUTINE optx( rho, grho, sx, v1x, v2x )
-!$acc routine (optx) seq
   !---------------------------------------------------------------------------
   !! OPTX, Handy et al. JCP 116, p. 5411 (2002) and refs. therein
   !! Present release: Mauro Boero, Tsukuba, 10/9/2002
@@ -501,6 +505,8 @@ SUBROUTINE optx( rho, grho, sx, v1x, v2x )
   USE kind_l,   ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -534,7 +540,6 @@ END SUBROUTINE optx
 !
 !---------------------------------------------------------------
 SUBROUTINE wcx( rho, grho, sx, v1x, v2x )
-!$acc routine (wcx) seq
   !---------------------------------------------------------------
   !!  Wu-Cohen exchange (without Slater exchange):
   !!  Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)
@@ -542,6 +547,8 @@ SUBROUTINE wcx( rho, grho, sx, v1x, v2x )
   USE kind_l,   ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -606,17 +613,19 @@ END SUBROUTINE wcx
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega )
-!$acc routine (pbexsr) seq
+SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega, in_err )
   !---------------------------------------------------------------------
   ! INCLUDE 'cnst.inc'
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
+  !$acc routine seq
+  !
   REAL(DP), INTENT(IN) :: omega
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sxsr, v1xsr, v2xsr
+  INTEGER :: in_err
   !
   ! ... local variables
   !
@@ -643,7 +652,7 @@ SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega )
      s = 8.572844D0 - 18.796223D0/s2
   ENDIF
   !
-  CALL wpbe_analy_erfc_approx_grad( rho, s, omega, fx, d1x, d2x )
+  CALL wpbe_analy_erfc_approx_grad( rho, s, omega, fx, d1x, d2x, in_err )
   !
   sxsr  = ex*fx                        ! - ex
   dsdn  = -4.D0/3.D0*s/rho
@@ -660,15 +669,312 @@ SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega )
 END SUBROUTINE pbexsr
 !
 !
+!
+!-----------------------------------------------------------------------     
+      SUBROUTINE axsr( IXC, RHO, GRHO, sx, V1X, V2X, OMEGA, IN_ERR )
+!-----------------------------------------------------------------------     
+!*** [Per Hyldgaard, No warranties. adapted from the pbesrx version above]
+!-----------------------------------------------------------------------
+!
+!      INCLUDE 'cnst.inc'
+      !
+      use kind_l, ONLY : DP
+      !
+      IMPLICIT NONE
+      !
+      !$acc routine seq
+      !
+      INTEGER :: IXC, IN_ERR
+      REAL(DP):: RHO, GRHO, V1X, V2X, OMEGA
+      REAL(DP), PARAMETER :: SMALL=1.D-20, SMAL2=1.D-08
+      REAL(DP), PARAMETER :: US=0.161620459673995492D0, &
+              AX=-0.738558766382022406D0, &
+              UM=0.2195149727645171D0,UK=0.8040D0,UL=UM/UK
+      REAL(DP), PARAMETER :: f1 = -1.10783814957303361_DP, alpha = 2.0_DP/3.0_DP
+      REAL(DP):: RS, VX, FX, AA, RR, EX, S2, S, D1X, D2X, SX, DSDN, DSDG
+!     ==--------------------------------------------------------------==
+      
+!      CALL XC(RHO,EX,EC,VX,VC)
+      RS = RHO**(1.0_DP/3.0_DP)
+      VX = (4.0_DP/3.0_DP)*f1*alpha*RS
+
+!      AA    = DMAX1(GRHO,SMAL2)
+      AA    = GRHO
+!      RR    = RHO**(-4.0_DP/3.0_DP)
+      RR    = 1.0_DP/(RHO*RS)
+      EX    = AX/RR
+      S2    = AA*RR*RR*US*US
+
+      S = SQRT(S2)
+      IF(S.GT.8.3D0) THEN
+        S = 8.572844D0 - 18.796223D0/S2
+      ENDIF
+      CALL wggax_analy_erfc(RHO,S,IXC,OMEGA,FX,D1X,D2X,IN_ERR)
+      sx = EX*FX        ! - EX
+      DSDN = -4.D0/3.D0*S/RHO
+      V1X = VX*FX + (DSDN*D2X+D1X)*EX   ! - VX
+      DSDG = US*RR
+      V2X = EX*1.D0/SQRT(AA)*DSDG*D2X
+
+!     ==--------------------------------------------------------------==
+      RETURN
+      END SUBROUTINE axsr
+!
+!
+!-----------------------------------------------------------------------     
+      SUBROUTINE wggax_analy_erfc(rho,s,nggatyp,omega,Fx_wgga, &
+                                  dfxdn,dfxds,in_err)
+!--------------------------------------------------------------------
+!
+!     Short-ranged wGGA Enhancement Factor (from erfc, analytical with
+!     gradients)
+!     
+!     This codes the HJS analytical-xc-hole idea, JCP 128, 194 105 (2008).
+!
+!     Copyright Per Hyldgaard, GPL, No warranty, 2016-
+!
+!     Inputs:
+!     rho     - electron density
+!     s       - scaled graident of electron density
+!     omega = default, short-range screening parameter
+!     nggatyp = 1 is refitted to PBEx -- via analytical hole
+!     nggatyp = 2 is fitted to PBEsolx - via analytical hole
+!     nggatyp = 3 is fitted to cx13 - via analytical hole
+!     nggatyp = 4 is fitted to rPW86 - via analytical hole
+!     nggatyp = 5 is fitted to PHexplore - via analytical hole
+!     nggatyp = 6 is fitted to test-reserve - via analytical hole
+!     ....
+!     nggatyp = 7 fitted to PBEx -- HJS fit to analytical hole
+!     nggatyp = 8 fitted to PBEsolx -- HJS fit to analytical hole
+!
+!     Returns:
+!     Fx_wgga - Analytic version of short-range gga enhancement factor
+!     dfxdn   - Derivative of Fx_wgga with respect to density rho
+!     dfxds   - Derivative of Fx_wgga with respect to scaled gradient s.
+!
+!--------------------------------------------------------------------
+
+      use kind_l,               only: DP
+      
+      Implicit None
+      
+      !$acc routine seq
+      
+      REAL(DP), PARAMETER :: pi=3.14159265358979323846d0
+
+      Real(dp) :: rho,s,omega,Fx_wgga,dfxdn,dfxds
+      integer :: in_err
+      integer :: nggatyp
+
+      Real(dp) :: Abar,B,C,D,E
+      parameter (Abar = 0.757211D0, B = -0.106364D0, C = -0.118649D0)
+      parameter (D =  0.609650D0, E = -0.0477963D0)
+
+      Real(dp) :: One, Two, Three, Four, Five, Six, Seven, Eight, Nine
+      parameter(One=1.0D0,Two=2.0D0,Three=3.0D0,Four=4.0D0,Five=5.0D0)
+      parameter(Six=6.0D0,Seven=7.0D0,Eight=8.0D0,Nine=9.0D0)
+
+      Real(dp) :: f12, f32, f52, f72, f13, f23, f25, f45, f65, f54, f18, f38, f58
+      parameter(f12=0.5D0,f32=Three*f12,f52=Five*f12,f72=Seven*f12)
+      parameter (f13=One/Three,f23=Two*f13)
+      parameter (f25=Two/Five, f45=Two*f25, f65=Three*f25,f54=Five/Four)
+      parameter(f18=One/Eight,f38=Three*f18,f58=Five*f18)
+      Real(dp) :: pi2, pisqrt
+      parameter( pi2=pi**Two, pisqrt=pi**f12)
+
+      Real(dp) :: s0val,s0sq
+      parameter (s0val=2.0D0,s0sq=s0val*s0val)
+
+      Real(dp) :: coef1,coef2,coef3
+      parameter (coef1=(Four/Nine)*B,coef2=(Four/Nine),coef3=Eight/Nine)
+
+!      Real(dp) ::, dimension(6) :: a2,a3,a4,a5,a6,a7
+!      Real(dp) ::, dimension(6) :: b1,b2,b3,b4
+!      Real(dp) ::, dimension(6) :: b5,b6,b7,b8,b9
+      Real(dp), dimension(8) :: a2,a3,a4,a5,a6,a7
+      Real(dp), dimension(8) :: b1,b2,b3,b4
+      Real(dp), dimension(8) :: b5,b6,b7,b8,b9
+
+!     HJS-type/ pbe-x pbesol-x cx13 rPW86 explore TestReserve / 
+!  Last two columns are parameters from the original HJS fits for PBE/PBesol
+      data a2 /  0.0154999D0,   4.58809D-3,   2.43873D-3,   6.00962D-7, &
+                 0.0139602D0,   4.56198D-3, 0.0159941D0,   0.0047333D0 /
+      data a3 / -0.0361006D0,  -8.57842D-3,  -4.15263D-3,  0.0402647D0, &
+                -0.0363194D0,  -8.70003D-3, 0.0852995D0,   0.0403304D0 /
+      data a4 /  0.0379567D0,   7.29562D-3,   2.58261D-3, -0.0353219D0, &
+                 0.0469970D0,   7.36958D-3, -0.1603680D0,  -0.0574615D0 /
+      data a5 / -0.0186715D0,  -3.20195D-3,   1.23940D-6,  0.0116112D0, &
+                -0.0317508D0,  -3.02436D-3, 0.1526450D0,   0.0435395D0 /
+      data a6 /  1.74264D-3,   6.04936D-4,  -7.58225D-4,  -1.55532D-4, &
+                 8.26494D-3,   3.86773D-4, -0.0971263D0,  -0.0216251D0 /
+      data a7 /  1.90765D-3,   2.16112D-5,   2.76378D-4,   5.03561D-5, &
+                 1.45383D-3,   9.43741D-5, 0.0422061D0,   0.0063721D0 /
+      data b1 / -2.7062566D0, -2.1449453D0, -2.2030319D0, -1.8779594D0, &
+                -3.0623921D0, -2.2089330D0, 5.3331900D0,   8.5205600D0 /
+      data b2 /  3.3316842D0,  2.0901104D0,  2.1759315D0,  1.5198811D0, &
+                 4.3601225D0,  2.1968353D0, -12.4780000D0, -13.9885000D0 /
+      data b3 / -2.3871819D0, -1.1935421D0, -1.2997841D0, -0.5383109D0, &
+                -3.7025379D0, -1.2662249D0, 11.0988000D0,   9.2858300D0 /
+      data b4 /  1.1197810D0,  0.4476392D0,  0.5347267D0,  0.1352399D0, &
+                 2.0707006D0,  0.4689964D0, -5.1101300D0,  -3.2728700D0 /
+      data b5 / -0.3606638D0, -0.1172367D0, -0.1588798D0, -0.0428465D0, &
+                -0.7578009D0, -0.1165714D0, 1.7146800D0,   0.8434990D0 /
+      data b6 /  0.0841990D0,  0.0231625D0,  0.0367329D0,  0.0117903D0, &
+                 0.1666493D0,  0.0207188D0, -0.6103800D0,  -0.2355430D0 /
+      data b7 / -0.0114719D0,  -3.52782D-3,  -7.73178D-3,   3.37908D-3, &
+                -0.0178278D0,  -2.97718D-3, 0.3075550D0,   0.0847074D0 /
+      data b8 /  1.69283D-3,   5.39942D-4,   1.26670D-3,  -4.93453D-5, &
+                 7.58236D-3,   5.98226D-4, -0.0770547D0,  -0.0171561D0 /
+      data b9 /  1.50540D-3,   1.58065D-5,   8.04175D-7,   7.09955D-6, &
+                 7.01937D-5,   4.67972D-6, 0.0334840D0,   0.0050552D0 /
+!     End HJS-type parameters: JPCM 34, 025902 (2022)
+
+      integer :: i
+      Real(dp) :: s2,s3,s4,s5,s6,s7,s8,s9
+      Real(dp) :: hnom,hdenom,dhnomds,dhdenomds
+      Real(dp) :: hs,dhds
+
+      Real(dp) :: lam,eta,zeta,dzetads
+      Real(dp) :: xi,phi,psi
+      Real(dp) :: alpha,dalphadn,dalphads
+      Real(dp) :: beta,dbetadn,dbetads
+
+      Real(dp) :: chi,dchidn,dchids
+      Real(dp) :: chiP1, chiP1p, dchiP1dn, dchiP1ds
+      Real(dp) :: chiP2, chiP2p, dchiP2dn, dchiP2ds
+      Real(dp) :: chiP3, chiP3p, dchiP3dn, dchiP3ds
+
+      Real(dp) :: dampfac,cfbars,dcfbards
+      Real(dp) :: egbars,degbards
+
+      Real(dp) :: kf,ny,ny2,dnydn
+      
+      kf    = (Three*pi2*rho) ** f13
+      ny= omega/kf
+      ny2=ny*ny
+      dnydn= -f13*ny/rho
+      
+!      if ((nggatyp.ge.1).or.(nggatyp.le.6)) then
+      if ((nggatyp>=1).or.(nggatyp<=8)) then
+         i = nggatyp
+      else
+         in_err = 3  ! wgga_analy_erfc: yet to be coded Wcx part
+         return
+      endif
+
+      s2=s*s
+      s3=s2*s
+      s4=s2*s2
+      s5=s2*s3
+      s6=s3*s3
+      s7=s4*s3
+      s8=s4*s4
+      s9=s4*s5
+
+      hnom = a2(i)*s2+a3(i)*s3+a4(i)*s4
+      hnom = hnom +a5(i)*s5+a6(i)*s6+a7(i)*s7
+      dhnomds = Two*a2(i)*s+Three*a3(i)*s2+Four*a4(i)*s3
+      dhnomds = dhnomds +Five*a5(i)*s4+Six*a6(i)*s5+Seven*a7(i)*s6
+      hdenom = One+b1(i)*s+b2(i)*s2+b3(i)*s3+b4(i)*s4+b5(i)*s5
+      hdenom = hdenom +b6(i)*s6+b7(i)*s7+b8(i)*s8+b9(i)*s9
+      dhdenomds = b1(i)+Two*b2(i)*s+Three*b3(i)*s2+Four*b4(i)*s3
+      dhdenomds = dhdenomds +Five*b5(i)*s4+Six*b6(i)*s5
+      dhdenomds = dhdenomds +Seven*b7(i)*s6+Eight*b8(i)*s7
+      dhdenomds = dhdenomds +Nine*b9(i)*s8
+      hs=hnom/hdenom
+      dhds=dhnomds/hdenom-hnom*dhdenomds/hdenom/hdenom
+
+      zeta = s2*hs
+      dzetads = Two*s*hs+s2*dhds
+      lam=zeta+D
+      eta=zeta+Abar
+
+      dampfac = (One+s2/s0sq)
+      cfbars=C-s2/dampfac/27.0D0 - zeta/Two
+      dcfbards=-Two*s/dampfac/dampfac/27.0D0 - dzetads/Two
+
+      egbars=-f25*cfbars*lam-(f45/Three)*B*lam**Two
+      egbars=egbars-f65*Abar*lam**Three
+      egbars=egbars-f45*pisqrt*lam**f72
+      egbars=egbars-Three*f45*(zeta**f12-eta**f12)*lam**f72
+
+      degbards=-f25*(dcfbards*lam+cfbars*dzetads)
+      degbards=degbards-f23*f45*B*dzetads*lam
+      degbards=degbards-Nine*f25*Abar*dzetads*lam**Two
+      degbards=degbards-Seven*f25*pisqrt*dzetads*lam**f52
+      degbards=degbards-Seven*f65*dzetads*(zeta**f12-eta**f12)*lam**f52
+      degbards=degbards-f65*dzetads*(zeta**(-f12)-eta**(-f12))*lam**f72
+
+      phi=(lam+ny2)**(f12)
+      psi=(eta+ny2)**(f12)
+      xi=(zeta+ny2)**(f12)
+
+      alpha=Two*ny*(xi-psi)
+      dalphadn=dnydn*Two*(xi-psi+ny2/xi-ny2/psi)
+      dalphads=dzetads*(ny/xi-ny/psi)
+
+      beta=Two*zeta*log((ny+xi)/(ny+phi))-Two*eta*log((ny+psi)/(ny+phi))
+      dbetadn=Abar/phi
+      dbetadn=dbetadn+zeta/xi-eta/psi
+      dbetadn=Two*dbetadn*dnydn
+      dbetads=Abar/(ny+phi)/phi+Two*log((ny+xi)/(ny+psi))
+      dbetads=dbetads+zeta/(ny+xi)/xi-eta/(ny+psi)/psi
+      dbetads=dbetads*dzetads
+
+      chi=ny/phi
+      dchidn=dnydn*lam/phi**Three
+      dchids=-f12*chi*dzetads/phi/phi
+
+      chiP1=One-chi
+      chiP1p=-One
+      dchiP1dn=chiP1p*dchidn
+      dchiP1ds=chiP1p*dchids
+
+      chiP2=One-f32*chi+f12*chi**Three
+      chiP2p=-f32*(One-chi**Two)
+      dchiP2dn=chiP2p*dchidn
+      dchiP2ds=chiP2p*dchids
+
+      chiP3=One-Five*f38*chi+f54*chi**Three-f38*chi**Five
+      chiP3p=-Five*f38+Three*f54*chi**Two-Five*f38*chi**Four
+      dchiP3dn=chiP3p*dchidn
+      dchiP3ds=chiP3p*dchids
+
+      Fx_wgga=Abar
+      Fx_wgga=Fx_wgga-coef1*chiP1/lam
+      Fx_wgga=Fx_wgga-coef2*cfbars*chiP2/lam**Two
+      Fx_wgga=Fx_wgga-coef3*egbars*chiP3/lam**Three
+      Fx_wgga=Fx_wgga+alpha+beta
+
+      dfxdn=-coef1*dchiP1dn/lam
+      dfxdn=dfxdn-coef2*cfbars*dchiP2dn/lam**Two
+      dfxdn=dfxdn-coef3*egbars*dchiP3dn/lam**Three
+      dfxdn=dfxdn+dalphadn+dbetadn
+
+      dfxds=-coef1*(dchiP1ds/lam-chiP1*dzetads/lam**Two)
+      dfxds=dfxds-coef2*(dcfbards*chiP2+cfbars*dchiP2ds)/lam**Two
+      dfxds=dfxds+coef2*cfbars*chiP2*(Two*dzetads/lam**Three)
+      dfxds=dfxds-coef3*(degbards*chiP3+egbars*dchiP3ds)/lam**Three
+      dfxds=dfxds+coef3*egbars*chiP3*(Three*dzetads/lam**Four)
+      dfxds=dfxds+dalphads+dbetads
+
+!     ==--------------------------------------------------------------==
+      RETURN
+      END SUBROUTINE wggax_analy_erfc
+!
+!-----------------------------------------------------------------------
+!
+!
 !-----------------------------------------------------------------------
 SUBROUTINE rPW86( rho, grho, sx, v1x, v2x )
-!$acc routine (rPW86) seq
   !---------------------------------------------------------------------
   !! PRB 33, 8800 (1986) and J. Chem. Theory comp. 5, 2754 (2009).
   !
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -707,7 +1013,6 @@ END SUBROUTINE rPW86
 !
 !-----------------------------------------------------------------
 SUBROUTINE c09x( rho, grho, sx, v1x, v2x )
-!$acc routine (c09x) seq
   !---------------------------------------------------------------
   !! Cooper '09 exchange for vdW-DF (without Slater exchange):
   !! V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
@@ -719,6 +1024,8 @@ SUBROUTINE c09x( rho, grho, sx, v1x, v2x )
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -779,13 +1086,14 @@ END SUBROUTINE c09x
 !
 !---------------------------------------------------------------
 SUBROUTINE sogga( rho, grho, sx, v1x, v2x )
-!$acc routine (sogga) seq
   !-------------------------------------------------------------
   !! SOGGA exchange
   !
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -839,12 +1147,14 @@ END SUBROUTINE sogga
 !
 !-------------------------------------------------------------------------
 SUBROUTINE pbexgau( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )
-!$acc routine (pbexgau) seq
   !-----------------------------------------------------------------------
+  !! PBEX gaussian.
   !
   USE kind_l,  ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: alpha_gau
   REAL(DP), INTENT(IN) :: rho, grho
@@ -887,31 +1197,34 @@ END SUBROUTINE pbexgau
     !
     !-----------------------------------------------------------------------
 SUBROUTINE pbe_gauscheme( rho, s, alpha_gau, Fx, dFxdr, dFxds )
-!$acc routine (pbe_gauscheme) seq
        !--------------------------------------------------------------------
+       !
+       USE kind_l, ONLY: DP
        !
        IMPLICIT NONE
        !
-       REAL*8 rho,s,alpha_gau,Fx,dFxdr,dFxds
+       !$acc routine seq
+       !
+       REAL(dp) :: rho,s,alpha_gau,Fx,dFxdr,dFxds
        ! input: charge and squared gradient and alpha_gau
        ! output: GGA enhancement factor of gau-PBE
        ! output: d(Fx)/d(s), d(Fx)/d(rho)
        !
-       REAL*8 Kx, Nx
+       REAL(dp) :: Kx, Nx
        ! PBE96 GGA enhancement factor
        ! GGA enhancement factor of Gaussian Function
        !
-       REAL*8 bx, cx, PI, sqrtpial, Prefac, term_PBE, Third, KsF
-       REAL*8 d1sdr, d1Kxds, d1Kxdr, d1bxdr, d1bxds, d1bxdKx, &
+       REAL(dp) :: bx, cx, PI, sqrtpial, Prefac, term_PBE, Third, KsF
+       REAL(dp) :: d1sdr, d1Kxds, d1Kxdr, d1bxdr, d1bxds, d1bxdKx, &
               d1Nxdbx,d1Nxdr, d1Nxds
        !
-       REAL*8 Zero,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten
+       REAL(dp) :: Zero,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten
        !
        SAVE Zero,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten
        DATA Zero,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten &
          / 0D0,1D0,2D0,3D0,4D0,5D0,6D0,7D0,8D0,9D0,10D0 /
        !
-       REAL*8 k , mu
+       REAL(dp) :: k , mu
        DATA k / 0.804d0 / , mu / 0.21951d0 /
        ! parameters of PBE functional
        !
@@ -938,7 +1251,7 @@ SUBROUTINE pbe_gauscheme( rho, s, alpha_gau, Fx, dFxdr, dFxds )
        Nx = bx * Prefac * ( SQRT(PI) * ERF(One/bx) + & 
         (bx - Two*bx*bx*bx)*cx - Two*bx )
        !
-       ! for convergency
+       ! for convergence
        IF (ABS(Nx) < 1.0D-15) THEN
          Nx = Zero
        ELSEIF ((One - ABS(Nx)) < 1.0D-15) THEN
@@ -946,7 +1259,7 @@ SUBROUTINE pbe_gauscheme( rho, s, alpha_gau, Fx, dFxdr, dFxds )
        ELSE
          Nx = Nx
        ENDIF
-       ! for convergency end
+       ! for convergence end
        !
        Fx =  Kx * Nx
        !
@@ -977,10 +1290,10 @@ END SUBROUTINE pbe_gauscheme
 !
 !-------------------------------------------------
 FUNCTION TayExp(X)
-!$acc routine (TayExp) seq
   !-------------------------------------------
   USE kind_l,   ONLY: DP
   IMPLICIT NONE
+  !$acc routine seq
   REAL(DP), INTENT(IN) :: X
   REAL(DP) :: TAYEXP
   INTEGER :: NTERM,I
@@ -1005,13 +1318,14 @@ END FUNCTION TayExp
 !
 !-------------------------------------------------------------------------
 SUBROUTINE PW86( rho, grho, sx, v1x, v2x )
-!$acc routine (PW86) seq
   !-----------------------------------------------------------------------
   !! Perdew-Wang 1986 exchange gradient correction: PRB 33, 8800 (1986)
   !
   USE kind_l,  ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -1050,7 +1364,6 @@ END SUBROUTINE PW86
 !
 !-----------------------------------------------------------------------
 SUBROUTINE becke86b( rho, grho, sx, v1x, v2x )
-!$acc routine (becke86b) seq
   !-----------------------------------------------------------------------
   !! Becke 1986 gradient correction to exchange
   !! A.D. Becke, J. Chem. Phys. 85 (1986) 7184
@@ -1058,6 +1371,8 @@ SUBROUTINE becke86b( rho, grho, sx, v1x, v2x )
   USE kind_l, ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -1091,7 +1406,6 @@ END SUBROUTINE becke86b
 !
 !---------------------------------------------------------------
 SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )
-!$acc routine (b86b) seq
   !-------------------------------------------------------------
   !! Becke exchange (without Slater exchange):
   !! iflag=1: A. D. Becke, J. Chem. Phys. 85, 7184 (1986) (B86b)
@@ -1104,6 +1418,8 @@ SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )
   !
   USE kind_l,     ONLY : DP
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   INTEGER, INTENT(IN) :: iflag
   REAL(DP), INTENT(IN) :: rho, grho
@@ -1162,7 +1478,6 @@ END SUBROUTINE b86b
 !
 !-----------------------------------------------------------------------
 SUBROUTINE cx13( rho, grho, sx, v1x, v2x )
-!$acc routine (cx13) seq
   !-----------------------------------------------------------------------
   !! The new exchange partner for a vdW-DF1-cx suggested
   !! by K. Berland and P. Hyldgaard, see PRB 89, 035412 (2014),
@@ -1171,6 +1486,8 @@ SUBROUTINE cx13( rho, grho, sx, v1x, v2x )
   USE kind_l, ONLY : DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -1220,13 +1537,14 @@ END SUBROUTINE cx13
 !
 !-----------------------------------------------------------------------
 SUBROUTINE becke88_spin( rho_up, rho_dw, grho_up, grho_dw, sx_up, sx_dw, v1x_up, v1x_dw, v2x_up, v2x_dw )
-!$acc routine (becke88_spin) seq
   !-----------------------------------------------------------------------
   !! Becke exchange: A.D. Becke, PRA 38, 3098 (1988) - Spin polarized case
   !
   USE kind_l,    ONLY: DP
   !
   IMPLICIT NONE
+  !
+  !$acc routine seq
   !
   REAL(DP), INTENT(IN) :: rho_up, rho_dw
   !! charge
@@ -1280,18 +1598,18 @@ END SUBROUTINE becke88_spin
 !
 !
 !-----------------------------------------------------------------------------
-SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
-!$acc routine (wpbe_analy_erfc_approx_grad) seq
+SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx, in_err )
       !-----------------------------------------------------------------------
-      !
-      !     wPBE Enhancement Factor (erfc approx.,analytical, gradients)
-      !
-      !--------------------------------------------------------------------
+      !! wPBE Enhancement Factor (erfc approx.,analytical, gradients).
       !
       USE kind_l,    ONLY: DP
+      !
       IMPLICIT NONE
       !
+      !$acc routine seq
+      !
       REAL(DP) rho,s,omega,Fx_wpbe,d1sfx,d1rfx
+      INTEGER in_err
       !
       REAL(DP) f12,f13,f14,f18,f23,f43,f32,f72,f34,f94,f1516,f98
       REAL(DP) pi,pi2,pi_23,srpi
@@ -1329,6 +1647,7 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
       REAL(DP) d1spiexperf,d1sexpei
       REAL(DP) d1rpiexperf,d1rexpei
       REAL(DP) expei1,expei2,expei3,expei4
+      REAL(DP) exint
       !
       REAL(DP) DHs,DHs2,DHs3,DHs4,DHs72,DHs92,DHsw,DHsw2,DHsw52,DHsw72
       REAL(DP) d1sDHs,d1rDHsw
@@ -1669,7 +1988,8 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
         !
         piexperf = pi*EXP(HsbwA94)*ERFC(HsbwA9412)
         ! expei    = Exp(HsbwA94)*Ei(-HsbwA94)
-        expei    = EXP(HsbwA94)*(-expint(1,HsbwA94))
+        CALL expint(1,HsbwA94,exint,in_err)
+        expei    = EXP(HsbwA94)*(-exint)
       ELSE
         !
         ! print *,rho,s," LARGE HsbwA94"
@@ -1875,20 +2195,21 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
 END SUBROUTINE wpbe_analy_erfc_approx_grad
 !
 !------------------------------------------------------------------
-FUNCTION EXPINT(n, x)
-!$acc routine (expint) seq
+SUBROUTINE EXPINT(n, x, exin, in_err)
 !-----------------------------------------------------------------------
-! Evaluates the exponential integral E_n(x)
+!! Evaluates the exponential integral \(E_n(x)\). 
+!! Inspired by Numerical Recipes.
 ! Parameters: maxit is the maximum allowed number of iterations,
 ! eps is the desired relative error, not smaller than the machine precision,
 ! big is a number near the largest representable floating-point number,
-! Inspired from Numerical Recipes
 !
-      USE kind_l,   ONLY: DP
+      USE kind_l,               ONLY: DP
       IMPLICIT NONE
+      !$acc routine seq
       INTEGER, INTENT(IN) :: n
       REAL(DP), INTENT(IN) :: x
-      REAL(DP) :: expint
+      REAL(DP), INTENT(OUT) :: exin
+      INTEGER :: in_err
       INTEGER, parameter :: maxit=200
       REAL(DP), parameter :: eps=1E-12, big=huge(x)*eps
       REAL(DP), parameter :: euler = 0.577215664901532860606512d0
@@ -1898,17 +2219,17 @@ FUNCTION EXPINT(n, x)
       REAL(DP) :: a,b,c,d,del,fact,h,iarsum
 
       IF (.NOT. ((n >= 0).AND.(x >= 0.0).AND.((x > 0.0).OR.(n > 1)))) THEN
-         !CALL xclib_error('expint','bad arguments', 1)
-         STOP
+         in_err = 1   ! expint: bad arguments
+         RETURN
       END IF
-
+      
       IF (n == 0) THEN
-         expint = exp(-x)/x
+         exin= exp(-x)/x
          RETURN
       END IF
       nm1 = n-1
       IF (x == 0.0d0) THEN
-         expint = 1.0d0/nm1
+         exin = 1.0d0/nm1
       ELSE IF (x > 1.0d0) THEN
          b = x+n
          c = big
@@ -1923,13 +2244,16 @@ FUNCTION EXPINT(n, x)
             h = h*del
             IF (ABS(del-1.0d0) <= EPS) EXIT
          END DO
-         IF (i > maxit) STOP !CALL xclib_error('expint','continued fraction failed',1)
-         expint = h*EXP(-x)
+         IF (i > maxit) THEN
+           in_err = 2   ! expint: continued fraction failed
+           RETURN
+         ENDIF
+         exin = h*EXP(-x)
       ELSE
          IF (nm1 /= 0) THEN
-            expint = 1.0d0/nm1
+            exin = 1.0d0/nm1
          ELSE
-            expint = -LOG(x)-euler
+            exin = -LOG(x)-euler
          END IF
          fact = 1.0d0
          do i=1,maxit
@@ -1946,12 +2270,15 @@ FUNCTION EXPINT(n, x)
                del = fact*(-LOG(x)-euler+iarsum)
 !               del = fact*(-LOG(x)-euler+sum(1.0d0/arth(1,1,nm1)))
             END IF
-            expint = expint + del
-            IF (ABS(del) < ABS(expint)*eps) EXIT
+            exin = exin + del
+            IF (ABS(del) < ABS(exin)*eps) EXIT
          END DO
-         IF (i > maxit) STOP !CALL xclib_error('expint','series failed',1)
+         IF (i > maxit) THEN
+           in_err = 2   ! expint: series failed
+           RETURN
+         ENDIF
       END IF
-END FUNCTION EXPINT
+END SUBROUTINE EXPINT
 !
 END MODULE
 

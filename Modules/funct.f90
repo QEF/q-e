@@ -160,10 +160,10 @@ MODULE funct
   !              "cx0"    vdW-DF-cx+HF/4 (cx13-0)        igcx =29 
   !              "r860"   rPW86+HF/4 (rw86-0)            igcx =30 (for DF0)
   !              "cx0p"   vdW-DF-cx+HF/5 (cx13-0p)       igcx =31 
-  !              "ahcx"   vdW-DF-cx based not yet in use igcx =32 reserved PH
-  !              "ahf2"   vdW-DF2 based not yet in use   igcx =33 reserved PH
-  !              "ahpb"   PBE based not yet in use       igcx =34 reserved PH
-  !              "ahps"   PBE-sol based not in use       igcx =35 reserved PH
+  !              "ahcx"   vdW-DF-cx based analytic hole  igcx =32 ! Launched vdW-DF-ahcx - PH
+  !              "ahf2"   vdW-DF2 based analytic hole    igcx =33 ! Defined vdw-DF2-AH at 0.20 - PH
+  !              "ahpb"   PBE based analytic hole        igcx =34 ! PBE-AH (rHJS-PBE) at 0.20 - PH
+  !              "ahps"   PBE-sol based analytic hole    igcx =35 ! PBESOL-AH (rHJS-PBEsol) at 0.20 - PH
   !              "cx14"   Exporations                    igcx =36 reserved PH
   !              "cx15"   Exporations                    igcx =37 reserved PH
   !              "br0"    vdW-DF2-b86r+HF/4 (b86r-0)     igcx =38 
@@ -175,6 +175,10 @@ MODULE funct
   !              "hhnx"   Hammer-Hansen-Norskov          igcx =44
   !              "w31x"   vdW-DF3-opt1 exchange          igcx =45
   !              "w32x"   vdW-DF3-opt2 exchange          igcx =46
+  !              "ahtr"   vdW-DF2-ahtr exchange          igcx =47 ! Test reserve called by vdW-DF2-ahtr - PH
+  !              "ehpb"   HSE variant                    igcx =48 ! Reserved PH
+  !              "hjpb"   HJS-type PBE cross check       igcx =49 ! Reserved PH
+  !              "hjps"   HJS-type PBEsol crosscheck     igcx =50 ! Reserved PH
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -278,6 +282,10 @@ MODULE funct
   !              gau-pbe J.-W. Song, K. Yamashita, K. Hirao JCP 135, 071103 (2011)
   !              rVV10   R. Sabatini et al. Phys. Rev. B 87, 041108(R) (2013)
   !              ev93     Engel-Vosko, Phys. Rev. B 47, 13164 (1993)
+  !              vdW-DF-ahcx V. Shukla, Y. Jiao, iC. M. Frostenson, and P. Hyldgaard, JPCM 34, 025902 (2022)
+  !              vdW-DF2-ah V. Shukla, Y. Jiao, iC. M. Frostenson, and P. Hyldgaard, JPCM 34, 025902 (2022)
+  !              PBE-ah V. Shukla, Y. Jiao, iC. M. Frostenson, and P. Hyldgaard, JPCM 34, 025902 (2022)
+  !              PBESOL-ah V. Shukla, Y. Jiao, iC. M. Frostenson, and P. Hyldgaard, JPCM 34, 025902 (2022)
   !
   ! NOTE ABOUT HSE: there are two slight deviations with respect to the HSE06
   ! functional as it is in Gaussian code (that is considered as the reference
@@ -449,13 +457,25 @@ CONTAINS
     CASE( 'VDW-DF-CX0P' )
        dft_defined = xclib_set_dft_IDs(6,4,31,0,0,0)
        inlc = 1
+    ! Special case vdW-DF-AHCX
+    CASE( 'VDW-DF-AHCX' )
+       dft_defined = xclib_set_dft_IDs(1,4,32,0,0,0)
+       inlc = 1
     ! Special case vdW-DF2-0
     CASE( 'VDW-DF2-0' )
        dft_defined = xclib_set_dft_IDs(6,4,30,0,0,0)
        inlc = 2
+    ! Special case vdW-DF2-AH
+    CASE( 'VDW-DF2-AH' )
+       dft_defined = xclib_set_dft_IDs(1,4,33,0,0,0)
+       inlc = 2
     ! Special case vdW-DF2-BR0
     CASE( 'VDW-DF2-BR0' )
        dft_defined = xclib_set_dft_IDs(6,4,38,0,0,0)
+       inlc = 2
+    ! Special case vdW-DF2-AHTR
+    CASE( 'VDW-DF2-AHTR' )
+       dft_defined = xclib_set_dft_IDs(1,4,47,0,0,0)
        inlc = 2
     ! Special case vdW-DF-C090
     CASE( 'VDW-DF-C090' )
@@ -759,6 +779,8 @@ CONTAINS
            shortname = 'VDW-DF-CX0'
         ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==31 .AND. igcc==0) THEN
            shortname = 'VDW-DF-CX0P'
+        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==32 .AND. igcc==0) THEN
+           shortname = 'VDW-DF-AHCX'
         ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==16 .AND. igcc==0) THEN
            shortname = 'VDW-DF-C09'
         ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==24 .AND. igcc==0) THEN
@@ -784,6 +806,10 @@ CONTAINS
            shortname = 'VDW-DF2-B86R'
         ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==30 .AND. igcc==0) THEN
            shortname = 'VDW-DF2-0'
+        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==33 .AND. igcc==0) THEN
+           shortname = 'VDW-DF2-AH'
+        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==47 .AND. igcc==0) THEN
+           shortname = 'VDW-DF2-AHTR'
         ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==38 .AND. igcc==0) THEN
            shortname = 'VDW-DF2-BR0'
         ELSE

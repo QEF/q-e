@@ -178,6 +178,7 @@ Method for searching of atoms which must be perturbed.
     there are using symmetry. Atoms which have the
     same type but are not equivalent by symmetry will
     be distinguished in this case.
+4 = Perturb all Hubbard atoms (the most expensive option)
          </pre></blockquote>
 </ul>      
       
@@ -544,6 +545,26 @@ Maximum distance (in Bohr) between two atoms to search
 neighbors (used only at the postprocessing step when
 lda_plus_u_kind = 2). This keyword is useful when there
 are e.g. defects in the system.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help dist_thr -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>dist_thr</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 6.D-4
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Threshold (in Bohr) for comparing inter-atomic distances
+when reconstructing the missing elements of the response
+susceptibility in the post-processing step.
          </pre></blockquote>
 </ul>      
       

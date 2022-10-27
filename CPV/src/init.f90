@@ -400,6 +400,11 @@
       USE smallbox_subs,         ONLY : gcalb
       USE io_global,             ONLY : stdout, ionode
       !
+#if defined (__ENVIRON)
+      USE plugin_flags,          ONLY : use_environ
+      USE environ_base_module,   ONLY : update_environ_cell
+#endif
+      !
       implicit none
       !
       REAL(DP), INTENT(IN) :: h(3,3)
@@ -407,6 +412,10 @@
       !
       REAL(DP) :: rat1, rat2, rat3
       INTEGER :: ig, dfftp_ngm
+      !
+#if defined (__ENVIRON)
+      REAL(DP) :: at_scaled(3, 3)
+#endif
       !
       !WRITE( stdout, "(4x,'h from newinit')" )
       !do i=1,3
@@ -443,7 +452,12 @@
       !
       !   pass new cell parameters to plugins
       !
-      CALL plugin_init_cell( )
+#if defined (__ENVIRON)
+      IF (use_environ) THEN
+         at_scaled = at * alat
+         CALL update_environ_cell(at_scaled)
+      END IF
+#endif
       !
       return
     end subroutine newinit_x

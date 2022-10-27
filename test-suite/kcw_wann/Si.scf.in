@@ -1,0 +1,36 @@
+&control
+    calculation = 'scf'
+    restart_mode='from_scratch',
+    prefix='Si',
+    pseudo_dir = '../../pseudo/',
+    outdir='./out'
+/
+&system
+    ibrav=2, 
+    celldm(1)=10.263101844
+    nat= 2, ntyp= 1,
+    ecutwfc = 20.0,
+    nbnd=4
+/
+&electrons
+    diagonalization='david'
+    mixing_beta = 0.7
+    conv_thr =  1.0d-10
+/
+&ions
+/
+ATOMIC_SPECIES
+Si 28.085 Si.pz-vbc.UPF
+ATOMIC_POSITIONS
+Si 0 0 0 
+Si 0.25 0.25 0.25
+K_POINTS crystal
+8
+  0.00000000  0.00000000  0.00000000  1.250000e-01 
+  0.00000000  0.00000000  0.50000000  1.250000e-01 
+  0.00000000  0.50000000  0.00000000  1.250000e-01 
+  0.00000000  0.50000000  0.50000000  1.250000e-01 
+  0.50000000  0.00000000  0.00000000  1.250000e-01 
+  0.50000000  0.00000000  0.50000000  1.250000e-01 
+  0.50000000  0.50000000  0.00000000  1.250000e-01 
+  0.50000000  0.50000000  0.50000000  1.250000e-01 

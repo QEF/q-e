@@ -1,3 +1,17 @@
+Tue Jun 07 2022  Anton Kokalj (tone.kokalj@ijs.si)
+	* textvalueToValue & valueToTextvalue did not work properly for
+	elements of dimension (for example if "dim" is a dimension, then
+	"textvalueToValue dim textvalue" worked OK, but "textvalueToValue
+	dim(1) textvalue" did not
+	* implicit array assignment was not parsed correctly if only one
+	value was specified, i.e. kpoint = 1 did not work, whereas kpoint
+	= 1 2 was OK.
+
+Sat Jan 08 2022  Anton Kokalj (tone.kokalj@ijs.si)
+	* adding the openInput method to :guib/GUI class. This enables to
+	open an input file from the command line (used for pwgui -o
+	option).
+
 Thu Jan 26 2017  Anton Kokalj (tone.kokalj@ijs.si)
 	* much improved parser of Fortran namelists.  Implicit assigments
 	of one-dimensional arrays is supported, whereas implicit

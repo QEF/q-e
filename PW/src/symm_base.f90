@@ -537,7 +537,7 @@ CONTAINS
                  ft_(:) = rau(:,na) - xau(:,nb) - NINT( rau(:,na) - xau(:,nb) )
                  !
                  ! ... ft_ is in crystal axis and is a valid fractional translation
-                 ! only if ft_(i)=0 or ft_(i)=1/n, with n=2,3,4,
+                 ! only if ft_(i)=0 or ft_(i)=1/n, with n=2,3,4,6
                  !
                  DO i = 1, 3
                     IF ( ABS (ft_(i)) > eps2 ) THEN

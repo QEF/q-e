@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2016 Quantum ESPRESSO group
+! Copyright (C) 2002-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -99,7 +99,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE lsda_mod,                ONLY: current_spin
   USE scf_gpum,                ONLY: vrs_d, using_vrs_d
   USE uspp,                    ONLY: nkb, vkb
-  USE ldaU,                    ONLY: lda_plus_u, lda_plus_u_kind, U_projection
+  USE ldaU,                    ONLY: lda_plus_u, lda_plus_u_kind, Hubbard_projectors
   USE gvect,                   ONLY: gstart
   USE control_flags,           ONLY: gamma_only
   USE noncollin_module,        ONLY: npol, noncolin
@@ -113,7 +113,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE fft_helper_subroutines
   USE device_memcpy_m,         ONLY: dev_memcpy, dev_memset
   !
-  USE wvfct_gpum,              ONLY: g2kin_d, using_g2kin_d
+  USE wvfct,                   ONLY: g2kin  
   USE becmod_subs_gpum,        ONLY: calbec_gpu, using_becp_auto, using_becp_d_auto
   IMPLICIT NONE
   !
@@ -136,14 +136,13 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   LOGICAL     :: need_host_copy
   !
   CALL start_clock_gpu( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
-  CALL using_g2kin_d(0)
   CALL using_vrs_d(0)
   !
   ! ... Here we add the kinetic energy (k+G)^2 psi and clean up garbage
   !
   need_host_copy = ( real_space .and. nkb > 0  ) .OR. &
                      xclib_dft_is('meta') .OR. &
-                    (lda_plus_u .AND. U_projection.NE."pseudo" ) .OR. &
+                    (lda_plus_u .AND. Hubbard_projectors.NE."pseudo" ) .OR. &
                     exx_is_active() .OR. lelfield
 
 
@@ -153,13 +152,13 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   ENDIF
 
 
-  !$cuf kernel do(2)
+  !$acc parallel loop collapse(2) present(g2kin, hpsi_d, psi_d)
   DO ibnd = 1, m
      DO i=1, lda
         IF (i <= n) THEN
-           hpsi_d (i, ibnd) = g2kin_d (i) * psi_d (i, ibnd)
+           hpsi_d (i, ibnd) = g2kin (i) * psi_d (i, ibnd)
            IF ( noncolin ) THEN
-              hpsi_d (lda+i, ibnd) = g2kin_d (i) * psi_d (lda+i, ibnd)
+              hpsi_d (lda+i, ibnd) = g2kin (i) * psi_d (lda+i, ibnd)
            END IF
         ELSE
            hpsi_d (i, ibnd) = (0.0_dp, 0.0_dp)
@@ -278,7 +277,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !
   ! ... Here we add the Hubbard potential times psi
   !
-  IF ( lda_plus_u .AND. U_projection.NE."pseudo" ) THEN
+  IF ( lda_plus_u .AND. Hubbard_projectors.NE."pseudo" ) THEN
      !
      CALL dev_memcpy(hpsi_host, hpsi_d )    ! hpsi_host = hpsi_d
      IF ( noncolin ) THEN
