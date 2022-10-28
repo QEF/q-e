@@ -6,7 +6,114 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------------
-SUBROUTINE d2ionq_dispd3( alat, nat, ityp, at, bg, tau, q, der2disp )
+SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
+  !------------------------------------------------------------------------
+  USE kinds,         ONLY: DP
+  USE io_global,     ONLY: stdout
+  USE control_ph,    ONLY: dftd3_hess
+  USE constants,     ONLY: tpi
+
+  IMPLICIT NONE
+
+  REAL(DP), INTENT(IN) :: alat
+  !! cell parameter (celldm(1))
+  INTEGER, INTENT(IN) :: nat
+  !! number of atoms in the unit cell
+  REAL(DP), INTENT(IN) :: at(3,3)
+  !! at(:,i) is lattice vector i in alat units
+  REAL(DP), INTENT(IN) :: q(3)
+  !! wavevector in 2pi/alat units
+  COMPLEX(DP), INTENT(INOUT) :: der2disp(3,nat,3,nat)
+  !! dispersion contribution to the (massless) dynamical matrix
+  ! 
+  INTEGER :: n, nn, nnn, rep(3), nrep, irep, jrep, krep, irp, jrp, krp
+  INTEGER :: i, j, iat, jat, ixyz, jxyz
+  CHARACTER(LEN=100) :: string
+  REAL(DP), ALLOCATABLE :: d3hess(:,:,:,:,:,:,:), buffer(:)
+  REAL(DP) :: eiqr, tt(3)
+  ! 
+  write(stdout,'(/,5x,2A)') 'Reading Grimme-D3 Hessian from file: ', dftd3_hess
+  !
+  ! Reading Hessian from file
+  !
+  OPEN (unit = 1, file = dftd3_hess, status = 'unknown')
+  READ(1, * ) 
+  READ(1, * ) string, rep(1:3), n, nn
+  !
+  ! some consistency checks before allocation
+  nrep = (2*rep(1)+1) * (2*rep(2)+1) * (2*rep(3)+1)  ! number of unit cells in the supercell 
+  nnn = nat * nrep                                   ! number of atoms in the supercell 
+  IF((n.ne.nat).or.(nn.ne.nnn)) THEN
+    WRITE(stdout, '(/,5x,4I9)' ) nat, n, nn, nnn
+    Call errore('d2ionq_dispd3', 'Wrong cell or supercell size', 1)
+  END IF
+  ALLOCATE( d3hess(-rep(1):rep(1),-rep(2):rep(2),-rep(3):rep(3), 3,nat,3,nat), buffer(3*nat) )
+  IF( size(d3hess) .ne. (3*nnn)**2 ) Call errore('d2ionq_dispd3', "Wrong Hessian dimensions", 1)
+  d3hess(:,:,:,:,:,:,:)=0.0_dp
+  !
+  DO irep = -rep(1), rep(1)
+    DO jrep = -rep(2), rep(2)
+      DO krep = -rep(3), rep(3)
+        !
+        READ(1, * ) string,irp, string,jrp, string,krp
+        IF(irep.ne.irp .or. jrep.ne.jrp .or. krep.ne.krp ) Call errore('d2ionq_dispd3', "Wrong Hessian I/O", 1)
+        !
+        DO i = 1, 3*nat         ! 1 2 3 4 5 6 7 8 9 ... 3*nat
+          iat  = (i+2)/3        ! 1 1 1 2 2 2 3 3 3 ... nat 
+          ixyz = i - 3* (iat-1) ! 1 2 3 1 2 3 1 2 3 ... 3 
+          READ(1, * ) buffer(1:3*nat) 
+          !
+          DO j = 1, 3*nat
+            jat  = (j+2)/3 
+            jxyz = j - 3* (jat-1) 
+            d3hess(irep,jrep,krep,ixyz,iat,jxyz,jat) = buffer(j)
+          END DO 
+          !  
+        END DO 
+        !
+      END DO 
+    END DO 
+  END DO 
+  !
+  CLOSE (1)
+  !
+  DEALLOCATE( buffer) 
+  !
+  write(stdout,'(/,5x,A)') 'Grimme-D3 Hessian read '
+  !
+  ! Computing dynamical matrix 
+  !
+  WRITE(stdout,'(/,5x,A,3f12.6)') 'Computing dynamical matrix for q: ', q(1:3) 
+  !
+  DO irep = -rep(1), rep(1)
+    DO jrep = -rep(2), rep(2)
+      DO krep = -rep(3), rep(3)
+        !
+        tt(:) = alat * ( irep * at(:,1) + jrep * at(:,2) + krep * at(:,3) )
+        eiqr = EXP(- tpi * (0_dp,1_dp) * ( q(1)*tt(1)+q(2)*tt(2)+q(3)*tt(3) ) )
+        DO ixyz = 1, 3
+          DO iat = 1, nat
+            DO jxyz = 1, 3
+              DO jat = 1, nat
+                der2disp(ixyz,iat,jxyz,jat) = der2disp(ixyz,iat,jxyz,jat) &
+                          + d3hess(irep,jrep,krep,ixyz,iat,jxyz,jat) * eiqr
+              END DO 
+            END DO 
+          END DO 
+        END DO 
+        !
+      END DO 
+    END DO 
+  END DO 
+  !
+  DEALLOCATE( d3hess ) 
+  !
+stop  
+  RETURN
+  !
+END SUBROUTINE d2ionq_dispd3
+!---------------------------------------------------------------------------
+SUBROUTINE d2ionq_dispd3_tmp( alat, nat, ityp, at, bg, tau, q, der2disp )
   !------------------------------------------------------------------------
   !! This routine calculates the Grimme-D3 contribution to the dynamical matrix.
   !
@@ -211,7 +318,7 @@ SUBROUTINE d2ionq_dispd3( alat, nat, ityp, at, bg, tau, q, der2disp )
 
   RETURN
 
-END SUBROUTINE d2ionq_dispd3
+END SUBROUTINE d2ionq_dispd3_tmp
 !---------------------------------------------------------------------------
 SUBROUTINE d2ionq_disp( alat, nat, ityp, at, bg, tau, q, der2disp )
   !------------------------------------------------------------------------

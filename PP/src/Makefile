@@ -71,7 +71,8 @@ all : tldeps open_grid.x average.x bands.x band_interpolation.x dos.x epsilon.x 
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x pw2wannier90.x pw2critic.x pw2gw.x pw2gt.x \
       wannier_ham.x wannier_plot.x molecularpdos.x \
-      pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x pprism.x
+      pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x pprism.x \
+      d3hess.x \
 
 
 libpp.a : $(PPOBJS) 
@@ -99,6 +100,11 @@ bands.x : bands.o libpp.a $(MODULES)
 band_interpolation.x : band_interpolation.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
 		band_interpolation.o libpp.a $(MODULES) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
+d3hess.x : d3hess.o libpp.a $(MODULES) 
+	$(LD) $(LDFLAGS) -o $@ \
+		d3hess.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 dos.x : dos.o libpp.a $(MODULES) 
