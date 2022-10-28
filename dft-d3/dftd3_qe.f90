@@ -14,7 +14,7 @@ MODULE dftd3_qe
   IMPLICIT NONE
   !
   PRIVATE
-  PUBLIC :: dftd3, dftd3_in, dftd3_xc, dftd3_pbc_gdisp, dftd3_printout, dftd3_clean
+  PUBLIC :: dftd3, dftd3_in, dftd3_xc, dftd3_pbc_gdisp, dftd3_pbc_hdisp, dftd3_printout, dftd3_clean
   SAVE
   !
   type(dftd3_calc) :: dftd3
@@ -56,16 +56,17 @@ MODULE dftd3_qe
   !! Added interface routine to original Aradi's interface
   !! for calculating force and stress separately from the energy.
   subroutine dftd3_pbc_gdisp(this, coords, izp, latvecs, &
-                            force_dftd3, stress_dftd3)
+                            force_dftd3, stress_dftd3, rep_cn_, rep_vdw_)
 
     type(dftd3_calc), intent(in) :: this
     real(wp), intent(in) :: coords(:,:)
     integer, intent(in) :: izp(:)
     real(wp), intent(in) :: latvecs(:,:)
     real(wp), intent(out) :: force_dftd3(:,:), stress_dftd3(:,:)
+    integer, optional, intent(out) :: rep_cn_(3), rep_vdw_(3)
     integer :: natom
     real(wp) :: s6, s18, rs6, rs8, rs10, alp6, alp8, alp10
-    real(wp) :: e6, e8, e10, e12, e6abc, gnorm, disp2
+    real(wp) :: gnorm, disp2
     real(wp) :: rtmp3(3)
     integer :: rep_cn(3), rep_vdw(3)
 
@@ -83,6 +84,9 @@ MODULE dftd3_qe
     rep_vdw(:) = int(rtmp3) + 1
     call set_criteria(this%cn_thr, latvecs, rtmp3)
     rep_cn(:) = int(rtmp3) + 1
+    if(present(rep_cn_)) rep_cn_(:) = rep_cn(:)
+    if(present(rep_vdw_)) rep_vdw_(:) = rep_vdw(:)
+   
 
     force_dftd3(:,:) = 0.0_wp
     call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
@@ -95,6 +99,88 @@ MODULE dftd3_qe
         & / abs(determinant(latvecs))  
 
   end subroutine dftd3_pbc_gdisp
+
+  ! Calculates the dispersion contribution to Hessian
+  subroutine dftd3_pbc_hdisp(this, stdout, step, coords, izp, latvecs, rep_cn, rep_vdw, hess_dftd3_ )
+  implicit none
+    type(dftd3_calc), intent(in) :: this
+    integer, intent(in) :: stdout 
+    real(wp), intent(in) :: step 
+    real(wp), intent(in) :: coords(:,:)
+    integer, intent(in) :: izp(:)
+    real(wp), intent(in) :: latvecs(:,:)
+    integer, intent(in)  :: rep_cn(3), rep_vdw(3)
+    real(wp), intent(out), target, contiguous :: hess_dftd3_(:,:,:,:,:,:,:)
+    real(wp), pointer :: hess_dftd3(:,:,:,:,:,:,:)
+    integer, allocatable :: ns(:)
+
+    real(wp) :: s6, s18, rs6, rs8, rs10, alp6, alp8, alp10
+    real(wp) :: gnorm, disp2
+    integer :: natom
+    integer :: iat, ixyz, istep 
+    integer :: irep, jrep, krep 
+    real(wp) :: rtmp3(3), stress_dftd3(3,3)
+    real(wp), allocatable :: force_dftd3(:,:), force_supercell_dftd3(:,:,:,:,:)
+
+    natom = size(coords, dim=2)
+
+    ns = shape(hess_dftd3_)
+    hess_dftd3( -ns(1)/2:ns(1)/2,-ns(2)/2:ns(2)/2,-ns(3)/2:ns(3)/2, 1:ns(4),1:ns(5),1:ns(6),1:ns(7) ) => hess_dftd3_
+
+    if(size(hess_dftd3, dim=5) .ne. natom ) Call errore('dftd3_pbc_hdisp', "Wrong Hessian dimensions", 1)
+    if(size(hess_dftd3, dim=7) .ne. natom ) Call errore('dftd3_pbc_hdisp', "Wrong Hessian dimensions", 2)
+
+    s6 = this%s6
+    s18 = this%s18
+    rs6 = this%rs6
+    rs8 = this%rs18
+    rs10 = this%rs18
+    alp6 = this%alp
+    alp8 = alp6 + 2.0_wp
+    alp10 = alp8 + 2.0_wp
+
+    allocate( force_dftd3(3,natom) )
+    allocate( & 
+      force_supercell_dftd3(-rep_vdw(1):rep_vdw(1),-rep_vdw(2):rep_vdw(2),-rep_vdw(3):rep_vdw(3),3,natom))
+
+    hess_dftd3(:,:,:,:,:,:,:) = 0.0_wp
+    do iat = 1, natom
+      do ixyz = 1, 3  
+        do istep = -1, 1, 2
+          write(stdout, '(5x,A,3I4)' ) 'Displacement step: ', iat, ixyz, istep
+          force_dftd3(:,:) = 0.0_wp ! this is not initialized in pbcgdisp 
+          !force_supercell_dftd3(:,:,:,:,:) = 0.0_wp ! this is initialized in pbcgdisp
+          call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
+              & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
+              & .true., .false., this%version, force_dftd3, disp2, gnorm, &
+              & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .false., this%cn_thr, &
+              & step, iat, ixyz, istep, force_supercell_dftd3)
+          !
+          ! Hessian update:
+          !   h = - 1/2 * ( f+ - f- ) / step
+          !   f+ = -2 * force_supercell_dftd3(+)
+          !   f- = -2 * force_supercell_dftd3(-)
+          !   h = ( force_supercell_dftd3(+) - force_supercell_dftd3(-) ) / step
+          !
+          do irep = -rep_vdw(1), rep_vdw(1) 
+            do jrep = -rep_vdw(2), rep_vdw(2) 
+              do krep = -rep_vdw(3), rep_vdw(3) 
+                hess_dftd3(irep,jrep,krep, ixyz,iat,1:3,1:natom) = hess_dftd3(irep,jrep,krep, ixyz,iat,1:3,1:natom) & 
+                                               + dble(istep) * force_supercell_dftd3(irep,jrep,krep,1:3,1:natom)  
+              end do 
+            end do 
+          end do 
+          !
+        end do ! istep
+      end do ! ixyz
+    end do ! iat
+    hess_dftd3(:,:,:,:,:,:,:) = hess_dftd3(:,:,:,:,:,:,:) / step 
+
+    deallocate( force_dftd3, force_supercell_dftd3 )
+
+    return
+
+  end subroutine dftd3_pbc_hdisp
 
 
   subroutine dftd3_printout(this, input_dftd3, stdout, nsp, atm, nat, ityp,&
