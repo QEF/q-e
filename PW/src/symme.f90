@@ -537,8 +537,8 @@ CONTAINS
     END DO
     !
     ! the next lines prevent an unlikely but not impossible case:
-    ! the gcut_ values set as above cut through a shell of G-vectors
-    ! (may happen if G-vector ordering with |G| is not perfect)
+    ! some gcut_ value (see above) cuts a shell of G-vectors in the middle
+    ! This may happen if G-vector ordering with |G| is not perfect
     !
     ngpos=0
     gtop = 0.0_dp
@@ -558,7 +558,7 @@ cutg:  DO ig=ngpos+1,ngm
        ngpos = ngpos + ngloc
        IF ( ngpos > ngm ) &
             CALL errore('sym_rho','internal error: too many G-vectors', ngpos)
-       ! Note that gnext > gtop in theory, but gnext \sim gtop may occur
+       ! Note that gnext > gtop only for perfect ordering
        CALL mp_max( gtop , intra_bgrp_comm)
        CALL mp_min( gnext, intra_bgrp_comm)
        ! The following criterion is rather arbitrary: it should as small as
