@@ -631,7 +631,6 @@ cutg:  DO ig=ngpos+1,ngm
     !-----------------------------------------------------------------------
     !! Initialize G-vector shells needed for symmetrization.
     ! 
-    USE constants, ONLY : eps8
     USE mp_bands,  ONLY : nproc_bgrp, me_bgrp
     !
     IMPLICIT NONE
@@ -674,7 +673,7 @@ cutg:  DO ig=ngpos+1,ngm
        ALLOCATE ( g2sort_g(ngm_))
        g2sort_g(:)=g_(1,:)*g_(1,:)+g_(2,:)*g_(2,:)+g_(3,:)*g_(3,:)
        igsort(1) = 0
-       CALL hpsort_eps( ngm_, g2sort_g, igsort, eps8 )
+       CALL hpsort( ngm_, g2sort_g, igsort )
        DEALLOCATE( g2sort_g)
     ELSE
        DO ig=1,ngm_
