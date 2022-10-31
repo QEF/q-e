@@ -101,15 +101,17 @@ MODULE dftd3_qe
   end subroutine dftd3_pbc_gdisp
 
   ! Calculates the dispersion contribution to Hessian
-  subroutine dftd3_pbc_hdisp(this, stdout, step, coords, izp, latvecs, rep_cn, rep_vdw, hess_dftd3_ )
+  subroutine dftd3_pbc_hdisp(this, stdout, step, coords, izp, latvecs, rep_cn, rep_vdw, hess_dftd3_, q_gamma )
   implicit none
     type(dftd3_calc), intent(in) :: this
     integer, intent(in) :: stdout 
     real(wp), intent(in) :: step 
-    real(wp), intent(in) :: coords(:,:)
+    real(wp), intent(inout) :: coords(:,:) 
+    ! in practice this is a (in). (inout) is only to allow differentiation without further allocations
     integer, intent(in) :: izp(:)
     real(wp), intent(in) :: latvecs(:,:)
     integer, intent(in)  :: rep_cn(3), rep_vdw(3)
+    logical, intent(in) :: q_gamma
     real(wp), intent(out), target, contiguous :: hess_dftd3_(:,:,:,:,:,:,:)
     real(wp), pointer :: hess_dftd3(:,:,:,:,:,:,:)
     integer, allocatable :: ns(:)
@@ -140,43 +142,73 @@ MODULE dftd3_qe
     alp10 = alp8 + 2.0_wp
 
     allocate( force_dftd3(3,natom) )
-    allocate( & 
+    if(.not.q_gamma) allocate( & 
       force_supercell_dftd3(-rep_vdw(1):rep_vdw(1),-rep_vdw(2):rep_vdw(2),-rep_vdw(3):rep_vdw(3),3,natom))
 
     hess_dftd3(:,:,:,:,:,:,:) = 0.0_wp
+    !
+    ! Hessian update:
+    !   h = - 1/2 * ( f+ - f- ) / step
+    !   f+ = -2 * force_from_pbcgdisp(+)
+    !   f- = -2 * force_from_pbcgdisp(-)
+    !   h = ( force_supercell_dftd3(+) - force_supercell_dftd3(-) ) / step
+    !
     do iat = 1, natom
       do ixyz = 1, 3  
-        do istep = -1, 1, 2
-          write(stdout, '(5x,A,3I4)' ) 'Displacement step: ', iat, ixyz, istep
-          force_dftd3(:,:) = 0.0_wp ! this is not initialized in pbcgdisp 
-          !force_supercell_dftd3(:,:,:,:,:) = 0.0_wp ! this is initialized in pbcgdisp
-          call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
-              & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
-              & .true., .false., this%version, force_dftd3, disp2, gnorm, &
-              & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .false., this%cn_thr, &
-              & step, iat, ixyz, istep, force_supercell_dftd3)
           !
-          ! Hessian update:
-          !   h = - 1/2 * ( f+ - f- ) / step
-          !   f+ = -2 * force_supercell_dftd3(+)
-          !   f- = -2 * force_supercell_dftd3(-)
-          !   h = ( force_supercell_dftd3(+) - force_supercell_dftd3(-) ) / step
-          !
-          do irep = -rep_vdw(1), rep_vdw(1) 
-            do jrep = -rep_vdw(2), rep_vdw(2) 
-              do krep = -rep_vdw(3), rep_vdw(3) 
-                hess_dftd3(irep,jrep,krep, ixyz,iat,1:3,1:natom) = hess_dftd3(irep,jrep,krep, ixyz,iat,1:3,1:natom) & 
-                                               + dble(istep) * force_supercell_dftd3(irep,jrep,krep,1:3,1:natom)  
+          if(q_gamma) then ! all periodic images of iat, ixyz will be displaced inside pbcgdisp 
+            !
+            write(stdout, '(5x,A,2I4,A)' ) 'Displacement step: ', iat, ixyz, '   (+) ' 
+            coords(ixyz,iat)=coords(ixyz,iat)+step
+            force_dftd3(1:3,1:natom) = 0.0_wp
+            call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
+                & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
+                & .true., .false., this%version, force_dftd3, disp2, gnorm, &
+                & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .true., this%cn_thr) 
+            hess_dftd3(0,0,0, ixyz,iat,1:3,1:natom) = hess_dftd3(0,0,0, ixyz,iat,1:3,1:natom) + force_dftd3(1:3,1:natom)
+            !
+            write(stdout, '(5x,A,2I4,A)' ) 'Displacement step: ', iat, ixyz, '   (-) ' 
+            coords(ixyz,iat)=coords(ixyz,iat)-2*step
+            force_dftd3(1:3,1:natom) = 0.0_wp
+            call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
+                & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
+                & .true., .false., this%version, force_dftd3, disp2, gnorm, &
+                & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .true., this%cn_thr) 
+            hess_dftd3(0,0,0, ixyz,iat,1:3,1:natom) = hess_dftd3(0,0,0, ixyz,iat,1:3,1:natom) - force_dftd3(1:3,1:natom)
+            !
+            coords(ixyz,iat)=coords(ixyz,iat)+step
+            !
+          else ! only iat, ixyz in the unit cell will be displaced inside pbcgdisp  
+            !
+            do istep = -1, 1, 2
+              write(stdout, '(5x,A,3I4)' ) 'Displacement step: ', iat, ixyz, istep
+              force_dftd3(:,:) = 0.0_wp ! this is not initialized in pbcgdisp 
+              !force_supercell_dftd3(:,:,:,:,:) = 0.0_wp ! this is initialized in pbcgdisp
+                call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
+                    & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
+                    & .true., .false., this%version, force_dftd3, disp2, gnorm, &
+                    & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .false., this%cn_thr, &
+                    & step, iat, ixyz, istep, force_supercell_dftd3)
+              !
+              do irep = -rep_vdw(1), rep_vdw(1) 
+                do jrep = -rep_vdw(2), rep_vdw(2) 
+                  do krep = -rep_vdw(3), rep_vdw(3) 
+                    hess_dftd3(irep,jrep,krep, ixyz,iat,1:3,1:natom) = hess_dftd3(irep,jrep,krep, ixyz,iat,1:3,1:natom) & 
+                                                   + dble(istep) * force_supercell_dftd3(irep,jrep,krep,1:3,1:natom)  
+                  end do 
+                end do 
               end do 
-            end do 
-          end do 
+              !
+            end do ! istep
+            !
+          end if ! q_gamma
           !
-        end do ! istep
       end do ! ixyz
     end do ! iat
     hess_dftd3(:,:,:,:,:,:,:) = hess_dftd3(:,:,:,:,:,:,:) / step 
 
-    deallocate( force_dftd3, force_supercell_dftd3 )
+    deallocate( force_dftd3 )
+    if(.not.q_gamma) deallocate( force_supercell_dftd3 )
 
     return
 
