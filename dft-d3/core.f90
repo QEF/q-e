@@ -4025,15 +4025,6 @@ contains
   end subroutine pbcgdisp
 
 
-  !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-  ! compute hessian  
-  !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-
-  subroutine pbchdisp( )
-  implicit none
-
-  end subroutine pbchdisp
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   subroutine copyc6(fname,maxc,max_elem,c6ab,maxci, minc6,minc6list,maxc6,&

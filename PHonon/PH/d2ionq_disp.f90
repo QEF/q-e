@@ -12,6 +12,7 @@ SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
   USE io_global,     ONLY: stdout
   USE control_ph,    ONLY: dftd3_hess
   USE constants,     ONLY: tpi
+  USE control_lr,    ONLY : lgamma
 
   IMPLICIT NONE
 
@@ -26,29 +27,41 @@ SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
   COMPLEX(DP), INTENT(INOUT) :: der2disp(3,nat,3,nat)
   !! dispersion contribution to the (massless) dynamical matrix
   ! 
-  INTEGER :: n, nn, nnn, rep(3), nrep, irep, jrep, krep, irp, jrp, krp
+  INTEGER :: n, nn, nnn, rep(3), nrep, nhess, irep, jrep, krep, irp, jrp, krp
   INTEGER :: i, j, iat, jat, ixyz, jxyz
   CHARACTER(LEN=100) :: string
   REAL(DP), ALLOCATABLE :: d3hess(:,:,:,:,:,:,:), buffer(:)
-  REAL(DP) :: eiqr, tt(3)
+  COMPLEX(DP) :: eiqr, tt(3)
+  LOGICAL :: q_gamma ! whether the Hessian stored in the file has been computed for q=0,0,0 only 
   ! 
-  write(stdout,'(/,5x,2A)') 'Reading Grimme-D3 Hessian from file: ', dftd3_hess
+  write(stdout,'(/,5x,2A)') 'Reading Grimme-D3 Hessian from file: ', TRIM(dftd3_hess)
   !
   ! Reading Hessian from file
   !
   OPEN (unit = 1, file = dftd3_hess, status = 'unknown')
   READ(1, * ) 
-  READ(1, * ) string, rep(1:3), n, nn
+  READ(1, * ) string, rep(1:3), n, nn, q_gamma
   !
   ! some consistency checks before allocation
+  IF((q_gamma.eqv..true.) .and. (lgamma.eqv..false.)) THEN
+    Call errore('d2ionq_dispd3', 'The Hessian in the file is only good for q=0,0,0. Recompute it with q_gamma=.false.', 1)
+  ELSE 
+    WRITE( stdout, '(/,5x,A,3I4)') 'Number of cells replicated along each semiaxis: ', rep(1), rep(2), rep(3)
+  END IF
   nrep = (2*rep(1)+1) * (2*rep(2)+1) * (2*rep(3)+1)  ! number of unit cells in the supercell 
   nnn = nat * nrep                                   ! number of atoms in the supercell 
+  nhess = (3 * nat)**2 * nrep                        ! Hessian dimensions
   IF((n.ne.nat).or.(nn.ne.nnn)) THEN
     WRITE(stdout, '(/,5x,4I9)' ) nat, n, nn, nnn
     Call errore('d2ionq_dispd3', 'Wrong cell or supercell size', 1)
   END IF
+
+  WRITE( stdout, '(5x,A,I9)') 'Number of cells in the supercell: ', nrep 
+  WRITE( stdout, '(5x,A,I9)') 'Number of atoms in the supercell: ', nn  
+  WRITE( stdout, '(5x,A,I9)') 'Hessian allocation dimensions: ', nhess 
+
   ALLOCATE( d3hess(-rep(1):rep(1),-rep(2):rep(2),-rep(3):rep(3), 3,nat,3,nat), buffer(3*nat) )
-  IF( size(d3hess) .ne. (3*nnn)**2 ) Call errore('d2ionq_dispd3', "Wrong Hessian dimensions", 1)
+  IF( size(d3hess) .ne. nhess ) Call errore('d2ionq_dispd3', "Wrong Hessian dimensions", 1)
   d3hess(:,:,:,:,:,:,:)=0.0_dp
   !
   DO irep = -rep(1), rep(1)
@@ -108,12 +121,13 @@ SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
   !
   DEALLOCATE( d3hess ) 
   !
-stop  
+  WRITE(stdout,'(/,5x,A)') 'Dynamical matrix computed'
+  !
   RETURN
   !
 END SUBROUTINE d2ionq_dispd3
 !---------------------------------------------------------------------------
-SUBROUTINE d2ionq_dispd3_tmp( alat, nat, ityp, at, bg, tau, q, der2disp )
+SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau, der2disp )
   !------------------------------------------------------------------------
   !! This routine calculates the Grimme-D3 contribution to the dynamical matrix.
   !
@@ -138,12 +152,8 @@ SUBROUTINE d2ionq_dispd3_tmp( alat, nat, ityp, at, bg, tau, q, der2disp )
   !! atomic types for atoms in the unit cell
   REAL(DP), INTENT(IN) :: at(3,3)
   !! at(:,i) is lattice vector i in alat units
-  REAL(DP), INTENT(IN) :: bg(3,3)
-  !! bg(:,i) is reciprocal lattice vector i in 2pi/alat units
   REAL(DP), INTENT(IN) :: tau(3,nat)
   !! atomic positions in alat units
-  REAL(DP), INTENT(IN) :: q(3)
-  !! wavevector in 2pi/alat units
   COMPLEX(DP), INTENT(OUT) :: der2disp(3,nat,3,nat)
   !! dispersion contribution to the (massless) dynamical matrix
   ! 
@@ -318,7 +328,7 @@ SUBROUTINE d2ionq_dispd3_tmp( alat, nat, ityp, at, bg, tau, q, der2disp )
 
   RETURN
 
-END SUBROUTINE d2ionq_dispd3_tmp
+END SUBROUTINE d2ionq_dispd3_debug
 !---------------------------------------------------------------------------
 SUBROUTINE d2ionq_disp( alat, nat, ityp, at, bg, tau, q, der2disp )
   !------------------------------------------------------------------------

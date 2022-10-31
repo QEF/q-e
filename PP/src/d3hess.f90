@@ -11,16 +11,16 @@
 !
 !----------------------------------------------------------------------------
 program d3hess
-  USE io_global,        ONLY : stdout, ionode, ionode_id
-  USE io_files,         ONLY : prefix, tmp_dir
-  USE kinds,            ONLY : DP
-  USE mp,               ONLY : mp_bcast
-  USE mp_global,        ONLY : mp_startup
-  USE mp_world,         ONLY : world_comm
-  USE environment,      ONLY : environment_start, environment_end
+  USE io_global,        ONLY: stdout, ionode, ionode_id
+  USE io_files,         ONLY: prefix, tmp_dir
+  USE kinds,            ONLY: DP
+  USE mp,               ONLY: mp_bcast
+  USE mp_global,        ONLY: mp_startup
+  USE mp_world,         ONLY: world_comm
+  USE environment,      ONLY: environment_start, environment_end
   !
-  USE cell_base,        ONLY : alat, at
-  USE ions_base,        ONLY : nat, tau, ityp, atm
+  USE cell_base,        ONLY: alat, at
+  USE ions_base,        ONLY: nat, tau, ityp, atm
   USE input_parameters, ONLY: dftd3_version, dftd3_threebody
   USE funct,            ONLY: get_dft_short
   USE dftd3_api,        ONLY: dftd3_init, dftd3_set_functional, get_atomic_number, dftd3_pbc_dispersion
@@ -32,6 +32,7 @@ program d3hess
   CHARACTER(len=256) :: filhess, outdir
   REAL(DP) :: step
   LOGICAL :: needwf = .FALSE.
+  LOGICAL :: q_gamma
   !
   INTEGER :: iat, jat, ixyz, jxyz, irep, jrep, krep, i,j
   INTEGER :: nnat, nrep, nhess, nsize
@@ -43,7 +44,7 @@ program d3hess
   REAL(DP), ALLOCATABLE :: xyz(:,:), buffer(:)
   REAL(DP), ALLOCATABLE :: force_d3(:,:), hess_d3(:,:,:,:,:,:,:)
   !
-  NAMELIST /input/ prefix, outdir, step, filhess
+  NAMELIST /input/ prefix, outdir, step, q_gamma, filhess
   !
 9078 FORMAT( '     DFT-D3 Dispersion         =',F17.8,' Ry' )
 9035 FORMAT(5X,'atom ',I4,' type ',I2,'   force = ',3F14.8)
@@ -67,7 +68,8 @@ program d3hess
      IF ( trim( outdir ) == ' ' ) outdir = './'
      prefix ='pwscf'
      filhess=' ' 
-     step=2.d-5 ! step for numerical differentiation
+     q_gamma=.false. ! whether to use a much cheaper algorithm when q=0,0,0
+     step=2.d-5      ! step for numerical differentiation
      !
      CALL input_from_file ( )
      READ (5,input,IOSTAT=ios)
@@ -86,6 +88,7 @@ program d3hess
   CALL mp_bcast( tmp_dir, ionode_id, world_comm )
   CALL mp_bcast( prefix, ionode_id, world_comm )
   CALL mp_bcast( step, ionode_id, world_comm )
+  CALL mp_bcast( q_gamma, ionode_id, world_comm )
   !
   CALL read_file_new ( needwf )
   !
@@ -97,8 +100,16 @@ program d3hess
   dft_ = get_dft_short( )
   dft_ = dftd3_xc ( dft_ )
   CALL dftd3_set_functional(dftd3, func=dft_, version=dftd3_version,tz=.false.)
-  WRITE( stdout, '(/,5x,A,3I4)') 'DFT-D3 version: ',  dftd3_version  
+  WRITE( stdout, '(/,5x,A,f24.12)') 'Differentiation step: ',  step 
+!civn 
+write(*,'(/,A,/)') '!!!WARNING: FIX DFT-D3 XML FILE READING!!!!'
+  WRITE( stdout, '(5x,A,3I4)') 'DFT-D3 version: ',  dftd3_version  
   WRITE( stdout, '(5x,A,L)') 'DFT-D3 threebody: ',  dftd3_threebody  
+  IF(q_gamma) THEN
+    WRITE( stdout, '(5x,A)') 'Using a cheap algorithm for q=0,0,0 only'
+  ELSE
+    WRITE( stdout, '(5x,A)') 'Using a general (and memory consuming) algorithm for any q '
+  END IF
   !
   ! Computing DFT-D3 forces to get rep_vdw and check consistency with the scf 
   !
@@ -125,7 +136,9 @@ program d3hess
   !
   ! Computing DFT-D3 hessian 
   !
-  WRITE( stdout, '(/,5x,A,3I4)') 'Number of cells along each semiaxis: ', rep_vdw(1), rep_vdw(2), rep_vdw(3)
+  IF(q_gamma) rep_vdw(:) = 0
+  !
+  WRITE( stdout, '(/,5x,A,3I4)') 'Number of cells replicated along each semiaxis: ', rep_vdw(1), rep_vdw(2), rep_vdw(3)
   nrep = (2*rep_vdw(1)+1) * (2*rep_vdw(2)+1) * (2*rep_vdw(3)+1)       
   WRITE( stdout, '(5x,A,I9)') 'Number of cells in the supercell: ', nrep 
   nnat = nat * nrep                                                   
@@ -143,7 +156,7 @@ program d3hess
   !
   CALL start_clock('hessian_dftd3')
   !
-  Call dftd3_pbc_hdisp(dftd3, stdout, step, xyz, atnum, latvecs, rep_cn, rep_vdw, hess_d3 )
+  Call dftd3_pbc_hdisp(dftd3, stdout, step, xyz, atnum, latvecs, rep_cn, rep_vdw, hess_d3, q_gamma )
   !
   CALL stop_clock('hessian_dftd3')  
   !
@@ -157,7 +170,7 @@ program d3hess
   OPEN (unit = 1, file = filhess, status = 'unknown')
   !
   WRITE(1,'(A)') 'Hessian matrix of the Grimme-D3 dispersion term'
-  WRITE(1,'(A,5I9)') 'Dimensions: ', rep_vdw(:), nat, nnat
+  WRITE(1,'(A,5I9,3x,L)') 'System: ', rep_vdw(:), nat, nnat, q_gamma
   !
   DO irep = -rep_vdw(1), rep_vdw(1)
     DO jrep = -rep_vdw(2), rep_vdw(2)
