@@ -116,7 +116,7 @@ SUBROUTINE force_hub( forceh )
       ALLOCATE( overlap_inv(natomwfc,natomwfc) )
    ENDIF
    !
-   !$acc data create( spsi ) copyin( wfcU )
+   !$acc data create(spsi) copyin(wfcU)
    !
 #if defined(__CUDA)
    CALL allocate_bec_type_gpu( nwfcU, nbnd, proj )
@@ -193,7 +193,7 @@ SUBROUTINE force_hub( forceh )
       ELSE
          projkd = proj%k_d
       ENDIF
-      !$acc data copyin(projrd,projkd)
+      !$acc data copyin(projrd,projkd,wfcatom,overlap_inv)
 #else
       CALL calbec( npw, wfcU, spsi, proj )
       !
@@ -314,7 +314,6 @@ SUBROUTINE force_hub( forceh )
       ELSE
         DEALLOCATE( projkd )
       ENDIF
-      
       !
    ENDDO ! ik
    !
@@ -327,10 +326,10 @@ SUBROUTINE force_hub( forceh )
 #endif
    !
    IF (lda_plus_u_kind==0) THEN
-      DEALLOCATE(dns)
-      IF (ALLOCATED(dnsb)) DEALLOCATE(dnsb)
+      DEALLOCATE( dns )
+      IF (ALLOCATED(dnsb)) DEALLOCATE( dnsb )
    ELSEIF (lda_plus_u_kind==2) THEN
-      DEALLOCATE(dnsg)
+      DEALLOCATE( dnsg )
    ENDIF
    !
    !$acc end data
@@ -338,10 +337,10 @@ SUBROUTINE force_hub( forceh )
    DEALLOCATE( spsi )
    DEALLOCATE( wfcatom )
    IF (Hubbard_projectors.EQ."ortho-atomic") THEN
-      DEALLOCATE (swfcatom) 
-      DEALLOCATE (eigenval)
-      DEALLOCATE (eigenvect)
-      DEALLOCATE (overlap_inv)
+      DEALLOCATE( swfcatom )
+      DEALLOCATE( eigenval )
+      DEALLOCATE( eigenvect )
+      DEALLOCATE( overlap_inv )
    ENDIF
    !
    IF (nspin == 1) forceh(:,:) = 2.d0 * forceh(:,:)
@@ -422,7 +421,7 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    INTEGER ::  ibnd, is, na, nt, m1, m2, off1, off2, m11, m22, ldim1
    COMPLEX(DP), ALLOCATABLE :: dproj(:,:),  dproj_us(:,:)
    !
-   CALL start_clock_gpu( 'dndtau' )
+   CALL start_clock( 'dndtau' )
    !
 #if defined(__CUDA)
   CALL using_evc(0)
@@ -457,6 +456,7 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
       ALLOCATE( doverlap_inv(natomwfc,natomwfc) )
       CALL calc_doverlap_inv( alpha, ipol, ik, jkb0 )
    ENDIF
+   !$acc data copyin(doverlap_inv)
    !
    ! ... Band parallelization. If each band appears more than once
    ! ... compute its contribution only once (i.e. when mykey=0)
@@ -477,9 +477,7 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
            !$acc end kernels
          ENDIF
          !
-         ! ... TODO: COPY ONLY A SLICE HERE
-         !CALL dev_memcpy( dproj , dproj_d )
-         !$acc update self(dproj)
+         !$acc update self(dproj(:,nb_s:nb_e))
          IF (mykey==0) THEN
           DO m1 = 1, 2*Hubbard_l(nt)+1
             DO m2 = m1, 2*Hubbard_l(nt)+1
@@ -508,9 +506,7 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
            !$acc end kernels
          ENDIF
          !
-         ! ... TODO: COPY ONLY A SLICE HERE
-         !CALL dev_memcpy( dproj , dproj_d )
-         !$acc update self(dproj)
+         !$acc update self(dproj(:,nb_s:nb_e))
          IF (mykey==0) THEN
           DO m1 = 1, ldim_back(nt) 
             off1 = offsetU_back(na)
@@ -542,6 +538,7 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
 ! !omp end parallel do
    !
    !$acc end data
+   !$acc end data
    DEALLOCATE( dproj )
    IF (ALLOCATED(doverlap_inv)) DEALLOCATE( doverlap_inv )
    IF (okvan) DEALLOCATE( dproj_us )
@@ -567,7 +564,7 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ENDDO
 ! !omp end parallel do
    !
-   CALL stop_clock_gpu( 'dndtau' )
+   CALL stop_clock( 'dndtau' )
    !
    RETURN
    !
@@ -627,7 +624,7 @@ SUBROUTINE dndtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
    INTEGER ::  ibnd, is, na, nt, m1, m2, off1, off2, m11, m22
    REAL(DP), ALLOCATABLE :: dproj(:,:)
    !
-   CALL start_clock_gpu( 'dndtau' )
+   CALL start_clock( 'dndtau' )
    !
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    !
@@ -638,9 +635,7 @@ SUBROUTINE dndtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
    !
    CALL dprojdtau_gamma( spsi, alpha, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
    !
-   ! ... TODO: Only copy a slice here
-   !CALL dev_memcpy( dproj, dproj_d )
-   !$acc update self(dproj)
+   !$acc update self(dproj(:,nb_s:nb_e))
    !
    dns(:,:,:,:) = 0.d0
    !
@@ -720,7 +715,7 @@ SUBROUTINE dndtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
    ENDDO
 ! !omp end parallel do
    !
-   CALL stop_clock_gpu( 'dndtau' )
+   CALL stop_clock( 'dndtau' )
    !
    RETURN
    !
@@ -785,7 +780,7 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    COMPLEX(DP), ALLOCATABLE :: dproj1(:,:), dproj2(:,:), dproj_us(:,:)
    INTEGER, EXTERNAL :: find_viz
    !
-   CALL start_clock_gpu( 'dngdtau' )
+   CALL start_clock( 'dngdtau' )
    !
 #if defined(__CUDA)
    CALL using_evc(0)
@@ -808,9 +803,7 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    CALL phase_factor( ik )
    !
-   ! ... TODO: Only copy a slice here
-   !CALL dev_memcpy( proj , proj_d )
-   !$acc update self(proj)
+   !$acc update self(proj(:,nb_s:nb_e))
    !
    ! ... Compute the USPP contribution to dproj1:
    ! ... <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
@@ -845,6 +838,7 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
       ALLOCATE( doverlap_inv(natomwfc,natomwfc) )
       CALL calc_doverlap_inv( alpha, ipol, ik, jkb0 )
    ENDIF
+   !$acc data copyin(doverlap_inv)
    !
    ! ... Band parallelization. If each band appears more than once
    ! ... compute its contribution only once (i.e. when mykey=0)
@@ -928,6 +922,7 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
 ! !omp end parallel do
    !
    !$acc end data
+   !$acc end data
    DEALLOCATE( dproj1 )
    DEALLOCATE( dproj2 )
    IF (ALLOCATED(doverlap_inv)) DEALLOCATE( doverlap_inv )
@@ -968,7 +963,7 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ENDDO
 ! !omp end parallel do
    !
-   CALL stop_clock_gpu('dngdtau')
+   CALL stop_clock('dngdtau')
    !
    RETURN
    !
@@ -1040,9 +1035,7 @@ SUBROUTINE dngdtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    CALL dprojdtau_gamma( spsi, alpha, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
    !
-   ! TODO: Only copy a slice here
-   !CALL dev_memcpy( dproj , dproj_d )
-   !$acc update self(dproj)
+   !$acc update self(dproj(:,nb_s:nb_e))
    !
    dnsg(:,:,:,:,:) = (0.d0,0.d0)
    !
@@ -1206,7 +1199,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    INTEGER :: npw, nt, ig, m1, m2, m3, ibnd, iwf, nt_, ih, jh, ldim, &
               ldim_std, offpm, i, j, m_start, m_end
    REAL(DP) :: gvec, xki
-   INTEGER :: nh_nt, ierr
+   INTEGER :: nh_nt
    COMPLEX(DP), ALLOCATABLE :: dwfc(:,:), &
                                dproj0(:,:) !derivative of the projector
    !
@@ -1220,8 +1213,6 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    ldim_std = 2*Hubbard_l(nt)+1
    xki = xk(ipol,ik)
    nh_nt = nh(nt)
-   !
-   !$acc update device(wfcU)
    !
    !$acc kernels
    dproj = (0.d0,0.d0)
@@ -1321,10 +1312,8 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
                  " Forces with background and  ortho-atomic are not supported", 1 )
       !
       ALLOCATE( dwfc(npwx,ldim) )
-      !$acc data create(dwfc,wfcatom) copyin(overlap_inv)
+      !$acc data create(dwfc,wfcatom) present_or_copyin(overlap_inv)
       !
-      IF ( ierr/=0 ) CALL errore( 'dprojdtau_k_gpu', ' Buffers allocation failed', &
-                                   ABS(ierr) )
       !$acc kernels
       dwfc(:,:) = (0.d0,0.d0)
       !$acc end kernels
@@ -1344,8 +1333,6 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       CALL errore( 'dprojdtau_k', 'disabled when it is compiled by xlf.', 1 )
 #else
       offpm = oatwfc(na) ! offset
-      !
-      !$acc update device(wfcatom)
       !
       !$acc parallel loop
       DO ig = 1, npw
@@ -1370,7 +1357,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       ! ... dwfc(ig,m1) = dwfc(ig,m1) + wfcatom(ig,m2) * doverlap_inv(m2,offpm+m1)
       ! ... where m1=1,ldim; m2=1,natomwfc; ig=1,npw
       !
-      !$acc data copyin(doverlap_inv)
+      !$acc data present_or_copyin(doverlap_inv)
       !$acc host_data use_device(wfcatom,doverlap_inv,dwfc)
       CALL MYZGEMM( 'N','N', npw, ldim, natomwfc, (1.d0,0.d0), &
                     wfcatom, npwx, doverlap_inv(:,offpm+1:offpm+ldim), &
@@ -1382,13 +1369,11 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       !
       ALLOCATE( dproj0(ldim,nbnd) )
       !$acc data create(dproj0)
-      !$acc kernels
-      dproj0(:,:) = (0.0d0,0.0d0)
-      !$acc end kernels
+      !
       !$acc host_data use_device(dwfc,spsi,dproj0)
       CALL MYZGEMM( 'C','N',ldim, nbnd, npw, (1.d0,0.d0), &
                     dwfc, npwx, spsi, npwx,  (0.d0,0.d0), &
-                    dproj0, ldim )
+                    dproj0, ldim )         
       CALL mp_sum( dproj0, intra_bgrp_comm )
       !$acc end host_data
       !
@@ -1513,12 +1498,16 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    !
    ALLOCATE( doverlap(natomwfc,natomwfc) )
    !
-   !$acc data copyin(wfcatom,swfcatom,eigenval) create(doverlap,doverlap_inv,eigenvect)
+   !$acc data present_or_copyin(wfcatom,swfcatom,eigenval) &
+   !$acc&          create(doverlap,doverlap_inv,eigenvect)
    !
    !$acc kernels
    doverlap_inv(:,:) = (0.0d0,0.0d0)
    doverlap(:,:) = (0.0d0,0.0d0)
    !$acc end kernels
+   !
+   doverlap_inv(:,:) = (0.0d0,0.0d0)
+   doverlap(:,:) = (0.0d0,0.0d0)
    !
    npw = ngk(ik)
    !
@@ -1846,6 +1835,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    INTEGER :: npw, nt, ig, na_, m1, ibnd, iwf, nt_, ih, jh, ldim, &
               ldim_std, offpm, nh_nt
    REAL(DP) :: gvec
+   COMPLEX(DP) :: bpsi_ii
    !
    REAL(DP), ALLOCATABLE :: dproj0(:,:)
    COMPLEX(DP), ALLOCATABLE :: dwfc(:,:)
@@ -1874,8 +1864,6 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    ldim_std = 2*Hubbard_l(nt)+1
    nh_nt = nh(nt)
    !
-   !$acc update device(wfcU)
-   !
    !$acc kernels
    dproj(:,:) = 0.0_DP
    !$acc end kernels
@@ -1889,11 +1877,6 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
       ALLOCATE( dwfc(npwx,ldim) )
       !$acc data create(dwfc,dproj0)
       !
-      !$acc kernels
-      dproj0(:,:) = 0.d0
-      dwfc(:,:) = (0.d0,0.d0)
-      !$acc end kernels
-      !
       ! ... In the expression of dwfc we don't need (k+G) but just G; k always
       ! ... multiplies the underived quantity and gives an opposite contribution
       ! ... in c.c. term because the sign of the imaginary unit. But in any case,
@@ -1905,13 +1888,13 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
         ELSE
            offpm = offsetU_back(alpha) + m1 - ldim_std 
            IF (backall(nt) .AND. m1 > ldim_std+2*Hubbard_l2(nt)+1) &
-              offpm = offsetU_back1(alpha) + m1 &
-                      - ldim_std - 2*Hubbard_l2(nt) - 1
+              offpm = offsetU_back1(alpha) + m1 - ldim_std - 2*Hubbard_l2(nt) - 1
         ENDIF
         !$acc parallel loop
-        DO ig = 1, npw
+        DO ig = 1, npwx
             gvec = g(ipol,igk_k(ig,ik)) * tpiba
-            dwfc(ig,m1) = (0.d0,-1.d0) * gvec * wfcU(ig,offpm)
+            IF (ig<=npw) dwfc(ig,m1) = (0.d0,-1.d0) * gvec * wfcU(ig,offpm)
+            IF (ig> npw) dwfc(ig,m1) = (0.d0,0.d0)
         ENDDO
         !
       ENDDO
@@ -1964,7 +1947,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    !$acc data create(betapsi0,dbetapsi,wfatdbeta,wfatbeta)
    !$acc data create(dbeta)
    !
-   !$acc parallel loop collapse(2) present(vkb(:,:))
+   !$acc parallel loop collapse(2) present(vkb)
    DO ih = 1, nh_nt
       DO ig = 1, npw
          dbeta(ig,ih) = vkb(ig,ijkb0+ih)
@@ -1994,7 +1977,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
 ! !omp end parallel do
 #if defined(__CUDA)
    CALL using_evc_d(0)
-   !$acc host_data use_device(wfcU,dbeta,wfatbeta,betapsi0)
+   !$acc host_data use_device(wfcU,dbeta,wfatdbeta,dbetapsi)
    CALL calbec_gpu( npw, dbeta, evc_d, dbetapsi ) 
    CALL calbec_gpu( npw, wfcU, dbeta, wfatdbeta ) 
    !$acc end host_data
@@ -2006,45 +1989,41 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    !
    !$acc end data
    DEALLOCATE( dbeta )
-   ALLOCATE( betapsi(nh(nt),nbnd) )
+   ALLOCATE( betapsi(nh(nt),nb_s:nb_e) )
    !$acc data create( betapsi )
    !
    ! ... calculate \sum_j qq(i,j)*dbetapsi(j)
    ! ... betapsi is used here as work space 
    !
-   !$acc kernels
-   betapsi(:,:) = 0.d0
-   !$acc end kernels
-   !
    ! ... here starts band parallelization
+! !omp parallel do default(shared) private(ih,ibnd,jh)
    !$acc parallel loop collapse(2) present(qq_at)
    DO ih = 1, nh_nt
       DO ibnd = nb_s, nb_e
+         bpsi_ii = (0.0_dp,0.0_dp)
          DO jh = 1, nh_nt
-            betapsi(ih,ibnd) = betapsi(ih,ibnd) + &
-                               qq_at(ih,jh,alpha) * dbetapsi(jh,ibnd)
+            bpsi_ii = bpsi_ii + qq_at(ih,jh,alpha) * dbetapsi(jh,ibnd)
          ENDDO
+         betapsi(ih,ibnd) = bpsi_ii
       ENDDO
    ENDDO
 ! !omp end parallel do
    !
    !$acc kernels
-   dbetapsi(:,:) = betapsi(:,:)
+   dbetapsi(:,nb_s:nb_e) = betapsi(:,nb_s:nb_e)
    !$acc end kernels
    !
    ! ... calculate \sum_j qq(i,j)*betapsi(j)
    !
-   !$acc kernels
-   betapsi(:,:) = 0.d0
-   !$acc end kernels
-   !
+! !omp parallel do default(shared) private(ih,ibnd,jh)
    !$acc parallel loop collapse(2) present(qq_at)
    DO ih = 1, nh_nt
       DO ibnd = nb_s, nb_e
+         bpsi_ii = (0.0_dp,0.0_dp)
          DO jh = 1, nh_nt
-            betapsi(ih,ibnd) = betapsi(ih,ibnd) + &
-                               qq_at(ih,jh,alpha) * betapsi0(jh,ibnd)
+            bpsi_ii = bpsi_ii + qq_at(ih,jh,alpha) * betapsi0(jh,ibnd)
          ENDDO
+         betapsi(ih,ibnd) = bpsi_ii
       ENDDO
    ENDDO
 ! !omp end parallel do
