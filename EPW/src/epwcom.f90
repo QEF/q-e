@@ -416,8 +416,8 @@
   !! Photon energy maximum (in eV)
   REAL(KIND = DP) :: omegastep
   !! Photon energy step (in eV)
-  REAL(KIND = DP) :: n_r
-  !! Refractive index
+  REAL(KIND = DP) :: sigma_ref
+  !! Reference conductivity for Drude dielectric function
   !
   ! ----------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.

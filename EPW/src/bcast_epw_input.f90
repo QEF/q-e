@@ -56,7 +56,7 @@
                             int_mob, scissor, carrier, ncarrier,              &
                             restart, restart_step, prtgkk, nel, meff, epsiheg,&
                             scatread, restart, restart_step, restart_filq,    &
-                            lphase, omegamin, omegamax, omegastep, n_r,       &
+                            lphase, omegamin, omegamax, omegastep, sigma_ref, &
                             mob_maxiter, use_ws, epmatkqread, selecqread,     &
                             scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma,&
                             assume_metal, wannier_plot_scale, reduce_unk,     &
@@ -266,7 +266,7 @@
   CALL mp_bcast(omegamin      , meta_ionode_id, world_comm)
   CALL mp_bcast(omegamax      , meta_ionode_id, world_comm)
   CALL mp_bcast(omegastep     , meta_ionode_id, world_comm)
-  CALL mp_bcast(n_r           , meta_ionode_id, world_comm)
+  CALL mp_bcast(sigma_ref     , meta_ionode_id, world_comm)
   CALL mp_bcast(nc            , meta_ionode_id, world_comm)
   CALL mp_bcast(scdm_mu       , meta_ionode_id, world_comm)
   CALL mp_bcast(scdm_sigma    , meta_ionode_id, world_comm)

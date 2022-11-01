@@ -1375,7 +1375,7 @@
             IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating ef0_fca', 1)
             DO itemp = 1, nstemp
               etemp_fca = gtemp(itemp)
-              CALL fermi_carrier_indabs(itemp, etemp_fca, ef0_fca)
+              CALL fermi_carrier_indabs(itemp, etemp_fca, ef0_fca, ctype)
             ENDDO
           ENDIF
           CALL indabs_main(iq, totq, first_cycle, iq_restart)

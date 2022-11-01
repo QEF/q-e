@@ -60,7 +60,8 @@
                             ncarrier, carrier, scattering_serta, restart, restart_step,&
                             scattering_0rta, longrange, shortrange, scatread, use_ws,  &
                             restart_filq, prtgkk, nel, meff, epsiheg, lphase,          &
-                            omegamin, omegamax, omegastep, n_r, lindabs, mob_maxiter,  &
+                            omegamin, omegamax, omegastep, lindabs, mob_maxiter,       &
+                            sigma_ref,                                                 &
                             auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
                             scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, &
                             wannier_plot_supercell, wannier_plot_scale, reduce_unk,    &
@@ -187,7 +188,7 @@
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
        iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange,&
        scatread, restart, restart_step, restart_filq, prtgkk, nel, meff,       &
-       epsiheg, lphase, omegamin, omegamax, omegastep, n_r, lindabs,           &
+       epsiheg, lphase, omegamin, omegamax, omegastep, lindabs, sigma_ref,     &
        mob_maxiter, auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
        scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, reduce_unk,  &
        wannier_plot_supercell, wannier_plot_scale, wannier_plot_radius,        &
@@ -399,7 +400,7 @@
   ! omegamin        : Photon energy minimum
   ! omegamax        : Photon energy maximum
   ! omegastep       : Photon energy step in evaluating phonon-assisted absorption spectra (in eV)
-  ! n_r             : Constant refractive index
+  ! sigma_ref       : Reference conductivity for resistive contribution of FCA
   ! lindabs         : If .TRUE., do phonon-assisted absorption
   !
   ! Added by Felix Goudreault
@@ -631,7 +632,7 @@
   omegamin     = 0.d0  ! eV
   omegamax     = 10.d0 ! eV
   omegastep    = 1.d0  ! eV
-  n_r          = 1.d0
+  sigma_ref    = 1.d0  ! 1/(Ohm m)
   lindabs      = .FALSE.
   mob_maxiter  = 50
   use_ws       = .FALSE.
