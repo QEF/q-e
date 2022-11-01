@@ -1467,8 +1467,8 @@
       sigma_calc = SUM(sigma_eig) / 3.d0 * inv_cell
       sigma_ref_au = sigma_ref / conv_factor1
       tau = sigma_ref_au / sigma_calc
-      WRITE(stdout, '(5x, a, 3E16.7)'), 'Calculated constant relaxation time: ', tau / (ryd2mev * meV2invps)
-      WRITE(stdout, '(5x, a, 3E16.7)'), 'Conductivity xx, yy, zz: ', conv_factor1 * sigma_eig(:) * &
+      WRITE(stdout, '(5x, a, 3E16.7)') 'Calculated constant relaxation time: ', tau / (ryd2mev * meV2invps)
+      WRITE(stdout, '(5x, a, 3E16.7)') 'Conductivity xx, yy, zz: ', conv_factor1 * sigma_eig(:) * &
                                         inv_cell * tau
       WRITE(stdout, '(5x, a)') 'Calculate and Write the resistive contribution (Drude term).'
       !

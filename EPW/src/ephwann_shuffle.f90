@@ -1638,7 +1638,7 @@
               CALL fermi_carrier_indabs(itemp, etemp_fca, ef0_fca, ctype)
               !
               IF (ii_partion) THEN
-                CALL calcpartion(itemp, etemp, ctype)
+                CALL calcpartion(itemp, etemp_fca, ctype)
               ELSE
                 partion(:) = 1.0d0
               ENDIF
