@@ -161,10 +161,10 @@ SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau, der2disp )
   CHARACTER(LEN=256):: dft_ , formt
   REAL(DP) :: latvecs(3,3)
   REAL(DP) :: step, eerr, eerl, eelr, eell
-  INTEGER:: atnum(1:nat), iat, ixyz, jat, jxyz
+  INTEGER:: atnum(1:nat), i, j, iat, ixyz, jat, jxyz
   REAL(DP) :: xyz(3,nat)
   REAL(DP) :: stress_d3(3,3)
-  REAL(DP), ALLOCATABLE :: force_d3(:,:), force_num(:,:)
+  REAL(DP), ALLOCATABLE :: force_d3(:,:), force_num(:,:), buffer(:)
   REAL(DP), ALLOCATABLE :: der2disp_ene(:,:,:,:), der2disp_frc(:,:,:,:) 
   
 9078 FORMAT( '     DFT-D3 Dispersion         =',F17.8,' Ry' )
@@ -175,7 +175,10 @@ SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau, der2disp )
   !
   ! Setting DFT-D3 functional dependent parameters
   !
-  if (dftd3_version==2) dftd3_threebody=.false.
+!civn 
+  !if (dftd3_version==2) dftd3_threebody=.false.
+  dftd3_threebody=.false.
+!
   dftd3_in%threebody = dftd3_threebody
   CALL dftd3_init(dftd3, dftd3_in)
   dft_ = get_dft_short( )
@@ -229,7 +232,7 @@ SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau, der2disp )
      WRITE( stdout, 9035) iat, ityp(iat), (force_d3(ixyz,iat)-force_num(ixyz,iat), ixyz = 1, 3)
   ENDDO
 
-  step=2.d-5
+  step=1.d-3
   CALL start_clock('dftd3')
   ALLOCATE( der2disp_ene(3,nat,3,nat), der2disp_frc(3,nat,3,nat) )
   der2disp = 0._dp
@@ -255,6 +258,36 @@ SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau, der2disp )
   end do 
 
   CALL stop_clock('dftd3:frc')
+
+
+  WRITE( stdout, '(/,5x,2A)') 'Writing Hessian on file hessian.debug '
+  ! 
+  WRITE(formt,'(A,I9,A)') '(', 3*nat, 'f24.16)'
+  ALLOCATE( buffer(3*nat) )
+  !
+  OPEN (unit = 1, file = 'hessian.debug' , status = 'unknown')
+  !
+  WRITE(1,'(A)') 'Hessian matrix of the Grimme-D3 dispersion term'
+  WRITE(1,'(A,5I9,3x,L)') 'System: '
+  !
+  DO i = 1, 3*nat         ! 1 2 3 4 5 6 7 8 9 ... 3*nat
+    iat  = (i+2)/3        ! 1 1 1 2 2 2 3 3 3 ... nat 
+    ixyz = i - 3* (iat-1) ! 1 2 3 1 2 3 1 2 3 ... 3 
+    !
+    DO j = 1, 3*nat
+      jat  = (j+2)/3 
+      jxyz = j - 3* (jat-1) 
+      buffer(j) = der2disp_frc(ixyz,iat,jxyz,jat)
+    END DO 
+    !  
+    WRITE(1, formt ) buffer(1:3*nat)
+    !
+  END DO 
+  !
+  CLOSE (1)
+  !
+  DEALLOCATE(buffer)
+
   CALL start_clock('dftd3:ene')
 
   do iat = 1, nat

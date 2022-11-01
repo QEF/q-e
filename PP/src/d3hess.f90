@@ -36,7 +36,7 @@ program d3hess
   !
   INTEGER :: iat, jat, ixyz, jxyz, irep, jrep, krep, i,j
   INTEGER :: nnat, nrep, nhess, nsize
-  INTEGER :: rep_cn(3), rep_vdw(3)
+  INTEGER :: rep_cn(3), rep_vdw(3), rep_hes(3)
   REAL(DP) :: latvecs(3,3)
   REAL(DP) :: stress_d3(3,3)
   CHARACTER(LEN=256):: dft_ , formt
@@ -94,6 +94,9 @@ program d3hess
   !
   ! Setting DFT-D3 functional dependent parameters
   !
+!civn 
+dftd3_threebody = .false.
+!
   if (dftd3_version==2) dftd3_threebody=.false.
   dftd3_in%threebody = dftd3_threebody
   CALL dftd3_init(dftd3, dftd3_in)
@@ -136,20 +139,25 @@ write(*,'(/,A,/)') '!!!WARNING: FIX DFT-D3 XML FILE READING!!!!'
   !
   ! Computing DFT-D3 hessian 
   !
-  IF(q_gamma) rep_vdw(:) = 0
+  IF(q_gamma) THEN
+    rep_hes(:) = 0
+  ELSE
+    rep_hes(:) = rep_vdw(:) 
+  END IF 
   !
   WRITE( stdout, '(/,5x,A,3I4)') 'Number of cells replicated along each semiaxis: ', rep_vdw(1), rep_vdw(2), rep_vdw(3)
-  nrep = (2*rep_vdw(1)+1) * (2*rep_vdw(2)+1) * (2*rep_vdw(3)+1)       
-  WRITE( stdout, '(5x,A,I9)') 'Number of cells in the supercell: ', nrep 
+  WRITE( stdout, '(/,5x,A,3I4)') 'Number of cells used for Hessian allocations: ',   rep_hes(1), rep_hes(2), rep_hes(3)
+  nrep = (2*rep_hes(1)+1) * (2*rep_hes(2)+1) * (2*rep_hes(3)+1)       
+  WRITE( stdout, '(5x,A,I9)') 'Number of cells in the supercell (Hessian): ', nrep 
   nnat = nat * nrep                                                   
-  WRITE( stdout, '(5x,A,I9)') 'Number of atoms in the supercell: ', nnat
+  WRITE( stdout, '(5x,A,I9)') 'Number of atoms in the supercell (Hessian): ', nnat
   nhess = (3*nat)**2  * nrep 
   ! note that we are allocating one Hessian for each replicated cell (nhess), 
   ! that is much smaller than the full Hessian of the supercell ((3*nat*nrep)**2), 
   ! because we ultimately want the Hessian only for the unit cell
   WRITE( stdout, '(5x,A,I9)') 'Hessian allocation dimensions: ', nhess 
   !
-  ALLOCATE( hess_d3(-rep_vdw(1):rep_vdw(1),-rep_vdw(2):rep_vdw(2),-rep_vdw(3):rep_vdw(3),3,nat,3,nat) )
+  ALLOCATE( hess_d3(-rep_hes(1):rep_hes(1),-rep_hes(2):rep_hes(2),-rep_hes(3):rep_hes(3),3,nat,3,nat) )
   !
   nsize = int(size(hess_d3))
   IF( nsize .ne. nhess ) Call errore('d3hess', "Wrong Hessian dimensions", 1)
@@ -170,13 +178,17 @@ write(*,'(/,A,/)') '!!!WARNING: FIX DFT-D3 XML FILE READING!!!!'
   OPEN (unit = 1, file = filhess, status = 'unknown')
   !
   WRITE(1,'(A)') 'Hessian matrix of the Grimme-D3 dispersion term'
-  WRITE(1,'(A,5I9,3x,L)') 'System: ', rep_vdw(:), nat, nnat, q_gamma
+  WRITE(1,'(A,5I9,3x,L)') 'System: ', rep_hes(:), nat, nnat, q_gamma
   !
-  DO irep = -rep_vdw(1), rep_vdw(1)
-    DO jrep = -rep_vdw(2), rep_vdw(2)
-      DO krep = -rep_vdw(3), rep_vdw(3)
+  DO irep = -rep_hes(1), rep_hes(1)
+    DO jrep = -rep_hes(2), rep_hes(2)
+      DO krep = -rep_hes(3), rep_hes(3)
         !
-        WRITE(1, '(3(A,I4))') 'irep= ',irep, ' jrep= ',jrep, ' krep= ',krep
+        IF(irep.eq.0 .and. jrep.eq.0 .and. krep.eq.0) THEN
+          WRITE(1, '(3(A,I4))') 'Unit cell: irep= ',irep, ' jrep= ',jrep, ' krep= ',krep
+        ELSE
+          WRITE(1, '(3(A,I4))') 'irep= ',irep, ' jrep= ',jrep, ' krep= ',krep
+        END IF
         !
         DO i = 1, 3*nat         ! 1 2 3 4 5 6 7 8 9 ... 3*nat
           iat  = (i+2)/3        ! 1 1 1 2 2 2 3 3 3 ... nat 
