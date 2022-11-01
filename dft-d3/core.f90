@@ -3036,7 +3036,7 @@ contains
                     rij=xyz_hstep(:,iat)-xyz(:,jat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
                   end if 
                 else
-                  rij=xyz(:,iat)-xyz(:,jat)+tau
+                  rij=xyz(:,jat)-xyz(:,iat)+tau
                 end if 
 
                 r2=sum(rij*rij)
@@ -3246,7 +3246,7 @@ contains
                     rij=xyz_hstep(:,iat)-xyz(:,jat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
                   end if 
                 else
-                  rij=xyz(:,iat)-xyz(:,jat)+tau
+                  rij=xyz(:,jat)-xyz(:,iat)+tau
                 end if 
 
                 r2=sum(rij*rij)
@@ -3913,11 +3913,8 @@ contains
 
     ! After calculating all derivatives dE/dr_ij w.r.t. distances,
     ! the grad w.r.t. the coordinates is calculated dE/dr_ij * dr_ij/dxyz_i
-    do iat=1,n
-      do jat=1,iat  
-write(*,*) '@@', iat, jat
-    !do iat=2,n
-    !  do jat=1,iat-1
+    do iat=2,n
+      do jat=1,iat-1
         linij=lin(iat,jat)
         rcovij=rcov(iz(iat))+rcov(iz(jat))
         do taux=-rep_v(1),rep_v(1)
@@ -3934,7 +3931,7 @@ write(*,*) '@@', iat, jat
                   rij=xyz_hstep(:,iat)-xyz(:,jat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
                 end if 
               else
-                rij=xyz(:,iat)-xyz(:,jat)+tau
+                rij=xyz(:,jat)-xyz(:,iat)+tau
               end if 
 
               r2=sum(rij*rij)
