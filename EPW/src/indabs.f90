@@ -1082,7 +1082,6 @@
           fnk = wgauss(-ekk / etemp_fca, -99)
           ! The wkf(ikk) already include a factor 2
           electron_density = electron_density + wkf(ikk) * fnk * factor
-!          WRITE(stdout, '(5x, f, f)') ekk, electron_density
         ENDDO ! ibnd
       ENDDO ! ik
       DO ik = 1, nkf
@@ -1130,28 +1129,20 @@
       elw = evbm - 10000d0
       ef_tmp = (ecbm + ecbm) / 2.d0
       DO i = 1, maxiter
-!        WRITE(stdout, '(5x, i)') nkf
         electron_density = zero
         DO ik = 1, nkf
           ikk = 2 * ik -1
-!          WRITE(stdout, '(5x, i, i)') icbm, nbndsub
           DO ibnd = icbm, nbndsub
             ekk = etf(ibnd, ikk) - ef_tmp
             fnk = wgauss(-ekk / etemp_fca, -99)
             ! The wkf(ikk) already include a factor 2
             electron_density = electron_density + wkf(ikk) * fnk * factor
-!            WRITE(stdout, '(5x, f, f)') ekk, electron_density
           ENDDO ! ibnd
         ENDDO ! ik
         CALL mp_barrier(inter_pool_comm)
         CALL mp_sum(electron_density, inter_pool_comm)
-!        WRITE(stdout, '(5x, f)') electron_density
-!        IF (ABS(electron_density) < eps80) THEN
-!          rel_err = -1.0d0
-!        ELSE
-          ! In this case ncarrier is a negative number
-         rel_err = (electron_density - ncarrier) / electron_density
-!        ENDIF
+        ! In this case ncarrier is a negative number
+        rel_err = (electron_density - ncarrier) / electron_density
         !
         IF (ABS(rel_err) < eps6) THEN
           fermi = ef_tmp
@@ -1185,12 +1176,7 @@
         ENDDO ! ik
         CALL mp_barrier(inter_pool_comm)
         CALL mp_sum(hole_density, inter_pool_comm)
-!        IF (ABS(hole_density) < eps80) THEN
-!          rel_err = -1000.0d0
-!        ELSE
-          ! In this case ncarrier is a negative number
         rel_err = (hole_density - ABS(ncarrier)) / hole_density
-!        ENDIF
         !
         IF (ABS(rel_err) < eps6) THEN
           fermi = ef_tmp
@@ -1362,21 +1348,11 @@
     REAL(KIND = DP) :: sr(3, 3)
     !! Rotation matrix
     !
-!    IF (assume_metal) THEN
-!      CALL errore("transport_coeffs", "metals not implemented.", 1)
-!    ENDIF
-!    CALL start_clock('MOB')
-    ! Hard code the reference conductivity for now
-!    sigma_ref = 16957.d0 ! 1/(Ohm m)
-    !
     inv_cell = 1.0d0 / omega
     ! for 2d system need to divide by area (vacuum in z-direction)
     IF (system_2d) inv_cell = inv_cell * at(3, 3) * alat
     !
-!    WRITE(stdout, '(/5x, e)') electron_si
     conv_factor1 = electron_si / (hbar * bohr2ang * Ang2m)
-!    tau = 10.0d0 * 41.34144 ! converted to a.u.
-!    WRITE(stdout, '(5x, f8.3)') tau
     !
     CALL fkbounds(nktotf, lower_bnd, upper_bnd)
     !
@@ -1387,13 +1363,6 @@
       !
       IF (itemp == 1) THEN
         WRITE(stdout, '(/5x, a)') 'Calculate conducitivity within RTA for the given density'
-        !
-        ! tdf_sigma_ij(ibnd,ik) = v_i(ik,ibnd) * v_j(ik,ibnd) * tau(ik,ibnd)
-        ! i,j - cartesian components and ij combined (i,j) index
-        ! 1 = (1,1) = xx, 2 = (1,2) = xy, 3 = (1,3) = xz
-        ! 4 = (2,1) = yx, 5 = (2,2) = yy, 6 = (2,3) = yz
-        ! 7 = (3,1) = zx, 8 = (3,2) = zy, 9 = (3,3) = zz
-        ! this can be reduced to 6 if we take into account symmetry xy=yx, ...
         tdf_sigma(:) = zero
         sigma(:, :)  = zero
         !
@@ -1429,9 +1398,7 @@
                   sa(:, :) = DBLE(s(:, :, s_bztoibz(ikbz)))
                   sb       = MATMUL(bg, sa)
                   sr(:, :) = MATMUL(at, TRANSPOSE(sb))
-                  !WRITE(stdout, '(5x, f)') sr(1, 1)
                   CALL DGEMV('n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1, 0.d0, v_rot(:), 1)
-                  !WRITE(stdout, '(5x, f)') v_rot(1)
                   ij = 0
                   DO j = 1, 3
                     DO i = 1, 3
@@ -1448,12 +1415,10 @@
               ENDDO ! ikbz
               IF (noncolin) THEN
                 IF (ABS(nb * 1.0 / (nkf1 * nkf2 * nkf3) - wkf(ikk)) > eps6) THEN
-                  !WRITE(stdout, '(5x, f, f)') nb * 2.0 / (nkf1*nkf2*nkf3), wkf(ikk)
                   CALL errore('transport', ' The number of kpoint in the IBZ is not equal to the weight', 1)
                 ENDIF
               ELSE
                 IF (ABS(nb * 2.0 / (nkf1 * nkf2 * nkf3) - wkf(ikk)) > eps6) THEN
-                  !WRITE(stdout, '(5x, f, f)') nb * 2.0 / (nkf1*nkf2*nkf3), wkf(ikk)
                   CALL errore('transport', ' The number of kpoint in the IBZ is not equal to the weight', 1)
                 ENDIF
               ENDIF
@@ -1485,7 +1450,6 @@
       !
       CALL mp_sum(sigma(:, itemp), world_comm)
       !
-!      WRITE(stdout, '(5x, E17.6)') sigma(1, itemp)
       sigma_m(:, :) = zero
       sigma_m(1, 1) = sigma(1, itemp)
       sigma_m(1, 2) = sigma(2, itemp)
@@ -1499,7 +1463,6 @@
       ! Diagonalize the conductivity matrix
       CALL rdiagh(3, sigma_m(:, :), 3, sigma_eig, sigma_vect)
       !
-      !WRITE(stdout, '(5x, a, 3E16.7)'), 'Conductivity xx, yy, zz', conv_factor1 * sigma_eig(:) * inv_cell
       !
       sigma_calc = SUM(sigma_eig) / 3.d0 * inv_cell
       sigma_ref_au = sigma_ref / conv_factor1
