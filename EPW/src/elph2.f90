@@ -114,6 +114,9 @@
     sigmai_mode(:, :, :, :),    &!  Mode resolved imaginary electron self-energy
     zi_all(:, :, :),            &!  Z renormalization factor
     eta(:, :, :),               &!  Adaptative smearing
+    !!!!!
+    eta_imp(:, :),              &!  Adaptative smearing for ionized impurity scattering rate integration
+    !!!!! 
     esigmar_all(:, :, :, :),    &!  energy of the real self-energy
     esigmai_all(:, :, :, :),    &!  energy of the imaginary self-energy
     jdos(:),                    &!  j-DOS
@@ -154,7 +157,13 @@
     inv_tau_b(:, :, :),      &!  In case of B-field, scattering rate for non-zero inv_tau k-points on full BZ
     df_in_b(:, :, :, :, :),  &!  In case of B-field, derivative of f wrt k for non-zero inv_tau k-points on full BZ
     xkf_bz(:, :),            &!  In case of B-field, homogeneous k-point list on the full BZ for etf_mem /= 3
-    Qmat(:, :, :, :)          !  Quadrupole tensor
+    !!!!!
+    !Qmat(:, :, :, :)         !  Quadrupole tensor 
+    Qmat(:, :, :, :),        &!  Quadrupole tensor
+    epstf_therm(:),          &!  Thermal thomas fermi dielectric function
+    qtf2_therm(:),           &!  Thermal thomas fermi wavevector
+    partion(:)                !  fraction of impurities ionized
+    !!!!!
   COMPLEX(KIND = DP), ALLOCATABLE :: &
     el_ph_mat(:, :, :, :),    &!  e-p matrix  (nbnd, nbnd, nks, 3*nat)
     cu(:, :, :),              &!  rot matrix for wannier interpolation of k point, coarse mesh (nbnd*nbnd*nkstot)
@@ -177,7 +186,11 @@
     vmef(:, :, :, :),         &!  velocity matrix elements on the fine mesh (ipol, nbnd, nbnd, nks)
     bmat(:, :, :, :),         &!  overlap U_k+q U_k^\dagger on the coarse mesh (nbnd, nbnd, nks, nqtot)
     eps_rpa(:),               &!  rpa model screening
-    veff(:, :)                 !  effective potential
+    !!!!!
+    !veff(:, :)                 !  effective potential
+    veff(:, :),               &!  effective potential
+    eimpf17(:, :, :)           !  full e-impurity matrix in bloch rep stored in mem (nbnd, nbnd, nkf) - nbnd inside wndow
+    !!!!
   !
   ! -------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.

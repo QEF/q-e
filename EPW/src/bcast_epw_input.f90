@@ -65,6 +65,8 @@
                             epw_crysym, bfieldx, bfieldy, bfieldz, tc_linear, &
                             !!!!!
                             !tc_linear_solver, mob_maxfreq, mob_nfreq
+                            ii_g, ii_charge, ii_n, ii_scattering, ii_only,    &
+                            ii_lscreen, ii_eda, ii_partion, ii_eps0,          &
                             tc_linear_solver, mob_maxfreq, mob_nfreq,         &
                             fbw, gridsamp, griddens, dos_del, muchem
                             !!!!!
@@ -181,6 +183,13 @@
   CALL mp_bcast(epw_nosym       , meta_ionode_id, world_comm)
   CALL mp_bcast(epw_noinv       , meta_ionode_id, world_comm)
   CALL mp_bcast(epw_crysym      , meta_ionode_id, world_comm)
+  !!!!!
+  CALL mp_bcast(ii_g            , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_scattering   , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_only         , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_lscreen      , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_partion      , meta_ionode_id, world_comm)
+  !!!!!
   !
   ! integers
   !
@@ -267,6 +276,12 @@
   CALL mp_bcast(bfieldy       , meta_ionode_id, world_comm)
   CALL mp_bcast(bfieldz       , meta_ionode_id, world_comm)
   CALL mp_bcast(mob_maxfreq   , meta_ionode_id, world_comm)
+  !!!!!
+  CALL mp_bcast(ii_charge , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_n , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_eda     , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_eps0    , meta_ionode_id, world_comm)
+  !!!!!
   !
   ! characters
   !
