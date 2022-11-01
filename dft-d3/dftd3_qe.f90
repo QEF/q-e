@@ -92,7 +92,7 @@ MODULE dftd3_qe
     call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
         & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
         & this%noabc, this%numgrad, this%version, force_dftd3, disp2, gnorm, &
-        & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .false., this%cn_thr)
+        & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .true., this%cn_thr)
     ! Note, the stress variable in pbcgdisp contains the *lattice derivatives*
     ! on return, so it needs to be converted to obtain the stress tensor.
     stress_dftd3(:,:) = -matmul(stress_dftd3, transpose(latvecs))&
@@ -105,11 +105,11 @@ MODULE dftd3_qe
   implicit none
     type(dftd3_calc), intent(in) :: this
     integer, intent(in) :: stdout 
-    real(wp), intent(in) :: step 
-    real(wp), intent(inout) :: coords(:,:) 
+    real(wp), intent(in) :: step             ! Bohr
+    real(wp), intent(inout) :: coords(:,:)   ! Bohr
     ! in practice this is a (in). (inout) is only to allow differentiation without further allocations
     integer, intent(in) :: izp(:)
-    real(wp), intent(in) :: latvecs(:,:)
+    real(wp), intent(in) :: latvecs(:,:)     ! Bohr
     integer, intent(in)  :: rep_cn(3), rep_vdw(3)
     logical, intent(in) :: q_gamma
     real(wp), intent(out), target, contiguous :: hess_dftd3_(:,:,:,:,:,:,:)
@@ -117,7 +117,7 @@ MODULE dftd3_qe
     integer, allocatable :: ns(:)
 
     real(wp) :: s6, s18, rs6, rs8, rs10, alp6, alp8, alp10
-    real(wp) :: gnorm, disp2
+    real(wp) :: gnorm, disp2, hnorm
     integer :: natom
     integer :: iat, ixyz, istep 
     integer :: irep, jrep, krep 
@@ -184,11 +184,11 @@ MODULE dftd3_qe
               write(stdout, '(5x,A,3I4)' ) 'Displacement step: ', iat, ixyz, istep
               force_dftd3(:,:) = 0.0_wp ! this is not initialized in pbcgdisp 
               !force_supercell_dftd3(:,:,:,:,:) = 0.0_wp ! this is initialized in pbcgdisp
-                call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
-                    & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
-                    & .true., .false., this%version, force_dftd3, disp2, gnorm, &
-                    & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .false., this%cn_thr, &
-                    & step, iat, ixyz, istep, force_supercell_dftd3)
+              call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
+                  & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
+                  & .true., .false., this%version, force_dftd3, disp2, gnorm, &
+                  & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .false., this%cn_thr, &
+                  & step, iat, ixyz, istep, force_supercell_dftd3)
               !
               do irep = -rep_vdw(1), rep_vdw(1) 
                 do jrep = -rep_vdw(2), rep_vdw(2) 
@@ -202,6 +202,9 @@ MODULE dftd3_qe
             end do ! istep
             !
           end if ! q_gamma
+          !
+          hnorm=sum(abs(hess_dftd3(0,0,0, ixyz,iat, 1:3,1:natom)))
+          write(*,*)'|H(unit cell)| =',hnorm
           !
       end do ! ixyz
     end do ! iat

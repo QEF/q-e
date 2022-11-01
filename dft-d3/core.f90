@@ -1776,17 +1776,23 @@ contains
   ! compute coordination numbers by adding an inverse damping function
   !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
-  subroutine pbcncoord(natoms,rcov,iz,xyz,cn,lat,rep_cn,crit_cn)
+  subroutine pbcncoord(natoms,rcov,iz,xyz,cn,lat,rep_cn,crit_cn,ldisplace,xyz_hstep)
     integer,intent(in) :: natoms,iz(*)
     real(wp),intent(in) :: rcov(94)
     real(wp), intent(in):: xyz(3,*),lat(3,3)
     real(wp), intent(in) :: crit_cn
     real(wp), intent(out):: cn(*)
-
+    logical, intent(in), optional :: ldisplace       ! whether to displace unit cell atoms 
+    real(wp), intent(in), optional :: xyz_hstep(3,*) ! displaced geometry
+  
+    logical ldisp
     integer i,max_elem,rep_cn(3)
 
     integer iat,taux,tauy,tauz
     real(wp) dx,dy,dz,r,damp,xn,rr,rco,tau(3)
+
+    ldisp = .false.
+    if(present(ldisplace)) ldisp = ldisplace
 
     do i=1,natoms
       xn=0.0d0
@@ -1797,9 +1803,25 @@ contains
               if (iat.eq.i .and. taux.eq.0 .and. tauy.eq.0 .and.&
                   & tauz.eq.0) cycle
               tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
-              dx=xyz(1,iat)-xyz(1,i)+tau(1)
-              dy=xyz(2,iat)-xyz(2,i)+tau(2)
-              dz=xyz(3,iat)-xyz(3,i)+tau(3)
+
+              if(ldisp) then 
+                ! iat always in the unit cell
+                ! i can be in the unit cell or in some replicas, depending on tau
+                if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0.) then 
+                  dx=xyz_hstep(1,iat)-xyz_hstep(1,i) ! both in the unit cell, use the displaced geometry
+                  dy=xyz_hstep(2,iat)-xyz_hstep(2,i) 
+                  dz=xyz_hstep(3,iat)-xyz_hstep(3,i) 
+                else
+                  dx=xyz_hstep(1,iat)-xyz(1,i)+tau(1) ! only iat in the unit cell, use the undisplaced geometry for i
+                  dy=xyz_hstep(2,iat)-xyz(2,i)+tau(2) 
+                  dz=xyz_hstep(3,iat)-xyz(3,i)+tau(3) 
+                end if 
+              else
+                dx=xyz(1,iat)-xyz(1,i)+tau(1)
+                dy=xyz(2,iat)-xyz(2,i)+tau(2)
+                dz=xyz(3,iat)-xyz(3,i)+tau(3)
+              end if 
+
               r=(dx*dx+dy*dy+dz*dz)
               if (r.gt.crit_cn) cycle
               r=sqrt(r)
@@ -2551,7 +2573,7 @@ contains
     USE mp,           ONLY : mp_sum
 
     integer,  intent(in), optional :: ia, ix, is
-    real(wp), intent(in), optional :: hstep ! step for atom displacement for numerical Hessian calculation
+    real(wp), intent(in), optional :: hstep ! step (in Bohr) for atom displacement for numerical Hessian calculation
     real(wp), intent(out), optional, target, contiguous :: g_supercell_(:,:,:,:,:) 
     real(wp), pointer :: g_supercell(:,:,:,:,:) 
     integer, allocatable :: ns(:)
@@ -2560,6 +2582,7 @@ contains
 
     logical :: ldisplace ! whether to displace atoms for numerical Hessian calculations
     integer :: mykey, na_s, na_smax, na_e
+    real(wp) :: hdisp
 
     integer n,iz(*),max_elem,maxc,version,mxc(max_elem)
     real(wp) xyz(3,*),r0ab(max_elem,max_elem),r2r4(*)
@@ -2642,9 +2665,10 @@ contains
       ns = shape(g_supercell_)
       g_supercell( -ns(1)/2:ns(1)/2, -ns(2)/2:ns(2)/2, -ns(3)/2:ns(3)/2, 1:ns(4), 1:ns(5) ) => g_supercell_
       g_supercell(:,:,:,:,:) = 0.0_wp 
+      hdisp = dble(is) * hstep
       allocate(xyz_hstep(3,n))
       xyz_hstep(1:3,1:n) = xyz(1:3,1:n)
-      xyz_hstep(ix, ia) = xyz_hstep(ix, ia) + dble(is) * hstep
+      xyz_hstep(ix, ia) = xyz_hstep(ix, ia) + hdisp
     end if 
 
     ! R^2 cut-off
@@ -2864,7 +2888,7 @@ contains
       if (echo)&
           & write(*,*) 'doing analytical gradient O(N^2) ...'
       ! precompute for analytical part
-      call pbcncoord(n,rcov,iz,xyz,cn,lat,rep_cn,crit_cn)
+      call pbcncoord(n,rcov,iz,xyz,cn,lat,rep_cn,crit_cn,ldisplace,xyz_hstep)
 
 
       s8 =s18
@@ -2903,9 +2927,12 @@ contains
 
 
               !first dE/d(tau) saved in drij(i,i,counter)
-              rij=tau
-              if(ldisplace .and. (iat.eq.ia) &
-                .and..not. (taux.eq.0.and.tauy.eq.0.and.tauz.eq.0)) rij=rij - dble(is) * hstep
+              if(ldisplace .and..not. (taux.eq.0 .and. tauy.eq.0 .and. tauz.eq.0)) then 
+                rij = xyz_hstep(:,iat) - xyz(:,iat) + tau
+              else
+                rij=tau
+              end if 
+
               r2=sum(rij*rij)
               ! if (r2.gt.rthr) cycle
 
@@ -3004,12 +3031,12 @@ contains
                   ! iat always in the unit cell
                   ! jat can be in the unit cell or in some replicas, depending on tau
                   if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0.) then 
-                    rij=xyz_hstep(:,jat)-xyz_hstep(:,iat) ! both in the unit cell, tau=0, use the displaced geometry 
+                    rij=xyz_hstep(:,iat)-xyz_hstep(:,jat) ! both in the unit cell, tau=0, use the displaced geometry 
                   else
                     rij=xyz_hstep(:,iat)-xyz(:,jat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
                   end if 
                 else
-                  rij=xyz(:,jat)-xyz(:,iat)+tau
+                  rij=xyz(:,iat)-xyz(:,jat)+tau
                 end if 
 
                 r2=sum(rij*rij)
@@ -3090,7 +3117,7 @@ contains
 
 
       if (echo) write(*,*) 'doing analytical gradient O(N^2) ...'
-      call pbcncoord(n,rcov,iz,xyz,cn,lat,rep_cn,crit_cn)
+      call pbcncoord(n,rcov,iz,xyz,cn,lat,rep_cn,crit_cn,ldisplace,xyz_hstep)
 
       a1 =rs6
       a2 =rs8
@@ -3127,9 +3154,11 @@ contains
               tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
 
               !first dE/d(tau) saved in drij(i,i,counter)
-              rij=tau
-              if(ldisplace .and. (iat.eq.ia) &
-                .and..not. (taux.eq.0.and.tauy.eq.0.and.tauz.eq.0)) rij=rij - dble(is) * hstep
+              if(ldisplace .and..not. (taux.eq.0 .and. tauy.eq.0 .and. tauz.eq.0)) then 
+                rij = xyz_hstep(:,iat) - xyz(:,iat) + tau
+              else
+                rij=tau
+              end if 
               r2=sum(rij*rij)
               ! if (r2.gt.rthr) cycle
 
@@ -3212,12 +3241,12 @@ contains
                   ! iat always in the unit cell
                   ! jat can be in the unit cell or in some replicas, depending on tau
                   if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0.) then 
-                    rij=xyz_hstep(:,jat)-xyz_hstep(:,iat) ! both in the unit cell, tau=0, use the displaced geometry 
+                    rij=xyz_hstep(:,iat)-xyz_hstep(:,jat) ! both in the unit cell, tau=0, use the displaced geometry 
                   else
                     rij=xyz_hstep(:,iat)-xyz(:,jat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
                   end if 
                 else
-                  rij=xyz(:,jat)-xyz(:,iat)+tau
+                  rij=xyz(:,iat)-xyz(:,jat)+tau
                 end if 
 
                 r2=sum(rij*rij)
@@ -3884,8 +3913,11 @@ contains
 
     ! After calculating all derivatives dE/dr_ij w.r.t. distances,
     ! the grad w.r.t. the coordinates is calculated dE/dr_ij * dr_ij/dxyz_i
-    do iat=2,n
-      do jat=1,iat-1
+    do iat=1,n
+      do jat=1,iat  
+write(*,*) '@@', iat, jat
+    !do iat=2,n
+    !  do jat=1,iat-1
         linij=lin(iat,jat)
         rcovij=rcov(iz(iat))+rcov(iz(jat))
         do taux=-rep_v(1),rep_v(1)
@@ -3893,7 +3925,18 @@ contains
             do tauz=-rep_v(3),rep_v(3)
               tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
 
-              rij=xyz(:,jat)-xyz(:,iat)+tau
+              if(ldisplace) then 
+                ! iat always in the unit cell
+                ! jat can be in the unit cell or in some replicas, depending on tau
+                if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0.) then 
+                  rij=xyz_hstep(:,iat)-xyz_hstep(:,jat) ! both in the unit cell, tau=0, use the displaced geometry 
+                else
+                  rij=xyz_hstep(:,iat)-xyz(:,jat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
+                end if 
+              else
+                rij=xyz(:,iat)-xyz(:,jat)+tau
+              end if 
+
               r2=sum(rij*rij)
               if (r2.gt.rthr.or.r2.lt.0.5) cycle
               r=dsqrt(r2)
