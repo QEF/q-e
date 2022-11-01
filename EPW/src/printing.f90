@@ -1487,6 +1487,10 @@
     !! Hall factor
     REAL(KIND = DP) :: hall(3, 3, nstemp)
     !! Hall factor
+    REAL(KIND = DP) :: sigma_hall(3, 3)
+    !! Hall conductivity
+    REAL(KIND = DP) :: mob_hall(3, 3)
+    !! Hall mobility
     REAL(KIND = DP) :: sigma_inv(3, 3, nstemp)
     !! Inverse conductivity tensor
     REAL(KIND = DP) :: mob_inv(3, 3, nstemp)
@@ -1537,23 +1541,7 @@
     WRITE(stdout, '(5x, a)') REPEAT('=',93)
     DO itemp = 1, nstemp
       etemp = gtemp(itemp)
-      WRITE(stdout, '(5x,a)') ' '
-      WRITE(stdout, '(5x,a,1f10.4,a)') 'Temperature: ', etemp * ryd2ev / kelvin2eV, ' K'
-      IF (system_2d) THEN
-        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens]'
-      ELSE
-        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens/m]'
-      ENDIF
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 1, itemp), '  |', sigmab_serta_si(:, 1, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 2, itemp), '  |', sigmab_serta_si(:, 2, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 3, itemp), '  |', sigmab_serta_si(:, 3, itemp)
       !
-      WRITE(stdout, '(5x,a)') 'Mobility tensor without magnetic field     | with magnetic field [cm^2/Vs]'
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 1, itemp), '  |', mobb_serta(:, 1, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 2, itemp), '  |', mobb_serta(:, 2, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 3, itemp), '  |', mobb_serta(:, 3, itemp)
-      !
-      !sigma_inv(:, :, itemp) = matinv3(sigma_serta(:, :, itemp))
       IF (system_2d) THEN ! We suppose vacuum is in the z direction
         mob_serta(3, 3, :) = 1d0
         mob_inv(:, :, itemp) = matinv3(mob_serta(:, :, itemp))
@@ -1563,7 +1551,27 @@
       ENDIF
       hall_serta(:, :, itemp) = MATMUL(MATMUL(mob_inv(:, :, itemp), mobb_serta(:, :, itemp)), &
                           mob_inv(:, :, itemp)) / (b_norm * hbarJ ) * electron_si * (bohr2ang * ang2cm)**2
+      !            
+      sigma_hall(:, :) = MATMUL(sigma_serta_si(:, :, itemp), hall_serta(:, :, itemp))            
+      mob_hall(:, :)   = MATMUL(mob_serta(:, :, itemp), hall_serta(:, :, itemp))            
       !
+      ! 
+      WRITE(stdout, '(5x,a)') ' '
+      WRITE(stdout, '(5x,a,1f10.4,a)') 'Temperature: ', etemp * ryd2ev / kelvin2eV, ' K'
+      IF (system_2d) THEN
+        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens]'
+      ELSE
+        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens/m]'
+      ENDIF
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 1, itemp), '  |', sigma_hall(:, 1)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 2, itemp), '  |', sigma_hall(:, 2)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 3, itemp), '  |', sigma_hall(:, 3)
+      !
+      WRITE(stdout, '(5x,a)') 'Mobility tensor without magnetic field     | with magnetic field [cm^2/Vs]'
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 1, itemp), '  |', mob_hall(:, 1)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 2, itemp), '  |', mob_hall(:, 2)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 3, itemp), '  |', mob_hall(:, 3)
+      ! 
       ! bfield is energy*sec/lenght**2, mobility is in cm**2 V**-1 sec**-1.
       ! To convert bfield to the same units of the mobility I do the same conversion as passing from the sigma
       ! tensor to the mobility: the energy is converted with electron_SI/hbarJ and the lenght**2 with (bohr2ang * ang2cm)**2
@@ -1578,23 +1586,7 @@
     WRITE(stdout, '(5x, a)') REPEAT('=',93)
     DO itemp = 1, nstemp
       etemp = gtemp(itemp)
-      WRITE(stdout, '(5x,a)') ' '
-      WRITE(stdout, '(5x,a,1f10.4,a)') 'Temperature: ', etemp * ryd2ev / kelvin2eV, ' K'
-      IF (system_2d) THEN
-        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens]'
-      ELSE
-        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens/m]'
-      ENDIF
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 1, itemp), '  |', sigmab_bte_si(:, 1, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 2, itemp), '  |', sigmab_bte_si(:, 2, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 3, itemp), '  |', sigmab_bte_si(:, 3, itemp)
-      !
-      WRITE(stdout, '(5x,a)') 'Mobility tensor without magnetic field     | with magnetic field [cm^2/Vs]'
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 1, itemp), '  |', mobb_bte(:, 1, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 2, itemp), '  |', mobb_bte(:, 2, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 3, itemp), '  |', mobb_bte(:, 3, itemp)
-      !
-      !sigma_inv(:, :, itemp) = matinv3(sigma_bte(:, :, itemp))
+      ! 
       IF (system_2d) THEN ! We suppose vacuum is in the z direction
         mob_bte(3, 3, :) = 1d0
         mob_inv(:, :, itemp) = matinv3(mob_bte(:, :, itemp))
@@ -1604,6 +1596,25 @@
       ENDIF
       hall(:, :, itemp) = MATMUL(MATMUL(mob_inv(:, :, itemp), mobb_bte(:, :, itemp)), &
                           mob_inv(:, :, itemp)) / (b_norm * hbarJ ) * electron_si * (bohr2ang * ang2cm)**2
+      !             
+      sigma_hall(:, :) = MATMUL(sigma_bte_si(:, :, itemp), hall(:, :, itemp))
+      mob_hall(:, :)   = MATMUL(mob_bte(:, :, itemp), hall(:, :, itemp))      
+      !            
+      WRITE(stdout, '(5x,a)') ' '
+      WRITE(stdout, '(5x,a,1f10.4,a)') 'Temperature: ', etemp * ryd2ev / kelvin2eV, ' K'
+      IF (system_2d) THEN
+        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens]'
+      ELSE
+        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens/m]'
+      ENDIF
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 1, itemp), '  |', sigma_hall(:, 1)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 2, itemp), '  |', sigma_hall(:, 2)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 3, itemp), '  |', sigma_hall(:, 3)
+      !
+      WRITE(stdout, '(5x,a)') 'Mobility tensor without magnetic field     | with magnetic field [cm^2/Vs]'
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 1, itemp), '  |', mob_hall(:, 1)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 2, itemp), '  |', mob_hall(:, 2)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 3, itemp), '  |', mob_hall(:, 3)
       !
       ! bfield is energy*sec/lenght**2, mobility is in cm**2 V**-1 sec**-1.
       ! To convert bfield to the same units of the mobility I do the same conversion as passing from the sigma
