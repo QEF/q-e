@@ -214,7 +214,7 @@ contains
     rep_cn(:) = int(rtmp3) + 1
     call pbcedisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
         & r2r4, this%r0ab, rcov, rs6, rs8, rs10, alp6, alp8, alp10, &
-        & this%version, this%noabc, e6, e8, e10, e12, e6abc, latvecs, &
+        & this%version, .true., e6, e8, e10, e12, e6abc, latvecs, &
         & this%rthr, rep_vdw, this%cn_thr, rep_cn)
     disp = -e6 * this%s6 - e8 * this%s18 - e6abc
 

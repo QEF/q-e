@@ -91,7 +91,7 @@ MODULE dftd3_qe
     force_dftd3(:,:) = 0.0_wp
     call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
         & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
-        & this%noabc, this%numgrad, this%version, force_dftd3, disp2, gnorm, &
+        & .true., .false., this%version, force_dftd3, disp2, gnorm, &
         & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .true., this%cn_thr)
     ! Note, the stress variable in pbcgdisp contains the *lattice derivatives*
     ! on return, so it needs to be converted to obtain the stress tensor.
