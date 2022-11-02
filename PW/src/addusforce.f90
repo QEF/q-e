@@ -91,7 +91,7 @@ SUBROUTINE addusforce_g( forcenl )
     IF ( nspin_mag == 4 .and. is /= 1 ) THEN
        CALL rho_r2g( dfftp, v%of_r(:,is), vg(:,is:is) )
     ELSE
-       CALL rho_r2g( dfftp, v%of_r(:,is), vg(:,is:is), vltot )
+       CALL rho_r2g( dfftp, v%of_r(:,is), vg(:,is:is), v=vltot )
     ENDIF
     ! ... Note the factors -i and 2pi/a *units of G) here in V(G) !
     !$acc kernels

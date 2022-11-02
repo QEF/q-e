@@ -22,7 +22,7 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
   USE io_global,        ONLY : stdout
   USE ldaU,             ONLY : Hubbard_l, Hubbard_n, Hubbard_l2, Hubbard_n2,        &
                                Hubbard_l3, Hubbard_n3, is_hubbard, is_hubbard_back, &
-                               backall
+                               backall, hubbard_occ
   !
   IMPLICIT NONE
   !
@@ -96,7 +96,7 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
            !
            IF (is_hubbard(nt)) THEN
               IF (label(n)==label_hub) THEN
-                 IF (upf(nt)%oc(n)>0.D0) THEN
+                 IF (hubbard_occ(nt,1) > 0.D0) THEN
                     hubbard_wfc = .TRUE.
                  ELSE
                     CALL errore('offset_atom_wfc', 'Hubbard manifold with &
@@ -107,7 +107,7 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
            !
            IF (is_hubbard_back(nt)) THEN
               IF (label(n)==label_hub2) THEN
-                 IF (upf(nt)%oc(n)>0.D0) THEN
+                 IF (hubbard_occ(nt,2) > 0.D0) THEN
                     hubbard_wfc2 = .TRUE.
                  ELSE
                     CALL errore('offset_atom_wfc', 'Hubbard manifold with &
@@ -115,7 +115,7 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
                  ENDIF
               ENDIF
               IF (backall(nt) .AND. (label(n)==label_hub3)) THEN
-                 IF (upf(nt)%oc(n)>0.D0) THEN
+                 IF (hubbard_occ(nt,3) > 0.D0) THEN
                     hubbard_wfc3 = .TRUE.
                  ELSE
                     CALL errore('offset_atom_wfc', 'Hubbard manifold with &

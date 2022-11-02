@@ -31,6 +31,7 @@ extffield.o \
 fd_gradient.o \
 fft_base.o \
 fft_rho.o \
+fft_wave.o \
 fsockets.o \
 funct.o \
 generate_function.o \

@@ -213,6 +213,8 @@ set_spin_vars.o \
 set_vrs.o \
 setlocal.o \
 setup.o \
+scissor.o \
+sic.o \
 stop_run.o \
 stres_cc.o \
 stres_ewa.o \

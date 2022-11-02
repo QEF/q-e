@@ -177,8 +177,9 @@ SUBROUTINE run_pwscf( exit_status )
      ! ... code stopped by user or not converged
      !
      IF ( check_stop_now() .OR. .NOT. conv_elec ) THEN
-        IF ( check_stop_now() ) exit_status = 255
-        IF ( .NOT. conv_elec) THEN
+        IF ( check_stop_now() ) THEN
+            exit_status = 255
+        ELSE
            IF (dmft) THEN
               exit_status =  131
            ELSE

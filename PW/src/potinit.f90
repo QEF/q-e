@@ -33,7 +33,7 @@ SUBROUTINE potinit()
   USE fft_base,             ONLY : dfftp
   USE gvect,                ONLY : ngm, gstart, g, gg, ig_l2g
   USE gvecs,                ONLY : doublegrid
-  USE control_flags,        ONLY : lscf, gamma_only, restart
+  USE control_flags,        ONLY : lscf, gamma_only, restart, sic
   USE scf,                  ONLY : rho, rho_core, rhog_core, &
                                    vltot, v, vrs, kedtau
   USE xc_lib,               ONLY : xclib_dft_is
@@ -214,6 +214,14 @@ SUBROUTINE potinit()
   ! ... bring starting rho from G- to R-space
   !
   CALL rho_g2r (dfftp, rho%of_g, rho%of_r)
+  !
+  ! .... initialize polaron density as spin-density
+  !
+  IF(sic) THEN
+     rho%pol_g(:,1) = rho%of_g(:,2)
+     rho%pol_g(:,2) = rho%of_g(:,2)
+     CALL rho_g2r (dfftp, rho%pol_g, rho%pol_r)
+  END IF   
   !
   IF  ( xclib_dft_is('meta') ) THEN
      IF (starting_pot /= 'file') THEN

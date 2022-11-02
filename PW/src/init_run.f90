@@ -47,6 +47,8 @@ SUBROUTINE init_run()
   USE wvfct_gpum,         ONLY : using_et, using_wg, using_wg_d
   USE rism_module,        ONLY : lrism, rism_alloc3d
   USE extffield,          ONLY : init_extffield
+  USE control_flags,      ONLY : scissor
+  USE sci_mod,            ONLY : allocate_scissor
   !
 #if defined (__ENVIRON)
   USE plugin_flags,        ONLY : use_environ
