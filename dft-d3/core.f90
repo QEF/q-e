@@ -3031,9 +3031,9 @@ contains
                   ! iat always in the unit cell
                   ! jat can be in the unit cell or in some replicas, depending on tau
                   if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0.) then 
-                    rij=xyz_hstep(:,iat)-xyz_hstep(:,jat) ! both in the unit cell, tau=0, use the displaced geometry 
+                    rij=xyz_hstep(:,jat)-xyz_hstep(:,iat) ! both in the unit cell, tau=0, use the displaced geometry 
                   else
-                    rij=xyz_hstep(:,iat)-xyz(:,jat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
+                    rij=xyz(:,jat)-xyz_hstep(:,iat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
                   end if 
                 else
                   rij=xyz(:,jat)-xyz(:,iat)+tau
@@ -3241,9 +3241,9 @@ contains
                   ! iat always in the unit cell
                   ! jat can be in the unit cell or in some replicas, depending on tau
                   if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0.) then 
-                    rij=xyz_hstep(:,iat)-xyz_hstep(:,jat) ! both in the unit cell, tau=0, use the displaced geometry 
+                    rij=xyz_hstep(:,jat)-xyz_hstep(:,iat) ! both in the unit cell, tau=0, use the displaced geometry 
                   else
-                    rij=xyz_hstep(:,iat)-xyz(:,jat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
+                    rij=xyz(:,jat)-xyz_hstep(:,iat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
                   end if 
                 else
                   rij=xyz(:,jat)-xyz(:,iat)+tau
@@ -3913,8 +3913,12 @@ contains
 
     ! After calculating all derivatives dE/dr_ij w.r.t. distances,
     ! the grad w.r.t. the coordinates is calculated dE/dr_ij * dr_ij/dxyz_i
-    do iat=2,n
-      do jat=1,iat-1
+!civn 
+    do iat=1,n
+      do jat=1,iat
+    !do iat=2,n
+    !  do jat=1,iat-1
+!
         linij=lin(iat,jat)
         rcovij=rcov(iz(iat))+rcov(iz(jat))
         do taux=-rep_v(1),rep_v(1)
@@ -3926,9 +3930,9 @@ contains
                 ! iat always in the unit cell
                 ! jat can be in the unit cell or in some replicas, depending on tau
                 if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0.) then 
-                  rij=xyz_hstep(:,iat)-xyz_hstep(:,jat) ! both in the unit cell, tau=0, use the displaced geometry 
+                  rij=xyz_hstep(:,jat)-xyz_hstep(:,iat) ! both in the unit cell, tau=0, use the displaced geometry 
                 else
-                  rij=xyz_hstep(:,iat)-xyz(:,jat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
+                  rij=xyz(:,jat)-xyz_hstep(:,iat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
                 end if 
               else
                 rij=xyz(:,jat)-xyz(:,iat)+tau
