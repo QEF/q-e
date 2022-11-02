@@ -2807,12 +2807,12 @@ contains
                 g(:,jat)=g(:,jat)+term*dxyz*c6
 !civn 
                 if(ldisplace) then 
-                  g_supercell(0,0,0,1:3,iat) = g_supercell(0,0,0,1:3,iat) -term*dxyz*c6 
-                  g_supercell(0,0,0,1:3,jat) = g_supercell(0,0,0,1:3,jat) +term*dxyz*c6
-                  if(.not.(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0)) then 
+                  !g_supercell(0,0,0,1:3,iat) = g_supercell(0,0,0,1:3,iat) -term*dxyz*c6 
+                  !g_supercell(0,0,0,1:3,jat) = g_supercell(0,0,0,1:3,jat) +term*dxyz*c6
+                  !if(.not.(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0)) then 
                     g_supercell(taux,tauy,tauz,1:3,iat) = g_supercell(taux,tauy,tauz,1:3,iat) -term*dxyz*c6 
                     g_supercell(taux,tauy,tauz,1:3,jat) = g_supercell(taux,tauy,tauz,1:3,jat) +term*dxyz*c6
-                  end if 
+                  !end if 
                 end if 
 !
                 disp=disp+c6*(1./damp1)/r2**3
@@ -3951,12 +3951,12 @@ contains
               g(:,jat)=g(:,jat)-vec
 
               if(ldisplace) then 
-                g_supercell(0,0,0,1:3,iat) = g_supercell(0,0,0,1:3,iat) + vec
-                g_supercell(0,0,0,1:3,jat) = g_supercell(0,0,0,1:3,jat) - vec
-                if(.not.(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0)) then 
+                !g_supercell(0,0,0,1:3,iat) = g_supercell(0,0,0,1:3,iat) + vec
+                !g_supercell(0,0,0,1:3,jat) = g_supercell(0,0,0,1:3,jat) - vec
+                !if(.not.(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0)) then 
                   g_supercell(taux,tauy,tauz,1:3,iat) = g_supercell(taux,tauy,tauz,1:3,iat) + vec
                   g_supercell(taux,tauy,tauz,1:3,jat) = g_supercell(taux,tauy,tauz,1:3,jat) - vec
-                end if 
+                !end if 
               end if 
 
               do i=1,3

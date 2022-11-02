@@ -31,6 +31,7 @@ SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
   INTEGER :: i, j, iat, jat, ixyz, jxyz
   CHARACTER(LEN=100) :: string
   REAL(DP), ALLOCATABLE :: d3hess(:,:,:,:,:,:,:), buffer(:)
+  COMPLEX(DP), ALLOCATABLE :: mmat(:,:,:,:)
   COMPLEX(DP) :: eiqr, tt(3)
   LOGICAL :: q_gamma ! whether the Hessian stored in the file has been computed for q=0,0,0 only 
   ! 
@@ -60,7 +61,7 @@ SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
   WRITE( stdout, '(5x,A,I9)') 'Number of atoms in the supercell: ', nn  
   WRITE( stdout, '(5x,A,I9)') 'Hessian allocation dimensions: ', nhess 
 
-  ALLOCATE( d3hess(-rep(1):rep(1),-rep(2):rep(2),-rep(3):rep(3), 3,nat,3,nat), buffer(3*nat) )
+  ALLOCATE( d3hess(-rep(1):rep(1),-rep(2):rep(2),-rep(3):rep(3), 3,nat,3,nat), buffer(3*nat), mmat(3,nat,3,nat) )
   IF( size(d3hess) .ne. nhess ) Call errore('d2ionq_dispd3', "Wrong Hessian dimensions", 1)
   d3hess(:,:,:,:,:,:,:)=0.0_dp
   !
@@ -68,7 +69,7 @@ SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
     DO jrep = -rep(2), rep(2)
       DO krep = -rep(3), rep(3)
         !
-        READ(1, * ) string,irp, string,jrp, string,krp
+        READ(1, * ) string,string, string,irp, string,jrp, string,krp
         IF(irep.ne.irp .or. jrep.ne.jrp .or. krep.ne.krp ) Call errore('d2ionq_dispd3', "Wrong Hessian I/O", 1)
         !
         DO i = 1, 3*nat         ! 1 2 3 4 5 6 7 8 9 ... 3*nat
@@ -98,6 +99,7 @@ SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
   !
   WRITE(stdout,'(/,5x,A,3f12.6)') 'Computing dynamical matrix for q: ', q(1:3) 
   !
+mmat = (0.0_dp, 0.0_dp)
   DO irep = -rep(1), rep(1)
     DO jrep = -rep(2), rep(2)
       DO krep = -rep(3), rep(3)
@@ -110,6 +112,10 @@ SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
               DO jat = 1, nat
                 der2disp(ixyz,iat,jxyz,jat) = der2disp(ixyz,iat,jxyz,jat) &
                           + d3hess(irep,jrep,krep,ixyz,iat,jxyz,jat) * eiqr
+!
+                mmat(ixyz,iat,jxyz,jat) = mmat(ixyz,iat,jxyz,jat) &
+                          + d3hess(irep,jrep,krep,ixyz,iat,jxyz,jat) * eiqr
+!
               END DO 
             END DO 
           END DO 
@@ -119,13 +125,62 @@ SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
     END DO 
   END DO 
   !
-  DEALLOCATE( d3hess ) 
+  CALL d2ionq_print_hessian( mmat, n, q_gamma )
+  !
+  DEALLOCATE( d3hess, mmat ) 
   !
   WRITE(stdout,'(/,5x,A)') 'Dynamical matrix computed'
   !
   RETURN
   !
 END SUBROUTINE d2ionq_dispd3
+!---------------------------------------------------------------------------
+SUBROUTINE d2ionq_print_hessian( mat, n, q_flag )
+  USE kinds,            ONLY: DP
+  USE io_global,        ONLY: stdout
+
+IMPLICIT NONE
+  INTEGER, INTENT(IN) :: n
+  LOGICAL, INTENT(IN) :: q_flag
+  COMPLEX(DP), INTENT(IN) :: mat(3,n,3,n)
+  !
+  INTEGER :: i, iat, ixyz, j, jat, jxyz
+  COMPLEX(DP), ALLOCATABLE :: buffer(:)
+  CHARACTER(LEN=256):: formt, filout
+  !
+  WRITE(formt,'(A,I9,A)') '(', 2*3*n, 'f24.16)'
+  WRITE(filout, '(A,L,A)')   'dynamical.',q_flag,'.debug'
+  !
+  WRITE( stdout, '(/,5x,2A)') 'Writing Hessian on file hessian.debug ', TRIM(filout)
+  !
+  ALLOCATE( buffer(3*n) )
+  !
+  OPEN (unit = 1, file = TRIM(filout), status = 'unknown')
+  !
+  WRITE(1,'(A)') 'Hessian matrix of the Grimme-D3 dispersion term'
+  WRITE(1,'(A,5I9,3x,L)') 'System: '
+  !
+  DO i = 1, 3*n         ! 1 2 3 4 5 6 7 8 9 ... 3*nat
+    iat  = (i+2)/3        ! 1 1 1 2 2 2 3 3 3 ... nat 
+    ixyz = i - 3* (iat-1) ! 1 2 3 1 2 3 1 2 3 ... 3 
+    !
+    DO j = 1, 3*n
+      jat  = (j+2)/3 
+      jxyz = j - 3* (jat-1) 
+      buffer(j) = mat(ixyz,iat,jxyz,jat)
+    END DO 
+    !  
+    WRITE(1, formt ) buffer(1:3*n)
+    !
+  END DO 
+  !
+  CLOSE (1)
+  !
+  DEALLOCATE(buffer)
+  !
+  RETURN
+  !
+END SUBROUTINE d2ionq_print_hessian
 !---------------------------------------------------------------------------
 SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau, der2disp )
   !------------------------------------------------------------------------

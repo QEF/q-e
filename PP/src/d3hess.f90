@@ -187,7 +187,7 @@ write(*,'(/,A,/)') '!!!WARNING: FIX DFT-D3 XML FILE READING!!!!'
         IF(irep.eq.0 .and. jrep.eq.0 .and. krep.eq.0) THEN
           WRITE(1, '(3(A,I4))') 'Unit cell: irep= ',irep, ' jrep= ',jrep, ' krep= ',krep
         ELSE
-          WRITE(1, '(3(A,I4))') 'irep= ',irep, ' jrep= ',jrep, ' krep= ',krep
+          WRITE(1, '(3(A,I4))') 'Replica cell: irep= ',irep, ' jrep= ',jrep, ' krep= ',krep
         END IF
         !
         DO i = 1, 3*nat         ! 1 2 3 4 5 6 7 8 9 ... 3*nat
