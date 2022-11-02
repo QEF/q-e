@@ -418,8 +418,8 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    ! ... local variables
    !
-   INTEGER ::  ibnd, is, na, nt, m1, m2, off1, off2, m11, m22, ldim1
-   COMPLEX(DP), ALLOCATABLE :: dproj(:,:),  dproj_us(:,:)
+   INTEGER :: ibnd, is, na, nt, m1, m2, off1, off2, m11, m22, ldim1
+   COMPLEX(DP), ALLOCATABLE :: dproj(:,:), dproj_us(:,:)
    !
    CALL start_clock( 'dndtau' )
    !
@@ -1268,9 +1268,6 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       CALL MYZGEMM( 'C','N',ldim, nbnd, npw, (1.d0,0.d0), &
                     dwfc, npwx, spsi, npwx, (0.d0,0.d0),  &
                     dproj0, ldim )
-      !$acc end host_data
-      !
-      !$acc host_data use_device(dproj0)
       CALL mp_sum( dproj0, intra_bgrp_comm )
       !$acc end host_data
       !
@@ -1312,7 +1309,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
                  " Forces with background and  ortho-atomic are not supported", 1 )
       !
       ALLOCATE( dwfc(npwx,ldim) )
-      !$acc data create(dwfc,wfcatom) present_or_copyin(overlap_inv)
+      !$acc data create(dwfc) present_or_copyin(wfcatom,overlap_inv)
       !
       !$acc kernels
       dwfc(:,:) = (0.d0,0.d0)
@@ -1499,14 +1496,11 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    ALLOCATE( doverlap(natomwfc,natomwfc) )
    !
    !$acc data present_or_copyin(wfcatom,swfcatom,eigenval) &
-   !$acc&          create(doverlap,doverlap_inv,eigenvect)
+   !$acc&          create(doverlap_inv,eigenvect)
    !
    !$acc kernels
    doverlap_inv(:,:) = (0.0d0,0.0d0)
-   doverlap(:,:) = (0.0d0,0.0d0)
    !$acc end kernels
-   !
-   doverlap_inv(:,:) = (0.0d0,0.0d0)
    doverlap(:,:) = (0.0d0,0.0d0)
    !
    npw = ngk(ik)
@@ -1521,7 +1515,7 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    DO m1 = m_start, m_end
       DO m2 = 1, natomwfc
          temp = (0.d0,0.d0)
-         !$acc parallel loop
+         !$acc parallel loop reduction(+:temp)
          DO ig = 1, npw
             ! ... (k+G) * 2pi/a
             gvec = (g(ipol,igk_k(ig,ik)) + xki) * tpiba
@@ -1535,7 +1529,7 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    DO m1 = 1, natomwfc
       DO m2 = m_start, m_end
          temp = (0.d0,0.d0)
-         !$acc parallel loop
+         !$acc parallel loop reduction(+:temp)
          DO ig = 1, npw
             ! ... (k+G) * 2pi/a
             gvec = (g(ipol,igk_k(ig,ik)) + xki) * tpiba
@@ -1549,7 +1543,7 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    ! ... Sum over G vectors
    CALL mp_sum( doverlap, intra_bgrp_comm )
    !
-   !$acc update device(doverlap)
+   !$acc data copyin(doverlap)
    !
    ! ... Add the USPP term in dO_IJ/d\tau(alpha,ipol):
    ! ... < phi_I | dS/d\tau(alpha,ipol) | phi_J >
@@ -1585,6 +1579,7 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    !
    !$acc update self(doverlap_inv)
    !
+   !$acc end data
    !$acc end data
    DEALLOCATE( doverlap )
    !
@@ -1904,9 +1899,6 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
       !$acc host_data use_device(spsi,dwfc,dproj0)
       CALL MYDGEMM( 'T','N',ldim, nbnd, 2*npw, 2.0_DP, dwfc, 2*npwx, spsi, &
                     2*npwx, 0.0_DP, dproj0, ldim )
-      !$acc end host_data
-      !
-      !$acc host_data use_device(dproj0)
       CALL mp_sum( dproj0, intra_bgrp_comm )
       !$acc end host_data
       !
