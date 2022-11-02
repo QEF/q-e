@@ -125,7 +125,11 @@ mmat = (0.0_dp, 0.0_dp)
     END DO 
   END DO 
   !
-  CALL d2ionq_print_hessian( mmat, n, q_gamma )
+  IF(q_gamma) THEN
+    CALL d2ionq_print_hessian( mmat, n, 1 )
+  ELSE
+    CALL d2ionq_print_hessian( mmat, n, 0 )
+  END IF 
   !
   DEALLOCATE( d3hess, mmat ) 
   !
@@ -135,21 +139,29 @@ mmat = (0.0_dp, 0.0_dp)
   !
 END SUBROUTINE d2ionq_dispd3
 !---------------------------------------------------------------------------
-SUBROUTINE d2ionq_print_hessian( mat, n, q_flag )
+SUBROUTINE d2ionq_print_hessian( mat, n, i_flag )
   USE kinds,            ONLY: DP
   USE io_global,        ONLY: stdout
 
 IMPLICIT NONE
   INTEGER, INTENT(IN) :: n
-  LOGICAL, INTENT(IN) :: q_flag
+  INTEGER, INTENT(IN) :: i_flag
   COMPLEX(DP), INTENT(IN) :: mat(3,n,3,n)
   !
   INTEGER :: i, iat, ixyz, j, jat, jxyz
   COMPLEX(DP), ALLOCATABLE :: buffer(:)
-  CHARACTER(LEN=256):: formt, filout
+  CHARACTER(LEN=256):: formt, filout, string
   !
+  IF(i_flag.eq.0) THEN
+    WRITE(string, '(A)' ) 'false'
+  ELSEIF(i_flag.eq.1) THEN
+    WRITE(string, '(A)' ) 'true'
+  ELSE
+    WRITE(string, '(A)' ) 'debug'
+  END IF 
+
   WRITE(formt,'(A,I9,A)') '(', 2*3*n, 'f24.16)'
-  WRITE(filout, '(A,L,A)')   'dynamical.',q_flag,'.debug'
+  WRITE(filout, '(A,A,A)')   'dynamical.',TRIM(string),'.debug'
   !
   WRITE( stdout, '(/,5x,2A)') 'Writing Hessian on file hessian.debug ', TRIM(filout)
   !
@@ -182,7 +194,7 @@ IMPLICIT NONE
   !
 END SUBROUTINE d2ionq_print_hessian
 !---------------------------------------------------------------------------
-SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau, der2disp )
+SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau )
   !------------------------------------------------------------------------
   !! This routine calculates the Grimme-D3 contribution to the dynamical matrix.
   !
@@ -209,9 +221,7 @@ SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau, der2disp )
   !! at(:,i) is lattice vector i in alat units
   REAL(DP), INTENT(IN) :: tau(3,nat)
   !! atomic positions in alat units
-  COMPLEX(DP), INTENT(OUT) :: der2disp(3,nat,3,nat)
-  !! dispersion contribution to the (massless) dynamical matrix
-  ! 
+  !
   !  Local variables  
   CHARACTER(LEN=256):: dft_ , formt
   REAL(DP) :: latvecs(3,3)
@@ -219,6 +229,7 @@ SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau, der2disp )
   INTEGER:: atnum(1:nat), i, j, iat, ixyz, jat, jxyz
   REAL(DP) :: xyz(3,nat)
   REAL(DP) :: stress_d3(3,3)
+  COMPLEX(DP), ALLOCATABLE :: mat(:,:,:,:)
   REAL(DP), ALLOCATABLE :: force_d3(:,:), force_num(:,:), buffer(:)
   REAL(DP), ALLOCATABLE :: der2disp_ene(:,:,:,:), der2disp_frc(:,:,:,:) 
   
@@ -290,7 +301,6 @@ SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau, der2disp )
   step=1.d-3
   CALL start_clock('dftd3')
   ALLOCATE( der2disp_ene(3,nat,3,nat), der2disp_frc(3,nat,3,nat) )
-  der2disp = 0._dp
   der2disp_ene = 0._dp
   der2disp_frc = 0._dp
 
@@ -314,35 +324,14 @@ SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau, der2disp )
 
   CALL stop_clock('dftd3:frc')
 
+  allocate( mat(3,nat,3,nat) )
 
-  WRITE( stdout, '(/,5x,2A)') 'Writing Hessian on file hessian.debug '
-  ! 
-  WRITE(formt,'(A,I9,A)') '(', 3*nat, 'f24.16)'
-  ALLOCATE( buffer(3*nat) )
-  !
-  OPEN (unit = 1, file = 'hessian.debug' , status = 'unknown')
-  !
-  WRITE(1,'(A)') 'Hessian matrix of the Grimme-D3 dispersion term'
-  WRITE(1,'(A,5I9,3x,L)') 'System: '
-  !
-  DO i = 1, 3*nat         ! 1 2 3 4 5 6 7 8 9 ... 3*nat
-    iat  = (i+2)/3        ! 1 1 1 2 2 2 3 3 3 ... nat 
-    ixyz = i - 3* (iat-1) ! 1 2 3 1 2 3 1 2 3 ... 3 
-    !
-    DO j = 1, 3*nat
-      jat  = (j+2)/3 
-      jxyz = j - 3* (jat-1) 
-      buffer(j) = der2disp_frc(ixyz,iat,jxyz,jat)
-    END DO 
-    !  
-    WRITE(1, formt ) buffer(1:3*nat)
-    !
-  END DO 
-  !
-  CLOSE (1)
-  !
-  DEALLOCATE(buffer)
+  mat(:,:,:,:) = cmplx( der2disp_frc(:,:,:,:), kind=dp )
 
+  CALL d2ionq_print_hessian( mat, nat, 2 )
+
+  deallocate( mat )
+ 
   CALL start_clock('dftd3:ene')
 
   do iat = 1, nat
@@ -382,7 +371,7 @@ SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau, der2disp )
   CALL stop_clock('dftd3:ene')
 
   !der2disp = der2disp_ene
-  der2disp = der2disp_frc
+  !der2disp = der2disp_frc
 
   CALL stop_clock('dftd3')
 
