@@ -359,7 +359,7 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256):: dft_
   !
   INTEGER  :: ia, nt, tempunit, i, j, ibrav_mp
-  LOGICAL  :: exst, parallelfs, domag, stop_on_error, is_tau_read
+  LOGICAL  :: exst, parallelfs, domag, stop_on_error, is_tau_read, sm_wasnt_set
   REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, V
   CHARACTER(len=256) :: tempfile
   INTEGER, EXTERNAL :: at2ibrav
@@ -742,40 +742,43 @@ SUBROUTINE iosys()
   lspinorb_ = lspinorb
   lforcet_ = lforcet
   !
+  ! ... starting_magnetization(nt) = sm_not_set means "not set"
+  ! ... take notice and set to the default (zero)
+  !
+  sm_wasnt_set = ALL (starting_magnetization(1:ntyp) == sm_not_set)
+  DO nt = 1, ntyp
+     IF ( starting_magnetization(nt) == sm_not_set ) &
+          starting_magnetization(nt) = 0.0_dp
+  END DO
+  !
   SELECT CASE( trim( constrained_magnetization ) )
   CASE( 'none' )
      !
-     ! ... starting_magnetization(nt) = sm_not_set means "not set"
      ! ... if no constraints are imposed on the magnetization, 
      ! ... starting_magnetization must be set for at least one atomic type
      !
      IF ( lscf .AND. lsda .AND. ( .NOT. tfixed_occ ) .AND. &
-          ( .not. two_fermi_energies )  .AND. &
-          ALL (starting_magnetization(1:ntyp) == sm_not_set) ) &
+          ( .not. two_fermi_energies )  .AND. sm_wasnt_set ) &
         CALL errore('iosys','some starting_magnetization MUST be set', 1 )
      !
      ! ... bring starting_magnetization between -1 and 1
      !
      DO nt = 1, ntyp
-        !
-        IF ( starting_magnetization(nt) == sm_not_set ) THEN
-           starting_magnetization(nt) = 0.0_dp
-        ELSEIF ( starting_magnetization(nt) > 1.0_dp ) THEN
-          starting_magnetization(nt) = 1.0_dp
-        ELSEIF ( starting_magnetization(nt) <-1.0_dp ) THEN
-          starting_magnetization(nt) =-1.0_dp
-        ENDIF
-        !
+        starting_magnetization(nt) = MIN( 1.0_dp,starting_magnetization(nt))
+        starting_magnetization(nt) = MAX(-1.0_dp,starting_magnetization(nt))
      ENDDO
      !
      i_cons = 0
      !
   CASE( 'atomic' )
      !
+     ! ... if "atomic" constraints are imposed on the magnetization, 
+     ! ... starting_magnetization must be set for at least one atomic type
+     !
      IF ( nspin == 1 ) &
         CALL errore( 'iosys','constrained atomic magnetizations ' // &
                    & 'require nspin=2 or 4 ', 1 )
-     IF ( ALL (starting_magnetization(1:ntyp) == sm_not_set) ) &
+     IF ( sm_wasnt_set ) &
         CALL errore( 'iosys','constrained atomic magnetizations ' // &
                    & 'require that some starting_magnetization is set', 1 )
      !
