@@ -55,7 +55,6 @@ SUBROUTINE forces()
   USE qmmm,              ONLY : qmmm_mode
   USE rism_module,       ONLY : lrism, force_rism
   !
-  USE control_flags,     ONLY : use_gpu
 #if defined(__CUDA)
   USE device_fbuff_m,          ONLY : dev_buf
 #endif
@@ -142,11 +141,7 @@ SUBROUTINE forces()
   ! ... The Hubbard contribution
   !     (included by force_us if using beta as local projectors)
   !
-  IF (.not. use_gpu) THEN
-     IF ( lda_plus_u .AND. Hubbard_projectors.NE.'pseudo' ) CALL force_hub( forceh )
-  ELSE
-     IF ( lda_plus_u .AND. Hubbard_projectors.NE.'pseudo' ) CALL force_hub_gpu( forceh )
-  ENDIF
+  IF ( lda_plus_u .AND. Hubbard_projectors.NE.'pseudo' ) CALL force_hub( forceh )
   !
   ! ... The ionic contribution is computed here
   !
