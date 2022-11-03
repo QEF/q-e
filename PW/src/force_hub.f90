@@ -431,7 +431,7 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    IF (okvan) ALLOCATE( dproj_us(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present(spsi,proj) create(dproj,dproj_us)
+   !$acc data present_or_copyin(spsi,proj,wfcU) create(dproj,dproj_us)
    !
    ! ... Compute the derivative of occupation matrices (the quantities dns(m1,m2))
    ! ... of the atomic orbitals. They are real quantities as well as ns(m1,m2).
@@ -440,8 +440,6 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    ! ... Compute the USPP contribution to dproj:
    ! ... <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
-   !
-   !$acc update device(wfcU)
    !
    IF (okvan) THEN
       !$acc data copyin( evc )
@@ -628,7 +626,7 @@ SUBROUTINE dndtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
    !
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present(rproj,spsi) create(dproj)
+   !$acc data present_or_copyin(rproj,spsi) create(dproj)
    !
    ! ... Compute the derivative of occupation matrices (the quantities dns(m1,m2))
    ! ... of the atomic orbitals. They are real quantities as well as ns(m1,m2).
@@ -791,7 +789,7 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ALLOCATE( dproj2(nwfcU,nb_s:nb_e) )
    IF (okvan) ALLOCATE( dproj_us(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present(proj,spsi) create(dproj1,dproj2,dproj_us)
+   !$acc data present_or_copyin(proj,spsi,wfcU) create(dproj1,dproj2,dproj_us)
    !
    ! ... Compute the derivative of the generalized occupation matrices 
    ! ... (the quantities dnsg(m1,m2)) of the atomic orbitals. 
@@ -1027,7 +1025,7 @@ SUBROUTINE dngdtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present(rproj,spsi) create(dproj)
+   !$acc data present_or_copyin(rproj,spsi) create(dproj)
    !
    ! ... Compute the derivative of the generalized occupation matrices 
    ! ... (the quantities dnsg(m1,m2)) of the atomic orbitals. 
@@ -1205,7 +1203,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    !
    CALL start_clock_gpu( 'dprojdtau' )
    !
-   !$acc data present(spsi,dproj)
+   !$acc data present_or_copyin(spsi,dproj)
    !
    nt  = ityp(na)
    npw = ngk(ik)
@@ -1638,7 +1636,7 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    !
    IF (.NOT.okvan) RETURN
    !
-   !$acc data present(A,B,A_dS_B)
+   !$acc data present_or_copyin(A,B) present_or_copyout(A_dS_B)
    !
    nt = ityp(alpha)
    npw = ngk(ik)
@@ -1851,7 +1849,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    !
    CALL start_clock_gpu( 'dprojdtau' )
    !
-   !$acc data present(dproj,spsi)
+   !$acc data present_or_copyin(dproj,spsi,wfcU)
    !
    nt = ityp(alpha)
    npw = ngk(ik)
