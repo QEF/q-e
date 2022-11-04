@@ -1292,7 +1292,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 Hubbard_alpha(i) is the perturbation (on atom i, in eV)
                 used to compute U (and V) with the linear-response method of
                 Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
-                (only for @ref lda_plus_u_kind=0 and 2).
+                (only for DFT+U or DFT+U+V).
                 
                 Note: Hubbard U and V can be computed using the HP code
                 which is based on density-functional perturbation theory,
@@ -1306,7 +1306,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 Hubbard_beta(i) is the perturbation (on atom i, in eV)
                 used to compute J0 with the linear-response method of
                 Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
-                (only for @ref lda_plus_u_kind=0 and 2). See also 
+                (only for DFT+U or DFT+U+V). See also 
                 PRB 84, 115108 (2011).
             }
         }
