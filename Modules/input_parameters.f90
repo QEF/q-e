@@ -646,6 +646,9 @@ MODULE input_parameters
         !! in rhombohedral axes. If FALSE in hexagonal axes, that are
         !! converted internally in rhombohedral axes.  
         !
+        INTEGER :: nextffield = 0 
+        !! Number of activated external force fields 
+        !
 
 
 
@@ -681,7 +684,8 @@ MODULE input_parameters
              lgcscf, gcscf_ignore_mun, gcscf_mu, gcscf_conv_thr,              &
              gcscf_gk, gcscf_gh, gcscf_beta,                                  &
              space_group, uniqueb, origin_choice, rhombohedral,               &
-             zgate, relaxz, block, block_1, block_2, block_height
+             zgate, relaxz, block, block_1, block_2, block_height,            &
+             nextffield
 
 !=----------------------------------------------------------------------------=!
 !  ELECTRONS Namelist Input Parameters

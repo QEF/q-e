@@ -1,0 +1,35 @@
+ &control
+    title = 'SiH4' ,
+    calculation = 'cp' ,
+    restart_mode = 'from_scratch' ,
+    outdir = '/home/pizza/codes/QEdev/q-e/tempdir/',
+    pseudo_dir = '/home/pizza/codes/QEdev/q-e/pseudo/',,
+    prefix = 'SiH4'   ,
+ /
+ &system
+    ibrav = 0 ,
+    celldm(1) = 15.0 ,
+    nat = 5  ,
+    ntyp = 2 ,
+    ecutwfc = 20 ,
+    ecutrho = 80 ,
+ /
+ &electrons
+    electron_dynamics = 'cg',
+ /
+ &ions
+    ion_dynamics = 'none',
+ /
+CELL_PARAMETERS  alat
+    1.00000000    0.000000000    0.000000000 
+     0.000000000   1.00000000    0.000000000 
+     0.000000000    0.000000000   1.00000000 
+ATOMIC_SPECIES
+   Si   28.08600  Si.pbe-hgh.UPF
+    H    1.00000  H.pbe-hgh.UPF
+ATOMIC_POSITIONS bohr
+Si      0.94486306644282E+01     0.94486306644282E+01     0.94486306644282E+01
+H      0.11193736563321E+02     0.11193736698874E+02     0.11073795138710E+02
+H       0.94486306644282E+01     0.94486306644282E+01     0.66094450422239E+01
+H      0.70648871385200E+01     0.10088581790695E+02     0.11073795138710E+02
+H       0.10088581849053E+02     0.70648872790557E+01     0.11073795138710E+02

@@ -2002,6 +2002,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
+         var nextffield -type INTEGER {
+           default { 0 }
+           info {
+               Number of activated external ionic force fields. 
+               See Doc/ExternalForceFields.tex for further explanation and parameterizations
+           }
+         }  
+    
+
     }
 
     #
