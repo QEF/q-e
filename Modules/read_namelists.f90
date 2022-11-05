@@ -26,7 +26,7 @@ MODULE read_namelists_module
   !
   PRIVATE
   !
-  REAL(DP), PARAMETER :: sm_not_set = -20.0_DP
+  REAL(DP), PARAMETER :: sm_not_set = -10000.0_DP
   !
   REAL(DP), PARAMETER :: fcp_not_set = 1.0E+99_DP
   !
@@ -331,6 +331,11 @@ MODULE read_namelists_module
        uniqueb = .FALSE.
        origin_choice = 1
        rhombohedral = .TRUE.
+       !
+       !
+       ! ... Extffield
+       !
+       nextffield = 0
        !
        RETURN
        !
@@ -1087,6 +1092,10 @@ MODULE read_namelists_module
        CALL mp_bcast( block_1,            ionode_id, intra_image_comm )
        CALL mp_bcast( block_2,            ionode_id, intra_image_comm )
        CALL mp_bcast( block_height,       ionode_id, intra_image_comm )
+       !
+       ! ... Extffield information
+       !
+       CALL mp_bcast( nextffield,         ionode_id, intra_image_comm )
 
        RETURN
        !

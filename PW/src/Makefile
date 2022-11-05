@@ -285,7 +285,6 @@ PWLIBS += \
   hs_psi_gpu.o \
   s_1psi_gpu.o \
   utils_gpu.o \
-  force_hub_gpu.o \
   drhoc_gpu.o \
   orthoatwfc_gpu.o \
   atomic_wfc_gpu.o

@@ -825,7 +825,7 @@ CONTAINS
                   END IF
                END IF  
                DO ich =1, nchannels 
-                  CALL qes_init(channels(ich), 'channel_occ', species(idx_i), lbl_(ich), ich, data(i, ich))
+                  CALL qes_init(channels(ich), 'channel_occ', species(idx_i), lbl_(ich), ich, data(idx_i, ich))
                END DO  
                CALL qes_init(objs(i),"Hubbard_Occ", nchannels, species(idx_i), channels(1:nchannels))
                DO ich = 1, nchannels

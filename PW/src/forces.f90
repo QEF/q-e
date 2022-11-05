@@ -39,7 +39,7 @@ SUBROUTINE forces()
   USE extfield,          ONLY : tefield, forcefield, gate, forcegate, relaxz
   USE control_flags,     ONLY : gamma_only, remove_rigid_rot, textfor, &
                                 iverbosity, llondon, ldftd3, lxdm, ts_vdw, &
-                                mbd_vdw, lforce => tprnfor
+                                mbd_vdw, lforce => tprnfor, istep
   USE bp,                ONLY : lelfield, gdir, l3dstring, efield_cart, &
                                 efield_cry,efield
   USE uspp,              ONLY : okvan
@@ -54,8 +54,9 @@ SUBROUTINE forces()
   USE esm,               ONLY : do_comp_esm, esm_bc, esm_force_ew
   USE qmmm,              ONLY : qmmm_mode
   USE rism_module,       ONLY : lrism, force_rism
+  USE extffield,         ONLY : apply_extffield_PW
+  USE input_parameters,  ONLY : nextffield
   !
-  USE control_flags,     ONLY : use_gpu
 #if defined(__CUDA)
   USE device_fbuff_m,          ONLY : dev_buf
 #endif
@@ -142,11 +143,7 @@ SUBROUTINE forces()
   ! ... The Hubbard contribution
   !     (included by force_us if using beta as local projectors)
   !
-  IF (.not. use_gpu) THEN
-     IF ( lda_plus_u .AND. Hubbard_projectors.NE.'pseudo' ) CALL force_hub( forceh )
-  ELSE
-     IF ( lda_plus_u .AND. Hubbard_projectors.NE.'pseudo' ) CALL force_hub_gpu( forceh )
-  ENDIF
+  IF ( lda_plus_u .AND. Hubbard_projectors.NE.'pseudo' ) CALL force_hub( forceh )
   !
   ! ... The ionic contribution is computed here
   !
@@ -304,6 +301,14 @@ SUBROUTINE forces()
      ENDIF
      !
   ENDDO
+  !
+  ! ... call run_extffield to apply external force fields on ions
+  ! 
+  IF ( nextffield > 0 ) THEN 
+     tau(:,:) = tau(:,:)*alat
+     CALL apply_extffield_PW(istep,nextffield,tau,force)
+     tau(:,:) = tau(:,:)/alat
+  END IF
   !
   ! ... resymmetrize (should not be needed, but ...)
   !
