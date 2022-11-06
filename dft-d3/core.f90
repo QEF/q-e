@@ -2805,7 +2805,7 @@ contains
                 term=alp6*tmp1-tmp2
                 g(:,iat)=g(:,iat)-term*dxyz*c6
                 g(:,jat)=g(:,jat)+term*dxyz*c6
-!civn 
+
                 if(ldisplace) then 
                   !g_supercell(0,0,0,1:3,iat) = g_supercell(0,0,0,1:3,iat) -term*dxyz*c6 
                   !g_supercell(0,0,0,1:3,jat) = g_supercell(0,0,0,1:3,jat) +term*dxyz*c6
@@ -2814,7 +2814,7 @@ contains
                     g_supercell(taux,tauy,tauz,1:3,jat) = g_supercell(taux,tauy,tauz,1:3,jat) +term*dxyz*c6
                   !end if 
                 end if 
-!
+
                 disp=disp+c6*(1./damp1)/r2**3
 
                 do ny=1,3
@@ -2928,7 +2928,7 @@ contains
 
               !first dE/d(tau) saved in drij(i,i,counter)
               if(ldisplace .and..not. (taux.eq.0 .and. tauy.eq.0 .and. tauz.eq.0)) then 
-                rij = xyz_hstep(:,iat) - xyz(:,iat) + tau
+                rij = xyz(:,iat) - xyz_hstep(:,iat) + tau
               else
                 rij=tau
               end if 
@@ -3913,12 +3913,8 @@ contains
 
     ! After calculating all derivatives dE/dr_ij w.r.t. distances,
     ! the grad w.r.t. the coordinates is calculated dE/dr_ij * dr_ij/dxyz_i
-!civn 
-    do iat=1,n
-      do jat=1,iat
-    !do iat=2,n
-    !  do jat=1,iat-1
-!
+    do iat=2,n
+      do jat=1,iat-1
         linij=lin(iat,jat)
         rcovij=rcov(iz(iat))+rcov(iz(jat))
         do taux=-rep_v(1),rep_v(1)
