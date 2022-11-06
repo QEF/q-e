@@ -18,6 +18,7 @@ set(src_modules
     electrons_base.f90 
     environ_base_module.f90
     environment.f90 
+    extffield.f90
     fd_gradient.f90 
     fft_base.f90 
     fft_rho.f90 
