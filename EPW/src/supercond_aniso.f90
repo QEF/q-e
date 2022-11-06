@@ -2036,8 +2036,9 @@
         ENDDO ! ibnd
       ENDDO ! ik
       !
-      fmu = nstate - 2.d0 * gtemp(itemp) * fmu - nel
-      dmu = - 2.d0 * gtemp(itemp) * dmu
+      ! HP: factor 2 is already included above in wkfs(ik)
+      fmu = nstate - gtemp(itemp) * fmu - nel
+      dmu = - gtemp(itemp) * dmu
       !
       muout = muin - fmu / dmu
       !
