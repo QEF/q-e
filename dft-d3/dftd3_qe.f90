@@ -127,7 +127,7 @@ MODULE dftd3_qe
     natom = size(coords, dim=2)
 
     ns = shape(hess_dftd3_)
-    hess_dftd3( -ns(1)/2:ns(1)/2,-ns(2)/2:ns(2)/2,-ns(3)/2:ns(3)/2, 1:ns(4),1:ns(5),1:ns(6),1:ns(7) ) => hess_dftd3_
+    hess_dftd3( -ns(3)/2:ns(3)/2,-ns(2)/2:ns(2)/2,-ns(1)/2:ns(1)/2, 1:ns(4),1:ns(5),1:ns(6),1:ns(7) ) => hess_dftd3_
 
     if(size(hess_dftd3, dim=5) .ne. natom ) Call errore('dftd3_pbc_hdisp', "Wrong Hessian dimensions", 1)
     if(size(hess_dftd3, dim=7) .ne. natom ) Call errore('dftd3_pbc_hdisp', "Wrong Hessian dimensions", 2)
@@ -143,7 +143,7 @@ MODULE dftd3_qe
 
     allocate( force_dftd3(3,natom) )
     if(.not.q_gamma) allocate( & 
-      force_supercell_dftd3(-rep_vdw(1):rep_vdw(1),-rep_vdw(2):rep_vdw(2),-rep_vdw(3):rep_vdw(3),3,natom))
+      force_supercell_dftd3(-rep_vdw(3):rep_vdw(3),-rep_vdw(2):rep_vdw(2),-rep_vdw(1):rep_vdw(1),3,natom))
 
     hess_dftd3(:,:,:,:,:,:,:) = 0.0_wp
     !
@@ -190,11 +190,11 @@ MODULE dftd3_qe
                   & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .false., this%cn_thr, &
                   & step, iat, ixyz, istep, force_supercell_dftd3)
               !
-              do irep = -rep_vdw(1), rep_vdw(1) 
+              do krep = -rep_vdw(3), rep_vdw(3) 
                 do jrep = -rep_vdw(2), rep_vdw(2) 
-                  do krep = -rep_vdw(3), rep_vdw(3) 
-                    hess_dftd3(irep,jrep,krep, ixyz,iat,1:3,1:natom) = hess_dftd3(irep,jrep,krep, ixyz,iat,1:3,1:natom) & 
-                                                   + dble(istep) * force_supercell_dftd3(irep,jrep,krep,1:3,1:natom)  
+                  do irep = -rep_vdw(1), rep_vdw(1) 
+                    hess_dftd3(krep,jrep,irep, ixyz,iat,1:3,1:natom) = hess_dftd3(krep,jrep,irep, ixyz,iat,1:3,1:natom) & 
+                                                   + dble(istep) * force_supercell_dftd3(krep,jrep,irep,1:3,1:natom)  
                   end do 
                 end do 
               end do 

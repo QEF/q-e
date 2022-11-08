@@ -157,7 +157,7 @@ write(*,'(/,A,/)') '!!!WARNING: FIX DFT-D3 XML FILE READING!!!!'
   ! because we ultimately want the Hessian only for the unit cell
   WRITE( stdout, '(5x,A,I9)') 'Hessian allocation dimensions: ', nhess 
   !
-  ALLOCATE( hess_d3(-rep_hes(1):rep_hes(1),-rep_hes(2):rep_hes(2),-rep_hes(3):rep_hes(3),3,nat,3,nat) )
+  ALLOCATE( hess_d3(-rep_hes(3):rep_hes(3),-rep_hes(2):rep_hes(2),-rep_hes(1):rep_hes(1),3,nat,3,nat) )
   !
   nsize = int(size(hess_d3))
   IF( nsize .ne. nhess ) Call errore('d3hess', "Wrong Hessian dimensions", 1)
@@ -197,7 +197,7 @@ write(*,'(/,A,/)') '!!!WARNING: FIX DFT-D3 XML FILE READING!!!!'
           DO j = 1, 3*nat
             jat  = (j+2)/3 
             jxyz = j - 3* (jat-1) 
-            buffer(j) = hess_d3(irep,jrep,krep,ixyz,iat,jxyz,jat)
+            buffer(j) = hess_d3(krep,jrep,irep,ixyz,iat,jxyz,jat)
           END DO 
           !  
           WRITE(1, formt ) buffer(1:3*nat)
