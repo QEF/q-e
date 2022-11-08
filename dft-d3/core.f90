@@ -1812,9 +1812,9 @@ contains
                   dy=xyz_hstep(2,iat)-xyz_hstep(2,i) 
                   dz=xyz_hstep(3,iat)-xyz_hstep(3,i) 
                 else
-                  dx=xyz_hstep(1,iat)-xyz(1,i)+tau(1) ! only iat in the unit cell, use the undisplaced geometry for i
-                  dy=xyz_hstep(2,iat)-xyz(2,i)+tau(2) 
-                  dz=xyz_hstep(3,iat)-xyz(3,i)+tau(3) 
+                  dx=xyz(1,iat)-xyz_hstep(1,i)+tau(1) ! only iat in the unit cell, use the undisplaced geometry for i
+                  dy=xyz(2,iat)-xyz_hstep(2,i)+tau(2) 
+                  dz=xyz(3,iat)-xyz_hstep(3,i)+tau(3) 
                 end if 
               else
                 dx=xyz(1,iat)-xyz(1,i)+tau(1)
@@ -2663,7 +2663,7 @@ contains
       if(.not.noabc) Call errore('pbcgdisp', 'Atom displacement not implemented with the threebody term', 1)
       ldisplace = .true.
       ns = shape(g_supercell_)
-      g_supercell( -ns(1)/2:ns(1)/2, -ns(2)/2:ns(2)/2, -ns(3)/2:ns(3)/2, 1:ns(4), 1:ns(5) ) => g_supercell_
+      g_supercell( -ns(3)/2:ns(3)/2, -ns(2)/2:ns(2)/2, -ns(1)/2:ns(1)/2, 1:ns(4), 1:ns(5) ) => g_supercell_
       g_supercell(:,:,:,:,:) = 0.0_wp 
       hdisp = dble(is) * hstep
       allocate(xyz_hstep(3,n))
@@ -2810,8 +2810,8 @@ contains
                   !g_supercell(0,0,0,1:3,iat) = g_supercell(0,0,0,1:3,iat) -term*dxyz*c6 
                   !g_supercell(0,0,0,1:3,jat) = g_supercell(0,0,0,1:3,jat) +term*dxyz*c6
                   !if(.not.(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0)) then 
-                    g_supercell(taux,tauy,tauz,1:3,iat) = g_supercell(taux,tauy,tauz,1:3,iat) -term*dxyz*c6 
-                    g_supercell(taux,tauy,tauz,1:3,jat) = g_supercell(taux,tauy,tauz,1:3,jat) +term*dxyz*c6
+                    g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) -term*dxyz*c6 
+                    g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) +term*dxyz*c6
                   !end if 
                 end if 
 
@@ -3913,7 +3913,9 @@ contains
 
     ! After calculating all derivatives dE/dr_ij w.r.t. distances,
     ! the grad w.r.t. the coordinates is calculated dE/dr_ij * dr_ij/dxyz_i
-    do iat=2,n
+    !do iat=2,n
+    !  do jat=1,iat-1
+    do iat=1,n
       do jat=1,iat-1
         linij=lin(iat,jat)
         rcovij=rcov(iz(iat))+rcov(iz(jat))
@@ -3954,8 +3956,8 @@ contains
                 !g_supercell(0,0,0,1:3,iat) = g_supercell(0,0,0,1:3,iat) + vec
                 !g_supercell(0,0,0,1:3,jat) = g_supercell(0,0,0,1:3,jat) - vec
                 !if(.not.(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0)) then 
-                  g_supercell(taux,tauy,tauz,1:3,iat) = g_supercell(taux,tauy,tauz,1:3,iat) + vec
-                  g_supercell(taux,tauy,tauz,1:3,jat) = g_supercell(taux,tauy,tauz,1:3,jat) - vec
+                  g_supercell(0,0,0,1:3,iat) = g_supercell(0,0,0,1:3,iat) + vec
+                  g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) - vec
                 !end if 
               end if 
 
