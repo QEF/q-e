@@ -313,7 +313,7 @@ CONTAINS
        lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_n, Hubbard_l, Hubbard_lmax, Hubbard_occ, &
        Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
        Hubbard_U, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, Hubbard_V, &
-       vdw_corr, scal6, lon_rcut, vdw_isolated )
+       vdw_corr, dftd3_version, dftd3_3body, scal6, lon_rcut, vdw_isolated )
     !-------------------------------------------------------------------
     ! 
     USE qes_types_module, ONLY : dft_type
@@ -343,6 +343,8 @@ CONTAINS
                    Hubbard_l3
     !
     CHARACTER(LEN=*), INTENT(out) :: vdw_corr
+    LOGICAL,INTENT(inout)   :: dftd3_3body 
+    INTEGER,INTENT(inout)   :: dftd3_version 
     REAL(dp), INTENT(inout) :: scal6, lon_rcut
     LOGICAL, INTENT(inout) :: vdw_isolated
     !
@@ -555,7 +557,13 @@ CONTAINS
          vdw_corr = ''
       END IF
       
-      IF ( dft_obj%vdW_ispresent ) THEN 
+      IF ( dft_obj%vdW_ispresent ) THEN
+         IF (dft_obj%vdW%dftd3_threebody_ispresent) THEN 
+            dftd3_3body = dft_obj%vdw%dftd3_threebody 
+         END IF 
+         IF (dft_obj%vdw%dftd3_version_ispresent) THEN 
+            dftd3_version = dft_obj%vdW%dftd3_version 
+         END IF  
          IF (dft_obj%vdW%london_s6_ispresent ) THEN 
             scal6 = dft_obj%vdW%london_s6
          END IF
