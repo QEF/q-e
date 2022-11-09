@@ -72,9 +72,9 @@ SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
   IF( size(d3hess) .ne. nhess ) Call errore('d2ionq_dispd3', "Wrong Hessian dimensions", 1)
   d3hess(:,:,:,:,:,:,:)=0.0_dp
   !
-  DO krep = -rep(3), rep(3)
+  DO irep = -rep(1), rep(1)
     DO jrep = -rep(2), rep(2)
-      DO irep = -rep(1), rep(1)
+      DO krep = -rep(3), rep(3)
         !
         READ(1, * ) string,string, string,irp, string,jrp, string,krp
         IF(irep.ne.irp .or. jrep.ne.jrp .or. krep.ne.krp ) Call errore('d2ionq_dispd3', "Wrong Hessian I/O", 1)
