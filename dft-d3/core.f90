@@ -2609,18 +2609,18 @@ contains
     real(wp) ::outpr(3,3)
     real(wp), DIMENSION(3,3):: outerprod
 
-    real(wp) rij(3),rik(3),rjk(3),r7,r9
+    real(wp) rij(3),rik(3),rjk(3),r7,r9, rij_hstep(3)
     real(wp) rik_dist,rjk_dist
     real(wp) drik,drjk
     real(wp) rcovij
     real(wp) dc6,c6chk
     real(wp) expterm,dcni
-    real(wp), allocatable,dimension(:,:,:,:) :: drij
+    real(wp), allocatable,dimension(:,:,:,:) :: drij, drij_hstep(:,:,:,:)
     real(wp), allocatable,dimension(:,:,:,:) :: dcn
     real(wp) dcnn
     real(wp) :: dc6_rest
-    real(wp) vec(3),vec2(3),dummy
-    real(wp) dc6i(n)
+    real(wp) vec(3),vec2(3),dummy, vec_hstep(3)
+    real(wp) dc6i(n), dc6i_hstep(n)
     real(wp) dc6ij(n,n)
     real(wp) dc6_rest_sum(n*(n+1)/2)
     integer linij,linik,linjk
@@ -2651,6 +2651,7 @@ contains
     real(wp) :: jkvec1, jkvec2, jkvec3   
     real(wp) :: jtau1, jtau2, jtau3  
     real(wp) :: ktau1, ktau2, ktau3  
+    real(wp) :: res1, res2
 
     ldisplace = .false.
     if(present(hstep).or.present(ia).or.present(ix).or.present(is).or.present(g_supercell_)) then 
@@ -2784,7 +2785,7 @@ contains
                 if(ldisplace) then 
                   ! iat always in the unit cell
                   ! jat can be in the unit cell or in some replicas, depending on tau
-                  if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0.) then 
+                  if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0) then 
                     dxyz=xyz_hstep(:,iat)-xyz_hstep(:,jat) ! both in the unit cell, use the displaced geometry
                   else
                     dxyz=xyz_hstep(:,iat)-xyz(:,jat)+tau ! only iat in the unit cell use the undisplaced geometry for jat
@@ -2893,17 +2894,19 @@ contains
 
       s8 =s18
       s10=s18
-      allocate(drij(-rep_v(3):rep_v(3),-rep_v(2):rep_v(2),&
-          & -rep_v(1):rep_v(1),n*(n+1)/2))
+      allocate(drij(-rep_v(3):rep_v(3),-rep_v(2):rep_v(2),-rep_v(1):rep_v(1),n*(n+1)/2), &
+               drij_hstep(-rep_v(3):rep_v(3),-rep_v(2):rep_v(2),-rep_v(1):rep_v(1),n*(n+1)/2) )
 
       disp=0
 
       drij=0.0d0
+      drij_hstep=0.0d0
       dc6_rest=0.0d0
       dc6_rest_sum=0.0d0
       c6save=0.0d0
       kat=0
       dc6i=0.0d0
+      dc6i_hstep=0.0d0
       dc6ij=0.0d0
 
       IF ( mykey == 0 ) THEN
@@ -2923,76 +2926,21 @@ contains
         do taux=-rep_v(1),rep_v(1)
           do tauy=-rep_v(2),rep_v(2)
             do tauz=-rep_v(3),rep_v(3)
+
               tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
-
-
-              !first dE/d(tau) saved in drij(i,i,counter)
               if(ldisplace .and..not. (taux.eq.0 .and. tauy.eq.0 .and. tauz.eq.0)) then 
                 rij = xyz(:,iat) - xyz_hstep(:,iat) + tau
               else
                 rij=tau
               end if 
-
               r2=sum(rij*rij)
               ! if (r2.gt.rthr) cycle
-
               if (r2.gt.0.1.and.r2.lt.rthr) then
-
-
-                r=dsqrt(r2)
-                r6=r2*r2*r2
-                r7=r6*r
-                r8=r6*r2
-                r9=r8*r
-
-                !
-                ! Calculates damping functions:
-                if (version.eq.3) then
-                  t6 = (r/(rs6*R0))**(-alp6)
-                  damp6 =1.d0/( 1.d0+6.d0*t6 )
-                  t8 = (r/(rs8*R0))**(-alp8)
-                  damp8 =1.d0/( 1.d0+6.d0*t8 )
-
-                  drij(tauz,tauy,taux,lin(iat,iat))=drij(tauz,tauy,taux,lin(iat,&
-                      & iat))&
-                      & +(-s6*(6.0/(r7)*C6*damp6)&
-                      & -s8*(24.0/(r9)*C6*r42*damp8))*0.5d0
-
-
-                  drij(tauz,tauy,taux,lin(iat,iat))=drij(tauz,tauy,taux,lin(iat,&
-                      & iat))&
-                      & +(s6*C6/r7*6.d0*alp6*t6*damp6*damp6&
-                      & +s8*C6*r42/r9*18.d0*alp8*t8*damp8*damp8)*0.5d0
-                else !version.eq.5
-                  t6 = (r/(rs6*R0)+R0*rs8)**(-alp6)
-                  damp6 =1.d0/( 1.d0+6.d0*t6 )
-                  t8 = (r/(R0)+R0*rs8)**(-alp8)
-                  damp8 =1.d0/( 1.d0+6.d0*t8 )
-  
-                  tmp1=s6*6.d0*damp6*C6/r7
-                  tmp2=s8*6.d0*C6*r42*damp8/r9
-                  drij(tauz,tauy,taux,lin(iat,iat))=drij(tauz,tauy,taux,lin(iat, &
-                      & iat)) - (tmp1 +4.d0*tmp2)*0.5d0               ! d(r^(-6))/d(r_ij)
-  
-  
-                  drij(tauz,tauy,taux,lin(iat,iat))=drij(tauz,tauy,taux,lin(iat, &
-                      & iat)) +(tmp1*alp6*t6*damp6*r/(r+rs6*R0*R0*rs8) &
-                      & +3.d0*tmp2*alp8*t8*damp8*r/(r+R0*R0*rs8))*0.5d0  !d(f_dmp)/d(r_ij)
-                endif
-                !
-                ! in dC6_rest all terms BUT C6-term is saved for the kat-loop
-                !
-                dc6_rest=&
-                    & (s6/r6*damp6+3.d0*s8*r42/r8*damp8)*0.50d0
-
-
-                disp=disp-dc6_rest*c6
-
-                dc6i(iat)=dc6i(iat)+dc6_rest*(dc6iji+dc6ijj)
-                ! if (r2.lt.crit_cn)
-                dc6_rest_sum(lin(iat,iat))=dc6_rest_sum(lin(iat,iat))+dc6_rest
-
-
+                Call gkernel1 (version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, res1, res2)
+                drij(tauz,tauy,taux,lin(iat,iat))=drij(tauz,tauy,taux,lin(iat,iat)) + res1*0.5d0
+                disp=disp-res2*0.50d0*c6
+                dc6i(iat)=dc6i(iat)+res2*0.50d0*(dc6iji+dc6ijj)
+                dc6_rest_sum(lin(iat,iat))=dc6_rest_sum(lin(iat,iat))+res2*0.50d0
               else
                 drij(tauz,tauy,taux,lin(iat,iat))=0.0d0
               end if
@@ -3025,78 +2973,46 @@ contains
           do taux=-rep_v(1),rep_v(1)
             do tauy=-rep_v(2),rep_v(2)
               do tauz=-rep_v(3),rep_v(3)
+
                 tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
 
                 if(ldisplace) then 
                   ! iat always in the unit cell
                   ! jat can be in the unit cell or in some replicas, depending on tau
-                  if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0.) then 
+                  if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0) then 
                     rij=xyz_hstep(:,jat)-xyz_hstep(:,iat) ! both in the unit cell, tau=0, use the displaced geometry 
                   else
-                    rij=xyz(:,jat)-xyz_hstep(:,iat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
+!civn
+                   rij=xyz(:,jat)-xyz(:,iat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
+                   if(iat.eq.ia) rij_hstep=xyz(:,jat)-xyz_hstep(:,iat)+tau 
                   end if 
                 else
                   rij=xyz(:,jat)-xyz(:,iat)+tau
                 end if 
-
                 r2=sum(rij*rij)
+write(*,*) '@@', iat,jat, r2
                 if (r2.gt.rthr) cycle
+                Call gkernel1 (version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, res1, res2)
+                drij(tauz,tauy,taux,linij)=drij(tauz,tauy,taux,linij) + res1 
+                disp = disp - res2 * C6
+                dc6i(iat)=dc6i(iat)+res2*dc6iji
+                dc6i(jat)=dc6i(jat)+res2*dc6ijj
+                dc6_rest_sum(linij) = dc6_rest_sum(linij) + res2
 
-
-                r=dsqrt(r2)
-                r6=r2*r2*r2
-                r7=r6*r
-                r8=r6*r2
-                r9=r8*r
-
-                !
-                ! Calculates damping functions:
-                if (version.eq.3) then
-                  t6 = (r/(rs6*R0))**(-alp6)
-                  damp6 =1.d0/( 1.d0+6.d0*t6 )
-                  t8 = (r/(rs8*R0))**(-alp8)
-                  damp8 =1.d0/( 1.d0+6.d0*t8 )
-
-                  drij(tauz,tauy,taux,linij)=drij(tauz,tauy,taux,&
-                      & linij)&
-                      & -s6*(6.0/(r7)*C6*damp6)&
-                      & -s8*(24.0/(r9)*C6*r42*damp8)
-
-                  drij(tauz,tauy,taux,linij)=drij(tauz,tauy,taux,&
-                      & linij)&
-                      & +s6*C6/r7*6.d0*alp6*t6*damp6*damp6&
-                      & +s8*C6*r42/r9*18.d0*alp8*t8*damp8*damp8
-                else !version.eq.5
-                  t6 = (r/(rs6*R0)+R0*rs8)**(-alp6)
-                  damp6 =1.d0/( 1.d0+6.d0*t6 )
-                  t8 = (r/(R0)+R0*rs8)**(-alp8)
-                  damp8 =1.d0/( 1.d0+6.d0*t8 )
-  
-                  tmp1=s6*6.d0*damp6*C6/r7
-                  tmp2=s8*6.d0*C6*r42*damp8/r9
-                  drij(tauz,tauy,taux,linij)=drij(tauz,tauy,taux, &
-                      & linij) - (tmp1 +4.d0*tmp2)  ! d(r^(-6))/d(r_ij)
-  
-  
-                  drij(tauz,tauy,taux,linij)=drij(tauz,tauy,taux,linij) &
-                      & +(tmp1*alp6*t6*damp6*r/(r+rs6*R0*R0*rs8) & 
-                      & +3.d0*tmp2*alp8*t8*damp8*r/(r+R0*R0*rs8)) !d(f_dmp)/d(r_ij)
-                endif
-                !
-                ! in dC6_rest all terms BUT C6-term is saved for the kat-loop
-                !
-                dc6_rest=&
-                    & (s6/r6*damp6+3.d0*s8*r42/r8*damp8)
-
-
-                disp=disp-dc6_rest*c6
-
-                dc6i(iat)=dc6i(iat)+dc6_rest*dc6iji
-                dc6i(jat)=dc6i(jat)+dc6_rest*dc6ijj
-                ! if (r2.lt.crit_cn)
-                dc6_rest_sum(linij)=dc6_rest_sum(linij)&
-                    & +dc6_rest
-
+!civn
+                if(ldisplace.and..not.(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0).and.(iat.eq.ia))then 
+                  r2=sum(rij_hstep*rij_hstep)
+write(*,*) '@@', iat,jat, r2
+                  disp = disp + res2 * C6 ! the previous one was wrong
+                  Call gkernel1 (version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, res1, res2)
+                  drij_hstep(tauz,tauy,taux,linij)=drij_hstep(tauz,tauy,taux,linij) + res1 
+                  disp = disp - res2 * C6
+                  
+                  dc6i_hstep(iat)=dc6i_hstep(iat)+res2*dc6iji
+                  dc6i_hstep(jat)=dc6i_hstep(jat)+res2*dc6ijj
+                  !civn this is never used
+                  !dc6_rest_sum(linij) = dc6_rest_sum(linij) + res2
+                end if
 
               end do ! taux
             end do ! tauy
@@ -3240,7 +3156,7 @@ contains
                 if(ldisplace) then 
                   ! iat always in the unit cell
                   ! jat can be in the unit cell or in some replicas, depending on tau
-                  if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0.) then 
+                  if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0) then 
                     rij=xyz_hstep(:,jat)-xyz_hstep(:,iat) ! both in the unit cell, tau=0, use the displaced geometry 
                   else
                     rij=xyz(:,jat)-xyz_hstep(:,iat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
@@ -3915,7 +3831,7 @@ contains
     ! the grad w.r.t. the coordinates is calculated dE/dr_ij * dr_ij/dxyz_i
     !do iat=2,n
     !  do jat=1,iat-1
-    do iat=1,n
+    do iat=2,n
       do jat=1,iat-1
         linij=lin(iat,jat)
         rcovij=rcov(iz(iat))+rcov(iz(jat))
@@ -3923,14 +3839,14 @@ contains
           do tauy=-rep_v(2),rep_v(2)
             do tauz=-rep_v(3),rep_v(3)
               tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
-
+!civn 
               if(ldisplace) then 
                 ! iat always in the unit cell
                 ! jat can be in the unit cell or in some replicas, depending on tau
-                if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0.) then 
+                if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0) then 
                   rij=xyz_hstep(:,jat)-xyz_hstep(:,iat) ! both in the unit cell, tau=0, use the displaced geometry 
                 else
-                  rij=xyz(:,jat)-xyz_hstep(:,iat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
+                  rij=xyz(:,jat)-xyz(:,iat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
                 end if 
               else
                 rij=xyz(:,jat)-xyz(:,iat)+tau
@@ -3938,27 +3854,28 @@ contains
 
               r2=sum(rij*rij)
               if (r2.gt.rthr.or.r2.lt.0.5) cycle
-              r=dsqrt(r2)
+               
+              Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
 
-              if (r2.lt.crit_cn) then
-                expterm=exp(-k1*(rcovij/r-1.d0))
-                dcnn=-k1*rcovij*expterm/&
-                    & (r2*(expterm+1.d0)*(expterm+1.d0))
-              else
-                dcnn=0.0d0
-              end if
-              x1=drij(tauz,tauy,taux,linij)+dcnn*(dc6i(iat)+dc6i(jat))
-              vec=x1*rij/r
               g(:,iat)=g(:,iat)+vec
               g(:,jat)=g(:,jat)-vec
 
               if(ldisplace) then 
-                !g_supercell(0,0,0,1:3,iat) = g_supercell(0,0,0,1:3,iat) + vec
-                !g_supercell(0,0,0,1:3,jat) = g_supercell(0,0,0,1:3,jat) - vec
-                !if(.not.(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0)) then 
-                  g_supercell(0,0,0,1:3,iat) = g_supercell(0,0,0,1:3,iat) + vec
-                  g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) - vec
-                !end if 
+                if(iat.eq.ia.and..not.(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0)) then 
+write(*,*) '@@@'
+                  rij=xyz(:,jat)-xyz_hstep(:,iat)+tau
+                  r2=sum(rij*rij)                
+                  Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), &
+                              dc6i_hstep(iat), dc6i_hstep(jat), vec_hstep)
+                else
+                  vec_hstep = vec
+                endif 
+                g_supercell(0,0,0,1:3,iat) = g_supercell(0,0,0,1:3,iat) + vec_hstep
+                g_supercell(0,0,0,1:3,jat) = g_supercell(0,0,0,1:3,jat) - vec       
+                if(.not.(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0)) then 
+                  g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) + vec
+                  g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) - vec_hstep
+                end if 
               end if 
 
               do i=1,3
@@ -4432,6 +4349,76 @@ contains
     end do
 
   end subroutine abc_to_xyz
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  subroutine gkernel1 ( version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, &
+                          res1, res2 ) 
+  implicit none
+  integer, intent(in)   :: version
+  real(wp), intent(in)  :: r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42
+  real(wp), intent(out) :: res1, res2
+
+  real(wp) :: r, r6, r7, r8, r9, tmp1, tmp2
+  real(wp) :: t6, damp6, t8, damp8 , dc6_rest
+
+  r=dsqrt(r2)
+  r6=r2*r2*r2
+  r7=r6*r
+  r8=r6*r2
+  r9=r8*r
+
+  if (version.eq.3) then
+    t6 = (r/(rs6*R0))**(-alp6)
+    damp6 =1.d0/( 1.d0+6.d0*t6 )
+    t8 = (r/(rs8*R0))**(-alp8)
+    damp8 =1.d0/( 1.d0+6.d0*t8 )
+    res1 = -s6*(6.0/(r7)*C6*damp6) -s8*(24.0/(r9)*C6*r42*damp8) &
+            +s6*C6/r7*6.d0*alp6*t6*damp6*damp6 +s8*C6*r42/r9*18.d0*alp8*t8*damp8*damp8 
+
+  elseif(version.eq.5) then  
+    t6 = (r/(rs6*R0)+R0*rs8)**(-alp6)
+    damp6 =1.d0/( 1.d0+6.d0*t6 )
+    t8 = (r/(R0)+R0*rs8)**(-alp8)
+    damp8 =1.d0/( 1.d0+6.d0*t8 )
+    tmp1=s6*6.d0*damp6*C6/r7
+    tmp2=s8*6.d0*C6*r42*damp8/r9
+    res1 = - (tmp1 +4.d0*tmp2) +(tmp1*alp6*t6*damp6*r/(r+rs6*R0*R0*rs8) +3.d0*tmp2*alp8*t8*damp8*r/(r+R0*R0*rs8)) 
+
+  endif
+
+  res2 = s6/r6*damp6+3.d0*s8*r42/r8*damp8 
+
+  return
+
+  end subroutine gkernel1
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  subroutine gkernel2 ( rij, r2, crit_cn, rcovij, drij_linij, dc6i_iat, dc6i_jat, vec ) 
+  implicit none
+  real(wp), intent(in)  :: rij(3) 
+  real(wp), intent(in)  :: r2, crit_cn, rcovij, drij_linij, dc6i_iat, dc6i_jat
+  real(wp), intent(out) :: vec(3) 
+
+  real(wp) :: r, expterm, dcnn, x1
+  
+  r=dsqrt(r2)
+
+  if (r2.lt.crit_cn) then
+    expterm=exp(-k1*(rcovij/r-1.d0))
+    dcnn=-k1*rcovij*expterm/&
+        & (r2*(expterm+1.d0)*(expterm+1.d0))
+  else
+    dcnn=0.0d0
+  end if
+
+  x1=drij_linij + dcnn*(dc6i_iat + dc6i_jat )
+  vec=x1*rij/r
+
+  return 
+
+  end subroutine gkernel2
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
