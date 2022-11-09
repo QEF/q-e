@@ -687,6 +687,8 @@ MODULE cp_restart_new
       LOGICAL :: backall_dum(nsp)
       INTEGER :: hub_l2_dum(nsp), hub_l3_dum(nsp), hub_lmax_back_dum  
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
+      INTEGER  :: int_dum 
+      LOGICAL  :: bool_dum
       !
       !
       dirname = restart_dir(ndr)
@@ -787,7 +789,8 @@ MODULE cp_restart_new
            lda_plus_U, lda_plus_U_kind, Hubbard_projectors, Hubbard_n, Hubbard_l, Hubbard_lmax,Hubbard_dum, &
            hub_l2_dum, hub_l2_dum, hub_l2_dum, hub_l2_dum, backall_dum, hub_lmax_back_dum, hubba_dum, & 
            Hubbard_U, hubba_dum, Hubbard_dum(1,:), Hubbard_dum(2,:), Hubbard_dum(3,:), &
-           HUBBARD_J = Hubbard_dum, HUBBARD_V = hubba_dum_dum, VDW_CORR = vdw_corr, SCAL6 = scal6,    & 
+           HUBBARD_J = Hubbard_dum, HUBBARD_V = hubba_dum_dum, VDW_CORR = vdw_corr, dftd3_version = int_dum, & 
+           dftd3_3body = bool_dum, SCAL6 = scal6,    & 
            LON_RCUT =lon_rcut, VDW_ISOLATED = vdw_isolated )
       CALL set_vdw_corr (vdw_corr, llondon, ldftd3, ts_vdw, mbd_vdw, lxdm )
       IF ( ldftd3 ) CALL errore('cp_readfile','DFT-D3 not implemented',1)
