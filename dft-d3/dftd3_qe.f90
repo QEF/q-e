@@ -140,7 +140,7 @@ MODULE dftd3_qe
     natom = size(coords, dim=2)
 
     ns = shape(hess_dftd3_)
-    hess_dftd3( -ns(3)/2:ns(3)/2,-ns(2)/2:ns(2)/2,-ns(1)/2:ns(1)/2, 1:ns(4),1:ns(5),1:ns(6),1:ns(7) ) => hess_dftd3_
+    hess_dftd3( -ns(1)/2:ns(1)/2,-ns(2)/2:ns(2)/2,-ns(3)/2:ns(3)/2, 1:ns(4),1:ns(5),1:ns(6),1:ns(7) ) => hess_dftd3_
 
     if(size(hess_dftd3, dim=5) .ne. natom ) Call errore('dftd3_pbc_hdisp', "Wrong Hessian dimensions", 1)
     if(size(hess_dftd3, dim=7) .ne. natom ) Call errore('dftd3_pbc_hdisp', "Wrong Hessian dimensions", 2)
