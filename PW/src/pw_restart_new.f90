@@ -1263,6 +1263,7 @@ MODULE pw_restart_new
 
       CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, mbd_vdw, lxdm )
       !FIXME this maybe should be done directly in set_vdw_corr 
+      CALL enforce_input_dft ( dft_name, .TRUE. )
       IF (ldftd3) THEN 
          IF (dftd3_version == 2 ) dftd3_3body = .FALSE. 
          dftd3_in%threebody = dftd3_3body 
@@ -1271,7 +1272,6 @@ MODULE pw_restart_new
          dft_ = dftd3_xc(dft_) 
          CALL dftd3_set_functional(dftd3, func = dft_, version = dftd3_version, tz=.FALSE.) 
       END IF  
-      CALL enforce_input_dft ( dft_name, .TRUE. )
       IF ( xclib_dft_is('hybrid') ) THEN
          ecutvcut=ecutvcut*e2
          ecutfock=ecutfock*e2

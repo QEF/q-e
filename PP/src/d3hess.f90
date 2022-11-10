@@ -92,20 +92,9 @@ program d3hess
   !
   CALL read_file_new ( needwf )
   !
-  ! Setting DFT-D3 functional dependent parameters
+  ! DFT-D3 functional dependent parameters have been set in read_file_new
   !
-!civn 
-dftd3_threebody = .false.
-!
-  if (dftd3_version==2) dftd3_threebody=.false.
-  dftd3_in%threebody = dftd3_threebody
-  CALL dftd3_init(dftd3, dftd3_in)
-  dft_ = get_dft_short( )
-  dft_ = dftd3_xc ( dft_ )
-  CALL dftd3_set_functional(dftd3, func=dft_, version=dftd3_version,tz=.false.)
   WRITE( stdout, '(/,5x,A,f24.12)') 'Differentiation step: ',  step 
-!civn 
-write(*,'(/,A,/)') '!!!WARNING: FIX DFT-D3 XML FILE READING!!!!'
   WRITE( stdout, '(5x,A,3I4)') 'DFT-D3 version: ',  dftd3_version  
   WRITE( stdout, '(5x,A,L)') 'DFT-D3 threebody: ',  dftd3_threebody  
   IF(q_gamma) THEN
