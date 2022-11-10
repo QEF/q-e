@@ -155,9 +155,9 @@ IMPLICIT NONE
   CHARACTER(LEN=256):: formt, filout, string
   !
   IF(i_flag.eq.0) THEN
-    WRITE(string, '(A)' ) 'false'
-  ELSEIF(i_flag.eq.1) THEN
     WRITE(string, '(A)' ) 'true'
+  ELSEIF(i_flag.eq.1) THEN
+    WRITE(string, '(A)' ) 'false'
   ELSE
     WRITE(string, '(A)' ) 'debug'
   END IF 
