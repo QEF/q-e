@@ -135,6 +135,8 @@ MODULE dftd3_qe
     real(wp) :: rtmp3(3), stress_dftd3(3,3)
     real(wp), allocatable :: force_dftd3(:,:), force_supercell_dftd3(:,:,:,:,:)
 
+    write(stdout, '(/,5x,A)' ) 'Three body terms in DFT-D3 disabled for Hessian calculation'
+
     natom = size(coords, dim=2)
 
     ns = shape(hess_dftd3_)

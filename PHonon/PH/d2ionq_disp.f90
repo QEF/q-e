@@ -247,11 +247,6 @@ SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau )
   !if (dftd3_version==2) dftd3_threebody=.false.
   dftd3_threebody=.false.
 !
-  dftd3_in%threebody = dftd3_threebody
-  CALL dftd3_init(dftd3, dftd3_in)
-  dft_ = get_dft_short( )
-  dft_ = dftd3_xc ( dft_ )
-  CALL dftd3_set_functional(dftd3, func=dft_, version=dftd3_version,tz=.false.)
 
   CALL start_clock('force_dftd3')
   ALLOCATE( force_d3(3, nat), force_num(3, nat) )
