@@ -69,6 +69,9 @@ MODULE dftd3_qe
     real(wp) :: gnorm, disp2
     real(wp) :: rtmp3(3)
     integer :: rep_cn(3), rep_vdw(3)
+!civn 
+    real(wp), allocatable :: force_supercell_dftd3(:,:,:,:,:)
+!
 
     natom = size(coords, dim=2)
     s6 = this%s6
@@ -87,12 +90,20 @@ MODULE dftd3_qe
     if(present(rep_cn_)) rep_cn_(:) = rep_cn(:)
     if(present(rep_vdw_)) rep_vdw_(:) = rep_vdw(:)
    
-
     force_dftd3(:,:) = 0.0_wp
-    call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
+!civn 
+    allocate( force_supercell_dftd3(-rep_vdw(3):rep_vdw(3),-rep_vdw(2):rep_vdw(2),-rep_vdw(1):rep_vdw(1),3,natom))
+    !call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
+    call pbcgdisp_new(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
+!
         & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
         & .true., .false., this%version, force_dftd3, disp2, gnorm, &
-        & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .true., this%cn_thr)
+!civn 
+        !& stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .true., this%cn_thr)
+        & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .true., this%cn_thr, &
+        & 0.0000000010d0, 2, 1, 1, force_supercell_dftd3)
+    deallocate( force_supercell_dftd3 )
+!
     ! Note, the stress variable in pbcgdisp contains the *lattice derivatives*
     ! on return, so it needs to be converted to obtain the stress tensor.
     stress_dftd3(:,:) = -matmul(stress_dftd3, transpose(latvecs))&
@@ -184,7 +195,8 @@ MODULE dftd3_qe
               write(stdout, '(5x,A,3I4)' ) 'Displacement step: ', iat, ixyz, istep
               force_dftd3(:,:) = 0.0_wp ! this is not initialized in pbcgdisp 
               !force_supercell_dftd3(:,:,:,:,:) = 0.0_wp ! this is initialized in pbcgdisp
-              call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
+!             call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
+              call pbcgdisp_new(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
                   & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
                   & .true., .false., this%version, force_dftd3, disp2, gnorm, &
                   & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .false., this%cn_thr, &

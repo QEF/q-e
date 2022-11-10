@@ -339,7 +339,10 @@ SUBROUTINE forces()
   force(:,:)    = force(:,:)    * DBLE( if_pos )
   forcescc(:,:) = forcescc(:,:) * DBLE( if_pos )
   !
-  IF ( iverbosity > 0 ) THEN
+!civn 
+! IF ( iverbosity > 0 ) THEN
+  IF ( .true.         ) THEN
+!
      IF ( do_comp_mt ) THEN
         WRITE( stdout, '(5x,"The Martyna-Tuckerman correction term to forces")')
         DO na = 1, nat

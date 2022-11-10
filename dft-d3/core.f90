@@ -1776,7 +1776,51 @@ contains
   ! compute coordination numbers by adding an inverse damping function
   !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
-  subroutine pbcncoord(natoms,rcov,iz,xyz,cn,lat,rep_cn,crit_cn,ldisplace,xyz_hstep)
+  subroutine pbcncoord(natoms,rcov,iz,xyz,cn,lat,rep_cn,crit_cn)
+    integer,intent(in) :: natoms,iz(*)
+    real(wp),intent(in) :: rcov(94)
+    real(wp), intent(in):: xyz(3,*),lat(3,3)
+    real(wp), intent(in) :: crit_cn
+    real(wp), intent(out):: cn(*)
+
+    integer i,max_elem,rep_cn(3)
+
+    integer iat,taux,tauy,tauz
+    real(wp) dx,dy,dz,r,damp,xn,rr,rco,tau(3)
+
+    do i=1,natoms
+      xn=0.0d0
+      do iat=1,natoms
+        do taux=-rep_cn(1),rep_cn(1)
+          do tauy=-rep_cn(2),rep_cn(2)
+            do tauz=-rep_cn(3),rep_cn(3)
+              if (iat.eq.i .and. taux.eq.0 .and. tauy.eq.0 .and.&
+                  & tauz.eq.0) cycle
+              tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
+              dx=xyz(1,iat)-xyz(1,i)+tau(1)
+              dy=xyz(2,iat)-xyz(2,i)+tau(2)
+              dz=xyz(3,iat)-xyz(3,i)+tau(3)
+              r=(dx*dx+dy*dy+dz*dz)
+              if (r.gt.crit_cn) cycle
+              r=sqrt(r)
+              ! covalent distance in Bohr
+              rco=rcov(iz(i))+rcov(iz(iat))
+              rr=rco/r
+              ! counting function exponential has a better long-range behavior than MH
+              damp=1.d0/(1.d0+exp(-k1*(rr-1.0d0)))
+              xn=xn+damp
+              ! print '("cn(",I2,I2,"): ",E14.8)',i,iat,damp
+
+            end do
+          end do
+        end do
+      end do
+      cn(i)=xn
+    end do
+
+  end subroutine pbcncoord
+
+  subroutine pbcncoord_new(natoms,rcov,iz,xyz,cn,lat,rep_cn,crit_cn,ldisplace,xyz_hstep)
     integer,intent(in) :: natoms,iz(*)
     real(wp),intent(in) :: rcov(94)
     real(wp), intent(in):: xyz(3,*),lat(3,3)
@@ -1840,7 +1884,7 @@ contains
       cn(i)=xn
     end do
 
-  end subroutine pbcncoord
+  end subroutine pbcncoord_new
 
 
 
@@ -2566,6 +2610,1399 @@ contains
   subroutine pbcgdisp(max_elem,maxc,n,xyz,iz,c6ab,mxc,r2r4,r0ab,&
       & rcov,s6,s18,rs6,rs8,rs10,alp6,alp8,alp10,noabc,num,&
       & version,g,disp,gnorm,stress,lat,rep_v,rep_cn,&
+      & crit_vdw,echo,crit_cn)
+
+
+    USE mp_images,    ONLY : me_image , nproc_image, intra_image_comm
+    USE mp,           ONLY : mp_sum
+    integer :: mykey, na_s, na_smax, na_e
+
+    integer n,iz(*),max_elem,maxc,version,mxc(max_elem)
+    real(wp) xyz(3,*),r0ab(max_elem,max_elem),r2r4(*)
+    real(wp) c6ab(max_elem,max_elem,maxc,maxc,3)
+    real(wp) g(3,*),s6,s18,rcov(max_elem)
+    real(wp) rs6,rs8,rs10,alp10,alp8,alp6
+    real(wp) a1,a2
+    real(wp) bj_dmp6,bj_dmp8
+    logical noabc,num,echo
+    ! conversion factors
+
+    integer iat,jat,i,j,kat,my,ny,a,b,idum,tau2
+    real(wp) R0,C6,alp,R42,disp,x1,y1,z1,x2,y2,z2,rr,e6abc,fdum
+    real(wp) dx,dy,dz,r2,r,r4,r6,r8,r10,r12,t6,t8,t10,damp1
+    real(wp) damp6,damp8,damp9,e6,e8,e10,e12,gnorm,tmp1
+    real(wp) s10,s8,gC6(3),term,step,dispr,displ,r235,tmp2
+    real(wp) cn(n),gx1,gy1,gz1,gx2,gy2,gz2,rthr,testsum
+    real(wp), DIMENSION(3,3) :: lat,stress,sigma,virialstress,lat_1
+    real(wp), DIMENSION(3,3) :: gC6_stress
+    integer, DIMENSION(3) :: rep_v,rep_cn
+    real(wp) crit_vdw,crit_cn
+    integer taux,tauy,tauz
+    real(wp), DIMENSION(3) :: tau,vec12,dxyz,dxyz0
+    real(wp) ::outpr(3,3)
+    real(wp), DIMENSION(3,3):: outerprod
+
+    real(wp) rij(3),rik(3),rjk(3),r7,r9
+    real(wp) rik_dist,rjk_dist
+    real(wp) drik,drjk
+    real(wp) rcovij
+    real(wp) dc6,c6chk
+    real(wp) expterm,dcni
+    real(wp), allocatable,dimension(:,:,:,:) :: drij
+    real(wp), allocatable,dimension(:,:,:,:) :: dcn
+    real(wp) dcnn
+    real(wp) :: dc6_rest
+    real(wp) vec(3),vec2(3),dummy
+    real(wp) dc6i(n)
+    real(wp) dc6ij(n,n)
+    real(wp) dc6_rest_sum(n*(n+1)/2)
+    integer linij,linik,linjk
+    real(wp) abc(3,n)
+
+    real(wp) eabc
+    real(wp) gabc(3,n),glatabc(3,3)
+    real(wp) sigma_abc(3,3)
+    real(wp) labc,rabc
+    real(wp) ,dimension(3) ::ijvec,ikvec,jkvec,jtau,ktau,dumvec
+    integer jtaux,jtauy,jtauz,ktaux,ktauy,ktauz,mtaux,mtauy,mtauz
+    integer,dimension(3) :: taumin,taumax
+    integer mat,linim,linjm,linkm
+    real(wp) rij2,rik2,rjk2,c9,c6ij,c6ik,c6jk,geomean,geomean3
+    real(wp) rr0ij,rr0jk,rr0ik,dc6iji,dc6ijj
+    real(wp) :: sr9=0.75d0
+    real(wp), parameter :: alp9=-16.0d0
+    real(wp),DIMENSION(n*(n+1)) ::c6save
+    real(wp) abcthr,time1,time2,geomean2,r0av,dc9,dfdmp,dang,ang
+    integer,dimension(3) ::repv,repmin,repmax
+    integer :: rep_v1, rep_v2, rep_v3  
+    integer :: rep_cn1, rep_cn2, rep_cn3  
+    integer :: repmin1, repmin2, repmin3   
+    integer :: repmax1, repmax2, repmax3   
+    real(wp) :: dumvec1, dumvec2, dumvec3  
+    real(wp) :: ijvec1, ijvec2, ijvec3   
+    real(wp) :: ikvec1, ikvec2, ikvec3   
+    real(wp) :: jkvec1, jkvec2, jkvec3   
+    real(wp) :: jtau1, jtau2, jtau3  
+    real(wp) :: ktau1, ktau2, ktau3  
+
+!civn 
+write(*,*) '@pbcgdisp'
+!
+    ! R^2 cut-off
+    rthr=crit_vdw
+    abcthr=crit_cn
+    ! write(*,*)'abcthr:', abcthr**(1./1.)
+    sigma=0.0d0
+    virialstress=0.0d0
+    stress=0.0d0
+    gabc=0.0d0
+    glatabc=0.0d0
+
+    ! testsum=0.0d0
+
+    if (echo)write(*,*)
+
+    if (num) then
+      if (echo) &
+          & write(*,*) 'doing numerical gradient O(N^3) ...'
+
+      call pbcedisp(max_elem,maxc,n,xyz,iz,c6ab,mxc,r2r4,r0ab,&
+          & rcov,rs6,rs8,rs10,alp6,alp8,alp10,version,noabc,&
+          & e6,e8,e10,e12,e6abc,lat,rthr,rep_v,crit_cn,rep_cn)
+
+
+      disp=-s6*e6-s18*e8-e6abc
+
+      step=2.d-5
+
+      do i=1,n
+        do j=1,3
+          xyz(j,i)=xyz(j,i)+step
+          call pbcedisp(max_elem,maxc,n,xyz,iz,c6ab,mxc,r2r4,r0ab,&
+              & rcov,rs6,rs8,rs10,alp6,alp8,alp10,version,noabc,&
+              & e6,e8,e10,e12,e6abc,lat,rthr,rep_v,crit_cn,rep_cn)
+
+          dispr=-s6*e6-s18*e8-e6abc
+          rabc=e6abc
+          xyz(j,i)=xyz(j,i)-2*step
+          call pbcedisp(max_elem,maxc,n,xyz,iz,c6ab,mxc,r2r4,r0ab,&
+              & rcov,rs6,rs8,rs10,alp6,alp8,alp10,version,noabc,&
+              & e6,e8,e10,e12,e6abc,lat,rthr,rep_v,crit_cn,rep_cn)
+
+          displ=-s6*e6-s18*e8-e6abc
+          labc=e6abc
+          gabc(j,i)=0.5*(rabc-labc)/step
+          g(j,i)=0.5*(dispr-displ)/step
+          xyz(j,i)=xyz(j,i)+step
+        end do
+      end do
+      if (echo) write(*,*)'Doing numerical stresstensor...'
+
+      call xyz_to_abc(xyz,abc,lat,n)
+      step=2.d-5
+      if (echo) write(*,*)'step: ',step
+      do i=1,3
+        do j=1,3
+          lat(j,i)=lat(j,i)+step
+          call abc_to_xyz(abc,xyz,lat,n)
+          call pbcedisp(max_elem,maxc,n,xyz,iz,c6ab,mxc,r2r4,r0ab,&
+              & rcov,rs6,rs8,rs10,alp6,alp8,alp10,version,noabc,&
+              & e6,e8,e10,e12,e6abc,lat,rthr,rep_v,crit_cn,rep_cn)
+
+          dispr=-s6*e6-s18*e8-e6abc
+          labc=e6abc
+
+
+          lat(j,i)=lat(j,i)-2*step
+          call abc_to_xyz(abc,xyz,lat,n)
+          call pbcedisp(max_elem,maxc,n,xyz,iz,c6ab,mxc,r2r4,r0ab,&
+              & rcov,rs6,rs8,rs10,alp6,alp8,alp10,version,noabc,&
+              & e6,e8,e10,e12,e6abc,lat,rthr,rep_v,crit_cn,rep_cn)
+
+          displ=-s6*e6-s18*e8-e6abc
+          rabc=e6abc
+          stress(j,i)=(dispr-displ)/(step*2.0)
+          glatabc(j,i)=(rabc-labc)/(step*2.0d0)
+
+          lat(j,i)=lat(j,i)+step
+          call abc_to_xyz(abc,xyz,lat,n)
+
+        end do
+      end do
+
+      sigma=0.0d0
+      call inv_cell(lat,lat_1)
+      do a=1,3
+        do b=1,3
+          do my=1,3
+            sigma(a,b)=sigma(a,b)-stress(a,my)*lat(b,my)
+          end do
+        end do
+      end do
+
+      goto 999
+
+    end if
+
+
+    if (version.eq.2)then
+      if (echo)write(*,*) 'doing analytical gradient D-old O(N^2) ...'
+      disp=0
+      stress=0.0d0
+      do iat=1,n-1
+        do jat=iat+1,n
+          R0=r0ab(iz(jat),iz(iat))*rs6
+          c6=c6ab(iz(jat),iz(iat),1,1,1)*s6
+          do taux=-rep_v(1),rep_v(1)
+            do tauy=-rep_v(2),rep_v(2)
+              do tauz=-rep_v(3),rep_v(3)
+                tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
+                dxyz=xyz(:,iat)-xyz(:,jat)+tau
+                r2 =sum(dxyz*dxyz)
+                if (r2.gt.rthr) cycle
+                r235=r2**3.5
+                r =dsqrt(r2)
+                damp6=exp(-alp6*(r/R0-1.0d0))
+                damp1=1.+damp6
+                tmp1=damp6/(damp1*damp1*r235*R0)
+                tmp2=6./(damp1*r*r235)
+
+                term=alp6*tmp1-tmp2
+                g(:,iat)=g(:,iat)-term*dxyz*c6
+                g(:,jat)=g(:,jat)+term*dxyz*c6
+                disp=disp+c6*(1./damp1)/r2**3
+
+                do ny=1,3
+                  do my=1,3
+                    sigma(my,ny)=sigma(my,ny)+term*dxyz(ny)*dxyz(my)*c6
+                  end do
+                end do
+              end do
+            end do
+          end do
+        end do
+      end do
+      ! and now the self interaction, only for convenient energy in dispersion
+      do iat=1,n
+        jat=iat
+        R0=r0ab(iz(jat),iz(iat))*rs6
+        c6=c6ab(iz(jat),iz(iat),1,1,1)*s6
+        do taux=-rep_v(1),rep_v(1)
+          do tauy=-rep_v(2),rep_v(2)
+            do tauz=-rep_v(3),rep_v(3)
+              if (taux.eq.0 .and. tauy.eq.0 .and. tauz.eq.0) cycle
+              tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
+
+              dxyz=tau
+              ! vec12=(/ dx,dy,dz /)
+              r2 =sum(dxyz*dxyz)
+              if (r2.gt.rthr) cycle
+              r235=r2**3.5
+              r =dsqrt(r2)
+              damp6=exp(-alp6*(r/R0-1.0d0))
+              damp1=1.+damp6
+              tmp1=damp6/(damp1*damp1*r235*R0)
+              tmp2=6./(damp1*r*r235)
+              disp=disp+(c6*(1./damp1)/r2**3)*0.50d0
+              term=alp6*tmp1-tmp2
+              do ny=1,3
+                do my=1,3
+                  sigma(my,ny)=sigma(my,ny)+term*dxyz(ny)*dxyz(my)*c6*0.5d0
+                end do
+              end do
+
+
+            end do
+          end do
+        end do
+      end do
+
+      call inv_cell(lat,lat_1)
+      do a=1,3
+        do b=1,3
+          do my=1,3
+            stress(a,b)=stress(a,b)-sigma(a,my)*lat_1(b,my)
+          end do
+        end do
+      end do
+
+      disp=-disp
+      ! sigma=virialstress
+      goto 999
+    end if
+
+    CALL block_distribute( n, me_image, nproc_image, na_s, na_e, mykey )
+
+    if ((version.eq.3).or.(version.eq.5)) then
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !
+      ! begin ZERO DAMPING GRADIENT
+      !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+      if (echo)&
+          & write(*,*) 'doing analytical gradient O(N^2) ...'
+      ! precompute for analytical part
+      call pbcncoord(n,rcov,iz,xyz,cn,lat,rep_cn,crit_cn)
+
+
+      s8 =s18
+      s10=s18
+      allocate(drij(-rep_v(3):rep_v(3),-rep_v(2):rep_v(2),&
+          & -rep_v(1):rep_v(1),n*(n+1)/2))
+
+      disp=0
+
+      drij=0.0d0
+      dc6_rest=0.0d0
+      dc6_rest_sum=0.0d0
+      c6save=0.0d0
+      kat=0
+      dc6i=0.0d0
+      dc6ij=0.0d0
+
+      IF ( mykey == 0 ) THEN
+
+      do iat=na_s, na_e
+        call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)),&
+            & mxc(iz(iat)),cn(iat),cn(iat),iz(iat),iz(iat),iat,iat,&
+            & c6,dc6iji,dc6ijj)
+
+        c6save(lin(iat,iat))=c6
+        dc6ij(iat,iat)=dc6iji
+        r0=r0ab(iz(iat),iz(iat))
+        r42=r2r4(iz(iat))*r2r4(iz(iat))
+        rcovij=rcov(iz(iat))+rcov(iz(iat))
+
+
+        do taux=-rep_v(1),rep_v(1)
+          do tauy=-rep_v(2),rep_v(2)
+            do tauz=-rep_v(3),rep_v(3)
+              tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
+
+
+              !first dE/d(tau) saved in drij(i,i,counter)
+              rij=tau
+              r2=sum(rij*rij)
+              ! if (r2.gt.rthr) cycle
+
+              if (r2.gt.0.1.and.r2.lt.rthr) then
+
+
+                r=dsqrt(r2)
+                r6=r2*r2*r2
+                r7=r6*r
+                r8=r6*r2
+                r9=r8*r
+
+                !
+                ! Calculates damping functions:
+                if (version.eq.3) then
+                  t6 = (r/(rs6*R0))**(-alp6)
+                  damp6 =1.d0/( 1.d0+6.d0*t6 )
+                  t8 = (r/(rs8*R0))**(-alp8)
+                  damp8 =1.d0/( 1.d0+6.d0*t8 )
+
+                  drij(tauz,tauy,taux,lin(iat,iat))=drij(tauz,tauy,taux,lin(iat,&
+                      & iat))&
+                      & +(-s6*(6.0/(r7)*C6*damp6)&
+                      & -s8*(24.0/(r9)*C6*r42*damp8))*0.5d0
+
+
+                  drij(tauz,tauy,taux,lin(iat,iat))=drij(tauz,tauy,taux,lin(iat,&
+                      & iat))&
+                      & +(s6*C6/r7*6.d0*alp6*t6*damp6*damp6&
+                      & +s8*C6*r42/r9*18.d0*alp8*t8*damp8*damp8)*0.5d0
+                else !version.eq.5
+                  t6 = (r/(rs6*R0)+R0*rs8)**(-alp6)
+                  damp6 =1.d0/( 1.d0+6.d0*t6 )
+                  t8 = (r/(R0)+R0*rs8)**(-alp8)
+                  damp8 =1.d0/( 1.d0+6.d0*t8 )
+  
+                  tmp1=s6*6.d0*damp6*C6/r7
+                  tmp2=s8*6.d0*C6*r42*damp8/r9
+                  drij(tauz,tauy,taux,lin(iat,iat))=drij(tauz,tauy,taux,lin(iat, &
+                      & iat)) - (tmp1 +4.d0*tmp2)*0.5d0               ! d(r^(-6))/d(r_ij)
+  
+  
+                  drij(tauz,tauy,taux,lin(iat,iat))=drij(tauz,tauy,taux,lin(iat, &
+                      & iat)) +(tmp1*alp6*t6*damp6*r/(r+rs6*R0*R0*rs8) &
+                      & +3.d0*tmp2*alp8*t8*damp8*r/(r+R0*R0*rs8))*0.5d0  !d(f_dmp)/d(r_ij)
+                endif
+                !
+                ! in dC6_rest all terms BUT C6-term is saved for the kat-loop
+                !
+                dc6_rest=&
+                    & (s6/r6*damp6+3.d0*s8*r42/r8*damp8)*0.50d0
+
+
+                disp=disp-dc6_rest*c6
+
+                dc6i(iat)=dc6i(iat)+dc6_rest*(dc6iji+dc6ijj)
+                ! if (r2.lt.crit_cn)
+                dc6_rest_sum(lin(iat,iat))=dc6_rest_sum(lin(iat,iat))+dc6_rest
+
+
+              else
+                drij(tauz,tauy,taux,lin(iat,iat))=0.0d0
+              end if
+
+
+            end do
+          end do
+        end do
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!
+        ! B E G I N jat L O O P
+!!!!!!!!!!!!!!!!!!!!!!!!!!
+        do jat=1,iat-1
+          !
+          ! get_dC6_dCNij calculates the derivative dC6(iat,jat)/dCN(iat) and
+          ! dC6(iat,jat)/dCN(jat). these are saved in dC6ij for the kat loop
+          !
+          call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)),&
+              & mxc(iz(jat)),cn(iat),cn(jat),iz(iat),iz(jat),iat,jat,&
+              & c6,dc6iji,dc6ijj)
+
+          r0=r0ab(iz(jat),iz(iat))
+          r42=r2r4(iz(iat))*r2r4(iz(jat))
+          rcovij=rcov(iz(iat))+rcov(iz(jat))
+          linij=lin(iat,jat)
+
+          dc6ij(iat,jat)=dc6iji
+          dc6ij(jat,iat)=dc6ijj
+          c6save(linij)=c6
+          do taux=-rep_v(1),rep_v(1)
+            do tauy=-rep_v(2),rep_v(2)
+              do tauz=-rep_v(3),rep_v(3)
+                tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
+
+
+                rij=xyz(:,jat)-xyz(:,iat)+tau
+                r2=sum(rij*rij)
+                if (r2.gt.rthr) cycle
+
+
+                r=dsqrt(r2)
+                r6=r2*r2*r2
+                r7=r6*r
+                r8=r6*r2
+                r9=r8*r
+
+                !
+                ! Calculates damping functions:
+                if (version.eq.3) then
+                  t6 = (r/(rs6*R0))**(-alp6)
+                  damp6 =1.d0/( 1.d0+6.d0*t6 )
+                  t8 = (r/(rs8*R0))**(-alp8)
+                  damp8 =1.d0/( 1.d0+6.d0*t8 )
+
+                  drij(tauz,tauy,taux,linij)=drij(tauz,tauy,taux,&
+                      & linij)&
+                      & -s6*(6.0/(r7)*C6*damp6)&
+                      & -s8*(24.0/(r9)*C6*r42*damp8)
+
+                  drij(tauz,tauy,taux,linij)=drij(tauz,tauy,taux,&
+                      & linij)&
+                      & +s6*C6/r7*6.d0*alp6*t6*damp6*damp6&
+                      & +s8*C6*r42/r9*18.d0*alp8*t8*damp8*damp8
+                else !version.eq.5
+                  t6 = (r/(rs6*R0)+R0*rs8)**(-alp6)
+                  damp6 =1.d0/( 1.d0+6.d0*t6 )
+                  t8 = (r/(R0)+R0*rs8)**(-alp8)
+                  damp8 =1.d0/( 1.d0+6.d0*t8 )
+  
+                  tmp1=s6*6.d0*damp6*C6/r7
+                  tmp2=s8*6.d0*C6*r42*damp8/r9
+                  drij(tauz,tauy,taux,linij)=drij(tauz,tauy,taux, &
+                      & linij) - (tmp1 +4.d0*tmp2)  ! d(r^(-6))/d(r_ij)
+  
+  
+                  drij(tauz,tauy,taux,linij)=drij(tauz,tauy,taux,linij) &
+                      & +(tmp1*alp6*t6*damp6*r/(r+rs6*R0*R0*rs8) & 
+                      & +3.d0*tmp2*alp8*t8*damp8*r/(r+R0*R0*rs8)) !d(f_dmp)/d(r_ij)
+                endif
+                !
+                ! in dC6_rest all terms BUT C6-term is saved for the kat-loop
+                !
+                dc6_rest=&
+                    & (s6/r6*damp6+3.d0*s8*r42/r8*damp8)
+
+
+                disp=disp-dc6_rest*c6
+
+                dc6i(iat)=dc6i(iat)+dc6_rest*dc6iji
+                dc6i(jat)=dc6i(jat)+dc6_rest*dc6ijj
+                ! if (r2.lt.crit_cn)
+                dc6_rest_sum(linij)=dc6_rest_sum(linij)&
+                    & +dc6_rest
+
+
+              end do
+            end do
+          end do
+
+        end do
+
+      end do
+      END IF
+
+    elseif ((version.eq.4).or.(version.eq.6)) then
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!
+      ! NOW THE BJ Gradient !
+!!!!!!!!!!!!!!!!!!!!!!!
+
+
+      if (echo) write(*,*) 'doing analytical gradient O(N^2) ...'
+      call pbcncoord(n,rcov,iz,xyz,cn,lat,rep_cn,crit_cn)
+
+      a1 =rs6
+      a2 =rs8
+      s8 =s18
+
+      allocate(drij(-rep_v(3):rep_v(3),-rep_v(2):rep_v(2),&
+          & -rep_v(1):rep_v(1),n*(n+1)/2))
+      disp=0
+      drij=0.0d0
+      dc6_rest=0.0d0
+      dc6_rest_sum=0.0d0
+      c6save=0.0d0
+      kat=0
+      dc6i=0.0d0
+      dc6ij=0.0d0
+
+      IF ( mykey == 0 ) THEN
+
+      do iat=na_s, na_e
+        call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)),&
+            & mxc(iz(iat)),cn(iat),cn(iat),iz(iat),iz(iat),iat,iat,&
+            & c6,dc6iji,dc6ijj)
+
+        dc6ij(iat,iat)=dc6iji
+        c6save(lin(iat,iat))=c6
+        r42=r2r4(iz(iat))*r2r4(iz(iat))
+        rcovij=rcov(iz(iat))+rcov(iz(iat))
+
+        R0=a1*sqrt(3.0d0*r42)+a2
+
+        do taux=-rep_v(1),rep_v(1)
+          do tauy=-rep_v(2),rep_v(2)
+            do tauz=-rep_v(3),rep_v(3)
+              tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
+
+              !first dE/d(tau) saved in drij(i,i,counter)
+              rij=tau
+              r2=sum(rij*rij)
+              ! if (r2.gt.rthr) cycle
+
+              ! if (r2.gt.0.1) then
+              if (r2.gt.0.1.and.r2.lt.rthr) then
+                !
+                ! get_dC6_dCNij calculates the derivative dC6(iat,jat)/dCN(iat) and
+                ! dC6(iat,jat)/dCN(jat). these are saved in dC6ij for the kat loop
+                !
+                r=dsqrt(r2)
+                r4=r2*r2
+                r6=r4*r2
+                r7=r6*r
+                r8=r6*r2
+                r9=r8*r
+
+                !
+                ! Calculates damping functions:
+
+                t6=(r6+R0**6)
+                t8=(r8+R0**8)
+
+                drij(tauz,tauy,taux,lin(iat,iat))=drij(tauz,tauy,taux,lin(iat, &
+                    & iat))&
+                    & -s6*C6*6.0d0*r4*r/(t6*t6)*0.5d0&
+                    & -s8*C6*24.0d0*r42*r7/(t8*t8)*0.5d0
+
+
+                !
+                ! in dC6_rest all terms BUT C6-term is saved for the kat-loop
+                !
+                dc6_rest=&
+                    & (s6/t6+3.d0*s8*r42/t8)*0.50d0
+
+
+                disp=disp-dc6_rest*c6
+
+                dc6i(iat)=dc6i(iat)+dc6_rest*(dc6iji+dc6ijj)
+                ! if (r2.lt.crit_cn)
+                dc6_rest_sum(lin(iat,iat))=dc6_rest_sum(lin(iat,iat))+&
+                    & dc6_rest
+
+
+              else
+                drij(tauz,tauy,taux,lin(iat,iat))=0.0d0
+              end if
+
+
+            end do
+          end do
+        end do
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!
+        ! B E G I N jat L O O P
+!!!!!!!!!!!!!!!!!!!!!!!!!!
+        do jat=1,iat-1
+          !
+          ! get_dC6_dCNij calculates the derivative dC6(iat,jat)/dCN(iat) and
+          ! dC6(iat,jat)/dCN(jat). these are saved in dC6ij for the kat loop
+          !
+          call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)),&
+              & mxc(iz(jat)),cn(iat),cn(jat),iz(iat),iz(jat),iat,jat,&
+              & c6,dc6iji,dc6ijj)
+
+          r42=r2r4(iz(iat))*r2r4(iz(jat))
+          rcovij=rcov(iz(iat))+rcov(iz(jat))
+
+          R0=a1*dsqrt(3.0d0*r42)+a2
+
+          linij=lin(iat,jat)
+          dc6ij(iat,jat)=dc6iji
+          dc6ij(jat,iat)=dc6ijj
+          c6save(linij)=c6
+          do taux=-rep_v(1),rep_v(1)
+            do tauy=-rep_v(2),rep_v(2)
+              do tauz=-rep_v(3),rep_v(3)
+                tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
+
+
+                rij=xyz(:,jat)-xyz(:,iat)+tau
+                r2=sum(rij*rij)
+                if (r2.gt.rthr) cycle
+
+
+                r=dsqrt(r2)
+                r4=r2*r2
+                r6=r4*r2
+                r7=r6*r
+                r8=r6*r2
+                r9=r8*r
+
+                !
+                ! Calculates damping functions:
+                t6=(r6+R0**6)
+                t8=(r8+R0**8)
+
+
+                drij(tauz,tauy,taux,linij)=drij(tauz,tauy,taux,&
+                    & linij)&
+                    & -s6*C6*6.0d0*r4*r/(t6*t6)&
+                    & -s8*C6*24.0d0*r42*r7/(t8*t8)
+
+                !
+                ! in dC6_rest all terms BUT C6-term is saved for the kat-loop
+                !
+                dc6_rest=&
+                    & (s6/t6+3.d0*s8*r42/t8)
+
+
+                disp=disp-dc6_rest*c6
+
+                dc6i(iat)=dc6i(iat)+dc6_rest*dc6iji
+                dc6i(jat)=dc6i(jat)+dc6_rest*dc6ijj
+                ! if (r2.lt.crit_cn)
+                dc6_rest_sum(lin(iat,jat))=dc6_rest_sum(linij)&
+                    & +dc6_rest
+
+
+              end do
+            end do
+          end do
+
+        end do
+
+      end do
+      END IF
+
+    end if
+
+!!!!!!!!!!!!!!!!!!!!!!!
+    !! BEGIN Threebody gradient
+!!!!!!!!!!!!!!!!!!!!!!!
+
+    if (.not.noabc) then
+
+      ! write(*,*)'!!!!!!!!!! THREEBODY GRADIENT !!!!!!!!!!'
+      sr9=0.75d0
+      eabc=0.0d0
+      abcthr=crit_cn
+      repv=rep_cn
+      ! write(*,*)'thr:',sqrt(abcthr)
+
+      call cpu_time(time1)
+
+      rep_cn1 = rep_cn(1) 
+      rep_cn2 = rep_cn(2) 
+      rep_cn3 = rep_cn(3) 
+      rep_v1 = rep_v(1)
+      rep_v2 = rep_v(2)
+      rep_v3 = rep_v(3)
+
+      CALL mp_sum ( c6save , intra_image_comm )
+      CALL mp_sum ( dc6ij  , intra_image_comm )
+      IF ( mykey == 0 ) THEN
+      na_smax = max(3,na_s)
+
+!$acc data copyin(xyz(1:3,1:n),iz(1:n),lat(1:3,1:3),r0ab(1:max_elem,1:max_elem),c6save(1:n*(n+1)),dc6ij(1:n,1:n)) &
+!$acc&            copy(dc6i(1:n),drij(-rep_v3:rep_v3,-rep_v2:rep_v2,-rep_v1:rep_v1,1:n*(n+1)/2)) 
+!$acc parallel vector_length(32) 
+!$acc loop collapse(3) gang  private(ijvec1,ijvec2,ijvec3, ikvec1,ikvec2,ikvec3, jkvec1,jkvec2,jkvec3, c6ij,c6ik,c6jk,c9, linij,linik,linjk, &
+!$acc&                              jtau1,jtau2,jtau3, rij2,rr0ij, repmin1,repmin2,repmin3,repmax1,repmax2,repmax3 ) &
+!$acc&                       reduction(+:eabc) 
+      do iat=na_smax,na_e
+        do jat=2, n
+          do kat=1, n 
+            if((jat.ge.iat).or.(kat.ge.jat)) cycle    
+            linij=lin(iat,jat)
+            ijvec1=xyz(1,jat)-xyz(1,iat)
+            ijvec2=xyz(2,jat)-xyz(2,iat)
+            ijvec3=xyz(3,jat)-xyz(3,iat)
+
+            c6ij=c6save(linij)
+
+            linik=lin(iat,kat)
+            linjk=lin(jat,kat)
+            ikvec1=xyz(1,kat)-xyz(1,iat)
+            ikvec2=xyz(2,kat)-xyz(2,iat)
+            ikvec3=xyz(3,kat)-xyz(3,iat)
+            jkvec1=xyz(1,kat)-xyz(1,jat)
+            jkvec2=xyz(2,kat)-xyz(2,jat)
+            jkvec3=xyz(3,kat)-xyz(3,jat)
+
+            c6ik=c6save(linik)
+            c6jk=c6save(linjk)
+            c9=-1.0d0*dsqrt(c6ij*c6ik*c6jk)
+!$acc loop seq independent
+            do jtaux=-rep_cn1,rep_cn1
+              repmin1=max(-rep_cn1,jtaux-rep_cn1)
+              repmax1=min(rep_cn1,jtaux+rep_cn1)
+!$acc loop seq independent   
+              do jtauy=-rep_cn2,rep_cn2
+                repmin2=max(-rep_cn2,jtauy-rep_cn2)
+                repmax2=min(rep_cn2,jtauy+rep_cn2)
+!$acc loop seq independent 
+                do jtauz=-rep_cn3,rep_cn3
+                  repmin3=max(-rep_cn3,jtauz-rep_cn3)
+                  repmax3=min(rep_cn3,jtauz+rep_cn3)
+                  jtau1=jtaux*lat(1,1)+jtauy*lat(1,2)+jtauz*lat(1,3)
+                  jtau2=jtaux*lat(2,1)+jtauy*lat(2,2)+jtauz*lat(2,3)
+                  jtau3=jtaux*lat(3,1)+jtauy*lat(3,2)+jtauz*lat(3,3)
+                  rij2= (ijvec1+jtau1)*(ijvec1+jtau1) + (ijvec2+jtau2)*(ijvec2+jtau2) + (ijvec3+jtau3)*(ijvec3+jtau3) 
+                  if (rij2.gt.abcthr)cycle
+
+                  rr0ij=DSQRT(rij2)/r0ab(iz(iat),iz(jat))
+
+!$acc loop vector collapse(3) private(ktau1,ktau2,ktau3, dumvec1,dumvec2,dumvec3, rik2,rjk2,rr0ik,rr0jk, &
+!$acc&                                geomean,geomean2,geomean3,r0av,damp9,ang,dc6_rest,dfdmp,r,dang,tmp1,dc9) &
+!$acc&                        reduction(+:eabc) 
+                  do ktaux=repmin1,repmax1
+                    do ktauy=repmin2,repmax2
+                      do ktauz=repmin3,repmax3
+                        ktau1=ktaux*lat(1,1)+ktauy*lat(1,2)+ktauz*lat(1,3)
+                        ktau2=ktaux*lat(2,1)+ktauy*lat(2,2)+ktauz*lat(2,3)
+                        ktau3=ktaux*lat(3,1)+ktauy*lat(3,2)+ktauz*lat(3,3)
+                        rik2=(ikvec1+ktau1)*(ikvec1+ktau1)+(ikvec2+ktau2)*(ikvec2+ktau2)+(ikvec3+ktau3)*(ikvec3+ktau3)
+                        if (rik2.gt.abcthr)cycle
+
+                        dumvec1=jkvec1+ktau1-jtau1
+                        dumvec2=jkvec2+ktau2-jtau2
+                        dumvec3=jkvec3+ktau3-jtau3
+                        rjk2=dumvec1*dumvec1+dumvec2*dumvec2+dumvec3*dumvec3
+                        if (rjk2.gt.abcthr)cycle
+                        rr0ik=dsqrt(rik2)/r0ab(iz(iat),iz(kat))
+                        rr0jk=dsqrt(rjk2)/r0ab(iz(jat),iz(kat))
+                        geomean2=(rij2*rjk2*rik2)
+                        ! first calculate the three components for the energy calculation fdmp
+                        ! and ang
+                        r0av=(rr0ij*rr0ik*rr0jk)**(1.0d0/3.0d0)
+                        damp9=1./(1.+6.*(sr9*r0av)**alp9)
+
+                        geomean=dsqrt(geomean2)
+                        geomean3=geomean*geomean2
+                        ang=0.375d0*(rij2+rjk2-rik2)*(rij2-rjk2+rik2)&
+                            & *(-rij2+rjk2+rik2)/(geomean3*geomean2)&
+                            & +1.0d0/(geomean3)
+
+                        dc6_rest=ang*damp9
+                        eabc=eabc+dc6_rest*c9
+                        !
+                        !start calculating the gradient components dfdmp, dang and dc9
+
+                        !dfdmp is the same for all three distances
+                        dfdmp=2.d0*alp9*(0.75d0*r0av)**(alp9)*damp9*damp9
+
+                        !start calculating the derivatives of each part w.r.t. r_ij
+                        r=dsqrt(rij2)
+
+
+                        dang=-0.375d0*(rij2**3+rij2**2*(rjk2+rik2)&
+                            & +rij2*(3.0d0*rjk2**2+2.0*rjk2*rik2+3.0*rik2**2)&
+                            & -5.0*(rjk2-rik2)**2*(rjk2+rik2))&
+                            & /(r*geomean3*geomean2)
+
+                        tmp1=-dang*c9*damp9+dfdmp/r*c9*ang
+!$acc atomic update
+                        drij(jtauz,jtauy,jtaux,linij)= drij(jtauz,jtauy,jtaux,linij)-tmp1
+!$acc end atomic 
+                        !start calculating the derivatives of each part w.r.t. r_ik
+
+                        r=dsqrt(rik2)
+
+
+                        dang=-0.375d0*(rik2**3+rik2**2*(rjk2+rij2)&
+                            & +rik2*(3.0d0*rjk2**2+2.0*rjk2*rij2+3.0*rij2**2)&
+                            & -5.0*(rjk2-rij2)**2*(rjk2+rij2))&
+                            & /(r*geomean3*geomean2)
+
+                        tmp1=-dang*c9*damp9+dfdmp/r*c9*ang
+                        ! tmp1=-dc9
+!$acc atomic update
+                        drij(ktauz,ktauy,ktaux,linik)= drij(ktauz,ktauy,ktaux,linik)-tmp1
+!$acc end atomic
+
+                        !
+                        !start calculating the derivatives of each part w.r.t. r_jk
+
+                        r=dsqrt(rjk2)
+
+                        dang=-0.375d0*(rjk2**3+rjk2**2*(rik2+rij2)&
+                            & +rjk2*(3.0d0*rik2**2+2.0*rik2*rij2+3.0*rij2**2)&
+                            & -5.0*(rik2-rij2)**2*(rik2+rij2))&
+                            & /(r*geomean3*geomean2)
+
+                        tmp1=-dang*c9*damp9+dfdmp/r*c9*ang
+!$acc atomic update
+                        drij(ktauz-jtauz,ktauy-jtauy,ktaux-jtaux,linjk)= drij(ktauz-jtauz,ktauy-jtauy,ktaux-jtaux,linjk)-tmp1
+!$acc end atomic
+
+                        !calculating the CN derivative dE_disp(ijk)/dCN(i)
+
+                        dc9=dc6ij(iat,jat)/c6ij+dc6ij(iat,kat)/c6ik
+                        dc9=0.5d0*c9*dc9
+!$acc atomic update 
+                        dc6i(iat) = dc6i(iat) + dc6_rest*dc9   
+!$acc end atomic
+
+                        dc9=dc6ij(jat,iat)/c6ij+dc6ij(jat,kat)/c6jk
+                        dc9=0.5d0*c9*dc9
+!$acc atomic update 
+                        dc6i(jat) = dc6i(jat) + dc6_rest*dc9  
+!$acc end atomic
+
+                        dc9=dc6ij(kat,iat)/c6ik+dc6ij(kat,jat)/c6jk
+                        dc9=0.5d0*c9*dc9
+!$acc atomic update 
+                        dc6i(kat) = dc6i(kat) + dc6_rest*dc9   
+!$acc end atomic
+                      end do
+                    end do
+                  end do
+                end do
+              end do
+            end do
+          end do
+        end do
+      end do
+!$acc end parallel 
+!$acc end data 
+
+      ! Now the interaction with jat=iat of the triples iat,iat,kat
+      do iat=max(2,na_s),na_e
+        jat=iat
+        linij=lin(iat,jat)
+        ijvec=0.0d0
+
+        c6ij=c6save(linij)
+        do kat=1,iat-1
+          linjk=lin(jat,kat)
+          linik=linjk
+
+          c6ik=c6save(linik)
+          c6jk=c6ik
+          ikvec=xyz(:,kat)-xyz(:,iat)
+          jkvec=ikvec
+          c9=-dsqrt(c6ij*c6ik*c6jk)
+          do jtaux=-repv(1),repv(1)
+            repmin(1)=max(-repv(1),jtaux-repv(1))
+            repmax(1)=min(repv(1),jtaux+repv(1))
+            do jtauy=-repv(2),repv(2)
+              repmin(2)=max(-repv(2),jtauy-repv(2))
+              repmax(2)=min(repv(2),jtauy+repv(2))
+              do jtauz=-repv(3),repv(3)
+                repmin(3)=max(-repv(3),jtauz-repv(3))
+                repmax(3)=min(repv(3),jtauz+repv(3))
+                if (jtaux.eq.0 .and. jtauy.eq.0 .and. jtauz.eq.0) cycle
+                jtau=jtaux*lat(:,1)+jtauy*lat(:,2)+jtauz*lat(:,3)
+                dumvec=jtau
+                rij2=SUM(dumvec*dumvec)
+                if (rij2.gt.abcthr)cycle
+
+                rr0ij=DSQRT(rij2)/r0ab(iz(iat),iz(jat))
+
+                do ktaux=repmin(1),repmax(1)
+                  do ktauy=repmin(2),repmax(2)
+                    do ktauz=repmin(3),repmax(3)
+                      ! every result * 0.5
+
+                      ktau=ktaux*lat(:,1)+ktauy*lat(:,2)+ktauz*lat(:,3)
+                      dumvec=ikvec+ktau
+                      dumvec=dumvec*dumvec
+                      rik2=SUM(dumvec)
+                      if (rik2.gt.abcthr)cycle
+
+                      dumvec=jkvec+ktau-jtau
+                      dumvec=dumvec*dumvec
+                      rjk2=SUM(dumvec)
+                      if (rjk2.gt.abcthr)cycle
+                      rr0ik=DSQRT(rik2)/r0ab(iz(iat),iz(kat))
+                      rr0jk=DSQRT(rjk2)/r0ab(iz(jat),iz(kat))
+
+
+                      geomean2=(rij2*rjk2*rik2)
+                      r0av=(rr0ij*rr0ik*rr0jk)**(1.0d0/3.0d0)
+                      damp9=1./(1.+6.*(sr9*r0av)**alp9)
+
+                      geomean=dsqrt(geomean2)
+                      geomean3=geomean*geomean2
+                      ang=0.375d0*(rij2+rjk2-rik2)*(rij2-rjk2+rik2)&
+                          & *(-rij2+rjk2+rik2)/(geomean3*geomean2)&
+                          & +1.0d0/(geomean3)
+
+
+                      dc6_rest=ang*damp9/2.0d0
+                      eabc=eabc+dc6_rest*c9
+
+                      ! iat=jat
+                      dfdmp=2.d0*alp9*(0.75d0*r0av)**(alp9)*damp9*damp9
+
+                      !start calculating the derivatives of each part w.r.t. r_ij
+                      r=dsqrt(rij2)
+
+                      dang=-0.375d0*(rij2**3+rij2**2*(rjk2+rik2) &
+                          & +rij2*(3.0d0*rjk2**2+2.0*rjk2*rik2+3.0*rik2**2)&
+                          & -5.0*(rjk2-rik2)**2*(rjk2+rik2))&
+                          & /(r*geomean3*geomean2)
+
+                      tmp1=-dang*c9*damp9+dfdmp/r*c9*ang
+                      drij(jtauz,jtauy,jtaux,linij)=&
+                          & drij(jtauz,jtauy,jtaux,linij)-tmp1/2.0
+
+                      !start calculating the derivatives of each part w.r.t. r_ik
+                      r=dsqrt(rik2)
+
+
+                      dang=-0.375d0*(rik2**3+rik2**2*(rjk2+rij2)&
+                          & +rik2*(3.0d0*rjk2**2+2.0*rjk2*rij2+3.0*rij2**2)&
+                          & -5.0*(rjk2-rij2)**2*(rjk2+rij2))&
+                          & /(r*geomean3*geomean2)
+
+                      tmp1=-dang*c9*damp9+dfdmp/r*c9*ang
+                      drij(ktauz,ktauy,ktaux,linik)=&
+                          & drij(ktauz,ktauy,ktaux,linik)-tmp1/2.0
+                      !
+                      !start calculating the derivatives of each part w.r.t. r_ik
+                      r=dsqrt(rjk2)
+
+                      dang=-0.375d0*(rjk2**3+rjk2**2*(rik2+rij2)&
+                          & +rjk2*(3.0d0*rik2**2+2.0*rik2*rij2+3.0*rij2**2)&
+                          & -5.0*(rik2-rij2)**2*(rik2+rij2))&
+                          & /(r*geomean3*geomean2)
+
+                      tmp1=-dang*c9*damp9+dfdmp/r*c9*ang
+
+                      drij(ktauz-jtauz,ktauy-jtauy,ktaux-jtaux,linjk)=&
+                          & drij(ktauz-jtauz,ktauy-jtauy,ktaux-jtaux,linjk)-tmp1/2.0
+
+                      dc9=dc6ij(iat,jat)/c6ij+dc6ij(iat,kat)/c6ik
+                      dc9=0.5d0*c9*dc9
+                      dc6i(iat)=dc6i(iat)+dc6_rest*dc9
+
+                      dc9=dc6ij(jat,iat)/c6ij+dc6ij(jat,kat)/c6jk
+                      dc9=0.5d0*c9*dc9
+                      dc6i(jat)=dc6i(jat)+dc6_rest*dc9
+
+                      dc9=dc6ij(kat,iat)/c6ik+dc6ij(kat,jat)/c6jk
+                      dc9=0.5d0*c9*dc9
+                      dc6i(kat)=dc6i(kat)+dc6_rest*dc9
+
+
+
+
+                    end do
+                  end do
+                end do
+
+              end do
+            end do
+          end do
+        end do
+      end do
+
+      do iat=max(2,na_s),na_e
+        do jat=1,iat-1
+          kat=jat
+          linij=lin(iat,jat)
+          linjk=lin(jat,kat)
+          linik=linij
+
+          c6ij=c6save(linij)
+          c6ik=c6ij
+
+          c6jk=c6save(linjk)
+          ikvec=xyz(:,kat)-xyz(:,iat)
+          ijvec=ikvec
+          jkvec=0.0d0
+
+          c9=-1.0d0*dsqrt(c6ij*c6ik*c6jk)
+          do jtaux=-repv(1),repv(1)
+            repmin(1)=max(-repv(1),jtaux-repv(1))
+            repmax(1)=min(repv(1),jtaux+repv(1))
+            do jtauy=-repv(2),repv(2)
+              repmin(2)=max(-repv(2),jtauy-repv(2))
+              repmax(2)=min(repv(2),jtauy+repv(2))
+              do jtauz=-repv(3),repv(3)
+                repmin(3)=max(-repv(3),jtauz-repv(3))
+                repmax(3)=min(repv(3),jtauz+repv(3))
+
+                jtau=jtaux*lat(:,1)+jtauy*lat(:,2)+jtauz*lat(:,3)
+                dumvec=ijvec+jtau
+                dumvec=dumvec*dumvec
+                rij2=SUM(dumvec)
+                if (rij2.gt.abcthr)cycle
+
+                rr0ij=SQRT(rij2)/r0ab(iz(iat),iz(jat))
+
+                do ktaux=repmin(1),repmax(1)
+                  do ktauy=repmin(2),repmax(2)
+                    do ktauz=repmin(3),repmax(3)
+                      ! every result * 0.5
+                      if (jtaux.eq.ktaux .and. jtauy.eq.ktauy&
+                          & .and. jtauz.eq.ktauz) cycle
+                      ktau=ktaux*lat(:,1)+ktauy*lat(:,2)+ktauz*lat(:,3)
+                      dumvec=ikvec+ktau
+                      dumvec=dumvec*dumvec
+                      rik2=SUM(dumvec)
+                      if (rik2.gt.abcthr)cycle
+                      rr0ik=SQRT(rik2)/r0ab(iz(iat),iz(kat))
+
+                      dumvec=jkvec+ktau-jtau
+                      dumvec=dumvec*dumvec
+                      rjk2=SUM(dumvec)
+                      if (rjk2.gt.abcthr)cycle
+                      rr0jk=SQRT(rjk2)/r0ab(iz(jat),iz(kat))
+
+                      ! if (rij*rjk*rik.gt.abcthr)cycle
+
+                      geomean2=(rij2*rjk2*rik2)
+                      r0av=(rr0ij*rr0ik*rr0jk)**(1.0d0/3.0d0)
+                      damp9=1./(1.+6.d0*(sr9*r0av)**alp9)
+
+                      geomean=dsqrt(geomean2)
+                      geomean3=geomean*geomean2
+                      ang=0.375d0*(rij2+rjk2-rik2)*(rij2-rjk2+rik2)&
+                          & *(-rij2+rjk2+rik2)/(geomean2*geomean3)&
+                          & +1.0d0/(geomean3)
+                      dc6_rest=ang*damp9/2.0d0
+                      eabc=eabc+dc6_rest*c9
+
+
+                      ! jat=kat
+                      dfdmp=2.d0*alp9*(0.75d0*r0av)**(alp9)*damp9*damp9
+                      !start calculating the derivatives of each part w.r.t. r_ij
+                      r=dsqrt(rij2)
+
+                      dang=-0.375d0*(rij2**3+rij2**2*(rjk2+rik2)&
+                          & +rij2*(3.0d0*rjk2**2+2.0d0*rjk2*rik2+3.0d0*rik2**2)&
+                          & -5.0d0*(rjk2-rik2)**2*(rjk2+rik2))&
+                          & /(r*geomean3*geomean2)
+
+                      tmp1=-dang*c9*damp9+dfdmp/r*c9*ang
+                      drij(jtauz,jtauy,jtaux,linij)=&
+                          & drij(jtauz,jtauy,jtaux,linij)-tmp1/2.0d0
+
+                      !start calculating the derivatives of each part w.r.t. r_ik
+                      r=dsqrt(rik2)
+
+
+                      dang=-0.375d0*(rik2**3+rik2**2*(rjk2+rij2)&
+                          & +rik2*(3.0d0*rjk2**2+2.0*rjk2*rij2+3.0*rij2**2)&
+                          & -5.0*(rjk2-rij2)**2*(rjk2+rij2))&
+                          & /(r*geomean3*geomean2)
+
+                      tmp1=-dang*c9*damp9+dfdmp/r*c9*ang
+                      ! tmp1=-dc9
+                      drij(ktauz,ktauy,ktaux,linik)=&
+                          & drij(ktauz,ktauy,ktaux,linik)-tmp1/2.0d0
+                      !
+                      !start calculating the derivatives of each part w.r.t. r_jk
+                      r=dsqrt(rjk2)
+
+                      dang=-0.375d0*(rjk2**3+rjk2**2*(rik2+rij2)&
+                          & +rjk2*(3.0d0*rik2**2+2.0*rik2*rij2+3.0*rij2**2)&
+                          & -5.0d0*(rik2-rij2)**2*(rik2+rij2))&
+                          & /(r*geomean3*geomean2)
+
+                      tmp1=-dang*c9*damp9+dfdmp/r*c9*ang
+                      drij(ktauz-jtauz,ktauy-jtauy,ktaux-jtaux,linjk)=&
+                          & drij(ktauz-jtauz,ktauy-jtauy,ktaux-jtaux,linjk)-tmp1/2.0d0
+
+                      !calculating the CN derivative dE_disp(ijk)/dCN(i)
+
+                      dc9=dc6ij(iat,jat)/c6ij+dc6ij(iat,kat)/c6ik
+                      dc9=0.5d0*c9*dc9
+                      dc6i(iat)=dc6i(iat)+dc6_rest*dc9
+
+                      dc9=dc6ij(jat,iat)/c6ij+dc6ij(jat,kat)/c6jk
+                      dc9=0.5d0*c9*dc9
+                      dc6i(jat)=dc6i(jat)+dc6_rest*dc9
+
+                      dc9=dc6ij(kat,iat)/c6ik+dc6ij(kat,jat)/c6jk
+                      dc9=0.5d0*c9*dc9
+                      dc6i(kat)=dc6i(kat)+dc6_rest*dc9
+
+
+
+
+                    end do
+                  end do
+                end do
+
+              end do
+            end do
+          end do
+        end do
+      end do
+
+
+      ! And finally the self interaction iat=jat=kat all
+
+      idum=0
+      do iat=na_s,na_e
+        jat=iat
+        kat=iat
+        ijvec=0.0d0
+        linij=lin(iat,jat)
+        linik=lin(iat,kat)
+        linjk=lin(jat,kat)
+        ikvec=ijvec
+        jkvec=ikvec
+        c6ij=c6save(linij)
+        c6ik=c6ij
+        c6jk=c6ij
+        c9=-(DSQRT(c6ij*c6ij*c6ij))
+
+        do jtaux=-repv(1),repv(1)
+          repmin(1)=max(-repv(1),jtaux-repv(1))
+          repmax(1)=min(repv(1),jtaux+repv(1))
+          do jtauy=-repv(2),repv(2)
+            repmin(2)=max(-repv(2),jtauy-repv(2))
+            repmax(2)=min(repv(2),jtauy+repv(2))
+            do jtauz=-repv(3),repv(3)
+              repmin(3)=max(-repv(3),jtauz-repv(3))
+              repmax(3)=min(repv(3),jtauz+repv(3))
+              if ((jtaux.eq.0) .and.(jtauy.eq.0) .and.(jtauz.eq.0))cycle
+              jtau=jtaux*lat(:,1)+jtauy*lat(:,2)+jtauz*lat(:,3)
+              dumvec=jtau
+              dumvec=dumvec*dumvec
+              rij2=SUM(dumvec)
+              if (rij2.gt.abcthr)cycle
+              rr0ij=SQRT(rij2)/r0ab(iz(iat),iz(jat))
+
+              do ktaux=repmin(1),repmax(1)
+                do ktauy=repmin(2),repmax(2)
+                  do ktauz=repmin(3),repmax(3)
+                    if ((ktaux.eq.0) .and.( ktauy.eq.0) .and.( ktauz.eq.0))cycle
+                    if ((ktaux.eq.jtaux) .and. (ktauy.eq.jtauy)&
+                        & .and. (ktauz.eq.jtauz)) cycle
+
+                    ! every result * 1/6 becaues every triple is counted twice due to the tw
+                    !
+                    !plus 1/3 becaues every triple is three times in each unitcell
+                    ktau=ktaux*lat(:,1)+ktauy*lat(:,2)+ktauz*lat(:,3)
+                    dumvec=ktau
+                    dumvec=dumvec*dumvec
+                    rik2=SUM(dumvec)
+                    if (rik2.gt.abcthr)cycle
+                    rr0ik=SQRT(rik2)/r0ab(iz(iat),iz(kat))
+
+                    dumvec=jkvec+ktau-jtau
+                    dumvec=dumvec*dumvec
+                    rjk2=SUM(dumvec)
+                    if (rjk2.gt.abcthr)cycle
+                    rr0jk=SQRT(rjk2)/r0ab(iz(jat),iz(kat))
+
+                    geomean2=(rij2*rjk2*rik2)
+                    r0av=(rr0ij*rr0ik*rr0jk)**(1.0d0/3.0d0)
+                    damp9=1./(1.+6.*(sr9*r0av)**alp9)
+
+                    geomean=dsqrt(geomean2)
+                    geomean3=geomean*geomean2
+                    ang=0.375d0*(rij2+rjk2-rik2)*(rij2-rjk2+rik2)&
+                        & *(-rij2+rjk2+rik2)/(geomean2*geomean3)&
+                        & +1.0d0/(geomean3)
+                    dc6_rest=ang*damp9/6.0d0
+                    eabc=eabc+c9*dc6_rest
+
+                    ! iat=jat=kat
+                    dfdmp=2.d0*alp9*(0.75d0*r0av)**(alp9)*damp9*damp9
+                    !start calculating the derivatives of each part w.r.t. r_ij
+
+                    r=dsqrt(rij2)
+                    dang=-0.375d0*(rij2**3+rij2**2*(rjk2+rik2)&
+                        & +rij2*(3.0d0*rjk2**2+2.0*rjk2*rik2+3.0*rik2**2)&
+                        & -5.0*(rjk2-rik2)**2*(rjk2+rik2))&
+                        & /(r*geomean3*geomean2)
+
+
+                    tmp1=-dang*c9*damp9+dfdmp/r*c9*ang
+                    drij(jtauz,jtauy,jtaux,linij)=&
+                        & drij(jtauz,jtauy,jtaux,linij)-tmp1/6.0d0
+
+                    !start calculating the derivatives of each part w.r.t. r_ik
+
+                    r=dsqrt(rik2)
+
+                    dang=-0.375d0*(rik2**3+rik2**2*(rjk2+rij2)&
+                        & +rik2*(3.0d0*rjk2**2+2.0*rjk2*rij2+3.0*rij2**2)&
+                        & -5.0*(rjk2-rij2)**2*(rjk2+rij2))&
+                        & /(r*geomean3*geomean2)
+
+                    tmp1=-dang*c9*damp9+dfdmp/r*c9*ang
+                    drij(ktauz,ktauy,ktaux,linik)=&
+                        & drij(ktauz,ktauy,ktaux,linik)-tmp1/6.0d0
+                    !
+                    !start calculating the derivatives of each part w.r.t. r_jk
+
+                    r=dsqrt(rjk2)
+                    dang=-0.375d0*(rjk2**3+rjk2**2*(rik2+rij2)&
+                        & +rjk2*(3.0d0*rik2**2+2.0*rik2*rij2+3.0*rij2**2)&
+                        & -5.0*(rik2-rij2)**2*(rik2+rij2))&
+                        & /(r*geomean3*geomean2)
+
+                    tmp1=-dang*c9*damp9+dfdmp/r*c9*ang
+                    drij(ktauz-jtauz,ktauy-jtauy,ktaux-jtaux,linjk)=&
+                        & drij(ktauz-jtauz,ktauy-jtauy,ktaux-jtaux,linjk)-tmp1/6.0d0
+
+
+                    !calculating the CN derivative dE_disp(ijk)/dCN(i)
+
+                    dc9=dc6ij(iat,jat)/c6ij+dc6ij(iat,kat)/c6ik
+                    dc9=0.5d0*c9*dc9
+                    dc6i(iat)=dc6i(iat)+dc6_rest*dc9
+
+                    dc9=dc6ij(jat,iat)/c6ij+dc6ij(jat,kat)/c6jk
+                    dc9=0.5d0*c9*dc9
+                    dc6i(jat)=dc6i(jat)+dc6_rest*dc9
+
+                    dc9=dc6ij(kat,iat)/c6ik+dc6ij(kat,jat)/c6jk
+                    dc9=0.5d0*c9*dc9
+                    dc6i(kat)=dc6i(kat)+dc6_rest*dc9
+
+
+
+
+
+                  end do
+                end do
+              end do
+            end do
+          end do
+          !jtaux
+        end do
+
+      end do
+
+      END IF
+      CALL mp_sum ( eabc , intra_image_comm )
+
+      call cpu_time(time2)
+
+      ! write(*,*)' eabc(gdisp): ',eabc
+      ! write(*,'('' time(abc) '',f6.1)')time2-time1
+      disp=disp-eabc
+      ! write(*,*)'gdisp:',disp
+    end if
+
+    CALL mp_sum ( drij , intra_image_comm )
+    CALL mp_sum ( dc6i , intra_image_comm )
+
+    sigma_abc=0.0d0
+    sigma=0.0d0
+
+    ! After calculating all derivatives dE/dr_ij w.r.t. distances,
+    ! the grad w.r.t. the coordinates is calculated dE/dr_ij * dr_ij/dxyz_i
+    do iat=2,n
+      do jat=1,iat-1
+        linij=lin(iat,jat)
+        rcovij=rcov(iz(iat))+rcov(iz(jat))
+        do taux=-rep_v(1),rep_v(1)
+          do tauy=-rep_v(2),rep_v(2)
+            do tauz=-rep_v(3),rep_v(3)
+              tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
+
+              rij=xyz(:,jat)-xyz(:,iat)+tau
+              r2=sum(rij*rij)
+              if (r2.gt.rthr.or.r2.lt.0.5) cycle
+              r=dsqrt(r2)
+
+              if (r2.lt.crit_cn) then
+                expterm=exp(-k1*(rcovij/r-1.d0))
+                dcnn=-k1*rcovij*expterm/&
+                    & (r2*(expterm+1.d0)*(expterm+1.d0))
+              else
+                dcnn=0.0d0
+              end if
+              x1=drij(tauz,tauy,taux,linij)+dcnn*(dc6i(iat)+dc6i(jat))
+              vec=x1*rij/r
+              g(:,iat)=g(:,iat)+vec
+              g(:,jat)=g(:,jat)-vec
+              do i=1,3
+                do j=1,3
+                  sigma(j,i)=sigma(j,i)+vec(j)*rij(i)
+                end do
+              end do
+
+
+
+            end do
+          end do
+        end do
+      end do
+    end do
+
+    do iat=1,n
+      rcovij=rcov(iz(iat))+rcov(iz(iat))
+      do taux=-rep_v(1),rep_v(1)
+        do tauy=-rep_v(2),rep_v(2)
+          do tauz=-rep_v(3),rep_v(3)
+            if (taux.eq.0.and.tauy.eq.0.and.tauz.eq.0) cycle
+
+            tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
+            r2=(sum(tau*tau))
+            r=dsqrt(r2)
+            if (r2.lt.crit_cn) then
+              expterm=exp(-k1*(rcovij/r-1.d0))
+              dcnn=-k1*rcovij*expterm/&
+                  & (r2*(expterm+1.d0)*(expterm+1.d0))
+            else
+              dcnn=0.0d0
+            end if
+            x1=drij(tauz,tauy,taux,lin(iat,iat))+dcnn*dc6i(iat)
+            vec=x1*tau/r
+            vec2(1)=taux
+            vec2(2)=tauy
+            vec2(3)=tauz
+            do i=1,3
+              do j=1,3
+                sigma(j,i)=sigma(j,i)+vec(j)*tau(i)
+              end do
+            end do
+
+
+          end do
+        end do
+      end do
+
+
+
+    end do
+
+
+
+    stress=0.0d0
+    glatabc=0.0d0
+    call inv_cell(lat,lat_1)
+    do a=1,3
+      do b=1,3
+        do my=1,3
+          stress(a,b)=stress(a,b)-sigma(a,my)*lat_1(b,my)
+        end do
+      end do
+    end do
+
+
+
+    ! write(*,*)'drij:',drij(lin(iat,jat),:)
+    ! write(*,*)'g:',g(1,1:3)
+    ! write(*,*)'dcn:',sum(dcn(lin(2,1),:))
+
+
+
+    deallocate(drij)
+
+
+
+
+999 continue
+!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !
+    !This is where the D2 gradient and the numerical gradient jump.
+    !
+!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! do i=1,n
+    ! write(*,'(83F17.12)') g(1:3,i)
+    ! end do
+    gnorm=sum(abs(g(1:3,1:n)))
+    if (echo)then
+      ! write(*,*)'testsum:',testsum*autoev/autoang
+      write(*,*)'|G(force)| =',gnorm
+      gnorm=sum(abs(stress(1:3,1:3)))
+      write(*,*)'|G(stress)|=',gnorm
+    end if
+
+  end subroutine pbcgdisp
+
+  subroutine pbcgdisp_new(max_elem,maxc,n,xyz,iz,c6ab,mxc,r2r4,r0ab,&
+      & rcov,s6,s18,rs6,rs8,rs10,alp6,alp8,alp10,noabc,num,&
+      & version,g,disp,gnorm,stress,lat,rep_v,rep_cn,&
       & crit_vdw,echo,crit_cn, hstep, ia, ix, is, g_supercell_)
 
 
@@ -2579,6 +4016,8 @@ contains
     integer, allocatable :: ns(:)
     real(wp) :: gnorm_supercell
     real(wp), allocatable :: xyz_hstep(:,:) ! displaced geometry
+    real(wp) :: iat_jat_fact ! weight for diagonal/off-diagonal gradient terms
+    logical :: unit_cell     ! a quick flag to check whether a certain taux,tauy,tauz points to the unit cell or to some image
 
     logical :: ldisplace ! whether to displace atoms for numerical Hessian calculations
     integer :: mykey, na_s, na_smax, na_e
@@ -2671,6 +4110,10 @@ contains
       xyz_hstep(1:3,1:n) = xyz(1:3,1:n)
       xyz_hstep(ix, ia) = xyz_hstep(ix, ia) + hdisp
     end if 
+
+!civn 
+write(*,*) '@pbcgdisp_new', ldisplace, shape(g_supercell)
+!
 
     ! R^2 cut-off
     rthr=crit_vdw
@@ -2889,7 +4332,7 @@ contains
       if (echo)&
           & write(*,*) 'doing analytical gradient O(N^2) ...'
       ! precompute for analytical part
-      call pbcncoord(n,rcov,iz,xyz,cn,lat,rep_cn,crit_cn,ldisplace,xyz_hstep)
+      call pbcncoord_new(n,rcov,iz,xyz,cn,lat,rep_cn,crit_cn,ldisplace,xyz_hstep)
 
 
       s8 =s18
@@ -2910,117 +4353,128 @@ contains
       dc6ij=0.0d0
 
       IF ( mykey == 0 ) THEN
+!civn 
+      do taux=-rep_v(1),rep_v(1)
+        do tauy=-rep_v(2),rep_v(2)
+          do tauz=-rep_v(3),rep_v(3)
 
-      do iat=na_s, na_e
-        call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)),&
-            & mxc(iz(iat)),cn(iat),cn(iat),iz(iat),iz(iat),iat,iat,&
-            & c6,dc6iji,dc6ijj)
+            unit_cell = taux.eq.0 .and. tauy.eq.0 .and. tauz.eq.0  
+            tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
+            r2=sqrt(sum(tau*tau))
+            if(unit_cell .and. (r2.gt.0.000010d0)) Call errore('pbcgdisp', &
+                                                      'non zero traslation vector found for the unit cell', 1)
 
-        c6save(lin(iat,iat))=c6
-        dc6ij(iat,iat)=dc6iji
-        r0=r0ab(iz(iat),iz(iat))
-        r42=r2r4(iz(iat))*r2r4(iz(iat))
-        rcovij=rcov(iz(iat))+rcov(iz(iat))
+            do iat=na_s, na_e
+              call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)),&
+                  & mxc(iz(iat)),cn(iat),cn(iat),iz(iat),iz(iat),iat,iat,&
+                  & c6,dc6iji,dc6ijj)
 
+              c6save(lin(iat,iat))=c6
+              dc6ij(iat,iat)=dc6iji
+              r0=r0ab(iz(iat),iz(iat))
+              r42=r2r4(iz(iat))*r2r4(iz(iat))
+              rcovij=rcov(iz(iat))+rcov(iz(iat))
 
-        do taux=-rep_v(1),rep_v(1)
-          do tauy=-rep_v(2),rep_v(2)
-            do tauz=-rep_v(3),rep_v(3)
+              iat_jat_fact = 0.50d0 ! each diagonal contribution is weighted 1/2
 
-              tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
-              if(ldisplace .and..not. (taux.eq.0 .and. tauy.eq.0 .and. tauz.eq.0)) then 
-                rij = xyz(:,iat) - xyz_hstep(:,iat) + tau
-              else
-                rij=tau
-              end if 
+              rij=tau
               r2=sum(rij*rij)
-              ! if (r2.gt.rthr) cycle
               if (r2.gt.0.1.and.r2.lt.rthr) then
-                Call gkernel1 (version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, res1, res2)
-                drij(tauz,tauy,taux,lin(iat,iat))=drij(tauz,tauy,taux,lin(iat,iat)) + res1*0.5d0
-                disp=disp-res2*0.50d0*c6
-                dc6i(iat)=dc6i(iat)+res2*0.50d0*(dc6iji+dc6ijj)
-                dc6_rest_sum(lin(iat,iat))=dc6_rest_sum(lin(iat,iat))+res2*0.50d0
+                !
+                Call gkernel1 (version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, iat_jat_fact, res1, res2)
+                drij(tauz,tauy,taux,lin(iat,iat))=drij(tauz,tauy,taux,lin(iat,iat)) + res1
+                disp=disp-res2*c6
+                dc6i(iat)=dc6i(iat)+res2*(dc6iji+dc6ijj)
+                dc6_rest_sum(lin(iat,iat))=dc6_rest_sum(lin(iat,iat))+res2
+                !
+                if(ldisplace .and..not. unit_cell .and. (iat.eq.ia) ) then 
+                  !
+                  disp=disp+res2*c6 ! remove the previous contribution 
+                  dc6_rest_sum(lin(iat,iat))=dc6_rest_sum(lin(iat,iat))-res2 ! remove the previous contribution
+                  !
+                  rij = xyz(:,iat) - xyz_hstep(:,iat) + tau
+                  r2=sum(rij*rij)
+                  Call gkernel1 (version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, iat_jat_fact, res1, res2)
+                  drij_hstep(tauz,tauy,taux,lin(iat,iat))=drij_hstep(tauz,tauy,taux,lin(iat,iat)) + res1
+                  disp=disp-res2*c6
+                  dc6i_hstep(iat)=dc6i_hstep(iat)+res2*(dc6iji+dc6ijj)
+                  dc6_rest_sum(lin(iat,iat))=dc6_rest_sum(lin(iat,iat))+res2
+                end if 
               else
                 drij(tauz,tauy,taux,lin(iat,iat))=0.0d0
+                if(ldisplace.and..not.unit_cell) drij_hstep(tauz,tauy,taux,lin(iat,iat))=0.0d0
               end if
 
+              do jat=1,iat-1
+                !
+                ! get_dC6_dCNij calculates the derivative dC6(iat,jat)/dCN(iat) and
+                ! dC6(iat,jat)/dCN(jat). these are saved in dC6ij for the kat loop
+                !
+                call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)),&
+                    & mxc(iz(jat)),cn(iat),cn(jat),iz(iat),iz(jat),iat,jat,&
+                    & c6,dc6iji,dc6ijj)
+      
+                r0=r0ab(iz(jat),iz(iat))
+                r42=r2r4(iz(iat))*r2r4(iz(jat))
+                rcovij=rcov(iz(iat))+rcov(iz(jat))
+                linij=lin(iat,jat)
+      
+                dc6ij(iat,jat)=dc6iji
+                dc6ij(jat,iat)=dc6ijj
+                c6save(linij)=c6
 
-            end do ! taux
-          end do ! tauy
-        end do ! tauz
+                iat_jat_fact = 1.0d0 ! off diagonal contributions for iat and jat are equivalent: they are weighted twice the diagonal ones 
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!
-        ! B E G I N jat L O O P
-!!!!!!!!!!!!!!!!!!!!!!!!!!
-        do jat=1,iat-1
-          !
-          ! get_dC6_dCNij calculates the derivative dC6(iat,jat)/dCN(iat) and
-          ! dC6(iat,jat)/dCN(jat). these are saved in dC6ij for the kat loop
-          !
-          call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)),&
-              & mxc(iz(jat)),cn(iat),cn(jat),iz(iat),iz(jat),iat,jat,&
-              & c6,dc6iji,dc6ijj)
+                rij=xyz(:,jat)-xyz(:,iat)+tau
 
-          r0=r0ab(iz(jat),iz(iat))
-          r42=r2r4(iz(iat))*r2r4(iz(jat))
-          rcovij=rcov(iz(iat))+rcov(iz(jat))
-          linij=lin(iat,jat)
-
-          dc6ij(iat,jat)=dc6iji
-          dc6ij(jat,iat)=dc6ijj
-          c6save(linij)=c6
-          do taux=-rep_v(1),rep_v(1)
-            do tauy=-rep_v(2),rep_v(2)
-              do tauz=-rep_v(3),rep_v(3)
-
-                tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
-
-                if(ldisplace) then 
-                  ! iat always in the unit cell
-                  ! jat can be in the unit cell or in some replicas, depending on tau
-                  if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0) then 
-                    rij=xyz_hstep(:,jat)-xyz_hstep(:,iat) ! both in the unit cell, tau=0, use the displaced geometry 
-                  else
-!civn
-                   rij=xyz(:,jat)-xyz(:,iat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
-                   if(iat.eq.ia) rij_hstep=xyz(:,jat)-xyz_hstep(:,iat)+tau 
-                  end if 
-                else
-                  rij=xyz(:,jat)-xyz(:,iat)+tau
-                end if 
-                r2=sum(rij*rij)
-write(*,*) '@@', iat,jat, r2
                 if (r2.gt.rthr) cycle
-                Call gkernel1 (version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, res1, res2)
-                drij(tauz,tauy,taux,linij)=drij(tauz,tauy,taux,linij) + res1 
+
+                r2=sum(rij*rij)
+                Call gkernel1 (version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, iat_jat_fact, res1, res2)
+                drij(tauz,tauy,taux,linij)=drij(tauz,tauy,taux,linij) + res1
                 disp = disp - res2 * C6
-                dc6i(iat)=dc6i(iat)+res2*dc6iji
-                dc6i(jat)=dc6i(jat)+res2*dc6ijj
+                dc6i(iat)=dc6i(iat)+res2 * dc6iji
+                dc6i(jat)=dc6i(jat)+res2 * dc6ijj
                 dc6_rest_sum(linij) = dc6_rest_sum(linij) + res2
 
-!civn
-                if(ldisplace.and..not.(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0).and.(iat.eq.ia))then 
-                  r2=sum(rij_hstep*rij_hstep)
-write(*,*) '@@', iat,jat, r2
-                  disp = disp + res2 * C6 ! the previous one was wrong
-                  Call gkernel1 (version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, res1, res2)
+                if(     ldisplace .and. (iat.eq.ia) ) then 
+                  !
+                  ! remove previous contributions from disp and dc6_rest_sum
+                  disp = disp + res2 * C6 
+                  dc6_rest_sum(linij) = dc6_rest_sum(linij) - res2
+                  !
+                  rij = ( xyz(:,jat) + tau ) - xyz_hstep(:,iat) 
+                  r2=sum(rij*rij)
+                  Call gkernel1 (version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, iat_jat_fact, res1, res2)
                   drij_hstep(tauz,tauy,taux,linij)=drij_hstep(tauz,tauy,taux,linij) + res1 
                   disp = disp - res2 * C6
-                  
                   dc6i_hstep(iat)=dc6i_hstep(iat)+res2*dc6iji
                   dc6i_hstep(jat)=dc6i_hstep(jat)+res2*dc6ijj
-                  !civn this is never used
-                  !dc6_rest_sum(linij) = dc6_rest_sum(linij) + res2
-                end if
+                  dc6_rest_sum(linij) = dc6_rest_sum(linij) + res2
+                  !
+                elseif( ldisplace .and. (jat.eq.ia) ) then 
+                  !
+                  ! remove previous contributions from disp and dc6_rest_sum
+                  disp = disp + res2 * C6 
+                  dc6_rest_sum(linij) = dc6_rest_sum(linij) - res2
+                  !
+                  rij = xyz_hstep(:,jat) - ( xyz(:,iat) - tau )  
+                  r2=sum(rij*rij)
+                  Call gkernel1 (version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, iat_jat_fact, res1, res2)
+                  drij_hstep(tauz,tauy,taux,linij)=drij_hstep(tauz,tauy,taux,linij) + res1 
+                  disp = disp - res2 * C6
+                  dc6i_hstep(iat)=dc6i_hstep(iat)+res2*dc6iji
+                  dc6i_hstep(jat)=dc6i_hstep(jat)+res2*dc6ijj
+                  dc6_rest_sum(linij) = dc6_rest_sum(linij) + res2
+                end if 
+                
+              end do ! jat 
+            end do ! iat
 
-              end do ! taux
-            end do ! tauy
-          end do ! tauz
+          end do ! tauz 
+        end do ! tauy
+      end do ! taux
 
-        end do ! jat
-
-      end do ! iat
       END IF ! mykey == 0
 
     elseif ((version.eq.4).or.(version.eq.6)) then
@@ -3033,7 +4487,7 @@ write(*,*) '@@', iat,jat, r2
 
 
       if (echo) write(*,*) 'doing analytical gradient O(N^2) ...'
-      call pbcncoord(n,rcov,iz,xyz,cn,lat,rep_cn,crit_cn,ldisplace,xyz_hstep)
+      call pbcncoord_new(n,rcov,iz,xyz,cn,lat,rep_cn,crit_cn,ldisplace,xyz_hstep)
 
       a1 =rs6
       a2 =rs8
@@ -3829,62 +5283,133 @@ write(*,*) '@@', iat,jat, r2
 
     ! After calculating all derivatives dE/dr_ij w.r.t. distances,
     ! the grad w.r.t. the coordinates is calculated dE/dr_ij * dr_ij/dxyz_i
-    !do iat=2,n
-    !  do jat=1,iat-1
-    do iat=2,n
-      do jat=1,iat-1
-        linij=lin(iat,jat)
-        rcovij=rcov(iz(iat))+rcov(iz(jat))
-        do taux=-rep_v(1),rep_v(1)
-          do tauy=-rep_v(2),rep_v(2)
-            do tauz=-rep_v(3),rep_v(3)
-              tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
 !civn 
-              if(ldisplace) then 
-                ! iat always in the unit cell
-                ! jat can be in the unit cell or in some replicas, depending on tau
-                if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0) then 
-                  rij=xyz_hstep(:,jat)-xyz_hstep(:,iat) ! both in the unit cell, tau=0, use the displaced geometry 
-                else
-                  rij=xyz(:,jat)-xyz(:,iat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
-                end if 
-              else
-                rij=xyz(:,jat)-xyz(:,iat)+tau
-              end if 
-
+    do taux=-rep_v(1),rep_v(1)
+      do tauy=-rep_v(2),rep_v(2)
+        do tauz=-rep_v(3),rep_v(3)
+          !
+          unit_cell = taux.eq.0 .and. tauy.eq.0 .and. tauz.eq.0  
+          tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
+          r2=sqrt(sum(tau*tau))
+          if(unit_cell .and. (r2.gt.0.000010d0)) Call errore('pbcgdisp', &
+                                                      'non zero traslation vector found for the unit cell', 1)
+          !
+          do iat = 1, n 
+            !
+            if(ldisplace .and..not. unit_cell .and. (iat.eq.ia) ) then 
+              !
+              linij=lin(iat,iat)
+              rcovij=rcov(iz(iat))+rcov(iz(iat))
+              !
+              rij = xyz(:,iat) - xyz_hstep(:,iat) + tau
               r2=sum(rij*rij)
-              if (r2.gt.rthr.or.r2.lt.0.5) cycle
-               
-              Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
-
+              Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i(iat), dc6i_hstep(iat), vec)
               g(:,iat)=g(:,iat)+vec
-              g(:,jat)=g(:,jat)-vec
-
-              if(ldisplace) then 
-                if(iat.eq.ia.and..not.(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0)) then 
-write(*,*) '@@@'
-                  rij=xyz(:,jat)-xyz_hstep(:,iat)+tau
-                  r2=sum(rij*rij)                
-                  Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), &
-                              dc6i_hstep(iat), dc6i_hstep(jat), vec_hstep)
+              g_supercell(0,0,0,1:3,iat)          = g_supercell(0,0,0,1:3,iat)          + vec
+              g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) - vec
+              !
+            !else 
+            !  whenever iat is not displaced (i.e. ldisplace is false or iat.ne.ia), forces from -tau and +tau cancel out each other 
+            !  whenever iat is in the unit_cell, there is no force contribution from iat with itself
+            end if 
+            !
+            do jat=1,iat-1
+              !
+              linij=lin(iat,jat)
+              rcovij=rcov(iz(iat))+rcov(iz(jat))
+              !
+              if(ldisplace .and. unit_cell) then 
+                !
+                if(iat.eq.ia) then
+                  rij=xyz(:,jat)-xyz_hstep(:,iat) 
+                  r2=sum(rij*rij)
+                  if (r2.gt.rthr.or.r2.lt.0.5) cycle
+                  Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i_hstep(iat), dc6i(jat), vec)
+                elseif(jat.eq.ia) then
+                  rij=xyz_hstep(:,jat)-xyz(:,iat) 
+                  r2=sum(rij*rij)
+                  if (r2.gt.rthr.or.r2.lt.0.5) cycle
+                  Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i(iat), dc6i_hstep(jat), vec)
+                  !vec = -vec
                 else
-                  vec_hstep = vec
-                endif 
-                g_supercell(0,0,0,1:3,iat) = g_supercell(0,0,0,1:3,iat) + vec_hstep
-                g_supercell(0,0,0,1:3,jat) = g_supercell(0,0,0,1:3,jat) - vec       
-                if(.not.(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0)) then 
-                  g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) + vec
-                  g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) - vec_hstep
+                  rij=xyz(:,jat)-xyz(:,iat) 
+                  r2=sum(rij*rij)
+                  if (r2.gt.rthr.or.r2.lt.0.5) cycle
+                  Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
                 end if 
-              end if 
+                g(:,iat)=g(:,iat)+vec
+                g(:,jat)=g(:,jat)-vec
+                g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) + vec
+                g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) - vec
+                !
+              elseif(ldisplace .and..not. unit_cell) then 
+                !
+                if(iat.eq.ia) then 
+                  !
+                  rij = ( xyz(:,jat) + tau ) - xyz_hstep(:,iat) ! displaced 
+                  r2=sum(rij*rij)                
+                  if (r2.gt.rthr.or.r2.lt.0.5) cycle
+                  Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i_hstep(iat), dc6i(jat), vec)
+                  g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) - vec       
+                  g_supercell(0   ,0   ,0   ,1:3,iat) = g_supercell(0   ,0   ,0   ,1:3,iat) + vec
+                  g(:,iat)=g(:,iat)+vec
+                  !
+                  rij = ( xyz(:,jat) + tau ) - xyz(:,iat)        ! undisplaced
+                  r2=sum(rij*rij)                
+                  Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
+                  g_supercell(0   ,0   ,0   ,1:3,jat) = g_supercell(0   ,0   ,0   ,1:3,jat) - vec       
+                  g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) + vec
+                  g(:,jat)=g(:,jat)-vec
+                  !
+                elseif(jat.eq.ia) then 
+                  !
+                  rij = xyz_hstep(:,jat) - ( xyz(:,iat) - tau )  ! displaced
+                  r2=sum(rij*rij)                
+                  if (r2.gt.rthr.or.r2.lt.0.5) cycle
+                  Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i(iat), dc6i_hstep(jat), vec)
+                  !vec = -vec
+                  g_supercell(0   ,0   ,0   ,1:3,jat) = g_supercell(0   ,0   ,0   ,1:3,jat) - vec       
+                  g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) + vec
+                  g(:,jat)=g(:,jat)-vec
+                  !
+                  rij = xyz(:,jat)  - ( xyz(:,iat) - tau )        ! undisplaced
+                  r2=sum(rij*rij)                
+                  Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
+                  !vec = -vec
+                  g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) - vec       
+                  g_supercell(0   ,0   ,0   ,1:3,iat) = g_supercell(0   ,0   ,0   ,1:3,iat) + vec
+                  g(:,iat)=g(:,iat)+vec
+                  !
+                else
+                  !
+                  rij = ( xyz(:,jat) + tau ) - xyz(:,iat)        ! undisplaced
+                  r2=sum(rij*rij)                
+                  if (r2.gt.rthr.or.r2.lt.0.5) cycle
+                  Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
+                  g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) - vec       
+                  g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) + vec       
+                  g_supercell(0   ,0   ,0   ,1:3,jat) = g_supercell(0   ,0   ,0   ,1:3,jat) - vec
+                  g_supercell(0   ,0   ,0   ,1:3,iat) = g_supercell(0   ,0   ,0   ,1:3,iat) + vec
+                  g(:,jat)=g(:,jat)-vec
+                  g(:,iat)=g(:,iat)+vec
+                  !
+                end if 
+                !
+              else ! ldisplace
+                rij=xyz(:,jat)-xyz(:,iat)+tau
+                r2=sum(rij*rij)
+                if (r2.gt.rthr.or.r2.lt.0.5) cycle
+                Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
+                g(:,iat)=g(:,iat)+vec
+                g(:,jat)=g(:,jat)-vec
+              end if ! ldisplace
+              !
 
               do i=1,3
                 do j=1,3
                   sigma(j,i)=sigma(j,i)+vec(j)*rij(i)
                 end do
               end do
-
-
 
             end do
           end do
@@ -3981,7 +5506,7 @@ write(*,*) '@@@'
       write(*,*)'|G(stress)|=',gnorm
     end if
 
-  end subroutine pbcgdisp
+  end subroutine pbcgdisp_new
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -4353,9 +5878,10 @@ write(*,*) '@@@'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   subroutine gkernel1 ( version, r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42, &
-                          res1, res2 ) 
+                          fact, res1, res2 ) 
   implicit none
   integer, intent(in)   :: version
+  real(wp), intent(in)  :: fact ! overall scaling factor for res1 and res2
   real(wp), intent(in)  :: r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42
   real(wp), intent(out) :: res1, res2
 
@@ -4388,6 +5914,9 @@ write(*,*) '@@@'
   endif
 
   res2 = s6/r6*damp6+3.d0*s8*r42/r8*damp8 
+
+  res1 = fact * res1
+  res2 = fact * res2
 
   return
 
