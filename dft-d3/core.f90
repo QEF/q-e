@@ -4103,17 +4103,13 @@ write(*,*) '@pbcgdisp'
       if(.not.noabc) Call errore('pbcgdisp', 'Atom displacement not implemented with the threebody term', 1)
       ldisplace = .true.
       ns = shape(g_supercell_)
-      g_supercell( -ns(3)/2:ns(3)/2, -ns(2)/2:ns(2)/2, -ns(1)/2:ns(1)/2, 1:ns(4), 1:ns(5) ) => g_supercell_
+      g_supercell( -ns(1)/2:ns(1)/2, -ns(2)/2:ns(2)/2, -ns(3)/2:ns(3)/2, 1:ns(4), 1:ns(5) ) => g_supercell_
       g_supercell(:,:,:,:,:) = 0.0_wp 
       hdisp = dble(is) * hstep
       allocate(xyz_hstep(3,n))
       xyz_hstep(1:3,1:n) = xyz(1:3,1:n)
       xyz_hstep(ix, ia) = xyz_hstep(ix, ia) + hdisp
     end if 
-
-!civn 
-write(*,*) '@pbcgdisp_new', ldisplace, shape(g_supercell)
-!
 
     ! R^2 cut-off
     rthr=crit_vdw
