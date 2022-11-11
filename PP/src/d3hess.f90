@@ -209,6 +209,4 @@ program d3hess
   !
   CALL stop_pp
   !
-  return
-  !
 end program

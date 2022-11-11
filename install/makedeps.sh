@@ -80,11 +80,15 @@ for dir in $dirs; do
 	atomic/src | GWW/gww )
 	     DEPENDS="$DEPEND2" ;;
 	PW/src | CPV/src )
-	     DEPENDS="$DEPEND2 ../../KS_Solvers/Davidson ../../KS_Solvers/CG ../../KS_Solvers/PPCG ../../KS_Solvers/ParO ../../KS_Solvers/DENSE ../../KS_Solvers/RMM ../../dft-d3" ;;
+	     DEPENDS="$DEPEND2 $LEVEL2/KS_Solvers/Davidson $LEVEL2/KS_Solvers/CG $LEVEL2/KS_Solvers/PPCG $LEVEL2/KS_Solvers/ParO $LEVEL2/KS_Solvers/DENSE $LEVEL2/KS_Solvers/RMM $LEVEL2/dft-d3" ;;
 	KS_Solvers/Davidson | KS_Solvers/Davidson_RCI | KS_Solvers/CG | KS_Solvers/PPCG | KS_Solvers/ParO | KS_Solvers/DENSE | KS_Solvers/RMM )
 	     DEPENDS="$DEPEND3" ;;
-	PW/tools | PP/src | PWCOND/src | GWW/pw4gww | NEB/src )
+	PP/src )
+	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/dft-d3" ;;
+	PW/tools | PWCOND/src | GWW/pw4gww | NEB/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src" ;;
+	PHonon/PH )
+	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL2/dft-d3" ;;
 	PHonon/FD | PHonon/PH | PHonon/Gamma | HP/src | TDDFPT/src | XSpectra/src  | GIPAW/src | KCW/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules" ;;
         KCW/PP )
