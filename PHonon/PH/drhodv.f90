@@ -107,7 +107,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
      ENDDO
   END DO
   allocate (aux   ( npwx*npol , nbnd))
-  !$acc enter data create(aux)
+  !$acc enter data create(aux( 1:npwx*npol , 1:nbnd))
   dynwrk(:,:) = (0.d0, 0.d0)
   wdyn  (:,:) = (0.d0, 0.d0)
   !

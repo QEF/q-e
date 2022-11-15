@@ -172,10 +172,10 @@ SUBROUTINE phq_init()
   endif
   !
   ALLOCATE( aux1( npwx*npol, nbnd ) )
-  !$acc enter data create(aux1)
+  !$acc enter data create(aux1( 1:npwx*npol, 1:nbnd ))
   IF (noncolin.AND.domag) THEN
           ALLOCATE(tevc(npwx*npol,nbnd))
-          !$acc enter data create(tevc(npwx*npol,nbnd))
+          !$acc enter data create(tevc(1:npwx*npol,1:nbnd))
   ENDIF
   !
   !$acc data copyin(xk) 
