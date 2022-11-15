@@ -876,8 +876,8 @@ PROGRAM matdyn
   CALL mp_global_end()
   !
   IF (asr == 'all') THEN
-     WRITE(stdout, '(/A110/)') "   You are using asr="//'"all"'//", please consider citing "// &
-                               "C. Lin, S. Ponc\'e and N. Marzari, arXiv:2209.09520 (2022)."
+     WRITE(stdout, '(/A117/)') "  You are using asr="//'"all"'//", please consider citing "// &
+                               "C. Lin, S. Ponc\'e and N. Marzari, npj Comput Mater 8, 236 (2022)."
   ENDIF
   !
   STOP
@@ -1608,7 +1608,8 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, frc_lr, zeu, nat, ibrav, tau_blk, a
   !
   if (n.eq.21) then
      !
-     !! Please consider citing C. Lin, S. Ponc\'e and N. Marzari, arXiv:2209.09520 (2022) if asr='all' is used.
+     !! Please consider citing C. Lin, S. Ponc\'e and N. Marzari, npj Comput Mater 8, 236 (2022)
+     !! if asr='all' is used.
      !
      ! Born-Huang invariance conditions
      do i=1,3
