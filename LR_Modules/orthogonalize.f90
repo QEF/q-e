@@ -50,7 +50,6 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
 #endif
   !
   IMPLICIT NONE
-#include "/p/software/juwelsbooster/stages/2022/software/Score-P/7.1-nvompic-2021b/include/scorep/SCOREP_User.inc"
   INTEGER, INTENT(IN) :: ikk, ikq   ! the index of the k and k+q points
   INTEGER, INTENT(IN) :: npwq       ! the number of plane waves for q
   COMPLEX(DP), INTENT(IN)    :: evq(npwx*npol,nbnd)
@@ -106,7 +105,6 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
            !
            wg1 = wgauss ((ef-et(ibnd,ikk)) / degauss, ngauss)
            w0g = w0gauss((ef-et(ibnd,ikk)) / degauss, ngauss) / degauss
-           SCOREP_RECORDING_OFF()
            DO jbnd = 1, nbnd
               wgp = wgauss ( (ef - et (jbnd, ikq) ) / degauss, ngauss)
               deltae = et (jbnd, ikq) - et (ibnd, ikk)
@@ -131,13 +129,11 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
               ps(jbnd,ibnd) = wwg(jbnd) * ps(jbnd,ibnd)
            END DO
            !$acc end parallel loop
-           SCOREP_RECORDING_ON()
            !
         ELSE
            !
            wg1 = wg(ibnd,ikk) / wk(ikk)
            !
-           SCOREP_RECORDING_OFF()
            DO jbnd = 1, nbnd
               !
               wwg(jbnd) = dfpt_tetra_beta(jbnd,ibnd,ikk)
@@ -150,7 +146,6 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
               ps(jbnd,ibnd) = wwg(jbnd) * ps(jbnd,ibnd)
            END DO
            !$acc end kernels
-           SCOREP_RECORDING_ON()
            !
         ENDIF
         !
