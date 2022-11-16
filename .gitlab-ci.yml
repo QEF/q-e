@@ -1,30 +1,30 @@
-build:pw:
-  tags: [docker]
-  image: ubuntu:18.04
-  script:
-    - apt-get -qq update
-    - apt-get -qq install m4 make wget curl git gfortran gcc libopenblas-dev libfftw3-dev libopenmpi-dev
-    - ./configure
-    - make pw
-#    - export OMP_NUM_THREADS=1
-#    - cd test-suite
-#    - mkdir /tmp/save
-#    - make run-tests-pw-serial
-#    - rm -r /tmp/save
+#build:pw:
+#  tags: [docker]
+#  image: ubuntu:18.04
+#  script:
+#    - apt-get -qq update
+#    - apt-get -qq install m4 make wget curl git gfortran gcc libopenblas-dev libfftw3-dev libopenmpi-dev
+#    - ./configure
+#    - make pw
+##    - export OMP_NUM_THREADS=1
+##    - cd test-suite
+##    - mkdir /tmp/save
+##    - make run-tests-pw-serial
+##    - rm -r /tmp/save
 
-build:cp:
-  tags: [docker]
-  image: ubuntu:18.04
-  script:
-    - apt-get -qq update
-    - apt-get -qq install m4 make wget curl git gfortran gcc libopenblas-dev libfftw3-dev libopenmpi-dev
-    - ./configure
-    - make cp
-#    - export OMP_NUM_THREADS=1
-#    - cd test-suite
-#    - mkdir /tmp/save
-#    - make run-tests-cp-serial
-#    - rm -r /tmp/save
+#build:cp:
+#  tags: [docker]
+#  image: ubuntu:18.04
+#  script:
+#    - apt-get -qq update
+#    - apt-get -qq install m4 make wget curl git gfortran gcc libopenblas-dev libfftw3-dev libopenmpi-dev
+#    - ./configure
+#    - make cp
+##    - export OMP_NUM_THREADS=1
+##    - cd test-suite
+##    - mkdir /tmp/save
+##    - make run-tests-cp-serial
+##    - rm -r /tmp/save
 
 #build:ph:
 #  tags: [docker]
@@ -38,68 +38,97 @@ build:cp:
 #    - make run-tests-ph-serial
 #    - rm -r /tmp/save
 
-build:cmake-gnu:
-  tags: [docker]
-  image: ubuntu:20.04
-  variables:
-    DEBIAN_FRONTEND: "noninteractive"
+#build:cmake-gnu:
+#  tags: [docker]
+#  image: ubuntu:20.04
+#  variables:
+#    DEBIAN_FRONTEND: "noninteractive"
+#  script:
+#    - apt-get -qq update
+#    - apt-get -qq install apt-transport-https ca-certificates gnupg software-properties-common wget
+#    - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+#    - apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
+#    - apt-get install -qq build-essential git cmake libopenblas-dev libfftw3-dev libopenmpi-dev
+#    - cmake --version
+#    - mkdir build
+#    - cd build
+#    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
+#            -DMPIEXEC_PREFLAGS="--allow-run-as-root;--oversubscribe" .. && make
+#      && make pw ph hp pwcond neb pp pwall cp tddfpt gwl ld1 upf xspectra couple epw all_currents
+#      && ctest -L unit --output-on-failure
+#    - make install DESTDIR=`pwd`/install_root
+
+
+build:cmake-gnu-brenta:
+  tags: [brenta]
   script:
-    - apt-get -qq update
-    - apt-get -qq install apt-transport-https ca-certificates gnupg software-properties-common wget
-    - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
-    - apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
-    - apt-get install -qq build-essential git cmake libopenblas-dev libfftw3-dev libopenmpi-dev
+    - module load git cmake gnu8 openmpi3 mkl 
+    - module list 2> checkmoduli
     - cmake --version
     - mkdir build
     - cd build
     - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
-            -DMPIEXEC_PREFLAGS="--allow-run-as-root;--oversubscribe" .. && make
-      && make pw ph hp pwcond neb pp pwall cp tddfpt gwl ld1 upf xspectra couple epw all_currents
+            -DMPIEXEC_PREFLAGS="--allow-run-as-root;--oversubscribe" .. && make -j 
+      && make -j pw ph hp pwcond neb qe_pp cp tddfpt gwl ld1 upf xspectra couple  epw all_currents
       && ctest -L unit --output-on-failure
-    - make install DESTDIR=`pwd`/install_root
 
-build:pgi:
-  tags: [docker]
-  image: nvcr.io/nvidia/nvhpc:20.9-devel-ubuntu20.04
-  script:
-    - apt-get -qq update
-    - apt-get -qq install ca-certificates git m4
-    - ./configure FC=pgf90 F90=pgf90 F77=pgfortran MPIF90=mpif90 --enable-openmp --with-cuda=yes --enable-cuda-env-check=no
-    - make pw cp ph
 
-build:cmake-nvhpc:
-  tags: [docker]
-  image: nvcr.io/nvidia/nvhpc:21.2-devel-cuda11.2-ubuntu20.04
-  variables:
-    DEBIAN_FRONTEND: "noninteractive"
-  script:
-    - apt-get -qq update
-    - apt-get -qq install apt-transport-https ca-certificates gnupg software-properties-common wget
-    - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
-    - apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
-    - apt-get install -qq git cmake libfftw3-dev
-    - cmake --version
-    - mkdir build
-    - cd build
-    - cmake -DBUILD_SHARED_LIBS=OFF -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
-            -DQE_ENABLE_CUDA=ON -DQE_ENABLE_OPENACC=ON -DNVFORTRAN_CUDA_CC=70 .. && make
 
-build:cmake-nvhpc-nocuda:
-  tags: [docker]
-  image: nvcr.io/nvidia/nvhpc:21.2-devel-cuda11.2-ubuntu20.04
-  variables:
-    DEBIAN_FRONTEND: "noninteractive"
+#build:pgi:
+#  tags: [docker]
+#  image: nvcr.io/nvidia/nvhpc:20.9-devel-ubuntu20.04
+#  script:
+#    - apt-get -qq update
+#    - apt-get -qq install ca-certificates git m4
+#    - ./configure FC=pgf90 F90=pgf90 F77=pgfortran MPIF90=mpif90 --enable-openmp --with-cuda=yes --enable-cuda-env-check=no
+#    - make pw cp ph
+
+build:pgi-brenta:
+  tags: [brenta]
   script:
-    - apt-get -qq update
-    - apt-get -qq install apt-transport-https ca-certificates gnupg software-properties-common wget
-    - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
-    - apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
-    - apt-get install -qq git cmake libfftw3-dev
-    - cmake --version
-    - mkdir build
-    - cd build
-    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
-            -DQE_ENABLE_CUDA=OFF -DQE_ENABLE_OPENACC=OFF .. && make
+    - module load git 
+    - export PATH=/scratch/pdelugas/nvidia/hpc_sdk//Linux_x86_64/22.7/compilers/bin:$PATH
+    - export PATH=/scratch/pdelugas/nvidia/hpc_sdk//Linux_x86_64/22.7/comm_libs/mpi/bin:$PATH  
+    - ./configure FC=pgf90 F90=pgf90 F77=pgfortran MPIF90=mpif90 --enable-openmp --with-cuda=yes --enable-cuda-env-check=no --with-cuda-runtime=11.7
+    - make -j pw cp ph
+    - make distclean
+
+
+
+#
+#build:cmake-nvhpc:
+#  tags: [docker]
+#  image: nvcr.io/nvidia/nvhpc:21.2-devel-cuda11.2-ubuntu20.04
+#  variables:
+#    DEBIAN_FRONTEND: "noninteractive"
+#  script:
+#    - apt-get -qq update
+#    - apt-get -qq install apt-transport-https ca-certificates gnupg software-properties-common wget
+#    - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+#    - apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
+#    - apt-get install -qq git cmake libfftw3-dev
+#    - cmake --version
+#    - mkdir build
+#    - cd build
+#    - cmake -DBUILD_SHARED_LIBS=OFF -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
+#            -DQE_ENABLE_CUDA=ON -DQE_ENABLE_OPENACC=ON -DNVFORTRAN_CUDA_CC=70 .. && make
+#
+#build:cmake-nvhpc-nocuda:
+#  tags: [docker]
+#  image: nvcr.io/nvidia/nvhpc:21.2-devel-cuda11.2-ubuntu20.04
+#  variables:
+#    DEBIAN_FRONTEND: "noninteractive"
+#  script:
+#    - apt-get -qq update
+#    - apt-get -qq install apt-transport-https ca-certificates gnupg software-properties-common wget
+#    - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+#    - apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
+#    - apt-get install -qq git cmake libfftw3-dev
+#    - cmake --version
+#    - mkdir build
+#    - cd build
+#    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
+#            -DQE_ENABLE_CUDA=OFF -DQE_ENABLE_OPENACC=OFF .. && make
 
             
 #build:centos:

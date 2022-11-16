@@ -6,6 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 MODULE efield_module
+  !! Module with variables and initialization/update routines for the
+  !! electric field.
 
   USE kinds, ONLY : DP
 
@@ -14,10 +16,13 @@ MODULE efield_module
 
   logical      :: tefield  = .FALSE.
   logical      :: tefield2 = .FALSE.
-  integer      :: epol     = 3 !direction electric field
-  real(kind=DP) :: efield   = 0.d0 !intensity electric field
+  integer      :: epol     = 3
+  !! Direction of the electric field
+  real(kind=DP) :: efield   = 0.d0
+  !! Intensity of the electric field
   real(kind=DP)  :: efield2 =0.d0 
-  real(kind=DP)    evalue!strenght of electric field
+  real(kind=DP)    evalue
+  !! Strenght of the electric field
   real(kind=DP)  evalue2
   integer epol2,ipolp2
   integer         ipolp  !direction of electric field
@@ -28,46 +33,78 @@ MODULE efield_module
 !***
 !***  Berry phase
 !***
-      integer, allocatable:: ctable(:,:,:)!correspondence tables for diff. polarization
-      integer, allocatable:: ctabin(:,:,:)!inverse correspondence table
-      complex(DP), allocatable:: qmat(:,:)!inverse of matrix Q, for Barry's phase
-      complex(DP), allocatable:: gqq(:,:,:,:)!factors int beta_Ri^*beta_Rj exp(iGr)dr
-      complex(DP), allocatable:: gqqm(:,:,:,:)! the same with exp(-iGr)
-      complex(DP), allocatable:: gqq0(:,:,:,:)!factors int beta_Ri^*beta_Rj exp(iGr)dr, at Gamma
-      complex(DP), allocatable:: gqqm0(:,:,:,:)! the same with exp(-iGr), at Gamma
+      integer, allocatable:: ctable(:,:,:)
+      !! Correspondence tables for diff. polarization
+      integer, allocatable:: ctabin(:,:,:)
+      !! Inverse correspondence table
+      complex(DP), allocatable:: qmat(:,:)
+      !! Inverse of matrix Q, for Barry's phase
+      complex(DP), allocatable:: gqq(:,:,:,:)
+      !! Factors \( \int \beta_{Ri}^*\beta_{Rj} \exp(iGr)dr \)
+      complex(DP), allocatable:: gqqm(:,:,:,:)
+      !! The same as \(\text{gqq}\) with \(\exp(-iGr)\)
+      complex(DP), allocatable:: gqq0(:,:,:,:)
+      !! Factors int beta_Ri^*beta_Rj exp(iGr)dr, at Gamma
+      complex(DP), allocatable:: gqqm0(:,:,:,:)
+      !! The same with exp(-iGr), at Gamma
       complex(DP), allocatable:: df(:)
-      integer, allocatable:: ctable2(:,:,:)!correspondence tables for diff. polarization
-      integer, allocatable:: ctabin2(:,:,:)!inverse correspondence table
-      complex(DP), allocatable:: qmat2(:,:)!inverse of matrix Q, for Barry's phase
-      complex(DP), allocatable:: gqq2(:,:,:,:)!factors int beta_Ri^*beta_Rj exp(iGr)dr
-      complex(DP), allocatable:: gqqm2(:,:,:,:)! the same with exp(-iGr)
-      complex(DP), allocatable:: gqq02(:,:,:,:)!factors int beta_Ri^*beta_Rj exp(iGr)dr, at Gamma
-      complex(DP), allocatable:: gqqm02(:,:,:,:)! the same with exp(-iGr), at Gamma
+      integer, allocatable:: ctable2(:,:,:)
+      !! Correspondence tables for diff. polarization
+      integer, allocatable:: ctabin2(:,:,:)
+      !! Inverse correspondence table
+      complex(DP), allocatable:: qmat2(:,:)
+      !! Inverse of matrix Q, for Barry's phase
+      complex(DP), allocatable:: gqq2(:,:,:,:)
+      !! Factors \(\int \beta_{Ri}^*\beta_{Rj} \exp(iGr)dr\)
+      complex(DP), allocatable:: gqqm2(:,:,:,:)
+      !! The same as \(\text{gqqm2}\) with \(\exp(-iGr)\)
+      complex(DP), allocatable:: gqq02(:,:,:,:)
+      !! Factors int \(\beta_{Ri}^*\beta_{Rj} \exp(iGr)dr\), at Gamma
+      complex(DP), allocatable:: gqqm02(:,:,:,:)
+      !! The same as \(text{gqq02}\) with \(\exp(-iGr)\), at Gamma
       complex(DP) detq
       complex(DP) detq2
-      real(DP) cdzp(3),cdzm(3), cdz0(3)!centers of ionic charges
-
+      real(DP):: cdzp(3)
+      !! centers of ionic charges
+      real(DP):: cdzm(3)
+      !! centers of ionic charges
+      real(DP):: cdz0(3)
+      !! centers of ionic charges
+      !
 !for parallelization for direcions 1 and 2
-      integer :: n_g_missing_p(2)!number of g vector with correspondence G-->G+1 is missing
-      integer :: n_g_missing_m(2)!number of g vector with correspondence G-->G-1 is missing
-      integer, allocatable :: whose_is_g(:) !correspondence G(plane waves, global) ---> processor
-      integer, allocatable :: ctable_missing_1(:,:,:)!correspondence G(plane waves local)--> array for mpi_alltoall
-                                              !n_g_missing*nproc
-      integer, allocatable :: ctable_missing_rev_1(:,:,:)!missing_g --> G (plane waves local)
-      integer, allocatable :: ctable_missing_2(:,:,:)!correspondence G(plane waves local)--> array for mpi_alltoall
-                                              !n_g_missing*nproc
-      integer, allocatable :: ctable_missing_rev_2(:,:,:)!missing_g --> G (plane waves local)
-      integer, allocatable :: ctabin_missing_1(:,:,:)!correspondence G(plane waves local)--> array for mpi_alltoall
-                                              !n_g_missing*nproc
-      integer, allocatable :: ctabin_missing_rev_1(:,:,:)!missing_g --> G (plane waves local)
-      integer, allocatable :: ctabin_missing_2(:,:,:)!correspondence G(plane waves local)--> array for mpi_alltoall
-                                              !n_g_missing*nproc
-      integer, allocatable :: ctabin_missing_rev_2(:,:,:)!missing_g --> G (plane waves local)
+      !
+      integer :: n_g_missing_p(2)
+      !! number of g vector with correspondence \(G\rightarrow G+1\) is missing
+      integer :: n_g_missing_m(2)
+      !! number of g vector with correspondence \(G\rightarrow G-1\) is missing
+      integer, allocatable :: whose_is_g(:)
+      !! correspondence G(plane waves, global) ---> processor
+      integer, allocatable :: ctable_missing_1(:,:,:)
+      !! correspondence G(plane waves local) \(\rightarrow\) array for mpi\_alltoall
+      !! n\_g\_missing*nproc
+      integer, allocatable :: ctable_missing_rev_1(:,:,:)
+      !! \(\text{missing_g} \rightarrow G \) (plane waves local)
+      integer, allocatable :: ctable_missing_2(:,:,:)
+      !! correspondence G(plane waves local) \(\rightarrow\) array for mpi\_alltoall
+      !! n\_g\_missing*nproc
+      integer, allocatable :: ctable_missing_rev_2(:,:,:)
+      !! Correspondence \(\text{missing_g} \rightarrow G\) (plane waves local)
+      integer, allocatable :: ctabin_missing_1(:,:,:)
+      !! correspondence G(plane waves local) \(\rightarrow\) array for mpi\_alltoall
+      !! n\_g\_missing*nproc
+      integer, allocatable :: ctabin_missing_rev_1(:,:,:)
+      !! Correspondence \(\text{missing_g} \rightarrow G\) (plane waves local)
+      integer, allocatable :: ctabin_missing_2(:,:,:)
+      !! correspondence G(plane waves local) \(\rightarrow\) array for mpi\_alltoall
+      !! n\_g\_missing*nproc
+      integer, allocatable :: ctabin_missing_rev_2(:,:,:)
+      !! Correspondence \(\text{missing_g} \rightarrow G\) (plane waves local)
 
 CONTAINS
 
 
   SUBROUTINE efield_init( epol_ , efield_ )
+    !! initialize electric field (intensity and direction).
     USE kinds, ONLY: DP
     REAL(DP), INTENT(IN) :: efield_
     INTEGER, INTENT(IN)    :: epol_
@@ -77,6 +114,7 @@ CONTAINS
   END SUBROUTINE efield_init
 
   SUBROUTINE efield_info( )
+    !! Print direction and intensity of electric field.
     USE io_global, ONLY: ionode,stdout
     if(ionode) write (stdout,401) epol, efield
          
@@ -92,6 +130,7 @@ CONTAINS
 
 
   SUBROUTINE efield_berry_setup( eigr, tau0 )
+    !! Initialize Berry phase electric field.
     USE io_global, ONLY: ionode,stdout
     IMPLICIT NONE
     COMPLEX(DP), INTENT(IN)  :: eigr(:,:)
@@ -129,6 +168,7 @@ CONTAINS
 
 
   SUBROUTINE allocate_efield( ngw, ngw_g, nx, nhx, nax, nsp )
+    !! Allocate electric field related arrays.
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: ngw, ngw_g, nx, nhx, nax, nsp
       allocate( ctable(ngw,2,3))
@@ -146,6 +186,7 @@ CONTAINS
 
 
   SUBROUTINE deallocate_efield( )
+    !! Dellocate electric field related arrays.
     IMPLICIT NONE
     IF( allocated( ctable ) )  deallocate( ctable )
     IF( allocated( ctabin ) ) deallocate( ctabin )
@@ -169,6 +210,7 @@ CONTAINS
 
 
   SUBROUTINE berry_energy( enb, enbi, bec, cm, fion )
+    !! Calculates the Berry energy
     USE ions_positions, ONLY: tau0
     USE control_flags, ONLY: tfor, tprnfor
     IMPLICIT NONE
@@ -209,6 +251,7 @@ CONTAINS
   END SUBROUTINE dforce_efield
 
  SUBROUTINE efield_init2( epol_ , efield_ )
+    !! Initialize electric field 2 (intensity and direction).
     USE kinds, ONLY: DP
     REAL(DP), INTENT(IN) :: efield_
     INTEGER, INTENT(IN)    :: epol_
@@ -218,6 +261,7 @@ CONTAINS
   END SUBROUTINE efield_init2
 
   SUBROUTINE efield_info2( )
+    !! Print direction and intensity of electric field 2
     USE io_global, ONLY: ionode,stdout
     if(ionode) write (stdout,402) epol2, efield2
          
@@ -233,6 +277,7 @@ CONTAINS
 
 
   SUBROUTINE efield_berry_setup2( eigr, tau0 )
+    !! Initialize Berry phase electric field 2-
     USE io_global, ONLY: ionode,stdout
     IMPLICIT NONE
     COMPLEX(DP), INTENT(IN)  :: eigr(:,:)
@@ -261,6 +306,7 @@ CONTAINS
 
 
   SUBROUTINE allocate_efield2( ngw, nx, nhx, nax, nsp )
+    !! Allocate electric field 2 related arrays.
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: ngw, nx, nhx, nax, nsp
       allocate( ctable2(ngw,2,3))
@@ -275,6 +321,7 @@ CONTAINS
 
 
   SUBROUTINE deallocate_efield2( )
+    !! Dellocate electric field 2 related arrays.
     IMPLICIT NONE
     IF( allocated( ctable2 ) )  deallocate( ctable2 )
     IF( allocated( ctabin2 ) ) deallocate( ctabin2 )
@@ -288,6 +335,7 @@ CONTAINS
 
 
   SUBROUTINE berry_energy2( enb, enbi, bec, cm, fion )
+    !! Calculates the Berry energy 2.
     USE ions_positions, ONLY: tau0
     USE control_flags, ONLY: tfor, tprnfor
     IMPLICIT NONE

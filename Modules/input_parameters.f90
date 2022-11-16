@@ -519,6 +519,11 @@ MODULE input_parameters
         REAL(DP) :: sic_epsilon = 0.0_DP
         REAL(DP) :: sic_alpha   = 0.0_DP
         LOGICAL   :: force_pairing = .false.
+        CHARACTER(len=80) :: pol_type = 'none'
+        REAL(DP) :: sic_gamma = 0.0_DP
+        LOGICAL  :: sic_energy = .false.
+        REAL(DP) :: sci_vb = 0.0_DP
+        REAL(DP) :: sci_cb = 0.0_DP
 
         LOGICAL :: one_atom_occupations=.false.
 
@@ -641,6 +646,9 @@ MODULE input_parameters
         !! in rhombohedral axes. If FALSE in hexagonal axes, that are
         !! converted internally in rhombohedral axes.  
         !
+        INTEGER :: nextffield = 0 
+        !! Number of activated external force fields 
+        !
 
 
 
@@ -663,6 +671,7 @@ MODULE input_parameters
              report, lforcet,                                                 &
              constrained_magnetization, B_field, fixed_magnetization,         &
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
+             pol_type, sic_gamma, sic_energy, sci_vb, sci_cb,                 &
              tot_charge, tot_magnetization, one_atom_occupations,             &
              vdw_corr, london, london_s6, london_rcut, london_c6, london_rvdw,&
              dftd3_version, dftd3_threebody,                                  &
@@ -675,7 +684,8 @@ MODULE input_parameters
              lgcscf, gcscf_ignore_mun, gcscf_mu, gcscf_conv_thr,              &
              gcscf_gk, gcscf_gh, gcscf_beta,                                  &
              space_group, uniqueb, origin_choice, rhombohedral,               &
-             zgate, relaxz, block, block_1, block_2, block_height
+             zgate, relaxz, block, block_1, block_2, block_height,            &
+             nextffield
 
 !=----------------------------------------------------------------------------=!
 !  ELECTRONS Namelist Input Parameters

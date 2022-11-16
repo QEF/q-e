@@ -130,8 +130,6 @@ program all_currents
    use_gpu = check_gpu_support()
    if(use_gpu) Call errore('QEHeat', 'QEHeat with GPU NYI.', 1)
    CALL mp_startup( images_only=.true. )
-   CALL set_mpi_comm_4_solvers(intra_pool_comm, intra_bgrp_comm, &
-                               inter_bgrp_comm)
    CALL environment_start('QEHeat')
    call start_clock('all_currents')
    IF (ionode) THEN

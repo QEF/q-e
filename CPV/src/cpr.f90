@@ -9,6 +9,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !----------------------------------------------------------------------------
+  !! Main loop for CP molecular dynamics.
   !
   USE kinds,                    ONLY : DP
   USE constants,                ONLY : bohr_radius_angs, amu_au, au_gpa
@@ -118,9 +119,10 @@ USE cp_main_variables,        ONLY : eigr_d
   USE ldaU_cp,                  ONLY : lda_plus_u, vupsi
   USE fft_base,                 ONLY : dfftp, dffts
   USE london_module,            ONLY : energy_london, force_london, stres_london
-  USE input_parameters,         ONLY : tcpbo
+  USE input_parameters,         ONLY : tcpbo, nextffield
   USE xc_lib,                   ONLY : xclib_dft_is, start_exx, exx_is_active
   USE device_memcpy_m,          ONLY : dev_memcpy
+  USE extffield,                ONLY : apply_extffield_CP,close_extffield
   !
 #if defined (__ENVIRON)
   USE plugin_flags,             ONLY : use_environ
@@ -134,8 +136,11 @@ USE cp_main_variables,        ONLY : eigr_d
   ! ... input/output variables
   !
   REAL(DP), INTENT(OUT) :: tau_out(3,nat)
+  !! positions of ions
   REAL(DP), INTENT(OUT) :: fion_out(3,nat)
+  !! forces on ions
   REAL(DP), INTENT(OUT) :: etot_out
+  !! total energy
   !
   ! ... control variables
   !
@@ -459,10 +464,20 @@ USE cp_main_variables,        ONLY : eigr_d
            !
         END IF
         !
-        !
         ! ... call void routine for user define/ plugin patches on external forces
         !
         CALL plugin_ext_forces()
+        !
+        ! ... call run_extffield to apply external force fields on ions
+        ! 
+        IF ( nextffield > 0 ) THEN
+           IF ( .NOT.tnosep .OR. CYCLE_NOSE.EQ.0 ) THEN
+              IF ( ionode ) THEN
+                 CALL apply_extffield_CP(nfi,nextffield,tau0,vels,fion)
+              END IF
+              CALL mp_bcast( fion, ionode_id, intra_bgrp_comm )
+           END IF
+        END IF
         !
         !
         CALL ions_move( tausp, taus, tausm, iforce, pmass, fion, ainv, &
@@ -498,7 +513,9 @@ USE cp_main_variables,        ONLY : eigr_d
         !
         CALL ions_cofmass( tausp, pmass, nat, ityp, cdm )
         !
-        IF ( ndfrz == 0 ) &
+        ! ... Center of mass subtraction bypassed if external ionic force fields are activated
+        ! 
+        IF ( ndfrz == 0 .AND. nextffield == 0) &
            CALL ions_cofmsub( tausp, iforce, nat, cdm, cdms )
         !
         CALL s_to_r( tausp, taup, nat, hnew )
@@ -1010,7 +1027,8 @@ USE cp_main_variables,        ONLY : eigr_d
   IF( iverbosity > 1 ) CALL laxlib_print_matrix( lambda, idesc, nbsp, nbsp, nudx, 1.D0, ionode, stdout )
   !
   IF (lda_plus_u) DEALLOCATE( forceh )
-
+  !
+  IF (ionode .AND. nextffield > 0) CALL close_extffield()
   !
   CALL stop_clock( 'cpr_total' ) ! BS
   !
@@ -1021,6 +1039,7 @@ END SUBROUTINE cprmain
 !----------------------------------------------------------------------------
 SUBROUTINE terminate_run()
   !----------------------------------------------------------------------------
+  !! Terminate CP run and print statistics.
   !
   USE io_global,         ONLY : stdout, ionode
   USE control_flags,     ONLY : ts_vdw, thdyn, tortho

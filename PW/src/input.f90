@@ -153,6 +153,12 @@ SUBROUTINE iosys()
   !
   USE relax,         ONLY : epse, epsf, epsp, starting_scf_threshold
   !
+  USE control_flags, ONLY : sic, scissor
+  USE sic_mod,       ONLY : pol_type_ => pol_type, sic_gamma_ => sic_gamma, &
+                            sic_energy_ => sic_energy
+  USE sci_mod,       ONLY : sci_vb_ => sci_vb, sci_cb_ => sci_cb
+ 
+  !
   USE extrapolation, ONLY : pot_order, wfc_order
   USE control_flags, ONLY : isolve, max_cg_iter, max_ppcg_iter, david, &
                             rmm_ndim, rmm_conv, gs_nblock, rmm_with_davidson, &
@@ -254,6 +260,7 @@ SUBROUTINE iosys()
                                input_dft, la2F, starting_ns_eigenvalue,     &
                                x_gamma_extrapolation, nqx1, nqx2, nqx3,     &
                                exxdiv_treatment, yukawa, ecutvcut,          &
+                               pol_type, sic_gamma, sic_energy, sci_vb, sci_cb, &
                                exx_fraction, screening_parameter, ecutfock, &
                                gau_parameter, localization_thr, scdm, ace,  &
                                scdmden, scdmgrd, nscdm, n_proj,             & 
@@ -352,7 +359,7 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256):: dft_
   !
   INTEGER  :: ia, nt, tempunit, i, j, ibrav_mp
-  LOGICAL  :: exst, parallelfs, domag, stop_on_error, is_tau_read
+  LOGICAL  :: exst, parallelfs, domag, stop_on_error, is_tau_read, sm_wasnt_set
   REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, V
   CHARACTER(len=256) :: tempfile
   INTEGER, EXTERNAL :: at2ibrav
@@ -562,6 +569,15 @@ SUBROUTINE iosys()
   nstep_ = nstep
   tstress_ = lmovecell .OR. ( tstress .and. lscf )
   !
+  sic_gamma_ = sic_gamma
+  sic_energy_ = sic_energy
+  IF(sic_gamma /= 0.d0 ) sic = .true.
+  pol_type_ = trim(pol_type)
+  sci_vb_ = sci_vb
+  sci_cb_ = sci_cb
+  IF(sci_vb .NE. 0.d0 .or. sci_cb .NE. 0.d0 ) scissor = .true.
+  IF(scissor .and. nspin .ne. 2) CALL errore('allocate_scissor', 'spin polarized calculation required',1)
+  !
   ! ELECTRIC FIELDS (SAWTOOTH), GATE FIELDS
   !
   IF ( tefield .and. ( .not. nosym ) .and. ( .not. gate ) ) THEN
@@ -726,40 +742,43 @@ SUBROUTINE iosys()
   lspinorb_ = lspinorb
   lforcet_ = lforcet
   !
+  ! ... starting_magnetization(nt) = sm_not_set means "not set"
+  ! ... take notice and set to the default (zero)
+  !
+  sm_wasnt_set = ALL (starting_magnetization(1:ntyp) == sm_not_set)
+  DO nt = 1, ntyp
+     IF ( starting_magnetization(nt) == sm_not_set ) &
+          starting_magnetization(nt) = 0.0_dp
+  END DO
+  !
   SELECT CASE( trim( constrained_magnetization ) )
   CASE( 'none' )
      !
-     ! ... starting_magnetization(nt) = sm_not_set means "not set"
      ! ... if no constraints are imposed on the magnetization, 
      ! ... starting_magnetization must be set for at least one atomic type
      !
      IF ( lscf .AND. lsda .AND. ( .NOT. tfixed_occ ) .AND. &
-          ( .not. two_fermi_energies )  .AND. &
-          ALL (starting_magnetization(1:ntyp) == sm_not_set) ) &
+          ( .not. two_fermi_energies )  .AND. sm_wasnt_set ) &
         CALL errore('iosys','some starting_magnetization MUST be set', 1 )
      !
      ! ... bring starting_magnetization between -1 and 1
      !
      DO nt = 1, ntyp
-        !
-        IF ( starting_magnetization(nt) == sm_not_set ) THEN
-           starting_magnetization(nt) = 0.0_dp
-        ELSEIF ( starting_magnetization(nt) > 1.0_dp ) THEN
-          starting_magnetization(nt) = 1.0_dp
-        ELSEIF ( starting_magnetization(nt) <-1.0_dp ) THEN
-          starting_magnetization(nt) =-1.0_dp
-        ENDIF
-        !
+        starting_magnetization(nt) = MIN( 1.0_dp,starting_magnetization(nt))
+        starting_magnetization(nt) = MAX(-1.0_dp,starting_magnetization(nt))
      ENDDO
      !
      i_cons = 0
      !
   CASE( 'atomic' )
      !
+     ! ... if "atomic" constraints are imposed on the magnetization, 
+     ! ... starting_magnetization must be set for at least one atomic type
+     !
      IF ( nspin == 1 ) &
         CALL errore( 'iosys','constrained atomic magnetizations ' // &
                    & 'require nspin=2 or 4 ', 1 )
-     IF ( ALL (starting_magnetization(1:ntyp) == sm_not_set) ) &
+     IF ( sm_wasnt_set ) &
         CALL errore( 'iosys','constrained atomic magnetizations ' // &
                    & 'require that some starting_magnetization is set', 1 )
      !

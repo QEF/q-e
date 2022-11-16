@@ -8,7 +8,7 @@ export LC_ALL
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 TOPDIR=`pwd`
 
 if test $# = 0

@@ -413,11 +413,13 @@ that is useful to call \qe\ programs from external codes.
 
 To install \qe\ from source, you need first of all a minimal Unix
 environment, that is: a command shell (e.g., bash, sh) and utilities \make,
-\texttt{awk}, \texttt{sed}. For MS-Windows, see Sec.\ref{SubSec:Windows}.
-You will also need a recent (v.3.14 or later) working CMake software 
-if you prefer installation 
-with CMake (supported since v.6.7), otherwise you will need the
-\configure\ command from autoconf (see next subsection).
+\texttt{awk}, \texttt{sed}. In order to install external
+libraries from scratch, you will also need \texttt{git} v.2.13 or later.
+For MS-Windows, see Sec.\ref{SubSec:Windows}.
+If you prefer installation with CMake (supported since v.6.7), 
+you will need a recent (v.3.14 or later) working CMake software;
+otherwise you will need the \configure\ command from autoconf and,
+for FoX compilation, \texttt{m4}.
 
 Note that the scripts contained
 in the distribution assume that the local  language is set to the
@@ -856,7 +858,7 @@ https://www.tddft.org/programs/libxc/functionals/
 Combinations of \qe\ and \libxc\ functionals are allowed in \texttt{PW}, but some attention has to be paid to their reciprocal compatibility (see section below).\\
 For example, the internal exchange term of PBE together with the correlation term of PBE in \libxc\ is obtained by:
 \begin{verbatim}
-input_dft = `XC-001I-000I-003L-130L-000I-000I'
+input_dft = `XC-001I-000I-003I-130L-000I-000I'
 \end{verbatim}
 which corresponds to the old:
 \begin{verbatim}
@@ -1308,21 +1310,28 @@ paragraph.
 
 \subsubsection{Cray machines}
 
-For recent Cray machines, use \texttt{./configure ARCH=craype}.
-This selects the \texttt{ftn} compiler, that typically uses
-the \texttt{crayftn} compiler but may also use other ones,
-depending upon the site and personal environment.
-
-''Now, despite what people can imagine, every CRAY machine deployed can
+''... despite what people can imagine, every CRAY machine deployed can
 have different environment. For example on the machine I usually use
 for tests [...] I do have to unload some modules to make QE running
 properly. On another CRAY [...] there is also Intel compiler as option
 and the system is slightly different compared to the other.'' 
 (info by Filippo Spiga)
 
-With the \verb|PrgEnv-cray| module, v.6.0.10, you get an internal compiler 
-error in \verb|esm_stres_mod.f90|. If so, reduce the optimization level
-for that specific routine from \verb|-O3| to \verb|-O1|.
+For recent Cray machines, use \texttt{./configure ARCH=craype}.
+This selects the \texttt{ftn} compiler, that typically uses
+the \texttt{crayftn} compiler but may also use other ones,
+depending upon the site and personal environment. Only very
+recent versions of the Cray compiler work, sort of.
+With the \verb|PrgEnv-cray| module v.6.0.10, \texttt{ftn} v.14.0.3,
+you run into the following problems:
+\begin{itemize}
+\item internal compiler error in \verb|esm_stres_mod.f90|;
+\item crashes when writing the final xml data file.
+\end{itemize}
+Workaround: compile codes \verb|esm_stres_mod.f90|,
+\verb|Modules/qexsd*.f90|, \verb|PW/src/pw_restart_new.f90|
+with reduced optimization, using -O0 or -O1 instead of the default
+-O3,fp3 optimization.
 
 If you want to use the Intel compiler instead, try something like:
 \begin{verbatim}

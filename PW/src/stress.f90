@@ -17,12 +17,13 @@ SUBROUTINE stress( sigma )
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
   USE constants,        ONLY : ry_kbar
   USE ener,             ONLY : etxc, vtxc
-  USE gvect,            ONLY : ngm, gstart, g, gg, gcutm
+  USE gvect,            ONLY : ngm, gstart, g, gg, gcutm, gl, gl_d
   USE fft_base,         ONLY : dfftp
   USE ldaU,             ONLY : lda_plus_u, Hubbard_projectors
   USE lsda_mod,         ONLY : nspin
   USE scf,              ONLY : rho, rho_core, rhog_core
-  USE control_flags,    ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, ts_vdw, mbd_vdw, use_gpu
+  USE control_flags,    ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, &
+                               ts_vdw, mbd_vdw
   USE xc_lib,           ONLY : xclib_dft_is
   USE symme,            ONLY : symmatrix
   USE bp,               ONLY : lelfield
@@ -36,8 +37,7 @@ SUBROUTINE stress( sigma )
   USE libmbd_interface, ONLY : HmbdvdW
   USE rism_module,      ONLY : lrism, stres_rism
   USE esm,              ONLY : do_comp_esm, esm_bc ! for ESM stress
-  USE esm,              ONLY : esm_stres_har, esm_stres_ewa, esm_stres_loclong ! for ESM stress
-  USE gvect,            ONLY : g_d, gg_d
+  USE esm,              ONLY : esm_stres_har, esm_stres_ewa, esm_stres_loclong 
   !
   IMPLICIT NONE
   !
@@ -55,7 +55,7 @@ SUBROUTINE stress( sigma )
   REAL(DP) :: sigmasol(3,3)      ! for RISM stress
   INTEGER  :: l, m
   !
-  ! Auxiliary variables for Grimme-D3
+  ! ... Auxiliary variables for Grimme-D3
   !
   INTEGER  :: atnum(1:nat)
   REAL(DP) :: latvecs(3,3)
@@ -70,10 +70,14 @@ SUBROUTINE stress( sigma )
   !
   CALL start_clock( 'stress' )
   !
-  !   contribution from local potential
+  !$acc update device( g, gg )
+#if defined(__CUDA)
+  gl_d = gl
+#endif
   !
-  IF (.NOT. use_gpu) CALL stres_loc( sigmaloc )
-  IF (      use_gpu) CALL stres_loc_gpu( sigmaloc )
+  ! ... contribution from local potential
+  !
+  CALL stres_loc( sigmaloc )
   !
   IF ( do_comp_esm .AND. ( esm_bc /= 'pbc' ) ) THEN
      ! In ESM, sigmaloc has only short-range term: add long-range term
@@ -81,51 +85,50 @@ SUBROUTINE stress( sigma )
      sigmaloc(:,:) = sigmaloc(:,:) + sigmaloclong(:,:)
   END IF
   !
-  !  hartree contribution
+  ! ... Hartree contribution
   !
   IF ( do_comp_esm .AND. ( esm_bc /= 'pbc' ) )  THEN ! for ESM stress
      CALL esm_stres_har( sigmahar, rho%of_g(:,1) )
   ELSE
-     IF (.NOT. use_gpu) CALL stres_har( sigmahar )
-     IF (      use_gpu) CALL stres_har_gpu( sigmahar )
-  END IF
+     CALL stres_har( sigmahar )
+  ENDIF
   !
-  !  xc contribution (diagonal)
+  ! ... XC contribution (diagonal)
   !
   sigmaxc(:,:) = 0.d0
   DO l = 1, 3
-     sigmaxc (l, l) = - (etxc - vtxc) / omega
+     sigmaxc(l,l) = - (etxc - vtxc) / omega
   ENDDO
   !
-  !  xc contribution: add gradient corrections (non diagonal)
+  ! ... XC contribution: add gradient corrections (non diagonal)
   !
-  CALL stres_gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, &
-       nspin, dfftp, g, alat, omega, sigmaxc )
+  IF (.NOT.xclib_dft_is('meta')) THEN
+    CALL stres_gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, &
+                         nspin, dfftp, g, alat, omega, sigmaxc )
+  ELSE
+    CALL stres_gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, &
+                         nspin, dfftp, g, alat, omega, sigmaxc, rho%kin_r )
+  ENDIF
   !
-  !  meta-GGA contribution 
+  ! ... meta-GGA contribution
   !
-  IF (.NOT. use_gpu) CALL stres_mgga( sigmaxc )
-  IF (      use_gpu) CALL stres_mgga_gpu( sigmaxc )
+  CALL stres_mgga( sigmaxc )
   !
-  ! core correction contribution
+  ! ... core correction contribution
   !
-  IF (.NOT. use_gpu) CALL stres_cc( sigmaxcc )
-  IF (      use_gpu) CALL stres_cc_gpu( sigmaxcc )
+  CALL stres_cc( sigmaxcc )
   !
-  !  ewald contribution
+  ! ... Ewald contribution
   !
   IF ( do_comp_esm .AND. ( esm_bc /= 'pbc' ) ) THEN ! for ESM stress
      CALL esm_stres_ewa( sigmaewa )
   ELSE
-     IF (.NOT. use_gpu) CALL stres_ewa( alat, nat, ntyp, ityp, zv, at,      &
-                                        bg, tau, omega, g, gg, ngm, gstart, &
-                                        gamma_only, gcutm, sigmaewa )
-     IF (      use_gpu) CALL stres_ewa_gpu( alat, nat, ntyp, ityp, zv, at, bg,&
-                                            tau, omega, g_d,gg_d, ngm, gstart,&
-                                            gamma_only, gcutm, sigmaewa )
-  END IF
+     CALL stres_ewa( alat, nat, ntyp, ityp, zv, at, bg, &
+                     tau, omega, g, gg, ngm, gstart,    &
+                     gamma_only, gcutm, sigmaewa )
+  ENDIF
   !
-  ! semi-empirical dispersion contribution: Grimme-D2 and D3
+  ! ... semi-empirical dispersion contribution: Grimme-D2 and D3
   !
   sigmad23( : , : ) = 0.d0
   IF ( llondon ) THEN
@@ -145,10 +148,9 @@ SUBROUTINE stress( sigma )
     CALL stop_clock('stres_dftd3')
   END IF
   !
-  !  kinetic + nonlocal contribuition
+  ! ... kinetic + nonlocal contribuition
   !
-  IF (.NOT. use_gpu) CALL stres_knl( sigmanlc, sigmakin )
-  IF (      use_gpu) CALL stres_knl_gpu( sigmanlc, sigmakin )
+  CALL stres_knl( sigmanlc, sigmakin )
   !
   DO l = 1, 3
      DO m = 1, 3
@@ -156,13 +158,13 @@ SUBROUTINE stress( sigma )
      ENDDO
   ENDDO
   !
-  !  Hubbard contribution
-  !  (included by stres_knl if using beta as local projectors)
+  ! ... Hubbard contribution
+  !     (included by stres_knl if using beta as local projectors)
   !
   sigmah(:,:) = 0.d0
   IF ( lda_plus_u .AND. Hubbard_projectors /= 'pseudo' ) CALL stres_hub( sigmah )
   !
-  !   Electric field contribution
+  ! ... Electric field contribution
   !
   sigmael(:,:)=0.d0
   sigmaion(:,:)=0.d0
@@ -170,15 +172,15 @@ SUBROUTINE stress( sigma )
 !  call stress_bp_efield (sigmael )
 !  call stress_ion_efield (sigmaion )
   !
-  ! vdW dispersion contribution: xdm
+  ! ... vdW dispersion contribution: xdm
   !
   sigmaxdm = 0._dp
   IF (lxdm) sigmaxdm = stress_xdm()
   !
-  ! vdW dispersion contribution: Tkatchenko-Scheffler
+  ! ... vdW dispersion contribution: Tkatchenko-Scheffler
   !
   sigma_ts = 0.0_DP
-    ! vdW dispersion contribution: Many-Body Dispersion
+  ! ... vdW dispersion contribution: Many-Body Dispersion
   !
   sigma_mbd = 0.0_DP
   IF ( mbd_vdw ) THEN
@@ -187,17 +189,17 @@ SUBROUTINE stress( sigma )
     sigma_ts = -2.0_DP*alat*MATMUL( HtsvdW, TRANSPOSE(at) )/omega
   ENDIF
   !
-  !   DFT-non_local contribution
+  ! ... DFT-non_local contribution
   !
   sigma_nonloc_dft(:,:) = 0.d0
   CALL stres_nonloc_dft( rho%of_r, rho_core, nspin, sigma_nonloc_dft )
   !
-  !   The solvation contribution (3D-RISM)
+  ! ... The solvation contribution (3D-RISM)
   !
   sigmasol(:,:) = 0.d0
   IF (lrism) CALL stres_rism(sigmasol)
   !
-  ! SUM
+  ! ... Sum all terms
   !
   sigma(:,:) = sigmakin(:,:) + sigmaloc(:,:) + sigmahar(:,:) +  &
                sigmaxc(:,:)  + sigmaxcc(:,:) + sigmaewa(:,:) +  &
@@ -213,12 +215,12 @@ SUBROUTINE stress( sigma )
   ELSE
      sigmaexx = 0.d0
   ENDIF
-  ! Resymmetrize the total stress. This should not be strictly necessary,
-  ! but prevents loss of symmetry in long vc-bfgs runs
+  ! ... Resymmetrize the total stress. This should not be strictly necessary,
+  !     but prevents loss of symmetry in long vc-bfgs runs
 
   CALL symmatrix( sigma )
   !
-  ! write results in Ry/(a.u.)^3 and in kbar
+  ! ... write results in Ry/(a.u.)^3 and in kbar
   !
   IF ( do_comp_esm .AND. ( esm_bc /= 'pbc' ) ) THEN ! for ESM stress
      WRITE( stdout, 9000) (sigma(1,1) + sigma(2,2)) * ry_kbar/3d0, &

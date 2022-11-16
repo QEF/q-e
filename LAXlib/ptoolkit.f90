@@ -5554,9 +5554,11 @@ SUBROUTINE laxlib_pztrtri_x ( sll, ldx, n, idesc )
     END DO
 
     ! split communicator is present and must be freed on all processors
-    CALL mpi_comm_free( col_comm, ierr )
-    IF( ierr /= 0 ) &
+    IF( col_comm /= MPI_COMM_NULL ) THEN
+       CALL mpi_comm_free( col_comm, ierr )
+       IF( ierr /= 0 ) &
           CALL lax_error__( " pztrtri ", " in mpi_comm_free 25 ", ABS( ierr ) )
+    ENDIF
 
     DEALLOCATE(B)
     DEALLOCATE(C)
@@ -5929,9 +5931,11 @@ SUBROUTINE laxlib_pdtrtri_x ( sll, ldx, n, idesc )
     END DO
 
     ! split communicator is present and must be freed on all processors
-    CALL mpi_comm_free( col_comm, ierr )
-    IF( ierr /= 0 ) &
+    IF( col_comm /= MPI_COMM_NULL ) THEN
+       CALL mpi_comm_free( col_comm, ierr )
+       IF( ierr /= 0 ) &
           CALL lax_error__( " pdtrtri ", " in mpi_comm_free 25 ", ABS( ierr ) )
+    ENDIF
 
     DEALLOCATE(B)
     DEALLOCATE(C)

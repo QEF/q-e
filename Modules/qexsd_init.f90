@@ -184,12 +184,13 @@ CONTAINS
       TYPE(wyckoff_positions_type) :: wyckoff_pos
       REAL(DP)                     :: new_alat
       INTEGER,TARGET              :: ibrav_tgt
-      INTEGER,POINTER             :: ibrav_ptr => null ()
+      INTEGER,POINTER             :: ibrav_ptr 
       CHARACTER(LEN=256),TARGET   :: use_alt_axes 
-      CHARACTER(LEN=256),POINTER  :: use_alt_axes_ => null ()
+      CHARACTER(LEN=256),POINTER  :: use_alt_axes_ 
       !
       ! atomic positions
       !
+      NULLIFY(use_alt_axes_, ibrav_ptr) 
       IF ( ibrav .ne. 0 ) THEN 
          ibrav_tgt =  abs(ibrav) 
          ibrav_ptr => ibrav_tgt
@@ -409,7 +410,7 @@ CONTAINS
       !
       SUBROUTINE qexsd_init_dftU (obj, nsp, psd, species, ityp, is_hubbard, &
                                   is_hubbard_back, backall, hubb_n2, hubb_l2, hubb_n3, hubb_l3,    & 
-                                  noncolin, lda_plus_u_kind, U_projection_type, U, U2,  J0, J,     &
+                                  noncolin, lda_plus_u_kind, U_projection_type, hubb_occ, U, U2,  J0, J,     &
                                   n, l, alpha, beta, alpha_back, starting_ns, Hub_ns, Hub_ns_nc, Hub_nsg, Hubbard_V )
          IMPLICIT NONE 
          TYPE(dftU_type),INTENT(INOUT)  :: obj 
@@ -429,7 +430,7 @@ CONTAINS
          CHARACTER(LEN=*),INTENT(IN)    :: U_projection_type
          LOGICAL,OPTIONAL,INTENT(IN)    :: noncolin 
          REAL(DP),OPTIONAL,INTENT(IN)   :: U(:), U2(:), J0(:), alpha(:), alpha_back(:), &
-                                           beta(:), J(:,:)                            
+                                           beta(:), J(:,:), hubb_occ(:,:)                           
          REAL(DP),OPTIONAL,INTENT(IN)   :: hubbard_v(:,:,:)
          REAL(DP),OPTIONAL,INTENT(IN)   :: starting_ns(:,:,:), Hub_ns(:,:,:,:), Hub_nsg(:,:,:,:)
          COMPLEX(DP),OPTIONAL,INTENT(IN) :: Hub_ns_nc(:,:,:,:)
@@ -437,6 +438,7 @@ CONTAINS
          CHARACTER(10), ALLOCATABLE            :: label(:)
          TYPE(HubbardCommon_type),ALLOCATABLE  :: U_(:), U2_(:), J0_(:), alpha_(:), &
                                                   alpha_back_(:), beta_(:)
+         TYPE(HubbardOcc_type),ALLOCATABLE     :: hubb_occ_(:)
          TYPE(HubbardJ_type),ALLOCATABLE       :: J_(:) 
          TYPE(starting_ns_type),ALLOCATABLE    :: starting_ns_(:) 
          TYPE(Hubbard_ns_type),ALLOCATABLE     :: Hubbard_ns_(:), Hubbard_ns_nc_(:)
@@ -451,6 +453,8 @@ CONTAINS
              ALLOCATE(label(nsp))
              label(:)="no Hubbard"
          ENDIF
+         IF (PRESENT(hubb_occ)) CALL init_hubbard_occs(hubb_occ, hubb_occ_, label, n2 = hubb_n2, n3=hubb_n3,  &
+                                                        l2 = hubb_l2, l3 = hubb_l3) 
          IF ( PRESENT(noncolin)) noncolin_ = noncolin 
          !
          IF (lda_plus_u_kind == 2 ) THEN 
@@ -481,9 +485,10 @@ CONTAINS
          END IF 
          
          !
-         CALL qes_init (obj, "dftU", lda_plus_u_kind, U_, J0_, alpha_, beta_,  J_, starting_ns_, Hub_V_,     & 
+         CALL qes_init (obj, "dftU", lda_plus_u_kind, hubb_occ_,  U_, J0_, alpha_, beta_,  J_, starting_ns_, Hub_V_,     & 
                        Hubbard_ns_, U_projection_type, Hub_back_, alpha_back_, Hubbard_ns_nc_)
          ! 
+         CALL reset_hubbard_occs(hubb_occ_)
          CALL reset_hubbard_commons(U_)
          CALL reset_hubbard_commons(U2_)
          CALL reset_hubbard_commons(beta_) 
@@ -597,8 +602,21 @@ CONTAINS
              END DO
            END DO 
          END FUNCTION check_and_init_Hubbard_V 
-           
-         
+         !
+         !
+         SUBROUTINE reset_hubbard_occs(objs) 
+            IMPLICIT NONE 
+            TYPE (HubbardOcc_type),INTENT(INOUT),ALLOCATABLE  :: objs(:)
+            !
+            INTEGER :: i
+            IF (.NOT. ALLOCATED(objs)) RETURN 
+            DO i =1, SIZE (objs)
+               CALL qes_reset(objs(i))
+            END DO 
+            DEALLOCATE (objs)
+         END SUBROUTINE reset_hubbard_occs 
+         !
+         ! 
          SUBROUTINE reset_hubbard_commons(objs) 
             IMPLICIT NONE 
             TYPE(HubbardCommon_type),ALLOCATABLE :: objs(:)
@@ -757,7 +775,7 @@ CONTAINS
                   backchar = 'one_orbital'
                END IF 
 
-               CALL qes_init(objs(isp), "Hubbard_back", SPECIES = TRIM(species(ityp(isp))), Hubbard_U2= u2_ , &
+               CALL qes_init(objs(isp), "Hubbard_back", SPECIES = TRIM(species(isp)), Hubbard_U2= u2_ , &
                              background=TRIM(backchar),  l2_number = l2_, l3_number=l3_, n2_number = n2_, n3_number = n3_)    
                IF (.NOT. is_back(isp)) THEN 
                  objs(isp)%lwrite = .FALSE.
@@ -768,7 +786,55 @@ CONTAINS
             END DO 
          END SUBROUTINE init_Hubbard_back 
 
+         
 
+         SUBROUTINE init_hubbard_occs(data, objs, labels_, n2, n3, l2, l3)
+            IMPLICIT NONE 
+            ! 
+            REAL(DP),INTENT(IN)  :: data(:,:)
+            TYPE(HubbardOcc_type),ALLOCATABLE, INTENT(INOUT)  :: objs(:)
+            CHARACTER(LEN=10),INTENT(IN) :: labels_(:)
+            INTEGER,OPTIONAL,INTENT(IN)  :: n2(:), n3(:), l2(:), l3(:) 
+            !
+            CHARACTER(LEN=10) :: lbl_(3) 
+            ! 
+            INTEGER  :: i, ich, idx_i, ndim, nchannels
+            INTEGER, ALLOCATABLE :: idx(:)
+            LOGICAL :: n2_ispresent, n3_ispresent
+            TYPE(ChannelOcc_type)   :: channels(3)
+            CHARACTER   :: hubbard_shell(4) = ['s','p','d','f']
+            n2_ispresent  = PRESENT(n2) .AND. PRESENT(l2)
+            n3_ispresent  = PRESENT(n3) .AND. PRESENT(l3) 
+            idx = PACK( [(i,i=1, nsp)] , [(INDEX(labels_(i),"no")==0,i=1,nsp)])
+            ndim = SIZE(idx)
+            ALLOCATE (objs(ndim))
+            DO i = 1, ndim
+               idx_i = idx(i)
+               nchannels = 1 
+               lbl_(1) = TRIM(labels_(idx_i))
+               IF (n2_ispresent ) THEN  
+                  IF ( n2(idx_i) > 0  ) THEN 
+                    nchannels = nchannels + 1
+                    WRITE (lbl_(nchannels),'(I0,A)') n2(idx_i),hubbard_shell(l2(idx_i)+1) 
+                  END IF
+               END IF 
+               IF (n3_ispresent ) THEN 
+                  IF ( n3(idx_i) > 0  ) THEN 
+                    nchannels = nchannels + 1
+                    WRITE (lbl_(nchannels),'(I0,A)') n3(idx_i),hubbard_shell(l3(idx_i)+1) 
+                  END IF
+               END IF  
+               DO ich =1, nchannels 
+                  CALL qes_init(channels(ich), 'channel_occ', species(idx_i), lbl_(ich), ich, data(idx_i, ich))
+               END DO  
+               CALL qes_init(objs(i),"Hubbard_Occ", nchannels, species(idx_i), channels(1:nchannels))
+               DO ich = 1, nchannels
+                  CALL qes_reset(channels(ich))
+               END DO 
+            END DO 
+         END SUBROUTINE init_hubbard_occs 
+         !
+         !
          SUBROUTINE reset_Hubbard_ns(objs) 
             IMPLICIT NONE 
             ! 
@@ -899,9 +965,10 @@ CONTAINS
       !
       INTEGER  :: iobj
       TYPE (scalmags_type),TARGET  :: smag_obj 
-      TYPE (scalmags_type),POINTER :: smag_ptr => NULL()
+      TYPE (scalmags_type),POINTER :: smag_ptr 
       TYPE (d3mags_type),  TARGET  :: vmag_obj 
-      TYPE (d3mags_type),  POINTER :: vmag_ptr => NULL()
+      TYPE (d3mags_type),  POINTER :: vmag_ptr 
+      NULLIFY(smag_ptr, vmag_ptr) 
       IF (PRESENT(site_mag_pol)) THEN 
          CALL qexsd_init_scalmags(smag_obj, SIZE(site_mag_pol,2), site_mag_pol(1,:), ityp, atm, site_charges) 
          smag_ptr => smag_obj 

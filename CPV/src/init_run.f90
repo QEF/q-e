@@ -9,9 +9,8 @@
 !----------------------------------------------------------------------------
 SUBROUTINE init_run()
   !----------------------------------------------------------------------------
-  !
-  ! ... this routine initialise the cp code and allocates (calling the
-  ! ... appropriate routines) the memory
+  !! This routine initialise the CP code and allocates (calling the
+  !! appropriate routines) the memory.
   !
   USE kinds,                    ONLY : DP
   USE control_flags,            ONLY : nbeg, nomore, lwf, iverbosity, iprint, &
@@ -77,10 +76,11 @@ SUBROUTINE init_run()
   USE wavefunctions,     ONLY : cv0                 ! exx_wf related
   USE wannier_base,             ONLY : vnbsp               ! exx_wf related
   !!!USE cp_restart,               ONLY : cp_read_wfc_Kong    ! exx_wf related
-  USE input_parameters,         ONLY : ref_cell
+  USE input_parameters,         ONLY : ref_cell, nextffield
   USE cell_base,                ONLY : ref_tpiba2, init_tpiba2
   USE tsvdw_module,             ONLY : tsvdw_initialize
   USE exx_module,               ONLY : exx_initialize
+  USE extffield,                ONLY : init_extffield
 #if defined (__CUDA)
   USE cudafor
 #endif
@@ -316,6 +316,14 @@ SUBROUTINE init_run()
     CALL emass_precond( ema0bg, g2kin, ngw, init_tpiba2, emass_cutoff ) 
     !WRITE( stdout,'(3X,"current_tpiba2=",F14.8)' ) tpiba2 !BS : DEBUG
     CALL g2kin_init( gg, tpiba2 )
+  END IF
+  !
+  !  read external force fields parameters
+  ! 
+  IF ( nextffield > 0 .AND. ionode) THEN
+     !
+     CALL init_extffield( 'CP', nextffield )
+     !
   END IF
   !
   CALL print_legend( )

@@ -8,13 +8,13 @@
 
 
 !----------------------------------------------------------------------
-SUBROUTINE vol_clu(rho_real,rho_g,flag)
-!----------------------------------------------------------------------
-! it computes the volume of the cluster (cluster calculations) starting
-! from the measure of the region of space occupied by the electronic density
-! above a given threshold
-
-      USE kinds,          ONLY: dp
+SUBROUTINE vol_clu( rho_real, rho_g, flag )
+      !----------------------------------------------------------------------
+      !! It computes the volume of the cluster (cluster calculations) starting
+      !! from the measure of the region of space occupied by the electronic density
+      !! above a given threshold.
+      !
+      USE kinds,          ONLY: DP
       USE constants,      ONLY: pi
       USE cell_base,      ONLY: alat, at, h, omega, tpiba, tpiba2
       USE electrons_base, ONLY: nspin

@@ -12,8 +12,6 @@ set(src_upflib
     init_tab_qrad.f90
     interp_atwfc.f90
     init_us_2_base.f90
-    gen_us_dj_gpu.f90
-    gen_us_dy_gpu.f90
     gth.f90
     paw_variables.f90
     pseudo_types.f90
@@ -56,7 +54,8 @@ set(src_upflib
     sph_bes_gpu.f90
     ylmr2_gpu.f90
     dylmr2_gpu.f90
-    simpsn_gpu.f90)
+    simpsn_gpu.f90
+    upf_acc_interfaces.f90)
 qe_enable_cuda_fortran("${src_upflib}")
 
 qe_add_library(qe_xml xmltools.f90 dom.f90 wxml.f90)

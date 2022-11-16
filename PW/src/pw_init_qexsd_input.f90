@@ -53,10 +53,7 @@
                                 ip_nosym => nosym, ip_noinv => noinv, ip_nosym_evc => nosym_evc,                      & 
                                 ip_no_t_rev => no_t_rev, ip_force_symmorphic => force_symmorphic,                     &
                                 ip_use_all_frac=>use_all_frac, assume_isolated, esm_bc, esm_w, esm_nfit, esm_efield,  & 
-                                ecfixed, qcutz, q2sigma,                                                              &    
-                                tforces, rd_for,                                                                      &
-                                rd_if_pos,                                                                               &
-                                tionvel, rd_vel,                                                                      &
+                                ecfixed, qcutz, q2sigma, tforces, rd_for, rd_if_pos, tionvel, rd_vel,                 &
                                 tefield, lelfield, dipfield, edir, emaxpos, eamp, eopreg, efield, efield_cart,gdir,   &
                                 lberry,nppstr,nberrycyc,                                                              &
                                 nconstr_inp, nc_fields, constr_type_inp, constr_target_inp, constr_inp, tconstr,      &
@@ -115,7 +112,7 @@
   CHARACTER(len=20)                        ::   dft_shortname
   CHARACTER(len=25)                        ::   dft_longname
   CHARACTER(LEN=80),TARGET                 ::  vdw_corr_, vdw_nonlocc_
-  CHARACTER(LEN=80),POINTER                ::  vdw_corr_pointer => NULL(), vdw_nonlocc_pt=>NULL()
+  CHARACTER(LEN=80),POINTER                ::  vdw_corr_pointer, vdw_nonlocc_pt
   LOGICAL,TARGET                           ::  gate_tgt, block_tgt, relaxz_tgt
   LOGICAL,POINTER                          ::  gate_ptr, block_ptr, relaxz_ptr
   REAL(DP),TARGET                          ::  block_1_tgt, block_2_tgt, block_height_tgt, zgate_tgt
@@ -125,15 +122,13 @@
   TYPE(vdW_type)                           ::  vdW_
   REAL(DP),TARGET                          ::  xdm_a1_, xdm_a2_, lond_s6_, lond_rcut_, ts_vdw_econv_thr_,&
                                                scr_par_, exx_frc_, ecutvcut_, ecut_fock_, loc_thr_, cell_factor_tg      
-  REAL(DP),POINTER                         ::  xdm_a1_pt=>NULL(), xdm_a2_pt=>NULL(), lond_s6_pt=>NULL(), &
-                                               lond_rcut_pt=>NULL(), ts_vdw_econv_thr_pt=>NULL(),& 
-                                               ecut_fock_opt=>NULL(), scr_par_opt=>NULL(), exx_frc_opt=>NULL(), &
-                                               ecutvcut_opt=>NULL(), loc_thr_p => NULL(), cell_factor_pt => NULL()  
+  REAL(DP),POINTER                         ::  xdm_a1_pt, xdm_a2_pt, lond_s6_pt, lond_rcut_pt, ts_vdw_econv_thr_pt, & 
+                                               ecut_fock_opt, scr_par_opt, exx_frc_opt, ecutvcut_opt, loc_thr_p,    &
+                                               cell_factor_pt
   LOGICAL,TARGET                           ::  empirical_vdw, ts_vdw_isolated_, dftd3_threebody_
-  LOGICAL,POINTER                          ::  ts_vdw_isolated_pt=>NULL(), dftd3_threebody_pt=>NULL()
+  LOGICAL,POINTER                          ::  ts_vdw_isolated_pt, dftd3_threebody_pt
   INTEGER,TARGET                           :: dftd3_version_, spin_ns, nbnd_tg, nq1_tg, nq2_tg, nq3_tg  
-  INTEGER,POINTER                          :: dftd3_version_pt=>NULL(), nbnd_pt => NULL(), nq1_pt=>NULL(),&
-                                              nq2_pt=>NULL(), nq3_pt=>NULL()  
+  INTEGER,POINTER                          :: dftd3_version_pt, nbnd_pt, nq1_pt, nq2_pt, nq3_pt   
   REAL(DP),ALLOCATABLE                     :: london_c6_(:), hubbard_U_(:), hubbard_U2_(:), hubbard_alpha_(:), &
                                               hubbard_alpha_back_(:), hubbard_J_(:,:), hubbard_J0_(:), hubbard_beta_(:), &
                                               starting_ns_(:,:,:)
@@ -146,8 +141,14 @@
   REAL(DP), PARAMETER                      :: ev_to_Ha = 1 / e2 / RYTOEV 
   !
   ! 
+  NULLIFY(vdw_corr_pointer, vdw_nonlocc_pt) 
   NULLIFY (gate_ptr, block_ptr, relaxz_ptr, block_1_ptr, block_2_ptr, block_height_ptr, zgate_ptr)
   NULLIFY (nr_1,nr_2,nr_3, nrs_1, nrs_2, nrs_3, nrb_1, nrb_2, nrb_3) 
+  NULLIFY (xdm_a1_pt, xdm_a2_pt, lond_s6_pt, lond_rcut_pt, ts_vdw_econv_thr_pt) 
+  NULLIFY (ecut_fock_opt, scr_par_opt, exx_frc_opt, ecutvcut_opt)  
+  NULLIFY (loc_thr_p, cell_factor_pt) 
+  NULLIFY (ts_vdw_isolated_pt, dftd3_threebody_pt ) 
+  NULLIFY (dftd3_version_pt, nbnd_pt, nq1_pt, nq2_pt, nq3_pt) 
 
   obj%tagname=TRIM(obj_tagname)
   IF ( ABS(ip_ibrav)  .GT. 0 ) THEN  

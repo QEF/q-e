@@ -95,6 +95,8 @@ SUBROUTINE setup()
   USE gcscf_module,       ONLY : lgcscf
   USE rism_module,        ONLY : lrism, rism_calc1d
   USE additional_kpoints, ONLY : add_additional_kpoints
+  USE control_flags,      ONLY : sic
+  USE sic_mod,            ONLY : init_sic, occ_f2fn, sic_energy
   !
   IMPLICIT NONE
   !
@@ -147,8 +149,12 @@ SUBROUTINE setup()
      IF ( noncolin ) no_t_rev=.true.
   END IF
   !
-  IF ( xclib_dft_is('meta') .AND. noncolin )  CALL errore( 'setup', &
+  IF ( xclib_dft_is('meta') ) THEN
+     IF ( noncolin )  CALL errore( 'setup', &
                                'Non-collinear Meta-GGA not implemented', 1 )
+     IF ( ANY (upf(1:ntyp)%nlcc) ) CALL infomsg( 'setup ', 'BEWARE:' // &
+               & ' nonlinear core correction is not consistent with meta-GGA')
+  END IF
   !
   ! ... Compute the ionic charge for each atom type and the total ionic charge
   !
@@ -685,6 +691,13 @@ SUBROUTINE setup()
   ! ... calculate solvent-solvent interaction (1D-RISM).
   !
   IF (lrism) CALL rism_calc1d()
+  !
+  ! ... SIC calculation
+  !
+  IF(sic) THEN
+     CALL init_sic()
+     IF (sic_energy) CALL occ_f2fn()
+  END IF
   !
   RETURN
   !

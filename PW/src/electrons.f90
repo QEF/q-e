@@ -30,7 +30,8 @@ SUBROUTINE electrons()
   USE scf,                  ONLY : rho, rho_core, rhog_core, v, vltot, vrs, &
                                    kedtau, vnew
   USE control_flags,        ONLY : tr2, niter, conv_elec, restart, lmd, &
-                                   do_makov_payne
+                                   do_makov_payne, sic
+  USE sic_mod,              ONLY : sic_energy, occ_f2fn, occ_fn2f, save_rhon, sic_first
   USE io_files,             ONLY : iunres, seqopn
   USE ldaU,                 ONLY : eth
   USE extfield,             ONLY : tefield, etotefield
@@ -150,6 +151,24 @@ SUBROUTINE electrons()
      ENDIF
      CLOSE ( unit=iunres, status='delete')
   ENDIF
+  !
+  !  ... energy calculation of neutral case
+  !
+  IF (sic .and. sic_energy) THEN
+     WRITE(stdout,'(5x,"Energy calculation for the neutral polaron")')
+     IF( .not. sic_first) THEN
+        CALL occ_f2fn()
+        CALL potinit()
+        CALL wfcinit()
+     END IF
+     CALL electrons_scf(printout,exxen)
+     CALL save_rhon(rho)
+     CALL close_files(.true.)
+     CALL occ_fn2f()
+     CALL potinit()
+     CALL wfcinit()
+     sic_first = .false.
+  END IF
   !
   DO idum=1,niter
      !
@@ -384,19 +403,20 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet, epaw, &
                                    elondon, edftd3, ef_up, ef_dw, exdm, ef, &
-                                   egrand, vsol, esol
+                                   egrand, vsol, esol, esic, esci
   USE scf,                  ONLY : scf_type, scf_type_COPY, bcast_scf_type,&
                                    create_scf_type, destroy_scf_type, &
                                    open_mix_file, close_mix_file, &
                                    rho, rho_core, rhog_core, v, vltot, vrs, &
                                    kedtau, vnew
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
-                                   iprint, conv_elec, &
+                                   iprint, conv_elec, sic, &
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
                                    llondon, ldftd3, scf_must_converge, lxdm, ts_vdw, &
                                    mbd_vdw, use_gpu
-  USE control_flags,        ONLY : n_scf_steps, scf_error
+  USE control_flags,        ONLY : n_scf_steps, scf_error, scissor
+  USE sci_mod,              ONLY : sci_iter
 
   USE io_files,             ONLY : iunmix, output_drho
   USE ldaU,                 ONLY : eth, lda_plus_u, lda_plus_u_kind, &
@@ -575,6 +595,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
         GO TO 10
      ENDIF
      iter = iter + 1
+     IF(scissor) sci_iter = iter
      !
      IF (use_gpu .and. (iverbosity >= 1) ) CALL dev_buf%print_report(stdout)
      IF (use_gpu .and. (iverbosity >= 1) ) CALL pin_buf%print_report(stdout)
@@ -684,6 +705,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
         If ( okpaw ) hwf_energy = hwf_energy + epaw
         IF ( lda_plus_u ) hwf_energy = hwf_energy + eth
         IF ( lrism ) hwf_energy = hwf_energy + esol + vsol
+        IF ( sic ) hwf_energy = hwf_energy + esic
+        IF ( scissor ) hwf_energy = hwf_energy + esci
         !
         IF ( lda_plus_u )  THEN
            !
@@ -1057,6 +1080,9 @@ SUBROUTINE electrons_scf ( printout, exxen )
         hwf_energy = hwf_energy + esol + vsol
      END IF
      !
+     IF (sic) etot = etot + esic
+     IF (scissor) etot = etot + esci
+     !
      ! ... adds possible external contribution from plugins to the energy
      !
      etot = etot + plugin_etot 
@@ -1118,6 +1144,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
   ELSE
      CALL close_mix_file( iunmix, 'keep' )
   ENDIF
+  !
+  IF(scissor) sci_iter = 0
   !
   IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
   call destroy_scf_type ( rhoin )

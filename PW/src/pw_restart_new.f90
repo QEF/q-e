@@ -101,7 +101,7 @@ MODULE pw_restart_new
       USE ktetra,               ONLY : tetra_type
       USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_projectors, &
                                        Hubbard_lmax, Hubbard_l, Hubbard_n, Hubbard_U, Hubbard_J, &
-                                       Hubbard_n2, Hubbard_l2, Hubbard_l3, Hubbard_V, &
+                                       Hubbard_n2, Hubbard_n3, Hubbard_l2, Hubbard_l3, Hubbard_V, Hubbard_occ,&
                                        Hubbard_alpha, Hubbard_alpha_back, nsg, &
                                        Hubbard_J0, Hubbard_beta, Hubbard_U2, ityp_s, &
                                        is_hubbard, is_hubbard_back, backall, neighood, nsg
@@ -234,7 +234,7 @@ MODULE pw_restart_new
       REAL(DP), ALLOCATABLE :: london_c6_(:), bp_el_pol(:), bp_ion_pol(:), &
            U_opt(:), J0_opt(:), alpha_opt(:), J_opt(:,:), beta_opt(:), &
            U2_opt(:), alpha_back_opt(:), ef_updw(:), nsg_(:,:,:,:)
-      INTEGER,ALLOCATABLE :: n_opt(:), l_opt(:), l2_opt(:), l3_opt(:), n2_opt(:)
+      INTEGER,ALLOCATABLE :: n_opt(:), l_opt(:), l2_opt(:), l3_opt(:), n2_opt(:), n3_opt(:)
       LOGICAL, ALLOCATABLE :: backall_opt(:) 
       !
       !
@@ -492,6 +492,7 @@ MODULE pw_restart_new
             CALL check_and_allocate_integer(n2_opt, Hubbard_n2)
             CALL check_and_allocate_integer(l2_opt, Hubbard_l2)
             CALL check_and_allocate_integer(l3_opt, Hubbard_l3)
+            CALL check_and_allocate_integer(n3_opt, Hubbard_n3)
             CALL check_and_allocate_logical(backall_opt, backall)
             IF ( ANY(Hubbard_J(:,1:nsp) /= 0.0_DP)) THEN
                ALLOCATE (J_opt(3,nsp)) 
@@ -523,10 +524,10 @@ MODULE pw_restart_new
             !
             CALL qexsd_init_dftU (dftU_obj_opt, NSP = nsp, PSD = upf(1:nsp)%psd, SPECIES = atm(1:nsp),                & 
                     ITYP = ityp(1:nat), IS_HUBBARD = is_hubbard, IS_HUBBARD_BACK = is_hubbard_back, BACKALL = backall,& 
-                    HUBB_n2 = n2_opt, HUBB_L2 = l2_opt, HUBB_L3 = l3_opt, NONCOLIN = noncolin,                        & 
-                    LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION_TYPE = Hubbard_projectors, U =U_opt,              &
-                    U2 = U2_opt, J0 = J0_opt, J = J_opt, n = n_opt, l = l_opt, Hubbard_V = Hubbard_V *Ry_to_Ha,       &
-                    alpha = alpha_opt, beta = beta_opt, alpha_back = alpha_back_opt,                                  & 
+                    HUBB_OCC = Hubbard_occ, HUBB_n2 = n2_opt, HUBB_L2 = l2_opt, HUBB_L3 = l3_opt, NONCOLIN = noncolin,& 
+                    HUBB_N3 = n3_opt, LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION_TYPE = Hubbard_projectors,      &
+                    U =U_opt, U2 = U2_opt, J0 = J0_opt, J = J_opt, n = n_opt, l = l_opt,                              &
+                    Hubbard_V = Hubbard_V *Ry_to_Ha, alpha = alpha_opt, beta = beta_opt, alpha_back = alpha_back_opt, & 
                     starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc, Hub_nsg = nsg_)
             !
             IF (ALLOCATED(J_opt)) DEALLOCATE(J_opt)
@@ -1134,7 +1135,7 @@ MODULE pw_restart_new
            time_reversal, no_t_rev, nosym, checkallsym
       USE ldaU,            ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax, Hubbard_lmax_back, &
                                   Hubbard_n, Hubbard_l, Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, &
-                                  Hubbard_U, Hubbard_U2, Hubbard_J, Hubbard_V, Hubbard_alpha, &
+                                  Hubbard_U, Hubbard_U2, Hubbard_J, Hubbard_V, Hubbard_alpha, Hubbard_occ, &
                                   Hubbard_alpha_back, Hubbard_J0, Hubbard_beta, Hubbard_projectors
       USE funct,           ONLY : enforce_input_dft
       USE xc_lib,          ONLY : start_exx, exx_is_active,xclib_dft_is,      &
@@ -1243,7 +1244,7 @@ MODULE pw_restart_new
       CALL qexsd_copy_dft ( output_obj%dft, nsp, atm, &
            dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
-           lda_plus_u, lda_plus_u_kind, Hubbard_projectors, Hubbard_n, Hubbard_l, Hubbard_lmax, &
+           lda_plus_u, lda_plus_u_kind, Hubbard_projectors, Hubbard_n, Hubbard_l, Hubbard_lmax, Hubbard_occ,&
            Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
            Hubbard_U, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, Hubbard_V, &
            vdw_corr, scal6, lon_rcut, vdw_isolated )

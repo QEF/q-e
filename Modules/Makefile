@@ -27,9 +27,11 @@ dist.o \
 electrons_base.o \
 environ_base_module.o \
 environment.o \
+extffield.o \
 fd_gradient.o \
 fft_base.o \
 fft_rho.o \
+fft_wave.o \
 fsockets.o \
 funct.o \
 generate_function.o \

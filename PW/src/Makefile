@@ -213,6 +213,8 @@ set_spin_vars.o \
 set_vrs.o \
 setlocal.o \
 setup.o \
+scissor.o \
+sic.o \
 stop_run.o \
 stres_cc.o \
 stres_ewa.o \
@@ -272,7 +274,6 @@ PWLIBS += \
   scf_mod_gpu.o \
   usnldiag_gpu.o \
   add_vuspsi_gpu.o \
-  addusdens_gpu.o \
   sum_band_gpu.o \
   newd_gpu.o \
   add_paw_to_deeq_gpu.o \
@@ -283,23 +284,7 @@ PWLIBS += \
   hs_psi_gpu.o \
   s_1psi_gpu.o \
   utils_gpu.o \
-  force_lc_gpu.o \
-  force_us_gpu.o \
-  force_cc_gpu.o \
-  force_hub_gpu.o \
   drhoc_gpu.o \
-  addusforce_gpu.o \
-  force_corr_gpu.o \
-  stres_loc_gpu.o \
-  dvloc_of_g_gpu.o \
-  stres_har_gpu.o \
-  stres_mgga_gpu.o \
-  stres_cc_gpu.o \
-  deriv_drhoc_gpu.o \
-  stres_ewa_gpu.o \
-  stres_knl_gpu.o \
-  stres_us_gpu.o \
-  compute_deff_gpu.o \
   orthoatwfc_gpu.o \
   atomic_wfc_gpu.o
 

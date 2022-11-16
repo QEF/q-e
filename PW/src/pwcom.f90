@@ -343,6 +343,10 @@ MODULE ener
   REAL(DP) :: exdm
   !! the XDM dispersion energy
   REAL(DP) :: demet
+  !! the sic energy
+  REAL(DP) :: esic
+  !! the scissor energy
+  REAL(DP) :: esci
   !! variational correction ("-TS") for metals
   REAL(DP) :: epaw
   !! sum of one-center paw contributions

@@ -11,7 +11,8 @@
 ! ... code ported from PW to CP by Federico Zipoli
 !
 SUBROUTINE makov_payne(etot)
-!
+  !! Makov Payne correction for CP.
+  !
 ! CP Modules
   USE kinds,             ONLY : DP
   USE ions_base,         ONLY : nat, zv, ityp

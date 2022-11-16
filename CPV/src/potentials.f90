@@ -357,7 +357,7 @@
   
 !
 
-DEV_ACC data present(rhoeg, rhops, mill,g ) copy(fion)  create(rp(1:s_ngm_)) copyin(sfac, screen_coul, gg, vps, ityp,ei1, ei2, ei3) 
+DEV_ACC data present(rhoeg, rhops, mill,g,gg ) copy(fion)  create(rp(1:s_ngm_)) copyin(sfac, screen_coul, vps, ityp,ei1, ei2, ei3) 
 !
 DEV_OMP parallel default(none) &
 DEV_OMP shared(gstart, dffts,sfac, rhops, screen_coul, rhoeg, nsp, gg, tpiba2, tpiba, mill, g, &
@@ -588,7 +588,7 @@ DEV_OMP end parallel
    SUBROUTINE self_vofhar_x( tscreen, self_ehte, vloc, rhoeg, omega, hmat )
 !=----------------------------------------------------------------------------=!
 
-      !  adds the hartree part of the self interaction
+      !! Adds the Hartree part of the self interaction.
 
       USE kinds,              ONLY: DP
       USE constants,          ONLY: fpi

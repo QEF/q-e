@@ -7,8 +7,8 @@
 !
 SUBROUTINE add_vhub_to_deeq_gpu( deeq_d )
 !-----------------------------------------------------------------
-  !! Add Hubbard contributions to the integral of V_eff and Q_{nm} when 
-  !! Hubbard_projectors is pseudo.
+  !! Add Hubbard contributions to the integral of \(V_\text{eff}\)
+  !! and \(Q_{nm}\) when Hubbard_projectors is pseudo.
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
@@ -21,27 +21,23 @@ SUBROUTINE add_vhub_to_deeq_gpu( deeq_d )
   !
   IMPLICIT NONE
   !
-  REAL(KIND=DP), INTENT(INOUT) :: deeq_d( nhm, nhm, nat, nspin )
-  !! integral of V_eff and Q_{nm}
-  !
-#if defined(__CUDA)
-  attributes(DEVICE) :: deeq_d
-#endif
+  REAL(KIND=DP), INTENT(INOUT) :: deeq_d(nhm,nhm,nat,nspin)
+  !! integral of \(V_\text{eff}\) and \(Q_{nm}\)
   !
   !  ... local variables
   !
-  REAL(KIND=DP), ALLOCATABLE :: deeq_aux_h( :, :, : )
-  REAL(KIND=DP), ALLOCATABLE :: deeq_aux_d( :, :, : )
+  REAL(KIND=DP), ALLOCATABLE :: deeq_aux_h(:,:,:)
+  REAL(KIND=DP), ALLOCATABLE :: deeq_aux_d(:,:,:)
 #if defined(__CUDA)
-  attributes(DEVICE) :: deeq_aux_d
+  attributes(DEVICE) :: deeq_aux_d, deeq_d
 #endif
   INTEGER :: na, nt, ih, jh, ijh, m1, m2, ow1, ow2, is, nhnt
   !
-  !
   ! (maybe) OPTIMIZE here ... reorder the loop ?
   !
-  ALLOCATE(deeq_aux_h( nhm, nhm, nspin ))
-  ALLOCATE(deeq_aux_d( nhm, nhm, nspin ))
+  ALLOCATE( deeq_aux_h(nhm,nhm,nspin) )
+  ALLOCATE( deeq_aux_d(nhm,nhm,nspin) )
+  !
   DO na = 1, nat
      !
      nt = ityp(na)
@@ -68,11 +64,12 @@ SUBROUTINE add_vhub_to_deeq_gpu( deeq_d )
            !
         ENDDO
      ENDDO
-     CALL dev_memcpy(deeq_aux_d, deeq_aux_h)
+     !
+     CALL dev_memcpy( deeq_aux_d, deeq_aux_h )
      ! HERE USE devXlib
      nhnt = nh(nt)
-     !$cuf kernel do(3)
-     DO is=1, nspin
+     !$acc parallel loop collapse(3)
+     DO is = 1, nspin
         DO ih = 1, nhnt
            DO jh = 1, nhnt
               deeq_d(jh,ih,na,is) = deeq_d(jh,ih,na,is) + deeq_aux_d(jh,ih,is)
@@ -81,7 +78,7 @@ SUBROUTINE add_vhub_to_deeq_gpu( deeq_d )
      END DO
      !
   ENDDO
-  
+  !
   DEALLOCATE(deeq_aux_h, deeq_aux_d)
   !
 END SUBROUTINE add_vhub_to_deeq_gpu
