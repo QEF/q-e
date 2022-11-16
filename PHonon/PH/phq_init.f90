@@ -172,13 +172,13 @@ SUBROUTINE phq_init()
   endif
   !
   ALLOCATE( aux1( npwx*npol, nbnd ) )
-  !$acc enter data create(aux1( 1:npwx*npol, 1:nbnd ))
+  !
   IF (noncolin.AND.domag) THEN
           ALLOCATE(tevc(npwx*npol,nbnd))
           !$acc enter data create(tevc(1:npwx*npol,1:nbnd))
   ENDIF
   !
-  !$acc data copyin(xk) 
+  !$acc data copyin(xk) create(aux1( 1:npwx*npol, 1:nbnd )) 
   DO ik = 1, nksq
      !
      ikk  = ikks(ik)
@@ -365,7 +365,6 @@ SUBROUTINE phq_init()
   END DO
   !$acc end data
   !
-  !$acc exit data delete(aux1)
   DEALLOCATE( aux1 )
   IF (noncolin.AND.domag) THEN
           !$acc exit data delete(tevc)

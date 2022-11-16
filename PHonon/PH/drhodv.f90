@@ -107,7 +107,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
      ENDDO
   END DO
   allocate (aux   ( npwx*npol , nbnd))
-  !$acc enter data create(aux( 1:npwx*npol , 1:nbnd))
+  !
   dynwrk(:,:) = (0.d0, 0.d0)
   wdyn  (:,:) = (0.d0, 0.d0)
   !
@@ -115,7 +115,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !
   nsolv=1
   IF (noncolin.AND.domag) nsolv=2
-  !$acc data copyin(xk, dpsi) 
+  !$acc data copyin(xk, dpsi) create(aux( 1:npwx*npol , 1:nbnd)) 
   do ik = 1, nksq
      ikk = ikks(ik)
      ikq = ikqs(ik)
@@ -234,7 +234,6 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   dyn (:,:) = dyn (:,:) + wdyn (:,:)
   dyn_rec(:,:) = dyn_rec(:,:) + wdyn(:,:)
 
-  !$acc exit data delete(aux)
   deallocate (aux)
 
   do ipert=1,nper
