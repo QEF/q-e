@@ -365,7 +365,6 @@ SUBROUTINE phq_init()
   END DO
   !$acc end data
   !
-  !$acc exit data delete(aux1)
   DEALLOCATE( aux1 )
   IF (noncolin.AND.domag) THEN
           !$acc exit data delete(tevc)
