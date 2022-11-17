@@ -326,7 +326,7 @@ SUBROUTINE force_us( forcenl )
                 ! ... Auxiliary variable to perform the reduction with gpu kernels
                 forcenl_ipol = 0.0_DP
 #if defined(_OPENACC)
-!$acc parallel loop collapse(2) reduction(-:forcenl_ipol)
+!$acc parallel loop collapse(2) reduction(+:forcenl_ipol)
 #else
 !$omp parallel do default(shared) private(ibnd_loc,ibnd,ih) reduction(-:forcenl_ipol)
 #endif
@@ -412,7 +412,7 @@ SUBROUTINE force_us( forcenl )
                 ikb = ijkb0 + ih
                 IF (noncolin) THEN
                    forcenl_p1 = 0.d0
-                   !$acc loop seq collapse(2) reduction(-:forcenl_p1)
+                   !$acc loop seq collapse(2) reduction(+:forcenl_p1)
                    DO is = 1, npol
                      DO js = 1, npol
                        ijs = (is-1)*npol+js
@@ -452,7 +452,7 @@ SUBROUTINE force_us( forcenl )
                    DO jh = ih+1, nh_nt
                       jkb = ijkb0 + jh
                       IF (noncolin) THEN
-                        !$acc loop seq collapse(2) reduction(-:forcenl_p1)
+                        !$acc loop seq collapse(2) reduction(+:forcenl_p1)
                         DO is = 1, npol
                           DO js = 1, npol
                              ijs = (is-1)*npol+js
