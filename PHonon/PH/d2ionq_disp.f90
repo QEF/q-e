@@ -207,7 +207,7 @@ SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau )
   USE input_parameters, ONLY: dftd3_version, dftd3_threebody
   USE funct,            ONLY: get_dft_short
   USE dftd3_api,        ONLY: dftd3_init, dftd3_set_functional, dftd3_pbc_dispersion, get_atomic_number
-  USE dftd3_qe,         ONLY: dftd3_xc, dftd3, dftd3_in
+  USE dftd3_qe,         ONLY: dftd3_xc, dftd3, dftd3_in, dftd3_pbc_gdisp_new
   USE ions_base,        ONLY: atm
   USE ener,             ONLY: edftd3
   
@@ -257,7 +257,7 @@ SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau )
   DO iat = 1, nat
      atnum(iat) = get_atomic_number(TRIM(atm(ityp(iat))))
   ENDDO
-  call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, edftd3, force_d3, stress_d3)
+  call dftd3_pbc_gdisp_new(dftd3, xyz, atnum, latvecs, force_d3, stress_d3)
   edftd3=edftd3*2.d0
   force_d3 = -2.d0*force_d3
   
@@ -308,10 +308,10 @@ SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau )
       write(*,*) 'displacing forces: ', iat, ixyz
 
       xyz(ixyz,iat)=xyz(ixyz,iat)+step
-      call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, eerr, force_d3, stress_d3)
+      call dftd3_pbc_gdisp_new(dftd3, xyz, atnum, latvecs, force_d3, stress_d3)
       force_d3 = -2.d0*force_d3
       xyz(ixyz,iat)=xyz(ixyz,iat)-2*step
-      call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, eell, force_num, stress_d3)
+      call dftd3_pbc_gdisp_new(dftd3, xyz, atnum, latvecs, force_num, stress_d3)
       force_num = -2.d0*force_num
 
       der2disp_frc(ixyz,iat,1:3,1:nat) = -0.5 * (force_d3(1:3,1:nat) - force_num(1:3,1:nat) ) / step

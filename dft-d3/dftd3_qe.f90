@@ -14,7 +14,7 @@ MODULE dftd3_qe
   IMPLICIT NONE
   !
   PRIVATE
-  PUBLIC :: dftd3, dftd3_in, dftd3_xc, dftd3_pbc_gdisp, dftd3_pbc_hdisp, dftd3_printout, dftd3_clean
+  PUBLIC :: dftd3, dftd3_in, dftd3_xc, dftd3_pbc_gdisp, dftd3_pbc_gdisp_new, dftd3_pbc_hdisp, dftd3_printout, dftd3_clean
   SAVE
   !
   type(dftd3_calc) :: dftd3
@@ -56,6 +56,47 @@ MODULE dftd3_qe
   !! Added interface routine to original Aradi's interface
   !! for calculating force and stress separately from the energy.
   subroutine dftd3_pbc_gdisp(this, coords, izp, latvecs, &
+                            force_dftd3, stress_dftd3)
+
+    type(dftd3_calc), intent(in) :: this
+    real(wp), intent(in) :: coords(:,:)
+    integer, intent(in) :: izp(:)
+    real(wp), intent(in) :: latvecs(:,:)
+    real(wp), intent(out) :: force_dftd3(:,:), stress_dftd3(:,:)
+    integer :: natom
+    real(wp) :: s6, s18, rs6, rs8, rs10, alp6, alp8, alp10
+    real(wp) :: e6, e8, e10, e12, e6abc, gnorm, disp2
+    real(wp) :: rtmp3(3)
+    integer :: rep_cn(3), rep_vdw(3)
+
+    natom = size(coords, dim=2)
+    s6 = this%s6
+    s18 = this%s18
+    rs6 = this%rs6
+    rs8 = this%rs18
+    rs10 = this%rs18
+    alp6 = this%alp
+    alp8 = alp6 + 2.0_wp
+    alp10 = alp8 + 2.0_wp
+
+    call set_criteria(this%rthr, latvecs, rtmp3)
+    rep_vdw(:) = int(rtmp3) + 1
+    call set_criteria(this%cn_thr, latvecs, rtmp3)
+    rep_cn(:) = int(rtmp3) + 1
+   
+    force_dftd3(:,:) = 0.0_wp
+    call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
+        & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
+        & this%noabc, this%numgrad, this%version, force_dftd3, disp2, gnorm, &
+        & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .false., this%cn_thr)
+    ! Note, the stress variable in pbcgdisp contains the *lattice derivatives*
+    ! on return, so it needs to be converted to obtain the stress tensor.
+    stress_dftd3(:,:) = -matmul(stress_dftd3, transpose(latvecs))&
+        & / abs(determinant(latvecs))  
+
+  end subroutine dftd3_pbc_gdisp
+
+  subroutine dftd3_pbc_gdisp_new(this, coords, izp, latvecs, &
                             force_dftd3, stress_dftd3, rep_cn_, rep_vdw_)
 
     type(dftd3_calc), intent(in) :: this
@@ -91,25 +132,21 @@ MODULE dftd3_qe
     if(present(rep_vdw_)) rep_vdw_(:) = rep_vdw(:)
    
     force_dftd3(:,:) = 0.0_wp
-!civn 
+
     allocate( force_supercell_dftd3(-rep_vdw(3):rep_vdw(3),-rep_vdw(2):rep_vdw(2),-rep_vdw(1):rep_vdw(1),3,natom))
-    !call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
     call pbcgdisp_new(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
-!
         & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
-        & .true., .false., this%version, force_dftd3, disp2, gnorm, &
-!civn 
-        !& stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .true., this%cn_thr)
+        & this%noabc, this%numgrad, this%version, force_dftd3, disp2, gnorm, &
         & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .true., this%cn_thr, &
         & 0.0000000010d0, 2, 1, 1, force_supercell_dftd3)
     deallocate( force_supercell_dftd3 )
-!
+
     ! Note, the stress variable in pbcgdisp contains the *lattice derivatives*
     ! on return, so it needs to be converted to obtain the stress tensor.
     stress_dftd3(:,:) = -matmul(stress_dftd3, transpose(latvecs))&
         & / abs(determinant(latvecs))  
 
-  end subroutine dftd3_pbc_gdisp
+  end subroutine dftd3_pbc_gdisp_new
 
   ! Calculates the dispersion contribution to Hessian
   subroutine dftd3_pbc_hdisp(this, stdout, step, coords, izp, latvecs, rep_cn, rep_vdw, hess_dftd3_, q_gamma )

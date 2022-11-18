@@ -1924,6 +1924,9 @@ contains
     real(wp) a1,a2
     real(wp) bj_dmp6,bj_dmp8
     real(wp) tmp1,tmp2
+!civn 
+write(*,*) '@pbcedisp'
+!
 
     e6 =0
     e8 =0
@@ -4110,6 +4113,9 @@ write(*,*) '@pbcgdisp'
       xyz_hstep(1:3,1:n) = xyz(1:3,1:n)
       xyz_hstep(ix, ia) = xyz_hstep(ix, ia) + hdisp
     end if 
+!civn 
+write(*,*) '@pbcgdisp_new', ldisplace
+!
 
     ! R^2 cut-off
     rthr=crit_vdw
