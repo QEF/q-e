@@ -238,7 +238,7 @@ MODULE dftd3_qe
               call pbcgdisp_new(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
                   & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
                   & .true., .false., this%version, force_dftd3, disp2, gnorm, &
-                  & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .false., this%cn_thr, &
+                  & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .true., this%cn_thr, &
                   & step, iat, ixyz, istep, force_supercell_dftd3)
               !
               do krep = -rep_vdw(3), rep_vdw(3) 

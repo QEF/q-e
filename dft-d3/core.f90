@@ -4121,114 +4121,7 @@ contains
     ! testsum=0.0d0
 
     if (echo)write(*,*)
-
-    if (version.eq.2)then
-      if (echo)write(*,*) 'doing analytical gradient D-old O(N^2) ...'
-      disp=0
-      stress=0.0d0
-      do iat=1,n-1
-        do jat=iat+1,n
-          R0=r0ab(iz(jat),iz(iat))*rs6
-          c6=c6ab(iz(jat),iz(iat),1,1,1)*s6
-          do taux=-rep_v(1),rep_v(1)
-            do tauy=-rep_v(2),rep_v(2)
-              do tauz=-rep_v(3),rep_v(3)
-                tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
-
-                if(ldisplace) then 
-                  ! iat always in the unit cell
-                  ! jat can be in the unit cell or in some replicas, depending on tau
-                  if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0) then 
-                    dxyz=xyz_hstep(:,iat)-xyz_hstep(:,jat) ! both in the unit cell, use the displaced geometry
-                  else
-                    dxyz=xyz_hstep(:,iat)-xyz(:,jat)+tau ! only iat in the unit cell use the undisplaced geometry for jat
-                  end if 
-                else
-                  dxyz=xyz(:,iat)-xyz(:,jat)+tau
-                end if 
-
-                r2 =sum(dxyz*dxyz)
-                if (r2.gt.rthr) cycle
-                r235=r2**3.5
-                r =dsqrt(r2)
-                damp6=exp(-alp6*(r/R0-1.0d0))
-                damp1=1.+damp6
-                tmp1=damp6/(damp1*damp1*r235*R0)
-                tmp2=6./(damp1*r*r235)
-
-                term=alp6*tmp1-tmp2
-                g(:,iat)=g(:,iat)-term*dxyz*c6
-                g(:,jat)=g(:,jat)+term*dxyz*c6
-
-                if(ldisplace) then 
-                  !g_supercell(0,0,0,1:3,iat) = g_supercell(0,0,0,1:3,iat) -term*dxyz*c6 
-                  !g_supercell(0,0,0,1:3,jat) = g_supercell(0,0,0,1:3,jat) +term*dxyz*c6
-                  !if(.not.(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0)) then 
-                    g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) -term*dxyz*c6 
-                    g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) +term*dxyz*c6
-                  !end if 
-                end if 
-
-                disp=disp+c6*(1./damp1)/r2**3
-
-                do ny=1,3
-                  do my=1,3
-                    sigma(my,ny)=sigma(my,ny)+term*dxyz(ny)*dxyz(my)*c6
-                  end do
-                end do
-              end do
-            end do
-          end do
-        end do
-      end do
-      ! and now the self interaction, only for convenient energy in dispersion
-      do iat=1,n
-        jat=iat
-        R0=r0ab(iz(jat),iz(iat))*rs6
-        c6=c6ab(iz(jat),iz(iat),1,1,1)*s6
-        do taux=-rep_v(1),rep_v(1)
-          do tauy=-rep_v(2),rep_v(2)
-            do tauz=-rep_v(3),rep_v(3)
-              if (taux.eq.0 .and. tauy.eq.0 .and. tauz.eq.0) cycle
-              tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
-
-              dxyz=tau
-              ! vec12=(/ dx,dy,dz /)
-              r2 =sum(dxyz*dxyz)
-              if (r2.gt.rthr) cycle
-              r235=r2**3.5
-              r =dsqrt(r2)
-              damp6=exp(-alp6*(r/R0-1.0d0))
-              damp1=1.+damp6
-              tmp1=damp6/(damp1*damp1*r235*R0)
-              tmp2=6./(damp1*r*r235)
-              disp=disp+(c6*(1./damp1)/r2**3)*0.50d0
-              term=alp6*tmp1-tmp2
-              do ny=1,3
-                do my=1,3
-                  sigma(my,ny)=sigma(my,ny)+term*dxyz(ny)*dxyz(my)*c6*0.5d0
-                end do
-              end do
-
-
-            end do
-          end do
-        end do
-      end do
-
-      call inv_cell(lat,lat_1)
-      do a=1,3
-        do b=1,3
-          do my=1,3
-            stress(a,b)=stress(a,b)-sigma(a,my)*lat_1(b,my)
-          end do
-        end do
-      end do
-
-      disp=-disp
-      ! sigma=virialstress
-      goto 999
-    end if ! version.eq.2
+    if (echo) write(*,*) 'doing analytical gradient for version...', version
 
     CALL block_distribute( n, me_image, nproc_image, na_s, na_e, mykey )
 
@@ -4239,8 +4132,6 @@ contains
       !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      if (echo)&
-          & write(*,*) 'doing analytical gradient O(N^2) for version...', version
       ! precompute for analytical part
       call pbcncoord_new(n,rcov,iz,xyz,cn,lat,rep_cn,crit_cn,ldisplace,xyz_hstep)
 
@@ -4395,14 +4286,14 @@ contains
 
       END IF ! mykey == 0
 
-    end if ! version
+      CALL mp_sum ( drij , intra_image_comm )
+      CALL mp_sum ( dc6i , intra_image_comm )
+      if( ldisplace ) then 
+        CALL mp_sum ( drij_hstep , intra_image_comm )
+        CALL mp_sum ( dc6i_hstep , intra_image_comm )
+      end if 
 
-    CALL mp_sum ( drij , intra_image_comm )
-    CALL mp_sum ( dc6i , intra_image_comm )
-    if( ldisplace ) then 
-      CALL mp_sum ( drij_hstep , intra_image_comm )
-      CALL mp_sum ( dc6i_hstep , intra_image_comm )
-    end if 
+    end if ! version
 
     ! After calculating all derivatives dE/dr_ij w.r.t. distances,
     ! the grad w.r.t. the coordinates is calculated dE/dr_ij * dr_ij/dxyz_i
@@ -4426,7 +4317,14 @@ contains
               !
               rij = xyz(:,iat) - xyz_hstep(:,iat) + tau
               r2=sum(rij*rij)
-              Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i(iat), dc6i_hstep(iat), vec)
+              if(version.eq.2) then 
+                iat_jat_fact = 0.5_wp
+                R0=r0ab(iz(iat),iz(iat))*rs6
+                c6=c6ab(iz(iat),iz(iat),1,1,1)*s6
+                Call gkernel3 ( iat_jat_fact, rij, r2, alp6, R0, c6, vec  )
+              else
+                Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i(iat), dc6i_hstep(iat), vec)
+              endif 
               g(:,iat)=g(:,iat)+vec
               g_supercell(0,0,0,1:3,iat)          = g_supercell(0,0,0,1:3,iat)          + vec
               g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) - vec
@@ -4440,6 +4338,11 @@ contains
               !
               linij=lin(iat,jat)
               rcovij=rcov(iz(iat))+rcov(iz(jat))
+              if(version.eq.2) then 
+                iat_jat_fact = 1.0_wp
+                R0=r0ab(iz(jat),iz(iat))*rs6
+                c6=c6ab(iz(jat),iz(iat),1,1,1)*s6
+              end if 
               !
               if(ldisplace .and. unit_cell) then 
                 !
@@ -4447,18 +4350,30 @@ contains
                   rij=xyz(:,jat)-xyz_hstep(:,iat) 
                   r2=sum(rij*rij)
                   if (r2.gt.rthr.or.r2.lt.0.5) cycle
-                  Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i_hstep(iat), dc6i(jat), vec)
+                  if(version.eq.2) then 
+                    Call gkernel3 ( iat_jat_fact, rij, r2, alp6, R0, c6, vec  )
+                  else
+                    Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i_hstep(iat), dc6i(jat), vec)
+                  endif 
                 elseif(jat.eq.ia) then
                   rij=xyz_hstep(:,jat)-xyz(:,iat) 
                   r2=sum(rij*rij)
                   if (r2.gt.rthr.or.r2.lt.0.5) cycle
-                  Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i(iat), dc6i_hstep(jat), vec)
+                  if(version.eq.2) then 
+                    Call gkernel3 ( iat_jat_fact, rij, r2, alp6, R0, c6, vec  )
+                  else
+                    Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i(iat), dc6i_hstep(jat), vec)
+                  end if
                   !vec = -vec
                 else
                   rij=xyz(:,jat)-xyz(:,iat) 
                   r2=sum(rij*rij)
                   if (r2.gt.rthr.or.r2.lt.0.5) cycle
-                  Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
+                  if(version.eq.2) then 
+                    Call gkernel3 ( iat_jat_fact, rij, r2, alp6, R0, c6, vec )
+                  else
+                    Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
+                  end if 
                 end if 
                 g(:,iat)=g(:,iat)+vec
                 g(:,jat)=g(:,jat)-vec
@@ -4472,14 +4387,22 @@ contains
                   rij = ( xyz(:,jat) + tau ) - xyz_hstep(:,iat) ! displaced 
                   r2=sum(rij*rij)                
                   if (r2.gt.rthr.or.r2.lt.0.5) cycle
-                  Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i_hstep(iat), dc6i(jat), vec)
+                  if(version.eq.2) then 
+                    Call gkernel3 ( iat_jat_fact, rij, r2, alp6, R0, c6, vec  )
+                  else
+                    Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i_hstep(iat), dc6i(jat), vec)
+                  end if 
                   g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) - vec       
                   g_supercell(0   ,0   ,0   ,1:3,iat) = g_supercell(0   ,0   ,0   ,1:3,iat) + vec
                   g(:,iat)=g(:,iat)+vec
                   !
                   rij = ( xyz(:,jat) + tau ) - xyz(:,iat)        ! undisplaced
                   r2=sum(rij*rij)                
-                  Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
+                  if(version.eq.2) then 
+                    Call gkernel3 ( iat_jat_fact, rij, r2, alp6, R0, c6, vec  )
+                  else
+                    Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
+                  end if  
                   g_supercell(0   ,0   ,0   ,1:3,jat) = g_supercell(0   ,0   ,0   ,1:3,jat) - vec       
                   g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) + vec
                   g(:,jat)=g(:,jat)-vec
@@ -4489,7 +4412,11 @@ contains
                   rij = xyz_hstep(:,jat) - ( xyz(:,iat) - tau )  ! displaced
                   r2=sum(rij*rij)                
                   if (r2.gt.rthr.or.r2.lt.0.5) cycle
-                  Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i(iat), dc6i_hstep(jat), vec)
+                  if(version.eq.2) then 
+                    Call gkernel3 ( iat_jat_fact, rij, r2, alp6, R0, c6, vec )
+                  else
+                    Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i(iat), dc6i_hstep(jat), vec)
+                  endif 
                   !vec = -vec
                   g_supercell(0   ,0   ,0   ,1:3,jat) = g_supercell(0   ,0   ,0   ,1:3,jat) - vec       
                   g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) + vec
@@ -4497,7 +4424,11 @@ contains
                   !
                   rij = xyz(:,jat)  - ( xyz(:,iat) - tau )        ! undisplaced
                   r2=sum(rij*rij)                
-                  Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
+                  if(version.eq.2) then 
+                    Call gkernel3 ( iat_jat_fact, rij, r2, alp6, R0, c6, vec )
+                  else
+                    Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
+                  endif 
                   !vec = -vec
                   g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) - vec       
                   g_supercell(0   ,0   ,0   ,1:3,iat) = g_supercell(0   ,0   ,0   ,1:3,iat) + vec
@@ -4508,7 +4439,11 @@ contains
                   rij = ( xyz(:,jat) + tau ) - xyz(:,iat)        ! undisplaced
                   r2=sum(rij*rij)                
                   if (r2.gt.rthr.or.r2.lt.0.5) cycle
-                  Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
+                  if(version.eq.2) then 
+                    Call gkernel3 ( iat_jat_fact, rij, r2, alp6, R0, c6, vec )
+                  else
+                    Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
+                  endif 
                   g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) - vec       
                   g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) + vec       
                   g_supercell(0   ,0   ,0   ,1:3,jat) = g_supercell(0   ,0   ,0   ,1:3,jat) - vec
@@ -4540,9 +4475,8 @@ contains
       end do
     end do
 
-    deallocate(drij)
-
-999 continue
+    if(allocated(drij)) deallocate(drij)
+    if(allocated(drij_hstep)) deallocate(drij_hstep)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!
     !
@@ -5018,6 +4952,30 @@ contains
   return 
 
   end subroutine gkernel2
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  
+  subroutine gkernel3 ( fact, dxyz, r2, alp6, R0, c6, vec )
+  implicit none
+  real(wp), intent(in) :: fact, dxyz(3), r2, alp6, R0, c6
+  real(wp), intent(out) :: vec(3)
+
+  real(wp) :: r235, r, damp6, damp1, tmp1, tmp2, term
+
+  r235=r2**3.5
+  r =dsqrt(r2)
+  damp6=exp(-alp6*(r/R0-1.0d0))
+  damp1=1.+damp6
+  tmp1=damp6/(damp1*damp1*r235*R0)
+  tmp2=6./(damp1*r*r235)
+
+  term=alp6*tmp1-tmp2
+
+  vec(1:3) = fact * term*dxyz(1:3)*c6
+
+  return
+  
+  end subroutine gkernel3
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
