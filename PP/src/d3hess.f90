@@ -6,10 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-! Author: Ivan Carnimeo (October 2022)
-!----------------------------------------------------------------------------
-!
-!----------------------------------------------------------------------------
 program d3hess
   USE io_global,        ONLY: stdout, ionode, ionode_id
   USE io_files,         ONLY: prefix, tmp_dir
@@ -95,8 +91,8 @@ program d3hess
   ! DFT-D3 functional dependent parameters have been set in read_file_new
   !
   WRITE( stdout, '(/,5x,A,f24.12)') 'Differentiation step: ',  step 
-  WRITE( stdout, '(5x,A,3I4)') 'DFT-D3 version: ',  dftd3_version  
-  WRITE( stdout, '(5x,A,L)') 'DFT-D3 threebody: ',  dftd3_threebody  
+  WRITE( stdout, '(5x,A,3I4)') 'DFT-D3 version: ',  dftd3%version  
+  WRITE( stdout, '(5x,A,L)') 'DFT-D3 threebody: ',  .not.dftd3%noabc
   IF(q_gamma) THEN
     WRITE( stdout, '(5x,A)') 'Using a cheap algorithm for q=0,0,0 only'
   ELSE
