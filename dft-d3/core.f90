@@ -4324,7 +4324,7 @@ write(*,*) '@pbcgdisp_new', ldisplace
 
     CALL block_distribute( n, me_image, nproc_image, na_s, na_e, mykey )
 
-    if ((version.eq.3).or.(version.eq.5)) then
+    if ((version.eq.3).or.(version.eq.5).or.(version.eq.4).or.(version.eq.6)) then
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !
       ! begin ZERO DAMPING GRADIENT
@@ -4332,18 +4332,19 @@ write(*,*) '@pbcgdisp_new', ldisplace
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       if (echo)&
-          & write(*,*) 'doing analytical gradient O(N^2) ...'
+          & write(*,*) 'doing analytical gradient O(N^2) for version...', version
       ! precompute for analytical part
       call pbcncoord_new(n,rcov,iz,xyz,cn,lat,rep_cn,crit_cn,ldisplace,xyz_hstep)
 
 
+      a1 =rs6
+      a2 =rs8
       s8 =s18
       s10=s18
       allocate(drij(-rep_v(3):rep_v(3),-rep_v(2):rep_v(2),-rep_v(1):rep_v(1),n*(n+1)/2), &
                drij_hstep(-rep_v(3):rep_v(3),-rep_v(2):rep_v(2),-rep_v(1):rep_v(1),n*(n+1)/2) )
 
       disp=0
-
       drij=0.0d0
       drij_hstep=0.0d0
       dc6_rest=0.0d0
@@ -4355,7 +4356,7 @@ write(*,*) '@pbcgdisp_new', ldisplace
       dc6ij=0.0d0
 
       IF ( mykey == 0 ) THEN
-!civn 
+
       do taux=-rep_v(1),rep_v(1)
         do tauy=-rep_v(2),rep_v(2)
           do tauz=-rep_v(3),rep_v(3)
@@ -4373,9 +4374,13 @@ write(*,*) '@pbcgdisp_new', ldisplace
 
               c6save(lin(iat,iat))=c6
               dc6ij(iat,iat)=dc6iji
-              r0=r0ab(iz(iat),iz(iat))
               r42=r2r4(iz(iat))*r2r4(iz(iat))
               rcovij=rcov(iz(iat))+rcov(iz(iat))
+              if((version.eq.3).or.(version.eq.5)) then 
+                R0=r0ab(iz(iat),iz(iat))
+              elseif((version.eq.4).or.(version.eq.6)) then
+                R0=a1*sqrt(3.0d0*r42)+a2
+              end if 
 
               iat_jat_fact = 0.50d0 ! each diagonal contribution is weighted 1/2
 
@@ -4416,14 +4421,17 @@ write(*,*) '@pbcgdisp_new', ldisplace
                     & mxc(iz(jat)),cn(iat),cn(jat),iz(iat),iz(jat),iat,jat,&
                     & c6,dc6iji,dc6ijj)
       
-                r0=r0ab(iz(jat),iz(iat))
                 r42=r2r4(iz(iat))*r2r4(iz(jat))
                 rcovij=rcov(iz(iat))+rcov(iz(jat))
                 linij=lin(iat,jat)
-      
                 dc6ij(iat,jat)=dc6iji
                 dc6ij(jat,iat)=dc6ijj
                 c6save(linij)=c6
+                if((version.eq.3).or.(version.eq.5)) then 
+                  R0=r0ab(iz(iat),iz(iat))
+                elseif((version.eq.4).or.(version.eq.6)) then
+                  R0=a1*dsqrt(3.0d0*r42)+a2 
+                end if 
 
                 iat_jat_fact = 1.0d0 ! off diagonal contributions for iat and jat are equivalent: they are weighted twice the diagonal ones 
 
@@ -4478,195 +4486,6 @@ write(*,*) '@pbcgdisp_new', ldisplace
       end do ! taux
 
       END IF ! mykey == 0
-
-    elseif ((version.eq.4).or.(version.eq.6)) then
-
-
-
-!!!!!!!!!!!!!!!!!!!!!!!
-      ! NOW THE BJ Gradient !
-!!!!!!!!!!!!!!!!!!!!!!!
-
-
-      if (echo) write(*,*) 'doing analytical gradient O(N^2) ...'
-      call pbcncoord_new(n,rcov,iz,xyz,cn,lat,rep_cn,crit_cn,ldisplace,xyz_hstep)
-
-      a1 =rs6
-      a2 =rs8
-      s8 =s18
-
-      allocate(drij(-rep_v(3):rep_v(3),-rep_v(2):rep_v(2),&
-          & -rep_v(1):rep_v(1),n*(n+1)/2))
-      disp=0
-      drij=0.0d0
-      dc6_rest=0.0d0
-      dc6_rest_sum=0.0d0
-      c6save=0.0d0
-      kat=0
-      dc6i=0.0d0
-      dc6ij=0.0d0
-
-      IF ( mykey == 0 ) THEN
-
-      do iat=na_s, na_e
-        call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)),&
-            & mxc(iz(iat)),cn(iat),cn(iat),iz(iat),iz(iat),iat,iat,&
-            & c6,dc6iji,dc6ijj)
-
-        dc6ij(iat,iat)=dc6iji
-        c6save(lin(iat,iat))=c6
-        r42=r2r4(iz(iat))*r2r4(iz(iat))
-        rcovij=rcov(iz(iat))+rcov(iz(iat))
-
-        R0=a1*sqrt(3.0d0*r42)+a2
-
-        do taux=-rep_v(1),rep_v(1)
-          do tauy=-rep_v(2),rep_v(2)
-            do tauz=-rep_v(3),rep_v(3)
-              tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
-
-              !first dE/d(tau) saved in drij(i,i,counter)
-              if(ldisplace .and..not. (taux.eq.0 .and. tauy.eq.0 .and. tauz.eq.0)) then 
-                rij = xyz_hstep(:,iat) - xyz(:,iat) + tau
-              else
-                rij=tau
-              end if 
-              r2=sum(rij*rij)
-              ! if (r2.gt.rthr) cycle
-
-              ! if (r2.gt.0.1) then
-              if (r2.gt.0.1.and.r2.lt.rthr) then
-                !
-                ! get_dC6_dCNij calculates the derivative dC6(iat,jat)/dCN(iat) and
-                ! dC6(iat,jat)/dCN(jat). these are saved in dC6ij for the kat loop
-                !
-                r=dsqrt(r2)
-                r4=r2*r2
-                r6=r4*r2
-                r7=r6*r
-                r8=r6*r2
-                r9=r8*r
-
-                !
-                ! Calculates damping functions:
-
-                t6=(r6+R0**6)
-                t8=(r8+R0**8)
-
-                drij(tauz,tauy,taux,lin(iat,iat))=drij(tauz,tauy,taux,lin(iat, &
-                    & iat))&
-                    & -s6*C6*6.0d0*r4*r/(t6*t6)*0.5d0&
-                    & -s8*C6*24.0d0*r42*r7/(t8*t8)*0.5d0
-
-
-                !
-                ! in dC6_rest all terms BUT C6-term is saved for the kat-loop
-                !
-                dc6_rest=&
-                    & (s6/t6+3.d0*s8*r42/t8)*0.50d0
-
-
-                disp=disp-dc6_rest*c6
-
-                dc6i(iat)=dc6i(iat)+dc6_rest*(dc6iji+dc6ijj)
-                ! if (r2.lt.crit_cn)
-                dc6_rest_sum(lin(iat,iat))=dc6_rest_sum(lin(iat,iat))+&
-                    & dc6_rest
-
-
-              else
-                drij(tauz,tauy,taux,lin(iat,iat))=0.0d0
-              end if
-
-
-            end do
-          end do
-        end do
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!
-        ! B E G I N jat L O O P
-!!!!!!!!!!!!!!!!!!!!!!!!!!
-        do jat=1,iat-1
-          !
-          ! get_dC6_dCNij calculates the derivative dC6(iat,jat)/dCN(iat) and
-          ! dC6(iat,jat)/dCN(jat). these are saved in dC6ij for the kat loop
-          !
-          call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)),&
-              & mxc(iz(jat)),cn(iat),cn(jat),iz(iat),iz(jat),iat,jat,&
-              & c6,dc6iji,dc6ijj)
-
-          r42=r2r4(iz(iat))*r2r4(iz(jat))
-          rcovij=rcov(iz(iat))+rcov(iz(jat))
-
-          R0=a1*dsqrt(3.0d0*r42)+a2
-
-          linij=lin(iat,jat)
-          dc6ij(iat,jat)=dc6iji
-          dc6ij(jat,iat)=dc6ijj
-          c6save(linij)=c6
-          do taux=-rep_v(1),rep_v(1)
-            do tauy=-rep_v(2),rep_v(2)
-              do tauz=-rep_v(3),rep_v(3)
-                tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
-
-                if(ldisplace) then 
-                  ! iat always in the unit cell
-                  ! jat can be in the unit cell or in some replicas, depending on tau
-                  if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0) then 
-                    rij=xyz_hstep(:,jat)-xyz_hstep(:,iat) ! both in the unit cell, tau=0, use the displaced geometry 
-                  else
-                    rij=xyz(:,jat)-xyz_hstep(:,iat)+tau ! only iat in the unit cell, use the undisplaced geometry for jat
-                  end if 
-                else
-                  rij=xyz(:,jat)-xyz(:,iat)+tau
-                end if 
-
-                r2=sum(rij*rij)
-                if (r2.gt.rthr) cycle
-
-
-                r=dsqrt(r2)
-                r4=r2*r2
-                r6=r4*r2
-                r7=r6*r
-                r8=r6*r2
-                r9=r8*r
-
-                !
-                ! Calculates damping functions:
-                t6=(r6+R0**6)
-                t8=(r8+R0**8)
-
-
-                drij(tauz,tauy,taux,linij)=drij(tauz,tauy,taux,&
-                    & linij)&
-                    & -s6*C6*6.0d0*r4*r/(t6*t6)&
-                    & -s8*C6*24.0d0*r42*r7/(t8*t8)
-
-                !
-                ! in dC6_rest all terms BUT C6-term is saved for the kat-loop
-                !
-                dc6_rest=&
-                    & (s6/t6+3.d0*s8*r42/t8)
-
-
-                disp=disp-dc6_rest*c6
-
-                dc6i(iat)=dc6i(iat)+dc6_rest*dc6iji
-                dc6i(jat)=dc6i(jat)+dc6_rest*dc6ijj
-                ! if (r2.lt.crit_cn)
-                dc6_rest_sum(lin(iat,jat))=dc6_rest_sum(linij)&
-                    & +dc6_rest
-
-
-              end do ! taux
-            end do ! tauy
-          end do ! tauz
-
-        end do ! jat
-
-      end do ! iat
-      END IF ! mykey
 
     end if ! version
 
@@ -5285,7 +5104,7 @@ write(*,*) '@pbcgdisp_new', ldisplace
 
     ! After calculating all derivatives dE/dr_ij w.r.t. distances,
     ! the grad w.r.t. the coordinates is calculated dE/dr_ij * dr_ij/dxyz_i
-!civn 
+
     do taux=-rep_v(1),rep_v(1)
       do tauy=-rep_v(2),rep_v(2)
         do tauz=-rep_v(3),rep_v(3)
@@ -5887,11 +5706,12 @@ write(*,*) '@pbcgdisp_new', ldisplace
   real(wp), intent(in)  :: r2, R0, s6, rs6, alp6, s8, rs8, alp8, C6, r42
   real(wp), intent(out) :: res1, res2
 
-  real(wp) :: r, r6, r7, r8, r9, tmp1, tmp2
+  real(wp) :: r, r4, r6, r7, r8, r9, tmp1, tmp2
   real(wp) :: t6, damp6, t8, damp8 , dc6_rest
 
   r=dsqrt(r2)
-  r6=r2*r2*r2
+  r4=r2*r2
+  r6=r4*r2
   r7=r6*r
   r8=r6*r2
   r9=r8*r
@@ -5903,6 +5723,7 @@ write(*,*) '@pbcgdisp_new', ldisplace
     damp8 =1.d0/( 1.d0+6.d0*t8 )
     res1 = -s6*(6.0/(r7)*C6*damp6) -s8*(24.0/(r9)*C6*r42*damp8) &
             +s6*C6/r7*6.d0*alp6*t6*damp6*damp6 +s8*C6*r42/r9*18.d0*alp8*t8*damp8*damp8 
+    res2 = s6/r6*damp6+3.d0*s8*r42/r8*damp8 
 
   elseif(version.eq.5) then  
     t6 = (r/(rs6*R0)+R0*rs8)**(-alp6)
@@ -5912,10 +5733,15 @@ write(*,*) '@pbcgdisp_new', ldisplace
     tmp1=s6*6.d0*damp6*C6/r7
     tmp2=s8*6.d0*C6*r42*damp8/r9
     res1 = - (tmp1 +4.d0*tmp2) +(tmp1*alp6*t6*damp6*r/(r+rs6*R0*R0*rs8) +3.d0*tmp2*alp8*t8*damp8*r/(r+R0*R0*rs8)) 
+    res2 = s6/r6*damp6+3.d0*s8*r42/r8*damp8 
+
+  elseif((version.eq.4).or.(version.eq.6)) then  
+    t6=(r6+R0**6)
+    t8=(r8+R0**8)
+    res1 = -s6*C6*6.0d0*r4*r/(t6*t6) -s8*C6*24.0d0*r42*r7/(t8*t8) 
+    res2 = s6/t6+3.d0*s8*r42/t8
 
   endif
-
-  res2 = s6/r6*damp6+3.d0*s8*r42/r8*damp8 
 
   res1 = fact * res1
   res2 = fact * res2
