@@ -620,7 +620,7 @@ SUBROUTINE cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
   !
   !$acc parallel loop copyin(cutoff_2D,tau,zv,ityp) &
   !$acc& reduction(+:sigma11,sigma21,sigma22,sigma31,sigma32, &
-  !$acc&             sigma33)
+  !$acc&             sigma33,sdewald)
   DO ng = gstart, ngm
      Gp = SQRT( g(1,ng)**2 + g(2,ng)**2 )*tpiba
      IF (Gp < eps8) THEN
