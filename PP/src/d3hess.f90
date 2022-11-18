@@ -24,7 +24,7 @@ program d3hess
   USE input_parameters, ONLY: dftd3_version, dftd3_threebody
   USE funct,            ONLY: get_dft_short
   USE dftd3_api,        ONLY: dftd3_init, dftd3_set_functional, get_atomic_number, dftd3_pbc_dispersion
-  USE dftd3_qe,         ONLY: dftd3_xc, dftd3, dftd3_pbc_gdisp, dftd3_pbc_hdisp, dftd3_in
+  USE dftd3_qe,         ONLY: dftd3_xc, dftd3, dftd3_pbc_gdisp_new, dftd3_pbc_hdisp, dftd3_in
   !
   IMPLICIT NONE
   INTEGER :: ios
@@ -114,7 +114,7 @@ program d3hess
      atnum(iat) = get_atomic_number(TRIM(atm(ityp(iat))))
   ENDDO
   !
-  call dftd3_pbc_gdisp(dftd3, xyz, atnum, latvecs, force_d3, stress_d3, rep_cn, rep_vdw)
+  call dftd3_pbc_gdisp_new(dftd3, xyz, atnum, latvecs, force_d3, stress_d3, rep_cn, rep_vdw)
   force_d3 = -2.d0*force_d3
   !
   WRITE( stdout, '(/,5x,A,3I4)') 'Number of images for CN: ',  rep_cn(:)
