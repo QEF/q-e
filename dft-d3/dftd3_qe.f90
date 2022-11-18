@@ -146,22 +146,20 @@ MODULE dftd3_qe
   end subroutine dftd3_pbc_gdisp
 
   subroutine dftd3_pbc_gdisp_new(this, coords, izp, latvecs, &
-                            force_dftd3, stress_dftd3, rep_cn_, rep_vdw_)
+                            force_dftd3, rep_cn_, rep_vdw_)
 
     type(dftd3_calc), intent(in) :: this
     real(wp), intent(in) :: coords(:,:)
     integer, intent(in) :: izp(:)
     real(wp), intent(in) :: latvecs(:,:)
-    real(wp), intent(out) :: force_dftd3(:,:), stress_dftd3(:,:)
+    real(wp), intent(out) :: force_dftd3(:,:)
     integer, optional, intent(out) :: rep_cn_(3), rep_vdw_(3)
     integer :: natom
     real(wp) :: s6, s18, rs6, rs8, rs10, alp6, alp8, alp10
     real(wp) :: gnorm, disp2
     real(wp) :: rtmp3(3)
     integer :: rep_cn(3), rep_vdw(3)
-!civn 
     real(wp), allocatable :: force_supercell_dftd3(:,:,:,:,:)
-!
 
     natom = size(coords, dim=2)
     s6 = this%s6
@@ -186,14 +184,9 @@ MODULE dftd3_qe
     call pbcgdisp_new(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
         & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
         & this%noabc, this%numgrad, this%version, force_dftd3, disp2, gnorm, &
-        & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .true., this%cn_thr, &
+        & latvecs, rep_vdw, rep_cn, this%rthr, .true., this%cn_thr, &
         & 0.0000000010d0, 2, 1, 1, force_supercell_dftd3)
     deallocate( force_supercell_dftd3 )
-
-    ! Note, the stress variable in pbcgdisp contains the *lattice derivatives*
-    ! on return, so it needs to be converted to obtain the stress tensor.
-    stress_dftd3(:,:) = -matmul(stress_dftd3, transpose(latvecs))&
-        & / abs(determinant(latvecs))  
 
   end subroutine dftd3_pbc_gdisp_new
 
@@ -283,13 +276,11 @@ MODULE dftd3_qe
               write(stdout, '(5x,A,3I4)' ) 'Displacement step: ', iat, ixyz, istep
               force_dftd3(:,:) = 0.0_wp ! this is not initialized in pbcgdisp 
               !force_supercell_dftd3(:,:,:,:,:) = 0.0_wp ! this is initialized in pbcgdisp
-!             call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
               call pbcgdisp_new(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
                   & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
                   & .true., .false., this%version, force_dftd3, disp2, gnorm, &
-                  & stress_dftd3, latvecs, rep_vdw, rep_cn, this%rthr, .true., this%cn_thr, &
+                  & latvecs, rep_vdw, rep_cn, this%rthr, .true., this%cn_thr, &
                   & step, iat, ixyz, istep, force_supercell_dftd3)
-              !
               do krep = -rep_vdw(3), rep_vdw(3) 
                 do jrep = -rep_vdw(2), rep_vdw(2) 
                   do irep = -rep_vdw(1), rep_vdw(1) 
