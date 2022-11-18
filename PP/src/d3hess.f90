@@ -159,49 +159,54 @@ program d3hess
   !
   ! Writing DFT-D3 hessian on file
   !
-  WRITE( stdout, '(/,5x,2A)') 'Writing Hessian on file: ',  filhess
-  ! 
-  WRITE(formt,'(A,I9,A)') '(', 3*nat, 'f24.16)'
-  ALLOCATE( buffer(3*nat) )
-  !
-  OPEN (unit = 1, file = filhess, status = 'unknown')
-  !
-  WRITE(1,'(A)') 'Hessian matrix of the Grimme-D3 dispersion term'
-  WRITE(1,'(A,5I9,3x,L)') 'System: ', rep_hes(:), nat, nnat, q_gamma
-  !
-  DO irep = -rep_hes(1), rep_hes(1)
-    DO jrep = -rep_hes(2), rep_hes(2)
-      DO krep = -rep_hes(3), rep_hes(3)
-        !
-        IF(irep.eq.0 .and. jrep.eq.0 .and. krep.eq.0) THEN
-          WRITE(1, '(3(A,I4))') 'Unit cell: irep= ',irep, ' jrep= ',jrep, ' krep= ',krep
-        ELSE
-          WRITE(1, '(3(A,I4))') 'Replica cell: irep= ',irep, ' jrep= ',jrep, ' krep= ',krep
-        END IF
-        !
-        DO i = 1, 3*nat         ! 1 2 3 4 5 6 7 8 9 ... 3*nat
-          iat  = (i+2)/3        ! 1 1 1 2 2 2 3 3 3 ... nat 
-          ixyz = i - 3* (iat-1) ! 1 2 3 1 2 3 1 2 3 ... 3 
+  IF( ionode ) THEN 
+    !
+    WRITE( stdout, '(/,5x,2A)') 'Writing Hessian on file: ',  filhess
+    ! 
+    WRITE(formt,'(A,I9,A)') '(', 3*nat, 'f24.16)'
+    ALLOCATE( buffer(3*nat) )
+    !
+    OPEN (unit = 1, file = filhess, status = 'unknown')
+    !
+    WRITE(1,'(A)') 'Hessian matrix of the Grimme-D3 dispersion term'
+    WRITE(1,'(A,5I9,3x,L)') 'System: ', rep_hes(:), nat, nnat, q_gamma
+    !
+    DO irep = -rep_hes(1), rep_hes(1)
+      DO jrep = -rep_hes(2), rep_hes(2)
+        DO krep = -rep_hes(3), rep_hes(3)
           !
-          DO j = 1, 3*nat
-            jat  = (j+2)/3 
-            jxyz = j - 3* (jat-1) 
-            buffer(j) = hess_d3(krep,jrep,irep,ixyz,iat,jxyz,jat)
+          IF(irep.eq.0 .and. jrep.eq.0 .and. krep.eq.0) THEN
+            WRITE(1, '(3(A,I4))') 'Unit cell: irep= ',irep, ' jrep= ',jrep, ' krep= ',krep
+          ELSE
+            WRITE(1, '(3(A,I4))') 'Replica cell: irep= ',irep, ' jrep= ',jrep, ' krep= ',krep
+          END IF
+          !
+          DO i = 1, 3*nat         ! 1 2 3 4 5 6 7 8 9 ... 3*nat
+            iat  = (i+2)/3        ! 1 1 1 2 2 2 3 3 3 ... nat 
+            ixyz = i - 3* (iat-1) ! 1 2 3 1 2 3 1 2 3 ... 3 
+            !
+            DO j = 1, 3*nat
+              jat  = (j+2)/3 
+              jxyz = j - 3* (jat-1) 
+              buffer(j) = hess_d3(krep,jrep,irep,ixyz,iat,jxyz,jat)
+            END DO 
+            !  
+            WRITE(1, formt ) buffer(1:3*nat)
+            !
           END DO 
-          !  
-          WRITE(1, formt ) buffer(1:3*nat)
           !
         END DO 
-        !
       END DO 
     END DO 
-  END DO 
+    !
+    CLOSE (1)
+    !
+    DEALLOCATE( buffer, xyz, atnum, force_d3, hess_d3 )
+    !
+    WRITE( stdout, * ) 
+    !
+  END IF 
   !
-  CLOSE (1)
-  !
-  DEALLOCATE( buffer, xyz, atnum, force_d3, hess_d3 )
-  !
-  WRITE( stdout, * ) 
   CALL print_clock('force_dftd3')
   CALL print_clock('hessian_dftd3')
   !
