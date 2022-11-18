@@ -1820,23 +1820,18 @@ contains
 
   end subroutine pbcncoord
 
-  subroutine pbcncoord_new(natoms,rcov,iz,xyz,cn,lat,rep_cn,crit_cn,ldisplace,xyz_hstep)
+  subroutine pbcncoord_new(natoms,rcov,iz,xyz,cn,lat,rep_cn,crit_cn,xyz_hstep)
     integer,intent(in) :: natoms,iz(*)
     real(wp),intent(in) :: rcov(94)
     real(wp), intent(in):: xyz(3,*),lat(3,3)
     real(wp), intent(in) :: crit_cn
     real(wp), intent(out):: cn(*)
-    logical, intent(in), optional :: ldisplace       ! whether to displace unit cell atoms 
-    real(wp), intent(in), optional :: xyz_hstep(3,*) ! displaced geometry
+    real(wp), intent(in) :: xyz_hstep(3,*) ! displaced geometry
   
-    logical ldisp
     integer i,max_elem,rep_cn(3)
 
     integer iat,taux,tauy,tauz
     real(wp) dx,dy,dz,r,damp,xn,rr,rco,tau(3)
-
-    ldisp = .false.
-    if(present(ldisplace)) ldisp = ldisplace
 
     do i=1,natoms
       xn=0.0d0
@@ -1848,22 +1843,14 @@ contains
                   & tauz.eq.0) cycle
               tau=taux*lat(:,1)+tauy*lat(:,2)+tauz*lat(:,3)
 
-              if(ldisp) then 
-                ! iat always in the unit cell
-                ! i can be in the unit cell or in some replicas, depending on tau
-                if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0.) then 
-                  dx=xyz_hstep(1,iat)-xyz_hstep(1,i) ! both in the unit cell, use the displaced geometry
-                  dy=xyz_hstep(2,iat)-xyz_hstep(2,i) 
-                  dz=xyz_hstep(3,iat)-xyz_hstep(3,i) 
-                else
-                  dx=xyz(1,iat)-xyz_hstep(1,i)+tau(1) ! only iat in the unit cell, use the undisplaced geometry for i
-                  dy=xyz(2,iat)-xyz_hstep(2,i)+tau(2) 
-                  dz=xyz(3,iat)-xyz_hstep(3,i)+tau(3) 
-                end if 
+              if(taux.eq.0.and.tauy.eq.0.and.tauz.eq.0.) then 
+                dx=xyz_hstep(1,iat)-xyz_hstep(1,i) ! both in the unit cell, use the displaced geometry
+                dy=xyz_hstep(2,iat)-xyz_hstep(2,i) 
+                dz=xyz_hstep(3,iat)-xyz_hstep(3,i) 
               else
-                dx=xyz(1,iat)-xyz(1,i)+tau(1)
-                dy=xyz(2,iat)-xyz(2,i)+tau(2)
-                dz=xyz(3,iat)-xyz(3,i)+tau(3)
+                dx=xyz(1,iat)-xyz_hstep(1,i)+tau(1) ! only iat in the unit cell, use the undisplaced geometry for i
+                dy=xyz(2,iat)-xyz_hstep(2,i)+tau(2) 
+                dz=xyz(3,iat)-xyz_hstep(3,i)+tau(3) 
               end if 
 
               r=(dx*dx+dy*dy+dz*dz)
@@ -3999,126 +3986,60 @@ contains
 
   subroutine pbcgdisp_new(max_elem,maxc,n,xyz,iz,c6ab,mxc,r2r4,r0ab,&
       & rcov,s6,s18,rs6,rs8,rs10,alp6,alp8,alp10,noabc,num,&
-      & version,g,disp,gnorm,stress,lat,rep_v,rep_cn,&
+      & version,g,disp,gnorm,lat,rep_v,rep_cn,&
       & crit_vdw,echo,crit_cn, hstep, ia, ix, is, g_supercell_)
-
-
+    !
     USE mp_images,    ONLY : me_image , nproc_image, intra_image_comm
     USE mp,           ONLY : mp_sum
-
-    integer,  intent(in), optional :: ia, ix, is
-    real(wp), intent(in), optional :: hstep ! step (in Bohr) for atom displacement for numerical Hessian calculation
-    real(wp), intent(out), optional, target, contiguous :: g_supercell_(:,:,:,:,:) 
+    !
+    ! input/output variables
+    !   
+    real(wp), intent(in) :: c6ab(max_elem,max_elem,maxc,maxc,3)
+    real(wp), intent(in) :: s6,s18,rcov(max_elem)
+    real(wp), intent(in) :: rs6,rs8,rs10,alp10,alp8,alp6
+    integer,  intent(in) :: n,iz(*),max_elem,maxc,version,mxc(max_elem)
+    real(wp), intent(in) :: xyz(3,*),r0ab(max_elem,max_elem),r2r4(*)
+    logical,  intent(in) :: noabc,num,echo
+    real(wp), dimension(3,3), intent(in) :: lat
+    integer,  dimension(3),   intent(in) :: rep_v,rep_cn
+    real(wp), intent(in) :: crit_vdw,crit_cn
+    integer,  intent(in) :: ia, ix, is
+    real(wp), intent(in) :: hstep ! step (in Bohr) for atom displacement for numerical Hessian calculation
+    real(wp), intent(inout) :: g(3,*), disp
+    real(wp), intent(out) :: gnorm
+    real(wp), target, contiguous, intent(out) :: g_supercell_(:,:,:,:,:) 
+    ! 
+    ! local variables
+    !
     real(wp), pointer :: g_supercell(:,:,:,:,:) 
     integer, allocatable :: ns(:)
-    real(wp) :: gnorm_supercell
     real(wp), allocatable :: xyz_hstep(:,:) ! displaced geometry
     real(wp) :: iat_jat_fact ! weight for diagonal/off-diagonal gradient terms
-    logical :: unit_cell     ! a quick flag to check whether a certain taux,tauy,tauz points to the unit cell or to some image
-
-    logical :: ldisplace ! whether to displace atoms for numerical Hessian calculations
-    integer :: mykey, na_s, na_smax, na_e
-    real(wp) :: hdisp
-
-    integer n,iz(*),max_elem,maxc,version,mxc(max_elem)
-    real(wp) xyz(3,*),r0ab(max_elem,max_elem),r2r4(*)
-    real(wp) c6ab(max_elem,max_elem,maxc,maxc,3)
-    real(wp) g(3,*),s6,s18,rcov(max_elem)
-    real(wp) rs6,rs8,rs10,alp10,alp8,alp6
-    real(wp) a1,a2
-    real(wp) bj_dmp6,bj_dmp8
-    logical noabc,num,echo
-    ! conversion factors
-
-    integer iat,jat,i,j,kat,my,ny,a,b,idum,tau2
-    real(wp) R0,C6,alp,R42,disp,x1,y1,z1,x2,y2,z2,rr,e6abc,fdum
-    real(wp) dx,dy,dz,r2,r,r4,r6,r8,r10,r12,t6,t8,t10,damp1
-    real(wp) damp6,damp8,damp9,e6,e8,e10,e12,gnorm,tmp1
-    real(wp) s10,s8,gC6(3),term,step,dispr,displ,r235,tmp2
-    real(wp) cn(n),gx1,gy1,gz1,gx2,gy2,gz2,rthr,testsum
-    real(wp), DIMENSION(3,3) :: lat,stress,sigma,virialstress,lat_1
-    real(wp), DIMENSION(3,3) :: gC6_stress
-    integer, DIMENSION(3) :: rep_v,rep_cn
-    real(wp) crit_vdw,crit_cn
-    integer taux,tauy,tauz
-    real(wp), DIMENSION(3) :: tau,vec12,dxyz,dxyz0
-    real(wp) ::outpr(3,3)
-    real(wp), DIMENSION(3,3):: outerprod
-
-    real(wp) rij(3),rik(3),rjk(3),r7,r9, rij_hstep(3)
-    real(wp) rik_dist,rjk_dist
-    real(wp) drik,drjk
-    real(wp) rcovij
-    real(wp) dc6,c6chk
-    real(wp) expterm,dcni
+    logical  :: unit_cell     ! a quick flag to check whether a certain taux,tauy,tauz points to the unit cell or to some image
+    integer  :: mykey, na_s, na_e
+    real(wp) :: hdisp,a1,a2,R0,C6,R42,r2,s10,s8,cn(n),rthr,rcovij,dcnn
+    integer  :: iat,jat, taux,tauy,tauz, linij
+    real(wp), DIMENSION(3) :: tau, rij, vec
     real(wp), allocatable,dimension(:,:,:,:) :: drij, drij_hstep(:,:,:,:)
     real(wp), allocatable,dimension(:,:,:,:) :: dcn
-    real(wp) dcnn
-    real(wp) :: dc6_rest
-    real(wp) vec(3),vec2(3),dummy, vec_hstep(3)
-    real(wp) dc6i(n), dc6i_hstep(n)
-    real(wp) dc6ij(n,n)
-    real(wp) dc6_rest_sum(n*(n+1)/2)
-    integer linij,linik,linjk
-    real(wp) abc(3,n)
-
-    real(wp) eabc
-    real(wp) gabc(3,n),glatabc(3,3)
-    real(wp) sigma_abc(3,3)
-    real(wp) labc,rabc
-    real(wp) ,dimension(3) ::ijvec,ikvec,jkvec,jtau,ktau,dumvec
-    integer jtaux,jtauy,jtauz,ktaux,ktauy,ktauz,mtaux,mtauy,mtauz
-    integer,dimension(3) :: taumin,taumax
-    integer mat,linim,linjm,linkm
-    real(wp) rij2,rik2,rjk2,c9,c6ij,c6ik,c6jk,geomean,geomean3
-    real(wp) rr0ij,rr0jk,rr0ik,dc6iji,dc6ijj
-    real(wp) :: sr9=0.75d0
-    real(wp), parameter :: alp9=-16.0d0
+    real(wp) :: dc6i(n), dc6i_hstep(n), dc6ij(n,n), dc6iji,dc6ijj
+    real(wp) :: dc6_rest_sum(n*(n+1)/2)
     real(wp),DIMENSION(n*(n+1)) ::c6save
-    real(wp) abcthr,time1,time2,geomean2,r0av,dc9,dfdmp,dang,ang
-    integer,dimension(3) ::repv,repmin,repmax
-    integer :: rep_v1, rep_v2, rep_v3  
-    integer :: rep_cn1, rep_cn2, rep_cn3  
-    integer :: repmin1, repmin2, repmin3   
-    integer :: repmax1, repmax2, repmax3   
-    real(wp) :: dumvec1, dumvec2, dumvec3  
-    real(wp) :: ijvec1, ijvec2, ijvec3   
-    real(wp) :: ikvec1, ikvec2, ikvec3   
-    real(wp) :: jkvec1, jkvec2, jkvec3   
-    real(wp) :: jtau1, jtau2, jtau3  
-    real(wp) :: ktau1, ktau2, ktau3  
-    real(wp) :: res1, res2
+    real(wp) :: res1, res2, gnorm_supercell
 
-    ldisplace = .false.
-    if(present(hstep).or.present(ia).or.present(ix).or.present(is).or.present(g_supercell_)) then 
-      if(.not.present(hstep)) Call errore('pbcgdisp', 'Atom displacement parameter missing ', 11)
-      if(.not.present(ia))    Call errore('pbcgdisp', 'Atom displacement parameter missing ', 12)
-      if(.not.present(ix))    Call errore('pbcgdisp', 'Atom displacement parameter missing ', 13)
-      if(.not.present(is))    Call errore('pbcgdisp', 'Atom displacement parameter missing ', 14)
-      if(.not.present(g_supercell_))    Call errore('pbcgdisp', 'Supercell gradient missing',  15)
-      if(num) Call errore('pbcgdisp', 'Atom displacement not implemented with numerical forces', 1)
-      if(.not.noabc) Call errore('pbcgdisp', 'Atom displacement not implemented with the threebody term', 1)
-      ldisplace = .true.
-      ns = shape(g_supercell_)
-      g_supercell( -ns(1)/2:ns(1)/2, -ns(2)/2:ns(2)/2, -ns(3)/2:ns(3)/2, 1:ns(4), 1:ns(5) ) => g_supercell_
-      g_supercell(:,:,:,:,:) = 0.0_wp 
-      hdisp = dble(is) * hstep
-      allocate(xyz_hstep(3,n))
-      xyz_hstep(1:3,1:n) = xyz(1:3,1:n)
-      xyz_hstep(ix, ia) = xyz_hstep(ix, ia) + hdisp
-    end if 
+    if(num) Call errore('pbcgdisp', 'Atom displacement not implemented with numerical forces', 1)
+    if(.not.noabc) Call errore('pbcgdisp', 'Atom displacement not implemented with the threebody term', 1)
+
+    ns = shape(g_supercell_)
+    g_supercell( -ns(1)/2:ns(1)/2, -ns(2)/2:ns(2)/2, -ns(3)/2:ns(3)/2, 1:ns(4), 1:ns(5) ) => g_supercell_
+    g_supercell(:,:,:,:,:) = 0.0_wp 
+    hdisp = dble(is) * hstep
+    allocate(xyz_hstep(3,n))
+    xyz_hstep(1:3,1:n) = xyz(1:3,1:n)
+    xyz_hstep(ix, ia) = xyz_hstep(ix, ia) + hdisp
 
     ! R^2 cut-off
     rthr=crit_vdw
-    abcthr=crit_cn
-    ! write(*,*)'abcthr:', abcthr**(1./1.)
-    sigma=0.0d0
-    virialstress=0.0d0
-    stress=0.0d0
-    gabc=0.0d0
-    glatabc=0.0d0
-
-    ! testsum=0.0d0
 
     if (echo)write(*,*)
     if (echo) write(*,*) 'doing analytical gradient for version...', version
@@ -4126,14 +4047,9 @@ contains
     CALL block_distribute( n, me_image, nproc_image, na_s, na_e, mykey )
 
     if ((version.eq.3).or.(version.eq.5).or.(version.eq.4).or.(version.eq.6)) then
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !
-      ! begin ZERO DAMPING GRADIENT
-      !
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       ! precompute for analytical part
-      call pbcncoord_new(n,rcov,iz,xyz,cn,lat,rep_cn,crit_cn,ldisplace,xyz_hstep)
+      call pbcncoord_new(n,rcov,iz,xyz,cn,lat,rep_cn,crit_cn,xyz_hstep)
 
 
       a1 =rs6
@@ -4146,10 +4062,8 @@ contains
       disp=0
       drij=0.0d0
       drij_hstep=0.0d0
-      dc6_rest=0.0d0
       dc6_rest_sum=0.0d0
       c6save=0.0d0
-      kat=0
       dc6i=0.0d0
       dc6i_hstep=0.0d0
       dc6ij=0.0d0
@@ -4193,7 +4107,7 @@ contains
                 dc6i(iat)=dc6i(iat)+res2*(dc6iji+dc6ijj)
                 dc6_rest_sum(lin(iat,iat))=dc6_rest_sum(lin(iat,iat))+res2
                 !
-                if(ldisplace .and..not. unit_cell .and. (iat.eq.ia) ) then 
+                if(.not. unit_cell .and. (iat.eq.ia) ) then 
                   !
                   disp=disp+res2*c6 ! remove the previous contribution 
                   dc6_rest_sum(lin(iat,iat))=dc6_rest_sum(lin(iat,iat))-res2 ! remove the previous contribution
@@ -4208,13 +4122,13 @@ contains
                 end if 
               else
                 drij(tauz,tauy,taux,lin(iat,iat))=0.0d0
-                if(ldisplace.and..not.unit_cell) drij_hstep(tauz,tauy,taux,lin(iat,iat))=0.0d0
+                if(.not.unit_cell) drij_hstep(tauz,tauy,taux,lin(iat,iat))=0.0d0
               end if
 
               do jat=1,iat-1
                 !
                 ! get_dC6_dCNij calculates the derivative dC6(iat,jat)/dCN(iat) and
-                ! dC6(iat,jat)/dCN(jat). these are saved in dC6ij for the kat loop
+                ! dC6(iat,jat)/dCN(jat)
                 !
                 call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)),&
                     & mxc(iz(jat)),cn(iat),cn(jat),iz(iat),iz(jat),iat,jat,&
@@ -4246,7 +4160,7 @@ contains
                 dc6i(jat)=dc6i(jat)+res2 * dc6ijj
                 dc6_rest_sum(linij) = dc6_rest_sum(linij) + res2
 
-                if(     ldisplace .and. (iat.eq.ia) ) then 
+                if( iat.eq.ia ) then 
                   !
                   ! remove previous contributions from disp and dc6_rest_sum
                   disp = disp + res2 * C6 
@@ -4261,7 +4175,7 @@ contains
                   dc6i_hstep(jat)=dc6i_hstep(jat)+res2*dc6ijj
                   dc6_rest_sum(linij) = dc6_rest_sum(linij) + res2
                   !
-                elseif( ldisplace .and. (jat.eq.ia) ) then 
+                elseif( jat.eq.ia ) then 
                   !
                   ! remove previous contributions from disp and dc6_rest_sum
                   disp = disp + res2 * C6 
@@ -4288,10 +4202,8 @@ contains
 
       CALL mp_sum ( drij , intra_image_comm )
       CALL mp_sum ( dc6i , intra_image_comm )
-      if( ldisplace ) then 
-        CALL mp_sum ( drij_hstep , intra_image_comm )
-        CALL mp_sum ( dc6i_hstep , intra_image_comm )
-      end if 
+      CALL mp_sum ( drij_hstep , intra_image_comm )
+      CALL mp_sum ( dc6i_hstep , intra_image_comm )
 
     end if ! version
 
@@ -4310,7 +4222,7 @@ contains
           !
           do iat = 1, n 
             !
-            if(ldisplace .and..not. unit_cell .and. (iat.eq.ia) ) then 
+            if(.not. unit_cell .and. (iat.eq.ia) ) then 
               !
               linij=lin(iat,iat)
               rcovij=rcov(iz(iat))+rcov(iz(iat))
@@ -4330,7 +4242,7 @@ contains
               g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) - vec
               !
             !else 
-            !  whenever iat is not displaced (i.e. ldisplace is false or iat.ne.ia), forces from -tau and +tau cancel out each other 
+            !  whenever iat is not displaced (i.e. iat.ne.ia), forces from -tau and +tau cancel out each other 
             !  whenever iat is in the unit_cell, there is no force contribution from iat with itself
             end if 
             !
@@ -4344,7 +4256,7 @@ contains
                 c6=c6ab(iz(jat),iz(iat),1,1,1)*s6
               end if 
               !
-              if(ldisplace .and. unit_cell) then 
+              if(unit_cell) then 
                 !
                 if(iat.eq.ia) then
                   rij=xyz(:,jat)-xyz_hstep(:,iat) 
@@ -4364,7 +4276,6 @@ contains
                   else
                     Call gkernel2(rij, r2, crit_cn, rcovij, drij_hstep(tauz,tauy,taux,linij), dc6i(iat), dc6i_hstep(jat), vec)
                   end if
-                  !vec = -vec
                 else
                   rij=xyz(:,jat)-xyz(:,iat) 
                   r2=sum(rij*rij)
@@ -4380,7 +4291,7 @@ contains
                 g_supercell(tauz,tauy,taux,1:3,iat) = g_supercell(tauz,tauy,taux,1:3,iat) + vec
                 g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) - vec
                 !
-              elseif(ldisplace .and..not. unit_cell) then 
+              elseif(.not. unit_cell) then 
                 !
                 if(iat.eq.ia) then 
                   !
@@ -4429,7 +4340,6 @@ contains
                   else
                     Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
                   endif 
-                  !vec = -vec
                   g_supercell(tauz,tauy,taux,1:3,jat) = g_supercell(tauz,tauy,taux,1:3,jat) - vec       
                   g_supercell(0   ,0   ,0   ,1:3,iat) = g_supercell(0   ,0   ,0   ,1:3,iat) + vec
                   g(:,iat)=g(:,iat)+vec
@@ -4453,56 +4363,27 @@ contains
                   !
                 end if 
                 !
-              else ! ldisplace
-                rij=xyz(:,jat)-xyz(:,iat)+tau
-                r2=sum(rij*rij)
-                if (r2.gt.rthr.or.r2.lt.0.5) cycle
-                Call gkernel2(rij, r2, crit_cn, rcovij, drij(tauz,tauy,taux,linij), dc6i(iat), dc6i(jat), vec)
-                g(:,iat)=g(:,iat)+vec
-                g(:,jat)=g(:,jat)-vec
-              end if ! ldisplace
+              end if ! unit_cell 
               !
-
-              do i=1,3
-                do j=1,3
-                  sigma(j,i)=sigma(j,i)+vec(j)*rij(i)
-                end do
-              end do
-
             end do
           end do
         end do
       end do
     end do
-
+    !
     if(allocated(drij)) deallocate(drij)
     if(allocated(drij_hstep)) deallocate(drij_hstep)
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !
-    !This is where the D2 gradient and the numerical gradient jump.
-    !
-!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if(ldisplace) then 
-      gnorm_supercell=sum(abs(g_supercell(:,:,:,1:3,:)))
-      write(*,*)'|G(force)| =',gnorm_supercell, ' supercell gradient'
-      gnorm_supercell=sum(abs(g_supercell(0,0,0,1:3,:)))
-      write(*,*)'|G(force)| =',gnorm_supercell, ' supercell gradient for atoms in the unit cell '
-      gnorm=sum(abs(g(1:3,1:n)))
-      write(*,*)'|G(force)| =',gnorm, ' unit cell gradient'
-      deallocate(xyz_hstep, ns)
-    end if 
-    ! do i=1,n
-    ! write(*,'(83F17.12)') g(1:3,i)
-    ! end do
+    gnorm_supercell=sum(abs(g_supercell(:,:,:,1:3,:)))
+    write(*,*)'|G(force)| =',gnorm_supercell, ' supercell gradient'
+    gnorm_supercell=sum(abs(g_supercell(0,0,0,1:3,:)))
+    write(*,*)'|G(force)| =',gnorm_supercell, ' supercell gradient for atoms in the unit cell '
     gnorm=sum(abs(g(1:3,1:n)))
-    if (echo)then
-      ! write(*,*)'testsum:',testsum*autoev/autoang
-      write(*,*)'|G(force)| =',gnorm
-      gnorm=sum(abs(stress(1:3,1:3)))
-      write(*,*)'|G(stress)|=',gnorm
-    end if
-
+    write(*,*)'|G(force)| =',gnorm, ' unit cell gradient'
+    deallocate(xyz_hstep, ns)
+    !
+    return
+    !
   end subroutine pbcgdisp_new
 
 

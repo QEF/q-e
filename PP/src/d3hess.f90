@@ -33,7 +33,6 @@ program d3hess
   INTEGER :: nnat, nrep, nhess, nsize
   INTEGER :: rep_cn(3), rep_vdw(3), rep_hes(3)
   REAL(DP) :: latvecs(3,3)
-  REAL(DP) :: stress_d3(3,3)
   CHARACTER(LEN=256):: dft_ , formt
   INTEGER, ALLOCATABLE  :: atnum(:)
   REAL(DP), ALLOCATABLE :: xyz(:,:), buffer(:)
@@ -111,7 +110,7 @@ program d3hess
      atnum(iat) = get_atomic_number(TRIM(atm(ityp(iat))))
   ENDDO
   !
-  call dftd3_pbc_gdisp_new(dftd3, xyz, atnum, latvecs, force_d3, stress_d3, rep_cn, rep_vdw)
+  call dftd3_pbc_gdisp_new(dftd3, xyz, atnum, latvecs, force_d3, rep_cn, rep_vdw)
   force_d3 = -2.d0*force_d3
   !
   WRITE( stdout, '(/,5x,A,3I4)') 'Number of images for CN: ',  rep_cn(:)
@@ -248,7 +247,6 @@ SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau )
   REAL(DP) :: step, eerr, eerl, eelr, eell
   INTEGER:: atnum(1:nat), i, j, iat, ixyz, jat, jxyz
   REAL(DP) :: xyz(3,nat)
-  REAL(DP) :: stress_d3(3,3)
   COMPLEX(DP), ALLOCATABLE :: mat(:,:,:,:)
   REAL(DP), ALLOCATABLE :: force_d3(:,:), force_num(:,:), buffer(:)
   REAL(DP), ALLOCATABLE :: der2disp_ene(:,:,:,:), der2disp_frc(:,:,:,:) 
@@ -271,7 +269,7 @@ SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau )
   DO iat = 1, nat
      atnum(iat) = get_atomic_number(TRIM(atm(ityp(iat))))
   ENDDO
-  call dftd3_pbc_gdisp_new(dftd3, xyz, atnum, latvecs, force_d3, stress_d3)
+  call dftd3_pbc_gdisp_new(dftd3, xyz, atnum, latvecs, force_d3)
   edftd3=edftd3*2.d0
   force_d3 = -2.d0*force_d3
   
@@ -322,10 +320,10 @@ SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau )
       write(*,*) 'displacing forces: ', iat, ixyz
 
       xyz(ixyz,iat)=xyz(ixyz,iat)+step
-      call dftd3_pbc_gdisp_new(dftd3, xyz, atnum, latvecs, force_d3, stress_d3)
+      call dftd3_pbc_gdisp_new(dftd3, xyz, atnum, latvecs, force_d3)
       force_d3 = -2.d0*force_d3
       xyz(ixyz,iat)=xyz(ixyz,iat)-2*step
-      call dftd3_pbc_gdisp_new(dftd3, xyz, atnum, latvecs, force_num, stress_d3)
+      call dftd3_pbc_gdisp_new(dftd3, xyz, atnum, latvecs, force_num)
       force_num = -2.d0*force_num
 
       der2disp_frc(ixyz,iat,1:3,1:nat) = -0.5 * (force_d3(1:3,1:nat) - force_num(1:3,1:nat) ) / step
