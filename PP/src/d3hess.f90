@@ -43,8 +43,6 @@ program d3hess
 9078 FORMAT( '     DFT-D3 Dispersion         =',F17.8,' Ry' )
 9035 FORMAT(5X,'atom ',I4,' type ',I2,'   force = ',3F14.8)
   !
-  write(stdout,'(A)') 'PROGRAM: d3hess '
-  !
   ! initialise environment
   !
 #if defined(__MPI)
