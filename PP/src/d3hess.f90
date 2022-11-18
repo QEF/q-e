@@ -17,10 +17,9 @@ program d3hess
   !
   USE cell_base,        ONLY: alat, at
   USE ions_base,        ONLY: nat, tau, ityp, atm
-  USE input_parameters, ONLY: dftd3_version, dftd3_threebody
   USE funct,            ONLY: get_dft_short
   USE dftd3_api,        ONLY: dftd3_init, dftd3_set_functional, get_atomic_number, dftd3_pbc_dispersion
-  USE dftd3_qe,         ONLY: dftd3_xc, dftd3, dftd3_pbc_gdisp_new, dftd3_pbc_hdisp, dftd3_in
+  USE dftd3_qe,         ONLY: dftd3, dftd3_pbc_gdisp_new, dftd3_pbc_hdisp
   !
   IMPLICIT NONE
   INTEGER :: ios
@@ -28,7 +27,7 @@ program d3hess
   CHARACTER(len=256) :: filhess, outdir
   REAL(DP) :: step
   LOGICAL :: needwf = .FALSE.
-  LOGICAL :: q_gamma
+  LOGICAL :: q_gamma, debug
   !
   INTEGER :: iat, jat, ixyz, jxyz, irep, jrep, krep, i,j
   INTEGER :: nnat, nrep, nhess, nsize
@@ -40,7 +39,7 @@ program d3hess
   REAL(DP), ALLOCATABLE :: xyz(:,:), buffer(:)
   REAL(DP), ALLOCATABLE :: force_d3(:,:), hess_d3(:,:,:,:,:,:,:)
   !
-  NAMELIST /input/ prefix, outdir, step, q_gamma, filhess
+  NAMELIST /input/ prefix, outdir, step, q_gamma, filhess, debug
   !
 9078 FORMAT( '     DFT-D3 Dispersion         =',F17.8,' Ry' )
 9035 FORMAT(5X,'atom ',I4,' type ',I2,'   force = ',3F14.8)
@@ -65,6 +64,7 @@ program d3hess
      prefix ='pwscf'
      filhess=' ' 
      q_gamma=.false. ! whether to use a much cheaper algorithm when q=0,0,0
+     debug=.false.   ! whether to check consistency between hessian, forces and energies
      step=2.d-5      ! step for numerical differentiation
      !
      CALL input_from_file ( )
@@ -85,6 +85,7 @@ program d3hess
   CALL mp_bcast( prefix, ionode_id, world_comm )
   CALL mp_bcast( step, ionode_id, world_comm )
   CALL mp_bcast( q_gamma, ionode_id, world_comm )
+  CALL mp_bcast( debug, ionode_id, world_comm )
   !
   CALL read_file_new ( needwf )
   !
@@ -121,6 +122,8 @@ program d3hess
   ENDDO
   !
   CALL stop_clock('force_dftd3')
+  !
+  if(debug) Call d2ionq_dispd3_debug( alat, nat, ityp, at, tau )
   !
   ! Computing DFT-D3 hessian 
   !
@@ -211,3 +214,206 @@ program d3hess
   CALL stop_pp
   !
 end program
+!---------------------------------------------------------------------------
+SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau )
+  !------------------------------------------------------------------------
+  !! This routine calculates the Grimme-D3 contribution to the dynamical matrix.
+  !
+  USE kinds,            ONLY: DP
+  USE io_global,        ONLY: stdout
+  USE symme,            ONLY: symvector
+  USE mp,               ONLY: mp_stop
+  USE funct,            ONLY: get_dft_short
+  USE dftd3_api,        ONLY: dftd3_init, dftd3_set_functional, dftd3_pbc_dispersion, get_atomic_number
+  USE dftd3_qe,         ONLY: dftd3, dftd3_pbc_gdisp_new, print_dftd3_hessian
+  USE ions_base,        ONLY: atm
+  USE ener,             ONLY: edftd3
+  
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: nat
+  !! number of atoms in the unit cell
+  REAL(DP), INTENT(IN) :: alat
+  !! cell parameter (celldm(1))
+  INTEGER, INTENT(IN) :: ityp(nat)
+  !! atomic types for atoms in the unit cell
+  REAL(DP), INTENT(IN) :: at(3,3)
+  !! at(:,i) is lattice vector i in alat units
+  REAL(DP), INTENT(IN) :: tau(3,nat)
+  !! atomic positions in alat units
+  !
+  !  Local variables  
+  CHARACTER(LEN=256):: dft_ , formt
+  REAL(DP) :: latvecs(3,3)
+  REAL(DP) :: step, eerr, eerl, eelr, eell
+  INTEGER:: atnum(1:nat), i, j, iat, ixyz, jat, jxyz
+  REAL(DP) :: xyz(3,nat)
+  REAL(DP) :: stress_d3(3,3)
+  COMPLEX(DP), ALLOCATABLE :: mat(:,:,:,:)
+  REAL(DP), ALLOCATABLE :: force_d3(:,:), force_num(:,:), buffer(:)
+  REAL(DP), ALLOCATABLE :: der2disp_ene(:,:,:,:), der2disp_frc(:,:,:,:) 
+  
+9078 FORMAT( '     DFT-D3 Dispersion         =',F17.8,' Ry' )
+9035 FORMAT(5X,'atom ',I4,' type ',I2,'   force = ',3F14.8)
+
+  write(stdout,'(A)') 'Adding Grimme-D3 contribution to the dynamical matrix'
+  WRITE ( stdout , 9078 ) edftd3 
+  !
+  ! Setting DFT-D3 functional dependent parameters
+  !
+
+  CALL start_clock('force_dftd3')
+  ALLOCATE( force_d3(3, nat), force_num(3, nat) )
+  force_num = 0._dp
+  force_d3(:,:) = 0.0_DP
+  latvecs(:,:)=at(:,:)*alat
+  xyz(:,:)=tau(:,:)*alat
+  DO iat = 1, nat
+     atnum(iat) = get_atomic_number(TRIM(atm(ityp(iat))))
+  ENDDO
+  call dftd3_pbc_gdisp_new(dftd3, xyz, atnum, latvecs, force_d3, stress_d3)
+  edftd3=edftd3*2.d0
+  force_d3 = -2.d0*force_d3
+  
+  step=1.d-6
+  !step=2.d-5
+
+  do iat = 1, nat
+    do ixyz = 1, 3 
+      xyz(ixyz,iat)=xyz(ixyz,iat)+step
+      call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, eerr)
+      eerr = eerr*2.0d0
+      xyz(ixyz,iat)=xyz(ixyz,iat)-2*step
+      call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, eell)
+      eell = eell*2.0d0
+      force_num(ixyz,iat)=-0.5*(eerr-eell)/step
+      xyz(ixyz,iat)=xyz(ixyz,iat)+step
+    end do 
+  end do 
+  !CALL symvector( nat, force_num )
+  CALL stop_clock('force_dftd3')
+
+  WRITE ( stdout , 9078 ) edftd3  
+  WRITE( stdout, '(/,5x,"DFT-D3 dispersion contribution to forces (analytical):")')
+  DO iat = 1, nat
+     WRITE( stdout, 9035) iat, ityp(iat), (force_d3(ixyz,iat), ixyz = 1, 3)
+  ENDDO
+
+  WRITE( stdout, '(/,5x,"DFT-D3 dispersion contribution to forces (numerical):")')
+  DO iat = 1, nat
+     WRITE( stdout, 9035) iat, ityp(iat), (force_num(ixyz,iat), ixyz = 1, 3)
+  ENDDO
+
+  WRITE( stdout, '(/,5x,"DFT-D3 analytical vs numerical err:")')
+  DO iat = 1, nat
+     WRITE( stdout, 9035) iat, ityp(iat), (force_d3(ixyz,iat)-force_num(ixyz,iat), ixyz = 1, 3)
+  ENDDO
+
+  step=1.d-3
+  CALL start_clock('dftd3')
+  ALLOCATE( der2disp_ene(3,nat,3,nat), der2disp_frc(3,nat,3,nat) )
+  der2disp_ene = 0._dp
+  der2disp_frc = 0._dp
+
+  CALL start_clock('dftd3:frc')
+
+  do iat = 1, nat
+    do ixyz = 1, 3 
+      write(*,*) 'displacing forces: ', iat, ixyz
+
+      xyz(ixyz,iat)=xyz(ixyz,iat)+step
+      call dftd3_pbc_gdisp_new(dftd3, xyz, atnum, latvecs, force_d3, stress_d3)
+      force_d3 = -2.d0*force_d3
+      xyz(ixyz,iat)=xyz(ixyz,iat)-2*step
+      call dftd3_pbc_gdisp_new(dftd3, xyz, atnum, latvecs, force_num, stress_d3)
+      force_num = -2.d0*force_num
+
+      der2disp_frc(ixyz,iat,1:3,1:nat) = -0.5 * (force_d3(1:3,1:nat) - force_num(1:3,1:nat) ) / step
+      xyz(ixyz,iat)=xyz(ixyz,iat)+step
+    end do 
+  end do 
+
+  CALL stop_clock('dftd3:frc')
+
+  allocate( mat(3,nat,3,nat) )
+
+  mat(:,:,:,:) = cmplx( der2disp_frc(:,:,:,:), kind=dp )
+
+  CALL print_dftd3_hessian( mat, nat, 'debug' )
+
+  deallocate( mat )
+ 
+  CALL start_clock('dftd3:ene')
+
+  do iat = 1, nat
+    do ixyz = 1, 3 
+      do jat = 1, nat
+        do jxyz = 1, 3 
+
+          write(*,*) 'displacing energy: ', iat, ixyz, jat, jxyz
+
+          xyz(ixyz,iat)=xyz(ixyz,iat)+step
+          xyz(jxyz,jat)=xyz(jxyz,jat)+step
+          call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, eerr)  ! i+s  j+s
+          eerr = eerr*2.0d0
+
+          xyz(ixyz,iat)=xyz(ixyz,iat)-2*step
+          call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, eelr)  ! i-s  j+s
+          eelr = eelr*2.0d0
+
+          xyz(jxyz,jat)=xyz(jxyz,jat)-2*step
+          call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, eell)  ! i-s  j-s
+          eell = eell*2.0d0
+
+          xyz(ixyz,iat)=xyz(ixyz,iat)+2*step
+          call dftd3_pbc_dispersion(dftd3, xyz, atnum, latvecs, eerl)  ! i+s  j-s
+          eerl = eerl*2.0d0
+
+          xyz(ixyz,iat)=xyz(ixyz,iat)-step
+          xyz(jxyz,jat)=xyz(jxyz,jat)+step
+
+          der2disp_ene(ixyz,iat,jxyz,jat) = (eerr - eerl - eelr + eell) / 4.0d0 / step / step
+
+        end do 
+      end do 
+    end do 
+  end do 
+
+  CALL stop_clock('dftd3:ene')
+
+  !der2disp = der2disp_ene
+  !der2disp = der2disp_frc
+
+  CALL stop_clock('dftd3')
+
+  write(formt,'(A,I5,A)') '(',3*nat,'F12.8)'
+  WRITE( stdout, '(/,5x,"DFT-D3 numerical hessian (from Forces):")')
+  DO iat = 1, nat
+     DO ixyz = 1, 3
+       WRITE( stdout, formt) der2disp_frc(ixyz,iat,1:3,1:nat)
+     END DO 
+  ENDDO
+
+  WRITE( stdout, '(/,5x,"DFT-D3 numerical hessian (from Energies):")')
+  DO iat = 1, nat
+     DO ixyz = 1, 3
+       WRITE( stdout, formt) der2disp_ene(ixyz,iat,1:3,1:nat)
+     END DO 
+  ENDDO
+
+
+  WRITE( stdout, '(/,5x,"DFT-D3 numerical hessian (from Forces vs from Energies):")')
+  DO iat = 1, nat
+     DO ixyz = 1, 3
+       WRITE( stdout, formt) der2disp_frc(ixyz,iat,1:3,1:nat)-der2disp_ene(ixyz,iat,1:3,1:nat)
+     END DO 
+  ENDDO
+
+
+  DEALLOCATE( force_d3, force_num, der2disp_ene, der2disp_frc)
+
+! Call mp_stop(555)
+
+  RETURN
+
+END SUBROUTINE d2ionq_dispd3_debug

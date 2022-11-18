@@ -58,7 +58,6 @@ subroutine dynmat0_new
      CALL d2ionq_disp(alat,nat,ityp,at,bg,tau,xq,dynwrk)
      CALL rotate_pattern_add (nat,u,dyn,dynwrk)
   ELSEIF(ldftd3) THEN
-     CALL d2ionq_dispd3_debug(alat,nat,ityp,at,tau)
      CALL d2ionq_dispd3(alat,nat,at,xq,dynwrk)
      CALL rotate_pattern_add (nat,u,dyn,dynwrk)
   ENDIF

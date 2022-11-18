@@ -14,13 +14,62 @@ MODULE dftd3_qe
   IMPLICIT NONE
   !
   PRIVATE
-  PUBLIC :: dftd3, dftd3_in, dftd3_xc, dftd3_pbc_gdisp, dftd3_pbc_gdisp_new, dftd3_pbc_hdisp, dftd3_printout, dftd3_clean
+  PUBLIC :: dftd3, dftd3_in, dftd3_xc, dftd3_pbc_gdisp, dftd3_printout, dftd3_clean
+  PUBLIC :: dftd3_pbc_gdisp_new, dftd3_pbc_hdisp, print_dftd3_hessian 
   SAVE
   !
   type(dftd3_calc) :: dftd3
   type(dftd3_input):: dftd3_in
    
   CONTAINS
+
+    !---------------------------------------------------------------------------
+    SUBROUTINE print_dftd3_hessian( mat, n, label )
+      USE kinds,            ONLY: DP
+      USE io_global,        ONLY: stdout
+    
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: n
+      COMPLEX(DP), INTENT(IN) :: mat(3,n,3,n)
+      CHARACTER(LEN=*), INTENT(IN) :: label
+      !
+      INTEGER :: i, iat, ixyz, j, jat, jxyz
+      COMPLEX(DP), ALLOCATABLE :: buffer(:)
+      CHARACTER(LEN=256):: formt, filout, string
+      !
+      WRITE(formt,'(A,I9,A)') '(', 2*3*n, 'f24.16)'
+      WRITE(filout, '(A,A,A)')   'dynamical.',TRIM(label),'.dat'
+      !
+      WRITE( stdout, '(/,5x,2A)') 'Writing Hessian on file ', TRIM(filout)
+      !
+      ALLOCATE( buffer(3*n) )
+      !
+      OPEN (unit = 1, file = TRIM(filout), status = 'unknown')
+      !
+      WRITE(1,'(A)') 'Hessian matrix of the Grimme-D3 dispersion term'
+      WRITE(1,'(A,5I9,3x,L)') 'System: '
+      !
+      DO i = 1, 3*n         ! 1 2 3 4 5 6 7 8 9 ... 3*nat
+        iat  = (i+2)/3        ! 1 1 1 2 2 2 3 3 3 ... nat 
+        ixyz = i - 3* (iat-1) ! 1 2 3 1 2 3 1 2 3 ... 3 
+        !
+        DO j = 1, 3*n
+          jat  = (j+2)/3 
+          jxyz = j - 3* (jat-1) 
+          buffer(j) = mat(ixyz,iat,jxyz,jat)
+        END DO 
+        !  
+        WRITE(1, formt ) buffer(1:3*n)
+        !
+      END DO 
+      !
+      CLOSE (1)
+      !
+      DEALLOCATE(buffer)
+      !
+      RETURN
+      !
+    END SUBROUTINE print_dftd3_hessian   
 
     !> Clean memory after a dftd3 calculator is run.
     !!
