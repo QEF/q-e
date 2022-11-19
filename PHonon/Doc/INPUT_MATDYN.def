@@ -93,6 +93,13 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
                 }
             }
         }
+        var huang -type LOGICAL {
+            default {@tt .true.}
+            info {
+                if @b .true. 15 Huang conditions for vanishing stress
+                tensor are included in @ref asr = 'all'.
+            }
+        }
         var dos -type LOGICAL {
             info {
                 if @b .true. calculate phonon Density of States (DOS)
