@@ -227,6 +227,7 @@ target_link_libraries(qe_phonon_ph
         qe_lr_modules
         qe_upflib
         qe_fftx
+        qe_dftd3
         qe_fox
         qe_xclib)
 
