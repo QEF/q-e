@@ -1417,12 +1417,13 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
   ! Local variables 
   !
   INTEGER :: is, isop, na, na1, na2, nt, nt1, nt2, m1, m2, viz, equiv_na2, i_type
-  COMPLEX(DP) :: check
+  COMPLEX(DP) :: check, check_en
   INTEGER, EXTERNAL :: type_interaction, find_viz
   !
   eth  = 0.d0
   v_hub(:,:,:,:,:) = (0.d0, 0.d0)
   check = (0.d0, 0.d0)
+  check_en = (0.d0, 0.d0)
   !
   DO na1 = 1, nat
      !
@@ -1458,6 +1459,8 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
                         !
                         eth = eth - nsg(m2,m1,viz,na1,is) * CONJG(nsg(m2,m1,viz,na1,is)) &
                                     * Hubbard_V(na1,na2,i_type) * 0.5d0
+                        !check_en = check_en -nsg(m2,m1,viz,na1,is) * CONJG(nsg(m2,m1,viz,na1,is)) &
+                        !            * Hubbard_V(na1,na2,i_type) * 0.5d0
                         !
                      ENDDO
                   ENDDO
@@ -1474,10 +1477,12 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
                         !
                         v_hub(m1,m1,na,na1,is) = v_hub(m1,m1,na,na1,is) &
                                        + Hubbard_V(na1,na1,i_type) * 0.5d0
-                        check = check   + Hubbard_V(na1,na1,i_type) * 0.5d0
+                        check = check  + Hubbard_V(na1,na1,i_type) * 0.5d0
                         ! 
                         eth = eth + nsg(m1,m1,na,na1,is) &
                                        * Hubbard_V(na1,na1,i_type) * 0.5d0
+                        !check_en = check_en +nsg(m1,m1,na,na1,is) &
+                        !               * Hubbard_V(na1,na1,i_type) * 0.5d0
                         !
                      ENDDO
                      !
@@ -1566,7 +1571,8 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
   !
   IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
      WRITE(stdout,'(/5x,"HUBBARD ENERGY = ",f9.4,1x," (Ry)")') eth
-     write(stdout,*) "check col UV",  check
+     !write(stdout,*) "check col UV",  check
+     !write(stdout,*) "check_en col UV",  check_en
   ENDIF
   !
   RETURN
@@ -1595,7 +1601,7 @@ SUBROUTINE v_hubbard_extended_nc (nsg, v_hub, eth)
    COMPLEX(DP), INTENT(IN)  :: nsg  (ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin)
    COMPLEX(DP), INTENT(OUT) :: v_hub(ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin)
    REAL(DP),    INTENT(OUT) :: eth
-   COMPLEX(DP) :: check
+   COMPLEX(DP) :: check, check_en
    ! 
    ! Local variables 
    !
@@ -1604,7 +1610,8 @@ SUBROUTINE v_hubbard_extended_nc (nsg, v_hub, eth)
    !
    eth  = 0.d0
    v_hub(:,:,:,:,:) = (0.d0, 0.d0)
-   check = 0
+   check = (0.0,0.0)
+   check_en = (0.0,0.0)
    !
    !write(stdout,*) nsg
    DO na1 = 1, nat
@@ -1642,6 +1649,8 @@ SUBROUTINE v_hubbard_extended_nc (nsg, v_hub, eth)
                          !
                          eth = eth - nsg(m2,m1,viz,na1,is) * CONJG(nsg(m2,m1,viz,na1,is)) &
                                      * Hubbard_V(na1,na2,1) * 0.5d0
+                        !check_en = check_en - nsg(m2,m1,viz,na1,is) * CONJG(nsg(m2,m1,viz,na1,is)) &
+                        !             * Hubbard_V(na1,na2,1) * 0.5d0
                          !
                       ENDDO
                    ENDDO
@@ -1660,6 +1669,8 @@ SUBROUTINE v_hubbard_extended_nc (nsg, v_hub, eth)
                          ! 
                          eth = eth + nsg(m1,m1,na,na1,is) &
                                         * Hubbard_V(na1,na1,1) * 0.5d0
+                        !check_en = check_en + nsg(m1,m1,na,na1,is) &
+                        !                * Hubbard_V(na1,na1,1) * 0.5d0
                          !
                       ENDDO
                       !
@@ -1682,7 +1693,8 @@ SUBROUTINE v_hubbard_extended_nc (nsg, v_hub, eth)
    !
    IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
       WRITE(stdout,'(/5x,"HUBBARD ENERGY = ",f9.4,1x," (Ry)")') eth
-      write(stdout,*) "check", check
+      !write(stdout,*) "check", check
+      !write(stdout,*) "check_en", check_en
    ENDIF
    !
    RETURN

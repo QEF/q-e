@@ -513,10 +513,10 @@ SUBROUTINE new_nsg_nc()
               is1, is2, is3, is4
    INTEGER :: na1, na2, viz, nt1, nt2, ldim1, ldim2, ldimb, nb1, nb2, viz_b
    INTEGER :: off, off1, off2, off3, eq_na2
-   INTEGER :: ldim_std1, ldim_std2
+   INTEGER :: ldim_std1, ldim_std2, sign
    ! in the nwfcU ordering
    COMPLEX(DP), ALLOCATABLE :: nrg_nc(:,:,:,:,:,:)
-   COMPLEX(DP) :: phase
+   COMPLEX(DP) :: phase, nrgtmp
    INTEGER, EXTERNAL :: find_viz
    !
    CALL start_clock('new_nsg')
@@ -590,7 +590,7 @@ SUBROUTINE new_nsg_nc()
                   nt2 = ityp(eq_na2)
                   ldim2 = ldim_u(nt2)
                   ! 
-                  IF (.false.) THEN
+                  IF (na1.GT.na2) THEN
                      !
                      ! ----------- LUCA (spawoc) -------- 
                      DO m1 = 1, ldim1
@@ -622,7 +622,7 @@ SUBROUTINE new_nsg_nc()
                                  ! ---------- LUCA (spawoc) check it --------------
                                  nrg_nc(m2,m1,viz,na1,is4,is3) = &
                                  nrg_nc(m2,m1,viz,na1,is4,is3) + &
-                                 ( wg(ibnd,ik) * ( proj%k(off1+ldim1*(is4-1),ibnd) * &
+                                 dcmplx( wg(ibnd,ik) * ( proj%k(off1+ldim1*(is4-1),ibnd) * &
                                  CONJG(proj%k(off2+ldim2*(is3-1),ibnd) * phase) ) )
                               ENDDO
                            ENDDO
@@ -692,7 +692,7 @@ SUBROUTINE new_nsg_nc()
             nt2 = ityp(eq_na2)
             ldim_std2 = 2*Hubbard_l(nt2)+1
             !
-            IF (.false.) THEN
+            IF (na1.GT.na2) THEN
                !
                ! we don't need to compute again
                DO is1 = 1, npol
@@ -719,6 +719,7 @@ SUBROUTINE new_nsg_nc()
                      !
                      off1 = 1
                      off3 = 2*Hubbard_l(nt2)+1
+                     sign = (-1)**( ll(m1,nt1) + ll(m2,nt2) )
                      !
                      DO is1 = 1, npol
                         DO is2 = 1, npol
@@ -727,322 +728,201 @@ SUBROUTINE new_nsg_nc()
                            ! Perform symmetrization using all available symmetries
                            !
                            !nsgnew(m2,m1,viz,na1,is) = nrg_nc(m2,m1,viz,na1,is2,is1)
-                           !if (.false.) then
+                           !if(.false.) then
                            DO isym = 1, nsym
                               !
                               CALL symonpair(na1,na2,isym,nb1,nb2)
                               !
                               viz_b = find_viz(nb1,nb2)
                               ! 
-                              ! ---- LUCA (spawoc) check other indices as in l==2 ----
                               DO m3 = off, off2
                                  DO m4 = off1, off3
                                     DO is3 = 1, npol
                                        DO is4 = 1, npol
                                           IF (ll(m1,nt1).EQ.0 .AND. &
                                                 ll(m2,nt2).EQ.0) THEN
-                                                   IF (t_rev(isym) == 1) THEN
+                                                   nrgtmp = t_rev(isym)*nrg_nc(m4,m3,viz_b,nb1,is3,is4)&
+                                                       +sign*(1-t_rev(isym))*CONJG(nrg_nc(m4,m3,viz_b,nb1,is3,is4))
                                                    nsgnew(m2,m1,viz,na1,is) = &
                                                       nsgnew(m2,m1,viz,na1,is) +  &
                                                       CONJG( d_spin_ldau(is1,is3,isym) )*& 
-                                                      nrg_nc(m4,m3,viz_b,nb1,is4,is3)*&
+                                                      nrgtmp * &
                                                       d_spin_ldau(is2,is4,isym)/nsym
-                                                   ELSE
-                                                   nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) )*& 
-                                                      CONJG(nrg_nc(m4,m3,viz_b,nb1,is4,is3))*&
-                                                      d_spin_ldau(is2,is4,isym)/nsym
-                                                   ENDIF
                                                    !
                                           ELSE IF (ll(m1,nt1).EQ.1 .AND. &
                                                 ll(m2,nt2).EQ.0) THEN
-                                                   IF (t_rev(isym) == 1) THEN
+                                                   nrgtmp = t_rev(isym)*nrg_nc(m4,m3,viz_b,nb1,is3,is4)&
+                                                       +sign*(1-t_rev(isym))*CONJG(nrg_nc(m4,m3,viz_b,nb1,is3,is4))
                                                    nsgnew(m2,m1,viz,na1,is) = &
                                                       nsgnew(m2,m1,viz,na1,is) +  &
                                                       CONJG( d_spin_ldau(is1,is3,isym) )*&
                                                       d1(m3,m1,isym) * &
-                                                      nrg_nc(m4,m3,viz_b,nb1,is4,is3) * &
-                                                      d_spin_ldau(is2,is4,isym) * &
-                                                      1.d0 / nsym
-                                                   ELSE
-                                                   nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) )*&
-                                                      d1(m3,m1,isym) * &
-                                                      CONJG(nrg_nc(m4,m3,viz_b,nb1,is4,is3)) * &
+                                                      nrgtmp * &
                                                       d_spin_ldau(is2,is4,isym)/nsym
-                                                   ENDIF
                                                    !
                                           ELSE IF (ll(m1,nt1).EQ.2 .AND. &
                                                 ll(m2,nt2).EQ.0) THEN
-                                                   IF (t_rev(isym) == 1) THEN
+                                                   nrgtmp = t_rev(isym)*nrg_nc(m4,m3,viz_b,nb1,is3,is4)&
+                                                       +sign*(1-t_rev(isym))*CONJG(nrg_nc(m4,m3,viz_b,nb1,is3,is4))
                                                    nsgnew(m2,m1,viz,na1,is) = &
                                                       nsgnew(m2,m1,viz,na1,is) +  &
                                                       CONJG( d_spin_ldau(is1,is3,isym) )*&
                                                       d2(m3,m1,isym) * &
-                                                      nrg_nc(m4,m3,viz_b,nb1,is3,is4) * &
-                                                      d_spin_ldau(is2,is4,isym) * &
-                                                      1.d0 / nsym
-                                                   ELSE
-                                                   nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) )*&
-                                                      d2(m3,m1,isym) * &
-                                                      CONJG(nrg_nc(m4,m3,viz_b,nb1,is3,is4)) * &
-                                                      d_spin_ldau(is2,is4,isym) / nsym
-                                                     
-                                                   ENDIF
+                                                      nrgtmp * &
+                                                      d_spin_ldau(is2,is4,isym)/nsym
                                                    !
                                           ELSE IF (ll(m1,nt1).EQ.3 .AND. &
                                                 ll(m2,nt2).EQ.0) THEN
-                                                   IF (t_rev(isym) == 1) THEN
+                                                   nrgtmp = t_rev(isym)*nrg_nc(m4,m3,viz_b,nb1,is3,is4)&
+                                                       +sign*(1-t_rev(isym))*CONJG(nrg_nc(m4,m3,viz_b,nb1,is3,is4))
                                                    nsgnew(m2,m1,viz,na1,is) = &
                                                       nsgnew(m2,m1,viz,na1,is) +  &
                                                       CONJG( d_spin_ldau(is1,is3,isym) )*&
                                                       d3(m3,m1,isym) * &
-                                                      nrg_nc(m4,m3,viz_b,nb1,is4,is3) * &
+                                                      nrgtmp * &
                                                       d_spin_ldau(is2,is4,isym)/nsym
-                                                   ELSE
-                                                   nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) )*&
-                                                      d3(m3,m1,isym) * &
-                                                      CONJG(nrg_nc(m4,m3,viz_b,nb1,is4,is3)) * &
-                                                      d_spin_ldau(is2,is4,isym) / nsym
-                                                      
-                                                   ENDIF
                                                    !
                                           ELSE IF (ll(m1,nt1).EQ.0 .AND. &
                                                 ll(m2,nt2).EQ.1) THEN
-                                                   IF (t_rev(isym) == 1) THEN
+                                                   nrgtmp = t_rev(isym)*nrg_nc(m4,m3,viz_b,nb1,is3,is4)&
+                                                       +sign*(1-t_rev(isym))*CONJG(nrg_nc(m4,m3,viz_b,nb1,is3,is4))
                                                    nsgnew(m2,m1,viz,na1,is) = &
                                                       nsgnew(m2,m1,viz,na1,is) +  &
                                                       CONJG( d_spin_ldau(is1,is3,isym) )* &
-                                                      nrg_nc(m4,m3,viz_b,nb1,is4,is3) * &
+                                                      nrgtmp * &
                                                       d_spin_ldau(is2,is4,isym) * &
                                                       d1(m4,m2,isym) / nsym
-                                                   ELSE
-                                                   nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) )* &
-                                                      CONJG(nrg_nc(m4,m3,viz_b,nb1,is4,is3)) * &
-                                                      d_spin_ldau(is2,is4,isym) * &
-                                                      d1(m4,m2,isym) / nsym
-                                                   ENDIF
                                                    !
                                           ELSE IF (ll(m1,nt1).EQ.1 .AND. &
                                                 ll(m2,nt2).EQ.1) THEN
-                                                   IF (t_rev(isym) == 1) THEN
+                                                   nrgtmp = t_rev(isym)*nrg_nc(m4,m3,viz_b,nb1,is3,is4)&
+                                                       +sign*(1-t_rev(isym))*CONJG(nrg_nc(m4,m3,viz_b,nb1,is3,is4))
                                                    nsgnew(m2,m1,viz,na1,is) = &
                                                       nsgnew(m2,m1,viz,na1,is) +  &
                                                       CONJG( d_spin_ldau(is1,is3,isym) ) * &
                                                       d1(m3,m1,isym) * &
-                                                      nrg_nc(m4,m3,viz_b,nb1,is4,is3) * &
+                                                      nrgtmp * &
                                                       d1(m4,m2,isym) * &
                                                       d_spin_ldau(is2,is4,isym) / nsym
-                                                   ELSE
-                                                   nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) ) * &
-                                                      d1(m3,m1,isym) * &
-                                                      CONJG(nrg_nc(m4,m3,viz_b,nb1,is4,is3)) * &
-                                                      d1(m4,m2,isym) * &
-                                                      d_spin_ldau(is2,is4,isym) / nsym   
-                                                   ENDIF
                                                    !
                                           ELSE IF (ll(m1,nt1).EQ.2 .AND. &
                                                 ll(m2,nt2).EQ.1) THEN
-                                                   IF (t_rev(isym) == 1) THEN
+                                                   nrgtmp = t_rev(isym)*nrg_nc(m4,m3,viz_b,nb1,is3,is4)&
+                                                       +sign*(1-t_rev(isym))*CONJG(nrg_nc(m4,m3,viz_b,nb1,is3,is4))
                                                    nsgnew(m2,m1,viz,na1,is) = &
                                                       nsgnew(m2,m1,viz,na1,is) +  &
                                                       CONJG( d_spin_ldau(is1,is3,isym) ) * &
                                                       d2(m3,m1,isym) * &
-                                                      nrg_nc(m4,m3,viz_b,nb1,is4,is3) * &
+                                                      nrgtmp * &
                                                       d1(m4,m2,isym) *&
                                                       d_spin_ldau(is2,is4,isym) / nsym
-                                                   ELSE
-                                                   nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) ) * &
-                                                      d2(m3,m1,isym) * &
-                                                      CONJG(nrg_nc(m4,m3,viz_b,nb1,is4,is3)) * &
-                                                      d1(m4,m2,isym) *&
-                                                      d_spin_ldau(is2,is4,isym) / nsym   
-                                                   ENDIF
                                                    !
                                           ELSE IF (ll(m1,nt1).EQ.3 .AND. &
                                                 ll(m2,nt2).EQ.1) THEN
-                                                   IF (t_rev(isym) == 1) THEN   
+                                                   nrgtmp = t_rev(isym)*nrg_nc(m4,m3,viz_b,nb1,is3,is4)&
+                                                       +sign*(1-t_rev(isym))*CONJG(nrg_nc(m4,m3,viz_b,nb1,is3,is4))
                                                    nsgnew(m2,m1,viz,na1,is) = &
                                                       nsgnew(m2,m1,viz,na1,is) +  &
                                                       CONJG( d_spin_ldau(is1,is3,isym) ) * &
                                                       d3(m3,m1,isym) * &
-                                                      nrg_nc(m4,m3,viz_b,nb1,is4,is3) * &
+                                                      nrgtmp * &
                                                       d1(m4,m2,isym) * &
                                                       d_spin_ldau(is2,is4,isym) / nsym
-                                                   ELSE
-                                                   nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) ) * &
-                                                      d3(m3,m1,isym) * &
-                                                      CONJG(nrg_nc(m4,m3,viz_b,nb1,is4,is3))*&
-                                                      d1(m4,m2,isym) * &
-                                                      d_spin_ldau(is2,is4,isym) / nsym   
-                                                   ENDIF
                                                    !
                                           ELSE IF (ll(m1,nt1).EQ.0 .AND. &
                                                 ll(m2,nt2).EQ.2) THEN
-                                                   IF (t_rev(isym) == 1) THEN
+                                                   nrgtmp = t_rev(isym)*nrg_nc(m4,m3,viz_b,nb1,is3,is4)&
+                                                       +sign*(1-t_rev(isym))*CONJG(nrg_nc(m4,m3,viz_b,nb1,is3,is4))
                                                    nsgnew(m2,m1,viz,na1,is) = &
                                                       nsgnew(m2,m1,viz,na1,is) +  &
                                                       CONJG( d_spin_ldau(is1,is3,isym) ) * &
-                                                      nrg_nc(m4,m3,viz_b,nb1,is4,is3) * &
+                                                      nrgtmp * &
                                                       d2(m4,m2,isym) * &
                                                       d_spin_ldau(is2,is4,isym) / nsym
-                                                   ELSE
-                                                   nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) ) * &
-                                                      CONJG(nrg_nc(m4,m3,viz_b,nb1,is4,is3))*&
-                                                      d2(m4,m2,isym) * &
-                                                      d_spin_ldau(is2,is4,isym) / nsym
-                                                   ENDIF
                                                    !
                                           ELSE IF (ll(m1,nt1).EQ.1 .AND. &
                                                 ll(m2,nt2).EQ.2) THEN
-                                                   IF (t_rev(isym) == 1) THEN
+                                                   nrgtmp = t_rev(isym)*nrg_nc(m4,m3,viz_b,nb1,is3,is4)&
+                                                       +sign*(1-t_rev(isym))*CONJG(nrg_nc(m4,m3,viz_b,nb1,is3,is4))
                                                    nsgnew(m2,m1,viz,na1,is) = &
                                                       nsgnew(m2,m1,viz,na1,is) +  &
                                                       CONJG( d_spin_ldau(is1,is3,isym) ) * &
                                                       d1(m3,m1,isym) * &
-                                                      nrg_nc(m4,m3,viz_b,nb1,is4,is3) * &
+                                                      nrgtmp * &
                                                       d2(m4,m2,isym) * &
                                                       d_spin_ldau(is2,is4,isym) / nsym
-                                                   ELSE
-                                                   nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) ) * &
-                                                      d1(m3,m1,isym) * &
-                                                      CONJG(nrg_nc(m4,m3,viz_b,nb1,is4,is3)) * &
-                                                      d2(m4,m2,isym) * &
-                                                      d_spin_ldau(is2,is4,isym) / nsym
-                                                   ENDIF
                                                    !
                                           ELSE IF (ll(m1,nt1).EQ.2 .AND. &
                                                 ll(m2,nt2).EQ.2) THEN
-                                                   IF (t_rev(isym) == 1) THEN   
-                                                      ! ------- LUCA (spawoc) restore -----------
+                                                   nrgtmp = t_rev(isym)*nrg_nc(m4,m3,viz_b,nb1,is3,is4)&
+                                                       +sign*(1-t_rev(isym))*CONJG(nrg_nc(m4,m3,viz_b,nb1,is3,is4))
                                                    nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) ) * &
-                                                      d2(m1,m3,isym) * &
-                                                      nrg_nc(m3,m4,viz_b,nb1,is3,is4) * &
-                                                      d2(m2,m4,isym) * &
-                                                      d_spin_ldau(is2,is4,isym) / nsym
-                                                   ELSE
-                                                   nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) ) * &
-                                                      d2(m1,m3,isym) * &
-                                                      conjg(nrg_nc(m3,m4,viz_b,nb1,is3,is4)) * &
-                                                      d2(m2,m4,isym) * &
-                                                      d_spin_ldau(is2,is4,isym) / nsym
-                                                   ENDIF
-                                                   !
-                                          ELSE IF (ll(m1,nt1).EQ.3 .AND. &
-                                                ll(m2,nt2).EQ.2) THEN
-                                                   IF (t_rev(isym) == 1) THEN 
-                                                   nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) ) * &
-                                                      d3(m3,m1,isym) * &
-                                                      nrg_nc(m4,m3,viz_b,nb1,is4,is3) * &
-                                                      d2(m4,m2,isym) * &
-                                                      d_spin_ldau(is2,is4,isym) / nsym
-                                                   ELSE
-                                                   nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) ) * &
-                                                      d3(m3,m1,isym) * &
-                                                      CONJG(nrg_nc(m4,m3,viz_b,nb1,is4,is3)) * &
-                                                      d2(m4,m2,isym) * &
-                                                      d_spin_ldau(is2,is4,isym) / nsym
-                                                   ENDIF
-                                          ELSE IF (ll(m1,nt1).EQ.0 .AND. &
-                                                ll(m2,nt2).EQ.3) THEN
-                                                   IF (t_rev(isym) == 1) THEN   
-                                                   nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) ) * &
-                                                      nrg_nc(m4,m3,viz_b,nb1,is4,is3) * &
-                                                      d3(m4,m2,isym) * &
-                                                      d_spin_ldau(is2,is4,isym) / nsym
-                                                   ELSE
-                                                   nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) ) * &
-                                                      CONJG(nrg_nc(m4,m3,viz_b,nb1,is4,is3)) * &
-                                                      d3(m4,m2,isym) * &
-                                                      d_spin_ldau(is2,is4,isym) / nsym
-                                                   ENDIF
-                                          ELSE IF (ll(m1,nt1).EQ.1 .AND. &
-                                                ll(m2,nt2).EQ.3) THEN
-                                                   IF (t_rev(isym) == 1) THEN  
-                                                   nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) ) * &
-                                                      d1(m3,m1,isym) * &
-                                                      nrg_nc(m4,m3,viz_b,nb1,is4,is3) * &
-                                                      d3(m4,m2,isym) * &
-                                                      d_spin_ldau(is2,is4,isym) / nsym
-                                                   ELSE
-                                                   nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) ) * &
-                                                      d1(m3,m1,isym) * &
-                                                      CONJG(nrg_nc(m4,m3,viz_b,nb1,is4,is3)) * &
-                                                      d3(m4,m2,isym) * &
-                                                      d_spin_ldau(is2,is4,isym) / nsym   
-                                                   ENDIF
-                                          ELSE IF (ll(m1,nt1).EQ.2 .AND. &
-                                                ll(m2,nt2).EQ.3) THEN
-                                                  IF (t_rev(isym) == 1) THEN  
-                                                  nsgnew(m2,m1,viz,na1,is) = &
                                                       nsgnew(m2,m1,viz,na1,is) +  &
                                                       CONJG( d_spin_ldau(is1,is3,isym) ) * &
                                                       d2(m3,m1,isym) * &
-                                                      nrg_nc(m4,m3,viz_b,nb1,is4,is3) * &
+                                                      nrgtmp * &
+                                                      d2(m4,m2,isym) * &
+                                                      d_spin_ldau(is2,is4,isym) / nsym
+                                                   !
+                                          ELSE IF (ll(m1,nt1).EQ.3 .AND. &
+                                                ll(m2,nt2).EQ.2) THEN
+                                                   nrgtmp = t_rev(isym)*nrg_nc(m4,m3,viz_b,nb1,is3,is4)&
+                                                       +sign*(1-t_rev(isym))*CONJG(nrg_nc(m4,m3,viz_b,nb1,is3,is4))
+                                                   nsgnew(m2,m1,viz,na1,is) = &
+                                                      nsgnew(m2,m1,viz,na1,is) +  &
+                                                      CONJG( d_spin_ldau(is1,is3,isym) ) * &
+                                                      d3(m3,m1,isym) * &
+                                                      nrgtmp * &
+                                                      d2(m4,m2,isym) * &
+                                                      d_spin_ldau(is2,is4,isym) / nsym
+                                                   !
+                                          ELSE IF (ll(m1,nt1).EQ.0 .AND. &
+                                                ll(m2,nt2).EQ.3) THEN
+                                                   nrgtmp = t_rev(isym)*nrg_nc(m4,m3,viz_b,nb1,is3,is4)&
+                                                       +sign*(1-t_rev(isym))*CONJG(nrg_nc(m4,m3,viz_b,nb1,is3,is4))
+                                                   nsgnew(m2,m1,viz,na1,is) = &
+                                                      nsgnew(m2,m1,viz,na1,is) +  &
+                                                      CONJG( d_spin_ldau(is1,is3,isym) ) * &
+                                                      nrgtmp * &
                                                       d3(m4,m2,isym) * &
                                                       d_spin_ldau(is2,is4,isym) / nsym
-                                                  ELSE
-                                                  nsgnew(m2,m1,viz,na1,is) = &
-                                                     nsgnew(m2,m1,viz,na1,is) +  &
-                                                     CONJG( d_spin_ldau(is1,is3,isym) ) * &
-                                                     d2(m3,m1,isym) * &
-                                                     CONJG(nrg_nc(m4,m3,viz_b,nb1,is4,is3)) * &
-                                                     d3(m4,m2,isym) * &
-                                                     d_spin_ldau(is2,is4,isym) / nsym 
-                                                  ENDIF
+                                                   !   
+                                          ELSE IF (ll(m1,nt1).EQ.1 .AND. &
+                                                ll(m2,nt2).EQ.3) THEN
+                                                   nrgtmp = t_rev(isym)*nrg_nc(m4,m3,viz_b,nb1,is3,is4)&
+                                                       +sign*(1-t_rev(isym))*CONJG(nrg_nc(m4,m3,viz_b,nb1,is3,is4))
+                                                   nsgnew(m2,m1,viz,na1,is) = &
+                                                      nsgnew(m2,m1,viz,na1,is) +  &
+                                                      CONJG( d_spin_ldau(is1,is3,isym) ) * &
+                                                      d1(m3,m1,isym) * &
+                                                      nrgtmp * &
+                                                      d3(m4,m2,isym) * &
+                                                      d_spin_ldau(is2,is4,isym) / nsym
+                                                   !
+                                          ELSE IF (ll(m1,nt1).EQ.2 .AND. &
+                                                ll(m2,nt2).EQ.3) THEN
+                                                   nrgtmp = t_rev(isym)*nrg_nc(m4,m3,viz_b,nb1,is3,is4)&
+                                                       +sign*(1-t_rev(isym))*CONJG(nrg_nc(m4,m3,viz_b,nb1,is3,is4))
+                                                   nsgnew(m2,m1,viz,na1,is) = &
+                                                      nsgnew(m2,m1,viz,na1,is) +  &
+                                                      CONJG( d_spin_ldau(is1,is3,isym) ) * &
+                                                      d2(m3,m1,isym) * &
+                                                      nrgtmp * &
+                                                      d3(m4,m2,isym) * &
+                                                      d_spin_ldau(is2,is4,isym) / nsym
+                                                   !
                                           ELSE IF (ll(m1,nt1).EQ.3 .AND. &
                                                 ll(m2,nt2).EQ.3) THEN
-                                                   IF (t_rev(isym) == 1) THEN  
+                                                   nrgtmp = t_rev(isym)*nrg_nc(m4,m3,viz_b,nb1,is3,is4)&
+                                                       +sign*(1-t_rev(isym))*CONJG(nrg_nc(m4,m3,viz_b,nb1,is3,is4))
                                                    nsgnew(m2,m1,viz,na1,is) = &
                                                       nsgnew(m2,m1,viz,na1,is) +  &
                                                       CONJG( d_spin_ldau(is1,is3,isym) ) * &
                                                       d3(m3,m1,isym) * &
-                                                      nrg_nc(m4,m3,viz_b,nb1,is4,is3) * &
+                                                      nrgtmp * &
                                                       d3(m4,m2,isym) * &
                                                       d_spin_ldau(is2,is4,isym) / nsym
-                                                   ELSE
-                                                   nsgnew(m2,m1,viz,na1,is) = &
-                                                      nsgnew(m2,m1,viz,na1,is) +  &
-                                                      CONJG( d_spin_ldau(is1,is3,isym) ) * &
-                                                      d3(m3,m1,isym) * &
-                                                      CONJG(nrg_nc(m4,m3,viz_b,nb1,is4,is3)) * &
-                                                      d3(m4,m2,isym) * &
-                                                      d_spin_ldau(is2,is4,isym) / nsym   
-                                                   ENDIF
+                                                   !
                                           ELSE
                                              CALL errore ('new_nsg', &
                                                    'angular momentum not implemented for at least one type', &
@@ -1052,9 +932,9 @@ SUBROUTINE new_nsg_nc()
                                        !
                                     ENDDO ! is3
                                     !
-                                 ENDDO !m00
+                                 ENDDO !m4
                                  !
-                              ENDDO !m0
+                              ENDDO !m3
                               !
                            ENDDO !isym
                            !endif
@@ -1075,6 +955,7 @@ SUBROUTINE new_nsg_nc()
       !
    ENDDO !na1
    !
+   !write(stdout,*) "nsgnew", nsgnew
    DEALLOCATE(nrg_nc)
    !
    CALL stop_clock('new_nsg')

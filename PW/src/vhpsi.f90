@@ -252,6 +252,7 @@ SUBROUTINE vhpsi_UV ()
   ! has been already computed elsewhere.
   !
   USE ldaU,      ONLY : ldim_u, neighood, at_sc, phase_fac, Hubbard_V, v_nsg
+  USE io_global,     ONLY : stdout
   !
   IMPLICIT NONE
   COMPLEX(DP) :: phase
@@ -577,6 +578,7 @@ SUBROUTINE vhpsi_nc( ldap, np, mps, psip, hpsi )
   USE mp_bands,         ONLY: intra_bgrp_comm
   USE mp,               ONLY: mp_sum
   USE lsda_mod,         ONLY: nspin
+  USE io_global,     ONLY : stdout
   !
   IMPLICIT NONE
   !
@@ -680,19 +682,17 @@ SUBROUTINE vhpsi_UV ()
       ENDIF
    ENDDO
    !
-   ALLOCATE (ctemp(ldimx,mps))
-   ALLOCATE (projauxc(ldimx,mps))
-   ALLOCATE (vaux(ldimx,ldimx))
+   ALLOCATE (ctemp(ldimx*npol,mps))
+   ALLOCATE (projauxc(ldimx*npol,mps))
+   ALLOCATE (vaux(ldimx*npol,ldimx*npol))
    !
-   ALLOCATE (wfcUaux(ldap*npol,ldimx))
+   ALLOCATE (wfcUaux(ldap*npol,ldimx*npol))
    !
    DO nt1 = 1, ntyp
       ldim1 = ldim_u(nt1)
       IF ( is_hubbard(nt1) ) THEN
          DO na1 = 1, nat
             IF (ityp(na1).EQ.nt1) THEN
-               DO is1 = 1, npol
-                  DO is2 = 1, npol
                      DO viz = 1, neighood(na1)%num_neigh
                         !
                         na2 = neighood(na1)%neigh(viz)
@@ -713,34 +713,41 @@ SUBROUTINE vhpsi_UV ()
                            !      <phi^J_m2|Psi_nk>  = proj
                            !         |phi^I_m1>      = wfcU
                            !
+                            !  DO is1 = 1, npol
+                            !     DO is2 = 1, npol
                            wfcUaux(:,:) = (0.0_dp, 0.0_dp)
                            !
                            off1 = offsetU(na1)
-                           DO m1 = 1, ldim1
+                           DO m1 = 1, ldim1*npol
                               DO ig = 1, ldap*npol
-                                 wfcUaux(ig,m1) = wfcU(ig,off1+m1+(is1-1)*ldim1)
+                                 wfcUaux(ig,m1) = wfcU(ig,off1+m1)
                               ENDDO
                            ENDDO
+                           !write(stdout,*) "phase, wfcUaux(1,1:ldim1)", phase, wfcUaux(1,1:ldim1*npol)
                            !
                            off2 = offsetU(equiv_na2)
                            vaux(:,:) = (0.0_dp, 0.0_dp)
                            projauxc(:,:) = (0.0_dp, 0.0_dp)
+                           do is1 =1 , npol
+                              do is2 =1 , npol
                            DO m1 = 1, ldim1
                               DO m2 = 1, ldim2
-                                 vaux(m2,m1) = CONJG( (v_nsg(m2, m1, viz, na1, npol*(is2-1)+is1))) * 0.5d0
+                                 vaux(m2+ldim2*(is2-1),m1+ldim1*(is1-1)) = CONJG( (v_nsg(m2, m1, viz, na1, npol*(is2-1)+is1))) * 0.5d0
                               ENDDO
                            ENDDO
+                        enddo 
+                     enddo
                            !
-                           DO m2 = 1, ldim2
-                              projauxc(m2,:) = proj(off2+m2+(is2-1)*ldim2,:)
+                           DO m2 = 1, ldim2*npol
+                              projauxc(m2,:) = proj(off2+m2,:)
                            ENDDO
                            ctemp(:,:) = (0.0_dp,0.0_dp)
                            !
-                           CALL ZGEMM ('t','n', ldim1,mps,ldim2, (1.0_dp,0.0_dp), &
-                                vaux,ldimx, projauxc,ldimx, (0.0_dp,0.0_dp), ctemp, ldimx)
+                           CALL ZGEMM ('t','n', ldim1*npol,mps,ldim2*npol, (1.0_dp,0.0_dp), &
+                                vaux,ldimx*npol, projauxc,ldimx*npol, (0.0_dp,0.0_dp), ctemp, ldimx*npol)
                            !
-                           CALL ZGEMM ('n','n', ldap*npol, mps, ldim1, phase, &
-                                wfcUaux, ldap*npol, ctemp, ldimx, (1.0_dp,0.0_dp), hpsi, ldap*npol)
+                           CALL ZGEMM ('n','n', ldap*npol, mps, ldim1*npol, phase, &
+                                wfcUaux, ldap*npol, ctemp, ldimx*npol, (1.0_dp,0.0_dp), hpsi, ldap*npol)
                            !
                            ! Compute the second part of the Hubbard potential, namely:
                            ! - \sum_IJ (J\=I) \sum_m1m2 V_IJ/2 * n^JI_m2m1 * |phi^J_m2><phi^I_m1|Psi_nk>
@@ -751,36 +758,41 @@ SUBROUTINE vhpsi_UV ()
                            !
                            wfcUaux(:,:) = (0.0_dp, 0.0_dp)
                            off2 = offsetU(equiv_na2)   
-                           DO m2 = 1, ldim2
+                           DO m2 = 1, ldim2*npol
                               DO ig = 1, ldap*npol
-                                 wfcUaux(ig,m2) = wfcU(ig,off2+m2+(is2-1)*ldim2)
+                                 wfcUaux(ig,m2) = wfcU(ig,off2+m2)
                               ENDDO
                            ENDDO 
                            ! 
                            off1 = offsetU(na1)
                            projauxc(:,:) = (0.0_dp,0.0_dp)
-                           do m1 = 1,ldim1
-                              projauxc(m1,:) = proj(off1+m1+(is1-1)*ldim1,:)
+                           do m1 = 1,ldim1*npol
+                              projauxc(m1,:) = proj(off1+m1,:)
                            enddo
                            vaux(:,:) = (0.0_dp,0.0_dp)
+                           do is1=1,npol
+                              do is2=1,npol
                            DO m1 = 1,ldim1
                               DO m2 = 1,ldim2
-                                 vaux(m2,m1) = v_nsg(m2, m1, viz, na1, npol*(is2-1)+is1) * 0.5d0
+                                 vaux(m2+ldim2*(is2-1),m1+ldim1*(is1-1)) = v_nsg(m2, m1, viz, na1, npol*(is2-1)+is1) * 0.5d0
                               ENDDO
                            ENDDO
+                        enddo
+                     enddo
                            !
                            ctemp(:,:) = (0.0_dp,0.0_dp)
                            !
-                           CALL ZGEMM ('n','n', ldim2,mps,ldim1, (1.0_dp,0.0_dp), &
-                                 vaux,ldimx, projauxc,ldimx, (0.0_dp,0.0_dp), ctemp, ldimx)
+                           CALL ZGEMM ('n','n', ldim2*npol,mps,ldim1*npol, (1.0_dp,0.0_dp), &
+                                 vaux,ldimx*npol, projauxc,ldimx*npol, (0.0_dp,0.0_dp), ctemp, ldimx*npol)
                            !
-                           CALL ZGEMM ('n','n', ldap*npol, mps, ldim2, CONJG(phase), &
-                                 wfcUaux, ldap*npol, ctemp, ldimx, (1.0_dp,0.0_dp), hpsi, ldap*npol)
+                                 ! ---- LUCA (spawoc) restore all ZGEMM -------------
+                           CALL ZGEMM ('n','n', ldap*npol, mps, ldim2*npol, CONJG(phase), &
+                                 wfcUaux, ldap*npol, ctemp, ldimx*npol, (1.0_dp,0.0_dp), hpsi, ldap*npol)
+                          !    ENDDO
+                          ! ENDDO
                            !
                         ENDIF
                      ENDDO 
-                  ENDDO
-               ENDDO
             ENDIF
          ENDDO
       ENDIF

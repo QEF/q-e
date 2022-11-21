@@ -1327,14 +1327,13 @@ SUBROUTINE electrons_scf ( printout, exxen )
                DO is = 1, npol
                   DO is1 = 1, npol
                      i = npol * (is1-1) + is
-                     j = npol  * (is-1) + is1
                      DO na1 = 1, nat
                         nt1 = ityp(na1)
                         DO viz = 1, neighood(na1)%num_neigh
                            na2 = neighood(na1)%neigh(viz)
                            equiv_na2 = at_sc(na2)%at
                            nt2 = ityp(equiv_na2)
-                           IF ( ANY(v_nsg(:,:,viz,na1,j).NE.0.0d0) ) THEN
+                           IF ( ANY(v_nsg(:,:,viz,na1,i).NE.0.0d0) ) THEN
                               DO m1 = 1, ldim_u(nt1)
                                  DO m2 = 1, ldim_u(nt2)
                                     delta_e_hub = delta_e_hub - &
@@ -1450,17 +1449,15 @@ SUBROUTINE electrons_scf ( printout, exxen )
                DO is = 1, npol
                   DO is1 = 1, npol
                      i =  npol*(is1-1) + is
-                     j =  npol*(is-1) + is1
                      DO na1 = 1, nat
                         nt1 = ityp(na1)
                         DO viz = 1, neighood(na1)%num_neigh
                            na2 = neighood(na1)%neigh(viz)
                            equiv_na2 = at_sc(na2)%at
                            nt2 = ityp(equiv_na2)
-                           IF ( ANY(v_nsg(:,:,viz,na1,is).NE.0.0d0) ) THEN
+                           IF ( ANY(v_nsg(:,:,viz,na1,i).NE.0.0d0) ) THEN
                               DO m1 = 1, ldim_u(nt1)
                                  DO m2 = 1, ldim_u(nt2)
-                                    ! LUCA (spawoc)
                                     delta_escf_hub = delta_escf_hub - &
                                           (nsg(m2,m1,viz,na1,i)-nsgnew(m2,m1,viz,na1,i)) * &
                                           v_nsg(m2,m1,viz,na1,i)
