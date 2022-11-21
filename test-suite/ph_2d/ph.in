@@ -6,7 +6,7 @@
   amass(1)=10.811,
   amass(2)=14.0067,
   outdir='./',
-  fildyn='bn.dyn.xml',
+  fildyn='bn.dyn',
   fildvscf='dvscf'
   ldisp=.true.,
   epsil=.true.,

@@ -141,7 +141,7 @@ SUBROUTINE stres_ewa( alat, nat, ntyp, ityp, zv, at, bg, tau, &
 !$omp   sigma32,sigma33)
 #else
 !$acc parallel loop copyin(tau,zv,ityp) reduction(+:sigma11,sigma21,sigma22,&
-!$acc        sigma31,sigma32,sigma33) reduction(-:sdewald)
+!$acc                                               sigma31,sigma32,sigma33,sdewald)
 #endif
      DO ng = gstart, ngm
         g2 = gg(ng) * tpiba2

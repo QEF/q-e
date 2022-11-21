@@ -1,0 +1,41 @@
+
+     Program Q2R v.7.1 starts on  5Oct2022 at 11:46:41 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     10976 MiB available memory on the printing compute node when the environment starts
+ 
+
+     reading grid info from file bn.dyn0.xml
+  reading force constants from file bn.dyn1
+Norm of the difference between old and new effective charges:    0.16489762617622202856
+  nqs=            1
+ q=   0.00000000  0.00000000  0.00000000
+  reading force constants from file bn.dyn2
+  nqs=            3
+ q=   0.00000000 -0.57735027  0.00000000
+ q=   0.50000000  0.28867513  0.00000000
+ q=  -0.50000000  0.28867513  0.00000000
+
+      q-space grid ok, #points =    4
+
+      fft-check warning: sum of imaginary terms = 7.932138E-12
+ 
+     Q2R          :      0.01s CPU      0.01s WALL
+
+ 
+   This run was terminated on:  11:46:41   5Oct2022            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
