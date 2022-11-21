@@ -477,7 +477,8 @@
               ! Dipole-dipole
               Qdd = zag(i) * fnat(j)
               ! Dipole-quad
-              Qdq = 0.5d0 * (zag(i) * qnat(j) - fnat(i) * qag(i))
+              !Qdq = 0.5d0 * (zag(i) * qnat(j) - fnat(i) * qag(i))
+              Qdq = 0.5d0 * (qag(i) * fnat(j) - zag(i) * qnat(j))
               ! Quad-quad
               Qqq = 0.25d0 * qag(i) * qnat(j)
               !
