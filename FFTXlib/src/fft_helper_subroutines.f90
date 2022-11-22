@@ -27,6 +27,9 @@ MODULE fft_helper_subroutines
   PRIVATE
   !
   PUBLIC :: fftx_threed2oned, fftx_oned2threed
+#if defined(__OPENMP_GPU)
+  PUBLIC :: fftx_threed2oned_omp
+#endif
   PUBLIC :: tg_reduce_rho
   PUBLIC :: tg_get_nnr, tg_get_recip_inc, fftx_ntgrp, fftx_tgpe, &
             tg_get_group_nr3
@@ -45,6 +48,9 @@ MODULE fft_helper_subroutines
   !     1-D vectors. Columns along the z-direction are stored
   !     contigiously.
   INTEGER, POINTER, DEVICE :: nl_d(:), nlm_d(:)
+#elif defined (__OPENMP_GPU)
+  PUBLIC :: fftx_psi2c_gamma_omp
+  INTEGER, ALLOCATABLE :: nl_d(:), nlm_d(:)
 #else
   INTEGER, ALLOCATABLE :: nl_d(:), nlm_d(:)
 #endif
@@ -415,7 +421,6 @@ CONTAINS
      !
   END SUBROUTINE fftx_c2psi_gamma
   !
-  !
 #ifdef __CUDA
   !---------------------------------------------------------------------
   SUBROUTINE fftx_c2psi_gamma_gpu( desc, psi, c, ca )
@@ -652,6 +657,37 @@ CONTAINS
   END SUBROUTINE fftx_threed2oned
   !
   !------------------------------------------------------------
+#if defined(__OPENMP_GPU)
+  SUBROUTINE fftx_threed2oned_omp( desc, vin_d, vout1_d, vout2_d )
+     !! GPU version of \(\texttt{fftx_threed2oned}\).
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     complex(DP), INTENT(OUT) :: vout1_d(:)
+     complex(DP), OPTIONAL, INTENT(OUT) :: vout2_d(:)
+     complex(DP), INTENT(IN) :: vin_d(:)
+     COMPLEX(DP) :: fp, fm
+     INTEGER :: ig
+     !$omp target data use_device_ptr( vout1_d, vout2_d, vin_d )
+     IF( PRESENT( vout2_d ) ) THEN
+        !$omp target teams loop
+        DO ig=1,desc%ngm
+           fp=vin_d(desc%nl(ig))+vin_d(desc%nlm(ig))
+           fm=vin_d(desc%nl(ig))-vin_d(desc%nlm(ig))
+           vout1_d(ig) = CMPLX(0.5d0,0.d0,kind=DP)*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
+           vout2_d(ig) = CMPLX(0.5d0,0.d0,kind=DP)*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
+        END DO
+     ELSE
+        !$omp target teams loop
+        DO ig=1,desc%ngm
+           vout1_d(ig) = vin_d(desc%nl(ig))
+        END DO
+     END IF
+     !$omp end target data
+  END SUBROUTINE
+#endif
+  !
+  !------------------------------------------------------------
   SUBROUTINE fftx_psi2c_gamma( desc, vin, vout1, vout2, howmany_set )
      !---------------------------------------------------------
      !
@@ -757,6 +793,33 @@ CONTAINS
         END DO
      END IF
   END SUBROUTINE fftx_psi2c_gamma_gpu
+  !
+  !------------------------------------------------------------
+#if defined(__OPENMP_GPU)
+  SUBROUTINE fftx_psi2c_gamma_omp( desc, vin, vout1, vout2 )
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     complex(DP), INTENT(OUT) :: vout1(:)
+     complex(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
+     complex(DP), INTENT(IN) :: vin(:)
+     INTEGER :: ig
+     IF( PRESENT( vout2 ) ) THEN
+!$omp target teams distribute parallel do
+        DO ig=1,desc%ngw
+           vout1(ig) = CMPLX( DBLE(vin(desc%nl(ig))+vin(desc%nlm(ig))),AIMAG(vin(desc%nl(ig))-vin(desc%nlm(ig))),kind=DP)
+           vout2(ig) = CMPLX(AIMAG(vin(desc%nl(ig))+vin(desc%nlm(ig))),-DBLE(vin(desc%nl(ig))-vin(desc%nlm(ig))),kind=DP)
+        END DO
+!$omp end target teams distribute parallel do
+     ELSE
+!$omp target teams distribute parallel do
+        DO ig=1,desc%ngw
+           vout1(ig) = vin(desc%nl(ig))
+        END DO
+!$omp end target teams distribute parallel do
+     END IF
+  END SUBROUTINE
+#endif
   !
   !------------------------------------------------------------
   SUBROUTINE fftx_psi2c_k( desc, vin, vout, igk, howmany_set )
