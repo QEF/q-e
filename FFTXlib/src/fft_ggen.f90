@@ -44,11 +44,27 @@ CONTAINS
    INTEGER, OPTIONAL, INTENT(OUT) :: mill(:,:)
    INTEGER :: ng, n1, n2, n3
    !
-   IF( ALLOCATED( dfft%nl ) ) DEALLOCATE( dfft%nl )
+   IF( ALLOCATED( dfft%nl ) ) THEN
+#if defined(__OPENMP_GPU)
+   !$omp target exit data map(delete:dfft%nl)
+#endif
+     DEALLOCATE( dfft%nl )
+   END IF 
    ALLOCATE( dfft%nl( dfft%ngm ) )
+#if defined(__OPENMP_GPU)
+   !$omp target enter data map(alloc:dfft%nl)
+#endif
    if (dfft%lgamma) THEN
-      IF( ALLOCATED( dfft%nlm ) ) DEALLOCATE( dfft%nlm )
+      IF( ALLOCATED( dfft%nlm ) ) THEN
+#if defined(__OPENMP_GPU)
+      !$omp target exit data map(delete:dfft%nlm)
+#endif
+        DEALLOCATE( dfft%nlm )
+      END IF 
       ALLOCATE( dfft%nlm( dfft%ngm ) )
+#if defined(__OPENMP_GPU)
+      !$omp target enter data map(alloc:dfft%nlm)
+#endif
    END IF
    !
    DO ng = 1, dfft%ngm

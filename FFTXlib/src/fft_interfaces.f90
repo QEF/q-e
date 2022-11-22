@@ -14,8 +14,32 @@ MODULE fft_interfaces
 
 
   PUBLIC :: fwfft, invfft, fft_interpolate
+#if defined(__OPENMP_GPU) 
+  PUBLIC :: invfft_y_omp, fwfft_y_omp
 
-  
+  INTERFACE
+     SUBROUTINE invfft_y_omp( fft_kind, f, dfft, howmany )
+       USE fft_types,       ONLY : fft_type_descriptor
+       USE fft_param,       ONLY : DP
+       IMPLICIT NONE
+       TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+       CHARACTER(LEN=*), INTENT(IN) :: fft_kind
+       COMPLEX(DP) :: f(:)
+       INTEGER, OPTIONAL, INTENT(IN) :: howmany
+     END SUBROUTINE invfft_y_omp
+
+     SUBROUTINE fwfft_y_omp( fft_kind, f, dfft, howmany )
+       USE fft_types,       ONLY : fft_type_descriptor
+       USE fft_param,       ONLY : DP
+       IMPLICIT NONE
+       TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+       CHARACTER(LEN=*), INTENT(IN) :: fft_kind
+       COMPLEX(DP) :: f(:)
+       INTEGER, OPTIONAL, INTENT(IN) :: howmany
+     END SUBROUTINE fwfft_y_omp
+  END INTERFACE
+#endif
+
   INTERFACE invfft
      !! invfft is the interface to both the standard fft **invfft_x**,
      !! and to the "box-grid" version **invfft_b**, used only in CP 
@@ -29,6 +53,9 @@ MODULE fft_interfaces
        TYPE(fft_type_descriptor), INTENT(IN) :: dfft
        INTEGER, OPTIONAL, INTENT(IN) :: howmany
        COMPLEX(DP) :: f(:)
+#if defined(__OPENMP_GPU) && defined(__USE_DISPATCH)
+       !$omp declare variant (invfft_y_omp) match( construct={dispatch} )
+#endif
      END SUBROUTINE invfft_y
      !
      SUBROUTINE invfft_b( f, dfft, ia )
@@ -63,6 +90,9 @@ MODULE fft_interfaces
        TYPE(fft_type_descriptor), INTENT(IN) :: dfft
        INTEGER, OPTIONAL, INTENT(IN) :: howmany
        COMPLEX(DP) :: f(:)
+#if defined(__OPENMP_GPU) && defined(__USE_DISPATCH)
+       !$omp declare variant(fwfft_y_omp) match(construct={dispatch} )
+#endif
      END SUBROUTINE fwfft_y
 #if defined(__CUDA)
      SUBROUTINE fwfft_y_gpu( grid_type, f_d, dfft, howmany, stream )

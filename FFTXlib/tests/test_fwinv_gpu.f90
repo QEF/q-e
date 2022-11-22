@@ -56,7 +56,7 @@ program test_fwinv_gpu
       END IF
     END DO
     !
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__OPENMP_GPU)
     ! the batched FFT is only implemented for GPU,
     ! will segault if called on non-implemented version.
     CALL test_fwfft_many_gpu_1(mp, test, .true., 1)
@@ -159,7 +159,7 @@ program test_fwinv_gpu
 #else
     ngm_g = ngm
 #endif
-    
+
     ! Generate G vectors and map global g vectors to local FFT points.
     CALL ggen(dfft, gamma_only, at, bg, 4.d0*gcut, ngm_g, ngm, g, .false.)
     !
@@ -395,6 +395,7 @@ program test_fwinv_gpu
     CALL RANDOM_NUMBER(rnd_aux)
     c(1:n) = CMPLX(rnd_aux(1:n), rnd_aux(n+1:2*n), kind=DP)
     c_d = c
+    !$omp target update to(c_d)
     DEALLOCATE(rnd_aux)
   END SUBROUTINE fill_random
   !
@@ -417,6 +418,9 @@ program test_fwinv_gpu
     USE fft_types,       ONLY : fft_type_descriptor
     USE stick_base,      ONLY : sticks_map
     USE fft_interfaces,  ONLY : fwfft
+#if defined(__OPENMP_GPU)
+    USE fft_interfaces,  ONLY : fwfft_y_omp
+#endif
     implicit none
     TYPE(mpi_t) :: mp
     TYPE(tester_t) :: test
@@ -427,7 +431,10 @@ program test_fwinv_gpu
     INTEGER, INTENT(IN) :: ny
     !
     LOGICAL :: parallel
-    COMPLEX(DP), ALLOCATABLE :: data_in(:), aux(:)
+    COMPLEX(DP), ALLOCATABLE :: data_in(:)
+#if !defined(__OPENMP_GPU)
+    COMPLEX(DP), ALLOCATABLE :: aux(:)
+#endif
     COMPLEX(DP), ALLOCATABLE DEVATTR :: data_in_d(:)
     INTEGER :: i
     !
@@ -442,54 +449,103 @@ program test_fwinv_gpu
     !
     IF ( ny .gt. 1 ) THEN
       ! Allocate variables and fill realspace data with random numbers
-      ALLOCATE(data_in(dfft%nnr_tg), aux(dfft%nnr_tg))
+      ALLOCATE(data_in(dfft%nnr_tg))
+#if !defined(__OPENMP_GPU)
+      ALLOCATE(aux(dfft%nnr_tg))
+#endif
       ALLOCATE(data_in_d(dfft%nnr_tg))
+      !$omp target enter data map(alloc:data_in_d)
       CALL fill_random(data_in, data_in_d, dfft%nnr_tg)
       !
       CALL fwfft( 'tgWave' , data_in, dfft, 1 )
+#if defined(__OPENMP_GPU)
+      CALL fwfft_y_omp( 'tgWave' , data_in_d, dfft, 1 )
+#else
       CALL fwfft( 'tgWave' , data_in_d, dfft, 1 )
+#endif
     ELSE
       ! Allocate variables and fill realspace data with random numbers
-      ALLOCATE(data_in(dfft%nnr), aux(dfft%nnr))
+      ALLOCATE(data_in(dfft%nnr))
+#if !defined(__OPENMP_GPU)
+      ALLOCATE(aux(dfft%nnr))
+#endif
       ALLOCATE(data_in_d(dfft%nnr))
-      CALL fill_random(data_in, data_in_d, dfft%nnr) 
+      !$omp target enter data map(alloc:data_in_d)
+      CALL fill_random(data_in, data_in_d, dfft%nnr)
       !
       CALL fwfft( 'Wave' , data_in, dfft, 1 )
-      CALL fwfft( 'Wave' , data_in_d, dfft, 1 )    
+#if defined(__OPENMP_GPU)
+      CALL fwfft_y_omp( 'Wave' , data_in_d, dfft, 1 )
+#else
+      CALL fwfft( 'Wave' , data_in_d, dfft, 1 )
+#endif
     ENDIF
     ! data from GPU is moved to an auxiliary array to compare the results of the GPU
     ! and the CPU implementation on the host
+#if !defined(__OPENMP_GPU)
     aux = data_in_d
+#else
+    !$omp target exit data map(from:data_in_d)
+#endif
     !
     ! Check, only the values relevant for a wavefunction FFT are considered
     DO i=1,dfft%ngw
+#if !defined(__OPENMP_GPU)
       IF (gamma_only) CALL test%assert_close( data_in(dfft%nlm(i)), aux(dfft%nlm(i)) )
       IF (.not. gamma_only) CALL test%assert_close( data_in(dfft%nl(i)), aux(dfft%nl(i)) )
+#else
+      IF (gamma_only) CALL test%assert_close( data_in(dfft%nlm(i)), data_in_d(dfft%nlm(i)) )
+      IF (.not. gamma_only) CALL test%assert_close( data_in(dfft%nl(i)), data_in_d(dfft%nl(i)) )
+#endif
     ENDDO
     !
+#if !defined(__OPENMP_GPU)
     DEALLOCATE(data_in, data_in_d, aux)
+#else
+    DEALLOCATE(data_in, data_in_d)
+#endif
     !
     !
     ! Test 2
     !
     ! Same as above
-    ALLOCATE(data_in(dfft%nnr), aux(dfft%nnr))
+    ALLOCATE(data_in(dfft%nnr))
+#if !defined(__OPENMP_GPU)
+    ALLOCATE(aux(dfft%nnr))
+#endif
     ALLOCATE(data_in_d(dfft%nnr))
+    !$omp target enter data map(alloc:data_in_d)
     CALL fill_random(data_in, data_in_d, dfft%nnr)
     !
     CALL fwfft( 'Rho' , data_in, dfft, 1 )
+#if defined(__OPENMP_GPU)
+    CALL fwfft_y_omp( 'Rho' , data_in_d, dfft, 1 )
+#else
     CALL fwfft( 'Rho' , data_in_d, dfft, 1 )
+#endif
+#if !defined(__OPENMP_GPU)
     aux = data_in_d
+#endif
+    !$omp target exit data map(from:data_in_d)
     !
     ! Check, only the values relevant for a product of wavefunctions are considered
     !
     DO i=1,dfft%ngm
+#if !defined(__OPENMP_GPU)
       IF (gamma_only) CALL test%assert_close( data_in(dfft%nlm(i)), aux(dfft%nlm(i)) )
       IF (.not. gamma_only) CALL test%assert_close( data_in(dfft%nl(i)), aux(dfft%nl(i)) )
+#else
+      IF (gamma_only) CALL test%assert_close( data_in(dfft%nlm(i)), data_in_d(dfft%nlm(i)) )
+      IF (.not. gamma_only) CALL test%assert_close( data_in(dfft%nl(i)), data_in_d(dfft%nl(i)) )
+#endif
     ENDDO
     !
     CALL fft_desc_finalize(dfft, smap)
+#if !defined(__OPENMP_GPU)
     DEALLOCATE(data_in, data_in_d, aux)
+#else
+    DEALLOCATE(data_in, data_in_d)
+#endif
     !
   END SUBROUTINE test_fwfft_gpu_1
   !
@@ -499,6 +555,9 @@ program test_fwinv_gpu
     USE fft_types,       ONLY : fft_type_descriptor
     USE stick_base,      ONLY : sticks_map
     USE fft_interfaces,  ONLY : invfft
+#if defined(__OPENMP_GPU)
+    USE fft_interfaces,  ONLY : invfft_y_omp
+#endif
     implicit none
     TYPE(mpi_t) :: mp
     TYPE(tester_t) :: test
@@ -509,7 +568,10 @@ program test_fwinv_gpu
     INTEGER, INTENT(IN) :: ny
     !
     LOGICAL :: parallel
-    COMPLEX(DP), ALLOCATABLE :: data_in(:), aux(:)
+    COMPLEX(DP), ALLOCATABLE :: data_in(:)
+#if !defined(__OPENMP_GPU)
+    COMPLEX(DP), ALLOCATABLE :: aux(:)
+#endif
     COMPLEX(DP), ALLOCATABLE DEVATTR :: data_in_d(:)
     integer :: i
     !
@@ -525,8 +587,12 @@ program test_fwinv_gpu
     !
     IF ( ny .gt. 1 ) THEN
       ! Allocate variables
-      ALLOCATE(data_in(dfft%nnr_tg), aux(dfft%nnr_tg))
+      ALLOCATE(data_in(dfft%nnr_tg))
+#if !defined(__OPENMP_GPU)
+      ALLOCATE(aux(dfft%nnr_tg))
+#endif
       ALLOCATE(data_in_d(dfft%nnr_tg))
+      !$omp target enter data map(alloc:data_in_d)
       !
       ! Data here is not correctly filled, but this test is disabled.
       ! This is left as TODO!!!
@@ -534,14 +600,23 @@ program test_fwinv_gpu
       CALL fill_random(data_in, data_in_d, dfft%nnr_tg)
       !
       CALL invfft( 'tgWave' , data_in, dfft, 1 )
+#if defined __OPENMP_GPU
+      CALL invfft_y_omp( 'tgWave' , data_in_d, dfft, 1 )
+#else
       CALL invfft( 'tgWave' , data_in_d, dfft, 1 )
+#endif
     ELSE
       !
-      ALLOCATE(data_in(dfft%nnr), aux(dfft%nnr))
+      ALLOCATE(data_in(dfft%nnr))
+#if !defined(__OPENMP_GPU)
+      ALLOCATE(aux(dfft%nnr))
+#endif
       ALLOCATE(data_in_d(dfft%nnr))
+      !$omp target enter data map(alloc:data_in_d)
       !
       ! Prepare input data, only vectors of wavefunctions
       data_in = (0.d0, 0.d0)
+#if !defined(__OPENMP_GPU)
       CALL fill_random_cpu(aux, dfft%ngw)
       DO i=1, dfft%ngw
         IF (gamma_only)       data_in(dfft%nlm(i)) = aux(i)
@@ -550,21 +625,52 @@ program test_fwinv_gpu
       ! copy to gpu and cleanup aux
       data_in_d = data_in
       aux = (0.d0, 0.d0)
+#else
+      CALL fill_random_cpu(data_in_d, dfft%ngw)
+      DO i=1, dfft%ngw
+        IF (gamma_only)       data_in(dfft%nlm(i)) = data_in_d(i)
+        IF (.not. gamma_only) data_in(dfft%nl(i)) = data_in_d(i)
+      ENDDO
+      ! copy to gpu and cleanup aux
+      data_in_d = data_in
+      !$omp target update to(data_in_d)
+#endif
       !
       CALL invfft( 'Wave' , data_in, dfft, 1 )
-      CALL invfft( 'Wave' , data_in_d, dfft, 1 )   
+#if defined __OPENMP_GPU
+      CALL invfft_y_omp( 'Wave' , data_in_d, dfft, 1 )
+#else
+      CALL invfft( 'Wave' , data_in_d, dfft, 1 )
+#endif
     ENDIF
+#if !defined(__OPENMP_GPU)
     aux = data_in_d
+#endif
+    !$omp target exit data map(from:data_in_d)
     ! Check
+#if !defined(__OPENMP_GPU)
     CALL test%assert_close( data_in, aux )
+#else
+    CALL test%assert_close( data_in, data_in_d )
+#endif
+    !
+#if !defined(__OPENMP_GPU)
+    DEALLOCATE(data_in, data_in_d, aux)
+#else
+    DEALLOCATE(data_in, data_in_d)
+#endif
     !
     ! Test 2
     !
-    DEALLOCATE(data_in, data_in_d, aux)
-    ALLOCATE(data_in(dfft%nnr), aux(dfft%nnr))
+    ALLOCATE(data_in(dfft%nnr))
+#if !defined(__OPENMP_GPU)
+    ALLOCATE(aux(dfft%nnr))
+#endif
     ALLOCATE(data_in_d(dfft%nnr))
+    !$omp target enter data map(alloc:data_in_d)
     ! Prepare input data
     data_in = (0.d0, 0.d0)
+#if !defined(__OPENMP_GPU)
     CALL fill_random_cpu(aux, dfft%ngm)
     DO i=1, dfft%ngm
       IF (gamma_only)       data_in(dfft%nlm(i)) = aux(i)
@@ -573,15 +679,40 @@ program test_fwinv_gpu
     ! copy to gpu and cleanup aux
     data_in_d = data_in
     aux = (0.d0, 0.d0)
+#else
+    CALL fill_random_cpu(data_in_d, dfft%ngm)
+    DO i=1, dfft%ngm
+      IF (gamma_only)       data_in(dfft%nlm(i)) = data_in_d(i)
+      IF (.not. gamma_only) data_in(dfft%nl(i)) = data_in_d(i)
+    ENDDO
+    ! copy to gpu and cleanup aux
+    data_in_d = data_in
+    !$omp target update to(data_in_d)
+#endif
     !
     CALL invfft( 'Rho' , data_in, dfft, 1 )
+#if defined(__OPENMP_GPU)
+    CALL invfft_y_omp( 'Rho' , data_in_d, dfft, 1 )
+#else
     CALL invfft( 'Rho' , data_in_d, dfft, 1 )
+#endif
+#if !defined(__OPENMP_GPU)
     aux = data_in_d
+#endif
+    !$omp target exit data map(from:data_in_d)
     ! Check
+#if !defined(__OPENMP_GPU)
     CALL test%assert_close( data_in, aux )
+#else
+    CALL test%assert_close( data_in, data_in_d )
+#endif
     !
     CALL fft_desc_finalize(dfft, smap)
+#if !defined(__OPENMP_GPU)
     DEALLOCATE(data_in, data_in_d, aux)
+#else
+    DEALLOCATE(data_in, data_in_d)
+#endif
     !
   END SUBROUTINE test_invfft_gpu_1
   !
@@ -591,6 +722,9 @@ program test_fwinv_gpu
     USE fft_types,       ONLY : fft_type_descriptor
     USE stick_base,      ONLY : sticks_map
     USE fft_interfaces,  ONLY : fwfft
+#if defined(__OPENMP_GPU)
+    USE fft_interfaces,  ONLY : fwfft_y_omp
+#endif
     implicit none
     TYPE(mpi_t) :: mp
     TYPE(tester_t) :: test
@@ -601,7 +735,10 @@ program test_fwinv_gpu
     INTEGER, INTENT(IN) :: ny
     !
     LOGICAL :: parallel
-    COMPLEX(DP), ALLOCATABLE :: data_in(:), aux(:)
+    COMPLEX(DP), ALLOCATABLE :: data_in(:)
+#if !defined(__OPENMP_GPU)
+    COMPLEX(DP), ALLOCATABLE :: aux(:)
+#endif
     COMPLEX(DP), ALLOCATABLE DEVATTR :: data_in_d(:)
     integer, parameter :: howmany=4
     INTEGER :: i, ii, start
@@ -616,53 +753,96 @@ program test_fwinv_gpu
       ! Not (yet?) possible
       RETURN
     ELSE
-      ALLOCATE(data_in(dfft%nnr*howmany), aux(dfft%nnr*howmany))
+      ALLOCATE(data_in(dfft%nnr*howmany))
+#if !defined(__OPENMP_GPU)
+      ALLOCATE(aux(dfft%nnr*howmany))
+#endif
       ALLOCATE(data_in_d(dfft%nnr*howmany))
+      !$omp target enter data map(alloc:data_in_d)
       CALL fill_random(data_in, data_in_d, dfft%nnr*howmany)
       !
+#if defined(__OPENMP_GPU)
+      CALL fwfft_y_omp( 'Wave' , data_in_d, dfft, howmany=howmany)
+#else
       CALL fwfft( 'Wave' , data_in_d, dfft, howmany=howmany)
+#endif
       !
+      !$omp target exit data map(from:data_in_d)
       DO i=0,howmany-1
         start = i*dfft%nnr
         CALL fwfft( 'Wave' , data_in(1+start:), dfft, 1 )
+#if !defined(__OPENMP_GPU)
         aux(1:dfft%nnr) = data_in_d(start+1:start+dfft%nnr)
+#endif
         ! Check, only the values relevant for a wavefunction FFT are considered
         DO ii=1,dfft%ngw
+#if !defined(__OPENMP_GPU)
             IF (gamma_only) CALL test%assert_close( data_in(dfft%nlm(ii)+start), aux(dfft%nlm(ii)) )
             IF (.not. gamma_only) CALL test%assert_close( data_in(dfft%nl(ii)+start), aux(dfft%nl(ii)) )
+#else
+            IF (gamma_only) CALL test%assert_close( data_in(dfft%nlm(ii)+start), data_in_d(dfft%nlm(ii)+start) )
+            IF (.not. gamma_only) CALL test%assert_close( data_in(dfft%nl(ii)+start), data_in_d(dfft%nl(ii)+start) )
+#endif
         ENDDO
         !
       END DO
       !
     ENDIF
     !
+#if !defined(__OPENMP_GPU)
+    DEALLOCATE(data_in, data_in_d, aux)
+#else
+    DEALLOCATE(data_in, data_in_d)
+#endif
+    !
     ! Test 2
     !
-    DEALLOCATE(data_in, data_in_d, aux)
-    ALLOCATE(data_in(dfft%nnr*howmany), aux(dfft%nnr))
+    ALLOCATE(data_in(dfft%nnr*howmany))
+#if !defined(__OPENMP_GPU)
+      ALLOCATE(aux(dfft%nnr))
+#endif
     ALLOCATE(data_in_d(dfft%nnr*howmany))
+    !$omp target enter data map(alloc:data_in_d)
     !
     CALL fill_random(data_in, data_in_d, dfft%nnr*howmany)
     !
+#if defined(__OPENMP_GPU)
+    CALL fwfft_y_omp( 'Rho' , data_in_d, dfft,  howmany)
+#else
     CALL fwfft( 'Rho' , data_in_d, dfft,  howmany)
+#endif
+    !
+    !$omp target exit data map(from:data_in_d)
+    !
     DO i=0,howmany-1
       !
       start = i*dfft%nnr
       !
       ! This will FFT the content of data_in starting from start+1 and for nnr elements
       CALL fwfft( 'Rho' , data_in(1+start:), dfft, 1 )
+#if !defined(__OPENMP_GPU)
       aux(1:dfft%nnr) = data_in_d(start+1:start+dfft%nnr)
+#endif
       !
       ! Same check as above, but remember that data_in starts from "start"
       DO ii=1,dfft%ngm
+#if !defined(__OPENMP_GPU)
         IF (gamma_only) CALL test%assert_close( data_in(dfft%nlm(ii)+start), aux(dfft%nlm(ii)) )
         IF (.not. gamma_only) CALL test%assert_close( data_in(dfft%nl(ii)+start), aux(dfft%nl(ii)) )
+#else
+        IF (gamma_only) CALL test%assert_close( data_in(dfft%nlm(ii)+start), data_in_d(dfft%nlm(ii)+start) )
+        IF (.not. gamma_only) CALL test%assert_close( data_in(dfft%nl(ii)+start), data_in_d(dfft%nl(ii)+start) )
+#endif
       ENDDO
       !
     END DO
     !
     CALL fft_desc_finalize(dfft, smap)
+#if !defined(__OPENMP_GPU)
     DEALLOCATE(data_in, data_in_d, aux)
+#else
+    DEALLOCATE(data_in, data_in_d)
+#endif
     !
   END SUBROUTINE test_fwfft_many_gpu_1
   !
@@ -671,6 +851,9 @@ program test_fwinv_gpu
     USE fft_types,       ONLY : fft_type_descriptor
     USE stick_base,      ONLY : sticks_map
     USE fft_interfaces,  ONLY : invfft
+#if defined(__OPENMP_GPU)
+    USE fft_interfaces,  ONLY : invfft_y_omp
+#endif
     implicit none
     TYPE(mpi_t) :: mp
     TYPE(tester_t) :: test
@@ -681,7 +864,10 @@ program test_fwinv_gpu
     INTEGER, INTENT(IN) :: ny
     !
     LOGICAL :: parallel
-    COMPLEX(DP), ALLOCATABLE :: data_in(:), aux(:)
+    COMPLEX(DP), ALLOCATABLE :: data_in(:)
+#if !defined(__OPENMP_GPU)
+    COMPLEX(DP), ALLOCATABLE :: aux(:)
+#endif
     COMPLEX(DP), ALLOCATABLE DEVATTR :: data_in_d(:)
     integer, parameter :: howmany=4
     integer :: start, i
@@ -698,15 +884,27 @@ program test_fwinv_gpu
     ELSE
       !
       ! Allocate variables
-      ALLOCATE(data_in(howmany*dfft%nnr), aux(howmany*dfft%nnr))
+      ALLOCATE(data_in(howmany*dfft%nnr))
+#if !defined(__OPENMP_GPU)
+      ALLOCATE(aux(howmany*dfft%nnr))
+#endif
       ALLOCATE(data_in_d(howmany*dfft%nnr))
+      !$omp target enter data map(alloc:data_in_d)
       !
       data_in = (0.d0, 0.d0)
+#if !defined(__OPENMP_GPU)
       CALL fill_random_cpu(aux, dfft%ngw)
       DO i=1, dfft%ngw
         IF (gamma_only)       data_in(dfft%nlm(i)) = aux(i)
         IF (.not. gamma_only) data_in(dfft%nl(i)) = aux(i)
       ENDDO
+#else
+      CALL fill_random_cpu(data_in_d, dfft%ngw)
+      DO i=1, dfft%ngw
+        IF (gamma_only)       data_in(dfft%nlm(i)) = data_in_d(i)
+        IF (.not. gamma_only) data_in(dfft%nl(i)) = data_in_d(i)
+      ENDDO
+#endif
       ! copy data to simulate multiple bands
       DO i=0,howmany-1
         start = i*dfft%nnr
@@ -714,32 +912,62 @@ program test_fwinv_gpu
       ENDDO
       ! copy to gpu and cleanup aux
       data_in_d = data_in
+      !$omp target update to(data_in_d)
+#if !defined(__OPENMP_GPU)
       aux = (0.d0, 0.d0)
+#endif
       !
+#if defined(__OPENMP_GPU)
+      CALL invfft_y_omp( 'Wave' , data_in_d, dfft, howmany=howmany ) !, stream=strm )
+#else
       CALL invfft( 'Wave' , data_in_d, dfft, howmany=howmany ) !, stream=strm )
+#endif
+      !$omp target exit data map(from:data_in_d)
       DO i=0,howmany-1
         start = i*dfft%nnr
         CALL invfft( 'Wave' , data_in(1+start:), dfft, 1 )
+#if !defined(__OPENMP_GPU)
         aux(start+1:start+dfft%nnr) = data_in_d(start+1:start+dfft%nnr)
         ! Check
         CALL test%assert_close( data_in(start+1:start+dfft%nnr), aux(start+1:start+dfft%nnr) )
+#else
+        CALL test%assert_close( data_in(start+1:start+dfft%nnr), data_in_d(start+1:start+dfft%nnr) )
+#endif
       END DO
     ENDIF
     !
+#if !defined(__OPENMP_GPU)
+    DEALLOCATE(data_in, data_in_d, aux)
+#else
+    DEALLOCATE(data_in, data_in_d)
+#endif
+    !
     ! Test 2
     !
-    DEALLOCATE(data_in, data_in_d, aux)
-    ALLOCATE(data_in(dfft%nnr*howmany), aux(dfft%nnr))
+    ALLOCATE(data_in(dfft%nnr*howmany))
+#if !defined(__OPENMP_GPU)
+    ALLOCATE(aux(dfft%nnr))
+#endif
     ALLOCATE(data_in_d(dfft%nnr*howmany))
+    !$omp target enter data map(alloc:data_in_d)
     data_in = (0.d0, 0.d0)
+#if !defined(__OPENMP_GPU)
     CALL fill_random_cpu(aux, dfft%ngm)
+#else
+    CALL fill_random_cpu(data_in_d, dfft%ngm)
+#endif
     !
     ! Prepare vectors assuming that a product of wfcs in reciprocal space
     ! is stored in data_in
     !
     DO i=1, dfft%ngm
+#if !defined(__OPENMP_GPU)
       IF (gamma_only)       data_in(dfft%nlm(i)) = aux(i)
       IF (.not. gamma_only) data_in(dfft%nl(i)) = aux(i)
+#else
+      IF (gamma_only)       data_in(dfft%nlm(i)) = data_in_d(i)
+      IF (.not. gamma_only) data_in(dfft%nl(i)) = data_in_d(i)
+#endif
     ENDDO
     ! copy data to simulate multiple bands
     DO i=0,howmany-1
@@ -748,24 +976,39 @@ program test_fwinv_gpu
     ENDDO
     ! copy to gpu input data and cleanup aux
     data_in_d = data_in
+    !$omp target update to(data_in_d)
+#if !defined(__OPENMP_GPU)
     aux = (0.d0, 0.d0)
-
+#endif
     !
+#if defined(__OPENMP_GPU)
+    CALL invfft_y_omp( 'Rho' , data_in_d, dfft, howmany )
+#else
     CALL invfft( 'Rho' , data_in_d, dfft, howmany )
+#endif
+    !$omp target exit data map(from:data_in_d)
     !
     DO i=0,howmany-1
       start = i*dfft%nnr
       CALL invfft( 'Rho' , data_in(1+start:), dfft, 1 )
+#if !defined(__OPENMP_GPU)
       aux(1:dfft%nnr) = data_in_d(start+1:start+dfft%nnr)
       ! Check
       CALL test%assert_close( data_in(start+1:start+dfft%nnr), aux(1:dfft%nnr) )
+#else
+      CALL test%assert_close( data_in(start+1:start+dfft%nnr), data_in_d(start+1:start+dfft%nnr) )
+#endif
     END DO
     !
     CALL fft_desc_finalize(dfft, smap)
+#if !defined(__OPENMP_GPU)
     DEALLOCATE(data_in, data_in_d, aux)
+#else
+    DEALLOCATE(data_in, data_in_d)
+#endif
     !
   END SUBROUTINE test_invfft_many_gpu_1
-  
+
 end program test_fwinv_gpu
 !
 ! Dummy

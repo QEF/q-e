@@ -204,6 +204,360 @@ CONTAINS
 END SUBROUTINE tg_cft3s
 !
 !
+#if defined(__OPENMP_GPU)
+SUBROUTINE tg_cft3s_omp( f, dfft, isgn )
+  !----------------------------------------------------------------------------
+  !
+  !! ... isgn = +-1 : parallel 3d fft for rho and for the potential
+  !                  NOT IMPLEMENTED WITH TASK GROUPS
+  !! ... isgn = +-2 : parallel 3d fft for wavefunctions
+  !
+  !! ... isgn = +   : G-space to R-space, output = \sum_G f(G)exp(+iG*R)
+  !! ...              fft along z using pencils        (cft_1z)
+  !! ...              transpose across nodes           (fft_scatter)
+  !! ...                 and reorder
+  ! ...              fft along y (using planes) and x (cft_2xy)
+  ! ... isgn = -   : R-space to G-space, output = \int_R f(R)exp(-iG*R)/Omega
+  ! ...              fft along x and y(using planes)  (cft_2xy)
+  ! ...              transpose across nodes           (fft_scatter)
+  ! ...                 and reorder
+  ! ...              fft along z using pencils        (cft_1z)
+  !
+  ! ...  The array "planes" signals whether a fft is needed along y :
+  ! ...    planes(i)=0 : column f(i,*,*) empty , don't do fft along y
+  ! ...    planes(i)=1 : column f(i,*,*) filled, fft along y needed
+  ! ...  "empty" = no active components are present in f(i,*,*)
+  ! ...            after (isgn>0) or before (isgn<0) the fft on z direction
+  !
+  ! ...  Note that if isgn=+/-1 (fft on rho and pot.) all fft's are needed
+  ! ...  and all planes(i) are set to 1
+  !
+  ! This driver is based on code written by Stefano de Gironcoli for PWSCF.
+  ! Task Group added by Costas Bekas, Oct. 2005, adapted from the CPMD code
+  ! (Alessandro Curioni) and revised by Carlo Cavazzoni 2007.
+  !
+  USE fft_scalar,         ONLY : cft_1z_omp, cft_2xy_omp
+  USE fft_scatter_2d_omp, ONLY : fft_scatter_omp
+  USE fft_types,          ONLY : fft_type_descriptor
+  USE fft_buffers,        ONLY : check_buffers_size, aux
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(inout)    :: f( : )  ! array containing data to be transformed
+  TYPE (fft_type_descriptor), INTENT(in) :: dfft
+                                           ! descriptor of fft data layout
+  INTEGER, INTENT(in)           :: isgn    ! fft direction
+  !
+  !
+  INTEGER                    :: me_p
+  INTEGER                    :: n1, n2, n3, nx1, nx2, nx3
+  INTEGER                    :: planes( dfft%nr1x )
+  !
+  !
+  IF (dfft%has_task_groups) CALL fftx_error__( ' tg_cft3s ', ' task groups on large mesh not implemented ', 1 )
+  !
+  CALL check_buffers_size(dfft)
+  !
+  n1  = dfft%nr1
+  n2  = dfft%nr2
+  n3  = dfft%nr3
+  nx1 = dfft%nr1x
+  nx2 = dfft%nr2x
+  nx3 = dfft%nr3x
+  !
+  me_p = dfft%mype + 1
+  !
+  IF ( isgn > 0 ) THEN
+     !
+     IF ( isgn /= 2 ) THEN
+        !
+        CALL cft_1z_omp( f, dfft%nsp( me_p ), n3, nx3, isgn, aux )
+        !
+        planes = dfft%iplp
+        !
+     ELSE
+        !
+        CALL cft_1z_omp( f, dfft%nsw( me_p ), n3, nx3, isgn, aux )
+        !
+        planes = dfft%iplw
+        !
+     ENDIF
+     !
+     CALL fw_scatter_omp( isgn ) ! forward scatter from stick to planes
+     !
+     CALL cft_2xy_omp( f, dfft%my_nr3p, n1, n2, nx1, nx2, isgn, planes )
+     !
+  ELSE
+     !
+     IF ( isgn /= -2 ) THEN
+        !
+        planes = dfft%iplp
+        !
+     ELSE
+        !
+        planes = dfft%iplw
+        !
+     ENDIF
+     !
+     CALL cft_2xy_omp( f, dfft%my_nr3p, n1, n2, nx1, nx2, isgn, planes )
+     !
+     CALL bw_scatter_omp( isgn )
+     !
+     IF ( isgn /= -2 ) THEN
+        !
+        CALL cft_1z_omp( aux, dfft%nsp( me_p ), n3, nx3, isgn, f )
+        !
+     ELSE
+        !
+        CALL cft_1z_omp( aux, dfft%nsw( me_p ), n3, nx3, isgn, f )
+        !
+     ENDIF
+     !
+  ENDIF
+  !
+  RETURN
+  !
+CONTAINS
+  !
+  SUBROUTINE fw_scatter_omp( iopt )
+
+     !Transpose data for the 2-D FFT on the x-y plane
+     !
+     !NOGRP*dfft%nnr: The length of aux and f
+     !nr3x: The length of each Z-stick
+     !aux: input - output
+     !f: working space
+     !isgn: type of scatter
+     !dfft%nsw(me) holds the number of Z-sticks proc. me has.
+     !dfft%nr3p: number of planes per processor
+     !
+     !
+     USE fft_scatter_2d_omp, ONLY : fft_scatter_omp
+     !
+     INTEGER, INTENT(in) :: iopt
+     !
+     IF( iopt == 2 ) THEN
+        !
+        CALL fft_scatter_omp( dfft, aux, nx3, dfft%nnr, f, dfft%nsw, dfft%nr3p, iopt )
+        !
+     ELSEIF( iopt == 1 ) THEN
+        !
+        CALL fft_scatter_omp( dfft, aux, nx3, dfft%nnr, f, dfft%nsp, dfft%nr3p, iopt )
+        !
+     ENDIF
+     !
+     RETURN
+  END SUBROUTINE fw_scatter_omp
+
+  !
+
+  SUBROUTINE bw_scatter_omp( iopt )
+     !
+     USE fft_scatter_2d_omp, ONLY : fft_scatter_omp
+     !
+     INTEGER, INTENT(in) :: iopt
+     !
+     IF( iopt == -2 ) THEN
+        !
+        CALL fft_scatter_omp( dfft, aux, nx3, dfft%nnr, f, dfft%nsw, dfft%nr3p, iopt )
+        !
+     ELSEIF( iopt == -1 ) THEN
+        !
+        CALL fft_scatter_omp( dfft, aux, nx3, dfft%nnr, f, dfft%nsp, dfft%nr3p, iopt )
+        !
+     ENDIF
+     !
+     RETURN
+  END SUBROUTINE bw_scatter_omp
+  !
+END SUBROUTINE tg_cft3s_omp
+
+SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
+  !----------------------------------------------------------------------------
+  !
+  !! ... isgn = +-1 : parallel 3d fft for rho and for the potential
+  !                  NOT IMPLEMENTED WITH TASK GROUPS
+  !! ... isgn = +-2 : parallel 3d fft for wavefunctions
+  !
+  !! ... isgn = +   : G-space to R-space, output = \sum_G f(G)exp(+iG*R)
+  !! ...              fft along z using pencils        (cft_1z)
+  !! ...              transpose across nodes           (fft_scatter)
+  !! ...                 and reorder
+  ! ...              fft along y (using planes) and x (cft_2xy)
+  ! ... isgn = -   : R-space to G-space, output = \int_R f(R)exp(-iG*R)/Omega
+  ! ...              fft along x and y(using planes)  (cft_2xy)
+  ! ...              transpose across nodes           (fft_scatter)
+  ! ...                 and reorder
+  ! ...              fft along z using pencils        (cft_1z)
+  !
+  ! ...  The array "planes" signals whether a fft is needed along y :
+  ! ...    planes(i)=0 : column f(i,*,*) empty , don't do fft along y
+  ! ...    planes(i)=1 : column f(i,*,*) filled, fft along y needed
+  ! ...  "empty" = no active components are present in f(i,*,*)
+  ! ...            after (isgn>0) or before (isgn<0) the fft on z direction
+  !
+  ! ...  Note that if isgn=+/-1 (fft on rho and pot.) all fft's are needed
+  ! ...  and all planes(i) are set to 1
+  !
+  ! This driver is based on code written by Stefano de Gironcoli for PWSCF.
+  ! Task Group added by Costas Bekas, Oct. 2005, adapted from the CPMD code
+  ! (Alessandro Curioni) and revised by Carlo Cavazzoni 2007.
+  !
+  USE fft_scalar,         ONLY : cft_1z_omp, cft_2xy_omp
+  USE fft_scatter_2d_omp, ONLY : fft_scatter_many_columns_to_planes_send_omp,  &
+                                   fft_scatter_many_columns_to_planes_store_omp, &
+                                   fft_scatter_many_planes_to_columns_send_omp, &
+                                   fft_scatter_many_planes_to_columns_store_omp
+  USE fft_types,          ONLY : fft_type_descriptor
+  USE fft_buffers,        ONLY : check_buffers_size, aux, aux2
+  !
+  IMPLICIT NONE
+  !
+  TYPE (fft_type_descriptor), INTENT(in) :: dfft
+                                           ! descriptor of fft data layout
+  INTEGER, INTENT(in)           :: isgn    ! fft direction
+  INTEGER, INTENT(in)           :: batchsize
+  COMPLEX(DP), INTENT(inout)    :: f( batchsize * dfft%nnr ) ! array containing data to be transformed
+  !
+  INTEGER                    :: me_p, istat, i, j, currsize
+  INTEGER                    :: n1, n2, n3, nx1, nx2, nx3, ncpx, nppx, proc
+  COMPLEX(DP), ALLOCATABLE   :: yf(:)
+  INTEGER                    :: planes( dfft%nr1x )
+  INTEGER                    :: sticks( dfft%nproc  )
+  INTEGER                    :: ii, jj, kk
+  !
+  !
+  n1  = dfft%nr1
+  n2  = dfft%nr2
+  n3  = dfft%nr3
+  nx1 = dfft%nr1x
+  nx2 = dfft%nr2x
+  nx3 = dfft%nr3x
+  !
+  CALL check_buffers_size(dfft, batchsize)
+  !
+  me_p = dfft%mype + 1
+  !
+  ncpx = 0
+  nppx = 0
+  DO proc = 1, dfft%nproc
+     IF ( abs(isgn) == 2 ) ncpx = max( ncpx, dfft%nsw ( proc ) )
+     IF ( abs(isgn) == 1 ) ncpx = max( ncpx, dfft%nsp ( proc ) )
+     nppx = max( nppx, dfft%nr3p ( proc ) )
+  ENDDO
+  IF ( abs(isgn) == 2 ) sticks = dfft%nsw
+  IF ( abs(isgn) == 1 ) sticks = dfft%nsp
+  !
+  IF ( (abs(isgn) /= 2) .and. (abs(isgn) /= 1) ) &
+     CALL fftx_error__( ' many_cft3s_omp ', ' abs(isgn) /= 1 or 2 not implemented ', isgn )
+  !
+  IF (dfft%nproc <= 1) CALL fftx_error__( ' many_cft3s_omp ', ' this subroutine should never be called with nproc= ', dfft%nproc )
+  !
+  IF ( isgn > 0 ) THEN
+     DO j = 0, batchsize-1, dfft%subbatchsize
+       currsize = min(dfft%subbatchsize, batchsize - j)
+       !
+       IF ( isgn /= 2 ) THEN
+          !
+          planes = dfft%iplp
+          !
+       ELSE
+          !
+          planes = dfft%iplw
+          !
+       ENDIF
+       !
+       !!$omp single
+       !!$omp task depend (out: aux(j*dfft%nnr+1:(j+1)*dfft%nnr))
+       DO i = 0, currsize - 1
+         CALL cft_1z_omp( f((j+i)*dfft%nnr + 1:), sticks(me_p), n3, nx3, isgn, aux(j*dfft%nnr + i*ncpx*nx3 +1:) )
+       ENDDO
+       !!$omp end task
+
+       !!$omp task depend (in: aux(j*dfft%nnr+1:(j+1)*dfft%nnr))
+       CALL fft_scatter_many_columns_to_planes_store_omp( dfft, aux(j*dfft%nnr + 1:), nx3, dfft%nnr, f(j*dfft%nnr + 1:), &
+         sticks, dfft%nr3p, isgn, currsize )
+       !!$omp end task
+       !!$omp end single
+
+     ENDDO
+
+     DO j = 0, batchsize-1, dfft%subbatchsize
+       currsize = min(dfft%subbatchsize, batchsize - j)
+
+       !!$omp single
+       !!$omp task depend (out: f(j*dfft%nnr+1:(j+1)*dfft%nnr))
+       CALL fft_scatter_many_columns_to_planes_send_omp( dfft, aux(j*dfft%nnr + 1:), nx3, dfft%nnr, f(j*dfft%nnr + 1:), &
+         aux2(j*dfft%nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
+       !!$omp end task
+
+       IF (currsize == dfft%subbatchsize) THEN
+         !!$omp task depend (in: f(j*dfft%nnr+1:(j+1)*dfft%nnr))
+         CALL cft_2xy_omp( f(j*dfft%nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes )
+         !!$omp end task
+       ELSE
+         !!$omp task depend (in: f(j*dfft%nnr+1:(j+1)*dfft%nnr))
+         DO i = 0, currsize - 1
+           CALL cft_2xy_omp( f((j+i)*dfft%nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes )
+         ENDDO
+         !!$omp end task
+       ENDIF
+       !!$omp end single
+
+     ENDDO
+     !
+  ELSE
+     !
+     DO j = 0, batchsize-1, dfft%subbatchsize
+       currsize = min(dfft%subbatchsize, batchsize - j)
+       !
+       IF ( isgn /= -2 ) THEN
+          !
+          planes = dfft%iplp
+          !
+       ELSE
+          !
+          planes = dfft%iplw
+          !
+       ENDIF
+
+       IF (currsize == dfft%subbatchsize) THEN
+         CALL cft_2xy_omp( f(j*dfft%nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes )
+       ELSE
+         DO i = 0, currsize - 1
+           CALL cft_2xy_omp( f((j+i)*dfft%nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes )
+         ENDDO
+       ENDIF
+
+       CALL fft_scatter_many_planes_to_columns_store_omp( dfft, nx3, dfft%nnr, f(j*dfft%nnr + 1:), &
+         aux2(j*dfft%nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
+
+     ENDDO
+
+     DO j = 0, batchsize-1, dfft%subbatchsize
+       currsize = min(dfft%subbatchsize, batchsize - j)
+
+       !!$omp single
+       !!$omp task depend (out: aux(j*dfft%nnr+1:(j+1)*dfft%nnr))
+       CALL fft_scatter_many_planes_to_columns_send_omp( dfft, aux(j*dfft%nnr + 1:), nx3, dfft%nnr, f(j*dfft%nnr + 1:), &
+         aux2(j*dfft%nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
+       !!$omp end task
+
+       !!$omp task depend (in: aux(j*dfft%nnr+1:(j+1)*dfft%nnr))
+       DO i = 0, currsize - 1
+         CALL cft_1z_omp( aux(j*dfft%nnr + i*ncpx*nx3 + 1:), sticks( me_p ), n3, nx3, isgn, f((j+i)*dfft%nnr + 1:) )
+       ENDDO
+       !!$omp end task
+       !!$omp end single
+
+     ENDDO
+  ENDIF
+  !
+  RETURN
+  !
+END SUBROUTINE many_cft3s_omp
+#endif
+!
 !
 #if defined(__CUDA)
 !----------------------------------------------------------------------------
