@@ -141,11 +141,11 @@ CONTAINS
       IF( input_line == ' ' .OR. input_line(1:1) == '#' .OR. &
                                  input_line(1:1) == '!' ) GOTO 100
       !
-      READ (input_line, *) card
-      !
       DO i = 1, len_trim( input_line )
          input_line( i : i ) = capital( input_line( i : i ) )
       ENDDO
+      !
+      READ (input_line, *) card
       !
       IF ( trim(card) == 'AUTOPILOT' ) THEN
          !
