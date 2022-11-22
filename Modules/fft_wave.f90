@@ -14,7 +14,7 @@ MODULE fft_wave
   !! which it enclose the calls to g-vect/FFT-grid transposition routines too.
   !
   USE kinds,           ONLY: DP
-  USE fft_interfaces,  ONLY: fwfft, invfft
+  USE fft_interfaces,  ONLY: fwfft, fwfft_y_omp, invfft, invfft_y_omp
   USE fft_types,       ONLY: fft_type_descriptor
   USE control_flags,   ONLY: gamma_only, many_fft
   !
@@ -28,7 +28,7 @@ MODULE fft_wave
 CONTAINS
   !
   !----------------------------------------------------------------------
-  SUBROUTINE wave_r2g( f_in, f_out, dfft, igk, howmany_set )
+  SUBROUTINE wave_r2g( f_in, f_out, dfft, igk, howmany_set, omp_mod )
     !--------------------------------------------------------------------
     !! Wave function FFT from R to G-space.
     !
@@ -50,12 +50,23 @@ CONTAINS
     !! (1) group_size;  
     !! (2) true dimension of psi;  
     !! (3) howmany (if gamma) or group_size (if k).
+    INTEGER, OPTIONAL, INTENT(IN) :: omp_mod
+    !! whether to execute the FFT on GPU with OMP5 offload
     !
     ! ... local variables
     INTEGER :: dim1, dim2
+    LOGICAL :: omp_offload, omp_map
     !
     dim1 = SIZE(f_in(:))
     dim2 = SIZE(f_out(1,:))
+    !
+    omp_offload = .false.
+    omp_map     = .false.
+    IF(PRESENT(omp_mod)) THEN
+      omp_offload = omp_mod.ge.0 ! run FFT on device (data already mapped)
+      omp_map     = omp_mod.ge.1 ! map data and run FFT on device
+    END IF 
+    IF(omp_offload.and.PRESENT(howmany_set)) Call errore('wave_r2g','omp_offload and many FFT NYI', 1)
     !
     !$acc data present_or_copyin(f_in) present_or_copyout(f_out)
     !
@@ -63,7 +74,17 @@ CONTAINS
     IF (PRESENT(howmany_set)) THEN
       CALL fwfft( 'Wave', f_in, dfft, howmany=howmany_set(3) )
     ELSE
-      CALL fwfft( 'Wave', f_in, dfft )
+      IF(omp_offload) THEN
+        IF(omp_map) THEN
+          !$omp target data map(tofrom:f_in)
+          CALL fwfft_y_omp( 'Wave', f_in, dfft )
+          !$omp end target data 
+        ELSE
+          CALL fwfft_y_omp( 'Wave', f_in, dfft )
+        END IF 
+      ELSE
+        CALL fwfft( 'Wave', f_in, dfft )
+      ENDIF 
     ENDIF
     !$acc end host_data
     !
@@ -93,7 +114,7 @@ CONTAINS
   !
   !
   !----------------------------------------------------------------------
-  SUBROUTINE wave_g2r( f_in, f_out, dfft, igk, howmany_set )
+  SUBROUTINE wave_g2r( f_in, f_out, dfft, igk, howmany_set, omp_mod )
     !--------------------------------------------------------------------
     !! Wave function FFT from G to R-space.
     !
@@ -114,9 +135,20 @@ CONTAINS
     !! (1) group_size;  
     !! (2) true dimension of psi;  
     !! (3) howmany (if gamma) or group_size (if k).
+    INTEGER, OPTIONAL, INTENT(IN) :: omp_mod
+    !! whether to execute the FFT on GPU with OMP5 offload
     !
     ! ... local variables
     INTEGER :: npw, dim2
+    LOGICAL :: omp_offload, omp_map
+    !
+    omp_offload = .false.
+    omp_map     = .false.
+    IF(PRESENT(omp_mod)) THEN
+      omp_offload = omp_mod.ge.0 ! run FFT on device (data already mapped)
+      omp_map     = omp_mod.ge.1 ! map data and run FFT on device
+    END IF 
+    IF(omp_offload.and.PRESENT(howmany_set)) Call errore('wave_r2g','omp_offload and many FFT NYI', 1)
     !
     !$acc data present_or_copyin(f_in) present_or_copyout(f_out)
     !
@@ -149,7 +181,17 @@ CONTAINS
     IF (PRESENT(howmany_set)) THEN
       CALL invfft( 'Wave', f_out, dfft, howmany=howmany_set(3) )
     ELSE
-      CALL invfft( 'Wave', f_out, dfft )
+      IF(omp_offload) THEN  
+        IF(omp_map) THEN 
+          !$omp target data map(tofrom:f_out)
+          CALL invfft_y_omp( 'Wave', f_out, dfft, howmany=1 )
+          !$omp end target data 
+        ELSE
+          CALL invfft_y_omp( 'Wave', f_out, dfft )
+        END IF 
+      ELSE
+        CALL invfft( 'Wave', f_out, dfft )
+      END IF 
     ENDIF
     !$acc end host_data
     !

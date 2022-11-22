@@ -110,7 +110,7 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
         ebnd = ibnd
         IF ( ibnd < m ) ebnd = ibnd + 1
         !
-        CALL wave_g2r( psi(1:n,ibnd:ebnd), psic, dffts )
+        CALL wave_g2r( psi(1:n,ibnd:ebnd), psic, dffts, omp_mod=1 )
         !
         DO j = 1, dffts%nnr
           psic(j) = psic(j) * v(j)
@@ -121,7 +121,7 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
           brange=2 ;  fac=0.5d0
         ENDIF
         !
-        CALL wave_r2g( psic(1:dffts%nnr), vpsi(:,1:brange), dffts )
+        CALL wave_r2g( psic(1:dffts%nnr), vpsi(:,1:brange), dffts, omp_mod=1  )
         !
         DO j = 1, n
           hpsi(j,ibnd) = hpsi(j,ibnd) + fac*vpsi(j,1)
@@ -255,7 +255,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
      !
      DO ibnd = 1, m
         !
-        CALL wave_g2r( psi(1:n,ibnd:ibnd), psic, dffts, igk=igk_k(:,current_k) )
+        CALL wave_g2r( psi(1:n,ibnd:ibnd), psic, dffts, igk=igk_k(:,current_k), omp_mod=1  )
         !
 !        write (6,*) 'wfc R '
 !        write (6,99) (psic(i), i=1,400)
@@ -269,7 +269,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
 !        write (6,*) 'v psi R '
 !        write (6,99) (psic(i), i=1,400)
         !
-        CALL wave_r2g( psic(1:dffts%nnr), vpsi(1:n,:), dffts, igk=igk_k(:,current_k) )
+        CALL wave_r2g( psic(1:dffts%nnr), vpsi(1:n,:), dffts, igk=igk_k(:,current_k), omp_mod=1  )
         !
         !$omp parallel do
         DO i = 1, n
@@ -432,7 +432,7 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
            ii = lda*(ipol-1)+1
            ie = lda*(ipol-1)+n
            CALL wave_g2r( psi(ii:ie,ibnd:ibnd), psic_nc(:,ipol), dffts, &
-                          igk=igk_k(:,current_k) )
+                          igk=igk_k(:,current_k), omp_mod=1  )
         ENDDO
         !
         IF (domag) THEN
@@ -452,7 +452,7 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
         !
         DO ipol = 1, npol
            CALL wave_r2g( psic_nc(1:dffts%nnr,ipol), vpsi(1:n,:), dffts, &
-                          igk=igk_k(:,current_k) )
+                          igk=igk_k(:,current_k), omp_mod=1  )
 !$omp parallel do
            DO j = 1, n
               hpsi(j,ipol,ibnd) = hpsi(j,ipol,ibnd) + vpsi(j,1)
