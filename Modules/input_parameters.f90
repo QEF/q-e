@@ -719,6 +719,9 @@ MODULE input_parameters
         !! Maximum number of iterations for orthonormalization
         !! usually between 20 and 300.
 
+        INTEGER :: exx_maxstep = 1000
+        !! maximum number of steps in the outer loop of electronic minimization
+        !! when exx is active (hybrid functionals).
         INTEGER :: electron_maxstep = 1000
         !! maximum number of steps in electronic minimization.
         !! This parameter applies only when using 'cg' electronic or
@@ -1041,7 +1044,7 @@ MODULE input_parameters
         !! CP: \(1 \text{a.u. of time} = 2.4189\cdot 10^{-17} s\), PW: twice that much.
 
         NAMELIST / electrons / emass, emass_cutoff, orthogonalization, &
-          electron_maxstep, scf_must_converge, ortho_eps, ortho_max, electron_dynamics,   &
+          exx_maxstep, electron_maxstep, scf_must_converge, ortho_eps, ortho_max, electron_dynamics,   &
           electron_damping, electron_velocities, electron_temperature, &
           ekincw, fnosee, ampre, grease,                               &
           diis_size, diis_nreset, diis_hcut,                           &

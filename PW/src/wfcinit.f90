@@ -14,7 +14,7 @@ SUBROUTINE aceinit0()
   !
   USE io_global,            ONLY : stdout
   USE klist,                ONLY : nks, nkstot
-  USE control_flags,        ONLY : lscf
+  USE control_flags,        ONLY : lscf, restart
   USE io_files,             ONLY : restart_dir
   USE wvfct,                ONLY : nbnd
   USE pw_restart_new,       ONLY : read_collected_wfc
@@ -31,7 +31,7 @@ SUBROUTINE aceinit0()
   !
   CALL start_clock( 'aceinit0' )
   !
-  IF(lscf) THEN
+  IF(lscf.and..not.restart) THEN
     !
     WRITE( stdout, '(5X,"EXX: ACE will be initialized later")' )
     !

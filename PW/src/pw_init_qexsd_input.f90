@@ -41,7 +41,7 @@
                                 ip_nr3 => nr3, ip_nr1s => nr1s, ip_nr2s => nr2s,ip_nr3s => nr3s, ip_nr1b=>nr1b,       &
                                 ip_nr2b=>nr2b, ip_nr3b => nr3b,                                                       &
                                 ip_diagonalization=>diagonalization, mixing_mode, mixing_beta,                        &
-                                mixing_ndim, tqr, tq_smoothing, tbeta_smoothing, electron_maxstep,                    &
+                                mixing_ndim, tqr, tq_smoothing, tbeta_smoothing, exx_maxstep, electron_maxstep,       &
                                 diago_thr_init, diago_full_acc,                                                       & 
                                 diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim,                               &
                                 diago_rmm_ndim, diago_rmm_conv, diago_gs_nblock,                                      &
@@ -465,7 +465,8 @@
     diagonalization = ip_diagonalization
   END IF
   CALL qexsd_init_electron_control(obj%electron_control, diagonalization, mixing_mode, mixing_beta, conv_thr/e2,         &
-                                   mixing_ndim, electron_maxstep, tqr, real_space, tq_smoothing, tbeta_smoothing, diago_thr_init, &
+                                   mixing_ndim, exx_maxstep, electron_maxstep, tqr, real_space, tq_smoothing, &
+                                   tbeta_smoothing, diago_thr_init, &
                                    diago_full_acc, diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim, &
                                    diago_rmm_ndim, diago_rmm_conv, diago_gs_nblock)
   !--------------------------------------------------------------------------------------------------------------------------------

@@ -223,7 +223,7 @@ MODULE qexsd_input
   END SUBROUTINE qexsd_init_basis
   !-------------------------------------------------------------------------------------------
   SUBROUTINE qexsd_init_electron_control( obj,diagonalization,mixing_mode,mixing_beta,&
-                                          conv_thr, mixing_ndim, max_nstep, tqr, real_space, &
+                                          conv_thr, mixing_ndim, exx_nstep, max_nstep, tqr, real_space, &
                                           tq_smoothing, tbeta_smoothing, & 
                                           diago_thr_init, diago_full_acc, &
                                           diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim, &
@@ -235,7 +235,7 @@ MODULE qexsd_input
   TYPE(electron_control_type)             ::  obj
   CHARACTER(LEN=*),INTENT(IN)             :: diagonalization,mixing_mode
   REAL(DP),INTENT(IN)                     :: mixing_beta, conv_thr, diago_thr_init
-  INTEGER,INTENT(IN)                      :: mixing_ndim,max_nstep, diago_cg_maxiter, &
+  INTEGER,INTENT(IN)                      :: mixing_ndim,exx_nstep, max_nstep, diago_cg_maxiter, &
                                              diago_ppcg_maxiter, diago_david_ndim, &
 
                                              diago_rmm_ndim, diago_gs_nblock
@@ -246,7 +246,7 @@ MODULE qexsd_input
   !
   CALL qes_init (obj,TAGNAME, DIAGONALIZATION=diagonalization,&
                                 MIXING_MODE=mixing_mode,MIXING_BETA=mixing_beta,&
-                                CONV_THR=conv_thr,MIXING_NDIM=mixing_ndim,MAX_NSTEP=max_nstep,&
+                                CONV_THR=conv_thr,MIXING_NDIM=mixing_ndim,EXX_NSTEP=exx_nstep,MAX_NSTEP=max_nstep,&
                                 TQ_SMOOTHING= tq_smoothing, TBETA_SMOOTHING = tbeta_smoothing,& 
                                 REAL_SPACE_Q=tqr, REAL_SPACE_BETA = real_space, DIAGO_THR_INIT=diago_thr_init,& 
                                 DIAGO_FULL_ACC=diago_full_acc,DIAGO_CG_MAXITER=diago_cg_maxiter, &
