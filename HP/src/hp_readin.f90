@@ -182,8 +182,7 @@ SUBROUTINE input_sanity()
   !
   IF (lmin.LT.0 .OR. lmin.GT.3) CALL errore('hp_readin','Not allowed value of lmin',1)
   !
-  IF (nmix.LT.1 .OR. nmix.GT.5) &
-     & CALL errore ('hp_readin', ' Wrong nmix ', 1) 
+  IF (nmix.LT.1) CALL errore ('hp_readin', ' Wrong nmix ', 1) 
   !
   IF (ltetra) CALL errore ('hp_readin', 'HP with tetrahedra is not supported', 1)
   !
