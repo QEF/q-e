@@ -546,3 +546,8 @@ set(PP_EXE_TARGETS
     qe_pp_st_fermiint0_exe
     qe_pp_st_fermiint1_exe
     qe_pp_rism_exe)
+add_custom_target(pp
+    DEPENDS
+        ${PP_EXE_TARGETS}
+    COMMENT
+        "post-processing applications for analysis and property calculations")
