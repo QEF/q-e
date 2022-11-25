@@ -64,7 +64,7 @@ SUBROUTINE read_file()
 END SUBROUTINE read_file
 !
 !----------------------------------------------------------------------------
-SUBROUTINE read_file_ph()
+SUBROUTINE read_file_ph( needwf_ph )
   !----------------------------------------------------------------------------
   !
   ! Wrapper routine, for compatibility with the phonon code: as "read_file",
@@ -92,7 +92,8 @@ SUBROUTINE read_file_ph()
   IMPLICIT NONE
   !
   INTEGER :: ik
-  LOGICAL :: exst, needwf, wfc_is_collected
+  LOGICAL :: exst, wfc_is_collected
+  LOGICAL, INTENT(IN) :: needwf_ph
   !
   WRITE( stdout, '(/,5x,A)') &
        'Reading xml data from directory:', TRIM( restart_dir() )
@@ -143,7 +144,7 @@ SUBROUTINE read_file_ph()
      ! ... read wavefunctions in collected format, write them to file or buffer
      !
      WRITE( stdout, '(5x,A)') &
-          'Reading collected, re-writing distributed wavefunctions'
+          'Reading collected, re-writing distributed wavefunctions in '//TRIM(wfc_dir)
      CALL using_evc(1)
      DO ik = 1, nks
         CALL read_collected_wfc ( restart_dir(), ik, evc )
@@ -151,7 +152,13 @@ SUBROUTINE read_file_ph()
      END DO
      !
   ELSE
-     CALL errore ('read_file',' Wavefunctions in collected format not available',1)
+     !
+     IF ( needwf_ph ) THEN
+        CALL errore ('read_file_ph',' Wavefunctions in collected format not available',1)
+     ELSE
+        WRITE( stdout, '(5x,A)') 'read_file_ph: Wavefunctions in collected format not needed'
+     ENDIF
+     !
   END IF
   !
   IF ( io_level /= 0 ) CALL close_buffer  ( iunwfc, 'KEEP' )
