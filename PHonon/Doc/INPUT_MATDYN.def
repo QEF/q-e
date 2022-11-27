@@ -71,7 +71,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
                     Remember to set write_lr = .true. to write long-range
                     force constants into file when running q2r and set @ref 
                     read_lr = .true. when running matdyn in the case of 
-                    infrared-active solids.
+                    infrared-active solids. (See npj Comput Mater 8, 236 (2022))
                 }
                 opt -val 'one-dim' {
                     3 translational asr + 1 rotational asr imposed
