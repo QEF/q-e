@@ -240,6 +240,11 @@ MODULE control_flags
   INTEGER, PUBLIC :: & ! variable controlling the amount of I/O to output
     iverbosity = 0     ! -1 minimal, 0 low, 1 medium, 2 high, 3 debug
   !
+  ! ... self-interaction correction and scissor operator
+  !
+  LOGICAL, PUBLIC :: sic = .FALSE.
+  LOGICAL, PUBLIC :: scissor = .FALSE.
+  !
   ! ... miscellany
   !
   LOGICAL, PUBLIC :: &

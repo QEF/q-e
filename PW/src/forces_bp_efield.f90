@@ -574,8 +574,8 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                               IF (max_aux_proc>max_aux) max_aux = max_aux_proc
                            ENDIF
                         ENDDO
-                        max_aux_proc=max_aux
-                        CALL mp_max(max_aux_proc, intra_bgrp_comm )
+                        !
+                        CALL mp_max(max_aux, intra_bgrp_comm )
                         ALLOCATE( aux_proc(max_aux,nproc), aux_proc_ind(max_aux,nproc) )
                         ALLOCATE( aux_rcv(max_aux,nproc), aux_rcv_ind(max_aux,nproc) )
                         aux_proc = (0.d0,0.d0)

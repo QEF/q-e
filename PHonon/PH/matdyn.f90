@@ -366,7 +366,11 @@ PROGRAM matdyn
         ALLOCATE(frc(nr1,nr2,nr3,3,3,nat_blk,nat_blk))
         ALLOCATE(frc_lr(nr1,nr2,nr3,3,3,nat_blk,nat_blk))
         frc_lr = 0.d0
-        CALL read_ifc(nr1,nr2,nr3,nat_blk,frc,frc_lr,read_lr)
+        if (read_lr) THEN
+           CALL read_ifc(nr1,nr2,nr3,nat_blk,frc,frc_lr)
+        else
+           CALL read_ifc(nr1,nr2,nr3,nat_blk,frc)
+        end if
      ELSE
         CALL readfc ( flfrc, nr1, nr2, nr3, epsil, nat_blk, &
             ibrav, alat, at_blk, ntyp_blk, &
@@ -1047,13 +1051,11 @@ SUBROUTINE writefc(flfrc, xmlifc, has_zstar, nr1, nr2, nr3, ibrav, alat, &
    INTEGER :: i, j, nt, na, nb, nn, m1, m2, m3, leng
    CHARACTER(LEN=256) :: flfrc2
    COMPLEX(DP) :: frc2(nr1*nr2*nr3,3,3,nat,nat)
-   COMPLEX(DP) :: frc_lr2(nr1*nr2*nr3,3,3,nat,nat)
    !
    leng = LEN_TRIM(flfrc)
    flfrc2 = flfrc(1:leng) // ".matdyn"
    IF (xmlifc) THEN
       frc2 = RESHAPE(frc, (/nr1*nr2*nr3,3,3,nat,nat/))
-      frc_lr2 = RESHAPE(frc_lr, (/nr1*nr2*nr3,3,3,nat,nat/))
       IF (has_zstar) THEN
          CALL write_dyn_mat_header(flfrc2, ntyp, nat, ibrav, nspin_mag, celldm, &
               at, bg, omega, atm, amass, tau, ityp, m_loc, nqs, epsil, zeu)
@@ -1061,7 +1063,7 @@ SUBROUTINE writefc(flfrc, xmlifc, has_zstar, nr1, nr2, nr3, ibrav, alat, &
          CALL write_dyn_mat_header(flfrc2, ntyp, nat, ibrav, nspin_mag, &
               celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, nqs)
       ENDIF
-      CALL write_ifc(nr1, nr2, nr3, nat, frc2, frc_lr2, .FALSE.)
+      CALL write_ifc(nr1, nr2, nr3, nat, frc2)
    ELSE IF (ionode) THEN
       OPEN(unit=1, file=flfrc2, status='unknown', form='formatted')
       WRITE(1,'(i3,i5,i4,6f11.7)') ntyp, nat, ibrav, celldm

@@ -185,6 +185,7 @@ CONTAINS
       ! istep counts all MD steps, including those of previous runs
       USE constraints_module, ONLY : nconstr, check_constraint
       USE constraints_module, ONLY : remove_constr_force, remove_constr_vec
+      USE input_parameters,   ONLY : nextffield
       !
       IMPLICIT NONE
       !
@@ -300,11 +301,13 @@ CONTAINS
          !
       ENDIF
       !
-      IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
+      IF ( .NOT. ANY( if_pos(:,:) == 0 ) .AND. nextffield == 0 ) THEN
          !
          ! ... if no atom has been fixed  we compute the displacement of the
          ! ... center of mass and we subtract it from the displaced positions
          !
+         ! ... bypassed if external ionic force fields are activated
+         ! 
          delta(:) = 0.D0
          DO na = 1, nat
             delta(:) = delta(:) + mass(na)*( tau_new(:,na) - tau(:,na) )
@@ -861,6 +864,7 @@ CONTAINS
       USE control_flags,      ONLY : istep, lconstrain
       !
       USE constraints_module, ONLY : remove_constr_force, check_constraint
+      USE input_parameters,   ONLY : nextffield
       ! TB
       USE extfield,           ONLY : relaxz
       !
@@ -995,11 +999,13 @@ CONTAINS
       IF ( .NOT. ANY( if_pos(:,:) == 0 ) .AND. (relaxz) ) THEN
          WRITE( stdout, '("relaxz = .TRUE. => displacement of the center of mass is not subtracted")')
       ENDIF
-      IF ( (.NOT. ANY( if_pos(:,:) == 0 )) .AND. (.NOT. relaxz) ) THEN
+      IF ( (.NOT. ANY( if_pos(:,:) == 0 )) .AND. (.NOT. relaxz) .AND. nextffield==0 ) THEN
          !
          ! ... if no atom has been fixed  we compute the displacement of the
          ! ... center of mass and we subtract it from the displaced positions
          !
+         ! ... also bypassed if external ionic force fields are activated
+         ! 
          delta(:) = 0.D0
          !
          DO na = 1, nat
@@ -1364,6 +1370,7 @@ CONTAINS
       !
       USE constraints_module, ONLY : nconstr
       USE constraints_module, ONLY : remove_constr_force, check_constraint
+      USE input_parameters,   ONLY : nextffield
       !
       IMPLICIT NONE
       !
@@ -1449,11 +1456,13 @@ CONTAINS
       !
       tau_new(:,:) = tau(:,:) + ( dt*force(:,:) + chi(:,:) ) / alat
       !
-      IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
+      IF ( .NOT. ANY( if_pos(:,:) == 0 ) .AND. nextffield==0) THEN
          !
          ! ... here we compute the displacement of the center of mass and we
          ! ... subtract it from the displaced positions
          !
+         ! ... also bypassed if external ionic force fields are activated
+         ! 
          delta(:) = 0.D0
          !
          DO na = 1, nat

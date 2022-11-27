@@ -21,10 +21,10 @@
      !! (\(\text{rhor}\)), the kinetic energy (\(\text{ekin}\)) and the kinetic
      !! energy term of QM stress (\(\text{dekin}\)).
 !
-!    Using quantities in scaled space:
+!    Using quantities in scaled space
 !    rhor(r) = rhor(s) / Omega
 !    rhor(s) = (sum over ib) fi(ib) |psi(s,ib)|^2 
-!     
+!
 !    fi(ib) = occupation numbers
 !    psi(r,ib) = psi(s,ib) / SQRT( Omega ) 
 !    psi(s,ib) = INV_FFT (  c0(ig,ib)  )
@@ -69,31 +69,28 @@
       USE io_base,            ONLY: read_rhog
       USE io_files,           ONLY: restart_dir
       USE fft_rho
-      USE fft_helper_subroutines, ONLY: c2psi_gamma
+      USE fft_helper_subroutines, ONLY: fftx_c2psi_gamma
       USE mp,                 ONLY: mp_barrier
       USE mp_world,           ONLY: mpime, world_comm
       !
       IMPLICIT NONE
-      !
-      INTEGER :: nfi
-      REAL(DP) :: bec_bgrp(:,:)
-      REAL(DP) :: dbec(:,:,:,:)
-      REAL(DP) :: rhovan(:,:,:)
-      REAL(DP) :: rhor(:,:)
-      REAL(DP) :: drhor(:,:,:,:)
-      REAL(DP) :: rhos(:,:)
-      REAL(DP) :: enl
-      REAL(DP) :: ekin
-      REAL(DP) :: denl(3,3)
-      REAL(DP) :: dekin(6)
-      COMPLEX(DP) :: rhog(:,:)
-      COMPLEX(DP) :: drhog(:,:,:,:)
-      COMPLEX(DP) :: c_bgrp(:,:)
-      COMPLEX(DP) DEVICEATTR :: c_d(:,:)
+      INTEGER nfi
+      REAL(DP) bec_bgrp(:,:)
+      REAL(DP) dbec(:,:,:,:)
+      REAL(DP) rhovan(:, :, : )
+      REAL(DP) rhor(:,:)
+      REAL(DP) drhor(:,:,:,:)
+      REAL(DP) rhos(:,:)
+      REAL(DP) enl, ekin
+      REAL(DP) denl(3,3), dekin(6)
+      COMPLEX(DP) rhog( :, : )
+      COMPLEX(DP) drhog( :, :, :, : )
+      COMPLEX(DP) c_bgrp( :, : )
+      COMPLEX(DP) DEVICEATTR :: c_d( :, : )
       LOGICAL, OPTIONAL, INTENT(IN) :: tstress
       INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
 
-      ! ... local variables
+      ! local variables
 
       INTEGER  :: iss, isup, isdw, iss1, iss2, i, ir, ig, k
       REAL(DP) :: rsumr(2), rsumg(2), sa1, sa2, detmp(6), mtmp(3,3)
@@ -239,7 +236,7 @@
             !
             ALLOCATE( psis( dffts%nnr ) ) 
             !
-            CALL c2psi_gamma( dffts, psis, c_bgrp(:,iwf) )
+            CALL fftx_c2psi_gamma( dffts, psis, c_bgrp(:,iwf:iwf) )
             !
             CALL invfft('Wave',psis, dffts )
             !
@@ -390,7 +387,7 @@
 
          do i = 1, nbsp_bgrp, 2 * fftx_ntgrp(dffts)
 
-            CALL c2psi_gamma( dffts, psis, c_bgrp(:,i), c_bgrp(:,i+1) )
+            CALL fftx_c2psi_gamma( dffts, psis, c_bgrp(:,i:i), c_bgrp(:,i+1) )
 
             CALL invfft('Wave', psis, dffts )
             !
@@ -507,7 +504,7 @@
                     psis( nl_d( ig )  + ioff) = c_d( ig, ii )
                  end do
               END IF
-              ! CALL c2psi_gamma( dffts, psis, c_bgrp(:,ii), c_bgrp(:,ii+1) )
+              ! CALL fftx_c2psi_gamma( dffts, psis, c_bgrp(:,ii:ii), c_bgrp(:,ii+1) )
               ioff = ioff + dffts%nnr
               
             END DO
@@ -605,7 +602,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 !        n_v(g) = sum_i,ij rho_i,ij q_i,ji(g) e^-ig.r_i
 !
 !     Same logic as in routine rhov.
-!     On input rhor and rhog must contain the smooth part only !!!
+!     On input rhor and rhog must contain the smooth part only !
 !     Output in (drhor, drhog)
 !
       USE kinds,                    ONLY: DP
@@ -634,9 +631,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 ! output
       REAL(DP),    INTENT(OUT) :: drhor(dfftp%nnr,nspin,3,3)
       COMPLEX(DP), INTENT(OUT) :: drhog(dfftp%ngm,nspin,3,3)
-
-      ! ... local variables
-      
+! local
       INTEGER i, j, isup, isdw, iv, jv, ig, ijv, is, iss, ia, ir, ijs, itid
       REAL(DP) :: asumt, dsumt
       COMPLEX(DP) fp, fm, ci

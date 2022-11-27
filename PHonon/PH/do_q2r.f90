@@ -313,7 +313,11 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d, write_lr)
            CALL write_dyn_mat_header( flfrc, ntyp, nat, ibrav, nspin_mag,  &
                 celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, nqs)
         ENDIF
-        CALL write_ifc(nr1,nr2,nr3,nat,phid,phid_lr,write_lr)
+        IF (write_lr) THEN
+           CALL write_ifc(nr1,nr2,nr3,nat,phid,phid_lr)
+        ELSE
+           CALL write_ifc(nr1,nr2,nr3,nat,phid)
+        ENDIF
      ELSE IF (ionode) THEN
      OPEN(unit=2,file=flfrc,status='unknown',form='formatted')
      WRITE(2,'(i3,i5,i4,6f11.7)') ntyp,nat,ibrav,celldm

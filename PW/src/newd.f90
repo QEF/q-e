@@ -20,14 +20,13 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE cell_base,            ONLY : omega, tpiba
   USE fft_base,             ONLY : dfftp
-  USE fft_interfaces,       ONLY : fwfft
+  USE fft_rho,              ONLY : rho_r2g
   USE gvect,                ONLY : g, gg, ngm, gstart, mill, &
                                    eigts1, eigts2, eigts3
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vltot
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions,        ONLY : psic
   USE noncollin_module,     ONLY : nspin_mag
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_pools,             ONLY : inter_pool_comm
@@ -63,14 +62,14 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
   !
   deeq(:,:,:,:) = 0.D0
   !
-  ! With k-point parallelization, distribute G-vectors across processors
-  ! ngm_s = index of first G-vector for this processor
-  ! ngm_e = index of last  G-vector for this processor
-  ! ngm_l = local number of G-vectors 
+  ! ... With k-point parallelization, distribute G-vectors across processors
+  ! ... ngm_s = index of first G-vector for this processor
+  ! ... ngm_e = index of last  G-vector for this processor
+  ! ... ngm_l = local number of G-vectors 
   !
   CALL divide( inter_pool_comm, ngm, ngm_s, ngm_e )
   ngm_l = ngm_e-ngm_s+1
-  ! for the extraordinary unlikely case of more processors than G-vectors
+  ! ... for the extraordinary unlikely case of more processors than G-vectors
   !
   IF ( ngm_l > 0 ) THEN
      ALLOCATE( vaux(ngm_l,nspin_mag), qmod(ngm_l), ylmk0(ngm_l,lmaxq*lmaxq) )
@@ -81,30 +80,14 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
      ENDDO
   ENDIF
   !
-  ! ... fourier transform of the total effective potential
+  ! ... Fourier transform of the total effective potential
   !
   DO is = 1, nspin_mag
-     !
-     IF ( (nspin_mag == 4 .AND. is /= 1) .OR. skip_vltot ) THEN 
-        !$omp parallel do default(shared) private(ig)
-        DO ig = 1, dfftp%nnr
-           psic(ig) = vr(ig,is)
-        ENDDO
-        !$omp end parallel do
-     ELSE
-        !$omp parallel do default(shared) private(ig)
-        DO ig = 1, dfftp%nnr
-           psic(ig) = vltot(ig) + vr(ig,is)
-        ENDDO
-        !$omp end parallel do
-     ENDIF
-     CALL fwfft( 'Rho', psic, dfftp )
-     !$omp parallel do default(shared) private(ig)
-     DO ig = 1, ngm_l
-        vaux(ig,is) = psic(dfftp%nl(ngm_s+ig-1))
-     ENDDO
-     !$omp end parallel do
-     !
+    IF ( (nspin_mag==4 .AND. is/=1) .OR. skip_vltot ) THEN
+       CALL rho_r2g( dfftp, vr(:,is:is), vaux(:,is:is), igs=ngm_s )
+    ELSE
+       CALL rho_r2g( dfftp, vr(:,is:is), vaux(:,is:is), v=vltot, igs=ngm_s )
+    ENDIF
   ENDDO
   !
   DO nt = 1, ntyp

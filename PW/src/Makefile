@@ -213,6 +213,8 @@ set_spin_vars.o \
 set_vrs.o \
 setlocal.o \
 setup.o \
+scissor.o \
+sic.o \
 stop_run.o \
 stres_cc.o \
 stres_ewa.o \
@@ -282,7 +284,6 @@ PWLIBS += \
   hs_psi_gpu.o \
   s_1psi_gpu.o \
   utils_gpu.o \
-  force_hub_gpu.o \
   drhoc_gpu.o \
   orthoatwfc_gpu.o \
   atomic_wfc_gpu.o

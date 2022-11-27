@@ -141,11 +141,11 @@ CONTAINS
       IF( input_line == ' ' .OR. input_line(1:1) == '#' .OR. &
                                  input_line(1:1) == '!' ) GOTO 100
       !
-      READ (input_line, *) card
-      !
       DO i = 1, len_trim( input_line )
          input_line( i : i ) = capital( input_line( i : i ) )
       ENDDO
+      !
+      READ (input_line, *) card
       !
       IF ( trim(card) == 'AUTOPILOT' ) THEN
          !
@@ -2205,6 +2205,15 @@ CONTAINS
          Hubbard_projectors = 'ortho-atomic'
       ELSEIF ( imatches( "NORM-ATOMIC", input_line ) ) THEN
          Hubbard_projectors = 'norm-atomic'
+      ELSEIF ( imatches( "-ATOMIC", input_line ) ) THEN
+         ! Sanity check
+         ! This is the case when the first part of the name was misspelled 
+         CALL errore( 'card_hubbard', 'Wrong name of the Hubbard projectors',1)
+      ELSEIF ( imatches( "ORTHOATOMIC", input_line ) .OR. &
+               imatches( "NORMATOMIC", input_line ) ) THEN
+         ! Sanity check
+         ! This is the case when the dash was forgotten in the name
+         CALL errore( 'card_hubbard', 'Wrong name of the Hubbard projectors',1)
       ELSEIF ( imatches( "ATOMIC", input_line ) ) THEN
          Hubbard_projectors = 'atomic'
       ELSEIF ( imatches( "WF", input_line ) ) THEN 
@@ -2218,7 +2227,7 @@ CONTAINS
                         & // input_line, 1 )
          ELSE
            CALL errore( 'card_hubbard', &
-                        & 'No Hubbard projectors specified in the HUBBARD card: ',1)
+                        & 'None or wrong Hubbard projectors specified in the HUBBARD card: ',1)
          ENDIF
       ENDIF
       !

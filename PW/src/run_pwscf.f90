@@ -59,6 +59,8 @@ SUBROUTINE run_pwscf( exit_status )
   USE beef,                 ONLY : beef_energies
   USE ldaU,                 ONLY : lda_plus_u
   USE add_dmft_occ,         ONLY : dmft
+  USE extffield,            ONLY : init_extffield, close_extffield
+  USE input_parameters,     ONLY : nextffield
   !
   USE device_fbuff_m,             ONLY : dev_buf
   !
@@ -146,6 +148,14 @@ SUBROUTINE run_pwscf( exit_status )
   ENDIF
   !
   CALL init_run()
+  !
+  !  read external force fields parameters
+  ! 
+  IF ( nextffield > 0 .AND. ionode) THEN
+     !
+     CALL init_extffield( 'PW', nextffield )
+     !
+  END IF
   !
   IF ( check_stop_now() ) THEN
      exit_status = 255
