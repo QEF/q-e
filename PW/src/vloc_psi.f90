@@ -37,7 +37,7 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
   !
   ! ... local variables
   !
-  INTEGER :: ibnd, j, incr, right_nr3, right_inc
+  INTEGER :: ibnd, j, incr, right_nr3, right_inc, nnr
   COMPLEX(DP) :: fp, fm
   COMPLEX(DP), ALLOCATABLE :: vpsi(:,:) 
   ! ... Variables for task groups
@@ -49,6 +49,7 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
   !
   CALL start_clock( 'vloc_psi' )
   incr = 2
+  nnr = dffts%nnr
   !
   use_tg = dffts%has_task_groups 
   !
@@ -63,6 +64,7 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
      CALL stop_clock( 'vloc_psi:tg_gather' )
   ELSE
      ALLOCATE( vpsi(n,incr) )
+     !$omp target enter data map(alloc:vpsi)
   ENDIF
   !
   IF ( use_tg ) THEN
@@ -110,9 +112,10 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
         ebnd = ibnd
         IF ( ibnd < m ) ebnd = ibnd + 1
         !
-        CALL wave_g2r( psi(1:n,ibnd:ebnd), psic, dffts, omp_mod=1 )
+        CALL wave_g2r( psi(1:n,ibnd:ebnd), psic, dffts, omp_mod=0 )
         !
-        DO j = 1, dffts%nnr
+        !$omp target teams distribute parallel do
+        DO j = 1, nnr
           psic(j) = psic(j) * v(j)
         ENDDO
         !
@@ -121,8 +124,9 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
           brange=2 ;  fac=0.5d0
         ENDIF
         !
-        CALL wave_r2g( psic(1:dffts%nnr), vpsi(:,1:brange), dffts, omp_mod=1  )
+        CALL wave_r2g( psic(1:nnr), vpsi(:,1:brange), dffts, omp_mod=0 )
         !
+        !$omp target teams distribute parallel do map(to:fac,ibnd,m) 
         DO j = 1, n
           hpsi(j,ibnd) = hpsi(j,ibnd) + fac*vpsi(j,1)
           IF ( ibnd<m ) hpsi(j,ibnd+1) = hpsi(j,ibnd+1) + fac*vpsi(j,2)
@@ -137,6 +141,7 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
      DEALLOCATE( tg_v )
      DEALLOCATE( tg_vpsi )
   ELSE
+     !$omp target exit data map(delete:vpsi) 
      DEALLOCATE( vpsi )
   ENDIF
   !
@@ -183,7 +188,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
   !
   ! ... local variables
   !
-  INTEGER :: ibnd, j, incr
+  INTEGER :: ibnd, j, incr, nnr
   INTEGER :: i, iin, right_nnr, right_nr3, right_inc
   COMPLEX(DP), ALLOCATABLE :: vpsi(:,:)
   ! ... chunking parameters
@@ -198,6 +203,8 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
   CALL start_clock( 'vloc_psi' )
   use_tg = dffts%has_task_groups 
   !
+  nnr = dffts%nnr
+  !
   IF( use_tg ) THEN
      CALL start_clock( 'vloc_psi:tg_gather' )
      v_siz =  dffts%nnr_tg
@@ -208,6 +215,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
      CALL stop_clock( 'vloc_psi:tg_gather' )
   ELSE
      ALLOCATE( vpsi(lda,1) )
+     !$omp target enter data map(alloc:vpsi)
   ENDIF
   !
   IF ( use_tg ) THEN
@@ -255,27 +263,25 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
      !
      DO ibnd = 1, m
         !
-        CALL wave_g2r( psi(1:n,ibnd:ibnd), psic, dffts, igk=igk_k(:,current_k), omp_mod=1  )
+        CALL wave_g2r( psi(1:n,ibnd:ibnd), psic, dffts, igk=igk_k(:,current_k), omp_mod=0 )
         !
 !        write (6,*) 'wfc R '
 !        write (6,99) (psic(i), i=1,400)
         !
-        !$omp parallel do
-        DO j = 1, dffts%nnr
+        !$omp target teams  distribute parallel do
+        DO j = 1, nnr
            psic(j) = psic(j) * v(j)
         ENDDO
-        !$omp end parallel do
         !
 !        write (6,*) 'v psi R '
 !        write (6,99) (psic(i), i=1,400)
         !
-        CALL wave_r2g( psic(1:dffts%nnr), vpsi(1:n,:), dffts, igk=igk_k(:,current_k), omp_mod=1  )
+        CALL wave_r2g( psic(1:nnr), vpsi(1:n,:), dffts, igk=igk_k(:,current_k), omp_mod=0 )
         !
-        !$omp parallel do
+        !$omp target teams distribute parallel do
         DO i = 1, n
            hpsi(i,ibnd) = hpsi(i,ibnd) + vpsi(i,1)
         ENDDO
-        !$omp end parallel do
         !
 !        write (6,*) 'v psi G ', ibnd
 !        write (6,99) (psic(i), i=1,400)
@@ -288,6 +294,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
      DEALLOCATE( tg_psic, tg_vpsi )
      DEALLOCATE( tg_v )
   ELSE
+     !$omp target exit data map(delete:vpsi)
      DEALLOCATE( vpsi )
   ENDIF
   !

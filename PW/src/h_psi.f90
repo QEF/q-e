@@ -179,7 +179,9 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         !
      ELSE
         ! ... usual reciprocal-space algorithm
+        !$omp target update to(hpsi,psi,vrs)
         CALL vloc_psi_gamma( lda, n, m, psi, vrs(1,current_spin), hpsi ) 
+        !$omp target update from(hpsi)
         !
      ENDIF 
      !
@@ -217,7 +219,9 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         !
      ELSE
         !
+        !$omp target update to(hpsi,psi,vrs)
         CALL vloc_psi_k( lda, n, m, psi, vrs(1,current_spin), hpsi )
+        !$omp target update from(hpsi)
         !
      ENDIF
      !

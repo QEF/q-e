@@ -128,9 +128,11 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   ALLOCATE( psi(  npwx, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( 'regterg ',' cannot allocate psi ', ABS(ierr) )
+  !$omp target enter data map(alloc:psi)
   ALLOCATE( hpsi( npwx, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( 'regterg ',' cannot allocate hpsi ', ABS(ierr) )
+  !$omp target enter data map(alloc:hpsi)
   !
   IF ( uspp ) THEN
      ALLOCATE( spsi( npwx, nvecx ), STAT=ierr )
@@ -616,7 +618,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   !
   IF ( uspp ) DEALLOCATE( spsi )
   !
+  !$omp target exit data map(delete:hpsi)
   DEALLOCATE( hpsi )
+  !$omp target exit data map(delete:psi)
   DEALLOCATE( psi )  
   !
   !$acc end data

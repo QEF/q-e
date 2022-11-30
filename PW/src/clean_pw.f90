@@ -144,7 +144,10 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( rhog_core ) )  DEALLOCATE( rhog_core )
   IF ( ALLOCATED( psic    ) )    DEALLOCATE( psic    )
   IF ( ALLOCATED( psic_nc ) )    DEALLOCATE( psic_nc )
-  IF ( ALLOCATED( vrs     ) )    DEALLOCATE( vrs     )
+  IF ( ALLOCATED( vrs     ) )    THEN
+    !$omp target exit data map(delete:vrs)
+    DEALLOCATE( vrs     )
+  ENDIF
   CALL deallocate_scf_gpu()
   !
   ! ... arrays allocated in allocate_locpot.f90 ( and never deallocated )

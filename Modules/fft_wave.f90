@@ -13,10 +13,14 @@ MODULE fft_wave
   !! This module contains wrappers to FFT and inverse FFTs of the wave function,
   !! which it enclose the calls to g-vect/FFT-grid transposition routines too.
   !
-  USE kinds,           ONLY: DP
-  USE fft_interfaces,  ONLY: fwfft, fwfft_y_omp, invfft, invfft_y_omp
-  USE fft_types,       ONLY: fft_type_descriptor
-  USE control_flags,   ONLY: gamma_only, many_fft
+  USE kinds,                  ONLY: DP
+  USE fft_interfaces,         ONLY: fwfft, invfft
+#if defined(__OPENMP_GPU)
+  USE fft_interfaces,         ONLY: fwfft_y_omp, invfft_y_omp
+  USE fft_helper_subroutines, ONLY: fftx_psi2c_k_omp, fftx_c2psi_k_omp
+#endif
+  USE fft_types,              ONLY: fft_type_descriptor
+  USE control_flags,          ONLY: gamma_only, many_fft
   !
   IMPLICIT NONE
   !
@@ -101,7 +105,17 @@ CONTAINS
       IF (PRESENT(howmany_set)) THEN
         CALL fftx_psi2c_k( dfft, f_in, f_out, igk, howmany_set(1:2) )
       ELSE
-        CALL fftx_psi2c_k( dfft, f_in, f_out(:,1:1), igk )
+        IF(omp_offload) THEN 
+          IF(omp_map) THEN
+            !$omp target data map(to:f_in,igk) map(tofrom:f_out)
+            CALL fftx_psi2c_k_omp( dfft, f_in, f_out(:,1:1), igk )
+            !$omp end target data
+          ELSE
+            CALL fftx_psi2c_k_omp( dfft, f_in, f_out(:,1:1), igk )
+          END IF
+        ELSE
+          CALL fftx_psi2c_k( dfft, f_in, f_out(:,1:1), igk )
+        END IF 
       ENDIF
       !$acc end data
     ENDIF
@@ -171,7 +185,17 @@ CONTAINS
         npw = howmany_set(2)
         CALL fftx_c2psi_k( dfft, f_out, f_in, igk, npw, howmany_set(1) )
       ELSE
-        CALL fftx_c2psi_k( dfft, f_out, f_in, igk, npw )
+        IF(omp_offload) THEN 
+          IF(omp_map) THEN
+            !$omp target data map(to:f_in,igk) map(tofrom:f_out) 
+            CALL fftx_c2psi_k_omp( dfft, f_out, f_in, igk, npw )
+            !$omp end target data
+          ELSE
+            CALL fftx_c2psi_k_omp( dfft, f_out, f_in, igk, npw )
+          END IF
+        ELSE
+          CALL fftx_c2psi_k( dfft, f_out, f_in, igk, npw )
+        ENDIF 
       ENDIF
       !$acc end data
       !
