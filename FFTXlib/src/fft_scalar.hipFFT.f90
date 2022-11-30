@@ -241,12 +241,12 @@ END MODULE
 
         tscale = 1.0_DP / nz
         IF (is_inplace) THEN
-           !$omp target parallel do
+           !$omp target teams distribute parallel do simd
            DO i=1, ldz * nsl
               c( i ) = c( i ) * tscale
            END DO
         ELSE
-           !$omp target parallel do
+           !$omp target teams distribute parallel do simd
            DO i=1, ldz * nsl
               cout( i ) = cout( i ) * tscale
            END DO
@@ -407,7 +407,7 @@ END MODULE
         CALL fftx_error__(" fft_scalar_hipFFT: cft_2xy_omp ", " hipfftExecZ2Z failed ", istat)
         CALL hipCheck(hipDeviceSynchronize())
 
-        !$omp target parallel do
+        !$omp target teams distribute parallel do simd
         DO k=1, nzl
            DO j=1, ldy
              DO i=1, ldx
@@ -554,7 +554,7 @@ END MODULE
         CALL hipCheck(hipDeviceSynchronize())
 
        tscale = 1.0_DP / DBLE( nx * ny * nz )
-       !$omp target parallel do
+       !$omp target teams distribute parallel do simd
         DO i=1, ldx*ldy*ldz*howmany
            f_d( i ) = f_d( i ) * tscale
         END DO
