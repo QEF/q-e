@@ -214,7 +214,7 @@
      Reading interatomic force constants
 
  end of file reached, closing tag not found
-     IFC last   -0.0032826
+     IFC last   -0.0032828
      Norm of the difference between old and new effective charges:    0.0000000
      Norm of the difference between old and new force-constants:    0.0000267
      Imposed crystal ASR
@@ -297,11 +297,25 @@
      Bloch2wane:          7 /          8
      Bloch2wane:          8 /          8
  
-     Bloch2wanp:          1 /          5
-     Bloch2wanp:          2 /          5
-     Bloch2wanp:          3 /          5
-     Bloch2wanp:          4 /          5
-     Bloch2wanp:          5 /          5
+     Bloch2wanp:          1 /         19
+     Bloch2wanp:          2 /         19
+     Bloch2wanp:          3 /         19
+     Bloch2wanp:          4 /         19
+     Bloch2wanp:          5 /         19
+     Bloch2wanp:          6 /         19
+     Bloch2wanp:          7 /         19
+     Bloch2wanp:          8 /         19
+     Bloch2wanp:          9 /         19
+     Bloch2wanp:         10 /         19
+     Bloch2wanp:         11 /         19
+     Bloch2wanp:         12 /         19
+     Bloch2wanp:         13 /         19
+     Bloch2wanp:         14 /         19
+     Bloch2wanp:         15 /         19
+     Bloch2wanp:         16 /         19
+     Bloch2wanp:         17 /         19
+     Bloch2wanp:         18 /         19
+     Bloch2wanp:         19 /         19
 
      Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file
 
@@ -314,7 +328,7 @@
      Size of q point mesh for interpolation:         64
      Using uniform k-mesh:    8   8   8
      Size of k point mesh for interpolation:       1024
-     Max number of k points per pool:              256
+     Max number of k points per pool:             1024
 
      Fermi energy coarse grid =   6.302835 eV
 
@@ -328,7 +342,7 @@
               ibndmax =    16  ebndmax =    10.794 eV
 
 
-     Number of ep-matrix elements per pool :       150528 ~=    1.15 Mb (@ 8 bytes/ DP)
+     Number of ep-matrix elements per pool :       602112 ~=    4.59 Mb (@ 8 bytes/ DP)
       
      A selecq.fmt file was found but re-created because selecqread == .FALSE. 
      We only need to compute       64 q-points
