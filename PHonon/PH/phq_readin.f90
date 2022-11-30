@@ -107,6 +107,7 @@ SUBROUTINE phq_readin()
   INTEGER, ALLOCATABLE :: wqaux(:)
   INTEGER :: nqaux, iq
   CHARACTER(len=80) :: diagonalization='david'
+  LOGICAL :: needwf_ph=.TRUE.
   !
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
                        nat_todo, verbosity, iverbosity, outdir, epsil,  &
@@ -715,7 +716,10 @@ SUBROUTINE phq_readin()
   !
   ! Here all needed data from the scf calculation are read
   !
-  CALL read_file_ph ( )
+  ! IO of wfcs in collected format is not needed for recover run
+  needwf_ph = .NOT. recover
+  !
+  CALL read_file_ph ( needwf_ph )
   !
   magnetic_sym=noncolin .AND. domag
   !
