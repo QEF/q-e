@@ -24,20 +24,22 @@
     !! This routine initializes the control variables needed to solve the eliashberg
     !! equations
     !!
-    USE kinds,           ONLY : DP
-    USE mp_global,       ONLY : world_comm
-    USE io_global,       ONLY : stdout, ionode_id
-    USE mp_world,        ONLY : mpime
-    USE mp,              ONLY : mp_barrier, mp_bcast
-    USE epwcom,          ONLY : eliashberg, nkf1, nkf2, nkf3, nsiter, &
-                                nqf1, nqf2, nqf3, nswi, muc, lreal, lpade, &
-                                liso, limag, laniso, lacon, kerwrite, kerread, &
-                                imag_read, fila2f, wscut, rand_q, rand_k, &
-                                ep_coupling, tc_linear, tc_linear_solver, gridsamp, fbw
-    USE cell_base,       ONLY : at, bg
-    USE constants_epw,   ONLY : ryd2ev
-    USE elph2,           ONLY : gtemp, elph
-    USE io_var,          ONLY : crystal
+    USE kinds,            ONLY : DP
+    USE mp_global,        ONLY : world_comm
+    USE io_global,        ONLY : stdout, ionode_id
+    USE mp_world,         ONLY : mpime
+    USE mp,               ONLY : mp_barrier, mp_bcast
+    USE epwcom,           ONLY : eliashberg, nkf1, nkf2, nkf3, nsiter, &
+                                 nqf1, nqf2, nqf3, nswi, muc, lreal, lpade, &
+                                 liso, limag, laniso, lacon, kerwrite, kerread, &
+                                 imag_read, fila2f, wscut, rand_q, rand_k, &
+                                 ep_coupling, tc_linear, tc_linear_solver, gridsamp, fbw
+    USE noncollin_module, ONLY : noncolin
+    USE ions_base,        ONLY : amass, ityp, nat, tau
+    USE cell_base,        ONLY : at, bg
+    USE constants_epw,    ONLY : ryd2ev
+    USE elph2,            ONLY : gtemp, elph
+    USE io_var,           ONLY : crystal
     !
     IMPLICIT NONE
     !
@@ -112,15 +114,31 @@
         !
         OPEN(UNIT = crystal, FILE = 'crystal.fmt', STATUS = 'old', IOSTAT = ios)
         IF (ios /= 0) CALL errore('eliashberg_init', 'error opening crystal.fmt', crystal)
-        READ(crystal, *) !nat
+        READ(crystal, *) nat
         READ(crystal, *) !nmodes
         READ(crystal, *) !nelec
         READ(crystal, *) at 
         READ(crystal, *) bg
+        READ(crystal, *) !omega
+        READ(crystal, *) !alat
+        ALLOCATE(tau(3, nat), STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_init', 'Error allocating tau', 1)
+        READ(crystal, *) tau
+        READ(crystal, *) amass
+        ALLOCATE(ityp(nat), STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_init', 'Error allocating ityp', 1)
+        READ(crystal, *) ityp
+        READ(crystal, *) noncolin
+        READ(crystal, *) !w_centers
+        !
         ! no need further
+        DEALLOCATE(tau, STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_init', 'Error deallocating tau', 1)
+        DEALLOCATE(ityp, STAT = ierr)
+        IF (ierr /= 0) CALL errore('eliashberg_init', 'Error deallocating ityp', 1)
         CLOSE(crystal)
       ENDIF ! mpime == ionode_id
-      CALL mp_bcast(at, ionode_id, world_comm)
+      CALL mp_bcast(noncolin, ionode_id, world_comm)
       CALL mp_bcast(bg, ionode_id, world_comm)
     ENDIF ! .not. elph .and. .not. ep_coupling
     RETURN
@@ -655,15 +673,16 @@
     !! SH: Updated to write the machine learning estimate for Tc, and
     !!       to limit the "gap0" to 6 decimal digits (Nov 2021).
     !!
-    USE kinds,         ONLY : DP
-    USE epwcom,        ONLY : nqstep, muc, nstemp
-    USE elph2,         ONLY : gtemp
-    USE eliashbergcom, ONLY : wsph, dwsph, a2f_iso, gap0
-    USE constants_epw, ONLY : kelvin2eV, zero
-    USE io_global,     ONLY : stdout, ionode_id
-    USE mp_global,     ONLY : inter_pool_comm
-    USE mp_world,      ONLY : mpime
-    USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
+    USE kinds,            ONLY : DP
+    USE epwcom,           ONLY : nqstep, muc, nstemp
+    USE elph2,            ONLY : gtemp
+    USE eliashbergcom,    ONLY : wsph, dwsph, a2f_iso, gap0
+    USE constants_epw,    ONLY : kelvin2eV, zero
+    USE noncollin_module, ONLY : noncolin
+    USE io_global,        ONLY : stdout, ionode_id
+    USE mp_global,        ONLY : inter_pool_comm
+    USE mp_world,         ONLY : mpime
+    USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum
     !
     IMPLICIT NONE
     !
@@ -749,7 +768,12 @@
                         gtemp(nstemp) / kelvin2eV, ' K is larger than Allen-Dynes Tc = ', tc, ' K'
       ENDIF
       !
+      ! HP: muc needs to be divided by 2 to make consistent with the el-ph contribution
+      ! in the SOC calculation
+      IF(noncolin) muc = muc / 2.d0
+      !
     ENDIF
+    CALL mp_bcast(muc, ionode_id, inter_pool_comm)
     CALL mp_bcast(gap0, ionode_id, inter_pool_comm)
     CALL mp_barrier(inter_pool_comm)
     !

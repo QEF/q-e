@@ -36,7 +36,11 @@
                                epmatkqread, selecqread, restart_step, nsmear,      &
                                nqc1, nqc2, nqc3, nkc1, nkc2, nkc3, assume_metal,   &
                                cumulant, eliashberg, nomega, mob_maxfreq, neta,    &
-                               omegamin, omegamax, omegastep, mob_nfreq
+                               !!!!!
+                               !omegamin, omegamax, omegastep, mob_nfreq
+                               omegamin, omegamax, omegastep, mob_nfreq, ii_g,     &
+                               ii_lscreen, ii_eda, ii_partion
+                               !!!!!
   USE control_flags,    ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw,    ONLY : ryd2ev, ryd2mev, one, two, zero, czero, eps40,      &
@@ -60,7 +64,11 @@
                                inv_tau_all_mode, inv_tau_allcb_mode, qrpl, Qmat,   &
                                ef0_fca, epsilon2_abs, epsilon2_abs_lorenz,         &
                                epsilon2_abs_all, epsilon2_abs_lorenz_all,          &
-                               inv_tau_all_freq, inv_tau_allcb_freq
+                               !!!!!
+                               !inv_tau_all_freq, inv_tau_allcb_freq
+                               inv_tau_all_freq, inv_tau_allcb_freq,               &
+                               eimpf17, epstf_therm, qtf2_therm, partion, eta_imp
+                               !!!!!
   USE wan2bloch,        ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                                ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                                dynifc2blochf, vmewan2blochp
@@ -71,7 +79,8 @@
   USE io_eliashberg,    ONLY : write_ephmat, count_kpoints, kmesh_fine, kqmap_fine,&
                                !!!!!
                                !check_restart_ephwrite
-                               check_restart_ephwrite, write_dos, write_phdos
+                               check_restart_ephwrite, write_dos, write_phdos,     &
+                               file_open_ephmat
                                !!!!!
   USE transport,        ONLY : transport_coeffs, scattering_rate_q
   USE grid,             ONLY : qwindow, loadkmesh_fst, xqf_otf
@@ -87,14 +96,22 @@
   USE mp_global,        ONLY : inter_pool_comm, npool, my_pool_id
   USE mp_world,         ONLY : mpime, world_comm
   USE low_lvl,          ONLY : system_mem_usage, mem_size
-  USE utilities,        ONLY : compute_dos, broadening, fermicarrier, fermiwindow
+  USE utilities,        ONLY : compute_dos, broadening, fermicarrier, fermiwindow, &
+                               !!!!!
+                               !calcpartion
+                               calcpartion, broadening_imp
+                               !!!!!
   USE grid,             ONLY : loadqmesh_serial, loadkmesh_para, load_rebal
   USE selfen,           ONLY : selfen_phon_q, selfen_elec_q, selfen_pl_q,          &
                                nesting_fn_q
   USE spectral_func,    ONLY : spectral_func_el_q, spectral_func_ph_q, a2f_main,   &
                                spectral_func_pl_q
-  USE rigid_epw,        ONLY : rpa_epsilon, tf_epsilon, compute_umn_f, rgd_blk_epw_fine !, &
-!                               find_gmin ! Temporarily commented by H. Lee
+  !!!!!
+  !USE rigid_epw,        ONLY : rpa_epsilon, tf_epsilon, compute_umn_f, rgd_blk_epw_fine !, &
+  !                               find_gmin ! Temporarily commented by H. Lee
+  USE rigid_epw,        ONLY : rpa_epsilon, tf_epsilon, compute_umn_f, rgd_blk_epw_fine, &
+                               rgd_imp_epw_fine, calc_qtf2_therm, calc_epstf_therm
+  !!!!!
   USE indabs,           ONLY : indabs_main, renorm_eig, fermi_carrier_indabs
   USE io_indabs,        ONLY : indabs_read
 #if defined(__MPI)
@@ -317,6 +334,10 @@
   !! Used to store $e^{2\pi r \cdot k+q}$ exponential
   COMPLEX(KIND = DP), ALLOCATABLE :: vmefp(:, :, :)
   !! Phonon velocity
+  !!!!!
+  COMPLEX(KIND = DP), ALLOCATABLE :: eimpmatf(:, :)
+  !! carrier-ionized impurity matrix in smooth Bloch basis
+  !!!!!
   !
   CALL start_clock('ephwann')
   !
@@ -596,6 +617,10 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating etf_ks', 1)
   ALLOCATE(epmatf(nbndsub, nbndsub, nmodes), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epmatf', 1)
+  !!!!!
+  ALLOCATE(eimpmatf(nbndsub, nbndsub), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eimpmatf', 1)
+  !!!!!
   ALLOCATE(cufkk(nbndsub, nbndsub), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cufkk', 1)
   ALLOCATE(cufkq(nbndsub, nbndsub), STAT = ierr)
@@ -606,17 +631,27 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating bmatf', 1)
   ALLOCATE(eps_rpa(nmodes), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eps_rpa', 1)
+  !!!!!
+  ALLOCATE(epstf_therm(nstemp), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epstf_therm', 1)
+  !!!!!
   ALLOCATE(isk_dummy(nkqf), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating isk_dummy', 1)
   epmatwef(:, :, :, :) = czero
   etf(:, :)            = zero
   etf_ks(:, :)         = zero
   epmatf(:, :, :)      = czero
+  !!!!!
+  eimpmatf(:, :)       = czero
+  !!!!!
   cufkk(:, :)          = czero
   cufkq(:, :)          = czero
   uf(:, :)             = czero
   bmatf(:, :)          = czero
   eps_rpa(:)           = czero
+  !!!!!
+  epstf_therm(:)       = zero
+  !!!!!
   isk_dummy(:)         = 0
   !
   ! Allocate velocity and dipole matrix elements after getting grid size
@@ -988,6 +1023,10 @@
     ! Fine mesh set of g-matrices.  It is large for memory storage
     ALLOCATE(epf17(nbndfst, nbndfst, nmodes, nkf), STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epf17', 1)
+    !!!!!
+    ALLOCATE(eimpf17(nbndfst, nbndfst, nkf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eimpf17', 1)
+    !!!!!
     ! We allocate the phonon frequency on the q-points within the window
     IF (etf_mem == 3) THEN
       ALLOCATE(wf(nmodes, totq), STAT = ierr)
@@ -1192,15 +1231,15 @@
         !
         IF(iq_restart > 1) THEN
           first_cycle = .TRUE.
-          IF (ephwrite) THEN
-            CALL check_restart_ephwrite
+          IF (ephwrite .AND. iq_restart + 1 <= totq) THEN
+            CALL check_restart_ephwrite(iq_restart)
           ENDIF
         ENDIF
         !
         ! Now, the iq_restart point has been done, so we need to do the next
         iq_restart = iq_restart + 1
         !
-        IF (iq_restart < totq) THEN
+        IF (iq_restart <= totq) THEN
           WRITE(stdout, '(5x,a,i8,a)')'We restart from ', iq_restart, ' q-points'
         ELSE
           WRITE(stdout, '(5x,a)')'All q-points are done, no need to restart !!'
@@ -1216,7 +1255,14 @@
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eta', 1)
       ALLOCATE(vmefp(3, nmodes, nmodes), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating vmefp', 1)
+      !!!!!
+      ALLOCATE(eta_imp(nbndfst, nkf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eta_imp', 1)
+      !!!!!
       eta(:, :, :)   = zero
+      !!!!!
+      eta_imp(:, :)  = zero
+      !!!!!
       vmefp(:, :, :) = czero
       adapt_smearing = .TRUE.
     ENDIF
@@ -1225,6 +1271,9 @@
       CALL start_clock ('ep-interp')
       !
       epf17(:, :, :, :) = czero
+      !!!!!
+      eimpf17(:, :, :) = czero
+      !!!!!
       cufkk(:, :) = czero
       cufkq(:, :) = czero
       !
@@ -1272,7 +1321,7 @@
         ! wf are the interpolated eigenfrequencies
         ! (omega on fine grid)
         !
-        IF (w2(nu) > -eps8) THEN
+        IF (w2(nu) > 0.0d0) THEN
           wf(nu, qind) =  DSQRT(ABS(w2(nu)))
         ELSE
           wf(nu, qind) = -DSQRT(ABS(w2(nu)))
@@ -1411,6 +1460,9 @@
             IF (adapt_smearing) THEN
               ! Return the value of the adaptative broadening eta
               CALL broadening(ik, ikk, ikq, wf(:, qind), vmefp, eta)
+              !!!!!
+              CALL broadening_imp(ik, ikk, ikq, eta_imp)
+              !!!!!
               !
             ENDIF ! adapt_smearing
             !
@@ -1448,6 +1500,24 @@
               ENDIF
               !
             ENDIF
+            !!!!!
+            !
+            IF (ii_g) THEN
+              !
+              eimpmatf(:, :) = czero
+              !
+              CALL compute_umn_f(nbndsub, cufkk, cufkq, bmatf)
+              !
+              IF ((ABS(xxq(1)) > eps8) .OR. (ABS(xxq(2)) > eps8) .OR. (ABS(xxq(3)) > eps8)) THEN
+                !
+                CALL cryst_to_cart(1, xxq, bg, 1)
+                CALL rgd_imp_epw_fine(nqc1, nqc2, nqc3, xxq, eimpmatf, epsi, bmatf, one)
+                CALL cryst_to_cart(1, xxq, at, -1)
+                !
+              ENDIF
+              !
+            ENDIF
+            !!!!!
             !
             ! Store epmatf in memory
             !
@@ -1457,6 +1527,12 @@
                    epf17(ibnd - ibndmin + 1, jbnd - ibndmin + 1, :, ik) = epmatf(ibnd, jbnd, :) / eps_rpa(:)
                 ELSE
                    epf17(ibnd - ibndmin + 1, jbnd - ibndmin + 1, :, ik) = epmatf(ibnd, jbnd, :)
+                ENDIF
+                !!!!!
+                IF (ii_g) THEN
+                  ! Here we will store the impurity elements in array eimpf17
+                  eimpf17(ibnd - ibndmin + 1, jbnd - ibndmin + 1, ik) = eimpmatf(ibnd, jbnd)
+                !!!!!
                 ENDIF
               ENDDO
             ENDDO
@@ -1485,8 +1561,25 @@
        ENDDO
        CALL mp_sum(valmin, inter_pool_comm)
        CALL mp_sum(valmax, inter_pool_comm)
-       WRITE(stdout, '(7x, a, f12.6, a)' ) 'Adaptative smearing = Min: ', DSQRT(2.d0) * MINVAL(valmin) * ryd2mev,' meV'
-       WRITE(stdout, '(7x, a, f12.6, a)' ) '                      Max: ', DSQRT(2.d0) * MAXVAL(valmax) * ryd2mev,' meV'
+       WRITE(stdout, '(7x, a, f12.6, a)' ) 'Adaptative smearing el-phonon = Min: ', DSQRT(2.d0) * MINVAL(valmin) * ryd2mev,' meV'
+       WRITE(stdout, '(7x, a, f12.6, a)' ) '                                Max: ', DSQRT(2.d0) * MAXVAL(valmax) * ryd2mev,' meV'
+       valmin(:) = zero
+       valmin(my_pool_id + 1) = 100.0d0
+       valmax(:) = zero
+       DO ik = 1, nkf
+         DO ibnd = 1, nbndfst
+           IF (eta_imp(ibnd, ik) < valmin(my_pool_id + 1) .AND. ABS(eta_imp(ibnd, ik)) > eps16) THEN
+             valmin(my_pool_id + 1) = eta_imp(ibnd, ik)
+           ENDIF
+           IF (eta_imp(ibnd, ik) > valmax(my_pool_id + 1)) THEN
+             valmax(my_pool_id + 1) = eta_imp(ibnd, ik)
+           ENDIF
+         ENDDO
+       ENDDO
+       CALL mp_sum(valmin, inter_pool_comm)
+       CALL mp_sum(valmax, inter_pool_comm)
+       WRITE(stdout, '(7x, a, f12.6, a)' ) 'Adaptative smearing el-impurity = Min: ', DSQRT(2.d0) * MINVAL(valmin) * ryd2mev,' meV'
+       WRITE(stdout, '(7x, a, f12.6, a)' ) '                                  Max: ', DSQRT(2.d0) * MAXVAL(valmax) * ryd2mev,' meV'
       ENDIF
       !
       ! --------------------------------------------------------------------------------------------------
@@ -1507,13 +1600,14 @@
       IF (specfun_ph) CALL spectral_func_ph_q(iqq, iq, totq)
       IF (specfun_pl .AND. vme == 'dipole') CALL spectral_func_pl_q(iqq, iq, totq, first_cycle)
       IF (ephwrite) THEN
-        IF (first_cycle .OR. iq == 1) THEN
+        IF (first_cycle .OR. iqq == 1) THEN
            CALL kmesh_fine
            CALL kqmap_fine
            CALL count_kpoints
+           CALL file_open_ephmat(lrepmatw2_restart)
            first_cycle = .FALSE.
         ENDIF
-        CALL write_ephmat(iqq, iq, totq)
+        CALL write_ephmat(iqq, iq, totq, lrepmatw2_restart)
       ENDIF
       !
       IF (.NOT. scatread) THEN
@@ -1529,12 +1623,38 @@
         ! Indirect absorption
         IF (lindabs .AND. .NOT. scattering) THEN
           IF (carrier .and. (iq == iq_restart)) THEN
+            !
             ALLOCATE(ef0_fca(nstemp), STAT = ierr)
             IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating ef0_fca', 1)
+            !
+            IF (ii_g) THEN
+              ALLOCATE(partion(nstemp), STAT = ierr)
+              IF (ierr /= 0) CALL errore('ephwann_shuffle.f90', 'Error allocating partion', 1)
+              ALLOCATE(qtf2_therm(nstemp), STAT = ierr)
+              IF (ierr /= 0) CALL errore('ephwann_shuffle.f90', 'Error allocating qtf2_therm', 1)
+              qtf2_therm(:) = zero
+            ENDIF
+            !
             DO itemp = 1, nstemp
               etemp_fca = gtemp(itemp)
-              CALL fermi_carrier_indabs(itemp, etemp_fca, ef0_fca)
+              CALL fermi_carrier_indabs(itemp, etemp_fca, ef0_fca, ctype)
+              !
+              IF (ii_partion) THEN
+                CALL calcpartion(itemp, etemp_fca, ctype)
+              ELSE
+                partion(:) = 1.0d0
+              ENDIF
+              !
+              IF (ii_g .AND. ii_lscreen) THEN
+                CALL calc_qtf2_therm(itemp, etemp_fca, ef0_fca, ef0_fca, ctype, epsi)
+              ENDIF
             ENDDO
+            !
+          ENDIF
+          !
+          IF (ii_g .AND. ii_lscreen) THEN
+            epstf_therm(:) = zero
+            CALL calc_epstf_therm(xxq, nstemp, epsi)
           ENDIF
           CALL indabs_main(iq, totq, first_cycle, iq_restart)
         ENDIF
@@ -1545,15 +1665,43 @@
           ! If we want to compute intrinsic mobilities, call fermicarrier to  correctly positionned the ef0 level.
           ! This is only done once for the first iq. Also compute the dos at the same time
           IF (iqq == iq_restart) THEN
+            !!!!!
+            ALLOCATE(partion(nstemp), STAT = ierr)
+            IF (ierr /= 0) CALL errore('ephwann_shuffle.f90', 'Error allocating partion', 1)
+            ALLOCATE(qtf2_therm(nstemp), STAT = ierr)
+            IF (ierr /= 0) CALL errore('ephwann_shuffle.f90', 'Error allocating qtf2_therm', 1)
+            qtf2_therm(:) = zero
+            !!!!!
             DO itemp = 1, nstemp
               etemp = gtemp(itemp)
+              !!!!!
+              IF (ii_partion) THEN
+                CALL calcpartion(itemp, etemp, ctype)
+              ELSE
+                partion(:) = 1.0d0
+              ENDIF
+              !!!!!
               CALL fermicarrier(itemp, etemp, ef0, efcb, ctype)
+              !!!!!
+              IF (ii_g .AND. ii_lscreen) THEN
+                CALL calc_qtf2_therm(itemp, etemp, ef0, efcb, ctype, epsi)
+              ENDIF
+              !!!!!
               ! compute dos for metals
               IF (assume_metal) THEN
                 CALL compute_dos(itemp, ef0, dos)
               ENDIF
             ENDDO
           ENDIF
+          !!!!!
+          IF (ii_g .AND. ii_lscreen) THEN
+            epstf_therm(:) = zero
+            !WRITE(*,*) 'epstf_therm before calc', epstf_therm(1)
+            CALL calc_epstf_therm(xxq, nstemp, epsi)
+          ELSE
+            epstf_therm(:) = one
+          ENDIF
+          !!!!!
           !
           IF (.NOT. iterative_bte .AND. etf_mem < 3) THEN
             CALL scattering_rate_q(iqq, iq, totq, ef0, efcb, first_cycle)
@@ -1758,6 +1906,10 @@
     ! Now deallocate
     DEALLOCATE(epf17, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epf17', 1)
+    !!!!!
+    DEALLOCATE(eimpf17, STAT= ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating eimpf17', 1)
+    !!!!!
     DEALLOCATE(selecq, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating selecq', 1)
     IF (scattering .AND. .NOT. iterative_bte) THEN
@@ -1878,6 +2030,10 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating etf_ks', 1)
   DEALLOCATE(epmatf, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epmatf', 1)
+  !!!!!
+  DEALLOCATE(eimpmatf, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating eimpmatf', 1)
+  !!!!!
   DEALLOCATE(cufkk, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cufkk', 1)
   DEALLOCATE(cufkq, STAT = ierr)
@@ -1888,6 +2044,10 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating isk_dummy', 1)
   DEALLOCATE(eps_rpa, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating eps_rpa', 1)
+  !!!!!
+  DEALLOCATE(epstf_therm, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epstf_therm', 1)
+  !!!!!
   DEALLOCATE(bmatf, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating bmatf', 1)
   DEALLOCATE(w2, STAT = ierr)

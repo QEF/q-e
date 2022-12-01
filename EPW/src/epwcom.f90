@@ -367,6 +367,31 @@
   !! Magnetic field along the z-direction
   REAL(KIND = DP) :: mob_maxfreq
   !! Maximum frequency for the spectral decomposition of mobility. Typically that freq. is the highest phonon freq.
+  !!!!!
+  !
+  ! Conductivity - ionized impurity scattering
+  LOGICAL :: ii_g
+  !! If .TRUE. calculate the ionized impurity matrix elements
+  LOGICAL :: ii_scattering
+  !! If .TRUE. calculate the carrier-impurity scattering rate
+  LOGICAL :: ii_only
+  !! If .TRUE., calculate only the ionized-impurity-limitted mobility
+  LOGICAL :: ii_lscreen
+  !! If .TRUE. (DEFAULT), calculate and use free-carrier
+  !! screening of ii_g matrix elements, if .FALSE., calculations will diverge with 
+  !! increasing density of k-point due to 1/(q^4) divergence for ionized impurity 
+  !! scattering rate
+  LOGICAL :: ii_partion
+  !! If .TRUE., account for partial ionization 
+  REAL(KIND = DP) :: ii_charge
+  !! charge of the ionized impurities, units of electron charge for input
+  REAL(KIND = DP) :: ii_n
+  !! density of impurities, input in units of cm^-3
+  REAL(KIND = DP) :: ii_eda
+  !! ionization energy of the donor or accpetor impurity, for partial ionization calcs
+  REAL(KIND = DP) :: ii_eps0
+  !! low frequency dielectric constant
+  !!!!! 
   !
   ! Plasmon
   REAL(KIND = DP) :: nel
@@ -391,8 +416,8 @@
   !! Photon energy maximum (in eV)
   REAL(KIND = DP) :: omegastep
   !! Photon energy step (in eV)
-  REAL(KIND = DP) :: n_r
-  !! Refractive index
+  REAL(KIND = DP) :: sigma_ref
+  !! Reference conductivity for Drude dielectric function
   !
   ! ----------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.

@@ -56,7 +56,7 @@
                             int_mob, scissor, carrier, ncarrier,              &
                             restart, restart_step, prtgkk, nel, meff, epsiheg,&
                             scatread, restart, restart_step, restart_filq,    &
-                            lphase, omegamin, omegamax, omegastep, n_r,       &
+                            lphase, omegamin, omegamax, omegastep, sigma_ref, &
                             mob_maxiter, use_ws, epmatkqread, selecqread,     &
                             scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma,&
                             assume_metal, wannier_plot_scale, reduce_unk,     &
@@ -65,6 +65,8 @@
                             epw_crysym, bfieldx, bfieldy, bfieldz, tc_linear, &
                             !!!!!
                             !tc_linear_solver, mob_maxfreq, mob_nfreq
+                            ii_g, ii_charge, ii_n, ii_scattering, ii_only,    &
+                            ii_lscreen, ii_eda, ii_partion, ii_eps0,          &
                             tc_linear_solver, mob_maxfreq, mob_nfreq,         &
                             fbw, gridsamp, griddens, dos_del, muchem
                             !!!!!
@@ -181,6 +183,13 @@
   CALL mp_bcast(epw_nosym       , meta_ionode_id, world_comm)
   CALL mp_bcast(epw_noinv       , meta_ionode_id, world_comm)
   CALL mp_bcast(epw_crysym      , meta_ionode_id, world_comm)
+  !!!!!
+  CALL mp_bcast(ii_g            , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_scattering   , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_only         , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_lscreen      , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_partion      , meta_ionode_id, world_comm)
+  !!!!!
   !
   ! integers
   !
@@ -257,7 +266,7 @@
   CALL mp_bcast(omegamin      , meta_ionode_id, world_comm)
   CALL mp_bcast(omegamax      , meta_ionode_id, world_comm)
   CALL mp_bcast(omegastep     , meta_ionode_id, world_comm)
-  CALL mp_bcast(n_r           , meta_ionode_id, world_comm)
+  CALL mp_bcast(sigma_ref     , meta_ionode_id, world_comm)
   CALL mp_bcast(nc            , meta_ionode_id, world_comm)
   CALL mp_bcast(scdm_mu       , meta_ionode_id, world_comm)
   CALL mp_bcast(scdm_sigma    , meta_ionode_id, world_comm)
@@ -267,6 +276,12 @@
   CALL mp_bcast(bfieldy       , meta_ionode_id, world_comm)
   CALL mp_bcast(bfieldz       , meta_ionode_id, world_comm)
   CALL mp_bcast(mob_maxfreq   , meta_ionode_id, world_comm)
+  !!!!!
+  CALL mp_bcast(ii_charge , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_n , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_eda     , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_eps0    , meta_ionode_id, world_comm)
+  !!!!!
   !
   ! characters
   !

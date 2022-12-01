@@ -60,15 +60,18 @@
                             ncarrier, carrier, scattering_serta, restart, restart_step,&
                             scattering_0rta, longrange, shortrange, scatread, use_ws,  &
                             restart_filq, prtgkk, nel, meff, epsiheg, lphase,          &
-                            omegamin, omegamax, omegastep, n_r, lindabs, mob_maxiter,  &
+                            omegamin, omegamax, omegastep, lindabs, mob_maxiter,       &
+                            sigma_ref,                                                 &
                             auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
                             scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, &
                             wannier_plot_supercell, wannier_plot_scale, reduce_unk,    &
                             wannier_plot_radius, fermi_plot, fixsym, epw_no_t_rev,     &
                             epw_tr, epw_nosym, epw_noinv, epw_crysym,                  &
                             !!!!!
-                            ! bfieldx, bfieldy, bfieldz, tc_linear, tc_linear_solver,    &
+                            ! bfieldx, bfieldy, bfieldz, tc_linear, tc_linear_solver,  &
                             bfieldx, bfieldy, bfieldz,                                 &
+                            ii_g, ii_charge, ii_n, ii_scattering, ii_only, ii_lscreen, &
+                            ii_eda, ii_partion, ii_eps0,                               &
                             !!!!!
                             mob_maxfreq, mob_nfreq
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
@@ -185,14 +188,16 @@
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
        iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange,&
        scatread, restart, restart_step, restart_filq, prtgkk, nel, meff,       &
-       epsiheg, lphase, omegamin, omegamax, omegastep, n_r, lindabs,           &
+       epsiheg, lphase, omegamin, omegamax, omegastep, lindabs, sigma_ref,     &
        mob_maxiter, auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
        scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, reduce_unk,  &
        wannier_plot_supercell, wannier_plot_scale, wannier_plot_radius,        &
        fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv, epw_crysym,         &
        !!!!!
-       ! tc_linear, tc_linear_solver, mob_maxfreq, mob_nfreq,                    &
+       ! tc_linear, tc_linear_solver, mob_maxfreq, mob_nfreq,                  &
        mob_maxfreq, mob_nfreq,                                                 &
+       ii_g, ii_charge, ii_n, ii_scattering, ii_only, ii_lscreen, ii_eda,      &
+       ii_partion, ii_eps0,                                                    &
        !!!!!
   !---------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
@@ -395,7 +400,7 @@
   ! omegamin        : Photon energy minimum
   ! omegamax        : Photon energy maximum
   ! omegastep       : Photon energy step in evaluating phonon-assisted absorption spectra (in eV)
-  ! n_r             : Constant refractive index
+  ! sigma_ref       : Reference conductivity for resistive contribution of FCA
   ! lindabs         : If .TRUE., do phonon-assisted absorption
   !
   ! Added by Felix Goudreault
@@ -627,7 +632,7 @@
   omegamin     = 0.d0  ! eV
   omegamax     = 10.d0 ! eV
   omegastep    = 1.d0  ! eV
-  n_r          = 1.d0
+  sigma_ref    = 1.d0  ! 1/(Ohm m)
   lindabs      = .FALSE.
   mob_maxiter  = 50
   use_ws       = .FALSE.
@@ -646,6 +651,17 @@
   bfieldz      = 0.d0  ! Tesla
   mob_maxfreq  = 100 ! Maximum frequency for spectral decomposition in meV
   mob_nfreq    = 100 ! Number of frequency for the spectral decomposition
+  !!!!!
+  ii_g   = .FALSE.
+  ii_charge = 1.0d0
+  ii_n   = 0.0d0
+  ii_scattering = .FALSE.
+  ii_only = .FALSE.
+  ii_lscreen = .TRUE.
+  ii_eda = 0.0d0
+  ii_partion = .FALSE.
+  ii_eps0 = 0.0d0
+  !!!!!
   !
   ! --------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
@@ -945,10 +961,46 @@
     WRITE(stdout, '(/,5x,a)') 'WARNING: You are using ngaussw == -99 (Fermi-Dirac).'
     WRITE(stdout, '(/,5x,a)') '         You probably need assume_metal == .true '
   ENDIF
+  !!!!!
+  ! Some controls on impurity scattering input
+  IF (assume_metal .AND. ii_g) THEN
+    CALL errore('epw_readin', 'Error: impurity matrix elements not compatable with metals', 1)
+  ENDIF
+  IF (ii_scattering .AND. .NOT. ii_g) THEN
+    CALL errore('epw_readin', 'Error: ii_g must = .true. if ii_scattering = .true.', 1)
+  ENDIF
+  IF (ii_g .AND. ii_eps0 == 0.0d0) THEN
+    WRITE(stdout, '(/,5x,a)') '--------------------------------------------------------------------------------------'
+    WRITE(stdout, '(/,5x,a)') 'WARNING: default value detected for ii_eps0, setting equal to 0.0d0.'
+    WRITE(stdout, '(/,5x,a)') 'Using high-frequency dielectric constant from epsil to screen carrier-impurity matrix elements.'
+    WRITE(stdout, '(/,5x,a)') 'For polar materials, please provide average ii_eps0 = eps_inf + eps_lat from dynmat.x run.'
+    WRITE(stdout, '(/,5x,a)') '--------------------------------------------------------------------------------------'
+  ENDIF
+  IF (ii_partion .AND. ii_eda == 0.0d0) THEN
+    WRITE(stdout, '(/,5x,a)') '--------------------------------------------------------------------------------------'
+    WRITE(stdout, '(/,5x,a)') 'WARNING: ii_partion == .TRUE. but dopant ionization energy ii_eda == 0.0 eV.'
+    WRITE(stdout, '(/,5x,a)') 'Results for partial ionizaton may not be physical.'
+    WRITE(stdout, '(/,5x,a)') 'if ii_partion == .true., please set ii_eda to a reasonable physical ionization energy in eV.'
+    WRITE(stdout, '(/,5x,a)') '--------------------------------------------------------------------------------------'
+  ENDIF
+  IF (ii_partion .AND. ii_eda > 1.0d0) THEN
+    WRITE(stdout, '(/,5x,a)') '--------------------------------------------------------------------------------------'
+    WRITE(stdout, '(/,5x,a)') 'WARNING: dopant ionization energy ii_eda > 1.0 eV.'
+    WRITE(stdout, '(/,5x,a)') 'Please check if correct, results may not be physical.'
+    WRITE(stdout, '(/,5x,a)') '--------------------------------------------------------------------------------------'
+  ENDIF
+  !IF (degaussw == 0.0 .AND. ii_scattering) THEN
+  !  WRITE(stdout, '(/,5x,a)') 'Error: degaussw must be > 0.0 eV when using including ionized impurity scattering'
+  !  CALL errore('epw_readin', 'Error: adaptive broadening not implemented yet with impurity scattering', 1)
+  !ENDIF
+  !!!!!
   ! thickness and smearing width of the Fermi surface
   ! from eV to Ryd
   fsthick     = fsthick / ryd2ev
   degaussw    = degaussw / ryd2ev
+  !!!!!
+  ii_eda      = ii_eda / ryd2ev
+  !!!!!
   delta_smear = delta_smear / ryd2ev
   !
   ! smearing of phonon in a2f
