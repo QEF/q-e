@@ -50,6 +50,7 @@ MODULE fft_helper_subroutines
   INTEGER, POINTER, DEVICE :: nl_d(:), nlm_d(:)
 #elif defined (__OPENMP_GPU)
   PUBLIC :: fftx_psi2c_k_omp, fftx_c2psi_k_omp
+  PUBLIC :: fftx_psi2c_gamma_omp, fftx_c2psi_gamma_omp
   INTEGER, ALLOCATABLE :: nl_d(:), nlm_d(:)
 #else
   INTEGER, ALLOCATABLE :: nl_d(:), nlm_d(:)
@@ -334,7 +335,7 @@ CONTAINS
      !
      IMPLICIT NONE
      !
-     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     TYPE(fft_type_descriptor), INTENT(IN) :: desc
      !! fft descriptor
      COMPLEX(DP), INTENT(OUT) :: psi(:)
      !! w.f. 3D array in Fourier space
@@ -420,6 +421,62 @@ CONTAINS
      CALL dealloc_nl_pntrs( desc )
      !
   END SUBROUTINE fftx_c2psi_gamma
+  !
+  !---------------------------------------------------------------------
+#if defined(__OPENMP_GPU)
+  SUBROUTINE fftx_c2psi_gamma_omp( desc, psi, c, ca, howmany_set )
+     !------------------------------------------------------------------
+     !! Copy wave-functions from 1D array (c_bgrp) to 3D array (psi) in 
+     !! Fourier space - gamma case.
+     !
+     IMPLICIT NONE
+     !
+     TYPE(fft_type_descriptor), INTENT(IN) :: desc
+     !! fft descriptor
+     COMPLEX(DP), INTENT(OUT) :: psi(:)
+     !! w.f. 3D array in Fourier space
+     COMPLEX(DP), INTENT(IN) :: c(:,:)
+     !! stores the Fourier expansion coefficients
+     COMPLEX(DP), OPTIONAL, INTENT(IN) :: ca(:)
+     INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(2)
+     ! howmany_set(1)=group_size ; howmany_set(2)=npw
+     !
+     COMPLEX(DP), PARAMETER :: ci=(0.0d0,1.0d0)
+     INTEGER :: ig, igmax0, igmax
+     !
+     IF (PRESENT(howmany_set)) THEN
+       !
+       ! ... should never be true (for the moment) with OPENMP_GPU
+       STOP
+       !
+     ELSE
+       !
+       igmax0 = SIZE(psi(:))
+       igmax = desc%ngw
+       !
+       !$omp target teams distribute parallel do
+       DO ig = 1, igmax0
+         psi(ig) = 0.0d0
+       ENDDO
+       !
+       IF( PRESENT(ca) ) THEN
+          !$omp target teams distribute parallel do
+          DO ig = 1, igmax
+            psi(desc%nlm(ig)) = CONJG(c(ig,1)) + ci * CONJG(ca(ig))
+            psi(desc%nl(ig)) = c(ig,1) + ci * ca(ig)
+          ENDDO
+       ELSE
+          !$omp target teams distribute parallel do
+          DO ig = 1, igmax
+            psi(desc%nlm(ig)) = CONJG(c(ig,1))
+            psi(desc%nl(ig)) = c(ig,1)
+          ENDDO
+       ENDIF
+       !
+     ENDIF
+     !
+  END SUBROUTINE fftx_c2psi_gamma_omp
+#endif
   !
 #ifdef __CUDA
   !---------------------------------------------------------------------
@@ -548,8 +605,6 @@ CONTAINS
      !
      INTEGER :: nnr, i, j, ig
      !
-     CALL alloc_nl_pntrs( desc )
-     !
 !civn howmany should never be present with omp
      IF (PRESENT(howmany)) THEN
         !
@@ -581,8 +636,6 @@ CONTAINS
         !
      ENDIF
      !
-     CALL dealloc_nl_pntrs( desc )
-     !
   END SUBROUTINE fftx_c2psi_k_omp
   !
   !-------------------------------------------------------------------------
@@ -598,8 +651,6 @@ CONTAINS
      INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(2)
      !
      INTEGER :: ig, igmax, idx, n, group_size, v_siz
-     !
-     CALL alloc_nl_pntrs( desc )
      !
      IF (PRESENT(howmany_set)) THEN
         !
@@ -624,8 +675,6 @@ CONTAINS
         ENDDO
         !
      ENDIF
-     !
-     CALL dealloc_nl_pntrs( desc )
      !
      RETURN
      !
@@ -868,6 +917,51 @@ CONTAINS
      CALL dealloc_nl_pntrs( desc )
      !
   END SUBROUTINE fftx_psi2c_gamma
+  !
+  !------------------------------------------------------------
+#if defined(__OPENMP_GPU)
+  SUBROUTINE fftx_psi2c_gamma_omp( desc, vin, vout1, vout2, howmany_set )
+     !---------------------------------------------------------
+     !
+     IMPLICIT NONE
+     !
+     TYPE(fft_type_descriptor), INTENT(IN) :: desc
+     COMPLEX(DP), INTENT(OUT) :: vout1(:,:)
+     COMPLEX(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
+     COMPLEX(DP), INTENT(IN) :: vin(:)
+     INTEGER, OPTIONAL, INTENT(IN) :: howmany_set(2)
+     !
+     COMPLEX(DP) :: fp, fm
+     INTEGER :: ig, igmax
+     !
+     igmax = desc%ngw
+     !
+     IF (PRESENT(howmany_set)) THEN
+       !
+       ! ... should never be true (for the moment) with OPENMP_GPU
+       STOP
+       !
+     ELSE
+       !
+       IF( PRESENT(vout2) ) THEN
+          !$omp target teams distribute parallel do
+          DO ig = 1, igmax
+             fp = vin(desc%nl(ig))+vin(desc%nlm(ig))
+             fm = vin(desc%nl(ig))-vin(desc%nlm(ig))
+             vout1(ig,1) = CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
+             vout2(ig) = CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
+          ENDDO
+       ELSE
+          !$omp target teams distribute parallel do
+          DO ig = 1, igmax
+             vout1(ig,1) = vin(desc%nl(ig))
+          ENDDO
+       ENDIF
+       !
+     ENDIF
+     !
+  END SUBROUTINE fftx_psi2c_gamma_omp
+#endif
   !
   !--------------------------------------------------------------------
   SUBROUTINE fftx_psi2c_gamma_gpu( desc, vin, vout1, vout2 )
