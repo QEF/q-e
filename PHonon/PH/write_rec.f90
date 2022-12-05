@@ -64,10 +64,13 @@ CONTAINS
     ! and trans calculation recovers from scratch.
     !
     CALL start_clock ('write_rec')
-    IF (where=='done_drhod') CALL ph_writefile('data_dyn',current_iq,irr,ierr)
-    IF (reduce_io ) RETURN
     where_rec=where
     CALL ph_writefile('status_ph',current_iq,0,ierr)
+    IF (where=='done_drhod') CALL ph_writefile('data_dyn',current_iq,irr,ierr)
+    IF (reduce_io ) THEN
+            CALL stop_clock ('write_rec')   
+            RETURN
+    ENDIF
     CALL seqopn (iunrec, 'recover', 'unformatted', exst)
     !
     ! info on current iteration (iter=0 potential mixing not available)
