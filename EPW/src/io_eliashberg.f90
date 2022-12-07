@@ -1725,8 +1725,107 @@
     END SUBROUTINE read_ephmat
     !-----------------------------------------------------------------------
     !
+    !----------------------------------------------------------------------------
+    SUBROUTINE file_open_ephmat(lrepmatw2_restart)
+    !----------------------------------------------------------------------------
+    !!
+    !! This routine opens all the files needed to save el-ph matrices for SC
+    !! Adopted from io_transport.f90/iter_open
+    !! 11/2022: Hari Paudyal
+    !
+    USE kinds,         ONLY : DP
+    USE io_files,      ONLY : prefix, tmp_dir, delete_if_present
+    USE io_var,        ONLY : iufileph
+    USE mp_global,     ONLY : my_pool_id, npool
+    USE elph2,         ONLY : lrepmatw2_merge
+    USE io_global,     ONLY : ionode_id
+    USE low_lvl,       ONLY : set_ndnmbr
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(inout) :: lrepmatw2_restart(npool)
+    !! To restart opening files
+    !
+    ! Local variables
+    !
+    CHARACTER(LEN = 256) :: dirname
+    !! Name of the directory to hold files
+    CHARACTER(LEN = 256) :: filephmat
+    !! Name e-ph mat file
+    CHARACTER(LEN = 4) :: filelab
+    !!
+    LOGICAL :: exst
+    !! Logical for existence of files
+    LOGICAL :: exst2
+    !! Logical for existence of files
+    !!
+    INTEGER :: dummy_int
+    !! Dummy INTEGER for reading
+    INTEGER :: ind
+    !! Temp. index
+    INTEGER :: ios
+    !! IO error message
+    REAL(KIND = DP) :: dummy_real
+    !! Dummy variable for reading
+    !
+    !
+    dirname = TRIM(tmp_dir) // TRIM(prefix) // '.ephmat'
+    !
+#if defined(__MPI)
+    CALL set_ndnmbr(0, my_pool_id + 1, 1, npool, filelab)
+    filephmat = TRIM(dirname) // '/' // 'ephmat' // filelab
+#else
+    filephmat = TRIM(dirname) // '/' // 'ephmat'
+#endif
+    !
+    INQUIRE(FILE = 'restart.fmt', EXIST = exst)
+    INQUIRE(FILE = filephmat, EXIST = exst2)
+    !
+    ! The restart.fmt exist - we try to restart
+    IF (exst) THEN
+      !
+      IF (exst2) THEN
+        !OPEN(UNIT = iufileph, FILE = filephmat, STATUS = 'unknown', &
+        !            POSITION = 'append', FORM = 'formatted', IOSTAT = ios)
+        OPEN(UNIT = iufileph, FILE = filephmat, STATUS = 'unknown', &
+                    POSITION = 'rewind', FORM = 'unformatted', ACTION = 'readwrite', IOSTAT = ios)
+        IF (ios /= 0) CALL errore('file_open_ephmat', 'error opening file ' // filephmat, iufileph)
+        ! This is done to move the pointer to the right position after a restart
+        IF (lrepmatw2_restart(my_pool_id + 1) > 0) THEN
+          READ(iufileph) dummy_int, dummy_int  ! my_pool_id, nks
+          DO ind = 1, lrepmatw2_restart(my_pool_id + 1)
+            READ(iufileph) dummy_real
+          ENDDO
+        ENDIF
+      ELSE
+        CALL errore('file_open_ephmat', 'A restart.fmt is present but not the prefix.ephmat folder', 1)
+      ENDIF
+      !
+      lrepmatw2_merge = lrepmatw2_restart(my_pool_id + 1)
+      !
+    ELSE ! no restart file present
+      !
+      IF (exst2) THEN
+        ! The file should not exist, we remove it
+        CALL delete_if_present(filephmat, .TRUE.)
+      ENDIF
+      !
+      !OPEN(UNIT = iufileph, FILE = filephmat, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
+      OPEN(UNIT = iufileph, FILE = filephmat, STATUS = 'unknown', FORM = 'unformatted', IOSTAT = ios)
+      IF (ios /= 0) CALL errore('file_open_ephmat', 'error opening file ' // filephmat, iufileph)
+      !
+      lrepmatw2_merge = 0
+      !
+    ENDIF ! restart
+    !
+    lrepmatw2_restart(:) = 0
+    !
     !-----------------------------------------------------------------------
-    SUBROUTINE write_ephmat(iqq, iq, totq)
+    END SUBROUTINE file_open_ephmat
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE write_ephmat(iqq, iq, totq, lrepmatw2_restart)
     !-----------------------------------------------------------------------
     !!
     !!  This routine writes the elph matrix elements in a format required
@@ -1746,13 +1845,13 @@
                            fermi_energy
     USE pwcom,      ONLY : ef
     USE elph2,      ONLY : etf, ibndmin, ibndmax, nkqf, epf17, wkf, nkf, &
-                           nqtotf, wf, xqf, nkqtotf, efnew, nbndfst, nktotf
+                           nqtotf, wf, xqf, nkqtotf, efnew, nbndfst, nktotf, &
+                           lrepmatw2_merge
     USE eliashbergcom, ONLY : nkfs, ekfs, wkfs, xkfs, dosef, ixkf, ixkqf, nbndfs
     USE constants_epw, ONLY : ryd2ev, ryd2mev, two, eps8, eps6, zero
     USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm, my_pool_id, npool
     USE division,      ONLY : fkbounds
-    USE low_lvl,       ONLY : set_ndnmbr
     !
     IMPLICIT NONE
     !
@@ -1762,6 +1861,8 @@
     !! Q-point index from full grid
     INTEGER :: totq
     !! Total number of q-points inside fsthick
+    INTEGER, INTENT(inout) :: lrepmatw2_restart(npool)
+    !! Current position inside the file during writing
     !
     ! Local variables
     !
@@ -1771,8 +1872,9 @@
     !! Name eigenvalue file
     CHARACTER(LEN = 256) :: filephmat
     !! Name e-ph mat file
-    CHARACTER(LEN = 4) :: filelab
-    !!
+    CHARACTER(LEN = 256) :: dirname
+    !! Name of the directory to save ikmap/egnv/freq/ephmat files
+    !
     INTEGER :: ik
     !! Counter on the k-point index
     INTEGER :: ikk
@@ -1803,6 +1905,8 @@
     !! Integer for the degenerate average over eigenstates
     INTEGER :: ind(npool)
     !! Temporary index
+    INTEGER :: dummy
+    !! Dummy variable for writing
     REAL(KIND = DP) :: epf2_deg(nbndfst, nbndfst, nmodes)
     !! Epc in degeneracies
     REAL(KIND = DP) :: w_1, w_2
@@ -1821,10 +1925,6 @@
     !! Function to compute the density of states at the Fermi level
     REAL(KIND = DP), EXTERNAL :: efermig
     !! Return the fermi energy
-    INTEGER :: dummy
-    !! Dummy variable for writing
-    CHARACTER(LEN = 256) :: dirname
-    !! Name of the directory to save ikmap/egnv/freq/ephmat files
     !
     ind(:)    = 0
     tmp_g2(:) = 0
@@ -1835,17 +1935,16 @@
     ! write phonon frequencies to file
     IF (my_pool_id == 0) THEN
       filfreq = TRIM(dirname) // '/' // 'freq'
-      IF (iq == 1) THEN
+      IF (iqq == 1) THEN
         !OPEN(UNIT = iufilfreq, FILE = filfreq, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
         OPEN(UNIT = iufilfreq, FILE = filfreq, STATUS = 'unknown', FORM = 'unformatted', IOSTAT = ios)
-
       ELSE
         !OPEN(UNIT = iufilfreq, FILE = filfreq, STATUS = 'unknown', POSITION = 'append', FORM = 'formatted', IOSTAT = ios)
         OPEN(UNIT = iufilfreq, FILE = filfreq, STATUS = 'unknown', POSITION = 'append', FORM = 'unformatted', IOSTAT = ios)
       ENDIF
       IF (ios /= 0) CALL errore('write_ephmat', 'error opening file ' // filfreq, iufilfreq)
-      !IF (iq == 1) WRITE(iufilfreq, '(5i7)') nqtotf, nqf1, nqf2, nqf3, nmodes
-      IF (iq == 1) WRITE(iufilfreq) nqtotf, nqf1, nqf2, nqf3, nmodes
+      !IF (iqq == 1) WRITE(iufilfreq, '(5i7)') nqtotf, nqf1, nqf2, nqf3, nmodes
+      IF (iqq == 1) WRITE(iufilfreq) nqtotf, nqf1, nqf2, nqf3, nmodes
       !WRITE(iufilfreq, '(3f15.9)') xqf(:, iq)
       WRITE(iufilfreq) xqf(:, iq)
       DO imode = 1, nmodes
@@ -1875,7 +1974,7 @@
     nkftot = nktotf
     CALL fkbounds(nkftot, lower_bnd, upper_bnd)
     !
-    IF (iq == 1) THEN
+    IF (iqq == 1) THEN
       !
       ! find fermicount - nr of k-points within the Fermi shell per pool
       ! for mp_mesh_k=true. femicount is the nr of irreducible k-points within the Fermi shell per pool
@@ -1921,28 +2020,13 @@
         CLOSE(iufilegnv)
       ENDIF
       !
-    ENDIF ! iq
+    ENDIF ! iqq
     !
     ! write the e-ph matrix elements in the Bloch representation on the fine mesh
     ! in .ephmat files (one for each pool)
     !
-#if defined(__MPI)
-    CALL set_ndnmbr(0, my_pool_id + 1, 1, npool, filelab)
-    filephmat = TRIM(dirname) // '/' // 'ephmat' // filelab
-#else
-    filephmat = TRIM(dirname) // '/' // 'ephmat'
-#endif
-    IF (iq == 1) THEN
-      !OPEN(UNIT = iufileph, FILE = filephmat, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
-      OPEN(UNIT = iufileph, FILE = filephmat, STATUS = 'unknown', FORM = 'unformatted', IOSTAT = ios)
-    ELSE
-      !OPEN(UNIT = iufileph, FILE = filephmat, STATUS = 'unknown', POSITION = 'append', FORM = 'formatted', IOSTAT = ios)
-      OPEN(UNIT = iufileph, FILE = filephmat, STATUS = 'unknown', POSITION = 'append', FORM = 'unformatted', IOSTAT = ios)
-    ENDIF
-    IF (ios /= 0) CALL errore('write_ephmat', 'error opening file ' // filephmat, iufileph)
-    !
-    !IF (iq == 1) WRITE(iufileph, '(2i7)') my_pool_id+1, fermicount
-    IF (iq == 1) WRITE(iufileph) my_pool_id+1, fermicount
+    !IF (iqq == 1) WRITE(iufileph, '(2i7)') my_pool_id+1, fermicount
+    IF (iqq == 1) WRITE(iufileph) my_pool_id + 1, fermicount
     !
     ! nkf - nr of k-points in the pool (fine mesh)
     ! for mp_mesh_k = true nkf is nr of irreducible k-points in the pool
@@ -2036,7 +2120,16 @@
       !
     ENDDO ! ik's
     !
+    lrepmatw2_merge = lrepmatw2_merge + ind(my_pool_id + 1)
+    !
+    ! Save to file restart information in formatted way for possible restart
+    lrepmatw2_restart(:) = 0
+    lrepmatw2_restart(my_pool_id + 1) = lrepmatw2_merge
+    CALL mp_sum(lrepmatw2_restart, inter_pool_comm)
+    CALL mp_barrier(inter_pool_comm)    
+    !
     IF (ind(my_pool_id + 1) > 0) THEN
+      !WRITE(*, *) my_pool_id + 1, ind(my_pool_id + 1), lrepmatw2_merge
       DO ifil = 1, ind(my_pool_id + 1)
         !WRITE(iufileph, '(ES20.10)') tmp_g2(ifil)
         WRITE(iufileph) tmp_g2(ifil)
@@ -2051,7 +2144,7 @@
       WRITE(iunrestart, *) dummy
       WRITE(iunrestart, *) npool
       DO ipool = 1, npool
-        WRITE(iunrestart, *) dummy
+        WRITE(iunrestart, *) lrepmatw2_restart(ipool)
       ENDDO
       DO ipool = 1, npool
        WRITE(iunrestart, *) dummy
@@ -2501,18 +2594,48 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE check_restart_ephwrite()
+    SUBROUTINE check_restart_ephwrite(iq_restart)
     !-----------------------------------------------------------------------
     !!
     !!   This routine checks the variables in restart while writing ephmat
-    !!   6/28/2020 Hari Paudyal
+    !!   06/2020 : Hari Paudyal
+    !!   11/2022 : Hari Paudyal (updated)
     !!
-    USE io_files, ONLY : prefix, tmp_dir
-    USE epwcom,   ONLY : nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, fsthick, mp_mesh_k
-    USE io_var,   ONLY : iufilfreq, iufilegnv
+    USE kinds,         ONLY : DP
+    USE io_files,      ONLY : prefix, tmp_dir
+    USE epwcom,        ONLY : nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, fsthick, mp_mesh_k
+    USE io_var,        ONLY : iufilfreq, iufilegnv
+    USE modes,         ONLY : nmodes
+    USE elph2,         ONLY : nqtotf
+    USE constants_epw, ONLY : zero
+    USE mp_global,     ONLY : my_pool_id, npool
     !
     IMPLICIT NONE
     !
+    INTEGER, INTENT(in) :: iq_restart
+    !! restart step of q-point
+    !
+    ! local variables
+    CHARACTER(LEN = 256) :: filfreq
+    !! file name
+    CHARACTER(LEN = 256) :: filegnv
+    !! file name
+    CHARACTER(LEN = 256) :: dirname
+    !! Name of the directory to save ikmap/egnv/freq/ephmat files
+    !
+    LOGICAL :: exst, exst2
+    !! Logical for existence of files
+    !
+    INTEGER :: iq
+    !! Counter on q points
+    INTEGER :: imode
+    !! Counter on modes
+    INTEGER :: iqq
+    !! Q-point index from selecq.fmt window
+    INTEGER :: ios
+    !! IO error message
+    INTEGER :: ierr
+    !! Error status
     INTEGER ::  nkftot_
     !! Temporary variable for number of k-points
     INTEGER ::  nkfs_
@@ -2525,54 +2648,85 @@
     !! Temporary variable for number of modes
     INTEGER :: nqf1_, nqf2_, nqf3_
     !! Temporary variable for number of q-points along each direction
-    LOGICAL :: exst
-    !! Logical for existence of files
-    LOGICAL :: exst2
-    !! Logical for existence of files
-    INTEGER :: ios
-    !! IO error message
-    CHARACTER(LEN = 256) :: filfreq
-    !! file name
-    CHARACTER(LEN = 256) :: filegnv
-    !! file name
-    CHARACTER(LEN = 256) :: dirname
-    !! Name of the directory to save ikmap/egnv/freq/ephmat files
+    !
+    REAL(KIND = DP), ALLOCATABLE :: wf_tmp(:, :)
+    ! temp. interpolated eigenfrequencie
+    REAL(KIND = DP), ALLOCATABLE :: xqf_tmp(:, :)
+    ! temp. fine q point grid
     !
     dirname = TRIM(tmp_dir) // TRIM(prefix) // '.ephmat'
     !
-    INQUIRE(FILE = 'restart.fmt', EXIST = exst)
+    INQUIRE(FILE = TRIM(dirname) // '/' // 'ikmap', EXIST = exst)
     !
-    IF (exst) THEN
-      INQUIRE(FILE = TRIM(dirname) // '/' // 'ikmap', EXIST = exst2)
-      IF (.NOT. exst2) THEN
-        CALL errore('check_restart_ephwrite', 'A restart.fmt is present but the directory ' // TRIM(prefix) // '.ephmat' // &
-                    ' is not found. Remove the restart.fmt file and restart.', 1)
-      ENDIF
+    IF (.NOT. exst) THEN
+      CALL errore('check_restart_ephwrite', 'A restart.fmt is present but the directory ' // TRIM(prefix) // '.ephmat' // &
+                  ' is not found. Remove the restart.fmt file and restart.', 1)
+    ENDIF
+    !
+    ! read header of egnv file
+    filegnv = TRIM(dirname) // '/' // 'egnv'
+    !OPEN(UNIT = iufilegnv, FILE = filegnv, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
+    OPEN(UNIT = iufilegnv, FILE = filegnv, STATUS = 'unknown', FORM = 'unformatted', IOSTAT = ios)
+    IF (ios /= 0) CALL errore('check_restart_ephwrite', 'error opening file '//filegnv, iufilegnv)
+    !
+    !READ(iufilegnv, '(5i7)') nkftot_, nkf1_, nkf2_, nkf3_, nkfs_
+    READ(iufilegnv) nkftot_, nkf1_, nkf2_, nkf3_, nkfs_
+    IF (nkf1 /= nkf1_ .OR. nkf2 /= nkf2_ .OR. nkf3 /= nkf3_) &
+      CALL errore('check_restart_ephwrite', 'nkf1, nkf2, nkf3 is not consistent with restart.fmt', 1)
+    CLOSE(iufilegnv)
+    !
+    ! read freq file
+    filfreq = TRIM(dirname) // '/' // 'freq'
+    !OPEN(UNIT = iufilfreq, FILE = filfreq, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
+    OPEN(UNIT = iufilfreq, FILE = filfreq, STATUS = 'unknown', FORM = 'unformatted', IOSTAT = ios)
+    IF (ios /= 0) CALL errore('check_restart_ephwrite', 'error opening file ' // filfreq, iufilfreq)
+    !READ(iufilfreq, '(5i7)') nqtotf_, nqf1_, nqf2_, nqf3_, nmodes_
+    READ(iufilfreq) nqtotf_, nqf1_, nqf2_, nqf3_, nmodes_
+    IF (nqf1 /= nqf1_ .OR. nqf2 /= nqf2_ .OR. nqf3 /= nqf3_) &
+      CALL errore('check_restart_ephwrite', 'nqf1, nqf2, nqf3 is not consistent with restart.fmt', 1)
+    !
+    ! read up to iq_restart and write fresh freq file to avoid overwritting
+    ALLOCATE(wf_tmp(nmodes, iq_restart), STAT = ierr)
+    IF (ierr /= 0) CALL errore('check_restart_ephwrite', 'Error allocating wf_tmp', 1)
+    ALLOCATE(xqf_tmp(3, iq_restart), STAT = ierr)
+    IF (ierr /= 0) CALL errore('check_restart_ephwrite', 'Error allocating xqf_tmp', 1)
+    wf_tmp(:, :) = zero
+    xqf_tmp(:, :) = zero
+    !
+    DO iqq = 1, iq_restart ! read only up to iq_restart
+      !READ(iufilfreq, '(3f15.9)') xqf_tmp(:, iqq)
+      READ(iufilfreq) xqf_tmp(:, iqq)
+      DO imode = 1, nmodes
+        !READ(iufilfreq, '(ES20.10)') wf_tmp(imode, iqq)
+        READ(iufilfreq) wf_tmp(imode, iqq)
+      ENDDO
+    ENDDO
+    CLOSE(iufilfreq)
+    !
+    ! Write fresh freq file
+    IF (my_pool_id == 0) THEN
       !
-      ! read header of egnv file
-      filegnv = TRIM(dirname) // '/' // 'egnv'
-      !OPEN(UNIT = iufilegnv, FILE = filegnv, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
-      OPEN(UNIT = iufilegnv, FILE = filegnv, STATUS = 'unknown', FORM = 'unformatted', IOSTAT = ios)
-      IF (ios /= 0) CALL errore('check_restart_ephwrite', 'error opening file '//filegnv, iufilegnv)
-      !
-      !READ(iufilegnv, '(5i7)') nkftot_, nkf1_, nkf2_, nkf3_, nkfs_
-      READ(iufilegnv) nkftot_, nkf1_, nkf2_, nkf3_, nkfs_
-      IF (nkf1 /= nkf1_ .OR. nkf2 /= nkf2_ .OR. nkf3 /= nkf3_) &
-        CALL errore('check_restart_ephwrite', 'nkf1, nkf2, nkf3 is not consistent with restart.fmt', 1)
-      CLOSE(iufilegnv)
-      !
-      ! read header of freq file
-      filfreq = TRIM(dirname) // '/' // 'freq'
       !OPEN(UNIT = iufilfreq, FILE = filfreq, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
       OPEN(UNIT = iufilfreq, FILE = filfreq, STATUS = 'unknown', FORM = 'unformatted', IOSTAT = ios)
-      IF (ios /= 0) CALL errore('kmap_fine', 'error opening file ' // filfreq, iufilfreq)
-      !READ(iufilfreq, '(5i7)') nqtotf_, nqf1_, nqf2_, nqf3_, nmodes_
-      READ(iufilfreq) nqtotf_, nqf1_, nqf2_, nqf3_, nmodes_
-      IF (nqf1 /= nqf1_ .OR. nqf2 /= nqf2_ .OR. nqf3 /= nqf3_) &
-        CALL errore('check_restart_ephwrite', 'nqf1, nqf2, nqf3 is not consistent with restart.fmt', 1)
-      CLOSE(iufilfreq)
+      IF (ios /= 0) CALL errore('check_restart_ephwrite', 'error opening file ' // filfreq, iufilfreq)
       !
+      !WRITE(iufilfreq, '(5i7)') nqtotf, nqf1, nqf2, nqf3, nmodes
+      WRITE(iufilfreq) nqtotf, nqf1, nqf2, nqf3, nmodes
+      DO iqq = 1, iq_restart ! write only up to iq_restart
+        !WRITE(iufilfreq, '(3f15.9)') xqf_tmp(:, iqq)
+        WRITE(iufilfreq) xqf_tmp(:, iqq)
+        DO imode = 1, nmodes
+          !WRITE(iufilfreq, '(ES20.10)') wf_tmp(imode, iqq)
+          WRITE(iufilfreq) wf_tmp(imode, iqq)
+        ENDDO
+      ENDDO
+      CLOSE(iufilfreq)
     ENDIF
+    !
+    DEALLOCATE(wf_tmp, STAT = ierr)
+    IF (ierr /= 0) CALL errore('check_restart_ephwrite', 'Error deallocating wf_tmp', 1)
+    DEALLOCATE(xqf_tmp, STAT = ierr)
+    IF (ierr /= 0) CALL errore('check_restart_ephwrite', 'Error deallocating xqf_tmp', 1)
     !
     RETURN
     !

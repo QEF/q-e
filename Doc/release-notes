@@ -8,6 +8,11 @@ New in development version:
   * GPU-accelerated phonon code (CINECA Team)
   * First steps towards GPU acceleration ifor AMD and Intel via OpenMP
   * More CUDA Fortran code removed and replaced by ACC (Ivan Carnimeo)
+  * EPW v.5.6.
+    (1) Ionized impurity scattering
+    (2) Ionized-impurity-assisted indirect optical absorption
+    For the full list of new features, bug fixes, and changes leading to backward incompatibility issues,
+    please visit the Releases page of the EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
 
 Incompatible changes in development version:
 

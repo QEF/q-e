@@ -18,10 +18,15 @@
   IMPLICIT NONE
   SAVE
 
-  INTEGER :: igmin(3)
+  INTEGER :: igmin(3), igmin_qG(3)
   !!
   REAL(KIND = DP) :: qqcut
   !!
+  REAL(KIND = DP), PARAMETER :: alph = 1.d0
+  !! Ewald parameter, units (2pi/alat)^{2}
+  REAL(KIND = DP), PARAMETER :: gmax = 14.d0
+  !! Cutoff criteria for G-sum:
+  !! e^{ - (q+G) \cdot \epsilon \cdot (q+G) / (4 \alpha) } < e^{ - gmax } terms are neglected.
   !
   CONTAINS
     !
@@ -49,6 +54,71 @@
     !
     !--------------------------------------------------------------------------
     END FUNCTION H_eps
+    !--------------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE find_min_qG(q)
+    !-----------------------------------------------------------------------
+    !!
+    !! Find igmin_qG = min_{G}|q+G|
+    !! to shift G-sum in long-range g
+    !! in order to ensure periodicity g(q+G')=g(q)
+    !!
+    USE constants_epw, ONLY : eps8
+    USE cell_base,     ONLY : bg, at
+    USE io_global,     ONLY : stdout
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: q(3)
+    !! q-vector from the full coarse or fine grid, in crystal coords.
+    !
+    ! Local variables
+    INTEGER         :: m1
+    !
+    INTEGER         :: m2
+    !
+    INTEGER         :: m3
+    !! Loop over G-vectors
+    REAL(KIND = DP) :: g1
+    !!
+    REAL(KIND = DP) :: g2
+    !!
+    REAL(KIND = DP) :: g3
+    !! G-vector in cartesian coords.
+    REAL(KIND = DP) :: qq
+    !! |q+G|
+    REAL(KIND = DP) :: qqmin
+    !! min|q+G|
+    REAL(KIND = DP) :: qtmp(3)
+    !!
+    !
+    ! Move q to 1BZ
+    qtmp(:) = q(:) - INT(q(:))
+    ! Transform to cartesian coords
+    CALL cryst_to_cart(1, qtmp, bg, 1)
+    !
+    igmin_qG = 0
+    qqmin = 1E10
+    DO m1 = -2, 2
+      DO m2 = -2, 2
+        DO m3 = -2, 2
+          g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + qtmp(1)
+          g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + qtmp(2)
+          g3 = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + qtmp(3)
+          qq = g1 * g1 + g2 * g2 + g3 * g3
+          IF (qqmin > qq) THEN
+            qqmin = qq
+            igmin_qG(1) = m1 - INT(q(1))
+            igmin_qG(2) = m2 - INT(q(2))
+            igmin_qG(3) = m3 - INT(q(3))
+          ENDIF
+        ENDDO
+      ENDDO
+    ENDDO
+    !
+    !--------------------------------------------------------------------------
+    END SUBROUTINE find_min_qG
     !--------------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
@@ -138,7 +208,7 @@
     !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : pi, fpi, e2
-    USE cell_base,     ONLY : bg, omega, alat
+    USE cell_base,     ONLY : bg, omega, alat, at
     USE constants_epw, ONLY : eps6, ci, zero, czero, twopi, eps8
     USE io_global,     ONLY : ionode_id
     USE mp_world,      ONLY : mpime
@@ -200,8 +270,8 @@
     !! (2*pi/a)^2
     REAL(KIND = DP):: geg
     !! <q+G| epsil | q+G>
-    REAL(KIND = DP) :: alph
-    !! Ewald parameter
+    !REAL(KIND = DP) :: alph
+    !!! Ewald parameter
     REAL(KIND = DP) :: fac
     !! General prefactor
     REAL(KIND = DP) :: gg(3)
@@ -210,8 +280,8 @@
     !! fac * EXP(-geg / (alph * 4.0d0)) / geg
     REAL(KIND = DP) :: arg
     !! Argument of the exponential
-    REAL(KIND = DP) :: gmax
-    !! Maximum G
+    !REAL(KIND = DP) :: gmax
+    !!! Maximum G
     REAL(KIND = DP) :: zag(3)
     !! Z * G
     REAL(KIND = DP) :: qag(3)
@@ -222,6 +292,8 @@
     !! Q * G
     REAL(KIND = DP) :: c
     !! vacuum size (supercell length along the z direction) in case of 2D
+    REAL(KIND = DP) :: qtmp(3)
+    !! Temporary q vector to find min_{G}|q+G|
     COMPLEX(KIND = DP) :: fnat(3)
     !! Z with \delta_kk' summed
     COMPLEX(KIND = DP) :: qnat(3)
@@ -274,8 +346,8 @@
       fac = (signe * e2 * fpi) / omega
     ENDIF
     !
-    gmax = 14.d0
-    alph = 1.0d0
+    !gmax = 14.d0
+    !alph = 1.0d0
     geg = gmax * alph * 4.0d0
     !
     ! Estimate of nr1x,nr2x,nr3x generating all vectors up to G^2 < geg
@@ -314,6 +386,11 @@
     ELSE
       add = 0
     ENDIF
+    !
+    !JLB: Find igmin_qG = min_{G}|q+G|
+    qtmp=q
+    CALL cryst_to_cart(1, qtmp, at, -1)
+    CALL find_min_qG(qtmp)
     !
     dyn_tmp(:, :) = czero
     !
@@ -400,7 +477,8 @@
               ! Dipole-dipole
               Qdd = zag(i) * fnat(j)
               ! Dipole-quad
-              Qdq = 0.5d0 * (zag(i) * qnat(j) - fnat(i) * qag(i))
+              !Qdq = 0.5d0 * (zag(i) * qnat(j) - fnat(i) * qag(i))
+              Qdq = 0.5d0 * (qag(i) * fnat(j) - zag(i) * qnat(j))
               ! Quad-quad
               Qqq = 0.25d0 * qag(i) * qnat(j)
               !
@@ -412,9 +490,15 @@
       ENDIF ! geg
       !
       ! Case q =/ 0
-      gg(1) = gg(1) + q(1) * (twopi / alat)
-      gg(2) = gg(2) + q(2) * (twopi / alat)
-      gg(3) = gg(3) + q(3) * (twopi / alat)
+      !gg(1) = gg(1) + q(1) * (twopi / alat)
+      !gg(2) = gg(2) + q(2) * (twopi / alat)
+      !gg(3) = gg(3) + q(3) * (twopi / alat)
+      !
+      !JLB: shift G-sum and center around min_{G}|q+G|, to ensure periodicity
+      gg(1) = ( (m1+igmin_qG(1)) * bg(1, 1) + (m2+igmin_qG(2)) * bg(1, 2) + (m3+igmin_qG(3)) * bg(1,3) + q(1)) * (twopi / alat)
+      gg(2) = ( (m1+igmin_qG(1)) * bg(2, 1) + (m2+igmin_qG(2)) * bg(2, 2) + (m3+igmin_qG(3)) * bg(2,3) + q(2)) * (twopi / alat)
+      gg(3) = ( (m1+igmin_qG(1)) * bg(3, 1) + (m2+igmin_qG(2)) * bg(3, 2) + (m3+igmin_qG(3)) * bg(3,3) + q(3)) * (twopi / alat)
+      !
       !
       IF (system_2d) THEN
         geg = gg(1)**2 + gg(2)**2 + gg(3)**2
@@ -523,7 +607,7 @@
     !!   \left[ U_{{\bf k}+{\bf q}}\:U_{{\bf k}}^{\dagger} \right]_{mn} $$
     !!
     USE kinds,         ONLY : dp
-    USE cell_base,     ONLY : bg, omega, alat
+    USE cell_base,     ONLY : bg, omega, alat, at
     USE ions_base,     ONLY : tau, nat
     USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, eps12, zero, eps8
     USE epwcom,        ONLY : shortrange, lpolar, system_2d
@@ -566,6 +650,10 @@
     !! Loop over q-points
     INTEGER :: nr1x, nr2x, nr3x
     !! Minimum supercell size to include all vector such that G^2 < geg
+    INTEGER :: mmin(3), mmax(3)
+    !! Shifted G-loop to be centered around min_{G}|q+G|
+    INTEGER :: nGtest
+    !! Number of G-vectors within cutoff (for testing purposes only)
     REAL(KIND = DP):: metric
     !! (2*pi/a)^2
     REAL(KIND = DP) :: qeq
@@ -576,10 +664,10 @@
     !! Z^* \cdot (q+g)
     REAL(KIND = DP) :: gg(3)
     !! G-vector
-    REAL(KIND = DP) :: gmax
-    !! Max G-vector
-    REAL(KIND = DP) :: alph
-    !! Ewald factor (arbitrary, here chosen to be 1)
+    !REAL(KIND = DP) :: gmax
+    !!! Max G-vector
+    !REAL(KIND = DP) :: alph
+    !!! Ewald factor (arbitrary, here chosen to be 1)
     REAL(KIND = DP) :: geg
     !!  <q+G| epsil | q+G>
     REAL(KIND = DP) :: Qqq
@@ -590,6 +678,8 @@
     !! G-vector * reff * G-vector
     REAL(KIND = DP) :: c
     !! vacuum size (supercell length along the z direction) in case of 2D
+    REAL(KIND = DP) :: qtmp(3)
+    !! Temporary q vector to find min_{G}|q+G|
     COMPLEX(KIND = DP) :: fac
     !! General prefactor
     COMPLEX(KIND = DP) :: facqd
@@ -622,8 +712,8 @@
       fac = (signe * e2 * fpi * ci) / omega
     ENDIF
     !
-    gmax = 14.d0
-    alph = 1.0d0
+    !gmax = 14.d0
+    !alph = 1.0d0
     metric = (twopi / alat)**2
     geg = gmax * alph * 4.0d0
     !
@@ -645,10 +735,27 @@
       nr3x = INT(SQRT(geg) / SQRT(bg(1, 3)**2 + bg(2, 3)**2 + bg(3, 3)**2)) + 1
     ENDIF
     !
+    !JLB: Find igmin_qG = min_{G}|q+G|
+    qtmp=q
+    CALL cryst_to_cart(1, qtmp, at, -1)
+    CALL find_min_qG(qtmp)
+    ! shift G-sum and center around min_{G}|q+G|, to ensure periodicity
+    mmin(1) = -nr1x + igmin_qG(1)
+    mmax(1) =  nr1x + igmin_qG(1)
+    mmin(2) = -nr2x + igmin_qG(2)
+    mmax(2) =  nr2x + igmin_qG(2)
+    mmin(3) = -nr3x + igmin_qG(3)
+    mmax(3) =  nr3x + igmin_qG(3)
+    !
     epmatl(:) = czero
-    DO m1 = -nr1x, nr1x
-      DO m2 = -nr2x, nr2x
-        DO m3 = -nr3x, nr3x
+    !DO m1 = -nr1x, nr1x
+    !  DO m2 = -nr2x, nr2x
+    !    DO m3 = -nr3x, nr3x
+    !
+    DO m1 = mmin(1), mmax(1)
+      DO m2 = mmin(2), mmax(2)
+        DO m3 = mmin(3), mmax(3)
+          !
           gg(1) = (m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)) * (twopi / alat)
           gg(2) = (m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)) * (twopi / alat)
           gg(3) = (m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3)) * (twopi / alat)
@@ -671,8 +778,9 @@
             IF (system_2d) THEN
               facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / (SQRT(qeq) * (1.0 + grg * SQRT(qeq)))
             ELSE
-              ! facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / qeq  <-- this is correct
-              facqd = fac * EXP(-qeq * DSQRT(metric) / (metric * alph * 4.0d0)) / qeq ! <-- this is to keep as previous
+              facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / qeq  !<-- this is correct
+              !facqd = fac * EXP(-qeq * DSQRT(metric) / (metric * alph * 4.0d0)) / qeq ! <-- this is to keep as previous
+              !facqd = fac / qeq ! no Ewald
             ENDIF
             !
             DO na = 1, nat
@@ -748,7 +856,7 @@
     !! 10/2016 - SP: Optimization
     !!
     USE kinds,         ONLY : DP
-    USE cell_base,     ONLY : bg, omega, alat
+    USE cell_base,     ONLY : bg, omega, alat, at
     USE ions_base,     ONLY : tau, nat
     USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, eps12, zero, eps8
     USE epwcom,        ONLY : shortrange, nbndsub, lpolar, system_2d
@@ -792,6 +900,10 @@
     !! Mode index
     INTEGER :: nr1x, nr2x, nr3x
     !! Minimum supercell size to include all vector such that G^2 < geg
+    INTEGER :: mmin(3), mmax(3)
+    !! Shifted G-loop to be centered around min_{G}|q+G|
+    INTEGER :: nGtest
+    !! Number of G-vectors within cutoff (for testing purposes only)
     REAL(KIND = DP):: metric
     !! (2*pi/a)^2
     REAL(KIND = DP) :: qeq
@@ -802,10 +914,10 @@
     !! Z^* \cdot (q+g)
     REAL(KIND = DP) :: gg(3)
     !! G-vector
-    REAL(KIND = DP) :: gmax
-    !!  Max G-vector
-    REAL(KIND = DP) :: alph
-    !! Ewald factor (arbitrary, here chosen to be 1)
+    !REAL(KIND = DP) :: gmax
+    !!!  Max G-vector
+    !REAL(KIND = DP) :: alph
+    !!! Ewald factor (arbitrary, here chosen to be 1)
     REAL(KIND = DP) :: geg
     !! <G| epsil | G>
     REAL(KIND = DP) :: reff(2, 2)
@@ -816,6 +928,8 @@
     !! In the case of Si, its a single value
     REAL(KIND = DP) :: c
     !! vacuum size (supercell length along the z direction) in case of 2D
+    REAL(KIND = DP) :: qtmp(3)
+    !! Temporary q vector to find min_{G}|q+G|
     COMPLEX(KIND = DP) :: fac
     !! General prefactor
     COMPLEX(KIND = DP) :: facqd
@@ -848,8 +962,8 @@
       fac = (signe * e2 * fpi * ci) / omega
     ENDIF
     !
-    gmax = 14.d0
-    alph = 1.0d0
+    !gmax = 14.d0
+    !alph = 1.0d0
     metric = (twopi / alat)**2
     geg = gmax * alph * 4.0d0
     !
@@ -871,10 +985,26 @@
       nr3x = INT(SQRT(geg) / SQRT(bg(1, 3)**2 + bg(2, 3)**2 + bg(3, 3)**2)) + 1
     ENDIF
     !
+    !JLB: Find igmin_qG = min_{G}|q+G|
+    qtmp=q
+    CALL cryst_to_cart(1, qtmp, at, -1)
+    CALL find_min_qG(qtmp)
+    ! shift G-sum and center around min_{G}|q+G|, to ensure periodicity
+    mmin(1) = -nr1x + igmin_qG(1)
+    mmax(1) =  nr1x + igmin_qG(1)
+    mmin(2) = -nr2x + igmin_qG(2)
+    mmax(2) =  nr2x + igmin_qG(2)
+    mmin(3) = -nr3x + igmin_qG(3)
+    mmax(3) =  nr3x + igmin_qG(3)
+    !
+    !nGtest = 0
     epmatl(:, :, :) = czero
-    DO m1 = -nr1x, nr1x
-      DO m2 = -nr2x, nr2x
-        DO m3 = -nr3x, nr3x
+    !DO m1 = -nr1x, nr1x
+    !  DO m2 = -nr2x, nr2x
+    !    DO m3 = -nr3x, nr3x
+    DO m1 = mmin(1), mmax(1)
+      DO m2 = mmin(2), mmax(2)
+        DO m3 = mmin(3), mmax(3)
           !
           gg(1) = (m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)) * (twopi / alat)
           gg(2) = (m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)) * (twopi / alat)
@@ -897,11 +1027,14 @@
           !
           IF (qeq > 0.0d0 .AND. qeq / (metric * alph * 4.0d0) < gmax) THEN
             !
+            !nGtest = nGtest + 1
+            !
             IF (system_2d) THEN
               facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / (SQRT(qeq) * (1.0 + grg * SQRT(qeq)))
             ELSE
-              ! facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / qeq  <-- this is correct
-              facqd = fac * EXP(-qeq * DSQRT(metric) / (metric * alph * 4.0d0)) / qeq ! <-- this is to keep as previous
+              facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / qeq  !<-- this is correct
+              !facqd = fac * EXP(-qeq * DSQRT(metric) / (metric * alph * 4.0d0)) / qeq ! <-- this is to keep as previous
+              !facqd = fac / qeq ! no Ewald
             ENDIF
             !
             DO na = 1, nat
@@ -936,6 +1069,8 @@
       ENDDO ! m2
     ENDDO ! m1
     !
+    !write(*,*) "Number of G-vectors within cutoff:", nGtest
+    !
     ! In case we want only the short-range we do
     ! g_s = DSQRT(g*g - g_l*g_l)
     !
@@ -952,6 +1087,174 @@
     END SUBROUTINE rgd_blk_epw_fine
     !-----------------------------------------------------------------------------
     !
+    !!!!!
+    !-------------------------------------------------------------------------------
+    SUBROUTINE rgd_imp_epw_fine(nqc1, nqc2, nqc3, q, epmat, epsil, bmat, signe)
+    !-------------------------------------------------------------------------------
+    !!
+    !! JL 01/2022
+    !! Compute the unscreened carrier-ionized impurity matrix element
+    !! The element is a Coulomb potential
+    !! (4*pi*Z*e^2)/(eps_inf*q^2)*U_{n,k}*U_{m,k+q}
+    !! Calculated on the fine grid only
+    !! Valid for the long range interaction, as U matricies for q=0 only
+    !!
+    USE kinds,         ONLY : DP
+    USE cell_base,     ONLY : bg, omega, alat
+    USE ions_base,     ONLY : tau, nat
+    USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, eps12, cc2cb
+    USE epwcom,        ONLY : shortrange, nbndsub, ii_n, ii_charge, ii_eps0
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: nqc1
+    !! Coarse q-point grid
+    INTEGER, INTENT(in) :: nqc2
+    !! Coarse q-point grid
+    INTEGER, INTENT(in) :: nqc3
+    !! Coarse q-point grid
+    !INTEGER, INTENT(in) :: nmodes
+    !! Max number of modes
+    REAL (KIND = DP), INTENT(in) :: q(3)
+    !! q-vector from the full coarse or fine grid.
+    REAL (KIND = DP), INTENT(in) :: epsil(3, 3)
+    !! dielectric constant tensor
+    REAL (KIND = DP), INTENT(in) :: signe
+    !! signe=+/-1.0 ==> add/subtract long range term
+    COMPLEX (KIND = DP), INTENT(inout) :: epmat(nbndsub, nbndsub)
+    !! e-ph matrix elements
+    COMPLEX (KIND = DP), INTENT(in) :: bmat(nbndsub, nbndsub)
+    !! Overlap matrix elements $$<U_{mk+q}|U_{nk}>$$
+    !
+    ! Local variables
+    INTEGER :: na
+    !! Atom index 1
+    INTEGER :: ipol
+    !! Polarison
+    INTEGER :: m1, m2, m3
+    !! Loop over q-points
+    INTEGER :: imode
+    !! Mode index
+    REAL(KIND = DP) :: qeq
+    !! <q+G| epsil | q+G>
+    REAL(KIND = DP) :: arg
+    !!
+    REAL(KIND = DP) :: zaq
+    !!
+    REAL(KIND = DP) :: g1, g2, g3
+    !!
+    REAL(KIND = DP) :: gmax
+    !!
+    REAL(KIND = DP) :: alph
+    !!
+    REAL(KIND = DP) :: geg
+    !!
+    REAL(KIND = DP) :: impurity_density
+    !! Impurity density per unit cell (1/N factor, where N is the number of 
+    !! cells to contain one imp)
+    COMPLEX(KIND = DP) :: fac
+    !!
+    COMPLEX(KIND = DP) :: facqd
+    !!
+    COMPLEX(KIND = DP) :: facq
+    !!
+    REAL(KIND = DP) :: m1f
+    !! fixed value of m1 to minimize |q - G|
+    REAL(KIND = DP) :: m2f
+    !! fixed value of m2 to minimize |q - G|
+    REAL(KIND = DP) :: m3f
+    !! fixed value of m3 to minimize |q - G|
+    REAL(KIND = DP) :: qmG
+    !! value of |q - G| to be minimized with respect to choices mNf
+    REAL(KIND = DP) :: val
+    !! comparison value
+    REAL(KIND = DP) :: eps_loc(3,3)
+    !! local epsilon
+    !
+    IF (ABS(ABS(signe) - 1.0) > eps12) CALL errore ('rgd_blk_epw_fine', 'Wrong value for signe ', 1)
+    !
+    eps_loc(:, :) = 0.0d0
+    !
+    IF (ii_eps0 == 0.0d0) THEN
+      eps_loc(1,1) = epsil(1,1)
+      eps_loc(2,2) = epsil(2,2)
+      eps_loc(3,3) = epsil(3,3)
+      eps_loc(1,2) = epsil(1,2)
+      eps_loc(2,1) = epsil(2,1)
+      eps_loc(1,3) = epsil(1,3)
+      eps_loc(3,1) = epsil(3,1)
+      eps_loc(2,3) = epsil(2,3)
+      eps_loc(3,2) = epsil(3,2)
+    ELSEIF (ii_eps0 > 0.0d0) THEN
+      eps_loc(1,1) = ii_eps0
+      eps_loc(2,2) = ii_eps0
+      eps_loc(3,3) = ii_eps0
+    ENDIF
+    !
+    gmax = 14.d0
+    alph = 1.0d0
+    geg = gmax * alph * 4.0d0
+    fac = signe * e2 * fpi * ii_charge / omega * ci
+    !
+    ! JL : look for G0 that minimizes | q + G | with G = 0
+    ! INITIAL VALUES
+    val = 1.0d24
+    m1f = 0
+    m2f = 0
+    m3f = 0
+    !
+    DO m1 = -5, 5
+      DO m2 = -5, 5
+        DO m3 = -5, 5
+          g1 = q(1) + (m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3))
+          g2 = q(2) + (m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3))
+          g3 = q(3) + (m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3))
+          qmG = SQRT(g1**2+g2**2+g3**2)
+          IF (qmG < val) THEN
+            val = qmG
+            m1f = m1
+            m2f = m2
+            m3f = m3
+          ENDIF
+        ENDDO
+      ENDDO
+    ENDDO
+    !
+    ! JL: Now, sum Gi on first shell displaced by G0, that is q + Gi + G0 
+    !
+    DO m1 = -1, 1 !-nqc1, nqc1
+      DO m2 = -1, 1 !-nqc2, nqc2
+        DO m3 = -1, 1 !-nqc3, nqc3
+          !
+          g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1) + m1f * bg(1, 1) + &
+                  m2f * bg(1, 2) + m3f * bg(1, 3)
+          g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2) + m1f * bg(2, 1) + &
+                  m2f * bg(2, 2) + m3f * bg(2, 3)
+          g3 = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3) + m1f * bg(3, 1) + &
+                  m2f * bg(3, 2) + m3f * bg(3, 3)
+          !
+          qeq = (g1 * (eps_loc(1, 1) * g1 + eps_loc(1, 2) * g2 + eps_loc(1, 3) * g3) + &
+                 g2 * (eps_loc(2, 1) * g1 + eps_loc(2, 2) * g2 + eps_loc(2, 3) * g3) + &
+                 g3 * (eps_loc(3, 1) * g1 + eps_loc(3, 2) * g2 + eps_loc(3, 3) * g3)) !*twopi/alat
+          !
+          IF (qeq > 0.0d0) THEN !  .AND. qeq / (alph * 4.0d0) < gmax) THEN
+            !
+            qeq = qeq * (twopi / alat)**2.0d0
+            facqd = fac / qeq !fac * EXP(-qeq / (alph * 4.0d0)) / qeq !/(two*wq)
+            !
+            facq = facqd * 1.0d0 ! For now add impurty at position 0, 0, 0, JL
+            CALL ZAXPY(nbndsub**2, facq , bmat(:, :), 1, epmat(:, :), 1)
+          ENDIF
+          !
+        ENDDO ! m3
+      ENDDO ! m2
+    ENDDO ! m1
+    !
+    !-----------------------------------------------------------------------------
+    END SUBROUTINE rgd_imp_epw_fine
+    !-----------------------------------------------------------------------------
+    !
+    !!!!!
     !-----------------------------------------------------------------------------
     SUBROUTINE rpa_epsilon(q, w, nmodes, epsil, eps_rpa)
     !-----------------------------------------------------------------------------
@@ -1120,6 +1423,274 @@
     END SUBROUTINE tf_epsilon
     !--------------------------------------------------------------------------
     !
+    !!!!!
+    !--------------------------------------------------------------------------
+    SUBROUTINE calc_qtf2_therm(itemp, etemp, ef0, efcb, ctype, epsil)
+    !--------------------------------------------------------------------------
+    !!
+    !! JL 01/2022
+    !! Compute thermal Thomas fermi wave vector for doped Semiconductores
+    !! ctype = +/1 1 only!! assume_metal = .FALSE. only (for now...) 
+    !! q_{tf}^{2}(T) = \frac{4\pi}{\omega*\varepsilon_\infty}\sum_{n,\mathbf{k}}
+    !! w_{n\mathbf k}\frac{\partial f_{n,\mathbf k}}{\partial \epsilon_{n\mathbf
+    !! k}}
+    !!
+    !
+    USE kinds,         ONLY : DP
+    USE cell_base,     ONLY : omega, at, alat
+    !
+    USE epwcom,        ONLY : nstemp, nbndsub, ii_eps0
+    USE elph2,         ONLY : ibndmin, etf, nkf, wkf, &
+                              nbndfst, qtf2_therm
+    USE constants,     ONLY : pi
+    USE io_global,     ONLY : stdout
+    USE mp,            ONLY : mp_sum
+    USE mp_global,     ONLY : inter_pool_comm, my_pool_id
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: itemp
+    !! temp index
+    INTEGER, INTENT(in) :: ctype
+    !! -1 for holes, 1 for electrons, 0 for both (forbidden)
+    REAL(KIND = DP), INTENT(in)  :: etemp
+    !! energy of temperatre at index itemp
+    REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
+    !! fermi energy of p-type or metal material
+    REAL(KIND = DP), INTENT(in) :: efcb(nstemp)
+    !! fermi_energy of n-type materials
+    REAL(KIND = DP), INTENT(in) :: epsil(3, 3)
+    !! dielectric tensor
+    !
+    ! local variables
+    INTEGER :: dummy1
+    !! dummy
+    INTEGER :: ik
+    !! counter on k ind
+    INTEGER :: ikk
+    !! counter over k on fine grid
+    INTEGER :: ibnd
+    !! counter over bands
+    REAL(KIND=DP) :: ekk
+    !! Energy on fine grid at ekk in fermi window
+    REAL(KIND=DP) :: dfnk
+    !! derivative of the fermi-dirac distribution
+    REAL(KIND=DP) :: inv_etemp
+    !! beta = 1/(kB*T), inverse thermal temperature in Ryd
+    REAL(KIND = DP), EXTERNAL :: w0gauss
+    !! The derivative of wgauss:  an approximation to the delta function
+    REAL(KIND = DP) :: eps_ave
+    !! Average dielectric function (semiconductor/insulator)
+    !
+    IF (ii_eps0 == 0.0) THEN
+      eps_ave = (epsil(1, 1) + epsil(2, 2) + epsil(3, 3)) / 3.d0
+    ELSEIF (ii_eps0 > 0.0) THEN
+      eps_ave = ii_eps0
+    ENDIF
+    !eps_ave = 1.0d0
+    !
+    IF (ctype==0) THEN
+      WRITE(stdout, '(5x,"ctype=0 not supported, keeping epf_tf_therm(:) == 1.0d0")')
+      RETURN
+    ENDIF
+    !
+    !IF (my_pool_id == 0) THEN
+    !  IF (ctype == -1) THEN
+    !    WRITE(stdout, '(5x,"Using Fermi energy of: ")')
+    !    WRITE(stdout,*) ef0(itemp)
+    !  ELSEIF (ctype == 1) THEN
+    !    WRITE(stdout, '(5x,"Using Fermi energy of: ")')
+    !    WRITE(stdout,*) efcb(itemp)
+    !  ENDIF
+    !ENDIF
+    !
+    inv_etemp = 1.0d0 / etemp
+    !
+    ! calc qtf^2(T) for holes in case of ctype=-1
+    IF (ctype==-1) THEN
+      DO ik = 1, nkf
+        ikk = 2*ik-1
+        DO ibnd = 1, nbndsub
+          ekk  = etf(ibnd, ikk)
+          dfnk = w0gauss((ekk-ef0(itemp))*inv_etemp,-99)*inv_etemp
+          qtf2_therm(itemp) = qtf2_therm(itemp) + (1.0d0/(eps_ave*omega))*8.0d0*pi*( wkf(ikk)*dfnk)
+        ENDDO
+      ENDDO
+    ENDIF
+    !
+    ! calc qtf^2(T) for holes in case of ctype=-1
+    IF (ctype==1) THEN
+      DO ik = 1, nkf
+        ikk = 2*ik-1
+        DO ibnd = 1, nbndsub
+          ekk  = etf(ibnd, ikk)
+          dfnk = w0gauss((ekk-efcb(itemp))*inv_etemp,-99)*inv_etemp
+          qtf2_therm(itemp) = qtf2_therm(itemp) + (1.0d0/(omega*eps_ave))*8.0d0*pi*( wkf(ikk)*dfnk  )
+        ENDDO
+      ENDDO
+    ENDIF
+    !
+    CALL mp_sum(qtf2_therm(itemp), inter_pool_comm)
+    !
+    !IF (my_pool_id == 0) THEN
+    !  !IF (iqq == 0 ) THEN
+    !  WRITE(stdout, '(5x,"ctype, itemp, q_tf_therm^2: ")')
+    !  WRITE(stdout,*) ctype, itemp, qtf2_therm(itemp)
+    !  !ENDIF
+    !ENDIF
+    !
+    !--------------------------------------------------------------------------
+    END SUBROUTINE calc_qtf2_therm
+    !--------------------------------------------------------------------------
+    !
+    !--------------------------------------------------------------------------
+    SUBROUTINE calc_epstf_therm(q, nstemp, epsil)
+    !--------------------------------------------------------------------------
+    !!
+    !! JL: 01/2022
+    !! Calculate the thermal thomas fermi dielectric function (1 + qtf^2(T)/q^2)
+    !!
+    USE kinds,         ONLY : DP
+    USE cell_base,     ONLY : at, bg, omega, alat
+    USE constants_epw, ONLY : twopi, ha2ev, cone, eps5, eps10, one
+    USE elph2,         ONLY : qtf2_therm, epstf_therm
+    !
+    USE io_global,     ONLY : stdout
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: nstemp
+    !! number of temperature points
+    REAL(KIND = DP), INTENT(inout) :: q(3)
+    !! q vector (in crystal coordinates)
+    REAL(KIND = DP), INTENT(in) :: epsil(3, 3)
+    !! dielectric constant tensor
+    !
+    ! Local variable
+    LOGICAL, SAVE :: first_call = .TRUE.
+    !! Logical for first_call the routine
+    INTEGER :: itemp
+    !! counter of temperature index
+    INTEGER :: m1, m2, m3
+    !! counter for G vecs
+    INTEGER :: m1f, m2f, m3f
+    !! index of G that minimizes q+G
+    REAL(KIND = DP) :: eps_ave
+    !! Average dielectric function (semiconductor/insulator)
+    REAL(KIND = DP) :: q2
+    !! squared phonon wavevector
+    REAL(KIND = DP) :: q2inv
+    !! inverse of q2, which is summed over G
+    REAL(KIND = DP) :: qm
+    !! sqrt of q2
+    REAL(KIND = DP) :: qtfc2
+    !! square Thomas fermi wv in units of (two*pi/alat)
+    !!!!!!qtfc = qtf / (twopi / alat)
+    REAL(KIND = DP) :: val
+    !! test value for finding G that minimizes q+G
+    REAL(KIND = DP) :: g1, g2, g3, qeq, qmG 
+    !!
+    REAL(KIND = DP) :: eps_loc(3,3)
+    !
+    eps_ave = (epsil(1, 1) + epsil(2, 2) + epsil(3, 3)) / 3.d0
+    eps_loc(1,1) = 1.0d0
+    eps_loc(2,2) = 1.0d0
+    eps_loc(3,3) = 1.0d0
+    eps_loc(1,2) = 0.0d0
+    eps_loc(2,1) = 0.0d0
+    eps_loc(1,3) = 0.0d0
+    eps_loc(3,1) = 0.0d0
+    eps_loc(2,3) = 0.0d0
+    eps_loc(3,2) = 0.0d0
+    !
+    IF (first_call) THEN
+      first_call = .FALSE.
+      WRITE(stdout, '(5x,"Calculation of thermal Thomas-Fermi screening: use with care")')
+      DO itemp = 1, nstemp
+        WRITE(stdout, '(5x,a,i5)') 'itemp=', itemp
+        WRITE(stdout, '(5x,a,f22.16)') 'q_tf (au^-1) = ', SQRT(qtf2_therm(itemp))
+      ENDDO
+      IF (eps_ave < eps5) WRITE(stdout, '(5x,"Warning: dielectric constant not found; set to 1")')
+    ENDIF
+    !
+    CALL cryst_to_cart(1, q, bg, 1)
+    !
+    ! JL: Look for G that minimizes q+G --> enforce periodicity
+    val = 1.0d24
+    m1f = 0
+    m2f = 0
+    m3f = 0
+    !
+    DO m1 = -5, 5
+      DO m2 = -5, 5
+        DO m3 = -5, 5
+          g1 = q(1) + (m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3))
+          g2 = q(2) + (m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3))
+          g3 = q(3) + (m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3))
+          qmG = SQRT(g1**2+g2**2+g3**2)
+          IF (qmG < val) THEN
+            val = qmG
+            m1f = m1
+            m2f = m2
+            m3f = m3
+          ENDIF
+        ENDDO
+      ENDDO
+    ENDDO
+    !
+    q2inv = 0.0d0
+    !
+    DO m1 = -1, 1 !-nqc1, nqc1
+      DO m2 = -1, 1 !-nqc2, nqc2
+        DO m3 = -1, 1 !-nqc3, nqc3
+          !
+          g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1) + m1f * bg(1, 1) + &
+                  m2f * bg(1, 2) + m3f * bg(1, 3)
+          g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2) + m1f * bg(2, 1) + &
+                  m2f * bg(2, 2) + m3f * bg(2, 3)
+          g3 = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3) + m1f * bg(3, 1) + &
+                  m2f * bg(3, 2) + m3f * bg(3, 3)
+          !
+          !qeq = (g1 * (epsil(1, 1) * g1 + epsil(1, 2) * g2 + epsil(1, 3) * g3) + &
+          !       g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3) + &
+          !       g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3)) !*twopi/alat
+          qeq = (g1 * (eps_loc(1, 1) * g1 + eps_loc(1, 2) * g2 + eps_loc(1, 3) * g3) + &
+                 g2 * (eps_loc(2, 1) * g1 + eps_loc(2, 2) * g2 + eps_loc(2, 3) * g3) + &
+                 g3 * (eps_loc(3, 1) * g1 + eps_loc(3, 2) * g2 + eps_loc(3, 3) * g3)) !*twopi/alat
+          IF (qeq > 0.0d0) THEN 
+            q2inv = q2inv + (1.0d0 / qeq)
+          ELSE
+            q2inv = q2inv + 0.0d0 
+          ENDIF
+        ENDDO
+      ENDDO
+    ENDDO
+    ! 
+    !! JL now calculate contributions to epstf_therm(itmep)
+    !
+    IF (q2inv > 0.0d0) THEN
+      q2 = 1.0d0 / q2inv
+    ELSE
+      q2 = 0.0
+    ENDIF 
+    !q2 = q(1)**2 + q(2)**2 + q(3)**2
+    qm = DSQRT(q2) ! in tpiba
+    DO itemp = 1, nstemp
+      IF (ABS(qm) > eps10) THEN
+        qtfc2 = qtf2_therm(itemp) / ((twopi / alat)**2.0d0)
+        epstf_therm(itemp) = 1.d0 + (qtfc2 / q2)
+      ELSE
+        epstf_therm(itemp) = one
+      ENDIF
+    ENDDO
+    !
+    CALL cryst_to_cart(1, q, at, -1)
+    !
+    !--------------------------------------------------------------------------
+    END SUBROUTINE calc_epstf_therm
+    !--------------------------------------------------------------------------
+    !
+    !!!!!
     !-----------------------------------------------------------------------
     SUBROUTINE compute_umn_f(nbnd, cufkk, cufkq, bmatf)
     !-----------------------------------------------------------------------
@@ -1255,8 +1826,8 @@
     !! (2*pi/a)^2
     REAL(KIND = DP):: geg
     !! <q+G| epsil | q+G>
-    REAL(KIND = DP) :: alph
-    !! Ewald parameter
+    !REAL(KIND = DP) :: alph
+    !!! Ewald parameter
     REAL(KIND = DP) :: fac
     !! General prefactor
     REAL(KIND = DP) :: gg(3)
@@ -1265,8 +1836,8 @@
     !! fac * EXP(-geg / (alph * 4.0d0)) / geg
     REAL(KIND = DP) :: arg
     !! Argument of the exponential
-    REAL(KIND = DP) :: gmax
-    !! Maximum G
+    !REAL(KIND = DP) :: gmax
+    !!! Maximum G
     REAL(KIND = DP) :: arg_no_g(3)
     !! Difference of atomic position
     REAL(KIND = DP) :: zag(3)
@@ -1285,15 +1856,15 @@
     ! very rough estimate: geg/4/alph > gmax = 14
     ! (exp (-14) = 10^-6)
     !
-    gmax = 14.d0
-    alph = 1.0d0
+    !gmax = 14.d0
+    !alph = 1.0d0
     metric = (twopi / alat)**2
     geg = gmax * alph * 4.0d0
     !
     IF (ABS(ABS(signe) - 1.0) > eps6) CALL errore('rgd_blk_der', ' wrong value for signe ', 1)
     !
-    gmax = 14.d0
-    alph = 1.0d0
+    !gmax = 14.d0
+    !alph = 1.0d0
     geg = gmax * alph * 4.0d0
     fac = signe * e2 * fpi / omega
     !
@@ -1451,10 +2022,10 @@
     !! Z^* \cdot (q+g)
     REAL(KIND = DP) :: gg(3)
     !! G-vector
-    REAL(KIND = DP) :: gmax
-    !!  Max G-vector
-    REAL(KIND = DP) :: alph
-    !! Ewald factor (arbitrary, here chosen to be 1)
+    !REAL(KIND = DP) :: gmax
+    !!!  Max G-vector
+    !REAL(KIND = DP) :: alph
+    !!! Ewald factor (arbitrary, here chosen to be 1)
     REAL(KIND = DP) :: geg
     !! <G| epsil | G>
     REAL(KIND = DP) :: reff(2, 2)
@@ -1497,8 +2068,8 @@
       fac = (signe * e2 * fpi * ci) / omega
     ENDIF
     !
-    gmax = 14.d0
-    alph = 1.0d0
+    !gmax = 14.d0
+    !alph = 1.0d0
     metric = (twopi / alat)**2
     geg  = gmax * alph * 4.0d0
     !
@@ -1549,8 +2120,8 @@
             IF (system_2d) THEN
               facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / (SQRT(qeq) * (1.0 + grg * SQRT(qeq)))
             ELSE
-              ! facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / qeq  <-- this is correct
-              facqd = fac * EXP(-qeq * DSQRT(metric) / (metric * alph * 4.0d0)) / qeq ! <-- this is to keep as previous
+              facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / qeq  !<-- this is correct
+              !facqd = fac * EXP(-qeq * DSQRT(metric) / (metric * alph * 4.0d0)) / qeq ! <-- this is to keep as previous
             ENDIF
             !
             DO na = 1, nat
