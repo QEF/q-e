@@ -276,6 +276,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
      enddo
 
   enddo
+  !$acc end data
   if (doublegrid) then
      do is = 1, nspin_mag
         call fft_interpolate (dffts, ldoss (:, is), dfftp, ldos (:, is))
@@ -299,7 +300,6 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
         END IF
      END DO
   END IF
-  !$acc end data
 
   call addusldos (ldos, becsum1)
   !
