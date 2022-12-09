@@ -4,7 +4,7 @@ New in development version:
     https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.129.126401
     https://journals.aps.org/prb/abstract/10.1103/PhysRevB.106.125119
   * GPU-accelerated phonon code (CINECA Team)
-  * First steps towards GPU acceleration ifor AMD and Intel via OpenMP
+  * First steps towards GPU acceleration for AMD and Intel via OpenMP
   * More CUDA Fortran code removed and replaced by ACC (Ivan Carnimeo)
   * EPW v.5.6.
     (1) Ionized impurity scattering
@@ -15,6 +15,10 @@ New in development version:
 Incompatible changes in development version:
 
 Fixed in development version:
+  * v.7.1 of CP for GPU was not working for pseudopotentials with nonlinear 
+    core correction
+  * in v.7.0 and 7.1 of pw.x the calculation of forces under a macroscopic
+    electric field in parallel execution was crashing due to a misspell
   * pw.x was not able to read J0 using the new Hubbard input syntax,
     and it was not printing the correct manifolds in the output when
     two Hubbard channels per atomic type are used
