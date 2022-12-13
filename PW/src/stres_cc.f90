@@ -33,7 +33,7 @@ SUBROUTINE stres_cc( sigmaxcc )
   !
   ! ... local variables
   !
-  INTEGER :: nt, ng, l, m, ir
+  INTEGER :: nt, ng, l, m, ir, dfftp_nnr
   REAL(DP) :: fact
   REAL(DP), ALLOCATABLE :: rhocg(:), vxc(:,:)
   COMPLEX(DP), ALLOCATABLE :: vaux(:,:)
@@ -46,6 +46,8 @@ SUBROUTINE stres_cc( sigmaxcc )
   !
   IF ( .NOT. ANY( upf(1:ntyp)%nlcc ) ) RETURN
   !
+  dfftp_nnr = dfftp%nnr !to avoid unnecessary copies in acc loop
+  !
   ! ... recalculate the exchange-correlation potential
   !
   ALLOCATE( vxc(dfftp%nnr,nspin), vaux(dfftp%nnr,1) )
@@ -56,7 +58,7 @@ SUBROUTINE stres_cc( sigmaxcc )
   !$acc data copyin( vxc )
   IF ( nspin==2 ) then
      !$acc parallel loop
-     DO ir = 1, dfftp%nnr
+     DO ir = 1, dfftp_nnr
         vxc(ir,1) = 0.5d0 * ( vxc(ir,1) + vxc(ir,2) )
      ENDDO
   ENDIF

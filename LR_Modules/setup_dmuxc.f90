@@ -22,9 +22,11 @@ SUBROUTINE setup_dmuxc
   !
   REAL(DP), ALLOCATABLE :: rho_aux(:,:)
   ! auxiliary array for density
-  INTEGER  :: ir, is, js, ns
+  INTEGER  :: ir, is, js, ns, dfftp_nnr
   !
   CALL start_clock ('setup_dmuxc')
+  !
+  dfftp_nnr = dfftp%nnr !to avoid unnecessary copies in acc loop
   !
   !$acc data copyin( rho ) copyout( dmuxc )
   !$acc data copyin( rho%of_r )
@@ -39,33 +41,33 @@ SUBROUTINE setup_dmuxc
   IF ( lsda ) THEN
      !
      !$acc parallel loop present(rho) copyin(rho_core)
-     DO ir = 1, dfftp%nnr
+     DO ir = 1, dfftp_nnr
        rho_aux(ir,1) = ( rho%of_r(ir,1) + rho%of_r(ir,2) + rho_core(ir) )*0.5_DP
        rho_aux(ir,2) = ( rho%of_r(ir,1) - rho%of_r(ir,2) + rho_core(ir) )*0.5_DP
      ENDDO
      !
-     CALL dmxc( dfftp%nnr, 2, rho_aux, dmuxc, gpu_args_=.TRUE. )
+     CALL dmxc( dfftp_nnr, 2, rho_aux, dmuxc, gpu_args_=.TRUE. )
      !
   ELSE
      !
      IF ( noncolin .AND. domag ) THEN
         !
         !$acc parallel loop present(rho) copyin(rho_core)
-        DO ir = 1, dfftp%nnr
+        DO ir = 1, dfftp_nnr
           rho_aux(ir,1)   = rho%of_r(ir,1) + rho_core(ir)
           rho_aux(ir,2:4) = rho%of_r(ir,2:4)
         ENDDO
         !
-        CALL dmxc( dfftp%nnr, 4, rho_aux, dmuxc, gpu_args_=.TRUE. )
+        CALL dmxc( dfftp_nnr, 4, rho_aux, dmuxc, gpu_args_=.TRUE. )
         !
      ELSE
         !
         !$acc parallel loop present(rho) copyin(rho_core)
-        DO ir = 1, dfftp%nnr
+        DO ir = 1, dfftp_nnr
           rho_aux(ir,1) = rho%of_r(ir,1) + rho_core(ir)
         ENDDO
         !
-        CALL dmxc( dfftp%nnr, 1, rho_aux, dmuxc, gpu_args_=.TRUE. )
+        CALL dmxc( dfftp_nnr, 1, rho_aux, dmuxc, gpu_args_=.TRUE. )
         !
      ENDIF
      !
