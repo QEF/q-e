@@ -460,7 +460,9 @@ DEV_ACC exit data delete(rhotmp)
          ENDIF
       END IF
       !
+      !FIXME : need to complete the offloading of this part rhog rhor and nlc call shou
       IF ( nlcc_any ) CALL add_cc( rhoc, rhog, rhor )
+DEV_ACC update device(rhog)
       CALL exch_corr_h( nspin, rhog, rhor, rhoc, sfac, exc, dxc, self_exc )
       !
       ! ... add non local corrections (if any)
