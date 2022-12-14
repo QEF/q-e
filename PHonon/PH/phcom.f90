@@ -335,6 +335,9 @@ MODULE control_ph
   INTEGER :: nk1,nk2,nk3, k1,k2,k3
   !! new Monkhorst-Pack k-point grid
   !
+  CHARACTER(LEN=256) :: dftd3_hess 
+  ! file from where the dftd3 hessian is read
+  !
 END MODULE control_ph
 !
 !

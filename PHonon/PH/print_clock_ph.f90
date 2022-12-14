@@ -19,6 +19,7 @@ subroutine print_clock_ph
   USE dvscf_interpolate, ONLY : ldvscf_interpolate
   USE ahc,        ONLY : elph_ahc
   USE el_phon,    ONLY : elph
+  USE control_flags,     ONLY : ldftd3
   !
   implicit none
   !
@@ -93,6 +94,11 @@ subroutine print_clock_ph
   call print_clock ('dynmat_us')
   call print_clock ('addusdynmat1')
   call print_clock ('d2ionq')
+  if (ldftd3) THEN
+    call print_clock('dftd3')
+    call print_clock('dftd3:frc')
+    call print_clock('dftd3:ene')
+  end if
   if (nlcc_any) call print_clock ('dynmatcc')
   WRITE( stdout, * )
   call print_clock ('dynmat_us')

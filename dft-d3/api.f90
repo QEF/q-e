@@ -214,7 +214,7 @@ contains
     rep_cn(:) = int(rtmp3) + 1
     call pbcedisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
         & r2r4, this%r0ab, rcov, rs6, rs8, rs10, alp6, alp8, alp10, &
-        & this%version, this%noabc, e6, e8, e10, e12, e6abc, latvecs, &
+        & this%version, .true., e6, e8, e10, e12, e6abc, latvecs, &
         & this%rthr, rep_vdw, this%cn_thr, rep_cn)
     disp = -e6 * this%s6 - e8 * this%s18 - e6abc
 
@@ -223,8 +223,8 @@ contains
        grads(:,:) = 0.0_wp
        call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
            & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
-           & this%noabc, this%numgrad, this%version, grads, disp2, gnorm, &
-           & stress, latvecs, rep_vdw, rep_cn, this%rthr, .false., this%cn_thr)
+           & .true., .false., this%version, grads, disp2, gnorm, &
+           & stress, latvecs, rep_vdw, rep_cn, this%rthr, .true., this%cn_thr)
        ! Note, the stress variable in pbcgdisp contains the *lattice derivatives*
        ! on return, so it needs to be converted to obtain the stress tensor.
        stress(:,:) = -matmul(stress, transpose(latvecs))&
