@@ -867,7 +867,7 @@ SUBROUTINE v_hubbard( ns, v_hub, eth )
   !
   IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
      WRITE(stdout,'(/5x,"HUBBARD ENERGY = ",f9.4,1x," (Ry)")') eth
-     write(stdout,*) "check coll U", check
+     !write(stdout,*) "check coll U", check
   ENDIF
   !
   RETURN
@@ -977,7 +977,7 @@ SUBROUTINE v_hubbard_nc( ns, v_hub, eth )
   !
   IF ( iverbosity > 0 ) THEN
      WRITE(stdout,'(/5x,"HUBBARD ENERGY = ",f9.4,1x," (Ry)")') eth
-     write(stdout,*) "check", check
+     !write(stdout,*) "check", check
   ENDIF
   !
   RETURN
@@ -1459,8 +1459,8 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
                         !
                         eth = eth - nsg(m2,m1,viz,na1,is) * CONJG(nsg(m2,m1,viz,na1,is)) &
                                     * Hubbard_V(na1,na2,i_type) * 0.5d0
-                        !check_en = check_en -nsg(m2,m1,viz,na1,is) * CONJG(nsg(m2,m1,viz,na1,is)) &
-                        !            * Hubbard_V(na1,na2,i_type) * 0.5d0
+                        check_en = check_en -nsg(m2,m1,viz,na1,is) * CONJG(nsg(m2,m1,viz,na1,is)) &
+                                    * Hubbard_V(na1,na2,i_type) * 0.5d0
                         !
                      ENDDO
                   ENDDO
@@ -1481,8 +1481,8 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
                         ! 
                         eth = eth + nsg(m1,m1,na,na1,is) &
                                        * Hubbard_V(na1,na1,i_type) * 0.5d0
-                        !check_en = check_en +nsg(m1,m1,na,na1,is) &
-                        !               * Hubbard_V(na1,na1,i_type) * 0.5d0
+                        check_en = check_en +nsg(m1,m1,na,na1,is) &
+                                       * Hubbard_V(na1,na1,i_type) * 0.5d0
                         !
                      ENDDO
                      !
@@ -1649,8 +1649,8 @@ SUBROUTINE v_hubbard_extended_nc (nsg, v_hub, eth)
                          !
                          eth = eth - nsg(m2,m1,viz,na1,is) * CONJG(nsg(m2,m1,viz,na1,is)) &
                                      * Hubbard_V(na1,na2,1) * 0.5d0
-                        !check_en = check_en - nsg(m2,m1,viz,na1,is) * CONJG(nsg(m2,m1,viz,na1,is)) &
-                        !             * Hubbard_V(na1,na2,1) * 0.5d0
+                        check_en = check_en - nsg(m2,m1,viz,na1,is) * CONJG(nsg(m2,m1,viz,na1,is)) &
+                                     * Hubbard_V(na1,na2,1) * 0.5d0
                          !
                       ENDDO
                    ENDDO
@@ -1669,8 +1669,8 @@ SUBROUTINE v_hubbard_extended_nc (nsg, v_hub, eth)
                          ! 
                          eth = eth + nsg(m1,m1,na,na1,is) &
                                         * Hubbard_V(na1,na1,1) * 0.5d0
-                        !check_en = check_en + nsg(m1,m1,na,na1,is) &
-                        !                * Hubbard_V(na1,na1,1) * 0.5d0
+                        check_en = check_en + nsg(m1,m1,na,na1,is) &
+                                        * Hubbard_V(na1,na1,1) * 0.5d0
                          !
                       ENDDO
                       !

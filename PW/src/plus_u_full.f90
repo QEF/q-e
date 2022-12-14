@@ -413,12 +413,14 @@ CONTAINS
       REAL(DP) :: j
       REAL(DP), ALLOCATABLE :: chiaux(:)
       INTEGER :: nc, ib
+      COMPLEX(DP) :: lphase
       !
       ! ... If SOC go on only if j=l+1/2
       IF (soc) j = upf(nt)%jchi(nb)
       IF (soc .AND. ABS(j-l+0.5_DP)<1.d-4 ) RETURN
       !
       ALLOCATE( chiaux(npw) )
+      lphase = (0.0,1.0)**l
       !
       IF (soc) THEN 
         !
@@ -453,7 +455,8 @@ CONTAINS
          IF (n_starting_wfc + 2*l+1 > natomwfc) CALL errore &
                ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
          DO ig = 1, npw
-            aux(ig) = sk(ig)*ylm(ig,lm)*chiaux(ig)
+            ! ---------- LUCA (spawoc) phase factor -------------
+            aux(ig) = lphase*sk(ig)*ylm(ig,lm)*chiaux(ig)
          ENDDO
          ! 
          DO ig = 1, npw

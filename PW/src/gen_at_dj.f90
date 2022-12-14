@@ -135,12 +135,14 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
       REAL(DP) :: j
       REAL(DP), ALLOCATABLE :: chiaux(:)
       INTEGER :: nc, ib
+      COMPLEX(DP) :: lphase
       !
       ! ... If SOC go on only if j=l+1/2
       IF (soc) j = upf(nt)%jchi(nb)
       IF (soc .AND. ABS(j-l+0.5_DP)<1.d-4 ) RETURN
       !
       ALLOCATE( chiaux(npw) )
+      lphase = (0.0,1.0)**l
       !
       IF (soc) THEN
         !
@@ -175,7 +177,7 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
          IF (iatw + 2*l+1 > natomwfc) CALL errore &
                ('dj_wfc_atom', 'internal error: too many wfcs', 1)
          DO ig = 1, npw
-            aux(ig) = sk(ig)*ylm(ig,lm)*chiaux(ig)
+            aux(ig) = lphase*sk(ig)*ylm(ig,lm)*chiaux(ig)
          ENDDO
          !
          DO ig = 1, npw

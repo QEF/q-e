@@ -73,6 +73,7 @@ SUBROUTINE force_hub( forceh )
    INTEGER :: nb_s, nb_e, mykey, ldimb
    LOGICAL :: lhubb
    LOGICAL :: save_flag
+   INTEGER, EXTERNAL :: find_viz
    !
    CALL start_clock( 'force_hub' )
    !
@@ -267,39 +268,71 @@ SUBROUTINE force_hub( forceh )
             !
             DO ipol = 1, 3  ! forces are calculated for coordinate ipol ...
                !
-               IF ( gamma_only ) THEN
-                  CALL dngdtau_gamma ( ldim, proj%r, spsi, alpha, ijkb0, ipol, ik, &
+               ! ------------ LUCA (spawoc) ----------
+               IF (noncolin) then
+                  CALL dngdtau_k_nc  ( ldim, proj%k, spsi, alpha, ijkb0, ipol, ik, &
                                       nb_s, nb_e, mykey, dnsg )
-               ELSE
-                  CALL dngdtau_k     ( ldim, proj%k, spsi, alpha, ijkb0, ipol, ik, &
-                                      nb_s, nb_e, mykey, dnsg )
-               ENDIF
-               !
-               DO is = 1, nspin
-                  DO na1 = 1, nat
-                     nt1 = ityp(na1)
-                     IF ( is_hubbard(nt1) ) THEN
-                        ldim1 = ldim_u(nt1)
-                        DO viz = 1, neighood(na1)%num_neigh
-                           na2 = neighood(na1)%neigh(viz)
-                           equiv_na2 = at_sc(na2)%at
-                           nt2 = ityp(equiv_na2)
-                           ldim2 = ldim_u(nt2)
-                           IF (Hubbard_V(na1,na2,1).NE.0.d0 .OR. &
-                               Hubbard_V(na1,na2,2).NE.0.d0 .OR. &
-                               Hubbard_V(na1,na2,3).NE.0.d0 .OR. &
-                               Hubbard_V(na1,na2,4).NE.0.d0 ) THEN
-                               DO m1 = 1, ldim1
-                                  DO m2 = 1, ldim2
-                                     forceh(ipol,alpha) = forceh(ipol,alpha) &
-                                        - DBLE(v_nsg(m2,m1,viz,na1,is) * dnsg(m2,m1,viz,na1,is))
-                                  ENDDO 
-                               ENDDO 
+                  DO is = 1, npol
+                     do is2 = 1, npol
+                        DO na1 = 1, nat
+                           nt1 = ityp(na1)
+                           IF ( is_hubbard(nt1) ) THEN
+                              ldim1 = ldim_u(nt1)
+                              DO viz = 1, neighood(na1)%num_neigh
+                                 na2 = neighood(na1)%neigh(viz)
+                                 equiv_na2 = at_sc(na2)%at
+                                 nt2 = ityp(equiv_na2)
+                                 ldim2 = ldim_u(nt2)
+                                 IF (Hubbard_V(na1,na2,1).NE.0.d0) THEN
+                                    DO m1 = 1, ldim1
+                                       DO m2 = 1, ldim2
+                                          forceh(ipol,alpha) = forceh(ipol,alpha) &
+                                             - DBLE((v_nsg(m2,m1,viz,na1,npol*(is-1)+is2)) &
+                                                   * (dnsg(m2,m1,viz,na1,npol*(is-1)+is2)))
+                                       ENDDO 
+                                    ENDDO 
+                                 ENDIF
+                              ENDDO ! viz
                            ENDIF
-                        ENDDO ! viz
-                     ENDIF
-                  ENDDO ! na1
-               ENDDO ! is
+                        ENDDO ! na1
+                     ENDDO
+                  ENDDO ! is
+               ELSE
+                  IF ( gamma_only ) THEN
+                     CALL dngdtau_gamma ( ldim, proj%r, spsi, alpha, ijkb0, ipol, ik, &
+                                       nb_s, nb_e, mykey, dnsg )
+                  ELSE
+                     CALL dngdtau_k     ( ldim, proj%k, spsi, alpha, ijkb0, ipol, ik, &
+                                       nb_s, nb_e, mykey, dnsg )
+                  ENDIF
+                  !
+                  DO is = 1, nspin
+                     DO na1 = 1, nat
+                        nt1 = ityp(na1)
+                        IF ( is_hubbard(nt1) ) THEN
+                           ldim1 = ldim_u(nt1)
+                           DO viz = 1, neighood(na1)%num_neigh
+                              na2 = neighood(na1)%neigh(viz)
+                              equiv_na2 = at_sc(na2)%at
+                              nt2 = ityp(equiv_na2)
+                              ldim2 = ldim_u(nt2)
+                              IF (Hubbard_V(na1,na2,1).NE.0.d0 .OR. &
+                                 Hubbard_V(na1,na2,2).NE.0.d0 .OR. &
+                                 Hubbard_V(na1,na2,3).NE.0.d0 .OR. &
+                                 Hubbard_V(na1,na2,4).NE.0.d0 ) THEN
+                                 DO m1 = 1, ldim1
+                                    DO m2 = 1, ldim2
+                                       forceh(ipol,alpha) = forceh(ipol,alpha) &
+                                          - DBLE(v_nsg(m2,m1,viz,na1,is) * dnsg(m2,m1,viz,na1,is))
+                                    ENDDO 
+                                 ENDDO 
+                              ENDIF
+                           ENDDO ! viz
+                        ENDIF
+                     ENDDO ! na1
+                  ENDDO ! is
+               ENDIF
+               ! --------------------------------------------
                !
             ENDDO ! ipol
             !
@@ -644,10 +677,11 @@ SUBROUTINE dndtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
                   DO m2 = 1, ldim1
                      DO ibnd = nb_s, nb_e
                         dns_nc(m1,m2,i,na) = dns_nc(m1,m2,i,na) + &
-                            wg(ibnd,ik) * dcmplx(CONJG(dproj(offsetU(na)+m2+ldim1*(is2-1),ibnd) )* &
-                                                       proj(offsetU(na)+m1+ldim1*(is1-1),ibnd)  + &
-                                                 CONJG(proj(offsetU(na)+m2+ldim1*(is2-1),ibnd) )* &
-                                                       dproj(offsetU(na)+m1+ldim1*(is1-1),ibnd)) 
+                            wg(ibnd,ik) * &
+                            dcmplx(CONJG(dproj(offsetU(na)+m2+ldim1*(is2-1),ibnd) )* &
+                                          proj(offsetU(na)+m1+ldim1*(is1-1),ibnd)  + &
+                                    CONJG(proj(offsetU(na)+m2+ldim1*(is2-1),ibnd) )* &
+                                         dproj(offsetU(na)+m1+ldim1*(is1-1),ibnd)) 
                      ENDDO                        
                   ENDDO
                ENDDO   
@@ -1011,10 +1045,6 @@ SUBROUTINE dngdtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    CALL mp_sum(dnsg, intra_pool_comm)
    !
-   ! In nspin=1 k-point weight wg is normalized to 2 el/band 
-   ! in the whole BZ but we are interested in dnsg of one spin component
-   !
-   IF (nspin == 1) dnsg = 0.5d0 * dnsg
    !
    ! Impose hermiticity of dnsg_{m1,m2}
    !
@@ -1049,6 +1079,214 @@ SUBROUTINE dngdtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    RETURN
    !
 END SUBROUTINE dngdtau_k
+!
+! -------------- LUCA (spawoc) --------------
+SUBROUTINE dngdtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
+   nb_e, mykey, dnsg)
+   !-------------------------------------------------------------------------
+   !! This routine computes the derivative of the nsg (generalized occupation
+   !! matrix of the noncollinear DFT+U+V scheme) with respect to the ionic
+   !! displacement \(u(\text{alpha,ipol})\) used to obtain the generalized 
+   !! Hubbard contribution to the atomic forces.
+   !
+   USE kinds,                ONLY : DP
+   USE ions_base,            ONLY : nat, ityp
+   USE lsda_mod,             ONLY : nspin, current_spin
+   USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, offsetU, at_sc,  &
+                  offsetU_back, offsetU_back1, Hubbard_l2,   &
+                  backall, max_num_neighbors, phase_fac, ldim_u, &
+                  neighood, Hubbard_projectors, wfcU
+   USE wvfct,                ONLY : nbnd, npwx, npw, wg
+   USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
+   USE mp,                   ONLY : mp_sum
+   USE wavefunctions,        ONLY : evc
+   USE uspp,                 ONLY : okvan
+   USE force_mod,            ONLY : doverlap_inv
+   USE basis,                ONLY : natomwfc
+   USE noncollin_module,     ONLY : npol 
+   USE io_global,  ONLY : stdout
+   ! 
+   IMPLICIT NONE
+   !
+   ! I/O variables
+   !
+   INTEGER, INTENT(IN) :: ldim
+   !! ldim = 2*Hubbard_lmax+1
+   COMPLEX (DP), INTENT(IN) :: proj(nwfcU,nbnd)
+   !! projection
+   COMPLEX (DP), INTENT(IN) :: spsi(npwx*npol,nbnd)
+   !! \(S|\ \text{evc}\rangle\)
+   INTEGER, INTENT(IN) :: alpha
+   !! the displaced atom index
+   INTEGER, INTENT(IN) :: jkb0
+   !! positions of beta functions for atom alpha
+   INTEGER, INTENT(IN) :: ipol
+   !! the component of displacement
+   INTEGER, INTENT(IN) :: ik
+   !! k-point index
+   INTEGER, INTENT(IN) :: nb_s
+   !! starting band number (for band parallelization)
+   INTEGER, INTENT(IN) :: nb_e
+   !! ending band number (for band parallelization)
+   INTEGER, INTENT(IN) :: mykey
+   !! If each band appears more than once
+   !! compute its contribution only once (i.e. when mykey=0)
+   COMPLEX (DP), INTENT (OUT) :: dnsg(ldim,ldim,max_num_neighbors,nat,nspin)
+   !! the derivative of the generalized atomic occupations
+   !
+   ! ... local variables
+   !
+   INTEGER :: ibnd, is, na, nt, m1, m2, off1, off2, m11, m22, &
+   ldim1, ldim2, eq_na2, na1, na2, nt1, nt2, viz, is1, is2, i, j
+   COMPLEX (DP), ALLOCATABLE :: dproj1(:,:), dproj2(:,:), dproj_us(:,:)
+   INTEGER, EXTERNAL :: find_viz
+   !
+   CALL start_clock('dngdtau')
+   !
+   ALLOCATE ( dproj1(nwfcU,nb_s:nb_e) )
+   ALLOCATE ( dproj2(nwfcU,nb_s:nb_e) )
+   !
+   ! Compute the derivative of the generalized occupation matrices 
+   ! (the quantities dnsg(m1,m2)) of the atomic orbitals. 
+   ! They are complex quantities as well as nsg(m1,m2).
+   !
+   dnsg(:,:,:,:,:) = (0.d0, 0.d0)
+   !
+   ! Compute the phases for each atom at this ik
+   !
+   CALL phase_factor(ik)
+   !
+   ! Compute the USPP contribution to dproj1:
+   ! <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
+   !
+   IF (okvan) THEN
+   ALLOCATE ( dproj_us(nwfcU,nb_s:nb_e) )
+   CALL matrix_element_of_dSdtau (alpha, ipol, ik, jkb0, &
+      nwfcU, wfcU, nbnd, evc, dproj_us, nb_s, nb_e, mykey)
+   ENDIF
+   !
+   IF (Hubbard_projectors.EQ."atomic") THEN
+      ! In the 'atomic' case the calculation must be performed only once (when na=alpha)
+      CALL dprojdtau_k ( spsi, alpha, alpha, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj1 )
+      IF (okvan) dproj1 = dproj1 + dproj_us
+      dproj2 = dproj1
+   ELSEIF (Hubbard_projectors.EQ."ortho-atomic") THEN
+      ! In the 'ortho-atomic' case calculate d[(O^{-1/2})^T]
+      ALLOCATE ( doverlap_inv(natomwfc,natomwfc) )
+      CALL calc_doverlap_inv (alpha, ipol, ik, jkb0)
+   ENDIF
+   !
+   ! Band parallelization. If each band appears more than once
+   ! compute its contribution only once (i.e. when mykey=0)
+   !
+   ! !omp parallel do default(shared) private(na1,viz,m1,m2,ibnd)
+   DO na1 = 1, nat
+      nt1 = ityp(na1)
+      IF ( is_hubbard(nt1) ) THEN
+         ! Compute the second contribution to dproj1 due to the derivative of 
+         ! ortho-atomic orbitals
+         IF (Hubbard_projectors.EQ."ortho-atomic") THEN
+            CALL dprojdtau_k ( spsi, alpha, na1, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj1 )
+            IF (okvan) dproj1 = dproj1 + dproj_us
+         ENDIF
+         ldim1 = ldim_u(nt1)
+         DO viz = 1, neighood(na1)%num_neigh
+            na2 = neighood(na1)%neigh(viz)
+            eq_na2 = at_sc(na2)%at
+            nt2 = ityp(eq_na2)
+            ldim2 = ldim_u(nt2)
+            ! Compute the second contribution to dproj2 due to the derivative of 
+            ! ortho-atomic orbitals
+            IF (Hubbard_projectors.EQ."ortho-atomic") THEN
+               CALL dprojdtau_k ( spsi, alpha, eq_na2, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj2 )
+               IF (okvan) dproj2 = dproj2 + dproj_us
+            ENDIF
+            IF (mykey==0) THEN
+               IF (na1.GT.na2) THEN 
+                  DO is1 = 1, npol
+                     DO is2 = 1, npol
+                        i = npol*(is2-1) + is1
+                        j = npol*(is1-1) + is2
+                        DO m1 = 1, ldim1
+                           DO m2 = 1, ldim2
+                              dnsg(m2,m1,viz,na1,i) = &
+                              CONJG(dnsg(m1,m2,find_viz(na2,na1),na2,j))
+                           ENDDO
+                        ENDDO
+                     ENDDO
+                  ENDDO
+               ELSE
+                  DO is1 = 1, npol
+                     DO is2 = 1, npol
+                        i = npol*(is2-1) + is1
+                        DO m1 = 1, ldim1
+                           off1 = offsetU(na1) + m1+ldim1*(is2-1)
+                           DO m2 = 1, ldim2
+                              off2 = offsetU(eq_na2) + m2+ldim2*(is1-1)
+                              DO ibnd = nb_s, nb_e
+                                 dnsg(m2,m1,viz,na1,i) =  &
+                                       dnsg(m2,m1,viz,na1,i) + &
+                                       wg(ibnd,ik)*dcmplx( CONJG(phase_fac(na2))*&
+                                       (proj(off1,ibnd) * CONJG(dproj2(off2,ibnd)) + &
+                                      dproj1(off1,ibnd)  *  CONJG(proj(off2,ibnd)) ) )
+                              ENDDO
+                           ENDDO
+                        ENDDO ! ibnd
+                     ENDDO ! m2
+                 ENDDO  ! m1
+               ENDIF
+            ENDIF
+         ENDDO ! viz          
+      ENDIF
+   ENDDO ! na1
+   ! !omp end parallel do
+   !
+   DEALLOCATE ( dproj1 ) 
+   DEALLOCATE ( dproj2 ) 
+   IF (ALLOCATED(doverlap_inv)) DEALLOCATE( doverlap_inv )
+   IF (ALLOCATED(dproj_us))     DEALLOCATE( dproj_us )
+   !
+   CALL mp_sum(dnsg, intra_pool_comm)
+   !
+   ! Impose hermiticity of dnsg_{m1,m2}
+   !
+   ! !omp parallel do default(shared) private(na1,viz,m1,m2)
+   DO na1 = 1, nat
+      nt1 = ityp (na1)
+      IF ( is_hubbard(nt1) ) THEN
+         ldim1 = ldim_u(nt1)
+         DO viz = 1, neighood(na1)%num_neigh
+            na2 = neighood(na1)%neigh(viz)
+            IF (na1.GT.na2) THEN
+               eq_na2 = at_sc(na2)%at
+               nt2 = ityp (eq_na2)
+               ldim2 = ldim_u(nt2)
+               DO is1 = 1, npol
+                  DO is2 = 1, npol
+                     i = npol*(is2-1) + is1
+                     j = npol*(is1-1) + is2
+                     DO m1 = 1, ldim1
+                        DO m2 = 1, ldim2
+                           dnsg(m2,m1,viz,na1,i) = &
+                              (dnsg(m2,m1,viz,na1,i) + &
+                              CONJG(dnsg(m1,m2,find_viz(na2,na1),na2,j)) )*0.5d0
+                           dnsg(m1,m2,find_viz(na2,na1),na2,j) = &
+                              CONJG(dnsg(m2,m1,viz,na1,i))
+                        ENDDO
+                     ENDDO
+                  ENDDO
+               ENDDO
+            ENDIF
+         ENDDO
+      ENDIF
+   ENDDO
+   ! !omp end parallel do
+   !
+   CALL stop_clock('dngdtau')
+   !
+   RETURN
+   !
+END SUBROUTINE dngdtau_k_nc
 !
 !-----------------------------------------------------------------------------
 SUBROUTINE dngdtau_gamma ( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &

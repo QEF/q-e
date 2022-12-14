@@ -293,37 +293,70 @@ SUBROUTINE stres_hub ( sigmah )
                !
                ! Compute the derivative of the occupation matrix w.r.t epsilon
                !
-               IF (gamma_only) THEN
-                  CALL dngdepsilon_gamma(ipol,jpol,ldim,proj%r,spsi,ik,nb_s,nb_e,mykey,dnsg)
-               ELSE
-                  CALL dngdepsilon_k(ipol,jpol,ldim,proj%k,spsi,ik,nb_s,nb_e,mykey,dnsg)
-               ENDIF
-               !
-               DO is = 1, nspin
-                  DO na1 = 1, nat
-                     nt1 = ityp(na1)
-                     IF ( is_hubbard(nt1) ) THEN
-                        ldim1 = ldim_u(nt1)
-                        DO viz = 1, neighood(na1)%num_neigh
-                           na2 = neighood(na1)%neigh(viz)
-                           equiv_na2 = at_sc(na2)%at
-                           nt2 = ityp (equiv_na2)
-                           ldim2 = ldim_u(nt2)
-                           IF (Hubbard_V(na1,na2,1).NE.0.d0 .OR. &
-                               Hubbard_V(na1,na2,2).NE.0.d0 .OR. &
-                               Hubbard_V(na1,na2,3).NE.0.d0 .OR. &
-                               Hubbard_V(na1,na2,4).NE.0.d0 ) THEN
-                               DO m1 = 1, ldim1
-                                  DO m2 = 1, ldim2
-                                     sigmah(ipol,jpol) = sigmah(ipol,jpol) - &
-                                           DBLE(v_nsg(m2,m1,viz,na1,is) * dnsg(m2,m1,viz,na1,is)) 
-                                  ENDDO 
-                               ENDDO 
+               ! ------------ LUCA (spawoc) ------------------
+               IF (noncolin) THEN
+                  CALL dngdepsilon_k_nc(ipol,jpol,ldim,proj%k,&
+                                          spsi,ik,nb_s,nb_e,mykey,dnsg)
+                  DO is = 1, npol
+                     DO is2 = 1, npol
+                        DO na1 = 1, nat
+                           nt1 = ityp(na1)
+                           IF ( is_hubbard(nt1) ) THEN
+                              ldim1 = ldim_u(nt1)
+                              DO viz = 1, neighood(na1)%num_neigh
+                                 na2 = neighood(na1)%neigh(viz)
+                                 equiv_na2 = at_sc(na2)%at
+                                 nt2 = ityp (equiv_na2)
+                                 ldim2 = ldim_u(nt2)
+                                 IF (Hubbard_V(na1,na2,1).NE.0.d0 ) THEN
+                                    DO m1 = 1, ldim1
+                                       DO m2 = 1, ldim2
+                                          sigmah(ipol,jpol) = sigmah(ipol,jpol) - &
+                                                DBLE(v_nsg(m2,m1,viz,na1,npol*(is-1)+is2) *&
+                                                      dnsg(m2,m1,viz,na1,npol*(is-1)+is2)) 
+                                       ENDDO 
+                                    ENDDO 
+                                 ENDIF
+                              ENDDO
                            ENDIF
                         ENDDO
-                     ENDIF
+                     ENDDO
                   ENDDO
-               ENDDO 
+               ELSE
+                  IF (gamma_only) THEN
+                     CALL dngdepsilon_gamma(ipol,jpol,ldim,proj%r,&
+                                             spsi,ik,nb_s,nb_e,mykey,dnsg)
+                  ELSE
+                     CALL dngdepsilon_k(ipol,jpol,ldim,proj%k, &
+                                            spsi,ik,nb_s,nb_e,mykey,dnsg)
+                  ENDIF
+                  !
+                  DO is = 1, nspin
+                     DO na1 = 1, nat
+                        nt1 = ityp(na1)
+                        IF ( is_hubbard(nt1) ) THEN
+                           ldim1 = ldim_u(nt1)
+                           DO viz = 1, neighood(na1)%num_neigh
+                              na2 = neighood(na1)%neigh(viz)
+                              equiv_na2 = at_sc(na2)%at
+                              nt2 = ityp (equiv_na2)
+                              ldim2 = ldim_u(nt2)
+                              IF (Hubbard_V(na1,na2,1).NE.0.d0 .OR. &
+                                 Hubbard_V(na1,na2,2).NE.0.d0 .OR. &
+                                 Hubbard_V(na1,na2,3).NE.0.d0 .OR. &
+                                 Hubbard_V(na1,na2,4).NE.0.d0 ) THEN
+                                 DO m1 = 1, ldim1
+                                    DO m2 = 1, ldim2
+                                       sigmah(ipol,jpol) = sigmah(ipol,jpol) - &
+                                             DBLE(v_nsg(m2,m1,viz,na1,is) * dnsg(m2,m1,viz,na1,is)) 
+                                    ENDDO 
+                                 ENDDO 
+                              ENDIF
+                           ENDDO
+                        ENDIF
+                     ENDDO
+                  ENDDO 
+               ENDIF
                ! 
             ENDIF
             !
@@ -988,6 +1021,146 @@ SUBROUTINE dngdepsilon_k ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,dnsg )
    !
 END SUBROUTINE dngdepsilon_k
 !
+! ------------ LUCA (spawoc) --------------------
+SUBROUTINE dngdepsilon_k_nc ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,dnsg )
+   !-----------------------------------------------------------------------
+   !! This routine computes the derivative of the nsg atomic occupations with
+   !! respect to the strain epsilon(ipol,jpol) used to obtain the noncollinear
+   !! generalized Hubbard contribution to the internal stres tensor.
+   !
+   USE kinds,             ONLY : DP
+   USE ions_base,         ONLY : nat, ityp
+   USE klist,             ONLY : ngk
+   USE lsda_mod,          ONLY : nspin, current_spin
+   USE wvfct,             ONLY : nbnd, npwx, wg
+   USE becmod,            ONLY : bec_type, allocate_bec_type, deallocate_bec_type
+   USE mp_pools,          ONLY : intra_pool_comm
+   USE mp,                ONLY : mp_sum
+   USE ldaU,              ONLY : nwfcU, Hubbard_l, is_hubbard, Hubbard_l2, &
+                                 ldim_u, at_sc, neighood, max_num_neighbors,   &
+                                 phase_fac, backall, offsetU, offsetU_back,    &
+                                 offsetU_back1
+   USE noncollin_module,  ONLY : npol 
+   USE io_global,          ONLY : stdout
+   
+   IMPLICIT NONE
+   !
+   ! I/O variables 
+   !
+   INTEGER, INTENT(IN) :: ipol
+   !! component index 1 to 3
+   INTEGER, INTENT(IN) :: jpol
+   !! component index 1 to 3
+   INTEGER, INTENT(IN) :: ldim
+   !! number of m-values: ldim = 2*Hubbard_lmax+1
+   COMPLEX (DP), INTENT(IN) :: proj(nwfcU,nbnd)
+   !! projection
+   COMPLEX (DP), INTENT(IN) :: spsi(npwx*npol,nbnd)
+   !! \(S|\ \text{evc}\rangle\)
+   INTEGER, INTENT(IN) :: ik
+   !! k-point index
+   INTEGER, INTENT(IN) :: nb_s
+   !! starting band number (for band parallelization)
+   INTEGER, INTENT(IN) :: nb_e
+   !! ending band number (for band parallelization)
+   INTEGER, INTENT(IN) :: mykey
+   !! If each band appears more than once
+   !! compute its contribution only once (i.e. when mykey=0) 
+   COMPLEX (DP), INTENT (OUT) :: dnsg(ldim,ldim,max_num_neighbors,nat,nspin)
+   !! the derivative of the nsg atomic occupations
+   !
+   ! ... local variables
+   !
+   INTEGER :: ibnd,              & ! count on bands
+              is,                & ! count on spins
+              npw,               & ! number of plane waves
+              na1, na2,          & ! atomic indices
+              nt1, nt2,          & ! indices of the atomic type
+              m1, m2, m11, m22,  & ! indices of magnetic quantum numbers
+              off1, off2, off22, & ! indices for the offsets
+              ldim1, ldim2,      & ! dimensions of the Hubbard manifold
+              eq_na2, viz,       & ! variables to control neighbors
+              is1, is2, i, j       ! for the spin indexes
+   COMPLEX(DP), ALLOCATABLE :: dproj(:,:)
+   INTEGER, EXTERNAL :: find_viz
+   !
+   ALLOCATE ( dproj(nwfcU,nbnd) )
+   !
+   ! D_Sl for l=1 and l=2 are already initialized, for l=0 D_S0 is 1
+   !
+   ! Offset of atomic wavefunctions initialized in setup and stored in oatwfc
+   !
+   dnsg(:,:,:,:,:) = (0.0_dp, 0.0_dp)
+   !
+   npw = ngk(ik)
+   !
+   ! Calculate the first derivative of proj with respect to epsilon(ipol,jpol)
+   !
+   CALL dprojdepsilon_k (spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj)
+   !
+   ! Set the phases for each atom at this ik
+   !
+   CALL phase_factor(ik)
+   !
+   ! Band parallelization. If each band appears more than once
+   ! compute its contribution only once (i.e. when mykey=0)
+   !
+   IF ( mykey /= 0 ) GO TO 10
+   !
+   DO na1 = 1, nat
+      nt1 = ityp(na1)
+      IF ( is_hubbard(nt1) ) THEN
+         ldim1 = ldim_u(nt1)
+         DO viz = 1, neighood(na1)%num_neigh
+            na2 = neighood(na1)%neigh(viz)
+            eq_na2 = at_sc(na2)%at
+            nt2 = ityp(eq_na2)
+            ldim2 = ldim_u(nt2)
+            IF (na1.GT.na2) THEN 
+               DO m1 = 1, ldim1
+                  DO m2 = 1, ldim2
+                     DO is1 = 1, npol
+                        DO is2 = 1, npol
+                           i = npol*(is2-1) + is1
+                           j = npol*(is1-1) + is2
+                           dnsg(m2,m1,viz,na1,i) = &
+                             CONJG(dnsg(m1,m2,find_viz(na2,na1), na2, j))
+                        ENDDO
+                     ENDDO
+                  ENDDO
+               ENDDO
+            ELSE
+               DO is1 = 1, npol
+                  DO is2 = 1, npol
+                     i = npol*(is2-1) + is1
+                     DO m1 = 1, ldim1
+                        off1 = offsetU(na1) + m1 +ldim1*(is2-1)
+                        DO m2 = 1, ldim2
+                           off2 = offsetU(eq_na2) + m2 +ldim2*(is1-1)
+                           DO ibnd = nb_s, nb_e
+                              dnsg(m2,m1,viz,na1,i) = &
+                                 dnsg(m2,m1,viz,na1,i) +  &
+                                 wg(ibnd,ik) * CONJG(phase_fac(na2)) * &
+                                   dcmplx(proj(off1,ibnd) * CONJG(dproj(off2,ibnd))  + &
+                                         dproj(off1,ibnd) *  CONJG(proj(off2,ibnd)) )
+                           ENDDO
+                        ENDDO 
+                     ENDDO  
+                  ENDDO
+               ENDDO
+            ENDIF 
+         ENDDO           
+      ENDIF 
+   ENDDO 
+   !
+10 CALL mp_sum(dnsg, intra_pool_comm)
+   !
+   !
+   DEALLOCATE( dproj )
+   !
+   RETURN
+   !
+END SUBROUTINE dngdepsilon_k_nc
 !-----------------------------------------------------------------------
 SUBROUTINE dngdepsilon_gamma ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,dnsg )
    !-----------------------------------------------------------------------
@@ -1163,6 +1336,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE mp,                   ONLY : mp_sum
    USE noncollin_module,     ONLY : noncolin, npol
    USE wavefunctions_gpum,   ONLY : using_evc
+   USE io_global,          ONLY : stdout 
    IMPLICIT NONE
    !
    ! I/O variables 
