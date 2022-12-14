@@ -571,20 +571,12 @@ SUBROUTINE sum_band()
           !
           ! ... calculate polaron density
           !
-          IF(sic .and. current_spin == isp) THEN
-             psic_p(:) = (0.d0, 0.d0)
-             !$omp parallel
-             CALL threaded_barrier_memset(psic_p, 0.D0, dffts%nnr*2)
-             !$omp do
-             DO j = 1, npw
-                psic_p(dffts%nl(igk_k(j,ik))) = evc(j,ibnd_p)
-             ENDDO
-             !$omp end do nowait
-             !$omp end parallel
-             CALL invfft ('Wave', psic_p, dffts)
+          IF ( sic .AND. current_spin==isp ) THEN
+             CALL wave_g2r( evc(1:npw,ibnd_p:ibnd_p), psic_p, dffts, igk=igk_k(:,ik) )
+             !
              CALL get_rho(rho%pol_r(:,1), dffts%nnr, wg(1,ik)/omega, psic_p)
              wg_p = wg_p + wg(ibnd_p,ik)
-          END IF
+          ENDIF
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
           !
