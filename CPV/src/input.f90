@@ -698,7 +698,9 @@ MODULE input
       force_pairing_ = force_pairing
 
       ! ... having set all input keywords, read plugins' input file(s)
-
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_read_input()
+#endif 
 #if defined (__ENVIRON)
       IF (use_environ) THEN
          CALL read_environ_input()

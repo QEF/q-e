@@ -19,15 +19,8 @@ USE io_files,         ONLY : tmp_dir
 USE plugin_flags
 !
 !
-! ***Environ MODULES BEGIN***
-! ***Environ MODULES END***
 !
 IMPLICIT NONE
 !
-! ***Environ VARIABLES BEGIN***
-! ***Environ VARIABLES END***
-!
-! ***Environ CALLS BEGIN***
-! ***Environ CALLS END***
 !
 END SUBROUTINE plugin_print_energies

@@ -129,6 +129,9 @@ SUBROUTINE from_scratch( )
     !
     !     pass ions informations to plugins
     !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_init_ions(tau0)
+#endif
 #if defined (__ENVIRON)
     IF (use_environ) CALL update_environ_ions(tau0)
 #endif

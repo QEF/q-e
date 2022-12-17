@@ -13,16 +13,10 @@ USE plugin_flags
 USE fft_base,         ONLY : dfftp
 USE mp_bands,         ONLY : me_bgrp
 !
-! ***Environ MODULES BEGIN***
-! ***Environ MODULES END***
+
 !
 implicit none
 !
-! ***Environ VARIABLES BEGIN***
-! ***Environ VARIABLES END***
-!
-! ***Environ CALLS BEGIN***
-! ***Environ CALLS END***
 !
 end subroutine plugin_init_base
 

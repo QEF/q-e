@@ -874,6 +874,9 @@ USE cp_main_variables,        ONLY : eigr_d
            IF ( tefield )  CALL efield_update( eigr )
            IF ( tefield2 ) CALL efield_update2( eigr )
            !
+#if defined (__LEGACY_PLUGINS)
+  CALL plugin_init_ions(tau0)
+#endif 
 #if defined (__ENVIRON)
            IF (use_environ) CALL update_environ_ions(tau0)
 #endif
@@ -1204,6 +1207,9 @@ SUBROUTINE terminate_run()
   !
   IF (tcg) call print_clock_tcg()
   !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_clock()
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) CALL print_environ_clocks()
 #endif

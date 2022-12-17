@@ -202,6 +202,9 @@ SUBROUTINE from_restart( )
    IF ( tefield  ) CALL efield_berry_setup( eigr, tau0 )
    IF ( tefield2 ) CALL efield_berry_setup2( eigr, tau0 )
    !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_init_ions(tau0)
+#endif 
 #if defined (__ENVIRON)
    IF (use_environ) CALL update_environ_ions(tau0)
 #endif
