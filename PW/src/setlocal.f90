@@ -132,6 +132,9 @@ SUBROUTINE setlocal
   !
   ! ... Save vltot for possible modifications in plugins
   !
+#if defined (__LEGACY_PLUGINS)
+  CALL plugin_init_potential( vltot)
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) CALL update_environ_potential(vltot)
 #endif

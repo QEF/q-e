@@ -1491,6 +1491,9 @@ SUBROUTINE iosys()
   !
   ! ... once input variables have been stored, read optional plugin input files
   !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_read_input('PW')
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) THEN
      CALL read_environ_input()

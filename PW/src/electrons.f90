@@ -923,6 +923,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      plugin_etot = 0.0_dp
      !
+#if defined (__LEGACY_PLUGINS) 
+     CALL plugin_scf_energy (plugin_etot, rhoin) 
+     !
+     CALL plugin_scf_potential(rhoin, conv_elec, dr2, vltot)
+#endif 
 #if defined (__ENVIRON)
      IF (use_environ) THEN
         CALL calc_environ_energy(plugin_etot, .TRUE.)
@@ -1610,6 +1615,9 @@ SUBROUTINE electrons_scf ( printout, exxen )
           !
        ENDIF
        !
+#if defined(__LEGACY_PLUGINS)
+       CALL plugin_print_energies()
+#endif 
 #if defined (__ENVIRON)
        IF (use_environ) CALL print_environ_energies('PW')
 #endif

@@ -129,6 +129,9 @@ SUBROUTINE init_run()
   IF (lrism) CALL rism_alloc3d()
   !
   call plugin_initbase()
+#if defined (__LEGACY_PLUGINS)
+  CALL plugin_initbase()
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) THEN
     IF (alat < 1.D-8) CALL errore('init_run', "Wrong alat", 1)
