@@ -3924,7 +3924,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
     card CONSTRAINTS {
         label {
-            Optional card, used for constrained dynamics or constrained optimisations
+            Optional card, used for constrained dynamics or constrained optimizations
             (only if @ref ion_dynamics=='damp' or 'verlet', variable-cell excepted)
         }
         message {
@@ -3984,7 +3984,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                                 G. Roma, J.P. Crocombette: J. Nucl. Mater. 403, 32 (2010),
                                 doi:10.1016/j.jnucmat.2010.06.001
                             }
-                        }                       
+                            opt -val 'potential_wall' {
+                                (experimental) add a potential wall at the origin
+                                normal to the the z-axis.
+                            }
+                        }
                     }
                     colgroup {
                         col constr(1)
@@ -4020,6 +4024,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                                            @i constr(1) is the index of the atom whose position is constrained.
                                            @i constr(2:4) are the three coordinates of the vector that specifies
                                            the constraint direction.
+                            @b 'potential_wall' :
+                                           Formula is: External force = prefac * exponent * Exp(-exponent). Force is only applied
+                                           on atoms within the cutoff.
+                                           @i constr(1) is the prefactor
+                                           @i constr(2) is the value in the exponent
+                                           @i constr(3) is the cutoff (in a.u.)
                         }
                     }
 

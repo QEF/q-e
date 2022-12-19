@@ -1544,7 +1544,7 @@ CONTAINS
                                     constr_inp(3,i)
                !
                WRITE(stdout, '(7x,i3,a)') &
-                  i,') potential wall at 0 z-axis is requested'
+                  i,') potential wall at origin normal to z-axis is requested'
                WRITE(stdout, '(9x,a)') 'External force is proportional to:'
                WRITE(stdout, '(11x,f12.6,a,f12.6,a,f12.6,a)') constr_inp(1,i), &
                   ' (a.u.) * ', constr_inp(2,i), ' (a.u.) * exp(', &
