@@ -453,6 +453,9 @@
       !
       !   pass new cell parameters to plugins
       !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_init_cell() 
+#endif 
 #if defined (__ENVIRON)
       IF (use_environ) THEN
          at_scaled = at * alat

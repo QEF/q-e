@@ -306,6 +306,9 @@ if(QE_ENABLE_CUDA)
         PRIVATE
             CUDA::cublas)
 endif()
+if ("legacy" IN_LIST QE_ENABLE_PLUGINS) 
+  target_compile_definitions(qe_pw PUBLIC __LEGACY_PLUGINS)
+endif()
 
 ###########################################################
 # pw.x

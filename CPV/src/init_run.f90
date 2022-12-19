@@ -132,6 +132,9 @@ SUBROUTINE init_run()
   !
   ! ... initialization of plugin variables and arrays
   !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_init_base()
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) THEN
      at_scaled = at * alat

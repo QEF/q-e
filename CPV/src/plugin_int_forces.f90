@@ -20,8 +20,6 @@ USE gvect,             ONLY : eigts1, eigts2, eigts3
 !
 USE plugin_flags
 !
-! ***Environ MODULES BEGIN***
-! ***Environ MODULES END***
 !
 IMPLICIT NONE
 !
@@ -35,11 +33,5 @@ COMPLEX(DP), ALLOCATABLE :: auxg(:), auxr(:)
 INTEGER  :: ipol, na
 ! counter on polarization
 ! counter on atoms
-!
-! ***Environ VARIABLES BEGIN***
-! ***Environ VARIABLES END***
-!
-! ***Environ CALLS BEGIN***
-! ***Environ CALLS END***
 !
 END SUBROUTINE plugin_int_forces

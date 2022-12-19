@@ -203,6 +203,9 @@
              IF( textfor ) WRITE( stdout, 16 ) eextfor
           END IF
           !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_print_energies()
+#endif 
 #if defined (__ENVIRON)
           IF (use_environ) CALL print_environ_energies('CP')
 #endif

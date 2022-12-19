@@ -66,6 +66,9 @@ SUBROUTINE forces()
   USE environ_base_module, ONLY : calc_environ_force
   USE environ_pw_module,   ONLY : is_ms_gcs, run_ms_gcs
 #endif
+#if defined(__LEGACY_PLUGINS) 
+  USE plugin_flags
+#endif 
   !
   IMPLICIT NONE
   !
@@ -217,6 +220,9 @@ SUBROUTINE forces()
   !
   ! ... call void routine for user define/ plugin patches on internal forces
   !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_int_forces() 
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) CALL calc_environ_force(force)
 #endif
@@ -321,6 +327,9 @@ SUBROUTINE forces()
   !
   ! ... call void routine for user define/ plugin patches on external forces
   !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_ext_forces() 
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) THEN
      IF (is_ms_gcs()) CALL run_ms_gcs()

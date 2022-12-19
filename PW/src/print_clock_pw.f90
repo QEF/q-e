@@ -339,7 +339,9 @@ SUBROUTINE print_clock_pw()
    !
    CALL rism_print_clock()
    !
+#if defined(__LEGACY_PLUGINS)
    CALL plugin_clock()
+#endif 
 #if defined (__ENVIRON)
    IF (use_environ) CALL print_environ_clocks()
 #endif
