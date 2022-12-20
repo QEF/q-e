@@ -1534,6 +1534,31 @@ CONTAINS
                !
             ENDIF
             !
+         CASE( 'potential_wall' )
+            !
+            IF ( nfield == 4 ) THEN
+               !
+               READ( input_line, * ) constr_type_inp(i), &
+                                    constr_inp(1,i), &
+                                    constr_inp(2,i), &
+                                    constr_inp(3,i)
+               !
+               WRITE(stdout, '(7x,i3,a)') &
+                  i,') potential wall at origin normal to z-axis is requested'
+               WRITE(stdout, '(9x,a)') 'External force is proportional to:'
+               WRITE(stdout, '(11x,f12.6,a,f12.6,a,f12.6,a)') constr_inp(1,i), &
+                  ' (a.u.) * ', constr_inp(2,i), ' (a.u.) * exp(', &
+                  (-1._dp) * constr_inp(2,i), ').'
+               WRITE(stdout, '(9x,a,f12.6,a)') 'Force is applied when atom is within ',&
+                  constr_inp(3,i), ' (a.u.) from the wall.'
+            !
+            ELSE
+               !
+               CALL errore( 'card_constraints', &
+                           & 'potential_wall: wrong number of fields', nfield )
+               !
+            ENDIF
+            !
          CASE DEFAULT
             !
             CALL errore( 'card_constraints', 'unknown constraint ' // &
