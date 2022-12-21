@@ -1137,7 +1137,7 @@ MODULE pw_restart_new
                                   Hubbard_n, Hubbard_l, Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, &
                                   Hubbard_U, Hubbard_U2, Hubbard_J, Hubbard_V, Hubbard_alpha, Hubbard_occ, &
                                   Hubbard_alpha_back, Hubbard_J0, Hubbard_beta, Hubbard_projectors
-      USE funct,           ONLY : enforce_input_dft
+      USE funct,           ONLY : enforce_input_dft, get_dft_short
       USE xc_lib,          ONLY : start_exx, exx_is_active,xclib_dft_is,      &
                                   set_screening_parameter, set_gau_parameter, &
                                   xclib_set_exx_fraction, stop_exx, start_exx  
@@ -1166,13 +1166,16 @@ MODULE pw_restart_new
       !
       USE mp_images,       ONLY : intra_image_comm
       USE mp,              ONLY : mp_bcast
+      USE dftd3_qe,        ONLY : dftd3_in, dftd3, dftd3_xc 
+      USE dftd3_api,       ONLY : dftd3_init, dftd3_set_functional 
       !
       IMPLICIT NONE
       LOGICAL, INTENT(OUT) :: wfc_is_collected
       !
-      INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3
-      LOGICAL  :: magnetic_sym, lvalid_input
-      CHARACTER(LEN=37) :: dft_name
+      INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3, dftd3_version
+      LOGICAL  :: magnetic_sym, lvalid_input, dftd3_3body
+      CHARACTER(LEN=37)  :: dft_name
+      CHARACTER(LEN=256) ::dft_
       CHARACTER(LEN=20) :: vdw_corr, occupations
       CHARACTER(LEN=320):: filename
       REAL(dp) :: exx_fraction, screening_parameter
@@ -1247,7 +1250,7 @@ MODULE pw_restart_new
            lda_plus_u, lda_plus_u_kind, Hubbard_projectors, Hubbard_n, Hubbard_l, Hubbard_lmax, Hubbard_occ,&
            Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
            Hubbard_U, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, Hubbard_V, &
-           vdw_corr, scal6, lon_rcut, vdw_isolated )
+           vdw_corr, dftd3_version, dftd3_3body, scal6, lon_rcut, vdw_isolated )
       Hubbard_alpha_back = Hubbard_alpha_back * e2 
       Hubbard_alpha      = Hubbard_alpha      * e2
       Hubbard_beta       = Hubbard_beta       * e2 
@@ -1257,8 +1260,18 @@ MODULE pw_restart_new
       Hubbard_J0         = Hubbard_J0         * e2 
       Hubbard_J          = Hubbard_J          * e2  
       !! More DFT initializations
+
       CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, mbd_vdw, lxdm )
+      !FIXME this maybe should be done directly in set_vdw_corr 
       CALL enforce_input_dft ( dft_name, .TRUE. )
+      IF (ldftd3) THEN 
+         IF (dftd3_version == 2 ) dftd3_3body = .FALSE. 
+         dftd3_in%threebody = dftd3_3body 
+         CALL dftd3_init(dftd3, dftd3_in)
+         dft_ = get_dft_short() 
+         dft_ = dftd3_xc(dft_) 
+         CALL dftd3_set_functional(dftd3, func = dft_, version = dftd3_version, tz=.FALSE.) 
+      END IF  
       IF ( xclib_dft_is('hybrid') ) THEN
          ecutvcut=ecutvcut*e2
          ecutfock=ecutfock*e2

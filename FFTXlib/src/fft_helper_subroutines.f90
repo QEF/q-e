@@ -365,12 +365,12 @@ CONTAINS
        howmany   = pack_size + remainder
        !
        !$acc kernels
-       psi(1:desc%nnr*howmany) = (0.d0, 0.d0)
+       psi(1:desc%nnr*howmany) = (0.d0,0.d0)
        !$acc end kernels
        !
        ! ... two ffts at the same time (remember, v_siz = dffts%nnr)
        IF ( pack_size > 0 ) THEN
-          !$acc parallel loop
+          !$acc parallel loop collapse(2)
           DO idx = 0, pack_size-1
              DO ig = 1, n
                 psi(nl_d(ig) + idx*v_siz) = c(ig,2*idx+1) + (0.d0,1.d0)*c(ig,2*idx+2)
@@ -389,19 +389,21 @@ CONTAINS
        !
      ELSE
        !
+       n = desc%ngw
+       !
        !$acc kernels
        psi = 0.0d0
        !$acc end kernels
        !
        IF( PRESENT(ca) ) THEN
           !$acc parallel loop present_or_copyin(ca)
-          DO ig = 1, desc%ngw
+          DO ig = 1, n
             psi(nlm_d(ig)) = CONJG(c(ig,1)) + ci * CONJG(ca(ig))
             psi(nl_d(ig)) = c(ig,1) + ci * ca(ig)
           ENDDO
        ELSE
           !$acc parallel loop
-          DO ig = 1, desc%ngw
+          DO ig = 1, n
             psi(nlm_d(ig)) = CONJG(c(ig,1))
             psi(nl_d(ig)) = c(ig,1)
           ENDDO
@@ -537,9 +539,10 @@ CONTAINS
      !! stores the Fourier expansion coefficients
      COMPLEX(DP), OPTIONAL, INTENT(IN) :: ca(:)
      COMPLEX(DP), PARAMETER :: ci=(0.0d0,1.0d0)
-     INTEGER :: ig
+     INTEGER :: ig, desc_ngm
      !
      CALL alloc_nl_pntrs( desc )
+     desc_ngm = desc%ngm
      !
      !$acc data present_or_copyin(c) present_or_copyout(psi)
      !$acc kernels
@@ -548,26 +551,26 @@ CONTAINS
      IF ( PRESENT(ca) ) THEN
         IF( desc%lgamma ) THEN
            !$acc parallel loop present_or_copyin(ca)
-           DO ig = 1, desc%ngm
+           DO ig = 1, desc_ngm
               psi(nlm_d(ig)) = CONJG(c(ig)) + ci * CONJG(ca(ig))
               psi(nl_d(ig)) = c(ig) + ci * ca(ig)
            ENDDO
         ELSE
            !$acc parallel loop present_or_copyin(ca)
-           DO ig = 1, desc%ngm
+           DO ig = 1, desc_ngm
               psi(nl_d(ig)) = c(ig) + ci * ca(ig)
            ENDDO
         ENDIF
      ELSE
         IF( desc%lgamma ) THEN
            !$acc parallel loop
-           DO ig = 1, desc%ngm
+           DO ig = 1, desc_ngm
               psi(nlm_d(ig)) = CONJG(c(ig))
               psi(nl_d(ig)) = c(ig)
            ENDDO
         ELSE
            !$acc parallel loop
-           DO ig = 1, desc%ngm
+           DO ig = 1, desc_ngm
               psi(nl_d(ig)) = c(ig)
            ENDDO
         ENDIF
@@ -702,9 +705,11 @@ CONTAINS
        !
      ELSE
        !
+       n = desc%ngw
+       !
        IF( PRESENT(vout2) ) THEN
           !$acc parallel loop present_or_copyout(vout2)
-          DO ig = 1, desc%ngw
+          DO ig = 1, n
              fp = vin(nl_d(ig))+vin(nlm_d(ig))
              fm = vin(nl_d(ig))-vin(nlm_d(ig))
              vout1(ig,1) = CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
@@ -712,7 +717,7 @@ CONTAINS
           ENDDO
        ELSE
           !$acc parallel loop
-          DO ig = 1, desc%ngw
+          DO ig = 1, n
              vout1(ig,1) = vin(nl_d(ig))
           ENDDO
        ENDIF

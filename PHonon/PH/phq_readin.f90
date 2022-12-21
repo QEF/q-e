@@ -38,7 +38,8 @@ SUBROUTINE phq_readin()
                             ext_recover, ext_restart, u_from_file, ldiag, &
                             search_sym, lqdir, electron_phonon, tmp_dir_phq, &
                             rec_code_read, qplot, only_init, only_wfc, &
-                            low_directory_check, nk1, nk2, nk3, k1, k2, k3
+                            low_directory_check, nk1, nk2, nk3, k1, k2, k3, &
+                            dftd3_hess
   USE save_ph,       ONLY : tmp_dir_save, save_ph_input_variables
   USE gamma_gamma,   ONLY : asr
   USE partial,       ONLY : atomo, nat_todo, nat_todo_input
@@ -125,7 +126,7 @@ SUBROUTINE phq_readin()
                        lshift_q, read_dns_bare, d2ns_type, diagonalization, &
                        ldvscf_interpolate, do_long_range, do_charge_neutral, &
                        wpot_dir, ahc_dir, ahc_nbnd, ahc_nbndskip, &
-                       skip_upperfan
+                       skip_upperfan, dftd3_hess
 
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
@@ -209,6 +210,8 @@ SUBROUTINE phq_readin()
   ! ahc_nbndskip: Number of bands to exclude when computing the self-energy.
   ! skip_upperfan: If .true., skip the calculation of upper Fan self-energy.
   !
+  ! dftd3_hess: file from where the dftd3 hessian is read
+  !
   ! Note: meta_ionode is a single processor that reads the input
   !       (ionode is also a single processor but per image)
   !       Data read from input is subsequently broadcast to all processors
@@ -277,6 +280,7 @@ SUBROUTINE phq_readin()
   fildyn       = 'matdyn'
   fildrho      = ' '
   fildvscf     = ' '
+  dftd3_hess   = ' '
   ldisp        = .FALSE.
   nq1          = 0
   nq2          = 0
@@ -772,8 +776,8 @@ SUBROUTINE phq_readin()
   IF (ts_vdw) CALL errore('phq_readin',&
      'The phonon code with TS-VdW is not yet available',1)
 
-  IF (ldftd3) CALL errore('phq_readin',&
-     'The phonon code with Grimme''s DFT-D3 is not yet available',1)
+  !IF (ldftd3) CALL errore('phq_readin',&
+  !   'The phonon code with Grimme''s DFT-D3 is not yet available',1)
 
   IF ( xclib_dft_is('meta') ) CALL errore('phq_readin',&
      'The phonon code with meta-GGA functionals is not yet available',1)
@@ -943,6 +947,12 @@ SUBROUTINE phq_readin()
   IF ((ldisp.AND..NOT.qplot) .AND. &
                   (nq1 .LE. 0 .OR. nq2 .LE. 0 .OR. nq3 .LE. 0)) &
        CALL errore('phq_readin','nq1, nq2, and nq3 must be greater than 0',1)
+
+  !
+  ! If dftd3_hess is not specified, use a default name set from prefix
+  !
+  IF ( dftd3_hess == ' ' ) dftd3_hess = trim(prefix)//'.hess'
+  dftd3_hess = TRIM(tmp_dir)//TRIM(dftd3_hess)
 
   CALL save_ph_input_variables()
   !

@@ -109,6 +109,10 @@ SUBROUTINE hinit0()
   ! these routines can be used to patch quantities that are dependent
   ! on the ions and cell parameters
   !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_init_ions(tau) 
+  CALL plugin_init_cell() 
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) THEN
      at_scaled = at * alat

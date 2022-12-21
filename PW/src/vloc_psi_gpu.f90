@@ -48,7 +48,7 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:), tg_vpsi(:,:)
 #if defined(__CUDA)
   attributes(DEVICE) :: tg_v_d
-  INTEGER :: v_siz, idx, ebnd, brange
+  INTEGER :: dffts_nnr, idx, ebnd, brange
   INTEGER :: ierr, ioff
   ! ... Variables to handle batched FFT
   INTEGER :: group_size, pack_size, remainder, howmany, hm_vec(3)
@@ -68,15 +68,15 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
   !
   IF ( use_tg ) THEN
      CALL start_clock_gpu( 'vloc_psi:tg_gather' )
-     v_siz = dffts%nnr_tg
+     dffts_nnr = dffts%nnr_tg
      incr = 2*fftx_ntgrp(dffts)
-     CALL dev_buf%lock_buffer( tg_v_d, v_siz, ierr )
-     ALLOCATE( tg_psic(v_siz), tg_vpsi(v_siz,incr) )
+     CALL dev_buf%lock_buffer( tg_v_d, dffts_nnr, ierr )
+     ALLOCATE( tg_psic(dffts_nnr), tg_vpsi(dffts_nnr,incr) )
      CALL tg_gather_gpu( dffts, v_d, tg_v_d )
      CALL stop_clock_gpu( 'vloc_psi:tg_gather' )
   ELSE
-     v_siz = dffts%nnr
-     ALLOCATE( psic(v_siz*incr), vpsi(v_siz,incr) )
+     dffts_nnr = dffts%nnr
+     ALLOCATE( psic(dffts_nnr*incr), vpsi(dffts_nnr,incr) )
   ENDIF
   !
   ! ... The local potential V_Loc psi:
@@ -135,8 +135,8 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
         !
         !$acc parallel loop collapse(2)
         DO idx = 0, howmany-1
-          DO j = 1, v_siz
-            psic(idx*v_siz+j) = psic(idx*v_siz+j) * v_d(j)
+          DO j = 1, dffts_nnr
+            psic(idx*dffts_nnr+j) = psic(idx*dffts_nnr+j) * v_d(j)
           ENDDO
         ENDDO
         !
@@ -174,7 +174,7 @@ SUBROUTINE vloc_psi_gamma_gpu( lda, n, m, psi_d, v_d, hpsi_d )
         CALL wave_g2r( psi(1:n,ibnd:ebnd), psic, dffts )
         !        
         !$acc parallel loop
-        DO j = 1, dffts%nnr
+        DO j = 1, dffts_nnr
            psic(j) = psic(j) * v_d(j)
         ENDDO
         !
@@ -260,7 +260,7 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v_d, hpsi_d )
 #if defined(__CUDA)
   attributes(DEVICE) :: tg_v_d
   !
-  INTEGER :: v_siz, idx, group_size, hm_vec(3)
+  INTEGER :: dffts_nnr, idx, group_size, hm_vec(3)
   INTEGER :: ierr, brange
   !
   CALL start_clock_gpu ('vloc_psi')
@@ -276,15 +276,15 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v_d, hpsi_d )
   !
   IF( use_tg ) THEN
      CALL start_clock_gpu ('vloc_psi:tg_gather')
-     v_siz =  dffts%nnr_tg
+     dffts_nnr =  dffts%nnr_tg
      incr = fftx_ntgrp(dffts)
-     CALL dev_buf%lock_buffer( tg_v_d, v_siz, ierr )
-     ALLOCATE( tg_psic(v_siz), tg_vpsi(v_siz,incr) )
+     CALL dev_buf%lock_buffer( tg_v_d, dffts_nnr, ierr )
+     ALLOCATE( tg_psic(dffts_nnr), tg_vpsi(dffts_nnr,incr) )
      CALL tg_gather_gpu( dffts, v_d, tg_v_d )
      CALL stop_clock_gpu ('vloc_psi:tg_gather')
   ELSE
-     v_siz = dffts%nnr
-     ALLOCATE( psic(v_siz*incr), vpsi(v_siz,incr) )
+     dffts_nnr = dffts%nnr
+     ALLOCATE( psic(dffts_nnr*incr), vpsi(dffts_nnr,incr) )
   ENDIF
   !
   IF( use_tg ) THEN
@@ -333,8 +333,8 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v_d, hpsi_d )
         !
         !$acc parallel loop collapse(2)
         DO idx = 0, group_size-1
-           DO j = 1, v_siz
-              psic(idx*v_siz+j) = psic(idx*v_siz+j) * v_d(j)
+           DO j = 1, dffts_nnr
+              psic(idx*dffts_nnr+j) = psic(idx*dffts_nnr+j) * v_d(j)
            ENDDO
         ENDDO
         !
@@ -359,7 +359,7 @@ SUBROUTINE vloc_psi_k_gpu( lda, n, m, psi_d, v_d, hpsi_d )
         CALL wave_g2r( psi(1:n,ibnd:ibnd), psic, dffts, igk=igk_k(:,current_k) )
         !
         !$acc parallel loop
-        DO j = 1, v_siz
+        DO j = 1, dffts_nnr
            psic(j) = psic(j) * v_d(j)
         ENDDO
         !
@@ -434,7 +434,7 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v_d, hpsi_d )
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:,:), tg_vpsi(:,:)
 #if defined(__CUDA)
   attributes(DEVICE) :: tg_v_d
-  INTEGER :: v_siz, idx, ioff, ii, ie, brange
+  INTEGER :: dffts_nnr, idx, ioff, ii, ie, brange
   INTEGER :: right_nnr, right_nr3, right_inc
   !
   CALL start_clock_gpu ('vloc_psi')
@@ -450,22 +450,22 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v_d, hpsi_d )
   !
   IF( use_tg ) THEN
      CALL start_clock_gpu( 'vloc_psi:tg_gather' )
-     v_siz = dffts%nnr_tg
+     dffts_nnr = dffts%nnr_tg
      incr = fftx_ntgrp(dffts)
      IF (domag) THEN
-        ALLOCATE( tg_v_d(v_siz,4) )
+        ALLOCATE( tg_v_d(dffts_nnr,4) )
         DO is = 1, nspin
            CALL tg_gather_gpu( dffts, v_d(:,is), tg_v_d(:,is) )
         ENDDO
      ELSE
-        ALLOCATE( tg_v_d(v_siz,1) )
+        ALLOCATE( tg_v_d(dffts_nnr,1) )
         CALL tg_gather_gpu( dffts, v_d(:,1), tg_v_d(:,1) )
      ENDIF
-     ALLOCATE( tg_psic(v_siz,npol), tg_vpsi(lda,incr) )
+     ALLOCATE( tg_psic(dffts_nnr,npol), tg_vpsi(lda,incr) )
      CALL stop_clock_gpu( 'vloc_psi:tg_gather' )
   ELSE
-     v_siz = dffts%nnr
-     ALLOCATE( psic_nc(v_siz,npol), vpsic_nc(lda,1) )
+     dffts_nnr = dffts%nnr
+     ALLOCATE( psic_nc(dffts_nnr,npol), vpsic_nc(lda,1) )
   ENDIF
   !
   ! ... the local potential V_Loc psi. First the psi in real space
@@ -541,7 +541,7 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v_d, hpsi_d )
         !
         IF (domag) THEN
            !$acc parallel loop
-           DO j = 1, dffts%nnr
+           DO j = 1, dffts_nnr
               sup  = psic_nc(j,1) * (v_d(j,1)+v_d(j,4)) + &
                      psic_nc(j,2) * (v_d(j,2)-(0.d0,1.d0)*v_d(j,3))
               sdwn = psic_nc(j,2) * (v_d(j,1)-v_d(j,4)) + &
@@ -551,7 +551,7 @@ SUBROUTINE vloc_psi_nc_gpu( lda, n, m, psi_d, v_d, hpsi_d )
            ENDDO
         ELSE
            !$acc parallel loop
-           DO j = 1, dffts%nnr
+           DO j = 1, dffts_nnr
               psic_nc(j,:) = psic_nc(j,:) * v_d(j,1)
            ENDDO
         ENDIF

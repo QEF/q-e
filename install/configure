@@ -783,6 +783,7 @@ with_hdf5
 with_hdf5_libs
 with_hdf5_include
 with_environ
+enable_legacy_plugins
 enable_signals
 '
       ac_precious_vars='build_alias
@@ -1429,6 +1430,7 @@ Optional Features:
                           (default: no)
   --enable-static         build static executables if possible (default: no)
   --enable-openacc        Enable compilation with OPENACC [default=yes]
+ --enable-legacy_plugins    Enables use of legacy plugins in PW and CP.
   --enable-signals        enable signal trapping (default: no)
 
 Optional Packages:
@@ -7285,6 +7287,24 @@ fi
 
 
 
+
+
+
+# Checking for optional compilation macros
+
+
+# Check whether --enable-legacy_plugins was given.
+if test "${enable_legacy_plugins+set}" = set; then :
+  enableval=$enable_legacy_plugins; enable_legacy_plugins=$enableval
+else
+  enable_legacy_plugins="no"
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: checking if legacy plugins are enabled ...  $enable_legacy_plugins" >&5
+$as_echo "checking if legacy plugins are enabled ...  $enable_legacy_plugins" >&6; }
+if test "$enable_legacy_plugins" = "yes";then
+	try_dflags="$try_dflags -D__LEGACY_PLUGINS"
+fi
 
 
 

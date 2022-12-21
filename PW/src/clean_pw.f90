@@ -227,10 +227,13 @@ SUBROUTINE clean_pw( lflag )
   !
   CALL deallocate_rism( lflag )
   !
+#if defined (__LEGACY_PLUGINS) 
   CALL plugin_clean( 'PW', lflag )
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) CALL clean_environ('PW', lflag)
 #endif
+  CALL   plugin_clean('PW', lflag) 
   !
   RETURN
   !

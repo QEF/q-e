@@ -1,0 +1,33 @@
+ &control
+    calculation='md'
+    dt=20,
+    nstep=40
+ /
+ &system
+    ibrav=0
+    nat=2, ntyp=1,
+    nbnd = 4,
+    ecutwfc = 25.0
+    nosym=.true.
+ /
+ &electrons
+    conv_thr = 1.d-8
+    mixing_beta = 0.7
+ /
+ &ions
+    ion_dynamics = 'verlet' ! default but still
+    ion_temperature='rescale-v'
+ /
+CONSTRAINTS
+1
+potential_wall 1.2 1.5 0.9
+ATOMIC_SPECIES
+ H 1.0008   H.pz-vbc.UPF
+ATOMIC_POSITIONS angstrom
+H      0.00000000    0.00000000    1.0000000
+H      0.00000000    0.00000000    4.0000000
+CELL_PARAMETERS angstrom
+ 5. 0. 0.
+ 0. 5. 0.
+ 0. 0. 5.
+K_POINTS gamma

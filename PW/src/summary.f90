@@ -159,6 +159,9 @@ SUBROUTINE summary()
      !
   END IF
   !  
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_summary()
+#endif
 #if defined (__ENVIRON)
   IF (use_environ) CALL print_environ_summary()
 #endif

@@ -121,6 +121,9 @@ target_link_libraries(qe_cpv
      PUBLIC 
         qe_openacc_fortran)
 
+if ("legacy" IN_LIST QE_ENABLE_PLUGINS) 
+  target_compile_definitions(qe_cpv PUBLIC __LEGACY_PLUGINS)
+endif() 
 ###########################################################
 # cp.x
 ###########################################################

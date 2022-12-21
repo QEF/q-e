@@ -121,6 +121,9 @@ SUBROUTINE run_pwscf( exit_status )
   !
   ! call to void routine for user defined / plugin patches initializations
   !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_initialization()
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) THEN
      IF (is_ms_gcs()) CALL init_ms_gcs()

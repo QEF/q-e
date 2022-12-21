@@ -36,7 +36,7 @@ SUBROUTINE stres_mgga( sigmaxc )
   !
   ! ... local variables
   !
-  INTEGER :: ix, iy, K, ir, ipol, iss, incr, ibnd, ik, npw
+  INTEGER :: ix, iy, K, ir, ipol, iss, incr, ibnd, ik, npw, dffts_nnr
   !
   REAL(DP), PARAMETER :: epsr = 1.E-6_DP, epsg = 1.E-10_DP, e2 = 2._DP
   !
@@ -56,6 +56,8 @@ SUBROUTINE stres_mgga( sigmaxc )
   !
   IF ( noncolin ) CALL errore( 'stres_mgga', 'noncollinear stress + meta-GGA &
                                &not implemented', 1 )
+  !
+  dffts_nnr = dffts%nnr   !to avoid unnecessary copies in acc loop
   !
   ALLOCATE( gradwfc(dffts%nnr,3) )
   ALLOCATE( crosstaus(dffts%nnr,6,nspin) )
@@ -106,7 +108,7 @@ SUBROUTINE stres_mgga( sigmaxc )
        ! ... Cross terms of kinetic energy density
        !
        !$acc parallel loop collapse(2)
-       DO ir = 1, dffts%nnr
+       DO ir = 1, dffts_nnr
          DO ipol = 1, 6
             !
             ! ... explanation here: https://stackoverflow.com/a/244550
@@ -152,7 +154,7 @@ SUBROUTINE stres_mgga( sigmaxc )
      !$acc update device(vkin,rhokin)
      !
      !$acc parallel loop reduction(+:sigma1,sigma2,sigma3,sigma4,sigma5,sigma6)
-     DO ir = 1, dffts%nnr
+     DO ir = 1, dffts_nnr
         !
         sigma1 = sigma1 + vkin(ir) * ( rhokin(ir) &
                         + DBLE(crosstaus(ir,1,iss)) )

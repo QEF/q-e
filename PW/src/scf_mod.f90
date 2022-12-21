@@ -1092,7 +1092,7 @@ SUBROUTINE rhoz_or_updw( rho, sp, dir )
   !
   ! ... local variables
   !
-  INTEGER :: ir
+  INTEGER :: ir, dfftp_nnr
   REAL(DP) :: vi
   !
   IF ( nspin /= 2 ) RETURN
@@ -1106,8 +1106,9 @@ SUBROUTINE rhoz_or_updw( rho, sp, dir )
   !
   IF ( sp /= 'only_g' ) THEN
      !
+     dfftp_nnr = dfftp%nnr
      !$acc parallel loop present_or_copy(rho%of_r)
-     DO ir = 1, dfftp%nnr
+     DO ir = 1, dfftp_nnr
         rho%of_r(ir,1) = ( rho%of_r(ir,1) + rho%of_r(ir,nspin) ) * vi
         rho%of_r(ir,nspin) = rho%of_r(ir,1) - rho%of_r(ir,nspin) * vi * 2._dp
      ENDDO

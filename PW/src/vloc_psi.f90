@@ -193,20 +193,21 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
   LOGICAL :: use_tg
   REAL(DP), ALLOCATABLE :: tg_v(:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:), tg_vpsi(:,:)
-  INTEGER :: v_siz, idx, brange
+  INTEGER :: idx, brange, dffts_nnr
   !
   CALL start_clock( 'vloc_psi' )
   use_tg = dffts%has_task_groups 
   !
   IF( use_tg ) THEN
      CALL start_clock( 'vloc_psi:tg_gather' )
-     v_siz =  dffts%nnr_tg
+     dffts_nnr = dffts%nnr_tg
      incr = fftx_ntgrp(dffts)
-     ALLOCATE( tg_v(v_siz) )
-     ALLOCATE( tg_psic(v_siz), tg_vpsi(lda,incr) )
+     ALLOCATE( tg_v(dffts_nnr) )
+     ALLOCATE( tg_psic(dffts_nnr), tg_vpsi(lda,incr) )
      CALL tg_gather( dffts, v, tg_v )
      CALL stop_clock( 'vloc_psi:tg_gather' )
   ELSE
+     dffts_nnr = dffts%nnr
      ALLOCATE( vpsi(lda,1) )
   ENDIF
   !
@@ -261,7 +262,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
 !        write (6,99) (psic(i), i=1,400)
         !
         !$omp parallel do
-        DO j = 1, dffts%nnr
+        DO j = 1, dffts_nnr
            psic(j) = psic(j) * v(j)
         ENDDO
         !$omp end parallel do
@@ -269,7 +270,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
 !        write (6,*) 'v psi R '
 !        write (6,99) (psic(i), i=1,400)
         !
-        CALL wave_r2g( psic(1:dffts%nnr), vpsi(1:n,:), dffts, igk=igk_k(:,current_k) )
+        CALL wave_r2g( psic(1:dffts_nnr), vpsi(1:n,:), dffts, igk=igk_k(:,current_k) )
         !
         !$omp parallel do
         DO i = 1, n
