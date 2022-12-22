@@ -76,7 +76,9 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   ! ...      H_ij = <psi_i| H |psi_j>     S_ij = <psi_i| S |psi_j>
   !
   call start_clock('rotwfck:hpsi'); !write(*,*) 'start rotwfck:hpsi';FLUSH(6)
+  !$omp target data map(alloc:psi,aux)
   CALL h_psi( npwx, npw, nstart, psi, aux )
+  !$omp end target data
   call stop_clock('rotwfck:hpsi') ; !write(*,*) 'stop rotwfck:hpsi';FLUSH(6)
   !
   call start_clock('rotwfck:hc'); !write(*,*) 'start rotwfck:hc';FLUSH(6)
@@ -230,7 +232,9 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   ! ...      H_ij = <psi_i| H |psi_j>     S_ij = <psi_i| S |psi_j>
   !
   call start_clock('protwfck:hpsi')
+  !$omp target data map(alloc:psi,aux)
   CALL h_psi( npwx, npw, nstart, psi, aux )
+  !$omp end target data
   call stop_clock('protwfck:hpsi')
   !
   call start_clock('protwfck:hc')

@@ -407,7 +407,8 @@ END MODULE
         CALL fftx_error__(" fft_scalar_hipFFT: cft_2xy_omp ", " hipfftExecZ2Z failed ", istat)
         CALL hipCheck(hipDeviceSynchronize())
 
-        !$omp target teams distribute parallel do simd
+        !!!$omp target teams distribute parallel do simd
+        !$omp target teams distribute parallel do collapse(3)
         DO k=1, nzl
            DO j=1, ldy
              DO i=1, ldx

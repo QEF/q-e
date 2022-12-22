@@ -36,9 +36,10 @@ CONTAINS
     !--------------------------------------------------------------------
     !! Wave function FFT from R to G-space.
     !
-    USE fft_helper_subroutines,  ONLY: fftx_psi2c_gamma, fftx_psi2c_k, &
-                                       fftx_psi2c_gamma_omp, fftx_psi2c_k_omp
-    
+    USE fft_helper_subroutines,  ONLY: fftx_psi2c_gamma, fftx_psi2c_k
+#if defined(__OPENMP_GPU)
+    USE fft_helper_subroutines,  ONLY: fftx_psi2c_gamma_omp, fftx_psi2c_k_omp
+#endif
     USE control_flags,           ONLY: many_fft
     !
     IMPLICIT NONE
@@ -68,10 +69,12 @@ CONTAINS
     !
     omp_offload = .FALSE.
     omp_map     = .FALSE.
+#if defined(__OPENMP_GPU)
     IF (PRESENT(omp_mod)) THEN
       omp_offload = omp_mod>=0 ! run FFT on device (data already mapped)
       omp_map     = omp_mod>=1 ! map data and run FFT on device
-    ENDIF 
+    ENDIF
+#endif
     IF(omp_offload.AND.PRESENT(howmany_set)) CALL errore( 'wave_r2g','omp_offload &
                                                           &and many FFT NYI', 1 )
     !
@@ -157,8 +160,10 @@ CONTAINS
     !--------------------------------------------------------------------
     !! Wave function FFT from G to R-space.
     !
-    USE fft_helper_subroutines, ONLY: fftx_c2psi_gamma, fftx_c2psi_k, &
-                                      fftx_c2psi_gamma_omp, fftx_c2psi_k_omp
+    USE fft_helper_subroutines, ONLY: fftx_c2psi_gamma, fftx_c2psi_k
+#if defined(__OPENMP_GPU)
+    USE fft_helper_subroutines, ONLY: fftx_c2psi_gamma_omp, fftx_c2psi_k_omp
+#endif
     !
     IMPLICIT NONE
     !
@@ -184,10 +189,12 @@ CONTAINS
     !
     omp_offload = .FALSE.
     omp_map     = .FALSE.
+#if defined(__OPENMP_GPU)
     IF (PRESENT(omp_mod)) THEN
       omp_offload = omp_mod>=0 ! run FFT on device (data already mapped)
       omp_map     = omp_mod>=1 ! map data and run FFT on device
     ENDIF
+#endif
     IF (omp_offload.AND.PRESENT(howmany_set)) CALL errore('wave_r2g','omp_offload &
                                                            &and many FFT NYI', 1 )
     !
