@@ -1397,17 +1397,16 @@ MODULE pw_restart_new
       !
       USE control_flags,        ONLY : gamma_only
       USE lsda_mod,             ONLY : nspin, isk
-      USE noncollin_module,     ONLY : noncolin, npol
-      USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k
-      USE wvfct,                ONLY : npwx, et, wg, nbnd
+      USE klist,                ONLY : nkstot, nks, ngk, igk_k
+      USE wvfct,                ONLY : npwx, nbnd
       USE gvect,                ONLY : ig_l2g
       USE mp_bands,             ONLY : root_bgrp, intra_bgrp_comm
-      USE mp_pools,             ONLY : me_pool, root_pool, &
-                                       intra_pool_comm, inter_pool_comm
+      USE mp_pools,             ONLY : me_pool, root_pool, intra_pool_comm
       USE mp,                   ONLY : mp_sum, mp_max
       USE io_base,              ONLY : read_wfc
       USE xc_lib,               ONLY : exx_is_active
       USE exx,                  ONLY : nbndproj
+      USE io_global,            ONLY : stdout
       !
       IMPLICIT NONE
       !
@@ -1421,13 +1420,13 @@ MODULE pw_restart_new
       CHARACTER(LEN=320)   :: filename, msg 
       CHARACTER(LEN=3)     :: label 
       LOGICAL              :: read_ace
-      INTEGER              :: i, ik_g, ig, ipol, ik_s
+      INTEGER              :: i, ik_g, ig
       INTEGER              :: npol_, nbnd_
-      INTEGER              :: nupdwn(2), ike, iks, ngk_g, npw_g, ispin
+      INTEGER              :: ike, iks, ngk_g, npw_g, ispin
       INTEGER, EXTERNAL    :: global_kpoint_index
       INTEGER, ALLOCATABLE :: mill_k(:,:)
       INTEGER, ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:)
-      LOGICAL              :: opnd, ionode_k
+      LOGICAL              :: ionode_k
       REAL(DP)             :: scalef, xk_(3), b1(3), b2(3), b3(3)
       !
       ! ... decide whether to read wfc or ace
@@ -1525,7 +1524,7 @@ MODULE pw_restart_new
       !
       IF(read_ace) THEN
         !
-        write(*,*) 'ACE potential read for ', nbnd_ , 'bands'
+        WRITE(stdout, '(5X,A,I8,A)') 'ACE potential read for ', nbnd_, ' bands'
         nbndproj = nbnd_
         !
       ELSE IF ( nbnd_ < nbnd .and..not. read_ace) THEN
