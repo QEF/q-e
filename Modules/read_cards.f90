@@ -2544,6 +2544,8 @@ CONTAINS
             ! PW/src/intersite_V.f90
             ! sp_pos(na) is the atomic type of the atom na
             IF (.NOT.ALLOCATED(ityp)) THEN
+               IF (.NOT.ALLOCATED(sp_pos)) CALL errore ('card_hubbard', &
+                       'card HUBBARD must follow card ATOMIC_SPECIES',1)
                ALLOCATE(ityp(natx*(2*sc_size+1)**3))
                ityp(1:nat) = sp_pos(1:nat)
                i = nat
