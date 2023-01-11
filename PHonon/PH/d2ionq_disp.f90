@@ -9,11 +9,13 @@
 SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
   !------------------------------------------------------------------------
   USE kinds,         ONLY: DP
-  USE io_global,     ONLY: ionode, stdout
+  USE io_global,     ONLY: ionode, ionode_id, stdout
   USE control_ph,    ONLY: dftd3_hess
   USE constants,     ONLY: tpi
-  USE control_lr,    ONLY : lgamma
-  USE dftd3_qe,      ONLY : print_dftd3_hessian
+  USE control_lr,    ONLY: lgamma
+  USE dftd3_qe,      ONLY: print_dftd3_hessian
+  USE mp_images,     ONLY: intra_image_comm
+  USE mp,            ONLY: mp_bcast
 
   IMPLICIT NONE
 
@@ -146,6 +148,7 @@ SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
     WRITE(stdout,'(/,5x,A)') 'Dynamical matrix computed'
     !
   end if 
+  CALL mp_bcast(der2disp, ionode_id, intra_image_comm)
   !
   RETURN
   !
