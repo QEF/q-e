@@ -617,17 +617,18 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	var occupations -type CHARACTER {
 	    info {
                a string describing the occupation of the electronic states.
+               Allowed values are 'fixed' (default) and 'ensemble'.
                In the case of conjugate gradient style of minimization
                of the electronic states, if occupations is set to 'ensemble',
-               this allows ensemble DFT calculations for metallic systems
+               this allows ensemble DFT calculations for metallic systems.
 	    }
 	}
 
 	var degauss -type REAL { 
-	    default { 0.D0 Ry }
+	    default { 0.D0 Ha }
 	    info {
                parameter for the smearing function, only used for ensemble DFT
-               calculations
+               calculations. Hartree atomic units
 	    }
 	}
 	
@@ -635,7 +636,9 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	    info {
                a string describing the kind of occupations for electronic states
                in the case of ensemble DFT (occupations == 'ensemble' );
-               now only Fermi-Dirac ('fd') case is implemented
+               possible values are: 'gaussian', 'fermi-dirac', 'hermite-delta',
+               'gaussian-splines', 'cold-smearing', 'marzari-vanderbilt', '0', '-1'.
+               Warning: only 'gaussian' is tested.
 	    }
 	}
 	
@@ -1057,7 +1060,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
         }      
 
 
-       var ninter_cold_restart -type INTEGER {
+       var niter_cold_restart -type INTEGER {
             default { 1 }
             info {
                frequency in iterations at which a full inner cycle, only
