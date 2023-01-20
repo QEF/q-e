@@ -183,6 +183,7 @@ subroutine phq_setup
         v%of_r(:,2:4)=-v%of_r(:,2:4)
         deeq_nc_save(:,:,:,:,2)=deeq_nc(:,:,:,:)
         deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,1)
+        !$acc update device(deeq_nc)
      ENDIF
   ENDIF
   !

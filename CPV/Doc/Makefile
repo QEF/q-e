@@ -4,23 +4,29 @@ LATEX   = pdflatex
 LATEX2HTML = latex2html
 PANDOC = pandoc
 
-PDFS =
+PDFS = 
 AUXS = $(PDFS:.pdf=.aux)
 LOGS = $(PDFS:.pdf=.log)
 OUTS = $(PDFS:.pdf=.out)
 TOCS = $(PDFS:.pdf=.toc)
-
+USER_GUIDES = user_guide.pdf user_guide.html
+PANDOC_PDF_ENGINE_CMD = --latex-engine
+PANDOC_PDF_ENGINE_CMD = --pdf-engine
+PANDOC_ADDITIONAL_DEF = --metadata csquotes=yes
 
 doc:  all
-all:  pdf defs
+all:  pdf defs 
 pdf: $(PDFS)
+user_guide: $(USER_GUIDES)
 
-$(PDFS): %.pdf: %.tex
-	$(LATEX)  $<
-	$(LATEX)  $<
+user_guide.pdf: user_guide.md pandoc_template.tex tp.tex
+	$(shell sed -e '/[[_TOC_]]/d' -e 's/\$$`/$$/g' -e 's/`\$$/$$/g' $< | $(PANDOC) -N --toc --metadata title='CP user guide' --metadata customtitlepage='tp' --metadata graphics --metadata geometry='top=3cm' --metadata geometry='left=3cm' --metadata geometry='right=3cm' --metadata geometry='bottom=3cm' --metadata hyperrefoptions='linktoc=all' ${PANDOC_PDF_ENGINE_CMD}=xelatex ${PANDOC_ADDITIONAL_DEF} -o $@ --template $(word 2,$^) )
+
+user_guide.html: user_guide.md
+	$(shell sed -e '/[[_TOC_]]/d' -e 's/\$$`/$$/g' -e 's/`\$$/$$/g' $< | $(PANDOC) -s --toc --metadata title='CP user guide' --mathml -o $@ )
 
 clean:
-	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) *~
+	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) $(USER_GUIDES) *~
 	- rm -rf user_guide/
 	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml input_xx.xsl
 	- rm -rf ../../Doc/INPUT_CP*.*

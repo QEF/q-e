@@ -514,13 +514,15 @@ CONTAINS
     !! Initialize arrays needed for parallel symmetrization
     ! 
     USE parallel_include
-    USE mp_bands, ONLY : nproc_bgrp, me_bgrp, intra_bgrp_comm
+    USE mp, ONLY : mp_min, mp_max
+    USE mp_bands, ONLY : nproc_bgrp, intra_bgrp_comm
     USE gvect, ONLY : ngm, gcutm, g, gg
     !
     IMPLICIT NONE
     !
     REAL(DP), PARAMETER :: twothirds = 0.6666666666666666_dp
     REAL(DP), ALLOCATABLE :: gcut_(:), g_(:,:)
+    REAL(DP) :: gtop, gnext
     INTEGER :: np, ig, ngloc, ngpos, ierr, ngm_
     !
     ALLOCATE( sendcnt(nproc_bgrp), recvcnt(nproc_bgrp), &
@@ -528,14 +530,43 @@ CONTAINS
     ALLOCATE( gcut_(nproc_bgrp) )
     !
     ! the gcut_ cutoffs are estimated in such a way that there is an similar
-    ! number of G-vectors in each shell gcut_(i) < G^2 < gcut_(i+1)
+    ! number of G-vectors in each "slice" with gcut_(i) < G^2 < gcut_(i+1)
     !
     DO np = 1, nproc_bgrp
        gcut_(np) = gcutm * np**twothirds/nproc_bgrp**twothirds
     END DO
     !
-    ! find the number of G-vectors in each shell (defined as above)
-    ! beware: will work only if G-vectors are in order of increasing |G|
+    ! the next lines prevent an unlikely but not impossible case:
+    ! some gcut_ value (see above) cuts a shell of G-vectors in the middle
+    ! This may happen if G-vector ordering with |G| is not perfect
+    !
+    ngpos=0
+    gtop = 0.0_dp
+    gnext= 0.0_dp
+    DO np = 1, nproc_bgrp-1
+       ngloc=0
+cutg:  DO ig=ngpos+1,ngm
+          IF ( gg(ig) > gcut_(np) ) THEN
+             gtop = gg(ig-1)
+             gnext = gg(ig)
+             EXIT cutg
+          END IF
+          ngloc = ngloc+1
+       END DO cutg
+       IF ( ngloc < 1 ) CALL infomsg('sym_rho_init', &
+            'some processors have no G-vectors for symmetrization')
+       ngpos = ngpos + ngloc
+       IF ( ngpos > ngm ) &
+            CALL errore('sym_rho','internal error: too many G-vectors', ngpos)
+       ! Note that gnext > gtop only for perfect ordering
+       CALL mp_max( gtop , intra_bgrp_comm)
+       CALL mp_min( gnext, intra_bgrp_comm)
+       ! The following criterion is rather arbitrary: it should as small as
+       ! possible but slightly larger than the expected numerical noise 
+       IF ( ABS ( gnext-gtop ) < 1.0e-7*gcut_(np) ) gcut_(np) = MAX(gnext,gtop)
+    END DO
+    !
+    ! now find the number of G-vectors in each "slice"
     !
     ngpos=0
     DO np = 1, nproc_bgrp
@@ -545,12 +576,8 @@ CONTAINS
           IF ( gg(ig) > gcut_(np) ) EXIT
           ngloc = ngloc+1
        END DO
-       IF ( ngloc < 1 ) CALL infomsg('sym_rho_init', &
-            'some processors have no G-vectors for symmetrization')
        sendcnt(np) = ngloc
        ngpos = ngpos + ngloc
-       IF ( ngpos > ngm ) &
-            CALL errore('sym_rho','internal error: too many G-vectors', ngpos)
     END DO
     IF ( ngpos /= ngm .OR. ngpos /= SUM (sendcnt)) &
          CALL errore('sym_rho_init', &
@@ -604,8 +631,7 @@ CONTAINS
     !-----------------------------------------------------------------------
     !! Initialize G-vector shells needed for symmetrization.
     ! 
-    USE constants, ONLY : eps8
-    USE mp_bands,  ONLY : nproc_bgrp
+    USE mp_bands,  ONLY : nproc_bgrp, me_bgrp
     !
     IMPLICIT NONE
     !
@@ -647,7 +673,7 @@ CONTAINS
        ALLOCATE ( g2sort_g(ngm_))
        g2sort_g(:)=g_(1,:)*g_(1,:)+g_(2,:)*g_(2,:)+g_(3,:)*g_(3,:)
        igsort(1) = 0
-       CALL hpsort_eps( ngm_, g2sort_g, igsort, eps8 )
+       CALL hpsort( ngm_, g2sort_g, igsort )
        DEALLOCATE( g2sort_g)
     ELSE
        DO ig=1,ngm_
@@ -717,7 +743,6 @@ gloop:    DO jg=iig,ngm_
     !! and corresponding rho(G), calls sym_rho_serial to perform the
     !! symmetrization, re-distributed rho(G) into original ordering.  
     !
-    USE constants,            ONLY : eps8, eps6
     USE gvect,                ONLY : ngm, g
     USE parallel_include
     USE mp_bands,             ONLY : intra_bgrp_comm

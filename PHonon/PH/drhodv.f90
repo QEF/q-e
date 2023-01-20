@@ -138,12 +138,14 @@ subroutine drhodv (nu_i0, nper, drhoscf)
         ELSE
            IF (okvan) THEN
               deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,2)
+              !$acc update device(deeq_nc)
               int1_nc(:,:,:,:,:)=int1_nc_save(:,:,:,:,:,2)
            ENDIF
            call drhodvnl (ik, ikk, nper, nu_i0, dynwrk, becpt, alphapt, &
                                                          dbecq, dalpq)
            IF (okvan) THEN
               deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,1)
+              !$acc update device(deeq_nc)
               int1_nc(:,:,:,:,:)=int1_nc_save(:,:,:,:,:,1)
            ENDIF
         ENDIF

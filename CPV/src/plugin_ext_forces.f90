@@ -8,7 +8,8 @@
 !----------------------------------------------------------------------------
 SUBROUTINE plugin_ext_forces()
   !----------------------------------------------------------------------------
-  !
+  !! This routine is used to calculate plugin contribution
+  !! to the external forces.
   !
   USE mp_global,        ONLY : intra_image_comm
   USE mp,               ONLY : mp_bcast

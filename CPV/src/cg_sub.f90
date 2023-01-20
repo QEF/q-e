@@ -986,10 +986,12 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine calcmt(nrlx, fdiag, zmat, fmat)
-!-----------------------------------------------------------------------
-!
-!  constructs fmat=z0^t.fdiag.z0    zmat = z0^t
-!
+      !-----------------------------------------------------------------------
+      !! Constructs \(\text{fmat}=\text{z0}^t\cdot\text{fdiag}\cdot\text{z0},
+      !!               \qquad \text{zmat}=\text{z0}^t\)
+      !
+      ! Constructs fmat=z0^t.fdiag.z0    zmat = z0^t
+      !
       USE kinds, ONLY: DP
       use electrons_base, ONLY: nudx, nspin, nupdwn, iupdwn, nx => nbspx
       USE cp_main_variables, ONLY: idesc
@@ -1125,14 +1127,12 @@ contains
    end subroutine minparabola
 
    subroutine pc2(a, beca, b, becb)
-
-! this function applies the operator Pc
-
-!    this subroutine applies the Pc operator
-!    a input :unperturbed wavefunctions
-!    b input :first order wavefunctions
-!    b output:b_i =b_i-a_j><a_j|S|b_i>
-
+      !
+      !! This subroutine applies the Pc operator:  
+      !! a input: unperturbed wavefunctions;  
+      !! b input: first order wavefunctions;  
+      !! b output: \(b_i =|b_i-a_j\rangle\langle a_j|S|b_i\rangle\).
+      !
       use kinds, only: dp
       use ions_base, only: na, nsp, nat, ityp
       use io_global, only: stdout
@@ -1153,7 +1153,8 @@ contains
       real(kind=DP) beca(nkb, n), becb(nkb, n)
       !$acc declare present(a,b,beca,becb)
 
-! local variables
+      ! ... local variables
+
       integer is, iv, jv, ia, inl, jnl, i, j, ig
       real(kind=DP) sca
       real(DP), allocatable :: bectmp(:, :), qq_tmp(:, :), qqb_tmp(:, :)
@@ -1234,14 +1235,12 @@ contains
    end subroutine pc2
 
    subroutine pcdaga2(a, as, b)
-
-! this function applies the operator Pc
-
-!    this subroutine applies the Pc^dagerr operator
-!    a input :unperturbed wavefunctions
-!    b input :first order wavefunctions
-!    b output:b_i =b_i - S|a_j><a_j|b_i>
-
+      !
+      !! This subroutine applies the Pc operator:  
+      !! a input: unperturbed wavefunctions;  
+      !! b input: first order wavefunctions;  
+      !! b output: \(b_i =b_i-S|a_j\rangle\langle a_j|b_i\rangle\).
+      !
       use kinds
       use io_global, only: stdout
       use mp_global, only: intra_bgrp_comm
@@ -1303,11 +1302,11 @@ contains
    end subroutine pcdaga2
 
    subroutine set_x_minus1(betae, m_minus1, ema0bg, use_ema)
-
-! this function calculates the factors for the inverse of the US K  matrix
-! it takes care of the preconditioning
-
-      use kinds, only: dp
+      !
+      !! This function calculates the factors for the inverse of the US K matrix.
+      !! It takes care of the preconditioning.
+      !
+      use kinds, only: DP
       use ions_base, only: nsp, nat, ityp
       use io_global, only: stdout
       use mp_global, only: intra_bgrp_comm
@@ -1540,7 +1539,7 @@ contains
       else 
          if (do_k) then
             if (pre_state) then
-               !$acc data copyin(g2kin,ave_ene,tpiba2) copy(c0)
+               !$acc data present(g2kin) copyin(ave_ene,tpiba2) copy(c0)
                !$acc parallel loop collapse(2) private(x)
                do i = 1, n
                   do ig = 1, ngw
@@ -1569,9 +1568,10 @@ contains
 
 
    subroutine ave_kin(c, ngwx, n, ene_ave)
-!this subroutine calculates the average kinetic energy of
-!each state , to be used for preconditioning
-
+      !
+      !! This subroutine calculates the average kinetic energy of
+      !! each state, to be used for preconditioning.
+      !
       USE kinds, ONLY: DP
       USE constants, ONLY: pi, fpi
       USE gvecw, ONLY: ngw
@@ -1595,7 +1595,7 @@ contains
       real(kind=dp) :: tmp
 
       !
-      !$acc parallel loop private(tmp) copyin(c,g2kin,gstart,ngw) copyout(ene_ave)
+      !$acc parallel loop private(tmp) present(g2kin) copyin(c,gstart,ngw) copyout(ene_ave)
       DO i = 1, n
          tmp = 0.d0
          !$acc loop vector reduction(+:tmp)
@@ -1618,11 +1618,10 @@ contains
 ! ... written by carlo sbraccia ( 2006 )
 !
 !----------------------------------------------------------------------------
-   SUBROUTINE para_dgemm(transa, transb, m, n, k, &
-                         alpha, a, lda, b, ldb, beta, c, ldc, comm)
+   SUBROUTINE para_dgemm( transa, transb, m, n, k, &
+                          alpha, a, lda, b, ldb, beta, c, ldc, comm )
       !----------------------------------------------------------------------------
-      !
-      ! ... trivial parallelization (splitting matrix B by columns) of dgemm
+      !! Trivial parallelization (splitting matrix B by columns) of \(\text{dgemm}\).
       !
       USE kinds, ONLY: DP
       !

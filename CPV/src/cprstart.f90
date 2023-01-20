@@ -17,6 +17,10 @@
 !----------------------------------------------------------------------------
 PROGRAM main
   !----------------------------------------------------------------------------
+  !! Molecular Dynamics using Density-Functional Theory.  
+  !! This is the main routine driver for Car-Parrinello simulations.  
+  !! See the documentation coming with the Quantum ESPRESSO distribution
+  !! for credits, references, appropriate citation of this code.
   !
   USE input,         ONLY : iosys_pseudo, iosys
   USE io_global,     ONLY : ionode, ionode_id

@@ -10,6 +10,8 @@
 SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
   !     ===================
   !--------------------------------------------------------------------
+  !! Calculates XC energy and potential for metaGGA case.
+  !
   use kinds,   only: dp
   use xc_lib,  only: xclib_set_threshold, xc_metagcx
   !

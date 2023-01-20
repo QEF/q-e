@@ -32,7 +32,6 @@ XOBJS = \
 ./xanes_quadrupole.o 
 
 GIPAWOBJS=./paw_gipaw.o \
-./gipaw_module.o \
 ./init_gipaw_1.o \
 ./init_gipaw_2.o
 

@@ -59,6 +59,8 @@ SUBROUTINE run_pwscf( exit_status )
   USE beef,                 ONLY : beef_energies
   USE ldaU,                 ONLY : lda_plus_u
   USE add_dmft_occ,         ONLY : dmft
+  USE extffield,            ONLY : init_extffield, close_extffield
+  USE input_parameters,     ONLY : nextffield
   !
   USE device_fbuff_m,             ONLY : dev_buf
   !
@@ -119,6 +121,9 @@ SUBROUTINE run_pwscf( exit_status )
   !
   ! call to void routine for user defined / plugin patches initializations
   !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_initialization()
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) THEN
      IF (is_ms_gcs()) CALL init_ms_gcs()
@@ -147,6 +152,14 @@ SUBROUTINE run_pwscf( exit_status )
   !
   CALL init_run()
   !
+  !  read external force fields parameters
+  ! 
+  IF ( nextffield > 0 .AND. ionode) THEN
+     !
+     CALL init_extffield( 'PW', nextffield )
+     !
+  END IF
+  !
   IF ( check_stop_now() ) THEN
      exit_status = 255
      CALL qexsd_set_status( exit_status )
@@ -167,11 +180,14 @@ SUBROUTINE run_pwscf( exit_status )
      ! ... code stopped by user or not converged
      !
      IF ( check_stop_now() .OR. .NOT. conv_elec ) THEN
-        IF ( check_stop_now() ) exit_status = 255
-        IF ( .NOT. conv_elec) THEN
-            IF (dmft) exit_status =  131
+        IF ( check_stop_now() ) THEN
+            exit_status = 255
         ELSE
-            exit_status = 2
+           IF (dmft) THEN
+              exit_status =  131
+           ELSE
+              exit_status = 2
+           ENDIF
         ENDIF
         CALL qexsd_set_status(exit_status)
         CALL punch( 'config' )

@@ -27,8 +27,14 @@ MODULE xmltools
   ! * xml comments (<!-- ...  -->) or <![CDATA[ ... ]]> cannot be mixed
   !   with numerical fields
   !
-  USE upf_kinds, ONLY : dp
+#if defined(__XML_STANDALONE)
   IMPLICIT NONE
+  INTEGER, PARAMETER :: DP_XML = selected_real_kind(14,200)
+  PUBLIC :: DP_XML
+#else
+  USE upf_kinds, ONLY : DP_XML => dp
+  IMPLICIT NONE
+#endif
   !
 #undef __debug
   !! define __debug to print information on opened and closed tags
@@ -159,7 +165,7 @@ CONTAINS
     !
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN) :: attrname
-    REAL(dp), INTENT(OUT) :: attrval_r
+    REAL(DP_XML), INTENT(OUT) :: attrval_r
     !
     CHARACTER(LEN=80) :: attrval_c
     !
@@ -170,7 +176,7 @@ CONTAINS
 1      print '("Error reading attribute ",a,": expected real, found ",a)', &
             trim(attrname), trim(attrval_c)
     end if
-    attrval_r = 0.0_dp
+    attrval_r = 0.0_DP_XML
     !
   END SUBROUTINE get_r_attr
   !
@@ -243,7 +249,7 @@ CONTAINS
     !
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN) :: attrname
-    REAL(dp), INTENT(IN) :: attrval_r
+    REAL(DP_XML), INTENT(IN) :: attrval_r
     !
     CALL add_c_attr ( attrname, r2c(attrval_r) )
     !
@@ -438,7 +444,7 @@ CONTAINS
     ! As writetag_c, for real value
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
-    REAL(dp), INTENT(IN)         :: rval
+    REAL(DP_XML), INTENT(IN)         :: rval
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL writetag_c (name, r2c(rval), ierr )
@@ -450,7 +456,7 @@ CONTAINS
     ! As writetag_c, for a vector of real values
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
-    REAL(dp), INTENT(IN)         :: rvec(:)
+    REAL(DP_XML), INTENT(IN)         :: rvec(:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
@@ -464,7 +470,7 @@ CONTAINS
     ! As writetag_c, for a matrix of real values
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
-    REAL(dp), INTENT(IN)         :: rmat(:,:)
+    REAL(DP_XML), INTENT(IN)         :: rmat(:,:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
@@ -478,7 +484,7 @@ CONTAINS
     ! As writetag_c, for a 3-dim tensor of real values
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
-    REAL(dp), INTENT(IN)         :: rtens(:,:,:)
+    REAL(DP_XML), INTENT(IN)         :: rtens(:,:,:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
@@ -493,7 +499,7 @@ CONTAINS
     !
     USE iso_c_binding
     CHARACTER(LEN=*), INTENT(IN) :: name
-    COMPLEX(dp), INTENT(IN), TARGET:: zvec(:)
+    COMPLEX(DP_XML), INTENT(IN), TARGET:: zvec(:)
     INTEGER, INTENT(OUT), OPTIONAL :: ierr
     !
     ! Casts a real pointer (rvec) to a complex array (zvec) via C pointer (!)
@@ -501,7 +507,7 @@ CONTAINS
     ! the argument of c_loc (zvec) is a pointer or has the "target" attribute
     !
     TYPE (c_ptr) :: cp
-    REAL(dp), POINTER  :: rvec(:)
+    REAL(DP_XML), POINTER  :: rvec(:)
     INTEGER :: n, ndim
     !
     NULLIFY (rvec)
@@ -522,11 +528,11 @@ CONTAINS
     !
     USE iso_c_binding
     CHARACTER(LEN=*), INTENT(IN) :: name
-    COMPLEX(dp), INTENT(IN), TARGET:: zmat(:,:)
+    COMPLEX(DP_XML), INTENT(IN), TARGET:: zmat(:,:)
     INTEGER, INTENT(OUT), OPTIONAL :: ierr
     !
     TYPE (c_ptr) :: cp
-    REAL(dp), POINTER  :: rmat(:,:)
+    REAL(DP_XML), POINTER  :: rmat(:,:)
     !
     NULLIFY (rmat)
     cp = c_loc(zmat)
@@ -544,11 +550,11 @@ CONTAINS
     !
     USE iso_c_binding
     CHARACTER(LEN=*), INTENT(IN) :: name
-    COMPLEX(dp), INTENT(IN), TARGET:: ztens(:,:,:)
+    COMPLEX(DP_XML), INTENT(IN), TARGET:: ztens(:,:,:)
     INTEGER, INTENT(OUT), OPTIONAL :: ierr
     !
     TYPE (c_ptr) :: cp
-    REAL(dp), POINTER  :: rtens(:,:,:)
+    REAL(DP_XML), POINTER  :: rtens(:,:,:)
     !
     NULLIFY (rtens)
     cp = c_loc(ztens)
@@ -617,8 +623,8 @@ CONTAINS
     INTEGER :: i
     LOGICAL :: indent
     !
-    IF ( nlevel < 0 ) THEN
-      print "('xmlw_closetag: severe error, closing tag that was never opened')"
+    IF ( nlevel < 1 ) THEN
+       IF ( nlevel < 0 ) print "('xmlw_closetag: severe error, closing tag that was never opened')"
       RETURN
     END IF
     IF ( .NOT.PRESENT(tag) ) THEN
@@ -713,7 +719,7 @@ CONTAINS
   end function l2c
   
   function r2c (f) result (c)
-    real(dp), intent(in) :: f
+    real(DP_XML), intent(in) :: f
     character(len=:), allocatable :: c
     character(len=30) :: caux
     !
@@ -757,7 +763,7 @@ CONTAINS
        READ(xmlunit, *) ivec
        CALL xmlr_closetag ( )
     else
-       ivec = 0.0_dp
+       ivec = 0.0_DP_XML
     end if
     IF ( present (ierr) ) ierr = ier_
     !
@@ -786,7 +792,7 @@ CONTAINS
     ! As readtag_c, for real value
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
-    REAL(dp), INTENT(OUT)         :: rval
+    REAL(DP_XML), INTENT(OUT)         :: rval
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     CHARACTER(LEN=80) :: cval
     !
@@ -794,7 +800,7 @@ CONTAINS
     if ( len_trim(cval) > 0 ) then
        READ (cval,*) rval
     else
-       rval = 0.0_dp
+       rval = 0.0_DP_XML
     end if
     !
   END SUBROUTINE readtag_r
@@ -804,7 +810,7 @@ CONTAINS
     ! As readtag_c, for a vector of real values
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
-    REAL(dp), INTENT(OUT)         :: rvec(:)
+    REAL(DP_XML), INTENT(OUT)         :: rvec(:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     INTEGER :: ier_
     !
@@ -813,7 +819,7 @@ CONTAINS
        READ(xmlunit, *) rvec
        CALL xmlr_closetag ( )
     else
-       rvec = 0.0_dp
+       rvec = 0.0_DP_XML
     end if
     IF ( present (ierr) ) ierr = ier_
     !
@@ -824,7 +830,7 @@ CONTAINS
     ! As readtag_c, for a matrix of real values
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
-    REAL(dp), INTENT(OUT)         :: rmat(:,:)
+    REAL(DP_XML), INTENT(OUT)         :: rmat(:,:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     INTEGER :: ier_
     !
@@ -833,7 +839,7 @@ CONTAINS
        READ(xmlunit, *) rmat
        CALL xmlr_closetag ( )
     else
-       rmat = 0.0_dp
+       rmat = 0.0_DP_XML
     end if
     IF ( present (ierr) ) ierr = ier_
     !
@@ -844,7 +850,7 @@ CONTAINS
     ! As readtag_c, for a 3-dim tensor of real values
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
-    REAL(dp), INTENT(OUT)         :: rtens(:,:,:)
+    REAL(DP_XML), INTENT(OUT)         :: rtens(:,:,:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     INTEGER :: ier_
     !
@@ -853,7 +859,7 @@ CONTAINS
        READ(xmlunit, *) rtens
        CALL xmlr_closetag ( )
     else
-       rtens = 0.0_dp
+       rtens = 0.0_DP_XML
     end if
     IF ( present (ierr) ) ierr = ier_
     !
@@ -865,11 +871,11 @@ CONTAINS
     !
     USE iso_c_binding
     CHARACTER(LEN=*), INTENT(IN) :: name
-    COMPLEX(dp), INTENT(OUT), target     :: zvec(:)
+    COMPLEX(DP_XML), INTENT(OUT), target     :: zvec(:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     TYPE (c_ptr) :: cp
-    REAL(dp), POINTER  :: rvec(:)
+    REAL(DP_XML), POINTER  :: rvec(:)
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
@@ -880,7 +886,7 @@ CONTAINS
        READ( xmlunit, *) rvec
        CALL xmlr_closetag ( )
     else
-       zvec = 0.0_dp
+       zvec = 0.0_DP_XML
     end if
     IF ( present (ierr) ) ierr = ier_
     !
@@ -892,10 +898,10 @@ CONTAINS
     !
     USE iso_c_binding
     CHARACTER(LEN=*), INTENT(IN) :: name
-    COMPLEX(dp), INTENT(OUT), target     :: zmat(:,:)
+    COMPLEX(DP_XML), INTENT(OUT), target     :: zmat(:,:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     TYPE (c_ptr) :: cp
-    REAL(dp), POINTER  :: rmat(:,:)
+    REAL(DP_XML), POINTER  :: rmat(:,:)
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
@@ -906,7 +912,7 @@ CONTAINS
        READ(xmlunit, *) rmat
        CALL xmlr_closetag ( )
     else
-       zmat = 0.0_dp
+       zmat = 0.0_DP_XML
     end if
     IF ( present (ierr) ) ierr = ier_
     !
@@ -918,10 +924,10 @@ CONTAINS
     !
     USE iso_c_binding
     CHARACTER(LEN=*), INTENT(IN) :: name
-    COMPLEX(dp), INTENT(OUT), target     :: ztens(:,:,:)
+    COMPLEX(DP_XML), INTENT(OUT), target     :: ztens(:,:,:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     TYPE (c_ptr) :: cp
-    REAL(dp), POINTER  :: rtens(:,:,:)
+    REAL(DP_XML), POINTER  :: rtens(:,:,:)
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
@@ -932,7 +938,7 @@ CONTAINS
        READ(xmlunit, *) rtens
        CALL xmlr_closetag ( )
     else
-       ztens = 0.0_dp
+       ztens = 0.0_DP_XML
     end if
     IF ( present (ierr) ) ierr = ier_
     !

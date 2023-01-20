@@ -3641,7 +3641,7 @@ SUBROUTINE compute_amn_with_scdm
    USE fft_interfaces,  ONLY : invfft !vv: inverse fft transform for computing the unk's on a grid
    USE noncollin_module,ONLY : noncolin, npol
    USE mp,              ONLY : mp_bcast, mp_barrier, mp_sum
-   USE mp_world,        ONLY : world_comm
+   USE mp_world,        ONLY : world_comm, mpime, nproc
    USE mp_pools,        ONLY : intra_pool_comm
    USE cell_base,       ONLY : at
    USE ions_base,       ONLY : ntyp => nsp, tau
@@ -3664,6 +3664,13 @@ SUBROUTINE compute_amn_with_scdm
    CHARACTER (len=9)  :: cdate,ctime
    CHARACTER (len=60) :: header
    LOGICAL            :: any_uspp, found_gamma
+
+#if defined(__SCALAPACK_QRCP)
+   REAL(DP) :: tmp_rwork(2)
+   INTEGER :: lrwork, context, nprow, npcol, myrow, mycol, descG(9)
+   INTEGER :: nblocks, rem, nblocks_loc, rem_loc=0, ibl
+   INTEGER, ALLOCATABLE :: piv_p(:)
+#endif
 
 #if defined(__MPI)
    INTEGER :: nxxs
@@ -3709,15 +3716,36 @@ SUBROUTINE compute_amn_with_scdm
    info = 0
    minmn = MIN(numbands,nrtot)
    ALLOCATE(qr_tau(2*minmn))
+#if defined(__SCALAPACK_QRCP)
+   ! Dimensions of the process grid
+   nprow = 1
+   npcol = nproc
+   ! Initialization of a default BLACS context and the processes grid
+   call blacs_get( -1, 0, context )
+   call blacs_gridinit( context, 'Row-major', nprow, npcol )
+   call blacs_gridinfo( context, nprow, npcol, myrow, mycol )
+   call descinit(descG, numbands, nrtot, minmn, minmn, 0, 0, context, max(1,minmn), info)
+   ! Global blocks
+   nblocks = nrtot / minmn
+   rem = mod(nrtot, minmn)
+   if (rem > 0) nblocks = nblocks + 1
+   ! Local blocks
+   nblocks_loc = nblocks / nproc
+   rem_loc = mod(nblocks, nproc)
+   if (mpime < rem_loc) nblocks_loc = nblocks_loc + 1
+   ALLOCATE(piv_p(minmn*nblocks_loc))
+   piv_p(:) = 0
+   ALLOCATE(psi_gamma(minmn*nblocks_loc,minmn))
+#else
    ALLOCATE(piv(nrtot))
    piv(:) = 0
    ALLOCATE(rwork(2*nrtot))
    rwork(:) = 0.0_DP
-
+   ALLOCATE(psi_gamma(nrtot,numbands))
+#endif
    ALLOCATE(kpt_latt(3,iknum))
    ALLOCATE(nowfc1(n_wannier,numbands))
    ALLOCATE(nowfc(n_wannier,numbands))
-   ALLOCATE(psi_gamma(nrtot,numbands))
    ALLOCATE(focc(numbands))
    minmn2 = MIN(numbands,n_wannier)
    maxmn2 = MAX(numbands,n_wannier)
@@ -3793,10 +3821,19 @@ SUBROUTINE compute_amn_with_scdm
       CALL gather_grid(dffts,psic,psic_all)
       ! vv: Gamma only
       ! vv: Build Psi_k = Unk * focc
+#if defined(__SCALAPACK_QRCP)
+      CALL mp_bcast(psic_all,ionode_id,world_comm)
+      norm_psi = sqrt(real(sum(psic_all(1:nrtot)*conjg(psic_all(1:nrtot))),kind=DP))
+      do ibl=0,nblocks_loc-1
+        psi_gamma(minmn*ibl+1:minmn*(ibl+1),locibnd) = &
+            psic_all(minmn*(ibl*nproc+mpime)+1:minmn*(ibl*nproc+mpime+1)) * (f_gamma / norm_psi)
+      enddo
+#else
       norm_psi = sqrt(real(sum(psic_all(1:nrtot)*conjg(psic_all(1:nrtot))),kind=DP))
       psic_all(1:nrtot) = psic_all(1:nrtot)/ norm_psi
       psi_gamma(1:nrtot,locibnd) = psic_all(1:nrtot)
       psi_gamma(1:nrtot,locibnd) = psi_gamma(1:nrtot,locibnd) * f_gamma
+#endif
 #else
       norm_psi = sqrt(real(sum(psic(1:nrtot)*conjg(psic(1:nrtot))),kind=DP))
       psic(1:nrtot) = psic(1:nrtot)/ norm_psi
@@ -3806,6 +3843,33 @@ SUBROUTINE compute_amn_with_scdm
    ENDDO
 
    ! vv: Perform QR factorization with pivoting on Psi_Gamma
+#if defined(__SCALAPACK_QRCP)
+   WRITE(stdout, '(5x,A,I4,A)') "Running QRCP in parallel, using ", nproc, " cores"
+   call PZGEQPF( numbands, nrtot, psi_gamma, 1, 1, descG, piv_p, qr_tau, &
+                 tmp_cwork, -1, tmp_rwork, -1, info )
+
+   lcwork = AINT(REAL(tmp_cwork(1)))
+   lrwork = AINT(REAL(tmp_rwork(1)))
+   ALLOCATE(rwork(lrwork))
+   ALLOCATE(cwork(lcwork))
+   rwork(:) = 0.0
+   cwork(:) = cmplx(0.0,0.0)
+
+   call PZGEQPF( numbands, nrtot, TRANSPOSE(CONJG(psi_gamma)), 1, 1, descG, piv_p, qr_tau, &
+                 cwork, lcwork, rwork, lrwork, info )
+
+   ALLOCATE(piv(minmn))
+   if (ionode) piv(1:minmn) = piv_p(1:minmn)
+   CALL mp_bcast(piv(1:minmn),ionode_id,world_comm)
+   DEALLOCATE(piv_p)
+#else
+   WRITE(stdout, '(5x, "Running QRCP in serial")')
+#if defined(__SCALAPACK)
+   WRITE(stdout, '(10x, A)') "Program compiled with ScaLAPACK but not using it for QRCP."
+   WRITE(stdout, '(10x, A)') "To enable ScaLAPACK for QRCP, use valid versions"
+   WRITE(stdout, '(10x, A)') "(ScaLAPACK >= 2.1.0 or MKL >= 2020) and set the argument"
+   WRITE(stdout, '(10x, A)') "'with-scalapack_version' in configure."
+#endif
    ! vv: Preliminary call to define optimal values for lwork and cwork size
    CALL ZGEQP3(numbands,nrtot,TRANSPOSE(CONJG(psi_gamma)),numbands,piv,qr_tau,tmp_cwork,-1,rwork,info)
    IF(info/=0) call errore('compute_amn','Error in computing the QR factorization',1)
@@ -3825,6 +3889,7 @@ SUBROUTINE compute_amn_with_scdm
    ! vv: Perform QR factorization with pivoting on Psi_Gamma
    CALL ZGEQP3(numbands,nrtot,TRANSPOSE(CONJG(psi_gamma)),numbands,piv,qr_tau,cwork,lcwork,rwork,info)
    IF(info/=0) call errore('compute_amn','Error in computing the QR factorization',1)
+#endif
 #endif
    DEALLOCATE(cwork)
    tmp_cwork(:) = (0.0_DP,0.0_DP)
@@ -3968,6 +4033,12 @@ SUBROUTINE compute_amn_with_scdm
 
 #if defined(__MPI)
    DEALLOCATE( psic_all )
+#endif
+
+#if defined(__SCALAPACK_QRCP)
+   ! Close BLACS environment
+   call blacs_gridexit( context )
+   call blacs_exit( 1 )
 #endif
 
    IF (ionode .and. wan_mode=='standalone') CLOSE (iun_amn)
@@ -4427,6 +4498,8 @@ subroutine orient_gf_spinor(npw)
 end subroutine orient_gf_spinor
 !
 SUBROUTINE generate_guiding_functions(ik)
+   !! gf should not be normalized at each k point because the atomic orbitals are
+   !! not orthonormal so that their Bloch representation is not normalized.
    !
    USE io_global,  ONLY : stdout
    USE constants, ONLY : pi, tpi, fpi, eps8
@@ -4445,7 +4518,7 @@ SUBROUTINE generate_guiding_functions(ik)
    INTEGER, PARAMETER :: lmax=3, lmax2=(lmax+1)**2
    INTEGER :: npw, iw, ig, bgtau(3), isph, l, mesh_r
    INTEGER :: lmax_iw, lm, ipol, n1, n2, n3, nr1, nr2, nr3, iig
-   real(DP) :: arg, anorm, fac, alpha_w2, yy, alfa, ddot
+   real(DP) :: arg, fac, alpha_w2, yy, alfa, ddot
    COMPLEX(DP) :: zdotc, kphase, lphase, gff, lph
    real(DP), ALLOCATABLE :: gk(:,:), qg(:), ylm(:,:), radial(:,:)
    COMPLEX(DP), ALLOCATABLE :: sk(:)
@@ -4487,15 +4560,6 @@ SUBROUTINE generate_guiding_functions(ik)
          sk(ig) = cmplx(cos(arg), -sin(arg) ,kind=DP)
          gf(ig,iw) = gf(ig,iw) * sk(ig)
       ENDDO
-      IF (gamma_only) THEN
-          anorm = 2.0_dp*ddot(2*npw,gf(1,iw),1,gf(1,iw),1)
-          IF (gstart==2) anorm = anorm - abs(gf(1,iw))**2
-      ELSE
-          anorm = REAL(zdotc(npw,gf(1,iw),1,gf(1,iw),1))
-      ENDIF
-      CALL mp_sum(anorm, intra_pool_comm)
-!      write (stdout,*) ik, iw, anorm
-      gf(:,iw) = gf(:,iw) / dsqrt(anorm)
    ENDDO
    !
    DEALLOCATE ( gk, qg, ylm, sk, radial)

@@ -13,7 +13,7 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
 project(qe
-    VERSION 7.0
+    VERSION 7.1
     DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization"
     LANGUAGES Fortran C)
 
@@ -98,6 +98,9 @@ option(QE_LAPACK_INTERNAL
     "enable internal reference LAPACK" OFF)
 option(QE_ENABLE_SCALAPACK
     "enable SCALAPACK execution units" OFF)
+cmake_dependent_option(QE_ENABLE_SCALAPACK_QRCP
+    "enable SCALAPACK QRCP in pw2wannier90 (requires SCALAPACK>=2.1.0 or Intel MKL>=2020)"
+    OFF "QE_ENABLE_SCALAPACK" OFF)
 option(QE_ENABLE_ELPA
     "enable ELPA execution units" OFF)
 option(QE_ENABLE_LIBXC
@@ -112,26 +115,32 @@ set(QE_FFTW_VENDOR "AUTO" CACHE
     STRING "select a specific FFTW library [Intel_DFTI, Intel_FFTW3, ArmPL, IBMESSL, FFTW3, Internal]")
 set(QE_ENABLE_SANITIZER "none" CACHE STRING "none,asan,ubsan,tsan,msan")
 set(QE_ENABLE_PLUGINS "" CACHE STRING "Semicolon-separated list of plugins")
-if(FOX_ROOT)
-    set(QE_FOX_INTERNAL OFF)
+set (QE_EXTRA_DEFINITIONS "" CACHE STRING "Semicolon-separated list of extra global definitions")
+option(QE_ENABLE_FOX
+    "enable XML I/O via Fox library" OFF)
+if(QE_ENABLE_FOX)
+    if(FOX_ROOT)
+        set(QE_FOX_INTERNAL OFF)
+    endif()
+    option(QE_FOX_INTERNAL
+        "enable FoX internal library" ON)
 endif()
-option(QE_FOX_INTERNAL
-    "enable FoX intenal library" ON)
+
 if(WANNIER90_ROOT)
     set(QE_WANNIER90_INTERNAL OFF)
 endif()
 option(QE_WANNIER90_INTERNAL
-    "enable Wannier90 intenal library" ON)
+    "enable Wannier90 internal library" ON)
 if(MBD_ROOT)
     set(QE_MBD_INTERNAL OFF)
 endif()
 option(QE_MBD_INTERNAL
-    "enable LibMBD intenal library" ON)
+    "enable LibMBD internal library" ON)
 if(DEVICEXLIB_ROOT)
     set(QE_DEVICEXLIB_INTERNAL OFF)
 endif()
 option(QE_DEVICEXLIB_INTERNAL
-    "enable DeviceXlib intenal library" ON)
+    "enable DeviceXlib internal library" ON)
 if(ENVIRON_ROOT)
     set(ENVIRON_DEFAULT "EXTERNAL")
 else()
@@ -169,6 +178,9 @@ endif()
 if(QE_ENABLE_BARRIER)
     qe_add_global_compile_definitions(__USE_BARRIER)
 endif()
+foreach(DEF IN LISTS QE_EXTRA_DEFINITIONS)
+    qe_add_global_compile_definitions(${DEF})
+endforeach()
 if(QE_ENABLE_MPI)
     # OMPI_SKIP_MPICXX: skip CXX APIs on openmpi, cause trouble to C APIs
     qe_add_global_compile_definitions(__MPI OMPI_SKIP_MPICXX)
@@ -184,6 +196,10 @@ if(QE_ENABLE_HDF5)
 endif()
 if(QE_ENABLE_ENVIRON)
     qe_add_global_compile_definitions(__ENVIRON)
+endif()
+
+if(QE_CLOCK_SECONDS)
+   qe_add_global_compile_definitions(__CLOCK_SECONDS)
 endif()
 
 # Feature checks
@@ -229,7 +245,7 @@ if(NOT QE_ENABLE_SANITIZER STREQUAL "none" AND NOT CMAKE_Fortran_COMPILER_ID MAT
 endif()
 
 # valid plugins checks
-set(VALID_QE_PLUGINS "d3q" "pw2qmcpack")
+set(VALID_QE_PLUGINS "d3q" "pw2qmcpack" "gipaw" "legacy")
 # Perform sanitizer option check, only works in debug mode
 foreach(PLUGIN IN LISTS QE_ENABLE_PLUGINS)
   if(NOT PLUGIN IN_LIST VALID_QE_PLUGINS)
@@ -484,6 +500,18 @@ if(QE_ENABLE_SCALAPACK)
         INTERFACE
             ${SCALAPACK_LIBRARIES}
             ${SCALAPACK_LINKER_FLAGS})
+    if(QE_ENABLE_SCALAPACK_QRCP)
+        include(CheckFortranFunctionExists)
+        set(CMAKE_REQUIRED_LIBRARIES "${SCALAPACK_LIBRARIES}")
+        check_fortran_function_exists("pzgeqpf" SCALAPACK_PZGEQPF_WORKS)
+        unset(CMAKE_REQUIRED_LIBRARIES)
+        if(SCALAPACK_PZGEQPF_WORKS)
+            message(STATUS "Found pzgeqpf, add ScaLAPACK pzgeqpf macro")
+            qe_add_global_compile_definitions(__SCALAPACK_QRCP)
+        else()
+            message(FATAL_ERROR "QE_ENABLE_SCALAPACK_QRCP requested but the current ScaLAPACK installation doesn't contain pzgeqpf!")
+        endif()
+    endif()
 endif(QE_ENABLE_SCALAPACK)
 
 ###########################################################

@@ -45,6 +45,10 @@ SUBROUTINE init_run()
   USE control_flags,      ONLY : use_gpu
   USE dfunct_gpum,        ONLY : newd_gpu
   USE wvfct_gpum,         ONLY : using_et, using_wg, using_wg_d
+  USE rism_module,        ONLY : lrism, rism_alloc3d
+  USE extffield,          ONLY : init_extffield
+  USE control_flags,      ONLY : scissor
+  USE sci_mod,            ONLY : allocate_scissor
   !
 #if defined (__ENVIRON)
   USE plugin_flags,        ONLY : use_environ
@@ -97,9 +101,9 @@ SUBROUTINE init_run()
      gg_d   = gg
   END IF
 #endif
-  !$acc update device(mill, g)
+  !$acc update device(mill, g, gg)
   !
-  IF (do_comp_esm) CALL esm_init()
+  IF (do_comp_esm) CALL esm_init(.NOT. lrism)
   !
   ! ... setup the 2D cutoff factor
   !
@@ -122,6 +126,12 @@ SUBROUTINE init_run()
   CALL allocate_bp_efield()
   CALL bp_global_map()
   !
+  IF (lrism) CALL rism_alloc3d()
+  !
+  call plugin_initbase()
+#if defined (__LEGACY_PLUGINS)
+  CALL plugin_initbase()
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) THEN
     IF (alat < 1.D-8) CALL errore('init_run', "Wrong alat", 1)

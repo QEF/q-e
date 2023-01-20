@@ -351,7 +351,7 @@ K_POINTS (automatic)
 \textcolor{red}{J0 Ni-3d 1.2}
 \end{alltt}
 %
-In the example above we apply Hubbard $U=5.0$~ev and Hund $J_0 = 1.0$~eV to Mn-$3d$ states, and Hubbard $U=6.0$~ev and Hund $J_0 = 1.2$~eV to Ni-$3d$ states. In the past, \texttt{J0} was specifed using the parameter \texttt{Hubbard\_J0} in the \texttt{system} namelist. Note that \texttt{J0} currently can be used only for one Hubbard channel.\\ 
+In the example above we apply Hubbard $U=5.0$~eV and Hund $J_0 = 1.0$~eV to Mn-$3d$ states, and Hubbard $U=6.0$~eV and Hund $J_0 = 1.2$~eV to Ni-$3d$ states. In the past, \texttt{J0} was specifed using the parameter \texttt{Hubbard\_J0} in the \texttt{system} namelist. Note that \texttt{J0} currently can be used only for one Hubbard channel.\\ 
 
 \noindent
 The code reads all lines in the \texttt{HUBBARD} card until the end of file is reached or until the next card is found in the input.\\
@@ -390,7 +390,7 @@ The meaning of \texttt{Hubbard\_J(i,ityp)} was the following (\texttt{i} runs fr
 \end{itemize}
 (If $B$ or $E2$ or $E3$ were not specified or set to 0 they were calculated from $J$ using atomic ratios.)\\
 
-Where these name conventions come from? There are many possible choices how to parametrize Hubbard interactions: $i)$ Slater integrals $F^0$, $F^2$, $F^4$, ..., $ii)$ standard Racah parameters $A$, $B$, $C$, $D$, ..., $iii)$ another set of Racah parameters $E^0$, ..., $E^3$, $iv)$ more physical choice $U$ and $J$ plus other missing like $B$ for the $d$ shell or $E^2$ and $E^3$ for the $f$ shell. In \qe\ the latter notation is used. Check the following references for further reading~\cite{Liechtenstein:1995, Racah:1942, Racah:1942b, Racah:1943, Racah:1949, Griffith:1961}\\
+Where these name conventions come from? There are many possible choices how to parametrize Hubbard interactions: $i)$ Slater integrals $F^0$, $F^2$, $F^4$, ..., $ii)$ standard Racah parameters $A$, $B$, $C$, $D$, ..., $iii)$ another set of Racah parameters $E^0$, ..., $E^3$, $iv)$ more physical choice $U$ and $J$ plus other missing like $B$ for the $d$ shell or $E^2$ and $E^3$ for the $f$ shell. In \qe\ the latter notation is used. Check the following references for further reading~\cite{Liechtenstein:1995, Racah:1942, Racah:1942b, Racah:1943, Racah:1949, Griffith:1961}.\\
 
 \noindent
 Below is the example of the new input syntax of DFT+$U$+$J$ (Liechtenstein's formulation) for Ni2MnGa:
@@ -437,7 +437,7 @@ K_POINTS (automatic)
 %
 
 \noindent
-If you want to use DFT+$U$ in the Liechtenstein's formulation (without $J$) then you still need to specify some very small value of $J$ (e.g. \texttt{1.d-12}) so that the automatic algorithm decides that this is the Liechtenstein's formulation. If \texttt{J} is not present in the \texttt{HUBBARD} card that the code will automatically assume that this is DFT+$U$ in the Dudarev's formulation.
+If you want to use DFT+$U$ in the Liechtenstein's formulation (without $J$) then you still need to specify some very small value of $J$ (e.g. \texttt{1.d-12}) so that the automatic algorithm decides that this is the Liechtenstein's formulation. If \texttt{J} is not present in the \texttt{HUBBARD} card then the code will automatically assume that this is DFT+$U$ in the Dudarev's formulation.
 
 \subsection{DFT+$U$+$V$ (Dudarev's formulation)}
 
@@ -557,14 +557,14 @@ ATOMIC_POSITIONS (crystal)
 K_POINTS (automatic)
  4 4 4 0 0 0
 HUBBARD (ortho-atomic)
-\textcolor{red}{V Co-3d Co-3d 1  1 7.70}
-\textcolor{red}{V Co-3d Co-3p 1  1 1.00}
-\textcolor{red}{V Co-3p Co-3p 1  1 2.00}
-\textcolor{red}{V Co-3p Co-3d 1  1 1.00}
-\textcolor{blue}{V Co-3d O-2p  1 19 0.75}
-\textcolor{blue}{V Co-3d O-2s  1  1 0.60}
-\textcolor{blue}{V Co-3p O-2s  1  1 0.50}
-\textcolor{blue}{V Co-3p O-2p  1  1 0.60}
+\textcolor{red}{V Co-3d Co-3d  1  1  7.70}
+\textcolor{red}{V Co-3d Co-3p  1  1  1.00}
+\textcolor{red}{V Co-3p Co-3p  1  1  2.00}
+\textcolor{red}{V Co-3p Co-3d  1  1  1.00}
+\textcolor{blue}{V Co-3d O-2p   1 19  0.75}
+\textcolor{blue}{V Co-3d O-2s   1 19  0.60}
+\textcolor{blue}{V Co-3p O-2s   1 19  0.50}
+\textcolor{blue}{V Co-3p O-2p   1 19  0.60}
 ...
 \end{alltt}
 %
@@ -602,21 +602,21 @@ ATOMIC_POSITIONS (crystal)
 K_POINTS (automatic)
  4 4 4 0 0 0
 HUBBARD (ortho-atomic)
-\textcolor{red}{V Co-3d    Co-3d    1  1 7.70}
-\textcolor{red}{V Co-3d    Co-3p-3s 1  1 1.00}
-\textcolor{red}{V Co-3p-3s Co-3p-3s 1  1 2.00}
-\textcolor{red}{V Co-3p-3s Co-3d    1  1 1.00}
-\textcolor{blue}{V Co-3d    O-2p     1 19 0.75}
-\textcolor{blue}{V Co-3d    O-2s-1s  1  1 0.60}
-\textcolor{blue}{V Co-3p-3s O-2s-1s  1  1 0.50}
-\textcolor{blue}{V Co-3p-3s O-2p     1  1 0.60}
+\textcolor{red}{V Co-3d    Co-3d    1  1  7.70}
+\textcolor{red}{V Co-3d    Co-3p-3s 1  1  1.00}
+\textcolor{red}{V Co-3p-3s Co-3p-3s 1  1  2.00}
+\textcolor{red}{V Co-3p-3s Co-3d    1  1  1.00}
+\textcolor{blue}{V Co-3d    O-2p     1 19  0.75}
+\textcolor{blue}{V Co-3d    O-2s-1s  1 19  0.60}
+\textcolor{blue}{V Co-3p-3s O-2s-1s  1 19  0.50}
+\textcolor{blue}{V Co-3p-3s O-2p     1 19  0.60}
 ...
 \end{alltt}
 %
 Note that pseudopotentials for O do not include $1s$ states. So the example above is just to show that if you have other elements instead of O and there are more deeper-lying states you may include them in the ``background'' channel. As before, it is possible to control the initial occupations of all these Hubbard manifolds using the keyword \texttt{Hubbard\_occ} (i.e. if you are not happy with the initial occupations that are read from pseudopotentials).\\
 
 \noindent
-Hubbard parameters $U$ and $V$ can be computed using the \hp\ code of \qe. However, the \hp\ curently supports the calculations of $U$ and $V$ for one Hubbard channel per atomic type. In other words, the advanced features presented above (i.e. cross-manifold interactions) are currently not implemented in \hp.
+Hubbard parameters $U$ and $V$ can be computed using the \hp\ code of \qe. However, the \hp\ currently supports the calculations of $U$ and $V$ for one Hubbard channel per atomic type. In other words, the advanced features presented above (i.e. cross-manifold interactions) are currently not implemented in \hp.
 
 
 \section{Calculation of Hubbard parameters}

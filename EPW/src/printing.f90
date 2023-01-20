@@ -880,7 +880,10 @@
     !! This routine print a header for superconductivity calculation
     !!
     USE io_global,     ONLY : stdout
-    USE epwcom,        ONLY : liso, laniso, lreal, imag_read, wscut
+    !!!!!
+    ! USE epwcom,        ONLY : liso, laniso, lreal, imag_read, wscut
+    USE epwcom,        ONLY : liso, laniso, lreal, imag_read, wscut, fbw
+    !!!!!
     USE elph2,         ONLY : gtemp
     USE eliashbergcom, ONLY : nsiw, nsw
     USE constants_epw, ONLY : kelvin2eV
@@ -897,12 +900,26 @@
       WRITE(stdout, '(a)') '    '
       WRITE(stdout, '(5x, a, i3, a, f12.5, a, a, i3, a)') 'temp(', itemp, ') = ', gtemp(itemp) / kelvin2eV, ' K'
       WRITE(stdout, '(a)') '    '
-      IF (liso) &
+      !!!!!
+      !IF (liso) &
+      !  WRITE(stdout, '(5x, a)') 'Solve isotropic Eliashberg equations on imaginary-axis'
+      !IF (laniso .AND. .NOT. imag_read) &
+      !  WRITE(stdout, '(5x, a)') 'Solve anisotropic Eliashberg equations on imaginary-axis'
+      !IF (laniso .AND. imag_read) &
+      !  WRITE(stdout, '(5x, a)') 'Read from file delta and znorm on imaginary-axis'
+      IF (liso .AND. .NOT. fbw) &
         WRITE(stdout, '(5x, a)') 'Solve isotropic Eliashberg equations on imaginary-axis'
-      IF (laniso .AND. .NOT. imag_read) &
+      IF (liso .AND. fbw) &
+        WRITE(stdout, '(5x, a)') 'Solve full-bandwidth isotropic Eliashberg equations on imaginary-axis'
+      IF (laniso .AND. .NOT. fbw .AND. .NOT. imag_read) &
         WRITE(stdout, '(5x, a)') 'Solve anisotropic Eliashberg equations on imaginary-axis'
-      IF (laniso .AND. imag_read) &
-        WRITE(stdout, '(5x, a)') 'Read from file delta and znorm on imaginary-axis '
+      IF (laniso .AND. fbw .AND. .NOT. imag_read) &
+        WRITE(stdout, '(5x, a)') 'Solve full-bandwidth anisotropic Eliashberg equations on imaginary-axis'
+      IF (laniso .AND. .NOT. fbw .AND. imag_read .AND. itemp == 1) &
+        WRITE(stdout, '(5x, a)') 'Read from file delta and znorm on imaginary-axis'
+      IF (laniso .AND. fbw .AND. imag_read .AND. itemp == 1) &
+        WRITE(stdout, '(5x, a)') 'Read from file delta and znorm and shift on imaginary-axis'
+      !!!!
       WRITE(stdout, '(a)') '    '
       WRITE(stdout, '(5x, a, i6, a, i6)') 'Total number of frequency points nsiw(', itemp, ') = ', nsiw(itemp)
       WRITE(stdout, '(5x, a, f10.4)') 'Cutoff frequency wscut = ', (2.d0 * nsiw(itemp) + 1) * pi * gtemp(itemp)
@@ -911,10 +928,20 @@
     !
     IF (cal_type == 2) THEN
       WRITE(stdout, '(a)') '    '
-      IF (liso) &
-        WRITE(stdout, '(5x, a)') 'Pade approximant of isotropic Eliashberg equations from imaginary-axis to real-axis'
-      IF (laniso) &
-        WRITE(stdout, '(5x, a)') 'Pade approximant of anisotropic Eliashberg equations from imaginary-axis to real-axis'
+      !!!!!
+      !IF (liso) &
+      !  WRITE(stdout, '(5x, a)') 'Pade approximant of isotropic Eliashberg equations from imaginary-axis to real-axis'
+      !IF (laniso) &
+      !  WRITE(stdout, '(5x, a)') 'Pade approximant of anisotropic Eliashberg equations from imaginary-axis to real-axis'
+      IF (liso .AND. .NOT. fbw) WRITE(stdout, '(5x, a)') &
+        'Pade approximant of isotropic Eliashberg equations from imaginary-axis to real-axis'
+      IF (laniso .AND. .NOT. fbw) WRITE(stdout, '(5x, a)') &
+        'Pade approximant of anisotropic Eliashberg equations from imaginary-axis to real-axis'
+      IF (liso .AND. fbw) WRITE(stdout, '(5x, a)') &
+        'Pade approximant of full-bandwidth isotropic Eliashberg equations from imaginary-axis to real-axis'
+      IF (laniso .AND. fbw) WRITE(stdout, '(5x, a)') &
+        'Pade approximant of full-bandwidth anisotropic Eliashberg equations from imaginary-axis to real-axis'
+      !!!!!
       WRITE(stdout, '(5x, a, f10.4)') 'Cutoff frequency wscut = ', wscut
       WRITE(stdout, '(a)') '    '
     ENDIF
@@ -1460,6 +1487,10 @@
     !! Hall factor
     REAL(KIND = DP) :: hall(3, 3, nstemp)
     !! Hall factor
+    REAL(KIND = DP) :: sigma_hall(3, 3)
+    !! Hall conductivity
+    REAL(KIND = DP) :: mob_hall(3, 3)
+    !! Hall mobility
     REAL(KIND = DP) :: sigma_inv(3, 3, nstemp)
     !! Inverse conductivity tensor
     REAL(KIND = DP) :: mob_inv(3, 3, nstemp)
@@ -1484,6 +1515,10 @@
                               / (carrier_density(itemp) * hbarJ)
       mobb_bte(:, :, itemp)   = (sigmab_bte(:, :, itemp) * electron_si * (bohr2ang * ang2cm)**2) &
                               / (carrier_density(itemp) * hbarJ)
+      ! 
+      ! To make the diagonal of mobb zero. 
+      mobb_serta(:, :, itemp) = mobb_serta(:, :, itemp) - mob_serta(:, :, itemp)
+      mobb_bte(:, :, itemp) = mobb_bte(:, :, itemp) - mob_bte(:, :, itemp) 
       !
       ! Convert conductivity tensor in SI units [Siemens m^-1=Coulomb s^-1 V^-1 m^-d ]
       ! in 3d: cm^2 s^-1 V^-1 * (cm ^-2  cmtom^-1 C) = Coulomb s^-1 V^-1
@@ -1506,23 +1541,7 @@
     WRITE(stdout, '(5x, a)') REPEAT('=',93)
     DO itemp = 1, nstemp
       etemp = gtemp(itemp)
-      WRITE(stdout, '(5x,a)') ' '
-      WRITE(stdout, '(5x,a,1f10.4,a)') 'Temperature: ', etemp * ryd2ev / kelvin2eV, ' K'
-      IF (system_2d) THEN
-        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens]'
-      ELSE
-        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens/m]'
-      ENDIF
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 1, itemp), '  |', sigmab_serta_si(:, 1, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 2, itemp), '  |', sigmab_serta_si(:, 2, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 3, itemp), '  |', sigmab_serta_si(:, 3, itemp)
       !
-      WRITE(stdout, '(5x,a)') 'Mobility tensor without magnetic field     | with magnetic field [cm^2/Vs]'
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 1, itemp), '  |', mobb_serta(:, 1, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 2, itemp), '  |', mobb_serta(:, 2, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 3, itemp), '  |', mobb_serta(:, 3, itemp)
-      !
-      sigma_inv(:, :, itemp) = matinv3(sigma_serta(:, :, itemp))
       IF (system_2d) THEN ! We suppose vacuum is in the z direction
         mob_serta(3, 3, :) = 1d0
         mob_inv(:, :, itemp) = matinv3(mob_serta(:, :, itemp))
@@ -1530,9 +1549,29 @@
       ELSE
         mob_inv(:, :, itemp) = matinv3(mob_serta(:, :, itemp))
       ENDIF
-      hall_serta(:, :, itemp) = MATMUL(MATMUL(mobb_serta(:, :, itemp), mob_inv(:, :, itemp)), &
+      hall_serta(:, :, itemp) = MATMUL(MATMUL(mob_inv(:, :, itemp), mobb_serta(:, :, itemp)), &
                           mob_inv(:, :, itemp)) / (b_norm * hbarJ ) * electron_si * (bohr2ang * ang2cm)**2
+      !            
+      sigma_hall(:, :) = MATMUL(sigma_serta_si(:, :, itemp), hall_serta(:, :, itemp))            
+      mob_hall(:, :)   = MATMUL(mob_serta(:, :, itemp), hall_serta(:, :, itemp))            
       !
+      ! 
+      WRITE(stdout, '(5x,a)') ' '
+      WRITE(stdout, '(5x,a,1f10.4,a)') 'Temperature: ', etemp * ryd2ev / kelvin2eV, ' K'
+      IF (system_2d) THEN
+        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens]'
+      ELSE
+        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens/m]'
+      ENDIF
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 1, itemp), '  |', sigma_hall(:, 1)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 2, itemp), '  |', sigma_hall(:, 2)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 3, itemp), '  |', sigma_hall(:, 3)
+      !
+      WRITE(stdout, '(5x,a)') 'Mobility tensor without magnetic field     | with magnetic field [cm^2/Vs]'
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 1, itemp), '  |', mob_hall(:, 1)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 2, itemp), '  |', mob_hall(:, 2)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 3, itemp), '  |', mob_hall(:, 3)
+      ! 
       ! bfield is energy*sec/lenght**2, mobility is in cm**2 V**-1 sec**-1.
       ! To convert bfield to the same units of the mobility I do the same conversion as passing from the sigma
       ! tensor to the mobility: the energy is converted with electron_SI/hbarJ and the lenght**2 with (bohr2ang * ang2cm)**2
@@ -1547,23 +1586,7 @@
     WRITE(stdout, '(5x, a)') REPEAT('=',93)
     DO itemp = 1, nstemp
       etemp = gtemp(itemp)
-      WRITE(stdout, '(5x,a)') ' '
-      WRITE(stdout, '(5x,a,1f10.4,a)') 'Temperature: ', etemp * ryd2ev / kelvin2eV, ' K'
-      IF (system_2d) THEN
-        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens]'
-      ELSE
-        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens/m]'
-      ENDIF
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 1, itemp), '  |', sigmab_bte_si(:, 1, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 2, itemp), '  |', sigmab_bte_si(:, 2, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 3, itemp), '  |', sigmab_bte_si(:, 3, itemp)
-      !
-      WRITE(stdout, '(5x,a)') 'Mobility tensor without magnetic field     | with magnetic field [cm^2/Vs]'
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 1, itemp), '  |', mobb_bte(:, 1, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 2, itemp), '  |', mobb_bte(:, 2, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 3, itemp), '  |', mobb_bte(:, 3, itemp)
-      !
-      sigma_inv(:, :, itemp) = matinv3(sigma_bte(:, :, itemp))
+      ! 
       IF (system_2d) THEN ! We suppose vacuum is in the z direction
         mob_bte(3, 3, :) = 1d0
         mob_inv(:, :, itemp) = matinv3(mob_bte(:, :, itemp))
@@ -1571,8 +1594,27 @@
       ELSE
         mob_inv(:, :, itemp) = matinv3(mob_bte(:, :, itemp))
       ENDIF
-      hall(:, :, itemp) = MATMUL(MATMUL(mobb_bte(:, :, itemp), mob_inv(:, :, itemp)), &
+      hall(:, :, itemp) = MATMUL(MATMUL(mob_inv(:, :, itemp), mobb_bte(:, :, itemp)), &
                           mob_inv(:, :, itemp)) / (b_norm * hbarJ ) * electron_si * (bohr2ang * ang2cm)**2
+      !             
+      sigma_hall(:, :) = MATMUL(sigma_bte_si(:, :, itemp), hall(:, :, itemp))
+      mob_hall(:, :)   = MATMUL(mob_bte(:, :, itemp), hall(:, :, itemp))      
+      !            
+      WRITE(stdout, '(5x,a)') ' '
+      WRITE(stdout, '(5x,a,1f10.4,a)') 'Temperature: ', etemp * ryd2ev / kelvin2eV, ' K'
+      IF (system_2d) THEN
+        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens]'
+      ELSE
+        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens/m]'
+      ENDIF
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 1, itemp), '  |', sigma_hall(:, 1)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 2, itemp), '  |', sigma_hall(:, 2)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 3, itemp), '  |', sigma_hall(:, 3)
+      !
+      WRITE(stdout, '(5x,a)') 'Mobility tensor without magnetic field     | with magnetic field [cm^2/Vs]'
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 1, itemp), '  |', mob_hall(:, 1)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 2, itemp), '  |', mob_hall(:, 2)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 3, itemp), '  |', mob_hall(:, 3)
       !
       ! bfield is energy*sec/lenght**2, mobility is in cm**2 V**-1 sec**-1.
       ! To convert bfield to the same units of the mobility I do the same conversion as passing from the sigma

@@ -119,7 +119,7 @@ inputs_args = ('O2.scf.1.in', '1'), ('O2.scf.2.in', '1'), ('O2.phG.in', '2')
 
 [ph_2d/]
 program = PH
-inputs_args = ('scf.in', '1'), ('ph.in', '2')
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r1.in', '3'), ('matdyn1.in', '8'), ('q2r2.in', '3'), ('matdyn2.in', '8')
 
 [epw_base/]
 program = EPW
@@ -159,7 +159,7 @@ inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.i
 
 [epw_mob/]
 program = EPW
-inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r.in', '4'), ('scf.in', '1'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3')
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r.in', '4'), ('scf.in', '1'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3'), ('epw5.in', '3'), ('epw6.in', '3')
 
 [epw_mob_ibte/]
 program = EPW
@@ -183,7 +183,7 @@ inputs_args = ('scf.in', '0'), ('ph.in', '2'), ('scf.in', '0'), ('nscf.in', '1')
 
 [zg_conf/]
 program = ZG
-inputs_args = ('zg.in', '')
+inputs_args = ('zg.in', '0')
 
 [tddfpt_CH4/]
 program = TDDFPT

@@ -710,7 +710,8 @@ NAMELIST: &SYSTEM
    Type:           REAL
    Default:        it depends on the specified functional
    Description:    Fraction of EXX for hybrid functional calculations. In the case of
-                   input_dft='PBE0', the default value is 0.25.
+                   input_dft='PBE0', the default value is 0.25. This entry overrides
+                   the default (as well as the restart file) value of a given functional.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------

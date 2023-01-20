@@ -26,6 +26,7 @@ SUBROUTINE scale_h
   USE exx_base,       ONLY : exx_grid_init, exx_mp_init
   USE exx,            ONLY : exx_gvec_reinit
   USE xc_lib,         ONLY : xclib_dft_is
+  USE rism_module,    ONLY : lrism, rism_reinit3d
   USE mp,             ONLY : mp_max
   USE mp_bands,       ONLY : intra_bgrp_comm
   !
@@ -74,7 +75,7 @@ SUBROUTINE scale_h
   g_d  = g
   gg_d = gg
 #endif
-  !$acc update device(g)
+  !$acc update device(g,gg)
   !
   CALL mp_max( gg_max, intra_bgrp_comm )
   !
@@ -100,8 +101,14 @@ SUBROUTINE scale_h
      CALL exx_mp_init( )
      CALL exx_gvec_reinit( at_old )
   ENDIF
+  !
   ! for ts-vdw
+  !
   CALL set_h_ainv()
+  !
+  ! for 3D-RISM
+  !
+  IF ( lrism ) CALL rism_reinit3d()
   !
   RETURN
   !

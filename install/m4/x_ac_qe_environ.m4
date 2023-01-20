@@ -15,7 +15,7 @@ AC_DEFUN([X_AC_QE_ENVIRON], [
 		 	fi
 		 	
 			if test -d $environ_root; then
-				environ_libs="$environ_root/libs/*"
+				environ_libs="-L$environ_root/libs -lenvsrc -lenvfft -lenvutil"
 				try_iflags="$try_iflags -I$environ_root/src"
 		 		try_dflags="$try_dflags -D__ENVIRON"
 				AC_MSG_RESULT(found at $environ_root)

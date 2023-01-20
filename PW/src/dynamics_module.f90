@@ -34,8 +34,8 @@ MODULE dynamics_module
    !
    SAVE
    PRIVATE
-   PUBLIC :: verlet, proj_verlet, terminate_verlet, fire, &
-             langevin_md, smart_MC, allocate_dyn_vars, deallocate_dyn_vars
+   PUBLIC :: verlet, verlet_read_tau_from_conf, proj_verlet, terminate_verlet, &
+             fire, langevin_md, smart_MC, allocate_dyn_vars, deallocate_dyn_vars
    PUBLIC :: temperature, refold_pos, vel
    PUBLIC :: dt, delta_t, nraise, control_temp, thermostat
    ! FIRE parameters
@@ -183,8 +183,9 @@ CONTAINS
       USE force_mod,          ONLY : force
       USE control_flags,      ONLY : istep, lconstrain, tv0rd, tstress
       ! istep counts all MD steps, including those of previous runs
-      USE constraints_module, ONLY : nconstr, check_constraint
-      USE constraints_module, ONLY : remove_constr_force, remove_constr_vec
+      USE constraints_module, ONLY : check_constraint, remove_constr_force, &
+         remove_constr_vec, check_wall_constraint
+      USE input_parameters,   ONLY : nextffield
       !
       IMPLICIT NONE
       !
@@ -203,20 +204,10 @@ CONTAINS
 #endif
       LOGICAL  :: is_restart
       REAL(DP), EXTERNAL :: dnrm2
-      REAL(DP) :: kstress(3,3)
+      REAL(DP) :: kstress(3,3), tau_tmp(3, nat)
       INTEGER :: i, j, restart_id
       !
-      ! ... the number of degrees of freedom
-      !
-      IF ( ANY( if_pos(:,:) == 0 ) ) THEN
-         !
-         ndof = 3*nat - COUNT( if_pos(:,:) == 0 ) - nconstr
-         !
-      ELSE
-         !
-         ndof = 3*nat - 3 - nconstr
-         !
-      ENDIF
+      ndof = get_ndof()
       !
       vel_defined  = .TRUE.
       temp_av      = 0.D0
@@ -233,9 +224,12 @@ CONTAINS
             ! Restarting...
             vel_defined = .FALSE.
             !
-            READ( UNIT = 4, FMT = * ) istep, etotold, tau_old(:,:), &
-               temp_new, temp_av, mass(:), total_mass, elapsed_time, &
-               tau_ref(:,:)
+            ! tau_tmp is read here but not used. It is used for restart in
+            ! verlet_read_tau_from_conf
+            !
+            READ( UNIT = 4, FMT = * ) istep, etotold, tau_tmp(:,:), &
+               tau_old(:,:), temp_new, temp_av, mass(:), total_mass, &
+               elapsed_time, tau_ref(:,:)
             !
             CLOSE( UNIT = 4, STATUS = 'KEEP' )
             !
@@ -267,6 +261,11 @@ CONTAINS
       !
       IF ( control_temp ) CALL apply_thermostat()
       !
+      ! ... Update forces if potential wall constraint was requested
+      !
+      IF (lconstrain) &
+         CALL check_wall_constraint( nat, tau, if_pos, ityp, alat, force )
+      !
       ! ... we first remove the component of the force along the
       ! ... constraint gradient ( this constitutes the initial
       ! ... guess for the calculation of the lagrange multipliers )
@@ -297,11 +296,13 @@ CONTAINS
          !
       ENDIF
       !
-      IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
+      IF ( .NOT. ANY( if_pos(:,:) == 0 ) .AND. nextffield == 0 ) THEN
          !
          ! ... if no atom has been fixed  we compute the displacement of the
          ! ... center of mass and we subtract it from the displaced positions
          !
+         ! ... bypassed if external ionic force fields are activated
+         ! 
          delta(:) = 0.D0
          DO na = 1, nat
             delta(:) = delta(:) + mass(na)*( tau_new(:,na) - tau(:,na) )
@@ -400,12 +401,12 @@ CONTAINS
       CALL seqopn( 4, 'md', 'FORMATTED',  is_restart )
       !
       WRITE( UNIT = 4, FMT = * ) restart_verlet
-      WRITE( UNIT = 4, FMT = * ) istep, etot, tau(:,:), temp_new, temp_av, &
-          mass(:), total_mass, elapsed_time, tau_ref(:,:)
+      WRITE( UNIT = 4, FMT = * ) istep, etot, tau_new(:,:), tau(:,:), &
+         temp_new, temp_av, mass(:), total_mass, elapsed_time, tau_ref(:,:)
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
-      CALL dump_trajectory_frame( istep, elapsed_time, temperature )
+      CALL dump_trajectory_frame( elapsed_time, temperature )
       !
       ! ... here the tau are shifted
       !
@@ -579,7 +580,7 @@ CONTAINS
          REAL(DP) :: sigma, kt
          !
          IF (.NOT. vel_defined) THEN
-            vel(:,:) = (tau(:,:) - tau_old(:,:)) / dt
+            vel(:,:) = ( tau(:,:) - tau_old(:,:) ) / dt * dble( if_pos(:,:) )
          ENDIF
          !
          SELECT CASE( TRIM( thermostat ) )
@@ -832,13 +833,14 @@ CONTAINS
      !! Terminate Verlet molecular dynamics calculation.
      !
      USE io_global, ONLY : stdout
+     USE control_flags, ONLY : istep
      !
      WRITE( UNIT = stdout, &
           FMT = '(/,5X,"The maximum number of steps has been reached.")' )
      WRITE( UNIT = stdout, &
           FMT = '(/,5X,"End of molecular dynamics calculation")' )
      !
-     CALL print_averages()
+     IF (istep > 0) CALL print_averages()
      !
    END SUBROUTINE terminate_verlet
    !
@@ -857,6 +859,7 @@ CONTAINS
       USE control_flags,      ONLY : istep, lconstrain
       !
       USE constraints_module, ONLY : remove_constr_force, check_constraint
+      USE input_parameters,   ONLY : nextffield
       ! TB
       USE extfield,           ONLY : relaxz
       !
@@ -991,11 +994,13 @@ CONTAINS
       IF ( .NOT. ANY( if_pos(:,:) == 0 ) .AND. (relaxz) ) THEN
          WRITE( stdout, '("relaxz = .TRUE. => displacement of the center of mass is not subtracted")')
       ENDIF
-      IF ( (.NOT. ANY( if_pos(:,:) == 0 )) .AND. (.NOT. relaxz) ) THEN
+      IF ( (.NOT. ANY( if_pos(:,:) == 0 )) .AND. (.NOT. relaxz) .AND. nextffield==0 ) THEN
          !
          ! ... if no atom has been fixed  we compute the displacement of the
          ! ... center of mass and we subtract it from the displaced positions
          !
+         ! ... also bypassed if external ionic force fields are activated
+         ! 
          delta(:) = 0.D0
          !
          DO na = 1, nat
@@ -1358,8 +1363,8 @@ CONTAINS
       USE control_flags,  ONLY : istep, lconstrain
       USE random_numbers, ONLY : gauss_dist
       !
-      USE constraints_module, ONLY : nconstr
       USE constraints_module, ONLY : remove_constr_force, check_constraint
+      USE input_parameters,   ONLY : nextffield
       !
       IMPLICIT NONE
       !
@@ -1445,11 +1450,13 @@ CONTAINS
       !
       tau_new(:,:) = tau(:,:) + ( dt*force(:,:) + chi(:,:) ) / alat
       !
-      IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
+      IF ( .NOT. ANY( if_pos(:,:) == 0 ) .AND. nextffield==0) THEN
          !
          ! ... here we compute the displacement of the center of mass and we
          ! ... subtract it from the displaced positions
          !
+         ! ... also bypassed if external ionic force fields are activated
+         ! 
          delta(:) = 0.D0
          !
          DO na = 1, nat
@@ -2001,7 +2008,6 @@ CONTAINS
       !! Theory and Simulations of Materials Laboratory, EPFL.
       !
       USE ions_base,          ONLY : nat, if_pos
-      USE constraints_module, ONLY : nconstr
       USE cell_base,          ONLY : alat
       USE random_numbers,     ONLY : gauss_dist, sum_of_gaussians2
       !
@@ -2016,17 +2022,7 @@ CONTAINS
       real(DP), external :: gasdev, sumnoises
       INTEGER  :: na
       !
-      ! ... the number of degrees of freedom
-      !
-      IF ( ANY( if_pos(:,:) == 0 ) ) THEN
-         !
-         ndof = 3*nat - count( if_pos(:,:) == 0 ) - nconstr
-         !
-      ELSE
-         !
-         ndof = 3*nat - 3 - nconstr
-         !
-      ENDIF
+      ndof = get_ndof()
       !
       IF ( nraise > 0 ) THEN
          !
@@ -2063,7 +2059,7 @@ CONTAINS
    END SUBROUTINE thermalize_resamp_vscaling
    !
    !-----------------------------------------------------------------------
-   SUBROUTINE dump_trajectory_frame( istep, time, temp )
+   SUBROUTINE dump_trajectory_frame( time, temp )
       !-----------------------------------------------------------------------
       !! Dump trajectory frame into a file in tmp_dir with name:
       !! prefix.istep.mdtrj. Don't append, create a new file for each step,
@@ -2073,21 +2069,16 @@ CONTAINS
       USE cell_base,   ONLY : alat, at
       USE constants,   ONLY : bohr_radius_angs
       USE ener,        ONLY : etot
-      USE io_files,    ONLY : prefix, tmp_dir, seqopn
+      USE io_files,    ONLY : prefix, tmp_dir
       USE ions_base,   ONLY : nat, tau
       !
       IMPLICIT NONE
       !
-      INTEGER, INTENT(in)  :: istep
       REAL(DP), INTENT(in) :: time, temp ! in ps, K
-      !
       INTEGER              :: iunit, i, k
-      CHARACTER(LEN=20)    :: istep_str
       !
-      WRITE(istep_str, '(I7.7)') istep
-      !
-      OPEN(NEWUNIT = iunit, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // "." &
-         // TRIM(ADJUSTL(istep_str)) // ".mdtrj" )
+      OPEN(NEWUNIT = iunit, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // ".mdtrj", &
+         STATUS="unknown", POSITION="APPEND")
       !
       ! Time (ps), temp (K), total energy (Ry), unit cell (9 values, Ang),
       ! atom coordinates (3 * nat values, Ang)
@@ -2095,9 +2086,93 @@ CONTAINS
       WRITE(iunit, *) time, temp, etot, &
          ( ( at(i,k) * alat * bohr_radius_angs, i = 1, 3), k = 1, 3 ), &
          ( ( tau(i,k) * alat * bohr_radius_angs, i = 1, 3), k = 1, nat )
+      WRITE(iunit, *) ! new line
       !
       CLOSE(iunit)
       !
    END SUBROUTINE dump_trajectory_frame
+   !
+   !--------------------------------------------------------------------------
+   SUBROUTINE verlet_read_tau_from_conf( )
+      !-----------------------------------------------------------------------
+      !! Try to set tau from restart prefix.md file.
+      !
+      USE io_files,  ONLY : prefix, seqopn
+      USE ions_base, ONLY : nat, tau
+      USE io_global, ONLY : ionode, ionode_id
+      USE mp,        ONLY : mp_bcast
+      USE mp_images, ONLY : intra_image_comm
+      !
+      IMPLICIT NONE
+      !
+      LOGICAL  :: is_restart = .FALSE.
+      INTEGER  :: restart_id = 0
+      REAL(DP) :: etotold = 0.0_DP
+      REAL(DP) :: tau_tmp(3, nat)
+      INTEGER  :: istep
+      !
+      ! Try to read restart file on the ionode only
+      IF ( ionode ) THEN
+         !
+         CALL seqopn( 4, 'md', 'FORMATTED', is_restart )
+         !
+         IF ( is_restart ) THEN
+            !
+            READ( UNIT = 4, FMT = * ) restart_id
+            !
+            IF ( restart_id .EQ. restart_verlet ) THEN
+               !
+               READ( UNIT = 4, FMT = * ) istep, etotold, tau_tmp(:,:)
+               !
+               IF ( SUM ( (tau_tmp(:,1:nat)-tau(:,1:nat))**2 ) > eps8 ) THEN
+                  !
+                  tau(:, 1:nat) = tau_tmp(:, 1:nat)
+                  !
+                  WRITE( stdout, '(/5X,"Atomic positions read from:", &
+                     /,5X,A)') TRIM(prefix) // ".md"
+               END IF
+               !
+            END IF
+            !
+            CLOSE( UNIT = 4 )
+            !
+         ELSE
+            !
+            CLOSE( UNIT = 4, STATUS = 'DELETE' )
+            !
+         END IF
+      !
+      END IF
+      !
+      CALL mp_bcast( tau, ionode_id, intra_image_comm )
+      !
+   END SUBROUTINE verlet_read_tau_from_conf
+   !
+   !-----------------------------------------------------------------------
+   FUNCTION get_ndof()
+      !-----------------------------------------------------------------------
+      !! Get the number of degrees of freedom. Use number of constraints
+      !! requested from the constraints_module.
+      !
+      USE ions_base,          ONLY : nat, if_pos
+      USE constraints_module, ONLY : nconstr_ndof
+      !
+      IMPLICIT NONE
+      !
+      REAL(DP) :: get_ndof
+      !
+      ! ... the number of degrees of freedom
+      !
+      IF ( ANY( if_pos(:,:) == 0 ) ) THEN
+         !
+         get_ndof = 3*nat - count( if_pos(:,:) == 0 ) - nconstr_ndof
+         !
+      ELSE
+         !
+         get_ndof = 3*nat - 3 - nconstr_ndof
+         !
+      ENDIF
+      !
+   END FUNCTION get_ndof
    !
 END MODULE dynamics_module

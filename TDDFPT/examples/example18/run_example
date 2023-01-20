@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
@@ -135,7 +135,7 @@ cat > $PREFIX.tddfpt.in << EOF
    q3 = 0.0
    units = 0
    start = 0.0
-   end = 3.6 
+   end = 3.6
    increment = 0.036
    epsil = 0.1
 /

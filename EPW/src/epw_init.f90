@@ -48,6 +48,8 @@
   USE poolgathering,    ONLY : poolgather_int, poolgather_int1
   USE io_epw,           ONLY : readwfc
   USE dvqpsi,           ONLY : dvanqq2
+  USE Coul_cut_2D,      ONLY : do_cutoff_2D
+  USE Coul_cut_2D_ph,   ONLY : cutoff_lr_Vlocq, cutoff_fact_qg
   USE scf,              ONLY : v, vltot
   USE fft_base,         ONLY : dfftp
   USE fft_interfaces,   ONLY : fwfft
@@ -172,6 +174,19 @@
     !
   END DO
   !
+  ! From PHonon/PH/phq_init.f90
+  ! SP: For 2d calculations, we need to initialize the fact for the q+G
+  ! component of the cutoff of the Coulomb interaction
+  IF (do_cutoff_2D) call cutoff_fact_qg()
+  !
+  ! In 2D calculations the long range part of vlocq(g) (erf/r part)
+  ! was not re-added in g-space because everything is caclulated in
+  ! radial coordinates, which is not compatible with 2D cutoff.
+  ! It will be re-added each time vlocq(g) is used in the code.
+  ! Here, this cutoff long-range part of vlocq(g) is computed only once
+  ! by the routine below and stored
+  IF (do_cutoff_2D) call cutoff_lr_Vlocq()
+  ! 
   IF (first_run) THEN
     ALLOCATE(igk_k_all(npwx, nkstot), STAT = ierr)
     IF (ierr /= 0) CALL errore('epw_init', 'Error allocating igk_k_all', 1)

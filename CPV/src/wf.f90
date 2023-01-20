@@ -16,8 +16,7 @@
 SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                b1, b2, b3, Uall, what1, wfc, jw, ibrav )
   !----------------------------------------------------------------------------
-  !
-  ! ... this routine calculates overlap matrices
+  !! This routine calculates overlap matrices.
   !
   ! ... routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
   !
@@ -699,10 +698,10 @@ END SUBROUTINE wf
 !----------------------------------------------------------------------------
 SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   !----------------------------------------------------------------------------
-  ! ... This part of the subroutine wf has been added by Manu. It performes
-  ! ... Damped Dynamics on the A matrix to get the Unitary transformation to
-  ! ... obtain the wannier function at time(t+delta). It also updates the
-  ! ... quantities bec
+  !! This subroutine performes Damped Dynamics on the A matrix to get the Unitary 
+  !! transformation to obtain the Wannier function at time(t+delta).
+  !! It also updates the quantities \(\text{bec}\).
+  ! This part has been added by Manu.
   !
   USE kinds,            ONLY : DP
   USE io_global,        ONLY : ionode, stdout
@@ -1319,9 +1318,8 @@ END SUBROUTINE grid_map
 !----------------------------------------------------------------------------
 SUBROUTINE setwfg( ibrav, b1, b2, b3 )
   !----------------------------------------------------------------------------
-  !
+  !! Find G vectors for a given ibrav and celldms.
   ! ... added by Young-Su Lee ( Nov 2006 )
-  ! Find G vectors for a given ibrav and celldms
   !
   USE kinds,              ONLY : DP
   USE cell_base,          ONLY : tpiba, celldm
@@ -1703,10 +1701,9 @@ END SUBROUTINE setwfg
 !----------------------------------------------------------------------------
 SUBROUTINE tric_wts( rp1, rp2, rp3, alat, wts )
   !----------------------------------------------------------------------------
-  !
-  ! ... This subroutine computes the weights to be used for
-  ! ... R.P. translations in the WF calculation in the case
-  ! ... of ibrav=0 or ibrav=14
+  !! This subroutine computes the weights to be used for
+  !! R.P. translations in the WF calculation in the case
+  !! of ibrav=0 or ibrav=14.
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : pi
@@ -1794,13 +1791,12 @@ END SUBROUTINE tric_wts
 !----------------------------------------------------------------------------
 SUBROUTINE tric_wts2( rp1, rp2, rp3, nw, wfg, weight )
   !----------------------------------------------------------------------------
+  !! Find the least square solutions of weights for G vectors.  
+  !! If the set of G vectors and calculated weights do not conform to the condition,
+  !! \(\sum_i \text{weight}_i G_{ia} G_{ib} = \text{delta}_{ab} \)
+  !! the code stops.
   !
   ! ... added by Young-Su Lee ( Nov 2006 )
-  !
-  ! Find the least square solutions of weights for G vectors
-  ! If the set of G vectors and calculated weights do not conform to the condition,
-  !  SUM_i weight_i G_ia G_ib = delta_ab
-  ! the code stops.
   !
   USE kinds,              ONLY : DP
   USE io_global,          ONLY : stdout
@@ -2705,8 +2701,8 @@ END SUBROUTINE wfsteep
 !----------------------------------------------------------------------------
 SUBROUTINE write_psi( c, jw )
   !----------------------------------------------------------------------------
+  !! Collect wavefunctions on first node and write to file.
   ! ... for calwf 5             - M.S
-  ! ... collect wavefunctions on first node and write to file
   !
   USE kinds,                  ONLY : DP
   USE io_global,              ONLY : stdout, ionode
@@ -2776,6 +2772,8 @@ END SUBROUTINE write_psi
 !----------------------------------------------------------------------------
 SUBROUTINE jacobi_rotation( m, Omat, Umat, b1, b2, b3 )
   !----------------------------------------------------------------------------
+  !! Jacobi rotations method is used to minimize the spread.  
+  !! F. Gygi, J.-L. Fatterbert and E. Schwegler, Comput. Phys. Commun. 155, 1 (2003)
   !
   USE kinds,                  ONLY : DP
   USE io_global,              ONLY : stdout
@@ -2986,10 +2984,10 @@ SUBROUTINE jacobi_rotation( m, Omat, Umat, b1, b2, b3 )
 END SUBROUTINE jacobi_rotation
 !==============================================================================
 
-    SUBROUTINE ddyn_u(nbsp, O, U, iss)
+    SUBROUTINE ddyn_u( nbsp, O, U, iss )
 
-! input: the overlap matrix O
-! ouput: the unitary transformation matrix U
+       !! It takes as input the overlap matrix O and provides as ouput the
+       !! unitary transformation matrix U.
 
        USE kinds,            ONLY : DP
        USE wannier_base,     ONLY : wf_friction, nsteps, tolw, adapt, wf_q, weight, nw, wfdt

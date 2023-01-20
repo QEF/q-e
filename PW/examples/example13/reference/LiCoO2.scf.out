@@ -1,0 +1,2270 @@
+
+     Program PWSCF v.7.0 starts on 24May2022 at 15:33:39 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     35307 MiB available memory on the printing compute node when the environment starts
+ 
+     Waiting for input...
+     Reading input from standard input
+
+     Current dimensions of program PWSCF are:
+     Max number of different atomic species (ntypx) = 10
+     Max number of k-points (npk) =  40000
+     Max angular momentum in pseudopotentials (lmaxx) =  4
+     file Co.pbesol-spn-rrkjus_psl.0.3.1.UPF: wavefunction(s)  3P renormalized
+     First shells distances (in Bohr):
+     shell:   1    0.000000
+     shell:   2    3.630748
+     shell:   3    5.321586
+     shell:   4    5.388078
+     shell:   5    6.442175
+     shell:   6    6.917913
+     shell:   7    7.573022
+
+     i    j  dist (Bohr)       stan-stan stan-bac bac-bac bac-stan
+     1    1   0.00000000  V =    5.0000   0.0000   0.0000   0.0000
+     1    2   6.91791251  V =    0.8000   0.0000   0.0000   0.0000
+     1    7   6.91791251  V =    0.8000   0.0000   0.0000   0.0000
+     2    1   6.91791251  V =    0.8000   0.0000   0.0000   0.0000
+     2    2   0.00000000  V =    0.0000   0.0000   0.0000   0.0000
+     3    3   0.00000000  V =    0.0000   0.0000   0.0000   0.0000
+     3  105   6.91791251  V =    0.8000   0.0000   0.0000   0.0000
+     4    4   0.00000000  V =    0.0000   0.0000   0.0000   0.0000
+ 
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     a serial algorithm will be used
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum        1517     755    229                29271    10281    1749
+ 
+     Using Slab Decomposition
+ 
+
+
+     bravais-lattice index     =            5
+     lattice parameter (alat)  =       9.3705  a.u.
+     unit-cell volume          =     217.1091 (a.u.)^3
+     number of atoms/cell      =            4
+     number of atomic types    =            3
+     number of electrons       =        32.00
+     number of Kohn-Sham states=           16
+     kinetic-energy cutoff     =      50.0000  Ry
+     charge density cutoff     =     400.0000  Ry
+     scf convergence threshold =      1.0E-10
+     mixing beta               =       0.7000
+     number of iterations used =            8  plain     mixing
+     Exchange-correlation= PBESOL
+                           (   1   4  10   8   0   0   0)
+     Hubbard projectors: ortho-atomic
+     Hubbard parameters of DFT+U+V (Dudarev formulation) in eV:
+
+     Internal variables: lda_plus_u = T, lda_plus_u_kind = 2
+
+     celldm(1)=   9.370500  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.838740  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (   0.283954  -0.163941   0.944719 )  
+               a(2) = (   0.000000   0.327882   0.944719 )  
+               a(3) = (  -0.283954  -0.163941   0.944719 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = (  1.760847 -1.016626  0.352839 )  
+               b(2) = (  0.000000  2.033251  0.352839 )  
+               b(3) = ( -1.760847 -1.016626  0.352839 )  
+
+
+     PseudoPot. # 1 for Co read from file:
+     /scratch/timrov/QE_gitlab/tmp10/q-e/pseudo/Co.pbesol-spn-rrkjus_psl.0.3.1.UPF
+     MD5 check sum: df65536841c871d28055fcb0059894d0
+     Pseudo is Ultrasoft + core correction, Zval = 17.0
+     Generated using &quot;atomic&quot; code by A. Dal Corso  v.6.3
+     Using radial grid of 1193 points,  6 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+                l(5) =   2
+                l(6) =   2
+     Q(r) pseudized with 0 coefficients 
+
+
+     PseudoPot. # 2 for O  read from file:
+     /scratch/timrov/QE_gitlab/tmp10/q-e/pseudo/O.pbesol-n-rrkjus_psl.0.1.UPF
+     MD5 check sum: f27e8aef0904343e863161fc6edd5707
+     Pseudo is Ultrasoft + core correction, Zval =  6.0
+     Generated using &quot;atomic&quot; code by A. Dal Corso  v.6.3MaX
+     Using radial grid of 1095 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     PseudoPot. # 3 for Li read from file:
+     /scratch/timrov/QE_gitlab/tmp10/q-e/pseudo/Li.pbesol-s-rrkjus_psl.0.2.1.UPF
+     MD5 check sum: def3ebcbbe91367824584f0aeb0e8100
+     Pseudo is Ultrasoft, Zval =  3.0
+     Generated using "atomic" code by A. Dal Corso  v.5.0.2 svn rev. 9415
+     Using radial grid of 1017 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     atomic species   valence    mass     pseudopotential
+        Co            17.00    59.00000     Co( 1.00)
+        O              6.00    16.00000     O ( 1.00)
+        Li             3.00     7.00000     Li( 1.00)
+
+     12 Sym. Ops., with inversion, found
+
+
+                                    s                        frac. trans.
+
+      isym =  1     identity                                     
+
+ cryst.   s( 1) = (     1          0          0      )
+                  (     0          1          0      )
+                  (     0          0          1      )
+
+ cart.    s( 1) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  1.0000000 -0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+      isym =  2     180 deg rotation - cart. axis [1,0,0]        
+
+ cryst.   s( 2) = (     0          0         -1      )
+                  (     0         -1          0      )
+                  (    -1          0          0      )
+
+ cart.    s( 2) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000 -1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym =  3     120 deg rotation - cryst. axis [0,0,1]       
+
+ cryst.   s( 3) = (     0          1          0      )
+                  (     0          0          1      )
+                  (     1          0          0      )
+
+ cart.    s( 3) = ( -0.5000000 -0.8660254 -0.0000000 )
+                  (  0.8660254 -0.5000000 -0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+      isym =  4     120 deg rotation - cryst. axis [0,0,-1]      
+
+ cryst.   s( 4) = (     0          0          1      )
+                  (     1          0          0      )
+                  (     0          1          0      )
+
+ cart.    s( 4) = ( -0.5000000  0.8660254  0.0000000 )
+                  ( -0.8660254 -0.5000000 -0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+      isym =  5     180 deg rotation - cryst. axis [0,1,0]       
+
+ cryst.   s( 5) = (     0         -1          0      )
+                  (    -1          0          0      )
+                  (     0          0         -1      )
+
+ cart.    s( 5) = ( -0.5000000 -0.8660254 -0.0000000 )
+                  ( -0.8660254  0.5000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym =  6     180 deg rotation - cryst. axis [1,1,0]       
+
+ cryst.   s( 6) = (    -1          0          0      )
+                  (     0          0         -1      )
+                  (     0         -1          0      )
+
+ cart.    s( 6) = ( -0.5000000  0.8660254  0.0000000 )
+                  (  0.8660254  0.5000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym =  7     inversion                                    
+
+ cryst.   s( 7) = (    -1          0          0      )
+                  (     0         -1          0      )
+                  (     0          0         -1      )
+
+ cart.    s( 7) = ( -1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000 -1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym =  8     inv. 180 deg rotation - cart. axis [1,0,0]   
+
+ cryst.   s( 8) = (     0          0          1      )
+                  (     0          1          0      )
+                  (     1          0          0      )
+
+ cart.    s( 8) = ( -1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  1.0000000 -0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+      isym =  9     inv. 120 deg rotation - cryst. axis [0,0,1]  
+
+ cryst.   s( 9) = (     0         -1          0      )
+                  (     0          0         -1      )
+                  (    -1          0          0      )
+
+ cart.    s( 9) = (  0.5000000  0.8660254  0.0000000 )
+                  ( -0.8660254  0.5000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym = 10     inv. 120 deg rotation - cryst. axis [0,0,-1] 
+
+ cryst.   s(10) = (     0          0         -1      )
+                  (    -1          0          0      )
+                  (     0         -1          0      )
+
+ cart.    s(10) = (  0.5000000 -0.8660254 -0.0000000 )
+                  (  0.8660254  0.5000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym = 11     inv. 180 deg rotation - cryst. axis [0,1,0]  
+
+ cryst.   s(11) = (     0          1          0      )
+                  (     1          0          0      )
+                  (     0          0          1      )
+
+ cart.    s(11) = (  0.5000000  0.8660254  0.0000000 )
+                  (  0.8660254 -0.5000000 -0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+      isym = 12     inv. 180 deg rotation - cryst. axis [1,1,0]  
+
+ cryst.   s(12) = (     1          0          0      )
+                  (     0          0          1      )
+                  (     0          1          0      )
+
+ cart.    s(12) = (  0.5000000 -0.8660254 -0.0000000 )
+                  ( -0.8660254 -0.5000000 -0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+     point group D_3d (-3m) 
+     there are  6 classes
+     the character table:
+
+       E     2C3   3C2'  i     2S6   3s_d 
+A_1g   1.00  1.00  1.00  1.00  1.00  1.00
+A_2g   1.00  1.00 -1.00  1.00  1.00 -1.00
+E_g    2.00 -1.00  0.00  2.00 -1.00  0.00
+A_1u   1.00  1.00  1.00 -1.00 -1.00 -1.00
+A_2u   1.00  1.00 -1.00 -1.00 -1.00  1.00
+E_u    2.00 -1.00  0.00 -2.00  1.00  0.00
+
+     the symmetry operations in each class and the name of the first element:
+
+     E        1
+          identity                                               
+     2C3      3    4
+          120 deg rotation - cryst. axis [0,0,1]                 
+     3C2'     2    5    6
+          180 deg rotation - cart. axis [1,0,0]                  
+     i        7
+          inversion                                              
+     2S6      9   10
+          inv. 120 deg rotation - cryst. axis [0,0,1]            
+     3s_d     8   11   12
+          inv. 180 deg rotation - cart. axis [1,0,0]             
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1           Co  tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+         2           O   tau(   2) = (   0.0000000  -0.0000000   0.7382650  )
+         3           O   tau(   3) = (   0.0000000  -0.0000000   2.0958909  )
+         4           Li  tau(   4) = (   0.0000000  -0.0000000   1.4170780  )
+
+   Crystallographic axes
+
+     site n.     atom                  positions (cryst. coord.)
+         1           Co  tau(   1) = (  0.0000000  0.0000000  0.0000000  )
+         2           O   tau(   2) = (  0.2604885  0.2604885  0.2604885  )
+         3           O   tau(   3) = (  0.7395115  0.7395115  0.7395115  )
+         4           Li  tau(   4) = (  0.5000000  0.5000000  0.5000000  )
+
+     number of k points=     4
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.2500000
+        k(    2) = (   0.8804236   0.5083128  -0.1764194), wk =   0.7500000
+        k(    3) = (   0.8804236  -0.5083128  -0.3528387), wk =   0.7500000
+        k(    4) = (   0.0000000   0.0000000  -0.5292581), wk =   0.2500000
+
+                       cryst. coord.
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.2500000
+        k(    2) = (  -0.0000000   0.0000000  -0.5000000), wk =   0.7500000
+        k(    3) = (  -0.0000000  -0.5000000  -0.5000000), wk =   0.7500000
+        k(    4) = (  -0.5000000  -0.5000000  -0.5000000), wk =   0.2500000
+
+     Dense  grid:    29271 G-vectors     FFT dimensions: (  60,  60,  60)
+
+     Smooth grid:    10281 G-vectors     FFT dimensions: (  45,  45,  45)
+
+     Dynamical RAM for                 wfc:       0.32 MB
+
+     Dynamical RAM for     wfc (w. buffer):       1.58 MB
+
+     Dynamical RAM for             U proj.:       0.22 MB
+
+     Dynamical RAM for  U proj. (w. buff.):       1.09 MB
+
+     Dynamical RAM for           str. fact:       1.34 MB
+
+     Dynamical RAM for           local pot:       0.00 MB
+
+     Dynamical RAM for          nlocal pot:       0.83 MB
+
+     Dynamical RAM for                qrad:       4.82 MB
+
+     Dynamical RAM for          rho,v,vnew:       6.28 MB
+
+     Dynamical RAM for               rhoin:       2.09 MB
+
+     Dynamical RAM for            rho*nmix:       7.15 MB
+
+     Dynamical RAM for           G-vectors:       1.75 MB
+
+     Dynamical RAM for          h,s,v(r/c):       0.05 MB
+
+     Dynamical RAM for          <psi|beta>:       0.01 MB
+
+     Dynamical RAM for                 psi:       0.63 MB
+
+     Dynamical RAM for                hpsi:       0.63 MB
+
+     Dynamical RAM for                spsi:       0.63 MB
+
+     Dynamical RAM for      wfcinit/wfcrot:       0.80 MB
+
+     Dynamical RAM for           addusdens:      83.97 MB
+
+     Estimated static dynamical RAM per process >      29.81 MB
+
+     Estimated max dynamical RAM per process >     120.93 MB
+
+     Check: negative core charge=   -0.000097
+
+     Initial potential from superposition of free atoms
+
+     starting charge      31.9949, renormalised to      32.0000
+
+     HUBBARD ENERGY =    0.3859  (Ry)
+
+     STARTING HUBBARD OCCUPATIONS:
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.00000
+     eigenvalues:
+       0.700  0.700  0.700  0.700  0.700
+     eigenvectors (columns):
+       1.000  0.000  0.000  0.000  0.000
+       0.000  1.000  0.000  0.000  0.000
+       0.000  0.000  1.000  0.000  0.000
+       0.000  0.000  0.000  1.000  0.000
+       0.000  0.000  0.000  0.000  1.000
+     occupation matrix ns (before diag.):
+       0.700  0.000  0.000  0.000  0.000
+       0.000  0.700  0.000  0.000  0.000
+       0.000  0.000  0.700  0.000  0.000
+       0.000  0.000  0.000  0.700  0.000
+       0.000  0.000  0.000  0.000  0.700
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   4.00000
+     eigenvalues:
+       0.667  0.667  0.667
+     eigenvectors (columns):
+       1.000  0.000  0.000
+       0.000  1.000  0.000
+       0.000  0.000  1.000
+     occupation matrix ns (before diag.):
+       0.667  0.000  0.000
+       0.000  0.667  0.000
+       0.000  0.000  0.667
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   4.00000
+     eigenvalues:
+       0.667  0.667  0.667
+     eigenvectors (columns):
+       1.000  0.000  0.000
+       0.000  1.000  0.000
+       0.000  0.000  1.000
+     occupation matrix ns (before diag.):
+       0.667  0.000  0.000
+       0.000  0.667  0.000
+       0.000  0.000  0.667
+
+     Number of occupied Hubbard levels =   15.0000
+
+     Atomic wfc used for Hubbard projectors are orthogonalized
+
+     Starting wfcs are   20 randomized atomic wfcs
+
+     total cpu time spent up to now is        1.4 secs
+
+     Self-consistent Calculation
+
+     iteration #  1     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           193 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35247 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  1.00E-02,  avg # of iterations =  2.0
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.22616
+     eigenvalues:
+       0.343  0.343  0.974  0.974  0.980
+     eigenvectors (columns):
+      -0.000 -0.000 -0.000 -0.000  1.000
+       0.674 -0.429 -0.146 -0.583 -0.000
+       0.429  0.674 -0.583  0.146 -0.000
+       0.323  0.507  0.775 -0.194  0.000
+       0.507 -0.323  0.194  0.775  0.000
+     occupation matrix ns (before diag.):
+       0.980  0.000  0.000  0.000  0.000
+       0.000  0.571  0.000 -0.000 -0.303
+       0.000  0.000  0.571 -0.303  0.000
+       0.000 -0.000 -0.303  0.746 -0.000
+       0.000 -0.303  0.000 -0.000  0.746
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.25165
+     eigenvalues:
+       0.864  0.864  0.897
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.897 -0.000  0.000
+      -0.000  0.864 -0.000
+       0.000 -0.000  0.864
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.25165
+     eigenvalues:
+       0.864  0.864  0.897
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.897 -0.000  0.000
+      -0.000  0.864 -0.000
+       0.000 -0.000  0.864
+
+     Number of occupied Hubbard levels =   17.7295
+
+     HUBBARD ENERGY =    0.2871  (Ry)
+
+     total cpu time spent up to now is        2.0 secs
+
+     total energy              =    -372.95569027 Ry
+     estimated scf accuracy    <       0.59812361 Ry
+
+     iteration #  2     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           236 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35218 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  1.87E-03,  avg # of iterations =  7.0
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   8.56580
+     eigenvalues:
+       0.656  0.656  0.990  0.991  0.991
+     eigenvectors (columns):
+      -0.000  0.000 -1.000  0.000  0.000
+       0.637  0.461 -0.000 -0.138 -0.602
+       0.461 -0.637 -0.000 -0.602  0.138
+       0.362 -0.500  0.000  0.767 -0.175
+       0.500  0.362  0.000  0.175  0.767
+     occupation matrix ns (before diag.):
+       0.990  0.000  0.000  0.000  0.000
+       0.000  0.784  0.000 -0.000 -0.163
+       0.000  0.000  0.784 -0.163  0.000
+       0.000 -0.000 -0.163  0.863 -0.000
+       0.000 -0.163  0.000 -0.000  0.863
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   4.41677
+     eigenvalues:
+       0.717  0.717  0.775
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.239 -0.000
+      -0.239  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.775 -0.000  0.000
+      -0.000  0.717 -0.000
+       0.000 -0.000  0.717
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   4.41677
+     eigenvalues:
+       0.717  0.717  0.775
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.775 -0.000  0.000
+      -0.000  0.717 -0.000
+       0.000 -0.000  0.717
+
+     Number of occupied Hubbard levels =   17.3993
+
+     HUBBARD ENERGY =    0.2698  (Ry)
+
+     total cpu time spent up to now is        2.8 secs
+
+     total energy              =    -372.71040133 Ry
+     estimated scf accuracy    <       2.17833863 Ry
+
+     iteration #  3     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           237 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35217 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  1.87E-03,  avg # of iterations =  5.2
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.06945
+     eigenvalues:
+       0.295  0.295  0.981  0.982  0.982
+     eigenvectors (columns):
+       0.000 -0.000 -1.000  0.000  0.000
+      -0.666 -0.438 -0.000 -0.144 -0.587
+      -0.438  0.666 -0.000 -0.587  0.144
+      -0.332  0.505  0.000  0.774 -0.189
+      -0.505 -0.332  0.000  0.189  0.774
+     occupation matrix ns (before diag.):
+       0.981  0.000 -0.000  0.000  0.000
+       0.000  0.545  0.000 -0.000 -0.331
+      -0.000  0.000  0.545 -0.331  0.000
+       0.000 -0.000 -0.331  0.731 -0.000
+       0.000 -0.331  0.000 -0.000  0.731
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.22431
+     eigenvalues:
+       0.863  0.863  0.887
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.887 -0.000  0.000
+      -0.000  0.863 -0.000
+       0.000 -0.000  0.863
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.22431
+     eigenvalues:
+       0.863  0.863  0.887
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.887 -0.000  0.000
+      -0.000  0.863 -0.000
+       0.000 -0.000  0.863
+
+     Number of occupied Hubbard levels =   17.5181
+
+     HUBBARD ENERGY =    0.2323  (Ry)
+
+     total cpu time spent up to now is        3.5 secs
+
+     total energy              =    -373.14741048 Ry
+     estimated scf accuracy    <       0.40275036 Ry
+
+     iteration #  4     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           237 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35217 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  1.26E-03,  avg # of iterations =  2.0
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.12363
+     eigenvalues:
+       0.302  0.302  0.986  0.986  0.986
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.666  0.438 -0.143 -0.587 -0.000
+      -0.438 -0.666 -0.587  0.143 -0.000
+      -0.332 -0.505  0.774 -0.189  0.000
+      -0.505  0.332  0.189  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.986  0.000 -0.000  0.000  0.000
+       0.000  0.551  0.000 -0.000 -0.329
+      -0.000  0.000  0.551 -0.329  0.000
+       0.000 -0.000 -0.329  0.736 -0.000
+       0.000 -0.329  0.000 -0.000  0.736
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.22606
+     eigenvalues:
+       0.862  0.862  0.888
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.239 -0.000
+      -0.239  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.888 -0.000  0.000
+      -0.000  0.862 -0.000
+       0.000 -0.000  0.862
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.22606
+     eigenvalues:
+       0.862  0.862  0.888
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.888 -0.000  0.000
+      -0.000  0.862 -0.000
+       0.000 -0.000  0.862
+
+     Number of occupied Hubbard levels =   17.5758
+
+     HUBBARD ENERGY =    0.1832  (Ry)
+
+     total cpu time spent up to now is        4.1 secs
+
+     total energy              =    -373.13128922 Ry
+     estimated scf accuracy    <       0.16899785 Ry
+
+     iteration #  5     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           238 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35217 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  5.28E-04,  avg # of iterations =  5.0
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.56104
+     eigenvalues:
+       0.403  0.403  0.991  0.991  0.991
+     eigenvectors (columns):
+      -0.000 -0.000  0.000 -0.000 -1.000
+       0.660 -0.444  0.141 -0.589  0.000
+       0.444  0.660  0.589  0.141  0.000
+       0.338  0.502 -0.774 -0.186 -0.000
+       0.502 -0.338 -0.186  0.774 -0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.619  0.000 -0.000 -0.283
+       0.000  0.000  0.619 -0.283  0.000
+       0.000 -0.000 -0.283  0.776 -0.000
+       0.000 -0.283  0.000 -0.000  0.776
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.00176
+     eigenvalues:
+       0.822  0.822  0.857
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.857 -0.000  0.000
+      -0.000  0.822 -0.000
+       0.000 -0.000  0.822
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.00176
+     eigenvalues:
+       0.822  0.822  0.857
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.857 -0.000  0.000
+      -0.000  0.822 -0.000
+       0.000 -0.000  0.822
+
+     Number of occupied Hubbard levels =   17.5646
+
+     HUBBARD ENERGY =    0.1815  (Ry)
+
+     total cpu time spent up to now is        4.8 secs
+
+     total energy              =    -373.17175268 Ry
+     estimated scf accuracy    <       0.03283851 Ry
+
+     iteration #  6     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           238 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35216 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  1.03E-04,  avg # of iterations =  1.5
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.54443
+     eigenvalues:
+       0.400  0.400  0.991  0.991  0.991
+     eigenvectors (columns):
+      -0.000 -0.000  0.000 -0.000 -1.000
+       0.660 -0.444  0.141 -0.589  0.000
+       0.444  0.660  0.589  0.141  0.000
+       0.338  0.502 -0.774 -0.185 -0.000
+       0.502 -0.338 -0.185  0.774 -0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.617  0.000 -0.000 -0.285
+       0.000  0.000  0.617 -0.285  0.000
+       0.000 -0.000 -0.285  0.774 -0.000
+       0.000 -0.285  0.000 -0.000  0.774
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.00850
+     eigenvalues:
+       0.823  0.823  0.858
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.858 -0.000  0.000
+      -0.000  0.823 -0.000
+       0.000 -0.000  0.823
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.00850
+     eigenvalues:
+       0.823  0.823  0.858
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.858 -0.000  0.000
+      -0.000  0.823 -0.000
+       0.000 -0.000  0.823
+
+     Number of occupied Hubbard levels =   17.5614
+
+     HUBBARD ENERGY =    0.1825  (Ry)
+
+     total cpu time spent up to now is        5.4 secs
+
+     total energy              =    -373.17202926 Ry
+     estimated scf accuracy    <       0.01459892 Ry
+
+     iteration #  7     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           238 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35216 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  4.56E-05,  avg # of iterations =  5.0
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.42582
+     eigenvalues:
+       0.370  0.370  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.662  0.442 -0.141 -0.588 -0.000
+      -0.442 -0.662 -0.588  0.141 -0.000
+      -0.336 -0.503  0.774 -0.186  0.000
+      -0.503  0.336  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.598  0.000 -0.000 -0.299
+       0.000  0.000  0.598 -0.299  0.000
+       0.000 -0.000 -0.299  0.763 -0.000
+       0.000 -0.299  0.000 -0.000  0.763
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.06823
+     eigenvalues:
+       0.832  0.832  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.239 -0.000
+      -0.239  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.06823
+     eigenvalues:
+       0.832  0.832  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+
+     Number of occupied Hubbard levels =   17.5623
+
+     HUBBARD ENERGY =    0.1820  (Ry)
+
+     total cpu time spent up to now is        6.0 secs
+
+     total energy              =    -373.17505769 Ry
+     estimated scf accuracy    <       0.00008948 Ry
+
+     iteration #  8     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35214 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  2.80E-07,  avg # of iterations =  9.0
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.40770
+     eigenvalues:
+       0.366  0.366  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.663  0.441 -0.141 -0.588 -0.000
+      -0.441 -0.663 -0.588  0.141 -0.000
+      -0.335 -0.504  0.774 -0.186  0.000
+      -0.504  0.335  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.594  0.000 -0.000 -0.301
+       0.000  0.000  0.594 -0.301  0.000
+       0.000 -0.000 -0.301  0.762 -0.000
+       0.000 -0.301  0.000 -0.000  0.762
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.07713
+     eigenvalues:
+       0.834  0.834  0.871
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.871 -0.000  0.000
+      -0.000  0.834 -0.000
+       0.000 -0.000  0.834
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.07713
+     eigenvalues:
+       0.834  0.834  0.871
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.871 -0.000  0.000
+      -0.000  0.834 -0.000
+       0.000 -0.000  0.834
+
+     Number of occupied Hubbard levels =   17.5620
+
+     HUBBARD ENERGY =    0.1818  (Ry)
+
+     total cpu time spent up to now is        7.0 secs
+
+     total energy              =    -373.17521463 Ry
+     estimated scf accuracy    <       0.00062375 Ry
+
+     iteration #  9     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35215 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  2.80E-07,  avg # of iterations =  2.0
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.40874
+     eigenvalues:
+       0.366  0.366  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.663  0.442 -0.141 -0.588 -0.000
+      -0.442 -0.663 -0.588  0.141 -0.000
+      -0.335 -0.503  0.774 -0.186  0.000
+      -0.503  0.335  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.594  0.000 -0.000 -0.301
+       0.000  0.000  0.594 -0.301  0.000
+       0.000 -0.000 -0.301  0.762 -0.000
+       0.000 -0.301  0.000 -0.000  0.762
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.07593
+     eigenvalues:
+       0.834  0.834  0.871
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.239 -0.000
+      -0.239  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.871 -0.000  0.000
+      -0.000  0.834 -0.000
+       0.000 -0.000  0.834
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.07593
+     eigenvalues:
+       0.834  0.834  0.871
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.871 -0.000  0.000
+      -0.000  0.834 -0.000
+       0.000 -0.000  0.834
+
+     Number of occupied Hubbard levels =   17.5606
+
+     HUBBARD ENERGY =    0.1816  (Ry)
+
+     total cpu time spent up to now is        7.6 secs
+
+     total energy              =    -373.17519410 Ry
+     estimated scf accuracy    <       0.00038670 Ry
+
+     iteration # 10     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35214 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  2.80E-07,  avg # of iterations =  4.2
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.41738
+     eigenvalues:
+       0.368  0.368  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.663  0.442 -0.141 -0.588 -0.000
+      -0.442 -0.663 -0.588  0.141 -0.000
+      -0.336 -0.503  0.774 -0.186  0.000
+      -0.503  0.336  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.596  0.000 -0.000 -0.300
+       0.000  0.000  0.596 -0.300  0.000
+       0.000 -0.000 -0.300  0.763 -0.000
+       0.000 -0.300  0.000 -0.000  0.763
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.07126
+     eigenvalues:
+       0.833  0.833  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.833 -0.000
+       0.000 -0.000  0.833
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.07126
+     eigenvalues:
+       0.833  0.833  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.833 -0.000
+       0.000 -0.000  0.833
+
+     Number of occupied Hubbard levels =   17.5599
+
+     HUBBARD ENERGY =    0.1816  (Ry)
+
+     total cpu time spent up to now is        8.2 secs
+
+     total energy              =    -373.17520092 Ry
+     estimated scf accuracy    <       0.00008860 Ry
+
+     iteration # 11     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35214 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  2.77E-07,  avg # of iterations =  1.2
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.41806
+     eigenvalues:
+       0.368  0.368  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.663  0.442 -0.141 -0.588 -0.000
+      -0.442 -0.663 -0.588  0.141 -0.000
+      -0.336 -0.503  0.774 -0.186  0.000
+      -0.503  0.336  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.596  0.000 -0.000 -0.300
+       0.000  0.000  0.596 -0.300  0.000
+       0.000 -0.000 -0.300  0.763 -0.000
+       0.000 -0.300  0.000 -0.000  0.763
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.07096
+     eigenvalues:
+       0.833  0.833  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.833 -0.000
+       0.000 -0.000  0.833
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.07096
+     eigenvalues:
+       0.833  0.833  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.833 -0.000
+       0.000 -0.000  0.833
+
+     Number of occupied Hubbard levels =   17.5600
+
+     HUBBARD ENERGY =    0.1815  (Ry)
+
+     total cpu time spent up to now is        8.7 secs
+
+     total energy              =    -373.17519724 Ry
+     estimated scf accuracy    <       0.00005643 Ry
+
+     iteration # 12     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35214 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  1.76E-07,  avg # of iterations =  3.2
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.42081
+     eigenvalues:
+       0.369  0.369  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.662  0.442 -0.141 -0.588 -0.000
+      -0.442 -0.662 -0.588  0.141 -0.000
+      -0.336 -0.503  0.774 -0.186  0.000
+      -0.503  0.336  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.596  0.000 -0.000 -0.299
+       0.000  0.000  0.596 -0.299  0.000
+       0.000 -0.000 -0.299  0.763 -0.000
+       0.000 -0.299  0.000 -0.000  0.763
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.06948
+     eigenvalues:
+       0.832  0.832  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.239 -0.000
+      -0.239  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.06948
+     eigenvalues:
+       0.832  0.832  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+
+     Number of occupied Hubbard levels =   17.5598
+
+     HUBBARD ENERGY =    0.1814  (Ry)
+
+     total cpu time spent up to now is        9.3 secs
+
+     total energy              =    -373.17519946 Ry
+     estimated scf accuracy    <       0.00001552 Ry
+
+     iteration # 13     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35214 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  4.85E-08,  avg # of iterations =  4.0
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.42341
+     eigenvalues:
+       0.370  0.370  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.663  0.441 -0.141 -0.588 -0.000
+      -0.441 -0.663 -0.588  0.141 -0.000
+      -0.335 -0.503  0.774 -0.186  0.000
+      -0.503  0.335  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.597  0.000 -0.000 -0.299
+       0.000  0.000  0.597 -0.299  0.000
+       0.000 -0.000 -0.299  0.764 -0.000
+       0.000 -0.299  0.000 -0.000  0.764
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.06810
+     eigenvalues:
+       0.832  0.832  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.06810
+     eigenvalues:
+       0.832  0.832  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+
+     Number of occupied Hubbard levels =   17.5596
+
+     HUBBARD ENERGY =    0.1815  (Ry)
+
+     total cpu time spent up to now is        9.9 secs
+
+     total energy              =    -373.17520196 Ry
+     estimated scf accuracy    <       0.00000122 Ry
+
+     iteration # 14     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35214 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  3.81E-09,  avg # of iterations =  5.8
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.42395
+     eigenvalues:
+       0.370  0.370  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.663  0.441 -0.141 -0.588 -0.000
+      -0.441 -0.663 -0.588  0.141 -0.000
+      -0.335 -0.504  0.774 -0.186  0.000
+      -0.504  0.335  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.597  0.000 -0.000 -0.299
+       0.000  0.000  0.597 -0.299  0.000
+       0.000 -0.000 -0.299  0.764 -0.000
+       0.000 -0.299  0.000 -0.000  0.764
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.06774
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.239 -0.000
+      -0.239  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.06774
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.239 -0.000
+      -0.239  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+
+     Number of occupied Hubbard levels =   17.5594
+
+     HUBBARD ENERGY =    0.1815  (Ry)
+
+     total cpu time spent up to now is       10.6 secs
+
+     total energy              =    -373.17520262 Ry
+     estimated scf accuracy    <       0.00000047 Ry
+
+     iteration # 15     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35214 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  1.46E-09,  avg # of iterations =  2.8
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.42379
+     eigenvalues:
+       0.370  0.370  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.664  0.440 -0.141 -0.588 -0.000
+      -0.440 -0.664 -0.588  0.141 -0.000
+      -0.334 -0.504  0.774 -0.186  0.000
+      -0.504  0.334  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.597  0.000 -0.000 -0.299
+       0.000  0.000  0.597 -0.299  0.000
+       0.000 -0.000 -0.299  0.764 -0.000
+       0.000 -0.299  0.000 -0.000  0.764
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.06781
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.06781
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+
+     Number of occupied Hubbard levels =   17.5594
+
+     HUBBARD ENERGY =    0.1814  (Ry)
+
+     total cpu time spent up to now is       11.2 secs
+
+     total energy              =    -373.17520232 Ry
+     estimated scf accuracy    <       0.00000111 Ry
+
+     iteration # 16     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35214 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  1.46E-09,  avg # of iterations =  5.0
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.42420
+     eigenvalues:
+       0.370  0.370  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.663  0.441 -0.142 -0.588 -0.000
+      -0.441 -0.663 -0.588  0.142 -0.000
+      -0.335 -0.504  0.774 -0.186  0.000
+      -0.504  0.335  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.597  0.000 -0.000 -0.299
+       0.000  0.000  0.597 -0.299  0.000
+       0.000 -0.000 -0.299  0.764 -0.000
+       0.000 -0.299  0.000 -0.000  0.764
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.06764
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.06764
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.239 -0.000
+      -0.239  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+
+     Number of occupied Hubbard levels =   17.5595
+
+     HUBBARD ENERGY =    0.1814  (Ry)
+
+     total cpu time spent up to now is       11.9 secs
+
+     total energy              =    -373.17520259 Ry
+     estimated scf accuracy    <       0.00000005 Ry
+
+     iteration # 17     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35214 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  1.44E-10,  avg # of iterations =  8.2
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.42319
+     eigenvalues:
+       0.370  0.370  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.663  0.441 -0.141 -0.588 -0.000
+      -0.441 -0.663 -0.588  0.141 -0.000
+      -0.335 -0.503  0.774 -0.186  0.000
+      -0.503  0.335  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.597  0.000 -0.000 -0.299
+       0.000  0.000  0.597 -0.299  0.000
+       0.000 -0.000 -0.299  0.764 -0.000
+       0.000 -0.299  0.000 -0.000  0.764
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.06821
+     eigenvalues:
+       0.832  0.832  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.06821
+     eigenvalues:
+       0.832  0.832  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.239 -0.000
+      -0.239  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+
+     Number of occupied Hubbard levels =   17.5596
+
+     HUBBARD ENERGY =    0.1815  (Ry)
+
+     total cpu time spent up to now is       12.7 secs
+
+     total energy              =    -373.17520305 Ry
+     estimated scf accuracy    <       0.00000254 Ry
+
+     iteration # 18     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35215 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  1.44E-10,  avg # of iterations =  5.0
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.42281
+     eigenvalues:
+       0.370  0.370  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.663  0.441 -0.141 -0.588 -0.000
+      -0.441 -0.663 -0.588  0.141 -0.000
+      -0.335 -0.504  0.774 -0.186  0.000
+      -0.504  0.335  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.597  0.000 -0.000 -0.299
+       0.000  0.000  0.597 -0.299  0.000
+       0.000 -0.000 -0.299  0.764 -0.000
+       0.000 -0.299  0.000 -0.000  0.764
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.06842
+     eigenvalues:
+       0.832  0.832  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.06842
+     eigenvalues:
+       0.832  0.832  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+
+     Number of occupied Hubbard levels =   17.5596
+
+     HUBBARD ENERGY =    0.1815  (Ry)
+
+     total cpu time spent up to now is       13.5 secs
+
+     total energy              =    -373.17520289 Ry
+     estimated scf accuracy    <       0.00000447 Ry
+
+     iteration # 19     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35215 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  1.44E-10,  avg # of iterations =  5.0
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.42298
+     eigenvalues:
+       0.370  0.370  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.663  0.441 -0.141 -0.588 -0.000
+      -0.441 -0.663 -0.588  0.141 -0.000
+      -0.335 -0.504  0.774 -0.186  0.000
+      -0.504  0.335  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.597  0.000 -0.000 -0.299
+       0.000  0.000  0.597 -0.299  0.000
+       0.000 -0.000 -0.299  0.764 -0.000
+       0.000 -0.299  0.000 -0.000  0.764
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.06832
+     eigenvalues:
+       0.832  0.832  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.06832
+     eigenvalues:
+       0.832  0.832  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+
+     Number of occupied Hubbard levels =   17.5596
+
+     HUBBARD ENERGY =    0.1815  (Ry)
+
+     total cpu time spent up to now is       14.1 secs
+
+     total energy              =    -373.17520315 Ry
+     estimated scf accuracy    <       0.00000343 Ry
+
+     iteration # 20     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35215 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  1.44E-10,  avg # of iterations =  5.0
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.42266
+     eigenvalues:
+       0.370  0.370  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.663  0.442 -0.141 -0.588 -0.000
+      -0.442 -0.663 -0.588  0.141 -0.000
+      -0.335 -0.503  0.774 -0.186  0.000
+      -0.503  0.335  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.597  0.000 -0.000 -0.299
+       0.000  0.000  0.597 -0.299  0.000
+       0.000 -0.000 -0.299  0.764 -0.000
+       0.000 -0.299  0.000 -0.000  0.764
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.06849
+     eigenvalues:
+       0.832  0.832  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.239 -0.000
+      -0.239  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.06849
+     eigenvalues:
+       0.832  0.832  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+
+     Number of occupied Hubbard levels =   17.5596
+
+     HUBBARD ENERGY =    0.1815  (Ry)
+
+     total cpu time spent up to now is       14.8 secs
+
+     total energy              =    -373.17520294 Ry
+     estimated scf accuracy    <       0.00000535 Ry
+
+     iteration # 21     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35214 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  1.44E-10,  avg # of iterations =  4.8
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.42288
+     eigenvalues:
+       0.370  0.370  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.663  0.441 -0.142 -0.588 -0.000
+      -0.441 -0.663 -0.588  0.142 -0.000
+      -0.335 -0.504  0.774 -0.186  0.000
+      -0.504  0.335  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.597  0.000 -0.000 -0.299
+       0.000  0.000  0.597 -0.299  0.000
+       0.000 -0.000 -0.299  0.764 -0.000
+       0.000 -0.299  0.000 -0.000  0.764
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.06837
+     eigenvalues:
+       0.832  0.832  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.06837
+     eigenvalues:
+       0.832  0.832  0.870
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.239 -0.000
+      -0.239  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.870 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+
+     Number of occupied Hubbard levels =   17.5596
+
+     HUBBARD ENERGY =    0.1814  (Ry)
+
+     total cpu time spent up to now is       15.5 secs
+
+     total energy              =    -373.17520224 Ry
+     estimated scf accuracy    <       0.00000404 Ry
+
+     iteration # 22     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35214 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  1.44E-10,  avg # of iterations =  7.5
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.42399
+     eigenvalues:
+       0.370  0.370  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.664  0.441 -0.141 -0.588 -0.000
+      -0.441 -0.664 -0.588  0.141 -0.000
+      -0.334 -0.504  0.774 -0.186  0.000
+      -0.504  0.334  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.597  0.000 -0.000 -0.299
+       0.000  0.000  0.597 -0.299  0.000
+       0.000 -0.000 -0.299  0.764 -0.000
+       0.000 -0.299  0.000 -0.000  0.764
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.06776
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.06776
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.239 -0.000
+      -0.239  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+
+     Number of occupied Hubbard levels =   17.5595
+
+     HUBBARD ENERGY =    0.1814  (Ry)
+
+     total cpu time spent up to now is       16.4 secs
+
+     total energy              =    -373.17520244 Ry
+     estimated scf accuracy    <       0.00000026 Ry
+
+     iteration # 23     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35214 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  1.44E-10,  avg # of iterations =  4.8
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.42428
+     eigenvalues:
+       0.370  0.370  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.664  0.441 -0.141 -0.588 -0.000
+      -0.441 -0.664 -0.588  0.141 -0.000
+      -0.334 -0.504  0.774 -0.186  0.000
+      -0.504  0.334  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.597  0.000 -0.000 -0.299
+       0.000  0.000  0.597 -0.299  0.000
+       0.000 -0.000 -0.299  0.764 -0.000
+       0.000 -0.299  0.000 -0.000  0.764
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.06759
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.06759
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+
+     Number of occupied Hubbard levels =   17.5595
+
+     HUBBARD ENERGY =    0.1814  (Ry)
+
+     total cpu time spent up to now is       17.1 secs
+
+     total energy              =    -373.17520246 Ry
+     estimated scf accuracy    <       0.00000001 Ry
+
+     iteration # 24     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35215 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  3.94E-11,  avg # of iterations =  4.8
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.42442
+     eigenvalues:
+       0.370  0.370  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.663  0.441 -0.142 -0.588 -0.000
+      -0.441 -0.663 -0.588  0.142 -0.000
+      -0.335 -0.504  0.774 -0.186  0.000
+      -0.504  0.335  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.597  0.000 -0.000 -0.299
+       0.000  0.000  0.597 -0.299  0.000
+       0.000 -0.000 -0.299  0.764 -0.000
+       0.000 -0.299  0.000 -0.000  0.764
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.06751
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.239 -0.000
+      -0.239  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.06751
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.239 -0.000
+      -0.239  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+
+     Number of occupied Hubbard levels =   17.5594
+
+     HUBBARD ENERGY =    0.1814  (Ry)
+
+     total cpu time spent up to now is       17.7 secs
+
+     total energy              =    -373.17520246 Ry
+     estimated scf accuracy    <          4.6E-09 Ry
+
+     iteration # 25     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35214 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  1.43E-11,  avg # of iterations =  2.8
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.42440
+     eigenvalues:
+       0.370  0.370  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.663  0.442 -0.141 -0.588 -0.000
+      -0.442 -0.663 -0.588  0.141 -0.000
+      -0.335 -0.503  0.774 -0.186  0.000
+      -0.503  0.335  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.597  0.000 -0.000 -0.299
+       0.000  0.000  0.597 -0.299  0.000
+       0.000 -0.000 -0.299  0.764 -0.000
+       0.000 -0.299  0.000 -0.000  0.764
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.06752
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.239 -0.000
+      -0.239  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.06752
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+
+     Number of occupied Hubbard levels =   17.5594
+
+     HUBBARD ENERGY =    0.1814  (Ry)
+
+     total cpu time spent up to now is       18.3 secs
+
+     total energy              =    -373.17520246 Ry
+     estimated scf accuracy    <          9.6E-10 Ry
+
+     iteration # 26     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35214 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  2.99E-12,  avg # of iterations =  5.0
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.42433
+     eigenvalues:
+       0.370  0.370  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.663  0.441 -0.142 -0.588 -0.000
+      -0.441 -0.663 -0.588  0.142 -0.000
+      -0.335 -0.504  0.774 -0.186  0.000
+      -0.504  0.335  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.597  0.000 -0.000 -0.299
+       0.000  0.000  0.597 -0.299  0.000
+       0.000 -0.000 -0.299  0.764 -0.000
+       0.000 -0.299  0.000 -0.000  0.764
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.06756
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.06756
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+
+     Number of occupied Hubbard levels =   17.5594
+
+     HUBBARD ENERGY =    0.1814  (Ry)
+
+     total cpu time spent up to now is       19.1 secs
+
+     total energy              =    -373.17520246 Ry
+     estimated scf accuracy    <          3.8E-09 Ry
+
+     iteration # 27     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35214 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  2.99E-12,  avg # of iterations =  3.2
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.42434
+     eigenvalues:
+       0.370  0.370  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.664  0.440 -0.141 -0.588 -0.000
+      -0.440 -0.664 -0.588  0.141 -0.000
+      -0.334 -0.504  0.774 -0.186  0.000
+      -0.504  0.334  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.597  0.000 -0.000 -0.299
+       0.000  0.000  0.597 -0.299  0.000
+       0.000 -0.000 -0.299  0.764 -0.000
+       0.000 -0.299  0.000 -0.000  0.764
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.06755
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.06755
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+
+     Number of occupied Hubbard levels =   17.5594
+
+     HUBBARD ENERGY =    0.1814  (Ry)
+
+     total cpu time spent up to now is       19.7 secs
+
+     total energy              =    -373.17520246 Ry
+     estimated scf accuracy    <          1.4E-09 Ry
+
+     iteration # 28     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+
+---- Real-time Memory Report at c_bands before calling an iterative solver
+           239 MiB given to the printing process from OS
+             0 MiB allocation reported by mallinfo(arena+hblkhd)
+         35214 MiB available memory on the node where the printing process lives
+------------------
+     ethr =  2.99E-12,  avg # of iterations =  3.5
+
+     =================== HUBBARD OCCUPATIONS ===================
+     ------------------------ ATOM    1 ------------------------
+     Tr[ns(  1)] =   7.42437
+     eigenvalues:
+       0.370  0.370  0.991  0.991  0.991
+     eigenvectors (columns):
+       0.000  0.000 -0.000 -0.000  1.000
+      -0.663  0.442 -0.141 -0.588 -0.000
+      -0.442 -0.663 -0.588  0.141 -0.000
+      -0.336 -0.503  0.774 -0.186  0.000
+      -0.503  0.336  0.186  0.774  0.000
+     occupation matrix ns (before diag.):
+       0.991  0.000  0.000  0.000  0.000
+       0.000  0.597  0.000 -0.000 -0.299
+       0.000  0.000  0.597 -0.299  0.000
+       0.000 -0.000 -0.299  0.764 -0.000
+       0.000 -0.299  0.000 -0.000  0.764
+     ------------------------ ATOM    2 ------------------------
+     Tr[ns(  2)] =   5.06753
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+     ------------------------ ATOM    3 ------------------------
+     Tr[ns(  3)] =   5.06753
+     eigenvalues:
+       0.832  0.832  0.869
+     eigenvectors (columns):
+      -0.000 -0.000  1.000
+      -0.971 -0.238 -0.000
+      -0.238  0.971  0.000
+     occupation matrix ns (before diag.):
+       0.869 -0.000  0.000
+      -0.000  0.832 -0.000
+       0.000 -0.000  0.832
+
+     Number of occupied Hubbard levels =   17.5594
+
+     HUBBARD ENERGY =    0.1814  (Ry)
+
+     total cpu time spent up to now is       20.3 secs
+
+     End of self-consistent calculation
+
+          k = 0.0000 0.0000 0.0000 (  1273 PWs)   bands (ev):
+
+   -84.0952 -47.5245 -47.5245 -47.4204 -33.4228  -9.3292  -7.5441   3.0861
+     5.3757   5.3757   7.6002   7.6002   8.5447   8.6803   8.6803   8.7302
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+
+          k = 0.8804 0.5083-0.1764 (  1296 PWs)   bands (ev):
+
+   -84.0874 -47.6029 -47.5430 -47.4081 -33.3830  -7.6386  -7.5372   2.8760
+     4.9990   5.0222   5.7575   7.1403   7.3567   7.9757   8.0736   8.6200
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+
+          k = 0.8804-0.5083-0.3528 (  1284 PWs)   bands (ev):
+
+   -84.0872 -47.6025 -47.5433 -47.4068 -33.3842  -7.6611  -7.5034   2.7864
+     4.2750   5.8688   5.9187   7.0977   7.2773   8.0124   8.0863   8.5150
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+
+          k = 0.0000 0.0000-0.5293 (  1268 PWs)   bands (ev):
+
+   -84.0947 -47.5248 -47.5248 -47.4191 -33.4216  -9.1995  -7.7608   3.8951
+     5.3929   5.3929   6.9912   7.6313   7.6313   8.6056   8.6056   9.1031
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+
+     highest occupied level (ev):     9.1031
+
+!    total energy              =    -373.17520246 Ry
+     estimated scf accuracy    <          1.1E-12 Ry
+
+     The total energy is the sum of the following terms:
+     one-electron contribution =    -253.25318598 Ry
+     hartree contribution      =     142.35172250 Ry
+     xc contribution           =     -51.39327570 Ry
+     ewald contribution        =    -211.06189316 Ry
+     Hubbard energy            =       0.18142989 Ry
+
+     convergence has been achieved in  28 iterations
+
+     Writing all to output data dir /scratch/timrov/QE_gitlab/tmp10/q-e/tempdir/LiCoO2.save/
+ 
+     init_run     :      1.13s CPU      1.26s WALL (       1 calls)
+     electrons    :     17.43s CPU     18.87s WALL (       1 calls)
+
+     Called by init_run:
+     wfcinit      :      0.16s CPU      0.16s WALL (       1 calls)
+     wfcinit:atom :      0.00s CPU      0.00s WALL (       4 calls)
+     wfcinit:wfcr :      0.14s CPU      0.15s WALL (       4 calls)
+     potinit      :      0.13s CPU      0.14s WALL (       1 calls)
+     hinit0       :      0.76s CPU      0.84s WALL (       1 calls)
+
+     Called by electrons:
+     c_bands      :     10.17s CPU     10.23s WALL (      28 calls)
+     sum_band     :      3.68s CPU      4.33s WALL (      28 calls)
+     v_of_rho     :      1.92s CPU      1.94s WALL (      29 calls)
+     v_h          :      0.06s CPU      0.06s WALL (      29 calls)
+     v_xc         :      1.86s CPU      1.87s WALL (      29 calls)
+     newd         :      1.50s CPU      2.26s WALL (      29 calls)
+     mix_rho      :      0.16s CPU      0.16s WALL (      28 calls)
+
+     Called by c_bands:
+     init_us_2    :      0.09s CPU      0.09s WALL (     232 calls)
+     init_us_2:cp :      0.09s CPU      0.09s WALL (     232 calls)
+     cegterg      :      9.89s CPU      9.94s WALL (     112 calls)
+
+     Called by sum_band:
+     sum_band:wei :      0.00s CPU      0.00s WALL (      28 calls)
+     sum_band:loo :      1.67s CPU      1.68s WALL (      28 calls)
+     sum_band:buf :      0.00s CPU      0.00s WALL (     112 calls)
+     sum_band:ini :      0.04s CPU      0.04s WALL (     112 calls)
+     sum_band:cal :      0.02s CPU      0.02s WALL (     112 calls)
+     sum_band:bec :      0.00s CPU      0.00s WALL (     112 calls)
+     addusdens    :      1.85s CPU      2.49s WALL (      28 calls)
+     addusd:skk   :      0.01s CPU      0.01s WALL (      84 calls)
+     addusd:dgemm :      0.39s CPU      0.93s WALL (      84 calls)
+     addusd:qvan2 :      1.23s CPU      1.23s WALL (      84 calls)
+
+     Called by *egterg:
+     cdiaghg      :      0.14s CPU      0.16s WALL (     610 calls)
+     cegterg:over :      0.08s CPU      0.08s WALL (     498 calls)
+     cegterg:upda :      0.05s CPU      0.05s WALL (     498 calls)
+     cegterg:last :      0.09s CPU      0.10s WALL (     289 calls)
+     h_psi        :      9.50s CPU      9.53s WALL (     614 calls)
+     s_psi        :      0.07s CPU      0.07s WALL (     618 calls)
+     g_psi        :      0.03s CPU      0.03s WALL (     498 calls)
+
+     Called by h_psi:
+     h_psi:calbec :      0.08s CPU      0.08s WALL (     614 calls)
+     vloc_psi     :      9.11s CPU      9.13s WALL (     614 calls)
+     add_vuspsi   :      0.07s CPU      0.07s WALL (     614 calls)
+     vhpsi        :      0.23s CPU      0.23s WALL (     614 calls)
+
+     General routines
+     calbec       :      0.13s CPU      0.13s WALL (    1456 calls)
+     fft          :      0.61s CPU      0.69s WALL (     375 calls)
+     ffts         :      0.04s CPU      0.04s WALL (      57 calls)
+     fftw         :      9.61s CPU      9.64s WALL (   12552 calls)
+     interpolate  :      0.08s CPU      0.09s WALL (      29 calls)
+     davcio       :      0.00s CPU      0.00s WALL (     110 calls)
+ 
+     Parallel routines
+
+     Hubbard U routines
+     new_nsg      :      0.02s CPU      0.02s WALL (      28 calls)
+     alloc_neigh  :      0.00s CPU      0.00s WALL (       1 calls)
+     vhpsi        :      0.23s CPU      0.23s WALL (     614 calls)
+ 
+     PWSCF        :     18.68s CPU     20.30s WALL
+
+ 
+   This run was terminated on:  15:33:59  24May2022            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

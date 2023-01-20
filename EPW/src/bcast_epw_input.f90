@@ -31,14 +31,24 @@
                             etf_mem, epwwrite, epwread, nbndsub, fermi_plot,  &
                             eps_acustic, ephwrite, epbread, nsiter, nqstep,   &
                             nqsmear, nqf3, nqf2, nqf1, nkf3, nkf2, nkf1,      &
-                            muc, mp_mesh_q, mp_mesh_k, max_memlt, lunif,      &
+                            !!!!!
+                            !muc, mp_mesh_q, mp_mesh_k, max_memlt, lunif,      &
+                            muc, mp_mesh_q, mp_mesh_k, max_memlt,             &
+                            !!!!!
                             lreal, lpolar, lpade, liso, limag, laniso, npade, &
                             specfun_el, specfun_ph, lifc, asr_typ,            &
                             lscreen, scr_typ, fermi_diff, smear_rpa,          &
-                            rand_q, rand_nq, rand_nk, rand_k, pwc, phonselfen,&
+                            !!!!!
+                            !rand_q, rand_nq, rand_nk, rand_k, pwc, phonselfen,&
+                            rand_q, rand_nq, rand_nk, rand_k, phonselfen,     &
+                            !!!!!
                             specfun_pl, cumulant, bnd_cum, iterative_bte,     &
-                            nw_specfun, nw, nswi, nswfc, nswc, nstemp, nsmear,&
-                            wsfc, wscut, write_wfn, wmin_specfun, wmin,       &
+                            !!!!!
+                            !nw_specfun, nw, nswi, nswfc, nswc, nstemp, nsmear,&
+                            !wsfc, wscut, write_wfn, wmin_specfun, wmin,       &
+                            nw_specfun, nw, nswi, nstemp, nsmear,             &
+                            wscut, write_wfn, wmin_specfun, wmin,             &
+                            !!!!!
                             wmax_specfun, wmax, wepexst, wannierize,          &
                             vme, longrange, shortrange, system_2d, lindabs,   &
                             temps, tempsmin, tempsmax, delta_approx, title,   &
@@ -46,14 +56,20 @@
                             int_mob, scissor, carrier, ncarrier,              &
                             restart, restart_step, prtgkk, nel, meff, epsiheg,&
                             scatread, restart, restart_step, restart_filq,    &
-                            lphase, omegamin, omegamax, omegastep, n_r,       &
+                            lphase, omegamin, omegamax, omegastep, sigma_ref, &
                             mob_maxiter, use_ws, epmatkqread, selecqread,     &
                             scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma,&
                             assume_metal, wannier_plot_scale, reduce_unk,     &
                             wannier_plot_supercell, wannier_plot_radius,      &
                             fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv, &
                             epw_crysym, bfieldx, bfieldy, bfieldz, tc_linear, &
-                            tc_linear_solver, mob_maxfreq, mob_nfreq
+                            !!!!!
+                            !tc_linear_solver, mob_maxfreq, mob_nfreq
+                            ii_g, ii_charge, ii_n, ii_scattering, ii_only,    &
+                            ii_lscreen, ii_eda, ii_partion, ii_eps0,          &
+                            tc_linear_solver, mob_maxfreq, mob_nfreq,         &
+                            fbw, gridsamp, griddens, dos_del, muchem
+                            !!!!!
   USE elph2,         ONLY : elph
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
@@ -121,11 +137,17 @@
   CALL mp_bcast(laniso          , meta_ionode_id, world_comm)
   CALL mp_bcast(tc_linear       , meta_ionode_id, world_comm)
   CALL mp_bcast(tc_linear_solver, meta_ionode_id, world_comm)
+  !!!!!
+  CALL mp_bcast(fbw             , meta_ionode_id, world_comm)
+  CALL mp_bcast(gridsamp        , meta_ionode_id, world_comm)
+  CALL mp_bcast(griddens        , meta_ionode_id, world_comm)
+  CALL mp_bcast(dos_del         , meta_ionode_id, world_comm)
+  CALL mp_bcast(muchem          , meta_ionode_id, world_comm)
+  !!!!!
   CALL mp_bcast(lpolar          , meta_ionode_id, world_comm)
   CALL mp_bcast(lifc            , meta_ionode_id, world_comm)
   CALL mp_bcast(lscreen         , meta_ionode_id, world_comm)
   CALL mp_bcast(cumulant        , meta_ionode_id, world_comm)
-  CALL mp_bcast(lunif           , meta_ionode_id, world_comm)
   CALL mp_bcast(kerwrite        , meta_ionode_id, world_comm)
   CALL mp_bcast(kerread         , meta_ionode_id, world_comm)
   CALL mp_bcast(imag_read       , meta_ionode_id, world_comm)
@@ -161,6 +183,13 @@
   CALL mp_bcast(epw_nosym       , meta_ionode_id, world_comm)
   CALL mp_bcast(epw_noinv       , meta_ionode_id, world_comm)
   CALL mp_bcast(epw_crysym      , meta_ionode_id, world_comm)
+  !!!!!
+  CALL mp_bcast(ii_g            , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_scattering   , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_only         , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_lscreen      , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_partion      , meta_ionode_id, world_comm)
+  !!!!!
   !
   ! integers
   !
@@ -187,8 +216,6 @@
   CALL mp_bcast(nqf3        , meta_ionode_id, world_comm)
   CALL mp_bcast(nqsmear     , meta_ionode_id, world_comm)
   CALL mp_bcast(nqstep      , meta_ionode_id, world_comm)
-  CALL mp_bcast(nswfc       , meta_ionode_id, world_comm)
-  CALL mp_bcast(nswc        , meta_ionode_id, world_comm)
   CALL mp_bcast(nswi        , meta_ionode_id, world_comm)
   CALL mp_bcast(broyden_ndim, meta_ionode_id, world_comm)
   CALL mp_bcast(nstemp      , meta_ionode_id, world_comm)
@@ -213,8 +240,10 @@
   CALL mp_bcast(eps_acustic   , meta_ionode_id, world_comm)
   CALL mp_bcast(degaussq      , meta_ionode_id, world_comm)
   CALL mp_bcast(delta_qsmear  , meta_ionode_id, world_comm)
-  CALL mp_bcast(pwc           , meta_ionode_id, world_comm)
-  CALL mp_bcast(wsfc          , meta_ionode_id, world_comm)
+  !!!!!
+  !  CALL mp_bcast(pwc           , meta_ionode_id, world_comm)
+  !  CALL mp_bcast(wsfc          , meta_ionode_id, world_comm)
+  !!!!!
   CALL mp_bcast(wscut         , meta_ionode_id, world_comm)
   CALL mp_bcast(broyden_beta  , meta_ionode_id, world_comm)
   CALL mp_bcast(tempsmin      , meta_ionode_id, world_comm)
@@ -237,7 +266,7 @@
   CALL mp_bcast(omegamin      , meta_ionode_id, world_comm)
   CALL mp_bcast(omegamax      , meta_ionode_id, world_comm)
   CALL mp_bcast(omegastep     , meta_ionode_id, world_comm)
-  CALL mp_bcast(n_r           , meta_ionode_id, world_comm)
+  CALL mp_bcast(sigma_ref     , meta_ionode_id, world_comm)
   CALL mp_bcast(nc            , meta_ionode_id, world_comm)
   CALL mp_bcast(scdm_mu       , meta_ionode_id, world_comm)
   CALL mp_bcast(scdm_sigma    , meta_ionode_id, world_comm)
@@ -247,6 +276,12 @@
   CALL mp_bcast(bfieldy       , meta_ionode_id, world_comm)
   CALL mp_bcast(bfieldz       , meta_ionode_id, world_comm)
   CALL mp_bcast(mob_maxfreq   , meta_ionode_id, world_comm)
+  !!!!!
+  CALL mp_bcast(ii_charge , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_n , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_eda     , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_eps0    , meta_ionode_id, world_comm)
+  !!!!!
   !
   ! characters
   !

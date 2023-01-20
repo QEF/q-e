@@ -8,8 +8,8 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-if [[ $QE_USE_MPI == 1 ]]; then
-  export PARA_PREFIX="mpirun -np ${TESTCODE_NPROCS}"
+if [[ "$QE_USE_MPI" != "" ]]; then
+  export PARA_PREFIX="mpirun -np $QE_USE_MPI"
   export PARA_SUFFIX=" "
 else
   unset PARA_PREFIX
@@ -76,6 +76,16 @@ then
   echo "Running POSTAHC ..."
 # echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/postahc.x < $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/postahc.x < $2 > $3 2> $4
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
+elif [[ "$1" == "8" ]]
+then
+  echo "Running MATDYN ..."
+# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/matdyn.x < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/matdyn.x < $2 > $3 2> $4
+  cp matdyn.modes $3
   if [[ -e CRASH ]]
   then
     cat $3

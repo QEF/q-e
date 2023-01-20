@@ -45,11 +45,14 @@ PROGRAM lr_main
   USE fft_base,              ONLY : dffts
   USE uspp,                  ONLY : okvan
   USE mp_bands,              ONLY : ntask_groups
+  USE control_flags,         ONLY : use_gpu
   !
 #if defined (__ENVIRON)
   USE plugin_flags,          ONLY : use_environ
   USE environ_base_module,   ONLY : print_environ_summary
 #endif
+  !
+  USE control_flags,         ONLY : use_gpu
   !
   IMPLICIT NONE
   !
@@ -60,6 +63,7 @@ PROGRAM lr_main
   LOGICAL            :: rflag
   COMPLEX(kind=dp)   :: temp
   LOGICAL, EXTERNAL  :: test_restart
+  LOGICAL, EXTERNAL  :: check_gpu_support
   !
   pol_index = 1
   !
@@ -74,6 +78,8 @@ PROGRAM lr_main
   IF (lr_verbosity > 5) THEN
      WRITE(stdout,'("<lr_main>")')
   ENDIF
+  !
+  use_gpu = check_gpu_support()
   !
   ! Reading input file and PWSCF xml, some initialisation;
   ! Read the input variables for TDDFPT;

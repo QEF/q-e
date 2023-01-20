@@ -175,7 +175,7 @@ SUBROUTINE wfcinit_gpu()
      !
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
-     call g2_kin_gpu (ik)
+     call g2_kin (ik)
      !
      ! ... More Hpsi initialization: nonlocal pseudopotential projectors |beta>
      !

@@ -305,9 +305,6 @@ MODULE wvfct
   INTEGER, ALLOCATABLE :: btype(:,:)
   !! one if the corresponding state has to be
   !! converged to full accuracy, zero otherwise
-#if defined(__CUDA)
-  attributes(pinned) :: g2kin, et, wg
-#endif
   !
 END MODULE wvfct
 !
@@ -346,6 +343,10 @@ MODULE ener
   REAL(DP) :: exdm
   !! the XDM dispersion energy
   REAL(DP) :: demet
+  !! the sic energy
+  REAL(DP) :: esic
+  !! the scissor energy
+  REAL(DP) :: esci
   !! variational correction ("-TS") for metals
   REAL(DP) :: epaw
   !! sum of one-center paw contributions
@@ -357,6 +358,10 @@ MODULE ener
   !! the Fermi energy down (if two_fermi_energies=.TRUE.)
   REAL(DP) :: egrand
   !! the Potentiostat contribution for GC-SCF
+  REAL(DP) :: esol
+  !! the solvation energy, from 3D-RISM
+  REAL(DP) :: vsol
+  !! another solvation energy, from 3D-RISM
   !
 END MODULE ener
 !

@@ -4,6 +4,7 @@
 !----------------------------------------------------------------------------------------
 MODULE environ_cp_module
     !------------------------------------------------------------------------------------
+    !! Contains environment contribution related routines.
 #if defined (__ENVIRON)
     !
     USE environ_base_module, ONLY: environ
@@ -32,6 +33,7 @@ CONTAINS
     !------------------------------------------------------------------------------------
     SUBROUTINE add_environ_potential(v)
         !--------------------------------------------------------------------------------
+        !! Add environment contribution to local potential.
         !
         IMPLICIT NONE
         !
@@ -40,7 +42,7 @@ CONTAINS
         INTEGER :: i
         REAL(DP) :: dvtot(dfftp%nnr)
         !
-        CHARACTER(LEN=80) :: sub_name = 'add_environ_potential'
+        CHARACTER(LEN=80) :: routine = 'add_environ_potential'
         !
         !--------------------------------------------------------------------------------
         !
@@ -73,6 +75,8 @@ CONTAINS
     !------------------------------------------------------------------------------------
     SUBROUTINE calc_environ_potential(rhoin, nfi)
         !--------------------------------------------------------------------------------
+        !! update electrons-related quantities in environment and calculate the environment 
+        !! contribution to the local potential.
         !
         IMPLICIT NONE
         !
@@ -82,7 +86,7 @@ CONTAINS
         LOGICAL :: update_venviron = .FALSE.
         REAL(DP) :: rhoaux(dfftp%nnr)
         !
-        CHARACTER(LEN=80) :: sub_name = 'calc_environ_potential'
+        CHARACTER(LEN=80) :: routine = 'calc_environ_potential'
         !
         !--------------------------------------------------------------------------------
         ! update electrons-related quantities in environ

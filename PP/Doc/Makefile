@@ -11,6 +11,7 @@ HTMLS = INPUT_PP.html \
         INPUT_pw2bgw.html \
         INPUT_bgw2pw.html \
 	INPUT_molecularpdos.html \
+	INPUT_PPRISM.html \
 	INPUT_IMPORTEXPORT_BINARY.html
 
 PDFS = eps_man.pdf user_guide.pdf
@@ -74,7 +75,10 @@ link_on_main_doc:
 	ln -fs ../PP/Doc/INPUT_bgw2pw.txt . ; \
 	ln -fs ../PP/Doc/INPUT_molecularpdos.html . ; \
 	ln -fs ../PP/Doc/INPUT_molecularpdos.xml . ; \
-	ln -fs ../PP/Doc/INPUT_molecularpdos.txt .)
+	ln -fs ../PP/Doc/INPUT_molecularpdos.txt .; \
+	ln -fs ../PP/Doc/INPUT_PPRISM.html . ; \
+	ln -fs ../PP/Doc/INPUT_PPRISM.xml . ; \
+	ln -fs ../PP/Doc/INPUT_PPRISM.txt .)
 
 user_guide: user_guide.pdf
 	- rm -rf user_guide/

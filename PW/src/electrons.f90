@@ -25,12 +25,13 @@ SUBROUTINE electrons()
   USE lsda_mod,             ONLY : nspin, absmag
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet, epaw, &
-                                   elondon, edftd3, ef_up, ef_dw
+                                   elondon, edftd3, vsol, esol, ef_up, ef_dw
   USE tsvdw_module,         ONLY : EtsvdW
   USE scf,                  ONLY : rho, rho_core, rhog_core, v, vltot, vrs, &
                                    kedtau, vnew
   USE control_flags,        ONLY : tr2, niter, conv_elec, restart, lmd, &
-                                   do_makov_payne
+                                   do_makov_payne, sic
+  USE sic_mod,              ONLY : sic_energy, occ_f2fn, occ_fn2f, save_rhon, sic_first
   USE io_files,             ONLY : iunres, seqopn
   USE ldaU,                 ONLY : eth
   USE extfield,             ONLY : tefield, etotefield
@@ -51,7 +52,8 @@ SUBROUTINE electrons()
   !
   USE wvfct_gpum,           ONLY : using_et, using_wg, using_wg_d
   USE scf_gpum,             ONLY : using_vrs
-
+  !
+  USE rism_module,          ONLY : lrism, rism_calc3d
   !
   IMPLICIT NONE
   !
@@ -137,6 +139,7 @@ SUBROUTINE electrons()
            !
            CALL v_of_rho( rho, rho_core, rhog_core, &
                ehart, etxc, vtxc, eth, etotefield, charge, v)
+           IF (lrism) CALL rism_calc3d(rho%of_g(:, 1), esol, vsol, v%of_r, tr2)
            IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
            CALL using_vrs(1)
            CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
@@ -148,6 +151,24 @@ SUBROUTINE electrons()
      ENDIF
      CLOSE ( unit=iunres, status='delete')
   ENDIF
+  !
+  !  ... energy calculation of neutral case
+  !
+  IF (sic .and. sic_energy) THEN
+     WRITE(stdout,'(5x,"Energy calculation for the neutral polaron")')
+     IF( .not. sic_first) THEN
+        CALL occ_f2fn()
+        CALL potinit()
+        CALL wfcinit()
+     END IF
+     CALL electrons_scf(printout,exxen)
+     CALL save_rhon(rho)
+     CALL close_files(.true.)
+     CALL occ_fn2f()
+     CALL potinit()
+     CALL wfcinit()
+     sic_first = .false.
+  END IF
   !
   DO idum=1,niter
      !
@@ -213,6 +234,8 @@ SUBROUTINE electrons()
         CALL v_of_rho( rho, rho_core, rhog_core, &
              ehart, etxc, vtxc, eth, etotefield, charge, v)
         etot = etot + etxc + exxen
+        !
+        IF (lrism) CALL rism_calc3d(rho%of_g(:, 1), esol, vsol, v%of_r, tr2)
         !
         IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
         CALL using_vrs(1)
@@ -380,19 +403,20 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet, epaw, &
                                    elondon, edftd3, ef_up, ef_dw, exdm, ef, &
-                                   egrand
+                                   egrand, vsol, esol, esic, esci
   USE scf,                  ONLY : scf_type, scf_type_COPY, bcast_scf_type,&
                                    create_scf_type, destroy_scf_type, &
                                    open_mix_file, close_mix_file, &
                                    rho, rho_core, rhog_core, v, vltot, vrs, &
                                    kedtau, vnew
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
-                                   iprint, conv_elec, &
+                                   iprint, conv_elec, sic, &
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
                                    llondon, ldftd3, scf_must_converge, lxdm, ts_vdw, &
                                    mbd_vdw, use_gpu
-  USE control_flags,        ONLY : n_scf_steps, scf_error
+  USE control_flags,        ONLY : n_scf_steps, scf_error, scissor
+  USE sci_mod,              ONLY : sci_iter
 
   USE io_files,             ONLY : iunmix, output_drho
   USE ldaU,                 ONLY : eth, lda_plus_u, lda_plus_u_kind, &
@@ -401,7 +425,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                    ldim_u, is_hubbard_back
   USE extfield,             ONLY : tefield, etotefield, gate, etotgatefield !TB
   USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
-                                   lambda, report, domag
+                                   lambda, report, domag, nspin_mag
   USE io_rho_xml,           ONLY : write_scf
   USE uspp,                 ONLY : okvan
   USE mp_bands,             ONLY : intra_bgrp_comm
@@ -421,9 +445,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE dfunct,               ONLY : newd
   USE dfunct_gpum,          ONLY : newd_gpu
   USE esm,                  ONLY : do_comp_esm, esm_printpot, esm_ewald
-  USE fcp_module,           ONLY : lfcp, fcp_mu
   USE gcscf_module,         ONLY : lgcscf, gcscf_mu, gcscf_ignore_mun, gcscf_set_nelec
   USE clib_wrappers,        ONLY : memstat
+  USE fcp_module,           ONLY : lfcp, fcp_mu
+  USE rism_module,          ONLY : lrism, rism_calc3d, rism_printpot
+  USE iso_c_binding,        ONLY : c_int
   !
   USE plugin_variables,     ONLY : plugin_etot
   USE libmbd_interface,     ONLY : EmbdvdW
@@ -569,6 +595,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
         GO TO 10
      ENDIF
      iter = iter + 1
+     IF(scissor) sci_iter = iter
      !
      IF (use_gpu .and. (iverbosity >= 1) ) CALL dev_buf%print_report(stdout)
      IF (use_gpu .and. (iverbosity >= 1) ) CALL pin_buf%print_report(stdout)
@@ -677,6 +704,9 @@ SUBROUTINE electrons_scf ( printout, exxen )
         hwf_energy = eband + deband_hwf + (etxc - etxcc) + ewld + ehart + demet
         If ( okpaw ) hwf_energy = hwf_energy + epaw
         IF ( lda_plus_u ) hwf_energy = hwf_energy + eth
+        IF ( lrism ) hwf_energy = hwf_energy + esol + vsol
+        IF ( sic ) hwf_energy = hwf_energy + esic
+        IF ( scissor ) hwf_energy = hwf_energy + esci
         !
         IF ( lda_plus_u )  THEN
            !
@@ -826,6 +856,10 @@ SUBROUTINE electrons_scf ( printout, exxen )
            CALL v_of_rho( rhoin, rho_core, rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v )
            !
+           IF (lrism) THEN
+              CALL rism_calc3d(rhoin%of_g(:, 1), esol, vsol, v%of_r, dr2)
+           ENDIF
+           !
            IF (okpaw) THEN
               CALL PAW_potential( rhoin%bec, ddd_paw, epaw,etot_cmp_paw )
               CALL PAW_symmetrize_ddd( ddd_paw )
@@ -857,9 +891,16 @@ SUBROUTINE electrons_scf ( printout, exxen )
            ! ... 2) vnew contains V(out)-V(in) ( used to correct the forces ).
            !
            vnew%of_r(:,:) = v%of_r(:,:)
+           !
            IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) nsg = nsgnew
+           !
            CALL v_of_rho( rho,rho_core,rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v )
+           !
+           IF (lrism) THEN
+              CALL rism_calc3d(rho%of_g(:, 1), esol, vsol, v%of_r, tr2)
+           END IF
+           !
            vnew%of_r(:,:) = v%of_r(:,:) - vnew%of_r(:,:)
            !
            IF (okpaw) THEN
@@ -882,6 +923,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      plugin_etot = 0.0_dp
      !
+#if defined (__LEGACY_PLUGINS) 
+     CALL plugin_scf_energy (plugin_etot, rhoin) 
+     !
+     CALL plugin_scf_potential(rhoin, conv_elec, dr2, vltot)
+#endif 
 #if defined (__ENVIRON)
      IF (use_environ) THEN
         CALL calc_environ_energy(plugin_etot, .TRUE.)
@@ -1024,15 +1070,23 @@ SUBROUTINE electrons_scf ( printout, exxen )
         hwf_energy = hwf_energy + etotgatefield
      ENDIF
      !
+     IF ( lgcscf .AND. (.NOT. gcscf_ignore_mun) ) THEN
+        etot = etot + egrand
+        hwf_energy = hwf_energy + egrand
+     END IF
+     !
      IF ( lfcp ) THEN
         etot = etot + fcp_mu * tot_charge
         hwf_energy = hwf_energy + fcp_mu * tot_charge
      END IF
      !
-     IF ( lgcscf .AND. (.NOT. gcscf_ignore_mun) ) THEN
-        etot = etot + egrand
-        hwf_energy = hwf_energy + egrand
+     IF ( lrism ) THEN
+        etot = etot + esol + vsol
+        hwf_energy = hwf_energy + esol + vsol
      END IF
+     !
+     IF (sic) etot = etot + esic
+     IF (scissor) etot = etot + esci
      !
      ! ... adds possible external contribution from plugins to the energy
      !
@@ -1050,6 +1104,10 @@ SUBROUTINE electrons_scf ( printout, exxen )
         ! ... print out ESM potentials if desired
         !
         IF ( do_comp_esm ) CALL esm_printpot( rho%of_g )
+        !
+        ! ... print out 3D-RISM potentials if desired
+        !
+        IF ( lrism ) CALL rism_printpot()
         !
         WRITE( stdout, 9110 ) iter
         !
@@ -1091,6 +1149,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
   ELSE
      CALL close_mix_file( iunmix, 'keep' )
   ENDIF
+  !
+  IF(scissor) sci_iter = 0
   !
   IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
   call destroy_scf_type ( rhoin )
@@ -1208,11 +1268,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
           delta_e = 0.5_DP*delta_e
           !
        ELSE
-          delta_e = - SUM( rho%of_r(:,:)*v%of_r(:,:) )
+          delta_e = - SUM( rho%of_r(:,1:nspin_mag)*v%of_r(:,1:nspin_mag) )
        ENDIF
        !
        IF ( xclib_dft_is('meta') ) &
-          delta_e = delta_e - SUM( rho%kin_r(:,:)*v%kin_r(:,:) )
+          delta_e = delta_e - SUM( rho%kin_r(:,1:nspin_mag)*v%kin_r(:,1:nspin_mag) )
        !
        delta_e = omega * delta_e / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
        !
@@ -1294,7 +1354,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
           delta_escf = 0.5_dp*delta_escf
           !
        ELSE
-         delta_escf = -SUM( ( rhoin%of_r(:,:)-rho%of_r(:,:) )*v%of_r(:,:) )
+         delta_escf = -SUM( ( rhoin%of_r(:,1:nspin_mag)-rho%of_r(:,1:nspin_mag) )*v%of_r(:,1:nspin_mag) )
        ENDIF
        !
        IF ( xclib_dft_is('meta') ) &
@@ -1473,10 +1533,14 @@ SUBROUTINE electrons_scf ( printout, exxen )
           IF ( lgauss ) then
              WRITE( stdout, 9070 ) demet
              WRITE( stdout, 9170 ) etot-demet
+          END IF
+          !
+          IF ( lgauss ) then
              WRITE( stdout, 9061 )
           ELSE
              WRITE( stdout, 9060 )
           END IF
+          !
           WRITE( stdout, 9062 ) (eband + deband), ehart, ( etxc - etxcc ), ewld
           !
           IF ( llondon ) WRITE ( stdout , 9074 ) elondon
@@ -1505,17 +1569,20 @@ SUBROUTINE electrons_scf ( printout, exxen )
             ENDIF
           ENDIF
           !
-          ! ... With Fermi-Dirac population factor, etot is the electronic
-          ! ... free energy F = E - TS , demet is the -TS contribution
+          IF ( lrism ) THEN
+             WRITE( stdout, 9902 ) esol
+             IF ( ABS( vsol ) > eps8 ) WRITE( stdout, 9903 ) vsol
+          END IF
           !
+          ! ... With Grandcanonical-SCF (GC-SCF) or Fictitious charge particle (FCP),
+          ! ... etot is the grand potential energy Omega = E - muN, where -muN is
+          ! ... the potentiostat contribution.
           !
-          ! ... With Fictitious charge particle (FCP) or Grand-Canonical-SCF,
-          ! ... etot is the grand potential energy Omega = E - muN,
-          ! ... -muN is the potentiostat contribution.
+          IF ( lgcscf .AND. (.NOT. gcscf_ignore_mun) ) THEN
+             WRITE( stdout, 9072 ) egrand
+          END IF
           !
           IF ( lfcp ) WRITE( stdout, 9072 ) fcp_mu*tot_charge
-          IF ( lgcscf .AND. ( .NOT. gcscf_ignore_mun ) ) &
-                         WRITE( stdout, 9072 ) egrand
           !
        ELSE IF ( conv_elec ) THEN
           !
@@ -1548,6 +1615,9 @@ SUBROUTINE electrons_scf ( printout, exxen )
           !
        ENDIF
        !
+#if defined(__LEGACY_PLUGINS)
+       CALL plugin_print_energies()
+#endif 
 #if defined (__ENVIRON)
        IF (use_environ) CALL print_environ_energies('PW')
 #endif
@@ -1601,7 +1671,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
 9082 FORMAT( '     Harris-Foulkes estimate   =',0PF17.8,' Ry' )
 9083 FORMAT( '     estimated scf accuracy    <',0PF17.8,' Ry' )
 9084 FORMAT( '     estimated scf accuracy    <',1PE17.1,' Ry' )
-9085 FORMAT(/'     total all-electron energy =',0PF17.6,' Ry' )
+9085 FORMAT( '     total all-electron energy =',0PF17.6,' Ry' )
 9170 FORMAT( '     internal energy E=F+TS    =',0PF17.8,' Ry' )
 9181 FORMAT(                                                  &
             /'!    total charge of GC-SCF    =',0PF17.8,' e' )
@@ -1610,6 +1680,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
             /'     the Fermi energy          =',0PF17.8,' eV' &
             /'                        (error :',0PF17.8,' eV)')
 
+9902 FORMAT( '     solvation energy (RISM)   =',F17.8,' Ry' )
+9903 FORMAT( '     level-shifting contrib.   =',F17.8,' Ry' )
   END SUBROUTINE print_energies
   !
 END SUBROUTINE electrons_scf

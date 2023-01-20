@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,8 +15,7 @@ SUBROUTINE hp_q_points ( )
   USE io_global,    ONLY : stdout
   USE symm_base,    ONLY : nsym, s, time_reversal, t_rev, invs
   USE cell_base,    ONLY : at, bg
-  USE ldaU_hp,      ONLY : skip_equivalence_q, nq1, nq2, nq3, &
-                           x_q, nqs, search_sym
+  USE ldaU_hp,      ONLY : skip_equivalence_q, nq1, nq2, nq3, x_q, nqs
 
   implicit none
 
@@ -73,7 +72,7 @@ SUBROUTINE hp_q_points ( )
   !
   !  Check that the q point grid is compatible with the symmetry.
   !
-  IF (search_sym) THEN
+  IF (nsym>1) THEN
      !
      check = check_q_points_sym(nqs, x_q, at, bg, nsym, s, invs, nq1, nq2, nq3)
      !

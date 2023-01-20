@@ -28,15 +28,13 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE cell_base,            ONLY : omega, tpiba
   USE fft_base,             ONLY : dfftp
-  USE fft_interfaces,       ONLY : fwfft
+  USE fft_rho,              ONLY : rho_r2g
   USE gvect,                ONLY : g, gg, ngm, gstart, mill, eigts1, eigts2, eigts3,&
                                    g_d, gg_d, mill_d, eigts1_d, eigts2_d, eigts3_d
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vltot
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions,        ONLY : psic
-  USE wavefunctions_gpum,   ONLY : psic_d
   USE noncollin_module,     ONLY : nspin_mag
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_pools,             ONLY : inter_pool_comm
@@ -50,9 +48,6 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   ! Input: potential , output: contribution to integral
   REAL(kind=dp), intent(in)  :: vr(dfftp%nnr,nspin)
   REAL(kind=dp), intent(out) :: deeq_d( nhm, nhm, nat, nspin )
-#if defined(__CUDA)
-  attributes(DEVICE) :: deeq_d
-#endif
   LOGICAL, intent(in) :: skip_vltot !If .false. vltot is added to vr when necessary
   ! INTERNAL
   INTEGER :: ngm_s, ngm_e, ngm_l
@@ -60,17 +55,14 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   INTEGER :: ig, nt, ih, jh, na, is, ijh, nij, nb, nab, nhnt, ierr
   ! counters on g vectors, atom type, beta functions x 2,
   !   atoms, spin, aux, aux, beta func x2 (again)
-  COMPLEX(DP), ALLOCATABLE :: vaux_d(:,:), aux_d(:,:), qgm_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: vaux(:,:), aux_d(:,:), qgm_d(:,:)
     ! work space
   REAL(DP), ALLOCATABLE :: ylmk0_d(:,:), qmod_d(:), deeaux_d(:,:)
     ! spherical harmonics, modulus of G
   REAL(DP) :: fact
   !
-  INTEGER, POINTER :: dfftp_nl_d(:)
-  ! workaround for cuf kernel limitations
-  !
 #if defined(__CUDA)
-  attributes(DEVICE) :: vaux_d, aux_d, qgm_d, ylmk0_d, qmod_d, deeaux_d, dfftp_nl_d
+  attributes(DEVICE) :: deeq_d, aux_d, qgm_d, ylmk0_d, qmod_d, deeaux_d
 #endif
   ! variable to map index of atoms of the same type
   INTEGER, ALLOCATABLE :: na_to_nab_h(:)
@@ -87,7 +79,9 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
      fact = 1.0_dp
   ENDIF
   !
+  !$acc kernels
   deeq_d(:,:,:,:) = 0.D0
+  !$acc end kernels
   !
   ! With k-point parallelization, distribute G-vectors across processors
   ! ngm_s = index of first G-vector for this processor
@@ -99,41 +93,26 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   ! for the extraordinary unlikely case of more processors than G-vectors
   !
   IF ( ngm_l > 0 ) THEN
-     ALLOCATE( vaux_d(ngm_l,nspin_mag), qmod_d(ngm_l), ylmk0_d( ngm_l, lmaxq*lmaxq ) )
+     ALLOCATE( vaux(ngm_l,nspin_mag), qmod_d(ngm_l), ylmk0_d( ngm_l, lmaxq*lmaxq ) )
      !
-     CALL ylmr2_gpu (lmaxq * lmaxq, ngm_l, g_d(1,ngm_s), gg_d(ngm_s), ylmk0_d)
+     CALL ylmr2_gpu( lmaxq*lmaxq, ngm_l, g_d(1,ngm_s), gg_d(ngm_s), ylmk0_d )
      !$cuf kernel do
      DO ig = 1, ngm_l
         qmod_d (ig) = SQRT(gg_d(ngm_s+ig-1))*tpiba
      ENDDO
   END IF
+  !$acc data create( vaux )
   !
-  ! ... fourier transform of the total effective potential
+  ! ... Fourier transform of the total effective potential
   !
-  dfftp_nl_d => dfftp%nl_d
   DO is = 1, nspin_mag
-     !
-     IF ( (nspin_mag == 4 .AND. is /= 1) .or. skip_vltot ) THEN 
-
-        psic_d(1:dfftp%nnr) = vr(1:dfftp%nnr,is)
-
+     IF ( (nspin_mag==4 .AND. is/=1) .OR. skip_vltot ) THEN
+        CALL rho_r2g( dfftp, vr(:,is:is), vaux(:,is:is), igs=ngm_s )
      ELSE
-        !$omp parallel do default(shared) private(ig)
-        do ig=1,dfftp%nnr
-           psic(ig) = vltot(ig) + vr(ig,is)
-        end do
-        !$omp end parallel do
-        psic_d(1:dfftp%nnr) = psic(1:dfftp%nnr)
+        CALL rho_r2g( dfftp, vr(:,is:is), vaux(:,is:is), v=vltot, igs=ngm_s )
      END IF
-     CALL fwfft ('Rho', psic_d, dfftp)
-     !
-     !$cuf kernel do
-     do ig=1,ngm_l
-        vaux_d(ig, is) = psic_d(dfftp_nl_d(ngm_s+ig-1))
-     end do
-     !
   END DO
-
+  !
   DO nt = 1, ntyp
      !
      IF ( upf(nt)%tvanp ) THEN
@@ -144,9 +123,9 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
         DO na = 1, nat
            IF ( ityp(na) == nt ) nab = nab + 1
            IF ( ityp(na) == nt ) THEN
-              na_to_nab_h(na)           = nab
+              na_to_nab_h(na) = nab
            ELSE
-              na_to_nab_h(na)           = -1
+              na_to_nab_h(na) = -1
            END IF
         END DO
         IF ( nab == 0 ) CYCLE ! No atoms for this type (?!?)
@@ -175,12 +154,12 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
         ! ... Compute and store V(G) times the structure factor e^(-iG*tau)
         !
         DO is = 1, nspin_mag
-           !$cuf kernel do(2)
+           !$acc parallel loop collapse(2)
            DO na = 1, nat
-              DO ig=1,ngm_l
+              DO ig = 1, ngm_l
                  nb = na_to_nab_d(na)
                  IF (nb > 0) &
-                    aux_d(ig, nb) = vaux_d(ig,is) * CONJG ( &
+                    aux_d(ig,nb) = vaux(ig,is) * CONJG ( &
                       eigts1_d(mill_d(1,ngm_s+ig-1),na) * &
                       eigts2_d(mill_d(2,ngm_s+ig-1),na) * &
                       eigts3_d(mill_d(3,ngm_s+ig-1),na) )
@@ -217,7 +196,8 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
      !
   END DO
   !
-  DEALLOCATE( qmod_d, ylmk0_d, vaux_d )
+  !$acc end data
+  DEALLOCATE( qmod_d, ylmk0_d, vaux )
   DEALLOCATE(na_to_nab_h); CALL buffer%release_buffer(na_to_nab_d, ierr)
   !
   ! REPLACE THIS WITH THE NEW allgather with type or use CPU variable! OPTIMIZE HERE
@@ -237,7 +217,7 @@ SUBROUTINE newd_gpu( )
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE lsda_mod,             ONLY : nspin
-  USE uspp,                 ONLY : deeq, okvan, deeq, deeq_d, deeq_nc, deeq_nc_d, dvan_d, dvan_so_d
+  USE uspp,                 ONLY : okvan, deeq, deeq_nc, dvan_d, dvan_so_d
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE noncollin_module,     ONLY : noncolin, domag, nspin_mag, lspinorb
   USE uspp,                 ONLY : nhtol, nhtolm
@@ -273,12 +253,12 @@ SUBROUTINE newd_gpu( )
         !
         IF ( lspinorb ) THEN
            !
-           !$cuf kernel do(4)
+           !$acc parallel loop collapse(4)
            DO is =  1, nspin
               DO na = 1, nat
                  DO jh = 1, nht
                     DO ih = 1, nht
-                       IF ( ityp_d(na) == nt ) deeq_nc_d(ih,jh,na,is) = dvan_so_d(ih,jh,is,nt)
+                       IF ( ityp_d(na) == nt ) deeq_nc(ih,jh,na,is) = dvan_so_d(ih,jh,is,nt)
                     END DO
                  END DO
               END DO
@@ -286,15 +266,15 @@ SUBROUTINE newd_gpu( )
            !
         ELSE IF ( noncolin ) THEN
            !
-           !$cuf kernel do(3)
+           !$acc parallel loop collapse(3)
            DO na = 1, nat
               DO jh = 1, nht
                  DO ih = 1, nht
                     IF ( ityp_d(na) == nt ) THEN
-                       deeq_nc_d(ih,jh,na,1) = dvan_d(ih,jh,nt)
-                       deeq_nc_d(ih,jh,na,2) = ( 0.D0, 0.D0 )
-                       deeq_nc_d(ih,jh,na,3) = ( 0.D0, 0.D0 )
-                       deeq_nc_d(ih,jh,na,4) = dvan_d(ih,jh,nt)
+                       deeq_nc(ih,jh,na,1) = dvan_d(ih,jh,nt)
+                       deeq_nc(ih,jh,na,2) = ( 0.D0, 0.D0 )
+                       deeq_nc(ih,jh,na,3) = ( 0.D0, 0.D0 )
+                       deeq_nc(ih,jh,na,4) = dvan_d(ih,jh,nt)
                     END IF
                  END DO
               END DO
@@ -303,13 +283,13 @@ SUBROUTINE newd_gpu( )
         ELSE
            !
            if ( nht > 0 ) THEN
-              !$cuf kernel do(4)
+              !$acc parallel loop collapse(4)
               DO is = 1, nspin
                  DO na = 1, nat
                     DO jh = 1, nht
                        DO ih = 1, nht
                           !
-                          IF ( ityp_d(na) == nt ) deeq_d(ih,jh,na,is) = dvan_d(ih,jh,nt)
+                          IF ( ityp_d(na) == nt ) deeq(ih,jh,na,is) = dvan_d(ih,jh,nt)
                           !
                        END DO
                     END DO
@@ -328,9 +308,9 @@ SUBROUTINE newd_gpu( )
      !
      ! ... sync with CPU
      if (noncolin) then
-        deeq_nc=deeq_nc_d
+        !$acc update self(deeq_nc)
      else
-        deeq=deeq_d
+        !$acc update self(deeq)
      endif
      !
      RETURN
@@ -346,12 +326,18 @@ SUBROUTINE newd_gpu( )
   !
   IF (tqr) THEN
      CALL newq_r(v%of_r,deeq,.false.)
-     deeq_d=deeq
+     !$acc update device(deeq)
   ELSE
-     CALL newq_gpu(v%of_r,deeq_d,.false.)
+     !$acc host_data use_device(deeq)
+     CALL newq_gpu(v%of_r,deeq,.false.)
+     !$acc end host_data
   END IF
   !
-  IF (noncolin) call add_paw_to_deeq_gpu(deeq_d)
+  IF (noncolin) THEN
+    !$acc host_data use_device(deeq)
+    call add_paw_to_deeq_gpu(deeq)
+    !$acc end host_data
+  ENDIF
   !
   types : &
   DO nt = 1, ntyp
@@ -372,13 +358,13 @@ SUBROUTINE newd_gpu( )
      ELSE if_noncolin
         !
         nht = nh(nt)
-        !$cuf kernel do(4)
+        !$acc parallel loop collapse(4)
         DO is = 1, nspin
            DO na = 1, nat
               DO ih = 1, nht
                  DO jh = 1, nht
                     IF ( ityp_d(na) == nt ) THEN
-                       deeq_d(ih,jh,na,is) = deeq_d(ih,jh,na,is) + dvan_d(ih,jh,nt)
+                       deeq(ih,jh,na,is) = deeq(ih,jh,na,is) + dvan_d(ih,jh,nt)
                     END IF
                  END DO
               END DO
@@ -389,17 +375,25 @@ SUBROUTINE newd_gpu( )
      !
   END DO types
   !
-  IF (.NOT.noncolin) CALL add_paw_to_deeq_gpu(deeq_d)
+  IF (.NOT.noncolin) THEN
+    !$acc host_data use_device(deeq)
+    CALL add_paw_to_deeq_gpu(deeq)
+    !$acc end host_data
+  ENDIF
   !
-  IF (lda_plus_U .AND. (Hubbard_projectors == 'pseudo')) CALL add_vhub_to_deeq_gpu(deeq_d)
+  IF (lda_plus_U .AND. (Hubbard_projectors == 'pseudo')) THEN
+    !$acc host_data use_device(deeq)
+    CALL add_vhub_to_deeq_gpu(deeq)
+    !$acc end host_data
+  ENDIF
   !
   CALL buffer%release_buffer(ityp_d, ierr)
   CALL stop_clock_gpu( 'newd' )
   !
   if (noncolin) then
-     deeq_nc=deeq_nc_d
+     !$acc update self(deeq_nc)
   else
-     deeq=deeq_d
+     !$acc update self(deeq)
   endif
   !
   RETURN
@@ -429,7 +423,7 @@ SUBROUTINE newd_gpu( )
             ijs = ijs + 1
             !
             IF (domag) THEN
-               !$cuf kernel do(3)
+               !$acc parallel loop collapse(3) present(deeq_nc,deeq)
                DO na = 1, nat
                   !
                   DO ih = 1, nhnt
@@ -438,24 +432,24 @@ SUBROUTINE newd_gpu( )
                         !
                         IF ( ityp_d(na) == nt ) THEN
                            !
-                           deeq_nc_d(ih,jh,na,ijs) = dvan_so_d(ih,jh,ijs,nt)
+                           deeq_nc(ih,jh,na,ijs) = dvan_so_d(ih,jh,ijs,nt)
                            !
                            DO kh = 1, nhnt
                               !
                               DO lh = 1, nhnt
                                  !
-                                 deeq_nc_d(ih,jh,na,ijs) = deeq_nc_d(ih,jh,na,ijs) +   &
-                                      deeq_d (kh,lh,na,1)*            &
-                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,1,is2,nt)  + &
+                                 deeq_nc(ih,jh,na,ijs) = deeq_nc(ih,jh,na,ijs) +   &
+                                      deeq(kh,lh,na,1)*         &
+                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,1,is2,nt) + &
                                    fcoef_d(ih,kh,is1,2,nt)*fcoef_d(lh,jh,2,is2,nt)) + &
-                                   deeq_d (kh,lh,na,2)*            &
-                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,2,is2,nt)  + &
+                                   deeq(kh,lh,na,2)*            &
+                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,2,is2,nt) + &
                                    fcoef_d(ih,kh,is1,2,nt)*fcoef_d(lh,jh,1,is2,nt)) + &
-                                   (0.D0,-1.D0)*deeq_d (kh,lh,na,3)*            &
-                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,2,is2,nt)  - &
+                                   (0.D0,-1.D0)*deeq(kh,lh,na,3)*            &
+                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,2,is2,nt) - &
                                    fcoef_d(ih,kh,is1,2,nt)*fcoef_d(lh,jh,1,is2,nt)) + &
-                                   deeq_d (kh,lh,na,4)*            &
-                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,1,is2,nt)  - &
+                                   deeq(kh,lh,na,4)*            &
+                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,1,is2,nt) - &
                                    fcoef_d(ih,kh,is1,2,nt)*fcoef_d(lh,jh,2,is2,nt))   
                                  !
                               END DO
@@ -471,7 +465,7 @@ SUBROUTINE newd_gpu( )
                !
             ELSE
                !
-               !$cuf kernel do(3) <<<*,*>>>
+               !$acc parallel loop collapse(3) present(deeq_nc,deeq)
                DO na = 1, nat
                   !
                   DO ih = 1, nhnt
@@ -480,15 +474,15 @@ SUBROUTINE newd_gpu( )
                         !
                         IF ( ityp_d(na) == nt ) THEN
                            !
-                           deeq_nc_d(ih,jh,na,ijs) = dvan_so_d(ih,jh,ijs,nt)
+                           deeq_nc(ih,jh,na,ijs) = dvan_so_d(ih,jh,ijs,nt)
                            !
                            DO kh = 1, nhnt
                               !
                               DO lh = 1, nhnt
                                  !
-                                 deeq_nc_d(ih,jh,na,ijs) = deeq_nc_d(ih,jh,na,ijs) +   &
-                                      deeq_d (kh,lh,na,1)*            &
-                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,1,is2,nt)  + &
+                                 deeq_nc(ih,jh,na,ijs) = deeq_nc(ih,jh,na,ijs) + &
+                                      deeq(kh,lh,na,1)*            &
+                                   (fcoef_d(ih,kh,is1,1,nt)*fcoef_d(lh,jh,1,is2,nt) + &
                                    fcoef_d(ih,kh,is1,2,nt)*fcoef_d(lh,jh,2,is2,nt) ) 
                                  !
                               END DO
@@ -526,42 +520,38 @@ SUBROUTINE newd_gpu( )
       !
       nhnt = nh(nt)
       !
-      !$cuf kernel do(3)
+      !$acc parallel loop collapse(3) present(deeq_nc,deeq)
       DO na = 1, nat
-         !
          DO ih = 1, nhnt
-            !
             DO jh = 1, nhnt
                !
                IF ( ityp_d(na) == nt ) THEN
                   !
                   IF (lspinorb) THEN
-                     deeq_nc_d(ih,jh,na,1) = dvan_so_d(ih,jh,1,nt) + &
-                                           deeq_d(ih,jh,na,1) + deeq_d(ih,jh,na,4)
-                     !                      
-                     deeq_nc_d(ih,jh,na,4) = dvan_so_d(ih,jh,4,nt) + &
-                                           deeq_d(ih,jh,na,1) - deeq_d(ih,jh,na,4)
+                     deeq_nc(ih,jh,na,1) = dvan_so_d(ih,jh,1,nt) + &
+                                           deeq(ih,jh,na,1) + deeq(ih,jh,na,4)
+                     !
+                     deeq_nc(ih,jh,na,4) = dvan_so_d(ih,jh,4,nt) + &
+                                           deeq(ih,jh,na,1) - deeq(ih,jh,na,4)
                      !
                   ELSE
-                     deeq_nc_d(ih,jh,na,1) = dvan_d(ih,jh,nt) + &
-                                           deeq_d(ih,jh,na,1) + deeq_d(ih,jh,na,4)
-                     !                      
-                     deeq_nc_d(ih,jh,na,4) = dvan_d(ih,jh,nt) + &
-                                           deeq_d(ih,jh,na,1) - deeq_d(ih,jh,na,4)
+                     deeq_nc(ih,jh,na,1) = dvan_d(ih,jh,nt) + &
+                                           deeq(ih,jh,na,1) + deeq(ih,jh,na,4)
+                     !
+                     deeq_nc(ih,jh,na,4) = dvan_d(ih,jh,nt) + &
+                                           deeq(ih,jh,na,1) - deeq(ih,jh,na,4)
                      !
                   END IF
-                  deeq_nc_d(ih,jh,na,2) = deeq_d(ih,jh,na,2) - &
-                                        ( 0.D0, 1.D0 ) * deeq_d(ih,jh,na,3)
-                  !                      
-                  deeq_nc_d(ih,jh,na,3) = deeq_d(ih,jh,na,2) + &
-                                        ( 0.D0, 1.D0 ) * deeq_d(ih,jh,na,3)
+                  deeq_nc(ih,jh,na,2) = deeq(ih,jh,na,2) - &
+                                        ( 0.D0, 1.D0 ) * deeq(ih,jh,na,3)
+                  !
+                  deeq_nc(ih,jh,na,3) = deeq(ih,jh,na,2) + &
+                                        ( 0.D0, 1.D0 ) * deeq(ih,jh,na,3)
                   !
                END IF
                !
             END DO
-            !
          END DO
-         !
       END DO
       !
     RETURN

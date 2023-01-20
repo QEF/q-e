@@ -41,6 +41,7 @@ MODULE fcp_module
   USE kinds,           ONLY : DP
   USE klist,           ONLY : tot_charge, lgauss, degauss, ltetra, two_fermi_energies
   USE relax,           ONLY : starting_scf_threshold
+  USE rism_module,     ONLY : lrism
   !
   IMPLICIT NONE
   SAVE
@@ -100,6 +101,12 @@ CONTAINS
     !
     IF (TRIM(esm_bc) == 'pbc') THEN
        CALL errore('fcp_check', 'please do not set esm_bc = "pbc", for FCP', 1)
+    END IF
+    !
+    ! ... cannot use Vacuum/Slab/Vacuum
+    !
+    IF (TRIM(esm_bc) == 'bc1' .AND. (.NOT. lrism)) THEN
+       CALL errore('fcp_check', 'cannot use ESM-BC1 without RISM, for FCP', 1)
     END IF
     !
     ! ... correct Vexx(G=0) ?

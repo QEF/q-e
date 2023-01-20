@@ -221,8 +221,6 @@ ftn )
     ;;
 esac
 
-AC_FC_SRCEXT(f90)
-
 echo setting F90... $f90
 echo setting MPIF90... $mpif90
 

@@ -242,7 +242,11 @@ SUBROUTINE get_homo_lumo ( ehomo, elumo )
   ehomo=-1D+6
   elumo=+1D+6
   !
-  IF ( .NOT. ionode ) RETURN
+  IF ( .NOT. ionode ) THEN
+   ehomo=0.
+   elumo=0.
+   RETURN
+  ENDIF
   !
   k_loop: DO ik = 1, nkstot
      ! exclude states with zero weight (present in phonon calculation)

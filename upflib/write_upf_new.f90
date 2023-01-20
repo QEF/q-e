@@ -720,7 +720,7 @@ CONTAINS
        IF ( upf%has_so .AND. upf%tpawp ) THEN
           DO nb = 1, upf%nbeta
              IF ( v2 ) THEN
-                tag = 'PP_AEWFC_rel.'//i2c(nb)
+                tag = 'PP_AEWFC_REL.'//i2c(nb)
              ELSE
                 tag = 'pp_aewfc_rel'
              END IF

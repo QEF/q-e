@@ -44,7 +44,6 @@
   - Names of interpolation tables and related routines are random:
       CP     PW      new name? 	     contains 	         computed in
     betagx   tab     tab_beta      beta(G) functions	compute_betagx,
-             tab_d2y tab_beta_d2y  splines for beta(G)	init_tab_beta
     dbetagx             	   dbeta(G)/dG 		compute_betagx
     qradx    qrad    tab_q         Q(G) for  USPP/PAW	init_tab_qrad
     dqradx              	   dQ(G)/dG  		compute_qradx

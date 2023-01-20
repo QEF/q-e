@@ -15,8 +15,9 @@ MODULE qe_drivers_d_gga
   !! Module with QE driver routines that calculates the derivatives of XC
   !! potential.
   !
-  USE kind_l,             ONLY: DP
-  USE dft_setting_params, ONLY: igcx, igcc, is_libxc
+  USE kind_l,               ONLY: DP
+  USE xclib_utils_and_para, ONLY: error_msg, nowarning
+  USE dft_setting_params,   ONLY: igcx, igcc, is_libxc
   !
   IMPLICIT NONE
   !
@@ -61,7 +62,7 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   ! ... local variables
   !
   INTEGER :: ir, i1, i2, i3, i4, f1, f2, f3, f4
-  INTEGER :: igcx_, igcc_
+  INTEGER :: igcx_, igcc_, ierr
   REAL(DP), ALLOCATABLE :: raux(:), s2aux(:), dr(:), s(:), ds(:)
   REAL(DP), ALLOCATABLE :: v1x(:), v2x(:), v1c(:), v2c(:)
   REAL(DP), ALLOCATABLE :: sx(:), sc(:)
@@ -97,7 +98,7 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
     raux(i4-1+ir) = r_in(ir)         ;   s2aux(i4-1+ir) = (s(ir)-ds(ir))**2
   ENDDO
   !
-  CALL gcxc( length*4, raux, s2aux, sx, sc, v1x, v2x, v1c, v2c )
+  CALL gcxc( length*4, raux, s2aux, sx, sc, v1x, v2x, v1c, v2c, ierr )
   !
   !$acc parallel loop
   DO ir = 1, length
@@ -124,12 +125,13 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   DEALLOCATE( raux, s2aux, dr, s, ds )
   DEALLOCATE( v1x, v2x, sx )
   DEALLOCATE( v1c, v2c, sc )
-  
   !
   IF (is_libxc(3)) igcx=igcx_
   IF (is_libxc(4)) igcc=igcc_
   !
   !$acc end data
+  !
+  IF (ierr/=0 .AND. .NOT.nowarning) CALL xclib_error( 'xc_gcx_', error_msg(ierr), 1 )
   !
   RETURN
   !
@@ -173,7 +175,7 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   INTEGER :: i1, i2, i3, i4, i5, i6, i7, i8, ir
   INTEGER :: f1, f2, f3, f4, f5, f6, f7, f8
   ! block delimiters
-  INTEGER :: igcx_, igcc_
+  INTEGER :: igcx_, igcc_, ierr
   REAL(DP) :: r_up, r_dw, s_up, s_dw, s2_up, s2_dw, rt, zeta, s2t
   REAL(DP) :: dr_up, dr_dw, ds_up, ds_dw, drt, ds, dz
   LOGICAL :: ir_null
@@ -253,7 +255,7 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
     raux(i8-1+ir,2) = r_dw        ;  s2aux(i8-1+ir,2) = (s_dw-ds_dw)**2
   ENDDO
   !
-  CALL gcx_spin( length*8, raux, s2aux, sx, v1x, v2x )
+  CALL gcx_spin( length*8, raux, s2aux, sx, v1x, v2x, ierr )
   !
   !$acc parallel loop
   DO ir = 1, length
@@ -386,6 +388,8 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   IF (is_libxc(4)) igcc=igcc_
   !
   !$acc end data
+  !
+  IF (ierr/=0 .AND. .NOT.nowarning) CALL xclib_error( 'xc_gcx_', error_msg(ierr), 2 )
   !
   RETURN
   !

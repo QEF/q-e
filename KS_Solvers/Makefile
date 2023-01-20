@@ -59,13 +59,7 @@ CG/rcgdiagg_gpu.o \
 CG/ccgdiagg_gpu.o \
 PPCG/generic_cublas.o \
 PPCG/ppcg_gamma_gpu.o \
-PPCG/ppcg_k_gpu.o \
-ParO/bpcg_gamma_gpu.o \
-ParO/bpcg_k_gpu.o \
-ParO/paro_gamma_new_gpu.o \
-ParO/paro_k_new_gpu.o \
-DENSE/rotate_HSpsi_gamma_gpu.o \
-DENSE/rotate_HSpsi_k_gpu.o
+PPCG/ppcg_k_gpu.o 
 
 # add here other objects, e.g. ParO/*.o NewSolver/*.o
 
@@ -95,6 +89,10 @@ libparo :
 	if test -d ParO ; then \
         ( cd ParO ; $(MAKE) all || exit 1 ) ; fi
 
+librmm : 
+	if test -d RMM ; then \
+        ( cd RMM ; $(MAKE) all || exit 1 ) ; fi
+
 libdense : 
 	if test -d DENSE ; then \
         ( cd DENSE ; $(MAKE) all || exit 1 ) ; fi
@@ -113,6 +111,7 @@ clean :
 	if test -d CG           ; then ( cd CG ; $(MAKE) clean ) ; fi
 	if test -d PPCG         ; then ( cd PPCG ; $(MAKE) clean ) ; fi
 	if test -d ParO         ; then ( cd ParO ; $(MAKE) clean ) ; fi
+	if test -d RMM          ; then ( cd RMM ; $(MAKE) clean ) ; fi
 	if test -d DENSE        ; then ( cd DENSE ; $(MAKE) clean ) ; fi
 	if test -d RMM          ; then ( cd RMM ; $(MAKE) clean ) ; fi
 	if test -d NewSolver    ; then ( cd NewSolver ; $(MAKE) clean ) ; fi

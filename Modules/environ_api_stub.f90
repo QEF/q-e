@@ -1,3 +1,9 @@
+!----------------------------------------------------------------------------------------
+!!
+!! The configure script auto-generates module file dependencies and does not handle 
+!! ifdef. To avoid broken make.depend, stub files are introduced
+!!
+!----------------------------------------------------------------------------------------
 #if !defined (__ENVIRON)
 !----------------------------------------------------------------------------------------
 !>
