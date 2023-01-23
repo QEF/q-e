@@ -1639,16 +1639,18 @@ SUBROUTINE fft_scatter_tg_omp ( desc, f_in, f_aux, nxx_, isgn )
   INTEGER, INTENT(in)                    :: nxx_, isgn
   COMPLEX (DP), INTENT(inout)    :: f_in (nxx_), f_aux (nxx_)
 
-  INTEGER :: ierr
+  INTEGER :: i, ierr
 
   CALL start_clock ('fft_scatt_tg')
 
   if ( abs (isgn) /= 3 ) call fftx_error__ ('fft_scatter_tg', 'wrong call', 1 )
   !
 #if defined(__MPI)
-!$omp target teams
-  f_aux = f_in
-!$omp end target teams
+!$omp target teams distribute parallel do map(present,alloc:f_in,f_aux)
+  do i = 1, nxx_
+    f_aux(i) = f_in(i)
+  enddo
+!$omp end target teams distribute parallel do
 !$omp target update from (f_aux)
   if ( isgn > 0 ) then
 

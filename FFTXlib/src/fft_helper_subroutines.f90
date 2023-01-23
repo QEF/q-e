@@ -824,11 +824,12 @@ CONTAINS
      complex(DP), OPTIONAL, INTENT(OUT) :: vout2_d(:)
      complex(DP), INTENT(IN) :: vin_d(:)
      COMPLEX(DP) :: fp, fm
-     INTEGER :: ig
+     INTEGER :: ig, desc_ngm
+     desc_ngm = desc%ngm
      !$omp target data use_device_ptr( vout1_d, vout2_d, vin_d )
      IF( PRESENT( vout2_d ) ) THEN
         !$omp target teams loop
-        DO ig=1,desc%ngm
+        DO ig = 1, desc_ngm
            fp=vin_d(desc%nl(ig))+vin_d(desc%nlm(ig))
            fm=vin_d(desc%nl(ig))-vin_d(desc%nlm(ig))
            vout1_d(ig) = CMPLX(0.5d0,0.d0,kind=DP)*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
@@ -836,7 +837,7 @@ CONTAINS
         END DO
      ELSE
         !$omp target teams loop
-        DO ig=1,desc%ngm
+        DO ig = 1, desc_ngm
            vout1_d(ig) = vin_d(desc%nl(ig))
         END DO
      END IF
