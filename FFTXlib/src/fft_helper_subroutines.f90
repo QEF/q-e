@@ -624,12 +624,12 @@ CONTAINS
         !
         nnr = desc%nnr
         !
-        !$omp target teams distribute parallel do map(to:nnr)
+        !$omp target teams distribute parallel do map(present,alloc:psi)
         DO i = 1, nnr
           psi(i) = (0.d0,0.d0)
-        END DO 
+        END DO
         !
-        !$omp target teams distribute parallel do map(to:ngk)
+        !$omp target teams distribute parallel do map(present,alloc:psi,c,igk)
         DO ig = 1, ngk
           psi(desc%nl(igk(ig))) = c(ig,1)
         ENDDO
