@@ -1351,6 +1351,12 @@ END MODULE fft_scatter_2d_gpu
 
         USE fft_types, ONLY: fft_type_descriptor
         USE fft_param
+! NOTE 'noteCray': Cray compiler has a bug in omp_target_memcpy_rect, waiting for a bugfix:
+!                  protected with __ONEMKL (should be defined when using Intel compiler only).
+#ifdef __ONEMKL
+        USE omp_lib
+        USE iso_c_binding, ONLY: c_loc, c_int, c_size_t
+#endif
 
         IMPLICIT NONE
 
@@ -1374,8 +1380,14 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
   IMPLICIT NONE
   !
   TYPE (fft_type_descriptor), TARGET, INTENT(in) :: dfft
-  INTEGER, INTENT(in)           :: nr3x, nxx_, isgn, ncp_ (:), npp_ (:)
-  COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
+  INTEGER, INTENT(in) :: nr3x, nxx_, isgn, ncp_(:), npp_(:)
+! NOTE: see upper 'noteCray' 
+#ifdef __ONEMKL
+  COMPLEX (DP), INTENT(inout), TARGET :: f_in(nxx_), f_aux(nxx_)
+  COMPLEX(DP) :: dummy
+#else
+  COMPLEX (DP), INTENT(inout) :: f_in(nxx_), f_aux(nxx_)
+#endif
   INTEGER :: omp_i, omp_j, nswip
   INTEGER :: istat
 #if defined(__MPI)
@@ -1410,26 +1422,55 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      ! step one: store contiguously the slices
      !
      offset = 0
+! NOTE: see upper noteCray
+#ifdef __ONEMKL
+#ifdef __GPU_MPI
+     !$omp target data use_device_addr(f_in,f_aux)
+#else
+     !$omp target data use_device_addr(f_in)
+#endif
      DO gproc = 1, nprocp
         kdest = ( gproc - 1 ) * sendsiz
         kfrom = offset
-!$omp target teams distribute parallel do collapse(2)
+        istat = int(omp_target_memcpy_rect(c_loc(f_aux), c_loc(f_in),                 &
+                                           int(sizeof(dummy),c_size_t),               &
+                                           int(2,c_int),                              &
+                                           int((/ ncp_(me), npp_(gproc) /),c_size_t), &
+                                           int((/        0,       kdest /),c_size_t), &
+                                           int((/        0,       kfrom /),c_size_t), &
+                                           int((/ ncp_(me),        nppx /),c_size_t), &
+                                           int((/ ncp_(me),        nr3x /),c_size_t), &
+#ifdef __GPU_MPI
+                                           int(omp_get_default_device(),c_int),       &
+#else
+                                           int(omp_get_initial_device(),c_int),       &
+#endif
+                                           int(omp_get_default_device(),c_int)),      &
+                    kind(istat))
+        offset = offset + npp_ ( gproc )
+     ENDDO
+     !$omp end target data
+#else
+     DO gproc = 1, nprocp
+        kdest = ( gproc - 1 ) * sendsiz
+        kfrom = offset
+        !$omp target teams distribute parallel do collapse(2)
         DO k = 1, ncp_ (me)
            DO i = 1, npp_ ( gproc )
              f_aux( kdest + i + (k-1)*nppx ) = f_in( kfrom + i + (k-1)*nr3x )
            END DO
         END DO
-!$omp end target teams distribute parallel do
         offset = offset + npp_ ( gproc )
      ENDDO
 
 #ifndef __GPU_MPI
-!$omp target update from (f_aux)
+     !$omp target update from (f_aux)
+#endif
 #endif
      !
      ! maybe useless; ensures that no garbage is present in the output
      !
-     !! f_in = 0.0_DP
+     ! ! f_in = 0.0_DP
      !
      ! step two: communication
      !
@@ -1596,7 +1637,10 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
 !$omp end target data
 #else
      CALL mpi_alltoall (f_in(1), sendsiz, MPI_DOUBLE_COMPLEX, f_aux(1), sendsiz, MPI_DOUBLE_COMPLEX, gcomm, ierr)
+! see upper 'noteCray'
+#ifndef __ONEMKL
      !$omp target update to(f_aux)
+#endif
 #endif
      CALL stop_clock ('a2a_bw')
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
@@ -1604,19 +1648,49 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      !  step one: store contiguously the columns
      !
      offset = 0
+! NOTE: se upper 'noteCray'
+#ifdef __ONEMKL
+#ifdef __GPU_MPI
+     !$omp target data use_device_addr(f_in,f_aux)
+#else
+     !$omp target data use_device_addr(f_in)
+#endif
      DO gproc = 1, nprocp
         kdest = ( gproc - 1 ) * sendsiz
         kfrom = offset
-!$omp target teams distribute parallel do collapse(2)
+        istat = int(omp_target_memcpy_rect(c_loc(f_in), c_loc(f_aux),                 &
+                                           int(sizeof(dummy),c_size_t),               &
+                                           int(2,c_int),                              &
+                                           int((/ ncp_(me), npp_(gproc) /),c_size_t), &
+                                           int((/        0,       kfrom /),c_size_t), &
+                                           int((/        0,       kdest /),c_size_t), &
+                                           int((/ ncp_(me),        nr3x /),c_size_t), &
+                                           int((/ ncp_(me),        nppx /),c_size_t), &
+                                           int(omp_get_default_device(),c_int),       &
+#ifdef __GPU_MPI
+                                           int(omp_get_default_device(),c_int)),      &
+#else
+                                           int(omp_get_initial_device(),c_int)),      &
+#endif
+                    kind(istat))
+        offset = offset + npp_ ( gproc )
+     ENDDO
+     !$omp end target data
+#else
+     DO gproc = 1, nprocp
+        kdest = ( gproc - 1 ) * sendsiz
+        kfrom = offset
+        !$omp target teams distribute parallel do collapse(2)
         DO k = 1, ncp_ (me)
            DO i = 1, npp_ ( gproc )
              f_in( kfrom + i + (k-1)*nr3x ) = f_aux( kdest + i + (k-1)*nppx )
            END DO
         END DO
-!$omp end target teams distribute parallel do
         offset = offset + npp_ ( gproc )
      ENDDO
 
+#endif
+     
 20   CONTINUE
 
   ENDIF

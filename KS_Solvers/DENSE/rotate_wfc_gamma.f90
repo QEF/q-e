@@ -77,7 +77,9 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, overlap, &
      psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0,kind=DP)
   !
   call start_clock('rotwfcg:hpsi'); !write(*,*) 'start rotwfcg:hpsi' ; FLUSH(6)
+  !$omp target data map(alloc:psi,aux)
   CALL h_psi( npwx, npw, nstart, psi, aux )
+  !$omp end target data
   call stop_clock('rotwfcg:hpsi'); !write(*,*) 'stop rotwfcg:hpsi' ; FLUSH(6)
   !
   call start_clock('rotwfcg:hc'); !write(*,*) 'start rotwfcg:hc' ; FLUSH(6)
@@ -234,7 +236,9 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, overlap, &
      psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0, kind=DP)
   !
   call start_clock('protwfcg:hpsi'); !write(*,*) 'start protwfcg:hpsi' ; FLUSH(6)
+  !$omp target data map(alloc:psi,aux)
   CALL h_psi( npwx, npw, nstart, psi, aux )
+  !$omp end target data
   call stop_clock('protwfcg:hpsi'); !write(*,*) 'stop protwfcg:hpsi' ; FLUSH(6)
   !
   call start_clock('protwfcg:hc'); !write(*,*) 'start protwfcg:hc' ; FLUSH(6)
