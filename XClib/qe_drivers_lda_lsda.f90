@@ -81,7 +81,7 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   REAL(DP), PARAMETER :: third = 1.0_DP/3.0_DP, &
                          pi34 = 0.6203504908994_DP, e2 = 2.0_DP
   !                      pi34 = (3/4pi)^(1/3)
-#if defined(_OPENMP)
+#if defined(_OPENMP) && !defined(__OPENMP_GPU)
   INTEGER :: ntids
   INTEGER, EXTERNAL :: omp_get_num_threads
   !
@@ -91,7 +91,9 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
 #if defined(_OPENACC)
 !$acc data present( rho_in, ex_out, vx_out, ec_out, vc_out )
 !$acc parallel loop
-#else
+#elif defined(__OPENMP_GPU)
+!$omp target teams distribute parallel do
+#elif defined(_OPENMP)
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho, rs, ex, ec, ec_, vx, vc, vc_ ) &
 !$omp shared( rho_in, length, iexch, icorr, ex_out, ec_out, vx_out, vc_out, &
@@ -255,7 +257,8 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   ENDDO
 #if defined(_OPENACC)
 !$acc end data
-#else
+#elif defined(__OPENMP_GPU)
+#elif defined(_OPENMP)
 !$omp end do
 !$omp end parallel
 #endif
@@ -305,7 +308,7 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
                          pi34 = 0.6203504908994_DP
   !                      pi34 = (3/4pi)^(1/3)
   !
-#if defined(_OPENMP)
+#if defined(_OPENMP) && !defined(__OPENMP_GPU)
   INTEGER :: ntids
   INTEGER, EXTERNAL :: omp_get_num_threads
   !
@@ -314,8 +317,10 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
   !
 #if defined(_OPENACC)  
 !$acc data present( rho_in, zeta_in, ex_out, vx_out, ec_out, vc_out )
-!$acc parallel loop  
-#else
+!$acc parallel loop
+#elif defined(__OPENMP_GPU)
+!$omp target teams distribute parallel do
+#elif defined(_OPENMP)
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho, rs, zeta, ex, ec, ec_, vx_up, vx_dw, vc_up, &
 !$omp          vc_dw, vc_up_, vc_dw_ ) &
@@ -469,7 +474,8 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
   ENDDO
 #if defined(_OPENACC)
 !$acc end data
-#else
+#elif defined(__OPENMP_GPU)
+#elif defined(_OPENMP)
 !$omp end do
 !$omp end parallel
 #endif
