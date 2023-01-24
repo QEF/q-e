@@ -71,7 +71,7 @@ inputs_args = ('scf-dos-1.in' ,'1'), ('scf-dos-2.in' ,'2')
 
 [pw_workflow_exx_nscf/]
 program = PW
-inputs_args = ('ncpp-k-1.in' ,'1'), ('ncpp-k-2.in' ,'2'), ('uspp-gamma-1.in' ,'1'), ('uspp-gamma-2.in' ,'2'), ('uspp-k-smearing-1.in' ,'1'), ('uspp-k-smearing-2.in' ,'2')
+inputs_args = ('ncpp-k-1.in' ,'1'), ('ncpp-k-2.in' ,'2'), ('uspp-gamma-1.in' ,'1'), ('uspp-gamma-2.in' ,'2'), ('uspp-k-smearing-1.in' ,'1'), ('uspp-k-smearing-2.in' ,'2'), ('ncpp-gamma-restart-1.in','1'), ('ncpp-gamma-restart-2.in','2'), ('uspp-k-restart-1.in','1'), ('uspp-k-restart-2.in','2')
 
 [ph_base/]
 program = PH
