@@ -30,6 +30,8 @@ SUBROUTINE hs_1psi( lda, n, psi, hpsi, spsi )
   !
   CALL start_clock( 'hs_1psi' )
   ! 
+  !$omp target enter data map(alloc:psi,hpsi)
+  !
   !OBM: I know this form is somewhat inelegant but, leaving the pre-real_space part intact
   !     makes it easier to debug probable errors, please do not "beautify" 
         if (real_space) then
@@ -47,6 +49,8 @@ SUBROUTINE hs_1psi( lda, n, psi, hpsi, spsi )
   CALL h_psi( lda, n, 1, psi, hpsi ) ! apply H to a single wfc (no bgrp parallelization here)
   CALL s_psi( lda, n, 1, psi, spsi ) ! apply S to a single wfc (no bgrp parallelization here)
        endif
+  !
+  !$omp target exit data map(delete:psi,hpsi)
   !
   CALL stop_clock( 'hs_1psi' )
   !

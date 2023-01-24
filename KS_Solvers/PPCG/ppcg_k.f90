@@ -132,10 +132,12 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   ! ... Compute block residual w = hpsi - psi*(psi'hpsi) (psi is orthonormal on input)
   !
   call start_clock('ppcg:hpsi')
+  !$omp target enter data map(alloc:psi,hpsi)
                                                          if (clean)  psi(npw+1:npwx,:) = C_ZERO
   CALL h_psi( npwx, npw, nbnd, psi, hpsi )             ; if (clean) hpsi(npw+1:npwx,:) = C_ZERO
   if (overlap) CALL s_psi( npwx, npw, nbnd, psi, spsi) ; if (clean) spsi(npw+1:npwx,:) = C_ZERO
-
+  !$omp target exit data map(delete:psi,hpsi)
+  !
   avg_iter = 1.d0
   call stop_clock('ppcg:hpsi')
   !
@@ -231,9 +233,11 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
      !
      ! ... Compute h*w
      call start_clock('ppcg:hpsi')
+     !$omp target enter data map(alloc:buffer1,buffer)
      call threaded_assign( buffer1, w, kdimx, nact, act_idx )
      CALL h_psi( npwx, npw, nact, buffer1, buffer )       ; if (clean) buffer (npw+1:npwx,1:nact) = C_ZERO
      hw(:,act_idx(1:nact)) = buffer(:,1:nact)
+     !$omp target exit data map(delete:buffer1,buffer)
      if (overlap) then ! ... Compute s*w
         CALL s_psi( npwx, npw, nact, buffer1, buffer )    ; if (clean) buffer(npw+1:npwx,1:nact) = C_ZERO
         sw(:,act_idx(1:nact)) = buffer(:,1:nact)

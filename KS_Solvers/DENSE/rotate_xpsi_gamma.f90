@@ -85,7 +85,11 @@ SUBROUTINE rotate_xpsi_gamma( h_psi, s_psi, overlap, &
   !
   CALL start_clock('rotxpsig:hpsi')
   !
+  !$omp target enter data map(alloc:psi,hpsi)
+  !
   CALL h_psi( npwx, npw, nstart, psi, hpsi )
+  !
+  !$omp target exit data map(delete:psi,hpsi)
   !
   CALL stop_clock('rotxpsig:hpsi')
   !

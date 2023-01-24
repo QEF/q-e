@@ -129,6 +129,8 @@ SUBROUTINE rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
   ALLOCATE( ibnd_index( nbnd ) )
   ALLOCATE( jbnd_index( ibnd_start:ibnd_end ) )
   !
+  !$omp target enter data map(alloc:psi,hpsi,kpsi,hkpsi)
+  !
   phi  = ZERO
   hphi = ZERO
   IF ( uspp ) sphi = ZERO
@@ -225,6 +227,8 @@ SUBROUTINE rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
   CALL mp_sum( hpsi, inter_bgrp_comm )
   IF ( uspp ) &
   CALL mp_sum( spsi, inter_bgrp_comm )
+  !
+  !$omp target exit data map(delete:psi,hpsi,kpsi,hkpsi)
   !
   DEALLOCATE( phi )
   DEALLOCATE( hphi )
