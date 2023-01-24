@@ -91,7 +91,7 @@ CONTAINS
     !
     IF (.NOT.ALLOCATED(igk_k)) THEN
       ALLOCATE( igk_k(npwx,nks) )
-      !$omp target enter data map(alloc:igk_k)
+      !$omp target enter data map(always,alloc:igk_k)
       !$acc enter data create(igk_k(1:npwx,1:nks))
     END IF
     !

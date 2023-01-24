@@ -1673,7 +1673,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
                                            int(omp_get_initial_device(),c_int)),      &
 #endif
                     kind(istat))
-        offset = offset + npp_ ( gproc )
+        offset = offset + npp_( gproc )
      ENDDO
      !$omp end target data
 #else
@@ -1681,12 +1681,12 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
         kdest = ( gproc - 1 ) * sendsiz
         kfrom = offset
         !$omp target teams distribute parallel do collapse(2)
-        DO k = 1, ncp_ (me)
-           DO i = 1, npp_ ( gproc )
+        DO k = 1, ncp_(me)
+           DO i = 1, npp_( gproc )
              f_in( kfrom + i + (k-1)*nr3x ) = f_aux( kdest + i + (k-1)*nppx )
            END DO
         END DO
-        offset = offset + npp_ ( gproc )
+        offset = offset + npp_( gproc )
      ENDDO
 
 #endif
