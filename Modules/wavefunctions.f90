@@ -63,7 +63,12 @@
        IF( ALLOCATED( c0_bgrp ) ) DEALLOCATE( c0_bgrp )
        IF( ALLOCATED( cm_bgrp ) ) DEALLOCATE( cm_bgrp )
        IF( ALLOCATED( phi ) ) DEALLOCATE( phi )
-       IF( ALLOCATED( psic_nc ) ) DEALLOCATE( psic_nc )
+       IF( ALLOCATED( psic_nc ) ) THEN
+#if defined(__OPENMP_GPU)
+         !$omp target exit data map(delete:psic_nc)
+#endif
+         DEALLOCATE( psic_nc )
+       ENDIF
        IF( ALLOCATED( psic ) ) THEN
 #if defined(__OPENMP_GPU)
          !$omp target exit data map(delete:psic)

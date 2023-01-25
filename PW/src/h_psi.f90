@@ -131,8 +131,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
 
   CALL using_vrs(0)   ! vloc_psi_gamma (intent:in)
-
-
   !
   ! ... Here we set the kinetic energy (k+G)^2 psi and clean up garbage
   !
@@ -187,7 +185,9 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      !
   ELSEIF ( noncolin ) THEN 
      !
+     !$omp target update to(hpsi,psi,vrs)
      CALL vloc_psi_nc( lda, n, m, psi, vrs, hpsi )
+     !$omp target update from(hpsi)
      !
   ELSE  
      ! 

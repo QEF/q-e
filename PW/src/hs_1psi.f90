@@ -25,7 +25,7 @@ SUBROUTINE hs_1psi( lda, n, psi, hpsi, spsi )
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: lda, n
-  COMPLEX(DP) :: psi(lda*npol,1), hpsi(n), spsi(n,1)
+  COMPLEX(DP) :: psi(lda*npol,1), hpsi(lda*npol), spsi(n,1)
   !
   !
   CALL start_clock( 'hs_1psi' )

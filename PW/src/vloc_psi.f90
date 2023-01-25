@@ -349,11 +349,12 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
   REAL(DP), ALLOCATABLE :: tg_v(:,:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:,:), tg_vpsi(:,:)
   INTEGER :: v_siz, idx, ioff, brange
-  INTEGER :: right_nr3, right_inc
+  INTEGER :: right_nr3, right_inc, dffts_nnr
   !
   CALL start_clock( 'vloc_psi' )
   !
   incr = 1
+  dffts_nnr = dffts%nnr
   !
   use_tg = dffts%has_task_groups
   !
@@ -374,6 +375,7 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
      CALL stop_clock( 'vloc_psi:tg_gather' )
   ELSE
      ALLOCATE( vpsi(lda,1) )
+     !$omp target enter data map(alloc:vpsi)
   ENDIF
   !
   IF( use_tg ) THEN
@@ -433,17 +435,21 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
      !
      DO ibnd = 1, m, incr
         !
-        psic_nc = (0.d0,0.d0)
+        !$omp target teams distribute parallel do
+        DO j = 1, dffts_nnr
+           psic_nc(j,:) = (0.d0,0.d0)
+        ENDDO
         !
         DO ipol = 1, npol
            ii = lda*(ipol-1)+1
            ie = lda*(ipol-1)+n
            CALL wave_g2r( psi(ii:ie,ibnd:ibnd), psic_nc(:,ipol), dffts, &
-                          igk=igk_k(:,current_k), omp_mod=1  )
+                          igk=igk_k(:,current_k), omp_mod=0 )
         ENDDO
         !
         IF (domag) THEN
-           DO j = 1, dffts%nnr
+           !$omp target teams distribute parallel do
+           DO j = 1, dffts_nnr
               sup  = psic_nc(j,1) * (v(j,1)+v(j,4)) + &
                      psic_nc(j,2) * (v(j,2)-(0.d0,1.d0)*v(j,3))
               sdwn = psic_nc(j,2) * (v(j,1)-v(j,4)) + &
@@ -452,19 +458,19 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
               psic_nc(j,2) = sdwn
            ENDDO
         ELSE
-           DO j = 1, dffts%nnr
+           !$omp target teams distribute parallel do
+           DO j = 1, dffts_nnr
               psic_nc(j,:) = psic_nc(j,:) * v(j,1)
            ENDDO
         ENDIF
         !
         DO ipol = 1, npol
            CALL wave_r2g( psic_nc(1:dffts%nnr,ipol), vpsi(1:n,:), dffts, &
-                          igk=igk_k(:,current_k), omp_mod=1  )
-!$omp parallel do
+                          igk=igk_k(:,current_k), omp_mod=0 )
+           !$omp target teams distribute parallel do
            DO j = 1, n
               hpsi(j,ipol,ibnd) = hpsi(j,ipol,ibnd) + vpsi(j,1)
            ENDDO
-!$omp end parallel do
         ENDDO
         !
      ENDDO
@@ -475,6 +481,7 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
      DEALLOCATE( tg_v )
      DEALLOCATE( tg_psic, tg_vpsi )
   ELSE
+     !$omp target exit data map(delete:vpsi)
      DEALLOCATE( vpsi )
   ENDIF
   !
