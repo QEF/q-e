@@ -368,7 +368,7 @@ SUBROUTINE phq_init()
   DEALLOCATE( aux1 )
   IF (noncolin.AND.domag) THEN
           !$acc exit data delete(tevc)
-          DEALLOCATE(tevc(npwx*npol,nbnd))
+          DEALLOCATE( tevc )
   ENDIF
   !
   CALL dvanqq()
