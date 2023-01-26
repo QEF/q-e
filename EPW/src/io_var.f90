@@ -44,6 +44,7 @@
             iunsparset_merge, iunepmatcb_merge, iunsparseqcb_merge,                &
             iunsparseicb_merge, iunsparsejcb_merge, iunsparsetcb_merge,            &
             iunsparsekcb_merge, iunepmat_merge
+  PUBLIC :: iunRpscell, iunkgridscell, iunpsirscell
 
   !
   ! Output of physically relevant quantities (60-100)
@@ -175,6 +176,12 @@
   ! 
   ! Miscellaneous (326-350)
   INTEGER :: epwbib          = 326 ! EPW bibliographic file.
+  !
+  ! Output quantities related to polaron (350-400)
+  !JLB: All the other polaron I/O units should also be defined here for consistency
+  INTEGER :: iunRpscell      = 351 ! Rp unit cell list within polaron supercell
+  INTEGER :: iunkgridscell   = 352 ! Gs k-grid used for transformed supercell
+  INTEGER :: iunpsirscell    = 353 ! Polaron wf in real space for transformed supercell
   !
   ! Merging of files (400-450)
   INTEGER :: iunepmat_merge    = 400

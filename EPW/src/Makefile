@@ -71,8 +71,9 @@ epw_summary.o \
 loadumat.o \
 stop_epw.o \
 wannierEPW.o \
-loadbm.o
-EPWOBJS += ephblochkq.o wfc_elec.o test_tools.o
+loadbm.o \
+polaron.o \
+test_tools.o 
 
 #default : epw
 
