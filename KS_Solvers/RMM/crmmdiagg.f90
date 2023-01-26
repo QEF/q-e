@@ -137,8 +137,9 @@ SUBROUTINE crmmdiagg( h_psi, s_psi, npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   ALLOCATE( ibnd_index( nbnd ) )
   ALLOCATE( jbnd_index( ibnd_start:ibnd_end ) )
   !
-  !$omp target enter data map(alloc:psi,hpsi)
-  !$omp target enter data map(alloc:kpsi,hkpsi)
+#if defined(__OPENMP_GPU)
+  !$omp target data map(alloc:psi,hpsi,kpsi,hkpsi)
+#endif
   !
   phi  = ZERO
   hphi = ZERO
@@ -226,8 +227,9 @@ SUBROUTINE crmmdiagg( h_psi, s_psi, npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   IF ( uspp ) &
   CALL mp_sum( spsi, inter_bgrp_comm )
   !
-  !$omp target exit data map(delete:psi,hpsi)
-  !$omp target exit data map(delete:kpsi,hkpsi)
+#if defined(__OPENMP_GPU)
+  !$omp end target data
+#endif
   !
   DEALLOCATE( phi )
   DEALLOCATE( hphi )

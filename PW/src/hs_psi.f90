@@ -25,12 +25,14 @@ SUBROUTINE hs_psi( lda, n, m, psi, hpsi, spsi )
   !
   CALL start_clock( 'hs_psi' )
   !
+#if defined(__OPENMP_GPU)
   !$omp target enter data map(alloc:psi,hpsi)
-  !
-  CALL h_psi_ ( lda, n, m, psi, hpsi ) ! apply H to m wfcs (no bgrp parallelization here)
-  CALL s_psi_ ( lda, n, m, psi, spsi ) ! apply S to m wfcs (no bgrp parallelization here)
-  !
+  CALL h_psi_( lda, n, m, psi, hpsi ) ! apply H to m wfcs (no bgrp parallelization here)
   !$omp target exit data map(delete:psi,hpsi)
+#else
+  CALL h_psi_( lda, n, m, psi, hpsi )
+#endif
+  CALL s_psi_( lda, n, m, psi, spsi ) ! apply S to m wfcs (no bgrp parallelization here)
   !
   CALL stop_clock( 'hs_psi' )
   !

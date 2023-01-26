@@ -151,11 +151,13 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   ALLOCATE(  psi( npwx*npol, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate psi ', ABS(ierr) )
-  !$omp target enter data map(alloc:psi)
   ALLOCATE( hpsi( npwx*npol, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate hpsi ', ABS(ierr) )
-  !$omp target enter data map(alloc:hpsi)
+  !
+#if defined(__OPENMP_GPU)
+  !$omp target data map(alloc:psi,hpsi)
+#endif
   !
   IF ( uspp ) THEN
      ALLOCATE( spsi( npwx*npol, nvecx ), STAT=ierr )
@@ -678,9 +680,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   !
   IF ( uspp ) DEALLOCATE( spsi )
   !
-  !$omp target exit data map(delete:hpsi)
+#if defined(__OPENMP_GPU)
+  !$omp end target data
+#endif
   DEALLOCATE( hpsi )
-  !$omp target exit data map(delete:psi)
   DEALLOCATE( psi )
   !
   !$acc end data 
@@ -834,12 +837,14 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
   ALLOCATE(  psi( npwx*npol, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' pcegterg ',' cannot allocate psi ', ABS(ierr) )
-  !$omp target enter data map(alloc:psi)
   !
   ALLOCATE( hpsi( npwx*npol, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' pcegterg ',' cannot allocate hpsi ', ABS(ierr) )
-  !$omp target enter data map(alloc:hpsi)
+  !
+#if defined(__OPENMP_GPU)
+  !$omp target data map(alloc:psi,hpsi)
+#endif
   !
   IF ( uspp ) THEN
      ALLOCATE( spsi( npwx*npol, nvecx ), STAT=ierr )
@@ -1211,8 +1216,9 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
   !
   IF ( uspp ) DEALLOCATE( spsi )
   !
-  !$omp target exit data map(delete:hpsi)
-  !$omp target exit data map(delete:psi)
+#if defined(__OPENMP_GPU)
+  !$omp end target data
+#endif
   DEALLOCATE( hpsi )
   DEALLOCATE( psi )  
   !

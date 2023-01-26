@@ -177,17 +177,25 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         !
      ELSE
         ! ... usual reciprocal-space algorithm
+#if defined(__OPENMP_GPU)
         !$omp target update to(hpsi,psi,vrs)
-        CALL vloc_psi_gamma( lda, n, m, psi, vrs(1,current_spin), hpsi ) 
+        CALL vloc_psi_gamma( lda, n, m, psi, vrs(1,current_spin), hpsi )
         !$omp target update from(hpsi)
+#else
+        CALL vloc_psi_gamma( lda, n, m, psi, vrs(1,current_spin), hpsi )
+#endif
         !
      ENDIF 
      !
   ELSEIF ( noncolin ) THEN 
      !
+#if defined(__OPENMP_GPU)
      !$omp target update to(hpsi,psi,vrs)
      CALL vloc_psi_nc( lda, n, m, psi, vrs, hpsi )
      !$omp target update from(hpsi)
+#else
+     CALL vloc_psi_nc( lda, n, m, psi, vrs, hpsi )
+#endif
      !
   ELSE  
      ! 
@@ -219,9 +227,13 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         !
      ELSE
         !
+#if defined(__OPENMP_GPU)
         !$omp target update to(hpsi,psi,vrs)
         CALL vloc_psi_k( lda, n, m, psi, vrs(1,current_spin), hpsi )
         !$omp target update from(hpsi)
+#else
+        CALL vloc_psi_k( lda, n, m, psi, vrs(1,current_spin), hpsi )
+#endif
         !
      ENDIF
      !

@@ -29,8 +29,10 @@ SUBROUTINE hs_1psi( lda, n, psi, hpsi, spsi )
   !
   !
   CALL start_clock( 'hs_1psi' )
-  ! 
-  !$omp target enter data map(alloc:psi,hpsi)
+  !
+#if defined(__OPENMP_GPU)
+  !$omp target data map(alloc:psi,hpsi)
+#endif
   !
   !OBM: I know this form is somewhat inelegant but, leaving the pre-real_space part intact
   !     makes it easier to debug probable errors, please do not "beautify" 
@@ -50,7 +52,9 @@ SUBROUTINE hs_1psi( lda, n, psi, hpsi, spsi )
   CALL s_psi( lda, n, 1, psi, spsi ) ! apply S to a single wfc (no bgrp parallelization here)
        endif
   !
-  !$omp target exit data map(delete:psi,hpsi)
+#if defined(__OPENMP_GPU)
+  !$omp end target data
+#endif
   !
   CALL stop_clock( 'hs_1psi' )
   !

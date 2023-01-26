@@ -64,7 +64,9 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
      CALL stop_clock( 'vloc_psi:tg_gather' )
   ELSE
      ALLOCATE( vpsi(n,incr) )
+#if defined(__OPENMP_GPU)
      !$omp target enter data map(alloc:vpsi)
+#endif
   ENDIF
   !
   IF ( use_tg ) THEN
@@ -114,7 +116,9 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
         !
         CALL wave_g2r( psi(1:n,ibnd:ebnd), psic, dffts, omp_mod=0 )
         !
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do
+#endif
         DO j = 1, nnr
           psic(j) = psic(j) * v(j)
         ENDDO
@@ -126,7 +130,9 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
         !
         CALL wave_r2g( psic(1:nnr), vpsi(:,1:brange), dffts, omp_mod=0 )
         !
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do map(to:fac,ibnd,m) 
+#endif
         DO j = 1, n
           hpsi(j,ibnd) = hpsi(j,ibnd) + fac*vpsi(j,1)
           IF ( ibnd<m ) hpsi(j,ibnd+1) = hpsi(j,ibnd+1) + fac*vpsi(j,2)
@@ -141,7 +147,9 @@ SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
      DEALLOCATE( tg_v )
      DEALLOCATE( tg_vpsi )
   ELSE
-     !$omp target exit data map(delete:vpsi) 
+#if defined(__OPENMP_GPU)
+     !$omp target exit data map(delete:vpsi)
+#endif
      DEALLOCATE( vpsi )
   ENDIF
   !
@@ -215,7 +223,9 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
      CALL stop_clock( 'vloc_psi:tg_gather' )
   ELSE
      ALLOCATE( vpsi(lda,1) )
+#if defined(__OPENMP_GPU)
      !$omp target enter data map(alloc:vpsi)
+#endif
   ENDIF
   !
   IF ( use_tg ) THEN
@@ -268,7 +278,9 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
 !        write (6,*) 'wfc R '
 !        write (6,99) (psic(i), i=1,400)
         !
-        !$omp target teams  distribute parallel do
+#if defined(__OPENMP_GPU)
+        !$omp target teams distribute parallel do
+#endif
         DO j = 1, nnr
            psic(j) = psic(j) * v(j)
         ENDDO
@@ -278,7 +290,9 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
         !
         CALL wave_r2g( psic(1:nnr), vpsi(1:n,:), dffts, igk=igk_k(:,current_k), omp_mod=0 )
         !
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do
+#endif
         DO i = 1, n
            hpsi(i,ibnd) = hpsi(i,ibnd) + vpsi(i,1)
         ENDDO
@@ -294,7 +308,9 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
      DEALLOCATE( tg_psic, tg_vpsi )
      DEALLOCATE( tg_v )
   ELSE
+#if defined(__OPENMP_GPU)
      !$omp target exit data map(delete:vpsi)
+#endif
      DEALLOCATE( vpsi )
   ENDIF
   !
@@ -375,7 +391,9 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
      CALL stop_clock( 'vloc_psi:tg_gather' )
   ELSE
      ALLOCATE( vpsi(lda,1) )
+#if defined(__OPENMP_GPU)
      !$omp target enter data map(alloc:vpsi)
+#endif
   ENDIF
   !
   IF( use_tg ) THEN
@@ -435,7 +453,9 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
      !
      DO ibnd = 1, m, incr
         !
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do
+#endif
         DO j = 1, dffts_nnr
            psic_nc(j,:) = (0.d0,0.d0)
         ENDDO
@@ -448,7 +468,9 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
         ENDDO
         !
         IF (domag) THEN
+#if defined(__OPENMP_GPU)
            !$omp target teams distribute parallel do
+#endif
            DO j = 1, dffts_nnr
               sup  = psic_nc(j,1) * (v(j,1)+v(j,4)) + &
                      psic_nc(j,2) * (v(j,2)-(0.d0,1.d0)*v(j,3))
@@ -458,7 +480,9 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
               psic_nc(j,2) = sdwn
            ENDDO
         ELSE
+#if defined(__OPENMP_GPU)
            !$omp target teams distribute parallel do
+#endif
            DO j = 1, dffts_nnr
               psic_nc(j,:) = psic_nc(j,:) * v(j,1)
            ENDDO
@@ -467,7 +491,9 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
         DO ipol = 1, npol
            CALL wave_r2g( psic_nc(1:dffts%nnr,ipol), vpsi(1:n,:), dffts, &
                           igk=igk_k(:,current_k), omp_mod=0 )
+#if defined(__OPENMP_GPU)
            !$omp target teams distribute parallel do
+#endif
            DO j = 1, n
               hpsi(j,ipol,ibnd) = hpsi(j,ipol,ibnd) + vpsi(j,1)
            ENDDO
@@ -481,7 +507,9 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
      DEALLOCATE( tg_v )
      DEALLOCATE( tg_psic, tg_vpsi )
   ELSE
+#if defined(__OPENMP_GPU)
      !$omp target exit data map(delete:vpsi)
+#endif
      DEALLOCATE( vpsi )
   ENDIF
   !
