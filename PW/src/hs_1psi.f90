@@ -25,11 +25,15 @@ SUBROUTINE hs_1psi( lda, n, psi, hpsi, spsi )
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: lda, n
-  COMPLEX(DP) :: psi(lda*npol,1), hpsi(n), spsi(n,1)
+  COMPLEX(DP) :: psi(lda*npol,1), hpsi(lda*npol), spsi(n,1)
   !
   !
   CALL start_clock( 'hs_1psi' )
-  ! 
+  !
+#if defined(__OPENMP_GPU)
+  !$omp target data map(alloc:psi,hpsi)
+#endif
+  !
   !OBM: I know this form is somewhat inelegant but, leaving the pre-real_space part intact
   !     makes it easier to debug probable errors, please do not "beautify" 
         if (real_space) then
@@ -47,6 +51,10 @@ SUBROUTINE hs_1psi( lda, n, psi, hpsi, spsi )
   CALL h_psi( lda, n, 1, psi, hpsi ) ! apply H to a single wfc (no bgrp parallelization here)
   CALL s_psi( lda, n, 1, psi, spsi ) ! apply S to a single wfc (no bgrp parallelization here)
        endif
+  !
+#if defined(__OPENMP_GPU)
+  !$omp end target data
+#endif
   !
   CALL stop_clock( 'hs_1psi' )
   !

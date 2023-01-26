@@ -133,7 +133,13 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
   !    set Im[ psi(G=0) ] -  needed for numerical stability
   call start_clock('ppcg:hpsi')
   IF ( gstart == 2 ) psi(1,1:nbnd) = CMPLX( DBLE( psi(1,1:nbnd) ), 0.D0, kind=DP)
+#if defined(__OPENMP_GPU)
+  !$omp target data map(alloc:psi,hpsi)
   CALL h_psi( npwx, npw, nbnd, psi, hpsi )
+  !$omp end target data
+#else
+  CALL h_psi( npwx, npw, nbnd, psi, hpsi )
+#endif
   if (overlap) CALL s_psi( npwx, npw, nbnd, psi, spsi)
   avg_iter = 1.d0
   call stop_clock('ppcg:hpsi')
@@ -235,7 +241,13 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
      call start_clock('ppcg:hpsi')
      IF ( gstart == 2 ) w(1,act_idx(1:nact)) = CMPLX( DBLE( w(1,act_idx(1:nact)) ), 0.D0, kind=DP)
      call threaded_assign( buffer1, w, npwx, nact, act_idx )
+#if defined(__OPENMP_GPU)
+     !$omp target data map(alloc:psi,hpsi)
      CALL h_psi( npwx, npw, nact, buffer1, buffer )
+     !$omp end target data
+#else
+     CALL h_psi( npwx, npw, nact, buffer1, buffer )
+#endif
 !     hw(:,act_idx(1:nact)) = buffer(:,1:nact)
      call threaded_backassign( hw, act_idx, buffer, npwx, nact )
      if (overlap) then ! ... Compute s*w

@@ -113,6 +113,7 @@ for dir in $dirs; do
 
     # list of all external library modules or include files
     libdeps="mpi omp_lib hdf5 mkl_dfti mkl_dfti.f90 fftw3.f03 fftw3.f \
+             mkl_dfti_omp_offload mkl_dfis_omp_offload.f90 \
              xc_version.h xc_f03_lib_m elpa elpa1 \
              mbd w90_io fox_dom fox_wxml m_common_io \
              device_fbuff_m device_memcpy_m device_auxfunc_m"

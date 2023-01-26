@@ -138,7 +138,9 @@ CONTAINS
             CALL fftx_psi2c_k_omp( dfft, f_in, f_out(:,1:1), igk )
             !$omp end target data
           ELSE
+            !$omp target data map(to:igk)
             CALL fftx_psi2c_k_omp( dfft, f_in, f_out(:,1:1), igk )
+            !$omp end target data
           ENDIF
 #endif
         ELSE
@@ -242,7 +244,9 @@ CONTAINS
             CALL fftx_c2psi_k_omp( dfft, f_out, f_in, igk, npw )
             !$omp end target data
           ELSE
+            !$omp target data map(to:igk)
             CALL fftx_c2psi_k_omp( dfft, f_out, f_in, igk, npw )
+            !$omp end target data
           ENDIF
 #endif
         ELSE

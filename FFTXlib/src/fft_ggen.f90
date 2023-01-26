@@ -52,7 +52,7 @@ CONTAINS
    END IF 
    ALLOCATE( dfft%nl( dfft%ngm ) )
 #if defined(__OPENMP_GPU)
-   !$omp target enter data map(alloc:dfft%nl)
+   !$omp target enter data map(always,alloc:dfft%nl)
 #endif
    if (dfft%lgamma) THEN
       IF( ALLOCATED( dfft%nlm ) ) THEN
@@ -60,10 +60,10 @@ CONTAINS
       !$omp target exit data map(delete:dfft%nlm)
 #endif
         DEALLOCATE( dfft%nlm )
-      END IF 
+      END IF
       ALLOCATE( dfft%nlm( dfft%ngm ) )
 #if defined(__OPENMP_GPU)
-      !$omp target enter data map(alloc:dfft%nlm)
+      !$omp target enter data map(always,alloc:dfft%nlm)
 #endif
    END IF
    !

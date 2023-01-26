@@ -75,7 +75,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   REAL(DP) :: sxsr, v1xsr, v2xsr
   REAL(DP) :: sc, v1c, v2c
   !
-#if defined(_OPENMP)
+#if defined(_OPENMP) && !defined(__OPENMP_GPU)
   INTEGER :: ntids
   INTEGER, EXTERNAL :: omp_get_num_threads
   !
@@ -91,8 +91,10 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
 #else
 !$acc data present( rho_in, grho_in, sx_out, sc_out, v1x_out, v2x_out, v1c_out, v2c_out ) copy( err_out )
 #endif
-!$acc parallel loop  
-#else
+!$acc parallel loop
+#elif defined(__OPENMP_GPU)
+!$omp target teams distribute parallel do
+#elif defined(_OPENMP)
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
 !$omp          v2x, v2x_, v2xsr, sc, v1c, v2c, iflag, in_err ) &
@@ -349,9 +351,11 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v2x = (1.0_DP - exx_fraction) * v2x
         ENDIF
         !
+#if !defined(__OPENMP_GPU)
      CASE( 43 ) ! 'BEEX'
         !
         CALL beefx( rho, grho, sx, v1x, v2x, 0 )
+#endif
         !
      CASE( 44 ) ! 'RPBE'
         !
@@ -423,10 +427,12 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v2c = 0.871_DP * v2c
         ENDIF
         !
+#if !defined(__OPENMP_GPU)
      CASE( 14 ) !'BEEC'
         ! last parameter 0 means: do not add lda contributions
         ! espresso will do that itself
         CALL beeflocalcorr( rho, grho, sc, v1c, v2c, 0 )
+#endif
         !
      CASE DEFAULT
         !
@@ -439,7 +445,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
      IF (in_err/=0) THEN
 #if defined(_OPENACC)
 !$acc atomic write
-#else
+#elif defined(_OPENMP) && !defined(__OPENMP_GPU)
 !$omp atomic write
 #endif
        err_out = in_err
@@ -452,7 +458,8 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   ENDDO
 #if defined(_OPENACC)
 !$acc end data
-#else
+#elif defined(__OPENMP_GPU)
+#elif defined(_OPENMP)
 !$omp end do
 !$omp end parallel
 #endif
@@ -503,7 +510,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out, err_out
   ! temporary values assigned to rho and grho when they
   ! are too small in order to avoid numerical problems.
   !
-#if defined(_OPENMP)
+#if defined(_OPENMP) && !defined(__OPENMP_GPU)
   INTEGER :: ntids
   INTEGER, EXTERNAL :: omp_get_num_threads
   !
@@ -519,7 +526,9 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out, err_out
 !$acc data present( rho_in, grho2_in, sx_tot, v1x_out, v2x_out ) copy( err_out )
 #endif
 !$acc parallel loop
-#else
+#elif defined(__OPENMP_GPU)
+!$omp target teams distribute parallel do
+#elif defined(_OPENMP)
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho_up, rho_dw, grho2_up, grho2_dw, rnull_up, rnull_dw, &
 !$omp          sx_up, sx_dw, sxsr_up, sxsr_dw, v1xsr_up, v1xsr_dw, &
@@ -973,6 +982,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out, err_out
         ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
         ! routine: needs kinetic energy density in addition to rho and grad rho
         !
+#if !defined(__OPENMP_GPU)
      CASE( 43 )                ! BEEX
         !
         rho_up = 2.0_DP * rho_up     ; rho_dw = 2.0_DP * rho_dw
@@ -984,6 +994,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out, err_out
         sx_tot(ir) = 0.5_DP * (sx_up*rnull_up + sx_dw*rnull_dw)
         v2x_up = 2.0_DP * v2x_up
         v2x_dw = 2.0_DP * v2x_dw
+#endif
         !
      CASE DEFAULT
         !
@@ -996,7 +1007,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out, err_out
      IF (in_err/=0) THEN
 #if defined(_OPENACC)
 !$acc atomic write
-#else
+#elif defined(_OPENMP) && !defined(__OPENMP_GPU)
 !$omp atomic write
 #endif
        err_out = in_err
@@ -1010,7 +1021,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out, err_out
   ENDDO
 #if defined(_OPENACC)
 !$acc end data
-#else
+#elif defined(__OPENMP_GPU)
+#elif defined(_OPENMP)
 !$omp end do
 !$omp end parallel
 #endif
@@ -1053,7 +1065,7 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
   REAL(DP) :: sc, v1c_up, v1c_dw, v2c
   !REAL(DP), PARAMETER :: small=1.E-10_DP !, epsr=1.E-6_DP
   !
-#if defined(_OPENMP)
+#if defined(_OPENMP) && !defined(__OPENMP_GPU)
   INTEGER :: ntids
   INTEGER, EXTERNAL :: omp_get_num_threads
   !
@@ -1063,7 +1075,9 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
 #if defined(_OPENACC)
 !$acc data present( rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out )
 !$acc parallel loop
-#else
+#elif defined(__OPENMP_GPU)
+!$omp target teams distribute parallel do
+#elif defined(_OPENMP)
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c ) &
 !$omp shared( igcc, sc_out, v1c_out, v2c_out, &
@@ -1104,9 +1118,11 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
        !
        CALL pbec_spin( rho, zeta, grho, 2, sc, v1c_up, v1c_dw, v2c )
        !
+#if !defined(__OPENMP_GPU)
     CASE( 14 )
        !  
        CALL beeflocalcorrspin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c, 0 )
+#endif
        !
     CASE DEFAULT
        !
@@ -1125,7 +1141,8 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
   ENDDO
 #if defined(_OPENACC)
 !$acc end data
-#else
+#elif defined(__OPENMP_GPU)
+#elif defined(_OPENMP)
 !$omp end do
 !$omp end parallel
 #endif
@@ -1175,7 +1192,7 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
   INTEGER :: ir
   REAL(DP) :: rho_up, rho_dw, grho_up, grho_dw
   REAL(DP) :: grho_ud
-#if defined(_OPENMP)
+#if defined(_OPENMP) && !defined(__OPENMP_GPU)
   INTEGER :: ntids
   INTEGER, EXTERNAL :: omp_get_num_threads
   !
@@ -1185,7 +1202,9 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
 #if defined(_OPENACC) 
 !$acc data present( rho_in, grho_in, grho_ud_in, sc, v1c, v2c, v2c_ud )
 !$acc parallel loop
-#else 
+#elif defined(__OPENMP_GPU)
+!$omp target teams distribute parallel do
+#elif defined(_OPENMP)
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho_up, rho_dw, grho_up, grho_dw, grho_ud ) &
 !$omp shared( length, rho_in, grho_in, grho_ud_in, &
@@ -1249,7 +1268,8 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
   ENDDO
 #if defined(_OPENACC)
 !$acc end data
-#else
+#elif defined(__OPENMP_GPU)
+#elif defined(_OPENMP)
 !$omp end do
 !$omp end parallel
 #endif

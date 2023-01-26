@@ -91,7 +91,6 @@ CONTAINS
     !
     IF (.NOT.ALLOCATED(igk_k)) THEN
       ALLOCATE( igk_k(npwx,nks) )
-      !$omp target enter data map(alloc:igk_k)
       !$acc enter data create(igk_k(1:npwx,1:nks))
     END IF
     !
@@ -106,7 +105,6 @@ CONTAINS
     DO ik = 1, nks
        CALL gk_sort( xk(1,ik), ngm, g, gcutw, ngk(ik), igk_k(1,ik), gk )
     ENDDO
-    !$omp target update to(igk_k)
     !$acc update device(igk_k)
     !
     DEALLOCATE( gk )
@@ -125,7 +123,6 @@ CONTAINS
     !
     !$acc exit data delete(igk_k)
     IF (ALLOCATED(igk_k))   THEN
-      !$omp target exit data map(delete:igk_k)
       DEALLOCATE( igk_k )
     END IF
     IF (ALLOCATED(igk_k_d)) DEALLOCATE( igk_k_d )
