@@ -16,7 +16,7 @@
   ibrav=0
   nat=8
   ntyp=1
-  ecutwfc=30.d0
+  ecutwfc=25.d0
   occupations='ensemble'
   degauss=0.02d0 !note that this is in Hartree!!
   smearing='gaussian'
@@ -24,7 +24,8 @@
 /
 &ELECTRONS
   electron_dynamics='cg'
-  conv_thr=5.d-5
+  conv_thr=.5d-5
+  maxiter = 55
   pre_state=.false. 
   n_inner=2             !number of internal cycles for conjugate gradient iteration
   niter_cold_restart=1  ! frequency in iterations at which a full inner cycle, only for cold smearing, is performed

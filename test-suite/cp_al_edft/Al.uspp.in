@@ -3,7 +3,7 @@
   verbosity='medium'
   restart_mode='from_scratch'
   nstep=2
-  tstress=.true.
+  tstress=.false.
   tprnfor=.true.
   dt=20.d0
   outdir='./out'
@@ -16,9 +16,9 @@
   ibrav=0
   nat=8
   ntyp=1
-  ecutwfc=20.d0
-  ecutrho=85.d0
-  nr1b=15, nr2b=15, nr3b=15
+  ecutwfc=15.d0
+  ecutrho=70.d0
+  nr1b=10, nr2b=10, nr3b=10
   occupations='ensemble'
   degauss=0.02d0 !note that this is in Hartree!!
   smearing='gaussian'
@@ -26,7 +26,8 @@
 /
 &ELECTRONS
   electron_dynamics='cg'
-  conv_thr=5.d-5
+  conv_thr=.5d-5
+  maxiter = 75
   pre_state=.false.     
   n_inner=2             !number of internal cycles for conjugate gradient iteration
   niter_cold_restart=1  ! frequency in iterations at which a full inner cycle, only for cold smearing, is performed
