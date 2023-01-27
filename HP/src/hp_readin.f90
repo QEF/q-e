@@ -26,7 +26,8 @@ SUBROUTINE hp_readin()
                                perturb_only_atom, sum_pertq, determine_num_pert_only,  &
                                skip_equivalence_q, tmp_dir_save, niter_max, dist_thr,  &
                                disable_type_analysis, docc_thr, num_neigh, lmin, rmax, &
-                               nmix, nq1, nq2, nq3, alpha_mix, start_q, last_q, maxter
+                               nmix, nq1, nq2, nq3, alpha_mix, start_q, last_q, maxter,&
+                               determine_q_mesh_only
   !
   IMPLICIT NONE
   !
@@ -41,7 +42,8 @@ SUBROUTINE hp_readin()
                          background, thresh_init, find_atpert, max_seconds, rmax,     &
                          niter_max, alpha_mix, nmix, compute_hp, perturb_only_atom,   &
                          start_q, last_q, sum_pertq, ethr_nscf, num_neigh, lmin,      &
-                         determine_num_pert_only, disable_type_analysis, docc_thr
+                         determine_num_pert_only, disable_type_analysis, docc_thr,    &
+                         determine_q_mesh_only
   !
   ! Note: meta_ionode is a single processor that reads the input
   !       Data read from input is subsequently broadcast to all processors
@@ -63,6 +65,7 @@ SUBROUTINE hp_readin()
   perturb_only_atom(:)    = .FALSE.
   skip_equivalence_q      = .FALSE.
   determine_num_pert_only = .FALSE.
+  determine_q_mesh_only   = .FALSE.
   disable_type_analysis   = .FALSE.
   equiv_type(:)      = 0
   find_atpert        = 1
@@ -166,6 +169,9 @@ SUBROUTINE input_sanity()
   !
   IF (ANY(Hubbard_J0(:).NE.0.d0)) &
      CALL errore ('hp_readin', 'Hubbard_J0 /= 0 is not allowed.', 1)
+  !
+  IF (determine_q_mesh_only .AND. .NOT.ANY(perturb_only_atom(:))) &
+     CALL errore ('hp_readin', 'determine_q_mesh_only can be set to .true. only if perturb_only_atom is .true. for some atom', 1)
   !
   IF (sum_pertq .AND. .NOT.ANY(perturb_only_atom(:))) &
      CALL errore ('hp_readin', 'sum_pertq can be set to .true. only if perturb_only_atom is .true. for some atom', 1)
