@@ -48,7 +48,7 @@ PROGRAM xclib_test
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_setting_params, ONLY: xc_info, xc_kind_error, libxc_flags
+  USE dft_setting_params, ONLY: xc_func, xc_info, xc_kind_error, libxc_flags
 #endif
   USE dft_setting_params,   ONLY: is_libxc
   USE dft_setting_routines, ONLY: capital
@@ -584,6 +584,7 @@ PROGRAM xclib_test
     IF (xclib_dft_is_libxc( 'ANY' )) CALL xclib_init_libxc( ns, .FALSE. )
     !
     IF ( igcc1==428 .AND. is_libxc(4) ) THEN
+!    IF ( igcx1==426 .AND. is_libxc(3) ) THEN
       ! Example of how to change an external parameter in a Libxc
       ! functional (HYB_GGA_XC_HSE06).
       ! Arguments:

@@ -492,12 +492,20 @@ CONTAINS
                                    islda, isgradient, ismeta, exx_fraction, &
                                    screening_parameter, gau_parameter,      & 
                                    ishybrid, has_finite_size_correction, is_libxc
-    !  
+#if defined(__LIBXC)
+    USE xc_f03_lib_m
+#endif
+    !
     IMPLICIT NONE
     !
     LOGICAL, INTENT(IN) :: isnonlocc
     !! The non-local part, for now, is not included in xc_lib, but this variable
     !! is needed to establish 'isgradient'.
+#if defined(__LIBXC)
+    TYPE(xc_f03_func_t) :: xc_func
+    TYPE(xc_f03_func_info_t) :: xc_info
+    INTEGER :: iid, family, id_vec(6)
+#endif
     LOGICAL :: is_libxc13, is_libxc12
     !
     ismeta    = (imeta+imetac > 0)
@@ -530,12 +538,12 @@ CONTAINS
        screening_parameter = 0.106_DP
     ENDIF
     ! AH-CROSStest-SERIES PBE-AH (at 34), PBESOL-AH (at 35)
-    IF ( (igcx ==34 .OR. igcx==35) .AND. .NOT.is_libxc(3) ) THEN
+    IF ( (igcx==34 .OR. igcx==35) .AND. .NOT.is_libxc(3) ) THEN
        exx_fraction = 0.20_DP
        screening_parameter = 0.106_DP
     ENDIF
     ! gau-pbe
-    IF ( igcx ==20 .AND. .NOT.is_libxc(3) ) THEN
+    IF ( igcx==20 .AND. .NOT.is_libxc(3) ) THEN
        exx_fraction = 0.24_DP
        gau_parameter = 0.150_DP
     ENDIF
@@ -543,9 +551,32 @@ CONTAINS
     IF ( iexch==4 .AND. .NOT.is_libxc(1)) exx_fraction = 1.0_DP
     IF ( iexch==5 .AND. .NOT.is_libxc(1)) exx_fraction = 1.0_DP
     ! B3LYP or B3LYP-VWN-1-RPA
-    IF ( iexch == 7 .AND. .NOT.is_libxc(3) ) exx_fraction = 0.2_DP
+    IF ( iexch==7 .AND. .NOT.is_libxc(3)) exx_fraction = 0.2_DP
     ! X3LYP
-    IF ( iexch == 9 .AND. .NOT.is_libxc(3) ) exx_fraction = 0.218_DP
+    IF ( iexch==9 .AND. .NOT.is_libxc(3)) exx_fraction = 0.218_DP
+    !
+#if defined(__LIBXC)
+    id_vec(1)=iexch ; id_vec(2)=icorr
+    id_vec(3)=igcx  ; id_vec(4)=igcc
+    id_vec(5)=imeta ; id_vec(6)=imetac
+    !
+    DO iid = 3, 6
+      IF ( is_libxc(iid) ) THEN
+        CALL xc_f03_func_init( xc_func, id_vec(iid), 1 )
+        xc_info = xc_f03_func_get_info( xc_func )
+        family = xc_f03_func_info_get_family( xc_info )
+        IF ( family==XC_FAMILY_HYB_LDA .OR. family==XC_FAMILY_HYB_GGA .OR. family==XC_FAMILY_HYB_MGGA ) THEN
+           exx_fraction = xc_f03_hyb_exx_coef( xc_func )
+           ! .. workaround for Libxc glitch in HSE06
+           IF (id_vec(iid)==428) THEN
+             exx_fraction = xc_f03_func_info_get_ext_params_default_value( xc_info, 0 )
+             screening_parameter = xc_f03_func_info_get_ext_params_default_value( xc_info, 1 )
+           ENDIF
+        ENDIF
+        CALL xc_f03_func_end( xc_func )
+      ENDIF
+    ENDDO
+#endif
     !
     ishybrid = ( exx_fraction /= 0.0_DP )
     !
@@ -676,16 +707,23 @@ CONTAINS
   SUBROUTINE set_screening_parameter( scrparm_ )
     !! Impose input parameter as screening parameter (for pbexsr)
     USE kind_l,             ONLY: DP
-    USE dft_setting_params, ONLY: igcx, is_libxc, screening_parameter
+    USE dft_setting_params
     IMPLICIT NONE
     REAL(DP):: scrparm_
     !! Value to impose as screening parameter
-    IF (ABS(scrparm_)>0.d0.AND.(igcx/=12.AND.(igcx<32.OR.igcx>35) &
-        .AND.igcx/=47).AND. .NOT.is_libxc(3)) THEN
-      CALL xclib_infomsg( 'set_screening_parameter', 'WARNING: the screening &
-                           &parameter seems inconsistent with the chosen inpu&
-                           &t dft and will be set to zero.' )
-      screening_parameter = 0.d0
+    INTEGER :: fkind
+    LOGICAL :: lxc_cond4 = .FALSE.
+#if defined(__LIBXC)
+    lxc_cond4 = (igcx==0 .AND.is_libxc(4) .AND. fkind==XC_EXCHANGE_CORRELATION)
+#endif
+    IF ((ABS(scrparm_)>0.d0.AND.(igcx/=0.AND.igcx/=12.AND.(igcx<32.OR.igcx>35) &
+        .AND.igcx/=47).AND..NOT.is_libxc(3))) THEN
+      IF (.NOT.lxc_cond4) THEN
+        CALL xclib_infomsg( 'set_screening_parameter', 'WARNING: the screening &
+                             &parameter seems inconsistent with the chosen inpu&
+                             &t dft and will be set to zero.' )
+        screening_parameter = 0.d0
+      ENDIF
     ELSE
       screening_parameter = scrparm_
     ENDIF
@@ -1012,8 +1050,7 @@ CONTAINS
 #if defined(__LIBXC)
     USE xclib_utils_and_para,ONLY: nowarning
     USE dft_setting_params,  ONLY: n_ext_params, xc_func, xc_info, par_list, &
-                                   libxc_flags, n_ext_params, exx_fraction,  &
-                                   ishybrid
+                                   libxc_flags, n_ext_params
 #endif
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: xclib_nspin
@@ -1052,11 +1089,6 @@ CONTAINS
           libxc_flags(iid,iflag) = 1
           flags_tot = flags_tot-2**iflag
         ENDDO
-        !
-        IF ( family==XC_FAMILY_HYB_GGA .OR. family==XC_FAMILY_HYB_MGGA ) THEN
-           exx_fraction = xc_f03_hyb_exx_coef( xc_func(iid) )
-           ishybrid = ( exx_fraction /= 0.d0 )
-        ENDIF
         !
         n_ext_params(iid) = xc_f03_func_info_get_n_ext_params( xc_info(iid) )
         p0 = 0 ;  pn = n_ext_params(iid)-1 ;  ips = 1
@@ -1160,7 +1192,7 @@ CONTAINS
     REAL(DP), INTENT(IN) :: param
     !! Input value of the parameter
 #if defined(__LIBXC)    
-    par_list(sid,i_param) = param
+    par_list(sid,i_param+1) = param
     CALL xc_f03_func_set_ext_params( xc_func(sid), par_list(sid,:) )
 #else
     CALL xclib_infomsg( 'set_libxc_ext_param', 'WARNING: an external parameter&
@@ -1186,7 +1218,7 @@ CONTAINS
     REAL(DP) :: get_libxc_ext_param
     !! Value of the parameter
 #if defined(__LIBXC)
-    get_libxc_ext_param = par_list(sid,i_param)
+    get_libxc_ext_param = par_list(sid,i_param+1)
 #else
     CALL xclib_infomsg( 'get_libxc_ext_param', 'WARNING: an external parameter&
                          &was sought in Libxc, but Libxc is not linked' )
