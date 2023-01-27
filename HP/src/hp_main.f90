@@ -23,7 +23,8 @@ PROGRAM hp_main
   USE control_flags,     ONLY : dfpt_hub, use_para_diag, use_gpu
   USE ldaU_hp,           ONLY : perturbed_atom, start_q, last_q, nqs, code, &
                                 compute_hp, sum_pertq, perturb_only_atom,   &
-                                determine_num_pert_only, tmp_dir_save
+                                determine_num_pert_only, tmp_dir_save,      &
+                                determine_q_mesh_only
   !
   IMPLICIT NONE
   !
@@ -110,6 +111,8 @@ PROGRAM hp_main
      !
      CALL hp_generate_grids()
      !
+     IF (determine_q_mesh_only) GO TO 105
+     !
      IF (sum_pertq) GO TO 102 
      !
      ! Loop over the q points
@@ -176,6 +179,8 @@ PROGRAM hp_main
      ! Deallocate some arrays
      !
      CALL hp_dealloc_1()
+     !
+105  CONTINUE
      !
      ! If perturb_only_atom(na)=.true., then this is not a full calculation
      ! but a calculation for only one Hubbard atom na. Hence, stop smoothly.
