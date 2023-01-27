@@ -773,6 +773,7 @@ MODULE qes_types_module
     REAL(DP) :: mixing_beta
     REAL(DP) :: conv_thr
     INTEGER :: mixing_ndim
+    INTEGER :: exx_nstep
     INTEGER :: max_nstep
     LOGICAL  :: real_space_q_ispresent = .FALSE.
     LOGICAL :: real_space_q

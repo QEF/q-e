@@ -355,6 +355,7 @@ MODULE read_namelists_module
        ortho_eps = 1.E-9_DP
        ortho_max = 300
        electron_maxstep = 100
+       exx_maxstep = 100
        scf_must_converge = .true.
        !
        ! ... ( 'sd' | 'cg' | 'damp' | 'verlet' | 'none' | 'diis' | 'cp-bo' )
@@ -1109,6 +1110,7 @@ MODULE read_namelists_module
        CALL mp_bcast( emass_cutoff,         ionode_id, intra_image_comm )
        CALL mp_bcast( orthogonalization,    ionode_id, intra_image_comm )
        CALL mp_bcast( electron_maxstep,     ionode_id, intra_image_comm )
+       CALL mp_bcast( exx_maxstep,          ionode_id, intra_image_comm )
        CALL mp_bcast( scf_must_converge,    ionode_id, intra_image_comm )
        CALL mp_bcast( ortho_eps,            ionode_id, intra_image_comm )
        CALL mp_bcast( ortho_max,            ionode_id, intra_image_comm )
