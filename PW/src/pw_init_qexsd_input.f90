@@ -318,14 +318,16 @@
        !
      END DO
      !
-     DO na = 1, nat
-        nt1 = ityp(na)
-        DO nb = 1, nat * (2*sc_size+1)**3
-           nt2 = ityp(mod(nb-1,nat)+1)
-           is_hubbard(nt1) = is_hubbard(nt1) .OR. ip_Hubbard_V(na,nb,1)/= 0.0_dp
-           is_hubbard(nt2) = is_hubbard(nt2) .OR. ip_Hubbard_V(na,nb,1)/= 0.0_dp
+    IF ( ANY(ip_hubbard_V(:,:,1) /=0.0_DP)) THEN
+        DO na = 1, nat
+           nt1 = ityp(na)
+           DO nb = 1, nat * (2*sc_size+1)**3
+              nt2 = ityp(mod(nb-1,nat)+1)
+              is_hubbard(nt1) = is_hubbard(nt1) .OR. ip_Hubbard_V(na,nb,1)/= 0.0_dp
+              is_hubbard(nt2) = is_hubbard(nt2) .OR. ip_Hubbard_V(na,nb,1)/= 0.0_dp
+           ENDDO
         ENDDO
-     ENDDO
+     END IF
      !
      IF ( ANY(ip_hubbard_u(1:ntyp) /=0.0_DP)) THEN
         ALLOCATE(hubbard_U_(ntyp))

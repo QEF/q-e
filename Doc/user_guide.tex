@@ -1461,9 +1461,9 @@ The groups hierarchy is as follow:
 \begin{itemize}
 \item {\bf world}: is the group of all processors (MPI\_COMM\_WORLD).
 \item
-{\bf images}: Processors can then be divided into different "images", each corresponding to a
-different self-consistent or linear-response
-calculation, loosely coupled to others.
+{\bf images}: Processors can then be divided into different "images", 
+each corresponding to a different self-consistent or linear-response
+calculation, loosely coupled to others. 
 \item
 {\bf pools}: each image can be subpartitioned into
 "pools", each taking care of a group of k-points.
@@ -1515,6 +1515,10 @@ ELPA and ScaLAPACK; alternative built-in algorithms are anyway available.
 \end{itemize}
 Note however that not all parallelization levels
 are implemented in all codes.
+
+When a communicator is split, the MPI process IDs in each sub-communicator
+remain ordered. So for instance, for two images and $2n$ MPI processes,
+image 0 contains IDs $0,1,...,n-1$, image 1 contains IDs $n,n+1,..,2n-1$.
 
 \paragraph{About communications}
 Images and pools are loosely coupled: inter-processors communication
