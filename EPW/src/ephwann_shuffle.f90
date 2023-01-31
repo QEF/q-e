@@ -1622,40 +1622,49 @@
         !
         ! Indirect absorption
         IF (lindabs .AND. .NOT. scattering) THEN
-          IF (carrier .and. (iq == iq_restart)) THEN
+          !
+          IF (carrier) THEN
+            IF (iq == iq_restart) THEN
+              !
+              ALLOCATE(ef0_fca(nstemp), STAT = ierr)
+              IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating ef0_fca', 1)
+              !
+              IF (ii_g) THEN
+                ALLOCATE(partion(nstemp), STAT = ierr)
+                IF (ierr /= 0) CALL errore('ephwann_shuffle.f90', 'Error allocating partion', 1)
+                ALLOCATE(qtf2_therm(nstemp), STAT = ierr)
+                IF (ierr /= 0) CALL errore('ephwann_shuffle.f90', 'Error allocating qtf2_therm', 1)
+                qtf2_therm(:) = zero
+              ENDIF
+              !
+              DO itemp = 1, nstemp
+                etemp_fca = gtemp(itemp)
+                CALL fermi_carrier_indabs(itemp, etemp_fca, ef0_fca, ctype)
+                !
+                IF (ii_g) THEN
+                  !
+                  IF (ii_partion) THEN
+                    CALL calcpartion(itemp, etemp_fca, ctype)
+                  ELSE
+                    partion(:) = 1.0d0
+                  ENDIF
+                  !
+                  IF (ii_lscreen) THEN
+                    CALL calc_qtf2_therm(itemp, etemp_fca, ef0_fca, ef0_fca, ctype, epsi)
+                  ENDIF
+                  !
+                ENDIF ! ii_g
+              ENDDO ! itemp
+              !
+            ENDIF ! iq_restart
             !
-            ALLOCATE(ef0_fca(nstemp), STAT = ierr)
-            IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating ef0_fca', 1)
-            !
-            IF (ii_g) THEN
-              ALLOCATE(partion(nstemp), STAT = ierr)
-              IF (ierr /= 0) CALL errore('ephwann_shuffle.f90', 'Error allocating partion', 1)
-              ALLOCATE(qtf2_therm(nstemp), STAT = ierr)
-              IF (ierr /= 0) CALL errore('ephwann_shuffle.f90', 'Error allocating qtf2_therm', 1)
-              qtf2_therm(:) = zero
+            IF (ii_g .AND. ii_lscreen) THEN
+              epstf_therm(:) = zero
+              CALL calc_epstf_therm(xxq, nstemp, epsi)
             ENDIF
             !
-            DO itemp = 1, nstemp
-              etemp_fca = gtemp(itemp)
-              CALL fermi_carrier_indabs(itemp, etemp_fca, ef0_fca, ctype)
-              !
-              IF (ii_partion) THEN
-                CALL calcpartion(itemp, etemp_fca, ctype)
-              ELSE
-                partion(:) = 1.0d0
-              ENDIF
-              !
-              IF (ii_g .AND. ii_lscreen) THEN
-                CALL calc_qtf2_therm(itemp, etemp_fca, ef0_fca, ef0_fca, ctype, epsi)
-              ENDIF
-            ENDDO
-            !
-          ENDIF
+          ENDIF ! carrier
           !
-          IF (ii_g .AND. ii_lscreen) THEN
-            epstf_therm(:) = zero
-            CALL calc_epstf_therm(xxq, nstemp, epsi)
-          ENDIF
           CALL indabs_main(iq, totq, first_cycle, iq_restart)
         ENDIF
         !
