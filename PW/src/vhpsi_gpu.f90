@@ -18,7 +18,7 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   USE kinds,         ONLY : DP
   USE becmod,        ONLY : bec_type, calbec, allocate_bec_type, &
                             deallocate_bec_type
-  USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, is_Hubbard,   &
+  USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, is_hubbard,   &
                             nwfcU, wfcU, offsetU, lda_plus_u_kind, &
                             is_hubbard_back, Hubbard_l2, offsetU_back, &
                             backall, offsetU_back1
