@@ -1381,7 +1381,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
   !
   TYPE (fft_type_descriptor), TARGET, INTENT(in) :: dfft
   INTEGER, INTENT(in) :: nr3x, nxx_, isgn, ncp_(:), npp_(:)
-! NOTE: see upper 'noteCray' 
+! NOTE: see upper 'noteCray'
 #ifdef __ONEMKL
   COMPLEX (DP), INTENT(inout), TARGET :: f_in(nxx_), f_aux(nxx_)
   COMPLEX(DP) :: dummy
@@ -1430,24 +1430,23 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      !$omp target data use_device_addr(f_in)
 #endif
      DO gproc = 1, nprocp
-        kdest = ( gproc - 1 ) * sendsiz
-        kfrom = offset
-        istat = int(omp_target_memcpy_rect(c_loc(f_aux), c_loc(f_in),                 &
-                                           int(sizeof(dummy),c_size_t),               &
-                                           int(2,c_int),                              &
-                                           int((/ ncp_(me), npp_(gproc) /),c_size_t), &
-                                           int((/        0,       kdest /),c_size_t), &
-                                           int((/        0,       kfrom /),c_size_t), &
-                                           int((/ ncp_(me),        nppx /),c_size_t), &
-                                           int((/ ncp_(me),        nr3x /),c_size_t), &
+        kdest = ( gproc - 1 ) * ncpx
+        kfrom = ( gproc - 1 ) * npp_(gproc)
+        istat = int(omp_target_memcpy_rect(c_loc(f_aux), c_loc(f_in),                    &
+                                           int(sizeof(dummy),c_size_t),                  &
+                                           int(2,c_int),                                 &
+                                           int((/    ncp_(me), npp_(gproc) /),c_size_t), &
+                                           int((/       kdest,           0 /),c_size_t), &
+                                           int((/           0,       kfrom /),c_size_t), &
+                                           int((/ (nxx_/nppx),        nppx /),c_size_t), &
+                                           int((/ (nxx_/nr3x),        nr3x /),c_size_t), &
 #ifdef __GPU_MPI
-                                           int(omp_get_default_device(),c_int),       &
+                                           int(omp_get_default_device(),c_int),          &
 #else
-                                           int(omp_get_initial_device(),c_int),       &
+                                           int(omp_get_initial_device(),c_int),          &
 #endif
-                                           int(omp_get_default_device(),c_int)),      &
+                                           int(omp_get_default_device(),c_int)),         &
                     kind(istat))
-        offset = offset + npp_ ( gproc )
      ENDDO
      !$omp end target data
 #else
@@ -1656,24 +1655,23 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      !$omp target data use_device_addr(f_in)
 #endif
      DO gproc = 1, nprocp
-        kdest = ( gproc - 1 ) * sendsiz
-        kfrom = offset
-        istat = int(omp_target_memcpy_rect(c_loc(f_in), c_loc(f_aux),                 &
-                                           int(sizeof(dummy),c_size_t),               &
-                                           int(2,c_int),                              &
-                                           int((/ ncp_(me), npp_(gproc) /),c_size_t), &
-                                           int((/        0,       kfrom /),c_size_t), &
-                                           int((/        0,       kdest /),c_size_t), &
-                                           int((/ ncp_(me),        nr3x /),c_size_t), &
-                                           int((/ ncp_(me),        nppx /),c_size_t), &
-                                           int(omp_get_default_device(),c_int),       &
+        kdest = ( gproc - 1 ) * ncpx
+        kfrom = ( gproc - 1 ) * npp_(gproc)
+        istat = int(omp_target_memcpy_rect(c_loc(f_in), c_loc(f_aux),                    &
+                                           int(sizeof(dummy),c_size_t),                  &
+                                           int(2,c_int),                                 &
+                                           int((/    ncp_(me), npp_(gproc) /),c_size_t), &
+                                           int((/           0,       kfrom /),c_size_t), &
+                                           int((/       kdest,           0 /),c_size_t), &
+                                           int((/ (nxx_/nr3x),        nr3x /),c_size_t), &
+                                           int((/ (nxx_/nppx),        nppx /),c_size_t), &
+                                           int(omp_get_default_device(),c_int),          &
 #ifdef __GPU_MPI
-                                           int(omp_get_default_device(),c_int)),      &
+                                           int(omp_get_default_device(),c_int)),         &
 #else
-                                           int(omp_get_initial_device(),c_int)),      &
+                                           int(omp_get_initial_device(),c_int)),         &
 #endif
                     kind(istat))
-        offset = offset + npp_( gproc )
      ENDDO
      !$omp end target data
 #else
@@ -1690,7 +1688,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      ENDDO
 
 #endif
-     
+
 20   CONTINUE
 
   ENDIF
