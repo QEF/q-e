@@ -380,7 +380,7 @@ CONTAINS
        !
        DO nt = 1, ntyp
           !
-          ! ---- LUCA (spawoc) to be checked whether needed -------
+          ! ---- LUCA (spawoc) -------
           IF (noncolin) THEN
              IF ( .NOT. ALLOCATED (d_spin_ldau) ) ALLOCATE( d_spin_ldau(2,2,48) )
              CALL comp_dspinldau()

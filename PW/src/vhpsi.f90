@@ -603,23 +603,28 @@ SUBROUTINE vhpsi_nc( ldap, np, mps, psip, hpsi )
   CALL start_clock('vhpsi')
   !
   ALLOCATE( proj(nwfcU, mps) )
+  proj(:,:) = (0.0_dp,0.0_dp)
   !
-!-- FIXME: to be replaced with ZGEMM
-! calculate <psi_at | phi_k> 
-  DO ibnd = 1, mps
-    DO na = 1, nwfcU
-       proj(na, ibnd) = dot_product( wfcU(1:ldap*npol, na), psip(1:ldap*npol, ibnd))
-    ENDDO
-  ENDDO
+  !-- FIXME: to be replaced with ZGEMM
+  !DO ibnd = 1, mps 
+    !DO na = 1, nwfcU
+    !   proj(na, ibnd) = dot_product( wfcU(1:ldap*npol, na), psip(1:ldap*npol, ibnd))
+    !ENDDO
+  !ENDDO
+  !
+  ! calculate <psi_at | phi_k> 
+  ! ------ LUCA (spawoc) implemented calculation with ZGEMM
+  CALL ZGEMM ('C', 'N', nwfcU, mps, ldap*npol, (1.0_DP, 0.0_DP), wfcU, &
+                    ldap*npol, psip, ldap*npol, (0.0_DP, 0.0_DP),  proj, nwfcU)
 #if defined(__MPI)
   CALL mp_sum ( proj, intra_bgrp_comm )
 #endif
 !--
   !
   IF ( lda_plus_u_kind.EQ.0 .OR. lda_plus_u_kind.EQ.1 ) THEN
-     CALL vhpsi_U ()  ! DFT+U
+     CALL vhpsi_U_nc ()  ! DFT+U
   ELSEIF ( lda_plus_u_kind.EQ.2 ) THEN
-     CALL vhpsi_UV () ! DFT+U+V
+     CALL vhpsi_UV_nc () ! DFT+U+V
   ENDIF
   !
   deallocate (proj)
@@ -631,38 +636,69 @@ CONTAINS
   !
   ! -----------------------------
   !
-SUBROUTINE vhpsi_U ()
+SUBROUTINE vhpsi_U_nc ()
    !
-   do ibnd = 1, mps  
-      do na = 1, nat  
-         nt = ityp (na)  
-         if ( is_hubbard(nt) ) then  
-            nwfc = 2 * Hubbard_l(nt) + 1
-  
-            do is1 = 1, npol
-             do m1 = 1, nwfc 
-               temp = 0.d0
-               do is2 = 1, npol
-                do m2 = 1, nwfc  
-                  temp = temp + v%ns_nc( m1, m2, npol*(is1-1)+is2, na) * &
-                                proj(offsetU(na)+(is2-1)*nwfc+m2, ibnd)
-                enddo
+   IMPLICIT NONE
+   INTEGER :: na, nt, ldim
+   !
+   DO nt = 1, ntyp
+      !
+      ! Compute the action of the Hubbard potential on the KS wave functions:
+      ! V_Hub |psip > = \sum v%ns |wfcU> <wfcU|psip>
+      ! where v%ns = U ( delta/2 - rho%ns ) is computed in v_of_rho
+      !
+      IF ( is_hubbard(nt) ) THEN
+         !  
+         ldim = 2*Hubbard_l(nt) + 1
+         !
+         ALLOCATE ( ctemp(ldim*npol,mps) )
+         ALLOCATE ( vaux (ldim*npol,ldim*npol) )
+         !
+         DO na = 1, nat
+            IF ( nt == ityp(na) ) THEN
+               !
+               vaux(:,:) = (0.0_dp,0.0_dp)
+               do is1 =1 , npol
+                  do is2 =1 , npol
+                     !DO m1 = 1, ldim1
+                     !   DO m2 = 1, ldim2
+                     vaux(1+ldim*(is1-1):ldim+ldim*(is1-1), &
+                          1+ldim*(is2-1):ldim+ldim*(is2-1)) &
+                           = v%ns_nc(1:ldim,1:ldim,npol*(is1-1)+is2,na)
+                     !   ENDDO
+                     !ENDDO
+                  enddo 
                enddo
-               call zaxpy (ldap*npol, temp, wfcU(1,offsetU(na)+(is1-1)*nwfc+m1),&
-                           1, hpsi(1,ibnd),1)
-             enddo
-            enddo
-         endif
-      enddo
-    enddo 
+               !
+               ctemp(:,:) = (0.0_dp,0.0_dp)
+               !
+               CALL ZGEMM ('n','n', ldim*npol, mps, ldim*npol, (1.0_dp,0.0_dp), &
+                     vaux, ldim*npol, proj(offsetU(na)+1,1),&
+                     nwfcU,(0.0_dp,0.0_dp),ctemp,ldim*npol)
+               
+               CALL ZGEMM ('n','n', ldap*npol, mps, ldim*npol, (1.0_dp,0.0_dp), &
+                     wfcU(1,offsetU(na)+1), ldap*npol, ctemp, ldim*npol, &
+                     (1.0_dp,0.0_dp), hpsi, ldap*npol)
+               !
+            ENDIF
+         ENDDO
+         !
+         DEALLOCATE(vaux)
+         DEALLOCATE ( ctemp )
+         !
+      ENDIF
+      !
+      !
+   ENDDO
+   !
    !
   RETURN
   !
-END SUBROUTINE vhpsi_U 
+END SUBROUTINE vhpsi_U_nc 
   !
   !---------------------------------------------
   ! 
-SUBROUTINE vhpsi_UV ()
+SUBROUTINE vhpsi_UV_nc ()
    !
    USE ldaU,      ONLY : ldim_u, neighood, at_sc, phase_fac, Hubbard_V, v_nsg
    !
@@ -730,13 +766,14 @@ SUBROUTINE vhpsi_UV ()
                            projauxc(:,:) = (0.0_dp, 0.0_dp)
                            do is1 =1 , npol
                               do is2 =1 , npol
-                           DO m1 = 1, ldim1
-                              DO m2 = 1, ldim2
-                                 vaux(m2+ldim2*(is2-1),m1+ldim1*(is1-1)) = CONJG( (v_nsg(m2, m1, viz, na1, npol*(is2-1)+is1))) * 0.5d0
-                              ENDDO
-                           ENDDO
-                        enddo 
-                     enddo
+                                 DO m1 = 1, ldim1
+                                    DO m2 = 1, ldim2
+                                       vaux(m2+ldim2*(is2-1),m1+ldim1*(is1-1)) = &
+                                          CONJG( (v_nsg(m2, m1, viz, na1, npol*(is2-1)+is1))) * 0.5d0
+                                    ENDDO
+                                 ENDDO
+                              enddo 
+                           enddo
                            !
                            DO m2 = 1, ldim2*npol
                               projauxc(m2,:) = proj(off2+m2,:)
@@ -772,13 +809,14 @@ SUBROUTINE vhpsi_UV ()
                            vaux(:,:) = (0.0_dp,0.0_dp)
                            do is1=1,npol
                               do is2=1,npol
-                           DO m1 = 1,ldim1
-                              DO m2 = 1,ldim2
-                                 vaux(m2+ldim2*(is2-1),m1+ldim1*(is1-1)) = v_nsg(m2, m1, viz, na1, npol*(is2-1)+is1) * 0.5d0
-                              ENDDO
-                           ENDDO
-                        enddo
-                     enddo
+                                 DO m1 = 1,ldim1
+                                    DO m2 = 1,ldim2
+                                       vaux(m2+ldim2*(is2-1),m1+ldim1*(is1-1)) = &
+                                            v_nsg(m2, m1, viz, na1, npol*(is2-1)+is1) * 0.5d0
+                                    ENDDO
+                                 ENDDO
+                              enddo
+                           enddo
                            !
                            ctemp(:,:) = (0.0_dp,0.0_dp)
                            !
@@ -808,7 +846,7 @@ SUBROUTINE vhpsi_UV ()
    !
    RETURN
    !
-END SUBROUTINE vhpsi_UV
+END SUBROUTINE vhpsi_UV_nc
   !
   ! --------------------------------------------
 END SUBROUTINE vhpsi_nc

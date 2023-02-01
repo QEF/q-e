@@ -619,7 +619,7 @@ SUBROUTINE new_nsg_nc()
                            !
                            DO is3 = 1, npol
                               DO is4 = 1, npol
-                                 ! ---------- LUCA (spawoc) check it --------------
+                                 ! ---------- LUCA (spawoc) --------------
                                  IF (domag.or.lspinorb) then
                                     nrg_nc(m2,m1,viz,na1,is4,is3) = &
                                     nrg_nc(m2,m1,viz,na1,is4,is3) + &
@@ -798,9 +798,9 @@ SUBROUTINE new_nsg_nc()
                                                    nsgnew(m2,m1,viz,na1,is) = &
                                                       nsgnew(m2,m1,viz,na1,is) +  &
                                                       CONJG( d_spin_ldau(is1,is3,isym) ) * &
-                                                      d1(m3,m1,isym) * &
+                                                      d1(m1,m3,isym) * &
                                                       nrgtmp * &
-                                                      d1(m4,m2,isym) * &
+                                                      d1(m2,m4,isym) * &
                                                       d_spin_ldau(is2,is4,isym) / nsym
                                                    !
                                           ELSE IF (ll(m1,nt1).EQ.2 .AND. &
@@ -896,9 +896,9 @@ SUBROUTINE new_nsg_nc()
                                                    nsgnew(m2,m1,viz,na1,is) = &
                                                       nsgnew(m2,m1,viz,na1,is) +  &
                                                       CONJG( d_spin_ldau(is1,is3,isym) ) * &
-                                                      d3(m3,m1,isym) * &
+                                                      d3(m1,m3,isym) * &
                                                       nrgtmp * &
-                                                      d3(m4,m2,isym) * &
+                                                      d3(m2,m4,isym) * &
                                                       d_spin_ldau(is2,is4,isym) / nsym
                                                    !
                                           ELSE

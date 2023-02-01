@@ -92,12 +92,12 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
            !
            IF (is_hubbard(nt)) THEN
               IF (label(n)==label_hub) THEN
-               !  IF (upf(nt)%oc(n)>0.D0) THEN
+                 IF (upf(nt)%oc(n)>0.D0) THEN
                     hubbard_wfc = .TRUE.
-                ! ELSE
-                !    CALL errore('offset_atom_wfc', 'Hubbard manifold with &
-                !            &zero occupations is not allowed',1) 
-                ! ENDIF
+                 ELSE
+                    CALL errore('offset_atom_wfc', 'Hubbard manifold with &
+                            &zero occupations is not allowed',1) 
+                 ENDIF
               ENDIF
            ENDIF
            !
