@@ -2065,7 +2065,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var electron_maxstep    -type INTEGER { 
             default { 100 }
             info {
-                maximum number of iterations in a scf step
+                maximum number of iterations in a scf step. If exact exchange is active, 
+                this will affect the inner loops.
+            }
+        }
+
+        var exx_maxstep    -type INTEGER { 
+            default { 100 }
+            info {
+                maximum number of outer iterations in a scf calculation with exact exchange.
             }
         }
 

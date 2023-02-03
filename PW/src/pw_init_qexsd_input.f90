@@ -41,7 +41,7 @@
                                 ip_nr3 => nr3, ip_nr1s => nr1s, ip_nr2s => nr2s,ip_nr3s => nr3s, ip_nr1b=>nr1b,       &
                                 ip_nr2b=>nr2b, ip_nr3b => nr3b,                                                       &
                                 ip_diagonalization=>diagonalization, mixing_mode, mixing_beta,                        &
-                                mixing_ndim, tqr, tq_smoothing, tbeta_smoothing, electron_maxstep,                    &
+                                mixing_ndim, tqr, tq_smoothing, tbeta_smoothing, exx_maxstep, electron_maxstep,       &
                                 diago_thr_init, diago_full_acc,                                                       & 
                                 diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim,                               &
                                 diago_rmm_ndim, diago_rmm_conv, diago_gs_nblock,                                      &
@@ -318,14 +318,16 @@
        !
      END DO
      !
-     DO na = 1, nat
-        nt1 = ityp(na)
-        DO nb = 1, nat * (2*sc_size+1)**3
-           nt2 = ityp(mod(nb-1,nat)+1)
-           is_hubbard(nt1) = is_hubbard(nt1) .OR. ip_Hubbard_V(na,nb,1)/= 0.0_dp
-           is_hubbard(nt2) = is_hubbard(nt2) .OR. ip_Hubbard_V(na,nb,1)/= 0.0_dp
+    IF ( ANY(ip_hubbard_V(:,:,1) /=0.0_DP)) THEN
+        DO na = 1, nat
+           nt1 = ityp(na)
+           DO nb = 1, nat * (2*sc_size+1)**3
+              nt2 = ityp(mod(nb-1,nat)+1)
+              is_hubbard(nt1) = is_hubbard(nt1) .OR. ip_Hubbard_V(na,nb,1)/= 0.0_dp
+              is_hubbard(nt2) = is_hubbard(nt2) .OR. ip_Hubbard_V(na,nb,1)/= 0.0_dp
+           ENDDO
         ENDDO
-     ENDDO
+     END IF
      !
      IF ( ANY(ip_hubbard_u(1:ntyp) /=0.0_DP)) THEN
         ALLOCATE(hubbard_U_(ntyp))
@@ -465,7 +467,8 @@
     diagonalization = ip_diagonalization
   END IF
   CALL qexsd_init_electron_control(obj%electron_control, diagonalization, mixing_mode, mixing_beta, conv_thr/e2,         &
-                                   mixing_ndim, electron_maxstep, tqr, real_space, tq_smoothing, tbeta_smoothing, diago_thr_init, &
+                                   mixing_ndim, exx_maxstep, electron_maxstep, tqr, real_space, tq_smoothing, &
+                                   tbeta_smoothing, diago_thr_init, &
                                    diago_full_acc, diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim, &
                                    diago_rmm_ndim, diago_rmm_conv, diago_gs_nblock)
   !--------------------------------------------------------------------------------------------------------------------------------

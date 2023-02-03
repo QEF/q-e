@@ -174,6 +174,7 @@ MODULE control_flags
   !
   INTEGER, PUBLIC :: &
     ngm0,             &! used in mix_rho
+    nexxiter,         &! the maximum number of outer iteration (exx)
     niter,            &! the maximum number of iteration
     nmix,             &! the number of iteration kept in the history
     imix               ! the type of mixing (0=plain,1=TF,2=local-TF)
