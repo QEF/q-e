@@ -825,8 +825,8 @@ SUBROUTINE phq_readin()
       'el-ph with wannier : specify bands range with elph_nbnd_min,elph_nbnd_max',1)
   END IF
 
-  IF(elph.and.nimage>1) call errore('phq_readin',&
-       'el-ph with images not implemented',1)
+  IF((elph .AND. .NOT. elph_ahc) .AND. nimage > 1) CALL errore('phq_readin',&
+       'el-ph with images not implemented', 1)
 
   IF (elph.OR.fildvscf /= ' ') lqdir=.TRUE.
 

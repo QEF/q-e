@@ -104,6 +104,8 @@ MODULE ahc
   !! Unit for \(\text{ahc_upfan}\) (upper Fan by Sternheimer) output
   INTEGER :: iundw
   !! Unit for \text{ahc_dw}\) (Debye-Waller) output
+  INTEGER :: iunp
+  !! Unit for \text{ahc_p}\) (momentum matrix) output
   INTEGER :: nbase_ik
   !! The position in the list of the first point that belong to this \(\text{npool}-1\)
   REAL(DP) :: e_degen_thr = 1.d-4
@@ -115,8 +117,11 @@ MODULE ahc
   !! Usual dimensions: (\(\text{ahc_nbnd},\ \text{ahc_nbnd},\ \text{nmodes},\ \text{nmodes}\));  
   !! upper Fan self-energy by Sternheimer
   COMPLEX(DP), ALLOCATABLE :: ahc_dw(:,:,:,:)
-  !! Usual dimensions: (\(\text{ahc_nbnd}, \text{ahc_nbnd}, \text{nmodes}, 3\));  
+  !! Usual dimensions: (\(\text{ahc_nbnd}, \text{ahc_nbnd}, \text{nmodes}, 3\));
   !! \([dV,p]\) matrix element for Debye-Waller
+  COMPLEX(DP), ALLOCATABLE :: ahc_p(:,:,:)
+  !! Usual dimensions: (\(\text{nbnd}, \text{ahc_nbnd}, 3\));
+  !! \(p\) matrix element
   COMPLEX(DP), ALLOCATABLE :: dvpsi_cart(:,:,:)
   !! Usual dimensions: (\(\text{npwx}\cdot\text{npol},\ \text{ahc_nbnd},\ \text{nmodes}\));  
   !! the Cartesian atomic displacement: \(dV/du_{q, \text{imode}}\cdot \psi_nk in\)
@@ -169,6 +174,10 @@ SUBROUTINE ahc_do_upperfan(ik)
   !! true if linear system is converged
   INTEGER :: lter
   !! Counter on iterations of Sternheimer equation
+  INTEGER :: len
+  !! Length of the file to write
+  INTEGER :: ierr
+  !! Error index
   REAL(DP) :: thresh
   !! convergence threshold for solving Sternheimer equation
   REAL(DP) :: anorm
@@ -266,8 +275,11 @@ SUBROUTINE ahc_do_upperfan(ik)
   ! Write ahc_upfan to file
   !
   IF (me_pool == root_pool) THEN
-     nrec = ik + nbase_ik
-     WRITE(iunupfan, REC=nrec) ahc_upfan
+     ! nrec = ik + nbase_ik
+     ! WRITE(iunupfan, REC=nrec) ahc_upfan
+     len = ahc_nbnd * ahc_nbnd * nmodes * nmodes
+     nrec = ik + nbase_ik - 1
+     CALL MY_MPI_FILE_WRITE_AT(ahc_upfan, len, nrec, iunupfan, ierr)
   ENDIF
   !
   ! Check: (H - e(ib)) dpsi_cart(:,ib,imode) = - P_c dvpsi_cart(:,ib,imode)
@@ -314,8 +326,11 @@ END SUBROUTINE ahc_do_upperfan
 !------------------------------------------------------------------------------
 SUBROUTINE ahc_do_dw(ik)
   !------------------------------------------------------------------------------
-  !! Compute and write to file the matrix elements of \([dV,p]\). This quantity is
+  !! Compute and write to file the matrix elements of p and \([dV,p]\). This quantity is
   !! needed to compute Debye-Waller self-energy within rigid-ion approximation.
+  !!
+  !! $$ \text{ahc_p}(\text{ib, jb, idir})
+  !!   = \langle\psi_{ib}(k) | p_\text{idir} | \psi_{jb}(k)\rangle $$
   !
   !! $$ \text{ahc_dw}(\text{ib, jb, imode, jdir})
   !!   = i\cdot \langle\psi_{ib}(k)|[dV_{SCF}/du_{\text{Gamma, imode}}, p_\text{jdir}]|
@@ -333,7 +348,7 @@ SUBROUTINE ahc_do_dw(ik)
   USE mp,               ONLY : mp_sum
   USE mp_pools,         ONLY : intra_pool_comm, me_pool, root_pool
   USE wavefunctions,    ONLY : evc
-  USE wvfct,            ONLY : npwx
+  USE wvfct,            ONLY : npwx, nbnd
   USE klist,            ONLY : ngk, igk_k, xk
   USE gvect,            ONLY : g
   USE noncollin_module, ONLY : noncolin
@@ -367,6 +382,10 @@ SUBROUTINE ahc_do_dw(ik)
   !! number of plane waves at k+q
   INTEGER :: nrec
   !! Record to write file
+  INTEGER :: len
+  !! Length of the file to write
+  INTEGER :: ierr
+  !! Error index
   COMPLEX(DP), ALLOCATABLE :: p_psi(:, :, :)
   !! wavefunction multiplied by the momentum operator p
   COMPLEX(DP), ALLOCATABLE :: p_psi_gauged(:, :, :)
@@ -418,6 +437,16 @@ SUBROUTINE ahc_do_dw(ik)
                (0.d0,0.d0), p_psi_gauged(1, 1, idir), npwx * npol)
   ENDDO
   !
+  ! Calculate ahc_p(ib,jb,idir) = <\psi_ib(k)|p_idir|\psi_jb(k)>
+  !
+  ahc_p = (0.d0, 0.d0)
+  DO idir = 1, 3
+    CALL ZGEMM('C', 'N', nbnd, ahc_nbnd, npwx * npol, &
+      (1.d0, 0.d0), evc(1, 1), npwx * npol, &
+                    p_psi_gauged(1, 1, idir), npwx * npol, &
+      (1.d0, 0.d0), ahc_p(1, 1, idir), nbnd)
+  ENDDO
+  !
   ! Calculate ahc_dw(ib,jb,imode,jdir)
   ! = i * <\psi_ib(k)|[dV_{SCF}/du^Gamma_{imode}, p_jdir]|\psi_jb(k)>
   !
@@ -436,12 +465,20 @@ SUBROUTINE ahc_do_dw(ik)
     ENDDO
   ENDDO
   !
+  CALL mp_sum(ahc_p, intra_pool_comm)
   CALL mp_sum(ahc_dw, intra_pool_comm)
   !
-  ! Write ahc_dw to file
+  ! Write ahc_p and ahc_dw to file
   IF (me_pool == root_pool) THEN
-    nrec = ik + nbase_ik
-    WRITE(iundw, REC=nrec) ahc_dw
+    len = nbnd * ahc_nbnd * 3
+    nrec = ik + nbase_ik - 1
+    CALL MY_MPI_FILE_WRITE_AT(ahc_p, len, nrec, iunp, ierr)
+    !
+    ! nrec = ik + nbase_ik
+    ! WRITE(iundw, REC=nrec) ahc_dw
+    len = ahc_nbnd * ahc_nbnd * nmodes * 3
+    nrec = ik + nbase_ik - 1
+    CALL MY_MPI_FILE_WRITE_AT(ahc_dw, len, nrec, iundw, ierr)
   ENDIF
   !
   DEALLOCATE(p_psi)
@@ -480,7 +517,7 @@ SUBROUTINE ahc_do_gkk(ik)
    INTEGER, INTENT(IN) :: ik
    !! k point index where dvpsi is calculated
    !
-   INTEGER :: imode, nrec
+   INTEGER :: imode, nrec, len, ierr
    !
    CALL start_clock('ahc_gkk')
    !
@@ -500,8 +537,11 @@ SUBROUTINE ahc_do_gkk(ik)
    ! Write ahc_gkk to file
    !
    IF (me_pool == root_pool) THEN
-      nrec = ik + nbase_ik
-      WRITE(iungkk, REC=nrec) ahc_gkk
+      ! nrec = ik + nbase_ik
+      ! WRITE(iungkk, REC=nrec) ahc_gkk
+      len = nbnd * ahc_nbnd * nmodes
+      nrec = ik + nbase_ik - 1
+      CALL MY_MPI_FILE_WRITE_AT(ahc_gkk, len, nrec, iungkk, ierr)
    ENDIF
    !
    CALL stop_clock('ahc_gkk')
@@ -1098,6 +1138,9 @@ SUBROUTINE elph_do_ahc()
   !! The main driver of the AHC calculation.
   !
   USE kinds,        ONLY : DP
+  USE mp,           ONLY : mp_barrier
+  USE mp_images,    ONLY : intra_image_comm
+  USE mp_pools,     ONLY : inter_pool_comm
   USE io_global,    ONLY : stdout
   USE io_files,     ONLY : diropn
   USE mp_pools,     ONLY : npool, my_pool_id, me_pool, root_pool
@@ -1120,6 +1163,8 @@ SUBROUTINE elph_do_ahc()
   !! Filename for \(\text{ahc_gkk}\) (\(\text{dV_q}\) matrix element) output
   CHARACTER(LEN=256) :: filoutdw
   !! Filename for \(\text{ahc_dw}\) (Debye-Waller) output
+  CHARACTER(LEN=256) :: filoutp
+  !! Filename for \(\text{ahc_p}\) (momentum matrix) output
   CHARACTER(LEN=256) :: filoutupfan
   !! Filename for \(\text{ahc_upfan}\) (upper Fan by Sternheimer) output
   INTEGER :: ik
@@ -1136,6 +1181,8 @@ SUBROUTINE elph_do_ahc()
   !! integer for calculating \(\text{nbase_ik}\)
   INTEGER :: nks1
   !! integer for calculating \(\text{nbase_ik}\)
+  INTEGER :: ierr
+  !! error index
   ! CHARACTER(LEN=256) :: filename_wf
   COMPLEX(DP), ALLOCATABLE :: dvpsi_gauged(:, :)
   !! Temporary storage of \(\text{dvpsi}\) for rotating to Cartesian
@@ -1170,6 +1217,7 @@ SUBROUTINE elph_do_ahc()
   ALLOCATE(ahc_gkk(nbnd, ahc_nbnd, nmodes))
   ALLOCATE(ahc_upfan(ahc_nbnd, ahc_nbnd, nmodes, nmodes))
   ALLOCATE(ahc_dw(ahc_nbnd, ahc_nbnd, nmodes, 3))
+  ALLOCATE(ahc_p(nbnd, ahc_nbnd, 3))
   ALLOCATE(dvpsi_cart(npwx*npol, ahc_nbnd, nmodes))
   ALLOCATE(psi_gauge(ahc_nbnd_gauge, ahc_nbnd))
   !
@@ -1180,26 +1228,34 @@ SUBROUTINE elph_do_ahc()
     filoutgkk = TRIM(ahc_dir) // 'ahc_gkk_iq' // TRIM(iq_name) // '.bin'
     filoutupfan = TRIM(ahc_dir) // 'ahc_upfan_iq' // TRIM(iq_name) // '.bin'
     filoutdw = TRIM(ahc_dir) // 'ahc_dw.bin'
+    filoutp = TRIM(ahc_dir) // 'ahc_p.bin'
     !
-    iungkk = find_free_unit()
-    INQUIRE(IOLENGTH=recl) ahc_gkk
-    OPEN(UNIT=iungkk, FILE=TRIM(filoutgkk), FORM='unformatted', &
-         ACCESS='direct', RECL=recl)
+    ! iungkk = find_free_unit()
+    ! INQUIRE(IOLENGTH=recl) ahc_gkk
+    ! OPEN(UNIT=iungkk, FILE=TRIM(filoutgkk), FORM='unformatted', &
+    !      ACCESS='direct', RECL=recl)
+    CALL MY_MPI_FILE_OPEN(inter_pool_comm, TRIM(filoutgkk), +1, iungkk, ierr)
     !
     IF (.NOT. skip_upperfan) THEN
-      iunupfan = find_free_unit()
-      INQUIRE(IOLENGTH=recl) ahc_upfan
-      OPEN(UNIT=iunupfan, FILE=TRIM(filoutupfan), FORM='unformatted', &
-           ACCESS='direct', RECL=recl)
+      ! iunupfan = find_free_unit()
+      ! INQUIRE(IOLENGTH=recl) ahc_upfan
+      ! OPEN(UNIT=iunupfan, FILE=TRIM(filoutupfan), FORM='unformatted', &
+      !      ACCESS='direct', RECL=recl)
+      CALL MY_MPI_FILE_OPEN(inter_pool_comm, TRIM(filoutupfan), +1, iunupfan, ierr)
     ENDIF
     !
     IF (lgamma) THEN
-      iundw = find_free_unit()
-      INQUIRE(IOLENGTH=recl) ahc_dw
-      OPEN(UNIT=iundw, FILE=TRIM(filoutdw), FORM='unformatted', &
-          ACCESS='direct', RECL=recl)
+      ! iundw = find_free_unit()
+      ! INQUIRE(IOLENGTH=recl) ahc_dw
+      ! OPEN(UNIT=iundw, FILE=TRIM(filoutdw), FORM='unformatted', &
+      !     ACCESS='direct', RECL=recl)
+      CALL MY_MPI_FILE_OPEN(inter_pool_comm, TRIM(filoutdw), +1, iundw, ierr)
+      CALL MY_MPI_FILE_OPEN(inter_pool_comm, TRIM(filoutp), +1, iunp, ierr)
     ENDIF
   ENDIF ! root_pool
+  !
+  ! Barrier to make sure that all files are opened before writing anything.
+  CALL mp_barrier(intra_image_comm)
   !
   ! We need to change nbnd_occ because we solve the Sternheimer
   ! equation for all bands, not only for occupied bands.
@@ -1264,22 +1320,116 @@ SUBROUTINE elph_do_ahc()
   !
   DEALLOCATE(ahc_gkk)
   DEALLOCATE(ahc_upfan)
+  DEALLOCATE(ahc_p)
   DEALLOCATE(ahc_dw)
   DEALLOCATE(dvpsi_cart)
   DEALLOCATE(psi_gauge)
   !
+  ! Barrier to make sure that all data are written before closing files.
+  CALL mp_barrier(intra_image_comm)
+  !
   ! Close output file units
   !
   IF (me_pool == root_pool) THEN
-    CLOSE(iungkk, STATUS='KEEP')
-    IF (.NOT. skip_upperfan) CLOSE(iunupfan, STATUS='KEEP')
-    IF (lgamma) CLOSE(iundw, STATUS='KEEP')
+    ! CLOSE(iungkk, STATUS='KEEP')
+    ! IF (.NOT. skip_upperfan) CLOSE(iunupfan, STATUS='KEEP')
+    ! IF (lgamma) CLOSE(iundw, STATUS='KEEP')
+    CALL MPI_FILE_CLOSE(iungkk, ierr)
+    IF (.NOT. skip_upperfan) CALL MPI_FILE_CLOSE(iunupfan, ierr)
+    IF (lgamma) CALL MPI_FILE_CLOSE(iundw, ierr)
+    IF (lgamma) CALL MPI_FILE_CLOSE(iunp, ierr)
   ENDIF ! root_pool
   !
   CALL stop_clock('ahc_elph')
   !
 END SUBROUTINE elph_do_ahc
 !------------------------------------------------------------------------------
+!
+!------------------------------------------------------------------------------
+SUBROUTINE MY_MPI_FILE_OPEN(comm, filename, io, iun, ierr)
+   !---------------------------------------------------------------------------
+   !! Wrapper for MPI_FILE_OPEN
+   !! If io == +1, open file for writing.
+   !! If io == -1, open file for reading.
+   !---------------------------------------------------------------------------
+   USE kinds,            ONLY : DP
+   USE parallel_include, ONLY : MPI_MODE_WRONLY, MPI_MODE_CREATE, &
+                                MPI_MODE_RDONLY, MPI_INFO_NULL
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(IN) :: comm
+   !! MPI communicator
+   CHARACTER(LEN = *), INTENT(IN) :: filename
+   !! name of the file to open
+   INTEGER, INTENT(IN) :: io
+   !! +1 for writing, -1 for reading
+   INTEGER, INTENT(OUT) :: iun
+   !! Unit for reading file
+   INTEGER, INTENT(out) :: ierr
+   !! Error status
+   !
+   CALL start_clock('MPI_FILE_OPEN')
+   !
+   IF (io == 1) THEN
+     ! Open for writing
+     CALL MPI_FILE_OPEN(comm, filename, MPI_MODE_WRONLY + MPI_MODE_CREATE, MPI_INFO_NULL, iun, ierr)
+     !
+   ELSE IF (io == -1) THEN
+     ! Open for reading
+     CALL MPI_FILE_OPEN(comm, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, iun, ierr)
+     !
+   ELSE
+     CALL errore('MY_MPI_FILE_OPEN', 'io value must be +1 or -1', 1)
+   ENDIF
+   !
+   CALL stop_clock('MPI_FILE_OPEN')
+   !
+END SUBROUTINE MY_MPI_FILE_OPEN
+!--------------------------------------------------------------------------
+!
+!--------------------------------------------------------------------------
+SUBROUTINE MY_MPI_FILE_WRITE_AT(array, dim, ind, iun, ierr)
+   !--------------------------------------------------------------------------
+   !! Wrapper for writing file using MPI IO.
+   !! Wraps MPI_FILE_WRITE_AT (blocking, noncollective write).
+   !--------------------------------------------------------------------------
+   USE kinds,            ONLY : DP
+   USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_DOUBLE_PRECISION, &
+                                MPI_STATUS_IGNORE
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(in) :: dim
+   !! Size of the array
+   INTEGER, INTENT(in) :: ind
+   !! Index of the file to write. Use a 0-based index.
+   INTEGER, INTENT(in) :: iun
+   !! Unit for reading file
+   INTEGER, INTENT(out) :: ierr
+   !! Error status
+   COMPLEX(KIND = DP), INTENT(inout) :: array(dim)
+   !! Output array
+   !
+   INTEGER(KIND = MPI_OFFSET_KIND) :: lrsize
+   !! Size of the data to write
+   INTEGER(KIND = MPI_OFFSET_KIND) :: lroffset
+   !! Offset for writing the data
+   !
+   CALL start_clock('MPI_WRITE_AT')
+   !
+   lrsize = 2_MPI_OFFSET_KIND * INT(dim, KIND = MPI_OFFSET_KIND)
+   !
+   lroffset = 2_MPI_OFFSET_KIND * 8_MPI_OFFSET_KIND &
+            * INT(dim, KIND = MPI_OFFSET_KIND) &
+            * INT(ind, KIND = MPI_OFFSET_KIND)
+   !
+   CALL MPI_FILE_WRITE_AT(iun, lroffset, array, lrsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+   !
+   CALL stop_clock('MPI_WRITE_AT')
+!
+END SUBROUTINE MY_MPI_FILE_WRITE_AT
+!--------------------------------------------------------------------------
 !
 !------------------------------------------------------------------------------
 END MODULE ahc

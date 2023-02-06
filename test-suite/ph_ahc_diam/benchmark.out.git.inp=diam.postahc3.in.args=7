@@ -1,66 +1,95 @@
 
-     Program POSTAHC v.6.5 starts on  9Apr2020 at 16:53:28 
+     Program POSTAHC v.7.0 starts on  6Feb2023 at 16:44:21 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
          "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     1 processors
+     Parallel version (MPI & OpenMP), running on       1 processor cores
+     Number of MPI processes:                 1
+     Threads/MPI process:                     1
 
      MPI processes distributed on     1 nodes
-     Fft bands division:     nmany     =       1
+     3238 MiB available memory on the printing compute node when the environment starts
+ 
+
+     Reading xml data from directory:
+
+     ./diam.save/
+     file C.UPF: wavefunction(s)  3d renormalized
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         121     121     43                  893      893     181
+ 
+     Using Slab Decomposition
+ 
+     There are          4 q points in total.
+     Calculating        4 q points in the root core.
+     Total number of bands :        9
+     Bands to calculate the self-energy :       5 to        8
  
      Calculating electron self-energy. Loop over q points
        1       2       3       4 
  
  
-     Real part of diagonal electron self-energy in Ry
+     Diagonal electron self-energy in eV
      Self-energy of degenerate states are averaged.
+     The DW and Upper_Fan terms are real-valed by construction.
      Total_Fan = Upper_Fan + Lower_Fan
      Total = Total_Fan + DW
  
      Begin postahc output
-         ik  ibnd       Total          DW   Total_Fan   Upper_Fan   Lower_Fan
-          1     1   0.0230583   0.0293167  -0.0062584  -0.0253389   0.0190805
-          1     2   0.0230583   0.0293167  -0.0062584  -0.0253389   0.0190805
-          1     3   0.0230583   0.0293167  -0.0062584  -0.0253389   0.0190805
-          1     4  -0.2194264  -0.0164240  -0.2030024  -0.0520276  -0.1509748
-          2     1  -0.0495690  -0.0058590  -0.0437100  -0.0325926  -0.0111174
-          2     2   0.1471711   0.0248381   0.1223329  -0.0233097   0.1456426
-          2     3   0.1471711   0.0248381   0.1223329  -0.0233097   0.1456426
-          2     4  -0.0239635   0.0255635  -0.0495269  -0.0251594  -0.0243675
-          3     1  -0.0987218   0.0240758  -0.1227977  -0.0256569  -0.0971408
-          3     2   0.0363262   0.0299608   0.0063654  -0.0333282   0.0396936
-          3     3   0.0564642   0.0388652   0.0175989  -0.0334900   0.0510890
-          3     4  -0.0787807   0.0056283  -0.0844089  -0.0300899  -0.0543190
-          4     1  -0.0606059   0.0122256  -0.0728315  -0.0208631  -0.0519684
-          4     2  -0.1031988   0.0204308  -0.1236295  -0.0290363  -0.0945933
-          4     3  -0.1392957   0.0255362  -0.1648319  -0.0366560  -0.1281759
-          4     4   0.1651968   0.0373793   0.1278175  -0.0420978   0.1699153
-          5     1  -0.0682017   0.0186229  -0.0868246  -0.0221583  -0.0646663
-          5     2   0.0454905   0.0226686   0.0228219  -0.0307861   0.0536080
-          5     3  -0.0578244   0.0230974  -0.0809217  -0.0344122  -0.0465096
-          5     4  -0.0717289   0.0215670  -0.0932959  -0.0296645  -0.0636313
+         ik  ibnd    Re[Total]           DW Re[Total_Fan]   Upper_Fan Re[Lower_Fan]   Im[Total]
+          1     1   0.31355367   0.39887352  -0.08531985  -0.37424041   0.28892056  -0.84126932
+          1     2   0.31355367   0.39887352  -0.08531985  -0.37424041   0.28892056  -0.84126932
+          1     3   0.31355367   0.39887352  -0.08531985  -0.37424041   0.28892056  -0.84126932
+          1     4  -2.99021148  -0.22346045  -2.76675103  -1.08095536  -1.68579567  -0.24834042
+          2     1  -0.67683136  -0.07971520  -0.59711616  -0.74077249   0.14365633  -3.73590207
+          2     2   2.00204037   0.33794005   1.66410032  -0.36440241   2.02850274  -3.03109050
+          2     3   2.00204037   0.33794005   1.66410032  -0.36440241   2.02850274  -3.03109050
+          2     4  -0.32736193   0.34780852  -0.67517046  -0.50744220  -0.16772826  -0.80815122
+          3     1  -1.34378919   0.32756852  -1.67135771  -0.45267065  -1.21868706  -0.12153864
+          3     2   0.49264214   0.40763792   0.08500422  -0.62972897   0.71473319  -0.39427425
+          3     3   0.76670205   0.52878875   0.23791330  -0.62440127   0.86231457  -1.03149313
+          3     4  -1.07476961   0.07657625  -1.15134586  -0.62852793  -0.52281793  -4.93420384
+          4     1  -0.82521531   0.16633743  -0.99155274  -0.37972460  -0.61182814  -0.21318181
+          4     2  -1.40528879   0.27797480  -1.68326359  -0.52538953  -1.15787406  -1.89400248
+          4     3  -1.89747710   0.34743764  -2.24491475  -0.72266813  -1.52224661  -1.02201803
+          4     4   2.24597640   0.50857071   1.73740568  -0.71865328   2.45605897  -2.35686871
+          5     1  -0.92875513   0.25337781  -1.18213294  -0.41548596  -0.76664698  -2.40433047
+          5     2   0.61780863   0.30842248   0.30938615  -0.55762467   0.86701082  -0.59500181
+          5     3  -0.78877056   0.31425589  -1.10302645  -0.65365917  -0.44936728  -0.17654543
+          5     4  -0.97716641   0.29343408  -1.27060049  -0.52785112  -0.74274937  -0.72776172
      End postahc output
  
-     Full off-diagonal complex self-energy is written
-     in selfen_real.dat and selfen_imag.dat.
-     Can differ from the output above because the
-     Self-energy of degenerate states are NOT averaged.
+     Full off-diagonal complex self-energy matrix is written in files
+     selfen_real.dat and selfen_imag.dat. These data can differ from
+     the output above because the self-energy of degenerate states are
+     NOT averaged in the selfen_*.dat output.
  
  
      debye_waller :      0.00s CPU      0.00s WALL (       4 calls)
      lower_fan    :      0.00s CPU      0.00s WALL (       4 calls)
      upper_fan    :      0.00s CPU      0.00s WALL (       4 calls)
  
-     POSTAHC      :      0.00s CPU      0.01s WALL
+     POSTAHC      :      0.10s CPU      0.11s WALL
 
  
-   This run was terminated on:  16:53:28   9Apr2020            
+   This run was terminated on:  16:44:21   6Feb2023            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
