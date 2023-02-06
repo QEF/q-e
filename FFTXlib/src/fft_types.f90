@@ -322,7 +322,9 @@ CONTAINS
     ALLOCATE( desc%tg_rdsp( desc%nproc2) ) ; desc%tg_rdsp = 0
 
 #if defined (__OPENMP_GPU)
+#ifndef __CRAY
     !$omp target enter data map(alloc:desc)
+#endif
     !$omp target enter data map(always,alloc:desc%nsp)
     !$omp target enter data map(always,alloc:desc%nsw)
     !$omp target enter data map(always,alloc:desc%ismap)
@@ -427,7 +429,9 @@ CONTAINS
     IF (OMP_TARGET_IS_PRESENT(c_loc(desc%nlm), OMP_GET_DEFAULT_DEVICE()) == 1) THEN
         !$omp target exit data map(delete:desc%nlm)
     ENDIF
+#ifndef __CRAY
     !$omp target exit data map(delete:desc)
+#endif
 #endif
 
     IF ( ALLOCATED( desc%aux  ) )   DEALLOCATE( desc%aux )
