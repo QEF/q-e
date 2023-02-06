@@ -1552,7 +1552,6 @@ SUBROUTINE electrons_scf ( printout, exxen )
           END IF
           !
           WRITE( stdout, 9062 ) (eband + deband), ehart, ( etxc - etxcc ), ewld
-          WRITE( stdout, 9301 ) eband
           !
           IF ( llondon ) WRITE ( stdout , 9074 ) elondon
           IF ( ldftd3 )  WRITE ( stdout , 9078 ) edftd3
