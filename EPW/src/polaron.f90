@@ -996,7 +996,7 @@ CONTAINS
          WRITE(stdout, '(5x, a, 50f16.7)') '      Eigenvalue (eV): ', eigVal*ryd2ev
          WRITE(stdout, '(5x, a, f16.7)')   '     Phonon part (eV): ', EPlrnPhon*ryd2ev
          WRITE(stdout, '(5x, a, f16.7)')   '   Electron part (eV): ', EPlrnElec*ryd2ev
-         IF (init_plrn==6) THEN
+         IF (init_plrn==6 .AND. niter_plrn==1) THEN
             WRITE(stdout, '(5x, a, f16.7)') 'Formation Energy at this \dtau (eV): ', ((- type_plrn)*eigval - EPlrnPhon)*ryd2ev
          ELSE 
             WRITE(stdout, '(5x, a, f16.7)')   'Formation Energy (eV): ', (EPlrnElec + EPlrnPhon)*ryd2ev
