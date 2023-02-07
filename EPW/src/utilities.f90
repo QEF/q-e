@@ -54,9 +54,17 @@
     !! arrays containing info from previous iterations
     !
     IF (alphamix < zero ) THEN
-      CALL mix_linear(ndim, deltaout, deltain, alphamix)
+      IF ((iter <= 3) .AND. (alphamix < -0.2d0)) THEN
+        CALL mix_linear(ndim, deltaout, deltain, -0.2d0)
+      ELSE
+        CALL mix_linear(ndim, deltaout, deltain, alphamix)
+      ENDIF
     ELSE
-      CALL mix_broyden(ndim, deltaout, deltain, alphamix, iter, n_iter, conv, df, dv)
+      IF ((iter <= 3) .AND. (alphamix > 0.2d0)) THEN
+        CALL mix_broyden(ndim, deltaout, deltain, 0.2d0, iter, n_iter, conv, df, dv)
+      ELSE
+        CALL mix_broyden(ndim, deltaout, deltain, alphamix, iter, n_iter, conv, df, dv)
+      ENDIF
     ENDIF
     !
     RETURN
@@ -90,7 +98,7 @@
     INTEGER :: i
     !
     DO i = 1, ndim
-      arin(i) = DABS(mixf) * arin(i) + (1.d0 - DABS(mixf)) * arout(i)
+      arin(i) = (1.d0 - DABS(mixf)) * arin(i) + DABS(mixf) * arout(i)
     ENDDO
     !
     !-----------------------------------------------------------------------
