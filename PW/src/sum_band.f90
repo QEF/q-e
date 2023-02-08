@@ -560,7 +560,7 @@ SUBROUTINE sum_band()
           IF ( dmft .AND. .NOT. dmft_updated) THEN
              ! 
              DO j = 1, npw
-                CALL ZGEMM( 'C', 'N', nbnd, 1, nbnd, (1.d0,0.d0), v_dmft(:,:,ik), &
+                CALL ZGEMM( 'T', 'N', nbnd, 1, nbnd, (1.d0,0.d0), v_dmft(:,:,ik), &
                             nbnd, evc(j,:), nbnd, (0.d0,0.d0), evc(j,:), nbnd )
              ENDDO
              !
