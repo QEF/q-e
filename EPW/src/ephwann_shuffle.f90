@@ -2109,6 +2109,12 @@
     IF (carrier) THEN
       DEALLOCATE(ef0_fca, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating ef0_fca', 1)
+      IF (ii_g) THEN
+        DEALLOCATE(partion, STAT = ierr)
+        IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating partion', 1)
+        DEALLOCATE(qtf2_therm, STAT = ierr)
+        IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating qtf2_therm', 1)
+      ENDIF
     ENDIF
     DEALLOCATE(epsilon2_abs, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epsilon2_abs', 1)
