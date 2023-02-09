@@ -57,10 +57,10 @@ CONTAINS
 #if defined(__OPENMP_GPU)
       ALLOCATE(aux(current_size), STAT=info)
       IF ( info /= 0 ) CALL fftx_error__( ' fft_buffers ', ' Allocation failed ', 4 )
-      !$omp target enter data map(always,alloc:aux)
+      !$omp target enter data map(alloc:aux)
       ALLOCATE(aux2(current_size), STAT=info)
       IF ( info /= 0 ) CALL fftx_error__( ' fft_buffers ', ' Allocation failed ', 5 )
-      !$omp target enter data map(always,alloc:aux2)
+      !$omp target enter data map(alloc:aux2)
 #else
       ALLOCATE(dev_space_fftparallel(current_size), STAT=info)
       IF ( info /= 0 ) CALL fftx_error__( ' fft_buffers ', ' Allocation failed ', 1 )

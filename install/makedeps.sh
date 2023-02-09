@@ -14,7 +14,7 @@ TOPDIR=`pwd`
 if test $# = 0
 then
 # this is the list of all directories for which we want to find dependencies
-# upon include files *.h or *.fh or modules. Note that libraries that are 
+# upon include files *.h or *.fh or modules. Note that libraries that are
 # externally maintained should not go into this list
 
     dirs=" LAXlib FFTXlib/src UtilXlib \
@@ -25,10 +25,10 @@ then
            PHonon/Gamma PHonon/PH PHonon/FD HP/src atomic/src \
            EPW/src XSpectra/src NEB/src TDDFPT/src \
            GWW/pw4gww GWW/gww GWW/head GWW/bse GWW/simple \
-	   GWW/simple_bse GWW/simple_ip QEHeat/src ACFDT/src KCW/src KCW/PP " 
-          
+	   GWW/simple_bse GWW/simple_ip QEHeat/src ACFDT/src KCW/src KCW/PP "
+
 elif
-    test $1 = "-addson" 
+    test $1 = "-addson"
 then
     echo "The script for adding new dependencies is running"
     echo "Usage: $0 -addson DIR DEPENDENCY_DIRS"
@@ -41,7 +41,6 @@ then
 else
     dirs=$*
 fi
-
 
 for dir in $dirs; do
 
@@ -58,13 +57,13 @@ for dir in $dirs; do
     LEVEL1=..
     LEVEL2=../..
     # default
-    DEPENDS="$LEVEL1/include" 
+    DEPENDS="$LEVEL1/include"
     # for convenience, used later
     DEPEND1="$LEVEL1/include $LEVEL1/FFTXlib/src $LEVEL1/XClib $LEVEL1/LAXlib \
 	     $LEVEL1/UtilXlib $LEVEL1/upflib"
     DEPEND3="$LEVEL2/include $LEVEL2/FFTXlib/src $LEVEL2/LAXlib $LEVEL2/UtilXlib"
     DEPEND2="$DEPEND3 $LEVEL2/upflib $LEVEL2/XClib $LEVEL2/Modules"
-    case $DIR in 
+    case $DIR in
         upflib )
              DEPENDS="$LEVEL1/include $LEVEL1/UtilXlib" ;;
         XClib )
@@ -75,7 +74,7 @@ for dir in $dirs; do
              DEPENDS="$LEVEL1/include $LEVEL1/UtilXlib $LEVEL1/Modules" ;;
         LR_Modules )
              DEPENDS="$DEPEND1 $LEVEL1/Modules $LEVEL1/PW/src" ;;
-	ACFDT/src ) 
+	ACFDT/src )
              DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;
 	atomic/src | GWW/gww )
 	     DEPENDS="$DEPEND2" ;;
@@ -90,9 +89,9 @@ for dir in $dirs; do
         KCW/PP )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL1/src" ;;
         EPW/src | QEHeat/src )
-             DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL2/PHonon/PH $LEVEL2/Modules" ;; 
+             DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL2/PHonon/PH $LEVEL2/Modules" ;;
 	GWW/head )
-	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;	
+	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;
 	GWW/bse )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules $LEVEL2/GWW/pw4gww $LEVEL2/GWW/gww" ;;
 	GWW/simple )
@@ -113,7 +112,7 @@ for dir in $dirs; do
 
     # list of all external library modules or include files
     libdeps="mpi omp_lib hdf5 mkl_dfti mkl_dfti.f90 fftw3.f03 fftw3.f \
-             mkl_dfti_omp_offload mkl_dfis_omp_offload.f90 \
+             mkl_dfti_omp_offload mkl_dfti_omp_offload.f90 \
              xc_version.h xc_f03_lib_m elpa elpa1 \
              mbd w90_io fox_dom fox_wxml m_common_io \
              device_fbuff_m device_memcpy_m device_auxfunc_m"
@@ -128,14 +127,14 @@ for dir in $dirs; do
     if test -d $TOPDIR/../$DIR
     then
 	cd $TOPDIR/../$DIR
-       
+
 cat > make.depend << EOF
 #####################################################################
 # Automatically generated file - if you notice lines looking like
-# some_file.o: @some_module@ 
-# figure out why "some_module", referenced in "some_file.o", is not 
+# some_file.o: @some_module@
+# figure out why "some_module", referenced in "some_file.o", is not
 # found: check spelling, presence in one of the DEPEND* directories
-# as defined in file "install/makedeps.sh"; if "some_module" is an 
+# as defined in file "install/makedeps.sh"; if "some_module" is an
 # external module, add it to the module lists "sysdeps", "libdeps",
 # "cudadeps" defined in "install/makedeps.sh".
 # Finally, from the top QE directory, run "make depend" to regenerate
@@ -152,7 +151,7 @@ EOF
         sed -f removedeps.tmp make.depend  > tmp; mv tmp make.depend
 	/bin/rm removedeps.tmp
 
-        # check for missing dependencies 
+        # check for missing dependencies
 	missing=`grep @ make.depend | grep -v @some_module@`
         if test "$missing" != "";
         then
@@ -164,7 +163,7 @@ EOF
            $ECHO -n "\rdirectory $DIR : ok"
        fi
     else
-       $ECHO "\ndirectory $DIR : not present in $TOPDIR" 
+       $ECHO "\ndirectory $DIR : not present in $TOPDIR"
     fi
 done
 if test "$notfound" = ""
