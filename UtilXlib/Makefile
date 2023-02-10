@@ -10,6 +10,8 @@ clocks_handler.o \
 cptimer.o \
 copy.o \
 c_mkdir.o \
+rocblas.o \
+onemkl_omp.o \
 device_helper.o \
 divide.o \
 data_buffer.o \
