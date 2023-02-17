@@ -3026,24 +3026,26 @@ CONTAINS
          lda_plus_u = .TRUE.
          !
          ! We need to determine automatically which case we are dealing with,
-         ! based on what Hubbard parameters we found in the HUBBARD card
+         ! based on what Hubbard parameters we found in the HUBBARD card.
+         ! Allow positive and negative values of Hubbard parameters
+         ! (just in case if users want to experiment with negative values)
          !
-         IF (ANY(Hubbard_J(:,:)>eps16)) THEN
+         IF (ANY(ABS(Hubbard_J(:,:))>eps16)) THEN
             ! DFT+U+J
             lda_plus_u_kind = 1
-            IF (ANY(Hubbard_J0(:)>eps16)) CALL errore('card_hubbard', &
-                    'Hund J is not compatible with Hund J0', i)
-            IF (ANY(Hubbard_V(:,:,:)>eps16)) CALL errore('card_hubbard', &
-                    'Currently Hund J is not compatible with Hubbard V', i)
-         ELSEIF (ANY(Hubbard_V(:,:,:)>eps16)) THEN
+            IF (ANY(ABS(Hubbard_J0(:))>eps16)) CALL errore('card_hubbard', &
+                    & 'Hund J is not compatible with Hund J0', i)
+            IF (ANY(ABS(Hubbard_V(:,:,:))>eps16)) CALL errore('card_hubbard', &
+                    & 'Currently Hund J is not compatible with Hubbard V', i)
+         ELSEIF (ANY(ABS(Hubbard_V(:,:,:))>eps16)) THEN
             ! DFT+U+V(+J0)
             lda_plus_u_kind = 2
             IF (noncolin) CALL errore('card_hubbard', &
                     'Hubbard V is not supported with noncolin=.true.', i)
-         ELSEIF (ANY(Hubbard_U(:)>eps16) .AND. noncolin) THEN
+         ELSEIF (ANY(ABS(Hubbard_U(:))>eps16) .AND. noncolin) THEN
             ! DFT+U
             lda_plus_u_kind = 1
-         ELSEIF (ANY(Hubbard_U(:)>eps16) .OR. ANY(Hubbard_J0(:)>eps16)) THEN
+         ELSEIF (ANY(ABS(Hubbard_U(:))>eps16) .OR. ANY(ABS(Hubbard_J0(:))>eps16)) THEN
             ! DFT+U(+J0)
             lda_plus_u_kind = 0
          ELSE

@@ -792,7 +792,7 @@ SUBROUTINE phq_readin()
      WRITE(stdout,'(5x,a)')  "045115 (2019) for the theoretical background."
 
      IF (okpaw) CALL errore('phq_readin',&
-          'The phonon code with paw and domag is not available yet',1)
+          'The phonon code with paw and magnetism is not yet available',1)
   ENDIF
 
   IF (okpaw.and.(lraman.or.elop)) CALL errore('phq_readin',&
@@ -803,8 +803,8 @@ SUBROUTINE phq_readin()
 
   IF (noncolin.and.(lraman.or.elop)) CALL errore('phq_readin', &
       'lraman, elop, and noncolin not programmed',1)
-  IF ( (noncolin.or.lspinorb) .and. elph ) CALL errore('phq_readin', &
-      'el-ph coefficient calculation disabled in noncolinear/spinorbit case',1)
+  IF ( domag .and. lspinorb .and. elph ) CALL errore('phq_readin', & 
+    'el-ph coefficient calculation disabled in magnetic spinorbit case',1)
 
   IF (lmovecell) CALL errore('phq_readin', &
       'The phonon code is not working after vc-relax',1)
