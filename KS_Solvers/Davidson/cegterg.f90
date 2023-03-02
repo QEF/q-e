@@ -120,6 +120,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
   !
+  !$omp target enter data map(to:evc)
+  !$omp target enter data map(alloc:e)
   nhpsi = 0
   CALL start_clock( 'cegterg' ); !write(*,*) 'start cegterg' ; FLUSH(6)
   !
@@ -163,6 +165,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      ALLOCATE( spsi( npwx*npol, nvecx ), STAT=ierr )
      IF( ierr /= 0 ) &
         CALL errore( ' cegterg ',' cannot allocate spsi ', ABS(ierr) )
+     !$omp target enter data map(to:spsi)
   END IF
   !
   ALLOCATE( sc( nvecx, nvecx ), STAT=ierr )
@@ -177,6 +180,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   ALLOCATE( ew( nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate ew ', ABS(ierr) )
+  !$omp target enter data map(alloc:sc, hc, vc, ew)
   ALLOCATE( conv( nvec ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate conv ', ABS(ierr) )
@@ -186,12 +190,22 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   nbase  = nvec
   conv   = .FALSE.
   !
+#if defined(__OPENMP_GPU) 
+  !$omp target teams distribute parallel do collapse(2)
+  do j=1, nvec
+     do i=1, npwx*npol
+        psi(i,j) = evc(i,j)
+     enddo
+  enddo
+#else
   !$acc host_data use_device(psi, hpsi, spsi, hc, sc)
   CALL dev_memcpy(psi, evc, (/ 1 , npwx*npol /), 1, &
                             (/ 1 , nvec /), 1)
+#endif
   !
   ! ... hpsi contains h times the basis vectors
   !
+  !$omp target update from(psi)
   CALL h_psi( npwx, npw, nvec, psi, hpsi ) ; nhpsi = nhpsi + nvec
   !
   ! ... spsi contains s times the basis vectors
@@ -207,8 +221,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   CALL mp_type_create_column_section(sc(1,1), 0, nbase, nvecx, column_section_type)
   my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
   !
+  !$omp target update to(hpsi)
   if (n_start .le. n_end) &
-  CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, hpsi(1,n_start), kdmx, ZERO, hc(1,n_start), nvecx )
+  CALL MYZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, hpsi(1,n_start), kdmx, ZERO, hc(1,n_start), nvecx )
+  !$omp target update from(hc)
   !
   if (n_start .le. n_end) & 
 #if defined(__CUDA)
@@ -220,15 +236,18 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   !
   IF ( uspp ) THEN
      !
+     !$omp target update to(spsi)
      if (n_start .le. n_end) &
-     CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, spsi(1,n_start), kdmx, &
+     CALL MYZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, spsi(1,n_start), kdmx, &
                  ZERO, sc(1,n_start), nvecx )
+     !$omp target update from (sc)
      !
   ELSE
      !
      if (n_start .le. n_end) &
-     CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, psi(1,n_start), kdmx, &
+     CALL MYZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, psi(1,n_start), kdmx, &
                  ZERO, sc(1,n_start), nvecx )
+     !$omp target update from (sc)
      !
   END IF
   !
@@ -245,6 +264,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   !
   !$acc parallel vector_length(64) 
   !$acc loop gang 
+  !$omp target update to(hc,sc)
+  !$omp target teams distribute parallel do
   DO n = 1, nbase
      !
      ! ... the diagonal of hc and sc must be strictly real
@@ -253,6 +274,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 ,kind=DP)
      !
      !$acc loop vector 
+     !$omp do simd
      DO m = n + 1, nbase
         !
         hc(n,m) = CONJG( hc(m,n) )
@@ -262,16 +284,28 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
   END DO
   !$acc end parallel
+  !$omp end target teams distribute parallel do
+  !$omp target update from(hc, sc)
   !
   CALL stop_clock( 'cegterg:init' )
   !
   IF ( lrot ) THEN
      !
+#if defined(__OPENMP_GPU)
+     !$omp target teams distribute parallel do collapse(2)
+     do j=1, nbase
+        do i=1, nbase
+           vc(i,j) = ZERO
+        enddo
+     enddo
+#else
      !$acc host_data use_device(vc)
      CALL dev_memset(vc, ZERO, (/1, nbase/), 1, (/1, nbase/), 1)
      !$acc end host_data
+#endif
      !
      !$acc parallel loop 
+     !$omp target teams distribute parallel do
      DO n = 1, nbase
         !
         e(n) = REAL( hc(n,n) )
@@ -280,7 +314,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !
      END DO
      !
+     !$omp target update from(e)
      CALL mp_bcast( e, root_bgrp_id, inter_bgrp_comm )
+     !$omp target update to(e)
      !
   ELSE
      !
@@ -295,10 +331,18 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         CALL mp_bcast( vc, root_bgrp_id, inter_bgrp_comm )
         CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
      ENDIF
+     !$omp target update to(hc, sc, vc, ew)
      CALL stop_clock( 'cegterg:diag' )
      !
+#if defined(__OPENMP_GPU)
+     !$omp target teams distribute parallel do
+     do i=1, nvec
+        e(i) = ew(i)
+     enddo
+#else
      CALL dev_memcpy (e, ew, (/ 1, nvec /), 1 )
      !$acc end host_data
+#endif
      !
   END IF
   !
@@ -326,6 +370,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
            !
            IF ( np /= n ) THEN
              !$acc parallel loop 
+             !$omp target teams distribute parallel do
              DO i = 1, nvecx
                vc(i,np) = vc(i,n)
              END DO 
@@ -334,8 +379,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
            ! ... for use in g_psi
            !
            !$acc kernels 
+           !$omp target
            ew(nbase+np) = e(n)
            !$acc end kernels 
+           !$omp end target
            !
         END IF
         !
@@ -351,14 +398,15 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !$acc host_data use_device(psi, spsi, vc)
      IF ( uspp ) THEN
         !
+        !$omp target update to(spsi)
         if (n_start .le. n_end) &
-        CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, spsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
+        CALL MYZGEMM( 'N','N', kdim, notcnv, my_n, ONE, spsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                     ZERO, psi(1,nb1), kdmx )
         !     
      ELSE
         !
         if (n_start .le. n_end) &
-        CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, psi(1,n_start), kdmx, vc(n_start,1), nvecx, &
+        CALL MYZGEMM( 'N','N', kdim, notcnv, my_n, ONE, psi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                     ZERO, psi(1,nb1), kdmx )
         !
      END IF
@@ -376,7 +424,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      END DO
      !$acc end parallel 
 #else
-     !$omp parallel do collapse(3)
+     !!!!omp parallel do collapse(3)
+     !$omp target teams distribute parallel do collapse(3)
      DO n = 1, notcnv
         DO ipol = 1, npol
            DO m = 1, numblock
@@ -388,15 +437,18 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
            END DO
         END DO
      END DO
-     !$omp end parallel do
+     !!!!omp end parallel do
 #endif
      !
      !$acc host_data use_device(psi, hpsi, vc, ew)
+     !$omp target update to(hpsi)
      if (n_start .le. n_end) &
-     CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, hpsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
+     CALL MYZGEMM( 'N','N', kdim, notcnv, my_n, ONE, hpsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                  ONE, psi(1,nb1), kdmx )
+     !$omp target update from(psi)
      CALL mp_sum( psi(:,nb1:nbase+notcnv), inter_bgrp_comm )
      !
+     !$omp target update from(ew)
      ! clean up garbage if there is any
      IF (npw < npwx) CALL dev_memset(psi, ZERO, [npw+1,npwx], 1, [nb1, nbase+notcnv])
      IF (npol == 2)  CALL dev_memset(psi, ZERO, [npwx+npw+1,2*npwx], 1, [nb1, nbase+notcnv])
@@ -416,6 +468,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      !$acc parallel vector_length(96) 
      !$acc loop gang private(nbn)
+     !$omp target update to(psi)
+     !$omp target teams distribute private(nbn)
      DO n = 1, notcnv
         !
         nbn = nbase + n
@@ -426,16 +480,20 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      IF(npol.ne.1) THEN 
        !$acc loop gang private(nbn)
+       !$omp target teams distribute private(nbn)
        DO n = 1, notcnv 
          nbn = nbase + n
          ew(n) = ew(n)  + MYDDOT_VECTOR_GPU( 2*npw, psi(npwx+1,nbn), psi(npwx+1,nbn) ) 
        END DO 
      END IF 
      !$acc end parallel 
+     !$omp target update from(ew)
      !
      !$acc host_data use_device(ew)
      CALL mp_sum( ew( 1:notcnv ), intra_bgrp_comm )
      !$acc end host_data
+     !
+     !$omp target update to(ew)
      !
 #if defined(__CUDA)
      !$acc parallel loop collapse(3) 
@@ -447,7 +505,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         END DO
      END DO
 #else
-     !$omp parallel do collapse(3)
+     !!!!omp parallel do collapse(3)
+     !$omp target teams distribute parallel do collapse(3)
      DO n = 1, notcnv
         DO ipol = 1, npol
            DO m = 1, numblock
@@ -459,12 +518,13 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
            END DO
         END DO
      END DO
-     !$omp end parallel do
+     !!!!omp end parallel do
 #endif
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
      !$acc host_data use_device(psi, hpsi, spsi, hc, sc)
+     !$omp target update from(psi)
      CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
      !
      IF ( uspp ) CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
@@ -477,8 +537,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      CALL mp_type_create_column_section(sc(1,1), nbase, notcnv, nvecx, column_section_type)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      !
-     CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, hpsi(1,nb1), kdmx, psi(1,n_start), kdmx, &
+     !$omp target update to(hpsi)
+     CALL MYZGEMM( 'C','N', notcnv, my_n, kdim, ONE, hpsi(1,nb1), kdmx, psi(1,n_start), kdmx, &
                  ZERO, hc(nb1,n_start), nvecx )
+     !$omp target update from(hc)
      !
      if (n_start .le. n_end) &
 #if defined(__CUDA)
@@ -492,13 +554,16 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      IF ( uspp ) THEN
         !
-        CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, spsi(1,nb1), kdmx, psi(1,n_start), kdmx, &
+        !$omp target update to(spsi)
+        CALL MYZGEMM( 'C','N', notcnv, my_n, kdim, ONE, spsi(1,nb1), kdmx, psi(1,n_start), kdmx, &
                     ZERO, sc(nb1,n_start), nvecx )
+        !$omp target update from(sc)
         !     
      ELSE
         !
-        CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, psi(1,nb1), kdmx, psi(1,n_start), kdmx, &
+        CALL MYZGEMM( 'C','N', notcnv, my_n, kdim, ONE, psi(1,nb1), kdmx, psi(1,n_start), kdmx, &
                     ZERO, sc(nb1,n_start), nvecx )
+        !$omp target update from(sc)
         !
      END IF
      !
@@ -509,6 +574,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
          CALL mp_sum( sc(nb1:nbase+notcnv, n_start:n_end) , intra_bgrp_comm )
 #endif
      CALL mp_gather( sc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
+     !$omp target update to(hc,sc)
      !$acc end host_data
      !
      CALL mp_type_free( column_section_type )
@@ -519,6 +585,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      !$acc parallel vector_length(64)
      !$acc loop gang
+     !$omp target teams distribute parallel do
      DO n = 1, nbase
         !
         ! ... the diagonal of hc and sc must be strictly real
@@ -529,6 +596,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         ENDIF
         !
         !$acc loop vector
+        !$omp do simd
         DO m = MAX(n+1,nb1), nbase
            !
            hc(n,m) = CONJG( hc(m,n) )
@@ -542,6 +610,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      ! ... diagonalize the reduced hamiltonian
      !
      !$acc host_data use_device(hc, sc, vc, ew)
+     !$omp target update from(hc, sc, vc)
      CALL start_clock( 'cegterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
         CALL diaghg( nbase, nvec, hc, sc, nvecx, ew, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
@@ -552,10 +621,12 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      ENDIF
      CALL stop_clock( 'cegterg:diag' )
      !$acc end host_data
+     !$omp target update to(ew)
      !
      ! ... test for convergence
      !
      !$acc parallel loop copy(conv(1:nvec)) copyin(btype(1:nvec))
+     !$omp target teams distribute parallel do map(tofrom:conv) map(to:btype)
      DO i = 1, nvec
        IF(btype(i) == 1) THEN
          conv(i) = ( ( ABS( ew(i) - e(i) ) < ethr ) )
@@ -569,9 +640,16 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      notcnv = COUNT( .NOT. conv(:) )
      !
+#if defined(__OPENMP_GPU)
+     !$omp target teams distribute parallel do
+     do i=1, nvec
+        e(i) = ew(i)
+     enddo
+#else
      !$acc host_data use_device(ew)
      CALL dev_memcpy (e, ew, (/ 1, nvec /) )
      !$acc end host_data
+#endif
      !
      ! ... if overall convergence has been achieved, or the dimension of
      ! ... the reduced basis set is becoming too large, or in any case if
@@ -579,6 +657,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      ! ... the first nvec elements with the current estimate of the
      ! ... eigenvectors;  set the basis dimension to nvec.
      !
+     !$omp target update to(hc, sc, vc)
      IF ( notcnv == 0 .OR. &
           nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
         !
@@ -587,10 +666,12 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
         my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
         !$acc host_data use_device(psi, vc)
-        CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, psi(1,n_start), kdmx, vc(n_start,1), nvecx, &
+        CALL MYZGEMM( 'N','N', kdim, nvec, my_n, ONE, psi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                     ZERO, evc, kdmx )
         !$acc end host_data
+        !$omp target update from(evc)
         CALL mp_sum( evc, inter_bgrp_comm )
+        !$omp target update to(evc)
         !
         IF ( notcnv == 0 ) THEN
            !
@@ -615,14 +696,25 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !
         ! ... refresh psi, H*psi and S*psi
         !
+#if defined(__OPENMP_GPU)
+        !$omp target teams distribute parallel do collapse(2)
+        do j=1, nvec
+           do i=1, npwx*npol
+              psi(i,j) = evc(i,j)
+           enddo
+        enddo
+#else
         !$acc host_data use_device(psi, hpsi, spsi, vc)
         CALL dev_memcpy(psi, evc, (/ 1, npwx*npol /), 1, &
                                       (/ 1, nvec /), 1)
+#endif
         !
         IF ( uspp ) THEN
            !
-           CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, spsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
+           !$omp target update to(spsi)
+           CALL MYZGEMM( 'N','N', kdim, nvec, my_n, ONE, spsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                        ZERO, psi(1,nvec+1), kdmx)
+           !$omp target update from(psi)
            CALL dev_memcpy(spsi, psi(:,nvec+1:), &
                                         (/1, npwx*npol/), 1, &
                                         (/1, nvec/), 1)
@@ -630,8 +722,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
            !
         END IF
         !
-        CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, hpsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
+        !$omp target update to(hpsi)
+        CALL MYZGEMM( 'N','N', kdim, nvec, my_n, ONE, hpsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                     ZERO, psi(1,nvec+1), kdmx )
+        !$omp target update from(psi)
         CALL dev_memcpy(hpsi, psi(:,nvec+1:), &
                                         (/1, npwx*npol/), 1, &
                                         (/1, nvec/), 1)
@@ -648,6 +742,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !vc(1:nbase,1:nbase) = ZERO
         !
         !$acc kernels 
+        !$omp target teams distribute parallel do
         DO n = 1, nbase
            hc(n,n) = CMPLX( e(n), 0.0_DP ,kind=DP)
            sc(n,n) = ONE
@@ -670,14 +765,19 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
   END DO iterate
   !
+  !$omp target exit data map(delete:evc)
+  !$omp target exit data map(from:e)
+  !
   DEALLOCATE( recv_counts )
   DEALLOCATE( displs )
   DEALLOCATE( conv )
+  !$omp target exit data map(delete:sc, hc, vc, ew)
   DEALLOCATE( ew )
   DEALLOCATE( vc )
   DEALLOCATE( hc )
   DEALLOCATE( sc )
   !
+  !$omp target exit data map(delete:spsi)
   IF ( uspp ) DEALLOCATE( spsi )
   !
 #if defined(__OPENMP_GPU)
