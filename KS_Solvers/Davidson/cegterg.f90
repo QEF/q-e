@@ -236,6 +236,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   !
   IF ( uspp ) THEN
      !
+     !$omp target update to(spsi)
      if (n_start .le. n_end) &
      CALL MYZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, spsi(1,n_start), kdmx, &
                  ZERO, sc(1,n_start), nvecx )
@@ -491,6 +492,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !$acc host_data use_device(ew)
      CALL mp_sum( ew( 1:notcnv ), intra_bgrp_comm )
      !$acc end host_data
+     !
+     !$omp target update to(ew)
      !
 #if defined(__CUDA)
      !$acc parallel loop collapse(3) 
