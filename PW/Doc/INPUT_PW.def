@@ -3903,7 +3903,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
         
         label { 
-            Optional card, needed only if @ref ibrav == 0 is specified, ignored otherwise ! 
+            Optional card, must be present if @ref ibrav == 0, must be absent otherwise
         }
         
         syntax {
