@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2021 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -524,6 +524,7 @@ CONTAINS
     USE uspp,             ONLY : okvan
     USE xc_lib,           ONLY : xclib_dft_is
     USE ldaU,             ONLY : lda_plus_u
+    USE noncollin_module, ONLY : domag
 
     IMPLICIT NONE
     !
@@ -578,6 +579,8 @@ CONTAINS
        IF (.NOT. gamma_only ) CALL errore('lr_readin', 'k-point algorithm is not tested yet',1)
        !
     ENDIF
+    !
+    IF (eels .AND. domag) CALL errore('lr_readin', 'EELS for magnetic systems is not implemented',1)
     !
     ! No taskgroups and EXX.
     !

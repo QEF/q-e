@@ -288,7 +288,8 @@ SUBROUTINE hp_solve_linear_system (na, iq)
            WRITE( stdout, '(6x, "2. Numerical instabilities due to too low cutoff")')
            WRITE( stdout, '(6x, "   for hard pseudopotentials.")')
            WRITE( stdout, '(/6x,"Stopping...")')
-           WRITE( stdout, '(/6x,"Solution: Try to use the 2-step scf procedure as in HP/example02")')
+           WRITE( stdout, '(/6x,"Solution (for magnetic insulators):")')
+           WRITE( stdout, '(6x,"Try to use the 2-step scf procedure as in HP/example02")')
            !
            CALL hp_stop_smoothly (.FALSE.)
            !
