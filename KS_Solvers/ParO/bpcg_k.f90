@@ -151,23 +151,23 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
         ! initial preconditioned gradient 
         !$acc host_data use_device(z, e)
         do l=nactive+1,nactive+nnew; i=l+done
-           call g_1psi(npwx,npw,z(:,l),e(i))     
+           call g_1psi(npwx,npw,z(:,l),e(i))
         end do
         !$acc end host_data
 
      !- project on conduction bands
         CALL start_clock( 'pcg:ortho' )
         !$acc host_data use_device(spsi0, psi0, z, spsi0vec)
-        CALL MYZGEMM( 'C', 'N', nbnd, nnew, kdim, ONE, spsi0, kdmx, z(:,nactive+1), &
-                                          kdmx, ZERO, spsi0vec, nbnd )
+        CALL MYZGEMM2( 'C', 'N', nbnd, nnew, kdim, ONE, spsi0, kdmx, z(:,nactive+1), &
+                                    kdmx, ZERO, spsi0vec, nbnd, .FALSE. )
         CALL mp_sum( spsi0vec, intra_bgrp_comm )
-        CALL MYZGEMM( 'N', 'N', kdim, nnew, nbnd, (-1.D0,0.D0), psi0, kdmx, spsi0vec, &
-                                          nbnd, ONE, z(:,nactive+1), kdmx )
+        CALL MYZGEMM2( 'N', 'N', kdim, nnew, nbnd, (-1.D0,0.D0), psi0, kdmx, spsi0vec, &
+                               nbnd, ONE, z(:,nactive+1), kdmx, .FALSE. )
         !$acc end host_data
         CALL stop_clock( 'pcg:ortho' )
      !-
 
-        !$acc parallel loop 
+        !$acc parallel loop
         do l=nactive+1,nactive+nnew
            g0(l) = MYDDOT_VECTOR_GPU( 2*kdim, z(:,l), b(:,l) )
         end do
@@ -274,9 +274,11 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
   !- project on conduction bands
      CALL start_clock( 'pcg:ortho' )
      !$acc host_data use_device(spsi0, psi0, z, spsi0vec)
-     CALL MYZGEMM( 'C', 'N', nbnd, nactive, kdim, ONE, spsi0, kdmx, z, kdmx, ZERO, spsi0vec, nbnd )
+     CALL MYZGEMM2( 'C', 'N', nbnd, nactive, kdim, ONE, spsi0, kdmx, z, kdmx, ZERO, spsi0vec, &
+                    nbnd, .FALSE. )
      CALL mp_sum( spsi0vec, intra_bgrp_comm )
-     CALL MYZGEMM( 'N', 'N', kdim, nactive, nbnd, (-1.D0,0.D0), psi0, kdmx, spsi0vec, nbnd, ONE, z, kdmx )
+     CALL MYZGEMM2( 'N', 'N', kdim, nactive, nbnd, (-1.D0,0.D0), psi0, kdmx, spsi0vec, nbnd, ONE, &
+                    z, kdmx, .FALSE. )
      !$acc end host_data
      CALL stop_clock( 'pcg:ortho' )
   !-

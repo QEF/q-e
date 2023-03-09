@@ -168,8 +168,8 @@ SUBROUTINE addusdens_g(rho)
            ! ... sum over atoms
            !
            !$acc host_data use_device(skk,tbecsum,aux2)
-           CALL MYDGEMM( 'N', 'T', 2*ngm_l, nij, nab, 1.0_dp, skk, 2*ngm_l, &
-                         tbecsum(1,1,is), nij, 0.0_dp, aux2, 2*ngm_l )
+           CALL MYDGEMM2( 'N', 'T', 2*ngm_l, nij, nab, 1.0_dp, skk, 2*ngm_l, &
+                          tbecsum(1,1,is), nij, 0.0_dp, aux2, 2*ngm_l,.FALSE. )
            !$acc end host_data
            !
            ! ... sum over lm indices of Q_{lm}

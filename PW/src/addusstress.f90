@@ -170,8 +170,8 @@ SUBROUTINE addusstress_g( sigmanlc )
                  !$acc end kernels
                  !
                  !$acc host_data use_device(qgm,tbecsum,aux2)
-                 CALL MYDGEMM( 'N', 'N', 2*ngm_l, nspin, nij, 1.0_dp, &
-                               qgm, 2*ngm_l, tbecsum, nij, 0.0_dp, aux2, 2*ngm_l )
+                 CALL MYDGEMM2( 'N', 'N', 2*ngm_l, nspin, nij, 1.0_dp, &
+                                qgm, 2*ngm_l, tbecsum, nij, 0.0_dp, aux2, 2*ngm_l, .FALSE. )
                  !$acc end host_data
                  !
 #if defined(_OPENACC)
@@ -205,8 +205,8 @@ SUBROUTINE addusstress_g( sigmanlc )
                  !
                  !$acc data copyout( fac )
                  !$acc host_data use_device(aux1,aux2,fac)
-                 CALL MYDGEMM( 'T','N', 3, nspin, 2*ngm_l, 1.0_dp, aux1, 2*ngm_l, &
-                               aux2, 2*ngm_l, 0.0_dp, fac, 3 )
+                 CALL MYDGEMM2( 'T','N', 3, nspin, 2*ngm_l, 1.0_dp, aux1, 2*ngm_l, &
+                                aux2, 2*ngm_l, 0.0_dp, fac, 3,.FALSE. )
                  !$acc end host_data
                  !$acc end data
                  !

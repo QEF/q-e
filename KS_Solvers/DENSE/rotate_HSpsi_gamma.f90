@@ -85,7 +85,7 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
 
   my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
   if (n_start .le. n_end) &
-  CALL MYDGEMM( 'T','N', nstart,my_n,kdim, 2.D0, psi,kdmx, hpsi(1,n_start),kdmx, 0.D0, hh(1,n_start),nstart )
+  CALL MYDGEMM2( 'T','N', nstart,my_n,kdim, 2.D0, psi,kdmx, hpsi(1,n_start),kdmx, 0.D0, hh(1,n_start),nstart,.FALSE. )
   IF ( gstart == 2 ) call MYDGER( nstart, my_n, -1.D0, psi,kdmx, hpsi(1,n_start),kdmx, hh(1,n_start),nstart )
   call start_clock('rotHSw:hc:s1')
   CALL mp_sum( hh(:,n_start:n_end), intra_bgrp_comm ) ! this section only needs to be collected inside bgrp
@@ -98,13 +98,13 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
   IF ( overlap ) THEN
      !
      if (n_start .le. n_end) &
-     CALL MYDGEMM('T','N', nstart,my_n,kdim, 2.D0, psi,kdmx, spsi(1,n_start),kdmx, 0.D0, ss(1,n_start),nstart)
+     CALL MYDGEMM2('T','N', nstart,my_n,kdim, 2.D0, psi,kdmx, spsi(1,n_start),kdmx, 0.D0, ss(1,n_start),nstart,.FALSE. )
      IF ( gstart == 2 ) CALL MYDGER(nstart, my_n, -1.D0, psi,kdmx, spsi(1,n_start),kdmx, ss(1,n_start),nstart)
      !
   ELSE
      !
      if (n_start .le. n_end) &
-     CALL MYDGEMM('T','N', nstart,my_n,kdim, 2.D0, psi,kdmx, psi(1,n_start),kdmx, 0.D0, ss(1,n_start),nstart)
+     CALL MYDGEMM2('T','N', nstart,my_n,kdim, 2.D0, psi,kdmx, psi(1,n_start),kdmx, 0.D0, ss(1,n_start),nstart,.FALSE. )
      IF ( gstart == 2 ) CALL MYDGER(nstart, my_n, -1.D0, psi,kdmx, psi(1,n_start),kdmx, ss(1,n_start),nstart)
      !
   END IF
@@ -142,7 +142,7 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
 
   my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
   if (n_start .le. n_end) &
-  CALL MYDGEMM( 'N','N', kdim,my_n,nstart, 1.D0, psi,kdmx,vv(1,n_start),nstart, 0.D0, aux(1,n_start),kdmx )
+  CALL MYDGEMM2( 'N','N', kdim,my_n,nstart, 1.D0, psi,kdmx,vv(1,n_start),nstart, 0.D0, aux(1,n_start),kdmx,.FALSE. )
   CALL dev_memcpy(psi, aux, [1, npwx], 1, [n_start,n_end])
 !  call start_clock('rotHSw:ev:b3'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b3')
   call start_clock('rotHSw:ev:s5')
@@ -150,7 +150,7 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
   call stop_clock('rotHSw:ev:s5')
 
   if (n_start .le. n_end) &
-  CALL MYDGEMM( 'N','N', kdim,my_n,nstart, 1.D0,hpsi,kdmx,vv(1,n_start),nstart, 0.D0, aux(1,n_start),kdmx )
+  CALL MYDGEMM2( 'N','N', kdim,my_n,nstart, 1.D0,hpsi,kdmx,vv(1,n_start),nstart, 0.D0, aux(1,n_start),kdmx,.FALSE. )
   CALL dev_memcpy(hpsi, aux, [1, npwx], 1, [n_start,n_end])  
 !  call start_clock('rotHSw:ev:b4'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b4')
   call start_clock('rotHSw:ev:s6')
@@ -160,7 +160,7 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
   IF (overlap) THEN
 
      if (n_start .le. n_end) &
-     CALL MYDGEMM( 'N','N', kdim,my_n,nstart, 1.D0,spsi,kdmx,vv(1,n_start),nstart, 0.D0, aux(1,n_start),kdmx )
+     CALL MYDGEMM2( 'N','N', kdim,my_n,nstart, 1.D0,spsi,kdmx,vv(1,n_start),nstart, 0.D0, aux(1,n_start),kdmx,.FALSE. )
      CALL dev_memcpy(spsi, aux, [1, npwx], 1, [n_start,n_end])     
 !     call start_clock('rotHSw:ev:b5'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b5')
      call start_clock('rotHSw:ev:s7')
