@@ -198,8 +198,8 @@ SUBROUTINE addusforce_g( forcenl )
            !
            !$acc host_data use_device(qgm,aux1,ddeeq)
            DO ipol = 1, 3
-              CALL MYDGEMM( 'C', 'N', nij, nab, 2*ngm_l, fact, qgm, 2*ngm_l, &
-                            aux1(1,1,ipol), 2*ngm_l, 0.0_DP, ddeeq(1,1,ipol,is), nij )
+              CALL MYDGEMM2( 'C', 'N', nij, nab, 2*ngm_l, fact, qgm, 2*ngm_l, &
+                             aux1(1,1,ipol), 2*ngm_l, 0.0_DP, ddeeq(1,1,ipol,is), nij, .FALSE. )
            ENDDO
            !$acc end host_data
            !

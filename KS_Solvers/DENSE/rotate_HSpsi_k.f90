@@ -84,8 +84,8 @@ SUBROUTINE rotate_HSpsi_k( npwx, npw, nstart, nbnd, npol, psi, hpsi, overlap, sp
 
   my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
   if (n_start .le. n_end) &
-    CALL MYZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, hpsi(1,n_start), kdmx, (0.D0,0.D0), &
-                                                                                         hh(1,n_start), nstart )
+    CALL MYZGEMM2( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, hpsi(1,n_start), kdmx, (0.D0,0.D0), &
+                                                                              hh(1,n_start), nstart,.FALSE. )
   call start_clock('rotHSw:hc:s1')
   CALL mp_sum( hh(:,n_start:n_end), intra_bgrp_comm ) ! this section only needs to be collected inside bgrp
   call stop_clock('rotHSw:hc:s1')
@@ -97,14 +97,14 @@ SUBROUTINE rotate_HSpsi_k( npwx, npw, nstart, nbnd, npol, psi, hpsi, overlap, sp
   IF ( overlap ) THEN
      !
      if (n_start .le. n_end) &
-       CALL MYZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, spsi(1,n_start), kdmx, &
-                                                                          (0.D0,0.D0), ss(1,n_start), nstart )
+       CALL MYZGEMM2( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, spsi(1,n_start), kdmx, &
+                                                      (0.D0,0.D0), ss(1,n_start), nstart, .FALSE. )
      !
   ELSE
      !
      if (n_start .le. n_end) &
-       CALL MYZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, psi(1,n_start), kdmx, &
-                                                                           (0.D0,0.D0), ss(1,n_start), nstart )
+       CALL MYZGEMM2( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, psi(1,n_start), kdmx, &
+                                                     (0.D0,0.D0), ss(1,n_start), nstart, .FALSE. )
      !
   END IF
   call start_clock('rotHSw:hc:s3')
@@ -142,8 +142,8 @@ SUBROUTINE rotate_HSpsi_k( npwx, npw, nstart, nbnd, npol, psi, hpsi, overlap, sp
 
   my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
   if (n_start .le. n_end) &
-    CALL MYZGEMM( 'N','N', kdim, my_n, nstart, (1.D0,0.D0), psi, kdmx, vv(1,n_start), nstart, &
-                                                                      (0.D0,0.D0), aux(1,n_start), kdmx )
+    CALL MYZGEMM2( 'N','N', kdim, my_n, nstart, (1.D0,0.D0), psi, kdmx, vv(1,n_start), nstart, &
+                                                    (0.D0,0.D0), aux(1,n_start), kdmx, .FALSE. )
   CALL dev_memcpy(psi, aux, [1, kdmx], 1, [n_start,n_end])
 !  call start_clock('rotHSw:ev:b3'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b3')
   call start_clock('rotHSw:ev:s5')
@@ -151,8 +151,8 @@ SUBROUTINE rotate_HSpsi_k( npwx, npw, nstart, nbnd, npol, psi, hpsi, overlap, sp
   call stop_clock('rotHSw:ev:s5')
 
   if (n_start .le. n_end) &
-    CALL MYZGEMM( 'N','N', kdim, my_n, nstart, (1.D0,0.D0), hpsi, kdmx, vv(1,n_start), nstart, &
-                                                                       (0.D0,0.D0), aux(1,n_start), kdmx )
+    CALL MYZGEMM2( 'N','N', kdim, my_n, nstart, (1.D0,0.D0), hpsi, kdmx, vv(1,n_start), nstart, &
+                                                     (0.D0,0.D0), aux(1,n_start), kdmx, .FALSE. )
   CALL dev_memcpy(hpsi, aux, [1, kdmx], 1, [n_start,n_end])  
 !  call start_clock('rotHSw:ev:b4'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b4')
   call start_clock('rotHSw:ev:s6')
@@ -162,8 +162,8 @@ SUBROUTINE rotate_HSpsi_k( npwx, npw, nstart, nbnd, npol, psi, hpsi, overlap, sp
   IF (overlap) THEN
 
      if (n_start .le. n_end) &
-       CALL MYZGEMM( 'N','N', kdim, my_n, nstart, (1.D0,0.D0), spsi, kdmx, vv(1,n_start), &
-                                                          nstart, (0.D0,0.D0), aux(1,n_start), kdmx )
+       CALL MYZGEMM2( 'N','N', kdim, my_n, nstart, (1.D0,0.D0), spsi, kdmx, vv(1,n_start), &
+                            nstart, (0.D0,0.D0), aux(1,n_start), kdmx, .FALSE. )
      CALL dev_memcpy(spsi, aux, [1, kdmx], 1, [n_start,n_end])     
 !     call start_clock('rotHSw:ev:b5'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b5')
      call start_clock('rotHSw:ev:s7')
@@ -426,7 +426,7 @@ CONTAINS
            ! use blas subs. on the matrix block
 
            call start_clock('rotHSw:hc:comp')
-           CALL ZGEMM( 'C','N', nr,nc,my_kdim, ( 1.D0, 0.D0 ), v(npw_s,ir),kdmx, w(npw_s,ic),kdmx, ( 0.D0, 0.D0 ), work,nx )
+           CALL ZGEMM( 'C','N', nr,nc,my_kdim, ( 1.D0, 0.D0 ), v(npw_s,ir),kdmx, w(npw_s,ic),kdmx, ( 0.D0, 0.D0 ),work,nx )
            call stop_clock('rotHSw:hc:comp')
 
 !           call start_clock('rotHSw:hc:b1'); CALL mp_barrier( ortho_parent_comm ); call stop_clock('rotHSw:hc:b1')

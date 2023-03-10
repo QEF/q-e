@@ -110,7 +110,7 @@ MODULE wave_gauge
          call mydgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, t_plus, 2*npwx, t_zero, 2*npwx, 0.d0, sa, nbnd)
          !$acc end host_data
 #else
-         call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, t_plus, 2*npwx, t_zero, 2*npwx, 0.d0, sa, nbnd) 
+         call mydgemm2('T', 'N', nbnd, nbnd, 2*npw, 2.d0, t_plus, 2*npwx, t_zero, 2*npwx, 0.d0, sa, nbnd,.false.) 
 #endif 
       end if
 #if defined (__CUDA) 
@@ -118,7 +118,7 @@ MODULE wave_gauge
       call mydgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, t_minus, 2*npwx, t_zero, 2*npwx, 0.d0, sb, nbnd)
       !$acc end host_data
 #else 
-      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, t_minus, 2*npwx, t_zero, 2*npwx, 0.d0, sb, nbnd)
+      call mydgemm2('T', 'N', nbnd, nbnd, 2*npw, 2.d0, t_minus, 2*npwx, t_zero, 2*npwx, 0.d0, sb, nbnd,.false.)
 #endif 
       if (gstart == 2) then
          !$acc parallel loop collapse(2) present(sa,sb,t_plus,t_minus,t_zero)
@@ -151,7 +151,7 @@ MODULE wave_gauge
              call mydgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, sa, nbnd, sa, nbnd, 0.d0, ssa, nbnd)
              !$acc end host_data
 #else 
-             call dgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, sa, nbnd, sa, nbnd, 0.d0, ssa, nbnd)
+             call mydgemm2('T', 'N', nbnd, nbnd, nbnd, 1.d0, sa, nbnd, sa, nbnd, 0.d0, ssa, nbnd,.false.)
 #endif 
          end if
 #if defined (__CUDA) 
@@ -159,7 +159,7 @@ MODULE wave_gauge
          call mydgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, sb, nbnd, sb, nbnd, 0.d0, ssb, nbnd)
          !$acc end host_data
 #else 
-         call dgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, sb, nbnd, sb, nbnd, 0.d0, ssb, nbnd)
+         call mydgemm2('T', 'N', nbnd, nbnd, nbnd, 1.d0, sb, nbnd, sb, nbnd, 0.d0, ssb, nbnd,.false.)
 #endif
       end if
       ! compute final projection

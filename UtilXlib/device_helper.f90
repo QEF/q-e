@@ -84,6 +84,86 @@ SUBROUTINE MYZGEMM( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC
 
 END SUBROUTINE MYZGEMM
 
+!=============================================================================================
+! The following two are PROVISIONAL routines for omp5 porting. They do the same as MYDGEMM and
+! MYZGEMM, but with an additional variable (OMP_OFFLOAD) to decide wether to perform a cpu 
+! _gemm or call a rocblas _gemm which takes gpu_only arguments.
+!
+SUBROUTINE MYDGEMM2( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC, OMP_OFFLOAD )
+#if defined(__CUDA)
+    use cudafor
+    use cublas
+#elif defined(__OPENMP_GPU)
+#if defined(__ONEMKL)
+    use onemkl_blas_gpu
+#endif
+#if defined(__ROCBLAS)
+    use rocblas_utils
+#endif
+#endif
+    CHARACTER*1, INTENT(IN) ::        TRANSA, TRANSB
+    INTEGER, INTENT(IN) ::            M, N, K, LDA, LDB, LDC
+    DOUBLE PRECISION, INTENT(IN) ::   ALPHA, BETA
+    DOUBLE PRECISION  :: A( LDA, * ), B( LDB, * ), C( LDC, * )
+    LOGICAL, INTENT(IN) :: OMP_OFFLOAD
+#if defined(__CUDA)
+    attributes(device) :: A, B, C
+    CALL cublasdgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+#else
+#if defined(__ONEMKL)
+    !$omp target variant dispatch use_device_ptr(A, B, C)
+#endif
+#if defined(__ROCBLAS)
+    IF (OMP_OFFLOAD) CALL rocblas_dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+    IF (.NOT. OMP_OFFLOAD) CALL dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+#else
+    CALL dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+#endif
+#if defined(__ONEMKL)
+    !$omp end target variant dispatch
+#endif
+#endif
+
+END SUBROUTINE MYDGEMM2
+
+SUBROUTINE MYZGEMM2( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC, OMP_OFFLOAD )
+#if defined(__CUDA)
+    use cudafor
+    use cublas
+#elif defined(__OPENMP_GPU)
+#if defined(__ONEMKL)
+    use onemkl_blas_gpu
+#endif
+#if defined(__ROCBLAS)
+    use rocblas_utils
+#endif
+#endif
+    CHARACTER*1, INTENT(IN) ::        TRANSA, TRANSB
+    INTEGER, INTENT(IN) ::            M, N, K, LDA, LDB, LDC
+    COMPLEX*16, INTENT(IN) :: ALPHA, BETA
+    COMPLEX*16  :: A( LDA, * ), B( LDB, * ), C( LDC, * )
+    LOGICAL, INTENT(IN) :: OMP_OFFLOAD
+#if defined(__CUDA)
+    attributes(device) :: A, B, C
+    CALL cublaszgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+#else
+#if defined(__ONEMKL)
+    !$omp target variant dispatch use_device_ptr(A, B, C)
+#endif
+#if defined(__ROCBLAS)
+    IF (OMP_OFFLOAD) CALL rocblas_zgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+    IF (.NOT. OMP_OFFLOAD) CALL zgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+#else
+    CALL zgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+#endif
+#if defined(__ONEMKL)
+    !$omp end target variant dispatch
+#endif
+#endif
+
+END SUBROUTINE MYZGEMM2
+!========================================================================================================
+
 ! In principle this can go away .......
 SUBROUTINE MYDGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
 #if defined(__CUDA)
