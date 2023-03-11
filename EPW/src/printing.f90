@@ -882,11 +882,12 @@
     USE io_global,     ONLY : stdout
     !!!!!
     ! USE epwcom,        ONLY : liso, laniso, lreal, imag_read, wscut
-    USE epwcom,        ONLY : liso, laniso, lreal, imag_read, wscut, fbw
+    USE epwcom,        ONLY : liso, laniso, lreal, imag_read, wscut, &
+                              fbw, broyden_beta
     !!!!!
     USE elph2,         ONLY : gtemp
     USE eliashbergcom, ONLY : nsiw, nsw
-    USE constants_epw, ONLY : kelvin2eV
+    USE constants_epw, ONLY : kelvin2eV, zero
     USE constants,     ONLY : pi
     !
     IMPLICIT NONE
@@ -923,6 +924,14 @@
       WRITE(stdout, '(a)') '    '
       WRITE(stdout, '(5x, a, i6, a, i6)') 'Total number of frequency points nsiw(', itemp, ') = ', nsiw(itemp)
       WRITE(stdout, '(5x, a, f10.4)') 'Cutoff frequency wscut = ', (2.d0 * nsiw(itemp) + 1) * pi * gtemp(itemp)
+      IF (broyden_beta < zero ) THEN
+        WRITE(stdout, '(5x, a, f12.5)') 'linear mixing factor = ', DABS(broyden_beta)
+      ELSE
+        WRITE(stdout, '(5x, a, f12.5)') 'broyden mixing factor = ', broyden_beta
+      ENDIF
+      IF ((DABS(broyden_beta) > 0.2d0)) THEN
+        WRITE(stdout, '(5x, a)') 'mixing factor = 0.2 is used for the first three iterations.'
+      ENDIF
       WRITE(stdout, '(a)') '    '
     ENDIF
     !
