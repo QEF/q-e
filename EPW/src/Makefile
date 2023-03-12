@@ -73,7 +73,6 @@ stop_epw.o \
 wannierEPW.o \
 loadbm.o \
 polaron.o \
-test_tools.o 
 
 #default : epw
 

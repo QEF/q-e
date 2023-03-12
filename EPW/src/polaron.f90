@@ -97,7 +97,6 @@ CONTAINS
       USE epwcom,        ONLY : nqf1, nqf2, nqf3, type_plrn
       USE epwcom,        ONLY : scell_mat_plrn
       USE poolgathering, ONLY : poolgather2
-      USE test_tools,    ONLY : para_write
       USE mp_global,     ONLY : inter_pool_comm
       USE mp,            ONLY : mp_sum
       USE io_files,      ONLY : check_tempdir
@@ -238,7 +237,6 @@ CONTAINS
                gq_model(iq) = rfac/((klen * twopi/alat) ** g_power_order_plrn)
             END IF
          END DO
-         IF (debug_plrn) CALL para_write(gq_model, 'gq_model')
       END IF
 
       ! change unit from eV to Rydberg
@@ -254,7 +252,6 @@ CONTAINS
       ! Shift the eigenvalues to make VBM/CBM zero
       etf_all(1:nbndsub, 1:nktotf) = etf_all(1:nbndsub, 1:nktotf) - efermi
 
-      IF(debug_plrn) CALL para_write(etf_all, 'etf_all')
       CALL stop_clock('find_EVBM')
 
       WRITE(stdout, "(5x, 'Allocating arrays and open files.')")
@@ -280,7 +277,7 @@ CONTAINS
          io_level_g_plrn = 1
          lword_g_tmp = nbnd_g_plrn * nbnd_g_plrn * nmodes * nkf
          IF(lword_g_tmp > maxword) THEN
-            CALL errore('polaron_prepare', 'Record size larger than maximum, use more cores!')
+            CALL errore('polaron_prepare', 'Record size larger than maximum, use more cores!', 1)
          ELSE
             lword_g = INT(lword_g_tmp)
          END IF
@@ -302,12 +299,12 @@ CONTAINS
 
          io_level_h_plrn = 1
          IF(nhblock_plrn < 1 .or. nhblock_plrn > nkf * nbnd_plrn ) THEN
-            CALL errore('polaron_prepare','Illegal nhblock_plrn, should between 1 and nkf * nbnd_plrn')
+            CALL errore('polaron_prepare','Illegal nhblock_plrn, should between 1 and nkf * nbnd_plrn', 1)
          END IF
          minNBlock = CEILING(REAL(nkf * nbnd_plrn * nktotf * nbnd_plrn, dp) / maxword)
 
          IF(minNBlock >  nhblock_plrn .and. nhblock_plrn /= 1) THEN
-            CALL errore('polaron_prepare', 'Record size larger than maximum, use more cores!')
+            CALL errore('polaron_prepare', 'Record size larger than maximum, use more cores!', 1)
          END IF
 
          hblocksize = CEILING(REAL(nkf * nbnd_plrn, dp) / nhblock_plrn)
@@ -316,7 +313,7 @@ CONTAINS
 
          IF(nhblock_plrn /= 1) THEN
             IF(lword_h_tmp > maxword) THEN
-               CALL errore('polaron_prepare', 'Record size larger than maximum, use more cores or larger nhblock_plrn!')
+               CALL errore('polaron_prepare', 'Record size larger than maximum, use more cores or larger nhblock_plrn!', 1)
             ELSE
                lword_h = lword_h_tmp
                !IF(nhblock_plrn /= 1) CALL open_buffer( ihamil , 'ham' , lword_h, io_level_h_plrn, exst, direc='plrn_tmp/')
@@ -338,14 +335,14 @@ CONTAINS
          !! Check whether the input is legal, otherwise print warning and stop
          !! Check the input now, because if inputs are illegal, we can stop the calculation
          !! before the heavy el-ph interpolation begins.
-         IF(nktotf /= nqtotf .or. nktotf < 1) CALL errore('polaron_scf','Not identical k and q grid. Do use same nkf and nqf!')
+         IF(nktotf /= nqtotf .or. nktotf < 1) CALL errore('polaron_scf','Not identical k and q grid. Do use same nkf and nqf!', 1)
 
          IF( (.NOT. scell_mat_plrn) .AND. (nkf1 == 0 .or. nkf2 == 0 .or. nkf3 == 0) ) THEN
             CALL errore('polaron_scf','Try to use nkf and nqf to generate k and q grid, &
-               IF you are using a manual grid, also provide this information.')
+               IF you are using a manual grid, also provide this information.', 1)
          END IF
-         IF(nkf < 1) CALL errore('polaron_scf','Some node has no k points!')
-         IF(nqtotf /= nqf) CALL errore('polaron_scf','Parallel over q is not available for polaron calculations.')
+         IF(nkf < 1) CALL errore('polaron_scf','Some node has no k points!', 1)
+         IF(nqtotf /= nqf) CALL errore('polaron_scf','Parallel over q is not available for polaron calculations.', 1)
 
          WRITE(stdout, '(5x, "Polaron wavefunction calculation starts with k points ",&
             &i0, ", q points ", i0, " and KS band ", i0)') nktotf,  nqtotf,  nbnd_plrn
@@ -366,8 +363,8 @@ CONTAINS
          !! the program gives wrong results
          ikGamma = indexGamma(xkf_all)
          iqGamma = indexGamma(xqf)
-         IF (ikGamma == 0) CALL errore('polaron_scf','k=0 not included in k grid!')
-         IF (iqGamma == 0) CALL errore('polaron_scf','q=0 not included in q grid!')
+         IF (ikGamma == 0) CALL errore('polaron_scf','k=0 not included in k grid!', 1)
+         IF (iqGamma == 0) CALL errore('polaron_scf','q=0 not included in q grid!', 1)
          WRITE(stdout, '(5x, "The index of Gamma point in k grid is ", i0, " &
             &and q grid IS ", i0)') ikGamma, iqGamma
 
@@ -407,7 +404,7 @@ CONTAINS
                xxk = xkf_all(1:3, ik_global) + xkf_all(1:3, ikq)
                IF (isGVec(xxk)) kpg_map(ik_global) = ikq
             END DO
-            IF (kpg_map(ik_global) == 0) CALL errore('polaron_scf', 'Not legal k/q grid!')
+            IF (kpg_map(ik_global) == 0) CALL errore('polaron_scf', 'Not legal k/q grid!', 1)
 
             ikq = kpg_map(ik_global)
             IF (ik_global > ikq) THEN
@@ -431,7 +428,6 @@ CONTAINS
             END IF
          END DO
 
-         IF(debug_plrn) CALL para_write(kpg_map,'kpg_map')
 
          WRITE(stdout, '(5x, a)') "Checking the k + q is included in the mesh grid for each k and q."
          !! find the global index of ik_global, ikq with vector k and k+q.
@@ -442,12 +438,11 @@ CONTAINS
                ik_global = ikqLocal2Global(ik, nktotf)
                xxk = xkf_all(1:3, iq) + xkf_all(1:3, ik_global)
                IF (ikq_all(ik, iq) == 0) THEN
-                  CALL errore('polaron_scf','Not commensurate k and q grid!')
+                  CALL errore('polaron_scf','Not commensurate k and q grid!', 1)
                END IF
             END DO
          END DO
 
-         IF(debug_plrn) CALL para_write(xkf_all,'xkf_all')
 
 
       END IF
@@ -531,7 +526,7 @@ CONTAINS
       END DO
       CALL stop_clock('find_k+q')
 
-      IF (ikq_all == 0) CALL errore('ikq_all','k + q not found')
+      IF (ikq_all == 0) CALL errore('ikq_all','k + q not found', 1)
 
    END FUNCTION
    !-----------------------------------------------------------------------
@@ -557,7 +552,7 @@ CONTAINS
          END IF
       END DO
 
-      IF (find_ik == 0) CALL errore('find_ik','k not found')
+      IF (find_ik == 0) CALL errore('find_ik','k not found', 1)
       CALL stop_clock('find_k')
    END FUNCTION
    !-----------------------------------------------------------------------
@@ -696,7 +691,6 @@ CONTAINS
       USE cell_base,     ONLY : bg, alat
       USE mp,            ONLY : mp_sum, mp_bcast
       USE poolgathering, ONLY : poolgather2
-      USE test_tools,    ONLY : para_write
       USE ions_base,     ONLY : nat
       USE mp_world,      ONLY : mpime, world_comm
       USE epwcom,        ONLY : ethrdg_plrn
@@ -755,7 +749,6 @@ CONTAINS
          wf(nmodes, :) = omega_LO_plrn
       END IF
 
-      IF(debug_plrn) CALL para_write(wf, 'wf')
 
       CALL stop_clock('re_omega')
 
@@ -771,7 +764,7 @@ CONTAINS
             !
             WRITE(stdout, '(5x, "Initializing polaron wavefunction using Gaussian wave &
                &packet with a width of", ES14.6)') init_sigma_plrn
-            WRITE(stdout, '(5x, "centered at k=", 3f14.6)') , init_k0_plrn !xkf_all(1:3, ik_edge)
+            WRITE(stdout, '(5x, "centered at k=", 3f14.6)') init_k0_plrn !xkf_all(1:3, ik_edge)
             CALL init_plrn_gaussian((/zero, zero, zero/), xkf_all, init_k0_plrn, eigVec)
          CASE (3)
             ALLOCATE(eigvec_wan(nktotf*nbnd_plrn, nstate_plrn))
@@ -813,7 +806,7 @@ CONTAINS
             CALL init_plrn_gaussian((/zero, zero, zero/), xkf_all, init_k0_plrn, eigVec)
             CALL norm_plrn_wf(eigVec, REAL(nktotf, DP))
          CASE DEFAULT
-            CALL errore('polaron_scf','init_plrn not implemented!')
+            CALL errore('polaron_scf','init_plrn not implemented!', 1)
       END SELECT
 
       !! Only keep the coefficients in lowest/highest band,
@@ -839,7 +832,6 @@ CONTAINS
                   =  eigVec((ik - 1)*nbnd_plrn + ibnd, 1:nstate_plrn)
             END DO
          END DO
-         CALL para_write(eigvec_wan/SQRT(REAL(nktotf, DP)), 'eigVec')
          DEALLOCATE(eigvec_wan)
       END IF
 
@@ -908,7 +900,7 @@ CONTAINS
             esterr = dtau_diff
             IF(dtau_diff < conv_thr_plrn .and. iter > 1) THEN
                IF(MAXVAL(ABS(REAL(dtau))) > alat/2.d0) THEN
-                    CALL errore("polaron_scf","Non-physical solution, check initial guess and convergence.") 
+                    CALL errore("polaron_scf","Non-physical solution, check initial guess and convergence.", 1) 
                END IF
                ! converged, write the final value of eigenvalue
                WRITE(stdout,'(5x,a)') REPEAT('-',80)
@@ -930,13 +922,11 @@ CONTAINS
                      Bmat_save(inu, iq) = Bmat(iq, inu)*wf(inu, iq)
                   END DO
                END DO
-               CALL para_write(Bmat_save, 'Bmat')
                Bmat_save = czero
             END IF
             !
             CALL start_clock('Setup_H')
             CALL build_plrn_hamil(Bmat, Bmat_save, iter)
-            IF (debug_plrn) CALL para_write(Hamil, 'Hamil')
             CALL stop_clock('Setup_H')
 
             CALL start_clock('DiagonH')
@@ -973,7 +963,6 @@ CONTAINS
                         =  eigVec((ik - 1)*nbnd_plrn + ibnd, 1:nstate_plrn)
                   END DO
                END DO
-               CALL para_write(eigvec_wan/DSQRT(REAL(nktotf, dp)), 'eigVec')
                DEALLOCATE(eigvec_wan)
             END IF
 
@@ -996,7 +985,7 @@ CONTAINS
          WRITE(stdout, '(5x, a, 50f16.7)') '      Eigenvalue (eV): ', eigVal*ryd2ev
          WRITE(stdout, '(5x, a, f16.7)')   '     Phonon part (eV): ', EPlrnPhon*ryd2ev
          WRITE(stdout, '(5x, a, f16.7)')   '   Electron part (eV): ', EPlrnElec*ryd2ev
-         IF (init_plrn==6 .AND. niter_plrn==1) THEN
+         IF (init_plrn==6) THEN
             WRITE(stdout, '(5x, a, f16.7)') 'Formation Energy at this \dtau (eV): ', ((- type_plrn)*eigval - EPlrnPhon)*ryd2ev
          ELSE 
             WRITE(stdout, '(5x, a, f16.7)')   'Formation Energy (eV): ', (EPlrnElec + EPlrnPhon)*ryd2ev
@@ -1178,7 +1167,7 @@ CONTAINS
          ELSE IF (type_plrn == -1) THEN
             efermi =  1E5
          ELSE
-            CALL errore('','Wrong type_plrn, should be 1 or -1')
+            CALL errore('','Wrong type_plrn, should be 1 or -1', 1)
          END IF
 
          DO ik = 1, nkf
@@ -1380,7 +1369,6 @@ CONTAINS
       USE mp_global,     ONLY : inter_pool_comm
       USE mp,            ONLY : mp_sum
       USE modes,         ONLY : nmodes
-      USE test_tools,    ONLY : para_write
 
       IMPLICIT NONE
 
@@ -1462,7 +1450,6 @@ CONTAINS
          END IF
          !TODO: to be consistent with Denny, whether this is correct?
          ! IF ( ABS(wf(1, iq)) < eps2 ) Bmat(iq, 1) = czero
-         IF(first .and. debug_plrn) CALL para_write(epf, 'epf') ! .and. debug_plrn
       END DO
       ! cal_Bmat only sum over local k, so we have to do mp_sum
       CALL mp_sum( Bmat, inter_pool_comm )
@@ -1481,7 +1468,6 @@ CONTAINS
       USE mp_global,     ONLY : inter_pool_comm
       USE mp,            ONLY : mp_sum
       USE modes,         ONLY : nmodes
-      USE test_tools,    ONLY : para_write
       USE cell_base,     ONLY : at, alat
 
       IMPLICIT NONE
@@ -1648,7 +1634,7 @@ CONTAINS
 
       ikqLocal2Global = startn + ikq - 1
       IF (ikqLocal2Global > lastn) THEN
-         CALL errore('Index of k/q is beyond this pool.')
+         CALL errore('ikqLocal2Global', 'Index of k/q is beyond this pool.', 1)
       END IF
       CALL stop_clock('ik_l2g')
 
@@ -1701,7 +1687,6 @@ CONTAINS
       USE mp_global,     ONLY : inter_pool_comm
       USE mp,            ONLY : mp_sum
       USE modes,         ONLY : nmodes
-      USE test_tools,    ONLY : para_write
       USE constants_epw, ONLY : czero
       USE elph2,         ONLY : nkf, nktotf
       USE io_global,     ONLY : stdout
@@ -1726,7 +1711,7 @@ CONTAINS
 
       ! Gather psi (dimension nkf) to form eigVec (dimension nktotf)
       CALL start_clock('cal_hpsi')
-      IF(lda < nkf * nbnd_plrn) CALL errore('h_psi_plrn', 'leading dimension of arrays psi is not correct')
+      IF(lda < nkf * nbnd_plrn) CALL errore('h_psi_plrn', 'leading dimension of arrays psi is not correct', 1)
       eigVec = czero
       DO ik = 1, nkf
          ik_global = ikqLocal2Global(ik, nktotf)
@@ -1775,7 +1760,7 @@ CONTAINS
       INTEGER,     INTENT(IN) :: lda, n, m
       COMPLEX(DP), INTENT(IN) :: psi(lda,m), spsi(lda,m)
 
-      CALL errore('s_psi_plrn',"WARNING: This function should not be called at all!")
+      CALL errore('s_psi_plrn',"WARNING: This function should not be called at all!", 1)
    END SUBROUTINE
    !
    !-----------------------------------------------------------------------
@@ -1901,7 +1886,7 @@ CONTAINS
       CALL mp_sum(indexGamma, inter_pool_comm)
 
       IF(.NOT. isGVec(xkf_all(1:3, indexGamma))) THEN
-         CALL errore('indexGamma','The index of Gamma point is wrong!')
+         CALL errore('indexGamma','The index of Gamma point is wrong!', 1)
       END IF
 
    END FUNCTION
@@ -1910,7 +1895,6 @@ CONTAINS
       USE elph2,  ONLY : nkf, nqtotf, wf, nktotf
       USE epwcom, ONLY : nstate_plrn, time_rev_A_plrn
       USE constants_epw, ONLY : czero, one, two, cone
-      USE test_tools, ONLY : para_write
       USE mp,           ONLY : mp_sum
       USE mp_global,    ONLY : inter_pool_comm
 
@@ -1933,7 +1917,6 @@ CONTAINS
       USE elph2,  ONLY : nkf, nqtotf, wf, nktotf
       USE epwcom, ONLY : nstate_plrn, time_rev_A_plrn
       USE constants_epw, ONLY : czero, one, two, cone
-      USE test_tools, ONLY : para_write
       USE mp,           ONLY : mp_sum
       USE mp_global,    ONLY : inter_pool_comm
 
@@ -1960,7 +1943,6 @@ CONTAINS
             indexkn1 = (ikpg - 1)*nbnd_plrn + ibnd
             indexkn2 = (ik_global - 1)*nbnd_plrn + ibnd
             eigVec_save(indexkn1, 1:nPlrn_l)  = CONJG(eigVec(indexkn2, 1:nPlrn_l))
-            !call para_write(CONJG(eigVec(indexkn1, :)) / eigVec(indexkn2, :), 'eigenvec_phase')
          END DO
          !end if
       END DO
@@ -2041,7 +2023,7 @@ CONTAINS
             zero, zero, 1, nstate_plrn, zero, mm, estmteRt(1:nstate_plrn), eigVec, nktotf*nbnd_plrn, &
             work, lwork, rwork, iwork, ifail, info )
 
-         IF (info /= 0) CALL errore('Polaron: diagonal error.')
+         IF (info /= 0) CALL errore('diag_serial','Polaron: diagonal error.', 1)
          DEALLOCATE(rwork, iwork, ifail, work, Identity)
       END IF
       DEALLOCATE(Hamil_save)
@@ -2495,7 +2477,7 @@ CONTAINS
          ELSE
             READ(wan_func_file, '(6I10)') nkf1_p, nkf2_p, nkf3_p, nktotf_p, nbndsub_p, nPlrn_p
             IF(nkf1_p*nkf2_p*nkf3_p /= nktotf_p) THEN
-               CALL errore(filename//'Not generated from the uniform grid!')
+               CALL errore("read_plrn_wf",filename//'Not generated from the uniform grid!', 1)
             END IF
          END IF
 
@@ -2642,12 +2624,12 @@ CONTAINS
          ELSE
             READ(wan_func_file, '(5I10)') nkf1_p, nkf2_p, nkf3_p, nktotf_p, nmodes_p
             IF(nkf1_p*nkf2_p*nkf3_p /= nktotf_p) THEN
-               CALL errore(filename//'Not generated from the uniform grid!')
+               CALL errore('read_plrn_dtau', filename//'Not generated from the uniform grid!', 1)
             END IF
          END IF
 
          IF(nmodes /= nmodes_p) THEN
-            CALL errore("Number of phonon modes are different with last run, please confirm what you do is correct!")
+            CALL errore('read_plrn_dtau', "Number of phonon modes are different with last run", 1)
          END IF
 
          ALLOCATE(eigvec_wan(nktotf_p, nmodes_p))
@@ -2724,13 +2706,13 @@ CONTAINS
       LOGICAL     :: is_mirror
 
       nkf_p(1:3) = (/nkf1_p, nkf2_p, nkf3_p/)
-      IF(nbndsub_p /= nbndsub) CALL errore('plrnwfwan2bloch','Different bands included in last calculation!')
+      IF(nbndsub_p /= nbndsub) CALL errore('plrnwfwan2bloch','Different bands included in last calculation!', 1)
       IF(ttype == 'Bloch2Wan') THEN
          itype =  1
       ELSE IF (ttype == 'Wan2Bloch') THEN
          itype = -1
       ELSE
-         CALL errore('plrn_eigvec_tran', 'Illegal translate form; should be Bloch2Wan or Wan2Bloch!')
+         CALL errore('plrn_eigvec_tran', 'Illegal translate form; should be Bloch2Wan or Wan2Bloch!', 1)
       END IF
 
       IF(PRESENT(ip_center)) THEN
@@ -2760,7 +2742,7 @@ CONTAINS
             !icount = 0
             !! loop over all Wannier position p
             IF (nkf1_p == 0 .or. nkf2_p == 0 .or. nkf3_p == 0) THEN
-               CALL errore('plrn_eigvec_tran','Wrong k grid, use nkf1/2/3 to give k grid!')
+               CALL errore('plrn_eigvec_tran','Wrong k grid, use nkf1/2/3 to give k grid!', 1)
             END IF
             DO icount = 1, nkf1_p * nkf2_p * nkf3_p
                i_vec(1:3) = MODULO(index_Rp(icount, nkf_p) + center_shift, nkf_p)
@@ -2822,13 +2804,13 @@ CONTAINS
       INTEGER     :: ibnd, jbnd, ix, iy, iz, indexkn1, indexkn2
       LOGICAL     :: is_mirror
 
-      IF(nbndsub_p /= nbndsub) CALL errore('plrnwfwan2bloch','Different bands included in last calculation!')
+      IF(nbndsub_p /= nbndsub) CALL errore('plrnwfwan2bloch','Different bands included in last calculation!',1)
       IF(ttype == 'Bloch2Wan') THEN
          itype =  1
       ELSE IF (ttype == 'Wan2Bloch') THEN
          itype = -1
       ELSE
-         CALL errore('plrn_eigvec_tran', 'Illegal translate form; should be Bloch2Wan or Wan2Bloch!')
+         CALL errore('plrn_eigvec_tran', 'Illegal translate form; should be Bloch2Wan or Wan2Bloch!', 1)
       END IF
 
       !! itype =  1 : Bloch2Wan: A_{mp} =  \frac{1}{N_p} \sum_{nk}A_{nk} \exp\left(ik\cdot R_p\right)U^\dagger_{mnk}
@@ -2898,7 +2880,7 @@ CONTAINS
 
       IF(ionode) WRITE(stdout, "(5x, a)") "Start of interpolation of electronic band structure."
       IF(.NOT. ALLOCATED(etf_all)) THEN
-         CALL errore('interp_plrn_wf','etf_all should be correctly prepared before calling interp_plrn_wf')
+         CALL errore('interp_plrn_wf','etf_all should be correctly prepared before calling interp_plrn_wf', 1)
       END IF
 
       !!FIXME: When selecting band in solving polaron, nbndsub_p should be changed when output
@@ -3011,13 +2993,13 @@ CONTAINS
       nptotf = nqf1_p * nqf2_p * nqf3_p
       nqf_p(1:3) = (/nqf1_p, nqf2_p, nqf3_p/)
 
-      IF(nptotf <= 0) CALL errore('plrn_eigvec_tran', 'Use correct .plrn file with nqf1_p \= 0!')
+      IF(nptotf <= 0) CALL errore('plrn_eigvec_tran', 'Use correct .plrn file with nqf1_p \= 0!', 1)
       IF(ttype == 'Bmat2Dtau') THEN
          itype =  1
       ELSE IF (ttype == 'Dtau2Bmat') THEN
          itype = -1
       ELSE
-         CALL errore('plrn_eigvec_tran', 'Illegal translation form; should be Bmat2Dtau or Dtau2Bmat!')
+         CALL errore('plrn_eigvec_tran', 'Illegal translation form; should be Bmat2Dtau or Dtau2Bmat!', 1)
       END IF
 
       uf = czero
@@ -3142,7 +3124,7 @@ CONTAINS
       ELSE IF (ttype == 'Dtau2Bmat') THEN
          itype = -1
       ELSE
-         CALL errore('plrn_eigvec_tran', 'Illegal translation form; should be Bmat2Dtau or Dtau2Bmat!')
+         CALL errore('plrn_eigvec_tran', 'Illegal translation form; should be Bmat2Dtau or Dtau2Bmat!', 1)
       END IF
 
       uf = czero
@@ -3735,7 +3717,7 @@ CONTAINS
       IF(ionode) THEN
          OPEN(UNIT = iunRpscell, FILE='Rp.scell.plrn', FORM='formatted', STATUS='unknown')
          READ(iunRpscell, *) nRp
-         IF (nRp .ne. nqtotf) CALL errore('read_Rp_in_S', 'nRp and nqtotf are not the same!')
+         IF (nRp .ne. nqtotf) CALL errore('read_Rp_in_S', 'nRp and nqtotf are not the same!',1)
          CLOSE(UNIT = iunRpscell)
       END IF
       CALL mp_bcast(nRp, meta_ionode_id, world_comm)
@@ -3789,7 +3771,7 @@ CONTAINS
       index_xp = delta_p(1) * nqf2 * nqf3 + delta_p(2) * nqf3 + delta_p(3) + 1
 
       IF(.NOT. ALL(index_Rp(index_xp) == delta_p(1:3))) THEN
-         CALL errore('index_xp','index_Rp not correct!',1)
+         CALL errore('index_xp', 'index_Rp not correct!', 1)
       END IF
    END FUNCTION
    !
@@ -3803,7 +3785,7 @@ CONTAINS
       index_shift(3) = MOD(ishift - 1, 3) - 1
 
       IF(ANY(index_shift < -1) .or. ANY(index_shift > 1)) THEN
-         CALL errore('index_shift','index_shift not correct!',1)
+         CALL errore('index_shift', 'index_shift not correct!', 1)
       END IF
    END FUNCTION
 

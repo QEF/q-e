@@ -51,7 +51,6 @@
     USE low_lvl,       ONLY : utility_zdotu, degen_sort
 !!!!!
     USE epwcom,        ONLY : debug_plrn, lphase, lrot
-    USE test_tools,    ONLY : para_write
 !!!!!
     !
     IMPLICIT NONE
@@ -425,7 +424,6 @@
     USE rigid_epw,     ONLY : rgd_blk
 !!!!!!
     USE low_lvl,       ONLY : degen_sort
-    USE test_tools,    ONLY : para_write
 !!!!!!
     !
     IMPLICIT NONE
@@ -694,10 +692,7 @@
             norm_vec(jmode) = ABS(cz(jmode, imode))
          END DO
          imode_max(:) = MAXLOC(norm_vec(1:nmodes))
-         IF(debug_plrn) CALL para_write(norm_vec(1:imode_max(1)), 'norm_vec')
-         IF(debug_plrn) CALL para_write(imode_max, 'imode_max')
          fac_max(1) = cz(imode_max(1), imode)/norm_vec(imode_max(1))
-         IF(debug_plrn) CALL para_write(fac_max, 'fac_max')
          cz(1:nmodes, imode) = cz(1:nmodes, imode) * CONJG(fac_max(1))
        END DO
      END IF
@@ -752,7 +747,6 @@
     USE epwcom,    ONLY : lpolar, nqc1, nqc2, nqc3, lphase
 !!!!!!
     USE epwcom,    ONLY : debug_plrn, lrot
-    USE test_tools,ONLY : para_write
     USE low_lvl,   ONLY : degen_sort
 !!!!!!
     USE io_global, ONLY : stdout
@@ -983,10 +977,7 @@
             norm_vec(jmode) = ABS(cz(jmode, imode))
          END DO
          imode_max(:) = MAXLOC(norm_vec(1:nmodes))
-         IF(debug_plrn) CALL para_write(norm_vec(1:imode_max(1)), 'norm_vec')
-         IF(debug_plrn) CALL para_write(imode_max, 'imode_max')
          fac_max(1) = cz(imode_max(1), imode)/norm_vec(imode_max(1))
-         IF(debug_plrn) CALL para_write(fac_max, 'fac_max')
          cz(1:nmodes, imode) = cz(1:nmodes, imode) * CONJG(fac_max(1))
        END DO
     END IF

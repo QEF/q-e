@@ -125,7 +125,6 @@
   USE polaron,        ONLY : plrn_flow_select, plrn_prepare, plrn_save_g_to_file
   USE polaron,        ONLY : is_mirror_q, is_mirror_k
   USE polaron,        ONLY : kpg_map, ikq_all
-  USE test_tools,     ONLY : para_write
   !!!!!
   !
   IMPLICIT NONE
