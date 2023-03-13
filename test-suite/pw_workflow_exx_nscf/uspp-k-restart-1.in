@@ -2,7 +2,6 @@
     calculation = 'scf',
     prefix      = 'Graphene_1x1_HSE',
     outdir      = './out',
-    pseudo_dir  = '/home/ivan/pseudo/',        
     max_seconds=3
  /
 
