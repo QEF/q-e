@@ -263,6 +263,22 @@ CONTAINS
       !
       CALL allocate_local_ortho_memory(nss, nx0)
       !
+#if defined(__GPU_MPI)
+      !
+      ! Workaround for a bug in the MPI for GPUs: "mp_root_sum", called by
+      ! "rhoset", fails if the dimension of the array is not the same on
+      ! all processes, included those who are not in the communicator
+      ! The bug is present in v.22.7 and previous (?) of the NVIDIA HPC SDK 
+      !
+      if ( nx0 == 1 ) THEN
+         deallocate( rhos, rhoa, sig, tau )
+         allocate( rhos(idesc(LAX_DESC_NRCX),idesc(LAX_DESC_NRCX)) )
+         allocate( rhoa(idesc(LAX_DESC_NRCX),idesc(LAX_DESC_NRCX)) )
+         allocate( sig (idesc(LAX_DESC_NRCX),idesc(LAX_DESC_NRCX)) )
+         allocate( tau (idesc(LAX_DESC_NRCX),idesc(LAX_DESC_NRCX)) )
+      end if
+#endif
+      !
       !     rho = <s'c0|s|cp>
       !
       CALL start_clock( 'rhoset' )

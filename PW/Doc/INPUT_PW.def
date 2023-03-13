@@ -1327,6 +1327,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 three Hubbard manifolds per Hubbard atom. However, if you want
                 to specify three manifolds then the second and the third manifolds
                 will be considered as one effective manifold (see Doc/Hubbard_input.pdf)
+
+                Note: Hubbard_occ cannot be used together with fully-relativistic pseudopotentials
+                (i.e. when noncolin=.true. and lspinorb=.true.) since this variable does not
+                allow to distinguish between the occupied and unoccupied channels (this is 
+                needed when determining the atomic orbital offsets).
             }
         }
         dimension Hubbard_alpha -start 1 -end ntyp -type REAL { 
@@ -3946,7 +3951,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
         
         label { 
-            Optional card, needed only if @ref ibrav == 0 is specified, ignored otherwise ! 
+            Optional card, must be present if @ref ibrav == 0, must be absent otherwise
         }
         
         syntax {
