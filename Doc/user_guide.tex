@@ -632,7 +632,7 @@ and the following optional packages:\\
 \texttt{--with-libxc-include}& directory where \libxc\ Fortran headers reside\\
 \end{tabular}\\
 \\
-In order to compile the code for GPU's you will need a recent version
+In order to compile the code for NVidia GPU's you will need a recent version
 (v.19.10 or later: the more recent, the better) of the NVidia HPC software
 development kit (SDK). OpenMP should be enabled. Enabling faster communications
 between GPUs, via NVlink or Infiniband RDMA, is essential for optimal
@@ -1091,10 +1091,11 @@ Beware: the default integer type for 64-bit machine is typically
 but it is not guaranteed to work and will not give
 any advantage anyway.
 
-Currently, \configure\ supports Intel (ifort), NAG (nagfor), NVidia
-(nvfortran, formerly PGI pgf90), ARM (armflang),
-and gfortran compilers. Pathscale, Sun Studio, AMD Open64, are no
-longer supported after v.6.2: g95, since v.6.1.
+Currently, \configure\ supports gfortran and the Intel (ifort), NVidia
+(nvfortran, formerly PGI pgf90) compilers. ARM (armflang) and NAG (nagfor)
+compilers are supported but little tested and may or may not work.
+Pathscale, Sun Studio, AMD Open64, are no longer supported after v.6.2;
+g95, since v.6.1.
 
 Intel MKL mathematical libraries are supported. ACML support must be
 considered as obsolete.
@@ -1210,14 +1211,13 @@ Unfortunately this not always happens. In fact:
 \item \configure\ tries to locate a parallel compiler in a logical
   place with a logical name, but if it has a strange names or it is
   located  in a strange location, you will have to instruct \configure\
-  to find it. If there is no parallel Fortran compiler, you will have
-  to install one.
+  to find it. If there is no parallel Fortran compiler (e.g., mpif90),
+  you will have to install one.
 \item \configure\ tries to locate libraries (both mathematical and
   parallel libraries) in the usual places with usual names, but if
   they have strange names or strange locations, you will have to
   rename/move them, or to instruct \configure\ to find them. If MPI
-  libraries are not found,
-  parallel compilation is disabled.
+  libraries are not found, parallel compilation is disabled.
 \item \configure\ tests that the compiler and the libraries are
   compatible (i.e. the compiler may link the libraries without
   conflicts and without missing symbols). If they aren't and the
@@ -1228,7 +1228,7 @@ Apart from such problems, \qe\ compiles and works on all non-buggy, properly
 configured hardware and software combinations. In some cases you may have to
 recompile MPI libraries: not all MPI installations contain support for
 the Fortran compiler of your choice (or for any Fortran compiler
-at all!).
+at all).
 
 If \qe\ does not work for some reason on a PC cluster,
 try first if it works in serial execution. A frequent problem with parallel
@@ -1320,10 +1320,9 @@ and the system is slightly different compared to the other.''
 For recent Cray machines, use \texttt{./configure ARCH=craype}.
 This selects the \texttt{ftn} compiler, that typically uses
 the \texttt{crayftn} compiler but may also use other ones,
-depending upon the site and personal environment. Only very
-recent versions of the Cray compiler work, sort of.
-With the \verb|PrgEnv-cray| module v.6.0.10, \texttt{ftn} v.14.0.3,
-you run into the following problems:
+depending upon the site and personal environment. \texttt{ftn} v.15.0.1
+compiles QE properly. With the \verb|PrgEnv-cray| module v.6.0.10,
+\texttt{ftn} v.14.0.3, you run into the following problems:
 \begin{itemize}
 \item internal compiler error in \verb|esm_stres_mod.f90|;
 \item crashes when writing the final xml data file.
@@ -1340,48 +1339,6 @@ $ ./configure ARCH=craype [--enable-openmp --enable-parallel --with-scalapack]
 \end{verbatim}
 
 Old Cray machines: T3D, T3E, X1, etc, are no longer supported.
-
-\subsubsection{Obsolescent architectures}
-
-\paragraph{Intel Xeon Phi}
-
-For Intel Xeon CPUs with Phi coprocessor, see this link:\\
-\texttt{https://software.intel.com/en-us/articles/explicit-offload-for-quantum-espresso}.
-
-There are three ways of compiling:
-\begin{itemize}
-\item {\em offload} mode, executed on main CPU and offloaded onto coprocessor
-"automagically";
-\item {\em native} mode, executed completely on coprocessor;
-\item {\em symmetric} mode, requiring creation of both binaries.
-\end{itemize}
-"You can take advantage of the offload mode using the \texttt{libxphi}
-library. This library offloads the BLAS/MKL functions on the Xeon Phi
-platform hiding the latency times due to the communication. You just
-need to compile this library and then to link it dynamically. The
-library works with any version of QE. Libxphi is available from
-\texttt{https://github.com/cdahnken/libxphi}. Some documentation is
-available therein.
-
-Instead, if you want to compile a native version of QE, you just need
-to add the \texttt{-mmic} flag and cross compile. If you want to use
-the symmetric mode, you need to compile twice: with and without the
-\texttt{-mmic} flag". "[...] everything, i.e. code+libraries, must be
-cross-compiled with the \texttt{-mmic} flag. In my opinion, it's pretty
-unlikely that native mode can outperform the execution on the standard
-Xeon cpu. I strongly suggest to use the Xeon Phi in offload mode, for now"
-(info by Fabio Affinito, March 2015).
-
-\paragraph{IBM BlueGene}
-
-The current \configure\ was working on the machines at CINECA and at J\"ulich.
-For other machines, you may need something like
-\begin{verbatim}
-  ./configure ARCH=ppc64-bg BLAS_LIBS=...  LAPACK_LIBS=... \
-              SCALAPACK_DIR=... BLACS_DIR=..."
-\end{verbatim}
-where the various *\_LIBS and *\_DIR "suggest" where the various libraries
-are located.
 
 \newpage
 
@@ -1461,9 +1418,9 @@ The groups hierarchy is as follow:
 \begin{itemize}
 \item {\bf world}: is the group of all processors (MPI\_COMM\_WORLD).
 \item
-{\bf images}: Processors can then be divided into different "images", each corresponding to a
-different self-consistent or linear-response
-calculation, loosely coupled to others.
+{\bf images}: Processors can then be divided into different "images", 
+each corresponding to a different self-consistent or linear-response
+calculation, loosely coupled to others. 
 \item
 {\bf pools}: each image can be subpartitioned into
 "pools", each taking care of a group of k-points.
@@ -1515,6 +1472,10 @@ ELPA and ScaLAPACK; alternative built-in algorithms are anyway available.
 \end{itemize}
 Note however that not all parallelization levels
 are implemented in all codes.
+
+When a communicator is split, the MPI process IDs in each sub-communicator
+remain ordered. So for instance, for two images and $2n$ MPI processes,
+image 0 contains IDs $0,1,...,n-1$, image 1 contains IDs $n,n+1,..,2n-1$.
 
 \paragraph{About communications}
 Images and pools are loosely coupled: inter-processors communication

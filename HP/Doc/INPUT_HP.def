@@ -90,6 +90,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
             }
         }
 
+        var determine_q_mesh_only -type LOGICAL {
+            default { .false. }
+            see { perturb_only_atom  }
+            info {
+              If .true. determines the number of q points
+              for a given perturbed atom and exits smoothly.
+              This keyword can be used only if perturb_only_atom
+              is set to .true.
+            }
+        }
+
         var find_atpert -type INTEGER {
             default { 1 }
             info {
@@ -271,7 +282,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
                 will be considered when writting Hubbard V parameters to 
                 the file parameters.out, which can be used in the 
                 subsequent DFT+U+V calculation. This keyword is used only 
-                when lda_plus_u_kind = 2 (post-processing stage).
+                for DFT+U+V (post-processing stage).
             }
         }
 
@@ -283,7 +294,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
                 system) Hubbard V will be written to the file parameters.out.
                 @ref lmin refers to the orbital quantum number of the atom 
                 corresponding to the first site-index in Hubbard_V(:,:,:). 
-                This keyword is used only when lda_plus_u_kind = 2 and only 
+                This keyword is used only for DFT+U+V and only 
                 in the post-processing stage. Example: @ref lmin=1 corresponds to 
                 writing to file V between e.g. oxygen (with p states) and its 
                 neighbors, and including V between transition metals (with d 
@@ -296,8 +307,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
             default { 100.D0 }
             info {
                 Maximum distance (in Bohr) between two atoms to search 
-                neighbors (used only at the postprocessing step when 
-                lda_plus_u_kind = 2). This keyword is useful when there 
+                neighbors (used only at the postprocessing step for 
+                DFT+U+V). This keyword is useful when there 
                 are e.g. defects in the system.
             }
         }

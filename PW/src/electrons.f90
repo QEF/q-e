@@ -29,7 +29,7 @@ SUBROUTINE electrons()
   USE tsvdw_module,         ONLY : EtsvdW
   USE scf,                  ONLY : rho, rho_core, rhog_core, v, vltot, vrs, &
                                    kedtau, vnew
-  USE control_flags,        ONLY : tr2, niter, conv_elec, restart, lmd, &
+  USE control_flags,        ONLY : tr2, nexxiter, conv_elec, restart, lmd, &
                                    do_makov_payne, sic
   USE sic_mod,              ONLY : sic_energy, occ_f2fn, occ_fn2f, save_rhon, sic_first
   USE io_files,             ONLY : iunres, seqopn
@@ -39,8 +39,9 @@ SUBROUTINE electrons()
   USE klist,                ONLY : nks
   USE uspp,                 ONLY : okvan
   USE exx,                  ONLY : aceinit,exxinit, exxenergy2, exxbuff, &
-                                   fock0, fock1, fock2, fock3, dexx, use_ace, local_thr 
-  USE xc_lib,               ONLY : xclib_dft_is, exx_is_active
+                                   fock0, fock1, fock2, fock3, dexx, use_ace, local_thr, &
+                                   domat
+  USE xc_lib,               ONLY : xclib_dft_is, exx_is_active, stop_exx
   USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi, gamma_only
   !
   USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
@@ -53,6 +54,7 @@ SUBROUTINE electrons()
   USE wvfct_gpum,           ONLY : using_et, using_wg, using_wg_d
   USE scf_gpum,             ONLY : using_vrs
   !
+  USE add_dmft_occ,         ONLY : dmft
   USE rism_module,          ONLY : lrism, rism_calc3d
   !
   IMPLICIT NONE
@@ -97,6 +99,7 @@ SUBROUTINE electrons()
   fock0 = 0.D0
   fock1 = 0.D0
   fock3 = 0.D0
+  !force higher verbosity for the printout in DMFT case
   IF (.NOT. exx_is_active () ) fock2 = 0.D0
   !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -110,7 +113,7 @@ SUBROUTINE electrons()
         READ (iunres, *, iostat=ios) iter, tr2, dexx
         IF ( ios /= 0 ) THEN
            iter = 0
-        ELSE IF ( iter < 0 .OR. iter > niter ) THEN
+        ELSE IF ( iter < 0 .OR. iter > nexxiter ) THEN
            iter = 0
         ELSE 
            READ (iunres, *) exxen, fock0, fock1, fock2
@@ -125,6 +128,9 @@ SUBROUTINE electrons()
            ! ... if restarting here, exx was already active
            ! ... initialize stuff for exx
            first = .false.
+!civn  see non-scf comment about this
+           Call stop_exx()
+!
            CALL exxinit(DoLoc)
            IF( DoLoc.and.gamma_only) THEN
              CALL localize_orbitals( )
@@ -135,7 +141,10 @@ SUBROUTINE electrons()
            CALL seqopn (iunres, 'restart_exx', 'unformatted', exst)
            IF (exst) READ (iunres, iostat=ios) exxbuff
            IF (ios /= 0) WRITE(stdout,'(5x,"Error in EXX restart!")')
-           IF (use_ace) CALL aceinit ( DoLoc )
+!civn 
+           !IF (use_ace) CALL aceinit ( DoLoc )
+           domat = .false.
+! 
            !
            CALL v_of_rho( rho, rho_core, rhog_core, &
                ehart, etxc, vtxc, eth, etotefield, charge, v)
@@ -170,7 +179,7 @@ SUBROUTINE electrons()
      sic_first = .false.
   END IF
   !
-  DO idum=1,niter
+  DO idum=1,nexxiter
      !
      iter = iter + 1
      !
@@ -336,11 +345,12 @@ SUBROUTINE electrons()
      !
      WRITE( stdout,'(/5x,"EXX: now go back to refine exchange calculation")')
      !
-     IF ( check_stop_now() ) THEN
+     IF ( check_stop_now() .or. (iter.ge.nexxiter) ) THEN
         CALL using_et(0)
         WRITE(stdout,'(5x,"Calculation (EXX) stopped after iteration #", &
                         & i6)') iter
         conv_elec=.FALSE.
+        IF(iter.ge.nexxiter) conv_elec=.TRUE. ! it will print ace and wfc files for restart
         CALL seqopn (iunres, 'restart_e', 'formatted', exst)
         WRITE (iunres, *) iter, tr2, dexx
         WRITE (iunres, *) exxen, fock0, fock1, fock2
@@ -1603,6 +1613,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
        ELSE
           !
           WRITE( stdout, 9080 ) etot
+          IF (dmft) THEN
+            WRITE( stdout, *) "    DMFT detected, writing all energy contributions"
+            WRITE( stdout, 9062 ) (eband + deband), ehart, ( etxc - etxcc ), ewld
+            WRITE( stdout, 9301 ) eband
+          ENDIF
           IF ( iverbosity > 1 ) WRITE( stdout, 9082 ) hwf_energy
           IF ( dr2 > eps8 ) THEN
              WRITE( stdout, 9083 ) dr2
@@ -1679,6 +1694,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
             /'     total charge of GC-SCF    =',0PF17.8,' e'  &
             /'     the Fermi energy          =',0PF17.8,' eV' &
             /'                        (error :',0PF17.8,' eV)')
+9301 FORMAT( '     band energy (sum(wg*et))  =',F17.8,' Ry' )
 
 9902 FORMAT( '     solvation energy (RISM)   =',F17.8,' Ry' )
 9903 FORMAT( '     level-shifting contrib.   =',F17.8,' Ry' )

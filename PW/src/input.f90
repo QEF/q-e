@@ -163,7 +163,7 @@ SUBROUTINE iosys()
   USE control_flags, ONLY : isolve, max_cg_iter, max_ppcg_iter, david, &
                             rmm_ndim, rmm_conv, gs_nblock, rmm_with_davidson, &
                             tr2, imix, gamma_only, &
-                            nmix, iverbosity, smallmem, niter, &
+                            nmix, iverbosity, smallmem, nexxiter, niter, &
                             io_level, ethr, lscf, lbfgs, lmd, &
                             lbands, lconstrain, restart, &
                             llondon, ldftd3, do_makov_payne, lxdm, &
@@ -281,7 +281,7 @@ SUBROUTINE iosys()
   !
   ! ... ELECTRONS namelist
   !
-  USE input_parameters, ONLY : electron_maxstep, mixing_mode, mixing_beta, &
+  USE input_parameters, ONLY : exx_maxstep, electron_maxstep, mixing_mode, mixing_beta, &
                                mixing_ndim, mixing_fixed_ns, conv_thr,     &
                                tqr, tq_smoothing, tbeta_smoothing,         &
                                diago_thr_init,                             &
@@ -1058,6 +1058,7 @@ SUBROUTINE iosys()
   !
   ethr = diago_thr_init
   tr2   = conv_thr
+  nexxiter = exx_maxstep
   niter = electron_maxstep
   adapt_thr = adaptive_thr
   tr2_init  = conv_thr_init

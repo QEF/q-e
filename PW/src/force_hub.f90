@@ -981,7 +981,7 @@ SUBROUTINE dngdtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    USE ions_base,            ONLY : nat, ityp
    USE lsda_mod,             ONLY : nspin, current_spin
    USE ldaU,                 ONLY : nwfcU, offsetU, at_sc, offsetU_back, Hubbard_l,&
-                                    offsetU_back1, is_Hubbard, Hubbard_l2, backall,&
+                                    offsetU_back1, is_hubbard, Hubbard_l2, backall,&
                                     max_num_neighbors, phase_fac, ldim_u, neighood
    USE wvfct,                ONLY : nbnd, npwx, npw, wg
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
@@ -1158,7 +1158,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    USE ldaU,                 ONLY : nwfcU, wfcU, offsetU, is_hubbard_back,   &
                                     Hubbard_l2, offsetU_back, offsetU_back1, &
                                     ldim_u, backall, lda_plus_u_kind, Hubbard_l,&
-                                    Hubbard_projectors, oatwfc, is_Hubbard
+                                    Hubbard_projectors, oatwfc, is_hubbard
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE uspp,                 ONLY : okvan, nkb
    USE uspp_param,           ONLY : nh

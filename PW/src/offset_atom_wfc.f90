@@ -102,6 +102,15 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
                     CALL errore('offset_atom_wfc', 'Hubbard manifold with &
                             &zero occupations is not allowed',1) 
                  ENDIF
+                 ! For FR-PPs, hubbard_occ cannot be used here because it does not
+                 ! allow to distinguish between the occupied and unoccupied channels.
+                 IF (noncolin .AND. upf(nt)%has_so) THEN
+                    IF (upf(nt)%oc(n) > 0.D0) THEN
+                       hubbard_wfc = .TRUE.
+                    ELSE
+                       hubbard_wfc = .FALSE.
+                    ENDIF
+                 ENDIF
               ENDIF
            ENDIF
            !

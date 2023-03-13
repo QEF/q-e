@@ -27,7 +27,6 @@ SUBROUTINE non_scf( )
   !
   USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
-!civn 
   USE exx,                  ONLY : exxinit, aceinit, use_ace
   USE scf,                  ONLY : rho, rho_core, rhog_core, v, vltot, vrs, kedtau
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw
@@ -39,7 +38,6 @@ SUBROUTINE non_scf( )
   USE gvecs,                ONLY : doublegrid
   USE ions_base,            ONLY : nat
   USE xc_lib,               ONLY : stop_exx, xclib_dft_is
-!
   !
   IMPLICIT NONE
   !
@@ -48,10 +46,9 @@ SUBROUTINE non_scf( )
   INTEGER :: iter, i, dr2 = 0.0_dp
   REAL(dp):: ef_scf, ef_scf_up, ef_scf_dw
   REAL(DP), EXTERNAL :: get_clock
-!civn 
   REAL(DP) :: charge
   REAL(DP) :: etot_cmp_paw(nat,2,2)
-!
+
   CALL using_evc(0) ! This may not be needed. save buffer is intent(in)
   !
   !
@@ -149,7 +146,6 @@ SUBROUTINE non_scf( )
      RETURN
   ENDIF
   !
-!civn 
   ! ... for exact exchange case update the ACE projector with the actual number of bands 
   !
   IF(xclib_dft_is('hybrid')) THEN 
@@ -194,7 +190,6 @@ SUBROUTINE non_scf( )
      IF ( lberry ) CALL c_phase()
      IF ( lorbm ) CALL orbm_kubo()
   END IF
-!
   !
   CALL stop_clock( 'electrons' )
   !

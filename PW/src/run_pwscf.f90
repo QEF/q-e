@@ -55,7 +55,7 @@ SUBROUTINE run_pwscf( exit_status )
   USE qmmm,                 ONLY : qmmm_initialization, qmmm_shutdown, &
                                    qmmm_update_positions, qmmm_update_forces
   USE qexsd_module,         ONLY : qexsd_set_status
-  USE xc_lib,               ONLY : xclib_dft_is, stop_exx
+  USE xc_lib,               ONLY : xclib_dft_is, stop_exx, exx_is_active
   USE beef,                 ONLY : beef_energies
   USE ldaU,                 ONLY : lda_plus_u
   USE add_dmft_occ,         ONLY : dmft
@@ -190,7 +190,11 @@ SUBROUTINE run_pwscf( exit_status )
            ENDIF
         ENDIF
         CALL qexsd_set_status(exit_status)
-        CALL punch( 'config' )
+        IF(exx_is_active()) then
+          CALL punch( 'all' )
+        ELSE
+          CALL punch( 'config' )
+        ENDIF
         RETURN
      ENDIF
      !

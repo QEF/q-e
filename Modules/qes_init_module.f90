@@ -2124,7 +2124,7 @@ MODULE qes_init_module
   !
   !
   SUBROUTINE qes_init_electron_control(obj, tagname, diagonalization, mixing_mode, mixing_beta,&
-                                      conv_thr, mixing_ndim, max_nstep, tq_smoothing, tbeta_smoothing,&
+                                      conv_thr, mixing_ndim, exx_nstep, max_nstep, tq_smoothing, tbeta_smoothing,&
                                       diago_thr_init, diago_full_acc, real_space_q, real_space_beta,&
                                       diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim,&
                                       diago_rmm_ndim, diago_gs_nblock, diago_rmm_conv)
@@ -2138,6 +2138,7 @@ MODULE qes_init_module
     REAL(DP),INTENT(IN) :: mixing_beta
     REAL(DP),INTENT(IN) :: conv_thr
     INTEGER,INTENT(IN) :: mixing_ndim
+    INTEGER,INTENT(IN) :: exx_nstep
     INTEGER,INTENT(IN) :: max_nstep
     LOGICAL,OPTIONAL,INTENT(IN) :: real_space_q
     LOGICAL,OPTIONAL,INTENT(IN) :: real_space_beta
@@ -2161,6 +2162,7 @@ MODULE qes_init_module
     obj%mixing_beta = mixing_beta
     obj%conv_thr = conv_thr
     obj%mixing_ndim = mixing_ndim
+    obj%exx_nstep = exx_nstep
     obj%max_nstep = max_nstep
     IF ( PRESENT(real_space_q)) THEN
       obj%real_space_q_ispresent = .TRUE. 
