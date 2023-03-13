@@ -485,7 +485,7 @@ CONTAINS
          END IF 
          
          !
-         CALL qes_init (obj, "dftU", lda_plus_u_kind, hubb_occ_,  U_, J0_, alpha_, beta_,  J_, starting_ns_, Hub_V_,     & 
+         CALL qes_init (obj, "dftU", .true., lda_plus_u_kind, hubb_occ_,  U_, J0_, alpha_, beta_,  J_, starting_ns_, Hub_V_,     & 
                        Hubbard_ns_, U_projection_type, Hub_back_, alpha_back_, Hubbard_ns_nc_)
          ! 
          CALL reset_hubbard_occs(hubb_occ_)
