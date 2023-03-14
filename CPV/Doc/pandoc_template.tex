@@ -450,6 +450,7 @@ $if(beamer)$
 \frame{\titlepage}
 $else$
 $if(customtitlepage)$
+\def\intitle{$title$}
 \begin{titlepage}
 \input{$customtitlepage$}
 \end{titlepage}
@@ -486,6 +487,7 @@ $if(colorlinks)$
 $endif$
 \setcounter{tocdepth}{$toc-depth$}
 \tableofcontents
+\newpage
 }
 $endif$
 $endif$
