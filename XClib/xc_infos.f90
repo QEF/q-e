@@ -225,9 +225,12 @@ PROGRAM xc_infos
       WRITE(stdout, '(" - Family: ",a)') TRIM(lxc_family)
       WRITE(stdout, '(" - Kind:   ",a)') TRIM(lxc_kind)
       !
-      IF (lxc_family(1:6)=="Hybrid" .AND. (i==1 .OR. i==3 .OR. &
-         ((i==2.OR.i==4).AND.fkind==XC_EXCHANGE_CORRELATION))) &
-            WRITE(stdout,*) '- Default exx fraction: ', exx_fraction
+      IF (lxc_family(1:6)=="Hybrid" .AND. (MOD(i,2)==1 .OR. ((MOD(i,2)==0) &
+                                    .AND.fkind==XC_EXCHANGE_CORRELATION))) THEN
+         WRITE(stdout,*) '- Default exx fraction: ', exx_fraction
+         IF (screening_parameter/=0.d0) &
+             WRITE(stdout,*) '- Default screening parameter: ', screening_parameter
+      ENDIF
       IF ( n_ext_params(i)/=0 ) THEN
         WRITE(stdout, '(" - External parameters: ",i3)') n_ext_params(i)
         DO ii = 0, n_ext_params(i)-1
@@ -249,6 +252,9 @@ PROGRAM xc_infos
       IF ( libxc_flags(i,2)  == 0 ) &
         WRITE(stdout,'(4X,"[w02] libxc functional with ID ",I4," does not ", &
                       &/4X,"provide Vxc derivative.")' ) idx
+      IF ( libxc_flags(i,8) == 1 ) &
+            WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," is CAM, ", &
+                          &/5X,"long range exx is not available yet (if needed).")' ) idx
       IF ( libxc_flags(i,14) == 1 ) &
         WRITE(stdout,'(4X,"[w02] libxc functional with ID ",I4," is still ", &
                       &/4X,"in development.")' ) idx

@@ -47,6 +47,19 @@ MODULE dft_setting_params
     !! some Libxc dfts are currently not usable in QE (for example
     !! kinetic dfts). If one of them is detected this variable is
     !! set to TRUE.
+    CHARACTER(LEN=100) :: lxc_exx_desc(5)
+    DATA lxc_exx_desc / 'Fraction of HF exchange',            &
+                        'Fraction of exact exchange',         &
+                        'Fraction of Hartree-Fock exchange ', &
+                        'Coefficient for exact exchange ',    &
+                        'Mixing parameter '/
+    !
+    CHARACTER(LEN=100) :: lxc_scr_desc(5)
+    DATA lxc_scr_desc / 'Range separation parameter', &
+                        'Range-separation parameter', &
+                        'Range separation constant',  &
+                        'Range-separation constant',  &
+                        'Screening parameter for HF' /
 #endif
     !
     LOGICAL  :: exx_started = .FALSE.
@@ -100,8 +113,8 @@ MODULE dft_setting_params
     !! TRUE if the functional is MGGA
     LOGICAL :: ishybrid    = .FALSE.
     !! TRUE if the functional is hybrid
-    LOGICAL :: scan_exx    = .FALSE.
-    !! TRUE if SCAN0 functional is active
+    INTEGER :: exx_term    = 0
+    !! term of the functional that is hybrid
     !
     LOGICAL :: discard_input_dft = .FALSE.
     !! TRUE if input DFT can be overwritten

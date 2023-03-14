@@ -45,7 +45,7 @@ CONTAINS
     !
     USE xclib_utils_and_para,ONLY: nowarning
     USE dft_setting_params,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
-                                   discard_input_dft, is_libxc, dft, scan_exx, notset
+                                   discard_input_dft, is_libxc, dft, notset
     USE qe_dft_list,         ONLY: nxc, ncc, ngcx, ngcc, nmeta, get_IDs_from_shortname, &
                                    dft_LDAx_name, dft_LDAc_name, dft_GGAx_name,         &
                                    dft_GGAc_name, dft_MGGA_name
@@ -146,7 +146,8 @@ CONTAINS
     ! ... A workaround to keep the q-e shortname notation for SCAN and TB09
     !     functionals valid.
     !
-    meta_libxc_short = imeta==3 .OR. imeta==5 .OR. imeta==6 .OR. imeta==7
+    meta_libxc_short = imeta==3 .OR. imeta==5 .OR. &
+                       imeta==6 .OR. imeta==7 .OR. imeta==8
     !
 #if defined(__LIBXC)
     IF (meta_libxc_short) THEN
@@ -164,13 +165,16 @@ CONTAINS
         imetac = 267
       CASE ( 6 )
         ! SCAN0
-        scan_exx = .TRUE.
         imeta = 264
         imetac = 267
       CASE ( 7 )
         ! R2SCAN
         imeta = 497
         imetac = 498
+      CASE ( 8 )
+        ! RSCAN
+        imeta = 493
+        imetac = 494
       END SELECT
       !
     END IF
@@ -490,11 +494,9 @@ CONTAINS
     USE kind_l,              ONLY: DP
     USE dft_setting_params,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
                                    islda, isgradient, ismeta, exx_fraction, &
-                                   screening_parameter, gau_parameter,      & 
-                                   ishybrid, has_finite_size_correction, is_libxc
-#if defined(__LIBXC)
-    USE xc_f03_lib_m
-#endif
+                                   screening_parameter, gau_parameter,      &
+                                   ishybrid, has_finite_size_correction,    &
+                                   is_libxc, exx_term
     !
     IMPLICIT NONE
     !
@@ -504,7 +506,8 @@ CONTAINS
 #if defined(__LIBXC)
     TYPE(xc_f03_func_t) :: xc_func
     TYPE(xc_f03_func_info_t) :: xc_info
-    INTEGER :: iid, family, id_vec(6)
+    INTEGER :: fkind, iid, family, id_vec(6), iflag, flags_tot, libxc_flag(16)
+    REAL(DP) :: omega, alpha, beta
 #endif
     LOGICAL :: is_libxc13, is_libxc12
     !
@@ -555,27 +558,48 @@ CONTAINS
     ! X3LYP
     IF ( iexch==9 .AND. .NOT.is_libxc(3)) exx_fraction = 0.218_DP
     !
+    ! ... intialize exx_fraction and screening_parameter from Libxc
 #if defined(__LIBXC)
+    !
+    alpha=0 ; beta=0 ; omega=0
+    !
     id_vec(1)=iexch ; id_vec(2)=icorr
     id_vec(3)=igcx  ; id_vec(4)=igcc
     id_vec(5)=imeta ; id_vec(6)=imetac
     !
-    DO iid = 3, 6
+    DO iid = 1, 6
       IF ( is_libxc(iid) ) THEN
         CALL xc_f03_func_init( xc_func, id_vec(iid), 1 )
         xc_info = xc_f03_func_get_info( xc_func )
+        fkind = xc_f03_func_info_get_kind( xc_info )
         family = xc_f03_func_info_get_family( xc_info )
-        IF ( family==XC_FAMILY_HYB_LDA .OR. family==XC_FAMILY_HYB_GGA .OR. family==XC_FAMILY_HYB_MGGA ) THEN
-           exx_fraction = xc_f03_hyb_exx_coef( xc_func )
-           ! .. workaround for Libxc glitch in HSE06
-           IF (id_vec(iid)==428) THEN
-             exx_fraction = xc_f03_func_info_get_ext_params_default_value( xc_info, 0 )
-             screening_parameter = xc_f03_func_info_get_ext_params_default_value( xc_info, 1 )
-           ENDIF
+        flags_tot = xc_f03_func_info_get_flags( xc_info )
+        DO iflag = 15, 0, -1
+          libxc_flag(iflag+1) = 0
+          IF ( flags_tot-2**iflag < 0 ) CYCLE
+          libxc_flag(iflag+1) = 1
+          flags_tot = flags_tot-2**iflag
+        ENDDO
+        !
+        IF ( family==XC_FAMILY_HYB_LDA .OR. family==XC_FAMILY_HYB_GGA .OR. &
+             family==XC_FAMILY_HYB_MGGA ) THEN
+          IF ( (MOD(iid,2)==1 .OR. ((MOD(iid,2)==0) .AND. &
+               fkind==XC_EXCHANGE_CORRELATION)) ) THEN
+             exx_term = iid
+             IF (exx_fraction==0.d0) THEN
+               exx_fraction = xc_f03_hyb_exx_coef( xc_func )
+               IF (libxc_flag(9) == 1) THEN
+                 CALL xc_f03_hyb_cam_coef( xc_func, omega, alpha, beta )
+                 IF (exx_fraction==0.d0) exx_fraction = beta
+                 IF (screening_parameter==0.d0) screening_parameter = omega
+               ENDIF
+             ENDIF
+          ENDIF
         ENDIF
         CALL xc_f03_func_end( xc_func )
       ENDIF
     ENDDO
+    !
 #endif
     !
     ishybrid = ( exx_fraction /= 0.0_DP )
@@ -938,7 +962,6 @@ CONTAINS
     finite_size_cell_volume_set = .FALSE.
     ismeta = .FALSE.
     ishybrid = .FALSE.
-    scan_exx = .FALSE.
     beeftype = -1 ; beefvdw = 0
   END SUBROUTINE
   !
@@ -1045,28 +1068,32 @@ CONTAINS
   SUBROUTINE xclib_init_libxc( xclib_nspin, domag )
     !------------------------------------------------------------------------
     !! Initialize Libxc functionals, if present.
-    USE dft_setting_params,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
-                                   is_libxc, libxc_initialized
+    USE dft_setting_params,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac,   &
+                                   is_libxc, libxc_initialized, exx_fraction, &
+                                   screening_parameter
 #if defined(__LIBXC)
     USE xclib_utils_and_para,ONLY: nowarning
     USE dft_setting_params,  ONLY: n_ext_params, xc_func, xc_info, par_list, &
-                                   libxc_flags, n_ext_params
+                                   libxc_flags, n_ext_params, exx_term, &
+                                   lxc_exx_desc, lxc_scr_desc
 #endif
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: xclib_nspin
     LOGICAL, INTENT(IN) :: domag
     !! 1: unpolarized case; 2: polarized
-    INTEGER :: iid, ip, p0, pn, ips, nspin0, iflag, family
-    INTEGER :: id_vec(6), flags_tot    
+    INTEGER :: i, ii, iid, iexx, iscr, ip, nspin0, iflag, family
+    INTEGER :: id_vec(6), flags_tot
     !
 #if defined(__LIBXC)
+    CHARACTER(LEN=100) :: pdesc
+    !
     !call xclib_init_libxc_print_version_info
     !
     nspin0 = xclib_nspin
     IF ( xclib_nspin==4 ) THEN
       nspin0 = 1
       IF ( domag ) nspin0 = 2
-    ENDIF  
+    ENDIF
     !
     id_vec(1)=iexch ; id_vec(2)=icorr
     id_vec(3)=igcx  ; id_vec(4)=igcc
@@ -1091,12 +1118,31 @@ CONTAINS
         ENDDO
         !
         n_ext_params(iid) = xc_f03_func_info_get_n_ext_params( xc_info(iid) )
-        p0 = 0 ;  pn = n_ext_params(iid)-1 ;  ips = 1
-        !
-        DO ip = p0, pn
-          par_list(iid,ip+ips) = xc_f03_func_info_get_ext_params_default_value( &
+        DO ip = 0, n_ext_params(iid)-1
+          par_list(iid,ip+1) = xc_f03_func_info_get_ext_params_default_value( &
                                                            xc_info(iid), ip )
         ENDDO
+        !
+        ! ... enforce the input value of the exx_fraction inside Libxc
+        IF (exx_term==iid .AND. exx_fraction>0.d0 .AND. n_ext_params(iid)/=0 ) THEN
+          iexx = 0
+          iscr = 0
+          DO i = 0, n_ext_params(iid)-1
+            pdesc = &
+              TRIM(xc_f03_func_info_get_ext_params_description(xc_info(iid), i))
+            DO ii = 1, 5
+              IF ( matches( lxc_exx_desc(ii), pdesc ) ) iexx = i
+            ENDDO
+            DO ii = 1, 5
+              IF ( matches( lxc_scr_desc(ii), pdesc ) ) iscr = i
+            ENDDO
+          ENDDO
+          !
+          IF (iexx/= 0) CALL set_libxc_ext_param( iid, iexx, exx_fraction )
+          IF (iscr/= 0 .AND. screening_parameter>0.d0) &
+                 CALL set_libxc_ext_param( iid, iscr, screening_parameter )
+        ENDIF
+        !
         libxc_initialized(iid) = .TRUE.
         !
         IF ( .NOT. nowarning ) THEN
@@ -1106,16 +1152,23 @@ CONTAINS
                           &/5X," QE if you need to modify them or to check their",&
                           &/5x," default values.")' ) id_vec(iid)
           IF ( libxc_flags(iid,0) == 0 ) &
-            WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
+            WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ", &
                           &/5X,"provide Exc.")' ) id_vec(iid)
           IF ( libxc_flags(iid,1) == 0 ) &
-            WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
+            WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ", &
                           &/5X,"provide Vxc.")' ) id_vec(iid)
           IF ( libxc_flags(iid,2) == 0 ) &
             WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ", &
                           &/5X,"provide Vxc derivative.")' ) id_vec(iid)
+          IF ( libxc_flags(iid,8) == 1 ) &
+            WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," is CAM, ",  &
+                          &/5X,"long range exx is not available yet (if needed).")' )&
+                          id_vec(iid)
+          IF ( libxc_flags(iid,14) == 1 ) &
+            WRITE(stdout,'(4X,"[w02] libxc functional with ID ",I4," is still ", &
+                      &/4X,"in development.")' ) id_vec(iid)
           IF ( libxc_flags(iid,15) == 1 ) &
-            WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," depends on", &
+            WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," depends on",  &
                           &/5X," the laplacian of the density, which is currently set",&
                           &/5X," to zero.")' ) id_vec(iid)
         ENDIF
@@ -1233,7 +1286,7 @@ CONTAINS
     !! Get DFT name in short notation.
     !
     USE dft_setting_params, ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
-                                  is_libxc, scan_exx, notset
+                                  is_libxc, notset
     USE qe_dft_list,        ONLY: dft_LDAc_name, get_shortname_from_IDs
     !
     IMPLICIT NONE
@@ -1258,11 +1311,13 @@ CONTAINS
     IF ( ANY(is_libxc(5:6)) ) THEN
        IF (imeta==263 .AND. imetac==267) THEN
           shortname = 'SCAN'
-       ELSEIF (imeta==264 .AND. imetac==267 .AND. scan_exx) THEN
+       ELSEIF (imeta==264 .AND. imetac==267) THEN
           shortname = 'SCAN0'
+       ELSEIF (imeta==493 .AND. imetac==494) THEN
+          shortname = 'RSCAN'
        ELSEIF (imeta==497 .AND. imetac==498) THEN
           shortname = 'R2SCAN'
-       ELSEIF (imeta == 208 .AND. imetac==231) THEN
+       ELSEIF (imeta==208 .AND. imetac==231) THEN
           shortname = 'TB09'
        ENDIF
     ENDIF
