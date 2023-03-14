@@ -64,7 +64,7 @@ PROGRAM compute_self_hartree
   !
   ! Rewind the input if the title is actually the beginning of inputph namelist
   IF( imatches("&kcw_pp", title)) THEN
-    WRITE(*, '(6x,a)') "Title line not specified: using 'default'."
+    WRITE(stdout, '(6x,a)') "Title line not specified: using 'default'."
     title='default'
     REWIND(5, iostat=ios)
     CALL errore('conmpute_self_hartree', 'Title line missing from input.', abs(ios))

@@ -18,6 +18,7 @@ SUBROUTINE kcw_bands()
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
   USE interpolation,        ONLY : read_wannier_centers, ft_ham, print_bands_to_file
+  USE io_files,             ONLY : prefix
   !
   !
   IMPLICIT NONE
@@ -26,6 +27,7 @@ SUBROUTINE kcw_bands()
   COMPLEX(DP) :: eigvc(num_wann,num_wann)
   REAL(DP)    :: eigvl(num_wann,nks_bands)
   INTEGER     :: ik
+  CHARACTER(268) :: filename
   !
   !
   ALLOCATE( centers(3,num_wann) )
@@ -46,7 +48,8 @@ SUBROUTINE kcw_bands()
     !
   ENDDO
   !
-  CALL print_bands_to_file( eigvl )
+  filename = trim(prefix)//'.kcwpp_bands.dat'
+  CALL print_bands_to_file( eigvl, filename )
   !
   WRITE( stdout, '(/,5x, "ENDING BAND STRUCTURE INTERPOLATION",/)' )
   !

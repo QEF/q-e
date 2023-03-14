@@ -5,6 +5,9 @@
 !/example02/reference/
 !/example02/reference/*
 !/example02/reference/*/*
+!/example03/reference/
+!/example03/reference/*
+!/example03/reference/*/*
 !run_example
 !*in
 !*ref
