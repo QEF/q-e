@@ -70,12 +70,18 @@ Read previous PWSCF and possibly W90 outputs and prepare the KCW
 calculation
             </opt>
             <opt val="'screen'" >
-Performe the calculation of KCW screening coefficient using a
+Perform the calculation of KCW screening coefficient using a
 LR approach as described here <link>https://doi.org/10.1021/acs.jctc.7b01116</link>
 and <a href="https://arxiv.org/abs/2202.08155">arXiv:2202.08155</a>
             </opt>
             <opt val="'ham'" >
-Performe the calculation interpolation and diagonalization of of KI hamiltonian
+Perform the calculation interpolation and diagonalization of the KI hamiltonian
+            </opt>
+            <opt val="'cc'" >
+Computes the (estimated) q+G=0 contribution to the bare and screened KC corrections.
+A report on this quantities is printed on output and can be used to correct a
+posteriori a &quot;screen&quot; calculation performed without any corrective scheme (<ref>l_vcut</ref>=.false.)
+avoiding the need of re-doing a &quot;screen&quot; calculation.
             </opt>
          </options>
       </var>
@@ -107,10 +113,10 @@ from MLWF. Requires &apos;write_hr = .true.&apos; in wannier90.
          </info>
       </var>
       <var name="spread_thr" type="REAL" >
-         <default> 0.001 Ry
+         <default> 0.0001 Ry
          </default>
          <info>
-NOT IMPLMENTED YET. Two or more Wannier functions are considered
+HARD-CODED FOR NOW. Two or more Wannier functions are considered
 identical if their spread (self-hartree) differ by less than spread_thr.
 Requires <ref>check_spread</ref> = .true.
          </info>
@@ -244,7 +250,7 @@ unitary matrices in the wannier90 file seedname_emp_u.mat
          <default> FALSE
          </default>
          <info>
- Specify if a disentangle unitary matrix needs to be read. Requires
+Specify if a disentangle unitary matrix needs to be read. Requires
 a consisten calcuation from the previous wannier90 run.
          </info>
       </var>
@@ -295,9 +301,16 @@ functions.
 The macroscopic dielectric constant. Needed for the Gygi-Baldereschi
 scheme if <ref>l_vcut</ref> = .TRUE.
 Typically from exp or from a ph.x calculation.
-NOTA BENE: This would be equivalent to a Makov-Payne correction.
-           it is perfectly fine for cubic systems. Not so for
-           anisotropic dielectric matrices.
+
+NOTA BENE: This would be equivalent to a Makov-Payne correction. It works well
+for cubic systems. Less well for anisotropic systems.
+
+ANISOTROPIC SYSTEMS: In this case a generalization of the GB scheme is implemented
+based on Nano Lett.,9, 975 (2009). It requires the full dielectric tensor to be provided.
+The code searches (in the working dir) for a file named &quot;eps.dat&quot; containing the macrospocic
+dielectric tensor. If it does not find it, the value <ref>eps_inf</ref> provided in input will be
+used (isotropic approximation). If not even <ref>eps_inf</ref> is provided in input no correction
+is applied to the screened KC correction.
          </info>
       </var>
       <var name="check_spread" type="LOGICAL" >
@@ -319,7 +332,7 @@ than 1e-4 Ry (Hard coded for now, see <ref>spread_thr</ref>).
          <info>
 If .true. the interpolated band structure is computed along
 a path secified with the K_POINTS card ( see PW documentation
-<link>https://www.quantum-espresso.org/Doc/INPUT_PW.html#idm1346</link> )
+<link>https://www.quantum-espresso.org/Doc/INPUT_PW.html#idm1487</link> )
          </info>
       </var>
       <var name="use_ws_distance" type="LOGICAL" >
@@ -351,7 +364,7 @@ are computed (R=0 and n=m).
       </var>
    </namelist>
    <card name="K_POINTS" >
-      <message> see <link>https://www.quantum-espresso.org/Doc/INPUT_PW.html#idm1346</link>
+      <message> see <link>https://www.quantum-espresso.org/Doc/INPUT_PW.html#idm1487</link>
       </message>
    </card>
 </input_description>

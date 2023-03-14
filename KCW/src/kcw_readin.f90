@@ -10,7 +10,7 @@
 SUBROUTINE kcw_readin()
   !----------------------------------------------------------------------------
   !
-  !!  This routine reads the control variables for the KC programs.
+  !!  This routine reads the control variables for the KCW programs.
   !!  from standard input (unit 5).
   !!  Then it calls the readfile routine to reads the variables saved
   !!  on a file by the previous self-consistent calculation.
@@ -63,24 +63,51 @@ SUBROUTINE kcw_readin()
   NAMELIST / HAM /      qp_symm, kipz_corr, i_orb, do_bands, use_ws_distance, & 
                         write_hr, l_alpha_corr, on_site_only
   !
+  !### COTROL
   !! outdir          : directory where input, output, temporary files reside 
   !! prefix          : the prefix of files produced by pwscf
   !! read_unitary_matrix  : if true the unitary matrix relating KS to localized orbital is read
   !! kcw_at_ks       : if true compute screening parameter for KS orbitals
-  !! fix_orb         : if .true. and kcw_at_ks froze the response of the KS we are looking at
   !! homo_only       : if kcw_at_ks only the screening coefficeint for HOMO is computed 
   !! kcw_iverbosity  : level of verbosity. Form 0 (only relevant infos) to 2 (almost everything) 
+  !! calculation     : specify the task: wann2kcw, interface with PW and W90; screen: calculation of the screening coefficients;
+  !!                   ham, comoute (interpolate) and diagonalize the KC hamiltonian
   !! l_vcut          : IF true the Gygi-Baldereschi scheme is used to deal with the q->0 divergence in the Coulomb integrals
+  !! assume_isolated : scheme to deal with the long rage of Coulomnb for isolated systems (as in PWscf)
   !! spin_component  : set the spin component we are looking at (same as the one from Wannir90) 
+  !! mp*             : Monhkost-Pack grid, need to be consistent with PW and W90
+  !! lrpa            : If true the response of the system is evaluated at the RPA level (no xc contribution) 
   !! spread_thr      : the tollerance within which two orbital are considered to have the same spread 
-  !! qp_symm         : if TRUE make the KI hamitonian hermitian in the spirit of quasiparticle GW scheme 
+  !
+  !### WANNIER 
   !! seedname        : seedname for the Wannier calculation
   !! num_wann_occ    : number of occupied wannier
   !! num_wann_emp    : number of empty wannier
+  !! have_empty      : TRUE if want to compute empty states 
+  !! has_disentangle : TRUE if Wannier functions are generated after a disentangle procedure 
+  !! l_unique_manifold : TRUE if a unique wannierization was performed for occupied and empty states (use with caution). 
+  !! check_ks        : if TRUE a check of the KS hamiltonian build on the Wannier representation is performed (eigenvalues
+  !!                   are compared to the original one from PW.
+  !
+  !### SCREEN 
+  !! fix_orb         : if .true. and kcw_at_ks froze the response of the KS we are looking at (FIXME obsolete, to be removed?) 
+  !! niter           : max number of iterations for the SCF problem
+  !! nmix            : # of iteration used in the mixing scheme for the SCF potential
+  !! tr2             : threshold for the convergence of the SCF problem
+  !! i_orb           : IF present in input specify which orbital the LR porblem needs to be solved (used to split the calculation
+  !!                   of the screening coefficients) 
+  !! eps_inf         : The value of the macroscopic dielectric function (needed to deal with the q->0 limit of the screened KC)
+  !! check_spread    : If TRUE the screening calculation is performed only for orbital with different spread (self-hartree)
+  !
+  !### HAM
   !! do_bands        : if .true. KC electronic bands are computed along the input path
   !! use_ws_distance : as in W90, if .true. the Wannier centers are considered in the interpolation
   !! write_hr        : if .true. KC H(R) is printed into a file
-  !! on_site_only    : if .true. only H(R=0) and i=j. 
+  !! on_site_only    : if .true. only H(R=0) and i=j is computed
+  !! qp_symm         : if TRUE make the KI hamitonian hermitian in the spirit of quasiparticle GW scheme 
+  !! kipz_corr       : Compute the pKIPZ hamiltonian (only for finite systems: Gamma-only calculation in SC) 
+  !! l_alpha_corr    : If true a correction is applied to the screening coefficient to mimick effect beyond the 
+  !!                   second order
   ! 
   IF (ionode) THEN
     !
@@ -159,10 +186,10 @@ SUBROUTINE kcw_readin()
   CALL errore( 'kcw_readin', 'reading CONTROL namelist', ABS( ios ) )
   CALL mp_bcast(calculation, ionode_id, intra_image_comm)
   !
-  IF (calculation /= 'wann2kcw' .AND. calculation /= 'screen' .AND. calculation /= 'ham') &
+  IF (calculation /= 'wann2kcw' .AND. calculation /= 'screen' .AND. calculation /= 'ham' .AND. calculation /= 'cc' ) &
   CALL errore('kcw_readin', 'calculation NOT specified or NOT correct', 1)
   !
-  IF (ionode .AND. .NOT. kcw_at_ks) READ( 5, WANNIER, IOSTAT = ios )
+  IF (ionode .AND. .NOT. kcw_at_ks .AND. (calculation /= 'cc') )  READ( 5, WANNIER, IOSTAT = ios )
   CALL mp_bcast(ios, ionode_id, intra_image_comm)
   CALL errore( 'kcw_readin', 'reading WANNIER namelist', ABS( ios ) )
   !
@@ -216,8 +243,8 @@ SUBROUTINE kcw_readin()
   IF (i_orb .lt. -1 ) & 
      CALL errore('kcw_readin', ' WRONG i_orb, orbital from input must be positive', 1)
   !
-  IF (calculation /= 'wann2kcw' .AND. (mp1 .lt. 1 .OR. mp2 .lt. 1 .OR. mp3 .lt. 1) )&
-     CALL errore('kcw_readin', ' WRONG k/q grid mp1, mp2, mp3', 1)
+  IF ( (mp1 .lt. 1 .OR. mp2 .lt. 1 .OR. mp3 .lt. 1) )&
+     CALL errore('kcw_readin', ' WRONG k/q grid: check input for mp1, mp2, mp3', 1)
   !
   IF (calculation == 'ham' .AND. npool .gt. 1) &
      CALL errore('kcw_readin', 'pools not implemented for "ham" calculation', npool)
