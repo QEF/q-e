@@ -12,9 +12,9 @@ MODULE qes_read_module
   !
   ! Quantum Espresso XSD namespace: http://www.quantum-espresso.org/ns/qes/qes-1.0
   !
-#if defined (__fox) 
+#if defined (__fox)
   USE FoX_dom
-#else 
+#else
   USE dom
 #endif
   USE qes_types_module
@@ -3335,6 +3335,13 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
+    ! 
+    IF (hasAttribute(xml_node, "new_format")) THEN
+      CALL extractDataAttribute(xml_node, "new_format", obj%new_format)
+      obj%new_format_ispresent = .TRUE.
+    ELSE
+      obj%new_format_ispresent = .FALSE.
+    END IF
     !
     !
     tmp_node_list => getElementsByTagname(xml_node, "lda_plus_u_kind")
@@ -4126,6 +4133,13 @@ MODULE qes_read_module
          CALL errore ("qes_read: HubbardBackType",&
                       "required attribute background not found", 10 )
       END IF
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "label")) THEN
+      CALL extractDataAttribute(xml_node, "label", obj%label)
+      obj%label_ispresent = .TRUE.
+    ELSE
+      obj%label_ispresent = .FALSE.
     END IF
     ! 
     IF (hasAttribute(xml_node, "species")) THEN
@@ -5665,6 +5679,34 @@ MODULE qes_read_module
        ELSE
           CALL errore ("qes_read:electron_controlType","error reading max_nstep",10)
        END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "exx_nstep")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:electron_controlType","exx_nstep: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:electron_controlType","exx_nstep: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%exx_nstep_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%exx_nstep , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:electron_controlType","error reading exx_nstep")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:electron_controlType","error reading exx_nstep",10)
+         END IF
+      END IF
+    ELSE
+       obj%exx_nstep_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "real_space_q")
@@ -10445,25 +10487,29 @@ MODULE qes_read_module
     tmp_node_list => getElementsByTagname(xml_node, "constr_target")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
+    IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN
-           CALL infomsg("qes_read:atomic_constraintType","constr_target: wrong number of occurrences")
+           CALL infomsg("qes_read:atomic_constraintType","constr_target: too many occurrences")
            ierr = ierr + 1
         ELSE
-           CALL errore("qes_read:atomic_constraintType","constr_target: wrong number of occurrences",10)
+           CALL errore("qes_read:atomic_constraintType","constr_target: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL extractDataContent(tmp_node, obj%constr_target, IOSTAT = iostat_ )
-    IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN
-          CALL infomsg("qes_read:atomic_constraintType","error reading constr_target")
-          ierr = ierr + 1
-       ELSE
-          CALL errore ("qes_read:atomic_constraintType","error reading constr_target",10)
-       END IF
+    IF (tmp_node_list_size>0) THEN
+      obj%constr_target_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%constr_target , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:atomic_constraintType","error reading constr_target")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:atomic_constraintType","error reading constr_target",10)
+         END IF
+      END IF
+    ELSE
+       obj%constr_target_ispresent = .FALSE.
     END IF
     !
     !

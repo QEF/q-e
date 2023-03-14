@@ -777,6 +777,7 @@ MODULE qes_reset_module
       obj%ndim_Hubbard_ns_nc = 0
       obj%Hubbard_ns_nc_ispresent = .FALSE.
     ENDIF
+    obj%new_format_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_dftU
   !
@@ -951,6 +952,7 @@ MODULE qes_reset_module
     !
     obj%n3_number_ispresent = .FALSE.
     obj%l3_number_ispresent = .FALSE.
+    obj%label_ispresent = .FALSE.
     obj%species_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_HubbardBack
@@ -1150,6 +1152,7 @@ MODULE qes_reset_module
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
+    obj%exx_nstep_ispresent = .FALSE.
     obj%real_space_q_ispresent = .FALSE.
     obj%real_space_beta_ispresent = .FALSE.
     obj%diago_cg_maxiter_ispresent = .FALSE.
@@ -1604,6 +1607,7 @@ MODULE qes_reset_module
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
+    obj%constr_target_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_atomic_constraint
   !
