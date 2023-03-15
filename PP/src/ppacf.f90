@@ -822,10 +822,10 @@ PROGRAM do_ppacf
     exxdiv_treatment = "gygi-baldereschi"
     ecutfock = ecutwfc
     !
+    CALL xclib_set_exx_fraction( 1._DP )
     CALL enforce_input_dft( 'HF' )
     isnonlocc = dft_is_nonlocc()
     CALL xclib_set_auxiliary_flags( isnonlocc )
-    CALL xclib_set_exx_fraction( 1._DP )
     !
     ALLOCATE( igk_buf(npwx), gk(npwx) )
     igk_k(:,:) = 0
