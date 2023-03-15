@@ -150,21 +150,13 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
         ENDIF
         !
         IF (noncolin) THEN
-#if defined(__CUDA) 
            !$acc kernels 
            dvpsi(1:npwx*npol, ibnd) = wg1 * dvpsi(1:npwx*npol, ibnd)
            !$acc end kernels
-#else
-           CALL dscal (2*npwx*npol, wg1, dvpsi(1,ibnd), 1)
-#endif
         ELSE
-#if defined(__CUDA)
            !$acc kernels
            dvpsi(1:npwq, ibnd) = wg1 * dvpsi(1:npwq, ibnd)
            !$acc end kernels
-#else
-           call dscal (2*npwq, wg1, dvpsi(1,ibnd), 1)
-#endif
         END IF
         !
      END DO
