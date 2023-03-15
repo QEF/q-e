@@ -1273,10 +1273,10 @@ MODULE pw_restart_new
          CALL dftd3_set_functional(dftd3, func = dft_, version = dftd3_version, tz=.FALSE.) 
       END IF  
       IF ( xclib_dft_is('hybrid') ) THEN
-         ecutvcut=ecutvcut*e2
-         ecutfock=ecutfock*e2
+         ecutvcut = ecutvcut*e2
+         ecutfock = ecutfock*e2
          CALL xclib_set_exx_fraction( exx_fraction ) 
-         CALL set_screening_parameter ( screening_parameter )
+         CALL set_screening_parameter( screening_parameter )
          CALL start_exx ()
       END IF
       !! Band structure section
