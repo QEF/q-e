@@ -119,6 +119,7 @@ MODULE read_namelists_module
        disk_io  = 'default'
        dipfield = .FALSE.
        gate     = .FALSE. !TB
+       twochem  = .FALSE.
        lberry   = .FALSE.
        gdir     = 0
        nppstr   = 0
@@ -163,6 +164,7 @@ MODULE read_namelists_module
        nat    = 0
        ntyp   = 0
        nbnd   = 0
+       nbnd_cond = 0
        tot_charge = 0.0_DP
        tot_magnetization = -10000
        ecutwfc = 0.0_DP
@@ -179,6 +181,8 @@ MODULE read_namelists_module
        occupations = 'fixed'
        smearing = 'gaussian'
        degauss = 0.0_DP
+       nelec_cond=0.0_DP
+       degauss_cond =0.0_DP
        nspin = 1
        nosym = .FALSE.
        nosym_evc = .FALSE.
@@ -904,6 +908,7 @@ MODULE read_namelists_module
        CALL mp_bcast( memory,        ionode_id, intra_image_comm )
        CALL mp_bcast( input_xml_schema_file, ionode_id, intra_image_comm )
        CALL mp_bcast( gate,          ionode_id, intra_image_comm ) !TB
+       CALL mp_bcast( twochem,       ionode_id, intra_image_comm )
        CALL mp_bcast( mbd_vdw,        ionode_id, intra_image_comm ) !GSz
        !
        RETURN
@@ -949,6 +954,9 @@ MODULE read_namelists_module
        CALL mp_bcast( occupations,       ionode_id, intra_image_comm )
        CALL mp_bcast( smearing,          ionode_id, intra_image_comm )
        CALL mp_bcast( degauss,           ionode_id, intra_image_comm )
+       CALL mp_bcast( degauss_cond,      ionode_id, intra_image_comm )
+       CALL mp_bcast( nelec_cond,        ionode_id, intra_image_comm )
+       CALL mp_bcast( nbnd_cond,         ionode_id, intra_image_comm )
        CALL mp_bcast( nspin,             ionode_id, intra_image_comm )
        CALL mp_bcast( nosym,             ionode_id, intra_image_comm )
        CALL mp_bcast( nosym_evc,         ionode_id, intra_image_comm )
