@@ -91,8 +91,8 @@ SUBROUTINE ks_hamiltonian (evc, ik, h_dim)
   !
   IF ( check_ks ) THEN 
      !WRITE(stdout,'(/,8x, "WARNING: Eig DIFFERS! k=", 3f12.4, 3x)' )  xk(:,ik)
-     WRITE( stdout, '(8X, "WANN  ",8F9.4)' ) (eigvl(iband)*rytoev, iband=1,h_dim)
-     WRITE( stdout, '(8X, "PWSCF ",8F9.4)' ) (et(iband,ik)*rytoev, iband=1,h_dim)
+     WRITE( stdout, '(8X, "WANN  ",8F11.4)' ) (eigvl(iband)*rytoev, iband=1,h_dim)
+     WRITE( stdout, '(8X, "PWSCF ",8F11.4)' ) (et(iband,ik)*rytoev, iband=1,h_dim)
   ENDIF
   !
   CALL deallocate_bec_type (becp)

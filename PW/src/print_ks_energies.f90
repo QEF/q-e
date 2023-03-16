@@ -163,7 +163,8 @@ SUBROUTINE print_ks_ef_homolumo ( print_ef_scf, ef_scf, ef_scf_up, ef_scf_dw )
   USE io_global,            ONLY : stdout
   USE fixed_occ,            ONLY : one_atom_occupations
   USE klist,                ONLY : two_fermi_energies, lgauss, ltetra
-  USE ener,                 ONLY : ef, ef_up, ef_dw
+  USE ener,                 ONLY : ef, ef_up, ef_dw, ef_cond
+  USE two_chem,             ONLY : twochem
   USE add_dmft_occ,         ONLY : dmft
   !
   IMPLICIT NONE
@@ -184,6 +185,7 @@ SUBROUTINE print_ks_ef_homolumo ( print_ef_scf, ef_scf, ef_scf_up, ef_scf_dw )
      ELSE
         WRITE( stdout, 9040 ) ef*rytoev
         IF ( print_ef_scf ) WRITE( stdout, 9050 ) ef_scf*rytoev
+        IF ( twochem ) WRITE( stdout, 9044) ef_cond*rytoev
         IF ( dmft ) WRITE( stdout, 9052 ) eband
      END IF
      !
@@ -209,6 +211,7 @@ SUBROUTINE print_ks_ef_homolumo ( print_ef_scf, ef_scf, ef_scf_up, ef_scf_dw )
 9042 FORMAT(/'     highest occupied, lowest unoccupied level (ev): ',2F10.4 )
 9041 FORMAT(/'     the spin up/dw Fermi energies are ',2F10.4,' ev' )
 9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev' )
+9044 FORMAT(/'     the conduction Fermi energy is ',F10.4,' ev' )
 9051 FORMAT( '     (compare with: ',2F10.4,' eV, computed in scf)' )
 9050 FORMAT( '     (compare with: ', F10.4,' eV, computed in scf)' )
 9052 FORMAT( '     The nscf band energy is: ', F17.8,' Ry' )

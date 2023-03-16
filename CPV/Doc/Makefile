@@ -9,7 +9,7 @@ AUXS = $(PDFS:.pdf=.aux)
 LOGS = $(PDFS:.pdf=.log)
 OUTS = $(PDFS:.pdf=.out)
 TOCS = $(PDFS:.pdf=.toc)
-USER_GUIDES = user_guide.pdf user_guide.html
+USER_GUIDES = user_guide.pdf user_guide.html autopilot_guide.pdf autopilot_guide.html
 PANDOC_PDF_ENGINE_CMD = --latex-engine
 PANDOC_PDF_ENGINE_CMD = --pdf-engine
 PANDOC_ADDITIONAL_DEF = --metadata csquotes=yes
@@ -20,10 +20,16 @@ pdf: $(PDFS)
 user_guide: $(USER_GUIDES)
 
 user_guide.pdf: user_guide.md pandoc_template.tex tp.tex
-	$(shell sed -e '/[[_TOC_]]/d' -e 's/\$$`/$$/g' -e 's/`\$$/$$/g' $< | $(PANDOC) -N --toc --metadata title='CP user guide' --metadata customtitlepage='tp' --metadata graphics --metadata geometry='top=3cm' --metadata geometry='left=3cm' --metadata geometry='right=3cm' --metadata geometry='bottom=3cm' --metadata hyperrefoptions='linktoc=all' ${PANDOC_PDF_ENGINE_CMD}=xelatex ${PANDOC_ADDITIONAL_DEF} -o $@ --template $(word 2,$^) )
+	$(shell sed -e '/[[_TOC_]]/d' -e 's/\$$`/$$/g' -e 's/`\$$/$$/g' $< | $(PANDOC) -N --toc --metadata title="CP's user guide" --metadata customtitlepage='tp' --metadata graphics --metadata geometry='top=3cm' --metadata geometry='left=3cm' --metadata geometry='right=3cm' --metadata geometry='bottom=3cm' --metadata hyperrefoptions='linktoc=all' ${PANDOC_PDF_ENGINE_CMD}=xelatex ${PANDOC_ADDITIONAL_DEF} -o $@ --template $(word 2,$^) )
+
+autopilot_guide.pdf: autopilot_guide.md pandoc_template.tex tp.tex
+	$(shell sed -e '/[[_TOC_]]/d' -e 's/\$$`/$$/g' -e 's/`\$$/$$/g' $< | $(PANDOC) -N --toc --metadata title="CP's AUTOPILOT user guide" --metadata customtitlepage='tp' --metadata graphics --metadata geometry='top=3cm' --metadata geometry='left=3cm' --metadata geometry='right=3cm' --metadata geometry='bottom=3cm' --metadata hyperrefoptions='linktoc=all' ${PANDOC_PDF_ENGINE_CMD}=xelatex ${PANDOC_ADDITIONAL_DEF} -o $@ --template $(word 2,$^) )
 
 user_guide.html: user_guide.md
-	$(shell sed -e '/[[_TOC_]]/d' -e 's/\$$`/$$/g' -e 's/`\$$/$$/g' $< | $(PANDOC) -s --toc --metadata title='CP user guide' --mathml -o $@ )
+	$(shell sed -e '/[[_TOC_]]/d' -e 's/\$$`/$$/g' -e 's/`\$$/$$/g' $< | $(PANDOC) -s --toc --metadata title="CP's user guide" --mathml -o $@ )
+
+autopilot_guide.html: autopilot_guide.md
+	$(shell sed -e '/[[_TOC_]]/d' -e 's/\$$`/$$/g' -e 's/`\$$/$$/g' $< | $(PANDOC) -s --toc --metadata title="CP's AUTOPILOT user guide" --mathml -o $@ )
 
 clean:
 	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) $(USER_GUIDES) *~

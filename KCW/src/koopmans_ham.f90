@@ -141,14 +141,14 @@ SUBROUTINE koopmans_ham ()
 #endif
     !
     WRITE( stdout, 9020 ) ( xk(i,ik), i = 1, 3 )
-    WRITE( stdout, '(10x, "KS  ",8F9.4)' ) (eigvl(iwann)*rytoev, iwann=1,num_wann)
+    WRITE( stdout, '(10x, "KS  ",8F11.4)' ) (eigvl(iwann)*rytoev, iwann=1,num_wann)
     !
     ehomo_ks = MAX ( ehomo_ks, eigvl(num_wann_occ ) )
     elumo_ks = MIN ( elumo_ks, eigvl(num_wann_occ+1 ) )
     !
     ham(:,:) = Hamlt(ik,:,:) 
     CALL cdiagh( num_wann, ham, num_wann, eigvl, eigvc )
-    WRITE( stdout, '(10x, "KI  ",8F9.4)' ) (eigvl(iwann)*rytoev, iwann=1,num_wann)
+    WRITE( stdout, '(10x, "KI  ",8F11.4)' ) (eigvl(iwann)*rytoev, iwann=1,num_wann)
     !
     ! Canonical wfc at each k point (overwrite the evc from DFT)
     lrwannfc = num_wann*npwx

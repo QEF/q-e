@@ -20,19 +20,21 @@ KCW stands for "Koopmans-compliant functionals in a Wannier representation". KCW
 code which calculates quasiparticle energies of finite and extended systems using
 [Koopmans-compliant functionals](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.021051)
 and [Maximally Localized Wannier Functions](http://journals.aps.org/prb/abstract/10.1103/PhysRevB.56.12847).
-The details of this implementation are described [here](https://arxiv.org/abs/2202.08155). 
-The code consists of 3 modules specified by the "calculation" variable in CONTROL namelist:
+The details of this implementation are described [here](https://pubs.acs.org/doi/full/10.1021/acs.jctc.2c00161)
+(see also [here](https://arxiv.org/abs/2202.08155) for the arXiv version). 
+The code consists of 3 main modules specified by the "calculation" variable in the CONTROL namelist:
 
-1) interface between Wannier90 and the KCW code (calculation="wann_to_kc") 
+1) interface between PWscf, and Wannier90 and the KCW code (calculation="wann2kcw") 
 
 2) calcuation of the screening coefficients (calculation="screen")
 
-3) calculation, interpolation and diagonalization of the KC hamiltonian (calculation = "kc_ham") 
+3) calculation, interpolation and diagonalization of the KC hamiltonian (calculation = "ham") 
+
+Finally "calulation=cc" computes the (estimated) q+G=0 contribution to the bare and screened KC corrections.
+A report on this quantities is printed on output and can be used to correct a posteriori a calculation performed 
+without any corrective scheme (l_vcut=.false.)
 
 KCW is developed and maintained by [Nicola Colonna](https://www.psi.ch/en/lns/people/nicola-colonna),  [Riccardo de Gennaro](https://people.epfl.ch/riccardo.degennaro), and [Edward Linscott](https://people.epfl.ch/edward.linscott)
-
-@Note
-Still in development. This version of the code works with QE7.1
 
 	TODO list: 
 	1) Symmetry: at the moment no symmetry are used. 

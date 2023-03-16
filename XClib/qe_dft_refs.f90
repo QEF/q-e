@@ -361,6 +361,9 @@ MODULE qe_dft_refs
   DATA dft_MGGA(7)%ref  / 'J. W. Furness, A. D. Kaplan, J. Ning, J. P. Perdew, &
                           &and J. Sun, JPCL 11, 8208 (2020)' /
   DATA dft_MGGA(7)%wrn  / 'needs Libxc' /
+  ! RSCAN
+  DATA dft_MGGA(8)%ref  / 'A. P. Bartók, J. R. Yates., JCP 150, 161101 (2019)' /
+  DATA dft_MGGA(8)%wrn  / 'needs Libxc' /
   !
   !
   ! ---- Full DFTs ----
@@ -447,6 +450,8 @@ MODULE qe_dft_refs
   DATA dft_full_descr(40) / 'PBE-AH: HJS implementation (PBE params).' /
   ! PBESOL-AH
   DATA dft_full_descr(41) / 'PBESOL-AH: HJS implementation (PBEsol params).' /
+  ! RSCAN
+  DATA dft_full_descr(42) / 'RSCAN Meta-GGA - needs Libxc.' /
   !
 END MODULE qe_dft_refs
 

@@ -45,3 +45,16 @@ target_link_libraries(
             qe_kcw
             qe_xclib
             qe_kcwpp)
+
+###########################################################
+# ups.x
+###########################################################
+set(src_ups_x ups.f90)
+qe_add_executable(qe_kcwpp_ups_exe ${src_ups_x})
+set_target_properties(qe_kcwpp_ups_exe PROPERTIES OUTPUT_NAME ups.x)
+target_link_libraries(qe_kcwpp_ups_exe
+    PRIVATE
+        qe_pw
+        qe_modules
+        qe_pp
+        qe_upflib)

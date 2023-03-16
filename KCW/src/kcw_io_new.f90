@@ -516,7 +516,7 @@ MODULE io_kcw
         !
         IF ( my_bgrp_id == root_bgrp_id ) CALL write_wfc( iunpun, &
              filename, root_bgrp, intra_bgrp_comm, ik_g, tpiba*xk(:,ik), &
-             ispin, nspin, evc0, npw_g, gamma_only, nbnd, &
+             ispin, nspin, evc0, npw_g, gamma_only, num_wann, &
              igk_l2g_kdip(:), ngk(ik), tpiba*bg(:,1), tpiba*bg(:,2), &
              tpiba*bg(:,3), mill_k, 1.D0 )
         !
@@ -633,6 +633,7 @@ MODULE io_kcw
      USE mp,                   ONLY : mp_sum, mp_max
      USE io_base,              ONLY : read_wfc
      USE lsda_mod,             ONLY : nspin, isk, nspin
+     USE control_kcw,          ONLY : num_wann
      !
      IMPLICIT NONE
      !
@@ -722,7 +723,7 @@ MODULE io_kcw
      ! ... here one should check for consistency between what is read
      ! ... and what is expected
      !
-     IF ( nbnd_ < nbnd ) THEN
+     IF ( nbnd_ < num_wann ) THEN
         WRITE (msg,'("The number of bands for this run is",I6,", but only",&
              & I6," bands were read from file")')  nbnd, nbnd_  
         CALL errore ('pw_restart - read_collected_wfc', msg, 1 )
