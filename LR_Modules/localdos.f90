@@ -321,6 +321,9 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   !
   IF (noncolin) deallocate(becsum1_nc)
   call deallocate_bec_type(becp)
+#if defined(__CUDA)
+  call deallocate_bec_type_gpu(becp_d)
+#endif
 
   call stop_clock ('localdos')
   return
