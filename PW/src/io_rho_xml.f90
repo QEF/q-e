@@ -116,19 +116,7 @@ MODULE io_rho_xml
             CLOSE( UNIT = iunpaw, STATUS = 'KEEP' )
          ENDIF
          !
-      END IF
-      !
-      IF ( twochem) THEN
-         !
-         IF ( ionode ) THEN
-            !
-            OPEN ( NEWUNIT=iuntwochem, FILE = TRIM(restart_dir() ) // 'twochem.exst', &
-                 FORM='unformatted', STATUS='unknown' )
-            CLOSE ( UNIT = iuntwochem, STATUS='KEEP' )
-         END IF
-         !
-      END IF
-      ! open empty file in the case of twochem to stop to phonon calculation.
+      END IF 
       !
       RETURN
     END SUBROUTINE write_scf

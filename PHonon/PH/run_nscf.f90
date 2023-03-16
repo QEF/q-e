@@ -105,9 +105,6 @@ SUBROUTINE run_nscf(do_band, iq)
   !
   CALL setup_nscf ( newgrid, xq, elph_mat .OR. elph_ahc )
   !
-  IF (ionode) INQUIRE( FILE = TRIM(prefix) // '.save/twochem.exst', EXIST=exst)
-  IF (exst)   CALL errore ('run_nscf',' twochem not yet implemented',1)
-  ! Verify that two_chem is not active (not implemented yet for PHonon)
   !
   CALL init_run()
   !
