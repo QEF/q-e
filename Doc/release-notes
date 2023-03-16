@@ -1,4 +1,6 @@
 New in development version:
+  * Self-consistent calculation with a two-chemical potential approach
+    by G. Marini, M. Calandra [Phys. Rev. B 104, 144103(2021)].
   * Polaron localization with semi-local functionals via correction of
     self interaction (S. Falletta, A. Pasquarello):
     https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.129.126401

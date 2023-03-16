@@ -197,6 +197,10 @@ MODULE input_parameters
         CHARACTER(len=80) :: disk_io = 'default'
         !! Specify the amount of I/O activities.
 
+        LOGICAL :: twochem = .FALSE.
+        !!if TRUE, the system is simulated using two chemical potentials,
+        !!one for the electrons and one for the holes (photoexcited system)
+
         LOGICAL :: tefield  = .false.
         !! if TRUE a sawtooth potential simulating a finite electric field
         !! is added to the local potential - only used in PW
@@ -288,7 +292,7 @@ MODULE input_parameters
           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
           tefield2, saverho, tabps, use_wannier, lecrpa,                  &
           lfcp, tqmmm, vdw_table_name, lorbm, memory, point_label_type,   &
-          input_xml_schema_file, gate, trism
+          input_xml_schema_file, gate, trism, twochem
 !
 !=----------------------------------------------------------------------------=!
 !  SYSTEM Namelist Input Parameters
@@ -399,6 +403,14 @@ MODULE input_parameters
 
         REAL(DP) :: starting_magnetization( nsx ) = 0.0_DP
         !! PW ONLY
+
+        !!!PARAMETERS FOR TWO-CHEM-CALCULATIONS
+        REAL(DP) :: degauss_cond = 0.0_DP 
+        !broadening for conduction band
+        INTEGER ::  nbnd_cond = 0 
+        ! n_bands in conduction
+        REAL(DP) :: nelec_cond =0.0_DP 
+        !number of electrons in the conduction bands
 
         ! DFT+Hubbard
         ! Old input parameters in the SYSTEM naqmelist (removed since v7.1):
@@ -657,6 +669,7 @@ MODULE input_parameters
              nr3s, nr1b, nr2b, nr3b, nosym, nosym_evc, noinv, use_all_frac,   &
              force_symmorphic, starting_charge, starting_magnetization,       &
              occupations, degauss, nspin, ecfixed, qcutz, q2sigma,            &
+             degauss_cond,nbnd_cond,nelec_cond,                       &
              lda_plus_u, lda_plus_u_kind, U_projection_type, Hubbard_parameters, & ! obsolete
              Hubbard_U, Hubbard_J0, Hubbard_J, Hubbard_V, Hubbard_U_back,     & ! moved to HUBBARD card 
              Hubbard_alpha, Hubbard_alpha_back, Hubbard_beta, Hubbard_occ,    &

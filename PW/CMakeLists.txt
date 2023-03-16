@@ -227,6 +227,7 @@ set(src_pw
    src/transform_becsum_nc.f90 
    src/transform_qq_so.f90 
    src/trnvecc.f90 
+   src/two_chem.f90
    src/update_pot.f90 
    src/us_exx.f90 
    src/usnldiag.f90 

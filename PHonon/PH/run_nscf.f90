@@ -27,7 +27,7 @@ SUBROUTINE run_nscf(do_band, iq)
   USE control_ph,      ONLY : reduce_io, recover, tmp_dir_phq, &
                               ext_restart, bands_computed, newgrid, qplot, &
                               only_wfc
-  USE io_global,       ONLY : stdout
+  USE io_global,       ONLY : stdout, ionode
   !USE save_ph,         ONLY : tmp_dir_save
   !
   USE grid_irr_iq,     ONLY : done_bands
@@ -45,6 +45,8 @@ SUBROUTINE run_nscf(do_band, iq)
   USE mp_images,       ONLY : intra_image_comm
   USE mp,              ONLY : mp_barrier
   USE rism_module,     ONLY : lrism, rism_set_restart
+  USE two_chem,        ONLY : twochem
+
   !
   IMPLICIT NONE
   !
@@ -102,6 +104,7 @@ SUBROUTINE run_nscf(do_band, iq)
   CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft)
   !
   CALL setup_nscf ( newgrid, xq, elph_mat .OR. elph_ahc )
+  !
   !
   CALL init_run()
   !
