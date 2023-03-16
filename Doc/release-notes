@@ -1,4 +1,4 @@
-New in development version:
+New in v.7.2:
   * Self-consistent calculation with a two-chemical potential approach
     by G. Marini, M. Calandra [Phys. Rev. B 104, 144103(2021)].
   * Polaron localization with semi-local functionals via correction of
@@ -11,12 +11,14 @@ New in development version:
   * EPW v.5.6.
     (1) Ionized impurity scattering
     (2) Ionized-impurity-assisted indirect optical absorption
-    For the full list of new features, bug fixes, and changes leading to backward incompatibility issues,
-    please visit the Releases page of the EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
+    For the full list of new features, bug fixes, and changes leading 
+    to backward incompatibility issues, please visit the Releases page 
+    of the EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
 
-Incompatible changes in development version:
+Incompatible changes in v.7.2:
+  * None known
 
-Fixed in development version:
+Fixed in v.7.2:
   * v.7.1 of CP for GPU was not working for pseudopotentials with nonlinear 
     core correction
   * in v.7.0 and 7.1 of pw.x the calculation of forces under a macroscopic
