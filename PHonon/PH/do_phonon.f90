@@ -46,7 +46,8 @@ SUBROUTINE do_phonon(auxdyn)
   USE ahc,            ONLY : elph_ahc, elph_do_ahc
   USE io_files,       ONLY : iunwfc
   USE buffers,        ONLY : close_buffer
-  USE control_flags,   ONLY : use_gpu
+  USE control_flags,  ONLY : use_gpu
+  USE environment,   ONLY : print_cuda_info
   
   IMPLICIT NONE
   !
@@ -81,6 +82,8 @@ SUBROUTINE do_phonon(auxdyn)
            CALL close_buffer( iunwfc, 'DELETE' )
         ENDIF
         CALL run_nscf(do_band, iq)
+     ELSE 
+        CALL print_cuda_info(check_use_gpu=.true.) 
      ENDIF
      !
      !  If only_wfc=.TRUE. the code computes only the wavefunctions 

@@ -52,7 +52,7 @@ SUBROUTINE cft_wave (ik, evc_g, evc_r, isw)
      ikk = ikks(ik) ! points to k+G indices
      npw = ngk(ikk) 
      CALL invfft_wave (npw, igk_k (1,ikk), evc_g, evc_r )
- ELSE IF (isw == -1) then
+  ELSE IF (isw == -1) then
      ikq = ikqs(ik) ! points to k+q+G indices
      npwq= ngk(ikq)
      CALL fwfft_wave (npwq, igk_k (1,ikq), evc_g, evc_r )
@@ -93,7 +93,7 @@ SUBROUTINE fwfft_wave (npwq, igkq, evc_g, evc_r )
   !$acc host_data use_device(evc_r)
   CALL fwfft ('Wave', evc_r(:,1), dffts)
   !$acc end host_data
-  !$acc parallel loop present(evc_g, evc_r, igkq, nl) private(ik)
+  !$acc parallel loop private(ik)
   DO ig = 1, npwq
      ik = nl(igkq(ig))
      evc_g (ig) = evc_g (ig) + evc_r (ik,1)
@@ -102,7 +102,7 @@ SUBROUTINE fwfft_wave (npwq, igkq, evc_g, evc_r )
      !$acc host_data use_device(evc_r)
      CALL fwfft ('Wave', evc_r(:,2), dffts)
      !$acc end host_data
-     !$acc parallel loop present(evc_g, evc_r, igkq, nl) private(ik)
+     !$acc parallel loop private(ik) 
      DO ig = 1, npwq
         ik = nl(igkq(ig))
         evc_g (ig+npwx) = evc_g (ig+npwx) + evc_r (ik,2)
@@ -137,10 +137,10 @@ SUBROUTINE invfft_wave (npw, igk, evc_g, evc_r )
   nl = dffts%nl
 #endif
 
-  !$acc kernels present(evc_r)
-  evc_r = (0.0_dp, 0.0_dp)
+  !$acc kernels
+  evc_r(:,:) = (0.0_dp, 0.0_dp)
   !$acc end kernels
-  !$acc parallel loop present(evc_g, evc_r, igk, nl) private(ik)
+  !$acc parallel loop private(ik)
   DO ig = 1, npw
      ik = nl(igk(ig))
      evc_r (ik, 1) = evc_g (ig)
@@ -149,7 +149,7 @@ SUBROUTINE invfft_wave (npw, igk, evc_g, evc_r )
   CALL invfft ('Wave', evc_r(:,1), dffts)
   !$acc end host_data
   IF (noncolin) THEN
-     !$acc parallel loop present(evc_g, evc_r, igk, nl) private(ik)
+     !$acc parallel loop private(ik)
      DO ig = 1, npw
         ik = nl(igk(ig))
         evc_r (ik, 2) = evc_g (ig+npwx)

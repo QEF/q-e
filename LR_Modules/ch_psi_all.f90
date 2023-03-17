@@ -59,7 +59,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   ! counter on bands
   ! counter on G vetors
 
-  COMPLEX(DP), ALLOCATABLE :: ps (:,:), hpsi (:,:), spsi (:,:)
+  COMPLEX(DP), ALLOCATABLE :: hpsi (:,:), spsi (:,:)
   ! scalar products
   ! the product of the Hamiltonian and h
   ! the product of the S matrix and h
@@ -68,7 +68,6 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   !
   !  This routine is task groups aware
   !
-  ALLOCATE (ps  ( nbnd , m))
   ALLOCATE (hpsi( npwx*npol , m))
   ALLOCATE (spsi( npwx*npol , m))
   !
@@ -95,24 +94,20 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   ! Compute an action of the Hamiltonian and the S operator
   ! on the h vector (i.e. H*h and S*h, respectively).
   !
-  !$acc enter data create(hpsi(1:npwx*npol, 1:m), spsi(1:npwx*npol, 1:m), ps(1:nbnd, 1:m))
-  !$acc kernels present(hpsi,spsi)
+  !$acc data create(hpsi(1:npwx*npol, 1:m), spsi(1:npwx*npol, 1:m)) present(h, e, ah)
+  !$acc kernels
   hpsi (:,:) = (0.d0, 0.d0)
   spsi (:,:) = (0.d0, 0.d0)
+  ah (:,:) = (0.d0, 0.d0)
   !$acc end kernels
 #if defined(__CUDA)
-  !$acc data present(h, hpsi, spsi)
   !$acc host_data use_device(h, hpsi, spsi)
   CALL h_psi_gpu (npwx, n, m, h, hpsi)
   CALL s_psi_gpu (npwx, n, m, h, spsi)
   !$acc end host_data
-  !$acc end data
-
 #else
-
   CALL h_psi (npwx, n, m, h, hpsi)
   CALL s_psi (npwx, n, m, h, spsi)
-
 #endif
 
   CALL start_clock ('last')
@@ -121,13 +116,8 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   !   and put the result in ah
   !
   CALL start_clock ('Hesh')
-  !$acc data present(e)
 
-  !$acc kernels present(ah)
-  ah=(0.d0,0.d0)
-  !$acc end kernels
-
-  !$acc parallel loop collapse(2) present(hpsi, spsi, ah, e)
+  !$acc parallel loop collapse(2)
   DO ibnd = 1, m
      DO ig = 1, n
         ah(ig, ibnd) = hpsi(ig, ibnd) - e(ibnd) * spsi(ig, ibnd)
@@ -135,7 +125,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   ENDDO
   IF (noncolin) THEN
      CALL start_clock ('Hesh:noncolin')
-     !$acc parallel loop collapse(2) present(hpsi, spsi, ah, e)
+     !$acc parallel loop collapse(2)
      DO ibnd = 1, m
         DO ig = 1, n
            ah(ig+npwx, ibnd) = hpsi(ig+npwx, ibnd) - e(ibnd) * spsi(ig+npwx, ibnd)
@@ -143,7 +133,6 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
      ENDDO
      CALL stop_clock ('Hesh:noncolin')
   ENDIF
-  !$acc end data
   CALL stop_clock ('Hesh')
 
   !
@@ -157,10 +146,9 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
         CALL ch_psi_all_k()
      ENDIF
   ENDIF
-  !$acc exit data delete(hpsi, spsi, ps)
+  !$acc end data
   DEALLOCATE (spsi)
   DEALLOCATE (hpsi)
-  DEALLOCATE (ps)
 
   CALL stop_clock ('last')
   CALL stop_clock ('ch_psi')
@@ -172,6 +160,7 @@ CONTAINS
     ! K-point part
     !
     USE becmod, ONLY : becp, calbec
+    USE control_lr,  ONLY : alpha_pv
 #if defined(__CUDA)
     USE becmod_gpum, ONLY : becp_d
     USE becmod_subs_gpum, ONLY : calbec_gpu,  using_becp_d_auto
@@ -183,13 +172,17 @@ CONTAINS
     INTEGER :: k
     INTEGER :: ibnd, ig
 
+    COMPLEX(DP), ALLOCATABLE :: ps (:,:)
+
+    ALLOCATE (ps  ( nbnd , m))
     k = nbnd_occ (ikqs(ik))
     CALL start_clock_gpu ('ch_psi_all_k')
-    !$acc data present(evq, ps, hpsi, spsi)
+    !
+    !$acc data create( ps(1:nbnd, 1:m) ) present(evq, hpsi, spsi)
     !
     !   Here we compute the projector in the valence band
     !
-    !$acc kernels present(ps)
+    !$acc kernels
     ps (:,:) = (0.d0, 0.d0)
     !$acc end kernels
     !
@@ -205,7 +198,7 @@ CONTAINS
             npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
     ENDIF
     !$acc end host_data
-    !$acc kernels present(ps,hpsi) 
+    !$acc kernels
     ps (:,:) = ps(:,:) * alpha_pv
     hpsi (:,:) = (0.d0, 0.d0)
     !$acc end kernels
@@ -221,7 +214,7 @@ CONTAINS
             npwx, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx)
     END IF
     !$acc end host_data
-    !$acc kernels present(spsi, hpsi)
+    !$acc kernels
     spsi(:,:) = hpsi(:,:)
     !$acc end  kernels
     !$acc end data
@@ -260,15 +253,15 @@ CONTAINS
 #else
     CALL s_psi (npwx, n, m, hpsi, spsi)
 #endif
-    !$acc parallel loop collapse(2) present(ah, spsi)
+    !$acc parallel loop collapse(2)
     DO ibnd = 1, m
        DO ig = 1, n
           ah (ig, ibnd) = ah (ig, ibnd) + spsi (ig, ibnd)
        ENDDO
     ENDDO
-    !$acc end parallel loop 
+    !$acc end parallel loop
     IF (noncolin) THEN
-       !$acc parallel loop collapse(2) present(ah, spsi)
+       !$acc parallel loop collapse(2)
        DO ibnd = 1, m
           DO ig = 1, n
              ah (ig+npwx, ibnd) = ah (ig+npwx, ibnd) + spsi (ig+npwx, ibnd)
@@ -276,6 +269,8 @@ CONTAINS
        ENDDO
        !$acc end parallel loop
     END IF
+
+    DEALLOCATE( ps)
     CALL stop_clock_gpu ('ch_psi_all_k')
     return
   END SUBROUTINE ch_psi_all_k
@@ -298,10 +293,15 @@ CONTAINS
     INTEGER :: m_start, m_end ,ntemp
     INTEGER :: ibnd, ig
 
+    COMPLEX(DP), ALLOCATABLE :: ps (:,:)
+
+    ALLOCATE (ps  ( nbnd , m))
     ntemp = nbnd_occ (ik)
     CALL start_clock_gpu ('ch_psi_all_gamma')
-    !$acc data present(evc, ps, hpsi, spsi)
-    !$acc kernels present(ps)
+
+    !$acc data create( ps(1:nbnd, 1:m) ) present(evc)
+
+    !$acc kernels
     ps (:,:) = 0.d0
     !$acc end kernels
     IF (noncolin) THEN
@@ -317,7 +317,7 @@ CONTAINS
     CALL DGEMM( 'C', 'N', nbnd, m, 2*n, 2.D0,evc, 2*npwx*npol, spsi, 2*npwx*npol, 0.D0, ps, nbnd )
     if(gstart==2) CALL DGER(nbnd, m, -1.0_DP, evc, 2*npwx, spsi, 2*npwx, ps, nbnd )
 #endif
-    !$acc kernels present(ps,hpsi)
+    !$acc kernels
     ps (:,:) = ps(:,:) * alpha_pv
     hpsi (:,:) = (0.d0, 0.d0)
     !$acc end kernels
@@ -327,7 +327,7 @@ CONTAINS
     !$acc host_data use_device(hpsi, ps, evc)
     CALL DGEMM ('N', 'N', 2*n, m, ntemp , 1.d0 , evc, 2*npwx, ps, nbnd, 1.d0 , hpsi, 2*npwx)
     !$acc end host_data
-    !$acc kernels present(spsi, hpsi)
+    !$acc kernels
     spsi(:,:) = hpsi(:,:)
     !$acc end  kernels
     !$acc end data
@@ -376,7 +376,7 @@ CONTAINS
        CALL s_psi (npwx, n, m, hpsi, spsi)
 #endif       
     ENDIF
-    !$acc parallel loop collapse(2) present(ah)
+    !$acc parallel loop collapse(2)
     DO ibnd = 1, m
        DO ig = 1, n
           ah (ig, ibnd) = ah (ig, ibnd) + spsi (ig, ibnd)
@@ -384,6 +384,8 @@ CONTAINS
     ENDDO
     !$acc end parallel loop
     CALL stop_clock_gpu ('ch_psi_all_gamma')
+
+    DEALLOCATE( ps )
     return
   END SUBROUTINE ch_psi_all_gamma
  
