@@ -57,11 +57,20 @@ CONTAINS
     INTEGER :: ierr
     LOGICAL :: exst
 
-    IF (reduce_io) RETURN
+    !
+    ! Write dynmat.X.Y if computed, regardless io_level.
+    ! Dynamical matrices should be written also when reduce_io is true, to recover 
+    ! from accomplished runs on images. Otherwise, dynmat.X.Y files are not found 
+    ! and trans calculation recovers from scratch.
+    !
     CALL start_clock ('write_rec')
     where_rec=where
     CALL ph_writefile('status_ph',current_iq,0,ierr)
     IF (where=='done_drhod') CALL ph_writefile('data_dyn',current_iq,irr,ierr)
+    IF (reduce_io ) THEN
+            CALL stop_clock ('write_rec')   
+            RETURN
+    ENDIF
     CALL seqopn (iunrec, 'recover', 'unformatted', exst)
     !
     ! info on current iteration (iter=0 potential mixing not available)

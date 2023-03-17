@@ -159,10 +159,8 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      ! Read unperturbed wavefuctions evc (wfct at k) 
      ! and evq (wfct at k+q)
      !
-!     IF (nksq > 1) THEN 
-        CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
-        CALL get_buffer (evq, nwordwfc, iunwfc, ikq)
-!     ENDIF
+     CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
+     CALL get_buffer (evq, nwordwfc, iunwfc, ikq)
      !
      dpsi(:,:)  = (0.d0,0.d0)
      dvpsi(:,:) = (0.d0,0.d0)
@@ -175,6 +173,8 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      !
 !     IF (interaction1) THEN
      IF ( .not. no_hxc) THEN
+        !
+        !$acc data copyin(evc, dvrssc) create(revc) copy (dvpsi)
         !
         ! The potential in dvrssc is distributed across all processors.
         ! We need to redistribute it so that it is completely contained in the
@@ -220,7 +220,6 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
               !
               ! FFT to R-space
               !
-!$acc data copyin(evc, dvrssc) copy(revc, dvpsi)              
               CALL cft_wave(ik, evc(1,ibnd), revc, +1)
               !
               ! Multiply the HXC potential with unperturbed wfct's 
@@ -230,11 +229,11 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
               ! back-FFT to G-space
               !
               CALL cft_wave(ik, dvpsi(1,ibnd), revc, -1)
-!$acc end data              
               !
            ENDIF
            !
         ENDDO
+        !$acc end data
         !
         ! In the case of US pseudopotentials there is an additional term.
         ! See the second term in Eq.(11) in J. Chem. Phys. 127, 164106 (2007).
@@ -304,10 +303,8 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      !
      ! Read unperturbed wavefuctions Tu_{-k} and Tu_{-k-Q}
      !
-!     IF (nksq > 1) THEN
-        CALL get_buffer (Tevc, nwordwfc, iunTwfc, 2*ik-1)
-        CALL get_buffer (Tevq, nwordwfc, iunTwfc, 2*ik  )
-!     ENDIF
+     CALL get_buffer (Tevc, nwordwfc, iunTwfc, 2*ik-1)
+     CALL get_buffer (Tevq, nwordwfc, iunTwfc, 2*ik  )
      !
      dpsi(:,:)  = (0.d0,0.d0)
      dvpsi(:,:) = (0.d0,0.d0)
@@ -320,6 +317,8 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      !
 !     IF (interaction1) THEN
      IF ( .not. no_hxc) THEN
+        !
+        !$acc data copyin(evc, dvrssc) create(revc) copy (dvpsi)
         !
         ! The potential in dvrssc is distributed across all processors.
         ! We need to redistribute it so that it is completely contained in the
@@ -365,7 +364,6 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
               !
               ! FFT to R-space
               !
-!$acc data copyin(Tevc, dvrssc) copy(revc, dvpsi)              
               CALL cft_wave(ik, Tevc(1,ibnd), revc, +1)
               !
               ! Multiply the HXC potential with unperturbed wfct's 
@@ -375,11 +373,11 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
               ! back-FFT to G-space
               !
               CALL cft_wave(ik, dvpsi(1,ibnd), revc, -1)
-!$acc end data
               !
            ENDIF
            !
         ENDDO
+        !$acc end data
         !
         ! In the case of US pseudopotentials there is an additional term.
         ! See the second term in Eq.(11) in J. Chem. Phys. 127, 164106 (2007).

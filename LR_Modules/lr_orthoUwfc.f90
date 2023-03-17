@@ -86,6 +86,7 @@ SUBROUTINE lr_orthoUwfc (lflag)
   ALLOCATE (wfcatom(npwx*npol,natomwfc))
   ALLOCATE (swfcatom(npwx*npol,natomwfc))
   !
+
   IF (okvan) CALL allocate_bec_type (nkb,natomwfc,becp)
   !
   DO ik = 1, nksq
@@ -197,14 +198,15 @@ SUBROUTINE s_phi (npw_, ik_, wfc, swfc)
   ! USPP: swfc = S * wfc
   !
   USE kinds,          ONLY : DP
-  USE becmod,         ONLY : calbec
+  USE becmod,         ONLY : calbec, becp
   USE uspp_init,        ONLY : init_us_2
+  USE becmod_subs_gpum,     ONLY : using_becp_auto
   !
   IMPLICIT NONE
   INTEGER,     INTENT(IN)  :: npw_
   INTEGER,     INTENT(IN)  :: ik_
-  COMPLEX(DP), INTENT(IN)  :: wfc  (npwx, natomwfc)
-  COMPLEX(DP), INTENT(OUT) :: swfc (npwx, natomwfc)
+  COMPLEX(DP), INTENT(IN)  :: wfc  (npwx*npol, natomwfc)
+  COMPLEX(DP), INTENT(OUT) :: swfc (npwx*npol, natomwfc)
   !
   ! NCPP case
   !
@@ -217,11 +219,13 @@ SUBROUTINE s_phi (npw_, ik_, wfc, swfc)
   !
   ! Compute beta functions vkb at ik_
   !
-  CALL init_us_2 (npw_, igk_k(1,ik_), xk(1,ik_), vkb)
+  CALL init_us_2 (npw_, igk_k(1,ik_), xk(1,ik_), vkb, .true.)
+  !$acc update host(vkb)
   !
   ! Compute the product of beta functions vkb
   ! with the functions wfc : becp = <vkb|wfc>
   !
+  Call using_becp_auto(2)
   CALL calbec (npw_, vkb, wfc, becp)
   !
   ! Calculate S*|wfc> = |wfc> + \sum qq * |vkb> * becp 
