@@ -54,9 +54,17 @@
     !! arrays containing info from previous iterations
     !
     IF (alphamix < zero ) THEN
-      CALL mix_linear(ndim, deltaout, deltain, alphamix)
+      IF ((iter <= 3) .AND. (alphamix < -0.2d0)) THEN
+        CALL mix_linear(ndim, deltaout, deltain, -0.2d0)
+      ELSE
+        CALL mix_linear(ndim, deltaout, deltain, alphamix)
+      ENDIF
     ELSE
-      CALL mix_broyden(ndim, deltaout, deltain, alphamix, iter, n_iter, conv, df, dv)
+      IF ((iter <= 3) .AND. (alphamix > 0.2d0)) THEN
+        CALL mix_broyden(ndim, deltaout, deltain, 0.2d0, iter, n_iter, conv, df, dv)
+      ELSE
+        CALL mix_broyden(ndim, deltaout, deltain, alphamix, iter, n_iter, conv, df, dv)
+      ENDIF
     ENDIF
     !
     RETURN
@@ -90,7 +98,7 @@
     INTEGER :: i
     !
     DO i = 1, ndim
-      arin(i) = DABS(mixf) * arin(i) + (1.d0 - DABS(mixf)) * arout(i)
+      arin(i) = (1.d0 - DABS(mixf)) * arin(i) + DABS(mixf) * arout(i)
     ENDDO
     !
     !-----------------------------------------------------------------------
@@ -1426,7 +1434,6 @@
     USE pwcom,         ONLY : ef
     USE mp,            ONLY : mp_max, mp_min
     USE mp_global,     ONLY : inter_pool_comm
-    USE epwcom,        ONLY : wfcelec
     USE constants_epw, ONLY : ryd2ev
     !
     IMPLICIT NONE
@@ -1462,20 +1469,6 @@
         !
       ENDDO
     ENDDO
-    IF (wfcelec) then
-      DO ik = 1, nkqf
-        DO ibnd = 1, nbndsub
-          ebnd = etf(ibnd, ik)
-          !
-          IF (ebnd < fsthick + ef .AND. ebnd > ef) THEN
-            ibndmin = MIN(ibnd, ibndmin)
-            ibndmax = MAX(ibnd, ibndmax)
-            ebndmin = MIN(ebnd, ebndmin)
-            ebndmax = MAX(ebnd, ebndmax)
-          ENDIF
-        ENDDO
-      ENDDO
-    ENDIF
     !
     tmp = DBLE(ibndmin)
     CALL mp_min(tmp, inter_pool_comm)

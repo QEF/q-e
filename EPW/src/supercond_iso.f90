@@ -1722,7 +1722,7 @@
       muout = muin - fmu / dmu
       !
       ! HP: linear mixing
-      muout = (1.0 - broyden_beta) * muin + broyden_beta * muout
+      muout = (1.d0 - ABS(broyden_beta)) * muin + ABS(broyden_beta) * muout
       !
       IF (ABS((muout - muin) / muin) <= eps6) conv = .TRUE.
       !
