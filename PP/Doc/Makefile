@@ -12,7 +12,9 @@ HTMLS = INPUT_PP.html \
         INPUT_bgw2pw.html \
 	INPUT_molecularpdos.html \
 	INPUT_PPRISM.html \
-	INPUT_IMPORTEXPORT_BINARY.html
+	INPUT_IMPORTEXPORT_BINARY.html \
+	INPUT_OSCDFT_PP.html \
+	INPUT_OSCDFT_ET.html
 
 PDFS = eps_man.pdf user_guide.pdf
 AUXS = $(PDFS:.pdf=.aux)
@@ -78,7 +80,13 @@ link_on_main_doc:
 	ln -fs ../PP/Doc/INPUT_molecularpdos.txt .; \
 	ln -fs ../PP/Doc/INPUT_PPRISM.html . ; \
 	ln -fs ../PP/Doc/INPUT_PPRISM.xml . ; \
-	ln -fs ../PP/Doc/INPUT_PPRISM.txt .)
+	ln -fs ../PP/Doc/INPUT_PPRISM.txt .; \
+	ln -fs ../PP/Doc/INPUT_OSCDFT_PP.html . ; \
+	ln -fs ../PP/Doc/INPUT_OSCDFT_PP.xml . ; \
+	ln -fs ../PP/Doc/INPUT_OSCDFT_PP.txt . ; \
+	ln -fs ../PP/Doc/INPUT_OSCDFT_ET.html . ; \
+	ln -fs ../PP/Doc/INPUT_OSCDFT_ET.xml . ; \
+	ln -fs ../PP/Doc/INPUT_OSCDFT_ET.txt . )
 
 user_guide: user_guide.pdf
 	- rm -rf user_guide/

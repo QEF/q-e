@@ -108,6 +108,11 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   USE scf_gpum,                ONLY: using_vrs
   USE becmod_subs_gpum,        ONLY: using_becp_auto
+#if defined(__OSCDFT)
+  USE plugin_flags,            ONLY : use_oscdft
+  USE oscdft_base,             ONLY : oscdft_ctx
+  USE oscdft_functions,        ONLY : oscdft_h_psi
+#endif
   !
   IMPLICIT NONE
   !
@@ -285,6 +290,11 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      ENDIF
      !
   ENDIF
+#if defined(__OSCDFT)
+  IF ( use_oscdft ) THEN
+     CALL oscdft_h_psi(oscdft_ctx, lda, n, m, psi, hpsi)
+  END IF
+#endif
   !
   ! ... With Gamma-only trick, Im(H*psi)(G=0) = 0 by definition,
   ! ... but it is convenient to explicitly set it to 0 to prevent trouble

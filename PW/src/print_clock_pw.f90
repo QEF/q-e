@@ -28,6 +28,10 @@ SUBROUTINE print_clock_pw()
    USE plugin_flags,        ONLY : use_environ
    USE environ_base_module, ONLY : print_environ_clocks
 #endif
+#if defined (__OSCDFT)
+   USE plugin_flags,        ONLY : use_oscdft
+   USE oscdft_base,         ONLY : print_oscdft_clocks
+#endif
    !
    IMPLICIT NONE
    !
@@ -344,6 +348,9 @@ SUBROUTINE print_clock_pw()
 #endif 
 #if defined (__ENVIRON)
    IF (use_environ) CALL print_environ_clocks()
+#endif
+#if defined (__OSCDFT)
+   IF (use_oscdft) CALL print_oscdft_clocks()
 #endif
    !
    RETURN

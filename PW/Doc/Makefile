@@ -24,7 +24,9 @@ clean:
 	- rm -rf user_guide/
 	- rm -rf input_xx.xsl
 	- rm -f INPUT_PW.html INPUT_PW.txt INPUT_PW.xml
+	- rm -f INPUT_OSCDFT.html INPUT_OSCDFT.txt INPUT_OSCDFT.xml
 	- rm -rf ../../Doc/INPUT_PW.*
+	- rm -rf ../../Doc/INPUT_OSCDFT.*
 
 
 user_guide: user_guide.pdf
@@ -48,7 +50,7 @@ user_guide: user_guide.pdf
 	@echo ""
 
 
-defs: input_xx.xsl INPUT_PW.html INPUT_PW.txt link_on_main_doc
+defs: input_xx.xsl INPUT_PW.html INPUT_PW.txt INPUT_OSCDFT.html INPUT_OSCDFT.txt link_on_main_doc
 
 input_xx.xsl:
 	@(if test ! -f input_xx.xsl; then \
@@ -65,7 +67,15 @@ INPUT_PW.html: %.html: %.def input_xx.xsl
 INPUT_PW.txt: %.txt: %.def input_xx.xsl
 	$(HELPDOC) $<
 
+INPUT_OSCDFT.html: %.html: %.def input_xx.xsl
+	$(HELPDOC) $<
+INPUT_OSCDFT.txt: %.txt: %.def input_xx.xsl
+	$(HELPDOC) $<
+
 link_on_main_doc:
 	-@( cd ../../Doc ; ln -fs ../PW/Doc/INPUT_PW.html . ; \
 	ln -fs ../PW/Doc/INPUT_PW.xml . ; \
-	ln -fs ../PW/Doc/INPUT_PW.txt .) 
+	ln -fs ../PW/Doc/INPUT_PW.txt . ; \
+	ln -fs ../PW/Doc/INPUT_OSCDFT.html . ; \
+	ln -fs ../PW/Doc/INPUT_OSCDFT.xml . ; \
+	ln -fs ../PW/Doc/INPUT_OSCDFT.txt . )

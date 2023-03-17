@@ -43,6 +43,11 @@ SUBROUTINE hinit1()
   USE environ_base_module, ONLY : update_environ_ions, update_environ_cell
   USE environ_pw_module,   ONLY : calc_environ_potential
 #endif
+#if defined (__OSCDFT)
+  USE plugin_flags,        ONLY : use_oscdft
+  USE oscdft_base,         ONLY : oscdft_ctx
+  USE oscdft_context,      ONLY : oscdft_init_context
+#endif
   !
   IMPLICIT NONE
 #if defined (__ENVIRON)
@@ -67,6 +72,11 @@ SUBROUTINE hinit1()
      tau_scaled = tau * alat
      CALL update_environ_ions(tau_scaled)
      CALL update_environ_cell(at_scaled)
+  END IF
+#endif
+#if defined (__OSCDFT)
+  IF (use_oscdft) THEN
+     CALL oscdft_init_context(oscdft_ctx)
   END IF
 #endif
   !

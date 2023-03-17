@@ -224,6 +224,12 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   USE control_flags,        ONLY : scissor
   USE sci_mod,              ONLY : evcc
+#if defined (__OSCDFT)
+  USE plugin_flags,     ONLY : use_oscdft
+  USE oscdft_base,      ONLY : oscdft_ctx
+  USE oscdft_functions, ONLY : oscdft_h_diag
+  USE oscdft_functions_gpu, ONLY : oscdft_h_diag_gpu
+#endif
   !
   IMPLICIT NONE
   !
@@ -605,6 +611,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              h_diag(j, 1) = g2kin(j) + v_of_0
           END DO
           !
+#if defined (__OSCDFT)
+          IF (use_oscdft) CALL oscdft_h_diag(oscdft_ctx)
+#endif
           CALL usnldiag( npw, h_diag, s_diag )
        ELSE
           call using_h_diag_d(2); call using_s_diag_d(2);
@@ -614,6 +623,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              h_diag_d(j, 1) = g2kin(j) + v_of_0
           END DO
           !
+#if defined (__OSCDFT)
+          IF (use_oscdft) CALL oscdft_h_diag_gpu(oscdft_ctx)
+#endif
           CALL usnldiag_gpu( npw, h_diag_d, s_diag_d )
        END IF
        !
@@ -975,6 +987,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              h_diag(1:npw, ipol) = g2kin(1:npw) + v_of_0
              !
           END DO
+#if defined (__OSCDFT)
+          IF (use_oscdft) CALL oscdft_h_diag(oscdft_ctx)
+#endif
           !
           call using_s_diag(2);
           CALL usnldiag( npw, h_diag, s_diag )
@@ -991,6 +1006,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              !
           END DO
           !
+#if defined (__OSCDFT)
+          IF (use_oscdft) CALL oscdft_h_diag_gpu(oscdft_ctx)
+#endif
           CALL using_s_diag_d(2); CALL using_h_diag_d(1)
           CALL usnldiag_gpu( npw, h_diag_d, s_diag_d )
        END IF

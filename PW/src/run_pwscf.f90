@@ -68,6 +68,11 @@ SUBROUTINE run_pwscf( exit_status )
   USE plugin_flags,      ONLY : use_environ
   USE environ_pw_module, ONLY : is_ms_gcs, init_ms_gcs
 #endif
+#if defined (__OSCDFT)
+  USE plugin_flags,      ONLY : use_oscdft
+  USE oscdft_base,       ONLY : oscdft_ctx
+  USE oscdft_functions,  ONLY : oscdft_run_pwscf
+#endif
   !
   IMPLICIT NONE
   !
@@ -171,11 +176,19 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ! ... electronic self-consistency or band structure calculation
      !
+#if defined (__OSCDFT)
+     IF (use_oscdft) THEN
+        CALL oscdft_run_pwscf(oscdft_ctx)
+     ELSE
+#endif
      IF ( .NOT. lscf) THEN
         CALL non_scf()
      ELSE
         CALL electrons()
      END IF
+#if defined (__OSCDFT)
+     END IF
+#endif
      !
      ! ... code stopped by user or not converged
      !

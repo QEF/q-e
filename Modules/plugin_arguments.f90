@@ -55,6 +55,11 @@ SUBROUTINE plugin_arguments()
        IF ( TRIM(arg)=='partn' ) THEN
           use_partn = .true.
        ENDIF
+       ! ***OSCDFT BEGIN***
+       IF ( TRIM(arg)=='oscdft' ) THEN
+          use_oscdft = .true.
+       ENDIF
+       ! ***OSCDFT END***
     ENDIF
   ENDDO
   !
@@ -85,6 +90,9 @@ END SUBROUTINE plugin_arguments
   !
 !  write(0,*) "use_plumed: ", use_plumed
   !
+  ! ***OSCDFT BEGIN***
+  CALL mp_bcast(use_oscdft,root,comm)
+  ! ***OSCDFT END***
   RETURN
   !
 END SUBROUTINE plugin_arguments_bcast
