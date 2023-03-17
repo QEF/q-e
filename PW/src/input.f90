@@ -352,6 +352,11 @@ SUBROUTINE iosys()
   USE plugin_flags,          ONLY : use_environ
   USE environ_base_module,   ONLY : read_environ_input, init_environ_setup
 #endif
+#if defined (__OSCDFT)
+  USE plugin_flags,          ONLY : use_oscdft
+  USE oscdft_base,           ONLY : oscdft_ctx
+  USE oscdft_input,          ONLY : oscdft_read_input
+#endif
   !
   IMPLICIT NONE
   !
@@ -1511,6 +1516,11 @@ SUBROUTINE iosys()
   IF (use_environ) THEN
      CALL read_environ_input()
      CALL init_environ_setup('PW')
+  END IF
+#endif
+#if defined (__OSCDFT)
+  IF (use_oscdft) THEN
+     CALL oscdft_read_input(oscdft_ctx%inp)
   END IF
 #endif
   !

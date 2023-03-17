@@ -261,6 +261,18 @@ wannier_init.o \
 wannier_check.o \
 wannier_clean.o \
 wannier_occ.o \
+oscdft_input.o \
+oscdft_context.o \
+oscdft_base.o \
+oscdft_enums.o \
+oscdft_indices.o \
+oscdft_wavefunction.o \
+oscdft_wavefunction_subs.o \
+oscdft_functions.o \
+oscdft_occupations.o \
+oscdft_wfcO.o \
+oscdft_forces.o \
+oscdft_forces_subs.o
 
 
 # GPU versions of routines
@@ -287,7 +299,13 @@ PWLIBS += \
   utils_gpu.o \
   drhoc_gpu.o \
   orthoatwfc_gpu.o \
-  atomic_wfc_gpu.o
+  atomic_wfc_gpu.o \
+  oscdft_wavefunction_subs_gpu.o \
+  oscdft_wfcO_gpu.o \
+  oscdft_functions_gpu.o \
+  additional_cusolver_subs.o
+
+
 
 QEMODS=../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a $(BASEMODS)
 

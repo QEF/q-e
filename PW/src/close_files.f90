@@ -21,6 +21,11 @@ SUBROUTINE close_files( lflag )
   USE mp,            ONLY: mp_barrier
   USE wannier_new,   ONLY: use_wannier
   USE bp,            ONLY: lelfield
+#if defined (__OSCDFT)
+  USE plugin_flags,     ONLY : use_oscdft
+  USE oscdft_base,      ONLY : oscdft_ctx
+  USE oscdft_functions, ONLY : oscdft_close_files
+#endif
   !
   IMPLICIT NONE
   !
@@ -75,6 +80,9 @@ SUBROUTINE close_files( lflag )
      ENDIF
      !
   END IF
+#if defined (__OSCDFT)
+  IF (use_oscdft) CALL oscdft_close_files(oscdft_ctx)
+#endif
   !
   CALL mp_barrier( intra_image_comm )  
   !

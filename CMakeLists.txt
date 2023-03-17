@@ -149,6 +149,10 @@ endif()
 set(QE_ENABLE_ENVIRON "${ENVIRON_DEFAULT}" CACHE
     STRING "select a specific Environ library [NO, EXTERNAL, INTERNAL]")
 
+# OSCDFT
+option(QE_ENABLE_OSCDFT "enable OS-CDFT 10.1021/acs.jctc.9b00281" OFF)
+
+
 # TODO change all ifdefs throughout code base to match
 # cmake options
 # TODO symbols beginning with '__' followed by a capital
@@ -206,6 +210,11 @@ endif()
 check_function_exists(mallinfo HAVE_MALLINFO)
 if(HAVE_MALLINFO)
     qe_add_global_compile_definitions(HAVE_MALLINFO)
+endif()
+
+# OSCDFT
+if(QE_ENABLE_OSCDFT)
+    qe_add_global_compile_definitions(__OSCDFT)
 endif()
 
 # Check options consistency
