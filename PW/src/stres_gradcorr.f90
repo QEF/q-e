@@ -48,11 +48,17 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, nspin, &
   REAL(DP) :: sigma_gc11, sigma_gc31, sigma_gc21, &
               sigma_gc32, sigma_gc22, sigma_gc33
   REAL(DP) :: sigma_gradcorr(3,3)
+  LOGICAL :: gpuarg
   !
   IF ( .NOT. xclib_dft_is('gradient') .AND. .NOT. xclib_dft_is('meta') ) RETURN
   !
   IF ( xclib_dft_is('meta') .AND. nspin>1 )  CALL errore( 'stres_gradcorr', &
        'Meta-GGA stress does not work with spin polarization', 1 )
+  !
+  gpuarg=.TRUE.
+#if defined(__OPENMP_GPU)
+  gpuarg=.FALSE.
+#endif
   !
   !$acc data present_or_copyin( rho, rho_core, rhog, rhog_core, g )
   !
@@ -166,7 +172,7 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, nspin, &
         ENDDO
         !$acc end data
      ELSE
-        CALL xc_gcx( nrxx, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, gpu_args_=.TRUE. )
+        CALL xc_gcx( nrxx, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, gpu_args_=gpuarg )
      ENDIF
      !
      !$acc parallel loop reduction(+:sigma_gc11,sigma_gc21,sigma_gc22, &

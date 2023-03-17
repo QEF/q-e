@@ -158,10 +158,10 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
      !- project on conduction bands
         CALL start_clock( 'pcg:ortho' )
         !$acc host_data use_device(spsi0, psi0, z, spsi0vec)
-        CALL MYDGEMM( 'T','N', nbnd,nnew,npw2, 2.D0, spsi0, npwx2, z(:,nactive+1), npwx2, 0.D0, spsi0vec, nbnd )
+        CALL MYDGEMM2( 'T','N', nbnd,nnew,npw2, 2.D0, spsi0, npwx2, z(:,nactive+1), npwx2, 0.D0, spsi0vec, nbnd,.FALSE. )
         IF ( gstart == 2 ) CALL MYDGER( nbnd, nnew, -1.D0, spsi0, npwx2, z(:,nactive+1), npwx2, spsi0vec, nbnd )
         CALL mp_sum( spsi0vec, intra_bgrp_comm )
-        CALL MYDGEMM( 'N','N', npw2,nnew,nbnd,-1.D0, psi0, npwx2, spsi0vec, nbnd, 1.D0, z(:,nactive+1), npwx2 )
+        CALL MYDGEMM2( 'N','N', npw2,nnew,nbnd,-1.D0, psi0, npwx2, spsi0vec, nbnd, 1.D0, z(:,nactive+1), npwx2,.FALSE. )
         !$acc end host_data
         CALL stop_clock( 'pcg:ortho' )
      !-
@@ -276,10 +276,10 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
   !- project on conduction bands
      CALL start_clock( 'pcg:ortho' )
      !$acc host_data use_device(spsi0, psi0, z, spsi0vec)
-     CALL MYDGEMM( 'T','N', nbnd,nactive,npw2, 2.D0, spsi0, npwx2, z, npwx2, 0.D0, spsi0vec, nbnd )
+     CALL MYDGEMM2( 'T','N', nbnd,nactive,npw2, 2.D0, spsi0, npwx2, z, npwx2, 0.D0, spsi0vec, nbnd, .FALSE. )
      IF ( gstart == 2 ) CALL MYDGER( nbnd, nactive, -1.D0, spsi0, npwx2, z, npwx2, spsi0vec, nbnd )
      CALL mp_sum( spsi0vec, intra_bgrp_comm )
-     CALL MYDGEMM( 'N','N', npw2,nactive,nbnd,-1.D0, psi0, npwx2, spsi0vec, nbnd, 1.D0, z, npwx2 )
+     CALL MYDGEMM2( 'N','N', npw2,nactive,nbnd,-1.D0, psi0, npwx2, spsi0vec, nbnd, 1.D0, z, npwx2, .FALSE. )
      !$acc end host_data
      CALL stop_clock( 'pcg:ortho' )
   !-

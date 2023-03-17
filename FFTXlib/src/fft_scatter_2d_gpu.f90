@@ -1413,6 +1413,9 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      ! step one: store contiguously the slices
      !
      offset = 0
+     !
+#ifdef __MEMCPY_RECT
+     !
 #ifdef __GPU_MPI
      !$omp target data use_device_addr(f_in,f_aux)
 #else
@@ -1438,6 +1441,25 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
                     kind(istat))
      ENDDO
      !$omp end target data
+     !
+#else
+     !
+     DO gproc = 1, nprocp
+        kdest = ( gproc - 1 ) * sendsiz
+        kfrom = offset
+        !$omp target teams distribute parallel do collapse(2)
+        DO k = 1, ncp_ (me)
+           DO i = 1, npp_ ( gproc )
+             f_aux( kdest + i + (k-1)*nppx ) = f_in( kfrom + i + (k-1)*nr3x )
+           END DO
+        END DO
+        offset = offset + npp_ ( gproc )
+     ENDDO
+#ifndef __GPU_MPI
+     !$omp target update from (f_aux)
+#endif
+     !
+#endif
      !
      ! maybe useless; ensures that no garbage is present in the output
      !
@@ -1608,6 +1630,9 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
 !$omp end target data
 #else
      CALL mpi_alltoall (f_in(1), sendsiz, MPI_DOUBLE_COMPLEX, f_aux(1), sendsiz, MPI_DOUBLE_COMPLEX, gcomm, ierr)
+#ifndef __MEMCPY_RECT
+     !$omp target update to(f_aux)
+#endif
 #endif
      CALL stop_clock ('a2a_bw')
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
@@ -1615,6 +1640,9 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      !  step one: store contiguously the columns
      !
      offset = 0
+     !
+#ifdef __MEMCPY_RECT
+     !
 #ifdef __GPU_MPI
      !$omp target data use_device_addr(f_in,f_aux)
 #else
@@ -1640,6 +1668,22 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
                     kind(istat))
      ENDDO
      !$omp end target data
+     !
+#else
+     !
+     DO gproc = 1, nprocp
+        kdest = ( gproc - 1 ) * sendsiz
+        kfrom = offset
+        !$omp target teams distribute parallel do collapse(2)
+        DO k = 1, ncp_(me)
+           DO i = 1, npp_( gproc )
+             f_in( kfrom + i + (k-1)*nr3x ) = f_aux( kdest + i + (k-1)*nppx )
+           END DO
+        END DO
+        offset = offset + npp_( gproc )
+     ENDDO
+     !
+#endif
 
 20   CONTINUE
 
