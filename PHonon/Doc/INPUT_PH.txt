@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: ph.x / PHonon / Quantum ESPRESSO (version: 7.0)
+Program: ph.x / PHonon / Quantum ESPRESSO (version: 7.2)
 ------------------------------------------------------------------------
 
 
@@ -149,6 +149,14 @@ NAMELIST: &INPUTPH
    Type:           REAL
    Default:        1.d7
    Description:    Maximum allowed run time before the job stops smoothly.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       dftd3_hess
+   
+   Type:           CHARACTER
+   Default:        'prefix.hess'
+   Description:    File where the D3 dispersion hessian matrix is read.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -558,7 +566,7 @@ NAMELIST: &INPUTPH
    Type:           INTEGER
    Default:        0,0,0
    Description:    Parameters of the Monkhorst-Pack grid (no offset) used
-                   when @ref ldisp=.true. Same meaning as for nk1, nk2, nk3
+                   when "ldisp"=.true. Same meaning as for nk1, nk2, nk3
                    in the input of pw.x.
    +--------------------------------------------------------------------
    
@@ -571,8 +579,8 @@ NAMELIST: &INPUTPH
                    runs a pw non-self consistent calculation with a different
                    k-point grid thant that used for the charge density.
                    This occurs even in the Gamma case.
-                   @ref nk1, @ref nk2, @ref nk3 are the parameters of the Monkhorst-Pack grid
-                   with offset determined by @ref k1, @ref k2, @ref k3.
+                   "nk1", "nk2", "nk3" are the parameters of the Monkhorst-Pack grid
+                   with offset determined by "k1", "k2", "k3".
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -882,7 +890,7 @@ ________________________________________________________________________
          Variables:      xq1, xq2, xq3
          
          Type:           REAL
-         Description:    q-point coordinates; used only with @ref ldisp=.true. and qplot=.true.
+         Description:    q-point coordinates; used only with "ldisp"=.true. and qplot=.true.
                          The phonon wavevector, in units of 2pi/a0 (a0 = lattice parameter).
                          The meaning of these q points and their weights nq depend on the
                          flags q2d and q_in_band_form. (NB: nq is integer)
@@ -986,4 +994,4 @@ ________________________________________________________________________
    information.
    
 
-This file has been created by helpdoc utility on Sat Dec 18 20:08:40 CET 2021
+This file has been created by helpdoc utility on Sat Mar 18 19:08:12 CET 2023

@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package PWscf -program pw.x {
+input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x {
 
     toc {}
 
@@ -496,7 +496,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
              IF .TRUE. , a two chemical potential calculation for the simulation of
              photoexcited systems is performed, constraining a fraction of the 
              electrons in the conduction manifold. 
-             See G. Marini, M. Calandra; Phys. Rev. B 104, 144103 (2021).  
+             See G. Marini, M. Calandra; PRB 104, 144103 (2021).  
              Note: requires @ref occupations to be set to 'smearing'.
             }
         }
@@ -1153,10 +1153,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
 
         var pol_type -type CHARACTER {
-            info {
-                Type of polaron in gammaDFT.
-                pol_type = 'e' : electron polaron
-                pol_type = 'h' : hole polaron
+            options {
+                info {
+                    Type of polaron in gammaDFT.
+                }
+                opt -val 'e' { electron polaron }
+                opt -val 'h' { hole polaron }
             }
         }
 
