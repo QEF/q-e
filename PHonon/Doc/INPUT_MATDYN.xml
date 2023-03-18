@@ -66,6 +66,14 @@ previous implementation of the asr used
 3 translational asr imposed by optimized
 correction of the force constants (projection)
             </opt>
+            <opt val="'all'" >
+3 translational asr + 3 rotational asr + 15 Huang
+conditions for vanishing stress tensor, imposed by
+optimized correction of the force constants (projection).
+Remember to set write_lr = .true. to write long-range
+force constants into file when running q2r and set <ref>read_lr</ref> = .true. when running matdyn in the case of
+infrared-active solids. (See npj Comput Mater 8, 236 (2022))
+            </opt>
             <opt val="'one-dim'" >
 3 translational asr + 1 rotational asr imposed
 by optimized correction of the dyn. mat. (the
@@ -85,6 +93,14 @@ In these cases the supplementary asr are cancelled
 during the orthonormalization procedure (see below).
             </info>
          </options>
+      </var>
+      <var name="huang" type="LOGICAL" >
+         <default> <tt>.true.</tt>
+         </default>
+         <info>
+if <b>.true.</b> 15 Huang conditions for vanishing stress
+tensor are included in <ref>asr</ref> = &apos;all&apos;.
+         </info>
       </var>
       <var name="dos" type="LOGICAL" >
          <info>
@@ -255,6 +271,24 @@ set to <b>.true.</b> to activate two-dimensional treatment of LO-TO splitting
          <info>
 if <b>.true.</b> do not apply LO-TO splitting for q=0
 (default: <tt>.false.)</tt>
+         </info>
+      </var>
+      <var name="read_lr" type="LOGICAL" >
+         <default> <tt>.false.</tt>
+         </default>
+         <info>
+if <b>.true.</b> read also long-range force constants when they exist in
+force constant file. This is required when enforcing <ref>asr</ref> = &apos;all&apos;
+for infrared-active solids.
+         </info>
+      </var>
+      <var name="write_frc" type="LOGICAL" >
+         <default> <tt>.false.</tt>
+         </default>
+         <info>
+if <b>.true.</b> write force constants with <ref>asr</ref> imposed into file.
+The filename would be <ref>flfrc</ref>+&quot;.matdyn&quot;. The long-range part of
+force constants will be not written.
          </info>
       </var>
    </namelist>
