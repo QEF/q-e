@@ -241,7 +241,7 @@ proc ::helpdoc::qe_mode_generate {module_list} {
         # filter-out cmds that already exists in cards
         set newL {}
         foreach cmd $cmds {
-            if { [lsearch -nocase $cards $cmd] < 0 && [lsearch -nocase $namelists $cmd] < 0 } {
+            if { [lsearch $cards $cmd] < 0 && [lsearch $namelists $cmd] < 0 } {
                 lappend newL $cmd
             }
         }
