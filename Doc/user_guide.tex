@@ -749,9 +749,8 @@ happen, especially on PC clusters, see Sec.\ref{SubSec:LinuxPCMPI}.
 (notably, non-blocking broadcast and gather operations) are required.
 
 \paragraph{Libraries for accelerators}
-The accelerated version of the code uses standard CUDA libraries such as
-\texttt{cublas, cufft, cusolver} and the eigensolver library explicitly
-developed for \qe{} by NVidia and distributed at \texttt{https://github.com/NVIDIA/Eigensolver\_gpu}.
+The accelerated version of the code uses standard CUDA libraries 
+\texttt{cublas, cufft, curand, cusolver}, available from the NVidia HPC SDK.
 
 \paragraph {HDF5}
 The HDF5 library (\texttt{https://www.hdfgroup.org/downloads/hdf5/}),
