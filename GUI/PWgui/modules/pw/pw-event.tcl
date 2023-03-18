@@ -178,6 +178,14 @@ tracevar gate w {
     }
 }
 
+tracevar twochem w {
+    if { [vartextvalue twochem] == "Yes" } {
+	groupwidget twochem_group enable
+    } else {
+	groupwidget twochem_group disable
+    }
+}
+
 
 # ------------------------------------------------------------------------
 #  Page: SYSTEM
@@ -665,6 +673,7 @@ postprocess {
     varset lfcp            -value {}
     varset trism           -value {}
     varset laue_both_hands -value {}
+    varset twochem         -value {}
     varset gate            -value {}
     varset ibrav           -value {}
     varset how_lattice     -value celldm

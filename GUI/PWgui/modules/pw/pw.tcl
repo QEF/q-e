@@ -214,6 +214,13 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     -value     { .true. .false. }
                 }
 
+                var twochem {
+                    -label "Perform a two chemical-potential calculation (twochem):"
+                    -widget    radiobox
+                    -textvalue { Yes No }	      
+                    -value     { .true. .false. }
+                }
+
                 var gate {
                     -label "Perform charged cell calculation using counter charged plate (gate):"
                     -widget    radiobox
@@ -945,6 +952,25 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     }
                 }                   
 
+                separator -label "--- Two chemical-potential calculation (twochem) options ---"
+                
+                group twochem_group -decor normal {
+                    var nbnd_cond {
+                        -label "Number of conduction states for \"twochem\" calculation (nbnd_cond):"
+                        -validate int
+                    }
+
+                    var degauss_cond {
+                        -label "\"Twochem\" gaussian spreading for conduction electrons (degauss_cond):"
+                        -validate fortranreal
+                    }
+
+                    var nelec_cond {
+                        -label "Number of conduction electrons for \"twochem\" calculation (nelec_cond):"
+                        -validate fortranreal
+                    }
+                }
+
                 separator -label "--- Charged plate (gate) options ---"
                 
                 group gate_group -decor normal {
@@ -981,6 +1007,52 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                         -label "Height of the potential barrier \[in Ry\] (block_height):"
                         -validate fortranreal
                     }               
+                }
+
+                separator -label "--- gammaDFT options ---"
+                
+                group gammaDFT_group -decor normal {
+                    var sic_gamma {
+                        -label "Strength of the gammaDFT potential (sic_gamma):"
+                        -validate fortranreal
+                    }
+
+                    var pol_type {
+                        -label "Type of polaron in gammaDFT (pol_type):"
+                        -widget radiobox
+                        -textvalue {
+                            "electron polaron"
+                            "hole polaron"
+                        }
+                        -value {
+                            'e'
+                            'h'
+                        }
+                    }
+
+                    var sic_energy {
+                        -label "Calculate the total energy in gammaDFT (sic_energy):"
+                        -widget    radiobox
+                        -textvalue { Yes No }	      
+                        -value     { .true. .false. }
+                    }
+
+                    var sci_vb {
+                        -label "Valence band shift \[in eV\] for gammaDFT (sci_vb):"
+                        -validate fortranreal
+                    }
+
+                    var sci_cb {
+                        -label "Conduction band band shift \[in eV\] for gammaDFT (sci_cb):"
+                        -validate fortranreal
+                    }
+                }
+
+                separator -label "--- External ionic force fields ---"
+                
+                var nextffield {
+                    -label "Number of activated external ionic force fields (nextffield):"
+                    -validate int
                 }
                 
                 separator -label "--- FFT meshes ---"
@@ -1020,6 +1092,11 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     -widget    spinint
                     -validate  posint
                     -fmt       %d
+                }
+
+                var exx_maxstep {
+                    -label "Max. \# of outer iterations with exact exchange (exx_maxstep):"
+                    -validate int
                 }
 
                 var scf_must_converge {
@@ -1731,17 +1808,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                 -validate fortranreal
                 -start 1 -end 1
             }
-            var rmax_lj {
-                -label "Maximum radius of Lennard-Jones for 3D-RISM 
-\[in `sigma'\] (rmax_lj):"
-                -validate fortranposreal
-            }
             page rism_1d -name "1D-RISM" {
-                var rmax1d {
-                    -label "Maximum inter-site radius for 1D-RISM 
-\[in Bohr\] (rmax1d)       :"
-                    -validate fortranposreal
-                }
                 var starting1d {
                     -label "How to initialize the 1D-RISM's correlation function 
 (starting1d):"      
@@ -1794,11 +1861,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     -label "Number of processes to calculate for 1D-RISM (rism1d_nproc):"
                     -validate nonnegint
                 }
-                var rism1d_nproc_switch {
-                    -label "Number of processes to calculate for 1D-RISM 
-(rism1d_nproc_switch):"
-                    -validate nonnegint
-                }            
             }
             
             page rism_3d -name "3D-RISM" {
@@ -1888,30 +1950,10 @@ calculation (rism3d_planar_average):"
 \[in Bohr\] (laue_buffer_right):"
                     -validate fortranreal
                 }
-                var laue_buffer_right_solu {
-                    -label "Additional buffering length on right-hand side of solute-ward 
-in Laue-RISM \[in Bohr\] (laue_buffer_right_solu):"
-                    -validate fortranreal
-                }
-                var laue_buffer_right_solv {
-                    -label "Additional buffering length on right-hand side of solvent-ward 
-in Laue-RISM \[in Bohr\] (laue_buffer_right_solv):"
-                    -validate fortranreal
-                }
                 
                 var laue_buffer_left {
                     -label "Buffering length on left-hand side in Laue-RISM 
 \[in Bohr\] (laue_buffer_left):"
-                    -validate fortranreal
-                }
-                var laue_buffer_left_solu {
-                    -label "Additional buffering length on left-hand side of solute-ward 
-in Laue-RISM \[in Bohr\] (laue_buffer_left_solu):"
-                    -validate fortranreal
-                }
-                var laue_buffer_left_solv {
-                    -label "Additional buffering length on left-hand side of solvent-ward 
-in Laue-RISM \[in Bohr\] (laue_buffer_left_solv):"
                     -validate fortranreal
                 }
 
@@ -2246,7 +2288,7 @@ in Laue-RISM \[in Angstrom\] (laue_wall_sigma):"
                         -cols     6
                         -rows     1
                         -optionalcols 3
-                        -widgets  {{optionmenu {'type_coord' 'atom_coord' 'distance' 'planar_angle' 'torsional_angle' 'bennett_proj'}} entry}
+                        -widgets  {{optionmenu {'type_coord' 'atom_coord' 'distance' 'planar_angle' 'torsional_angle' 'bennett_proj' 'potential_wall'}} entry}
                         -outfmt   {"  %s  " %S}
                         -infmt    {%d %S}
                     }
