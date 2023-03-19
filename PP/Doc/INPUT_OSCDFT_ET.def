@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package {PWscf} -program  {oscdft_et.x} {
+input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {oscdft_et.x} {
 
     toc {}
 

@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pw.x / PWscf / Quantum Espresso (version: 7.1rc)
+Program: pw.x / PWscf / Quantum ESPRESSO (version: 7.2)
 ------------------------------------------------------------------------
 
 
@@ -496,6 +496,19 @@ NAMELIST: &CONTROL
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
+   Variable:       twochem
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   See:            nelec_cond, nbnd_cond, degauss_cond
+   Description:    IF .TRUE. , a two chemical potential calculation for the simulation of
+                   photoexcited systems is performed, constraining a fraction of the
+                   electrons in the conduction manifold.
+                   See G. Marini, M. Calandra; PRB 104, 144103 (2021).
+                   Note: requires "occupations" to be set to 'smearing'.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
    Variable:       lfcp
    
    Type:           LOGICAL
@@ -751,6 +764,16 @@ NAMELIST: &SYSTEM
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
+   Variable:       nbnd_cond
+   
+   Type:           INTEGER
+   Default:        nbnd_cond = "nbnd" - # of electrons / 2 in the collinear case;
+                                        nbnd_cond = "nbnd" - # of electrons in the noncollinear case.
+   Description:    Number of electronic states in the conduction manifold
+                   for a two chemical-potential calculation ("twochem"=.true.).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
    Variable:       tot_charge
    
    Type:           REAL
@@ -792,8 +815,9 @@ NAMELIST: &SYSTEM
    Default:        0
    Description:    Starting spin polarization on atomic type 'i' in a spin
                    polarized (LSDA or noncollinear/spin-orbit) calculation.
-                   Allowed values range between -1 (all spins down for the
-                   valence electrons of atom type 'i') to 1 (all spins up).
+                   For non-constrained calculations, the allowed values
+                   range between -1 (all spins down for the valence electrons
+                   of atom type 'i') to 1 (all spins up).
                    If you expect a nonzero magnetization in your ground state,
                    you MUST either specify a nonzero value for at least one
                    atomic type, or constrain the magnetization using variable
@@ -1067,6 +1091,27 @@ NAMELIST: &SYSTEM
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
+   Variable:       degauss_cond
+   
+   Type:           REAL
+   Default:        0.D0 Ry
+   Description:    value of the gaussian spreading (Ry) for brillouin-zone
+                   integration in the conduction manifold in a two-chemical
+                   potential calculation ("twochem"=.true.).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       nelec_cond
+   
+   Type:           REAL
+   Default:        0.D0
+   Description:    Number of electrons placed in the conduction manifold in a two-chemical
+                   potential calculation ("twochem"=.true.). Of the total # of
+                   electrons nelec, nelec-nelec_cond will occupy the valence
+                   manifold and nelec_cond will be constrained in the conduction manifold.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
    Variable:       degauss
    
    Type:           REAL
@@ -1112,6 +1157,60 @@ NAMELIST: &SYSTEM
                                 (magnetization in generic direction)
                                 DO NOT specify "nspin" in this case;
                                 specify "noncolin"=.TRUE. instead
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       sic_gamma
+   
+   Type:           REAL
+   Default:        0
+   Description:    Strength of the gammaDFT potential.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       pol_type
+   
+   Type:           CHARACTER
+   Description:   
+                   Type of polaron in gammaDFT.
+    
+                   'e' :
+                        electron polaron
+    
+                   'h' :
+                        hole polaron
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       sic_energy
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    Enable the calculation of the total energy in gammaDFT. When .true.,
+                   a preliminary calculation is performed to calculate the electron density
+                   in the absence of the polaron. When .false., the total energy printed in
+                   output should not be considered. For structural relaxations, it is
+                   recommended to use .false. to avoid doubling the computational cost.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       sci_vb
+   
+   Type:           REAL
+   Default:        0
+   Description:    Valence band shift (in eV) through self-consistent
+                   scissor operator. When performing gammaDFT calculations
+                   of polarons, the polaron level is not shifted.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       sci_cb
+   
+   Type:           REAL
+   Default:        0
+   Description:    Conduction band band shift (in eV) through self-consistent
+                   scissor operator. When performing gammaDFT calculations
+                   of polarons, the polaron level is not shifted.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1278,6 +1377,11 @@ NAMELIST: &SYSTEM
                    three Hubbard manifolds per Hubbard atom. However, if you want
                    to specify three manifolds then the second and the third manifolds
                    will be considered as one effective manifold (see Doc/Hubbard_input.pdf)
+                   
+                   Note: Hubbard_occ cannot be used together with fully-relativistic pseudopotentials
+                   (i.e. when noncolin=.true. and lspinorb=.true.) since this variable does not
+                   allow to distinguish between the occupied and unoccupied channels (this is
+                   needed when determining the atomic orbital offsets).
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1288,7 +1392,7 @@ NAMELIST: &SYSTEM
    Description:    Hubbard_alpha(i) is the perturbation (on atom i, in eV)
                    used to compute U (and V) with the linear-response method of
                    Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
-                   (only for "lda_plus_u_kind"=0 and 2).
+                   (only for DFT+U or DFT+U+V).
                    
                    Note: Hubbard U and V can be computed using the HP code
                    which is based on density-functional perturbation theory,
@@ -1304,7 +1408,7 @@ NAMELIST: &SYSTEM
    Description:    Hubbard_beta(i) is the perturbation (on atom i, in eV)
                    used to compute J0 with the linear-response method of
                    Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
-                   (only for "lda_plus_u_kind"=0 and 2). See also
+                   (only for DFT+U or DFT+U+V). See also
                    PRB 84, 115108 (2011).
    +--------------------------------------------------------------------
    
@@ -2036,6 +2140,15 @@ NAMELIST: &SYSTEM
       
    \\\---
    
+   +--------------------------------------------------------------------
+   Variable:       nextffield
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    Number of activated external ionic force fields.
+                   See Doc/ExternalForceFields.tex for further explanation and parameterizations
+   +--------------------------------------------------------------------
+   
 ===END OF NAMELIST======================================================
 
 
@@ -2047,7 +2160,16 @@ NAMELIST: &ELECTRONS
    
    Type:           INTEGER
    Default:        100
-   Description:    maximum number of iterations in a scf step
+   Description:    maximum number of iterations in a scf step. If exact exchange is active,
+                   this will affect the inner loops.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       exx_maxstep
+   
+   Type:           INTEGER
+   Default:        100
+   Description:    maximum number of outer iterations in a scf calculation with exact exchange.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -4050,7 +4172,7 @@ CARD: ADDITIONAL_K_POINTS { tpiba | crystal | tpiba_b | crystal_b | tpiba_c | cr
 ========================================================================
 CARD: CELL_PARAMETERS { alat | bohr | angstrom }
 
-   OPTIONAL CARD, NEEDED ONLY IF "IBRAV" == 0 IS SPECIFIED, IGNORED OTHERWISE !
+   OPTIONAL CARD, MUST BE PRESENT IF "IBRAV" == 0, MUST BE ABSENT OTHERWISE
    
    /////////////////////////////////////////
    // Syntax:                             //
@@ -4100,7 +4222,7 @@ CARD: CELL_PARAMETERS { alat | bohr | angstrom }
 ========================================================================
 CARD: CONSTRAINTS 
 
-   OPTIONAL CARD, USED FOR CONSTRAINED DYNAMICS OR CONSTRAINED OPTIMISATIONS
+   OPTIONAL CARD, USED FOR CONSTRAINED DYNAMICS OR CONSTRAINED OPTIMIZATIONS
    (ONLY IF "ION_DYNAMICS"=='DAMP' OR 'VERLET', VARIABLE-CELL EXCEPTED)
    
    When this card is present the SHAKE algorithm is automatically used.
@@ -4173,6 +4295,10 @@ CARD: CONSTRAINTS
                            minus the center of mass of the others.
                            G. Roma, J.P. Crocombette: J. Nucl. Mater. 403, 32 (2010),
                            doi:10.1016/j.jnucmat.2010.06.001
+       
+                      'potential_wall' :
+                           (experimental) add a potential wall at the origin
+                           normal to the the z-axis.
       +--------------------------------------------------------------------
       
       +--------------------------------------------------------------------
@@ -4204,6 +4330,12 @@ CARD: CONSTRAINTS
                                      constr(1) is the index of the atom whose position is constrained.
                                      constr(2:4) are the three coordinates of the vector that specifies
                                      the constraint direction.
+                      'potential_wall' :
+                                     Formula is: External force = prefac * exponent * Exp(-exponent). Force is only applied
+                                     on atoms within the cutoff.
+                                     constr(1) is the prefactor
+                                     constr(2) is the value in the exponent
+                                     constr(3) is the cutoff (in a.u.)
       +--------------------------------------------------------------------
       
       +--------------------------------------------------------------------
@@ -4684,4 +4816,4 @@ CARD: HUBBARD atomic | ortho-atomic | norm-atomic | wf | pseudo
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Wed Jun 08 15:59:56 CEST 2022
+This file has been created by helpdoc utility on Sat Mar 18 16:00:16 CET 2023

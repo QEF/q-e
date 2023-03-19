@@ -135,6 +135,12 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    -label "Broadening of energy levels for LDOS in eV (degauss_ldos):"
 		    -validate fortrannonnegreal
 		}
+                var use_gauss_ldos {
+                    -label "Use gaussian broadening or LDOS (use_gauss_ldos):"
+                    -widget    radiobox
+                    -textvalue { Yes No }	      
+                    -value     { .true. .false. }
+                }
 	    }
 	}
     }

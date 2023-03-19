@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package QEHeat -program all_currents.x {
+input_description -distribution {Quantum ESPRESSO} -package QEHeat -program all_currents.x {
 
     toc {}
 

@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package KCW -program kcw.x {
+input_description -distribution {Quantum ESPRESSO} -package KCW -program kcw.x {
 
     toc {}
 

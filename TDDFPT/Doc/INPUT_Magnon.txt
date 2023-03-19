@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: turbo_magnons.x / turboMAGNONS / Quantum Espresso (version: 7.0)
+Program: turbo_magnon.x / turboMAGNON / Quantum ESPRESSO (version: 7.2)
 ------------------------------------------------------------------------
 
 
@@ -21,18 +21,18 @@ either a "!" or a "#" character in the first position of a line.
 Structure of the input data:
 ===============================================================================
 
-&lr_input
+&LR_INPUT
   ...
 /
 
-&lr_control
+&LR_CONTROL
   ...
 /
 
 
 
 ========================================================================
-NAMELIST: &lr_input
+NAMELIST: &LR_INPUT
 
    THIS NAMELIST IS ALWAYS NEEDED !
    
@@ -100,7 +100,7 @@ NAMELIST: &lr_input
 
 
 ========================================================================
-NAMELIST: &lr_control
+NAMELIST: &LR_CONTROL
 
    +--------------------------------------------------------------------
    Variable:       itermax
@@ -159,4 +159,4 @@ NAMELIST: &lr_control
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Sat Dec 18 20:08:54 CET 2021
+This file has been created by helpdoc utility on Sat Mar 18 15:45:38 CET 2023

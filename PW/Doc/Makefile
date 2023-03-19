@@ -9,6 +9,9 @@ LOGS = $(PDFS:.pdf=.log)
 OUTS = $(PDFS:.pdf=.out)
 TOCS = $(PDFS:.pdf=.toc)
 
+HTMLS = INPUT_PW.html INPUT_OSCDFT.html
+XMLS = $(HTMLS:.html=.xml)
+TXTS = $(HTMLS:.html=.txt)
 
 doc:  all
 all:  defs pdf html 
@@ -23,11 +26,8 @@ clean:
 	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) *~
 	- rm -rf user_guide/
 	- rm -rf input_xx.xsl
-	- rm -f INPUT_PW.html INPUT_PW.txt INPUT_PW.xml
-	- rm -f INPUT_OSCDFT.html INPUT_OSCDFT.txt INPUT_OSCDFT.xml
-	- rm -rf ../../Doc/INPUT_PW.*
-	- rm -rf ../../Doc/INPUT_OSCDFT.*
-
+	- rm -f $(HTMLS) $(XMLS) $(TXTS)
+	- rm -f $(patsubst %,../../Doc/%,$(HTMLS) $(XMLS) $(TXTS))
 
 user_guide: user_guide.pdf
 	- rm -rf user_guide/
@@ -73,9 +73,4 @@ INPUT_OSCDFT.txt: %.txt: %.def input_xx.xsl
 	$(HELPDOC) $<
 
 link_on_main_doc:
-	-@( cd ../../Doc ; ln -fs ../PW/Doc/INPUT_PW.html . ; \
-	ln -fs ../PW/Doc/INPUT_PW.xml . ; \
-	ln -fs ../PW/Doc/INPUT_PW.txt . ; \
-	ln -fs ../PW/Doc/INPUT_OSCDFT.html . ; \
-	ln -fs ../PW/Doc/INPUT_OSCDFT.xml . ; \
-	ln -fs ../PW/Doc/INPUT_OSCDFT.txt . )
+	-@( cd ../../Doc ; for file in $(HTMLS) $(XMLS) $(TXTS); do ln -fs ../PW/Doc/$$file . ; done )

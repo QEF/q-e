@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: turbo_spectrum.x / turboTDDFPT / Quantum ESPRESSO (version: 7.0)
+Program: turbo_spectrum.x / turboTDDFPT / Quantum ESPRESSO (version: 7.2)
 ------------------------------------------------------------------------
 
 
@@ -102,7 +102,8 @@ NAMELIST: &LR_INPUT
    
    Type:           REAL
    Default:        0.02
-   Description:    The broadening/damping term (in Rydberg units).
+   Description:    The broadening/damping term. In Rydberg units if magnons=.false.,
+                       in meV if magnons = .true.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -111,9 +112,10 @@ NAMELIST: &LR_INPUT
    Type:           INTEGER
    Default:        0
    Description:    The unit system used for the output and the start, end and increment
-                   input parameters.
+                   input parameters. (only meV used in that case).
                    
-                   0 = Rydbergs, 1 = Electron volts and 2 = Nanometres per electron volts.
+                   0 = Rydbergs, 1 = Electron volts, 2 = Nanometres per electron volts,
+                   3 = milli Electron volts (only for magnons=.true.)
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -122,7 +124,7 @@ NAMELIST: &LR_INPUT
    Type:           REAL
    Default:        0.0
    Description:    The polarizability and the absorption coefficient are computed
-                   starting from this value. In units set by the units variable.
+                   starting from this value. In units set.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -131,7 +133,7 @@ NAMELIST: &LR_INPUT
    Type:           REAL
    Default:        2.5
    Description:    The polarizability and the absorption coefficient are computed
-                   up to this value. In units set by the units variable.
+                   up to this value. In units set.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -140,7 +142,7 @@ NAMELIST: &LR_INPUT
    Type:           REAL
    Default:        0.001
    Description:    Incremental step used to define the mesh between start and end.
-                   In units set by the units variable.
+                   In units set.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -163,6 +165,14 @@ NAMELIST: &LR_INPUT
    Default:        .false.
    Description:    Must be set to .true. for EELS. EELS-specific operations
                    will be performed.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       magnons
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    Must be set to .true. for magnon-calculation post-processing.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -189,4 +199,4 @@ NAMELIST: &LR_INPUT
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Sat Dec 18 20:08:54 CET 2021
+This file has been created by helpdoc utility on Sat Mar 18 15:45:38 CET 2023
