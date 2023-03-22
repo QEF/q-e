@@ -18,6 +18,8 @@ Incompatible changes in v.7.2:
   * None known
 
 Fixed in v.7.2:
+  * Mysterious MPI errors in "custom" parallel diagonalization, produced
+    on some MPI libraries by destruction of nonexistent communicators
   * v.7.1 of CP for GPU was not working for pseudopotentials with nonlinear 
     core correction
   * in v.7.0 and 7.1 of pw.x the calculation of forces under a macroscopic
