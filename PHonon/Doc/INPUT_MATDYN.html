@@ -46,7 +46,7 @@
 <tr><th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
 <h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
 <h2 style="margin: 10 10 10 15; text-align: left;"> Program:
-	      matdyn.x / PHonon / Quantum ESPRESSO<span style="font-weight: normal;"> (version: 7.0)</span>
+	      matdyn.x / PHonon / Quantum ESPRESSO<span style="font-weight: normal;"> (version: 7.2)</span>
 </h2>
 </th></tr>
 <tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
@@ -58,21 +58,21 @@
    <p><a href="#idm3">INTRODUCTION</a></p>
    <p><a href="#idm12">&amp;INPUT</a></p>
 <blockquote>
-<a href="#idm13">flfrc</a> | <a href="#idm17">asr</a> | <a href="#idm27">dos</a> | <a href="#idm33">nk1</a> | <a href="#idm34">nk2</a> | <a href="#idm35">nk3</a> | <a href="#idm38">deltaE</a> | <a href="#idm42">ndos</a> | <a href="#idm44">degauss</a> | <a href="#idm47">fldos</a> | <a href="#idm51">flfrq</a> | <a href="#idm54">flvec</a> | <a href="#idm57">fleig</a> | <a href="#idm60">fldyn</a> | <a href="#idm62">at</a> | <a href="#idm65">l1</a> | <a href="#idm66">l2</a> | <a href="#idm67">l3</a> | <a href="#idm70">ntyp</a> | <a href="#idm73">amass</a> | <a href="#idm76">readtau</a> | <a href="#idm79">fltau</a> | <a href="#idm83">la2F</a> | <a href="#idm86">q_in_band_form</a> | <a href="#idm90">q_in_cryst_coord</a> | <a href="#idm94">eigen_similarity</a> | <a href="#idm98">fd</a> | <a href="#idm101">na_ifc</a> | <a href="#idm105">nosym</a> | <a href="#idm108">loto_2d</a> | <a href="#idm111">loto_disable</a>
+<a href="#idm13">flfrc</a> | <a href="#idm17">asr</a> | <a href="#idm29">huang</a> | <a href="#idm35">dos</a> | <a href="#idm41">nk1</a> | <a href="#idm42">nk2</a> | <a href="#idm43">nk3</a> | <a href="#idm46">deltaE</a> | <a href="#idm50">ndos</a> | <a href="#idm52">degauss</a> | <a href="#idm55">fldos</a> | <a href="#idm59">flfrq</a> | <a href="#idm62">flvec</a> | <a href="#idm65">fleig</a> | <a href="#idm68">fldyn</a> | <a href="#idm70">at</a> | <a href="#idm73">l1</a> | <a href="#idm74">l2</a> | <a href="#idm75">l3</a> | <a href="#idm78">ntyp</a> | <a href="#idm81">amass</a> | <a href="#idm84">readtau</a> | <a href="#idm87">fltau</a> | <a href="#idm91">la2F</a> | <a href="#idm94">q_in_band_form</a> | <a href="#idm98">q_in_cryst_coord</a> | <a href="#idm102">eigen_similarity</a> | <a href="#idm106">fd</a> | <a href="#idm109">na_ifc</a> | <a href="#idm113">nosym</a> | <a href="#idm116">loto_2d</a> | <a href="#idm119">loto_disable</a> | <a href="#idm123">read_lr</a> | <a href="#idm129">write_frc</a>
 </blockquote>
-   <p><a href="#idm117">AtomicPositionSpecs</a></p>
+   <p><a href="#idm138">AtomicPositionSpecs</a></p>
 <blockquote>
-<a href="#idm125">X</a> | <a href="#idm126">Y</a> | <a href="#idm127">Z</a> | <a href="#idm128">ityp</a>
+<a href="#idm146">X</a> | <a href="#idm147">Y</a> | <a href="#idm148">Z</a> | <a href="#idm149">ityp</a>
 </blockquote>
-   <p><a href="#idm132">qPointsSpecs</a></p>
+   <p><a href="#idm153">qPointsSpecs</a></p>
 <blockquote>
-<a href="#idm138">nq</a> | <a href="#idm146">q_x</a> | <a href="#idm147">q_y</a> | <a href="#idm148">q_z</a> | <a href="#idm149">nptq</a>
+<a href="#idm159">nq</a> | <a href="#idm167">q_x</a> | <a href="#idm168">q_y</a> | <a href="#idm169">q_z</a> | <a href="#idm170">nptq</a>
 </blockquote>
-<p><a href="#idm157">qPointsSpecs</a></p>
+<p><a href="#idm178">qPointsSpecs</a></p>
 <blockquote>
-<a href="#idm160">nq</a> | <a href="#idm169">q_x</a> | <a href="#idm170">q_y</a> | <a href="#idm171">q_z</a>
+<a href="#idm181">nq</a> | <a href="#idm190">q_x</a> | <a href="#idm191">q_y</a> | <a href="#idm192">q_z</a>
 </blockquote>
-   <p><a href="#idm172">Notes</a></p>
+   <p><a href="#idm193">Notes</a></p>
 </blockquote>
 </blockquote>
    <blockquote>
@@ -164,6 +164,17 @@ correction of the force constants (projection)
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'all'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+3 translational asr + 3 rotational asr + 15 Huang
+conditions for vanishing stress tensor, imposed by
+optimized correction of the force constants (projection).
+Remember to set write_lr = .true. to write long-range
+force constants into file when running q2r and set <a href="#read_lr">read_lr</a> = .true. when running matdyn in the case of
+infrared-active solids. (See npj Comput Mater 8, 236 (2022))
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
 <dt><tt><span class="flag">'one-dim'</span> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
 3 translational asr + 1 rotational asr imposed
@@ -190,7 +201,23 @@ during the orthonormalization procedure (see below).
 </blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm27"></a><a name="dos"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm29"></a><a name="huang"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">huang</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> <tt>.true.</tt>
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+if <b>.true.</b> 15 Huang conditions for vanishing stress
+tensor are included in <a href="#asr">asr</a> = 'all'.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm35"></a><a name="dos"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">dos</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -208,7 +235,7 @@ supplied in input (default)
       <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
-<a name="idm33"></a><a name="nk1"></a>nk1, <a name="idm34"></a><a name="nk2"></a>nk2, <a name="idm35"></a><a name="nk3"></a>nk3</th>
+<a name="idm41"></a><a name="nk1"></a>nk1, <a name="idm42"></a><a name="nk2"></a>nk2, <a name="idm43"></a><a name="nk3"></a>nk3</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
@@ -217,7 +244,7 @@ uniform q-point grid for DOS calculation (includes q=0)
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm38"></a><a name="deltaE"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm46"></a><a name="deltaE"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">deltaE</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -229,7 +256,7 @@ below, is not specified)
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm42"></a><a name="ndos"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm50"></a><a name="ndos"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ndos</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -240,7 +267,7 @@ number of energy steps for DOS calculations
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm44"></a><a name="degauss"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm52"></a><a name="degauss"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">degauss</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -252,7 +279,7 @@ Default: 0 - meaning use tetrahedra
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm47"></a><a name="fldos"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm55"></a><a name="fldos"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fldos</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -264,7 +291,7 @@ and is normalised to 3*nat, i.e. the number of phonons
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm51"></a><a name="flfrq"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm59"></a><a name="flfrq"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">flfrq</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -274,7 +301,7 @@ output file for frequencies (default: <tt>'matdyn.freq')</tt>
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm54"></a><a name="flvec"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm62"></a><a name="flvec"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">flvec</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -287,7 +314,7 @@ then normalized. As such they are not orthogonal.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm57"></a><a name="fleig"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm65"></a><a name="fleig"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fleig</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -299,7 +326,7 @@ matrix. They are orthogonal.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm60"></a><a name="fldyn"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm68"></a><a name="fldyn"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fldyn</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -309,9 +336,9 @@ output file for dynamical matrix (default: ' ' i.e. not written)
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm62"></a><a name="at"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm70"></a><a name="at"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
-<th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">at(i,j), (i,j) = (1,1) ... (3,3)
+<th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">at(i,j), (i,j) = (1,1) . . . (3,3)
                     </th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
 </tr>
@@ -324,7 +351,7 @@ original lattice (default: use original cell)
       <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
-<a name="idm65"></a><a name="l1"></a>l1, <a name="idm66"></a><a name="l2"></a>l2, <a name="idm67"></a><a name="l3"></a>l3</th>
+<a name="idm73"></a><a name="l1"></a>l1, <a name="idm74"></a><a name="l2"></a>l2, <a name="idm75"></a><a name="l3"></a>l3</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
@@ -333,7 +360,7 @@ l1, l2, l3 respectively (default: 1, ignored if <a href="#at">at</a> specified)
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm70"></a><a name="ntyp"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm78"></a><a name="ntyp"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ntyp</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -344,7 +371,7 @@ number of atom types in the supercell
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm73"></a><a name="amass"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm81"></a><a name="amass"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">amass(i), i=1,ntyp</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -355,7 +382,7 @@ masses of atoms in the supercell (a.m.u.), one per atom type
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm76"></a><a name="readtau"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm84"></a><a name="readtau"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">readtau</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -366,7 +393,7 @@ read  atomic positions of the supercell from input
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm79"></a><a name="fltau"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm87"></a><a name="fltau"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fltau</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -377,7 +404,7 @@ write atomic positions of the supercell to file <tt>fltau</tt>
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm83"></a><a name="la2F"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm91"></a><a name="la2F"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">la2F</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -387,7 +414,7 @@ if <b>.true.</b> interpolates also the el-ph coefficients
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm86"></a><a name="q_in_band_form"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm94"></a><a name="q_in_band_form"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">q_in_band_form</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -399,7 +426,7 @@ are given. See below. (default: <tt>.false.).</tt>
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm90"></a><a name="q_in_cryst_coord"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm98"></a><a name="q_in_cryst_coord"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">q_in_cryst_coord</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -410,7 +437,7 @@ coordinates (default: <tt>.false.)</tt>
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm94"></a><a name="eigen_similarity"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm102"></a><a name="eigen_similarity"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">eigen_similarity</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -424,7 +451,7 @@ analysis of the modes.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm98"></a><a name="fd"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm106"></a><a name="fd"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fd</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -434,7 +461,7 @@ if <b>.true.</b> the ifc come from the finite displacement calculation
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm101"></a><a name="na_ifc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm109"></a><a name="na_ifc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">na_ifc</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -446,7 +473,7 @@ constants if finite displacement method is used (as in Wang et al.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm105"></a><a name="nosym"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm113"></a><a name="nosym"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nosym</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -456,7 +483,7 @@ if <b>.true.,</b> no symmetry and no time reversal are imposed
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm108"></a><a name="loto_2d"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm116"></a><a name="loto_2d"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">loto_2d</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -466,7 +493,7 @@ set to <b>.true.</b> to activate two-dimensional treatment of LO-TO splitting
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm111"></a><a name="loto_disable"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm119"></a><a name="loto_disable"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">loto_disable</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -477,11 +504,45 @@ if <b>.true.</b> do not apply LO-TO splitting for q=0
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm123"></a><a name="read_lr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">read_lr</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> <tt>.false.</tt>
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+if <b>.true.</b> read also long-range force constants when they exist in
+force constant file. This is required when enforcing <a href="#asr">asr</a> = 'all'
+for infrared-active solids.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm129"></a><a name="write_frc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">write_frc</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> <tt>.false.</tt>
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+if <b>.true.</b> write force constants with <a href="#asr">asr</a> imposed into file.
+The filename would be <a href="#flfrc">flfrc</a>+".matdyn". The long-range part of
+force constants will be not written.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
    </td></tr></tbody></table></td></tr>
 </table>
    <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; width: 100%; padding: 5 5 0 5"><tr><td>
 <b>IF </b><tt><em>readtau == .true.</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
-         <a name="idm117"></a><a name="AtomicPositionSpecs"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+         <a name="idm138"></a><a name="AtomicPositionSpecs"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
 <tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
 	    Card: <span class="card">AtomicPositionSpecs</span> </h2></th></tr>
 <tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
@@ -491,25 +552,25 @@ if (<a href="#readtau">readtau</a>) atomic positions must be specified as follow
             </b></p>
 <h3>Syntax:</h3>
 <blockquote><div class="syntax">
-<a name="idm121"></a><table>
+<a name="idm142"></a><table>
 <tr>
-<td style="white-space:nowrap"> <i><a href="#idm125">X(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm126">Y(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm127">Z(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm128">ityp(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm146">X(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm147">Y(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm148">Z(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm149">ityp(1)</a></i> </td>
 </tr>
 <tr>
-<td style="white-space:nowrap"> <i><a href="#idm125">X(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm126">Y(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm127">Z(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm128">ityp(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm146">X(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm147">Y(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm148">Z(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm149">ityp(2)</a></i> </td>
 </tr>
 <tr><td colspan="2"> . . .</td></tr>
 <tr>
-<td style="white-space:nowrap"> <i><a href="#idm125">X(nat)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm126">Y(nat)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm127">Z(nat)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm128">ityp(nat)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm146">X(nat)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm147">Y(nat)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm148">Z(nat)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm149">ityp(nat)</a></i> </td>
 </tr>
 </table>
 </div></blockquote>
@@ -520,7 +581,7 @@ if (<a href="#readtau">readtau</a>) atomic positions must be specified as follow
 <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th width="20%" align="left" valign="top" style="background: #ffff99; padding: 2 2 2 10; ">
-<a name="X"><a name="idm125">X</a></a>, <a name="Y"><a name="idm126">Y</a></a>, <a name="Z"><a name="idm127">Z</a></a>
+<a name="X"><a name="idm146">X</a></a>, <a name="Y"><a name="idm147">Y</a></a>, <a name="Z"><a name="idm148">Z</a></a>
 </th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
 </tr>
@@ -531,7 +592,7 @@ X, Y, Z atomic positions
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
 <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
-<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="ityp"><a name="idm128">ityp</a></a></th>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="ityp"><a name="idm149">ityp</a></a></th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
@@ -547,7 +608,7 @@ index of the atomic type
 </td></tr></table>
    <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; width: 100%; padding: 5 5 0 5"><tr><td>
 <b>IF </b><tt><em>q_in_band_form == .true .and. dos == .false.</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
-         <a name="idm132"></a><a name="qPointsSpecs"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+         <a name="idm153"></a><a name="qPointsSpecs"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
 <tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
 	    Card: <span class="card">qPointsSpecs</span> </h2></th></tr>
 <tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
@@ -557,25 +618,25 @@ if (<a href="#q_in_band_form">q_in_band_form</a> .and. .not.<a href="#dos">dos</
             </b></p>
 <h3>Syntax:</h3>
 <blockquote><div class="syntax">
-<i><a href="#idm138">nq</a></i>  <br><a name="idm140"></a><table>
+<i><a href="#idm159">nq</a></i>  <br><a name="idm161"></a><table>
 <tr>
-<td style="white-space:nowrap"> <i><a href="#idm146">q_x(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm147">q_y(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm148">q_z(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm149">nptq(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm167">q_x(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm168">q_y(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm169">q_z(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm170">nptq(1)</a></i> </td>
 </tr>
 <tr>
-<td style="white-space:nowrap"> <i><a href="#idm146">q_x(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm147">q_y(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm148">q_z(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm149">nptq(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm167">q_x(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm168">q_y(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm169">q_z(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm170">nptq(2)</a></i> </td>
 </tr>
 <tr><td colspan="2"> . . .</td></tr>
 <tr>
-<td style="white-space:nowrap"> <i><a href="#idm146">q_x(nq)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm147">q_y(nq)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm148">q_z(nq)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm149">nptq(nq)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm167">q_x(nq)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm168">q_y(nq)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm169">q_z(nq)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm170">nptq(nq)</a></i> </td>
 </tr>
 </table>
 </div></blockquote>
@@ -583,7 +644,7 @@ if (<a href="#q_in_band_form">q_in_band_form</a> .and. .not.<a href="#dos">dos</
 <tr><td>
 <h3>Description of items:</h3>
 <blockquote>
-<a name="idm138"></a><a name="nq"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<a name="idm159"></a><a name="nq"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nq</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -596,7 +657,7 @@ number of q points
 <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th width="20%" align="left" valign="top" style="background: #ffff99; padding: 2 2 2 10; ">
-<a name="q_x"><a name="idm146">q_x</a></a>, <a name="q_y"><a name="idm147">q_y</a></a>, <a name="q_z"><a name="idm148">q_z</a></a>
+<a name="q_x"><a name="idm167">q_x</a></a>, <a name="q_y"><a name="idm168">q_y</a></a>, <a name="q_z"><a name="idm169">q_z</a></a>
 </th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
 </tr>
@@ -607,7 +668,7 @@ coordinates of the Q point
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
 <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
-<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="nptq"><a name="idm149">nptq</a></a></th>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="nptq"><a name="idm170">nptq</a></a></th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
@@ -629,29 +690,29 @@ coordinates, 2pi/<i>a</i> units (<i>a</i> = lattice parameters)
          <p><b>
 if (.not. <a href="#dos">dos</a>) q-points must be specified as follows:
          </b></p>
-         <a name="idm157"></a><a name="qPointsSpecs"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+         <a name="idm178"></a><a name="qPointsSpecs"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
 <tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
 	    Card: <span class="card">qPointsSpecs</span> </h2></th></tr>
 <tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
 <tr><td>
 <h3>Syntax:</h3>
 <blockquote><div class="syntax">
-<i><a href="#idm160">nq</a></i>  <br><a name="idm162"></a><table>
+<i><a href="#idm181">nq</a></i>  <br><a name="idm183"></a><table>
 <tr>
-<td style="white-space:nowrap"> <i><a href="#idm169">q_x(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm170">q_y(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm171">q_z(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm190">q_x(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm191">q_y(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm192">q_z(1)</a></i> </td>
 </tr>
 <tr>
-<td style="white-space:nowrap"> <i><a href="#idm169">q_x(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm170">q_y(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm171">q_z(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm190">q_x(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm191">q_y(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm192">q_z(2)</a></i> </td>
 </tr>
 <tr><td colspan="2"> . . .</td></tr>
 <tr>
-<td style="white-space:nowrap"> <i><a href="#idm169">q_x(nq)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm170">q_y(nq)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm171">q_z(nq)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm190">q_x(nq)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm191">q_y(nq)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm192">q_z(nq)</a></i> </td>
 </tr>
 </table>
 </div></blockquote>
@@ -659,7 +720,7 @@ if (.not. <a href="#dos">dos</a>) q-points must be specified as follows:
 <tr><td>
 <h3>Description of items:</h3>
 <blockquote>
-<a name="idm160"></a><a name="nq"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<a name="idm181"></a><a name="nq"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nq</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -672,7 +733,7 @@ number of q points
 <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th width="20%" align="left" valign="top" style="background: #ffff99; padding: 2 2 2 10; ">
-<a name="q_x"><a name="idm169">q_x</a></a>, <a name="q_y"><a name="idm170">q_y</a></a>, <a name="q_z"><a name="idm171">q_z</a></a>
+<a name="q_x"><a name="idm190">q_x</a></a>, <a name="q_y"><a name="idm191">q_y</a></a>, <a name="q_z"><a name="idm192">q_z</a></a>
 </th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
 </tr>
@@ -688,7 +749,7 @@ q-points in cartesian coordinates, 2pi/<i>a</i> units (<i>a</i> = lattice parame
       </td></tr></table></blockquote>
 </td></tr></table>
    <blockquote>
-<a name="idm172"><h3>Notes</h3></a>
+<a name="idm193"><h3>Notes</h3></a>
       <blockquote><pre>
 If q = 0, the direction qhat (q=&gt;0) for the non-analytic part
 is extracted from the sequence of q-points as follows:
@@ -704,7 +765,7 @@ if you want to have q = 0 results for two different directions
 </td></tr>
 </table>
 <small>
-	  This file has been created by helpdoc utility on Sat Dec 18 20:08:41 CET 2021.
+	  This file has been created by helpdoc utility on Sat Mar 18 19:08:12 CET 2023.
 	</small>
 </body>
 </html>

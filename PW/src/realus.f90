@@ -228,7 +228,7 @@ MODULE realus
       USE constants,  ONLY : pi, fpi, eps16, eps6
       USE ions_base,  ONLY : nat, nsp, ityp, tau
       USE cell_base,  ONLY : at, bg, alat
-      USE uspp,       ONLY : okvan, qq_at, qq_at_d, qq_nt, nhtol
+      USE uspp,       ONLY : okvan, qq_at, qq_at, qq_nt, nhtol
       USE uspp_param, ONLY : upf, nh
       USE atom,       ONLY : rgrid
       USE fft_types,  ONLY : fft_type_descriptor
@@ -404,9 +404,8 @@ MODULE realus
       ! and sync on GPUs
       !
       CALL mp_sum( qq_at, intra_bgrp_comm )
-#if defined __CUDA
-      qq_at_d=qq_at
-#endif
+      !
+      !$acc update device(qq_at)
       !
       ! and test that they don't differ too much 
       ! from the result computed on the atomic grid
@@ -455,7 +454,7 @@ MODULE realus
       !! Sync with GPU memory is performed outside
       !
       USE constants,  ONLY : eps16, eps6
-      USE uspp,       ONLY : indv, nhtolm, ap, qq_at, qq_at_d
+      USE uspp,       ONLY : indv, nhtolm, ap, qq_at
       USE uspp_param, ONLY : upf, lmaxq, nh
       USE atom,       ONLY : rgrid
       USE splinelib,  ONLY : spline, splint
@@ -1293,9 +1292,8 @@ MODULE realus
       USE uspp,             ONLY : okvan, becsum
       USE uspp_param,       ONLY : upf, nh
       USE noncollin_module, ONLY : nspin_mag
-      USE fft_interfaces,   ONLY : fwfft
+      USE fft_rho,          ONLY : rho_r2g
       USE fft_base,         ONLY : dfftp
-      USE wavefunctions,    ONLY : psic
 #if defined (__DEBUG)
       USE noncollin_module, ONLY : nspin_lsda
       USE constants,        ONLY : eps6
@@ -1311,7 +1309,8 @@ MODULE realus
       COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag)
       !
       INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, mbia
-      REAL(kind=dp), ALLOCATABLE :: rhor(:,:) 
+      REAL(kind=dp), ALLOCATABLE :: rhor(:,:)
+      COMPLEX(kind=dp), ALLOCATABLE :: rhog(:,:)
 #if defined (__DEBUG)
       CHARACTER(len=80) :: msg
       REAL(kind=dp) :: charge
@@ -1322,7 +1321,7 @@ MODULE realus
       !
       CALL start_clock( 'addusdens' )
       !
-      ALLOCATE ( rhor(dfftp%nnr,nspin_mag) )
+      ALLOCATE( rhor(dfftp%nnr,nspin_mag), rhog(dfftp%nnr,nspin_mag) )
       rhor(:,:) = 0.0_dp
       DO is = 1, nspin_mag
          !
@@ -1349,13 +1348,10 @@ MODULE realus
       ENDDO
       !
       !
-      DO is = 1, nspin_mag
-         psic(:) = rhor(:,is)
-         CALL fwfft ('Rho', psic, dfftp)
-         rho(:,is) = rho(:,is) + psic(dfftp%nl(:))
-      END DO
+      CALL rho_r2g( dfftp, rhor, rhog )
+      rho(:,:) = rho(:,:) + rhog(1:dfftp%ngm,:)
       !
-      DEALLOCATE ( rhor )
+      DEALLOCATE( rhor, rhog )
 #if defined (__DEBUG)
       !
       ! ... check the total charge (must not be summed on k-points)
@@ -2170,7 +2166,7 @@ MODULE realus
     IMPLICIT NONE
     !
     INTEGER :: ia, box_ir
-
+    !
     !$omp parallel
     DO ia = 1, nat
        !$omp do
@@ -2200,8 +2196,8 @@ MODULE realus
     USE klist,         ONLY : ngk, igk_k
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
-    USE fft_interfaces,ONLY : invfft
-    USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
+    USE fft_wave,      ONLY : wave_g2r, tgwave_g2r
+    USE fft_helper_subroutines,   ONLY : fftx_ntgrp
     !
     IMPLICIT NONE
     !
@@ -2215,87 +2211,57 @@ MODULE realus
     LOGICAL, OPTIONAL :: conserved
     !! if this flag is true, the orbital is stored in temporary memory
     !
-    ! Internal temporary variables
-    INTEGER :: j, idx, ioff, right_inc, ntgrp
-
+    INTEGER :: ebnd
+    !
+    !-------------------TEMPORARY-----------
+    INTEGER :: ngk1
+    LOGICAL :: is_present, acc_is_present
+    !---------------------------------------
+    !
     !Task groups
-
+    !
     !The new task group version based on vloc_psi
     !print *, "->Real space"
     CALL start_clock( 'invfft_orbital' )
     !
     IF( dffts%has_task_groups ) THEN
         !
-        tg_psic = (0.d0, 0.d0)
-        ioff   = 0
-        CALL tg_get_recip_inc( dffts, right_inc )
-        ntgrp = fftx_ntgrp(dffts)
+        CALL tgwave_g2r( orbital(1:ngk(1),ibnd:last), tg_psic, dffts, ngk(1) )
         !
-        DO idx = 1, 2*ntgrp, 2
-           IF( idx + ibnd - 1 < last ) THEN
-              DO j = 1, ngk(1)
-                 tg_psic(dffts%nl (igk_k(j,1))+ioff) =      orbital(j,idx+ibnd-1) +&
-                      (0.0d0,1.d0) * orbital(j,idx+ibnd)
-                 tg_psic(dffts%nlm(igk_k(j,1))+ioff) =conjg(orbital(j,idx+ibnd-1) -&
-                      (0.0d0,1.d0) * orbital(j,idx+ibnd) )
-              ENDDO
-           ELSEIF( idx + ibnd - 1 == last ) THEN
-              DO j = 1, ngk(1)
-                 tg_psic(dffts%nl (igk_k(j,1))+ioff) =        orbital(j,idx+ibnd-1)
-                 tg_psic(dffts%nlm(igk_k(j,1))+ioff) = conjg( orbital(j,idx+ibnd-1))
-              ENDDO
-           ENDIF
-           ioff = ioff + right_inc
-        ENDDO
-        !
-        CALL invfft ('tgWave', tg_psic, dffts)
-        !
-        !
-        IF (present(conserved)) THEN
-         IF (conserved .eqv. .true.) THEN
-          IF (.not. allocated(tg_psic_temp)) ALLOCATE( tg_psic_temp( dffts%nnr_tg ) )
-          tg_psic_temp=tg_psic
-         ENDIF
+        IF (PRESENT(conserved)) THEN
+          IF (conserved) THEN
+            IF (.NOT. ALLOCATED(tg_psic_temp)) ALLOCATE( tg_psic_temp(dffts%nnr_tg) )
+            tg_psic_temp = tg_psic
+          ENDIF
         ENDIF
-
+        !
     ELSE !Task groups not used
         !
-        !$omp parallel default(shared) private(j)
-        CALL threaded_barrier_memset(psic, 0.D0, dffts%nnr*2)
-
-        IF (ibnd < last) THEN
-           ! two ffts at the same time
-           !$omp do
-           DO j = 1, ngk(1)
-              psic (dffts%nl (igk_k(j,1))) =       orbital(j, ibnd) + (0.0d0,1.d0)*orbital(j, ibnd+1)
-              psic (dffts%nlm(igk_k(j,1))) = conjg(orbital(j, ibnd) - (0.0d0,1.d0)*orbital(j, ibnd+1))
-           ENDDO
-           !$omp end do
-        ELSE
-           !$omp do
-           DO j = 1, ngk(1)
-              psic (dffts%nl (igk_k(j,1))) =       orbital(j, ibnd)
-              psic (dffts%nlm(igk_k(j,1))) = conjg(orbital(j, ibnd))
-           ENDDO
-           !$omp end do
-        ENDIF
-        !$omp end parallel
+        ebnd = ibnd
+        IF ( ibnd < last ) ebnd = ebnd + 1
         !
-       CALL invfft ('Wave', psic, dffts)
+        CALL wave_g2r( orbital(1:ngk(1),ibnd:ebnd), psic, dffts )
         !
-        IF (present(conserved)) THEN
-         IF (conserved .eqv. .true.) THEN
-           IF (.not. allocated(psic_temp) ) ALLOCATE (psic_temp(size(psic)))
-           CALL zcopy(size(psic),psic,1,psic_temp,1)
-         ENDIF
+!-------------TEMPORARY---------------------
+        ngk1 = SIZE(psic)
+#if defined(_OPENACC)
+        is_present = acc_is_present(psic,ngk1)
+        !$acc update self(psic) if (is_present)
+#endif
+!-------------------------------------------
+        !
+        IF (PRESENT(conserved)) THEN
+          IF (conserved) THEN
+            IF (.NOT. ALLOCATED(psic_temp) ) ALLOCATE( psic_temp(SIZE(psic)) )
+            CALL zcopy( SIZE(psic), psic, 1, psic_temp, 1 )
+          ENDIF
         ENDIF
-
+        !
     ENDIF
-
+    !
     CALL stop_clock( 'invfft_orbital' )
-
+    !
   END SUBROUTINE invfft_orbital_gamma
-  !
   !
   !--------------------------------------------------------------------------
   SUBROUTINE fwfft_orbital_gamma( orbital, ibnd, last, conserved, add_to_orbital )
@@ -2310,13 +2276,12 @@ MODULE realus
     !! OBM 241008,
     !! SdG 130420.
     !
-    USE wavefunctions, &
-                       ONLY : psic
-    USE klist,         ONLY : ngk, igk_k
+    USE wavefunctions, ONLY : psic
+    USE klist,         ONLY : ngk
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
-    USE fft_interfaces,ONLY : fwfft
-    USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
+    USE fft_wave,      ONLY : wave_r2g, tgwave_r2g
+    USE fft_helper_subroutines,   ONLY : fftx_ntgrp
     !
     IMPLICIT NONE
     !
@@ -2332,112 +2297,115 @@ MODULE realus
     LOGICAL, OPTIONAL :: add_to_orbital
     !! if this flag is true, the result is added to (rather than stored into) orbital
     !
-    ! Internal temporary variables
+    ! ... local variables
+    !
     COMPLEX(DP) :: fp, fm
-    INTEGER :: j, idx, ioff, right_inc, ntgrp
+    REAL(DP) :: fac
+    INTEGER :: j, idx, incr, ebnd, brange
     LOGICAL :: add_to_orbital_
-
-    !Task groups
-    !print *, "->fourier space"
+    COMPLEX(DP), ALLOCATABLE :: psio(:,:)
+    !
+!-------------------TEMPORARY-----------
+    INTEGER :: ngk1
+    LOGICAL :: is_present, acc_is_present
+!---------------------------------------
+    !
+    ! ... Task groups
+    !print *, "->Fourier space"
     CALL start_clock( 'fwfft_orbital' )
     !
-    add_to_orbital_=.FALSE. ; IF( present(add_to_orbital)) add_to_orbital_ = add_to_orbital
+    add_to_orbital_=.FALSE. ; IF( PRESENT(add_to_orbital)) add_to_orbital_ = add_to_orbital
     !
-    !New task_groups versions
+    ! ... New task_groups versions
     IF( dffts%has_task_groups ) THEN
-       !
-        CALL fwfft ('tgWave', tg_psic, dffts )
         !
-        ioff   = 0
-        CALL tg_get_recip_inc( dffts, right_inc )
-        ntgrp = fftx_ntgrp(dffts)
+        incr = 2*fftx_ntgrp(dffts)
+        ALLOCATE( psio(ngk(1),incr) )
         !
-        DO idx = 1, 2*ntgrp, 2
-           !
-           IF( idx + ibnd - 1 < last ) THEN
+        brange = last-ibnd+1
+        !
+        CALL tgwave_r2g( tg_psic, psio(:,1:brange), dffts, ngk(1) )
+        !
+        DO idx = 1, incr, 2
+           IF( idx+ibnd-1<last ) THEN
               DO j = 1, ngk(1)
-                 fp= ( tg_psic( dffts%nl(igk_k(j,1)) + ioff ) +  &
-                      tg_psic( dffts%nlm(igk_k(j,1)) + ioff ) ) * 0.5d0
-                 fm= ( tg_psic( dffts%nl(igk_k(j,1)) + ioff ) -  &
-                      tg_psic( dffts%nlm(igk_k(j,1)) + ioff ) ) * 0.5d0
                  IF( add_to_orbital_ ) THEN
-                    orbital (j, ibnd+idx-1) = orbital (j, ibnd+idx-1) + cmplx( dble(fp), aimag(fm),kind=DP)
-                    orbital (j, ibnd+idx  ) = orbital (j, ibnd+idx  ) + cmplx(aimag(fp),- dble(fm),kind=DP)
+                    orbital(j,ibnd+idx-1) = orbital(j,ibnd+idx-1) + 0.5d0 * psio(j,idx)
+                    orbital(j,ibnd+idx) = orbital(j,ibnd+idx) + 0.5d0 * psio(j,idx+1)
                  ELSE
-                    orbital (j, ibnd+idx-1) = cmplx( dble(fp), aimag(fm),kind=DP)
-                    orbital (j, ibnd+idx  ) = cmplx(aimag(fp),- dble(fm),kind=DP)
-                 END IF
+                    orbital(j,ibnd+idx-1) = 0.5d0 * psio(j,idx)
+                    orbital(j,ibnd+idx) = 0.5d0 * psio(j,idx+1)
+                 ENDIF
               ENDDO
-           ELSEIF( idx + ibnd - 1 == last ) THEN
+           ELSEIF( idx+ibnd-1==last ) THEN
               DO j = 1, ngk(1)
                  IF( add_to_orbital_ ) THEN
-                    orbital (j, ibnd+idx-1) = orbital (j, ibnd+idx-1) + tg_psic( dffts%nl(igk_k(j,1)) + ioff )
+                    orbital(j,ibnd+idx-1) = orbital(j,ibnd+idx-1) + psio(j,idx)
                  ELSE
-                    orbital (j, ibnd+idx-1) = tg_psic( dffts%nl(igk_k(j,1)) + ioff )
-                 END IF
+                    orbital(j,ibnd+idx-1) = psio(j,idx)
+                 ENDIF
               ENDDO
            ENDIF
-           !
-           ioff = ioff + right_inc
-           !
         ENDDO
         !
-        IF (present(conserved)) THEN
-         IF (conserved .eqv. .true.) THEN
-          IF (allocated(tg_psic_temp)) DEALLOCATE( tg_psic_temp )
+        DEALLOCATE( psio )
+        !
+        IF (PRESENT(conserved)) THEN
+         IF (conserved) THEN
+          IF (ALLOCATED(tg_psic_temp)) DEALLOCATE( tg_psic_temp )
          ENDIF
         ENDIF
-
+        !
     ELSE !Non task_groups version
          !larger memory slightly faster
-        CALL fwfft ('Wave', psic, dffts)
-
-        IF (ibnd < last) THEN
-           ! two ffts at the same time
-
-           IF( add_to_orbital_ ) THEN
-              !$omp parallel do private(fp, fm)
-              DO j = 1, ngk(1)
-                 fp = (psic (dffts%nl(igk_k(j,1))) + psic (dffts%nlm(igk_k(j,1))))*0.5d0
-                 fm = (psic (dffts%nl(igk_k(j,1))) - psic (dffts%nlm(igk_k(j,1))))*0.5d0
-                 orbital( j, ibnd)   = orbital( j, ibnd)   + cmplx( dble(fp), aimag(fm),kind=DP)
-                 orbital( j, ibnd+1) = orbital( j, ibnd+1) + cmplx(aimag(fp),- dble(fm),kind=DP)
-              ENDDO
-              !$omp end parallel do
-           ELSE
-              !$omp parallel do private(fp, fm)
-              DO j = 1, ngk(1)
-                 fp = (psic (dffts%nl(igk_k(j,1))) + psic (dffts%nlm(igk_k(j,1))))*0.5d0
-                 fm = (psic (dffts%nl(igk_k(j,1))) - psic (dffts%nlm(igk_k(j,1))))*0.5d0
-                 orbital( j, ibnd)   = cmplx( dble(fp), aimag(fm),kind=DP)
-                 orbital( j, ibnd+1) = cmplx(aimag(fp),- dble(fm),kind=DP)
-              ENDDO
-              !$omp end parallel do
-           ENDIF
+        !
+        ebnd = ibnd
+        IF (ibnd<last) ebnd = ebnd + 1
+        brange = ebnd-ibnd+1
+        !
+        ALLOCATE( psio(ngk(1),brange) )
+        !
+        CALL wave_r2g( psic(1:dffts%nnr), psio, dffts )
+        !
+!-------------TEMPORARY---------------------
+        ngk1 = SIZE(psic)
+#if defined(_OPENACC)
+        is_present = acc_is_present(psic,ngk1)
+        !$acc update self(psic) if (is_present)
+#endif
+!-------------------------------------------
+        !
+        fac = 1.d0
+        IF ( ibnd<last ) fac = 0.5d0
+        !
+        IF ( add_to_orbital_ ) THEN
+           !$omp parallel do
+           DO j = 1, ngk(1)
+              orbital(j,ibnd) = orbital(j,ibnd) + fac*psio(j,1)
+              IF (ibnd<last) orbital(j,ibnd+1) = orbital(j,ibnd+1) + fac*psio(j,2)
+           ENDDO
+           !$omp end parallel do
         ELSE
-           IF( add_to_orbital_ ) THEN
-              !$omp parallel do
-              DO j = 1, ngk(1)
-                 orbital(j, ibnd)   =  orbital(j, ibnd) +  psic (dffts%nl(igk_k(j,1)))
-              ENDDO
-              !$omp end parallel do
-           ELSE
-              !$omp parallel do
-              DO j = 1, ngk(1)
-                 orbital(j, ibnd)   =  psic (dffts%nl(igk_k(j,1)))
-              ENDDO
-              !$omp end parallel do
-           ENDIF
+           !$omp parallel do
+           DO j = 1, ngk(1)
+              orbital(j,ibnd) = fac*psio(j,1)
+              IF (ibnd<last) orbital(j,ibnd+1) = fac*psio(j,2)
+           ENDDO
+           !$omp end parallel do
         ENDIF
-        IF (present(conserved)) THEN
-         IF (conserved .eqv. .true.) THEN
-           IF (allocated(psic_temp) ) DEALLOCATE(psic_temp)
+        !
+        DEALLOCATE( psio )
+        !
+        IF (PRESENT(conserved)) THEN
+         IF (conserved) THEN
+           IF (ALLOCATED(psic_temp) ) DEALLOCATE( psic_temp )
          ENDIF
         ENDIF
+        !
     ENDIF
     !
     CALL stop_clock( 'fwfft_orbital' )
-
+    !
   END SUBROUTINE fwfft_orbital_gamma
   !
   !--------------------------------------------------------------------------
@@ -2455,11 +2423,11 @@ MODULE realus
     USE klist,                    ONLY : ngk, igk_k
     USE wvfct,                    ONLY : current_k
     USE fft_base,                 ONLY : dffts
-    USE fft_interfaces,           ONLY : invfft
-    USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
-
+    USE fft_wave,                 ONLY : wave_g2r, tgwave_g2r
+    USE fft_helper_subroutines,   ONLY : fftx_ntgrp
+    !
     IMPLICIT NONE
-
+    !
     INTEGER, INTENT(in) :: ibnd
     !! index of the band currently being transformed
     INTEGER, INTENT(in) :: last
@@ -2472,63 +2440,51 @@ MODULE realus
     LOGICAL, OPTIONAL :: conserved
     !! if this flag is true, the orbital is stored in temporary memory
     !
-    ! Internal variables
-    INTEGER :: ioff, idx, ik_ , right_inc, ntgrp, ig
-
+    INTEGER :: ik_
+!-------------------TEMPORARY-----------
+    INTEGER :: ngk1
+    LOGICAL :: is_present, acc_is_present
+!---------------------------------------    
+    !
     CALL start_clock( 'invfft_orbital' )
-    
-    ! current_k  variable  must contain the index of the desired kpoint
-    ik_ = current_k ; if (present(ik)) ik_ = ik
-
+    !
+    ! ... current_k  variable  must contain the index of the desired kpoint
+    ik_ = current_k ; IF (PRESENT(ik)) ik_ = ik
+    !
     IF( dffts%has_task_groups ) THEN
        !
-       tg_psic = ( 0.D0, 0.D0 )
-       ioff   = 0
-       CALL tg_get_recip_inc( dffts, right_inc )
-       ntgrp = fftx_ntgrp(dffts)
+       CALL tgwave_g2r( orbital(:,ibnd:last), tg_psic, dffts, ngk(1), igk_k(:,ik_) )
        !
-       DO idx = 1, ntgrp
-          !
-          IF( idx + ibnd - 1 <= last ) THEN
-             !DO j = 1, size(orbital,1)
-             tg_psic( dffts%nl( igk_k(:, ik_) ) + ioff ) = orbital(:,idx+ibnd-1)
-             !END DO
-          ENDIF
-
-          ioff = ioff + right_inc
-
-       ENDDO
-       !
-       CALL invfft ('tgWave', tg_psic, dffts)
-       IF (present(conserved)) THEN
-          IF (conserved .eqv. .true.) THEN
-             IF (.not. allocated(tg_psic_temp)) &
-                  &ALLOCATE( tg_psic_temp( dffts%nnr_tg ) )
-             tg_psic_temp=tg_psic
+       IF (PRESENT(conserved)) THEN
+          IF (conserved) THEN
+             IF (.NOT.ALLOCATED(tg_psic_temp)) ALLOCATE( tg_psic_temp(dffts%nnr_tg) )
+             tg_psic_temp = tg_psic
           ENDIF
        ENDIF
        !
-    ELSE  !non task_groups version
+    ELSE  ! ... non task_groups version
        !
-       !$omp parallel default(shared) private(ig)
-       CALL threaded_barrier_memset(psic, 0.D0, dffts%nnr*2)
-       !$omp do
-       do ig = 1, ngk(ik_)
-          psic(dffts%nl(igk_k(ig, ik_))) = orbital(ig,ibnd)
-       end do
-       !$omp end do
-       !$omp end parallel
+       CALL wave_g2r( orbital(:,ibnd:ibnd), psic, dffts, igk=igk_k(:,ik_) )
        !
-       CALL invfft ('Wave', psic, dffts)
-       IF (present(conserved)) THEN
-          IF (conserved .eqv. .true.) THEN
-             IF (.not. allocated(psic_temp) ) ALLOCATE (psic_temp(size(psic)))
-             psic_temp=psic
+!-------------TEMPORARY---------------------
+       ngk1 = SIZE(psic)
+#if defined(_OPENACC)
+       is_present = acc_is_present(psic,ngk1)
+       !$acc update self(psic) if (is_present)
+#endif
+!-------------------------------------------       
+       !
+       IF (PRESENT(conserved)) THEN
+          IF (conserved) THEN
+             IF (.NOT. ALLOCATED(psic_temp) ) ALLOCATE( psic_temp(SIZE(psic)) )
+             psic_temp = psic
           ENDIF
        ENDIF
        !
     ENDIF
+    !
     CALL stop_clock( 'invfft_orbital' )
+    !
   END SUBROUTINE invfft_orbital_k
   !
   !--------------------------------------------------------------------------
@@ -2549,8 +2505,8 @@ MODULE realus
     USE wvfct,                    ONLY : current_k
     USE kinds,                    ONLY : DP
     USE fft_base,                 ONLY : dffts
-    USE fft_interfaces,           ONLY : fwfft
-    USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
+    USE fft_wave,                 ONLY : wave_r2g, tgwave_r2g
+    USE fft_helper_subroutines,   ONLY : fftx_ntgrp
     !
     IMPLICIT NONE
     !
@@ -2568,73 +2524,95 @@ MODULE realus
     LOGICAL, OPTIONAL :: add_to_orbital
     !! if this flag is true, the result is added to (rather than stored into) orbital
     !
-    ! Internal variables
-    INTEGER :: ioff, idx, ik_ , right_inc, ntgrp, ig
+    ! ... local variables
+    !
+    INTEGER :: idx, ik_ , incr, ig, brange
     LOGICAL :: add_to_orbital_
+    COMPLEX(DP), ALLOCATABLE :: psio(:,:)
+!-------------------TEMPORARY-----------
+    INTEGER :: ngk1
+    LOGICAL :: is_present, acc_is_present
+!---------------------------------------    
     !
     CALL start_clock( 'fwfft_orbital' )
     !
-    add_to_orbital_=.FALSE. ; IF( present(add_to_orbital)) add_to_orbital_ = add_to_orbital
+    add_to_orbital_=.FALSE. ; IF( PRESENT(add_to_orbital)) add_to_orbital_ = add_to_orbital
     !
-    ! current_k  variable  must contain the index of the desired kpoint
-    ik_ = current_k ; if (present(ik)) ik_ = ik
-
+    ! ... current_k  variable  must contain the index of the desired kpoint
+    !
+    ik_ = current_k ; IF (PRESENT(ik)) ik_ = ik
+    !
     IF( dffts%has_task_groups ) THEN
        !
-       CALL fwfft ('tgWave', tg_psic, dffts)
+       incr = fftx_ntgrp(dffts)
        !
-       ioff   = 0
-       CALL tg_get_recip_inc( dffts, right_inc )
-       ntgrp = fftx_ntgrp(dffts)
+       ALLOCATE( psio(ngk(ik_),incr) )
        !
-       DO idx = 1, ntgrp
+       brange = last-ibnd+1
+       !
+       CALL tgwave_r2g( tg_psic, psio(:,1:brange), dffts, ngk(ik_), igk_k(:,ik_) )
+       !
+       DO idx = 1, incr
           !
-          IF( idx + ibnd - 1 <= last ) THEN
+          IF( idx+ibnd-1 <= last ) THEN
              IF( add_to_orbital_ ) THEN
-                orbital (:, ibnd+idx-1) = orbital (:, ibnd+idx-1) + tg_psic( dffts%nl(igk_k(:,ik_)) + ioff )
+                orbital(:,ibnd+idx-1) = orbital(:,ibnd+idx-1) + psio(:,idx)
              ELSE
-                orbital (:, ibnd+idx-1) = tg_psic( dffts%nl(igk_k(:,ik_)) + ioff )
-             END IF
-
+                orbital(:,ibnd+idx-1) = psio(:,idx)
+             ENDIF
           ENDIF
           !
-          ioff = ioff + right_inc
-          !
        ENDDO
-       IF (present(conserved)) THEN
-          IF (conserved .eqv. .true.) THEN
-             IF (allocated(tg_psic_temp)) DEALLOCATE( tg_psic_temp )
+       !
+       DEALLOCATE( psio )
+       !
+       IF (PRESENT(conserved)) THEN
+          IF (conserved) THEN
+             IF (ALLOCATED(tg_psic_temp)) DEALLOCATE( tg_psic_temp )
           ENDIF
        ENDIF
        !
     ELSE !non task groups version
        !
-       CALL fwfft ('Wave', psic, dffts)
+       ALLOCATE( psio(ngk(ik_),1) )
+       !
+       CALL wave_r2g( psic(1:dffts%nnr), psio, dffts, igk=igk_k(:,ik_) )
+       !
+       !-------------TEMPORARY---------------------
+       ngk1 = SIZE(psic)
+#if defined(_OPENACC)
+       is_present = acc_is_present(psic,ngk1)
+       !$acc update self(psic) if (is_present)
+#endif
+!-------------------------------------------   
        !
        IF( add_to_orbital_ ) THEN
           !$omp parallel do default(shared) private(ig)
-          do ig=1,ngk(ik_)
-             orbital(ig,ibnd) = orbital(ig,ibnd) + psic(dffts%nl(igk_k(ig,ik_)))
-          end do
+          DO ig = 1, ngk(ik_)
+             orbital(ig,ibnd) = orbital(ig,ibnd) + psio(ig,1)
+          ENDDO
           !$omp end parallel do
        ELSE
           !$omp parallel do default(shared) private(ig)
-          do ig=1,ngk(ik_)
-             orbital(ig,ibnd) = psic(dffts%nl(igk_k(ig,ik_)))
-          end do
+          DO ig = 1, ngk(ik_)
+             orbital(ig,ibnd) = psio(ig,1)
+          ENDDO
           !$omp end parallel do
-       END IF
+       ENDIF
        !
-       IF (present(conserved)) THEN
-          IF (conserved .eqv. .true.) THEN
-             IF (allocated(psic_temp) ) DEALLOCATE(psic_temp)
+       DEALLOCATE( psio )
+       !
+       IF ( PRESENT(conserved) ) THEN
+          IF (conserved) THEN
+             IF ( ALLOCATED(psic_temp) ) DEALLOCATE( psic_temp )
           ENDIF
        ENDIF
     ENDIF
+    !
     CALL stop_clock( 'fwfft_orbital' )
-
+    !
   END SUBROUTINE fwfft_orbital_k
-
+  !
   !--------------------------------------------------------------------------
   SUBROUTINE v_loc_psir( ibnd, last )
     !--------------------------------------------------------------------------

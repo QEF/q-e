@@ -1,5 +1,5 @@
 
-! Copyright (C) 2002-2020 Quantum ESPRESSO group
+! Copyright (C) 2002-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -93,28 +93,35 @@ SUBROUTINE iosys()
                             smearing_          => smearing, &
                             degauss_           => degauss, &
                             tot_charge_        => tot_charge, &
-                            tot_magnetization_ => tot_magnetization
+                            tot_magnetization_ => tot_magnetization, &
+                            degauss_cond_      => degauss_cond, &
+                            nelec_cond_        => nelec_cond
   USE ktetra,        ONLY : tetra_type
   USE start_k,       ONLY : init_start_k
   !
-  USE ldaU,          ONLY : Hubbard_U_     => hubbard_u, &
+  USE ldaU,          ONLY : Hubbard_U_  => hubbard_u, &
                             Hubbard_J0_ => hubbard_j0, &
                             Hubbard_J_ => hubbard_j, &
+                            Hubbard_n_ => hubbard_n, &
+                            Hubbard_l_ => hubbard_l, &
                             Hubbard_alpha_ => hubbard_alpha, &
                             Hubbard_beta_ => hubbard_beta, &
                             lda_plus_u_    => lda_plus_u, &
                             lda_plus_u_kind_    => lda_plus_u_kind, &
-                            Hubbard_parameters_ => Hubbard_parameters, &
+                            Hubbard_projectors_ => hubbard_projectors, &
                             iso_sys_    => iso_sys, &
-                            niter_with_fixed_ns, starting_ns, U_projection, &
-                            Hubbard_U_back_ => hubbard_u_back, &
+                            niter_with_fixed_ns, starting_ns, &
+                            Hubbard_U2_ => hubbard_u2, &
+                            Hubbard_n2_ => hubbard_n2, &
+                            Hubbard_l2_ => hubbard_l2, &
+                            Hubbard_n3_ => hubbard_n3, &
+                            Hubbard_l3_ => hubbard_l3, &
                             Hubbard_alpha_back_ => hubbard_alpha_back, &
                             Hubbard_V_ => hubbard_v , &
+                            Hubbard_occ_ => hubbard_occ, &
                             hub_pot_fix_ => hub_pot_fix, &
                             reserv_ => reserv, &
                             backall_ => backall, &
-                            lback_ => lback, &
-                            l1back_ => l1back, &
                             reserv_back_ => reserv_back
   !
   USE add_dmft_occ,  ONLY : dmft_ => dmft, &
@@ -148,11 +155,17 @@ SUBROUTINE iosys()
   !
   USE relax,         ONLY : epse, epsf, epsp, starting_scf_threshold
   !
+  USE control_flags, ONLY : sic, scissor
+  USE sic_mod,       ONLY : pol_type_ => pol_type, sic_gamma_ => sic_gamma, &
+                            sic_energy_ => sic_energy
+  USE sci_mod,       ONLY : sci_vb_ => sci_vb, sci_cb_ => sci_cb
+ 
+  !
   USE extrapolation, ONLY : pot_order, wfc_order
   USE control_flags, ONLY : isolve, max_cg_iter, max_ppcg_iter, david, &
                             rmm_ndim, rmm_conv, gs_nblock, rmm_with_davidson, &
                             tr2, imix, gamma_only, &
-                            nmix, iverbosity, smallmem, niter, &
+                            nmix, iverbosity, smallmem, nexxiter, niter, &
                             io_level, ethr, lscf, lbfgs, lmd, &
                             lbands, lconstrain, restart, &
                             llondon, ldftd3, do_makov_payne, lxdm, &
@@ -177,7 +190,11 @@ SUBROUTINE iosys()
                             max_xml_steps_    => max_xml_steps 
   USE check_stop,    ONLY : max_seconds_ => max_seconds
   !
-  USE wvfct,         ONLY : nbnd_ => nbnd
+  USE wvfct,         ONLY : nbnd_ => nbnd, &
+                            nbnd_cond_ => nbnd_cond              
+  !
+  USE two_chem,      ONLY : twochem_ => twochem
+  !  
   USE gvecw,         ONLY : ecfixed_ => ecfixed, &
                             qcutz_   => qcutz, &
                             q2sigma_ => q2sigma
@@ -217,6 +234,8 @@ SUBROUTINE iosys()
 
   USE gcscf_module,          ONLY : gcscf_iosys
 
+  USE rism_module,           ONLY : rism_iosys
+
   USE vlocal,        ONLY : starting_charge_ => starting_charge
   !
   ! ... CONTROL namelist
@@ -228,7 +247,8 @@ SUBROUTINE iosys()
                                gdir, nppstr, wf_collect,lelfield,lorbm,efield, &
                                nberrycyc, efield_cart, lecrpa,                 &
                                lfcp, vdw_table_name, memory, max_seconds,      &
-                               tqmmm, efield_phase, gate, max_xml_steps
+                               tqmmm, efield_phase, gate, max_xml_steps,       &
+                               trism, twochem
 
   !
   ! ... SYSTEM namelist
@@ -240,23 +260,21 @@ SUBROUTINE iosys()
                                use_all_frac, force_symmorphic,              &
                                starting_charge, starting_magnetization,     &
                                occupations, degauss, smearing, nspin,       &
-                               ecfixed, qcutz, q2sigma, lda_plus_U,         &
-                               lda_plus_U_kind, Hubbard_U, Hubbard_J,       &
-                               Hubbard_J0, Hubbard_beta, dmft, dmft_prefix, &
-                               Hubbard_alpha, Hubbard_parameters,           &
-                               Hubbard_U_back, Hubbard_alpha_back,          &
-                               Hubbard_V, hub_pot_fix, reserv, reserv_back, &
-                               backall, lback, l1back, input_dft, la2F,     &
-                               starting_ns_eigenvalue, U_projection_type,   &
+                               ecfixed, qcutz, q2sigma,                     &
+                               dmft, dmft_prefix, Hubbard_beta, Hubbard_occ,&
+                               Hubbard_alpha, Hubbard_alpha_back,           &
+                               hub_pot_fix, reserv, reserv_back, backall,   &
+                               input_dft, la2F, starting_ns_eigenvalue,     &
                                x_gamma_extrapolation, nqx1, nqx2, nqx3,     &
                                exxdiv_treatment, yukawa, ecutvcut,          &
+                               pol_type, sic_gamma, sic_energy, sci_vb, sci_cb, &
                                exx_fraction, screening_parameter, ecutfock, &
                                gau_parameter, localization_thr, scdm, ace,  &
                                scdmden, scdmgrd, nscdm, n_proj,             & 
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
-                               starting_spin_angle, assume_isolated,spline_ps,&
+                               starting_spin_angle, assume_isolated,        &
                                vdw_corr, london, london_s6, london_rcut, london_c6, &
                                london_rvdw, dftd3_threebody, dftd3_version,   &
                                ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,     &
@@ -266,11 +284,12 @@ SUBROUTINE iosys()
                                esm_bc, esm_efield, esm_w, esm_nfit, esm_a,    &
                                lgcscf,                                        &
                                zgate, relaxz, block, block_1, block_2,        &
-                               block_height
+                               block_height, lgcscf, nbnd_cond, nelec_cond,   &
+                               degauss_cond
   !
   ! ... ELECTRONS namelist
   !
-  USE input_parameters, ONLY : electron_maxstep, mixing_mode, mixing_beta, &
+  USE input_parameters, ONLY : exx_maxstep, electron_maxstep, mixing_mode, mixing_beta, &
                                mixing_ndim, mixing_fixed_ns, conv_thr,     &
                                tqr, tq_smoothing, tbeta_smoothing,         &
                                diago_thr_init,                             &
@@ -312,19 +331,32 @@ SUBROUTINE iosys()
                                     f_inp
   USE input_parameters,      ONLY : deallocate_input_parameters
   !
+  ! Hubbard
+  USE input_parameters,      ONLY : Hubbard_U, Hubbard_J, Hubbard_J0, Hubbard_V, Hubbard_U2, &
+                                    Hubbard_n, Hubbard_l, Hubbard_projectors, &
+                                    Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, &
+                                    lda_plus_u, lda_plus_u_kind
+
   USE constraints_module,    ONLY : init_constraint
   USE read_namelists_module, ONLY : read_namelists, sm_not_set
   USE london_module,         ONLY : init_london, lon_rcut, scal6, in_c6, in_rvdw
-  USE dftd3_api,             ONLY : dftd3_init, dftd3_set_params, &
-                                    dftd3_set_functional, dftd3_calc, &
-                                    dftd3_input
+  USE dftd3_api,             ONLY : dftd3_init, dftd3_set_functional
   USE dftd3_qe,              ONLY : dftd3_xc, dftd3, dftd3_in
   USE xdm_module,            ONLY : init_xdm, a1i, a2i
   USE tsvdw_module,          ONLY : vdw_isolated, vdw_econv_thr
-  USE uspp_data,             ONLY : spline_ps_ => spline_ps
   !
   USE qexsd_input,           ONLY : qexsd_input_obj
   USE qes_types_module,      ONLY : input_type
+  !
+#if defined (__ENVIRON)
+  USE plugin_flags,          ONLY : use_environ
+  USE environ_base_module,   ONLY : read_environ_input, init_environ_setup
+#endif
+#if defined (__OSCDFT)
+  USE plugin_flags,          ONLY : use_oscdft
+  USE oscdft_base,           ONLY : oscdft_ctx
+  USE oscdft_input,          ONLY : oscdft_read_input
+#endif
   !
   IMPLICIT NONE
   !
@@ -340,7 +372,7 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256):: dft_
   !
   INTEGER  :: ia, nt, tempunit, i, j, ibrav_mp
-  LOGICAL  :: exst, parallelfs, domag, stop_on_error
+  LOGICAL  :: exst, parallelfs, domag, stop_on_error, is_tau_read, sm_wasnt_set
   REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, V
   CHARACTER(len=256) :: tempfile
   INTEGER, EXTERNAL :: at2ibrav
@@ -550,6 +582,15 @@ SUBROUTINE iosys()
   nstep_ = nstep
   tstress_ = lmovecell .OR. ( tstress .and. lscf )
   !
+  sic_gamma_ = sic_gamma
+  sic_energy_ = sic_energy
+  IF(sic_gamma /= 0.d0 ) sic = .true.
+  pol_type_ = trim(pol_type)
+  sci_vb_ = sci_vb
+  sci_cb_ = sci_cb
+  IF(sci_vb .NE. 0.d0 .or. sci_cb .NE. 0.d0 ) scissor = .true.
+  IF(scissor .and. nspin .ne. 2) CALL errore('allocate_scissor', 'spin polarized calculation required',1)
+  !
   ! ELECTRIC FIELDS (SAWTOOTH), GATE FIELDS
   !
   IF ( tefield .and. ( .not. nosym ) .and. ( .not. gate ) ) THEN
@@ -638,6 +679,8 @@ SUBROUTINE iosys()
   !
   degauss_ = degauss
   smearing_ = smearing
+  degauss_cond_ = degauss_cond
+  nelec_cond_ = nelec_cond
   !
   IF( ltetra ) THEN
      IF( lforce ) CALL infomsg( 'iosys', &
@@ -647,6 +690,7 @@ SUBROUTINE iosys()
   END IF
   IF( nbnd < 1 ) CALL errore( 'iosys', 'nbnd less than 1', nbnd ) 
   nbnd_    = nbnd
+  nbnd_cond_ = nbnd_cond
   !
   two_fermi_energies = ( tot_magnetization /= -10000._DP)
   IF ( two_fermi_energies .and. tot_magnetization < -9999._DP) &
@@ -714,40 +758,43 @@ SUBROUTINE iosys()
   lspinorb_ = lspinorb
   lforcet_ = lforcet
   !
+  ! ... starting_magnetization(nt) = sm_not_set means "not set"
+  ! ... take notice and set to the default (zero)
+  !
+  sm_wasnt_set = ALL (starting_magnetization(1:ntyp) == sm_not_set)
+  DO nt = 1, ntyp
+     IF ( starting_magnetization(nt) == sm_not_set ) &
+          starting_magnetization(nt) = 0.0_dp
+  END DO
+  !
   SELECT CASE( trim( constrained_magnetization ) )
   CASE( 'none' )
      !
-     ! ... starting_magnetization(nt) = sm_not_set means "not set"
      ! ... if no constraints are imposed on the magnetization, 
      ! ... starting_magnetization must be set for at least one atomic type
      !
      IF ( lscf .AND. lsda .AND. ( .NOT. tfixed_occ ) .AND. &
-          ( .not. two_fermi_energies )  .AND. &
-          ALL (starting_magnetization(1:ntyp) == sm_not_set) ) &
+          ( .not. two_fermi_energies )  .AND. sm_wasnt_set ) &
         CALL errore('iosys','some starting_magnetization MUST be set', 1 )
      !
      ! ... bring starting_magnetization between -1 and 1
      !
      DO nt = 1, ntyp
-        !
-        IF ( starting_magnetization(nt) == sm_not_set ) THEN
-           starting_magnetization(nt) = 0.0_dp
-        ELSEIF ( starting_magnetization(nt) > 1.0_dp ) THEN
-          starting_magnetization(nt) = 1.0_dp
-        ELSEIF ( starting_magnetization(nt) <-1.0_dp ) THEN
-          starting_magnetization(nt) =-1.0_dp
-        ENDIF
-        !
+        starting_magnetization(nt) = MIN( 1.0_dp,starting_magnetization(nt))
+        starting_magnetization(nt) = MAX(-1.0_dp,starting_magnetization(nt))
      ENDDO
      !
      i_cons = 0
      !
   CASE( 'atomic' )
      !
+     ! ... if "atomic" constraints are imposed on the magnetization, 
+     ! ... starting_magnetization must be set for at least one atomic type
+     !
      IF ( nspin == 1 ) &
         CALL errore( 'iosys','constrained atomic magnetizations ' // &
                    & 'require nspin=2 or 4 ', 1 )
-     IF ( ALL (starting_magnetization(1:ntyp) == sm_not_set) ) &
+     IF ( sm_wasnt_set ) &
         CALL errore( 'iosys','constrained atomic magnetizations ' // &
                    & 'require that some starting_magnetization is set', 1 )
      !
@@ -1027,6 +1074,7 @@ SUBROUTINE iosys()
   !
   ethr = diago_thr_init
   tr2   = conv_thr
+  nexxiter = exx_maxstep
   niter = electron_maxstep
   adapt_thr = adaptive_thr
   tr2_init  = conv_thr_init
@@ -1185,8 +1233,14 @@ SUBROUTINE iosys()
   !
   IF ( mixing_beta < 0.0_DP ) THEN
      !
-     IF ( lgcscf ) THEN
+     IF ( lgcscf .AND. trism ) THEN
+        ! GC-SCF with ESM-RISM
+        mixing_beta = 0.1_DP
+     ELSE IF ( lgcscf ) THEN
         ! GC-SCF with ESM-BC2 or ESM-BC3
+        mixing_beta = 0.2_DP
+     ELSE IF ( trism ) THEN
+        ! 3D-RISM or ESM-RISM
         mixing_beta = 0.2_DP
      ELSE
         ! default
@@ -1222,6 +1276,7 @@ SUBROUTINE iosys()
   efield_     = efield
   nberrycyc_  = nberrycyc
   efield_cart_ = efield_cart
+  twochem_    = twochem
   SELECT CASE(efield_phase)
      CASE( 'none' )
         phase_control=0
@@ -1248,84 +1303,36 @@ SUBROUTINE iosys()
       CALL errore( 'iosys', 'DMFT update not implemented without HDF5 library', 1 )
   ENDIF
 #endif
-  ! Hubbard parameters for DFT+U+V
   !
-  IF ( lda_plus_u_kind == 0 .OR. lda_plus_u_kind == 1 ) THEN
-     !
-     ! In this case the Hubbard parameters can be read only directly
-     ! from the PWscf input
-     !
-     IF ( Hubbard_parameters /= 'input' ) &
-        CALL errore( 'iosys', 'Not allowed value of Hubbard_parameters', 1 )
-     !
-  ELSEIF ( lda_plus_u_kind == 2 ) THEN
-     !
-     IF ( Hubbard_parameters == 'input' ) THEN
-        !
-        WRITE( stdout, '(/5x,"Reading Hubbard V parameters from the input...",/)')
-        !
-     ELSEIF ( Hubbard_parameters == 'file' ) THEN
-        !
-        WRITE( stdout, '(/5x,"Reading Hubbard V parameters from the file parameters.in...",/)')
-        !
-        tempfile = TRIM("parameters.in")
-        !
-        INQUIRE (file = tempfile, exist = exst)
-        IF (.NOT.exst) CALL errore('iosys','File parameters.in was not found...',1)
-        !
-        ! Nullify all Hubbard_V, just in case if they were specified in the PWscf input
-        !
-        Hubbard_V(:,:,:) = 0.0d0
-        !
-        ! Open the file parameters.in and read Hubbard_V from there
-        !
-        OPEN( NEWUNIT = tempunit, FILE = tempfile, FORM = 'formatted', STATUS = 'unknown' )
-        READ(tempunit,*)
-10      READ(tempunit,*,END=11) i, j, V
-        Hubbard_V(i,j,1) = V
-        GO TO 10
-11      CLOSE( UNIT = tempunit, STATUS = 'KEEP' )
-        !
-     ELSEIF ( Hubbard_parameters /= 'input' .AND. Hubbard_parameters /= 'file' ) THEN
-        !
-        CALL errore( 'iosys', 'Not allowed value of Hubbard_parameters', 1 )
-        !  
-     ENDIF
-     !
+  lda_plus_u_      = lda_plus_u
+  lda_plus_u_kind_ = lda_plus_u_kind
+  !
+  IF ( lda_plus_u .AND. (lda_plus_u_kind==0 .OR. lda_plus_u_kind==2) .AND. noncolin ) THEN
+     CALL errore('iosys', 'simplified DFT+U(+V) is not implemented with &
+                          &noncol. magnetism, use DFT+U+J', 1)
   ENDIF
   !
   Hubbard_U_(1:ntyp)          = hubbard_u(1:ntyp) / rytoev
   Hubbard_J_(1:3,1:ntyp)      = hubbard_j(1:3,1:ntyp) / rytoev
   Hubbard_J0_(1:ntyp)         = hubbard_j0(1:ntyp) / rytoev
   Hubbard_V_(:,:,:)           = hubbard_V(:,:,:) / rytoev
-  Hubbard_U_back_(:)          = hubbard_U_back(:) / rytoev
+  Hubbard_U2_(:)              = hubbard_U2(:) / rytoev
+  Hubbard_n_(1:ntyp)          = hubbard_n(1:ntyp)
+  Hubbard_l_(1:ntyp)          = hubbard_l(1:ntyp)
+  Hubbard_n2_(1:ntyp)         = hubbard_n2(1:ntyp)
+  Hubbard_l2_(1:ntyp)         = hubbard_l2(1:ntyp)
+  Hubbard_n3_(1:ntyp)         = hubbard_n3(1:ntyp)
+  Hubbard_l3_(1:ntyp)         = hubbard_l3(1:ntyp)
+  Hubbard_projectors_         = hubbard_projectors
   Hubbard_alpha_(1:ntyp)      = hubbard_alpha(1:ntyp) / rytoev
   Hubbard_beta_(1:ntyp)       = hubbard_beta(1:ntyp) / rytoev
+  Hubbard_occ_(1:ntyp,1:3)    = hubbard_occ(1:ntyp,1:3)
   Hubbard_alpha_back_(1:ntyp) = hubbard_alpha_back(1:ntyp) / rytoev
-  U_projection                = U_projection_type
   starting_ns                 = starting_ns_eigenvalue
   backall_(1:ntyp)            = backall(1:ntyp)
-  lback_(1:ntyp)              = lback(1:ntyp)
-  l1back_(1:ntyp)             = l1back(1:ntyp)
   hub_pot_fix_                = hub_pot_fix
   reserv_                     = reserv
   reserv_back_                = reserv_back
-  !
-  ! --- LUCA -----
-  ! IF ( lda_plus_u .AND. lda_plus_u_kind == 0 .AND. noncolin ) THEN
-  !   CALL errore('iosys', 'simplified LDA+U not implemented with &
-  !                        &noncol. magnetism, use lda_plus_u_kind = 1', 1)
-  !  END IF
-  ! ------------------
-  IF ( lda_plus_u .AND. lda_plus_u_kind == 2 ) THEN
-     IF ( nat > SIZE(Hubbard_V,1) ) CALL errore('input', &
-          & 'Too many atoms. The dimensions of Hubbard_V must be increased.',1)
-     ! In order to increase the dimensions of the Hubbard_V array,
-     ! change the parameter natx in Modules/parameters.f90 from 50 to the 
-     ! number of atoms in your system.
-  END IF
-  lda_plus_u_             = lda_plus_u
-  lda_plus_u_kind_        = lda_plus_u_kind
   !
   ! REAL-SPACE TREATMENT
   !
@@ -1354,7 +1361,6 @@ SUBROUTINE iosys()
   !
   ! MISCELLANEOUS VARIABLES
   !
-  spline_ps_ = spline_ps
   la2F_      = la2F
   max_seconds_ = max_seconds
   !
@@ -1503,7 +1509,20 @@ SUBROUTINE iosys()
   !
   ! ... once input variables have been stored, read optional plugin input files
   !
-  CALL plugin_read_input("PW")
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_read_input('PW')
+#endif 
+#if defined (__ENVIRON)
+  IF (use_environ) THEN
+     CALL read_environ_input()
+     CALL init_environ_setup('PW')
+  END IF
+#endif
+#if defined (__OSCDFT)
+  IF (use_oscdft) THEN
+     CALL oscdft_read_input(oscdft_ctx%inp)
+  END IF
+#endif
   !
   ! ... Files (for compatibility) and directories
   !     Must be set before calling read_conf_from_file
@@ -1533,7 +1552,8 @@ SUBROUTINE iosys()
         pseudo_dir_cur = restart_dir()
      END IF
      !
-     CALL read_conf_from_file( stop_on_error, nat_, ntyp, tau, alat, at )
+     CALL read_conf_from_file( stop_on_error, nat_, ntyp, tau, alat, at, &
+                               is_tau_read )
      !
      ! Update reciprocal lattice and volume (may be updated if coming from a vc run)
      !
@@ -1712,17 +1732,21 @@ SUBROUTINE iosys()
      CALL init_constraint( nat, tau, ityp, alat )
   END IF
   !
-  ! ... set variables for FCP
+  ! ... set variables for RISM
+  !
+  CALL rism_iosys(trism)
+  !
+  ! ... set variables for FCP (this must be after RISM, to check condition)
   !
   CALL fcp_iosys(lfcp)
   !
-  ! ... set variables for GC-SCF (this must be after FCP, to check condition)
+  ! ... set variables for GC-SCF (this must be after RISM and FCP, to check condition)
   !
   CALL gcscf_iosys(lgcscf)
   !
   ! ... End of reading input parameters
   !
-#if ! defined (__INTEL_COMPILER) || (__INTEL_COMPILER >= 1300) 
+#if ! defined (__INTEL_COMPILER) || __INTEL_COMPILER >= 1300
   CALL pw_init_qexsd_input(qexsd_input_obj, obj_tagname="input")
 #endif
   CALL deallocate_input_parameters ()  

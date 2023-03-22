@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,7 +10,7 @@ SUBROUTINE close_files( lflag )
   !----------------------------------------------------------------------------
   !! Close all files and synchronize processes for a new scf calculation.
   !
-  USE ldaU,          ONLY: lda_plus_u, U_projection
+  USE ldaU,          ONLY: lda_plus_u, Hubbard_projectors
   USE control_flags, ONLY: io_level
   USE fixed_occ,     ONLY: one_atom_occupations
   USE io_files,      ONLY: prefix, iunwfc, iunsat, &
@@ -21,6 +21,11 @@ SUBROUTINE close_files( lflag )
   USE mp,            ONLY: mp_barrier
   USE wannier_new,   ONLY: use_wannier
   USE bp,            ONLY: lelfield
+#if defined (__OSCDFT)
+  USE plugin_flags,     ONLY : use_oscdft
+  USE oscdft_base,      ONLY : oscdft_ctx
+  USE oscdft_functions, ONLY : oscdft_close_files
+#endif
   !
   IMPLICIT NONE
   !
@@ -44,7 +49,7 @@ SUBROUTINE close_files( lflag )
   ! ... iunsat contains the (orthogonalized) atomic wfcs * S
   ! ... iunhub  as above, only for wfcs * S having an associated Hubbard U
   !
-  IF ( lda_plus_u .AND. (U_projection /= 'pseudo') ) THEN
+  IF ( lda_plus_u .AND. (Hubbard_projectors /= 'pseudo') ) THEN
      IF ( io_level < 0 ) THEN
         CALL close_buffer( iunhub, 'DELETE' )
      ELSE
@@ -75,6 +80,9 @@ SUBROUTINE close_files( lflag )
      ENDIF
      !
   END IF
+#if defined (__OSCDFT)
+  IF (use_oscdft) CALL oscdft_close_files(oscdft_ctx)
+#endif
   !
   CALL mp_barrier( intra_image_comm )  
   !

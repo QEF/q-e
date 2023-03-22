@@ -17,11 +17,21 @@ This documentation, like the software it accompanies, is distributed in the hope
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
 warranty of MERCHANTABILITY FOR A PARTICULAR PURPOSE.  
 
+\
+\
+\
+\
+\
+\
+\
+\
+
+
 [[_TOC_]]
 
---------------------------------------------------------------------------------
-AUTOPILOT DOCUMENTATION
---------------------------------------------------------------------------------
+
+# Autopilot Documentation
+
 
 The Autopilot Feature Suite is a user level enhancement for directing 
 Car-Parrinello simulations based on CP.X packaged in ESPRESSO. 
@@ -33,9 +43,7 @@ The following features are incorporated:
  - Autopilot Course Correction (Steering) 
 
 
---------------------------------------------------------------------------------
-Auto Restart Mode 
---------------------------------------------------------------------------------
+# Auto Restart Mode 
 
 Auto Restart Mode is an extension of restart_mode declared in the CONTROL section 
 of the input file. When restart mode is set to "auto", control determines if the 
@@ -71,9 +79,7 @@ placing more control with the user.
 
 
 
---------------------------------------------------------------------------------
-Autopilot Course Configuration (Dynamic Rules) 
---------------------------------------------------------------------------------
+# Autopilot Course Configuration (Dynamic Rules) 
 
 Autopilot Course Configuration (Dynamic Rules) is a method that allows select 
 input parameters (Autopilot variables) to change during the course of a 
@@ -169,9 +175,7 @@ runtime error may occur.
 
 
 
---------------------------------------------------------------------------------
-Autopilot Course Correction (Steering) 
---------------------------------------------------------------------------------
+# Autopilot Course Correction (Steering) 
 
 Autopilot Course Correction (Steering) provides a run-time method of changing 
 Autopilot variables on the fly, after the simulation is underway. Autopilot 
@@ -282,49 +286,63 @@ will pause.
 
 
 
+# List of autopilot variables
 
---------------------------------------------------------------------------------
-TESTING 
---------------------------------------------------------------------------------
+The Autopilot module supports the following input variables:
 
-The entire Autopilot Feature Suite issues directives to slave nodes under 
-MPI, with the fewest broadcasted parameters. All features have been tested 
-under Intel 8.1 with MKL 7.0.1 libraries on a Linux-32 single processor and under 
-PGI 5.2 with MPI on Linux-64 with 1, 2 and 4 processors. 
+ - isave
+ - iprint
+ - tprint
+ - dt (automatically set also tolp to old dt and electron_velocities/ions_velocities to 'change_step')
+ - electron_dynamics (if 'cg', this has little side-effects)
+ - electron_damping
+ - ion_dynamics
+ - orthogonalization
+ - ion_damping
+ - ion_temperature
+ - tempw
+ - nhpcl
+ - fnosep
+ 
 
 
 
-
-
---------------------------------------------------------------------------------
-ADDING AN AUTOPILOT VARIABLE
---------------------------------------------------------------------------------
+# How to add support for a new autopilot variable
 
 See `autopilot.f90` for examples.
-- Select the input parameter from the list in file INPUT_CP 
-- Identify parameter dependencies, initializations, assignments, etc 
-- Edit autopilot.f90 to add the following, 
-    where VARNAME is the name of the new Autopilot variable:
-        VARTYPE :: rule_VARNAME(max_event_step) at module scope 
-        LOGICAL :: event_VARNAME(max_event_step) at module scope
-* Remember to add to the PUBLIC block as well
-        event_VARNAME(:) = .false. to init_autopilot subroutine 
-        rule_VARNAME(:) = VARDEFAULT to init_autopilot subroutine 
-* Import VARNAME with USE to employ_rules subroutine
-* In employ_rules, add conditional clause on event_VARNAME to assign VARNAME: 
-         ! VARNAME
-         if (event_VARNAME(event_index)) then
-           VARNAME  = rule_VARNAME(event_index)
-           CALL init_other_VARNAME_dependent_variables( VARNAME)
-           write(*,*) 'RULE EVENT: VARNAME', VARNAME
-         endif
-* Import VARNAME with USE to assign_rule subroutine
-* In assign_rule, add condition clause matching the VARNAME create rule as so: 
-         ELSEIF ( matches( "VARNAME", var ) ) THEN
-                     read(value, *) VARTYPE_value
-                     rule_VARNAME(event)  = VARTYPE_value
-                     event_VARNAME(event) = .true.
-* TEST  
+
+ - Select the input parameter from the list in file INPUT_CP 
+ - Identify parameter dependencies, initializations, assignments, etc 
+ - Edit autopilot.f90 to add the following, 
+     where VARNAME is the name of the new Autopilot variable:
+     
+         VARTYPE :: rule_VARNAME(max_event_step) !at module scope 
+         LOGICAL :: event_VARNAME(max_event_step) !at module scope
+ 
+ * Remember to add to the PUBLIC block as well
+ 
+         event_VARNAME(:) = .false. !to init_autopilot subroutine 
+         rule_VARNAME(:) = VARDEFAULT !to init_autopilot subroutine 
+         
+ * Import VARNAME with USE to employ_rules subroutine
+ * In employ_rules, add conditional clause on event_VARNAME to assign VARNAME: 
+ 
+          ! VARNAME
+          if (event_VARNAME(event_index)) then
+            VARNAME  = rule_VARNAME(event_index)
+            CALL init_other_VARNAME_dependent_variables( VARNAME)
+            write(*,*) 'RULE EVENT: VARNAME', VARNAME
+          endif
+          
+ * Import VARNAME with USE to assign_rule subroutine
+ * In assign_rule, add condition clause matching the VARNAME create rule as so: 
+ 
+          ELSEIF ( matches( "VARNAME", var ) ) THEN
+                      read(value, *) VARTYPE_value
+                      rule_VARNAME(event)  = VARTYPE_value
+                      event_VARNAME(event) = .true.
+                      
+ * TEST  
 
 WARNING: Some Autopilot variables may create "side-effects".  For example, the 
 inclusion of a rule for TEMPW rules invokes a side-effect call to ions_nose_init.  

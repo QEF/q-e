@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 PWSCF group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,7 @@ SUBROUTINE allocate_wfc()
   USE wvfct,               ONLY : npwx, nbnd
   USE basis,               ONLY : natomwfc, swfcatom
   USE fixed_occ,           ONLY : one_atom_occupations
-  USE ldaU,                ONLY : wfcU, nwfcU, lda_plus_u, U_projection
+  USE ldaU,                ONLY : wfcU, nwfcU, lda_plus_u, Hubbard_projectors
   USE noncollin_module,    ONLY : npol
   USE wavefunctions,       ONLY : evc
   USE wannier_new,         ONLY : use_wannier
@@ -31,7 +31,7 @@ SUBROUTINE allocate_wfc()
   !
   IF ( one_atom_occupations .OR. use_wannier ) &
      ALLOCATE( swfcatom(npwx*npol,natomwfc) )
-  IF ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) &
+  IF ( lda_plus_u .AND. (Hubbard_projectors.NE.'pseudo') ) &
        ALLOCATE( wfcU(npwx*npol,nwfcU) )
   !
   RETURN
@@ -54,7 +54,6 @@ SUBROUTINE allocate_wfc_k()
   USE gvecw,            ONLY : gcutw
   USE gvect,            ONLY : ngm, g
   USE klist,            ONLY : xk, nks, init_igk
-  USE wvfct_gpum,       ONLY : using_g2kin
   !
   IMPLICIT NONE
   !
@@ -74,14 +73,14 @@ SUBROUTINE allocate_wfc_k()
   !   beta functions
   !
   ALLOCATE( vkb(npwx,nkb) )
-#if defined __CUDA
-!$acc enter data create(vkb(1:npwx,1:nkb) ) 
-#endif
   !
   !   g2kin contains the kinetic energy \hbar^2(k+G)^2/2m
   !
   ALLOCATE( g2kin(npwx) )
-  CALL using_g2kin(2)
+  !
+#if defined __CUDA
+!$acc enter data create(vkb(1:npwx,1:nkb), g2kin(1:npwx) ) 
+#endif
   !
   RETURN
   !

@@ -41,6 +41,9 @@ subroutine dvanqq
 
   USE phus, ONLY : int1, int2, int4, int4_nc, int5, int5_so
   USE control_ph, ONLY : rec_code_read
+  USE partial, ONLY :  nat_todo, nat_todo_input, atomo, set_local_atomo
+  USE lr_symm_base, ONLY  :  nsymq 
+  USE symm_base,    ONLY  :  irt    
 
   USE eqv,        ONLY : vlocq
   USE qpoint,     ONLY : eigqts, xq
@@ -50,8 +53,10 @@ subroutine dvanqq
   !
   !   And the local variables
   !
-
-  integer :: nt, na, nb, ig, nta, ntb, ir, ih, jh, ijh, ipol, jpol, is
+  integer  ::  nat_l
+  ! effective number of atoms to do when nat_todo_input > 0 
+  integer,allocatable :: atomo_l(:)
+  integer :: nt, na, nb, ig, nta, ntb, ir, ih, jh, ijh, ipol, jpol, is, na_l, nb_l 
   ! counters
 
   real(DP), allocatable :: qmod (:), qmodg (:), qpg (:,:), &
@@ -61,9 +66,9 @@ subroutine dvanqq
   ! the  q+G vectors
   ! the spherical harmonics
 
-  complex(DP) :: fact, fact1
+  complex(DP) :: fact, fact1,z9aux(9)
   complex(DP), allocatable :: aux1 (:), aux2 (:),&
-       aux3 (:), aux5 (:), veff (:,:), sk(:)
+       aux3 (:), aux5 (:), aux35(:,:), veff (:,:), sk(:)
   ! work space
   complex(DP), allocatable, target :: qgm(:)
   ! the augmentation function at G
@@ -81,9 +86,7 @@ subroutine dvanqq
   int5(:,:,:,:,:) = (0.d0, 0.d0)
   allocate (sk  (  ngm))
   allocate (aux1(  ngm))
-  allocate (aux2(  ngm))
-  allocate (aux3(  ngm))
-  allocate (aux5(  ngm))
+  allocate(aux35(9,ngm))
   allocate (qmodg( ngm))
   allocate (ylmk0( ngm , lmaxq * lmaxq))
   allocate (qgm  ( ngm))
@@ -110,6 +113,11 @@ subroutine dvanqq
         qmod (ig) = sqrt (qmod (ig) ) * tpiba
      enddo
   endif
+  if (nat_todo_input > 0 ) then 
+      call set_local_atomo(nat, nat_todo, atomo, nsymq, irt, nat_l, atomo_l)
+  else 
+     nat_l = nat 
+  end if 
   !
   !   we start by computing the FT of the effective potential
   !
@@ -153,7 +161,12 @@ subroutine dvanqq
                                              * eigts2 (mill(2,ig), nb) &
                                              * eigts3 (mill(3,ig), nb)
                     enddo
-                    do na = 1, nat
+                    do na_l = 1, nat_l
+                       if (nat_l < nat ) then 
+                          na = atomo_l(na_l) 
+                       else 
+                          na = na_l
+                       end if 
                        fact = eigqts (na) * CONJG(eigqts (nb) )
                        !
                        !    nb is the atom of the augmentation function
@@ -162,42 +175,41 @@ subroutine dvanqq
                        !  
                        IF (do_cutoff_2D) THEN
                           do ig=1, ngm
-                             sk(ig)=(vlocq(ig,nta)+lr_Vlocq (ig, nta)) &
+                             sk(ig)= (vlocq(ig,nta)+lr_Vlocq (ig, nta)) &
                                                * eigts1(mill(1,ig), na) &
                                                * eigts2(mill(2,ig), na) &
                                                * eigts3(mill(3,ig), na)
                           enddo
                        ELSE
                           do ig=1, ngm
-                             sk(ig)=vlocq(ig,nta) * eigts1(mill(1,ig), na) &
+                             sk(ig)=  vlocq(ig,nta) * eigts1(mill(1,ig), na) &
                                                   * eigts2(mill(2,ig), na) &
-                                                  * eigts3(mill(3,ig), na)
+                                                  * eigts3(mill(3,ig), na) 
                            enddo
                        ENDIF
                        ! 
-                       ! FIXME: replace dot_products with zgemm
+                       ! FIXME: replace zgemv with zgemm
                        !
-                       do ipol = 1, 3
-                          do ig=1, ngm
-                            aux5(ig)= sk(ig) * (g (ipol, ig) + xq (ipol) )
-                          enddo
-                          int2 (ih, jh, ipol, na, nb) = fact * fact1 * &
-                                dot_product (aux1, aux5)
-                          do jpol = 1, 3
-                             if (jpol >= ipol) then
-                                do ig = 1, ngm
-                                   aux3 (ig) = aux5 (ig) * &
-                                               (g (jpol, ig) + xq (jpol) )
-                                enddo
-                                int5 (ijh, ipol, jpol, na, nb) = &
-                                     CONJG(fact) * tpiba2 * omega * &
-                                     dot_product (aux3, aux1)
-                             else
-                                int5 (ijh, ipol, jpol, na, nb) = &
-                                     int5 (ijh, jpol, ipol, na, nb)
-                             endif
-                          enddo
-                       enddo
+                       !$omp parallel do default(shared) private(ig)
+                       do ig =1, ngm 
+                          aux35(1:3,ig) = conjg(sk(ig)) * (g(1:3,ig) + xq (1:3))
+                          aux35(4:6,ig) = aux35(1,ig) *  (g(1:3,ig) + xq (1:3))
+                          aux35(7:8,ig) = aux35(2,ig) *  (g(2:3,ig) + xq (2:3))
+                          aux35(9,ig)  =  aux35(3,ig) *  (g(3,ig) + xq (3))
+                       end do 
+                       call zgemv('N', 9,ngm,cmplx(1._dp, 0._dp,kind=dp),aux35,9,aux1,1,(0._dp,0._dp),z9aux,1)
+                       z9aux(4:9) = conjg(fact)*tpiba2*omega*z9aux(4:9)
+                       !
+                       int2(ih,jh,1:3,na,nb) = conjg(z9aux(1:3)) * fact * fact1
+                       ! 
+                       z9aux(1:3) = z9aux(4:6)
+                       z9aux( 4)  = z9aux (2)
+                       z9aux(5:6) = z9aux(7:8)
+                       z9aux(7)   = z9aux(3)
+                       z9aux(8)   = z9aux(6)
+                       !
+                       call zcopy(9, z9aux(1),1, int5(ijh,1,1,na,nb), size(int5,1)) 
+                       !
                     enddo
                     if (.not.lgamma) then
                        do ig = 1, ngm
@@ -207,25 +219,26 @@ subroutine dvanqq
                        enddo
                     endif
                     do is = 1, nspin_mag
-                       do ipol = 1, 3
-                          do ig = 1, ngm
-                             aux2 (ig) = veff (dfftp%nl (ig), is) * g (ipol, ig)
-                          enddo
-                          int1 (ih, jh, ipol, nb, is) = - fact1 * &
-                               dot_product (aux1, aux2)
-                          do jpol = 1, 3
-                             if (jpol >= ipol) then
-                                do ig = 1, ngm
-                                   aux3 (ig) = aux2 (ig) * g (jpol, ig)
-                                enddo
-                                int4 (ijh, ipol, jpol, nb, is) = - tpiba2 * &
-                                     omega * dot_product (aux3, aux1)
-                             else
-                                int4 (ijh, ipol, jpol, nb, is) = &
-                                     int4 (ijh, jpol, ipol, nb, is)
-                             endif
-                          enddo
-                       enddo
+                       !$omp parallel do default(shared) private(ig)
+                       do ig = 1, ngm 
+                          aux35(1:3,ig) = conjg(veff (dfftp%nl (ig), is)) * g (1:3, ig)
+                          aux35(4:6,ig) = aux35(1,ig) * g(1:3,ig)
+                          aux35(7:8,ig) = aux35(2,ig) * g(2:3,ig)
+                          aux35(9,ig)   = aux35(3,ig) * g(3,ig) 
+                       end do 
+                       call zgemv('N',9,ngm,cmplx(1._dp, 0._dp,kind=dp), aux35,9,aux1,1,(0._dp,0._dp),z9aux,1)
+                       !
+                       z9aux(4:9) = -tpiba2 * omega * z9aux(4:9)
+                       int1(ih,jh,1:3,nb,is) = -fact1  * conjg(z9aux(1:3))
+                       ! 
+                       z9aux(1:3) = z9aux(4:6)
+                       z9aux( 4)  = z9aux (2)
+                       z9aux(5:6) = z9aux(7:8)
+                       z9aux(7)   = z9aux(3)
+                       z9aux(8)   = z9aux(6)
+                       !
+                       call zcopy(9, z9aux(1),1, int4(ijh,1,1,nb,is), size(int4,1)) 
+                       !
                     enddo
                  endif
               enddo
@@ -236,13 +249,18 @@ subroutine dvanqq
               !
               !    We use the symmetry properties of the integral factor
               !
-              do nb = 1, nat
+              do nb =1, nat 
                  if (ityp (nb) == ntb) then
                     do ipol = 1, 3
                        do is = 1, nspin_mag
                           int1(jh,ih,ipol,nb,is) = int1(ih,jh,ipol,nb,is)
                        enddo
-                       do na = 1, nat
+                       do na_l = 1, nat_l
+                          if (nat_l < nat ) then 
+                             na = atomo_l(na_l)
+                          else 
+                             na = na_l
+                          end if 
                           int2(jh,ih,ipol,na,nb) = int2(ih,jh,ipol,na,nb)
                        enddo
                     enddo
@@ -264,7 +282,12 @@ subroutine dvanqq
      IF (lspinorb) int5_so = (0.d0, 0.d0)
      DO nt = 1, ntyp
         IF ( upf(nt)%tvanp ) THEN
-           DO na = 1, nat
+           DO na_l = 1, nat_l
+              IF (nat_l < nat)  THEN 
+                na = atomo_l(na_l)  
+              ELSE 
+                na = na_l 
+              END IF 
               IF (ityp(na)==nt) THEN
                  IF (upf(nt)%has_so) THEN
                     CALL transform_int4_so(int4,na)
@@ -297,9 +320,7 @@ subroutine dvanqq
   deallocate (qgm)
   deallocate (ylmk0)
   deallocate (qmodg)
-  deallocate (aux5)
-  deallocate (aux3)
-  deallocate (aux2)
+  deallocate(aux35)
   deallocate (aux1)
   deallocate (sk)
 

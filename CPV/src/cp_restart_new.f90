@@ -8,14 +8,15 @@
 !-----------------------------------------------------------------------------
 MODULE cp_restart_new
   !-----------------------------------------------------------------------------
+  !! This module contains subroutines to write and read data required to
+  !! restart a calculation from the disk.
+  !! Important notice:
   !
-  ! ... This module contains subroutines to write and read data required to
-  ! ... restart a calculation from the disk. Important notice:
-  ! ... * only one processor writes (the one for which ionode = .true.)
-  ! ... * all processors read the xml file
-  ! ... * one processor per band group reads the wavefunctions,
-  ! ...   distributes them within their band group
-  ! ... * lambda matrices are read by one processors, broadcast to all others
+  !! * only one processor writes (the one for which ionode=.TRUE.);
+  !! * all processors read the xml file;
+  !! * one processor per band group reads the wavefunctions distributes 
+  !!   them within their band group;
+  !! * lambda matrices are read by one processor, broadcast to all others.
   !
   USE kinds,     ONLY : DP
   !
@@ -28,14 +29,14 @@ MODULE cp_restart_new
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
   USE matrix_inversion
-#if defined (__outfoxed)
-    USE     wxml
-    USE     dom,     ONLY : Node, parseFile, item, getElementsByTagname, &
+#if defined (__fox)
+    USE FoX_wxml
+    USE FoX_dom,     ONLY : Node, parseFile, item, getElementsByTagname, &
                             hasAttribute, extractDataAttribute, &
                             extractDataContent, destroy
 #else
-    USE FoX_wxml
-    USE FoX_dom,     ONLY : Node, parseFile, item, getElementsByTagname, &
+    USE     wxml
+    USE     dom,     ONLY : Node, parseFile, item, getElementsByTagname, &
                             hasAttribute, extractDataAttribute, &
                             extractDataContent, destroy
 #endif
@@ -81,7 +82,7 @@ MODULE cp_restart_new
       USE funct,                    ONLY : get_dft_name, dft_is_nonlocc, get_nonlocc_name
       USE xc_lib,                   ONLY : xclib_dft_is, xclib_get_exx_fraction, &
                                            get_screening_parameter
-      USE ldaU_cp,                  ONLY : lda_plus_U, ns, Hubbard_l, &
+      USE ldaU_cp,                  ONLY : lda_plus_U, ns, Hubbard_l, Hubbard_n, &
                                            Hubbard_lmax, Hubbard_U
       USE energies,                 ONLY : enthal, ekin, eht, esr, eself, &
                                            epseu, enl, exc, vave
@@ -564,6 +565,7 @@ MODULE cp_restart_new
                             lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, vnhe, &
                             ekincm, c02, cm2, wfc )
       !------------------------------------------------------------------------
+      !! Read XML file.
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, llondon,&
                                            ts_vdw, mbd_vdw, lxdm, iverbosity, lwf
@@ -576,7 +578,7 @@ MODULE cp_restart_new
                                            ityp, ions_cofmass
       USE gvect,       ONLY : ig_l2g, mill
       USE cp_main_variables,        ONLY : nprint_nfi
-      USE ldaU_cp,                  ONLY : lda_plus_U, ns, Hubbard_l, &
+      USE ldaU_cp,                  ONLY : lda_plus_U, ns, Hubbard_l, Hubbard_n, &
                                            Hubbard_lmax, Hubbard_U
       USE mp,                       ONLY : mp_sum, mp_bcast
       USE mp_global,                ONLY : nproc_file, nproc_pool_file, &
@@ -676,19 +678,19 @@ MODULE cp_restart_new
       TYPE (general_info_type ) :: geninfo_obj 
       TYPE (Node),POINTER       :: root, nodePointer
       CHARACTER(LEN=20) :: dft_name, vdw_corr
-      CHARACTER(LEN=32) :: exxdiv_treatment, U_projection
+      CHARACTER(LEN=32) :: exxdiv_treatment, Hubbard_projectors
       LOGICAL :: ldftd3
       INTEGER :: nq1, nq2, nq3, lda_plus_U_kind
       REAL(dp):: exx_fraction, screening_parameter, ecutfock, ecutvcut,local_thr
       LOGICAL :: x_gamma_extrapolation
-      REAL(dp):: hubbard_dum(3,nsp)
+      REAL(dp):: hubbard_dum(3,nsp), hubba_dum(nsp), hubba_dum_dum(1,1,1) 
+      LOGICAL :: backall_dum(nsp)
+      INTEGER :: hub_l2_dum(nsp), hub_l3_dum(nsp), hub_lmax_back_dum  
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
-      INTEGER, POINTER            :: hub_l_back_dum(:), hub_l1_back_dum(:), hub_lmax_back_dum  
-      LOGICAL, POINTER            :: backall_dum(:)
-      REAL(dp),    POINTER        :: hubba_dum(:)
+      INTEGER  :: int_dum 
+      LOGICAL  :: bool_dum
       !
       !
-      NULLIFY (hub_l_back_dum, hub_l1_back_dum, hub_lmax_back_dum, backall_dum, hubba_dum) 
       dirname = restart_dir(ndr)
       filename= xmlfile(ndr)
       INQUIRE ( file=filename, exist=found )
@@ -784,11 +786,12 @@ MODULE cp_restart_new
       CALL qexsd_copy_dft ( output_obj%dft, nsp, atm, dft_name, &
            nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
-           lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax,&
-           hub_l_back_dum, hub_l1_back_dum, backall_dum, hub_lmax_back_dum, hubba_dum, & 
+           lda_plus_U, lda_plus_U_kind, Hubbard_projectors, Hubbard_n, Hubbard_l, Hubbard_lmax,Hubbard_dum, &
+           hub_l2_dum, hub_l2_dum, hub_l2_dum, hub_l2_dum, backall_dum, hub_lmax_back_dum, hubba_dum, & 
            Hubbard_U, hubba_dum, Hubbard_dum(1,:), Hubbard_dum(2,:), Hubbard_dum(3,:), &
-           Hubbard_dum, &
-           vdw_corr, scal6, lon_rcut, vdw_isolated)
+           HUBBARD_J = Hubbard_dum, HUBBARD_V = hubba_dum_dum, VDW_CORR = vdw_corr, dftd3_version = int_dum, & 
+           dftd3_3body = bool_dum, SCAL6 = scal6,    & 
+           LON_RCUT =lon_rcut, VDW_ISOLATED = vdw_isolated )
       CALL set_vdw_corr (vdw_corr, llondon, ldftd3, ts_vdw, mbd_vdw, lxdm )
       IF ( ldftd3 ) CALL errore('cp_readfile','DFT-D3 not implemented',1)
       !
@@ -845,7 +848,7 @@ MODULE cp_restart_new
        xnhp0, vnhp, ekincm, xnhe0, vnhe, ht, htvel, gvel, xnhh0, vnhh,      &
        staum, svelm, xnhpm, xnhem, htm, xnhhm) !
     !------------------------------------------------------------------------
-    ! ... Cell related variables, CP-specific
+    !! Cell related variables, CP-specific.
     !
     USE ions_base, ONLY: nat
     !
@@ -1069,8 +1072,7 @@ MODULE cp_restart_new
   !------------------------------------------------------------------------
   SUBROUTINE cp_writecenters( xf, h, wfc )
     !------------------------------------------------------------------------
-    !
-    ! ... Write Wannier centers
+    !! Write Wannier centers.
     !
     USE kinds, ONLY : dp
     USE io_global, ONLY : ionode
@@ -1119,9 +1121,10 @@ MODULE cp_restart_new
   !------------------------------------------------------------------------
   SUBROUTINE cp_read_wfc( ndr, ik, nk, iss, nspin, c2, tag, ierr )
     !------------------------------------------------------------------------
-    !
-    ! Wrapper, and ugly hack, for old cp_read_wfc called in restart.f90
-    ! If ierr is present, returns ierr=-1 if file not found, 0 otherwise
+    !! Wrapper, and ugly hack, for old \(\texttt{cp_read_wfc}\) called in 
+    !! \(\texttt{restart.f90}\).  
+    !! If \(\text{ierr}\) is present, returns (\text{ierr}=-1\) if file not
+    !! found, 0 otherwise.
     !
     USE mp_bands,           ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
     USE electrons_base,     ONLY : iupdwn, nupdwn
@@ -1173,12 +1176,13 @@ MODULE cp_restart_new
        ierr )
     !
     !------------------------------------------------------------------------
-    ! ... Cell related variables, CP-specific
-    ! ... ierr = -2: nothing found
-    ! ... ierr = -1: MD status found, no info on timesteps
-    ! ... ierr =  0: MD status and timestep info read
-    ! ... ierr =  1: error reading MD status
-    ! ... ierr =  2: error reading timestep info
+    !! Cell related variables, CP-specific:
+    !
+    !! * ierr = -2: nothing found;
+    !! * ierr = -1: MD status found, no info on timesteps;
+    !! * ierr =  0: MD status and timestep info read;
+    !! * ierr =  1: error reading MD status;
+    !! * ierr =  2: error reading timestep info.
     !
     !
     TYPE(Node),POINTER,INTENT(IN) :: root
@@ -1387,8 +1391,7 @@ MODULE cp_restart_new
   !------------------------------------------------------------------------
   SUBROUTINE cp_readcenters( root, wfc )
     !------------------------------------------------------------------------
-    !
-    ! ... Read Wannier centers
+    !! Read Wannier centers.
     !
     USE kinds, ONLY : dp
     USE io_global, ONLY : stdout
@@ -1567,8 +1570,7 @@ MODULE cp_restart_new
   SUBROUTINE cp_write_lambda( filename, iunpun, iss, nspin, nudx, &
        lambda, ierr )
     !------------------------------------------------------------------------
-    !
-    ! ... collect and write matrix lambda to file
+    !! Collect and write matrix lambda to file.
     !
     USE kinds, ONLY : dp
     USE mp, ONLY : mp_bcast
@@ -1606,8 +1608,7 @@ MODULE cp_restart_new
   SUBROUTINE cp_read_lambda( filename, iunpun, iss, nspin, nudx, &
              lambda, ierr )
     !------------------------------------------------------------------------
-    !
-    ! ... read matrix lambda from file, distribute it
+    !! Read matrix lambda from file, distribute it.
     !
     USE kinds, ONLY : dp
     USE mp, ONLY : mp_bcast
@@ -1649,8 +1650,7 @@ MODULE cp_restart_new
   !------------------------------------------------------------------------
   SUBROUTINE cp_write_zmat( ndw, mat_z, ierr )
     !------------------------------------------------------------------------
-    !
-    ! ... collect and write matrix z to file
+    !! Collect and write matrix z to file.
     !
     USE kinds, ONLY : dp
     USE mp, ONLY : mp_bcast
@@ -1698,8 +1698,7 @@ MODULE cp_restart_new
   !------------------------------------------------------------------------
   SUBROUTINE cp_read_zmat( ndr, mat_z, ierr )
     !------------------------------------------------------------------------
-    !
-    ! ... read from file and distribute matrix z
+    !! Read from file and distribute matrix z.
     !
     USE kinds, ONLY : dp
     USE mp, ONLY : mp_bcast

@@ -21,6 +21,7 @@ set(src_cpv
     src/electrons_nose.f90
     src/energies.f90
     src/ensemble_dft.f90
+    src/environ_cp_module.f90
     src/exch_corr.f90
     src/exx_cg.f90
     src/exx_es.f90
@@ -120,6 +121,9 @@ target_link_libraries(qe_cpv
      PUBLIC 
         qe_openacc_fortran)
 
+if ("legacy" IN_LIST QE_ENABLE_PLUGINS) 
+  target_compile_definitions(qe_cpv PUBLIC __LEGACY_PLUGINS)
+endif() 
 ###########################################################
 # cp.x
 ###########################################################

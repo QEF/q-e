@@ -1,19 +1,88 @@
-New in development version:
+New in v.7.2:
+  * Oxidation state constrained DFT [Ku and Sit, JCTC 15, 4781 (2019)]
+  * Self-consistent calculation with a two-chemical potential approach
+    by G. Marini, M. Calandra [Phys. Rev. B 104, 144103(2021)].
+  * Polaron localization with semi-local functionals via correction of
+    self interaction (S. Falletta, A. Pasquarello):
+    https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.129.126401
+    https://journals.aps.org/prb/abstract/10.1103/PhysRevB.106.125119
+  * GPU-accelerated phonon code (CINECA Team)
+  * First steps towards GPU acceleration for AMD and Intel via OpenMP
+  * More CUDA Fortran code removed and replaced by ACC (Ivan Carnimeo)
+  * EPW v.5.7.
+    (1) Polaron
+    For the full list of new features, bug fixes, and changes leading to backward incompatibility issues,
+    please visit the Releases page of the EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
+
+Incompatible changes in v.7.2:
+  * None known
+
+Fixed in v.7.2:
+  * v.7.1 of CP for GPU was not working for pseudopotentials with nonlinear 
+    core correction
+  * in v.7.0 and 7.1 of pw.x the calculation of forces under a macroscopic
+    electric field in parallel execution was crashing due to a misspell
+  * pw.x was not able to read J0 using the new Hubbard input syntax,
+    and it was not printing the correct manifolds in the output when
+    two Hubbard channels per atomic type are used
+  * hp.x was not checking the compatibility of the q-mesh and FFT mesh
+  * ppacf.x was not working any longer in parallel in v7.1 
+  * neb.x was unable to read the HUBBARD card from input since v7.1
+  * r2r4 coefficient for Ba in DFT-D3 was incorrect since the original
+    release in v.6.2.1 (noticed by Valid Askarpour)
+  * Fully-relativistic PPs generated with QE versions 6.7 to 7.1 may contain
+    an incorrect "PP_AEWFC_rel" tag instead of the correct one "PP_AEWFC_REL" 
+    (noticed by Andrea Dal Corso)
+  * Non-magnetic spin-orbit calculations could in some rare case produce
+    NaN's in the energy (noticed by Andrea Dal Corso)
+  * CP wasn't honoring "exx_fraction" in v.7.1  (fixed by Hsin-Yu Ko)
+  * QEHeat and KCW were not working if compiled for GPU
+  * SCF failure to converge wasn't always exiting with a non-zero code since
+    v7.0 (fixed by A. Fonari)
+
+New in 7.1 version:
+  * DFT+RISM (1D, 3D, Laue) by S. Nishihara & M. Otani [Phys. Rev. B 96, 115429 (2017)].
+  * Improved, streamlined and extended porting to NVidia GPUs
+  * KCW package for Koopmans-compliant functionals in a Wannier representation:
+    https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.021051.
+    Developed and maintained by N. Colonna, R. de Gennaro, E. Linscott
   * If no explicit parallelization options -nk, -nt, -nd are provided,
     pw.x will figure out suitable values for optimal, or at least, not
     too bad, parallelization
+  * EPW v.5.5. For the full list of new features, bug fixes, and changes leading
+    to backward incompatibility issues, please visit the Releases page of the 
+    EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
 
-Incompatible changes in development version:
+Incompatible changes in 7.1 version:
   * Source files previously found in FFTXLIB/ moved to FFTXLIB/src/
   * gen_us_dj, gen_us_dj moved to upflib/ and into module uspp_init
+  * DFT+Hubbard codes have new input syntax (check Doc/Hubbard_input.pdf)
 
-Fixed in development version:
+Fixed in 7.1 version:
+  * Berry phases could in some cases be off by a factor eR/V.
+    Present since v.6.6 (noticed by S. Spreafico, fixed by R. Cohen)
+  * `divide_class_so` routine could yield the wrong irreducible representations
+    classification in the D3_h  group (G.J. Ferreira, A. Dal Corso) 
   * XSPECTRA gave incorrect results with k-point parallelization, since
     at least v. 6.6, due to missing broadcast of recomputed Fermi energy
-    (found and fixed by Fanchen Meng, Brookhaven)
+    (found and fixed by Fanchan Meng, Brookhaven)
+  * Bugfix in DFPT+U with PAW pseudos and when fildvscf/=''
   * Makov-Payne correction wasn't working with ibrav=0 and cubic cell (A. Fonari)
+  * Card ADDITIONAL_KPOINTS wasn't working as expected (Prasenjit Ghosh)
+  * Subtle bug in G-vector ordering, usually triggered by almost-but-not-quite
+    symmetric primitive lattice vectors, was affecting k=0 calculations (not CP)
+    since v.6.0. The ultimate fix would require to change routine hpsort_eps; 
+    the current workaround consists in not recomputing k+G indices if k=0.
+  * In CMake GPU builds, one routine fftx_threed2oned_gpu was not compiled with
+    a proper GPU compiler option and caused failure in GGA-noncolin calculations.
+  * CP with Hubbard U was crashing also when reading the xml file (v.7.0)
+  * Bugfix in turboMagnon for k point grids that have Gamma or points at the
+    Brillouin zone edge (the weights were not correct)
+  * Libxc (5.2.x) linking failure when using CMake.
 
 New in 7.0 version:
+  * Unscreened and screened (range-separated) vdW-DF hybrids
+    (Per Hyldgaard and collaborators)
   * GPU support for PWscf and CP significantly extended
   * RMM-DIIS for CPU (S. Nisihara) and GPU (E. de Paoli, P. Delugas)
   * DFT-D3: MPI parallelization and GPU acceleration with OpenACC

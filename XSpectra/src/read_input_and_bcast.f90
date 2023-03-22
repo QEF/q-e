@@ -58,7 +58,6 @@ subroutine read_input_and_bcast(filerecon, r_paw)
        xcheck_conv, &
        show_status, &
        nelup,neldw, &
-       U_projection_type,&
        time_limit,&
        restart_mode,&
        edge,   &            ! 'K', 'L2' or 'L3'
@@ -154,6 +153,8 @@ subroutine read_input_and_bcast(filerecon, r_paw)
 
   ENDIF
 
+  CALL plugin_arguments_bcast( ionode_id, world_comm )
+
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   ! $   Variables broadcasting
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -193,8 +194,6 @@ subroutine read_input_and_bcast(filerecon, r_paw)
   CALL mp_bcast( cut_occ_states, ionode_id, world_comm )
   CALL mp_bcast( terminator, ionode_id, world_comm )
   CALL mp_bcast( xanes_file,  ionode_id, world_comm )
-
-  CALL mp_bcast( U_projection_type, ionode_id, world_comm )
 
   CALL mp_bcast( gamma_mode, ionode_id, world_comm )
   CALL mp_bcast( gamma_energy, ionode_id, world_comm )

@@ -281,7 +281,8 @@ MODULE london_module
       USE ions_base ,          ONLY : ntyp => nsp, atom_label => atm
       INTEGER :: ata
       !
-      IF ( ionode ) THEN
+      IF ( ionode .AND. ALLOCATED(R_vdw) ) THEN
+         ! do not print anything if DFT-D2 variables not set
          WRITE ( stdout ,'( /, 5X, "-------------------------------------------------" , &
                           & /, 5X, "Parameters for Dispersion (Grimme-D2) Correction:" , &
                           & /, 5X, "-------------------------------------------------" , &

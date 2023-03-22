@@ -1,0 +1,30 @@
+!
+! This is a restart test. Make sure md_restart_verlet.save folder is not present
+! and md_restart_verlet.md is a copy of md_restart_verlet_original.md.
+! This is taken care of in run-pw.sh
+!
+ &control
+    restart_mode = 'restart'
+    calculation='md'
+    dt=20,
+    nstep=50
+    prefix = 'md_restart_verlet'
+ /
+ &system
+    ibrav= 2, celldm(1)=10.18, nat=  2, ntyp= 1,
+    ecutwfc = 8.0, nosym=.true.
+ /
+ &electrons
+    conv_thr =  1.0e-8
+    mixing_beta = 0.7
+ /
+ &ions
+    ion_dynamics = 'verlet' ! default but still
+ /
+ATOMIC_SPECIES
+ Si  28.086  Si.pz-vbc.UPF
+ATOMIC_POSITIONS {alat}
+ Si -0.123 -0.123 -0.123
+ Si  0.123  0.123  0.123
+K_POINTS {automatic}
+ 1 1 1 0 0 0

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
@@ -118,9 +118,9 @@ $PW_COMMAND < ni.scf.in > ni.scf.out
 check_failure $?
 $ECHO " done"
 
-# phonon dispersion calculation 
+# phonon dispersion calculation
 cat > ni.ph.in << EOF
-phonons of Ni 
+phonons of Ni
  &inputph
   tr2_ph=1.0d-14,
   prefix='nickel',

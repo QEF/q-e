@@ -11,18 +11,11 @@
 !-----------------------------------------------------------------------
 SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
                      tlast, ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion )
-!-----------------------------------------------------------------------
-!     computes: the one-particle potential v in real space,
-!               the total energy etot,
-!               the forces fion acting on the ions,
-!               the derivative of total energy to cell parameters h
-!     rhor input : electronic charge on dense real space grid
-!                  (plus core charge if present)
-!     rhog input : electronic charge in g space (up to density cutoff)
-!     rhos input : electronic charge on smooth real space grid
-!     rhor output: total potential on dense real space grid
-!     rhos output: total potential on smooth real space grid
-!
+      !-----------------------------------------------------------------------
+      !! It computes the one-particle potential v in real space, the total 
+      !! energy etot, the forces fion acting on the ions, the derivative
+      !! of total energy to cell parameters h.
+      !
       USE kinds,            ONLY: dp
       USE control_flags,    ONLY: iprint, iverbosity, thdyn, tpre, tfor, &
                                   tprnfor, iesr, textfor
@@ -64,24 +57,53 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE exx_module,       ONLY: dexx_dh, exxalfa  ! exx_wf related
       USE fft_rho
       USE fft_helper_subroutines
-      
+      !
       USE plugin_variables, ONLY: plugin_etot
 #if defined(__CUDA) && defined(_OPENACC)
       USE cublas
-#endif  
+#endif
+
+#if defined (__ENVIRON)
+      USE plugin_flags,        ONLY : use_environ
+      USE environ_cp_module,   ONLY : add_environ_potential, calc_environ_potential
+      USE environ_base_module, ONLY : calc_environ_energy, calc_environ_force
+#endif
 
       IMPLICIT NONE
-!
-      LOGICAL     :: tlast, tfirst
-      INTEGER     :: nfi
-      REAL(DP)    :: rhor(:,:), drhor(:,:,:,:), rhos(:,:), fion(:,:)
-      REAL(DP)    :: rhoc(:), tau0(:,:)
+      !
+      INTEGER  :: nfi
+      !! Counter on the electronic iterations.
+      REAL(DP) :: rhor(:,:)
+      !! Input: electronic charge on dense real space grid
+      !! (plus core charge if present).  
+      !! Output: total potential on dense real space grid.
+      REAL(DP) :: drhor(:,:,:,:)
+      !! Derivative of \(\text{rhor}\) with respect to cell.
+      COMPLEX(DP) :: rhog(:,:)
+      !! Input : electronic charge in g space (up to density cutoff).
+      COMPLEX(DP) :: drhog(:,:,:,:)
+      !! Derivative of \(\text{rhog}\) with respect to cell.
+      REAL(DP) :: rhos(:,:)
+      !! Input: electronic charge on smooth real space grid.  
+      !! Output: total potential on smooth real space grid.
+      REAL(DP) :: rhoc(:)
+      !! Core charge density
+      LOGICAL :: tfirst
+      !! TRUE if first step
+      LOGICAL :: tlast
+      !! TRUE if last step
       ! COMPLEX(DP) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat), ei3(-nr3:nr3,nat)
-      COMPLEX(DP) :: ei1(:,:), ei2(:,:), ei3(:,:)
+      COMPLEX(DP) :: ei1(:,:)
+      COMPLEX(DP) :: ei2(:,:)
+      COMPLEX(DP) :: ei3(:,:)
+      INTEGER :: irb(:,:)
       COMPLEX(DP) :: eigrb(:,:)
-      COMPLEX(DP) :: rhog(:,:), drhog(:,:,:,:)
       COMPLEX(DP) :: sfac(:,:)
-      INTEGER     :: irb(:,:)
+      REAL(DP) ::  tau0(:,:)
+      REAL(DP) :: fion(:,:)
+      !! Ionic forces
+      !
+      ! ... local variables
       !
       INTEGER iss, isup, isdw, ig, ir, i, j, k, ij, is, ia, inlc
       REAL(DP) :: vtxc, vave, ebac, wz, eh, ehpre, enlc
@@ -91,35 +113,38 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       COMPLEX(DP), ALLOCATABLE :: drhot(:,:)
       REAL(DP), ALLOCATABLE    :: gagb(:,:), rhosave(:,:), newrhosave(:,:), rhocsave(:) 
       !
-      REAL(DP), ALLOCATABLE :: fion1( :, : )
-      REAL(DP), ALLOCATABLE :: stmp( :, : )
+      REAL(DP), ALLOCATABLE :: fion1(:,:)
+      REAL(DP), ALLOCATABLE :: stmp(:,:)
       !
       COMPLEX(DP), ALLOCATABLE :: self_vloc(:)
       COMPLEX(DP)              :: self_rhoeg
       REAL(DP)                 :: self_ehtet, fpibg
       LOGICAL                  :: ttsic
-      REAL(DP)                 :: detmp( 3, 3 ), desr( 6 ), deps( 6 )
-      REAL(DP)                 :: detmp2( 3, 3 )
-      REAL(DP)                 :: ht( 3, 3 )
-      REAL(DP)                 :: deht( 6 )
-      COMPLEX(DP)              :: screen_coul( 1 )
+      REAL(DP)                 :: detmp(3,3), desr(6), deps(6)
+      REAL(DP)                 :: detmp2(3,3)
+      REAL(DP)                 :: ht(3,3)
+      REAL(DP)                 :: deht(6)
+      COMPLEX(DP)              :: screen_coul(1)
       REAL(DP)                 :: dexx(3,3) ! stress tensor from exact exchange exx_wf related
-!
+      !
       INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
       INTEGER, DIMENSION(6), PARAMETER :: beta  = (/ 1,1,1,2,2,3 /)
-
+      !
       ! ...  dalbe(:) = delta( alpha(:), beta(:) )
       REAL(DP),  DIMENSION(6), PARAMETER :: dalbe = &
          (/ 1.0_DP, 0.0_DP, 0.0_DP, 1.0_DP, 0.0_DP, 1.0_DP /)
       COMPLEX(DP), PARAMETER :: ci = ( 0.0d0, 1.0d0 )
       INTEGER  :: p_ngm_, s_ngm_, p_nnr_, s_nnr_
 
+#if defined (__ENVIRON)
+      REAL(DP), ALLOCATABLE :: force_environ(:, :)
+#endif
+
       CALL start_clock( 'vofrho' )
       p_ngm_ = dfftp%ngm 
       s_ngm_ = dffts%ngm
       p_nnr_ = dfftp%nnr
       s_nnr_ = dffts%nnr
-      
       !
       !     TS-vdW calculation (RAD)
       !
@@ -164,15 +189,27 @@ DEV_ACC enter data create(drhot(1:p_ngm_, 1:6))
 !
       if (abivol.or.abisur) call vol_clu(rhor,rhog,nfi)
       !
-      !     compute plugin contributions to the potential, add it later
-      !
-      CALL plugin_get_potential(rhor,nfi)
-      !
-      !     compute plugin contributions to the energy
-      !
       plugin_etot = 0.0_dp
+#if defined(__LEGACY_PLUGINS)
+      ! compute plugin contributions to the potential, add it later 
+      CALL plugin_get_potential(rhor, nfi)
       !
-      CALL plugin_energy(rhor,plugin_etot)
+      ! compute plugin contribution to energy 
+      !
+      CALL plugin_energy(rhor, plugin_etot)
+#endif 
+  !
+      !
+
+#if defined (__ENVIRON)
+      IF (use_environ) THEN
+         ! compute plugin contributions to the potential, add it later
+         CALL calc_environ_potential(rhor, nfi)
+         ! compute plugin contributions to the energy
+         CALL calc_environ_energy(plugin_etot)
+         plugin_etot = 0.5D0 * plugin_etot ! Rydberg to Hartree
+      END IF
+#endif
       !
       ttsic = ( ABS( self_interaction ) /= 0 )
       !
@@ -200,7 +237,8 @@ DEV_ACC enter data create(drhot(1:p_ngm_, 1:6))
       !
       zpseu = 0.0_DP 
       !
-      DEV_ACC  data copyin(rhog,drhog,ht,sfac,vps,gg,rhops) copyout(vtemp) 
+      DEV_ACC  update device(gg)
+      DEV_ACC  data copyin(rhog,drhog,ht,sfac,vps,rhops) copyout(vtemp) 
       DEV_OMP  parallel default(shared), private(ig,is,ij,i,j,k)
       !
       DEV_OMP do 
@@ -325,7 +363,7 @@ DEV_ACC loop vector reduction(+:x_tmp)
 DEV_ACC end parallel
       !
 DEV_OMP do
-DEV_ACC parallel loop present(rhotmp)
+DEV_ACC parallel loop present(rhotmp,gg)
       DO ig = gstart, p_ngm_
          vtemp(ig) = CONJG( rhotmp( ig ) ) * rhotmp( ig ) / gg( ig )
       END DO
@@ -390,7 +428,7 @@ DEV_ACC kernels
 DEV_ACC end kernels 
 
 !
-DEV_ACC parallel loop present(rhotmp)
+DEV_ACC parallel loop present(rhotmp,gg)
 !
 DEV_OMP parallel default(shared), private(ig,is)
 DEV_OMP do
@@ -432,7 +470,9 @@ DEV_ACC exit data delete(rhotmp)
          ENDIF
       END IF
       !
+      !FIXME : need to complete the offloading of this part rhog rhor and nlc call shou
       IF ( nlcc_any ) CALL add_cc( rhoc, rhog, rhor )
+DEV_ACC update device(rhog)
       CALL exch_corr_h( nspin, rhog, rhor, rhoc, sfac, exc, dxc, self_exc )
       !
       ! ... add non local corrections (if any)
@@ -495,7 +535,12 @@ DEV_ACC exit data delete(rhotmp)
       !
       !     add plugin contributions to potential here... 
       !
-      CALL plugin_add_potential( rhor )
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_add_potential( rhor) 
+#endif 
+#if defined (__ENVIRON)
+      IF (use_environ) CALL add_environ_potential(rhor)
+#endif
       !
 !
 !     rhor contains the xc potential in r-space
@@ -505,11 +550,11 @@ DEV_ACC exit data delete(rhotmp)
 !     -------------------------------------------------------------------
 !
       IF( abivol .or. abisur ) THEN
-         CALL rho_r2g ( dfftp, rhor, rhog, v_vol )
+         CALL rho_r2g ( dfftp, rhor, rhog, v=v_vol )
       ELSE
          CALL rho_r2g ( dfftp, rhor, rhog )
       END IF
-DEV_ACC update device (rhog) 
+      !
       IF( nspin == 1 ) THEN
          CALL zaxpy(p_ngm_, (1.0d0,0.0d0) , vtemp, 1, rhog(:,1), 1)
       ELSE
@@ -551,7 +596,17 @@ DEV_ACC end data
          !
          !     plugin patches on internal forces
          !
-         CALL plugin_int_forces(fion)
+#if defined (__LEGACY_PLUGINS)
+  CALL plugin_int_forces(fion)
+#endif 
+#if defined (__ENVIRON)
+         IF (use_environ) THEN
+            ALLOCATE (force_environ(3, nat))
+            CALL calc_environ_force(force_environ)
+            fion = fion + 0.5D0 * force_environ ! Environ forces in Ry/bohr
+            DEALLOCATE (force_environ)
+         END IF
+#endif
 
       END IF
 

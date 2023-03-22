@@ -28,8 +28,9 @@ SUBROUTINE hp_run_nscf (do_band)
   USE control_lr,      ONLY : lgamma
   USE lr_symm_base,    ONLY : nsymq, invsymq
   USE ldaU_hp,         ONLY : tmp_dir_save, tmp_dir_hp
-  USE noncollin_module,     ONLY : noncolin, domag
-  USE ldaU,                 ONLY : lda_plus_u_kind
+  USE noncollin_module,ONLY : noncolin, domag
+  USE ldaU,            ONLY : lda_plus_u_kind
+  USE rism_module,     ONLY : lrism, rism_set_restart
   !
   IMPLICIT NONE
   !
@@ -56,6 +57,8 @@ SUBROUTINE hp_run_nscf (do_band)
   restart        = .FALSE.
   conv_ions      = .TRUE.
   isolve         = 0
+  !
+  IF (lrism) CALL rism_set_restart()
   !
   ! iverbosity is used by the PWscf routines
   IF (iverbosity.LE.2) THEN

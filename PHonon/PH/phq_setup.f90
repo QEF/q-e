@@ -104,6 +104,7 @@ subroutine phq_setup
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, dvscf_interpol_setup
   USE ahc,           ONLY : elph_ahc, elph_ahc_setup
 
+  USE el_phon,       ONLY : elph_mat
   implicit none
 
   real(DP) :: sr_is(3,3,48)
@@ -182,6 +183,7 @@ subroutine phq_setup
         v%of_r(:,2:4)=-v%of_r(:,2:4)
         deeq_nc_save(:,:,:,:,2)=deeq_nc(:,:,:,:)
         deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,1)
+        !$acc update device(deeq_nc)
      ENDIF
   ENDIF
   !
@@ -195,10 +197,12 @@ subroutine phq_setup
   !
   ! 4) Computes the number of occupied bands for each k point
   !
+  if(.not.elph_mat)&
   call setup_nbnd_occ()
   !
   ! 5) Computes alpha_pv
   !
+  if(.not.elph_mat)&
   call setup_alpha_pv()
   !
   ! 6) Set all symmetries and variables needed to use the pattern representation

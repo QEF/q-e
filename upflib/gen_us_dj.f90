@@ -7,9 +7,9 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE gen_us_dj_base &
-     ( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
-       omega, nr1, nr2, nr3, eigts1, eigts2, eigts3, mill, g, dvkb )
+SUBROUTINE gen_us_dj_base( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
+                           omega, nr1, nr2, nr3, eigts1, eigts2, eigts3,    &
+                           mill, g, dvkb )
   !----------------------------------------------------------------------
   !! Calculates the beta function pseudopotentials with
   !! the derivative of the Bessel functions.
@@ -18,7 +18,7 @@ SUBROUTINE gen_us_dj_base &
   USE upf_const,  ONLY: tpi
   USE uspp,       ONLY: nkb, indv, nhtol, nhtolm
   USE uspp_data,  ONLY: nqx, tab, dq
-  USE uspp_param, ONLY: upf, lmaxkb, nbetam, nh
+  USE uspp_param, ONLY: upf, lmaxkb, nbetam, nh, nhm
   !
   IMPLICIT NONE
   !
@@ -42,7 +42,7 @@ SUBROUTINE gen_us_dj_base &
   !! rec.lattice units 2pi/a
   REAL(DP), INTENT(IN) :: omega
   !! cell volume
-  INTEGER, INTENT(IN) :: nr1,nr2,nr3
+  INTEGER, INTENT(IN) :: nr1, nr2, nr3
   !! fft dims (dense grid)
   COMPLEX(DP), INTENT(IN) :: eigts1(-nr1:nr1,nat)
   !! structure factor 1
@@ -54,7 +54,7 @@ SUBROUTINE gen_us_dj_base &
   !! miller index map
   REAL(DP), INTENT(IN) :: g(3,*)
   !! g vectors (2pi/a units)
-  COMPLEX(DP), INTENT(OUT) :: dvkb(npwx, nkb)
+  COMPLEX(DP), INTENT(OUT) :: dvkb(npwx,nkb)
   !! the beta function pseudopotential
   !
   ! ... local variables
@@ -67,46 +67,54 @@ SUBROUTINE gen_us_dj_base &
   ! index of the first nonzero point in the r
   ! counter on atomic type
   !
-  REAL(DP) :: arg, px, ux, vx, wx
+  INTEGER :: ina, na, l, iig, lm, ikb_t, nht
+  REAL(DP) :: arg, px, ux, vx, wx, qt
   ! argument of the atomic phase factor
-  !
-  COMPLEX(DP) :: phase, pref
-  ! atomic phase factor
+  COMPLEX(DP) :: pref
   ! prefactor
   !
-  INTEGER :: na, l, iig, lm, iq
-  REAL(DP), ALLOCATABLE :: djl(:,:,:), ylm(:,:), q(:), gk(:,:)
-  REAL(DP) :: qt
-  COMPLEX(DP), ALLOCATABLE :: sk(:)
+  INTEGER,     ALLOCATABLE :: nas(:), ihv(:), nav(:)
+  REAL(DP),    ALLOCATABLE :: djl(:,:,:), ylm(:,:), q(:), gk(:,:)
+  COMPLEX(DP), ALLOCATABLE :: sk(:,:), phase(:)
+  ! phase: atomic phase factor
   !
   IF (nkb == 0) RETURN
   !
-  CALL start_clock( 'stres_us31' )
+  !$acc data present_or_copyin(igk,eigts1,eigts2,eigts3,mill,g) &
+  !$acc      present_or_copyout(dvkb) copyin(ityp,tau,xk)
   !
-  ALLOCATE( djl(npw,nbetam,ntyp)   )    
-  ALLOCATE( ylm(npw,(lmaxkb+1)**2) )    
-  ALLOCATE( gk(3,npw) )    
-  ALLOCATE( q(npw)    )    
+  !CALL start_clock( 'stres_us31' )
   !
+  ALLOCATE( djl(npw,nbetam,ntyp), ylm(npw,(lmaxkb+1)**2) )
+  ALLOCATE( gk(3,npw), q(npw) )
+  !$acc data create( djl, ylm )
+  !$acc data create( gk, q )
+  !
+  !$acc parallel loop
   DO ig = 1, npw
      iig = igk(ig)
-     gk(1, ig) = xk(1) + g(1, iig)
-     gk(2, ig) = xk(2) + g(2, iig)
-     gk(3, ig) = xk(3) + g(3, iig)
-     q(ig) = gk(1, ig)**2 + gk(2, ig)**2 + gk(3, ig)**2
+     gk(1,ig) = xk(1) + g(1,iig)
+     gk(2,ig) = xk(2) + g(2,iig)
+     gk(3,ig) = xk(3) + g(3,iig)
+     q(ig) = gk(1,ig)**2 + gk(2,ig)**2 + gk(3,ig)**2
   ENDDO
   !
-  CALL stop_clock( 'stres_us31' )
-  CALL start_clock( 'stres_us32' )
+#if defined(__CUDA)
+  !$acc host_data use_device(gk,q,ylm)
+  CALL ylmr2_gpu( (lmaxkb+1)**2, npw, gk, q, ylm )
+  !$acc end host_data
+#else
+  !$acc update self(gk,q)
   CALL ylmr2( (lmaxkb+1)**2, npw, gk, q, ylm )
-  CALL stop_clock( 'stres_us32' )
-  CALL start_clock( 'stres_us33' )
+  !$acc update device(ylm)
+#endif
   !
+  !$acc data copyin( tab )
   DO nt = 1, ntyp
+     !$acc parallel loop collapse(2)
      DO nb = 1, upf(nt)%nbeta
-        !
         DO ig = 1, npw
-           qt = SQRT(q (ig)) * tpiba
+           qt = SQRT(q(ig)) * tpiba
            px = qt / dq - INT(qt/dq)
            ux = 1.d0 - px
            vx = 2.d0 - px
@@ -115,62 +123,99 @@ SUBROUTINE gen_us_dj_base &
            i1 = i0 + 1
            i2 = i0 + 2
            i3 = i0 + 3
-           djl(ig,nb,nt) = ( tab(i0, nb, nt) * (-vx*wx-ux*wx-ux*vx)/6.d0 + &
-                             tab(i1, nb, nt) * (+vx*wx-px*wx-px*vx)/2.d0 - &
-                             tab(i2, nb, nt) * (+ux*wx-px*wx-px*ux)/2.d0 + &
-                             tab(i3, nb, nt) * (+ux*vx-px*vx-px*ux)/6.d0 )/dq
+           djl(ig,nb,nt) = ( tab(i0,nb,nt) * (-vx*wx-ux*wx-ux*vx)/6.d0 + &
+                             tab(i1,nb,nt) * (+vx*wx-px*wx-px*vx)/2.d0 - &
+                             tab(i2,nb,nt) * (+ux*wx-px*wx-px*ux)/2.d0 + &
+                             tab(i3,nb,nt) * (+ux*vx-px*vx-px*ux)/6.d0 ) / dq
         ENDDO
-        !
      ENDDO
   ENDDO
+  !$acc end data
   !
-  CALL stop_clock( 'stres_us33' )
-  CALL start_clock( 'stres_us34' )
+  !CALL stop_clock( 'stres_us33' )
+  !CALL start_clock( 'stres_us34' )
   !
-  DEALLOCATE ( q  )
-  DEALLOCATE ( gk )
+  !$acc end data
+  DEALLOCATE( q, gk )
   !
-  ALLOCATE ( sk(npw) )
-  ikb = 0
+  !
+  ALLOCATE( phase(nat), sk(npw,nat) )
+  ALLOCATE( nas(nat), ihv(nat*nhm), nav(nat*nhm) )
+  !
+  ina = 0
   DO nt = 1, ntyp
-     DO na = 1, nat
-        !
-        IF (ityp(na) == nt) THEN
-           arg = ( xk(1) * tau(1,na) + &
-                   xk(2) * tau(2,na) + &
-                   xk(3) * tau(3,na) ) * tpi
-           phase = CMPLX( COS(arg), -SIN(arg) ,KIND=DP )
-           DO ig = 1, npw
-              iig = igk(ig)
-              sk (ig) = eigts1(mill (1,iig), na) * &
-                        eigts2(mill (2,iig), na) * &
-                        eigts3(mill (3,iig), na) * phase
-           ENDDO
-           DO ih = 1, nh(nt)
-              nb = indv(ih, nt)
-              l = nhtol(ih, nt)
-              lm= nhtolm(ih, nt)
-              ikb = ikb + 1
-              pref = (0.d0, -1.d0) **l
-              !
-              DO ig = 1, npw
-                 dvkb(ig, ikb) = djl(ig, nb, nt) * sk(ig) * ylm(ig, lm) &
-                      * pref
-              ENDDO
-           ENDDO
-        ENDIF
-        !
-     ENDDO
+  DO na = 1, nat
+    IF ( ityp(na) == nt ) THEN
+      ina = ina + 1
+      nas(ina) = na
+    ENDIF
+  ENDDO
   ENDDO
   !
-  CALL stop_clock('stres_us34')
+  !$acc data create( phase, sk, ihv, nav ) copyin( nas )
   !
-  IF (ikb /= nkb) CALL upf_error('gen_us_dj', 'unexpected error', 1)
-  DEALLOCATE( sk  )
-  DEALLOCATE( ylm )
-  DEALLOCATE( djl )
+  !$acc parallel loop
+  DO ina = 1, nat
+     na = nas(ina)
+     arg = (xk(1) * tau(1,na) + xk(2) * tau(2,na) &
+          + xk(3) * tau(3,na) ) * tpi
+     phase(na) = CMPLX( COS(arg), -SIN(arg), KIND=DP )
+  ENDDO
+  !
+  !$acc parallel loop collapse(2)
+  DO ina = 1, nat
+    DO ig = 1, npw
+      !
+      na = nas(ina)
+      iig = igk(ig)
+      sk(ig,na) = eigts1(mill(1,iig),na) * &
+                  eigts2(mill(2,iig),na) * &
+                  eigts3(mill(3,iig),na) * phase(na)
+    ENDDO
+  ENDDO
+  !
+  ikb_t = 0
+  DO ina = 1, nat
+    na = nas(ina)
+    nht = nh(ityp(na))
+    !$acc kernels
+    DO ih = 1, nht
+       ihv(ikb_t+ih) = ih
+       nav(ikb_t+ih) = na
+    ENDDO
+    !$acc end kernels
+    ikb_t = ikb_t + nht
+  ENDDO
+  !
+  !
+  !$acc parallel loop collapse(2) copyin(indv,nhtol,nhtolm)
+  DO ikb = 1, ikb_t
+    DO ig = 1, npw
+      ih = ihv(ikb)
+      na = nav(ikb)
+      nt = ityp(na)
+      nb = indv(ih,nt)
+      l  = nhtol(ih,nt)
+      lm = nhtolm(ih,nt)
+      pref = (0._DP,-1._DP)**l
+      !
+      dvkb(ig,ikb) = CMPLX(djl(ig,nb,nt)) * sk(ig,na) * &
+                     CMPLX(ylm(ig,lm)) * pref
+    ENDDO
+  ENDDO
+  !
+  !ALL stop_clock('stres_us34')
+  !
+  !$acc end data
+  !$acc end data
+  DEALLOCATE( phase, sk )
+  DEALLOCATE( nas, ihv, nav )
+  !
+  IF (ikb_t /= nkb) CALL upf_error('gen_us_dj', 'unexpected error', 1)
+  !
+  !$acc end data
+  DEALLOCATE( djl, ylm )
   !
   RETURN
   !
 END SUBROUTINE gen_us_dj_base
-

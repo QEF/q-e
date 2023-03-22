@@ -29,6 +29,12 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 		    -widget   [list entrybutton "Prefix ..." [list ::pwscf::phSelectPunchFile $this prefix]] \
 		    -fmt      %S -validate string
 		
+                var dftd3_hess {
+                    -label  "File containing D3 dispersion Hessian matrix (dftd3_hess):"
+		    -widget entryfileselectquote
+                    -fmt    %S
+                    -validate string
+                }
 
 		separator -label "--- Output Data Files ---"
 

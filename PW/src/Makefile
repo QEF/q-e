@@ -67,6 +67,7 @@ dynamics_module.o \
 efermig.o \
 efermit.o \
 electrons.o \
+environ_pw_module.o \
 eqvect.o \
 esm.o \
 esm_common_mod.o \
@@ -117,6 +118,7 @@ h_psi.o \
 h_psi_meta.o \
 hinit0.o \
 hinit1.o \
+hubbard.o \
 init_ns.o \
 init_q_aeps.o \
 init_run.o \
@@ -192,6 +194,7 @@ remove_atomic_rho.o \
 report_mag.o \
 restart_in_electrons.o \
 rho2zeta.o \
+rism_module.o \
 ruotaijk.o \
 run_pwscf.o \
 s_1psi.o \
@@ -210,6 +213,8 @@ set_spin_vars.o \
 set_vrs.o \
 setlocal.o \
 setup.o \
+scissor.o \
+sic.o \
 stop_run.o \
 stres_cc.o \
 stres_ewa.o \
@@ -230,12 +235,12 @@ summary.o \
 symme.o \
 symm_base.o \
 symmetrize_at.o \
-tabd.o \
 tetra.o \
 transform_becsum_so.o \
 transform_becsum_nc.o \
 transform_qq_so.o \
 trnvecc.o \
+two_chem.o\
 update_pot.o \
 us_exx.o \
 usnldiag.o \
@@ -256,6 +261,18 @@ wannier_init.o \
 wannier_check.o \
 wannier_clean.o \
 wannier_occ.o \
+oscdft_input.o \
+oscdft_context.o \
+oscdft_base.o \
+oscdft_enums.o \
+oscdft_indices.o \
+oscdft_wavefunction.o \
+oscdft_wavefunction_subs.o \
+oscdft_functions.o \
+oscdft_occupations.o \
+oscdft_wfcO.o \
+oscdft_forces.o \
+oscdft_forces_subs.o
 
 
 # GPU versions of routines
@@ -267,11 +284,9 @@ PWLIBS += \
   s_psi_gpu.o \
   vloc_psi_gpu.o \
   pwcom_gpu.o \
-  g2_kin_gpu.o \
   scf_mod_gpu.o \
   usnldiag_gpu.o \
   add_vuspsi_gpu.o \
-  addusdens_gpu.o \
   sum_band_gpu.o \
   newd_gpu.o \
   add_paw_to_deeq_gpu.o \
@@ -282,25 +297,15 @@ PWLIBS += \
   hs_psi_gpu.o \
   s_1psi_gpu.o \
   utils_gpu.o \
-  force_lc_gpu.o \
-  force_us_gpu.o \
-  force_cc_gpu.o \
-  force_hub_gpu.o \
   drhoc_gpu.o \
-  addusforce_gpu.o \
-  force_corr_gpu.o \
-  stres_loc_gpu.o \
-  dvloc_of_g_gpu.o \
-  stres_har_gpu.o \
-  stres_mgga_gpu.o \
-  stres_cc_gpu.o \
-  deriv_drhoc_gpu.o \
-  stres_ewa_gpu.o \
-  stres_knl_gpu.o \
-  stres_us_gpu.o \
-  compute_deff_gpu.o \
   orthoatwfc_gpu.o \
-  atomic_wfc_gpu.o
+  atomic_wfc_gpu.o \
+  oscdft_wavefunction_subs_gpu.o \
+  oscdft_wfcO_gpu.o \
+  oscdft_functions_gpu.o \
+  additional_cusolver_subs.o
+
+
 
 QEMODS=../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a $(BASEMODS)
 

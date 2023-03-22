@@ -1,0 +1,16 @@
+This example shows how to use the KCW code to compute the electronic structure
+of H2O molecule using canonical KS orbitals as variational ones. 
+This requires few steps:
+
+1) run a standard scf calculation at PBE level. 
+   input=h2o.scf.in, output=h2o.scf.out
+
+3) prepare the KCW calculation 
+   input=h2o.kcw-wann2kcw.in, output=h2o.kcw-wann2kcw.out
+
+4) calculate the screening coefficients 
+   input=h2o.kcw-screen.in, output=h2o.kcw-screen.out
+
+5) calculate and diagonalize the KI Hamiltonian 
+   input=h2o.kcw-ham.in, output=h2o.kcw-ham.out
+

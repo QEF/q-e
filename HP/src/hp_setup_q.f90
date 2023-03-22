@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -55,7 +55,7 @@ SUBROUTINE hp_setup_q()
   USE fft_base,         ONLY : dfftp
   USE gvect,            ONLY : ngm
   USE gvecs,            ONLY : doublegrid
-  USE symm_base,        ONLY : nrot, nsym, s, ft, irt, time_reversal, &
+  USE symm_base,        ONLY : nrot, nsym, s, irt, time_reversal, &
                                inverse_s, d1, d2, d3
   USE uspp_param,       ONLY : upf
   USE uspp,             ONLY : nlcc_any, okvan, deeq_nc

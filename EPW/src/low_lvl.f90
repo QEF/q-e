@@ -864,44 +864,55 @@
     !
     !-----------------------------------------------------------------------
     FUNCTION matinv3(A) RESULT(B)
-    !-----------------------------------------------------------------------
-    !!
-    !! Performs a direct calculation of the inverse of a 3×3 matrix.
-    !!
-    USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : eps160
-    !
-    REAL(KIND = DP), INTENT(in) :: A(3, 3)
-    !! Matrix
-    !
-    ! Local variable
-    REAL(KIND = DP) :: detinv
-    !! Inverse of the determinant
-    REAL(KIND = DP) :: B(3, 3)
-    !! Inverse matrix
-    !
-    ! Calculate the inverse determinant of the matrix
-    detinv = 1 / (A(1, 1) * A(2, 2) * A(3, 3) - A(1, 1) * A(2, 3) * A(3, 2) &
-                - A(1, 2) * A(2, 1) * A(3, 3) + A(1, 2) * A(2, 3) * A(3, 1) &
-                + A(1, 3) * A(2, 1) * A(3, 2) - A(1, 3) * A(2, 2) * A(3, 1))
-    !
-    IF (detinv < eps160) THEN
-      CALL errore('matinv3', 'Inverse does not exist ', 1)
-    ENDIF
-    !
-    ! Calculate the inverse of the matrix
-    B(1, 1) = +detinv * (A(2, 2) * A(3, 3) - A(2, 3) * A(3, 2))
-    B(2, 1) = -detinv * (A(2, 1) * A(3, 3) - A(2, 3) * A(3, 1))
-    B(3, 1) = +detinv * (A(2, 1) * A(3, 2) - A(2, 2) * A(3, 1))
-    B(1, 2) = -detinv * (A(1, 2) * A(3, 3) - A(1, 3) * A(3, 2))
-    B(2, 2) = +detinv * (A(1, 1) * A(3, 3) - A(1, 3) * A(3, 1))
-    B(3, 2) = -detinv * (A(1, 1) * A(3, 2) - A(1, 2) * A(3, 1))
-    B(1, 3) = +detinv * (A(1, 2) * A(2, 3) - A(1, 3) * A(2, 2))
-    B(2, 3) = -detinv * (A(1, 1) * A(2, 3) - A(1, 3) * A(2, 1))
-    B(3, 3) = +detinv * (A(1, 1) * A(2, 2) - A(1, 2) * A(2, 1))
-    !-----------------------------------------------------------------------
-    END FUNCTION matinv3
-    !-----------------------------------------------------------------------
+      !-----------------------------------------------------------------------
+      !!
+      !! Performs a direct calculation of the inverse of a 3×3 matrix.
+      !!
+      USE kinds,         ONLY : DP
+      USE constants_epw, ONLY : eps160
+      !
+      REAL(KIND = DP), INTENT(in) :: A(3, 3)
+      !! Matrix
+      !
+      ! Local variable
+      REAL(KIND = DP) :: detinv, det
+      !! Inverse of the determinant
+      REAL(KIND = DP) :: B(3, 3)
+      !! Inverse matrix
+      !
+      !! Calculate the inverse determinant of the matrix
+      !detinv = 1 / (A(1, 1) * A(2, 2) * A(3, 3) - A(1, 1) * A(2, 3) * A(3, 2) &
+      !            - A(1, 2) * A(2, 1) * A(3, 3) + A(1, 2) * A(2, 3) * A(3, 1) &
+      !            + A(1, 3) * A(2, 1) * A(3, 2) - A(1, 3) * A(2, 2) * A(3, 1))
+      !!
+      !IF (detinv < eps160) THEN
+      !  CALL errore('matinv3', 'Inverse does not exist ', 1)
+      !ENDIF
+      !JLB
+      det = (A(1, 1) * A(2, 2) * A(3, 3) - A(1, 1) * A(2, 3) * A(3, 2)  &
+            - A(1, 2) * A(2, 1) * A(3, 3) + A(1, 2) * A(2, 3) * A(3, 1) &
+            + A(1, 3) * A(2, 1) * A(3, 2) - A(1, 3) * A(2, 2) * A(3, 1))
+      !
+      IF (ABS(det) < eps160) THEN
+        CALL errore('matinv3', 'Inverse does not exist ', 1)
+      END IF
+      !
+      detinv = 1 / det
+      !JLB
+      !
+      ! Calculate the inverse of the matrix
+      B(1, 1) = +detinv * (A(2, 2) * A(3, 3) - A(2, 3) * A(3, 2))
+      B(2, 1) = -detinv * (A(2, 1) * A(3, 3) - A(2, 3) * A(3, 1))
+      B(3, 1) = +detinv * (A(2, 1) * A(3, 2) - A(2, 2) * A(3, 1))
+      B(1, 2) = -detinv * (A(1, 2) * A(3, 3) - A(1, 3) * A(3, 2))
+      B(2, 2) = +detinv * (A(1, 1) * A(3, 3) - A(1, 3) * A(3, 1))
+      B(3, 2) = -detinv * (A(1, 1) * A(3, 2) - A(1, 2) * A(3, 1))
+      B(1, 3) = +detinv * (A(1, 2) * A(2, 3) - A(1, 3) * A(2, 2))
+      B(2, 3) = -detinv * (A(1, 1) * A(2, 3) - A(1, 3) * A(2, 1))
+      B(3, 3) = +detinv * (A(1, 1) * A(2, 2) - A(1, 2) * A(2, 1))
+      !-----------------------------------------------------------------------
+      END FUNCTION matinv3
+      !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
     PURE FUNCTION find_minimum(grid, grid_dim) RESULT(minpos)
     !-----------------------------------------------------------------------
@@ -1062,7 +1073,10 @@
     ! Local variables
     CHARACTER(LEN = 256) :: chunit
     !! Unit name
-    INTEGER :: imelt
+    !!!!!
+    ! INTEGER :: imelt
+    INTEGER(8) :: imelt
+    !!!!!
     !! Size in number of elements
     REAL(KIND = DP) :: rmelt
     !! Size in byte
@@ -1089,10 +1103,15 @@
     !-----------------------------------------------------------------------
     SUBROUTINE mem_size_eliashberg(vmelt, imelt)
     !-----------------------------------------------------------------------
-    !
-    !  This routine estimates the amount of memory taken up or
-    !  released by different arrays
-    !
+    !!
+    !!  This routine estimates the amount of memory taken up or
+    !!  released by different arrays
+    !!!!! these comment lines are added
+    !!
+    !!  SH: The "imelt" variable type is changed to INTEGER(8) throughout the
+    !!        code to avoid issues with large Nr of k-points, etc (Nov 2021).
+    !!
+    !!!!!
     USE io_global,     ONLY : stdout
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : max_memlt
@@ -1105,7 +1124,10 @@
     !
     INTEGER, INTENT(in) :: vmelt
     !! 1 for integer variables and 2 for real variables
-    INTEGER, INTENT(in) :: imelt
+    !!!!!
+    ! INTEGER, INTENT(in) :: imelt
+    INTEGER(8), INTENT(in) :: imelt
+    !!!!!
     !! > 0 memory added or < 0 memory subtracted
     !
     REAL(KIND = DP) :: rmelt
@@ -1156,7 +1178,10 @@
     USE io_global,     ONLY : stdout
     USE epwcom,        ONLY : max_memlt, nqstep
     USE eliashbergcom, ONLY : nkfs, nbndfs, nsiw, nqfs, limag_fly, &
-                              lacon_fly, memlt_pool
+                              !!!!!
+                              ! lacon_fly, memlt_pool
+                              lacon_fly, memlt_pool, wsn
+                              !!!!!
     USE mp_global,     ONLY : inter_pool_comm, my_pool_id
     USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
     USE division,      ONLY : fkbounds
@@ -1170,7 +1195,10 @@
     !! calculation type
     !
     !Local variables
-    INTEGER :: imelt
+    !!!!!
+    ! INTEGER :: imelt
+    INTEGER(8) :: imelt
+    !!!!!
     !! size array
     INTEGER :: lower_bnd, upper_bnd
     !! Lower/upper bound index after k parallelization
@@ -1192,7 +1220,12 @@
     imelt = (upper_bnd - lower_bnd + 1) * MAXVAL(nqfs(:)) * nbndfs**2
     IF (cname == 'imag') THEN
       ! get the size of the akeri that needa to be stored in each pool
-      imelt = imelt * (2 * nsiw(itemp))
+      !!!!! first line is changed, and 3rd and 4th lines are added
+      ! imelt = imelt * (2 * nsiw(itemp))
+      !
+      ! SH: This is adjusted to accommodate the sparse sampling case
+      imelt = imelt * 2 * (wsn(nsiw(itemp)) + 1)
+      !!!!!
     ELSEIF (cname == 'acon') THEN
       ! get the size of a2fij that needs to be stored in each pool
       imelt = imelt * nqstep

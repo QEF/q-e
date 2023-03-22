@@ -15,8 +15,9 @@ MODULE qe_drivers_d_gga
   !! Module with QE driver routines that calculates the derivatives of XC
   !! potential.
   !
-  USE kind_l,             ONLY: DP
-  USE dft_setting_params, ONLY: igcx, igcc, is_libxc
+  USE kind_l,               ONLY: DP
+  USE xclib_utils_and_para, ONLY: error_msg, nowarning
+  USE dft_setting_params,   ONLY: igcx, igcc, is_libxc
   !
   IMPLICIT NONE
   !
@@ -60,16 +61,20 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   !
   ! ... local variables
   !
-  INTEGER :: i1, i2, i3, i4, f1, f2, f3, f4
-  INTEGER :: igcx_, igcc_
-  REAL(DP), DIMENSION(length) :: dr, s, ds
-  REAL(DP), DIMENSION(4*length) :: raux, s2aux
+  INTEGER :: ir, i1, i2, i3, i4, f1, f2, f3, f4
+  INTEGER :: igcx_, igcc_, ierr
+  REAL(DP), ALLOCATABLE :: raux(:), s2aux(:), dr(:), s(:), ds(:)
   REAL(DP), ALLOCATABLE :: v1x(:), v2x(:), v1c(:), v2c(:)
   REAL(DP), ALLOCATABLE :: sx(:), sc(:)
   REAL(DP), PARAMETER :: small = 1.E-30_DP
   !
+  !$acc data present( r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc )
+  !
+  ALLOCATE( raux(4*length), s2aux(4*length), dr(length), s(length), ds(length) )
   ALLOCATE( v1x(4*length), v2x(4*length), sx(4*length) )
   ALLOCATE( v1c(4*length), v2c(4*length), sc(4*length) )
+  !$acc data create( raux, s2aux, s, dr, ds )
+  !$acc data create( v1x, v2x, sx, v1c, v2c, sc )
   !
   igcx_=igcx
   igcc_=igcc
@@ -81,42 +86,52 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   i3 = f2+1  ;   f3 = 3*length   !           [ rho    , (grho+ds)^2 ]
   i4 = f3+1  ;   f4 = 4*length   !           [ rho    , (grho-ds)^2 ]
   !
-  s  = SQRT(s2_in)
-  dr = MIN(1.d-4, 1.d-2*r_in)
-  ds = MIN(1.d-4, 1.d-2*s)
+  !$acc parallel loop
+  DO ir = 1, length
+    s(ir)  = SQRT(s2_in(ir))
+    dr(ir) = MIN(1.d-4, 1.d-2*r_in(ir))
+    ds(ir) = MIN(1.d-4, 1.d-2*s(ir))
+    !
+    raux(i1-1+ir) = r_in(ir)+dr(ir)  ;   s2aux(i1-1+ir) = s2_in(ir)
+    raux(i2-1+ir) = r_in(ir)-dr(ir)  ;   s2aux(i2-1+ir) = s2_in(ir)
+    raux(i3-1+ir) = r_in(ir)         ;   s2aux(i3-1+ir) = (s(ir)+ds(ir))**2
+    raux(i4-1+ir) = r_in(ir)         ;   s2aux(i4-1+ir) = (s(ir)-ds(ir))**2
+  ENDDO
   !
-  raux(i1:f1) = r_in+dr  ;   s2aux(i1:f1) = s2_in
-  raux(i2:f2) = r_in-dr  ;   s2aux(i2:f2) = s2_in
-  raux(i3:f3) = r_in     ;   s2aux(i3:f3) = (s+ds)**2
-  raux(i4:f4) = r_in     ;   s2aux(i4:f4) = (s-ds)**2
+  CALL gcxc( length*4, raux, s2aux, sx, sc, v1x, v2x, v1c, v2c, ierr )
   !
-  !$acc data copyin( raux, s2aux ) copyout( sx, sc, v1x, v2x, v1c, v2c )
-  !$acc host_data use_device( raux, s2aux, sx, sc, v1x, v2x, v1c, v2c )
-  CALL gcxc( length*4, raux, s2aux, sx, sc, v1x, v2x, v1c, v2c )
-  !$acc end host_data
+  !$acc parallel loop
+  DO ir = 1, length
+    IF ( r_in(ir)>small .AND. s2_in(ir)>small ) THEN
+      vrrx(ir) = 0.5_DP * (v1x(i1-1+ir) - v1x(i2-1+ir)) / dr(ir)
+      vrrc(ir) = 0.5_DP * (v1c(i1-1+ir) - v1c(i2-1+ir)) / dr(ir)
+      !
+      vsrx(ir) = 0.25_DP * ((v2x(i1-1+ir) - v2x(i2-1+ir)) / dr(ir) + &
+                       (v1x(i3-1+ir) - v1x(i4-1+ir)) / ds(ir) / s(ir))
+      vsrc(ir) = 0.25_DP * ((v2c(i1-1+ir) - v2c(i2-1+ir)) / dr(ir) + &
+                       (v1c(i3-1+ir) - v1c(i4-1+ir)) / ds(ir) / s(ir))
+      !
+      vssx(ir) = 0.5_DP * (v2x(i3-1+ir) - v2x(i4-1+ir)) / ds(ir) / s(ir)
+      vssc(ir) = 0.5_DP * (v2c(i3-1+ir) - v2c(i4-1+ir)) / ds(ir) / s(ir)
+    ELSE
+      vrrx(ir) = 0._DP  ;  vrrc(ir) = 0._DP
+      vsrx(ir) = 0._DP  ;  vsrc(ir) = 0._DP
+      vssx(ir) = 0._DP  ;  vssc(ir) = 0._DP
+    ENDIF
+  ENDDO
+  !
   !$acc end data
-  !
-  ! ... to avoid NaN in the next operations
-  WHERE( r_in<=small .OR. s2_in<=small )
-    dr = 1._DP ; ds = 1._DP ; s = 1._DP
-  END WHERE
-  !
-  vrrx = 0.5_DP * (v1x(i1:f1) - v1x(i2:f2)) / dr
-  vrrc = 0.5_DP * (v1c(i1:f1) - v1c(i2:f2)) / dr
-  !
-  vsrx = 0.25_DP * ((v2x(i1:f1) - v2x(i2:f2)) / dr + &
-                    (v1x(i3:f3) - v1x(i4:f4)) / ds / s)
-  vsrc = 0.25_DP * ((v2c(i1:f1) - v2c(i2:f2)) / dr + &
-                    (v1c(i3:f3) - v1c(i4:f4)) / ds / s)
-  !
-  vssx = 0.5_DP * (v2x(i3:f3) - v2x(i4:f4)) / ds / s
-  vssc = 0.5_DP * (v2c(i3:f3) - v2c(i4:f4)) / ds / s
-  !
+  !$acc end data
+  DEALLOCATE( raux, s2aux, dr, s, ds )
   DEALLOCATE( v1x, v2x, sx )
   DEALLOCATE( v1c, v2c, sc )
   !
   IF (is_libxc(3)) igcx=igcx_
   IF (is_libxc(4)) igcc=igcc_
+  !
+  !$acc end data
+  !
+  IF (ierr/=0 .AND. .NOT.nowarning) CALL xclib_error( 'xc_gcx_', error_msg(ierr), 1 )
   !
   RETURN
   !
@@ -157,21 +172,18 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   !
   ! ... local variables
   !
-  INTEGER :: i1, i2, i3, i4, i5, i6, i7, i8
+  INTEGER :: i1, i2, i3, i4, i5, i6, i7, i8, ir
   INTEGER :: f1, f2, f3, f4, f5, f6, f7, f8
   ! block delimiters
-  INTEGER :: igcx_, igcc_
-  REAL(DP), DIMENSION(length,2) :: r, s, s2
-  REAL(DP), DIMENSION(length,2) :: drup, drdw, dsup, dsdw
-  REAL(DP), ALLOCATABLE :: sx(:), v1x(:,:), v2x(:,:)
-  REAL(DP), ALLOCATABLE :: sc(:), v1c(:,:), v2c(:)
-  REAL(DP), DIMENSION(length) :: rt, zeta, st, s2t
-  REAL(DP), DIMENSION(length) :: dr, ds, dz
-  REAL(DP), DIMENSION(length,2) :: null_v
+  INTEGER :: igcx_, igcc_, ierr
+  REAL(DP) :: r_up, r_dw, s_up, s_dw, s2_up, s2_dw, rt, zeta, s2t
+  REAL(DP) :: dr_up, dr_dw, ds_up, ds_dw, drt, ds, dz
+  LOGICAL :: ir_null
   ! used to set output values to zero when input values 
   ! are too small (e.g. rho<eps)
-  ! 
-  REAL(DP), ALLOCATABLE :: raux(:,:), s2aux(:,:)
+  REAL(DP), ALLOCATABLE :: sx(:), v1x(:,:), v2x(:,:)
+  REAL(DP), ALLOCATABLE :: sc(:), v1c(:,:), v2c(:)
+  REAL(DP), ALLOCATABLE :: raux(:,:), st(:), s2aux(:,:)
   REAL(DP), ALLOCATABLE :: rtaux(:), s2taux(:), zetaux(:)
   ! auxiliary arrays for gcx- and gcc- routines input
   !
@@ -179,18 +191,16 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   REAL(DP), PARAMETER :: rho_trash = 0.4_DP, zeta_trash = 0.2_DP, &
                          s2_trash = 0.1_DP
   !
+  !$acc data present( r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, vssc, vrzc )
+  !
   igcx_=igcx
   igcc_=igcc
   IF (is_libxc(3)) igcx=0
   IF (is_libxc(4)) igcc=0
   !
-  vrrx = 0.0_DP ; vrsx = 0.0_DP ; vssx = 0.0_DP
-  vrrc = 0.0_DP ; vrsc = 0.0_DP ; vrzc = 0.0_DP
-  vssc = 0.0_DP
-  !
   ! ... EXCHANGE
   !
-  i1 = 1     ;   f1 = length     !8 blocks(x2): [ rho+drup , grho2         ]
+  i1 = 1     ;   f1 = length     !  8 blocks:   [ rho+drup , grho2         ]
   i2 = f1+1  ;   f2 = 2*length   !              [ rho-drup , grho2         ]
   i3 = f2+1  ;   f3 = 3*length   !              [ rho      , (grho+dsup)^2 ]
   i4 = f3+1  ;   f4 = 4*length   !              [ rho      , (grho-dsup)^2 ]
@@ -201,66 +211,90 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   !
   ALLOCATE( raux(length*8,2), s2aux(length*8,2) )
   ALLOCATE( sx(length*8), v1x(length*8,2), v2x(length*8,2) )
+  !$acc data create( raux, s2aux )
+  !$acc data create( sx, v1x, v2x )
   !
-  s2(:,1) = g_in(:,1,1)**2 + g_in(:,2,1)**2 + g_in(:,3,1)**2 !up
-  s2(:,2) = g_in(:,1,2)**2 + g_in(:,2,2)**2 + g_in(:,3,2)**2 !down
-  s = SQRT(s2)
-  r = r_in
+  !$acc parallel loop
+  DO ir = 1, length
+    s2_up = g_in(ir,1,1)**2 + g_in(ir,2,1)**2 + g_in(ir,3,1)**2
+    s2_dw = g_in(ir,1,2)**2 + g_in(ir,2,2)**2 + g_in(ir,3,2)**2
+    !
+    ! ... thresholds
+    r_up=r_in(ir,1) ; s_up=SQRT(s2_up)
+    IF ( r_in(ir,1)<=eps .OR. SQRT(s2_up)<=eps ) THEN
+      r_up=rho_trash ; s2_up=s2_trash ; s_up=SQRT(s2_trash)
+    ENDIF
+    !
+    r_dw=r_in(ir,2) ; s_dw=SQRT(s2_dw)
+    IF ( r_in(ir,2)<=eps .OR. SQRT(s2_dw)<=eps ) THEN
+      r_dw=rho_trash ; s2_dw=s2_trash ; s_dw=SQRT(s2_trash)
+    ENDIF
+    !
+    dr_up = MIN(1.D-4, 1.D-2*r_up) ; ds_up = MIN(1.D-4, 1.D-2*s_up)
+    dr_dw = MIN(1.D-4, 1.D-2*r_dw) ; ds_dw = MIN(1.D-4, 1.D-2*s_dw)
+    !
+    ! ... up
+    raux(i1-1+ir,1) = r_up+dr_up  ;  s2aux(i1-1+ir,1) = s2_up
+    raux(i2-1+ir,1) = r_up-dr_up  ;  s2aux(i2-1+ir,1) = s2_up
+    raux(i3-1+ir,1) = r_up        ;  s2aux(i3-1+ir,1) = (s_up+ds_up)**2
+    raux(i4-1+ir,1) = r_up        ;  s2aux(i4-1+ir,1) = (s_up-ds_up)**2
+    !
+    raux(i1-1+ir,2) = r_dw        ;  s2aux(i1-1+ir,2) = s2_dw
+    raux(i2-1+ir,2) = r_dw        ;  s2aux(i2-1+ir,2) = s2_dw
+    raux(i3-1+ir,2) = r_dw        ;  s2aux(i3-1+ir,2) = s2_dw
+    raux(i4-1+ir,2) = r_dw        ;  s2aux(i4-1+ir,2) = s2_dw
+    ! ... down
+    raux(i5-1+ir,1) = r_up        ;  s2aux(i5-1+ir,1) = s2_up
+    raux(i6-1+ir,1) = r_up        ;  s2aux(i6-1+ir,1) = s2_up
+    raux(i7-1+ir,1) = r_up        ;  s2aux(i7-1+ir,1) = s2_up
+    raux(i8-1+ir,1) = r_up        ;  s2aux(i8-1+ir,1) = s2_up
+    !
+    raux(i5-1+ir,2) = r_dw+dr_dw  ;  s2aux(i5-1+ir,2) = s2_dw
+    raux(i6-1+ir,2) = r_dw-dr_dw  ;  s2aux(i6-1+ir,2) = s2_dw
+    raux(i7-1+ir,2) = r_dw        ;  s2aux(i7-1+ir,2) = (s_dw+ds_dw)**2
+    raux(i8-1+ir,2) = r_dw        ;  s2aux(i8-1+ir,2) = (s_dw-ds_dw)**2
+  ENDDO
   !
-  null_v = 1.0_DP
+  CALL gcx_spin( length*8, raux, s2aux, sx, v1x, v2x, ierr )
   !
-  ! ... thresholds
-  WHERE ( r_in(:,1)<=eps .OR. s(:,1)<=eps )
-     r(:,1) = rho_trash
-     s2(:,1) = s2_trash ; s(:,1) = SQRT(s2_trash)
-     null_v(:,1) = 0.0_DP
-  END WHERE
+  !$acc parallel loop
+  DO ir = 1, length
+    ! ... up
+    s2_up = g_in(ir,1,1)**2 + g_in(ir,2,1)**2 + g_in(ir,3,1)**2
+    IF ( r_in(ir,1)>eps .AND. SQRT(s2_up)>eps ) THEN
+      r_up = r_in(ir,1)
+      s_up = SQRT(s2_up)
+      dr_up = MIN(1.D-4, 1.D-2*r_up)
+      ds_up = MIN(1.D-4, 1.D-2*s_up)
+      vrrx(ir,1) = 0.5_DP  *  (v1x(i1-1+ir,1) - v1x(i2-1+ir,1)) / dr_up
+      vrsx(ir,1) = 0.25_DP * ((v2x(i1-1+ir,1) - v2x(i2-1+ir,1)) / dr_up + &
+                              (v1x(i3-1+ir,1) - v1x(i4-1+ir,1)) / ds_up / s_up)
+      vssx(ir,1) = 0.5_DP  *  (v2x(i3-1+ir,1) - v2x(i4-1+ir,1)) / ds_up / s_up
+    ELSE
+      vrrx(ir,1) = 0._DP
+      vrsx(ir,1) = 0._DP
+      vssx(ir,1) = 0._DP
+    ENDIF
+    ! ... down
+    s2_dw = g_in(ir,1,2)**2 + g_in(ir,2,2)**2 + g_in(ir,3,2)**2
+    IF ( r_in(ir,2)>eps .AND. SQRT(s2_dw)>eps ) THEN
+      r_dw = r_in(ir,2)
+      s_dw = SQRT(s2_dw)
+      dr_dw = MIN(1.D-4, 1.D-2*r_dw)
+      ds_dw = MIN(1.D-4, 1.D-2*s_dw)
+      vrrx(ir,2) = 0.5_DP  *  (v1x(i5-1+ir,2) - v1x(i6-1+ir,2)) / dr_dw
+      vrsx(ir,2) = 0.25_DP * ((v2x(i5-1+ir,2) - v2x(i6-1+ir,2)) / dr_dw + &
+                              (v1x(i7-1+ir,2) - v1x(i8-1+ir,2)) / ds_dw / s_dw)
+      vssx(ir,2) = 0.5_DP  *  (v2x(i7-1+ir,2) - v2x(i8-1+ir,2)) / ds_dw / s_dw
+    ELSE
+      vrrx(ir,2) = 0._DP
+      vrsx(ir,2) = 0._DP
+      vssx(ir,2) = 0._DP
+    ENDIF
+  ENDDO
   !
-  WHERE ( r_in(:,2)<=eps .OR. s(:,2)<=eps )
-     r(:,2) = rho_trash
-     s2(:,2) = s2_trash ; s(:,2) = SQRT(s2_trash)
-     null_v(:,2) = 0.0_DP
-  END WHERE
-  !
-  drup = 0.0_DP ;  drdw = 0.0_DP
-  dsup = 0.0_DP ;  dsdw = 0.0_DP
-  !
-  drup(:,1) = MIN(1.D-4, 1.D-2*r(:,1)) ; dsup(:,1) = MIN(1.D-4, 1.D-2*s(:,1))
-  drdw(:,2) = MIN(1.D-4, 1.D-2*r(:,2)) ; dsdw(:,2) = MIN(1.D-4, 1.D-2*s(:,2))
-  !
-  ! ... up
-  raux(i1:f1,:) = r+drup ;  s2aux(i1:f1,:) = s2
-  raux(i2:f2,:) = r-drup ;  s2aux(i2:f2,:) = s2
-  raux(i3:f3,:) = r      ;  s2aux(i3:f3,:) = (s+dsup)**2
-  raux(i4:f4,:) = r      ;  s2aux(i4:f4,:) = (s-dsup)**2
-  ! ... down
-  raux(i5:f5,:) = r+drdw ;  s2aux(i5:f5,:) = s2
-  raux(i6:f6,:) = r-drdw ;  s2aux(i6:f6,:) = s2
-  raux(i7:f7,:) = r      ;  s2aux(i7:f7,:) = (s+dsdw)**2
-  raux(i8:f8,:) = r      ;  s2aux(i8:f8,:) = (s-dsdw)**2
-  !
-  !
-  !$acc data copyin( raux, s2aux ) copyout( sx, v1x, v2x )
-  !$acc host_data use_device( raux, s2aux, sx, v1x, v2x )
-  CALL gcx_spin( length*8, raux, s2aux, sx, v1x, v2x )
-  !$acc end host_data
   !$acc end data
-  !
-  ! ... up
-  vrrx(:,1) = 0.5_DP  *  (v1x(i1:f1,1) - v1x(i2:f2,1)) / drup(:,1)
-  vrsx(:,1) = 0.25_DP * ((v2x(i1:f1,1) - v2x(i2:f2,1)) / drup(:,1) + &
-                         (v1x(i3:f3,1) - v1x(i4:f4,1)) / dsup(:,1) / s(:,1))
-  vssx(:,1) = 0.5_DP  *  (v2x(i3:f3,1) - v2x(i4:f4,1)) / dsup(:,1) / s(:,1)
-  ! ... down
-  vrrx(:,2) = 0.5_DP  *  (v1x(i5:f5,2) - v1x(i6:f6,2)) / drdw(:,2)
-  vrsx(:,2) = 0.25_DP * ((v2x(i5:f5,2) - v2x(i6:f6,2)) / drdw(:,2) + &
-                                     (v1x(i7:f7,2) - v1x(i8:f8,2)) / dsdw(:,2) / s(:,2))
-  vssx(:,2) = 0.5_DP  *  (v2x(i7:f7,2) - v2x(i8:f8,2)) / dsdw(:,2) / s(:,2)
-  !
-  vrrx(:,1) = vrrx(:,1)*null_v(:,1) ;  vrrx(:,2) = vrrx(:,2)*null_v(:,2)
-  vrsx(:,1) = vrsx(:,1)*null_v(:,1) ;  vrsx(:,2) = vrsx(:,2)*null_v(:,2)
-  vssx(:,1) = vssx(:,1)*null_v(:,1) ;  vssx(:,2) = vssx(:,2)*null_v(:,2)
-  !
+  !$acc end data
   DEALLOCATE( raux, s2aux  )
   DEALLOCATE( sx, v1x, v2x )
   !
@@ -273,64 +307,89 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   i5 = f4+1  ;   f5 = 5*length   !          [ rt    , grho2     , zeta+dz ]
   i6 = f5+1  ;   f6 = 6*length   !          [ rt    , grho2     , zeta-dz ]  
   !
-  ALLOCATE( rtaux(length*6), s2taux(length*6), zetaux(length*6) )
+  ALLOCATE( rtaux(length*6), st(length), s2taux(length*6), zetaux(length*6) )
   ALLOCATE( v1c(length*6,2), v2c(length*6), sc(length*6) )
+  !$acc data create( rtaux, st, s2taux, zetaux )
+  !$acc data create( v1c, v2c, sc )
   !
-  rt(:) = r_in(:,1) + r_in(:,2)
+  !$acc parallel loop
+  DO ir = 1, length
+    !
+    rt = r_in(ir,1) + r_in(ir,2)
+    IF (rt > eps) zeta = (r_in(ir,1)-r_in(ir,2)) / rt
+    !
+    s2t = (g_in(ir,1,1) + g_in(ir,1,2))**2 + &
+          (g_in(ir,2,1) + g_in(ir,2,2))**2 + &
+          (g_in(ir,3,1) + g_in(ir,3,2))**2
+    st(ir) = SQRT(s2t)
+    !
+    IF (rt<=eps .OR. ABS(zeta)>1._DP .OR. st(ir)<=eps) THEN
+      rt  = rho_trash
+      s2t = s2_trash ; st(ir) = SQRT(s2_trash)
+      zeta = zeta_trash
+    ENDIF
+    !
+    drt = MIN(1.D-4, 1.D-2 * rt)
+    ds = MIN(1.D-4, 1.D-2 * st(ir))
+    !dz = MIN(1.D-4, 1.D-2 * ABS(zeta) )
+    dz = 1.D-6
+    !
+    ! ... If zeta is too close to +-1 the derivative is evaluated at a
+    ! slightly smaller value.
+    zeta = SIGN( MIN(ABS(zeta), (1.0_DP - 2.0_DP*dz)), zeta )
+    !
+    rtaux(i1-1+ir) = rt+drt ; s2taux(i1-1+ir) = s2t            ; zetaux(i1-1+ir) = zeta
+    rtaux(i2-1+ir) = rt-drt ; s2taux(i2-1+ir) = s2t            ; zetaux(i2-1+ir) = zeta
+    rtaux(i3-1+ir) = rt     ; s2taux(i3-1+ir) = (st(ir)+ds)**2 ; zetaux(i3-1+ir) = zeta
+    rtaux(i4-1+ir) = rt     ; s2taux(i4-1+ir) = (st(ir)-ds)**2 ; zetaux(i4-1+ir) = zeta
+    rtaux(i5-1+ir) = rt     ; s2taux(i5-1+ir) = s2t            ; zetaux(i5-1+ir) = zeta+dz
+    rtaux(i6-1+ir) = rt     ; s2taux(i6-1+ir) = s2t            ; zetaux(i6-1+ir) = zeta-dz
+  ENDDO
   !
-  null_v = 1.0_DP
-  !
-  WHERE (rt > eps)
-     zeta = (r_in(:,1) - r_in(:,2)) / rt(:)
-  ELSEWHERE
-     zeta = zeta_trash
-     null_v(:,1) = 0.0_DP
-  END WHERE
-  !
-  s2t = (g_in(:,1,1) + g_in(:,1,2))**2 + &
-        (g_in(:,2,1) + g_in(:,2,2))**2 + &
-        (g_in(:,3,1) + g_in(:,3,2))**2
-  st = SQRT(s2t)
-  !
-  WHERE (rt<eps .OR. ABS(zeta)>1._DP .OR. st<eps)
-     rt(:)  = rho_trash
-     s2t(:) = s2_trash ; st = SQRT(s2_trash)
-     zeta(:) = zeta_trash
-     null_v(:,1) = 0.0_DP
-  END WHERE
-  !
-  dr = MIN(1.D-4, 1.D-2 * rt)
-  ds = MIN(1.D-4, 1.D-2 * st)
-  !dz = MIN(1.D-4, 1.D-2 * ABS(zeta) )
-  dz = 1.D-6
-  !
-  ! ... If zeta is too close to +-1 the derivative is evaluated at a
-  ! slightly smaller value.
-  zeta = SIGN( MIN(ABS(zeta), (1.0_DP - 2.0_DP*dz)), zeta )
-  !
-  rtaux(i1:f1) = rt+dr ;  s2taux(i1:f1) = s2t        ;  zetaux(i1:f1) = zeta
-  rtaux(i2:f2) = rt-dr ;  s2taux(i2:f2) = s2t        ;  zetaux(i2:f2) = zeta
-  rtaux(i3:f3) = rt    ;  s2taux(i3:f3) = (st+ds)**2 ;  zetaux(i3:f3) = zeta
-  rtaux(i4:f4) = rt    ;  s2taux(i4:f4) = (st-ds)**2 ;  zetaux(i4:f4) = zeta
-  rtaux(i5:f5) = rt    ;  s2taux(i5:f5) = s2t        ;  zetaux(i5:f5) = zeta+dz
-  rtaux(i6:f6) = rt    ;  s2taux(i6:f6) = s2t        ;  zetaux(i6:f6) = zeta-dz
-  !
-  !$acc data copyin( rtaux, zetaux, s2taux ) copyout( sc, v1c, v2c )
-  !$acc host_data use_device( rtaux, zetaux, s2taux, sc, v1c, v2c )
   CALL gcc_spin( length*6, rtaux, zetaux, s2taux, sc, v1c, v2c )
-  !$acc end host_data
-  !$acc end data
   !
-  vrrc(:,1) = 0.5_DP * (v1c(i1:f1,1) - v1c(i2:f2,1)) / dr    * null_v(:,1)
-  vrrc(:,2) = 0.5_DP * (v1c(i1:f1,2) - v1c(i2:f2,2)) / dr    * null_v(:,1)
-  vrsc(:,1) = 0.5_DP * (v1c(i3:f3,1) - v1c(i4:f4,1)) / ds/st * null_v(:,1)
-  vrsc(:,2) = 0.5_DP * (v1c(i3:f3,2) - v1c(i4:f4,2)) / ds/st * null_v(:,1)
-  vssc(:)   = 0.5_DP * (v2c(i3:f3)   - v2c(i4:f4)  ) / ds/st * null_v(:,1)
-  vrzc(:,1) = 0.5_DP * (v1c(i5:f5,1) - v1c(i6:f6,1)) / dz    * null_v(:,1)
-  vrzc(:,2) = 0.5_DP * (v1c(i5:f5,2) - v1c(i6:f6,2)) / dz    * null_v(:,1)
+  !$acc parallel loop
+  DO ir = 1, length
+    !
+    rt = r_in(ir,1)+r_in(ir,2)
+    !
+    ir_null = .FALSE.
+    zeta = zeta_trash
+    IF (rt>=eps) zeta = (r_in(ir,1)-r_in(ir,2)) / rt
+    IF (rt<eps .OR. ABS(zeta)>1._DP .OR. st(ir)<eps) ir_null = .TRUE.
+    !
+    drt = MIN(1.D-4, 1.D-2 * rt)
+    ds = MIN(1.D-4, 1.D-2 * st(ir))
+    !dz = MIN(1.D-4, 1.D-2 * ABS(zeta) )
+    dz = 1.D-6
+    !
+    IF ( .NOT. ir_null ) THEN
+      vrrc(ir,1) = 0.5_DP * (v1c(i1-1+ir,1) - v1c(i2-1+ir,1)) / drt
+      vrrc(ir,2) = 0.5_DP * (v1c(i1-1+ir,2) - v1c(i2-1+ir,2)) / drt
+      vrsc(ir,1) = 0.5_DP * (v1c(i3-1+ir,1) - v1c(i4-1+ir,1)) / ds/st(ir)
+      vrsc(ir,2) = 0.5_DP * (v1c(i3-1+ir,2) - v1c(i4-1+ir,2)) / ds/st(ir)
+      vssc(ir)   = 0.5_DP * (v2c(i3-1+ir)   - v2c(i4-1+ir)  ) / ds/st(ir)
+      vrzc(ir,1) = 0.5_DP * (v1c(i5-1+ir,1) - v1c(i6-1+ir,1)) / dz
+      vrzc(ir,2) = 0.5_DP * (v1c(i5-1+ir,2) - v1c(i6-1+ir,2)) / dz
+    ELSE
+      vrrc(ir,1) = 0._DP ;  vrrc(ir,2) = 0._DP
+      vrsc(ir,1) = 0._DP ;  vrsc(ir,2) = 0._DP
+      vrzc(ir,1) = 0._DP ;  vrzc(ir,2) = 0._DP
+      vssc(ir)   = 0._DP
+    ENDIF
+  ENDDO
+  !
+  !$acc end data
+  !$acc end data
+  DEALLOCATE( rtaux, st, s2taux, zetaux )
+  DEALLOCATE( v1c, v2c, sc )
   !
   IF (is_libxc(3)) igcx=igcx_
   IF (is_libxc(4)) igcc=igcc_
+  !
+  !$acc end data
+  !
+  IF (ierr/=0 .AND. .NOT.nowarning) CALL xclib_error( 'xc_gcx_', error_msg(ierr), 2 )
   !
   RETURN
   !

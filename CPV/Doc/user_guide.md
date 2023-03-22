@@ -3,22 +3,22 @@
 Introduction
 ============
 
-This guide covers the usage of the `CP` package, version 7.0, a core
+This guide covers the usage of the `CP` package, a core
 component of the Quantum ESPRESSO distribution. Further documentation,
 beyond what is provided in this guide, can be found in the directory
 `CPV/Doc/`, containing a copy of this guide.
 
 This guide assumes that you know the physics that `CP` describes and the
-methods it implements. It also assumes that you have already installed,
+methods it implements. A good reference for the topic is the book [D, Marx and J. Hutter, "Ab Initio Molecular Dynamics"](https://doi.org/10.1017/CBO9780511609633) It also assumes that you have already installed,
 or know how to install, Quantum ESPRESSO. If not, please read the
 general User's Guide for Quantum ESPRESSO, found in directory `Doc/` two
 levels above the one containing this guide; or consult the web site:
-`http://www.quantum-espresso.org`.
+[www.quantum-espresso.org](https://www.quantum-espresso.org).
 
 People who want to modify or contribute to `CP` should read the
-Developer Manual: `https://gitlab.com/QEF/q-e/-/wikis/home`.
+Developer Manual: [gitlab.com/QEF/q-e/-/wikis/home](https://gitlab.com/QEF/q-e/-/wikis/home).
 
-`CP` can perform Car-Parrinello molecular dynamics, including
+`CP` can perform [Car-Parrinello molecular dynamics](https://doi.org/10.1103/PhysRevLett.55.2471), including
 variable-cell dynamics. The `CP` package is based on the original code
 written by Roberto Car
 and Michele Parrinello. `CP` was developed by Alfredo Pasquarello (EPF
@@ -31,12 +31,12 @@ and others. We quote in particular:
 -   Sergio Orlandini (CINECA) for completing the CUDA Fortran acceleration
     started by Carlo Cavazzoni
 
--   Fabio Affinito and Maruella Ippolito (CINECA) for testing and benchmarking
+-   Fabio Affinito and Mariella Ippolito (CINECA) for testing and benchmarking
 
 -   Ivan Carnimeo and Pietro Delugas (SISSA) for further openACC acceleration
 
 -   Riccardo Bertossa (SISSA) for extensive refactoring of ensemble dynamics /
-    conjugate gradient part
+    conjugate gradient part, contributions to the documentation
 
 -   Federico Grasselli and Riccardo Bertossa (SISSA) for bug fixes,
     extensions to Autopilot;
@@ -44,7 +44,7 @@ and others. We quote in particular:
 -   Biswajit Santra, Hsin-Yu Ko, Marcus Calegari Andrade (Princeton) for
     various contribution, notably the SCAN functional;
 
--   Robert DiStasio (Cornell)), Biswajit Santra, and Hsin-Yu Ko for
+-   Robert DiStasio (Cornell), Biswajit Santra, and Hsin-Yu Ko for
     hybrid functionals with MLWF; (maximally localized Wannier
     functions);
 
@@ -64,7 +64,7 @@ The original version of this guide was mostly written by Gerardo Ballabio
 and Carlo Cavazzoni.
 
 `CP` is free software, released under the GNU General Public License.\
-See `http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt`, or the file
+See [www.gnu.org/licenses/old-licenses/gpl-2.0.txt](https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt), or the file
 `License` in the distribution.
 
 We shall greatly appreciate if scientific work done using the Quantum
@@ -181,6 +181,7 @@ keywords with self-explanatory names:
 > ATOMIC\_POSITIONS\
 > CELL\_PARAMETERS (optional)\
 > OCCUPATIONS (optional)
+> AUTOPILOT (optional)
 
 The keywords may be followed on the same line by an option. Unknown
 fields are ignored. See the files mentioned above for details on the
@@ -246,14 +247,16 @@ The `prefix.for` file, formatted like the previous two, contains the computed
 forces, in Hartree atomic units as well. It is written only if a molecular
 dynamics calculation is performed, or if `tprnfor = .true.` is set in input.
 
+In the `prefix.str` file you can find the stress tensor (with the ionic kinetic part included), in GPa.
+
 The simulation cell is written in a file named `prefix.cel` with the same header as the previous
 described files, and the cell matrix is then listed. NB: **THE CELL MATRIX IN THE
 OUTPUT IS TRANSPOSED** that means that if you want to reuse it again for a new input file,
 you have to pick the one that you find in `prefix.cel` and write in the input file
-after inverting rows and columns.
+after inverting rows and columns. In the `prefix.cel` file you will find the cell vectors in the **columns** of the matrix.
 
 The file `prefix.evp` has one line per printed step and contains some
-thermodynamical data.
+thermodynamics data.
 The first line of the file names the columns:
 ```
 #   nfi  time(ps)  ekinc  Tcell(K)  Tion(K)  etot  enthal  econs  econt  Volume  Pressure(GPa)
@@ -264,7 +267,7 @@ where:
    - `etot` is the DFT (potential) energy of the system, $`E_{DFT}`$
    - `econs` is a physically meaningful constant of motion, $`E_{DFT} + K_{NUCLEI}`$,
    in the limit of zero electronic fictitious mass
-   - `econt` is the constant of motion of the lagrangian$`E_{DFT} + K_{IONS} + K_{ELECTRONS}`$ t.
+   - `econt` is the constant of motion of the Lagrangian$`E_{DFT} + K_{IONS} + K_{ELECTRONS}`$ t.
    If the time step `dt` is small enough this will be up to a very good precision a constant.
    It is not a physical quantity, since $`K_{ELECTRONS}`$ has _nothing_ to do with the quantum
    kinetic energy of the electrons.
@@ -282,6 +285,7 @@ To prepare and run a CP simulation you should first of all define the
 system:
 
 > atomic positions\
+> atomic velocities (can be zero, read from the input, sampled from Maxwell-Boltzmann)\
 > system cell\
 > pseudopotentials\
 > cut-offs\
@@ -354,6 +358,8 @@ An example of input file (Benzene Molecule):
 
 You can find the description of the input variables in file `Doc/INPUT_CP.*`.
 
+The best way to initialize and run the simulation is first doing a few steps of Born-Oppenheimer (BO) molecular dynamics (MD) using the `electron_dynamic = 'cg'` input for minimizing the electronic degrees of freedom each MD step, after sampling the ionic velocities from a Maxwell-Boltzmann distribution. Then usually you run a Nosé thermostat and/or a barostat to reach some temperature and pressure that you choose. Then you can run in the microcanonical ensemble if needed. During the CP MD you must check that the fake electronic kinetic energy does not increase too much, otherwise at some point your simulation may become completely wrong.
+
 Reaching the electronic ground state
 ------------------------------------
 
@@ -361,9 +367,9 @@ The first run, when starting from scratch, is always an electronic
 minimization, with fixed ions and cell, to bring the electronic system
 on the ground state (GS) relative to the starting atomic configuration.
 This step is conceptually very similar to self-consistency in a
-`pw.x` run.
+`pw.x` run. The suggested method is to use the `electron_dynamics = ’cg’` to initialize the simulation.
 
-Sometimes a single run is not enough to reach the GS. In this case, you
+Sometimes when you do not use the CG routine, a single run is not enough to reach the GS. In this case, you
 need to re-run the electronic minimization stage. Use the input of the
 first run, changing `restart_mode = ’from_scratch’` to
 `restart_mode = ’restart’`.
@@ -385,16 +391,41 @@ Usually we consider the system on the GS when `ekin_conv_thr`
 $`< 10^{-5}`$. You could check the value of the fictitious kinetic energy
 on the standard output (column EKINC).
 
-Different strategies are available to minimize electrons, but the most
-frequently used is _damped dynamics_: `electron_dynamics = ’damp’` and
-`electron_damping` = a number typically ranging from 0.1 and 0.5.
-See the input description to compute the optimal damping factor.
-Steepest descent: `electron_dynamics = ’sd’`, is also available but it
-is typicallyslower than damped dynamics and should be used only to
+Different strategies are available to minimize electrons.
+You can choose among the following:
+
+  - _conjugate gradient_ (CG): direct minimization of the energy functional `electron_dynamics = ’cg’`
+  - damped dynamics: `electron_dynamics = ’damp’` and `electron_damping` = a number typically ranging from 0.1 and 0.5.
+  - Steepest descent: `electron_dynamics = ’sd’`
+
+The CG routine computes also the wavefunction time derivative in the parallel transport gauge.
+The time derivative is performed by computing twice the ground state using the atomic positions at the current timestep,
+and the atomic positions at the next timestep, that are computed by moving the atoms with their atomic velocities.
+This procedure allows to start the dynamics with a wavefunction velocity consistent with the atomic velocities.
+This usually results in a smoother start of the simulation.
+An other advantage of this technique is that you can apply it also in the middle of the dynamics introducing
+a much lower discontinuity in the trajectory than apply a minimization only and settings again to zero the wavefunction 
+velocity. All the other minimization routines in CP when called set the wavefunction velocity to zero.
+At the moment the CG routine works only with the plane wave parallelization scheme, both on CPU and GPU machines. It can run "on the fly" by using the autopilot module. 
+
+See the input description to compute the optimal damping factor of the damped dynamics routine.
+Steepest descent is also available but it is typically slower than damped dynamics and should be used only to
 start the minimization.
+
+Note that the CG routine is used also for doing a Born-Oppenheimer dynamic, or for using the ensemble DFT molecular dynamics. For this reason the meaning of the input variable
+`nstep` is different. In the CG minimization `nstep` is the number of ions dynamic step: the conjugate gradient algorithm stops
+when the required accuracy is reached, and the maximum number of steps that the CG algorithm performs is the input variable
+`maxiter`. In the damped dynamics and the steepest descent the `nstep` input variable is the number of sd/damped dynamics steps performed
+to reach the ground state, and ions usually are kept fixed.
 
 Relax the system
 ----------------
+
+If the input atomic positions are far from the equilibrium position you need to relax the system.
+Note that you can consider to do that with the pw.x code that may be faster for this task.
+Keep in mind that a recipe that works for every case does not exist, and it is impossible to predict 
+what will happen in an arbitrary system without running the simulation. The best approach is to try
+and see what happens. Here we give some ideas on a possible approach to the simulation.
 
 Once your system is in the GS, depending on how you have prepared the
 starting atomic configuration:
@@ -402,20 +433,24 @@ starting atomic configuration:
 1.  if you have set the atomic positions \"by hand\" and/or from a
     classical code, check the forces on atoms, and if they are large
     ($`\sim 0.1 \div 1.0`$ atomic units), you should perform an ionic
-    minimization, otherwise the system could break up during the
-    dynamics.
+    minimization or a few step of CG dynamic with a very small timestep
+    to equilibrate a little the simulation,
+    otherwise the system could break up during the CP dynamics.
 
 2.  if you have taken the positions from a previous run or a previous
     ab-initio simulation, check the forces, and if they are too small
     ($`\sim 10^{-4}`$ atomic units), this means that atoms are already in
     equilibrium positions and, even if left free, they will not move.
-    Then you need to randomize positions a little bit (see below).
+    You will need to set the atomic velocities from input or let the code
+    chose them by sampling a Maxwell-Boltzmann distribution at a given temperature.
+    An alternative approach is also to randomize a little bit the atomic positions.
 
-Let us consider case 1). There are different strategies to relax the
-system, but the most used are again steepest-descent or damped-dynamics
+Let us consider case 1). Suppose that you decided to minimize the system with the cp.x code.
+There are different strategies to relax the
+system in cp.x, but the most used are again steepest-descent or damped-dynamics
 for ions and electrons. You could also mix electronic and ionic
 minimization scheme freely, i.e. ions in steepest-descent and electron
-in with damped-dynamics or vice versa.
+in with conjugate-gradient.
 
 -   suppose we want to perform steepest-descent for ions. Then we should
     specify the following section for ions:
@@ -459,9 +494,10 @@ in with damped-dynamics or vice versa.
     electron and ions together, the ionic forces are not properly
     correct, then it is often better to perform a ionic step every N
     electronic steps, or to move ions only when electron are in their GS
-    (within the chosen threshold).
+    (within the chosen threshold). You can also use the CG dynamics for the electrons,
+    that take care of fully minimizing the electronic energy.
 
-    This can be specified by adding, in the ionic section, the
+    You can perform a ionic step every N electronic steps done with 'sd' or 'damp', by adding, in the ionic section, the
     `ion_nstepe` parameter, then the &IONS namelist become as follows:
 
                  &ions
@@ -483,10 +519,12 @@ in with damped-dynamics or vice versa.
     process thus continues until the forces become smaller than
     `forc_conv_thr`.
 
-    *Note* that to fully relax the system you need many runs, and
-    different strategies, that you should mix and change in order to
-    speed-up the convergence. The process is not automatic, but is
-    strongly based on experience, and trial and error.
+    *Note* that to fully relax the system 
+    you need many runs, and different strategies, that you should mix and change in order to
+    speed-up the convergence. This process is not automatic, but is
+    strongly based on experience, and trial and error. For this reason
+    we suggest to use the CG minimization algorithm, that simplifies the 
+    process and usually works well, at least for the electronic part of the problem.
 
     Remember also that the convergence to the equilibrium positions
     depends on the energy threshold for the electronic GS, in fact
@@ -495,8 +533,65 @@ in with damped-dynamics or vice versa.
     on forces could not be satisfied, if you do not require an even
     smaller threshold on total energy.
 
-Let us now move to case 2: randomization of positions.
 
+A different approach is to use a small timestep
+and run the ion dynamic using ground states computed with the CG routine.
+The system, given a small enough timestep and a big enough number of steps,
+will thermalize at a defined temperature. Note that if the potential energy of the
+initial configuration is too big the final temperature may be too large.
+To run some steps of Born-Oppenheimer (BO) molecular dynamics you can set the following input variables:
+
+             &control
+                ! ...
+                nstep = 100, ! number of MD steps. It has to be big enought
+                dt    = 1.0d0, ! put a small number here...
+                ! ...
+             /
+             !...
+             &electrons
+                electron_dynamics = 'cg'
+             /
+             !...
+             &ions
+               ion_dynamics = 'verlet' ! you also mix different approaches by changing this to sd
+             /
+             !...
+             
+
+An additional feature of the code that you can use to perform the simulation initialization doing less restarts is the autopilot module ( see [the autopilot guide](autopilot_guide.md) ). For example you can play with the timestep _while the simulation is running_ by writing a file called `pilot.mb` in the folder where the simulation is running with the following content:
+
+         PILOT
+           NOW : DT = 0.5
+           NOW + 10 : DT = 1.0
+           NOW + 20 : DT = 5.0
+         ENDRULES
+
+Let us now move to case 2.
+
+If you have forces that are too small in your initial state, you can chose to initialize the simulation with 
+random initial atomic velocities. The input variables are `ion_velocities = 'random'` and `tempw = 300.0` to sample from a 300K distribution.
+In this case the best approach is to perform the ground state calculation and the small initial thermalization in a single run by performing few steps of BO dynamics using CG
+
+
+             &control
+                ! ...
+                nstep = 50, ! number of MD steps. It has to be big enought
+                dt    = 20.0d0, ! if the forces are small, you don't need a small number...
+                ! ...
+             /
+             !...
+             &electrons
+                electron_dynamics = 'cg'
+             /
+             !...
+             &ions
+               ion_dynamics = 'verlet' ! you also mix different approaches by changing this to sd
+               ion_velocities = 'random'
+               tempw = 300.d0
+             /
+             !...
+
+A different approach is to randomize the atomic positions, and set the ionic velocities to zero.
 If you have relaxed the system or if the starting system is already in
 the equilibrium positions, then you need to displace ions from the
 equilibrium positions, otherwise they will not move in a dynamics
@@ -531,41 +626,86 @@ energy plateau.
 CP dynamics
 -----------
 
-At this point after having minimized the electrons, and with ions
-displaced from their equilibrium positions, we are ready to start a CP
-dynamics. We need to specify `’verlet’` both in ionic and electronic
+At this point after having:
+
+ 1. minimized the electrons
+ 2. a good initial configuration of the ionic degrees of freedom (good positions and velocities)
+ 3. optionally computed the initial wavefunction velocity with the CG routine
+ 
+we are ready to start a CP dynamics.
+
+The parameter specific to the CP method that you must choose very carefully is the electron fake mass `emass`. The fake electron mass is the parameter that change how the wavefunctions follow the minimum of the DFT energy during the dynamics. The smaller the better. In the limit where both the fake mass and the timestep are zero we recover a perfect minimization of the wavefunction at each timestep, but this would require an infinite amount of steps to simulate a trajectory of a given length in time. So we need a compromise between efficiency and precision. You should always check that the forces on the ions are well converged with respect to the emass parameter.
+What happens is that, the bigger the fake electron mass, the bigger the systematic error that you have on the forces. The error, intuitively, is related to the fact that the electrons have a finite classical mass, that is interacting with the ions through the DFT potential, so they have an inertia that adds up to the mass of the ion, slowing it down. This effect causes that, with a good approximation, the forces calculated with the CP method, on average, are the _true_ ground state forces time a factor between 0.0 and 1.0 that depends on `emass`. You can correct the leading order of this error by changing the ionic mass by the same factor to recover the same inertia of the atom+electron classical object. Remember also that static properties of an equilibrium molecular dynamics simulation do not depend on the mass of the ions. So if only static properties like radial distribution function or lattice parameters are needed this leading order correction is not necessary, but it becomes important if you are computing, for example, a diffusion coefficient. For a detailed analysis of this aspect of the theory see for example [P. Tangney, "On the theory underlying the Car-Parrinello method and the role of the fictitious mass parameter"](https://doi.org/10.1063/1.2162893)([arXiv](https://arxiv.org/abs/cond-mat/0601130)) or the Marx and Hutter book.
+
+In practice, you can safely use `emass` of about 50 atomic units without affecting the dynamical properties too much.
+
+Keep in mind that the lower the `emass` the lower the integration timestep `dt`, because the electronic degrees of freedom will move faster. You have to check
+that with your parameters the CP constant of motion in the output is conserved with a good approximation.
+
+To run the CP simulation you need to specify `’verlet’` both in ionic and electronic
 dynamics. The threshold in control input section will be ignored, like
-any parameter related to minimization strategy. The first time we
-perform a CP run after a minimization, it is always better to put
-velocities equal to zero, unless we have velocities, from a previous
-simulation, to specify in the input file. Restore the proper masses for
-the ions. In this way we will sample the microcanonical ensemble. The
-input section changes as follow:
+any parameter related to minimization strategy.
+To start the simulation you must use the restart from the previous step.
+Restore the proper masses for the ions. In this way we will sample the microcanonical ensemble.
+If you did not use the CG routine (that computes electron velocities), 
+the input section changes as follow:
+
 
                &electrons
-                  emass = 400.d0,
+                  emass = 50.d0,
                   emass_cutoff = 2.5d0,
                   electron_dynamics = 'verlet',
-                  electron_velocities = 'zero'
+                  electron_velocities = 'zero' ! only if you did NOT use CG
                /
                &ions
                   ion_dynamics = 'verlet',
-                  ion_velocities = 'zero'
+                  ion_velocities = 'zero' ! if you did NOT use CG!
                /
                ATOMIC_SPECIES
                C 12.0d0 c_blyp_gia.pp
                H 1.00d0 h.ps
+               
+If you used a method that computes the ionic velocities and the electronic velocities in a consistent way you can use the following:
 
-If you want to specify the initial velocities for ions, you have to set
+               &electrons
+                  emass = 50.d0,
+                  emass_cutoff = 2.5d0,
+                  electron_dynamics = 'verlet',
+                  electron_velocities = 'default' ! if you have wfc velocities
+               /
+               &ions
+                  ion_dynamics = 'verlet',
+                  ion_velocities = 'default' ! if you have velocities
+               /
+               ATOMIC_SPECIES
+               C 12.0d0 c_blyp_gia.pp
+               H 1.00d0 h.ps
+               
+If you want to change the timestep, for example because you used a big timestep in a small
+CG thermalization performed in the relaxation step, you must specify the following additional parameters:
+
+               &control
+                    dt    = 5.0d0, ! new integration timestep
+               /
+               &electrons
+                  electron_velocities = 'change_step' ! if you have wfc velocities
+               /
+               &ions
+                  ion_velocities = 'change_step' ! if you have velocities
+                  tolp = 20.d0 ! old integration timestep
+               /
+
+If you want to specify a new set of initial velocities for ions, you have to set
 `ion_velocities =’from_input’`, and add the ATOMIC\_VELOCITIES card,
-after the ATOMIC\_POSITION card, with the list of velocities in atomic
-units.
+after the ATOMIC\_POSITION card, with the list of velocities with time in atomic
+units, and length in the same units specified for the atomic positions.
 
 NOTA BENE: in restarting the dynamics after the first CP run, remember
 to remove or comment the velocities parameters:
 
+
                &electrons
-                  emass = 400.d0,
+                  emass = 50.d0,
                   emass_cutoff = 2.5d0,
                   electron_dynamics = 'verlet'
                   ! electron_velocities = 'zero'
@@ -1028,7 +1168,7 @@ parallelization can be found by observing the performances of `ortho`
 in the final time report for different numbers of processors in the 
 linear-algebra group (must be a square integer, not larger than the 
 number of processoris for plane-wave parallelization). Linear-algebra
-parallelization distributes `M\times M`$ matrices, with `M` number of
+parallelization distributes $`M\times M`$ matrices, with `M` number of
 bands, so it may be useful if memory-constrained.
 
 Note: optimal serial performances are achieved when the data are as much

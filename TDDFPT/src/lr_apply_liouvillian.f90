@@ -64,6 +64,11 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE dv_of_drho_lr
   USE xc_lib,               ONLY : start_exx, stop_exx
   !
+#if defined (__ENVIRON)
+  USE plugin_flags,         ONLY : use_environ
+  USE environ_td_module,    ONLY : calc_environ_dpotential
+#endif
+  !
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(IN)  :: evc1(npwx*npol,nbnd,nks)
@@ -159,7 +164,9 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
            !
            DEALLOCATE(dvrs_temp)
            !
-           CALL plugin_tddfpt_potential(rho_1,dvrs)
+#if defined (__ENVIRON)
+           IF (use_environ) CALL calc_environ_dpotential(rho_1, dvrs)
+#endif
            !
         ELSE
            !
@@ -534,7 +541,15 @@ CONTAINS
     !
     ! Compute sevc1_new = H*evc1
     !
+#if defined(__CUDA)
+    !$acc data copyin(evc1) copyout(sevc1_new)
+    !$acc host_data use_device(evc1, sevc1_new)
+    CALL h_psi_gpu (npwx,ngk(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1))
+    !$acc end host_data
+    !$acc end data
+#else
     CALL h_psi(npwx,ngk(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1))
+#endif
     !
     IF (lr_exx) CALL start_exx()
     !
@@ -547,7 +562,15 @@ CONTAINS
            CALL fwfft_orbital_gamma(spsi1,ibnd,nbnd)
         ENDDO
     ELSE
+#if defined(__CUDA)
+       !$acc data copyin(evc1) copyout(spsi1)
+       !$acc host_data use_device(evc1, spsi1)
+       CALL s_psi_gpu (npwx,ngk(1),nbnd,evc1(1,1,1),spsi1)
+       !$acc end host_data
+       !$acc end data
+#else            
        CALL s_psi(npwx,ngk(1),nbnd,evc1(1,1,1),spsi1)
+#endif
     ENDIF
     !
     !   Subtract the eigenvalues

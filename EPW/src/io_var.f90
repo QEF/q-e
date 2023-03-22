@@ -24,7 +24,10 @@
             iua2ffil, iudosfil, iufillambda, iuqdos, iufe, iufilker, iuquad,  &
             iufilgap, iospectral_sup, iua2ftrfil, iufilgapFS, iufillambdaFS,  &
             iospectral_cum, iuwanep, iuwane, iunukk, iudvscf, iuqpeig, iures, &
-            iuint3paw
+            !!!!!
+            ! iuint3paw
+            iuint3paw, iufildos, iufilmat
+            !!!!!
   PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb, &
             iufilfreq, iufilegnv, iufileph, iufilkqmap, iunpattern, iufilmu_q, &
             iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, iufilFS,  &
@@ -41,6 +44,7 @@
             iunsparset_merge, iunepmatcb_merge, iunsparseqcb_merge,                &
             iunsparseicb_merge, iunsparsejcb_merge, iunsparsetcb_merge,            &
             iunsparsekcb_merge, iunepmat_merge
+  PUBLIC :: iunRpscell, iunkgridscell, iunpsirscell
 
   !
   ! Output of physically relevant quantities (60-100)
@@ -73,6 +77,10 @@
   INTEGER :: iudvscf         = 80  ! Unit for the dvscf_q file
   INTEGER :: iudyn           = 81  ! Unit for the dynamical matrix file
   INTEGER :: iufilkqmap      = 82  ! Map of k+q
+  !!!!!
+  INTEGER :: iufilmat        = 87  ! Matsubara indices
+  INTEGER :: iufildos        = 88  ! electronic DOS in Fermi windows [prefix.dos]
+  !!!!!
   INTEGER :: iukgmap         = 96  ! Map of folding G-vector indexes [.kgmap]
   INTEGER :: iuwanep         = 97  ! Spatial decay of e-p matrix elements in wannier basis
                                    ! Electrons + phonons [epmat_wanep]
@@ -168,6 +176,12 @@
   ! 
   ! Miscellaneous (326-350)
   INTEGER :: epwbib          = 326 ! EPW bibliographic file.
+  !
+  ! Output quantities related to polaron (350-400)
+  !JLB: All the other polaron I/O units should also be defined here for consistency
+  INTEGER :: iunRpscell      = 351 ! Rp unit cell list within polaron supercell
+  INTEGER :: iunkgridscell   = 352 ! Gs k-grid used for transformed supercell
+  INTEGER :: iunpsirscell    = 353 ! Polaron wf in real space for transformed supercell
   !
   ! Merging of files (400-450)
   INTEGER :: iunepmat_merge    = 400

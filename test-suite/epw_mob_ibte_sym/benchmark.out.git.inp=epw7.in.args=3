@@ -27,21 +27,25 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.2.0 starts on  9Jul2020 at 18:54:54 
+     Program EPW v.5.6 starts on  6Feb2023 at 15:48:34 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
          "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     4 processors
+     Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     K-points division:     npool     =       4
-     Fft bands division:     nmany     =       1
+     45726 MiB available memory on the printing compute node when the environment starts
+
+     Reading input from epw7.in
+
+     Reading supplied temperature list.
                       
      ------------------------------------------------------------------------ 
                    RESTART - RESTART - RESTART - RESTART                         
@@ -83,7 +87,7 @@
 
      site n.  atom      mass           positions (a_0 units)
 
- 
+
      No symmetry!
 
      G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
@@ -98,6 +102,8 @@
      Using si.ukk from disk
      -------------------------------------------------------------------
 
+     Symmetries of Bravais lattice:  48
+     Symmetries of crystal:          48
 
      Do not need to read .epb files; read .fmt files
 
@@ -116,15 +122,15 @@
      Finished reading Wann rep data from file
 
      ===================================================================
-     Memory usage:  VmHWM =        53Mb
-                   VmPeak =       386Mb
+     Memory usage:  VmHWM =        15Mb
+                   VmPeak =       250Mb
      ===================================================================
      
      Using uniform q-mesh:    7   7   7
      Size of q point mesh for interpolation:        343
      Using uniform MP k-mesh:    7   7   7
      Size of k point mesh for interpolation:         40
-     Max number of k points per pool:               10
+     Max number of k points per pool:               40
 
      Fermi energy coarse grid =   6.255484 eV
 
@@ -135,12 +141,12 @@
      ===================================================================
      Applying a scissor shift of   0.70000 eV to the CB      5
 
-              ibndmin =     5  ebndmin =     0.563
-              ibndmax =     5  ebndmax =     0.591
+              ibndmin =     5  ebndmin =     7.661 eV
+              ibndmax =     5  ebndmax =     8.046 eV
 
 
-     Number of ep-matrix elements per pool :           30 ~=    0.23 Kb (@ 8 bytes/ DP)
-     Number of elements per core         36
+     Number of ep-matrix elements per pool :          120 ~=    0.94 Kb (@ 8 bytes/ DP)
+     Number of elements per core        144
      Symmetry mapping finished
       
      =============================================================================================
@@ -148,16 +154,16 @@
      =============================================================================================
 
      =============================================================================================
-       Temp     Fermi   Elec density  Population SR                  Elec mobility 
+       Temp     Fermi   Elec density  Population SR            Drift Elec mobility 
         [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      400.000   7.0305   0.10000E+14   0.00000E+00    0.162793E+00    0.000000E+00    0.000000E+00
-                                                      0.000000E+00    0.162793E+00    0.000000E+00
-                                                      0.000000E+00    0.000000E+00    0.162793E+00
-      500.000   6.8729   0.10000E+14   0.00000E+00    0.140282E+00    0.000000E+00    0.000000E+00
-                                                      0.000000E+00    0.140282E+00    0.000000E+00
-                                                      0.000000E+00    0.000000E+00    0.140282E+00
+      400.000   7.0305   0.10000E+14   0.00000E+00    0.162741E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.162741E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.162741E+00
+      500.000   6.8729   0.10000E+14   0.00000E+00    0.140246E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.140246E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.140246E+00
       
      =============================================================================================
      Start solving iterative Boltzmann Transport Equation
@@ -166,108 +172,108 @@
      Iteration number:         1
 
      =============================================================================================
-       Temp     Fermi   Elec density  Population SR                  Elec mobility 
+       Temp     Fermi   Elec density  Population SR            Drift Elec mobility 
         [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      400.000   7.0305   0.10000E+14   0.00000E+00    0.134336E+00    0.000000E+00    0.000000E+00
-                                                      0.000000E+00    0.134336E+00    0.000000E+00
-                                                      0.000000E+00    0.000000E+00    0.134336E+00
-      500.000   6.8729   0.10000E+14   0.00000E+00    0.118625E+00    0.000000E+00    0.000000E+00
-                                                      0.000000E+00    0.118625E+00    0.000000E+00
-                                                      0.000000E+00    0.000000E+00    0.118625E+00
+      400.000   7.0305   0.10000E+14   0.00000E+00    0.134293E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.134293E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.134293E+00
+      500.000   6.8729   0.10000E+14   0.00000E+00    0.118596E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.118596E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.118596E+00
 
-                                                      0.134336E+00    Max error
+                                                      0.134293E+00    Max error
      Iteration number:         2
 
      =============================================================================================
-       Temp     Fermi   Elec density  Population SR                  Elec mobility 
+       Temp     Fermi   Elec density  Population SR            Drift Elec mobility 
         [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      400.000   7.0305   0.10000E+14   0.00000E+00    0.139367E+00    0.000000E+00    0.000000E+00
-                                                      0.000000E+00    0.139367E+00    0.000000E+00
-                                                      0.000000E+00    0.000000E+00    0.139367E+00
-      500.000   6.8729   0.10000E+14   0.00000E+00    0.122220E+00    0.000000E+00    0.000000E+00
-                                                      0.000000E+00    0.122220E+00    0.000000E+00
-                                                      0.000000E+00    0.000000E+00    0.122220E+00
+      400.000   7.0305   0.10000E+14   0.00000E+00    0.139323E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.139323E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.139323E+00
+      500.000   6.8729   0.10000E+14   0.00000E+00    0.122189E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.122189E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.122189E+00
 
-                                                      0.503091E-02    Max error
+                                                      0.502947E-02    Max error
      Iteration number:         3
 
      =============================================================================================
-       Temp     Fermi   Elec density  Population SR                  Elec mobility 
+       Temp     Fermi   Elec density  Population SR            Drift Elec mobility 
         [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      400.000   7.0305   0.10000E+14   0.00000E+00    0.138474E+00    0.000000E+00    0.000000E+00
-                                                      0.000000E+00    0.138474E+00    0.000000E+00
-                                                      0.000000E+00    0.000000E+00    0.138474E+00
-      500.000   6.8729   0.10000E+14   0.00000E+00    0.121602E+00    0.000000E+00    0.000000E+00
-                                                      0.000000E+00    0.121602E+00    0.000000E+00
-                                                      0.000000E+00    0.000000E+00    0.121602E+00
+      400.000   7.0305   0.10000E+14   0.00000E+00    0.138429E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.138429E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.138429E+00
+      500.000   6.8729   0.10000E+14   0.00000E+00    0.121572E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.121572E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.121572E+00
 
-                                                      0.893536E-03    Max error
+                                                      0.893296E-03    Max error
      Iteration number:         4
 
      =============================================================================================
-       Temp     Fermi   Elec density  Population SR                  Elec mobility 
+       Temp     Fermi   Elec density  Population SR            Drift Elec mobility 
         [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      400.000   7.0305   0.10000E+14   0.00000E+00    0.138633E+00    0.000000E+00    0.000000E+00
-                                                      0.000000E+00    0.138633E+00    0.000000E+00
-                                                      0.000000E+00    0.000000E+00    0.138633E+00
-      500.000   6.8729   0.10000E+14   0.00000E+00    0.121710E+00    0.000000E+00    0.000000E+00
-                                                      0.000000E+00    0.121710E+00    0.000000E+00
-                                                      0.000000E+00    0.000000E+00    0.121710E+00
+      400.000   7.0305   0.10000E+14   0.00000E+00    0.138588E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.138588E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.138588E+00
+      500.000   6.8729   0.10000E+14   0.00000E+00    0.121680E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.121680E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.121680E+00
 
-                                                      0.159036E-03    Max error
+                                                      0.158996E-03    Max error
      Iteration number:         5
 
      =============================================================================================
-       Temp     Fermi   Elec density  Population SR                  Elec mobility 
+       Temp     Fermi   Elec density  Population SR            Drift Elec mobility 
         [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      400.000   7.0305   0.10000E+14   0.00000E+00    0.138604E+00    0.000000E+00    0.000000E+00
-                                                      0.000000E+00    0.138604E+00    0.000000E+00
-                                                      0.000000E+00    0.000000E+00    0.138604E+00
-      500.000   6.8729   0.10000E+14   0.00000E+00    0.121691E+00    0.000000E+00    0.000000E+00
-                                                      0.000000E+00    0.121691E+00    0.000000E+00
-                                                      0.000000E+00    0.000000E+00    0.121691E+00
+      400.000   7.0305   0.10000E+14   0.00000E+00    0.138560E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.138560E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.138560E+00
+      500.000   6.8729   0.10000E+14   0.00000E+00    0.121661E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.121661E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.121661E+00
 
-                                                      0.283334E-04    Max error
+                                                      0.283268E-04    Max error
      Iteration number:         6
 
      =============================================================================================
-       Temp     Fermi   Elec density  Population SR                  Elec mobility 
+       Temp     Fermi   Elec density  Population SR            Drift Elec mobility 
         [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      400.000   7.0305   0.10000E+14   0.00000E+00    0.138609E+00    0.000000E+00    0.000000E+00
-                                                      0.000000E+00    0.138609E+00    0.000000E+00
-                                                      0.000000E+00    0.000000E+00    0.138609E+00
-      500.000   6.8729   0.10000E+14   0.00000E+00    0.121694E+00    0.000000E+00    0.000000E+00
-                                                      0.000000E+00    0.121694E+00    0.000000E+00
-                                                      0.000000E+00    0.000000E+00    0.121694E+00
+      400.000   7.0305   0.10000E+14   0.00000E+00    0.138565E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.138565E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.138565E+00
+      500.000   6.8729   0.10000E+14   0.00000E+00    0.121664E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.121664E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.121664E+00
 
-                                                      0.505006E-05    Max error
+                                                      0.504899E-05    Max error
      Iteration number:         7
 
      =============================================================================================
-       Temp     Fermi   Elec density  Population SR                  Elec mobility 
+       Temp     Fermi   Elec density  Population SR            Drift Elec mobility 
         [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      400.000   7.0305   0.10000E+14   0.00000E+00    0.138608E+00    0.000000E+00    0.000000E+00
-                                                      0.000000E+00    0.138608E+00    0.000000E+00
-                                                      0.000000E+00    0.000000E+00    0.138608E+00
-      500.000   6.8729   0.10000E+14   0.00000E+00    0.121694E+00    0.000000E+00    0.000000E+00
-                                                      0.000000E+00    0.121694E+00    0.000000E+00
-                                                      0.000000E+00    0.000000E+00    0.121694E+00
+      400.000   7.0305   0.10000E+14   0.00000E+00    0.138564E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.138564E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.138564E+00
+      500.000   6.8729   0.10000E+14   0.00000E+00    0.121663E+00    0.000000E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.121663E+00    0.000000E+00
+                                       0.00000E+00    0.000000E+00    0.000000E+00    0.121663E+00
 
-                                                      0.900291E-06    Max error
+                                                      0.900117E-06    Max error
 
      Unfolding on the coarse grid
      elphon_wrap  :      0.00s CPU      0.00s WALL (       1 calls)
@@ -278,20 +284,16 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :      0.16s CPU      0.19s WALL (       1 calls)
+     ephwann      :      0.26s CPU      0.27s WALL (       1 calls)
 
-     HamW2B       :      0.00s CPU      0.00s WALL (      10 calls)
-     kpoint_paral :      0.00s CPU      0.00s WALL (       1 calls)
+     HamW2B       :      0.00s CPU      0.00s WALL (      40 calls)
 
 
      Total program execution
-     EPW          :      0.17s CPU      0.20s WALL
+     EPW          :      0.26s CPU      0.27s WALL
 
-                                                                                          
- Please consider citing:                                                                  
- S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
-                                                                                          
- In addition, since you have used the following functionalities, please cite:             
-   scattering :: S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)     
-   iterative_bte :: S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)  
-   iterative_bte :: F. Macheda and N. Bonini, Phys. Rev. B 98, 201201 (2018)                 
+     ===============================================================================
+     The functionality-dependent EPW.bib file was created with suggested citations. 
+     Please consider citing the papers listed in EPW.bib.                           
+     ===============================================================================
+                                                                                    

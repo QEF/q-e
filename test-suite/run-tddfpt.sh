@@ -8,8 +8,8 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-if [[ $QE_USE_MPI == 1 ]]; then
-  export PARA_PREFIX="mpirun -np ${TESTCODE_NPROCS}"
+if [[ "$QE_USE_MPI" != "" ]]; then
+  export PARA_PREFIX="mpirun -np $QE_USE_MPI"
   export PARA_SUFFIX=" "
 else
   unset PARA_PREFIX
@@ -68,16 +68,16 @@ then
   fi
 elif [[ "$1" == "6" ]]
 then
-  echo "Running TURBO MAGNONS ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_magnons.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_magnons.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  echo "Running TURBO MAGNON ..."
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_magnon.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_magnon.x ${PARA_SUFFIX} < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
   fi
 elif [[ "$1" == "7" ]]
 then
-  echo "Running TURBO SPECTRUM MAGNONS ..."
+  echo "Running TURBO SPECTRUM MAGNON ..."
   echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4
   cp $3 turbo_spectrum.out

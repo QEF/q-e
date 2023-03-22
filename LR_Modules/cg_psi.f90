@@ -32,12 +32,14 @@ subroutine cg_psi (lda, n, m, psi, h_diag)
   ! counter on bands
   ! counter on the elements of the vector
   !
+  !$acc parallel loop collapse(2) present(psi,h_diag)
   do k = 1, m
      do i = 1, n
         psi (i, k) = psi (i, k) * h_diag (i, k)
      enddo
   enddo
   IF (noncolin) THEN
+     !$acc parallel loop collapse(2) present(psi,h_diag)
      do k = 1, m
         do i = 1, n
            psi (i+lda, k) = psi (i+lda, k) * h_diag (i+lda, k)

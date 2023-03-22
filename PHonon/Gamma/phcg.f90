@@ -28,9 +28,7 @@ PROGRAM phcg
   !
   ! Initialize MPI, clocks, print initial messages
   !
-#if defined(__MPI)
   CALL mp_startup ( )
-#endif
   CALL environment_start ( code )
   !
   CALL cg_readin
@@ -424,7 +422,7 @@ SUBROUTINE cg_neweps
   USE ions_base, ONLY : nat, tau
   USE fft_base,  ONLY : dfftp
   USE scf,       ONLY : rho, rho_core
-  USE xc_lib,    ONLY : xclib_set_threshold
+  USE xc_lib,    ONLY : xclib_set_threshold, dmxc
   USE cgcom
   !
   IMPLICIT NONE
@@ -483,10 +481,13 @@ SUBROUTINE newscf
   USE basis, ONLY: starting_wfc 
   USE cellmd,ONLY: lmovecell
   USE gvecs, ONLY: doublegrid
+  USE gvect, ONLY: gstart
   USE wvfct, ONLY: btype
   USE klist, ONLY: nkstot
   USE wvfct, ONLY: nbnd, nbndx
   USE noncollin_module, ONLY: report
+  USE check_stop,    ONLY : check_stop_init
+  USE fft_base,      ONLY : dfftp
   USE symm_base,     ONLY : nsym
   USE io_files,      ONLY : iunwfc, prefix, tmp_dir, postfix
   USE ldaU,          ONLY : lda_plus_u
@@ -510,7 +511,10 @@ SUBROUTINE newscf
   lmovecell=.false.
   iprint=10000
   starting_wfc='file'
-  report=1
+  report=0
+  CALL check_stop_init()
+  CALL setup_para ( dfftp%nr3, 1, nbnd )
+  CALL export_gstart_2_solvers(gstart)
   if ( .not. allocated (btype) ) then
      allocate( btype( nbnd, nkstot ) )
      btype(:,:) = 1

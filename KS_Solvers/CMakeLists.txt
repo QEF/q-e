@@ -52,8 +52,6 @@ set(src_dense
     DENSE/gram_schmidt_gamma.f90
     DENSE/rotate_driver.f90
     # GPU
-    DENSE/rotate_HSpsi_gamma_gpu.f90
-    DENSE/rotate_HSpsi_k_gpu.f90
     DENSE/rotate_wfc_gamma_gpu.f90
     DENSE/rotate_xpsi_k_gpu.f90
     DENSE/rotate_xpsi_gamma_gpu.f90
@@ -71,12 +69,7 @@ set(src_paro
     ParO/paro_k.f90
     ParO/pcg_k.f90
     ParO/paro_gamma_new.f90
-    ParO/paro_k_new.f90
-    # GPU
-    ParO/bpcg_gamma_gpu.f90
-    ParO/bpcg_k_gpu.f90
-    ParO/paro_gamma_new_gpu.f90
-    ParO/paro_k_new_gpu.f90)
+    ParO/paro_k_new.f90)
 qe_enable_cuda_fortran("${src_paro}")
 
 set(src_rmmdiis
@@ -90,6 +83,8 @@ set(src_rmmdiis
 qe_add_library(qe_kssolver_davidson ${src_davidson})
 target_link_libraries(qe_kssolver_davidson
     PRIVATE
+        qe_device_lapack
+        qe_openacc_fortran
         qe_openmp_fortran
         qe_lax
         qe_utilx
@@ -123,6 +118,7 @@ target_link_libraries(qe_kssolver_ppcg
 qe_add_library(qe_kssolver_dense ${src_dense})
 target_link_libraries(qe_kssolver_dense
     PRIVATE
+        qe_openacc_fortran
         qe_lax
         qe_utilx
         qe_mpi_fortran
@@ -139,7 +135,9 @@ add_dependencies(qe_kssolver_dense qe_ks_headers)
 
 qe_add_library(qe_kssolver_paro ${src_paro})
 target_link_libraries(qe_kssolver_paro
-    PRIVATE
+    PRIVATE 
+        qe_device_lapack
+        qe_openacc_fortran
         qe_kssolver_dense
         qe_lax
         qe_utilx

@@ -10,8 +10,8 @@ epw:
 	(cd ZG/src ; make )
 
 clean:
-	cd src ; rm -f *.o *.mod  *~ *.F90
-	cd ZG/src ; rm -f *.o *.mod  *~
+	cd src ; rm -f *.o *.a *.mod  *~ *.F90
+	cd ZG/src ; rm -f *.o *.a *.mod  *~
 
 distclean : clean
 	rm -f src/epw.x bin/epw.x

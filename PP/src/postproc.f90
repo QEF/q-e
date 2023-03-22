@@ -27,7 +27,7 @@ SUBROUTINE extract (plot_files,plot_num)
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau
   USE gvect
   USE fft_base,  ONLY : dfftp
-  USE klist,     ONLY : two_fermi_energies, degauss
+  USE klist,     ONLY : two_fermi_energies, degauss, ngauss
   USE vlocal,    ONLY : strf
   USE io_files,  ONLY : tmp_dir, prefix
   USE io_global, ONLY : ionode, ionode_id
@@ -50,10 +50,10 @@ SUBROUTINE extract (plot_files,plot_num)
        (/ '  ', '_X', '_Y', '_Z' /)
 
   INTEGER :: kpoint(2), kband(2), spin_component(3), ios
-  LOGICAL :: lsign, needwf, dummy
+  LOGICAL :: lsign, needwf, dummy, use_gauss_ldos
 
   REAL(DP) :: emin, emax, sample_bias, z, dz
-  
+
   REAL(DP) :: degauss_ldos, delta_e
   CHARACTER(len=256) :: filplot
   INTEGER :: plot_nkpt, plot_nbnd, plot_nspin, nplots
@@ -64,7 +64,7 @@ SUBROUTINE extract (plot_files,plot_num)
 
   NAMELIST / inputpp / outdir, prefix, plot_num, sample_bias, &
       spin_component, z, dz, emin, emax, delta_e, degauss_ldos, kpoint, kband, &
-      filplot, lsign
+      filplot, lsign, use_gauss_ldos
   !
   !   set default values for variables in namelist
   !
@@ -84,6 +84,7 @@ SUBROUTINE extract (plot_files,plot_num)
   emax = +999.0d0
   delta_e=0.1d0
   degauss_ldos=-999.0d0
+  use_gauss_ldos=.false.
   !
   ios = 0
   !
@@ -118,6 +119,7 @@ SUBROUTINE extract (plot_files,plot_num)
   CALL mp_bcast( kpoint, ionode_id, intra_image_comm )
   CALL mp_bcast( filplot, ionode_id, intra_image_comm )
   CALL mp_bcast( lsign, ionode_id, intra_image_comm )
+  CALL mp_bcast( use_gauss_ldos, ionode_id, intra_image_comm)
   !
   ! no task specified: do nothing and return
   !
@@ -173,6 +175,11 @@ SUBROUTINE extract (plot_files,plot_num)
   emax = emax / rytoev
   delta_e = delta_e / rytoev
   degauss_ldos = degauss_ldos / rytoev
+
+  ! Set ngauss to 0 if necessary.
+  IF (use_gauss_ldos .AND. plot_num == 3) THEN
+    ngauss = 0
+  ENDIF
 
   ! Number of output files depends on input
   nplots = 1

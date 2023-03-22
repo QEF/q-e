@@ -70,7 +70,7 @@ SUBROUTINE setup()
   USE upf_ions,           ONLY : n_atom_wfc
   USE uspp_param,         ONLY : upf
   USE uspp,               ONLY : okvan
-  USE ldaU,               ONLY : lda_plus_u, init_lda_plus_u
+  USE ldaU,               ONLY : lda_plus_u, init_hubbard
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el,&
                                  nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
@@ -89,15 +89,18 @@ SUBROUTINE setup()
   USE exx,                ONLY : ecutfock
   USE xc_lib,             ONLY : xclib_dft_is
   USE paw_variables,      ONLY : okpaw
+  USE extfield,           ONLY : gate
   USE esm,                ONLY : esm_z_inv
   USE fcp_module,         ONLY : lfcp
   USE gcscf_module,       ONLY : lgcscf
-  USE extfield,           ONLY : gate
+  USE rism_module,        ONLY : lrism, rism_calc1d
   USE additional_kpoints, ONLY : add_additional_kpoints
+  USE control_flags,      ONLY : sic
+  USE sic_mod,            ONLY : init_sic, occ_f2fn, sic_energy
   !
   IMPLICIT NONE
   !
-  INTEGER  :: na, is, ierr, ibnd, ik, nrot_, nr3, nk_
+  INTEGER  :: na, is, ierr, ibnd, ik, nrot_, nbnd_, nr3, nk_ 
   LOGICAL  :: magnetic_sym, skip_equivalence=.FALSE.
   REAL(DP) :: iocc, ionic_charge, one
   !
@@ -146,8 +149,12 @@ SUBROUTINE setup()
      IF ( noncolin ) no_t_rev=.true.
   END IF
   !
-  IF ( xclib_dft_is('meta') .AND. noncolin )  CALL errore( 'setup', &
+  IF ( xclib_dft_is('meta') ) THEN
+     IF ( noncolin )  CALL errore( 'setup', &
                                'Non-collinear Meta-GGA not implemented', 1 )
+     IF ( ANY (upf(1:ntyp)%nlcc) ) CALL infomsg( 'setup ', 'BEWARE:' // &
+               & ' nonlinear core correction is not consistent with meta-GGA')
+  END IF
   !
   ! ... Compute the ionic charge for each atom type and the total ionic charge
   !
@@ -169,13 +176,14 @@ SUBROUTINE setup()
   IF ( .NOT. lscf .OR. ( (lfcp .OR. lgcscf) .AND. restart ) ) THEN
      !
      ! ... in these cases, we need (or it is useful) to read the Fermi energy
+     ! ... also, number of bands is needed for FCP/GC-SCF
      !
      IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
      CALL mp_bcast(ierr, ionode_id, intra_image_comm)
      IF ( ierr > 0 ) CALL errore ( 'setup', 'problem reading ef from file ' //&
           & TRIM(xmlfile()), ierr )
      IF (ionode) CALL qexsd_copy_efermi ( output_obj%band_structure, &
-          nelec, ef, two_fermi_energies, ef_up, ef_dw )
+          nelec, ef, two_fermi_energies, ef_up, ef_dw, nbnd_ )
      ! convert to Ry a.u. 
      ef = ef*e2
      ef_up = ef_up*e2
@@ -185,12 +193,14 @@ SUBROUTINE setup()
      CALL mp_bcast(two_fermi_energies, ionode_id, intra_image_comm)
      CALL mp_bcast(ef_up, ionode_id, intra_image_comm)
      CALL mp_bcast(ef_dw, ionode_id, intra_image_comm)
+     CALL mp_bcast(nbnd_, ionode_id, intra_image_comm)
      CALL qes_reset  ( output_obj )
      !
   END IF
   !
   IF ( (lfcp .OR. lgcscf) .AND. restart ) THEN
      tot_charge = ionic_charge - nelec
+     nbnd = nbnd_
   END IF
   !
   ! ... magnetism-related quantities
@@ -423,7 +433,8 @@ SUBROUTINE setup()
   !
   doublegrid = ( dual > 4.0_dp + eps8 )
   IF ( doublegrid .AND. ( .NOT.okvan .AND. .NOT.okpaw .AND. &
-                          .NOT. ANY (upf(1:ntyp)%nlcc)      ) ) &
+                          .NOT. ANY (upf(1:ntyp)%nlcc) .AND. &
+                          .NOT. lrism ) ) &
        CALL infomsg ( 'setup', 'no reason to have ecutrho>4*ecutwfc' )
   IF ( ecutwfc > 10000.d0 .OR. ecutwfc < 1.d0 ) THEN
        WRITE(stdout,*) 'ECUTWFC = ', ecutwfc
@@ -538,8 +549,8 @@ SUBROUTINE setup()
      !
      ! ... eliminate rotations that are not symmetry operations
      !
-     CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, gate .OR. &
-                     (.NOT. esm_z_inv()) )
+     CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, &
+                   & gate .OR. (.NOT. esm_z_inv(lrism)) )
      !
      ! ... do not force FFT grid to be commensurate with fractional translations
      !
@@ -635,9 +646,9 @@ SUBROUTINE setup()
      ENDDO
   ENDIF
   !
-  ! ... Set up Hubbard parameters for DFT+U(+V) calculation
+  ! ... Set up Hubbard parameters for DFT+Hubbard
   !
-  CALL init_lda_plus_u ( upf(1:ntyp)%psd, nspin, noncolin )
+  CALL init_hubbard ( upf(1:ntyp)%psd, nspin, noncolin )
   !
   ! ... initialize d1 and d2 to rotate the spherical harmonics
   !
@@ -675,6 +686,17 @@ SUBROUTINE setup()
      !
      CALL setup_exx  ()
      !
+  END IF
+  !
+  ! ... calculate solvent-solvent interaction (1D-RISM).
+  !
+  IF (lrism) CALL rism_calc1d()
+  !
+  ! ... SIC calculation
+  !
+  IF(sic) THEN
+     CALL init_sic()
+     IF (sic_energy) CALL occ_f2fn()
   END IF
   !
   RETURN
@@ -731,10 +753,8 @@ SUBROUTINE setup_para ( nr3, nkstot, nbnd )
 pool:   do np = 2, nkstot
            ! npool should be a divisor of the number of processors
            if ( mod(nproc_image, np) /= 0 ) cycle
-           if ( nproc_image/np <= nr3/2 ) then
-              npool_= np
-              exit pool
-           end if
+           npool_= np
+           if ( nproc_image/np <= nr3/2 ) exit pool
         end do pool
      end if
   END IF

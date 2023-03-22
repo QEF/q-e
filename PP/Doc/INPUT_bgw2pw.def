@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package PWscf -program bgw2pw.x {
+input_description -distribution {Quantum ESPRESSO} -package PWscf -program bgw2pw.x {
 
     toc {}
 

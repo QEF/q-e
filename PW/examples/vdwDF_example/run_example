@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -98,11 +98,11 @@ cat > graphite.scf.in << EOF
 /
 
 &system
-    ibrav           = 4 
+    ibrav           = 4
     celldm(1)       = 4.6411700000
     celldm(3)       = 2.7264000000
-    
-    nat             = 4 
+
+    nat             = 4
     ntyp            = 1
 
     occupations     = 'fixed'
@@ -131,7 +131,7 @@ ATOMIC_SPECIES
 C   12.00   C.pbe-rrkjus.UPF
 
 ATOMIC_POSITIONS {alat}
-C      0.0000000000 0.0000000000 0.0000000000 
+C      0.0000000000 0.0000000000 0.0000000000
 C      0.0000000000 0.5773502692 0.0000000000
 C      0.0000000000 0.0000000000 1.3632000000
 C      0.5000000000 0.2886751346 1.3632000000
@@ -152,7 +152,7 @@ $ECHO " done"
 
 #
 # self-consistent calculation
-# for water molecules 
+# for water molecules
 #
 cat > water.scf.in << EOF
 &control
@@ -168,7 +168,7 @@ cat > water.scf.in << EOF
 
 &system
     ibrav           = 8
-    celldm(1)       = 15 
+    celldm(1)       = 15
     celldm(2)       = 0.954545454545455
     celldm(3)       = 1.22727272727273
     nat             = 6
@@ -187,7 +187,7 @@ cat > water.scf.in << EOF
 ATOMIC_SPECIES
    O   15.9994    O.pbe-rrkjus.UPF
    H   1.00794    H.pbe-rrkjus.UPF
- 
+
 ATOMIC_POSITIONS {angstrom}
 O     -0.000000     0.013129    -0.057535
 H     -0.000000     0.779069    -0.656064
@@ -212,7 +212,7 @@ $ECHO " done"
 
 #
 # self-consistent calculation
-# for Argon dimer 
+# for Argon dimer
 #
 cat > Ar.scf.in << EOF
 &control
@@ -254,7 +254,7 @@ ATOMIC_POSITIONS {angstrom}
 Ar      0.000000     0.000000     0.000000
 Ar      0.000000     0.000000     4.500000
 
-K_POINTS gamma 
+K_POINTS gamma
 
 EOF
 

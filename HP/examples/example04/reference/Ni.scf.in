@@ -2,8 +2,8 @@
     calculation='scf'
     restart_mode='from_scratch',
     prefix='Ni'
-    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/pseudo/'
-    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/'
+    pseudo_dir = '/scratch/timrov/QE_gitlab/tmp1/q-e/pseudo/'
+    outdir='/scratch/timrov/QE_gitlab/tmp1/q-e/tempdir/'
     verbosity='high'
  /
  &system
@@ -18,10 +18,6 @@
     degauss = 0.02,
     nspin = 2,
     starting_magnetization(1) = 0.5,
-    lda_plus_u = .true.,
-    lda_plus_u_kind = 0,
-    U_projection_type = 'ortho-atomic',
-    Hubbard_U(1) = 1.d-8
  /
  &electrons
     conv_thr =  1.d-15
@@ -33,3 +29,5 @@ ATOMIC_POSITIONS {crystal}
  Ni   0.0000000000  0.000000000  0.000000000
 K_POINTS {automatic}
  2 2 2 0 0 0
+HUBBARD {ortho-atomic}
+U Ni-3d 0.0001

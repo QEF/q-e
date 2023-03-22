@@ -8,10 +8,10 @@
 
 #define nmax 30
 
-#pragma acc routine (dgemv_) seq
 extern void dgemv_(const char *, const int *, const int *, const double *,
     double *, const int *, double *, const int *, const double *, double *,
     const int *);
+#pragma acc routine (dgemv_) seq
 
 #pragma acc routine seq
 double ddot1(double v[], double u[], int n)

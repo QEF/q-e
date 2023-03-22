@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2020 Quantum ESPRESSO group
+! Copyright (C) 2002-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,10 +19,10 @@ SUBROUTINE stres_hub ( sigmah )
    USE cell_base,          ONLY : omega, at, bg
    USE wvfct,              ONLY : nbnd, npwx
    USE ldaU,               ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, &
-                                  lda_plus_u_kind, U_projection, is_hubbard_back, &
+                                  lda_plus_u_kind, Hubbard_projectors, is_hubbard_back, &
                                   ldim_back, ldmx_b, nsg, v_nsg, max_num_neighbors, &
                                   ldim_u, Hubbard_V, at_sc, neighood, ldmx_tot, &
-                                  wfcU, nwfcU, copy_U_wfc
+                                  wfcU, nwfcU, copy_U_wfc, Hubbard_J
    USE becmod,             ONLY : bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
    USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
    USE uspp,               ONLY : nkb, vkb, okvan
@@ -42,6 +42,7 @@ SUBROUTINE stres_hub ( sigmah )
                                   us_dy, us_dj
    USE wavefunctions_gpum, ONLY : using_evc
    USE uspp_init,          ONLY : init_us_2, gen_us_dj, gen_us_dy
+   USE constants,          ONLY : eps16
    !
    IMPLICIT NONE
    !
@@ -61,7 +62,6 @@ SUBROUTINE stres_hub ( sigmah )
    !! the derivative of the atomic occupations
    COMPLEX(DP), ALLOCATABLE :: spsi(:,:)
    TYPE (bec_type) :: proj
-   INTEGER, EXTERNAL :: type_interaction
    LOGICAL :: lhubb
    LOGICAL :: save_flag
    !
@@ -69,14 +69,14 @@ SUBROUTINE stres_hub ( sigmah )
    !
    save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .false.
    !
-   IF (.NOT.((U_projection.EQ."atomic") .OR. (U_projection.EQ."ortho-atomic"))) &
-      CALL errore("force_hub", &
-                   " forces for this U_projection_type not implemented",1)
+   IF (.NOT.((Hubbard_projectors.EQ."atomic") .OR. (Hubbard_projectors.EQ."ortho-atomic"))) &
+      CALL errore("stres_hub", &
+                   " stress for this Hubbard_projectors type not implemented",1)
    !
-   IF (lda_plus_u_kind.EQ.1) CALL errore("stres_hub", &
-                   " stress in non collinear LDA+U scheme is not yet implemented",1)
+   IF (noncolin) CALL errore ("stres_hub","Noncollinear case is not supported",1)
    !
-   ! IF (noncolin) CALL errore ("forceh","Noncollinear case is not supported",1)
+   IF (ANY(Hubbard_J(:,:)>eps16)) CALL errore("stres_hub", &
+                   " stress in the DFT+U+J scheme is not implemented", 1 ) 
    !
    sigmah(:,:) = 0.d0
    !
@@ -85,7 +85,7 @@ SUBROUTINE stres_hub ( sigmah )
    ALLOCATE (wfcatom(npwx*npol,natomwfc))
    ALLOCATE (at_dy(npwx*npol,natomwfc), at_dj(npwx*npol,natomwfc))
    IF (okvan) ALLOCATE (us_dy(npwx,nkb), us_dj(npwx,nkb))
-   IF (U_projection.EQ."ortho-atomic") THEN
+   IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ALLOCATE (swfcatom(npwx*npol,natomwfc))
       ALLOCATE (eigenval(natomwfc))
       ALLOCATE (eigenvect(natomwfc,natomwfc))
@@ -173,7 +173,7 @@ SUBROUTINE stres_hub ( sigmah )
       !
       ! Set up various quantities, in particular wfcU which 
       ! contains Hubbard-U (ortho-)atomic wavefunctions (without ultrasoft S)
-      CALL orthoUwfc2 (ik)
+      CALL orthoUwfc_k (ik, .TRUE.)
       !
       ! proj=<wfcU|S|evc>
       ! ----------------------- LUCA ------------------------------------
@@ -317,7 +317,6 @@ SUBROUTINE stres_hub ( sigmah )
                                Hubbard_V(na1,na2,4).NE.0.d0 ) THEN
                                DO m1 = 1, ldim1
                                   DO m2 = 1, ldim2
-                                     i_type = type_interaction(na1, m1, equiv_na2, m2)
                                      sigmah(ipol,jpol) = sigmah(ipol,jpol) - &
                                            DBLE(v_nsg(m2,m1,viz,na1,is) * dnsg(m2,m1,viz,na1,is)) 
                                   ENDDO 
@@ -370,7 +369,7 @@ SUBROUTINE stres_hub ( sigmah )
    DEALLOCATE (wfcatom)
    DEALLOCATE (at_dy, at_dj)
    IF (okvan) DEALLOCATE (us_dy, us_dj)
-   IF (U_projection.EQ."ortho-atomic") THEN
+   IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       DEALLOCATE (swfcatom)
       DEALLOCATE (eigenval)
       DEALLOCATE (eigenvect)
@@ -402,7 +401,7 @@ SUBROUTINE dndepsilon_k ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,dns )
    USE mp,                ONLY : mp_sum
    USE ldaU,              ONLY : nwfcU, offsetU, Hubbard_l, is_hubbard,  &
                                  ldim_back, offsetU_back, offsetU_back1, &
-                                 is_hubbard_back, Hubbard_l_back, backall
+                                 is_hubbard_back, Hubbard_l2, backall
    USE wavefunctions_gpum,ONLY : using_evc
    USE becmod_subs_gpum,  ONLY : using_becp_auto
    !
@@ -493,16 +492,16 @@ SUBROUTINE dndepsilon_k ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,dns )
          DO m1 = 1, ldim_back(nt)
             off1 = offsetU_back(na)
             m11 = m1
-            IF (backall(nt) .AND. m1.GT.2*Hubbard_l_back(nt)+1) THEN
+            IF (backall(nt) .AND. m1.GT.2*Hubbard_l2(nt)+1) THEN
                off1 = offsetU_back1(na)
-               m11 = m1 - 2*Hubbard_l_back(nt) - 1
+               m11 = m1 - 2*Hubbard_l2(nt) - 1
             ENDIF
             DO m2 = m1, ldim_back(nt)
                off2 = offsetU_back(na)
                m22 = m2
-               IF (backall(nt) .AND. m2.GT.2*Hubbard_l_back(nt)+1) THEN
+               IF (backall(nt) .AND. m2.GT.2*Hubbard_l2(nt)+1) THEN
                   off2 = offsetU_back1(na)
-                  m22 = m2 - 2*Hubbard_l_back(nt) - 1
+                  m22 = m2 - 2*Hubbard_l2(nt) - 1
                ENDIF
                DO ibnd = nb_s, nb_e
                   dns(m1,m2,current_spin,na) = &
@@ -711,7 +710,7 @@ SUBROUTINE dndepsilon_gamma ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,d
    USE mp,                ONLY : mp_sum
    USE ldaU,              ONLY : nwfcU, offsetU, Hubbard_l, is_hubbard,  &
                                  ldim_back, offsetU_back, offsetU_back1, &
-                                 is_hubbard_back, Hubbard_l_back, backall
+                                 is_hubbard_back, Hubbard_l2, backall
  
    IMPLICIT NONE
    !
@@ -797,16 +796,16 @@ SUBROUTINE dndepsilon_gamma ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,d
          DO m1 = 1, ldim_back(nt)
             off1 = offsetU_back(na)
             m11 = m1
-            IF (backall(nt) .AND. m1.GT.2*Hubbard_l_back(nt)+1) THEN
+            IF (backall(nt) .AND. m1.GT.2*Hubbard_l2(nt)+1) THEN
                off1 = offsetU_back1(na)
-               m11 = m1 - 2*Hubbard_l_back(nt) - 1
+               m11 = m1 - 2*Hubbard_l2(nt) - 1
             ENDIF
             DO m2 = m1, ldim_back(nt)
                off2 = offsetU_back(na)
                m22 = m2
-               IF (backall(nt) .AND. m2.GT.2*Hubbard_l_back(nt)+1) THEN
+               IF (backall(nt) .AND. m2.GT.2*Hubbard_l2(nt)+1) THEN
                   off2 = offsetU_back1(na)
-                  m22 = m2 - 2*Hubbard_l_back(nt)-1
+                  m22 = m2 - 2*Hubbard_l2(nt)-1
                ENDIF
                DO ibnd = nb_s, nb_e
                   dns(m1,m2,current_spin,na) = &
@@ -863,7 +862,7 @@ SUBROUTINE dngdepsilon_k ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,dnsg )
    USE becmod,            ONLY : bec_type, allocate_bec_type, deallocate_bec_type
    USE mp_pools,          ONLY : intra_pool_comm
    USE mp,                ONLY : mp_sum
-   USE ldaU,              ONLY : nwfcU, Hubbard_l, is_hubbard, Hubbard_l_back, &
+   USE ldaU,              ONLY : nwfcU, Hubbard_l, is_hubbard, Hubbard_l2, &
                                  ldim_u, at_sc, neighood, max_num_neighbors,   &
                                  phase_fac, backall, offsetU, offsetU_back,    &
                                  offsetU_back1
@@ -953,17 +952,17 @@ SUBROUTINE dngdepsilon_k ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,dnsg )
                   IF (m1.GT.2*Hubbard_l(nt1)+1) &
                      off1 = offsetU_back(na1) + m1 - 2*Hubbard_l(nt1) - 1
                   IF (backall(nt1) .AND. &
-                     m1.GT.2*(Hubbard_l(nt1)+Hubbard_l_back(nt1)+1) ) &
+                     m1.GT.2*(Hubbard_l(nt1)+Hubbard_l2(nt1)+1) ) &
                      off1 = offsetU_back1(na1) + m1 - &
-                            2*(Hubbard_l(nt1)+Hubbard_l_back(nt1)+1)
+                            2*(Hubbard_l(nt1)+Hubbard_l2(nt1)+1)
                   DO m2 = 1, ldim2
                      off2 = offsetU(eq_na2) + m2
                      IF (m2.GT.2*Hubbard_l(nt2)+1) & 
                         off2 = offsetU_back(eq_na2)+ m2 - 2*Hubbard_l(nt2) - 1
                      IF (backall(nt2) .AND. &
-                        m2.GT.2*(Hubbard_l(nt2)+Hubbard_l_back(nt2)+1) ) &
+                        m2.GT.2*(Hubbard_l(nt2)+Hubbard_l2(nt2)+1) ) &
                         off2 = offsetU_back1(eq_na2) + m2 - &
-                               2*(Hubbard_l(nt2)+Hubbard_l_back(nt2)+1)
+                               2*(Hubbard_l(nt2)+Hubbard_l2(nt2)+1)
                      DO ibnd = nb_s, nb_e
                         dnsg(m2,m1,viz,na1,current_spin) =                  &
                             dnsg(m2,m1,viz,na1,current_spin) +              &
@@ -1006,7 +1005,7 @@ SUBROUTINE dngdepsilon_gamma ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,dnsg 
    USE becmod,            ONLY : bec_type, allocate_bec_type, deallocate_bec_type
    USE mp_pools,          ONLY : intra_pool_comm
    USE mp,                ONLY : mp_sum
-   USE ldaU,              ONLY : nwfcU, Hubbard_l, is_hubbard, Hubbard_l_back, &
+   USE ldaU,              ONLY : nwfcU, Hubbard_l, is_hubbard, Hubbard_l2, &
                                  ldim_u, at_sc, neighood, max_num_neighbors,   &
                                  phase_fac, backall, offsetU, offsetU_back,    &
                                  offsetU_back1
@@ -1096,17 +1095,17 @@ SUBROUTINE dngdepsilon_gamma ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,dnsg 
                   IF (m1.GT.2*Hubbard_l(nt1)+1) &
                        off1 = offsetU_back(na1) + m1 - 2*Hubbard_l(nt1) - 1
                   IF (backall(nt1) .AND. &
-                     m1.GT.2*(Hubbard_l(nt1)+Hubbard_l_back(nt1)+1) ) &
+                     m1.GT.2*(Hubbard_l(nt1)+Hubbard_l2(nt1)+1) ) &
                      off1 = offsetU_back1(na1) + m1 - &
-                            2*(Hubbard_l(nt1)+Hubbard_l_back(nt1)+1)
+                            2*(Hubbard_l(nt1)+Hubbard_l2(nt1)+1)
                   DO m2 = 1, ldim2
                      off2 = offsetU(eq_na2) + m2
                      IF (m2.GT.2*Hubbard_l(nt2)+1) & 
                         off2 = offsetU_back(eq_na2) + m2 - 2*Hubbard_l(nt2) - 1
                      IF (backall(nt2) .AND. &
-                        m2.GT.2*(Hubbard_l(nt2)+Hubbard_l_back(nt2)+1) ) &
+                        m2.GT.2*(Hubbard_l(nt2)+Hubbard_l2(nt2)+1) ) &
                         off2 = offsetU_back1(eq_na2) + m2 - &
-                               2*(Hubbard_l(nt2)+Hubbard_l_back(nt2)+1)
+                               2*(Hubbard_l(nt2)+Hubbard_l2(nt2)+1)
                      DO ibnd = nb_s, nb_e
                         dnsg(m2,m1,viz,na1,current_spin) =              &
                             dnsg(m2,m1,viz,na1,current_spin) +          &
@@ -1153,7 +1152,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE ldaU,                 ONLY : nwfcU, wfcU, is_hubbard, is_hubbard_back,  &
                                     offsetU, offsetU_back, offsetU_back1,      &
                                     oatwfc, oatwfc_back, oatwfc_back1, ldim_u, &
-                                    U_projection, Hubbard_l, Hubbard_l_back,   &
+                                    Hubbard_projectors, Hubbard_l, Hubbard_l2, &
                                     backall
    USE lsda_mod,             ONLY : lsda, nspin, isk
    USE wvfct,                ONLY : nbnd, npwx, wg
@@ -1248,7 +1247,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
          ldim_std = 2*Hubbard_l(nt)+1
          IF (is_hubbard(nt) .OR. is_hubbard_back(nt)) THEN
             ! --------------------------- LUCA -----------------------
-            IF (U_projection.EQ."atomic") THEN
+            IF (Hubbard_projectors.EQ."atomic") THEN
                DO m1 = 1, ldim_u(nt)
                   IF (m1.LE.ldim_std) THEN
                      offpmU = offsetU(na)
@@ -1256,9 +1255,9 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
                   ELSE
                      offpmU = offsetU_back(na) - ldim_std
                      offpm  = oatwfc_back(na)  - ldim_std
-                     IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l_back(nt)+1) THEN
-                        offpmU = offsetU_back1(na) - ldim_std - 2*Hubbard_l_back(nt) - 1
-                        offpm  = oatwfc_back1(na)  - ldim_std - 2*Hubbard_l_back(nt) - 1
+                     IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l2(nt)+1) THEN
+                        offpmU = offsetU_back1(na) - ldim_std - 2*Hubbard_l2(nt) - 1
+                        offpm  = oatwfc_back1(na)  - ldim_std - 2*Hubbard_l2(nt) - 1
                      ENDIF
                   ENDIF
                      dwfc(ig,offpmU+m1) = at_dy(ig,offpm+m1) * a1 + at_dj(ig,offpm+m1) * a2
@@ -1269,7 +1268,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
                                                       + at_dj(ig+npwx,offpm+m1+ldim_std)*a2
                      ENDIF
                ENDDO      
-            ELSEIF (U_projection.EQ."ortho-atomic") THEN
+            ELSEIF (Hubbard_projectors.EQ."ortho-atomic") THEN
                DO m1 = 1, ldim_std*npol             
                   offpmU = offsetU(na)
                   offpm  = oatwfc(na)
@@ -1297,7 +1296,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    ! 2. Contribution due to the derivative of (O^{-1/2})_JI which
    !    is multiplied by atomic wavefunctions (only for ortho-atomic case)
    !
-   IF (U_projection.EQ."ortho-atomic") THEN
+   IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       !
       ! Compute the derivative dO_IJ/d\epsilon(ipol,jpol)
       !
@@ -1759,7 +1758,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    USE ldaU,                 ONLY : nwfcU, wfcU, is_hubbard, is_hubbard_back,  &
                                     offsetU, offsetU_back, offsetU_back1,      &
                                     oatwfc, oatwfc_back, oatwfc_back1, ldim_u, &
-                                    U_projection, Hubbard_l, Hubbard_l_back,   &
+                                    Hubbard_projectors, Hubbard_l, Hubbard_l2, &
                                     backall
    USE lsda_mod,             ONLY : lsda, nspin, isk
    USE wvfct,                ONLY : nbnd, npwx, wg
@@ -1816,7 +1815,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    CALL using_evc(0)
    !
    ! See the implementation in dprojdepsilon_k
-   IF (U_projection.EQ."ortho-atomic") CALL errore("dprojdtau_gamma", &
+   IF (Hubbard_projectors.EQ."ortho-atomic") CALL errore("dprojdtau_gamma", &
                     " Forces with gamma-only and ortho-atomic are not supported",1)
    !
    ! Number of plane waves at the k point with the index ik
@@ -1860,9 +1859,9 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
                ELSE
                   offpmU = offsetU_back(na) - ldim_std
                   offpm  = oatwfc_back(na)  - ldim_std
-                  IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l_back(nt)+1) THEN
-                     offpmU = offsetU_back1(na) - ldim_std - 2*Hubbard_l_back(nt) - 1
-                     offpm  = oatwfc_back1(na)  - ldim_std - 2*Hubbard_l_back(nt) - 1
+                  IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l2(nt)+1) THEN
+                     offpmU = offsetU_back1(na) - ldim_std - 2*Hubbard_l2(nt) - 1
+                     offpm  = oatwfc_back1(na)  - ldim_std - 2*Hubbard_l2(nt) - 1
                   ENDIF
                ENDIF
                dwfc(ig,offpmU+m1) = at_dy(ig,offpm+m1) * a1 + at_dj(ig,offpm+m1) * a2

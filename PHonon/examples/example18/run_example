@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
@@ -78,7 +78,7 @@ $ECHO "  running ph.x as: $PH_COMMAND"
 $ECHO
 
 # Note: The value of Hubbard U for Co 3d states
-# in this example was taken randomly just for the 
+# in this example was taken randomly just for the
 # sake of demonstrating how the PHonon code works
 # including the Hubbard correction.
 
@@ -98,25 +98,21 @@ cat > LiCoO2.scf.in << EOF
     outdir='$TMP_DIR/'
  /
  &system
-    ibrav = 5, 
+    ibrav = 5,
     celldm(1) = 9.3705,
     celldm(4) = 0.83874,
-    nat = 4, 
+    nat = 4,
     ntyp = 3,
     ecutwfc = 40.0
     ecutrho = 320.0
-    lda_plus_u = .true.,
-    lda_plus_u_kind = 0,
-    U_projection_type = 'atomic',
-    Hubbard_U(1) = 3.0
  /
  &electrons
     conv_thr =  1.d-13
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
-Co  58.933194  Co.pbesol-spn-rrkjus_psl.0.3.1.UPF 
-O   15.999     O.pbesol-n-rrkjus_psl.0.1.UPF 
+Co  58.933194  Co.pbesol-spn-rrkjus_psl.0.3.1.UPF
+O   15.999     O.pbesol-n-rrkjus_psl.0.1.UPF
 Li   6.94      Li.pbesol-s-rrkjus_psl.0.2.1.UPF
 ATOMIC_POSITIONS {crystal}
  Co  0.0000000000   0.0000000000   0.0000000000
@@ -125,6 +121,8 @@ ATOMIC_POSITIONS {crystal}
  Li  0.5000000000   0.5000000000   0.5000000000
 K_POINTS {automatic}
  4 4 4 0 0 0
+HUBBARD {atomic}
+U Co-3d 3.0
 EOF
 $ECHO "  running the scf calculation for LiCoO2...\c"
 $PW_COMMAND < LiCoO2.scf.in > LiCoO2.scf.out

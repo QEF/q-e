@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,7 +14,7 @@ SUBROUTINE aceinit0()
   !
   USE io_global,            ONLY : stdout
   USE klist,                ONLY : nks, nkstot
-  USE control_flags,        ONLY : lscf
+  USE control_flags,        ONLY : lscf, restart
   USE io_files,             ONLY : restart_dir
   USE wvfct,                ONLY : nbnd
   USE pw_restart_new,       ONLY : read_collected_wfc
@@ -25,20 +25,19 @@ SUBROUTINE aceinit0()
   !
   IMPLICIT NONE
   !
+  INTEGER :: ierr
   INTEGER :: ik
   CHARACTER (LEN=256)  :: dirname
   !
   CALL start_clock( 'aceinit0' )
   !
-  IF(lscf) THEN
+  IF(lscf.and..not.restart) THEN
     !
     WRITE( stdout, '(5X,"EXX: ACE will be initialized later")' )
     !
   ELSE
     !
     WRITE( stdout, '(5X,"EXX: initializing ACE and reading from file")' )
-    WRITE( stdout, '(5X,"WARNING: this will crash or be completely wrong if a compliant ACE potential & 
-                             from a previous SCF run is not found on file")' )
     !
     Call start_exx()
     !
@@ -49,7 +48,9 @@ SUBROUTINE aceinit0()
     dirname = restart_dir ( )
     !
     DO ik = 1, nks
-       CALL read_collected_wfc ( dirname, ik, xi(:,:,ik), "ace" )
+       CALL read_collected_wfc ( dirname, ik, xi(:,:,ik), "ace", ierr )
+       IF ( ierr /= 0 ) CALL errore ('aceinit0', &
+            'file with ACE potential not found or not readable',ik)
     END DO
     !
     WRITE( stdout, '(5X,"Starting ACE correctly read from file")' )
@@ -78,7 +79,7 @@ SUBROUTINE wfcinit()
   USE klist,                ONLY : xk, nks, ngk, igk_k
   USE control_flags,        ONLY : io_level, lscf
   USE fixed_occ,            ONLY : one_atom_occupations
-  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU, lda_plus_u_kind
+  USE ldaU,                 ONLY : lda_plus_u, Hubbard_projectors, wfcU, lda_plus_u_kind
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
                                    diropn, xmlfile, restart_dir
@@ -144,10 +145,19 @@ SUBROUTINE wfcinit()
      IF ( twfcollect_file ) THEN
         !
         DO ik = 1, nks
-           CALL read_collected_wfc ( dirname, ik, evc )
+           CALL read_collected_wfc ( dirname, ik, evc, "wfc", ierr )
+           IF ( ierr /= 0 ) GO TO 10
            CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
         END DO
         !
+10      IF ( ierr /= 0 ) THEN
+           WRITE( stdout, '(5X,"Wavefunctions not found or not readable, ", &
+                & "recomputing them from scratch" )' )
+           CALL close_buffer(iunwfc, 'delete')
+           CALL open_buffer(iunwfc,'wfc', nwordwfc, io_level, exst_mem, exst_file)
+           starting_wfc = 'atomic+random'
+        END IF
+        !   
      ELSE IF ( exst_sum /= 0 ) THEN
         !
         WRITE( stdout, '(5X,"Cannot read wfcs: file not found")' )
@@ -232,7 +242,7 @@ SUBROUTINE wfcinit()
      !
      ! ... Needed for DFT+U
      !
-     IF ( nks > 1 .AND. lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
+     IF ( nks > 1 .AND. lda_plus_u .AND. (Hubbard_projectors .NE. 'pseudo') ) &
         CALL get_buffer( wfcU, nwordwfcU, iunhub, ik )
      !
      ! DFT+U+V: calculate the phase factor at a given k point

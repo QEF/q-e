@@ -12,11 +12,11 @@ This version requires the nvfortran (previously PGI) compiler from the
 NVidia HPC SDK, v.19.10 or later (freely downloadable from NVidia). 
 Earlier versions may or may not work and are no longer supported. 
 You are advised to use the most recent version of NVidia software you can find. 
+
+For compilation using CMake, see GitLab.com/QEF/q-e/-/wikis/Developers/CMake-build-system. For compilation using `configure`, see the User Guide in Doc/.
 The `configure` script checks for the presence of the nvfortran compiler and 
 of a few cuda libraries. For this reason the path pointing to the cuda toolkit
-must be present in `LD_LIBRARY_PATH`.
-
-A template for the configure command is:
+must be present in `LD_LIBRARY_PATH`. A template for the configure command is:
 
 ```
 ./configure --with-cuda=XX --with-cuda-runtime=YY --with-cuda-cc=ZZ --enable-openmp [ --with-scalapack=no ][ --with-cuda-mpi=yes ]

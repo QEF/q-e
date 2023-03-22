@@ -9,6 +9,7 @@
 SUBROUTINE init_run()
   !----------------------------------------------------------------------------
   !
+  USE kinds,              ONLY : DP
   USE klist,              ONLY : nkstot
   USE start_k,            ONLY : nks_start, nk1, nk2, nk3, k1, k2, k3
   USE symme,              ONLY : sym_rho_init
@@ -19,7 +20,7 @@ SUBROUTINE init_run()
                                  g_d, gg_d, mill_d, gshells, &
                                  gstart ! to be communicated to the Solvers if gamma_only
   USE gvecs,              ONLY : gcutms, ngms
-  USE cell_base,          ONLY : at, bg, set_h_ainv
+  USE cell_base,          ONLY : alat, at, bg, set_h_ainv
   USE cellmd,             ONLY : lmovecell
   USE dynamics_module,    ONLY : allocate_dyn_vars
   USE paw_variables,      ONLY : okpaw
@@ -32,10 +33,12 @@ SUBROUTINE init_run()
   USE recvec_subs,        ONLY : ggen, ggens
   USE wannier_new,        ONLY : use_wannier    
   USE dfunct,             ONLY : newd
+  USE martyna_tuckerman,  ONLY : do_comp_mt
   USE esm,                ONLY : do_comp_esm, esm_init
   USE tsvdw_module,       ONLY : tsvdw_initialize
   USE libmbd_interface,   ONLY : init_mbd
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
+  USE two_chem,           ONLY : init_twochem, twochem
   USE lsda_mod,           ONLY : nspin
   USE noncollin_module,   ONLY : domag
   USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc, xclib_dft_is 
@@ -43,9 +46,23 @@ SUBROUTINE init_run()
   USE control_flags,      ONLY : use_gpu
   USE dfunct_gpum,        ONLY : newd_gpu
   USE wvfct_gpum,         ONLY : using_et, using_wg, using_wg_d
+  USE rism_module,        ONLY : lrism, rism_alloc3d
+  USE extffield,          ONLY : init_extffield
+  USE control_flags,      ONLY : scissor
+  USE sci_mod,            ONLY : allocate_scissor
+  !
+#if defined (__ENVIRON)
+  USE plugin_flags,        ONLY : use_environ
+  USE environ_base_module, ONLY : init_environ_base
+#endif
   !
   IMPLICIT NONE
   INTEGER :: ierr
+  !
+#if defined (__ENVIRON)
+  REAL(DP) :: at_scaled(3, 3)
+  REAL(DP) :: gcutm_scaled
+#endif
   !
   CALL start_clock( 'init_run' )
   !
@@ -85,13 +102,17 @@ SUBROUTINE init_run()
      gg_d   = gg
   END IF
 #endif
-  !$acc update device(mill, g)
+  !$acc update device(mill, g, gg)
   !
-  IF (do_comp_esm) CALL esm_init()
+  IF (do_comp_esm) CALL esm_init(.NOT. lrism)
   !
   ! ... setup the 2D cutoff factor
   !
   IF (do_cutoff_2D) CALL cutoff_fact()
+  !
+  ! ... setup two chemical potentials calculation
+  !
+  IF (twochem) CALL init_twochem()
   !
   CALL gshells ( lmovecell )
   !
@@ -110,7 +131,20 @@ SUBROUTINE init_run()
   CALL allocate_bp_efield()
   CALL bp_global_map()
   !
+  IF (lrism) CALL rism_alloc3d()
+  !
   call plugin_initbase()
+#if defined (__LEGACY_PLUGINS)
+  CALL plugin_initbase()
+#endif 
+#if defined (__ENVIRON)
+  IF (use_environ) THEN
+    IF (alat < 1.D-8) CALL errore('init_run', "Wrong alat", 1)
+    at_scaled = at * alat
+    gcutm_scaled = gcutm / alat**2
+    call init_environ_base(at_scaled, gcutm_scaled, do_comp_mt)
+  END IF
+#endif
   !
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ), btype( nbnd, nkstot ) )
   !

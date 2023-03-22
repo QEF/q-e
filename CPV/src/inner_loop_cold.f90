@@ -12,8 +12,7 @@
                           sfac, c0, bec, dbec, firstiter, vpot )
 !====================================================================
       !
-      ! minimizes the total free energy
-      ! using cold smearing,
+      !! Minimizes the total free energy using cold smearing.
       !
       !
 
@@ -146,7 +145,7 @@
 
          ! operates the Hamiltonian on the wavefunction c0
          h0c0( :, : )= 0.D0
-         DO i= 1, n, 2                      
+         DO i= 1, n, 2
             CALL dforce( i, bec, betae, c0, h0c0(:,i), h0c0(:,i+1), rhos, dffts%nnr, ispin, f, n, nspin )
          END DO
 
@@ -310,11 +309,11 @@
 
    SUBROUTINE inner_loop_lambda( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
-                          sfac, c0, bec, dbec, firstiter,c0hc0,c1hc1,lambda,  &
+                          sfac, c0, bec, dbec, firstiter,c0hc0,c1hc1,lambda, &
                           free_energy, vpot )
     
-!this subroutine for the energy matrix (1-lambda)c0hc0+labda*c1hc1
-!calculates the corresponding free energy
+      !! This subroutine for the energy matrix (1-lambda)c0hc0+labda*c1hc1
+      !! calculates the corresponding free energy.
 
 
       ! declares modules

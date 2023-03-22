@@ -61,6 +61,7 @@
   REAL(KIND = DP), PARAMETER :: mev2invps= 1.0 / mev2ps               ! 1.51926746069
   REAL(KIND = DP), PARAMETER :: byte2Mb  = 7.62939453125E-6_DP        ! 8 / (1024 * 1024) because 8 bytes per number, value in Mb
   REAL(KIND = DP), PARAMETER :: kb       = k_boltzmann_si / electronvolt_si ! 8.6173324d-05 eV/K
+  REAL(KIND = DP), PARAMETER :: cc2cb    = 6.74822779181357d24        ! cubic cm to cubic bohr 
   !
   ! ... zero up to a given accuracy
   !

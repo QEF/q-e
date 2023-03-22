@@ -174,6 +174,7 @@ MODULE control_flags
   !
   INTEGER, PUBLIC :: &
     ngm0,             &! used in mix_rho
+    nexxiter,         &! the maximum number of outer iteration (exx)
     niter,            &! the maximum number of iteration
     nmix,             &! the number of iteration kept in the history
     imix               ! the type of mixing (0=plain,1=TF,2=local-TF)
@@ -239,6 +240,11 @@ MODULE control_flags
     io_level = 1       ! variable controlling the amount of I/O to file
   INTEGER, PUBLIC :: & ! variable controlling the amount of I/O to output
     iverbosity = 0     ! -1 minimal, 0 low, 1 medium, 2 high, 3 debug
+  !
+  ! ... self-interaction correction and scissor operator
+  !
+  LOGICAL, PUBLIC :: sic = .FALSE.
+  LOGICAL, PUBLIC :: scissor = .FALSE.
   !
   ! ... miscellany
   !

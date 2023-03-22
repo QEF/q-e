@@ -3,7 +3,7 @@
     restart_mode='from_scratch',
     title = 'TDDFPT-MAGNONS Example fE (NC PP)'
     outdir='./out',
-    prefix='Fe'
+    prefix='Femag'
  /
  &system
     nosym           = .true.
@@ -28,7 +28,7 @@
     electron_maxstep = 200
  /
 ATOMIC_SPECIES
-Fe  55.85   Fe.lda-pseudoDojo.UPF
+Fe  55.85   Fe.pz-n-nc.UPF
 ATOMIC_POSITIONS alat
 Fe  0.00000000 0.00000000 0.00000000
 K_POINTS automatic

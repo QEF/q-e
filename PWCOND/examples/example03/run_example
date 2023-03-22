@@ -2,12 +2,12 @@
 
 ###############################################################################
 ##
-##  Example of usage for PWcond with LDA+U
+##  Example of usage for PWcond with DFT+U
 ##
 ###############################################################################
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -89,7 +89,7 @@ rm -rf $TMP_DIR/pwscf*
 $ECHO " done"
 
 
-# self-consistent calculation for Au monatomic wire (LDA)
+# self-consistent calculation for Au monatomic wire (DFT)
 cat > Auwire.scf.in << EOF
  &control
     calculation = 'scf',
@@ -122,12 +122,12 @@ ATOMIC_POSITIONS (angstrom)
 K_POINTS (automatic)
  1 1 25 0 0 0
 EOF
-$ECHO "  running the LDA scf calculation for Au monatomic wire...\c"
+$ECHO "  running the DFT scf calculation for Au monatomic wire...\c"
 $PW_COMMAND < Auwire.scf.in > Auwire.scf.out
 check_failure $?
 $ECHO " done"
 
-# complex bands of the Au monatomic wire (LDA)
+# complex bands of the Au monatomic wire (DFT)
 cat > Auwire.cond.in << EOF
  &inputcond
     outdir='$TMP_DIR/'
@@ -145,13 +145,13 @@ cat > Auwire.cond.in << EOF
     0.0 0.0 1.0
     100
 EOF
-$ECHO "  running pwcond.x to calculate the complex bands of Au wire (LDA)...\c"
+$ECHO "  running pwcond.x to calculate the complex bands of Au wire (DFT)...\c"
 $PWCOND_COMMAND < Auwire.cond.in > Auwire.cond.out
 check_failure $?
 $ECHO " done"
 
 
-# self-consistent calculation for Au monatomic wire (LDA+U)
+# self-consistent calculation for Au monatomic wire (DFT+U)
 cat > AuwireU.scf.in << EOF
  &control
     calculation = 'scf',
@@ -172,9 +172,6 @@ cat > AuwireU.scf.in << EOF
     occupations = 'smearing',
     smearing = 'mv',
     degauss = 0.01,
-    lda_plus_U = .true.,
-    U_projection_type = 'pseudo',
-    Hubbard_U = 3.0
  /
  &electrons
     conv_thr = 1.0e-8
@@ -186,13 +183,15 @@ ATOMIC_POSITIONS (angstrom)
  Au  0.0  0.0  0.0
 K_POINTS (automatic)
  1 1 25 0 0 0
+HUBBARD {pseudo}
+U Au-5d 3.0
 EOF
-$ECHO "  running the LDA+U scf calculation for Au monatomic wire...\c"
+$ECHO "  running the DFT+U scf calculation for Au monatomic wire...\c"
 $PW_COMMAND < AuwireU.scf.in > AuwireU.scf.out
 check_failure $?
 $ECHO " done"
 
-# complex bands of the Au monatomic wire (LDA+U)
+# complex bands of the Au monatomic wire (DFT+U)
 cat > AuwireU.cond.in << EOF
  &inputcond
     outdir='$TMP_DIR/'
@@ -210,13 +209,13 @@ cat > AuwireU.cond.in << EOF
     0.0 0.0 1.0
     100
 EOF
-$ECHO "  running pwcond.x to calculate the complex bands of Au wire (LDA+U)...\c"
+$ECHO "  running pwcond.x to calculate the complex bands of Au wire (DFT+U)...\c"
 $PWCOND_COMMAND < AuwireU.cond.in > AuwireU.cond.out
 check_failure $?
 $ECHO " done"
 
 
-# self-consistent calculation for Au monatomic wire (LDA)
+# self-consistent calculation for Au monatomic wire (DFT)
 cat > Auwire1.scf.in << EOF
  &control
     calculation='scf'
@@ -249,12 +248,12 @@ ATOMIC_POSITIONS (angstrom)
 K_POINTS (automatic)
  2 2 24 1 1 1
 EOF
-$ECHO "  running the LDA scf calculation for Au monatomic wire...\c"
+$ECHO "  running the DFT scf calculation for Au monatomic wire...\c"
 $PW_COMMAND < Auwire1.scf.in > Auwire1.scf.out
 check_failure $?
 $ECHO " done"
 
-# self-consistent calculation for Au-CO-Au system (LDA)
+# self-consistent calculation for Au-CO-Au system (DFT)
 cat > COatAuwire.scf.in << EOF
  &control
     calculation = 'scf',
@@ -282,8 +281,8 @@ cat > COatAuwire.scf.in << EOF
  /
 ATOMIC_SPECIES
  Au  196.966  Au.pz-rrkjus_aewfc.UPF
- C    12.0107  C.pz-rrkjus.UPF  
- O    15.9994  O.pz-rrkjus.UPF  
+ C    12.0107  C.pz-rrkjus.UPF
+ O    15.9994  O.pz-rrkjus.UPF
 ATOMIC_POSITIONS alat
 C   0.238357456 0.0 0.948
 O   0.381346734 0.0 0.948
@@ -292,16 +291,16 @@ Au  0.0  0.0  0.316
 Au  0.0  0.0  0.632
 Au  0.0  0.0  0.948
 Au  0.0  0.0  1.264
-Au  0.0  0.0  1.580 
+Au  0.0  0.0  1.580
 K_POINTS (automatic)
  2 2 4 1 1 1
 EOF
-$ECHO "  running the LDA scf calculation for Au wire with CO impurity...\c"
+$ECHO "  running the DFT scf calculation for Au wire with CO impurity...\c"
 $PW_COMMAND < COatAuwire.scf.in > COatAuwire.scf.out
 check_failure $?
 $ECHO " done"
 
-# transmission calculation for the Au-CO-Au system (LDA)
+# transmission calculation for the Au-CO-Au system (DFT)
 cat > COatAuwire.cond.in << EOF
  &inputcond
     outdir = '$TMP_DIR/',
@@ -335,13 +334,13 @@ cat > COatAuwire.cond.in << EOF
  -0.9
  -1.0
 EOF
-$ECHO "  running pwcond.x to calculate the LDA transmission of an Au wire with atop CO...\c"
+$ECHO "  running pwcond.x to calculate the DFT transmission of an Au wire with atop CO...\c"
 $PWCOND_COMMAND < COatAuwire.cond.in > COatAuwire.cond.out
 check_failure $?
 $ECHO " done"
 
 
-# self-consistent calculation for Au monatomic wire (LDA+U)
+# self-consistent calculation for Au monatomic wire (DFT+U)
 cat > Auwire1U.scf.in << EOF
  &control
     calculation='scf'
@@ -362,9 +361,6 @@ cat > Auwire1U.scf.in << EOF
     occupations = 'smearing',
     smearing = 'mv',
     degauss = 0.01,
-    lda_plus_U = .true.,
-    U_projection_type = 'pseudo',
-    Hubbard_U = 3.0
  /
  &electrons
     conv_thr = 1.0d-8,
@@ -376,13 +372,15 @@ ATOMIC_POSITIONS (angstrom)
  Au  0.0  0.0  0.0
 K_POINTS (automatic)
  2 2 24 1 1 1
+HUBBARD {pseudo}
+U Au-5d 3.0
 EOF
-$ECHO "  running the LDA+U scf calculation for Au monatomic wire...\c"
+$ECHO "  running the DFT+U scf calculation for Au monatomic wire...\c"
 $PW_COMMAND < Auwire1U.scf.in > Auwire1U.scf.out
 check_failure $?
 $ECHO " done"
 
-# self-consistent calculation for Au-CO-Au system (LDA+U)
+# self-consistent calculation for Au-CO-Au system (DFT+U)
 cat > COatAuwireU.scf.in << EOF
  &control
     calculation = 'scf',
@@ -403,9 +401,6 @@ cat > COatAuwireU.scf.in << EOF
     occupations = 'smearing',
     smearing = 'mv',
     degauss = 0.01,
-    lda_plus_U = .true.,
-    U_projection_type = 'pseudo',
-    Hubbard_U = 3.0
  /
  &electrons
     conv_thr = 1.0d-8,
@@ -413,8 +408,8 @@ cat > COatAuwireU.scf.in << EOF
  /
 ATOMIC_SPECIES
  Au  196.966  Au.pz-rrkjus_aewfc.UPF
- C    12.0107  C.pz-rrkjus.UPF  
- O    15.9994  O.pz-rrkjus.UPF  
+ C    12.0107  C.pz-rrkjus.UPF
+ O    15.9994  O.pz-rrkjus.UPF
 ATOMIC_POSITIONS alat
 C   0.238357456 0.0 0.948
 O   0.381346734 0.0 0.948
@@ -423,16 +418,18 @@ Au  0.0  0.0  0.316
 Au  0.0  0.0  0.632
 Au  0.0  0.0  0.948
 Au  0.0  0.0  1.264
-Au  0.0  0.0  1.580 
+Au  0.0  0.0  1.580
 K_POINTS (automatic)
  2 2 4 1 1 1
+HUBBARD {pseudo}
+U Au-5d 3.0
 EOF
-$ECHO "  running the LDA+U scf calculation for Au wire with CO impurity...\c"
+$ECHO "  running the DFT+U scf calculation for Au wire with CO impurity...\c"
 $PW_COMMAND < COatAuwireU.scf.in > COatAuwireU.scf.out
 check_failure $?
 $ECHO " done"
 
-# transmission calculation for the Au-CO-Au system (LDA+U)
+# transmission calculation for the Au-CO-Au system (DFT+U)
 cat > COatAuwireU.cond.in << EOF
  &inputcond
     outdir = '$TMP_DIR/',
@@ -466,7 +463,7 @@ cat > COatAuwireU.cond.in << EOF
  -0.9
  -1.0
 EOF
-$ECHO "  running pwcond.x to calculate the LDA+U transmission of an Au wire with atop CO...\c"
+$ECHO "  running pwcond.x to calculate the DFT+U transmission of an Au wire with atop CO...\c"
 $PWCOND_COMMAND < COatAuwireU.cond.in > COatAuwireU.cond.out
 check_failure $?
 $ECHO " done"
@@ -483,7 +480,7 @@ set style line 22 lt 2 lc rgbcolor 'magenta' lw 1 pt 2
 set style arrow 1 nohead lt 3 lc rgbcolor 'dark-green' lw 1.5
 set style arrow 2 nohead lt 1 lc rgbcolor 'black' lw 1
 
-#1. compare CBS of Au chain within LDA and LDA+U
+#1. compare CBS of Au chain within DFT and DFT+U
 set key center right
 set xlabel 'Re(k_z)'
 set label 'Im(k_z)=0' at 0.02, -2.5 left

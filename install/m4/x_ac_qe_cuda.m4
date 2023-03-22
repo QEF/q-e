@@ -60,25 +60,28 @@ AC_ARG_ENABLE([openacc],
    [],
    [enable_openacc=yes])
 
-if test "$f90_major_version" -gt 20 || (test "$f90_major_version" -eq 20 && test "$f90_minor_version" -ge 7); then
-   # NVHPC v. 20.7 and later
-   mMcuda="-cuda -gpu"
-   mMcudalib="-cudalib"
-else
-   # NVHPC previous to v. 20.7
-   mMcuda="-Mcuda"
-   mMcudalib="-Mcudalib"
-fi
-
 if test "x$with_cuda" != "xno"
 then
+   # NVHPC v. 21.11-22.1 buggy
+   if (test "$f90_major_version" -eq 21 && test "$f90_minor_version" -ge 11) ||
+      (test "$f90_major_version" -eq 22 && test "$f90_minor_version" -le 1 ) ; then
+      AC_MSG_ERROR([Buggy compiler version, upgrade to 22.3 or downgrade to 21.9])
+   fi
+
+   if test "$f90_major_version" -gt 20 || (test "$f90_major_version" -eq 20 && test "$f90_minor_version" -ge 7); then
+      # NVHPC v. 20.7 and later
+      mMcuda="-cuda -gpu"
+      mMcudalib="-cudalib"
+   else
+      # NVHPC previous to v. 20.7
+      mMcuda="-Mcuda"
+      mMcudalib="-Mcudalib"
+   fi
+
    # -----------------------------------------
    # Check compiler
    # -----------------------------------------
-   AC_LANG_PUSH([Fortran])
-   AC_FC_SRCEXT([f90])
    AX_CHECK_COMPILE_FLAG([$mMcuda=cuda$with_cuda_runtime], [have_cudafor=yes], [have_cudafor=no], [], [MODULE test; use cudafor; END MODULE])
-   AC_LANG_POP([Fortran])
    if test "x$have_cudafor" != "xyes"
    then
       AC_MSG_ERROR([You do not have the cudafor module. Are you using NVHPC compiler?])

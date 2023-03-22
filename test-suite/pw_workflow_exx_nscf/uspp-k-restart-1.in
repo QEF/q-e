@@ -1,0 +1,34 @@
+ &CONTROL
+    calculation = 'scf',
+    prefix      = 'Graphene_1x1_HSE',
+    outdir      = './out',
+    max_seconds=3
+ /
+
+ &SYSTEM
+    ibrav     = 4,
+    celldm(1) = 4.654,
+    celldm(3) = 3.0,
+    nat  = 2,
+    ntyp = 1,
+    ecutwfc = 20.0,
+    ecutrho = 200.0, 
+    occupations = 'smearing',
+    smearing = 'gaussian',
+    degauss = 0.01, 
+    input_dft = 'hse',
+ /
+ 
+ &ELECTRONS
+    conv_thr = 1.0d-8
+ /
+ 
+ATOMIC_SPECIES
+   C  12.0107 C.pbe-rrkjus.UPF
+   
+ATOMIC_POSITIONS alat
+   C    0.000000    0.0000000   0.000000
+   C    0.000000    0.5773503   0.000000
+   
+K_POINTS automatic
+   9 9 1   0 0 0

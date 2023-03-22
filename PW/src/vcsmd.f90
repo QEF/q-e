@@ -45,8 +45,7 @@ SUBROUTINE vcsmd( conv_ions )
   USE ener,                ONLY : etot
   USE io_files,            ONLY : prefix, delete_if_present, seqopn
   !
-  USE constraints_module,  ONLY : nconstr
-  USE constraints_module,  ONLY : remove_constr_force, check_constraint  
+  USE constraints_module,  ONLY : remove_constr_force, check_constraint
   !
   !
   IMPLICIT NONE

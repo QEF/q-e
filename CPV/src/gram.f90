@@ -8,9 +8,9 @@
 #include <cpv_device_macros.h> 
 !-------------------------------------------------------------------------
 SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )
-!-----------------------------------------------------------------------
-!     gram-schmidt orthogonalization of the set of wavefunctions cp
-!
+      !-----------------------------------------------------------------------
+      !! Gram-Schmidt orthogonalization of the set of wavefunctions cp.
+      !
       USE gvecw,          ONLY : ngw
       USE electrons_base, ONLY : nbspx_bgrp, ibgrp_g2l, nupdwn, iupdwn, nbspx, iupdwn_bgrp, nspin
       USE kinds,          ONLY : DP
@@ -55,7 +55,7 @@ SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )
       ALLOCATE( bec_tmp( nkbx ) )
       ALLOCATE( csc2( SIZE( csc ) ) )
 !
-      CALL set_uspp_stuff(tvanp, all_tvanp, nqq, iqq, nsp, upf, nh, qq_nt)
+      tvanp(1:nsp) = upf(1:nsp)%tvanp
       CALL block_distribute(nat, me_bgrp, nproc_bgrp, ia_s, ia_e, mykey)  
 DEV_ACC data copy(cp_bgrp, bec_bgrp) create(ctmp, cp_tmp,bec_tmp,csc,csc2) &
 DEV_ACC & copyin(betae, qq_nt, ofsbeta,ityp, ibgrp_g2l, nh, tvanp ) 
@@ -108,53 +108,19 @@ DEV_ACC end data
       DEALLOCATE( csc2 )
       DEALLOCATE( bec_tmp )
       DEALLOCATE( cp_tmp )
-      DEALLOCATE (iqq)
 
       CALL stop_clock( 'gram' )
 !
       RETURN
 
-CONTAINS
-!-----------------------------------------------------------------------
-   SUBROUTINE set_uspp_stuff(tvanp, all_tvanp, nqq, iqq, nsp, upf, nh, qq_nt) 
-!-----------------------------------------------------------------------
-     USE pseudo_types, ONLY: pseudo_upf
-     IMPLICIT NONE 
-     INTEGER,INTENT(IN)               :: nsp 
-     TYPE(PSEUDO_UPF),INTENT(IN)      :: upf(nsp) 
-     INTEGER,INTENT(IN)               :: nh(nsp) 
-     REAL(DP),INTENT(IN)              :: qq_nt(:,:,:)
-     LOGICAL,INTENT(OUT)              :: tvanp(nsp) 
-     LOGICAL,INTENT(OUT)              :: all_tvanp 
-     INTEGER,ALLOCATABLE,INTENT(OUT)  :: nqq(:) 
-     INTEGER,ALLOCATABLE              :: iqq(:,:) 
-     ! 
-     INTEGER                          :: nhx,is,iv, jv  
-     nhx = MAXVAL(nh(1:nsp)) 
-     ALLOCATE (iqq(2,nhx*nhx),nqq(nsp)) 
-     tvanp(1:nsp) = upf(1:nsp)%tvanp 
-     all_tvanp = ALL(tvanp(1:nsp)) 
-     nqq = 0 
-     DO is = 1, nsp
-       DO iv = 1, nh(is) 
-         DO jv =1, nh(is)
-           IF (ABS(qq_nt(iv,jv,is)) .GT. 1.e-5) THEN 
-             nqq(is) = nqq(is) + 1 
-             iqq(:,nqq(is)) =[iv,jv] 
-           END IF 
-         END DO
-       END DO
-     END DO 
-   END SUBROUTINE set_uspp_stuff  
-      
-   
+CONTAINS   
 !-----------------------------------------------------------------------
    FUNCTION cscnorm( bec, cp, i, n )
-!-----------------------------------------------------------------------
-!
-!     Compute the norm of the i-th electronic state = (<c|S|c>)^(1/2) 
-!     requires in input the updated bec(i)
-!
+      !-----------------------------------------------------------------------
+      !! Compute the norm of the i-th electronic state:
+      !! \[ (\langle c|S|c \rangle)^{1/2} \ .\]
+      !! Requires in input the updated \(\text{bec}(i)\).
+      !
       USE ions_base,          ONLY: nat, ityp
       USE gvecw,              ONLY: ngw
       USE uspp_param,         ONLY: nh, upf
@@ -220,8 +186,8 @@ DEV_ACC end data
 !-------------------------------------------------------------------------
       SUBROUTINE gracsc_bgrp( i, csc, iss, nk )
 !-----------------------------------------------------------------------
-!     requires in input the updated bec(k) for k<i
-!     on output: bec(i) is recalculated
+      !! Requires in input the updated \(\text{bec}(k)\) for \(k<i\).
+      !! On output: \(\text{bec}(i)\) is recalculated.
 !
       USE ions_base,      ONLY: na, nat, ityp
       USE uspp,           ONLY: qq_nt, ofsbeta

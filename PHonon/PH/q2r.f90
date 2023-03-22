@@ -70,9 +70,12 @@ PROGRAM q2r
   LOGICAL :: la2F
   LOGICAL :: loto_2d
   !! Set to TRUE to activate two-dimensional treatment of LO-TO splitting. 
+  LOGICAL :: write_lr
+  !! Set to .true. to write long-range IFC into IFC file when enforcing
+  !! asr='all' for polar solids in matdyn.
   INTEGER :: ios
   !
-  NAMELIST / input / fildyn, flfrc, prefix, zasr, la2F, loto_2d, el_ph_nsigma
+  NAMELIST / input / fildyn, flfrc, prefix, zasr, la2F, loto_2d, write_lr, el_ph_nsigma
   !
   CALL mp_startup()
   CALL environment_start('Q2R')
@@ -83,6 +86,7 @@ PROGRAM q2r
   flfrc = ' '
   prefix = ' '
   loto_2d=.false.
+  write_lr = .false.
   zasr = 'no'
      !
   la2F=.false.
@@ -101,8 +105,9 @@ PROGRAM q2r
   CALL mp_bcast(loto_2d, ionode_id, world_comm)
   CALL mp_bcast(la2F, ionode_id, world_comm)
   CALL mp_bcast(el_ph_nsigma, ionode_id, world_comm)
+  CALL mp_bcast(write_lr, ionode_id, world_comm)
   !
-  CALL do_q2r(fildyn, flfrc, prefix, zasr, la2F, loto_2d)
+  CALL do_q2r(fildyn, flfrc, prefix, zasr, la2F, loto_2d, write_lr)
   !
   CALL environment_end('Q2R')
 
