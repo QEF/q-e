@@ -7,7 +7,7 @@
 !
 ! This file initiated by Carlo Cavazzoni 2020
 !
-! Purpose: collect miscellaneus subroutines to help dealing with 
+! Purpose: collect miscellaneus subroutines to help dealing with
 !          accelerator devices
 
 ! In principle this can go away .......
@@ -86,7 +86,7 @@ END SUBROUTINE MYZGEMM
 
 !=============================================================================================
 ! The following two are PROVISIONAL routines for omp5 porting. They do the same as MYDGEMM and
-! MYZGEMM, but with an additional variable (OMP_OFFLOAD) to decide wether to perform a cpu 
+! MYZGEMM, but with an additional variable (OMP_OFFLOAD) to decide wether to perform a cpu
 ! _gemm or call a rocblas _gemm which takes gpu_only arguments.
 !
 SUBROUTINE MYDGEMM2( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC, OMP_OFFLOAD )
@@ -109,19 +109,19 @@ SUBROUTINE MYDGEMM2( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LD
 #if defined(__CUDA)
     attributes(device) :: A, B, C
     CALL cublasdgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
-#else
-#if defined(__ONEMKL)
-    !$omp target variant dispatch use_device_ptr(A, B, C)
-#endif
-#if defined(__ROCBLAS)
+#elif defined(__ONEMKL)
+    IF (OMP_OFFLOAD) THEN
+      !$omp target variant dispatch use_device_ptr(A, B, C)
+      CALL dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+      !$omp end target variant dispatch
+    ELSE
+      CALL dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+    ENDIF
+#elif defined(__ROCBLAS)
     IF (OMP_OFFLOAD) CALL rocblas_dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
     IF (.NOT. OMP_OFFLOAD) CALL dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
 #else
     CALL dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
-#endif
-#if defined(__ONEMKL)
-    !$omp end target variant dispatch
-#endif
 #endif
 
 END SUBROUTINE MYDGEMM2
@@ -146,19 +146,19 @@ SUBROUTINE MYZGEMM2( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LD
 #if defined(__CUDA)
     attributes(device) :: A, B, C
     CALL cublaszgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
-#else
-#if defined(__ONEMKL)
-    !$omp target variant dispatch use_device_ptr(A, B, C)
-#endif
-#if defined(__ROCBLAS)
+#elif defined(__ONEMKL)
+    IF (OMP_OFFLOAD) THEN
+       !$omp target variant dispatch use_device_ptr(A, B, C)
+       CALL zgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+       !$omp end target variant dispatch
+    ELSE
+       CALL zgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+    ENDIF
+#elif defined(__ROCBLAS)
     IF (OMP_OFFLOAD) CALL rocblas_zgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
     IF (.NOT. OMP_OFFLOAD) CALL zgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
 #else
     CALL zgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
-#endif
-#if defined(__ONEMKL)
-    !$omp end target variant dispatch
-#endif
 #endif
 
 END SUBROUTINE MYZGEMM2
@@ -216,9 +216,9 @@ DOUBLE PRECISION FUNCTION MYDDOT_VECTOR_GPU(N,DX,DY)
     !$omp declare target
 #endif
     RES = 0.0d0
-    MYDDOT_VECTOR_GPU = 0.0d0 
+    MYDDOT_VECTOR_GPU = 0.0d0
     IF (N.LE.0) RETURN
-    ! code for unequal increments or equal increments not equal to 1 NOT implemented 
+    ! code for unequal increments or equal increments not equal to 1 NOT implemented
     M = mod(N,5)
     IF(M.NE.0) THEN
       !$acc loop vector reduction(+:RES)
@@ -226,8 +226,8 @@ DOUBLE PRECISION FUNCTION MYDDOT_VECTOR_GPU(N,DX,DY)
     !$omp parallel do simd reduction(+:RES)
 #endif
       DO I = 1, M
-        RES = RES + DX(I) * DY(I) 
-      END DO 
+        RES = RES + DX(I) * DY(I)
+      END DO
 #if defined __OPENMP_GPU
     !$omp end parallel do simd
 #endif
@@ -235,15 +235,15 @@ DOUBLE PRECISION FUNCTION MYDDOT_VECTOR_GPU(N,DX,DY)
         MYDDOT_VECTOR_GPU = RES
         RETURN
       END IF
-    END IF 
-    MP1 = M + 1 
+    END IF
+    MP1 = M + 1
     !$acc loop vector reduction(+:RES)
 #if defined __OPENMP_GPU
     !$omp parallel do simd reduction(+:RES)
 #endif
     DO I = MP1, n, 5
       RES = RES + DX(I)*DY(I) + DX(I+1)*DY(I+1) + DX(I+2)*DY(I+2) + DX(I+3)*DY(I+3) + DX(I+4)*DY(I+4)
-    END DO 
+    END DO
 #if defined __OPENMP_GPU
     !$omp end parallel do simd
 #endif
