@@ -187,13 +187,8 @@ SUBROUTINE write_ns_nc
   USE noncollin_module,  ONLY : npol
   USE io_global,         ONLY : stdout
   USE scf,               ONLY : rho
-<<<<<<< HEAD
-  USE ldaU,              ONLY : Hubbard_lmax, Hubbard_l, Hubbard_alpha, &
-                                Hubbard_U, Hubbard_J, Hubbard_alpha
-=======
   USE ldaU,              ONLY : Hubbard_l, Hubbard_alpha, &
                                 Hubbard_U
->>>>>>> 48b24e82928af44ba63d04f37c99b0224cbc506d
   !
   IMPLICIT NONE
   !
@@ -202,37 +197,6 @@ SUBROUTINE write_ns_nc
   REAL(DP), ALLOCATABLE :: lambda(:)
   REAL(DP) :: nsum,nsuma(2), ns, mx, my, mz
   !
-<<<<<<< HEAD
-  ! Print Hubbard parameters
-  !
-  WRITE (stdout,'(/5x,"Hubbard parameters (eV):")')
-  !
-  DO nt = 1, ntyp
-     IF (Hubbard_U(nt) /= 0.d0) THEN
-        IF (Hubbard_l(nt)==0) THEN
-           WRITE(stdout,'(5x,a,i3,a,f12.8)') 'U(',nt,') =', Hubbard_U(nt) * rytoev
-           ! --------------- LUCA ----------------------
-           IF (Hubbard_alpha(nt) /= 0.d0) WRITE(stdout,'(5x,a,i3,a,f8.4)')      &
-                        'alpha(',nt,') =', Hubbard_alpha(nt)*rytoev
-           ! -------------------------------------------------
-        ELSEIF (Hubbard_l(nt)==1) THEN
-           WRITE(stdout,'(5x,2(a,i3,a,f9.4,3x))') 'U(',nt,') =', Hubbard_U(nt)*rytoev, &
-                                                  'J(',nt,') =', Hubbard_J(1,nt)*rytoev
-        ELSEIF (Hubbard_l(nt)==2) THEN
-           WRITE(stdout,'(5x,3(a,i3,a,f9.4,3x))') 'U(',nt,') =', Hubbard_U(nt)*rytoev,   &
-                                                  'J(',nt,') =', Hubbard_J(1,nt)*rytoev, &
-                                                  'B(',nt,') =', Hubbard_J(2,nt)*rytoev
-        ELSEIF (Hubbard_l(nt)==3) THEN
-           WRITE(stdout,'(5x,4(a,i3,a,f9.4,3x))') 'U (',nt,') =', Hubbard_U(nt)*rytoev,   &
-                                                  'J (',nt,') =', Hubbard_J(1,nt)*rytoev, &
-                                                  'E2(',nt,') =', Hubbard_J(2,nt)*rytoev, &
-                                                  'E3(',nt,') =', Hubbard_J(3,nt)*rytoev
-        ENDIF
-     ENDIF
-  ENDDO
-  !
-=======
->>>>>>> 48b24e82928af44ba63d04f37c99b0224cbc506d
   WRITE (stdout,'(/5x,17("="), " HUBBARD OCCUPATIONS ",16("="))')
   !
   ! Calculation of occupations
@@ -259,16 +223,8 @@ SUBROUTINE write_ns_nc
         ENDDO
         nsum = nsum + nsuma(1) + nsuma(2) 
         !
-<<<<<<< HEAD
-        ! ----- LUCA (modified write for finite-difference) --------
-        !WRITE( stdout,'(5x,"Tr[ns] (up, down, total) = ",3f9.5)') &
-        !                      nsuma(1), nsuma(2), nsuma(1) + nsuma(2)
-        WRITE( stdout,'(5x,"Tr[ns] (up, down, total) = ",3f15.12)') &
-                              nsuma(1), nsuma(2), nsuma(1) + nsuma(2)  
-=======
         WRITE( stdout,'(5x,"Tr[ns(",i3,")] (up, down, total) = ",3f9.5)') &
                               na, nsuma(1), nsuma(2), nsuma(1)+nsuma(2)
->>>>>>> 48b24e82928af44ba63d04f37c99b0224cbc506d
         !
         ALLOCATE (f(2*ldim,2*ldim), vet(2*ldim,2*ldim), lambda(2*ldim))
         !

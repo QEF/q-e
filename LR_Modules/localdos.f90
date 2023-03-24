@@ -139,6 +139,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
      CALL synchronize_bec_type_gpu( becp_d, becp, 'h')
 #else
      call calbec ( npw, vkb, evc, becp)
+#endif
      do ibnd = 1, nbnd_occ (ikks(ik))
         !
         if(ltetra) then

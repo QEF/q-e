@@ -88,9 +88,7 @@ SUBROUTINE force_hub( forceh )
       CALL errore( "force_hub", &
                    " forces for this Hubbard_projectors type not implemented", 1 )
    !
-   IF (noncolin) CALL errore( "forceh","Noncollinear case is not supported", 1 )
-   !
-   ! IF (noncolin) CALL errore ("forceh","Noncollinear case is not supported",1)
+   ! IF (noncolin) CALL errore( "forceh","Noncollinear case is not supported", 1 )
    IF (ANY(Hubbard_J(:,:)>eps16)) CALL errore( "force_hub", &
                    " forces in the DFT+U+J scheme are not implemented", 1 )
    !
@@ -136,13 +134,19 @@ SUBROUTINE force_hub( forceh )
    !
    !$acc data create(spsi) copyin(wfcU)
    !
+   ! ---------------- LUCA --------------
+   IF (noncolin) THEN
+      ALLOCATE (proj%k (nwfcU, nbnd))
+      CALL using_evc(0)
+   ELSE
 #if defined(__CUDA)
-   CALL allocate_bec_type_gpu( nwfcU, nbnd, proj )
-   CALL using_evc_d(0)
+      CALL allocate_bec_type_gpu( nwfcU, nbnd, proj )
+      CALL using_evc_d(0)
 #else
-   CALL allocate_bec_type( nwfcU, nbnd, proj )
-   CALL using_evc(0)
+      CALL allocate_bec_type( nwfcU, nbnd, proj )
+      CALL using_evc(0)
 #endif
+   ENDIF
    !
    ! ... poor-man parallelization over bands:
    !      - if nproc_pool=1 : nb_s=1, nb_e=nbnd, mykey=0;
@@ -636,8 +640,8 @@ SUBROUTINE dndtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    USE lsda_mod,             ONLY : nspin, current_spin
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, offsetU, &
                                     is_hubbard_back, offsetU_back, ldim_u, &
-                                    offsetU_back1, ldim_back, Hubbard_l_back, &
-                                    backall, U_projection, wfcU
+                                    offsetU_back1, ldim_back, Hubbard_projectors, &
+                                    backall, wfcU
    USE noncollin_module,     ONLY : npol                            
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
@@ -711,7 +715,7 @@ SUBROUTINE dndtau_k_nc ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    ! In the 'ortho-atomic' case calculate d[(O^{-1/2})^T]
    !
-   IF (U_projection.EQ."ortho-atomic") THEN
+   IF (Hubbard_projectors.EQ."ortho-atomic") THEN
       ALLOCATE ( doverlap_inv(natomwfc,natomwfc) )
       CALL calc_doverlap_inv (alpha, ipol, ik, jkb0)
    ENDIF
@@ -1451,6 +1455,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       ! ... Note: parallelization here is over plane waves, not over bands!
       !
       ALLOCATE ( dwfc(npwx*npol,ldim*npol) )
+      dwfc(:,:) = (0.d0, 0.d0)
       !$acc data create(dwfc)
       !
       !$acc kernels
@@ -1929,14 +1934,14 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
          ! ----------- LUCA ----------------------------
          IF (noncolin) THEN
             IF ( upf(nt)%has_so ) THEN     
-               qq(ih,jh) =             CMPLX(qq_so(ih,jh,1,nt), 0.0d0, kind=DP)
-               qq(ih,jh+nh_nt) =       CMPLX(qq_so(ih,jh,2,nt), 0.0d0, kind=DP)
-               qq(ih+nh_nt,jh) =       CMPLX(qq_so(ih,jh,3,nt), 0.0d0, kind=DP)
-               qq(ih+nh_nt,jh+nh_nt) = CMPLX(qq_so(ih,jh,4,nt), 0.0d0, kind=DP)
+               qq(ih,jh) =             qq_so(ih,jh,1,nt)
+               qq(ih,jh+nh_nt) =       qq_so(ih,jh,2,nt)
+               qq(ih+nh_nt,jh) =       qq_so(ih,jh,3,nt)
+               qq(ih+nh_nt,jh+nh_nt) = qq_so(ih,jh,4,nt)
             ELSE
                qq(ih,jh) =             CMPLX(qq_at(ih,jh,alpha), 0.0d0, kind=DP)
-               qq(ih,jh+nh_nt) =       CMPLX((0.0,0.0), 0.0d0, kind=DP)
-               qq(ih+nh_nt,jh) =       CMPLX((0.0,0.0), 0.0d0, kind=DP)
+               qq(ih,jh+nh_nt) =       (0.0,0.0)
+               qq(ih+nh_nt,jh) =       (0.0,0.0)
                qq(ih+nh_nt,jh+nh_nt) = CMPLX(qq_at(ih,jh,alpha), 0.0d0, kind=DP)     
             ENDIF   
          ELSE
@@ -1949,6 +1954,14 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    ALLOCATE( aux(npwx*npol,nh(nt)*npol) )
    !$acc data create(aux)
    !
+   ! ---------------- LUCA ---------------------
+   !$acc parallel loop collapse(2) 
+   DO ih = 1, nh_nt*npol
+      DO ig = 1, npwx*npol
+         aux(ig,ih) = (0.0d0, 0.0d0)
+      ENDDO
+   ENDDO
+   !
    ! ... Beta function
 ! !omp parallel do default(shared) private(ig,ih)
    !$acc parallel loop collapse(2) present(vkb(:,:))
@@ -1958,14 +1971,6 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
          ! ------------------ LUCA ------------------
          IF (noncolin) aux(ig+npwx,ih+nh_nt) = vkb(ig,ijkb0+ih)
          ! ------------------------------------------
-      ENDDO
-   ENDDO
-   !$acc parallel loop collapse(2) 
-   DO ih = 1, nh_nt
-      DO ig = npw+1, npwx
-         aux(ig,ih) = (0.0d0, 0.0d0)
-         ! ------ LUCA ----------------
-         IF (noncolin) aux(ig+npwx,ih) = (0.0d0, 0.0d0)
       ENDDO
    ENDDO
 ! !omp end parallel do
@@ -2038,10 +2043,10 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
       CALL mp_sum( dbetaB(:, 1:lB) , intra_bgrp_comm )
    ELSE
 #if defined(__CUDA)
-   !$acc host_data use_device(A,Adbeta,B,dbetaB,aux)
+      !$acc host_data use_device(A,Adbeta,B,dbetaB,aux)
       CALL calbec_gpu( npw, A, aux, Adbeta )
       CALL calbec_gpu( npw, aux, B, dbetaB )
-   !$acc end host_data
+      !$acc end host_data
 #else
       ! ... Calculate Abeta = <A|beta>
       CALL calbec( npw, A, aux, Adbeta )
@@ -2072,11 +2077,11 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
                  aux(1+nh(nt), lB_s), nh(nt)*npol)
    ELSE
       ! ... Calculate \sum_jh qq_at(ih,jh) * dbetaB(jh)
-   !$acc host_data use_device(qq,dbetaB,aux)
+      !$acc host_data use_device(qq,dbetaB,aux)
       CALL MYZGEMM( 'N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
                   qq, nh(nt), dbetaB(1,lB_s),    nh(nt), (0.0d0,0.0d0), &
                   aux(1,lB_s), nh(nt) )
-   !$acc end host_data
+      !$acc end host_data
    ENDIF
    ! ------------------------------------------------------------
    !$acc kernels
@@ -2100,11 +2105,11 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
                  aux(1+nh(nt), lB_s), nh(nt)*npol)
    ELSE 
       ! ... Calculate \sum_jh qq_at(ih,jh) * betaB(jh)
-   !$acc host_data use_device(qq,betaB,aux)
+      !$acc host_data use_device(qq,betaB,aux)
       CALL MYZGEMM( 'N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
                   qq, nh(nt), betaB(1,lB_s),     nh(nt), (0.0d0,0.0d0), &
                   aux(1,lB_s), nh(nt) )
-   !$acc end host_data
+      !$acc end host_data
    ENDIF
    ! --------------------------------------------------------
    !
@@ -2124,7 +2129,7 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
       IF (noncolin) THEN
          nt1 = nh(nt) + 1
          IF ( .NOT.PRESENT(flag) ) THEN
-         DO na = 1, nat
+            DO na = 1, nat
                IF ( is_hubbard(ityp(na)) ) THEN
                   ldim = 2*hubbard_l(ityp(na)) + 1
                   mU = offsetU(na) + 1
@@ -2159,14 +2164,14 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
                         A_dS_B(1,lB_s), lA)
          ENDIF        
       ELSE
-      !$acc host_data use_device(Adbeta,betaB,Abeta,dbetaB,A_dS_B)
+         !$acc host_data use_device(Adbeta,betaB,Abeta,dbetaB,A_dS_B)
          CALL MYZGEMM( 'N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
                      Adbeta, lA, betaB(1,lB_s), nh(nt), (0.0d0,0.0d0), &
                      A_dS_B(1,lB_s), lA )
          CALL MYZGEMM( 'N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
                      Abeta, lA, dbetaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
                      A_dS_B(1,lB_s), lA )
-      !$acc end host_data
+         !$acc end host_data
       ENDIF
    ENDIF
    ! ------------------------------------------------------------------

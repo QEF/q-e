@@ -3044,7 +3044,8 @@ CONTAINS
                     'Hubbard V is not supported with noncolin=.true.', i)
          ELSEIF (ANY(ABS(Hubbard_U(:))>eps16) .AND. noncolin) THEN
             ! DFT+U
-            lda_plus_u_kind = 1
+            ! --------------- LUCA -----------------
+            lda_plus_u_kind = 0
          ELSEIF (ANY(ABS(Hubbard_U(:))>eps16) .OR. ANY(ABS(Hubbard_J0(:))>eps16)) THEN
             ! DFT+U(+J0)
             lda_plus_u_kind = 0

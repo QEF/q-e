@@ -73,7 +73,7 @@ SUBROUTINE stres_hub ( sigmah )
       CALL errore("stres_hub", &
                    " stress for this Hubbard_projectors type not implemented",1)
    !
-   IF (noncolin) CALL errore ("stres_hub","Noncollinear case is not supported",1)
+   ! IF (noncolin) CALL errore ("stres_hub","Noncollinear case is not supported",1)
    !
    IF (ANY(Hubbard_J(:,:)>eps16)) CALL errore("stres_hub", &
                    " stress in the DFT+U+J scheme is not implemented", 1 ) 
@@ -561,7 +561,7 @@ SUBROUTINE dndepsilon_k_nc ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,dn
    USE mp,                ONLY : mp_sum
    USE ldaU,              ONLY : nwfcU, offsetU, Hubbard_l, is_hubbard,  &
                                  ldim_back, offsetU_back, offsetU_back1, &
-                                 is_hubbard_back, Hubbard_l_back, backall
+                                 is_hubbard_back, backall
    USE wavefunctions_gpum,ONLY : using_evc
    USE becmod_subs_gpum,  ONLY : using_becp_auto
 
