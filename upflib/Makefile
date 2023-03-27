@@ -65,14 +65,13 @@ ylmr2.o
 # GPU versions of routines
 OBJS_GPU= \
   dylmr2_gpu.o \
-  gen_us_dj_gpu.o \
-  gen_us_dy_gpu.o \
   init_us_2_base_gpu.o \
   interp_atwfc_gpu.o \
   qvan2_gpu.o \
   simpsn_gpu.o \
   sph_bes_gpu.o \
-  ylmr2_gpu.o
+  ylmr2_gpu.o \
+  upf_acc_interfaces.o
 
 OBJS_NODEP+= dom.o wxml.o
 

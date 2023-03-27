@@ -183,8 +183,9 @@ CONTAINS
       USE force_mod,          ONLY : force
       USE control_flags,      ONLY : istep, lconstrain, tv0rd, tstress
       ! istep counts all MD steps, including those of previous runs
-      USE constraints_module, ONLY : nconstr, check_constraint
-      USE constraints_module, ONLY : remove_constr_force, remove_constr_vec
+      USE constraints_module, ONLY : check_constraint, remove_constr_force, &
+         remove_constr_vec, check_wall_constraint
+      USE input_parameters,   ONLY : nextffield
       !
       IMPLICIT NONE
       !
@@ -206,17 +207,7 @@ CONTAINS
       REAL(DP) :: kstress(3,3), tau_tmp(3, nat)
       INTEGER :: i, j, restart_id
       !
-      ! ... the number of degrees of freedom
-      !
-      IF ( ANY( if_pos(:,:) == 0 ) ) THEN
-         !
-         ndof = 3*nat - COUNT( if_pos(:,:) == 0 ) - nconstr
-         !
-      ELSE
-         !
-         ndof = 3*nat - 3 - nconstr
-         !
-      ENDIF
+      ndof = get_ndof()
       !
       vel_defined  = .TRUE.
       temp_av      = 0.D0
@@ -270,6 +261,11 @@ CONTAINS
       !
       IF ( control_temp ) CALL apply_thermostat()
       !
+      ! ... Update forces if potential wall constraint was requested
+      !
+      IF (lconstrain) &
+         CALL check_wall_constraint( nat, tau, if_pos, ityp, alat, force )
+      !
       ! ... we first remove the component of the force along the
       ! ... constraint gradient ( this constitutes the initial
       ! ... guess for the calculation of the lagrange multipliers )
@@ -300,11 +296,13 @@ CONTAINS
          !
       ENDIF
       !
-      IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
+      IF ( .NOT. ANY( if_pos(:,:) == 0 ) .AND. nextffield == 0 ) THEN
          !
          ! ... if no atom has been fixed  we compute the displacement of the
          ! ... center of mass and we subtract it from the displaced positions
          !
+         ! ... bypassed if external ionic force fields are activated
+         ! 
          delta(:) = 0.D0
          DO na = 1, nat
             delta(:) = delta(:) + mass(na)*( tau_new(:,na) - tau(:,na) )
@@ -861,6 +859,7 @@ CONTAINS
       USE control_flags,      ONLY : istep, lconstrain
       !
       USE constraints_module, ONLY : remove_constr_force, check_constraint
+      USE input_parameters,   ONLY : nextffield
       ! TB
       USE extfield,           ONLY : relaxz
       !
@@ -995,11 +994,13 @@ CONTAINS
       IF ( .NOT. ANY( if_pos(:,:) == 0 ) .AND. (relaxz) ) THEN
          WRITE( stdout, '("relaxz = .TRUE. => displacement of the center of mass is not subtracted")')
       ENDIF
-      IF ( (.NOT. ANY( if_pos(:,:) == 0 )) .AND. (.NOT. relaxz) ) THEN
+      IF ( (.NOT. ANY( if_pos(:,:) == 0 )) .AND. (.NOT. relaxz) .AND. nextffield==0 ) THEN
          !
          ! ... if no atom has been fixed  we compute the displacement of the
          ! ... center of mass and we subtract it from the displaced positions
          !
+         ! ... also bypassed if external ionic force fields are activated
+         ! 
          delta(:) = 0.D0
          !
          DO na = 1, nat
@@ -1362,8 +1363,8 @@ CONTAINS
       USE control_flags,  ONLY : istep, lconstrain
       USE random_numbers, ONLY : gauss_dist
       !
-      USE constraints_module, ONLY : nconstr
       USE constraints_module, ONLY : remove_constr_force, check_constraint
+      USE input_parameters,   ONLY : nextffield
       !
       IMPLICIT NONE
       !
@@ -1449,11 +1450,13 @@ CONTAINS
       !
       tau_new(:,:) = tau(:,:) + ( dt*force(:,:) + chi(:,:) ) / alat
       !
-      IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
+      IF ( .NOT. ANY( if_pos(:,:) == 0 ) .AND. nextffield==0) THEN
          !
          ! ... here we compute the displacement of the center of mass and we
          ! ... subtract it from the displaced positions
          !
+         ! ... also bypassed if external ionic force fields are activated
+         ! 
          delta(:) = 0.D0
          !
          DO na = 1, nat
@@ -2005,7 +2008,6 @@ CONTAINS
       !! Theory and Simulations of Materials Laboratory, EPFL.
       !
       USE ions_base,          ONLY : nat, if_pos
-      USE constraints_module, ONLY : nconstr
       USE cell_base,          ONLY : alat
       USE random_numbers,     ONLY : gauss_dist, sum_of_gaussians2
       !
@@ -2020,17 +2022,7 @@ CONTAINS
       real(DP), external :: gasdev, sumnoises
       INTEGER  :: na
       !
-      ! ... the number of degrees of freedom
-      !
-      IF ( ANY( if_pos(:,:) == 0 ) ) THEN
-         !
-         ndof = 3*nat - count( if_pos(:,:) == 0 ) - nconstr
-         !
-      ELSE
-         !
-         ndof = 3*nat - 3 - nconstr
-         !
-      ENDIF
+      ndof = get_ndof()
       !
       IF ( nraise > 0 ) THEN
          !
@@ -2155,5 +2147,32 @@ CONTAINS
       CALL mp_bcast( tau, ionode_id, intra_image_comm )
       !
    END SUBROUTINE verlet_read_tau_from_conf
+   !
+   !-----------------------------------------------------------------------
+   FUNCTION get_ndof()
+      !-----------------------------------------------------------------------
+      !! Get the number of degrees of freedom. Use number of constraints
+      !! requested from the constraints_module.
+      !
+      USE ions_base,          ONLY : nat, if_pos
+      USE constraints_module, ONLY : nconstr_ndof
+      !
+      IMPLICIT NONE
+      !
+      REAL(DP) :: get_ndof
+      !
+      ! ... the number of degrees of freedom
+      !
+      IF ( ANY( if_pos(:,:) == 0 ) ) THEN
+         !
+         get_ndof = 3*nat - count( if_pos(:,:) == 0 ) - nconstr_ndof
+         !
+      ELSE
+         !
+         get_ndof = 3*nat - 3 - nconstr_ndof
+         !
+      ENDIF
+      !
+   END FUNCTION get_ndof
    !
 END MODULE dynamics_module

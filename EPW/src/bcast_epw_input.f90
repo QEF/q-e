@@ -56,7 +56,7 @@
                             int_mob, scissor, carrier, ncarrier,              &
                             restart, restart_step, prtgkk, nel, meff, epsiheg,&
                             scatread, restart, restart_step, restart_filq,    &
-                            lphase, omegamin, omegamax, omegastep, n_r,       &
+                            lphase, omegamin, omegamax, omegastep, sigma_ref, &
                             mob_maxiter, use_ws, epmatkqread, selecqread,     &
                             scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma,&
                             assume_metal, wannier_plot_scale, reduce_unk,     &
@@ -65,6 +65,8 @@
                             epw_crysym, bfieldx, bfieldy, bfieldz, tc_linear, &
                             !!!!!
                             !tc_linear_solver, mob_maxfreq, mob_nfreq
+                            ii_g, ii_charge, ii_n, ii_scattering, ii_only,    &
+                            ii_lscreen, ii_eda, ii_partion, ii_eps0,          &
                             tc_linear_solver, mob_maxfreq, mob_nfreq,         &
                             fbw, gridsamp, griddens, dos_del, muchem
                             !!!!!
@@ -76,16 +78,21 @@
   USE io_global,     ONLY : meta_ionode_id
   USE control_flags, ONLY : iverbosity
   USE ions_base,     ONLY : amass
-  ! ---------------------------------------------------------------------------------
-  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
-  ! Shell implementation for future use.
-  USE epwcom,        ONLY : wfcelec, model_vertex , polaron_wf, r01, r02, r03,&
-                            num_cbands, start_band, start_mode, cb_shift,     &
-                            polaron_interpol, polaron_bq, polaron_dos,        &
-                            electron_dos, phonon_dos, diag_mode,              &
-                            restart_polaron_mode, polaron_type,               &
-                            emax_plrn, nDOS_plrn, emin_plrn
-  ! -------------------------------------------------------------------------------
+  ! Added for polaron calculations by Chao Lian
+  USE epwcom,        ONLY : plrn, restart_plrn, conv_thr_plrn, end_band_plrn,  lrot,  &
+                            cal_psir_plrn, start_band_plrn,  type_plrn, nstate_plrn,  &
+                            interp_Ank_plrn, interp_Bqu_plrn, init_sigma_plrn,        &
+                            full_diagon_plrn, mixing_Plrn, init_plrn, niter_plrn,     &
+                            nDOS_plrn, edos_max_plrn, edos_min_plrn, edos_sigma_plrn, &
+                            pdos_sigma_plrn, pdos_max_plrn, pdos_min_plrn,            &
+                            seed_plrn, ethrdg_plrn, time_rev_A_plrn, nhblock_plrn,    &
+                            beta_plrn, Mmn_plrn, recal_Mmn_plrn, r0_plrn, debug_plrn, &
+                            time_rev_U_plrn,  g_start_band_plrn, g_end_band_plrn,     &
+                            g_start_energy_plrn, g_end_energy_plrn,                   &
+                            model_vertex_plrn, model_enband_plrn, model_phfreq_plrn,  &
+                            kappa_plrn, omega_LO_plrn, m_eff_plrn, step_wf_grid_plrn, &
+                            scell_mat_plrn, scell_mat
+  !
   !
   IMPLICIT NONE
   !
@@ -181,6 +188,13 @@
   CALL mp_bcast(epw_nosym       , meta_ionode_id, world_comm)
   CALL mp_bcast(epw_noinv       , meta_ionode_id, world_comm)
   CALL mp_bcast(epw_crysym      , meta_ionode_id, world_comm)
+  !!!!!
+  CALL mp_bcast(ii_g            , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_scattering   , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_only         , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_lscreen      , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_partion      , meta_ionode_id, world_comm)
+  !!!!!
   !
   ! integers
   !
@@ -257,7 +271,7 @@
   CALL mp_bcast(omegamin      , meta_ionode_id, world_comm)
   CALL mp_bcast(omegamax      , meta_ionode_id, world_comm)
   CALL mp_bcast(omegastep     , meta_ionode_id, world_comm)
-  CALL mp_bcast(n_r           , meta_ionode_id, world_comm)
+  CALL mp_bcast(sigma_ref     , meta_ionode_id, world_comm)
   CALL mp_bcast(nc            , meta_ionode_id, world_comm)
   CALL mp_bcast(scdm_mu       , meta_ionode_id, world_comm)
   CALL mp_bcast(scdm_sigma    , meta_ionode_id, world_comm)
@@ -267,6 +281,12 @@
   CALL mp_bcast(bfieldy       , meta_ionode_id, world_comm)
   CALL mp_bcast(bfieldz       , meta_ionode_id, world_comm)
   CALL mp_bcast(mob_maxfreq   , meta_ionode_id, world_comm)
+  !!!!!
+  CALL mp_bcast(ii_charge , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_n , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_eda     , meta_ionode_id, world_comm)
+  CALL mp_bcast(ii_eps0    , meta_ionode_id, world_comm)
+  !!!!!
   !
   ! characters
   !
@@ -285,29 +305,54 @@
   CALL mp_bcast(scdm_entanglement, meta_ionode_id, world_comm)
   !
   ! ---------------------------------------------------------------------------------
-  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
-  ! Shell implementation for future use.
-  CALL mp_bcast (wfcelec         , meta_ionode_id, world_comm)
-  CALL mp_bcast (model_vertex    , meta_ionode_id, world_comm)
-  CALL mp_bcast (polaron_wf      , meta_ionode_id, world_comm)
-  CALL mp_bcast (polaron_interpol, meta_ionode_id, world_comm)
-  CALL mp_bcast (polaron_bq      , meta_ionode_id, world_comm)
-  CALL mp_bcast (polaron_dos     , meta_ionode_id, world_comm)
-  CALL mp_bcast (electron_dos    , meta_ionode_id, world_comm)
-  CALL mp_bcast (phonon_dos      , meta_ionode_id, world_comm)
-  CALL mp_bcast (num_cbands  , meta_ionode_id, world_comm)
-  CALL mp_bcast (start_band  , meta_ionode_id, world_comm)
-  CALL mp_bcast (start_mode  , meta_ionode_id, world_comm)
-  CALL mp_bcast (cb_shift    , meta_ionode_id, world_comm)
-  CALL mp_bcast (diag_mode   , meta_ionode_id, world_comm)
-  CALL mp_bcast (restart_polaron_mode, meta_ionode_id, world_comm)
-  CALL mp_bcast (polaron_type, meta_ionode_id, world_comm)
-  CALL mp_bcast (r01           , meta_ionode_id, world_comm)
-  CALL mp_bcast (r02           , meta_ionode_id, world_comm)
-  CALL mp_bcast (r03           , meta_ionode_id, world_comm)
-  CALL mp_bcast (nDOS_plrn     , meta_ionode_id, world_comm)
-  CALL mp_bcast (emax_plrn     , meta_ionode_id, world_comm)
-  CALL mp_bcast (emin_plrn     , meta_ionode_id, world_comm)
+  ! Added for polaron calculations by Chao Lian.
+  CALL mp_bcast(lrot               , meta_ionode_id, world_comm)
+  CALL mp_bcast(plrn ,               meta_ionode_id, world_comm)
+  CALL mp_bcast(cal_psir_plrn,       meta_ionode_id, world_comm)
+  CALL mp_bcast(interp_Ank_plrn,     meta_ionode_id, world_comm)
+  CALL mp_bcast(interp_Bqu_plrn,     meta_ionode_id, world_comm)
+  CALL mp_bcast(start_band_plrn,     meta_ionode_id, world_comm)
+  CALL mp_bcast(end_band_plrn,       meta_ionode_id, world_comm)
+  CALL mp_bcast(type_plrn,           meta_ionode_id, world_comm)
+  CALL mp_bcast(nDOS_plrn,           meta_ionode_id, world_comm)
+  CALL mp_bcast(edos_max_plrn,       meta_ionode_id, world_comm)
+  CALL mp_bcast(edos_min_plrn,       meta_ionode_id, world_comm)
+  CALL mp_bcast(nstate_plrn,         meta_ionode_id, world_comm)
+  CALL mp_bcast(niter_plrn,          meta_ionode_id, world_comm)
+  CALL mp_bcast(conv_thr_plrn,       meta_ionode_id, world_comm)
+  CAll mp_bcast(restart_plrn,        meta_ionode_id, world_comm)
+  CAll mp_bcast(type_plrn,           meta_ionode_id, world_comm)
+  CAll mp_bcast(init_sigma_plrn,     meta_ionode_id, world_comm)
+  CAll mp_bcast(ethrdg_plrn,         meta_ionode_id, world_comm)
+  CAll mp_bcast(time_rev_A_plrn,     meta_ionode_id, world_comm)
+  CAll mp_bcast(time_rev_U_plrn,     meta_ionode_id, world_comm)
+  CAll mp_bcast(debug_plrn,          meta_ionode_id, world_comm)
+  CAll mp_bcast(full_diagon_plrn,    meta_ionode_id, world_comm)
+  CAll mp_bcast(mixing_Plrn,         meta_ionode_id, world_comm)
+  CAll mp_bcast(init_plrn,           meta_ionode_id, world_comm)
+  CAll mp_bcast(Mmn_plrn,            meta_ionode_id, world_comm)
+  CAll mp_bcast(recal_Mmn_plrn,      meta_ionode_id, world_comm)
+  CAll mp_bcast(r0_plrn,             meta_ionode_id, world_comm)
+  CAll mp_bcast(edos_sigma_plrn,     meta_ionode_id, world_comm)
+  CAll mp_bcast(pdos_sigma_plrn,     meta_ionode_id, world_comm)
+  CAll mp_bcast(pdos_max_plrn,       meta_ionode_id, world_comm)
+  CAll mp_bcast(pdos_min_plrn,       meta_ionode_id, world_comm)
+  CAll mp_bcast(seed_plrn,           meta_ionode_id, world_comm)
+  CAll mp_bcast(nhblock_plrn,        meta_ionode_id, world_comm)
+  CAll mp_bcast(beta_plrn,           meta_ionode_id, world_comm)
+  CAll mp_bcast(g_start_band_plrn,   meta_ionode_id, world_comm)
+  CAll mp_bcast(g_end_band_plrn,     meta_ionode_id, world_comm)
+  CAll mp_bcast(g_start_energy_plrn, meta_ionode_id, world_comm)
+  CAll mp_bcast(g_end_energy_plrn,   meta_ionode_id, world_comm)
+  CAll mp_bcast(step_wf_grid_plrn,   meta_ionode_id, world_comm)
+  CAll mp_bcast(model_vertex_plrn,   meta_ionode_id, world_comm)
+  CAll mp_bcast(model_enband_plrn,   meta_ionode_id, world_comm)
+  CAll mp_bcast(model_phfreq_plrn,   meta_ionode_id, world_comm)
+  CAll mp_bcast(kappa_plrn,          meta_ionode_id, world_comm)
+  CAll mp_bcast(omega_LO_plrn,       meta_ionode_id, world_comm)
+  CAll mp_bcast(m_eff_plrn,          meta_ionode_id, world_comm)
+  CALL mp_bcast(scell_mat_plrn,      meta_ionode_id, world_comm)
+  CALL mp_bcast(scell_mat,           meta_ionode_id, world_comm)
   ! --------------------------------------------------------------------------------
 #endif
   !

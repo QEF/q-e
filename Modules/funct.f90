@@ -166,7 +166,7 @@ MODULE funct
   !              "ahps"   PBE-sol based analytic hole    igcx =35 ! PBESOL-AH (rHJS-PBEsol) at 0.20 - PH
   !              "cx14"   Exporations                    igcx =36 reserved PH
   !              "cx15"   Exporations                    igcx =37 reserved PH
-  !              "br0"    vdW-DF2-b86r+HF/4 (b86r-0)     igcx =38 
+  !              "br0"    vdW-DF2-b86r+HF/4 (b86r-0)     igcx =38 ! Tested (2022)
   !              "cx16"   Exporations                    igcx =39 reserved PH
   !              "c090"   vdW-DF-c09+HF/4 (c09-0)        igcx =40 
   !              "b86x"   B86b exchange * 0.75           igcx =41
@@ -175,7 +175,7 @@ MODULE funct
   !              "hhnx"   Hammer-Hansen-Norskov          igcx =44
   !              "w31x"   vdW-DF3-opt1 exchange          igcx =45
   !              "w32x"   vdW-DF3-opt2 exchange          igcx =46
-  !              "ahtr"   vdW-DF2-ahtr exchange          igcx =47 ! Test reserve called by vdW-DF2-ahtr - PH
+  !              "ahbr"   vdW-DF2-ahbr exchange          igcx =47 ! for vdW-DF2-ahbr 
   !              "ehpb"   HSE variant                    igcx =48 ! Reserved PH
   !              "hjpb"   HJS-type PBE cross check       igcx =49 ! Reserved PH
   !              "hjps"   HJS-type PBEsol crosscheck     igcx =50 ! Reserved PH
@@ -346,14 +346,14 @@ CONTAINS
     ! ... local variables
     !
     INTEGER :: len, l, i
-    CHARACTER(len=150) :: dftout
+    CHARACTER(len=150) :: dftout, dftout_loc
     LOGICAL :: dft_defined
     LOGICAL :: check_libxc
     !
     CHARACTER(LEN=1), EXTERNAL :: capital
     CHARACTER(LEN=4) :: lda_exch, lda_corr, gga_exch, gga_corr
     !
-    INTEGER :: save_inlc
+    INTEGER :: save_inlc, lnt, ln_nlc
     INTEGER :: iexch, icorr, igcx, igcc, imeta
     !
     ! Exit if set to discard further input dft
@@ -473,8 +473,8 @@ CONTAINS
     CASE( 'VDW-DF2-BR0' )
        dft_defined = xclib_set_dft_IDs(6,4,38,0,0,0)
        inlc = 2
-    ! Special case vdW-DF2-AHTR
-    CASE( 'VDW-DF2-AHTR' )
+    ! Special case vdW-DF2-AHBR
+    CASE( 'VDW-DF2-AHBR' )
        dft_defined = xclib_set_dft_IDs(1,4,47,0,0,0)
        inlc = 2
     ! Special case vdW-DF-C090
@@ -510,7 +510,7 @@ CONTAINS
     ! Case for old RRKJ format, containing indices instead of label
     CASE DEFAULT
        !
-       IF ('INDEX:' ==  dftout(1:6)) THEN
+       IF ('INDEX:' == dftout(1:6)) THEN
           READ( dftout(7:18), '(6i2)') iexch, icorr, igcx, igcc, inlc, imeta
           dft_defined = xclib_set_dft_IDs(iexch, icorr, igcx, igcc, imeta, 0)
           CALL xclib_get_name('LDA','EXCH', lda_exch)
@@ -523,9 +523,19 @@ CONTAINS
                    TRIM(gga_exch) //'-'// &
                    TRIM(gga_corr) //'-'// nonlocc(inlc)
        ELSE
-          CALL xclib_set_dft_from_name( TRIM(dftout) )
+          !
+          dftout_loc = ''
           inlc = matching( dftout, ncnl, nonlocc )
+          IF ( inlc/=0 .AND. dftout(1:3) == 'XC-' ) THEN
+            lnt = LEN_TRIM(dftout)
+            ln_nlc = LEN_TRIM(nonlocc(inlc))
+            dftout_loc(1:lnt-ln_nlc) = dftout(1:lnt-ln_nlc)
+          ELSE
+            dftout_loc = dftout
+          ENDIF
+          CALL xclib_set_dft_from_name( TRIM(dftout_loc) )
           dft_defined = .TRUE.
+          !
        ENDIF
        !
     END SELECT
@@ -809,7 +819,7 @@ CONTAINS
         ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==33 .AND. igcc==0) THEN
            shortname = 'VDW-DF2-AH'
         ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==47 .AND. igcc==0) THEN
-           shortname = 'VDW-DF2-AHTR'
+           shortname = 'VDW-DF2-AHBR'
         ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==38 .AND. igcc==0) THEN
            shortname = 'VDW-DF2-BR0'
         ELSE

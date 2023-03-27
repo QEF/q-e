@@ -43,7 +43,6 @@ SUBROUTINE kcw_pp_readin()
     ! counter on types
   CHARACTER (LEN=256) :: outdir
   !
-  CHARACTER(LEN=1), EXTERNAL :: capital
   INTEGER, EXTERNAL  :: atomic_number
   REAL(DP), EXTERNAL :: atom_weight
   LOGICAL, EXTERNAL  :: imatches
@@ -88,7 +87,7 @@ SUBROUTINE kcw_pp_readin()
   !
   ! Rewind the input if the title is actually the beginning of inputph namelist
   IF( imatches("&kcw_pp", title)) THEN
-    WRITE(*, '(6x,a)') "Title line not specified: using 'default'."
+    WRITE(stdout, '(6x,a)') "Title line not specified: using 'default'."
     title='default'
     REWIND(5, iostat=ios)
     CALL errore('kcw_pp_readin', 'Title line missing from input.', abs(ios))

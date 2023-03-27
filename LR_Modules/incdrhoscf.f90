@@ -20,13 +20,16 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   USE fft_interfaces,       ONLY : invfft
   USE wvfct,                ONLY : npwx, nbnd
   USE uspp_param,           ONLY : nhm
-  USE wavefunctions, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   USE klist,                ONLY : ngk,igk_k
   USE qpoint,               ONLY : ikks, ikqs
   USE control_lr,           ONLY : nbnd_occ
   USE mp_bands,             ONLY : me_bgrp, inter_bgrp_comm, ntask_groups
   USE mp,                   ONLY : mp_sum
   USE fft_helper_subroutines
+#if defined(__CUDA)
+  USE wavefunctions_gpum,   ONLY : evc_d
+#endif
 
   IMPLICIT NONE
   !
@@ -50,12 +53,26 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   ! the change of wavefunctions in real space
   COMPLEX(DP), ALLOCATABLE :: tg_psi(:), tg_dpsi(:), tg_drho(:)
 
-  INTEGER :: npw, npwq, ikk, ikq
+  INTEGER :: npw, npwq, ikk, ikq, itmp
   INTEGER :: ibnd, ir, ir3, ig, incr, v_siz, idx, ioff, ioff_tg, nxyp
   INTEGER :: right_inc, ntgrp
   ! counters
 
-  CALL start_clock ('incdrhoscf')
+  ! For device buffer 
+#if defined(__CUDA)
+  INTEGER, POINTER, DEVICE :: nl_d(:)
+  !
+  nl_d  => dffts%nl_d
+  evc_d = evc
+#else
+  INTEGER, ALLOCATABLE :: nl_d(:)
+  !
+  ALLOCATE( nl_d(dffts%ngm) )
+  nl_d  = dffts%nl
+#endif
+  
+
+  CALL start_clock_gpu ('incdrhoscf')
   !
   ALLOCATE(dpsic(dffts%nnr))
   ALLOCATE(psi(dffts%nnr))
@@ -77,11 +94,14 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
      !
      incr = fftx_ntgrp(dffts)
      !
+  ELSE
+     v_siz = dffts%nnr
   ENDIF
   !
   ! dpsi contains the   perturbed wavefunctions of this k point
   ! evc  contains the unperturbed wavefunctions of this k point
   !
+  !$acc data copyin(dpsi(1:npwx,1:nbnd)) copy(drhoscf(1:v_siz)) create(psi(1:v_siz),dpsic(1:v_siz)) present(igk_k) deviceptr(evc_d, nl_d) 
   do ibnd = 1, nbnd_occ(ikk), incr
      !
      IF ( dffts%has_task_groups ) THEN
@@ -129,31 +149,48 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
         !
         ! Normal case: no task groups
         !
-        ! FFT to R-space of the unperturbed wfct's evc
+        ! Initialize psi and dpsic
         !
+        !$acc kernels 
         psi (:) = (0.d0, 0.d0)
-        do ig = 1, npw
-           psi (dffts%nl (igk_k(ig,ikk) ) ) = evc (ig, ibnd)
-        enddo
-        CALL invfft ('Wave', psi, dffts)
-        !
-        ! FFT to R-space of the perturbed wfct's dpsi
-        !
         dpsic(:) = (0.d0, 0.d0)
-        do ig = 1, npwq
-           dpsic (dffts%nl (igk_k(ig,ikq) ) ) = dpsi (ig, ibnd)
+        !$acc end kernels
+        !
+        !$acc parallel loop 
+        do ig = 1, npw
+           itmp = nl_d (igk_k(ig,ikk) )
+#if defined(__CUDA)
+           psi (itmp ) = evc_d (ig, ibnd)
+#else
+           psi (itmp ) = evc (ig, ibnd)
+#endif
         enddo
+        !$acc parallel loop
+        do ig = 1, npwq
+           itmp = nl_d (igk_k(ig,ikq) )
+           dpsic ( itmp ) = dpsi (ig, ibnd)
+        enddo
+        !
+        ! FFT to R-space of the unperturbed/perturbed wfcts psi/dpsi
+        !
+        !$acc host_data use_device(psi)
+        CALL invfft ('Wave', psi, dffts)
+        !$acc end host_data
+        !$acc host_data use_device(dpsic)
         CALL invfft ('Wave', dpsic, dffts)
+        !$acc end host_data
         !
         ! Calculation of the response charge-density
         !
-        do ir = 1, dffts%nnr
+        !$acc parallel loop 
+        do ir = 1, v_siz
            drhoscf (ir) = drhoscf (ir) + wgt * CONJG(psi (ir) ) * dpsic (ir)
         enddo
         !
      ENDIF
      !
   enddo ! loop on bands
+  !$acc end data
   !
   ! Ultrasoft contribution
   ! Calculate dbecsum = <evc|vkb><vkb|dpsi>
@@ -169,7 +206,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
      DEALLOCATE(tg_drho)
   ENDIF
   !
-  CALL stop_clock ('incdrhoscf')
+  CALL stop_clock_gpu ('incdrhoscf')
   !
   RETURN
   !

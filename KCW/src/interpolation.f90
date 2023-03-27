@@ -79,7 +79,7 @@ CONTAINS
       !
       CALL cdiagh( num_wann, ham_int, num_wann, eigvl(:,ik), eigvc )
       !
-      WRITE( stdout, '(6x,8F9.4)' ) eigvl(:,ik)*rytoev
+      WRITE( stdout, '(6x,8F11.4)' ) eigvl(:,ik)*rytoev
       !
     ENDDO
     !
@@ -393,7 +393,7 @@ CONTAINS
   END SUBROUTINE read_wannier_centers 
   !
   !
-  SUBROUTINE print_bands_to_file( eigvl )
+  SUBROUTINE print_bands_to_file( eigvl, filename)
     !---------------------------------------------------------------------
     !
     ! ...  This routine prints the interpolated band energies in the  
@@ -414,6 +414,8 @@ CONTAINS
     REAL(DP) :: kvec(3)
     REAL(DP) :: kvec_aux(3)
     REAL(DP) :: k_dist, k_dist_save 
+    CHARACTER(268), INTENT(IN), OPTIONAL :: filename
+    CHARACTER(268) :: filename_
     !
     !
     IF ( ionode ) THEN
@@ -462,7 +464,9 @@ CONTAINS
       ENDDO
       !
       !
-      OPEN( 100, file=trim(prefix)//'.kcw_bands.dat', status='unknown' )
+      filename_ = trim(prefix)//'.kcw_bands.dat'
+      IF (PRESENT (filename) ) filename_=filename
+      OPEN( 100, file=filename_, status='unknown' )
       !
       DO iband = 1, num_wann
         !

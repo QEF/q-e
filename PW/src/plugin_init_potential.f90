@@ -13,17 +13,11 @@ USE plugin_flags
 USE kinds, ONLY : DP
 USE fft_base,  ONLY : dfftp
 !
-! ***Environ MODULES BEGIN***
-! ***Environ MODULES END***
 !
 implicit none
 !
 REAL(DP), INTENT(IN) :: vltot(dfftp%nnr)
-! ***Environ VARIABLES BEGIN***
-! ***Environ VARIABLES END***
 !
-! ***Environ CALLS BEGIN***
-! ***Environ CALLS END***
 !
 end subroutine plugin_init_potential
 

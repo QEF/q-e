@@ -15,8 +15,10 @@ MODULE wxml
   ! A second workaround: use variable "sameline" to keep track of tags
   ! to be written on a single line
   !
-  USE upf_kinds, ONLY : dp
   use xmltools
+#if !defined(__XML_STANDALONE)
+  USE upf_kinds, ONLY : DP_XML => dp
+#endif
   !
   implicit none
   type :: xmlf_t
@@ -51,23 +53,29 @@ CONTAINS
     !
     character(len=*), intent(in) :: filename
     type(xmlf_t), intent(out) :: xf
-    ! ignored
     integer, intent(in), optional :: unit
     integer, intent(out) :: iostat
-    ! ignored
     logical, intent(in)  :: pretty_print, replace, namespace 
+    ! unit, pretty_print, namespace are ignored 
+    character(len=7) :: writable
     integer :: iun
     !
     iun = xml_open_file ( filename )
     if ( iun == -1 ) then
        iostat = 1
     else
-       iostat = 0
-       ! dirty  trick to have the same format with no changes to qexsd.f90
-       if ( replace) then
-          call add_attr('version','1.0')
-          call add_attr('encoding','UTF-8')
-          call xmlw_writetag ( 'xml', '?' )
+       inquire (unit=iun, write=writable)
+       if ( writable /= 'YES' ) then
+          iostat = 1
+          iun = -1
+       else
+          iostat = 0
+          ! dirty trick to have the same format with no changes to qexsd.f90
+          if ( replace ) then
+             call add_attr('version','1.0')
+             call add_attr('encoding','UTF-8')
+             call xmlw_writetag ( 'xml', '?' )
+          end if
        end if
     end if
     xf%unit = iun
@@ -120,7 +128,7 @@ CONTAINS
     !
     type(xmlf_t), intent(in) :: xf
     character(len=*), intent(in) :: name
-    real(dp), intent(in) :: value
+    real(DP_XML), intent(in) :: value
     !
     if ( xf%unit == -1 ) then
        print *, 'xml file not opened'
@@ -134,7 +142,7 @@ CONTAINS
     !
     type(xmlf_t), intent(in) :: xf
     character(len=*), intent(in) :: name
-    real(dp), intent(in) :: value(:)
+    real(DP_XML), intent(in) :: value(:)
     character(len=80) :: cvalue
     !
     if ( xf%unit == -1 ) then
@@ -301,7 +309,7 @@ CONTAINS
   subroutine xml_addcharacters_r ( xf, field, fmt )
     !
     type(xmlf_t), intent(in) :: xf
-    real(dp), intent(in) :: field
+    real(DP_XML), intent(in) :: field
     character(len=*), intent(in), optional :: fmt
     !
     integer :: ierr
@@ -326,7 +334,7 @@ CONTAINS
   subroutine xml_addcharacters_rv( xf, field, fmt )
     !
     type(xmlf_t), intent(in) :: xf
-    real(dp), intent(in) :: field(:)
+    real(DP_XML), intent(in) :: field(:)
     character(len=*), intent(in), optional :: fmt
     !
     integer :: ierr, nf
@@ -356,7 +364,7 @@ CONTAINS
   subroutine xml_addcharacters_rm( xf, field, fmt )
     !
     type(xmlf_t), intent(in) :: xf
-    real(dp), intent(in) :: field(:,:)
+    real(DP_XML), intent(in) :: field(:,:)
     character(len=*), intent(in), optional :: fmt
     !
     integer :: ierr

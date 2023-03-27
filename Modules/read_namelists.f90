@@ -26,7 +26,7 @@ MODULE read_namelists_module
   !
   PRIVATE
   !
-  REAL(DP), PARAMETER :: sm_not_set = -20.0_DP
+  REAL(DP), PARAMETER :: sm_not_set = -10000.0_DP
   !
   REAL(DP), PARAMETER :: fcp_not_set = 1.0E+99_DP
   !
@@ -119,6 +119,7 @@ MODULE read_namelists_module
        disk_io  = 'default'
        dipfield = .FALSE.
        gate     = .FALSE. !TB
+       twochem  = .FALSE.
        lberry   = .FALSE.
        gdir     = 0
        nppstr   = 0
@@ -163,6 +164,7 @@ MODULE read_namelists_module
        nat    = 0
        ntyp   = 0
        nbnd   = 0
+       nbnd_cond = 0
        tot_charge = 0.0_DP
        tot_magnetization = -10000
        ecutwfc = 0.0_DP
@@ -179,6 +181,8 @@ MODULE read_namelists_module
        occupations = 'fixed'
        smearing = 'gaussian'
        degauss = 0.0_DP
+       nelec_cond=0.0_DP
+       degauss_cond =0.0_DP
        nspin = 1
        nosym = .FALSE.
        nosym_evc = .FALSE.
@@ -280,8 +284,6 @@ MODULE read_namelists_module
        !
        one_atom_occupations=.FALSE.
        !
-       spline_ps = .false.
-       ! 
        real_space = .false.
        !
        ! ... DFT-D, Tkatchenko-Scheffler, XDM, MBD
@@ -330,6 +332,11 @@ MODULE read_namelists_module
        origin_choice = 1
        rhombohedral = .TRUE.
        !
+       !
+       ! ... Extffield
+       !
+       nextffield = 0
+       !
        RETURN
        !
      END SUBROUTINE
@@ -352,6 +359,7 @@ MODULE read_namelists_module
        ortho_eps = 1.E-9_DP
        ortho_max = 300
        electron_maxstep = 100
+       exx_maxstep = 100
        scf_must_converge = .true.
        !
        ! ... ( 'sd' | 'cg' | 'damp' | 'verlet' | 'none' | 'diis' | 'cp-bo' )
@@ -406,6 +414,11 @@ MODULE read_namelists_module
        sic_epsilon = 0.0_DP
        sic_alpha = 0.0_DP
        force_pairing = .false.
+       pol_type = 'none'
+       sic_gamma = 0.0_DP
+       sic_energy = .false.
+       sci_vb = 0.0_DP
+       sci_cb = 0.0_DP
        !
        fermi_energy = 0.0_DP
        n_inner = 2
@@ -895,6 +908,7 @@ MODULE read_namelists_module
        CALL mp_bcast( memory,        ionode_id, intra_image_comm )
        CALL mp_bcast( input_xml_schema_file, ionode_id, intra_image_comm )
        CALL mp_bcast( gate,          ionode_id, intra_image_comm ) !TB
+       CALL mp_bcast( twochem,       ionode_id, intra_image_comm )
        CALL mp_bcast( mbd_vdw,        ionode_id, intra_image_comm ) !GSz
        !
        RETURN
@@ -940,6 +954,9 @@ MODULE read_namelists_module
        CALL mp_bcast( occupations,       ionode_id, intra_image_comm )
        CALL mp_bcast( smearing,          ionode_id, intra_image_comm )
        CALL mp_bcast( degauss,           ionode_id, intra_image_comm )
+       CALL mp_bcast( degauss_cond,      ionode_id, intra_image_comm )
+       CALL mp_bcast( nelec_cond,        ionode_id, intra_image_comm )
+       CALL mp_bcast( nbnd_cond,         ionode_id, intra_image_comm )
        CALL mp_bcast( nspin,             ionode_id, intra_image_comm )
        CALL mp_bcast( nosym,             ionode_id, intra_image_comm )
        CALL mp_bcast( nosym_evc,         ionode_id, intra_image_comm )
@@ -1021,7 +1038,6 @@ MODULE read_namelists_module
        !
        CALL mp_bcast( assume_isolated,           ionode_id, intra_image_comm )
        CALL mp_bcast( one_atom_occupations,      ionode_id, intra_image_comm )
-       CALL mp_bcast( spline_ps,                 ionode_id, intra_image_comm )
        !
        CALL mp_bcast( vdw_corr,                  ionode_id, intra_image_comm )
        CALL mp_bcast( ts_vdw,                    ionode_id, intra_image_comm )
@@ -1077,6 +1093,10 @@ MODULE read_namelists_module
        CALL mp_bcast( block_1,            ionode_id, intra_image_comm )
        CALL mp_bcast( block_2,            ionode_id, intra_image_comm )
        CALL mp_bcast( block_height,       ionode_id, intra_image_comm )
+       !
+       ! ... Extffield information
+       !
+       CALL mp_bcast( nextffield,         ionode_id, intra_image_comm )
 
        RETURN
        !
@@ -1098,6 +1118,7 @@ MODULE read_namelists_module
        CALL mp_bcast( emass_cutoff,         ionode_id, intra_image_comm )
        CALL mp_bcast( orthogonalization,    ionode_id, intra_image_comm )
        CALL mp_bcast( electron_maxstep,     ionode_id, intra_image_comm )
+       CALL mp_bcast( exx_maxstep,          ionode_id, intra_image_comm )
        CALL mp_bcast( scf_must_converge,    ionode_id, intra_image_comm )
        CALL mp_bcast( ortho_eps,            ionode_id, intra_image_comm )
        CALL mp_bcast( ortho_max,            ionode_id, intra_image_comm )
@@ -1149,6 +1170,11 @@ MODULE read_namelists_module
        CALL mp_bcast( sic_epsilon ,         ionode_id, intra_image_comm )
        CALL mp_bcast( sic_alpha   ,         ionode_id, intra_image_comm )
        CALL mp_bcast( force_pairing ,       ionode_id, intra_image_comm )
+       CALL mp_bcast( pol_type,             ionode_id, intra_image_comm )
+       CALL mp_bcast( sic_gamma,            ionode_id, intra_image_comm )
+       CALL mp_bcast( sic_energy,           ionode_id, intra_image_comm )
+       CALL mp_bcast( sci_vb,               ionode_id, intra_image_comm )
+       CALL mp_bcast( sci_cb,               ionode_id, intra_image_comm )
        !
        ! ... ensemble-DFT
        !

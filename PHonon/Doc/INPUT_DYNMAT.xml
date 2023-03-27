@@ -96,6 +96,15 @@ previous implementation).
             </info>
          </options>
       </var>
+      <var name="remove_interaction_blocks" type="LOGICAL" >
+         <info>
+If .true. lines and rows corresponding to atoms that are not displaced
+are set to 0. This can be used for ph.x calculations with nat_todo set
+in ph.x, to remove the interaction between the diplaced and fixed parts of the system.
+         </info>
+         <default> .false.
+         </default>
+      </var>
       <var name="axis" type="INTEGER" >
          <info>
 indicates the rotation axis for a 1D system (1=Ox, 2=Oy, 3=Oz)

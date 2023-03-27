@@ -17,7 +17,10 @@
   CONTAINS
     !
     !--------------------------------------------------------------------------
-    SUBROUTINE hamwan2bloch(nbnd, nrr, cuf, eig, chw, cfac, dims)
+!!!!!
+   !SUBROUTINE hamwan2bloch(nbnd, nrr, cuf, eig, chw, cfac, dims)
+    SUBROUTINE hamwan2bloch(nbnd, nrr, cuf, eig, chw, cfac, dims, is_mirror)
+!!!!!
     !--------------------------------------------------------------------------
     !!
     !!  From the Hamiltonian in Wannier representation, find the corresponding
@@ -31,7 +34,10 @@
     !!  output : rotation matrix cuf(nbnd, nbnd)
     !!           interpolated hamiltonian eigenvalues eig(nbnd)
     !!
-    !!  2019: Weng Hong Sio and SP: Lifting of degeneracies.
+    !!  2021: CL : Replace the random perturbation matrix with prime number matrix
+    !!        in Lifting of degeneracies; control tag : lphase
+    !!  2021: CL : Rotate the the largest element in eigenvector to real axis. (lrot)
+    !!  2019: Weng Hong Sio and SP: Lifting of degeneracies. control tag: lrot
     !!        P_prime = U^dag P U where P is a random perturbation matrix
     !!        cuf = (eigvector of P_prime) * U
     !!        P_prime spans the degenenrate subspace.
@@ -43,6 +49,9 @@
     USE constants_epw, ONLY : czero, cone, zero, one, eps12, eps16
     USE epwcom,        ONLY : use_ws
     USE low_lvl,       ONLY : utility_zdotu, degen_sort
+!!!!!
+    USE epwcom,        ONLY : debug_plrn, lphase, lrot
+!!!!!
     !
     IMPLICIT NONE
     !
@@ -62,6 +71,10 @@
     !! Hamiltonian in Wannier basis
     COMPLEX(KIND = DP), INTENT(out) :: cuf(nbnd, nbnd)
     !! Rotation matrix U^\dagger, fine mesh
+!!!!!
+    LOGICAL, INTENT(IN), OPTIONAL :: is_mirror
+    !! .true. if k-point is a time-reversal invariant point
+!!!!!
     !
     ! Local variables
     LOGICAL :: duplicates
@@ -114,10 +127,22 @@
     !! Perturbation matrix made of small complex random number on the full space
     COMPLEX(KIND = DP), ALLOCATABLE :: cwork(:)
     !! Complex work variable
-    COMPLEX(KIND = DP), ALLOCATABLE :: P_prime(:, :)
+!!!!!
+    ! COMPLEX(KIND = DP), ALLOCATABLE :: P_prime(:, :)
+    REAL(KIND = DP), ALLOCATABLE :: P_prime(:, :)
+!!!!!
     !! Perturbation matrix on the subspace
     COMPLEX(KIND = DP), ALLOCATABLE :: Uk(:, :)
     !! Rotation matrix on the full space
+!!!!!
+    INTEGER :: ibnd_max(1)
+    !! Index of the maximum element
+    REAL(KIND = DP) :: norm_vec(nbnd)
+    !! Real Hamiltonian matrix in Bloch basis for TRI k points
+    COMPLEX(KIND = DP) :: cfac2(nrr, dims, dims)
+    !! cfac for the time-reversial point if pointed
+    COMPLEX(KIND = DP) :: fac_max
+!!!!!
     !
     CALL start_clock('HamW2B')
     !----------------------------------------------------------
@@ -133,17 +158,31 @@
     !  H~(k'+q') is chf( nbnd, nbnd, 2*ik   )
     !
     chf(:, :) = czero
+!!!!!!!
+    ! Calculate the -k if this is a mirror point
+    ! Do nothing if not specified
+    cfac2 = cfac
+    IF (PRESENT(is_mirror)) THEN
+        IF(is_mirror) cfac2 = CONJG(cfac)
+    END IF
+!!!!!!!
     !
     IF (use_ws) THEN
       DO iw = 1, dims
         DO iw2 = 1, dims
           DO ir = 1, nrr
-            chf(iw, iw2) = chf(iw, iw2) + chw(iw, iw2, ir) * cfac(ir, iw, iw2)
+!!!!!!!
+           !chf(iw, iw2) = chf(iw, iw2) + chw(iw, iw2, ir) * cfac(ir, iw, iw2)
+            chf(iw, iw2) = chf(iw, iw2) + chw(iw, iw2, ir) * cfac2(ir, iw, iw2)
+!!!!!!!
           ENDDO
         ENDDO
       ENDDO
     ELSE
-      CALL ZGEMV('n', nbnd**2, nrr, cone, chw, nbnd**2, cfac(:, 1, 1), 1, cone, chf, 1)
+!!!!!!!
+     !CALL ZGEMV('n', nbnd**2, nrr, cone, chw, nbnd**2, cfac(:, 1, 1), 1, cone, chf, 1)
+      CALL ZGEMV('n', nbnd**2, nrr, cone, chw, nbnd**2, cfac2(:, 1, 1), 1, cone, chf, 1)
+!!!!!!!
     ENDIF
     !
     !---------------------------------------------------------------------
@@ -199,24 +238,27 @@
       degen_group(2, ig) = degen_group(1, ig) + degen_group(2, ig) -1
     ENDDO
     !
+!!!!!!!
+    ! This old random matrix generation is removed
     ! Generate a pertubation matrix of size (nbnd x nbnd) made of random number
     !CALL init_random_seed()
     ! SP: Using random_number does not work because the perturbation needs to be the
     !     same when calling hamwan2bloch at k and k+q (see ephwann_shuffle).
     !     Therefore I fix a "random" number 0.25644832 + 0.01 * ibnd and 0.11584272 + 0.025 * jbnd
-    P(:, :) = czero
-    DO ibnd = 1, nbnd
-      DO jbnd = 1, nbnd
-        !CALL random_number(rand1)
-        !CALL random_number(rand2)
-        rand1 = 0.25644832 + 0.01 * ibnd
-        rand2 = 0.11584272 + 0.025 * jbnd
-        P(jbnd, ibnd) = CMPLX(rand1, rand2, KIND = DP)
-      ENDDO
-    ENDDO
+    !P(:, :) = czero
+    !DO ibnd = 1, nbnd
+    !  DO jbnd = 1, nbnd
+    !    !CALL random_number(rand1)
+    !    !CALL random_number(rand2)
+    !    rand1 = 0.25644832 + 0.01 * ibnd
+    !    rand2 = 0.11584272 + 0.025 * jbnd
+    !    P(jbnd, ibnd) = CMPLX(rand1, rand2, KIND = DP)
+    !  ENDDO
+    !dENDDO
     !
     ! Hermitize the Perturbation matrix and make it small
-    P = 0.5d0 * (P + TRANSPOSE(CONJG(P))) * ABS(MINVAL(w)) * 0.1d0
+    !P = 0.5d0 * (P + TRANSPOSE(CONJG(P))) * ABS(MINVAL(w)) * 0.1d0
+!!!!!!!
     !
     DO ig = 1, ndeg
       starting = degen_group(1, ig)
@@ -224,7 +266,10 @@
       ! Size of the degenerate subspace
       length   = ending - starting + 1
       !
-      ALLOCATE(rwork(1 + 5 * length + 2 * length**2), STAT = ierr)
+!!!!!!!
+      !ALLOCATE(rwork(1 + 5 * length + 2 * length**2), STAT = ierr)
+      ALLOCATE(rwork(length**2 + 2 * length), STAT = ierr)
+!!!!!!!
       IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating rwork', 1)
       ALLOCATE(iwork(3 + 5 * length), STAT = ierr)
       IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating iwork', 1)
@@ -238,14 +283,22 @@
       IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating wp', 1)
       !
       Uk(:, :) = cz(:, starting:ending)
-      P_prime = MATMUL(TRANSPOSE(CONJG(Uk)), MATMUL(P, Uk))
+      ! Create a matrix filled with prime numbers
+!!!!!!
+      ! P_prime = MATMUL(TRANSPOSE(CONJG(Uk)), MATMUL(P, Uk))
+      CALL prime_number_matrix(P_prime, length)
+!!!!!!
       ! Diagonalization of P_prime
-      CALL ZHEEVD('V', 'L', length, P_prime, length, wp, cwork, &
-                2 * length + length**2, rwork, 1 + 5 * length + 2 * length**2, &
-                iwork, 3 + 5 * length, info)
+!!!!!!
+!      CALL ZHEEVD('V', 'L', length, P_prime, length, wp, cwork, &
+!                2 * length + length**2, rwork, 1 + 5 * length + 2 * length**2, &
+!                iwork, 3 + 5 * length, info)
+      CALL DSYEV('V', 'L', length, P_prime, length, wp, rwork, &
+                length**2 + 2 * length, info)
+!!!!!!
       ! On exiting P_prime is the eigenvector of the P_prime matrix and wp the eigenvector.
       !
-      cz(:, starting:ending) = MATMUL(Uk, P_prime)
+      IF (lphase) cz(:, starting:ending) = MATMUL(Uk, P_prime)
       !
       DEALLOCATE(rwork, STAT = ierr)
       IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating rwork', 1)
@@ -261,11 +314,23 @@
       IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating wp', 1)
     ENDDO ! ig
     !
+!!!!!!
+    ! Find the largest element and set it to pure real
+    IF(lrot) THEN
+       DO ibnd = 1, nbnd
+         DO jbnd = 1, nbnd
+            norm_vec(jbnd) = ABS(cz(jbnd, ibnd))
+         END DO
+         ibnd_max(:) = MAXLOC(norm_vec(1:nbnd))
+         fac_max = cz(ibnd_max(1), ibnd) / norm_vec(ibnd_max(1))
+         cz(1:nbnd, ibnd) = cz(1:nbnd, ibnd) * CONJG(fac_max)
+       END DO
+    END IF
+!!!!!!
     DO jbnd = 1, nbnd
       INNER : DO ibnd = 1, nbnd
         IF (ABS(cz(ibnd, jbnd)) > eps12) THEN
           cz(:, jbnd) = cz(:, jbnd) * CONJG(cz(ibnd, jbnd))
-          !cz(:, jbnd) = cz(:, jbnd) / SQRT(zdotu(nbnd, CONJG(cz(:, jbnd)), 1, cz(:, jbnd), 1))
           cz(:, jbnd) = cz(:, jbnd) / SQRT(utility_zdotu(CONJG(cz(:, jbnd)), cz(:, jbnd)))
           EXIT INNER
         ENDIF
@@ -277,6 +342,12 @@
     !
     cuf = CONJG(TRANSPOSE(cz))
     eig = w
+!!!!!!
+    ! Do the conjugate on eigenvector
+    IF (PRESENT(is_mirror)) THEN
+      IF(is_mirror) cuf = TRANSPOSE(cz)
+    END IF
+!!!!!!
     !
     CALL stop_clock('HamW2B')
     !
@@ -284,8 +355,49 @@
     END SUBROUTINE hamwan2bloch
     !--------------------------------------------------------------------------
     !
+!!!!!!
     !--------------------------------------------------------------------------
-    SUBROUTINE dynwan2bloch(nmodes, nrr_q, irvec_q, ndegen_q, xxq, cuf, eig)
+    SUBROUTINE prime_number_matrix(A, n)
+    !--------------------------------------------------------------------------
+      !!
+      !! Generating a n x n matrix A filled with prime numbers
+      !! For example, if n = 4, A =
+      !! |2   3  5  7|
+      !! |11 13 17 19|
+      !! |23 29 31 37|
+      !! |41 43 47 53|
+      !! Used to perturb the degenerate eigenstates
+      !! 2021 Chao Lian
+      !
+      USE kinds,         ONLY : DP
+      IMPLICIT NONE
+      REAL(dp), INTENT(OUT) :: A(:, :)
+      INTEGER, INTENT(IN) :: n
+      INTEGER :: prime_numbers(60) = (/2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, &
+         & 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, &
+         & 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281/)
+
+      INTEGER :: i, j, k
+      k = 0
+      DO i = 1, n
+         DO j = i, n
+            k = k + 1
+            A(i, j) = REAL(prime_numbers(k), dp)
+         END DO
+      END DO
+
+      DO i = 1, n
+         DO j = 1, i
+            A(i, j) = (A(j, i))
+         END DO
+      END DO
+
+    END SUBROUTINE
+    !
+    !--------------------------------------------------------------------------
+    !SUBROUTINE dynwan2bloch(nmodes, nrr_q, irvec_q, ndegen_q, xxq, cuf, eig)
+    SUBROUTINE dynwan2bloch(nmodes, nrr_q, irvec_q, ndegen_q, xxq, cuf, eig, is_mirror)
+!!!!!!
     !--------------------------------------------------------------------------
     !!
     !! From the Hamiltonian in Wannier representation, find the corresponding
@@ -296,16 +408,23 @@
     !! required to obtain proper phonon dispersion interpolation
     !! and corresponds to the reality of the interatomic force constants
     !!
+    !!  2021: CL : Lifting of degeneracies using random perturbation matrix
+    !!             with prime number matrix control tag : lphase
+    !!             Rotate the the largest element in eigenvector to real axis. (lrot)
     !
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
     USE ions_base,     ONLY : amass, tau, nat, ityp
     USE elph2,         ONLY : rdw, epsi, zstar, qrpl
-    USE epwcom,        ONLY : lpolar, lphase, use_ws, nqc1, nqc2, nqc3
+    USE epwcom,        ONLY : lpolar, lphase, lrot, use_ws, nqc1, nqc2, nqc3
+    USE epwcom,        ONLY : debug_plrn
     USE constants_epw, ONLY : twopi, ci, czero, zero, one, eps12
     USE rigid,         ONLY : cdiagh2
     USE low_lvl,       ONLY : utility_zdotu
     USE rigid_epw,     ONLY : rgd_blk
+!!!!!!
+    USE low_lvl,       ONLY : degen_sort
+!!!!!!
     !
     IMPLICIT NONE
     !
@@ -323,6 +442,10 @@
     !! interpolated dynamical matrix eigenvalues for this kpoint
     COMPLEX(KIND = DP), INTENT(out) :: cuf(nmodes, nmodes)
     !! Rotation matrix, fine mesh
+!!!!!!
+    LOGICAL, INTENT(IN), OPTIONAL :: is_mirror
+    !! .true. if q-point is a the mirror point of some original point
+!!!!!!
     !
     ! Local variables
     INTEGER :: imode
@@ -351,6 +474,55 @@
     ! Dynamical matrix in Bloch basis, fine mesh
     COMPLEX(KIND = DP) :: cfac
     !! Complex prefactor for Fourier transform.
+!!!!!!
+    INTEGER, ALLOCATABLE :: degen_group(:, :)
+    !! Index of degenerate subspace
+    INTEGER :: ierr
+    !! Error status
+    INTEGER :: list_dup(nmodes)
+    !! List of degenerate eigenvalues
+    INTEGER :: ndeg
+    !! Number of degeneracies
+    LOGICAL :: duplicates
+    !! Returns if the bands contains degeneracices for that k-point.
+    INTEGER :: ig
+    !! Counter on real-space index
+    !JLB
+    INTEGER :: info
+    !! "0" successful exit, "<0" i-th argument had an illegal value, ">0" i eigenvectors failed to converge.
+    REAL(KIND = DP) :: rwork_tri(3*nmodes)
+    !! Real work array for TRI q case
+    REAL(KIND = DP) :: rchf(nmodes, nmodes), norm_vec(nmodes)
+    !! Real Dynamical matrix in Bloch basis for TRI q points
+    INTEGER, ALLOCATABLE :: iwork(:)
+    !! IWORK(1) returns the optimal LIWORK.
+    REAL(KIND = DP) :: rand1
+    !! Random number
+    REAL(KIND = DP) :: rand2
+    !! Random number
+    REAL(KIND = DP), ALLOCATABLE :: wp(:)
+    !! Perturbed eigenvalues on the degenerate subspace
+    REAL(KIND = DP), ALLOCATABLE :: rwork(:)
+    !! RWORK(1) returns the optimal LRWORK.
+    COMPLEX(KIND = DP) :: P(nmodes, nmodes)
+    !! Perturbation matrix made of small complex random number on the full space
+    COMPLEX(KIND = DP) :: fac_max(1)
+    !!
+    COMPLEX(KIND = DP), ALLOCATABLE :: cwork(:)
+    !! Complex work variable
+    REAL(KIND = DP), ALLOCATABLE :: P_prime(:, :)
+    !! Perturbation matrix on the subspace
+    COMPLEX(KIND = DP), ALLOCATABLE :: Uk(:, :)
+    !! Rotation matrix on the full space
+    INTEGER :: starting
+    !! Starting position
+    INTEGER :: ending
+    !! Ending position
+    INTEGER :: length
+    !! Size of the degenerate subspace
+    INTEGER :: imode_max(1)
+    !! Size of the degenerate subspace
+!!!!!!
     !
     CALL start_clock ('DynW2B')
     !----------------------------------------------------------
@@ -433,6 +605,78 @@
     !             0, 0, -one, neig, w, cz, nmodes, cwork, &
     !             rwork, iwork, ifail, info)
     CALL cdiagh2(nmodes, chf, nmodes, w, cz)
+!!!!!!
+    ! Find the degenerate eigenvalues w
+    CALL degen_sort(w, SIZE(w), duplicates, list_dup)
+    !
+    ndeg = MAXVAL(list_dup)
+    ALLOCATE(degen_group(2, ndeg), STAT = ierr)
+    IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating degen_group', 1)
+    degen_group(:, :) = 0
+    !
+    ! degen_group contains the starting and ending position of each group
+    ! degen_group(1,1) = starting position of group 1
+    ! degen_group(2,1) = ending position of group 1
+    ! degen_group(1,2) = starting position of group 2 ...
+    DO ig = 1, ndeg
+      degen_group(2, ig) = 0
+      DO jmode = 1, nmodes
+        IF (list_dup(jmode) == ig) THEN
+          IF (jmode == 1) THEN
+            degen_group(1, ig) = jmode
+          ELSE
+            IF (list_dup(jmode) - list_dup(jmode - 1) /= 0) degen_group(1, ig) = jmode
+          ENDIF
+          degen_group(2, ig) = degen_group(2, ig) + 1
+        ENDIF
+      ENDDO
+      degen_group(2, ig) = degen_group(1, ig) + degen_group(2, ig) -1
+    ENDDO
+    !
+    ! Generate a pertubation matrix of size (nbnd x nbnd) made of random number
+    !
+    DO ig = 1, ndeg
+      starting = degen_group(1, ig)
+      ending   = degen_group(2, ig)
+      ! Size of the degenerate subspace
+      length   = ending - starting + 1
+      !
+      ALLOCATE(rwork(length**2 + 2 * length), STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating rwork', 1)
+      ALLOCATE(iwork(3 + 5 * length), STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating iwork', 1)
+      ALLOCATE(cwork(length**2 + 2 * length), STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating cwork', 1)
+      ALLOCATE(Uk(nmodes, length), STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating Uk', 1)
+      ALLOCATE(P_prime(length, length), STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating P_prime', 1)
+      ALLOCATE(wp(length), STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating wp', 1)
+      !
+      Uk(:, 1:length) = cz(:, starting:ending)
+      CALL prime_number_matrix(P_prime, length)
+      ! Diagonalization of P_prime
+      CALL DSYEV('V', 'L', length, P_prime, length, wp, rwork, &
+                length**2 + 2 * length, info)
+      ! On exiting P_prime is the eigenvector of the P_prime matrix and wp the eigenvector.
+      !
+      IF(lphase) cz(:, starting:ending) = MATMUL(Uk, P_prime)
+      !
+      DEALLOCATE(rwork, STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating rwork', 1)
+      DEALLOCATE(iwork, STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating iwork', 1)
+      DEALLOCATE(cwork, STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating cwork', 1)
+      DEALLOCATE(Uk, STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating Uk', 1)
+      DEALLOCATE(P_prime, STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating P_prime', 1)
+      DEALLOCATE(wp, STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating wp', 1)
+    ENDDO ! ig
+!!!!!!
     !
     ! clean noise
     DO jmode = 1,nmodes
@@ -440,6 +684,19 @@
         IF (ABS(cz(imode, jmode)) < eps12) cz(imode, jmode) = czero
       ENDDO
     ENDDO
+!!!!!!
+    ! Find the largest element and set it to pure real
+    IF(lrot) THEN
+       DO imode = 1, nmodes
+         DO jmode = 1, nmodes
+            norm_vec(jmode) = ABS(cz(jmode, imode))
+         END DO
+         imode_max(:) = MAXLOC(norm_vec(1:nmodes))
+         fac_max(1) = cz(imode_max(1), imode)/norm_vec(imode_max(1))
+         cz(1:nmodes, imode) = cz(1:nmodes, imode) * CONJG(fac_max(1))
+       END DO
+     END IF
+!!!!!!
     !
     ! DS - Impose phase
     IF (lphase) THEN
@@ -458,6 +715,11 @@
     !
     cuf = cz
     eig = w
+!!!!!!
+    IF(PRESENT(is_mirror)) THEN
+      IF(is_mirror) cuf = CONJG(cz)
+    END IF
+!!!!!!
     !
     CALL stop_clock('DynW2B')
     !
@@ -466,18 +728,27 @@
     !--------------------------------------------------------------------------
     !
     !--------------------------------------------------------------------------
-    SUBROUTINE dynifc2blochf(nmodes, rws, nrws, xxq, cuf, eig)
+!!!!!
+   !SUBROUTINE dynifc2blochf(nmodes, rws, nrws, xxq, cuf, eig)
+    SUBROUTINE dynifc2blochf(nmodes, rws, nrws, xxq, cuf, eig, is_mirror)
+!!!!!
     !--------------------------------------------------------------------------
     !!
     !!  From the IFCs in the format of q2r, find the corresponding
     !!  dynamical matrix for a given q point (as in matdyn.x) on the fine grid
-    !!
+    !!  2021: CL : Lifting of degeneracies using random perturbation matrix
+    !!             with prime number matrix control tag : lphase
+    !!             Rotate the the largest element in eigenvector to real axis. (lrot)
     !
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : at, bg
     USE ions_base, ONLY : amass, tau, nat, ityp
     USE elph2,     ONLY : ifc, epsi, zstar, wscache, qrpl
     USE epwcom,    ONLY : lpolar, nqc1, nqc2, nqc3, lphase
+!!!!!!
+    USE epwcom,    ONLY : debug_plrn, lrot
+    USE low_lvl,   ONLY : degen_sort
+!!!!!!
     USE io_global, ONLY : stdout
     USE rigid_epw, ONLY : rgd_blk
     USE low_lvl,       ONLY : utility_zdotu
@@ -497,6 +768,10 @@
     !! interpolated phonon eigenvalues for this qpoint
     COMPLEX(KIND = DP), INTENT(out) :: cuf(nmodes, nmodes)
     !! Rotation matrix, fine mesh
+!!!!!!
+    LOGICAL, INTENT(IN), OPTIONAL :: is_mirror
+    !! .true. if q-point is a time-reversal point
+!!!!!!
     !
     ! Local variables
     LOGICAL, SAVE :: first = .TRUE.
@@ -557,6 +832,14 @@
     !! Dynamical matrix in Bloch basis, fine mesh
     COMPLEX(KIND = DP) :: dyn(3, 3, nat, nat)
     !! Dynamical matrix
+!!!!!
+    REAL(KIND = DP) :: norm_vec(nmodes)
+    !! Vector for one eigenmode
+    INTEGER :: imode_max(1)
+    !! index of the max element
+    COMPLEX(KIND = DP) :: fac_max(1)
+    !! value of the max element
+!!!!!
     !
     CALL start_clock('DynW2B')
     !
@@ -686,6 +969,19 @@
     CALL zhpevx('V', 'A', 'U', nmodes, champ , zero, zero, &
                 0, 0, -one, neig, w, cz, nmodes, cwork, rwork, iwork, ifail, info)
     !
+!!!!!
+    ! Find the largest element and set it to pure real
+    IF(lrot) THEN
+       DO imode = 1, nmodes
+         DO jmode = 1, nmodes
+            norm_vec(jmode) = ABS(cz(jmode, imode))
+         END DO
+         imode_max(:) = MAXLOC(norm_vec(1:nmodes))
+         fac_max(1) = cz(imode_max(1), imode)/norm_vec(imode_max(1))
+         cz(1:nmodes, imode) = cz(1:nmodes, imode) * CONJG(fac_max(1))
+       END DO
+    END IF
+!!!!!
     ! clean noise
     DO jmode = 1,nmodes
       DO imode = 1,nmodes

@@ -49,6 +49,10 @@ inputs_args = ('scf.in' ,''), ('scf-1.in' ,''), ('scf-2.in' ,''), ('scf-allfrac.
 program = PW
 inputs_args = ('spinorbit.in' ,''), ('spinorbit-1.in' ,''), ('spinorbit-3.in' ,''), ('spinorbit-pbe.in' ,''), ('spinorbit-paw.in','')
 
+[pw_twochem/]
+program = PW
+inputs_args = ('scf_twochem.in', ''), ('nscf_twochem.in',''), ('relax_twochem.in',''), ('vc-relax_twochem.in','')
+
 [pw_uspp/]
 program = PW
 inputs_args = ('uspp.in' ,''), ('uspp-2.in' ,''), ('uspp-cg.in' ,''), ('uspp-hyb-g.in' ,''), ('uspp-hyb-k.in',''), ('uspp-mixing_TF.in' ,''), ('uspp-mixing_localTF.in' ,''), ('uspp-mixing_ndim.in' ,''), ('uspp-singlegrid.in' ,''), ('uspp1-coulomb.in' ,''), ('uspp1.in' ,''), ('uspp2.in' ,''), ('uspp-paro-gamma.in',''), ('uspp-paro-k.in',''), ('uspp-ppcg-gamma.in',''), ('uspp-ppcg-k.in','')
@@ -71,7 +75,7 @@ inputs_args = ('scf-dos-1.in' ,'1'), ('scf-dos-2.in' ,'2')
 
 [pw_workflow_exx_nscf/]
 program = PW
-inputs_args = ('ncpp-k-1.in' ,'1'), ('ncpp-k-2.in' ,'2'), ('uspp-gamma-1.in' ,'1'), ('uspp-gamma-2.in' ,'2'), ('uspp-k-smearing-1.in' ,'1'), ('uspp-k-smearing-2.in' ,'2')
+inputs_args = ('ncpp-k-1.in' ,'1'), ('ncpp-k-2.in' ,'2'), ('uspp-gamma-1.in' ,'1'), ('uspp-gamma-2.in' ,'2'), ('uspp-k-smearing-1.in' ,'1'), ('uspp-k-smearing-2.in' ,'2'), ('ncpp-gamma-restart-1.in','1'), ('ncpp-gamma-restart-2.in','2'), ('uspp-k-restart-1.in','1'), ('uspp-k-restart-2.in','2')
 
 [ph_base/]
 program = PH
@@ -119,7 +123,7 @@ inputs_args = ('O2.scf.1.in', '1'), ('O2.scf.2.in', '1'), ('O2.phG.in', '2')
 
 [ph_2d/]
 program = PH
-inputs_args = ('scf.in', '1'), ('ph.in', '2')
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r1.in', '3'), ('matdyn1.in', '8'), ('q2r2.in', '3'), ('matdyn2.in', '8')
 
 [epw_base/]
 program = EPW
@@ -183,7 +187,7 @@ inputs_args = ('scf.in', '0'), ('ph.in', '2'), ('scf.in', '0'), ('nscf.in', '1')
 
 [zg_conf/]
 program = ZG
-inputs_args = ('zg.in', '')
+inputs_args = ('zg.in', '0')
 
 [tddfpt_CH4/]
 program = TDDFPT

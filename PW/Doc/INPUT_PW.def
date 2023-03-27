@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package PWscf -program pw.x {
+input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x {
 
     toc {}
 
@@ -489,6 +489,20 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
+        var twochem -type LOGICAL {
+            default { .FALSE. }
+            see { nelec_cond, nbnd_cond, degauss_cond }
+            info {
+             IF .TRUE. , a two chemical potential calculation for the simulation of
+             photoexcited systems is performed, constraining a fraction of the 
+             electrons in the conduction manifold. 
+             See G. Marini, M. Calandra; PRB 104, 144103 (2021).  
+             Note: requires @ref occupations to be set to 'smearing'.
+            }
+        }
+
+
+
         var lfcp -type LOGICAL {
             default { .FALSE. }
             info {
@@ -745,6 +759,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 k-point, not the number of bands per k-point, is doubled
             }
         }
+
+         var nbnd_cond -type INTEGER {
+            default { nbnd_cond = @ref nbnd - # of electrons / 2 in the collinear case;
+                      nbnd_cond = @ref nbnd - # of electrons in the noncollinear case.
+            }
+            info {
+                Number of electronic states in the conduction manifold
+                for a two chemical-potential calculation (@ref twochem=.true.). 
+            }
+        }
         
         var tot_charge -type REAL { 
             default { 0.0 }
@@ -783,8 +807,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             info {
                 Starting spin polarization on atomic type 'i' in a spin 
                 polarized (LSDA or noncollinear/spin-orbit) calculation.
-                Allowed values range between -1 (all spins down for the
-                valence electrons of atom type 'i') to 1 (all spins up).
+                For non-constrained calculations, the allowed values 
+                range between -1 (all spins down for the valence electrons
+                of atom type 'i') to 1 (all spins up).
                 If you expect a nonzero magnetization in your ground state,
 		you MUST either specify a nonzero value for at least one
 		atomic type, or constrain the magnetization using variable
@@ -1050,6 +1075,25 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
+        var degauss_cond -type REAL {
+            default { 0.D0 Ry }
+            info {
+                value of the gaussian spreading (Ry) for brillouin-zone
+                integration in the conduction manifold in a two-chemical
+                potential calculation (@ref twochem=.true.).
+            }
+        }
+
+        var nelec_cond -type REAL {
+            default { 0.D0 }
+            info {
+                Number of electrons placed in the conduction manifold in a two-chemical 
+                potential calculation (@ref twochem=.true.). Of the total # of 
+                electrons nelec, nelec-nelec_cond will occupy the valence 
+                manifold and nelec_cond will be constrained in the conduction manifold. 
+            }
+        }
+ 
         var degauss -type REAL { 
             default { 0.D0 Ry }
             info {
@@ -1057,7 +1101,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 integration in metals.
             }
         }
-        
+       
         var smearing -type CHARACTER {
             default { 'gaussian' }
 
@@ -1098,6 +1142,52 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                              (magnetization in generic direction)
                              DO NOT specify @ref nspin in this case;
                              specify @ref noncolin=.TRUE. instead
+            }
+        }
+
+        var sic_gamma -type REAL {
+            default { 0 }
+            info {
+                Strength of the gammaDFT potential.
+            }
+        }
+
+        var pol_type -type CHARACTER {
+            options {
+                info {
+                    Type of polaron in gammaDFT.
+                }
+                opt -val 'e' { electron polaron }
+                opt -val 'h' { hole polaron }
+            }
+        }
+
+        var sic_energy -type LOGICAL {
+            default { .false. }
+            info {
+                Enable the calculation of the total energy in gammaDFT. When .true., 
+                a preliminary calculation is performed to calculate the electron density 
+                in the absence of the polaron. When .false., the total energy printed in 
+                output should not be considered. For structural relaxations, it is 
+                recommended to use .false. to avoid doubling the computational cost.
+            }
+        }
+
+        var sci_vb -type REAL {
+            default { 0 }
+            info {
+                Valence band shift (in eV) through self-consistent 
+                scissor operator. When performing gammaDFT calculations 
+                of polarons, the polaron level is not shifted.
+            }
+        }
+
+        var sci_cb -type REAL {
+            default { 0 }
+            info {
+                Conduction band band shift (in eV) through self-consistent 
+		scissor operator. When performing gammaDFT calculations 
+                of polarons, the polaron level is not shifted.
             }
         }
 
@@ -1239,6 +1329,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 three Hubbard manifolds per Hubbard atom. However, if you want
                 to specify three manifolds then the second and the third manifolds
                 will be considered as one effective manifold (see Doc/Hubbard_input.pdf)
+
+                Note: Hubbard_occ cannot be used together with fully-relativistic pseudopotentials
+                (i.e. when noncolin=.true. and lspinorb=.true.) since this variable does not
+                allow to distinguish between the occupied and unoccupied channels (this is 
+                needed when determining the atomic orbital offsets).
             }
         }
         dimension Hubbard_alpha -start 1 -end ntyp -type REAL { 
@@ -1247,7 +1342,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 Hubbard_alpha(i) is the perturbation (on atom i, in eV)
                 used to compute U (and V) with the linear-response method of
                 Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
-                (only for @ref lda_plus_u_kind=0 and 2).
+                (only for DFT+U or DFT+U+V).
                 
                 Note: Hubbard U and V can be computed using the HP code
                 which is based on density-functional perturbation theory,
@@ -1261,7 +1356,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 Hubbard_beta(i) is the perturbation (on atom i, in eV)
                 used to compute J0 with the linear-response method of
                 Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
-                (only for @ref lda_plus_u_kind=0 and 2). See also 
+                (only for DFT+U or DFT+U+V). See also 
                 PRB 84, 115108 (2011).
             }
         }
@@ -1957,6 +2052,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
+         var nextffield -type INTEGER {
+           default { 0 }
+           info {
+               Number of activated external ionic force fields. 
+               See Doc/ExternalForceFields.tex for further explanation and parameterizations
+           }
+         }  
+    
+
     }
 
     #
@@ -1968,7 +2072,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var electron_maxstep    -type INTEGER { 
             default { 100 }
             info {
-                maximum number of iterations in a scf step
+                maximum number of iterations in a scf step. If exact exchange is active, 
+                this will affect the inner loops.
+            }
+        }
+
+        var exx_maxstep    -type INTEGER { 
+            default { 100 }
+            info {
+                maximum number of outer iterations in a scf calculation with exact exchange.
             }
         }
 
@@ -3841,7 +3953,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
         
         label { 
-            Optional card, needed only if @ref ibrav == 0 is specified, ignored otherwise ! 
+            Optional card, must be present if @ref ibrav == 0, must be absent otherwise
         }
         
         syntax {
@@ -3870,7 +3982,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
     card CONSTRAINTS {
         label {
-            Optional card, used for constrained dynamics or constrained optimisations
+            Optional card, used for constrained dynamics or constrained optimizations
             (only if @ref ion_dynamics=='damp' or 'verlet', variable-cell excepted)
         }
         message {
@@ -3930,7 +4042,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                                 G. Roma, J.P. Crocombette: J. Nucl. Mater. 403, 32 (2010),
                                 doi:10.1016/j.jnucmat.2010.06.001
                             }
-                        }                       
+                            opt -val 'potential_wall' {
+                                (experimental) add a potential wall at the origin
+                                normal to the the z-axis.
+                            }
+                        }
                     }
                     colgroup {
                         col constr(1)
@@ -3966,6 +4082,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                                            @i constr(1) is the index of the atom whose position is constrained.
                                            @i constr(2:4) are the three coordinates of the vector that specifies
                                            the constraint direction.
+                            @b 'potential_wall' :
+                                           Formula is: External force = prefac * exponent * Exp(-exponent). Force is only applied
+                                           on atoms within the cutoff.
+                                           @i constr(1) is the prefactor
+                                           @i constr(2) is the value in the exponent
+                                           @i constr(3) is the cutoff (in a.u.)
                         }
                     }
 

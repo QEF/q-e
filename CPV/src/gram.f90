@@ -8,9 +8,9 @@
 #include <cpv_device_macros.h> 
 !-------------------------------------------------------------------------
 SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )
-!-----------------------------------------------------------------------
-!     gram-schmidt orthogonalization of the set of wavefunctions cp
-!
+      !-----------------------------------------------------------------------
+      !! Gram-Schmidt orthogonalization of the set of wavefunctions cp.
+      !
       USE gvecw,          ONLY : ngw
       USE electrons_base, ONLY : nbspx_bgrp, ibgrp_g2l, nupdwn, iupdwn, nbspx, iupdwn_bgrp, nspin
       USE kinds,          ONLY : DP
@@ -116,11 +116,11 @@ DEV_ACC end data
 CONTAINS   
 !-----------------------------------------------------------------------
    FUNCTION cscnorm( bec, cp, i, n )
-!-----------------------------------------------------------------------
-!
-!     Compute the norm of the i-th electronic state = (<c|S|c>)^(1/2) 
-!     requires in input the updated bec(i)
-!
+      !-----------------------------------------------------------------------
+      !! Compute the norm of the i-th electronic state:
+      !! \[ (\langle c|S|c \rangle)^{1/2} \ .\]
+      !! Requires in input the updated \(\text{bec}(i)\).
+      !
       USE ions_base,          ONLY: nat, ityp
       USE gvecw,              ONLY: ngw
       USE uspp_param,         ONLY: nh, upf
@@ -186,8 +186,8 @@ DEV_ACC end data
 !-------------------------------------------------------------------------
       SUBROUTINE gracsc_bgrp( i, csc, iss, nk )
 !-----------------------------------------------------------------------
-!     requires in input the updated bec(k) for k<i
-!     on output: bec(i) is recalculated
+      !! Requires in input the updated \(\text{bec}(k)\) for \(k<i\).
+      !! On output: \(\text{bec}(i)\) is recalculated.
 !
       USE ions_base,      ONLY: na, nat, ityp
       USE uspp,           ONLY: qq_nt, ofsbeta

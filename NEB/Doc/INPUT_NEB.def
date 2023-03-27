@@ -29,7 +29,7 @@ set card_TOTAL_CHARGE {
 
 # standard *.def description follows
 
-input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
+input_description -distribution {Quantum ESPRESSO} -package NEB -program neb.x {
 
     toc {}
 

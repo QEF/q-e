@@ -301,7 +301,7 @@ CONTAINS
     npw_g     = basis_set%npwx
     !
     b1 =  basis_set%reciprocal_lattice%b1
-    b2 =  basis_set%reciprocal_lattice%b2
+   !  b2 =  basis_set%reciprocal_lattice%b2
     b3 =  basis_set%reciprocal_lattice%b3
     !
   END SUBROUTINE qexsd_copy_basis_set
@@ -310,10 +310,10 @@ CONTAINS
   SUBROUTINE qexsd_copy_dft ( dft_obj, nsp, atm, &
        dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
        exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
-       lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_n, Hubbard_l, Hubbard_lmax, &
+       lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_n, Hubbard_l, Hubbard_lmax, Hubbard_occ, &
        Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
        Hubbard_U, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, Hubbard_V, &
-       vdw_corr, scal6, lon_rcut, vdw_isolated )
+       vdw_corr, dftd3_version, dftd3_3body, scal6, lon_rcut, vdw_isolated )
     !-------------------------------------------------------------------
     ! 
     USE qes_types_module, ONLY : dft_type
@@ -337,18 +337,20 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(inout) :: U_projection
     INTEGER, INTENT(inout) :: Hubbard_n(:), Hubbard_l(:), Hubbard_n2(:), Hubbard_l2(:), Hubbard_n3(:), Hubbard_l3(:) 
     REAL(dp), INTENT(inout) :: Hubbard_U(:), Hubbard_U2(:), Hubbard_J0(:), Hubbard_J(:,:), Hubbard_V(:,:,:), &
-                               Hubbard_alpha(:), Hubbard_alpha_back(:), Hubbard_beta(:)
+                               Hubbard_alpha(:), Hubbard_alpha_back(:), Hubbard_beta(:), Hubbard_occ(:,:)
     LOGICAL, INTENT(inout) :: backall(:)
     OPTIONAL    :: Hubbard_U2, Hubbard_n2, Hubbard_l2, Hubbard_lmax_back, Hubbard_alpha_back, &
                    Hubbard_l3
     !
     CHARACTER(LEN=*), INTENT(out) :: vdw_corr
+    LOGICAL,INTENT(inout)   :: dftd3_3body 
+    INTEGER,INTENT(inout)   :: dftd3_version 
     REAL(dp), INTENT(inout) :: scal6, lon_rcut
     LOGICAL, INTENT(inout) :: vdw_isolated
     !
     CHARACTER(LEN=256 ) :: label
     CHARACTER(LEN=3 )   :: symbol
-    INTEGER :: ihub, isp, hu_n, hu_l, idx1, idx2
+    INTEGER :: ihub, isp, hu_n, hu_l, idx1, idx2, idx3, ich
     INTEGER, EXTERNAL :: spdf_to_l
     !
     dft_name = TRIM(dft_obj%functional)
@@ -434,8 +436,20 @@ CONTAINS
               END DO loop_on_species_back
             END DO loop_hubbardBack
        END IF
-
-       ! 
+       !
+      IF (dft_obj%dftU%Hubbard_Occ_ispresent) THEN 
+         loop_on_hubbard_occ: DO ihub =1, dft_obj%dftU%ndim_Hubbard_Occ 
+            symbol = TRIM(dft_obj%dftU%Hubbard_Occ(ihub)%specie) 
+            loop_on_species: DO isp = 1, nsp
+               IF (TRIM(symbol) == TRIM(atm(isp))) THEN 
+                  DO ich = 1, dft_obj%dftU%Hubbard_Occ(ihub)%channels 
+                     Hubbard_occ(isp,ich) = dft_obj%dftU%Hubbard_Occ(ihub)%channel_occ(ich)%ChannelOcc 
+                  END DO 
+               END IF 
+            END DO loop_on_species 
+         END DO loop_on_hubbard_occ
+      END IF 
+      ! 
        IF ( dft_obj%dftU%Hubbard_J0_ispresent ) THEN 
             loop_on_hubbardj0:DO ihub =1, dft_obj%dftU%ndim_Hubbard_J0
                symbol = TRIM(dft_obj%dftU%Hubbard_J0(ihub)%specie)
@@ -500,18 +514,32 @@ CONTAINS
          DO ihub = 1, dft_obj%dftU%ndim_Hubbard_V 
            idx1 = dft_obj%dftU%Hubbard_V(ihub)%index1
            idx2 = dft_obj%dftU%Hubbard_V(ihub)%index2
-           Hubbard_V(idx1, idx2,1) = dft_obj%dftU%Hubbard_V(ihub)%HubbardInterSpecieV  
+           IF (Hubbard_V(idx1, idx2,1 ) == 0._DP ) THEN 
+             idx3 = 1 
+           ELSE IF (Hubbard_V(idx1, idx2, 2) == 0._DP) THEN 
+             idx3 = 2 
+           ELSE IF (Hubbard_V(idx1, idx2, 3) == 0._DP) THEN 
+             idx3 = 3 
+           ELSE IF (Hubbard_V(idx1, idx2, 4) == 0._DP) THEN
+             idx3 = 4  
+           END IF 
+           Hubbard_V(idx1, idx2, idx3 ) = dft_obj%dftU%Hubbard_V(ihub)%HubbardInterSpecieV
            symbol = TRIM(dft_obj%dftU%Hubbard_V(ihub)%specie1) 
            label  = TRIM(dft_obj%dftU%hubbard_V(ihub)%label1) 
            DO isp = 1, nsp
-             IF (TRIM(symbol) == TRIM(atm(isp)) .AND. Hubbard_n(isp) == -1 ) THEN 
+             IF (TRIM(symbol) == TRIM(atm(isp)) .AND. & 
+                  ( Hubbard_n(isp) == -1 .OR. Hubbard_n2(isp) == -1 ))  THEN 
                READ (label(1:1),'(i1)', END=14, ERR=15) hu_n
                hu_l = spdf_to_l( label(2:2) )
-               Hubbard_n(isp) = hu_n
-               Hubbard_l(isp) = hu_l
-               IF (Hubbard_n(isp)<0 .OR. Hubbard_l(isp)<0) &
-                  CALL errore ("qexsd_copy_dft:", &
-                     &"Problem while reading Hubbard_n and/or Hubbard_l", 1 )
+               IF ( idx3 == 1 .OR. idx3 == 2 ) THEN 
+                 Hubbard_n(isp) = hu_n
+                 Hubbard_l(isp) = hu_l
+                 IF (Hubbard_n(isp)<0 .OR. Hubbard_l(isp)<0) &
+                    CALL errore ("qexsd_copy_dft:", "Problem while reading Hubbard_n and/or Hubbard_l", 1)
+               ELSE IF ( idx3 == 3 .OR. idx3 == 4 ) THEN 
+                 Hubbard_n2 = hu_n 
+                 Hubbard_l2 = hu_l 
+               END IF 
              END IF 
            END DO
          END DO     
@@ -529,7 +557,13 @@ CONTAINS
          vdw_corr = ''
       END IF
       
-      IF ( dft_obj%vdW_ispresent ) THEN 
+      IF ( dft_obj%vdW_ispresent ) THEN
+         IF (dft_obj%vdW%dftd3_threebody_ispresent) THEN 
+            dftd3_3body = dft_obj%vdw%dftd3_threebody 
+         END IF 
+         IF (dft_obj%vdw%dftd3_version_ispresent) THEN 
+            dftd3_version = dft_obj%vdW%dftd3_version 
+         END IF  
          IF (dft_obj%vdW%london_s6_ispresent ) THEN 
             scal6 = dft_obj%vdW%london_s6
          END IF

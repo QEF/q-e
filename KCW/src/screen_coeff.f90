@@ -62,9 +62,10 @@ SUBROUTINE screen_coeff ()
   COMPLEX(DP) :: phase(dffts%nnr), wann_c(dffts%nnr,num_wann), rho_c(dffts%nnr,num_wann)
   !! The phase associated to the hift k+q-> k'
   !
-  COMPLEX(DP) :: int_rho, int_wann, pi_q_unrelax, sh_q, pi_q_relax, pi_q_relax_rs
+  COMPLEX(DP) :: int_rho, int_wann, pi_q_unrelax, pi_q_unrelax_, sh_q, pi_q_relax, pi_q_relax_rs
   COMPLEX(DP) :: struct_fact
   LOGICAL :: do_real_space = .false. 
+  LOGICAL :: exst
   !
   COMPLEX(DP) :: drho_zero
   !
@@ -165,11 +166,13 @@ SUBROUTINE screen_coeff ()
        CALL bare_pot ( rhor, rhog, vh_rhog, delta_vr, delta_vg, iq, delta_vr_, delta_vg_) 
        !! ... The periodic part of the perturbation
        !
-       pi_q_unrelax = sum (CONJG(rhog (:)) * delta_vg(:,spin_component))*weight(iq)*omega
-       sh_q = 0.5D0 * sum (CONJG(rhog (:)) * vh_rhog(:)                )*weight(iq)*omega
+       pi_q_unrelax  = sum (CONJG(rhog (:)) * delta_vg(:,spin_component)) *weight(iq)*omega
+       pi_q_unrelax_ = sum (CONJG(rhog (:)) * delta_vg_(:,spin_component))*weight(iq)*omega
+       sh_q  = 0.5D0 * sum (CONJG(rhog (:)) * vh_rhog(:)                ) *weight(iq)*omega
        !
-       CALL mp_sum (pi_q_unrelax, intra_bgrp_comm)
-       CALL mp_sum (sh_q,         intra_bgrp_comm)
+       CALL mp_sum (pi_q_unrelax,  intra_bgrp_comm)
+       CALL mp_sum (pi_q_unrelax_, intra_bgrp_comm)
+       CALL mp_sum (sh_q,          intra_bgrp_comm)
        !! Sum over different processes
        !
        vki_u(iwann) = vki_u(iwann) + pi_q_unrelax
@@ -205,24 +208,25 @@ SUBROUTINE screen_coeff ()
        !
        CALL mp_sum (pi_q_relax, intra_bgrp_comm)
        !
+       pi_q_relax = pi_q_relax + pi_q_unrelax_
+       !
        IF (lgamma .and. l_vcut ) THEN 
-          IF ( ABS(eps_inf - 1.D0) .gt. 1e-6) THEN 
-            !WRITE(stdout, '(/, 5X, "INFO: Adding the q+G contribution", 3x, "bare", 1es15.5, 3x,"screen", 1es15.5)') &
-            !                -div/omega/nqs, -(1.D0/eps_inf -1.D0)*div/omega/nqs
-            WRITE(stdout, '(/, 5X, "INFO: Adding the q+G contribution", 3x, "bare", 1es15.5, 3x,"screen", 1es15.5)') &
-                            -div/omega/nqs, -(div_eps-div)/omega/nqs
-            !pi_q_relax = pi_q_relax - (1.D0/eps_inf -1.D0)*div/omega/nqs 
-            pi_q_relax = pi_q_relax - (div_eps-div)/omega/nqs 
-          ELSE
-            ! This is in the case eps_inf is not provided in input but l_vcut=.true. .
-            ! The LR is done with G0=0 while the unrelaxed with GB for G0=0. This remove the inconsistency
-            pi_q_relax = pi_q_relax  + div/omega/nqs 
-          ENDIF
+          !
+          !WRITE(stdout, 9013) iq, iwann, pi_q_relax, pi_q_unrelax_
+          WRITE(stdout, '(/, 7X, "INFO: Result without q+G=0   ", 3x, "rPi*      ", 1F15.8, 3x,"uPi*      ", 1F15.8)') &
+                         DBLE(pi_q_relax), DBLE(pi_q_unrelax_)
+          WRITE(stdout, '(   7X, "INFO: The q+G=0 contribution", 3x, "rPi(q+G=0)", 1F15.8, 3x,"uPi(q+G=0)", 1F15.8)') &
+                         -(div_eps)/omega/nqs, -div/omega/nqs
+          pi_q_relax = pi_q_relax - (div_eps)/omega/nqs 
+          !
        ENDIF
        !
        IF (do_real_space) THEN 
          !
          CALL mp_sum (pi_q_relax_rs, intra_bgrp_comm)
+         pi_q_relax_rs = pi_q_relax_rs + pi_q_unrelax
+         IF (lgamma .and. l_vcut ) pi_q_relax_rs = pi_q_relax_rs - (div_eps)/omega/nqs 
+         !
          WRITE(stdout, 9010) iq, iwann, pi_q_relax, pi_q_relax_rs, pi_q_unrelax, sh_q
          IF( ionode) WRITE(iun_res,'(2I5,8F20.12)') iq, iwann, pi_q_relax, pi_q_relax_rs, pi_q_unrelax, sh_q
          !
@@ -240,8 +244,12 @@ SUBROUTINE screen_coeff ()
     !
     CALL clean_pw_kcw( )
     !
-    IF (ionode) REWIND(986)
-    IF (ionode) WRITE(986,'(i5)') iq
+    IF (ionode) THEN 
+      INQUIRE(file=TRIM(tmp_dir_kcw)//TRIM(prefix)//'.alpha.status', exist=exst)
+      IF (.NOT. exst) OPEN(986, file=TRIM(tmp_dir_kcw)//TRIM(prefix)//'.alpha.status')
+      REWIND(986)
+      WRITE(986,'(i5)') iq
+    ENDIF
     !
   ENDDO ! qpoints
   !
@@ -266,16 +274,16 @@ SUBROUTINE screen_coeff ()
   DO jwann = iorb_start, iorb_end
     !
     iwann = group_alpha(jwann)
-    alpha = REAL(vki_u(iwann)+vki_r(iwann))/REAL(vki_u(iwann))
+    alpha = REAL(vki_r(iwann))/REAL(vki_u(iwann))
     !
     IF ( l_do_alpha(jwann) ) THEN 
       WRITE(stdout,'(/, 8x, "iwann  = ", i5, 3x, "relaxed = ", 1f15.8, 3x, "unrelaxed = " & 
                 &  , 1f15.8, 3x, "alpha =", f12.8, 3x, "self Hartree =", f12.8 )') &
-                &  jwann, REAL(vki_u(iwann)+vki_r(iwann)), REAL(vki_u(iwann)), alpha, REAL(sh(iwann))
+                &  jwann, REAL(vki_r(iwann)), REAL(vki_u(iwann)), alpha, REAL(sh(iwann))
     ELSE
       WRITE(stdout,'(/, 8x, "iwann* = ", i5, 3x, "relaxed = ", 1f15.8, 3x, "unrelaxed = " & 
                  &  , 1f15.8, 3x, "alpha =", f12.8, 3x, "self Hartree =", f12.8 )') &
-                 &  jwann, REAL(vki_u(iwann)+vki_r(iwann)), REAL(vki_u(iwann)), alpha, REAL(sh(iwann))
+                 &  jwann, REAL(vki_r(iwann)), REAL(vki_u(iwann)), alpha, REAL(sh(iwann))
     ENDIF
     !
     ! store the final value of alpha
@@ -335,6 +343,10 @@ SUBROUTINE screen_coeff ()
                "rPi_q_RS =", 2f15.8, 3x, "uPi_q =", 2f15.8, 3x, "Self Hartree =", 2f15.8)
 9011 FORMAT(/, 8x, "iq =", i4, 3x, "iwann =", i4, 3x, "rPi_q =", 2f15.8, 3x, "uPi_q =", & 
                2f15.8, 3x, "SH_q =", 2f15.8)
+9012 FORMAT(/, 8x, "iq =", i4, 3x, "iwann =", i4, 3x, "rPi_q =", 2f15.8, 3x, "uPi_q =", & 
+               2f15.8)
+9013 FORMAT(/, 8x, "iq =", i4, 3x, "iwann =", i4, 3x, "rPi_q* =", 2f15.8, 3x, "uPi_q* =", & 
+               2f15.8)
 
 END subroutine screen_coeff
 
@@ -359,8 +371,12 @@ SUBROUTINE restart_screen (num_wann, iq_start, vki_r, vki_u, sh, do_real_space)
   INTEGER :: iq_start, num_wann, iwann, iwann_, iq, iq_, iun_res
   LOGICAL :: exst, do_real_space
   !
-  INQUIRE(file="fort.986", exist=exst)
-  IF( .NOT. exst) RETURN
+  INQUIRE(file=TRIM(tmp_dir_kcw)//TRIM(prefix)//'.alpha.status', exist=exst)
+  IF( .NOT. exst) THEN
+    RETURN
+  ELSE 
+    OPEN (986, file = TRIM(tmp_dir_kcw)//TRIM(prefix)//'.alpha.status')
+  ENDIF 
   !
   iun_res = 987
   OPEN (iun_res, file = TRIM(tmp_dir_kcw)//TRIM(prefix)//'.LR_res.txt')

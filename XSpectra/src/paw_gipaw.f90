@@ -60,9 +60,6 @@ MODULE paw_gipaw
      REAL(DP), POINTER :: &
           paw_tab(:,:)          ! interpolation table for PPs
 
-     REAL(DP), POINTER :: &
-          paw_tab_d2y(:,:)      ! for cubic splines
-
      TYPE ( at_wfc ), POINTER :: aephi(:)
      TYPE ( at_wfc ), POINTER :: psphi(:)
 

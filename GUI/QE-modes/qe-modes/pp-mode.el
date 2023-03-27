@@ -80,7 +80,7 @@
 (defvar qe-end-namelist (list "&END" "/"))
 
 ;; pp's variables
-(defvar pp-vars (list "degauss_ldos" "delta_e" "e1" "e2" "e3" "emax" "emin" "fileout" "filepp" "filplot" "iflag" "interpolation" "kband" "kpoint" "lsign" "nfile" "nx" "ny" "nz" "outdir" "output_format" "plot_num" "prefix" "radius" "sample_bias" "spin_component" "weight" "x0" ))
+(defvar pp-vars (list "degauss_ldos" "delta_e" "e1" "e2" "e3" "emax" "emin" "fileout" "filepp" "filplot" "iflag" "interpolation" "kband" "kpoint" "lsign" "nfile" "nx" "ny" "nz" "outdir" "output_format" "plot_num" "prefix" "radius" "sample_bias" "spin_component" "use_gauss_ldos" "weight" "x0" ))
 
 ;; pp's cards & keywords
 (defvar pp-cards (list "__NO-CARDS" ))

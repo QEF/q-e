@@ -27,6 +27,10 @@ subroutine hp_allocate_q
   USE control_lr,           ONLY : lgamma
   USE ldaU,                 ONLY : Hubbard_lmax, nwfcU
   USE ldaU_lr,              ONLY : swfcatomk, swfcatomkpq
+#if defined(__CUDA)
+  USE becmod_gpum,      ONLY: becp_d
+  USE becmod_subs_gpum, ONLY: allocate_bec_type_gpu
+#endif  
   !
   IMPLICIT NONE
   INTEGER :: ik
@@ -48,6 +52,9 @@ subroutine hp_allocate_q
      ALLOCATE (becp1(nksq))
      DO ik = 1,nksq
         CALL allocate_bec_type ( nkb, nbnd, becp1(ik) )
+#if defined(__CUDA)
+        CALL allocate_bec_type_gpu(nkb,nbnd,becp_d)
+#endif
      ENDDO
   ENDIF
   !

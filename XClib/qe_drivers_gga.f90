@@ -211,7 +211,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         ELSEIF ( igcx == 33) THEN ! vdW-DF2-ah
            CALL rPW86( rho, grho, sx, v1x, v2x )
            iflag = 4 ! for rPW86 - analytical sr hole
-        ELSEIF ( igcx == 47) THEN ! vdW-DF2-ahtr
+        ELSEIF ( igcx == 47) THEN ! vdW-DF2-ahbr
            CALL b86b( rho, grho, 3, sx, v1x, v2x ) 
            iflag = 6 ! for test-reserve - analytical sr hole
         ENDIF
@@ -869,7 +869,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out, err_out
         !
         ! igcx=32:  vdw-df-ahcx
         ! igcx=33:  vdw-df2-AH
-        ! igcx=47:  vdw-df2-ahtr
+        ! igcx=47:  vdw-df2-ahbr
         !
         iflag = 0
         IF ( igcx == 32) THEN ! vdW-DF-ahcx
@@ -880,7 +880,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out, err_out
            CALL rPW86( rho_up, grho2_up, sx_up, v1x_up, v2x_up )
            CALL rPW86( rho_dw, grho2_dw, sx_dw, v1x_dw, v2x_dw )
            iflag = 4 ! for rPW86 - sr hole
-        ELSEIF ( igcx == 47) THEN ! vdW-DF2-ahtr
+        ELSEIF ( igcx == 47) THEN ! vdW-DF2-ahbr
            CALL b86b( rho_up, grho2_up, 3, sx_up, v1x_up, v2x_up ) 
            CALL b86b( rho_dw, grho2_dw, 3, sx_dw, v1x_dw, v2x_dw ) 
            iflag = 6 ! for test-reserve - sr hole

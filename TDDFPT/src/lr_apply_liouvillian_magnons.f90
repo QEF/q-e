@@ -39,6 +39,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
  
   USE io_global,             ONLY : stdout
   USE uspp_init,             ONLY : init_us_2
+  USE scf_gpum,              ONLY : vrs_d
 
   IMPLICIT NONE
   !
@@ -152,15 +153,14 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      ! The vkb's are needed for the non-local potential in h_psi,
      ! and for the ultrasoft term.
      !
-     CALL init_us_2 (npwq, igk_k(1,ikq), xk(1,ikq), vkb)
+     CALL init_us_2 (npwq, igk_k(1,ikq), xk(1,ikq), vkb, .true.)
+     !$acc update host(vkb)
      !
      ! Read unperturbed wavefuctions evc (wfct at k) 
      ! and evq (wfct at k+q)
      !
-!     IF (nksq > 1) THEN 
-        CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
-        CALL get_buffer (evq, nwordwfc, iunwfc, ikq)
-!     ENDIF
+     CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
+     CALL get_buffer (evq, nwordwfc, iunwfc, ikq)
      !
      dpsi(:,:)  = (0.d0,0.d0)
      dvpsi(:,:) = (0.d0,0.d0)
@@ -173,6 +173,8 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      !
 !     IF (interaction1) THEN
      IF ( .not. no_hxc) THEN
+        !
+        !$acc data copyin(evc, dvrssc) create(revc) copy (dvpsi)
         !
         ! The potential in dvrssc is distributed across all processors.
         ! We need to redistribute it so that it is completely contained in the
@@ -231,6 +233,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
            ENDIF
            !
         ENDDO
+        !$acc end data
         !
         ! In the case of US pseudopotentials there is an additional term.
         ! See the second term in Eq.(11) in J. Chem. Phys. 127, 164106 (2007).
@@ -256,7 +259,9 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      ! Apply the operator ( H - \epsilon S + alpha_pv P_v) to evc1
      ! where alpha_pv = 0
      !
+     !$acc data copyin(evq) copy(evc1(1:npwx*npol,1:nbnd,ik,1),sevc1_new(1:npwx*npol,1:nbnd,ik), et(:,ikk))
      CALL ch_psi_all (npwq, evc1(:,:,ik,1), sevc1_new(:,:,ik,1), et(:,ikk), ik, nbnd_occ(ikk)) 
+     !$acc end data
      !
      IF (ALLOCATED(psic_nc)) DEALLOCATE(psic_nc)
      !
@@ -298,10 +303,8 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      !
      ! Read unperturbed wavefuctions Tu_{-k} and Tu_{-k-Q}
      !
-!     IF (nksq > 1) THEN
-        CALL get_buffer (Tevc, nwordwfc, iunTwfc, 2*ik-1)
-        CALL get_buffer (Tevq, nwordwfc, iunTwfc, 2*ik  )
-!     ENDIF
+     CALL get_buffer (Tevc, nwordwfc, iunTwfc, 2*ik-1)
+     CALL get_buffer (Tevq, nwordwfc, iunTwfc, 2*ik  )
      !
      dpsi(:,:)  = (0.d0,0.d0)
      dvpsi(:,:) = (0.d0,0.d0)
@@ -314,6 +317,8 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      !
 !     IF (interaction1) THEN
      IF ( .not. no_hxc) THEN
+        !
+        !$acc data copyin(evc, dvrssc) create(revc) copy (dvpsi)
         !
         ! The potential in dvrssc is distributed across all processors.
         ! We need to redistribute it so that it is completely contained in the
@@ -372,6 +377,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
            ENDIF
            !
         ENDDO
+        !$acc end data
         !
         ! In the case of US pseudopotentials there is an additional term.
         ! See the second term in Eq.(11) in J. Chem. Phys. 127, 164106 (2007).
@@ -396,16 +402,25 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      vrs(:,3) = - vrs(:,3)
      vrs(:,4) = - vrs(:,4)     
      !
+#if defined(__CUDA)
+     vrs_d = vrs
+#endif
      ! Apply the operator ( H - \epsilon S + alpha_pv P_v) to evc1
      ! where alpha_pv = 0
      !
+     !$acc data copyin(evq) copy(evc1(1:npwx*npol,1:nbnd,ik,2),sevc1_new(1:npwx*npol,1:nbnd,ik,2), et(:,imk))
      CALL ch_psi_all (npwq, evc1(:,:,ik,2), sevc1_new(:,:,ik,2), et(:,imk), ik, nbnd_occ(imk))
+     !$acc end data
      !
      ! Change the sign of b_xc back
      !
      vrs(:,2) = - vrs(:,2)
      vrs(:,3) = - vrs(:,3)
      vrs(:,4) = - vrs(:,4)
+     !
+#if defined(__CUDA)
+     vrs_d = vrs
+#endif
      !
      IF (ALLOCATED(psic_nc)) DEALLOCATE(psic_nc)
      !

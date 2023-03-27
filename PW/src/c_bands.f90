@@ -108,11 +108,7 @@ SUBROUTINE c_bands( iter )
      !
      IF ( lsda ) current_spin = isk(ik)
      !
-     IF ( use_gpu ) THEN
-        CALL g2_kin_gpu( ik )
-     ELSE
-        CALL g2_kin( ik )
-     END IF
+     CALL g2_kin( ik )
      !
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
@@ -223,9 +219,18 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE xc_lib,               ONLY : exx_is_active
   USE gcscf_module,         ONLY : lgcscf
   USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
-  USE wvfct_gpum,           ONLY : et_d, using_et, using_et_d, &
-                                   g2kin_d, using_g2kin, using_g2kin_d
+  USE wvfct_gpum,           ONLY : et_d, using_et, using_et_d
   USE becmod_subs_gpum,     ONLY : using_becp_auto
+  !
+  USE control_flags,        ONLY : scissor
+  USE sci_mod,              ONLY : evcc
+#if defined (__OSCDFT)
+  USE plugin_flags,     ONLY : use_oscdft
+  USE oscdft_base,      ONLY : oscdft_ctx
+  USE oscdft_functions, ONLY : oscdft_h_diag
+  USE oscdft_functions_gpu, ONLY : oscdft_h_diag_gpu
+#endif
+  !
   IMPLICIT NONE
   !
   ! please do not capitalize (FORD rules)
@@ -359,7 +364,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        ! ... h_diag is the precondition matrix
        !
-       CALL using_g2kin(0)
        CALL using_h_diag(2)
        IF ( isolve == 1 .OR. isolve == 2 ) THEN
           FORALL( ig = 1 : npw )
@@ -442,7 +446,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                !
              ELSE
                CALL using_evc_d(1);  CALL using_et_d(1); CALL using_h_diag_d(0) ! precontidtion has intent(in)
-               CALL paro_gamma_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, okvan, &
+               CALL paro_gamma_new( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, okvan, &
                           npwx, npw, nbnd, evc_d, et_d(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                !
                avg_iter = avg_iter + nhpsi/float(nbnd) 
@@ -493,7 +497,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           IF (lrot .AND. .NOT. lscf ) THEN
               !!
               CALL using_h_diag(2);
-!              CALL using_h_diag(0); CALL using_g2kin(0);
+!              CALL using_h_diag(0)
               FORALL( ig = 1 : npw )
                  h_diag(ig,1) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
               END FORALL
@@ -508,7 +512,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 !
               ELSE
                 CALL using_evc_d(1);  CALL using_et_d(1); CALL using_h_diag_d(0) ! precontidtion has intent(in)
-                CALL paro_gamma_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, okvan, &
+                CALL paro_gamma_new( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, okvan, &
                            npwx, npw, nbnd, evc_d, et_d(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                 !
                 avg_iter = avg_iter + nhpsi/float(nbnd) 
@@ -534,15 +538,19 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           !
           !
           IF (.not. use_gpu) THEN
-            CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0); CALL using_g2kin(0) !precontidtion has intent(in)
+            CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) !precontidtion has intent(in)
             CALL rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, evc, hevc, sevc, &
                          et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
                          okvan, lrot, exx_is_active(), notconv, rmm_iter )
           ELSE
-             CALL using_evc_d(1);  CALL using_et(1); CALL using_g2kin_d(0) !precontidtion has intent(in)
+             CALL using_evc_d(1);  CALL using_et(1)!precontidtion has intent(in)
+             !$acc data present(g2kin)
+             !$acc host_data use_device(g2kin)
              CALL rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, evc_d, hevc_d, sevc_d, &
-                          et(1,ik), g2kin_d, btype(1,ik), ethr, rmm_ndim, &
+                          et(1,ik), g2kin, btype(1,ik), ethr, rmm_ndim, &
                           okvan, lrot, exx_is_active(), notconv, rmm_iter )
+             !$acc end host_data 
+             !$acc end data
           END IF
           !
           !
@@ -599,21 +607,25 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        IF ( .not. use_gpu ) THEN
           call using_h_diag(2); call using_s_diag(2);
           !
-          CALL using_g2kin(0)
           DO j=1, npw
              h_diag(j, 1) = g2kin(j) + v_of_0
           END DO
           !
+#if defined (__OSCDFT)
+          IF (use_oscdft) CALL oscdft_h_diag(oscdft_ctx)
+#endif
           CALL usnldiag( npw, h_diag, s_diag )
        ELSE
           call using_h_diag_d(2); call using_s_diag_d(2);
           !
-          CALL using_g2kin_d(0)
-          !$cuf kernel do(1)
+          !$acc parallel loop present(g2kin, h_diag_d) 
           DO j=1, npw
-             h_diag_d(j, 1) = g2kin_d(j) + v_of_0
+             h_diag_d(j, 1) = g2kin(j) + v_of_0
           END DO
           !
+#if defined (__OSCDFT)
+          IF (use_oscdft) CALL oscdft_h_diag_gpu(oscdft_ctx)
+#endif
           CALL usnldiag_gpu( npw, h_diag_d, s_diag_d )
        END IF
        !
@@ -645,7 +657,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 !
              ELSE
                 !
-                CALL regterg_gpu (  h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
+                CALL regterg (  h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
                          npw, npwx, nbnd, nbndx, evc_d, ethr, &
                          et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call
              END IF
@@ -716,6 +728,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
     ENDIF
     !
+    IF (scissor) evcc = evc
+    !
     !write (*,*) ' current isolve value ( 0 Davidson, 1 CG, 2 PPCG, 3 PARO, 4 RMM)', isolve; FLUSH(6)
     IF ( isolve == 1 .OR. isolve == 2 .OR. isolve == 3 .or. rmm_use_paro(iter)) THEN
        !
@@ -725,7 +739,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        !write (*,*) ' inside CG solver branch '
        !
-       CALL using_g2kin(0)
        CALL using_h_diag(2);
        h_diag = 1.D0
        IF ( isolve == 1 .OR. isolve == 2) THEN
@@ -808,7 +821,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                ! write (6,*) ntry, avg_iter, nhpsi
              ELSE
                CALL using_evc_d(1); CALL using_et_d(1); CALL using_h_diag_d(0)
-               CALL paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, okvan, &
+               CALL paro_k_new( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, okvan, &
                         npwx, npw, nbnd, npol, evc_d, et_d(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                !
                avg_iter = avg_iter + nhpsi/float(nbnd) 
@@ -855,7 +868,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
 !          IF ( .NOT. lrot ) THEN
           IF (lrot .AND. .NOT. lscf ) THEN
               !
-              CALL using_h_diag(2); CALL using_g2kin(0);
+              CALL using_h_diag(2)
               h_diag = 1.D0
               FORALL( ig = 1 : npwx )
                  h_diag(ig,:) = g2kin(ig) + v_of_0
@@ -871,7 +884,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 ! write (6,*) ntry, avg_iter, nhpsi
               ELSE
                 CALL using_evc_d(1); CALL using_et_d(1); CALL using_h_diag_d(0)
-                CALL paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, okvan, &
+                CALL paro_k_new( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, okvan, &
                          npwx, npw, nbnd, npol, evc_d, et_d(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                 !
                 avg_iter = avg_iter + nhpsi/float(nbnd) 
@@ -903,10 +916,14 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                              et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
                              okvan, lrot, exx_is_active(), notconv, rmm_iter )
           ELSE
-             CALL using_evc_d(1); CALL using_et(1); CALL using_g2kin_d(0)
+             CALL using_evc_d(1); CALL using_et(1) 
+             !$acc data present(g2kin)
+             !$acc host_data use_device(g2kin)
              CALL crmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, npol, evc_d, hevc_d, sevc_d, &
-                             et(1,ik), g2kin_d(1), btype(1,ik), ethr, rmm_ndim, &
+                             et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
                              okvan, lrot, exx_is_active(), notconv, rmm_iter )
+             !$acc end host_data
+             !$acc end data
           END IF
           !
           IF ( lscf .AND. ( .NOT. rmm_conv ) ) notconv = 0
@@ -963,29 +980,35 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        IF ( .not. use_gpu ) THEN
           !
-          CALL using_g2kin(0); CALL using_h_diag(2);
+          CALL using_h_diag(2);
           !
           DO ipol = 1, npol
              !
              h_diag(1:npw, ipol) = g2kin(1:npw) + v_of_0
              !
           END DO
+#if defined (__OSCDFT)
+          IF (use_oscdft) CALL oscdft_h_diag(oscdft_ctx)
+#endif
           !
           call using_s_diag(2);
           CALL usnldiag( npw, h_diag, s_diag )
        ELSE
           !
-          CALL using_g2kin_d(0) ;CALL using_h_diag_d(2)
+          CALL using_h_diag_d(2)
           !
           DO ipol = 1, npol
              !
-             !$cuf kernel do(1)
+             !$acc parallel loop present(g2kin, h_diag_d) 
              DO j = 1, npw
-                h_diag_d(j, ipol) = g2kin_d(j) + v_of_0
+                h_diag_d(j, ipol) = g2kin(j) + v_of_0
              END DO
              !
           END DO
           !
+#if defined (__OSCDFT)
+          IF (use_oscdft) CALL oscdft_h_diag_gpu(oscdft_ctx)
+#endif
           CALL using_s_diag_d(2); CALL using_h_diag_d(1)
           CALL usnldiag_gpu( npw, h_diag_d, s_diag_d )
        END IF
@@ -1021,7 +1044,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 !
              ELSE
                 !
-                CALL cegterg_gpu ( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
+                CALL cegterg ( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
                                npw, npwx, nbnd, nbndx, npol, evc_d, ethr, &
                                et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
              END IF
@@ -1222,8 +1245,7 @@ SUBROUTINE c_bands_nscf( )
      !
      IF ( lsda ) current_spin = isk(ik)
      !
-     IF (.not. use_gpu ) CALL g2_kin( ik )
-     IF (      use_gpu ) CALL g2_kin_gpu( ik )
+     CALL g2_kin( ik )
      ! 
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !

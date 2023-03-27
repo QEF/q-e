@@ -1,6 +1,6 @@
 #!/bin/sh
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -87,12 +87,12 @@ cat > $PREFIX.scf.in << EOF
  &control
     calculation        = 'scf',
     prefix             = '$PREFIX',
-    tstress            = .true., 
-    tprnfor            = .true., 
+    tstress            = .true.,
+    tprnfor            = .true.,
     pseudo_dir         = '$PSEUDO_DIR/',
     outdir             = '$TMP_DIR/',
- / 
- &system 
+ /
+ &system
     ibrav              = 1,
     celldm(1)          = 7.2612,
     nat                = 5,
@@ -102,24 +102,24 @@ cat > $PREFIX.scf.in << EOF
     occupations        = 'smearing',
     degauss            = 0.02,
     smearing           = 'm-p',
- / 
- &electrons 
+ /
+ &electrons
     mixing_beta        = 0.7,
     mixing_mode        = 'local-TF'
  /
- 
- ATOMIC_SPECIES 
+
+ ATOMIC_SPECIES
     Sr	87.62		Sr.pbesol-spn-rrkjus_psl.1.0.0.UPF
     V	50.9415		V.pbesol-spnl-rrkjus_psl.1.0.0.UPF
-    O	15.9994		O.pbesol-n-rrkjus_psl.0.1.UPF 
- 
+    O	15.9994		O.pbesol-n-rrkjus_psl.0.1.UPF
+
  ATOMIC_POSITIONS (crystal)
  Sr       0.000000000   0.000000000   0.000000000
  V        0.500000000   0.500000000   0.500000000
  O        0.500000000   0.500000000   0.000000000
  O        0.500000000   0.000000000   0.500000000
  O        0.000000000   0.500000000   0.500000000
- 
+
  K_POINTS automatic
  5 5 5 0 0 0
 EOF
@@ -133,13 +133,13 @@ cat > $PREFIX.nscf.in << EOF
  &control
     calculation        = 'nscf',
     prefix             = '$PREFIX',
-    tstress            = .true., 
-    tprnfor            = .true., 
+    tstress            = .true.,
+    tprnfor            = .true.,
     verbosity          = 'high',
     pseudo_dir         = '$PSEUDO_DIR/',
     outdir             = '$TMP_DIR/',
- / 
- &system 
+ /
+ &system
     ibrav              = 1,
     celldm(1)          = 7.2612,
     nat                = 5,
@@ -154,19 +154,19 @@ cat > $PREFIX.nscf.in << EOF
  /
  &electrons
  /
- 
- ATOMIC_SPECIES 
+
+ ATOMIC_SPECIES
     Sr	87.62		Sr.pbesol-spn-rrkjus_psl.1.0.0.UPF
     V	50.9415		V.pbesol-spnl-rrkjus_psl.1.0.0.UPF
-    O	15.9994		O.pbesol-n-rrkjus_psl.0.1.UPF 
- 
+    O	15.9994		O.pbesol-n-rrkjus_psl.0.1.UPF
+
  ATOMIC_POSITIONS (crystal)
  Sr       0.000000000   0.000000000   0.000000000
  V        0.500000000   0.500000000   0.500000000
  O        0.500000000   0.500000000   0.000000000
  O        0.500000000   0.000000000   0.500000000
  O        0.000000000   0.500000000   0.500000000
- 
+
  K_POINTS crystal
  125
    0.00000000  0.00000000  0.00000000  8.000000e-03
@@ -306,13 +306,13 @@ cat > $PREFIX.dmft_scf.in << EOF
     calculation        = 'scf',
     prefix             = '$PREFIX',
     restart_mode       = 'restart',
-    tstress            = .true., 
-    tprnfor            = .true., 
+    tstress            = .true.,
+    tprnfor            = .true.,
     verbosity          = 'high',
     pseudo_dir         = '$PSEUDO_DIR/',
     outdir             = '$TMP_DIR/',
- / 
- &system 
+ /
+ &system
     ibrav              = 1,
     celldm(1)          = 7.2612,
     nat                = 5,
@@ -325,27 +325,27 @@ cat > $PREFIX.dmft_scf.in << EOF
     dmft               = .true.,
     dmft_prefix        = '${PREFIX}_dmft',
     nosym	           = .true.,
- / 
- &electrons 
+ /
+ &electrons
     electron_maxstep   = 1,
     mixing_beta        = 0.2,
     mixing_mode        = 'local-TF'
     startingwfc        = 'file',
     startingpot        = 'file',
  /
- 
- ATOMIC_SPECIES 
+
+ ATOMIC_SPECIES
     Sr	87.62		Sr.pbesol-spn-rrkjus_psl.1.0.0.UPF
     V	50.9415		V.pbesol-spnl-rrkjus_psl.1.0.0.UPF
-    O	15.9994		O.pbesol-n-rrkjus_psl.0.1.UPF 
- 
+    O	15.9994		O.pbesol-n-rrkjus_psl.0.1.UPF
+
  ATOMIC_POSITIONS (crystal)
  Sr       0.000000000   0.000000000   0.000000000
  V        0.500000000   0.500000000   0.500000000
  O        0.500000000   0.500000000   0.000000000
  O        0.500000000   0.000000000   0.500000000
  O        0.000000000   0.500000000   0.500000000
- 
+
  K_POINTS crystal
  125
    0.00000000  0.00000000  0.00000000  8.000000e-03

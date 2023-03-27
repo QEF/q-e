@@ -53,12 +53,12 @@ SUBROUTINE print_ks_only( )
   USE ener,                 ONLY : ef, eband 
   USE lsda_mod,             ONLY : lsda, nspin
   USE noncollin_module,     ONLY : lforcet
+  USE add_dmft_occ,         ONLY : dmft, dmft_updated
   USE wvfct,                ONLY : nbnd, et, wg
   USE control_flags,        ONLY : conv_elec, lbands, iverbosity
   USE mp_bands,             ONLY : root_bgrp, intra_bgrp_comm, inter_bgrp_comm
   USE mp,                   ONLY : mp_sum, mp_bcast
   USE mp_pools,             ONLY : inter_pool_comm 
-  USE add_dmft_occ,         ONLY : dmft_updated
   !
   USE wvfct_gpum,           ONLY : using_et
   !
@@ -90,7 +90,7 @@ SUBROUTINE print_ks_only( )
 !
 ! band energy is not available in non-scf calculations (AlexS)
 !
-     IF (lforcet) THEN
+     IF (lforcet .or. dmft) THEN
         eband = 0.0_dp
         DO ik = 1, nks
            DO i = 1, nbnd
@@ -98,9 +98,11 @@ SUBROUTINE print_ks_only( )
            END DO
         END DO
         CALL mp_sum( eband, inter_pool_comm )
-        WRITE (stdout,'(/,"------")')
-        WRITE (stdout,*)  'eband, Ef (eV) = ',eband*rytoev,ef*rytoev
-        WRITE (stdout,'("------",/)')
+        IF (lforcet) THEN
+                WRITE (stdout,'(/,"------")')
+                WRITE (stdout,*)  'eband, Ef (eV) = ',eband*rytoev,ef*rytoev
+                WRITE (stdout,'("------",/)')
+        ENDIF
      ENDIF
      !
      DO ik = 1, nkstot
@@ -157,10 +159,13 @@ SUBROUTINE print_ks_ef_homolumo ( print_ef_scf, ef_scf, ef_scf_up, ef_scf_dw )
   !
   USE kinds,                ONLY : dp
   USE constants,            ONLY : rytoev
+  USE ener,                 ONLY : ef, eband 
   USE io_global,            ONLY : stdout
   USE fixed_occ,            ONLY : one_atom_occupations
   USE klist,                ONLY : two_fermi_energies, lgauss, ltetra
-  USE ener,                 ONLY : ef, ef_up, ef_dw
+  USE ener,                 ONLY : ef, ef_up, ef_dw, ef_cond
+  USE two_chem,             ONLY : twochem
+  USE add_dmft_occ,         ONLY : dmft
   !
   IMPLICIT NONE
   LOGICAL, INTENT(in) :: print_ef_scf
@@ -180,6 +185,8 @@ SUBROUTINE print_ks_ef_homolumo ( print_ef_scf, ef_scf, ef_scf_up, ef_scf_dw )
      ELSE
         WRITE( stdout, 9040 ) ef*rytoev
         IF ( print_ef_scf ) WRITE( stdout, 9050 ) ef_scf*rytoev
+        IF ( twochem ) WRITE( stdout, 9044) ef_cond*rytoev
+        IF ( dmft ) WRITE( stdout, 9052 ) eband
      END IF
      !
   ELSE IF ( .NOT. one_atom_occupations ) THEN
@@ -204,8 +211,10 @@ SUBROUTINE print_ks_ef_homolumo ( print_ef_scf, ef_scf, ef_scf_up, ef_scf_dw )
 9042 FORMAT(/'     highest occupied, lowest unoccupied level (ev): ',2F10.4 )
 9041 FORMAT(/'     the spin up/dw Fermi energies are ',2F10.4,' ev' )
 9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev' )
+9044 FORMAT(/'     the conduction Fermi energy is ',F10.4,' ev' )
 9051 FORMAT( '     (compare with: ',2F10.4,' eV, computed in scf)' )
 9050 FORMAT( '     (compare with: ', F10.4,' eV, computed in scf)' )
+9052 FORMAT( '     The nscf band energy is: ', F17.8,' Ry' )
   !
 END SUBROUTINE print_ks_ef_homolumo
 !
@@ -242,7 +251,11 @@ SUBROUTINE get_homo_lumo ( ehomo, elumo )
   ehomo=-1D+6
   elumo=+1D+6
   !
-  IF ( .NOT. ionode ) RETURN
+  IF ( .NOT. ionode ) THEN
+   ehomo=0.
+   elumo=0.
+   RETURN
+  ENDIF
   !
   k_loop: DO ik = 1, nkstot
      ! exclude states with zero weight (present in phonon calculation)

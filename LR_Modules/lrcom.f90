@@ -40,6 +40,9 @@ END MODULE qpoint
 MODULE qpoint_aux
   USE kinds,      ONLY : DP
   USE becmod,     ONLY : bec_type
+#if defined(__CUDA)
+  USE becmod_gpum, ONLY : bec_type_d
+#endif
   SAVE
   
   INTEGER, ALLOCATABLE :: ikmks(:)    ! index of -k for magnetic calculations
@@ -47,7 +50,9 @@ MODULE qpoint_aux
   INTEGER, ALLOCATABLE :: ikmkmqs(:)  ! index of -k-q for magnetic calculations
 
   TYPE(bec_type), ALLOCATABLE :: becpt(:), alphapt(:,:)
-
+#if defined(__CUDA)
+  TYPE(bec_type_d), ALLOCATABLE :: becpt_d(:), alphapt_d(:,:)
+#endif
 END MODULE qpoint_aux
 !
 !
@@ -152,6 +157,9 @@ MODULE lrus
   !
   USE kinds,  ONLY : DP
   USE becmod, ONLY : bec_type
+#if defined(__CUDA)
+  USE becmod_gpum, ONLY : bec_type_d
+#endif
   !
   ! ... These are additional variables needed for the linear response
   ! ... with US pseudopotentials and a generic perturbation Delta Vscf
@@ -175,6 +183,9 @@ MODULE lrus
   ! dpqq and dpqq_so: dipole moment of each Q multiplied by the fcoef factors 
   !
   type (bec_type), ALLOCATABLE, TARGET :: becp1(:) ! nksq)
+#if defined(__CUDA)
+  type (bec_type_d), ALLOCATABLE, TARGET :: becp1_d(:) 
+#endif
   ! becp1 contains < beta_n | psi_i >
   !
   REAL (DP),    ALLOCATABLE :: bbg(:,:)      ! nkb, nkb)

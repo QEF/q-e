@@ -26,7 +26,7 @@ p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
 
 
 # HP
-u=`grep "Hubbard U (eV)" -A 1 $fname | tail -n 1 | awk '{print $7}'`
+u=`grep "Hubbard U (eV)" -A 1 $fname | tail -n 1 | awk '{print $8}'`
 v1=`grep "Hubbard V (eV)" -A 2 $fname | tail -n 1 | awk '{print $6}'`
 v2=`grep "Hubbard V (eV)" -A 3 $fname | tail -n 1 | awk '{print $6}'`
 

@@ -533,11 +533,7 @@ subroutine solve_head
         enddo
      enddo
      call mp_barrier( world_comm )
-     write(stdout,*) 'ATT02'
      if(ionode) close(iun)
-
-     call mp_barrier( world_comm )
-     write(stdout,*) 'ATT1'
      deallocate(pola_charge)
      deallocate(e_head_pol)
      deallocate(e_head_g)
@@ -571,11 +567,6 @@ subroutine solve_head
   deallocate(head,head_tmp,freqs)
   deallocate( tmp_g)
   deallocate(epsilon_g)
-
-  
-
-   call mp_barrier( world_comm )
-   write(stdout,*) 'THIS IS THE END'
 
   call stop_clock ('solve_head')
   return

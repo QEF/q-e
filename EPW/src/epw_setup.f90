@@ -43,11 +43,6 @@
   USE fft_base,      ONLY : dfftp
   USE gvecs,         ONLY : doublegrid
   USE noncollin_module, ONLY : noncolin, domag, m_loc, angle1, angle2, ux, nspin_mag
-  ! ---------------------------------------------------------------------------------
-  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
-  ! Shell implementation for future use.
-  USE epwcom,        ONLY: polaron_wf
-  ! ---------------------------------------------------------------------------------
   !
   IMPLICIT NONE
   !
@@ -67,20 +62,6 @@
   !! k-points in crystal coords. in multiple of nkc1, nkc2, nkc3
   !
   CALL start_clock('epw_setup')
-  !
-  IF (.NOT. polaron_wf)  THEN
-    DO jk = 1, nkstot
-      xx_c = xk_cryst(1, jk) * nkc1
-      yy_c = xk_cryst(2, jk) * nkc2
-      zz_c = xk_cryst(3, jk) * nkc3
-      !
-      ! check that the k-mesh was defined in the positive region of 1st BZ
-      !
-      IF (xx_c < -eps5 .OR. yy_c < -eps5 .OR. zz_c < -eps5) &
-        CALL errore('epw_setup', 'coarse k-mesh needs to be strictly positive in 1st BZ', 1)
-      !
-    ENDDO
-  ENDIF ! not polaron_wf
   !
   ! 1) Computes the total local potential (external+scf) on the smooth grid
   !

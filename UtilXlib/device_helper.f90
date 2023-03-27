@@ -105,3 +105,88 @@ DOUBLE PRECISION FUNCTION MYDDOT(N,DX,INCX,DY,INCY)
 
 END FUNCTION MYDDOT
 
+! this is analogus to MYDDOT, but the result is on device
+DOUBLE PRECISION FUNCTION MYDDOT_VECTOR_GPU(N,DX,DY)
+#if defined(__CUDA)
+!$acc routine(MYDDOT_VECTOR_GPU) vector
+#endif
+    INTEGER, INTENT(IN) :: N
+    DOUBLE PRECISION, INTENT(IN) :: DX(*),DY(*)
+    DOUBLE PRECISION :: RES
+#if defined (__CUDA)
+    INTEGER :: I, M, MP1
+    RES = 0.0d0
+    MYDDOT_VECTOR_GPU = 0.0d0 
+    IF (N.LE.0) RETURN
+    ! code for unequal increments or equal increments not equal to 1 NOT implemented 
+    M = mod(N,5)
+    IF(M.NE.0) THEN
+      !$acc loop vector reduction(+:RES)
+      DO I = 1, M
+        RES = RES + DX(I) * DY(I) 
+      END DO 
+      IF (N.LT.5) THEN
+        MYDDOT_VECTOR_GPU = RES
+        RETURN
+      END IF
+    END IF 
+    MP1 = M + 1 
+    !$acc loop vector reduction(+:RES)
+    DO I = MP1, n, 5
+      RES = RES + DX(I)*DY(I) + DX(I+1)*DY(I+1) + DX(I+2)*DY(I+2) + DX(I+3)*DY(I+3) + DX(I+4)*DY(I+4)
+    END DO 
+    MYDDOT_VECTOR_GPU = RES
+#else
+    DOUBLE PRECISION DDOT
+    MYDDOT_VECTOR_GPU = DDOT(N,DX,1,DY,1)
+#endif
+END FUNCTION MYDDOT_VECTOR_GPU
+
+function MYDDOTv2 (n, dx, incx, dy, incy)
+#if defined(__CUDA)
+USE cudafor
+USE cublas
+#endif
+implicit none
+  DOUBLE PRECISION :: MYDDOTv2
+  integer :: n, incx, incy
+  DOUBLE PRECISION, dimension(*)  :: dx, dy
+#if defined(__CUDA)
+  attributes(device) :: dx, dy
+  attributes(device) :: MYDDOTv2
+  type(cublashandle) :: h
+  integer :: ierr
+  h = cublasGetHandle()
+  ierr = cublasDDOT_v2(h, n, dx, incx, dy, incy, MYDDOTv2)
+#else
+  DOUBLE PRECISION DDOT
+  MYDDOTv2=DDOT(n, dx, incx, dy, incy)
+#endif
+
+  return
+end function MYDDOTv2
+
+subroutine MYDDOTv3 (n, dx, incx, dy, incy, result)
+#if defined(__CUDA)
+USE cudafor
+USE cublas
+#endif
+  implicit none
+  integer :: n, incx, incy
+  DOUBLE PRECISION, dimension(*)  :: dx, dy
+  DOUBLE PRECISION :: result
+#if defined(__CUDA)
+  attributes(device) :: dx, dy
+  attributes(device) :: result
+  type(cublashandle) :: h
+  integer :: ierr
+  h = cublasGetHandle()
+  ierr = cublasDDOT_v2(h, n, dx, incx, dy, incy, result)
+#else
+  DOUBLE PRECISION DDOT
+  result=DDOT(n, dx, incx, dy, incy)
+#endif
+
+  return
+end subroutine MYDDOTv3
+

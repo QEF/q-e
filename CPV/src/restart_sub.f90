@@ -33,7 +33,6 @@ SUBROUTINE from_restart( )
    USE wave_base,             ONLY : rande_base
    USE efield_module,         ONLY : efield_berry_setup,  tefield, &
                                      efield_berry_setup2, tefield2
-   USE pseudo_base,           ONLY : vkb_d
    USE uspp,                  ONLY : okvan, vkb, nkb, nlcc_any
    USE cp_main_variables,     ONLY : ht0, htm, lambdap, lambda, lambdam, eigr, &
                                      sfac, taub, irb, eigrb, edft, bec_bgrp, dbec, idesc, iabox, nabox
@@ -169,9 +168,8 @@ SUBROUTINE from_restart( )
    CALL strucf( sfac, eigts1, eigts2, eigts3, mill, dffts%ngm )
    !
    CALL prefor( eigr, vkb )
-#if defined(__CUDA)
-   CALL dev_memcpy( vkb_d, vkb )
-#endif
+   !
+   !$acc update device(vkb)
    !
    CALL formf( .TRUE. , eself )
    !
@@ -204,6 +202,9 @@ SUBROUTINE from_restart( )
    IF ( tefield  ) CALL efield_berry_setup( eigr, tau0 )
    IF ( tefield2 ) CALL efield_berry_setup2( eigr, tau0 )
    !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_init_ions(tau0)
+#endif 
 #if defined (__ENVIRON)
    IF (use_environ) CALL update_environ_ions(tau0)
 #endif

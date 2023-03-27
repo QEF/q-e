@@ -6,7 +6,7 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-AC_INIT(ESPRESSO, 7.1, , espresso)
+AC_INIT(ESPRESSO, 7.2, , espresso)
 
 AC_PREREQ(2.64)
 AC_CONFIG_MACRO_DIR([m4/])
@@ -27,13 +27,16 @@ X_AC_QE_ARCH()
 try_dflags=""
 
 # Add needed include directories
-try_iflags="-I. -I\$(TOPDIR)/include -I\$(TOPDIR)/FoX/finclude "
+try_iflags="-I. -I\$(TOPDIR)/include"
 
 # Checking archiver...
 X_AC_QE_AR()
 
 # Checking OpenMP...
 X_AC_QE_OPENMP()
+
+AC_LANG_PUSH(Fortran) 
+AC_FC_SRCEXT(f90) 
 
 # Checking MPIF90...
 X_AC_QE_MPIF90()
@@ -56,8 +59,6 @@ X_AC_QE_CUDA()
 # Checking F90 rule...
 X_AC_QE_F90RULE()
 
-AC_LANG_PUSH(Fortran 77)
-F77=$f90 # use Fortran 90 actually
 FFLAGS="$test_fflags"
 LDFLAGS="$test_ldflags"
 
@@ -72,6 +73,9 @@ X_AC_QE_FFT()
 
 # Setting libxc...
 ACX_LIBXC()
+
+# Setting FoX...
+X_AC_QE_FOX()
 
 # Checking for IBM MASS library...
 X_AC_QE_MASS()
@@ -90,6 +94,9 @@ X_AC_QE_HDF5()
 
 # Checking environ...
 X_AC_QE_ENVIRON()
+
+# Checking for optional compilation macros
+X_AC_QE_ENABLE_OPTIONS() 
 
 # Checking SIGNAL...
 X_AC_QE_SIGNAL()

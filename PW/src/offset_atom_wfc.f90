@@ -22,7 +22,7 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
   USE io_global,        ONLY : stdout
   USE ldaU,             ONLY : Hubbard_l, Hubbard_n, Hubbard_l2, Hubbard_n2,        &
                                Hubbard_l3, Hubbard_n3, is_hubbard, is_hubbard_back, &
-                               backall
+                               backall, hubbard_occ
   !
   IMPLICIT NONE
   !
@@ -36,9 +36,11 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
                       label_hub,     & ! Label of the first Hubbard manifold
                       label_hub2,    & ! Label of the second Hubbard manifold
                       label_hub3       ! Label of the third Hubbard manifold
+  CHARACTER(LEN=2) :: label_aux
   CHARACTER(LEN=2), ALLOCATABLE :: label(:)
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   CHARACTER(LEN=1), EXTERNAL :: l_to_spdf
+  CHARACTER(LEN=1), EXTERNAL :: capital
   !
   counter = 0
   offset(:) = -1
@@ -79,7 +81,9 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
         hubbard_wfc3 = .FALSE.
         !
         ! Label of the n-th atomic orbital for the atom na of type nt
-        label(n) = upf(nt)%els(n)
+        ! (if lowercase, then capitalize)
+        label_aux = upf(nt)%els(n)
+        label(n) = label_aux(1:1) // capital(label_aux(2:2))
         !
         IF (TRIM(label(n))=='') &
                 CALL errore('offset_atom_wfc', 'The pseudo for ' // atm(nt) // &
@@ -92,18 +96,27 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
            !
            IF (is_hubbard(nt)) THEN
               IF (label(n)==label_hub) THEN
-                 IF (upf(nt)%oc(n)>0.D0) THEN
+                 IF (hubbard_occ(nt,1) > 0.D0) THEN
                     hubbard_wfc = .TRUE.
                  ELSE
                     CALL errore('offset_atom_wfc', 'Hubbard manifold with &
                             &zero occupations is not allowed',1) 
+                 ENDIF
+                 ! For FR-PPs, hubbard_occ cannot be used here because it does not
+                 ! allow to distinguish between the occupied and unoccupied channels.
+                 IF (noncolin .AND. upf(nt)%has_so) THEN
+                    IF (upf(nt)%oc(n) > 0.D0) THEN
+                       hubbard_wfc = .TRUE.
+                    ELSE
+                       hubbard_wfc = .FALSE.
+                    ENDIF
                  ENDIF
               ENDIF
            ENDIF
            !
            IF (is_hubbard_back(nt)) THEN
               IF (label(n)==label_hub2) THEN
-                 IF (upf(nt)%oc(n)>0.D0) THEN
+                 IF (hubbard_occ(nt,2) > 0.D0) THEN
                     hubbard_wfc2 = .TRUE.
                  ELSE
                     CALL errore('offset_atom_wfc', 'Hubbard manifold with &
@@ -111,7 +124,7 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
                  ENDIF
               ENDIF
               IF (backall(nt) .AND. (label(n)==label_hub3)) THEN
-                 IF (upf(nt)%oc(n)>0.D0) THEN
+                 IF (hubbard_occ(nt,3) > 0.D0) THEN
                     hubbard_wfc3 = .TRUE.
                  ELSE
                     CALL errore('offset_atom_wfc', 'Hubbard manifold with &

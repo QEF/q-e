@@ -1,4 +1,5 @@
-\documentclass[12pt,a4paper]{article} \def\version{7.1}
+\documentclass[12pt,a4paper]{article} 
+\def\version{7.2}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -87,15 +88,15 @@ potential. Weicheng Bao (Nanjing University) and Norge Cruz Hernandez
 
 \section{Installation}
 
-\PHonon\ is a package tightly bound to \qe.
+\PHonon\ is a \qe\ package and it is tightly bound to \qe.
 For instruction on how to download and compile \qe, please refer
 to the general Users' Guide, available in file \texttt{Doc/user\_guide.pdf}
 under the main \qe\ directory, or in web site
 \texttt{http://www.quantum-espresso.org}.
 
-Once \qe\ is correctly configured, \PHonon\ can be automatically
-downloaded, unpacked and compiled by
-just typing \texttt{make ph}, from the main \qe\ directory.
+Once \qe\ is correctly configured, \PHonon\ is compiled by
+just typing \texttt{make ph}, from the main \qe\ directory;
+or, if you use CMake, by just typing \texttt{make}.
 
 \subsection{Structure of the \PHonon\ package}
 
@@ -182,8 +183,8 @@ In the following, we will indicate by ${\bf q}$ the phonon wavevectors,
 while ${\bf k}$ will indicate Bloch vectors used for summing over the 
 Brillouin Zone.
 
-The main code \phx\ can be used whenever \PWscf\ can be used, 
-with the exceptions of DFT+U, hybrid functionals, external electric fields,
+The main code \phx\ can be used whenever \PWscf\ can be used, with the
+exceptions of hybrid and meta-GGA functionals, external electric fields,
 constraints on magnetization, nonperiodic boundary conditions.
 USPP and PAW are not implemented for higher-order response calculations.
 See the header of file \texttt{PHonon/PH/phonon.f90} for a complete and

@@ -17,7 +17,11 @@ MODULE read_mol_module
   USE molecule_const, ONLY : RY_TO_KJMOLm1, RY_TO_KCALMOLm1, BOHRm3_TO_MOLCMm3, BOHRm3_TO_MOLLm1
   USE molecule_types, ONLY : molecule, deallocate_molecule
   USE upf_utils,      ONLY : version_compare
+#if defined(__fox)
   USE FoX_dom
+#else
+  USE dom
+#endif
   !
   IMPLICIT NONE
   SAVE

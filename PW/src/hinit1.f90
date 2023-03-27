@@ -43,6 +43,11 @@ SUBROUTINE hinit1()
   USE environ_base_module, ONLY : update_environ_ions, update_environ_cell
   USE environ_pw_module,   ONLY : calc_environ_potential
 #endif
+#if defined (__OSCDFT)
+  USE plugin_flags,        ONLY : use_oscdft
+  USE oscdft_base,         ONLY : oscdft_ctx
+  USE oscdft_context,      ONLY : oscdft_init_context
+#endif
   !
   IMPLICIT NONE
 #if defined (__ENVIRON)
@@ -57,12 +62,21 @@ SUBROUTINE hinit1()
   ! these routines can be used to patch quantities that are dependent
   ! on the ions and cell parameters
   !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_init_ions(tau)
+  CALL plugin_init_cell()
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) THEN
      at_scaled = at * alat
      tau_scaled = tau * alat
      CALL update_environ_ions(tau_scaled)
      CALL update_environ_cell(at_scaled)
+  END IF
+#endif
+#if defined (__OSCDFT)
+  IF (use_oscdft) THEN
+     CALL oscdft_init_context(oscdft_ctx)
   END IF
 #endif
   !
@@ -89,6 +103,9 @@ SUBROUTINE hinit1()
   !
   ! ... plugin contribution to local potential
   !
+#if defined(__LEGACY_PLUGINS) 
+  CALL plugin_scf_potential(rho, .FALSE., -1.d0, vltot) 
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) CALL calc_environ_potential(rho, .FALSE., -1.D0, vltot)
 #endif

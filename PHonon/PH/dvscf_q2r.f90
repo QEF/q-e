@@ -14,6 +14,7 @@ PROGRAM dvscf_q2r
 !!    Originally proposed by [1]. For charge neutrality correction see [2].
 !!    Dipole long-range part described in [3].
 !!    Quadrupole long-range part described in [4] (not implemented here).
+!!    Author: Jae-Mo Lihm
 !!
 !! Input data: Namelist "input"
 !!    prefix  : Prepended to input/output filenames; must be the same used

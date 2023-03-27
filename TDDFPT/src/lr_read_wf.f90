@@ -214,7 +214,8 @@ SUBROUTINE normal_read()
         !
         DO ik = 1, nks
            !
-           CALL init_us_2(ngk(ik),igk_k(1,ik),xk(1,ik),vkb)
+           CALL init_us_2(ngk(ik),igk_k(1,ik),xk(1,ik),vkb,.true.)
+           !$acc update host(vkb)
            CALL calbec(ngk(ik),vkb,evc0(:,:,ik),becp1_c(:,:,ik))
            becp%k = becp1_c(:,:,ik)
            CALL s_psi (npwx, ngk(ik), nbnd, evc0(:,:,ik), sevc0(:,:,ik)) 

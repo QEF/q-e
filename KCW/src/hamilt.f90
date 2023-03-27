@@ -365,10 +365,10 @@ SUBROUTINE ham_koopmans_k (ik)
   ENDIF 
   !
   WRITE( stdout, 9020 ) ( xk(i,ik), i = 1, 3 )
-  WRITE( stdout, '(10x, "KS  ",8F9.4)' ) (eigvl(iwann)*rytoev, iwann=1,num_wann)
+  WRITE( stdout, '(10x, "KS  ",8F11.4)' ) (eigvl(iwann)*rytoev, iwann=1,num_wann)
   ham(:,:) = Hamlt(ik,:,:) 
   CALL cdiagh( num_wann, ham, num_wann, eigvl, eigvc )
-  WRITE( stdout, '(10x, "KI  ",8F9.4)' ) (eigvl(iwann)*rytoev, iwann=1,num_wann)
+  WRITE( stdout, '(10x, "KI  ",8F11.4)' ) (eigvl(iwann)*rytoev, iwann=1,num_wann)
   !
   !deltaHk(1:num_wann,1:num_wann,ik) = deltaH(1:num_wann,1:num_wan)
   !! Store the result in a global varible

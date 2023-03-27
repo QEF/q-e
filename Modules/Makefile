@@ -27,9 +27,11 @@ dist.o \
 electrons_base.o \
 environ_base_module.o \
 environment.o \
+extffield.o \
 fd_gradient.o \
 fft_base.o \
 fft_rho.o \
+fft_wave.o \
 fsockets.o \
 funct.o \
 generate_function.o \
@@ -223,14 +225,9 @@ MODULES += \
   cuda_subroutines.o \
   random_numbers_gpu.o
 
-TLDEPS= libfox libutil libla libfft librxc
+TLDEPS= libfox libla libfft libutil libmbd librxc libupf
 
 all : libqemod.a
-
-## The following is needed only for lapack compiled from sources
-
-dlamch.o : dlamch.f
-	$(F77) $(FFLAGS_NOOPT) -c $<
 
 libqemod.a: 	$(MODULES) $(OBJS) $(RISMLIB)
 	$(AR) $(ARFLAGS) $@ $?       

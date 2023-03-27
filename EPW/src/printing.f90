@@ -594,7 +594,7 @@
     !
     DO j = 1, 3
       DO i = 1, 3
-        sigma(i, j) = sigma(i, j) - vkk_all(j) * f_out(i) * wkf_all
+        sigma(i, j) = sigma(i, j) - vkk_all(i) * f_out(j) * wkf_all
       ENDDO
     ENDDO
     fi_check(:) = fi_check(:) + f_out(:) * sfac / (nkf1 * nkf2 * nkf3)
@@ -659,13 +659,13 @@
       IF (ABS(nden) < eps80) CALL errore('prtmob', 'The carrier density is 0', 1)
       mobility(:, :) = (mobility(:, :) / (electron_si * carrier_density * inv_cell)) * (bohr2ang * ang2cm) ** 3
       WRITE(stdout, '(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 3E16.6)') etemp * ryd2ev / kelvin2eV, ef0 * ryd2ev, &
-           nden, SUM(fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
+           nden, fi_check(1), mobility(1, 1), mobility(1, 2), mobility(1, 3)
     ELSE
       WRITE(stdout, '(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 3E16.6)') etemp * ryd2ev / kelvin2eV, ef0 * ryd2ev, &
-           dos(itemp), SUM(fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
+           dos(itemp), fi_check(1), mobility(1, 1), mobility(1, 2), mobility(1, 3)
     ENDIF
-    WRITE(stdout, '(50x, 3E16.6)') mobility(2, 1), mobility(2, 2), mobility(2, 3)
-    WRITE(stdout, '(50x, 3E16.6)') mobility(3, 1), mobility(3, 2), mobility(3, 3)
+    WRITE(stdout, '(36x, 1E14.5, 3E16.6)') fi_check(2), mobility(2, 1), mobility(2, 2), mobility(2, 3)
+    WRITE(stdout, '(36x, 1E14.5, 3E16.6)') fi_check(3), mobility(3, 1), mobility(3, 2), mobility(3, 3)
     IF (PRESENT(max_mob)) THEN
       max_mob = MAXVAL(mobility(:,:))
     ENDIF
@@ -855,10 +855,10 @@
     WRITE(stdout, '(/5x, a)') REPEAT('=', 93)
     IF (.NOT. assume_metal) THEN
       IF (ncarrier < -1E5) THEN
-        WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                  Hole mobility ")')
+        WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR            Drift Hole mobility ")')
         WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]")')
       ELSE
-        WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                  Elec mobility ")')
+        WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR            Drift Elec mobility ")')
         WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]")')
       ENDIF
     ELSE
@@ -882,11 +882,12 @@
     USE io_global,     ONLY : stdout
     !!!!!
     ! USE epwcom,        ONLY : liso, laniso, lreal, imag_read, wscut
-    USE epwcom,        ONLY : liso, laniso, lreal, imag_read, wscut, fbw
+    USE epwcom,        ONLY : liso, laniso, lreal, imag_read, wscut, &
+                              fbw, broyden_beta
     !!!!!
     USE elph2,         ONLY : gtemp
     USE eliashbergcom, ONLY : nsiw, nsw
-    USE constants_epw, ONLY : kelvin2eV
+    USE constants_epw, ONLY : kelvin2eV, zero
     USE constants,     ONLY : pi
     !
     IMPLICIT NONE
@@ -923,6 +924,14 @@
       WRITE(stdout, '(a)') '    '
       WRITE(stdout, '(5x, a, i6, a, i6)') 'Total number of frequency points nsiw(', itemp, ') = ', nsiw(itemp)
       WRITE(stdout, '(5x, a, f10.4)') 'Cutoff frequency wscut = ', (2.d0 * nsiw(itemp) + 1) * pi * gtemp(itemp)
+      IF (broyden_beta < zero ) THEN
+        WRITE(stdout, '(5x, a, f12.5)') 'linear mixing factor = ', DABS(broyden_beta)
+      ELSE
+        WRITE(stdout, '(5x, a, f12.5)') 'broyden mixing factor = ', broyden_beta
+      ENDIF
+      IF ((DABS(broyden_beta) > 0.2d0)) THEN
+        WRITE(stdout, '(5x, a)') 'mixing factor = 0.2 is used for the first three iterations.'
+      ENDIF
       WRITE(stdout, '(a)') '    '
     ENDIF
     !
@@ -1487,6 +1496,8 @@
     !! Hall factor
     REAL(KIND = DP) :: hall(3, 3, nstemp)
     !! Hall factor
+    REAL(KIND = DP) :: mob_hall(3, 3)
+    !! Hall mobility
     REAL(KIND = DP) :: sigma_inv(3, 3, nstemp)
     !! Inverse conductivity tensor
     REAL(KIND = DP) :: mob_inv(3, 3, nstemp)
@@ -1511,10 +1522,6 @@
                               / (carrier_density(itemp) * hbarJ)
       mobb_bte(:, :, itemp)   = (sigmab_bte(:, :, itemp) * electron_si * (bohr2ang * ang2cm)**2) &
                               / (carrier_density(itemp) * hbarJ)
-      ! 
-      ! To make the diagonal of mobb zero. 
-      mobb_serta(:, :, itemp) = mobb_serta(:, :, itemp) - mob_serta(:, :, itemp)
-      mobb_bte(:, :, itemp) = mobb_bte(:, :, itemp) - mob_bte(:, :, itemp) 
       !
       ! Convert conductivity tensor in SI units [Siemens m^-1=Coulomb s^-1 V^-1 m^-d ]
       ! in 3d: cm^2 s^-1 V^-1 * (cm ^-2  cmtom^-1 C) = Coulomb s^-1 V^-1
@@ -1529,6 +1536,12 @@
         sigmab_serta_si(:, :, itemp) = mobb_serta(:, :, itemp) * (electron_si * carrier_density_cm(itemp) * cm2m**(-1))
         sigmab_bte_si(:, :, itemp)   = mobb_bte(:, :, itemp) * (electron_si * carrier_density_cm(itemp) * cm2m**(-1))
       ENDIF
+      ! 
+      ! To make the diagonal of mobb zero. 
+      mobb_serta(:, :, itemp) = mobb_serta(:, :, itemp) - mob_serta(:, :, itemp)
+      mobb_bte(:, :, itemp) = mobb_bte(:, :, itemp) - mob_bte(:, :, itemp) 
+      !
+
     ENDDO ! itemp
     !
     b_norm = SQRT(bfieldx**2 + bfieldy**2 + bfieldz**2)
@@ -1537,23 +1550,7 @@
     WRITE(stdout, '(5x, a)') REPEAT('=',93)
     DO itemp = 1, nstemp
       etemp = gtemp(itemp)
-      WRITE(stdout, '(5x,a)') ' '
-      WRITE(stdout, '(5x,a,1f10.4,a)') 'Temperature: ', etemp * ryd2ev / kelvin2eV, ' K'
-      IF (system_2d) THEN
-        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens]'
-      ELSE
-        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens/m]'
-      ENDIF
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 1, itemp), '  |', sigmab_serta_si(:, 1, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 2, itemp), '  |', sigmab_serta_si(:, 2, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 3, itemp), '  |', sigmab_serta_si(:, 3, itemp)
       !
-      WRITE(stdout, '(5x,a)') 'Mobility tensor without magnetic field     | with magnetic field [cm^2/Vs]'
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 1, itemp), '  |', mobb_serta(:, 1, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 2, itemp), '  |', mobb_serta(:, 2, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 3, itemp), '  |', mobb_serta(:, 3, itemp)
-      !
-      !sigma_inv(:, :, itemp) = matinv3(sigma_serta(:, :, itemp))
       IF (system_2d) THEN ! We suppose vacuum is in the z direction
         mob_serta(3, 3, :) = 1d0
         mob_inv(:, :, itemp) = matinv3(mob_serta(:, :, itemp))
@@ -1563,21 +1560,10 @@
       ENDIF
       hall_serta(:, :, itemp) = MATMUL(MATMUL(mob_inv(:, :, itemp), mobb_serta(:, :, itemp)), &
                           mob_inv(:, :, itemp)) / (b_norm * hbarJ ) * electron_si * (bohr2ang * ang2cm)**2
+      !            
+      mob_hall(:, :)   = MATMUL(hall_serta(:, :, itemp),mob_serta(:, :, itemp))            
       !
-      ! bfield is energy*sec/lenght**2, mobility is in cm**2 V**-1 sec**-1.
-      ! To convert bfield to the same units of the mobility I do the same conversion as passing from the sigma
-      ! tensor to the mobility: the energy is converted with electron_SI/hbarJ and the lenght**2 with (bohr2ang * ang2cm)**2
-      WRITE(stdout, '(5x, a, 1E18.6)') 'Hall factor'
-      WRITE(stdout, '(3x, 3E16.6)') hall_serta(:, 1, itemp)
-      WRITE(stdout, '(3x, 3E16.6)') hall_serta(:, 2, itemp)
-      WRITE(stdout, '(3x, 3E16.6)') hall_serta(:, 3, itemp)
-    ENDDO
-    !
-    WRITE(stdout, '(/5x, a)') REPEAT('=',93)
-    WRITE(stdout, '(5x, a)') 'BTE'
-    WRITE(stdout, '(5x, a)') REPEAT('=',93)
-    DO itemp = 1, nstemp
-      etemp = gtemp(itemp)
+      ! 
       WRITE(stdout, '(5x,a)') ' '
       WRITE(stdout, '(5x,a,1f10.4,a)') 'Temperature: ', etemp * ryd2ev / kelvin2eV, ' K'
       IF (system_2d) THEN
@@ -1585,16 +1571,30 @@
       ELSE
         WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens/m]'
       ENDIF
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 1, itemp), '  |', sigmab_bte_si(:, 1, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 2, itemp), '  |', sigmab_bte_si(:, 2, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 3, itemp), '  |', sigmab_bte_si(:, 3, itemp)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(1, :, itemp), '  |', sigmab_serta_si(1, :, itemp)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(2, :, itemp), '  |', sigmab_serta_si(2, :, itemp)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(3, :, itemp), '  |', sigmab_serta_si(3, :, itemp)
       !
-      WRITE(stdout, '(5x,a)') 'Mobility tensor without magnetic field     | with magnetic field [cm^2/Vs]'
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 1, itemp), '  |', mobb_bte(:, 1, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 2, itemp), '  |', mobb_bte(:, 2, itemp)
-      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 3, itemp), '  |', mobb_bte(:, 3, itemp)
-      !
-      !sigma_inv(:, :, itemp) = matinv3(sigma_bte(:, :, itemp))
+      WRITE(stdout, '(5x,a)') 'Mobility tensor without magnetic field     | Hall mobility [cm^2/Vs]'
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(1, :, itemp), '  |', mob_hall(1, :)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(2, :, itemp), '  |', mob_hall(2, :)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(3, :, itemp), '  |', mob_hall(3, :)
+      ! 
+      ! bfield is energy*sec/lenght**2, mobility is in cm**2 V**-1 sec**-1.
+      ! To convert bfield to the same units of the mobility I do the same conversion as passing from the sigma
+      ! tensor to the mobility: the energy is converted with electron_SI/hbarJ and the lenght**2 with (bohr2ang * ang2cm)**2
+      WRITE(stdout, '(5x, a, 1E18.6)') 'Hall factor'
+      WRITE(stdout, '(3x, 3E16.6)') hall_serta(1, :, itemp)
+      WRITE(stdout, '(3x, 3E16.6)') hall_serta(2, :, itemp)
+      WRITE(stdout, '(3x, 3E16.6)') hall_serta(3, :, itemp)
+    ENDDO
+    !
+    WRITE(stdout, '(/5x, a)') REPEAT('=',93)
+    WRITE(stdout, '(5x, a)') 'BTE'
+    WRITE(stdout, '(5x, a)') REPEAT('=',93)
+    DO itemp = 1, nstemp
+      etemp = gtemp(itemp)
+      ! 
       IF (system_2d) THEN ! We suppose vacuum is in the z direction
         mob_bte(3, 3, :) = 1d0
         mob_inv(:, :, itemp) = matinv3(mob_bte(:, :, itemp))
@@ -1604,14 +1604,32 @@
       ENDIF
       hall(:, :, itemp) = MATMUL(MATMUL(mob_inv(:, :, itemp), mobb_bte(:, :, itemp)), &
                           mob_inv(:, :, itemp)) / (b_norm * hbarJ ) * electron_si * (bohr2ang * ang2cm)**2
+      !             
+      mob_hall(:, :)   = MATMUL(hall(:, :, itemp),mob_bte(:, :, itemp))      
+      !            
+      WRITE(stdout, '(5x,a)') ' '
+      WRITE(stdout, '(5x,a,1f10.4,a)') 'Temperature: ', etemp * ryd2ev / kelvin2eV, ' K'
+      IF (system_2d) THEN
+        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens]'
+      ELSE
+        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens/m]'
+      ENDIF
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(1, :, itemp), '  |', sigmab_bte_si(1, :, itemp)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(2, :, itemp), '  |', sigmab_bte_si(2, :, itemp)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(3, :, itemp), '  |', sigmab_bte_si(3, :, itemp)
+      !
+      WRITE(stdout, '(5x,a)') 'Mobility tensor without magnetic field     | Hall mobility [cm^2/Vs]'
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(1, :, itemp), '  |', mob_hall(1, :)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(2, :, itemp), '  |', mob_hall(2, :)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(3, :, itemp), '  |', mob_hall(3, :)
       !
       ! bfield is energy*sec/lenght**2, mobility is in cm**2 V**-1 sec**-1.
       ! To convert bfield to the same units of the mobility I do the same conversion as passing from the sigma
       ! tensor to the mobility: the energy is converted with electron_SI/hbarJ and the lenght**2 with (bohr2ang * ang2cm)**2
       WRITE(stdout, '(5x, a, 1E18.6)') 'Hall factor'
-      WRITE(stdout, '(3x, 3E16.6)') hall(:, 1, itemp)
-      WRITE(stdout, '(3x, 3E16.6)') hall(:, 2, itemp)
-      WRITE(stdout, '(3x, 3E16.6)') hall(:, 3, itemp)
+      WRITE(stdout, '(3x, 3E16.6)') hall(1, :, itemp)
+      WRITE(stdout, '(3x, 3E16.6)') hall(2, :, itemp)
+      WRITE(stdout, '(3x, 3E16.6)') hall(3, :, itemp)
     ENDDO
     !
     ! SP: To be removed when adding to the main QE repo.

@@ -8,45 +8,45 @@
 
 subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
 
-! this subroutine compute the part of force for the ions due to
-! electronic berry phase( see internal notes)
-! it needs becdr
-
-! fion       : input, forces on ions
-! tfor       : input, if true it computes force
-! at         : input, direct lattice vectors, divided by alat
-! ipol       : input, electric field polarization
-! qmatinv    : input, inverse of Q matrix: Q_i,j=<Psi_i|exp(iG*r)|Psi_j>
-! bec0       : input, factors <beta_iR|Psi_j>
-! becdr      : input, factors d<beta_iR|Psi_j>/dR
-! gqq        : input, Int_e exp(iG*r)*q_ijR(r)
-! evalue     : input, scale of electric field
+  !! This subroutine computes the part of force for the ions due to
+  !! electronic Berry phase (see internal notes).  
+  !! It needs \(\text{becdr}\) as input variable.
  
   use ions_base, only : nax, na, nsp, nat, ityp
   use uspp_param, only: upf, nh, nhm
   use uspp, only : nkb, ofsbeta
   use kinds, only : dp
   use constants, only :
-  use cell_base, only: at, alat
+  use cell_base, only: at, alat ! at: direct lattice vectors, divided by alat
   use electrons_base, only: nbsp, nbspx, nspin, nbspx_bgrp
   use mp_global, only: nbgrp
 
-
   implicit none
 
-  real(dp) evalue
-  complex(dp) qmatinv(nbspx,nbspx),gqq(nhm,nhm,nax,nsp)
-  real(dp) bec0(nkb,nbspx),becdr(nkb,nbspx,3)
-  real(dp) fion(3,*)
-  integer ipol
-  logical tfor
+  real(dp) :: evalue
+  !! input, scale of electric field
+  complex(dp) :: qmatinv(nbspx,nbspx)
+  !! input, inverse of Q matrix:
+  !! \( Q_{i,j}=\langle\Psi_i|\exp(iG\ r)|\Psi_j\rangle\)
+  complex(dp) :: gqq(nhm,nhm,nax,nsp)
+  !! input, \( \text{Int}_e \exp(iG\ r)\ q_ijR(r) \)
+  real(dp) :: bec0(nkb,nbspx)
+  !! input, factors \(\langle \beta_{iR}|\Psi_j\rangle\)
+  real(dp) :: becdr(nkb,nbspx,3)
+  !! input, factors \(d\langle\beta_{iR}|\Psi_j\rangle/dR \)
+  real(dp) :: fion(3,*)
+  !! input, forces on ions
+  integer :: ipol
+  !! input, electric field polarization
+  logical :: tfor
+  !! input, if TRUE it computes force
+  
+  ! ... local variables
 
-!local variables
-
-  complex(dp) ci, temp, temp1,temp2,temp3
+  complex(dp) :: ci, temp, temp1,temp2,temp3
   real(dp) :: gmes
   real(dp), external :: g_mes
-  integer iv,jv,ia,is,k,i,j,ilm,jlm,inl,jnl,ism
+  integer :: iv,jv,ia,is,k,i,j,ilm,jlm,inl,jnl,ism
       
   if(.not. tfor) return
 

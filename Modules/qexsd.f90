@@ -30,17 +30,17 @@ MODULE qexsd_module
   USE qes_reset_module, ONLY : qes_reset
   USE qes_init_module,  ONLY : qes_init
   !
-#if defined (__outfoxed)
-  USE     wxml,  ONLY : xmlf_t, xml_OpenFile, xml_DeclareNamespace, &
-                        xml_NewElement, xml_addAttribute, xml_addComment,&
-                        xml_AddCharacters, xml_EndElement, xml_Close
-  USE     dom,   ONLY : parseFile, item, getElementsByTagname, &
-                        destroy, nodeList, Node
-#else
+#if defined (__fox)
   USE FoX_wxml,  ONLY : xmlf_t, xml_OpenFile, xml_DeclareNamespace, &
                         xml_NewElement, xml_addAttribute, xml_addComment,&
                         xml_AddCharacters, xml_EndElement, xml_Close
   USE FoX_dom,   ONLY : parseFile, item, getElementsByTagname, &
+                        destroy, nodeList, Node
+#else
+  USE     wxml,  ONLY : xmlf_t, xml_OpenFile, xml_DeclareNamespace, &
+                        xml_NewElement, xml_addAttribute, xml_addComment,&
+                        xml_AddCharacters, xml_EndElement, xml_Close
+  USE     dom,   ONLY : parseFile, item, getElementsByTagname, &
                         destroy, nodeList, Node
 #endif
   !
@@ -52,7 +52,7 @@ MODULE qexsd_module
   ! definitions for the fmt
   !
   CHARACTER(5),  PARAMETER :: fmt_name = "QEXSD"
-  CHARACTER(8),  PARAMETER :: fmt_version = "21.11.01"
+  CHARACTER(8),  PARAMETER :: fmt_version = "23.03.10"
   !
   ! internal data to be set
   !
@@ -131,7 +131,7 @@ CONTAINS
       CALL xml_NewElement (XF=qexsd_xf, NAME = "qes:espresso")
       CALL xml_addAttribute(XF=qexsd_xf, NAME = "xsi:schemaLocation", &
                             VALUE = "http://www.quantum-espresso.org/ns/qes/qes-1.0 "//&
-                                    "http://www.quantum-espresso.org/ns/qes/qes_220603.xsd" )
+                                    "http://www.quantum-espresso.org/ns/qes/qes_230310.xsd" )
       CALL xml_addAttribute(XF=qexsd_xf, NAME="Units", VALUE="Hartree atomic units")
       CALL xml_addComment(XF = qexsd_xf, &
               COMMENT = "All quantities are in Hartree atomic units unless otherwise specified" ) 
@@ -149,7 +149,7 @@ CONTAINS
       CALL qes_reset (parallel_info) 
       IF ( check_file_exst(input_xml_schema_file) )  THEN
          CALL xml_addComment( XF = qexsd_xf, COMMENT= "")
-#if ! defined(__outfoxed)
+#if defined(__fox)
          CALL qexsd_cp_line_by_line(ounit ,input_xml_schema_file, spec_tag="input")
 #else
          CALL qexsd_cp_line_by_line(qexsd_xf%unit,input_xml_schema_file, spec_tag="input")

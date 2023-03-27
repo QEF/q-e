@@ -79,9 +79,7 @@ arm:armflang )
         if test "$use_debug" -eq 1; then 
            try_fflags="$try_fflags -g" 
         fi   
-        try_ldflags="-mcpu=native"
         try_fflags_openmp="-fopenmp"
-        try_ldfflags_openmp="-fopenmp" 
         try_f90flags="\$(FFLAGS) -cpp"
         try_ldflags="-g -mcpu=native"
         try_ldflags_openmp="-fopenmp"
@@ -107,14 +105,14 @@ arm:armflang )
         ;;
 *:*gfortran )
 	try_fflags="-O3 -g"
-        if test "$f90_major_version" -ge "10"; then
- 	   try_fflags="$try_fflags -fallow-argument-mismatch"
-        fi
         if test "$use_debug" -eq 1; then
             try_fflags="-O3 -g  -Wall -fbounds-check -frange-check -finit-integer=987654321 -finit-real=nan -finit-logical=true -finit-character=64"
         fi
         if test "$use_pedantic" -eq 1; then
             try_fflags="-O2 -g -pedantic -Wall -Wextra -Wconversion -fimplicit-none -fbacktrace -ffree-line-length-0 -fcheck=all"
+        fi
+        if test "$f90_major_version" -ge "10"; then
+ 	   try_fflags="$try_fflags -fallow-argument-mismatch"
         fi
         try_fflags_openmp="-fopenmp"
         try_f90flags="\$(FFLAGS) -cpp"

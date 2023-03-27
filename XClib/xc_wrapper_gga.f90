@@ -103,7 +103,8 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   USE kind_l,               ONLY: DP
   USE xclib_utils_and_para, ONLY: error_msg, nowarning
   USE dft_setting_params,   ONLY: igcx, igcc, is_libxc, rho_threshold_gga, &
-                                  grho_threshold_gga, rho_threshold_lda
+                                  grho_threshold_gga, rho_threshold_lda,   &
+                                  ishybrid, exx_started, exx_fraction
   USE qe_drivers_gga
   !
   IMPLICIT NONE
@@ -129,7 +130,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   REAL(DP), ALLOCATABLE :: vc_rho(:), vc_sigma(:)
   !
   INTEGER :: fkind_x, np
-  REAL(DP) :: rs, rtot, zet, vc_2(2), arho_k
+  REAL(DP) :: rs, rtot, zet, vc_2(2), arho_k, xcoef
   REAL(DP), PARAMETER :: pi34 = 0.6203504908994_DP
   !
   LOGICAL :: POLARIZED
@@ -206,7 +207,8 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   IF ( ns==1 .AND. ANY(.NOT.is_libxc(3:4)) ) THEN
      !
-     CALL gcxc( length, rho_lxc, sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1), ierr )
+     CALL gcxc( length, rho_lxc, sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), &
+                v2c(:,1), ierr )
      !
      !$acc parallel loop
      DO k = 1, length
@@ -227,9 +229,11 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
     !
     CALL xc_f03_func_set_dens_threshold( xc_func(4), small )!rho_threshold_gga )
     IF (libxc_flags(4,0)==1) THEN
-      CALL xc_f03_gga_exc_vxc( xc_func(4), lengthxc, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
+      CALL xc_f03_gga_exc_vxc( xc_func(4), lengthxc, rho_lxc(1), sigma(1), &
+                               ec_lxc(1), vc_rho(1), vc_sigma(1) )
     ELSE
-      CALL xc_f03_gga_vxc( xc_func(4), lengthxc, rho_lxc(1), sigma(1), vc_rho(1), vc_sigma(1) )
+      CALL xc_f03_gga_vxc( xc_func(4), lengthxc, rho_lxc(1), sigma(1), &
+                           vc_rho(1), vc_sigma(1) )
       ec_lxc = 0.d0
     ENDIF
     !
@@ -357,14 +361,14 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
           ex(k) = 0.d0 ;  v1x(k,1) = 0.d0 ;  v2x(k,1) = 0.d0
           CYCLE
         ENDIF
-        ex(k) = ex_lxc(k) * rho_lxc(k) * SIGN(1.0_DP, rho(k,1))
-        v1x(k,1) = vx_rho(k)
+        ex(k) = xcoef * ex_lxc(k) * rho_lxc(k) * SIGN(1.0_DP, rho(k,1))
+        v1x(k,1) = xcoef * vx_rho(k)
         IF ( rho_lxc(k) <= rho_threshold_gga .OR. &
              SQRT(ABS(sigma(k))) <= grho_threshold_gga) THEN
           v2x(k,1) = 0.d0
           CYCLE
         ENDIF
-        v2x(k,1) = vx_sigma(k)*2.d0
+        v2x(k,1) = xcoef * vx_sigma(k)*2.d0
       ENDDO
     ELSE
       !$acc parallel loop
@@ -379,16 +383,16 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
           v2x(k,1) = 0.d0 ;  v2x(k,2) = 0.d0
           CYCLE
         ENDIF
-        ex(k) = ex_lxc(k) * (rho_up+rho_dw)
-        v1x(k,1) = vx_rho(2*k-1)
-        v1x(k,2) = vx_rho(2*k)
+        ex(k) = xcoef * ex_lxc(k) * (rho_up+rho_dw)
+        v1x(k,1) = xcoef * vx_rho(2*k-1)
+        v1x(k,2) = xcoef * vx_rho(2*k)
         IF ( rho_up <= rho_threshold_gga .OR. rho_dw <= rho_threshold_gga .OR. &
              grho_up<=grho_threshold_gga .OR. grho_dw<=grho_threshold_gga ) THEN
           v2x(k,1) = 0.d0 ;  v2x(k,2) = 0.d0
           CYCLE
-        ENDIF     
-        v2x(k,1) = vx_sigma(3*k-2)*2.d0
-        v2x(k,2) = vx_sigma(3*k)*2.d0
+        ENDIF
+        v2x(k,1) = xcoef * vx_sigma(3*k-2)*2.d0
+        v2x(k,2) = xcoef * vx_sigma(3*k)*2.d0
       ENDDO
     ENDIF
     !

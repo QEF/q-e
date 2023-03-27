@@ -15,7 +15,7 @@
   subroutine init_dimensions(  )
 
       !
-      !     initialize G-vectors and related quantities
+      !! Initialize G-vectors and related quantities.
       !
 
       USE kinds,                ONLY : dp
@@ -184,9 +184,9 @@
         CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
         !
       END IF
-!NOTE g and mill already allocate in the device they are initialized below. 
-!$acc data present(g, mill) 
-!$acc update device(g,mill) 
+!NOTE g, gg and mill already allocate in the device they are initialized below. 
+!$acc data present(g,gg,mill) 
+!$acc update device(g,gg,mill) 
 !$acc end data 
       !
       CALL gshells (.TRUE.)
@@ -384,10 +384,11 @@
 
     subroutine newinit_x( h, iverbosity )
       !
-      !     re-initialization of lattice parameters and g-space vectors.
-      !     Note that direct and reciprocal lattice primitive vectors
-      !     at, ainv, and corresponding quantities for small boxes
-      !     are recalculated according to the value of cell parameter h
+      !! Re-initialization of lattice parameters and g-space vectors.
+      !! Note that direct and reciprocal lattice primitive vectors
+      !! \(\text{at}\), \(\text{ainv}\), and corresponding quantities
+      !! for small boxes are recalculated according to the value of 
+      !! cell parameter h.
       !
       USE kinds,                 ONLY : DP
       USE constants,             ONLY : tpi
@@ -429,13 +430,13 @@
       !  re-calculate G-vectors and kinetic energy
       !
       dfftp_ngm = dfftp%ngm 
-!$acc parallel loop present(g, mill) copyin(bg) copyout(gg)  
+!$acc parallel loop present(g,gg,mill) copyin(bg)
       do ig = 1, dfftp_ngm
          g(:,ig)= mill(1,ig)*bg(:,1) + mill(2,ig)*bg(:,2) + mill(3,ig)*bg(:,3)
          gg(ig)=g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2 
       enddo
-!$acc end parallel loop 
-!$acc update host(g) 
+!$acc end parallel loop
+!$acc update host(g,gg)
       !
       call g2kin_init ( gg, tpiba2 )
       !
@@ -452,6 +453,9 @@
       !
       !   pass new cell parameters to plugins
       !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_init_cell() 
+#endif 
 #if defined (__ENVIRON)
       IF (use_environ) THEN
          at_scaled = at * alat
@@ -464,7 +468,7 @@
 
     SUBROUTINE realspace_grids_info ( dfftp, dffts )
 
-      !  Print info on local and global dimensions for real space grids
+      !!  Print info on local and global dimensions for real space grids.
 
       USE fft_types, ONLY: fft_type_descriptor
       use io_global, only: stdout, ionode

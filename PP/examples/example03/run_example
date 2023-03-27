@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -233,7 +233,7 @@ cat > AlAs110.pp_isostm-.in << EOF
     filepp(1)='AlAsresm-1.0'
     weight(1)=1.0
     iflag=2
-    output_format=7    
+    output_format=7
     fileout='AlAs110.pp_isostm-.dat'
     e1(1)=7.0, e1(2)=0.0,     e1(3)=0.0
     e2(1)=0.0, e2(2)=7.07107, e2(3)=0.0
@@ -322,7 +322,7 @@ cat > AlAs110.pp_isostm+.in << EOF
     filepp(1)='AlAsresm+1.0'
     weight(1)=1.0
     iflag=2
-    output_format=7    
+    output_format=7
     fileout='AlAs110.pp_isostm+.dat'
     e1(1)=7.0, e1(2)=0.0,     e1(3)=0.0
     e2(1)=0.0, e2(2)=7.07107, e2(3)=0.0

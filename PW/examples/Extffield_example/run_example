@@ -1,0 +1,145 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `dirname $0`
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x in combination with external ionic force fields during the molecular dynamics"
+$ECHO "simulation of SiH4."
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x"
+PSEUDO_LIST="Si.pbe-hgh.UPF H.pbe-hgh.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+FPMD_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as: $FPMD_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/cp*
+$ECHO " done"
+
+# molecular dynamics calculation
+cat > SiH4.inp << EOF
+ &control
+    title = 'SiH4' ,
+    calculation = 'md' ,
+    restart_mode = 'from_scratch' ,
+    nstep  = 500,
+    iprint = 10,
+    isave  = 100,
+    dt    = 3.0d0,
+    disk_io = 'low' ,
+    prefix = 'SiH4',
+    pseudo_dir='$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+ /
+ &SYSTEM
+    ibrav = 0 ,
+    celldm(1) = 8.0 ,
+    nat = 5  ,
+    ntyp = 2 ,
+    ecutwfc = 20 ,
+    ecutrho = 80 ,
+    nextffield = 2,
+    nosym = .TRUE.,
+ /
+ &ELECTRONS
+    mixing_beta = 0.4,
+    conv_thr =  1.0d-7,
+ /
+ &IONS 
+    tempw = 300,
+    ion_temperature = 'rescaling',
+ /
+CELL_PARAMETERS  alat
+    1.000000000    0.000000000    0.000000000 
+     0.000000000   1.000000000    0.000000000 
+     0.000000000    0.000000000   1.000000000 
+ATOMIC_SPECIES
+   Si   28.08600  Si.pbe-hgh.UPF
+    H    1.00000  H.pbe-hgh.UPF
+ATOMIC_POSITIONS bohr
+Si      0.94486306644282E+01     0.94486306644282E+01     0.945E+01
+H      0.11193736563321E+02     0.11193736698874E+02     0.111E+02
+H       0.94486306644282E+01     0.94486306644282E+01     0.66E+01
+H      0.70648871385200E+01     0.10088581790695E+02     0.111E+02
+H       0.10088581849053E+02     0.70648872790557E+01     0.111E+02
+K_POINTS gamma
+EOF
+
+cat > extffield.dat << EOF
+1   11
+3   0   5.0    0.005   10
+1   11
+3   1   11.3    -0.005   10
+EOF
+
+$ECHO "  running the calculation with ionic dynamics...\c"
+$FPMD_COMMAND < SiH4.inp > SiH4.out
+cp $TMP_DIR/SiH4.extffield .
+check_failure $?
+$ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : done"

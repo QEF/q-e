@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{7.1}
+\def\version{7.2}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -370,21 +370,22 @@ The \qe\ distribution contains several directories. Some of them are
 common to all packages:
 
 \begin{tabular}{ll}
-\texttt{Modules/} &  Fortran modules and utilities used by all programs\\
-\texttt{upflib/}  &  pseudopotential-related code, plus conversion tools\\
-\texttt{include/} &  files *.h included by fortran and C source files\\
-\texttt{clib/}    &  libraries and utilities written in C\\
-\texttt{FFTXlib/} &  FFT libraries\\
-\texttt{LAXlib/}  &  Linear Algebra (parallel) libraries\\
-\texttt{KS\_Solvers/}  &  Iterative diagonalization routines\\
-\texttt{UtilXlib/}&  Miscellaneous timing, error handling, MPI utilites\\
-\texttt{XClib/}   &  Exchange-correlation functionals (excepted van der Waals)\\
-\texttt{install/} &  installation scripts and utilities\\
-\texttt{pseudo}/  &  pseudopotential files used by examples\\
-\texttt{Doc/}     &  general documentation\\
-\texttt{archive/} &  external libraries in .tar.gz form\\
-\texttt{external/}&  external libraries downloaded by CMake\\
-\texttt{test-suite/} &  automated tests\\
+\texttt{Modules/}    & Fortran modules and utilities used by all programs\\
+\texttt{upflib/}     & pseudopotential-related code, plus conversion tools\\
+\texttt{include/}    & files *.h included by fortran and C source files\\
+\texttt{FFTXlib/}    & FFT libraries\\
+\texttt{LAXlib/}     & Linear Algebra (parallel) libraries\\
+\texttt{KS\_Solvers/}& Iterative diagonalization routines\\
+\texttt{UtilXlib/}   & Miscellaneous timing, error handling, MPI utilites\\
+\texttt{XClib/}      & Exchange-correlation functionals (excepted van der Waals)\\
+\texttt{MBD/}        & Routines for many-body dispersions\\
+\texttt{LR\_Modules/}& Fortran modules and utilities used by linear-response codes\\
+\texttt{install/}    & installation scripts and utilities\\
+\texttt{pseudo}/     & pseudopotential files used by examples\\
+\texttt{Doc/}        & general documentation\\
+\texttt{archive/}    & external libraries in .tar.gz form\\
+\texttt{external/}   & external libraries downloaded by CMake\\
+\texttt{test-suite/} & automated tests
 \end{tabular}
 \\
 while others are specific to a single package:
@@ -399,24 +400,26 @@ while others are specific to a single package:
 \texttt{CPV/}     & \CP\ package\\
 \texttt{atomic/}  & \texttt{atomic} package\\
 \texttt{GUI/}     & \texttt{PWGui} package\\
-\texttt{QEHeat/}   & \texttt{QEHeat} package\\
-\texttt{HP/}      & \texttt{HP} package
+\texttt{HP/}      & \texttt{HP} package\\
+\texttt{QEHeat/}  & \texttt{QEHeat} package\\
+\texttt{KCW/}     & \texttt{KCW} package
 \end{tabular}
+\\
 
 Finally, directory \texttt{COUPLE/} contains code and documentation
-that is useful to call \qe\ programs from external codes; directory
-\texttt{LR\_Modules/} contains source files for modules that are common
-to all linear-response codes.
+that is useful to call \qe\ programs from external codes.
 \subsection{Prerequisites}
 \label{Sec:Installation}
 
 To install \qe\ from source, you need first of all a minimal Unix
 environment, that is: a command shell (e.g., bash, sh) and utilities \make,
-\texttt{awk}, \texttt{sed}. For MS-Windows, see Sec.\ref{SubSec:Windows}.
-You will also need a recent (v.3.14 or later) working CMake software 
-if you prefer installation 
-with CMake (supported since v.6.7), otherwise you will need the
-\configure\ command from autoconf (see next subsection).
+\texttt{awk}, \texttt{sed}. In order to install external
+libraries from scratch, you will also need \texttt{git} v.2.13 or later.
+For MS-Windows, see Sec.\ref{SubSec:Windows}.
+If you prefer installation with CMake (supported since v.6.7), 
+you will need a recent (v.3.14 or later) working CMake software;
+otherwise you will need the \configure\ command from autoconf and,
+for FoX compilation, \texttt{m4}.
 
 Note that the scripts contained
 in the distribution assume that the local  language is set to the
@@ -450,7 +453,7 @@ software). Note that most commercial compilers are also available
 free of charge under some conditions (e.g. academic or personal usage, no
 support) and may provide MPI libraries and run-time software as well.
 
-\subsection{Building with cMake}
+\subsection{Building with CMake}
 
 See \texttt{https://gitlab.com/QEF/q-e/-/wikis/Developers/CMake-build-system}.
 
@@ -502,10 +505,11 @@ in any \texttt{Makefile}, type \texttt{make depend}, or run
 
 It is convenient to use "parallel make" to speed up compilation:
 \texttt{make -jN} compiles in parallel on N processors. Note that
-if you interrupt \make, depending upon what it was doing
-you may run into trouble the next time you type \make (for instance,
-if \make\ is interrupted while unpacking and compiling the FoX library).
-If so, run \texttt{make clean} before running \make\ again.
+if you interrupt \make, you may run into trouble the next time you 
+type \make (for instance, if \make\ is interrupted while unpacking
+and compiling an external library).
+If so, run \texttt{make clean}, or even \texttt{make distclean}, 
+before running \make\ again.
 
 You should always be able to compile the \qe\ suite
 of programs without having to edit any of the generated files. However you
@@ -528,7 +532,7 @@ Some environment variables that are relevant to \configure\ are:
 
 \begin{tabular}{ll}
 \texttt{ARCH}& label identifying the machine type (see below)\\
-\texttt{F90, F77, CC} &names of Fortran, Fortran-77, and C compilers\\
+\texttt{F90, CC} &names of Fortran and C compilers\\
 \texttt{MPIF90} &       name of parallel Fortran 90 compiler (using MPI)\\
 \texttt{CPP} &          source file preprocessor (defaults to \$CC -E)\\
 \texttt{LD} &           linker (defaults to \$MPIF90)\\
@@ -556,8 +560,8 @@ compilation.
 
 If your machine type is unknown to \configure, you may use the
 \texttt{ARCH}
-variable to suggest an architecture among supported ones. Some large
-parallel machines using a front-end (e.g. Cray XT) will actually
+variable to suggest an architecture among supported ones. Some 
+parallel machines using a front-end may actually
 need it, or else \configure\ will correctly recognize the front-end
 but not the specialized compilation environment of those machines.
 In some cases, cross-compilation requires to specify the target machine
@@ -604,7 +608,8 @@ is between bracket:\\
 \\
 and the following optional packages:\\
 \begin{tabular}{ll}
-\texttt{--with-scalapack}&        (yes$|$no$|$intel) Use scalapack if available. \\
+\texttt{--with-fox} & Use official FoX library instead of built-in replacement (default:no)\\
+\texttt{--with-scalapack}& (yes$|$no$|$intel) Use scalapack if available. \\
       &Set to \texttt{intel} to use Intel MPI and BLACS (default: use OpenMPI)\\
 \texttt{--with-elpa-include}&   Specify full path of ELPA include and modules
   headers (no)\\
@@ -627,7 +632,7 @@ and the following optional packages:\\
 \texttt{--with-libxc-include}& directory where \libxc\ Fortran headers reside\\
 \end{tabular}\\
 \\
-In order to compile the code for GPU's you will need a recent version
+In order to compile the code for NVidia GPU's you will need a recent version
 (v.19.10 or later: the more recent, the better) of the NVidia HPC software
 development kit (SDK). OpenMP should be enabled. Enabling faster communications
 between GPUs, via NVlink or Infiniband RDMA, is essential for optimal
@@ -744,9 +749,8 @@ happen, especially on PC clusters, see Sec.\ref{SubSec:LinuxPCMPI}.
 (notably, non-blocking broadcast and gather operations) are required.
 
 \paragraph{Libraries for accelerators}
-The accelerated version of the code uses standard CUDA libraries such as
-\texttt{cublas, cufft, cusolver} and the eigensolver library explicitly
-developed for \qe{} by NVidia and distributed at \texttt{https://github.com/NVIDIA/Eigensolver\_gpu}.
+The accelerated version of the code uses standard CUDA libraries 
+\texttt{cublas, cufft, curand, cusolver}, available from the NVidia HPC SDK.
 
 \paragraph {HDF5}
 The HDF5 library (\texttt{https://www.hdfgroup.org/downloads/hdf5/}),
@@ -853,7 +857,7 @@ https://www.tddft.org/programs/libxc/functionals/
 Combinations of \qe\ and \libxc\ functionals are allowed in \texttt{PW}, but some attention has to be paid to their reciprocal compatibility (see section below).\\
 For example, the internal exchange term of PBE together with the correlation term of PBE in \libxc\ is obtained by:
 \begin{verbatim}
-input_dft = `XC-001I-000I-003L-130L-000I-000I'
+input_dft = `XC-001I-000I-003I-130L-000I-000I'
 \end{verbatim}
 which corresponds to the old:
 \begin{verbatim}
@@ -1086,10 +1090,11 @@ Beware: the default integer type for 64-bit machine is typically
 but it is not guaranteed to work and will not give
 any advantage anyway.
 
-Currently, \configure\ supports Intel (ifort), NAG (nagfor), NVidia
-(nvfortran, formerly PGI pgf90), ARM (armflang),
-and gfortran compilers. Pathscale, Sun Studio, AMD Open64, are no
-longer supported after v.6.2: g95, since v.6.1.
+Currently, \configure\ supports gfortran and the Intel (ifort), NVidia
+(nvfortran, formerly PGI pgf90) compilers. ARM (armflang) and NAG (nagfor)
+compilers are supported but little tested and may or may not work.
+Pathscale, Sun Studio, AMD Open64, are no longer supported after v.6.2;
+g95, since v.6.1.
 
 Intel MKL mathematical libraries are supported. ACML support must be
 considered as obsolete.
@@ -1205,14 +1210,13 @@ Unfortunately this not always happens. In fact:
 \item \configure\ tries to locate a parallel compiler in a logical
   place with a logical name, but if it has a strange names or it is
   located  in a strange location, you will have to instruct \configure\
-  to find it. If there is no parallel Fortran compiler, you will have
-  to install one.
+  to find it. If there is no parallel Fortran compiler (e.g., mpif90),
+  you will have to install one.
 \item \configure\ tries to locate libraries (both mathematical and
   parallel libraries) in the usual places with usual names, but if
   they have strange names or strange locations, you will have to
   rename/move them, or to instruct \configure\ to find them. If MPI
-  libraries are not found,
-  parallel compilation is disabled.
+  libraries are not found, parallel compilation is disabled.
 \item \configure\ tests that the compiler and the libraries are
   compatible (i.e. the compiler may link the libraries without
   conflicts and without missing symbols). If they aren't and the
@@ -1223,7 +1227,7 @@ Apart from such problems, \qe\ compiles and works on all non-buggy, properly
 configured hardware and software combinations. In some cases you may have to
 recompile MPI libraries: not all MPI installations contain support for
 the Fortran compiler of your choice (or for any Fortran compiler
-at all!).
+at all).
 
 If \qe\ does not work for some reason on a PC cluster,
 try first if it works in serial execution. A frequent problem with parallel
@@ -1305,21 +1309,27 @@ paragraph.
 
 \subsubsection{Cray machines}
 
-For recent Cray machines, use \texttt{./configure ARCH=craype}.
-This selects the \texttt{ftn} compiler, that typically uses
-the \texttt{crayftn} compiler but may also use other ones,
-depending upon the site and personal environment.
-
-''Now, despite what people can imagine, every CRAY machine deployed can
+''... despite what people can imagine, every CRAY machine deployed can
 have different environment. For example on the machine I usually use
 for tests [...] I do have to unload some modules to make QE running
 properly. On another CRAY [...] there is also Intel compiler as option
 and the system is slightly different compared to the other.'' 
 (info by Filippo Spiga)
 
-With the \verb|PrgEnv-cray| module, v.6.0.10, you get an internal compiler 
-error in \verb|esm_stres_mod.f90|. If so, reduce the optimization level
-for that specific routine from \verb|-O3| to \verb|-O1|.
+For recent Cray machines, use \texttt{./configure ARCH=craype}.
+This selects the \texttt{ftn} compiler, that typically uses
+the \texttt{crayftn} compiler but may also use other ones,
+depending upon the site and personal environment. \texttt{ftn} v.15.0.1
+compiles QE properly. With the \verb|PrgEnv-cray| module v.6.0.10,
+\texttt{ftn} v.14.0.3, you run into the following problems:
+\begin{itemize}
+\item internal compiler error in \verb|esm_stres_mod.f90|;
+\item crashes when writing the final xml data file.
+\end{itemize}
+Workaround: compile codes \verb|esm_stres_mod.f90|,
+\verb|Modules/qexsd*.f90|, \verb|PW/src/pw_restart_new.f90|
+with reduced optimization, using -O0 or -O1 instead of the default
+-O3,fp3 optimization.
 
 If you want to use the Intel compiler instead, try something like:
 \begin{verbatim}
@@ -1328,48 +1338,6 @@ $ ./configure ARCH=craype [--enable-openmp --enable-parallel --with-scalapack]
 \end{verbatim}
 
 Old Cray machines: T3D, T3E, X1, etc, are no longer supported.
-
-\subsubsection{Obsolescent architectures}
-
-\paragraph{Intel Xeon Phi}
-
-For Intel Xeon CPUs with Phi coprocessor, see this link:\\
-\texttt{https://software.intel.com/en-us/articles/explicit-offload-for-quantum-espresso}.
-
-There are three ways of compiling:
-\begin{itemize}
-\item {\em offload} mode, executed on main CPU and offloaded onto coprocessor
-"automagically";
-\item {\em native} mode, executed completely on coprocessor;
-\item {\em symmetric} mode, requiring creation of both binaries.
-\end{itemize}
-"You can take advantage of the offload mode using the \texttt{libxphi}
-library. This library offloads the BLAS/MKL functions on the Xeon Phi
-platform hiding the latency times due to the communication. You just
-need to compile this library and then to link it dynamically. The
-library works with any version of QE. Libxphi is available from
-\texttt{https://github.com/cdahnken/libxphi}. Some documentation is
-available therein.
-
-Instead, if you want to compile a native version of QE, you just need
-to add the \texttt{-mmic} flag and cross compile. If you want to use
-the symmetric mode, you need to compile twice: with and without the
-\texttt{-mmic} flag". "[...] everything, i.e. code+libraries, must be
-cross-compiled with the \texttt{-mmic} flag. In my opinion, it's pretty
-unlikely that native mode can outperform the execution on the standard
-Xeon cpu. I strongly suggest to use the Xeon Phi in offload mode, for now"
-(info by Fabio Affinito, March 2015).
-
-\paragraph{IBM BlueGene}
-
-The current \configure\ was working on the machines at CINECA and at J\"ulich.
-For other machines, you may need something like
-\begin{verbatim}
-  ./configure ARCH=ppc64-bg BLAS_LIBS=...  LAPACK_LIBS=... \
-              SCALAPACK_DIR=... BLACS_DIR=..."
-\end{verbatim}
-where the various *\_LIBS and *\_DIR "suggest" where the various libraries
-are located.
 
 \newpage
 
@@ -1449,9 +1417,9 @@ The groups hierarchy is as follow:
 \begin{itemize}
 \item {\bf world}: is the group of all processors (MPI\_COMM\_WORLD).
 \item
-{\bf images}: Processors can then be divided into different "images", each corresponding to a
-different self-consistent or linear-response
-calculation, loosely coupled to others.
+{\bf images}: Processors can then be divided into different "images", 
+each corresponding to a different self-consistent or linear-response
+calculation, loosely coupled to others. 
 \item
 {\bf pools}: each image can be subpartitioned into
 "pools", each taking care of a group of k-points.
@@ -1503,6 +1471,10 @@ ELPA and ScaLAPACK; alternative built-in algorithms are anyway available.
 \end{itemize}
 Note however that not all parallelization levels
 are implemented in all codes.
+
+When a communicator is split, the MPI process IDs in each sub-communicator
+remain ordered. So for instance, for two images and $2n$ MPI processes,
+image 0 contains IDs $0,1,...,n-1$, image 1 contains IDs $n,n+1,..,2n-1$.
 
 \paragraph{About communications}
 Images and pools are loosely coupled: inter-processors communication

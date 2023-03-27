@@ -25,7 +25,7 @@ PROGRAM xc_infos
   USE xclib_utils_and_para, ONLY: stdout, nowarning
 #if defined(__LIBXC)
   USE xc_f03_lib_m
-  USE dft_setting_params,   ONLY: xc_info, xc_kind_error, n_ext_params, &
+  USE dft_setting_params,   ONLY: xc_func, xc_info, xc_kind_error, n_ext_params, &
                                   par_list, libxc_flags
 #endif
   !
@@ -35,7 +35,7 @@ PROGRAM xc_infos
   CHARACTER(LEN=150) :: dft_r
   CHARACTER(LEN=100) :: dft_w
   CHARACTER(LEN=10)  :: dft_n
-  INTEGER :: n_ext, id(6), idfull
+  INTEGER :: n_ext, id(6), idfull, fkind
   INTEGER :: i, ii
   !
   !-------- Input var -----------------------
@@ -107,11 +107,11 @@ PROGRAM xc_infos
   WRITE(stdout,*) " "
   WRITE(stdout,*) "============== "
   !
+  CALL xclib_set_auxiliary_flags( .FALSE. )
+  !
 #if defined(__LIBXC)
   IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( 1, .FALSE. )
 #endif
-  !
-  CALL xclib_set_auxiliary_flags( .FALSE. )
   !
   DO i = 1, 6
     idx = id(i)
@@ -187,7 +187,8 @@ PROGRAM xc_infos
       !
     ELSEIF (is_libxc(i)) THEN
       !
-      SELECT CASE( xc_f03_func_info_get_kind(xc_info(i)) )
+      fkind = xc_f03_func_info_get_kind(xc_info(i))
+      SELECT CASE( fkind )
       CASE( XC_EXCHANGE )
         WRITE(lxc_kind, '(a)') 'EXCHANGE'
       CASE( XC_CORRELATION )
@@ -204,6 +205,8 @@ PROGRAM xc_infos
       SELECT CASE( xc_f03_func_info_get_family(xc_info(i)) )
       CASE( XC_FAMILY_LDA )
         WRITE(lxc_family,'(a)') "LDA"
+      CASE( XC_FAMILY_HYB_LDA )
+        WRITE(lxc_family,'(a)') "Hybrid LDA" 
       CASE( XC_FAMILY_GGA )
         WRITE(lxc_family,'(a)') "GGA"
       CASE( XC_FAMILY_HYB_GGA )
@@ -222,6 +225,12 @@ PROGRAM xc_infos
       WRITE(stdout, '(" - Family: ",a)') TRIM(lxc_family)
       WRITE(stdout, '(" - Kind:   ",a)') TRIM(lxc_kind)
       !
+      IF (lxc_family(1:6)=="Hybrid" .AND. (MOD(i,2)==1 .OR. ((MOD(i,2)==0) &
+                                    .AND.fkind==XC_EXCHANGE_CORRELATION))) THEN
+         WRITE(stdout,*) '- Default exx fraction: ', exx_fraction
+         IF (screening_parameter/=0.d0) &
+             WRITE(stdout,*) '- Default screening parameter: ', screening_parameter
+      ENDIF
       IF ( n_ext_params(i)/=0 ) THEN
         WRITE(stdout, '(" - External parameters: ",i3)') n_ext_params(i)
         DO ii = 0, n_ext_params(i)-1
@@ -243,6 +252,9 @@ PROGRAM xc_infos
       IF ( libxc_flags(i,2)  == 0 ) &
         WRITE(stdout,'(4X,"[w02] libxc functional with ID ",I4," does not ", &
                       &/4X,"provide Vxc derivative.")' ) idx
+      IF ( libxc_flags(i,8) == 1 ) &
+            WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," is CAM, ", &
+                          &/5X,"long range exx is not available yet (if needed).")' ) idx
       IF ( libxc_flags(i,14) == 1 ) &
         WRITE(stdout,'(4X,"[w02] libxc functional with ID ",I4," is still ", &
                       &/4X,"in development.")' ) idx

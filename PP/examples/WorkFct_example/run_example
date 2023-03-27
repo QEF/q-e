@@ -1,12 +1,12 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
-                                                                                
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -74,7 +74,7 @@ if [ "$GP_COMMAND" = "" ]; then
         $ECHO "gnuplot not in PATH"
         $ECHO "Results will not be plotted"
 fi
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -112,9 +112,9 @@ cat > Al100.in << EOF
   outdir      = "$TMP_DIR",
 /
 &SYSTEM
-  ibrav       = 6, 
+  ibrav       = 6,
   celldm(1)   = 5.4235090117D0,
-  celldm(3)   = 6.3639610306789276D0, 
+  celldm(3)   = 6.3639610306789276D0,
   nat         = 4,
   ntyp        = 1,
   ecutwfc     = 15.D0,
@@ -144,18 +144,18 @@ $ECHO "  running the scf calculation for Al(100) ...\c"
 $PW_COMMAND < Al100.in > Al100.out
 $ECHO " done"
 
-# post-processing for potential 
+# post-processing for potential
 cat > Al100.pp.in << EOF
 &inputPP
    outdir='$TMP_DIR',
    plot_num=11
    filplot = 'Al100.pot'
 /
- 
+
 &plot
    iflag=3,
    output_format=3
-/ 
+/
 EOF
 $ECHO "  running pp.x to obtain 3D potential file ...\c"
 $PP_COMMAND < Al100.pp.in > Al100.pp.out
@@ -185,8 +185,8 @@ cat > Al.bulkref.in << EOF
   outdir      = "$TMP_DIR",
 /
 &SYSTEM
-  ibrav       = 1, 
-  celldm(1)   = 7.67000000D0, 
+  ibrav       = 1,
+  celldm(1)   = 7.67000000D0,
   nat         = 4,
   ntyp        = 1,
   ecutwfc     = 25.D0,
@@ -222,11 +222,11 @@ cat > Al.bulkref.pp.in << EOF
    plot_num=11
    filplot = 'Albulkrefpot'
 /
- 
+
 &plot
    iflag=3,
    output_format=3
-/ 
+/
 EOF
 $ECHO "  running pp.x to obtain 3D Bulk potential file ...\c"
 $PP_COMMAND < Al.bulkref.pp.in > Al.bulkref.pp.out
@@ -269,29 +269,29 @@ wf2=`awk "BEGIN{ print $vVac-$eFermiBulk }"`
 
 if [ "$GP_COMMAND" = "" ]; then
     break
-else    
+else
 cat > gnuplot.tmp <<EOF
-set term postscript eps enhanced 
+set term postscript eps enhanced
 set output 'Al100.wf.eps'
 set xr [0.0:18]
 set yr [-12:9]
 set ytics -12, 1, 9
-set xlabel "Length (Angstroms)" 
-set ylabel "Energy (eV)" 
+set xlabel "Length (Angstroms)"
+set ylabel "Energy (eV)"
 # set key 11,6.5
 set size sq 1,1
 set label 1 "V_{Vacuum}" at 18.2, 5.4
 set label 2 "E_{Fermi, Slab}" at 18.2, 1.6
 set label 3 "E_{Fermi, Bulk}" at 18.2, 0.6
 set label 4 "V_{Bulk}" at 18.2, -6.4
-set label 5 "Work function calculated \n with no bulk reference \n {/Symbol F} = $wf1 eV" at 19, -0.7 
+set label 5 "Work function calculated \n with no bulk reference \n {/Symbol F} = $wf1 eV" at 19, -0.7
 set label 6 "Work function calculated \n with bulk reference \n {/Symbol F} = $wf2 eV" at 19, -4
 
 plot 'Al100.avg.dat' using (\$1*0.52918):(\$3*13.6058) with lines linewidth 5 title 'V_{Macroscopic Average, Slab}', \
      'Al100.avg.dat' using (\$1*0.52918):(\$2*13.6058) with lines linewidth 1 title 'V_{Planar Average, Slab}', \
      $vSlab with lines linewidth 2 notitle, \
      $eFermiSlab with lines linewidth 2 notitle, \
-     $eFermiBulk with lines linewidth 2 notitle 
+     $eFermiBulk with lines linewidth 2 notitle
 
 EOF
 $ECHO "  Plotting averages and work function results ...\c"

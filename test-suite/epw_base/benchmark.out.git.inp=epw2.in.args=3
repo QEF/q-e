@@ -27,21 +27,25 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.2.0 starts on  9Jul2020 at 18:49:14 
+     Program EPW v.5.5 starts on 19Nov2022 at 12:47:46 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
          "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     4 processors
+     Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     K-points division:     npool     =       4
-     Fft bands division:     nmany     =       1
+     52663 MiB available memory on the printing compute node when the environment starts
+
+     Reading input from epw2.in
+
+     Reading supplied temperature list.
                       
      ------------------------------------------------------------------------ 
                    RESTART - RESTART - RESTART - RESTART                         
@@ -83,7 +87,7 @@
 
      site n.  atom      mass           positions (a_0 units)
 
- 
+
      No symmetry!
 
      G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
@@ -98,6 +102,8 @@
      Using diam.ukk from disk
      -------------------------------------------------------------------
 
+     Symmetries of Bravais lattice:  48
+     Symmetries of crystal:          48
 
      Do not need to read .epb files; read .fmt files
 
@@ -114,15 +120,15 @@
      Finished reading Wann rep data from file
 
      ===================================================================
-     Memory usage:  VmHWM =        57Mb
-                   VmPeak =       388Mb
+     Memory usage:  VmHWM =        18Mb
+                   VmPeak =       359Mb
      ===================================================================
      
      Using uniform q-mesh:    6   6   6
      Size of q point mesh for interpolation:        216
      Using uniform k-mesh:    6   6   6
      Size of k point mesh for interpolation:        432
-     Max number of k points per pool:              108
+     Max number of k points per pool:              432
 
      Fermi energy coarse grid =  14.009579 eV
 
@@ -132,11 +138,11 @@
 
      ===================================================================
 
-              ibndmin =     1  ebndmin =    -0.074
-              ibndmax =     4  ebndmax =     1.021
+              ibndmin =     1  ebndmin =    -1.003 eV
+              ibndmax =     4  ebndmax =    13.891 eV
 
 
-     Number of ep-matrix elements per pool :         5184 ~=   40.50 Kb (@ 8 bytes/ DP)
+     Number of ep-matrix elements per pool :        20736 ~=  162.00 Kb (@ 8 bytes/ DP)
       
      A selecq.fmt file was found but re-created because selecqread == .FALSE. 
      Number selected, total            100            100
@@ -150,8 +156,6 @@
 
 
      Fermi Surface thickness =  15.000000 eV
-
-     Golden Rule strictly enforced with T =   0.025852 eV
      Gaussian Broadening:   1.000 eV, ngauss=   1
      DOS =  0.055485 states/spin/eV/Unit Cell at Ef= 13.576268 eV
 
@@ -247,7 +251,7 @@
 
      iq =    11 coord.:   0.00000  0.16667  0.66667 wt:   0.00463
      -------------------------------------------------------------------
-     Nesting function (q)=   0.770917E+00 [Adimensional]
+     Nesting function (q)=   0.770916E+00 [Adimensional]
      -------------------------------------------------------------------
 
 
@@ -310,7 +314,7 @@
 
      iq =    18 coord.:   0.00000  0.33333  0.83333 wt:   0.00463
      -------------------------------------------------------------------
-     Nesting function (q)=   0.770917E+00 [Adimensional]
+     Nesting function (q)=   0.770916E+00 [Adimensional]
      -------------------------------------------------------------------
 
 
@@ -382,7 +386,7 @@
 
      iq =    26 coord.:   0.00000  0.66667  0.16667 wt:   0.00463
      -------------------------------------------------------------------
-     Nesting function (q)=   0.770917E+00 [Adimensional]
+     Nesting function (q)=   0.770916E+00 [Adimensional]
      -------------------------------------------------------------------
 
 
@@ -445,7 +449,7 @@
 
      iq =    33 coord.:   0.00000  0.83333  0.33333 wt:   0.00463
      -------------------------------------------------------------------
-     Nesting function (q)=   0.770917E+00 [Adimensional]
+     Nesting function (q)=   0.770916E+00 [Adimensional]
      -------------------------------------------------------------------
 
 
@@ -562,7 +566,7 @@
 
      iq =    46 coord.:   0.16667  0.16667  0.50000 wt:   0.00463
      -------------------------------------------------------------------
-     Nesting function (q)=   0.770917E+00 [Adimensional]
+     Nesting function (q)=   0.770916E+00 [Adimensional]
      -------------------------------------------------------------------
 
 
@@ -940,7 +944,7 @@
 
      iq =    88 coord.:   0.33333  0.33333  0.50000 wt:   0.00463
      -------------------------------------------------------------------
-     Nesting function (q)=   0.770917E+00 [Adimensional]
+     Nesting function (q)=   0.770916E+00 [Adimensional]
      -------------------------------------------------------------------
 
 
@@ -1193,7 +1197,7 @@
 
      iq =   116 coord.:   0.50000  0.16667  0.16667 wt:   0.00463
      -------------------------------------------------------------------
-     Nesting function (q)=   0.770916E+00 [Adimensional]
+     Nesting function (q)=   0.770917E+00 [Adimensional]
      -------------------------------------------------------------------
 
 
@@ -1256,7 +1260,7 @@
 
      iq =   123 coord.:   0.50000  0.33333  0.33333 wt:   0.00463
      -------------------------------------------------------------------
-     Nesting function (q)=   0.770916E+00 [Adimensional]
+     Nesting function (q)=   0.770917E+00 [Adimensional]
      -------------------------------------------------------------------
 
 
@@ -1382,7 +1386,7 @@
 
      iq =   137 coord.:   0.50000  0.66667  0.66667 wt:   0.00463
      -------------------------------------------------------------------
-     Nesting function (q)=   0.770916E+00 [Adimensional]
+     Nesting function (q)=   0.770917E+00 [Adimensional]
      -------------------------------------------------------------------
 
 
@@ -1445,7 +1449,7 @@
 
      iq =   144 coord.:   0.50000  0.83333  0.83333 wt:   0.00463
      -------------------------------------------------------------------
-     Nesting function (q)=   0.770916E+00 [Adimensional]
+     Nesting function (q)=   0.770917E+00 [Adimensional]
      -------------------------------------------------------------------
 
 
@@ -1697,7 +1701,7 @@
 
      iq =   172 coord.:   0.66667  0.66667  0.50000 wt:   0.00463
      -------------------------------------------------------------------
-     Nesting function (q)=   0.770917E+00 [Adimensional]
+     Nesting function (q)=   0.770916E+00 [Adimensional]
      -------------------------------------------------------------------
 
 
@@ -2076,7 +2080,7 @@
 
      iq =   214 coord.:   0.83333  0.83333  0.50000 wt:   0.00463
      -------------------------------------------------------------------
-     Nesting function (q)=   0.770917E+00 [Adimensional]
+     Nesting function (q)=   0.770916E+00 [Adimensional]
      -------------------------------------------------------------------
 
 
@@ -2101,8 +2105,8 @@
      Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
 
      ===================================================================
-     Memory usage:  VmHWM =        61Mb
-                   VmPeak =       394Mb
+     Memory usage:  VmHWM =        20Mb
+                   VmPeak =       359Mb
      ===================================================================
 
 
@@ -2115,19 +2119,20 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :      0.41s CPU      0.47s WALL (       1 calls)
-     ep-interp    :      0.37s CPU      0.41s WALL (     216 calls)
+     ephwann      :      1.17s CPU      1.23s WALL (       1 calls)
+     ep-interp    :      1.11s CPU      1.18s WALL (     216 calls)
 
      DynW2B       :      0.00s CPU      0.00s WALL (     216 calls)
-     HamW2B       :      0.12s CPU      0.13s WALL (   23490 calls)
-     ephW2Bp      :      0.02s CPU      0.02s WALL (     216 calls)
-     ephW2B       :      0.06s CPU      0.07s WALL (   11664 calls)
+     HamW2B       :      0.41s CPU      0.43s WALL (   93960 calls)
+     ephW2Bp      :      0.03s CPU      0.03s WALL (     216 calls)
+     ephW2B       :      0.22s CPU      0.23s WALL (   46656 calls)
 
 
      Total program execution
-     EPW          :      0.42s CPU      0.48s WALL
+     EPW          :      1.17s CPU      1.24s WALL
 
-                                                                                          
- Please consider citing:                                                                  
- S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
-                                                                                          
+     ===============================================================================
+     The functionality-dependent EPW.bib file was created with suggested citations. 
+     Please consider citing the papers listed in EPW.bib.                           
+     ===============================================================================
+                                                                                    

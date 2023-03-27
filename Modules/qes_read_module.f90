@@ -12,10 +12,10 @@ MODULE qes_read_module
   !
   ! Quantum Espresso XSD namespace: http://www.quantum-espresso.org/ns/qes/qes-1.0
   !
-#if defined (__outfoxed) 
-  USE dom
-#else 
+#if defined (__fox)
   USE FoX_dom
+#else
+  USE dom
 #endif
   USE qes_types_module
   !
@@ -51,6 +51,8 @@ MODULE qes_read_module
     MODULE PROCEDURE qes_read_HubbardInterSpecieV
     MODULE PROCEDURE qes_read_SiteMoment
     MODULE PROCEDURE qes_read_HubbardJ
+    MODULE PROCEDURE qes_read_ChannelOcc
+    MODULE PROCEDURE qes_read_HubbardOcc
     MODULE PROCEDURE qes_read_SitMag
     MODULE PROCEDURE qes_read_starting_ns
     MODULE PROCEDURE qes_read_Hubbard_ns
@@ -3333,6 +3335,13 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
+    ! 
+    IF (hasAttribute(xml_node, "new_format")) THEN
+      CALL extractDataAttribute(xml_node, "new_format", obj%new_format)
+      obj%new_format_ispresent = .TRUE.
+    ELSE
+      obj%new_format_ispresent = .FALSE.
+    END IF
     !
     !
     tmp_node_list => getElementsByTagname(xml_node, "lda_plus_u_kind")
@@ -3362,6 +3371,22 @@ MODULE qes_read_module
     ELSE
        obj%lda_plus_u_kind_ispresent = .FALSE.
     END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "Hubbard_Occ")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%Hubbard_Occ_ispresent = .TRUE.
+    ELSE
+      obj%Hubbard_Occ_ispresent = .FALSE.
+    END IF
+    obj%ndim_Hubbard_Occ = tmp_node_list_size
+    ALLOCATE(obj%Hubbard_Occ(tmp_node_list_size))
+    DO index=1,tmp_node_list_size
+        tmp_node => item( tmp_node_list, index-1 )
+        CALL qes_read_HubbardOcc(tmp_node, obj%Hubbard_Occ(index), ierr )
+    END DO
     !
     tmp_node_list => getElementsByTagname(xml_node, "Hubbard_U")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -3780,6 +3805,130 @@ MODULE qes_read_module
   END SUBROUTINE qes_read_HubbardJ
   !
   !
+  SUBROUTINE qes_read_ChannelOcc(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(ChannelOcc_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    ! 
+    IF (hasAttribute(xml_node, "specie")) THEN
+      CALL extractDataAttribute(xml_node, "specie", obj%specie)
+      obj%specie_ispresent = .TRUE.
+    ELSE
+      obj%specie_ispresent = .FALSE.
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "label")) THEN
+      CALL extractDataAttribute(xml_node, "label", obj%label)
+      obj%label_ispresent = .TRUE.
+    ELSE
+      obj%label_ispresent = .FALSE.
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "index")) THEN
+      CALL extractDataAttribute(xml_node, "index", obj%index)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: ChannelOccType",&
+                        "required attribute index not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: ChannelOccType",&
+                      "required attribute index not found", 10 )
+      END IF
+    END IF
+    !
+    !
+    !
+    CALL extractDataContent(xml_node, obj%ChannelOcc )
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_ChannelOcc
+  !
+  !
+  SUBROUTINE qes_read_HubbardOcc(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(HubbardOcc_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    ! 
+    IF (hasAttribute(xml_node, "channels")) THEN
+      CALL extractDataAttribute(xml_node, "channels", obj%channels)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: HubbardOccType",&
+                        "required attribute channels not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: HubbardOccType",&
+                      "required attribute channels not found", 10 )
+      END IF
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "specie")) THEN
+      CALL extractDataAttribute(xml_node, "specie", obj%specie)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: HubbardOccType",&
+                        "required attribute specie not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: HubbardOccType",&
+                      "required attribute specie not found", 10 )
+      END IF
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "channel_occ")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size < 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:HubbardOccType","channel_occ: not enough elements")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:HubbardOccType","channel_occ: not enough elements",10)
+        END IF
+    END IF
+    IF (tmp_node_list_size > 3) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:HubbardOccType","channel_occ: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:HubbardOccType","channel_occ: too many occurrences",10)
+        END IF
+    END IF
+    !
+    obj%ndim_channel_occ = tmp_node_list_size
+    ALLOCATE(obj%channel_occ(tmp_node_list_size))
+    DO index=1,tmp_node_list_size
+        tmp_node => item( tmp_node_list, index-1 )
+        CALL qes_read_ChannelOcc(tmp_node, obj%channel_occ(index), ierr )
+    END DO
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_HubbardOcc
+  !
+  !
   SUBROUTINE qes_read_SitMag(xml_node, obj, ierr )
     !
     IMPLICIT NONE
@@ -3984,6 +4133,13 @@ MODULE qes_read_module
          CALL errore ("qes_read: HubbardBackType",&
                       "required attribute background not found", 10 )
       END IF
+    END IF
+    ! 
+    IF (hasAttribute(xml_node, "label")) THEN
+      CALL extractDataAttribute(xml_node, "label", obj%label)
+      obj%label_ispresent = .TRUE.
+    ELSE
+      obj%label_ispresent = .FALSE.
     END IF
     ! 
     IF (hasAttribute(xml_node, "species")) THEN
@@ -5523,6 +5679,34 @@ MODULE qes_read_module
        ELSE
           CALL errore ("qes_read:electron_controlType","error reading max_nstep",10)
        END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "exx_nstep")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:electron_controlType","exx_nstep: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:electron_controlType","exx_nstep: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%exx_nstep_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%exx_nstep , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:electron_controlType","error reading exx_nstep")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:electron_controlType","error reading exx_nstep",10)
+         END IF
+      END IF
+    ELSE
+       obj%exx_nstep_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "real_space_q")
@@ -10303,25 +10487,29 @@ MODULE qes_read_module
     tmp_node_list => getElementsByTagname(xml_node, "constr_target")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
+    IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN
-           CALL infomsg("qes_read:atomic_constraintType","constr_target: wrong number of occurrences")
+           CALL infomsg("qes_read:atomic_constraintType","constr_target: too many occurrences")
            ierr = ierr + 1
         ELSE
-           CALL errore("qes_read:atomic_constraintType","constr_target: wrong number of occurrences",10)
+           CALL errore("qes_read:atomic_constraintType","constr_target: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL extractDataContent(tmp_node, obj%constr_target, IOSTAT = iostat_ )
-    IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN
-          CALL infomsg("qes_read:atomic_constraintType","error reading constr_target")
-          ierr = ierr + 1
-       ELSE
-          CALL errore ("qes_read:atomic_constraintType","error reading constr_target",10)
-       END IF
+    IF (tmp_node_list_size>0) THEN
+      obj%constr_target_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%constr_target , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:atomic_constraintType","error reading constr_target")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:atomic_constraintType","error reading constr_target",10)
+         END IF
+      END IF
+    ELSE
+       obj%constr_target_ispresent = .FALSE.
     END IF
     !
     !

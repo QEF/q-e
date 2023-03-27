@@ -26,7 +26,8 @@ SUBROUTINE hp_readin()
                                perturb_only_atom, sum_pertq, determine_num_pert_only,  &
                                skip_equivalence_q, tmp_dir_save, niter_max, dist_thr,  &
                                disable_type_analysis, docc_thr, num_neigh, lmin, rmax, &
-                               nmix, nq1, nq2, nq3, alpha_mix, start_q, last_q, maxter
+                               nmix, nq1, nq2, nq3, alpha_mix, start_q, last_q, maxter,&
+                               determine_q_mesh_only
   !
   IMPLICIT NONE
   !
@@ -41,7 +42,8 @@ SUBROUTINE hp_readin()
                          background, thresh_init, find_atpert, max_seconds, rmax,     &
                          niter_max, alpha_mix, nmix, compute_hp, perturb_only_atom,   &
                          start_q, last_q, sum_pertq, ethr_nscf, num_neigh, lmin,      &
-                         determine_num_pert_only, disable_type_analysis, docc_thr
+                         determine_num_pert_only, disable_type_analysis, docc_thr,    &
+                         determine_q_mesh_only
   !
   ! Note: meta_ionode is a single processor that reads the input
   !       Data read from input is subsequently broadcast to all processors
@@ -63,6 +65,7 @@ SUBROUTINE hp_readin()
   perturb_only_atom(:)    = .FALSE.
   skip_equivalence_q      = .FALSE.
   determine_num_pert_only = .FALSE.
+  determine_q_mesh_only   = .FALSE.
   disable_type_analysis   = .FALSE.
   equiv_type(:)      = 0
   find_atpert        = 1
@@ -167,6 +170,9 @@ SUBROUTINE input_sanity()
   IF (ANY(Hubbard_J0(:).NE.0.d0)) &
      CALL errore ('hp_readin', 'Hubbard_J0 /= 0 is not allowed.', 1)
   !
+  IF (determine_q_mesh_only .AND. .NOT.ANY(perturb_only_atom(:))) &
+     CALL errore ('hp_readin', 'determine_q_mesh_only can be set to .true. only if perturb_only_atom is .true. for some atom', 1)
+  !
   IF (sum_pertq .AND. .NOT.ANY(perturb_only_atom(:))) &
      CALL errore ('hp_readin', 'sum_pertq can be set to .true. only if perturb_only_atom is .true. for some atom', 1)
   !
@@ -182,8 +188,7 @@ SUBROUTINE input_sanity()
   !
   IF (lmin.LT.0 .OR. lmin.GT.3) CALL errore('hp_readin','Not allowed value of lmin',1)
   !
-  IF (nmix.LT.1 .OR. nmix.GT.5) &
-     & CALL errore ('hp_readin', ' Wrong nmix ', 1) 
+  IF (nmix.LT.1) CALL errore ('hp_readin', ' Wrong nmix ', 1) 
   !
   IF (ltetra) CALL errore ('hp_readin', 'HP with tetrahedra is not supported', 1)
   !
@@ -191,10 +196,10 @@ SUBROUTINE input_sanity()
      & 'Cannot start from pw.x data file using Gamma-point tricks',1)
   !
   IF (.NOT.lda_plus_u) CALL errore('hp_readin',&
-     & 'The HP code can be used only when lda_plus_u=.true.',1)
+     & 'The HP code can be used only on top of DFT+Hubbard (i.e. when the HUBBARD card is used in pw.x)',1)
   !
   IF (lda_plus_u_kind.EQ.1) CALL errore("hp_readin", &
-     & ' The HP code does not support lda_plus_u_kind=1',1)
+     & ' The HP code does not support the Liechtenstein formulation of DFT+U',1)
   !
   IF (Hubbard_projectors.NE."atomic" .AND. Hubbard_projectors.NE."ortho-atomic") &
      CALL errore("hp_readin", &

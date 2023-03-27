@@ -7,7 +7,7 @@
 ###############################################################################
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -281,8 +281,8 @@ cat > COatAuwire.scf.in << EOF
  /
 ATOMIC_SPECIES
  Au  196.966  Au.pz-rrkjus_aewfc.UPF
- C    12.0107  C.pz-rrkjus.UPF  
- O    15.9994  O.pz-rrkjus.UPF  
+ C    12.0107  C.pz-rrkjus.UPF
+ O    15.9994  O.pz-rrkjus.UPF
 ATOMIC_POSITIONS alat
 C   0.238357456 0.0 0.948
 O   0.381346734 0.0 0.948
@@ -291,7 +291,7 @@ Au  0.0  0.0  0.316
 Au  0.0  0.0  0.632
 Au  0.0  0.0  0.948
 Au  0.0  0.0  1.264
-Au  0.0  0.0  1.580 
+Au  0.0  0.0  1.580
 K_POINTS (automatic)
  2 2 4 1 1 1
 EOF
@@ -408,8 +408,8 @@ cat > COatAuwireU.scf.in << EOF
  /
 ATOMIC_SPECIES
  Au  196.966  Au.pz-rrkjus_aewfc.UPF
- C    12.0107  C.pz-rrkjus.UPF  
- O    15.9994  O.pz-rrkjus.UPF  
+ C    12.0107  C.pz-rrkjus.UPF
+ O    15.9994  O.pz-rrkjus.UPF
 ATOMIC_POSITIONS alat
 C   0.238357456 0.0 0.948
 O   0.381346734 0.0 0.948
@@ -418,7 +418,7 @@ Au  0.0  0.0  0.316
 Au  0.0  0.0  0.632
 Au  0.0  0.0  0.948
 Au  0.0  0.0  1.264
-Au  0.0  0.0  1.580 
+Au  0.0  0.0  1.580
 K_POINTS (automatic)
  2 2 4 1 1 1
 HUBBARD {pseudo}
