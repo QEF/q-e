@@ -562,7 +562,7 @@ CONTAINS
            nat_ = SIZE(ityp) 
            nbt_  = SIZE(hubbard_v_, 2) / SIZE( hubbard_v_, 1) * nat_ 
            !
-           ndim = COUNT( hubbard_v_(:,:,1:4) > 0._DP ) 
+           ndim = COUNT( hubbard_v_(:,:,1:4) /= 0._DP ) 
            IF (ndim == 0 ) RETURN 
            ALLOCATE (objs(ndim)) 
 
