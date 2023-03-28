@@ -11,10 +11,6 @@ MODULE dft_setting_routines
   !! Routines to set and/or recover DFT names, parameters and flags.
   !
   USE xclib_utils_and_para,  ONLY: stdout
-#if defined(__LIBXC)
-#include "xc_version.h"
-  USE xc_f03_lib_m
-#endif  
   !
   SAVE
   !
@@ -330,6 +326,7 @@ CONTAINS
                                     is_libxc, exx_fraction
 #if defined(__LIBXC)
     USE dft_setting_params,   ONLY: xc_kind_error
+    USE xc_f03_lib_m
 #endif
     USE xclib_utils_and_para, ONLY: nowarning
     ! 
@@ -497,6 +494,9 @@ CONTAINS
                                    screening_parameter, gau_parameter,      &
                                    ishybrid, has_finite_size_correction,    &
                                    is_libxc, exx_term
+#if defined(__LIBXC)
+    USE xc_f03_lib_m
+#endif
     !
     IMPLICIT NONE
     !
@@ -1076,6 +1076,7 @@ CONTAINS
     USE dft_setting_params,  ONLY: n_ext_params, xc_func, xc_info, par_list, &
                                    libxc_flags, n_ext_params, exx_term, &
                                    lxc_exx_desc, lxc_scr_desc
+    USE xc_f03_lib_m
 #endif
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: xclib_nspin
@@ -1183,6 +1184,7 @@ CONTAINS
 #if defined(__LIBXC)
   SUBROUTINE xclib_init_libxc_print_version_info()
     !------------------------------------------------------------------------
+    USE xc_f03_lib_m
     IMPLICIT NONE
     INTEGER :: major, minor, micro
     CALL xc_f03_version(major, minor, micro)
@@ -1200,6 +1202,7 @@ CONTAINS
 #if defined(__LIBXC)
     USE dft_setting_params,  ONLY: xc_func, xc_kind_error, libxc_flags, &
                                    n_ext_params, par_list
+    USE xc_f03_lib_m
 #endif
     IMPLICIT NONE
     INTEGER :: iid
@@ -1235,6 +1238,7 @@ CONTAINS
     USE kind_l,       ONLY: DP
 #if defined(__LIBXC)
     USE dft_setting_params,  ONLY: xc_func, par_list
+    USE xc_f03_lib_m
 #endif
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: sid
