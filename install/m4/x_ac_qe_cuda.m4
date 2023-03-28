@@ -55,10 +55,11 @@ AC_ARG_WITH([cuda-mpi],
    [with_cuda_mpi=no])
 
 
-AC_ARG_ENABLE([openacc],
-   [AS_HELP_STRING([--enable-openacc],[Enable compilation with OPENACC @<:@default=yes@:>@])],
+AC_ARG_ENABLE([nvtx],
+   [AS_HELP_STRING([--enable-nvtx],[Enable compilation for NVTX @<:@default=no@:>@])],
    [],
-   [enable_openacc=yes])
+   [enable_nvtx=no])
+
 
 if test "x$with_cuda" != "xno"
 then
@@ -99,6 +100,11 @@ then
    cuda_fflags="$mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/external/devxlib/src"
    cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/external/devxlib/include"
+   #
+   if test "$enable_nvtx" == "yes"; then
+      try_dflags="$try_dflags -D__PROFILE_NVTX"
+      cuda_fflags="$cuda_fflags -InvToolsExt.h -lnvToolsExt"
+   fi
    # -----------------------------------------
    # Fortran flags
    # -----------------------------------------   
@@ -117,13 +123,9 @@ then
    ldflags="$ldflags $mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    gpu_arch="$with_cuda_cc"
    cuda_runtime="$with_cuda_runtime"
-   if test "$enable_openacc" == "yes"; then
-      ldflags="$ldflags -acc"
-      cuda_fflags="$cuda_fflags -acc"
-      cuda_cflags="$cuda_cflags -acc"
-   else
-      AC_MSG_ERROR([OpenACC must be enabled])
-   fi
+   ldflags="$ldflags -acc"
+   cuda_fflags="$cuda_fflags -acc"
+   cuda_cflags="$cuda_cflags -acc"
 
 fi
 
