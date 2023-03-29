@@ -94,8 +94,9 @@ SUBROUTINE wfcinit()
   USE qexsd_module,         ONLY : qexsd_readschema
   USE qes_types_module,     ONLY : output_type
   USE qes_libs_module,      ONLY : qes_reset
-  USE wavefunctions_gpum,   ONLY : using_evc
+  USE wavefunctions_gpum,   ONLY : using_evc_d, using_evc
   USE uspp_init,            ONLY : init_us_2
+  USE control_flags,        ONLY : use_gpu
   !
   IMPLICIT NONE
   !
@@ -111,8 +112,20 @@ SUBROUTINE wfcinit()
   !
   IF ( (use_wannier .OR. one_atom_occupations ) .AND. lda_plus_u ) &
        CALL errore ( 'wfcinit', 'currently incompatible options', 1 )
-  IF ( use_wannier .OR. one_atom_occupations ) CALL orthoatwfc ( use_wannier )
-  IF ( lda_plus_u ) CALL orthoUwfc(.FALSE.)
+  IF ( use_wannier .OR. one_atom_occupations ) then 
+    IF (use_gpu) then 
+      CALL orthoatwfc_gpu ( use_wannier )
+    ELSE
+      CALL orthoatwfc ( use_wannier )
+    ENDIF
+  ENDIF
+  IF ( lda_plus_u ) THEN 
+    IF(use_gpu) then 
+      CALL orthoUwfc_gpu(.FALSE.)
+    ELSE
+      CALL orthoUwfc(.FALSE.)
+    END IF
+  END IF
   !
   ! ... open files/buffer for wavefunctions (nwordwfc set in openfil)
   ! ... io_level > 1 : open file, otherwise: open buffer
@@ -157,7 +170,7 @@ SUBROUTINE wfcinit()
            CALL open_buffer(iunwfc,'wfc', nwordwfc, io_level, exst_mem, exst_file)
            starting_wfc = 'atomic+random'
         END IF
-        !   
+        !
      ELSE IF ( exst_sum /= 0 ) THEN
         !
         WRITE( stdout, '(5X,"Cannot read wfcs: file not found")' )
@@ -238,7 +251,7 @@ SUBROUTINE wfcinit()
      !
      ! ... More Hpsi initialization: nonlocal pseudopotential projectors |beta>
      !
-     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
+     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb , use_gpu)
      !
      ! ... Needed for DFT+U
      !
@@ -250,8 +263,12 @@ SUBROUTINE wfcinit()
      IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) CALL phase_factor(ik)
      !
      ! ... calculate starting wavefunctions (calls Hpsi)
-     !
-     CALL init_wfc ( ik )
+     ! 
+     IF(use_gpu) THEN
+       CALL init_wfc_gpu ( ik )
+     ELSE
+       CALL init_wfc ( ik )
+     END IF
      !
      ! ... write  starting wavefunctions to file
      !
@@ -435,3 +452,208 @@ SUBROUTINE init_wfc ( ik )
   RETURN
   !
 END SUBROUTINE init_wfc
+!
+!----------------------------------------------------------------------------
+SUBROUTINE init_wfc_gpu ( ik )
+  !----------------------------------------------------------------------------
+  !
+  ! ... This routine computes starting wavefunctions for k-point ik
+  !
+  USE kinds,                ONLY : DP
+  USE bp,                   ONLY : lelfield
+  USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
+                                   bec_type, becp
+  USE constants,            ONLY : tpi
+  USE basis,                ONLY : natomwfc, starting_wfc
+  USE gvect,                ONLY : gstart
+  USE klist,                ONLY : xk, ngk, igk_k_d
+  USE wvfct,                ONLY : nbnd, npwx
+  USE uspp,                 ONLY : nkb, okvan
+  USE noncollin_module,     ONLY : npol
+  USE random_numbers_gpum,  ONLY : randy_vect_gpu => randy_vect_debug_gpu
+                                                  ! use '=>randy_vect_debug_gpu'
+                                                  ! to adopt the same (slower) PRNG
+                                                  ! used on the CPU.
+  USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm, &
+                                   nbgrp, root_bgrp_id
+  USE mp,                   ONLY : mp_bcast
+  USE xc_lib,               ONLY : xclib_dft_is, stop_exx
+  !
+  USE gvect,                ONLY : g_d
+  USE wavefunctions_gpum,   ONLY : evc_d, using_evc_d
+  USE wvfct_gpum,           ONLY : et_d, using_et_d
+  USE becmod_subs_gpum,     ONLY : using_becp_auto, using_becp_d_auto
+  USE control_flags,        ONLY : lscf
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(in) :: ik
+  !
+  INTEGER :: ibnd, ig, ipol, n_starting_wfc, n_starting_atomic_wfc
+  LOGICAL :: lelfield_save
+  !
+  REAL(DP) :: rr, arg
+  REAL(DP), ALLOCATABLE :: etatom_d(:) ! atomic eigenvalues
+  !
+  COMPLEX(DP), ALLOCATABLE :: wfcatom_d(:,:,:) ! atomic wfcs for initialization (device)
+  REAL(DP),    ALLOCATABLE :: randy_d(:) ! data for random
+  !
+  ! Auxiliary variables for CUDA version
+  INTEGER :: rnd_idx, ngk_ik
+  REAL(DP):: xk_1, xk_2, xk_3
+#if defined(__CUDA)
+  attributes(DEVICE) :: etatom_d, wfcatom_d, randy_d
+#endif
+  !
+  !
+  IF ( starting_wfc(1:6) == 'atomic' ) THEN
+     !
+     n_starting_wfc = MAX( natomwfc, nbnd )
+     n_starting_atomic_wfc = natomwfc
+     !
+  ELSE IF ( starting_wfc == 'random' ) THEN
+     !
+     n_starting_wfc = nbnd
+     n_starting_atomic_wfc = 0
+     !
+  ELSE
+     !
+     ! ...case 'file' should not be done here
+     !
+     CALL errore ( 'init_wfc', &
+          'invalid value for startingwfc: ' // TRIM ( starting_wfc ) , 1 )
+     !
+  END IF
+  !
+  ALLOCATE( wfcatom_d( npwx, npol, n_starting_wfc ) )
+  ALLOCATE(randy_d(2 * n_starting_wfc * npol * ngk(ik)))
+  !
+  IF ( n_starting_atomic_wfc > 0 ) THEN
+     !
+     CALL start_clock_gpu( 'wfcinit:atomic' ); !write(*,*) 'start wfcinit:atomic' ; FLUSH(6)
+     CALL atomic_wfc_gpu( ik, wfcatom_d )
+     CALL stop_clock_gpu( 'wfcinit:atomic' ); !write(*,*) 'stop wfcinit:atomic' ; FLUSH(6)
+     !
+     IF ( starting_wfc == 'atomic+random' .AND. &
+         n_starting_wfc == n_starting_atomic_wfc ) THEN
+         !
+         ! ... in this case, introduce a small randomization of wavefunctions
+         ! ... to prevent possible "loss of states"
+         !
+         CALL randy_vect_gpu( randy_d, 2 * n_starting_atomic_wfc * npol * ngk(ik) )
+         !
+         ngk_ik  = ngk(ik)
+!$cuf kernel do(3)
+         DO ibnd = 1, n_starting_atomic_wfc
+            !
+            DO ipol = 1, npol
+               !
+               DO ig = 1, ngk_ik
+                  !
+                  rnd_idx = 2 * ((ig-1) + ( (ipol-1) + (ibnd-1) * npol ) * ngk_ik) + 1
+                  rr  = randy_d(rnd_idx)
+                  arg = tpi * randy_d(rnd_idx+1)
+                  !
+                  wfcatom_d(ig,ipol,ibnd) = wfcatom_d(ig,ipol,ibnd) * &
+                     ( 1.0_DP + 0.05_DP * CMPLX( rr*COS(arg), rr*SIN(arg) ,kind=DP) )
+                  !
+               END DO
+               !
+            END DO
+            !
+         END DO
+         !
+     END IF
+     !
+  END IF
+  !
+  ! ... if not enough atomic wfc are available,
+  ! ... fill missing wfcs with random numbers
+  !
+  IF (n_starting_atomic_wfc < n_starting_wfc) &
+     CALL randy_vect_gpu( randy_d , 2 * (n_starting_wfc-n_starting_atomic_wfc) * npol * ngk(ik) )
+  !
+  ngk_ik  = ngk(ik)
+  xk_1 = xk(1,ik); xk_2 = xk(2,ik); xk_3 = xk(3,ik)
+!$cuf kernel do(3)
+  DO ibnd = n_starting_atomic_wfc + 1, n_starting_wfc
+     !
+     DO ipol = 1, npol
+        !
+        DO ig = 1, npwx
+           !
+           IF (ig <= ngk_ik) THEN
+              !
+              rnd_idx = 2 * ((ig-1) + ( (ipol-1) + (ibnd-n_starting_atomic_wfc-1) * npol ) * ngk_ik) + 1
+              rr  = randy_d(rnd_idx)
+              arg = tpi * randy_d(rnd_idx+1)
+              !
+              rr = rr / ( ( xk_1 + g_d(1,igk_k_d(ig,ik)) )**2 + &
+                          ( xk_2 + g_d(2,igk_k_d(ig,ik)) )**2 + &
+                          ( xk_3 + g_d(3,igk_k_d(ig,ik)) )**2 + 1.0_DP )
+              wfcatom_d(ig,ipol,ibnd) = &
+                   CMPLX( rr*COS( arg ), rr*SIN( arg ) ,kind=DP)
+           ELSE
+              wfcatom_d(ig,ipol,ibnd) = (0.0_dp, 0.0_dp)
+           END IF
+           !
+        END DO
+        !
+     END DO
+     !
+  END DO
+  !
+  DEALLOCATE( randy_d )
+  !
+  ! when band parallelization is active, the first band group distributes
+  ! the wfcs to the others making sure all bgrp have the same starting wfc
+  ! FIXME: maybe this should be done once evc are computed, not here?
+  !
+  IF( nbgrp > 1 ) CALL mp_bcast( wfcatom_d, root_bgrp_id, inter_bgrp_comm )
+  !
+  ! ... Diagonalize the Hamiltonian on the basis of atomic wfcs
+  !
+  ALLOCATE( etatom_d( n_starting_wfc ) )
+  !
+  ! ... Allocate space for <beta|psi>
+  !
+  CALL using_becp_auto (2)
+  CALL allocate_bec_type ( nkb, n_starting_wfc, becp, intra_bgrp_comm )
+  CALL using_becp_d_auto (2)
+  !
+  ! ... the following trick is for electric fields with Berry's phase:
+  ! ... by setting lelfield = .false. one prevents the calculation of
+  ! ... electric enthalpy in the Hamiltonian (cannot be calculated
+  ! ... at this stage: wavefunctions at previous step are missing)
+  !
+  lelfield_save = lelfield
+  lelfield = .FALSE.
+  !
+  ! ... subspace diagonalization (calls Hpsi)
+  !
+  IF ( xclib_dft_is('hybrid') .and. lscf  ) CALL stop_exx()
+  CALL start_clock_gpu( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
+  CALL using_evc_d(2)  ! rotate_wfc_gpu (..., evc_d, etatom_d) -> evc : out (not specified)
+  CALL rotate_wfc_gpu ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom_d, npol, okvan, evc_d, etatom_d )
+  CALL stop_clock_gpu( 'wfcinit:wfcrot' ); !write(*,*) 'stop wfcinit:wfcrot' ; FLUSH(6)
+  !
+  lelfield = lelfield_save
+  !
+  ! ... copy the first nbnd eigenvalues
+  ! ... eigenvectors are already copied inside routine rotate_wfc
+  !
+  CALL using_et_d(2)
+  !$cuf kernel do
+  DO ibnd=1,nbnd
+     et_d(ibnd,ik) = etatom_d(ibnd)
+  END DO
+  !
+  CALL using_becp_auto (2)
+  CALL deallocate_bec_type ( becp )
+  CALL using_becp_d_auto (2)
+  DEALLOCATE( etatom_d )
+  DEALLOCATE( wfcatom_d )
+  !
+  RETURN
+  !
+END SUBROUTINE init_wfc_gpu
