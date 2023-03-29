@@ -59,13 +59,7 @@ SUBROUTINE wfcinit()
       CALL orthoatwfc ( use_wannier )
     ENDIF
   ENDIF
-  IF ( lda_plus_u ) THEN 
-    IF(use_gpu) then 
-      CALL orthoUwfc_gpu(.FALSE.)
-    ELSE
-      CALL orthoUwfc(.FALSE.)
-    END IF
-  END IF
+  IF ( lda_plus_u ) CALL orthoUwfc(.FALSE.)
   !
   ! ... open files/buffer for wavefunctions (nwordwfc set in openfil)
   ! ... io_level > 1 : open file, otherwise: open buffer

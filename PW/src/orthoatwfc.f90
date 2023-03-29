@@ -11,9 +11,11 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   !-----------------------------------------------------------------------
   !
   ! This routine saves to buffer "iunhub" atomic wavefunctions having an
-  ! associated Hubbard U term * S, for DFT+U(+V) calculations. Same for
-  ! atomic wavefunctions are orthogonalized if desired, depending upon
-  ! the value of "Hubbard_projectors". "swfcatom" must NOT be allocated on input.
+  ! associated Hubbard U term * S, for DFT+U(+V) calculations. Same for 
+  ! "iunhub2" but without S (this is then used to computed Hubbard forces 
+  ! and stresses). Atomic wavefunctions
+  ! are orthogonalized if desired, depending upon the value of "Hubbard_projectors"
+  ! "swfcatom" must NOT be allocated on input.
   !
   ! If save_wfcatom == .TRUE., also write atomic wavefunctions before
   ! applying S to buffer.
@@ -30,10 +32,11 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
                          bec_type, becp, calbec
-  USE control_flags,    ONLY : gamma_only
+  USE control_flags,    ONLY : gamma_only, use_gpu
   USE noncollin_module, ONLY : noncolin, npol
   USE mp_bands,         ONLY : use_bgrp_in_hpsi
-  USE becmod_subs_gpum, ONLY : using_becp_auto
+  USE becmod_gpum,      ONLY : becp_d
+  USE becmod_subs_gpum, ONLY : using_becp_auto, using_becp_d_auto, calbec_gpu
   USE uspp_init,        ONLY : init_us_2
   IMPLICIT NONE
   !
@@ -46,7 +49,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   ! ibnd: counter on bands
   LOGICAL :: orthogonalize_wfc, normalize_only, save_flag
   COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:)
-
+  !
   IF ( Hubbard_projectors == "pseudo" ) THEN
      WRITE( stdout,*) 'Beta functions used for Hubbard projectors'
      RETURN
@@ -82,6 +85,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   END IF
   !
   ALLOCATE ( wfcatom(npwx*npol, natomwfc), swfcatom(npwx*npol, natomwfc) )
+  !$acc enter data create(wfcatom, swfcatom)
   !
   save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
   !
@@ -93,28 +97,54 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      !
      IF (noncolin) THEN
        CALL atomic_wfc_nc_updown (ik, wfcatom)
+       !$acc update device(wfcatom)
      ELSE
-       CALL atomic_wfc (ik, wfcatom)
+       IF(use_gpu) THEN
+         !$acc host_data use_device(wfcatom)
+         CALL atomic_wfc_gpu( ik, wfcatom )
+         !$acc end host_data
+       ELSE
+         CALL atomic_wfc (ik, wfcatom)
+       END IF
      ENDIF
      npw = ngk (ik)
-     CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
-     CALL calbec (npw, vkb, wfcatom, becp)
-     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
+     CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb, use_gpu)
+     if(use_gpu) then 
+       CALL using_becp_d_auto(2)
+       !$acc host_data use_device(vkb, wfcatom)
+       CALL calbec_gpu( npw, vkb, wfcatom, becp_d )
+       !$acc end host_data
+       !
+       !$acc host_data use_device(wfcatom, swfcatom) 
+       CALL s_psi_gpu( npwx, npw, natomwfc, wfcatom, swfcatom )
+       !$acc end host_data
+     else
+       CALL calbec (npw, vkb, wfcatom, becp)
+       CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
+     end if 
      !
-     IF (orthogonalize_wfc) &
-        CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
+     IF (orthogonalize_wfc) THEN
+       IF(use_gpu) then 
+         !$acc host_data use_device(wfcatom, swfcatom)
+         CALL ortho_swfc_gpu( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
+         !$acc end host_data
+       ELSE
+         CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
+       END IF
+     END IF
      !
      ! copy S * atomic wavefunctions with Hubbard U term only in wfcU
      ! (this is used during the self-consistent solution of Kohn-Sham equations)
      ! save to unit iunhub
      !
+     !$acc update host(swfcatom)
      CALL copy_U_wfc (swfcatom, noncolin)
      IF ( nks > 1 ) CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
      !
      ! If save_wfcatom=.TRUE. copy the orthonormalized wfcatom to wfcU and save
      ! to unit iunhubnoS
      !
-     IF (save_wfcatom) THEN
+     IF (save_wfcatom.and..not.use_gpu) THEN
         IF (orthogonalize_wfc) THEN
            CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .TRUE. )
         ENDIF
@@ -123,6 +153,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      ENDIF
      !
   ENDDO
+  !$acc exit data delete(wfcatom, swfcatom)
   DEALLOCATE (wfcatom, swfcatom)
   CALL deallocate_bec_type ( becp )
   CALL using_becp_auto(2)

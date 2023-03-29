@@ -12,144 +12,144 @@
 #define cublasZcopy zcopy
 #endif
 !
-!-----------------------------------------------------------------------
-SUBROUTINE orthoUwfc_gpu
-  !-----------------------------------------------------------------------
-  !
-  ! This routine saves to buffer "iunhub" atomic wavefunctions having an
-  ! associated Hubbard U term * S, for DFT+U(+V) calculations. Same for 
-  ! "iunhub2" but without S (this is then used to computed Hubbard forces 
-  ! and stresses). Atomic wavefunctions
-  ! are orthogonalized if desired, depending upon the value of "Hubbard_projectors"
-  ! "swfcatom" must NOT be allocated on input.
-  !
-  USE kinds,      ONLY : DP
-  USE buffers,    ONLY : get_buffer, save_buffer
-  USE io_global,  ONLY : stdout
-  USE io_files,   ONLY : iunhub, nwordwfcU
-  USE ions_base,  ONLY : nat
-  USE basis,      ONLY : natomwfc, swfcatom
-  USE klist,      ONLY : nks, xk, ngk, igk_k
-  USE ldaU,       ONLY : Hubbard_projectors, wfcU, nwfcU, copy_U_wfc
-  USE wvfct,      ONLY : npwx
-  USE uspp,       ONLY : nkb, vkb
-  USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
-                         bec_type, becp, calbec
-  USE control_flags,    ONLY : gamma_only
-  USE noncollin_module, ONLY : noncolin, npol
-  USE mp_bands,         ONLY : use_bgrp_in_hpsi
-  !
-  USE becmod_gpum,      ONLY : becp_d
-  USE becmod_subs_gpum, ONLY : using_becp_auto, using_becp_d_auto, &
-                               calbec_gpu
-  USE uspp_init,        ONLY : init_us_2
-  ! 
-  IMPLICIT NONE
-  !
-  !
-  INTEGER :: ik, ibnd, info, i, j, k, na, nb, nt, isym, n, ntemp, m, &
-       l, lm, ltot, ntot, ipol, npw
-  ! ik: the k point under consideration
-  ! ibnd: counter on bands
-  LOGICAL :: orthogonalize_wfc, normalize_only, save_flag
-  COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:)
-  !
-  COMPLEX(DP) , ALLOCATABLE :: wfcatom_d(:,:)
-  COMPLEX(DP) , ALLOCATABLE :: swfcatom_d(:,:)
-  !
-#if defined(__CUDA)
-  attributes(DEVICE) :: wfcatom_d, swfcatom_d
-#endif  
-  !
-  IF ( Hubbard_projectors == "pseudo" ) THEN
-     WRITE( stdout,*) 'Beta functions used for Hubbard projectors'
-     RETURN
-  ELSE IF (Hubbard_projectors=="wf") THEN
-     !
-     ! Read Wannier functions from file (produced by pmw.x).
-     !
-     WRITE( stdout,*) 'Hubbard projectors are read from file produced by pmw.x'
-     DO ik = 1, nks
-        CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
-     END DO
-     RETURN
-     !
-  ELSE IF (Hubbard_projectors=="atomic") THEN
-     orthogonalize_wfc = .FALSE.
-     normalize_only = .FALSE.
-     WRITE( stdout,'(/5x,a,/)') 'Atomic wfc used for Hubbard projectors are NOT orthogonalized'
-  ELSE IF (Hubbard_projectors=="ortho-atomic") THEN
-     orthogonalize_wfc = .TRUE.
-     normalize_only = .FALSE.    
-     WRITE( stdout,'(/5x,a,/)') 'Atomic wfc used for Hubbard projectors are orthogonalized'
-     IF (gamma_only) CALL errore('orthoUwfc', &
-          'Gamma-only calculation for this case not implemented', 1 )
-  ELSE IF (Hubbard_projectors=="norm-atomic") THEN
-     orthogonalize_wfc = .TRUE.
-     normalize_only = .TRUE.
-     WRITE( stdout,'(/5x,a,/)') 'Atomic wfc used for Hubbard projectors are normalized but NOT orthogonalized'
-     IF (gamma_only) CALL errore('orthoUwfc', &
-          'Gamma-only calculation for this case not implemented', 1 )
-  ELSE
-     WRITE(stdout,'(/5x,"Hubbard_projectors = ",a)') Hubbard_projectors
-     CALL errore ("orthoUwfc"," This type of Hubbard projectors is not valid",1)
-  END IF
-  !
-  ALLOCATE( wfcatom(npwx*npol,natomwfc), swfcatom(npwx*npol,natomwfc) )
-  ALLOCATE( wfcatom_d(npwx*npol,natomwfc), swfcatom_d(npwx*npol,natomwfc) )               !
-  save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
-
-  ! Allocate the array becp = <beta|wfcatom>
-  CALL allocate_bec_type (nkb,natomwfc, becp) 
-  CALL using_becp_auto(2)
-  
-  DO ik = 1, nks
-     
-     IF (noncolin) THEN
-       CALL atomic_wfc_nc_updown( ik, wfcatom )
-       wfcatom_d = wfcatom
-     ELSE
-       CALL atomic_wfc_gpu( ik, wfcatom_d )
-     ENDIF
-     !
-     npw = ngk(ik)
-     !
-     CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
-     !
-     CALL using_becp_d_auto(2)
-!$acc data present(vkb(:,:))
-!$acc host_data use_device(vkb)
-     CALL calbec_gpu( npw, vkb, wfcatom_d, becp_d )
-!$acc end host_data
-!$acc end data
-     !
-     CALL s_psi_gpu( npwx, npw, natomwfc, wfcatom_d, swfcatom_d )
-     !
-     IF (orthogonalize_wfc) &
-        CALL ortho_swfc_gpu( npw, normalize_only, natomwfc, wfcatom_d, swfcatom_d, .FALSE. )
-     !
-     ! copy S * atomic wavefunctions with Hubbard U term only in wfcU
-     ! (this is used during the self-consistent solution of Kohn-Sham equations)
-     ! save to unit iunhub
-     !
-     swfcatom = swfcatom_d
-     CALL copy_U_wfc (swfcatom, noncolin)
-     IF ( nks > 1 ) &
-          CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
-     !
-  ENDDO
-  !
-  DEALLOCATE( wfcatom, swfcatom )
-  DEALLOCATE( wfcatom_d, swfcatom_d )
-  !
-  CALL deallocate_bec_type( becp )
-  CALL using_becp_auto(2)
-  !
-  use_bgrp_in_hpsi = save_flag
-  !
-  RETURN
-     
-END SUBROUTINE orthoUwfc_gpu
+!!!-----------------------------------------------------------------------
+!!SUBROUTINE orthoUwfc_gpu
+!!  !-----------------------------------------------------------------------
+!!  !
+!!  ! This routine saves to buffer "iunhub" atomic wavefunctions having an
+!!  ! associated Hubbard U term * S, for DFT+U(+V) calculations. Same for 
+!!  ! "iunhub2" but without S (this is then used to computed Hubbard forces 
+!!  ! and stresses). Atomic wavefunctions
+!!  ! are orthogonalized if desired, depending upon the value of "Hubbard_projectors"
+!!  ! "swfcatom" must NOT be allocated on input.
+!!  !
+!!  USE kinds,      ONLY : DP
+!!  USE buffers,    ONLY : get_buffer, save_buffer
+!!  USE io_global,  ONLY : stdout
+!!  USE io_files,   ONLY : iunhub, nwordwfcU
+!!  USE ions_base,  ONLY : nat
+!!  USE basis,      ONLY : natomwfc, swfcatom
+!!  USE klist,      ONLY : nks, xk, ngk, igk_k
+!!  USE ldaU,       ONLY : Hubbard_projectors, wfcU, nwfcU, copy_U_wfc
+!!  USE wvfct,      ONLY : npwx
+!!  USE uspp,       ONLY : nkb, vkb
+!!  USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
+!!                         bec_type, becp, calbec
+!!  USE control_flags,    ONLY : gamma_only
+!!  USE noncollin_module, ONLY : noncolin, npol
+!!  USE mp_bands,         ONLY : use_bgrp_in_hpsi
+!!  !
+!!  USE becmod_gpum,      ONLY : becp_d
+!!  USE becmod_subs_gpum, ONLY : using_becp_auto, using_becp_d_auto, &
+!!                               calbec_gpu
+!!  USE uspp_init,        ONLY : init_us_2
+!!  ! 
+!!  IMPLICIT NONE
+!!  !
+!!  !
+!!  INTEGER :: ik, ibnd, info, i, j, k, na, nb, nt, isym, n, ntemp, m, &
+!!       l, lm, ltot, ntot, ipol, npw
+!!  ! ik: the k point under consideration
+!!  ! ibnd: counter on bands
+!!  LOGICAL :: orthogonalize_wfc, normalize_only, save_flag
+!!  COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:)
+!!  !
+!!  COMPLEX(DP) , ALLOCATABLE :: wfcatom_d(:,:)
+!!  COMPLEX(DP) , ALLOCATABLE :: swfcatom_d(:,:)
+!!  !
+!!#if defined(__CUDA)
+!!  attributes(DEVICE) :: wfcatom_d, swfcatom_d
+!!#endif  
+!!  !
+!!  IF ( Hubbard_projectors == "pseudo" ) THEN
+!!     WRITE( stdout,*) 'Beta functions used for Hubbard projectors'
+!!     RETURN
+!!  ELSE IF (Hubbard_projectors=="wf") THEN
+!!     !
+!!     ! Read Wannier functions from file (produced by pmw.x).
+!!     !
+!!     WRITE( stdout,*) 'Hubbard projectors are read from file produced by pmw.x'
+!!     DO ik = 1, nks
+!!        CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
+!!     END DO
+!!     RETURN
+!!     !
+!!  ELSE IF (Hubbard_projectors=="atomic") THEN
+!!     orthogonalize_wfc = .FALSE.
+!!     normalize_only = .FALSE.
+!!     WRITE( stdout,'(/5x,a,/)') 'Atomic wfc used for Hubbard projectors are NOT orthogonalized'
+!!  ELSE IF (Hubbard_projectors=="ortho-atomic") THEN
+!!     orthogonalize_wfc = .TRUE.
+!!     normalize_only = .FALSE.    
+!!     WRITE( stdout,'(/5x,a,/)') 'Atomic wfc used for Hubbard projectors are orthogonalized'
+!!     IF (gamma_only) CALL errore('orthoUwfc', &
+!!          'Gamma-only calculation for this case not implemented', 1 )
+!!  ELSE IF (Hubbard_projectors=="norm-atomic") THEN
+!!     orthogonalize_wfc = .TRUE.
+!!     normalize_only = .TRUE.
+!!     WRITE( stdout,'(/5x,a,/)') 'Atomic wfc used for Hubbard projectors are normalized but NOT orthogonalized'
+!!     IF (gamma_only) CALL errore('orthoUwfc', &
+!!          'Gamma-only calculation for this case not implemented', 1 )
+!!  ELSE
+!!     WRITE(stdout,'(/5x,"Hubbard_projectors = ",a)') Hubbard_projectors
+!!     CALL errore ("orthoUwfc"," This type of Hubbard projectors is not valid",1)
+!!  END IF
+!!  !
+!!  ALLOCATE( wfcatom(npwx*npol,natomwfc), swfcatom(npwx*npol,natomwfc) )
+!!  ALLOCATE( wfcatom_d(npwx*npol,natomwfc), swfcatom_d(npwx*npol,natomwfc) )               !
+!!  save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
+!!
+!!  ! Allocate the array becp = <beta|wfcatom>
+!!  CALL allocate_bec_type (nkb,natomwfc, becp) 
+!!  CALL using_becp_auto(2)
+!!  
+!!  DO ik = 1, nks
+!!     
+!!     IF (noncolin) THEN
+!!       CALL atomic_wfc_nc_updown( ik, wfcatom )
+!!       wfcatom_d = wfcatom
+!!     ELSE
+!!       CALL atomic_wfc_gpu( ik, wfcatom_d )
+!!     ENDIF
+!!     !
+!!     npw = ngk(ik)
+!!     !
+!!     CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
+!!     !
+!!     CALL using_becp_d_auto(2)
+!!!$acc data present(vkb(:,:))
+!!!$acc host_data use_device(vkb)
+!!     CALL calbec_gpu( npw, vkb, wfcatom_d, becp_d )
+!!!$acc end host_data
+!!!$acc end data
+!!     !
+!!     CALL s_psi_gpu( npwx, npw, natomwfc, wfcatom_d, swfcatom_d )
+!!     !
+!!     IF (orthogonalize_wfc) &
+!!        CALL ortho_swfc_gpu( npw, normalize_only, natomwfc, wfcatom_d, swfcatom_d, .FALSE. )
+!!     !
+!!     ! copy S * atomic wavefunctions with Hubbard U term only in wfcU
+!!     ! (this is used during the self-consistent solution of Kohn-Sham equations)
+!!     ! save to unit iunhub
+!!     !
+!!     swfcatom = swfcatom_d
+!!     CALL copy_U_wfc (swfcatom, noncolin)
+!!     IF ( nks > 1 ) &
+!!          CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
+!!     !
+!!  ENDDO
+!!  !
+!!  DEALLOCATE( wfcatom, swfcatom )
+!!  DEALLOCATE( wfcatom_d, swfcatom_d )
+!!  !
+!!  CALL deallocate_bec_type( becp )
+!!  CALL using_becp_auto(2)
+!!  !
+!!  use_bgrp_in_hpsi = save_flag
+!!  !
+!!  RETURN
+!!     
+!!END SUBROUTINE orthoUwfc_gpu
 !
 !-----------------------------------------------------------------------
 SUBROUTINE orthoatwfc_gpu( orthogonalize_wfc )
