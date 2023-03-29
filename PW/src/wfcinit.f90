@@ -52,13 +52,7 @@ SUBROUTINE wfcinit()
   !
   IF ( (use_wannier .OR. one_atom_occupations ) .AND. lda_plus_u ) &
        CALL errore ( 'wfcinit', 'currently incompatible options', 1 )
-  IF ( use_wannier .OR. one_atom_occupations ) then 
-    IF (use_gpu) then 
-      CALL orthoatwfc_gpu ( use_wannier )
-    ELSE
-      CALL orthoatwfc ( use_wannier )
-    ENDIF
-  ENDIF
+  IF ( use_wannier .OR. one_atom_occupations ) CALL orthoatwfc ( use_wannier )
   IF ( lda_plus_u ) CALL orthoUwfc(.FALSE.)
   !
   ! ... open files/buffer for wavefunctions (nwordwfc set in openfil)

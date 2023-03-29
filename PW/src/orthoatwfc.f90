@@ -282,18 +282,20 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
   ! "swfcatom" must be allocated on input.
   ! Useful for options "wannier" and "one_atom_occupations"
   !
-  USE kinds,      ONLY : DP
-  USE buffers,    ONLY : save_buffer
-  USE io_global,  ONLY : stdout
-  USE io_files,   ONLY : iunsat, nwordatwfc
-  USE ions_base,  ONLY : nat
-  USE basis,      ONLY : natomwfc, swfcatom
-  USE klist,      ONLY : nks, xk, ngk, igk_k
-  USE wvfct,      ONLY : npwx
-  USE uspp,       ONLY : nkb, vkb
+  USE kinds,            ONLY : DP
+  USE buffers,          ONLY : save_buffer
+  USE io_global,        ONLY : stdout
+  USE io_files,         ONLY : iunsat, nwordatwfc
+  USE ions_base,        ONLY : nat
+  USE basis,            ONLY : natomwfc, swfcatom
+  USE klist,            ONLY : nks, xk, ngk, igk_k
+  USE wvfct,            ONLY : npwx
+  USE uspp,             ONLY : nkb, vkb
+  USE becmod_gpum,      ONLY : becp_d
+  USE becmod_subs_gpum, ONLY : using_becp_auto, using_becp_d_auto, calbec_gpu
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
                          bec_type, becp, calbec
-  USE control_flags,    ONLY : gamma_only
+  USE control_flags,    ONLY : gamma_only, use_gpu
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_init,        ONLY : init_us_2
   IMPLICIT NONE
@@ -306,9 +308,10 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
   ! ibnd: counter on bands
   LOGICAL :: normalize_only = .FALSE.
   COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:)
-
+  
   normalize_only=.FALSE.
   ALLOCATE (wfcatom( npwx*npol, natomwfc))
+  !$acc enter data create(wfcatom, swfcatom)
 
   ! Allocate the array becp = <beta|wfcatom>
   CALL allocate_bec_type (nkb,natomwfc, becp) 
@@ -317,22 +320,53 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
      
      IF (noncolin) THEN
        CALL atomic_wfc_nc_updown (ik, wfcatom)
+       !$acc update device(wfcatom)
      ELSE
-       CALL atomic_wfc (ik, wfcatom)
+       IF(use_gpu) THEN 
+         !$acc host_data use_device(wfcatom)
+         CALL atomic_wfc_gpu( ik, wfcatom )
+         !$acc end host_data
+       ELSE
+         CALL atomic_wfc (ik, wfcatom)
+       END IF
      ENDIF
      npw = ngk (ik)
-     CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
-     CALL calbec (npw, vkb, wfcatom, becp) 
-     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
+     !
+     CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb, use_gpu)
+     !
+     IF(use_gpu) THEN 
+       CALL using_becp_auto(2)
+       CALL using_becp_d_auto(2)
+       !$acc host_data use_device(vkb, wfcatom)
+       CALL calbec_gpu( npw, vkb, wfcatom, becp_d )
+       !$acc end host_data
+       !
+       !$acc host_data use_device(wfcatom, swfcatom)
+       CALL s_psi_gpu( npwx, npw, natomwfc, wfcatom, swfcatom )
+       !$acc end host_data
+     ELSE
+       CALL calbec (npw, vkb, wfcatom, becp) 
+       CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
+     END IF
 
-     IF (orthogonalize_wfc) &
-        CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
+     IF (orthogonalize_wfc) THEN
+       IF(use_gpu) THEN 
+         !$acc host_data use_device(wfcatom, swfcatom)
+         CALL ortho_swfc_gpu( npw, normalize_only, &
+              natomwfc, wfcatom, swfcatom, .FALSE. )
+         !$acc end host_data
+       ELSE
+         CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
+       END IF
+     END IF
      !
      ! write S * atomic wfc to unit iunsat
      !
+     !$acc update host(swfcatom)
      CALL save_buffer (swfcatom, nwordatwfc, iunsat, ik)
      !
   ENDDO
+  !$acc exit data delete(wfcatom, swfcatom)
   DEALLOCATE (wfcatom)
   CALL deallocate_bec_type ( becp )
   !

@@ -130,11 +130,7 @@ SUBROUTINE hinit1()
   ! ... in DFT+Hubbard calculations
   !
   IF ( lda_plus_u  ) CALL orthoUwfc(.FALSE.)
-  IF (.NOT. use_gpu) THEN
-    IF ( use_wannier ) CALL orthoatwfc( .TRUE. )
-  ELSE
-    IF ( use_wannier ) CALL orthoatwfc_gpu( .TRUE. )
-  ENDIF
+  IF ( use_wannier ) CALL orthoatwfc( .TRUE. )
   !
   ! ... The following line forces recalculation of terms used by EXX
   ! ... It is actually needed only in case of variable-cell calculations
