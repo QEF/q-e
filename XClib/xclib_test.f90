@@ -46,7 +46,6 @@ PROGRAM xclib_test
                             xmlw_writetag, xmlw_opentag, xmlw_closetag, &
                             xmlr_opentag, xmlr_closetag, get_attr, add_attr
 #if defined(__LIBXC)
-#include "xc_version.h"
   USE xc_f03_lib_m
   USE dft_setting_params, ONLY: xc_func, xc_info, xc_kind_error, libxc_flags
 #endif
