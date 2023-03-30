@@ -394,25 +394,35 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
      eigenvect(:,:) = work(:,:)
      overlap_inv(:,:) = overlap(:,:)
      !
+  END IF 
+  !
+  DEALLOCATE( work )
+  !
+  ALLOCATE( work(m, npwx*npol ) )
+  work(:,:) = (0.d0,0.d0)
+  !
+  IF (lflag) THEN
+     !
      ! Transform atomic orbitals WITHOUT the ultrasoft S operator 
      ! O^(-1/2) \psi (note the transposition):
      ! \phi_I = \sum_J O^{-1/2}_JI \phi_J
      !
-     DO i = 1, npw
-        work(:,1) = (0.d0,0.d0)
-        IF (noncolin) THEN
-           DO ipol=1,npol
-              j = i + (ipol-1)*npwx
-              CALL zgemv ('n',m,m,(1.d0,0.d0),overlap, &
-                   m, wfc(j,1), npwx*npol, (0.d0,0.d0),work,1)
-              CALL zcopy (m,work,1,wfc(j,1),npwx*npol)
-           END DO
-        ELSE
-           CALL zgemv ('n', m, m, (1.d0, 0.d0) , overlap, &
-                m, wfc (i, 1) , npwx, (0.d0, 0.d0) , work, 1)
-           CALL zcopy (m, work, 1, wfc (i, 1), npwx)
-        END IF
-     ENDDO
+     IF(noncolin) THEN 
+       CALL ZGEMM('n', 't', m, npwx*npol, m, (1.d0,0.d0), overlap, m, wfc, npwx*npol, (0.d0,0.d0), work, m )
+       DO i = 1, npwx*npol
+         DO j = 1, m
+           wfc(i,j) = work(j,i)
+         END DO 
+       END DO
+     ELSE
+       CALL ZGEMM('n', 't', m, npw, m, (1.d0,0.d0), overlap, m, wfc, npwx*npol, (0.d0,0.d0), work, m )
+       DO i = 1, npw
+         DO j = 1, m
+           wfc(i,j) = work(j,i)
+         END DO 
+       END DO
+     END IF
+     !
      !
   ELSE
      !
@@ -421,21 +431,21 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
      ! \Sphi_I = \sum_J O^{-1/2}_JI \Sphi_J
      ! FIXME: can be done in a faster way by using wfc as work space 
      !
-     DO i = 1, npw
-        work(:,1) = (0.d0,0.d0)
-        IF (noncolin) THEN
-           DO ipol=1,npol
-              j = i + (ipol-1)*npwx
-              CALL zgemv ('n',m,m,(1.d0,0.d0),overlap, &
-                   m, swfc(j,1), npwx*npol, (0.d0,0.d0),work,1)
-              CALL zcopy (m,work,1,swfc(j,1),npwx*npol)
-           END DO
-        ELSE
-           CALL zgemv ('n', m, m, (1.d0, 0.d0) , overlap, &
-                m, swfc (i, 1) , npwx, (0.d0, 0.d0) , work, 1)
-           CALL zcopy (m, work, 1, swfc (i, 1), npwx)
-        END IF
-     ENDDO
+     IF(noncolin) THEN 
+       CALL ZGEMM('n', 't', m, npwx*npol, m, (1.d0,0.d0), overlap, m, swfc, npwx*npol, (0.d0,0.d0), work, m )
+       DO i = 1, npwx*npol
+         DO j = 1, m
+           swfc(i,j) = work(j,i)
+         END DO 
+       END DO
+     ELSE
+       CALL ZGEMM('n', 't', m, npw, m, (1.d0,0.d0), overlap, m, swfc, npwx*npol, (0.d0,0.d0), work, m )
+       DO i = 1, npw
+         DO j = 1, m
+           swfc(i,j) = work(j,i)
+         END DO 
+       END DO
+     END IF
      !
   ENDIF
   !
