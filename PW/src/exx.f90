@@ -3994,12 +3994,14 @@ end associate
           CALL init_us_2( npw, igk_k(1,ik), xk(:,ik), vkb )
           CALL calbec( npw, vkb, evc, becpsi, nbnd )
        ENDIF
+     if (has_valence_bands_in_current_k()) then
        IF (gamma_only) THEN
           CALL aceinit_gamma( DoLoc, npw, nbnd, evc, xi(1,1,ik), becpsi, ee )
        ELSE
           CALL aceinit_k( DoLoc, npw, nbnd, evc, xi(1,1,ik), becpsi, ee )
        ENDIF
        eexx = eexx + ee
+     end if
     ENDDO
     !
     CALL mp_sum( eexx, inter_pool_comm )
@@ -4110,6 +4112,10 @@ end associate
     COMPLEX(DP),ALLOCATABLE :: cmexx(:,:), vv(:,:)  
     REAL*8, PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0  
     !
+    if (.not.has_valence_bands_in_current_k()) then
+      exxe = 0._dp
+      return
+    end if
     CALL start_clock( 'vexxace' )
     !
     ALLOCATE( vv(nnpw,nbnd) )
@@ -4341,6 +4347,7 @@ end associate
     COMPLEX(DP), ALLOCATABLE :: cmexx(:,:), vv(:,:)
     REAL*8, PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0
     !
+    if (.not.has_valence_bands_in_current_k()) return
     CALL start_clock( 'vexxace' )
     !
     ALLOCATE( vv(npwx*npol,nbnd) )  
@@ -4894,5 +4901,18 @@ end associate
     !
   END SUBROUTINE vexx_loc_k
   !
+  function has_valence_bands_in_current_k()
+    use wvfct,         only : nbnd, wg, current_k
+    use klist,         only : wk
+    implicit none
+    logical  :: has_valence_bands_in_current_k
+    integer  :: n_occ
+    if (abs(wk(current_k)) > eps_occ) then
+      n_occ = nint(sum(wg(1:nbnd,current_k) / wk(current_k)))
+      has_valence_bands_in_current_k = (n_occ >= 1)
+    else
+      has_valence_bands_in_current_k = .false. ! does not matter so not calculate
+    end if
+  end function has_valence_bands_in_current_k
   !
 END MODULE exx
