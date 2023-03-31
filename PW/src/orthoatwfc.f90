@@ -114,8 +114,8 @@ SUBROUTINE orthoUwfc(save_wfcatom)
        !$acc host_data use_device(vkb, wfcatom)
        CALL calbec_gpu( npw, vkb, wfcatom, becp_d )
        !$acc end host_data
-       !
-       !$acc host_data use_device(wfcatom, swfcatom) 
+
+       !$acc host_data use_device(wfcatom, swfcatom)
        CALL s_psi_gpu( npwx, npw, natomwfc, wfcatom, swfcatom )
        !$acc end host_data
      else
@@ -123,15 +123,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
        CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
      end if 
      !
-     IF (orthogonalize_wfc) THEN
-       IF(use_gpu) then 
-         !$acc host_data use_device(wfcatom, swfcatom)
-         CALL ortho_swfc_gpu( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
-         !$acc end host_data
-       ELSE
-         CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
-       END IF
-     END IF
+     IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
      !
      ! copy S * atomic wavefunctions with Hubbard U term only in wfcU
      ! (this is used during the self-consistent solution of Kohn-Sham equations)
@@ -145,9 +137,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      ! to unit iunhubnoS
      !
      IF (save_wfcatom.and..not.use_gpu) THEN
-        IF (orthogonalize_wfc) THEN
-           CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .TRUE. )
-        ENDIF
+        IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .TRUE. )
         CALL copy_U_wfc (wfcatom, noncolin)
         CALL save_buffer (wfcU, nwordwfcU, iunhub_noS, ik)
      ENDIF
@@ -250,8 +240,11 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
   ! Compute the overlap matrix
   ! lflag=.FALSE. : On the output wfcatom are unchanged, swfcatom = O^{-1/2} S\phi.
   ! lflag=.TRUE.  : On the output wfcatom = O^{-1/2} \phi (no ultrasoft S), swfcatom are unchanged.
-  IF (orthogonalize_wfc) &
+  IF (orthogonalize_wfc) THEN
+     !$acc data copy(wfcatom, swfcatom)
      CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, lflag )
+     !$acc end data
+  END IF
   !
   IF (lflag) THEN
      ! Copy (ortho-)atomic wavefunctions with Hubbard U term only
@@ -293,8 +286,8 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
   USE uspp,             ONLY : nkb, vkb
   USE becmod_gpum,      ONLY : becp_d
   USE becmod_subs_gpum, ONLY : using_becp_auto, using_becp_d_auto, calbec_gpu
-  USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
-                         bec_type, becp, calbec
+  USE becmod,           ONLY : allocate_bec_type, deallocate_bec_type, &
+                               bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only, use_gpu
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_init,        ONLY : init_us_2
@@ -349,16 +342,7 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
        CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
      END IF
 
-     IF (orthogonalize_wfc) THEN
-       IF(use_gpu) THEN 
-         !$acc host_data use_device(wfcatom, swfcatom)
-         CALL ortho_swfc_gpu( npw, normalize_only, &
-              natomwfc, wfcatom, swfcatom, .FALSE. )
-         !$acc end host_data
-       ELSE
-         CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
-       END IF
-     END IF
+     IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
      !
      ! write S * atomic wfc to unit iunsat
      !
@@ -390,10 +374,11 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
   !
   USE kinds,            ONLY : DP
   USE wvfct,            ONLY : npwx
-  USE mp_bands,         ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
   USE mp,               ONLY : mp_sum
   USE noncollin_module, ONLY : noncolin, npol
   USE force_mod,        ONLY : eigenval, eigenvect, overlap_inv
+  USE control_flags,    ONLY : use_gpu
   !
   IMPLICIT NONE
   !
@@ -402,69 +387,114 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
   COMPLEX(dp), INTENT(INOUT) :: wfc (npwx*npol,m)
   COMPLEX(dp), INTENT(INOUT) :: swfc(npwx*npol,m)
   LOGICAL, INTENT(IN) :: lflag
-
+  !
+  ! ... local variables
+  !
   COMPLEX(DP) :: temp 
   COMPLEX(DP) , ALLOCATABLE ::  work (:,:), overlap (:,:)
   REAL(DP) , ALLOCATABLE :: e (:)
+  !$acc declare device_resident(work, overlap, e)
+#if defined(__CUDA)
+  COMPLEX(DP) , ALLOCATABLE ::  s(:,:)
+  !$acc declare device_resident(s)
+#endif
   INTEGER :: i, j, k, ipol
 
   ALLOCATE (overlap( m , m))    
   ALLOCATE (work   ( m , m))    
   ALLOCATE (e      ( m))    
+#if defined(__CUDA)
+  ALLOCATE(s(m,m))
+#endif
   ! 
+  !$acc kernels
   overlap(:,:) = (0.d0,0.d0)
   work(:,:) = (0.d0,0.d0)
+  !$acc end kernels
   !
   ! calculate overlap matrix
   !
   IF (noncolin) THEN
-     CALL zgemm ('c', 'n', m, m, npwx*npol, (1.d0, 0.d0), wfc, &
+     !$acc host_data use_device(wfc, swfc, overlap)
+     CALL MYZGEMM ('c', 'n', m, m, npwx*npol, (1.d0, 0.d0), wfc, &
           npwx*npol, swfc, npwx*npol, (0.d0,0.d0), overlap, m)
+     !$acc end host_data
   ELSE
-     CALL zgemm ('c', 'n', m, m, npw, (1.d0, 0.d0), wfc, &
+     !$acc host_data use_device(wfc, swfc, overlap)
+     CALL MYZGEMM ('c', 'n', m, m, npw, (1.d0, 0.d0), wfc, &
           npwx, swfc, npwx, (0.d0, 0.d0), overlap, m)
+     !$acc end host_data
   END IF
   !
+  !$acc host_data use_device(overlap)
   CALL mp_sum(  overlap, intra_bgrp_comm )
+  !$acc end host_data
   !
   IF ( normalize_only ) THEN
+     !$acc parallel
+     !$acc loop gang
      DO i = 1, m
+        !$acc loop vector
         DO j = i+1, m
            overlap(i,j) = CMPLX(0.d0,0.d0, kind=dp)
            overlap(j,i) = CMPLX(0.d0,0.d0, kind=dp)
         ENDDO
      ENDDO
+     !$acc end parallel
   END IF
   !
   ! find O^(-1/2) (actually, its transpose)
   !
-  CALL cdiagh (m, overlap, m, e, work)
+!civn: ZHEEV not available in cuBLAS/cuSOLVER?
+  IF(use_gpu) THEN
+    !
+#if defined(__CUDA)
+    ! s_d = CMPLX(0.d0,0.d0, kind=dp)  ! fused below
+    !$acc kernels
+    s(:,:) = CMPLX(0.d0,0.d0, kind=dp) 
+    DO i = 1, m
+       s(i,i) = CMPLX(1.d0,0.d0, kind=dp)
+    ENDDO
+    !$acc end kernels
+    ! THIS SHOULD BE A SIMPLE CDIAGH (NOT GENERALIZED!) DRIVER NEEDED IN LAXLIB
+    !$acc host_data use_device(overlap, s, e, work)
+    CALL laxlib_cdiaghg_gpu( m, m, overlap, s, m, e, work, me_bgrp, &
+                             root_bgrp, intra_bgrp_comm )
+    !$acc end host_data
+#endif
+    !
+  ELSE
+    CALL cdiagh (m, overlap, m, e, work)
+  END IF 
   !
+  !$acc parallel loop collapse(2)
   DO i = 1, m
-     DO j = i, m
-        temp = (0.d0, 0.d0)
-        DO k = 1, m
-           temp = temp + work (j, k) * (1.d0/SQRT(e(k))) * CONJG (work (i, k) )
-        ENDDO
-        overlap (i, j) = temp
-        IF (j.NE.i) overlap (j, i) = CONJG (temp)
-     ENDDO
-  ENDDO
+    DO j = 1, m
+      s(i,j) = work(i,j) * (1.d0/SQRT(e(j)))
+    END DO
+  END DO 
+  !$acc host_data use_device(s, work, overlap)
+  Call MYZGEMM( 'n', 'c', m, m, m, (1.d0, 0.d0), s, m, work, m, (0.d0,0.d0), overlap, m)
+  !$acc end host_data
   !
   IF (lflag) THEN
      !
      ! Save quantities which are needed for 
      ! calculations of Hubbard forces and stress
+     !$acc kernels copyout(eigenval, eigenvect, overlap_inv)
      eigenval(:) = e(:)
      eigenvect(:,:) = work(:,:)
      overlap_inv(:,:) = overlap(:,:)
+     !$acc end kernels
      !
   END IF 
   !
   DEALLOCATE( work )
   !
   ALLOCATE( work(m, npwx*npol ) )
+  !$acc kernels
   work(:,:) = (0.d0,0.d0)
+  !$acc end kernels
   !
   IF (lflag) THEN
      !
@@ -473,20 +503,27 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
      ! \phi_I = \sum_J O^{-1/2}_JI \phi_J
      !
      IF(noncolin) THEN 
-       CALL ZGEMM('n', 't', m, npwx*npol, m, (1.d0,0.d0), overlap, m, wfc, npwx*npol, (0.d0,0.d0), work, m )
+       !$acc host_data use_device(overlap, wfc, work)
+       CALL MYZGEMM('n', 't', m, npwx*npol, m, (1.d0,0.d0), overlap, m, wfc, npwx*npol, (0.d0,0.d0), work, m )
+       !$acc end host_data
+       !$acc parallel loop collapse(2) 
        DO i = 1, npwx*npol
          DO j = 1, m
            wfc(i,j) = work(j,i)
          END DO 
        END DO
      ELSE
-       CALL ZGEMM('n', 't', m, npw, m, (1.d0,0.d0), overlap, m, wfc, npwx*npol, (0.d0,0.d0), work, m )
+       !$acc host_data use_device(overlap, wfc, work)
+       CALL MYZGEMM('n', 't', m, npw, m, (1.d0,0.d0), overlap, m, wfc, npwx*npol, (0.d0,0.d0), work, m )
+       !$acc end host_data
+       !$acc parallel loop collapse(2)
        DO i = 1, npw
          DO j = 1, m
            wfc(i,j) = work(j,i)
          END DO 
        END DO
      END IF
+    
      !
      !
   ELSE
@@ -497,14 +534,20 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
      ! FIXME: can be done in a faster way by using wfc as work space 
      !
      IF(noncolin) THEN 
-       CALL ZGEMM('n', 't', m, npwx*npol, m, (1.d0,0.d0), overlap, m, swfc, npwx*npol, (0.d0,0.d0), work, m )
+       !$acc host_data use_device(overlap, swfc, work)
+       CALL MYZGEMM('n', 't', m, npwx*npol, m, (1.d0,0.d0), overlap, m, swfc, npwx*npol, (0.d0,0.d0), work, m )
+       !$acc end host_data 
+       !$acc parallel loop collapse(2)
        DO i = 1, npwx*npol
          DO j = 1, m
            swfc(i,j) = work(j,i)
          END DO 
        END DO
      ELSE
-       CALL ZGEMM('n', 't', m, npw, m, (1.d0,0.d0), overlap, m, swfc, npwx*npol, (0.d0,0.d0), work, m )
+       !$acc host_data use_device(overlap, swfc, work)
+       CALL MYZGEMM('n', 't', m, npw, m, (1.d0,0.d0), overlap, m, swfc, npwx*npol, (0.d0,0.d0), work, m )
+       !$acc end host_data
+       !$acc parallel loop collapse(2)
        DO i = 1, npw
          DO j = 1, m
            swfc(i,j) = work(j,i)
@@ -514,6 +557,9 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
      !
   ENDIF
   !
+#if defined(__CUDA)
+  DEALLOCATE(s)
+#endif
   DEALLOCATE (overlap)
   DEALLOCATE (work)
   DEALLOCATE (e)
