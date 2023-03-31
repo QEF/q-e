@@ -79,6 +79,11 @@ SUBROUTINE c_bands_nscf_ph( )
      ! ... Set k-point, spin, kinetic energy, needed by Hpsi
      !
      current_k = ik
+     !
+     ! ---------- LUCA (spawoc) -----------------
+     IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) CALL phase_factor(ik)
+     ! ------------------------------------
+     !
      IF ( lsda ) current_spin = isk(ik)
      call g2_kin( ik )
      ! 

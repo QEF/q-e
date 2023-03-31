@@ -90,9 +90,12 @@ SUBROUTINE hp_ns_trace
                  ENDDO
                  IF (nspin==1) THEN
                     ns(na1) = 2.0d0 * nsaux(na1,1)
-                 ELSE
+                    ! ---------- LUCA (spawoc) ---------------
+                 ELSEIF (nspin==2) THEN
                     ns(na1)   = nsaux(na1,1) + nsaux(na1,2)
                     magn(na1) = nsaux(na1,1) - nsaux(na1,2)
+                 ELSE
+                    ns(na1)   = nsaux(na1,1) + nsaux(na1,4)
                  ENDIF
                  GO TO 10
               ENDIF
