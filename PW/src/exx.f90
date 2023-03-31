@@ -4347,7 +4347,10 @@ end associate
     COMPLEX(DP), ALLOCATABLE :: cmexx(:,:), vv(:,:)
     REAL*8, PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0
     !
-    if (.not.has_valence_bands_in_current_k()) return
+    if (.not.has_valence_bands_in_current_k()) then
+      exxe = 0._dp
+      return
+    end if
     CALL start_clock( 'vexxace' )
     !
     ALLOCATE( vv(npwx*npol,nbnd) )  
