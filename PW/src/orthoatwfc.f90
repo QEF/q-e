@@ -577,6 +577,7 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
   !! The solution is written in a closed form by solving the Lyapunov
   !! equation (a particular case of the Sylvester equation).
   !! See Eq. (32) in PRB 105, 199901(E) (2022).
+  !! See Eq. (32) in PRB 102, 235159 (2020).
   !! Written by I. Timrov (June 2020)
   !
   USE kinds,       ONLY : DP
@@ -599,6 +600,7 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
   ! Local variables
   INTEGER :: m1, m2, m3, m4
   COMPLEX(DP), ALLOCATABLE :: aux(:,:)
+  !$acc declare device_resident(aux)
   !! eigenvectors of the overlap matrix
   !! auxiliary array
   !
@@ -608,12 +610,17 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
   ! and put the result back in doverlap
   !
   ! Compute aux = doverlap * work
-  CALL ZGEMM('N','N', m, m, m, (1.d0,0.d0), doverlap, &
+  !$acc host_data use_device(doverlap, work, aux)
+  CALL MYZGEMM('N','N', m, m, m, (1.d0,0.d0), doverlap, &
               m, work, m, (0.d0,0.d0), aux, m)
+  !$acc end host_data
   ! Compute (work^H) * aux
-  CALL ZGEMM('C','N', m, m, m, (1.d0,0.d0), work, &
+  !$acc host_data use_device(work, aux, doverlap)
+  CALL MYZGEMM('C','N', m, m, m, (1.d0,0.d0), work, &
               m, aux, m, (0.d0,0.d0), doverlap, m)
+  !$acc end host_data
   !
+  !$acc parallel loop collapse(2)
   DO m1 = 1, m
      DO m2 = 1, m
         aux(m1,m2) = doverlap(m1,m2) / &
@@ -624,11 +631,15 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
   ! Compute work * aux * (work^H)
   !
   ! Compute doverlap = aux * (work^H)
-  CALL ZGEMM('N','C', m, m, m, (1.d0,0.d0), aux, &
+  !$acc host_data use_device(aux, work, doverlap)
+  CALL MYZGEMM('N','C', m, m, m, (1.d0,0.d0), aux, &
               m, work, m, (0.d0,0.d0), doverlap, m)
+  !$acc end host_data
   ! Compute doverlap_inv = work * doverlap
-  CALL ZGEMM('N','N', m, m, m, (-1.d0,0.d0), work, &
+  !$acc host_data use_device(work, doverlap, doverlap_inv)
+  CALL MYZGEMM('N','N', m, m, m, (-1.d0,0.d0), work, &
               m, doverlap, m, (0.d0,0.d0), doverlap_inv, m)
+  !$acc end host_data
   !
   DEALLOCATE (aux)
   !

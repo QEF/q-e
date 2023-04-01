@@ -1565,15 +1565,8 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    !
    !$acc update device(eigenvect)
    !
-#if defined(__CUDA)
-   !$acc host_data use_device(eigenval,eigenvect,doverlap,doverlap_inv)
-   CALL calculate_doverlap_inv_gpu( natomwfc, eigenval, eigenvect, &
-                                    doverlap, doverlap_inv )
-   !$acc end host_data
-#else
    CALL calculate_doverlap_inv( natomwfc, eigenval, eigenvect, &
                                 doverlap, doverlap_inv )
-#endif
    !
    !$acc update self(doverlap_inv)
    !
