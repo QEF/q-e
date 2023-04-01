@@ -481,7 +481,7 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
      !
      ! Save quantities which are needed for 
      ! calculations of Hubbard forces and stress
-     !$acc kernels copyout(eigenval, eigenvect, overlap_inv)
+     !$acc kernels copyout(overlap_inv)
      eigenval(:) = e(:)
      eigenvect(:,:) = work(:,:)
      overlap_inv(:,:) = overlap(:,:)

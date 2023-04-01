@@ -1493,8 +1493,7 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    !
    ALLOCATE( doverlap(natomwfc,natomwfc) )
    !
-   !$acc data present_or_copyin(wfcatom,swfcatom,eigenval) &
-   !$acc&          create(doverlap_inv,eigenvect)
+   !$acc data present_or_copyin(wfcatom,swfcatom) create(doverlap_inv)
    !
    !$acc kernels
    doverlap_inv(:,:) = (0.0d0,0.0d0)
@@ -1562,8 +1561,6 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    !
    ! ... Now compute dO^{-1/2}_JI/d\tau(alpha,ipol) using dO_IJ/d\tau(alpha,ipol)
    ! ... Note the transposition!
-   !
-   !$acc update device(eigenvect)
    !
    CALL calculate_doverlap_inv( natomwfc, eigenval, eigenvect, &
                                 doverlap, doverlap_inv )
