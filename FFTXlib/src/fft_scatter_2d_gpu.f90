@@ -1387,7 +1387,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
   INTEGER :: k, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom, offset
   INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
   !
-  INTEGER :: iter, dest, sorc
+  INTEGER :: iter, dest, sorc, ncp_me, npp_gproc
   INTEGER :: istatus(MPI_STATUS_SIZE)
 
   me     = dfft%mype + 1
@@ -1422,22 +1422,24 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      !$omp target data use_device_addr(f_in)
 #endif
      DO gproc = 1, nprocp
+        ncp_me = ncp_(me)
+        npp_gproc = npp_(gproc)
         kdest = ( gproc - 1 ) * ncpx
-        kfrom = ( gproc - 1 ) * npp_(gproc)
-        istat = int(omp_target_memcpy_rect(c_loc(f_aux), c_loc(f_in),                    &
-                                           int(sizeof(dummy),c_size_t),                  &
-                                           int(2,c_int),                                 &
-                                           int((/    ncp_(me), npp_(gproc) /),c_size_t), &
-                                           int((/       kdest,           0 /),c_size_t), &
-                                           int((/           0,       kfrom /),c_size_t), &
-                                           int((/ (nxx_/nppx),        nppx /),c_size_t), &
-                                           int((/ (nxx_/nr3x),        nr3x /),c_size_t), &
+        kfrom = ( gproc - 1 ) * nppx
+        istat = int(omp_target_memcpy_rect(c_loc(f_aux), c_loc(f_in),                  &
+                                           int(sizeof(dummy),c_size_t),                &
+                                           int(2,c_int),                               &
+                                           int((/      ncp_me, npp_gproc /),c_size_t), &
+                                           int((/       kdest,         0 /),c_size_t), &
+                                           int((/           0,     kfrom /),c_size_t), &
+                                           int((/ (nxx_/nppx),      nppx /),c_size_t), &
+                                           int((/ (nxx_/nr3x),      nr3x /),c_size_t), &
 #ifdef __GPU_MPI
-                                           int(omp_get_default_device(),c_int),          &
+                                           int(omp_get_default_device(),c_int),        &
 #else
-                                           int(omp_get_initial_device(),c_int),          &
+                                           int(omp_get_initial_device(),c_int),        &
 #endif
-                                           int(omp_get_default_device(),c_int)),         &
+                                           int(omp_get_default_device(),c_int)),       &
                     kind(istat))
      ENDDO
      !$omp end target data
@@ -1447,13 +1449,15 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      DO gproc = 1, nprocp
         kdest = ( gproc - 1 ) * sendsiz
         kfrom = offset
+        ncp_me = ncp_(me)
+        npp_gproc = npp_(gproc)
         !$omp target teams distribute parallel do collapse(2)
-        DO k = 1, ncp_ (me)
-           DO i = 1, npp_ ( gproc )
+        DO k = 1, ncp_me
+           DO i = 1, npp_gproc
              f_aux( kdest + i + (k-1)*nppx ) = f_in( kfrom + i + (k-1)*nr3x )
            END DO
         END DO
-        offset = offset + npp_ ( gproc )
+        offset = offset + npp_gproc
      ENDDO
 #ifndef __GPU_MPI
      !$omp target update from (f_aux)
@@ -1513,7 +1517,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
 10   CONTINUE
 
 !$omp target teams distribute parallel do
-     do i = lbound(f_aux,1), ubound(f_aux,1)
+     do i = 1, nxx_
        f_aux(i) = (0.d0, 0.d0)
      end do
 !$omp end target teams distribute parallel do
@@ -1559,7 +1563,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
         DO ip = 1, nprocp
            ioff = dfft%iss( ip )
            nswip = dfft%nsp( ip )
-!$omp target teams distribute parallel do collapse(2)
+           !$omp target teams distribute parallel do collapse(2)
            DO omp_j = 1, npp
               DO omp_i = 1, nswip
                  mc = dfft%ismap( omp_i + ioff )
@@ -1567,13 +1571,12 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
                  f_in( omp_j + it ) = f_aux( mc + ( omp_j - 1 ) * nnp )
               ENDDO
            ENDDO
-!$omp end target teams distribute parallel do
         ENDDO
      ELSE
         DO gproc = 1, nprocp
            ioff = dfft%iss( gproc )
            nswip = dfft%nsw( gproc )
-!$omp target teams distribute parallel do collapse(2)
+           !$omp target teams distribute parallel do collapse(2)
            DO omp_j = 1, npp
               DO omp_i = 1, nswip
                  mc = dfft%ismap( omp_i + ioff )
@@ -1581,7 +1584,6 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
                  f_in( omp_j + it ) = f_aux( mc + ( omp_j - 1 ) * nnp )
               ENDDO
            ENDDO
-!$omp end target teams distribute parallel do
         ENDDO
      END IF
      !
@@ -1592,12 +1594,12 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      gcomm = dfft%comm
      !
 #ifndef __GPU_MPI
-!$omp target update from (f_in(1:sendsiz*nprocp))
+     !$omp target update from (f_in(1:sendsiz*nprocp))
 #endif
      !
      CALL start_clock ('a2a_bw')
 #ifdef __GPU_MPI
-!$omp target data use_device_ptr(f_in, f_aux)
+     !$omp target data use_device_ptr(f_in, f_aux)
      DO iter = 2, nprocp
         IF(IAND(nprocp, nprocp-1) == 0) THEN
           sorc = IEOR( me-1, iter-1 )
@@ -1620,14 +1622,13 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
 
      ENDDO
 
-!$omp target teams distribute parallel do
+     !$omp target teams distribute parallel do
      DO i=(me-1)*sendsiz + 1, me*sendsiz
         f_aux(i) = f_in(i)
      ENDDO
-!$omp end target teams distribute parallel do
 
      call MPI_WAITALL(2*nprocp-2, srh, MPI_STATUSES_IGNORE, ierr)
-!$omp end target data
+     !$omp end target data
 #else
      CALL mpi_alltoall (f_in(1), sendsiz, MPI_DOUBLE_COMPLEX, f_aux(1), sendsiz, MPI_DOUBLE_COMPLEX, gcomm, ierr)
 #ifndef __MEMCPY_RECT
@@ -1649,21 +1650,23 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      !$omp target data use_device_addr(f_in)
 #endif
      DO gproc = 1, nprocp
+        ncp_me = ncp_(me)
+        npp_gproc = npp_(gproc)
         kdest = ( gproc - 1 ) * ncpx
-        kfrom = ( gproc - 1 ) * npp_(gproc)
-        istat = int(omp_target_memcpy_rect(c_loc(f_in), c_loc(f_aux),                    &
-                                           int(sizeof(dummy),c_size_t),                  &
-                                           int(2,c_int),                                 &
-                                           int((/    ncp_(me), npp_(gproc) /),c_size_t), &
-                                           int((/           0,       kfrom /),c_size_t), &
-                                           int((/       kdest,           0 /),c_size_t), &
-                                           int((/ (nxx_/nr3x),        nr3x /),c_size_t), &
-                                           int((/ (nxx_/nppx),        nppx /),c_size_t), &
-                                           int(omp_get_default_device(),c_int),          &
+        kfrom = ( gproc - 1 ) * nppx
+        istat = int(omp_target_memcpy_rect(c_loc(f_in), c_loc(f_aux),                  &
+                                           int(sizeof(dummy),c_size_t),                &
+                                           int(2,c_int),                               &
+                                           int((/      ncp_me, npp_gproc /),c_size_t), &
+                                           int((/           0,     kfrom /),c_size_t), &
+                                           int((/       kdest,         0 /),c_size_t), &
+                                           int((/ (nxx_/nr3x),      nr3x /),c_size_t), &
+                                           int((/ (nxx_/nppx),      nppx /),c_size_t), &
+                                           int(omp_get_default_device(),c_int),        &
 #ifdef __GPU_MPI
-                                           int(omp_get_default_device(),c_int)),         &
+                                           int(omp_get_default_device(),c_int)),       &
 #else
-                                           int(omp_get_initial_device(),c_int)),         &
+                                           int(omp_get_initial_device(),c_int)),       &
 #endif
                     kind(istat))
      ENDDO
@@ -1674,13 +1677,15 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      DO gproc = 1, nprocp
         kdest = ( gproc - 1 ) * sendsiz
         kfrom = offset
+        ncp_me = ncp_(me)
+        npp_gproc = npp_(gproc)
         !$omp target teams distribute parallel do collapse(2)
-        DO k = 1, ncp_(me)
-           DO i = 1, npp_( gproc )
+        DO k = 1, ncp_me
+           DO i = 1, npp_gproc
              f_in( kfrom + i + (k-1)*nr3x ) = f_aux( kdest + i + (k-1)*nppx )
            END DO
         END DO
-        offset = offset + npp_( gproc )
+        offset = offset + npp_gproc
      ENDDO
      !
 #endif
