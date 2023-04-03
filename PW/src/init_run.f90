@@ -190,15 +190,13 @@ SUBROUTINE init_run()
     !
     CALL newd_gpu()
     !
-    CALL wfcinit_gpu()
-    !
   ELSE
     !
     CALL newd()
     !
-    CALL wfcinit()
-    !
   END IF
+  !
+  CALL wfcinit()
   !
   IF(use_wannier) CALL wannier_init()
   !

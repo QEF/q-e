@@ -291,13 +291,11 @@ PWLIBS += \
   newd_gpu.o \
   add_paw_to_deeq_gpu.o \
   add_vhub_to_deeq_gpu.o \
-  wfcinit_gpu.o \
   rotate_wfc_gpu.o \
   hs_1psi_gpu.o \
   hs_psi_gpu.o \
   s_1psi_gpu.o \
   utils_gpu.o \
-  orthoatwfc_gpu.o \
   atomic_wfc_gpu.o \
   oscdft_wavefunction_subs_gpu.o \
   oscdft_wfcO_gpu.o \

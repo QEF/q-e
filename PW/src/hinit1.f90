@@ -129,13 +129,8 @@ SUBROUTINE hinit1()
   ! ... and recalculate the products of the S with the atomic wfcs used 
   ! ... in DFT+Hubbard calculations
   !
-  IF (.NOT. use_gpu) THEN
-    IF ( lda_plus_u  ) CALL orthoUwfc(.FALSE.)
-    IF ( use_wannier ) CALL orthoatwfc( .TRUE. )
-  ELSE
-    IF ( lda_plus_u  ) CALL orthoUwfc_gpu() 
-    IF ( use_wannier ) CALL orthoatwfc_gpu( .TRUE. )
-  ENDIF
+  IF ( lda_plus_u  ) CALL orthoUwfc(.FALSE.)
+  IF ( use_wannier ) CALL orthoatwfc( .TRUE. )
   !
   ! ... The following line forces recalculation of terms used by EXX
   ! ... It is actually needed only in case of variable-cell calculations
