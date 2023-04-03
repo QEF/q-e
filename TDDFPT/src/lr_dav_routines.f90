@@ -454,58 +454,122 @@ contains
     write(stdout,'(7x,"num of basis:",I5,3x,"total built basis:",I5)') num_basis,num_basis_tot
     
     ! Add new matrix elements to the M_C and M_D(in the subspace)(part 1)
-    do ibr = num_basis_old+1, num_basis
-      if(.not.ltammd) then
-        ! Calculate new D*vec_b
-        call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.false.)
-        if(.not. poor_of_ram2) D_vec_b(:,:,:,ibr)=vecwork(:,:,:)
-
-        ! Add new M_D
-        do ibl = 1, ibr
-          ! Here there's a choice between saving memory and saving calculation
-          if(poor_of_ram .or. .not. okvan) then ! Less memory needed
-            M_D(ibl,ibr)=lr_dot_us(vec_b(1,1,1,ibl),vecwork(1,1,1))
-          else  ! Less calculation, double memory required 
-            M_D(ibl,ibr)=lr_dot(svec_b(1,1,1,ibl),vecwork(1,1,1))
-          endif
-          if(ibl /= ibr)  M_D(ibr,ibl)=M_D(ibl,ibr)
-        enddo
-
-        ! Calculate new C*vec_b
-        call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.true.)
-        if(.not. poor_of_ram2) C_vec_b(:,:,:,ibr)=vecwork(:,:,:)
-
-        ! Add new M_C
-        do ibl = 1, ibr
-          if(poor_of_ram .or. .not. okvan) then ! Less memory needed
-            M_C(ibl,ibr)=lr_dot_us(vec_b(1,1,1,ibl),vecwork(1,1,1))
-          else  ! Less calculation, double memory required
-            M_C(ibl,ibr)=lr_dot(svec_b(1,1,1,ibl),vecwork(1,1,1))
-          endif
-          if(ibl /= ibr) M_C(ibr,ibl)=M_C(ibl,ibr)
-        enddo
-
-      else ! ltammd
-        call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.true.)
-        if(.not. poor_of_ram2) then
-          D_vec_b(:,:,:,ibr)=vecwork(:,:,:)
-          C_vec_b(:,:,:,ibr)=vecwork(:,:,:)
-        endif
-
-        ! Add new M_D, M_C
-        do ibl = 1, ibr
-          if(poor_of_ram .or. .not. okvan) then ! Less memory needed
-            M_D(ibl,ibr)=lr_dot_us(vec_b(1,1,1,ibl),vecwork(1,1,1))
-          else ! Less calculation, double memory required
-            M_D(ibl,ibr)=lr_dot_us(svec_b(1,1,1,ibl),vecwork(1,1,1))
-          endif
-          if(ibl /= ibr) M_D(ibr,ibl)=M_D(ibl,ibr)
-          M_C(ibl,ibr)=M_D(ibl,ibr)
-          if(ibl /= ibr) M_C(ibr,ibl)=M_C(ibl,ibr)
-        enddo
-      endif
-    enddo
-
+    if (.not.ltammd) then
+       if (.not. okvan) then !norm conserving    
+          do ibr = num_basis_old+1, num_basis
+             ! Calculate new D*vec_b
+             call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.false.)
+             if(.not. poor_of_ram2) D_vec_b(:,:,:,ibr)=vecwork(:,:,:)
+             !
+             ! Add new M_D
+             do ibl = 1, ibr
+                ! Here there's a choice between saving memory and saving calculation
+                M_D(ibl,ibr)=lr_dot(vec_b(1,1,1,ibl),vecwork(1,1,1))
+!                if(ibl /= ibr)  M_D(ibr,ibl)=M_D(ibl,ibr)
+                M_D(ibr,ibl)=M_D(ibl,ibr)
+             enddo
+             ! Calculate new C*vec_b
+             call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.true.)
+             if(.not. poor_of_ram2) C_vec_b(:,:,:,ibr)=vecwork(:,:,:)
+             ! Add new M_C
+             do ibl = 1, ibr
+                M_C(ibl,ibr)=lr_dot(vec_b(1,1,1,ibl),vecwork(1,1,1))
+!                if(ibl /= ibr) M_C(ibr,ibl)=M_C(ibl,ibr)
+                M_C(ibr,ibl)=M_C(ibl,ibr)
+             enddo
+          enddo 
+       else if(poor_of_ram) then ! Less memory needed
+          do ibr = num_basis_old+1, num_basis
+             ! Calculate new D*vec_b
+             call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.false.)
+             if(.not. poor_of_ram2) D_vec_b(:,:,:,ibr)=vecwork(:,:,:)
+             !
+             ! Add new M_D
+             do ibl = 1, ibr
+                ! Here there's a choice between saving memory and saving calculation
+                M_D(ibl,ibr)=lr_dot_us(vec_b(1,1,1,ibl),vecwork(1,1,1))
+                if(ibl /= ibr)  M_D(ibr,ibl)=M_D(ibl,ibr)
+             enddo   
+             ! Calculate new C*vec_b
+             call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.true.)
+             if(.not. poor_of_ram2) C_vec_b(:,:,:,ibr)=vecwork(:,:,:)
+             ! Add new M_C
+             do ibl = 1, ibr
+                M_C(ibl,ibr)=lr_dot_us(vec_b(1,1,1,ibl),vecwork(1,1,1))
+                if(ibl /= ibr) M_C(ibr,ibl)=M_C(ibl,ibr)
+             enddo
+          enddo
+       else !uspp
+          do ibr = num_basis_old+1, num_basis
+             ! Calculate new D*vec_b
+             call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.false.)
+             if(.not. poor_of_ram2) D_vec_b(:,:,:,ibr)=vecwork(:,:,:)
+             !
+             ! Add new M_D
+             do ibl = 1, ibr
+                ! Here there's a choice between saving memory and saving calculation
+                M_D(ibl,ibr)=lr_dot(svec_b(1,1,1,ibl),vecwork(1,1,1))
+                if(ibl /= ibr)  M_D(ibr,ibl)=M_D(ibl,ibr)
+             enddo
+             ! Calculate new C*vec_b
+             call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.true.)
+             if(.not. poor_of_ram2) C_vec_b(:,:,:,ibr)=vecwork(:,:,:)
+             ! Add new M_C
+             do ibl = 1, ibr
+                M_C(ibl,ibr)=lr_dot(svec_b(1,1,1,ibl),vecwork(1,1,1))
+                if(ibl /= ibr) M_C(ibr,ibl)=M_C(ibl,ibr)
+             enddo
+          enddo
+       endif        
+    else
+       if (.not. okvan) then
+          do ibr = num_basis_old+1, num_basis
+             call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.true.)
+             if (.not. poor_of_ram2) then
+                D_vec_b(:,:,:,ibr)=vecwork(:,:,:)
+                C_vec_b(:,:,:,ibr)=vecwork(:,:,:)
+             endif
+             ! Add new M_D, M_C    
+             do ibl = 1, ibr
+                M_D(ibl,ibr)=lr_dot(vec_b(1,1,1,ibl),vecwork(1,1,1))
+                if(ibl /= ibr) M_D(ibr,ibl)=M_D(ibl,ibr)
+                M_C(ibl,ibr)=M_D(ibl,ibr)
+                if(ibl /= ibr) M_C(ibr,ibl)=M_C(ibl,ibr)
+             enddo   
+          enddo   
+       elseif (poor_of_ram) then ! Less memory needed
+          do ibr = num_basis_old+1, num_basis
+             call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.true.)
+             if (.not. poor_of_ram2) then
+                D_vec_b(:,:,:,ibr)=vecwork(:,:,:)
+                C_vec_b(:,:,:,ibr)=vecwork(:,:,:)
+             endif
+             ! Add new M_D, M_C    
+             do ibl = 1, ibr
+                M_D(ibl,ibr)=lr_dot_us(vec_b(1,1,1,ibl),vecwork(1,1,1))
+                if(ibl /= ibr) M_D(ibr,ibl)=M_D(ibl,ibr)
+                M_C(ibl,ibr)=M_D(ibl,ibr)
+                if(ibl /= ibr) M_C(ibr,ibl)=M_C(ibl,ibr)
+             enddo   
+          enddo  
+       else ! Less calculation, double memory required
+          do ibr = num_basis_old+1, num_basis
+             call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.true.)
+             if (.not. poor_of_ram2) then
+                D_vec_b(:,:,:,ibr)=vecwork(:,:,:)
+                C_vec_b(:,:,:,ibr)=vecwork(:,:,:)
+             endif
+             ! Add new M_D, M_C    
+             do ibl = 1, ibr
+                M_D(ibl,ibr)=lr_dot_us(svec_b(1,1,1,ibl),vecwork(1,1,1))
+                if(ibl /= ibr) M_D(ibr,ibl)=M_D(ibl,ibr)
+                M_C(ibl,ibr)=M_D(ibl,ibr)
+                if(ibl /= ibr) M_C(ibr,ibl)=M_C(ibl,ibr)
+             enddo
+          enddo        
+       endif        
+    endif        
+       
     call solve_M_DC()
 
     call stop_clock('one_step')
@@ -673,48 +737,48 @@ contains
     call start_clock("calc_residue")
 
     do ieign = 1, num_eign
-      if(poor_of_ram2) then ! If D_ C_ basis are not stored, we have to apply liouvillian again
-        call lr_apply_liouvillian(right_full(:,:,:,ieign),right_res(:,:,:,ieign),.true.) ! Apply lanczos
-        call lr_apply_liouvillian(left_full(:,:,:,ieign),left_res(:,:,:,ieign),.false.)
-      else ! Otherwise they are be recovered directly by the combination of C_ and D_ basis
-        left_res(:,:,:,ieign)=0.0d0
-        right_res(:,:,:,ieign)=0.0d0
-        do ibr = 1, num_basis
-          right_res(:,:,1,ieign)=right_res(:,:,1,ieign)+right_M(ibr,eign_value_order(ieign))*C_vec_b(:,:,1,ibr)
-          left_res(:,:,1,ieign)=left_res(:,:,1,ieign)+left_M(ibr,eign_value_order(ieign))*D_vec_b(:,:,1,ibr)
-        enddo
-      endif
+       if (poor_of_ram2) then ! If D_ C_ basis are not stored, we have to apply liouvillian again
+          call lr_apply_liouvillian(right_full(:,:,:,ieign),right_res(:,:,:,ieign),.true.) ! Apply lanczos
+          call lr_apply_liouvillian(left_full(:,:,:,ieign),left_res(:,:,:,ieign),.false.)
+       else ! Otherwise they are be recovered directly by the combination of C_ and D_ basis
+         left_res(:,:,:,ieign)=0.0d0
+         right_res(:,:,:,ieign)=0.0d0
+         do ibr = 1, num_basis
+            right_res(:,:,1,ieign)=right_res(:,:,1,ieign)+right_M(ibr,eign_value_order(ieign))*C_vec_b(:,:,1,ibr)
+            left_res(:,:,1,ieign)=left_res(:,:,1,ieign)+left_M(ibr,eign_value_order(ieign))*D_vec_b(:,:,1,ibr)
+         enddo
+       endif
      
-      ! The reason of using this method
-      call lr_1to1orth(right_res(1,1,1,ieign),left_full(1,1,1,ieign))
-      call lr_1to1orth(left_res(1,1,1,ieign),right_full(1,1,1,ieign))
-      ! Instead of this will be explained in the document
-      ! right_res(:,:,:,ieign)=right_res(:,:,:,ieign)-sqrt(eign_value(eign_value_order(ieign),1))*left_full(:,:,:,ieign)
-      ! left_res(:,:,:,ieign)=left_res(:,:,:,ieign)-sqrt(eign_value(eign_value_order(ieign),1))*right_full(:,:,:,ieign)
+       ! The reason of using this method
+       call lr_1to1orth(right_res(1,1,1,ieign),left_full(1,1,1,ieign))
+       call lr_1to1orth(left_res(1,1,1,ieign),right_full(1,1,1,ieign))
+       ! Instead of this will be explained in the document
+       ! right_res(:,:,:,ieign)=right_res(:,:,:,ieign)-sqrt(eign_value(eign_value_order(ieign),1))*left_full(:,:,:,ieign)
+       ! left_res(:,:,:,ieign)=left_res(:,:,:,ieign)-sqrt(eign_value(eign_value_order(ieign),1))*right_full(:,:,:,ieign)
 
-      ! Update kill_r/l
-      right2(ieign)=lr_dot_us(right_res(1,1,1,ieign),right_res(1,1,1,ieign))
-      if (abs(aimag(right2(ieign))) .gt. zero .or. dble(right2(ieign)) .lt. 0.0D0) then
-        write(stdout,'(7x,"Warning! Wanging! the residue is weird.")')
-      endif
-      if( dble(right2(ieign)) .lt. residue_conv_thr ) then
-        kill_right(ieign)=.true.
-        toadd=toadd-1
-      endif
-      if( dble(right2(ieign)) .gt. max_res )  max_res = dble(right2(ieign))
+       ! Update kill_r/l
+       right2(ieign)=lr_dot_us(right_res(1,1,1,ieign),right_res(1,1,1,ieign))
+       if (abs(aimag(right2(ieign))) .gt. zero .or. dble(right2(ieign)) .lt. 0.0D0) then
+          write(stdout,'(7x,"Warning! Wanging! the residue is weird.")')
+       endif
+       if (dble(right2(ieign)) .lt. residue_conv_thr ) then
+          kill_right(ieign)=.true.
+          toadd=toadd-1
+       endif
+       if( dble(right2(ieign)) .gt. max_res )  max_res = dble(right2(ieign))
 
-      left2(ieign)=lr_dot_us(left_res(1,1,1,ieign),left_res(1,1,1,ieign))
-      if (abs(aimag(left2(ieign))) .gt. zero .or. dble(left2(ieign)) .lt. 0.0D0) then
-        write(stdout,'(7x,"Warning! Wanging! the residue is weird.")')
-      endif
-      if( dble(left2(ieign)) .lt. residue_conv_thr ) then
-        kill_left(ieign)=.true.
-        toadd=toadd-1
-      endif
-      if( dble(left2(ieign)) .gt. max_res )  max_res = dble(left2(ieign))
+       left2(ieign)=lr_dot_us(left_res(1,1,1,ieign),left_res(1,1,1,ieign))
+       if (abs(aimag(left2(ieign))) .gt. zero .or. dble(left2(ieign)) .lt. 0.0D0) then
+          write(stdout,'(7x,"Warning! Wanging! the residue is weird.")')
+       endif
+       if (dble(left2(ieign)) .lt. residue_conv_thr ) then
+          kill_left(ieign)=.true.
+          toadd=toadd-1
+       endif
+       if(dble(left2(ieign)) .gt. max_res )  max_res = dble(left2(ieign))
       
-      write (stdout,'(5x,"Residue(Squared modulus):",I5,2x,2F15.7)') ieign, &
-       dble(right2(ieign)), dble(left2(ieign))
+       write (stdout,'(5x,"Residue(Squared modulus):",I5,2x,2F15.7)') ieign, &
+             dble(right2(ieign)), dble(left2(ieign))
     enddo
  
     write(stdout,'(7x,"Largest residue:",5x,F20.12)') max_res
@@ -722,13 +786,13 @@ contains
     call stop_clock("calc_residue")
     
     ! Forseen that the number of basis will be too large
-    if(num_basis+toadd .gt. num_basis_max) then
-      if(discharged) &
-        call errore('lr_discharge',"The num_basis_max is too small that even discharge &
-                  & cannot work. Please increase its value in the input.",1)
-      discharged = .true.
-      call lr_discharge()
-      goto 110
+    if (num_basis+toadd .gt. num_basis_max) then
+       if (discharged) &
+          call errore('lr_discharge',"The num_basis_max is too small that even discharge &
+                     & cannot work. Please increase its value in the input.",1)
+       discharged = .true.
+       call lr_discharge()
+       goto 110
     endif
 
    return
@@ -745,6 +809,7 @@ contains
     use uspp,           only : okvan
     use lr_us
     use lr_dav_debug
+    use wvfct,                only : npwx
     
     implicit none
     integer :: ieign, flag
@@ -755,24 +820,25 @@ contains
     call start_clock("expan_basis")
 
     if (precondition) then
-      do ieign = 1, num_eign
-        if(.not. kill_left(ieign)) then
-          call treat_residue(left_res(:,:,1,ieign),ieign)
-          call lr_norm(left_res(1,1,1,ieign))
-          call lr_ortho(left_res(:,:,:,ieign), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.)
-          call lr_norm(left_res(1,1,1,ieign))
-        endif
+       do ieign = 1, num_eign
+          if (.not. kill_left(ieign)) then
+             call treat_residue(left_res(:,:,1,ieign),ieign)
+             call lr_norm(left_res(1,1,1,ieign))
+             call orthogonalize(left_res(:,:,:,ieign), evc0(:,:,1), 1, 1,sevc0(:,:,1),npwx,.true.)
+             call lr_norm(left_res(1,1,1,ieign))
+          endif
 
-        if(.not. kill_right(ieign)) then
-          call treat_residue(right_res(:,:,1,ieign),ieign)
-          call lr_norm(right_res(1,1,1,ieign))
-          call lr_ortho(right_res(:,:,:,ieign), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.)
-          call lr_norm(left_res(1,1,1,ieign))
-        endif
-      enddo
+          if (.not. kill_right(ieign)) then
+             call treat_residue(right_res(:,:,1,ieign),ieign)
+             call lr_norm(right_res(1,1,1,ieign))
+!             call lr_norm(left_res(1,1,1,ieign))
+             call orthogonalize(right_res(:,:,:,ieign), evc0(:,:,1), 1, 1,sevc0(:,:,1),npwx,.true.)
+             call lr_norm(right_res(1,1,1,ieign))
+          endif
+       enddo
     endif
  
-    ! Here mGS are called three times and lr_ortho is called once for increasing 
+    ! Here mGS are called three times and orthogonalize is called once for increasing 
     ! numerical stability of orthonalization
     call lr_mGS_orth()    ! 1st
     call lr_mGS_orth_pp()
@@ -782,53 +848,53 @@ contains
     call lr_mGS_orth_pp()
 
     do ieign = 1, num_eign
-      call lr_ortho(right_res(:,:,:,ieign), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.)
-      call lr_ortho(left_res(:,:,:,ieign), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.)
-      call lr_norm(right_res(:,:,:,ieign))
-      call lr_norm(left_res(:,:,:,ieign))
+       call orthogonalize(right_res(:,:,:,ieign), evc0(:,:,1), 1, 1,sevc0(:,:,1),npwx,.true.)
+       call orthogonalize(left_res(:,:,:,ieign), evc0(:,:,1), 1, 1,sevc0(:,:,1),npwx,.true.)
+       call lr_norm(right_res(:,:,:,ieign))
+       call lr_norm(left_res(:,:,:,ieign))
     enddo
 
-    if(toadd .eq. 0) then
-      write(stdout,'("TOADD is zero !!")')
-      dav_conv=.true.
-      return
+    if (toadd .eq. 0) then
+       write(stdout,'("TOADD is zero !!")')
+       dav_conv=.true.
+       return
     endif
 
     !if( dav_iter .gt. max_iter .or. num_basis+toadd .gt. num_basis_max ) then
-    if( dav_iter .gt. max_iter ) then
-      write(stdout,'(/5x,"!!!! We have arrived maximum number of iterations. We have to stop &
-                   &here, and the result will not be trustable !!!!! ")')
-      dav_conv=.true.
+    if ( dav_iter .gt. max_iter ) then
+       write(stdout,'(/5x,"!!!! We have arrived maximum number of iterations. We have to stop &
+                    &here, and the result will not be trustable !!!!! ")')
+       dav_conv=.true.
     else
-      num_basis_old=num_basis
-      num_basis_tot=num_basis_tot+toadd
-      ! Expand the basis
-      do ieign = 1, num_eign
-        if(.not. kill_left(ieign)) then
-          num_basis=num_basis+1
-          vec_b(:,:,:,num_basis)=left_res(:,:,:,ieign)
-          if(.not. poor_of_ram .and. okvan) &
-            call lr_apply_s(vec_b(:,:,:,num_basis),svec_b(:,:,:,num_basis))
-        endif
-        if(.not. kill_right(ieign)) then
-          num_basis=num_basis+1
-          vec_b(:,:,:,num_basis)=right_res(:,:,:,ieign)
-          if(.not. poor_of_ram .and. okvan) &
-            call lr_apply_s(vec_b(:,:,:,num_basis),svec_b(:,:,:,num_basis))
-        endif
-      enddo
+       num_basis_old=num_basis
+       num_basis_tot=num_basis_tot+toadd
+       ! Expand the basis
+       do ieign = 1, num_eign
+          if (.not. kill_left(ieign)) then
+             num_basis=num_basis+1
+             vec_b(:,:,:,num_basis)=left_res(:,:,:,ieign)
+             if (.not. poor_of_ram .and. okvan) &
+                call lr_apply_s(vec_b(:,:,:,num_basis),svec_b(:,:,:,num_basis))
+          endif
+          if (.not. kill_right(ieign)) then
+             num_basis=num_basis+1
+             vec_b(:,:,:,num_basis)=right_res(:,:,:,ieign)
+             if (.not. poor_of_ram .and. okvan) &
+                call lr_apply_s(vec_b(:,:,:,num_basis),svec_b(:,:,:,num_basis))
+          endif
+       enddo
     endif
-    if(conv_assistant) then
-      if(max_res .lt. 10*residue_conv_thr .and. .not. ploted(1)) then
-        call interpret_eign('10')
-        ploted(1)=.true.
-      endif
+    if (conv_assistant) then
+       if (max_res .lt. 10*residue_conv_thr .and. .not. ploted(1)) then
+          call interpret_eign('10')
+          ploted(1)=.true.
+       endif
     endif
 
     call stop_clock("expan_basis")
 
     return
-    end subroutine dav_expan_basis
+  end subroutine dav_expan_basis
   !-------------------------------------------------------------------------------
 
   subroutine lr_mGS_orth()
@@ -839,7 +905,7 @@ contains
     use kinds,                only : dp
     use klist,                only : nks
     use wvfct,                only : npwx,nbnd
-    use uspp,           only : okvan
+    use uspp,                 only : okvan
     use lr_dav_variables
  
     implicit none
@@ -849,42 +915,42 @@ contains
     call start_clock("mGS_orth")
     ! first orthogonalize to old basis
     do ib = 1, num_basis
-      do ieign = 1, num_eign
-        if (.not. kill_left(ieign)) then
-          if(poor_of_ram .or. .not. okvan) then ! Less memory needed
-            call lr_1to1orth(left_res(1,1,1,ieign),vec_b(1,1,1,ib))
-          else ! Less calculation, double memory required
-            call lr_bi_1to1orth(left_res(1,1,1,ieign),vec_b(1,1,1,ib),svec_b(1,1,1,ib))
+       do ieign = 1, num_eign
+          if (.not. kill_left(ieign)) then
+             if (poor_of_ram .or. .not. okvan) then ! Less memory needed
+                call lr_1to1orth(left_res(1,1,1,ieign),vec_b(1,1,1,ib))
+             else ! Less calculation, double memory required
+                call lr_bi_1to1orth(left_res(1,1,1,ieign),vec_b(1,1,1,ib),svec_b(1,1,1,ib))
+             endif
           endif
-        endif
-        if (.not. kill_right(ieign)) then
-          if(poor_of_ram .or. .not. okvan) then ! Less memory needed
-            call lr_1to1orth(right_res(1,1,1,ieign),vec_b(1,1,1,ib))
-          else ! Less calculation, double memory required
-            call lr_bi_1to1orth(right_res(1,1,1,ieign),vec_b(1,1,1,ib),svec_b(1,1,1,ib))
+          if (.not. kill_right(ieign)) then
+             if (poor_of_ram .or. .not. okvan) then ! Less memory needed
+                call lr_1to1orth(right_res(1,1,1,ieign),vec_b(1,1,1,ib))
+             else ! Less calculation, double memory required
+                call lr_bi_1to1orth(right_res(1,1,1,ieign),vec_b(1,1,1,ib),svec_b(1,1,1,ib))
+             endif
           endif
-        endif
-      enddo
+       enddo
     enddo
 
     ! orthogonalize between new basis themselves
     do ieign = 1, num_eign
-      if (.not. kill_left(ieign) .and. .not. kill_right(ieign)) then
-        call lr_1to1orth(left_res(1,1,1,ieign),right_res(1,1,1,ieign))
-      endif
-      do ieign2 = ieign+1, num_eign
-        if (.not. kill_left(ieign2) .and. .not. kill_left(ieign)) &
-          call lr_1to1orth(left_res(1,1,1,ieign2),left_res(1,1,1,ieign))
+       if (.not. kill_left(ieign) .and. .not. kill_right(ieign)) then
+          call lr_1to1orth(left_res(1,1,1,ieign),right_res(1,1,1,ieign))
+       endif
+       do ieign2 = ieign+1, num_eign
+          if (.not. kill_left(ieign2) .and. .not. kill_left(ieign)) &
+             call lr_1to1orth(left_res(1,1,1,ieign2),left_res(1,1,1,ieign))
         
-        if (.not. kill_left(ieign2) .and. .not. kill_right(ieign)) &
-          call lr_1to1orth(left_res(1,1,1,ieign2),right_res(1,1,1,ieign))
+          if (.not. kill_left(ieign2) .and. .not. kill_right(ieign)) &
+             call lr_1to1orth(left_res(1,1,1,ieign2),right_res(1,1,1,ieign))
         
-        if (.not. kill_right(ieign2) .and. .not. kill_left(ieign)) &
-          call lr_1to1orth(right_res(1,1,1,ieign2),left_res(1,1,1,ieign))
+          if (.not. kill_right(ieign2) .and. .not. kill_left(ieign)) &
+             call lr_1to1orth(right_res(1,1,1,ieign2),left_res(1,1,1,ieign))
         
-        if (.not. kill_right(ieign2) .and. .not. kill_right(ieign)) &
-          call lr_1to1orth(right_res(1,1,1,ieign2),right_res(1,1,1,ieign))
-      enddo
+          if (.not. kill_right(ieign2) .and. .not. kill_right(ieign)) &
+             call lr_1to1orth(right_res(1,1,1,ieign2),right_res(1,1,1,ieign))
+       enddo
     enddo
     call stop_clock("mGS_orth")
     return
@@ -910,27 +976,27 @@ contains
   
     call start_clock("mGS_orth_pp")
     do ieign = 1, num_eign
-      if(.not. kill_left(ieign)) then
-        norm_res = dble(lr_dot_us(left_res(1,1,1,ieign),left_res(1,1,1,ieign)))
-        if(norm_res .lt. residue_conv_thr) then
-          kill_left(ieign) = .true.
-          write(stdout,'("One residue is eliminated:",5x,E20.12)') norm_res
-          toadd=toadd-1
-        else
-          call lr_norm(left_res(:,:,1,ieign))
-        endif
-      endif
+       if (.not. kill_left(ieign)) then
+          norm_res = dble(lr_dot_us(left_res(1,1,1,ieign),left_res(1,1,1,ieign)))
+          if (norm_res .lt. residue_conv_thr) then
+             kill_left(ieign) = .true.
+             write(stdout,'("One residue is eliminated:",5x,E20.12)') norm_res
+             toadd=toadd-1
+          else
+             call lr_norm(left_res(:,:,1,ieign))
+          endif
+       endif
 
-      if(.not. kill_right(ieign)) then
-        norm_res = dble(lr_dot_us(right_res(1,1,1,ieign),right_res(1,1,1,ieign)))
-        if(norm_res .lt. residue_conv_thr) then
-          kill_right(ieign) = .true.
-          write(stdout,'("One residue is eliminated:",5x,E20.12)') norm_res
-          toadd=toadd-1
-        else
-          call lr_norm(right_res(:,:,1,ieign))
-        endif
-      endif
+       if (.not. kill_right(ieign)) then
+          norm_res = dble(lr_dot_us(right_res(1,1,1,ieign),right_res(1,1,1,ieign)))
+          if (norm_res .lt. residue_conv_thr) then
+             kill_right(ieign) = .true.
+             write(stdout,'("One residue is eliminated:",5x,E20.12)') norm_res
+             toadd=toadd-1
+          else
+             call lr_norm(right_res(:,:,1,ieign))
+          endif
+       endif
     enddo
     call stop_clock("mGS_orth_pp")
     return
@@ -947,12 +1013,18 @@ contains
     use klist,                only : nks
     use wvfct,                only : npwx,nbnd
     use lr_us
+    use uspp,                 only : okvan
 
     implicit none
     complex(dp)  :: vect(npwx,nbnd,nks),svect(npwx,nbnd,nks)
+    complex(kind=dp),external :: lr_dot
     real(dp) :: temp
  
-    temp=dble(lr_dot_us(vect(1,1,1),vect(1,1,1)))
+    if (okvan) then
+       temp=dble(lr_dot_us(vect(1,1,1),vect(1,1,1)))
+    else
+       temp=dble(lr_dot(vect(1,1,1),vect(1,1,1)))
+    endif
     vect(:,:,:)=vect(:,:,:)/sqrt(temp)
 
     return
@@ -970,11 +1042,17 @@ contains
     use klist,                only : nks
     use wvfct,                only : npwx,nbnd
     use lr_us
+    use uspp,           only : okvan
     
     implicit none
+    complex(kind=dp),external :: lr_dot
     complex(dp)  :: vect1(npwx,nbnd,nks),vect2(npwx,nbnd,nks)
     
-    vect1(:,:,1)=vect1(:,:,1)-(lr_dot_us(vect1(1,1,1),vect2(1,1,1))/lr_dot_us(vect2(1,1,1),vect2(1,1,1)))*vect2(:,:,1)
+    if (okvan) then
+       vect1(:,:,1)=vect1(:,:,1)-(lr_dot_us(vect1(1,1,1),vect2(1,1,1))/lr_dot_us(vect2(1,1,1),vect2(1,1,1)))*vect2(:,:,1)
+    else
+       vect1(:,:,1)=vect1(:,:,1)-(lr_dot(vect1(1,1,1),vect2(1,1,1))/lr_dot(vect2(1,1,1),vect2(1,1,1)))*vect2(:,:,1)
+    endif        
     return
   end subroutine lr_1to1orth
   !-------------------------------------------------------------------------------
@@ -1502,8 +1580,8 @@ contains
 
     ! Orthogonalize to occupied states
     do ib = 1, num_init
-      call lr_ortho(vec_b(:,:,:,ib), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.)
-      call lr_norm(vec_b(1,1,1,ib))
+       call orthogonalize(vec_b(:,:,:,ib), evc0(:,:,1), 1, 1,sevc0(:,:,1),npwx,.true.)
+       call lr_norm(vec_b(1,1,1,ib))
     enddo
 
     ! GS orthogonalization, twice for numerical stability
