@@ -393,19 +393,11 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
   COMPLEX(DP) :: temp 
   COMPLEX(DP) , ALLOCATABLE ::  work (:,:), overlap (:,:)
   REAL(DP) , ALLOCATABLE :: e (:)
-  !$acc declare device_resident(work, overlap, e)
-#if defined(__CUDA)
   COMPLEX(DP) , ALLOCATABLE ::  s(:,:)
-  !$acc declare device_resident(s)
-#endif
+  !$acc declare device_resident(work, overlap, e, s)
   INTEGER :: i, j, k, ipol
-
-  ALLOCATE (overlap( m , m))    
-  ALLOCATE (work   ( m , m))    
-  ALLOCATE (e      ( m))    
-#if defined(__CUDA)
-  ALLOCATE(s(m,m))
-#endif
+  !
+  ALLOCATE (overlap(m,m), work(m,m), e(m), s(m,m))
   ! 
   !$acc kernels
   overlap(:,:) = (0.d0,0.d0)
@@ -448,7 +440,6 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
 !civn: ZHEEV not available in cuBLAS/cuSOLVER?
   IF(use_gpu) THEN
     !
-#if defined(__CUDA)
     ! s_d = CMPLX(0.d0,0.d0, kind=dp)  ! fused below
     !$acc kernels
     s(:,:) = CMPLX(0.d0,0.d0, kind=dp) 
@@ -461,7 +452,6 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
     CALL laxlib_cdiaghg_gpu( m, m, overlap, s, m, e, work, me_bgrp, &
                              root_bgrp, intra_bgrp_comm )
     !$acc end host_data
-#endif
     !
   ELSE
     CALL cdiagh (m, overlap, m, e, work)
@@ -557,12 +547,7 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
      !
   ENDIF
   !
-#if defined(__CUDA)
-  DEALLOCATE(s)
-#endif
-  DEALLOCATE (overlap)
-  DEALLOCATE (work)
-  DEALLOCATE (e)
+  DEALLOCATE (overlap, work, e, s)
   !
   RETURN
   !      
