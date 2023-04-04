@@ -776,6 +776,7 @@ with_libxc_prefix
 with_libxc_include
 with_fox
 with_scalapack
+with_scalapack_qrcp
 with_elpa_include
 with_elpa_lib
 with_elpa_version
@@ -6639,9 +6640,9 @@ done
 
 # Enable QRCP with scalapack if --with-scalapack-qrcp==yes is set.
 
-# Check whether --with-scalapack was given.
-if test "${with_scalapack+set}" = set; then :
-  withval=$with_scalapack; if test "$withval" = "yes" ; then
+# Check whether --with-scalapack-qrcp was given.
+if test "${with_scalapack_qrcp+set}" = set; then :
+  withval=$with_scalapack_qrcp; if test "$withval" = "yes" ; then
       with_scalapack_qrcp=1
    else
       with_scalapack_qrcp=0

@@ -1,6 +1,6 @@
 -# Copyright (C) 2001-2023 Quantum ESPRESSO Foundation
  
-AC_DEFUN([X_AC_QE_ENABLE_OPTIONS], [
+AC_DEFUN([X_AC_QE_PLUGINS], [
 
 AC_ARG_ENABLE(legacy_plugins,
 	[ --enable-legacy_plugins    Enables use of legacy plugins in PW and CP.],

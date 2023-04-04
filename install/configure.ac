@@ -96,7 +96,7 @@ X_AC_QE_HDF5()
 X_AC_QE_ENVIRON()
 
 # Checking for optional compilation macros
-X_AC_QE_ENABLE_OPTIONS() 
+X_AC_QE_PLUGINS() 
 
 # Checking SIGNAL...
 X_AC_QE_SIGNAL()
