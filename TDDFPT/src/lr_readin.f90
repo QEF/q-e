@@ -355,6 +355,21 @@ SUBROUTINE lr_readin
         !
      ENDIF
      !
+     IF (davidson) THEN
+        !
+        ! check and set num_init and num_basis_max
+        !
+        IF (num_init < num_eign ) THEN
+           WRITE(stdout,'(5X,"num_init is too small, set to num_init = 2*num_eign")')
+           num_init = 2 * num_eign
+        ENDIF
+        IF (num_basis_max < 2*num_init ) THEN
+           WRITE(stdout,'(5X,"num_basis_max is too small, set to num_basis_max = 4*num_init")')     
+           num_basis_max = 4 * num_init
+        ENDIF   
+        !
+     ENDIF
+     !
 #if defined(__MPI)
   ENDIF
   !
