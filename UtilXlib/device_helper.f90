@@ -28,6 +28,33 @@ SUBROUTINE MYDGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
 
 END SUBROUTINE MYDGER
 
+SUBROUTINE MYDGER_C  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
+#if defined(__CUDA)
+    use cudafor
+    use cublas
+#elif defined(__OPENMP_GPU)
+#if defined(__ONEMKL)
+    use onemkl_blas_no_array_check_gpu
+#endif
+#endif
+!     .. Scalar Arguments ..
+    DOUBLE PRECISION ::  ALPHA
+    INTEGER          ::   INCX, INCY, LDA, M, N
+!     .. Array Arguments ..
+    COMPLEX*16 :: A( LDA, * ), X( * ), Y( * )
+#if defined(__CUDA)
+    attributes(device) :: A, X, Y
+#endif
+#if defined(__ONEMKL)
+    !$omp target variant dispatch use_device_ptr(A, X, Y)
+#endif
+    CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
+#if defined(__ONEMKL)
+    !$omp end target variant dispatch
+#endif
+
+END SUBROUTINE MYDGER_C
+
 !=----------------------------------------------------------------------------=!
 
 ! In principle this can go away .......
@@ -48,6 +75,41 @@ SUBROUTINE MYDGEMM( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC
 #endif
 
 END SUBROUTINE MYDGEMM
+
+SUBROUTINE MYDGEMM_C( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+#if defined(__CUDA)
+    use cudafor
+    use cublas
+#elif defined(__OPENMP_GPU)
+#if defined(__ONEMKL)
+    use onemkl_blas_no_array_check_gpu
+#endif
+#if defined(__ROCBLAS)
+    use rocblas_utils
+#endif
+#endif
+    CHARACTER*1, INTENT(IN) ::        TRANSA, TRANSB
+    INTEGER, INTENT(IN) ::            M, N, K, LDA, LDB, LDC
+    DOUBLE PRECISION, INTENT(IN) ::   ALPHA, BETA
+    COMPLEX*16  :: A( LDA, * ), B( LDB, * ), C( LDC, * )
+#if defined(__CUDA)
+    attributes(device) :: A, B, C
+    CALL cublasdgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+#else
+#if defined(__ONEMKL)
+    !$omp target variant dispatch use_device_ptr(A, B, C)
+#endif
+#if defined(__ROCBLAS)
+    CALL rocblas_dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+#else
+    CALL dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+#endif
+#if defined(__ONEMKL)
+    !$omp end target variant dispatch
+#endif
+#endif
+
+END SUBROUTINE MYDGEMM_C
 
 SUBROUTINE MYZGEMM( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
 #if defined(__CUDA)
