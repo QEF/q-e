@@ -251,9 +251,15 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   !$acc host_data use_device(psi, hpsi, spsi, hr, sr)
   CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
   my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
-  if (n_start .le. n_end) &
-  CALL MYDGEMM2( 'T','N', nbase, my_n, npw2, 2.D0 , psi, npwx2, hpsi(1,n_start), npwx2, 0.D0, hr(1,n_start), nvecx, .false. )
-  IF ( gstart == 2 ) CALL MYDGER( nbase, my_n, -1.D0, psi, npwx2, hpsi(1,n_start), npwx2, hr(1,n_start), nvecx )
+  if (n_start .le. n_end) then
+     !$omp target update to(hpsi)
+     CALL MYDGEMM_C( 'T','N', nbase, my_n, npw2, 2.D0 , psi, npwx2, hpsi(1,n_start), npwx2, 0.D0, hr(1,n_start), nvecx )
+  endif
+  IF ( gstart == 2 ) THEN
+     !$omp target update to(hpsi)
+     CALL MYDGER_C( nbase, my_n, -1.D0, psi, npwx2, hpsi(1,n_start), npwx2, hr(1,n_start), nvecx )
+  ENDIF
+  !$omp target update from(hr)
   CALL mp_sum( hr( :, 1:nbase ), inter_bgrp_comm )
   !
   CALL mp_sum( hr( :, 1:nbase ), intra_bgrp_comm )
@@ -261,23 +267,29 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   !
   IF ( uspp ) THEN
      !
-     if (n_start .le. n_end) &
-     CALL MYDGEMM2( 'T','N', nbase, my_n, npw2, 2.D0, psi, npwx2, spsi(1,n_start), npwx2, 0.D0, sr(1,n_start), nvecx, .false. )
-     IF ( gstart == 2 ) CALL MYDGER( nbase, my_n, -1.D0, psi, npwx2, spsi(1,n_start), npwx2, sr(1,n_start), nvecx )
+     if (n_start .le. n_end) then
+        !$omp target update to(spsi)
+        CALL MYDGEMM_C( 'T','N', nbase, my_n, npw2, 2.D0, psi, npwx2, spsi(1,n_start), npwx2, 0.D0, sr(1,n_start), nvecx )
+     endif
+     IF ( gstart == 2 ) THEN
+        !$omp target update to(spsi)
+        CALL MYDGER_C( nbase, my_n, -1.D0, psi, npwx2, spsi(1,n_start), npwx2, sr(1,n_start), nvecx )
+     ENDIF
      !
   ELSE
      !
      if (n_start .le. n_end) &
-     CALL MYDGEMM2( 'T','N', nbase, my_n, npw2, 2.D0, psi, npwx2, psi(1,n_start), npwx2, 0.D0, sr(1,n_start), nvecx, .false. )
-     IF ( gstart == 2 ) CALL MYDGER( nbase, my_n, -1.D0, psi, npwx2, psi(1,n_start), npwx2, sr(1,n_start), nvecx )
+     CALL MYDGEMM_C( 'T','N', nbase, my_n, npw2, 2.D0, psi, npwx2, psi(1,n_start), npwx2, 0.D0, sr(1,n_start), nvecx )
+     IF ( gstart == 2 ) CALL MYDGER_C( nbase, my_n, -1.D0, psi, npwx2, psi(1,n_start), npwx2, sr(1,n_start), nvecx )
      !
   END IF
+  !$omp target update from(sr)
   CALL mp_sum( sr( :, 1:nbase ), inter_bgrp_comm )
   !
   CALL mp_sum( sr( :, 1:nbase ), intra_bgrp_comm )
+  !$omp target update to(sr)
   !$acc end host_data
   !
-  !$omp target update to(sr)
   CALL stop_clock( 'regterg:init' )
   !
   IF ( lrot ) THEN
@@ -291,8 +303,6 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         !
      END DO
      !
-     !!$omp target update from(e)
-     !$omp target update from(e,vr)
   ELSE
      !
      ! ... diagonalize the reduced hamiltonian
@@ -308,14 +318,13 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      ENDIF
      CALL stop_clock( 'regterg:diag' )
      !$acc end host_data
-     !$omp target update to(hr,sr,vr,ew)
+     !$omp target update to(vr,ew)
      !
      !$acc parallel loop
      !$omp target teams distribute parallel do
      DO i = 1, nvec
         e(i) = ew(i)
      END DO
-     !$omp target update from(e)
      !
   END IF
   !
@@ -379,19 +388,16 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         !
         if (n_start .le. n_end) then
            !!$omp target update to(spsi)
-           !$omp target update from(vr,psi)
-           CALL MYDGEMM2( 'N','N', npw2, notcnv, my_n, 1.D0, spsi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, psi(1,nb1), npwx2, .false. )
+           !$omp target update to(spsi)
+           CALL MYDGEMM_C( 'N','N', npw2, notcnv, my_n, 1.D0, spsi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, psi(1,nb1), npwx2 )
         endif
         !
      ELSE
         !
-        if (n_start .le. n_end) then
-           !$omp target update from(vr,psi)
-           CALL MYDGEMM2( 'N','N', npw2, notcnv, my_n, 1.D0, psi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, psi(1,nb1), npwx2, .false. )
-        endif
+        if (n_start .le. n_end) &
+           CALL MYDGEMM_C( 'N','N', npw2, notcnv, my_n, 1.D0, psi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, psi(1,nb1), npwx2 )
         !
      END IF
-     !$omp target update to(psi)
      !$acc end host_data
 ! NB: must not call mp_sum over inter_bgrp_comm here because it is done later to the full correction
      !
@@ -405,15 +411,18 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !
      !$acc host_data use_device(psi, hpsi, vr, ew)
      if (n_start .le. n_end) then
-        !$omp target update from(psi)
-        CALL MYDGEMM2( 'N','N', npw2, notcnv, my_n, 1.D0, hpsi(1,n_start), npwx2, vr(n_start,1), nvecx, 1.D0, psi(1,nb1), npwx2, .false. )
+        !$omp target update to(hpsi)
+        CALL MYDGEMM_C( 'N','N', npw2, notcnv, my_n, 1.D0, hpsi(1,n_start), npwx2, vr(n_start,1), nvecx, 1.D0, psi(1,nb1), npwx2 )
      endif
+     !
+     !$omp target update from(psi)
      CALL mp_sum( psi(:,nb1:nbase+notcnv), inter_bgrp_comm )
      !
      CALL stop_clock( 'regterg:update' )
      !
      ! ... approximate inverse iteration
      !
+     !$omp target update from(ew)
      CALL g_psi( npwx, npw, notcnv, 1, psi(1,nb1), ew(nb1) )
      !$acc end host_data
      !
@@ -425,7 +434,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !
      !$acc parallel vector_length(96)
      !$acc loop gang private(nbn)
-     !$omp target update to(psi)
+     !$omp target update to(psi,ew)
      !$omp target teams distribute private(nbn)
      DO n = 1, notcnv
         !
@@ -481,12 +490,14 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !$acc host_data use_device(psi, hpsi, hr)
      CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
+     !$omp target update to(hpsi)
+     CALL MYDGEMM_C( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, hpsi(1,nb1), npwx2, 0.D0, hr(n_start,nb1), nvecx )
+     IF ( gstart == 2 ) CALL MYDGER_C( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, hpsi(1,nb1), npwx2, hr(n_start,nb1), nvecx )
      !$omp target update from(hr)
-     CALL MYDGEMM2( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, hpsi(1,nb1), npwx2, 0.D0, hr(n_start,nb1), nvecx, .false. )
-     IF ( gstart == 2 ) CALL MYDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, hpsi(1,nb1), npwx2, hr(n_start,nb1), nvecx )
      CALL mp_sum( hr( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
      !
      CALL mp_sum( hr( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
+     !$omp target update to(hr)
      !$acc end host_data
      !
      !$acc parallel loop collapse(2)
@@ -503,20 +514,22 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !$omp target update from(sr)
      IF ( uspp ) THEN
         !
-        CALL MYDGEMM2( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, spsi(1,nb1), npwx2, 0.D0, sr(n_start,nb1), nvecx, .false. )
-        IF ( gstart == 2 ) CALL MYDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, spsi(1,nb1), npwx2, sr(n_start,nb1), nvecx )
+        !$omp target update to(spsi)
+        CALL MYDGEMM_C( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, spsi(1,nb1), npwx2, 0.D0, sr(n_start,nb1), nvecx )
+        IF ( gstart == 2 ) CALL MYDGER_C( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, spsi(1,nb1), npwx2, sr(n_start,nb1), nvecx )
         !
      ELSE
         !
-        CALL MYDGEMM2( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, psi(1,nb1), npwx2, 0.D0, sr(n_start,nb1) , nvecx, .false. )
-        IF ( gstart == 2 ) CALL MYDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, psi(1,nb1), npwx2, sr(n_start,nb1), nvecx )
+        CALL MYDGEMM_C( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, psi(1,nb1), npwx2, 0.D0, sr(n_start,nb1) , nvecx )
+        IF ( gstart == 2 ) CALL MYDGER_C( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, psi(1,nb1), npwx2, sr(n_start,nb1), nvecx )
         !
      END IF
+     !$omp target update from(sr)
      CALL mp_sum( sr( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
      !
      CALL mp_sum( sr( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm  )
      !$acc end host_data
-     !$omp target update to(hr,sr)
+     !$omp target update to(sr)
      !
      CALL stop_clock( 'regterg:overlap' )
      !
@@ -551,7 +564,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
      ENDIF
      !$acc end host_data
-     !$omp target update to(ew)
+     !$omp target update to(hr,sr,vr,ew)
      CALL stop_clock( 'regterg:diag' )
      !
      ! ... test for convergence
@@ -583,7 +596,6 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      ! ... the first nvec elements with the current estimate of the
      ! ... eigenvectors;  set the basis dimension to nvec.
      !
-     !$omp target update to(hr, sr, vr)
      IF ( notcnv == 0 .OR. &
           nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
         !
@@ -600,10 +612,11 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
         my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
         !$acc host_data use_device(psi, vr)
+        CALL MYDGEMM_C( 'N','N', npw2, nvec, my_n, 1.D0, psi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, evc, npwx2 )
         !$omp target update from(evc)
-        CALL MYDGEMM2( 'N','N', npw2, nvec, my_n, 1.D0, psi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, evc, npwx2, .false. )
         !$acc end host_data
         CALL mp_sum( evc, inter_bgrp_comm )
+        !$omp target update to(evc)
         !
         IF ( notcnv == 0 ) THEN
            !
@@ -629,7 +642,6 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         ! ... refresh psi, H*psi and S*psi
         !
         !$acc parallel loop collapse(2)
-        !$omp target update to(psi,evc)
         !$omp target teams distribute parallel do collapse(2)
         DO i=1,nvec
            DO k=1,npwx
@@ -648,8 +660,8 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
            END DO
            !
            !$acc host_data use_device(psi, spsi, vr)
+           CALL MYDGEMM_C( 'N','N', npw2, nvec, my_n, 1.D0, spsi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, psi(1,nvec+1), npwx2 )
            !$omp target update from(psi)
-           CALL MYDGEMM2( 'N','N', npw2, nvec, my_n, 1.D0, spsi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, psi(1,nvec+1), npwx2, .false.)
            CALL mp_sum( psi(:,nvec+1:nvec+nvec), inter_bgrp_comm )
            !$omp target update to(psi)
            !$acc end host_data
@@ -678,8 +690,8 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         !$acc end kernels
 #endif
         !$acc host_data use_device(psi, hpsi, vr)
+        CALL MYDGEMM_C( 'N','N', npw2, nvec, my_n, 1.D0, hpsi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, psi(1,nvec+1), npwx2 )
         !$omp target update from(psi)
-        CALL MYDGEMM2( 'N','N', npw2, nvec, my_n, 1.D0, hpsi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, psi(1,nvec+1), npwx2, .false. )
         CALL mp_sum( psi(:,nvec+1:nvec+nvec), inter_bgrp_comm )
         !$omp target update to(psi)
         !$acc end host_data
