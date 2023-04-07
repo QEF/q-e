@@ -634,27 +634,33 @@ and the following optional packages:\\
 \\
 In order to compile the code for NVidia GPU's you will need a recent version
 (v.19.10 or later: the more recent, the better) of the NVidia HPC software
-development kit (SDK). OpenMP should be enabled. Enabling faster communications
-between GPUs, via NVlink or Infiniband RDMA, is essential for optimal
-performance. If your MPI library is built to be CUDA-aware, then enable it
-with \texttt{--with-cuda-mpi=yes}. The following \configure\ options are
-available:\\
+development kit (SDK). Ensure that you have properly defined all needed environmental
+variables, e.g. by running the "module" file provided in the HPC SDK with command
+\texttt{module}. Specify \texttt{--with-cuda} and \texttt{--with-cuda-cc} as explained 
+below. This enables OpenMP and disables ScaLAPACK by default. Other options below
+are optional. Enabling faster communications between GPUs, via NVlink or Infiniband RDMA, 
+is essential for optimal parallel performance. 
+
+The following \configure\ options are available:\\
 \begin{tabular}{ll}
 \texttt{--with-cuda=value}&         enable compilation of GPU-accelerated subroutines.\\
                           &         \texttt{value} should point the path where the CUDA toolkit \\
-                          &         is installed, e.g. \texttt{/opt/cuda} (default: no)\\
+                          &         is installed, e.g. \texttt{\$NVHPC\_CUDA\_HOME}\\
 \texttt{--with-cuda-cc=value}&      sets the compute capabilities for the compilation\\
                              &      of the accelerated subroutines. \\
                              &      \texttt{value} must be consistent with the hardware and the\\
                              &      NVidia driver installed on the workstation or on the\\
                              &      compute nodes of the HPC facility (default: 35)\\
-\texttt{--with-cuda-runtime=value}& sets the version of the CUDA toolkit used \\
+\texttt{--with-cuda-runtime=value}& (optional) sets the version of the CUDA toolkit used \\
                                   & for the compilation of the accelerated code.\\
                                   & \texttt{value} must be consistent with the\\
                                   & CUDA Toolkit installed on the workstation \\
                                   & or available on the compute nodes of the HPC facility.\\
-\texttt{--with-cuda-mpi=value}    & use CUDA-aware MPI library (default: no).\\
-\texttt{--enable-nvtx=value}      & enable NVTX profiling (default: no).\\
+\texttt{--with-cuda-mpi=value}    & \texttt{yes} enables the usage of CUDA-aware MPI library.\\
+                                  & Beware: if you have no fast inter-GPU communications, e.g.,\\
+				  & NVlink or Infiniband RDMA, you may get a crash at run time.\\
+				  & Important for optimal parallel performances (default: no).\\
+\texttt{--enable-nvtx=value}      & enable NVTX profiling (for developers, default: no).\\
 \end{tabular}
 
 To modify or extend \configure\ (advanced users only!), see the Wiki pages
