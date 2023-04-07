@@ -1127,7 +1127,7 @@
       ! assuming free electron density
       eup = 10000d0 + ecbm
       elw = evbm - 10000d0
-      ef_tmp = (ecbm + ecbm) / 2.d0
+      ef_tmp = (ecbm + evbm) / 2.d0
       DO i = 1, maxiter
         electron_density = zero
         DO ik = 1, nkf

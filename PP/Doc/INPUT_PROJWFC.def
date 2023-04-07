@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package PWscf -program projwfc.x {
+input_description -distribution {Quantum ESPRESSO} -package PWscf -program projwfc.x {
 
     toc {}
 
@@ -157,9 +157,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
             info {
                 number of boxes where the local DOS is computed
             }
-        }       
-
-        var irmin(3,n_proj_boxes) -type INTEGER {
+        }
+        
+        multidimension irmin -start 1,1 -end 3,n_proj_boxes -indexes i,n_proj_boxes -type INTEGER {
             default { 1 for each box }
             info {
                 
@@ -169,7 +169,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
             }
         }       
 
-        var irmax(3,n_proj_boxes) -type INTEGER {
+        multidimension irmax -start 1,1 -end 3,n_proj_boxes -indexes i,n_proj_boxes -type INTEGER {
             default { 0 for each box }
             info {
                 

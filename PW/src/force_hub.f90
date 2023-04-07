@@ -454,7 +454,6 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
       ALLOCATE( doverlap_inv(natomwfc,natomwfc) )
       CALL calc_doverlap_inv( alpha, ipol, ik, jkb0 )
    ENDIF
-   !$acc data copyin(doverlap_inv)
    !
    ! ... Band parallelization. If each band appears more than once
    ! ... compute its contribution only once (i.e. when mykey=0)
@@ -535,7 +534,6 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ENDDO
 ! !omp end parallel do
    !
-   !$acc end data
    !$acc end data
    DEALLOCATE( dproj )
    IF (ALLOCATED(doverlap_inv)) DEALLOCATE( doverlap_inv )
@@ -836,7 +834,6 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
       ALLOCATE( doverlap_inv(natomwfc,natomwfc) )
       CALL calc_doverlap_inv( alpha, ipol, ik, jkb0 )
    ENDIF
-   !$acc data copyin(doverlap_inv)
    !
    ! ... Band parallelization. If each band appears more than once
    ! ... compute its contribution only once (i.e. when mykey=0)
@@ -919,7 +916,6 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ENDDO ! na1
 ! !omp end parallel do
    !
-   !$acc end data
    !$acc end data
    DEALLOCATE( dproj1 )
    DEALLOCATE( dproj2 )
@@ -1352,13 +1348,11 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       ! ... dwfc(ig,m1) = dwfc(ig,m1) + wfcatom(ig,m2) * doverlap_inv(m2,offpm+m1)
       ! ... where m1=1,ldim; m2=1,natomwfc; ig=1,npw
       !
-      !$acc data present_or_copyin(doverlap_inv)
       !$acc host_data use_device(wfcatom,doverlap_inv,dwfc)
       CALL MYZGEMM( 'N','N', npw, ldim, natomwfc, (1.d0,0.d0), &
                     wfcatom, npwx, doverlap_inv(:,offpm+1:offpm+ldim), &
                     natomwfc, (1.d0,0.d0), dwfc, npwx )
       !$acc end host_data
-      !$acc end data
       !
       ! ... 3. Final step: compute dproj0 = <dwfc|spsi>
       !
@@ -1493,8 +1487,7 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    !
    ALLOCATE( doverlap(natomwfc,natomwfc) )
    !
-   !$acc data present_or_copyin(wfcatom,swfcatom,eigenval) &
-   !$acc&          create(doverlap_inv,eigenvect)
+   !$acc data present_or_copyin(wfcatom,swfcatom) 
    !
    !$acc kernels
    doverlap_inv(:,:) = (0.0d0,0.0d0)
@@ -1563,19 +1556,8 @@ SUBROUTINE calc_doverlap_inv( alpha, ipol, ik, ijkb0 )
    ! ... Now compute dO^{-1/2}_JI/d\tau(alpha,ipol) using dO_IJ/d\tau(alpha,ipol)
    ! ... Note the transposition!
    !
-   !$acc update device(eigenvect)
-   !
-#if defined(__CUDA)
-   !$acc host_data use_device(eigenval,eigenvect,doverlap,doverlap_inv)
-   CALL calculate_doverlap_inv_gpu( natomwfc, eigenval, eigenvect, &
-                                    doverlap, doverlap_inv )
-   !$acc end host_data
-#else
    CALL calculate_doverlap_inv( natomwfc, eigenval, eigenvect, &
                                 doverlap, doverlap_inv )
-#endif
-   !
-   !$acc update self(doverlap_inv)
    !
    !$acc end data
    !$acc end data

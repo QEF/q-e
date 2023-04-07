@@ -3,16 +3,22 @@ HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 LATEX   = pdflatex
 LATEX2HTML = latex2html
 
-HTMLS = INPUT_PP.html \
-	INPUT_PROJWFC.html \
-	INPUT_DOS.html \
+
+HTMLS = INPUT_BAND_INTERPOLATION.html \
 	INPUT_BANDS.html \
-	INPUT_BAND_INTERPOLATION.html \
-        INPUT_pw2bgw.html \
-        INPUT_bgw2pw.html \
+	INPUT_bgw2pw.html \
+	INPUT_D3HESS.html \
+	INPUT_DOS.html \
+	INPUT_IMPORTEXPORT_BINARY.html \
 	INPUT_molecularpdos.html \
+	INPUT_OSCDFT_ET.html \
+	INPUT_OSCDFT_PP.html \
+	INPUT_PPACF.html \
+	INPUT_PP.html \
 	INPUT_PPRISM.html \
-	INPUT_IMPORTEXPORT_BINARY.html
+	INPUT_PROJWFC.html \
+	INPUT_pw2bgw.html \
+	INPUT_pw2gw.html
 
 PDFS = eps_man.pdf user_guide.pdf
 AUXS = $(PDFS:.pdf=.aux)
@@ -51,34 +57,7 @@ input_xx.xsl:
         fi) ; fi)
 
 link_on_main_doc:
-	-@( cd ../../Doc ; ln -fs ../PP/Doc/INPUT_PP.html . ; \
-	ln -fs ../PP/Doc/INPUT_PP.xml . ; \
-	ln -fs ../PP/Doc/INPUT_PP.txt . ; \
-	ln -fs ../PP/Doc/INPUT_PROJWFC.html . ; \
-	ln -fs ../PP/Doc/INPUT_PROJWFC.xml . ; \
-	ln -fs ../PP/Doc/INPUT_PROJWFC.txt . ; \
-	ln -fs ../PP/Doc/INPUT_DOS.html . ; \
-	ln -fs ../PP/Doc/INPUT_DOS.xml . ; \
-	ln -fs ../PP/Doc/INPUT_DOS.txt . ; \
-	ln -fs ../PP/Doc/INPUT_BANDS.html . ; \
-	ln -fs ../PP/Doc/INPUT_BANDS.xml . ; \
-	ln -fs ../PP/Doc/INPUT_BANDS.txt . ; \
-	ln -fs ../PP/Doc/INPUT_BAND_INTERPOLATION.html . ; \
-	ln -fs ../PP/Doc/INPUT_BAND_INTERPOLATION.xml . ; \
-	ln -fs ../PP/Doc/INPUT_BAND_INTERPOLATION.txt . ; \
-	ln -fs ../PP/Doc/INPUT_pw2gw.html . ;  \
-	ln -fs ../PP/Doc/INPUT_pw2bgw.html . ; \
-	ln -fs ../PP/Doc/INPUT_pw2bgw.xml . ; \
-	ln -fs ../PP/Doc/INPUT_pw2bgw.txt . ; \
-	ln -fs ../PP/Doc/INPUT_bgw2pw.html . ; \
-	ln -fs ../PP/Doc/INPUT_bgw2pw.xml . ; \
-	ln -fs ../PP/Doc/INPUT_bgw2pw.txt . ; \
-	ln -fs ../PP/Doc/INPUT_molecularpdos.html . ; \
-	ln -fs ../PP/Doc/INPUT_molecularpdos.xml . ; \
-	ln -fs ../PP/Doc/INPUT_molecularpdos.txt .; \
-	ln -fs ../PP/Doc/INPUT_PPRISM.html . ; \
-	ln -fs ../PP/Doc/INPUT_PPRISM.xml . ; \
-	ln -fs ../PP/Doc/INPUT_PPRISM.txt .)
+	-@( cd ../../Doc ; for file in $(HTMLS) $(XMLS) $(TXTS); do ln -fs ../PP/Doc/$$file . ; done )
 
 user_guide: user_guide.pdf
 	- rm -rf user_guide/
@@ -103,6 +82,4 @@ user_guide: user_guide.pdf
 clean:
 	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS)
 	- rm -f $(HTMLS) $(TXTS) $(XMLS) input_xx.xsl *~
-	- rm -rf ../../Doc/$(HTMLS)
-	- rm -rf ../../Doc/$(XMLS)
-	- rm -rf ../../Doc/$(TXTS)
+	- rm -f $(patsubst %,../../Doc/%,$(HTMLS) $(XMLS) $(TXTS))

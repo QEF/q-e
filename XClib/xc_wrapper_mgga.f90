@@ -88,7 +88,7 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
   USE kind_l,               ONLY: DP
   USE dft_setting_params,   ONLY: imeta, imetac, is_libxc, rho_threshold_mgga,&
                                   grho2_threshold_mgga, tau_threshold_mgga,   &
-                                  scan_exx, exx_started, exx_fraction
+                                  ishybrid, exx_started, exx_fraction
   USE qe_drivers_mgga
   !
   IMPLICIT NONE
@@ -135,7 +135,7 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
   REAL(DP), ALLOCATABLE :: vc_rho(:), vc_sigma(:), vc_tau(:)
   REAL(DP), ALLOCATABLE :: lapl_rho(:), vlapl_rho(:) ! not used in QE
   !
-  REAL(DP) :: rh, ggrho2, atau
+  REAL(DP) :: rh, ggrho2, atau, xcoef
 #if (XC_MAJOR_VERSION > 4)
   INTEGER(8) :: lengthxc
 #else
@@ -243,6 +243,9 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
       ex_lxc = 0.d0 
     ENDIF
     !
+    xcoef = 1.d0
+    IF ( ishybrid .AND. exx_started .AND. exx_fraction>0.d0) xcoef = 1.d0-exx_fraction
+    !
     !$acc data copyin( ex_lxc, vx_rho, vx_sigma, vx_tau )
     IF ( ns==1 ) THEN
       !$acc parallel loop
@@ -254,10 +257,10 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
           v2x(k,1) = 0.d0 ; v3x(k,1) = 0.d0
           CYCLE
         ENDIF  
-        ex(k) = ex_lxc(k) * rho_lxc(k)
-        v1x(k,1) = vx_rho(k)
-        v2x(k,1) = vx_sigma(k) * 2.0_DP
-        v3x(k,1) = vx_tau(k)
+        ex(k) = xcoef * ex_lxc(k) * rho_lxc(k)
+        v1x(k,1) = xcoef * vx_rho(k)
+        v2x(k,1) = xcoef * vx_sigma(k) * 2.0_DP
+        v3x(k,1) = xcoef * vx_tau(k)
       ENDDO
     ELSE
       !$acc parallel loop
@@ -268,22 +271,22 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
           v1x(k,2) = 0.d0 ; v2x(k,2) = 0.d0 ; v3x(k,2) = 0.d0
           CYCLE
         ENDIF
-        ex(k) = ex_lxc(k) * (rho_lxc(2*k-1)+rho_lxc(2*k))
+        ex(k) = xcoef * ex_lxc(k) * (rho_lxc(2*k-1)+rho_lxc(2*k))
         IF ( ABS(rho_lxc(2*k-1))>rho_threshold_mgga .AND. &
              sigma(3*k-2)>grho2_threshold_mgga      .AND. &
              ABS(tau_lxc(2*k-1))>tau_threshold_mgga ) THEN
-          v1x(k,1) = vx_rho(2*k-1)
-          v2x(k,1) = vx_sigma(3*k-2)*2.d0
-          v3x(k,1) = vx_tau(2*k-1)
+          v1x(k,1) = xcoef * vx_rho(2*k-1)
+          v2x(k,1) = xcoef * vx_sigma(3*k-2)*2.d0
+          v3x(k,1) = xcoef * vx_tau(2*k-1)
         ELSE
           v1x(k,1) = 0.d0 ; v2x(k,1) = 0.d0 ; v3x(k,1) = 0.d0
         ENDIF
         IF ( ABS(rho_lxc(2*k))>rho_threshold_mgga .AND. &
              sigma(3*k)>grho2_threshold_mgga      .AND. &
              ABS(tau_lxc(2*k))>tau_threshold_mgga ) THEN
-          v1x(k,2) = vx_rho(2*k)
-          v2x(k,2) = vx_sigma(3*k)*2.d0
-          v3x(k,2) = vx_tau(2*k)
+          v1x(k,2) = xcoef * vx_rho(2*k)
+          v2x(k,2) = xcoef * vx_sigma(3*k)*2.d0
+          v3x(k,2) = xcoef * vx_tau(2*k)
         ELSE
           v1x(k,2) = 0.d0 ; v2x(k,2) = 0.d0 ; v3x(k,2) = 0.d0
         ENDIF

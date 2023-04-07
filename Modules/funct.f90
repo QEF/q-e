@@ -346,14 +346,14 @@ CONTAINS
     ! ... local variables
     !
     INTEGER :: len, l, i
-    CHARACTER(len=150) :: dftout
+    CHARACTER(len=150) :: dftout, dftout_loc
     LOGICAL :: dft_defined
     LOGICAL :: check_libxc
     !
     CHARACTER(LEN=1), EXTERNAL :: capital
     CHARACTER(LEN=4) :: lda_exch, lda_corr, gga_exch, gga_corr
     !
-    INTEGER :: save_inlc
+    INTEGER :: save_inlc, lnt, ln_nlc
     INTEGER :: iexch, icorr, igcx, igcc, imeta
     !
     ! Exit if set to discard further input dft
@@ -510,7 +510,7 @@ CONTAINS
     ! Case for old RRKJ format, containing indices instead of label
     CASE DEFAULT
        !
-       IF ('INDEX:' ==  dftout(1:6)) THEN
+       IF ('INDEX:' == dftout(1:6)) THEN
           READ( dftout(7:18), '(6i2)') iexch, icorr, igcx, igcc, inlc, imeta
           dft_defined = xclib_set_dft_IDs(iexch, icorr, igcx, igcc, imeta, 0)
           CALL xclib_get_name('LDA','EXCH', lda_exch)
@@ -523,9 +523,19 @@ CONTAINS
                    TRIM(gga_exch) //'-'// &
                    TRIM(gga_corr) //'-'// nonlocc(inlc)
        ELSE
-          CALL xclib_set_dft_from_name( TRIM(dftout) )
+          !
+          dftout_loc = ''
           inlc = matching( dftout, ncnl, nonlocc )
+          IF ( inlc/=0 .AND. dftout(1:3) == 'XC-' ) THEN
+            lnt = LEN_TRIM(dftout)
+            ln_nlc = LEN_TRIM(nonlocc(inlc))
+            dftout_loc(1:lnt-ln_nlc) = dftout(1:lnt-ln_nlc)
+          ELSE
+            dftout_loc = dftout
+          ENDIF
+          CALL xclib_set_dft_from_name( TRIM(dftout_loc) )
           dft_defined = .TRUE.
+          !
        ENDIF
        !
     END SELECT

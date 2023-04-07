@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package KCW -program kcw.x {
+input_description -distribution {Quantum ESPRESSO} -package KCW -program kcw.x {
 
     toc {}
 
@@ -71,13 +71,21 @@ input_description -distribution {Quantum Espresso} -package KCW -program kcw.x {
                      calculation}
 
                 opt -val 'screen' {
-                     Performe the calculation of KCW screening coefficient using a
+                     Perform the calculation of KCW screening coefficient using a
                      LR approach as described here https://doi.org/10.1021/acs.jctc.7b01116
                      and arXiv:2202.08155 
                 }
 
                 opt -val 'ham' {
-                     Performe the calculation interpolation and diagonalization of of KI hamiltonian 
+                     Perform the calculation interpolation and diagonalization of the KI hamiltonian 
+                }
+
+                opt -val 'cc' {
+                     Computes the (estimated) q+G=0 contribution to the bare and screened KC corrections.
+                     A report on this quantities is printed on output and can be used to correct a 
+                     posteriori a "screen" calculation performed without any corrective scheme (@ref l_vcut=.false.)
+                     avoiding the need of re-doing a "screen" calculation.
+
                 }
 
 
@@ -113,9 +121,9 @@ input_description -distribution {Quantum Espresso} -package KCW -program kcw.x {
         }
 
         var spread_thr  -type REAL {
-            default { 0.001 Ry }
+            default { 0.0001 Ry }
             info {
-             NOT IMPLMENTED YET. Two or more Wannier functions are considered
+             HARD-CODED FOR NOW. Two or more Wannier functions are considered
              identical if their spread (self-hartree) differ by less than spread_thr.
 	     Requires @ref check_spread = .true.
             }
@@ -253,8 +261,8 @@ input_description -distribution {Quantum Espresso} -package KCW -program kcw.x {
 	var has_disentangle -type LOGICAL {
 	    default { FALSE }
 	    info {
- 	    Specify if a disentangle unitary matrix needs to be read. Requires
-	    a consisten calcuation from the previous wannier90 run.
+            Specify if a disentangle unitary matrix needs to be read. Requires
+            a consisten calcuation from the previous wannier90 run.
 	    }
 	}
 
@@ -306,9 +314,16 @@ input_description -distribution {Quantum Espresso} -package KCW -program kcw.x {
 	     The macroscopic dielectric constant. Needed for the Gygi-Baldereschi 
              scheme if @ref l_vcut = .TRUE. 
              Typically from exp or from a ph.x calculation.
-             NOTA BENE: This would be equivalent to a Makov-Payne correction.
-                        it is perfectly fine for cubic systems. Not so for 
-                        anisotropic dielectric matrices. 
+ 
+             NOTA BENE: This would be equivalent to a Makov-Payne correction. It works well
+             for cubic systems. Less well for anisotropic systems. 
+ 
+             ANISOTROPIC SYSTEMS: In this case a generalization of the GB scheme is implemented 
+             based on Nano Lett.,9, 975 (2009). It requires the full dielectric tensor to be provided.
+             The code searches (in the working dir) for a file named "eps.dat" containing the macrospocic
+             dielectric tensor. If it does not find it, the value @ref eps_inf provided in input will be
+             used (isotropic approximation). If not even @ref eps_inf is provided in input no correction
+             is applied to the screened KC correction. 
 	     }
 	}
  
@@ -333,7 +348,7 @@ input_description -distribution {Quantum Espresso} -package KCW -program kcw.x {
            info {
            If .true. the interpolated band structure is computed along 
            a path secified with the K_POINTS card ( see PW documentation 
-           https://www.quantum-espresso.org/Doc/INPUT_PW.html#idm1346 )
+           https://www.quantum-espresso.org/Doc/INPUT_PW.html#idm1487 )
            }
         }
 
@@ -367,7 +382,7 @@ input_description -distribution {Quantum Espresso} -package KCW -program kcw.x {
      }
 
     card K_POINTS { 
-      message { see https://www.quantum-espresso.org/Doc/INPUT_PW.html#idm1346 }
+      message { see https://www.quantum-espresso.org/Doc/INPUT_PW.html#idm1487 }
       }
 }
 

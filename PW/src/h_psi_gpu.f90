@@ -115,6 +115,11 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !
   USE wvfct,                   ONLY: g2kin  
   USE becmod_subs_gpum,        ONLY: calbec_gpu, using_becp_auto, using_becp_d_auto
+#if defined(__OSCDFT)
+  USE plugin_flags,            ONLY : use_oscdft
+  USE oscdft_base,             ONLY : oscdft_ctx
+  USE oscdft_functions_gpu,    ONLY : oscdft_h_psi_gpu
+#endif
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)     :: lda, n, m
@@ -326,6 +331,11 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
      CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
      !
   END IF
+#if defined(__OSCDFT)
+  IF ( use_oscdft ) THEN
+     CALL oscdft_h_psi_gpu(oscdft_ctx, lda, n, m, psi_d, hpsi_d)
+  END IF
+#endif
   !
   ! ... With Gamma-only trick, Im(H*psi)(G=0) = 0 by definition,
   ! ... but it is convenient to explicitly set it to 0 to prevent trouble

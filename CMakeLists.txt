@@ -111,6 +111,8 @@ option(QE_ENABLE_STATIC_BUILD
     "enable fully static build of executables" OFF)
 option(QE_ENABLE_DOC
     "enable documentation building" OFF)
+option(QE_CLOCK_SECONDS
+    "print program time in seconds" OFF)
 set(QE_FFTW_VENDOR "AUTO" CACHE
     STRING "select a specific FFTW library [Intel_DFTI, Intel_FFTW3, ArmPL, IBMESSL, FFTW3, Internal]")
 set(QE_ENABLE_SANITIZER "none" CACHE STRING "none,asan,ubsan,tsan,msan")
@@ -148,6 +150,10 @@ else()
 endif()
 set(QE_ENABLE_ENVIRON "${ENVIRON_DEFAULT}" CACHE
     STRING "select a specific Environ library [NO, EXTERNAL, INTERNAL]")
+
+# OSCDFT
+option(QE_ENABLE_OSCDFT "enable OS-CDFT 10.1021/acs.jctc.9b00281" OFF)
+
 
 # TODO change all ifdefs throughout code base to match
 # cmake options
@@ -197,7 +203,6 @@ endif()
 if(QE_ENABLE_ENVIRON)
     qe_add_global_compile_definitions(__ENVIRON)
 endif()
-
 if(QE_CLOCK_SECONDS)
    qe_add_global_compile_definitions(__CLOCK_SECONDS)
 endif()
@@ -206,6 +211,11 @@ endif()
 check_function_exists(mallinfo HAVE_MALLINFO)
 if(HAVE_MALLINFO)
     qe_add_global_compile_definitions(HAVE_MALLINFO)
+endif()
+
+# OSCDFT
+if(QE_ENABLE_OSCDFT)
+    qe_add_global_compile_definitions(__OSCDFT)
 endif()
 
 # Check options consistency

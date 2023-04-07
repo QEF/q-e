@@ -649,6 +649,8 @@ MODULE qes_types_module
     LOGICAL  :: lread  = .FALSE.
     !
     CHARACTER(len=256) :: background
+    CHARACTER(len=256) :: label
+    LOGICAL :: label_ispresent = .FALSE.
     CHARACTER(len=256) :: species
     LOGICAL :: species_ispresent = .FALSE.
     REAL(DP) :: Hubbard_U2
@@ -773,8 +775,9 @@ MODULE qes_types_module
     REAL(DP) :: mixing_beta
     REAL(DP) :: conv_thr
     INTEGER :: mixing_ndim
-    INTEGER :: exx_nstep
     INTEGER :: max_nstep
+    LOGICAL  :: exx_nstep_ispresent = .FALSE.
+    INTEGER :: exx_nstep
     LOGICAL  :: real_space_q_ispresent = .FALSE.
     LOGICAL :: real_space_q
     LOGICAL  :: real_space_beta_ispresent = .FALSE.
@@ -1049,6 +1052,7 @@ MODULE qes_types_module
     !
     REAL(DP), DIMENSION(4) :: constr_parms
     CHARACTER(len=256) :: constr_type
+    LOGICAL  :: constr_target_ispresent = .FALSE.
     REAL(DP) :: constr_target
     !
   END TYPE atomic_constraint_type
@@ -1451,6 +1455,8 @@ MODULE qes_types_module
     LOGICAL  :: lwrite = .FALSE.
     LOGICAL  :: lread  = .FALSE.
     !
+    LOGICAL :: new_format
+    LOGICAL :: new_format_ispresent = .FALSE.
     LOGICAL  :: lda_plus_u_kind_ispresent = .FALSE.
     INTEGER :: lda_plus_u_kind
     LOGICAL  :: Hubbard_Occ_ispresent = .FALSE.

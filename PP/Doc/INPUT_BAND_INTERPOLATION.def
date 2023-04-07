@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package PWscf -program band_interpolation.x {
+input_description -distribution {Quantum ESPRESSO} -package PWscf -program band_interpolation.x {
 
     toc {}
 

@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: hp.x / PWscf / Quantum Espresso (version: 7.0)
+Program: hp.x / PWscf / Quantum Espresso (version: 7.2)
 ------------------------------------------------------------------------
 
 
@@ -98,6 +98,18 @@ NAMELIST: &INPUTHP
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
+   Variable:       determine_q_mesh_only
+   
+   Type:           LOGICAL
+   Default:        .false.
+   See:            perturb_only_atom
+   Description:    If .true. determines the number of q points
+                   for a given perturbed atom and exits smoothly.
+                   This keyword can be used only if perturb_only_atom
+                   is set to .true.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
    Variable:       find_atpert
    
    Type:           INTEGER
@@ -115,6 +127,7 @@ NAMELIST: &INPUTHP
                        there are using symmetry. Atoms which have the
                        same type but are not equivalent by symmetry will
                        be distinguished in this case.
+                   4 = Perturb all Hubbard atoms (the most expensive option)
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -294,7 +307,7 @@ NAMELIST: &INPUTHP
                    will be considered when writting Hubbard V parameters to
                    the file parameters.out, which can be used in the
                    subsequent DFT+U+V calculation. This keyword is used only
-                   when lda_plus_u_kind = 2 (post-processing stage).
+                   for DFT+U+V (post-processing stage).
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -307,7 +320,7 @@ NAMELIST: &INPUTHP
                    system) Hubbard V will be written to the file parameters.out.
                    "lmin" refers to the orbital quantum number of the atom
                    corresponding to the first site-index in Hubbard_V(:,:,:).
-                   This keyword is used only when lda_plus_u_kind = 2 and only
+                   This keyword is used only for DFT+U+V and only
                    in the post-processing stage. Example: "lmin"=1 corresponds to
                    writing to file V between e.g. oxygen (with p states) and its
                    neighbors, and including V between transition metals (with d
@@ -321,8 +334,8 @@ NAMELIST: &INPUTHP
    Type:           REAL
    Default:        100.D0
    Description:    Maximum distance (in Bohr) between two atoms to search
-                   neighbors (used only at the postprocessing step when
-                   lda_plus_u_kind = 2). This keyword is useful when there
+                   neighbors (used only at the postprocessing step for
+                   DFT+U+V). This keyword is useful when there
                    are e.g. defects in the system.
    +--------------------------------------------------------------------
    
@@ -339,4 +352,4 @@ NAMELIST: &INPUTHP
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Sat Dec 18 20:08:38 CET 2021
+This file has been created by helpdoc utility on Sat Mar 18 12:58:29 CET 2023

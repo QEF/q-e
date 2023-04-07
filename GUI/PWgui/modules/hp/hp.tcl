@@ -82,12 +82,19 @@ module HP\#auto -title "PWSCF GUI: module HP.x" -script {
         separator -label "--- Perturbations ---"
 
         var determine_num_pert_only {
-            -label "Determine the number of perturbations (determine_num_pert_only):"
+            -label "Only determine the number of perturbations (determine_num_pert_only):"
             -widget    radiobox
             -textvalue { Yes No }
             -value     { .true. .false. }
         }
-        
+
+        var determine_q_mesh_only {
+            -label "Only determine the number of q points (determine_q_mesh_only):"
+            -widget    radiobox
+            -textvalue { Yes No }	      
+            -value     { .true. .false. }
+        }
+
         var find_atpert {
             -label "Method for searching which atoms must be perturbed (find_atpert):"
             -textvalue {

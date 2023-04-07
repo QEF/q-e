@@ -703,6 +703,30 @@ Note: this option was called "monopole" in v6.0 and 6.1 of pw.x
 
 
 # ------------------------------------------------------------------------
+help twochem -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>twochem</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>See: </em> nelec_cond, nbnd_cond, degauss_cond
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+IF .TRUE. , a two chemical potential calculation for the simulation of
+photoexcited systems is performed, constraining a fraction of the
+electrons in the conduction manifold.
+See G. Marini, M. Calandra; "PRB 104, 144103 (2021)".
+Note: requires "occupations" to be set to 'smearing'.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help lfcp -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>lfcp</b></big>
@@ -1026,6 +1050,27 @@ k-point, not the number of bands per k-point, is doubled
 
 
 # ------------------------------------------------------------------------
+help nbnd_cond -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>nbnd_cond</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em>
+nbnd_cond = "nbnd" - # of electrons / 2 in the collinear case;
+                     nbnd_cond = "nbnd" - # of electrons in the noncollinear case.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Number of electronic states in the conduction manifold
+for a two chemical-potential calculation ("twochem"=.true.).
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help tot_charge -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>tot_charge</b></big>
@@ -1103,8 +1148,9 @@ help starting_magnetization -helpfmt helpdoc -helptext {
 <blockquote><pre>
 Starting spin polarization on atomic type 'i' in a spin
 polarized (LSDA or noncollinear/spin-orbit) calculation.
-Allowed values range between -1 (all spins down for the
-valence electrons of atom type 'i') to 1 (all spins up).
+For non-constrained calculations, the allowed values
+range between -1 (all spins down for the valence electrons
+of atom type 'i') to 1 (all spins up).
 If you expect a nonzero magnetization in your ground state,
 you MUST either specify a nonzero value for at least one
 atomic type, or constrain the magnetization using variable
@@ -1537,6 +1583,47 @@ When "lspinorb" is .FALSE. this flag is not used.
 
 
 # ------------------------------------------------------------------------
+help degauss_cond -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>degauss_cond</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.D0 Ry
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+value of the gaussian spreading (Ry) for brillouin-zone
+integration in the conduction manifold in a two-chemical
+potential calculation ("twochem"=.true.).
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help nelec_cond -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>nelec_cond</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.D0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Number of electrons placed in the conduction manifold in a two-chemical
+potential calculation ("twochem"=.true.). Of the total # of
+electrons nelec, nelec-nelec_cond will occupy the valence
+manifold and nelec_cond will be constrained in the conduction manifold.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help degauss -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>degauss</b></big>
@@ -1621,6 +1708,114 @@ nspin = 4 :  spin-polarized calculation, noncollinear
              (magnetization in generic direction)
              DO NOT specify "nspin" in this case;
              specify "noncolin"=.TRUE. instead
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help sic_gamma -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>sic_gamma</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Strength of the gammaDFT potential.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help pol_type -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>pol_type</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote>
+<pre>
+Type of polaron in gammaDFT.
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'e'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> electron polaron
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'h'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> hole polaron
+            </pre></dd>
+</dl>
+</blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help sic_energy -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>sic_energy</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Enable the calculation of the total energy in gammaDFT. When .true.,
+a preliminary calculation is performed to calculate the electron density
+in the absence of the polaron. When .false., the total energy printed in
+output should not be considered. For structural relaxations, it is
+recommended to use .false. to avoid doubling the computational cost.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help sci_vb -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>sci_vb</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Valence band shift (in eV) through self-consistent
+scissor operator. When performing gammaDFT calculations
+of polarons, the polaron level is not shifted.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help sci_cb -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>sci_cb</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Conduction band band shift (in eV) through self-consistent
+scissor operator. When performing gammaDFT calculations
+of polarons, the polaron level is not shifted.
          </pre></blockquote>
 </ul>      
       
@@ -1932,6 +2127,11 @@ Hubbard manifold number. It is possible to specify up to
 three Hubbard manifolds per Hubbard atom. However, if you want
 to specify three manifolds then the second and the third manifolds
 will be considered as one effective manifold (see Doc/Hubbard_input.pdf)
+
+Note: Hubbard_occ cannot be used together with fully-relativistic pseudopotentials
+(i.e. when noncolin=.true. and lspinorb=.true.) since this variable does not
+allow to distinguish between the occupied and unoccupied channels (this is
+needed when determining the atomic orbital offsets).
          </pre></blockquote>
 </ul>      
       
@@ -1952,7 +2152,7 @@ help Hubbard_alpha -helpfmt helpdoc -helptext {
 Hubbard_alpha(i) is the perturbation (on atom i, in eV)
 used to compute U (and V) with the linear-response method of
 Cococcioni and de Gironcoli, "PRB 71, 035105 (2005)"
-(only for "lda_plus_u_kind"=0 and 2).
+(only for DFT+U or DFT+U+V).
 
 Note: Hubbard U and V can be computed using the HP code
 which is based on density-functional perturbation theory,
@@ -1978,7 +2178,7 @@ help Hubbard_beta -helpfmt helpdoc -helptext {
 Hubbard_beta(i) is the perturbation (on atom i, in eV)
 used to compute J0 with the linear-response method of
 Cococcioni and de Gironcoli, "PRB 71, 035105 (2005)"
-(only for "lda_plus_u_kind"=0 and 2). See also
+(only for DFT+U or DFT+U+V). See also
 "PRB 84, 115108 (2011)".
          </pre></blockquote>
 </ul>      
@@ -3244,6 +3444,25 @@ Height of the potential barrier in Rydberg.
 
 
 # ------------------------------------------------------------------------
+help nextffield -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>nextffield</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Number of activated external ionic force fields.
+See Doc/ExternalForceFields.tex for further explanation and parameterizations
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help electron_maxstep -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>electron_maxstep</b></big>
@@ -3254,7 +3473,26 @@ help electron_maxstep -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-maximum number of iterations in a scf step
+maximum number of iterations in a scf step. If exact exchange is active,
+this will affect the inner loops.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help exx_maxstep -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>exx_maxstep</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 100
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+maximum number of outer iterations in a scf calculation with exact exchange.
          </pre></blockquote>
 </ul>      
       
@@ -6674,6 +6912,12 @@ These variables have different meanings for different constraint types:
                <i>constr(1)</i> is the index of the atom whose position is constrained.
                <i>constr(2:4)</i> are the three coordinates of the vector that specifies
                the constraint direction.
+<b>'potential_wall'</b> :
+               Formula is: External force = prefac * exponent * Exp(-exponent). Force is only applied
+               on atoms within the cutoff.
+               <i>constr(1)</i> is the prefactor
+               <i>constr(2)</i> is the value in the exponent
+               <i>constr(3)</i> is the cutoff (in a.u.)
                   </pre></blockquote>
 </ul><ul>
 <li> <em>Variable: </em><big><b>constr_target</b></big>

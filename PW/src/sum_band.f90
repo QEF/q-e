@@ -51,6 +51,11 @@ SUBROUTINE sum_band()
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto
   USE fft_interfaces,       ONLY : invfft
+#if defined (__OSCDFT)
+  USE plugin_flags,     ONLY : use_oscdft
+  USE oscdft_base,      ONLY : oscdft_ctx
+  USE oscdft_functions, ONLY : oscdft_sum_band
+#endif
   !
   IMPLICIT NONE
   !
@@ -135,6 +140,9 @@ SUBROUTINE sum_band()
        !
     ENDIF
   ENDIF
+#if defined (__OSCDFT)
+  IF (use_oscdft) CALL oscdft_sum_band(oscdft_ctx)
+#endif
   !
   ! ... for band parallelization: set band computed by this processor
   !

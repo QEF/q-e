@@ -151,12 +151,12 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
         !
         ! Initialize psi and dpsic
         !
-        !$acc kernels present(psi,dpsic)
+        !$acc kernels 
         psi (:) = (0.d0, 0.d0)
         dpsic(:) = (0.d0, 0.d0)
         !$acc end kernels
         !
-        !$acc parallel loop present(psi, igk_k) 
+        !$acc parallel loop 
         do ig = 1, npw
            itmp = nl_d (igk_k(ig,ikk) )
 #if defined(__CUDA)
@@ -165,7 +165,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
            psi (itmp ) = evc (ig, ibnd)
 #endif
         enddo
-        !$acc parallel loop present(dpsi, dpsic, igk_k)
+        !$acc parallel loop
         do ig = 1, npwq
            itmp = nl_d (igk_k(ig,ikq) )
            dpsic ( itmp ) = dpsi (ig, ibnd)
@@ -182,7 +182,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
         !
         ! Calculation of the response charge-density
         !
-        !$acc parallel loop present(drhoscf(1:v_siz),psi,dpsic)
+        !$acc parallel loop 
         do ir = 1, v_siz
            drhoscf (ir) = drhoscf (ir) + wgt * CONJG(psi (ir) ) * dpsic (ir)
         enddo

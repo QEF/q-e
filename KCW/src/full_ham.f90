@@ -509,9 +509,9 @@ SUBROUTINE full_ham (ik)
   IF (ALLOCATED(ham_aux)) DEALLOCATE (ham_aux)
   !
   WRITE( stdout, '()' )
-  WRITE( stdout, '(10x, "KI[Full] ",8F9.4)' ) (et(ibnd,ik)*rytoev, ibnd=1,n_orb) 
+  WRITE( stdout, '(10x, "KI[Full] ",8F11.4)' ) (et(ibnd,ik)*rytoev, ibnd=1,n_orb) 
   IF (kcw_at_ks ) WRITE( stdout, '()' )
-  IF (kcw_at_ks ) WRITE( stdout, '(10x, "KI[Pert] ",8F9.4)' ) (et_aux(ibnd,ik)*rytoev, ibnd=1,n_orb)
+  IF (kcw_at_ks ) WRITE( stdout, '(10x, "KI[Pert] ",8F11.4)' ) (et_aux(ibnd,ik)*rytoev, ibnd=1,n_orb)
   !
   WRITE( stdout, '()' )
   IF ( elumo < 1d+6) THEN

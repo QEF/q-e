@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,7 @@ SUBROUTINE init_run()
                                  g_d, gg_d, mill_d, gshells, &
                                  gstart ! to be communicated to the Solvers if gamma_only
   USE gvecs,              ONLY : gcutms, ngms
-  USE cell_base,          ONLY : alat, at, bg, set_h_ainv
+  USE cell_base,          ONLY : alat, at, bg, set_h_ainv, omega
   USE cellmd,             ONLY : lmovecell
   USE dynamics_module,    ONLY : allocate_dyn_vars
   USE paw_variables,      ONLY : okpaw
@@ -38,9 +38,12 @@ SUBROUTINE init_run()
   USE tsvdw_module,       ONLY : tsvdw_initialize
   USE libmbd_interface,   ONLY : init_mbd
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
+  USE two_chem,           ONLY : init_twochem, twochem
   USE lsda_mod,           ONLY : nspin
   USE noncollin_module,   ONLY : domag
-  USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc, xclib_dft_is 
+  USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc, &
+                                 xclib_dft_is, xclib_set_finite_size_volume, &
+                                 dft_has_finite_size_correction
   !
   USE control_flags,      ONLY : use_gpu
   USE dfunct_gpum,        ONLY : newd_gpu
@@ -109,6 +112,10 @@ SUBROUTINE init_run()
   !
   IF (do_cutoff_2D) CALL cutoff_fact()
   !
+  ! ... setup two chemical potentials calculation
+  !
+  IF (twochem) CALL init_twochem()
+  !
   CALL gshells ( lmovecell )
   !
   ! ... variable initialization for parallel symmetrization
@@ -167,8 +174,13 @@ SUBROUTINE init_run()
   CALL openfil()
   !
   IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin, domag )
-  !
-  IF (xclib_dft_is('hybrid')) CALL aceinit0()
+  IF (dft_has_finite_size_correction()) &
+       CALL xclib_set_finite_size_volume(REAL(omega*nk1*nk2*nk3))
+  IF ( xclib_dft_is('hybrid') ) THEN
+     IF ( lmovecell ) CALL infomsg('iosys', &
+          'Variable cell and hybrid XC little tested')
+     CALL aceinit0()
+  END IF
   !
   CALL hinit0()
   !
@@ -178,15 +190,13 @@ SUBROUTINE init_run()
     !
     CALL newd_gpu()
     !
-    CALL wfcinit_gpu()
-    !
   ELSE
     !
     CALL newd()
     !
-    CALL wfcinit()
-    !
   END IF
+  !
+  CALL wfcinit()
   !
   IF(use_wannier) CALL wannier_init()
   !

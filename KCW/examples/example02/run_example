@@ -80,7 +80,7 @@ KCW_COMMAND="$PARA_PREFIX $BIN_DIR/kcw.x $PARA_POSTFIX"
 KCW_COMMAND_noPOSTFIX="$PARA_PREFIX $BIN_DIR/kcw.x"
 $ECHO
 $ECHO "  running pw.x as:   $PW_COMMAND"
-$ECHO "  running kcw.x as:   $KCW_COMMAND"
+$ECHO "  running kcw.x as:   $KCW_COMMAND_noPOSTFIX"
 $ECHO
 
 # clean TMP_DIR
@@ -147,11 +147,14 @@ W2K h2o
   kcw_at_ks=.true.
   read_unitary_matrix = .false.
   calculation = 'wann2kcw'
+  mp1 = 1
+  mp2 = 1
+  mp3 = 1
 /
 EOF
 
 $ECHO "  Running the interface to KCW for $PREFIX...\c"
-$KCW_COMMAND -in $PREFIX.kcw-wann2kcw.in > $PREFIX.kcw-wann2kcw.out
+$KCW_COMMAND_noPOSTFIX -in $PREFIX.kcw-wann2kcw.in > $PREFIX.kcw-wann2kcw.out
 $ECHO " done"
 
 
@@ -179,7 +182,7 @@ KCW h2o screen
 EOF
 
 $ECHO "  Running the screening parameter calculation for $PREFIX...\c"
-$KCW_COMMAND -in $PREFIX.kcw-screen.in > $PREFIX.kcw-screen.out
+$KCW_COMMAND_noPOSTFIX -in $PREFIX.kcw-screen.in > $PREFIX.kcw-screen.out
 $ECHO " done"
 
 cat > $PREFIX.kcw-ham.in << EOF

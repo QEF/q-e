@@ -94,7 +94,8 @@ SUBROUTINE setup_nbnd_occ
      !
   ENDIF
   !
-  nbnd_occx = MAXVAL(nbnd_occ)
+!  nbnd_occx = MAXVAL(nbnd_occ)
+  nbnd_occx = nbnd
   !
   CALL stop_clock ('setup_nbnd_occ')
   !

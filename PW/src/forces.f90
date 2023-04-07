@@ -66,8 +66,13 @@ SUBROUTINE forces()
   USE environ_base_module, ONLY : calc_environ_force
   USE environ_pw_module,   ONLY : is_ms_gcs, run_ms_gcs
 #endif
+#if defined (__OSCDFT)
+  USE plugin_flags,        ONLY : use_oscdft
+  USE oscdft_base,         ONLY : oscdft_ctx
+  USE oscdft_forces_subs,  ONLY : oscdft_apply_forces, oscdft_print_forces
+#endif
 #if defined(__LEGACY_PLUGINS) 
-  USE plugin_flags
+  USE plugin_flags,        ONLY : plugin_ext_forces, plugin_int_forces
 #endif 
   !
   IMPLICIT NONE
@@ -225,6 +230,9 @@ SUBROUTINE forces()
 #endif 
 #if defined (__ENVIRON)
   IF (use_environ) CALL calc_environ_force(force)
+#endif
+#if defined (__OSCDFT)
+  IF (use_oscdft) CALL oscdft_apply_forces(oscdft_ctx)
 #endif
   !
   ! ... Berry's phase electric field terms
@@ -435,6 +443,9 @@ SUBROUTINE forces()
      END IF
      !
   END IF
+#if defined (__OSCDFT)
+  IF (use_oscdft) CALL oscdft_print_forces(oscdft_ctx)
+#endif
   !
   sumfor = 0.D0
   sumscf = 0.D0

@@ -21,11 +21,11 @@ build:cmake-gnu:
 
 build:pgi:
   tags: [docker]
-  image: nvcr.io/nvidia/nvhpc:20.9-devel-ubuntu20.04
+  image: nvcr.io/nvidia/nvhpc:21.2-devel-cuda11.2-ubuntu20.04
   script:
     - apt-get -qq update
     - apt-get -qq install ca-certificates git m4
-    - ./configure FC=pgf90 F90=pgf90 F77=pgfortran MPIF90=mpif90 --enable-openmp --with-cuda=yes --enable-cuda-env-check=no
+    - ./configure FC=pgf90 F90=pgf90 F77=pgfortran MPIF90=mpif90 --enable-openmp --with-cuda=yes --enable-cuda-env-check=no --with-cuda-runtime=11.2  --with-cuda-cc=70
     - make pw cp ph
 
 

@@ -57,7 +57,6 @@
   ! --------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
   ! Shell implementation for future use.
-  USE epwcom,           ONLY : polaron_wf
   USE grid,             ONLY : loadqmesh_serial, loadkmesh_para
   ! --------------------------------------------------------------------------------
   !
@@ -251,16 +250,6 @@
     CALL dvanqq2()
   ENDIF
   !
-  ! ------------------------------------------------------------------------------- 
-  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
-  ! Shell implementation for future use. 
-  ! IF (polaron_wf) then
-  !   CALL loadqmesh_serial
-  !    CALL loadkmesh_para
-  !    CALL KSstate_extract()
-  !   STOP
-  ! ENDIF
-  ! -------------------------------------------------------------------------------
   !
   CALL stop_clock('epw_init')
   !

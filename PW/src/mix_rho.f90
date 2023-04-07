@@ -45,6 +45,11 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   USE ldaU,           ONLY : lda_plus_u, lda_plus_u_kind, ldim_u, &
                              max_num_neighbors, nsg, nsgnew
   USE buffers,        ONLY : open_buffer, close_buffer, get_buffer, save_buffer
+#if defined (__OSCDFT)
+  USE plugin_flags,     ONLY : use_oscdft
+  USE oscdft_base,      ONLY : oscdft_ctx
+  USE oscdft_functions, ONLY : oscdft_mix_rho
+#endif
   !
   IMPLICIT NONE
   !
@@ -162,6 +167,9 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
      conv = conv .AND. ( ABS( ef - gcscf_mu ) < gcscf_eps )
      !
   END IF
+#if defined(__OSCDFT)
+  IF (use_oscdft) CALL oscdft_mix_rho(oscdft_ctx, conv)
+#endif
   !
   IF ( conv .OR. dr2 < tr2_min ) THEN
      !

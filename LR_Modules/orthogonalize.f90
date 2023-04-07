@@ -60,7 +60,7 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   COMPLEX(DP), ALLOCATABLE :: ps(:,:)
   REAL(DP), ALLOCATABLE    :: ps_r(:,:)
   INTEGER :: ibnd, jbnd, nbnd_eff, n_start, n_end
-  REAL(DP) :: wg1, w0g, wgp, wwg, deltae, theta
+  REAL(DP) :: wg1, w0g, wgp, wwg(nbnd), deltae, theta
   REAL(DP), EXTERNAL :: w0gauss, wgauss
   ! functions computing the delta and theta function
   !
@@ -109,24 +109,26 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
               wgp = wgauss ( (ef - et (jbnd, ikq) ) / degauss, ngauss)
               deltae = et (jbnd, ikq) - et (ibnd, ikk)
               theta = wgauss (deltae / degauss, 0)
-              wwg = wg1 * (1.d0 - theta) + wgp * theta
+              wwg(jbnd) = wg1 * (1.d0 - theta) + wgp * theta
               IF (jbnd <= nbnd_occ (ikq) ) THEN
                  IF (abs (deltae) > 1.0d-5) THEN
-                    wwg = wwg + alpha_pv * theta * (wgp - wg1) / deltae
+                    wwg(jbnd) = wwg(jbnd) + alpha_pv * theta * (wgp - wg1) / deltae
                  ELSE
                     !
                     !  if the two energies are too close takes the limit
                     !  of the 0/0 ratio
                     !
-                    wwg = wwg - alpha_pv * theta * w0g
+                    wwg(jbnd) = wwg(jbnd) - alpha_pv * theta * w0g
                  ENDIF
               ENDIF
               !
-              !$acc kernels present(ps)
-              ps(jbnd,ibnd) = wwg * ps(jbnd,ibnd)
-              !$acc end kernels
-              !
            ENDDO
+           !
+           !$acc parallel loop copyin(wwg)
+           DO jbnd = 1, nbnd
+              ps(jbnd,ibnd) = wwg(jbnd) * ps(jbnd,ibnd)
+           END DO
+           !$acc end parallel loop
            !
         ELSE
            !
@@ -134,32 +136,27 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
            !
            DO jbnd = 1, nbnd
               !
-              wwg = dfpt_tetra_beta(jbnd,ibnd,ikk)
+              wwg(jbnd) = dfpt_tetra_beta(jbnd,ibnd,ikk)
               !
-              !$acc kernels present(ps)
-              ps(jbnd,ibnd) = wwg * ps(jbnd,ibnd)
-              !$acc end kernels
               !
            ENDDO
+           !
+           !$acc kernels copyin(wwg)
+           DO jbnd = 1, nbnd
+              ps(jbnd,ibnd) = wwg(jbnd) * ps(jbnd,ibnd)
+           END DO
+           !$acc end kernels
            !
         ENDIF
         !
         IF (noncolin) THEN
-#if defined(__CUDA) 
-           !$acc kernels present(dvpsi)
+           !$acc kernels 
            dvpsi(1:npwx*npol, ibnd) = wg1 * dvpsi(1:npwx*npol, ibnd)
            !$acc end kernels
-#else
-           CALL dscal (2*npwx*npol, wg1, dvpsi(1,ibnd), 1)
-#endif
         ELSE
-#if defined(__CUDA)
-           !$acc kernels present(dvpsi)
+           !$acc kernels
            dvpsi(1:npwq, ibnd) = wg1 * dvpsi(1:npwq, ibnd)
            !$acc end kernels
-#else
-           call dscal (2*npwq, wg1, dvpsi(1,ibnd), 1)
-#endif
         END IF
         !
      END DO
@@ -170,14 +167,13 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
      !
      !  insulators
      !
+     !$acc host_data use_device(evq, dvpsi, ps)
      IF (noncolin) THEN
-        !$acc host_data use_device(evq, dvpsi, ps)
         CALL zgemm( 'C', 'N',nbnd_occ(ikq), nbnd_occ(ikk), npwx*npol, &
              (1.d0,0.d0), evq, npwx*npol, dvpsi, npwx*npol, &
              (0.d0,0.d0), ps, nbnd )
-        !$acc end host_data
      ELSEIF (gamma_only) THEN
-        !$acc host_data use_device(evq, dvpsi, ps_r)
+        !$acc host_data use_device(ps_r)
         CALL dgemm( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), 2*npwq, &
              2.0_DP, evq, 2*npwx, dvpsi, 2*npwx, &
              0.0_DP, ps_r, nbnd )
@@ -187,12 +183,11 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
         ENDIF
         !$acc end host_data
      ELSE
-        !$acc host_data use_device(evq, dvpsi, ps)
         CALL zgemm( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), npwq, &
              (1.d0,0.d0), evq, npwx, dvpsi, npwx, &
              (0.d0,0.d0), ps, nbnd )
-        !$acc end host_data
      END IF
+     !$acc end host_data
      !
      nbnd_eff=nbnd_occ(ikk)
      !
@@ -254,7 +249,7 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   ! |dvspi> =  -(|dvpsi> - S|evq><evq|dvpsi>)
   !
   IF (gamma_only) THEN
-     !$acc kernels present(ps, ps_r)
+     !$acc kernels 
      ps = CMPLX (ps_r,0.0_DP, KIND=DP)
      !$acc end kernels
   ENDIF        

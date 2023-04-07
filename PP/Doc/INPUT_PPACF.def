@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso (version 6.3 with ppacf patch)} -package PWscf -program ppacf.x {
+input_description -distribution {Quantum ESPRESSO} -package PWscf -program ppacf.x {
 
     toc {}
 

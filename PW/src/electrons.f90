@@ -475,6 +475,14 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE environ_base_module,  ONLY : calc_environ_energy, print_environ_energies
   USE environ_pw_module,    ONLY : calc_environ_potential
 #endif
+#if defined (__OSCDFT)
+  USE plugin_flags,         ONLY : use_oscdft
+  USE oscdft_base,          ONLY : oscdft_ctx
+  USE oscdft_functions,     ONLY : oscdft_electrons,&
+                                   oscdft_scf_energy,&
+                                   oscdft_print_energies,&
+                                   oscdft_print_ns
+#endif
   !
   IMPLICIT NONE
   !
@@ -659,11 +667,19 @@ SUBROUTINE electrons_scf ( printout, exxen )
         !
         ! ... diagonalization of the KS hamiltonian
         !
+#if defined (__OSCDFT)
+        IF (use_oscdft) THEN
+           CALL oscdft_electrons(oscdft_ctx, iter, et, nbnd, nkstot, nks)
+        ELSE
+#endif
         IF ( lelfield ) THEN
            CALL c_bands_efield( iter )
         ELSE
            CALL c_bands( iter )
         ENDIF
+#if defined (__OSCDFT)
+        END IF
+#endif
         !
         IF ( stopped_by_user ) THEN
            conv_elec=.FALSE.
@@ -944,6 +960,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
         CALL calc_environ_potential(rhoin, conv_elec, dr2, vltot)
      END IF
 #endif
+#if defined (__OSCDFT)
+     IF (use_oscdft) THEN
+        CALL oscdft_scf_energy(oscdft_ctx, plugin_etot)
+     END IF
+#endif
      !
      ! ... define the total local potential (external + scf)
      !
@@ -1012,6 +1033,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
            ENDIF
            !
         ENDIF
+#if defined (__OSCDFT)
+        IF (use_oscdft) THEN
+           CALL oscdft_print_ns(oscdft_ctx)
+        END IF
+#endif
         CALL print_ks_energies()
         !
      ENDIF
@@ -1635,6 +1661,9 @@ SUBROUTINE electrons_scf ( printout, exxen )
 #endif 
 #if defined (__ENVIRON)
        IF (use_environ) CALL print_environ_energies('PW')
+#endif
+#if defined (__OSCDFT)
+       IF (use_oscdft .AND. conv_elec) CALL oscdft_print_energies(oscdft_ctx)
 #endif
        !
        IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
