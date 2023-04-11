@@ -15,6 +15,12 @@ SUBROUTINE MYDGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
 #if defined(__CUDA)
     use cudafor
     use cublas
+#elif defined(__OPENMP_GPU)
+#if defined(__ONEMKL)
+    use onemkl_blas_gpu
+#elif defined(__ROCBLAS)
+    use rocblas_utils
+#endif
 #endif
 !     .. Scalar Arguments ..
     DOUBLE PRECISION ::  ALPHA
@@ -23,37 +29,20 @@ SUBROUTINE MYDGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
     DOUBLE PRECISION :: A( LDA, * ), X( * ), Y( * )
 #if defined(__CUDA)
     attributes(device) :: A, X, Y
-#endif
     CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
-
-END SUBROUTINE MYDGER
-
-SUBROUTINE MYDGER_C  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
-#if defined(__CUDA)
-    use cudafor
-    use cublas
 #elif defined(__OPENMP_GPU)
 #if defined(__ONEMKL)
-    use onemkl_blas_no_array_check_gpu
-#endif
-#endif
-!     .. Scalar Arguments ..
-    DOUBLE PRECISION ::  ALPHA
-    INTEGER          ::   INCX, INCY, LDA, M, N
-!     .. Array Arguments ..
-    COMPLEX*16 :: A( LDA, * ), X( * ), Y( * )
-#if defined(__CUDA)
-    attributes(device) :: A, X, Y
-#endif
-#if defined(__ONEMKL)
     !$omp target variant dispatch use_device_ptr(A, X, Y)
-#endif
     CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
-#if defined(__ONEMKL)
     !$omp end target variant dispatch
+#elif defined(__ROCBLAS)
+    CALL rocblas_dger( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
+#endif
+#else
+    CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
 #endif
 
-END SUBROUTINE MYDGER_C
+END SUBROUTINE MYDGER
 
 !=----------------------------------------------------------------------------=!
 
@@ -65,8 +54,7 @@ SUBROUTINE MYDGEMM( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC
 #elif defined(__OPENMP_GPU)
 #if defined(__ONEMKL)
     use onemkl_blas_gpu
-#endif
-#if defined(__ROCBLAS)
+#elif defined(__ROCBLAS)
     use rocblas_utils
 #endif
 #endif
@@ -131,6 +119,48 @@ END SUBROUTINE MYZGEMM
 ! MYZGEMM, but with an additional variable (OMP_OFFLOAD) to decide wether to perform a cpu
 ! _gemm or call a rocblas _gemm which takes gpu_only arguments.
 !
+SUBROUTINE MYDGER2  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA, OMP_OFFLOAD )
+#if defined(__CUDA)
+    use cudafor
+    use cublas
+#elif defined(__OPENMP_GPU)
+#if defined(__ONEMKL)
+    use onemkl_blas_gpu
+#elif defined(__ROCBLAS)
+    use rocblas_utils
+#endif
+#endif
+!     .. Scalar Arguments ..
+    DOUBLE PRECISION ::  ALPHA
+    INTEGER          ::   INCX, INCY, LDA, M, N
+!     .. Array Arguments ..
+    DOUBLE PRECISION :: A( LDA, * ), X( * ), Y( * )
+    LOGICAL, INTENT(IN) :: OMP_OFFLOAD
+#if defined(__CUDA)
+    attributes(device) :: A, X, Y
+    CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
+#elif defined(__OPENMP_GPU)
+#if defined(__ONEMKL)
+    IF (OMP_OFFLOAD) THEN
+       !$omp target variant dispatch use_device_ptr(A, X, Y)
+       CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
+       !$omp end target variant dispatch
+    ELSE
+       CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
+    ENDIF
+#elif defined(__ROCBLAS)
+    IF (OMP_OFFLOAD) THEN
+       CALL rocblas_dger( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
+    ELSE
+       CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
+    ENDIF
+#endif
+#else
+    CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
+#endif
+
+END SUBROUTINE MYDGER2
+
 SUBROUTINE MYDGEMM2( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC, OMP_OFFLOAD )
 #if defined(__CUDA)
     use cudafor
