@@ -257,7 +257,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   endif
   IF ( gstart == 2 ) THEN
      !$omp target update to(hpsi)
-     CALL MYDGER_C( nbase, my_n, -1.D0, psi, npwx2, hpsi(1,n_start), npwx2, hr(1,n_start), nvecx )
+     CALL MYDGER( nbase, my_n, -1.D0, psi, npwx2, hpsi(1,n_start), npwx2, hr(1,n_start), nvecx )
   ENDIF
   !$omp target update from(hr)
   CALL mp_sum( hr( :, 1:nbase ), inter_bgrp_comm )
@@ -273,14 +273,14 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      endif
      IF ( gstart == 2 ) THEN
         !$omp target update to(spsi)
-        CALL MYDGER_C( nbase, my_n, -1.D0, psi, npwx2, spsi(1,n_start), npwx2, sr(1,n_start), nvecx )
+        CALL MYDGER( nbase, my_n, -1.D0, psi, npwx2, spsi(1,n_start), npwx2, sr(1,n_start), nvecx )
      ENDIF
      !
   ELSE
      !
      if (n_start .le. n_end) &
      CALL MYDGEMM( 'T','N', nbase, my_n, npw2, 2.D0, psi, npwx2, psi(1,n_start), npwx2, 0.D0, sr(1,n_start), nvecx )
-     IF ( gstart == 2 ) CALL MYDGER_C( nbase, my_n, -1.D0, psi, npwx2, psi(1,n_start), npwx2, sr(1,n_start), nvecx )
+     IF ( gstart == 2 ) CALL MYDGER( nbase, my_n, -1.D0, psi, npwx2, psi(1,n_start), npwx2, sr(1,n_start), nvecx )
      !
   END IF
   !$omp target update from(sr)
@@ -491,7 +491,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      !$omp target update to(hpsi)
      CALL MYDGEMM( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, hpsi(1,nb1), npwx2, 0.D0, hr(n_start,nb1), nvecx )
-     IF ( gstart == 2 ) CALL MYDGER_C( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, hpsi(1,nb1), npwx2, hr(n_start,nb1), nvecx )
+     IF ( gstart == 2 ) CALL MYDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, hpsi(1,nb1), npwx2, hr(n_start,nb1), nvecx )
      !$omp target update from(hr)
      CALL mp_sum( hr( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
      !
@@ -515,12 +515,12 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         !
         !$omp target update to(spsi)
         CALL MYDGEMM( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, spsi(1,nb1), npwx2, 0.D0, sr(n_start,nb1), nvecx )
-        IF ( gstart == 2 ) CALL MYDGER_C( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, spsi(1,nb1), npwx2, sr(n_start,nb1), nvecx )
+        IF ( gstart == 2 ) CALL MYDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, spsi(1,nb1), npwx2, sr(n_start,nb1), nvecx )
         !
      ELSE
         !
         CALL MYDGEMM( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, psi(1,nb1), npwx2, 0.D0, sr(n_start,nb1) , nvecx )
-        IF ( gstart == 2 ) CALL MYDGER_C( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, psi(1,nb1), npwx2, sr(n_start,nb1), nvecx )
+        IF ( gstart == 2 ) CALL MYDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, psi(1,nb1), npwx2, sr(n_start,nb1), nvecx )
         !
      END IF
      !$omp target update from(sr)
