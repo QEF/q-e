@@ -62,27 +62,9 @@ SUBROUTINE MYDGEMM( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC
 #if defined(__CUDA)
     use cudafor
     use cublas
-#endif
-    CHARACTER*1, INTENT(IN) ::        TRANSA, TRANSB
-    INTEGER, INTENT(IN) ::            M, N, K, LDA, LDB, LDC
-    DOUBLE PRECISION, INTENT(IN) ::   ALPHA, BETA
-    DOUBLE PRECISION  :: A( LDA, * ), B( LDB, * ), C( LDC, * )
-#if defined(__CUDA)
-    attributes(device) :: A, B, C
-    CALL cublasdgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
-#else
-    CALL dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
-#endif
-
-END SUBROUTINE MYDGEMM
-
-SUBROUTINE MYDGEMM_C( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
-#if defined(__CUDA)
-    use cudafor
-    use cublas
 #elif defined(__OPENMP_GPU)
 #if defined(__ONEMKL)
-    use onemkl_blas_no_array_check_gpu
+    use onemkl_blas_gpu
 #endif
 #if defined(__ROCBLAS)
     use rocblas_utils
@@ -91,25 +73,23 @@ SUBROUTINE MYDGEMM_C( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, L
     CHARACTER*1, INTENT(IN) ::        TRANSA, TRANSB
     INTEGER, INTENT(IN) ::            M, N, K, LDA, LDB, LDC
     DOUBLE PRECISION, INTENT(IN) ::   ALPHA, BETA
-    COMPLEX*16  :: A( LDA, * ), B( LDB, * ), C( LDC, * )
+    DOUBLE PRECISION  :: A( LDA, * ), B( LDB, * ), C( LDC, * )
 #if defined(__CUDA)
     attributes(device) :: A, B, C
     CALL cublasdgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
-#else
+#elif defined(__OPENMP_GPU)
 #if defined(__ONEMKL)
     !$omp target variant dispatch use_device_ptr(A, B, C)
-#endif
-#if defined(__ROCBLAS)
+    CALL dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+    !$omp end target variant dispatch
+#elif defined(__ROCBLAS)
     CALL rocblas_dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+#endif
 #else
     CALL dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
 #endif
-#if defined(__ONEMKL)
-    !$omp end target variant dispatch
-#endif
-#endif
 
-END SUBROUTINE MYDGEMM_C
+END SUBROUTINE MYDGEMM
 
 SUBROUTINE MYZGEMM( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
 #if defined(__CUDA)
