@@ -524,6 +524,7 @@ subroutine readgth (iunps, np, upf)
   USE upf_kinds,    ONLY: dp
   USE upf_const,    ONLY: e2, tpi
   USE upf_params,   ONLY: lmaxx
+  USE upf_utils,    ONLY: l_to_spdf
   USE pseudo_types, ONLY: pseudo_upf
 
   implicit none
@@ -537,7 +538,7 @@ subroutine readgth (iunps, np, upf)
               nprl, os, ns, iv, jv
   real(dp) :: rcore, qcore, rc2, prefact, znucl, r2well, rloc, rrl, cc(4)
   character(len=256)            :: info
-  character(len=  1), parameter :: ch10=char(10), spdf(0:3) = ['S','P','D','F']
+  character(len=  1), parameter :: ch10=char(10)
   character(len=  2), external  :: atom_name
   integer,  allocatable         :: nproj(:)
   real(dp), allocatable         :: hij(:,:,:), kij(:,:,:)
@@ -680,7 +681,7 @@ subroutine readgth (iunps, np, upf)
       iv = iv+1
       gth_p(ns)%lll(iv)=ll
       gth_p(ns)%ipr(iv)=ii
-      upf%lll(iv)=ll; WRITE (upf%els_beta(iv), '(I1,A1)' ) ii, spdf(ll)
+      upf%lll(iv)=ll; WRITE (upf%els_beta(iv), '(I1,A1)' ) ii, l_to_spdf(ll)
       jloop: do jj=ii, nprl
         jv = iv+jj-ii
         upf%dion(iv,jv) = hij(ll,ii,jj)/e2

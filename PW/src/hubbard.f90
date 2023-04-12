@@ -95,6 +95,7 @@ SUBROUTINE write_hub_param (nt, hub_parameter, hub_name, flag)
     USE io_global,      ONLY : stdout
     USE ldaU,           ONLY : Hubbard_n, Hubbard_l, Hubbard_n2, Hubbard_l2, &
                                Hubbard_n3, Hubbard_l3, backall
+    USE upf_utils,      ONLY : l_to_spdf
     !
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: nt
@@ -102,7 +103,6 @@ SUBROUTINE write_hub_param (nt, hub_parameter, hub_name, flag)
     INTEGER, INTENT(IN) :: flag ! 1: first Hubbard channel
                                 ! 2: second Hubbard channel
     REAL(DP) :: hub_parameter
-    CHARACTER(LEN=1), EXTERNAL :: l_to_spdf
     !
     IF (hub_parameter /= 0.d0) THEN
        IF (flag==1) THEN
@@ -145,6 +145,7 @@ SUBROUTINE determine_hubbard_occ ( nt, lflag )
                              Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3,    &
                              hubbard_occ
     USE io_global,    ONLY : stdout
+    USE upf_utils,    ONLY : l_to_spdf, capital
     !
     IMPLICIT NONE
     !
@@ -157,8 +158,6 @@ SUBROUTINE determine_hubbard_occ ( nt, lflag )
     INTEGER :: i, & ! runs over all pseudo-atomic orbitals for the atomic type nt
                ldim
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
-    CHARACTER(LEN=1), EXTERNAL :: l_to_spdf
-    CHARACTER(LEN=1), EXTERNAL :: capital
     LOGICAL :: first
     !
     IF ( upf(nt)%nwfc < 1 ) THEN
@@ -168,11 +167,11 @@ SUBROUTINE determine_hubbard_occ ( nt, lflag )
     ENDIF
     !
     IF (lflag==1) THEN
-       label_hub = TRIM(int_to_char(Hubbard_n(nt))) // l_to_spdf(Hubbard_l(nt),.TRUE.)
+       label_hub = TRIM(int_to_char(Hubbard_n(nt))) // l_to_spdf(Hubbard_l(nt))
     ELSEIF (lflag==2) THEN
-       label_hub = TRIM(int_to_char(Hubbard_n2(nt))) // l_to_spdf(Hubbard_l2(nt),.TRUE.)
+       label_hub = TRIM(int_to_char(Hubbard_n2(nt))) //l_to_spdf(Hubbard_l2(nt))
     ELSEIF (lflag==3) THEN
-       label_hub = TRIM(int_to_char(Hubbard_n3(nt))) // l_to_spdf(Hubbard_l3(nt),.TRUE.)
+       label_hub = TRIM(int_to_char(Hubbard_n3(nt))) //l_to_spdf(Hubbard_l3(nt))
     ELSE
        CALL errore('determine_hubbard_occ','Not allowed value of lflag',lflag)
     ENDIF

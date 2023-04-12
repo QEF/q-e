@@ -23,8 +23,9 @@ MODULE projections
     !
     SUBROUTINE fill_nlmchi ( natomwfc, lmax_wfc )
       !
-      USE ions_base, ONLY : ityp, nat
-      USE upf_ions, ONLY : n_atom_wfc
+      USE ions_base,  ONLY : ityp, nat
+      USE upf_ions,   ONLY : n_atom_wfc
+      USE upf_utils,  ONLY : l_to_spdf
       USE uspp_param, ONLY: upf
       USE noncollin_module, ONLY: noncolin, lspinorb
       !
@@ -35,7 +36,6 @@ MODULE projections
       REAL(dp) :: jj, fact(2)
       REAL(dp), EXTERNAL :: spinor
       CHARACTER(LEN=2) :: label
-      CHARACTER(LEN=1) :: spdf(0:3) = ['S','P','D','F']
       INTEGER :: nn(0:3)
       !
       natomwfc = n_atom_wfc (nat, ityp, noncolin)
@@ -53,7 +53,7 @@ MODULE projections
                l = upf(nt)%lchi (n)
                ! the following lines guess the label if absent
                IF ( label =='Xn' ) THEN
-                  WRITE(label,'(I1,A1)') nn(l), spdf(l)
+                  WRITE(label,'(I1,A1)') nn(l), l_to_spdf(l)
                   nn(l) = nn(l) + 1
                END IF
                lmax_wfc = max (lmax_wfc, l )
