@@ -992,7 +992,7 @@ SUBROUTINE projwave_paw( )
 !      charge within augmentation sphere for pdos
   !-----------------------------------------------------------------------
   !
-  USE atom,       ONLY : rgrid, msh
+  USE atom,       ONLY : rgrid
   USE io_global, ONLY : stdout
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE constants, ONLY: rytoev
