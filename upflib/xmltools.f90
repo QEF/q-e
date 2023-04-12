@@ -77,6 +77,9 @@ MODULE xmltools
   PUBLIC :: xml_protect, i2c, l2c, r2c
   !
   ! Error codes returned by xmlr_opentag / xml_readtag:
+  !  -11  as -10 + -1
+  !  -10  tag found and read above the current position, after a file rewind:
+  !       may or may not what you desire
   !  -1   tag with no value (e.g. <tag attr="val"/>) found (no error)
   !   0   tag found and read (no error)
   !   1   tag not found
@@ -759,7 +762,7 @@ CONTAINS
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
-    if ( ier_ == 0  ) then
+    if ( ier_ == 0 .or. ier_ == -10 ) then
        READ(xmlunit, *) ivec
        CALL xmlr_closetag ( )
     else
@@ -815,7 +818,7 @@ CONTAINS
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
-    if ( ier_ == 0  ) then
+    if ( ier_ == 0 .or. ier_ == -10 ) then
        READ(xmlunit, *) rvec
        CALL xmlr_closetag ( )
     else
@@ -835,7 +838,7 @@ CONTAINS
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
-    if ( ier_ == 0  ) then
+    if ( ier_ == 0 .or. ier_ == -10 ) then
        READ(xmlunit, *) rmat
        CALL xmlr_closetag ( )
     else
@@ -855,7 +858,7 @@ CONTAINS
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
-    if ( ier_ == 0  ) then
+    if ( ier_ == 0 .or. ier_ == -10 ) then
        READ(xmlunit, *) rtens
        CALL xmlr_closetag ( )
     else
@@ -879,7 +882,7 @@ CONTAINS
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
-    if ( ier_ == 0  ) then
+    if ( ier_ == 0 .or. ier_ == -10 ) then
        NULLIFY (rvec)
        cp = c_loc(zvec)
        CALL c_f_pointer ( cp, rvec, shape(zvec)*[2])
@@ -905,7 +908,7 @@ CONTAINS
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
-    if ( ier_ == 0  ) then
+    if ( ier_ == 0 .or. ier_ == -10 ) then
        NULLIFY (rmat)
        cp = c_loc(zmat)
        CALL c_f_pointer (cp, rmat, shape(zmat)*[2,1])
@@ -931,7 +934,7 @@ CONTAINS
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
-    if ( ier_ == 0  ) then
+    if ( ier_ == 0 .or. ier_ == -10 ) then
        NULLIFY (rtens)
        cp = c_loc(ztens)
        CALL c_f_pointer (cp, rtens, shape(ztens)*[2,1,1])
@@ -1100,7 +1103,11 @@ CONTAINS
                 j0= j
              else if ( line(j:j+1) == '/>' ) then
                 ! <tag ... /> found : return
-                if (present(ierr)) ierr =-1
+                if (present(ierr) .and. ntry == 1) then
+                   ierr =-1
+                else if (present(ierr) .and. ntry == 2) then
+                   ierr =-11
+                end if
                 ! eot = 0: tag with no value found
                 eot = 0
                 !
@@ -1110,7 +1117,11 @@ CONTAINS
                 ! <tag ... > found
                 ! eot points to the rest of the line
                 eot = j+1
-                if (present(ierr)) ierr = 0
+                if (present(ierr) .and. ntry == 1) then
+                   ierr = 0
+                else if (present(ierr) .and. ntry == 2) then
+                   ierr =-10
+                end if
                 nlevel = nlevel+1
                 IF ( nlevel > maxlevel ) THEN
                    print *, 'xmlr_opentag: severe error, too many levels'
