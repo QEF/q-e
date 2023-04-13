@@ -26,26 +26,30 @@ FUNCTION upf_get_pp_format (psfile) result(pp_format)
   IMPLICIT NONE
   INTEGER :: pp_format
   CHARACTER (LEN=*) :: psfile
-  INTEGER :: l
+  INTEGER :: l, lm3, lm4, lm5
   !
   l = LEN_TRIM (psfile)
-  pp_format = 5
-  IF (l > 3) THEN
-     IF (psfile (l-3:l) =='.xml' .OR. psfile (l-3:l) =='.XML') THEN
-        pp_format = 0
-     ELSE IF (psfile (l-3:l) =='.upf' .OR. psfile (l-3:l) =='.UPF') THEN
-        pp_format = 1
-     ELSE IF (psfile (l-3:l) =='.vdb' .OR. psfile (l-3:l) =='.van') THEN
-        pp_format = 2
-     ELSE IF (psfile (l-3:l) =='.gth') THEN
-        pp_format = 3
-     ELSE IF (psfile (l-3:l) =='.cpi' .OR. psfile (l-3:l) =='.fhi') THEN
-        pp_format = 6
-     ELSE IF (psfile (l-4:l) =='.cpmd') THEN
-        pp_format = 7
-     ELSE IF (l > 5) THEN
-        If (psfile (l-5:l) =='.RRKJ3') pp_format = 4
-     END IF
+  lm3 = max(l-3,1)
+  lm4 = max(l-4,1)
+  lm5 = max(l-5,1)
+  IF (psfile (lm3:l) =='.xml' .OR. psfile (lm3:l) =='.XML') THEN
+     pp_format = 0
+  ELSE IF (psfile (lm3:l) =='.upf' .OR. psfile (lm3:l) =='.UPF') THEN
+     pp_format = 1
+  ELSE IF (psfile (lm3:l) =='.vdb' .OR. psfile (lm3:l) =='.van') THEN
+     pp_format = 2
+  ELSE IF (psfile (lm3:l) =='.gth') THEN
+     pp_format = 3
+  ELSE IF (psfile (lm3:l) =='.cpi' .OR. psfile (l-3:l) =='.fhi') THEN
+     pp_format = 6
+  ELSE IF (psfile (lm4:l) =='.cpmd') THEN
+     pp_format = 7
+  ELSE IF (psfile (lm4:l) =='.psml' ) THEN
+     pp_format = 8
+  ELSE IF (psfile (lm5:l) =='.RRKJ3') THEN
+     pp_format = 4
+  ELSE
+     pp_format = 5
   END IF
   !
 END FUNCTION upf_get_pp_format

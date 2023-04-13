@@ -51,8 +51,6 @@ SUBROUTINE read_ps ( filein, upf_in )
      !
   ELSE
      !
-     OPEN ( UNIT=iunps, FILE=filein, STATUS = 'old', FORM = 'formatted' ) 
-     !
      !     The type of the pseudopotential is determined by the file name:
      !    *.xml or *.XML  UPF format with schema              pp_format=0
      !    *.upf or *.UPF  UPF format                          pp_format=1
@@ -61,7 +59,20 @@ SUBROUTINE read_ps ( filein, upf_in )
      !    *.RRKJ3         PWSCF US PP format ("atomic" code)  pp_format=4
      !    *.fhi or *cpi   FHI/Abinit numerical NC PP          pp_format=6
      !    *.cpmd          CPMD NC pseudopot. file format      pp_format=7
+     !    *.psml          Siesta/Abinit psml NCPP file format pp_format=8
      !    none of the above: PWSCF norm-conserving format     pp_format=5
+     !
+     IF ( upf_get_pp_format( filein ) == 8 ) THEN
+        !
+        ! Unlike all other cases, file must be opened with xml tools
+        !
+        WRITE( stdout, "('file type is PSML (experimental)')")
+        CALL read_psml (filein, upf_in)
+        RETURN
+        !
+     END IF
+     !
+     OPEN ( UNIT=iunps, FILE=filein, STATUS = 'old', FORM = 'formatted' ) 
      !
      IF ( upf_get_pp_format( filein ) == 2  ) THEN
         !
@@ -92,6 +103,7 @@ SUBROUTINE read_ps ( filein, upf_in )
         !
         WRITE( stdout, "('file type is CPMD NC format')")
         CALL read_cpmd (iunps, upf_in)
+        !
         !
      ELSE
         !

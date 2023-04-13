@@ -13,11 +13,12 @@ PROGRAM upfconv
   !     Pseudopotential conversion utility, can
   !     - convert from:
   !          UPF v.1 or v.2 containing "&" characters,
-  !          old PWSCF norm-conserving and Ultrasoft formats
-  !          Vanderbilt ultrasoft PP generation code format
+  !          norm-conserving PPs in .psml format (experimental),
+  !          old PWSCF norm-conserving and Ultrasoft formats,
+  !          Vanderbilt ultrasoft PP generation code format,
   !          CPMD format (TYPE=NUMERIC, LOGARITHMIC, CAR, GOEDECKER)
   !       to:
-  !         UPF v.2 clean, or UPF with schema (xml)
+  !         UPF v.2, or new UPF with schema (xml)
   !     - extract and write to separate files:
   !          wavefunctions
   !          projectors ("beta" functions)
@@ -74,6 +75,8 @@ PROGRAM upfconv
      prefix_len = INDEX(TRIM(filein),'.UPF') - 1
   ELSE IF (INDEX(TRIM(filein),'.upf') > 0 ) THEN
      prefix_len = INDEX(TRIM(filein),'.upf') - 1
+  ELSE IF (INDEX(TRIM(filein),'.psml') > 0 ) THEN
+     prefix_len = INDEX(TRIM(filein),'.psml') - 1
   ELSE 
      prefix_len = LEN_TRIM(filein)
   ENDIF
@@ -228,21 +231,23 @@ SUBROUTINE conv_upf2xml( upf )
   IF ( version_compare(upf%nv,"2.0.1") == 'equal') RETURN
   upf%nv="2.0.1"
   !
-  IF ( .NOT. ALLOCATED(upf%nchi) ) THEN
-     ALLOCATE(upf%nchi(upf%nwfc))
-     upf%nchi(:) = 0
-  END IF
-  IF ( .NOT. ALLOCATED(upf%rcut_chi) ) THEN
-     ALLOCATE(upf%rcut_chi(upf%nwfc))
-     upf%rcut_chi(:) = upf%rcut(:)
-  END IF
-  IF ( .NOT. ALLOCATED(upf%rcutus_chi) ) THEN
-     ALLOCATE(upf%rcutus_chi(upf%nwfc))
-     upf%rcutus_chi(:) = upf%rcutus(:)
-  END IF
-  IF ( .NOT. ALLOCATED(upf%epseu) ) THEN
-     ALLOCATE(upf%epseu(upf%nwfc))
-     upf%epseu(:) = 0.0
+  IF ( upf%nwfc > 0 ) THEN
+     IF ( .NOT. ALLOCATED(upf%nchi) ) THEN
+        ALLOCATE(upf%nchi(upf%nwfc))
+        upf%nchi(:) = 0
+     END IF
+     IF ( .NOT. ALLOCATED(upf%rcut_chi) ) THEN
+        ALLOCATE(upf%rcut_chi(upf%nwfc))
+        upf%rcut_chi(:) = upf%rcut(:)
+     END IF
+     IF ( .NOT. ALLOCATED(upf%rcutus_chi) ) THEN
+        ALLOCATE(upf%rcutus_chi(upf%nwfc))
+        upf%rcutus_chi(:) = upf%rcutus(:)
+     END IF
+     IF ( .NOT. ALLOCATED(upf%epseu) ) THEN
+        ALLOCATE(upf%epseu(upf%nwfc))
+        upf%epseu(:) = 0.0
+     END IF
   END IF
   IF ( TRIM(upf%rel) == '' ) THEN 
      IF (upf%has_so) THEN
