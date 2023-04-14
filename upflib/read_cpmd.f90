@@ -305,6 +305,7 @@ SUBROUTINE convert_cpmd(upf)
   !
   USE pseudo_types, ONLY : pseudo_upf
   USE upf_const, ONLY : e2
+  USE upf_utils, ONLY : spdf_to_l, l_to_spdf
   !
   IMPLICIT NONE
   !
@@ -314,7 +315,6 @@ SUBROUTINE convert_cpmd(upf)
   REAL(dp) :: x, x2, vll, rcloc, fac
   CHARACTER (len=20):: dft
   CHARACTER (len=2):: label
-  CHARACTER (len=1):: spdf(0:3) = ['S','P','D','F']
   CHARACTER (len=2), EXTERNAL :: atom_name
   INTEGER :: lloc, my_lmax, l, i, j, ij, ir, iv, jv
   !
@@ -424,17 +424,7 @@ SUBROUTINE convert_cpmd(upf)
      READ (label(1:1),*, err=10) l
      upf%els(i)  = label
      upf%nchi(i)  = l
-     IF ( label(2:2) == 's' .or. label(2:2) == 'S') THEN
-        l=0
-     ELSEIF ( label(2:2) == 'p' .or. label(2:2) == 'P') THEN
-        l=1
-     ELSEIF ( label(2:2) == 'd' .or. label(2:2) == 'D') THEN
-        l=2
-     ELSEIF ( label(2:2) == 'f' .or. label(2:2) == 'F') THEN
-        l=3
-     ELSE
-        l=i-1
-     ENDIF
+     l =spdf_to_l(label(2:2))
      upf%lchi(i)  = l
      upf%rcut_chi(i)  = 0.0d0
      upf%rcutus_chi(i)= 0.0d0
@@ -521,7 +511,7 @@ SUBROUTINE convert_cpmd(upf)
            DO i=1, nl(l)
               iv = iv+1
               upf%lll(iv)=l
-              WRITE (upf%els_beta(iv), '(I1,A1)' ) i, spdf(l)
+              WRITE (upf%els_beta(iv), '(I1,A1)' ) i, l_to_spdf(l)
               DO j=i, nl(l)
                  jv = iv+j-i
                  ij=ij+1
