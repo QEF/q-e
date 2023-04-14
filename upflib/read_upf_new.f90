@@ -92,6 +92,7 @@ CONTAINS
        ! existing PP files may have pp_nlcc first, pp_local later,
        ! but also the other way round - check that everything was right
        !
+       if ( ierr ==-10 ) ierr = 0
        if ( ierr /= 0 ) then
           ierr = -81
           return
