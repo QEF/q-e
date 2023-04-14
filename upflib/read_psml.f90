@@ -10,6 +10,15 @@ subroutine read_psml ( filename, upf )
   !-----------------------------------------------------
   !! Read pseudopotential files in PSML format using "xmltools"
   !! stores data into the "upf" structure
+  !! Main differences between the two formats:
+  !! - in PSML arrays: local potential, projectors, charges, ... 
+  !!   may be shorter than the full length of the radial grid,
+  !!   as specified in tag argument "npts";
+  !!   in UPF they all have the same full grid size "upf%mesh" so they
+  !!   must be completed (local potential) or set to zero beyond npts
+  !! - PSML pseudo-core charge must be divided by 4\pi
+  !! - PSML projectors must be multiplied by r
+  !! Works only for a subset of PSML files
   !! Written by P. Giannozzi, April 2023
   !
   USE xmltools
@@ -294,7 +303,7 @@ CONTAINS
           read (iun,*) upf%beta(1:npt,nb)
           do n=2,upf%mesh
              if ( n <= npt+1 ) then
-                upf%beta(n,nb) = upf%beta(n,nb) / upf%r(n)
+                upf%beta(n,nb) = upf%beta(n,nb) * upf%r(n)
              else
                 upf%beta(n,nb) = 0.0_dp
              end if
