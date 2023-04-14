@@ -41,7 +41,8 @@ subroutine read_psml ( filename, upf )
   tag = 'psml'
   call xmlr_opentag ( trim(tag), IERR = ierr )
   IF ( ierr /= 0 ) RETURN
-  call get_attr ( 'version', upf%nv ); print *, 'version=',upf%nv
+  call get_attr ( 'version', upf%nv )
+  ! print *, 'version=',upf%nv
   call get_attr ( 'uuid', upf%author )
   !
   tag = 'provenance'
@@ -91,9 +92,8 @@ subroutine read_psml ( filename, upf )
   !
   ! Convert from Hartree (PSML) to Ry
   !
-  upf%vloc(:) = e2*upf%vloc(:)
-  upf%beta(:,:) = e2*upf%beta(:,:)
-  upf%dion(:,:) = upf%dion(:,:)/e2
+  upf%vloc(:)   = e2*upf%vloc(:)
+  upf%dion(:,:) = e2*upf%dion(:,:)
   !
   RETURN
 10 print *, 'read_psml: error reading tag ',trim(tag)
@@ -280,7 +280,7 @@ CONTAINS
           ! actual read is done here during the second scan
           read (iun,*) upf%beta(1:npt,nb)
           if ( npt < upf%mesh) upf%beta(npt+1:,nb) = 0.0_dp
-          upf%dion(nb,nb) = 1.0_dp/ekb
+          upf%dion(nb,nb) = ekb
           upf%els_beta(nb) = '*'//spdf
           if ( spdf == 's' .or. spdf == 'S' ) then
              upf%lll(nb) = 0
@@ -368,42 +368,17 @@ function libxc_to_qe (nxc, xc)
   integer :: xc(nxc)
   character(len=25) :: libxc_to_qe
   !
-  if ( nxc < 1 ) go to 10
-  if ( xc(1) == 1 ) then
-     libxc_to_qe = 'SLA'
-  else
-     go to 10
-  end if
+  libxc_to_qe = 'Not Recognized'
+  print *, 'nxc, nc = ', nxc,xc
   if ( nxc < 2 ) return
-  if ( xc(2) == 9 ) then
-     libxc_to_qe = trim(libxc_to_qe) // '-PZ'
-  else if ( xc(2) == 12 ) then
-     libxc_to_qe = trim(libxc_to_qe) // '-PW'
-  else
-     go to 10
+  if ( xc(1) == 1 .and. xc(2) == 9 ) then
+     libxc_to_qe = 'SLA-PZ' ! Perdew-Zunger
+  else if ( xc(1) == 1 .and. xc(2) == 12 ) then
+     libxc_to_qe = 'SLA-PW' ! Perdew-Wang
+  else if ( xc(1) == 101 .and. xc(2) == 130 ) then
+     libxc_to_qe = 'SLA-PZ-PBX-PBC' ! PBE
+  else if ( xc(1) == 116 .and. xc(2) == 133 ) then
+     libxc_to_qe = 'SLA-PZ-PSX-PSC' ! PBESOL
   end if
-  if ( nxc < 3 ) return
-  if ( xc(3) == 101 ) then
-     libxc_to_qe = trim(libxc_to_qe) // '-PBX'
-  else if ( xc(3) == 106 ) then
-     libxc_to_qe = trim(libxc_to_qe) // '-B88'
-  else if ( xc(3) == 116 ) then
-     libxc_to_qe = trim(libxc_to_qe) // '-PSX'
-  else
-     go to 10
-  end if
-  if ( nxc < 4 ) return
-  if ( xc(4) == 130 ) then
-     libxc_to_qe = trim(libxc_to_qe) // '-PBC'
-  else if ( xc(4) == 131 ) then
-     libxc_to_qe = trim(libxc_to_qe) // '-BLYP'
-  else if ( xc(4) == 133 ) then
-     libxc_to_qe = trim(libxc_to_qe) // '-PSC'
-  else
-     go to 10
-  end if
-  return
-10 libxc_to_qe = 'Not Recognized'
-  return
   !
 end function libxc_to_qe
