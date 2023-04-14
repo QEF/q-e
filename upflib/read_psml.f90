@@ -13,11 +13,11 @@ subroutine read_psml ( filename, upf )
   !! Written by P. Giannozzi, April 2023
   !
   USE xmltools
+  USE upf_kinds, ONLY : dp
+  USE upf_const, ONLY : e2, fpi
   USE pseudo_types, ONLY: pseudo_upf
   !
   IMPLICIT NONE
-  INTEGER, PARAMETER :: dp = selected_real_kind(14,200)
-  REAL, PARAMETER :: e2 = 2.0_dp
   !
   CHARACTER(len=*), INTENT(IN) :: filename
   !! input : name of file in psml format
@@ -29,6 +29,7 @@ subroutine read_psml ( filename, upf )
   !! tag where error (ierr != 0) was detected
   INTEGER :: iun
   !! unit for reading data
+  INTEGER :: n
   !
   ierr = 0
   iun = xml_open_file ( filename )
@@ -70,11 +71,21 @@ subroutine read_psml ( filename, upf )
      tag = 'pseudocore-charge'
      call read_psml_radialfunc ( tag, upf%rho_atc,ierr )
      IF ( ierr /= 0 ) GO TO 10
+     upf%rho_atc(:) = upf%rho_atc(:) / fpi
   END IF
   !
   tag = 'local-potential'
   call read_psml_radialfunc ( tag, upf%vloc, ierr )
   IF ( ierr /= 0 ) GO TO 10
+  ! size(vloc) < size(mesh) so vloc is filled with zeros
+  ! fill vloc with asymptotic behavior until size(mesh) 
+  do n=upf%mesh,1,-1
+     if ( upf%vloc(n) == 0.0_dp ) then
+        upf%vloc(n) = -upf%zp/upf%r(n)
+     else
+        exit
+     end if
+  end do
   !
   tag = 'nonlocal-projectors'
   call read_psml_nonlocal_projectors ( ierr )
@@ -114,9 +125,11 @@ CONTAINS
     upf%tpawp = .false.
     upf%has_so = .false.
     upf%has_gipaw = .false.
+    upf%paw_as_gipaw = .false.
     upf%tcoulombp = .false.
     upf%is_gth = .false.
     upf%is_multiproj = .false.
+    upf%typ = 'NC'
     call xmlr_opentag ( 'pseudo-atom-spec', IERR = ierr )
     if (ierr /= 0) return
     call get_attr ( 'atomic-label', upf%psd )
@@ -239,7 +252,7 @@ CONTAINS
   SUBROUTINE read_psml_nonlocal_projectors ( ierr )
     !
     INTEGER :: ierr
-    INTEGER :: nb, npt, ndum
+    INTEGER :: n, nb, npt, ndum
     real(dp) :: ekb
     CHARACTER(len=1) :: spdf
     !
@@ -279,7 +292,13 @@ CONTAINS
        if ( upf%nbeta > 0 ) then
           ! actual read is done here during the second scan
           read (iun,*) upf%beta(1:npt,nb)
-          if ( npt < upf%mesh) upf%beta(npt+1:,nb) = 0.0_dp
+          do n=2,upf%mesh
+             if ( n <= npt+1 ) then
+                upf%beta(n,nb) = upf%beta(n,nb) / upf%r(n)
+             else
+                upf%beta(n,nb) = 0.0_dp
+             end if
+          end do
           upf%dion(nb,nb) = ekb
           upf%els_beta(nb) = '*'//spdf
           if ( spdf == 's' .or. spdf == 'S' ) then
@@ -376,9 +395,9 @@ function libxc_to_qe (nxc, xc)
   else if ( xc(1) == 1 .and. xc(2) == 12 ) then
      libxc_to_qe = 'SLA-PW' ! Perdew-Wang
   else if ( xc(1) == 101 .and. xc(2) == 130 ) then
-     libxc_to_qe = 'SLA-PZ-PBX-PBC' ! PBE
+     libxc_to_qe = 'SLA-PW-PBX-PBC' ! PBE
   else if ( xc(1) == 116 .and. xc(2) == 133 ) then
-     libxc_to_qe = 'SLA-PZ-PSX-PSC' ! PBESOL
+     libxc_to_qe = 'SLA-PW-PSX-PSC' ! PBESOL
   end if
   !
 end function libxc_to_qe
