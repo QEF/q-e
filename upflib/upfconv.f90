@@ -90,10 +90,10 @@ PROGRAM upfconv
              & in the CASINO pp file is what you expected.'
   ELSE IF ( conversion == "-x" ) THEN
      fileout = filein(1:prefix_len) //'.xml'
-     WRITE(*,*) 'UPF to xml format conversion'
+     WRITE(*,*) 'conversion to xml format'
   ELSE IF ( conversion == "-u" ) THEN
      fileout = filein(1:prefix_len) //'.UPF2'
-     WRITE(*,*) 'UPF v.1 to UPF v.2 format conversion'
+     WRITE(*,*) 'conversion to UPF v.2'
   ELSE IF ( conversion == "-e" .or. conversion == "-p" ) THEN
      fileout = filein(1:prefix_len)
   ELSE

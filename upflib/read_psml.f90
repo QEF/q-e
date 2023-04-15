@@ -144,7 +144,10 @@ CONTAINS
     call get_attr ( 'atomic-label', upf%psd )
     call get_attr ( 'atomic-number', upf%zmesh )
     call get_attr ( 'relativity', upf%rel )
-    if ( upf%rel(1:5) == 'dirac' ) upf%rel='full'
+    if ( upf%rel(1:5) == 'dirac' ) then
+       upf%rel='full'
+       upf%has_so = .true.
+    end if
     call get_attr ( 'core-corrections', cc )
     upf%nlcc = (cc == 'yes')
     call xmlr_opentag ( 'exchange-correlation', IERR = ierr )
@@ -260,10 +263,12 @@ CONTAINS
   !
   SUBROUTINE read_psml_nonlocal_projectors ( ierr )
     !
+    use upf_utils, only: spdf_to_l
     INTEGER :: ierr
     INTEGER :: n, nb, npt, ndum
-    real(dp) :: ekb
+    real(dp) :: ekb, j
     CHARACTER(len=1) :: spdf
+
     !
     call xmlr_opentag('nonlocal-projectors', IERR = ierr )
     if (ierr /= 0) return
@@ -273,6 +278,7 @@ CONTAINS
     do 
        call xmlr_opentag ( 'proj', IERR = ierr )
        call get_attr ( 'l', spdf )
+       call get_attr ( 'j', j )
        ! call get_attr ( 'seq',ndum )
        call get_attr ( 'ekb',ekb )
        call xmlr_opentag ( 'radfunc' )
@@ -288,6 +294,7 @@ CONTAINS
                upf%dion(nb,nb),  &
                upf%qqq(nb,nb)    )
           allocate (upf%beta(upf%mesh,nb))
+          IF (upf%has_so) ALLOCATE( upf%jjj(nb) ) 
           upf%rcut(:)  = 0.0_dp
           upf%rcutus(:)= 0.0_dp
           upf%dion(:,:)= 0.0_dp
@@ -301,8 +308,8 @@ CONTAINS
        if ( upf%nbeta > 0 ) then
           ! actual read is done here during the second scan
           read (iun,*) upf%beta(1:npt,nb)
-          do n=2,upf%mesh
-             if ( n <= npt+1 ) then
+          do n=1,upf%mesh
+             if ( n > 1 .and. n <= npt+1 ) then
                 upf%beta(n,nb) = upf%beta(n,nb) * upf%r(n)
              else
                 upf%beta(n,nb) = 0.0_dp
@@ -310,15 +317,8 @@ CONTAINS
           end do
           upf%dion(nb,nb) = ekb
           upf%els_beta(nb) = '*'//spdf
-          if ( spdf == 's' .or. spdf == 'S' ) then
-             upf%lll(nb) = 0
-          else if ( spdf == 'p' .or. spdf == 'P' ) then
-             upf%lll(nb) = 1
-          else if ( spdf == 'd' .or. spdf == 'D' ) then
-             upf%lll(nb) = 2
-          else if ( spdf == 'f' .or. spdf == 'F' ) then
-             upf%lll(nb) = 3
-          end if
+          upf%lll(nb) = spdf_to_l(spdf)
+          if (upf%has_so) upf%jjj(nb) = j
           upf%kbeta(nb) = npt
        else
           ! set max length of projectors during the first scan
@@ -335,6 +335,7 @@ CONTAINS
   !
   SUBROUTINE read_psml_pseudo_wave_functions ( ierr )
     !
+    use upf_utils, only : spdf_to_l
     INTEGER :: ierr
     INTEGER :: n, npt, ndum
     CHARACTER(len=1) :: spdf
@@ -352,25 +353,19 @@ CONTAINS
     upf%rcut_chi(:)  = 0.0_dp
     upf%rcutus_chi(:)= 0.0_dp
     upf%oc(upf%nwfc) = 0.0_dp
-    !IF ( upf%has_so ) THEN
-    !   allocate ( upf%nn(upf%nwfc) )
-    !   allocate ( upf%jchi(upf%nwfc) )
-    !END IF
+    IF ( upf%has_so ) THEN
+       allocate ( upf%nn(upf%nwfc) )
+       upf%nn(:) = 0       
+       allocate ( upf%jchi(upf%nwfc) )
+    END IF
     do n=1,upf%nwfc
        call xmlr_opentag ( 'pswf', IERR = ierr )
        if ( ierr /= 0 ) return
        call get_attr ( 'l', spdf )
        call get_attr ( 'n', upf%nchi(n) )
+       if ( upf%has_so ) call get_attr ( 'j', upf%jchi(n) )
        call get_attr ( 'energy_level', upf%epseu(n) )
-       if ( spdf == 's' .or. spdf == 'S' ) then
-          upf%lchi(n) = 0
-       else if ( spdf == 'p' .or. spdf == 'P' ) then
-          upf%lchi(n) = 1
-       else if ( spdf == 'd' .or. spdf == 'D' ) then
-          upf%lchi(n) = 2
-       else if ( spdf == 'f' .or. spdf == 'F' ) then
-          upf%lchi(n) = 3
-       end if
+       upf%lchi(n) = spdf_to_l(spdf)
        write(upf%els(n),'(i1,a1)') upf%nchi(n), spdf
        call xmlr_opentag ( 'radfunc' )
        call xmlr_opentag ( 'data', IERR = ierr  )
@@ -383,9 +378,9 @@ CONTAINS
        if ( npt < upf%mesh ) upf%chi(npt+1:upf%mesh,n) = 0.0_dp
        call xmlr_closetag () ! data
        call xmlr_closetag () ! radfun
-       call xmlr_closetag () ! pwscf
+       call xmlr_closetag () ! pswf
     end do
-    call xmlr_closetag ( ) ! nonlocal-projectors
+    call xmlr_closetag ( ) ! pseudo-wave-functions
     !
   END SUBROUTINE read_psml_pseudo_wave_functions
   !
