@@ -82,7 +82,7 @@ MODULE pseudo_types
      !
      CHARACTER(LEN=2), ALLOCATABLE :: els(:)  ! els(nwfc) label of wfc
      CHARACTER(LEN=2), ALLOCATABLE :: els_beta(:)  ! els(nbeta) label of beta
-     INTEGER, ALLOCATABLE  :: nchi(:)    ! lchi(nwfc) value of pseudo-n for wavefcts
+     INTEGER, ALLOCATABLE  :: nchi(:)    ! nchi(nwfc) value of pseudo-n for wavefcts
      INTEGER, ALLOCATABLE  :: lchi(:)    ! lchi(nwfc) value of l for wavefcts
      REAL(DP), ALLOCATABLE :: oc(:)      ! oc(nwfc) occupancies for wavefcts
      REAL(DP), ALLOCATABLE :: epseu(:)   ! pseudo one-particle energy (nwfc)
@@ -133,6 +133,7 @@ MODULE pseudo_types
 
      LOGICAL :: has_so             ! if .true. includes spin-orbit
      INTEGER, ALLOCATABLE :: nn(:)     ! nn(nwfc) quantum number of wfc
+     ! FIIXME: nn appears to be a duplicate of nchi
      REAL(DP), ALLOCATABLE :: rcut(:)  ! cut-off radius(nbeta)
      REAL(DP), ALLOCATABLE :: rcutus(:)! ultrasoft cut-off radius (nbeta)
      REAL(DP), ALLOCATABLE :: jchi(:)  ! jchi(nwfc) j=l+1/2 or l-1/2 of wfc

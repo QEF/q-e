@@ -21,6 +21,7 @@ set(src_upflib
     read_fhi.f90
     read_ncpp.f90
     read_ps.f90
+    read_psml.f90
     read_upf_new.f90
     read_upf_v1.f90
     read_uspp.f90
