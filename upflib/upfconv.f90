@@ -289,7 +289,7 @@ SUBROUTINE plot_ps_loc ( upf, fileout )
   TYPE(pseudo_upf), intent(in) :: upf
   CHARACTER(LEN=256) :: fileout
   !
-  REAL(DP) :: dq = 0.01_dp
+  REAL(DP), parameter :: dq = 0.01_dp
   INTEGER, PARAMETER :: nq = 4000
   REAL(DP) :: q(nq), vq(nq), vq2(nq), aux(upf%mesh), aux1(upf%mesh)
   REAL(DP) :: vq0, vq1, vlq
@@ -384,7 +384,11 @@ SUBROUTINE plot_ps_beta ( upf, fileout )
   !
   print '("kkbeta = ",1i5)',upf%kkbeta
   do nb=1,upf%nbeta
-     write(filename,'(A,"-betar-",i1,".dat")') trim(fileout),nb
+     if ( nb < 10 ) then
+        write(filename,'(A,"-betar-",i1,".dat")') trim(fileout),nb
+     else
+        write(filename,'(A,"-betar-",i2,".dat")') trim(fileout),nb
+     end if
      iun = 199 + nb
      open( unit=iun, file=filename, status='unknown', form='formatted' )
      write(iun,'("#   r,  vbeta(r,lm)")') 
@@ -401,7 +405,11 @@ SUBROUTINE plot_ps_beta ( upf, fileout )
   ! Compute q^2*beta(q)
   !
   do nb=1,upf%nbeta
-     write(filename,'(A,"-betaq-",i1,".dat")') trim(fileout),nb
+     if ( nb < 10 ) then
+        write(filename,'(A,"-betaq-",i1,".dat")') trim(fileout),nb
+     else
+        write(filename,'(A,"-betaq-",i2,".dat")') trim(fileout),nb
+     end if
      iun = 299 + nb
      open( unit=iun, file=filename, status='unknown', form='formatted' )
      write(iun,'("#   q,  q^2*v(q) ((old)  a^2*v(q) (cp90)")')
