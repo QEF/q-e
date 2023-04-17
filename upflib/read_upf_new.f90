@@ -513,10 +513,7 @@ CONTAINS
                 upf%rcut_chi(upf%nwfc), &
                 upf%rcutus_chi(upf%nwfc), &
                 upf%epseu(upf%nwfc) )
-    IF ( upf%has_so ) THEN
-       allocate ( upf%nn(upf%nwfc) )
-       allocate ( upf%jchi(upf%nwfc) )
-    END IF
+    IF ( upf%has_so ) allocate ( upf%jchi(upf%nwfc) )
     !
     CALL xmlr_opentag( capitalize_if_v2('pp_pswfc') )
     DO nw=1,upf%nwfc
@@ -532,10 +529,7 @@ CONTAINS
             call upf_error('read_pp_pswfc','mismatch reading PSWFC', nw)
        call get_attr( 'label', upf%els(nw) )
        call get_attr( 'l', upf%lchi(nw) )
-       IF ( .not. v2 .and. upf%has_so ) THEN
-          call get_attr( 'nn', upf%nn(nw) )
-          call get_attr( 'jchi', upf%jchi(nw) )
-       END IF
+       IF ( .not. v2 .and. upf%has_so ) call get_attr( 'jchi', upf%jchi(nw) )
        call get_attr( 'occupation', upf%oc(nw) )
        call get_attr( 'n', upf%nchi(nw) )
        call get_attr( 'pseudo_energy', upf%epseu(nw) )
@@ -612,7 +606,7 @@ CONTAINS
     !
     IMPLICIT NONE
     TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
-    INTEGER :: nw, nb, ierr
+    INTEGER :: nw, nb, nn, ierr
     CHARACTER(LEN=1) :: dummy
     !
     IF ( .NOT. v2 .OR. .NOT. upf%has_so ) RETURN
@@ -623,7 +617,7 @@ CONTAINS
        CALL get_attr( 'index' , nb )
        ! not-so-strict test: index absent or incorrect in some UPF v.2 files
        IF ( .NOT. v2 .AND. nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',1)
-       CALL get_attr( 'nn',    upf%nn(nw) )
+       CALL get_attr( 'nn',    nn ) ! obsolete
        CALL get_attr( 'jchi',  upf%jchi(nw) )
        !
        ! the following data is already known and was not read in old versions
