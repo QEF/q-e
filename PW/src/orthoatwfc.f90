@@ -457,15 +457,19 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
     CALL cdiagh (m, overlap, m, e, work)
   END IF 
   !
-  !$acc parallel loop collapse(2)
+  !$acc parallel loop collapse(2) private(temp)
   DO i = 1, m
-    DO j = 1, m
-      s(i,j) = work(i,j) * (1.d0/SQRT(e(j)))
-    END DO
-  END DO 
-  !$acc host_data use_device(s, work, overlap)
-  Call MYZGEMM( 'n', 'c', m, m, m, (1.d0, 0.d0), s, m, work, m, (0.d0,0.d0), overlap, m)
-  !$acc end host_data
+     DO j = 1, m
+        IF ( j < i ) CYCLE
+        temp = (0.d0, 0.d0)
+        !$acc loop seq
+        DO k = 1, m
+           temp = temp + work(j,k) * 1.d0/SQRT(e(k)) * CONJG(work(i,k))
+        ENDDO
+        overlap(i,j) = temp
+        IF (j /= i) overlap(j,i) = CONJG(temp)
+     ENDDO
+  ENDDO
   !
   IF (lflag) THEN
      !
@@ -482,6 +486,7 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
   DEALLOCATE( work )
   !
   ALLOCATE( work(m, npwx*npol ) )
+  !
   !$acc kernels
   work(:,:) = (0.d0,0.d0)
   !$acc end kernels
