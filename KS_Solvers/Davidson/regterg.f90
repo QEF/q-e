@@ -468,10 +468,13 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      ! ... here compute the hpsi and spsi of the new functions
      !
      !$acc host_data use_device(psi, hpsi, spsi)
-     !$omp target update from(psi)
+     !$omp target update from(psi,hpsi)
      CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
      !
-     IF ( uspp ) CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
+     IF ( uspp ) THEN
+        !$omp target update from(spsi)
+        CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
+     ENDIF
      !$acc end host_data
      !
      ! ... update the reduced hamiltonian
@@ -510,7 +513,6 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !$acc host_data use_device(psi, spsi, sr)
      CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
-     !$omp target update from(sr)
      IF ( uspp ) THEN
         !
         !$omp target update to(spsi)
@@ -665,7 +667,6 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
            !$omp target update to(psi)
            !$acc end host_data
            !
-           !$omp target update to(spsi)
            !$acc parallel loop collapse(2)
            !$omp target teams distribute parallel do collapse(2)
            DO i=1,nvec
@@ -695,7 +696,6 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         !$omp target update to(psi)
         !$acc end host_data
         !
-        !$omp target update to(hpsi)
         !$acc parallel loop collapse(2)
         !$omp target teams distribute parallel do collapse(2)
         DO i=1,nvec
