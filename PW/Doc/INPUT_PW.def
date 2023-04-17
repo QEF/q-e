@@ -1266,9 +1266,11 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
 
                 opt -val 'gygi-baldereschi' { appropriate for cubic and quasi-cubic supercells }
                 
-                opt -val 'vcut_spherical' { appropriate for cubic and quasi-cubic supercells }
+                opt -val 'vcut_spherical' { appropriate for cubic and quasi-cubic supercells
+                                            (untested for non-orthogonal crystal axis) }
 
-                opt -val 'vcut_ws' { appropriate for strongly anisotropic supercells, see also @ref ecutvcut. }
+                opt -val 'vcut_ws' { appropriate for strongly anisotropic supercells, see also @ref ecutvcut
+                                     (untested for non-orthogonal crystal axis) }
                 
                 opt -val 'none' { sets Coulomb potential at G,q=0 to 0.0 (required for GAU-PBE) }
             }
