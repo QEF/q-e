@@ -352,11 +352,7 @@ CONTAINS
     upf%rcut_chi(:)  = 0.0_dp
     upf%rcutus_chi(:)= 0.0_dp
     upf%oc(upf%nwfc) = 0.0_dp
-    IF ( upf%has_so ) THEN
-       allocate ( upf%nn(upf%nwfc) )
-       upf%nn(:) = 0       
-       allocate ( upf%jchi(upf%nwfc) )
-    END IF
+    IF ( upf%has_so ) allocate ( upf%jchi(upf%nwfc) )
     do n=1,upf%nwfc
        call xmlr_opentag ( 'pswf', IERR = ierr )
        if ( ierr /= 0 ) return

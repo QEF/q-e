@@ -235,7 +235,6 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   !
   DO nt = 1, ntyp
      !
-     CALL nullify_radial_grid( rgrid( nt ) )
      CALL add_upf_grid (upf(nt), rgrid(nt))
      !
      ! the radial grid is defined up to r(mesh) but we introduce 
@@ -514,11 +513,9 @@ SUBROUTINE upf_bcast(upf, ionode, ionode_id, comm)
   
   IF (upf%has_so) THEN
      IF ( .NOT. ionode) THEN
-        ALLOCATE (upf%nn(upf%nwfc))
         ALLOCATE (upf%jchi(upf%nwfc))
         ALLOCATE(upf%jjj(upf%nbeta))
      END IF
-     CALL mp_bcast (upf%nn,ionode_id,comm )
      CALL mp_bcast (upf%jchi,ionode_id,comm )
      CALL mp_bcast (upf%jjj,ionode_id,comm )
   END IF

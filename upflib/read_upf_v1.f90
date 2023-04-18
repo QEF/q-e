@@ -570,15 +570,13 @@ subroutine read_pseudo_addinfo (upf, iunps)
   TYPE (pseudo_upf), INTENT(INOUT) :: upf
   integer :: nb
   
-  ALLOCATE( upf%nn(upf%nwfc) )
   ALLOCATE( upf%jchi(upf%nwfc) )
   ALLOCATE( upf%jjj(upf%nbeta) )
 
-  upf%nn=0
   upf%jchi=0.0_DP
   do nb = 1, upf%nwfc
      read (iunps, *,err=100,end=100) upf%els(nb),  &
-          upf%nn(nb), upf%lchi(nb), upf%jchi(nb), upf%oc(nb)
+          upf%nchi(nb), upf%lchi(nb), upf%jchi(nb), upf%oc(nb)
      if ( abs ( upf%jchi(nb)-upf%lchi(nb)-0.5_dp ) > 1.0d-7 .and. &
           abs ( upf%jchi(nb)-upf%lchi(nb)+0.5_dp ) > 1.0d-7      ) then
         call upf_error ( 'read_pseudo_upf', 'obsolete ADDINFO section ignored',-1)
