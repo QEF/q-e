@@ -279,10 +279,9 @@ SUBROUTINE export_upf(filename, unit_loc)
    END SUBROUTINE export_upf_wfc
 
    SUBROUTINE export_upf_so
-      ALLOCATE( upf%nn(upf%nwfc), upf%jchi(upf%nwfc), upf%jjj(upf%nbeta) )
+      ALLOCATE( upf%jchi(upf%nwfc), upf%jjj(upf%nbeta) )
 
       upf%els(1:upf%nwfc)  = elts(1:upf%nwfc)
-      upf%nn(1:upf%nwfc)   = nnts(1:upf%nwfc)
       upf%lchi(1:upf%nwfc) = llts(1:upf%nwfc)
       upf%jchi(1:upf%nwfc) = jjts(1:upf%nwfc)
       !
