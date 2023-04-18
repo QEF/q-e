@@ -37,11 +37,16 @@ CONTAINS
     TYPE(pseudo_upf),INTENT(OUT) :: upf
     !! the derived type storing the pseudo data
     INTEGER, INTENT(OUT) :: ierr
-    !! ierr=0  : xml schema, ierr=-2: UPF v.2
-    !! ierr=-81: error reading PP file
+    !! ierr= -1 : UPF v.2
+    !! ierr=  0 : xml schema
+    !! ierr=1-4 : error reading PP file
+    !! ierr= 81 : error opening PP file
     !
     iun = xml_open_file ( filename )
-    IF ( iun == -1 ) CALL upf_error('read_upf', 'cannot open file',1)
+    if ( iun == -1 ) THEN
+       ierr = 81
+       return
+    end if
     call xmlr_opentag ( 'qe_pp:pseudo', IERR = ierr )
     if ( ierr == 0 ) then
        v2 =.false.
@@ -50,13 +55,13 @@ CONTAINS
        call xmlr_opentag ( 'UPF', IERR = ierr )
        if ( ierr == 0 ) then
           v2 =.true.
-          ierr = -2
           CALL get_attr ( 'version', upf%nv )
        end if
+    else
+       return
     end if
-    if ( ierr /= 0 .and. ierr /= -2 ) then
+    if ( ierr > 0 ) then
        call xml_closefile( )
-       ierr = -81
        return
     end if
     !
@@ -93,10 +98,7 @@ CONTAINS
        ! but also the other way round - check that everything was right
        !
        if ( ierr ==-10 ) ierr = 0
-       if ( ierr /= 0 ) then
-          ierr = -81
-          return
-       end if
+       if ( ierr /= 0 ) return
     end if
     !
     CALL read_pp_semilocal ( upf )
@@ -123,6 +125,8 @@ CONTAINS
     !
     CALL xml_closefile ( )
     !
+    if ( v2 ) ierr = -1
+
   END SUBROUTINE read_upf_new
   !
   FUNCTION capitalize_if_v2 ( strin ) RESULT ( strout )
@@ -635,10 +639,7 @@ CONTAINS
        ! existing PP files may have pp_relbeta first, pp_relwfc later,
        ! but also the other way round - check that everything was right
        !
-       if ( ierr > 0 ) then
-          ierr = -81
-          return
-       end if
+       if ( ierr > 0 ) return
        CALL get_attr( 'index' , nw )
        IF ( .NOT.v2 .AND. nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',2)
        CALL get_attr( 'lll',  upf%lll(nb) )

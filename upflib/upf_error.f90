@@ -10,8 +10,7 @@
 SUBROUTINE upf_error( calling_routine, message, ierr )
   !----------------------------------------------------------------------------
   !
-  ! ... Writes an error message to output (unit "*") if ierr != 0
-  ! ... Stops if ierr > 0. Does nothing if ierr = 0 
+  ! ... Writes an error message to output (unit "*") if ierr != 0 and stops
   !
   USE upf_parallel_include
   IMPLICIT NONE
@@ -24,12 +23,7 @@ SUBROUTINE upf_error( calling_routine, message, ierr )
   CHARACTER(LEN=6) :: cerr
   INTEGER          :: info
   !
-  IF( ierr < 0 ) THEN
-     WRITE( UNIT = *, FMT = '(5X,"Message from routine ",A,":")' ) &
-             TRIM(calling_routine)
-     WRITE( UNIT = *, FMT = '(5X,A)' ) TRIM(message)
-     RETURN
-  ELSE IF( ierr > 0 ) THEN
+  IF( ierr /= 0 ) THEN
      !
      WRITE( cerr, FMT = '(I6)' ) ierr
      WRITE( UNIT = *, FMT = '(/,1X,78("%"))' )
