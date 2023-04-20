@@ -12,9 +12,11 @@ addusdbec.o \
 addusdbec_nc.o \
 apply_dpot.o \
 apply_dpot_mod.o \
+apply_trev.o \
 addusldos.o \
 adddvepsi_us.o \
 addusddenseq.o \
+c_bands_ph.o \
 cft_wave.o \
 cgsolve_all.o \
 ccgsolve_all.o \
@@ -35,6 +37,7 @@ dnonloccorr.o \
 dv_vdW_DF.o \
 dv_rVV10.o \
 newdq.o \
+non_scf_ph.o \
 set_intq_nc.o \
 lr_sym_mod.o \
 orthogonalize.o \
