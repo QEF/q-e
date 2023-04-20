@@ -236,6 +236,9 @@ SUBROUTINE print_clock_pw()
    WRITE( stdout, '(/5X,"General routines")' )
    !
    CALL print_clock( 'calbec' )
+#if defined(__OPENMP_GPU)
+   CALL print_clock( 'calbec_omp')
+#endif
    CALL print_clock( 'fft' )
    CALL print_clock( 'ffts' )
    CALL print_clock( 'fftw' )

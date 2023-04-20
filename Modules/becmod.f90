@@ -53,9 +53,16 @@ MODULE becmod
      MODULE PROCEDURE becscal_nck, becscal_gamma
      !
   END INTERFACE
+
+  INTERFACE calbec_omp
+     !
+     MODULE PROCEDURE calbec_k_omp, calbec_gamma_omp, calbec_gamma_nocomm_omp, calbec_nc_omp, calbec_bec_type_omp
+     !
+  END INTERFACE
   !
   PUBLIC :: bec_type, becp, allocate_bec_type, deallocate_bec_type, calbec, &
-            beccopy, becscal, is_allocated_bec_type
+            beccopy, becscal, is_allocated_bec_type,                        &
+            calbec_omp
   !
 CONTAINS
   !-----------------------------------------------------------------------
@@ -468,5 +475,278 @@ CONTAINS
 
     RETURN
   END SUBROUTINE becscal_gamma
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_bec_type_omp ( npw, beta, psi, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !_
+    USE mp_bands, ONLY: intra_bgrp_comm
+    USE mp,       ONLY: mp_get_comm_null
+    !
+    IMPLICIT NONE
+    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
+    TYPE (bec_type), INTENT (inout) :: betapsi ! NB: must be INOUT otherwise
+                                               !  the allocatd array is lost
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    !
+    INTEGER :: nkb, local_nbnd
+    INTEGER, EXTERNAL :: ldim_block, gind_block
+    INTEGER :: m_loc, m_begin, ip, i, j
+    REAL(DP), ALLOCATABLE :: dtmp(:,:)
+    !
+    IF ( present (nbnd) ) THEN
+        local_nbnd = nbnd
+    ELSE
+        local_nbnd = size ( psi, 2)
+    ENDIF
 
+    IF ( gamma_only ) THEN
+       !
+       IF( betapsi%comm == mp_get_comm_null() ) THEN
+          !
+          CALL calbec_gamma_omp ( npw, beta, psi, betapsi%r, local_nbnd, intra_bgrp_comm )
+          !
+       ELSE
+          !
+          ALLOCATE( dtmp( SIZE( betapsi%r, 1 ), SIZE( betapsi%r, 2 ) ) )
+          !
+          DO ip = 0, betapsi%nproc - 1
+             m_loc   = ldim_block( betapsi%nbnd , betapsi%nproc, ip )
+             m_begin = gind_block( 1,  betapsi%nbnd, betapsi%nproc, ip )
+             IF( ( m_begin + m_loc - 1 ) > local_nbnd ) m_loc = local_nbnd - m_begin + 1
+             IF( m_loc > 0 ) THEN
+                CALL calbec_gamma_omp ( npw, beta, psi(:,m_begin:m_begin+m_loc-1), dtmp, m_loc, betapsi%comm )
+                IF( ip == betapsi%mype ) THEN
+                   nkb = SIZE( betapsi%r, 1 )
+                   DO j = 1, m_loc
+                     DO i = 1, nkb 
+                       betapsi%r(i,j) = dtmp(i,j)
+                     END DO
+                   END DO
+                END IF
+             END IF
+          END DO
+
+          DEALLOCATE( dtmp )
+          !
+       END IF
+       !
+    ELSEIF ( noncolin) THEN
+       !
+       CALL  calbec_nc_omp ( npw, beta, psi, betapsi%nc, local_nbnd )
+       !
+    ELSE
+       !
+       CALL  calbec_k_omp ( npw, beta, psi, betapsi%k, local_nbnd )
+       !
+    ENDIF
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_bec_type_omp
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_gamma_nocomm_omp ( npw, beta, psi, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    USE mp_bands, ONLY: intra_bgrp_comm
+    IMPLICIT NONE
+    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
+    REAL (DP), INTENT (out) :: betapsi(:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    INTEGER :: m
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi, 2)
+    ENDIF
+    CALL calbec_gamma_omp ( npw, beta, psi, betapsi, m, intra_bgrp_comm )
+    RETURN
+    !
+  END SUBROUTINE calbec_gamma_nocomm_omp
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_gamma_omp ( npw, beta, psi, betapsi, nbnd, comm )
+    !-----------------------------------------------------------------------
+    !! matrix times matrix with summation index (k=1,npw) running on
+    !! half of the G-vectors or PWs - assuming k=0 is the G=0 component:
+    !
+    !! $$ betapsi(i,j) = 2Re(\sum_k beta^*(i,k)psi(k,j)) + beta^*(i,0)psi(0,j) $$
+    !
+    USE mp,        ONLY : mp_sum
+    !
+    IMPLICIT NONE
+    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
+    REAL (DP), INTENT (out) :: betapsi(:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, INTENT (in) :: nbnd
+    INTEGER, INTENT (in) :: comm 
+    !
+    INTEGER :: nkb, npwx, m, i
+    !
+    m = nbnd
+    !
+    nkb = size (beta, 2)
+    IF ( nkb == 0 ) RETURN
+    !
+    CALL start_clock( 'calbec_omp' )
+    IF ( npw == 0 ) betapsi(:,:)=0.0_DP
+    !$omp target data map(tofrom:betapsi)
+    npwx= size (beta, 1)
+    IF ( npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
+    IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
+#if defined(DEBUG)
+    WRITE (*,*) 'calbec gamma'
+    WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 2)
+#endif
+    IF ( nkb /= size (betapsi,1) .or. m > size (betapsi, 2) ) &
+      CALL errore ('calbec', 'size mismatch', 3)
+    !
+    IF ( m == 1 ) THEN
+        !
+        CALL MYDGEMV( 'C', 2*npw, nkb, 2.0_DP, beta, 2*npwx, psi, 1, 0.0_DP, &
+                     betapsi, 1 )
+        IF ( gstart == 2 ) THEN
+             !$omp target teams distribute parallel do
+             DO i=1, nkb 
+                betapsi(i,1) = betapsi(i,1) - beta(1,i)*psi(1,1)
+             END DO
+        ENDIF
+        !
+    ELSE
+        !
+        CALL MYDGEMM2( 'C', 'N', nkb, m, 2*npw, 2.0_DP, beta, 2*npwx, psi, &
+                    2*npwx, 0.0_DP, betapsi, nkb, .TRUE. )
+        IF ( gstart == 2 ) THEN
+           !$omp target update from(betapsi)
+           CALL DGER( nkb, m, -1.0_DP, beta, 2*npwx, psi, 2*npwx, betapsi, nkb )
+           !$omp target update to(betapsi)
+        ENDIF
+        !
+    ENDIF
+    !
+    !$omp end target data
+    CALL mp_sum( betapsi( :, 1:m ), comm )
+    !
+    CALL stop_clock( 'calbec_omp' )
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_gamma_omp
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_k_omp ( npw, beta, psi, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !! Matrix times matrix with summation index (k=1,npw) running on
+    !! G-vectors or PWs:
+    !! $$ betapsi(i,j) = \sum_k beta^*(i,k) psi(k,j)$$
+    !
+    USE mp_bands, ONLY : intra_bgrp_comm
+    USE mp,       ONLY : mp_sum
+
+    IMPLICIT NONE
+    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
+    COMPLEX (DP), INTENT (out) :: betapsi(:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    !
+    INTEGER :: nkb, npwx, m
+    !
+    nkb = size (beta, 2)
+    IF ( nkb == 0 ) RETURN
+    !
+    CALL start_clock( 'calbec_omp' )
+    IF ( npw == 0 ) betapsi(:,:)=(0.0_DP,0.0_DP)
+    !$omp target data map(tofrom:betapsi)
+    npwx= size (beta, 1)
+    IF ( npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
+    IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi, 2)
+    ENDIF
+#if defined(DEBUG)
+    WRITE (*,*) 'calbec k'
+    WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 2)
+#endif
+    IF ( nkb /= size (betapsi,1) .or. m > size (betapsi, 2) ) &
+      CALL errore ('calbec', 'size mismatch', 3)
+    !
+    IF ( m == 1 ) THEN
+       !
+       CALL MYZGEMV( 'C', npw, nkb, (1.0_DP,0.0_DP), beta, npwx, psi, 1, &
+                   (0.0_DP, 0.0_DP), betapsi, 1 )
+       !
+    ELSE
+       !
+       CALL MYZGEMM2( 'C', 'N', nkb, m, npw, (1.0_DP,0.0_DP), &
+                 beta, npwx, psi, npwx, (0.0_DP,0.0_DP), betapsi, nkb, .TRUE. )
+       !
+    ENDIF
+    !$omp end target data
+    !
+    CALL mp_sum( betapsi( :, 1:m ), intra_bgrp_comm )
+    !
+    CALL stop_clock( 'calbec_omp' )
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_k_omp
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_nc_omp ( npw, beta, psi, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !! Matrix times matrix with summation index (k below) running on
+    !! G-vectors or PWs corresponding to two different polarizations:
+    !
+    !! * \(betapsi(i,1,j) = \sum_k=1,npw beta^*(i,k) psi(k,j)\)
+    !! * \(betapsi(i,2,j) = \sum_k=1,npw beta^*(i,k) psi(k+npwx,j)\)
+    !
+    USE mp_bands, ONLY : intra_bgrp_comm
+    USE mp,       ONLY : mp_sum
+
+    IMPLICIT NONE
+    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
+    COMPLEX (DP), INTENT (out) :: betapsi(:,:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    !
+    INTEGER :: nkb, npwx, npol, m
+    !
+    nkb = size (beta, 2)
+    IF ( nkb == 0 ) RETURN
+    !
+    CALL start_clock ('calbec_omp')
+    IF ( npw == 0 ) betapsi(:,:,:)=(0.0_DP,0.0_DP)
+    !$omp target data map(tofrom:betapsi)
+    npwx= size (beta, 1)
+    IF ( 2*npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
+    IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi, 2)
+    ENDIF
+    npol= size (betapsi, 2)
+#if defined(DEBUG)
+    WRITE (*,*) 'calbec nc'
+    WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 3)
+#endif
+    IF ( nkb /= size (betapsi,1) .or. m > size (betapsi, 3) ) &
+      CALL errore ('calbec', 'size mismatch', 3)
+    !
+    CALL MYZGEMM2 ('C', 'N', nkb, m*npol, npw, (1.0_DP, 0.0_DP), beta, &
+              npwx, psi, npwx, (0.0_DP, 0.0_DP),  betapsi, nkb, .TRUE.)
+    !
+    !$omp end target data
+    CALL mp_sum( betapsi( :, :, 1:m ), intra_bgrp_comm )
+    !
+    CALL stop_clock( 'calbec_omp' )
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_nc_omp
+  !
+  !
 END MODULE becmod
+

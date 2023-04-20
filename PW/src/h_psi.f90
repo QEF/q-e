@@ -87,7 +87,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   USE kinds,                   ONLY: DP
   USE bp,                      ONLY: lelfield, l3dstring, gdir, efield, efield_cry
-  USE becmod,                  ONLY: bec_type, becp, calbec
+  USE becmod,                  ONLY: bec_type, becp, calbec, calbec_omp
   USE lsda_mod,                ONLY: current_spin
   USE scf,                     ONLY: vrs  
   USE wvfct,                   ONLY: g2kin
@@ -247,7 +247,14 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      CALL using_becp_auto(1)
      !
      CALL start_clock( 'h_psi:calbec' )
+#if defined(__OPENMP_GPU)
+     !$omp target data map(to:vkb)
+     !$omp target update to(psi)
+     CALL calbec_omp( n, vkb, psi, becp, m )
+     !$omp end target data
+#else
      CALL calbec( n, vkb, psi, becp, m )
+#endif
      CALL stop_clock( 'h_psi:calbec' )
      CALL add_vuspsi( lda, n, m, hpsi )
      !
