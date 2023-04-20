@@ -18,7 +18,7 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
   USE util_param,    ONLY : DP
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
                             me_bgrp, root_bgrp
-  USE mp_bands_util, ONLY : gstart ! index of the first nonzero G 
+  USE mp_bands_util, ONLY : gstart ! index of the first nonzero G
   USE mp,            ONLY : mp_sum, mp_barrier, mp_allgather, mp_type_create_column_section, mp_type_free
   USE device_memcpy_m,    ONLY: dev_memcpy
   !
@@ -31,7 +31,7 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
   INTEGER, INTENT(IN) :: &
     npw,                 &         ! dimension of the matrices (psi,Hpsi,Spsi) to be rotated
     npwx,                &         ! leading dimension of the wavefunction-related matrices
-    nstart,              &         ! input number of states 
+    nstart,              &         ! input number of states
     nbnd                           ! output number of states
   COMPLEX(DP), INTENT(INOUT) :: psi(npwx,nstart), hpsi(npwx,nstart) ! input and output psi, Hpsi,
   COMPLEX(DP), INTENT(INOUT), OPTIONAL :: spsi(npwx,nstart)         ! ...   and optionnally Spsi
@@ -63,7 +63,7 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
      if (overlap) spsi(1,1:nstart) = CMPLX( DBLE( spsi(1,1:nstart) ), 0.D0,kind=DP)
      !$acc end kernels
   END IF
-  
+
   kdim = 2 * npw
   kdmx = 2 * npwx
   !
@@ -86,7 +86,7 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
   my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
   if (n_start .le. n_end) &
   CALL MYDGEMM2( 'T','N', nstart,my_n,kdim, 2.D0, psi,kdmx, hpsi(1,n_start),kdmx, 0.D0, hh(1,n_start),nstart,.FALSE. )
-  IF ( gstart == 2 ) call MYDGER( nstart, my_n, -1.D0, psi,kdmx, hpsi(1,n_start),kdmx, hh(1,n_start),nstart )
+  IF ( gstart == 2 ) call MYDGER2( nstart, my_n, -1.D0, psi,kdmx, hpsi(1,n_start),kdmx, hh(1,n_start),nstart,.FALSE. )
   call start_clock('rotHSw:hc:s1')
   CALL mp_sum( hh(:,n_start:n_end), intra_bgrp_comm ) ! this section only needs to be collected inside bgrp
   call stop_clock('rotHSw:hc:s1')
@@ -99,13 +99,13 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
      !
      if (n_start .le. n_end) &
      CALL MYDGEMM2('T','N', nstart,my_n,kdim, 2.D0, psi,kdmx, spsi(1,n_start),kdmx, 0.D0, ss(1,n_start),nstart,.FALSE. )
-     IF ( gstart == 2 ) CALL MYDGER(nstart, my_n, -1.D0, psi,kdmx, spsi(1,n_start),kdmx, ss(1,n_start),nstart)
+     IF ( gstart == 2 ) CALL MYDGER2(nstart, my_n, -1.D0, psi,kdmx, spsi(1,n_start),kdmx, ss(1,n_start),nstart,.FALSE. )
      !
   ELSE
      !
      if (n_start .le. n_end) &
      CALL MYDGEMM2('T','N', nstart,my_n,kdim, 2.D0, psi,kdmx, psi(1,n_start),kdmx, 0.D0, ss(1,n_start),nstart,.FALSE. )
-     IF ( gstart == 2 ) CALL MYDGER(nstart, my_n, -1.D0, psi,kdmx, psi(1,n_start),kdmx, ss(1,n_start),nstart)
+     IF ( gstart == 2 ) CALL MYDGER2(nstart, my_n, -1.D0, psi,kdmx, psi(1,n_start),kdmx, ss(1,n_start),nstart,.FALSE. )
      !
   END IF
   call start_clock('rotHSw:hc:s3')
@@ -151,7 +151,7 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
 
   if (n_start .le. n_end) &
   CALL MYDGEMM2( 'N','N', kdim,my_n,nstart, 1.D0,hpsi,kdmx,vv(1,n_start),nstart, 0.D0, aux(1,n_start),kdmx,.FALSE. )
-  CALL dev_memcpy(hpsi, aux, [1, npwx], 1, [n_start,n_end])  
+  CALL dev_memcpy(hpsi, aux, [1, npwx], 1, [n_start,n_end])
 !  call start_clock('rotHSw:ev:b4'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b4')
   call start_clock('rotHSw:ev:s6')
   CALL mp_allgather(hpsi(:,1:nbnd), column_type, recv_counts, displs, inter_bgrp_comm)
@@ -161,7 +161,7 @@ SUBROUTINE rotate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, spsi
 
      if (n_start .le. n_end) &
      CALL MYDGEMM2( 'N','N', kdim,my_n,nstart, 1.D0,spsi,kdmx,vv(1,n_start),nstart, 0.D0, aux(1,n_start),kdmx,.FALSE. )
-     CALL dev_memcpy(spsi, aux, [1, npwx], 1, [n_start,n_end])     
+     CALL dev_memcpy(spsi, aux, [1, npwx], 1, [n_start,n_end])
 !     call start_clock('rotHSw:ev:b5'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b5')
      call start_clock('rotHSw:ev:s7')
      CALL mp_allgather(spsi(:,1:nbnd), column_type, recv_counts, displs, inter_bgrp_comm)
@@ -207,7 +207,7 @@ SUBROUTINE protate_HSpsi_gamma( npwx, npw, nstart, nbnd, psi, hpsi, overlap, sps
   !
   USE util_param,       ONLY : DP
   USE mp_bands_util,    ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
-  USE mp_bands_util,    ONLY : gstart ! index of the first nonzero G 
+  USE mp_bands_util,    ONLY : gstart ! index of the first nonzero G
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier, mp_rank
   USE mp,               ONLY : mp_allgather, mp_type_create_column_section, mp_type_free
   !
@@ -411,7 +411,7 @@ CONTAINS
 
            !write (6,*) 'nx: ', nx
            !write (6,*) 'ipc, ipr, root', ipc, ipr, root
-           !write (6,*) 'ic, nc,  ir, nr', ic, nc, ir, nr 
+           !write (6,*) 'ic, nc,  ir, nr', ic, nc, ir, nr
            !do ix=1,nx
            !   write (6,'(16f12.8)')  work(1:nx,ix)
            !enddo
@@ -469,7 +469,7 @@ CONTAINS
               nr = idesc_ip(LAX_DESC_NR, ipr, ipc )
               ir = idesc_ip(LAX_DESC_IR, ipr, ipc )
               !
-              root = rank_ip( ipr, ipc )                             ! this proc has the needed block 
+              root = rank_ip( ipr, ipc )                             ! this proc has the needed block
               IF( ipr-1 == idesc(LAX_DESC_MYR) .AND. ipc-1 == idesc(LAX_DESC_MYC) .AND. la_proc ) vtmp(:,1:nc) = vv(:,1:nc)
               CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm ) ! the other ones will receive it
               !

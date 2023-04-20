@@ -49,7 +49,6 @@ MODULE rocblas
 
     END INTERFACE
 
-
     CONTAINS
 
         FUNCTION rocblas_get_operation(op)
@@ -202,6 +201,29 @@ MODULE rocblas_utils
     INTERFACE rocblas_dgemm
         MODULE PROCEDURE rocblas_ddgemm, rocblas_dzgemm1, rocblas_dzgemm2, rocblas_dzgemm3    
     END INTERFACE
+ 
+    INTERFACE 
+        FUNCTION rocblas_dger_(handle, m, n, alpha, x, incx, y, incy, A, lda) &
+                               BIND(C, NAME="rocblas_dger") 
+                USE ISO_C_BINDING
+                IMPLICIT NONE
+                TYPE(C_PTR), VALUE :: handle
+                INTEGER(rocblas_int), VALUE :: m, n
+                REAL(c_double) :: alpha
+                TYPE(C_PTR), VALUE :: x
+                INTEGER(rocblas_int), VALUE :: incx
+                TYPE(C_PTR), VALUE :: y
+                INTEGER(rocblas_int), VALUE :: incy
+                TYPE(C_PTR), VALUE :: A
+                INTEGER(rocblas_int), VALUE :: lda
+                INTEGER :: rocblas_dger_
+        END FUNCTION rocblas_dger_
+
+    END INTERFACE
+
+    INTERFACE rocblas_dger
+        MODULE PROCEDURE rocblas_dger1, rocblas_dzger
+    END INTERFACE  
 
     CONTAINS
 
@@ -400,6 +422,52 @@ MODULE rocblas_utils
             !$omp end target data
 
             CALL rocblas_check(stat, "dzgemm3")
+
+        END SUBROUTINE
+
+        SUBROUTINE rocblas_dger1(m, n, alpha, x, incx, y, incy, A, lda) 
+            USE ISO_C_BINDING
+            IMPLICIT NONE
+            INTEGER, INTENT(IN) :: m, n, incx, incy, lda
+            REAL(DP), INTENT(IN) :: alpha 
+            REAL(DP), INTENT(IN), TARGET :: x(m), y(n)
+            REAL(DP), INTENT(INOUT), TARGET :: A(lda,*)
+            INTEGER :: rm, rn, rincx, rincy, rlda
+            INTEGER :: stat
+            rm = int(m, kind(rocblas_int))
+            rn = int(n, kind(rocblas_int))
+            rincx = int(incx, kind(rocblas_int))
+            rincy = int(incx, kind(rocblas_int))
+            rlda = int(lda, kind(rocblas_int))
+
+            !$omp target data use_device_ptr(A, x, y)
+            stat = rocblas_dger_(handle, rm, rn, alpha, c_loc(x), rincx, c_loc(y), rincy, &
+                                 c_loc(A), rlda)
+            !$omp end target data
+            CALL rocblas_check(stat, "DGER1")
+
+        END SUBROUTINE
+
+        SUBROUTINE rocblas_dzger(m, n, alpha, x, incx, y, incy, A, lda) 
+            USE ISO_C_BINDING
+            IMPLICIT NONE
+            INTEGER, INTENT(IN) :: m, n, incx, incy, lda
+            REAL(DP), INTENT(IN) :: alpha 
+            COMPLEX(DP), INTENT(IN) :: x(m), y(n)
+            REAL(DP), INTENT(INOUT) :: A(lda,*)
+            INTEGER :: rm, rn, rincx, rincy, rlda
+            INTEGER :: stat
+            rm = int(m, kind(rocblas_int))
+            rn = int(n, kind(rocblas_int))
+            rincx = int(incx, kind(rocblas_int))
+            rincy = int(incx, kind(rocblas_int))
+            rlda = int(lda, kind(rocblas_int))
+
+            !$omp target data use_device_ptr(A, x, y)
+            stat = rocblas_dger_(handle, rm, rn, alpha, c_loc(x), rincx, c_loc(y), rincy, &
+                                 c_loc(A), rlda)
+            !$omp end target data
+            CALL rocblas_check(stat, "DZGER")
 
         END SUBROUTINE
 
