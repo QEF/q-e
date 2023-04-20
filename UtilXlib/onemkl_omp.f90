@@ -38,7 +38,7 @@ module onemkl_vsl_gpu
 #endif
 endmodule onemkl_vsl_gpu
 
-#else
+#elif defined(__OPENMP_GPU)
 
 module onemkl_dfti_gpu
 endmodule onemkl_dfti_gpu
