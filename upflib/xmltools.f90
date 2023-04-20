@@ -60,7 +60,7 @@ MODULE xmltools
   !
   ! variables used to keep track of open tags
   !
-  INTEGER :: nlevel = -1
+  INTEGER :: nlevel = -1, level0 = 0
   INTEGER, PARAMETER :: maxlength=80, maxlevel=9
   CHARACTER(LEN=maxlength), DIMENSION(0:maxlevel) :: open_tags
   !
@@ -289,10 +289,15 @@ CONTAINS
          IOSTAT=ios)
     IF ( ios /= 0 ) iun = -1
     nopen = nopen + 1
-    IF ( nopen > 1 ) xmlsave = xmlunit
+    IF ( nopen > 1 ) then
+       ! a second file is opened: keep track of the status of the previous file
+       xmlsave = xmlunit
+       level0  = nlevel
+    else
+       nlevel = 0
+       open_tags(nlevel) = 'root'
+    end if
     xmlunit = iun
-    nlevel = 0
-    open_tags(nlevel) = 'root'
     if ( allocated(attrlist) ) DEALLOCATE ( attrlist)
 #if defined ( __debug )
     print "('file ',a,' opened with unit ',i5)",trim(filexml),iun
@@ -302,6 +307,7 @@ CONTAINS
   !
   SUBROUTINE xml_closefile ( )
     !
+    integer :: ios
     CLOSE ( UNIT=xmlunit, STATUS='keep' )
 #if defined ( __debug )
     print "('unit ',i5,': file closed')", xmlunit
@@ -309,9 +315,14 @@ CONTAINS
     xmlunit = xmlsave
     nopen = nopen - 1
     xmlsave = -1
-    IF (nlevel > 0) print '("warning: file closed at level ",i1,&
+    IF (nlevel > level0 ) print '("warning: file closed at level ",i1,&
             & " with tag ",A," open")', nlevel, trim(open_tags(nlevel))
-    nlevel = 0
+    IF ( nopen == 1 ) THEN
+       ! the second file is opened: return to the status of previous file
+       nlevel  = level0
+    ELSE
+       level0 = 0
+    END IF
     !
   END SUBROUTINE xml_closefile
   !
