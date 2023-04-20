@@ -14,8 +14,7 @@ SUBROUTINE run_pwscf( exit_status )
   !
   !! Run an instance of the Plane Wave Self-Consistent Field code 
   !! MPI initialization and input data reading is performed in the 
-  !! calling code - returns in exit_status the exit code for pw.x, 
-  !! returned in the shell. Values are:  
+  !! calling code - returns in exit_status the exit code for pw.x:
   !! * 0: completed successfully
   !! * 1: an error has occurred (value returned by the errore() routine)
   !! * 2-127: convergence error
@@ -27,6 +26,10 @@ SUBROUTINE run_pwscf( exit_status )
   !!     (note: in the future, check_stop_now could also return a value
   !!     to specify the reason of exiting, and the value could be used
   !!     to return a different value for different reasons)
+  !! @Note
+  !! 20/04/23 Unless preprocessing flag __RETURN_EXIT_STATUS is set (see
+  !! routine do_stop) pw.x no longer returns an exit status != 0  to the shell
+  !! @endnote
   !
   !! @Note
   !! 10/01/17 Samuel Ponce: Add Ford documentation
