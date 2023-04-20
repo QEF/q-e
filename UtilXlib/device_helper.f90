@@ -236,25 +236,77 @@ SUBROUTINE MYZGEMM2( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LD
 END SUBROUTINE MYZGEMM2
 !========================================================================================================
 
-! In principle this can go away .......
 SUBROUTINE MYDGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
 #if defined(__CUDA)
     use cudafor
     use cublas
+#elif defined(__OPENMP_GPU)
+#if defined(__ONEMKL)
+    use onemkl_blas_gpu
 #endif
-      DOUBLE PRECISION, INTENT(IN) :: ALPHA,BETA
-      INTEGER, INTENT(IN) :: INCX,INCY,LDA,M,N
-      CHARACTER*1, INTENT(IN) :: TRANS
-      DOUBLE PRECISION A(LDA,*),X(*),Y(*)
+#if defined(__ROCBLAS)
+    use rocblas_utils
+#endif
+#endif
+    DOUBLE PRECISION, INTENT(IN) :: ALPHA,BETA
+    INTEGER, INTENT(IN) :: INCX,INCY,LDA,M,N
+    CHARACTER*1, INTENT(IN) :: TRANS
+    DOUBLE PRECISION A(LDA,*),X(*),Y(*)
 #if defined(__CUDA)
     attributes(device) :: A, X, Y
     CALL cublasdgemv(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
 #else
+#if defined(__ONEMKL)
+    !$omp target variant dispatch use_device_ptr(A, X, Y)
+#endif
+#if defined(__ROCBLAS)
+    CALL rocblas_dgemv(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
+#else
     CALL dgemv(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
+#endif
+#if defined(__ONEMKL)
+    !$omp end target variant dispatch
+#endif
 #endif
 END SUBROUTINE MYDGEMV
 
+
 !=----------------------------------------------------------------------------=
+
+SUBROUTINE MYZGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
+#if defined(__CUDA)
+    use cudafor
+    use cublas
+#elif defined(__OPENMP_GPU)
+#if defined(__ONEMKL)
+    use onemkl_blas_gpu
+#endif
+#if defined(__ROCBLAS)
+    use rocblas_utils
+#endif
+#endif
+    COMPLEX*16, INTENT(IN) :: ALPHA,BETA
+    INTEGER, INTENT(IN) :: INCX,INCY,LDA,M,N
+    CHARACTER*1, INTENT(IN) :: TRANS
+    COMPLEX*16 :: A(LDA,*),X(*),Y(*)
+#if defined(__CUDA)
+    attributes(device) :: A, X, Y
+    CALL cublaszgemv(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
+#else
+#if defined(__ONEMKL)
+    !$omp target variant dispatch use_device_ptr(A, X, Y)
+#endif
+#if defined(__ROCBLAS)
+    CALL rocblas_zgemv(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
+#else
+    CALL zgemv(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
+#endif
+#if defined(__ONEMKL)
+    !$omp end target variant dispatch
+#endif
+#endif
+END SUBROUTINE MYZGEMV
+
 
 ! In principle this can go away .......
 DOUBLE PRECISION FUNCTION MYDDOT(N,DX,INCX,DY,INCY)
