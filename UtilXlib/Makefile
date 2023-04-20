@@ -36,7 +36,8 @@ ptrace.o\
 set_mpi_comm_4_solvers.o \
 util_param.o \
 thread_util.o \
-nvtx_wrapper.o 
+nvtx_wrapper.o \
+hip_profiling.o
 
 all : libutil.a
 
