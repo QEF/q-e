@@ -134,9 +134,8 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
         !! start reading - check  first if files are readable as xml files,
         !! then as UPF v.2, then as UPF v.1
         !
-        IF (isupf ==-81 ) THEN
-           !! error code -81 means that the file is not xml or UPF v.2 
-           !! (the funny code value is for compatibility with FoX)
+        IF (isupf > 0 ) THEN
+           !! file is not xml or UPF v.2 
            CALL  read_upf_v1 (file_pseudo, upf(nt), isupf )
            !! try to read UPF v.1 file
            IF ( isupf == 0 ) isupf = -1

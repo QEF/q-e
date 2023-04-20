@@ -134,8 +134,6 @@ CONTAINS
     !
     if (is <= 0) &
          call upf_error('readvan','routine called with wrong 1st argument', 1)
-    if (iunps <= 0 .or. iunps >= 100000) &
-         call upf_error('readvan','routine called with wrong 2nd argument', 1)
     !
     read(iunps, *, err=100, iostat=ios ) &
          (iver(i),i=1,3), (idmy(i),i=1,3)

@@ -14,7 +14,8 @@
 
 ! ...   declare modules
         USE upf_kinds,    ONLY: DP
-        USE pseudo_types, ONLY : pseudo_upf
+        USE upf_io,       ONLY: stdout
+        USE pseudo_types, ONLY: pseudo_upf
         USE upf_utils,    ONLY: matches
 !
         IMPLICIT NONE
@@ -90,7 +91,6 @@ SUBROUTINE read_upf_v1 ( file_pseudo, upf, ierr )
   
   call scan_end (iunps, "HEADER")  
 
-  ! WRITE( stdout, * ) "Reading pseudopotential file in UPF format"  
   ! Compatibility with later formats:
   upf%has_wfc = .false.
 
@@ -196,7 +196,7 @@ subroutine scan_end (iunps, string)
   if (matches ("</PP_"//string//">", rstring) ) return  
   return
 300 call upf_error ('scan_end', &
-       'No '//string//' block end statement, possibly corrupted file',  -1)
+       'No '//string//' block end statement, possibly corrupted file', 1)
 end subroutine scan_end
 !
 !---------------------------------------------------------------------
@@ -579,7 +579,7 @@ subroutine read_pseudo_addinfo (upf, iunps)
           upf%nchi(nb), upf%lchi(nb), upf%jchi(nb), upf%oc(nb)
      if ( abs ( upf%jchi(nb)-upf%lchi(nb)-0.5_dp ) > 1.0d-7 .and. &
           abs ( upf%jchi(nb)-upf%lchi(nb)+0.5_dp ) > 1.0d-7      ) then
-        call upf_error ( 'read_pseudo_upf', 'obsolete ADDINFO section ignored',-1)
+        write(stdout,'(5x,"read_pseudo_upf: obsolete ADDINFO section ignored")')
         upf%has_so = .false.
         return
      end if
@@ -590,7 +590,7 @@ subroutine read_pseudo_addinfo (upf, iunps)
      read (iunps, *, err=100,end=100) upf%lll(nb), upf%jjj(nb)
      if ( abs ( upf%lll(nb)-upf%jjj(nb)-0.5_dp) > 1.0d-7 .and. &
           abs ( upf%lll(nb)-upf%jjj(nb)+0.5_dp) > 1.0d-7       ) then
-        call upf_error ( 'read_pseudo_upf', 'obsolete ADDINFO section ignored',-1)
+        write(stdout,'(5x,"read_pseudo_upf: obsolete ADDINFO section ignored")')
         upf%has_so = .false.
         return
      end if
