@@ -168,8 +168,7 @@ SUBROUTINE start_clock( label )
                         t0cpu, t0wall, f_wall, f_tcpu
   USE nvtx
 #if defined(__OPENMP_GPU)
-  USE hip_profiling,       ONLY : roctxRangePushA
-  USE iso_c_binding,       ONLY: c_null_char
+  USE hip_profiling,       ONLY : roctxStartRange
 #endif
   !
   IMPLICIT NONE
@@ -178,9 +177,6 @@ SUBROUTINE start_clock( label )
   !
   CHARACTER(len=12):: label_
   INTEGER          :: n
-#if defined(__OPENMP_GPU)
-  INTEGER          :: ret
-#endif
   !
 #if defined (__TRACE)
   if (trace_depth <= max_print_depth ) &  ! used to gauge the ammount of output
@@ -211,7 +207,7 @@ SUBROUTINE start_clock( label )
 
            call nvtxStartRange(label_, n)
 #if defined(__OPENMP_GPU)
-           ret = roctxRangePushA(label_//c_null_char)
+           call roctxStartRange(label_)
 #endif
         ENDIF
         !
@@ -235,7 +231,7 @@ SUBROUTINE start_clock( label )
      t0wall(nclock)      = f_wall()
      call nvtxStartRange(label_, n)
 #if defined(__OPENMP_GPU)
-     ret = roctxRangePushA(label_//c_null_char)
+     CALL roctxStartRange(label_)
 #endif
      !
   ENDIF
@@ -340,7 +336,7 @@ SUBROUTINE stop_clock( label )
                         notrunning, called, t0cpu, t0wall, f_wall, f_tcpu
   USE nvtx
 #if defined(__OPENMP_GPU)
-  USE hip_profiling, ONLY : roctxRangePop
+  USE hip_profiling, ONLY : roctxEndRange
 #endif
   !
   IMPLICIT NONE
@@ -384,7 +380,7 @@ SUBROUTINE stop_clock( label )
 
            call nvtxEndRange
 #if defined(__OPENMP_GPU)
-           call roctxRangePop()
+           call roctxEndRange
 #endif
            !
         ENDIF
