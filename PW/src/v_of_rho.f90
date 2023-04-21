@@ -1685,25 +1685,25 @@ SUBROUTINE v_hubbard_extended_nc (nsg, v_hub, eth)
          !  
       ENDIF
       !
+      ! Hubbard_alpha
+      !!
+      IF ( ldim_u(nt1).GT.0 .AND. (Hubbard_alpha(nt1).NE.0.0d0 ) ) THEN
+         !
+         na = find_viz(na1,na1)
+         !
+         DO is = 1, npol
+            !
+            DO m1 = 1, 2*Hubbard_l(nt1)+1
+               v_hub(m1,m1,na,na1,is**2) = v_hub(m1,m1,na,na1,is**2) + Hubbard_alpha(nt1)
+               eth = eth + nsg(m1,m1,na,na1,is**2)* Hubbard_alpha(nt1)
+            ENDDO
+            !
+         ENDDO
+         !
+      ENDIF
       !
    ENDDO ! na1
    !
-   ! Hubbard_alpha
-   !!
-   IF ( ldim_u(nt1).GT.0 .AND. (Hubbard_alpha(nt1).NE.0.0d0 ) ) THEN
-      !
-      na = find_viz(na1,na1)
-      !
-      DO is = 1, npol**2
-         !
-         DO m1 = 1, 2*Hubbard_l(nt1)+1
-            v_hub(m1,m1,na,na1,is) = v_hub(m1,m1,na,na1,is) + Hubbard_alpha(nt1)
-            eth = eth + nsg(m1,m1,na,na1,is)* Hubbard_alpha(nt1)
-         ENDDO
-         !
-      ENDDO
-      !
-   ENDIF
    !
    IF (nspin.EQ.1) eth = eth * 2.d0
    !
