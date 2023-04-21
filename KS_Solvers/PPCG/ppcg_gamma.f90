@@ -242,7 +242,7 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
      IF ( gstart == 2 ) w(1,act_idx(1:nact)) = CMPLX( DBLE( w(1,act_idx(1:nact)) ), 0.D0, kind=DP)
      call threaded_assign( buffer1, w, npwx, nact, act_idx )
 #if defined(__OPENMP_GPU)
-     !$omp target data map(alloc:psi,hpsi)
+     !$omp target data map(alloc:buffer1,buffer)
      CALL h_psi( npwx, npw, nact, buffer1, buffer )
      !$omp end target data
 #else
