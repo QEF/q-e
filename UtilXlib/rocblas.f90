@@ -177,7 +177,9 @@ MODULE rocblas_utils
                 INTEGER(rocblas_int), VALUE :: ldc
                 INTEGER :: rocblas_dgemm_
         END FUNCTION rocblas_dgemm_
+     END INTERFACE
 
+     INTERFACE
         FUNCTION rocblas_dgemv_(handle, trans, m, n, alpha, A, lda, X, incx, beta, Y, incy) &
                                BIND(C, NAME="rocblas_dgemv")
                 USE ISO_C_BINDING
@@ -195,23 +197,9 @@ MODULE rocblas_utils
                 INTEGER(rocblas_int), VALUE :: incy
                 INTEGER :: rocblas_dgemv_
         END FUNCTION rocblas_dgemv_
+     END INTERFACE
 
-        FUNCTION rocblas_dger_(handle, m, n, alpha, X, incx, Y, incy, A, lda) &
-                               BIND(C, NAME="rocblas_dger")
-                USE ISO_C_BINDING
-                IMPLICIT NONE
-                TYPE(C_PTR), VALUE :: handle
-                INTEGER(rocblas_int), VALUE :: m, n
-                REAL(c_double) :: alpha
-                TYPE(C_PTR), VALUE :: X
-                INTEGER(rocblas_int), VALUE :: incx
-                TYPE(C_PTR), VALUE :: Y
-                INTEGER(rocblas_int), VALUE :: incy
-                TYPE(C_PTR), VALUE :: A
-                INTEGER(rocblas_int), VALUE :: lda
-                INTEGER :: rocblas_dger_
-        END FUNCTION rocblas_dger_
-
+     INTERFACE
         FUNCTION rocblas_zgemv_(handle, trans, m, n, alpha, A, lda, X, incx, beta, Y, incy) &
                                BIND(C, NAME="rocblas_zgemv")
                 USE ISO_C_BINDING
@@ -229,7 +217,9 @@ MODULE rocblas_utils
                 INTEGER(rocblas_int), VALUE :: incy
                 INTEGER :: rocblas_zgemv_
         END FUNCTION rocblas_zgemv_
+     END INTERFACE
 
+     INTERFACE
         FUNCTION rocblas_zgemm_(handle, transA, transB, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc) &
                                BIND(C, NAME="rocblas_zgemm") 
                 USE ISO_C_BINDING
@@ -270,7 +260,6 @@ MODULE rocblas_utils
                 INTEGER(rocblas_int), VALUE :: lda
                 INTEGER :: rocblas_dger_
         END FUNCTION rocblas_dger_
-
     END INTERFACE
 
     INTERFACE rocblas_dger
@@ -278,34 +267,6 @@ MODULE rocblas_utils
     END INTERFACE  
 
     CONTAINS
-
-        SUBROUTINE rocblas_dger(m, n, alpha, X, incx, Y, incy, A, lda)
-            IMPLICIT NONE
-            INTEGER, INTENT(IN) :: m, n, lda, incx, incy
-            REAL(DP), INTENT(IN) :: alpha
-            REAL(DP), INTENT(IN), TARGET :: X(*)
-            REAL(DP), INTENT(IN), TARGET :: Y(*)
-            REAL(DP), INTENT(INOUT), TARGET :: A(lda,*)
-            INTEGER :: stat
-            INTEGER(rocblas_int) :: rm, rn, rlda, rincx, rincy
-
-            rm = int(m, kind(rocblas_int))
-            rn = int(n, kind(rocblas_int))
-            rlda = int(lda, kind(rocblas_int))
-            rincx = int(incx, kind(rocblas_int))
-            rincy = int(incy, kind(rocblas_int))
-
-            !$omp target data use_device_ptr(A, X, Y)
-            stat = rocblas_dger_(handle, rm, rn,     &
-                                 alpha,              &
-                                 c_loc(X), rincx,    &
-                                 c_loc(Y), rincy,    &
-                                 c_loc(A), rlda )
-            !$omp end target data
-
-            CALL rocblas_check(stat, "dger")
-
-        END SUBROUTINE rocblas_dger
 
         SUBROUTINE rocblas_dgemv(trans, m, n, alpha, A, lda, X, incx, beta, Y, incy)
             IMPLICIT NONE

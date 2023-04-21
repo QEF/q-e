@@ -236,7 +236,7 @@ SUBROUTINE MYZGEMM2( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LD
 END SUBROUTINE MYZGEMM2
 !========================================================================================================
 
-SUBROUTINE MYDGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
+SUBROUTINE MYDGEMV2(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
 #if defined(__CUDA)
     use cudafor
     use cublas
@@ -268,12 +268,12 @@ SUBROUTINE MYDGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
     !$omp end target variant dispatch
 #endif
 #endif
-END SUBROUTINE MYDGEMV
+END SUBROUTINE MYDGEMV2
 
 
 !=----------------------------------------------------------------------------=
 
-SUBROUTINE MYZGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
+SUBROUTINE MYZGEMV2(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
 #if defined(__CUDA)
     use cudafor
     use cublas
@@ -305,7 +305,7 @@ SUBROUTINE MYZGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
     !$omp end target variant dispatch
 #endif
 #endif
-END SUBROUTINE MYZGEMV
+END SUBROUTINE MYZGEMV2
 
 
 ! In principle this can go away .......

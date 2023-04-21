@@ -603,7 +603,7 @@ CONTAINS
     !
     IF ( m == 1 ) THEN
         !
-        CALL MYDGEMV( 'C', 2*npw, nkb, 2.0_DP, beta, 2*npwx, psi, 1, 0.0_DP, &
+        CALL MYDGEMV2( 'C', 2*npw, nkb, 2.0_DP, beta, 2*npwx, psi, 1, 0.0_DP, &
                      betapsi, 1 )
         IF ( gstart == 2 ) THEN
              !$omp target teams distribute parallel do
@@ -617,9 +617,7 @@ CONTAINS
         CALL MYDGEMM2( 'C', 'N', nkb, m, 2*npw, 2.0_DP, beta, 2*npwx, psi, &
                     2*npwx, 0.0_DP, betapsi, nkb, .TRUE. )
         IF ( gstart == 2 ) THEN
-           !$omp target update from(betapsi)
-           CALL DGER( nkb, m, -1.0_DP, beta, 2*npwx, psi, 2*npwx, betapsi, nkb )
-           !$omp target update to(betapsi)
+           CALL MYDGER2( nkb, m, -1.0_DP, beta, 2*npwx, psi, 2*npwx, betapsi, nkb, .TRUE. )
         ENDIF
         !
     ENDIF
@@ -674,7 +672,7 @@ CONTAINS
     !
     IF ( m == 1 ) THEN
        !
-       CALL MYZGEMV( 'C', npw, nkb, (1.0_DP,0.0_DP), beta, npwx, psi, 1, &
+       CALL MYZGEMV2( 'C', npw, nkb, (1.0_DP,0.0_DP), beta, npwx, psi, 1, &
                    (0.0_DP, 0.0_DP), betapsi, 1 )
        !
     ELSE
