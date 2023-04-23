@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-SUBROUTINE read_ps ( psfile, upf, isupf )
+SUBROUTINE read_ps ( psfile, upf, ierr )
   !
   ! stripped-down version of readpp in Modules/read_pseudo.f90
   ! for serial execution only and for usage in conversion codes
@@ -23,28 +23,28 @@ SUBROUTINE read_ps ( psfile, upf, isupf )
   IMPLICIT NONE
   CHARACTER(LEN=256), INTENT(in) :: psfile
   TYPE(pseudo_upf), INTENT(out) :: upf
-  INTEGER, INTENT(out) :: isupf
+  INTEGER, INTENT(out) :: ierr
   !
   INTEGER :: iunps, l, lm3, lm4, lm5
   !
   !
-  CALL read_upf_new( psfile, upf, isupf )
+  CALL read_upf_new( psfile, upf, ierr )
   !
-  IF (isupf == 81 ) THEN
+  IF (ierr == 81 ) THEN
      WRITE (stdout, '("readpp: file ",A1,"  not readable")') trim(psfile)
      return
-  ELSE IF (isupf > 0 ) THEN
-     CALL  read_upf_v1 ( psfile, upf, isupf )
+  ELSE IF (ierr > 0 ) THEN
+     CALL  read_upf_v1 ( psfile, upf, ierr )
      !! try to read UPF v.1 file
-     IF ( isupf == 0 ) WRITE( stdout, "('file type is UPF v.1')")
-  ELSE IF ( isupf == 0 ) THEN
+     IF ( ierr == 0 ) WRITE( stdout, "('file type is UPF v.1')")
+  ELSE IF ( ierr == 0 ) THEN
      WRITE( stdout, "('file type is xml')") 
-  ELSE IF ( isupf ==-1 ) THEN
-     isupf = 0
+  ELSE IF ( ierr ==-2 ) THEN
+     ierr = 0
      WRITE( stdout, "('file type is UPF v.2')")
   END IF
   !
-  IF ( isupf /= 0 ) THEN
+  IF ( ierr /= 0 ) THEN
      !
      l = LEN_TRIM (psfile)
      lm3 = max(l-3,1)
@@ -63,44 +63,46 @@ SUBROUTINE read_ps ( psfile, upf, isupf )
      ELSE
         !
         OPEN ( NEWUNIT=iunps, FILE=psfile, STATUS = 'old', &
-             FORM = 'formatted', IOSTAT = isupf )
-        IF (isupf /= 0 ) RETURN
+             FORM = 'formatted', IOSTAT = ierr )
+        IF (ierr /= 0 ) RETURN
         !
         IF (psfile (lm3:l) =='.vdb' .OR. psfile (lm3:l) =='.van') THEN
            !
            WRITE( stdout, "('file type is Vanderbilt US PP')")
-           CALL readvan (iunps, 1, upf)
+           CALL readvan (iunps, upf, ierr)
            !
         ELSE IF (psfile (lm3:l) =='.gth') THEN
            !
            WRITE( stdout, "('file type is GTH (analytical)')")
-           CALL readgth (iunps, 1, upf)
+           CALL readgth (iunps, 1, upf, ierr)
            !
         ELSE IF (psfile (lm5:l) =='.RRKJ3') THEN
            !
            WRITE( stdout, "('file type is RRKJ3')")
-           CALL readrrkj (iunps, 1, upf)
+           CALL readrrkj (iunps, upf, ierr)
            !
         ELSE IF (psfile (lm3:l) =='.cpi' .OR. psfile (l-3:l) =='.fhi') THEN
            !
            WRITE( stdout, "('file type is FHI .cpi or .fhi format')")
            CALL readfhi (iunps, upf)
+           ierr = 0 
            !
         ELSE IF (psfile (lm4:l) =='.cpmd') THEN
            !
            WRITE( stdout, "('file type is CPMD NC format')")
-           CALL read_cpmd (iunps, upf)
+           CALL read_cpmd (iunps, upf, ierr)
            !
         ELSE
            !
            WRITE( stdout, "('file type is old PWscf NC format')")
-           CALL read_ncpp (iunps, 1, upf)
+           CALL read_ncpp (iunps, upf, ierr)
            !
         ENDIF
         !
         ! end of reading
-        !
         CLOSE (iunps)
+        ! Error return
+        IF ( ierr /= 0 ) RETURN
         !
      END IF
      !
@@ -109,7 +111,7 @@ SUBROUTINE read_ps ( psfile, upf, isupf )
   ! reconstruct Q(r) if needed
   !
   CALL set_upf_q (upf)
-  !
-  isupf = 0 
+  ! Normal return
+  ierr = 0 
   !
 END SUBROUTINE read_ps

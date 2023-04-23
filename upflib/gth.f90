@@ -518,10 +518,11 @@ subroutine deallocate_gth( lflag )
   !
 end subroutine deallocate_gth
 !-----------------------------------------------------------------------
-subroutine readgth (iunps, np, upf)
+subroutine readgth (iunps, np, upf, ierr)
   !-----------------------------------------------------------------------
   !
   USE upf_kinds,    ONLY: dp
+  USE upf_io,       ONLY: stdout
   USE upf_const,    ONLY: e2, tpi
   USE upf_params,   ONLY: lmaxx
   USE upf_utils,    ONLY: l_to_spdf
@@ -531,7 +532,9 @@ subroutine readgth (iunps, np, upf)
   !
   ! I/O
   TYPE (pseudo_upf) :: upf
-  integer :: iunps, np
+  integer, intent(in) :: iunps
+  integer, intent(in) :: np
+  integer, intent(out):: ierr
   !
   ! Local variables
   integer  :: ios, pspdat, pspcod, pspxc, lmax, lloc, mmax, ii, jj, ll, nn, nnonloc, &
@@ -544,6 +547,7 @@ subroutine readgth (iunps, np, upf)
   real(dp), allocatable         :: hij(:,:,:), kij(:,:,:)
   type(gth_parameters), pointer, dimension(:) :: gth_tmp_p
   !
+  ierr = 1
   os=0; if (associated(gth_p)) os=size(gth_p)
   ns=os+1; allocate(gth_tmp_p(ns))
   if (os>0) then
@@ -582,13 +586,18 @@ subroutine readgth (iunps, np, upf)
 
   read (iunps, '(a)', end=400, err=400, iostat=ios) info
   read (iunps, *, err=400) znucl, upf%zp, pspdat
-  if (upf%zp <= 0._dp .or. upf%zp > 100 ) call upf_error ('readgth', 'Wrong zp ', np)
+  if (upf%zp <= 0._dp .or. upf%zp > 100 ) then
+     write(stdout,'(5x,"readgth: Wrong zp ")')
+     return
+  end if
   upf%psd=atom_name ( NINT(znucl) )
   call gth_grid_for_rho(upf,znucl)
 
   read (iunps, *, err=400) pspcod,pspxc,lmax,lloc,mmax,r2well
-  IF ( pspcod /= 10 .AND. pspcod /= 12 ) &
-     call upf_error ('readgth', 'unknown/invalid pspcod:', pspcod )
+  IF ( pspcod /= 10 .AND. pspcod /= 12 ) then
+     write(stdout,'(5x,"readgth: unknown/invalid pspcod")')
+     return
+  end if
   IF ( pspcod == 12 ) THEN
      ! pseudo with NLCC
      upf%nlcc=.true.
@@ -618,7 +627,8 @@ subroutine readgth (iunps, np, upf)
   ELSE IF (pspxc == -101130) THEN ! PBE from libXC
      upf%dft = 'PBE'
   ELSE
-     call upf_error ('readgth', 'pspxc cod. cannot be understood', abs (np) )
+     write(stdout,'(5x,"readgth: unknown/invalid pspxc code")')
+     return
   ENDIF
   !
   cc(:)=0._dp
@@ -691,9 +701,11 @@ subroutine readgth (iunps, np, upf)
   enddo lloop
   !
   deallocate(hij,kij,nproj)
+  ierr = 0 
   return
   !
-400 call upf_error ('readgth', 'pseudo file is empty or wrong', abs (np) )
+400 write(stdout,'(5x,"readgth: pseudo file is empty or wrong")' )
+  !
 end subroutine readgth
 !*****************************************************************************************
 subroutine gth_grid_for_rho(upf,znucl)

@@ -69,7 +69,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   CHARACTER(len=512) :: file_pseudo
   ! file name complete with path
   LOGICAL :: printout_ = .FALSE., exst
-  INTEGER :: iunps, isupf, nt, nb, ir, ios
+  INTEGER :: iunps, isupf, ierr, nt, nb, ir, ios
   INTEGER :: iexch_, icorr_, igcx_, igcc_, inlc_
   INTEGER :: iexch1, icorr1, igcx1, igcc1, inlc1
   !
@@ -128,17 +128,18 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      END IF
      !
      IF ( ionode ) THEN
-        isupf = 0
-        CALL  read_upf_new( file_pseudo, upf(nt), isupf )
+        CALL  read_upf_new( file_pseudo, upf(nt), ierr )
         !
         !! start reading - check  first if files are readable as xml files,
         !! then as UPF v.2, then as UPF v.1
         !
-        IF (isupf > 0 ) THEN
+        IF ( ierr > 0 ) THEN
            !! file is not xml or UPF v.2 
-           CALL  read_upf_v1 (file_pseudo, upf(nt), isupf )
+           CALL  read_upf_v1 (file_pseudo, upf(nt), ierr )
            !! try to read UPF v.1 file
-           IF ( isupf == 0 ) isupf = -1
+           IF ( ierr == 0 ) isupf = -1
+        ELSE
+           isupf = ierr
         END IF
         !
      END IF
@@ -176,32 +177,33 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
            !
            IF( printout_ ) &
               WRITE( stdout, "(3X,'file type is Vanderbilt US PP')")
-           CALL readvan (iunps, nt, upf(nt))
+           CALL readvan (iunps, upf(nt), ierr)
            !
         ELSE IF ( upf_get_pp_format( psfile(nt) ) == 3 ) THEN
            !
            IF( printout_ ) &
               WRITE( stdout, "(3X,'file type is GTH (analytical)')")
-           CALL readgth (iunps, nt, upf(nt))
+           CALL readgth (iunps, nt, upf(nt), ierr)
            !
         ELSE IF ( upf_get_pp_format( psfile(nt) ) == 4 ) THEN
            !
            IF( printout_ ) &
               WRITE( stdout, "(3X,'file type is RRKJ3')")
-           CALL readrrkj (iunps, nt, upf(nt))
+           CALL readrrkj (iunps, upf(nt), ierr)
            !
         ELSE IF ( upf_get_pp_format( psfile(nt) ) == 5 ) THEN
            !
            IF( printout_ ) &
               WRITE( stdout, "(3X,'file type is old PWscf NC format')")
-           CALL read_ncpp (iunps, nt, upf(nt))
+           CALL read_ncpp (iunps, upf(nt), ierr)
            !
         ELSE
            !
-           CALL errore('readpp', 'file '//TRIM(file_pseudo)//' not readable',1)
+           ierr = 1
            !
         ENDIF
         !
+        IF (ierr /= 0) CALL errore('readpp', 'file '//TRIM(file_pseudo)//' not readable',1)
         ! end of reading
         !
         CLOSE (iunps)
