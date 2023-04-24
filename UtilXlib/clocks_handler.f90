@@ -336,7 +336,7 @@ SUBROUTINE stop_clock( label )
                         notrunning, called, t0cpu, t0wall, f_wall, f_tcpu
   USE nvtx
 #if defined(__OPENMP_GPU)
-  USE hip_profiling, ONLY : roctxEndRange
+  USE roctx, ONLY : roctxEndRange
 #endif
   !
   IMPLICIT NONE
