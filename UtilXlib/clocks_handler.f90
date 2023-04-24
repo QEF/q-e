@@ -168,7 +168,7 @@ SUBROUTINE start_clock( label )
                         t0cpu, t0wall, f_wall, f_tcpu
   USE nvtx
 #if defined(__OPENMP_GPU)
-  USE hip_profiling,       ONLY : roctxStartRange
+  USE roctx,       ONLY : roctxStartRange
 #endif
   !
   IMPLICIT NONE
