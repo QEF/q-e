@@ -275,8 +275,13 @@ subroutine read_ncpp (iunps, upf, ierr)
   upf%is_multiproj=.false.
   !
   ! Set additional, not present, variables to dummy values
-  allocate(upf%els(upf%nwfc))
-  upf%els(:) = 'nX'
+  allocate(upf%els(upf%nwfc), upf%nchi(upf%nwfc), upf%epseu(upf%nwfc))
+  upf%els(:)  = 'nX'
+  upf%nchi(:) = 0
+  upf%epseu(:)= 0._dp
+  allocate(upf%rcut_chi(upf%nwfc), upf%rcutus_chi(upf%nwfc))
+  upf%rcut_chi(:) = 0._dp
+  upf%rcutus_chi(:) = 0._dp
   allocate(upf%els_beta(upf%nbeta))
   upf%els_beta(:) = 'nX'
   allocate(upf%rcut(upf%nbeta), upf%rcutus(upf%nbeta))

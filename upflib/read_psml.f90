@@ -5,8 +5,15 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!--------------------------------------------------------
-subroutine read_psml ( filename, upf )
+!---------------------------------------------------------------------
+MODULE read_psml_module
+  !---------------------------------------------------------------------
+  !
+  PUBLIC :: read_psml
+  !
+CONTAINS
+  !--------------------------------------------------------
+  subroutine read_psml ( filename, upf, ierr )
   !-----------------------------------------------------
   !! Read pseudopotential files in PSML format using "xmltools"
   !! stores data into the "upf" structure. Note that:
@@ -36,7 +43,7 @@ subroutine read_psml ( filename, upf )
   !! input : name of file in psml format
   TYPE(pseudo_upf), INTENT(OUT) :: upf
   !! the derived type storing the pseudo data
-  INTEGER  :: ierr
+  INTEGER, INTENT(OUT) :: ierr
   !! error code (0 if correctly read)
   CHARACTER(len=30) :: tag
   !! tag where error (ierr != 0) was detected
@@ -97,8 +104,10 @@ subroutine read_psml ( filename, upf )
   tag = 'pseudo-wave-functions'
   call read_psml_pseudo_wave_functions ( ierr )
   IF ( ierr /= 0 ) THEN
+     !! optional tag, may or may not be present
      print *, 'read_psml: tag ',trim(tag),' not present'
      upf%nwfc = 0 
+     ierr = 0
   END IF
   !
   call xmlr_closetag ( ) ! psml
@@ -131,7 +140,6 @@ CONTAINS
     INTEGER :: n, nxc, ndum
     INTEGER :: xc(6)
     CHARACTER(len=3) :: cc
-    CHARACTER(len=25), external :: libxc_to_qe
     
     !
     upf%tvanp = .false.
@@ -389,7 +397,7 @@ function libxc_to_qe (nxc, xc)
   character(len=25) :: libxc_to_qe
   !
   libxc_to_qe = 'Not Recognized'
-  print *, 'nxc, nc = ', nxc,xc
+  ! print *, 'nxc, nc = ', nxc,xc
   if ( nxc < 2 ) return
   if ( xc(1) == 1 .and. xc(2) == 9 ) then
      libxc_to_qe = 'SLA-PZ' ! Perdew-Zunger
@@ -402,3 +410,5 @@ function libxc_to_qe (nxc, xc)
   end if
   !
 end function libxc_to_qe
+
+END MODULE read_psml_module

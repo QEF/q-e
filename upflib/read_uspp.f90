@@ -188,13 +188,14 @@ CONTAINS
     !
     !     info on pseudo eigenstates - energies are not used
     !
-    ALLOCATE ( upf%oc(upf%nwfc), upf%lchi(upf%nwfc) ) 
+    ALLOCATE ( upf%oc(upf%nwfc), upf%lchi(upf%nwfc), upf%nchi(upf%nwfc) ) 
     ALLOCATE ( nnlz(upf%nwfc), ee(upf%nwfc) )
     read( iunps, '(i5,2f15.9)', err=100, iostat=ios ) &
          ( nnlz(iv), upf%oc(iv), ee(iv), iv=1,upf%nwfc )
     do iv = 1, upf%nwfc
        i = nnlz(iv) / 100
        upf%lchi(iv) = nnlz(iv)/10 - i * 10
+       upf%nchi(iv) = i
     enddo
     read( iunps, '(2i5,f15.9)', err=100, iostat=ios ) &
          keyps, ifpcor, rinner1
@@ -355,8 +356,12 @@ CONTAINS
     enddo
     !
     ! Set additional, not present, variables to dummy values
-    ALLOCATE(upf%els(upf%nwfc))
+    ALLOCATE(upf%els(upf%nwfc), upf%epseu(upf%nwfc))
     upf%els(:) = 'nX'
+    upf%epseu(:) = 0._dp
+    ALLOCATE(upf%rcut_chi(upf%nwfc), upf%rcutus_chi(upf%nwfc))
+    upf%rcut_chi(:) = 0._dp
+    upf%rcutus_chi(:) = 0._dp
     ALLOCATE(upf%els_beta(upf%nbeta))
     upf%els_beta(:) = 'nX'
     ALLOCATE(upf%rcut(upf%nbeta), upf%rcutus(upf%nbeta))
@@ -753,12 +758,14 @@ CONTAINS
     read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
          ( rdum, nb=1,upf%nwfc )
     !
-    ALLOCATE ( upf%oc(upf%nwfc), upf%lchi(upf%nwfc), upf%lll(upf%nwfc) ) 
+    ALLOCATE ( upf%oc(upf%nwfc), upf%lchi(upf%nwfc), upf%nchi(upf%nwfc) )
+    ALLOCATE ( upf%lll(upf%nwfc) ) 
     !
     do nb=1,upf%nwfc
        read(iunps,'(a2,2i3,f6.2)',err=100,iostat=ios) &
             adum, ndum, upf%lchi(nb), upf%oc(nb)
        upf%lll(nb)=upf%lchi(nb)
+       upf%nchi(nb)=ndum
        !
        ! oc < 0 distinguishes between bound states from unbound states
        !
@@ -859,8 +866,12 @@ CONTAINS
     end if
     !
     ! Set additional, not present, variables to dummy values
-    allocate(upf%els(upf%nwfc))
+    ALLOCATE(upf%els(upf%nwfc), upf%epseu(upf%nwfc))
     upf%els(:) = 'nX'
+    upf%epseu(:) = 0._dp
+    ALLOCATE(upf%rcut_chi(upf%nwfc), upf%rcutus_chi(upf%nwfc))
+    upf%rcut_chi(:) = 0._dp
+    upf%rcutus_chi(:) = 0._dp
     allocate(upf%els_beta(upf%nbeta))
     upf%els_beta(:) = 'nX'
     allocate(upf%rcut(upf%nbeta), upf%rcutus(upf%nbeta))

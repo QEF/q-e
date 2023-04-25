@@ -38,7 +38,7 @@ CONTAINS
     TYPE(pseudo_upf),INTENT(OUT) :: upf
     !! the derived type storing the pseudo data
     INTEGER, INTENT(OUT) :: ierr
-    !! ierr= -1 : UPF v.2
+    !! ierr= -2 : UPF v.2
     !! ierr=  0 : xml schema
     !! ierr=1-4 : error reading PP file
     !! ierr= 81 : error opening PP file

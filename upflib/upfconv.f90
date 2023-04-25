@@ -32,7 +32,7 @@ PROGRAM upfconv
   !
   IMPLICIT NONE
   TYPE(pseudo_upf) :: upf
-  INTEGER :: prefix_len, nargs, i,j 
+  INTEGER :: prefix_len, nargs, i,j, ierr 
   CHARACTER(LEN=256) :: filein, fileout
   CHARACTER(LEN=2)   :: conversion=' '
   CHARACTER(LEN=5)   :: schema='none'
@@ -102,12 +102,16 @@ PROGRAM upfconv
      STOP
   END IF
   IF ( prefix_len < 1 ) THEN
-     WRITE(*,*) 'Empty file name, stopping'
+     WRITE(*,*) 'Empty file, stopping'
      STOP
   END IF
   WRITE(*,*) 'input file: ' // trim(filein), ', output file: ' // trim(fileout)
  
-  CALL read_ps ( filein, upf )
+  CALL read_ps_new ( filein, upf, ierr )
+  IF ( ierr > 0  ) THEN
+     WRITE(*,*) 'Cannot read file, stopping'
+     STOP
+  END IF
 
   IF ( conversion == "-c" ) THEN
      !
