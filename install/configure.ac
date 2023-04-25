@@ -101,6 +101,9 @@ X_AC_QE_PLUGINS()
 # Checking SIGNAL...
 X_AC_QE_SIGNAL()
 
+# Checking STATUS...
+X_AC_QE_STATUS()
+
 # Checking for ranlib...
 X_AC_QE_RANLIB()
 
