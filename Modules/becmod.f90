@@ -484,6 +484,14 @@ CONTAINS
     USE mp,       ONLY: mp_get_comm_null
     !
     IMPLICIT NONE
+    !
+    ! Temporary interface to offload calbec routines
+    ! with openmp offload
+    !
+    ! IN    : beta, psi are present on device
+    ! INOUT : betapsi is on the host
+    !         betapsi is mapped to,from in children
+    !
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
     TYPE (bec_type), INTENT (inout) :: betapsi ! NB: must be INOUT otherwise
                                                !  the allocatd array is lost
