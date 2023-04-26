@@ -110,9 +110,8 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
   !
-  !$omp target enter data map(to:evc)
-  !$omp target enter data map(alloc:e)
   CALL start_clock( 'regterg' ) !; write(6,*) 'enter regterg' ; FLUSH(6)
+  !$omp target data map(to:evc) map(alloc:e)
   !
   !$acc data deviceptr(evc, e)
   !
@@ -157,7 +156,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   ALLOCATE( ew( nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( 'regterg ',' cannot allocate ew ', ABS(ierr) )
-  !$omp target enter data map(alloc:sr, hr, vr, ew)
+  !$omp target data map(alloc:sr, hr, vr, ew)
   ALLOCATE( conv( nvec ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( 'regterg ',' cannot allocate conv ', ABS(ierr) )
@@ -318,7 +317,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      ENDIF
      CALL stop_clock( 'regterg:diag' )
      !$acc end host_data
-     !$omp target update to(vr,ew)
+     !$omp target update to(hr,sr,vr,ew)
      !
      !$acc parallel loop
      !$omp target teams distribute parallel do
@@ -386,10 +385,8 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !$acc host_data use_device(psi, spsi, vr)
      IF ( uspp ) THEN
         !
-        if (n_start .le. n_end) then
-           !$omp target update to(spsi)
+        if (n_start .le. n_end) &
            CALL MYDGEMM( 'N','N', npw2, notcnv, my_n, 1.D0, spsi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, psi(1,nb1), npwx2 )
-        endif
         !
      ELSE
         !
@@ -409,10 +406,8 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      END DO
      !
      !$acc host_data use_device(psi, hpsi, vr, ew)
-     if (n_start .le. n_end) then
-        !$omp target update to(hpsi)
+     if (n_start .le. n_end) &
         CALL MYDGEMM( 'N','N', npw2, notcnv, my_n, 1.D0, hpsi(1,n_start), npwx2, vr(n_start,1), nvecx, 1.D0, psi(1,nb1), npwx2 )
-     endif
      !
      !$omp target update from(psi)
      CALL mp_sum( psi(:,nb1:nbase+notcnv), inter_bgrp_comm )
@@ -434,7 +429,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !$acc parallel vector_length(96)
      !$acc loop gang private(nbn)
      !$omp target update to(psi,ew)
-     !$omp target teams distribute private(nbn)
+     !$omp target teams distribute parallel do private(nbn)
      DO n = 1, notcnv
         !
         nbn = nbase + n
@@ -732,20 +727,17 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !
   END DO iterate
   !
-  !$omp target exit data map(delete:evc)
-  !$omp target exit data map(from:e)
   DEALLOCATE( conv )
-  !$omp target exit data map(delete:ew)
+  !$omp end target data
   DEALLOCATE( ew )
-  !$omp target exit data map(delete:vr)
   DEALLOCATE( vr )
-  !$omp target exit data map(delete:hr)
   DEALLOCATE( hr )
-  !$omp target exit data map(delete:sr)
   DEALLOCATE( sr )
   !
-  !$omp target exit data map(delete:spsi)
-  IF ( uspp ) DEALLOCATE( spsi )
+  IF ( uspp ) THEN
+     !$omp target exit data map(delete:spsi)
+     DEALLOCATE( spsi )
+  ENDIF
   !
 #if defined(__OPENMP_GPU)
   !$omp end target data
@@ -754,6 +746,8 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   DEALLOCATE( psi )
   !
   !$acc end data
+  !$omp target update from(e)
+  !$omp end target data
   !
   CALL stop_clock( 'regterg' )
   !call print_clock( 'regterg' )
