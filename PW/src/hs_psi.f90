@@ -27,7 +27,9 @@ SUBROUTINE hs_psi( lda, n, m, psi, hpsi, spsi )
   !
 #if defined(__OPENMP_GPU)
   !$omp target data map(alloc:psi,hpsi)
+  !$omp target update to(psi,hpsi)     
   CALL h_psi_( lda, n, m, psi, hpsi ) ! apply H to m wfcs (no bgrp parallelization here)
+  !$omp target update from(hpsi)    
   !$omp end target data
 #else
   CALL h_psi_( lda, n, m, psi, hpsi )

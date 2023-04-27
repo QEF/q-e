@@ -79,7 +79,9 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, overlap, &
   call start_clock('rotwfcg:hpsi'); !write(*,*) 'start rotwfcg:hpsi' ; FLUSH(6)
 #if defined(__OPENMP_GPU)
   !$omp target data map(alloc:psi,aux)
+  !$omp target update to(psi,aux)     
   CALL h_psi( npwx, npw, nstart, psi, aux )
+  !$omp target update from(aux)    
   !$omp end target data
 #else
   CALL h_psi( npwx, npw, nstart, psi, aux )
@@ -242,7 +244,9 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, overlap, &
   call start_clock('protwfcg:hpsi'); !write(*,*) 'start protwfcg:hpsi' ; FLUSH(6)
 #if defined(__OPENMP_GPU)
   !$omp target data map(alloc:psi,aux)
+  !$omp target update to(psi,aux)     
   CALL h_psi( npwx, npw, nstart, psi, aux )
+  !$omp target update from(aux)    
   !$omp end target data
 #else
   CALL h_psi( npwx, npw, nstart, psi, aux )

@@ -271,7 +271,9 @@ CONTAINS
     !
     hpsi = ZERO
     !
+    !$omp target update to(psi,hpsi)   
     CALL h_psi( npwx, npw, nbnd, psi, hpsi )
+    !$omp target update from(hpsi)  
     !
     ! ... Operate the Overlap : S |psi>
     !
@@ -854,7 +856,9 @@ CONTAINS
     !
     ! ... Operate the Hamiltonian : H K (H - eS) |psi>
     !
+    !$omp target update to(kpsi,hkpsi)   
     CALL h_psi( npwx, npw, notconv, kpsi, hkpsi )
+    !$omp target update from(hkpsi)  
     !
     ! ... Operate the Overlap : S K (H - eS) |psi>
     !
