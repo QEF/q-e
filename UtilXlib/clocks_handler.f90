@@ -167,6 +167,9 @@ SUBROUTINE start_clock( label )
   USE mytime,    ONLY : nclock, clock_label, notrunning, no, maxclock, &
                         t0cpu, t0wall, f_wall, f_tcpu
   USE nvtx
+#if defined(__OPENMP_GPU)
+  USE roctx,       ONLY : roctxStartRange
+#endif
   !
   IMPLICIT NONE
   !
@@ -203,6 +206,9 @@ SUBROUTINE start_clock( label )
            t0wall(n)= f_wall()
 
            call nvtxStartRange(label_, n)
+#if defined(__OPENMP_GPU)
+           call roctxStartRange(label_)
+#endif
         ENDIF
         !
         RETURN
@@ -224,6 +230,9 @@ SUBROUTINE start_clock( label )
      t0cpu(nclock)       = f_tcpu()
      t0wall(nclock)      = f_wall()
      call nvtxStartRange(label_, n)
+#if defined(__OPENMP_GPU)
+     CALL roctxStartRange(label_)
+#endif
      !
   ENDIF
   !
@@ -326,6 +335,9 @@ SUBROUTINE stop_clock( label )
   USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
                         notrunning, called, t0cpu, t0wall, f_wall, f_tcpu
   USE nvtx
+#if defined(__OPENMP_GPU)
+  USE roctx, ONLY : roctxEndRange
+#endif
   !
   IMPLICIT NONE
   !
@@ -367,6 +379,9 @@ SUBROUTINE stop_clock( label )
            called(n)    = called(n) + 1
 
            call nvtxEndRange
+#if defined(__OPENMP_GPU)
+           call roctxEndRange
+#endif
            !
         ENDIF
         !

@@ -120,7 +120,11 @@ for dir in $dirs; do
              mkl_dfti_omp_offload mkl_dfti_omp_offload.f90 \
              xc_version.h xc_f03_lib_m elpa elpa1 \
              mbd w90_io fox_dom fox_wxml m_common_io \
-             device_fbuff_m device_memcpy_m device_auxfunc_m"
+             device_fbuff_m device_memcpy_m device_auxfunc_m \
+	     onemkl_blas_omp_offload_ilp64 onemkl_blas_omp_offload_ilp64_no_array_check\
+	     onemkl_blas_omp_offload_lp64 onemkl_blas_omp_offload_lp64_no_array_check \
+	     onemkl_lapack_omp_offload_ilp64 onemkl_lapack_omp_offload_lp64 \
+	     onemkl_vsl_omp_offload_ilp64 onemkl_vsl_omp_offload_lp64"
 
     # list of all cuda-related modules
     cudadeps="cublas cudafor curand cufft flops_tracker cusolverdn \
