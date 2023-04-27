@@ -81,6 +81,8 @@ CONTAINS
     CALL read_pp_mesh ( upf )
     !
     allocate ( upf%rho_atc(upf%mesh) )
+    !! FIXME: this is needed only if the nonlinear core correction is used,
+    !! FIXME: but with PAW the pseudo-core charge is used also if no nlcc
     IF(upf%nlcc) then
        CALL xmlr_readtag( capitalize_if_v2('pp_nlcc'), &
             upf%rho_atc(:) )

@@ -518,7 +518,7 @@ subroutine deallocate_gth( lflag )
   !
 end subroutine deallocate_gth
 !-----------------------------------------------------------------------
-subroutine readgth (iunps, np, upf, ierr)
+subroutine readgth (psfile, np, upf, ierr)
   !-----------------------------------------------------------------------
   !
   USE upf_kinds,    ONLY: dp
@@ -532,13 +532,13 @@ subroutine readgth (iunps, np, upf, ierr)
   !
   ! I/O
   TYPE (pseudo_upf) :: upf
-  integer, intent(in) :: iunps
+  character(LEN=*), intent(in) :: psfile
   integer, intent(in) :: np
   integer, intent(out):: ierr
   !
   ! Local variables
-  integer  :: ios, pspdat, pspcod, pspxc, lmax, lloc, mmax, ii, jj, ll, nn, nnonloc, &
-              nprl, os, ns, iv, jv
+  integer  :: iunps, ios, pspdat, pspcod, pspxc, lmax, lloc, mmax, &
+              ii, jj, ll, nn, nnonloc, nprl, os, ns, iv, jv
   real(dp) :: rcore, qcore, rc2, prefact, znucl, r2well, rloc, rrl, cc(4)
   character(len=256)            :: info
   character(len=  1), parameter :: ch10=char(10)
@@ -584,6 +584,8 @@ subroutine readgth (iunps, np, upf, ierr)
   allocate(upf%lchi(upf%nwfc))
   upf%lchi(:) = 0
 
+  open(newunit=iunps, file=psfile, form='formatted', status='old', iostat = ios)
+  if ( ios .ne. 0 ) go to 400
   read (iunps, '(a)', end=400, err=400, iostat=ios) info
   read (iunps, *, err=400) znucl, upf%zp, pspdat
   if (upf%zp <= 0._dp .or. upf%zp > 100 ) then
@@ -677,6 +679,7 @@ subroutine readgth (iunps, np, upf, ierr)
       upf%rho_atc(ii) = prefact * exp(-0.5_dp * upf%r(ii)**2 / rc2)
     enddo
   end if
+  close (unit=iunps)
   !
   allocate(upf%lll(upf%nbeta), upf%els_beta(upf%nbeta), upf%dion(upf%nbeta,upf%nbeta))
   allocate(upf%rcut(upf%nbeta), upf%rcutus(upf%nbeta), upf%kbeta(upf%nbeta))

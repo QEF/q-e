@@ -50,11 +50,8 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   USE xc_lib,       ONLY: xclib_get_id
   USE radial_grids, ONLY: deallocate_radial_grid, nullify_radial_grid
   USE clib_wrappers,     ONLY: md5_from_file
-  USE read_upf_v1_module,   ONLY: read_upf_v1
-  USE read_upf_new_module,  ONLY: read_upf_new
-  USE upf_auxtools, ONLY: upf_get_pp_format, upf_check_atwfc_norm
+  USE upf_auxtools, ONLY: upf_check_atwfc_norm
   USE upf_to_internal,  ONLY: add_upf_grid, set_upf_q
-  USE read_uspp_module, ONLY: readvan, readrrkj
   USE m_gth,            ONLY: readgth
   !
   IMPLICIT NONE
@@ -133,9 +130,14 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !
      CALL mp_bcast (ierr,ionode_id,intra_image_comm)
      !
-     IF ( ierr > 0 ) CALL errore('readpp', &
-          'file '//TRIM(file_pseudo)//' not readable',1)
-     !! Unrecoverable error
+     IF ( ierr == -7 ) THEN
+        !! FIXME: GTH PP files must be read from all processors
+        CALL  readgth( file_pseudo, nt, upf(nt), ierr )
+     END IF
+     IF ( ierr > 0 ) THEN
+        !! Unrecoverable error
+        CALL errore('readpp', 'file '//TRIM(file_pseudo)//' not readable',1)
+     END IF
      !
      CALL upf_bcast(upf(nt), ionode, ionode_id, intra_image_comm)
      !! Success: broadcast the pseudopotential to all processors
@@ -314,7 +316,8 @@ SUBROUTINE upf_bcast(upf, ionode, ionode_id, comm)
   CALL mp_bcast (upf%r,   ionode_id, comm )
   CALL mp_bcast (upf%rab, ionode_id, comm )
   !
-  IF ( upf%nlcc) THEN
+  IF ( upf%nlcc. OR. upf%tpawp ) THEN
+     !! FIXME: PAW uses the pseudo-core charge even when nlcc is not present
      IF ( .NOT. ionode) ALLOCATE( upf%rho_atc(upf%mesh) )
      CALL mp_bcast (upf%rho_atc, ionode_id, comm )
   END IF

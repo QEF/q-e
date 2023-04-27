@@ -20,6 +20,7 @@ SUBROUTINE read_ps_new ( psfile, upf, ierr, printout )
   !!    ierr = -4  old Vanderbilt formatted USPP (deprecated)
   !!    ierr = -5  old RRKJ3 USPP format (deprecated)
   !!    ierr = -6  old PWscf NCPP format (deorecated)
+  !!    ierr = -7  Goedecker-Teter-Hutter NCPP
   !! Should be executed on a single processor
   !
   USE upf_io,             ONLY: stdout
@@ -74,6 +75,9 @@ SUBROUTINE read_ps_new ( psfile, upf, ierr, printout )
      ELSE IF (psfile (lm5:l) =='.RRKJ3') THEN
         CALL readrrkj (iunps, upf, ierr)
         IF ( ierr == 0 ) ierr = -5
+     ELSE IF (psfile (lm3:l) =='.gth' .OR. psfile(lm3:l) == '.GTH' ) THEN
+        !! FIXME: should be done in the same way as for the other cases
+        ierr = -7
      ELSE
         CALL read_ncpp (iunps, upf, ierr)
         IF ( ierr == 0 ) ierr = -6
@@ -108,6 +112,8 @@ SUBROUTINE read_ps_new ( psfile, upf, ierr, printout )
            WRITE( stdout, "('file format is RRKJ3')")
         CASE(-6)
            WRITE( stdout, "('file format is old PWscf NC format')")
+        CASE(-7)
+           WRITE( stdout, "('file format is GTH (Goedecker-Teter-Hutter)')")
         CASE DEFAULT
            WRITE( stdout, "('file format could not be determined')")
         END SELECT
