@@ -1416,7 +1416,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      !
 #ifdef __MEMCPY_RECT
      !
-#ifdef __GPU_MPI
+#if defined(__GPU_MPI) || defined(__GPU_MPI_OMP)
      !$omp target data use_device_addr(f_in,f_aux)
 #else
      !$omp target data use_device_addr(f_in)
@@ -1434,7 +1434,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
                                            int((/           0,     kfrom /),c_size_t), &
                                            int((/ (nxx_/nppx),      nppx /),c_size_t), &
                                            int((/ (nxx_/nr3x),      nr3x /),c_size_t), &
-#ifdef __GPU_MPI
+#if defined(__GPU_MPI) || defined(__GPU_MPI_OMP)
                                            int(omp_get_default_device(),c_int),        &
 #else
                                            int(omp_get_initial_device(),c_int),        &
@@ -1459,7 +1459,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
         END DO
         offset = offset + npp_gproc
      ENDDO
-#ifndef __GPU_MPI
+#if !defined(__GPU_MPI) && !defined(__GPU_MPI_OMP)
      !$omp target update from (f_aux)
 #endif
      !
@@ -1474,7 +1474,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      gcomm = dfft%comm
 
      CALL start_clock ('a2a_fw')
-#ifdef __GPU_MPI
+#if defined(__GPU_MPI) || defined(__GPU_MPI_OMP)
 !$omp target data use_device_ptr(f_in, f_aux)
      DO iter = 2, nprocp
         IF(IAND(nprocp, nprocp-1) == 0) THEN
@@ -1593,12 +1593,12 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      !
      gcomm = dfft%comm
      !
-#ifndef __GPU_MPI
+#if !defined(__GPU_MPI) && !defined(__GPU_MPI_OMP)
      !$omp target update from (f_in(1:sendsiz*nprocp))
 #endif
      !
      CALL start_clock ('a2a_bw')
-#ifdef __GPU_MPI
+#if defined(__GPU_MPI) || defined(__GPU_MPI_OMP)
      !$omp target data use_device_ptr(f_in, f_aux)
      DO iter = 2, nprocp
         IF(IAND(nprocp, nprocp-1) == 0) THEN
@@ -1644,7 +1644,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      !
 #ifdef __MEMCPY_RECT
      !
-#ifdef __GPU_MPI
+#if defined(__GPU_MPI) || defined(__GPU_MPI_OMP)
      !$omp target data use_device_addr(f_in,f_aux)
 #else
      !$omp target data use_device_addr(f_in)
@@ -1663,7 +1663,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
                                            int((/ (nxx_/nr3x),      nr3x /),c_size_t), &
                                            int((/ (nxx_/nppx),      nppx /),c_size_t), &
                                            int(omp_get_default_device(),c_int),        &
-#ifdef __GPU_MPI
+#if defined(__GPU_MPI) || defined(__GPU_MPI_OMP)
                                            int(omp_get_default_device(),c_int)),       &
 #else
                                            int(omp_get_initial_device(),c_int)),       &
