@@ -735,10 +735,6 @@ SUBROUTINE setup_para ( nr3, nkstot, nbnd )
   ! GPUs (not sure it serves any purpose)
   !
   use_gpu = check_gpu_support( )
-  ! *** OMP-GPU PORTING - TEMPORARY ***
-#if defined(__OPENMP_GPU)
-  use_gpu = .TRUE.
-#endif
   !
   ! k-point parallelization first
   !
@@ -815,6 +811,9 @@ task:   do np = 2, maxtask
   ! matrices nbnd*nbnd are distributed into blocks of size > 100x100
   !
   if ( ndiag_ == 0 .AND. use_gpu ) ndiag_ = 1
+#if defined(__OPENMP_GPU)
+  if ( ndiag_ == 0 ) ndiag_ = 1
+#endif
   if ( ndiag_ == 0 ) then
      do np = nint(nbnd/100.), 1, -1
          if ( np**2 <= nproc_bgrp ) exit
@@ -823,11 +822,6 @@ task:   do np = 2, maxtask
   end if
   !
   CALL set_para_diag( nbnd, use_para_diag )
-  !
-  ! *** TEMPORARY ***
-#if defined(__OPENMP_GPU)
-  use_gpu = .FALSE.
-#endif
   !
 END SUBROUTINE setup_para
 !
