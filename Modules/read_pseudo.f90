@@ -316,7 +316,7 @@ SUBROUTINE upf_bcast(upf, ionode, ionode_id, comm)
   CALL mp_bcast (upf%r,   ionode_id, comm )
   CALL mp_bcast (upf%rab, ionode_id, comm )
   !
-  IF ( upf%nlcc. OR. upf%tpawp ) THEN
+  IF ( upf%nlcc .OR. upf%tpawp ) THEN
      !! FIXME: PAW uses the pseudo-core charge even when nlcc is not present
      IF ( .NOT. ionode) ALLOCATE( upf%rho_atc(upf%mesh) )
      CALL mp_bcast (upf%rho_atc, ionode_id, comm )
