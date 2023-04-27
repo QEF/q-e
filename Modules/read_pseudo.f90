@@ -131,16 +131,15 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      CALL mp_bcast (ierr,ionode_id,intra_image_comm)
      !
      IF ( ierr == -7 ) THEN
-        !! FIXME: GTH PP files must be read from all processors
         CALL  readgth( file_pseudo, nt, upf(nt), ierr )
-     END IF
-     IF ( ierr > 0 ) THEN
+        !! FIXME: GTH PP files must be read from all processors
+     ELSE
+        IF ( ierr > 0 ) CALL errore('readpp', &
+             'file '//TRIM(file_pseudo)//' not readable',1)
         !! Unrecoverable error
-        CALL errore('readpp', 'file '//TRIM(file_pseudo)//' not readable',1)
+        CALL upf_bcast(upf(nt), ionode, ionode_id, intra_image_comm)
+        !! Success: broadcast the pseudopotential to all processors
      END IF
-     !
-     CALL upf_bcast(upf(nt), ionode, ionode_id, intra_image_comm)
-     !! Success: broadcast the pseudopotential to all processors
      !
      ! reconstruct Q(r) if needed
      !
