@@ -166,8 +166,9 @@ SUBROUTINE start_clock( label )
 #endif
   USE mytime,    ONLY : nclock, clock_label, notrunning, no, maxclock, &
                         t0cpu, t0wall, f_wall, f_tcpu
+#if defined(__CUDA) && defined(__PROFILE_NVTX)
   USE nvtx
-#if defined(__OPENMP_GPU)
+#elif defined(__OPENMP_GPU) && defined(__PROFILE_ROCTX)
   USE roctx,       ONLY : roctxStartRange
 #endif
   !
@@ -205,8 +206,9 @@ SUBROUTINE start_clock( label )
            t0cpu(n) = f_tcpu()
            t0wall(n)= f_wall()
 
+#if defined(__CUDA) && defined(__PROFILE_NVTX)
            call nvtxStartRange(label_, n)
-#if defined(__OPENMP_GPU)
+#elif defined(__OPENMP_GPU) && defined(__PROFILE_ROCTX)
            call roctxStartRange(label_)
 #endif
         ENDIF
@@ -229,8 +231,9 @@ SUBROUTINE start_clock( label )
      clock_label(nclock) = label_
      t0cpu(nclock)       = f_tcpu()
      t0wall(nclock)      = f_wall()
+#if defined(__CUDA) && defined(__PROFILE_NVTX)
      call nvtxStartRange(label_, n)
-#if defined(__OPENMP_GPU)
+#elif defined(__OPENMP_GPU) && defined(__PROFILE_ROCTX)
      CALL roctxStartRange(label_)
 #endif
      !
@@ -334,8 +337,9 @@ SUBROUTINE stop_clock( label )
 #endif
   USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
                         notrunning, called, t0cpu, t0wall, f_wall, f_tcpu
+#if defined(__CUDA) && defined(__PROFILE_NVTX)
   USE nvtx
-#if defined(__OPENMP_GPU)
+#elif defined(__OPENMP_GPU) && defined(__PROFILE_ROCTX)
   USE roctx, ONLY : roctxEndRange
 #endif
   !
@@ -378,8 +382,9 @@ SUBROUTINE stop_clock( label )
            t0wall(n)    = notrunning
            called(n)    = called(n) + 1
 
+#if defined(__CUDA) && defined(__PROFILE_NVTX)
            call nvtxEndRange
-#if defined(__OPENMP_GPU)
+#elif defined(__OPENMP_GPU) && defined(__PROFILE_ROCTX)
            call roctxEndRange
 #endif
            !
