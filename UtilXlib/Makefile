@@ -6,6 +6,7 @@ include ../make.inc
 MODFLAGS=$(MOD_FLAG).
 
 UTIL = clib_wrappers.o \
+roctx_wrapper.o \
 clocks_handler.o \
 cptimer.o \
 copy.o \
@@ -36,8 +37,7 @@ ptrace.o\
 set_mpi_comm_4_solvers.o \
 util_param.o \
 thread_util.o \
-nvtx_wrapper.o \
-roctx_wrapper.o
+nvtx_wrapper.o
 
 all : libutil.a
 
