@@ -134,7 +134,10 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   ! ... Here we set the kinetic energy (k+G)^2 psi and clean up garbage
   !
-  !$omp parallel do
+  !!!!omp parallel do
+  !
+  !$omp target update to(hpsi, psi)
+  !$omp target teams distribute parallel do
   DO ibnd = 1, m
      hpsi(1:n,ibnd) = g2kin(1:n) * psi(1:n,ibnd)
      IF (n<lda) hpsi(n+1:lda, ibnd) = (0.0_dp, 0.0_dp)
@@ -143,7 +146,8 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         IF (n<lda) hpsi(lda+n+1:lda+lda, ibnd) = (0.0_dp, 0.0_dp)
      ENDIF
   ENDDO
-  !$omp end parallel do
+  !!!!omp end parallel do
+  !$omp target update from(hpsi)
 
   CALL start_clock( 'h_psi:pot' ); !write (*,*) 'start h_psi:pot';FLUSH(6)
   !
