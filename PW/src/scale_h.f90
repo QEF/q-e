@@ -76,6 +76,7 @@ SUBROUTINE scale_h
   gg_d = gg
 #endif
   !$acc update device(g,gg)
+  !$omp target update to(g)
   !
   CALL mp_max( gg_max, intra_bgrp_comm )
   !

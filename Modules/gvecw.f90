@@ -77,6 +77,7 @@
        !  allocate kinetic energy
        !
        ALLOCATE( g2kin(ngw) )
+       !$omp target enter data map(alloc:g2kin)
        !$acc enter data create(g2kin)
        !
        RETURN 
@@ -102,6 +103,7 @@
        END IF
        !
        !$acc update device(g2kin)
+       !$omp target update to(g2kin)
        !
        RETURN 
        !
@@ -109,6 +111,7 @@
      !
      SUBROUTINE deallocate_gvecw
        !$acc exit data delete(g2kin)
+       !$omp target exit data map(delete:g2kin)
        IF( ALLOCATED( g2kin ) ) DEALLOCATE( g2kin )
      END SUBROUTINE deallocate_gvecw
      !=----------------------------------------------------------------------------=!

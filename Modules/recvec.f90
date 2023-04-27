@@ -121,6 +121,7 @@
           ALLOCATE( gl_d(ngm) )
        ENDIF  
        !$acc enter data create( mill(1:3,1:ngm), g(1:3,1:ngm), gg(1:ngm) ) 
+       !$omp target enter data map(alloc: g)
        !
        RETURN 
        !
@@ -147,6 +148,7 @@
        DEALLOCATE( gg )
        END IF
        IF( ALLOCATED( g ) )  THEN 
+         !$omp exit data map(delete:g)
 !$acc    exit data delete(g) 
          DEALLOCATE( g )
        END IF 
@@ -187,6 +189,7 @@
      SUBROUTINE deallocate_gvect_exx()
        IF( ALLOCATED( gg ) )      DEALLOCATE( gg )
        IF( ALLOCATED( g ) )  THEN
+         !$omp exit data map(delete:g)
 !$acc    exit data delete(g) 
          DEALLOCATE( g )
        END IF 

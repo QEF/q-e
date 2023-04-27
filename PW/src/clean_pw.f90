@@ -181,6 +181,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in init_run.f90 ( and never deallocated )
   !
   !$acc exit data delete(g2kin)
+  !$omp target exit data map(delete:g2kin)
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
   CALL deallocate_wvfct_gpu()
   IF ( ALLOCATED( et ) )         DEALLOCATE( et )

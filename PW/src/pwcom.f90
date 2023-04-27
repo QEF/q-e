@@ -92,6 +92,7 @@ CONTAINS
     IF (.NOT.ALLOCATED(igk_k)) THEN
       ALLOCATE( igk_k(npwx,nks) )
       !$acc enter data create(igk_k(1:npwx,1:nks))
+      !$omp target enter data map(alloc: igk_k)
     END IF
     !
     IF (.NOT.ALLOCATED(ngk))   ALLOCATE( ngk(nks) )
@@ -106,6 +107,7 @@ CONTAINS
        CALL gk_sort( xk(1,ik), ngm, g, gcutw, ngk(ik), igk_k(1,ik), gk )
     ENDDO
     !$acc update device(igk_k)
+    !$omp target update to(igk_k)
     !
     DEALLOCATE( gk )
 #if defined (__CUDA)
@@ -121,6 +123,7 @@ CONTAINS
     !
     IF (ALLOCATED(ngk))     DEALLOCATE( ngk )
     !
+    !$omp target exit data map(delete:igk_k)
     !$acc exit data delete(igk_k)
     IF (ALLOCATED(igk_k))   THEN
       DEALLOCATE( igk_k )

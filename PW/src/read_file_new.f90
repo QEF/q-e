@@ -328,6 +328,7 @@ SUBROUTINE post_xml_init (  )
   gg_d   = gg
 #endif
   !$acc update device(mill, g, gg)
+  !$omp target update to(g)
   !
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms ) 
   CALL gshells ( lmovecell )
