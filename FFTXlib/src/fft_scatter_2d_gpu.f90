@@ -1379,7 +1379,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
   INTEGER, INTENT(in) :: nr3x, nxx_, isgn, ncp_(:), npp_(:)
   COMPLEX (DP), INTENT(inout), TARGET :: f_in(nxx_), f_aux(nxx_)
   COMPLEX(DP) :: dummy
-  INTEGER :: omp_i, omp_j, nswip
+  INTEGER :: omp_i, omp_j, nswip, nppt
   INTEGER :: istat
 #if defined(__MPI)
 
@@ -1402,6 +1402,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      nppx = dfft%nr3x
   END IF
   sendsiz = ncpx * nppx
+  nppt = sum(npp_(1:nprocp))
   !
   ierr = 0
   IF (isgn.gt.0) THEN
@@ -1425,7 +1426,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
         ncp_me = ncp_(me)
         npp_gproc = npp_(gproc)
         kdest = ( gproc - 1 ) * ncpx
-        kfrom = ( gproc - 1 ) * nppx
+        kfrom = sum(npp_(1:gproc-1))
         istat = int(omp_target_memcpy_rect(c_loc(f_aux), c_loc(f_in),                  &
                                            int(sizeof(dummy),c_size_t),                &
                                            int(2,c_int),                               &
@@ -1433,7 +1434,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
                                            int((/       kdest,         0 /),c_size_t), &
                                            int((/           0,     kfrom /),c_size_t), &
                                            int((/ (nxx_/nppx),      nppx /),c_size_t), &
-                                           int((/ (nxx_/nr3x),      nr3x /),c_size_t), &
+                                           int((/ (nxx_/nr3x),      nppt /),c_size_t), &
 #if defined(__GPU_MPI) || defined(__GPU_MPI_OMP)
                                            int(omp_get_default_device(),c_int),        &
 #else
@@ -1653,7 +1654,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
         ncp_me = ncp_(me)
         npp_gproc = npp_(gproc)
         kdest = ( gproc - 1 ) * ncpx
-        kfrom = ( gproc - 1 ) * nppx
+        kfrom = sum( npp_(1:gproc-1))
         istat = int(omp_target_memcpy_rect(c_loc(f_in), c_loc(f_aux),                  &
                                            int(sizeof(dummy),c_size_t),                &
                                            int(2,c_int),                               &

@@ -735,6 +735,10 @@ SUBROUTINE setup_para ( nr3, nkstot, nbnd )
   ! GPUs (not sure it serves any purpose)
   !
   use_gpu = check_gpu_support( )
+  ! *** OMP-GPU PORTING - TEMPORARY ***
+#if defined(__OPENMP_GPU)
+  use_gpu = .TRUE.
+#endif
   !
   ! k-point parallelization first
   !
@@ -819,6 +823,11 @@ task:   do np = 2, maxtask
   end if
   !
   CALL set_para_diag( nbnd, use_para_diag )
+  !
+  ! *** TEMPORARY ***
+#if defined(__OPENMP_GPU)
+  use_gpu = .FALSE.
+#endif
   !
 END SUBROUTINE setup_para
 !
