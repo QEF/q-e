@@ -16,7 +16,7 @@ SUBROUTINE hs_psi( lda, n, m, psi, hpsi, spsi )
   ! ... No bgrp parallelization here !
   !
   USE kinds,  ONLY: DP
-  USE noncollin_module, ONLY: npol 
+  USE noncollin_module, ONLY: npol
   !
   IMPLICIT NONE
   !
@@ -26,9 +26,9 @@ SUBROUTINE hs_psi( lda, n, m, psi, hpsi, spsi )
   CALL start_clock( 'hs_psi' )
   !
 #if defined(__OPENMP_GPU)
-  !$omp target enter data map(alloc:psi,hpsi)
+  !$omp target data map(alloc:psi,hpsi)
   CALL h_psi_( lda, n, m, psi, hpsi ) ! apply H to m wfcs (no bgrp parallelization here)
-  !$omp target exit data map(delete:psi,hpsi)
+  !$omp end target data
 #else
   CALL h_psi_( lda, n, m, psi, hpsi )
 #endif
