@@ -50,11 +50,8 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   USE xc_lib,       ONLY: xclib_get_id
   USE radial_grids, ONLY: deallocate_radial_grid, nullify_radial_grid
   USE clib_wrappers,     ONLY: md5_from_file
-  USE read_upf_v1_module,   ONLY: read_upf_v1
-  USE read_upf_new_module,  ONLY: read_upf_new
-  USE upf_auxtools, ONLY: upf_get_pp_format, upf_check_atwfc_norm
+  USE upf_auxtools, ONLY: upf_check_atwfc_norm
   USE upf_to_internal,  ONLY: add_upf_grid, set_upf_q
-  USE read_uspp_module, ONLY: readvan, readrrkj
   USE m_gth,            ONLY: readgth
   !
   IMPLICIT NONE
@@ -69,13 +66,11 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   CHARACTER(len=512) :: file_pseudo
   ! file name complete with path
   LOGICAL :: printout_ = .FALSE., exst
-  INTEGER :: iunps, isupf, nt, nb, ir, ios
+  INTEGER :: ierr, nt, nb, ir, ios
   INTEGER :: iexch_, icorr_, igcx_, igcc_, inlc_
   INTEGER :: iexch1, icorr1, igcx1, igcc1, inlc1
   !
   ! ... initializations, allocations, etc
-  !
-  iunps = 4
   !
   IF( ALLOCATED( upf ) ) THEN
      DO nt = 1, SIZE( upf )
@@ -88,9 +83,8 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   !
   IF ( PRESENT(printout) ) THEN
      printout_ = printout .AND. ionode
-  END IF
-  IF ( printout_) THEN
-     WRITE( stdout,"(//,3X,'Atomic Pseudopotentials Parameters',/, &
+     IF (printout_) &
+            &  WRITE( stdout,"(//,3X,'Atomic Pseudopotentials Parameters',/, &
                    &    3X,'----------------------------------' )" )
   END IF
   !
@@ -128,85 +122,24 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      END IF
      !
      IF ( ionode ) THEN
-        isupf = 0
-        CALL  read_upf_new( file_pseudo, upf(nt), isupf )
         !
-        !! start reading - check  first if files are readable as xml files,
-        !! then as UPF v.2, then as UPF v.1
-        !
-        IF (isupf > 0 ) THEN
-           !! file is not xml or UPF v.2 
-           CALL  read_upf_v1 (file_pseudo, upf(nt), isupf )
-           !! try to read UPF v.1 file
-           IF ( isupf == 0 ) isupf = -1
-        END IF
+        CALL  read_ps_new( file_pseudo, upf(nt), ierr, printout )
+        !! Try to read first UPF or PSML format
         !
      END IF
      !
-     CALL mp_bcast (isupf,ionode_id,intra_image_comm)
+     CALL mp_bcast (ierr,ionode_id,intra_image_comm)
      !
-     IF (isupf == -2 .OR. isupf == -1 .OR. isupf == 0) THEN
-        !
-        CALL upf_bcast(upf(nt), ionode, ionode_id, intra_image_comm)
-        !! broadcast the pseudopotential to all processors
-        !
-        IF( printout_) THEN
-           IF ( isupf == 0 ) THEN
-              WRITE( stdout, "(3X,'file type is xml')") 
-           ELSE
-              WRITE( stdout, "(3X,'file type is UPF v.',I1)") ABS(isupf) 
-           END IF
-        END IF
-        !
+     IF ( ierr == -7 ) THEN
+        CALL  readgth( file_pseudo, nt, upf(nt), ierr )
+        !! FIXME: GTH PP files must be read from all processors
      ELSE
-        !
-        ! FIXME: also for old PP, reading should be done by a single process
-        !
-        OPEN ( UNIT = iunps, FILE = file_pseudo, STATUS = 'old', FORM = 'formatted' )
-        !
-        !     The type of the pseudopotential is determined by the file name:
-        !    *.xml or *.XML  UPF format with schema              pp_format=0
-        !    *.upf or *.UPF  UPF format                          pp_format=1
-        !    *.vdb or *.van  Vanderbilt US pseudopotential code  pp_format=2
-        !    *.gth           Goedecker-Teter-Hutter NC pseudo    pp_format=3
-        !    *.RRKJ3         Andrea's   US new code              pp_format=4
-        !    none of the above: PWSCF norm-conserving format     pp_format=5
-        !
-        IF ( upf_get_pp_format( psfile(nt) ) == 2  ) THEN
-           !
-           IF( printout_ ) &
-              WRITE( stdout, "(3X,'file type is Vanderbilt US PP')")
-           CALL readvan (iunps, nt, upf(nt))
-           !
-        ELSE IF ( upf_get_pp_format( psfile(nt) ) == 3 ) THEN
-           !
-           IF( printout_ ) &
-              WRITE( stdout, "(3X,'file type is GTH (analytical)')")
-           CALL readgth (iunps, nt, upf(nt))
-           !
-        ELSE IF ( upf_get_pp_format( psfile(nt) ) == 4 ) THEN
-           !
-           IF( printout_ ) &
-              WRITE( stdout, "(3X,'file type is RRKJ3')")
-           CALL readrrkj (iunps, nt, upf(nt))
-           !
-        ELSE IF ( upf_get_pp_format( psfile(nt) ) == 5 ) THEN
-           !
-           IF( printout_ ) &
-              WRITE( stdout, "(3X,'file type is old PWscf NC format')")
-           CALL read_ncpp (iunps, nt, upf(nt))
-           !
-        ELSE
-           !
-           CALL errore('readpp', 'file '//TRIM(file_pseudo)//' not readable',1)
-           !
-        ENDIF
-        !
-        ! end of reading
-        !
-        CLOSE (iunps)
-        !
-     ENDIF
+        IF ( ierr > 0 ) CALL errore('readpp', &
+             'file '//TRIM(file_pseudo)//' not readable',1)
+        !! Unrecoverable error
+        CALL upf_bcast(upf(nt), ionode, ionode_id, intra_image_comm)
+        !! Success: broadcast the pseudopotential to all processors
+     END IF
      !
      ! reconstruct Q(r) if needed
      !
@@ -382,8 +315,11 @@ SUBROUTINE upf_bcast(upf, ionode, ionode_id, comm)
   CALL mp_bcast (upf%r,   ionode_id, comm )
   CALL mp_bcast (upf%rab, ionode_id, comm )
   !
-  IF ( .NOT. ionode) ALLOCATE( upf%rho_atc(upf%mesh) )
-  CALL mp_bcast (upf%rho_atc, ionode_id, comm )
+  IF ( upf%nlcc .OR. upf%tpawp ) THEN
+     !! FIXME: PAW uses the pseudo-core charge even when nlcc is not present
+     IF ( .NOT. ionode) ALLOCATE( upf%rho_atc(upf%mesh) )
+     CALL mp_bcast (upf%rho_atc, ionode_id, comm )
+  END IF
   !
   IF(.not. upf%tcoulombp) THEN
      IF ( .NOT. ionode) ALLOCATE( upf%vloc(upf%mesh) )
