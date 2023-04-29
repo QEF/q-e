@@ -7,7 +7,7 @@
     simplified version, in module upf_invmat, file upf_invmat.f90
   - capital, lowercase, isnumeric, matches, version_compare
     in module upf_utils, file upf_utils.f90
-  - errore and infomsg
+  - errore
     as upf_error, in file upf_error.f90
 
 * Module variables that have been (partially) duplicated:
@@ -17,14 +17,27 @@
 
 * TO BE DONE: 
 
-  - PP files:
-    semilocal Vnl and human-readable sections are not read, but they should:
-    converters may make a good usage of that information
-    How to read from a given record in fortran (without direct I/O) ?
-    fseek, ftell, pos= identifier, stream I/O?
+  - The usage of the full grid with "upf%mesh" points is useless and even
+    dangerous in some cases (may enhance large-r numerical noise).
+    The upf% structure contains shorter grids for nonlocal projectors
+    (upf%kkbeta and upf%kbeta(:)). Another shorter grid is defined as
+    "msh" with a rather arbitrary cutoff at Rmax=10 a.u. and used in
+    several cases (e.g. integration of local part). Maybe we should
+    move "msh" into the upf structure and allocate/read/write arrays
+    using such a shorter grid
+
+  - Simpson integration does not seem to be the best choice. One might use 
+    GTH analytical PPs converted to numerical form for testing purposes
+
+  - semilocal Vnl and human-readable sections are not read from PP files,
+    but they should: converters may make a good usage of that information.
+
+  - It would be VERY useful to read from a given record in fortran (without 
+    direct I/O): how can one use fseek, ftell, pos= identifier, stream I/O?
 
   - set the correct value of nsp in uspp_param when allocate_uspp is called,
     use it ONLY inside upflib, remove link of nsp in ions_base to uspp_param
+
   - nh(:) is allocated in init_uspp_dims, but maybe it should allocated
     together with upf(:), when upf is read? Or maybe nh should be part of upf?
     It is used in many many places, though!
@@ -34,6 +47,7 @@
     (requires merge of interpolation tables qrad and qradb)
 
   - upf_ions now contains just a function n_atom_wfc: move somewhere else?
+    same for upf_auxtools, that only contains upf_check_atwfc_norm
   - upf_spinorb contains just two variables: merge into uspp? add to it
     the two functions spinor and sph_ind used only for spin-orbit?
   - lmaxq should be "the maximum value of L in Q functions", not "... + 1"

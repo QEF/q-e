@@ -133,6 +133,9 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      IF ( ierr == -7 ) THEN
         CALL  readgth( file_pseudo, nt, upf(nt), ierr )
         !! FIXME: GTH PP files must be read from all processors
+        IF ( ierr > 0 ) CALL errore('readpp', &
+             'file '//TRIM(file_pseudo)//' not readable',1)
+        !! Unrecoverable error
      ELSE
         IF ( ierr > 0 ) CALL errore('readpp', &
              'file '//TRIM(file_pseudo)//' not readable',1)
