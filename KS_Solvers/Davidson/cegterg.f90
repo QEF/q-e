@@ -273,7 +273,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 ,kind=DP)
      !
      !$acc loop vector
-     !!$omp do simd
+     !$omp simd
      DO m = n + 1, nbase
         !
         hc(n,m) = CONJG( hc(m,n) )
@@ -595,7 +595,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         ENDIF
         !
         !$acc loop vector
-        !!$omp do simd
+        !$omp simd
         DO m = MAX(n+1,nb1), nbase
            !
            hc(n,m) = CONJG( hc(m,n) )
