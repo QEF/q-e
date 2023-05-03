@@ -209,7 +209,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   !
   ! ... spsi contains s times the basis vectors
   !
-  IF ( uspp ) CALL s_psi( npwx, npw, nvec, psi, spsi )
+  IF ( uspp ) THEN
+          CALL s_psi( npwx, npw, nvec, psi, spsi )
+          !$omp target update from(spsi)
+  ENDIF
   !
   ! ... hc contains the projection of the hamiltonian onto the reduced
   ! ... space vc contains the eigenvectors of hc
@@ -235,7 +238,6 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   !
   IF ( uspp ) THEN
      !
-     !$omp target update to(spsi)
      if (n_start .le. n_end) &
      CALL MYZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, spsi(1,n_start), kdmx, &
                  ZERO, sc(1,n_start), nvecx )
@@ -272,8 +274,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      hc(n,n) = CMPLX( REAL( hc(n,n) ), 0.D0 ,kind=DP)
      sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 ,kind=DP)
      !
-     !$acc loop vector
-     !$omp simd
+     !$acc loop vector 
+     !!$omp do simd
      DO m = n + 1, nbase
         !
         hc(n,m) = CONJG( hc(m,n) )
@@ -397,7 +399,6 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !$acc host_data use_device(psi, spsi, vc)
      IF ( uspp ) THEN
         !
-        !$omp target update to(spsi)
         if (n_start .le. n_end) &
         CALL MYZGEMM( 'N','N', kdim, notcnv, my_n, ONE, spsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                     ZERO, psi(1,nb1), kdmx )
@@ -526,7 +527,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !$omp target update from(psi)
      CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
      !
-     IF ( uspp ) CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
+     IF ( uspp ) THEN
+             CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
+             !$omp target update from(spsi)
+     ENDIF
      !
      ! ... update the reduced hamiltonian
      !
@@ -553,7 +557,6 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      IF ( uspp ) THEN
         !
-        !$omp target update to(spsi)
         CALL MYZGEMM( 'C','N', notcnv, my_n, kdim, ONE, spsi(1,nb1), kdmx, psi(1,n_start), kdmx, &
                     ZERO, sc(nb1,n_start), nvecx )
         !$omp target update from(sc)
@@ -595,7 +598,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         ENDIF
         !
         !$acc loop vector
-        !$omp simd
+        !!$omp do simd
         DO m = MAX(n+1,nb1), nbase
            !
            hc(n,m) = CONJG( hc(m,n) )
@@ -710,14 +713,14 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !
         IF ( uspp ) THEN
            !
-           !$omp target update to(spsi)
            CALL MYZGEMM( 'N','N', kdim, nvec, my_n, ONE, spsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                        ZERO, psi(1,nvec+1), kdmx)
-           !$omp target update from(psi)
+           !$omp target update from(psi,spsi)
            CALL dev_memcpy(spsi, psi(:,nvec+1:), &
                                         (/1, npwx*npol/), 1, &
                                         (/1, nvec/), 1)
            CALL mp_sum( spsi(:,1:nvec), inter_bgrp_comm )
+           !$omp target update to(spsi)
            !
         END IF
         !
@@ -951,6 +954,7 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
      ALLOCATE( spsi( npwx*npol, nvecx ), STAT=ierr )
      IF( ierr /= 0 ) &
         CALL errore( ' pcegterg ',' cannot allocate spsi ', ABS(ierr) )
+     !$omp target enter data map(alloc:spsi)
   END IF
   !
   ! ... Initialize the matrix descriptor
@@ -1016,7 +1020,11 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
   !
   CALL h_psi( npwx, npw, nvec, psi, hpsi ) ; nhpsi = nhpsi + nvec
   !
-  IF ( uspp ) CALL s_psi( npwx, npw, nvec, psi, spsi )
+  IF ( uspp ) THEN
+          !$omp target update to(psi)
+          CALL s_psi( npwx, npw, nvec, psi, spsi )
+          !$omp target update from(spsi)
+  ENDIF
   !
   ! ... hl contains the projection of the hamiltonian onto the reduced
   ! ... space, vl contains the eigenvectors of hl. Remember hl, vl and sl
@@ -1132,7 +1140,11 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
      !
      CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
      !
-     IF ( uspp ) CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
+     IF ( uspp ) THEN
+             !$omp target update to(psi)
+             CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
+             !$omp target update from(spsi)
+     ENDIF
      !
      ! ... update the reduced hamiltonian
      !
@@ -1315,7 +1327,10 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
   DEALLOCATE( conv )
   DEALLOCATE( ew )
   !
-  IF ( uspp ) DEALLOCATE( spsi )
+  IF ( uspp ) THEN
+          !$omp target exit data map(delete:spsi)
+          DEALLOCATE( spsi )
+  ENDIF
   !
 #if defined(__OPENMP_GPU)
   !$omp end target data

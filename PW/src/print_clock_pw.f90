@@ -206,6 +206,9 @@ SUBROUTINE print_clock_pw()
    !
    CALL print_clock( 'h_psi' )
    CALL print_clock( 's_psi' )
+#if defined(__OPENMP_GPU)
+   CALL print_clock( 's_psi_omp' )
+#endif
    CALL print_clock( 'g_psi' )
 
    IF (real_space ) THEN
