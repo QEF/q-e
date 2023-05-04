@@ -4,6 +4,7 @@ set(src_pw
    src/add_efield.f90 
    src/add_dmft_occ.f90 
    src/add_vuspsi.f90 
+   src/add_vuspsi_omp.f90
    src/add_gatefield.f90 
    src/add_paw_to_deeq.f90 
    src/add_vhub_to_deeq.f90 

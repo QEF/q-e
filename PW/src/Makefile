@@ -15,6 +15,7 @@ add_bfield.o \
 add_efield.o \
 add_dmft_occ.o \
 add_vuspsi.o \
+add_vuspsi_omp.o \
 add_gatefield.o \
 add_paw_to_deeq.o \
 add_vhub_to_deeq.o \
