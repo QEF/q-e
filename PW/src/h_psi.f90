@@ -256,7 +256,9 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      CALL calbec( n, vkb, psi, becp, m )
 #endif
      CALL stop_clock( 'h_psi:calbec' )
-     CALL add_vuspsi( lda, n, m, hpsi )
+     !$omp target update to(hpsi)
+     CALL add_vuspsi_omp( lda, n, m, hpsi )
+     !$omp target update from(hpsi)
      !
   ENDIF
   !
