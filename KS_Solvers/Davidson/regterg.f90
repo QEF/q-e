@@ -205,6 +205,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   ! ... set Im[ psi(G=0) ] -  needed for numerical stability
      IF (gstart == 2) psi(1,k) = CMPLX( DBLE( psi(1,k) ), 0.D0 ,kind=DP)
      !$acc loop vector
+     !$omp simd
      DO i=2,npwx
          psi(i,k) = evc(i,k)
      END DO
@@ -454,6 +455,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         ! ... set Im[ psi(G=0) ] -  needed for numerical stability
         IF (gstart == 2) psi(1,nbase+i) = CMPLX( DBLE(psi(1,nbase+i)), 0.D0 ,kind=DP)
         !$acc loop vector
+        !$omp simd
         DO k=2,npwx
            psi(k,nbase+i) = psi(k,nbase+i)/SQRT( ew(i) )
         END DO
@@ -537,6 +539,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      DO n = 1, nbase
         !
         !$acc loop vector
+        !$omp simd
         DO m = n + 1, nbase
            !
            hr(m,n) = hr(n,m)
