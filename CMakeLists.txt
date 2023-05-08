@@ -76,6 +76,9 @@ else()
     option(QE_ENABLE_OPENMP
         "enable distributed execution support via OpenMP" OFF)
 endif()
+cmake_dependent_option(QE_ENABLE_OFFLOAD
+    "enable OpenMP offload"
+    OFF "QE_ENABLE_OPENMP" OFF)
 option(QE_ENABLE_MPI
     "enable distributed execution support via MPI" ON)
 option(QE_ENABLE_MPI_GPU_AWARE
@@ -302,6 +305,8 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
     include(GNUFortranCompiler)
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC")
     include(NVFortranCompiler)
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Cray")
+    include(CrayFortranCompiler)
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "XL")
     include(IBMFortranCompiler)
 endif()
