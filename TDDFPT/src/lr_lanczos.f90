@@ -311,9 +311,11 @@ SUBROUTINE one_lanczos_step()
     IF (.not.eels .and. .not. magnons) THEN
        !
        DO ik=1, nks
-          CALL orthogonalize(evc1(:,:,ik,1), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),npwx,.true.)
+!          CALL orthogonalize(evc1(:,:,ik,1), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),npwx,.true.)
+          CALL lr_ortho(evc1(:,:,ik,1), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
           IF (.not. pseudo_hermitian) &
-          CALL orthogonalize(evc1(:,:,ik,2), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),npwx,.true.)
+          CALL lr_ortho(evc1(:,:,ik,2), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)        
+!          CALL orthogonalize(evc1(:,:,ik,2), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),npwx,.true.)
        ENDDO
        !
     ENDIF

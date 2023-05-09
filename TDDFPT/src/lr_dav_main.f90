@@ -46,7 +46,6 @@ PROGRAM lr_dav_main
   LOGICAL, EXTERNAL  :: check_gpu_support
 
   use_gpu = check_gpu_support()
-  if(use_gpu) Call errore('lr_dav_main', 'turbo_davidson with GPU NYI', 1)
 
 #if defined(__MPI)
   CALL mp_startup ( )
