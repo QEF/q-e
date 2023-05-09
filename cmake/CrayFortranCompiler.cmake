@@ -3,6 +3,8 @@ if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 14.0.0)
   message(FATAL_ERROR "Requires CCE 14.0.0 or higher ")
 endif()
 
+message(WARNING "The Cray Fortran compiler is not ready for QE production use.")
+
 qe_add_global_compile_definitions(__CRAY)
 
 # set preprocessor specific flag
