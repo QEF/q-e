@@ -109,10 +109,6 @@ SUBROUTINE paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   CALL mp_type_create_column_section(evc(1,1), 0, npwx, npwx, column_type)
 
   ALLOCATE ( psi(npwx,nvecx), hpsi(npwx,nvecx), spsi(npwx,nvecx), ew(nvecx), conv(nbnd) )
-#if defined(__OPENMP_GPU)
-  !$omp target enter data map(alloc:psi,hpsi)
-#endif
-
   CALL start_clock( 'paro:init' ); 
   conv(:) =  .FALSE. ; nconv = COUNT ( conv(:) )
   !$acc kernels
@@ -120,7 +116,13 @@ SUBROUTINE paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   !$acc end kernels
 
   !$acc host_data use_device(psi, hpsi, spsi)
+#if defined(__OPENMP_GPU)
+  !$omp target data map(alloc:psi,hpsi)
+#endif
   call h_psi (npwx,npw,nbnd,psi,hpsi) ! computes H*psi
+#if defined(__OPENMP_GPU)
+  !$omp end target data
+#endif
   call s_psi (npwx,npw,nbnd,psi,spsi) ! computes S*psi
   !$acc end host_data
 
@@ -268,9 +270,6 @@ SUBROUTINE paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   !
   CALL mp_sum(nhpsi,inter_bgrp_comm)
 
-#if defined(__OPENMP_GPU)
-  !$omp target exit data map(delete:psi,hpsi)
-#endif
   DEALLOCATE ( ew, conv, psi, hpsi, spsi )
   CALL mp_type_free( column_type )
 
