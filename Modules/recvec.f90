@@ -189,7 +189,7 @@
      SUBROUTINE deallocate_gvect_exx()
        IF( ALLOCATED( gg ) )      DEALLOCATE( gg )
        IF( ALLOCATED( g ) )  THEN
-         !$omp exit data map(delete:g)
+         !$omp target exit data map(delete:g)
 !$acc    exit data delete(g) 
          DEALLOCATE( g )
        END IF 
