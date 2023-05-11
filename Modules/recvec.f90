@@ -148,7 +148,7 @@
        DEALLOCATE( gg )
        END IF
        IF( ALLOCATED( g ) )  THEN 
-         !$omp exit data map(delete:g)
+         !$omp target exit data map(delete:g)
 !$acc    exit data delete(g) 
          DEALLOCATE( g )
        END IF 
