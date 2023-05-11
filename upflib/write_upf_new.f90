@@ -472,7 +472,7 @@ CONTAINS
              IF ( l > 0 .AND. ABS(upf%jjj(nb)-l-0.5_dp) < 0.001_dp ) ind = 2
           END IF
           IF ( v2 ) THEN
-             tag = 'PP_VNL.'//i2c(ind)
+             tag = 'PP_VNL.'//i2c(l)
           ELSE
              tag = 'vnl'
           END IF
