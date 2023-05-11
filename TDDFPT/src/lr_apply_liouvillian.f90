@@ -335,7 +335,7 @@ CONTAINS
     !
     REAL(DP), ALLOCATABLE :: becp2(:,:)
     REAL(DP), ALLOCATABLE :: tg_dvrss(:)
-    INTEGER :: v_siz, incr, ioff
+    INTEGER :: v_siz, incr, ioff, ir, nnr_siz
     INTEGER :: ibnd_start_gamma, ibnd_end_gamma
     !
     incr = 2
@@ -352,7 +352,13 @@ CONTAINS
     !
     IF ( interaction ) THEN
        !
-       CALL start_clock('interaction')
+       nnr_siz= dffts%nnr
+       !$acc data copyin(revc0(1:nnr_siz,1:nbnd,1), dvrss(1:nnr_siz)) copyout(psic(1:nnr_siz),evc1_new(1:npwx*npol,1:nbnd,1:nks))
+       !
+       CALL start_clock_gpu('interaction')
+       !
+   !    nnr_siz= dffts%nnr
+   !    !$acc data copyin(revc0(1:nnr_siz,1:nbnd,1), dvrss(1:nnr_siz)) copyout(psic(1:nnr_siz))
        !
        IF (nkb > 0 .and. okvan) THEN
           ! calculation of becp2
@@ -393,23 +399,25 @@ CONTAINS
           ENDDO
           !end: calculation of becp2
        ENDIF
-
-      IF ( dffts%has_task_groups ) THEN
-         !
-         v_siz =  dffts%nnr_tg
-         !
-         incr = 2 * fftx_ntgrp(dffts)
-         !
-         ALLOCATE( tg_dvrss(1:v_siz) )
-         tg_dvrss=0.0d0
-         !
-         CALL tg_gather(dffts, dvrss, tg_dvrss)
-         !
-      ENDIF
+       !
+       IF ( dffts%has_task_groups ) THEN
+          !
+          v_siz =  dffts%nnr_tg
+          !
+          incr = 2 * fftx_ntgrp(dffts)
+          !
+          ALLOCATE( tg_dvrss(1:v_siz) )
+          tg_dvrss=0.0d0
+          !
+          CALL tg_gather(dffts, dvrss, tg_dvrss)
+          !
+       ENDIF
        !
        ! evc1_new is used as a container for the interaction
        !
+       !$acc kernels
        evc1_new(:,:,:) = (0.0d0,0.0d0)
+       !$acc end kernels
        !
        ibnd_start_gamma = ibnd_start
        IF (MOD(ibnd_start, 2)==0) ibnd_start_gamma = ibnd_start + 1
@@ -433,7 +441,9 @@ CONTAINS
              !
           ELSE
              !
-             DO ir = 1,dffts%nnr
+             !DO ir = 1,dffts%nnr
+             !$acc parallel loop
+             DO ir = 1, nnr_siz
                 !
                 psic(ir) = revc0(ir,ibnd,1)*CMPLX(dvrss(ir),0.0d0,DP)
                 !
@@ -446,65 +456,65 @@ CONTAINS
           ENDIF
           !
           IF (real_space .and. okvan .and. nkb > 0) THEN
-          !THE REAL SPACE PART (modified from s_psi)
-                  !fac = sqrt(omega)
-                  !
-                  ijkb0 = 0
-                  iqs = 0
-                  jqs = 0
-                  !
-                  DO nt = 1, ntyp
-                  !
-                    DO ia = 1, nat
+             !THE REAL SPACE PART (modified from s_psi)
+             !fac = sqrt(omega)
+             !
+             ijkb0 = 0
+             iqs = 0
+             jqs = 0
+             !
+             DO nt = 1, ntyp
+                !
+                DO ia = 1, nat
+                   !
+                   IF ( ityp(ia) == nt ) THEN
                       !
-                      IF ( ityp(ia) == nt ) THEN
-                        !
-                        mbia = maxbox_beta(ia)
-                        ALLOCATE( w1(nh(nt)),  w2(nh(nt)) )
-                        w1 = 0.D0
-                        w2 = 0.D0
-                        !
-                        DO ih = 1, nh(nt)
-                        !
-                          DO jh = 1, nh(nt)
-                          !
-                          jkb = ijkb0 + jh
-                          w1(ih) = w1(ih) + becp2(jkb, ibnd)
-                          IF ( ibnd+1 <= nbnd ) w2(ih) = w2(ih) + &
+                      mbia = maxbox_beta(ia)
+                      ALLOCATE( w1(nh(nt)),  w2(nh(nt)) )
+                      w1 = 0.D0
+                      w2 = 0.D0
+                      !
+                      DO ih = 1, nh(nt)
+                         !
+                         DO jh = 1, nh(nt)
+                            !
+                            jkb = ijkb0 + jh
+                            w1(ih) = w1(ih) + becp2(jkb, ibnd)
+                            IF ( ibnd+1 <= nbnd ) w2(ih) = w2(ih) + &
                                &becp2(jkb, ibnd+1)
-                          !
-                          ENDDO
-                        !
-                        ENDDO
-                        !
-                        !w1 = w1 * fac
-                        !w2 = w2 * fac
-                        ijkb0 = ijkb0 + nh(nt)
-                        !
-                        DO ih = 1, nh(nt)
-                          !
-                          DO ir = 1, mbia
-                          !
-                           iqs = jqs + ir
-                           psic( box_beta(box0(ia)+ir) ) = &
+                            !
+                         ENDDO
+                         !
+                      ENDDO
+                      !
+                      !w1 = w1 * fac
+                      !w2 = w2 * fac
+                      ijkb0 = ijkb0 + nh(nt)
+                      !
+                      DO ih = 1, nh(nt)
+                         !
+                         DO ir = 1, mbia
+                            !
+                            iqs = jqs + ir
+                            psic( box_beta(box0(ia)+ir) ) = &
                                 &psic( box_beta(box0(ia)+ir) ) + &
                                 &betasave(box0(ia)+ir,ih)*&
                                 &CMPLX( w1(ih), w2(ih), KIND=dp )
-                          !
-                          ENDDO
-                        !
-                        jqs = iqs
-                        !
-                        ENDDO
-                        !
+                            !
+                         ENDDO
+                         !
+                         jqs = iqs
+                         !
+                      ENDDO
+                      !
                       DEALLOCATE( w1, w2 )
-                        !
-                      ENDIF
-                    !
-                    ENDDO
-                  !
-                 ENDDO
-
+                      !
+                   ENDIF
+                   !
+                ENDDO
+                !
+             ENDDO
+             !
           ENDIF
           !
           !   Back to reciprocal space 
@@ -514,7 +524,9 @@ CONTAINS
        ENDDO
        !
 #if defined(__MPI)
+       !$acc host_data use_device(evc1_new)
        CALL mp_sum( evc1_new(:,:,1), inter_bgrp_comm )
+       !$acc end host_data
 #endif
        IF (dffts%has_task_groups) DEALLOCATE (tg_dvrss)
        !
@@ -525,7 +537,9 @@ CONTAINS
           !
        ENDIF
        !
-       CALL stop_clock('interaction')
+    !!!   !$acc end data
+       CALL stop_clock_gpu('interaction')
+       !$acc end data
        !
     ENDIF
     !

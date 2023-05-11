@@ -76,7 +76,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   INTEGER       :: ir, ik, ibnd, jbnd, ig, ijkb0, np, na
   INTEGER       :: ijh,ih,jh,ikb,jkb,is
   INTEGER       :: i, j, k, l
-  INTEGER       :: v_siz, nnr_siz
+  INTEGER       :: v_siz, nnr_siz, irho
   REAL(kind=dp) :: w1, w2, scal, rho_sum
   ! These are temporary buffers for the response 
   REAL(kind=dp), ALLOCATABLE :: rho_sum_resp_x(:), rho_sum_resp_y(:),&
@@ -95,7 +95,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   v_siz = dfftp%nnr
   nnr_siz = dffts%nnr
   ! 
-  !$acc data create(psic(1:v_siz)) copyin(evc1(1:npwx*npol,1:nbnd,1:nks),revc0(1:nnr_siz,1:nbnd,1:nksq)) copyout( rho_1(1:v_siz,1:nspin_mag))
+  !$acc data create(psic(1:v_siz)) copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) copyin(revc0(1:nnr_siz,1:nbnd,1:nksq)) copyout( rho_1(1:v_siz,1:nspin_mag))
   !
   !$acc kernels
   psic(:) = (0.0d0, 0.0d0)
@@ -181,13 +181,11 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   !
   ! The psic workspace can present a memory bottleneck
   !
-  !$acc end data
-  !
-  DEALLOCATE ( psic )
-  !
 #if defined(__MPI)
   IF(gamma_only) THEN
+     !$acc host_data use_device(rho_1)
      CALL mp_sum(rho_1, inter_pool_comm)
+     !$acc end host_data
   ELSE
      CALL mp_sum(rho_1c, inter_pool_comm)
   ENDIF
@@ -200,7 +198,11 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
      DO is = 1, nspin_mag
         !
         rho_sum = 0.0d0
-        rho_sum = SUM(rho_1(:,is))
+!        rho_sum = SUM(rho_1(:,is))
+        !$acc parallel loop private(rho_sum) copy(rho_sum)
+        do irho = 1, v_siz
+           rho_sum = rho_sum + rho_1(i,is)
+        enddo   
         !
 #if defined(__MPI)
         CALL mp_sum(rho_sum, intra_bgrp_comm )
@@ -233,6 +235,10 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
      ENDDO
      !
   ENDIF
+  !
+  !$acc end data
+  !
+  DEALLOCATE ( psic )
   !
   IF (charge_response == 2 .AND. LR_iteration /=0) THEN
      !
@@ -378,7 +384,6 @@ CONTAINS
     USE mp,                  ONLY : mp_sum
     USE realus,              ONLY : tg_psic
     USE fft_base,            ONLY : dffts
-    USE fft_wave,            ONLY : wave_g2r
 
     IMPLICIT NONE
     !
@@ -413,10 +418,7 @@ CONTAINS
        ebnd = ibnd
        IF ( ibnd < nbnd ) ebnd = ebnd + 1
        !
-       CALL wave_g2r( evc1(1:ngk(1),ibnd:ebnd,1), psic, dffts )
-       !       CALL invfft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
-       !
-!       !$acc update device(psic)
+       CALL invfft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
        !
        IF (dffts%has_task_groups) THEN
           !
