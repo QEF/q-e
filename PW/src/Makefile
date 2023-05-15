@@ -199,6 +199,7 @@ ruotaijk.o \
 run_pwscf.o \
 s_1psi.o \
 s_psi.o \
+s_psi_omp.o \
 save_in_cbands.o \
 save_in_electrons.o \
 scale_h.o \

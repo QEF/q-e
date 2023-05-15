@@ -187,7 +187,8 @@ set(src_pw
    src/ruotaijk.f90 
    src/run_pwscf.f90 
    src/s_1psi.f90 
-   src/s_psi.f90 
+   src/s_psi.f90
+   src/s_psi_omp.f90 
    src/save_in_cbands.f90 
    src/save_in_electrons.f90 
    src/scale_h.f90 

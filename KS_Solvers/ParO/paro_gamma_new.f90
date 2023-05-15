@@ -15,15 +15,15 @@
 !
 ! The approach following Algorithm is the parallel orbital updating algorithm:
 ! 1. Choose initial $E_{\mathrm{cut}}^{(0)}$ and then obtain $V_{N_G^{0}}$, use the SCF method to solve
-!    the Kohn-Sham equation in $V_{G_0}$ and get the initial $(\lambda_i^{0},u_i^{0}), i=1, \cdots, N$
+!    the Kohn-Sham equation in $V_{G_0}$ and get the initial $(\lambda_i^{0},u_i^{0}), i=1, \cdots, N$ 
 !    and let $n=0$.
 ! 2. For $i=1,2,\ldots,N$, find $e_i^{n+1/2}\in V_{G_n}$ satisfying
 !    $$a(\rho_{in}^{n}; e_i^{n+1/2}, v) = -[(a(\rho_{in}^{n}; u_i^{n}, v) - \lambda_i^{n} (u_i^{n}, v))]  $$
-!    in parallel , where $\rho_{in}^{n}$ is the input charge density obtained by the orbits obtained in the
+!    in parallel , where $\rho_{in}^{n}$ is the input charge density obtained by the orbits obtained in the 
 !    $n$-th iteration or the former iterations.
 ! 3. Find $\{\lambda_i^{n+1},u_i^{n+1}\} \in \mathbf{R}\times \tilde{V}_N$   satisfying
 !      $$a(\tilde{\rho}; u_i^{n+1}, v) = ( \lambda_i^{n+1}u_i^{n+1}, v) \quad  \forall v \in \tilde{V}_N$$
-!      where $\tilde{V}_N = \mathrm{span}\{e_1^{n+1/2},\ldots,e_N^{n+1/2},u_1^{n},\ldots,u_N^{n}\}$,
+!      where $\tilde{V}_N = \mathrm{span}\{e_1^{n+1/2},\ldots,e_N^{n+1/2},u_1^{n},\ldots,u_N^{n}\}$, 
 !      $\tilde{\rho}(x)$ is the input charge density obtained from the previous orbits.
 ! 4. Convergence check: if not converged, set $n=n+1$, go to step 2; else,  stop.
 !
@@ -31,7 +31,7 @@
 !  X. Dai, X. Gong, A. Zhou, J. Zhu,
 !   A parallel orbital-updating approach for electronic structure calculations, arXiv:1405.0260 (2014).
 ! X. Dai, Z. Liu, X. Zhang, A. Zhou,
-!  A Parallel Orbital-updating Based Optimization Method for Electronic Structure Calculations,
+!  A Parallel Orbital-updating Based Optimization Method for Electronic Structure Calculations, 
 !   arXiv:1510.07230 (2015).
 ! Yan Pan, Xiaoying Dai, Xingao Gong, Stefano de Gironcoli, Gian-Marco Rignanese, and Aihui Zhou,
 !  A Parallel Orbital-updating Based Plane Wave Basis Method. J. Comp. Phys. 348, 482-492 (2017).
@@ -39,9 +39,9 @@
 ! The file is written mainly by Stefano de Gironcoli and Yan Pan.
 ! GPU porting by Ivan Carnimeo
 !
-!NOTE (Ivan Carnimeo, May, 30th, 2022):
-!   paro_k_new and paro_gamma_new have been ported to GPU with OpenACC,
-!   the previous CUF versions (paro_k_new_gpu and paro_gamma_new_gpu) have been removed,
+!NOTE (Ivan Carnimeo, May, 30th, 2022): 
+!   paro_k_new and paro_gamma_new have been ported to GPU with OpenACC, 
+!   the previous CUF versions (paro_k_new_gpu and paro_gamma_new_gpu) have been removed, 
 !   and now paro_k_new and paro_gamma_new are used for both CPU and GPU execution.
 !   If you want to see the previous code checkout to commit: 55c4e48ba650745f74bad43175f65f5449fd1273 (on Fri May 13 10:57:23 2022 +0000)
 !
@@ -70,7 +70,7 @@ SUBROUTINE paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   INTEGER, INTENT(IN)        :: btype(nbnd)
   INTEGER, INTENT(OUT)       :: notconv, nhpsi
 !  INTEGER, INTENT(IN)        :: paro_flag
-
+  
   ! local variables (used in the call to cegterg )
   !------------------------------------------------------------------------
   EXTERNAL h_psi, s_psi, hs_psi, g_1psi
@@ -109,23 +109,25 @@ SUBROUTINE paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   CALL mp_type_create_column_section(evc(1,1), 0, npwx, npwx, column_type)
 
   ALLOCATE ( psi(npwx,nvecx), hpsi(npwx,nvecx), spsi(npwx,nvecx), ew(nvecx), conv(nbnd) )
-#if defined(__OPENMP_GPU)
-  !$omp target data map(alloc:psi,hpsi)
-#endif
-
-  CALL start_clock( 'paro:init' );
+  CALL start_clock( 'paro:init' ); 
   conv(:) =  .FALSE. ; nconv = COUNT ( conv(:) )
   !$acc kernels
   psi(:,1:nbnd) = evc(:,1:nbnd) ! copy input evc into work vector
   !$acc end kernels
 
   !$acc host_data use_device(psi, hpsi, spsi)
+#if defined(__OPENMP_GPU)
+  !$omp target data map(alloc:psi,hpsi)
+#endif
   call h_psi (npwx,npw,nbnd,psi,hpsi) ! computes H*psi
+#if defined(__OPENMP_GPU)
+  !$omp end target data
+#endif
   call s_psi (npwx,npw,nbnd,psi,spsi) ! computes S*psi
   !$acc end host_data
 
   nhpsi = 0 ; IF (my_bgrp_id==0) nhpsi = nbnd
-  CALL stop_clock( 'paro:init' );
+  CALL stop_clock( 'paro:init' ); 
 
 #if defined(__MPI)
   IF ( nproc_ortho == 1 ) THEN
@@ -168,27 +170,27 @@ SUBROUTINE paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
 
      !write (6,*) itry, notconv, conv
      !write (6,*) ' nvecx, nbnd, nconv, notconv, nextra, nactive, nbase, ntrust, ndiag  =', nvecx, nbnd, nconv, notconv, nextra, nactive, nbase, ntrust, ndiag
-
+     
      CALL divide_all(inter_bgrp_comm,nactive,ibnd_start,ibnd_end,recv_counts,displs)
      how_many = ibnd_end - ibnd_start + 1
      !write (6,*) nactive, ibnd_start, ibnd_end, recv_counts, displs
 
-     CALL start_clock( 'paro:pack' );
+     CALL start_clock( 'paro:pack' ); 
      lbnd = 1; kbnd = 1
      DO ibnd = 1, ntrust ! pack unconverged roots in the available space
         IF (.NOT.conv(ibnd) ) THEN
-           !$acc kernels
+           !$acc kernels 
            psi (:,nbase+kbnd)  = psi(:,ibnd)
            hpsi(:,nbase+kbnd) = hpsi(:,ibnd)
            spsi(:,nbase+kbnd) = spsi(:,ibnd)
-           ew(kbnd) = eig(ibnd)
+           ew(kbnd) = eig(ibnd) 
            !$acc end kernels
            last_unconverged = ibnd
            lbnd=lbnd+1 ; kbnd=kbnd+recv_counts(mod(lbnd-2,nbgrp)+1); if (kbnd>nactive) kbnd=kbnd+1-nactive
         END IF
      END DO
      DO ibnd = nbnd+1, nbase   ! add extra vectors if it is the case
-        !$acc kernels
+        !$acc kernels 
         psi (:,nbase+kbnd)  = psi(:,ibnd)
         hpsi(:,nbase+kbnd) = hpsi(:,ibnd)
         spsi(:,nbase+kbnd) = spsi(:,ibnd)
@@ -196,28 +198,28 @@ SUBROUTINE paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
         !$acc end kernels
         lbnd=lbnd+1 ; kbnd=kbnd+recv_counts(mod(lbnd-2,nbgrp)+1); if (kbnd>nactive) kbnd=kbnd+1-nactive
      END DO
-     !$acc kernels
+     !$acc kernels 
      psi (:,nbase+1:nbase+how_many) = psi (:,nbase+ibnd_start:nbase+ibnd_end)
      hpsi(:,nbase+1:nbase+how_many) = hpsi(:,nbase+ibnd_start:nbase+ibnd_end)
      spsi(:,nbase+1:nbase+how_many) = spsi(:,nbase+ibnd_start:nbase+ibnd_end)
      ew(1:how_many) = ew(ibnd_start:ibnd_end)
      !$acc end kernels
-     CALL stop_clock( 'paro:pack' );
-
+     CALL stop_clock( 'paro:pack' ); 
+   
 !     write (6,*) ' check nactive = ', lbnd, nactive
      if (lbnd .ne. nactive+1 ) stop ' nactive check FAILED '
 
      CALL bpcg_gamma(hs_psi, g_1psi, psi, spsi, npw, npwx, nbnd, how_many, &
                 psi(:,nbase+1), hpsi(:,nbase+1), spsi(:,nbase+1), ethr, ew(1), nhpsi)
 
-     CALL start_clock( 'paro:mp_bar' );
+     CALL start_clock( 'paro:mp_bar' ); 
      CALL mp_barrier(inter_bgrp_comm)
-     CALL stop_clock( 'paro:mp_bar' );
-     CALL start_clock( 'paro:mp_sum' );
-     !$acc kernels
-     psi (:,nbase+ibnd_start:nbase+ibnd_end) = psi (:,nbase+1:nbase+how_many)
-     hpsi(:,nbase+ibnd_start:nbase+ibnd_end) = hpsi(:,nbase+1:nbase+how_many)
-     spsi(:,nbase+ibnd_start:nbase+ibnd_end) = spsi(:,nbase+1:nbase+how_many)
+     CALL stop_clock( 'paro:mp_bar' ); 
+     CALL start_clock( 'paro:mp_sum' ); 
+     !$acc kernels 
+     psi (:,nbase+ibnd_start:nbase+ibnd_end) = psi (:,nbase+1:nbase+how_many) 
+     hpsi(:,nbase+ibnd_start:nbase+ibnd_end) = hpsi(:,nbase+1:nbase+how_many) 
+     spsi(:,nbase+ibnd_start:nbase+ibnd_end) = spsi(:,nbase+1:nbase+how_many) 
      !$acc end kernels
 
      !$acc host_data use_device(psi, hpsi, spsi)
@@ -225,7 +227,7 @@ SUBROUTINE paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
      CALL mp_allgather(hpsi(:,nbase+1:ndiag), column_type, recv_counts, displs, inter_bgrp_comm)
      CALL mp_allgather(spsi(:,nbase+1:ndiag), column_type, recv_counts, displs, inter_bgrp_comm)
      !$acc end host_data
-     CALL stop_clock( 'paro:mp_sum' );
+     CALL stop_clock( 'paro:mp_sum' ); 
 
 #if defined(__MPI)
      IF ( nproc_ortho == 1 ) THEN
@@ -248,12 +250,12 @@ SUBROUTINE paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
      ! but only those that have actually been corrected should be trusted
      conv(1:nbnd) = .FALSE.
 
-     !$acc kernels copy(conv)
-     conv(1:ntrust) = ABS(ew(1:ntrust)-eig(1:ntrust)).LT.ethr
+     !$acc kernels copy(conv) 
+     conv(1:ntrust) = ABS(ew(1:ntrust)-eig(1:ntrust)).LT.ethr 
      !$acc end kernels
 
      nconv = COUNT(conv(1:ntrust)) ; notconv = nbnd - nconv
-     !$acc kernels
+     !$acc kernels 
      eig(1:nbnd)  = ew(1:nbnd)
      !$acc end kernels
      IF ( nconv == nbnd ) EXIT ParO_loop
@@ -268,9 +270,6 @@ SUBROUTINE paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   !
   CALL mp_sum(nhpsi,inter_bgrp_comm)
 
-#if defined(__OPENMP_GPU)
-  !$omp end target data
-#endif
   DEALLOCATE ( ew, conv, psi, hpsi, spsi )
   CALL mp_type_free( column_type )
 
