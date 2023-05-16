@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -101,7 +101,7 @@ cat > ni+co.scf.in << EOF
     prefix='ni+co',
     pseudo_dir = '$PSEUDO_DIR',
     outdir='$TMP_DIR'
-    
+
     tefield=.true.,
     dipfield=.true.,
  /
@@ -127,7 +127,7 @@ cat > ni+co.scf.in << EOF
 ATOMIC_SPECIES
 C	1.0	C.pbe-rrkjus.UPF
 O	1.0	O.pbe-rrkjus.UPF
-Ni	1.0	Ni.pbe-nd-rrkjus.UPF  
+Ni	1.0	Ni.pbe-nd-rrkjus.UPF
 
 CELL_PARAMETERS alat
 1.00000000 0.00000000 0.00000000
@@ -151,7 +151,7 @@ check_failure $?
 $ECHO " done"
 
 #
-# Extract the potential from the SCF calculation 
+# Extract the potential from the SCF calculation
 #
 cat > ni+co.pp.in << EOF
 &inputpp
@@ -169,7 +169,7 @@ $ECHO " done"
 
 #
 # Average the potential to obtain the planar average along edir
-# 
+#
 cat > ni+co.avg.in << EOF
 1
 ni+co.vpot
@@ -183,7 +183,7 @@ $ECHO "  running average.x to obtain the potential along Z...\c"
 $AVERAGE_COMMAND < ni+co.avg.in > ni+co.vpot-z
 check_failure $?
 $ECHO " done"
-mv avg.dat ni+co.vpot-z 
+mv avg.dat ni+co.vpot-z
 
 #
 # If gnuplot is present plot the potential. In the graph it's clear where
@@ -192,19 +192,19 @@ mv avg.dat ni+co.vpot-z
 
 if [ "$GP_COMMAND" = "" ]; then
     break
-else    
+else
 cat > ni+co.gnuplot <<EOF
 set terminal postscript enhanced color
 set output 'ni+co.eps'
 
 set multiplot
 
-set size 1,1   
+set size 1,1
 set origin 0,0
 
 set style line 1 lt 1
 set style line 2 lt 2
-set style line 3 lt 3 
+set style line 3 lt 3
 
 set arrow 1 from 8,-2.2976 to 8,4.75 ls 3
 set arrow 2 from 8,4.75 to 8,-2.2976 ls 3
@@ -221,7 +221,7 @@ plot '< tail -150 ni+co.vpot-z' u (\$1*0.52918):(\$2*13.6) w l ls 1 title 'Pot.'
 
 
 
-set size 0.4,0.4 
+set size 0.4,0.4
 set origin 0.45,0.1
 set xrange [8:18]
 set yrange[4.74:4.76]
@@ -230,8 +230,8 @@ set xtics 8.2,2.8,18
 set ytics 4.742, 0.005, 4.758
 
 set style line 1 lt 1
-set style line 2 lt 2 
-set style line 3 lt 3 
+set style line 2 lt 2
+set style line 3 lt 3
 
 set arrow 1 from 10,4.7566 to 10,4.7529 ls 3
 set arrow 2 from 10,4.7529 to 10,4.7566 ls 3
@@ -239,8 +239,8 @@ set arrow 2 from 10,4.7529 to 10,4.7566 ls 3
 
 set label "Dipole corr." at 10.8,4.748
 
-unset xlabel 
-unset ylabel 
+unset xlabel
+unset ylabel
 
 plot [8:18][4.74:4.76] "< tail -150 ni+co.vpot-z" u (\$1*0.52918):(\$3*13.6) w l ls 1 notitle, "< tail -150 ni+co.vpot-z" u (\$1*0.52918):(4.7566) w l ls 2 notitle, "< tail -150 ni+co.vpot-z" u (\$1*0.52918):(4.7529) w l ls 2 notitle
 
@@ -270,17 +270,17 @@ cat > water.scf.in << EOF
     prefix='water',
     pseudo_dir = '$PSEUDO_DIR',
     outdir='$TMP_DIR'
-    
-   tefield=.true., 
+
+   tefield=.true.,
     dipfield=.true.
 /
 &SYSTEM
-    ibrav=1, celldm(1) = 15 
+    ibrav=1, celldm(1) = 15
     nat=3, ntyp=2
 
     ecutwfc=30.0
     occupations='smearing', degauss=0.01
-    
+
     edir=3
     eamp=0.D0
     eopreg=0.1
@@ -306,7 +306,7 @@ check_failure $?
 $ECHO " done"
 
 #
-# Extract the potential from the SCF calculation  
+# Extract the potential from the SCF calculation
 #
 cat > water.pp.in << EOF
 &inputpp
@@ -344,7 +344,7 @@ mv avg.dat water.vpot-z
 
 if [ "$GP_COMMAND" = "" ]; then
     break
-else    
+else
 cat > water.gnuplot <<EOF
 set terminal postscript enhanced color
 set output 'water.eps'
@@ -360,10 +360,10 @@ set label "Dipole correction" at 3,0.5
 
 set yrange [-1.2:1.2]
 
-set xlabel "Length (Angstroms)" 
-set ylabel "Energy (eV)" 
+set xlabel "Length (Angstroms)"
+set ylabel "Energy (eV)"
 
-plot "< tail -90 water.vpot-z" u (\$1*0.52918):(\$2*13.6) w l ls 1 title "Pot.", "< tail -90 water.vpot-z" u (\$1*0.52918):(-0.15) w l ls 2 notitle, "< tail -90 water.vpot-z" u (\$1*0.52918):(0.93) w l ls 2 notitle 
+plot "< tail -90 water.vpot-z" u (\$1*0.52918):(\$2*13.6) w l ls 1 title "Pot.", "< tail -90 water.vpot-z" u (\$1*0.52918):(-0.15) w l ls 2 notitle, "< tail -90 water.vpot-z" u (\$1*0.52918):(0.93) w l ls 2 notitle
 
 set output
 reset

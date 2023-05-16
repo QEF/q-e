@@ -9,6 +9,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !----------------------------------------------------------------------------
+  !! Main loop for CP molecular dynamics.
   !
   USE kinds,                    ONLY : DP
   USE constants,                ONLY : bohr_radius_angs, amu_au, au_gpa
@@ -23,7 +24,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                                      !autopilot work
   USE core,                     ONLY : rhoc
   USE uspp_param,               ONLY : nhm, nh
-  USE pseudo_base,              ONLY : vkb_d
   USE uspp,                     ONLY : nkb, vkb, becsum, deeq, okvan, nlcc_any
   USE energies,                 ONLY : eht, epseu, exc, etot, eself, enl, &
                                        ekin, atot, entropy, egrand, enthal, &
@@ -119,9 +119,10 @@ USE cp_main_variables,        ONLY : eigr_d
   USE ldaU_cp,                  ONLY : lda_plus_u, vupsi
   USE fft_base,                 ONLY : dfftp, dffts
   USE london_module,            ONLY : energy_london, force_london, stres_london
-  USE input_parameters,         ONLY : tcpbo
+  USE input_parameters,         ONLY : tcpbo, nextffield
   USE xc_lib,                   ONLY : xclib_dft_is, start_exx, exx_is_active
   USE device_memcpy_m,          ONLY : dev_memcpy
+  USE extffield,                ONLY : apply_extffield_CP,close_extffield
   !
 #if defined (__ENVIRON)
   USE plugin_flags,             ONLY : use_environ
@@ -135,8 +136,11 @@ USE cp_main_variables,        ONLY : eigr_d
   ! ... input/output variables
   !
   REAL(DP), INTENT(OUT) :: tau_out(3,nat)
+  !! positions of ions
   REAL(DP), INTENT(OUT) :: fion_out(3,nat)
+  !! forces on ions
   REAL(DP), INTENT(OUT) :: etot_out
+  !! total energy
   !
   ! ... control variables
   !
@@ -460,10 +464,20 @@ USE cp_main_variables,        ONLY : eigr_d
            !
         END IF
         !
-        !
         ! ... call void routine for user define/ plugin patches on external forces
         !
         CALL plugin_ext_forces()
+        !
+        ! ... call run_extffield to apply external force fields on ions
+        ! 
+        IF ( nextffield > 0 ) THEN
+           IF ( .NOT.tnosep .OR. CYCLE_NOSE.EQ.0 ) THEN
+              IF ( ionode ) THEN
+                 CALL apply_extffield_CP(nfi,nextffield,tau0,vels,fion)
+              END IF
+              CALL mp_bcast( fion, ionode_id, intra_bgrp_comm )
+           END IF
+        END IF
         !
         !
         CALL ions_move( tausp, taus, tausm, iforce, pmass, fion, ainv, &
@@ -499,7 +513,9 @@ USE cp_main_variables,        ONLY : eigr_d
         !
         CALL ions_cofmass( tausp, pmass, nat, ityp, cdm )
         !
-        IF ( ndfrz == 0 ) &
+        ! ... Center of mass subtraction bypassed if external ionic force fields are activated
+        ! 
+        IF ( ndfrz == 0 .AND. nextffield == 0) &
            CALL ions_cofmsub( tausp, iforce, nat, cdm, cdms )
         !
         CALL s_to_r( tausp, taup, nat, hnew )
@@ -545,9 +561,8 @@ USE cp_main_variables,        ONLY : eigr_d
         ! ... prefor calculates vkb
         !
         CALL prefor( eigr, vkb )
-#if defined(__CUDA)
-        CALL dev_memcpy( vkb_d, vkb )
-#endif
+        !
+        !$acc update device(vkb)
         !
      END IF
      !
@@ -565,7 +580,11 @@ USE cp_main_variables,        ONLY : eigr_d
          IF ( tortho ) THEN
            !
 #if defined (__CUDA)
-           CALL ortho( vkb_d, cm_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+           !$acc data present(vkb)
+           !$acc host_data use_device(vkb)
+           CALL ortho( vkb, cm_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+           !$acc end host_data
+           !$acc end data
 #else
            CALL ortho( vkb, cm_bgrp, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #endif
@@ -604,8 +623,11 @@ USE cp_main_variables,        ONLY : eigr_d
 #if defined (__CUDA)
          CALL dev_memcpy( eigr_d, eigr )
          !CALL dev_memcpy( cm_d, cm_bgrp )
-         CALL calbec( nbsp_bgrp, vkb_d, cm_d, bec_d, 1 )
-         !CALL dev_memcpy( vkb, vkb_d )
+         !$acc data present(vkb)
+         !$acc host_data use_device(vkb)
+         CALL calbec( nbsp_bgrp, vkb, cm_d, bec_d, 1 )
+         !$acc end host_data
+         !$acc end data
          !CALL dev_memcpy( bec_bgrp, bec_d )
 #else
          CALL calbec( nbsp_bgrp, vkb, cm_bgrp, bec_bgrp, 1 ) 
@@ -619,8 +641,8 @@ USE cp_main_variables,        ONLY : eigr_d
 #endif
          END IF
          !
+         !$acc update host(vkb)
 #if defined (__CUDA)
-        CALL dev_memcpy( vkb, vkb_d )
         CALL dev_memcpy( bec_bgrp, bec_d )
 #endif
          !
@@ -852,6 +874,9 @@ USE cp_main_variables,        ONLY : eigr_d
            IF ( tefield )  CALL efield_update( eigr )
            IF ( tefield2 ) CALL efield_update2( eigr )
            !
+#if defined (__LEGACY_PLUGINS)
+  CALL plugin_init_ions(tau0)
+#endif 
 #if defined (__ENVIRON)
            IF (use_environ) CALL update_environ_ions(tau0)
 #endif
@@ -1005,7 +1030,8 @@ USE cp_main_variables,        ONLY : eigr_d
   IF( iverbosity > 1 ) CALL laxlib_print_matrix( lambda, idesc, nbsp, nbsp, nudx, 1.D0, ionode, stdout )
   !
   IF (lda_plus_u) DEALLOCATE( forceh )
-
+  !
+  IF (ionode .AND. nextffield > 0) CALL close_extffield()
   !
   CALL stop_clock( 'cpr_total' ) ! BS
   !
@@ -1016,6 +1042,7 @@ END SUBROUTINE cprmain
 !----------------------------------------------------------------------------
 SUBROUTINE terminate_run()
   !----------------------------------------------------------------------------
+  !! Terminate CP run and print statistics.
   !
   USE io_global,         ONLY : stdout, ionode
   USE control_flags,     ONLY : ts_vdw, thdyn, tortho
@@ -1180,6 +1207,9 @@ SUBROUTINE terminate_run()
   !
   IF (tcg) call print_clock_tcg()
   !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_clock()
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) CALL print_environ_clocks()
 #endif

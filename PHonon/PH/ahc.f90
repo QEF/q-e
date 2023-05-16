@@ -213,7 +213,9 @@ SUBROUTINE ahc_do_upperfan(ik)
   ! compute beta functions and kinetic energy for k-point ikq
   ! needed by h_psi, called by ch_psi_all, called by cgsolve_all
   !
-  CALL init_us_2(npwq, igk_k(1, ikq), xk(1, ikq), vkb)
+  CALL init_us_2(npwq, igk_k(1, ikq), xk(1, ikq), vkb, .true.)
+  !$acc update host(vkb)
+  !
   CALL g2_kin(ikq)
   !
   ! compute preconditioning matrix h_diag used by cgsolve_all

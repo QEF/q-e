@@ -168,7 +168,7 @@ SUBROUTINE memory_report()
   ! other (possibly minor) data loads
   lmaxq = 2*lmaxkb+1
   IF (lmaxq > 0) THEN
-     ! not accurate if spline_ps .and. cell_factor <= 1.1d0
+     ! not accurate if cell_factor <= 1.1d0
      nqxq = int( ( (sqrt(ecutrho) + qnorm) / dq + 4) * cell_factor )
      ! allocate_nlpot.f90:87 qrad
      add = real_size * nqxq * nbetam*(nbetam+1)/2 * lmaxq * ntyp

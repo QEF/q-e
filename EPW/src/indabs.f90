@@ -14,6 +14,8 @@
   !! 12/03/2018 Kyle and E. Kioupakis: First implementation
   !! 08/04/2018 S. Ponce: Cleaning
   !! 17/09/2019 S. Ponce: Modularization and cleaning
+  !! 07/2021 X. Zhang: Added free carrier absorption related subroutines
+  !! 04/2022 X. Zhang: Merged with impurity matrix elements implementation
   !!
   IMPLICIT NONE
   !
@@ -32,13 +34,16 @@
     USE epwcom,        ONLY : nstemp, fsthick, degaussw, &
                               eps_acustic, efermi_read, fermi_energy,&
                               vme, omegamin, omegamax, omegastep, carrier, &
-                              nomega, neta, restart, restart_step
+                              nomega, neta, restart, restart_step, &
+                              ii_g, ii_n, ii_lscreen
     USE elph2,         ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf, &
                               sigmar_all, efnew, gtemp, &
                               dmef, omegap, epsilon2_abs, epsilon2_abs_lorenz, vmef, &
-                              nbndfst, nktotf, ef0_fca, &
-                              epsilon2_abs_all, epsilon2_abs_lorenz_all
-    USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, czero
+                              nbndfst, nktotf, ef0_fca, partion, &
+                              epsilon2_abs_all, epsilon2_abs_lorenz_all, epstf_therm, &
+                              epsilon2_abs_imp, epsilon2_abs_lorenz_imp, eimpf17
+    USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, czero, &
+                              bohr2ang, ang2cm
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_world,      ONLY : mpime
     USE mp_global,     ONLY : inter_pool_comm
@@ -122,6 +127,10 @@
     !! Occupation prefactors
     REAL(KIND = DP) :: cfac
     !! Absorption prefactor
+    REAL(KIND = DP) :: n_imp_au(nstemp)
+    !! Density of charged impurity in a.u.
+    REAL(KIND = DP) :: inveps
+    !! Inverse of thermal eps
     REAL(KIND = DP) :: eta(9) = (/ 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5 /) / ryd2eV
     !! Imaginary broadening of matrix element denominators
     REAL(KIND = DP) :: etemp_fca
@@ -139,6 +148,10 @@
     !!- Velocity matrix elements at k, k+q
     COMPLEX(KIND = DP) :: s1a(3), s1e(3), s2a(3), s2e(3)
     !! Transition probability function
+    COMPLEX(KIND = DP) :: s1imp(3), s2imp(3)
+    !! Charged impurity transition
+    COMPLEX(KIND = DP) :: eimpf(nbndfst, nbndfst)
+    !! Electron-charged-impurity matrix elements
     COMPLEX(KIND = DP) :: epf(nbndfst, nbndfst, nmodes)
     !! Generalized matrix elements for phonon-assisted absorption
     !
@@ -157,16 +170,15 @@
     !
     IF (iq == iq_restart) THEN
       !
-      !IF (.NOT. ALLOCATED (omegap) )    ALLOCATE(omegap(nomega))
-      !IF (.NOT. ALLOCATED (epsilon2_abs) ) ALLOCATE(epsilon2_abs(3, nomega, neta))
-      !IF (.NOT. ALLOCATED (epsilon2_abs_lorenz) ) ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta))
       ALLOCATE(omegap(nomega), STAT = ierr)
       IF (ierr /= 0) CALL errore('indabs', 'Error allocating omegap', 1)
-      ! Now move the allocation into ephwann instead of indabs
-!      ALLOCATE(epsilon2_abs(3, nomega, neta, nstemp), STAT = ierr)
-!      IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs', 1)
-!      ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta, nstemp), STAT = ierr)
-!      IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs_lorenz', 1)
+      !
+      IF (carrier .and. ii_g) THEN
+        ALLOCATE(epsilon2_abs_imp(3, nomega, neta, nstemp), STAT = ierr)
+        IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs_imp', 1)
+        ALLOCATE(epsilon2_abs_lorenz_imp(3, nomega, neta, nstemp), STAT = ierr)
+        IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs_lorenz_imp', 1)
+      ENDIF
       !
       IF (iq_restart == 1) THEN
         epsilon2_abs_all = 0.d0
@@ -189,11 +201,26 @@
       DO itemp = 1, nstemp
         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Temperature T = ', gtemp(itemp) * ryd2ev, ' eV'
       ENDDO
+      !
+      IF (carrier) THEN
+        IF (ii_g) THEN
+        WRITE(stdout, '(5x,"Impurity-assisted optics calculated for the given charge density.")')
+          epsilon2_abs_imp = 0.d0
+          epsilon2_abs_lorenz_imp = 0.d0
+        ENDIF
+        CALL conduc_fca(ef0_fca)
+      ENDIF
     ENDIF
     !
     ! The total number of k points
     !
     nksqtotf = nktotf ! odd-even for k,k+q
+    !
+    IF (ii_g) THEN
+      DO itemp = 1, nstemp
+        n_imp_au(itemp) = partion(itemp) * ii_n * (bohr2ang * ang2cm)**(3.d0)
+      ENDDO
+    ENDIF
     !
     DO itemp = 1, nstemp
       IF (first_cycle .and. itemp == nstemp) THEN
@@ -212,10 +239,23 @@
         ENDIF
         !
         inv_eptemp0 = 1.0 / gtemp(itemp)
+        !
+        IF (carrier .and. ii_g .and. ii_lscreen) THEN
+          inveps = 1.0 / epstf_therm(itemp)
+        ENDIF
+        !
         DO ik = 1, nkf
           !
           ikk = 2 * ik - 1
           ikq = ikk + 1
+          !
+          IF (carrier .and. ii_g) THEN
+            IF (ii_lscreen) THEN
+              eimpf(:, :) = eimpf17(:, :, ik) * inveps
+            ELSE
+              eimpf(:, :) = eimpf17(:, :, ik)
+            ENDIF
+          ENDIF
           !
           DO imode = 1, nmodes
             !
@@ -285,13 +325,13 @@
                           ! The energy of the electron at k+q (relative to Ef)
                           ekmq = etf(ibndmin - 1 + mbnd, ikq) - ef0
                           !
-                          s1a(:) = s1a(:) + epf(mbnd, jbnd,imode) * vkk(:, ibnd, mbnd) / &
+                          s1a(:) = s1a(:) + epf(jbnd, mbnd,imode) * vkk(:, mbnd, ibnd) / &
                                    (ekmk  - ekq + wq(imode) + ci * eta(m))
-                          s1e(:) = s1e(:) + epf(mbnd, jbnd,imode) * vkk(:, ibnd, mbnd) / &
+                          s1e(:) = s1e(:) + epf(jbnd, mbnd,imode) * vkk(:, mbnd, ibnd) / &
                                    (ekmk  - ekq - wq(imode) + ci * eta(m))
-                          s2a(:) =  s2a(:) + epf(ibnd, mbnd,imode) * vkq(:, mbnd, jbnd) / &
+                          s2a(:) =  s2a(:) + epf(mbnd, ibnd,imode) * vkq(:, jbnd, mbnd) / &
                                    (ekmq  - ekk - wq(imode)+ ci * eta(m))
-                          s2e(:) =  s2e(:) + epf(ibnd, mbnd,imode) * vkq(:, mbnd, jbnd) / &
+                          s2e(:) =  s2e(:) + epf(mbnd, ibnd,imode) * vkq(:, jbnd, mbnd) / &
                                    (ekmq  - ekk + wq(imode)+ ci * eta(m))
                         ENDDO
                         !
@@ -324,6 +364,48 @@
                       ENDDO ! neta
                     ENDIF ! if wq > acoustic
                   ENDDO ! imode
+                  !
+                  IF (carrier .and. ii_g) THEN
+                    !
+                    DO m = 1, neta
+                      !
+                      s1imp = czero
+                      s2imp = czero
+                      !
+                      DO mbnd = 1, nbndfst
+                        !
+                        ! The energy of the electron at k (relative to Ef)
+                        ekmk = etf(ibndmin - 1 + mbnd, ikk) - ef0
+                        ! The energy of the electron at k+q (relative to Ef)
+                        ekmq = etf(ibndmin - 1 + mbnd, ikq) - ef0
+                        !
+                        s1imp(:) = s1imp(:) + eimpf(jbnd, mbnd) * vkk(:, mbnd, ibnd) / &
+                                 (ekmk  - ekq + ci * eta(m))
+                        s2imp(:) = s2imp(:) + eimpf(mbnd, ibnd) * vkq(:, jbnd, mbnd) / &
+                                 (ekmq  - ekk + ci * eta(m))
+                      ENDDO
+                      !
+                      pfac  =  wgkk - wgkq
+                      !
+                      DO iw = 1, nomega
+                        !
+                        IF (ABS(ekq - ekk  - omegap(iw)) > 6.0 * degaussw) CYCLE
+                        !
+                        weighta = w0gauss((ekq - ekk - omegap(iw)) / degaussw, 0) / degaussw
+                        !
+                        DO ipol = 1, 3
+                          epsilon2_abs_imp(ipol, iw, m, itemp) = epsilon2_abs_imp(ipol, iw, m, itemp) + (wkf(ikk) / 2.0) * &
+                               wqf(iq) * cfac / omegap(iw)**2 * pfac  * weighta * &
+                               ABS(s1imp(ipol) + s2imp(ipol))**2 * n_imp_au(itemp)
+                          epsilon2_abs_lorenz_imp(ipol, iw, m, itemp) = epsilon2_abs_lorenz_imp(ipol, iw, m, itemp) + &
+                               (wkf(ikk) / 2.0) * wqf(iq) * &
+                               cfac / omegap(iw)**2 * pfac  * ABS(s1imp(ipol) + s2imp(ipol))**2 * n_imp_au(itemp) * &
+                               (degaussw / (degaussw**2 + (ekq - ekk - omegap(iw))**2)) / pi
+                        ENDDO ! ipol
+                      ENDDO ! iw
+                    ENDDO ! neta
+                  ENDIF ! carrier&imp
+                  !
                 ENDIF ! endif  ekq in fsthick
               ENDDO ! jbnd
             ENDIF  ! endif  ekk in fsthick
@@ -357,6 +439,12 @@
       CALL mp_sum(epsilon2_abs, inter_pool_comm)
       CALL mp_sum(epsilon2_abs_lorenz, inter_pool_comm)
       CALL mp_barrier(inter_pool_comm)
+      IF (carrier .and. ii_g) THEN
+        CALL mp_barrier(inter_pool_comm)
+        CALL mp_sum(epsilon2_abs_imp, inter_pool_comm)
+        CALL mp_sum(epsilon2_abs_lorenz_imp, inter_pool_comm)
+        CALL mp_barrier(inter_pool_comm)
+      ENDIF
       !
 #endif
       !
@@ -406,6 +494,28 @@
             WRITE(iuindabs, format_string) omegap(iw) * ryd2ev, (SUM(epsilon2_abs_lorenz_all(:, iw, m, itemp)) / 3.0d0, m = 1, neta)
           ENDDO
           CLOSE(iuindabs)
+          !
+          IF (carrier .and. ii_g) THEN
+            nameF = 'epsilon2_indabs_imp_' // trim(adjustl(tp)) // 'K.dat'
+            OPEN(UNIT = iuindabs, FILE = nameF)
+            WRITE(iuindabs, '(a)') '# Charged-impurity-assisted absorption versus energy'
+            WRITE(iuindabs, '(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
+            DO iw = 1, nomega
+              WRITE(iuindabs, format_string) omegap(iw) * ryd2ev, (SUM(epsilon2_abs_imp(:, iw, m, itemp)) / 3.0d0, m = 1, neta)
+            ENDDO
+            CLOSE(iuindabs)
+            !
+            nameF = 'epsilon2_indabs_lorenz_imp_' // trim(adjustl(tp)) // 'K.dat'
+            OPEN(UNIT = iuindabs, FILE = nameF)
+            WRITE(iuindabs, '(a)') '# Charged-impurity-assisted absorption versus energy'
+            WRITE(iuindabs, '(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
+            DO iw = 1, nomega
+              WRITE(iuindabs, format_string) omegap(iw) * ryd2ev, &
+                      (SUM(epsilon2_abs_lorenz_imp(:, iw, m, itemp)) / 3.0d0, m = 1, neta)
+            ENDDO
+            CLOSE(iuindabs)
+            !
+          ENDIF! carrier&ii_g
         ENDIF
       ENDDO
     ENDIF
@@ -417,7 +527,7 @@
     !-----------------------------------------------------------------------
     SUBROUTINE dirabs()
     !-----------------------------------------------------------------------
-    !!
+    !! Xiao Zhang 03/2021
     !! This routine calculates the direct part of the imaginary dielectric
     !! function.
     !! Only independent particles scheme is implemented, as simple as
@@ -578,7 +688,7 @@
                 IF (ekkj - ekki - omegamax > 6.0 * degaussw) CYCLE
                 IF (ekkj - ekki - omegamin < - 6.0 * degaussw) CYCLE
                 !
-                optmat(:) = vkk(:,ibnd,jbnd)
+                optmat(:) = vkk(:,jbnd,ibnd)
                 pfac = wgki - wgkj
                 DO iw = 1, nomega
                   IF (ABS(ekkj - ekki  - omegap(iw)) > 6.0 * degaussw) CYCLE
@@ -796,9 +906,9 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE fermi_carrier_indabs(itemp, etemp_fca, ef0_fca)
+    SUBROUTINE fermi_carrier_indabs(itemp, etemp_fca, ef0_fca, ctype)
     !-----------------------------------------------------------------------
-    !!
+    !! Xiao Zhang: Implemented 03/2021
     !! This is a slightly modified version of subroutine fermicarrier
     !! in Utility.f90. This is used to calculate the fermi energy associated
     !! with a certain carrier density in when the user want to calculate
@@ -823,7 +933,7 @@
     !
     INTEGER, INTENT(in) :: itemp
     !! Temperature index
-!    INTEGER, INTENT(out) :: ctype
+    INTEGER, INTENT(out) :: ctype
     !! Calculation type: -1 = hole, +1 = electron and 0 = both.
     REAL(KIND = DP), INTENT(in) :: etemp_fca
     !! Temperature in kBT [Ry] unit.
@@ -897,6 +1007,13 @@
       ef0_fca(itemp) = efermig(etf, nbndsub, nkqf, nelec, wkf, etemp_fca, ngaussw, 0, isk_dummy)
       RETURN
     ENDIF
+    !
+    IF (ncarrier < 0.d0) THEN
+      ctype = -1
+    ELSE
+      ctype = 1
+    ENDIF
+    !
     ef_tmp  = zero
     fermi   = zero
     fermicb = zero
@@ -965,7 +1082,6 @@
           fnk = wgauss(-ekk / etemp_fca, -99)
           ! The wkf(ikk) already include a factor 2
           electron_density = electron_density + wkf(ikk) * fnk * factor
-!          WRITE(stdout, '(5x, f, f)') ekk, electron_density
         ENDDO ! ibnd
       ENDDO ! ik
       DO ik = 1, nkf
@@ -1011,30 +1127,22 @@
       ! assuming free electron density
       eup = 10000d0 + ecbm
       elw = evbm - 10000d0
-      ef_tmp = (ecbm + ecbm) / 2.d0
+      ef_tmp = (ecbm + evbm) / 2.d0
       DO i = 1, maxiter
-!        WRITE(stdout, '(5x, i)') nkf
         electron_density = zero
         DO ik = 1, nkf
           ikk = 2 * ik -1
-!          WRITE(stdout, '(5x, i, i)') icbm, nbndsub
           DO ibnd = icbm, nbndsub
             ekk = etf(ibnd, ikk) - ef_tmp
             fnk = wgauss(-ekk / etemp_fca, -99)
             ! The wkf(ikk) already include a factor 2
             electron_density = electron_density + wkf(ikk) * fnk * factor
-!            WRITE(stdout, '(5x, f, f)') ekk, electron_density
           ENDDO ! ibnd
         ENDDO ! ik
         CALL mp_barrier(inter_pool_comm)
         CALL mp_sum(electron_density, inter_pool_comm)
-!        WRITE(stdout, '(5x, f)') electron_density
-!        IF (ABS(electron_density) < eps80) THEN
-!          rel_err = -1.0d0
-!        ELSE
-          ! In this case ncarrier is a negative number
-         rel_err = (electron_density - ncarrier) / electron_density
-!        ENDIF
+        ! In this case ncarrier is a negative number
+        rel_err = (electron_density - ncarrier) / electron_density
         !
         IF (ABS(rel_err) < eps6) THEN
           fermi = ef_tmp
@@ -1068,12 +1176,7 @@
         ENDDO ! ik
         CALL mp_barrier(inter_pool_comm)
         CALL mp_sum(hole_density, inter_pool_comm)
-!        IF (ABS(hole_density) < eps80) THEN
-!          rel_err = -1000.0d0
-!        ELSE
-          ! In this case ncarrier is a negative number
         rel_err = (hole_density - ABS(ncarrier)) / hole_density
-!        ENDIF
         !
         IF (ABS(rel_err) < eps6) THEN
           fermi = ef_tmp
@@ -1113,6 +1216,285 @@
     END SUBROUTINE fermi_carrier_indabs
     !-----------------------------------------------------------------------
     !
+    !-----------------------------------------------------------------------
+    SUBROUTINE conduc_fca(ef0_fca)
+    !----------------------------------------------------------------------
+    !!
+    !! This routine calculates the electrical conductivity
+    !! within constant relaxation time approxiamtion
+    !! The aim is to calculate resistive term within EPW in a
+    !! consistent manner
+    !!
+    !! Xiao Zhang, 06/2021 First implementation
+    !----------------------------------------------------------------------
+    USE kinds,             ONLY : DP
+    USE io_global,         ONLY : stdout, ionode_id
+    USE cell_base,         ONLY : alat, at, omega, bg
+    USE symm_base,         ONLY : s
+    USE epwcom,            ONLY : nbndsub, fsthick, system_2d, nstemp, assume_metal, &
+                                  vme, mp_mesh_k, nkf1, nkf2, nkf3, omegamin, omegamax, &
+                                  omegastep, nomega, sigma_ref
+    USE elph2,             ONLY : ibndmin, etf, nkf, wkf, vmef, dmef, bztoibz,  &
+                                  nkqtotf, gtemp, nbndfst, nktotf, nkqf, s_bztoibz, &
+                                  omegap
+    USE constants_epw,     ONLY : zero, one, bohr2ang, ryd2ev, ang2cm, czero, &
+                                  kelvin2eV, hbar, Ang2m, hbarJ, eps6, eps4, pi, &
+                                  ryd2mev, meV2invps
+    USE constants,         ONLY : electron_si
+    USE mp,                ONLY : mp_sum, mp_bcast
+    USE mp_global,         ONLY : world_comm
+    USE mp_world,          ONLY : mpime
+    USE poolgathering,     ONLY : poolgatherc4, poolgather2
+    USE division,          ONLY : fkbounds
+    USE grid,              ONLY : kpoint_grid_epw
+    USE symm_base,         ONLY : s
+    USE noncollin_module,  ONLY : noncolin
+    USE pwcom,             ONLY : ef
+    USE io_var,            ONLY : iuindabs
+    !
+    IMPLICIT NONE
+    !
+    REAL (KIND = DP), INTENT(in) :: ef0_fca(nstemp)
+    !! Fermi level for temperature itemp and the given carrier density.
+    !
+    ! Local variables
+    CHARACTER(LEN = 256) :: format_string
+    !! Format string
+    CHARACTER(LEN = 256) :: nameF
+    !! Name of the file
+    CHARACTER(LEN = 20) :: tp
+    !! Temperature, in string format
+    INTEGER :: i
+    !! Cartesian direction index
+    INTEGER :: j
+    !! Cartesian direction index
+    INTEGER :: ij
+    !! Cartesian coupled index for matrix.
+    INTEGER :: ik
+    !! K-point index
+    INTEGER :: ikk
+    !! Odd index to read etf
+    INTEGER :: ibnd
+    !! Local band index
+    INTEGER :: itemp
+    !! Temperature index
+    INTEGER :: lower_bnd
+    !! Lower bounds index after k or q paral
+    INTEGER :: upper_bnd
+    !! Upper bounds index after k or q paral
+    INTEGER :: ikbz
+    !! k-point index that run on the full BZ
+    INTEGER :: nb
+    !! Number of points in the BZ corresponding to a point in IBZ
+    INTEGER :: iww
+    !! Frequency point
+    INTEGER :: ierr
+    !! Error status
+    REAL(KIND = DP) :: efcalc
+    !! Fermi level
+    REAL(KIND = DP) :: ekk
+    !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
+    REAL(KIND = DP) :: dfnk
+    !! Derivative Fermi distribution $$-df_{nk}/dE_{nk}$$
+    REAL(KIND = DP) :: etemp
+    !! Temperature in Ry (this includes division by kb)
+    REAL(KIND = DP) :: tau
+    !! Relaxation time
+    REAL(KIND = DP) :: conv_factor1
+    !! Conversion factor for the conductivity
+    REAL(KIND = DP) :: sigma_ref_au
+    !! Reference conductivity from user input, a.u.
+    REAL(KIND = DP) :: sigma_calc
+    !! Calculated average conductivity
+    REAL(KIND = DP) :: inv_cell
+    !! Inverse of the volume in [Bohr^{-3}]
+    REAL(KIND = DP) :: vkk(3, nbndfst)
+    !! Electron velocity vector for a band.
+    REAL(KIND = DP) :: sigma(9, nstemp)
+    !! Conductivity matrix in vector form
+    REAL(KIND = DP) :: sigma_m(3, 3)
+    !! Conductivity matrix
+    REAL(KIND = DP) :: sigma_eig(3)
+    !! Eigenvalues from the diagonalized conductivity matrix
+    REAL(KIND = DP) :: sigma_vect(3, 3)
+    !! Eigenvectors from the diagonalized conductivity matrix
+    REAL(KIND = DP) :: tdf_sigma(9)
+    !! Temporary file
+    REAL(KIND = DP), EXTERNAL :: wgauss
+    !! Compute the approximate theta function. Here computes Fermi-Dirac
+    REAL(KIND = DP), EXTERNAL :: w0gauss
+    !! The derivative of wgauss:  an approximation to the delta function
+    REAL(KIND = DP) :: epsilon2_resistive(nomega)
+    !! Resistive spectra
+    REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
+    !! Eigen-energies on the fine grid collected from all pools in parallel case
+    COMPLEX(KIND = DP), ALLOCATABLE :: dmef_all(:, :, :, :)
+    !! dipole matrix elements on the fine mesh among all pools
+    COMPLEX(KIND = DP), ALLOCATABLE :: vmef_all(:, :, :, :)
+    !! velocity matrix elements on the fine mesh among all pools
+    REAL(KIND = DP), ALLOCATABLE :: tdf_sigma_m(:, :, :, :)
+    !! transport distribution function
+    REAL(KIND = DP), ALLOCATABLE :: wkf_all(:)
+    !! k-point weight on the full grid across all pools
+    !  SP - Uncomment to use symmetries on velocities
+    REAL(KIND = DP) :: v_rot(3)
+    !! Rotated velocity by the symmetry operation
+    REAL(KIND = DP) :: vk_cart(3)
+    !! veloctiy in cartesian coordinate
+    REAL(KIND = DP) :: sa(3, 3)
+    !! Rotation matrix
+    REAL(KIND = DP) :: sb(3, 3)
+    !! Rotation matrix
+    REAL(KIND = DP) :: sr(3, 3)
+    !! Rotation matrix
+    !
+    inv_cell = 1.0d0 / omega
+    ! for 2d system need to divide by area (vacuum in z-direction)
+    IF (system_2d) inv_cell = inv_cell * at(3, 3) * alat
+    !
+    conv_factor1 = electron_si / (hbar * bohr2ang * Ang2m)
+    !
+    CALL fkbounds(nktotf, lower_bnd, upper_bnd)
+    !
+    DO itemp = 1, nstemp
+      !
+      etemp = gtemp(itemp)
+      efcalc = ef0_fca(itemp)
+      !
+      IF (itemp == 1) THEN
+        WRITE(stdout, '(/5x, a)') 'Calculate conducitivity within RTA for the given density'
+        tdf_sigma(:) = zero
+        sigma(:, :)  = zero
+        !
+      ENDIF
+      DO ik = 1, nkf
+        !
+        ikk = 2 * ik - 1
+        !
+        IF (MINVAL(ABS(etf(:, ik) - ef)) < fsthick) THEN
+          !
+          DO ibnd = 1, nbndfst
+            !
+            tdf_sigma(:) = zero
+            !
+            IF (vme == 'wannier') THEN
+              vkk(:, ibnd) = REAL(vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+            ELSE
+              vkk(:, ibnd) = 2.0 * REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+            ENDIF
+            !
+            IF (mp_mesh_k) THEN
+              !
+              vk_cart(:) = vkk(:, ibnd)
+              !
+              ! Loop on full BZ
+              nb = 0
+              DO ikbz = 1, nkf1 * nkf2 * nkf3
+                ! If the k-point from the full BZ is related by a symmetry operation
+                ! to the current k-point, then take it.
+                IF (bztoibz(ikbz) == ik + lower_bnd - 1) THEN
+                  nb = nb + 1
+                  ! Transform the symmetry matrix from Crystal to cartesian
+                  sa(:, :) = DBLE(s(:, :, s_bztoibz(ikbz)))
+                  sb       = MATMUL(bg, sa)
+                  sr(:, :) = MATMUL(at, TRANSPOSE(sb))
+                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1, 0.d0, v_rot(:), 1)
+                  ij = 0
+                  DO j = 1, 3
+                    DO i = 1, 3
+                      ij = ij + 1
+                      ! The factor two in the weight at the end is to account for spin
+                      IF (noncolin) THEN
+                        tdf_sigma(ij) = tdf_sigma(ij) + (v_rot(i) * v_rot(j)) * 1.0 / (nkf1 * nkf2 * nkf3)
+                      ELSE
+                        tdf_sigma(ij) = tdf_sigma(ij) + (v_rot(i) * v_rot(j)) * 2.0 / (nkf1 * nkf2 * nkf3)
+                      ENDIF
+                    ENDDO
+                  ENDDO
+                ENDIF
+              ENDDO ! ikbz
+              IF (noncolin) THEN
+                IF (ABS(nb * 1.0 / (nkf1 * nkf2 * nkf3) - wkf(ikk)) > eps6) THEN
+                  CALL errore('transport', ' The number of kpoint in the IBZ is not equal to the weight', 1)
+                ENDIF
+              ELSE
+                IF (ABS(nb * 2.0 / (nkf1 * nkf2 * nkf3) - wkf(ikk)) > eps6) THEN
+                  CALL errore('transport', ' The number of kpoint in the IBZ is not equal to the weight', 1)
+                ENDIF
+              ENDIF
+            ! withtout symmetries
+            ELSE
+              !
+              ij = 0
+              DO j = 1, 3
+                DO i = 1, 3
+                  ij = ij + 1
+                  tdf_sigma(ij) = vkk(i, ibnd) * vkk(j, ibnd) * wkf(ikk)
+                ENDDO
+              ENDDO
+            ENDIF ! mp_mesh_k
+            !
+            ekk = etf(ibndmin - 1 + ibnd, ikk) - efcalc
+            !
+            ! derivative Fermi distribution
+            dfnk = w0gauss(ekk / etemp, -99) / etemp
+            !
+            ! electrical conductivity matrix
+            sigma(:, itemp) = sigma(:, itemp) + dfnk * tdf_sigma(:)! * tau
+            !
+          ENDDO! ibnd
+        ENDIF!fsthick
+      ENDDO! ik
+      !
+      !Sum over all pool to gather results
+      !
+      CALL mp_sum(sigma(:, itemp), world_comm)
+      !
+      sigma_m(:, :) = zero
+      sigma_m(1, 1) = sigma(1, itemp)
+      sigma_m(1, 2) = sigma(2, itemp)
+      sigma_m(1, 3) = sigma(3, itemp)
+      sigma_m(2, 1) = sigma(4, itemp)
+      sigma_m(2, 2) = sigma(5, itemp)
+      sigma_m(2, 3) = sigma(6, itemp)
+      sigma_m(3, 1) = sigma(7, itemp)
+      sigma_m(3, 2) = sigma(8, itemp)
+      sigma_m(3, 3) = sigma(9, itemp)
+      ! Diagonalize the conductivity matrix
+      CALL rdiagh(3, sigma_m(:, :), 3, sigma_eig, sigma_vect)
+      !
+      !
+      sigma_calc = SUM(sigma_eig) / 3.d0 * inv_cell
+      sigma_ref_au = sigma_ref / conv_factor1
+      tau = sigma_ref_au / sigma_calc
+      WRITE(stdout, '(5x, a, 3E16.7)') 'Calculated constant relaxation time: ', tau / (ryd2mev * meV2invps)
+      WRITE(stdout, '(5x, a, 3E16.7)') 'Conductivity xx, yy, zz: ', conv_factor1 * sigma_eig(:) * &
+                                        inv_cell * tau
+      WRITE(stdout, '(5x, a)') 'Calculate and Write the resistive contribution (Drude term).'
+      !
+      !4*pi*sigma/(w*(1+w^2*tau^2)), an additional factor of two comes from e^2
+      !
+      DO iww = 1, nomega
+        epsilon2_resistive(iww) = 8.d0 * pi * sigma_ref_au / (omegap(iww) * (1 + omegap(iww)**2.d0 * tau**2.d0))
+      ENDDO
+      !
+      IF (mpime == ionode_id) THEN
+        WRITE(tp,"(f8.1)") gtemp(itemp) * ryd2ev / kelvin2eV
+        nameF = 'epsilon2_indabs_resis_' // trim(adjustl(tp)) // 'K.dat'
+        OPEN(UNIT = iuindabs, FILE = nameF)
+        WRITE(iuindabs, '(a)') '# Resistive contribution versus energy'
+        WRITE(iuindabs, '(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
+        DO iww = 1, nomega
+          WRITE(iuindabs, '(2E22.14)') omegap(iww) * ryd2ev, epsilon2_resistive(iww)
+        ENDDO
+        CLOSE(iuindabs)
+      ENDIF
+      !
+    ENDDO ! itemp
+    !-----------------------------------------------------------------------
+    END SUBROUTINE conduc_fca
+    !-----------------------------------------------------------------------
+  !
   !-----------------------------------------------------------------------
   END MODULE indabs
   !-----------------------------------------------------------------------

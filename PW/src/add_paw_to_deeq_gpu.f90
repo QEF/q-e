@@ -19,7 +19,7 @@ SUBROUTINE add_paw_to_deeq_gpu(deeq_d)
   !
   IMPLICIT NONE
   !
-  REAL(KIND=DP), INTENT(INOUT) :: deeq_d( nhm, nhm, nat, nspin )
+  REAL(DP), INTENT(INOUT) :: deeq_d(nhm,nhm,nat,nspin)
   !! integral of the perturbed potential
   !
   ! ... local variables
@@ -27,7 +27,7 @@ SUBROUTINE add_paw_to_deeq_gpu(deeq_d)
   INTEGER :: na, nb, nab, nt, ih, jh, ijh, nhnt, is
   REAL(DP), ALLOCATABLE :: ddd_paw_d(:,:,:)
 #if defined(__CUDA)
-  attributes(DEVICE) :: deeq_d, ddd_paw_d
+  attributes(DEVICE) :: ddd_paw_d, deeq_d
 #endif
 
 ! OPTIMIZE HERE: squeeze loop on atoms having PAW pseudo
@@ -39,7 +39,7 @@ SUBROUTINE add_paw_to_deeq_gpu(deeq_d)
         nt = ityp(na)
         IF (.not.upf(nt)%tpawp) CYCLE
         nhnt = nh(nt)
-!$cuf kernel do(3)
+        !$acc parallel loop collapse(3)
         DO is=1,nspin
            DO ih=1,nhnt
               DO jh=1,nhnt

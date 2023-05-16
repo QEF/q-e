@@ -32,7 +32,7 @@ SUBROUTINE nsg_adj
    !
    WRITE( stdout, '(/5X,"WARNING!!! Modifying starting ns matrices according to input values")')
    !
-   IF (2*Hubbard_lmax+1 > ldmx) CALL errore('ns_adj',' ldmx is too small',ldmx)
+   IF (2*Hubbard_lmax+1 > ldmx) CALL errore('nsg_adj',' ldmx is too small',ldmx)
    ! 
    DO na = 1, nat
       !
@@ -87,8 +87,8 @@ SUBROUTINE nsg_adj
       !
    ENDDO
    !
-   ! Uncomment the line below if needed (useful for debugging purposes)
-   !CALL write_nsg
+   ! Write the updated occupation matrices
+   CALL write_nsg
    !
    ! Reset starting_ns so that this step is not repeated
    starting_ns = -1.0_dp

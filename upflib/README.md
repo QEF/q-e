@@ -14,9 +14,9 @@ Currently, it includes
 - interpolation of pseudopotentials
 - generation of various pseudopotentials matrix elements
 - utilities: spherical harmonics and Bessel functions, integration routines
-Old UPF specifications can be found here:
+Old UPF specifications can NO LONGER be found here:
 http://www.quantum-espresso.org/pseudopotentials/unified-pseudopotential-format
-The xml schema for the newer UPF definition can be found here:
+The xml schema for the newer UPF definition can NOT YET be found here:
 http://www.quantum-espresso.org/ns/qes/qe_pp-1.0.xsd
 
 In addition to the `libupf.a` library, executable utilities are produced:

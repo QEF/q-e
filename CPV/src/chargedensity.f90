@@ -17,13 +17,9 @@
       ( nfi, c_bgrp, c_d, bec_bgrp, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, &
         enl, denl, ekin, dekin, tstress, ndwwf )
 !-----------------------------------------------------------------------
-!
-!  this routine computes:
-!  rhor  = normalized electron density in real space
-!  ekin  = kinetic energy
-!  dekin = kinetic energy term of QM stress
-!
-!    rhor(r) = (sum over ib) fi(ib) |psi(r,ib)|^2
+     !! This routine computes the normalized electron density in real space 
+     !! (\(\text{rhor}\)), the kinetic energy (\(\text{ekin}\)) and the kinetic
+     !! energy term of QM stress (\(\text{dekin}\)).
 !
 !    Using quantities in scaled space
 !    rhor(r) = rhor(s) / Omega
@@ -73,7 +69,7 @@
       USE io_base,            ONLY: read_rhog
       USE io_files,           ONLY: restart_dir
       USE fft_rho
-      USE fft_helper_subroutines, ONLY: c2psi_gamma
+      USE fft_helper_subroutines, ONLY: fftx_c2psi_gamma
       USE mp,                 ONLY: mp_barrier
       USE mp_world,           ONLY: mpime, world_comm
       !
@@ -240,7 +236,7 @@
             !
             ALLOCATE( psis( dffts%nnr ) ) 
             !
-            CALL c2psi_gamma( dffts, psis, c_bgrp(:,iwf) )
+            CALL fftx_c2psi_gamma( dffts, psis, c_bgrp(:,iwf:iwf) )
             !
             CALL invfft('Wave',psis, dffts )
             !
@@ -391,7 +387,7 @@
 
          do i = 1, nbsp_bgrp, 2 * fftx_ntgrp(dffts)
 
-            CALL c2psi_gamma( dffts, psis, c_bgrp(:,i), c_bgrp(:,i+1) )
+            CALL fftx_c2psi_gamma( dffts, psis, c_bgrp(:,i:i), c_bgrp(:,i+1) )
 
             CALL invfft('Wave', psis, dffts )
             !
@@ -508,7 +504,7 @@
                     psis( nl_d( ig )  + ioff) = c_d( ig, ii )
                  end do
               END IF
-              ! CALL c2psi_gamma( dffts, psis, c_bgrp(:,ii), c_bgrp(:,ii+1) )
+              ! CALL fftx_c2psi_gamma( dffts, psis, c_bgrp(:,ii:ii), c_bgrp(:,ii+1) )
               ioff = ioff + dffts%nnr
               
             END DO
@@ -606,7 +602,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 !        n_v(g) = sum_i,ij rho_i,ij q_i,ji(g) e^-ig.r_i
 !
 !     Same logic as in routine rhov.
-!     On input rhor and rhog must contain the smooth part only !!!
+!     On input rhor and rhog must contain the smooth part only !
 !     Output in (drhor, drhog)
 !
       USE kinds,                    ONLY: DP

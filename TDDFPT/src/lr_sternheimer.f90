@@ -166,8 +166,8 @@ SUBROUTINE one_sternheimer_step(iu, flag)
     CALL apply_dpot_allocate()
     IF (okpaw) mixin=(0.0_DP,0.0_DP)
     !
-
-dvpsi =(0.0d0, 0.0d0)
+    !$acc enter data create(aux2, dvscfins)
+    dvpsi =(0.0d0, 0.0d0)
 
 !    IF (rec_code_read == -20.AND.ext_recover) then
 !       ! restarting in Electric field calculation
@@ -237,8 +237,9 @@ dvpsi =(0.0d0, 0.0d0)
           ! The vkb's are needed for the non-local potential in h_psi,
           ! and for the ultrasoft term.
           !
-          CALL init_us_2 (npwq, igk_k(1,ikq), xk(1,ikq), vkb)
+          CALL init_us_2 (npwq, igk_k(1,ikq), xk(1,ikq), vkb, .true.)
           !
+          !$acc update host(vkb)
           ! Read unperturbed wavefuctions evc (wfct at k) 
           ! and evq (wfct at k+q)
           !
@@ -437,9 +438,9 @@ dvpsi =(0.0d0, 0.0d0)
 
                 ltaver = ltaver + lter
                 lintercall = lintercall + 1
-                IF (.not.conv_root) WRITE( stdout, "(5x,'kpoint',i4,' ibnd',i4, &
+                IF (.not.conv_root) WRITE( stdout, "(5x,'kpoint',i4, &
                   &         ' solve_e: root not converged ',es10.3)") ik &
-                  &, ibnd, anorm
+                  &, anorm
                 !
                 ! writes delta_psi on iunit iudwf, k=kpoint,
                 !
@@ -671,6 +672,7 @@ dvpsi =(0.0d0, 0.0d0)
        DEALLOCATE(mixout)
     ENDIF
     deallocate (drhoscfout)
+    !$acc exit data delete(aux2, dvscfins)
     if (doublegrid) deallocate (dvscfins)
     deallocate (dvscfin)
     if (noncolin) deallocate(dbecsum_nc)
@@ -679,6 +681,7 @@ dvpsi =(0.0d0, 0.0d0)
 !    CLOSE( unit = iund0psi)
 !    CLOSE( unit = iudwf)
 !    CLOSE( unit = iu1dwf)
+
 
     alpha_pv=alpha_pv0
     !

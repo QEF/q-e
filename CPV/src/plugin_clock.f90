@@ -6,8 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 subroutine plugin_clock()
+!! This routine is used for printing plugins clocks
 !
-! This routine is used for printing plugins clocks
 ! DO NOT REMOVE THE TAGS ! ***ADDSON_NAME KIND_OF_PATCH***
 !
 USE plugin_flags

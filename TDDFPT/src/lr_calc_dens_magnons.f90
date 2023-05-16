@@ -68,20 +68,37 @@ SUBROUTINE lr_calc_dens_magnons (drhoscf, dpsi, L_dag)
   !
   INTEGER :: imk
   !
-  INTEGER :: ibnd, ig, npw, ir
+  INTEGER :: ibnd, ig, npw, ir, itmp, v_siz
   REAL(DP) :: wgt
   COMPLEX(DP), ALLOCATABLE :: psi (:,:)
   COMPLEX(DP), ALLOCATABLE :: dpsic (:,:)
-
+  !
+  ! For device buffer
+#if defined(__CUDA)
+  INTEGER, POINTER, DEVICE :: nl_d(:)
+  !
+  nl_d  => dffts%nl_d
+#else
+  INTEGER, ALLOCATABLE :: nl_d(:)
+  !
+  ALLOCATE( nl_d(dffts%ngm) )
+  nl_d  = dffts%nl
+#endif
+  !
   ALLOCATE (psi  (dffts%nnr, npol))
   ALLOCATE (dpsic(dffts%nnr, npol))
-
-  CALL start_clock ('lr_calc_dens')
+  !
+  CALL start_clock_gpu ('lr_calc_dens')
   !
   ALLOCATE (drhoscfh(dffts%nnr,nspin_mag))
-  dpsic(:,:)    = (0.0d0, 0.0d0)
-  psi(:,:)      = (0.0d0, 0.0d0)
+  !
+  v_siz = dffts%nnr
+  !
+  !$acc data copyin(dpsi(1:npwx*npol,1:nbnd_occx,1:nksq,1:2), evc(1:npol*npwx,1:nbnd), Tevc(1:npol*npwx,1:nbnd)) copyout(drhoscfh(1:v_siz,1:nspin_mag)) create(dpsic(1:v_siz,1:npol), psi(1:v_siz,1:npol)) present(igk_k) deviceptr(nl_d)
+  !
+  !$acc kernels
   drhoscfh(:,:) = (0.0d0, 0.0d0)
+  !$acc end kernels
   !
   ! evc  contains the unperturbed wavefunctions of this k point
   !
@@ -102,36 +119,52 @@ SUBROUTINE lr_calc_dens_magnons (drhoscf, dpsi, L_dag)
      !IF (nksq > 1) 
      CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
      !
+     !$acc update device(evc)
      ! Calculation of the response charge density
+     !
+     wgt = wk(ikk)/omega
      !
      DO ibnd = 1, nbnd_occ(ikk)
         !
-        ! can be moved outside band-loop
-        wgt = wk(ikk)/omega
-        !
         ! FFT to R-space of the unperturbed wfct's evc
         !
-        psi = (0.d0, 0.d0)
+        !$acc kernels
+        psi(:,:) = (0.d0, 0.d0)
+        !$acc end kernels
+        !
+        !$acc parallel loop 
         DO ig = 1, npw   ! should have +k behaviour. Check
-           psi(dffts%nl (igk_k(ig,ikk)),1) = evc(ig,ibnd)
-           psi(dffts%nl (igk_k(ig,ikk)),2) = evc(ig+npwx,ibnd)
+           itmp = nl_d ( igk_k(ig,ikk) )
+           psi(itmp,1) = evc(ig,ibnd)
+           psi(itmp,2) = evc(ig+npwx,ibnd)
         ENDDO
+        !
+        !$acc host_data use_device(psi, psi)
         CALL invfft ('Wave', psi(:,1), dffts)
         CALL invfft ('Wave', psi(:,2), dffts)
+        !$acc end host_data
         !
         ! FFT to R-space of the perturbed wfct's dpsi
         !
-        dpsic = (0.d0, 0.d0)
+        !$acc kernels
+        dpsic(:,:) = (0.d0, 0.d0)
+        !$acc end kernels
+        !$acc parallel loop
         DO ig = 1, npwq
-           dpsic(dffts%nl(igk_k(ig,ikq)),1) = dpsi(ig,ibnd,ik,1)
-           dpsic(dffts%nl(igk_k(ig,ikq)),2) = dpsi(ig+npwx,ibnd,ik,1)
+           itmp = nl_d (igk_k(ig,ikq))
+           dpsic(itmp,1) = dpsi(ig,ibnd,ik,1)
+           dpsic(itmp,2) = dpsi(ig+npwx,ibnd,ik,1)
         ENDDO
+        !
+        !$acc host_data use_device(dpsic)
         CALL invfft ('Wave', dpsic(:,1), dffts)
         CALL invfft ('Wave', dpsic(:,2), dffts)
+        !$acc end host_data
         !
         ! Calculation of the response charge density
         !
-        DO ir = 1, dffts%nnr
+        !$acc parallel loop
+        DO ir = 1, v_siz !dffts%nnr
            ! n'^{res}
            drhoscfh(ir,1) = drhoscfh(ir,1) + wgt * (CONJG(psi(ir,1))*dpsic(ir,1) + &
                                                  &  CONJG(psi(ir,2))*dpsic(ir,2) )
@@ -144,14 +177,10 @@ SUBROUTINE lr_calc_dens_magnons (drhoscf, dpsi, L_dag)
            ! mz'^{res}
            drhoscfh(ir,4) = drhoscfh(ir,4) + wgt * (CONJG(psi(ir,1))*dpsic(ir,1)- &
                                                 &   CONJG(psi(ir,2))*dpsic(ir,2) )
-           
         ENDDO
         !
         !
      ENDDO ! loop on bands
-
-
-
      !
   ENDDO 
   !
@@ -174,49 +203,57 @@ SUBROUTINE lr_calc_dens_magnons (drhoscf, dpsi, L_dag)
      ! Read the unperturbed wavefuctions Tevc(-k)
      !
      Tevc(:,:) = (0.0d0, 0.0d0)
-     !IF (nksq > 1) 
+     !
      CALL get_buffer (Tevc, nwordwfc, iunTwfc, 2*ik-1)
      !
-     ! The weight of the k point
+     !$acc update device(Tevc)
      !
-!     weight = wk(imk)
+     wgt = wk(imk)/omega
      !
-     ! Calculation of the response charge density
-     !
-!     CALL incdrhoscf_nc(drhoscfh(:,:), weight, ik, dbecsum_nc(:,:,:,:), dpsi(:,:,ik,2),.true.)
- 
      DO ibnd = 1, nbnd_occ(imk)
-        !
-        ! can be moved outside band-loop
-        wgt = wk(imk)/omega
         !
         ! FFT to R-space of the unperturbed wfct's evc
         !
-        psi = (0.d0, 0.d0)
+        !$acc kernels
+        psi(:,:) = (0.d0, 0.d0)
+        !$acc end kernels
+        !$acc parallel loop
         DO ig = 1, npw   ! should have +k behaviour. Check
-           psi(dffts%nl (igk_k(ig,ikk)),1) = Tevc(ig,ibnd)
-           psi(dffts%nl (igk_k(ig,ikk)),2) = Tevc(ig+npwx,ibnd)
+           itmp = nl_d ( igk_k(ig,ikk) )
+           psi(itmp,1) = Tevc(ig,ibnd)
+           psi(itmp,2) = Tevc(ig+npwx,ibnd)
         ENDDO
+        !$acc host_data use_device(psi)
         CALL invfft ('Wave', psi(:,1), dffts)
         CALL invfft ('Wave', psi(:,2), dffts)
+        !$acc end host_data
         !
         ! FFT to R-space of the perturbed wfct's dpsi
         !
-        dpsic = (0.d0, 0.d0)
+        !$acc kernels
+        dpsic(:,:) = (0.d0, 0.d0)
+        !$acc end kernels
+        !$acc parallel loop
         DO ig = 1, npwq 
-           dpsic(dffts%nl(igk_k(ig,ikq)),1) = dpsi(ig,ibnd,ik,2)
-           dpsic(dffts%nl(igk_k(ig,ikq)),2) = dpsi(ig+npwx,ibnd,ik,2)
+           itmp = nl_d ( igk_k(ig,ikq) )
+           dpsic(itmp,1) = dpsi(ig,ibnd,ik,2)
+           dpsic(itmp,2) = dpsi(ig+npwx,ibnd,ik,2)
         ENDDO
+        !$acc host_data use_device(dpsic)
         CALL invfft ('Wave', dpsic(:,1), dffts)
         CALL invfft ('Wave', dpsic(:,2), dffts)
+        !$acc end host_data
         !
         ! In the L^+ case we compute rho(X,-Y)
         !
-        IF (L_dag) dpsic = -dpsic
+        !$acc kernels
+        IF (L_dag) dpsic(:,:) = -dpsic(:,:)
+        !$acc end kernels
         !
         ! Calculation of the response charge density
         !
-        DO ir = 1, dffts%nnr
+        !$acc parallel loop
+        DO ir = 1, v_siz ! dffts%nnr
            ! n'^{anti-res}
            drhoscfh(ir,1) = drhoscfh(ir,1) + wgt * (CONJG(psi(ir,1))*dpsic(ir,1) + &
                                                  &  CONJG(psi(ir,2))*dpsic(ir,2) )
@@ -229,9 +266,7 @@ SUBROUTINE lr_calc_dens_magnons (drhoscf, dpsi, L_dag)
            ! mz'^{anti-res}
            drhoscfh(ir,4) = drhoscfh(ir,4) - wgt * (CONJG(psi(ir,1))*dpsic(ir,1)- &
                                                 &   CONJG(psi(ir,2))*dpsic(ir,2) )
-
         ENDDO
-        !
         !
      ENDDO ! loop on bands
      !
@@ -240,6 +275,8 @@ SUBROUTINE lr_calc_dens_magnons (drhoscf, dpsi, L_dag)
   ! Interpolate the charge density from the smooth mesh
   ! to a thicker mesh (if doublegrid=.true.)
   ! drhoscfh -> drhoscf
+  !
+  !$acc end data
   !
   DO is = 1, nspin_mag
      CALL fft_interpolate(dffts, drhoscfh(:,is), dfftp, drhoscf(:,is) )
@@ -251,20 +288,11 @@ SUBROUTINE lr_calc_dens_magnons (drhoscf, dpsi, L_dag)
   CALL mp_sum (drhoscf, inter_pool_comm)
 #endif
   !
-  ! Symmetrization of the charge density response
-  ! wrt the small group of q.
-  !
-!#if defined(__MPI)
-!  CALL lr_psym_eels(drhoscf)
-!#else
-!  CALL lr_sym_eels(drhoscf)
-!#endif
-  !
   DEALLOCATE (drhoscfh)
-
+  !
   DEALLOCATE (psi, dpsic )
   !
-  CALL stop_clock ('lr_calc_dens')
+  CALL stop_clock_gpu ('lr_calc_dens')
   !
   RETURN
   !

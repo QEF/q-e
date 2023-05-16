@@ -29,7 +29,6 @@ SUBROUTINE from_scratch( )
     USE energies,             ONLY : entropy, eself, enl, ekin, enthal, etot, ekincm
     USE energies,             ONLY : dft_energy_type, debug_energies
     USE dener,                ONLY : denl, denl6, dekin6, detot
-    USE pseudo_base,          ONLY : vkb_d
     USE uspp,                 ONLY : vkb, becsum, deeq, nkb, okvan, nlcc_any
     USE io_global,            ONLY : stdout, ionode
     USE core,                 ONLY : rhoc
@@ -130,6 +129,9 @@ SUBROUTINE from_scratch( )
     !
     !     pass ions informations to plugins
     !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_init_ions(tau0)
+#endif
 #if defined (__ENVIRON)
     IF (use_environ) CALL update_environ_ions(tau0)
 #endif
@@ -144,9 +146,8 @@ SUBROUTINE from_scratch( )
     ! ... prefor calculates vkb (used by gram)
     !
     CALL prefor( eigr, vkb )
-#if defined(__CUDA)
-    CALL dev_memcpy( vkb_d, vkb )
-#endif
+    !
+    !$acc update device(vkb)
     !
     nspin_wfc = nspin
     IF( force_pairing ) nspin_wfc = 1
@@ -270,7 +271,11 @@ SUBROUTINE from_scratch( )
       !
       IF( ttforce ) THEN
 #if defined (__CUDA)
-         CALL nlfq_bgrp( cm_d, vkb_d, bec_bgrp, becdr_bgrp, fion )
+         !$acc data present(vkb)
+         !$acc host_data use_device(vkb)
+         CALL nlfq_bgrp( cm_d, vkb, bec_bgrp, becdr_bgrp, fion )
+         !$acc end host_data 
+         !$acc end data 
 #else
          CALL nlfq_bgrp( cm_bgrp, vkb, bec_bgrp, becdr_bgrp, fion )
 #endif
@@ -280,7 +285,11 @@ SUBROUTINE from_scratch( )
       !     the electron mass rises with g**2
       !
 #if defined (__CUDA)
-      CALL calphi_bgrp( cm_d, ngw, bec_bgrp, nkb, vkb_d, phi, nbspx_bgrp, ema0bg )
+      !$acc data present(vkb)
+      !$acc host_data use_device(vkb)
+      CALL calphi_bgrp( cm_d, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
+      !$acc end host_data 
+      !$acc end data 
 #else
       CALL calphi_bgrp( cm_bgrp, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
 #endif
@@ -292,7 +301,11 @@ SUBROUTINE from_scratch( )
       !
       if( tortho ) then
 #if defined (__CUDA)
-         CALL ortho( vkb_d, c0_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+         !$acc data present(vkb)
+         !$acc host_data use_device(vkb)
+         CALL ortho( vkb, c0_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+         !$acc end host_data 
+         !$acc end data 
 #else
          CALL ortho( vkb, c0_bgrp, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #endif

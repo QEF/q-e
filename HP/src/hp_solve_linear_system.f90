@@ -51,6 +51,10 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate
   USE efermi_shift,         ONLY : ef_shift, def
   USE response_kernels,     ONLY : sternheimer_kernel
+#if defined(__CUDA)
+  USE becmod_gpum,      ONLY: becp_d
+  USE becmod_subs_gpum, ONLY: allocate_bec_type_gpu
+#endif
   !
   IMPLICIT NONE
   !
@@ -102,6 +106,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
              ndim,       &
              is,         & ! counter on spin polarizations
              npw           ! number of plane waves at k
+  INTEGER :: nnr   
 
   REAL(DP) :: tcpu, get_clock ! timing variables
   CHARACTER(LEN=256) :: flmixdpot = 'mixd'
@@ -125,12 +130,17 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   ELSE
      dvscfins(1:dffts%nnr, 1:nspin_mag, 1:1) => dvscfin
   ENDIF
+  nnr = dfftp%nnr
+  !$acc enter data create(dvscfins(1:nnr, 1:nspin_mag, 1))
   !
   ! USPP-specific allocations
   !
   IF (okvan) ALLOCATE (int3 ( nhm, nhm, nat, nspin_mag, 1))
   IF (okpaw) ALLOCATE (int3_paw ( nhm, nhm, nat, nspin_mag, 1))
   CALL allocate_bec_type (nkb, nbnd, becp)
+#if defined(__CUDA)
+  CALL allocate_bec_type_gpu(nkb,nbnd,becp_d)
+#endif
   !
   ALLOCATE (dbecsum((nhm*(nhm+1))/2, nat, nspin_mag, 1))
   !
@@ -278,7 +288,8 @@ SUBROUTINE hp_solve_linear_system (na, iq)
            WRITE( stdout, '(6x, "2. Numerical instabilities due to too low cutoff")')
            WRITE( stdout, '(6x, "   for hard pseudopotentials.")')
            WRITE( stdout, '(/6x,"Stopping...")')
-           WRITE( stdout, '(/6x,"Solution: Try to use the 2-step scf procedure as in HP/example02")')
+           WRITE( stdout, '(/6x,"Solution (for magnetic insulators):")')
+           WRITE( stdout, '(6x,"Try to use the 2-step scf procedure as in HP/example02")')
            !
            CALL hp_stop_smoothly (.FALSE.)
            !
@@ -389,6 +400,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   DEALLOCATE (dvscfin)
   DEALLOCATE (dvscfout)
   DEALLOCATE (trace_dns_tot_old)
+  !$acc exit data delete(dvscfins)
   IF (doublegrid)       DEALLOCATE (dvscfins)
   IF (ALLOCATED(ldoss)) DEALLOCATE (ldoss)
   IF (ALLOCATED(ldos))  DEALLOCATE (ldos)

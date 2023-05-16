@@ -1,4 +1,3 @@
-
 ! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -7,8 +6,9 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine stres_loc (sigmaloc)
+SUBROUTINE stres_loc( sigmaloc )
   !----------------------------------------------------------------------
+  !! Calculate the local term of the stress.
   !
   USE kinds,                ONLY : DP
   USE atom,                 ONLY : msh, rgrid
@@ -16,97 +16,133 @@ subroutine stres_loc (sigmaloc)
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : omega, tpiba2
   USE fft_base,             ONLY : dfftp
-  USE fft_interfaces,       ONLY : fwfft
+  USE fft_rho,              ONLY : rho_r2g
   USE gvect,                ONLY : ngm, gstart, g, ngl, gl, igtongl
   USE scf,                  ONLY : rho
   USE vlocal,               ONLY : strf, vloc
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions, ONLY : psic
   USE uspp_param,           ONLY : upf
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
-  USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_stres_evloc, cutoff_stres_sigmaloc 
+  USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_stres_evloc, &
+                                   cutoff_stres_sigmaloc 
   !
-  implicit none
+  IMPLICIT NONE
   !
-  real(DP) :: sigmaloc (3, 3)
-  real(DP) , allocatable :: dvloc(:)
-  real(DP) :: evloc, fact
-  integer :: ng, nt, l, m
+  REAL(DP) :: sigmaloc(3,3)
+  REAL(DP), ALLOCATABLE :: dvloc(:)
+  COMPLEX(DP), ALLOCATABLE :: rhog(:,:)
+  REAL(DP) :: evloc, fact
+  INTEGER :: ng, nt, l, m
   ! counter on g vectors
   ! counter on atomic type
   ! counter on angular momentum
   ! counter on spin components
-
-  allocate(dvloc(ngl))
+  REAL(DP) :: sigma11, sigma21, sigma22, spart, &
+              sigma31, sigma32, sigma33
+  !
+  ALLOCATE( dvloc(ngl), rhog(dfftp%nnr,1) )
   sigmaloc(:,:) = 0.d0
-  psic(:) = CMPLX(rho%of_r(:,1), KIND=dp)
-
-  CALL fwfft ('Rho', psic, dfftp)
-  ! psic contains now the charge density in G space
-  if (gamma_only) then
+  !
+  !$acc data create(rhog)
+  CALL rho_r2g( dfftp, rho%of_r(:,1), rhog )
+  !
+  !$acc data copyin(vloc,strf,gl,igtongl) create(dvloc)
+  !
+  IF (gamma_only) THEN
      fact = 2.d0
-  else
+  ELSE
      fact = 1.d0
-  end if
+  ENDIF
+  !
   evloc = 0.0d0
-  do nt = 1, ntyp
-     if (gstart==2) evloc = evloc + &
-          psic (dfftp%nl (1) ) * strf (1, nt) * vloc (igtongl (1), nt)
-     do ng = gstart, ngm
-        evloc = evloc +  DBLE (CONJG(psic (dfftp%nl (ng) ) ) * strf (ng, nt) ) &
-             * vloc (igtongl (ng), nt) * fact
-     enddo
-  enddo
-  ! 2D:  add contribution from cutoff long-range part of Vloc
-  IF (do_cutoff_2D)  call cutoff_stres_evloc( psic, strf, evloc )
+  !
+  IF (gstart==2) THEN
+    !$acc parallel loop reduction(+:evloc)
+    DO nt = 1, ntyp
+       evloc = evloc + rhog(1,1)*strf(1,nt)*vloc(igtongl(1),nt)
+    ENDDO
+  ENDIF
+  !
+  !$acc parallel loop collapse(2) reduction(+:evloc)
+  DO nt = 1, ntyp
+    DO ng = gstart, ngm
+      evloc = evloc + DBLE(CONJG(rhog(ng,1)) * strf(ng,nt)) &
+                      * vloc(igtongl(ng),nt) * fact
+    ENDDO
+  ENDDO
+  !
+  ! ... 2D: add contribution from cutoff long-range part of Vloc
+  IF (do_cutoff_2D)  CALL cutoff_stres_evloc( rhog(:,1), strf, evloc )
   !
   !      WRITE( 6,*) ' evloc ', evloc, evloc*omega   ! DEBUG
   !
-  do nt = 1, ntyp
+  DO nt = 1, ntyp
+     !
      IF ( upf(nt)%is_gth ) THEN
         !
         ! special case: GTH pseudopotential
         !
-        call dvloc_gth (nt, upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
+        CALL dvloc_gth( nt, upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc )
         !
-     ELSE IF ( upf(nt)%tcoulombp ) THEN
+     ELSEIF ( upf(nt)%tcoulombp ) THEN
         !
         ! special case: pseudopotential is coulomb 1/r potential
         !
-        call dvloc_coul (upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
+        CALL dvloc_coul( upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc )
         !
      ELSE
         !
         ! normal case: dvloc contains dV_loc(G)/dG
         !
-        call dvloc_of_g (rgrid(nt)%mesh, msh (nt), rgrid(nt)%rab, rgrid(nt)%r,&
-          upf(nt)%vloc(:), upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
+        CALL dvloc_of_g( rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r, &
+                         upf(nt)%vloc(:), upf(nt)%zp, tpiba2, ngl, gl, omega, &
+                         dvloc )
         !
-     END IF
-     ! no G=0 contribution
-     do ng = 1, ngm
-        do l = 1, 3
-           do m = 1, l
-              sigmaloc(l, m) = sigmaloc(l, m) +  DBLE( CONJG( psic(dfftp%nl(ng) ) ) &
-                    * strf (ng, nt) ) * 2.0d0 * dvloc (igtongl (ng) ) &
-                    * tpiba2 * g (l, ng) * g (m, ng) * fact
-           enddo
-        enddo
-     enddo
-  enddo
-  IF (do_cutoff_2D)  call cutoff_stres_sigmaloc( psic, strf, sigmaloc) ! 2D: re-add LR Vloc to sigma here
+     ENDIF
+     ! ... no G=0 contribution
+     sigma11 = 0._DP ; sigma21 = 0._DP ; sigma22 = 0._DP
+     sigma31 = 0._DP ; sigma32 = 0._DP ; sigma33 = 0._DP
+     !
+     !$acc parallel loop reduction(+:sigma11,sigma21,sigma22,sigma31,sigma32,&
+     !$acc                           sigma33)
+     DO ng = 1, ngm
+       spart = DBLE(CONJG(rhog(ng,1)) * strf(ng,nt)) * 2.0_DP * &
+               dvloc(igtongl(ng))
+       sigma11 = sigma11 + spart * g(1,ng) * g(1,ng)
+       sigma21 = sigma21 + spart * g(2,ng) * g(1,ng)
+       sigma22 = sigma22 + spart * g(2,ng) * g(2,ng)
+       sigma31 = sigma31 + spart * g(3,ng) * g(1,ng)
+       sigma32 = sigma32 + spart * g(3,ng) * g(2,ng)
+       sigma33 = sigma33 + spart * g(3,ng) * g(3,ng)
+     ENDDO
+     !
+     sigmaloc(1,1) = sigmaloc(1,1) + sigma11 * fact * tpiba2
+     sigmaloc(2,1) = sigmaloc(2,1) + sigma21 * fact * tpiba2
+     sigmaloc(2,2) = sigmaloc(2,2) + sigma22 * fact * tpiba2
+     sigmaloc(3,1) = sigmaloc(3,1) + sigma31 * fact * tpiba2
+     sigmaloc(3,2) = sigmaloc(3,2) + sigma32 * fact * tpiba2
+     sigmaloc(3,3) = sigmaloc(3,3) + sigma33 * fact * tpiba2  
+     !
+  ENDDO
   !
-  do l = 1, 3
-     sigmaloc (l, l) = sigmaloc (l, l) + evloc
-     do m = 1, l - 1
-        sigmaloc (m, l) = sigmaloc (l, m)
-     enddo
-  enddo
+  ! ... 2D: re-add LR Vloc to sigma here
+  IF (do_cutoff_2D)  CALL cutoff_stres_sigmaloc( rhog(:,1), strf, sigmaloc )
   !
-  call mp_sum(  sigmaloc, intra_bgrp_comm )
+  !$acc end data
+  !$acc end data
   !
-  deallocate(dvloc)
-  return
-end subroutine stres_loc
-
+  DO l = 1, 3
+     sigmaloc(l,l) = sigmaloc(l,l) + evloc
+     DO m = 1, l-1
+        sigmaloc(m,l) = sigmaloc(l,m)
+     ENDDO
+  ENDDO
+  !
+  CALL mp_sum( sigmaloc, intra_bgrp_comm )
+  !
+  DEALLOCATE( dvloc, rhog )
+  !
+  RETURN
+  !
+END SUBROUTINE stres_loc

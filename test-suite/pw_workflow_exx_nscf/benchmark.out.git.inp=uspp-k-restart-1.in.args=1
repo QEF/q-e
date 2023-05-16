@@ -1,0 +1,443 @@
+
+     Program PWSCF v.7.1 starts on 24Jan2023 at 15: 4:53 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI & OpenMP), running on       4 processor cores
+     Number of MPI processes:                 4
+     Threads/MPI process:                     1
+
+     MPI processes distributed on     1 nodes
+     24278 MiB available memory on the printing compute node when the environment starts
+
+     Reading input from uspp-k-restart-1.in
+
+     Current dimensions of program PWSCF are:
+     Max number of different atomic species (ntypx) = 10
+     Max number of k-points (npk) =  40000
+     Max angular momentum in pseudopotentials (lmaxx) =  4
+     file C.pbe-rrkjus.UPF: wavefunction(s)  2S 2P renormalized
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= HSE
+                           (   1   4  12   4   0   0   0)
+     EXX-fraction              =        0.25
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     a serial algorithm will be used
+
+     EXX: q-point mesh:     9    9    1
+     EXX: setup a grid of 81 q-points centered on each k-point
+     (k+q)-points:
+   0.0000000   0.0000000   0.0000000         1    1
+   0.0000000   0.1283001   0.0000000         2    1
+   0.0000000   0.2566001   0.0000000         3    1
+   0.0000000   0.3849002   0.0000000         4    1
+   0.0000000   0.5132002   0.0000000         5    1
+  -0.0000000  -0.5132002   0.0000000         5   -1
+  -0.0000000  -0.3849002   0.0000000         4   -1
+  -0.0000000  -0.2566001   0.0000000         3   -1
+  -0.0000000  -0.1283001   0.0000000         2   -1
+   0.1111111   0.0641500   0.0000000         2    5
+   0.1111111   0.1924501   0.0000000         6    1
+   0.1111111   0.3207501   0.0000000         7    1
+   0.1111111   0.4490502   0.0000000         8    1
+   0.1111111   0.5773503   0.0000000         9    1
+   0.1111111  -0.4490502  -0.0000000         8   -3
+   0.1111111  -0.3207501  -0.0000000         7   -3
+   0.1111111  -0.1924501  -0.0000000         6   -3
+   0.1111111  -0.0641500  -0.0000000         2   -6
+   0.2222222   0.1283001   0.0000000         3    5
+   0.2222222   0.2566001   0.0000000         7   -9
+   0.2222222   0.3849002   0.0000000        10    1
+   0.2222222   0.5132002   0.0000000        11    1
+   0.2222222  -0.5132002  -0.0000000        11   -3
+   0.2222222  -0.3849002  -0.0000000        10   -3
+   0.2222222  -0.2566001  -0.0000000         7   -6
+   0.2222222  -0.1283001  -0.0000000         3   -6
+   0.2222222   0.0000000   0.0000000         6    5
+   0.3333333   0.1924501   0.0000000         4    5
+   0.3333333   0.3207501   0.0000000         8   -9
+   0.3333333   0.4490502   0.0000000        11   -9
+   0.3333333   0.5773503   0.0000000        12    1
+   0.3333333  -0.4490502  -0.0000000        11   -6
+   0.3333333  -0.3207501  -0.0000000         8   -6
+   0.3333333  -0.1924501  -0.0000000         4   -6
+   0.3333333  -0.0641500   0.0000000         7   10
+   0.3333333   0.0641500   0.0000000         7    5
+   0.4444444   0.2566001   0.0000000         5    5
+  -0.5555556  -0.1924501   0.0000000         9   -5
+  -0.5555556  -0.0641500   0.0000000        11   -5
+  -0.5555556   0.0641500   0.0000000        11  -10
+   0.4444444  -0.3849002  -0.0000000         9   -6
+   0.4444444  -0.2566001  -0.0000000         5   -6
+   0.4444444  -0.1283001   0.0000000         8   10
+   0.4444444   0.0000000   0.0000000        10    5
+   0.4444444   0.1283001   0.0000000         8    5
+  -0.4444444  -0.2566001   0.0000000         5   -5
+  -0.4444444  -0.1283001   0.0000000         8   -5
+  -0.4444444   0.0000000   0.0000000        10   -5
+  -0.4444444   0.1283001   0.0000000         8  -10
+  -0.4444444   0.2566001   0.0000000         5    6
+  -0.4444444   0.3849002   0.0000000         9    6
+   0.5555556  -0.0641500   0.0000000        11   10
+   0.5555556   0.0641500   0.0000000        11    5
+   0.5555556   0.1924501   0.0000000         9    5
+  -0.3333333  -0.1924501   0.0000000         4   -5
+  -0.3333333  -0.0641500   0.0000000         7   -5
+  -0.3333333   0.0641500   0.0000000         7  -10
+  -0.3333333   0.1924501   0.0000000         4    6
+  -0.3333333   0.3207501   0.0000000         8    6
+  -0.3333333   0.4490502   0.0000000        11    6
+  -0.3333333  -0.5773503   0.0000000        12   -1
+  -0.3333333  -0.4490502   0.0000000        11    9
+  -0.3333333  -0.3207501   0.0000000         8    9
+  -0.2222222  -0.1283001   0.0000000         3   -5
+  -0.2222222   0.0000000   0.0000000         6   -5
+  -0.2222222   0.1283001   0.0000000         3    6
+  -0.2222222   0.2566001   0.0000000         7    6
+  -0.2222222   0.3849002   0.0000000        10    3
+  -0.2222222   0.5132002   0.0000000        11    3
+  -0.2222222  -0.5132002   0.0000000        11   -1
+  -0.2222222  -0.3849002   0.0000000        10   -1
+  -0.2222222  -0.2566001   0.0000000         7    9
+  -0.1111111  -0.0641500   0.0000000         2   -5
+  -0.1111111   0.0641500   0.0000000         2    6
+  -0.1111111   0.1924501   0.0000000         6    3
+  -0.1111111   0.3207501   0.0000000         7    3
+  -0.1111111   0.4490502   0.0000000         8    3
+  -0.1111111  -0.5773503   0.0000000         9   -1
+  -0.1111111  -0.4490502   0.0000000         8   -1
+  -0.1111111  -0.3207501   0.0000000         7   -1
+  -0.1111111  -0.1924501   0.0000000         6   -1
+
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          75      30      9                 3131      784     157
+     Max          76      31     10                 3134      791     168
+     Sum         301     121     37                12531     3147     647
+
+     Using Slab Decomposition
+
+
+
+     bravais-lattice index     =            4
+     lattice parameter (alat)  =       4.6540  a.u.
+     unit-cell volume          =     261.8973 (a.u.)^3
+     number of atoms/cell      =            2
+     number of atomic types    =            1
+     number of electrons       =         8.00
+     number of Kohn-Sham states=            8
+     kinetic-energy cutoff     =      20.0000  Ry
+     charge density cutoff     =     200.0000  Ry
+     cutoff for Fock operator  =      80.0000  Ry
+     scf convergence threshold =      1.0E-08
+     mixing beta               =       0.7000
+     number of iterations used =            8  plain     mixing
+     Exchange-correlation= HSE
+                           (   1   4  12   4   0   0   0)
+     EXX-fraction              =        0.25
+
+     celldm(1)=   4.654000  celldm(2)=   0.000000  celldm(3)=   3.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (   1.000000   0.000000   0.000000 )  
+               a(2) = (  -0.500000   0.866025   0.000000 )  
+               a(3) = (   0.000000   0.000000   3.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = (  1.000000  0.577350 -0.000000 )  
+               b(2) = (  0.000000  1.154701  0.000000 )  
+               b(3) = (  0.000000 -0.000000  0.333333 )  
+
+
+     PseudoPot. # 1 for C  read from file:
+     /home/ivan/pseudo/C.pbe-rrkjus.UPF
+     MD5 check sum: c9ac5a99bc85b198593446162950cd17
+     Pseudo is Ultrasoft, Zval =  4.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  627 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     atomic species   valence    mass     pseudopotential
+        C              4.00    12.01070     C ( 1.00)
+
+     24 Sym. Ops., with inversion, found (12 have fractional translation)
+
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1           C   tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+         2           C   tau(   2) = (   0.0000000   0.5773503   0.0000000  )
+
+     number of k points=    12  Gaussian smearing, width (Ry)=  0.0100
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0246914
+        k(    2) = (   0.0000000   0.1283001   0.0000000), wk =   0.1481481
+        k(    3) = (   0.0000000   0.2566001   0.0000000), wk =   0.1481481
+        k(    4) = (   0.0000000   0.3849002   0.0000000), wk =   0.1481481
+        k(    5) = (   0.0000000   0.5132002   0.0000000), wk =   0.1481481
+        k(    6) = (   0.1111111   0.1924501   0.0000000), wk =   0.1481481
+        k(    7) = (   0.1111111   0.3207501   0.0000000), wk =   0.2962963
+        k(    8) = (   0.1111111   0.4490502   0.0000000), wk =   0.2962963
+        k(    9) = (   0.1111111   0.5773503   0.0000000), wk =   0.1481481
+        k(   10) = (   0.2222222   0.3849002   0.0000000), wk =   0.1481481
+        k(   11) = (   0.2222222   0.5132002   0.0000000), wk =   0.2962963
+        k(   12) = (   0.3333333   0.5773503   0.0000000), wk =   0.0493827
+
+     Dense  grid:    12531 G-vectors     FFT dimensions: (  24,  24,  64)
+
+     Smooth grid:     3147 G-vectors     FFT dimensions: (  15,  15,  40)
+
+     Estimated max dynamical RAM per process >      20.64 MB
+
+     Estimated total dynamical RAM >      82.58 MB
+     EXX: ACE will be initialized later
+
+     Initial potential from superposition of free atoms
+
+     starting charge       7.9999, renormalised to       8.0000
+     Starting wfcs are    8 randomized atomic wfcs
+
+     total cpu time spent up to now is        0.1 secs
+
+     Self-consistent Calculation
+
+     iteration #  1     ecut=    20.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  5.8
+
+     negative rho (up, down):  1.066E-07 0.000E+00
+
+     total cpu time spent up to now is        0.2 secs
+
+     total energy              =     -22.73778671 Ry
+     estimated scf accuracy    <       0.19496029 Ry
+
+     iteration #  2     ecut=    20.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  2.44E-03,  avg # of iterations =  3.1
+
+     negative rho (up, down):  7.261E-07 0.000E+00
+
+     total cpu time spent up to now is        0.2 secs
+
+     total energy              =     -22.76531528 Ry
+     estimated scf accuracy    <       0.00234891 Ry
+
+     iteration #  3     ecut=    20.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  2.94E-05,  avg # of iterations =  5.9
+
+     negative rho (up, down):  3.970E-06 0.000E+00
+
+     total cpu time spent up to now is        0.2 secs
+
+     total energy              =     -22.76553451 Ry
+     estimated scf accuracy    <       0.00014579 Ry
+
+     iteration #  4     ecut=    20.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  1.82E-06,  avg # of iterations =  3.1
+
+     negative rho (up, down):  3.541E-06 0.000E+00
+
+     total cpu time spent up to now is        0.3 secs
+
+     total energy              =     -22.76554073 Ry
+     estimated scf accuracy    <       0.00000047 Ry
+
+     iteration #  5     ecut=    20.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  5.93E-09,  avg # of iterations =  2.6
+
+     negative rho (up, down):  3.253E-06 0.000E+00
+
+     total cpu time spent up to now is        0.3 secs
+
+     total energy              =     -22.76554105 Ry
+     estimated scf accuracy    <       0.00000003 Ry
+
+     iteration #  6     ecut=    20.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  3.33E-10,  avg # of iterations =  2.0
+
+     negative rho (up, down):  3.199E-06 0.000E+00
+
+     total cpu time spent up to now is        0.3 secs
+
+     End of self-consistent calculation
+
+          k = 0.0000 0.0000 0.0000 (   397 PWs)   bands (ev):
+
+   -18.6680  -6.7212  -2.1512  -2.1511   3.7661   7.1332   9.2548   9.2548
+
+          k = 0.0000 0.1283 0.0000 (   399 PWs)   bands (ev):
+
+   -18.3765  -6.3803  -3.2769  -2.7261   4.1639   7.5105   9.2816   9.8446
+
+          k = 0.0000 0.2566 0.0000 (   394 PWs)   bands (ev):
+
+   -17.5060  -5.8247  -5.3526  -3.8888   5.3565   8.5401   9.0515   9.0672
+
+          k = 0.0000 0.3849 0.0000 (   398 PWs)   bands (ev):
+
+   -16.0800  -8.7588  -4.9210  -3.7274   5.8402   7.3333   8.6297  10.5305
+
+          k = 0.0000 0.5132 0.0000 (   396 PWs)   bands (ev):
+
+   -14.1736 -11.5156  -5.4832  -1.8711   3.1345   8.3278  10.1018  12.9749
+
+          k = 0.1111 0.1925 0.0000 (   409 PWs)   bands (ev):
+
+   -17.7959  -5.6976  -4.8366  -3.8917   4.9595   8.2597   9.7279   9.8551
+
+          k = 0.1111 0.3208 0.0000 (   398 PWs)   bands (ev):
+
+   -16.6472  -7.2878  -5.2681  -4.3581   6.5474   7.1137   9.7370  10.0295
+
+          k = 0.1111 0.4491 0.0000 (   389 PWs)   bands (ev):
+
+   -14.9680 -10.0511  -6.1385  -2.5204   4.2486   8.9075   9.7024  11.7937
+
+          k = 0.1111 0.5774 0.0000 (   386 PWs)   bands (ev):
+
+   -13.2291 -12.1944  -6.4422  -1.1764   2.5171   9.5420  11.9380  12.0978
+
+          k = 0.2222 0.3849 0.0000 (   395 PWs)   bands (ev):
+
+   -15.2443  -8.8118  -7.2829  -2.7719   4.8708   8.5216  11.2621  12.3515
+
+          k = 0.2222 0.5132 0.0000 (   394 PWs)   bands (ev):
+
+   -13.3940 -10.9232  -8.2823  -0.8916   2.6247  11.2255  12.1609  12.4163
+
+          k = 0.3333 0.5774 0.0000 (   381 PWs)   bands (ev):
+
+   -11.7301 -11.7301  -9.6762   0.9203   0.9203  11.5853  13.6510  13.6510
+
+     the Fermi energy is     0.9203 ev
+
+!    total energy              =     -22.76554105 Ry
+     estimated scf accuracy    <          3.6E-10 Ry
+     smearing contrib. (-TS)   =      -0.00027861 Ry
+     internal energy E=F+TS    =     -22.76526244 Ry
+
+     convergence has been achieved in   6 iterations
+
+     Using ACE for calculation of exact exchange
+
+     EXX grid:     3147 G-vectors     FFT dimensions: (  15,  15,  40)
+     ACE projected onto     8 (nbndproj) and applied to     8 (nbnd) bands
+
+     negative rho (up, down):  3.199E-06 0.000E+00
+
+     EXX: now go back to refine exchange calculation
+
+     Maximum CPU time exceeded
+
+     max_seconds     =       3.00
+     elapsed seconds =      28.10
+     Calculation (EXX) stopped after iteration #     1
+
+     Writing all to output data dir ./out/Graphene_1x1_HSE.save/
+
+     init_run     :      0.05s CPU      0.06s WALL (       1 calls)
+     electrons    :      0.22s CPU      0.22s WALL (       1 calls)
+
+     Called by init_run:
+     aceinit0     :      0.00s CPU      0.00s WALL (       1 calls)
+     wfcinit      :      0.01s CPU      0.01s WALL (       1 calls)
+     potinit      :      0.00s CPU      0.01s WALL (       1 calls)
+     hinit0       :      0.02s CPU      0.03s WALL (       1 calls)
+
+     Called by electrons:
+     c_bands      :      0.14s CPU      0.14s WALL (       6 calls)
+     sum_band     :      0.04s CPU      0.04s WALL (       6 calls)
+     v_of_rho     :      0.04s CPU      0.04s WALL (       8 calls)
+     newd         :      0.02s CPU      0.02s WALL (       7 calls)
+     mix_rho      :      0.00s CPU      0.00s WALL (       6 calls)
+
+     Called by c_bands:
+     init_us_2    :      0.01s CPU      0.01s WALL (     264 calls)
+     init_us_2:cp :      0.01s CPU      0.01s WALL (     264 calls)
+     cegterg      :      0.13s CPU      0.13s WALL (      72 calls)
+
+     Called by *egterg:
+     cdiaghg      :      0.02s CPU      0.02s WALL (     341 calls)
+     h_psi        :      0.10s CPU      0.10s WALL (     353 calls)
+     s_psi        :      0.00s CPU      0.00s WALL (     353 calls)
+     g_psi        :      0.00s CPU      0.00s WALL (     269 calls)
+
+     Called by h_psi:
+     h_psi:calbec :      0.00s CPU      0.00s WALL (     353 calls)
+     vloc_psi     :      0.09s CPU      0.09s WALL (     353 calls)
+     add_vuspsi   :      0.00s CPU      0.00s WALL (     353 calls)
+
+     General routines
+     calbec       :      0.01s CPU      0.01s WALL (     473 calls)
+     fft          :      0.01s CPU      0.02s WALL (      97 calls)
+     ffts         :      0.00s CPU      0.00s WALL (      14 calls)
+     fftw         :      0.08s CPU      0.08s WALL (    3992 calls)
+     fftc         :      5.81s CPU      6.15s WALL (  124416 calls)
+     fftcw        :      0.01s CPU      0.01s WALL (     288 calls)
+     interpolate  :      0.00s CPU      0.00s WALL (       8 calls)
+     davcio       :      0.00s CPU      0.00s WALL (      12 calls)
+
+     Parallel routines
+
+     EXX routines
+     exx_grid     :      0.00s CPU      0.00s WALL (       1 calls)
+     exxinit      :      0.06s CPU      0.09s WALL (       1 calls)
+     vexx         :     26.33s CPU     27.70s WALL (      12 calls)
+     matcalc      :      0.00s CPU      0.00s WALL (      36 calls)
+     aceupdate    :      0.00s CPU      0.00s WALL (      12 calls)
+     vexxace      :      0.00s CPU      0.00s WALL (      12 calls)
+     aceinit      :     26.33s CPU     27.70s WALL (      12 calls)
+
+     EXX+US  routines
+     becxx        :      0.00s CPU      0.00s WALL (       1 calls)
+     addusxx      :      9.04s CPU      9.57s WALL (   62208 calls)
+     newdxx       :      9.92s CPU     10.34s WALL (   62208 calls)
+     qvan_init    :      0.42s CPU      0.44s WALL (     972 calls)
+     nlxx_pot     :      0.00s CPU      0.00s WALL (      96 calls)
+
+     PWSCF        :     26.72s CPU     28.15s WALL
+
+
+   This run was terminated on:  15: 5:21  24Jan2023            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
+-------------------------------------------------------
+Primary job  terminated normally, but 1 process returned
+a non-zero exit code.. Per user-direction, the job has been aborted.
+-------------------------------------------------------
+--------------------------------------------------------------------------
+mpirun detected that one or more processes exited with non-zero status, thus causing
+the job to be terminated. The first process to do so was:
+
+  Process name: [[31574,1],0]
+  Exit code:    255
+--------------------------------------------------------------------------

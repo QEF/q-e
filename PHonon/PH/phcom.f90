@@ -125,6 +125,9 @@ MODULE phus
   !
   USE kinds, ONLY :  DP
   USE becmod, ONLY : bec_type
+#if defined(__CUDA)
+  USE becmod_gpum, ONLY : bec_type_d
+#endif
   !
   SAVE
   !
@@ -160,6 +163,9 @@ MODULE phus
   !
   !
   type(bec_type),  ALLOCATABLE, TARGET :: alphap(:,:)  ! nkbtot, nbnd, 3, nksq)
+#if defined(__CUDA)
+  type(bec_type_d),  ALLOCATABLE, TARGET :: alphap_d(:,:)
+#endif
   !! contains \( \langle d\du (\beta_n) | \psi_i \rangle\)
   !
 END MODULE phus
@@ -185,7 +191,21 @@ MODULE partial
   !! TRUE if this irr.rep. has been done
   LOGICAL :: all_comp
   !! if TRUE all representation have been computed
-  !
+  INTERFACE 
+    SUBROUTINE set_local_atomo(nat, nat_todo_, atomo_, nsym, irt,  nat_l, atomo_l) 
+      IMPLICIT NONE 
+      INTEGER,INTENT(IN)               :: nat, nat_todo_, nsym, atomo_(nat_todo_), irt(48,nat)
+      !! :nat: total number of atoms
+      !! :nat_todo: number of atoms effectively displaced 
+      !! :nsym: number of symmetries in the system
+      !! :atomo: list of atoms to be displaced before symmetrization 
+      !! :irt: atoms corresponding atom for each sym operation and atom
+      INTEGER,INTENT(OUT)              :: nat_l 
+      !! actual number of atoms to be displaced considering symmetries
+      INTEGER,ALLOCATABLE,INTENT(OUT)  :: atomo_l(:)
+      !! list with the indeces of all the atoms to be displaced 
+    END SUBROUTINE set_local_atomo
+  END INTERFACE
 END MODULE partial
 !
 MODULE gamma_gamma
@@ -320,6 +340,9 @@ MODULE control_ph
   !! if TRUE use new k-point grid nk1,nk2,nk3
   INTEGER :: nk1,nk2,nk3, k1,k2,k3
   !! new Monkhorst-Pack k-point grid
+  !
+  CHARACTER(LEN=256) :: dftd3_hess 
+  ! file from where the dftd3 hessian is read
   !
 END MODULE control_ph
 !

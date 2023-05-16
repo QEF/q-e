@@ -58,6 +58,8 @@ write_hamiltonians.o \
 globalmod.o \
 fouriermod.o \
 idwmod.o \
+oscdft_pp_mod.o \
+oscdft_et_mod.o \
 xc_vdW_scale_mod.o   # added by Yang Jiao
 
 PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a 
@@ -71,7 +73,9 @@ all : tldeps open_grid.x average.x bands.x band_interpolation.x dos.x epsilon.x 
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x pw2wannier90.x pw2critic.x pw2gw.x pw2gt.x \
       wannier_ham.x wannier_plot.x molecularpdos.x \
-      pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x pprism.x
+      pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x pprism.x \
+      d3hess.x \
+      oscdft_pp.x oscdft_et.x
 
 
 libpp.a : $(PPOBJS) 
@@ -99,6 +103,11 @@ bands.x : bands.o libpp.a $(MODULES)
 band_interpolation.x : band_interpolation.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
 		band_interpolation.o libpp.a $(MODULES) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
+d3hess.x : d3hess.o libpp.a $(MODULES) 
+	$(LD) $(LDFLAGS) -o $@ \
+		d3hess.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 dos.x : dos.o libpp.a $(MODULES) 
@@ -241,6 +250,17 @@ pprism.x : postrism.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		postrism.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
+# ***OSCDFT BEGIN***
+oscdft_pp.x : oscdft_pp.o libpp.a $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		oscdft_pp.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+oscdft_et.x : oscdft_et.o libpp.a $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		oscdft_et.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+# ***OSCDFT END***
 
 clean :
 	- /bin/rm -f *.x *.o *~ *_tmp.f90 *.d *.mod *.i *.L libpp.a

@@ -9,7 +9,10 @@
 SUBROUTINE read_file()
   !----------------------------------------------------------------------------
   !
-  ! Wrapper routine, for backwards compatibility
+  ! Wrapper routine, for backwards compatibility: reads the xml file,
+  ! then reads the wavefunctions in "collected" format and writes them
+  ! into "distributed" format, forcing write to file (not to buffer).
+  ! NOT TO BE USED IN NEW CODE. Use "read_file_new" instead.
   !
   USE io_global,        ONLY : stdout
   USE control_flags,    ONLY : io_level
@@ -61,24 +64,124 @@ SUBROUTINE read_file()
 END SUBROUTINE read_file
 !
 !----------------------------------------------------------------------------
+SUBROUTINE read_file_ph( needwf_ph )
+  !----------------------------------------------------------------------------
+  !
+  ! Wrapper routine, for compatibility with the phonon code: as "read_file",
+  ! but pool parallelization is done just after the reading of the xml file,
+  ! before reading the wavefunction files. To be used ONLY for codes that 
+  ! can split processors into pools at run-time depending upon the number
+  ! of k-points (unless the number of pools is explicitly specified) 
+  !
+  USE io_global,        ONLY : stdout
+  USE control_flags,    ONLY : io_level
+  USE buffers,          ONLY : open_buffer, close_buffer, save_buffer
+  USE io_files,         ONLY : nwordwfc, iunwfc, wfc_dir, tmp_dir, restart_dir
+  USE wvfct,            ONLY : nbnd, npwx, et, wg
+  USE noncollin_module, ONLY : npol
+  USE klist,            ONLY : nkstot, nks, xk, wk
+  USE lsda_mod,         ONLY : isk
+  USE wavefunctions,    ONLY : evc
+  USE pw_restart_new,   ONLY : read_collected_wfc
+  USE fft_base,         ONLY : dffts
+  !
+  USE wvfct_gpum,       ONLY : using_et, using_wg, using_wg_d
+  USE wavefunctions_gpum, ONLY : using_evc
+  USE pw_restart_new,   ONLY : read_xml_file
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: ik
+  LOGICAL :: exst, wfc_is_collected
+  LOGICAL, INTENT(IN) :: needwf_ph
+  !
+  WRITE( stdout, '(/,5x,A)') &
+       'Reading xml data from directory:', TRIM( restart_dir() )
+  !
+  ! ... Read the contents of the xml data file
+  !
+  CALL read_xml_file ( wfc_is_collected )
+  !
+  ! Guess parallelization on the basis of data from the scf calculation
+  ! Must be done before post_xml_init is called
+  !
+  CALL setup_para ( dffts%nr3, nkstot, nbnd )
+  !
+  ! ... more initializations: pseudopotentials / G-vectors / FFT arrays /
+  ! ... charge density / potential / ... , but not KS orbitals
+  !
+  CALL post_xml_init ( )
+  !
+  ! ... distribute across pools k-points and related variables.
+  ! ... nks is defined by the following routine as the number 
+  ! ... of k-points in the current pool
+  !
+  CALL divide_et_impera( nkstot, xk, wk, isk, nks )
+  CALL using_et(1)
+  CALL poolscatter( nbnd, nkstot, et, nks, et )
+  CALL using_wg(1)
+  CALL poolscatter( nbnd, nkstot, wg, nks, wg )
+#if defined(__CUDA)
+  ! Updating wg here. Should not be done and will be removed ASAP.
+  CALL using_wg_d(0)
+#endif
+  !
+  ! ... allocate_wfc_k also computes no. of plane waves and k+G indices
+  ! ... FIXME: the latter should be read from file, not recomputed
+  !
+  CALL allocate_wfc_k()
+  !
+  ! ... Open unit iunwfc, for Kohn-Sham orbitals - we assume that wfcs
+  ! ... have been written to tmp_dir, not to a different directory!
+  !
+  wfc_dir = tmp_dir
+  !
+  IF ( wfc_is_collected ) THEN
+     !
+     nwordwfc = nbnd*npwx*npol
+     CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst )
+     !
+     ! ... read wavefunctions in collected format, write them to file or buffer
+     !
+     WRITE( stdout, '(5x,A)') &
+          'Reading collected, re-writing distributed wavefunctions in '//TRIM(wfc_dir)
+     CALL using_evc(1)
+     DO ik = 1, nks
+        CALL read_collected_wfc ( restart_dir(), ik, evc )
+        CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
+     END DO
+     !
+  ELSE
+     !
+     IF ( needwf_ph ) THEN
+        CALL errore ('read_file_ph',' Wavefunctions in collected format not available',1)
+     ELSE
+        WRITE( stdout, '(5x,A)') 'read_file_ph: Wavefunctions in collected format not needed'
+     ENDIF
+     !
+  END IF
+  !
+  IF ( io_level /= 0 ) CALL close_buffer  ( iunwfc, 'KEEP' )
+  !
+END SUBROUTINE read_file_ph
+!
+!----------------------------------------------------------------------------
 SUBROUTINE read_file_new ( needwf )
   !----------------------------------------------------------------------------
   !
-  ! Reads xml data file produced by pw.x or cp.x, performs initializations
-  ! related to the contents of the xml file
-  ! If needwf=.t. performs wavefunction-related initialization as well
-  ! Does not read wfcs but returns in "wfc_is_collected" info on the wfc file
+  ! Reads xml data file produced by pw.x or cp.x;
+  ! performs initializations related to the contents of the xml file;
+  ! if needwf=.t. performs wavefunction-related initialization as well.
+  ! Does not actually read wfcs. Returns in "needwf" info on the wfc file
   !
   USE io_global,      ONLY : stdout
   USE io_files,       ONLY : nwordwfc, iunwfc, wfc_dir, tmp_dir, restart_dir
   USE gvect,          ONLY : ngm, g
   USE gvecw,          ONLY : gcutw
   USE klist,          ONLY : nkstot, nks, xk, wk
-  USE lsda_mod,       ONLY : isk, nspin
-  USE noncollin_module,ONLY: domag
+  USE lsda_mod,       ONLY : isk
   USE wvfct,          ONLY : nbnd, et, wg
   USE pw_restart_new, ONLY : read_xml_file
-  USE xc_lib,         ONLY : xclib_dft_is_libxc, xclib_init_libxc
   !
   USE wvfct_gpum,     ONLY : using_et, using_wg, using_wg_d
   !
@@ -95,10 +198,6 @@ SUBROUTINE read_file_new ( needwf )
   !
   CALL read_xml_file ( wfc_is_collected )
   !
-  ! ... initialize Libxc if needed
-  !
-  IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin, domag )
-  !
   ! ... more initializations: pseudopotentials / G-vectors / FFT arrays /
   ! ... charge density / potential / ... , but not KS orbitals
   !
@@ -110,7 +209,7 @@ SUBROUTINE read_file_new ( needwf )
      !
      ! ... initialization of KS orbitals
      !
-     wfc_dir = tmp_dir ! this is likely obsolete and no longer used
+     wfc_dir = tmp_dir
      !
      ! ... distribute across pools k-points and related variables.
      ! ... nks is defined by the following routine as the number 
@@ -173,7 +272,7 @@ SUBROUTINE post_xml_init (  )
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE wvfct,                ONLY : nbnd, nbndx, et, wg
   USE lsda_mod,             ONLY : nspin
-  USE noncollin_module,     ONLY : noncolin, lspinorb
+  USE noncollin_module,     ONLY : noncolin, lspinorb, domag
   USE cell_base,            ONLY : at, bg, set_h_ainv
   USE symm_base,            ONLY : d1, d2, d3
   USE mp_bands,             ONLY : intra_bgrp_comm
@@ -183,11 +282,16 @@ SUBROUTINE post_xml_init (  )
   USE read_solv_module,     ONLY : read_solvents
   USE rism_module,          ONLY : rism_tobe_alive, rism_pot3d
   USE rism3d_facade,        ONLY : lrism3d, rism3d_initialize, rism3d_read_to_restart
+  USE xc_lib,               ONLY : xclib_dft_is_libxc, xclib_init_libxc
   !
   IMPLICIT NONE
   !
   REAL(DP) :: ehart, etxc, vtxc, etotefield, charge
   CHARACTER(LEN=37) :: dft_name
+  !
+  ! ... initialize Libxc if needed
+  !
+  IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin, domag )
   !
   ! ... set G cutoffs and cell factor (FIXME: from setup.f90?)
   !
@@ -230,10 +334,10 @@ SUBROUTINE post_xml_init (  )
   g_d    = g
   gg_d   = gg
 #endif
-  !$acc update device(mill, g)
+  !$acc update device(mill, g, gg)
   !
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms ) 
-  CALL gshells ( lmovecell ) 
+  CALL gshells ( lmovecell )
   !
   IF (do_comp_esm) CALL esm_init()
   IF (do_cutoff_2D) CALL cutoff_fact()
@@ -268,6 +372,7 @@ SUBROUTINE post_xml_init (  )
   !
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, dfftp%nr1, dfftp%nr2,&
                    dfftp%nr3, strf, eigts1, eigts2, eigts3 )
+  !$acc update device(eigts1(:,:), eigts2(:,:), eigts3(:,:))
   CALL setlocal()
   CALL set_rhoc()
   !

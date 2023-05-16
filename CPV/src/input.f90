@@ -117,6 +117,7 @@ MODULE input
    !-------------------------------------------------------------------------
    SUBROUTINE set_control_flags()
      !-------------------------------------------------------------------------
+     !! Set internal flags according to the input.
      !
      USE io_global,     ONLY : stdout
      USE autopilot,     ONLY : auto_check
@@ -697,7 +698,9 @@ MODULE input
       force_pairing_ = force_pairing
 
       ! ... having set all input keywords, read plugins' input file(s)
-
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_read_input()
+#endif 
 #if defined (__ENVIRON)
       IF (use_environ) THEN
          CALL read_environ_input()
@@ -728,6 +731,7 @@ MODULE input
    !-------------------------------------------------------------------------
    SUBROUTINE modules_setup()
      !-------------------------------------------------------------------------
+     !! Call the module specific setup routine.
      !
      USE input_parameters, ONLY: ibrav , celldm , trd_ht, dt,                 &
            rd_ht, a, b, c, cosab, cosac, cosbc, ntyp , nat ,                  &
@@ -777,6 +781,7 @@ MODULE input
      USE input_parameters, ONLY : step_pen, A_pen, alpha_pen, sigma_pen
      USE input_parameters, ONLY : vdw_corr, london, london_s6, london_rcut, &
                                   ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr
+     USE input_parameters, ONLY : exx_fraction, screening_parameter
      !
      USE constants,        ONLY : amu_au, pi
      USE control_flags,    ONLY : lconstrain, tpre, thdyn, tksw
@@ -806,6 +811,7 @@ MODULE input
      USE control_flags,    ONLY : llondon, ts_vdw_ => ts_vdw
      USE london_module,    ONLY : init_london, scal6, lon_rcut
      USE tsvdw_module,     ONLY : vdw_isolated, vdw_econv_thr
+     USE xc_lib,           ONLY : xclib_set_exx_fraction, set_screening_parameter
      !
      IMPLICIT NONE
      !
@@ -984,6 +990,14 @@ MODULE input
         vdw_econv_thr= ts_vdw_econv_thr
      END IF
      !
+     ! ... must be done AFTER dft is read from PP files and initialized
+     ! ... or else the two following parameters will be overwritten
+     !
+     IF (exx_fraction >= 0.0_DP) CALL xclib_set_exx_fraction (exx_fraction)
+     !
+     IF (screening_parameter >= 0.0_DP) &
+       & CALL set_screening_parameter(screening_parameter)
+     !
      RETURN
      !
   END SUBROUTINE modules_setup
@@ -994,7 +1008,7 @@ MODULE input
   !
   SUBROUTINE input_info()
 
-    ! this subroutine print to standard output some parameters read from input
+    !! This subroutine print to standard output some parameters read from input.
     ! ----------------------------------------------
 
     USE input_parameters,   ONLY: restart_mode
@@ -1031,6 +1045,8 @@ MODULE input
   !
   SUBROUTINE modules_info()
 
+    !! write to stdout input module information
+  
     USE input_parameters, ONLY: electron_dynamics, electron_temperature, &
       orthogonalization
 

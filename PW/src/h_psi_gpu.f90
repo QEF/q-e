@@ -113,8 +113,13 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE fft_helper_subroutines
   USE device_memcpy_m,         ONLY: dev_memcpy, dev_memset
   !
-  USE wvfct_gpum,              ONLY: g2kin_d, using_g2kin_d
+  USE wvfct,                   ONLY: g2kin  
   USE becmod_subs_gpum,        ONLY: calbec_gpu, using_becp_auto, using_becp_d_auto
+#if defined(__OSCDFT)
+  USE plugin_flags,            ONLY : use_oscdft
+  USE oscdft_base,             ONLY : oscdft_ctx
+  USE oscdft_functions_gpu,    ONLY : oscdft_h_psi_gpu
+#endif
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)     :: lda, n, m
@@ -136,7 +141,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   LOGICAL     :: need_host_copy
   !
   CALL start_clock_gpu( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
-  CALL using_g2kin_d(0)
   CALL using_vrs_d(0)
   !
   ! ... Here we add the kinetic energy (k+G)^2 psi and clean up garbage
@@ -153,13 +157,13 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   ENDIF
 
 
-  !$cuf kernel do(2)
+  !$acc parallel loop collapse(2) present(g2kin, hpsi_d, psi_d)
   DO ibnd = 1, m
      DO i=1, lda
         IF (i <= n) THEN
-           hpsi_d (i, ibnd) = g2kin_d (i) * psi_d (i, ibnd)
+           hpsi_d (i, ibnd) = g2kin (i) * psi_d (i, ibnd)
            IF ( noncolin ) THEN
-              hpsi_d (lda+i, ibnd) = g2kin_d (i) * psi_d (lda+i, ibnd)
+              hpsi_d (lda+i, ibnd) = g2kin (i) * psi_d (lda+i, ibnd)
            END IF
         ELSE
            hpsi_d (i, ibnd) = (0.0_dp, 0.0_dp)
@@ -234,7 +238,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
            ! ... psic -> vrs * psic (psic overwritten will become hpsi)
            CALL v_loc_psir_inplace( ibnd, m )
            ! ... psic (hpsi) -> psic + vusp
-           CALL  add_vuspsir_k( ibnd, m )
+           CALL add_vuspsir_k( ibnd, m )
            ! ... transform psic back in reciprocal space and add it to hpsi
            CALL fwfft_orbital_k( hpsi_host, ibnd, m, add_to_orbital=.TRUE. )
            !
@@ -327,6 +331,11 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
      CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
      !
   END IF
+#if defined(__OSCDFT)
+  IF ( use_oscdft ) THEN
+     CALL oscdft_h_psi_gpu(oscdft_ctx, lda, n, m, psi_d, hpsi_d)
+  END IF
+#endif
   !
   ! ... With Gamma-only trick, Im(H*psi)(G=0) = 0 by definition,
   ! ... but it is convenient to explicitly set it to 0 to prevent trouble

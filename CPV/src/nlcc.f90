@@ -10,9 +10,8 @@
 !=----------------------------------------------------------------------------=!
    subroutine core_charge_ftr( tpre )
 !=----------------------------------------------------------------------------=!
-     !
-     !  Compute the fourier transform of the core charge, from the radial
-     !  mesh to the reciprocal space
+     !! Compute the Fourier transform of the core charge, from the radial
+     !! mesh to the reciprocal space
      !
      use kinds,              ONLY : DP
      use ions_base,          ONLY : nsp
@@ -27,7 +26,7 @@
      USE splines,            ONLY : spline
      use gvect,              ONLY : gg, gstart
      USE core,               ONLY : rhocb, rhocg, drhocg
-     USE fft_base,           ONLY: dfftp
+     USE fft_base,           ONLY : dfftp
      !
      IMPLICIT NONE
      !
@@ -90,8 +89,7 @@
 !-----------------------------------------------------------------------
       subroutine add_cc( rhoc, rhog, rhor )
 !-----------------------------------------------------------------------
-!
-! add core correction to the charge density for exch-corr calculation
+      !! Add core correction to the charge density for exch-corr calculation.
 !
       USE kinds,              ONLY: DP
       use electrons_base,     only: nspin
@@ -166,11 +164,10 @@
 !-----------------------------------------------------------------------
       subroutine force_cc(irb,eigrb,vxc,fion1)
 !-----------------------------------------------------------------------
-!
-!     core correction force: f = \int V_xc(r) (d rhoc(r)/d R_i) dr
-!     same logic as in newd - uses box grid. For parallel execution:
-!     the sum over node contributions is done in the calling routine
-!
+      !! Core correction force: \(f=\int V_{xc}(r)(d\text{rhoc}(r)/dR_i)dr\).  
+      !! Same logic as in \(\texttt{newd}\) - uses box grid. For parallel execution:
+      !! the sum over node contributions is done in the calling routine.
+      !
       USE kinds,             ONLY: DP
       use electrons_base,    only: nspin
       use smallbox_gvec,     only: gxb, ngb
@@ -307,10 +304,9 @@
 !-----------------------------------------------------------------------
       subroutine set_cc( rhoc )
 !-----------------------------------------------------------------------
-!
-!     Calculate core charge contribution in real space, rhoc(r)
-!     Same logic as for rhov: use box grid for core charges
-! 
+      !! Calculate core charge contribution in real space, \(\text{rhoc}(r)\).
+      !! Same logic as for \(\text{rhov}\): use box grid for core charges.
+      !
       use kinds, only: dp
       use ions_base,         only: nsp, na, nat, ityp
       use uspp_param,        only: upf

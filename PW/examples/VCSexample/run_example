@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -30,7 +30,7 @@ $ECHO "  checking that needed directories and files exist...\c"
 
 # check for directories
 for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
-    if test ! -d $DIR ; then 
+    if test ! -d $DIR ; then
         $ECHO
         $ECHO "ERROR: $DIR not existent or not a directory"
         $ECHO "Aborting"
@@ -102,21 +102,21 @@ cat > As.vcs00.in << EOF
    ! cosAB = 0.49517470 ,
    ! cosAC = 0.49517470 ,
    !  cosBC = 0.49517470 ,
-                         nat  =  2 , 
-                        ntyp  =  1 , 
+                         nat  =  2 ,
+                        ntyp  =  1 ,
                      ecutwfc  =  25.0 ,
-                     ecutrho  =  100.0 , 
-                        nbnd  =  9 , 
+                     ecutrho  =  100.0 ,
+                        nbnd  =  9 ,
                  occupations  =  'smearing' ,
                     smearing  =  'mv' ,
                      degauss  =  0.005 ,
-                       nspin  =  1 , 
-                  lda_plus_u  =  .false. , 
+                       nspin  =  1 ,
+                  lda_plus_u  =  .false. ,
  /
  &ELECTRONS
-            electron_maxstep  =  70  , 
-                    conv_thr  =  1.0d-7  , 
-             diagonalization   =   'david'   ,  
+            electron_maxstep  =  70  ,
+                    conv_thr  =  1.0d-7  ,
+             diagonalization   =   'david'   ,
  /
  &IONS
  /
@@ -131,11 +131,11 @@ CELL_PARAMETERS alat
    -0.29006459 -0.50240689  0.81452422
 ATOMIC_SPECIES
    As   74.90000  As.pz-bhs.UPF
-ATOMIC_POSITIONS crystal 
+ATOMIC_POSITIONS crystal
 As    0.290010       0.290010       0.290010
 As   -0.290010      -0.290010      -0.290010
-K_POINTS automatic 
-  4 4 4   1 1 1 
+K_POINTS automatic
+  4 4 4   1 1 1
 EOF
 
 
@@ -148,7 +148,7 @@ cat > As.vcs500.in << EOF
  &CONTROL
    calculation =   "vc-relax"   ,
    restart_mode = 'from_scratch' ,
-   outdir='$TMP_DIR/' , 
+   outdir='$TMP_DIR/' ,
    pseudo_dir = '$PSEUDO_DIR' ,
    disk_io = 'default' ,
    verbosity = 'default' ,
@@ -169,21 +169,21 @@ cat > As.vcs500.in << EOF
    ! cosAB = 0.49517470 ,
    ! cosAC = 0.49517470 ,
    ! cosBC = 0.49517470 ,
-                         nat  =  2 , 
-                        ntyp  =  1 , 
+                         nat  =  2 ,
+                        ntyp  =  1 ,
                      ecutwfc  =  25.0 ,
-                     ecutrho  =  100.0 , 
-                        nbnd  =  9 , 
+                     ecutrho  =  100.0 ,
+                        nbnd  =  9 ,
                  occupations  =  'smearing' ,
                     smearing  =  'mv' ,
                      degauss  =  0.005 ,
-                       nspin  =  1 , 
-                  lda_plus_u  =  .false. , 
+                       nspin  =  1 ,
+                  lda_plus_u  =  .false. ,
  /
  &ELECTRONS
-            electron_maxstep  =  70  , 
-                    conv_thr  =  1.0d-7  , 
-             diagonalization   =   'david'   ,  
+            electron_maxstep  =  70  ,
+                    conv_thr  =  1.0d-7  ,
+             diagonalization   =   'david'   ,
  /
  &IONS
  /
@@ -198,11 +198,11 @@ CELL_PARAMETERS  alat
    -0.29006459 -0.50240689  0.81452422
 ATOMIC_SPECIES
    As   74.90000  As.pz-bhs.UPF
-ATOMIC_POSITIONS crystal 
+ATOMIC_POSITIONS crystal
 As    0.290010       0.290010       0.290010
 As   -0.290010      -0.290010      -0.290010
-K_POINTS automatic 
-  4 4 4   1 1 1 
+K_POINTS automatic
+  4 4 4   1 1 1
 EOF
 
 
@@ -228,17 +228,17 @@ cat > As.bfgs00.in << EOF
    ! cosAB = 0.49517470 ,
    ! cosAC = 0.49517470 ,
    !  cosBC = 0.49517470 ,
-                         nat  =  2 , 
-                        ntyp  =  1 , 
+                         nat  =  2 ,
+                        ntyp  =  1 ,
                      ecutwfc  =  25.0 ,
-                     ecutrho  =  100.0 , 
-                        nbnd  =  9 , 
+                     ecutrho  =  100.0 ,
+                        nbnd  =  9 ,
                  occupations  =  'smearing' ,
                     smearing  =  'mv' ,
                      degauss  =  0.005 ,
  /
  &ELECTRONS
-                    conv_thr  =  1.0d-7  , 
+                    conv_thr  =  1.0d-7  ,
  /
  &IONS
  /
@@ -252,11 +252,11 @@ CELL_PARAMETERS alat
    -0.29006459 -0.50240689  0.81452422
 ATOMIC_SPECIES
    As   74.90000  As.pz-bhs.UPF
-ATOMIC_POSITIONS crystal 
+ATOMIC_POSITIONS crystal
 As    0.290010       0.290010       0.290010
 As   -0.290010      -0.290010      -0.290010
-K_POINTS automatic 
-  4 4 4   1 1 1 
+K_POINTS automatic
+  4 4 4   1 1 1
 EOF
 
 $ECHO "  running the bfgs vc-relax calculation for As at 0 kbar. \c"
@@ -281,17 +281,17 @@ cat > As.bfgs500.in << EOF
    ! cosAB = 0.49517470 ,
    ! cosAC = 0.49517470 ,
    ! cosBC = 0.49517470 ,
-                         nat  =  2 , 
-                        ntyp  =  1 , 
+                         nat  =  2 ,
+                        ntyp  =  1 ,
                      ecutwfc  =  25.0 ,
-                     ecutrho  =  100.0 , 
-                        nbnd  =  9 , 
+                     ecutrho  =  100.0 ,
+                        nbnd  =  9 ,
                  occupations  =  'smearing' ,
                     smearing  =  'mv' ,
                      degauss  =  0.005 ,
  /
  &ELECTRONS
-                    conv_thr  =  1.0d-7  , 
+                    conv_thr  =  1.0d-7  ,
  /
  &IONS
  /
@@ -305,11 +305,11 @@ CELL_PARAMETERS alat
    -0.29006459 -0.50240689  0.81452422
 ATOMIC_SPECIES
    As   74.90000  As.pz-bhs.UPF
-ATOMIC_POSITIONS crystal 
+ATOMIC_POSITIONS crystal
 As    0.290010       0.290010       0.290010
 As   -0.290010      -0.290010      -0.290010
-K_POINTS automatic 
-  4 4 4   1 1 1 
+K_POINTS automatic
+  4 4 4   1 1 1
 EOF
 
 $ECHO "  running the bfgs vc-relax calculation for As at 500 kbar. \c"

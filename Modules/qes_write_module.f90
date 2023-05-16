@@ -11,11 +11,11 @@ MODULE qes_write_module
   !
   ! Quantum Espresso XSD namespace: http://www.quantum-espresso.org/ns/qes/qes-1.0
   !
-#if defined (__outfoxed) 
-  USE  wxml 
-#else 
-  USE FoX_wxml 
-#endif 
+#if defined (__fox)
+  USE FoX_wxml
+#else
+  USE wxml
+#endif
   USE qes_types_module
   !
   IMPLICIT NONE
@@ -50,6 +50,8 @@ MODULE qes_write_module
     MODULE PROCEDURE qes_write_HubbardInterSpecieV
     MODULE PROCEDURE qes_write_SiteMoment
     MODULE PROCEDURE qes_write_HubbardJ
+    MODULE PROCEDURE qes_write_ChannelOcc
+    MODULE PROCEDURE qes_write_HubbardOcc
     MODULE PROCEDURE qes_write_SitMag
     MODULE PROCEDURE qes_write_starting_ns
     MODULE PROCEDURE qes_write_Hubbard_ns
@@ -825,10 +827,16 @@ MODULE qes_write_module
      IF ( .NOT. obj%lwrite ) RETURN 
      ! 
      CALL xml_NewElement(xp, TRIM(obj%tagname))
+     IF (obj%new_format_ispresent) CALL xml_addAttribute(xp, 'new_format', obj%new_format )
      IF (obj%lda_plus_u_kind_ispresent) THEN
         CALL xml_NewElement(xp, "lda_plus_u_kind")
            CALL xml_addCharacters(xp, obj%lda_plus_u_kind)
         CALL xml_EndElement(xp, "lda_plus_u_kind")
+     END IF
+     IF (obj%Hubbard_Occ_ispresent) THEN
+        DO i = 1, obj%ndim_Hubbard_Occ
+           CALL qes_write_HubbardOcc(xp, obj%Hubbard_Occ(i) )
+        END DO
      END IF
      IF (obj%Hubbard_U_ispresent) THEN
         DO i = 1, obj%ndim_Hubbard_U
@@ -966,6 +974,43 @@ MODULE qes_write_module
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_HubbardJ
 
+   SUBROUTINE qes_write_ChannelOcc(xp, obj)
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(ChannelOcc_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     IF (obj%specie_ispresent) CALL xml_addAttribute(xp, 'specie', TRIM(obj%specie) )
+     IF (obj%label_ispresent) CALL xml_addAttribute(xp, 'label', TRIM(obj%label) )
+     CALL xml_addAttribute(xp, 'index', obj%index )
+        CALL xml_AddCharacters(xp, obj%ChannelOcc, fmt='s16')
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_ChannelOcc
+
+   SUBROUTINE qes_write_HubbardOcc(xp, obj)
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(HubbardOcc_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     CALL xml_addAttribute(xp, 'channels', obj%channels )
+     CALL xml_addAttribute(xp, 'specie', TRIM(obj%specie) )
+     DO i = 1, obj%ndim_channel_occ
+        CALL qes_write_ChannelOcc(xp, obj%channel_occ(i) )
+     END DO
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_HubbardOcc
+
    SUBROUTINE qes_write_SitMag(xp, obj)
      !-----------------------------------------------------------------
      IMPLICIT NONE
@@ -1045,6 +1090,7 @@ MODULE qes_write_module
      ! 
      CALL xml_NewElement(xp, TRIM(obj%tagname))
      CALL xml_addAttribute(xp, 'background', TRIM(obj%background) )
+     IF (obj%label_ispresent) CALL xml_addAttribute(xp, 'label', TRIM(obj%label) )
      IF (obj%species_ispresent) CALL xml_addAttribute(xp, 'species', TRIM(obj%species) )
      CALL xml_NewElement(xp, 'Hubbard_U2')
         CALL xml_addCharacters(xp, obj%Hubbard_U2, fmt='s16')
@@ -1392,6 +1438,11 @@ MODULE qes_write_module
      CALL xml_NewElement(xp, 'max_nstep')
         CALL xml_addCharacters(xp, obj%max_nstep)
      CALL xml_EndElement(xp, 'max_nstep')
+     IF (obj%exx_nstep_ispresent) THEN
+        CALL xml_NewElement(xp, "exx_nstep")
+           CALL xml_addCharacters(xp, obj%exx_nstep)
+        CALL xml_EndElement(xp, "exx_nstep")
+     END IF
      IF (obj%real_space_q_ispresent) THEN
         CALL xml_NewElement(xp, "real_space_q")
            CALL xml_addCharacters(xp, obj%real_space_q)
@@ -2406,9 +2457,11 @@ MODULE qes_write_module
      CALL xml_NewElement(xp, 'constr_type')
         CALL xml_addCharacters(xp, TRIM(obj%constr_type))
      CALL xml_EndElement(xp, 'constr_type')
-     CALL xml_NewElement(xp, 'constr_target')
-        CALL xml_addCharacters(xp, obj%constr_target, fmt='s16')
-     CALL xml_EndElement(xp, 'constr_target')
+     IF (obj%constr_target_ispresent) THEN
+        CALL xml_NewElement(xp, "constr_target")
+           CALL xml_addCharacters(xp, obj%constr_target, fmt='s16')
+        CALL xml_EndElement(xp, "constr_target")
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_atomic_constraint
 

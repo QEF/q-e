@@ -50,6 +50,8 @@ MODULE qes_init_module
     MODULE PROCEDURE qes_init_HubbardInterSpecieV
     MODULE PROCEDURE qes_init_SiteMoment
     MODULE PROCEDURE qes_init_HubbardJ
+    MODULE PROCEDURE qes_init_ChannelOcc
+    MODULE PROCEDURE qes_init_HubbardOcc
     MODULE PROCEDURE qes_init_SitMag
     MODULE PROCEDURE qes_init_starting_ns
     MODULE PROCEDURE qes_init_Hubbard_ns
@@ -1197,15 +1199,18 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_qpoint_grid
   !
   !
-  SUBROUTINE qes_init_dftU(obj, tagname, lda_plus_u_kind, Hubbard_U, Hubbard_J0, Hubbard_alpha,&
-                          Hubbard_beta, Hubbard_J, starting_ns, Hubbard_V, Hubbard_ns, U_projection_type,&
-                          Hubbard_back, Hubbard_alpha_back, Hubbard_ns_nc)
+  SUBROUTINE qes_init_dftU(obj, tagname, new_format, lda_plus_u_kind, Hubbard_Occ, Hubbard_U,&
+                          Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, starting_ns, Hubbard_V,&
+                          Hubbard_ns, U_projection_type, Hubbard_back, Hubbard_alpha_back, Hubbard_ns_nc &
+                          )
     !
     IMPLICIT NONE
     !
     TYPE(dftU_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
+    LOGICAL, OPTIONAL, INTENT(IN) :: new_format
     INTEGER,OPTIONAL,INTENT(IN) :: lda_plus_u_kind
+    TYPE(HubbardOcc_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_Occ
     TYPE(HubbardCommon_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_U
     TYPE(HubbardCommon_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_J0
     TYPE(HubbardCommon_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_alpha
@@ -1222,12 +1227,26 @@ MODULE qes_init_module
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
+    IF (PRESENT(new_format)) THEN
+      obj%new_format_ispresent = .TRUE.
+      obj%new_format = new_format
+    ELSE
+      obj%new_format_ispresent = .FALSE.
+    END IF
     !
     IF ( PRESENT(lda_plus_u_kind)) THEN
       obj%lda_plus_u_kind_ispresent = .TRUE. 
       obj%lda_plus_u_kind = lda_plus_u_kind
     ELSE
       obj%lda_plus_u_kind_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(Hubbard_Occ)) THEN
+      obj%Hubbard_Occ_ispresent = .TRUE.
+      ALLOCATE(obj%Hubbard_Occ(SIZE(Hubbard_Occ)))
+      obj%ndim_Hubbard_Occ = SIZE(Hubbard_Occ) 
+      obj%Hubbard_Occ = Hubbard_Occ
+    ELSE
+      obj%Hubbard_Occ_ispresent = .FALSE.
     END IF
     IF ( PRESENT(Hubbard_U)) THEN
       obj%Hubbard_U_ispresent = .TRUE.
@@ -1467,6 +1486,62 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_HubbardJ
   !
   !
+  SUBROUTINE qes_init_ChannelOcc(obj, tagname, specie, label, index, ChannelOcc)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(ChannelOcc_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: specie
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: label
+    INTEGER, INTENT(IN) :: index
+    REAL(DP), INTENT(IN) :: ChannelOcc
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    IF (PRESENT(specie)) THEN
+      obj%specie_ispresent = .TRUE.
+      obj%specie = specie
+    ELSE
+      obj%specie_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(label)) THEN
+      obj%label_ispresent = .TRUE.
+      obj%label = label
+    ELSE
+      obj%label_ispresent = .FALSE.
+    END IF
+    obj%index = index
+    !
+    obj%ChannelOcc = ChannelOcc
+    !
+  END SUBROUTINE qes_init_ChannelOcc
+  !
+  !
+  SUBROUTINE qes_init_HubbardOcc(obj, tagname, channels, specie, channel_occ)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(HubbardOcc_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    INTEGER, INTENT(IN) :: channels
+    CHARACTER(LEN=*), INTENT(IN) :: specie
+    TYPE(ChannelOcc_type),DIMENSION(:),INTENT(IN) :: channel_occ
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    obj%channels = channels
+    obj%specie = specie
+    !
+    ALLOCATE(obj%channel_occ(SIZE(channel_occ)))
+    obj%ndim_channel_occ = SIZE(channel_occ)
+    obj%channel_occ = channel_occ
+    !
+  END SUBROUTINE qes_init_HubbardOcc
+  !
+  !
   SUBROUTINE qes_init_SitMag(obj, tagname, species, atom, charge, SitMag)
     !
     IMPLICIT NONE
@@ -1606,14 +1681,15 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_Hubbard_ns
   !
   !
-  SUBROUTINE qes_init_HubbardBack(obj, tagname, background, species, Hubbard_U2, n2_number, l2_number,&
-                                 n3_number, l3_number)
+  SUBROUTINE qes_init_HubbardBack(obj, tagname, background, label, species, Hubbard_U2, n2_number,&
+                                 l2_number, n3_number, l3_number)
     !
     IMPLICIT NONE
     !
     TYPE(HubbardBack_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     CHARACTER(LEN=*), INTENT(IN) :: background
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: label
     CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: species
     REAL(DP),INTENT(IN) :: Hubbard_U2
     INTEGER,INTENT(IN) :: n2_number
@@ -1625,6 +1701,12 @@ MODULE qes_init_module
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     obj%background = background
+    IF (PRESENT(label)) THEN
+      obj%label_ispresent = .TRUE.
+      obj%label = label
+    ELSE
+      obj%label_ispresent = .FALSE.
+    END IF
     IF (PRESENT(species)) THEN
       obj%species_ispresent = .TRUE.
       obj%species = species
@@ -2058,9 +2140,10 @@ MODULE qes_init_module
   !
   SUBROUTINE qes_init_electron_control(obj, tagname, diagonalization, mixing_mode, mixing_beta,&
                                       conv_thr, mixing_ndim, max_nstep, tq_smoothing, tbeta_smoothing,&
-                                      diago_thr_init, diago_full_acc, real_space_q, real_space_beta,&
-                                      diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim,&
-                                      diago_rmm_ndim, diago_gs_nblock, diago_rmm_conv)
+                                      diago_thr_init, diago_full_acc, exx_nstep, real_space_q,&
+                                      real_space_beta, diago_cg_maxiter, diago_ppcg_maxiter,&
+                                      diago_david_ndim, diago_rmm_ndim, diago_gs_nblock, diago_rmm_conv &
+                                      )
     !
     IMPLICIT NONE
     !
@@ -2072,6 +2155,7 @@ MODULE qes_init_module
     REAL(DP),INTENT(IN) :: conv_thr
     INTEGER,INTENT(IN) :: mixing_ndim
     INTEGER,INTENT(IN) :: max_nstep
+    INTEGER,OPTIONAL,INTENT(IN) :: exx_nstep
     LOGICAL,OPTIONAL,INTENT(IN) :: real_space_q
     LOGICAL,OPTIONAL,INTENT(IN) :: real_space_beta
     LOGICAL,INTENT(IN) :: tq_smoothing
@@ -2095,6 +2179,12 @@ MODULE qes_init_module
     obj%conv_thr = conv_thr
     obj%mixing_ndim = mixing_ndim
     obj%max_nstep = max_nstep
+    IF ( PRESENT(exx_nstep)) THEN
+      obj%exx_nstep_ispresent = .TRUE. 
+      obj%exx_nstep = exx_nstep
+    ELSE
+      obj%exx_nstep_ispresent = .FALSE.
+    END IF
     IF ( PRESENT(real_space_q)) THEN
       obj%real_space_q_ispresent = .TRUE. 
       obj%real_space_q = real_space_q
@@ -3376,7 +3466,7 @@ MODULE qes_init_module
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     REAL(DP), DIMENSION(4),INTENT(IN) :: constr_parms
     CHARACTER(LEN=*),INTENT(IN) :: constr_type
-    REAL(DP),INTENT(IN) :: constr_target
+    REAL(DP),OPTIONAL,INTENT(IN) :: constr_target
     !
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
@@ -3384,7 +3474,12 @@ MODULE qes_init_module
     !
     obj%constr_parms = constr_parms
     obj%constr_type = constr_type
-    obj%constr_target = constr_target
+    IF ( PRESENT(constr_target)) THEN
+      obj%constr_target_ispresent = .TRUE. 
+      obj%constr_target = constr_target
+    ELSE
+      obj%constr_target_ispresent = .FALSE.
+    END IF
     !
   END SUBROUTINE qes_init_atomic_constraint
   !

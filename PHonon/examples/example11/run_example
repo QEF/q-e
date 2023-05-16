@@ -7,7 +7,7 @@
 ###############################################################################
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -16,7 +16,7 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example calculates the phonon modes of relativistic Au" 
+$ECHO "This example calculates the phonon modes of relativistic Au"
 $ECHO "at the gamma and X points with PAW in the noncollinear and "
 $ECHO "spin-orbit case."
 $ECHO

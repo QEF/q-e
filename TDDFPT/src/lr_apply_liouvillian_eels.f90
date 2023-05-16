@@ -137,8 +137,10 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      ! The vkb's are needed for the non-local potential in h_psi,
      ! and for the ultrasoft term.
      !
-     CALL init_us_2 (npwq, igk_k(1,ikq), xk(1,ikq), vkb)
+     CALL init_us_2 (npwq, igk_k(1,ikq), xk(1,ikq), vkb, .true.)
      !
+     !$acc update host(vkb)
+     ! 
      ! Read unperturbed wavefuctions evc (wfct at k) 
      ! and evq (wfct at k+q)
      !
@@ -160,7 +162,9 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
         ! We need to redistribute it so that it is completely contained in the
         ! processors of an orbital TASK-GROUP.
         !
+!$acc data copyin(dvrssc) copy(dvpsi)
         CALL apply_dpot_bands(ik, nbnd_occ(ikk), dvrssc, evc, dvpsi)
+!$acc end data        
         !
         ! In the case of US pseudopotentials there is an additional term.
         ! See the second term in Eq.(11) in J. Chem. Phys. 127, 164106 (2007).
@@ -190,8 +194,9 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      ! Apply the operator ( H - \epsilon S + alpha_pv P_v) to evc1
      ! where alpha_pv = 0
      !
+     !$acc data copyin(evq) copy(evc1(1:npwx*npol,1:nbnd,ik),sevc1_new(1:npwx*npol,1:nbnd,ik), et)
      CALL ch_psi_all (npwq, evc1(:,:,ik), sevc1_new(:,:,ik), et(:,ikk), ik, nbnd_occ(ikk)) 
-     !
+     !$acc end data
      IF (noncolin) THEN
         IF (ALLOCATED(psic_nc)) DEALLOCATE(psic_nc)
      !ELSE

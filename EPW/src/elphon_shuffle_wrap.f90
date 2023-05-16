@@ -265,7 +265,7 @@
   !
   ! Read in external electronic eigenvalues. e.g. GW
   !
-  IF (.NOT. epbread .AND. .NOT. epwread) THEN
+  IF (.NOT. epwread) THEN
     ALLOCATE(et_ks(nbnd, nks), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating et_ks', 1)
     et_ks(:, :) = zero
@@ -302,7 +302,7 @@
   !
   !  gather electronic eigenvalues for subsequent shuffle
   !
-  IF (eig_read) THEN
+  IF (eig_read .AND. .NOT. epwread) THEN
     et_all(:, :) = zero
     CALL poolgather(nbnd, nkstot, nks, et_loc(1:nbnd, 1:nks), et_all)
   ENDIF

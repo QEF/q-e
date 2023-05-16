@@ -21,7 +21,7 @@ foreach child_ns [concat ::pwtk [namespace children ::pwtk]] {
     } {
         if { [info exists ${child_ns}::$listName] } {
             upvar #0 ${child_ns}::$listName listVar
-            append pwtk_cmds $listVar
+            append pwtk_cmds $listVar\n
         }
     }
 }

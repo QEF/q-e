@@ -40,7 +40,6 @@ clean_pw_kcw.o \
 close_kcw.o \
 kcw_R_points.o\
 ham_R0_2nd.o\
-hamilt.o\
 read_alpha.o\
 kcw_io_new.o\
 bcast_wfc.o\

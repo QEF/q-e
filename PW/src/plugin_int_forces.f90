@@ -96,7 +96,7 @@ SUBROUTINE external_force_lc( rhor, force )
   ! ... Local variables
   !
   CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
-       g, rhor, dfftp%nl, gstart, gamma_only, vloc, force )
+       g, rhor, gstart, gamma_only, vloc, force )
   !
   RETURN
   !

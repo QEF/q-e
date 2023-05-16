@@ -197,6 +197,10 @@ MODULE input_parameters
         CHARACTER(len=80) :: disk_io = 'default'
         !! Specify the amount of I/O activities.
 
+        LOGICAL :: twochem = .FALSE.
+        !!if TRUE, the system is simulated using two chemical potentials,
+        !!one for the electrons and one for the holes (photoexcited system)
+
         LOGICAL :: tefield  = .false.
         !! if TRUE a sawtooth potential simulating a finite electric field
         !! is added to the local potential - only used in PW
@@ -288,7 +292,7 @@ MODULE input_parameters
           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
           tefield2, saverho, tabps, use_wannier, lecrpa,                  &
           lfcp, tqmmm, vdw_table_name, lorbm, memory, point_label_type,   &
-          input_xml_schema_file, gate, trism
+          input_xml_schema_file, gate, trism, twochem
 !
 !=----------------------------------------------------------------------------=!
 !  SYSTEM Namelist Input Parameters
@@ -399,6 +403,14 @@ MODULE input_parameters
 
         REAL(DP) :: starting_magnetization( nsx ) = 0.0_DP
         !! PW ONLY
+
+        !!!PARAMETERS FOR TWO-CHEM-CALCULATIONS
+        REAL(DP) :: degauss_cond = 0.0_DP 
+        !broadening for conduction band
+        INTEGER ::  nbnd_cond = 0 
+        ! n_bands in conduction
+        REAL(DP) :: nelec_cond =0.0_DP 
+        !number of electrons in the conduction bands
 
         ! DFT+Hubbard
         ! Old input parameters in the SYSTEM naqmelist (removed since v7.1):
@@ -519,9 +531,12 @@ MODULE input_parameters
         REAL(DP) :: sic_epsilon = 0.0_DP
         REAL(DP) :: sic_alpha   = 0.0_DP
         LOGICAL   :: force_pairing = .false.
+        CHARACTER(len=80) :: pol_type = 'none'
+        REAL(DP) :: sic_gamma = 0.0_DP
+        LOGICAL  :: sic_energy = .false.
+        REAL(DP) :: sci_vb = 0.0_DP
+        REAL(DP) :: sci_cb = 0.0_DP
 
-        LOGICAL :: spline_ps = .false.
-        !! use spline interpolation for pseudopotential
         LOGICAL :: one_atom_occupations=.false.
 
         CHARACTER(len=80) :: assume_isolated = 'none'
@@ -643,6 +658,9 @@ MODULE input_parameters
         !! in rhombohedral axes. If FALSE in hexagonal axes, that are
         !! converted internally in rhombohedral axes.  
         !
+        INTEGER :: nextffield = 0 
+        !! Number of activated external force fields 
+        !
 
 
 
@@ -651,6 +669,7 @@ MODULE input_parameters
              nr3s, nr1b, nr2b, nr3b, nosym, nosym_evc, noinv, use_all_frac,   &
              force_symmorphic, starting_charge, starting_magnetization,       &
              occupations, degauss, nspin, ecfixed, qcutz, q2sigma,            &
+             degauss_cond,nbnd_cond,nelec_cond,                       &
              lda_plus_u, lda_plus_u_kind, U_projection_type, Hubbard_parameters, & ! obsolete
              Hubbard_U, Hubbard_J0, Hubbard_J, Hubbard_V, Hubbard_U_back,     & ! moved to HUBBARD card 
              Hubbard_alpha, Hubbard_alpha_back, Hubbard_beta, Hubbard_occ,    &
@@ -665,7 +684,8 @@ MODULE input_parameters
              report, lforcet,                                                 &
              constrained_magnetization, B_field, fixed_magnetization,         &
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
-             tot_charge, tot_magnetization, spline_ps, one_atom_occupations,  &
+             pol_type, sic_gamma, sic_energy, sci_vb, sci_cb,                 &
+             tot_charge, tot_magnetization, one_atom_occupations,             &
              vdw_corr, london, london_s6, london_rcut, london_c6, london_rvdw,&
              dftd3_version, dftd3_threebody,                                  &
              ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,                       &
@@ -677,7 +697,8 @@ MODULE input_parameters
              lgcscf, gcscf_ignore_mun, gcscf_mu, gcscf_conv_thr,              &
              gcscf_gk, gcscf_gh, gcscf_beta,                                  &
              space_group, uniqueb, origin_choice, rhombohedral,               &
-             zgate, relaxz, block, block_1, block_2, block_height
+             zgate, relaxz, block, block_1, block_2, block_height,            &
+             nextffield
 
 !=----------------------------------------------------------------------------=!
 !  ELECTRONS Namelist Input Parameters
@@ -711,6 +732,9 @@ MODULE input_parameters
         !! Maximum number of iterations for orthonormalization
         !! usually between 20 and 300.
 
+        INTEGER :: exx_maxstep = 1000
+        !! maximum number of steps in the outer loop of electronic minimization
+        !! when exx is active (hybrid functionals).
         INTEGER :: electron_maxstep = 1000
         !! maximum number of steps in electronic minimization.
         !! This parameter applies only when using 'cg' electronic or
@@ -1033,7 +1057,7 @@ MODULE input_parameters
         !! CP: \(1 \text{a.u. of time} = 2.4189\cdot 10^{-17} s\), PW: twice that much.
 
         NAMELIST / electrons / emass, emass_cutoff, orthogonalization, &
-          electron_maxstep, scf_must_converge, ortho_eps, ortho_max, electron_dynamics,   &
+          exx_maxstep, electron_maxstep, scf_must_converge, ortho_eps, ortho_max, electron_dynamics,   &
           electron_damping, electron_velocities, electron_temperature, &
           ekincw, fnosee, ampre, grease,                               &
           diis_size, diis_nreset, diis_hcut,                           &

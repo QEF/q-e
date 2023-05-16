@@ -7,8 +7,9 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine stres_cc (sigmaxcc)
+SUBROUTINE stres_cc( sigmaxcc )
   !-----------------------------------------------------------------------
+  !! Core correction term of the stress.
   !
   USE kinds,                ONLY : DP
   USE atom,                 ONLY : rgrid, msh
@@ -16,91 +17,147 @@ subroutine stres_cc (sigmaxcc)
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : alat, omega, tpiba, tpiba2
   USE fft_base,             ONLY : dfftp
-  USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : ngm, gstart, g, gg, ngl, gl,igtongl
+  USE fft_rho,              ONLY : rho_r2g
+  USE gvect,                ONLY : ngm, gstart, ngl, gl, igtongl, g, gg
   USE ener,                 ONLY : etxc, vtxc
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho, rho_core, rhog_core
   USE vlocal,               ONLY : strf
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions, ONLY : psic
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
-  implicit none
-  ! output
-  real(DP) :: sigmaxcc (3, 3)
-  ! local variables
-
-  integer :: nt, ng, l, m, ir
-  ! counters
-  real(DP) :: fact, sigmadiag
-  real(DP) , allocatable:: rhocg (:), vxc (:,:)
-
-  sigmaxcc(:,:) = 0.d0
-  if ( ANY (upf(1:ntyp)%nlcc) ) goto 15
-
-  return
-
-15 continue
+  IMPLICIT NONE
   !
-  ! recalculate the exchange-correlation potential
+  REAL(DP), INTENT(OUT) :: sigmaxcc(3,3)
   !
-  allocate ( vxc(dfftp%nnr,nspin) )
-  call v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
-  if (nspin.eq.1.or.nspin.eq.4) then
-     do ir = 1, dfftp%nnr
-        psic (ir) = vxc (ir, 1)
-     enddo
-  else
-     do ir = 1, dfftp%nnr
-        psic (ir) = 0.5d0 * (vxc (ir, 1) + vxc (ir, 2) )
-     enddo
-  endif
-  deallocate (vxc)
-  CALL fwfft ('Rho', psic, dfftp)
+  ! ... local variables
   !
-  ! psic contains now Vxc(G)
+  INTEGER :: nt, ng, l, m, ir, dfftp_nnr
+  REAL(DP) :: fact
+  REAL(DP), ALLOCATABLE :: rhocg(:), vxc(:,:)
+  COMPLEX(DP), ALLOCATABLE :: vaux(:,:)
   !
-  allocate(rhocg(ngl))
-  sigmadiag = 0.0d0
-  if (gamma_only) then
-     fact = 2.d0
-  else
-     fact = 1.d0
-  end if
-  do nt = 1, ntyp
-     if ( upf(nt)%nlcc ) then
-        call drhoc (ngl, gl, omega, tpiba2, msh(nt), rgrid(nt)%r, &
-              rgrid(nt)%rab, upf(nt)%rho_atc, rhocg)
-        ! diagonal term
-        if (gstart==2) sigmadiag = sigmadiag + &
-             CONJG(psic (dfftp%nl(1) ) ) * strf (1,nt) * rhocg (igtongl (1) )
-        do ng = gstart, ngm
-           sigmadiag = sigmadiag + CONJG(psic (dfftp%nl (ng) ) ) * &
-                strf (ng,nt) * rhocg (igtongl (ng) ) * fact
-        enddo
-
-        call deriv_drhoc (ngl, gl, omega, tpiba2, msh(nt), &
-             rgrid(nt)%r, rgrid(nt)%rab, upf(nt)%rho_atc, rhocg)
-        ! non diagonal term (g=0 contribution missing)
-        do ng = gstart, ngm
-           do l = 1, 3
-              do m = 1, 3
-                 sigmaxcc (l, m) = sigmaxcc (l, m) + CONJG(psic (dfftp%nl (ng) ) ) &
-                      * strf (ng, nt) * rhocg (igtongl (ng) ) * tpiba * &
-                      g (l, ng) * g (m, ng) / sqrt (gg (ng) ) * fact
-              enddo
-           enddo
-        enddo
-     endif
-  enddo
-
-  do l = 1, 3
-     sigmaxcc (l, l) = sigmaxcc (l, l) + sigmadiag
-  enddo
-  call mp_sum(  sigmaxcc, intra_bgrp_comm )
-  deallocate (rhocg)
-  return
-end subroutine stres_cc
+  REAL(DP) :: rhocg1, sigma_rid, sigmadiag
+  REAL(DP) :: sigma1, sigma2, sigma3, &
+              sigma4, sigma5, sigma6
+  !
+  sigmaxcc(:,:) = 0._DP
+  !
+  IF ( .NOT. ANY( upf(1:ntyp)%nlcc ) ) RETURN
+  !
+  dfftp_nnr = dfftp%nnr !to avoid unnecessary copies in acc loop
+  !
+  ! ... recalculate the exchange-correlation potential
+  !
+  ALLOCATE( vxc(dfftp%nnr,nspin), vaux(dfftp%nnr,1) )
+  !
+  CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, vxc )
+  !
+  !$acc data create( vaux )
+  !$acc data copyin( vxc )
+  IF ( nspin==2 ) then
+     !$acc parallel loop
+     DO ir = 1, dfftp_nnr
+        vxc(ir,1) = 0.5d0 * ( vxc(ir,1) + vxc(ir,2) )
+     ENDDO
+  ENDIF
+  !
+  CALL rho_r2g( dfftp, vxc(:,1), vaux(:,1:1) )
+  !
+  !$acc end data
+  DEALLOCATE( vxc )
+  !
+  ! ... vaux contains now Vxc(G)
+  !
+  sigmadiag = 0._DP
+  !
+  fact = 1._DP
+  IF (gamma_only) fact = 2._DP
+  !
+  !$acc data copyin( gl, strf, igtongl )
+  !
+  ALLOCATE( rhocg(ngl) )
+  !$acc data create( rhocg )
+  !
+  sigma1 = 0._DP ;  sigma4 = 0._DP
+  sigma2 = 0._DP ;  sigma5 = 0._DP
+  sigma3 = 0._DP ;  sigma6 = 0._DP
+  !
+  !
+  DO nt = 1, ntyp
+     IF ( upf(nt)%nlcc ) THEN
+        !
+        !$acc data copyin(rgrid(nt:nt),upf(nt:nt))
+        !$acc data copyin(rgrid(nt)%r,rgrid(nt)%rab,upf(nt)%rho_atc)
+        
+        CALL drhoc( ngl, gl, omega, tpiba2, msh(nt), rgrid(nt)%r, &
+                    rgrid(nt)%rab, upf(nt)%rho_atc, rhocg )
+        !
+        ! ... diagonal term
+        IF (gstart==2) THEN
+          !$acc kernels
+          rhocg1 = rhocg(igtongl(1))
+          sigmadiag = sigmadiag + DBLE(CONJG(vaux(1,1)) * &
+                                  strf(1,nt)) * rhocg1
+          !$acc end kernels
+        ENDIF
+        !
+        !$acc parallel loop reduction(+:sigmadiag)
+        DO ng = gstart, ngm
+           sigmadiag = sigmadiag + DBLE(CONJG(vaux(ng,1)) * &
+                                   strf(ng,nt)) * rhocg(igtongl(ng)) * fact
+        ENDDO
+        !
+        CALL deriv_drhoc( ngl, gl, omega, tpiba2, msh(nt), &
+                          rgrid(nt)%r, rgrid(nt)%rab, upf(nt)%rho_atc, &
+                          rhocg )
+        !
+        ! ... non diagonal term (g=0 contribution missing)
+        !
+        !$acc parallel loop reduction(+:sigma1,sigma2,sigma3,sigma4,sigma5,sigma6)
+        DO ng = gstart, ngm
+          !
+          sigma_rid = DBLE(CONJG(vaux(ng,1)) * strf(ng,nt)) * &
+                      rhocg(igtongl(ng)) * tpiba / SQRT(gg(ng)) * fact
+          !
+          sigma1 = sigma1 + sigma_rid * g(1,ng)*g(1,ng)
+          sigma2 = sigma2 + sigma_rid * g(1,ng)*g(2,ng)
+          sigma3 = sigma3 + sigma_rid * g(1,ng)*g(3,ng)
+          sigma4 = sigma4 + sigma_rid * g(2,ng)*g(2,ng)
+          sigma5 = sigma5 + sigma_rid * g(3,ng)*g(2,ng)
+          sigma6 = sigma6 + sigma_rid * g(3,ng)*g(3,ng)
+          !
+        ENDDO
+        !
+        !$acc end data
+        !$acc end data
+        !
+     ENDIF
+     !
+  ENDDO
+  !
+  !$acc end data
+  !
+  sigmaxcc(1,1) = sigma1  ;  sigmaxcc(2,3) = sigma5
+  sigmaxcc(1,2) = sigma2  ;  sigmaxcc(3,1) = sigma3
+  sigmaxcc(1,3) = sigma3  ;  sigmaxcc(3,2) = sigma5
+  sigmaxcc(2,1) = sigma2  ;  sigmaxcc(3,3) = sigma6
+  sigmaxcc(2,2) = sigma4
+  !
+  DO l = 1, 3
+     sigmaxcc(l,l) = sigmaxcc(l,l) + sigmadiag
+  ENDDO
+  !
+  CALL mp_sum( sigmaxcc, intra_bgrp_comm )
+  !
+  !$acc end data
+  !$acc end data
+  !
+  DEALLOCATE( rhocg )
+  DEALLOCATE( vaux  )
+  !
+  RETURN
+  !
+END SUBROUTINE stres_cc
 

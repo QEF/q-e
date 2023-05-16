@@ -1,0 +1,91 @@
+#####################################################################
+# Automatically generated file - if you notice lines looking like
+# some_file.o: @some_module@ 
+# figure out why "some_module", referenced in "some_file.o", is not 
+# found: check spelling, presence in one of the DEPEND* directories
+# as defined in file "install/makedeps.sh"; if "some_module" is an 
+# external module, add it to the module lists "sysdeps", "libdeps",
+# "cudadeps" defined in "install/makedeps.sh".
+# Finally, from the top QE directory, run "make depend" to regenerate
+# the files - DO NOT EDIT MANUALLY (unless you know what you are doing)
+####################################################################
+bcast_kcw_pp_input.o : ../../Modules/io_files.o
+bcast_kcw_pp_input.o : ../../Modules/io_global.o
+bcast_kcw_pp_input.o : ../../Modules/mp_global.o
+bcast_kcw_pp_input.o : ../../Modules/run_info.o
+bcast_kcw_pp_input.o : ../../UtilXlib/mp.o
+bcast_kcw_pp_input.o : ../src/kcw_comm.o
+compute_self_hartree.o : ../../LR_Modules/lrcom.o
+compute_self_hartree.o : ../../Modules/check_stop.o
+compute_self_hartree.o : ../../Modules/environment.o
+compute_self_hartree.o : ../../Modules/input_parameters.o
+compute_self_hartree.o : ../../Modules/io_files.o
+compute_self_hartree.o : ../../Modules/io_global.o
+compute_self_hartree.o : ../../Modules/kind.o
+compute_self_hartree.o : ../../Modules/mp_global.o
+compute_self_hartree.o : ../../Modules/run_info.o
+compute_self_hartree.o : ../../PW/src/pwcom.o
+compute_self_hartree.o : ../../UtilXlib/mp.o
+compute_self_hartree.o : ../src/kcw_comm.o
+input_pp_summary.o : ../../Modules/io_files.o
+input_pp_summary.o : ../../Modules/io_global.o
+input_pp_summary.o : ../../Modules/run_info.o
+input_pp_summary.o : ../../UtilXlib/mp.o
+input_pp_summary.o : ../src/kcw_comm.o
+interp_r_to_k.o : ../../Modules/check_stop.o
+interp_r_to_k.o : ../../Modules/environment.o
+interp_r_to_k.o : ../../Modules/mp_global.o
+interp_r_to_k.o : ../src/interpolation.o
+kcw_bands.o : ../../Modules/constants.o
+kcw_bands.o : ../../Modules/io_files.o
+kcw_bands.o : ../../Modules/io_global.o
+kcw_bands.o : ../../Modules/kind.o
+kcw_bands.o : ../src/interpolation.o
+kcw_bands.o : ../src/kcw_comm.o
+kcw_pp_readin.o : ../../Modules/control_flags.o
+kcw_pp_readin.o : ../../Modules/io_files.o
+kcw_pp_readin.o : ../../Modules/io_global.o
+kcw_pp_readin.o : ../../Modules/kind.o
+kcw_pp_readin.o : ../../Modules/mp_global.o
+kcw_pp_readin.o : ../../Modules/mp_pools.o
+kcw_pp_readin.o : ../../Modules/noncol.o
+kcw_pp_readin.o : ../../Modules/read_cards.o
+kcw_pp_readin.o : ../../Modules/run_info.o
+kcw_pp_readin.o : ../../UtilXlib/mp.o
+kcw_pp_readin.o : ../../upflib/paw_variables.o
+kcw_pp_readin.o : ../../upflib/uspp.o
+kcw_pp_readin.o : ../src/kcw_comm.o
+read_hr.o : ../../Modules/constants.o
+read_hr.o : ../../Modules/io_files.o
+read_hr.o : ../../Modules/io_global.o
+read_hr.o : ../../Modules/mp_global.o
+read_hr.o : ../../PW/src/pwcom.o
+read_hr.o : ../../UtilXlib/mp.o
+read_hr.o : ../src/interpolation.o
+read_hr.o : ../src/kcw_comm.o
+sh_setup.o : ../../LR_Modules/lrcom.o
+sh_setup.o : ../../Modules/cell_base.o
+sh_setup.o : ../../Modules/control_flags.o
+sh_setup.o : ../../Modules/fft_base.o
+sh_setup.o : ../../Modules/io_global.o
+sh_setup.o : ../../Modules/kind.o
+sh_setup.o : ../../PW/src/buffers.o
+sh_setup.o : ../../PW/src/pwcom.o
+sh_setup.o : ../../UtilXlib/mp.o
+sh_setup.o : ../src/coulomb.o
+sh_setup.o : ../src/kcw_comm.o
+sh_setup.o : ../src/kcw_io_new.o
+ups.o : ../../Modules/cell_base.o
+ups.o : ../../Modules/constants.o
+ups.o : ../../Modules/environment.o
+ups.o : ../../Modules/io_files.o
+ups.o : ../../Modules/io_global.o
+ups.o : ../../Modules/kind.o
+ups.o : ../../Modules/mp_global.o
+ups.o : ../../Modules/mp_images.o
+ups.o : ../../Modules/recvec.o
+ups.o : ../../Modules/wavefunctions.o
+ups.o : ../../PW/src/pw_restart_new.o
+ups.o : ../../PW/src/pwcom.o
+ups.o : ../../UtilXlib/mp.o
+ups.o : ../../upflib/uspp.o

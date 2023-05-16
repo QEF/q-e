@@ -118,6 +118,11 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
             info { Maximum allowed run time before the job stops smoothly. }
         }
 
+        var dftd3_hess -type CHARACTER { 
+            default { 'prefix.hess' }
+            info { File where the D3 dispersion hessian matrix is read. }
+        }
+
         var fildyn -type CHARACTER { 
             default { 'matdyn' }
             info { File where the dynamical matrix is written. }
