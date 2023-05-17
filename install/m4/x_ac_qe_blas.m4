@@ -53,9 +53,12 @@ else
 	       nvfortran* )
                     # NB: next two can be replaced by flag "-Mmkl"
       		    mkl_lib="mkl_intel_lp64"
-                    mkl_omp="mkl_intel_thread"
+                    # mkl_omp="mkl_intel_thread"
 		    # NB: with nvidia hpc sdk 2020, linking to threaded mkl
 		    # v.19.1 update 4 fails due to a missing symbol
+                    mkl_omp="mkl_sequential"
+		    # NB: with (at least) nvidia 22.7, threaded mkl are
+		    # catastrophically slow for DFT+U calculations
 		    ;;
 	       pgf* )
                     # For obsolete PGI versions (superseded by nvfortran)
