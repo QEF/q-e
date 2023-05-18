@@ -142,7 +142,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   !
   call assign_scf_to_mix_type(rhoin, rhoin_m)
   call assign_scf_to_mix_type(input_rhout, rhout_m)
-
   call mix_type_AXPY ( -1.d0, rhoin_m, rhout_m )
   !
   IF ( lgcscf ) THEN
