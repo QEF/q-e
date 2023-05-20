@@ -1121,8 +1121,7 @@ Gfortran v.4.8.5, still found on CentOS machines, no longer compiles
 convention for Fortran functions that return complex values [...]
 If your code crashes during a call to \texttt{zdotc},
 recompile \qe\ using the internal BLAS and LAPACK routines
-(using \configure\ options \texttt{--with-internal-blas} and
-\texttt{--with-internal-lapack})
+(...)
 to see if the problem disappears; or, add the \texttt{-ff2c} flag"
 (info by Giovanni Pizzi, Jan. 2013).
 You may also consider replacing the offending calls to \texttt{zdotc}

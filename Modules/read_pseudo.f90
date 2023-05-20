@@ -12,7 +12,6 @@ MODULE read_pseudo_mod
   !! read pseudopotential files and store the data in a few internal variables
   !! (mainly in the "upf" structure). The files are read only by one processor.
   !! The data is subsequently broadcast to all other processors.
-  !! FIXME: files with old PP formats are still read by all processors.
   !
   USE io_files,     ONLY: pseudo_dir, pseudo_dir_cur, psfile
   USE ions_base,    ONLY: ntyp => nsp
