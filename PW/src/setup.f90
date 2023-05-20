@@ -675,9 +675,11 @@ SUBROUTINE setup()
   ! ... checks and initializations to be performed after parallelization setup
   !
   IF ( lberry .OR. lelfield .OR. lorbm ) THEN
-     IF ( npool > 1 ) CALL errore( 'iosys', &
+     IF ( npool > 1 ) CALL errore( 'setup', &
           'Berry Phase/electric fields not implemented with pools', 1 )
   END IF
+  IF ( gamma_only .AND. npool > 1 ) CALL errore( 'setup', &
+          'Gamma-only calculations not allowed with pools', 1 )
   IF ( xclib_dft_is('hybrid') ) THEN
      IF ( nks == 0 ) CALL errore('setup','pools with no k-points' &
           & // ' not allowed for hybrid functionals',1)
