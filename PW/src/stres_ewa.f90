@@ -150,9 +150,9 @@ SUBROUTINE stres_ewa( alat, nat, ntyp, ityp, zv, at, bg, tau, &
         DO na = 1, nat
            arg = (g(1,ng) * tau(1,na) + g(2,ng) * tau(2,na) + &
                   g(3,ng) * tau(3,na) ) * tpi
-           rhostar = rhostar + CMPLX(zv(ityp(na))) * CMPLX(COS(arg), SIN(arg), KIND=DP)
+           rhostar = rhostar + CMPLX(zv(ityp(na)), KIND=DP) * CMPLX(COS(arg), SIN(arg), KIND=DP)
         ENDDO
-        rhostar = rhostar / CMPLX(omega)
+        rhostar = rhostar / CMPLX(omega, KIND=DP)
         sewald = fact * tpi * e2 * EXP(-g2a) / g2 * ABS(rhostar)**2
         sdewald = sdewald - sewald
         !
