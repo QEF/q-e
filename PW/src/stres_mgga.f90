@@ -238,8 +238,8 @@ SUBROUTINE wfc_gradient( ibnd, ik, npw, gradpsi )
         !$acc parallel loop
         DO j = 1, npw
            kplusgi = (xki+g(ipol,igk_k(j,ik))) * tpiba
-           kplusg_evc(j,1) = CMPLX(0.D0,kplusgi) * evc(j,ibnd)
-           IF ( ibnd<nbnd ) kplusg_evc(j,2) = CMPLX(0.d0,kplusgi) * evc(j,ibnd+1)
+           kplusg_evc(j,1) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(j,ibnd)
+           IF ( ibnd<nbnd ) kplusg_evc(j,2) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(j,ibnd+1)
         ENDDO
         !
         CALL wave_g2r( kplusg_evc(1:npw,1:brange), gradpsi(:,ipol), dffts )
@@ -257,7 +257,7 @@ SUBROUTINE wfc_gradient( ibnd, ik, npw, gradpsi )
         !$acc parallel loop
         DO j = 1, npw
            kplusgi = (xki+g(ipol,igk_k(j,ik))) * tpiba
-           kplusg_evc(j,1) = CMPLX(0.D0,kplusgi,kind=DP) * evc(j,ibnd)
+           kplusg_evc(j,1) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(j,ibnd)
         ENDDO
         !
         CALL wave_g2r( kplusg_evc(1:npw,1:1), gradpsi(:,ipol), dffts, igk=igk_k(:,ik) )

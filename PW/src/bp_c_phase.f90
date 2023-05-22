@@ -716,8 +716,8 @@ SUBROUTINE c_phase
          zeta_mod= DBLE(CONJG(zeta)*zeta)
 !REC if zeta_mod=0 then angle is zero!
          if(zeta_mod.le.eps)then
-            phik(istring)=0d0
-            cphik(istring)=cmplx(1d0,0d0)
+            phik(istring)=0._DP
+            cphik(istring)=CMPLX(1._DP,0._DP,KIND=DP)
          endif
 
 !     --- End loop over orthogonal k-points ---

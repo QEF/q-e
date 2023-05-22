@@ -193,7 +193,7 @@ CONTAINS
                     !$cuf kernel do (1) <<<*,*>>>
                     DO ig = 1, npw
                       aux_d(ig) = aux_d(ig) + rot_ylm_in1 * &
-                                  CMPLX(ylm_d(ig,ind1))
+                                  CMPLX(ylm_d(ig,ind1), KIND=DP)
                     ENDDO
                   ENDIF
                ENDDO
@@ -201,7 +201,7 @@ CONTAINS
                DO ig = 1, npw
                   wfcatom_d(ig,is,n_starting_wfc) = lphase * &
                                 sk_d(ig)*aux_d(ig)*CMPLX(fact_is* &
-                                chiq_d(ig,nb,nt))
+                                chiq_d(ig,nb,nt), KIND=DP)
                END DO
             ELSE
                 wfcatom_d(:,is,n_starting_wfc) = (0.d0,0.d0)
@@ -279,7 +279,7 @@ CONTAINS
       !
       !$cuf kernel do (1) <<<*,*>>>
       DO ig = 1, npw
-        aux_d(ig) = sk_d(ig)* CMPLX(ylm_d(ig,lm)*chiaux_d(ig))
+        aux_d(ig) = sk_d(ig)* CMPLX(ylm_d(ig,lm)*chiaux_d(ig), KIND=DP)
       END DO
       !
       ! now, rotate wfc as needed
@@ -287,31 +287,31 @@ CONTAINS
       !
       !$cuf kernel do (1) <<<*,*>>>
       DO ig = 1, npw
-         fup = CMPLX(COS(0.5d0*alpha))*aux_d(ig)
-         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*alpha))*aux_d(ig)
+         fup = CMPLX(COS(0.5d0*alpha), KIND=DP)*aux_d(ig)
+         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*alpha), KIND=DP)*aux_d(ig)
          !
          ! Now, build the orthogonal wfc
          ! first rotation with angle (alpha+pi) around (OX)
          !
-         wfcatom_d(ig,1,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman)) &
-                        +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fup
-         wfcatom_d(ig,2,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman)) &
-                        -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fdown
+         wfcatom_d(ig,1,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
+                        +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fup
+         wfcatom_d(ig,2,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
+                        -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fdown
          !
          ! second: rotation with angle gamma around (OZ)
          !
          ! Now, build the orthogonal wfc
          ! first rotation with angle (alpha+pi) around (OX)
          !
-         fup = CMPLX(COS(0.5d0*(alpha+pi)))*aux_d(ig)
+         fup = CMPLX(COS(0.5d0*(alpha+pi)), KIND=DP)*aux_d(ig)
          fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*(alpha+pi)))*aux_d(ig)
          !
          ! second, rotation with angle gamma around (OZ)
          !
-         wfcatom_d(ig,1,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman)) &
-                  +(0.d0,1.d0)*CMPLX(SIN(0.5d0 *gamman)))*fup
-         wfcatom_d(ig,2,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman)) &
-                  -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fdown
+         wfcatom_d(ig,1,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
+                  +(0.d0,1.d0)*CMPLX(SIN(0.5d0 *gamman), KIND=DP))*fup
+         wfcatom_d(ig,2,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
+                  -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fdown
       END DO
    END DO
    !
@@ -340,7 +340,7 @@ CONTAINS
             ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
       !$cuf kernel do (1) <<<*,*>>>
       DO ig = 1, npw
-         aux_d(ig) = sk_d(ig)*CMPLX(ylm_d(ig,lm)*chiq_d(ig,nb,nt))
+         aux_d(ig) = sk_d(ig)*CMPLX(ylm_d(ig,lm)*chiq_d(ig,nb,nt), KIND=DP)
       END DO
       !
       ! now, rotate wfc as needed
@@ -348,31 +348,31 @@ CONTAINS
       !
       !$cuf kernel do (1) <<<*,*>>>
       DO ig = 1, npw
-         fup = CMPLX(COS(0.5d0*alpha))*aux_d(ig)
-         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*alpha))*aux_d(ig)
+         fup = CMPLX(COS(0.5d0*alpha), KIND=DP)*aux_d(ig)
+         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*alpha), KIND=DP)*aux_d(ig)
          !
          ! Now, build the orthogonal wfc
          ! first rotation with angle (alpha+pi) around (OX)
          !
-         wfcatom_d(ig,1,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman)) &
-                        +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fup
-         wfcatom_d(ig,2,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman)) &
-                        -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fdown
+         wfcatom_d(ig,1,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
+                        +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fup
+         wfcatom_d(ig,2,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
+                        -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fdown
          !
          ! second: rotation with angle gamma around (OZ)
          !
          ! Now, build the orthogonal wfc
          ! first rotation with angle (alpha+pi) around (OX)
          !
-         fup = CMPLX(COS(0.5d0*(alpha+pi)))*aux_d(ig)
-         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*(alpha+pi)))*aux_d(ig)
+         fup = CMPLX(COS(0.5d0*(alpha+pi)), KIND=DP)*aux_d(ig)
+         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*(alpha+pi)), KIND=DP)*aux_d(ig)
          !
          ! second, rotation with angle gamma around (OZ)
          !
-         wfcatom_d(ig,1,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman)) &
-                  +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fup
-         wfcatom_d(ig,2,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman)) &
-                  -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fdown
+         wfcatom_d(ig,1,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
+                  +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fup
+         wfcatom_d(ig,2,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman), KIND=DP) &
+                  -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman), KIND=DP))*fdown
       END DO
    END DO
    n_starting_wfc = n_starting_wfc + 2*l+1
@@ -395,7 +395,7 @@ CONTAINS
       !$cuf kernel do (1) <<<*,*>>>
       DO ig = 1, npw
          wfcatom_d(ig,1,n_starting_wfc) = lphase * &
-            sk_d(ig) * CMPLX(ylm_d(ig,lm) * chiq_d(ig,nb,nt))
+            sk_d(ig) * CMPLX(ylm_d(ig,lm) * chiq_d(ig,nb,nt), KIND=DP)
       ENDDO
       !
    END DO

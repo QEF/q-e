@@ -622,7 +622,7 @@ CONTAINS
       IF (lda_plus_u_cob)          CALL DCOPY(rlen_ldaUb,rho%nsb, 1,io_buffer(start_ldaUb),1)
       IF (okpaw)                   CALL DCOPY(rlen_bec, rho%bec,  1,io_buffer(start_bec), 1)
       !
-      IF (dipfield) io_buffer(start_dipole) = CMPLX( rho%el_dipole, 0.0_dp )
+      IF (dipfield) io_buffer(start_dipole) = CMPLX( rho%el_dipole, 0.0_dp, KIND=DP )
       IF (sic)                     CALL DCOPY(rlen_pol, rho%pol_g, 1,io_buffer(start_pol),1)
       !
       CALL save_buffer( io_buffer, record_length, iunit, record )   
