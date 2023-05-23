@@ -2198,8 +2198,8 @@ MODULE realus
     INTEGER :: ebnd
     !
     !-------------------TEMPORARY-----------
-    INTEGER :: ngk1
-    LOGICAL :: is_present, acc_is_present
+!    INTEGER :: ngk1
+!    LOGICAL :: is_present, acc_is_present
     !---------------------------------------
     !
     !Task groups
@@ -2295,8 +2295,8 @@ MODULE realus
     COMPLEX(DP), ALLOCATABLE :: psio(:,:)
     !
 !-------------------TEMPORARY-----------
-    INTEGER :: ngk1
-    LOGICAL :: is_present, acc_is_present
+!    INTEGER :: ngk1
+!    LOGICAL :: is_present, acc_is_present
 !---------------------------------------
     !
     ! ... Task groups
@@ -2359,7 +2359,7 @@ MODULE realus
         CALL wave_r2g( psic(1:dffts%nnr), psio, dffts )
         !
 !-------------TEMPORARY---------------------
-        ngk1 = SIZE(psic)
+!        ngk1 = SIZE(psic)
 !#if defined(_OPENACC)
 !        is_present = acc_is_present(psic,ngk1)
 !        !$acc update self(psic) if (is_present)
