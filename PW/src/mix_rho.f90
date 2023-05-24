@@ -458,6 +458,7 @@ SUBROUTINE approx_screening( drho )
   IMPLICIT NONE
   !
   type (mix_type), intent(INOUT) :: drho ! (in/out)
+  !$acc declare present(drho, drho%of_g, gg) 
   !
   REAL(DP) :: rs, agg0, bgg0
   !
@@ -468,12 +469,16 @@ SUBROUTINE approx_screening( drho )
   IF ( lgcscf ) THEN
      !
      bgg0 = gcscf_gk * gcscf_gk / tpiba2
+     !$acc kernels
      drho%of_g(:ngm0,1) =  drho%of_g(:ngm0,1) * (gg(:ngm0)+bgg0) &
                         / (gg(:ngm0)+agg0+bgg0)
+     !$acc end kernels
      !
   ELSE
      !
+     !$acc kernels
      drho%of_g(:ngm0,1) =  drho%of_g(:ngm0,1) * gg(:ngm0) / (gg(:ngm0)+agg0)
+     !$acc end kernels
      !
   END IF
   !
@@ -503,6 +508,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   type(mix_type), intent(inout) :: drho
   type(mix_type), intent(in) :: rhobest
+  
   !
   INTEGER, PARAMETER :: mmx = 12
   !
@@ -518,29 +524,42 @@ SUBROUTINE approx_screening2( drho, rhobest )
     dv(:),      &! dv(ngm0)
     vbest(:),   &! vbest(ngm0)
     wbest(:),   &! wbest(ngm0)
-    auxg(:,:)    ! auxg(dffts%nnr,1)
+    auxg(:,:)    ! auxg(dffts%nnr,1) 
   REAL(DP), ALLOCATABLE :: &
     alpha(:),   &! alpha(dffts%nnr)
     auxr(:)      ! auxr(dffts%nnr)
   !
   INTEGER             :: ir, ig
   REAL(DP), PARAMETER :: one_third = 1.D0 / 3.D0
+  INTEGER :: dffts_nnr  
+  !$acc data present(drho, drho%of_g, rhobest, rhobest%of_g) 
   !
+
+  dffts_nnr = dffts%nnr
   target = 0.D0
   !
-  IF ( (.NOT. lgcscf) .AND. gg(1) < eps8 ) drho%of_g(1,1) = ZERO
+  IF ( (.NOT. lgcscf) .AND. gg(1) < eps8 ) THEN 
+    !$acc kernels
+    drho%of_g(1,1) = ZERO
+    !$acc end kernels
+  END IF 
   !
-  ALLOCATE( auxr(dffts%nnr), auxg(dffts%nnr,1) )
-  ALLOCATE( alpha( dffts%nnr ) )
+  ALLOCATE( auxr(dffts_nnr), auxg(dffts_nnr,1) )
+  ALLOCATE( alpha( dffts_nnr ) )
   ALLOCATE( v( ngm0, mmx ), &
             w( ngm0, mmx ), dv( ngm0 ), vbest( ngm0 ), wbest( ngm0 ) )
   !
+  !$acc enter data create(v, w, dv, vbest, wbest, auxg, auxr, alpha) 
   CALL rho_g2r( dffts, rhobest%of_g(:,1), auxr )
   !
   avg_rsm1 = 0.D0
   !
+#if defined(_OPENACC)
+  !$acc parallel loop reduction(+:avg_rsm1)
+#else
   !$omp parallel do reduction(+:avg_rsm1)
-  DO ir = 1, dffts%nnr
+#endif
+  DO ir = 1, dffts_nnr
      alpha(ir) = ABS( auxr(ir) )
      !
      IF ( alpha(ir) > eps32 ) THEN
@@ -553,7 +572,9 @@ SUBROUTINE approx_screening2( drho, rhobest )
      alpha(ir) = 3.D0 * ( tpi / 3.D0 )**( 5.D0 / 3.D0 ) * alpha(ir)
      !
   END DO
+#if !defined(_OPENACC)
   !$omp end parallel do
+#endif
   !
   CALL mp_sum( avg_rsm1 , intra_bgrp_comm )
   avg_rsm1 = ( dffts%nr1*dffts%nr2*dffts%nr3 ) / avg_rsm1
@@ -570,31 +591,49 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   CALL rho_g2r( dffts, drho%of_g(:,1), auxr )
   !
+#if defined(_OPENACC)
+  !$acc parallel loop 
+#else
   !$omp parallel do
-  DO ir = 1, dffts%nnr
+#endif 
+  DO ir = 1, dffts_nnr
      auxr(ir) = auxr(ir) * alpha(ir)
   ENDDO
+#if !defined(_OPENACC)
   !$omp end parallel do
+#endif
   !
   CALL rho_r2g( dffts, auxr, auxg )
   !
   IF ( lgcscf ) THEN
      !
+#if defined (_OPENACC) 
+     !$acc parallel loop 
+#else
      !$omp parallel do
+#endif 
      DO ig = 1, ngm0
         dv(ig) = auxg(ig,1) * ( gg(ig) + bgg0 ) * tpiba2
         v(ig,1)= auxg(ig,1) * ( gg(ig) + bgg0 ) / ( gg(ig) + agg0 + bgg0 )
      ENDDO
+#if !defined(_OPENACC) 
      !$omp end parallel do
+#endif
      !
   ELSE
      !
+#if defined(_OPENACC) 
+     !$acc parallel loop
+#else
      !$omp parallel do
+#endif 
      DO ig = 1, ngm0
         dv(ig) = auxg(ig,1) * gg(ig) * tpiba2
         v(ig,1)= auxg(ig,1) * gg(ig) / ( gg(ig) + agg0 )
      ENDDO
+#if !defined(_OPENACC)
      !$omp end parallel do
+#endif
      !
   END IF
   !
@@ -605,47 +644,72 @@ SUBROUTINE approx_screening2( drho, rhobest )
   repeat_loop: DO
      !
      ! ... generate the vector w
-     !     
+     !
+#if defined (_OPENACC) 
+     !$acc parallel loop async(2) 
+#else     
      !$omp parallel
         !$omp do
+#endif
         DO ig = 1, ngm0
            !
            w(ig,m) = fpi * e2 * v(ig,m)
            !
         ENDDO
+#if !defined(_OPENACC) 
         !$omp end do nowait
      !$omp end parallel
+#endif
      !
      CALL rho_g2r( dffts, v(:,m), auxr )
      !
+#if defined(_OPENACC) 
+     !$acc parallel loop
+#else
      !$omp parallel do
-     DO ir = 1, dffts%nnr
+#endif
+     DO ir = 1, dffts_nnr
         auxr(ir) = auxr(ir) * alpha(ir)
      ENDDO
+#if !defined(_OPENACC)
      !$omp end parallel do
+#endif
      !
      CALL rho_r2g( dffts, auxr, auxg )
      !
      IF ( lgcscf ) THEN
         !
+#if defined (_OPENACC)
+        !$acc parallel loop wait(2) 
+#else
         !$omp parallel do
+#endif
         DO ig = 1, ngm0
            w(ig,m) = w(ig,m) + ( gg(ig) + bgg0 ) * tpiba2 * auxg(ig,1)
         ENDDO
+#if !defined(_OPENACC)
         !$omp end parallel do
+#endif
         !
      ELSE
         !
+#if defined (_OPENACC)
+        !$acc parallel loop wait(2)
+#else 
         !$omp parallel do
+#endif
         DO ig = 1, ngm0
            w(ig,m) = w(ig,m) + gg(ig) * tpiba2 * auxg(ig,1)
         ENDDO
+#if !defined(_OPENACC)
         !$omp end parallel do
+#endif
         !
      END IF
      !
      ! ... build the linear system
      !
+
      DO i = 1, m
         !
         IF ( lgcscf ) THEN
@@ -686,6 +750,19 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      FORALL( i = 1:m ) vec(i) = SUM( invaa(i,:)*bb(:) )
      !
+#if defined(_OPENACC)
+     !$acc kernels  
+     vbest = ZERO
+     wbest(1:ngm0) = dv(1:ngm0)
+     !$acc end kernels 
+     do i=1,m
+       !$acc kernels async(i) 
+       vbest(1:ngm0) = vbest(1:ngm0) + vec(i) * v(1:ngm0,i) 
+       wbest(1:ngm0) = wbest(1:ngm0) - vec(i) * w(1:ngm0,i)
+       !$acc end kernels 
+     end do 
+     !$acc wait
+#else        
      !$omp parallel
         !$omp do
         DO ig = 1, ngm0
@@ -703,6 +780,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
            !$omp end do nowait
         END DO
      !$omp end parallel
+#endif 
      !
      IF ( lgcscf ) THEN
         !
@@ -718,15 +796,22 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      IF ( dr2_best < target ) THEN
         !
+#if defined (_OPENACC) 
+        !$acc parallel loop 
+#else 
         !$omp parallel
            !$omp do
+#endif
            DO ig = 1, ngm0
               drho%of_g(ig,1) = vbest(ig)
            ENDDO
+#if !defined(_OPENACC) 
            !$omp end do nowait
            !
         !$omp end parallel
+#endif
         !
+        !$acc exit data finalize delete(auxr, auxg, alpha, v, w, dv, vbest, wbest) 
         DEALLOCATE( auxr, auxg )
         DEALLOCATE( alpha, v, w, dv, vbest, wbest )
         !
@@ -736,15 +821,21 @@ SUBROUTINE approx_screening2( drho, rhobest )
         !
         m = 1
         !
+#if defined(_OPENACC) 
+        !$acc parallel loop
+#else
         !$omp parallel do
+#endif 
         DO ig = 1, ngm0
            v(ig,m)  = vbest(ig)
         ENDDO
+#if !defined(_OPENACC) 
         !$omp end parallel do
+#endif 
         aa(:,:) = 0.D0
         bb(:)   = 0.D0
         !
-        CYCLE repeat_loop
+        CYCLE repeat_loop 
         !
      END IF
      !
@@ -752,24 +843,37 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      IF ( lgcscf ) THEN
         !
+#if defined(_OPENACC) 
+        !$acc parallel loop
+#else
         !$omp parallel do
+#endif
         DO ig = 1, ngm0
            v(ig,m) = wbest(ig) / ( gg(ig) + agg0 + bgg0 )
         ENDDO
+#if !defined(_OPENACC) 
         !$omp end parallel do
+#endif
         !
      ELSE
         !
+#if defined(_OPENACC)
+        !$acc parallel loop
+#else 
         !$omp parallel do
+#endif 
         DO ig = 1, ngm0
            v(ig,m) = wbest(ig) / ( gg(ig) + agg0 )
         ENDDO
+#if !defined(_OPENACC) 
         !$omp end parallel do
+#endif 
         !
      END IF
      !
   END DO repeat_loop
   !
+  !$acc end data
   RETURN
   !
 END SUBROUTINE approx_screening2
