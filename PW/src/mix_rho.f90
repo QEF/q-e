@@ -532,6 +532,10 @@ SUBROUTINE approx_screening2( drho, rhobest )
   INTEGER             :: ir, ig
   REAL(DP), PARAMETER :: one_third = 1.D0 / 3.D0
   INTEGER :: dffts_nnr  
+  INTEGER :: mmx_refreshed
+  INTEGER :: MAX_MMX_REFRESHES = 4
+  ! parameter setting how many times the solver's iterative space
+  ! is refreshed before quitting
   !$acc data present(drho, drho%of_g, rhobest, rhobest%of_g) 
   !
 
@@ -638,6 +642,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   END IF
   !
   m       = 1
+  mmx_refreshed = 0 
   aa(:,:) = 0.D0
   bb(:)   = 0.D0
   !
@@ -646,7 +651,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
      ! ... generate the vector w
      !
 #if defined (_OPENACC) 
-     !$acc parallel loop async(2) 
+     !$acc parallel loop 
 #else     
      !$omp parallel
         !$omp do
@@ -680,7 +685,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
      IF ( lgcscf ) THEN
         !
 #if defined (_OPENACC)
-        !$acc parallel loop wait(2) 
+        !$acc parallel loop 
 #else
         !$omp parallel do
 #endif
@@ -694,7 +699,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
      ELSE
         !
 #if defined (_OPENACC)
-        !$acc parallel loop wait(2)
+        !$acc parallel loop
 #else 
         !$omp parallel do
 #endif
@@ -750,18 +755,16 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      FORALL( i = 1:m ) vec(i) = SUM( invaa(i,:)*bb(:) )
      !
-#if defined(_OPENACC)
-     !$acc kernels  
-     vbest = ZERO
-     wbest(1:ngm0) = dv(1:ngm0)
-     !$acc end kernels 
-     do i=1,m
-       !$acc kernels async(i) 
-       vbest(1:ngm0) = vbest(1:ngm0) + vec(i) * v(1:ngm0,i) 
-       wbest(1:ngm0) = wbest(1:ngm0) - vec(i) * w(1:ngm0,i)
-       !$acc end kernels 
+#if defined(_OPENACC) 
+     !$acc parallel loop
+     do ig = 1, ngm0
+       vbest(ig) = ZERO 
+       wbest(ig) = dv(ig)  
+       do i =1, m 
+         vbest(ig) = vbest(ig) + vec(i) * v(ig,i) 
+         wbest(ig) = wbest(ig) - vec(i) * w(ig,i)
+       end do 
      end do 
-     !$acc wait
 #else        
      !$omp parallel
         !$omp do
@@ -787,15 +790,18 @@ SUBROUTINE approx_screening2( drho, rhobest )
         dr2_best = local_tf_ddot( wbest, wbest, ngm0, gcscf_gh )
         !
      ELSE
-        !
+        ! 
         dr2_best = local_tf_ddot( wbest, wbest, ngm0 )
         !
      END IF
      !
      IF ( target == 0.D0 ) target = MAX( 1.D-12, 1.D-6*dr2_best )
      !
-     IF ( dr2_best < target ) THEN
-        !
+     IF ( dr2_best < target .OR. (& 
+          m >=mmx .AND. mmx_refreshed >= MAX_MMX_REFRESHES) & 
+        ) THEN
+        ! exit if converged or after the solver has been restarted 
+        !MAX_MMX_REFRESHES times, avoiding a possible infinite loop
 #if defined (_OPENACC) 
         !$acc parallel loop 
 #else 
@@ -820,6 +826,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
      ELSE IF ( m >= mmx ) THEN
         !
         m = 1
+        mmx_refreshed = mmx_refreshed + 1 
         !
 #if defined(_OPENACC) 
         !$acc parallel loop
