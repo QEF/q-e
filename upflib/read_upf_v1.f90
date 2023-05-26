@@ -419,6 +419,7 @@ subroutine read_pseudo_nl (iunps, upf, ierr)
      ALLOCATE( upf%rcut( 1 ) )
      ALLOCATE( upf%rcutus( 1 ) )
      ALLOCATE( upf%els_beta( 1 ) )
+     ierr = 0
      return
   end if
   ALLOCATE( upf%kbeta( upf%nbeta ) )
