@@ -107,7 +107,7 @@ PROGRAM upfconv
   END IF
   WRITE(*,*) 'input file: ' // trim(filein), ', output file: ' // trim(fileout)
  
-  CALL read_ps_new ( filein, upf, ierr )
+  CALL read_ps_new ( filein, upf, .false., ierr )
   IF ( ierr > 0  ) THEN
      WRITE(*,*) 'Cannot read file, stopping'
      STOP

@@ -5,10 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-SUBROUTINE read_ps_new ( psfile, upf, ierr, printout )
+SUBROUTINE read_ps_new ( psfile, upf, printout, ierr )
   !
   !! Read PP file "psfile" into structure "upf"
-  !! Print some information if "printout" is present and true
+  !! Print some information if "printout" is true
   !! Return an error code in "ierr" as follows:
   !! ierr = 81  file cannot be opened (not found or not accessible)
   !! ierr >  0  error reading file
@@ -33,7 +33,7 @@ SUBROUTINE read_ps_new ( psfile, upf, ierr, printout )
   !
   IMPLICIT NONE
   CHARACTER(LEN=256), INTENT(in) :: psfile
-  LOGICAL, INTENT(IN), OPTIONAL :: printout
+  LOGICAL, INTENT(IN)            :: printout
   TYPE(pseudo_upf), INTENT(out) :: upf
   INTEGER, INTENT(out) :: ierr
   !
@@ -94,11 +94,9 @@ SUBROUTINE read_ps_new ( psfile, upf, ierr, printout )
   !!! CALL set_upf_q (upf)
   !! reconstruct Q(r) if needed
    
-  IF (present(printout)) THEN
+  IF (printout) THEN
      !
-     IF (printout) THEN
-        !
-        SELECT CASE(ierr)
+     SELECT CASE(ierr)
         CASE(0)
            WRITE( stdout, "('file format is UPF xml (experimental)')") 
         CASE(-1)
@@ -117,9 +115,7 @@ SUBROUTINE read_ps_new ( psfile, upf, ierr, printout )
            WRITE( stdout, "('file format is GTH (Goedecker-Teter-Hutter)')")
         CASE DEFAULT
            WRITE( stdout, "('file format could not be determined')")
-        END SELECT
-        !
-     END IF
+     END SELECT
      !
   END IF
   !
