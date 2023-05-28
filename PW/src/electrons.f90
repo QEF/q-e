@@ -1736,20 +1736,20 @@ FUNCTION exxenergyace( )
   !--------------------------------------------------------------------------
   !! Compute exchange energy using ACE
   !
-  USE kinds,           ONLY : DP
-  USE buffers,         ONLY : get_buffer
-  USE exx,             ONLY : vexxace_gamma, vexxace_k, domat
-  USE klist,           ONLY : nks, ngk
-  USE wvfct,           ONLY : nbnd, npwx, current_k
-  USE lsda_mod,        ONLY : lsda, isk, current_spin
-  USE io_files,        ONLY : iunwfc, nwordwfc
-  USE mp_pools,        ONLY : inter_pool_comm
-  USE mp_bands,        ONLY : intra_bgrp_comm
-  USE mp,              ONLY : mp_sum
-  USE control_flags,   ONLY : gamma_only
-  USE wavefunctions,   ONLY : evc
-  !
-  USE wavefunctions_gpum, ONLY : using_evc
+  USE kinds,              ONLY : DP
+  USE buffers,            ONLY : get_buffer
+  USE exx,                ONLY : vexxace_gamma, vexxace_k, domat, &
+                                 vexxace_gamma_gpu, vexxace_k_gpu
+  USE klist,              ONLY : nks, ngk
+  USE wvfct,              ONLY : nbnd, npwx, current_k
+  USE lsda_mod,           ONLY : lsda, isk, current_spin
+  USE io_files,           ONLY : iunwfc, nwordwfc
+  USE mp_pools,           ONLY : inter_pool_comm
+  USE mp_bands,           ONLY : intra_bgrp_comm
+  USE mp,                 ONLY : mp_sum
+  USE control_flags,      ONLY : gamma_only, use_gpu
+  USE wavefunctions,      ONLY : evc
+  USE wavefunctions_gpum, ONLY : evc_d, using_evc, using_evc_d
   !
   IMPLICIT NONE
   !
@@ -1764,18 +1764,27 @@ FUNCTION exxenergyace( )
   domat = .TRUE.
   exxenergyace=0.0_dp
   !
-  CALL using_evc(0)
+  IF (.NOT. use_gpu) CALL using_evc(0)
+  IF (      use_gpu) CALL using_evc_d(0)
   !
   DO ik = 1, nks
      npw = ngk (ik)
+     !
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
-     IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
-     IF (nks > 1) CALL using_evc(2)
+     !
+     IF (nks > 1) THEN
+        CALL using_evc(2)
+        CALL get_buffer( evc, nwordwfc, iunwfc, ik )
+        IF (use_gpu) CALL using_evc_d(0)
+     ENDIF
+     !
      IF (gamma_only) THEN
-        CALL vexxace_gamma( npw, nbnd, evc, ex )
+        IF (.NOT. use_gpu) CALL vexxace_gamma( npw, nbnd, evc, ex )
+        IF (      use_gpu) CALL vexxace_gamma_gpu( npw, nbnd, evc_d, ex )
      ELSE
-        CALL vexxace_k( npw, nbnd, evc, ex )
+        IF (.NOT. use_gpu) CALL vexxace_k( npw, nbnd, evc, ex )
+        IF (      use_gpu) CALL vexxace_k_gpu( npw, nbnd, evc_d, ex )
      ENDIF
      exxenergyace = exxenergyace + ex
   ENDDO
