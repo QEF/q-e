@@ -32,6 +32,7 @@ SUBROUTINE hinit1()
   USE paw_onecenter,       ONLY : paw_potential
   USE paw_symmetry,        ONLY : paw_symmetrize_ddd
   USE dfunct,              ONLY : newd
+  USE dfunct_gpum,         ONLY : newd_gpu
   USE exx_base,            ONLY : coulomb_fac, coulomb_done
   !
   USE scf_gpum,            ONLY : using_vrs
@@ -124,7 +125,8 @@ SUBROUTINE hinit1()
      CALL PAW_symmetrize_ddd( ddd_paw )
   ENDIF
   ! 
-  CALL newd()
+  IF (.not. use_gpu) CALL newd()
+  IF (      use_gpu) CALL newd_gpu()
   !
   ! ... and recalculate the products of the S with the atomic wfcs used 
   ! ... in DFT+Hubbard calculations
