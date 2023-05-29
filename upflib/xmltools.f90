@@ -60,7 +60,7 @@ MODULE xmltools
   !
   ! variables used to keep track of open tags
   !
-  INTEGER :: nlevel = -1
+  INTEGER :: nlevel = -1, level0 = 0
   INTEGER, PARAMETER :: maxlength=80, maxlevel=9
   CHARACTER(LEN=maxlength), DIMENSION(0:maxlevel) :: open_tags
   !
@@ -77,6 +77,9 @@ MODULE xmltools
   PUBLIC :: xml_protect, i2c, l2c, r2c
   !
   ! Error codes returned by xmlr_opentag / xml_readtag:
+  !  -11  as -10 + -1
+  !  -10  tag found and read above the current position, after a file rewind:
+  !       may or may not what you desire
   !  -1   tag with no value (e.g. <tag attr="val"/>) found (no error)
   !   0   tag found and read (no error)
   !   1   tag not found
@@ -286,10 +289,15 @@ CONTAINS
          IOSTAT=ios)
     IF ( ios /= 0 ) iun = -1
     nopen = nopen + 1
-    IF ( nopen > 1 ) xmlsave = xmlunit
+    IF ( nopen > 1 ) then
+       ! a second file is opened: keep track of the status of the previous file
+       xmlsave = xmlunit
+       level0  = nlevel
+    else
+       nlevel = 0
+       open_tags(nlevel) = 'root'
+    end if
     xmlunit = iun
-    nlevel = 0
-    open_tags(nlevel) = 'root'
     if ( allocated(attrlist) ) DEALLOCATE ( attrlist)
 #if defined ( __debug )
     print "('file ',a,' opened with unit ',i5)",trim(filexml),iun
@@ -299,6 +307,7 @@ CONTAINS
   !
   SUBROUTINE xml_closefile ( )
     !
+    integer :: ios
     CLOSE ( UNIT=xmlunit, STATUS='keep' )
 #if defined ( __debug )
     print "('unit ',i5,': file closed')", xmlunit
@@ -306,9 +315,14 @@ CONTAINS
     xmlunit = xmlsave
     nopen = nopen - 1
     xmlsave = -1
-    IF (nlevel > 0) print '("warning: file closed at level ",i1,&
+    IF (nlevel > level0 ) print '("warning: file closed at level ",i1,&
             & " with tag ",A," open")', nlevel, trim(open_tags(nlevel))
-    nlevel = 0
+    IF ( nopen == 1 ) THEN
+       ! the second file is opened: return to the status of previous file
+       nlevel  = level0
+    ELSE
+       level0 = 0
+    END IF
     !
   END SUBROUTINE xml_closefile
   !
@@ -759,7 +773,7 @@ CONTAINS
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
-    if ( ier_ == 0  ) then
+    if ( ier_ == 0 .or. ier_ == -10 ) then
        READ(xmlunit, *) ivec
        CALL xmlr_closetag ( )
     else
@@ -815,7 +829,7 @@ CONTAINS
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
-    if ( ier_ == 0  ) then
+    if ( ier_ == 0 .or. ier_ == -10 ) then
        READ(xmlunit, *) rvec
        CALL xmlr_closetag ( )
     else
@@ -835,7 +849,7 @@ CONTAINS
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
-    if ( ier_ == 0  ) then
+    if ( ier_ == 0 .or. ier_ == -10 ) then
        READ(xmlunit, *) rmat
        CALL xmlr_closetag ( )
     else
@@ -855,7 +869,7 @@ CONTAINS
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
-    if ( ier_ == 0  ) then
+    if ( ier_ == 0 .or. ier_ == -10 ) then
        READ(xmlunit, *) rtens
        CALL xmlr_closetag ( )
     else
@@ -879,7 +893,7 @@ CONTAINS
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
-    if ( ier_ == 0  ) then
+    if ( ier_ == 0 .or. ier_ == -10 ) then
        NULLIFY (rvec)
        cp = c_loc(zvec)
        CALL c_f_pointer ( cp, rvec, shape(zvec)*[2])
@@ -905,7 +919,7 @@ CONTAINS
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
-    if ( ier_ == 0  ) then
+    if ( ier_ == 0 .or. ier_ == -10 ) then
        NULLIFY (rmat)
        cp = c_loc(zmat)
        CALL c_f_pointer (cp, rmat, shape(zmat)*[2,1])
@@ -931,7 +945,7 @@ CONTAINS
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
-    if ( ier_ == 0  ) then
+    if ( ier_ == 0 .or. ier_ == -10 ) then
        NULLIFY (rtens)
        cp = c_loc(ztens)
        CALL c_f_pointer (cp, rtens, shape(ztens)*[2,1,1])
@@ -1100,7 +1114,11 @@ CONTAINS
                 j0= j
              else if ( line(j:j+1) == '/>' ) then
                 ! <tag ... /> found : return
-                if (present(ierr)) ierr =-1
+                if (present(ierr) .and. ntry == 1) then
+                   ierr =-1
+                else if (present(ierr) .and. ntry == 2) then
+                   ierr =-11
+                end if
                 ! eot = 0: tag with no value found
                 eot = 0
                 !
@@ -1110,7 +1128,11 @@ CONTAINS
                 ! <tag ... > found
                 ! eot points to the rest of the line
                 eot = j+1
-                if (present(ierr)) ierr = 0
+                if (present(ierr) .and. ntry == 1) then
+                   ierr = 0
+                else if (present(ierr) .and. ntry == 2) then
+                   ierr =-10
+                end if
                 nlevel = nlevel+1
                 IF ( nlevel > maxlevel ) THEN
                    print *, 'xmlr_opentag: severe error, too many levels'

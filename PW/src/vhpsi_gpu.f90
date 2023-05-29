@@ -127,11 +127,11 @@ SUBROUTINE vhpsi_U_gpu()
       ALLOCATE( ctemp_d(ldimaxt,mps) )
       IF (ANY(is_hubbard(:))) THEN
         ALLOCATE( vaux_d(ldimax,ldimax,nat) )
-        vaux_d = CMPLX(v%ns(:,:,current_spin,:))
+        vaux_d = CMPLX(v%ns(:,:,current_spin,:),KIND=DP)
       ENDIF
       IF (ANY(is_hubbard_back(:))) THEN
          ALLOCATE( vauxb_d(ldmx_b,ldmx_b,nat) )
-         vauxb_d = CMPLX(v%nsb(:,:,current_spin,:))
+         vauxb_d = CMPLX(v%nsb(:,:,current_spin,:),KIND=DP)
       ENDIF
     ENDIF
   ENDIF

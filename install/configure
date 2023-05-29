@@ -786,6 +786,7 @@ with_hdf5_include
 with_environ
 enable_legacy_plugins
 enable_signals
+enable_exit_status
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1433,6 +1434,7 @@ Optional Features:
   --enable-nvtx           Enable compilation for NVTX [default=no]
  --enable-legacy_plugins    Enables use of legacy plugins in PW and CP.
   --enable-signals        enable signal trapping (default: no)
+  --enable-exit-status    enable Unix status on exit (default: no)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -4327,9 +4329,12 @@ else
 	       nvfortran* )
                     # NB: next two can be replaced by flag "-Mmkl"
       		    mkl_lib="mkl_intel_lp64"
-                    mkl_omp="mkl_intel_thread"
+                    # mkl_omp="mkl_intel_thread"
 		    # NB: with nvidia hpc sdk 2020, linking to threaded mkl
 		    # v.19.1 update 4 fails due to a missing symbol
+                    mkl_omp="mkl_sequential"
+		    # NB: with (at least) nvidia 22.7, threaded mkl are
+		    # catastrophically slow for DFT+U calculations
 		    ;;
 	       pgf* )
                     # For obsolete PGI versions (superseded by nvfortran)
@@ -7328,6 +7333,27 @@ fi
 
   # preprocessing flag for signal trapping (experimental)
   if test "$use_signals" -eq 1 ; then try_dflags="$try_dflags -D__TRAP_SIGUSR1" ; fi
+
+
+
+
+# Checking STATUS...
+
+
+   # Check whether --enable-exit-status was given.
+if test "${enable_exit_status+set}" = set; then :
+  enableval=$enable_exit_status; if   test "$enableval" = "yes" ; then
+        use_status=1
+     else
+        use_status=0
+     fi
+else
+  use_status=0
+fi
+
+
+  # preprocessing flag for returning Unix status on exit (experimental)
+  if test "$use_status" -eq 1 ; then try_dflags="$try_dflags -D__RETURN_EXIT_STATUS" ; fi
 
 
 

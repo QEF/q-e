@@ -1,3 +1,13 @@
+New in development version:
+  * Experimental support for pseudopotentials in PSML format
+
+Incompatible changes in development version:
+  * None known
+
+Fixed in development version:
+  * Incorrect PP_SEMILOCAL field written for old-style pseudopotentials.
+    May cause crashes (but not bad numbers). Reported by Jibiao Li.
+
 New in v.7.2:
   * Oxidation state constrained DFT [Ku and Sit, JCTC 15, 4781 (2019)]
   * Self-consistent calculation with a two-chemical potential approach

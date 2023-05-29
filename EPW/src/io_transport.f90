@@ -2462,7 +2462,7 @@
     !! Local band index
     INTEGER :: ltau_all
     !! Length of the vector
-    INTEGER(KIND = 8) :: unf_recl
+    INTEGER :: unf_recl
     !! Record length unit
     REAL(KIND = DP) :: aux(nstemp * nbndfst * nktotf + 2)
     !! Vector to store the array
