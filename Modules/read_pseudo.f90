@@ -122,7 +122,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !
      IF ( ionode ) THEN
         !
-        CALL  read_ps_new( file_pseudo, upf(nt), ierr, printout )
+        CALL  read_ps_new( file_pseudo, upf(nt), printout_, ierr )
         !! Try to read first UPF or PSML format
         !
      END IF

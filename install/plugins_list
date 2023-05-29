@@ -19,10 +19,6 @@ YAMBO=yambo-4.5.2
 YAMBO_URL=https://github.com/yambo-code/yambo/archive/4.5.2.tar.gz
 
 #
-# Package maintainer: 
-W90=wannier90-3.1.0
-W90_URL=https://codeload.github.com/wannier-developers/wannier90/tar.gz/v3.1.0
-#
 # Package maintainer: Davide Ceresoli
 GIPAW=qe-gipaw-$(RELEASE_VERSION)
 GIPAW_URL=https://github.com/dceresoli/qe-gipaw/archive/$(RELEASE_VERSION).tar.gz
