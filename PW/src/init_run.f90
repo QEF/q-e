@@ -101,6 +101,7 @@ SUBROUTINE init_run()
   END IF
 #endif
   !$acc update device(mill, g, gg)
+  !$omp target update to(g)
   !
   IF (do_comp_esm) CALL esm_init(.NOT. lrism)
   !

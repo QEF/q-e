@@ -85,6 +85,10 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !! This routine computes the product of the Hamiltonian matrix with m 
   !! wavefunctions contained in psi.
   !
+  !civn: with OMP5 psi and hpsi are assumed on device
+  !      if you need host data, remember to map them outside
+  !      (spsi is still on host untill s_psi will be ported)
+  !
   USE kinds,                   ONLY: DP
   USE bp,                      ONLY: lelfield, l3dstring, gdir, efield, efield_cry
   USE becmod,                  ONLY: bec_type, becp, calbec, calbec_omp
@@ -134,7 +138,9 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   ! ... Here we set the kinetic energy (k+G)^2 psi and clean up garbage
   !
-  !$omp parallel do
+  !!!!omp parallel do
+  !
+  !$omp target teams distribute parallel do
   DO ibnd = 1, m
      hpsi(1:n,ibnd) = g2kin(1:n) * psi(1:n,ibnd)
      IF (n<lda) hpsi(n+1:lda, ibnd) = (0.0_dp, 0.0_dp)
@@ -143,7 +149,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         IF (n<lda) hpsi(lda+n+1:lda+lda, ibnd) = (0.0_dp, 0.0_dp)
      ENDIF
   ENDDO
-  !$omp end parallel do
+  !!!!omp end parallel do
 
   CALL start_clock( 'h_psi:pot' ); !write (*,*) 'start h_psi:pot';FLUSH(6)
   !
@@ -152,6 +158,9 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   IF ( gamma_only ) THEN
      ! 
      IF ( real_space .AND. nkb > 0  ) THEN
+        !
+        !$omp target update from(psi,hpsi)
+        !
         CALL using_becp_auto(1)
         !
         ! ... real-space algorithm
@@ -174,28 +183,23 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
            ! ... transform psic back in reciprocal space and add it to hpsi
            CALL fwfft_orbital_gamma( hpsi, ibnd, m, add_to_orbital=.TRUE. )
         ENDDO
+        !$omp target update to(psi,hpsi)
         !
      ELSE
         ! ... usual reciprocal-space algorithm
 #if defined(__OPENMP_GPU)
-        !$omp target update to(hpsi,psi,vrs)
-        CALL vloc_psi_gamma( lda, n, m, psi, vrs(1,current_spin), hpsi )
-        !$omp target update from(hpsi)
-#else
-        CALL vloc_psi_gamma( lda, n, m, psi, vrs(1,current_spin), hpsi )
+        !$omp target update to(vrs)
 #endif
+        CALL vloc_psi_gamma( lda, n, m, psi, vrs(1,current_spin), hpsi )
         !
      ENDIF 
      !
   ELSEIF ( noncolin ) THEN 
      !
 #if defined(__OPENMP_GPU)
-     !$omp target update to(hpsi,psi,vrs)
-     CALL vloc_psi_nc( lda, n, m, psi, vrs, hpsi )
-     !$omp target update from(hpsi)
-#else
-     CALL vloc_psi_nc( lda, n, m, psi, vrs, hpsi )
+     !$omp target update to(vrs)
 #endif
+     CALL vloc_psi_nc( lda, n, m, psi, vrs, hpsi )
      !
   ELSE  
      ! 
@@ -203,6 +207,8 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         !
         ! ... real-space algorithm
         ! ... fixme: real_space without beta functions does not make sense
+        !
+        !$omp target update from(psi,hpsi)
         !
         CALL using_becp_auto(1)  ! WHY IS THIS HERE?
 
@@ -225,15 +231,14 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
            !
         ENDDO
         !
+        !$omp target update to(psi,hpsi)
+        !
      ELSE
         !
 #if defined(__OPENMP_GPU)
-        !$omp target update to(hpsi,psi,vrs)
-        CALL vloc_psi_k( lda, n, m, psi, vrs(1,current_spin), hpsi )
-        !$omp target update from(hpsi)
-#else
-        CALL vloc_psi_k( lda, n, m, psi, vrs(1,current_spin), hpsi )
+        !$omp target update to(vrs)
 #endif
+        CALL vloc_psi_k( lda, n, m, psi, vrs(1,current_spin), hpsi )
         !
      ENDIF
      !
@@ -249,42 +254,54 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      CALL start_clock( 'h_psi:calbec' )
 #if defined(__OPENMP_GPU)
      !$omp target data map(to:vkb)
-     !$omp target update to(psi)
      CALL calbec_omp( n, vkb, psi, becp, m )
      !$omp end target data
 #else
      CALL calbec( n, vkb, psi, becp, m )
 #endif
      CALL stop_clock( 'h_psi:calbec' )
-     !$omp target update to(hpsi)
      CALL add_vuspsi( lda, n, m, hpsi )
-     !$omp target update from(hpsi)
      !
   ENDIF
   !
   CALL stop_clock( 'h_psi:pot' ); !write (*,*) 'stop h_psi:pot';FLUSH(6)
+  !
+  !civn: from here the additional pieces of hpsi are computed on host with omp5 
+  !      with a lot of data movement. remember to remove the update directives 
+  !      as the porting of the different pieces proceeds
   !  
-  IF (xclib_dft_is('meta')) CALL h_psi_meta( lda, n, m, psi, hpsi )
+  IF (xclib_dft_is('meta')) THEN
+    !$omp target update from(psi,hpsi)
+    CALL h_psi_meta( lda, n, m, psi, hpsi )
+    !$omp target update to(hpsi)
+  END IF
   !
   ! ... Here we add the Hubbard potential times psi
   !
   IF ( lda_plus_u .AND. Hubbard_projectors.NE."pseudo" ) THEN
      !
+     !$omp target update from(psi,hpsi)
      IF ( noncolin ) THEN
         CALL vhpsi_nc( lda, n, m, psi, hpsi )
      ELSE
         CALL vhpsi( lda, n, m, psi, hpsi )
      ENDIF
+     !$omp target update to(hpsi)
      !
   ENDIF
   !
   ! ... apply scissor operator
   !
-  IF (scissor) call p_psi(lda,n,m,psi,hpsi) 
+  IF (scissor) THEN
+    !$omp target update from(psi,hpsi)
+    call p_psi(lda,n,m,psi,hpsi) 
+    !$omp target update to(hpsi)
+  END IF
   !
   ! ... Here the exact-exchange term Vxx psi
   !
   IF ( exx_is_active() ) THEN
+     !$omp target update from(psi,hpsi)
      IF ( use_ace ) THEN
         IF ( gamma_only ) THEN
            CALL vexxace_gamma( lda, m, psi, ee, hpsi )
@@ -295,12 +312,14 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         CALL using_becp_auto(0)
         CALL vexx( lda, n, m, psi, hpsi, becp )
      ENDIF
+     !$omp target update to(hpsi)
   ENDIF
   !
   ! ... electric enthalpy if required
   !
   IF ( lelfield ) THEN
      !
+     !$omp target update from(psi,hpsi)
      IF ( .NOT.l3dstring ) THEN
         CALL h_epsi_her_apply( lda, n, m, psi, hpsi,gdir, efield )
      ELSE
@@ -308,14 +327,19 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
            CALL h_epsi_her_apply( lda, n, m, psi, hpsi,ipol,efield_cry(ipol) )
         ENDDO
      ENDIF
+     !$omp target update to(hpsi)
      !
   ENDIF
   !
   ! ... With Gamma-only trick, Im(H*psi)(G=0) = 0 by definition,
   ! ... but it is convenient to explicitly set it to 0 to prevent trouble
   !
-  IF ( gamma_only .AND. gstart == 2 ) &
-      hpsi(1,1:m) = CMPLX( DBLE( hpsi(1,1:m) ), 0.D0, KIND=DP)
+  IF ( gamma_only .AND. gstart == 2 ) THEN
+    !$omp target teams distribute parallel do
+    DO ibnd = 1, m 
+      hpsi(1,ibnd) = CMPLX( DBLE( hpsi(1,ibnd) ), 0.D0, KIND=DP)
+    END DO 
+  END IF
   !
   CALL stop_clock( 'h_psi' )
   !

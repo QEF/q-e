@@ -37,7 +37,9 @@ SUBROUTINE hs_1psi( lda, n, psi, hpsi, spsi )
   !OBM: I know this form is somewhat inelegant but, leaving the pre-real_space part intact
   !     makes it easier to debug probable errors, please do not "beautify" 
         if (real_space) then
+           !$omp target update to(psi,hpsi)
            CALL h_psi( lda, n, 1, psi, hpsi )
+           !$omp target update from(hpsi)
            if (gamma_only) then
              call invfft_orbital_gamma(psi,1,1) !transform the orbital to real space
              call s_psir_gamma(1,1)
@@ -48,7 +50,9 @@ SUBROUTINE hs_1psi( lda, n, psi, hpsi, spsi )
              call fwfft_orbital_k(spsi,1,1)
            end if
         else   
+  !$omp target update to(psi,hpsi)     
   CALL h_psi( lda, n, 1, psi, hpsi ) ! apply H to a single wfc (no bgrp parallelization here)
+  !$omp target update from(hpsi)    
   CALL s_psi( lda, n, 1, psi, spsi ) ! apply S to a single wfc (no bgrp parallelization here)
        endif
   !

@@ -216,15 +216,11 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   ! ... hpsi contains h times the basis vectors
   !
   !$acc host_data use_device(psi, hpsi, spsi)
-  !$omp target update from(psi,hpsi)
   CALL h_psi( npwx, npw, nvec, psi, hpsi )  ; nhpsi = nvec
   !
   ! ... spsi contains s times the basis vectors
   !
-  IF ( uspp ) then
-     !$omp target update from(spsi)
-     CALL s_psi( npwx, npw, nvec, psi, spsi )
-  endif
+  IF ( uspp ) CALL s_psi( npwx, npw, nvec, psi, spsi )
   !$acc end host_data
   !
   ! ... hr contains the projection of the hamiltonian onto the reduced
@@ -252,11 +248,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
   my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
   if (n_start .le. n_end) then
-     !$omp target update to(hpsi)
      CALL MYDGEMM( 'T','N', nbase, my_n, npw2, 2.D0 , psi, npwx2, hpsi(1,n_start), npwx2, 0.D0, hr(1,n_start), nvecx )
   endif
   IF ( gstart == 2 ) THEN
-     !$omp target update to(hpsi)
      CALL MYDGER( nbase, my_n, -1.D0, psi, npwx2, hpsi(1,n_start), npwx2, hr(1,n_start), nvecx )
   ENDIF
   !$omp target update from(hr)
@@ -268,11 +262,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   IF ( uspp ) THEN
      !
      if (n_start .le. n_end) then
-        !$omp target update to(spsi)
         CALL MYDGEMM( 'T','N', nbase, my_n, npw2, 2.D0, psi, npwx2, spsi(1,n_start), npwx2, 0.D0, sr(1,n_start), nvecx )
      endif
      IF ( gstart == 2 ) THEN
-        !$omp target update to(spsi)
         CALL MYDGER( nbase, my_n, -1.D0, psi, npwx2, spsi(1,n_start), npwx2, sr(1,n_start), nvecx )
      ENDIF
      !
@@ -465,13 +457,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      ! ... here compute the hpsi and spsi of the new functions
      !
      !$acc host_data use_device(psi, hpsi, spsi)
-     !$omp target update from(psi,hpsi)
      CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
      !
-     IF ( uspp ) THEN
-        !$omp target update from(spsi)
-        CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
-     ENDIF
+     IF ( uspp ) CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
      !$acc end host_data
      !
      ! ... update the reduced hamiltonian
@@ -489,7 +477,6 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !$acc host_data use_device(psi, hpsi, hr)
      CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
-     !$omp target update to(hpsi)
      CALL MYDGEMM( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, hpsi(1,nb1), npwx2, 0.D0, hr(n_start,nb1), nvecx )
      IF ( gstart == 2 ) CALL MYDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, hpsi(1,nb1), npwx2, hr(n_start,nb1), nvecx )
      !$omp target update from(hr)
@@ -512,7 +499,6 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      IF ( uspp ) THEN
         !
-        !$omp target update to(spsi)
         CALL MYDGEMM( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, spsi(1,nb1), npwx2, 0.D0, sr(n_start,nb1), nvecx )
         IF ( gstart == 2 ) CALL MYDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, spsi(1,nb1), npwx2, sr(n_start,nb1), nvecx )
         !

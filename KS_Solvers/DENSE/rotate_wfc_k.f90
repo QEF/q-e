@@ -78,7 +78,9 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   call start_clock('rotwfck:hpsi'); !write(*,*) 'start rotwfck:hpsi';FLUSH(6)
 #if defined(__OPENMP_GPU)
   !$omp target data map(alloc:psi,aux)
+  !$omp target update to(psi,aux)
   CALL h_psi( npwx, npw, nstart, psi, aux )
+  !$omp target update from(aux)
   !$omp end target data
 #else
   CALL h_psi( npwx, npw, nstart, psi, aux )
@@ -238,7 +240,9 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   call start_clock('protwfck:hpsi')
 #if defined(__OPENMP_GPU)
   !$omp target data map(alloc:psi,aux)
+  !$omp target update to(psi,aux)
   CALL h_psi( npwx, npw, nstart, psi, aux )
+  !$omp target update from(aux)
   !$omp end target data
 #else
   CALL h_psi( npwx, npw, nstart, psi, aux )

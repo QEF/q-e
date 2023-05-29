@@ -136,7 +136,11 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   !$omp target data map(alloc:psi,hpsi)
 #endif
                                                          if (clean)  psi(npw+1:npwx,:) = C_ZERO
-  CALL h_psi( npwx, npw, nbnd, psi, hpsi )             ; if (clean) hpsi(npw+1:npwx,:) = C_ZERO
+  !$omp target update to(psi,hpsi)     
+  CALL h_psi( npwx, npw, nbnd, psi, hpsi )             
+  !$omp target update from(hpsi)    
+  if (clean) hpsi(npw+1:npwx,:) = C_ZERO
+  
   if (overlap) CALL s_psi( npwx, npw, nbnd, psi, spsi) ; if (clean) spsi(npw+1:npwx,:) = C_ZERO
 #if defined(__OPENMP_GPU)
   !$omp end target data
@@ -241,7 +245,10 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
      !$omp target data map(alloc:buffer1,buffer)
 #endif
      call threaded_assign( buffer1, w, kdimx, nact, act_idx )
-     CALL h_psi( npwx, npw, nact, buffer1, buffer )       ; if (clean) buffer (npw+1:npwx,1:nact) = C_ZERO
+     !$omp target update to(buffer1,buffer)  
+     CALL h_psi( npwx, npw, nact, buffer1, buffer )       
+     !$omp target update from(buffer) 
+     if (clean) buffer (npw+1:npwx,1:nact) = C_ZERO
      hw(:,act_idx(1:nact)) = buffer(:,1:nact)
 #if defined(__OPENMP_GPU)
      !$omp end target data

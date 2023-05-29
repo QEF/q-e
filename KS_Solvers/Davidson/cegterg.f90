@@ -204,15 +204,11 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   !
   ! ... hpsi contains h times the basis vectors
   !
-  !$omp target update from(psi)
   CALL h_psi( npwx, npw, nvec, psi, hpsi ) ; nhpsi = nhpsi + nvec
   !
   ! ... spsi contains s times the basis vectors
   !
-  IF ( uspp ) THEN
-          CALL s_psi( npwx, npw, nvec, psi, spsi )
-          !$omp target update from(spsi)
-  ENDIF
+  IF ( uspp ) CALL s_psi( npwx, npw, nvec, psi, spsi )
   !
   ! ... hc contains the projection of the hamiltonian onto the reduced
   ! ... space vc contains the eigenvectors of hc
@@ -223,7 +219,6 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   CALL mp_type_create_column_section(sc(1,1), 0, nbase, nvecx, column_section_type)
   my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
   !
-  !$omp target update to(hpsi)
   if (n_start .le. n_end) &
   CALL MYZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, hpsi(1,n_start), kdmx, ZERO, hc(1,n_start), nvecx )
   !$omp target update from(hc)
@@ -441,7 +436,6 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
 #endif
      !
      !$acc host_data use_device(psi, hpsi, vc, ew)
-     !$omp target update to(hpsi)
      if (n_start .le. n_end) &
      CALL MYZGEMM( 'N','N', kdim, notcnv, my_n, ONE, hpsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                  ONE, psi(1,nb1), kdmx )
@@ -524,13 +518,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      ! ... here compute the hpsi and spsi of the new functions
      !
      !$acc host_data use_device(psi, hpsi, spsi, hc, sc)
-     !$omp target update from(psi)
      CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
      !
-     IF ( uspp ) THEN
-             CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
-             !$omp target update from(spsi)
-     ENDIF
+     IF ( uspp ) CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
      !
      ! ... update the reduced hamiltonian
      !
@@ -540,7 +530,6 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      CALL mp_type_create_column_section(sc(1,1), nbase, notcnv, nvecx, column_section_type)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      !
-     !$omp target update to(hpsi)
      CALL MYZGEMM( 'C','N', notcnv, my_n, kdim, ONE, hpsi(1,nb1), kdmx, psi(1,n_start), kdmx, &
                  ZERO, hc(nb1,n_start), nvecx )
      !$omp target update from(hc)
@@ -724,7 +713,6 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
            !
         END IF
         !
-        !$omp target update to(hpsi)
         CALL MYZGEMM( 'N','N', kdim, nvec, my_n, ONE, hpsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                     ZERO, psi(1,nvec+1), kdmx )
         !$omp target update from(psi)
@@ -732,6 +720,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
                                         (/1, npwx*npol/), 1, &
                                         (/1, nvec/), 1)
         CALL mp_sum( hpsi(:,1:nvec), inter_bgrp_comm )
+        !$omp target update to(hpsi)
         !$acc end host_data
         !
         ! ... refresh the reduced hamiltonian
