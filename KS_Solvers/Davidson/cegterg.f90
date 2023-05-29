@@ -208,10 +208,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   !
   ! ... spsi contains s times the basis vectors
   !
-  IF ( uspp ) THEN
-    CALL s_psi( npwx, npw, nvec, psi, spsi )
-    !$omp target update from(spsi)
-  END IF
+  IF ( uspp ) CALL s_psi( npwx, npw, nvec, psi, spsi )
   !
   ! ... hc contains the projection of the hamiltonian onto the reduced
   ! ... space vc contains the eigenvectors of hc
@@ -523,10 +520,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !$acc host_data use_device(psi, hpsi, spsi, hc, sc)
      CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
      !
-     IF ( uspp ) THEN
-       CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
-       !$omp target update from(spsi)
-     END IF
+     IF ( uspp ) CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
      !
      ! ... update the reduced hamiltonian
      !
