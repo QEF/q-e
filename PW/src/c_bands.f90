@@ -628,13 +628,25 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              CALL using_evc(1); CALL using_et(1);
              IF ( use_para_diag ) THEN
 !                ! make sure that all processors have the same wfc
+#if defined(__OPENMP_GPU)
+                CALL pregterg( h_psi, s_psi_omp, okvan, g_psi, &
+                            npw, npwx, nbnd, nbndx, evc, ethr, &
+                            et(1,ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call
+#else
                 CALL pregterg( h_psi, s_psi, okvan, g_psi, &
                             npw, npwx, nbnd, nbndx, evc, ethr, &
                             et(1,ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call
+#endif
              ELSE
+#if defined(__OPENMP_GPU)
+                CALL regterg (  h_psi, s_psi_omp, okvan, g_psi, &
+                         npw, npwx, nbnd, nbndx, evc, ethr, &
+                         et(1,ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call
+#else
                 CALL regterg (  h_psi, s_psi, okvan, g_psi, &
                          npw, npwx, nbnd, nbndx, evc, ethr, &
                          et(1,ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call
+#endif
              END IF
              ! CALL using_evc(1) done above
           ELSE

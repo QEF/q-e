@@ -221,9 +221,10 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   ! ... spsi contains s times the basis vectors
   !
   IF ( uspp ) then
-     !$omp target update from(psi)
+     !!omp target update from(psi)
      CALL s_psi( npwx, npw, nvec, psi, spsi )
-     !$omp target update to(spsi)
+     !!omp target update to(spsi)
+     !$omp target update from(spsi)
   endif
   !$acc end host_data
   !
@@ -464,9 +465,10 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
      !
      IF ( uspp ) THEN
-        !$omp target update from(psi)
+        !!omp target update from(psi)
         CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
-        !$omp target update to(spsi)
+        !!omp target update to(spsi)
+        !$omp target update from(spsi)
      ENDIF
      !$acc end host_data
      !
