@@ -11,7 +11,7 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
           $(MOD_FLAG)../../PHonon/PH \
           $(MOD_FLAG)../../LR_Modules \
-          $(MOD_FLAG)../../wannier90-3.1.0/src/obj \
+          $(MOD_FLAG)../../external/wannier90/src/obj \
           $(MOD_FLAG)../../dft-d3
 
 #
