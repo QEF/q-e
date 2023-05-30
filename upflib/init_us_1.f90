@@ -306,9 +306,10 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      end do
   end if
   !
-  ! fill interpolation table tab
+  ! fill interpolation table for beta functions and for atomic charge
   !
   CALL init_tab_beta ( omega, intra_bgrp_comm )
+  CALL init_tab_rho  ( intra_bgrp_comm )
   !
 #if defined __CUDA
   !

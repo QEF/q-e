@@ -31,6 +31,7 @@ SUBROUTINE atomic_rho_g( rhocg, nspina )
   USE vlocal,               ONLY : starting_charge, strf
   USE noncollin_module,     ONLY : angle1, angle2
   USE uspp_param,           ONLY : upf
+  USE uspp_data,            ONLY : tab_rho, dq
   !
   IMPLICIT NONE
   !
@@ -44,60 +45,47 @@ SUBROUTINE atomic_rho_g( rhocg, nspina )
   !
   ! ... local variables
   !
-  REAL(DP) :: rhoneg, rhoima, rhoscale, gx
-  REAL(DP), ALLOCATABLE :: rhocgnt(:), aux(:)
+  REAL(DP) :: rhoneg, rhoima, rhoscale, gx, px, ux, vx, wx
+  REAL(DP), ALLOCATABLE :: rhocgnt(:)
   REAL(DP) :: angular(nspina)
-  INTEGER :: ir, is, ig, igl, nt, ndm
+  INTEGER :: ir, is, ig, igl, nt, i0, i1, i2, i3
   !
   ! allocate work space 
   !
-  ndm = MAXVAL ( msh(1:ntyp) )
   ALLOCATE (rhocgnt( ngl))
   !
-!$omp parallel private(aux, gx, rhoscale, angular)
+!$omp parallel private(gx,px,ux,vx,wx,i0,i1,i2,i3,rhoscale, angular)
   !
   call threaded_nowait_memset(rhocg, 0.0_dp, ngm*nspina*2)
   !
-  ALLOCATE (aux(ndm))
-  !
   DO nt = 1, ntyp
      !
-     ! Here we compute the G=0 term
-     !
-!$omp master
-     IF (gstart == 2) then
-        DO ir = 1, msh (nt)
-           aux (ir) = upf(nt)%rho_at (ir)
-        ENDDO
-        call simpson (msh (nt), aux, rgrid(nt)%rab, rhocgnt (1) )
-     ENDIF
-!$omp end master
-     !
-     ! Here we compute the G<>0 term
+     ! interpolate rho(G)
      !
 !$omp do
-     DO igl = gstart, ngl
+     DO igl = 1, ngl
         gx = sqrt (gl (igl) ) * tpiba
-        DO ir = 1, msh (nt)
-           IF (rgrid(nt)%r(ir) < eps8) then
-              aux(ir) = upf(nt)%rho_at(ir)
-           ELSE
-              aux(ir) = upf(nt)%rho_at(ir) * &
-                        sin(gx*rgrid(nt)%r(ir)) / (rgrid(nt)%r(ir)*gx)
-           ENDIF
-        ENDDO
-        CALL simpson (msh (nt), aux, rgrid(nt)%rab, rhocgnt (igl) )
+        px = gx / dq - int (gx/dq)
+        ux = 1.d0 - px
+        vx = 2.d0 - px
+        wx = 3.d0 - px
+        i0 = INT(gx/dq) + 1
+        i1 = i0 + 1
+        i2 = i0 + 2
+        i3 = i0 + 3
+        rhocgnt (igl) = &
+                     tab_rho(i0, nt) * ux * vx * wx / 6.d0 + &
+                     tab_rho(i1, nt) * px * vx * wx / 2.d0 - &
+                     tab_rho(i2, nt) * px * ux * wx / 2.d0 + &
+                     tab_rho(i3, nt) * px * ux * vx / 6.d0
      ENDDO
 !$omp end do
-     !
-     ! we compute the 3D atomic charge in reciprocal space
      !
      IF (upf(nt)%zp > eps8) THEN
         rhoscale = MAX(0.0_dp, upf(nt)%zp - starting_charge(nt)) / upf(nt)%zp
      ELSE
         rhoscale = 1.0_dp
      ENDIF
-     !
      !
 !$omp do
      DO ig = 1, ngm
@@ -131,7 +119,6 @@ SUBROUTINE atomic_rho_g( rhocg, nspina )
 !$omp barrier
   ENDDO
 
-  DEALLOCATE (aux)
 !$omp end parallel
 
   DEALLOCATE (rhocgnt)
