@@ -532,7 +532,7 @@ SUBROUTINE sum_band()
        ns = SIZE(rho%of_r,2)
        dffts_nnr = dffts%nnr
        !
-       !$omp target data map(from:rho%of_r)
+       !$omp target data map(alloc:rho%of_r)
        !$omp target teams distribute parallel do collapse(2)
        DO j = 1, ns
          DO i = 1, dffts_nnr
@@ -757,6 +757,9 @@ SUBROUTINE sum_band()
           !
        END DO k_loop
        !
+       IF ((.NOT.noncolin).AND.(.NOT.use_tg)) THEN
+         !$omp target update from(rho%of_r)
+       ENDIF
        !*rho%of_r
        !$omp end target data
        !
@@ -897,7 +900,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   !! Routine used in sum_band (if okvan) and in compute_becsum, called by hinit1 (if okpaw).
   !
   USE kinds,              ONLY : DP
-  USE becmod,             ONLY : becp, calbec, allocate_bec_type
+  USE becmod,             ONLY : becp, calbec, allocate_bec_type, calbec_omp
   USE control_flags,      ONLY : gamma_only, tqr
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp
   USE uspp,               ONLY : nkb, vkb, becsum, ebecsum, ofsbeta
@@ -944,8 +947,18 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   CALL start_clock( 'sum_band:calbec' )
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN
-     ! calbec computes becp = <vkb_i|psi_j>
-     CALL calbec( npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
+    ! calbec computes becp = <vkb_i|psi_j>
+    IF ((.NOT.gamma_only).AND.(.NOT. noncolin)) THEN
+#if defined(__OPENMP_GPU)
+      !$omp target data map(to:vkb)
+      CALL calbec_omp( npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
+      !$omp end target data
+#else
+      CALL calbec( npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
+#endif
+    ELSE
+      CALL calbec( npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
+    ENDIF
   ELSE
      if (gamma_only) then
         do kbnd = 1, this_bgrp_nbnd, 2 !  ibnd_start, ibnd_end, 2
