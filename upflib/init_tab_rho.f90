@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------
-SUBROUTINE init_tab_rho (intra_bgrp_comm)
+SUBROUTINE init_tab_rho (omega, intra_bgrp_comm)
   !----------------------------------------------------------------------
   !
   ! Compute interpolation table for atomic charge density
@@ -21,7 +21,8 @@ SUBROUTINE init_tab_rho (intra_bgrp_comm)
   !
   IMPLICIT NONE
   !
-  integer,  intent(in) :: intra_bgrp_comm
+  INTEGER, INTENT(IN)  :: intra_bgrp_comm
+  REAL(dp), INTENT(IN) :: omega
   !
   INTEGER :: ndm, startq, lastq, nt, iq, ir
   ! various indices
@@ -51,6 +52,7 @@ SUBROUTINE init_tab_rho (intra_bgrp_comm)
         ENDDO
         !
         CALL simpson ( msh(nt), aux, rgrid(nt)%rab, tab_rho(iq,nt) )
+        tab_rho (iq,nt) = tab_rho (iq,nt) / omega 
         !
      ENDDO
      !

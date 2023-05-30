@@ -25,8 +25,8 @@ SUBROUTINE atomic_rho_g( rhocg, nspina )
   USE constants,            ONLY : eps8
   USE atom,                 ONLY : rgrid, msh
   USE ions_base,            ONLY : ntyp => nsp
-  USE cell_base,            ONLY : tpiba, omega
-  USE gvect,                ONLY : ngm, ngl, gstart, gl, igtongl
+  USE cell_base,            ONLY : tpiba
+  USE gvect,                ONLY : ngm, ngl, gl, igtongl
   USE lsda_mod,             ONLY : starting_magnetization
   USE vlocal,               ONLY : starting_charge, strf
   USE noncollin_module,     ONLY : angle1, angle2
@@ -90,7 +90,7 @@ SUBROUTINE atomic_rho_g( rhocg, nspina )
 !$omp do
      DO ig = 1, ngm
         rhocg(ig,1) = rhocg(ig,1) + &
-                strf(ig,nt) * rhoscale * rhocgnt(igtongl(ig)) / omega
+                strf(ig,nt) * rhoscale * rhocgnt(igtongl(ig))
      ENDDO
 !$omp end do nowait
      !
@@ -108,7 +108,7 @@ SUBROUTINE atomic_rho_g( rhocg, nspina )
            DO ig = 1, ngm
               rhocg(ig,is) = rhocg(ig,is) + &
                             starting_magnetization(nt) * angular(is-1) * &
-                            strf(ig,nt) * rhoscale * rhocgnt(igtongl(ig)) / omega
+                            strf(ig,nt) * rhoscale * rhocgnt(igtongl(ig))
            ENDDO
 !$omp end do nowait
         ENDDO
@@ -133,7 +133,7 @@ SUBROUTINE atomic_rho( rhoa, nspina )
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE cell_base,            ONLY : tpiba, omega
+  USE cell_base,            ONLY : omega
   USE control_flags,        ONLY : gamma_only
   USE lsda_mod,             ONLY : lsda
   USE mp_bands,             ONLY : intra_bgrp_comm
