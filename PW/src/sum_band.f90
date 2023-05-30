@@ -223,7 +223,9 @@ SUBROUTINE sum_band()
      !
      ! ... Here we add the (unsymmetrized) Ultrasoft contribution to the charge
      !
+     !$omp target data map(to:becsum)
      CALL addusdens( rho%of_g(:,:) )
+     !$omp end target data
      !
   ENDIF
   !
@@ -918,6 +920,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,         ONLY : using_et
   USE becmod_subs_gpum,   ONLY : using_becp_auto
+  USE paw_variables,      ONLY : okpaw
   !
   IMPLICIT NONE
   !
@@ -948,7 +951,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN
     ! calbec computes becp = <vkb_i|psi_j>
-    IF ((.NOT.gamma_only).AND.(.NOT. noncolin)) THEN
+    IF ((.NOT.gamma_only).AND.(.NOT. noncolin).AND.(.NOT.okpaw)) THEN
 #if defined(__OPENMP_GPU)
       !$omp target data map(to:vkb)
       CALL calbec_omp( npw, vkb, evc(:,ibnd_start:ibnd_end), becp )

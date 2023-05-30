@@ -80,10 +80,6 @@ SUBROUTINE addusdens_g(rho)
   ALLOCATE( aux(ngm,nspin_mag) )
   !$acc data create(aux)
   !
-  !$acc kernels
-  aux = (0.d0,0.d0)
-  !$acc end kernels
-  !
   ! ... With k-point/bgrp parallelization, distribute G-vectors across all processors
   ! ... ngm_s = index of first G-vector for this processor (in the k-point x bgrp pool)
   ! ... ngm_e = index of last  G-vector for this processor (in the k-point x bgrp pool)
@@ -107,12 +103,24 @@ SUBROUTINE addusdens_g(rho)
   !$acc host_data use_device(g,gg,ylmk0)
   CALL ylmr2_gpu( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0 )
   !$acc end host_data
+#elif defined(__OPENMP_GPU)
+  !$omp target data map(to:gg,eigts1,eigts2,eigts3,mill) map(alloc:ylmk0,qmod) map(from:aux)
+  CALL ylmr2_omp( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0 )
 #else
   CALL ylmr2( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0 )
   !$acc update device(ylmk0)
 #endif
   !
+  !$acc parallel loop collapse(2)
+  !$omp target teams distribute parallel do collapse(2)
+  DO is= 1, nspin_mag
+    DO ig = 1, ngm
+      aux(ig,is) = (0.d0,0.d0)
+    ENDDO
+  ENDDO
+  !
   !$acc parallel loop
+  !$omp target teams distribute parallel do
   DO ig = 1, ngm_l
      qmod(ig) = SQRT(gg(ngm_s+ig-1))*tpiba
   ENDDO
@@ -135,6 +143,7 @@ SUBROUTINE addusdens_g(rho)
         !
         ALLOCATE( skk(ngm_l,nab), tbecsum(nij,nab,nspin_mag), aux2(ngm_l,nij) )
         !$acc data create(skk,tbecsum,aux2)
+        !$omp target data map(alloc:skk,tbecsum,aux2)
         !
         CALL start_clock_gpu( 'addusd:skk' )
         nb = 0
@@ -144,6 +153,7 @@ SUBROUTINE addusdens_g(rho)
               !tbecsum(:,nb,:) = becsum(1:nij,na,1:nspin_mag)
               !
               !$acc parallel loop collapse(2)
+              !$omp target teams distribute parallel do collapse(2)
               DO im = 1, nspin_mag
                  DO ij = 1, nij
 #if defined(__CUDA)
@@ -155,6 +165,7 @@ SUBROUTINE addusdens_g(rho)
               ENDDO
               !
               !$acc parallel loop present(eigts1,eigts2,eigts3,mill)
+              !$omp target teams distribute parallel do
               DO ig = 1, ngm_l
                  skk(ig,nb) = eigts1(mill(1,ngm_s+ig-1),na) * &
                               eigts2(mill(2,ngm_s+ig-1),na) * &
@@ -169,7 +180,7 @@ SUBROUTINE addusdens_g(rho)
            !
            !$acc host_data use_device(skk,tbecsum,aux2)
            CALL MYDGEMM2( 'N', 'T', 2*ngm_l, nij, nab, 1.0_dp, skk, 2*ngm_l, &
-                          tbecsum(1,1,is), nij, 0.0_dp, aux2, 2*ngm_l,.FALSE. )
+                          tbecsum(1,1,is), nij, 0.0_dp, aux2, 2*ngm_l,.TRUE. )
            !$acc end host_data
            !
            ! ... sum over lm indices of Q_{lm}
@@ -181,11 +192,14 @@ SUBROUTINE addusdens_g(rho)
                  !$acc host_data use_device(qmod,qgm,ylmk0)
                  CALL qvan2_gpu( ngm_l, ih, jh, nt, qmod, qgm, ylmk0 )
                  !$acc end host_data
+#elif defined(__OPENMP_GPU)
+                 CALL qvan2_omp( ngm_l, ih, jh, nt, qmod, qgm, ylmk0 )
 #else
                  CALL qvan2( ngm_l, ih, jh, nt, qmod, qgm, ylmk0 )
                  !$acc update self(ylmk0)
 #endif
                  !$acc parallel loop
+                 !$omp target teams distribute parallel do
                  DO ig = 1, ngm_l
                     aux(ngm_s+ig-1,is) = aux(ngm_s+ig-1,is) + aux2(ig,ijh)*qgm(ig)
                  ENDDO
@@ -194,12 +208,14 @@ SUBROUTINE addusdens_g(rho)
            ENDDO
         ENDDO
         !
+        !$omp end target data
         !$acc end data
         DEALLOCATE( tbecsum, skk, aux2 )
         !
      ENDIF
   ENDDO
   !
+  !$omp end target data
   !$acc end data
   DEALLOCATE( ylmk0 )
   DEALLOCATE( qgm, qmod )
