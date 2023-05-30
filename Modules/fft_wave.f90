@@ -65,7 +65,7 @@ CONTAINS
     LOGICAL :: omp_offload, omp_map
     !
     dim1 = SIZE(f_in(:))
-    dim2 = SIZE(f_out(1,:))
+    dim2 = SIZE(f_out,2)
     !
     omp_offload = .FALSE.
     omp_map     = .FALSE.
@@ -202,8 +202,8 @@ CONTAINS
     !
     !$acc data present_or_copyin(f_in) present_or_copyout(f_out)
     !
-    npw  = SIZE(f_in(:,1))
-    dim2 = SIZE(f_in(1,:))
+    npw  = SIZE(f_in,1)
+    dim2 = SIZE(f_in,2)
     !
     IF (gamma_only) THEN
       !
@@ -265,7 +265,7 @@ CONTAINS
 #if defined (__OPENMP_GPU)
         IF(omp_map) THEN 
           !$omp target data map(tofrom:f_out)
-          CALL invfft_y_omp( 'Wave', f_out, dfft, howmany=1 )
+          CALL invfft_y_omp( 'Wave', f_out, dfft )
           !$omp end target data 
         ELSE
           CALL invfft_y_omp( 'Wave', f_out, dfft )

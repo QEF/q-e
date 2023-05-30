@@ -442,7 +442,7 @@ SUBROUTINE sum_band()
           !
           ! ... If we have a US pseudopotential we compute here the becsum term
           !
-          IF ( okvan ) CALL sum_bec( ik, current_spin, ibnd_start,ibnd_end,this_bgrp_nbnd ) 
+          IF ( okvan ) CALL sum_bec( ik, current_spin, ibnd_start,ibnd_end,this_bgrp_nbnd )
           !
        ENDDO k_loop
        !
@@ -479,13 +479,13 @@ SUBROUTINE sum_band()
        !
        REAL(DP) :: w1
        ! weights
-       INTEGER :: npw, ipol, na, np
+       INTEGER :: npw, ipol, na, np, ns
        !
        INTEGER  :: idx, ioff, ioff_tg, nxyp, incr, v_siz, j, ir3, i
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:), tg_psi_nc(:,:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:), tg_rho_nc(:,:)
        LOGICAL  :: use_tg
-       INTEGER :: right_nnr, right_nr3, right_inc, ntgrp
+       INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, dffts_nnr
        !
        ! chunking parameters
        INTEGER, PARAMETER :: blocksize = 256
@@ -528,6 +528,17 @@ SUBROUTINE sum_band()
           incr  = fftx_ntgrp(dffts)
           !
        END IF
+       !
+       ns = SIZE(rho%of_r,2)
+       dffts_nnr = dffts%nnr
+       !
+       !$omp target data map(from:rho%of_r)
+       !$omp target teams distribute parallel do collapse(2)
+       DO j = 1, ns
+         DO i = 1, dffts_nnr
+           rho%of_r(i,j)=0.d0
+         ENDDO
+       ENDDO
        !
        k_loop: DO ik = 1, nks
           !
@@ -587,6 +598,8 @@ SUBROUTINE sum_band()
           END IF
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
+          !
+          !$omp target data map(to:evc)
           !
           DO ibnd = ibnd_start, ibnd_end, incr
              !
@@ -700,11 +713,11 @@ SUBROUTINE sum_band()
                    !
                 ELSE
                    !
-                   CALL wave_g2r( evc(1:npw,ibnd:ibnd), psic, dffts, igk=igk_k(:,ik) )
+                   CALL wave_g2r( evc(1:npw,ibnd:ibnd), psic, dffts, igk=igk_k(:,ik), omp_mod=0 )
                    !
                    ! ... increment the charge density ...
                    !
-                   CALL get_rho( rho%of_r(:,current_spin), dffts%nnr, w1, psic )
+                   CALL get_rho( rho%of_r(:,current_spin), dffts%nnr, w1, psic, omp_mod=0 )
                    !
                 ENDIF
                 !
@@ -739,7 +752,13 @@ SUBROUTINE sum_band()
           !
           IF ( okvan ) CALL sum_bec ( ik, current_spin, ibnd_start,ibnd_end,this_bgrp_nbnd ) 
           !
+          !*evc
+          !$omp end target data
+          !
        END DO k_loop
+       !
+       !*rho%of_r
+       !$omp end target data
        !
        ! ... with distributed <beta|psi>, sum over bands
        !
@@ -766,27 +785,45 @@ SUBROUTINE sum_band()
      END SUBROUTINE sum_band_k
      !
      !
-     SUBROUTINE get_rho(rho_loc, nrxxs_loc, w1_loc, psic_loc)
-
+     SUBROUTINE get_rho( rho_loc, nrxxs_loc, w1_loc, psic_loc, omp_mod )
+        !
         IMPLICIT NONE
-
+        !
         INTEGER :: nrxxs_loc
         REAL(DP) :: rho_loc(nrxxs_loc)
         REAL(DP) :: w1_loc
         COMPLEX(DP) :: psic_loc(nrxxs_loc)
-
+        INTEGER, INTENT(IN), OPTIONAL :: omp_mod
+        !
         INTEGER :: ir
-
-        !$omp parallel do
-        DO ir = 1, nrxxs_loc
-           !
-           rho_loc(ir) = rho_loc(ir) + &
-                         w1_loc * ( DBLE( psic_loc(ir) )**2 + &
-                                   AIMAG( psic_loc(ir) )**2 )
-           !
-        END DO
-        !$omp end parallel do
-
+        LOGICAL :: omp_offload
+        !
+        omp_offload = .FALSE.
+#if defined(__OPENMP_GPU)
+        IF (PRESENT(omp_mod))  omp_offload = omp_mod==0
+#endif
+        !
+        IF (omp_offload) THEN
+          !$omp target teams distribute parallel do
+          DO ir = 1, nrxxs_loc
+             !
+             rho_loc(ir) = rho_loc(ir) + &
+                           w1_loc * ( DBLE( psic_loc(ir) )**2 + &
+                                     AIMAG( psic_loc(ir) )**2 )
+             !
+          ENDDO
+        ELSE
+          !$omp parallel do
+          DO ir = 1, nrxxs_loc
+             !
+             rho_loc(ir) = rho_loc(ir) + &
+                           w1_loc * ( DBLE( psic_loc(ir) )**2 + &
+                                     AIMAG( psic_loc(ir) )**2 )
+             !
+          ENDDO
+          !$omp end parallel do
+        ENDIF
+        !
      END SUBROUTINE get_rho
 
      SUBROUTINE get_rho_gamma(rho_loc, nrxxs_loc, w1_loc, w2_loc, psic_loc)
