@@ -384,9 +384,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 !
                 IF (.not. use_gpu) THEN
                    CALL using_evc(1);  CALL using_et(1); ! et is used as intent(out), set intento=2?
-                   !$omp target data map(to:vkb)
                    CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
-                   !$omp end target data
                 ELSE
                    CALL using_evc_d(1);  CALL using_et_d(1); ! et is used as intent(out), set intento=2?
                    CALL rotate_wfc_gpu( npwx, npw, nbnd, gstart, nbnd, evc_d, npol, okvan, evc_d, et_d(1,ik) )
@@ -768,9 +766,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 !
                 IF ( .not. use_gpu ) THEN
                    CALL using_evc(1); CALL using_et(1);
-                   !$omp target data map(to:vkb)
                    CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
-                   !$omp end target data
                 ELSE
                    CALL using_evc_d(1); CALL using_et_d(1);
                    CALL rotate_wfc_gpu( npwx, npw, nbnd, gstart, nbnd, evc_d, npol, okvan, evc_d, et_d(1,ik) )
