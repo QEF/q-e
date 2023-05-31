@@ -281,7 +281,7 @@ SUBROUTINE init_wfc ( ik )
   USE gvect,                ONLY : g, gstart
   USE klist,                ONLY : xk, ngk, igk_k
   USE wvfct,                ONLY : nbnd, npwx, et
-  USE uspp,                 ONLY : nkb, okvan
+  USE uspp,                 ONLY : nkb, okvan, vkb
   USE noncollin_module,     ONLY : npol
   USE wavefunctions,        ONLY : evc
   USE random_numbers,       ONLY : randy
