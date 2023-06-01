@@ -1476,7 +1476,8 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
 
      CALL start_clock ('a2a_fw')
 #if defined(__GPU_MPI) || defined(__GPU_MPI_OMP)
-!$omp target data use_device_ptr(f_in, f_aux)
+
+!$omp target data use_device_addr(f_in, f_aux)
      DO iter = 2, nprocp
         IF(IAND(nprocp, nprocp-1) == 0) THEN
           sorc = IEOR( me-1, iter-1 )
@@ -1498,6 +1499,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
         call MPI_ISEND( f_aux((dest)*sendsiz + 1), sendsiz, MPI_DOUBLE_COMPLEX, dest, 0, gcomm, srh(iter+nprocp-2), ierr )
 
      ENDDO
+!$omp end target data
 
 !$omp target teams distribute parallel do
      DO i=(me-1)*sendsiz + 1, me*sendsiz
@@ -1506,7 +1508,6 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
 !$omp end target teams distribute parallel do
 
      call MPI_WAITALL(2*nprocp-2, srh, MPI_STATUSES_IGNORE, ierr)
-!$omp end target data
 #else
      CALL mpi_alltoall (f_aux(1), sendsiz, MPI_DOUBLE_COMPLEX, f_in(1), sendsiz, MPI_DOUBLE_COMPLEX, gcomm, ierr)
      !$omp target update to (f_in(1:sendsiz*nprocp))
@@ -1600,7 +1601,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      !
      CALL start_clock ('a2a_bw')
 #if defined(__GPU_MPI) || defined(__GPU_MPI_OMP)
-     !$omp target data use_device_ptr(f_in, f_aux)
+     !$omp target data use_device_addr(f_in, f_aux)
      DO iter = 2, nprocp
         IF(IAND(nprocp, nprocp-1) == 0) THEN
           sorc = IEOR( me-1, iter-1 )
@@ -1622,6 +1623,7 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
         call MPI_ISEND( f_in((dest)*sendsiz + 1), sendsiz, MPI_DOUBLE_COMPLEX, dest, 0, gcomm, srh(iter+nprocp-2), ierr )
 
      ENDDO
+     !$omp end target data
 
      !$omp target teams distribute parallel do
      DO i=(me-1)*sendsiz + 1, me*sendsiz
@@ -1629,7 +1631,6 @@ SUBROUTINE fft_scatter_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      ENDDO
 
      call MPI_WAITALL(2*nprocp-2, srh, MPI_STATUSES_IGNORE, ierr)
-     !$omp end target data
 #else
      CALL mpi_alltoall (f_in(1), sendsiz, MPI_DOUBLE_COMPLEX, f_aux(1), sendsiz, MPI_DOUBLE_COMPLEX, gcomm, ierr)
 #ifndef __MEMCPY_RECT
