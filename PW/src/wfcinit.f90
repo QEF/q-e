@@ -485,7 +485,7 @@ SUBROUTINE aceinit0()
   USE io_files,             ONLY : restart_dir
   USE wvfct,                ONLY : nbnd
   USE pw_restart_new,       ONLY : read_collected_wfc
-  USE exx,                  ONLY : xi, domat
+  USE exx,                  ONLY : xi, xi_d, domat
   USE xc_lib,               ONLY : start_exx, exx_is_active
   USE noncollin_module,     ONLY : npol
   USE wvfct,                ONLY : npwx
@@ -509,6 +509,9 @@ SUBROUTINE aceinit0()
     Call start_exx()
     !
     IF (.NOT. ALLOCATED(xi)) ALLOCATE( xi(npwx*npol,nbnd,nkstot) )
+#if defined (__CUDA)
+    IF (.NOT. ALLOCATED(xi_d)) ALLOCATE( xi_d(npwx*npol,nbnd) )
+#endif
     !
     xi=(0.0d0, 0.0d0)
     !
@@ -519,6 +522,10 @@ SUBROUTINE aceinit0()
        IF ( ierr /= 0 ) CALL errore ('aceinit0', &
             'file with ACE potential not found or not readable',ik)
     END DO
+    !
+#if defined (__CUDA)
+    IF (nks == 1) xi_d(:,:) = xi(:,:,1)
+#endif
     !
     WRITE( stdout, '(5X,"Starting ACE correctly read from file")' )
     !
