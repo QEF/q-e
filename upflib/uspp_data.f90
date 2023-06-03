@@ -94,7 +94,7 @@ contains
      tab(:,:,:)    = tab(:,:,:) * SQRT(vol_ratio_m1)
      qrad(:,:,:,:) = qrad(:,:,:,:) * vol_ratio_m1
      tab_at(:,:,:) = tab_at(:,:,:) * SQRT(vol_ratio_m1)
-     tab_rho(:,:)  = tab_rho(:,:) * SQRT(vol_ratio_m1)
+     tab_rho(:,:)  = tab_rho(:,:) * vol_ratio_m1
 #if defined __CUDA
      ! CUDA Fortran safeguard
      if(size(tab) > 0) tab_d = tab
