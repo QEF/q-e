@@ -53,8 +53,7 @@ SUBROUTINE set_rhoc
            !
            ! drhoc computes the radial fourier transform for each shell of g vec
            !
-           CALL drhoc (ngl, gl, omega, tpiba2, msh (nt), rgrid(nt)%r, &
-             rgrid(nt)%rab, upf(nt)%rho_atc, rhocg)
+           CALL drhoc (nt, ngl, gl, omega, tpiba2, rhocg)
            !
            !     multiply by the structure factor and sum
            !

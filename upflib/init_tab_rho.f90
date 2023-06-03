@@ -6,11 +6,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------
-SUBROUTINE init_tab_rho (omega, intra_bgrp_comm)
+SUBROUTINE init_tab_rho (omega, comm)
   !----------------------------------------------------------------------
   !
   ! Compute interpolation table for atomic charge density
   ! tab_rho(i,nt) = \rho_nt(q_i) for atom of type nt, on grid q_i
+  !! Output in tab_rhc, module uspp_data
   !
   USE upf_kinds,    ONLY : dp
   USE upf_const,    ONLY : fpi, eps8
@@ -21,19 +22,21 @@ SUBROUTINE init_tab_rho (omega, intra_bgrp_comm)
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN)  :: intra_bgrp_comm
+  INTEGER, INTENT(IN)  :: comm
+  !! MPI communicator, to split the workload
   REAL(dp), INTENT(IN) :: omega
+  !! Unit-cell volume
   !
   INTEGER :: ndm, startq, lastq, nt, iq, ir
-  ! various indices
+  !! Various indices
   REAL(dp) :: q
   REAL(dp), ALLOCATABLE :: aux (:)
-  ! space
+  !! Work space
   !
   ndm = MAXVAL( msh(1:nsp) )
   ALLOCATE (aux(ndm))
   !
-  CALL divide (intra_bgrp_comm, nqxq, startq, lastq)
+  CALL divide (comm, nqxq, startq, lastq)
   !
   DO nt = 1, nsp
      !
@@ -58,7 +61,7 @@ SUBROUTINE init_tab_rho (omega, intra_bgrp_comm)
      !
   END DO
   !
-  CALL mp_sum ( tab_rho (:,1:nsp), intra_bgrp_comm )
+  CALL mp_sum ( tab_rho (:,1:nsp), comm )
   !
   DEALLOCATE (aux)
   !

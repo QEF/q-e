@@ -89,12 +89,7 @@ SUBROUTINE force_cc( forcecc )
   DO nt = 1, ntyp
      IF ( upf(nt)%nlcc ) THEN
         !
-        !$acc data copyin(rgrid(nt:nt),upf(nt:nt))
-        !$acc data copyin(rgrid(nt)%r,rgrid(nt)%rab,upf(nt)%rho_atc)
-        CALL drhoc( ngl, gl, omega, tpiba2, msh(nt), rgrid(nt)%r, &
-                    rgrid(nt)%rab, upf(nt)%rho_atc, rhocg )
-        !$acc end data
-        !$acc end data
+        CALL drhoc( nt, ngl, gl, omega, tpiba2, rhocg )
         !
 #if !defined(_OPENACC)
         !$omp parallel do private( tau1,tau2,tau3,forcecc_x,forcecc_y,forcecc_z,&

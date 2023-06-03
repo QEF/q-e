@@ -16,8 +16,9 @@ MODULE uspp_data
   PRIVATE
   !
   PUBLIC :: nqxq, nqx, dq
-  PUBLIC :: qrad,   tab,   tab_at  , tab_rho
+  PUBLIC :: qrad,   tab,   tab_at
   PUBLIC :: qrad_d, tab_d, tab_at_d
+  PUBLIC :: tab_rho, tab_rhc
   !
   PUBLIC :: allocate_uspp_data
   PUBLIC :: deallocate_uspp_data
@@ -30,15 +31,17 @@ MODULE uspp_data
   REAL(DP), PARAMETER:: dq = 0.01D0
   !! space between points in the pseudopotential tab.
   REAL(DP), ALLOCATABLE :: qrad(:,:,:,:)
-  !! radial FT of Q functions
+  !! interpolation table for radial FT of Q functions
   REAL(DP), ALLOCATABLE :: tab(:,:,:)
-  !! interpolation table for PPs
+  !! interpolation table for PP projectorss
   REAL(DP), ALLOCATABLE :: tab_at(:,:,:)
   !! interpolation table for atomic wfc
   REAL(DP), ALLOCATABLE :: tab_rho(:,:)
-  !! interpolation table for atomic rho
+  !! interpolation table for atomic charge density
+  REAL(DP), ALLOCATABLE :: tab_rhc(:,:)
+  !! interpolation table for atomic pseudo-core charge density
   !
-  ! GPUs vars
+  !! GPUs variables - only those tables that is useful to have on GPUss
   !
   REAL(DP), ALLOCATABLE :: qrad_d(:,:,:,:)
   REAL(DP), ALLOCATABLE :: tab_d(:,:,:)
@@ -62,6 +65,7 @@ contains
      allocate(tab(nqx_,nbetam,nsp))
      allocate(tab_at(nqx_,nwfcm,nsp))
      allocate(tab_rho(nqxq_,nsp))
+     allocate(tab_rhc(nqxq_,nsp))
      !
      IF (use_gpu) then
         ! allocations with zero size protected
@@ -80,6 +84,7 @@ contains
      if( allocated( tab ) )       deallocate( tab )
      if( allocated( tab_at ) )    deallocate( tab_at )
      if( allocated( tab_rho) )    deallocate( tab_rho)
+     if( allocated( tab_rhc) )    deallocate( tab_rhc)
      !
      if( allocated( qrad_d ) )    deallocate( qrad_d )
      if( allocated( tab_d ) )     deallocate( tab_d )
@@ -95,6 +100,7 @@ contains
      qrad(:,:,:,:) = qrad(:,:,:,:) * vol_ratio_m1
      tab_at(:,:,:) = tab_at(:,:,:) * SQRT(vol_ratio_m1)
      tab_rho(:,:)  = tab_rho(:,:) * vol_ratio_m1
+     tab_rhc(:,:)  = tab_rhc(:,:) * vol_ratio_m1
 #if defined __CUDA
      ! CUDA Fortran safeguard
      if(size(tab) > 0) tab_d = tab

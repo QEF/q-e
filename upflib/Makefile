@@ -19,6 +19,7 @@ init_us_2_base.o \
 init_tab_atwfc.o \
 init_tab_beta.o \
 init_tab_rho.o \
+init_tab_rhc.o \
 init_tab_qrad.o
 
 OBJS_NODEP= \
