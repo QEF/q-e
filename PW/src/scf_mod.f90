@@ -898,7 +898,7 @@ FUNCTION tauk_ddot( rho1, rho2, gf )
     !$acc parallel loop reduction (+: tauk_ddot)
      DO ig = gstart, gf
         tauk_ddot = tauk_ddot + &
-          SUM( REAL( CONJG( rho1%kin_g(1,2:nspin))*(rho2%kin_g(1,2:nspin) ), DP))
+          SUM( REAL( CONJG( rho1%kin_g(ig,2:nspin))*(rho2%kin_g(ig,2:nspin) ), DP))
      ENDDO
     !$acc end parallel loop
      !
@@ -907,7 +907,7 @@ FUNCTION tauk_ddot( rho1, rho2, gf )
      ! ... G=0 term
      IF ( gstart == 2 ) THEN
         tauk_ddot = tauk_ddot + &
-          SUM(REAL(CONJG( rho1%kin_g(1,1:nspin))*(rho2%kin_g(1,1:nspin) ), DP))
+          SUM(REAL(CONJG( rho1%kin_g(1,2:nspin))*(rho2%kin_g(1,2:nspin) ), DP))
      ENDIF
      !
      IF ( nspin == 2 ) tauk_ddot = 0.5D0 *  tauk_ddot 
