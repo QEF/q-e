@@ -22,7 +22,7 @@ SUBROUTINE force_corr( forcescc )
   USE uspp_param,           ONLY : upf
   USE uspp_data,            ONLY : tab_rho, dq
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
-  USE cell_base,            ONLY : tpiba
+  USE cell_base,            ONLY : tpiba, omega
   USE fft_base,             ONLY : dfftp
   USE fft_rho,              ONLY : rho_r2g
   USE gvect,                ONLY : ngm, gstart, g, ngl, gl, igtongl
@@ -66,9 +66,9 @@ SUBROUTINE force_corr( forcescc )
   CALL rho_r2g( dfftp, vauxr, vauxg )
   !
   IF (gamma_only) THEN
-     fact = 2.d0
+     fact = 2.d0*omega
   ELSE
-     fact = 1.d0
+     fact = 1.d0*omega
   ENDIF
   !
   DO nt = 1, ntyp
