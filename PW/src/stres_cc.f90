@@ -90,8 +90,8 @@ SUBROUTINE stres_cc( sigmaxcc )
         !
         !$acc data copyin(rgrid(nt:nt),upf(nt:nt))
         !$acc data copyin(rgrid(nt)%r,rgrid(nt)%rab,upf(nt)%rho_atc)
-        
-        CALL drhoc( ngl, gl, omega, tpiba2, rhocg )
+ 
+        CALL drhoc( nt, ngl, gl, omega, tpiba2, rhocg )
         !
         ! ... diagonal term
         IF (gstart==2) THEN
