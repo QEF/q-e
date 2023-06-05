@@ -43,8 +43,8 @@ SUBROUTINE set_rhoc
   rho_core(:)  = 0.0_DP
 
   IF ( ANY( upf(1:ntyp)%nlcc ) ) THEN
-
      ALLOCATE (rhocg( ngl))    
+     ! acc data create(rhocg) copyin(gl)
      !
      !    the sum is on atom types
      !
@@ -60,8 +60,9 @@ SUBROUTINE set_rhoc
            DO ng = 1, ngm
               rhog_core(ng) = rhog_core(ng) + strf(ng,nt) * rhocg(igtongl(ng))
            END DO
-       ENDIF
+        ENDIF
      ENDDO
+     ! acc end data
      DEALLOCATE (rhocg)
      !
      CALL rho_g2r( dfftp, rhog_core, rho_core )

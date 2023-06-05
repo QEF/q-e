@@ -38,6 +38,7 @@ SUBROUTINE drhoc( nt, ngl, gl, omega, tpiba2, rhocg )
   ! counters
   !
   !$acc data present_or_copyin(gl) present_or_copyout(rhocg)
+  !$acc parallel loop
   DO igl = 1, ngl
      gx = SQRT(gl(igl) * tpiba2)
      px = gx / dq - int (gx/dq)
