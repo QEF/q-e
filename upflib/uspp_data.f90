@@ -16,7 +16,7 @@ MODULE uspp_data
   PRIVATE
   !
   PUBLIC :: nqxq, nqx, dq
-  PUBLIC :: qrad,   tab,   tab_at
+  PUBLIC :: qrad,   tab,   tab_at  , tab_rho
   PUBLIC :: qrad_d, tab_d, tab_at_d
   !
   PUBLIC :: allocate_uspp_data
@@ -35,6 +35,8 @@ MODULE uspp_data
   !! interpolation table for PPs
   REAL(DP), ALLOCATABLE :: tab_at(:,:,:)
   !! interpolation table for atomic wfc
+  REAL(DP), ALLOCATABLE :: tab_rho(:,:)
+  !! interpolation table for atomic rho
   !
   ! GPUs vars
   !
@@ -59,6 +61,7 @@ contains
      if (lmaxq>0) allocate(qrad(nqxq_,nbetam*(nbetam+1)/2, lmaxq, nsp))
      allocate(tab(nqx_,nbetam,nsp))
      allocate(tab_at(nqx_,nwfcm,nsp))
+     allocate(tab_rho(nqxq_,nsp))
      !
      IF (use_gpu) then
         ! allocations with zero size protected
@@ -76,6 +79,7 @@ contains
      if( allocated( qrad ) )      deallocate( qrad )
      if( allocated( tab ) )       deallocate( tab )
      if( allocated( tab_at ) )    deallocate( tab_at )
+     if( allocated( tab_rho) )    deallocate( tab_rho)
      !
      if( allocated( qrad_d ) )    deallocate( qrad_d )
      if( allocated( tab_d ) )     deallocate( tab_d )
@@ -90,6 +94,7 @@ contains
      tab(:,:,:)    = tab(:,:,:) * SQRT(vol_ratio_m1)
      qrad(:,:,:,:) = qrad(:,:,:,:) * vol_ratio_m1
      tab_at(:,:,:) = tab_at(:,:,:) * SQRT(vol_ratio_m1)
+     tab_rho(:,:)  = tab_rho(:,:) * vol_ratio_m1
 #if defined __CUDA
      ! CUDA Fortran safeguard
      if(size(tab) > 0) tab_d = tab

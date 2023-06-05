@@ -108,7 +108,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
                                      fwfft_orbital_k, calbec_rs_k, add_vuspsir_k,           & 
                                      v_loc_psir_inplace
   USE fft_base,                ONLY: dffts
-  USE exx,                     ONLY: use_ace, vexx, vexxace_gamma, vexxace_k
+  USE exx,                     ONLY: use_ace, vexx, vexxace_gamma_gpu, vexxace_k_gpu
   USE xc_lib,                  ONLY: exx_is_active, xclib_dft_is
   USE fft_helper_subroutines
   USE device_memcpy_m,         ONLY: dev_memcpy, dev_memset
@@ -135,7 +135,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   attributes(PINNED) :: psi_host, hpsi_host
 #endif
   !
-  INTEGER     :: ipol, ibnd, incr, i
+  INTEGER     :: ipol, ibnd, i
   REAL(dp)    :: ee
   !
   LOGICAL     :: need_host_copy
@@ -147,8 +147,8 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !
   need_host_copy = ( real_space .and. nkb > 0  ) .OR. &
                      xclib_dft_is('meta') .OR. &
-                    (lda_plus_u .AND. Hubbard_projectors.NE."pseudo" ) .OR. &
-                    exx_is_active() .OR. lelfield
+                    (lda_plus_u .AND. Hubbard_projectors.NE."pseudo") .OR. &
+                    (exx_is_active() .AND. .NOT. use_ace) .OR. lelfield
 
 
   IF (need_host_copy) THEN
@@ -196,9 +196,9 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
            ! ... transform psi to real space -> psic 
            CALL invfft_orbital_gamma(psi_host, ibnd, m )
            ! ... compute becp%r = < beta|psi> from psic in real space
-     CALL start_clock_gpu( 'h_psi:calbec' ) 
+           CALL start_clock_gpu( 'h_psi:calbec' )
            CALL calbec_rs_gamma( ibnd, m, becp%r )
-     CALL stop_clock_gpu( 'h_psi:calbec' )
+           CALL stop_clock_gpu( 'h_psi:calbec' )
            ! ... psic -> vrs * psic (psic overwritten will become hpsi)
            CALL v_loc_psir_inplace( ibnd, m ) 
            ! ... psic (hpsi) -> psic + vusp
@@ -232,9 +232,9 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
            ! ... transform psi to real space -> psic 
            CALL invfft_orbital_k(psi_host, ibnd, m )
            ! ... compute becp%r = < beta|psi> from psic in real space
-     CALL start_clock_gpu( 'h_psi:calbec' )
+           CALL start_clock_gpu( 'h_psi:calbec' )
            CALL calbec_rs_k( ibnd, m )
-     CALL stop_clock_gpu( 'h_psi:calbec' )
+           CALL stop_clock_gpu( 'h_psi:calbec' )
            ! ... psic -> vrs * psic (psic overwritten will become hpsi)
            CALL v_loc_psir_inplace( ibnd, m )
            ! ... psic (hpsi) -> psic + vusp
@@ -302,18 +302,18 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   ! ... Here the exact-exchange term Vxx psi
   !
   IF ( exx_is_active() ) THEN
-     CALL dev_memcpy(hpsi_host, hpsi_d ) ! hpsi_host = hpsi_d
      IF ( use_ace) THEN
         IF (gamma_only) THEN
-           CALL vexxace_gamma(lda,m,psi_host,ee,hpsi_host)
+           CALL vexxace_gamma_gpu(lda,m,psi_d,ee,hpsi_d)
         ELSE
-           CALL vexxace_k(lda,m,psi_host,ee,hpsi_host) 
+           CALL vexxace_k_gpu(lda,m,psi_d,ee,hpsi_d)
         END IF
      ELSE
+        CALL dev_memcpy(hpsi_host, hpsi_d ) ! hpsi_host = hpsi_d
         CALL using_becp_auto(0)
         CALL vexx( lda, n, m, psi_host, hpsi_host, becp )
+        CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
      END IF
-     CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
   END IF
   !
   ! ... electric enthalpy if required

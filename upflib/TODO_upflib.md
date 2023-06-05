@@ -62,7 +62,7 @@
     qradx    qrad    tab_q         Q(G) for  USPP/PAW	init_tab_qrad
     dqradx              	   dQ(G)/dG  		compute_qradx
              tab_at  tab_atwfc     atomic R_nl(G)	init_tab_atwfc
-                    (tab_atrho     atomic rho(G)	to be done)
+             tab_rho tab_atrho     atomic rho(G)	init_tab_rho
                     (tab_vloc      local potential	to be done)
 
 

@@ -25,12 +25,13 @@ SUBROUTINE atomic_rho_g( rhocg, nspina )
   USE constants,            ONLY : eps8
   USE atom,                 ONLY : rgrid, msh
   USE ions_base,            ONLY : ntyp => nsp
-  USE cell_base,            ONLY : tpiba, omega
-  USE gvect,                ONLY : ngm, ngl, gstart, gl, igtongl
+  USE cell_base,            ONLY : tpiba
+  USE gvect,                ONLY : ngm, ngl, gl, igtongl
   USE lsda_mod,             ONLY : starting_magnetization
   USE vlocal,               ONLY : starting_charge, strf
   USE noncollin_module,     ONLY : angle1, angle2
   USE uspp_param,           ONLY : upf
+  USE uspp_data,            ONLY : tab_rho, dq
   !
   IMPLICIT NONE
   !
@@ -44,53 +45,41 @@ SUBROUTINE atomic_rho_g( rhocg, nspina )
   !
   ! ... local variables
   !
-  REAL(DP) :: rhoneg, rhoima, rhoscale, gx
-  REAL(DP), ALLOCATABLE :: rhocgnt(:), aux(:)
+  REAL(DP) :: rhoneg, rhoima, rhoscale, gx, px, ux, vx, wx
+  REAL(DP), ALLOCATABLE :: rhocgnt(:)
   REAL(DP) :: angular(nspina)
-  INTEGER :: ir, is, ig, igl, nt, ndm
+  INTEGER :: ir, is, ig, igl, nt, i0, i1, i2, i3
   !
   ! allocate work space 
   !
-  ndm = MAXVAL ( msh(1:ntyp) )
   ALLOCATE (rhocgnt( ngl))
   !
-!$omp parallel private(aux, gx, rhoscale, angular)
+!$omp parallel private(gx,px,ux,vx,wx,i0,i1,i2,i3,rhoscale, angular)
   !
   call threaded_nowait_memset(rhocg, 0.0_dp, ngm*nspina*2)
   !
-  ALLOCATE (aux(ndm))
-  !
   DO nt = 1, ntyp
      !
-     ! Here we compute the G=0 term
-     !
-!$omp master
-     IF (gstart == 2) then
-        DO ir = 1, msh (nt)
-           aux (ir) = upf(nt)%rho_at (ir)
-        ENDDO
-        call simpson (msh (nt), aux, rgrid(nt)%rab, rhocgnt (1) )
-     ENDIF
-!$omp end master
-     !
-     ! Here we compute the G<>0 term
+     ! interpolate rho(G)
      !
 !$omp do
-     DO igl = gstart, ngl
+     DO igl = 1, ngl
         gx = sqrt (gl (igl) ) * tpiba
-        DO ir = 1, msh (nt)
-           IF (rgrid(nt)%r(ir) < eps8) then
-              aux(ir) = upf(nt)%rho_at(ir)
-           ELSE
-              aux(ir) = upf(nt)%rho_at(ir) * &
-                        sin(gx*rgrid(nt)%r(ir)) / (rgrid(nt)%r(ir)*gx)
-           ENDIF
-        ENDDO
-        CALL simpson (msh (nt), aux, rgrid(nt)%rab, rhocgnt (igl) )
+        px = gx / dq - int (gx/dq)
+        ux = 1.d0 - px
+        vx = 2.d0 - px
+        wx = 3.d0 - px
+        i0 = INT(gx/dq) + 1
+        i1 = i0 + 1
+        i2 = i0 + 2
+        i3 = i0 + 3
+        rhocgnt (igl) = &
+                     tab_rho(i0, nt) * ux * vx * wx / 6.d0 + &
+                     tab_rho(i1, nt) * px * vx * wx / 2.d0 - &
+                     tab_rho(i2, nt) * px * ux * wx / 2.d0 + &
+                     tab_rho(i3, nt) * px * ux * vx / 6.d0
      ENDDO
 !$omp end do
-     !
-     ! we compute the 3D atomic charge in reciprocal space
      !
      IF (upf(nt)%zp > eps8) THEN
         rhoscale = MAX(0.0_dp, upf(nt)%zp - starting_charge(nt)) / upf(nt)%zp
@@ -98,11 +87,10 @@ SUBROUTINE atomic_rho_g( rhocg, nspina )
         rhoscale = 1.0_dp
      ENDIF
      !
-     !
 !$omp do
      DO ig = 1, ngm
         rhocg(ig,1) = rhocg(ig,1) + &
-                strf(ig,nt) * rhoscale * rhocgnt(igtongl(ig)) / omega
+                strf(ig,nt) * rhoscale * rhocgnt(igtongl(ig))
      ENDDO
 !$omp end do nowait
      !
@@ -120,7 +108,7 @@ SUBROUTINE atomic_rho_g( rhocg, nspina )
            DO ig = 1, ngm
               rhocg(ig,is) = rhocg(ig,is) + &
                             starting_magnetization(nt) * angular(is-1) * &
-                            strf(ig,nt) * rhoscale * rhocgnt(igtongl(ig)) / omega
+                            strf(ig,nt) * rhoscale * rhocgnt(igtongl(ig))
            ENDDO
 !$omp end do nowait
         ENDDO
@@ -131,7 +119,6 @@ SUBROUTINE atomic_rho_g( rhocg, nspina )
 !$omp barrier
   ENDDO
 
-  DEALLOCATE (aux)
 !$omp end parallel
 
   DEALLOCATE (rhocgnt)
@@ -146,7 +133,7 @@ SUBROUTINE atomic_rho( rhoa, nspina )
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE cell_base,            ONLY : tpiba, omega
+  USE cell_base,            ONLY : omega
   USE control_flags,        ONLY : gamma_only
   USE lsda_mod,             ONLY : lsda
   USE mp_bands,             ONLY : intra_bgrp_comm
