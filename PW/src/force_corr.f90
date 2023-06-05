@@ -61,7 +61,7 @@ SUBROUTINE force_corr( forcescc )
   !
   ALLOCATE( rhocgnt(ngl) )
   !
-  !$acc data copyin(tau,gl,ityp) create(rhocgnt,vauxg)
+  !$acc data copyin(tau,gl,ityp) create(rhocgnt,vauxg) present(tab_rho)
   !
   CALL rho_r2g( dfftp, vauxr, vauxg )
   !
@@ -73,6 +73,7 @@ SUBROUTINE force_corr( forcescc )
   !
   DO nt = 1, ntyp
      !
+     !$acc parallel loop 
      DO ig = 1, ngl
         !
         gx = SQRT(gl(ig)) * tpiba
@@ -90,9 +91,6 @@ SUBROUTINE force_corr( forcescc )
                      tab_rho(i2, nt) * px * ux * wx / 2.d0 + &
                      tab_rho(i3, nt) * px * ux * vx / 6.d0
      ENDDO
-     !
-     !$acc end data
-     !$acc end data
      !
 #if defined(_OPENACC)
      !$acc parallel loop gang copy(forcescc)

@@ -88,7 +88,10 @@ SUBROUTINE stres_cc( sigmaxcc )
   DO nt = 1, ntyp
      IF ( upf(nt)%nlcc ) THEN
         !
-        CALL drhoc( nt, ngl, gl, omega, tpiba2, rhocg )
+        !$acc data copyin(rgrid(nt:nt),upf(nt:nt))
+        !$acc data copyin(rgrid(nt)%r,rgrid(nt)%rab,upf(nt)%rho_atc)
+        
+        CALL drhoc( ngl, gl, omega, tpiba2, rhocg )
         !
         ! ... diagonal term
         IF (gstart==2) THEN

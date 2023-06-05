@@ -54,5 +54,6 @@ SUBROUTINE drhoc( nt, ngl, gl, omega, tpiba2, rhocg )
                    tab_rhc(i3, nt) * px * ux * vx / 6.d0
 
   ENDDO
+  !$acc end data
   !
 END SUBROUTINE drhoc
