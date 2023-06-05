@@ -83,7 +83,7 @@ contains
      if( allocated( qrad ) )      deallocate( qrad )
      if( allocated( tab ) )       deallocate( tab )
      if( allocated( tab_at ) )    deallocate( tab_at )
-!$acc exit data finalize delete(tab_rho)
+!$acc exit data delete(tab_rho, tab_rhc)
      if( allocated( tab_rho) )    deallocate( tab_rho)
      if( allocated( tab_rhc) )    deallocate( tab_rhc)
      !
@@ -103,7 +103,7 @@ contains
      tab_rho(:,:)  = tab_rho(:,:) * vol_ratio_m1
      tab_rhc(:,:)  = tab_rhc(:,:) * vol_ratio_m1
 #if defined __CUDA
-!$acc enter data copyin (tab_rho)
+!$acc enter data copyin (tab_rho, tab_rhc)
      ! CUDA Fortran safeguard
      if(size(tab) > 0) tab_d = tab
      if(size(qrad) > 0) qrad_d = qrad

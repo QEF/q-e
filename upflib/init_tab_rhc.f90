@@ -64,6 +64,7 @@ SUBROUTINE init_tab_rhc (omega, comm)
   END DO
   !
   CALL mp_sum ( tab_rhc (:,1:nsp), comm )
+  !$acc enter data copyin (tab_rhc)
   !
   DEALLOCATE (aux)
   !
