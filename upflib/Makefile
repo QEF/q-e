@@ -71,8 +71,7 @@ OBJS_GPU= \
   init_us_2_base_gpu.o \
   interp_atwfc_gpu.o \
   qvan2_gpu.o \
-  ylmr2_gpu.o \
-  upf_acc_interfaces.o
+  ylmr2_gpu.o
 
 OBJS_NODEP+= dom.o wxml.o
 
