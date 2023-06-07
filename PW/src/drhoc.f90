@@ -7,9 +7,9 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE drhoc( nt, ngl, gl, omega, tpiba2, rhocg )
+SUBROUTINE drhoc( nt, ngl, gl, tpiba2, rhocg )
   !-----------------------------------------------------------------------
-  !! Calculates the Fourier transform of the core charge.
+  !! Calculates the radial Fourier transform of the core charge.
   !
   USE kinds,     ONLY : dp
   USE uspp_data, ONLY : tab_rhc, dq
@@ -22,8 +22,6 @@ SUBROUTINE drhoc( nt, ngl, gl, omega, tpiba2, rhocg )
   !! input: the number of g shell
   REAL(DP) :: gl(ngl)
   !! input: the number of G shells
-  REAL(DP) :: omega
-  !! input: the volume of the unit cell
   REAL(DP) :: tpiba2
   !! input: 2 times pi / alat
   REAL(DP) :: rhocg(ngl)
@@ -37,7 +35,7 @@ SUBROUTINE drhoc( nt, ngl, gl, omega, tpiba2, rhocg )
   INTEGER :: igl, i0, i1, i2, i3
   ! counters
   !
-  !$acc data present_or_copyin(gl) present_or_copyout(rhocg)
+  !$acc data present_or_copyin(gl) present_or_copyout(rhocg) present(tab_rhc)
   !$acc parallel loop
   DO igl = 1, ngl
      gx = SQRT(gl(igl) * tpiba2)
