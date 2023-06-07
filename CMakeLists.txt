@@ -13,7 +13,7 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
 project(qe
-    VERSION 7.1
+    VERSION 7.2
     DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization"
     LANGUAGES Fortran C)
 
@@ -308,6 +308,38 @@ if(NOT Fortran_ISYSTEM_SUPPORTED AND NOT DEFINED CMAKE_NO_SYSTEM_FROM_IMPORTED)
   set(CMAKE_NO_SYSTEM_FROM_IMPORTED ON)
 endif()
 
+###########################################################
+# OpenMP
+# The following targets will be defined:
+add_library(qe_openmp_fortran INTERFACE)
+add_library(qe_openmp_c INTERFACE)
+qe_install_targets(qe_openmp_fortran qe_openmp_c)
+###########################################################
+if(QE_ENABLE_OPENMP)
+    find_package(OpenMP REQUIRED Fortran C)
+    target_link_libraries(qe_openmp_fortran INTERFACE OpenMP::OpenMP_Fortran)
+    target_link_libraries(qe_openmp_c INTERFACE OpenMP::OpenMP_C)
+endif(QE_ENABLE_OPENMP)
+if(QE_ENABLE_OFFLOAD)
+    target_compile_definitions(qe_openmp_fortran INTERFACE "$<$<COMPILE_LANGUAGE:Fortran>:__OPENMP_GPU>")
+endif()
+
+###########################################################
+# OpenACC
+# The following targets will be defined:
+add_library(qe_openacc_fortran INTERFACE)
+add_library(qe_openacc_c INTERFACE)
+qe_install_targets(qe_openacc_fortran qe_openacc_c)
+###########################################################
+if(QE_ENABLE_OPENACC)
+    if(CMAKE_VERSION VERSION_LESS 3.16.0)
+        message(FATAL_ERROR "CMake versions >= 3.16 required for QE_ENABLE_OPENACC=ON!")
+    endif()
+    find_package(OpenACC REQUIRED Fortran C)
+    target_link_libraries(qe_openacc_fortran INTERFACE OpenACC::OpenACC_Fortran)
+    target_link_libraries(qe_openacc_c INTERFACE OpenACC::OpenACC_C)
+endif(QE_ENABLE_OPENACC)
+
 ############################################################
 # Compiler vendor specific options
 ############################################################
@@ -353,39 +385,6 @@ if(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
         find_package(CUDAToolkit REQUIRED)
     endif()
 endif(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
-
-###########################################################
-# OpenMP
-# The following targets will be defined:
-add_library(qe_openmp_fortran INTERFACE)
-add_library(qe_openmp_c INTERFACE)
-qe_install_targets(qe_openmp_fortran qe_openmp_c)
-###########################################################
-if(QE_ENABLE_OPENMP)
-    find_package(OpenMP REQUIRED Fortran C)
-    target_link_libraries(qe_openmp_fortran INTERFACE OpenMP::OpenMP_Fortran)
-    target_link_libraries(qe_openmp_c INTERFACE OpenMP::OpenMP_C)
-endif(QE_ENABLE_OPENMP)
-
-###########################################################
-# OpenACC
-# The following targets will be defined:
-add_library(qe_openacc_fortran INTERFACE)
-add_library(qe_openacc_c INTERFACE)
-qe_install_targets(qe_openacc_fortran qe_openacc_c)
-###########################################################
-if(QE_ENABLE_OPENACC)
-    if(CMAKE_VERSION VERSION_LESS 3.16.0)
-        message(FATAL_ERROR "CMake versions >= 3.16 required for QE_ENABLE_OPENACC=ON!")
-    endif()
-    find_package(OpenACC REQUIRED Fortran C)
-    target_link_libraries(qe_openacc_fortran INTERFACE OpenACC::OpenACC_Fortran)
-    target_link_libraries(qe_openacc_c INTERFACE OpenACC::OpenACC_C)
-    if(GPU_TARGET_COMPILE_OPTIONS)
-        target_compile_options(qe_openacc_fortran INTERFACE "$<$<COMPILE_LANGUAGE:Fortran>:${GPU_TARGET_COMPILE_OPTIONS}>")
-        target_compile_options(qe_openacc_c INTERFACE "$<$<COMPILE_LANGUAGE:C>:${GPU_TARGET_COMPILE_OPTIONS}>")
-    endif()
-endif(QE_ENABLE_OPENACC)
 
 ###########################################################
 # MPI

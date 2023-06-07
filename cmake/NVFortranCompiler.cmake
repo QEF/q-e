@@ -50,6 +50,11 @@ if(QE_ENABLE_CUDA)
                             "Please check CMakeError.log for the exact error.")
     endif()
 
+    if(GPU_TARGET_COMPILE_OPTIONS)
+        target_compile_options(qe_openacc_fortran INTERFACE "$<$<COMPILE_LANGUAGE:Fortran>:${GPU_TARGET_COMPILE_OPTIONS}>")
+        target_compile_options(qe_openacc_c INTERFACE "$<$<COMPILE_LANGUAGE:C>:${GPU_TARGET_COMPILE_OPTIONS}>")
+    endif()
+
     # CMake default CMAKE_Fortran_FLAGS_RELEASE as -fast -O3
     # -O3 makes the CUDA runs fail at stres_us_gpu.f90, thus override
     set(CMAKE_Fortran_FLAGS_RELEASE "-fast")
