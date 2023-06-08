@@ -63,7 +63,7 @@ SUBROUTINE dynmatcc(dyncc)
   DO na=1,nat
      nta=ityp(na)
      IF ( upf(nta)%nlcc ) THEN
-        CALL drhoc (nta, ngl, gl, tpiba2,, rhocg)
+        CALL drhoc (nta, ngl, gl, tpiba2, rhocg)
         DO ig=1,ngm
            exg = tpi* ( g(1,ig)*tau(1,na) + &
                         g(2,ig)*tau(2,na) + &
