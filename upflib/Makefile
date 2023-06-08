@@ -19,6 +19,7 @@ init_us_2_base.o \
 init_tab_atwfc.o \
 init_tab_beta.o \
 init_tab_rho.o \
+init_tab_rhc.o \
 init_tab_qrad.o
 
 OBJS_NODEP= \
@@ -70,8 +71,7 @@ OBJS_GPU= \
   init_us_2_base_gpu.o \
   interp_atwfc_gpu.o \
   qvan2_gpu.o \
-  ylmr2_gpu.o \
-  upf_acc_interfaces.o
+  ylmr2_gpu.o
 
 OBJS_NODEP+= dom.o wxml.o
 

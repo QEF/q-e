@@ -310,6 +310,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   !
   CALL init_tab_beta ( omega, intra_bgrp_comm )
   CALL init_tab_rho  ( omega, intra_bgrp_comm )
+  CALL init_tab_rhc  ( omega, intra_bgrp_comm )
   !
 #if defined __CUDA
   !

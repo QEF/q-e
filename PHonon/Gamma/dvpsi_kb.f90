@@ -55,9 +55,7 @@ SUBROUTINE dvpsi_kb(ik,nu)
      mu = 3*(na-1)
      IF ( u(mu+1,nu)**2+u(mu+2,nu)**2+u(mu+3,nu)**2> 1.0d-12) THEN
         nt=ityp(na)
-        IF (upf(nt)%nlcc) CALL drhoc (ngl, gl, omega, tpiba2, rgrid(nt)%mesh,&
-                                  rgrid(nt)%r, rgrid(nt)%rab, upf(nt)%rho_atc,&
-                                  rhocg )
+        IF (upf(nt)%nlcc) CALL drhoc (nt, ngl, gl, tpiba2, rhocg )
         has_nlcc = has_nlcc .or. upf(nt)%nlcc
         DO ng = 1,ngm
            gtau = tpi * ( g(1,ng)*tau(1,na) + &

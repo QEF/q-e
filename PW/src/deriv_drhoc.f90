@@ -1,35 +1,26 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE deriv_drhoc( ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, drhocg )
+SUBROUTINE deriv_drhoc( nt, ngl, gl, tpiba2, drhocg )
   !--------------------------------------------------------------------------
   !! Calculates the Fourier transform of \(d\text{Rho}_c/dG\).
   !
   USE kinds
-  USE constants,          ONLY : pi, fpi
-  USE upf_acc_interfaces, ONLY : simpson
+  USE uspp_data, ONLY : tab_rhc, dq
   !
   IMPLICIT NONE
   !
+  INTEGER :: nt
+  !! input: atomic type
   INTEGER :: ngl
   !! input: the number of g shell
-  INTEGER :: mesh
-  !! input: the number of radial mesh points
   REAL(DP), INTENT(IN) :: gl(ngl)
   !! input: the number of G shells
-  REAL(DP), INTENT(IN) :: r(mesh)
-  !! input: the radial mesh
-  REAL(DP), INTENT(IN) :: rab(mesh)
-  !! input: the derivative of the radial mesh
-  REAL(DP), INTENT(IN) :: rhoc(mesh)
-  !! input: the radial core charge
-  REAL(DP), INTENT(IN) :: omega
-  !! input: the volume of the unit cell
   REAL(DP), INTENT(IN) :: tpiba2
   !! input: 2 times pi / alat
   REAL(DP), INTENT(OUT) :: drhocg(ngl)
@@ -37,61 +28,31 @@ SUBROUTINE deriv_drhoc( ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, drhocg )
   !
   ! ... local variables
   !
-  REAL(DP) :: gx, rhocg1
+    REAL(DP) :: gx, px, ux, vx, wx
   ! the modulus of g for a given shell
-  ! the fourier transform
-  REAL(DP), ALLOCATABLE :: aux(:)
-  ! auxiliary memory for integration
-  INTEGER :: ir, igl, igl0
-  ! counter on radial mesh points
-  ! counter on g shells
-  ! lower limit for loop on ngl
+  ! variables used for interpolation
+  INTEGER :: igl, i0, i1, i2, i3
+  ! counters
   !
-  !$acc data present_or_copyin(gl,r,rab,rhoc) present_or_copyout(drhocg)
-  !
-  ! G=0 term
-  !
-  IF (gl(1) < 1.0d-8) THEN
-     !$acc kernels
-     drhocg(1) = 0.0d0
-     !$acc end kernels
-     igl0 = 2
-  ELSE
-     igl0 = 1
-  ENDIF
-  !
-  ! G <> 0 term
-  !
-#if !defined(_OPENACC)
-!$omp parallel private(aux,gx,rhocg1)
-#endif
-  !
-  ALLOCATE( aux(mesh) )
-#if defined(_OPENACC)
-!$acc parallel loop gang private(aux)
-#else
-!$omp do
-#endif
-  DO igl = igl0, ngl
+  !$acc data present_or_copyin(gl) present_or_copyout(drhocg)
+  !$acc parallel loop
+  DO igl = 1, ngl
      gx = SQRT( gl(igl) * tpiba2 )
-     !$acc loop vector
-     DO ir = 1, mesh
-        aux(ir) = r(ir)*rhoc(ir)*( r(ir) * COS(gx*r(ir)) /       &
-                                      gx - SIN(gx*r(ir)) / gx**2 )
-     ENDDO
-     CALL simpson( mesh, aux, rab, rhocg1 )
-     drhocg(igl) = fpi / omega * rhocg1
+     px = gx / dq - int (gx/dq)
+     ux = 1.d0 - px
+     vx = 2.d0 - px
+     wx = 3.d0 - px
+     i0 = INT(gx/dq) + 1
+     i1 = i0 + 1
+     i2 = i0 + 2
+     i3 = i0 + 3
+     drhocg (igl) = (- tab_rhc(i0, nt) * (ux*vx + vx*wx + ux*wx) / 6.0_dp &
+                     + tab_rhc(i1, nt) * (wx*vx - px*wx - px*vx) / 2.0_dp &
+                     - tab_rhc(i2, nt) * (wx*ux - px*wx - px*ux) / 2.0_dp &
+                     + tab_rhc(i3, nt) * (ux*vx - px*ux - px*vx) / 6.0_dp ) / dq
   ENDDO
-#if !defined(_OPENACC)
-!$omp end do nowait
-#endif
   !
-  DEALLOCATE( aux )
   !$acc end data
-  !
-#if !defined(_OPENACC)
-!$omp end parallel
-#endif
   !
   RETURN
   !
