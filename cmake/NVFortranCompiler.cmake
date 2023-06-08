@@ -63,7 +63,7 @@ endif()
 if(QE_ENABLE_OPENACC)
     if(GPU_TARGET_COMPILE_OPTIONS)
         target_compile_options(qe_openacc_fortran INTERFACE "$<$<COMPILE_LANGUAGE:Fortran>:${GPU_TARGET_COMPILE_OPTIONS}>")
-        target_compile_options(qe_openacc_c INTERFACE "$<$<COMPILE_LANGUAGE:Fortran>:${GPU_TARGET_COMPILE_OPTIONS}>")
+        target_compile_options(qe_openacc_c INTERFACE "$<$<COMPILE_LANGUAGE:C>:${GPU_TARGET_COMPILE_OPTIONS}>")
     endif()
 endif()
 

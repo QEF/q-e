@@ -349,6 +349,8 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATC
     include(NVFortranCompiler)
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Cray")
     include(CrayFortranCompiler)
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
+    include(IntelFortranCompiler)
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "XL")
     include(IBMFortranCompiler)
 endif()
