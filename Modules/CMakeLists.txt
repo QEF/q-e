@@ -35,6 +35,7 @@ set(src_modules
     ions_base.f90 
     kind.f90 
     lmdif.f90
+    makov_payne.f90
     mdiis.f90 
     mm_dispersion.f90 
     mp_bands.f90 

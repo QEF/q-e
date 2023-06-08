@@ -23,6 +23,7 @@ extract_program = XXXXXX/test-suite/extract-cp.sh
 inputs_args = ('*.in', '')
 run_cmd_template = tc.program -input tc.input tc.args > tc.output 2> tc.error
 tolerance = ( (1.0e-5, 1.0e-5, 'e1'),
+              (1.0e-5, 1.0e-5, 'mp1'),
               (5.0e-4, 1.0e-4, 's1'),
               (1.0e-2, 1.0e-2, 'v1u'),
               (1.0e-2, 1.0e-2, 'v1d'),

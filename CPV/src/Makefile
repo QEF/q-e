@@ -108,8 +108,7 @@ wannier.o \
 wave.o \
 wave_base.o \
 wave_types.o \
-wf.o \
-makov_payne.o
+wf.o
 
 LOBJS = \
 entropy.o 
