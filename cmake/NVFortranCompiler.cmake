@@ -36,10 +36,12 @@ endif()
 
 if(QE_ENABLE_CUDA)
     if(CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 20.7)
-        set(QE_CUDA_COMPILE_OPTIONS"-cuda")
+        set(CUDA_FLAG "-cuda")
     else()
-        set(QE_CUDA_COMPILE_OPTIONS "-Mcuda")
+        set(CUDA_FLAG "-Mcuda")
     endif()
+
+    set(QE_CUDA_COMPILE_OPTIONS ${CUDA_FLAG})
 
     if(GPU_TARGET_COMPILE_OPTIONS)
       list(APPEND QE_CUDA_COMPILE_OPTIONS ${GPU_TARGET_COMPILE_OPTIONS})
