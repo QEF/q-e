@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 # CMake < 3.13 cannot install external targets:
 # https://gitlab.kitware.com/cmake/cmake/merge_requests/2152
 
@@ -19,13 +19,6 @@ project(qe
 
 if(${qe_BINARY_DIR} STREQUAL ${qe_SOURCE_DIR})
     message(FATAL_ERROR "QE source folder cannot be safely used as a build folder!")
-endif()
-
-# CMake < v3.18 cannot discover the ARM Performance Library
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*|arm64.*|ARM64.*)")
-    if(CMAKE_VERSION VERSION_LESS 3.18.0)
-        message("-- CMake versions less than 3.18 cannot automatically discover the ARM Performance Library!")
-    endif()
 endif()
 
 ##########################################################
@@ -332,9 +325,6 @@ add_library(qe_openacc_c INTERFACE)
 qe_install_targets(qe_openacc_fortran qe_openacc_c)
 ###########################################################
 if(QE_ENABLE_OPENACC)
-    if(CMAKE_VERSION VERSION_LESS 3.16.0)
-        message(FATAL_ERROR "CMake versions >= 3.16 required for QE_ENABLE_OPENACC=ON!")
-    endif()
     find_package(OpenACC REQUIRED Fortran C)
     target_link_libraries(qe_openacc_fortran INTERFACE OpenACC::OpenACC_Fortran)
     target_link_libraries(qe_openacc_c INTERFACE OpenACC::OpenACC_C)
