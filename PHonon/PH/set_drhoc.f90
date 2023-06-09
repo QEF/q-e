@@ -49,7 +49,7 @@ subroutine set_drhoc (q, drc)
   ALLOCATE ( rhc(ngm) )
   do nt = 1, ntyp
      if ( upf(nt)%nlcc ) then
-        call drhoc( nt, ngm, qg2, tpiba2, rhc )
+        call interp_rhc( nt, ngm, qg2, tpiba2, rhc )
         drc (:,nt) = CMPLX(rhc(:), kind=dp)
      else
         drc (:,nt) = (0.0_dp, 0.0_dp)

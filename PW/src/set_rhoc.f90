@@ -51,9 +51,9 @@ SUBROUTINE set_rhoc
      DO nt = 1, ntyp
         IF ( upf(nt)%nlcc ) THEN
            !
-           ! drhoc computes the radial fourier transform for each shell of g vec
+           ! interp_rhc computes the radial fourier transform for each shell of g vec
            !
-           CALL drhoc (nt, ngl, gl, tpiba2, rhocg)
+           CALL interp_rhc (nt, ngl, gl, tpiba2, rhocg)
            !
            !     multiply by the structure factor and sum
            !

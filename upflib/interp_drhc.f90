@@ -6,11 +6,11 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE deriv_drhoc( nt, ngl, gl, tpiba2, drhocg )
+SUBROUTINE interp_drhc( nt, ngl, gl, tpiba2, drhocg )
   !--------------------------------------------------------------------------
   !! Calculates the Fourier transform of \(d\text{Rho}_c/dG\).
   !
-  USE kinds
+  USE upf_kinds, ONLY : dp
   USE uspp_data, ONLY : tab_rhc, dq
   !
   IMPLICIT NONE
@@ -56,5 +56,5 @@ SUBROUTINE deriv_drhoc( nt, ngl, gl, tpiba2, drhocg )
   !
   RETURN
   !
-END SUBROUTINE deriv_drhoc
+END SUBROUTINE interp_drhc
 

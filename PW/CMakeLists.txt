@@ -44,11 +44,9 @@ set(src_pw
    src/Coul_cut_2D.f90 
    src/d_matrix.f90 
    src/data_structure.f90 
-   src/deriv_drhoc.f90 
    src/divide_class.f90 
    src/divide_class_so.f90 
    src/divide_et_impera.f90 
-   src/drhoc.f90 
    src/rotate_wfc.f90 
    src/run_driver.f90 
    src/dvloc_of_g.f90 
