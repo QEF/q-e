@@ -80,7 +80,29 @@ CONTAINS
     !
     ! Optical case: gamma_only
     ! Noncollinear case is not implemented
+    !    
+    USE wvfct, ONLY : npwx,nbnd,wg
+#if defined(__CUDA)
+    use cublas
+#endif
+    !  
+    INTEGER :: ibnd
+    REAL(DP), EXTERNAL :: MYDDOT_VECTOR_GPU
+    !$acc routine(MYDDOT_VECTOR_GPU) vector
     !
+    !$acc data present_or_copyin(x,y) copyin(wg) copy(temp_gamma)
+#if defined(__CUDA)
+    !$acc parallel loop reduction(temp_gamma)
+    DO ibnd=1,nbnd
+       !
+       temp_gamma = temp_gamma + 2.D0*wg(ibnd,1)*MYDDOT_VECTOR_GPU(2*ngk(1),x(:,ibnd,1),y(:,ibnd,1))
+       !
+       ! G=0 has been accounted twice, so we subtract one contribution.
+       !
+       IF (gstart==2) temp_gamma = temp_gamma - wg(ibnd,1)*dble(x(1,ibnd,1))*dble(y(1,ibnd,1))
+       !
+    ENDDO
+#else
     DO ibnd=1,nbnd
        !
        temp_gamma = temp_gamma + 2.D0*wg(ibnd,1)*DDOT(2*ngk(1),x(:,ibnd,1),1,y(:,ibnd,1),1)
@@ -90,6 +112,8 @@ CONTAINS
        IF (gstart==2) temp_gamma = temp_gamma - wg(ibnd,1)*dble(x(1,ibnd,1))*dble(y(1,ibnd,1))
        !
     ENDDO
+#endif
+    !$acc end data 
     !
 #if defined(__MPI)
     CALL mp_sum(temp_gamma, intra_bgrp_comm)

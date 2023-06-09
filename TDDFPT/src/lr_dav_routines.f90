@@ -458,14 +458,14 @@ contains
        if (.not. okvan) then !norm conserving    
           do ibr = num_basis_old+1, num_basis
              ! Calculate new D*vec_b
-             !$acc data copyin(vec_b(:,:,:,ibr)) copyout(vecwork(:,:,:), D_vec_b(:,:,:,ibr))
+             !$acc data copyin(vec_b(:,:,:,ibr)) copyout(vecwork(:,:,:), D_vec_b(:,:,:,ibr), C_vec_b(:,:,:,ibr))
              call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.false.)
              if (.not. poor_of_ram2) THEN
                 !$acc kernels     
                 D_vec_b(:,:,:,ibr)=vecwork(:,:,:)
                 !$acc end kernels
              endif
-             !$acc end data
+!!!!             !$acc end data
              !
              ! Add new M_D
              do ibl = 1, ibr
@@ -475,14 +475,14 @@ contains
 !                M_D(ibr,ibl)=M_D(ibl,ibr)
              enddo
              ! Calculate new C*vec_b
-             !$acc data copyin(vec_b(:,:,:,ibr)) copyout(vecwork(:,:,:), C_vec_b(:,:,:,ibr))
+!!!             !$acc data copyin(vec_b(:,:,:,ibr)) copyout(vecwork(:,:,:), C_vec_b(:,:,:,ibr))
              call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.true.)
              if (.not. poor_of_ram2) THEN
                 !$acc kernels
                 C_vec_b(:,:,:,ibr)=vecwork(:,:,:)
                 !$acc end kernels
              endif   
-             !$acc end data
+!!!             !$acc end data
              !
              ! Add new M_C
              do ibl = 1, ibr
@@ -490,6 +490,8 @@ contains
                 if(ibl /= ibr) M_C(ibr,ibl)=M_C(ibl,ibr)
 !                M_C(ibr,ibl)=M_C(ibl,ibr)
              enddo
+             !
+             !$acc end data
           enddo 
        else if(poor_of_ram) then ! Less memory needed
           do ibr = num_basis_old+1, num_basis
