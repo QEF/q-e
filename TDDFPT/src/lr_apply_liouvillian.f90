@@ -68,6 +68,10 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE environ_td_module,    ONLY : calc_environ_dpotential
 #endif
   !
+#if defined(__CUDA)
+    USE cublas
+#endif
+  !
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(IN)  :: evc1(npwx*npol,nbnd,nks)
@@ -82,26 +86,30 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
                            & w1(:), w2(:)
   COMPLEX(DP), ALLOCATABLE :: dvrs_temp(:,:), spsi1(:,:), dvrsc(:,:), &
                               & dvrssc(:), sevc1_new(:,:,:)
+  INTEGER :: nnr_siz
   !
   IF (lr_verbosity > 5) THEN
      WRITE(stdout,'("<lr_apply_liouvillian>")')
   ENDIF
   !
-  CALL start_clock('lr_apply')
+  CALL start_clock_gpu('lr_apply')
   !
-  IF (interaction)      CALL start_clock('lr_apply_int')
-  IF (.not.interaction) CALL start_clock('lr_apply_no')
+  IF (interaction)      CALL start_clock_gpu('lr_apply_int')
+  IF (.not.interaction) CALL start_clock_gpu('lr_apply_no')
   !
   ALLOCATE( d_deeq(nhm, nhm, nat, nspin) )
-  d_deeq(:,:,:,:)=0.0d0
-  !
   ALLOCATE( spsi1(npwx, nbnd) )
+  ALLOCATE( sevc1_new(npwx*npol,nbnd,nks))
+  !
+  nnr_siz= dffts%nnr
+!$acc data present_or_copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) present_or_copyout(evc1_new(1:npwx*npol,1:nbnd,1:nks)) copyout(sevc1_new(1:npwx*npol,1:nbnd,1:nks)) create(spsi1(1:npwx, 1:nbnd))
+  !
+  d_deeq(:,:,:,:)=0.0d0
+  !$acc kernels
   spsi1(:,:)=(0.0d0,0.0d0)
-  !
-  ALLOCATE(sevc1_new(npwx*npol,nbnd,nks))
   sevc1_new(:,:,:) = (0.0d0,0.0d0)
-  !
   evc1_new(:,:,:) = (0.0d0,0.0d0)
+  !$acc end kernels
   !
   IF ( interaction ) THEN 
      !
@@ -215,11 +223,15 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   ALLOCATE ( psic (dffts%nnr) )
   !
   IF ( gamma_only ) THEN
+!!!     nnr_siz= dffts%nnr     
+!!!$acc data copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) copy(sevc1_new(1:npwx*npol,1:nbnd,1:nks), spsi1(1:npwx, 1:nbnd)) copyout(psic(1:nnr_siz),evc1_new(1:npwx*npol,1:nbnd,1:nks))
      CALL lr_apply_liouvillian_gamma()
+!!!$acc end data 
   ELSE
      CALL lr_apply_liouvillian_k()
   ENDIF
   !
+!!!  !$acc end data
   DEALLOCATE ( psic )
   !
   IF ( (interaction .or. lr_exx) .and. (.not.ltammd)  ) THEN
@@ -232,8 +244,10 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
      ! Here we add the two terms: 
      ! [H(k) - E(k)] * evc1(k) + dV_HXC * revc0(k)
      !
-     CALL zaxpy(size_evc,CMPLX(1.0d0,0.0d0,kind=DP),&
+     !$acc host_data use_device(evc1_new, sevc1_new)        
+     CALL zaxpy(size_evc,CMPLX(1.0d0,0.0d0,kind=DP),&        
                        & evc1_new(:,:,:), 1, sevc1_new(:,:,:), 1)
+     !$acc end host_data          
      !
   ELSEIF ( interaction .and. ltammd ) THEN
      !
@@ -244,8 +258,10 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
      !
      !   Here evc1_new contains the interaction
      !
+     !$acc host_data use_device(evc1_new, sevc1_new)
      CALL zaxpy(size_evc,CMPLX(0.5d0,0.0d0,kind=DP),&
                        & evc1_new(:,:,:) , 1, sevc1_new(:,:,:),1)
+     !$acc end host_data           
      !
   ELSE
      !
@@ -256,21 +272,29 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
      !
   ENDIF
   !
-  IF (gstart == 2 .AND. gamma_only ) sevc1_new(1,:,:) = &
-                & CMPLX( REAL( sevc1_new(1,:,:), DP ), 0.0d0, DP )
+!  !$acc end data
   !
-  IF (gstart==2 .and. gamma_only) THEN
-     DO ik=1,nks
-        DO ibnd=1,nbnd
-           IF (abs(aimag(sevc1_new(1,ibnd,ik)))>1.0d-12) THEN
-              !
-              CALL errore(' lr_apply_liouvillian ',&
-                   'Imaginary part of G=0 '// &
-                   'component does not equal zero',1)
-           ENDIF
-        ENDDO
-     ENDDO
+  IF (gstart == 2 .AND. gamma_only ) THEN 
+     !$acc kernels
+     sevc1_new(1,:,:) = &
+                & CMPLX( REAL( sevc1_new(1,:,:), DP ), 0.0d0, DP )
+     !$acc end kernels
   ENDIF
+
+!!!  !$acc end data
+  !
+!  IF (gstart==2 .and. gamma_only) THEN
+!     DO ik=1,nks
+!        DO ibnd=1,nbnd
+!           IF (abs(aimag(sevc1_new(1,ibnd,ik)))>1.0d-12) THEN
+!              !
+!              CALL errore(' lr_apply_liouvillian ',&
+!                   'Imaginary part of G=0 '// &
+!                   'component does not equal zero',1)
+!           ENDIF
+!        ENDDO
+!     ENDDO
+!  ENDIF
   !
   ! Apply the projector on empty states P_c^+.
   ! Note: The projector P_c^+ can be applied only
@@ -289,9 +313,13 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
      !
      CALL orthogonalize(sevc1_new(:,:,ik), evc0(:,:,ik), ik, ik, &
                                   & sevc0(:,:,ik), ngk(ik), .true.)
+     !$acc kernels                     
      sevc1_new(:,:,ik) = -sevc1_new(:,:,ik)
+     !$acc end kernels
      !
   ENDDO 
+  !
+!!!  !$acc end data
   !
   ! Here we apply the S^{-1} operator.
   ! See equations after Eq.(47) of B. Walker et al., J. Chem. Phys.
@@ -305,16 +333,17 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
                        & sevc1_new(1,1,ik), evc1_new(1,1,ik))
   ENDDO
   !
+  !$acc end data
   IF (allocated(dvrs)) DEALLOCATE(dvrs)
   IF (allocated(dvrss)) DEALLOCATE(dvrss)
   DEALLOCATE(d_deeq)
   DEALLOCATE(spsi1)
   DEALLOCATE(sevc1_new)
   !
-  IF (interaction)      CALL stop_clock('lr_apply_int')
-  IF (.not.interaction) CALL stop_clock('lr_apply_no')
+  IF (interaction)      CALL stop_clock_gpu('lr_apply_int')
+  IF (.not.interaction) CALL stop_clock_gpu('lr_apply_no')
   !
-  CALL stop_clock('lr_apply')
+  CALL stop_clock_gpu('lr_apply')
   !
   RETURN
   !
@@ -330,13 +359,17 @@ CONTAINS
     USE mp_global,                ONLY : ibnd_start, ibnd_end, inter_bgrp_comm
     USE mp,                       ONLY : mp_sum
     USE lr_exx_kernel,            ONLY : lr_exx_sum_int
+#if defined(__CUDA)
+    USE cublas
+#endif
     !
     IMPLICIT NONE
     !
     REAL(DP), ALLOCATABLE :: becp2(:,:)
     REAL(DP), ALLOCATABLE :: tg_dvrss(:)
+    COMPLEX(DP)           :: coef
     INTEGER :: v_siz, incr, ioff, ir, nnr_siz
-    INTEGER :: ibnd_start_gamma, ibnd_end_gamma
+    INTEGER :: ibnd_start_gamma, ibnd_end_gamma, ibnd, ngk1
     !
     incr = 2
     !
@@ -350,15 +383,14 @@ CONTAINS
     ! Now apply to the ground state wavefunctions
     ! and convert to real space
     !
+    nnr_siz= dffts%nnr
+    !$acc data create (psic(1:nnr_siz))
+!    !$acc data copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) copy(sevc1_new(1:npwx*npol,1:nbnd,1:nks), spsi1(1:npwx, 1:nbnd)) copyout(psic(1:nnr_siz),evc1_new(1:npwx*npol,1:nbnd,1:nks))
+    !
     IF ( interaction ) THEN
        !
-       nnr_siz= dffts%nnr
-       !$acc data copyin(revc0(1:nnr_siz,1:nbnd,1), dvrss(1:nnr_siz)) copyout(psic(1:nnr_siz),evc1_new(1:npwx*npol,1:nbnd,1:nks))
        !
        CALL start_clock_gpu('interaction')
-       !
-   !    nnr_siz= dffts%nnr
-   !    !$acc data copyin(revc0(1:nnr_siz,1:nbnd,1), dvrss(1:nnr_siz)) copyout(psic(1:nnr_siz))
        !
        IF (nkb > 0 .and. okvan) THEN
           ! calculation of becp2
@@ -425,8 +457,8 @@ CONTAINS
        !
        IF (lr_exx) CALL lr_exx_sum_int()
        !
+       !$acc enter data copyin(revc0(1:nnr_siz,1:nbnd,1), dvrss(1:nnr_siz))
        DO ibnd = ibnd_start_gamma ,ibnd_end_gamma, incr
-!      DO ibnd = 1,nbnd,2
           !
           ! Product with the potential vrs = (vltot+vr)
           ! revc0 is on smooth grid. psic is used up to smooth grid
@@ -523,6 +555,8 @@ CONTAINS
           !
        ENDDO
        !
+       !$acc exit data delete(revc0, dvrss)
+       !
 #if defined(__MPI)
        !$acc host_data use_device(evc1_new)
        CALL mp_sum( evc1_new(:,:,1), inter_bgrp_comm )
@@ -537,9 +571,7 @@ CONTAINS
           !
        ENDIF
        !
-    !!!   !$acc end data
        CALL stop_clock_gpu('interaction')
-       !$acc end data
        !
     ENDIF
     !
@@ -555,11 +587,9 @@ CONTAINS
     ! Compute sevc1_new = H*evc1
     !
 #if defined(__CUDA)
-    !$acc data copyin(evc1) copyout(sevc1_new)
     !$acc host_data use_device(evc1, sevc1_new)
     CALL h_psi_gpu (npwx,ngk(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1))
     !$acc end host_data
-    !$acc end data
 #else
     CALL h_psi(npwx,ngk(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1))
 #endif
@@ -576,11 +606,9 @@ CONTAINS
         ENDDO
     ELSE
 #if defined(__CUDA)
-       !$acc data copyin(evc1) copyout(spsi1)
        !$acc host_data use_device(evc1, spsi1)
        CALL s_psi_acc (npwx,ngk(1),nbnd,evc1(1,1,1),spsi1)
        !$acc end host_data
-       !$acc end data
 #else            
        CALL s_psi(npwx,ngk(1),nbnd,evc1(1,1,1),spsi1)
 #endif
@@ -590,10 +618,15 @@ CONTAINS
     !
     DO ibnd = 1,nbnd
        !
-       CALL zaxpy(ngk(1), CMPLX(-(et(ibnd,1)-scissor),0.0d0,DP), &
-                      & spsi1(:,ibnd), 1, sevc1_new(:,ibnd,1), 1)
+       coef = CMPLX(-(et(ibnd,1)-scissor),0.0d0)
+       !$acc host_data use_device(spsi1, sevc1_new) 
+       CALL zaxpy(ngk(1), coef, &
+             & spsi1(1,ibnd), 1, sevc1_new(1,ibnd,1), 1)
+       !$acc end host_data       
        !
     ENDDO
+    !
+    !$acc end data 
     !
     IF ( nkb > 0 .and. okvan ) DEALLOCATE(becp2)
     !
