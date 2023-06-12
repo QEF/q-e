@@ -11,17 +11,20 @@
 !
 !#define _PRINT_ON_FILE
 !
+MODULE makovpayne
+IMPLICIT NONE
+CONTAINS
 !---------------------------------------------------------------------------
-SUBROUTINE makov_payne( etot )
+SUBROUTINE makov_payne( etot, tau, rhor, rhog, strf, vloc, gamma_only, etot_in_hartree, &
+                        output_in_hartree, vacuum_level )
   !---------------------------------------------------------------------------
   !
+  !USE vlocal,    ONLY : strf, vloc
+  !USE control_flags, ONLY : gamma_only
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
-  USE ions_base, ONLY : nat, tau, ityp, zv
-  USE cell_base, ONLY : at, bg, alat
+  USE ions_base, ONLY : nat, ityp, zv
   USE fft_base,  ONLY : dfftp
-  USE scf,       ONLY : rho
-  USE lsda_mod,  ONLY : nspin
   USE plugin_flags
 !
 ! ***Environ MODULES BEGIN***
@@ -30,6 +33,18 @@ SUBROUTINE makov_payne( etot )
   IMPLICIT NONE
   !
   REAL(DP), INTENT(IN) :: etot
+  REAL(DP), INTENT(IN) :: tau(:,:)
+  !! atomic positions in cell coordinates
+  REAL(DP), INTENT(IN) :: rhor(:)
+  !! total density r space
+  COMPLEX(DP), INTENT(IN) :: rhog(:)
+  !! total density g space
+  COMPLEX(DP), INTENT(IN) :: strf(:,:) 
+  !! the structure factor
+  REAL(DP), INTENT(IN) :: vloc(:,:)
+  !! the local potential for each atom type
+  LOGICAL, INTENT(IN) :: gamma_only, etot_in_hartree, output_in_hartree, &
+                         vacuum_level
   !
   INTEGER  :: ia
   REAL(DP) :: x0(3), zvtot, qq
@@ -50,36 +65,47 @@ SUBROUTINE makov_payne( etot )
   !
   x0(:) = x0(:) / zvtot
   !
-  CALL compute_dipole( dfftp%nnr, rho%of_r(:,1), x0, e_dipole, e_quadrupole )
+  CALL compute_dipole( dfftp%nnr, rhor, x0, e_dipole, e_quadrupole)
   !
-  CALL write_dipole( etot, x0, e_dipole, e_quadrupole, qq )
+  IF (etot_in_hartree) THEN
+     CALL write_dipole( etot*2.0_dp, tau, x0, e_dipole, e_quadrupole, qq, &
+                        output_in_hartree )
+  ELSE
+     CALL write_dipole( etot, tau, x0, e_dipole, e_quadrupole, qq,&
+                        output_in_hartree )
+  ENDIF
   !
 ! ***Environ CALLS BEGIN***
 ! ***Environ CALLS END***
   !
-  CALL vacuum_level( x0, zvtot )
+  IF (vacuum_level) &
+     CALL compute_vacuum_level( x0, zvtot, rhog, strf, vloc, gamma_only )
   !
   RETURN
   !
 END SUBROUTINE makov_payne
 !
 !---------------------------------------------------------------------------
-SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
+SUBROUTINE write_dipole( etot, tau, x0, dipole_el, quadrupole_el, qq, &
+                output_in_hartree )
   !---------------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
   USE constants,  ONLY : e2, pi, rytoev, au_debye
-  USE ions_base,  ONLY : nat, ityp, tau, zv
-  USE cell_base,  ONLY : at, bg, omega, alat, ibrav
+  USE ions_base,  ONLY : nat, ityp, zv
+  USE cell_base,  ONLY : at, omega, alat, ibrav
   USE io_global,  ONLY : ionode
   !
   IMPLICIT NONE
   !
   REAL(DP), INTENT(IN)  :: etot
+  REAL(DP), INTENT(IN)  :: tau(:,:)
+  !! atomic positions in cell coordinates
   REAL(DP), INTENT(IN)  :: x0(3)
   REAL(DP), INTENT(IN)  :: dipole_el(0:3), quadrupole_el(3)
   REAL(DP), INTENT(OUT) :: qq
+  LOGICAL, INTENT(IN)   :: output_in_hartree
   !
   REAL(DP) :: dipole_ion(3), quadrupole_ion(3), dipole(3), quadrupole(3)
   REAL(DP) :: zvia, zvtot
@@ -178,22 +204,34 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
          '(/5X,"Makov-Payne correction with Madelung constant = ",F8.4)' ) &
       madelung(ibrav_mp)
   !
-  WRITE( stdout,'(/5X,"Makov-Payne correction ",F14.8," Ry = ",F6.3, &
-       &              " eV (1st order, 1/a0)")'   ) -corr1, -corr1*rytoev
-  WRITE( stdout,'( 5X,"                       ",F14.8," Ry = ",F6.3, &
-       &              " eV (2nd order, 1/a0^3)")' ) -corr2, -corr2*rytoev
-  WRITE( stdout,'( 5X,"                       ",F14.8," Ry = ",F6.3, &
-       &              " eV (total)")' ) -corr1-corr2, (-corr1-corr2)*rytoev
-  !
-  WRITE( stdout,'(/"!    Total+Makov-Payne energy  = ",F16.8," Ry")' ) &
-      etot - corr1 - corr2 
+  IF (output_in_hartree) THEN
+      WRITE( stdout,'(/5X,"Makov-Payne correction ",F14.8," Ha = ",F6.3, &
+           &              " eV (1st order, 1/a0)")'   ) -corr1/2.0_dp, -corr1*rytoev
+      WRITE( stdout,'( 5X,"                       ",F14.8," Ha = ",F6.3, &
+           &              " eV (2nd order, 1/a0^3)")' ) -corr2/2.0_dp, -corr2*rytoev
+      WRITE( stdout,'( 5X,"                       ",F14.8," Ha = ",F6.3, &
+           &              " eV (total)")' ) (-corr1-corr2)/2.0_dp, (-corr1-corr2)*rytoev
+      !
+      WRITE( stdout,'(/"!    Total+Makov-Payne energy  = ",F16.8," Ha")' ) &
+          (etot - corr1 - corr2 )/2.0_dp
+  ELSE
+      WRITE( stdout,'(/5X,"Makov-Payne correction ",F14.8," Ry = ",F6.3, &
+           &              " eV (1st order, 1/a0)")'   ) -corr1, -corr1*rytoev
+      WRITE( stdout,'( 5X,"                       ",F14.8," Ry = ",F6.3, &
+           &              " eV (2nd order, 1/a0^3)")' ) -corr2, -corr2*rytoev
+      WRITE( stdout,'( 5X,"                       ",F14.8," Ry = ",F6.3, &
+           &              " eV (total)")' ) -corr1-corr2, (-corr1-corr2)*rytoev
+      !
+      WRITE( stdout,'(/"!    Total+Makov-Payne energy  = ",F16.8," Ry")' ) &
+          etot - corr1 - corr2 
+  ENDIF
   !
   RETURN
   !
 END SUBROUTINE write_dipole
 !
 !---------------------------------------------------------------------------
-SUBROUTINE vacuum_level( x0, zion )
+SUBROUTINE compute_vacuum_level( x0, zion, rhog, strf, vloc, gamma_only )
   !---------------------------------------------------------------------------
   !
   USE kinds,     ONLY : DP
@@ -201,20 +239,23 @@ SUBROUTINE vacuum_level( x0, zion )
   USE io_files,  ONLY : prefix
   USE constants, ONLY : e2, pi, tpi, fpi, rytoev, eps32
   USE gvect,     ONLY : g, gg, ngm, gstart, igtongl
-  USE scf,       ONLY : rho
-  USE lsda_mod,  ONLY : nspin
   USE cell_base, ONLY : at, alat, tpiba, tpiba2
   USE ions_base, ONLY : nsp
-  USE vlocal,    ONLY : strf, vloc
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
-  USE control_flags, ONLY : gamma_only
   USE basic_algebra_routines, ONLY : norm
   !
   IMPLICIT NONE
   !
   REAL(DP), INTENT(IN) :: x0(3)
   REAL(DP), INTENT(IN) :: zion
+  COMPLEX(DP), INTENT(IN) :: rhog(:)
+  !! total density
+  COMPLEX(DP), INTENT(IN) :: strf(:,:) 
+  !! the structure factor
+  REAL(DP), INTENT(IN) :: vloc(:,:)
+  !! the local potential for each atom type
+  LOGICAL, INTENT(IN) :: gamma_only
   !
   INTEGER                  :: i, ir, ig, first_point
   REAL(DP)                 :: r, dr, rmax, rg, phase, sinxx
@@ -257,8 +298,8 @@ SUBROUTINE vacuum_level( x0, zion )
      !
      fac = e2*fpi / ( tpiba2*gg(ig) )
      !
-     rgtot_re = REAL(  rho%of_g(ig,1) )
-     rgtot_im = AIMAG( rho%of_g(ig,1) )
+     rgtot_re = REAL(  rhog(ig) )
+     rgtot_im = AIMAG( rhog(ig) )
      !
      vg(ig) = vg(ig) + CMPLX( rgtot_re, rgtot_im ,kind=DP)*fac
      !
@@ -318,7 +359,7 @@ SUBROUTINE vacuum_level( x0, zion )
         END IF
         !
         vgig = vg(ig)
-        qgig = rho%of_g(ig,1)
+        qgig = rhog(ig)
         !
         ! ... add the phase factor corresponding to the translation of the
         ! ... origin by x0 (notice that x0 is in alat units)
@@ -384,5 +425,5 @@ SUBROUTINE vacuum_level( x0, zion )
   !
   RETURN
   !
-END SUBROUTINE vacuum_level
-
+END SUBROUTINE compute_vacuum_level
+END MODULE

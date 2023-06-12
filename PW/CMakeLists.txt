@@ -125,7 +125,6 @@ set(src_pw
    src/lchk_tauxk.f90 
    src/ldaU.f90 
    src/make_pointlists.f90 
-   src/makov_payne.f90 
    src/manypw.f90 
    src/martyna_tuckerman.f90 
    src/memory_report.f90 

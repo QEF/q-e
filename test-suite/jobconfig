@@ -15,7 +15,7 @@ inputs_args = ('berry.in', ''), ('berry-1.in', ''), ('berry-2.in','')
 
 [pw_cluster/]
 program = PW
-inputs_args = ('cluster1.in', ''), ('cluster2.in', ''), ('cluster3.in',''), ('cluster4.in','')
+inputs_args = ('cluster1.in', ''), ('cluster2.in', ''), ('cluster3.in',''), ('cluster4.in',''), ('cluster5.in',''), ('cluster6.in',''), 
 
 [pw_lsda/]
 program = PW

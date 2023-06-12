@@ -12,7 +12,12 @@ s1=`grep -A 3 "Total stress" $fname | tail -3 | tr '\n' ' ' | awk '{ printf "%-1
 v1u=`grep -A 2 "Eigenvalues (eV).*spin.*1" $fname | tail -1 | awk '{ for(i=1;i<=NF;i++) { v=v+$i; } print v }'` 
 v1d=`grep -A 2 "Eigenvalues (eV).*spin.*2" $fname | tail -1 | awk '{ for(i=1;i<=NF;i++) { v=v+$i; } print v }'` 
 t1=`grep -A 6 "Averaged Physical Quantities"  $fname | tail -1 | awk '{ print $4 }'`
- 
+mp1=`grep "Total+Makov-Payne" $fname | awk '{print $5}'` 
+if test "$mp1" != ""; then
+	echo mp1
+	echo $mp1
+fi
+
 if test "$e1" != ""; then
 	echo e1
 	echo $e1

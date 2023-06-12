@@ -136,7 +136,6 @@ kpoint_grid.o \
 lchk_tauxk.o \
 ldaU.o \
 make_pointlists.o \
-makov_payne.o \
 manypw.o \
 martyna_tuckerman.o \
 memory_report.o \

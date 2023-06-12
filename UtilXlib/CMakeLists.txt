@@ -76,6 +76,7 @@ if(QE_ENABLE_TEST)
     qe_install_targets(qe_utilx_tests)
 
     set(source_names
+        test_offload_macros
         test_mp_count_nodes
         test_mp_bcast_i1
         test_mp_bcast_iv
@@ -115,11 +116,9 @@ if(QE_ENABLE_TEST)
     endif()
 
     # TODO rename all sources *.f90 -> *.F90
-    set(src_tests)
     FOREACH(NAME ${source_names})
         set(src_test tests/${NAME}.f90)
         qe_enable_cuda_fortran("${src_test}")
-        set(src_tests ${src_tests} "${src_test}")
         string(REPLACE "test_" "test_qe_utilx_" TGT_NAME ${NAME})
         qe_add_executable(${TGT_NAME} ${src_test})
         set_target_properties(${TGT_NAME} 
@@ -133,4 +132,8 @@ if(QE_ENABLE_TEST)
                 qe_mpi_fortran)
         add_unit_test(${TGT_NAME} 1 1 $<TARGET_FILE:${TGT_NAME}>)
     ENDFOREACH(NAME)
+    target_link_libraries(test_qe_utilx_offload_macros
+        PRIVATE
+            qe_openacc_fortran
+            qe_openmp_fortran)
 endif()

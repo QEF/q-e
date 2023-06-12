@@ -63,8 +63,7 @@ SUBROUTINE dynmatcc(dyncc)
   DO na=1,nat
      nta=ityp(na)
      IF ( upf(nta)%nlcc ) THEN
-        CALL drhoc (ngl, gl, omega, tpiba2, rgrid(nta)%mesh, rgrid(nta)%r, &
-                    rgrid(nta)%rab, upf(nta)%rho_atc, rhocg)
+        CALL drhoc (nta, ngl, gl, tpiba2, rhocg)
         DO ig=1,ngm
            exg = tpi* ( g(1,ig)*tau(1,na) + &
                         g(2,ig)*tau(2,na) + &
@@ -90,9 +89,7 @@ SUBROUTINE dynmatcc(dyncc)
         DO nb=1,nat
            ntb=ityp(nb)
            IF ( upf(ntb)%nlcc ) THEN
-              CALL drhoc (ngl, gl, omega, tpiba2, rgrid(ntb)%mesh, &
-                          rgrid(ntb)%r, rgrid(ntb)%rab, upf(ntb)%rho_atc,&
-                          rhocg)
+              CALL drhoc (ntb, ngl, gl, tpiba2, rhocg)
               DO ig=1,ngm
                  exg = tpi* ( g(1,ig)*tau(1,nb) + &
                               g(2,ig)*tau(2,nb) + &
