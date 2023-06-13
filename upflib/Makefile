@@ -29,6 +29,8 @@ dqvan2.o \
 dylmr2.o \
 gth.o \
 interp_atwfc.o \
+interp_rhc.o \
+interp_drhc.o \
 paw_variables.o \
 pseudo_types.o \
 qvan2.o \

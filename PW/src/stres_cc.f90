@@ -87,7 +87,7 @@ SUBROUTINE stres_cc( sigmaxcc )
   DO nt = 1, ntyp
      IF ( upf(nt)%nlcc ) THEN
         !
-        CALL drhoc( nt, ngl, gl, tpiba2, rhocg )
+        CALL interp_rhc( nt, ngl, gl, tpiba2, rhocg )
         !
         ! ... diagonal term
         IF (gstart==2) THEN
@@ -104,7 +104,7 @@ SUBROUTINE stres_cc( sigmaxcc )
                                    strf(ng,nt)) * rhocg(igtongl(ng)) * fact
         ENDDO
         !
-        CALL deriv_drhoc( nt, ngl, gl, tpiba2, rhocg )
+        CALL interp_drhc( nt, ngl, gl, tpiba2, rhocg )
         !
         ! ... non diagonal term (g=0 contribution missing)
         !

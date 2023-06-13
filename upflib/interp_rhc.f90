@@ -7,11 +7,11 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE drhoc( nt, ngl, gl, tpiba2, rhocg )
+SUBROUTINE interp_rhc( nt, ngl, gl, tpiba2, rhocg )
   !-----------------------------------------------------------------------
   !! Calculates the radial Fourier transform of the core charge.
   !
-  USE kinds,     ONLY : dp
+  USE upf_kinds, ONLY : dp
   USE uspp_data, ONLY : tab_rhc, dq
   !
   IMPLICIT NONE
@@ -55,4 +55,4 @@ SUBROUTINE drhoc( nt, ngl, gl, tpiba2, rhocg )
   ENDDO
   !$acc end data
   !
-END SUBROUTINE drhoc
+END SUBROUTINE interp_rhc

@@ -55,11 +55,9 @@ coset.o \
 Coul_cut_2D.o \
 d_matrix.o \
 data_structure.o \
-deriv_drhoc.o \
 divide_class.o \
 divide_class_so.o \
 divide_et_impera.o \
-drhoc.o \
 rotate_wfc.o \
 run_driver.o \
 dvloc_of_g.o \

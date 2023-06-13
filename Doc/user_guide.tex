@@ -634,11 +634,11 @@ and the following optional packages:\\
 \end{tabular}\\
 \\
 In order to compile the code for NVidia GPU's you will need a recent version
-(v.19.10 or later: the more recent, the better) of the NVidia HPC software
-development kit (SDK). Ensure that you have properly defined all needed environmental
-variables, e.g. by running the "module" file provided in the HPC SDK with command
+(v.19.10 or later) of the NVidia HPC software development kit (SDK). Beware:
+some versions may be buggy. Ensure that all needed environmental variables
+are properly defined, e.g. by running the "module" file provided in the HPC SDK with command
 \texttt{module}. Specify \texttt{--with-cuda} and \texttt{--with-cuda-cc} as explained 
-below. This enables OpenMP and disables ScaLAPACK by default. Other options below
+below. Other options below
 are optional. Enabling faster communications between GPUs, via NVlink or Infiniband RDMA, 
 is essential for optimal parallel performance. 
 

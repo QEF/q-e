@@ -43,33 +43,34 @@ SUBROUTINE set_rhoc
   rho_core(:)  = 0.0_DP
 
   IF ( ANY( upf(1:ntyp)%nlcc ) ) THEN
-     ALLOCATE (rhocg( ngl))    
-     ! acc data create(rhocg) copyin(gl)
+     ALLOCATE (rhocg( ngl))
+     ! FIXME: strf should always stay on GPU
+     !$acc data create(rhocg) copyin(gl, igtongl, strf, rhog_core, rho_core)
      !
      !    the sum is on atom types
      !
      DO nt = 1, ntyp
         IF ( upf(nt)%nlcc ) THEN
            !
-           ! drhoc computes the radial fourier transform for each shell of g vec
+           ! interp_rhc computes the radial fourier transform for each shell of g vec
            !
-           CALL drhoc (nt, ngl, gl, tpiba2, rhocg)
+           CALL interp_rhc (nt, ngl, gl, tpiba2, rhocg)
            !
            !     multiply by the structure factor and sum
            !
+           !$acc parallel loop
            DO ng = 1, ngm
               rhog_core(ng) = rhog_core(ng) + strf(ng,nt) * rhocg(igtongl(ng))
            END DO
         ENDIF
      ENDDO
-     ! acc end data
-     DEALLOCATE (rhocg)
      !
      CALL rho_g2r( dfftp, rhog_core, rho_core )
      !
      !    test on the charge and computation of the core energy
      !
      rhoneg = 0.d0
+     !$acc parallel loop reduction(+:rhoneg)
      DO ir = 1, dfftp%nnr
         rhoneg = rhoneg + min (0.d0, rho_core (ir) )
         !
@@ -107,6 +108,10 @@ SUBROUTINE set_rhoc
      ! 9000 format (5x,'core-only xc energy         = ',f15.8,' Ry')
      !   WRITE( stdout,  * ) 'BEWARE it will be subtracted from total energy !'
      !
+     !FIXME: rho_core and rhog_core should always stay on GPU
+     !$acc exit data copyout(rho_core, rhog_core)
+     !$acc end data
+     DEALLOCATE (rhocg)
   END IF
   !
   RETURN

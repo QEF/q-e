@@ -89,7 +89,7 @@ SUBROUTINE force_cc( forcecc )
   DO nt = 1, ntyp
      IF ( upf(nt)%nlcc ) THEN
         !
-        CALL drhoc( nt, ngl, gl, tpiba2, rhocg )
+        CALL interp_rhc( nt, ngl, gl, tpiba2, rhocg )
         !
 #if !defined(_OPENACC)
         !$omp parallel do private( tau1,tau2,tau3,forcecc_x,forcecc_y,forcecc_z,&
