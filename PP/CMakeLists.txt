@@ -44,7 +44,8 @@ set(src_pp
     src/write_p_avg.f90
     src/write_io_header.f90
     src/write_hamiltonians.f90
-    src/xc_vdW_scale_mod.f90)
+    src/xc_vdW_scale_mod.f90
+    src/fft_interpolation_mod.f90)
 # OSCDFT
 if (QE_ENABLE_OSCDFT)
     list(APPEND src_pp
