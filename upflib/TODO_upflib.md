@@ -39,8 +39,8 @@
     use it ONLY inside upflib, remove link of nsp in ions_base to uspp_param
 
   - nh(:) is allocated in init_uspp_dims, but maybe it should allocated
-    together with upf(:), when upf is read? Or maybe nh should be part of upf?
-    It is used in many many places, though!
+    together with upf(:), when upf is read. Or even better (but annoying
+    to do): nh should be part of upf, since it is an atomic quantity?
 
   - Merge pseudopotential_indexes from CPV/src/pseudopot_sub.f90 with the
     uspp initialization in upflib (init_us_1 etc); merge qvan2b and qvan2
@@ -56,15 +56,18 @@
     be stored in a different variable (something like ylmdim, or maxlm)
 
   - Names of interpolation tables and related routines are random:
-      CP     PW      new name? 	     contains 	         computed in
+      CP     PW      better name     contains 	         computed in
     betagx   tab     tab_beta      beta(G) functions	compute_betagx,
     dbetagx             	   dbeta(G)/dG 		compute_betagx
     qradx    qrad    tab_q         Q(G) for  USPP/PAW	init_tab_qrad
     dqradx              	   dQ(G)/dG  		compute_qradx
-             tab_at  tab_atwfc     atomic R_nl(G)	init_tab_atwfc
-             tab_rho tab_atrho     atomic rho(G)	init_tab_rho
+             tab_at  tab_atwfc?    atomic R_nl(G)	init_tab_atwfc
+             tab_rho               atomic rho(G)	init_tab_rho
+             tab_rhc               pseudocore rho(G)	init_tab_rhc
                     (tab_vloc      local potential	to be done)
-
+  - Move allocation of interpolation tables into initialization routines,
+    setting max |G| as input. Collect interpolation data and related
+    routines into a module, one per variable.
 
 * upflib restructuring:
   - shall we keep just one src folder ? or structure it a bit more, such as
