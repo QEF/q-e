@@ -74,6 +74,7 @@ contains
                        allocate(qrad_d(nqxq_,nbetam*(nbetam+1)/2, lmaxq, nsp))
         if (nbetam>0)  allocate(tab_d(nqx_,nbetam,nsp))
         if (nwfcm>0)   allocate(tab_at_d(nqx_,nwfcm,nsp))
+        !$acc enter data create(tab_rho,tab_rhc)
      endif
      !
   end subroutine allocate_uspp_data
@@ -83,7 +84,7 @@ contains
      if( allocated( qrad ) )      deallocate( qrad )
      if( allocated( tab ) )       deallocate( tab )
      if( allocated( tab_at ) )    deallocate( tab_at )
-!$acc exit data delete(tab_rho, tab_rhc)
+     !$acc exit data delete(tab_rho, tab_rhc)
      if( allocated( tab_rho) )    deallocate( tab_rho)
      if( allocated( tab_rhc) )    deallocate( tab_rhc)
      !
@@ -103,7 +104,7 @@ contains
      tab_rho(:,:)  = tab_rho(:,:) * vol_ratio_m1
      tab_rhc(:,:)  = tab_rhc(:,:) * vol_ratio_m1
 #if defined __CUDA
-!$acc enter data copyin (tab_rho, tab_rhc)
+!$acc update device (tab_rho, tab_rhc)
      ! CUDA Fortran safeguard
      if(size(tab) > 0) tab_d = tab
      if(size(qrad) > 0) qrad_d = qrad
