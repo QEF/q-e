@@ -62,7 +62,7 @@ SUBROUTINE init_tab_rho (omega, comm)
   END DO
   !
   CALL mp_sum ( tab_rho (:,1:nsp), comm )
-!$acc enter data copyin (tab_rho)
+  !$acc update device (tab_rho)
   !
   DEALLOCATE (aux)
   !

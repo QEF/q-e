@@ -28,7 +28,7 @@
   USE mp_bands,      ONLY : intra_bgrp_comm
   USE mp,            ONLY : mp_barrier, mp_bcast
   USE io_global,     ONLY : stdout, meta_ionode, meta_ionode_id, ionode_id
-  USE uspp_data,     ONLY : nqxq, dq, qrad
+  USE uspp_data,     ONLY : nqxq, dq, qrad, tab_rhc
   USE gvect,         ONLY : gcutm, ngm, g, gg
   USE cellmd,        ONLY : cell_factor
   USE uspp_param,    ONLY : lmaxq, nbetam
@@ -251,6 +251,10 @@
         IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating qrad', 1)
         ALLOCATE(qrad(maxvalue, nbetam * (nbetam + 1) / 2, lmaxq, nsp), STAT = ierr)
         IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating qrad ', 1)
+        IF (ALLOCATED(tab_rhc)) THEN
+           DEALLOCATE(tab_rhc)
+           ALLOCATE(tab_rhc(maxvalue,nsp))
+        END IF
         !
         qrad(:, :, :, :) = zero
         ! RM - need to call init_us_1 to re-calculate qrad
