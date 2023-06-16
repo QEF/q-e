@@ -293,7 +293,7 @@ The Autopilot module supports the following input variables:
  - isave
  - iprint
  - tprint
- - dt (automatically set also tolp to old dt and electron_velocities/ions_velocities to 'change_step')
+ - dt (perform all the rescaling needed to change the timestep)
  - electron_dynamics (if 'cg', this has little side-effects)
  - electron_damping
  - ion_dynamics

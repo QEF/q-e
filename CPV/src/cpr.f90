@@ -918,14 +918,14 @@ USE cp_main_variables,        ONLY : eigr_d
           CALL writefile( h, hold ,nfi, c0_bgrp, c0old, taus, tausm,  &
                           vels, velsm, acc, lambda, lambdam, idesc, xnhe0, xnhem,     &
                           vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0,&
-                          xnhhm, vnhh, velh, fion, tps, z0t, f, rhor )
+                          xnhhm, vnhh, velh, fion, tps, z0t, f, rhor, delt )
            !
         ELSE
            !
            CALL writefile( h, hold, nfi, c0_bgrp, cm_bgrp, taus,  &
                            tausm, vels, velsm, acc,  lambda, lambdam, idesc, xnhe0,   &
                            xnhem, vnhe, xnhp0, xnhpm, vnhp, nhpcl, nhpdim, ekincm,&
-                           xnhh0, xnhhm, vnhh, velh, fion, tps, z0t, f, rhor )
+                           xnhh0, xnhhm, vnhh, velh, fion, tps, z0t, f, rhor, delt )
            !
         END IF
         !
@@ -1003,7 +1003,7 @@ USE cp_main_variables,        ONLY : eigr_d
         END IF
         !
      END IF
-     !
+     ! wf_closing_options calls writefile internally
      IF ( lwf ) &
         CALL wf_closing_options( nfi, c0_bgrp, cm_bgrp, bec_bgrp, eigr, eigrb,&
                                  taub, irb, ibrav, bg(:,1), bg(:,2), bg(:,3), &
@@ -1011,7 +1011,7 @@ USE cp_main_variables,        ONLY : eigr_d
                                  velsm, acc, lambda, lambdam, idesc, xnhe0, xnhem,  &
                                  vnhe, xnhp0, xnhpm, vnhp, nhpcl, nhpdim,    &
                                  ekincm, xnhh0, xnhhm, vnhh, velh, ecutrho,  &
-                                 ecutwfc,delt,celldm, fion, tps, z0t, f, rhor )
+                                 ecutwfc,delt,celldm, fion, tps, z0t, f, rhor, delt )
      !
      IF ( tstop ) EXIT main_loop
      !
@@ -1036,7 +1036,7 @@ USE cp_main_variables,        ONLY : eigr_d
   CALL writefile( h, hold, nfi, c0_bgrp, cm_bgrp, taus, tausm, &
                   vels, velsm, acc, lambda, lambdam, idesc, xnhe0, xnhem, vnhe,    &
                   xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm,    &
-                  vnhh, velh, fion, tps, z0t, f, rhor )
+                  vnhh, velh, fion, tps, z0t, f, rhor, delt )
   !
   IF( iverbosity > 1 ) CALL laxlib_print_matrix( lambda, idesc, nbsp, nbsp, nudx, 1.D0, ionode, stdout )
   !
