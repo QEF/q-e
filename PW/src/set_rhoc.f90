@@ -44,7 +44,6 @@ SUBROUTINE set_rhoc
 
   IF ( ANY( upf(1:ntyp)%nlcc ) ) THEN
      ALLOCATE (rhocg( ngl))
-     ! FIXME: strf should always stay on GPU
      !$acc data create(rhocg) copyin(gl, igtongl, strf, rhog_core, rho_core)
      !
      !    the sum is on atom types
@@ -108,7 +107,6 @@ SUBROUTINE set_rhoc
      ! 9000 format (5x,'core-only xc energy         = ',f15.8,' Ry')
      !   WRITE( stdout,  * ) 'BEWARE it will be subtracted from total energy !'
      !
-     !FIXME: rho_core and rhog_core should always stay on GPU
      !$acc exit data copyout(rho_core, rhog_core)
      !$acc end data
      DEALLOCATE (rhocg)

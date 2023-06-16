@@ -66,6 +66,7 @@ contains
      allocate(tab_at(nqx_,nwfcm,nsp))
      allocate(tab_rho(nqxq_,nsp))
      allocate(tab_rhc(nqxq_,nsp))
+     !$acc enter data create(tab_rho,tab_rhc)
      !
      IF (use_gpu) then
         ! allocations with zero size protected
@@ -74,7 +75,6 @@ contains
                        allocate(qrad_d(nqxq_,nbetam*(nbetam+1)/2, lmaxq, nsp))
         if (nbetam>0)  allocate(tab_d(nqx_,nbetam,nsp))
         if (nwfcm>0)   allocate(tab_at_d(nqx_,nwfcm,nsp))
-        !$acc enter data create(tab_rho,tab_rhc)
      endif
      !
   end subroutine allocate_uspp_data
