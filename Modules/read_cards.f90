@@ -290,7 +290,7 @@ CONTAINS
       !
       CHARACTER(len=256) :: input_line
       INTEGER            :: is, ip, ierr
-      CHARACTER(len=4)   :: lb_pos
+      CHARACTER(len=6)   :: lb_pos
       CHARACTER(len=256) :: psfile
       !
       !
@@ -373,7 +373,7 @@ CONTAINS
       !
       CHARACTER(len=256) :: input_line
       CHARACTER(len=2)   :: prog
-      CHARACTER(len=4)   :: lb_pos
+      CHARACTER(len=6)   :: lb_pos
       INTEGER            :: ia, k, is, nfield, idx, rep_i
       LOGICAL, EXTERNAL  :: matches
       LOGICAL            :: tend

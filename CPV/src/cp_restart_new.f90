@@ -1463,7 +1463,7 @@ MODULE cp_restart_new
     REAL(DP)         :: a1_(3), a2_(3), a3_(3)
     REAL(DP)         :: b1_(3), b2_(3), b3_(3)
     REAL(DP), ALLOCATABLE :: tau_(:,:) 
-    CHARACTER(LEN=3) :: atm_(ntypx)
+    CHARACTER(LEN=6) :: atm_(ntypx)
     TYPE(output_type) :: output_obj
     TYPE(Node),POINTER :: root, simpleNode, timestepsNode, cellNode, stepNode
     !

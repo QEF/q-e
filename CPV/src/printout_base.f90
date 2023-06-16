@@ -181,7 +181,7 @@ CONTAINS
     CHARACTER(LEN=3), INTENT(IN), OPTIONAL :: what
     INTEGER,          INTENT(IN), OPTIONAL :: nfi
     REAL(DP),        INTENT(IN), OPTIONAL :: tps
-    CHARACTER(LEN=3), INTENT(IN), OPTIONAL :: label( : )
+    CHARACTER(LEN=6), INTENT(IN), OPTIONAL :: label( : )
     REAL(DP),        INTENT(IN), OPTIONAL :: fact
     CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: head
     !
