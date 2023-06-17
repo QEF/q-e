@@ -23,16 +23,13 @@ subroutine set_drhoc (q, drc)
   !
   REAL(DP),INTENT(in) :: q(3)
   !! the q-point used for structure factor
-  COMPLEX(DP),INTENT(inout) :: drc(ngm,ntyp)
-  !! Fourier-transform of core charge at q
-  !! FIXME: why is it complex? there is nothing complex here
+  REAL(DP),INTENT(inout) :: drc(ngm,ntyp)
+  !! Fourier-transform of core charge at q+G
   !
   ! ... local variables
   !
   REAL(DP), ALLOCATABLE :: qg2(:)
   !! (q+G)^2 in (2\pi/a)^2 units
-  REAL(DP), ALLOCATABLE :: rhc(:)
-  !! interpolated rho_core(|q+G|), real
   INTEGER :: ng, nt
   ! counters
 
@@ -46,17 +43,14 @@ subroutine set_drhoc (q, drc)
                ( g(3,ng) + q(3) )**2
   end do
   !
-  ALLOCATE ( rhc(ngm) )
   do nt = 1, ntyp
      if ( upf(nt)%nlcc ) then
-        call interp_rhc( nt, ngm, qg2, tpiba2, rhc )
-        drc (:,nt) = CMPLX(rhc(:), kind=dp)
+        call interp_rhc( nt, ngm, qg2, tpiba2, drc(1,nt) )
      else
-        drc (:,nt) = (0.0_dp, 0.0_dp)
+        drc (:,nt) = 0.0_dp
      end if
   end do
   !
-  DEALLOCATE( rhc )
   DEALLOCATE( qg2 )
   CALL stop_clock('set_drhoc')
 

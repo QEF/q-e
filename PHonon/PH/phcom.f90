@@ -112,8 +112,8 @@ MODULE nlcc_ph
   !
   SAVE
   !
-  COMPLEX (DP), ALLOCATABLE, TARGET :: drc(:,:) ! (ngm, ntyp)
-  !! contain the rhoc (without structure fac) for all atomic types.
+  REAL (DP), ALLOCATABLE, TARGET :: drc(:,:) ! (ngm, ntyp)
+  !! contain rho core (without structure fac) for all atomic types.
   !
 END MODULE nlcc_ph
 !
