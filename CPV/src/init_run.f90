@@ -363,7 +363,7 @@ SUBROUTINE init_run()
                     tausm, vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, &
                     vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm, xnhh0, xnhhm,&
                     vnhh, velh, fion, tps, z0t, f, dt_xml_old )
-     write (*,*) 'xml file says that dt = ', dt_xml_old
+     WRITE (stdout,*) 'old dt (from xml) = ', dt_xml_old
      !
      CALL from_restart( )
      !

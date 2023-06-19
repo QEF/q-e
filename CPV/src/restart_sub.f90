@@ -74,25 +74,25 @@ SUBROUTINE from_restart( )
    !if necessary change the timestep
 
    IF (dt_old > 0.0d0) THEN
-       WRITE (*,*) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-       WRITE (*,*) '!! WARNING !! USE OF TOLP FOR CHANGING THE TIMESTEP IS DEPRECATED !!'
-       WRITE (*,*) '!! WARNING !!        THIS FEATURE WILL BE REMOVED SOON            !!'
-       WRITE (*,*) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-       WRITE (*,*) 'NOTE: specifying tolp for changing the timestep is deprecated and error-prone'
-       WRITE (*,*) '      the changing of timestep is performed automatically when the input timestep is'
-       WRITE (*,*) '      different from the one read from the xml file and no changing timestep input variable'
-       WRITE (*,*) '      is specified (tolp, ion_velocities and electron_velocities = change_step )'
+       WRITE (stdout,*) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+       WRITE (stdout,*) '!! WARNING !! USE OF TOLP FOR CHANGING THE TIMESTEP IS DEPRECATED !!'
+       WRITE (stdout,*) '!! WARNING !!        THIS FEATURE WILL BE REMOVED SOON            !!'
+       WRITE (stdout,*) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+       WRITE (stdout,*) 'NOTE: specifying tolp for changing the timestep is deprecated and error-prone'
+       WRITE (stdout,*) '      the changing of timestep is performed automatically when the input timestep is'
+       WRITE (stdout,*) '      different from the one read from the xml file and no changing timestep input variable'
+       WRITE (stdout,*) '      is specified (tolp, ion_velocities and electron_velocities = change_step )'
        IF (abs(dt_old - dt_xml_old) > 1.0d-6) THEN
            CALL errore (' from_restart ', ' input tolp and old dt written in the xml file are different ', 1)
        ENDIF
    ELSE IF ( abs(dt_xml_old - delt) > 1.0d-6 ) THEN
        dt_old = dt_xml_old
        trescalee = .true.
-       WRITE (*,*) 'NOTE: the new behavior is to automatically perform a change of timestep when the old'
-       WRITE (*,*) '      timestep written in the xml file is different from the input one'
-       WRITE (*,*) '!! RESCALING IONS AND ELECTRONS VELOCITIES'
-       WRITE (*,*) 'old dt = ', dt_old
-       WRITE (*,*) 'new dt = ', delt
+       WRITE (stdout,*) 'NOTE: the new behavior is to automatically perform a change of timestep when the old'
+       WRITE (stdout,*) '      timestep written in the xml file is different from the input one'
+       WRITE (stdout,*) '!! RESCALING IONS AND ELECTRONS VELOCITIES'
+       WRITE (stdout,*) 'old dt = ', dt_old
+       WRITE (stdout,*) 'new dt = ', delt
    END IF
    !
    ! dt_old should be -1.0 here if untouched. Rescale velocities
