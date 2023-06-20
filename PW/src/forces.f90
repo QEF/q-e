@@ -71,9 +71,6 @@ SUBROUTINE forces()
   USE oscdft_base,         ONLY : oscdft_ctx
   USE oscdft_forces_subs,  ONLY : oscdft_apply_forces, oscdft_print_forces
 #endif
-#if defined(__LEGACY_PLUGINS) 
-  USE plugin_flags,        ONLY : plugin_ext_forces, plugin_int_forces
-#endif 
   !
   IMPLICIT NONE
   !
