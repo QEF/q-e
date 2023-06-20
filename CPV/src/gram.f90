@@ -254,7 +254,7 @@ DEV_ACC end host_data
       END IF 
       nk = 0
       iupdwn_iss = iupdwn( iss) 
-DEV_ACC serial  present(ibgrp_g2l)      
+DEV_ACC serial copy(nk)  present(ibgrp_g2l)      
       DO k = iupdwn_iss, kmax
          ibgrp_k = ibgrp_g2l( k )
          IF( ibgrp_k > 0 ) THEN
@@ -374,7 +374,7 @@ DEV_ACC end kernels
 
 
       nk = 0
-DEV_ACC serial present(ibgrp_g2l, csc) 
+DEV_ACC serial copy(nk) present(ibgrp_g2l, csc) 
       DO k = iupdwn_iss, kmax
          ibgrp_k = ibgrp_g2l( k )
          IF( ibgrp_k > 0 ) THEN
