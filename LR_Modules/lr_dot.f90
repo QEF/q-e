@@ -54,8 +54,11 @@ FUNCTION lr_dot(x,y)
   !
   IF (gamma_only) THEN
      !
+     !$acc data present_or_copyin(x,y) copyin(wg) copy(temp_gamma)
      CALL lr_dot_gamma()
+     !$acc end data
      lr_dot = cmplx(temp_gamma,0.0d0,dp)
+     lr_dot = lr_dot/degspin
      !
   ELSEIF (noncolin) THEN
      !
@@ -65,10 +68,9 @@ FUNCTION lr_dot(x,y)
   ELSE
      !
      CALL lr_dot_k()
+     lr_dot = lr_dot/degspin
      !
   ENDIF
-  !
-  lr_dot = lr_dot/degspin
   !
   CALL stop_clock ('lr_dot')
   !
@@ -90,7 +92,7 @@ CONTAINS
     REAL(DP), EXTERNAL :: MYDDOT_VECTOR_GPU
     !$acc routine(MYDDOT_VECTOR_GPU) vector
     !
-    !$acc data present_or_copyin(x,y) copyin(wg) copy(temp_gamma)
+    !$acc data present(x,y,wg,temp_gamma)
 #if defined(__CUDA)
     !$acc parallel loop reduction(temp_gamma)
     DO ibnd=1,nbnd
@@ -113,12 +115,14 @@ CONTAINS
        !
     ENDDO
 #endif
-    !$acc end data 
     !
 #if defined(__MPI)
+    !$acc host_data use_device(temp_gamma)
     CALL mp_sum(temp_gamma, intra_bgrp_comm)
+    !$acc end host_data
 #endif
     !
+    !$acc end data
     RETURN
     !
   END SUBROUTINE lr_dot_gamma

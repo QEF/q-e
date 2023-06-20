@@ -455,44 +455,39 @@ contains
     
     ! Add new matrix elements to the M_C and M_D(in the subspace)(part 1)
     if (.not.ltammd) then
-       if (.not. okvan) then !norm conserving    
+       if (.not. okvan) then !norm conserving
           do ibr = num_basis_old+1, num_basis
              ! Calculate new D*vec_b
-             !$acc data copyin(vec_b(:,:,:,ibr)) copyout(vecwork(:,:,:), D_vec_b(:,:,:,ibr), C_vec_b(:,:,:,ibr))
+             !$acc data copyin(vec_b(:,:,:,ibr)) create(vecwork(:,:,:)) copyout(D_vec_b(:,:,:,ibr), C_vec_b(:,:,:,ibr))
              call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.false.)
              if (.not. poor_of_ram2) THEN
                 !$acc kernels     
                 D_vec_b(:,:,:,ibr)=vecwork(:,:,:)
                 !$acc end kernels
              endif
-!!!!             !$acc end data
              !
              ! Add new M_D
              do ibl = 1, ibr
                 ! Here there's a choice between saving memory and saving calculation
                 M_D(ibl,ibr)=lr_dot(vec_b(1,1,1,ibl),vecwork(1,1,1))
                 if(ibl /= ibr)  M_D(ibr,ibl)=M_D(ibl,ibr)
-!                M_D(ibr,ibl)=M_D(ibl,ibr)
              enddo
              ! Calculate new C*vec_b
-!!!             !$acc data copyin(vec_b(:,:,:,ibr)) copyout(vecwork(:,:,:), C_vec_b(:,:,:,ibr))
              call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.true.)
              if (.not. poor_of_ram2) THEN
                 !$acc kernels
                 C_vec_b(:,:,:,ibr)=vecwork(:,:,:)
                 !$acc end kernels
              endif   
-!!!             !$acc end data
              !
              ! Add new M_C
              do ibl = 1, ibr
                 M_C(ibl,ibr)=lr_dot(vec_b(1,1,1,ibl),vecwork(1,1,1))
                 if(ibl /= ibr) M_C(ibr,ibl)=M_C(ibl,ibr)
-!                M_C(ibr,ibl)=M_C(ibl,ibr)
              enddo
              !
              !$acc end data
-          enddo 
+          enddo
        else if(poor_of_ram) then ! Less memory needed
           do ibr = num_basis_old+1, num_basis
              ! Calculate new D*vec_b
@@ -733,11 +728,13 @@ contains
     use kinds,  only : dp
     use io_global, only : stdout
     use wvfct,                only : nbnd, npwx
+    use uspp,           only : okvan
     use lr_dav_debug
     use lr_us
     
     implicit none
-    integer :: ieign, flag,ibr
+    complex(kind=dp),external :: lr_dot
+    integer :: ieign, flag, ibr
     logical :: discharged
     complex(kind=dp) :: temp(npwx,nbnd)
 
@@ -751,20 +748,29 @@ contains
 
     call start_clock("calc_residue")
 
+    !$acc data copyout(left_res(:,:,:,:), right_res(:,:,:,:)) copyin(right_M(:,:), left_M(:,:), C_vec_b(:,:,:,:), D_vec_b(:,:,:,:), left_full(:,:,:,:), right_full(:,:,:,:))
     do ieign = 1, num_eign
+
        if (poor_of_ram2) then ! If D_ C_ basis are not stored, we have to apply liouvillian again
           call lr_apply_liouvillian(right_full(:,:,:,ieign),right_res(:,:,:,ieign),.true.) ! Apply lanczos
           call lr_apply_liouvillian(left_full(:,:,:,ieign),left_res(:,:,:,ieign),.false.)
        else ! Otherwise they are be recovered directly by the combination of C_ and D_ basis
-         left_res(:,:,:,ieign)=0.0d0
-         right_res(:,:,:,ieign)=0.0d0
-         do ibr = 1, num_basis
-            right_res(:,:,1,ieign)=right_res(:,:,1,ieign)+right_M(ibr,eign_value_order(ieign))*C_vec_b(:,:,1,ibr)
-            left_res(:,:,1,ieign)=left_res(:,:,1,ieign)+left_M(ibr,eign_value_order(ieign))*D_vec_b(:,:,1,ibr)
-         enddo
+          !$acc kernels     
+          left_res(:,:,:,ieign)=0.0d0
+          right_res(:,:,:,ieign)=0.0d0
+          !$acc end kernels
+          do ibr = 1, num_basis
+             !$acc kernels async
+             right_res(:,:,1,ieign)=right_res(:,:,1,ieign)+right_M(ibr,eign_value_order(ieign))*C_vec_b(:,:,1,ibr)
+             left_res(:,:,1,ieign)=left_res(:,:,1,ieign)+left_M(ibr,eign_value_order(ieign))*D_vec_b(:,:,1,ibr)
+             !$acc end kernels
+          enddo 
+          !$acc wait
        endif
      
        ! The reason of using this method
+       
+!       !$acc data copy(left_res(:,:,:,ieign), right_res(:,:,:,ieign)) copyin(left_full(:,:,:,ieign), right_full(:,:,:,ieign))
        call lr_1to1orth(right_res(1,1,1,ieign),left_full(1,1,1,ieign))
        call lr_1to1orth(left_res(1,1,1,ieign),right_full(1,1,1,ieign))
        ! Instead of this will be explained in the document
@@ -772,7 +778,11 @@ contains
        ! left_res(:,:,:,ieign)=left_res(:,:,:,ieign)-sqrt(eign_value(eign_value_order(ieign),1))*right_full(:,:,:,ieign)
 
        ! Update kill_r/l
-       right2(ieign)=lr_dot_us(right_res(1,1,1,ieign),right_res(1,1,1,ieign))
+       if (okvan) then
+          right2(ieign)=lr_dot_us(right_res(1,1,1,ieign),right_res(1,1,1,ieign))
+       else
+          right2(ieign)=lr_dot(right_res(1,1,1,ieign),right_res(1,1,1,ieign))     
+       endif   
        if (abs(aimag(right2(ieign))) .gt. zero .or. dble(right2(ieign)) .lt. 0.0D0) then
           write(stdout,'(7x,"Warning! Wanging! the residue is weird.")')
        endif
@@ -782,7 +792,14 @@ contains
        endif
        if( dble(right2(ieign)) .gt. max_res )  max_res = dble(right2(ieign))
 
-       left2(ieign)=lr_dot_us(left_res(1,1,1,ieign),left_res(1,1,1,ieign))
+       if (okvan) then
+          left2(ieign)=lr_dot_us(left_res(1,1,1,ieign),left_res(1,1,1,ieign))
+       else
+          left2(ieign)=lr_dot(left_res(1,1,1,ieign),left_res(1,1,1,ieign))
+       endif
+          
+          !       !$acc end data
+
        if (abs(aimag(left2(ieign))) .gt. zero .or. dble(left2(ieign)) .lt. 0.0D0) then
           write(stdout,'(7x,"Warning! Wanging! the residue is weird.")')
        endif
@@ -795,7 +812,8 @@ contains
        write (stdout,'(5x,"Residue(Squared modulus):",I5,2x,2F15.7)') ieign, &
              dble(right2(ieign)), dble(left2(ieign))
     enddo
- 
+    !$acc end data
+
     write(stdout,'(7x,"Largest residue:",5x,F20.12)') max_res
     if(max_res .lt. residue_conv_thr) dav_conv=.true.
     call stop_clock("calc_residue")
@@ -855,6 +873,7 @@ contains
  
     ! Here mGS are called three times and orthogonalize is called once for increasing 
     ! numerical stability of orthonalization
+    !$acc data copy(left_res(:,:,:,:), right_res(:,:,:,:)) copyin(vec_b(:,:,:,:))
     call lr_mGS_orth()    ! 1st
     call lr_mGS_orth_pp()
     call lr_mGS_orth()    ! 2nd
@@ -868,6 +887,7 @@ contains
        call lr_norm(right_res(:,:,:,ieign))
        call lr_norm(left_res(:,:,:,ieign))
     enddo
+    !$acc end data
 
     if (toadd .eq. 0) then
        write(stdout,'("TOADD is zero !!")')
@@ -928,26 +948,35 @@ contains
     real(dp) :: temp
     
     call start_clock("mGS_orth")
-    ! first orthogonalize to old basis
-    do ib = 1, num_basis
-       do ieign = 1, num_eign
-          if (.not. kill_left(ieign)) then
-             if (poor_of_ram .or. .not. okvan) then ! Less memory needed
-                call lr_1to1orth(left_res(1,1,1,ieign),vec_b(1,1,1,ib))
-             else ! Less calculation, double memory required
-                call lr_bi_1to1orth(left_res(1,1,1,ieign),vec_b(1,1,1,ib),svec_b(1,1,1,ib))
-             endif
-          endif
-          if (.not. kill_right(ieign)) then
-             if (poor_of_ram .or. .not. okvan) then ! Less memory needed
-                call lr_1to1orth(right_res(1,1,1,ieign),vec_b(1,1,1,ib))
-             else ! Less calculation, double memory required
-                call lr_bi_1to1orth(right_res(1,1,1,ieign),vec_b(1,1,1,ib),svec_b(1,1,1,ib))
-             endif
-          endif
-       enddo
-    enddo
 
+    !$acc data present_or_copy(left_res(:,:,:,:), right_res(:,:,:,:)) present_or_copyin(vec_b(:,:,:,:))
+
+    ! first orthogonalize to old basis
+    do ieign = 1, num_eign
+       if (.not. kill_left(ieign)) then
+          if (poor_of_ram .or. .not. okvan) then ! Less memory needed
+             do ib = 1, num_basis
+                call lr_1to1orth(left_res(1,1,1,ieign),vec_b(1,1,1,ib))
+             enddo
+          else ! Less calculation, double memory required
+             do ib = 1, num_basis
+                call lr_bi_1to1orth(left_res(1,1,1,ieign),vec_b(1,1,1,ib),svec_b(1,1,1,ib))
+             enddo
+          endif
+       endif
+       if (.not. kill_right(ieign)) then
+          if (poor_of_ram .or. .not. okvan) then ! Less memory needed
+             do ib = 1, num_basis
+                call lr_1to1orth(right_res(1,1,1,ieign),vec_b(1,1,1,ib))
+             enddo
+          else
+             do ib = 1, num_basis
+                call lr_bi_1to1orth(right_res(1,1,1,ieign),vec_b(1,1,1,ib),svec_b(1,1,1,ib))
+             enddo   
+          endif    
+       endif
+    enddo    
+    !
     ! orthogonalize between new basis themselves
     do ieign = 1, num_eign
        if (.not. kill_left(ieign) .and. .not. kill_right(ieign)) then
@@ -967,6 +996,7 @@ contains
              call lr_1to1orth(right_res(1,1,1,ieign2),right_res(1,1,1,ieign))
        enddo
     enddo
+    !$acc end data
     call stop_clock("mGS_orth")
     return
   end subroutine lr_mGS_orth
@@ -982,17 +1012,24 @@ contains
     use klist,                only : nks
     use wvfct,                only : npwx,nbnd
     use io_global,            only : stdout
+    use uspp,                 only : okvan    
     use lr_dav_variables
     use lr_us
 
     implicit none
+    complex(kind=dp),external :: lr_dot
     integer :: ieign,ia
     real(dp) :: norm_res
   
     call start_clock("mGS_orth_pp")
+    !$acc data present_or_copy(left_res(:,:,:,:), right_res(:,:,:,:))    
     do ieign = 1, num_eign
        if (.not. kill_left(ieign)) then
-          norm_res = dble(lr_dot_us(left_res(1,1,1,ieign),left_res(1,1,1,ieign)))
+          if (okvan) then
+             norm_res = dble(lr_dot_us(left_res(1,1,1,ieign),left_res(1,1,1,ieign)))
+          else
+             norm_res = dble(lr_dot(left_res(1,1,1,ieign),left_res(1,1,1,ieign))) 
+          endif    
           if (norm_res .lt. residue_conv_thr) then
              kill_left(ieign) = .true.
              write(stdout,'("One residue is eliminated:",5x,E20.12)') norm_res
@@ -1003,7 +1040,11 @@ contains
        endif
 
        if (.not. kill_right(ieign)) then
-          norm_res = dble(lr_dot_us(right_res(1,1,1,ieign),right_res(1,1,1,ieign)))
+          if (okvan) then
+             norm_res = dble(lr_dot_us(right_res(1,1,1,ieign),right_res(1,1,1,ieign)))
+          else 
+             norm_res = dble(lr_dot(right_res(1,1,1,ieign),right_res(1,1,1,ieign)))   
+          endif   
           if (norm_res .lt. residue_conv_thr) then
              kill_right(ieign) = .true.
              write(stdout,'("One residue is eliminated:",5x,E20.12)') norm_res
@@ -1013,6 +1054,8 @@ contains
           endif
        endif
     enddo
+    !$acc end data
+
     call stop_clock("mGS_orth_pp")
     return
   end subroutine lr_mGS_orth_pp
@@ -1031,17 +1074,23 @@ contains
     use uspp,                 only : okvan
 
     implicit none
-    complex(dp)  :: vect(npwx,nbnd,nks),svect(npwx,nbnd,nks)
+    complex(dp)  :: vect(npwx,nbnd,nks)
     complex(kind=dp),external :: lr_dot
     real(dp) :: temp
- 
+    !
+    !$acc data present_or_copy(vect(:,:,:))
+    !
     if (okvan) then
        temp=dble(lr_dot_us(vect(1,1,1),vect(1,1,1)))
     else
        temp=dble(lr_dot(vect(1,1,1),vect(1,1,1)))
     endif
+    !$acc kernels copyin(temp)
     vect(:,:,:)=vect(:,:,:)/sqrt(temp)
-
+    !$acc end kernels
+    !
+    !$acc end data
+    !
     return
   end subroutine lr_norm
   !-------------------------------------------------------------------------------
@@ -1062,12 +1111,28 @@ contains
     implicit none
     complex(kind=dp),external :: lr_dot
     complex(dp)  :: vect1(npwx,nbnd,nks),vect2(npwx,nbnd,nks)
-    
+    complex(dp)  :: temp_dot1, temp_dot2, temp_dot
+    !
+    !$acc data present_or_copy(vect1(:,:,:)) present_or_copyin(vect2(:,:,:))
+    !
     if (okvan) then
-       vect1(:,:,1)=vect1(:,:,1)-(lr_dot_us(vect1(1,1,1),vect2(1,1,1))/lr_dot_us(vect2(1,1,1),vect2(1,1,1)))*vect2(:,:,1)
+       temp_dot1 = lr_dot_us(vect1(1,1,1),vect2(1,1,1))
+       temp_dot2 = lr_dot_us(vect2(1,1,1),vect2(1,1,1))
+       temp_dot  = temp_dot1/temp_dot2
+       !$acc kernels copyin(temp_dot)
+       vect1(:,:,1)=vect1(:,:,1)-temp_dot*vect2(:,:,1)
+       !$acc end kernels       
     else
-       vect1(:,:,1)=vect1(:,:,1)-(lr_dot(vect1(1,1,1),vect2(1,1,1))/lr_dot(vect2(1,1,1),vect2(1,1,1)))*vect2(:,:,1)
-    endif        
+       temp_dot1 = lr_dot(vect1(1,1,1),vect2(1,1,1))
+       temp_dot2 = lr_dot(vect2(1,1,1),vect2(1,1,1))
+       temp_dot  = temp_dot1/temp_dot2     
+       !$acc kernels copyin(temp_dot)
+       vect1(:,:,1)=vect1(:,:,1)-temp_dot*vect2(:,:,1)
+       !$acc end kernels
+    endif       
+    !
+    !$acc end data
+    ! 
     return
   end subroutine lr_1to1orth
   !-------------------------------------------------------------------------------
@@ -1086,8 +1151,17 @@ contains
     implicit none
     complex(kind=dp),external :: lr_dot
     complex(dp)  :: vect1(npwx,nbnd,nks),vect2(npwx,nbnd,nks),svect2(npwx,nbnd,nks)
-    
-    vect1(:,:,1)=vect1(:,:,1)-(lr_dot(svect2(1,1,1),vect1(1,1,1))/lr_dot(svect2(1,1,1),vect2(1,1,1)))*vect2(:,:,1)
+    complex(dp)  :: temp_dot1, temp_dot2, temp_dot
+    !
+    !$acc data present_or_copy(vect1(:,:,:)) present_or_copyin(svect2(:,:,:), vect2(:,:,:))
+    temp_dot1 = lr_dot(svect2(1,1,1),vect1(1,1,1))
+    temp_dot2 = lr_dot(svect2(1,1,1),vect2(1,1,1))
+    temp_dot  = temp_dot1/temp_dot2
+    !
+    !$acc kernels copyin(temp_dot)
+    vect1(:,:,1)=vect1(:,:,1)-temp_dot*vect2(:,:,1)
+    !$acc end kernels
+    !$acc end data
     return
   end subroutine lr_bi_1to1orth
   !-------------------------------------------------------------------------------
@@ -1138,9 +1212,11 @@ contains
     use io_global,            only : stdout,ionode,ionode_id
     use mp,                   only : mp_bcast,mp_barrier                  
     use mp_world,             only : world_comm
+    use uspp,                 only : okvan
     use lr_us
     
     implicit none
+    complex(dp), external :: lr_dot
     character(len=*) :: message
     integer :: ieign, ia,ic,iv,ipol
     real(kind=dp), external   :: ddot
@@ -1223,7 +1299,11 @@ contains
       left_full(:,:,:,ieign)=left_full(:,:,:,ieign)/dble(omegal(ieign))      
     
       ! Normalize the vector
-      norm=2.0d0*dble(lr_dot_us(right_full(1,1,1,ieign),left_full(1,1,1,ieign)))
+      if (okvan) then 
+         norm=2.0d0*dble(lr_dot_us(right_full(1,1,1,ieign),left_full(1,1,1,ieign)))
+      else 
+         norm=2.0d0*dble(lr_dot(right_full(1,1,1,ieign),left_full(1,1,1,ieign)))
+      endif   
       norm=sqrt(abs(norm))
 
       right_full(:,:,:,ieign)=right_full(:,:,:,ieign)/norm
@@ -1233,8 +1313,13 @@ contains
       left_res(:,:,:,ieign)=(right_full(:,:,:,ieign)+left_full(:,:,:,ieign))/sqrt(2.0d0) !X
       right_res(:,:,:,ieign)=(right_full(:,:,:,ieign)-left_full(:,:,:,ieign))/sqrt(2.0d0) !Y
 
-      normx=dble(lr_dot_us(left_res(1,1,1,ieign),left_res(1,1,1,ieign)))
-      normy=-dble(lr_dot_us(right_res(1,1,1,ieign),right_res(1,1,1,ieign)))
+      if (okvan) then
+         normx=dble(lr_dot_us(left_res(1,1,1,ieign),left_res(1,1,1,ieign)))
+         normy=-dble(lr_dot_us(right_res(1,1,1,ieign),right_res(1,1,1,ieign)))
+      else 
+         normx=dble(lr_dot(left_res(1,1,1,ieign),left_res(1,1,1,ieign)))
+         normy=-dble(lr_dot(right_res(1,1,1,ieign),right_res(1,1,1,ieign)))
+      endif        
       norm_F(ieign)=normx+normy  !! Actually norm_F should always be one since it was previously normalized
       
       if(message=="END") then

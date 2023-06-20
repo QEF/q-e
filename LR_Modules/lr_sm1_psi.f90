@@ -46,7 +46,9 @@ SUBROUTINE lr_sm1_psi (ik, lda, n, m, psi, spsi)
   CALL start_clock( 'lr_sm1_psi' )
   !
   IF ( gamma_only ) THEN
+     !$acc data present_or_copyin(psi) present_or_copyout(spsi)     
      CALL sm1_psi_gamma()
+     !$acc end data
   ELSEIF (noncolin) THEN
      CALL sm1_psi_nc()
   ELSE
@@ -88,9 +90,10 @@ CONTAINS
     ! counters
     REAL(DP), ALLOCATABLE :: ps(:,:)
     !
-    !$acc data present_or_copyin(psi) present_or_copyout(spsi)
     !
     ! Initialize spsi : spsi = psi
+    !
+    !$acc data present(psi,spsi)
     !
     !$acc kernels
     spsi(:,:) = psi(:,:)
