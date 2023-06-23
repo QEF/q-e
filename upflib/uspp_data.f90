@@ -17,7 +17,7 @@ MODULE uspp_data
   !
   PUBLIC :: nqxq, nqx, dq
   PUBLIC :: qrad,   tab,   tab_at
-  PUBLIC :: qrad_d, tab_d, tab_at_d
+  PUBLIC :: tab_d, tab_at_d
   PUBLIC :: tab_rho, tab_rhc
   !
   PUBLIC :: allocate_uspp_data
@@ -43,12 +43,11 @@ MODULE uspp_data
   !
   !! GPUs variables - only those tables that is useful to have on GPUss
   !
-  REAL(DP), ALLOCATABLE :: qrad_d(:,:,:,:)
   REAL(DP), ALLOCATABLE :: tab_d(:,:,:)
   REAL(DP), ALLOCATABLE :: tab_at_d(:,:,:)
   !
 #if defined(__CUDA)
-  attributes (DEVICE) :: qrad_d, tab_d, tab_at_d
+  attributes (DEVICE) :: tab_d, tab_at_d
 #endif
   !
 contains
@@ -66,13 +65,11 @@ contains
      allocate(tab_at(nqx_,nwfcm,nsp))
      allocate(tab_rho(nqxq_,nsp))
      allocate(tab_rhc(nqxq_,nsp))
-     !$acc enter data create(tab_rho,tab_rhc)
+     !$acc enter data create(tab_rho,tab_rhc,qrad)
      !
      IF (use_gpu) then
         ! allocations with zero size protected
         ! since problematic with CUDAfor
-        if (lmaxq>0.and.nbetam>0)  &
-                       allocate(qrad_d(nqxq_,nbetam*(nbetam+1)/2, lmaxq, nsp))
         if (nbetam>0)  allocate(tab_d(nqx_,nbetam,nsp))
         if (nwfcm>0)   allocate(tab_at_d(nqx_,nwfcm,nsp))
      endif
@@ -81,14 +78,13 @@ contains
   !
   subroutine deallocate_uspp_data()
      implicit none
-     if( allocated( qrad ) )      deallocate( qrad )
      if( allocated( tab ) )       deallocate( tab )
      if( allocated( tab_at ) )    deallocate( tab_at )
-     !$acc exit data delete(tab_rho, tab_rhc)
+     !$acc exit data delete(tab_rho, tab_rhc, qrad)
+     if( allocated( qrad ) )      deallocate( qrad )
      if( allocated( tab_rho) )    deallocate( tab_rho)
      if( allocated( tab_rhc) )    deallocate( tab_rhc)
      !
-     if( allocated( qrad_d ) )    deallocate( qrad_d )
      if( allocated( tab_d ) )     deallocate( tab_d )
      if( allocated( tab_at_d ) )  deallocate( tab_at_d )
   end subroutine
@@ -104,10 +100,9 @@ contains
      tab_rho(:,:)  = tab_rho(:,:) * vol_ratio_m1
      tab_rhc(:,:)  = tab_rhc(:,:) * vol_ratio_m1
 #if defined __CUDA
-!$acc update device (tab_rho, tab_rhc)
+!$acc update device (tab_rho, tab_rhc,qrad)
      ! CUDA Fortran safeguard
      if(size(tab) > 0) tab_d = tab
-     if(size(qrad) > 0) qrad_d = qrad
      if(size(tab_at) > 0) tab_at_d = tab_at
 #endif
   end subroutine scale_uspp_data

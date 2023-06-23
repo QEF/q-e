@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2023 Quantum ESPRESSO  Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,171 +7,47 @@
 !
 !
 !-----------------------------------------------------------------------
-module qvan2_gpum
-#if defined(__CUDA)
-contains
-attributes(global) subroutine qvan2_kernel(ngy, ih, jh, np, qmod_d, qg_d, ylmk0_d, lmaxq, nbetam, nlx, dq)
-   !-----------------------------------------------------------------------
-   !
-   !    This routine computes the fourier transform of the Q functions
-   !    The interpolation table for the radial fourier trasform is stored 
-   !    in qrad.
-   !
-   !    The formula implemented here is
-   !
-   !     q(g,i,j) = sum_lm (-i)^l ap(lm,i,j) yr_lm(g^) qrad(g,l,i,j)
-   !
-   !
-   USE upf_kinds, ONLY: DP
-   USE uspp_data, ONLY: qrad_d
-   USE uspp,      ONLY: lpl_d, lpx_d, ap_d, indv_d, nhtolm_d
-   implicit none
-   !
-   ! Input variables
-   !
-   REAL(DP),intent(IN) :: dq
-   integer, intent(IN) :: ngy, ih, jh, np, lmaxq, nbetam, nlx
-   attributes(value):: ngy, ih, jh, np, lmaxq, nbetam, nlx, dq
-   ! ngy   :   number of G vectors to compute
-   ! ih, jh:   first and second index of Q
-   ! np    :   index of pseudopotentials
-   !
-   real(DP),intent(IN) :: ylmk0_d (ngy, lmaxq * lmaxq), qmod_d (ngy)
-   ! ylmk0 :  spherical harmonics
-   ! qmod  :  moduli of the q+g vectors
-   !
-   ! output: the fourier transform of interest
-   !
-   real(DP),intent(OUT) :: qg_d (2,ngy)
-   attributes(device):: ylmk0_d, qmod_d, qg_d
-   !
-   !     here the local variables
-   !
-   real (DP) :: sig
-   ! the nonzero real or imaginary part of (-i)^L 
-   real (DP), parameter :: sixth = 1.d0 / 6.d0
-   !
-   integer :: nb, mb, ijv, ivl, jvl, ig, lp, l, lm, i0, i1, i2, i3, ind
-   real(DP) :: dqi, qm, px, ux, vx, wx, uvx, pwx, work, qm1
-   real(DP) :: uvwx, pwvx, pwux, pxuvx
-   !
-   ig= threadIdx%x+BlockDim%x*(BlockIdx%x-1)
-   !
-   if (ig <= ngy) then
-      !     compute the indices which correspond to ih,jh
-      dqi = 1.0_DP / dq
-      nb = indv_d (ih, np)
-      mb = indv_d (jh, np)
-      if (nb.ge.mb) then
-         ijv = nb * (nb - 1) / 2 + mb
-      else
-         ijv = mb * (mb - 1) / 2 + nb
-      endif
-      ivl = nhtolm_d(ih, np)
-      jvl = nhtolm_d(jh, np)
-      
-      qg_d(1,ig) = 0.d0
-      qg_d(2,ig) = 0.d0
-      
-      qm = qmod_d (ig) * dqi
-      px = qm - int (qm)
-      ux = 1.d0 - px
-      vx = 2.d0 - px
-      wx = 3.d0 - px
-      i0 = INT( qm ) + 1
-      i1 = i0 + 1
-      i2 = i0 + 2
-      i3 = i0 + 3
-      uvx = ux * vx * sixth
-      pwx = px * wx * 0.5d0
-      
-      do lm = 1, lpx_d (ivl, jvl)
-         lp = lpl_d (ivl, jvl, lm)
-          if (lp == 1) then
-             l = 1
-             sig = 1.0d0
-             ind = 1
-          elseif ( lp <= 4) then
-             l = 2
-             sig =-1.0d0
-             ind = 2
-          elseif ( lp <= 9 ) then
-             l = 3
-             sig =-1.0d0
-             ind = 1
-          elseif ( lp <= 16 ) then
-             l = 4
-              sig = 1.0d0
-             ind = 2
-          elseif ( lp <= 25 ) then
-             l = 5
-             sig = 1.0d0
-             ind = 1
-          elseif ( lp <= 36 ) then
-             l = 6
-             sig =-1.0d0
-             ind = 2
-          else
-             l = 7
-             sig =-1.0d0
-             ind = 1
-          endif
-          sig = sig * ap_d (lp, ivl, jvl)
-               work = qrad_d (i0, ijv, l, np) * uvx * wx + &
-                      qrad_d (i1, ijv, l, np) * pwx * vx - &
-                      qrad_d (i2, ijv, l, np) * pwx * ux + &
-                      qrad_d (i3, ijv, l, np) * px * uvx
-          qg_d (ind,ig) = qg_d (ind,ig) + sig * ylmk0_d (ig, lp) * work
-      end do
-   end if
-   !
-   return
-end subroutine qvan2_kernel
-#endif
-end module qvan2_gpum
-
-
-subroutine qvan2_gpu (ngy, ih, jh, np, qmod_d, qg_d, ylmk0_d)
+SUBROUTINE qvan2_gpu( ngy, ih, jh, np, qmod, qg, ylmk0 )
   !-----------------------------------------------------------------------
+  !! This routine computes the Fourier transform of the Q functions.
   !
-  !    This routine computes the fourier transform of the Q functions
-  !    The interpolation table for the radial fourier transform is stored 
-  !    in qrad.
+  !! The interpolation table for the radial Fourier transform is stored 
+  !! in qrad.
   !
-  !    The formula implemented here is
-  !
-  !     q(g,i,j) = sum_lm (-i)^l ap(lm,i,j) yr_lm(g^) qrad(g,l,i,j)
-  !
+  !! The formula implemented here is:
+  !! \[ q(g,i,j) = \sum_\text{lm} (-i)^l \text{ap}(\text{lm},i,j) 
+  !! \text{yr}_\text{lm}(g) \text{qrad}(g,l,i,j) \]
   !
   USE upf_kinds,   ONLY: DP
-  USE uspp_data,   ONLY: dq
+  USE uspp_data,   ONLY: dq, qrad
   USE uspp_param,  ONLY: lmaxq, nbetam
-  USE uspp,        ONLY: nlx, nhtolm, indv
-#if defined(__CUDA)
-  USE cudafor
-  USE qvan2_gpum,  ONLY : qvan2_kernel
-#endif
+  USE uspp,        ONLY: nlx, lpl, lpx, ap, indv, nhtolm
   !
-  implicit none
+  IMPLICIT NONE
   !
-  ! Input variables
+  INTEGER, INTENT(IN) :: ngy
+  !! number of G vectors to compute
+  INTEGER, INTENT(IN) :: ih
+  !! first index of Q
+  INTEGER, INTENT(IN) :: jh
+  !! second index of Q
+  INTEGER, INTENT(IN) :: np
+  !! index of pseudopotentials
+  REAL(DP), INTENT(IN) :: ylmk0(ngy,lmaxq*lmaxq)
+  !! spherical harmonics
+  REAL(DP), INTENT(IN) :: qmod(ngy)
+  !! moduli of the q+g vectors 
+  REAL(DP), INTENT(OUT) :: qg(2,ngy)
+  !! the Fourier transform of interest
   !
-  integer,intent(IN) :: ngy, ih, jh, np
-  ! ngy   :   number of G vectors to compute
-  ! ih, jh:   first and second index of Q
-  ! np    :   index of pseudopotentials
+  ! ... local variables
   !
-  real(DP),intent(IN) :: ylmk0_d (ngy, lmaxq * lmaxq), qmod_d (ngy)
-  ! ylmk0 :  spherical harmonics
-  ! qmod  :  moduli of the q+g vectors
+  REAL(DP) :: sig
+  ! the nonzero real or imaginary part of (-i)^L
   !
-  ! output: the fourier transform of interest
+  REAL(DP), PARAMETER :: sixth = 1.0_DP / 6.0_DP
   !
-  real(DP),intent(OUT) :: qg_d (2,ngy)
-  !
-  !     here the local variables
-  !
-  integer :: nb, mb, ijv, ivl, jvl, ig, lp, l, lm, i0, i1, i2, i3, ind
+  INTEGER :: nb, mb, ijv, ivl, jvl, ig, lp, l, lm, i0, i1, i2, i3, ind
   ! nb,mb  : atomic index corresponding to ih,jh
   ! ijv    : combined index (nb,mb)
   ! ivl,jvl: combined LM index corresponding to ih,jh
@@ -182,37 +58,110 @@ subroutine qvan2_gpu (ngy, ih, jh, np, qmod_d, qg_d, ylmk0_d)
   ! i0-i3  : counters for interpolation table
   ! ind    : ind=1 if the results is real (l even), ind=2 if complex (l odd)
   !
+  REAL(DP) :: dqi, qm, px, ux, vx, wx, uvx, pwx, work
+  ! 1 divided dq
+  ! qmod/dq
+  ! measures for interpolation table
+  ! auxiliary variables for intepolation
+  ! auxiliary variables
   !
-  !     compute the indices which correspond to ih,jh
+  ! This should not happen, but better to check
   !
-#if defined(__CUDA)
-  type(dim3):: grid, tBlock
-  attributes(device):: ylmk0_d, qmod_d, qg_d
-#endif
+!$acc declare deviceptr(qmod,ylmk0,qg)
+!$acc data present_or_copyin(qmod,ylmk0) present_or_copyout(qg) present(qrad)
+  !IF ( INT(qmod(ngy)/dq)+4 > size(qrad,1) ) CALL upf_error &
+  !     ('qvan2', 'internal error: dimension of interpolation table', 1 )
   !
-  nb = indv (ih, np)
-  mb = indv (jh, np)
-  if (nb.ge.mb) then
+  ! ... computes the indices which correspond to ih,jh
+  !
+  nb = indv(ih,np)
+  mb = indv(jh,np)
+  !
+  IF (nb >= mb) THEN
      ijv = nb * (nb - 1) / 2 + mb
-  else
+  ELSE
      ijv = mb * (mb - 1) / 2 + nb
-  endif
-  ivl = nhtolm(ih, np)
-  jvl = nhtolm(jh, np)
-  if (nb > nbetam .OR. mb > nbetam) &
-       call upf_error (' qvan2 ', ' wrong dimensions (1)', MAX(nb,mb))
-  if (ivl > nlx .OR. jvl > nlx) &
-       call upf_error (' qvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
+  ENDIF
   !
-#if defined(__CUDA)
-  tBlock = dim3(256,1,1)
-  grid = dim3(ceiling(real(ngy)/tBlock%x),1,1)
-  call qvan2_kernel<<<grid,tBlock>>>(ngy, ih, jh, np, qmod_d, qg_d, ylmk0_d, lmaxq, nbetam, nlx, dq)
+  ivl = nhtolm(ih,np)
+  jvl = nhtolm(jh,np)
   !
-#else
-  ! possibly change this to call to CPU version...
-  CALL upf_error('qvan2_gpu', 'Trying to use device subroutine but code was not compiled with device support!', 1)
-#endif
+  IF (nb > nbetam .OR. mb > nbetam) &
+       CALL upf_error( ' qvan2 ', ' wrong dimensions (1)', MAX(nb,mb) )
+  IF (ivl > nlx .OR. jvl > nlx) &
+       CALL upf_error( ' qvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl) )
   !
-end subroutine qvan2_gpu
-
+  ! ... and makes the sum over the non zero LM
+  !
+  dqi = 1.0_DP / dq
+  !$acc kernels
+  qg = 0.0_DP
+  !$acc end kernels
+  !
+  DO lm = 1, lpx(ivl,jvl)
+     lp = lpl(ivl,jvl,lm)
+     IF ( lp < 1 .OR. lp > 49 ) CALL upf_error( 'qvan2', ' lp wrong ', MAX(lp,1) )
+     !
+     ! ... finds angular momentum l corresponding to combined index lp (l is 
+     !     actually l+1 because this is the way qrad is stored, check init_us_1)
+     !
+     IF ( lp == 1 ) THEN
+        l = 1
+        sig = 1.0_DP
+        ind = 1
+     ELSEIF ( lp <=  4 ) THEN
+        l = 2
+        sig =-1.0_DP
+        ind = 2
+     ELSEIF ( lp <=  9 ) THEN
+        l = 3
+        sig =-1.0_DP
+        ind = 1
+     ELSEIF ( lp <= 16 ) THEN
+        l = 4
+        sig = 1.0_DP
+        ind = 2
+     ELSEIF ( lp <= 25 ) THEN
+        l = 5
+        sig = 1.0_DP
+        ind = 1
+     ELSEIF ( lp <= 36 ) THEN
+        l = 6
+        sig =-1.0_DP
+        ind = 2
+     ELSE
+        l = 7
+        sig =-1.0_DP
+        ind = 1
+     ENDIF
+     !
+     sig = sig * ap(lp, ivl, jvl)
+     !
+!$acc parallel loop
+     DO ig = 1, ngy
+        !
+        qm = qmod (ig) * dqi
+        px = qm - INT(qm)
+        ux = 1.0_DP - px
+        vx = 2.0_DP - px
+        wx = 3.0_DP - px
+        i0 = INT(qm) + 1
+        i1 = i0 + 1
+        i2 = i0 + 2
+        i3 = i0 + 3
+        uvx = ux * vx * sixth
+        pwx = px * wx * 0.5_DP
+        work = qrad(i0,ijv,l,np) * uvx * wx + &
+               qrad(i1,ijv,l,np) * pwx * vx - &
+               qrad(i2,ijv,l,np) * pwx * ux + &
+               qrad(i3,ijv,l,np) * px * uvx
+        qg(ind,ig) = qg(ind,ig) + sig * ylmk0(ig,lp) * work
+        !
+     ENDDO
+  ENDDO
+!$acc end data
+  !
+  !
+  RETURN
+  !
+END SUBROUTINE qvan2_gpu
