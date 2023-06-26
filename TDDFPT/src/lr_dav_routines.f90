@@ -456,9 +456,10 @@ contains
     ! Add new matrix elements to the M_C and M_D(in the subspace)(part 1)
     if (.not.ltammd) then
        if (.not. okvan) then !norm conserving
+          !$acc data copyin(vec_b(:,:,:,num_basis_old+1:num_basis)) create(vecwork(:,:,:)) copyout(D_vec_b(:,:,:,num_basis_old+1:num_basis), C_vec_b(:,:,:,num_basis_old+1:num_basis))      
           do ibr = num_basis_old+1, num_basis
              ! Calculate new D*vec_b
-             !$acc data copyin(vec_b(:,:,:,ibr)) create(vecwork(:,:,:)) copyout(D_vec_b(:,:,:,ibr), C_vec_b(:,:,:,ibr))
+!             !$acc data copyin(vec_b(:,:,:,ibr)) create(vecwork(:,:,:)) copyout(D_vec_b(:,:,:,ibr), C_vec_b(:,:,:,ibr))
              call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.false.)
              if (.not. poor_of_ram2) THEN
                 !$acc kernels     
@@ -486,8 +487,9 @@ contains
                 if(ibl /= ibr) M_C(ibr,ibl)=M_C(ibl,ibr)
              enddo
              !
-             !$acc end data
+!             !$acc end data
           enddo
+          !$acc end data
        else if(poor_of_ram) then ! Less memory needed
           do ibr = num_basis_old+1, num_basis
              ! Calculate new D*vec_b
@@ -873,7 +875,8 @@ contains
  
     ! Here mGS are called three times and orthogonalize is called once for increasing 
     ! numerical stability of orthonalization
-    !$acc data copy(left_res(:,:,:,:), right_res(:,:,:,:)) copyin(vec_b(:,:,:,:))
+!    !$acc data copy(left_res(:,:,:,:), right_res(:,:,:,:)) copyin(vec_b(:,:,:,:))
+    !$acc data copy(left_res(:,:,:,:), right_res(:,:,:,:), vec_b(:,:,:,:))
     call lr_mGS_orth()    ! 1st
     call lr_mGS_orth_pp()
     call lr_mGS_orth()    ! 2nd
@@ -887,15 +890,14 @@ contains
        call lr_norm(right_res(:,:,:,ieign))
        call lr_norm(left_res(:,:,:,ieign))
     enddo
-    !$acc end data
-
+!    !$acc end data
+    !
     if (toadd .eq. 0) then
        write(stdout,'("TOADD is zero !!")')
        dav_conv=.true.
-       return
+       go to 10
     endif
-
-    !if( dav_iter .gt. max_iter .or. num_basis+toadd .gt. num_basis_max ) then
+    !
     if ( dav_iter .gt. max_iter ) then
        write(stdout,'(/5x,"!!!! We have arrived maximum number of iterations. We have to stop &
                     &here, and the result will not be trustable !!!!! ")')
@@ -907,18 +909,26 @@ contains
        do ieign = 1, num_eign
           if (.not. kill_left(ieign)) then
              num_basis=num_basis+1
+             !$acc kernels
              vec_b(:,:,:,num_basis)=left_res(:,:,:,ieign)
+             !$acc end kernels
              if (.not. poor_of_ram .and. okvan) &
                 call lr_apply_s(vec_b(:,:,:,num_basis),svec_b(:,:,:,num_basis))
           endif
           if (.not. kill_right(ieign)) then
              num_basis=num_basis+1
+             !$acc kernels
              vec_b(:,:,:,num_basis)=right_res(:,:,:,ieign)
+             !$acc end kernels
              if (.not. poor_of_ram .and. okvan) &
                 call lr_apply_s(vec_b(:,:,:,num_basis),svec_b(:,:,:,num_basis))
           endif
        enddo
     endif
+    !
+    10 call stop_clock("expan_basis")
+    !$acc end data
+    !    
     if (conv_assistant) then
        if (max_res .lt. 10*residue_conv_thr .and. .not. ploted(1)) then
           call interpret_eign('10')
@@ -926,7 +936,8 @@ contains
        endif
     endif
 
-    call stop_clock("expan_basis")
+!!    call stop_clock("expan_basis")
+!!    !$acc end data
 
     return
   end subroutine dav_expan_basis
@@ -1223,165 +1234,165 @@ contains
     real(dp) :: norm, normx, normy, alpha, shouldbe1,temp
     real(dp) :: C_right_M(num_basis_max),D_left_M(num_basis_max)
 
-    if(.not. allocated(norm_F)) allocate(norm_F(num_eign))
+    if (.not. allocated(norm_F)) allocate(norm_F(num_eign))
 
-    if(message=="END") then
-      write(stdout,'(/7x,"================================================================")') 
-      write(stdout,'(/7x,"Davidson diagonalization has finished in",I5," steps.")') dav_iter
-      write(stdout,'(10x,"the number of current basis is",I5)') num_basis
-      write(stdout,'(10x,"the number of total basis built is",I5)') num_basis_tot
+    if (message=="END") then
+       write(stdout,'(/7x,"================================================================")') 
+       write(stdout,'(/7x,"Davidson diagonalization has finished in",I5," steps.")') dav_iter
+       write(stdout,'(10x,"the number of current basis is",I5)') num_basis
+       write(stdout,'(10x,"the number of total basis built is",I5)') num_basis_tot
 
-      write(stdout,'(/7x,"Now print out information of eigenstates")') 
+       write(stdout,'(/7x,"Now print out information of eigenstates")') 
     endif
 
-    if(message=="10")&
-      write(stdout,'(/7x,"Quasi convergence(10*residue_conv_thr) has been arrived in",I5," steps.")') dav_iter
+    if (message=="10")&
+       write(stdout,'(/7x,"Quasi convergence(10*residue_conv_thr) has been arrived in",I5," steps.")') dav_iter
     
-    if(.not. done_calc_R) then
-      call lr_calc_R()
-      done_calc_R=.true.
+    if (.not. done_calc_R) then
+       call lr_calc_R()
+       done_calc_R=.true.
     endif
     
     ! Print out Oscilation strength
-    if(message == "END") then
-      write(stdout,'(/,/5x,"K-S Oscillator strengths")')
-      write(stdout,'(5x,"occ",1x,"con",8x,"R-x",14x,"R-y",14x,"R-z")')
-      do iv=nbnd-p_nbnd_occ+1, nbnd
-        do ic=1,p_nbnd_virt
-          write(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8,2X,E16.8)') &
-             &iv,ic,dble(R(iv,ic,1)),dble(R(iv,ic,2)),dble(R(iv,ic,3))
-        enddo 
-      enddo
+    if (message == "END") then
+       write(stdout,'(/,/5x,"K-S Oscillator strengths")')
+       write(stdout,'(5x,"occ",1x,"con",8x,"R-x",14x,"R-y",14x,"R-z")')
+       do iv = nbnd-p_nbnd_occ+1, nbnd
+          do ic = 1,p_nbnd_virt
+             write(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8,2X,E16.8)') &
+                  &iv,ic,dble(R(iv,ic,1)),dble(R(iv,ic,2)),dble(R(iv,ic,3))
+          enddo 
+       enddo
     endif
 
     ! Analysis of each eigen-state
     do ieign = 1, num_eign
 #if defined(__MPI)
-  ! This part is calculated in serial
-  if(ionode) then
+       ! This part is calculated in serial
+       if (ionode) then
 #endif
-      ia = eign_value_order(ieign)
-      if(message=="END")&
-        write(stdout,'(/7x,"! The",I5,1x,"-th eigen state. The transition&
-         & energy is: ", 5x, F12.8)') ieign, tr_energy(ia)
-      ! Please see Documentation for the explaination of the next four steps
-      ! In short it gets the right components of X and Y
-      ! Apply C to the right eigen state in order to calculate the right omega
-      call dgemv('N',num_basis,num_basis,(1.0D0,0.0D0),dble(M_C),&
-           &num_basis_max,right_M(:,ia),1,(0.0D0,0.0D0),C_right_M,1)
-      omegar(ieign)=ddot(num_basis,left_M(:,ia),1,left_M(:,ia),1)
-      omegar(ieign)=ddot(num_basis,C_right_M,1,left_M(:,ia),1)
-
-      ! Apply D to the left eigen state in order to calculate the left omega
-      call dgemv('N',num_basis,num_basis,(1.0D0,0.0D0),dble(M_D),&
-           &num_basis_max,left_M(:,ia),1,(0.0D0,0.0D0),D_left_M,1)
-      omegal(ieign)=ddot(num_basis,right_M(:,ia),1,right_M(:,ia),1)
-      omegal(ieign)=ddot(num_basis,D_left_M,1,right_M(:,ia),1)
-
-      if(abs(omegal(ieign)*omegar(ieign)-tr_energy(ia)**2) .gt. zero) then
-        write(stdout,'(/5x,"Warning !!! : The interpretation of the eigenstates may have problems.")')
-        write(stdout,'(10x,"omegal*omegar = ",F20.12,10x,"omega^2 = ",F20.12)') &
-            &omegal(ieign)*omegar(ieign),tr_energy(ia)**2
-      endif
-
-      ! scale right_full and left_full in order to make omegar = omegal
-      omegar(ieign)=sqrt(dble(omegar(ieign)))
-      omegal(ieign)=sqrt(dble(omegal(ieign)))
-
+          ia = eign_value_order(ieign)
+          if (message=="END")&
+          write(stdout,'(/7x,"! The",I5,1x,"-th eigen state. The transition&
+          & energy is: ", 5x, F12.8)') ieign, tr_energy(ia)
+          ! Please see Documentation for the explaination of the next four steps
+          ! In short it gets the right components of X and Y
+          ! Apply C to the right eigen state in order to calculate the right omega
+          call dgemv('N',num_basis,num_basis,(1.0D0,0.0D0),dble(M_C),&
+             &num_basis_max,right_M(:,ia),1,(0.0D0,0.0D0),C_right_M,1)
+          omegar(ieign)=ddot(num_basis,left_M(:,ia),1,left_M(:,ia),1)
+          omegar(ieign)=ddot(num_basis,C_right_M,1,left_M(:,ia),1)
+          !
+          ! Apply D to the left eigen state in order to calculate the left omega
+          call dgemv('N',num_basis,num_basis,(1.0D0,0.0D0),dble(M_D),&
+             &num_basis_max,left_M(:,ia),1,(0.0D0,0.0D0),D_left_M,1)
+          omegal(ieign)=ddot(num_basis,right_M(:,ia),1,right_M(:,ia),1)
+          omegal(ieign)=ddot(num_basis,D_left_M,1,right_M(:,ia),1)
+          !
+          if (abs(omegal(ieign)*omegar(ieign)-tr_energy(ia)**2) .gt. zero) then
+             write(stdout,'(/5x,"Warning !!! : The interpretation of the eigenstates may have problems.")')
+             write(stdout,'(10x,"omegal*omegar = ",F20.12,10x,"omega^2 = ",F20.12)') &
+                &omegal(ieign)*omegar(ieign),tr_energy(ia)**2
+          endif
+          !
+          ! scale right_full and left_full in order to make omegar = omegal
+          omegar(ieign)=sqrt(dble(omegar(ieign)))
+          omegal(ieign)=sqrt(dble(omegal(ieign)))
+          !
 #if defined(__MPI)
-  endif
-  call mp_barrier(world_comm)
-  call mp_bcast(omegar,ionode_id,world_comm)
-  call mp_bcast(omegal,ionode_id,world_comm)
+       endif
+       call mp_barrier(world_comm)
+       call mp_bcast(omegar,ionode_id,world_comm)
+       call mp_bcast(omegal,ionode_id,world_comm)
 #endif
 
-      right_full(:,:,:,ieign)=right_full(:,:,:,ieign)/dble(omegar(ieign))      
-      left_full(:,:,:,ieign)=left_full(:,:,:,ieign)/dble(omegal(ieign))      
+       right_full(:,:,:,ieign)=right_full(:,:,:,ieign)/dble(omegar(ieign))      
+       left_full(:,:,:,ieign)=left_full(:,:,:,ieign)/dble(omegal(ieign))    
     
-      ! Normalize the vector
-      if (okvan) then 
-         norm=2.0d0*dble(lr_dot_us(right_full(1,1,1,ieign),left_full(1,1,1,ieign)))
-      else 
-         norm=2.0d0*dble(lr_dot(right_full(1,1,1,ieign),left_full(1,1,1,ieign)))
-      endif   
-      norm=sqrt(abs(norm))
+       ! Normalize the vector
+       if (okvan) then 
+          norm=2.0d0*dble(lr_dot_us(right_full(1,1,1,ieign),left_full(1,1,1,ieign)))
+       else 
+          norm=2.0d0*dble(lr_dot(right_full(1,1,1,ieign),left_full(1,1,1,ieign)))
+       endif   
+       norm=sqrt(abs(norm))
 
-      right_full(:,:,:,ieign)=right_full(:,:,:,ieign)/norm
-      left_full(:,:,:,ieign)=left_full(:,:,:,ieign)/norm      
+       right_full(:,:,:,ieign)=right_full(:,:,:,ieign)/norm
+       left_full(:,:,:,ieign)=left_full(:,:,:,ieign)/norm 
       
-      ! Linear transform from L,R back to x,y
-      left_res(:,:,:,ieign)=(right_full(:,:,:,ieign)+left_full(:,:,:,ieign))/sqrt(2.0d0) !X
-      right_res(:,:,:,ieign)=(right_full(:,:,:,ieign)-left_full(:,:,:,ieign))/sqrt(2.0d0) !Y
+       ! Linear transform from L,R back to x,y
+       left_res(:,:,:,ieign)=(right_full(:,:,:,ieign)+left_full(:,:,:,ieign))/sqrt(2.0d0) !X
+       right_res(:,:,:,ieign)=(right_full(:,:,:,ieign)-left_full(:,:,:,ieign))/sqrt(2.0d0) !Y
 
-      if (okvan) then
-         normx=dble(lr_dot_us(left_res(1,1,1,ieign),left_res(1,1,1,ieign)))
-         normy=-dble(lr_dot_us(right_res(1,1,1,ieign),right_res(1,1,1,ieign)))
-      else 
-         normx=dble(lr_dot(left_res(1,1,1,ieign),left_res(1,1,1,ieign)))
-         normy=-dble(lr_dot(right_res(1,1,1,ieign),right_res(1,1,1,ieign)))
-      endif        
-      norm_F(ieign)=normx+normy  !! Actually norm_F should always be one since it was previously normalized
+       if (okvan) then
+          normx=dble(lr_dot_us(left_res(1,1,1,ieign),left_res(1,1,1,ieign)))
+          normy=-dble(lr_dot_us(right_res(1,1,1,ieign),right_res(1,1,1,ieign)))
+       else 
+          normx=dble(lr_dot(left_res(1,1,1,ieign),left_res(1,1,1,ieign)))
+          normy=-dble(lr_dot(right_res(1,1,1,ieign),right_res(1,1,1,ieign)))
+       endif        
+       norm_F(ieign)=normx+normy  !! Actually norm_F should always be one since it was previously normalized
       
-      if(message=="END") then
-        write(stdout,'(/5x,"The two digitals below indicate the importance of doing beyong TDA: ")')
-        write(stdout,'(/5x,"Components: X",2x,F12.5,";",4x,"Y",2x,F12.5)') &
+       if (message=="END") then
+          write(stdout,'(/5x,"The two digitals below indicate the importance of doing beyong TDA: ")')
+          write(stdout,'(/5x,"Components: X",2x,F12.5,";",4x,"Y",2x,F12.5)') &
                normx/norm_F(ieign),normy/norm_F(ieign)
-      endif
+       endif
 
-      call lr_calc_Fxy(ieign)
+       call lr_calc_Fxy(ieign)
     
-      normx=0
-      normy=0
-      do iv = nbnd-p_nbnd_occ+1, nbnd
-        do ic = 1, p_nbnd_virt
-        normx=normx+Fx(iv,ic)*Fx(iv,ic)
-        normy=normy-Fy(iv,ic)*Fy(iv,ic)
-        enddo
-      enddo
-      if( normx+normy .lt. 0.0d0 ) then
-        normx=-normx
-        normy=-normy
-      endif
-
-      if(message=="END") then
-        write (stdout,'(/5x,"In the occ-virt project subspace the total Fxy is:")')
-        write(stdout,'(/5x,"X",2x,F12.5,";",4x,"Y",2x,F12.5,4x,"total",2x,F12.5,2x,&
-              &"/ ",F12.5)') normx,normy,normx+normy,norm_F(ieign)
-      endif
-      
-      do ipol = 1 ,3
-        chi_dav(ipol,ieign)=dav_calc_chi("X",ieign,ipol)+dav_calc_chi("Y",ieign,ipol)
-        chi_dav(ipol,ieign)=chi_dav(ipol,ieign)*chi_dav(ipol,ieign)*2.0d0/(PI*3)
-      enddo
-
-      total_chi(ieign)=chi_dav(1,ieign)+chi_dav(2,ieign)+chi_dav(3,ieign)
-
-      if(message=="END") then
-        write (stdout,'(/5x,"The Chi_i_i is",5x,"Total",10x,"1",15x,"2",15x,"3")')
-        write (stdout,'(/12x,8x,E15.8,3x,E15.8,3x,E15.8,3x,E15.8)') total_chi(ieign),&
-           &chi_dav(1,ieign),chi_dav(2,ieign), chi_dav(3,ieign)
-
-       ! Components analysis
-        write (stdout,'(/5x,"Now is the components analysis of this transition.")')
-
-        call print_principle_components()
-
-        write (stdout,'(/5x,"Now for all the calculated particle and hole pairs : ")')
-        write (stdout,'(/5x,"occ",5x,"virt",7x,"FX",14x,"FY",/)')
-        do iv = nbnd-p_nbnd_occ+1, nbnd
+       normx=0
+       normy=0
+       do iv = nbnd-p_nbnd_occ+1, nbnd
           do ic = 1, p_nbnd_virt
-            write (stdout,'(3x,I5,I5,5x,E15.8,5x,E15.8)') iv, ic, dble(Fx(iv,ic)), dble(Fy(iv,ic))
+             normx=normx+Fx(iv,ic)*Fx(iv,ic)
+             normy=normy-Fy(iv,ic)*Fy(iv,ic)
           enddo
-        enddo
-        write(stdout,'(/7x,"**************",/)') 
-      endif
+       enddo
+       if ( normx+normy .lt. 0.0d0 ) then
+          normx=-normx
+          normy=-normy
+       endif
+
+       if (message=="END") then
+          write (stdout,'(/5x,"In the occ-virt project subspace the total Fxy is:")')
+          write (stdout,'(/5x,"X",2x,F12.5,";",4x,"Y",2x,F12.5,4x,"total",2x,F12.5,2x,&
+                &"/ ",F12.5)') normx,normy,normx+normy,norm_F(ieign)
+       endif
+      
+       do ipol = 1 ,3
+          chi_dav(ipol,ieign)=dav_calc_chi("X",ieign,ipol)+dav_calc_chi("Y",ieign,ipol)
+          chi_dav(ipol,ieign)=chi_dav(ipol,ieign)*chi_dav(ipol,ieign)*2.0d0/(PI*3)
+       enddo
+
+       total_chi(ieign)=chi_dav(1,ieign)+chi_dav(2,ieign)+chi_dav(3,ieign)
+
+       if (message=="END") then
+          write (stdout,'(/5x,"The Chi_i_i is",5x,"Total",10x,"1",15x,"2",15x,"3")')
+          write (stdout,'(/12x,8x,E15.8,3x,E15.8,3x,E15.8,3x,E15.8)') total_chi(ieign),&
+                &chi_dav(1,ieign),chi_dav(2,ieign), chi_dav(3,ieign)
+
+          ! Components analysis
+          write (stdout,'(/5x,"Now is the components analysis of this transition.")')
+
+          call print_principle_components()
+
+          write (stdout,'(/5x,"Now for all the calculated particle and hole pairs : ")')
+          write (stdout,'(/5x,"occ",5x,"virt",7x,"FX",14x,"FY",/)')
+          do iv = nbnd-p_nbnd_occ+1, nbnd
+             do ic = 1, p_nbnd_virt
+                write (stdout,'(3x,I5,I5,5x,E15.8,5x,E15.8)') iv, ic, dble(Fx(iv,ic)), dble(Fy(iv,ic))
+             enddo
+          enddo
+          write(stdout,'(/7x,"**************",/)') 
+       endif
     enddo
 
 #if defined(__MPI)
-    if(ionode) then
+    if (ionode) then
 #endif
-      call write_eigenvalues(message)
-      call write_spectrum(message)
+       call write_eigenvalues(message)
+       call write_spectrum(message)
 #if defined(__MPI)
     endif
 #endif
@@ -1397,18 +1408,32 @@ contains
     use lr_dav_variables
     use lr_variables,    only : d0psi
     use kinds,    only : dp
+    use uspp,     only : okvan
     use lr_us
   
     implicit none
     character :: flag_calc
     integer :: ieign,ipol
-
-    if( flag_calc .eq. "X" ) then
-      dav_calc_chi=lr_dot_us(d0psi(:,:,1,ipol), left_res(:,:,1,ieign))
-    else if (flag_calc .eq. "Y") then
-      dav_calc_chi=lr_dot_us(d0psi(:,:,1,ipol), right_res(:,:,1,ieign))
-    endif
-
+    complex(kind=dp), external :: lr_dot
+    !
+    if (okvan) then 
+       if ( flag_calc .eq. "X" ) then
+          dav_calc_chi=lr_dot_us(d0psi(:,:,1,ipol), left_res(:,:,1,ieign))
+       else if (flag_calc .eq. "Y") then
+          dav_calc_chi=lr_dot_us(d0psi(:,:,1,ipol), right_res(:,:,1,ieign))
+       endif
+    else
+       if ( flag_calc .eq. "X" ) then
+          !$acc data copyin(d0psi(:,:,1,ipol), left_res(:,:,1,ieign))     
+          dav_calc_chi=lr_dot(d0psi(:,:,1,ipol), left_res(:,:,1,ieign))
+          !$acc end data
+       else if (flag_calc .eq. "Y") then
+          !$acc data copyin(d0psi(:,:,1,ipol), right_res(:,:,1,ieign))     
+          dav_calc_chi=lr_dot(d0psi(:,:,1,ipol), right_res(:,:,1,ieign))
+          !$acc end data
+       endif
+    endif            
+    !
     return
   end function dav_calc_chi
   !-------------------------------------------------------------------------------

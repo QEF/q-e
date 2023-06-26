@@ -92,7 +92,7 @@ CONTAINS
     REAL(DP), EXTERNAL :: MYDDOT_VECTOR_GPU
     !$acc routine(MYDDOT_VECTOR_GPU) vector
     !
-    !$acc data present(x,y,wg,temp_gamma)
+!    !$acc data present(x,y,wg,temp_gamma)
 #if defined(__CUDA)
     !$acc parallel loop reduction(temp_gamma)
     DO ibnd=1,nbnd
@@ -122,7 +122,7 @@ CONTAINS
     !$acc end host_data
 #endif
     !
-    !$acc end data
+!    !$acc end data
     RETURN
     !
   END SUBROUTINE lr_dot_gamma

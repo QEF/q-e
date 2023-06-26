@@ -93,7 +93,7 @@ CONTAINS
     !
     ! Initialize spsi : spsi = psi
     !
-    !$acc data present(psi,spsi)
+!    !$acc data present(psi,spsi)
     !
     !$acc kernels
     spsi(:,:) = psi(:,:)
@@ -133,7 +133,7 @@ CONTAINS
     !$acc end host_data
     !
     !$acc exit data delete(ps)
-    !$acc end data
+!    !$acc end data
     DEALLOCATE(ps)
     !
     RETURN
