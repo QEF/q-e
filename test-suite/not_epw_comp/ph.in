@@ -4,7 +4,7 @@
   fildyn   = 'si.dyn.xml',
   fildvscf = 'dvscf'
   tr2_ph   =  1.0d-16,
-  electron_phonon='epw',
+  electron_phonon='prt',
   kx=0.0,
   ky=0.0,
   kz=0.0,

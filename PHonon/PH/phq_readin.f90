@@ -79,7 +79,7 @@ SUBROUTINE phq_readin()
       skip_upperfan
   USE read_namelists_module, ONLY : check_namelist_read
   USE open_close_input_file, ONLY : open_input_file, close_input_file
-  USE el_phon,       ONLY : kx, ky, kz, elph_epw
+  USE el_phon,       ONLY : kx, ky, kz, elph_prt
   !
   IMPLICIT NONE
   !
@@ -474,9 +474,9 @@ SUBROUTINE phq_readin()
      elph_ahc = .true.
      trans = .false.
      nogg = .true.
-  CASE( 'epw' )
+  CASE( 'prt' )
      elph = .true.
-     elph_epw=.true.
+     elph_prt=.true.
   CASE DEFAULT
      elph=.false.
   END SELECT
@@ -912,7 +912,7 @@ SUBROUTINE phq_readin()
   !
   !YAMBO >
   IF (elph .AND. .NOT.(lgauss .OR. ltetra) &
-      .AND. .NOT. (elph_yambo .OR. elph_ahc .OR. elph_epw).and..not.elph_mat) &
+      .AND. .NOT. (elph_yambo .OR. elph_ahc .OR. elph_prt).and..not.elph_mat) &
           CALL errore ('phq_readin', 'Electron-phonon only for metals', 1)
   !YAMBO <
   IF (elph .AND. fildvscf.EQ.' ' .AND. .NOT. ldvscf_interpolate) &
