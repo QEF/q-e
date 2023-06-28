@@ -65,10 +65,10 @@ SUBROUTINE qvan2_gpu( ngy, ih, jh, np, qmod, qg, ylmk0 )
   ! auxiliary variables for intepolation
   ! auxiliary variables
   !
-  ! This should not happen, but better to check
-  !
-!$acc declare deviceptr(qmod,ylmk0,qg)
 !$acc data present_or_copyin(qmod,ylmk0) present_or_copyout(qg) present(qrad)
+  !
+  ! This should not happen, but better to check
+  ! FIXME: why is the following not working?
   !IF ( INT(qmod(ngy)/dq)+4 > size(qrad,1) ) CALL upf_error &
   !     ('qvan2', 'internal error: dimension of interpolation table', 1 )
   !

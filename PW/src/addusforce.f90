@@ -143,9 +143,7 @@ SUBROUTINE addusforce_g( forcenl )
            DO jh = ih, nh(nt)
               ijh = ijh + 1
 #if defined(__CUDA)
-              !$acc host_data use_device(qmod,qgm,ylmk0)
               CALL qvan2_gpu( ngm_l, ih, jh, nt, qmod, qgm(1,ijh), ylmk0 )
-              !$acc end host_data
 #else
               CALL qvan2( ngm_l, ih, jh, nt, qmod, qgm(1,ijh), ylmk0 )
               !$acc update self(ylmk0)

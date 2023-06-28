@@ -145,17 +145,15 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
         ! ... (without structure factor)
         !
         ijh = 0
-        !$acc host_data use_device(qgm, ylmk0 )
-        !$acc host_data use_device(qmod)
         DO ih = 1, nhnt
            DO jh = ih, nhnt
               ijh = ijh + 1
               CALL qvan2_gpu ( ngm_l, ih, jh, nt, qmod, qgm(1,ijh), ylmk0 )
            END DO
         END DO
-        !$acc end host_data
         !
         ALLOCATE ( aux_d (ngm_l, nab ), deeaux_d(nij, nab) )
+        !$acc host_data use_device(qgm)
         !
         ! ... Compute and store V(G) times the structure factor e^(-iG*tau)
         !

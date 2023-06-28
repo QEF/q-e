@@ -178,9 +178,7 @@ SUBROUTINE addusdens_g(rho)
               DO jh = ih, nh(nt)
                  ijh = ijh + 1
 #if defined(__CUDA) && defined(_OPENACC)
-                 !$acc host_data use_device(qmod,qgm,ylmk0)
                  CALL qvan2_gpu( ngm_l, ih, jh, nt, qmod, qgm, ylmk0 )
-                 !$acc end host_data
 #else
                  CALL qvan2( ngm_l, ih, jh, nt, qmod, qgm, ylmk0 )
                  !$acc update self(ylmk0)
