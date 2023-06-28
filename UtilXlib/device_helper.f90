@@ -7,10 +7,9 @@
 !
 ! This file initiated by Carlo Cavazzoni 2020
 !
-! Purpose: collect miscellaneus subroutines to help dealing with 
+! Purpose: collect miscellaneous subroutines to help dealing with 
 !          accelerator devices
 
-! In principle this can go away .......
 SUBROUTINE MYDGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
 #if defined(__CUDA)
     use cudafor
@@ -30,7 +29,6 @@ END SUBROUTINE MYDGER
 
 !=----------------------------------------------------------------------------=!
 
-! In principle this can go away .......
 SUBROUTINE MYDGEMM( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
 #if defined(__CUDA)
     use cudafor
@@ -67,7 +65,6 @@ SUBROUTINE MYZGEMM( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC
 
 END SUBROUTINE MYZGEMM
 
-! In principle this can go away .......
 SUBROUTINE MYDGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
 #if defined(__CUDA)
     use cudafor
@@ -87,7 +84,6 @@ END SUBROUTINE MYDGEMV
 
 !=----------------------------------------------------------------------------=
 
-! In principle this can go away .......
 DOUBLE PRECISION FUNCTION MYDDOT(N,DX,INCX,DY,INCY)
 #if defined(__CUDA)
     use cudafor
