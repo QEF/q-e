@@ -71,7 +71,6 @@ SUBROUTINE qvan2( ngy, ih, jh, np, qmod, qg, ylmk0 )
   ! FIXME: why is the following not working?
   !IF ( INT(qmod(ngy)/dq)+4 > size(qrad,1) ) CALL upf_error &
   !     ('qvan2', 'internal error: dimension of interpolation table', 1 )
-  write(6,'(5x,"Sono in qvan2")'); flush(6)
   !
   ! ... computes the indices which correspond to ih,jh
   !

@@ -142,12 +142,7 @@ SUBROUTINE addusforce_g( forcenl )
         DO ih = 1, nh(nt)
            DO jh = ih, nh(nt)
               ijh = ijh + 1
-#if defined(__CUDA)
-              CALL qvan2_gpu( ngm_l, ih, jh, nt, qmod, qgm(1,ijh), ylmk0 )
-#else
               CALL qvan2( ngm_l, ih, jh, nt, qmod, qgm(1,ijh), ylmk0 )
-              !$acc update self(ylmk0)
-#endif
            ENDDO
         ENDDO
         !
