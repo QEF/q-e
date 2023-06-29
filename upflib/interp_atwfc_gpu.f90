@@ -14,7 +14,6 @@ SUBROUTINE interp_atwfc_gpu ( npw, qg, nwfcm, chiq )
   INTEGER, INTENT(IN)  :: nwfcm
   REAL(dp), INTENT(IN) :: qg(npw)
   REAL(dp), INTENT(OUT):: chiq(npw,nwfcm,nsp)
-!$acc declare deviceptr(qg,chiq)
   !
   INTEGER :: nt, nb, ig
   INTEGER :: i0, i1, i2, i3
