@@ -97,7 +97,7 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   !
   ! chiq = radial fourier transform of atomic orbitals chi
   !
-  CALL interp_atwfc_gpu ( npw, qg, nwfcm, chiq )
+  CALL interp_atwfc ( npw, qg, nwfcm, chiq )
   !
   !$acc end data
   DEALLOCATE( qg, gk_d )
