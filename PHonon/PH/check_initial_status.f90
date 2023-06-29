@@ -196,7 +196,7 @@ SUBROUTINE check_initial_status(auxdyn)
   IF (fildvscf /= ' ') THEN
     WRITE(stdout, '(5x,a)')
     WRITE(stdout, '(5x,a)') 'Saving dvscf to file. Distribute only q points, &
-                            &not irreducible represetations.'
+                            &not irreducible representations.'
     distribute_irrep = .FALSE.
   ENDIF
 !

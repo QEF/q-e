@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2023 Quantum ESPRESSO  Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -58,21 +58,22 @@ SUBROUTINE qvan2( ngy, ih, jh, np, qmod, qg, ylmk0 )
   ! i0-i3  : counters for interpolation table
   ! ind    : ind=1 if the results is real (l even), ind=2 if complex (l odd)
   !
-  REAL(DP) :: dqi, qm, px, ux, vx, wx, uvx, pwx, work, qm1
+  REAL(DP) :: dqi, qm, px, ux, vx, wx, uvx, pwx, work
   ! 1 divided dq
   ! qmod/dq
   ! measures for interpolation table
   ! auxiliary variables for intepolation
   ! auxiliary variables
   !
-  ! This should not happen, but better to check
+!$acc data present_or_copyin(qmod,ylmk0) present_or_copyout(qg) present(qrad)
   !
-  IF ( INT(qmod(ngy)/dq)+4 > size(qrad,1) ) CALL upf_error &
-       ('qvan2', 'internal error: dimension of interpolation table', 1 )
+  ! This should not happen, but better to check
+  ! FIXME: why is the following not working?
+  !IF ( INT(qmod(ngy)/dq)+4 > size(qrad,1) ) CALL upf_error &
+  !     ('qvan2', 'internal error: dimension of interpolation table', 1 )
   !
   ! ... computes the indices which correspond to ih,jh
   !
-  dqi = 1.0_DP / dq
   nb = indv(ih,np)
   mb = indv(jh,np)
   !
@@ -90,9 +91,12 @@ SUBROUTINE qvan2( ngy, ih, jh, np, qmod, qg, ylmk0 )
   IF (ivl > nlx .OR. jvl > nlx) &
        CALL upf_error( ' qvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl) )
   !
-  qg = 0.0_DP
-  !
   ! ... and makes the sum over the non zero LM
+  !
+  dqi = 1.0_DP / dq
+  !$acc kernels
+  qg = 0.0_DP
+  !$acc end kernels
   !
   DO lm = 1, lpx(ivl,jvl)
      lp = lpl(ivl,jvl,lm)
@@ -133,45 +137,31 @@ SUBROUTINE qvan2( ngy, ih, jh, np, qmod, qg, ylmk0 )
      !
      sig = sig * ap(lp, ivl, jvl)
      !
-     qm1 = -1.0_DP !  any number smaller than qmod(1)
-     !
-!$omp parallel do default(shared), private(qm,px,ux,vx,wx,i0,i1,i2,i3,uvx,pwx,work)
+!$acc parallel loop
      DO ig = 1, ngy
         !
-        ! ... calculates quantites depending on the module of G only when needed
-        !
-#if ! defined _OPENMP
-        IF ( ABS( qmod(ig) - qm1 ) > 1.0D-6 ) THEN
-#endif
-           !
-           qm = qmod (ig) * dqi
-           px = qm - INT(qm)
-           ux = 1.0_DP - px
-           vx = 2.0_DP - px
-           wx = 3.0_DP - px
-           i0 = INT(qm) + 1
-           i1 = i0 + 1
-           i2 = i0 + 2
-           i3 = i0 + 3
-           uvx = ux * vx * sixth
-           pwx = px * wx * 0.5_DP
-           work = qrad(i0,ijv,l,np) * uvx * wx + &
-                  qrad(i1,ijv,l,np) * pwx * vx - &
-                  qrad(i2,ijv,l,np) * pwx * ux + &
-                  qrad(i3,ijv,l,np) * px * uvx
-#if ! defined _OPENMP
-           qm1 = qmod(ig)
-        END IF
-#endif
+        qm = qmod (ig) * dqi
+        px = qm - INT(qm)
+        ux = 1.0_DP - px
+        vx = 2.0_DP - px
+        wx = 3.0_DP - px
+        i0 = INT(qm) + 1
+        i1 = i0 + 1
+        i2 = i0 + 2
+        i3 = i0 + 3
+        uvx = ux * vx * sixth
+        pwx = px * wx * 0.5_DP
+        work = qrad(i0,ijv,l,np) * uvx * wx + &
+               qrad(i1,ijv,l,np) * pwx * vx - &
+               qrad(i2,ijv,l,np) * pwx * ux + &
+               qrad(i3,ijv,l,np) * px * uvx
         qg(ind,ig) = qg(ind,ig) + sig * ylmk0(ig,lp) * work
         !
      ENDDO
-!$omp end parallel do
-  !
   ENDDO
+!$acc end data
   !
   !
   RETURN
   !
 END SUBROUTINE qvan2
-

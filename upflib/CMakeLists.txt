@@ -55,7 +55,6 @@ set(src_upflib
     # GPU
     init_us_2_base_gpu.f90
     interp_atwfc_gpu.f90
-    qvan2_gpu.f90
     ylmr2_gpu.f90
     dylmr2_gpu.f90)
 qe_enable_cuda_fortran("${src_upflib}")
