@@ -1,3 +1,11 @@
+!
+! Copyright (C) 2023-2035 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
 MODULE fft_interpolation_mod
   USE kinds, ONLY: DP
   USE constants, ONLY: PI
