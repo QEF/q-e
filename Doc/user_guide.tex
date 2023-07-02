@@ -441,8 +441,8 @@ avoiding nonstandard extensions and newer features that are not
 widespread or stabilized. If however your compiler is older than
 a few ($\sim 5$) years, it is likely that something will not work.
 The same applies to mathematical and MPI libraries.
-For GPU compilation, you need v.19.10 or later of the NVidia HPC SDK
-(previous versions are no longer supported).
+For GPU compilation, you need v.21.7 or later of the NVidia HPC SDK
+(previous versions may or may not work).
 
 Big computing centers typically provide a Fortran compiler complete
 with all needed libraries. Workstations or ``commodity'' machines
@@ -634,8 +634,9 @@ and the following optional packages:\\
 \end{tabular}\\
 \\
 In order to compile the code for NVidia GPU's you will need a recent version
-(v.19.10 or later) of the NVidia HPC software development kit (SDK). Beware:
-some versions may be buggy. Ensure that all needed environmental variables
+(v.21.7 or later) of the NVidia HPC software development kit (SDK). Beware:
+some versions are known to miscompile QE. Ensure that all needed environmental
+variables
 are properly defined, e.g. by running the "module" file provided in the HPC SDK with command
 \texttt{module}. Specify \texttt{--with-cuda} and \texttt{--with-cuda-cc} as explained 
 below. Other options below

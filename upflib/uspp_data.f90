@@ -17,7 +17,7 @@ MODULE uspp_data
   !
   PUBLIC :: nqxq, nqx, dq
   PUBLIC :: qrad,   tab,   tab_at
-  PUBLIC :: tab_d, tab_at_d
+  PUBLIC :: tab_d
   PUBLIC :: tab_rho, tab_rhc
   !
   PUBLIC :: allocate_uspp_data
@@ -44,10 +44,9 @@ MODULE uspp_data
   !! GPUs variables - only those tables that is useful to have on GPUss
   !
   REAL(DP), ALLOCATABLE :: tab_d(:,:,:)
-  REAL(DP), ALLOCATABLE :: tab_at_d(:,:,:)
   !
 #if defined(__CUDA)
-  attributes (DEVICE) :: tab_d, tab_at_d
+  attributes (DEVICE) :: tab_d
 #endif
   !
 contains
@@ -65,13 +64,12 @@ contains
      allocate(tab_at(nqx_,nwfcm,nsp))
      allocate(tab_rho(nqxq_,nsp))
      allocate(tab_rhc(nqxq_,nsp))
-     !$acc enter data create(tab_rho,tab_rhc,qrad)
+     !$acc enter data create(tab_rho,tab_rhc,qrad,tab_at)
      !
      IF (use_gpu) then
         ! allocations with zero size protected
         ! since problematic with CUDAfor
         if (nbetam>0)  allocate(tab_d(nqx_,nbetam,nsp))
-        if (nwfcm>0)   allocate(tab_at_d(nqx_,nwfcm,nsp))
      endif
      !
   end subroutine allocate_uspp_data
@@ -79,14 +77,13 @@ contains
   subroutine deallocate_uspp_data()
      implicit none
      if( allocated( tab ) )       deallocate( tab )
+     !$acc exit data delete(tab_rho, tab_rhc, qrad,tab_at)
      if( allocated( tab_at ) )    deallocate( tab_at )
-     !$acc exit data delete(tab_rho, tab_rhc, qrad)
      if( allocated( qrad ) )      deallocate( qrad )
      if( allocated( tab_rho) )    deallocate( tab_rho)
      if( allocated( tab_rhc) )    deallocate( tab_rhc)
      !
      if( allocated( tab_d ) )     deallocate( tab_d )
-     if( allocated( tab_at_d ) )  deallocate( tab_at_d )
   end subroutine
   !
   subroutine scale_uspp_data( vol_ratio_m1 )
@@ -100,10 +97,9 @@ contains
      tab_rho(:,:)  = tab_rho(:,:) * vol_ratio_m1
      tab_rhc(:,:)  = tab_rhc(:,:) * vol_ratio_m1
 #if defined __CUDA
-!$acc update device (tab_rho, tab_rhc,qrad)
+!$acc update device (tab_rho, tab_rhc,qrad,tab_at)
      ! CUDA Fortran safeguard
      if(size(tab) > 0) tab_d = tab
-     if(size(tab_at) > 0) tab_at_d = tab_at
 #endif
   end subroutine scale_uspp_data
   !
