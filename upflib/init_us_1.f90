@@ -27,7 +27,6 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   !
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : fpi, sqrt2
-  USE atom,         ONLY : rgrid
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv, &
                            ap, aainit, qq_so, dvan_so, okvan, ofsbeta, &
                            nhtol_d, nhtoj_d, nhtolm_d, ijtoh_d, dvan_d, &
