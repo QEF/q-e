@@ -67,7 +67,7 @@ then
    if (test "$f90_major_version" -lt 21 ) || (test "$f90_major_version" -eq 21 && test "$f90_minor_version" -lt 2 ) ; then
       AC_MSG_WARN([Compiler version too old, use at least 21.7])
    fi
-   if (test "$f90_major_version" -lt 21 )
+   if (test "$f90_major_version" -lt 21 ) ; then
       AC_MSG_ERROR([Compiler version too old, use at least 21.7])
    fi
    # NVHPC v. 21.11-22.1 buggy

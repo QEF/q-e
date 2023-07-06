@@ -4124,7 +4124,7 @@ then
       { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Compiler version too old, use at least 21.7" >&5
 $as_echo "$as_me: WARNING: Compiler version too old, use at least 21.7" >&2;}
    fi
-   if (test "$f90_major_version" -lt 21 )
+   if (test "$f90_major_version" -lt 21 ) ; then
       as_fn_error $? "Compiler version too old, use at least 21.7" "$LINENO" 5
    fi
    # NVHPC v. 21.11-22.1 buggy
