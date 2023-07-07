@@ -194,6 +194,12 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
                                  dnsq(m1,m2,is,na) = dnsq(m1,m2,is,na) + &
                                  wk(ikk) * CONJG(proj1(ibnd,ihubst1+ldim*(isp1-1)) ) * &
                                                  proj2(ibnd,ihubst2+ldim*(isp2-1))
+                                 IF (.not.domag) THEN 
+                                      dnsq(m1,m2,is,na) = dnsq(m1,m2,is,na) + &
+                                      wk(ikk) * CONJG(proj1(ibnd,ihubst2+ldim*(isp2-1)) ) * &
+                                                      proj2(ibnd,ihubst1+ldim*(isp1-1))
+                                 ENDIF
+               
                                  ! 
                                  ! to be added the correction for metals at q=0
                                  IF (lmetq0.and.isolv==1) then

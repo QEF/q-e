@@ -454,22 +454,32 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      IF (okvan) then
         CALL newdq (dvscfin, 1)
         IF (noncolin.AND.domag) then
+           !
            int3_save(:,:,:,:,:,1)=int3_nc(:,:,:,:,:)
-           ! IF (okpaw) rho%bec(:,:,2:4)=-rho%bec(:,:,2:4)
-           dvscfin(:,2:4)=-dvscfin(:,2:4)
-           ! IF (okpaw) dbecsum(:,:,2:4,1)=-dbecsum(:,:,2:4,1)
+           !
+           ! ---------- LUCA (spawoc PAW) ----------------------
+           dvscfin(:,2:4) = -dvscfin(:,2:4)
+           IF (okpaw) THEN 
+              dbecsum(:,:,2:4,1) = -dbecsum(:,:,2:4,1)
+              rho%bec(:,:,2:4) = -rho%bec(:,:,2:4)
+           ENDIF
+           !
            !   if needed recompute the paw coeffients with the opposite sign of
            !   the magnetic field
            !
+           IF (okpaw) CALL PAW_dpotential(dbecsum,rho%bec,int3_paw,1)
            !
            CALL newdq (dvscfin, 1)
            int3_save(:,:,:,:,:,2)=int3_nc(:,:,:,:,:)
            !
            !  restore the correct sign of the magnetic field.
            !
-           dvscfin(:,2:4)=-dvscfin(:,2:4)
-           IF (okpaw) dbecsum(:,:,2:4,1)=-dbecsum(:,:,2:4,1)
-           IF (okpaw) rho%bec(:,:,2:4)=-rho%bec(:,:,2:4)
+           dvscfin(:,2:4) = -dvscfin(:,2:4)
+           IF (okpaw) THEN 
+              dbecsum(:,:,2:4,1) = -dbecsum(:,:,2:4,1)
+              rho%bec(:,:,2:4) = -rho%bec(:,:,2:4)
+           ENDIF
+           ! -------------------------------------------------
            !
            !  put into int3_nc the coefficient with +B
            !

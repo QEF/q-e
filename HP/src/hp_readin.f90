@@ -201,10 +201,10 @@ SUBROUTINE input_sanity()
      CALL errore("hp_readin", &
      " The HP code for this Hubbard_projectors type is not implemented",1)
   !   
-  ! ---------- LUCA -----------------------------
+  ! ---------- LUCA (spawoc PAW) -----------------------------
   !IF (noncolin) CALL errore('hp_readin','Noncolliner case is not supported',1)
-  IF ((noncolin.and.okpaw)) CALL errore('hp_readin','HP with PAW and noncolin &
-                                         not available yet',1) 
+  !IF ((noncolin.and.okpaw)) CALL errore('hp_readin','HP with PAW and noncolin &
+  !                                       not available yet',1) 
   ! -------------------------------------------------                                         
   !
   IF (lmovecell) CALL errore('hp_readin','The HP code is not working after vc-relax',1)
