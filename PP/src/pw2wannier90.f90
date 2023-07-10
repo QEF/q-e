@@ -37,13 +37,14 @@ module wannier
         nnbx,nexband,iun_uhu,&
         iun_uIu,& !ivo
    ! end change Lopez, Thonhauser, Souza
-        iun_sHu, iun_sIu ! shc
+        iun_sHu, iun_sIu,& ! shc
+        iun_hkmn, iun_hvmn, iun_hdmn, iun_hhmn !JQ
    integer  :: n_wannier !number of WF
    integer  :: n_proj    !number of projection
    complex(DP), allocatable :: gf(:,:)  ! guding_function(npwx,n_wannier)
    complex(DP), allocatable :: gf_spinor(:,:)
    complex(DP), allocatable :: sgf_spinor(:,:)
-   integer               :: ispinw, ikstart, ikstop, iknum
+   integer               :: ispinw, ikstart, ikstop, iknum, reduce_unk_factor
    character(LEN=15)     :: wan_mode    ! running mode
    logical               :: logwann, wvfn_formatted, write_unk, write_eig, &
    ! begin change Lopez, Thonhauser, Souza
@@ -58,7 +59,9 @@ module wannier
    ! irreducible BZ
                             irr_bz, &
    ! vv: Begin SCDM keywords
-                            scdm_proj
+                            scdm_proj, &
+                            amn_formatted, mmn_formatted, eig_formatted, &
+                            write_hhmn, write_hkmn, write_hvmn, write_hdmn, hmn_formatted
    character(LEN=15)     :: scdm_entanglement
    real(DP)              :: scdm_mu, scdm_sigma
    ! vv: End SCDM keywords
@@ -93,10 +96,727 @@ module wannier
    integer,allocatable :: rir(:,:)
    logical,allocatable :: zerophase(:,:)
    real(DP), allocatable :: bvec(:,:), xbvec(:,:)    ! bvectors
+
+   integer, PARAMETER :: header_len = 60
+   !! The length of header in amn/mmn/eig/... files
+   !! For unformatted stream IO, this must be the same as wannier90 when reading those files.
 end module wannier
+
+module atproj
+   USE kinds, ONLY: DP
+
+   ! Atomic projectors for species
+   TYPE atproj_type
+      CHARACTER(len=3) :: atsym ! atomic symbol
+      INTEGER :: ngrid ! number of grid points
+      REAL(DP), ALLOCATABLE :: xgrid(:)
+      REAL(DP), ALLOCATABLE :: rgrid(:) ! exp(xgrid(:))
+      INTEGER :: nproj ! total number of projectors for this species
+      INTEGER, ALLOCATABLE :: l(:) ! angular momentum of each wfc
+      REAL(DP), ALLOCATABLE :: radial(:, :) ! magnitude at each point, ngrid x nproj
+   END TYPE atproj_type
+
+   ! atomic proj input variables, start with atom_proj*
+   LOGICAL :: atom_proj
+   CHARACTER(LEN=256) :: atom_proj_dir ! directory of external projectors
+   LOGICAL :: atom_proj_ext ! switch for using external files instead of orbitals from UPF
+   INTEGER, PARAMETER :: nexatproj_max = 2000 ! max allowed number of projectors to be excluded
+   INTEGER :: atom_proj_exclude(nexatproj_max) ! index starts from 1
+   LOGICAL :: atom_proj_ortho ! whether perform Lowdin orthonormalization
+   LOGICAL :: atom_proj_sym ! whether perform symmetrization
+
+   ! atomic proj internal variables, using *atproj*
+   INTEGER :: nexatproj ! actual number of excluded projectors
+   INTEGER :: natproj ! total number of projectors = n_proj + nexatproj
+   LOGICAL, ALLOCATABLE :: atproj_excl(:) ! size = total num of projectors
+   INTEGER :: iun_atproj
+   TYPE(atproj_type), ALLOCATABLE :: atproj_typs(:) ! all atom proj types
+
+   REAL(DP), ALLOCATABLE :: tab_at(:, :, :)
+   !! interpolation table for atomic projectors
+
+CONTAINS
+
+   SUBROUTINE skip_comments(file_unit)
+      ! read a file_unit and skip lines starting with #
+      !
+      USE, INTRINSIC :: ISO_FORTRAN_ENV
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(in) :: file_unit
+      CHARACTER(len=256) :: line
+      INTEGER :: ret_code
+      !
+      DO
+      READ (file_unit, '(A)', iostat=ret_code) line
+      IF (ret_code == IOSTAT_END) EXIT
+      IF (ret_code /= 0) THEN
+         ! read error
+         EXIT
+      END IF
+      IF (INDEX(ADJUSTL(line), "#") == 1) CYCLE
+      EXIT
+      END DO
+
+      BACKSPACE file_unit
+
+      RETURN
+   END SUBROUTINE skip_comments
+
+   function write_dbg(lopen)
+      ! Utility function for debuging parallel execution, each processor writes to one file.
+      ! Support kpool.
+      !
+      ! Usage:
+      ! m = write_dbg(.true.)
+      ! write(m, *) ik_g
+      ! do n = 1, nbnd
+      !    write(m, *) Mkb(1:nbnd,n)
+      ! end do
+      ! n = write_dbg(.false.)
+      !
+      use mp_pools, only : my_pool_id, me_pool
+      !
+      implicit none
+      !
+      logical, intent(in) :: lopen
+      ! open or close the debug output file
+      integer :: write_dbg
+      ! the unit number of the debug file
+      !
+      character(LEN=6), external :: int_to_char
+      !
+      logical :: opened
+      integer, PARAMETER :: f = 1238
+      !
+      inquire(f, opened=opened)
+      if (lopen) then
+         if (.not. opened) &
+            open(f, file='dbg.k'//trim(int_to_char(my_pool_id))&
+            //'.p'//trim(int_to_char(me_pool)), action='write',status='replace')
+      else
+         if (opened) &
+            close(f,status='keep')
+      end if
+      write_dbg = f
+      return
+   end function write_dbg
+   
+   !-----------------------------------------------------------------------
+   SUBROUTINE write_file_amn(proj)
+      !-----------------------------------------------------------------------
+      ! On input proj has dimension num_bands x num_projs x num_kpoints
+      !
+      USE kinds, ONLY: DP
+      USE io_global, ONLY: stdout, ionode
+      USE wannier, ONLY: seedname, iun_amn, amn_formatted, header_len
+
+      IMPLICIT NONE
+
+      COMPLEX(DP), INTENT(IN) :: proj(:, :, :)
+      !
+      INTEGER, EXTERNAL :: find_free_unit
+      !
+      INTEGER :: nbnd, nprj, nkpt
+      INTEGER :: ib, ip, ik
+      CHARACTER(len=9) :: cdate, ctime
+      CHARACTER(len=header_len) :: header
+
+      IF (ionode) THEN
+      nbnd = SIZE(proj, 1)
+      nprj = SIZE(proj, 2)
+      nkpt = SIZE(proj, 3)
+
+      iun_amn = find_free_unit()
+      IF (amn_formatted) THEN
+         OPEN (unit=iun_amn, file=TRIM(seedname)//".amn", form='formatted')
+      ELSE
+         ! I use stream IO for unformatted, so I don't need to write the whole matrix in
+         ! one Fortran write (i.e. in one record). But I need a fortran2003 compiler
+         OPEN (unit=iun_amn, file=TRIM(seedname)//".amn", form='unformatted', ACCESS="STREAM")
+      END IF
+      CALL date_and_tim(cdate, ctime)
+      header = 'Created on '//cdate//' at '//ctime
+      IF (amn_formatted) THEN
+         WRITE (iun_amn, *) header
+         WRITE (iun_amn, *) nbnd, nkpt, nprj
+      ELSE
+         WRITE (iun_amn) header
+         WRITE (iun_amn) nbnd, nkpt, nprj
+      END IF
+
+      IF (amn_formatted) THEN
+         DO ik = 1, nkpt
+            DO ip = 1, nprj
+               DO ib = 1, nbnd
+                  WRITE (iun_amn, '(3i5,2f18.12)') ib, ip, ik, proj(ib, ip, ik)
+               END DO
+            END DO
+         END DO
+      ELSE
+         DO ik = 1, nkpt
+            DO ip = 1, nprj
+               DO ib = 1, nbnd
+                  WRITE (iun_amn) ib, ip, ik, proj(ib, ip, ik)
+               END DO
+            END DO
+         END DO
+      END IF
+      CLOSE (iun_amn)
+      END IF
+
+      RETURN
+   END SUBROUTINE write_file_amn
+   
+   SUBROUTINE allocate_atproj_type(typ, ngrid, nproj)
+      !
+      IMPLICIT NONE
+      !
+      TYPE(atproj_type), INTENT(INOUT) :: typ
+      INTEGER, INTENT(IN) :: ngrid, nproj
+      INTEGER :: ierr
+      !
+      typ%ngrid = ngrid
+      typ%nproj = nproj
+      ALLOCATE (typ%xgrid(ngrid), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating typ%xgrid', 1)
+      ALLOCATE (typ%rgrid(ngrid), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating typ%rgrid', 1)
+      ALLOCATE (typ%l(nproj), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating typ%l', 1)
+      ALLOCATE (typ%radial(ngrid, nproj), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating typ%radial', 1)
+  
+      RETURN
+   END SUBROUTINE allocate_atproj_type
+  
+   SUBROUTINE read_atomproj(typs)
+      !
+      ! read data files for atom proj
+      ! should be called only by one node
+      !
+      USE kinds, ONLY: dp
+      USE io_global, ONLY: stdout
+      USE ions_base, ONLY: nsp, atm
+      !
+      IMPLICIT NONE
+      !
+      TYPE(atproj_type), INTENT(INOUT) :: typs(nsp)
+      !
+      INTEGER, EXTERNAL :: find_free_unit
+      !
+      INTEGER :: i, j, it
+      LOGICAL :: file_exists
+      CHARACTER(len=256) :: filename
+      INTEGER :: ngrid, nproj
+  
+      iun_atproj = find_free_unit()
+  
+      DO it = 1, nsp
+        filename = TRIM(atom_proj_dir)//'/'//TRIM(atm(it))//".dat"
+        INQUIRE (FILE=TRIM(filename), EXIST=file_exists)
+        IF (.NOT. file_exists) &
+          CALL errore('pw2wannier90', 'file not exists: '//TRIM(filename), 1)
+        OPEN (unit=iun_atproj, file=TRIM(filename), form='formatted')
+        CALL skip_comments(iun_atproj)
+  
+        READ (iun_atproj, *) ngrid, nproj
+        WRITE (stdout, *) " Read from "//TRIM(filename)
+        WRITE (stdout, '((A),(I4))') "   number of grid points   = ", ngrid
+        WRITE (stdout, '((A),(I4))') "   number of projectors    = ", nproj
+  
+        CALL allocate_atproj_type(typs(it), ngrid, nproj)
+        typs(it)%atsym = atm(it)
+  
+        READ (iun_atproj, *) (typs(it)%l(i), i=1, nproj)
+        WRITE (stdout, '((A))', advance='no') "   ang. mom. of projectors = "
+        DO i = 1, nproj
+          WRITE (stdout, '(I4)', advance='no') typs(it)%l(i)
+        END DO
+        WRITE (stdout, *)
+        WRITE (stdout, *)
+  
+        DO i = 1, ngrid
+          READ (iun_atproj, *) typs(it)%xgrid(i), typs(it)%rgrid(i), &
+            (typs(it)%radial(i, j), j=1, nproj)
+          ! PRINT *, i, typs(it)%xgrid(i), typs(it)%rgrid(i)
+        END DO
+  
+        CLOSE (iun_atproj)
+      END DO
+  
+      RETURN
+   END SUBROUTINE read_atomproj
+  
+  !-----------------------------------------------------------------------
+   SUBROUTINE atomproj_wfc(ik, wfcatom)
+      !-----------------------------------------------------------------------
+      !! This routine computes the superposition of atomic wavefunctions
+      !! for k-point "ik" - output in "wfcatom".
+      !
+      !  adapted from PW/src/atomic_wfc.f90, PP/src/atomic_wfc_nc_proj.f90
+      !
+      USE kinds, ONLY: DP
+      USE constants, ONLY: tpi, fpi, pi
+      USE cell_base, ONLY: omega, tpiba
+      USE ions_base, ONLY: nat, ntyp => nsp, ityp, tau
+      USE gvect, ONLY: mill, eigts1, eigts2, eigts3, g
+      USE klist, ONLY: xk, igk_k, ngk
+      USE wvfct, ONLY: npwx
+      USE noncollin_module, ONLY: noncolin, npol, angle1, angle2
+      USE spin_orb, ONLY: lspinorb, rot_ylm, fcoef, lmaxx, domag, &
+                          starting_spin_angle
+      USE wannier, ONLY: n_proj
+      !
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: ik
+      !! k-point index
+      COMPLEX(DP), INTENT(OUT) :: wfcatom(npwx, npol, natproj)
+      !! Superposition of atomic wavefunctions
+      !
+      ! ... local variables
+      !
+      INTEGER :: n_starting_wfc, lmax_wfc, nt, l, nb, na, m, lm, ig, iig, &
+                 i0, i1, i2, i3, npw
+      REAL(DP), ALLOCATABLE :: qg(:), ylm(:, :), chiq(:, :, :), gk(:, :)
+      COMPLEX(DP), ALLOCATABLE :: sk(:), aux(:)
+      COMPLEX(DP) :: kphase, lphase
+      REAL(DP)    :: arg
+      INTEGER :: nwfcm
+      !! max number of radial atomic projectors across atoms
+      INTEGER :: ierr
+  
+      CALL start_clock('atomproj_wfc')
+  
+      ! calculate max angular momentum required in wavefunctions
+      lmax_wfc = 0
+      nwfcm = 0
+      DO nt = 1, ntyp
+        lmax_wfc = MAX(lmax_wfc, MAXVAL(atproj_typs(nt)%l))
+        nwfcm = MAX(nwfcm, atproj_typs(nt)%nproj)
+      END DO
+      !
+      npw = ngk(ik)
+      !
+      ALLOCATE (ylm(npw, (lmax_wfc + 1)**2), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating ylm', 1)
+      ALLOCATE (chiq(npw, nwfcm, ntyp), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating chiq', 1)
+      ALLOCATE (gk(3, npw), qg(npw), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating gk/qg', 1)
+      !
+      DO ig = 1, npw
+        iig = igk_k(ig, ik)
+        gk(1, ig) = xk(1, ik) + g(1, iig)
+        gk(2, ig) = xk(2, ik) + g(2, iig)
+        gk(3, ig) = xk(3, ik) + g(3, iig)
+        qg(ig) = gk(1, ig)**2 + gk(2, ig)**2 + gk(3, ig)**2
+      END DO
+      !
+      !  ylm = spherical harmonics
+      !
+      CALL ylmr2((lmax_wfc + 1)**2, npw, gk, qg, ylm)
+      !
+      ! set now q=|k+G| in atomic units
+      !
+      DO ig = 1, npw
+        qg(ig) = SQRT(qg(ig))*tpiba
+      END DO
+      !
+      CALL interp_atproj(npw, qg, nwfcm, chiq)
+      !
+      DEALLOCATE (qg, gk)
+      ALLOCATE (aux(npw), sk(npw), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating aux/sk', 1)
+      !
+      wfcatom(:, :, :) = (0.0_DP, 0.0_DP)
+      n_starting_wfc = 0
+      !
+      DO na = 1, nat
+        arg = (xk(1, ik)*tau(1, na) + xk(2, ik)*tau(2, na) + xk(3, ik)*tau(3, na))*tpi
+        kphase = CMPLX(COS(arg), -SIN(arg), KIND=DP)
+        !
+        !     sk is the structure factor
+        !
+        DO ig = 1, npw
+          iig = igk_k(ig, ik)
+          sk(ig) = kphase*eigts1(mill(1, iig), na)* &
+                   eigts2(mill(2, iig), na)* &
+                   eigts3(mill(3, iig), na)
+        END DO
+        !
+        nt = ityp(na)
+        DO nb = 1, atproj_typs(nt)%nproj
+          l = atproj_typs(nt)%l(nb)
+          lphase = (0.D0, 1.D0)**l
+          !
+          !  the factor i^l MUST BE PRESENT in order to produce
+          !  wavefunctions for k=0 that are real in real space
+          !
+          ! IF (noncolin) THEN
+          !   !
+          !   IF (lspinorb) THEN
+          !     !
+          !     IF (starting_spin_angle .OR. .NOT. domag) THEN
+          !       CALL atomic_wfc_so()
+          !     ELSE
+          !       CALL atomic_wfc_so_mag()
+          !     END IF
+          !     !
+          !   ELSE
+          !     !
+          !     CALL atomic_wfc_nc()
+          !     !
+          !   END IF
+          !   !
+          ! ELSE
+          !
+          CALL atomic_wfc___()
+          !
+          ! END IF
+          !
+        END DO
+        !
+      END DO
+  
+      DEALLOCATE (aux, sk, chiq, ylm)
+  
+      CALL stop_clock('atomproj_wfc')
+  
+      RETURN
+  
+   CONTAINS
+      ! !----------------------------------------------------------------
+      ! SUBROUTINE atomic_wfc_so()
+      !   !------------------------------------------------------------
+      !  !! Spin-orbit case.
+      !   !
+      !   REAL(DP) :: fact(2), j
+      !   REAL(DP), EXTERNAL :: spinor
+      !   INTEGER :: ind, ind1, n1, is, sph_ind
+      !   !
+      !   j = upf(nt)%jchi(nb)
+      !   DO m = -l - 1, l
+      !     fact(1) = spinor(l, j, m, 1)
+      !     fact(2) = spinor(l, j, m, 2)
+      !     IF (ABS(fact(1)) > 1.D-8 .OR. ABS(fact(2)) > 1.D-8) THEN
+      !       n_starting_wfc = n_starting_wfc + 1
+      !       IF (n_starting_wfc > natomwfc) CALL errore &
+      !         ('atomic_wfc_so', 'internal error: too many wfcs', 1)
+      !       DO is = 1, 2
+      !         IF (ABS(fact(is)) > 1.D-8) THEN
+      !           ind = lmaxx + 1 + sph_ind(l, j, m, is)
+      !           aux = (0.D0, 0.D0)
+      !           DO n1 = 1, 2*l + 1
+      !             ind1 = l**2 + n1
+      !             IF (ABS(rot_ylm(ind, n1)) > 1.D-8) &
+      !               aux(:) = aux(:) + rot_ylm(ind, n1)*ylm(:, ind1)
+      !           END DO
+      !           DO ig = 1, npw
+      !             wfcatom(ig, is, n_starting_wfc) = lphase*fact(is)* &
+      !                                               sk(ig)*aux(ig)*chiq(ig, nb, nt)
+      !           END DO
+      !         ELSE
+      !           wfcatom(:, is, n_starting_wfc) = (0.D0, 0.D0)
+      !         END IF
+      !       END DO
+      !     END IF
+      !   END DO
+      !   !
+      ! END SUBROUTINE atomic_wfc_so
+      ! !
+      ! SUBROUTINE atomic_wfc_so_mag()
+      !   !
+      !  !! Spin-orbit case, magnetization along "angle1" and "angle2"
+      !  !! In the magnetic case we always assume that magnetism is much larger
+      !  !! than spin-orbit and average the wavefunctions at l+1/2 and l-1/2
+      !  !! filling then the up and down spinors with the average wavefunctions,
+      !  !! according to the direction of the magnetization, following what is
+      !  !! done in the noncollinear case.
+      !   !
+      !   REAL(DP) :: alpha, gamman, j
+      !   COMPLEX(DP) :: fup, fdown
+      !   REAL(DP), ALLOCATABLE :: chiaux(:)
+      !   INTEGER :: nc, ib
+      !   !
+      !   j = upf(nt)%jchi(nb)
+      !   !
+      !   !  This routine creates two functions only in the case j=l+1/2 or exit in the
+      !   !  other case
+      !   !
+      !   IF (ABS(j - l + 0.5_DP) < 1.D-4) RETURN
+  
+      !   ALLOCATE (chiaux(npw))
+      !   !
+      !   !  Find the functions j=l-1/2
+      !   !
+      !   IF (l == 0) THEN
+      !     chiaux(:) = chiq(:, nb, nt)
+      !   ELSE
+      !     DO ib = 1, upf(nt)%nwfc
+      !       IF ((upf(nt)%lchi(ib) == l) .AND. &
+      !           (ABS(upf(nt)%jchi(ib) - l + 0.5_DP) < 1.D-4)) THEN
+      !         nc = ib
+      !         EXIT
+      !       END IF
+      !     END DO
+      !     !
+      !     !  Average the two functions
+      !     !
+      !     chiaux(:) = (chiq(:, nb, nt)*(l + 1.0_DP) + chiq(:, nc, nt)*l)/(2.0_DP*l + 1.0_DP)
+      !     !
+      !   END IF
+      !   !
+      !   !  and construct the starting wavefunctions as in the noncollinear case.
+      !   !
+      !   alpha = angle1(nt)
+      !   gamman = -angle2(nt) + 0.5D0*pi
+      !   !
+      !   DO m = 1, 2*l + 1
+      !     lm = l**2 + m
+      !     n_starting_wfc = n_starting_wfc + 1
+      !     IF (n_starting_wfc + 2*l + 1 > natomwfc) CALL errore &
+      !       ('atomic_wfc_so_mag', 'internal error: too many wfcs', 1)
+      !     DO ig = 1, npw
+      !       aux(ig) = sk(ig)*ylm(ig, lm)*chiaux(ig)
+      !     END DO
+      !     !
+      !     ! now, rotate wfc as needed
+      !     ! first : rotation with angle alpha around (OX)
+      !     !
+      !     DO ig = 1, npw
+      !       fup = COS(0.5D0*alpha)*aux(ig)
+      !       fdown = (0.D0, 1.D0)*SIN(0.5D0*alpha)*aux(ig)
+      !       !
+      !       ! Now, build the orthogonal wfc
+      !       ! first rotation with angle (alpha+pi) around (OX)
+      !       !
+      !       wfcatom(ig, 1, n_starting_wfc) = (COS(0.5D0*gamman) &
+      !                                         + (0.D0, 1.D0)*SIN(0.5D0*gamman))*fup
+      !       wfcatom(ig, 2, n_starting_wfc) = (COS(0.5D0*gamman) &
+      !                                         - (0.D0, 1.D0)*SIN(0.5D0*gamman))*fdown
+      !       !
+      !       ! second: rotation with angle gamma around (OZ)
+      !       !
+      !       ! Now, build the orthogonal wfc
+      !       ! first rotation with angle (alpha+pi) around (OX)
+      !       !
+      !       fup = COS(0.5D0*(alpha + pi))*aux(ig)
+      !       fdown = (0.D0, 1.D0)*SIN(0.5D0*(alpha + pi))*aux(ig)
+      !       !
+      !       ! second, rotation with angle gamma around (OZ)
+      !       !
+      !       wfcatom(ig, 1, n_starting_wfc + 2*l + 1) = (COS(0.5D0*gamman) &
+      !                                                   + (0.D0, 1.D0)*SIN(0.5D0*gamman))*fup
+      !       wfcatom(ig, 2, n_starting_wfc + 2*l + 1) = (COS(0.5D0*gamman) &
+      !                                                   - (0.D0, 1.D0)*SIN(0.5D0*gamman))*fdown
+      !     END DO
+      !   END DO
+      !   n_starting_wfc = n_starting_wfc + 2*l + 1
+      !   DEALLOCATE (chiaux)
+      !   !
+      ! END SUBROUTINE atomic_wfc_so_mag
+      ! !
+      ! SUBROUTINE atomic_wfc_nc()
+      !   !
+      !  !! noncolinear case, magnetization along "angle1" and "angle2"
+      !   !
+      !   REAL(DP) :: alpha, gamman
+      !   COMPLEX(DP) :: fup, fdown
+      !   !
+      !   alpha = angle1(nt)
+      !   gamman = -angle2(nt) + 0.5D0*pi
+      !   !
+      !   DO m = 1, 2*l + 1
+      !     lm = l**2 + m
+      !     n_starting_wfc = n_starting_wfc + 1
+      !     IF (n_starting_wfc + 2*l + 1 > natomwfc) CALL errore &
+      !       ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
+      !     DO ig = 1, npw
+      !       aux(ig) = sk(ig)*ylm(ig, lm)*chiq(ig, nb, nt)
+      !     END DO
+      !     !
+      !     ! now, rotate wfc as needed
+      !     ! first : rotation with angle alpha around (OX)
+      !     !
+      !     DO ig = 1, npw
+      !       fup = COS(0.5D0*alpha)*aux(ig)
+      !       fdown = (0.D0, 1.D0)*SIN(0.5D0*alpha)*aux(ig)
+      !       !
+      !       ! Now, build the orthogonal wfc
+      !       ! first rotation with angle (alpha+pi) around (OX)
+      !       !
+      !       wfcatom(ig, 1, n_starting_wfc) = (COS(0.5D0*gamman) &
+      !                                         + (0.D0, 1.D0)*SIN(0.5D0*gamman))*fup
+      !       wfcatom(ig, 2, n_starting_wfc) = (COS(0.5D0*gamman) &
+      !                                         - (0.D0, 1.D0)*SIN(0.5D0*gamman))*fdown
+      !       !
+      !       ! second: rotation with angle gamma around (OZ)
+      !       !
+      !       ! Now, build the orthogonal wfc
+      !       ! first rotation with angle (alpha+pi) around (OX)
+      !       !
+      !       fup = COS(0.5D0*(alpha + pi))*aux(ig)
+      !       fdown = (0.D0, 1.D0)*SIN(0.5D0*(alpha + pi))*aux(ig)
+      !       !
+      !       ! second, rotation with angle gamma around (OZ)
+      !       !
+      !       wfcatom(ig, 1, n_starting_wfc + 2*l + 1) = (COS(0.5D0*gamman) &
+      !                                                   + (0.D0, 1.D0)*SIN(0.5D0*gamman))*fup
+      !       wfcatom(ig, 2, n_starting_wfc + 2*l + 1) = (COS(0.5D0*gamman) &
+      !                                                   - (0.D0, 1.D0)*SIN(0.5D0*gamman))*fdown
+      !     END DO
+      !   END DO
+      !   n_starting_wfc = n_starting_wfc + 2*l + 1
+      !   !
+      ! END SUBROUTINE atomic_wfc_nc
+  
+      SUBROUTINE atomic_wfc___()
+        !
+        ! ... LSDA or nonmagnetic case
+        !
+        DO m = 1, 2*l + 1
+          lm = l**2 + m
+          n_starting_wfc = n_starting_wfc + 1
+          IF (n_starting_wfc > natproj) CALL errore &
+            ('atomic_wfc___', 'internal error: too many wfcs', 1)
+          !
+          DO ig = 1, npw
+            wfcatom(ig, 1, n_starting_wfc) = lphase* &
+                                             sk(ig)*ylm(ig, lm)*chiq(ig, nb, nt)
+          END DO
+          !
+        END DO
+        !
+      END SUBROUTINE atomic_wfc___
+      !
+   END SUBROUTINE atomproj_wfc
+  
+   SUBROUTINE interp_atproj(npw, qg, nwfcm, chiq)
+      !-----------------------------------------------------------------------
+      !
+      ! computes chiq: radial fourier transform of atomic projector chi
+      !
+      !! adapted from upflib/interp_atwfc.f90
+      !
+      USE kinds, ONLY: dp
+      USE ions_base, ONLY: nsp
+      USE uspp_data, ONLY: dq
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN)  :: npw
+      INTEGER, INTENT(IN)  :: nwfcm
+      REAL(dp), INTENT(IN) :: qg(npw)
+      REAL(dp), INTENT(OUT):: chiq(npw, nwfcm, nsp)
+      !
+      INTEGER :: nt, nb, ig
+      INTEGER :: i0, i1, i2, i3
+      REAL(dp):: qgr, px, ux, vx, wx
+      !
+      DO nt = 1, nsp
+        DO nb = 1, atproj_typs(nt)%nproj
+          DO ig = 1, npw
+            qgr = qg(ig)
+            px = qgr/dq - INT(qgr/dq)
+            ux = 1.D0 - px
+            vx = 2.D0 - px
+            wx = 3.D0 - px
+            i0 = INT(qgr/dq) + 1
+            i1 = i0 + 1
+            i2 = i0 + 2
+            i3 = i0 + 3
+            chiq(ig, nb, nt) = &
+              tab_at(i0, nb, nt)*ux*vx*wx/6.D0 + &
+              tab_at(i1, nb, nt)*px*vx*wx/2.D0 - &
+              tab_at(i2, nb, nt)*px*ux*wx/2.D0 + &
+              tab_at(i3, nb, nt)*px*ux*vx/6.D0
+          END DO
+        END DO
+      END DO
+  
+   END SUBROUTINE interp_atproj
+  
+   SUBROUTINE init_tab_atproj(intra_bgrp_comm)
+      !-----------------------------------------------------------------------
+      !! This routine computes a table with the radial Fourier transform
+      !! of the atomic wavefunctions.
+      !!
+      !! adapted from upflib/init_tab_atwfc.f90
+      !
+      USE kinds, ONLY: DP
+      USE upf_const, ONLY: fpi
+      USE uspp_data, ONLY: nqx, dq
+      USE ions_base, ONLY: nsp
+      USE cell_base, ONLY: omega
+      USE mp, ONLY: mp_sum
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: intra_bgrp_comm
+      !
+      INTEGER :: nt, nb, iq, ir, l, startq, lastq, ndm, nwfcm
+      !
+      REAL(DP), ALLOCATABLE :: aux(:), vchi(:), rab(:)
+      REAL(DP) :: vqint, pref, q
+      !
+      ndm = 0
+      nwfcm = 0
+      DO nt = 1, nsp
+        ndm = MAX(ndm, atproj_typs(nt)%ngrid)
+        nwfcm = MAX(nwfcm, atproj_typs(nt)%nproj)
+      END DO
+      ALLOCATE (aux(ndm), vchi(ndm), rab(ndm))
+      !
+      ! chiq = radial fourier transform of atomic orbitals chi
+      !
+      pref = fpi/SQRT(omega)
+      ! needed to normalize atomic wfcs (not a bad idea in general)
+      CALL divide(intra_bgrp_comm, nqx, startq, lastq)
+      !
+      ! nqx = INT( (SQRT(ecutwfc) / dq + 4) )
+      ALLOCATE (tab_at(nqx, nwfcm, nsp))
+      tab_at(:, :, :) = 0.0_DP
+      !
+      DO nt = 1, nsp
+        rab = (atproj_typs(nt)%xgrid(2) - atproj_typs(nt)%xgrid(1))* &
+              atproj_typs(nt)%rgrid
+        DO nb = 1, atproj_typs(nt)%nproj
+          !
+          l = atproj_typs(nt)%l(nb)
+          !
+          DO iq = startq, lastq
+            q = dq*(iq - 1)
+            CALL sph_bes(atproj_typs(nt)%ngrid, atproj_typs(nt)%rgrid, q, l, aux)
+            DO ir = 1, atproj_typs(nt)%ngrid
+              vchi(ir) = atproj_typs(nt)%radial(ir, nb)*aux(ir)*atproj_typs(nt)%rgrid(ir)
+            END DO
+            CALL simpson(atproj_typs(nt)%ngrid, vchi, rab, vqint)
+            tab_at(iq, nb, nt) = vqint*pref
+          END DO
+          !
+        END DO
+      END DO
+      !
+      CALL mp_sum(tab_at, intra_bgrp_comm)
+      !
+      DEALLOCATE (aux, vchi, rab)
+      !
+      RETURN
+      !
+   END SUBROUTINE init_tab_atproj
+  
+   SUBROUTINE deallocate_atproj
+      IMPLICIT NONE
+  
+      IF (ALLOCATED(tab_at)) DEALLOCATE (tab_at)
+  
+      RETURN
+   END SUBROUTINE deallocate_atproj
+
+end module atproj
 !
-
-
 !------------------------------------------------------------------------
 PROGRAM pw2wannier90
   ! This is the interface to the Wannier90 code: see http://www.wannier.org
@@ -116,6 +836,9 @@ PROGRAM pw2wannier90
   USE control_flags,    ONLY : gamma_only
   USE environment,ONLY : environment_start, environment_end
   USE wannier
+  use atproj, only : atom_proj, atom_proj_dir, atom_proj_ext, &
+                     atom_proj_exclude, atom_proj_ortho, atom_proj_sym
+  USE read_namelists_module, only : check_namelist_read
   !
   IMPLICIT NONE
   !
@@ -129,7 +852,7 @@ PROGRAM pw2wannier90
   NAMELIST / inputpp / outdir, prefix, spin_component, wan_mode, &
        seedname, write_unk, write_amn, write_mmn, write_spn, write_eig,&
    ! begin change Lopez, Thonhauser, Souza
-       wvfn_formatted, reduce_unk, write_unkg, write_uhu,&
+       wvfn_formatted, reduce_unk, reduce_unk_factor, write_unkg, write_uhu,&
        write_dmn, read_sym, & !YN:
        write_uIu, spn_formatted, uHu_formatted, uIu_formatted,& !ivo
    ! end change Lopez, Thonhauser, Souza
@@ -139,8 +862,12 @@ PROGRAM pw2wannier90
        regular_mesh,& !gresch
        irr_bz,& ! Koretsune
    ! begin change Vitale
-       scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma
+       scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma, &
    ! end change Vitale
+       amn_formatted, mmn_formatted, eig_formatted,&
+       atom_proj, atom_proj_dir, atom_proj_ext, atom_proj_exclude,&
+       atom_proj_ortho,&!, atom_proj_sym
+       write_hhmn, write_hkmn, write_hvmn, write_hdmn, hmn_formatted
   !
   ! initialise environment
   !
@@ -189,6 +916,7 @@ PROGRAM pw2wannier90
      sIu_formatted=.false.
      ! end shc
      reduce_unk= .false.
+     reduce_unk_factor = 2
      write_unkg= .false.
      write_dmn = .false. !YN:
      read_sym  = .false. !YN:
@@ -197,6 +925,22 @@ PROGRAM pw2wannier90
      scdm_entanglement = 'isolated'
      scdm_mu = 0.0_dp
      scdm_sigma = 1.0_dp
+     amn_formatted = .true.
+     mmn_formatted = .true.
+     eig_formatted = .true.
+     atom_proj = .false.
+     atom_proj_dir = './'
+     atom_proj_ext = .false.
+     atom_proj_ortho = .true.
+     atom_proj_exclude = -1
+     ! TODO I cannot symmetrize the projection now, the results are wrong!
+     ! I need to restore the sym_proj_g,... to its original version
+     atom_proj_sym = .false.
+     write_hhmn = .false.
+     write_hkmn = .false.
+     write_hvmn = .false.
+     write_hdmn = .false.
+     hmn_formatted = .true.
      !
      !     reading the namelist inputpp
      !
@@ -209,7 +953,7 @@ PROGRAM pw2wannier90
   ENDIF
   !
   CALL mp_bcast(ios,ionode_id, world_comm)
-  IF (ios /= 0) CALL errore( 'pw2wannier90', 'reading inputpp namelist', abs(ios))
+  CALL check_namelist_read(ios, 5, "inputpp")
   !
   ! broadcast input variable to all nodes
   !
@@ -234,6 +978,7 @@ PROGRAM pw2wannier90
   ! end shc
   CALL mp_bcast(write_spn,ionode_id, world_comm)
   CALL mp_bcast(reduce_unk,ionode_id, world_comm)
+  CALL mp_bcast(reduce_unk_factor,ionode_id, world_comm)
   CALL mp_bcast(write_unkg,ionode_id, world_comm)
   CALL mp_bcast(write_dmn,ionode_id, world_comm)
   CALL mp_bcast(read_sym,ionode_id, world_comm)
@@ -242,21 +987,52 @@ PROGRAM pw2wannier90
   CALL mp_bcast(scdm_entanglement,ionode_id, world_comm)
   CALL mp_bcast(scdm_mu,ionode_id, world_comm)
   CALL mp_bcast(scdm_sigma,ionode_id, world_comm)
+  CALL mp_bcast(amn_formatted, ionode_id, world_comm)
+  CALL mp_bcast(mmn_formatted, ionode_id, world_comm)
+  CALL mp_bcast(eig_formatted, ionode_id, world_comm)
+  CALL mp_bcast(atom_proj, ionode_id, world_comm)
+  CALL mp_bcast(atom_proj_dir, ionode_id, world_comm)
+  CALL mp_bcast(atom_proj_ext,ionode_id, world_comm)
+  CALL mp_bcast(atom_proj_ortho, ionode_id, world_comm)
+  CALL mp_bcast(atom_proj_sym, ionode_id, world_comm)
+  CALL mp_bcast(atom_proj_exclude, ionode_id, world_comm)
+  call mp_bcast(write_hhmn, ionode_id, world_comm)
+  call mp_bcast(write_hkmn, ionode_id, world_comm)
+  call mp_bcast(write_hvmn, ionode_id, world_comm)
+  call mp_bcast(write_hdmn, ionode_id, world_comm)
+  call mp_bcast(hmn_formatted, ionode_id, world_comm)
   !
   ! Check: kpoint distribution with pools not implemented
   !
-  IF (npool > 1) CALL errore('pw2wannier90', 'pools not implemented', npool)
+  IF (npool > 1) THEN
+    IF (spin_component /= 'none') &
+      CALL errore('pw2wannier90', 'pools not implemented for spin-polarized calculation', npool)
+    IF (write_amn .AND. scdm_proj) &
+      CALL errore('pw2wannier90', 'pools not implemented for scdm_proj', npool)
+    IF (write_uhu .OR. write_uIu .OR. write_sHu .OR.  write_sIu .OR. &
+        write_spn .OR. write_unkg .OR. write_dmn .OR. write_unk) write(stdout, *) &
+        'pools only implemented for write_amn, write_mmn, write_eig'
+    ! CALL errore('pw2wannier90', 'pools not implemented', npool)
+  END IF
   !
   ! Check: bands distribution not implemented
   IF (nbgrp > 1) CALL errore('pw2wannier90', 'bands (-nb) not implemented', nbgrp)
-  !
+
+  if ((reduce_unk_factor) < 1) &
+    call errore('pw2wannier90', 'reduce_unk_factor < 1', 1)
+
   !   Now allocate space for pwscf variables, read and check them.
   !
   logwann = .true.
   WRITE(stdout,*)
-  WRITE(stdout,*) ' Reading nscf_save data'
+  WRITE(stdout,'(5x,A)') 'Reading nscf_save data'
   CALL read_file
   WRITE(stdout,*)
+  !
+  IF (npool > 1) THEN
+      IF (gamma_only) &
+         CALL errore('pw2wannier90', 'gamma_only not working with pools', npool)
+  END IF
   !
   IF (noncolin.and.gamma_only) CALL errore('pw2wannier90',&
        'Non-collinear and gamma_only not implemented',1)
@@ -348,6 +1124,12 @@ PROGRAM pw2wannier90
            else
              CALL compute_amn_with_scdm
            end if
+        else if (atom_proj) then
+          WRITE(stdout,*) ' -------------------------------------'
+          WRITE(stdout,*) ' *** Compute  A with atomic projectors'
+          WRITE(stdout,*) ' -------------------------------------'
+          WRITE(stdout,*)
+          CALL compute_amn_with_atomproj
         ELSE
            WRITE(stdout,*) ' --------------------------'
            WRITE(stdout,*) ' *** Compute  A projections'
@@ -465,6 +1247,14 @@ PROGRAM pw2wannier90
         WRITE(stdout,*) ' -----------------------------'
         WRITE(stdout,*)
      ENDIF
+     IF (write_hhmn .or. write_hkmn .or. write_hvmn .or. write_hdmn) THEN
+         WRITE(stdout,*) ' --------------------'
+         WRITE(stdout,*) ' *** Compute components of Hamiltonian'
+         WRITE(stdout,*) ' --------------------'
+         WRITE(stdout,*)
+         CALL compute_hmn
+         WRITE(stdout,*)
+     ENDIF
      WRITE(stdout,*) ' ------------'
      WRITE(stdout,*) ' *** Stop pp '
      WRITE(stdout,*) ' ------------'
@@ -479,6 +1269,10 @@ PROGRAM pw2wannier90
      CALL print_clock( 'compute_shc'  )
      CALL print_clock( 'write_unk'    )
      CALL print_clock( 'write_parity' )
+     IF(write_hhmn  .or. write_hkmn .or. write_hvmn .or. write_hdmn) &
+        CALL print_clock( 'compute_hmn' )
+     IF ( ionode ) WRITE( stdout, *  )
+     IF(npool > 1) CALL print_clock( 'readwfc_g' )
      ! not sure if this should be called also in 'library' mode or not !!
      CALL environment_end ( 'PW2WANNIER' )
      IF ( ionode ) WRITE( stdout, *  )
@@ -840,6 +1634,7 @@ SUBROUTINE read_nnkp
   USE wvfct,     ONLY : npwx, nbnd
   USE noncollin_module, ONLY : noncolin
   USE wannier
+  USE atproj, ONLY : atom_proj
 
   IMPLICIT NONE
   !
@@ -1048,35 +1843,42 @@ SUBROUTINE read_nnkp
 
   ! automatic projections
   IF (ionode) THEN
-     CALL scan_file_to('auto_projections',found)
-     IF (found) THEN
-        READ (iun_nnkp, *) n_wannier
-        READ (iun_nnkp, *) tmp_auto
-
-        IF (scdm_proj) THEN
-           IF (n_proj > 0) THEN
-              WRITE(stdout,'(//, " ****** begin Error message ******",/)')
-              WRITE(stdout,'(/," Found a projection block, an auto_projections block",/)')
-              WRITE(stdout,'(/," and scdm_proj = T in the input file. These three options are inconsistent.",/)')
-              WRITE(stdout,'(/," Please refer to the Wannier90 User guide for correct use of these flags.",/)')
-              WRITE(stdout,'(/, " ****** end Error message ******",//)')
-              CALL errore( 'pw2wannier90', 'Inconsistent options for projections.', 1 )
-           ELSE
-              IF (tmp_auto /= 0) CALL errore( 'pw2wannier90', 'Second entry in auto_projections block is not 0. ' // &
-              'See Wannier90 User Guide in the auto_projections section for clarifications.', 1 )
-           ENDIF
+    CALL scan_file_to('auto_projections',found)
+    IF (found) THEN
+      READ (iun_nnkp, *) n_wannier
+      READ (iun_nnkp, *) tmp_auto
+      
+      IF (scdm_proj) THEN
+        IF (n_proj > 0) THEN
+          WRITE(stdout,'(//, " ****** begin Error message ******",/)')
+          WRITE(stdout,'(/," Found a projection block, an auto_projections block",/)')
+          WRITE(stdout,'(/," and scdm_proj = T in the input file. These three options are inconsistent.",/)')
+          WRITE(stdout,'(/," Please refer to the Wannier90 User guide for correct use of these flags.",/)')
+          WRITE(stdout,'(/, " ****** end Error message ******",//)')
+          CALL errore( 'pw2wannier90', 'Inconsistent options for projections.', 1 )
         ELSE
-           ! Fire an error whether or not a projections block is found
-           CALL errore( 'pw2wannier90', 'scdm_proj = F but found an auto_projections block in '&
-                &//trim(seedname)//'.nnkp', 1 )
+          IF (tmp_auto /= 0) CALL errore( 'pw2wannier90', 'Second entry in auto_projections block is not 0. ' // &
+          'See Wannier90 User Guide in the auto_projections section for clarifications.', 1 )
         ENDIF
-     ELSE
-        IF (scdm_proj) THEN
-           ! Fire an error whether or not a projections block is found
-           CALL errore( 'pw2wannier90', 'scdm_proj = T but cannot find an auto_projections block in '&
-                &//trim(seedname)//'.nnkp', 1 )
-        ENDIF
-     ENDIF
+      ELSE IF (atom_proj) THEN
+        continue
+      ELSE
+        ! Fire an error whether or not a projections block is found
+        CALL errore( 'pw2wannier90', 'scdm_proj = F and atom_proj = F '&
+        &'but found an auto_projections block in '&
+        &//trim(seedname)//'.nnkp', 1 )
+      ENDIF
+    ELSE
+      IF (scdm_proj) THEN
+        ! Fire an error whether or not a projections block is found
+        CALL errore( 'pw2wannier90', 'scdm_proj = T but cannot find an auto_projections block in '&
+        &//trim(seedname)//'.nnkp', 1 )
+      ENDIF
+      IF (atom_proj) THEN
+        CALL errore( 'pw2wannier90', 'atom_proj = T but cannot find an auto_projections block in '&
+        &//trim(seedname)//'.nnkp', 1 )
+      ENDIF
+    ENDIF
   ENDIF
 
   ! Broadcast
@@ -1099,10 +1901,10 @@ SUBROUTINE read_nnkp
   !
   WRITE(stdout,*)
   WRITE(stdout,*) 'Projections:'
-  DO iw=1,n_proj
-     WRITE(stdout,'(3f12.6,3i3,f12.6)') &
-          center_w(1:3,iw),l_w(iw),mr_w(iw),r_w(iw),alpha_w(iw)
-  ENDDO
+    DO iw=1,n_proj
+       WRITE(stdout,'(3f12.6,3i3,f12.6)') &
+            center_w(1:3,iw),l_w(iw),mr_w(iw),r_w(iw),alpha_w(iw)
+    ENDDO
 
   IF (ionode) THEN   ! read from ionode only
      CALL scan_file_to('nnkpts',found)
@@ -1433,7 +2235,7 @@ SUBROUTINE compute_dmn
    COMPLEX(DP)              :: mmn, zdotc, phase1
    real(DP)                 :: arg, g_(3),v1(3),v2(3),v3(3),v4(3),v5(3),err,ermx,dvec(3,32),dwgt(32),dvec2(3,32),dmat(3,3)
    CHARACTER (len=9)        :: cdate,ctime
-   CHARACTER (len=60)       :: header
+   CHARACTER (len=header_len) :: header
    LOGICAL                  :: any_uspp
    INTEGER                  :: nn,inn,loop,loop2
    LOGICAL                  :: nn_found
@@ -2031,15 +2833,15 @@ END SUBROUTINE compute_dmn
 SUBROUTINE compute_mmn
    !-----------------------------------------------------------------------
    !
-   USE io_global,  ONLY : stdout, ionode
-   USE kinds,           ONLY: DP
+   USE io_global,       ONLY : stdout, ionode
+   USE kinds,           ONLY : DP
    USE wvfct,           ONLY : nbnd, npwx
    USE control_flags,   ONLY : gamma_only
-   USE wavefunctions, ONLY : evc, psic, psic_nc
+   USE wavefunctions,   ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts, dfftp
    USE fft_interfaces,  ONLY : fwfft, invfft
-   USE klist,           ONLY : nkstot, xk, igk_k, ngk
-   USE io_files,        ONLY : nwordwfc, iunwfc
+   USE klist,           ONLY : nkstot, xk, igk_k, ngk, nks
+   USE io_files,        ONLY : nwordwfc, iunwfc, diropn
    USE gvect,           ONLY : g, ngm, gstart
    USE cell_base,       ONLY : omega, alat, tpiba, at, bg
    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
@@ -2048,16 +2850,20 @@ SUBROUTINE compute_mmn
    USE uspp_param,      ONLY : upf, nh, lmaxq, nhm
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
-   USE mp_pools,        ONLY : intra_pool_comm
-   USE mp,              ONLY : mp_sum
-   USE noncollin_module,ONLY : noncolin, npol, lspinorb
+   USE mp_pools,        ONLY : intra_pool_comm, inter_pool_comm, npool, root_pool
+   USE mp,              ONLY : mp_sum, mp_bcast
+   USE mp_world,        ONLY : world_comm
+   USE noncollin_module,ONLY : noncolin, npol
+   USE spin_orb,        ONLY : lspinorb
    USE gvecw,           ONLY : gcutw
    USE wannier
+   use atproj,          only : write_dbg
    USE uspp_init,            ONLY : init_us_2
 
    IMPLICIT NONE
    !
    INTEGER, EXTERNAL :: find_free_unit
+   INTEGER, EXTERNAL :: global_kpoint_index
    !
    complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
    !
@@ -2072,41 +2878,95 @@ SUBROUTINE compute_mmn
    COMPLEX(DP)              :: mmn, zdotc, phase1
    real(DP)                 :: arg, g_(3)
    CHARACTER (len=9)        :: cdate,ctime
-   CHARACTER (len=60)       :: header
+   CHARACTER (len=header_len) :: header
    LOGICAL                  :: any_uspp
    INTEGER                  :: nn,inn,loop,loop2
    LOGICAL                  :: nn_found
    INTEGER                  :: istart,iend
    INTEGER                  :: ibnd_n, ibnd_m
-
+   !
+   INTEGER :: iknum_l
+   ! local num of kpt on each pool
+   integer :: ik_g
+   ! global index of kpt corresponds to ik
+   real(DP), ALLOCATABLE :: xk_g(:, :)
+   ! xk of all pools
+   REAL(DP), ALLOCATABLE :: workg(:)
+   INTEGER, ALLOCATABLE  :: igkq(:)
+   ! igk_k for k+b point
+   INTEGER :: ierr
+   LOGICAL :: exst
 
    CALL start_clock( 'compute_mmn' )
 
    any_uspp = any(upf(1:ntyp)%tvanp)
 
-   ALLOCATE( phase(dffts%nnr) )
-   ALLOCATE( evcq(npol*npwx,nbnd) )
+   ALLOCATE( phase(dffts%nnr), stat=ierr )
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating phase', 1)
+   ALLOCATE( evcq(npol*npwx,nbnd), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating evcq', 1)
 
    IF(noncolin) THEN
-      ALLOCATE( aux_nc(npwx,npol) )
+      ALLOCATE( aux_nc(npwx,npol), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating aux_nc', 1)
    ELSE
-      ALLOCATE( aux(npwx) )
+      ALLOCATE( aux(npwx), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating aux', 1)
    ENDIF
 
-   IF (gamma_only) ALLOCATE(aux2(npwx))
+   IF (gamma_only) THEN
+      ALLOCATE(aux2(npwx), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating aux2', 1)
+   END IF
 
-   IF (wan_mode=='library') ALLOCATE(m_mat(num_bands,num_bands,nnb,iknum))
+   IF ((wan_mode=='library') .OR. (npool > 1)) THEN
+      ALLOCATE(m_mat(num_bands, num_bands, nnb, iknum), STAT=ierr)
+      IF (ierr /= 0) CALL errore('compute_mmn', 'Error allocating m_mat', 1)
+      m_mat = (0.0_dp, 0.0_dp)
+   END IF
+   !
+   if (npool > 1) then
+      ! close all the wfc files to allow access for each pool to all wfs
+      CLOSE(UNIT = iunwfc, STATUS = 'keep')
+   end if
 
    IF (wan_mode=='standalone') THEN
       iun_mmn = find_free_unit()
-      IF (ionode) OPEN (unit=iun_mmn, file=trim(seedname)//".mmn",form='formatted')
+      IF (mmn_formatted) THEN
+         IF (ionode) OPEN (unit=iun_mmn, file=trim(seedname)//".mmn",form='formatted')
+      ELSE
+         IF (ionode) OPEN (unit=iun_mmn, file=trim(seedname)//".mmn",form='unformatted',ACCESS="STREAM")
+      END IF
       CALL date_and_tim( cdate, ctime )
       header='Created on '//cdate//' at '//ctime
       IF (ionode) THEN
-         WRITE (iun_mmn,*) header
-         WRITE (iun_mmn,*) nbnd-nexband, iknum, nnb
+         IF (mmn_formatted) THEN
+            WRITE (iun_mmn,*) header
+            WRITE (iun_mmn,*) nbnd-nexband, iknum, nnb
+         ELSE
+            WRITE (iun_mmn) header
+            WRITE (iun_mmn) nbnd-nexband, iknum, nnb
+         END IF
       ENDIF
    ENDIF
+   
+   IF (npool > 1) THEN
+      allocate (xk_g(3, nkstot), STAT = ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating xk_g', 1)
+
+      xk_g = 0.0_dp
+      i = global_kpoint_index(nkstot, 1)
+      xk_g(:,i:(i+nks-1)) = xk(:,1:nks)
+      CALL mp_sum( xk_g, inter_pool_comm )
+
+      ALLOCATE( workg(npwx), STAT=ierr )
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating workg', 1)
+      workg = 0.0_dp
+
+      allocate( igkq(npwx), STAT=ierr )
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating igkq', 1)
+      igkq = 0
+   END IF
 
    !
    !   USPP
@@ -2115,19 +2975,24 @@ SUBROUTINE compute_mmn
    IF(any_uspp) THEN
       CALL allocate_bec_type ( nkb, nbnd, becp )
       IF (gamma_only) THEN
-         ALLOCATE ( rbecp2(nkb,nbnd))
+         ALLOCATE ( rbecp2(nkb,nbnd), STAT=ierr )
+         IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating rbecp2', 1)
       else if (noncolin) then
-         ALLOCATE ( becp2_nc(nkb,2,nbnd) )
+         ALLOCATE ( becp2_nc(nkb,2,nbnd), STAT=ierr )
+         IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating becp2_nc', 1)
       ELSE
-         ALLOCATE ( becp2(nkb,nbnd) )
+         ALLOCATE ( becp2(nkb,nbnd), STAT=ierr )
+         IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating becp2', 1)
       ENDIF
       !
       !     qb is  FT of Q(r)
       !
       nbt = nnb * iknum
       !
-      ALLOCATE( qg(nbt) )
-      ALLOCATE (dxk(3,nbt))
+      ALLOCATE( qg(nbt), STAT=ierr )
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating qg', 1)
+      ALLOCATE (dxk(3,nbt), STAT=ierr )
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating dxk', 1)
       !
       ind = 0
       DO ik=1,iknum
@@ -2137,15 +3002,22 @@ SUBROUTINE compute_mmn
             !
             g_(:) = REAL( g_kpb(:,ik,ib) )
             CALL cryst_to_cart (1, g_, bg, 1)
-            dxk(:,ind) = xk(:,ikp) +g_(:) - xk(:,ik)
+            if (npool > 1) then
+               dxk(:,ind) = xk_g(:,ikp) + g_(:) - xk_g(:,ik)
+            else
+               dxk(:,ind) = xk(:,ikp) + g_(:) - xk(:,ik)
+            end if
             qg(ind) = dxk(1,ind)*dxk(1,ind)+dxk(2,ind)*dxk(2,ind)+dxk(3,ind)*dxk(3,ind)
          ENDDO
-!         write (stdout,'(i3,12f8.4)')  ik, qg((ik-1)*nnb+1:ik*nnb)
+         ! write (stdout,'(i3,12f8.4)')  ik, qg((ik-1)*nnb+1:ik*nnb)
       ENDDO
 
-      ALLOCATE( ylm(nbt,lmaxq*lmaxq), qgm(nbt) )
-      ALLOCATE( qb (nhm, nhm, ntyp, nbt) )
-      ALLOCATE( qq_so (nhm, nhm, 4, ntyp) )
+      ALLOCATE( ylm(nbt,lmaxq*lmaxq), qgm(nbt), STAT=ierr )
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating ylm/qgm', 1)
+      ALLOCATE( qb (nhm, nhm, ntyp, nbt), STAT=ierr )
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating qb', 1)
+      ALLOCATE( qq_so (nhm, nhm, 4, ntyp), STAT=ierr )
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating qq_so', 1)
       !
       CALL ylmr2 (lmaxq*lmaxq, nbt, dxk, qg, ylm)
       qg(:) = sqrt(qg(:)) * tpiba
@@ -2165,18 +3037,41 @@ SUBROUTINE compute_mmn
       !
    ENDIF
 
-   WRITE(stdout,'(a,i8)') '  MMN: iknum = ',iknum
+   if (npool > 1) THEN
+      iknum_l = nks
+      WRITE(stdout,'(a,i8)') '  MMN: iknum = ',iknum
+      write(stdout,'(a,i8)') '  On this pool: nks = ',nks
+   else
+      iknum_l = iknum
+      WRITE(stdout,'(a,i8)') '  MMN: iknum = ',iknum
+   END IF
    !
-   ALLOCATE( Mkb(nbnd,nbnd) )
+   ALLOCATE( Mkb(nbnd,nbnd), stat=ierr )
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating Mkb', 1)
    !
-   ind = 0
-   DO ik=1,iknum
+   if (npool > 1) then
+      ind = (global_kpoint_index(nkstot, 1) - 1) * nnb
+   else
+      ind = 0
+   end if
+   DO ik=1,iknum_l
       WRITE (stdout,'(i8)',advance='no') ik
       IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
       FLUSH(stdout)
-      ikevc = ik + ikstart - 1
-         CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
-      npw = ngk(ik)
+      if (npool > 1) THEN
+        ! CALL read_collected_wfc(restart_dir(), ik, evc)
+        ik_g = global_kpoint_index(nkstot, ik)
+        ikevc = ik + ikstart - 1
+        CALL readwfc_g (evc, 2*nwordwfc, iunwfc, ik_g)
+        ! no need to sort, already ordered for ik
+        ! CALL gk_sort(xk(1, ik), ngm, g, gcutw, npw, igk_k(1, ik), workg)
+        npw = ngk(ik)
+      else
+        ik_g = ik
+        ikevc = ik + ikstart - 1
+        CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1)
+        npw = ngk(ik)
+      end if
       !
       !  USPP
       !
@@ -2190,30 +3085,49 @@ SUBROUTINE compute_mmn
       !do ib=1,nnb(ik)
       DO ib=1,nnb
          ind = ind + 1
-         ikp = kpb(ik,ib)
-! read wfc at k+b
+         ! read wfc at k+b
+         if (npool > 1) THEN
+           ikp = kpb(ik_g,ib)
+         else
+           ikp = kpb(ik,ib)
+         end if
          ikpevcq = ikp + ikstart - 1
+         if (npool > 1) then
+            CALL readwfc_g (evcq, 2*nwordwfc, iunwfc, ikpevcq)
+         else
 !         if(noncolin) then
 !            call davcio (evcq_nc, 2*nwordwfc, iunwfc, ikpevcq, -1 )
 !         else
             CALL davcio (evcq, 2*nwordwfc, iunwfc, ikpevcq, -1 )
 !         end if
-! compute the phase
-         IF (.not.zerophase(ik,ib)) THEN
+         end if
+         !
+         if (npool > 1) then
+            ! sorts k+G vectors in order of increasing magnitude, up to ecut
+            ! FIXME: if k+b is not in this pool, maybe we lose some gvectors?
+            CALL gk_sort(xk_g(:, ikpevcq), ngm, g, gcutw, npwq, igkq, workg)
+         else
+            npwq = ngk(ikp)
+         end if
+         ! compute the phase
+         IF (.not.zerophase(ik_g,ib)) THEN
             phase(:) = (0.d0,0.d0)
-            IF ( ig_(ik,ib)>0) phase( dffts%nl(ig_(ik,ib)) ) = (1.d0,0.d0)
+            IF ( ig_(ik_g,ib)>0) phase( dffts%nl(ig_(ik_g,ib)) ) = (1.d0,0.d0)
             CALL invfft ('Wave', phase, dffts)
          ENDIF
          !
          !  USPP
          !
-         npwq = ngk(ikp)
          IF(any_uspp) THEN
-            CALL init_us_2 (npwq, igk_k(1,ikp), xk(1,ikp), vkb)
+            if (npool > 1) then
+               CALL init_us_2 (npwq, igkq(1:npwq), xk_g(1,ikp), vkb)
+            else
+               CALL init_us_2 (npwq, igk_k(1,ikp), xk(1,ikp), vkb)
+            end if
             ! below we compute the product of beta functions with |psi>
             IF (gamma_only) THEN
                CALL calbec ( npwq, vkb, evcq, rbecp2 )
-            else if (noncolin) then
+            ELSE IF (noncolin) THEN
                CALL calbec ( npwq, vkb, evcq, becp2_nc )
 
                if (lspinorb) then
@@ -2231,8 +3145,12 @@ SUBROUTINE compute_mmn
          !
          ! loops on bands
          !
-         IF (wan_mode=='standalone') THEN
-            IF (ionode) WRITE (iun_mmn,'(7i5)') ik, ikp, (g_kpb(ipol,ik,ib), ipol=1,3)
+         IF ((wan_mode=='standalone') .and. (npool == 1)) THEN
+            IF (mmn_formatted) THEN
+               IF (ionode) WRITE (iun_mmn,'(7i5)') ik, ikp, (g_kpb(ipol,ik,ib), ipol=1,3)
+            ELSE
+               IF (ionode) WRITE (iun_mmn) ik, ikp, (g_kpb(ipol,ik,ib), ipol=1,3)
+            END IF
          ENDIF
          !
          DO m=1,nbnd
@@ -2244,24 +3162,32 @@ SUBROUTINE compute_mmn
                   istart=(ipol-1)*npwx+1
                   iend=istart+npw-1
                   psic_nc(dffts%nl (igk_k(1:npw,ik) ),ipol ) = evc(istart:iend, m)
-		            IF (.not.zerophase(ik,ib)) THEN
+                  IF (.not.zerophase(ik,ib)) THEN
                      CALL invfft ('Wave', psic_nc(:,ipol), dffts)
                      psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * &
                                                  phase(1:dffts%nnr)
                      CALL fwfft ('Wave', psic_nc(:,ipol), dffts)
                   ENDIF
-                  aux_nc(1:npwq,ipol) = psic_nc(dffts%nl (igk_k(1:npwq,ikp)),ipol )
+                  if (npool > 1) then
+                     aux_nc(1:npwq,ipol) = psic_nc(dffts%nl(igkq(1:npwq)),ipol)
+                  else
+                     aux_nc(1:npwq,ipol) = psic_nc(dffts%nl(igk_k(1:npwq,ikp)),ipol)
+                  end if
                ENDDO
             ELSE
                psic(:) = (0.d0, 0.d0)
                psic(dffts%nl (igk_k (1:npw,ik) ) ) = evc (1:npw, m)
                IF(gamma_only) psic(dffts%nlm(igk_k(1:npw,ik) ) ) = conjg(evc (1:npw, m))
-               IF (.not.zerophase(ik,ib)) THEN
+               IF (.not.zerophase(ik_g,ib)) THEN
                   CALL invfft ('Wave', psic, dffts)
                   psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
                   CALL fwfft ('Wave', psic, dffts)
                ENDIF
-               aux(1:npwq)  = psic(dffts%nl (igk_k(1:npwq,ikp) ) )
+               if (npool > 1) then
+                  aux(1:npwq) = psic(dffts%nl(igkq(1:npwq) ) )
+               else
+                  aux(1:npwq) = psic(dffts%nl(igk_k(1:npwq,ikp) ) )
+               end if
             ENDIF
             IF(gamma_only) THEN
                IF (gstart==2) psic(dffts%nlm(1)) = (0.d0,0.d0)
@@ -2380,20 +3306,58 @@ SUBROUTINE compute_mmn
             DO m=1,nbnd
                IF (excluded_band(m)) CYCLE
                ibnd_m = ibnd_m + 1
-               IF (wan_mode=='standalone') THEN
-                  IF (ionode) WRITE (iun_mmn,'(2f18.12)') Mkb(m,n)
-               ELSEIF (wan_mode=='library') THEN
-                  m_mat(ibnd_m,ibnd_n,ib,ik)=Mkb(m,n)
-               ELSE
-                  CALL errore('compute_mmn',' value of wan_mode not recognised',1)
-               ENDIF
+               if (npool > 1) then
+                  m_mat(ibnd_m,ibnd_n,ib,ik_g) = Mkb(m,n)
+               else
+                  IF ((wan_mode=='standalone') .and. (npool == 1)) THEN
+                     IF (mmn_formatted) THEN
+                        IF (ionode) WRITE (iun_mmn,'(2f18.12)') Mkb(m,n)
+                     ELSE
+                        IF (ionode) WRITE (iun_mmn) Mkb(m,n)
+                     END IF
+                  ELSEIF (wan_mode=='library') THEN
+                     m_mat(ibnd_m,ibnd_n,ib,ik) = Mkb(m,n)
+                  ELSE
+                     CALL errore('compute_mmn',' value of wan_mode not recognised',1)
+                  ENDIF
+               end if
             ENDDO
          ENDDO
          !
       ENDDO !ib
    ENDDO  !ik
 
+   if (npool > 1) then
+      call mp_sum(m_mat, inter_pool_comm)
+      if (ionode) then
+         do ik = 1, nkstot
+            do ib = 1, nnb
+               IF (mmn_formatted) THEN
+                  WRITE (iun_mmn,'(7i5)') ik, kpb(ik,ib), (g_kpb(ipol,ik,ib), ipol=1,3)
+                  do n = 1, num_bands
+                     do m = 1, num_bands
+                        WRITE (iun_mmn,'(2f18.12)') m_mat(m,n,ib,ik)
+                     end do
+                  end do
+               ELSE
+                  WRITE (iun_mmn) ik, kpb(ik,ib), (g_kpb(ipol,ik,ib), ipol=1,3)
+                  WRITE (iun_mmn) ((m_mat(m,n,ib,ik), m=1,num_bands), n=1,num_bands)
+               END IF
+            end do
+         end do
+      end if
+      ! reopen wfc here
+      CALL diropn(iunwfc, 'wfc', 2*nwordwfc, exst)
+   end if
+
    IF (ionode .and. wan_mode=='standalone') CLOSE (iun_mmn)
+
+   if (npool > 1) then
+      deallocate(xk_g)
+      ! deallocate(ngk_g)
+      ! deallocate(igk_k_g)
+      deallocate(igkq)
+   end if
 
    IF (gamma_only) DEALLOCATE(aux2)
    DEALLOCATE (Mkb, phase)
@@ -3523,7 +4487,7 @@ SUBROUTINE compute_spin
    COMPLEX(DP)              :: mmn, zdotc, phase1
    real(DP)                 :: arg, g_(3)
    CHARACTER (len=9)        :: cdate,ctime
-   CHARACTER (len=60)       :: header
+   CHARACTER (len=header_len) :: header
    LOGICAL                  :: any_uspp
    INTEGER                  :: nn,inn,loop,loop2
    LOGICAL                  :: nn_found
@@ -3766,7 +4730,7 @@ SUBROUTINE compute_orb
    COMPLEX(DP)              :: mmn, zdotc, phase1
    real(DP)                 :: arg, g_(3)
    CHARACTER (len=9)        :: cdate,ctime
-   CHARACTER (len=60)       :: header
+   CHARACTER (len=header_len) :: header
    LOGICAL                  :: any_uspp
    INTEGER                  :: nn,inn,loop,loop2
    LOGICAL                  :: nn_found
@@ -4190,7 +5154,7 @@ SUBROUTINE compute_shc
    COMPLEX(DP), parameter :: cmplx_i = (0.0_DP, 1.0_DP)
    !
    CHARACTER (len=9) :: cdate,ctime
-   CHARACTER (len=60) :: header
+   CHARACTER (len=header_len) :: header
    LOGICAL :: any_uspp
    INTEGER :: ik, ipol, npw, m, n
    INTEGER :: ikevc
@@ -4451,7 +5415,7 @@ SUBROUTINE compute_amn
    !
    USE io_global,  ONLY : stdout, ionode
    USE kinds,           ONLY : DP
-   USE klist,           ONLY : nkstot, xk, ngk, igk_k
+   USE klist,           ONLY : nkstot, xk, ngk, igk_k, nks
    USE wvfct,           ONLY : nbnd, npwx
    USE control_flags,   ONLY : gamma_only
    USE wavefunctions, ONLY : evc
@@ -4463,25 +5427,27 @@ SUBROUTINE compute_amn
    USE wannier
    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
    USE uspp_param,      ONLY : upf
-   USE mp_pools,        ONLY : intra_pool_comm
+   USE mp_pools,        ONLY : intra_pool_comm, npool, inter_pool_comm
    USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
    USE gvecw,           ONLY : gcutw
    USE constants,       ONLY : eps6
+   USE atproj,          ONLY : write_file_amn
    USE uspp_init,            ONLY : init_us_2
 
    IMPLICIT NONE
    !
    INTEGER, EXTERNAL :: find_free_unit
+   INTEGER, EXTERNAL :: global_kpoint_index
    !
    COMPLEX(DP) :: amn, zdotc,amn_tmp,fac(2)
    real(DP):: ddot
    COMPLEX(DP), ALLOCATABLE :: sgf(:,:)
    INTEGER :: ik, npw, ibnd, ibnd1, iw,i, ikevc, nt, ipol
    CHARACTER (len=9)  :: cdate,ctime
-   CHARACTER (len=60) :: header
+   CHARACTER (len=header_len) :: header
    LOGICAL            :: any_uspp, opnd, exst,spin_z_pos, spin_z_neg
-   INTEGER            :: istart
+   INTEGER            :: istart, ierr, iknum_l, ik_g
 
    !nocolin: we have half as many projections g(r) defined as wannier
    !         functions. We project onto (1,0) (ie up spin) and then onto
@@ -4494,44 +5460,69 @@ SUBROUTINE compute_amn
 
    any_uspp =any (upf(1:ntyp)%tvanp)
 
-   IF (wan_mode=='library') ALLOCATE(a_mat(num_bands,n_wannier,iknum))
+   IF (wan_mode=='library') THEN
+      ALLOCATE(a_mat(num_bands,n_wannier,iknum), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating a_mat', 1)
+   END IF
 
    IF (wan_mode=='standalone') THEN
+      if (npool > 1 .or. .not. amn_formatted) then
+         ALLOCATE(a_mat(num_bands,n_wannier,iknum), stat=ierr)
+         a_mat = 0.0
+         IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating a_mat', 1)
+      end if
       iun_amn = find_free_unit()
-      IF (ionode) THEN
+      IF (ionode .and. (npool == 1)) THEN
+         IF (amn_formatted) THEN
+            THEN
          IF (irr_bz) THEN
             OPEN (unit=iun_amn, file=trim(seedname)//".iamn",form='formatted')
          ELSE
             OPEN (unit=iun_amn, file=trim(seedname)//".amn",form='formatted')
+         END IF
+      END IF
          ENDIF
       ENDIF
    ENDIF
 
    WRITE(stdout,'(a,i8)') '  AMN: iknum = ',iknum
+   iknum_l = iknum
+   if (npool > 1) then
+      iknum_l = nks
+      write(stdout,'(a,i8)') '  On this pool: nks = ',nks
+   end if
    !
    IF (wan_mode=='standalone') THEN
       CALL date_and_tim( cdate, ctime )
       header='Created on '//cdate//' at '//ctime
-      IF (ionode) THEN
-         WRITE (iun_amn,*) header
-         WRITE (iun_amn,*) nbnd-nexband,  iknum, n_wannier
-         !WRITE (iun_amn,*) nbnd-nexband,  iknum, n_proj
+      IF (ionode .and. npool == 1) THEN
+         IF (amn_formatted) THEN
+            WRITE (iun_amn,*) header
+            WRITE (iun_amn,*) nbnd-nexband, iknum, n_wannier
+            !WRITE (iun_amn,*) nbnd-nexband,  iknum, n_proj
+         END IF
       ENDIF
    ENDIF
    !
-   ALLOCATE( sgf(npwx,n_proj))
-   ALLOCATE( gf_spinor(2*npwx,n_proj))
-   ALLOCATE( sgf_spinor(2*npwx,n_proj))
+   ALLOCATE( sgf(npwx,n_proj), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating sgf', 1)
+   ALLOCATE( gf_spinor(2*npwx,n_proj), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating gf_spinor', 1)
+   ALLOCATE( sgf_spinor(2*npwx,n_proj), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating sgf_spinor', 1)
    !
    IF (any_uspp) THEN
       CALL allocate_bec_type ( nkb, n_wannier, becp)
    ENDIF
    !
 
-   DO ik=1,iknum
+   DO ik=1,iknum_l
       WRITE (stdout,'(i8)',advance='no') ik
       IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
       FLUSH(stdout)
+      if (npool > 1 .or. .not. amn_formatted) then
+         ik_g = global_kpoint_index(nkstot, ik)
+      end if
       ikevc = ik + ikstart - 1
 !      if(noncolin) then
 !         call davcio (evc_nc, 2*nwordwfc, iunwfc, ikevc, -1 )
@@ -4598,7 +5589,11 @@ SUBROUTINE compute_amn
                      CALL mp_sum(amn, intra_pool_comm)
                      ibnd1=ibnd1+1
                      IF (wan_mode=='standalone') THEN
-                        IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd1, iw+n_proj*(ipol-1), ik, amn
+                        if (npool == 1 .and. amn_formatted) then
+                           IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd1, iw+n_proj*(ipol-1), ik, amn
+                        else
+                           a_mat(ibnd1,iw+n_proj*(ipol-1),ik_g) = amn
+                        end if
                      ELSEIF (wan_mode=='library') THEN
                         a_mat(ibnd1,iw+n_proj*(ipol-1),ik) = amn
                      ELSE
@@ -4638,7 +5633,11 @@ SUBROUTINE compute_amn
                      CALL mp_sum(amn, intra_pool_comm)
                      ibnd1=ibnd1+1
                      IF (wan_mode=='standalone') THEN
-                        IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn
+                        if (npool == 1 .and. amn_formatted) THEN
+                           IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn
+                        else
+                           a_mat(ibnd1,iw+n_proj*(ipol-1),ik_g) = amn
+                        end if
                      ELSEIF (wan_mode=='library') THEN
                         a_mat(ibnd1,iw+n_proj*(ipol-1),ik) = amn
                      ELSE
@@ -4676,7 +5675,11 @@ SUBROUTINE compute_amn
                      enddo
                      ibnd1=ibnd1+1
                      IF (wan_mode=='standalone') THEN
-                        IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn
+                        if (npool == 1 .and. amn_formatted) THEN
+                           IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn
+                        else
+                           a_mat(ibnd1,iw+n_proj*(ipol-1),ik_g) = amn
+                        end if
                      ELSEIF (wan_mode=='library') THEN
                            a_mat(ibnd1,iw+n_proj*(ipol-1),ik) = amn
                         ELSE
@@ -4700,7 +5703,11 @@ SUBROUTINE compute_amn
                   CALL mp_sum(amn, intra_pool_comm)
                   ibnd1=ibnd1+1
                   IF (wan_mode=='standalone') THEN
-                     IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn
+                     if (npool == 1 .and. amn_formatted) THEN
+                        IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn
+                     else
+                        a_mat(ibnd1,iw,ik_g) = amn
+                     end if
                   ELSEIF (wan_mode=='library') THEN
                      a_mat(ibnd1,iw,ik) = amn
                   ELSE
@@ -4715,7 +5722,20 @@ SUBROUTINE compute_amn
      CALL deallocate_bec_type (becp)
    ENDIF
    !
-   IF (ionode .and. wan_mode=='standalone') CLOSE (iun_amn)
+   if (wan_mode=='standalone') then
+      if (npool > 1) call mp_sum(a_mat, inter_pool_comm)
+      if (ionode) then
+         if (npool > 1 .or. .not. amn_formatted) call write_file_amn(a_mat)
+      end if
+   end if
+
+   IF (ionode .and. wan_mode=='standalone') then
+      if (amn_formatted .and. (npool == 1)) CLOSE (iun_amn)
+   end if
+
+   if (allocated(a_mat)) then
+      deallocate(a_mat)
+   end if
 
    WRITE(stdout,'(/)')
    WRITE(stdout,*) ' AMN calculated'
@@ -4764,7 +5784,7 @@ SUBROUTINE compute_amn_with_scdm
               jpt,kpt,lpt, ib, istart, gamma_idx, minmn, minmn2, maxmn2, numbands, nbtot, &
               ig, ig_local ! jml
    CHARACTER (len=9)  :: cdate,ctime
-   CHARACTER (len=60) :: header
+   CHARACTER (len=header_len) :: header
    LOGICAL            :: any_uspp, found_gamma
 
 #if defined(__SCALAPACK_QRCP)
@@ -4865,7 +5885,11 @@ SUBROUTINE compute_amn_with_scdm
 
    IF (wan_mode=='standalone') THEN
       iun_amn = find_free_unit()
-      IF (ionode) OPEN (unit=iun_amn, file=trim(seedname)//".amn",form='formatted')
+      IF (amn_formatted) THEN
+         IF (ionode) OPEN (unit=iun_amn, file=trim(seedname)//".amn",form='formatted')
+      ELSE
+         IF (ionode) OPEN (unit=iun_amn, file=trim(seedname)//".amn",form='unformatted',ACCESS="STREAM")
+      END IF
    ENDIF
 
    WRITE(stdout,'(a,i8)') '  AMN: iknum = ',iknum
@@ -4874,8 +5898,19 @@ SUBROUTINE compute_amn_with_scdm
       CALL date_and_tim( cdate, ctime )
       header='Created on '//cdate//' at '//ctime//' with SCDM '
       IF (ionode) THEN
-         WRITE (iun_amn,*) header
-         WRITE (iun_amn,'(3i8,xxx,2f10.6)') numbands,  iknum, n_wannier, scdm_mu, scdm_sigma
+         IF (amn_formatted) THEN
+            WRITE (iun_amn,*) header
+            ! WRITE (iun_amn,'(3i8,xxx,2f10.6)') numbands,  iknum, n_wannier, scdm_mu, scdm_sigma
+            WRITE (iun_amn,'(3i8)') numbands, iknum, n_wannier
+         ELSE
+            WRITE (iun_amn) header
+            ! WRITE (iun_amn) numbands,  iknum, n_wannier, scdm_mu, scdm_sigma
+            !
+            ! I think we shouldn't write additional scdm_mu/sigma to amn, this breaks the original
+            ! amn format, and also with unformatted stream IO, when reading amn file these two
+            ! additional float will cause problem. (For unformatted record based IO we can just skip it.)
+            WRITE (iun_amn) numbands, iknum, n_wannier
+         END IF
       ENDIF
    ENDIF
 
@@ -4932,6 +5967,7 @@ SUBROUTINE compute_amn_with_scdm
       enddo
 #else
       norm_psi = sqrt(real(sum(psic_all(1:nrtot)*conjg(psic_all(1:nrtot))),kind=DP))
+      CALL mp_bcast(norm_psi,ionode_id,world_comm)
       psic_all(1:nrtot) = psic_all(1:nrtot)/ norm_psi
       psi_gamma(1:nrtot,locibnd) = psic_all(1:nrtot)
       psi_gamma(1:nrtot,locibnd) = psi_gamma(1:nrtot,locibnd) * f_gamma
@@ -5111,7 +6147,11 @@ SUBROUTINE compute_amn_with_scdm
          DO ibnd = 1,nbtot
             IF (excluded_band(ibnd)) CYCLE
             locibnd = locibnd + 1
-            IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') locibnd, iw, ik, REAL(Amat(locibnd,iw)), AIMAG(Amat(locibnd,iw))
+            IF (amn_formatted) THEN
+               IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') locibnd, iw, ik, REAL(Amat(locibnd,iw)), AIMAG(Amat(locibnd,iw))
+            ELSE
+               IF (ionode) WRITE(iun_amn) locibnd, iw, ik, REAL(Amat(locibnd,iw)), AIMAG(Amat(locibnd,iw))
+            END IF
          ENDDO
       ENDDO
    ENDDO  ! k-points
@@ -5193,7 +6233,7 @@ SUBROUTINE compute_amn_with_scdm_spinor
               jpt,kpt,lpt, ib, istart, gamma_idx, minmn, minmn2, maxmn2, numbands, nbtot, &
               ig, ig_local, count_piv_spin, ispin ! jml
    CHARACTER (len=9)  :: cdate,ctime
-   CHARACTER (len=60) :: header
+   CHARACTER (len=header_len) :: header
    LOGICAL            :: any_uspp, found_gamma
 
 #if defined(__MPI)
@@ -5268,7 +6308,11 @@ SUBROUTINE compute_amn_with_scdm_spinor
 
    IF (wan_mode=='standalone') THEN
       iun_amn = find_free_unit()
-      IF (ionode) OPEN (unit=iun_amn, file=trim(seedname)//".amn",form='formatted')
+      IF (amn_formatted) THEN
+         IF (ionode) OPEN (unit=iun_amn, file=trim(seedname)//".amn",form='formatted')
+      ELSE
+         IF (ionode) OPEN (unit=iun_amn, file=trim(seedname)//".amn",form='unformatted',ACCESS="STREAM")
+      END IF
    ENDIF
 
    WRITE(stdout,'(a,i8)') '  AMN: iknum = ',iknum
@@ -5277,8 +6321,15 @@ SUBROUTINE compute_amn_with_scdm_spinor
       CALL date_and_tim( cdate, ctime )
       header='Created on '//cdate//' at '//ctime//' with SCDM '
       IF (ionode) THEN
-         WRITE (iun_amn,*) header
-         WRITE (iun_amn,'(3i8,xxx,2f10.6)') numbands,  iknum, n_wannier, scdm_mu, scdm_sigma
+         IF (amn_formatted) THEN
+            WRITE (iun_amn,*) header
+            ! WRITE (iun_amn,'(3i8,xxx,2f10.6)') numbands,  iknum, n_wannier, scdm_mu, scdm_sigma
+            WRITE (iun_amn,'(3i8)') numbands, iknum, n_wannier
+         ELSE
+            WRITE (iun_amn) header
+            ! WRITE (iun_amn) numbands,  iknum, n_wannier, scdm_mu, scdm_sigma
+            WRITE (iun_amn) numbands, iknum, n_wannier
+         END IF
       ENDIF
    ENDIF
 
@@ -5330,6 +6381,7 @@ SUBROUTINE compute_amn_with_scdm_spinor
       CALL gather_grid(dffts, psic_nc(:,2), psic_all(:,2))
       norm_psi = sqrt( real(sum(psic_all(1:nrtot, 1)*conjg(psic_all(1:nrtot, 1))),kind=DP) &
                       +real(sum(psic_all(1:nrtot, 2)*conjg(psic_all(1:nrtot, 2))),kind=DP) )
+      CALL mp_bcast(norm_psi,ionode_id,world_comm)
       ! vv: Gamma only
       ! vv: Build Psi_k = Unk * focc
       psi_gamma(1:nrtot,        locibnd) = psic_all(1:nrtot, 1) * f_gamma / norm_psi
@@ -5503,7 +6555,11 @@ SUBROUTINE compute_amn_with_scdm_spinor
          DO ibnd = 1,nbtot
             IF (excluded_band(ibnd)) CYCLE
             locibnd = locibnd + 1
-            IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') locibnd, iw, ik, REAL(Amat(locibnd,iw)), AIMAG(Amat(locibnd,iw))
+            IF (amn_formatted) THEN
+               IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') locibnd, iw, ik, REAL(Amat(locibnd,iw)), AIMAG(Amat(locibnd,iw))
+            ELSE
+               IF (ionode) WRITE(iun_amn) locibnd, iw, ik, REAL(Amat(locibnd,iw)), AIMAG(Amat(locibnd,iw))
+            END IF
          ENDDO
       ENDDO
       CALL stop_clock( 'scdm_write' )
@@ -5540,6 +6596,1009 @@ SUBROUTINE compute_amn_with_scdm_spinor
    RETURN
 END SUBROUTINE compute_amn_with_scdm_spinor
 
+SUBROUTINE compute_amn_with_atomproj
+  ! Use internal UPF atomic projectors or external projectors
+  ! to generate amn matrices.
+  !
+  ! The code is roughly the same as projwfc.x with some entensions:
+  ! 1. allow using external projectors
+  ! 2. allow skipping orthogonalization of projectors
+  ! 3. allow excluding projectors specified by user
+  ! 4. allow excluding bands specified by user
+  !
+  USE kinds, ONLY: DP
+  USE io_global, ONLY: stdout, ionode, ionode_id
+  USE ions_base, ONLY: nat, ityp, atm, nsp
+  USE basis, ONLY: natomwfc, swfcatom
+  USE klist, ONLY: xk, nks, nkstot, nelec, ngk, igk_k
+  USE lsda_mod, ONLY: nspin
+  USE noncollin_module, ONLY: noncolin, npol
+  USE spin_orb, ONLY: lspinorb, domag
+  USE wvfct, ONLY: npwx, nbnd
+  USE uspp, ONLY: nkb, vkb
+  USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
+  USE io_files, ONLY: prefix, restart_dir, tmp_dir
+  USE control_flags, ONLY: gamma_only, use_para_diag
+  USE pw_restart_new, ONLY: read_collected_wfc
+  USE wavefunctions, ONLY: evc
+  !
+  USE projections, ONLY: nlmchi, fill_nlmchi, compute_mj, &
+                         sym_proj_g, sym_proj_k, sym_proj_nc, sym_proj_so, &
+                         compute_zdistmat, compute_ddistmat, &
+                         wf_times_overlap, wf_times_roverlap
+  !
+  USE mp, ONLY: mp_bcast
+  USE mp_pools, ONLY: me_pool, root_pool, intra_pool_comm
+  USE mp_world, ONLY: world_comm
+  USE wannier
+  USE atproj, ONLY: atom_proj_dir, atom_proj_ext, atom_proj_ortho, &
+                    atom_proj_sym, natproj, nexatproj, nexatproj_max, &
+                    atproj_excl, atproj_typs, &
+                    atom_proj_exclude, write_file_amn, &
+                    allocate_atproj_type, read_atomproj, init_tab_atproj, &
+                    deallocate_atproj, atomproj_wfc
+  !
+  IMPLICIT NONE
+  !
+  INCLUDE 'laxlib.fh'
+  !
+  INTEGER :: npw, npw_, ik, ibnd, nwfc, lmax_wfc
+  INTEGER :: i, j, k, it, l, m
+  REAL(DP), ALLOCATABLE :: e(:)
+  COMPLEX(DP), ALLOCATABLE :: wfcatom(:, :), wfcatomall(:, :)
+  COMPLEX(DP), ALLOCATABLE :: proj0(:, :), proj0all(:, :), proj(:, :, :)
+  COMPLEX(DP), ALLOCATABLE :: e_work_d(:, :)
+  ! Some workspace for gamma-point calculation ...
+  REAL(DP), ALLOCATABLE :: rproj0(:, :), rproj0all(:, :)
+  COMPLEX(DP), ALLOCATABLE :: overlap_d(:, :), work_d(:, :), diag(:, :), vv(:, :)
+  REAL(DP), ALLOCATABLE :: roverlap_d(:, :)
+  !
+  LOGICAL :: freeswfcatom
+  !
+  INTEGER :: idesc(LAX_DESC_SIZE)
+  INTEGER, ALLOCATABLE :: idesc_ip(:, :, :)
+  INTEGER, ALLOCATABLE :: rank_ip(:, :)
+  ! matrix distribution descriptors
+  INTEGER :: nx, nrl, nrlx
+  ! maximum local block dimension
+  LOGICAL :: la_proc
+  ! flag to distinguish procs involved in linear algebra
+  INTEGER, ALLOCATABLE :: notcnv_ip(:)
+  INTEGER, ALLOCATABLE :: ic_notcnv(:)
+  LOGICAL :: do_distr_diag_inside_bgrp
+  INTEGER :: nproc_ortho
+  ! distinguishes active procs in parallel linear algebra
+  CHARACTER(len=256) :: err_str
+  LOGICAL :: has_excl_proj
+  INTEGER :: ierr
+
+  CALL start_clock('compute_amn')
+
+  IF (wan_mode == 'library') THEN
+    CALL errore('pw2wannier90', 'have not tested with library mode', 1)
+  END IF
+
+  IF (atom_proj_ext) THEN
+    if (domag) &
+      CALL errore('pw2wannier90', &
+                  'does not support magnetism with external projectors', 1)
+
+    if (noncolin) &
+      CALL errore('pw2wannier90', &
+                  'does not support non-collinear magnetism with external projectors', 1)
+
+    IF (atom_proj_sym) &
+      CALL errore('pw2wannier90', &
+                  'does not support symmetrization with external projectors', 1)
+  END IF
+
+  IF (atom_proj_ext) THEN
+    ALLOCATE (atproj_typs(nsp), stat=ierr)
+    IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating atproj_typs', 1)
+  END IF
+
+  IF (ionode) THEN
+    IF (atom_proj_ext) THEN
+      WRITE (stdout, '(a)') '  Using atomic projectors from dir '//TRIM(atom_proj_dir)
+      WRITE (stdout, *) ''
+
+      CALL read_atomproj(atproj_typs)
+
+      n_proj = 0
+      DO i = 1, nat
+        it = ityp(i)
+        DO nwfc = 1, atproj_typs(it)%nproj
+          l = atproj_typs(it)%l(nwfc)
+          DO m = 1, 2*l+1
+            n_proj = n_proj + 1
+            WRITE (stdout, 1000, ADVANCE="no") &
+              n_proj, i, atproj_typs(it)%atsym, nwfc, l
+            WRITE (stdout, 1003) m
+          END DO
+        END DO
+      END DO
+      WRITE (stdout, *) ''
+    ELSE
+      WRITE (stdout, '(a)') '  Use atomic projectors from UPF'
+      WRITE (stdout, *) ''
+      WRITE (stdout, '( 5x,"(read from pseudopotential files):"/)')
+      CALL fill_nlmchi(natomwfc, lmax_wfc)
+      DO nwfc = 1, natomwfc
+        WRITE (stdout, 1000, ADVANCE="no") &
+          nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
+          nlmchi(nwfc)%n, nlmchi(nwfc)%l
+        IF (lspinorb) THEN
+          WRITE (stdout, 1001) nlmchi(nwfc)%jj, &
+            compute_mj(nlmchi(nwfc)%jj, nlmchi(nwfc)%l, nlmchi(nwfc)%m)
+        ELSE IF (noncolin) THEN
+          WRITE (stdout, 1002) nlmchi(nwfc)%m, &
+            0.5D0 - INT(nlmchi(nwfc)%ind/(2*nlmchi(nwfc)%l + 2))
+        ELSE
+          WRITE (stdout, 1003) nlmchi(nwfc)%m
+        END IF
+      END DO
+      WRITE (stdout, *) ''
+      n_proj = natomwfc
+    END IF
+1000  FORMAT(5X, "state #", i4, ": atom ", i3, " (", a3, "), wfc ", i2, &
+             " (l=", i1)
+1001  FORMAT(" j=", f3.1, " m_j=", f4.1, ")")
+1002  FORMAT(" m=", i2, " s_z=", f4.1, ")")
+1003  FORMAT(" m=", i2, ")")
+
+    IF (n_proj <= 0) CALL errore('pw2wannier90', &
+                                 'Cannot project on zero atomic projectors!', 1)
+
+    ! check exclude
+    allocate(atproj_excl(n_proj), stat=ierr)
+    IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating atproj_excl', 1)
+    atproj_excl = .false.
+
+    DO i = 1, nexatproj_max
+      IF (atom_proj_exclude(i) > n_proj) THEN
+        WRITE (err_str, *) 'atom_proj_exclude(', i, ') = ', &
+          atom_proj_exclude(i), &
+          '> total number of projectors (', n_proj, ')'
+        CALL errore('pw2wannier90', err_str, i)
+      else if (atom_proj_exclude(i) < 0) then
+        CYCLE
+      else
+        atproj_excl(atom_proj_exclude(i)) = .true.
+      END IF
+    END DO
+
+    nexatproj = COUNT(atproj_excl)
+    IF (nexatproj > 0) THEN
+      has_excl_proj = .TRUE.
+    ELSE
+      has_excl_proj = .FALSE.
+    END IF
+
+    natproj = n_proj
+
+    IF (has_excl_proj) THEN
+      WRITE (stdout, *) '    excluded projectors: '
+      j = 0 ! how many elements have been written
+      DO i = 1, n_proj
+        if (atproj_excl(i)) THEN
+          WRITE (stdout, '(i8)', advance='no') i
+          j = j + 1
+          IF (MOD(j, 10) == 0) WRITE (stdout, *)
+        END IF
+      END DO
+      WRITE (stdout, *) ''
+      n_proj = n_proj - nexatproj
+    END IF
+
+    IF (gamma_only) &
+      WRITE (stdout, '(5x,"gamma-point specific algorithms are used")')
+
+    FLUSH (stdout)
+  END IF
+
+  ! MPI related calls
+  IF (atom_proj_ext) THEN
+    DO it = 1, nsp
+      i = atproj_typs(it)%ngrid
+      j = atproj_typs(it)%nproj
+      call mp_bcast(i, ionode_id, world_comm)
+      call mp_bcast(j, ionode_id, world_comm)
+      if (.NOT. ionode) &
+        call allocate_atproj_type(atproj_typs(it), i, j)
+
+      CALL mp_bcast(atproj_typs(it)%atsym, ionode_id, world_comm)
+      CALL mp_bcast(atproj_typs(it)%xgrid, ionode_id, world_comm)
+      CALL mp_bcast(atproj_typs(it)%rgrid, ionode_id, world_comm)
+      CALL mp_bcast(atproj_typs(it)%l, ionode_id, world_comm)
+      CALL mp_bcast(atproj_typs(it)%radial, ionode_id, world_comm)
+    END DO
+
+    call init_tab_atproj(world_comm)
+  ELSE
+    ! need to access nlmchi, natomwfc, lmax_wfc on each core,
+    ! the root node has been filled already
+    IF (.NOT. ionode) CALL fill_nlmchi(natomwfc, lmax_wfc)
+  END IF
+  CALL mp_bcast(natproj, ionode_id, world_comm)
+  CALL mp_bcast(n_proj, ionode_id, world_comm)
+  CALL mp_bcast(nexatproj, ionode_id, world_comm)
+  CALL mp_bcast(has_excl_proj, ionode_id, world_comm)
+  if (.not. ionode) then
+     allocate(atproj_excl(n_proj+nexatproj), stat=ierr)
+     IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating atproj_excl', 1)
+  end if
+  CALL mp_bcast(atproj_excl, ionode_id, world_comm)
+  !
+  !   Initialize parallelism for linear algebra
+  !
+  CALL set_para_diag(n_proj, use_para_diag)
+  !
+  CALL desc_init(n_proj, nx, la_proc, idesc, rank_ip, idesc_ip)
+  CALL laxlib_getval(nproc_ortho=nproc_ortho)
+  use_para_diag = (nproc_ortho > 1)
+  IF (ionode .AND. use_para_diag) THEN
+    WRITE (stdout, &
+           '(5x,"linear algebra parallelized on ",i3," procs")') nproc_ortho
+  END IF
+  !
+  IF (ionode) THEN
+    !
+    !   nbnd = num_bands + nexband
+    ! For UPF projectors:
+    !   natomwfc = n_proj + nexatproj
+    !
+    WRITE (stdout, *)
+    WRITE (stdout, *) '    Problem Sizes '
+    WRITE (stdout, *) '      n_proj    = ', n_proj
+    IF (atom_proj_ext) THEN
+      WRITE (stdout, *) '      natproj   = ', natproj
+    ELSE
+      WRITE (stdout, *) '      natomwfc  = ', natomwfc
+    END IF
+    WRITE (stdout, *) '      num_bands = ', num_bands
+    WRITE (stdout, *) '      nbnd      = ', nbnd
+    WRITE (stdout, *) '      nkstot    = ', nkstot
+    IF (use_para_diag) &
+      WRITE (stdout, *) '      nx        = ', nx
+    WRITE (stdout, *) '      npwx      = ', npwx
+    WRITE (stdout, *) '      nkb       = ', nkb
+    WRITE (stdout, *)
+  END IF
+  !
+  ALLOCATE (proj(num_bands, n_proj, nkstot))
+  !
+  IF (.NOT. ALLOCATED(swfcatom)) THEN
+    ALLOCATE (swfcatom(npwx*npol, n_proj), stat=ierr)
+    IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating swfcatom', 1)
+    freeswfcatom = .TRUE.
+  ELSE
+    freeswfcatom = .FALSE.
+  END IF
+
+  ALLOCATE (wfcatom(npwx*npol, n_proj), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating wfcatom', 1)
+  IF (has_excl_proj) THEN
+    ! additional space for excluded projectors, for atomic_wfc(), etc.
+    IF (atom_proj_ext) THEN
+      ALLOCATE (wfcatomall(npwx*npol, natproj), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating wfcatomall', 1)
+    ELSE
+      ALLOCATE (wfcatomall(npwx*npol, natomwfc), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating wfcatomall', 1)
+   END IF
+  END IF
+  ALLOCATE (e(n_proj), stat=ierr)
+  IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating e', 1)
+  !
+  !    loop on k points
+  !
+  WRITE (stdout, '(a,i8)') '  AMN: iknum = ', iknum
+  DO ik = 1, nks
+    !
+    IF (ionode) THEN
+      WRITE (stdout, '(i8)', advance='no') ik
+      IF (MOD(ik, 10) == 0) WRITE (stdout, *)
+      FLUSH (stdout)
+    END IF
+    !
+    npw = ngk(ik)
+    CALL read_collected_wfc(restart_dir(), ik, evc)
+    !
+    ! exclude bands
+    IF (nexband > 0) THEN
+      i = 1
+      DO j = 1, nbnd
+        IF (excluded_band(j)) CYCLE
+        IF (i /= j) evc(:, i) = evc(:, j)
+        i = i + 1
+      END DO
+      evc(:, (num_bands + 1):nbnd) = (0.0_DP, 0.0_DP)
+    END IF
+    !
+    wfcatom(:, :) = (0.0_DP, 0.0_DP)
+    IF (atom_proj_ext) THEN
+      IF (.NOT. has_excl_proj) THEN
+        CALL atomproj_wfc(ik, wfcatom)
+      ELSE
+        wfcatomall(:, :) = (0.0_DP, 0.0_DP)
+        CALL atomproj_wfc(ik, wfcatomall)
+        ! exclude projectors
+        i = 1 ! counter for wfcatom
+        DO j = 1, natproj ! counter for wfcatomall
+          IF (atproj_excl(j)) CYCLE
+          wfcatom(:, i) = wfcatomall(:, j)
+          i = i + 1
+        END DO
+        IF ((i - 1) /= n_proj) THEN
+          CALL errore('compute_amn_with_atomproj', &
+                      'internal error when excluding projectors', i)
+        END IF
+      END IF
+    ELSE
+      IF (.NOT. has_excl_proj) THEN
+        IF (noncolin) THEN
+          CALL atomic_wfc_nc_proj(ik, wfcatom)
+        ELSE
+          CALL atomic_wfc(ik, wfcatom)
+        END IF
+      ELSE
+        wfcatomall(:, :) = (0.0_DP, 0.0_DP)
+        IF (noncolin) THEN
+          CALL atomic_wfc_nc_proj(ik, wfcatomall)
+        ELSE
+          CALL atomic_wfc(ik, wfcatomall)
+        END IF
+        ! exclude projectors
+        i = 1 ! counter for wfcatom
+        DO j = 1, natomwfc ! counter for wfcatomall
+          IF (atproj_excl(j)) CYCLE
+          wfcatom(:, i) = wfcatomall(:, j)
+          i = i + 1
+        END DO
+        IF ((i - 1) /= n_proj) THEN
+          CALL errore('compute_amn_with_atomproj', &
+                      'internal error when excluding projectors', i)
+        END IF
+      END IF
+    END IF
+    !
+    CALL allocate_bec_type(nkb, n_proj, becp)
+    !
+    CALL init_us_2(npw, igk_k(1, ik), xk(1, ik), vkb)
+    CALL calbec(npw, vkb, wfcatom, becp)
+    CALL s_psi(npwx, npw, n_proj, wfcatom, swfcatom)
+    !
+    CALL deallocate_bec_type(becp)
+    !
+    ! wfcatom = |phi_i> , swfcatom = \hat S |phi_i>
+    ! calculate overlap matrix O_ij = <phi_i|\hat S|\phi_j>
+    !
+    IF (atom_proj_ortho) THEN
+      IF (la_proc) THEN
+        ALLOCATE (overlap_d(nx, nx), stat=ierr)
+        IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating overlap_d', 1)
+      ELSE
+        ALLOCATE (overlap_d(1, 1), stat=ierr)
+        IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating overlap_d', 1)
+      END IF
+      overlap_d = (0.D0, 0.D0)
+      npw_ = npw
+      IF (noncolin) npw_ = npol*npwx
+      IF (gamma_only) THEN
+        !
+        ! in the Gamma-only case the overlap matrix (real) is copied
+        ! to a complex one as for the general case - easy but wasteful
+        !
+        IF (la_proc) THEN
+          ALLOCATE (roverlap_d(nx, nx), stat=ierr)
+          IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating roverlap_d', 1)
+        ELSE
+          ALLOCATE (roverlap_d(1, 1), stat=ierr)
+          IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating roverlap_d', 1)
+        END IF
+        roverlap_d = 0.D0
+        CALL compute_ddistmat(npw, n_proj, nx, wfcatom, swfcatom, roverlap_d, &
+                              idesc, rank_ip, idesc_ip)
+        overlap_d(:, :) = CMPLX(roverlap_d(:, :), 0.0_DP, kind=dp)
+      ELSE
+        CALL compute_zdistmat(npw_, n_proj, nx, wfcatom, swfcatom, overlap_d, &
+                              idesc, rank_ip, idesc_ip)
+      END IF
+      !
+      ! diagonalize the overlap matrix
+      !
+      IF (la_proc) THEN
+        !
+        ALLOCATE (work_d(nx, nx), stat=ierr)
+        IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating work_d', 1)
+
+        nrl = idesc(LAX_DESC_NRL)
+        nrlx = idesc(LAX_DESC_NRLX)
+
+        ALLOCATE (diag(nrlx, n_proj), stat=ierr)
+        IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating diag', 1)
+        ALLOCATE (vv(nrlx, n_proj), stat=ierr)
+        IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating vv', 1)
+        !
+        !  re-distribute the overlap matrix for parallel diagonalization
+        !
+        CALL blk2cyc_redist(n_proj, diag, nrlx, n_proj, overlap_d, nx, nx, idesc)
+        !
+        ! parallel diagonalization
+        !
+        CALL zhpev_drv('V', diag, nrlx, e, vv, nrlx, nrl, n_proj, &
+                       idesc(LAX_DESC_NPC)*idesc(LAX_DESC_NPR), &
+                       idesc(LAX_DESC_MYPE), idesc(LAX_DESC_COMM))
+        !
+        !  bring distributed eigenvectors back to original distribution
+        !
+        CALL cyc2blk_redist(n_proj, vv, nrlx, n_proj, work_d, nx, nx, idesc)
+        !
+        DEALLOCATE (vv)
+        DEALLOCATE (diag)
+        !
+      ELSE
+        ALLOCATE (work_d(1, 1), stat=ierr)
+        IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating work_d', 1)
+      END IF
+
+      CALL mp_bcast(e, root_pool, intra_pool_comm)
+
+      ! calculate O^{-1/2} (actually, its transpose)
+
+      DO i = 1, n_proj
+        e(i) = 1.D0/dsqrt(e(i))
+      END DO
+
+      IF (la_proc) THEN
+        ALLOCATE (e_work_d(nx, nx), stat=ierr)
+        IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating e_work_d', 1)
+        DO j = 1, idesc(LAX_DESC_NC)
+          DO i = 1, idesc(LAX_DESC_NR)
+            e_work_d(i, j) = e(j + idesc(LAX_DESC_IC) - 1)*work_d(i, j)
+          END DO
+        END DO
+        CALL sqr_mm_cannon('N', 'C', n_proj, (1.0_DP, 0.0_DP), e_work_d, &
+                           nx, work_d, nx, (0.0_DP, 0.0_DP), overlap_d, nx, idesc)
+        CALL laxlib_zsqmher(n_proj, overlap_d, nx, idesc)
+        DEALLOCATE (e_work_d)
+      END IF
+      !
+      DEALLOCATE (work_d)
+      !
+      ! calculate wfcatom = O^{-1/2} \hat S | phi>
+      !
+      IF (gamma_only) THEN
+        roverlap_d(:, :) = REAL(overlap_d(:, :), DP)
+        CALL wf_times_roverlap(nx, npw, swfcatom, roverlap_d, wfcatom, &
+                               idesc, rank_ip, idesc_ip, la_proc)
+        DEALLOCATE (roverlap_d)
+      ELSE
+        CALL wf_times_overlap(nx, npw_, swfcatom, overlap_d, wfcatom, &
+                              idesc, rank_ip, idesc_ip, la_proc)
+      END IF
+      DEALLOCATE (overlap_d)
+    END IF
+    !
+    ! make the projection <psi_i| O^{-1/2} \hat S | phi_j>,
+    ! symmetrize the projections if required
+    !
+    IF (gamma_only) THEN
+      !
+      ALLOCATE (rproj0(n_proj, num_bands), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating rproj0', 1)
+      CALL calbec(npw, wfcatom, evc, rproj0, nbnd=num_bands)
+      !
+      ! IF ((.NOT. atom_proj_ext) .AND. atom_proj_sym) THEN
+      !   IF (has_excl_proj) THEN
+      !     ALLOCATE (rproj0all(natomwfc, num_bands))
+      !     rproj0all = 0.0_DP
+      !     ! expand the size to natomwfc so I can call sym_proj_g
+      !     ! the excluded part is just 0.0
+      !     i = 1 ! counter for rproj0
+      !     DO j = 1, natomwfc ! counter for rproj0all
+      !       IF (atproj_excl(j)) CYCLE
+      !       rproj0all(j, :) = rproj0(i, :)
+      !       i = i + 1
+      !     END DO
+      !     !
+      !     CALL sym_proj_g(rproj0all)
+      !     !
+      !     ! exclude projectors
+      !     i = 1 ! counter for rproj0
+      !     DO j = 1, natomwfc ! counter for rproj0all
+      !       IF (atproj_excl(j)) CYCLE
+      !       rproj0(i, :) = rproj0all(j, :)
+      !       i = i + 1
+      !     END DO
+      !     !
+      !     DEALLOCATE (rproj0all)
+      !   ELSE
+      !     CALL sym_proj_g(rproj0)
+      !   END IF
+      ! END IF
+      ! Note the CONJG, I need <psi|g>, while rpoj0 = <g|psi>
+      proj(:, :, ik) = TRANSPOSE(rproj0(:, :))
+      DEALLOCATE (rproj0)
+      !
+    ELSE
+      !
+      ALLOCATE (proj0(n_proj, num_bands), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating proj0', 1)
+      CALL calbec(npw_, wfcatom, evc, proj0, nbnd=num_bands)
+      !
+      ! IF ((.NOT. atom_proj_ext) .AND. atom_proj_sym) THEN
+      !   IF (has_excl_proj) THEN
+      !     ALLOCATE (proj0all(natomwfc, num_bands))
+      !     proj0all = (0.0_DP, 0.0_DP)
+      !     ! expand the size to natomwfc so I can call sym_proj_*
+      !     ! the exclude part is just 0.0
+      !     i = 1 ! counter for proj0
+      !     DO j = 1, natomwfc ! counter for proj0all
+      !       IF (atproj_excl(j)) CYCLE
+      !       proj0all(j, :) = proj0(i, :)
+      !       i = i + 1
+      !     END DO
+      !     !
+      !     IF (lspinorb) THEN
+      !       CALL sym_proj_so(domag, proj0all)
+      !     ELSE IF (noncolin) THEN
+      !       CALL sym_proj_nc(proj0all)
+      !     ELSE
+      !       CALL sym_proj_k(proj0all)
+      !     END IF
+      !     !
+      !     ! exclude projectors
+      !     i = 1 ! counter for proj0
+      !     DO j = 1, natomwfc ! counter for proj0all
+      !       IF (atproj_excl(j)) CYCLE
+      !       proj0(i, :) = proj0all(j, :)
+      !       i = i + 1
+      !     END DO
+      !     !
+      !     DEALLOCATE (proj0all)
+      !   ELSE
+      !     IF (lspinorb) THEN
+      !       CALL sym_proj_so(domag, proj0)
+      !     ELSE IF (noncolin) THEN
+      !       CALL sym_proj_nc(proj0)
+      !     ELSE
+      !       CALL sym_proj_k(proj0)
+      !     END IF
+      !   END IF
+      ! END IF
+      ! Note the CONJG, I need <psi|g>, while poj0 = <g|psi>
+      proj(:, :, ik) = TRANSPOSE(CONJG(proj0(:, :)))
+      DEALLOCATE (proj0)
+      !
+    END IF
+  END DO ! on k-points
+  !
+  call deallocate_atproj()
+  DEALLOCATE (e)
+  DEALLOCATE (wfcatom)
+  IF (freeswfcatom) DEALLOCATE (swfcatom)
+  IF (has_excl_proj) THEN
+    DEALLOCATE (wfcatomall)
+  END IF
+  DEALLOCATE (idesc_ip)
+  DEALLOCATE (rank_ip)
+  !
+  !   vector proj are distributed across the pools
+  !   collect data for all k-points to the first pool
+  !
+  CALL poolrecover(proj, 2*num_bands*n_proj, nkstot, nks)
+  !
+  ! write to standard output and to file
+  !
+  IF (ionode) THEN
+    CALL write_file_amn(proj)
+    !
+    WRITE (stdout, '(/)')
+    WRITE (stdout, *) ' AMN calculated'
+  END IF
+  !
+  DEALLOCATE (proj)
+  CALL laxlib_end()
+
+  CALL stop_clock('compute_amn')
+
+  RETURN
+
+END SUBROUTINE compute_amn_with_atomproj
+
+SUBROUTINE compute_hmn
+    !-----------------------------------------------------------------------
+    !
+    USE io_global,       ONLY : stdout, ionode
+    USE kinds,           ONLY : DP
+    USE wvfct,           ONLY : nbnd, npwx, current_k
+    USE control_flags,   ONLY : gamma_only
+    USE wavefunctions,   ONLY : evc, psic, psic_nc
+    USE fft_base,        ONLY : dffts, dfftp
+    USE fft_interfaces,  ONLY : fwfft, invfft
+    USE klist,           ONLY : nkstot, xk, ngk, igk_k, nks
+    USE io_files,        ONLY : nwordwfc, iunwfc
+    USE gvect,           ONLY : g, ngm, gstart
+    USE cell_base,       ONLY : tpiba2, alat, at, bg
+    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
+    USE constants,       ONLY : tpi
+    USE uspp,            ONLY : nkb, vkb
+    USE uspp_param,      ONLY : upf, nh, lmaxq
+    USE becmod,          ONLY : bec_type, becp, calbec, &
+                                allocate_bec_type, deallocate_bec_type
+    USE mp_pools,        ONLY : intra_pool_comm, inter_pool_comm, &
+                                npool, me_pool, root_pool
+    USE mp,              ONLY : mp_sum
+    USE noncollin_module,ONLY : noncolin, npol
+    USE gvecw,           ONLY : gcutw
+    USE wannier
+    USE mp,              ONLY : mp_barrier
+    USE scf,             ONLY : vrs, vltot, v, kedtau
+    USE gvecs,           ONLY : doublegrid
+    USE lsda_mod,        ONLY : nspin, current_spin, isk
+    USE constants,       ONLY : rytoev
+    USE wvfct,           ONLY : g2kin
+    USE realus,          ONLY : real_space
+
+    IMPLICIT NONE
+    !
+    INTEGER, EXTERNAL :: find_free_unit
+    INTEGER, EXTERNAL :: global_kpoint_index
+    !
+    complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
+    !
+    INTEGER :: mmn_tot, ik, ikp, ipol, npw, i, m, n
+    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
+    INTEGER :: ikevc, ikpevcq, s, counter
+    COMPLEX(DP), ALLOCATABLE :: phase(:), aux(:), aux2(:,:), aux3(:,:), aux4(:,:)
+    real(DP), ALLOCATABLE    :: rbecp2(:,:)
+    COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:)
+    real(DP), ALLOCATABLE    :: qg(:), ylm(:,:)
+    COMPLEX(DP)              :: val, zdotc, phase1
+    real(DP)                 :: arg, g_(3)
+    CHARACTER (len=9)        :: cdate,ctime
+    CHARACTER (len=header_len) :: header
+    LOGICAL                  :: any_uspp
+    INTEGER                  :: nn,inn,loop,loop2
+    LOGICAL                  :: nn_found
+    INTEGER                  :: istart,iend
+    integer                  :: npw_b1, npw_b2, i_b1, i_b2, ikp_b1, ikp_b2
+    !   integer, allocatable     :: igk_b1(:), igk_b2(:)
+    complex(DP), allocatable :: kmn(:,:,:),vmn(:,:,:),hmn(:,:,:),xmn(:,:,:),dmn(:,:,:)
+    ! end change Lopez, Thonhauser, Souza
+    INTEGER                  :: ibnd_n, ibnd_m, ierr
+    ! pools related
+    INTEGER :: ik_g ! global kpoint index
+    INTEGER ikstart_l, ikstop_l  ! local for each pool
+    LOGICAL :: ionode_pool
+
+    ! Note on diagonalization
+    ! In nscf step, using davidson or cg will lead to different hamiltonian:
+    ! For cg, the L2 norm of (output hhmn matrix - eigenvalue matrix (diagonal matrix from eig file))
+    ! is around 1e-4, for davidson it is around 1e-8, i.e. the davidson hamiltonian is more diagonal.
+
+    CALL start_clock( 'compute_hmn' )
+
+    ionode_pool = ( me_pool == root_pool )
+
+    any_uspp = any(upf(1:ntyp)%tvanp)
+
+    IF (gamma_only) CALL errore('pw2wannier90',&
+            'write_uHu and write_uIu not yet implemented for gamma_only case',1) !ivo
+    IF (wan_mode=='library') call errore('pw2wannier90', &
+        'write_hamiltonian not yet implemented with library mode', 1)
+    if (noncolin) call errore('pw2wannier90', &
+        'write_hamiltonian not yet implemented with noncollinear magnetism', 1)
+
+    ! 1. kinetic energy: kmn, should include one-center correction, which is
+    !    part of non-local term
+    ! 2. local potential: vmn
+    ! 3. Hartree potential: hmn
+    ! 4. xc potential: xmn
+    ! 5. non-local potential: dmn
+    
+    ! hmn: total hamiltonian
+    ! kmn: kinetic operator on pseudo-wavefunction
+    ! vmn: local potential
+    ! dmn: non-local potential
+    if (write_hhmn) then
+       allocate(hmn(num_bands,num_bands,nkstot), stat=ierr)
+       IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating hmn', 1)
+       hmn = (0.0_DP, 0.0_DP)
+    end if
+    if (write_hkmn) then
+       allocate(kmn(num_bands,num_bands,nkstot), stat=ierr)
+       IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating kmn', 1)
+       kmn = (0.0_DP, 0.0_DP)
+    end if
+    if (write_hvmn) then
+       allocate(vmn(num_bands,num_bands,nkstot), stat=ierr)
+       IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating vmn', 1)
+       vmn = (0.0_DP, 0.0_DP)
+    end if
+   !  allocate(xmn(num_bands,num_bands))
+   !  xmn = (0.0_DP, 0.0_DP)
+    if (write_hdmn) then
+       allocate(dmn(num_bands,num_bands,nkstot), stat=ierr)
+       IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating dmn', 1)
+       dmn = (0.0_DP, 0.0_DP)
+    end if
+
+    !====================================================================
+    ! Hamiltonian H(q): KJ1999 Eq.(47)
+    ! Ref PW/src/h_psi.f90
+    !
+    ! Calculate the matrix elements
+    !   <u_m(q)|O(q)|u_n(q)>
+    ! where the operator O(q) is
+    ! 1. kinetic (pseudo-wavefunction + one-center correction)
+    !    -1/2 \nabla^2 + \sum_{(i,j)} |\tilde{p}_i\rangle (
+    !    \langle \phi_i | -1/2 \nabla^2 | \phi_j\rangle
+    !   -\langle \tilde{\phi}_i | -1/2 \nabla^2 | \tilde{\phi}_j\rangle)
+    !   \langle \tilde{p}_j|
+    ! 2. local pseudopotential
+    !    v_{loc} = v_H[\tilde{n}_{Zc}]
+    ! 3. Hartree (only pseudo-wavefunction)
+    !    v_H[\tilde{n} + \hat{n}]
+    !    NOT v_H[\tilde{n} + \hat{n} + \tilde{n}_{Zc}]
+    ! 4. Exchange-correlation (only pseudo-wavefunction)
+    !    v_xc[\tilde{n} + \hat{n} + \tilde{n}_{c}]
+    ! 5. Non-local D term (one-center correction of kinetic + Hartree + xc)
+    !    \sum_{(i,j)} |\tilde{p}_i\rangle
+    !    (\hat{D}_{ij} + D^1_{ij} - \tilde{D}^1_{ij}) \langle \tilde{p}_j |
+    !====================================================================
+    !
+    !     allocate(igk_b1(npwx),igk_b2(npwx),evc_b1(npol*npwx,nbnd),&
+    !
+   allocate(aux(npwx), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating aux', 1)
+   ! allocate(aux2(npol*npwx,nbnd), aux3(nbnd, nbnd))
+   allocate(aux2(npwx,1), aux3(npwx,nbnd), aux4(nbnd,nbnd), stat=ierr)
+   IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating aux2/aux3/aux4', 1)
+   if (write_hkmn) then
+      iun_hkmn = find_free_unit()
+      if (ionode) then
+         CALL date_and_tim( cdate, ctime )
+         header='Created on '//cdate//' at '//ctime
+         if(hmn_formatted) then
+            open  (unit=iun_hkmn, file=TRIM(seedname)//".hkmn",form='FORMATTED')
+            write (iun_hkmn,*) header
+            write (iun_hkmn,*) nbnd-nexband, iknum
+         else
+            open  (unit=iun_hkmn, file=TRIM(seedname)//".hkmn",form='UNFORMATTED',ACCESS="STREAM")
+            write (iun_hkmn) header
+            write (iun_hkmn) nbnd-nexband, iknum
+         endif
+      endif
+   end if
+   if (write_hvmn) then
+      iun_hvmn = find_free_unit()
+      if (ionode) then
+         CALL date_and_tim( cdate, ctime )
+         header='Created on '//cdate//' at '//ctime
+         if(hmn_formatted) then
+            open  (unit=iun_hvmn, file=TRIM(seedname)//".hvmn",form='FORMATTED')
+            write (iun_hvmn,*) header
+            write (iun_hvmn,*) nbnd-nexband, iknum
+         else
+            open  (unit=iun_hvmn, file=TRIM(seedname)//".hvmn",form='UNFORMATTED',ACCESS="STREAM")
+            write (iun_hvmn) header
+            write (iun_hvmn) nbnd-nexband, iknum
+         endif
+      endif
+   end if
+   if (write_hdmn) then
+      iun_hdmn = find_free_unit()
+      if (ionode) then
+         CALL date_and_tim( cdate, ctime )
+         header='Created on '//cdate//' at '//ctime
+         if(hmn_formatted) then
+            open  (unit=iun_hdmn, file=TRIM(seedname)//".hdmn",form='FORMATTED')
+            write (iun_hdmn,*) header
+            write (iun_hdmn,*) nbnd-nexband, iknum
+         else
+            open  (unit=iun_hdmn, file=TRIM(seedname)//".hdmn",form='UNFORMATTED',ACCESS="STREAM")
+            write (iun_hdmn) header
+            write (iun_hdmn) nbnd-nexband, iknum
+         endif
+      endif
+   end if
+   if (write_hhmn) then
+      iun_hhmn = find_free_unit()
+      if (ionode) then
+         CALL date_and_tim( cdate, ctime )
+         header='Created on '//cdate//' at '//ctime
+         if(hmn_formatted) then
+            open  (unit=iun_hhmn, file=TRIM(seedname)//".hhmn",form='FORMATTED')
+            write (iun_hhmn,*) header
+            write (iun_hhmn,*) nbnd-nexband, iknum
+         else
+            open  (unit=iun_hhmn, file=TRIM(seedname)//".hhmn",form='UNFORMATTED',ACCESS="STREAM")
+            write (iun_hhmn) header
+            write (iun_hhmn) nbnd-nexband, iknum
+         endif
+      endif
+   end if
+
+    CALL set_vrs(vrs,vltot,v%of_r,kedtau,v%kin_r,dfftp%nnr,nspin,doublegrid)
+    call allocate_bec_type ( nkb, nbnd, becp )
+    !     ALLOCATE( workg(npwx) )
+
+    if (ionode) write(stdout,'(a,i8)') ' iknum = ',iknum
+    IF (npool > 1) THEN
+       if (ionode) write(stdout,'(a,i8)') ' On this pool: nks = ',nks
+       ikstart_l = 1
+       ikstop_l = nks
+    ELSE
+       ikstart_l = ikstart
+       ikstop_l = ikstop
+    END IF
+    do ik = ikstart_l, ikstop_l ! loop over k points
+        !
+        IF (ionode) THEN
+           WRITE (stdout, '(i8)', advance='no') ik
+           IF (MOD(ik, 10) == 0) WRITE (stdout, *)
+           FLUSH (stdout)
+        END IF
+        !
+        ik_g = global_kpoint_index(nkstot, ik)
+        !
+        npw = ngk(ik)
+        ! sort the wfc at k and set up stuff for h_psi
+        current_k=ik
+        current_spin = isk(ik)
+        IF ( nkb > 0 ) CALL init_us_2(npw,igk_k(1,ik),xk(1,ik),vkb)
+        !
+        ! compute  " O | u_n,k > "
+        !
+        ! read wfc at ik
+        !CALL get_buffer( evc, nwordwfc, iunwfc, ik+ikstart-1 )
+        call davcio(evc, 2*nwordwfc, iunwfc, ik+ikstart-1, -1)
+        !
+        ! calculate the kinetic energy at ik, used in h_psi
+        !
+        CALL g2_kin(ik)
+        !
+        ! See h_psi.f90:h_psi_ for how to build the Hamiltonian
+        !CALL h_psi(npwx, npw, nbnd, evc_aux, H_evc)
+        !
+        ! non-local potential, use matrix product, but doesn't skip excluded bands
+!        IF ( nkb > 0 .AND. .NOT. real_space) THEN
+!            !
+!            aux2 = (0.0_dp, 0.0_dp)
+!            CALL calbec( npw, vkb, evc, becp, nbnd )
+!            CALL add_vuspsi( npwx, npw, nbnd, aux2 )
+!            CALL ZGEMM( 'C', 'N', nbnd, nbnd, npw, ( 1.0_dp, 0.0_dp ), evc, &
+!                    npwx, aux2, npwx, ( 0.0_dp, 0.0_dp ), aux3, nbnd)
+!            !
+!        ENDIF
+        !
+        ibnd_m = 0
+        do m = 1, nbnd
+            if (excluded_band(m)) cycle
+            ibnd_m = ibnd_m + 1
+            ibnd_n = 0
+            do n = 1, nbnd
+                if (excluded_band(n)) cycle
+                ibnd_n = ibnd_n + 1
+                ! compute kinetic term of pseudo-wavefunction
+                if (write_hkmn) then
+                  ! g2kin is real, aux is complex
+                  aux(1:npw) = g2kin(1:npw) * evc(1:npw, n)
+                  val = zdotc(npw, evc(:, m), 1, aux, 1)
+                  val = val * rytoev ! because wannier90 works in eV
+                  kmn(ibnd_m, ibnd_n, ik_g) = val
+                end if
+                ! compute local pseudopotential
+                if (write_hvmn) then
+                  aux = (0.0_dp, 0.0_dp)
+                  CALL vloc_psi_k(npwx, npw, 1, evc(:,n), vrs(1,current_spin), aux)
+                  val = zdotc(npw, evc(:, m), 1, aux, 1)
+                  vmn(ibnd_m, ibnd_n, ik_g) = val * rytoev
+                end if
+                ! non-local potential
+                if (write_hdmn) then
+                  IF ( nkb > 0 .AND. .NOT. real_space) THEN
+                     ! I need a 2d aux2 instead of 1d evc(:,n)
+                     aux2(:,1) = evc(:,n)
+                     CALL calbec( npw, vkb, aux2, becp, 1 )
+                     aux = (0.0_dp, 0.0_dp)
+                     CALL add_vuspsi( npwx, npw, 1, aux )
+                     val = zdotc(npw, evc(:,m), 1, aux, 1)
+                     dmn(ibnd_m, ibnd_n, ik_g) = val * rytoev
+                     !
+                  ENDIF
+               end if
+            end do !n
+        end do !m
+
+        if (write_hhmn) then
+           aux3 = (0.0_dp, 0.0_dp)
+           call h_psi( npwx, npw, nbnd, evc, aux3 )
+           call ZGEMM('C', 'N', nbnd, nbnd, npw, ( 1.0_dp, 0.0_dp ), evc, &
+                      npwx, aux3, npwx, ( 0.0_dp, 0.0_dp ), aux4, nbnd)
+           ibnd_m = 0
+           do m = 1, nbnd
+                 if (excluded_band(m)) cycle
+                 ibnd_m = ibnd_m + 1
+                 ibnd_n = 0
+                 do n = 1, nbnd
+                    if (excluded_band(n)) cycle
+                    ibnd_n = ibnd_n + 1
+                    hmn(ibnd_m, ibnd_n, ik_g) = aux4(m, n) * rytoev
+                 end do
+           end do
+        end if
+    end do ! ik
+    !
+    if (write_hkmn) then
+      call mp_sum(kmn(:,:,:), intra_pool_comm)
+      call mp_sum(kmn(:,:,:), inter_pool_comm)
+    end if
+    if (write_hvmn) then
+      call mp_sum(vmn(:,:,:), intra_pool_comm)
+      call mp_sum(vmn(:,:,:), inter_pool_comm)
+    end if
+    if (write_hdmn) then
+      call mp_sum(dmn(:,:,:), intra_pool_comm)
+      call mp_sum(dmn(:,:,:), inter_pool_comm)
+    end if
+    if (write_hhmn) then
+      call mp_sum(hmn(:,:,:), intra_pool_comm)
+      call mp_sum(hmn(:,:,:), inter_pool_comm)
+    end if
+
+   ! output only upper triangular part
+   if (ionode) then  ! write the files out to disk
+      if(hmn_formatted) then ! slow bulky way for transferable files
+         do ik=1,nkstot
+            do n=1,num_bands
+               do m=1,n
+                  if (write_hkmn) write(iun_hkmn,'(2ES20.10)') kmn(m,n,ik)
+                  if (write_hvmn) write(iun_hvmn,'(2ES20.10)') vmn(m,n,ik)
+                  if (write_hdmn) write(iun_hdmn,'(2ES20.10)') dmn(m,n,ik)
+                  if (write_hhmn) write(iun_hhmn,'(2ES20.10)') hmn(m,n,ik)
+               enddo
+            enddo
+         enddo
+      else  ! the fast way
+         if (write_hkmn) write(iun_hkmn) (((kmn(m,n,ik),m=1,n),n=1,num_bands),ik=1,nkstot)
+         if (write_hvmn) write(iun_hvmn) (((vmn(m,n,ik),m=1,n),n=1,num_bands),ik=1,nkstot)
+         if (write_hdmn) write(iun_hdmn) (((dmn(m,n,ik),m=1,n),n=1,num_bands),ik=1,nkstot)
+         if (write_hhmn) write(iun_hhmn) (((hmn(m,n,ik),m=1,n),n=1,num_bands),ik=1,nkstot)
+      endif
+      if (write_hkmn) close (iun_hkmn)
+      if (write_hvmn) close (iun_hvmn)
+      if (write_hdmn) close (iun_hdmn)
+      if (write_hhmn) close (iun_hhmn)
+   endif ! end of io
+    !
+    if (allocated(aux)) deallocate(aux)
+    if (allocated(aux2)) deallocate(aux2)
+    if (allocated(aux3)) deallocate(aux3)
+    if (allocated(aux4)) deallocate(aux4)
+    if (allocated(kmn)) deallocate(kmn)
+    if (allocated(vmn)) deallocate(vmn)
+    if (allocated(hmn)) deallocate(hmn)
+   !  deallocate(xmn)
+    if (allocated(dmn)) deallocate(dmn)
+    !
+    !   IF(any_uspp) THEN
+    !      DEALLOCATE (  qb)
+    !      CALL deallocate_bec_type (becp)
+    !      IF (gamma_only) THEN
+    !          DEALLOCATE (rbecp2)
+    !       ELSE
+    !          DEALLOCATE (becp2)
+    !       ENDIF
+    !    ENDIF
+    CALL deallocate_bec_type (becp)
+    !
+    CALL stop_clock( 'compute_hmn' )
+    !
+    RETURN
+END SUBROUTINE compute_hmn
 
 subroutine orient_gf_spinor(npw)
    use constants, only: eps6
@@ -5671,38 +7730,60 @@ END SUBROUTINE generate_guiding_functions
 SUBROUTINE write_band
    USE io_global,  ONLY : stdout, ionode
    USE wvfct, ONLY : nbnd, et
-   USE klist, ONLY : nkstot
+   USE klist, ONLY : nkstot, nks
    USE constants, ONLY: rytoev
    USE wannier
+   USE mp_pools, ONLY: npool
 
    IMPLICIT NONE
    !
    INTEGER, EXTERNAL :: find_free_unit
    !
-   INTEGER ik, ibnd, ibnd1, ikevc
+   INTEGER ik, ibnd, ibnd1, ikevc, ierr
+   INTEGER ikstart_l, ikstop_l
+   ! local start and end indexes for kpt
 
    IF (wan_mode=='standalone') THEN
       iun_band = find_free_unit()
-      IF (ionode) THEN
+      IF (eig_formatted) THEN
+         IF (ionode) THEN
          IF (irr_bz) THEN
             OPEN (unit=iun_band, file=trim(seedname)//".ieig",form='formatted')
          ELSE
             OPEN (unit=iun_band, file=trim(seedname)//".eig",form='formatted')
+      ELSE
+         IF (ionode) OPEN (unit=iun_band, file=trim(seedname)//".eig",form='unformatted',ACCESS="STREAM")
+      END IF
          ENDIF
       ENDIF
    ENDIF
 
-   IF (wan_mode=='library') ALLOCATE(eigval(num_bands,iknum))
+   IF (wan_mode=='library' .OR. npool > 1) THEN
+      ALLOCATE(eigval(num_bands,iknum), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating eigval', 1)
+      eigval = 0.0_dp
+   END IF
 
-   DO ik=ikstart,ikstop
+   IF (npool > 1) THEN
+      ikstart_l = 1
+      ikstop_l = nks
+   ELSE
+      ikstart_l = ikstart
+      ikstop_l = ikstop
+   END IF
+   DO ik = ikstart_l, ikstop_l
       ikevc = ik - ikstart + 1
-      ibnd1=0
-      DO ibnd=1,nbnd
+      ibnd1 = 0
+      DO ibnd = 1, nbnd
          IF (excluded_band(ibnd)) CYCLE
-         ibnd1=ibnd1 + 1
-         IF (wan_mode=='standalone') THEN
-            IF (ionode) WRITE (iun_band,'(2i5,f18.12)') ibnd1, ikevc, et(ibnd,ik)*rytoev
-         ELSEIF (wan_mode=='library') THEN
+         ibnd1 = ibnd1 + 1
+         IF (wan_mode == 'standalone' .AND. (npool == 1)) THEN
+            IF (eig_formatted) THEN
+               IF (ionode) WRITE (iun_band, '(2i5,f18.12)') ibnd1, ikevc, et(ibnd,ik)*rytoev
+            ELSE
+               IF (ionode) WRITE (iun_band) ibnd1, ikevc, et(ibnd,ik)*rytoev
+            END IF
+         ELSEIF ((wan_mode=='library') .OR. (npool > 1)) THEN
             eigval(ibnd1,ikevc) = et(ibnd,ik)*rytoev
          ELSE
             CALL errore('write_band',' value of wan_mode not recognised',1)
@@ -5711,32 +7792,53 @@ SUBROUTINE write_band
    ENDDO
 
    IF (wan_mode=='standalone') THEN
-       IF (ionode) CLOSE (unit=iun_band)
+      IF (npool > 1) THEN
+         CALL poolrecover(eigval, num_bands, nkstot, nks)
+         IF (ionode) THEN
+            IF (eig_formatted) THEN
+               DO ik = 1, nkstot
+                  DO ibnd = 1, num_bands
+                     WRITE(iun_band, '(2i5,f18.12)') ibnd, ik, eigval(ibnd, ik)
+                  END DO
+               END DO
+            ELSE
+               DO ik = 1, nkstot
+                  DO ibnd = 1, num_bands
+                     WRITE(iun_band) ibnd, ik, eigval(ibnd, ik)
+                  END DO
+               END DO
+            END IF
+         END IF
+         DEALLOCATE(eigval)
+      END IF
+      IF (ionode) CLOSE (unit=iun_band)
    ENDIF
 
    RETURN
 END SUBROUTINE write_band
 
 SUBROUTINE write_plot
-   USE io_global,  ONLY : stdout, ionode
+   USE io_global,  ONLY : stdout
    USE wvfct, ONLY : nbnd, npwx
    USE gvecw, ONLY : gcutw
    USE control_flags, ONLY : gamma_only
    USE wavefunctions, ONLY : evc, psic, psic_nc
    USE io_files, ONLY : nwordwfc, iunwfc
    USE wannier
-   USE klist,           ONLY : nkstot, xk, ngk, igk_k
+   USE klist,           ONLY : nkstot, xk, ngk, igk_k, nks
    USE gvect,           ONLY : g, ngm
    USE fft_base,        ONLY : dffts
    USE scatter_mod,     ONLY : gather_grid
    USE fft_interfaces,  ONLY : invfft
    USE noncollin_module,ONLY : noncolin, npol
+   USE mp_pools,        ONLY : npool, me_pool, root_pool
 
    IMPLICIT NONE
    !
    INTEGER, EXTERNAL :: find_free_unit
+   INTEGER, EXTERNAL :: global_kpoint_index
    !
-   INTEGER ik, npw, ibnd, ibnd1, ikevc, i1, j, spin
+   INTEGER ik, npw, ibnd, ibnd1, ikevc, i1, j, spin, ierr
    CHARACTER*20 wfnname
 
    ! aam: 1/5/06: for writing smaller unk files
@@ -5745,44 +7847,65 @@ SUBROUTINE write_plot
 
    INTEGER ipol
    !-------------------------------------------!
+   ! pools related
+   INTEGER ikstart_l, ikstop_l  ! local for each pool
+   LOGICAL :: ionode_pool
 
 #if defined(__MPI)
    INTEGER nxxs
    COMPLEX(DP),ALLOCATABLE :: psic_all(:), psic_nc_all(:,:)
    nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
    IF (.NOT.noncolin) THEN
-      ALLOCATE(psic_all(nxxs) )
+      ALLOCATE(psic_all(nxxs), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating psic_all', 1)
    ELSE
-      ALLOCATE(psic_nc_all(nxxs,npol) )
+      ALLOCATE(psic_nc_all(nxxs,npol), stat=ierr)
+      IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating psic_nc_all', 1)
    ENDIF
 #endif
 
    CALL start_clock( 'write_unk' )
 
    IF (reduce_unk) THEN
-      WRITE(stdout,'(3(a,i5))') 'nr1s =',dffts%nr1,'nr2s=',dffts%nr2,'nr3s=',dffts%nr3
-      n1by2=(dffts%nr1+1)/2
-      n2by2=(dffts%nr2+1)/2
-      n3by2=(dffts%nr3+1)/2
-      WRITE(stdout,'(3(a,i5))') 'n1by2=',n1by2,'n2by2=',n2by2,'n3by2=',n3by2
+      WRITE(stdout,'(3(a,i5))') 'nr1s = ',dffts%nr1,' nr2s = ',dffts%nr2,' nr3s = ',dffts%nr3
+      n1by2 = (dffts%nr1 - 1) / reduce_unk_factor + 1
+      n2by2 = (dffts%nr2 - 1) / reduce_unk_factor + 1
+      n3by2 = (dffts%nr3 - 1) / reduce_unk_factor + 1
+      WRITE(stdout,'(3(a,i5))') 'n1by2 = ',n1by2,' n2by2 = ',n2by2,' n3by2 = ',n3by2
       IF (.NOT.noncolin) THEN
-         ALLOCATE(psic_small(n1by2*n2by2*n3by2))
+         ALLOCATE(psic_small(n1by2*n2by2*n3by2), stat=ierr)
+         IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating psic_small', 1)
          psic_small = (0.0_DP, 0.0_DP)
       ELSE
-         ALLOCATE(psic_nc_small(n1by2*n2by2*n3by2,npol))
+         ALLOCATE(psic_nc_small(n1by2*n2by2*n3by2,npol), stat=ierr)
+         IF (ierr /= 0) CALL errore('pw2wannier90', 'Error allocating psic_nc_small', 1)
          psic_nc_small = (0.0_DP, 0.0_DP)
       ENDIF
    ENDIF
 
-   WRITE(stdout,'(a,i8)') ' UNK: iknum = ',iknum
+   ionode_pool = ( me_pool == root_pool )
 
-   DO ik=ikstart,ikstop
+   WRITE(stdout,'(a,i8)') ' UNK: iknum = ',iknum
+   IF (npool > 1) THEN
+      write(stdout,'(a,i8)') ' On this pool: nks = ',nks
+      ikstart_l = 1
+      ikstop_l = nks
+   ELSE
+      ikstart_l = ikstart
+      ikstop_l = ikstop
+   END IF
+
+   DO ik = ikstart_l, ikstop_l
 
       WRITE (stdout,'(i8)',advance='no') ik
       IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
       FLUSH(stdout)
 
-      ikevc = ik - ikstart + 1
+      IF (npool > 1) THEN
+         ikevc = global_kpoint_index(nkstot, ik)
+      ELSE
+         ikevc = ik - ikstart + 1
+      END IF
 
       iun_plot = find_free_unit()
       !write(wfnname,200) p,spin
@@ -5796,23 +7919,23 @@ SUBROUTINE write_plot
 201   FORMAT ('UNK',i5.5,'.','NC')
 200   FORMAT ('UNK',i5.5,'.',i1)
 
-   IF (ionode) THEN
-      IF(wvfn_formatted) THEN
-         OPEN (unit=iun_plot, file=wfnname,form='formatted')
-         IF (reduce_unk) THEN
-            WRITE(iun_plot,*)  n1by2,n2by2,n3by2, ikevc, nbnd-nexband
+      IF (ionode_pool) THEN
+         IF(wvfn_formatted) THEN
+            OPEN (unit=iun_plot, file=wfnname,form='formatted')
+            IF (reduce_unk) THEN
+               WRITE(iun_plot,*)  n1by2,n2by2,n3by2, ikevc, nbnd-nexband
+            ELSE
+               WRITE(iun_plot,*)  dffts%nr1,dffts%nr2,dffts%nr3,ikevc,nbnd-nexband
+            ENDIF
          ELSE
-            WRITE(iun_plot,*)  dffts%nr1,dffts%nr2,dffts%nr3,ikevc,nbnd-nexband
-         ENDIF
-      ELSE
-         OPEN (unit=iun_plot, file=wfnname,form='unformatted')
-         IF (reduce_unk) THEN
-            WRITE(iun_plot)  n1by2,n2by2,n3by2, ikevc, nbnd-nexband
-         ELSE
-            WRITE(iun_plot)  dffts%nr1,dffts%nr2,dffts%nr3,ikevc,nbnd-nexband
+            OPEN (unit=iun_plot, file=wfnname,form='unformatted')
+            IF (reduce_unk) THEN
+               WRITE(iun_plot)  n1by2,n2by2,n3by2, ikevc, nbnd-nexband
+            ELSE
+               WRITE(iun_plot)  dffts%nr1,dffts%nr2,dffts%nr3,ikevc,nbnd-nexband
+            ENDIF
          ENDIF
       ENDIF
-   ENDIF
 
       CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
 
@@ -5843,9 +7966,9 @@ SUBROUTINE write_plot
             ENDDO
          ENDIF
          IF (reduce_unk) THEN
-            DO k=1,dffts%nr3,2
-               DO j=1,dffts%nr2,2
-                  DO i=1,dffts%nr1,2
+            DO k=1,dffts%nr3,reduce_unk_factor
+               DO j=1,dffts%nr2,reduce_unk_factor
+                  DO i=1,dffts%nr1,reduce_unk_factor
                      idx = (k-1)*dffts%nr2*dffts%nr1 + (j-1)*dffts%nr1 + i
                      pos=pos+1
                      IF (.NOT.noncolin) THEN
@@ -5859,50 +7982,50 @@ SUBROUTINE write_plot
                ENDDO
             ENDDO
          ENDIF
-      IF (ionode) THEN
-         IF(wvfn_formatted) THEN
-            IF (reduce_unk) THEN
-               IF (.NOT.noncolin) THEN
-                  WRITE (iun_plot,'(2ES20.10)') (psic_small(j),j=1,n1by2*n2by2*n3by2)
+         IF (ionode_pool) THEN
+            IF(wvfn_formatted) THEN
+               IF (reduce_unk) THEN
+                  IF (.NOT.noncolin) THEN
+                     WRITE (iun_plot,'(2ES20.10)') (psic_small(j),j=1,n1by2*n2by2*n3by2)
+                  ELSE
+                     DO ipol = 1, npol
+                        WRITE (iun_plot,'(2ES20.10)') (psic_nc_small(j,ipol),j=1,n1by2*n2by2*n3by2)
+                     ENDDO
+                  ENDIF
                ELSE
-                  DO ipol = 1, npol
-                     WRITE (iun_plot,'(2ES20.10)') (psic_nc_small(j,ipol),j=1,n1by2*n2by2*n3by2)
-                  ENDDO
+                  IF (.NOT.noncolin) THEN
+                     WRITE (iun_plot,'(2ES20.10)') (psic_all(j),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
+                  ELSE
+                     DO ipol = 1, npol
+                        WRITE (iun_plot,'(2ES20.10)') (psic_nc_all(j,ipol),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
+                     ENDDO
+                  ENDIF
                ENDIF
             ELSE
-               IF (.NOT.noncolin) THEN
-                  WRITE (iun_plot,'(2ES20.10)') (psic_all(j),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
+               IF (reduce_unk) THEN
+                  IF (.NOT.noncolin) THEN
+                     WRITE (iun_plot) (psic_small(j),j=1,n1by2*n2by2*n3by2)
+                  ELSE
+                     DO ipol = 1, npol
+                        WRITE (iun_plot) (psic_nc_small(j,ipol),j=1,n1by2*n2by2*n3by2)
+                     ENDDO
+                  ENDIF
                ELSE
-                  DO ipol = 1, npol
-                     WRITE (iun_plot,'(2ES20.10)') (psic_nc_all(j,ipol),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
-                  ENDDO
-               ENDIF
-            ENDIF
-         ELSE
-            IF (reduce_unk) THEN
-               IF (.NOT.noncolin) THEN
-                  WRITE (iun_plot) (psic_small(j),j=1,n1by2*n2by2*n3by2)
-               ELSE
-                  DO ipol = 1, npol
-                     WRITE (iun_plot) (psic_nc_small(j,ipol),j=1,n1by2*n2by2*n3by2)
-                  ENDDO
-               ENDIF
-            ELSE
-               IF (.NOT.noncolin) THEN
-                  WRITE (iun_plot) (psic_all(j),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
-               ELSE
-                  DO ipol = 1, npol
-                     WRITE (iun_plot) (psic_nc_all(j,ipol),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
-                  ENDDO
+                  IF (.NOT.noncolin) THEN
+                     WRITE (iun_plot) (psic_all(j),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
+                  ELSE
+                     DO ipol = 1, npol
+                        WRITE (iun_plot) (psic_nc_all(j,ipol),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
+                     ENDDO
+                  ENDIF
                ENDIF
             ENDIF
          ENDIF
-      ENDIF
 #else
          IF (reduce_unk) THEN
-            DO k=1,dffts%nr3,2
-               DO j=1,dffts%nr2,2
-                  DO i=1,dffts%nr1,2
+            DO k=1,dffts%nr3,reduce_unk_factor
+               DO j=1,dffts%nr2,reduce_unk_factor
+                  DO i=1,dffts%nr1,reduce_unk_factor
                      idx = (k-1)*dffts%nr2*dffts%nr1 + (j-1)*dffts%nr1 + i
                      pos=pos+1
                      IF (.NOT.noncolin) THEN
@@ -5952,7 +8075,7 @@ SUBROUTINE write_plot
 #endif
       ENDDO !ibnd
 
-      IF(ionode) CLOSE (unit=iun_plot)
+      IF(ionode_pool) CLOSE (unit=iun_plot)
 
    ENDDO  !ik
 
@@ -6876,3 +8999,126 @@ SUBROUTINE radialpart(ng, q, alfa, rvalue, lmax, radial)
   DEALLOCATE (bes, func_r, r, rij, aux )
   RETURN
 END SUBROUTINE radialpart
+
+subroutine ik_g2l ( nkstot, ik_g, ipool, ik )
+   !----------------------------------------------------------------------------
+   !! Returns the local index of a k-point and the index of its pool
+   !! Adapted from divide_et_impera.f90:local_kpoint_index
+   !
+   USE mp_pools,   ONLY: npool, my_pool_id, kunit
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(IN) :: nkstot
+   !! total number of k-points
+   INTEGER, INTENT(IN) :: ik_g
+   !! global index of k-point
+   INTEGER, INTENT(OUT) :: ipool
+   !! return the index of the pool
+   INTEGER, INTENT(OUT) :: ik
+   !! return the local kpoint index
+   !
+   ! local variables
+   !
+   INTEGER  :: nks, rest, tot
+   INTEGER, ALLOCATABLE :: nks_pool(:) ! num of kpt per pool
+   !
+   if (ik_g < 0) call errore('ik_g2l', 'ik_g < 0', 1)
+   if (ik_g > nkstot) call errore('ik_g2l', 'ik_g >= nkstot', 1)
+   !
+   nks = kunit * ( nkstot / kunit / npool )
+   !
+   rest = ( nkstot - nks * npool ) / kunit
+   !
+   allocate(nks_pool(npool))
+   nks_pool = nks
+   do ipool = 1, npool
+      IF ( ipool <= rest ) nks_pool(ipool) = nks + kunit
+   end do
+   !
+   tot = 0
+   do ipool = 1, npool
+      tot = tot + nks_pool(ipool)
+      if (ik_g <= tot) exit
+   end do
+   !
+   ik = ik_g - (tot - nks_pool(ipool))
+   !
+   ! pool index should starts from 0
+   ipool = ipool - 1
+   ! print *, 'ik_g2l', ik_g, ipool, ik
+   !
+ END subroutine ik_g2l
+
+!----------------------------------------------------------------------------
+SUBROUTINE readwfc_g( vect, nword, unit, ik_g )
+   !----------------------------------------------------------------------------
+   !! Read wfc for the global index of kpoint ik_g
+   !! Direct-access vector input/output.  
+   !! read/write \(\text{nword}\) words starting from the address specified by
+   !! \(\text{vect}\).
+   !! Adapted from io_files.f90:davcio
+   !
+   USE kinds ,     ONLY : DP
+   USE mp_pools,   ONLY : my_pool_id, nproc_pool, me_pool, kunit, npool
+   USE klist,      ONLY : nks, nkstot
+   USE io_files,   ONLY : prefix, tmp_dir
+   !
+   IMPLICIT NONE
+   !
+   REAL(DP), INTENT(INOUT) :: vect(nword)
+   !! input/output: the vector to read/write
+   INTEGER, INTENT(IN) :: nword
+   !! the dimension of vect
+   INTEGER, INTENT(IN) :: unit
+   !! the unit where to read/write, usually iunwfc.
+   !! Need to be closed before calling this subroutine!
+   INTEGER, INTENT(IN) :: ik_g
+   !! global index of kpoint
+   !
+   CHARACTER(len=6), EXTERNAL :: int_to_char
+   !
+   INTEGER :: ios
+   ! integer variable for I/O control
+   CHARACTER(len=256) :: name, msg
+   integer*8 :: unf_recl
+   ! double precision to prevent integer overflow
+   integer :: direct_io_factor
+   real(dp):: dummy
+   integer :: ik, ipool, iproc
+   !
+   CALL start_clock( 'readwfc_g' )
+   !
+   if (npool == 1) call errore('readwfc_g', 'should only use this for pool', 1)
+   !
+   call ik_g2l(nkstot, ik_g, ipool, ik)
+   !
+   iproc = ipool * nproc_pool + me_pool + 1
+   name = TRIM(tmp_dir) // TRIM(prefix) // '.wfc' // TRIM(int_to_char(iproc))
+   !
+   ! from io_files.f90:diropen()
+   ! the  record length in direct-access I/O is given by the number of
+   ! real*8 words times direct_io_factor (may depend on the compiler)
+   !
+   INQUIRE (IOLENGTH=direct_io_factor) dummy
+   unf_recl = direct_io_factor * int(nword, kind=kind(unf_recl))
+   if (unf_recl <= 0) call errore ('readwfc_g', 'wrong record length', 3)
+   !
+   open (unit, file=trim(adjustl(name)), iostat=ios, form='unformatted', &
+         status = 'unknown', access = 'direct', recl = unf_recl)
+
+   if (ios /= 0) call errore ('readwfc_g', 'error opening '//trim(name), unit)
+   !
+   ! from io_files.f90:davcio()
+   !
+   READ( UNIT = unit, REC = ik, IOSTAT = ios, iomsg = msg ) vect
+   IF ( ios /= 0 ) CALL errore( 'readwfc_g', &
+         & 'error reading file "' // TRIM(name) // '" '//trim(msg), unit)
+   !
+   CLOSE(unit, STATUS = 'KEEP')
+   !
+   CALL stop_clock( 'readwfc_g' )
+   !
+   RETURN
+   !
+ END SUBROUTINE readwfc_g
