@@ -424,7 +424,7 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
   COMPLEX(DP), ALLOCATABLE   :: yf(:)
   INTEGER                    :: planes( dfft%nr1x )
   INTEGER                    :: sticks( dfft%nproc  )
-  INTEGER                    :: ii, jj, kk
+  INTEGER                    :: ii, jj, kk, dfft_nnr, dfft_nr3p
   !
   !
   n1  = dfft%nr1
@@ -433,6 +433,8 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
   nx1 = dfft%nr1x
   nx2 = dfft%nr2x
   nx3 = dfft%nr3x
+  !
+  dfft_nnr = dfft%nnr
   !
   CALL check_buffers_size(dfft, batchsize)
   !
@@ -468,14 +470,14 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        ENDIF
        !
        !!$omp single
-       !!$omp task depend (out: aux(j*dfft%nnr+1:(j+1)*dfft%nnr))
+       !!$omp task depend (out: aux(j*dfft_nnr+1:(j+1)*dfft_nnr))
        DO i = 0, currsize - 1
-         CALL cft_1z_omp( f((j+i)*dfft%nnr + 1:), sticks(me_p), n3, nx3, isgn, aux(j*dfft%nnr + i*ncpx*nx3 +1:) )
+         CALL cft_1z_omp( f((j+i)*dfft_nnr + 1:), sticks(me_p), n3, nx3, isgn, aux(j*dfft_nnr + i*ncpx*nx3 +1:) )
        ENDDO
        !!$omp end task
 
-       !!$omp task depend (in: aux(j*dfft%nnr+1:(j+1)*dfft%nnr))
-       CALL fft_scatter_many_columns_to_planes_store_omp( dfft, aux(j*dfft%nnr + 1:), nx3, dfft%nnr, f(j*dfft%nnr + 1:), &
+       !!$omp task depend (in: aux(j*dfft_nnr+1:(j+1)*dfft_nnr))
+       CALL fft_scatter_many_columns_to_planes_store_omp( dfft, aux(j*dfft_nnr + 1:), nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
          sticks, dfft%nr3p, isgn, currsize )
        !!$omp end task
        !!$omp end single
@@ -486,19 +488,19 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        currsize = min(dfft%subbatchsize, batchsize - j)
 
        !!$omp single
-       !!$omp task depend (out: f(j*dfft%nnr+1:(j+1)*dfft%nnr))
-       CALL fft_scatter_many_columns_to_planes_send_omp( dfft, aux(j*dfft%nnr + 1:), nx3, dfft%nnr, f(j*dfft%nnr + 1:), &
-         aux2(j*dfft%nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
+       !!$omp task depend (out: f(j*dfft_nnr+1:(j+1)*dfft_nnr))
+       CALL fft_scatter_many_columns_to_planes_send_omp( dfft, aux(j*dfft%nnr + 1:), nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
+         aux2(j*dfft_nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
        !!$omp end task
 
        IF (currsize == dfft%subbatchsize) THEN
-         !!$omp task depend (in: f(j*dfft%nnr+1:(j+1)*dfft%nnr))
-         CALL cft_2xy_omp( f(j*dfft%nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes )
+         !!$omp task depend (in: f(j*dfft_nnr+1:(j+1)*dfft_nnr))
+         CALL cft_2xy_omp( f(j*dfft_nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes )
          !!$omp end task
        ELSE
-         !!$omp task depend (in: f(j*dfft%nnr+1:(j+1)*dfft%nnr))
+         !!$omp task depend (in: f(j*dfft_nnr+1:(j+1)*dfft_nnr))
          DO i = 0, currsize - 1
-           CALL cft_2xy_omp( f((j+i)*dfft%nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes )
+           CALL cft_2xy_omp( f((j+i)*dfft_nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes )
          ENDDO
          !!$omp end task
        ENDIF
@@ -522,15 +524,15 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        ENDIF
 
        IF (currsize == dfft%subbatchsize) THEN
-         CALL cft_2xy_omp( f(j*dfft%nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes )
+         CALL cft_2xy_omp( f(j*dfft_nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes )
        ELSE
          DO i = 0, currsize - 1
-           CALL cft_2xy_omp( f((j+i)*dfft%nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes )
+           CALL cft_2xy_omp( f((j+i)*dfft_nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes )
          ENDDO
        ENDIF
 
-       CALL fft_scatter_many_planes_to_columns_store_omp( dfft, nx3, dfft%nnr, f(j*dfft%nnr + 1:), &
-         aux2(j*dfft%nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
+       CALL fft_scatter_many_planes_to_columns_store_omp( dfft, nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
+         aux2(j*dfft_nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
 
      ENDDO
 
@@ -538,14 +540,14 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        currsize = min(dfft%subbatchsize, batchsize - j)
 
        !!$omp single
-       !!$omp task depend (out: aux(j*dfft%nnr+1:(j+1)*dfft%nnr))
-       CALL fft_scatter_many_planes_to_columns_send_omp( dfft, aux(j*dfft%nnr + 1:), nx3, dfft%nnr, f(j*dfft%nnr + 1:), &
-         aux2(j*dfft%nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
+       !!$omp task depend (out: aux(j*dfft_nnr+1:(j+1)*dfft_nnr))
+       CALL fft_scatter_many_planes_to_columns_send_omp( dfft, aux(j*dfft_nnr + 1:), nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
+         aux2(j*dfft_nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
        !!$omp end task
 
-       !!$omp task depend (in: aux(j*dfft%nnr+1:(j+1)*dfft%nnr))
+       !!$omp task depend (in: aux(j*dfft_nnr+1:(j+1)*dfft_nnr))
        DO i = 0, currsize - 1
-         CALL cft_1z_omp( aux(j*dfft%nnr + i*ncpx*nx3 + 1:), sticks( me_p ), n3, nx3, isgn, f((j+i)*dfft%nnr + 1:) )
+         CALL cft_1z_omp( aux(j*dfft_nnr + i*ncpx*nx3 + 1:), sticks( me_p ), n3, nx3, isgn, f((j+i)*dfft_nnr + 1:) )
        ENDDO
        !!$omp end task
        !!$omp end single

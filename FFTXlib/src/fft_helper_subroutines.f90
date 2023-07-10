@@ -605,20 +605,22 @@ CONTAINS
      INTEGER, OPTIONAL, INTENT(IN) :: howmany
      !! 
      !
-     INTEGER :: nnr, i, j, ig
+     INTEGER :: nnr, i, j, ig, nhw
      !
-!civn howmany should never be present with omp
      IF (PRESENT(howmany)) THEN
         !
         nnr = desc%nnr
-        ! 
-        DO i = 1, desc%nnr*howmany
-          psi(i) = (0.d0,0.d0)
-        END DO 
+        nhw = desc%nnr*howmany
         !
+        !$omp target teams distribute parallel do map(present,alloc:psi)
+        DO i = 1, nhw
+          psi(i) = (0.d0,0.d0)
+        END DO
+        !
+        !$omp target teams distribute parallel do collapse(2) map(present,alloc:psi,c,igk)
         DO i = 0, howmany-1
           DO j = 1, ngk
-            psi(desc%nl(igk(j))+i*desc%nnr) = c(j,i+1)
+            psi(desc%nl(igk(j))+i*nnr) = c(j,i+1)
           ENDDO
         ENDDO
         !
@@ -660,7 +662,7 @@ CONTAINS
         n = howmany_set(2)
         v_siz = desc%nnr
         !
-        !$omp target teams distribute parallel do map(to:group_size,n,v_siz)
+        !$omp target teams distribute parallel do collapse(2)
         DO idx = 0, group_size-1
            DO ig = 1, n
               vout(ig,idx+1) = vin(idx*v_siz+desc%nl(igk(ig)))
@@ -671,7 +673,7 @@ CONTAINS
         !
         igmax = MIN(desc%ngw,SIZE(vout(:,1)))
         !
-        !$omp target teams distribute parallel do map(to:igmax)
+        !$omp target teams distribute parallel do
         DO ig = 1, igmax
           vout(ig,1) = vin(desc%nl(igk(ig)))
         ENDDO

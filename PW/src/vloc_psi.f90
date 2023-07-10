@@ -176,6 +176,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
   USE mp_bands,               ONLY : me_bgrp
   USE fft_base,               ONLY : dffts
   USE fft_wave
+  USE control_flags,          ONLY : many_fft
   USE fft_helper_subroutines, ONLY : fftx_ntgrp, tg_get_nnr, tg_get_group_nr3
   USE wavefunctions,          ONLY : psic
   !
@@ -196,7 +197,7 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
   !
   ! ... local variables
   !
-  INTEGER :: ibnd, j, incr, nnr
+  INTEGER :: ibnd, ebnd, j, incr, nnr
   INTEGER :: i, iin, right_nnr, right_nr3, right_inc
   COMPLEX(DP), ALLOCATABLE :: vpsi(:,:)
   ! ... chunking parameters
@@ -205,13 +206,15 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
   ! ... Task Groups
   LOGICAL :: use_tg
   REAL(DP), ALLOCATABLE :: tg_v(:)
-  COMPLEX(DP), ALLOCATABLE :: tg_psic(:), tg_vpsi(:,:)
-  INTEGER :: idx, brange, dffts_nnr
+  COMPLEX(DP), ALLOCATABLE :: tg_psic(:), tg_vpsi(:,:), psicg(:)
+  INTEGER :: v_siz, idx, brange, dffts_nnr, group_size, hm_vec(3), ierr, vszt
   !
   CALL start_clock( 'vloc_psi' )
-  use_tg = dffts%has_task_groups 
+  use_tg = dffts%has_task_groups
   !
   nnr = dffts%nnr
+  !
+  incr = many_fft
   !
   IF( use_tg ) THEN
      CALL start_clock( 'vloc_psi:tg_gather' )
@@ -221,6 +224,14 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
      ALLOCATE( tg_psic(dffts_nnr), tg_vpsi(lda,incr) )
      CALL tg_gather( dffts, v, tg_v )
      CALL stop_clock( 'vloc_psi:tg_gather' )
+  ELSEIF (many_fft>1) THEN
+     v_siz = dffts%nnr
+     vszt = v_siz*incr
+     ALLOCATE( psicg(vszt), vpsi(v_siz,incr) )
+!#if defined(__OPENMP_GPU)
+!     !$omp target enter data map(alloc:vpsi)
+!#endif
+     !
   ELSE
      dffts_nnr = dffts%nnr
      ALLOCATE( vpsi(lda,1) )
@@ -269,6 +280,38 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
         !$omp end parallel do
         !
      ENDDO
+     !
+  ELSEIF (many_fft > 1) THEN
+     !
+     !$omp target data map(alloc:psicg,vpsi)
+     DO ibnd = 1, m, incr
+        !
+        group_size = MIN(many_fft,m-(ibnd-1))
+        hm_vec(1)=group_size ; hm_vec(2)=n ; hm_vec(3)=group_size
+        ebnd = ibnd+group_size-1
+        !
+        CALL wave_g2r( psi(:,ibnd:ebnd), psicg, dffts, igk=igk_k(:,current_k), &
+                       howmany_set=hm_vec, omp_mod=0 )
+        !
+        !$omp target teams distribute parallel do collapse(2)
+        DO idx = 0, group_size-1
+           DO j = 1, v_siz
+              psicg(idx*v_siz+j) = psicg(idx*v_siz+j) * v(j)
+           ENDDO
+        ENDDO
+        !
+        CALL wave_r2g( psicg, vpsi, dffts, igk=igk_k(:,current_k), &
+                       howmany_set=hm_vec, omp_mod=0 )
+        !
+        !$omp target teams distribute parallel do collapse(2)
+        DO idx = 0, group_size-1
+           DO j = 1, n
+              hpsi(j,ibnd+idx) = hpsi(j,ibnd+idx) + vpsi(j,idx+1)
+           ENDDO
+        ENDDO
+        !
+     ENDDO
+     !$omp end target data
      !
   ELSE
      !
@@ -319,6 +362,11 @@ SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
   IF ( use_tg ) THEN
      DEALLOCATE( tg_psic, tg_vpsi )
      DEALLOCATE( tg_v )
+  ELSEIF (many_fft>1) THEN
+!#if defined(__OPENMP_GPU)
+!     !$omp target exit data map(delete:vpsi)
+!#endif
+     DEALLOCATE( psicg, vpsi )
   ELSE
 #if defined(__OPENMP_GPU)
      !$omp target exit data map(delete:vpsi)
