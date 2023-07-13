@@ -162,13 +162,29 @@ SUBROUTINE openfilq()
   iudrho = 23
   lrdrho = 2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x * nspin_mag
 
-  if(elph_mat)then
-    IF ( ionode .AND. fildrho /= ' ') THEN
+  if(elph_mat.and.lgamma)then
+    IF ( fildrho == ' ')      then
+      write(stdout,'(5x,A)')  'openfilq: Not provided name for fildrho file '
+      iudrho = 0
+    else
+      INQUIRE ( file=TRIM(dvscf_star%dir)//TRIM(prefix)//'.'//TRIM(fildrho)//'.E1', exist=exst )
+      IF (exst ) THEN
+        write(stdout,'(5x,A)')  'openfilq: Found file '//TRIM(prefix)//'.'//TRIM(fildrho)//'.E1'
+        iudrho = 23
+      else
+        write(stdout,'(5x,A)')  'openfilq: file '//TRIM(prefix)//'.'//TRIM(fildrho)//'.E1'//&
+          ' not found in '//dvscf_star%dir
+        iudrho = 0
+      end if
+    end if
+
+    IF ( ionode ) THEN
       INQUIRE (UNIT = iudrho, OPENED = exst)
       IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
       CALL diropn (iudrho, TRIM(fildrho)//'.E', lrdrho, exst, dvscf_star%dir)
       IF (.not.exst) then
-        write(stdout,*)  'openfilq,file '//TRIM(fildrho)//'.E'//' not found in '//dvscf_star%dir
+        write(stdout,'(5x,A)')  'openfilq: Error opening file '//TRIM(prefix)//'.'//TRIM(fildrho)//'.E1'//&
+          ' not found in '//dvscf_star%dir
         iudrho = 0
       end if
     end if

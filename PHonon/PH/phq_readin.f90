@@ -821,11 +821,16 @@ SUBROUTINE phq_readin()
   IF (lmovecell) CALL errore('phq_readin', &
       'The phonon code is not working after vc-relax',1)
 
-  if(elph_mat.and.fildvscf.eq.' ') call errore('phq_readin',&
-       'el-ph with wannier requires fildvscf',1)
 
-  IF(elph_mat.and.npool.ne.1) call errore('phq_readin',&
-       'el-ph with wannier : pools not implemented',1)
+  IF(elph_mat) THEN
+    if(fildvscf.eq.' ') call errore('phq_readin',&
+      'el-ph with wannier requires fildvscf',1)
+    IF(npool.ne.1) call errore('phq_readin',&
+      'el-ph with wannier : pools not implemented',1)
+    IF ((elph_nbnd_min .eq. 1).and.(elph_nbnd_max .eq. 0))&
+      call errore('phq_readin',&
+      'el-ph with wannier : specify bands range with elph_nbnd_min,elph_nbnd_max',1)
+  END IF
 
   IF (elph .AND. okpaw) CALL errore('phq_readin',&
      'Electron-phonon calculations with PAW not tested',1)
