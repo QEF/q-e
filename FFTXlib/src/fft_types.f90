@@ -324,6 +324,7 @@ CONTAINS
 #if defined (__OPENMP_GPU)
     !$omp target enter data map(always,alloc:desc%nsp)
     !$omp target enter data map(always,alloc:desc%nsw)
+    !$omp target enter data map(always,alloc:desc%iss)
     !$omp target enter data map(always,alloc:desc%ismap)
     !$omp target enter data map(always,alloc:desc%ir1p)
     !$omp target enter data map(always,alloc:desc%ir1w)
@@ -392,6 +393,9 @@ CONTAINS
     ENDIF
     IF (OMP_TARGET_IS_PRESENT(c_loc(desc%nsw), OMP_GET_DEFAULT_DEVICE()) == 1) THEN
         !$omp target exit data map(delete:desc%nsw)
+    ENDIF
+    IF (OMP_TARGET_IS_PRESENT(c_loc(desc%iss), OMP_GET_DEFAULT_DEVICE()) == 1) THEN
+        !$omp target exit data map(delete:desc%iss)
     ENDIF
     IF (OMP_TARGET_IS_PRESENT(c_loc(desc%ismap), OMP_GET_DEFAULT_DEVICE()) == 1) THEN
         !$omp target exit data map(delete:desc%ismap)
