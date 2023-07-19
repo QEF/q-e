@@ -95,8 +95,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   v_siz = dfftp%nnr
   nnr_siz = dffts%nnr
   !
-  !$acc data create(psic(1:v_siz)) present_or_copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) copyin(revc0(1:nnr_siz,1:nbnd,1:nksq)) copyout( rho_1(1:v_siz,1:nspin_mag)) 
-!!!  !$acc data create(psic(1:v_siz)) copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) copyin(revc0(1:nnr_siz,1:nbnd,1:nksq)) copyout( rho_1(1:v_siz,1:nspin_mag))
+  !$acc data create(psic(1:v_siz)) present_or_copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) present_or_copyin(revc0(1:nnr_siz,1:nbnd,1:nksq)) copyout( rho_1(1:v_siz,1:nspin_mag)) 
   !
   !$acc kernels
   psic(:) = (0.0d0, 0.0d0)

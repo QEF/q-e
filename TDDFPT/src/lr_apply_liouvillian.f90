@@ -102,7 +102,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   ALLOCATE( sevc1_new(npwx*npol,nbnd,nks))
   !
   nnr_siz= dffts%nnr
-!$acc data present_or_copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) present_or_copyout(evc1_new(1:npwx*npol,1:nbnd,1:nks)) copyout(sevc1_new(1:npwx*npol,1:nbnd,1:nks)) create(spsi1(1:npwx, 1:nbnd))
+!$acc data present_or_copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) present_or_copyout(evc1_new(1:npwx*npol,1:nbnd,1:nks)) copyout(sevc1_new(1:npwx*npol,1:nbnd,1:nks)) create(spsi1(1:npwx, 1:nbnd)) present_or_copyin(revc0(1:nnr_siz,1:nbnd,1))
   !
   d_deeq(:,:,:,:)=0.0d0
   !$acc kernels
@@ -223,15 +223,11 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   ALLOCATE ( psic (dffts%nnr) )
   !
   IF ( gamma_only ) THEN
-!!!     nnr_siz= dffts%nnr     
-!!!$acc data copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) copy(sevc1_new(1:npwx*npol,1:nbnd,1:nks), spsi1(1:npwx, 1:nbnd)) copyout(psic(1:nnr_siz),evc1_new(1:npwx*npol,1:nbnd,1:nks))
      CALL lr_apply_liouvillian_gamma()
-!!!$acc end data 
   ELSE
      CALL lr_apply_liouvillian_k()
   ENDIF
   !
-!!!  !$acc end data
   DEALLOCATE ( psic )
   !
   IF ( (interaction .or. lr_exx) .and. (.not.ltammd)  ) THEN
@@ -272,7 +268,6 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
      !
   ENDIF
   !
-!  !$acc end data
   !
   IF (gstart == 2 .AND. gamma_only ) THEN 
      !$acc kernels
@@ -281,7 +276,6 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
      !$acc end kernels
   ENDIF
 
-!!!  !$acc end data
   !
 !  IF (gstart==2 .and. gamma_only) THEN
 !     DO ik=1,nks
@@ -319,7 +313,6 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
      !
   ENDDO 
   !
-!!!  !$acc end data
   !
   ! Here we apply the S^{-1} operator.
   ! See equations after Eq.(47) of B. Walker et al., J. Chem. Phys.
@@ -385,7 +378,6 @@ CONTAINS
     !
     nnr_siz= dffts%nnr
     !$acc data create (psic(1:nnr_siz))
-!    !$acc data copyin(evc1(1:npwx*npol,1:nbnd,1:nks)) copy(sevc1_new(1:npwx*npol,1:nbnd,1:nks), spsi1(1:npwx, 1:nbnd)) copyout(psic(1:nnr_siz),evc1_new(1:npwx*npol,1:nbnd,1:nks))
     !
     IF ( interaction ) THEN
        !
@@ -457,7 +449,7 @@ CONTAINS
        !
        IF (lr_exx) CALL lr_exx_sum_int()
        !
-       !$acc enter data copyin(revc0(1:nnr_siz,1:nbnd,1), dvrss(1:nnr_siz))
+       !$acc enter data copyin(dvrss(1:nnr_siz))
        DO ibnd = ibnd_start_gamma ,ibnd_end_gamma, incr
           !
           ! Product with the potential vrs = (vltot+vr)
@@ -555,7 +547,7 @@ CONTAINS
           !
        ENDDO
        !
-       !$acc exit data delete(revc0, dvrss)
+       !$acc exit data delete (dvrss)
        !
 #if defined(__MPI)
        !$acc host_data use_device(evc1_new)

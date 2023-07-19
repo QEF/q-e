@@ -459,7 +459,6 @@ contains
           !$acc data copyin(vec_b(:,:,:,num_basis_old+1:num_basis)) create(vecwork(:,:,:)) copyout(D_vec_b(:,:,:,num_basis_old+1:num_basis), C_vec_b(:,:,:,num_basis_old+1:num_basis))      
           do ibr = num_basis_old+1, num_basis
              ! Calculate new D*vec_b
-!             !$acc data copyin(vec_b(:,:,:,ibr)) create(vecwork(:,:,:)) copyout(D_vec_b(:,:,:,ibr), C_vec_b(:,:,:,ibr))
              call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.false.)
              if (.not. poor_of_ram2) THEN
                 !$acc kernels     
@@ -487,7 +486,6 @@ contains
                 if(ibl /= ibr) M_C(ibr,ibl)=M_C(ibl,ibr)
              enddo
              !
-!             !$acc end data
           enddo
           !$acc end data
        else if(poor_of_ram) then ! Less memory needed
@@ -772,7 +770,6 @@ contains
      
        ! The reason of using this method
        
-!       !$acc data copy(left_res(:,:,:,ieign), right_res(:,:,:,ieign)) copyin(left_full(:,:,:,ieign), right_full(:,:,:,ieign))
        call lr_1to1orth(right_res(1,1,1,ieign),left_full(1,1,1,ieign))
        call lr_1to1orth(left_res(1,1,1,ieign),right_full(1,1,1,ieign))
        ! Instead of this will be explained in the document
@@ -799,8 +796,6 @@ contains
        else
           left2(ieign)=lr_dot(left_res(1,1,1,ieign),left_res(1,1,1,ieign))
        endif
-          
-          !       !$acc end data
 
        if (abs(aimag(left2(ieign))) .gt. zero .or. dble(left2(ieign)) .lt. 0.0D0) then
           write(stdout,'(7x,"Warning! Wanging! the residue is weird.")')
@@ -866,7 +861,6 @@ contains
           if (.not. kill_right(ieign)) then
              call treat_residue(right_res(:,:,1,ieign),ieign)
              call lr_norm(right_res(1,1,1,ieign))
-!             call lr_norm(left_res(1,1,1,ieign))
              call orthogonalize(right_res(:,:,:,ieign), evc0(:,:,1), 1, 1,sevc0(:,:,1),npwx,.true.)
              call lr_norm(right_res(1,1,1,ieign))
           endif
@@ -875,7 +869,6 @@ contains
  
     ! Here mGS are called three times and orthogonalize is called once for increasing 
     ! numerical stability of orthonalization
-!    !$acc data copy(left_res(:,:,:,:), right_res(:,:,:,:)) copyin(vec_b(:,:,:,:))
     !$acc data copy(left_res(:,:,:,:), right_res(:,:,:,:), vec_b(:,:,:,:))
     call lr_mGS_orth()    ! 1st
     call lr_mGS_orth_pp()
@@ -890,7 +883,6 @@ contains
        call lr_norm(right_res(:,:,:,ieign))
        call lr_norm(left_res(:,:,:,ieign))
     enddo
-!    !$acc end data
     !
     if (toadd .eq. 0) then
        write(stdout,'("TOADD is zero !!")')
@@ -935,10 +927,7 @@ contains
           ploted(1)=.true.
        endif
     endif
-
-!!    call stop_clock("expan_basis")
-!!    !$acc end data
-
+    !
     return
   end subroutine dav_expan_basis
   !-------------------------------------------------------------------------------
