@@ -410,6 +410,7 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
                                    fft_scatter_many_planes_to_columns_store_omp
   USE fft_types,          ONLY : fft_type_descriptor
   USE fft_buffers,        ONLY : check_buffers_size, aux, aux2
+  USE hipfft
   !
   IMPLICIT NONE
   !
@@ -504,7 +505,11 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
          CALL cft_1z_omp( f((j+i)*dfft_nnr + 1:), sticks(me_p), n3, nx3, isgn, aux(j*dfft_nnr + i*ncpx*nx3 +1:), stream=dfft%a2a_comp )
        ENDDO
        !!$omp end task
-
+       !
+       ! tmp
+       CALL hipCheck(hipDeviceSynchronize())
+       ! tmp
+       !
        !!$omp task depend (in: aux(j*dfft_nnr+1:(j+1)*dfft_nnr))
        CALL fft_scatter_many_columns_to_planes_store_omp( dfft, aux(j*dfft_nnr + 1:), nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
          sticks, dfft%nr3p, isgn, currsize )
@@ -577,11 +582,14 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
 
        !!$omp task depend (in: aux(j*dfft_nnr+1:(j+1)*dfft_nnr))
        DO i = 0, currsize - 1
-         CALL cft_1z_omp( aux(j*dfft_nnr + i*ncpx*nx3 + 1:), sticks( me_p ), n3, nx3, isgn, f((j+i)*dfft_nnr + 1:), nocost=.true., stream=dfft%a2a_comp )
+         CALL cft_1z_omp( aux(j*dfft_nnr + i*ncpx*nx3 + 1:), sticks( me_p ), n3, nx3, isgn, f((j+i)*dfft_nnr + 1:), stream=dfft%a2a_comp )
        ENDDO
        !!$omp end task
        !!$omp end single
-        
+       !
+       !tmp
+       CALL hipCheck(hipDeviceSynchronize())
+       !tmp
        !
        ! This can not be streamed on the same stream of hip calls by now
        !

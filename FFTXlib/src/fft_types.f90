@@ -534,7 +534,7 @@ CONTAINS
     ! SLAB decomposition
     IF (desc%a2a_comp /= 0) THEN
       PRINT*, 'destroying'
-      !CALL hipCheck(hipStreamDestroy( desc%a2a_comp ))
+      CALL hipCheck(hipStreamDestroy( desc%a2a_comp ))
       desc%a2a_comp = 0
     END IF
 #endif

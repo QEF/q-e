@@ -62,7 +62,15 @@ MODULE hipfft
        USE enums
        IMPLICIT NONE
        INTEGER(kind(HIP_SUCCESS)) :: hipStreamDestroy
-       TYPE(C_PTR) :: stream
+       TYPE(C_PTR),VALUE :: stream
+     END FUNCTION
+
+     FUNCTION hipStreamSynchronize(stream) BIND(C, name="hipStreamSynchronize")
+       USE iso_c_binding
+       USE enums
+       IMPLICIT NONE
+       INTEGER(kind(HIP_SUCCESS)) :: hipStreamSynchronize
+       TYPE(C_PTR),VALUE :: stream
      END FUNCTION
 
 
@@ -275,10 +283,12 @@ END MODULE
               hipfft_status = hipfftExecZ2Z(hipfft_planz(ip), c_loc(c), c_loc(cout), HIPFFT_FORWARD)
             !$omp end target data
         ENDIF
-        CALL hipCheck(hipDeviceSynchronize())
         IF(hipfft_status /= 0) CALL fftx_error__(' cft_1z GPU ',' stopped in hipfftExecZ2Z(Forward) ')
             CALL hipfftCheck(hipfft_status)
 
+        CALL hipCheck(hipDeviceSynchronize())
+
+        IF (.NOT.present(stream)) THEN
         tscale = 1.0_DP / nz
         IF (is_inplace) THEN
            !$omp target teams distribute parallel do simd
@@ -286,21 +296,15 @@ END MODULE
               c( i ) = c( i ) * tscale
            END DO
         ELSE
-           IF ( .NOT. nocost_ ) THEN
            !$omp target teams distribute parallel do simd
            DO i=1, ldz * nsl
               cout( i ) = cout( i ) * tscale
            END DO
-           ENDIF
+         ENDIF
         END IF
 
      ELSE IF (isign > 0) THEN
 
-        !CALL  hipCheck(hipStreamCreate(stream_))
-        !IF (present(stream)) THEN
-        !       hipfft_status = hipfftSetStream(hipfft_planz(ip), stream)
-        !        IF(hipfft_status /= 0) call fftx_error__(' fft_scalar_hipFFT: cft_1z ', ' failed to set stream ')
-        !ENDIF
      
         IF (is_inplace) THEN
             !$omp target data use_device_ptr(c)
@@ -313,8 +317,6 @@ END MODULE
         ENDIF
         IF(hipfft_status /= 0) CALL fftx_error__(' cft_1z GPU ',' stopped in hipfftExecZ2Z(Backward) ')
             CALL hipfftCheck(hipfft_status)
-
-        !CALL hipCheck(hipStreamDestroy(stream_))
 
         CALL hipCheck(hipDeviceSynchronize())
 
