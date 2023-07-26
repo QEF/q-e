@@ -240,6 +240,7 @@ target_link_libraries(qe_pp_pw2wannier90_exe
         qe_pw
         qe_modules
         qe_pp
+        qe_lax
         qe_fftx
         qe_upflib
         qe_xclib
