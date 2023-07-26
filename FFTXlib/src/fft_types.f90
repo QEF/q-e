@@ -25,6 +25,7 @@ MODULE fft_types
   USE omp_lib
 #if defined(__OPENMP_GPU)
   USE iso_c_binding
+  USE hipfft
 #endif
   IMPLICIT NONE
   PRIVATE
@@ -164,6 +165,9 @@ MODULE fft_types
     INTEGER              :: subbatchsize = 4  ! size of subbatch for pipelining
     INTEGER, ALLOCATABLE :: srh(:,:) ! These are non blocking send/recv handles that are used to
                                      ! overlap computation and communication of FFTs subbatches.
+#endif
+#if defined(__OPENMP_GPU)
+    TYPE(C_PTR) :: a2a_comp
 #endif
 #if defined(__CUDA)
     ! These CUDA streams are used in the 1D+1D+1D GPU implementation
@@ -377,6 +381,10 @@ CONTAINS
 
 #endif
 
+#if defined(__OPENMP_GPU)
+   CALL hipcheck(hipStreamCreate( desc%a2a_comp ))
+#endif
+
     incremental_grid_identifier = incremental_grid_identifier + 1
     desc%grid_id = incremental_grid_identifier
 
@@ -519,6 +527,16 @@ CONTAINS
         DEALLOCATE( desc%bevents )
     END IF
 
+#endif
+
+#if defined(__OPENMP_GPU) 
+
+    ! SLAB decomposition
+    IF (desc%a2a_comp /= 0) THEN
+      PRINT*, 'destroying'
+      !CALL hipCheck(hipStreamDestroy( desc%a2a_comp ))
+      desc%a2a_comp = 0
+    END IF
 #endif
 
 #if defined(__CUDA) || defined(__OPENMP_GPU)

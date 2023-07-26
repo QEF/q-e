@@ -49,6 +49,23 @@ MODULE hipfft
 
      END FUNCTION hipDeviceSynchronize
 
+     FUNCTION hipStreamCreate(stream) BIND(C, name="hipStreamCreate")
+       USE iso_c_binding
+       USE enums
+       IMPLICIT NONE
+       INTEGER(kind(HIP_SUCCESS)) :: hipStreamCreate
+       TYPE(C_PTR) :: stream
+     END FUNCTION
+
+     FUNCTION hipStreamDestroy(stream) BIND(C, name="hipStreamDestroy")
+       USE iso_c_binding
+       USE enums
+       IMPLICIT NONE
+       INTEGER(kind(HIP_SUCCESS)) :: hipStreamDestroy
+       TYPE(C_PTR) :: stream
+     END FUNCTION
+
+
      FUNCTION hipfftPlan1d(plan,nx,myType,batch) BIND(C, name="hipfftPlan1d")
        USE iso_c_binding
        USE enums
@@ -96,8 +113,17 @@ MODULE hipfft
        IMPLICIT NONE
        INTEGER(kind(HIPFFT_SUCCESS)) :: hipfftDestroy
        TYPE(C_PTR),VALUE :: plan
-
      END FUNCTION
+
+
+     FUNCTION hipfftSetStream(plan,stream) BIND(C, name="hipfftSetStream")
+       USE iso_c_binding
+       USE enums
+       IMPLICIT NONE
+       INTEGER(kind(HIPFFT_SUCCESS)) :: hipfftSetStream
+       TYPE(C_PTR),VALUE :: plan
+       TYPE(C_PTR),VALUE :: stream
+     END FUNCTION 
 
 END INTERFACE
 
@@ -160,7 +186,7 @@ END MODULE
 !=----------------------------------------------------------------------=!
 !
 
-   SUBROUTINE cft_1z_omp(c, nsl, nz, ldz, isign, cout, in_place)
+   SUBROUTINE cft_1z_omp(c, nsl, nz, ldz, isign, cout, stream, in_place, nocost)
 
 !     driver routine for nsl 1d complex fft's of length nz
 !     ldz >= nz is the distance between sequences to be transformed
@@ -173,7 +199,9 @@ END MODULE
 
      INTEGER, INTENT(IN)           :: isign
      INTEGER, INTENT(IN)           :: nsl, nz, ldz
+     TYPE(C_PTR), INTENT(IN), OPTIONAL         :: stream
      LOGICAL, INTENT(IN), OPTIONAL :: in_place
+     LOGICAL, INTENT(IN), OPTIONAL :: nocost
 
      COMPLEX (DP) :: c(:), cout(:)
 
@@ -181,7 +209,7 @@ END MODULE
      INTEGER    :: i, err, idir, ip, void
      INTEGER, SAVE :: zdims( 3, ndims ) = -1
      INTEGER, SAVE :: icurrent = 1
-     LOGICAL :: found
+     LOGICAL :: found, nocost_
 
      LOGICAL, SAVE :: is_inplace
 
@@ -195,6 +223,13 @@ END MODULE
      ELSE
        is_inplace = .false.
      END IF
+     IF (PRESENT(nocost)) THEN
+       nocost_ = nocost
+     ELSE
+       nocost_ = .false.
+     END IF
+
+
      !
      ! Check dimensions and corner cases.
      !
@@ -218,13 +253,18 @@ END MODULE
      !
      !   Now perform the FFTs using machine specific drivers
      !
-
+     ! Associate the plane to the stream
+     !
+     IF (present(stream)) THEN
+         hipfft_status = hipfftSetStream(hipfft_planz(ip), stream)
+         IF(hipfft_status /= 0) call fftx_error__(' fft_scalar_hipFFT: cft_1z ', ' failed to set stream ')
+     ENDIF
+     !
 #if defined(__FFT_CLOCKS)
      CALL start_clock( 'cft_1z' )
 #endif
 
      IF (isign < 0) THEN
-
 
         IF (is_inplace) THEN
             !$omp target data use_device_ptr(c)
@@ -246,13 +286,22 @@ END MODULE
               c( i ) = c( i ) * tscale
            END DO
         ELSE
+           IF ( .NOT. nocost_ ) THEN
            !$omp target teams distribute parallel do simd
            DO i=1, ldz * nsl
               cout( i ) = cout( i ) * tscale
            END DO
+           ENDIF
         END IF
 
      ELSE IF (isign > 0) THEN
+
+        !CALL  hipCheck(hipStreamCreate(stream_))
+        !IF (present(stream)) THEN
+        !       hipfft_status = hipfftSetStream(hipfft_planz(ip), stream)
+        !        IF(hipfft_status /= 0) call fftx_error__(' fft_scalar_hipFFT: cft_1z ', ' failed to set stream ')
+        !ENDIF
+     
         IF (is_inplace) THEN
             !$omp target data use_device_ptr(c)
               hipfft_status = hipfftExecZ2Z(hipfft_planz(ip), c_loc(c), c_loc(c), HIPFFT_BACKWARD)
@@ -264,6 +313,8 @@ END MODULE
         ENDIF
         IF(hipfft_status /= 0) CALL fftx_error__(' cft_1z GPU ',' stopped in hipfftExecZ2Z(Backward) ')
             CALL hipfftCheck(hipfft_status)
+
+        !CALL hipCheck(hipStreamDestroy(stream_))
 
         CALL hipCheck(hipDeviceSynchronize())
 

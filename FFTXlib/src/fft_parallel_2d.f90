@@ -429,6 +429,8 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
   !------------------PROVISIONAL--------------------
   INTEGER :: dfft_nproc
   INTEGER, ALLOCATABLE :: dfft_iss(:), dfft_nsw(:), dfft_nsp(:), dfft_ismap(:)
+  REAL (DP)  :: tscale
+  INTEGER :: k, nsl, ldz
   !-------------------------------------------------------
   !
   !
@@ -464,7 +466,7 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
   dfft_nproc=dfft%nproc
   ALLOCATE( dfft_iss(dfft_nproc), dfft_nsw(dfft_nproc), dfft_nsp(dfft_nproc) )
   ALLOCATE( dfft_ismap(nx1*nx2) )
-!*  !$omp target enter data map(alloc:dfft_iss,dfft_nsw,dfft_nsp,dfft_ismap)
+  !$omp target enter data map(alloc:dfft_iss,dfft_nsw,dfft_nsp,dfft_ismap)
 !  !$omp target
   DO i = 1, dfft_nproc
     dfft_iss(i) = dfft%iss(i)
@@ -472,12 +474,12 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
     dfft_nsp(i) = dfft%nsp(i)
   ENDDO
 !  !$omp end target
-!*  !$omp target update to(dfft_iss,dfft_nsw,dfft_nsp)
+  !$omp target update to(dfft_iss,dfft_nsw,dfft_nsp)
 !  !$omp target teams distribute parallel do
   DO i = 1, nx1*nx2
     dfft_ismap(i) = dfft%ismap(i)
   ENDDO
-!*  !$omp target update to(dfft_ismap)
+  !$omp target update to(dfft_ismap)
 !-------------------------------------------------
 
   !stop
@@ -499,13 +501,13 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        !!$omp single
        !!$omp task depend (out: aux(j*dfft_nnr+1:(j+1)*dfft_nnr))
        DO i = 0, currsize - 1
-!*         CALL cft_1z_omp( f((j+i)*dfft_nnr + 1:), sticks(me_p), n3, nx3, isgn, aux(j*dfft_nnr + i*ncpx*nx3 +1:) )
+         CALL cft_1z_omp( f((j+i)*dfft_nnr + 1:), sticks(me_p), n3, nx3, isgn, aux(j*dfft_nnr + i*ncpx*nx3 +1:), stream=dfft%a2a_comp )
        ENDDO
        !!$omp end task
 
        !!$omp task depend (in: aux(j*dfft_nnr+1:(j+1)*dfft_nnr))
-!*       CALL fft_scatter_many_columns_to_planes_store_omp( dfft, aux(j*dfft_nnr + 1:), nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
-!*         sticks, dfft%nr3p, isgn, currsize )
+       CALL fft_scatter_many_columns_to_planes_store_omp( dfft, aux(j*dfft_nnr + 1:), nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
+         sticks, dfft%nr3p, isgn, currsize )
        !!$omp end task
        !!$omp end single
 
@@ -516,18 +518,18 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
 
        !!$omp single
        !!$omp task depend (out: f(j*dfft_nnr+1:(j+1)*dfft_nnr))
-!*       CALL fft_scatter_many_columns_to_planes_send_omp( dfft, aux(j*dfft%nnr + 1:), nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
-!*         aux2(j*dfft_nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1, dfft_iss, dfft_nsw, dfft_nsp, dfft_ismap )
+       CALL fft_scatter_many_columns_to_planes_send_omp( dfft, aux(j*dfft%nnr + 1:), nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
+         aux2(j*dfft_nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1, dfft_iss, dfft_nsw, dfft_nsp, dfft_ismap )
        !!$omp end task
 
        IF (currsize == dfft%subbatchsize) THEN
          !!$omp task depend (in: f(j*dfft_nnr+1:(j+1)*dfft_nnr))
-!*         CALL cft_2xy_omp( f(j*dfft_nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes )
+         CALL cft_2xy_omp( f(j*dfft_nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes )
          !!$omp end task
        ELSE
          !!$omp task depend (in: f(j*dfft_nnr+1:(j+1)*dfft_nnr))
          DO i = 0, currsize - 1
-!*           CALL cft_2xy_omp( f((j+i)*dfft_nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes )
+           CALL cft_2xy_omp( f((j+i)*dfft_nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes )
          ENDDO
          !!$omp end task
        ENDIF
@@ -551,16 +553,16 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        ENDIF
 
        IF (currsize == dfft%subbatchsize) THEN
-!*         CALL cft_2xy_omp( f(j*dfft_nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes )
+         CALL cft_2xy_omp( f(j*dfft_nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes )
        ELSE
          DO i = 0, currsize - 1
-!*           CALL cft_2xy_omp( f((j+i)*dfft_nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes )
+           CALL cft_2xy_omp( f((j+i)*dfft_nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes )
          ENDDO
        ENDIF
 
-!*       CALL fft_scatter_many_planes_to_columns_store_omp( dfft, nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
-!*                            aux2(j*dfft_nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1, &
-!*                            dfft_iss, dfft_nsw, dfft_nsp, dfft_ismap)
+       CALL fft_scatter_many_planes_to_columns_store_omp( dfft, nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
+                            aux2(j*dfft_nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1, &
+                            dfft_iss, dfft_nsw, dfft_nsp, dfft_ismap)
 
      ENDDO
 
@@ -569,23 +571,37 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
 
        !!$omp single
        !!$omp task depend (out: aux(j*dfft_nnr+1:(j+1)*dfft_nnr))
-!*       CALL fft_scatter_many_planes_to_columns_send_omp( dfft, aux(j*dfft_nnr + 1:), nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
-!*         aux2(j*dfft_nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
+       CALL fft_scatter_many_planes_to_columns_send_omp( dfft, aux(j*dfft_nnr + 1:), nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
+         aux2(j*dfft_nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
        !!$omp end task
 
        !!$omp task depend (in: aux(j*dfft_nnr+1:(j+1)*dfft_nnr))
        DO i = 0, currsize - 1
-!*         CALL cft_1z_omp( aux(j*dfft_nnr + i*ncpx*nx3 + 1:), sticks( me_p ), n3, nx3, isgn, f((j+i)*dfft_nnr + 1:) )
+         CALL cft_1z_omp( aux(j*dfft_nnr + i*ncpx*nx3 + 1:), sticks( me_p ), n3, nx3, isgn, f((j+i)*dfft_nnr + 1:), nocost=.true., stream=dfft%a2a_comp )
        ENDDO
        !!$omp end task
        !!$omp end single
+        
+       !
+       ! This can not be streamed on the same stream of hip calls by now
+       !
+       tscale = 1.0_DP / n3
+       nsl = sticks(me_p)
+       ldz = nx3
+       DO i = 0, currsize - 1
+           !$omp target teams distribute parallel do simd
+           DO k=1, nsl * ldz
+               f((j+i)*dfft_nnr + k) = f((j+i)*dfft_nnr + k) * tscale
+           END DO
+        ENDDO
+
 
      ENDDO
   ENDIF
   !
 
 !-------------HIGHLY PROVISIONAL-------------------
-!*  !$omp target exit data map(delete:dfft_iss,dfft_nsw,dfft_nsp,dfft_ismap)
+ !$omp target exit data map(delete:dfft_iss,dfft_nsw,dfft_nsp,dfft_ismap)
   DEALLOCATE( dfft_iss, dfft_nsw, dfft_nsp )
   DEALLOCATE( dfft_ismap )
 !---------------------------------------------------
