@@ -502,13 +502,11 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        !!$omp single
        !!$omp task depend (out: aux(j*dfft_nnr+1:(j+1)*dfft_nnr))
        DO i = 0, currsize - 1
-         CALL cft_1z_omp( f((j+i)*dfft_nnr + 1:), sticks(me_p), n3, nx3, isgn, aux(j*dfft_nnr + i*ncpx*nx3 +1:), stream=dfft%a2a_comp )
+         CALL cft_1z_omp( f((j+i)*dfft_nnr + 1:), sticks(me_p), n3, nx3, isgn, aux(j*dfft_nnr + i*ncpx*nx3 +1:),stream=dfft%a2a_comp)
        ENDDO
        !!$omp end task
        !
-       ! tmp
        CALL hipCheck(hipDeviceSynchronize())
-       ! tmp
        !
        !!$omp task depend (in: aux(j*dfft_nnr+1:(j+1)*dfft_nnr))
        CALL fft_scatter_many_columns_to_planes_store_omp( dfft, aux(j*dfft_nnr + 1:), nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
@@ -582,28 +580,12 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
 
        !!$omp task depend (in: aux(j*dfft_nnr+1:(j+1)*dfft_nnr))
        DO i = 0, currsize - 1
-         CALL cft_1z_omp( aux(j*dfft_nnr + i*ncpx*nx3 + 1:), sticks( me_p ), n3, nx3, isgn, f((j+i)*dfft_nnr + 1:), stream=dfft%a2a_comp )
+         CALL cft_1z_omp( aux(j*dfft_nnr + i*ncpx*nx3 + 1:), sticks( me_p ), n3, nx3, isgn, f((j+i)*dfft_nnr + 1:), dfft%a2a_comp )
        ENDDO
        !!$omp end task
        !!$omp end single
        !
-       !tmp
        CALL hipCheck(hipDeviceSynchronize())
-       !tmp
-       !
-       ! This can not be streamed on the same stream of hip calls by now
-       !
-       tscale = 1.0_DP / n3
-       nsl = sticks(me_p)
-       ldz = nx3
-       DO i = 0, currsize - 1
-           !$omp target teams distribute parallel do simd
-           DO k=1, nsl * ldz
-               f((j+i)*dfft_nnr + k) = f((j+i)*dfft_nnr + k) * tscale
-           END DO
-        ENDDO
-
-
      ENDDO
   ENDIF
   !

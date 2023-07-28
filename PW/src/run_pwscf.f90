@@ -76,7 +76,7 @@ SUBROUTINE run_pwscf( exit_status )
   USE oscdft_functions,  ONLY : oscdft_run_pwscf
 #endif
 #if defined(__ROCBLAS)
-  USE rocblas,           ONLY : rocblas_init, rocblas_destroy
+  USE rocblas,           ONLY : rocblas_init, rocblas_destroy, rocblas_a2a_init, rocblas_a2a_destroy
 #endif
   !
   IMPLICIT NONE
@@ -140,7 +140,7 @@ SUBROUTINE run_pwscf( exit_status )
   END IF
 #endif
 #if defined(__ROCBLAS)
-  CALL rocblas_init()  
+  CALL rocblas_init() 
 #endif
   !
   CALL check_stop_init()
@@ -362,7 +362,7 @@ SUBROUTINE run_pwscf( exit_status )
   CALL qmmm_shutdown()
   !
 #if defined(__ROCBLAS)
-  CALL rocblas_destroy()  
+  CALL rocblas_destroy()
 #endif
   RETURN
   !

@@ -194,7 +194,7 @@ END MODULE
 !=----------------------------------------------------------------------=!
 !
 
-   SUBROUTINE cft_1z_omp(c, nsl, nz, ldz, isign, cout, stream, in_place, nocost)
+   SUBROUTINE cft_1z_omp(c, nsl, nz, ldz, isign, cout, stream, in_place)
 
 !     driver routine for nsl 1d complex fft's of length nz
 !     ldz >= nz is the distance between sequences to be transformed
@@ -209,7 +209,6 @@ END MODULE
      INTEGER, INTENT(IN)           :: nsl, nz, ldz
      TYPE(C_PTR), INTENT(IN), OPTIONAL         :: stream
      LOGICAL, INTENT(IN), OPTIONAL :: in_place
-     LOGICAL, INTENT(IN), OPTIONAL :: nocost
 
      COMPLEX (DP) :: c(:), cout(:)
 
@@ -217,13 +216,14 @@ END MODULE
      INTEGER    :: i, err, idir, ip, void
      INTEGER, SAVE :: zdims( 3, ndims ) = -1
      INTEGER, SAVE :: icurrent = 1
-     LOGICAL :: found, nocost_
-
+     LOGICAL :: found
+     
+     TYPE(C_PTR)   :: stream_
      LOGICAL, SAVE :: is_inplace
 
      ! AMD hipFFT library variables
 
-     INTEGER, SAVE :: hipfft_status = 0
+     INTEGER, SAVE :: hipfft_status = 0, incc = 1 
      type(c_ptr), SAVE :: hipfft_planz( ndims ) = c_null_ptr
 
      IF (PRESENT(in_place)) THEN
@@ -231,13 +231,11 @@ END MODULE
      ELSE
        is_inplace = .false.
      END IF
-     IF (PRESENT(nocost)) THEN
-       nocost_ = nocost
+     IF (PRESENT(stream)) THEN
+       stream_ = stream
      ELSE
-       nocost_ = .false.
+       stream_ = 0
      END IF
-
-
      !
      ! Check dimensions and corner cases.
      !
@@ -263,10 +261,8 @@ END MODULE
      !
      ! Associate the plane to the stream
      !
-     IF (present(stream)) THEN
-         hipfft_status = hipfftSetStream(hipfft_planz(ip), stream)
-         IF(hipfft_status /= 0) call fftx_error__(' fft_scalar_hipFFT: cft_1z ', ' failed to set stream ')
-     ENDIF
+     hipfft_status = hipfftSetStream(hipfft_planz(ip), stream_)
+     IF(hipfft_status /= 0) call fftx_error__(' fft_scalar_hipFFT: cft_1z ', ' failed to set stream ')
      !
 #if defined(__FFT_CLOCKS)
      CALL start_clock( 'cft_1z' )
@@ -284,11 +280,10 @@ END MODULE
             !$omp end target data
         ENDIF
         IF(hipfft_status /= 0) CALL fftx_error__(' cft_1z GPU ',' stopped in hipfftExecZ2Z(Forward) ')
-            CALL hipfftCheck(hipfft_status)
+        CALL hipfftCheck(hipfft_status)
 
         CALL hipCheck(hipDeviceSynchronize())
 
-        IF (.NOT.present(stream)) THEN
         tscale = 1.0_DP / nz
         IF (is_inplace) THEN
            !$omp target teams distribute parallel do simd
@@ -296,12 +291,11 @@ END MODULE
               c( i ) = c( i ) * tscale
            END DO
         ELSE
-           !$omp target teams distribute parallel do simd
-           DO i=1, ldz * nsl
-              cout( i ) = cout( i ) * tscale
-           END DO
-         ENDIF
-        END IF
+             !$omp target teams distribute parallel do simd
+             DO i=1, ldz * nsl
+                cout( i ) = cout( i ) * tscale
+             END DO
+        ENDIF
 
      ELSE IF (isign > 0) THEN
 
@@ -315,8 +309,9 @@ END MODULE
             hipfft_status = hipfftExecZ2Z(hipfft_planz(ip), c_loc(c), c_loc(cout), HIPFFT_BACKWARD)
             !$omp end target data
         ENDIF
+
         IF(hipfft_status /= 0) CALL fftx_error__(' cft_1z GPU ',' stopped in hipfftExecZ2Z(Backward) ')
-            CALL hipfftCheck(hipfft_status)
+        CALL hipfftCheck(hipfft_status)
 
         CALL hipCheck(hipDeviceSynchronize())
 
