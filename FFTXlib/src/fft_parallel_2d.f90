@@ -527,16 +527,18 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
 
        IF (currsize == dfft%subbatchsize) THEN
          !!$omp task depend (in: f(j*dfft_nnr+1:(j+1)*dfft_nnr))
-         CALL cft_2xy_omp( f(j*dfft_nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes )
+         CALL cft_2xy_omp( f(j*dfft_nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes, stream=dfft%a2a_comp )
          !!$omp end task
        ELSE
          !!$omp task depend (in: f(j*dfft_nnr+1:(j+1)*dfft_nnr))
          DO i = 0, currsize - 1
-           CALL cft_2xy_omp( f((j+i)*dfft_nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes )
+           CALL cft_2xy_omp( f((j+i)*dfft_nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes, stream=dfft%a2a_comp )
          ENDDO
          !!$omp end task
        ENDIF
        !!$omp end single
+
+       CALL hipCheck(hipDeviceSynchronize())
 
      ENDDO
      !
@@ -556,12 +558,14 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        ENDIF
 
        IF (currsize == dfft%subbatchsize) THEN
-         CALL cft_2xy_omp( f(j*dfft_nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes )
+         CALL cft_2xy_omp( f(j*dfft_nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes, stream=dfft%a2a_comp )
        ELSE
          DO i = 0, currsize - 1
-           CALL cft_2xy_omp( f((j+i)*dfft_nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes )
+           CALL cft_2xy_omp( f((j+i)*dfft_nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes, stream=dfft%a2a_comp )
          ENDDO
        ENDIF
+
+       CALL hipCheck(hipDeviceSynchronize())
 
        CALL fft_scatter_many_planes_to_columns_store_omp( dfft, nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
                             aux2(j*dfft_nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1, &

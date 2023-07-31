@@ -223,7 +223,7 @@ END MODULE
 
      ! AMD hipFFT library variables
 
-     INTEGER, SAVE :: hipfft_status = 0, incc = 1 
+     INTEGER, SAVE :: hipfft_status = 0
      type(c_ptr), SAVE :: hipfft_planz( ndims ) = c_null_ptr
 
      IF (PRESENT(in_place)) THEN
@@ -313,7 +313,7 @@ END MODULE
         IF(hipfft_status /= 0) CALL fftx_error__(' cft_1z GPU ',' stopped in hipfftExecZ2Z(Backward) ')
         CALL hipfftCheck(hipfft_status)
 
-        CALL hipCheck(hipDeviceSynchronize())
+        !CALL hipCheck(hipDeviceSynchronize())
 
      END IF
 
@@ -371,7 +371,7 @@ END MODULE
 
    END SUBROUTINE cft_1z_omp
 
-   SUBROUTINE cft_2xy_omp(r_d, nzl, nx, ny, ldx, ldy, isign, pl2ix)
+   SUBROUTINE cft_2xy_omp(r_d, nzl, nx, ny, ldx, ldy, isign, pl2ix, stream)
 
 !     driver routine for nzl 2d complex fft's of lengths nx and ny
 !     input : r_d(ldx*ldy)  complex, transform is in-place
@@ -385,8 +385,7 @@ END MODULE
      IMPLICIT NONE
 
      INTEGER, INTENT(IN) :: isign, ldx, ldy, nx, ny, nzl
-     !FIXME: stream support not yet working
-     !INTEGER(kind = hip_stream_kind), INTENT(IN) :: stream
+     TYPE(C_PTR), INTENT(IN), OPTIONAL :: stream
      INTEGER, OPTIONAL, INTENT(IN) :: pl2ix(:)
      COMPLEX (DP), TARGET :: r_d(ldx,ldy,nzl)
      INTEGER :: i, k, j, err, idir, ip, kk, void, istat
@@ -401,6 +400,7 @@ END MODULE
 
      INTEGER, SAVE :: hipfft_status = 0
      type(c_ptr), SAVE :: hipfft_plan_2d( ndims ) = c_null_ptr
+     TYPE(C_PTR) :: stream_
      INTEGER :: batch_1, batch_2
 
      dofft( 1 : nx ) = .TRUE.
@@ -420,6 +420,12 @@ END MODULE
        batch_2 = nx-i+1
      END IF
 
+     IF (present(stream)) THEN
+       stream_ = stream
+     ELSE
+       stream_ = 0
+     ENDIF
+
      !
      !   Here initialize table only if necessary
      !
@@ -434,8 +440,17 @@ END MODULE
 
      END IF
 
-     !istat = hipfftSetStream(hipfft_plan_2d(ip), stream)
-     !CALL fftx_error__(" fft_scalar_hipFFT: cft_2xy_omp ", " failed to set stream ", istat)
+!#if defined(__HIPFFT_ALL_XY_PLANES)
+     hipfft_status = hipfftSetStream(hipfft_plan_2d(ip), stream_)
+     IF(hipfft_status /= 0) CALL fftx_error__(' fft_scalar_hipFFT: cft_2xy_omp ', ' failed to set stream ')
+!#else
+!     hipfft_status = hipfftSetStream(hipfft_plan_x(ip), stream_)
+!     IF(hipfft_status /= 0) fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " failed to set stream ")
+!     hipfft_status = hipfftSetStream(hipfft_plan_y(1,ip), stream_)
+!     IF(hipfft_status /= 0) fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " failed to set stream ")
+!     hipfft_status = hipfftSetStream(hipfft_plan_y(2,ip), stream_)
+!     IF(hipfft_status /= 0) fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " failed to set stream ")
+!#endif
 
      !
      !   Now perform the FFTs using machine specific drivers
@@ -447,15 +462,15 @@ END MODULE
 
      IF( isign < 0 ) THEN
         !
-        tscale = 1.0_DP / ( nx * ny )
         !
         !$omp target data use_device_ptr(r_d)
-        istat = hipfftExecZ2Z( hipfft_plan_2d(ip), c_loc(r_d), c_loc(r_d), HIPFFT_FORWARD )
+        hipfft_status = hipfftExecZ2Z( hipfft_plan_2d(ip), c_loc(r_d), c_loc(r_d), HIPFFT_FORWARD )
         !$omp end target data
-        CALL fftx_error__(" fft_scalar_hipFFT: cft_2xy_omp ", " hipfftExecZ2Z failed ", istat)
+        IF(hipfft_status /= 0) CALL fftx_error__(" fft_scalar_hipFFT: cft_2xy_omp ", " hipfftExecZ2Z failed ")
         CALL hipCheck(hipDeviceSynchronize())
 
         !!!$omp target teams distribute parallel do simd
+        tscale = 1.0_DP / ( nx * ny )
         !$omp target teams distribute parallel do collapse(3)
         DO k=1, nzl
            DO j=1, ldy
@@ -467,13 +482,12 @@ END MODULE
 
      ELSE IF( isign > 0 ) THEN
         !$omp target data use_device_ptr(r_d)
-        istat = hipfftExecZ2Z( hipfft_plan_2d(ip), c_loc(r_d), c_loc(r_d), HIPFFT_BACKWARD )
+        hipfft_status = hipfftExecZ2Z( hipfft_plan_2d(ip), c_loc(r_d), c_loc(r_d), HIPFFT_BACKWARD )
         !$omp end target data
 
-        CALL fftx_error__(" fft_scalar_hipFFT: cft_2xy_omp ", " hipfftExecZ2Z failed ", istat)
-        CALL hipCheck(hipDeviceSynchronize())
+        IF(hipfft_status /= 0) CALL fftx_error__(" fft_scalar_hipFFT: cft_2xy_omp ", " hipfftExecZ2Z failed ", istat)
+        !CALL hipCheck(hipDeviceSynchronize())
      END IF
-
 
 
 #if defined(__FFT_CLOCKS)
