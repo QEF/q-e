@@ -20,7 +20,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   USE noncollin_module, ONLY : noncolin, nspin_lsda
   USE ions_base,        ONLY : nat, tau
   USE ldaU,             ONLY : lda_plus_u, lda_plus_u_kind, ldmx_b, &
-                               nsg, v_nsg 
+                               nsg, v_nsg
   USE xc_lib,           ONLY : xclib_dft_is
   USE scf,              ONLY : scf_type
   USE cell_base,        ONLY : alat
@@ -35,10 +35,10 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   TYPE(scf_type), INTENT(INOUT) :: rho
   !! the valence charge
   TYPE(scf_type), INTENT(INOUT) :: v
-  !! the scf (Hxc) potential 
-  !=================> NB: NOTE that in F90 derived data type must be INOUT and 
+  !! the scf (Hxc) potential
+  !=================> NB: NOTE that in F90 derived data type must be INOUT and
   !=================> not just OUT because otherwise their allocatable or pointer
-  !=================> components are NOT defined 
+  !=================> components are NOT defined
   REAL(DP), INTENT(IN) :: rho_core(dfftp%nnr)
   !! the core charge
   COMPLEX(DP), INTENT(IN) :: rhog_core(ngm)
@@ -78,7 +78,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !
   CALL v_h( rho%of_g(:,1), ehart, charge, v%of_r )
   !
-  ! ... DFT+U(+V): build up (extended) Hubbard potential 
+  ! ... DFT+U(+V): build up (extended) Hubbard potential
   !
   IF (lda_plus_u) THEN
      !
@@ -119,7 +119,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   ENDIF
   !
   ! ... add an electric field
-  ! 
+  !
   DO is = 1, nspin_lsda
      CALL add_efield(v%of_r(1,is), etotefield, rho%of_r(:,1), .false. )
   END DO
@@ -177,7 +177,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   REAL(DP), INTENT(INOUT) :: v(dfftp%nnr,nspin)
   !! V_xc potential
   REAL(DP), INTENT(INOUT) :: kedtaur(dfftp%nnr,nspin)
-  !! local K energy density                     
+  !! local K energy density
   REAL(DP), INTENT(INOUT) :: vtxc
   !! integral V_xc * rho
   REAL(DP), INTENT(INOUT) :: etxc
@@ -237,7 +237,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
        rhogsum(k) = fac*rhog_core(k) + ( rho%of_g(k,1) + sgn_is*rho%of_g(k,nspin) )*0.5D0
      ENDDO
      !
-     CALL fft_gradient_g2r( dfftp, rhogsum, g, grho(:,:,is) ) 
+     CALL fft_gradient_g2r( dfftp, rhogsum, g, grho(:,:,is) )
      !
   ENDDO
   !
@@ -363,7 +363,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
     write (stdout, '(/,5x, "negative rho (up,down): ", 2es10.3)') rhoneg1, rhoneg2
   ENDIF
   !
-  vtxc = omega * vtxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 ) 
+  vtxc = omega * vtxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   etxc = omega * etxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   !
   IF ( dft_is_nonlocc() ) CALL nlc( rho%of_r, rho_core, nspin, etxc, vtxc, v )
@@ -461,14 +461,18 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   etxc = 0.D0 ;  rhoneg1 = 0.D0
   vtxc = 0.D0 ;  rhoneg2 = 0.D0
   !
-  !$acc data copyin( rho_core, rhog_core, rho ) copyout( v )
-  !$acc data copyin( rho%of_r, rho%of_g )
-  !
   ALLOCATE( ex(dfftp%nnr), vx(dfftp%nnr,nspin) )
   ALLOCATE( ec(dfftp%nnr), vc(dfftp%nnr,nspin) )
-  !$acc data create( ex, ec, vx, vc )
   !
+#if defined(_OPENACC)
+  !$acc data copyin( rho_core, rhog_core, rho ) copyout( v )
+  !$acc data copyin( rho%of_r, rho%of_g )
+  !$acc data create( ex, ec, vx, vc )
   !$acc parallel loop
+#elif defined(__OPENMP_GPU)
+  !$omp target data map(always,to:rho%of_r) map(to:rho_core) map(alloc:ex,ec,vx,vc) map(from:v)
+  !$omp target teams distribute parallel do
+#endif
   DO ir = 1, dfftp_nnr
     rho%of_r(ir,1) = rho%of_r(ir,1) + rho_core(ir)
   ENDDO
@@ -478,7 +482,11 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
      !
      CALL xc( dfftp_nnr, 1, 1, rho%of_r, ex, ec, vx, vc, gpu_args_=.TRUE. )
      !
+#if defined(_OPENACC)
      !$acc parallel loop reduction(+:etxc,vtxc,rhoneg1) present(rho)
+#elif defined(__OPENMP_GPU)
+     !$omp target teams distribute parallel do reduction(+:etxc,vtxc,rhoneg1)
+#endif
      DO ir = 1, dfftp_nnr
         v(ir,1) = e2*( vx(ir,1) + vc(ir,1) )
         etxc = etxc + e2*( ex(ir) + ec(ir) )*rho%of_r(ir,1)
@@ -493,8 +501,12 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
      !
      CALL xc( dfftp_nnr, 2, 2, rho%of_r, ex, ec, vx, vc, gpu_args_=.TRUE. )
      !
+#if defined(_OPENACC)
      !$acc parallel loop reduction(+:etxc,vtxc,rhoneg1,rhoneg2) &
      !$acc&              present(rho)
+#elif defined(__OPENMP_GPU)
+     !$omp target teams distribute parallel do reduction(+:etxc,vtxc,rhoneg1,rhoneg2)
+#endif
      DO ir = 1, dfftp_nnr
         v(ir,1) = e2*( vx(ir,1) + vc(ir,1) )
         v(ir,2) = e2*( vx(ir,2) + vc(ir,2) )
@@ -514,7 +526,12 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
       !
       CALL xc( dfftp_nnr, 4, 2, rho%of_r, ex, ec, vx, vc, gpu_args_=.TRUE. )
       !
-      !$acc parallel loop reduction(+:etxc,vtxc,rhoneg1,rhoneg2) present(rho)
+#if defined(_OPENACC)
+      !$acc parallel loop reduction(+:etxc,vtxc,rhoneg1,rhoneg2) &
+      !$acc&              present(rho)
+#elif defined(__OPENMP_GPU)
+      !$omp target teams distribute parallel do reduction(+:etxc,vtxc,rhoneg1,rhoneg2)
+#endif
       DO ir = 1, dfftp_nnr
          arho = ABS( rho%of_r(ir,1) )
          IF ( arho < vanishing_charge ) THEN
@@ -546,7 +563,11 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
       !
   ENDIF
   !
+#if defined(_OPENACC)
   !$acc end data
+#elif defined(__OPENMP_GPU)
+  !$omp end target data
+#endif
   DEALLOCATE( ex, vx )
   DEALLOCATE( ec, vc )
   !
@@ -604,7 +625,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   USE mp,                ONLY : mp_sum
   USE martyna_tuckerman, ONLY : wg_corr_h, do_comp_mt
   USE esm,               ONLY : do_comp_esm, esm_hartree, esm_bc
-  USE Coul_cut_2D,       ONLY : do_cutoff_2D, cutoff_2D, cutoff_hartree  
+  USE Coul_cut_2D,       ONLY : do_cutoff_2D, cutoff_2D, cutoff_hartree
   !
   IMPLICIT NONE
   !
@@ -657,7 +678,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
 !$omp parallel do private( fac, rgtot_re, rgtot_im ), reduction(+:ehart)
         DO ig = gstart, ngm
            !
-           fac = 1.D0 / gg(ig) 
+           fac = 1.D0 / gg(ig)
            !
            rgtot_re = REAL(  rhog(ig) )
            rgtot_im = AIMAG( rhog(ig) )
@@ -788,11 +809,11 @@ SUBROUTINE v_hubbard( ns, v_hub, eth )
   !
   !  ... local variables
   !
-  REAL(DP) :: effU, sgn(2) 
+  REAL(DP) :: effU, sgn(2)
   INTEGER  :: is, isop, na, nt, m1, m2
   !
   eth    = 0.d0
-  sgn(1) =  1.d0  
+  sgn(1) =  1.d0
   sgn(2) = -1.d0
   !
   v_hub(:,:,:,:) = 0.d0
@@ -807,8 +828,8 @@ SUBROUTINE v_hubbard( ns, v_hub, eth )
            effU = Hubbard_U(nt) - Hubbard_J0(nt)
         ELSE
            effU = Hubbard_U(nt)
-        ENDIF 
-        ! 
+        ENDIF
+        !
         DO is = 1, nspin
            DO m1 = 1, 2 * Hubbard_l(nt) + 1
               eth = eth + ( Hubbard_alpha(nt) + 0.5D0*effU )*ns(m1,m1,is,na)
@@ -841,7 +862,7 @@ SUBROUTINE v_hubbard( ns, v_hub, eth )
         ENDDO
         !
      END IF
-     !   
+     !
   ENDDO
   !
   IF (nspin==1) eth = 2.d0 * eth
@@ -894,7 +915,7 @@ SUBROUTINE v_hubbard_b (ns, v_hub, eth)
           CALL errore('v_hubbard_b', 'J0 is not supported in DFT+U with multiple channels per atomic type',1)
      !
      IF (Hubbard_beta(nt).NE.0.d0) &
-     CALL errore('v_hubbard_b', 'Hubbard_beta is not supported in DFT+U with multiple channels per atomic type',1) 
+     CALL errore('v_hubbard_b', 'Hubbard_beta is not supported in DFT+U with multiple channels per atomic type',1)
      !
      IF (is_hubbard_back(nt)) THEN
         !
@@ -902,7 +923,7 @@ SUBROUTINE v_hubbard_b (ns, v_hub, eth)
         !
         DO is = 1, nspin
            !
-           DO m1 = 1, ldim_back(nt) 
+           DO m1 = 1, ldim_back(nt)
               !
               eth = eth + ( Hubbard_alpha_back(nt) + 0.5D0 * effU ) * &
                               ns(m1,m1,is,na)
@@ -983,7 +1004,7 @@ SUBROUTINE v_hubbard_full( ns, v_hub, eth )
      !
      IF (Hubbard_U(nt)/=0.d0) THEN
         !
-        ! Initialize U(m1,m2,m3,m4) matrix 
+        ! Initialize U(m1,m2,m3,m4) matrix
         !
         CALL hubbard_matrix( Hubbard_lmax, Hubbard_l(nt), Hubbard_U(nt), &
                                Hubbard_J(1,nt), u_matrix )
@@ -1001,7 +1022,7 @@ SUBROUTINE v_hubbard_full( ns, v_hub, eth )
         IF (nspin==1) n_tot = 2.d0 * n_tot
         !
         mag2  = 0.d0
-        ! 
+        !
         IF (nspin==2) THEN
            DO m1 = 1, 2 * Hubbard_l(nt) + 1
               mag2 = mag2 + ns(m1,m1,1,na) - ns(m1,m1,2,na)
@@ -1026,12 +1047,12 @@ SUBROUTINE v_hubbard_full( ns, v_hub, eth )
            !
            DO m1 = 1, 2 * Hubbard_l(nt) + 1
               !
-              ! Hubbard potential: DC contribution  
+              ! Hubbard potential: DC contribution
               !
               v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + Hubbard_J(1,nt)*n_spin + &
                          0.5d0*(Hubbard_U(nt)-Hubbard_J(1,nt)) - Hubbard_U(nt)*n_tot
               !
-              ! +U contributions 
+              ! +U contributions
               !
               DO m2 = 1, 2 * Hubbard_l(nt) + 1
                  DO m3 = 1, 2 * Hubbard_l(nt) + 1
@@ -1059,7 +1080,7 @@ SUBROUTINE v_hubbard_full( ns, v_hub, eth )
      ENDIF
      !
   ENDDO ! na
-  ! 
+  !
   IF (nspin==1) eth_u = 2.d0 * eth_u
   eth = eth_u - eth_dc
   !
@@ -1111,19 +1132,19 @@ SUBROUTINE v_hubbard_full_nc( ns, v_hub, eth )
   ALLOCATE( u_matrix(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, 2*Hubbard_lmax+1, 2*Hubbard_lmax+1) )
   !
   eth        = 0.d0
-  eth_dc     = 0.d0  
-  eth_noflip = 0.d0  
-  eth_flip   = 0.d0  
+  eth_dc     = 0.d0
+  eth_noflip = 0.d0
+  eth_flip   = 0.d0
   !
   v_hub(:,:,:,:) = 0.d0
   !
-  DO na = 1, nat  
+  DO na = 1, nat
      !
-     nt = ityp (na)  
+     nt = ityp (na)
      !
-     IF (Hubbard_U(nt) /= 0.d0) THEN  
+     IF (Hubbard_U(nt) /= 0.d0) THEN
         !
-        ! Initialize U(m1,m2,m3,m4) matrix 
+        ! Initialize U(m1,m2,m3,m4) matrix
         !
         CALL hubbard_matrix( Hubbard_lmax, Hubbard_l(nt), Hubbard_U(nt), &
                              Hubbard_J(1,nt), u_matrix )
@@ -1139,17 +1160,17 @@ SUBROUTINE v_hubbard_full_nc( ns, v_hub, eth )
           mx = mx + DBLE( ns(m1, m1, 2, na) + ns(m1, m1, 3, na) )
           my = my + 2.d0 * AIMAG( ns(m1, m1, 2, na) )
           mz = mz + DBLE( ns(m1, m1, 1, na) - ns(m1, m1, 4, na) )
-        ENDDO  
-        mag2 = mx**2 + my**2 + mz**2  
+        ENDDO
+        mag2 = mx**2 + my**2 + mz**2
         !
         ! Hubbard energy: DC term
         !
         mx = REAL(n_tot)
         eth_dc = eth_dc + 0.5d0*( Hubbard_U(nt)*mx*(mx-1.d0) - &
                                   Hubbard_J(1,nt)*mx*(0.5d0*mx-1.d0) - &
-                                  0.5d0*Hubbard_J(1,nt)*mag2 )   
+                                  0.5d0*Hubbard_J(1,nt)*mag2 )
         !
-        DO is = 1, nspin  
+        DO is = 1, nspin
            !
            IF (is == 2) THEN
             is1 = 3
@@ -1170,7 +1191,7 @@ SUBROUTINE v_hubbard_full_nc( ns, v_hub, eth )
                 DO m3 = 1, 2*Hubbard_l(nt)+1
                  DO m4 = 1, 2*Hubbard_l(nt)+1
                    eth_noflip = eth_noflip + 0.5d0*(                            &
-                              ( u_matrix(m1,m2,m3,m4)-u_matrix(m1,m2,m4,m3) )*  & 
+                              ( u_matrix(m1,m2,m3,m4)-u_matrix(m1,m2,m4,m3) )*  &
                               ns(m1,m3,is,na)*ns(m2,m4,is,na) +                 &
                       u_matrix(m1,m2,m3,m4)*ns(m1,m3,is,na)*ns(m2,m4,nspin+1-is,na) )
                  ENDDO
@@ -1179,7 +1200,7 @@ SUBROUTINE v_hubbard_full_nc( ns, v_hub, eth )
              ENDDO
              !
            ELSE
-             ! 
+             !
              ! Spin-flip contribution
              !
              DO m1 = 1, 2*Hubbard_l(nt)+1
@@ -1187,7 +1208,7 @@ SUBROUTINE v_hubbard_full_nc( ns, v_hub, eth )
                DO m3 = 1, 2*Hubbard_l(nt)+1
                 DO m4 = 1, 2*Hubbard_l(nt)+1
                    eth_flip = eth_flip - 0.5d0*u_matrix(m1,m2,m4,m3)* &
-                                     ns(m1,m3,is,na)*ns(m2,m4,is1,na) 
+                                     ns(m1,m3,is,na)*ns(m2,m4,is1,na)
                 ENDDO
                ENDDO
               ENDDO
@@ -1195,7 +1216,7 @@ SUBROUTINE v_hubbard_full_nc( ns, v_hub, eth )
              !
            ENDIF
            !
-           ! Hubbard potential: non spin-flip contribution 
+           ! Hubbard potential: non spin-flip contribution
            !
            IF (is1 == is) THEN
              !
@@ -1204,8 +1225,8 @@ SUBROUTINE v_hubbard_full_nc( ns, v_hub, eth )
                DO m3 = 1, 2*Hubbard_l(nt)+1
                 DO m4 = 1, 2*Hubbard_l(nt)+1
                   v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) + &
-                    u_matrix(m1,m3,m2,m4)*( ns(m3,m4,1,na)+ns(m3,m4,4,na) ) 
-                ENDDO 
+                    u_matrix(m1,m3,m2,m4)*( ns(m3,m4,1,na)+ns(m3,m4,4,na) )
+                ENDDO
                ENDDO
               ENDDO
              ENDDO
@@ -1216,28 +1237,28 @@ SUBROUTINE v_hubbard_full_nc( ns, v_hub, eth )
            !
            n_aux = 0.d0
            DO m1 = 1, 2*Hubbard_l(nt)+1
-              n_aux = n_aux + ns(m1,m1,is1,na)  
+              n_aux = n_aux + ns(m1,m1,is1,na)
            ENDDO
            !
            DO m1 = 1, 2*Hubbard_l(nt)+1
-             ! 
-             ! Hubbard potential: DC contribution  
+             !
+             ! Hubbard potential: DC contribution
              !
              v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + Hubbard_J(1,nt)*n_aux
              !
              IF (is1 == is) THEN
                 v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + &
-                     0.5d0*(Hubbard_U(nt)-Hubbard_J(1,nt)) - Hubbard_U(nt)*n_tot  
+                     0.5d0*(Hubbard_U(nt)-Hubbard_J(1,nt)) - Hubbard_U(nt)*n_tot
              ENDIF
              !
              ! Hubbard potential: spin-flip contribution
              !
-             DO m2 = 1, 2*Hubbard_l(nt)+1  
+             DO m2 = 1, 2*Hubbard_l(nt)+1
               DO m3 = 1, 2*Hubbard_l(nt)+1
                DO m4 = 1, 2*Hubbard_l(nt)+1
                   v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - &
-                             u_matrix(m1,m3,m4,m2) * ns(m3,m4,is1,na) 
-               ENDDO 
+                             u_matrix(m1,m3,m4,m2) * ns(m3,m4,is1,na)
+               ENDDO
               ENDDO
              ENDDO
              !
@@ -1256,7 +1277,7 @@ SUBROUTINE v_hubbard_full_nc( ns, v_hub, eth )
   IF ( iverbosity > 0 ) THEN
     WRITE(stdout,*) '--- in v_hubbard ---'
     WRITE(stdout,'("Hub. E (dc, noflip, flip, total) ",4f9.4)') &
-                                 eth_dc, eth_noflip, eth_flip, eth 
+                                 eth_dc, eth_noflip, eth_flip, eth
     WRITE(stdout,*) '-------'
   ENDIF
   !
@@ -1289,8 +1310,8 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
   COMPLEX(DP), INTENT(IN)  :: nsg  (ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin)
   COMPLEX(DP), INTENT(OUT) :: v_hub(ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin)
   REAL(DP),    INTENT(OUT) :: eth
-  ! 
-  ! Local variables 
+  !
+  ! Local variables
   !
   INTEGER :: is, isop, na, na1, na2, nt, nt1, nt2, m1, m2, viz, equiv_na2, i_type
   INTEGER, EXTERNAL :: type_interaction, find_viz
@@ -1339,14 +1360,14 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
                      na = find_viz(na1,na1)
                      !
                      ! This is the diagonal term (like in the DFT+U only case)
-                     ! 
+                     !
                      DO m1 = 1, ldim_u(nt1)
                         !
                         i_type = type_interaction(na1,m1,equiv_na2,m1)
                         !
                         v_hub(m1,m1,na,na1,is) = v_hub(m1,m1,na,na1,is) &
                                        + Hubbard_V(na1,na1,i_type) * 0.5d0
-                        ! 
+                        !
                         eth = eth + nsg(m1,m1,na,na1,is) &
                                        * Hubbard_V(na1,na1,i_type) * 0.5d0
                         !
@@ -1399,7 +1420,7 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
            ENDDO ! viz
            !
         ENDDO ! is
-        !  
+        !
      ENDIF
      !
      ! Hubbard_alpha or Hubbard_alpha_back
@@ -1447,7 +1468,7 @@ END SUBROUTINE v_hubbard_extended
 !----------------------------------------------------------------------------
 SUBROUTINE v_h_of_rho_r( rhor, ehart, charge, v )
   !----------------------------------------------------------------------------
-  !! Hartree potential VH(r) from a density in R space n(r) 
+  !! Hartree potential VH(r) from a density in R space n(r)
   !
   USE kinds,           ONLY : DP
   USE fft_base,        ONLY : dfftp
@@ -1494,7 +1515,7 @@ END SUBROUTINE v_h_of_rho_r
 !----------------------------------------------------------------------------
 SUBROUTINE gradv_h_of_rho_r( rho, gradv )
   !----------------------------------------------------------------------------
-  !! Gradient of Hartree potential in R space from a total 
+  !! Gradient of Hartree potential in R space from a total
   !! (spinless) density in R space n(r)
   !
   USE kinds,           ONLY : DP
@@ -1524,7 +1545,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
   ! ... Bring rho to G space
   !
   ALLOCATE( rhoaux( dfftp%nnr ) )
-  rhoaux( : ) = CMPLX( rho( : ), 0.D0, KIND=dp ) 
+  rhoaux( : ) = CMPLX( rho( : ), 0.D0, KIND=dp )
   !
   CALL fwfft( 'Rho', rhoaux, dfftp )
   !
@@ -1539,25 +1560,25 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
     DO ig = gstart, ngm
       !
       fac = g(ipol,ig) / gg(ig)
-      gaux(dfftp%nl(ig)) = CMPLX(-AIMAG(rhoaux(dfftp%nl(ig))),REAL(rhoaux(dfftp%nl(ig))),KIND=dp)*fac 
+      gaux(dfftp%nl(ig)) = CMPLX(-AIMAG(rhoaux(dfftp%nl(ig))),REAL(rhoaux(dfftp%nl(ig))),KIND=dp)*fac
       !
     ENDDO
     !
-    ! ...and add the factor e2*fpi/2\pi/a coming from the missing prefactor of 
-    !  V = e2 * fpi divided by the 2\pi/a factor missing in G  
+    ! ...and add the factor e2*fpi/2\pi/a coming from the missing prefactor of
+    !  V = e2 * fpi divided by the 2\pi/a factor missing in G
     !
     fac = e2 * fpi / tpiba
-    gaux = gaux * fac 
+    gaux = gaux * fac
     !
     ! ...add martyna-tuckerman correction, if needed
-    ! 
+    !
     IF (do_comp_mt) THEN
        ALLOCATE( vaux( ngm ), rgtot(ngm) )
        rgtot(1:ngm) = rhoaux(dfftp%nl(1:ngm))
        CALL wg_corr_h( omega, ngm, rgtot, vaux, eh_corr )
        DO ig = gstart, ngm
          fac = g(ipol,ig) * tpiba
-         gaux(dfftp%nl(ig)) = gaux(dfftp%nl(ig)) + CMPLX(-AIMAG(vaux(ig)),REAL(vaux(ig)),kind=dp)*fac 
+         gaux(dfftp%nl(ig)) = gaux(dfftp%nl(ig)) + CMPLX(-AIMAG(vaux(ig)),REAL(vaux(ig)),kind=dp)*fac
        END DO
        DEALLOCATE( rgtot, vaux )
     ENDIF

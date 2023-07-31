@@ -25,15 +25,21 @@ SUBROUTINE hs_1psi( lda, n, psi, hpsi, spsi )
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: lda, n
-  COMPLEX(DP) :: psi(lda*npol,1), hpsi(n), spsi(n,1)
+  COMPLEX(DP) :: psi(lda*npol,1), hpsi(lda*npol), spsi(n,1)
   !
   !
   CALL start_clock( 'hs_1psi' )
-  ! 
+  !
+#if defined(__OPENMP_GPU)
+  !$omp target data map(alloc:psi,hpsi)
+#endif
+  !
   !OBM: I know this form is somewhat inelegant but, leaving the pre-real_space part intact
   !     makes it easier to debug probable errors, please do not "beautify" 
         if (real_space) then
+           !$omp target update to(psi,hpsi)
            CALL h_psi( lda, n, 1, psi, hpsi )
+           !$omp target update from(hpsi)
            if (gamma_only) then
              call invfft_orbital_gamma(psi,1,1) !transform the orbital to real space
              call s_psir_gamma(1,1)
@@ -44,9 +50,15 @@ SUBROUTINE hs_1psi( lda, n, psi, hpsi, spsi )
              call fwfft_orbital_k(spsi,1,1)
            end if
         else   
+  !$omp target update to(psi,hpsi)     
   CALL h_psi( lda, n, 1, psi, hpsi ) ! apply H to a single wfc (no bgrp parallelization here)
+  !$omp target update from(hpsi)    
   CALL s_psi( lda, n, 1, psi, spsi ) ! apply S to a single wfc (no bgrp parallelization here)
        endif
+  !
+#if defined(__OPENMP_GPU)
+  !$omp end target data
+#endif
   !
   CALL stop_clock( 'hs_1psi' )
   !

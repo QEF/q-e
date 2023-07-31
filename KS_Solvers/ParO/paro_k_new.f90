@@ -117,7 +117,15 @@ SUBROUTINE paro_k_new( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   !$acc end kernels
 
   !$acc host_data use_device(psi, hpsi, spsi)
+#if defined(__OPENMP_GPU)
+  !$omp target data map(alloc:psi,hpsi)
+  !$omp target update to(psi,hpsi)     
+#endif
   call h_psi (npwx,npw,nbnd,psi,hpsi) ! computes H*psi
+#if defined(__OPENMP_GPU)
+  !$omp target update from(hpsi)    
+  !$omp end target data
+#endif
   call s_psi (npwx,npw,nbnd,psi,spsi) ! computes S*psi
   !$acc end host_data
 

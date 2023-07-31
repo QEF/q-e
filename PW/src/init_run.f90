@@ -105,6 +105,9 @@ SUBROUTINE init_run()
   END IF
 #endif
   !$acc update device(mill, g, gg)
+#if defined(__OPENMP_GPU)
+  !$omp target update to(g)
+#endif
   !
   IF (do_comp_esm) CALL esm_init(.NOT. lrism)
   !

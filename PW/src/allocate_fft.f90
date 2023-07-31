@@ -70,13 +70,24 @@ SUBROUTINE allocate_fft
   ENDIF
   ALLOCATE( rhog_core(ngm)  )
   ALLOCATE( psic(dfftp%nnr) )
+#if defined (__OPENMP_GPU)
+  !$omp target enter data map(alloc:psic)
+#endif
   ALLOCATE( vrs(dfftp%nnr,nspin) )
+#if defined (__OPENMP_GPU)
+  !$omp target enter data map(alloc:vrs)
+#endif
 #if defined(__CUDA)
   CALL using_vrs(2)
   CALL using_psic(2); CALL using_psic_d(0)
 #endif
   !
-  IF (noncolin) ALLOCATE( psic_nc(dfftp%nnr,npol) )
+  IF (noncolin) THEN
+    ALLOCATE( psic_nc(dfftp%nnr,npol) )
+#if defined (__OPENMP_GPU)
+    !$omp target enter data map(alloc:psic_nc)
+#endif
+  ENDIF
 #if defined(__CUDA)
   IF (noncolin) THEN
      CALL using_psic_nc(2)

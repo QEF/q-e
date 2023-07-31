@@ -137,6 +137,10 @@ SUBROUTINE crmmdiagg( h_psi, s_psi, npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   ALLOCATE( ibnd_index( nbnd ) )
   ALLOCATE( jbnd_index( ibnd_start:ibnd_end ) )
   !
+#if defined(__OPENMP_GPU)
+  !$omp target data map(alloc:psi,hpsi,kpsi,hkpsi)
+#endif
+  !
   phi  = ZERO
   hphi = ZERO
   IF ( uspp ) sphi = ZERO
@@ -223,6 +227,10 @@ SUBROUTINE crmmdiagg( h_psi, s_psi, npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   IF ( uspp ) &
   CALL mp_sum( spsi, inter_bgrp_comm )
   !
+#if defined(__OPENMP_GPU)
+  !$omp end target data
+#endif
+  !
   DEALLOCATE( phi )
   DEALLOCATE( hphi )
   IF ( uspp ) DEALLOCATE( sphi )
@@ -260,7 +268,9 @@ CONTAINS
     !
     hpsi = ZERO
     !
+    !$omp target update to(psi,hpsi)   
     CALL h_psi( npwx, npw, nbnd, psi, hpsi )
+    !$omp target update from(hpsi)  
     !
     ! ... Operate the Overlap : S |psi>
     !
@@ -810,7 +820,9 @@ CONTAINS
     !
     ! ... Operate the Hamiltonian : H K (H - eS) |psi>
     !
+    !$omp target update to(kpsi,hkpsi)   
     CALL h_psi( npwx, npw, notconv, kpsi, hkpsi )
+    !$omp target update from(hkpsi)  
     !
     ! ... Operate the Overlap : S K (H - eS) |psi>
     !

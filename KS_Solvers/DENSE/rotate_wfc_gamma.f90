@@ -45,7 +45,7 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, overlap, &
   COMPLEX(DP), ALLOCATABLE :: aux(:,:)
   REAL(DP),    ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:)
   REAL(DP),    ALLOCATABLE :: en(:)
-  INTEGER :: n_start, n_end, my_n
+  INTEGER :: n_start, n_end, my_n, j
   !
   EXTERNAL  h_psi,    s_psi
     ! h_psi(npwx,npw,nvec,psi,hpsi)
@@ -73,11 +73,23 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, overlap, &
   !
   ! ... set Im[ psi(G=0) ] -  needed for numerical stability
   !
-  IF ( gstart == 2 ) &
-     psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0,kind=DP)
+#if defined(__OPENMP_GPU)
+  !$omp target data map(alloc:psi,aux)
+  !$omp target update to(psi,aux)
+#endif
+  IF ( gstart == 2 ) THEN
+     !$omp target teams distribute parallel do
+     DO j = 1, nstart
+        psi(1,j) = CMPLX( DBLE( psi(1,j) ), 0.D0,kind=DP)
+     END DO
+  ENDIF
   !
   call start_clock('rotwfcg:hpsi'); !write(*,*) 'start rotwfcg:hpsi' ; FLUSH(6)
   CALL h_psi( npwx, npw, nstart, psi, aux )
+#if defined(__OPENMP_GPU)
+  !$omp target update from(aux)    
+  !$omp end target data
+#endif
   call stop_clock('rotwfcg:hpsi'); !write(*,*) 'stop rotwfcg:hpsi' ; FLUSH(6)
   !
   call start_clock('rotwfcg:hc'); !write(*,*) 'start rotwfcg:hc' ; FLUSH(6)
@@ -234,7 +246,15 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, overlap, &
      psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0, kind=DP)
   !
   call start_clock('protwfcg:hpsi'); !write(*,*) 'start protwfcg:hpsi' ; FLUSH(6)
+#if defined(__OPENMP_GPU)
+  !$omp target data map(alloc:psi,aux)
+  !$omp target update to(psi,aux)     
   CALL h_psi( npwx, npw, nstart, psi, aux )
+  !$omp target update from(aux)    
+  !$omp end target data
+#else
+  CALL h_psi( npwx, npw, nstart, psi, aux )
+#endif
   call stop_clock('protwfcg:hpsi'); !write(*,*) 'stop protwfcg:hpsi' ; FLUSH(6)
   !
   call start_clock('protwfcg:hc'); !write(*,*) 'start protwfcg:hc' ; FLUSH(6)

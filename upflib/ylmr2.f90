@@ -127,3 +127,89 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   !
   return
 end subroutine ylmr2
+!
+!-----------------------------------------------------------------------
+subroutine ylmr2_omp( lmax2, ng, g, gg, ylm )
+  !-----------------------------------------------------------------------
+  !
+  USE upf_kinds, ONLY : DP
+  USE upf_const, ONLY : pi, fpi
+  !
+  IMPLICIT NONE
+  !
+  integer, intent(in) :: lmax2, ng
+  real(DP), intent(in) :: g (3, ng), gg (ng)
+  real(DP), intent(out) :: ylm (ng,lmax2)
+  !
+  ! local variables
+  !
+  real(DP), parameter :: eps = 1.0d-9
+  real(DP) :: cost , sent, phi
+  real(DP) :: c, gmod
+  integer :: lmax, ig, l, m, lm, lm1, lm2
+  !
+  if (ng < 1 .or. lmax2 < 1) return
+  do lmax = 0, 25
+     if ((lmax+1)**2 == lmax2) go to 10
+  end do
+  call upf_error (' ylmr', 'l > 25 or wrong number of Ylm required',lmax2)
+10 continue
+  !
+  if (lmax == 0) then
+     ylm(:,1) =  sqrt (1.d0 / fpi)
+     return
+  end if
+   !
+   !$omp target teams distribute parallel do
+   do ig=1,ng
+     gmod = sqrt (gg (ig) )
+     if (gmod < eps) then
+        cost = 0.d0
+     else
+        cost = g(3,ig)/gmod
+     endif
+     sent = sqrt(max(0.0_dp,1.0_dp-cost*cost))
+     !
+     ylm (ig,1) = 1.d0
+     ylm (ig,2) = cost
+     ylm (ig,4) =-sent/sqrt(2.d0)
+     do l = 2, lmax
+        do m = 0, l - 2
+           lm = (l  )**2 + 1 + 2*m
+           lm1= (l-1)**2 + 1 + 2*m
+           lm2= (l-2)**2 + 1 + 2*m
+           ylm(ig,lm) = cost*(2*l-1)/sqrt(DBLE(l*l-m*m))*ylm(ig,lm1) &
+                - sqrt(DBLE((l-1)*(l-1)-m*m))/sqrt(DBLE(l*l-m*m))*ylm(ig,lm2)
+        end do
+        lm = (l  )**2 + 1 + 2*l
+        lm1= (l  )**2 + 1 + 2*(l-1)
+        lm2= (l-1)**2 + 1 + 2*(l-1)
+        ylm(ig,lm1) = cost * sqrt(DBLE(2*l-1)) * ylm(ig,lm2)
+        ylm(ig,lm ) = - sqrt(DBLE(2*l-1))/sqrt(DBLE(2*l))*sent*ylm(ig,lm2)
+     end do
+     !
+     if (g(1,ig) > eps) then
+        phi  = atan( g(2,ig)/g(1,ig) )
+     else if (g(1,ig) < -eps) then
+        phi  = atan( g(2,ig)/g(1,ig) ) + pi
+     else
+        phi  = sign( pi/2.d0,g(2,ig) )
+     end if
+     lm = 1
+     ylm(ig,1) = ylm(ig,1) / sqrt(fpi)
+     !
+     do l = 1, lmax
+        c = sqrt (DBLE(2*l+1) / fpi)
+        lm = lm + 1
+        ylm(ig, lm) = c * ylm(ig,lm)
+        do m = 1, l
+           lm = lm + 2
+           ylm(ig, lm-1) = c * sqrt(2.d0) * ylm(ig,lm) * cos (m*phi)
+           ylm(ig, lm  ) = c * sqrt(2.d0) * ylm(ig,lm) * sin (m*phi)
+        end do
+     end do
+  enddo
+  !
+  return
+end subroutine ylmr2_omp
+

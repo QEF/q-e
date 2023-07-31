@@ -24,7 +24,11 @@ SUBROUTINE perdew86( rho, grho, sc, v1c, v2c )
   !
   IMPLICIT NONE
   !
+#if defined(_OPENACC)
   !$acc routine seq
+#elif defined(__OPENMP_GPU)
+  !$omp declare target
+#endif
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sc, v1c, v2c
@@ -77,7 +81,11 @@ SUBROUTINE ggac( rho, grho, sc, v1c, v2c )
   !
   IMPLICIT NONE
   !
+#if defined(_OPENACC)
   !$acc routine seq
+#elif defined(__OPENMP_GPU)
+  !$omp declare target
+#endif
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sc, v1c, v2c
@@ -157,7 +165,11 @@ SUBROUTINE glyp( rho, grho, sc, v1c, v2c )
   !
   IMPLICIT NONE
   !
+#if defined(_OPENACC)
   !$acc routine seq
+#elif defined(__OPENMP_GPU)
+  !$omp declare target
+#endif
   !
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sc, v1c, v2c
@@ -204,7 +216,11 @@ SUBROUTINE pbec( rho, grho, iflag, sc, v1c, v2c )
   !
   IMPLICIT NONE
   !
+#if defined(_OPENACC)
   !$acc routine seq
+#elif defined(__OPENMP_GPU)
+  !$omp declare target
+#endif
   !
   INTEGER,  INTENT(IN) :: iflag
   REAL(DP), INTENT(IN) :: rho, grho
@@ -271,7 +287,11 @@ SUBROUTINE perdew86_spin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c )
   !
   IMPLICIT NONE
   !
+#if defined(_OPENACC)
   !$acc routine seq
+#elif defined(__OPENMP_GPU)
+  !$omp declare target
+#endif
   !
   REAL(DP), INTENT(IN) :: rho
   !! the total charge density
@@ -344,7 +364,11 @@ SUBROUTINE ggac_spin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c )
   !
   IMPLICIT NONE
   !
+#if defined(_OPENACC)
   !$acc routine seq
+#elif defined(__OPENMP_GPU)
+  !$omp declare target
+#endif
   !
   REAL(DP), INTENT(IN) :: rho
   !! the total charge density
@@ -454,7 +478,11 @@ SUBROUTINE pbec_spin( rho, zeta, grho, iflag, sc, v1c_up, v1c_dw, v2c )
   !
   IMPLICIT NONE
   !
+#if defined(_OPENACC)
   !$acc routine seq
+#elif defined(__OPENMP_GPU)
+  !$omp declare target
+#endif
   !
   INTEGER, INTENT(IN) :: iflag
   !! see main comments
@@ -551,7 +579,11 @@ SUBROUTINE lsd_glyp( rho_in_up, rho_in_dw, grho_up, grho_dw, grho_ud, sc, &
   !
   IMPLICIT NONE
   !
+#if defined(_OPENACC)
   !$acc routine seq
+#elif defined(__OPENMP_GPU)
+  !$omp declare target
+#endif
   !
   REAL(DP), INTENT(IN) :: rho_in_up, rho_in_dw
   !! the total charge density
@@ -630,7 +662,11 @@ SUBROUTINE cpbe2d( rho, grho, sc, v1c, v2c )
   !
   IMPLICIT NONE
   !
+#if defined(_OPENACC)
   !$acc routine seq
+#elif defined(__OPENMP_GPU)
+  !$omp declare target
+#endif
   !
   REAL(DP), INTENT(IN)  :: rho, grho
   REAL(DP), INTENT(OUT) :: sc, v1c, v2c

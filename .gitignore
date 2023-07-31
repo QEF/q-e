@@ -6,6 +6,7 @@ build/
 *.a
 *.inc
 *.mod
+*.modmic
 *.o
 *.x
 *.pyc

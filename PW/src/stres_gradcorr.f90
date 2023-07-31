@@ -48,11 +48,17 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, nspin, &
   REAL(DP) :: sigma_gc11, sigma_gc31, sigma_gc21, &
               sigma_gc32, sigma_gc22, sigma_gc33
   REAL(DP) :: sigma_gradcorr(3,3)
+  LOGICAL :: gpuarg
   !
   IF ( .NOT. xclib_dft_is('gradient') .AND. .NOT. xclib_dft_is('meta') ) RETURN
   !
   IF ( xclib_dft_is('meta') .AND. nspin>1 )  CALL errore( 'stres_gradcorr', &
        'Meta-GGA stress does not work with spin polarization', 1 )
+  !
+  gpuarg=.TRUE.
+#if defined(__OPENMP_GPU)
+  gpuarg=.FALSE.
+#endif
   !
   !$acc data present_or_copyin( rho, rho_core, rhog, rhog_core, g )
   !
@@ -159,14 +165,14 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, nspin, &
           kedtaue2(k,1) = kedtau(k,1) / e2
         ENDDO
         CALL xc_metagcx( nrxx, 1, np, rhoaux, grho, kedtaue2, sx, sc, &
-                         v1x, v2x, v3x, v1c, v2cm, v3c, gpu_args_=.TRUE. )
+                         v1x, v2x, v3x, v1c, v2cm, v3c, gpu_args_=gpuarg )
         !$acc parallel loop
         DO k = 1, nrxx
           v2c(k,1) = v2cm(1,k,1)
         ENDDO
         !$acc end data
      ELSE
-        CALL xc_gcx( nrxx, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, gpu_args_=.TRUE. )
+        CALL xc_gcx( nrxx, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, gpu_args_=gpuarg )
      ENDIF
      !
      !$acc parallel loop reduction(+:sigma_gc11,sigma_gc21,sigma_gc22, &
@@ -199,7 +205,7 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, nspin, &
           kedtaue2(k,1:nspin0) = kedtau(k,1:nspin0) / e2
         ENDDO
         CALL xc_metagcx( nrxx, nspin0, np, rhoaux, grho, kedtaue2, sx, sc, &
-                         v1x, v2x, v3x, v1c, v2cm, v3c, gpu_args_=.TRUE. )
+                         v1x, v2x, v3x, v1c, v2cm, v3c, gpu_args_=gpuarg )
         !$acc parallel loop
         DO k = 1, nrxx
           v2c(k,:) = v2cm(1,k,:)
@@ -212,7 +218,7 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, nspin, &
         ALLOCATE( v2c_ud(nrxx) )
         !$acc data create( v2c_ud )
         !
-        CALL xc_gcx( nrxx, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, v2c_ud, gpu_args_=.TRUE. )
+        CALL xc_gcx( nrxx, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, v2c_ud, gpu_args_=gpuarg )
         !
         !$acc parallel loop reduction(+:sigma_gc11,sigma_gc21,sigma_gc22, &
         !$acc&                          sigma_gc31,sigma_gc32,sigma_gc33)
@@ -259,7 +265,7 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, nspin, &
   sigma_gradcorr(2,2) = sigma_gc22
   sigma_gradcorr(3,1) = sigma_gc31
   sigma_gradcorr(3,2) = sigma_gc32
-  sigma_gradcorr(3,3) = sigma_gc33 
+  sigma_gradcorr(3,3) = sigma_gc33
   !
   !$acc end data
   !$acc end data
