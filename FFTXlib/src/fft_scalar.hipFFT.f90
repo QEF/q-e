@@ -73,6 +73,48 @@ MODULE hipfft
        TYPE(C_PTR),VALUE :: stream
      END FUNCTION
 
+     FUNCTION hipEventCreate(event) BIND(C, name="hipEventCreate")
+       USE iso_c_binding
+       USE enums
+       IMPLICIT NONE
+       INTEGER(kind(HIP_SUCCESS)) :: hipEventCreate
+       TYPE(C_PTR),VALUE :: event
+     END FUNCTION
+
+     FUNCTION hipEventDestroy(event) BIND(C, name="hipEventDestroy")
+       USE iso_c_binding
+       USE enums
+       IMPLICIT NONE
+       INTEGER(kind(HIP_SUCCESS)) :: hipEventDestroy
+       TYPE(C_PTR),VALUE :: event
+     END FUNCTION
+
+     FUNCTION hipEventRecord(event,stream) BIND(C, name="hipEventRecord")
+       USE iso_c_binding
+       USE enums
+       IMPLICIT NONE
+       INTEGER(kind(HIP_SUCCESS)) :: hipEventRecord
+       TYPE(C_PTR),VALUE :: stream
+       TYPE(C_PTR),VALUE :: event
+     END FUNCTION
+
+     FUNCTION hipEventSynchronize(event) BIND(C, name="hipEventSynchronize")
+       USE iso_c_binding
+       USE enums
+       IMPLICIT NONE
+       INTEGER(kind(HIP_SUCCESS)) :: hipEventSynchronize
+       TYPE(C_PTR),VALUE :: event
+     END FUNCTION
+
+     FUNCTION hipStreamWaitEvent(stream,event,flag) BIND(C, name="hipStreamWaitEvent")
+       USE iso_c_binding
+       USE enums
+       IMPLICIT NONE
+       INTEGER(kind(HIP_SUCCESS)) :: hipStreamWaitEvent
+       TYPE(C_PTR),VALUE :: stream
+       TYPE(C_PTR),VALUE :: event
+       INTEGER(c_int),VALUE :: flag
+     END FUNCTION
 
      FUNCTION hipfftPlan1d(plan,nx,myType,batch) BIND(C, name="hipfftPlan1d")
        USE iso_c_binding
@@ -160,7 +202,60 @@ CONTAINS
          CALL EXIT(hiperror)
       END IF
   END SUBROUTINE hipfftCheck
-  
+
+  SUBROUTINE myEventCreate(event)
+      IMPLICIT NONE
+
+      TYPE(C_PTR) :: event
+
+      CALL hipcheck(hipEventCreate(c_loc(event)))
+
+  END SUBROUTINE myEventCreate
+
+  SUBROUTINE myEventDestroy(event)
+      IMPLICIT NONE
+
+      TYPE(C_PTR), VALUE :: event
+
+      CALL hipcheck(hipEventDestroy(c_loc(event)))
+
+  END SUBROUTINE myEventDestroy
+
+  SUBROUTINE myEventSynchronize(event)
+      IMPLICIT NONE
+
+      TYPE(C_PTR) :: event
+
+      CALL hipcheck(hipEventSynchronize(c_loc(event)))
+
+  END SUBROUTINE myEventSynchronize
+
+  SUBROUTINE myStreamCreate(stream)
+      IMPLICIT NONE
+
+      TYPE(C_PTR) :: stream
+
+      CALL hipcheck(hipStreamCreate(c_loc(stream)))
+
+  END SUBROUTINE myStreamCreate
+
+  SUBROUTINE myStreamDestroy(stream)
+      IMPLICIT NONE
+
+      TYPE(C_PTR) :: stream
+
+      CALL hipcheck(hipEventDestroy(c_loc(stream)))
+
+  END SUBROUTINE myStreamDestroy
+
+  SUBROUTINE myStreamSynchronize(stream)
+      IMPLICIT NONE
+
+      TYPE(C_PTR) :: stream
+
+      CALL hipcheck(hipStreamSynchronize(c_loc(stream)))
+
+  END SUBROUTINE myStreamSynchronize
 
 END MODULE
 

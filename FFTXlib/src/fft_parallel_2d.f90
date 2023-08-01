@@ -506,7 +506,11 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        ENDDO
        !!$omp end task
        !
-       CALL hipCheck(hipDeviceSynchronize())
+       i = hipEventRecord(dfft%bevents(j/dfft%subbatchsize + 1), dfft%a2a_comp)
+       i = hipStreamWaitEvent(dfft%bstreams(j/dfft%subbatchsize + 1), dfft%bevents(j/dfft%subbatchsize + 1), 0)
+       !
+       IF (j > 0) i = hipStreamWaitEvent(dfft%bstreams(j/dfft%subbatchsize + 1), dfft%bevents(j/dfft%subbatchsize), 0)
+       !CALL hipCheck(hipDeviceSynchronize())
        !
        !!$omp task depend (in: aux(j*dfft_nnr+1:(j+1)*dfft_nnr))
        CALL fft_scatter_many_columns_to_planes_store_omp( dfft, aux(j*dfft_nnr + 1:), nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
@@ -564,7 +568,7 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
            CALL cft_2xy_omp( f((j+i)*dfft_nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes, stream=dfft%a2a_comp )
          ENDDO
        ENDIF
-
+        
        CALL hipCheck(hipDeviceSynchronize())
 
        CALL fft_scatter_many_planes_to_columns_store_omp( dfft, nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
@@ -581,6 +585,7 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        CALL fft_scatter_many_planes_to_columns_send_omp( dfft, aux(j*dfft_nnr + 1:), nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
          aux2(j*dfft_nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
        !!$omp end task
+
 
        !!$omp task depend (in: aux(j*dfft_nnr+1:(j+1)*dfft_nnr))
        DO i = 0, currsize - 1
@@ -975,7 +980,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
          f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
 
 
-       i = cudaEventRecord(dfft%bevents(j/dfft%subbatchsize + 1), dfft%bstreams(j/dfft%subbatchsize + 1))
+       i = cudaEventRecord(dfft%bevents(j/dfft%subbatchsize + 0), dfft%bstreams(j/dfft%subbatchsize + 1))
        i = cudaStreamWaitEvent(dfft%a2a_comp, dfft%bevents(j/dfft%subbatchsize + 1), 0)
 
        DO i = 0, currsize - 1

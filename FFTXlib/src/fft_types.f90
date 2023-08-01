@@ -168,6 +168,8 @@ MODULE fft_types
 #endif
 #if defined(__OPENMP_GPU)
     TYPE(C_PTR) :: a2a_comp
+    TYPE(C_PTR), allocatable :: bstreams(:)
+    TYPE(C_PTR), allocatable :: bevents(:)
 #endif
 #if defined(__CUDA)
     ! These CUDA streams are used in the 1D+1D+1D GPU implementation
@@ -382,7 +384,16 @@ CONTAINS
 #endif
 
 #if defined(__OPENMP_GPU)
-   CALL hipcheck(hipStreamCreate( desc%a2a_comp ))
+
+    CALL myStreamCreate( desc%a2a_comp )
+
+    ALLOCATE( desc%bstreams( nsubbatches ) )
+    ALLOCATE( desc%bevents( nsubbatches ) )
+    DO i = 1, nsubbatches
+      CALL myStreamCreate( desc%bstreams(i) )
+      CALL myEventCreate( desc%bevents(i) )
+    ENDDO
+
 #endif
 
     incremental_grid_identifier = incremental_grid_identifier + 1
@@ -532,10 +543,32 @@ CONTAINS
 #if defined(__OPENMP_GPU) 
     ! SLAB decomposition
     IF (desc%a2a_comp /= 0) THEN
-      CALL hipCheck(hipStreamSynchronize( desc%a2a_comp ))
-      CALL hipCheck(hipStreamDestroy( desc%a2a_comp ))
+      CALL myStreamSynchronize( desc%a2a_comp )
+      CALL myStreamDestroy( desc%a2a_comp )
       desc%a2a_comp = 0
     END IF
+
+    IF ( ALLOCATED(desc%bstreams) ) THEN
+        nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
+        DO i = 1, nsubbatches
+          CALL myStreamSynchronize( desc%bstreams(i) ) 
+          CALL myStreamDestroy( desc%bstreams(i) ) 
+        ENDDO
+        !
+        DEALLOCATE( desc%bstreams )
+    END IF
+
+    IF ( ALLOCATED(desc%bevents) ) THEN
+        nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
+        DO i = 1, nsubbatches
+          CALL myEventSynchronize( desc%bevents(i) )
+          CALL myEventDestroy( desc%bevents(i) )
+        ENDDO
+        !
+        DEALLOCATE( desc%bevents )
+    END IF
+
+
 #endif
 
 #if defined(__CUDA) || defined(__OPENMP_GPU)
