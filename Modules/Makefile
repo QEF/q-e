@@ -44,6 +44,7 @@ io_global.o  \
 ions_base.o \
 kind.o \
 lmdif.o \
+plugin_flags.o \
 makov_payne.o \
 mdiis.o \
 mm_dispersion.o \
@@ -58,7 +59,6 @@ noncol.o \
 open_close_input_file.o \
 parameters.o \
 parser.o \
-plugin_flags.o \
 plugin_arguments.o \
 plugin_variables.o \
 pw_dot.o \

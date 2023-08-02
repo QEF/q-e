@@ -157,7 +157,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         IF (n<lda) hpsi(lda+n+1:lda+lda, ibnd) = (0.0_dp, 0.0_dp)
      ENDIF
   ENDDO
-#if not defined(__OPENMP_GPU)
+#if !defined(__OPENMP_GPU)
   !$omp end parallel do
 #endif
 

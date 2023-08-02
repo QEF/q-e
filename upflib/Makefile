@@ -38,15 +38,16 @@ radial_grids.o \
 read_cpmd.o \
 read_fhi.o \
 read_ncpp.o \
-read_ps.o \
+xmltools.o \
+splinelib.o \
 read_psml.o \
+read_ps.o \
 read_upf_new.o \
 read_upf_v1.o \
 read_uspp.o \
 spinor.o \
 sph_ind.o \
 sph_bes.o \
-splinelib.o \
 simpsn.o \
 upf_auxtools.o \
 upf_const.o \
@@ -64,7 +65,6 @@ uspp.o \
 uspp_data.o \
 uspp_param.o \
 write_upf_new.o \
-xmltools.o \
 ylmr2.o
 
 # GPU versions of routines
