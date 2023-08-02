@@ -54,7 +54,7 @@ MODULE hipfft
        USE enums
        IMPLICIT NONE
        INTEGER(kind(HIP_SUCCESS)) :: hipStreamCreate
-       TYPE(C_PTR), VALUE :: stream
+       TYPE(C_PTR) :: stream
      END FUNCTION
 
      FUNCTION hipStreamDestroy(stream) BIND(C, name="hipStreamDestroy")
@@ -78,7 +78,7 @@ MODULE hipfft
        USE enums
        IMPLICIT NONE
        INTEGER(kind(HIP_SUCCESS)) :: hipEventCreate
-       TYPE(C_PTR),VALUE :: event
+       TYPE(C_PTR) :: event
      END FUNCTION
 
      FUNCTION hipEventDestroy(event) BIND(C, name="hipEventDestroy")
