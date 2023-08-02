@@ -387,12 +387,12 @@ CONTAINS
 
     CALL myStreamCreate( desc%a2a_comp )
 
-    ALLOCATE( desc%bstreams( nsubbatches ) )
-    ALLOCATE( desc%bevents( nsubbatches ) )
-    DO i = 1, nsubbatches
-      CALL myStreamCreate( desc%bstreams(i) )
-      CALL myEventCreate( desc%bevents(i) )
-    ENDDO
+    !ALLOCATE( desc%bstreams( nsubbatches ) )
+    !ALLOCATE( desc%bevents( nsubbatches ) )
+    !DO i = 1, nsubbatches
+    !  CALL myStreamCreate( desc%bstreams(i) )
+    !  CALL myEventCreate( desc%bevents(i) )
+    !ENDDO
 
 #endif
 
@@ -548,25 +548,25 @@ CONTAINS
       desc%a2a_comp = 0
     END IF
 
-    IF ( ALLOCATED(desc%bstreams) ) THEN
-        nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
-        DO i = 1, nsubbatches
-          CALL myStreamSynchronize( desc%bstreams(i) ) 
-          CALL myStreamDestroy( desc%bstreams(i) ) 
-        ENDDO
+    !IF ( ALLOCATED(desc%bstreams) ) THEN
+    !    nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
+    !    DO i = 1, nsubbatches
+    !      CALL myStreamSynchronize( desc%bstreams(i) ) 
+    !      CALL myStreamDestroy( desc%bstreams(i) ) 
+    !    ENDDO
         !
-        DEALLOCATE( desc%bstreams )
-    END IF
+    !    DEALLOCATE( desc%bstreams )
+    !END IF
 
-    IF ( ALLOCATED(desc%bevents) ) THEN
-        nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
-        DO i = 1, nsubbatches
-          CALL myEventSynchronize( desc%bevents(i) )
-          CALL myEventDestroy( desc%bevents(i) )
-        ENDDO
+    !IF ( ALLOCATED(desc%bevents) ) THEN
+    !    nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
+    !    DO i = 1, nsubbatches
+    !      CALL myEventSynchronize( desc%bevents(i) )
+    !      CALL myEventDestroy( desc%bevents(i) )
+    !    ENDDO
         !
-        DEALLOCATE( desc%bevents )
-    END IF
+    !    DEALLOCATE( desc%bevents )
+    !END IF
 
 
 #endif

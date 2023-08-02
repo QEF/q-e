@@ -54,7 +54,7 @@ MODULE hipfft
        USE enums
        IMPLICIT NONE
        INTEGER(kind(HIP_SUCCESS)) :: hipStreamCreate
-       TYPE(C_PTR) :: stream
+       TYPE(C_PTR), VALUE :: stream
      END FUNCTION
 
      FUNCTION hipStreamDestroy(stream) BIND(C, name="hipStreamDestroy")
@@ -62,7 +62,7 @@ MODULE hipfft
        USE enums
        IMPLICIT NONE
        INTEGER(kind(HIP_SUCCESS)) :: hipStreamDestroy
-       TYPE(C_PTR),VALUE :: stream
+       TYPE(C_PTR), VALUE :: stream
      END FUNCTION
 
      FUNCTION hipStreamSynchronize(stream) BIND(C, name="hipStreamSynchronize")
@@ -70,7 +70,7 @@ MODULE hipfft
        USE enums
        IMPLICIT NONE
        INTEGER(kind(HIP_SUCCESS)) :: hipStreamSynchronize
-       TYPE(C_PTR),VALUE :: stream
+       TYPE(C_PTR), VALUE  :: stream
      END FUNCTION
 
      FUNCTION hipEventCreate(event) BIND(C, name="hipEventCreate")
@@ -305,7 +305,7 @@ END MODULE
      TYPE(C_PTR), INTENT(IN), OPTIONAL         :: stream
      LOGICAL, INTENT(IN), OPTIONAL :: in_place
 
-     COMPLEX (DP) :: c(:), cout(:)
+     COMPLEX (DP) :: c(:), cout(:), ctmp(ldz*nsl), couttmp(ldz*nsl)
 
      REAL (DP)  :: tscale
      INTEGER    :: i, err, idir, ip, void
@@ -408,7 +408,7 @@ END MODULE
         IF(hipfft_status /= 0) CALL fftx_error__(' cft_1z GPU ',' stopped in hipfftExecZ2Z(Backward) ')
         CALL hipfftCheck(hipfft_status)
 
-        !CALL hipCheck(hipDeviceSynchronize())
+        CALL hipCheck(hipDeviceSynchronize())
 
      END IF
 
@@ -581,7 +581,7 @@ END MODULE
         !$omp end target data
 
         IF(hipfft_status /= 0) CALL fftx_error__(" fft_scalar_hipFFT: cft_2xy_omp ", " hipfftExecZ2Z failed ", istat)
-        !CALL hipCheck(hipDeviceSynchronize())
+        CALL hipCheck(hipDeviceSynchronize())
      END IF
 
 
