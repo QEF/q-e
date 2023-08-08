@@ -6773,7 +6773,7 @@ if test "${with_hdf5+set}" = set; then :
       skip_hdf5_module_check=1
    else
       with_hdf5_path="$withval"
-      skip_hdf5_module_chek=0
+      skip_hdf5_module_check=0
       with_hdf5=1
    fi
 else
@@ -6977,7 +6977,7 @@ $as_echo "$as_me: WARNING: ***HDF5 Fortran extensions not found" >&2;}
                   have_hdf5=0
 fi
 
-          elif skip_hdf5_module_chek -eq 0; then
+          elif test "$skip_hdf5_module_check" -eq 0; then
               as_ac_File=`$as_echo "ac_cv_file_$with_hdf5_path/include/hdf5.mod" | $as_tr_sh`
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $with_hdf5_path/include/hdf5.mod" >&5
 $as_echo_n "checking for $with_hdf5_path/include/hdf5.mod... " >&6; }
