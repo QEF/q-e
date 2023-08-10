@@ -237,7 +237,7 @@ CONTAINS
             is_restart = .FALSE.
          ENDIF
       ENDIF
-
+      !
       IF (.NOT.is_restart) THEN
          !
          CLOSE( UNIT = 4, STATUS = 'DELETE' )
@@ -711,17 +711,13 @@ CONTAINS
          USE symm_base,      ONLY : invsym, nsym, irt
          USE cell_base,      ONLY : alat
          USE ions_base,      ONLY : nat, if_pos
-         USE random_numbers, ONLY : gauss_dist, set_random_seed
+         USE random_numbers, ONLY : gauss_dist
          !
          IMPLICIT NONE
          !
          INTEGER  :: na, nb
          REAL(DP) :: total_mass, kt, sigma, ek, ml(3), system_temp
          !
-         ! ... next command prevents different MD runs to start
-         ! ... with exactly the same "random" velocities
-         !
-         CALL set_random_seed( )
          kt = temperature / ry_to_kelvin
          !
          ! ... starting velocities have a Maxwell-Boltzmann distribution

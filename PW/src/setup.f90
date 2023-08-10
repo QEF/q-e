@@ -97,6 +97,8 @@ SUBROUTINE setup()
   USE additional_kpoints, ONLY : add_additional_kpoints
   USE control_flags,      ONLY : sic
   USE sic_mod,            ONLY : init_sic, occ_f2fn, sic_energy
+  USE random_numbers,     ONLY : set_random_seed
+  USE dynamics_module,    ONLY : control_temp
   !
   IMPLICIT NONE
   !
@@ -703,7 +705,10 @@ SUBROUTINE setup()
      IF (sic_energy) CALL occ_f2fn()
   END IF
   !
-  RETURN
+  ! ... next command prevents different MD runs to start
+  ! ... with exactly the same "random" velocities
+  !
+  IF (lmd.AND.control_temp) CALL set_random_seed( )
   !
 END SUBROUTINE setup
 !
