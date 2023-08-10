@@ -20,12 +20,19 @@ SUBROUTINE allocate_wfc()
   USE ldaU,                ONLY : wfcU, nwfcU, lda_plus_u, Hubbard_projectors
   USE noncollin_module,    ONLY : npol
   USE wavefunctions,       ONLY : evc
+#if defined(__OPENMP_GPU)
+  USE omp_lib
+  USE wavefunctions,       ONLY : ntraits, pinned_alloc, traits
+#endif
   USE wannier_new,         ONLY : use_wannier
   USE wavefunctions_gpum,  ONLY : using_evc
   !
   IMPLICIT NONE
   !
-  !
+#if defined(__OPENMP_GPU)
+  pinned_alloc = omp_init_allocator(omp_default_mem_alloc, ntraits, traits)
+  !$omp allocate(evc) allocator(pinned_alloc)
+#endif
   ALLOCATE( evc(npwx*npol,nbnd) )
   CALL using_evc(2)
   !

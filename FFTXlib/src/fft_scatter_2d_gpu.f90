@@ -1349,10 +1349,10 @@ END MODULE fft_scatter_2d_gpu
    MODULE fft_scatter_2d_omp
 !=----------------------------------------------------------------------=!
 
-        USE fft_types, ONLY: fft_type_descriptor
+        USE fft_types, ONLY: fft_type_descriptor, dfft_bstreams, dfft_bevents
         USE fft_param
         USE omp_lib
-        USE iso_c_binding, ONLY: c_loc, c_int, c_size_t
+        USE iso_c_binding, ONLY: c_loc, c_int, c_size_t, c_ptr
 
         IMPLICIT NONE
 
@@ -1994,23 +1994,26 @@ SUBROUTINE fft_scatter_omp_batch ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, is
 
 END SUBROUTINE fft_scatter_omp_batch
 
-SUBROUTINE fft_scatter_many_columns_to_planes_store_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, batchsize )
+SUBROUTINE fft_scatter_many_columns_to_planes_store_omp ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, batchsize, batch_id )
+   !
+   USE hipfft, ONLY: hipEventRecord, hipMemcpy2DAsync, hipcheck, hipdevicesynchronize
    !
    IMPLICIT NONE
    !
    TYPE (fft_type_descriptor), TARGET, INTENT(in) :: dfft
    INTEGER, INTENT(in)           :: nr3x, nxx_, isgn, ncp_ (:), npp_ (:)
    COMPLEX (DP), INTENT(inout)   :: f_in(:), f_aux(:)
-   INTEGER, INTENT(IN) :: batchsize
+   INTEGER, INTENT(IN) :: batchsize, batch_id
    INTEGER :: istat
 #if defined(__MPI)
    INTEGER :: k, offset, proc, ierr, me, nprocp, gcomm, i, kdest, kfrom
    INTEGER :: me_p, nppx, mc, j, npp, nnp, nnr, ii, it, ip, ioff, sendsiz, ncpx, &
-              ipp, nblk, nsiz, npp_proc
+              ipp, nblk, nsiz, npp_proc, ncp_me
    !
    INTEGER, ALLOCATABLE, DIMENSION(:) :: offset_proc
    INTEGER :: iter, dest, sorc
    INTEGER :: istatus(MPI_STATUS_SIZE)
+   COMPLEX(DP) :: dummy
    !
 #ifdef __GPU_MPI
    call fftx_error__('fft_scatter_many_', 'OMP batched FFT not enabled with gpu_mpi', abs(ierr))
@@ -2049,6 +2052,7 @@ SUBROUTINE fft_scatter_many_columns_to_planes_store_omp ( dfft, f_in, nr3x, nxx_
       offset = offset + npp_(proc)
    ENDDO
    !
+   !$omp target data use_device_ptr(f_in)
    DO iter = 2, nprocp
       IF(IAND(nprocp, nprocp-1) == 0) THEN
         dest = IEOR( me-1, iter-1 )
@@ -2094,21 +2098,38 @@ SUBROUTINE fft_scatter_many_columns_to_planes_store_omp ( dfft, f_in, nr3x, nxx_
 !$omp end taskgroup
       ENDIF
 #else
-! $ omp taskgroup
-!!$omp target teams distribute parallel do collapse(2) nowait
-!$omp target teams distribute parallel do collapse(2)
-      DO k = 1, batchsize * ncpx
-         DO i = 1, npp_proc
-           f_aux( kdest + i + (k-1)*nppx ) = f_in( kfrom + i + (k-1)*nr3x )
-         END DO
-      END DO
-!$omp end target teams distribute parallel do
-! $ omp end taskgroup
+      !
+
+      ncp_me = batchsize*ncpx !ncp_(me)
+      kdest = ncpx*(proc-1)*batchsize * nppx
+      kfrom = nppx*(proc-1)
+      !
+      istat = hipMemcpy2DAsync( int(sizeof(dummy)),      &
+                                c_loc(f_aux(kdest+1)), &
+                                c_loc(f_in(kfrom+1)),  &
+                                nppx,                  &
+                                nr3x,                  &
+                                nppx,                  &
+                                ncp_me,                &
+#if defined(__GPU_MPI) || defined(__GPU_MPI_OMP)
+                                int(3,c_int),          &
+#else
+                                int(2,c_int),          &
+#endif
+                                dfft_bstreams(batch_id) )
+      !
+      
+      !CALL hipCheck(hipDeviceSynchronize())
+
 #endif
 #endif
    ENDDO
-!$omp target update from (f_aux)
+   !$omp end target data
    !
+
+
+
+   istat = hipEventRecord( dfft_bevents(batch_id), dfft_bstreams(batch_id) )
    DEALLOCATE( offset_proc )
    !
 10 CONTINUE

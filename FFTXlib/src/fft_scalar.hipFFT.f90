@@ -30,6 +30,14 @@ MODULE enums
     ENUMERATOR :: HIPFFT_Z2Z = 105
   END ENUM
 
+  ENUM, BIND(C)
+    ENUMERATOR :: hipMemcpyHostToHost = 0
+    ENUMERATOR :: hipMemcpyHostToDevice = 1
+    ENUMERATOR :: hipMemcpyDeviceToHost = 2
+    ENUMERATOR :: hiphipMemcpyDeviceToDevice = 3
+    ENUMERATOR :: hipMemcpyDefault = 4
+  END ENUM
+
 END MODULE
 
 MODULE hipfft
@@ -175,7 +183,36 @@ MODULE hipfft
        TYPE(C_PTR),VALUE :: stream
      END FUNCTION 
 
-END INTERFACE
+ END INTERFACE
+
+ INTERFACE
+    FUNCTION hipMemcpy2D_(dst,dpitch,src,spitch,width,height,ikind) BIND(C, name="hipMemcpy2D")
+      USE iso_c_binding
+      USE enums
+      IMPLICIT NONE
+      INTEGER(kind(HIP_SUCCESS)) :: hipMemcpy2D_
+      TYPE(c_ptr),VALUE :: dst
+      INTEGER(c_size_t), VALUE :: dpitch
+      TYPE(c_ptr),VALUE :: src
+      INTEGER(c_size_t), VALUE :: spitch, width, height
+      INTEGER(kind(hipMemcpyDeviceToHost)),VALUE :: ikind
+    END FUNCTION
+  END INTERFACE
+  !
+  INTERFACE
+    FUNCTION hipMemcpy2DAsync_(dst,dpitch,src,spitch,width,height,ikind,stream) BIND(C, name="hipMemcpy2DAsync")
+      USE iso_c_binding
+      USE enums
+      IMPLICIT NONE
+      INTEGER(kind(HIP_SUCCESS)) :: hipMemcpy2DAsync_
+      TYPE(c_ptr),VALUE :: dst
+      INTEGER(c_size_t), VALUE :: dpitch
+      TYPE(c_ptr),VALUE :: src
+      INTEGER(c_size_t), VALUE :: spitch, width, height
+      INTEGER(kind(hipMemcpyDeviceToHost)),VALUE :: ikind
+      TYPE(c_ptr), VALUE :: stream
+    END FUNCTION
+  END INTERFACE
 
 CONTAINS
 
@@ -208,7 +245,7 @@ CONTAINS
 
       TYPE(C_PTR) :: event
 
-      CALL hipcheck(hipEventCreate(c_loc(event)))
+      CALL hipcheck(hipEventCreate(event))
 
   END SUBROUTINE myEventCreate
 
@@ -217,7 +254,7 @@ CONTAINS
 
       TYPE(C_PTR), VALUE :: event
 
-      CALL hipcheck(hipEventDestroy(c_loc(event)))
+      CALL hipcheck(hipEventDestroy(event))
 
   END SUBROUTINE myEventDestroy
 
@@ -226,7 +263,7 @@ CONTAINS
 
       TYPE(C_PTR) :: event
 
-      CALL hipcheck(hipEventSynchronize(c_loc(event)))
+      CALL hipcheck(hipEventSynchronize(event))
 
   END SUBROUTINE myEventSynchronize
 
@@ -235,7 +272,7 @@ CONTAINS
 
       TYPE(C_PTR) :: stream
 
-      CALL hipcheck(hipStreamCreate(c_loc(stream)))
+      CALL hipcheck(hipStreamCreate(stream))
 
   END SUBROUTINE myStreamCreate
 
@@ -244,7 +281,7 @@ CONTAINS
 
       TYPE(C_PTR) :: stream
 
-      CALL hipcheck(hipEventDestroy(c_loc(stream)))
+      CALL hipcheck(hipEventDestroy(stream))
 
   END SUBROUTINE myStreamDestroy
 
@@ -253,9 +290,53 @@ CONTAINS
 
       TYPE(C_PTR) :: stream
 
-      CALL hipcheck(hipStreamSynchronize(c_loc(stream)))
+      CALL hipcheck(hipStreamSynchronize(stream))
 
   END SUBROUTINE myStreamSynchronize
+
+  FUNCTION hipMemcpy2D( sdsize, dst, src, dpitch, spitch, width, height, ikind )
+     USE iso_c_binding
+     USE enums
+     IMPLICIT NONE
+     INTEGER :: hipMemcpy2D
+     INTEGER :: sdsize
+     TYPE(c_ptr) :: dst
+     TYPE(c_ptr) :: src
+     INTEGER :: dpitch, spitch, width, height
+     INTEGER :: ikind
+     !
+     hipMemcpy2D = hipMemcpy2D_( dst,                &
+                                 int(dpitch*sdsize,c_size_t),  &
+                                 src,        &
+                                 int(spitch*sdsize,c_size_t),      &
+                                 int(width*sdsize,c_size_t),      &
+                                 int(height,c_size_t),      &
+                                 int(ikind,c_int ) )
+  END FUNCTION
+  !
+  FUNCTION hipMemcpy2DAsync( sdsize, dst, src, dpitch, spitch, width, height, ikind, stream )
+     USE iso_c_binding
+     USE enums
+     IMPLICIT NONE
+     INTEGER :: hipMemcpy2DAsync
+     INTEGER :: sdsize
+     TYPE(c_ptr) :: dst
+     TYPE(c_ptr) :: src
+     INTEGER :: dpitch, spitch, width, height
+     INTEGER :: ikind
+!     INTEGER :: stream
+     TYPE(c_ptr) :: stream
+     !
+     hipMemcpy2DAsync = hipMemcpy2DAsync_( dst,                           &
+                                      int(dpitch*sdsize,c_size_t),   &
+                                      src,                           &
+                                      int(spitch*sdsize,c_size_t),   &
+                                      int(width*sdsize,c_size_t),    &
+                                      int(height,c_size_t),          &
+                                      int(ikind,c_int ),             &
+                                      stream )
+  END FUNCTION
+
 
 END MODULE
 

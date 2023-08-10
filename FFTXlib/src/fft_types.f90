@@ -166,11 +166,11 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: srh(:,:) ! These are non blocking send/recv handles that are used to
                                      ! overlap computation and communication of FFTs subbatches.
 #endif
-#if defined(__OPENMP_GPU)
-    TYPE(C_PTR) :: a2a_comp
-    TYPE(C_PTR), allocatable :: bstreams(:)
-    TYPE(C_PTR), allocatable :: bevents(:)
-#endif
+!#if defined(__OPENMP_GPU)
+!    TYPE(C_PTR) :: a2a_comp
+!    TYPE(C_PTR), allocatable :: bstreams(:)
+!    TYPE(C_PTR), allocatable :: bevents(:)
+!#endif
 #if defined(__CUDA)
     ! These CUDA streams are used in the 1D+1D+1D GPU implementation
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_scatter_yz
@@ -196,7 +196,19 @@ MODULE fft_types
 
   REAL(DP) :: fft_dual = 4.0d0
   INTEGER  :: incremental_grid_identifier = 0
-
+  !
+  !
+!----------------------HIGHLY PROVISIONAL--------------------
+#if defined(__OPENMP_GPU)
+  TYPE(C_PTR) :: dfft_a2a_comp
+  TYPE(C_PTR), ALLOCATABLE :: dfft_bstreams(:)
+  TYPE(C_PTR), ALLOCATABLE :: dfft_bevents(:)
+  !
+  PUBLIC :: dfft_a2a_comp, dfft_bstreams, dfft_bevents
+#endif
+!------------------------------------------------------------
+  !
+  !
   PUBLIC :: fft_type_descriptor, fft_type_init
   PUBLIC :: fft_type_allocate, fft_type_deallocate
   PUBLIC :: fft_stick_index, fft_index_to_3d
@@ -383,18 +395,18 @@ CONTAINS
 
 #endif
 
-#if defined(__OPENMP_GPU)
-
-    CALL myStreamCreate( desc%a2a_comp )
-
-    !ALLOCATE( desc%bstreams( nsubbatches ) )
-    !ALLOCATE( desc%bevents( nsubbatches ) )
-    !DO i = 1, nsubbatches
-    !  CALL myStreamCreate( desc%bstreams(i) )
-    !  CALL myEventCreate( desc%bevents(i) )
-    !ENDDO
-
-#endif
+!#if defined(__OPENMP_GPU)
+!
+!    CALL myStreamCreate( desc%a2a_comp )
+!
+!    !ALLOCATE( desc%bstreams( nsubbatches ) )
+!    !ALLOCATE( desc%bevents( nsubbatches ) )
+!    !DO i = 1, nsubbatches
+!    !  CALL myStreamCreate( desc%bstreams(i) )
+!    !  CALL myEventCreate( desc%bevents(i) )
+!    !ENDDO
+!
+!#endif
 
     incremental_grid_identifier = incremental_grid_identifier + 1
     desc%grid_id = incremental_grid_identifier
@@ -542,32 +554,31 @@ CONTAINS
 
 #if defined(__OPENMP_GPU) 
     ! SLAB decomposition
-    IF (desc%a2a_comp /= 0) THEN
-      CALL myStreamSynchronize( desc%a2a_comp )
-      CALL myStreamDestroy( desc%a2a_comp )
-      desc%a2a_comp = 0
-    END IF
+ !   IF (dfft_a2a_comp /= 0) THEN
+ !     CALL myStreamSynchronize( dfft_a2a_comp )
+ !     CALL myStreamDestroy( dfft_a2a_comp )
+ !     dfft_a2a_comp = 0
+ !   END IF
 
-    !IF ( ALLOCATED(desc%bstreams) ) THEN
-    !    nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
-    !    DO i = 1, nsubbatches
-    !      CALL myStreamSynchronize( desc%bstreams(i) ) 
-    !      CALL myStreamDestroy( desc%bstreams(i) ) 
-    !    ENDDO
+ !   IF ( ALLOCATED(dfft_bstreams) ) THEN
+ !       nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
+ !       DO i = 1, nsubbatches
+ !         CALL myStreamSynchronize( dfft_bstreams(i) ) 
+ !         CALL myStreamDestroy( dfft_bstreams(i) ) 
+ !       ENDDO
         !
-    !    DEALLOCATE( desc%bstreams )
-    !END IF
+ !       DEALLOCATE( dfft_bstreams )
+ !   END IF
 
-    !IF ( ALLOCATED(desc%bevents) ) THEN
-    !    nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
-    !    DO i = 1, nsubbatches
-    !      CALL myEventSynchronize( desc%bevents(i) )
-    !      CALL myEventDestroy( desc%bevents(i) )
-    !    ENDDO
-        !
-    !    DEALLOCATE( desc%bevents )
-    !END IF
-
+ !   IF ( ALLOCATED(dfft_bevents) ) THEN
+ !       nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
+ !       DO i = 1, nsubbatches
+ !         CALL myEventSynchronize( dfft_bevents(i) )
+ !         CALL myEventDestroy( dfft_bevents(i) )
+ !       ENDDO
+ !       !
+ !       DEALLOCATE( dfft_bevents )
+ !   END IF
 
 #endif
 
@@ -1117,6 +1128,7 @@ CONTAINS
 
      REAL(DP) :: gcut, gkcut, dual
      INTEGER  :: ngm, ngw
+     INTEGER  :: i, nsubbatches
      !write (6,*) ' inside fft_type_init' ; FLUSH(6)
 
      dual = fft_dual
@@ -1132,7 +1144,7 @@ CONTAINS
         CALL fftx_error__(' fft_type_init ', ' unknown FFT personality ', 1 )
      END IF
      !write (*,*) 'FFT_TYPE_INIT pers, gkcut,gcut', pers, gkcut, gcut
-
+     !
      IF( .NOT. ALLOCATED( dfft%nsp ) ) THEN
         CALL fft_type_allocate( dfft, at, bg, gcut, comm, fft_fact=fft_fact, nyfft=nyfft )
      ELSE
@@ -1140,6 +1152,20 @@ CONTAINS
            CALL fftx_error__(' fft_type_init ', ' FFT already allocated with a different communicator ', 1 )
         END IF
      END IF
+
+#if defined(__OPENMP_GPU)
+     IF (pers=='wave') THEN
+        nsubbatches = ceiling(real(dfft%batchsize)/dfft%subbatchsize)
+        CALL myStreamCreate( dfft_a2a_comp )
+        ALLOCATE( dfft_bstreams( nsubbatches ) )
+        ALLOCATE( dfft_bevents( nsubbatches ) )
+        DO i = 1, nsubbatches
+          CALL myStreamCreate( dfft_bstreams(i) )
+          CALL myEventCreate( dfft_bevents(i) )
+        ENDDO
+     ENDIF
+#endif
+
 
      IF ( PRESENT (use_pd) ) dfft%use_pencil_decomposition = use_pd
      IF ( ( .not. dfft%use_pencil_decomposition ) .and. ( nyfft > 1 ) ) &
