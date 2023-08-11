@@ -687,8 +687,8 @@ SUBROUTINE setup()
           & // ' not allowed for hybrid functionals',1)
      IF ( tstress .and. npool > 1 )  CALL errore('setup', &
          'stress for hybrid functionals not available with pools', 1)
-     IF ( tstress )  CALL errore('setup', &
-         'stress for hybrid functionals not available', 1)
+     !!!IF ( tstress )  CALL errore('setup', &
+     !!!    'stress for hybrid functionals not available', 1)
      !
      CALL setup_exx  ()
      !
