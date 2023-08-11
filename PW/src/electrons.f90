@@ -539,8 +539,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
   REAL(DP), EXTERNAL :: ewald, get_clock
   REAL(DP) :: etot_cmp_paw(nat,2,2)
   ! 
-  REAL(DP) :: latvecs(3,3)
-  !! auxiliary variables for grimme-d3
+  REAL(DP), ALLOCATABLE :: taupbc(:,:)
+  !! atomic positions centered around r=0 - for grimme-d3
   INTEGER:: atnum(1:nat), na
   !! auxiliary variables for grimme-d3
   LOGICAL :: lhb
@@ -586,14 +586,18 @@ SUBROUTINE electrons_scf ( printout, exxen )
   !
   IF (ldftd3) THEN
      CALL start_clock('energy_dftd3')
-     latvecs(:,:)=at(:,:)*alat
-     tau(:,:)=tau(:,:)*alat
+     ! taupbc are atomic positions in alat units, centered around r=0
+     ALLOCATE ( taupbc(3,nat) )
+     taupbc(:,:) = tau(:,:)
+     CALL cryst_to_cart( nat, taupbc, bg, -1 ) 
+     taupbc(:,:) = taupbc(:,:) - NINT(taupbc(:,:))
+     CALL cryst_to_cart( nat, taupbc, at,  1 ) 
      DO na = 1, nat
         atnum(na) = get_atomic_number(TRIM(atm(ityp(na))))
      ENDDO
-     call dftd3_pbc_dispersion(dftd3,tau,atnum,latvecs,edftd3)
+     call dftd3_pbc_dispersion(dftd3, alat*taupbc, atnum, alat*at, edftd3)
      edftd3=edftd3*2.d0
-     tau(:,:)=tau(:,:)/alat
+     DEALLOCATE( taupbc)
      CALL stop_clock('energy_dftd3')
   ELSE
      edftd3= 0.0
