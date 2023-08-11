@@ -10,6 +10,9 @@ Fixed in development version:
   * Wrong output from Libxc-based gga-exchange functionals (gga_x) due to
     a bad multiplicative factor (v7.2 only, noticed by Peter Kraus).
     The exchange+correlation ones (gga_xc) were not affected.
+  * The seed for random numbers was not set after the first run. As a result,
+    all subsequent runs used the same sequence of random numbers. Affects only
+    thermostats in Verlet dynamics for pw.x. Noticed by Han Hsu, NCU Taiwan.
 
 New in v.7.2:
   * Oxidation state constrained DFT [Ku and Sit, JCTC 15, 4781 (2019)]
