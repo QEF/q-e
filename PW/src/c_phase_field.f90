@@ -482,9 +482,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
                aux=(0.d0,0.d0)
                IF ( noncolin ) aux_2=(0.d0,0.d0)
                DO mb=1,nbnd
-                  IF ( .NOT. l_cal(mb) ) THEN
-                     mat(mb,mb)=(0.d0, 0.d0)
-                  ELSE
+                  IF ( l_cal(mb) ) THEN
                      IF (kpar /= (nppstr_3d(pdir)+1)) THEN
                         DO ig=1,npw1
                            aux(igk1(ig),mb)=psi1(ig,mb)
@@ -527,19 +525,8 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
                ENDDO
                CALL ZGEMM('C','N',nbnd,nbnd,ngm,(1.d0,0.d0),aux0,ngm,aux,ngm,(0.d0,0.d0),mat,nbnd)
                IF (noncolin) CALL ZGEMM('C','N',nbnd,nbnd,ngm,(1.d0,0.d0),aux0_2,ngm,aux_2,ngm,(1.d0,0.d0),mat,nbnd)
-               CALL  mp_sum( mat, intra_bgrp_comm )
-               DO mb=1,nbnd
-                  DO nb=1,nbnd
-                     IF ( .NOT.l_cal(mb) .OR. .NOT.l_cal(nb) ) THEN
-                        IF(mb==nb) THEN
-                           mat(mb,nb)=(1.d0,0.d0)
-                        ELSE
-                           mat(mb,nb)=(0.d0,0.d0)
-                        END IF
-                     ENDIF
-                  ENDDO
-               END DO
                !
+               CALL  mp_sum( mat, intra_bgrp_comm )
                !
                ! --- Calculate the augmented part: ij=KB projectors, ---
                ! --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---
@@ -581,6 +568,10 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
                      ENDDO
                   ENDDO
                ENDIF
+               !
+               DO mb=1,nbnd
+                  IF ( .NOT.l_cal(mb) ) mat(mb,mb)=(1.d0,0.d0)
+               END DO
                !
                !  --- Calculate matrix determinant ---
                !
