@@ -233,6 +233,7 @@ target_link_libraries(qe_pp_projwfc_exe
 # pw2wannier90.x
 ###########################################################
 set(src_pw2wannier90_x src/pw2wannier90.f90)
+qe_enable_cuda_fortran("${src_pw2wannier90_x}")
 qe_add_executable(qe_pp_pw2wannier90_exe ${src_pw2wannier90_x})
 set_target_properties(qe_pp_pw2wannier90_exe PROPERTIES OUTPUT_NAME pw2wannier90.x)
 target_link_libraries(qe_pp_pw2wannier90_exe
