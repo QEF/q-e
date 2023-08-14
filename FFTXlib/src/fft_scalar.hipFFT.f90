@@ -574,6 +574,7 @@ END MODULE
      COMPLEX (DP), TARGET :: r_d(ldx,ldy,nzl)
      INTEGER :: i, k, j, err, idir, ip, kk, void, istat
      REAL(DP) :: tscale
+     COMPLEX(DP) :: itscale
      INTEGER, SAVE :: icurrent = 1
      INTEGER, SAVE :: dims( 6, ndims) = -1
      LOGICAL :: dofft( nfftx ), found
@@ -585,7 +586,7 @@ END MODULE
      INTEGER, SAVE :: hipfft_status = 0
      type(c_ptr), SAVE :: hipfft_plan_2d( ndims ) = c_null_ptr
      TYPE(C_PTR) :: stream_
-     INTEGER :: batch_1, batch_2
+     INTEGER :: batch_1, batch_2, incy
 
      dofft( 1 : nx ) = .TRUE.
      batch_1 = nx
@@ -651,10 +652,12 @@ END MODULE
         hipfft_status = hipfftExecZ2Z( hipfft_plan_2d(ip), c_loc(r_d), c_loc(r_d), HIPFFT_FORWARD )
         !$omp end target data
         IF(hipfft_status /= 0) CALL fftx_error__(" fft_scalar_hipFFT: cft_2xy_omp ", " hipfftExecZ2Z failed ")
+        
         CALL hipCheck(hipDeviceSynchronize())
 
         !!!$omp target teams distribute parallel do simd
         tscale = 1.0_DP / ( nx * ny )
+        IF (.NOT.PRESENT(stream)) THEN
         !$omp target teams distribute parallel do collapse(3)
         DO k=1, nzl
            DO j=1, ldy
@@ -663,6 +666,14 @@ END MODULE
               END DO
            END DO
         END DO
+        ELSE
+        itscale=CMPLX(tscale-1.0_DP)
+        incy=1
+        CALL a2azaxpy(nzl*ldx*ldy,itscale,r_d,1,r_d,incy)
+        ENDIF
+
+        CALL hipCheck(hipDeviceSynchronize())
+
 
      ELSE IF( isign > 0 ) THEN
         !$omp target data use_device_ptr(r_d)
