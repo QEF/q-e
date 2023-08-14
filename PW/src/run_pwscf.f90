@@ -45,6 +45,7 @@ SUBROUTINE run_pwscf( exit_status )
   USE control_flags,        ONLY : conv_elec, gamma_only, ethr, lscf, treinit_gvecs
   USE control_flags,        ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs,&
                                    lensemb, lforce=>tprnfor, tstress
+  USE control_flags,        ONLY : many_fft
   USE cellmd,               ONLY : lmovecell
   USE command_line_options, ONLY : command_line
   USE force_mod,            ONLY : sigma, force
@@ -141,6 +142,7 @@ SUBROUTINE run_pwscf( exit_status )
 #endif
 #if defined(__ROCBLAS)
   CALL rocblas_init() 
+  IF (many_fft>1) CALL rocblas_a2a_init()
 #endif
   !
   CALL check_stop_init()
@@ -362,7 +364,8 @@ SUBROUTINE run_pwscf( exit_status )
   CALL qmmm_shutdown()
   !
 #if defined(__ROCBLAS)
-  CALL rocblas_destroy()
+  CALL rocblas_destroy() 
+  IF(many_fft>1) CALL rocblas_a2a_destroy()
 #endif
   RETURN
   !

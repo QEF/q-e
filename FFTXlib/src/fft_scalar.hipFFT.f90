@@ -458,7 +458,7 @@ END MODULE
         IF(hipfft_status /= 0) CALL fftx_error__(' cft_1z GPU ',' stopped in hipfftExecZ2Z(Forward) ')
         CALL hipfftCheck(hipfft_status)
 
-        CALL hipCheck(hipDeviceSynchronize())
+        !CALL hipCheck(hipDeviceSynchronize())
 
         tscale = 1.0_DP / nz
         IF (.NOT.PRESENT(stream)) THEN

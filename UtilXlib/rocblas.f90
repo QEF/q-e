@@ -683,7 +683,7 @@ MODULE rocblas_utils
             rincy = int(incy, kind(rocblas_int))
 
             !$omp target data use_device_ptr(x, y)
-            stat = rocblas_zaxpy_(handle, rn, alpha, c_loc(x), rincx, c_loc(y), rincy)
+            stat = rocblas_zaxpy_(handle_a2a, rn, alpha, c_loc(x), rincx, c_loc(y), rincy)
             !$omp end target data
             CALL rocblas_check(stat, "ZAXPY")
 
