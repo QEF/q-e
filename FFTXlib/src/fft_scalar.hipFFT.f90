@@ -499,8 +499,6 @@ END MODULE
         IF(hipfft_status /= 0) CALL fftx_error__(' cft_1z GPU ',' stopped in hipfftExecZ2Z(Backward) ')
         CALL hipfftCheck(hipfft_status)
 
-        CALL hipCheck(hipDeviceSynchronize())
-
      END IF
 
 #if defined(__FFT_CLOCKS)
