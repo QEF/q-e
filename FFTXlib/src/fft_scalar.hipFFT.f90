@@ -386,10 +386,10 @@ END MODULE
      TYPE(C_PTR), INTENT(IN), OPTIONAL         :: stream
      LOGICAL, INTENT(IN), OPTIONAL :: in_place
 
-     COMPLEX (DP) :: c(:), cout(:), ctmp(ldz*nsl), couttmp(ldz*nsl)
+     COMPLEX (DP) :: c(:), cout(:), ctmp(ldz*nsl), couttmp(ldz*nsl), itscale
 
      REAL (DP)  :: tscale
-     INTEGER    :: i, err, idir, ip, void
+     INTEGER    :: i, err, idir, ip, void, incy
      INTEGER, SAVE :: zdims( 3, ndims ) = -1
      INTEGER, SAVE :: icurrent = 1
      LOGICAL :: found
@@ -461,6 +461,7 @@ END MODULE
         CALL hipCheck(hipDeviceSynchronize())
 
         tscale = 1.0_DP / nz
+        IF (.NOT.PRESENT(stream)) THEN
         IF (is_inplace) THEN
            !$omp target teams distribute parallel do simd
            DO i=1, ldz * nsl
@@ -471,6 +472,15 @@ END MODULE
              DO i=1, ldz * nsl
                 cout( i ) = cout( i ) * tscale
              END DO
+        ENDIF
+        ELSE
+          incy=1
+          itscale=CMPLX(tscale-1.0_DP)
+          IF (is_inplace) THEN
+             CALL a2azaxpy(ldz*nsl,itscale,c,1,c,incy)
+          ELSE
+             CALL a2azaxpy(ldz*nsl,itscale,cout,1,cout,incy)
+          ENDIF
         ENDIF
 
      ELSE IF (isign > 0) THEN

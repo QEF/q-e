@@ -345,7 +345,7 @@ MODULE rocblas_utils
                 IMPLICIT NONE
                 TYPE(C_PTR), VALUE :: handle
                 INTEGER(rocblas_int), VALUE :: n
-                COMPLEX(c_double) :: alpha
+                COMPLEX(c_double_complex) :: alpha
                 TYPE(C_PTR), VALUE :: x
                 INTEGER(rocblas_int), VALUE :: incx
                 TYPE(C_PTR), VALUE :: y
@@ -675,7 +675,7 @@ MODULE rocblas_utils
             INTEGER, INTENT(INOUT) :: incy
             COMPLEX(DP), INTENT(IN) :: alpha
             COMPLEX(DP), INTENT(IN) :: x(n)
-            COMPLEX(DP), INTENT(OUT) :: y(n)
+            COMPLEX(DP), INTENT(INOUT) :: y(n)
             INTEGER :: rn, rincx, rincy
             INTEGER :: stat
             rn = int(n, kind(rocblas_int))
