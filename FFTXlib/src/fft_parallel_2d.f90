@@ -603,8 +603,10 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        !!$omp end task
        !!$omp end single
        !
-       CALL hipCheck(hipDeviceSynchronize())
      ENDDO
+       !
+       CALL hipCheck(hipDeviceSynchronize())
+       !
   ENDIF
   !
 

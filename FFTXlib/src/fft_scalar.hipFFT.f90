@@ -458,8 +458,6 @@ END MODULE
         IF(hipfft_status /= 0) CALL fftx_error__(' cft_1z GPU ',' stopped in hipfftExecZ2Z(Forward) ')
         CALL hipfftCheck(hipfft_status)
 
-        !CALL hipCheck(hipDeviceSynchronize())
-
         tscale = 1.0_DP / nz
         IF (.NOT.PRESENT(stream)) THEN
           IF (is_inplace) THEN
@@ -653,8 +651,6 @@ END MODULE
         !$omp end target data
         IF(hipfft_status /= 0) CALL fftx_error__(" fft_scalar_hipFFT: cft_2xy_omp ", " hipfftExecZ2Z failed ")
         
-        CALL hipCheck(hipDeviceSynchronize())
-
         !!!$omp target teams distribute parallel do simd
         tscale = 1.0_DP / ( nx * ny )
         IF (.NOT.PRESENT(stream)) THEN
@@ -671,8 +667,6 @@ END MODULE
           incy=1
           CALL a2azaxpy(nzl*ldx*ldy,itscale,r_d,1,r_d,incy)
         ENDIF
-
-        CALL hipCheck(hipDeviceSynchronize())
 
 
      ELSE IF( isign > 0 ) THEN
