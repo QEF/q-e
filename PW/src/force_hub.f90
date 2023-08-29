@@ -1259,9 +1259,9 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       ALLOCATE ( dproj0(ldim,nbnd) )
       !$acc data create(dproj0)
       !$acc host_data use_device(dwfc,spsi,dproj0)
-      CALL MYZGEMM( 'C','N',ldim, nbnd, npw, (1.d0,0.d0), &
+      CALL MYZGEMM2( 'C','N',ldim, nbnd, npw, (1.d0,0.d0), &
                     dwfc, npwx, spsi, npwx, (0.d0,0.d0),  &
-                    dproj0, ldim )
+                    dproj0, ldim, .false. )
       CALL mp_sum( dproj0, intra_bgrp_comm )
       !$acc end host_data
       !
@@ -1349,9 +1349,9 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       ! ... where m1=1,ldim; m2=1,natomwfc; ig=1,npw
       !
       !$acc host_data use_device(wfcatom,doverlap_inv,dwfc)
-      CALL MYZGEMM( 'N','N', npw, ldim, natomwfc, (1.d0,0.d0), &
+      CALL MYZGEMM2( 'N','N', npw, ldim, natomwfc, (1.d0,0.d0), &
                     wfcatom, npwx, doverlap_inv(:,offpm+1:offpm+ldim), &
-                    natomwfc, (1.d0,0.d0), dwfc, npwx )
+                    natomwfc, (1.d0,0.d0), dwfc, npwx, .false. )
       !$acc end host_data
       !
       ! ... 3. Final step: compute dproj0 = <dwfc|spsi>
@@ -1360,9 +1360,9 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       !$acc data create(dproj0)
       !
       !$acc host_data use_device(dwfc,spsi,dproj0)
-      CALL MYZGEMM( 'C','N',ldim, nbnd, npw, (1.d0,0.d0), &
+      CALL MYZGEMM2( 'C','N',ldim, nbnd, npw, (1.d0,0.d0), &
                     dwfc, npwx, spsi, npwx,  (0.d0,0.d0), &
-                    dproj0, ldim )         
+                    dproj0, ldim, .false. )         
       CALL mp_sum( dproj0, intra_bgrp_comm )
       !$acc end host_data
       !
@@ -1700,9 +1700,9 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    !
    ! ... Calculate \sum_jh qq_at(ih,jh) * dbetaB(jh)
    !$acc host_data use_device(qq,dbetaB,aux)
-   CALL MYZGEMM( 'N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+   CALL MYZGEMM2( 'N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
                  qq, nh(nt), dbetaB(1,lB_s),    nh(nt), (0.0d0,0.0d0), &
-                 aux(1,lB_s), nh(nt) )
+                 aux(1,lB_s), nh(nt), .false. )
    !$acc end host_data
    !$acc kernels
    dbetaB(:,:) = aux(:,:)
@@ -1710,9 +1710,9 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    !
    ! ... Calculate \sum_jh qq_at(ih,jh) * betaB(jh)
    !$acc host_data use_device(qq,betaB,aux)
-   CALL MYZGEMM( 'N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+   CALL MYZGEMM2( 'N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
                  qq, nh(nt), betaB(1,lB_s),     nh(nt), (0.0d0,0.0d0), &
-                 aux(1,lB_s), nh(nt) )
+                 aux(1,lB_s), nh(nt), .false. )
    !$acc end host_data
    !$acc kernels
    betaB(:,:) = aux(:,:)
@@ -1727,12 +1727,12 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    !
    IF ( mykey == 0 ) THEN
       !$acc host_data use_device(Adbeta,betaB,Abeta,dbetaB,A_dS_B)
-      CALL MYZGEMM( 'N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+      CALL MYZGEMM2( 'N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
                     Adbeta, lA, betaB(1,lB_s), nh(nt), (0.0d0,0.0d0), &
-                    A_dS_B(1,lB_s), lA )
-      CALL MYZGEMM( 'N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                    A_dS_B(1,lB_s), lA, .false. )
+      CALL MYZGEMM2( 'N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
                     Abeta, lA, dbetaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
-                    A_dS_B(1,lB_s), lA )
+                    A_dS_B(1,lB_s), lA, .false. )
       !$acc end host_data
    ENDIF
    !
