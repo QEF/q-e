@@ -1877,8 +1877,8 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
       !
       ! ... there is no G=0 term
       !$acc host_data use_device(spsi,dwfc,dproj0)
-      CALL MYDGEMM( 'T','N',ldim, nbnd, 2*npw, 2.0_DP, dwfc, 2*npwx, spsi, &
-                    2*npwx, 0.0_DP, dproj0, ldim )
+      CALL MYDGEMM2( 'T','N',ldim, nbnd, 2*npw, 2.0_DP, dwfc, 2*npwx, spsi, &
+                    2*npwx, 0.0_DP, dproj0, ldim, .false. )
       CALL mp_sum( dproj0, intra_bgrp_comm )
       !$acc end host_data
       !
@@ -2005,12 +2005,12 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    !
    IF ( mykey==0 .AND. nh(nt)>0 ) THEN
       !$acc host_data use_device(wfatdbeta,wfatbeta,betapsi,dbetapsi,dproj)
-      CALL MYDGEMM( 'N', 'N', nwfcU, nb_e-nb_s+1, nh(nt), 1.0_dp,      &
+      CALL MYDGEMM2( 'N', 'N', nwfcU, nb_e-nb_s+1, nh(nt), 1.0_dp,      &
                     wfatdbeta, nwfcU, betapsi(1,nb_s), nh(nt), 1.0_dp, &
-                    dproj(1,nb_s), nwfcU )
-      CALL MYDGEMM( 'N', 'N', nwfcU, nb_e-nb_s+1, nh(nt), 1.0_dp,      &
+                    dproj(1,nb_s), nwfcU, .false. )
+      CALL MYDGEMM2( 'N', 'N', nwfcU, nb_e-nb_s+1, nh(nt), 1.0_dp,      &
                     wfatbeta, nwfcU, dbetapsi(1,nb_s), nh(nt), 1.0_dp, &
-                    dproj(1,nb_s), nwfcU )
+                    dproj(1,nb_s), nwfcU, .false. )
       !$acc end host_data
    ENDIF
    !
