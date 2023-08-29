@@ -339,11 +339,11 @@ MODULE rocblas_utils
     END INTERFACE
 
     INTERFACE
-        FUNCTION rocblas_zaxpy_(handle, n, alpha, x, incx, y, incy) &
+        FUNCTION rocblas_zaxpy_(handle_a2a, n, alpha, x, incx, y, incy) &
                                BIND(C, NAME="rocblas_zaxpy")
                 USE ISO_C_BINDING
                 IMPLICIT NONE
-                TYPE(C_PTR), VALUE :: handle
+                TYPE(C_PTR), VALUE :: handle_a2a
                 INTEGER(rocblas_int), VALUE :: n
                 COMPLEX(c_double_complex) :: alpha
                 TYPE(C_PTR), VALUE :: x

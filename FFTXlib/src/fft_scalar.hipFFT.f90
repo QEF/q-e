@@ -462,17 +462,17 @@ END MODULE
 
         tscale = 1.0_DP / nz
         IF (.NOT.PRESENT(stream)) THEN
-        IF (is_inplace) THEN
-           !$omp target teams distribute parallel do simd
-           DO i=1, ldz * nsl
+          IF (is_inplace) THEN
+            !$omp target teams distribute parallel do simd
+            DO i=1, ldz * nsl
               c( i ) = c( i ) * tscale
-           END DO
-        ELSE
-             !$omp target teams distribute parallel do simd
-             DO i=1, ldz * nsl
-                cout( i ) = cout( i ) * tscale
-             END DO
-        ENDIF
+            END DO
+          ELSE
+            !$omp target teams distribute parallel do simd
+            DO i=1, ldz * nsl
+              cout( i ) = cout( i ) * tscale
+            END DO
+          ENDIF
         ELSE
           incy=1
           itscale=CMPLX(tscale-1.0_DP)
@@ -658,18 +658,18 @@ END MODULE
         !!!$omp target teams distribute parallel do simd
         tscale = 1.0_DP / ( nx * ny )
         IF (.NOT.PRESENT(stream)) THEN
-        !$omp target teams distribute parallel do collapse(3)
-        DO k=1, nzl
-           DO j=1, ldy
-             DO i=1, ldx
+          !$omp target teams distribute parallel do collapse(3)
+          DO k=1, nzl
+            DO j=1, ldy
+              DO i=1, ldx
                 r_d(i,j,k) = r_d(i,j,k) * tscale
               END DO
-           END DO
-        END DO
+            END DO
+          END DO
         ELSE
-        itscale=CMPLX(tscale-1.0_DP)
-        incy=1
-        CALL a2azaxpy(nzl*ldx*ldy,itscale,r_d,1,r_d,incy)
+          itscale=CMPLX(tscale-1.0_DP)
+          incy=1
+          CALL a2azaxpy(nzl*ldx*ldy,itscale,r_d,1,r_d,incy)
         ENDIF
 
         CALL hipCheck(hipDeviceSynchronize())
