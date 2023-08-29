@@ -2099,17 +2099,16 @@ SUBROUTINE fft_scatter_many_columns_to_planes_store_omp ( dfft, f_in, nr3x, nxx_
       ENDIF
 #else
       !
-
-      ncp_me = batchsize*ncpx !ncp_(me)
+      ncp_me = batchsize*ncpx
       kdest = ncpx*(proc-1)*batchsize * nppx
-      kfrom = nppx*(proc-1)
+      kfrom = offset_proc(proc)
       !
       istat = hipMemcpy2DAsync( int(sizeof(dummy)),      &
                                 c_loc(f_aux(kdest+1)), &
                                 c_loc(f_in(kfrom+1)),  &
                                 nppx,                  &
                                 nr3x,                  &
-                                nppx,                  &
+                                npp_proc,              &
                                 ncp_me,                &
 #if defined(__GPU_MPI) || defined(__GPU_MPI_OMP)
                                 int(3,c_int),          &
@@ -2117,18 +2116,11 @@ SUBROUTINE fft_scatter_many_columns_to_planes_store_omp ( dfft, f_in, nr3x, nxx_
                                 int(2,c_int),          &
 #endif
                                 dfft_bstreams(batch_id) )
-      !
-      
-      !CALL hipCheck(hipDeviceSynchronize())
-
 #endif
 #endif
    ENDDO
    !$omp end target data
    !
-
-
-
    istat = hipEventRecord( dfft_bevents(batch_id), dfft_bstreams(batch_id) )
    DEALLOCATE( offset_proc )
    !
