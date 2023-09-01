@@ -663,7 +663,7 @@ END MODULE
             END DO
           END DO
         ELSE
-          itscale=CMPLX(tscale-1.0_DP)
+          itscale=CMPLX(tscale-1.0_DP,KIND=DP)
           incy=1
           CALL a2azaxpy(nzl*ldx*ldy,itscale,r_d,1,r_d,incy)
         ENDIF
