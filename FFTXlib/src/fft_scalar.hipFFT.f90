@@ -675,7 +675,6 @@ END MODULE
         !$omp end target data
 
         IF(hipfft_status /= 0) CALL fftx_error__(" fft_scalar_hipFFT: cft_2xy_omp ", " hipfftExecZ2Z failed ", istat)
-        CALL hipCheck(hipDeviceSynchronize())
      END IF
 
 
