@@ -43,8 +43,6 @@ subroutine drhodv (nu_i0, nper, drhoscf)
 
   USE eqv,      ONLY : dpsi
   USE qpoint,   ONLY : nksq, ikks, ikqs
-  USE control_lr, ONLY : lgamma
-  USE control_flags, ONLY : gamma_only
   USE lrus,     ONLY : becp1
   USE phus,     ONLY : alphap, int1_nc
   USE qpoint_aux, ONLY : becpt, alphapt
