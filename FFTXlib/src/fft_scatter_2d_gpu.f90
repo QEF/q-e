@@ -2280,7 +2280,7 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
    !istat = hipEventRecord( dfft_bevents(batch_id), dfft_bstreams(batch_id) )
    !istat = hipStreamWaitEvent( dfft_a2a_comp, dfft_bstreams(batch_id), 0)
 
-   CALL hipCheck(hipDeviceSynchronize())
+  ! CALL hipCheck(hipDeviceSynchronize())
 
    !
 10 CONTINUE

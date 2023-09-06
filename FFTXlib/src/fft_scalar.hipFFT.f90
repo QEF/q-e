@@ -516,7 +516,6 @@ END MODULE
 !             CALL a2azaxpy(ldz*nsl,itscale,cout,1,cout,incy)
 !          ENDIF
 !#else
-          PRINT*, 'stream non default'
           IF (is_inplace) THEN
             CALL cft1z_loop(c,tscale,2*ldz*nsl,stream)
           ELSE
