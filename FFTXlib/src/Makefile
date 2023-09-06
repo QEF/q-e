@@ -37,7 +37,8 @@ fft_types.o \
 tg_gather.o \
 fft_helper_subroutines.o \
 fft_param.o \
-fft_buffers.o
+fft_buffers.o \
+fft_kernels.o 
 
 all : libqefft.a
 
@@ -55,6 +56,9 @@ fftw.o : fftw.c fftw.h
 fftw_sp.o : fftw_sp.c fftw_sp.h fftw.h konst.h
 
 fftw_dp.o : fftw_dp.c fftw_dp.h fftw.h konst.h
+
+#fft_kernels.hip.o : fft_kernels.o
+#	hipcc --offload-arch=gfx90a -c fft_kernels.hip.cpp
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L

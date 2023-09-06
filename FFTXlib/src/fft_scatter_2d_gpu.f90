@@ -2275,6 +2275,14 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
    ENDDO
 #endif
    !
+   !i = cudaEventRecord(dfft%bevents(batch_id), dfft%bstreams(batch_id))
+   !i = cudaStreamW(dfft%a2a_comp, dfft%bevents(batch_id), 0)
+   !istat = hipEventRecord( dfft_bevents(batch_id), dfft_bstreams(batch_id) )
+   !istat = hipStreamWaitEvent( dfft_a2a_comp, dfft_bstreams(batch_id), 0)
+
+   CALL hipCheck(hipDeviceSynchronize())
+
+   !
 10 CONTINUE
    !
    ! Zero out f_aux_d

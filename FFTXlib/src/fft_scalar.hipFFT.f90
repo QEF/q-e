@@ -40,6 +40,40 @@ MODULE enums
 
 END MODULE
 
+MODULE hip_kernels
+  use omp_lib
+  USE, INTRINSIC :: iso_c_binding
+
+  IMPLICIT NONE
+  PRIVATE
+  PUBLIC :: cft1z_loop
+
+  INTERFACE
+    SUBROUTINE cft1z_loop_(s, dev_ptr,val, stream) &
+        & BIND(C, name="c_cft1z_loop_")
+      USE iso_c_binding
+      INTEGER(C_INT), INTENT(IN), VALUE   :: s
+      TYPE(C_PTR), VALUE                  :: dev_ptr
+      REAL(C_DOUBLE), VALUE               :: val
+      TYPE(C_PTR),    VALUE               :: stream
+    END SUBROUTINE cft1z_loop_
+  END INTERFACE
+
+  CONTAINS
+
+  SUBROUTINE cft1z_loop(a,val,s,stream)
+    COMPLEX(8), INTENT(inout)  :: a(:)
+    REAL(8), INTENT(in)        :: val
+    INTEGER(C_INT), INTENT(in) :: s
+    TYPE(C_PTR)                :: stream
+
+    !$omp target data use_device_addr(a)
+    CALL cft1z_loop_(s,c_loc(a),val,stream)
+    !$omp end target data
+
+  END SUBROUTINE cft1z_loop
+END MODULE hip_kernels
+
 MODULE hipfft
   USE iso_c_binding
   USE enums
@@ -181,8 +215,7 @@ MODULE hipfft
        INTEGER(kind(HIPFFT_SUCCESS)) :: hipfftSetStream
        TYPE(C_PTR),VALUE :: plan
        TYPE(C_PTR),VALUE :: stream
-     END FUNCTION 
-
+     END FUNCTION
  END INTERFACE
 
  INTERFACE
@@ -347,6 +380,7 @@ END MODULE
        USE, intrinsic :: ISO_C_BINDING
        USE hipfft
        USE fft_param
+       USE hip_kernels
 
        IMPLICIT NONE
         SAVE
@@ -386,7 +420,8 @@ END MODULE
      TYPE(C_PTR), INTENT(IN), OPTIONAL         :: stream
      LOGICAL, INTENT(IN), OPTIONAL :: in_place
 
-     COMPLEX (DP) :: c(:), cout(:), ctmp(ldz*nsl), couttmp(ldz*nsl), itscale
+     COMPLEX (DP) :: c(:), cout(:), itscale
+     COMPLEX (DP), ALLOCATABLE :: a(:)
 
      REAL (DP)  :: tscale
      INTEGER    :: i, err, idir, ip, void, incy
@@ -445,7 +480,6 @@ END MODULE
 #endif
 
      IF (isign < 0) THEN
-
         IF (is_inplace) THEN
             !$omp target data use_device_ptr(c)
               hipfft_status = hipfftExecZ2Z(hipfft_planz(ip), c_loc(c), c_loc(c), HIPFFT_FORWARD)
@@ -457,9 +491,9 @@ END MODULE
         ENDIF
         IF(hipfft_status /= 0) CALL fftx_error__(' cft_1z GPU ',' stopped in hipfftExecZ2Z(Forward) ')
         CALL hipfftCheck(hipfft_status)
-
+        
         tscale = 1.0_DP / nz
-        IF (.NOT.PRESENT(stream)) THEN
+        IF (stream_==0) THEN
           IF (is_inplace) THEN
             !$omp target teams distribute parallel do simd
             DO i=1, ldz * nsl
@@ -472,15 +506,25 @@ END MODULE
             END DO
           ENDIF
         ELSE
-          incy=1
-          itscale=CMPLX(tscale-1.0_DP)
+!#if defined(__NO_HIPKERNS)
+!          STOP
+!          incy=1
+!          itscale=CMPLX(tscale-1.0_DP,KIND=DP)
+!          IF (is_inplace) THEN
+!             CALL a2azaxpy(ldz*nsl,itscale,c,1,c,incy)
+!          ELSE
+!             CALL a2azaxpy(ldz*nsl,itscale,cout,1,cout,incy)
+!          ENDIF
+!#else
+          PRINT*, 'stream non default'
           IF (is_inplace) THEN
-             CALL a2azaxpy(ldz*nsl,itscale,c,1,c,incy)
+            CALL cft1z_loop(c,tscale,2*ldz*nsl,stream)
           ELSE
-             CALL a2azaxpy(ldz*nsl,itscale,cout,1,cout,incy)
+            CALL cft1z_loop(cout,tscale,2*ldz*nsl,stream)
           ENDIF
+          CALL hipCheck(hipDeviceSynchronize())
+!#endif
         ENDIF
-
      ELSE IF (isign > 0) THEN
 
      
