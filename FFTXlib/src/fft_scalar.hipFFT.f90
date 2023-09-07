@@ -46,32 +46,32 @@ MODULE hip_kernels
 
   IMPLICIT NONE
   PRIVATE
-  PUBLIC :: cft1z_loop
+  PUBLIC :: scalar_multiply
 
   INTERFACE
-    SUBROUTINE cft1z_loop_(s, dev_ptr,val, stream) &
-        & BIND(C, name="c_cft1z_loop_")
+    SUBROUTINE scalar_multiply_(s, dev_ptr,val, stream) &
+        & BIND(C, name="c_scalar_multiply_")
       USE iso_c_binding
       INTEGER(C_INT), INTENT(IN), VALUE   :: s
       TYPE(C_PTR), VALUE                  :: dev_ptr
       REAL(C_DOUBLE), VALUE               :: val
       TYPE(C_PTR),    VALUE               :: stream
-    END SUBROUTINE cft1z_loop_
+    END SUBROUTINE scalar_multiply_
   END INTERFACE
 
   CONTAINS
 
-  SUBROUTINE cft1z_loop(a,val,s,stream)
+  SUBROUTINE scalar_multiply(a,val,s,stream)
     COMPLEX(8), INTENT(inout)  :: a(:)
     REAL(8), INTENT(in)        :: val
     INTEGER(C_INT), INTENT(in) :: s
     TYPE(C_PTR)                :: stream
 
     !$omp target data use_device_addr(a)
-    CALL cft1z_loop_(s,c_loc(a),val,stream)
+    CALL scalar_multiply_(s,c_loc(a),val,stream)
     !$omp end target data
 
-  END SUBROUTINE cft1z_loop
+  END SUBROUTINE scalar_multiply
 END MODULE hip_kernels
 
 MODULE hipfft
@@ -517,9 +517,9 @@ END MODULE
 !          ENDIF
 !#else
           IF (is_inplace) THEN
-            CALL cft1z_loop(c,tscale,2*ldz*nsl,stream)
+            CALL scalar_multiply(c,tscale,2*ldz*nsl,stream)
           ELSE
-            CALL cft1z_loop(cout,tscale,2*ldz*nsl,stream)
+            CALL scalar_multiply(cout,tscale,2*ldz*nsl,stream)
           ENDIF
           CALL hipCheck(hipDeviceSynchronize())
 !#endif
