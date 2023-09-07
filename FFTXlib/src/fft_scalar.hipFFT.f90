@@ -46,7 +46,7 @@ MODULE hip_kernels
 
   IMPLICIT NONE
   PRIVATE
-  PUBLIC :: scalar_multiply
+  PUBLIC :: scalar_multiply, scalar_multiply_3D
 
   INTERFACE
     SUBROUTINE scalar_multiply_(s, dev_ptr,val, stream) &
@@ -72,6 +72,19 @@ MODULE hip_kernels
     !$omp end target data
 
   END SUBROUTINE scalar_multiply
+
+  SUBROUTINE scalar_multiply_3D(a,val,s,stream)
+    COMPLEX(8), INTENT(inout)  :: a(:,:,:)
+    REAL(8), INTENT(in)        :: val
+    INTEGER(C_INT), INTENT(in) :: s
+    TYPE(C_PTR)                :: stream
+
+    !$omp target data use_device_addr(a)
+    CALL scalar_multiply_(s,c_loc(a),val,stream)
+    !$omp end target data
+
+  END SUBROUTINE scalar_multiply_3D
+
 END MODULE hip_kernels
 
 MODULE hipfft
@@ -517,11 +530,11 @@ END MODULE
 !          ENDIF
 !#else
           IF (is_inplace) THEN
-            CALL scalar_multiply(c,tscale,2*ldz*nsl,stream)
+            CALL scalar_multiply(c,tscale,2*ldz*nsl,stream_)
           ELSE
-            CALL scalar_multiply(cout,tscale,2*ldz*nsl,stream)
+            CALL scalar_multiply(cout,tscale,2*ldz*nsl,stream_)
           ENDIF
-          CALL hipCheck(hipDeviceSynchronize())
+          !CALL hipCheck(hipDeviceSynchronize())
 !#endif
         ENDIF
      ELSE IF (isign > 0) THEN
@@ -696,7 +709,7 @@ END MODULE
         
         !!!$omp target teams distribute parallel do simd
         tscale = 1.0_DP / ( nx * ny )
-        IF (.NOT.PRESENT(stream)) THEN
+        IF (stream_==0) THEN
           !$omp target teams distribute parallel do collapse(3)
           DO k=1, nzl
             DO j=1, ldy
@@ -706,9 +719,10 @@ END MODULE
             END DO
           END DO
         ELSE
-          itscale=CMPLX(tscale-1.0_DP,KIND=DP)
-          incy=1
-          CALL a2azaxpy(nzl*ldx*ldy,itscale,r_d,1,r_d,incy)
+!          itscale=CMPLX(tscale-1.0_DP,KIND=DP)
+!          incy=1
+!          CALL a2azaxpy(nzl*ldx*ldy,itscale,r_d,1,r_d,incy)
+           CALL scalar_multiply_3D(r_d,tscale,2*nzl*ldy*ldx,stream_)
         ENDIF
 
 
