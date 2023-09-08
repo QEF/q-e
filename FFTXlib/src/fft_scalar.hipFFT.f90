@@ -34,7 +34,7 @@ MODULE enums
     ENUMERATOR :: hipMemcpyHostToHost = 0
     ENUMERATOR :: hipMemcpyHostToDevice = 1
     ENUMERATOR :: hipMemcpyDeviceToHost = 2
-    ENUMERATOR :: hiphipMemcpyDeviceToDevice = 3
+    ENUMERATOR :: hipMemcpyDeviceToDevice = 3
     ENUMERATOR :: hipMemcpyDefault = 4
   END ENUM
 
