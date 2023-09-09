@@ -1,4 +1,4 @@
-##NOTES##
+## NOTES ##
 
 * Routines or utilities existing in two copies, one for QE and one for upflib:
   - randy
@@ -55,7 +55,8 @@
     of spherical harmonics (2*lmaxkb+1)^2 is something different and should
     be stored in a different variable (something like ylmdim, or maxlm)
 
-  - Names of interpolation tables and related routines are random:
+  - Interpolation tables: rationalize names of variables and related routines
+```
       CP     PW      better name     contains 	         computed in
     betagx   tab     tab_beta      beta(G) functions	compute_betagx,
     dbetagx             	   dbeta(G)/dG 		compute_betagx
@@ -64,14 +65,23 @@
              tab_at  tab_atwfc?    atomic R_nl(G)	init_tab_atwfc
              tab_rho               atomic rho(G)	init_tab_rho
              tab_rhc               pseudocore rho(G)	init_tab_rhc
-                    (tab_vloc      local potential	to be done)
-  - Move allocation of interpolation tables into initialization routines,
-    setting max |G| as input. Collect interpolation data and related
-    routines into a module, one per variable.
+	             tab_vloc      local pseudopotential TO BE DONE
+```
+  - Interpolation tables: rationalize the structure of the code.
+    Move allocation  of interpolation tables into initialization routines,
+    setting max |G| as input. Collect interpolation data and related routines
+    into a module, one per variable.
+  - Interpolation tables: get rid of CUDA Fortran. Currently interpolation
+    tables are computed on CPU, copied to GPU using OpenACC, used via OpenACC.
+    Exception: init_us_2 still use CUDA Fortran, so tab_d has DEVICE
+    attribute and ylmr2, dylmr2 have a CUDA Fortran version.
+  - Local potentials should also be interpolated.
 
 * upflib restructuring:
   - shall we keep just one src folder ? or structure it a bit more, such as
+```
     upflib/baselib     all basic data structures and io  
     upflib/advlib      advanced initializations (init_us_0,1,2)
     upflib/tools       tools from upftools
+```
 
