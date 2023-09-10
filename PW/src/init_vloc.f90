@@ -12,26 +12,35 @@ SUBROUTINE init_vloc()
   !! This routine computes the fourier coefficient of the local
   !! potential vloc(ig,it) for each type of atom.
   !
-  USE atom,           ONLY : msh, rgrid
+  USE kinds,          ONLY : dp
+  USE vloc_mod,       ONLY : vloc_of_g, vloc_coul
   USE m_gth,          ONLY : vloc_gth
-  USE kinds,          ONLY : DP
   USE uspp_param,     ONLY : upf
   USE ions_base,      ONLY : ntyp => nsp
   USE cell_base,      ONLY : omega, tpiba2
-  USE vlocal,         ONLY : vloc
   USE gvect,          ONLY : ngl, gl
-  USE Coul_cut_2D,    ONLY : do_cutoff_2D, cutoff_lr_Vloc
+  USE atom,           ONLY : msh, rgrid
+  USE Coul_cut_2D,    ONLY : do_cutoff_2D, cutoff_lr_Vloc, lz
+  USE esm,            ONLY : do_comp_esm, esm_bc
+  USE vlocal,         ONLY : vloc
   !
   IMPLICIT NONE
   !
   INTEGER :: nt
   ! counter on atomic types
+  LOGICAL :: modified_coulomb
   !
   CALL start_clock( 'init_vloc' )
   !
-  vloc(:,:) = 0._DP
+  vloc(:,:) = 0._dp
+  !
+  modified_coulomb = do_cutoff_2D .OR. (do_comp_esm .and. ( esm_bc .ne. 'pbc' ))
   !
   DO nt = 1, ntyp
+     IF (rgrid(nt)%r(msh(nt)) > lz) THEN 
+        call errore('init_vloc','2D cutoff smaller than pseudo cutoff radius: &
+             & increase interlayer distance (or see Modules/read_pseudo.f90)',1)
+     END IF
      !
      ! compute V_loc(G) for a given type of atom
      !
@@ -51,16 +60,14 @@ SUBROUTINE init_vloc()
         !
         ! normal case
         !
-        CALL vloc_of_g( rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r, &
-                        upf(nt)%vloc(1), upf(nt)%zp, tpiba2, ngl, gl, omega, &
-                        vloc(1,nt) )
+        CALL vloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, vloc(1,nt) )
         !
      ENDIF
      !
   ENDDO
   !
   ! in 2D calculations the long range part of vloc(g) (erf/r part)
-  ! was not re-added in g-space because everything is caclulated in
+  ! was not re-added in g-space because everything is calculated in
   ! radial coordinates, which is not compatible with 2D cutoff. 
   ! It will be re-added each time vloc(g) is used in the code. 
   ! Here, this cutoff long-range part of vloc(g) is computed only once

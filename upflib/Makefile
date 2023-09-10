@@ -10,6 +10,7 @@ MODFLAGS= $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../external/devxlib/src
 # OBJS_GPU   depend upon modules in devxlib
 
 OBJS_DEP= \
+vloc_mod.o \
 gen_us_dj.o \
 gen_us_dy.o \
 init_us_0.o \
