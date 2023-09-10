@@ -232,7 +232,6 @@ set(src_pw
    src/vcsmd.f90 
    src/vcsubs.f90 
    src/vhpsi.f90 
-   src/vloc_of_g.f90 
    src/vloc_psi.f90 
    src/utils.f90 
    src/xdm_dispersion.f90 
