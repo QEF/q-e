@@ -49,7 +49,6 @@ set(src_pw
    src/divide_et_impera.f90 
    src/rotate_wfc.f90 
    src/run_driver.f90 
-   src/dvloc_of_g.f90 
    src/dynamics_module.f90 
    src/efermig.f90 
    src/efermit.f90 

@@ -60,7 +60,6 @@ divide_class_so.o \
 divide_et_impera.o \
 rotate_wfc.o \
 run_driver.o \
-dvloc_of_g.o \
 dynamics_module.o \
 efermig.o \
 efermit.o \
