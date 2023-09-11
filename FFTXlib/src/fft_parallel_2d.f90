@@ -515,32 +515,24 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
      !
      !------------------------------------
      !
-
      DO j = 0, batchsize-1, dfft%subbatchsize
        currsize = min(dfft%subbatchsize, batchsize - j)
-
-       !!$omp single
-       !!$omp task depend (out: f(j*dfft_nnr+1:(j+1)*dfft_nnr))
+       !
        CALL fft_scatter_many_columns_to_planes_send_omp( dfft, aux(j*dfft%nnr + 1:), nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
          aux2(j*dfft_nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1, dfft_iss, dfft_nsw, dfft_nsp, dfft_ismap )
-       !!$omp end task
-
-       CALL hipCheck(hipDeviceSynchronize())
-
+       !
        IF (currsize == dfft%subbatchsize) THEN
-         !!$omp task depend (in: f(j*dfft_nnr+1:(j+1)*dfft_nnr))
+         !
          CALL cft_2xy_omp( f(j*dfft_nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, planes, stream=dfft_a2a_comp )
-         !!$omp end task
+         !
        ELSE
-         !!$omp task depend (in: f(j*dfft_nnr+1:(j+1)*dfft_nnr))
+         !
          DO i = 0, currsize - 1
            CALL cft_2xy_omp( f((j+i)*dfft_nnr + 1:), dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes, stream=dfft_a2a_comp )
          ENDDO
-         !!$omp end task
+         !
        ENDIF
-       !!$omp end single
-       CALL hipCheck(hipDeviceSynchronize())
-
+       !
      ENDDO
      !
      CALL hipCheck(hipDeviceSynchronize())

@@ -243,9 +243,7 @@ MODULE hipfft
       INTEGER(c_size_t), VALUE :: spitch, width, height
       INTEGER(kind(hipMemcpyDeviceToHost)),VALUE :: ikind
     END FUNCTION
-  END INTERFACE
-  !
-  INTERFACE
+    !
     FUNCTION hipMemcpy2DAsync_(dst,dpitch,src,spitch,width,height,ikind,stream) BIND(C, name="hipMemcpy2DAsync")
       USE iso_c_binding
       USE enums
@@ -258,6 +256,30 @@ MODULE hipfft
       INTEGER(kind(hipMemcpyDeviceToHost)),VALUE :: ikind
       TYPE(c_ptr), VALUE :: stream
     END FUNCTION
+    !
+    FUNCTION hipMemcpy_(dst,src,sizeBytes,ikind) BIND(C, name="hipMemcpy")
+      USE iso_c_binding
+      USE enums
+      IMPLICIT NONE
+      INTEGER(kind(HIP_SUCCESS)) :: hipMemcpy_
+      TYPE(c_ptr),VALUE :: dst
+      TYPE(c_ptr),VALUE :: src
+      INTEGER(c_size_t), VALUE :: sizeBytes
+      INTEGER(kind(hipMemcpyHostToHost)),VALUE :: ikind
+    END FUNCTION
+    !
+    FUNCTION hipMemcpyAsync_(dst,src,sizeBytes,ikind,stream) BIND(C, name="hipMemcpyAsync")
+      USE iso_c_binding
+      USE enums
+      IMPLICIT NONE
+      INTEGER(kind(HIP_SUCCESS)) :: hipMemcpyAsync_
+      TYPE(c_ptr),VALUE :: dst
+      TYPE(c_ptr),VALUE :: src
+      INTEGER(c_size_t), VALUE :: sizeBytes
+      INTEGER(kind(hipMemcpyHostToHost)),VALUE :: ikind
+      TYPE(c_ptr), VALUE :: stream
+    END FUNCTION
+    !
   END INTERFACE
 
 CONTAINS
@@ -339,7 +361,7 @@ CONTAINS
       CALL hipcheck(hipStreamSynchronize(stream))
 
   END SUBROUTINE myStreamSynchronize
-
+  !
   FUNCTION hipMemcpy2D( sdsize, dst, src, dpitch, spitch, width, height, ikind )
      USE iso_c_binding
      USE enums
@@ -382,8 +404,41 @@ CONTAINS
                                       int(ikind,c_int ),             &
                                       stream )
   END FUNCTION
-
-
+  !
+  FUNCTION hipMemcpy( sdsize, dst, src, isize, ikind )
+     USE iso_c_binding
+     USE enums
+     IMPLICIT NONE
+     INTEGER :: hipMemcpy
+     TYPE(c_ptr) :: dst
+     TYPE(c_ptr) :: src
+     INTEGER :: sdsize, isize
+     INTEGER :: ikind
+     !
+     hipMemcpy = hipMemcpy_( dst,                         &
+                             src,                         &
+                             int(isize*sdsize,c_size_t),  &
+                             int(ikind,c_int ) )
+  END FUNCTION
+  !
+  FUNCTION hipMemcpyAsync( sdsize, dst, src, isize, ikind, stream )
+     USE iso_c_binding
+     USE enums
+     IMPLICIT NONE
+     INTEGER :: hipMemcpyAsync
+     TYPE(c_ptr) :: dst
+     TYPE(c_ptr) :: src
+     INTEGER :: sdsize, isize
+     INTEGER :: ikind
+     TYPE(c_ptr) :: stream
+     !
+     hipMemcpyAsync = hipMemcpyAsync_( dst,                         &
+                                       src,                         &
+                                       int(isize*sdsize,c_size_t),  &
+                                       int(ikind,c_int ),           &
+                                       stream )
+  END FUNCTION
+  !
 END MODULE
 
 !=----------------------------------------------------------------------=!
@@ -426,8 +481,8 @@ END MODULE
 !     output : cout(ldz*nsl) (complex - NOTA BENE: transform is not in-place!)
 !     isign > 0 : backward (f(G)=>f(R)), isign < 0 : forward (f(R) => f(G))
 !     Up to "ndims" initializations (for different combinations of input
-!     parameters nz, nsl, ldz) are stored and re-used if available
-
+!     parameters nz, nsl, ldz) are stored and re-used if available.
+     !
      INTEGER, INTENT(IN)           :: isign
      INTEGER, INTENT(IN)           :: nsl, nz, ldz
      TYPE(C_PTR), INTENT(IN), OPTIONAL         :: stream
