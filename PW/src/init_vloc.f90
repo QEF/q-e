@@ -37,7 +37,7 @@ SUBROUTINE init_vloc()
   modified_coulomb = do_cutoff_2D .OR. (do_comp_esm .and. ( esm_bc .ne. 'pbc' ))
   !
   DO nt = 1, ntyp
-     IF (rgrid(nt)%r(msh(nt)) > lz) THEN 
+     IF (do_cutoff_2D .AND. rgrid(nt)%r(msh(nt)) > lz) THEN 
         call errore('init_vloc','2D cutoff smaller than pseudo cutoff radius: &
              & increase interlayer distance (or see Modules/read_pseudo.f90)',1)
      END IF
