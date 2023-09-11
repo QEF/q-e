@@ -9,9 +9,8 @@
 !--------------------------------------------------------------------------
 MODULE mdiis
   !--------------------------------------------------------------------------
-  !
-  ! ... this module keeps data for MDIIS algorism.
-  ! ... (A.Kovalenko et al., J. Comput. Chem. 1999, 20, 928-936)
+  !! This module keeps data for MDIIS algorism.
+  !! (A.Kovalenko et al., J. Comput. Chem. 1999, 20, 928-936)
   !
   USE kinds, ONLY : DP
   USE mp,    ONLY : mp_sum, mp_bcast, mp_rank
@@ -22,16 +21,26 @@ MODULE mdiis
   !
   ! ... define data of MDIIS
   TYPE mdiis_type
-    INTEGER           :: mbox       ! maximum size of box
-    INTEGER           :: nbox       ! number of saved vectors in box
-    INTEGER,  POINTER :: ibox(:)    ! index of vectors in box
-    INTEGER           :: nvec       ! dimension of vector
-    REAL(DP), POINTER :: vbox(:,:)  ! vectors in box
-    REAL(DP), POINTER :: vres(:,:)  ! residual vectors
-    REAL(DP), POINTER :: rmat(:,:)  ! matrix of dot-products
-    REAL(DP), POINTER :: coef(:)    ! coefficients of DIIS
-    REAL(DP)          :: eta        ! step radius
-    INTEGER           :: next       ! number of extrapolation
+    INTEGER           :: mbox
+    !! maximum size of box
+    INTEGER           :: nbox
+    !! number of saved vectors in box
+    INTEGER,  POINTER :: ibox(:)
+    !! index of vectors in box
+    INTEGER           :: nvec
+    !! dimension of vector
+    REAL(DP), POINTER :: vbox(:,:)
+    !! vectors in box
+    REAL(DP), POINTER :: vres(:,:)
+    !! residual vectors
+    REAL(DP), POINTER :: rmat(:,:)
+    !! matrix of dot-products
+    REAL(DP), POINTER :: coef(:)
+    !! coefficients of DIIS
+    REAL(DP)          :: eta
+    !! step radius
+    INTEGER           :: next
+    !! number of extrapolation
   END TYPE mdiis_type
   !
   ! ... public components
@@ -46,8 +55,7 @@ CONTAINS
   !--------------------------------------------------------------------------
   SUBROUTINE allocate_mdiis(mdiist, mbox, nvec, eta, next)
     !--------------------------------------------------------------------------
-    !
-    ! ... initialize mdiis_type
+    !! Initialize \(\texttt{mdiis_type}\)
     !
     IMPLICIT NONE
     !
@@ -76,8 +84,7 @@ CONTAINS
   !--------------------------------------------------------------------------
   SUBROUTINE deallocate_mdiis(mdiist)
     !--------------------------------------------------------------------------
-    !
-    ! ... finalize mdiis_type
+    !! Finalize \(\texttt{mdiis_type}\)
     !
     IMPLICIT NONE
     !
@@ -99,16 +106,13 @@ CONTAINS
   !--------------------------------------------------------------------------
   SUBROUTINE reset_mdiis(mdiist, keep1)
     !--------------------------------------------------------------------------
-    !
-    ! ... reset mdiis_type
-    ! ...
-    ! ... Variables:
-    ! ...   keep1: if true, keep the latest vector, and delete the others.
-    ! ...          if false, delete all vectors (default).
+    !! Reset \(\texttt{mdiis\type}\).
     !
     IMPLICIT NONE
     TYPE(mdiis_type),  INTENT(INOUT) :: mdiist
     LOGICAL, OPTIONAL, INTENT(IN)    :: keep1
+    !! If TRUE, keep the latest vector, and delete the others.  
+    !! If FALSE, delete all vectors (default).
     !
     INTEGER :: ibox1
     LOGICAL :: keep1_
@@ -141,21 +145,18 @@ CONTAINS
   !--------------------------------------------------------------------------
   SUBROUTINE update_by_mdiis(mdiist, vbox1, vres1, comm)
     !--------------------------------------------------------------------------
-    !
-    ! ... save vector and solve MDIIS-equation to update vector
-    ! ...
-    ! ... Variables:
-    ! ...   vbox1: vector of the latest iteration  (for in)
-    ! ...          vector modified by MDIIS method (for out)
-    ! ...   vres1: residual of the latest iteration
-    ! ...   comm:  MPI's communicator, to sum up dot-products
+    !! Save vector and solve MDIIS-equation to update vector.
     !
     IMPLICIT NONE
     !
     TYPE(mdiis_type),  INTENT(INOUT) :: mdiist
     REAL(DP),          INTENT(INOUT) :: vbox1(1:*)
+    !! vector of the latest iteration  (for in)  
+    !! vector modified by MDIIS method (for out)
     REAL(DP),          INTENT(IN)    :: vres1(1:*)
+    !! residual of the latest iteration
     INTEGER, OPTIONAL, INTENT(IN)    :: comm
+    !! MPI's communicator, to sum up dot-products
     !
     INTEGER :: irank
     INTEGER :: ierr
@@ -265,6 +266,43 @@ CONTAINS
       END DO
     END SUBROUTINE make_rmat
     !
+#if defined (__MDIIS_DGETRF)
+    SUBROUTINE inverse(n, amat, ierr)
+      IMPLICIT NONE
+      INTEGER,  INTENT(IN)    :: n
+      REAL(DP), INTENT(INOUT) :: amat(n, n)
+      INTEGER,  INTENT(OUT)   :: ierr
+      !
+      INTEGER,  ALLOCATABLE :: ipiv(:)
+      INTEGER               :: lwork
+      REAL(DP), ALLOCATABLE :: work(:)
+      !
+      EXTERNAL :: dgetrf
+      EXTERNAL :: dgetri
+      !
+      ierr = 0
+      lwork = 3 * n
+      ALLOCATE(ipiv(n))
+      ALLOCATE(work(lwork))
+      !
+      CALL dgetrf(n, n, amat, n, ipiv, ierr)
+      IF (ierr /= 0) THEN
+        ierr = ABS(ierr)
+        GOTO 100
+      END IF
+      !
+      CALL dgetri(n, amat, n, ipiv, work, lwork, ierr)
+      IF (ierr /= 0) THEN
+        ierr = ABS(ierr)
+        GOTO 100
+      END IF
+      !
+100   CONTINUE
+      DEALLOCATE(ipiv)
+      DEALLOCATE(work)
+    END SUBROUTINE inverse
+    !
+#else
     SUBROUTINE inverse(n, amat, ierr)
       IMPLICIT NONE
       INTEGER,  INTENT(IN)    :: n
@@ -320,6 +358,7 @@ CONTAINS
       DEALLOCATE(eval)
     END SUBROUTINE inverse
     !
+#endif
     SUBROUTINE solve_mdiis(ierr)
       IMPLICIT NONE
       INTEGER, INTENT(OUT) :: ierr

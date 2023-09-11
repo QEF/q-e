@@ -7,7 +7,7 @@ module Dos\#auto -title "PWSCF GUI: module Dos.x" -script {
     namelist dos -name "DOS" {
 	optional {
 	    var prefix {
-		-label    "Prefix of punch file saved by program PW.X (prefix):" 
+		-label    "Prefix of outdir files saved by program PW.X (prefix):" 
 		-fmt      %S -validate string
 	    }
 	    
@@ -33,7 +33,12 @@ module Dos\#auto -title "PWSCF GUI: module Dos.x" -script {
                     'tetrahedra_lin' 
                     'tetrahedra_opt'
                 }
-                -validate string
+                -textvalue {
+                    Smearing
+                    "Bloechl's tetrahedron method"
+                    "Original linear tetrahedron method"
+                    "Optimized tetrahedron method"
+                }
             }
 
             var ngauss {
@@ -56,7 +61,6 @@ module Dos\#auto -title "PWSCF GUI: module Dos.x" -script {
 	    var DeltaE {
 		-label    "Resolution of PDOS plots \[in eV\] (DeltaE):"
 		-validate fortranreal
-		-default  0.01
 	    }
 
 	    var Emin {

@@ -27,12 +27,13 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on  4Feb2019 at 17:32: 8 
+     Program EPW v.5.5 starts on 19Nov2022 at 12:50:59 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
          "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
@@ -40,12 +41,19 @@
      Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
+     52422 MiB available memory on the printing compute node when the environment starts
 
-     Reading data from directory:
+     Reading input from epw1.in
+
+     Reading supplied temperature list.
+
+     Reading xml data from directory:
+
      ./si.save/
 
      IMPORTANT: XC functional enforced from input :
-     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
@@ -55,6 +63,9 @@
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         211     211     85                 2109     2109     531
 
+     Using Slab Decomposition
+
+     Reading collected, re-writing distributed wavefunctions
 
      --                                                                         
 
@@ -65,7 +76,8 @@
      number of atomic types    =            1
      kinetic-energy cut-off    =      15.0000  Ry
      charge density cut-off    =      60.0000  Ry
-     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
      Non magnetic calculation with spin-orbit
 
      celldm(1)=   10.26200  celldm(2)=    0.00000  celldm(3)=    0.00000
@@ -177,11 +189,10 @@
                 l(8) =   2
                 l(9) =   2
                l(10) =   2
-     EPW          :      0.19s CPU      0.20s WALL
+     EPW          :      0.10s CPU      0.12s WALL
 
-     EPW          :      0.31s CPU      0.33s WALL
+     EPW          :      0.12s CPU      0.15s WALL
 
-     No wavefunction gauge setting applied
      -------------------------------------------------------------------
      Wannierization on  4 x  4 x  4 electronic grid
      -------------------------------------------------------------------
@@ -361,25 +372,25 @@
 
      Wannier Function centers (cartesian, alat) and spreads (ang):
 
-     (   0.04115   0.04115   0.04115) :   2.22692
-     (   0.04115   0.04115   0.04115) :   2.22692
-     (   0.04115  -0.04115  -0.04115) :   2.22692
-     (   0.04115  -0.04115  -0.04115) :   2.22692
-     (  -0.04115   0.04115  -0.04115) :   2.22692
-     (  -0.04115   0.04115  -0.04115) :   2.22692
-     (  -0.04115  -0.04115   0.04115) :   2.22692
-     (  -0.04115  -0.04115   0.04115) :   2.22692
-     (   0.33395   0.33395   0.33395) :   1.84645
-     (   0.33395   0.33395   0.33395) :   1.84645
-     (   0.33395   0.16605   0.16605) :   1.84645
-     (   0.33395   0.16605   0.16605) :   1.84645
-     (   0.16605   0.33395   0.16605) :   1.84645
-     (   0.16605   0.33395   0.16605) :   1.84645
-     (   0.16605   0.16605   0.33395) :   1.84645
-     (   0.16605   0.16605   0.33395) :   1.84645
+     (   0.04115   0.04115   0.04115) :   2.22693
+     (   0.04115   0.04115   0.04115) :   2.22693
+     (   0.04115  -0.04115  -0.04115) :   2.22693
+     (   0.04115  -0.04115  -0.04115) :   2.22693
+     (  -0.04115   0.04115  -0.04115) :   2.22693
+     (  -0.04115   0.04115  -0.04115) :   2.22693
+     (  -0.04115  -0.04115   0.04115) :   2.22693
+     (  -0.04115  -0.04115   0.04115) :   2.22693
+     (   0.33395   0.33395   0.33395) :   1.84644
+     (   0.33395   0.33395   0.33395) :   1.84644
+     (   0.33395   0.16605   0.16605) :   1.84644
+     (   0.33395   0.16605   0.16605) :   1.84644
+     (   0.16605   0.33395   0.16605) :   1.84644
+     (   0.16605   0.33395   0.16605) :   1.84644
+     (   0.16605   0.16605   0.33395) :   1.84644
+     (   0.16605   0.16605   0.33395) :   1.84644
 
      -------------------------------------------------------------------
-     WANNIER      :      9.88s CPU      9.94s WALL (       1 calls)
+     WANNIER      :      8.63s CPU      8.67s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Dipole matrix elements calculated
@@ -388,19 +399,20 @@
      Calculating kgmap
 
      Progress kgmap: ########################################
-     kmaps        :      0.11s CPU      0.11s WALL (       1 calls)
+     kmaps        :      0.00s CPU      0.00s WALL (       1 calls)
+     Symmetries of Bravais lattice:  48
+     Symmetries of crystal:          48
 
      Reading interatomic force constants
 
+ end of file reached, closing tag not found
      IFC last   -0.0032828
      Norm of the difference between old and new effective charges:    0.0000000
-     Norm of the difference between old and new force-constants:    0.0000291
+     Norm of the difference between old and new force-constants:    0.0000288
      Imposed crystal ASR
 
      Finished reading ifcs
 
-     Symmetries of Bravais lattice:  48
-     Symmetries of crystal:          48
 
 
      ===================================================================
@@ -465,35 +477,48 @@
      The .epb files have been correctly written
 
 
-     Band disentanglement is used:  nbndsub =   16
+     Band disentanglement is used: nbndsub =   16
      Use zone-centred Wigner-Seitz cells 
      Number of WS vectors for electrons       93
      Number of WS vectors for phonons       19
      Number of WS vectors for electron-phonon       19
      Maximum number of cores for efficient parallelization      114
-     Results may improve by using use_ws == .true. 
+     Results may improve by using use_ws == .TRUE. 
+ 
+     Bloch2wane:          1 /          8
+     Bloch2wane:          2 /          8
+     Bloch2wane:          3 /          8
+     Bloch2wane:          4 /          8
+     Bloch2wane:          5 /          8
+     Bloch2wane:          6 /          8
+     Bloch2wane:          7 /          8
+     Bloch2wane:          8 /          8
+ 
+     Bloch2wanp:          1 /         19
+     Bloch2wanp:          2 /         19
+     Bloch2wanp:          3 /         19
+     Bloch2wanp:          4 /         19
+     Bloch2wanp:          5 /         19
+     Bloch2wanp:          6 /         19
+     Bloch2wanp:          7 /         19
+     Bloch2wanp:          8 /         19
+     Bloch2wanp:          9 /         19
+     Bloch2wanp:         10 /         19
+     Bloch2wanp:         11 /         19
+     Bloch2wanp:         12 /         19
+     Bloch2wanp:         13 /         19
+     Bloch2wanp:         14 /         19
+     Bloch2wanp:         15 /         19
+     Bloch2wanp:         16 /         19
+     Bloch2wanp:         17 /         19
+     Bloch2wanp:         18 /         19
+     Bloch2wanp:         19 /         19
 
      Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file
 
-
-     Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
-
-
-     Reading interatomic force constants
-
-     IFC last   -0.0032828
-     Norm of the difference between old and new effective charges:    0.0000000
-     Norm of the difference between old and new force-constants:    0.0000291
-     Imposed crystal ASR
-
-     Finished reading ifcs
-
-
-     Finished reading Wann rep data from file
-
      ===================================================================
-     Memory usage:  VmHWM =        75Mb
-                   VmPeak =       344Mb
+     Memory usage:  VmHWM =        78Mb
+                   VmPeak =       410Mb
      ===================================================================
      
      Using q-mesh file: ./LGX.txt
@@ -502,7 +527,7 @@
      Size of k point mesh for interpolation:        200
      Max number of k points per pool:              200
 
-     Fermi energy coarse grid =   0.000000 eV
+     Fermi energy coarse grid =   6.302835 eV
 
      ===================================================================
 
@@ -510,52 +535,51 @@
 
      ===================================================================
 
-              ibndmin =     3  ebndmin =    -0.087
-              ibndmax =     4  ebndmax =     0.078
+              ibndmin =     3  ebndmin =     5.107 eV
+              ibndmax =    12  ebndmax =     7.499 eV
 
 
-     Number of ep-matrix elements per pool :         2400 ~=   18.75 Kb (@ 8 bytes/ DP)
-     Number selected, total     100     100
+     Number of ep-matrix elements per pool :        60000 ~=  468.75 Kb (@ 8 bytes/ DP)
+     Number selected, total         100         100
      We only need to compute      100 q-points
       
      Progression iq (fine) =        100/       100
      ===================================================================
-     Memory usage:  VmHWM =        75Mb
-                   VmPeak =       344Mb
+     Memory usage:  VmHWM =        78Mb
+                   VmPeak =       410Mb
      ===================================================================
 
 
      Unfolding on the coarse grid
-     elphon_wrap  :     58.64s CPU     59.29s WALL (       1 calls)
+     elphon_wrap  :     53.42s CPU     53.94s WALL (       1 calls)
 
      INITIALIZATION: 
 
-     set_drhoc    :      0.32s CPU      0.32s WALL (       9 calls)
+     set_drhoc    :      0.11s CPU      0.11s WALL (       9 calls)
      init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
-     init_us_1    :      0.02s CPU      0.02s WALL (       1 calls)
+     init_us_1    :      0.02s CPU      0.02s WALL (       2 calls)
+
 
 
      Electron-Phonon interpolation
-     ephwann      :      3.64s CPU      4.28s WALL (       1 calls)
-     ep-interp    :      2.78s CPU      3.32s WALL (     100 calls)
+     ephwann      :      3.54s CPU      4.17s WALL (       1 calls)
+     ep-interp    :      2.87s CPU      3.44s WALL (     100 calls)
 
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
-     Ham: step 2  :      0.03s CPU      0.03s WALL (       1 calls)
+     Ham: step 2  :      0.00s CPU      0.00s WALL (       1 calls)
      ep: step 1   :      0.01s CPU      0.01s WALL (      48 calls)
-     ep: step 2   :      0.18s CPU      0.18s WALL (      48 calls)
+     ep: step 2   :      3.46s CPU      4.09s WALL (       1 calls)
      DynW2B       :      0.00s CPU      0.00s WALL (     100 calls)
-     HamW2B       :      1.46s CPU      1.47s WALL (   20841 calls)
-     ephW2Bp      :      0.29s CPU      0.81s WALL (     100 calls)
+     HamW2B       :      1.27s CPU      1.28s WALL (   21789 calls)
+     ephW2Bp      :      0.32s CPU      0.86s WALL (     100 calls)
+     ephW2B       :      0.42s CPU      0.42s WALL (    5776 calls)
 
 
      Total program execution
-     EPW          :   1m12.46s CPU   1m13.84s WALL
+     EPW          :   1m 5.71s CPU   1m 6.93s WALL
 
-                                                                                          
- Please consider citing:                                                                  
- S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
-                                                                                          
- In addition, if you used anisotropic Eliashberg superconductivity please cite:           
-              E. R. Margine and F. Giustino, Phys. Rev. B 87, 024505 (2013)               
-              if you used transport properties (scattering rates, mobility) please cite:  
-              S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)     
+     ===============================================================================
+     The functionality-dependent EPW.bib file was created with suggested citations. 
+     Please consider citing the papers listed in EPW.bib.                           
+     ===============================================================================
+                                                                                    

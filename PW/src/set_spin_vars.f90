@@ -6,13 +6,13 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !------------------------------------------------------------------------
-SUBROUTINE set_spin_vars( lsda, noncolin, lspinorb, domag, &
+SUBROUTINE set_spin_vars( lsda, noncolin, domag, &
      npol, nspin, nspin_lsda, nspin_mag, nspin_gga, current_spin )
   !------------------------------------------------------------------------
   !
   !  Set various spin-related variables
   !
-  LOGICAL, INTENT(IN)  :: lsda, noncolin, lspinorb, domag
+  LOGICAL, INTENT(IN)  :: lsda, noncolin, domag
   INTEGER, INTENT(OUT) :: npol, nspin, nspin_lsda, nspin_mag, nspin_gga
   INTEGER, INTENT(OUT) :: current_spin
   !

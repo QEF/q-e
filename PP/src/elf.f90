@@ -1,5 +1,5 @@
-   !
-! Copyright (C) 2001-2005 PWSCF group
+!
+! Copyright (C) 2001-2021 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -33,7 +33,7 @@ SUBROUTINE do_elf (elf)
   USE io_files, ONLY: restart_dir
   USE klist, ONLY: nks, xk, ngk, igk_k
   USE lsda_mod, ONLY: nspin
-  USE scf, ONLY: rho
+  USE scf, ONLY: rho, rhoz_or_updw
   USE symme, ONLY: sym_rho, sym_rho_init
   USE wvfct, ONLY: nbnd, wg
   USE control_flags, ONLY: gamma_only
@@ -51,7 +51,7 @@ SUBROUTINE do_elf (elf)
   !
   INTEGER :: i, j, k, ibnd, ik, is
   REAL(DP) :: gv(3), w1, d, fac
-  REAL(DP), ALLOCATABLE :: kkin (:), tbos (:)
+  REAL(DP), ALLOCATABLE :: kkin (:), tbos (:,:)
   COMPLEX(DP), ALLOCATABLE :: aux (:), aux2 (:)
   !
   CALL infomsg ('do_elf', 'elf + US not fully implemented')
@@ -135,45 +135,58 @@ SUBROUTINE do_elf (elf)
   !          aux --> charge density in Fourier space
   !         aux2 --> iG * rho(G)
   !
-  ALLOCATE ( tbos(dfftp%nnr), aux2(dfftp%nnr) )
-  tbos(:) = 0.d0
+  ALLOCATE ( tbos(dfftp%nnr,nspin), aux2(dfftp%nnr) )
   !
-  ! put the total (up+down) charge density in rho%of_r(*,1)
+  ! set rho%of_r(:,1) = spin up, rho%of_r(:,2) = spin down charge
   !
-  DO is = 2, nspin
-     rho%of_r (:, 1) =  rho%of_r (:, 1) + rho%of_r (:, is)
-  ENDDO
+  IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', '->updw' )
   !
-  aux(:) = cmplx( rho%of_r(:, 1), 0.d0 ,kind=DP)
-  CALL fwfft ('Rho', aux, dfftp)
+  ! FIXME: the following gradient calculation could be performed
+  !        in a more straightforward way using "fft_gradient_r2r"
   !
-  DO j = 1, 3
-     aux2(:) = (0.d0,0.d0)
-     DO i = 1, ngm
-        aux2(dfftp%nl(i)) = aux(dfftp%nl(i)) * cmplx(0.0d0, g(j,i)*tpiba,kind=DP)
-     ENDDO
-     IF (gamma_only) THEN
+  DO k = 1, nspin
+     tbos(:,k) = 0.d0
+     aux(:) = cmplx( rho%of_r(:, k), 0.d0 ,kind=DP)
+     CALL fwfft ('Rho', aux, dfftp)
+     !
+     DO j = 1, 3
+        aux2(:) = (0.d0,0.d0)
         DO i = 1, ngm
-           aux2(dfftp%nlm(i)) = aux(dfftp%nlm(i)) * cmplx(0.0d0,-g(j,i)*tpiba,kind=DP)
+           aux2(dfftp%nl(i)) = aux(dfftp%nl(i)) * cmplx(0.0d0, g(j,i)*tpiba,kind=DP)
         ENDDO
-     ENDIF
+        IF (gamma_only) THEN
+           DO i = 1, ngm
+              aux2(dfftp%nlm(i)) = aux(dfftp%nlm(i)) * cmplx(0.0d0,-g(j,i)*tpiba,kind=DP)
+           ENDDO
+        ENDIF
 
-     CALL invfft ('Rho', aux2, dfftp)
-     DO i = 1, dfftp%nnr
-        tbos (i) = tbos (i) + dble(aux2(i))**2
+        CALL invfft ('Rho', aux2, dfftp)
+        DO i = 1, dfftp%nnr
+           tbos (i, k) = tbos (i, k) + dble(aux2(i))**2
+        ENDDO
      ENDDO
   ENDDO
   !
-  ! Calculates ELF
+  ! Calculate ELF
   !
-  fac = 5.d0 / (3.d0 * (3.d0 * pi**2) ** (2.d0 / 3.d0) )
+  fac = 5.d0 / (3.d0 * (6.d0 * pi**2) ** (2.d0 / 3.d0) )
   elf(:) = 0.d0
   DO i = 1, dfftp%nnr
-     IF (rho%of_r (i,1) > 1.d-30) THEN
-        d = fac / rho%of_r(i,1)**(5d0/3d0) * (kkin(i)-0.25d0*tbos(i)/rho%of_r(i,1))
-        elf (i) = 1.0d0 / (1.0d0 + d**2)
+     IF ( nspin == 2 ) THEN
+        IF ( (rho%of_r (i,1) > 1.d-30).and.(rho%of_r (i,2) > 1.d-30) ) THEN
+           d = fac / ( rho%of_r(i,1)**(5d0/3d0) + rho%of_r(i,2)**(5d0/3d0) ) &
+                *(kkin(i) - 0.25d0*tbos(i,1)/rho%of_r(i,1) - &
+                0.25d0*tbos(i,2)/rho%of_r(i,2) + 1.d-5)
+           elf (i) = 1.0d0 / (1.0d0 + d**2)
+        ENDIF
+     ELSE
+        IF ( rho%of_r (i,1) > 1.d-30 ) THEN
+           d = fac / ( rho%of_r(i,1)**(5d0/3d0) ) &
+                *(kkin(i) - 0.25d0*tbos(i,1)/rho%of_r(i,1) + 1.d-5)
+           elf (i) = 1.0d0 / (1.0d0 + d**2)
+        END IF
      ENDIF
-  ENDDO
+  END DO
   DEALLOCATE (aux, aux2, tbos, kkin)
   RETURN
 
@@ -209,7 +222,8 @@ SUBROUTINE do_rdg (rdg)
      IF (rho%of_r(i,1) > rho_cut) THEN
         rdg(i) = fac * 100.d0 / abs(rho%of_r(i,1))**(4.d0/3.d0)
      ELSE
-        rdg(i) = fac * sqrt(grho(1,i)**2 + grho(2,i)**2 + grho(3,i)**2) / abs(rho%of_r(i,1))**(4.d0/3.d0)
+        rdg(i) = fac * sqrt(grho(1,i)**2 + grho(2,i)**2 + grho(3,i)**2) &
+                     / abs(rho%of_r(i,1))**(4.d0/3.d0)
      ENDIF
   ENDDO
   
@@ -218,8 +232,6 @@ SUBROUTINE do_rdg (rdg)
   RETURN
 
 END SUBROUTINE do_rdg
-
-
 
 !-----------------------------------------------------------------------
 SUBROUTINE do_sl2rho (sl2rho)
@@ -247,12 +259,6 @@ SUBROUTINE do_sl2rho (sl2rho)
   ! gradient and hessian of rho
   ALLOCATE( grho(3,dfftp%nnr), hrho(3,3,dfftp%nnr) )
 
-  ! put the total (up+down) charge density in rho%of_r(*,1)
-  DO is = 2, nspin
-     rho%of_g(:,1) =  rho%of_g(:,1) + rho%of_g(:,is)
-     rho%of_r(:,1) =  rho%of_r(:,1) + rho%of_r(:,is)
-  ENDDO
-
   ! calculate hessian of rho (gradient is discarded)
   CALL fft_hessian( dfftp, rho%of_r(:,1), g, grho, hrho )
 
@@ -271,7 +277,7 @@ SUBROUTINE do_sl2rho (sl2rho)
                   v, 3, work, 24, iwork, ifail, info )
      !
      IF ( info > 0) THEN
-        CALL errore('do_sl2rho','failed to diagonlize',info)
+        CALL errore('do_sl2rho','failed to diagonalize',info)
      ELSEIF (info < 0) THEN
         call errore('do_sl2rho','illegal arguments in DSYEVX',-info)
      ENDIF
@@ -285,3 +291,61 @@ SUBROUTINE do_sl2rho (sl2rho)
   RETURN
 
 END SUBROUTINE do_sl2rho
+
+!-----------------------------------------------------------------------
+SUBROUTINE do_dori (dori)
+  !-----------------------------------------------------------------------
+  ! D. Yang & Q.Liu
+  ! density overlap regions indicator（DOI: 10.1021/ct500490b）
+  ! theta(r) = 4 * (laplacian(rho(r)) * grad(rho(r)) * rho(r) 
+  !            + | grad(rho(r)) |**2 * grad(rho(r)))
+  !            / (| grad(rho(r)) |**2)**3
+  ! DORI(r) = theta(r) / (1 + theta(r))
+
+  USE kinds,                ONLY: DP
+  USE constants,            ONLY: pi
+  USE fft_base,             ONLY: dfftp
+  USE scf,                  ONLY: rho
+  USE gvect,                ONLY: g, ngm
+  USE lsda_mod,             ONLY: nspin
+  IMPLICIT NONE
+  REAL(DP), INTENT(OUT) :: dori (dfftp%nnr)
+  REAL(DP), ALLOCATABLE :: grho(:,:), hrho(:,:,:), temp(:,:,:), sum_grho(:)
+  INTEGER :: is, i, j
+
+  ! gradient and hessian of rho
+  ALLOCATE( grho(3,dfftp%nnr), hrho(3,3,dfftp%nnr))
+  ALLOCATE(sum_grho(dfftp%nnr), temp(2,3,dfftp%nnr))
+
+
+  ! calculate hessian of rho (gradient is discarded)
+  CALL fft_hessian( dfftp, rho%of_r(:,1), g, grho, hrho )
+
+  ! calculate theta(r)
+  sum_grho(:) = grho(1,:)**2 + grho(2,:)**2 + grho(3,:)**2
+  DO i = 1, 3
+     temp(1,i,:) = 0.0d0
+     DO j = 1,3
+        temp(1,i,:) = temp(1,i,:) + grho(j,:)*hrho(i,j,:)
+     ENDDO
+     temp(1,i,:) = rho%of_r(:,1)*temp(1,i,:)
+     temp(2,i,:) = grho(i,:)*sum_grho(:)
+  ENDDO
+  dori(:) = 0.d0 
+  DO i = 1, 3
+     dori(:) = dori(:) + (temp(1,i,:)-temp(2,i,:))**2
+  ENDDO
+  ! calculate dori(r) 
+  dori(:) = 4/(sum_grho(:)+1.d-5)**3*dori(:)
+  dori(:) = dori(:) / (1 + dori(:))
+  
+  DEALLOCATE( grho, hrho, temp )
+  DEALLOCATE( sum_grho )
+
+  RETURN
+
+END SUBROUTINE do_dori
+
+
+
+!-----------------------------------------------------------------------

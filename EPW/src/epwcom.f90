@@ -36,6 +36,13 @@
   !! ...  title of the simulation
   CHARACTER(LEN = 10)  :: asr_typ
   !! type of ASR if lifc=.TRUE.
+  CHARACTER(LEN = 10) :: vme
+  !! if 'dipole' then computes the velocity as dipole+commutator = <\psi_mk|p+i[V_NL,r]|\psi_nk>
+  !! if 'wannier' then computes the velocity as dH_nmk/dk - i(e_nk-e_mk)A_nmk where A is the Berry connection
+  !!!!!
+  CHARACTER(LEN = 10) :: tc_linear_solver
+  !! algorithm to solve T_c eigenvalue problem
+  !!!!!
   !
   LOGICAL :: elecselfen
   !! if .TRUE. calculate electron selfenergy due to e-p interaction
@@ -87,10 +94,10 @@
   !! if .TRUE. prefix.epmatwe files are already on disk. don't recalculate. debugging param
   LOGICAL :: epexst
   !! if .TRUE. prefix.epmatwp files are already on disk. don't recalculate. debugging param
-  LOGICAL :: vme
-  !! if .TRUE. calculate velocity matrix elements
   LOGICAL :: band_plot
   !! if .TRUE. write files to plot band structure and phonon dispersion
+  LOGICAL :: fermi_plot
+  !! if .TRUE. write files to plot Fermi surface
   LOGICAL :: lpolar
   !! if .TRUE. enable the correct Wannier interpolation in the case of polar material.
   LOGICAL :: lscreen
@@ -110,6 +117,8 @@
   LOGICAL :: prtgkk
   !! if .TRUE. print the |g| vertex in [meV].
   LOGICAL :: lphase
+  !! if .TRUE. fix the gauge when diagonalizing the interpolated dynamical matrix and electronic Hamiltonian.
+  LOGICAL :: lrot
   !! if .TRUE. fix the gauge when diagonalizing the interpolated dynamical matrix and electronic Hamiltonian.
   LOGICAL :: lindabs
   !! if .TRUE. perform phonon-assisted absorption calculations
@@ -139,8 +148,10 @@
   !! if .TRUE. solve isotropic case
   LOGICAL :: laniso
   !! if .TRUE. solve anisotropic case
-  LOGICAL :: lunif
-  !! if .TRUE. a uniform grid is defined between wsfc and wc for real-axis calculations
+  !!!!!
+  !  LOGICAL :: lunif
+  !  !! if .TRUE. a uniform grid is defined between wsfc and wc for real-axis calculations
+  !!!!!
   LOGICAL :: kerwrite
   !! if .TRUE. write kp and km to files .ker for real-axis calculations
   LOGICAL :: kerread
@@ -149,6 +160,16 @@
   !! if .TRUE. read from file Delta and Znorm on the imaginary-axis
   LOGICAL :: eliashberg
   !! if .TRUE. solve the Eliashberg equations
+  LOGICAL :: tc_linear
+  !! if .TRUE. linearized Eliashberg eqn. for T_c will be solved
+  !!!!!
+  ! CHARACTER(LEN = 10) :: tc_linear_solver
+  ! !! algorithm to solve T_c eigenvalue problem
+  LOGICAL :: fbw
+  !! if .TRUE. full-bandwidth calculations will be performed
+  LOGICAL :: muchem
+  !! if .TURE. the chem. pot. is updated in fbw calculations
+  !!!!!
   !
   ! Conductivity
   LOGICAL :: scattering
@@ -169,6 +190,18 @@
   !! if .TRUE. compute the long range interaction of el-ph. Can only be .TRUE. if lpolar is also true.
   LOGICAL :: shortrange
   !! if .TRUE. compute the long range interaction of el-ph. Can only be .TRUE. if lpolar is also true.
+  LOGICAL :: fixsym
+  !! if .TRUE. try to fix the symmetry-related issues
+  LOGICAL :: epw_no_t_rev
+  !! if .TRUE. set t_rev = 0
+  LOGICAL :: epw_tr
+  !! set time_reversal to epw_tr
+  LOGICAL :: epw_nosym
+  !! If .TRUE. set nsym=1 (nrot=1) and invsym=.FALSE.
+  LOGICAL :: epw_noinv
+  !! If .TRUE. set imq to non-zero value
+  LOGICAL :: epw_crysym
+  !! If .TRUE. calculate the symmetry of the crystal
   !
   INTEGER :: ngaussw
   !! smearing type for Fermi surface average in e-ph coupling after wann. interp.
@@ -202,8 +235,8 @@
   !! Switch for symmetry operations
   INTEGER :: nwanxx = 200
   !! parameter used in writing prefix.win file.
-  INTEGER :: ntempxx = 25
-  !! Maximum number of wannier functions
+  INTEGER :: ntempxx = 50
+  !! Maximum number of temperatures
   INTEGER :: etf_mem
   !! If 0, all in memory. If 1, less is stored in memory (read files).
   INTEGER :: scr_typ
@@ -212,31 +245,37 @@
   !! band index for which the cumulant calculation is done
   INTEGER :: mob_maxiter
   !! Maximum number of iteration for the IBTE
+  INTEGER :: nstemp
+  !! nr. of temperature points for temperature dependent caclulations
+  REAL(KIND = DP) :: tempsmin
+  !! min. temperature in Eliashberg equations - deprecated as an input parameter
+  REAL(KIND = DP) :: tempsmax
+  !! max. temperature - deprecated as an input parameter
+  REAL(KIND = DP) :: temps(50)
+  !! input temperature array (units of Kelvin)
   !
   ! Superconductivity
-  INTEGER :: nswfc
-  !! nr. of grid points between (0,wsfc)
-  INTEGER :: nswc
-  !! nr. of grid points between (wsfc,wscut)
   INTEGER :: nswi
   !! nr. of grid points for Eliashberg equations of imaginary axis
-  INTEGER :: nstemp
-  !! nr. of temperature points for Eliashberg equations
   INTEGER :: nsiter
   !! nr. of iterations for self-consistency
+  INTEGER :: npade
+  !! percentange of Matsubara points used in Pade continuation
   INTEGER :: broyden_ndim
   !! nr. of iterations used in broyden mixing scheme
   INTEGER :: nw_specfun
   !! nr. of bins for frequency in electron spectral function due to e-p interaction
   INTEGER :: restart_step
   !! Create a restart point during the interpolation part every restart_step q/k-points.
+  !!!!!
+  INTEGER :: gridsamp
+  !! Type of the Matsubara freq. sampling (-1= read from file; 0= uniform; 1= sparse)
+  !!!!!
   !
   REAL(KIND = DP) :: degaussw
   !! smearing width for Fermi surface average in e-ph coupling after wann interp
   REAL(KIND = DP) :: fsthick
   !! thickness of the Fermi shell for averaging the e-ph matrix element
-  REAL(KIND = DP) :: eptemp
-  ! temperature for the electronic Fermi occupations in the e-p calculation
   REAL(KIND = DP) :: wmin
   !! min frequency for frequency scan in \delta( e_k - e_k+q - w ) when strict sel. rule is applied
   REAL(KIND = DP) :: wmax
@@ -279,16 +318,14 @@
   !! change in energy for each additional smearing in the a2f
   REAL(KIND = DP) :: muc
   !! effective Coulomb potential in Eliashberg equations
-  REAL(KIND = DP) :: wsfc
-  !! intermediate freqeuncy between (0,wscut)
-  REAL(KIND = DP) :: pwc
-  !! power used to define a non-uniform grid between wsfc and wscut
+  !!!!!
+  !  REAL(KIND = DP) :: wsfc
+  !  !! intermediate freqeuncy between (0,wscut)
+  !  REAL(KIND = DP) :: pwc
+  !  !! power used to define a non-uniform grid between wsfc and wscut
+  !!!!!
   REAL(KIND = DP) :: wscut
   !! upper limit cutoff frequency in Eliashberg equations (at least 5 times wsphmax)
-  REAL(KIND = DP) :: tempsmin
-  !! min. temperature in Eliashberg equations
-  REAL(KIND = DP) :: tempsmax
-  !! max. temperature
   REAL(KIND = DP) :: broyden_beta
   !! mixing factor for broyden mixing
   REAL(KIND = DP) :: conv_thr_raxis
@@ -308,16 +345,55 @@
   !! min frequency in electron spectral function due to e-p interaction
   REAL(KIND = DP) :: wmax_specfun
   !! max frequency in electron spectral function due to e-p `interaction
-  REAL(KIND = DP) :: temps(50)
-  !! temperature entering in the Eliashberg equtions (units of Kelvin)
+  !!!!!
+  REAL(KIND = DP) :: dos_del
+  !! Delta_E in electronic dos for Fermi window (in eV)
+  REAL(KIND = DP) :: griddens
+  !! Measure of sparsity of the grid
+  !!!!!
   !
   ! Conductivity
+  INTEGER :: mob_nfreq
+  !! Number of frequency for the spectral decomposition of mobility
   REAL(KIND = DP) :: scissor
   !! Value of the scissor shift in eV.
   REAL(KIND = DP) :: ncarrier
   !! Amount of carrier concentration in cm^-3 when doping a semiconductors
   REAL(KIND = DP) :: nc
   !! Number of carrier per unit cell that participate to the conduction in the Ziman resistivity formula
+  REAL(KIND = DP) :: bfieldx
+  !! Magnetic field along the x-direction
+  REAL(KIND = DP) :: bfieldy
+  !! Magnetic field along the y-direction
+  REAL(KIND = DP) :: bfieldz
+  !! Magnetic field along the z-direction
+  REAL(KIND = DP) :: mob_maxfreq
+  !! Maximum frequency for the spectral decomposition of mobility. Typically that freq. is the highest phonon freq.
+  !!!!!
+  !
+  ! Conductivity - ionized impurity scattering
+  LOGICAL :: ii_g
+  !! If .TRUE. calculate the ionized impurity matrix elements
+  LOGICAL :: ii_scattering
+  !! If .TRUE. calculate the carrier-impurity scattering rate
+  LOGICAL :: ii_only
+  !! If .TRUE., calculate only the ionized-impurity-limitted mobility
+  LOGICAL :: ii_lscreen
+  !! If .TRUE. (DEFAULT), calculate and use free-carrier
+  !! screening of ii_g matrix elements, if .FALSE., calculations will diverge with 
+  !! increasing density of k-point due to 1/(q^4) divergence for ionized impurity 
+  !! scattering rate
+  LOGICAL :: ii_partion
+  !! If .TRUE., account for partial ionization 
+  REAL(KIND = DP) :: ii_charge
+  !! charge of the ionized impurities, units of electron charge for input
+  REAL(KIND = DP) :: ii_n
+  !! density of impurities, input in units of cm^-3
+  REAL(KIND = DP) :: ii_eda
+  !! ionization energy of the donor or accpetor impurity, for partial ionization calcs
+  REAL(KIND = DP) :: ii_eps0
+  !! low frequency dielectric constant
+  !!!!! 
   !
   ! Plasmon
   REAL(KIND = DP) :: nel
@@ -332,80 +408,121 @@
   !! smearing for the calculation of the Lindhard function (in eV)
   !
   ! Phonon-assisted absorption
+  INTEGER :: neta = 9
+  !! Number of broadening parameters
+  INTEGER :: nomega
+  !! Number of frequency (photon energy) points
   REAL(KIND = DP) :: omegamin
   !! Photon energy minimum (in eV)
   REAL(KIND = DP) :: omegamax
   !! Photon energy maximum (in eV)
   REAL(KIND = DP) :: omegastep
   !! Photon energy step (in eV)
-  REAL(KIND = DP) :: n_r
-  !! Refractive index
+  REAL(KIND = DP) :: sigma_ref
+  !! Reference conductivity for Drude dielectric function
   !
   ! ----------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
   ! Shell implementation for future use.
-  INTEGER :: num_cbands
-  !! number of conduction bands accounted in the Hilbert space of polaron Hamilontian
-  INTEGER :: start_band
-  !! start band index in matrix element
-  INTEGER :: nPlrn
-  !! Number of polaron bands
-  INTEGER :: nDOS_plrn
+  INTEGER :: start_band_plrn, end_band_plrn
+  !! Start and end band index in matrix element
+  INTEGER :: nstate_plrn
+  !! Number of polaron states calculated
+  INTEGER :: ndos_plrn
   !! Number of grid in polaron DOS calculation
-  INTEGER :: start_mode
-  !! start mode index
-  INTEGER :: cb_shift
-  !! CB shifted in polaron calculation
-  INTEGER :: diag_mode
-  !! diagonalization mode for polaron solver
-  INTEGER :: restart_polaron_mode
-  !! polaron restart mode
-  INTEGER :: polaron_type
+  INTEGER :: type_plrn
   !! polaron type (electron/hole)
-  INTEGER :: init_plrn_wf
+  INTEGER :: init_plrn
   !! initial polaron wavefuntion with 1:Gaussian package and 2:Random number
-  INTEGER :: niterPlrn
+  INTEGER :: niter_plrn
   !! Maximum number of polaron SCF loops.
-  REAL(KIND = DP) :: spherical_cutoff
-  !!  spherical_cutoff for fast convergence in polaron calculation
-  REAL(KIND = DP) :: conv_thr_polaron
+  INTEGER :: seed_plrn
+  !! The seed number to generate the random initial polaron wavefunction
+  INTEGER :: nhblock_plrn
+  !! The seed number to generate the random initial polaron wavefunction
+  INTEGER :: g_start_band_plrn, g_end_band_plrn
+  !! Start and end band in saving g matrix
+  INTEGER :: step_wf_grid_plrn
+  !! number of grid to skip in output of real space wavefunction
+  INTEGER :: io_lvl_plrn
+  !! number of grid to skip in output of real space wavefunction
+  INTEGER :: scell_mat(3,3)
+  !! Supercell transformation matrix for polaron
+  INTEGER :: init_ntau_plrn
+  !! Number of displacements to be read from file to calculate polaron energy landscape  
+  INTEGER :: nethrdg_plrn
+  !! Number of steps in the diagonalization if adaptive_ethrdg_plrn=.true.
+  REAL(KIND = DP) :: conv_thr_plrn
   !!  convergent threshold for polaron calculation
-  REAL(KIND = DP) :: r01, r02, r03
-  !!  x,y,z Carsteian coordinate of polaron centre
-  REAL(KIND = DP) :: emin_plrn, emax_plrn, sigma_edos_plrn
+  REAL(KIND = DP) :: edos_min_plrn, edos_max_plrn, edos_sigma_plrn
   !! Electron Energy range in polaron DOS calculation
-  REAL(KIND = DP) :: pmin_plrn, pmax_plrn, sigma_pdos_plrn
+  REAL(KIND = DP) :: pdos_min_plrn, pdos_max_plrn, pdos_sigma_plrn
   !! Phonon Energy range in polaron DOS calculation
-  REAL(KIND = DP) :: n_dop
-  !! extra added charge per cell (as tot_charge, with opposite sign)
-  REAL(KIND = DP) :: sigma_plrn
-  !! decay radius of polaron wavefunction in initialization
-  REAL(KIND = DP) :: ethr_Plrn
-  !! decay radius of polaron wavefunction in initialization
-  REAL(KIND = DP) :: mixing_Plrn
+  REAL(KIND = DP) :: init_sigma_plrn
+  !! decay radius of polaron wavefunction in Gaussian initialization
+  REAL(KIND = DP) :: init_k0_plrn(3)
+  !! center k of Gaussian initialization
+  REAL(KIND = DP) :: mixing_plrn
+  !! mixing weight in plrn iteration
+  REAL(KIND = DP) :: ethrdg_plrn
+  !! threshold in diagonalization of the polaron Hamiltonian
+  REAL(KIND = DP) :: beta_plrn(3)
   !! Mixing weight in Self-consistency
-  LOGICAL :: wfcelec
+  REAL(KIND = DP) :: r0_plrn(3)
+  !! Mixing weight in Self-consistency
+  REAL(KIND = DP) :: g_start_energy_plrn
+  !! Mixing weight in Self-consistency
+  REAL(KIND = DP) :: g_end_energy_plrn
+  !! Mixing weight in Self-consistency
+  REAL(KIND = DP) :: kappa_plrn
+  !! Mixing weight in Self-consistency
+  REAL(KIND = DP) :: g_power_order_plrn
+  !! kappa
+  REAL(KIND = DP) :: omega_LO_plrn
+  !! Higher optical phonon frequency
+  REAL(KIND = DP) :: m_eff_plrn
+  !! effective mass in LP model
+  REAL(KIND = DP) :: g_tol_plrn
+  !!
+  REAL(KIND = DP) :: as(3,3)
+  !! Supercell lattice vectors transformed by Smat, as=S*at
+  REAL(KIND = DP) :: bs(3,3)
+  !! Supercell reciprocal lattice vectors transformed by Sbar=transpose(inverse(Smat), bs=Sbar*bg  
+  REAL(KIND = DP) :: init_ethrdg_plrn
+  !! Initial coarse threshold to be used if adaptive_ethrdg_plrn=.true. 
+  !!
+  LOGICAL :: plrn
   !! if .true. calculates perturbated part of the wavefunction
-  LOGICAL :: restart_polaron
+  LOGICAL :: model_vertex_plrn
+  !! if .true. calculates vertex model
+  LOGICAL :: model_enband_plrn
+  !! if .true. calculates vertex model
+  LOGICAL :: model_phfreq_plrn
+  !! if .true. calculates vertex model
+  LOGICAL :: restart_plrn
   !! if .true. Using Ack from written outputs
-  LOGICAL :: model_vertex
-  !! if .true. Using model vertex and effective mass for polaron calculation
-  LOGICAL :: wfcelec_old
-  !! if .true. Using old algorithm by DS
   LOGICAL :: full_diagon_plrn
-   !! if .true. diagonalizing the polaron Hamiltonian with direct diagonalization
-  LOGICAL :: polaron_wf
+  !! if .true. diagonalizing the polaron Hamiltonian with direct diagonalization
+  LOGICAL :: cal_psir_plrn
   !! if .true. Generating a 3D-plot for polaron wavefunction
-  LOGICAL :: polaron_interpol
+  LOGICAL :: interp_Ank_plrn
   !! if .true. interpolating polaron A(k) from A(Re)
-  LOGICAL :: polaron_bq
+  LOGICAL :: interp_Bqu_plrn
   !! if .true. interpolating polaron phonon component bq from A(Re) and An(k)
-  LOGICAL :: polaron_dos
-  !! if .true. calculating polaron dos
-  LOGICAL :: electron_dos
-  !! if .true. calculating contributed electron dos
-  LOGICAL :: phonon_dos
-  !! if .true. calculating excited phonon dos
+  LOGICAL :: debug_plrn
+  !! if .true. interpolating polaron phonon component bq from A(Re) and An(k)
+  LOGICAL :: time_rev_A_plrn
+  !! if .true. time_rev_A_plrn
+  LOGICAL :: time_rev_U_plrn
+  !! if .true. time_rev_A_plrn
+  LOGICAL :: Mmn_plrn
+  !! if .true. time_rev_A_plrn
+  LOGICAL :: recal_Mmn_plrn
+  !! if .true. time_rev_A_plrn
+  LOGICAL :: scell_mat_plrn
+  !! if .true. activate supercell transformation for polaron
+  LOGICAL :: adapt_ethrdg_plrn
+  !! if .true. activate adaptive threshold in polaron davidson diagonalization
   ! ----------------------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------

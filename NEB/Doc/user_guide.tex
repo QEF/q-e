@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.2.1}
+\def\version{7.1}
 \def\qe{{\sc Quantum ESPRESSO}}
 \def\NEB{\texttt{PWneb}} % to be decided
 \usepackage{html}
@@ -14,27 +14,21 @@
 \oddsidemargin = 0 cm
 
 \def\pwx{\texttt{pw.x}}
-\def\cpx{\texttt{cp.x}}
-\def\phx{\texttt{ph.x}}
 \def\nebx{\texttt{neb.x}}
 \def\configure{\texttt{configure}}
 \def\PWscf{\texttt{PWscf}}
-\def\PHonon{\texttt{PHonon}}
-\def\CP{\texttt{CP}}
-\def\PostProc{\texttt{PostProc}}
 \def\make{\texttt{make}}
 
 \begin{document} 
 \author{}
 \date{}
 
-\def\qeImage{../../Doc/quantum_espresso.pdf}
+\def\qeImage{../../Doc/quantum_espresso}
 
 \title{
   \includegraphics[width=5cm]{\qeImage} \\
   % title
   \Huge \NEB\ User's Guide (v. \version)
-  \\ \Large (only partially updated)
 }
 
 \maketitle
@@ -47,24 +41,22 @@ This guide covers the usage of \NEB, version \version:
 an open-source package for the calculation of energy barriers 
 and reaction pathway using the Nudged Elastic Band (NEB) method.
 
-{\em Important notice: due to the lack of time and of manpower, this
-manual is only partially updated and may contain outdated information.}
-
 This guide assumes that you know the physics 
 that \NEB\ describes and the methods it implements.
 It also assumes  that you have already installed,
 or know how to install, \qe. If not, please read
 the general User's Guide for \qe, found in 
-directory \texttt{Doc/} two levels above the 
-one containing this guide; or consult the web site:\\
+subdirectory \texttt{Doc/} of the main \qe\ directory,
+or consult the web site:\\
 \texttt{http://www.quantum-espresso.org}.
 
 \NEB \ is part of the \qe \ distribution and uses the \PWscf\
 package as electronic-structure computing tools (``engine''). 
 It is however written in a modular way and could be adapted 
-to use other codes as ``engine''. Note that since v.4.3 \PWscf\ no 
-longer performs NEB calculations. Also note that NEB with 
-Car-Parrinello molecular dynamics is not implemented anymore since v.4.3.
+to use other codes as ``engine''. Since v.4.3 the NEB calculation
+is performed by a separate executable \nebx\ and no longer by 
+\pwx. Also note that NEB with Car-Parrinello molecular dynamics 
+is no longer implemented since v.4.3.
 
 \section{People and terms of use}
 The current maintainers of \NEB\ are Layla Martin-Samos,
@@ -83,7 +75,8 @@ or the file License in the distribution).
 
 \section{Compilation}
 
-\NEB\ is a package tightly bound to \qe.
+\NEB\ is a package of \qe\ and requires package \PWscf\ for
+compilation.
 For instruction on how to download and compile \qe, please refer 
 to the general Users' Guide, available in file \texttt{Doc/user\_guide.pdf}
 under the main \qe\ directory, or in web site 
@@ -110,46 +103,11 @@ Symlinks to executable programs will be placed in the
 
 \subsection{Running examples}
 \label{SubSec:Examples}
-As a final check that compilation was successful, you may want to run some or
-all of the examples (presently only one). To run the examples, you should follow this procedure:
-\begin{enumerate}   
-\item Edit the \texttt{environment\_variables} file in the main \qe \ directory,
- setting the following variables as needed: 
-\begin{quote}
-   BIN\_DIR: directory where executables reside\\
-   PSEUDO\_DIR: directory where pseudopotential files reside\\
-   TMP\_DIR: directory to be used as temporary storage area
-\end{quote}
-\end{enumerate}
-The default values of BIN\_DIR and PSEUDO\_DIR should be fine, 
-unless you have installed things in nonstandard places. The TMP\_DIR 
-variable must point to a directory where you have read and write permissions, 
-with enough available space to host the temporary files produced by the 
-example runs, and possibly offering good I/O performance (i.e., don't 
-use an NFS-mounted directory). \textbf{N.B.} Use a dedicated directory,
-because the example script will automatically delete all data inside TMP\_DIR.
-If you have compiled the parallel version of \qe\ (this
-is the default if parallel libraries are detected), you will usually
-have to specify a driver program (such as \texttt{mpirun} or \texttt{mpiexec}) 
-and the number of processors: see Sec.\ref{SubSec:para} for
-details. In order to do that, edit again the \texttt{environment\_variables} 
-file
-and set the PARA\_PREFIX and PARA\_POSTFIX variables as needed. 
-Parallel executables will be started with a command line like this: 
-\begin{verbatim}
-      $PARA_PREFIX neb.x $PARA_POSTFIX -inp file.in > file.out
-\end{verbatim}
-For example, the command for IBM's POE looks like this:
-\begin{verbatim}
-      poe neb.x -procs 4 -inp file.in > file.out
-\end{verbatim}
-therefore you will need to set PARA\_PREFIX="poe", PARA\_POSTFIX="-procs 4". 
-Furthermore, if your machine does not support interactive use, you
-must run the commands specified below through the batch queuing
-system installed on that machine. Ask your system administrator for
-instructions. 
+As a final check that compilation was successful, you may want
+to run the examples (presently only one). See the general documentation
+for instructions on how to run the examples.
 
-Go to \texttt{NEB/examples/examplex01} and execute:
+Go to \texttt{NEB/examples/example01} and execute:
 \begin{verbatim}
       ./run_example
 \end{verbatim}
@@ -157,13 +115,11 @@ This will create a subdirectory \texttt{results/} containing the input and
 output files generated by the calculation.
 
 The \texttt{reference/} subdirectory contains
-verified output files, that you can check your results against. They
-were generated on a Linux PC using the Intel compiler. On different
-architectures the precise numbers could be slightly different, in
-particular if different FFT dimensions are automatically selected. For
-this reason, a plain diff of your results against the reference data
-doesn't work, or at least, it requires human inspection of the
-results.
+verified output files, that you can check your results against.
+The exact numbers depend upon the hardware, software stack,
+execution mode: tiny differences are not a problem, but
+a plain diff of your results against the reference data
+doesn't work, or at least, it requires human inspection.
 
 \section{Parallelism}
 \label{Sec:para}
@@ -176,75 +132,23 @@ all \PWscf-specific parallelization options.
 For a detailed information about parallelization in \qe, 
 please refer to the general documentation.
 
-As \NEB \ makes several independent evaluations of energy and forces at each step of
-the path optimization (one for each point in the configurational space,
- called ``image'', consituting the path)
- it is possible to distribute them among processors using an additional level of 
-parallelization (see later).
-%corresponding to a point in configuration space (i.e. to
-%a different set of atomic positions).
+In addition, \NEB \ makes several independent evaluations
+of energy and forces at each step of the path optimization:
+one per ``image'', that is, a point in the path, corresponding
+to a set of atomic positions.
+It is thus possible and often convenient to distribute
+images among processors, using the ``image'' parallelization,
+as described in the general documentation. The number of image
+groups is specified using the option \texttt{-ni N} (or,
+equivalently,  \texttt{-nimage N}) after the executable name
+(e.g., \nebx) in the command line. The default is a single
+image group (no image parallelization)
 
-\subsection{Running on parallel machines}
-\label{SubSec:para}
-
-Parallel execution is strongly system- and installation-dependent. 
-Typically one has to specify:
-\begin{enumerate}
-\item a launcher program (not always needed), 
-such as \texttt{poe}, \texttt{mpirun}, \texttt{mpiexec},
-  with the  appropriate options (if any);
-\item the number of processors, typically as an option to the launcher
-  program, but in some cases to be specified after the name of the
-  program to be
-  executed; 
-\item the program to be executed, with the proper path if needed: for
-  instance, \texttt{./neb.x}, or \texttt{\$HOME/bin/neb.x}, or
-  whatever applies; 
-\item other \texttt{PWscf}-specific parallelization options, to be
-  read and interpreted by the running code; 
-\item the number of image groups used by NEB (see next subsection).
-\end{enumerate}
-Items 1) and 2) are machine- and installation-dependent, and may be 
-different for interactive and batch execution. Note that large
-parallel machines are  often configured so as to disallow interactive
-execution: if in doubt, ask your system administrator.
-Item 3) also depend on your specific configuration (shell, execution
-path, etc). 
-Item 4) is optional but may be important: see the following section
-for the meaning of the various options.
-
-For illustration, here is how to run \texttt{neb.x} \ on 16 processors partitioned into
-4 image groups (4 processors each), for a path containing at least 4 images with POE:
-\begin{verbatim}
-   poe neb.x -procs 16 -ni 4 -i input
-\end{verbatim}
-
-
-\subsection{Parallelization levels}
-
-Data structures are distributed across processors.
-Processors are organized in a hierarchy of groups, 
-which are identified by different MPI communicators level.
-The groups hierarchy is as follow:
-\begin{verbatim}
-  world - image_group - PWscf hierarchy
-\end{verbatim}
-
-\texttt{world}: is the group of all processors (MPI\_COMM\_WORLD).
-
-\texttt{image\_group}: Processors can then be divided into different image groups,
-each of them taking care of one or more NEB images.
-
-%{\bf Communications}:
-Image parallelization is of loosely coupled type, so that processors belonging to
-different image groups communicate only once in a while, 
-whereas processors within the same image group are tightly coupled and 
-communications are more significant (please refer to the user guide of \PWscf).
-
-The default number of image groups is one, corresponding to the option
- \texttt{-ni 1} (or, equivalently,  \texttt{-nimage 1}).
-
-\newpage
+Images are loosely coupled calculations: processors belonging to
+different image groups communicate only once in a while, whereas
+processors within the same image group are tightly coupled and 
+communications are more significant (please refer to the user
+guide of \PWscf).
 
 \section{Using \NEB}
 

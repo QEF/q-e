@@ -26,27 +26,40 @@
      
         TYPE wave_descriptor
 
-          INTEGER :: ldg  ! leading dimension for pw array dimension
-          INTEGER :: ldb  ! leading dimension for band array dimension
-          INTEGER :: lds  ! leading dimension for spin array dimension
-          INTEGER :: ldk  ! leading dimension for k-points array dimension
+          INTEGER :: ldg
+          !! leading dimension for pw array dimension
+          INTEGER :: ldb
+          !! leading dimension for band array dimension
+          INTEGER :: lds
+          !! leading dimension for spin array dimension
+          INTEGER :: ldk
+          !! leading dimension for k-points array dimension
        
-          INTEGER :: ngwl  ! local number of pw
-          INTEGER :: ngwt  ! global number of pw
-          INTEGER :: nbl( 2 )  ! local number of bands
-          INTEGER :: nbt( 2 )  ! global number of bands
-          INTEGER :: nkl  ! local number of k-points
-          INTEGER :: nkt  ! global number of k-points
+          INTEGER :: ngwl
+          !! local number of pw
+          INTEGER :: ngwt
+          !! global number of pw
+          INTEGER :: nbl(2)
+          !! local number of bands
+          INTEGER :: nbt(2)
+          !! global number of bands
+          INTEGER :: nkl
+          !! local number of k-points
+          INTEGER :: nkt
+          !! global number of k-points
 
-          INTEGER :: nspin ! number of spin
+          INTEGER :: nspin
+          !! number of spin
 
-          INTEGER :: isym  ! symmetry of the wave function 
-                           ! ( gamma symmetry: isym == 0 )
+          INTEGER :: isym
+          !! symmetry of the wave function 
+          ! ( gamma symmetry: isym == 0 )
 
-          LOGICAL :: gamma ! true if wave functions have gamma symmetry
+          LOGICAL :: gamma
+          !! TRUE if wave functions have gamma symmetry
    
-          LOGICAL :: gzero ! true if the first plane wave is the one 
-                           ! with |G| == 0
+          LOGICAL :: gzero
+          !! TRUE if the first plane wave is the one with \(|G|=0\)
 
         END TYPE wave_descriptor
 
@@ -65,7 +78,8 @@
 
 
       SUBROUTINE wave_descriptor_init( desc, ngwl, ngwt, nbl, nbt, nkl, nkt, &
-        nspin, scheme, lgz )
+                                       nspin, scheme, lgz )
+        !! Initialize wave descriptor.
 
         IMPLICIT NONE
 
@@ -161,7 +175,8 @@
 
 
       SUBROUTINE wave_descriptor_info( desc, nam, iunit )
-
+        !! Print infos about wave descriptor.
+        !
         IMPLICIT NONE
 
         TYPE (wave_descriptor), INTENT(IN) :: desc

@@ -30,7 +30,7 @@ SUBROUTINE average_pp( ntyp )
      IF ( upf(nt)%has_so ) THEN
         !
         IF ( upf(nt)%tvanp ) &
-             CALL errore( 'average_pp', 'FR-PP please use lspinorb=.true.', 1 )
+                CALL errore( 'average_pp', 'Fully relativistic PPs, need spin-orbit calc. (lspinorb=.true.)', 1 )
         !
         nbe = 0
         !

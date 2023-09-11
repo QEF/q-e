@@ -18,9 +18,11 @@
 ;; (https://www.emacswiki.org/emacs/DerivedMode,
 ;; https://www.emacswiki.org/emacs/SampleMode) as well as the very
 ;; useful resources of Xah Lee
-;; (http://ergoemacs.org/emacs/elisp_syntax_coloring.html).  Last but
-;; not the least Sebastijan Peljhan is acknowledged for his work on
-;; `xsf-mode' that inspired the idea of writing the qe-modes.
+;; (http://ergoemacs.org/emacs/elisp_syntax_coloring.html). Sebastijan
+;; Peljhan is acknowledged for his work on `xsf-mode' that inspired
+;; the idea of writing the qe-modes. Last but not the least,
+;; Hongyi Zhao contributed the ido-completion-read snippet of
+;; code for selecting the values for the card's flags.
 
 
 ;; This file is not part of GNU Emacs.
@@ -71,20 +73,20 @@
 
 ;; cp's supercards (if any)
 (defvar cp-open-supercards   (list ))
-(defvar cp-closed-supercards (list ))
+(defvar cp-closed-supercards (list "AUTOPILOT" "ENDRULES" ))
   
 ;; cp's namelists
 (defvar cp-namelists (list "&CELL" "&CONTROL" "&ELECTRONS" "&IONS" "&PRESS_AI" "&SYSTEM" "&WANNIER" ))
 (defvar qe-end-namelist (list "&END" "/"))
 
 ;; cp's variables
-(defvar cp-vars (list "A" "abisur" "abivol" "adapt" "ampre" "amprp" "assume_isolated" "B" "C" "calculation" "calwf" "cell_damping" "cell_dofree" "cell_dynamics" "cell_factor" "cell_parameters" "cell_temperature" "cell_velocities" "celldm" "conv_thr" "cosAB" "cosAC" "cosBC" "degauss" "disk_io" "dt" "dthr" "ecfixed" "ecutrho" "ecutwfc" "efield" "efx0" "efx1" "efy0" "efy1" "efz0" "efz1" "ekin_conv_thr" "ekincw" "electron_damping" "electron_dynamics" "electron_maxstep" "electron_temperature" "electron_velocities" "emass" "emass_cutoff" "epol" "etot_conv_thr" "exx_dis_cutoff" "exx_fraction" "exx_me_rcut_pair" "exx_me_rcut_self" "exx_neigh" "exx_poisson_eps" "exx_ps_rcut_pair" "exx_ps_rcut_self" "fnhscl" "fnosee" "fnoseh" "fnosep" "forc_conv_thr" "grease" "greash" "greasp" "Hubbard_U" "ibrav" "iesr" "input_dft" "ion_damping" "ion_dynamics" "ion_nstepe" "ion_positions" "ion_radius" "ion_temperature" "ion_velocities" "iprint" "isave" "lambda_cold" "lda_plus_u" "london_rcut" "london_s6" "max_seconds" "maxiter" "maxwfdt" "memory" "n_inner" "nat" "nbnd" "ndega" "ndr" "ndw" "nhgrp" "nhpcl" "nhptyp" "ninter_cold_restart" "nit" "niter_cg_restart" "nr1" "nr1b" "nr1s" "nr2" "nr2b" "nr2s" "nr3" "nr3b" "nr3s" "nsd" "nspin" "nstep" "nsteps" "ntyp" "nwf" "occupations" "ortho_eps" "ortho_max" "ortho_para" "orthogonalization" "outdir" "P_ext" "P_fin" "P_in" "passop" "prefix" "press" "pseudo_dir" "pvar" "q2sigma" "qcutz" "remove_rigid_rot" "restart_mode" "rho_thr" "saverho" "smearing" "startingwfc" "Surf_t" "sw_len" "tabps" "tcg" "tefield" "temph" "tempw" "title" "tolp" "tolw" "tot_charge" "tot_magnetization" "tprnfor" "tranp" "ts_vdw" "ts_vdw_econv_thr" "ts_vdw_isolated" "tstress" "vdw_corr" "verbosity" "wf_efield" "wf_friction" "wf_q" "wf_switch" "wfdt" "wffort" "wfsd" "wmass" "writev" ))
+(defvar cp-vars (list "A" "B" "C" "Hubbard_U" "P_ext" "P_fin" "P_in" "Surf_t" "abisur" "abivol" "adapt" "ampre" "amprp" "assume_isolated" "calculation" "calwf" "cell_damping" "cell_dofree" "cell_dynamics" "cell_factor" "cell_parameters" "cell_temperature" "cell_velocities" "celldm" "conv_thr" "cosAB" "cosAC" "cosBC" "degauss" "disk_io" "dt" "dthr" "ecfixed" "ecutrho" "ecutwfc" "efield" "efx0" "efx1" "efy0" "efy1" "efz0" "efz1" "ekin_conv_thr" "ekincw" "electron_damping" "electron_dynamics" "electron_maxstep" "electron_temperature" "electron_velocities" "emass" "emass_cutoff" "epol" "etot_conv_thr" "exx_dis_cutoff" "exx_fraction" "exx_me_rcut_pair" "exx_me_rcut_self" "exx_neigh" "exx_poisson_eps" "exx_ps_rcut_pair" "exx_ps_rcut_self" "exx_use_cube_domain" "fnhscl" "fnosee" "fnoseh" "fnosep" "forc_conv_thr" "grease" "greash" "greasp" "ibrav" "iesr" "input_dft" "ion_damping" "ion_dynamics" "ion_nstepe" "ion_positions" "ion_radius" "ion_temperature" "ion_velocities" "iprint" "isave" "lambda_cold" "lda_plus_u" "london_rcut" "london_s6" "max_seconds" "maxiter" "maxwfdt" "memory" "n_inner" "nat" "nbnd" "ndega" "ndr" "ndw" "nhgrp" "nhpcl" "nhptyp" "nit" "niter_cg_restart" "niter_cold_restart" "nr1" "nr1b" "nr1s" "nr2" "nr2b" "nr2s" "nr3" "nr3b" "nr3s" "nsd" "nspin" "nstep" "nsteps" "ntyp" "nwf" "occupations" "ortho_eps" "ortho_max" "ortho_para" "orthogonalization" "outdir" "passop" "pre_state" "prefix" "press" "pseudo_dir" "pvar" "q2sigma" "qcutz" "remove_rigid_rot" "restart_mode" "rho_thr" "saverho" "smearing" "startingwfc" "sw_len" "tabps" "tcg" "tefield" "temph" "tempw" "title" "tolp" "tolw" "tot_charge" "tot_magnetization" "tprnfor" "tranp" "ts_vdw" "ts_vdw_econv_thr" "ts_vdw_isolated" "tstress" "vdw_corr" "verbosity" "wf_efield" "wf_friction" "wf_q" "wf_switch" "wfdt" "wffort" "wfsd" "wmass" "writev" ))
 
 ;; cp's cards & keywords
-(defvar cp-cards (list "ATOMIC_FORCES" "ATOMIC_POSITIONS" "ATOMIC_SPECIES" "ATOMIC_VELOCITIES" "AUTOPILOT" "CELL_PARAMETERS" "CONSTRAINTS" "OCCUPATIONS" "PLOT_WANNIER" "REF_CELL_PARAMETERS" ))
+(defvar cp-cards (list "ATOMIC_FORCES" "ATOMIC_POSITIONS" "ATOMIC_SPECIES" "ATOMIC_VELOCITIES" "CELL_PARAMETERS" "CONSTRAINTS" "OCCUPATIONS" "PLOT_WANNIER" "REF_CELL_PARAMETERS" "on_step" ))
 
 ;; cp's flags
-(defvar cp-flags (list "a.u" "alat" "angstrom" "bohr" "crystal" ))
+(defvar cp-flags (list "alat" "angstrom" "bohr" "crystal" ))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

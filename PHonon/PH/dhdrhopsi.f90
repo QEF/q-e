@@ -9,33 +9,35 @@
 !-----------------------------------------------------------------------
 subroutine dhdrhopsi
   !-----------------------------------------------------------------------
+  !! Computes the chi-wavefunction that will be used in the Raman, and
+  !! electro-optic tensor calculations.
   !
-  ! Computes the chi-wavefunction that will be used in the Raman, and
-  ! electro-optic tensor calculations.
+  !! The first-order derivative of the charge-density and of the wavefunctions
+  !! should have been previously calculated by \(\texttt{solve_e}\), and are 
+  !! read from file.
   !
-  ! The first-order derivative of the charge-density and of the wavefunctions
-  ! should have been previously calculated by solve_e, and are read from file.
+  !! \(|\chi\rangle\) is a function that should depend on two polarization indexes.
+  !! Since it is symmetric per exchange of the two indexes; we are considering
+  !! only one index (running from 1 to 6) that is related to the two polarizat.
+  !! by the common variables: \(\text{jab}(3,3)\), \(\text{a1j}(6)\), 
+  !! \(\text{a2j}(6)\) 
+  ! --see the comment written in phcom.f90
   !
-  ! |chi> is a function that should depend on two polarization indexes.
-  ! Since it is symmetric per exchange of the two indexes; we are considering
-  ! only one index (running from 1 to 6) that is related to the two polarizat.
-  ! by the common variables: jab(3,3),  a1j(6), a2j(6) --see the comment
-  ! written in phcom.f90
+  !! \(|\chi\rangle = Pc [DH, D\rho] |\psi\rangle\) is computed in two 
+  !! different steps:
   !
-  ! |chi> = Pc [ DH , D\rho ] |psi> is computed in two different steps:
+  !! 1) \(|\chi\rangle = d/dk\ |Du\rangle\langleu|\ |u\rangle\) ; where \(d/dk\)
+  !!    is the derivative with respect to the k-point, \(|u\rangle\) is the Bloch-
+  !!    wavefunction, and \(|Du\rangle\) is the derivative of \(|u\rangle\)
+  !!    with respect to the electric field. The derivation is done be finite
+  !!    differences, computing in a non-self consistent way \(|u_{k+d}\rangle\) 
+  !!    and \(|Du_{k+d}\rangle\), where \(d\) is a small vector.
   !
-  ! 1) |chi> = d/dk (|Du><u|) |u> ; where d/dk is the derivative with
-  !         respect to the k-point, |u> is the Bloch-wavefunction, and
-  !         |Du> is the derivative of |u> with respect to the electric field
-  !    The derivation is done be finite differences, computing in a
-  !         non-self consistent way |u_{k+d}> and |Du_{k+d}>, where d is a
-  !         small vector
+  !! 2) \(|\chi(i)\rangle = |\chi(i)\rangle + DH |Du(i)\rangle - 
+  !!      \sum_j|Du(j)\rangle\langle u(j)| DH |u(i)\rangle \)
+  !!    where DH is the variation of the self-consistent part of the hamiltonian
+  !!    with respect to the Electric field. \(i, j\) are band indexes.
   !
-  ! 2) |chi(i)> = |chi(i)> + DH |Du(i)> - sum_j |Du(j)> <u(j)| DH |u(i)>
-  !         where DH is the variation of the self-consistent part of the
-  !         hamiltonian with respect to the Electric field.
-  !         i, j are band indexes
-
   USE kinds,     ONLY : DP
   USE buffers,   ONLY : get_buffer
   USE cell_base, ONLY : tpiba, at
@@ -47,8 +49,7 @@ subroutine dhdrhopsi
   USE becmod,    ONLY : calbec, bec_type, allocate_bec_type, &
                         deallocate_bec_type, beccopy
   use ramanm,    ONLY : lrchf, iuchf, lrd2w, iud2w, jab, dek, eth_ns
-  USE units_ph,  ONLY : lrdwf, iudwf
-  USE units_lr,  ONLY : iuwfc, lrwfc
+  USE units_lr,  ONLY : iuwfc, lrwfc, lrdwf, iudwf
   USE lrus,      ONLY : becp1
   USE eqv,       ONLY : dpsi, dvpsi
   USE qpoint,    ONLY : nksq
@@ -57,6 +58,8 @@ subroutine dhdrhopsi
   USE mp_pools,  ONLY : inter_pool_comm
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
+  USE control_flags,   ONLY: use_para_diag
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
 
@@ -115,6 +118,9 @@ subroutine dhdrhopsi
   allocate (ps0       (nbnd)          )
   allocate (ps1       (nbnd,nbnd)     )
   allocate (ps2       (nbnd,nbnd,3)   )
+
+  ! Set-up parallel diagonalization which is used in hdiag
+  CALL set_para_diag( nbnd, use_para_diag )
 
   CALL allocate_bec_type (nkb, nbnd, becp1_sw)
 

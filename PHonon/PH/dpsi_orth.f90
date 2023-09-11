@@ -9,18 +9,33 @@
 !-------------------------------------------------------------------------
 SUBROUTINE dpsi_orth (ik, wgg, dpsi_orth_cart) 
   !-----------------------------------------------------------------------
-  ! 
-  ! DFPT+U: This routine calculates for USPP, for each k point, due to
-  ! the othogonality contraints, the vector at k+q :
+  !! DFPT+U: This routine calculates for USPP, for each k point, due to
+  !! the othogonality contraints, the vector at k+q:
+  !! \begin{equation}\notag
+  !! \begin{split}
+  !!    |\text{dpsi_orth_cart}(\text{na},\text{icart},\text{ibnd},\text{ispin},
+  !!       \text{ig})\rangle &= \sum_{n'} \text{wgg}(\text{ibnd},n',k)\cdot 
+  !!      |\text{psi}(n',k+q,\text{ispin})\rangle\cdot \\
+  !!          & \sum_{l1,l2} [ \langle\text{psi}(n',k+q,\text{ispin})| 
+  !!             d_\text{na icart}\text{beta}(k+q,L,l1)\rangle\cdot \\
+  !!          & \text{qq_nt}(L,l1,l2)\cdot \langle\text{beta}(k,L,l2)|\text{psi}
+  !!            (n,k,\text{ispin})\rangle \\
+  !!          & + \langle\text{psi}(n',k+q,\text{ispin})|\text{beta}(k+q,L,l1)\rangle  
+  !!            \cdot \text{qq_nt}(L,l1,l2)\cdot \\
+  !!          &\langle d_\text{na,icart}\text{beta}(k,L,l2)| \text{psi}(n,k,
+  !!           \text{ispin})\rangle]
+  !! \end{split}
+  !! \end{equation}
   !
+  ! ... same formula source-readable.
   ! |dpsi_orth_cart(na,icart,ibnd,ispin,ig)> = 
   !     \sum_{n'} wgg(ibnd,n',k) * |psi(n',k+q,ispin)> 
   !           * \sum_{l1,l2} [ <psi(n',k+q,ispin)| d_{na icart}beta(k+q,L,l1)> 
   !                             * qq_nt(L,l1,l2) * <beta(k,L,l2)| psi(n,k,ispin)> 
   !                          + <psi(n',k+q,ispin)| beta(k+q,L,l1)>  
-  !                             * qq_nt(L,l1,l2) * <d_{na,icart}beta(k,L,l2)| psi(n,k,ispin)> ]                                      !
-  ! Written  by A. Floris
-  ! Modified by I. Timrov (01.10.2018)
+  !                             * qq_nt(L,l1,l2) * <d_{na,icart}beta(k,L,l2)| psi(n,k,ispin)> ] 
+  !! Written  by A. Floris.  
+  !! Modified by I. Timrov (01.10.2018).
   !
   USE kinds,         ONLY : DP
   USE units_lr,      ONLY : iuwfc, lrwfc
@@ -41,7 +56,7 @@ SUBROUTINE dpsi_orth (ik, wgg, dpsi_orth_cart)
   REAL(DP),    INTENT(IN)    :: wgg(nbnd,nbnd,nksq)
   COMPLEX(DP), INTENT(INOUT) :: dpsi_orth_cart(npwx,nbnd,3,nat)
   !
-  ! Local variables
+  ! ... local variables
   !
   COMPLEX(DP), ALLOCATABLE :: dpqq(:), dpqq1(:), sum_dpqq(:,:,:,:)
   INTEGER :: ikk, ikq, npw, npwq, i, j, k, icart, jcart, &

@@ -19,7 +19,6 @@ cflags=$CFLAGS     # Flags for C compiler
 cppflags=$CPPFLAGS # Flags for C preprocessor
 dflags=$DFLAGS     # Fortran file preprocessing options, e.g. -D__DEFINE_THIS
 iflags=$IFLAGS     # Location of include files - shouldn't be needed
-f77=$F77           # Fortran 77 serial compiler (must be in execution path)
 f90=$F90           # Fortran 90 serial compiler (must be in execution path)
 mpif90=$MPIF90     # Fortran 90 parallel compiler (must be in execution path)
 fflags=$FFLAGS     # Flags for Fortran 77 and 90 compilers

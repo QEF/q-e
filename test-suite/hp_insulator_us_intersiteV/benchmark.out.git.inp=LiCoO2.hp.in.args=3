@@ -4,9 +4,9 @@
                            Hubbard U parameters:
 
        site n.  type  label  spin  new_type  new_label  Hubbard U (eV)
-         1        1    Co      1      1         Co         5.7008
-         2        2    O       1      2         O         13.1849
-         3        2    O       1      2         O         13.1849
+         1        1    Co      1      1         Co      3d   5.7008
+         2        2    O       1      2         O       2p  13.1849
+         3        2    O       1      2         O       2p  13.1849
 
   =-------------------------------------------------------------------=
 

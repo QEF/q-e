@@ -12,21 +12,19 @@
 !----------------------------------------------------------------------------
 MODULE constraints_module
    !----------------------------------------------------------------------------
+   !! Variables and methods for constraint Molecular Dynamics and
+   !! constrained ionic relaxations (the SHAKE algorithm based on
+   !! lagrange multipliers) are defined here.
    !
-   ! ... variables and methods for constraint Molecular Dynamics and
-   ! ... constrained ionic relaxations (the SHAKE algorithm based on
-   ! ... lagrange multipliers) are defined here.
+   !! Most of these variables and methods are also used for meta-dynamics
+   !! and free-energy smd: indeed the collective variables are implemented
+   !! as constraints.
    !
-   ! ... most of these variables and methods are also used for meta-dynamics
-   ! ... and free-energy smd : indeed the collective variables are implemented
-   ! ... as constraints.
+   !! Written by Carlo Sbraccia ( 24/02/2004 ).
+   !! References:
    !
-   ! ... written by Carlo Sbraccia ( 24/02/2004 )
-   !
-   ! ... references :
-   !
-   ! ... 1) M. P. Allen and D. J. Tildesley, Computer Simulations of Liquids,
-   ! ...    Clarendon Press - Oxford (1986)
+   !! 1) M. P. Allen and D. J. Tildesley, Computer Simulations of Liquids,
+   !!    Clarendon Press - Oxford (1986)
    !
    USE kinds,     ONLY : DP
    USE constants, ONLY : eps32, tpi, fpi
@@ -49,12 +47,14 @@ MODULE constraints_module
                deallocate_constraint, &
                compute_dmax,          &
                pbc,                   &
-               constraint_grad
+               constraint_grad, &
+               check_wall_constraint
    !
    !
    ! ... public variables (assigned in the CONSTRAINTS input card)
    !
-   PUBLIC :: nconstr,       &
+   PUBLIC :: nconstr,         &
+               nconstr_ndof,  &
                constr_tol,    &
                constr_type,   &
                constr,        &
@@ -65,7 +65,7 @@ MODULE constraints_module
    !
    ! ... global variables
    !
-   INTEGER               :: nconstr=0
+   INTEGER               :: nconstr=0, nconstr_ndof
    REAL(DP)              :: constr_tol
    INTEGER,  ALLOCATABLE :: constr_type(:)
    REAL(DP), ALLOCATABLE :: constr(:,:)
@@ -73,6 +73,23 @@ MODULE constraints_module
    REAL(DP), ALLOCATABLE :: lagrange(:)
    REAL(DP), ALLOCATABLE :: gp(:)
    REAL(DP)              :: dmax
+   !
+   ! ... If any of the constraints that require gradient calculation is
+   ! ... requested, has_constr_grad_types is set to .true. in init_constraint
+   ! ... If potential wall is requested, has_constr_wall is set to .true.
+   !
+   LOGICAL               :: has_constr_grad_types, has_constr_wall
+   !
+   ! ... constants that define constraints types
+   !
+   INTEGER, PARAMETER    :: constr_type_coord = 1, constr_atom_coord = 2, &
+      constr_distance = 3, constr_planar_angle = 4, &
+      constr_torsional_angle = 5, constr_struct_fac = 6, &
+      constr_sph_struct_fac = 7, constr_bennett_proj = 8, constr_wall = 9
+   INTEGER, PARAMETER, DIMENSION(8) :: constr_grad_types = (/ &
+      constr_type_coord, constr_atom_coord, constr_distance, &
+      constr_planar_angle, constr_torsional_angle, constr_struct_fac, &
+      constr_sph_struct_fac, constr_bennett_proj/)
    !
 CONTAINS
    !
@@ -82,10 +99,10 @@ CONTAINS
    SUBROUTINE init_constraint( nat, tau, ityp, tau_units )
       !-----------------------------------------------------------------------
       !
-      ! ... this routine is used to initialize constraints variables and
-      ! ... collective variables (notice that collective variables are
-      ! ... implemented as normal constraints but are read using specific
-      ! ... input variables)
+      !! This routine is used to initialize constraints variables and
+      !! collective variables (notice that collective variables are
+      !! implemented as normal constraints but are read using specific
+      !! input variables).
       !
       USE input_parameters, ONLY : nconstr_inp, constr_tol_inp, &
                                  constr_type_inp, constr_inp, &
@@ -152,7 +169,7 @@ CONTAINS
             ! ... constraint on global coordination-number, i.e. the average
             ! ... number of atoms of type B surrounding the atoms of type A
             !
-            constr_type(ia) = 1
+            constr_type(ia) = constr_type_coord
             IF ( tmp_target_set(ia) ) THEN
                constr_target(ia) = tmp_target_inp(ia)
             ELSE
@@ -169,7 +186,7 @@ CONTAINS
             ! ... constraint on local coordination-number, i.e. the average
             ! ... number of atoms of type A surrounding a specific atom
             !
-            constr_type(ia) = 2
+            constr_type(ia) = constr_atom_coord
             IF ( tmp_target_set(ia) ) THEN
                constr_target(ia) = tmp_target_inp(ia)
             ELSE
@@ -183,7 +200,7 @@ CONTAINS
             !
          CASE( 'distance' )
             !
-            constr_type(ia) = 3
+            constr_type(ia) = constr_distance
             IF ( tmp_target_set(ia) ) THEN
                constr_target(ia) = tmp_target_inp(ia)
             ELSE
@@ -209,7 +226,7 @@ CONTAINS
             ! ... constraint on planar angle (for the notation used here see
             ! ... Appendix C of the Allen-Tildesley book)
             !
-            constr_type(ia) = 4
+            constr_type(ia) = constr_planar_angle
             IF ( tmp_target_set(ia) ) THEN
                !
                ! ... the input value of target for the torsional angle (given
@@ -228,7 +245,7 @@ CONTAINS
             ! ... constraint on torsional angle (for the notation used here
             ! ... see Appendix C of the Allen-Tildesley book)
             !
-            constr_type(ia) = 5
+            constr_type(ia) = constr_torsional_angle
             IF ( tmp_target_set(ia) ) THEN
                !
                ! ... the input value of target for the torsional angle (given
@@ -246,7 +263,7 @@ CONTAINS
             !
             ! ... constraint on structure factor at a given k-vector
             !
-            constr_type(ia) = 6
+            constr_type(ia) = constr_struct_fac
             IF ( tmp_target_set(ia) ) THEN
                constr_target(ia) = tmp_target_inp(ia)
             ELSE
@@ -258,7 +275,7 @@ CONTAINS
             ! ... constraint on spherical average of the structure factor for
             ! ... a given k-vector of norm k
             !
-            constr_type(ia) = 7
+            constr_type(ia) = constr_sph_struct_fac
             IF ( tmp_target_set(ia) ) THEN
                constr_target(ia) = tmp_target_inp(ia)
             ELSE
@@ -273,12 +290,16 @@ CONTAINS
             ! ... ( Ch.H. Bennett in Diffusion in Solids, Recent Developments,
             ! ...   Ed. by A.S. Nowick and J.J. Burton, New York 1975 )
             !
-            constr_type(ia) = 8
+            constr_type(ia) = constr_bennett_proj
             IF ( tmp_target_set(ia) ) THEN
                constr_target(ia) = tmp_target_inp(ia)
             ELSE
                CALL set_bennett_proj( ia )
             ENDIF
+            !
+         CASE ( 'potential_wall' )
+            !
+            constr_type(ia) = constr_wall
             !
          CASE DEFAULT
             !
@@ -290,6 +311,26 @@ CONTAINS
       ENDDO
       !
       DEALLOCATE( tmp_type_inp,tmp_target_set,tmp_target_inp )
+      !
+      has_constr_grad_types = .FALSE.
+      has_constr_wall = .FALSE.
+      nconstr_ndof = 0
+      DO ia = 1, nconstr
+         IF( ANY( constr_grad_types .EQ. constr_type(ia) ) ) THEN
+            has_constr_grad_types = .TRUE.
+            !
+            ! Only used in dynamics_module :: get_ndof
+            ! It differs from the nconstr, by the potential_wall constraint
+            nconstr_ndof = nconstr_ndof + 1
+         ELSE IF (constr_type(ia) .EQ. constr_wall) THEN
+            !
+            IF (has_constr_wall) &
+               CALL errore( 'init_constraint', &
+                  'only only potential_wall constraint can be set', 1 )
+            !
+            has_constr_wall = .TRUE.
+         END IF
+      END DO
       !
       RETURN
       !
@@ -527,8 +568,8 @@ CONTAINS
                               if_pos, ityp, tau_units, g, dg )
       !-----------------------------------------------------------------------
       !
-      ! ... this routine computes the value of the constraint equation and
-      ! ... the corresponding constraint gradient
+      !! This routine computes the value of the constraint equation and
+      !! the corresponding constraint gradient.
       !
       IMPLICIT NONE
       !
@@ -553,10 +594,12 @@ CONTAINS
       REAL(DP)    :: r0(3), r1(3), r2(3), ri(3), k(3), phase, ksin(3), norm_k, sinxx
       COMPLEX(DP) :: struc_fac
       !
+      CHARACTER(len=6), EXTERNAL :: int_to_char
+      !
       dg(:,:) = 0.0_DP
       !
       SELECT CASE ( constr_type(idx) )
-      CASE( 1 )
+      CASE( constr_type_coord )
          !
          ! ... constraint on global coordination
          !
@@ -607,7 +650,7 @@ CONTAINS
          !
          g = ( g - constr_target(idx) )
          !
-      CASE( 2 )
+      CASE( constr_atom_coord )
          !
          ! ... constraint on local coordination
          !
@@ -645,7 +688,7 @@ CONTAINS
          !
          g = ( g - constr_target(idx) )
          !
-      CASE( 3 )
+      CASE( constr_distance )
          !
          ! ... constraint on distances
          !
@@ -662,7 +705,7 @@ CONTAINS
          !
          dg(:,ia2) = - dg(:,ia1)
          !
-      CASE( 4 )
+      CASE( constr_planar_angle )
          !
          ! ... constraint on planar angles (for the notation used here see
          ! ... Appendix C of the Allen-Tildesley book)
@@ -690,7 +733,7 @@ CONTAINS
          dg(:,ia2) = X * ( C01/C11*d1(:) - d0(:) ) * inv_den
          dg(:,ia1) = - dg(:,ia0) - dg(:,ia2)
          !
-      CASE( 5 )
+      CASE( constr_torsional_angle )
          !
          ! ... constraint on torsional angle (for the notation used here
          ! ... see Appendix C of the Allen-Tildesley book)
@@ -758,7 +801,7 @@ CONTAINS
          dg(:,ia2) = (d2phi-d1phi)*360.0_DP/tpi
          dg(:,ia3) = (-d2phi)*360.0_DP/tpi
          !
-      CASE( 6 )
+      CASE( constr_struct_fac )
          !
          ! ... constraint on structure factor at a given k vector
          !
@@ -801,7 +844,7 @@ CONTAINS
          !
          dg(:,:) = dg(:,:)*2.0_DP/dble( nat*nat )
          !
-      CASE( 7 )
+      CASE( constr_sph_struct_fac )
          !
          ! ... constraint on spherical average of the structure factor for
          ! ... a given k-vector of norm k
@@ -849,7 +892,7 @@ CONTAINS
          !
          dg(:,:) = 4.0_DP*fpi*dg(:,:) / dble( nat )
          !
-      CASE( 8 )
+      CASE( constr_bennett_proj )
          !
          ! ... constraint on Bennett projection
          !
@@ -878,6 +921,11 @@ CONTAINS
          !
          dg(:,ia0) = d2(:)*C01
          !
+      CASE DEFAULT
+            !
+            CALL errore( 'constraint_grad', 'constrait type ' //&
+               trim(int_to_char(constr_type(idx))) // ' not implemented', 1 )
+            !
       END SELECT
       !
       dg(:,:) = dg(:,:)*dble( if_pos(:,:) )
@@ -890,16 +938,16 @@ CONTAINS
    SUBROUTINE check_constraint( nat, taup, tau0, &
                                  force, if_pos, ityp, tau_units, dt, massconv )
       !-----------------------------------------------------------------------
+      !! Update taup (predicted positions) so that the constraint equation
+      !! g=0 is satisfied, using the recursion formula:
+      !! $$ \text{taup} = \text{taup} - \frac{g(\text{taup})}{M^{-1}\langle 
+      !! dg(\text{taup})|dg(\text{tau0})\rangle} dg(\text{tau0})$$
+      !! in normal cases the constraint equation should be satisfied at
+      !! the very first iteration.
       !
-      ! ... update taup (predicted positions) so that the constraint equation
-      ! ... g=0 is satisfied, using the recursion formula:
-      !
-      ! ...                       g(taup)
-      ! ... taup = taup - ----------------------- * dg(tau0)
-      ! ...               M^-1<dg(taup)|dg(tau0)>
-      !
-      ! ... in normal cases the constraint equation should be satisfied at
-      ! ... the very first iteration.
+      !                        g(taup)
+      !  taup = taup - ----------------------- * dg(tau0)
+      !                M^-1<dg(taup)|dg(tau0)>
       !
       USE ions_base, ONLY : amass
       !
@@ -925,6 +973,8 @@ CONTAINS
       !
       REAL(DP), EXTERNAL :: ddot
       !
+      !
+      IF (.NOT.has_constr_grad_types) RETURN
       !
       ALLOCATE( dgp( 3, nat ) )
       ALLOCATE( dg0( 3, nat, nconstr ) )
@@ -1030,9 +1080,9 @@ CONTAINS
                                     if_pos, ityp, tau_units, force )
       !-----------------------------------------------------------------------
       !
-      ! ... the component of the force that is orthogonal to the
-      ! ... ipersurface defined by the constraint equations is removed
-      ! ... and the corresponding value of the lagrange multiplier computed
+      !! The component of the force that is orthogonal to the
+      !! ipersurface defined by the constraint equations is removed
+      !! and the corresponding value of the lagrange multiplier computed.
       !
       IMPLICIT NONE
       !
@@ -1052,6 +1102,8 @@ CONTAINS
       !
       REAL(DP), EXTERNAL :: ddot, dnrm2
       !
+      !
+      IF (.NOT.has_constr_grad_types) RETURN
       !
       dim = 3*nat
       !
@@ -1157,9 +1209,9 @@ CONTAINS
                                  if_pos, ityp, tau_units, vec )
       !-----------------------------------------------------------------------
       !
-      ! ... the component of a displacement vector that is orthogonal to the
-      ! ... ipersurface defined by the constraint equations is removed
-      ! ... and the corresponding value of the lagrange multiplier computed
+      !! The component of a displacement vector that is orthogonal to the
+      !! ipersurface defined by the constraint equations is removed
+      !! and the corresponding value of the lagrange multiplier computed.
       !
       IMPLICIT NONE
       !
@@ -1177,6 +1229,8 @@ CONTAINS
       !
       REAL(DP), EXTERNAL :: ddot
       !
+      !
+      IF (.NOT.has_constr_grad_types) RETURN
       !
       dim = 3*nat
       !
@@ -1265,8 +1319,7 @@ CONTAINS
    !-----------------------------------------------------------------------
    FUNCTION cross(A,B)
       !-----------------------------------------------------------------------
-      !
-      ! ... cross product
+      !! Cross product.
       !
       IMPLICIT NONE
       !
@@ -1283,8 +1336,8 @@ CONTAINS
    FUNCTION pbc( vect )
       !-----------------------------------------------------------------------
       !
-      ! ... periodic boundary conditions ( vect is assumed to be given
-      ! ... in cartesian coordinates and in atomic units )
+      !! Periodic boundary conditions ( vect is assumed to be given
+      !! in cartesian coordinates and in atomic units )
       !
       USE cell_base, ONLY : at, bg, alat
       !
@@ -1315,7 +1368,7 @@ CONTAINS
    SUBROUTINE compute_dmax()
       !-----------------------------------------------------------------------
       !
-      ! ... dmax corresponds to one half the longest diagonal of the cell
+      !! Dmax corresponds to one half the longest diagonal of the cell.
       !
       USE cell_base, ONLY : at, alat
       !
@@ -1341,4 +1394,63 @@ CONTAINS
       !
    END SUBROUTINE compute_dmax
    !
+   !-----------------------------------------------------------------------
+   SUBROUTINE check_wall_constraint( nat, tau, &
+                                           if_pos, ityp, tau_units, force )
+      !-----------------------------------------------------------------------
+      !
+      !! If potential wall constraint is requested, update force accordingly.
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,  INTENT(in)    :: nat
+      REAL(DP), INTENT(in)    :: tau(:,:)
+      INTEGER,  INTENT(in)    :: if_pos(:,:)
+      INTEGER,  INTENT(in)    :: ityp(:)
+      REAL(DP), INTENT(in)    :: tau_units
+      REAL(DP), INTENT(inout) :: force(:,:)
+      !
+      INTEGER               :: na, ia
+      INTEGER, PARAMETER    :: dir = 3 ! Hard-coded for Z-axis
+      REAL(DP)              :: tau_pbc_vec(3), tau_abs, tau_pbc, rcut
+      REAL(DP)              :: prefac, exponent
+      REAL(DP), PARAMETER   :: inner_cutoff = 0.1_dp ! In a.u. Hard-coded
+      !
+      CHARACTER(len=6), EXTERNAL :: int_to_char
+      !
+      !
+      IF (.NOT.has_constr_wall) RETURN
+      !
+      DO ia = 1, nconstr
+         IF (constr_type(ia) .EQ. constr_wall) THEN
+            prefac = constr(1, ia)
+            exponent = constr(2, ia)
+            rcut = constr(3, ia)
+            EXIT
+         END IF
+      END DO
+      !
+      DO na = 1, nat
+         !
+         ! This computes shortest vector from the origin to the atom coordinates
+         ! given the PBCs. Origin is picked since the wall is at the origin.
+         tau_pbc_vec = pbc( tau(:,na)*tau_units )
+         tau_pbc = tau_pbc_vec( dir )
+         tau_abs = abs( tau_pbc )
+         !
+         ! Atom's Z-coordinate too far from the wall, cycle
+         IF (tau_abs .GT. rcut) CYCLE
+         !
+         ! Prevent force blow up by error-ing out
+         IF (tau_abs .LE. inner_cutoff) &
+            CALL errore( 'check_wall_constraint', 'Atom ' // &
+                        trim(int_to_char(na)) // ' too close to the wall.', 1)
+         !
+         ! Repulsive energy is C/r^n - C/rcut^n. Force is derivative:
+         force(dir, na) = force(dir, na) + prefac * exponent * &
+                          tau_abs ** (-exponent) / tau_pbc
+      END DO
+      !
+   END SUBROUTINE check_wall_constraint
+      !
 END MODULE constraints_module

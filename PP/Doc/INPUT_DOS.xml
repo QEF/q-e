@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="input_xx.xsl"?>
+<!-- FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST -->
+    
+<input_description distribution="Quantum ESPRESSO" package="PWscf" program="dos.x" >
+   <toc>
+   </toc>
+   <intro>
+<b>Purpose of dos.x:</b>
+    calculates the Density of States (DOS)
+    (separated into up and down components for DSDA)
+
+
+<b>Structure of the input data:</b>
+============================
+
+   <b>&amp;DOS</b>
+     ...
+   <b>/</b>
+
+IMPORTANT: since v.5 namelist name is &amp;DOS and no longer &amp;INPUTPP
+   </intro>
+   <namelist name="DOS" >
+      <var name="prefix" type="CHARACTER" >
+         <default> &apos;pwscf&apos;
+         </default>
+         <info>
+prefix of input file produced by pw.x
+(wavefunctions are not needed)
+         </info>
+      </var>
+      <var name="outdir" type="CHARACTER" >
+         <info>
+directory containing the input data, i.e. the same as in pw.x
+         </info>
+         <default>
+value of the <tt>ESPRESSO_TMPDIR</tt> environment variable if set;
+current directory (&apos;./&apos;) otherwise
+         </default>
+      </var>
+      <var name="bz_sum" type="CHARACTER" >
+         <options>
+            <info> Keyword selecting  the method for BZ summation. Available options are:
+            </info>
+            <opt val="'smearing'" >
+integration using gaussian smearing. In fact currently
+any string not related to tetrahedra defaults to smearing;
+            </opt>
+            <opt val="'tetrahedra'" >
+Tetrahedron method, Bloechl&apos;s version:
+P.E. Bloechl, <a href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.49.16223">PRB 49, 16223 (1994)</a>
+Requires uniform grid of k-points, to be
+automatically generated in pw.x.
+            </opt>
+            <opt val="'tetrahedra_lin'" >
+Original linear tetrahedron method.
+To be used only as a reference;
+the optimized tetrahedron method is more efficient.
+            </opt>
+            <opt val="'tetrahedra_opt'" >
+Optimized tetrahedron method:
+see M. Kawamura, <a href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.89.094515">PRB 89, 094515 (2014)</a>.
+            </opt>
+         </options>
+         <default>
+&apos;smearing&apos; if degauss is given in input;
+                        options read from the xml data file otherwise.
+         </default>
+      </var>
+      <var name="ngauss" type="INTEGER" >
+         <default> 0
+         </default>
+         <status> optional
+         </status>
+         <info>
+Type of gaussian broadening:
+
+    =  0  Simple Gaussian (default)
+
+    =  1  Methfessel-Paxton of order 1
+
+    = -1  &quot;cold smearing&quot; (Marzari-Vanderbilt-DeVita-Payne)
+
+    =-99  Fermi-Dirac function
+         </info>
+      </var>
+      <var name="degauss" type="REAL" >
+         <info>
+gaussian broadening, Ry (not eV!)
+(see below)
+         </info>
+      </var>
+      <vargroup type="REAL" >
+         <var name="Emin" >
+         </var>
+         <var name="Emax" >
+         </var>
+         <default> band extrema
+         </default>
+         <info>
+min, max energy (eV) for DOS plot. If unspecified, the
+lower and/or upper band value, plus/minus 3 times the
+value of the gaussian smearing if present, will be used.
+         </info>
+      </vargroup>
+      <var name="DeltaE" type="REAL" >
+         <info>
+energy grid step (eV)
+         </info>
+      </var>
+      <var name="fildos" type="CHARACTER" >
+         <default> &apos;<ref>prefix</ref>.dos&apos;
+         </default>
+         <info>
+output file containing DOS(E)
+         </info>
+      </var>
+   </namelist>
+   <section title="Notes" >
+      <subsection title="Output" >
+         <text>
+The total DOS (states/eV plotted vs <i>E</i> in eV) is written to file <ref>fildos</ref>
+         </text>
+      </subsection>
+      <subsection title="Important !" >
+         <text>
+The tetrahedron method is used if
+
+    - the input data file has been produced by pw.x using the option
+      occupations=&apos;tetrahedra&apos;, AND
+
+    - a value for degauss is not given as input to namelist &amp;dos
+
+
+Gaussian broadening is used in all other cases:
+
+    - if <ref>degauss</ref> is set to some value in namelist &amp;DOS, that value
+      (and the optional value for <ref>ngauss</ref>) is used
+
+    - if <ref>degauss</ref> is NOT set to any value in namelist &amp;DOS, the
+      value of <ref>degauss</ref> and of <ref>ngauss</ref> are read from the input data
+      file (they will be the same used in the pw.x calculations)
+
+    - if <ref>degauss</ref> is NOT set to any value in namelist &amp;DOS, AND
+      there is no value of <ref>degauss</ref> and of <ref>ngauss</ref> in the input data
+      file, <ref>degauss</ref>=<ref>DeltaE</ref> (in Ry) and <ref>ngauss</ref>=0 will be used
+         </text>
+      </subsection>
+   </section>
+</input_description>

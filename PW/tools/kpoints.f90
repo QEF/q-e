@@ -176,6 +176,7 @@ program special_points
   !
   write(*,'(/5x,a)',advance="no") '# of k-points   == '
   write(*,'(i5,a5,i5)') nk,'  of ',n
+  write(*,'(5x,"NOTE: k-points are given in 2\pi/a units")')
   write(*,'(2x)')
   !
   write(1,'(i5)') nk

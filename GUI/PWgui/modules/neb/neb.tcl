@@ -136,8 +136,8 @@ module NEB -title "PWSCF GUI: module NEB.x" -script {
 	group fcp -decor normal {
 	    separator -label "--- Fictitious Charge Particle (FCP) options ---"
 
-	    var lfcpopt {
-		-label "Perform a constant bias potential calculation using ESM (lfcpopt):"
+	    var lfcp {
+		-label "Perform a constant bias potential calculation using ESM (lfcp):"
 		-textvalue { Yes No }
 		-value     { .TRUE. .FALSE. }
 		-widget    radiobox
@@ -145,19 +145,29 @@ module NEB -title "PWSCF GUI: module NEB.x" -script {
 
 	    group fcp_specs -decor none {	
 		var fcp_mu {
-		    -label "target Fermi energy in Ry (fcp_mu):"	    
+		    -label "Target Fermi energy in Ry (fcp_mu):"	    
 		    -validate fortranreal
 		}
-		
-		var fcp_tot_charge_first {
-		    -label "Total charge for the first image (fcp_tot_charge_first):"
-		    -validate fortranreal
-		}    
-		
-		var fcp_tot_charge_last {
-		    -label "Total charge for the last image (fcp_tot_charge_last):"
-		    -validate fortranreal
-		}
+
+                var fcp_thr {
+                    -label "Convergence threshold for FCP force (fcp_thr):"
+                    -validate fortranreal
+                }
+
+                var fcp_scheme {
+                    -label "Type of FCP optimization scheme (fcp_scheme):"
+                    	    -value {
+                                'lm'
+                                'newton'
+                                'coupled'
+                            }
+                    -textvalue {
+                        "line-minimization method  <lm>"
+                        "Newton-Raphson method  <newton>"
+                        "Coupled method with ionic position  <coupled>"
+                    }
+                    -widget optionmenu
+                }
 	    }
 	}
     }

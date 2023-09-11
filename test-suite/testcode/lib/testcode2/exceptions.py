@@ -8,12 +8,13 @@ Custom exceptions.  Initialise signal handler for the interrupt signal.
 :license: modified BSD; see LICENSE for more details.
 '''
 
+from __future__ import print_function
 import signal
 import sys
 
 def signal_handler(sig, frame):
     '''Capture signal and leave quietly.'''
-    print('Signal: %s has been caught.  Bye!' % (sig))
+    print(('Signal: %s has been caught.  Bye!' % (sig)))
     sys.exit(1)
 
 

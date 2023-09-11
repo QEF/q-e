@@ -25,13 +25,13 @@ SUBROUTINE macro
         WRITE(filbar,'("filbar",i1)') ipol
         iubar=ipol
         CALL seqopn (iubar,filbar,'unformatted',here)
-!!!            if (.not.here) then
+!||            if (.not.here) then
         ! calculate x * psi  (if not already done)
         dvpsi(:,:) = (0.d0, 0.d0)
-!!!            else
+!||            else
         ! otherwise restart from x * psi that is present on from file
-!!!               read(iubar) dvpsi
-!!!            end if
+!||               read(iubar) dvpsi
+!||            end if
         CALL dvpsi_e(ik,ipol)
         ! write x * psi
         REWIND(iubar)

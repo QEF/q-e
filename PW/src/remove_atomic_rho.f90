@@ -23,17 +23,17 @@ SUBROUTINE remove_atomic_rho
   !
   IMPLICIT NONE
   COMPLEX(DP), ALLOCATABLE :: drhog(:,:)
+  COMPLEX(DP), ALLOCATABLE :: work(:,:)
   !
-  IF ( nspin > 1 ) CALL errore &
-       ( 'remove_atomic_rho', 'spin polarization not allowed in drho', 1 )
-
   WRITE( stdout, '(/5x,"remove atomic charge density from scf rho")')
   !
   !     subtract the old atomic charge density
   !
   ALLOCATE ( drhog( ngm, nspin) )
-  CALL atomic_rho_g ( drhog, nspin)
-  drhog = rho%of_g - drhog
+  ALLOCATE ( work( ngm, nspin) )
+  CALL atomic_rho_g ( work, nspin)
+  drhog = rho%of_g
+  drhog(:,1) = drhog(:,1) - work(:,1)
   !
   IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
        CALL write_rhog( TRIM( restart_dir( ) ) // output_drho, &
@@ -42,6 +42,7 @@ SUBROUTINE remove_atomic_rho
        gamma_only, mill, ig_l2g, drhog )
   !
   DEALLOCATE(drhog)
+  DEALLOCATE(work)
   !
 END SUBROUTINE remove_atomic_rho
 

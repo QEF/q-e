@@ -152,8 +152,8 @@
 !  ----------------------------------------------
 
       SUBROUTINE cutoffs_print_info()
-
-        !  Print out information about different cut-offs
+      
+        !!  Print out information about different cut-offs.
 
         USE gvecw, ONLY: ecutwfc,  gcutw
         USE gvect, ONLY: ecutrho,  gcutm
@@ -275,7 +275,7 @@
 
        SUBROUTINE ions_print_info( )
             
-         !  Print info about input parameter for ion dynamic
+         !! Print info about input parameter for ion dynamic
 
          USE io_global,     ONLY: ionode, stdout
          USE control_flags, ONLY: tranp, amprp, tnosep, tolp, tfor, tsdp, &
@@ -503,7 +503,7 @@
 SUBROUTINE gmeshinfo( )
 !----------------------------------------------
    !
-   !   Print out the number of g vectors for the different mesh
+   !! Print out the number of g vectors for the different mesh.
    !
    USE kinds,     ONLY: DP
    USE mp_global, ONLY: nproc_bgrp, intra_bgrp_comm
@@ -653,6 +653,10 @@ END SUBROUTINE constraint_info
 
 SUBROUTINE new_atomind_constraints()
    !
+   !! Substitute the atom index given in the input file
+   !! with the new atom index, after the sort in the
+   !! atomic coordinates.
+   !
    USE kinds,              ONLY: DP
    USE constraints_module, ONLY: constr
    !
@@ -661,10 +665,6 @@ SUBROUTINE new_atomind_constraints()
    INTEGER  :: ic, ia
    INTEGER  :: iaa
    REAL(DP) :: aa
-   !
-   !  Substitute the atom index given in the input file
-   !  with the new atom index, after the sort in the
-   !  atomic coordinates.
    !
    DO ic = 1, SIZE( constr, 2 )
       DO ia = 1, SIZE( constr, 1 )
@@ -698,12 +698,12 @@ END SUBROUTINE compute_stress_x
 !-----------------------------------------------------------------------
 subroutine formf( tfirst, eself )
   !-----------------------------------------------------------------------
-
-  !computes (a) the self-energy eself of the ionic pseudocharges;
-  !         (b) the form factors of: (i) pseudopotential (vps),
-  !             (ii) ionic pseudocharge (rhops)
-  !         also calculated the derivative of vps with respect to
-  !         g^2 (dvps)
+  !! Computes:  
+  !! (a) the self-energy \(\text{eself}\) of the ionic pseudocharges;  
+  !! (b) the form factors of: (i) pseudopotential (vps), (ii) ionic 
+  !!                          pseudocharge (rhops).  
+  !! Also calculates the derivative of \(\text{vps}\) with respect to
+  !! \(g^2(\text{dvps})\).
   ! 
   USE kinds,           ONLY : DP
   use mp,              ONLY : mp_sum
@@ -823,10 +823,9 @@ end subroutine formf
 !-----------------------------------------------------------------------
 SUBROUTINE newnlinit()
   !-----------------------------------------------------------------------
-  !
-  ! ... this routine calculates arrays beta, qq, qgb, rhocb
-  ! ... and derivatives w.r.t. cell parameters dbeta
-  ! ... See also comments in nlinit
+  !! This routine calculates arrays \(\text{beta}\), \(\text{qq}\), \(\text{qgb}\),
+  !! \(\text{rhocb}\) and derivatives w.r.t. cell parameters \(\text{dbeta}\).
+  !! See also comments in \(\texttt{nlinit}\).
   !
   use control_flags,    ONLY : tpre
   use pseudopotential,  ONLY : tpstab
@@ -896,11 +895,10 @@ END SUBROUTINE newnlinit
 !-----------------------------------------------------------------------
 subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, idesc )
   !-----------------------------------------------------------------------
-  !
-  !     contribution to the internal stress tensor due to the constraints
+  !! Contribution to the internal stress tensor due to the constraints.
   !
   USE kinds,             ONLY : DP
-  use uspp,              ONLY : nkb, qq_nt, indv_ijkb0
+  use uspp,              ONLY : nkb, qq_nt, ofsbeta
   use uspp_param,        ONLY : nh, nhm, upf
   use ions_base,         ONLY : nat, ityp
   use electrons_base,    ONLY : nbspx, nbsp, nudx, nspin, nupdwn, iupdwn, ibgrp_g2l
@@ -990,7 +988,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, idesc )
 !
                     do iv=1,nh(is)
                        do jv=1,nh(is)
-                          inl=indv_ijkb0(ia) + jv
+                          inl=ofsbeta(ia) + jv
                           if(abs(qq_nt(iv,jv,is)).gt.1.e-5) then
                              do i = 1, nc
                                 tmpbec(iv,i) = tmpbec(iv,i) +  qq_nt(iv,jv,is) * bec( inl, i, iss  )
@@ -1000,7 +998,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, idesc )
                     end do
 
                     do iv=1,nh(is)
-                       inl=indv_ijkb0(ia) + iv
+                       inl=ofsbeta(ia) + iv
                        do i = 1, nr
                           tmpdh(i,iv) = dbec( inl, i + (iss-1)*nrcx, ii, jj )
                        end do
@@ -1066,22 +1064,27 @@ end subroutine nlfh_x
 
 !-----------------------------------------------------------------------
 subroutine nlinit
-  !-----------------------------------------------------------------------
-  !
-  !     this routine allocates and initializes arrays beta, qq, qgb,
-  !     rhocb, and derivatives w.r.t. cell parameters dbeta
-  !
-  !       beta(ig,l,is) = 4pi/sqrt(omega) y^r(l,q^)
-  !                               int_0^inf dr r^2 j_l(qr) betar(l,is,r)
-  !
-  !       Note that beta(g)_lm,is = (-i)^l*beta(ig,l,is) (?)
-  !
-  !       qq_ij=int_0^r q_ij(r)=omega*qg(g=0)
-  !
-  !     beta and qradb are first calculated on a fixed linear grid in |G|
-  !     (betax, qradx) then calculated on the box grid by interpolation
-  !     (this is done in routine newnlinit)
-  !
+      !-----------------------------------------------------------------------
+      !! This routine allocates and initializes arrays \(\text{beta}\), 
+      !! \(\text{qq}\), \(\text{qgb}\), \(\text{rhocb}\), and derivatives w.r.t.
+      !! cell parameters \(\text{dbeta}\).
+      !
+      !! \[  \text{beta}(\text{ig},l,\text{is}) = 4\pi/\sqrt(\Omega) y^r(l,q)
+      !!         \int_0^inf dr r^2 j_l(\text{qr}) \text{betar}(l,\text{is},r) \]
+      !
+      !  beta(ig,l,is) = 4pi/sqrt(Omega) y^r(l,q^)
+      !         \int_0^inf dr r^2 j_l(qr) betar(l,is,r)
+      !
+      !! Note that \(\text{beta}(g)_{lm,is} = (-i)^l \text{beta}(\text{ig},l,\text{is})\)
+      !
+      !! \[ \text{qq}_{ij}=\int_0^r q_{ij}(r)=\Omega \text{qg}(g=0) \]
+      !
+      !  qq_ij=int_0^r q_ij(r)=omega*qg(g=0)
+      !
+      !! \(\text{beta}\) and \(\text{qradb}\) are first calculated on a fixed linear
+      !! grid in |G| (\(\text{betax}\), \(\text{qradx}\)) then calculated on the box
+      !! grid by interpolation (this is done in routine \(\texttt{newnlinit}\)).
+      !
       use kinds,           ONLY : dp
       use control_flags,   ONLY : iprint, tpre
       use io_global,       ONLY : stdout, ionode
@@ -1090,8 +1093,8 @@ subroutine nlinit
       use constants,       ONLY : pi, fpi
       use ions_base,       ONLY : na, nsp
       use uspp,            ONLY : aainit, beta, qq_nt, dvan, nhtol, nhtolm, indv,&
-                                  dbeta
-      use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh, ish
+                                  dbeta, qq_nt_d
+      use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh
       use atom,            ONLY : rgrid
       use qgb_mod,         ONLY : qgb, dqgb
       use smallbox_gvec,   ONLY : ngb
@@ -1141,6 +1144,9 @@ subroutine nlinit
          allocate( dqgb( ngb, nhm*(nhm+1)/2, nsp, 3, 3 ) )
          allocate( dbeta( ngw, nhm, nsp, 3, 3 ) )
       END IF
+#ifdef __CUDA
+      ALLOCATE( qq_nt_d(nhm,nhm,nsp) )
+#endif
       !
       !     initialization for vanderbilt species
       !
@@ -1196,8 +1202,11 @@ end subroutine nlinit
 !-------------------------------------------------------------------------
 subroutine qvan2b(ngy,iv,jv,is,ylm,qg,qradb)
   !--------------------------------------------------------------------------
+  !! Implements: 
+  !! \[ q(g,l,k) = \sum_{lm} (-i)^l \text{ap}(lm,l,k)
+  !!             \text{yr}_{lm}(g) \text{qrad}(g,l,l,k) \]
   !
-  !     q(g,l,k) = sum_lm (-i)^l ap(lm,l,k) yr_lm(g^) qrad(g,l,l,k)
+  !   q(g,l,k) = sum_lm (-i)^l ap(lm,l,k) yr_lm(g^) qrad(g,l,l,k)
   !
   USE kinds,         ONLY : DP
   use control_flags, ONLY : iprint, tpre
@@ -1278,8 +1287,8 @@ end subroutine qvan2b
 !-------------------------------------------------------------------------
 subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg,dqrad,qradb)
   !--------------------------------------------------------------------------
-  !
-  !     dq(i,j) derivatives wrt to h(i,j) of q(g,l,k) calculated in qvan2b
+  !! The \(\text{dq}(i,j)\) are the derivatives with respect to \(h(i,j)\)
+  !! of \(q(g,l,k)\) calculated in \(\texttt{qvan2b}\).
   !
   USE kinds,         ONLY : DP
   use control_flags, ONLY : iprint, tpre
@@ -1378,10 +1387,10 @@ end subroutine dqvan2b
 !-----------------------------------------------------------------------
 subroutine dylmr2_( nylm, ngy, g, gg, ainv, dylm )
   !-----------------------------------------------------------------------
-  !
-  ! temporary CP interface for PW routine dylmr2
-  ! dylmr2  calculates d Y_{lm} /d G_ipol
-  ! dylmr2_ calculates G_ipol \sum_k h^(-1)(jpol,k) (dY_{lm} /dG_k)
+  !! Temporary CP interface for PW routine \(\texttt{dylmr2}\):  
+  !! \(\text{dylmr2}\) calculates \(d Y_{lm} /d G_\text{ipol}\);  
+  !! \(\text{dylmr2}\_\) calculates \(G_\text{ipol} \sum_k h^{-1}
+  !!                                  (\text{jpol},k) (dY_{lm} /dG_k)\).
   !
   USE kinds, ONLY: DP
 
@@ -1423,12 +1432,11 @@ end subroutine dylmr2_
 
 !-----------------------------------------------------------------------
    SUBROUTINE denlcc_x( nnr, nspin, vxcr, sfac, drhocg, dcc )
-!-----------------------------------------------------------------------
-!
-! derivative of non linear core correction exchange energy wrt cell 
-! parameters h 
-! Output in dcc
-!
+      !-----------------------------------------------------------------------
+      !! Derivative of non linear core correction exchange energy with respect
+      !! to cell parameters h.
+      !! Output in dcc.
+      !
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
       USE gvect, ONLY: gstart, g, gg
@@ -1503,24 +1511,25 @@ end subroutine dylmr2_
 
 
 !-----------------------------------------------------------------------
-      SUBROUTINE dotcsc_x( eigr, cp, ngw, n )
+      SUBROUTINE dotcsc_x( betae, cp, ngw, n )
 !-----------------------------------------------------------------------
 !
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: na, nsp, nat, ityp
       USE io_global,          ONLY: stdout
       USE gvect, ONLY: gstart
-      USE uspp,               ONLY: nkb, qq_nt, indv_ijkb0
-      USE uspp_param,         ONLY: nh, ish, upf
+      USE uspp,               ONLY: nkb, qq_nt, ofsbeta
+      USE uspp_param,         ONLY: nh, upf
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm, nbgrp, inter_bgrp_comm
-      USE cp_interfaces,      ONLY: nlsm1
+      USE cp_interfaces,      ONLY: calbec
       USE electrons_base,     ONLY: ispin, ispin_bgrp, nbspx_bgrp, ibgrp_g2l, iupdwn, nupdwn, nbspx
 !
       IMPLICIT NONE
 !
       INTEGER,     INTENT(IN) :: ngw, n
-      COMPLEX(DP), INTENT(IN) :: eigr(:,:), cp(:,:)
+      COMPLEX(DP), INTENT(IN) :: cp(:,:)
+      COMPLEX(DP), INTENT(INOUT) :: betae(:,:)
 ! local variables
       REAL(DP) rsum, csc(n) ! automatic array
       COMPLEX(DP) temp(ngw) ! automatic array
@@ -1536,7 +1545,7 @@ end subroutine dylmr2_
 !     < beta | phi > is real. only the i lowest:
 !
 
-      CALL nlsm1( nbspx_bgrp, 1, nsp, eigr, cp, becp, 2 )
+      CALL calbec( nbspx_bgrp, betae, cp, becp, 2 )
 
       nnn = MIN( 12, n )
 
@@ -1586,8 +1595,8 @@ end subroutine dylmr2_
                      IF( ityp(ia) /= is ) CYCLE
                      DO iv=1,nh(is)
                         DO jv=1,nh(is)
-                           inl = indv_ijkb0(ia) + iv
-                           jnl = indv_ijkb0(ia) + jv
+                           inl = ofsbeta(ia) + iv
+                           jnl = ofsbeta(ia) + jv
                            rsum = rsum + qq_nt(iv,jv,is)*becp_tmp(inl)*becp(jnl,ibgrp_k)
                         END DO
                      END DO
@@ -1614,9 +1623,8 @@ end subroutine dylmr2_
 !
 !-----------------------------------------------------------------------
    FUNCTION enkin_x( c, f, n )
-!-----------------------------------------------------------------------
-      !
-      ! calculation of kinetic energy term
+      !-----------------------------------------------------------------------
+      !! Calculation of kinetic energy term.
       !
       USE kinds,              ONLY: DP
       USE constants,          ONLY: pi, fpi
@@ -1640,40 +1648,83 @@ end subroutine dylmr2_
       ! local
 
       INTEGER  :: ig, i
-      REAL(DP) :: sk(n)  ! automatic array
+      REAL(DP) :: sk, rsum
       !
+      sk = 0.0d0
+!$omp parallel do reduction(+:sk) default(none) &
+!$omp shared(c,g2kin,gstart,ngw,n,f) private(i,ig,rsum)
       DO i=1,n
-         sk(i)=0.0d0
+         rsum = 0.0d0
          DO ig=gstart,ngw
-            sk(i)=sk(i)+DBLE(CONJG(c(ig,i))*c(ig,i))*g2kin(ig)
+            rsum = rsum + DBLE(CONJG(c(ig,i))*c(ig,i)) * g2kin(ig)
          END DO
+         sk = sk + f(i) * rsum
       END DO
+!$omp end parallel do
 
-      CALL mp_sum( sk(1:n), intra_bgrp_comm )
-
-      enkin_x=0.0d0
-      DO i=1,n
-         enkin_x=enkin_x+f(i)*sk(i)
-      END DO
+      CALL mp_sum( sk, intra_bgrp_comm )
 
       ! ... reciprocal-space vectors are in units of alat/(2 pi) so a
       ! ... multiplicative factor (2 pi/alat)**2 is required
-
-      enkin_x = enkin_x * tpiba2
+      enkin_x = tpiba2 * sk
 !
       RETURN
    END FUNCTION enkin_x
 
+#if defined (__CUDA)
+!-----------------------------------------------------------------------
+   FUNCTION enkin_gpu_x( c, f, n )
+!-----------------------------------------------------------------------
+      !
+      USE kinds,              ONLY: DP
+      USE constants,          ONLY: pi, fpi
+      USE gvecw,              ONLY: ngw
+      USE gvect,              ONLY: gstart
+      USE gvecw,              ONLY: g2kin
+      USE mp,                 ONLY: mp_sum
+      USE mp_global,          ONLY: intra_bgrp_comm
+      USE cell_base,          ONLY: tpiba2
+      USE cudafor
+
+      IMPLICIT NONE
+
+      REAL(DP)                :: enkin_gpu_x
+
+      INTEGER,     INTENT(IN) :: n
+      COMPLEX(DP), DEVICE, INTENT(IN) :: c( :, : )
+      REAL(DP),    DEVICE, INTENT(IN) :: f( : )
+      !
+      ! local
+
+      INTEGER  :: ig, i
+      REAL(DP) :: sk
+      !
+      sk=0.0d0
+!$acc parallel loop collapse(2) present(g2kin, f, c) 
+      DO i=1,n
+         DO ig=gstart,ngw
+            sk = sk + f(i) * DBLE(CONJG(c(ig,i))*c(ig,i)) * g2kin(ig)
+         END DO
+      END DO
+
+      CALL mp_sum( sk, intra_bgrp_comm )
+
+      enkin_gpu_x = tpiba2 * sk
+!
+      RETURN
+   END FUNCTION enkin_gpu_x
+#endif
+
 !-------------------------------------------------------------------------
       SUBROUTINE nlfl_bgrp_x( bec_bgrp, becdr_bgrp, lambda, idesc, fion )
-!-----------------------------------------------------------------------
-!     contribution to fion due to the orthonormality constraint
-! 
-!
+      !-----------------------------------------------------------------------
+      !! Contribution to \(\text{fion}\) due to the orthonormality constraint.
+      !
+      !
       USE kinds,             ONLY: DP
       USE io_global,         ONLY: stdout
       USE ions_base,         ONLY: na, nsp, nat, ityp
-      USE uspp,              ONLY: nhsa=>nkb, qq_nt, indv_ijkb0
+      USE uspp,              ONLY: nhsa=>nkb, qq_nt, ofsbeta
       USE uspp_param,        ONLY: nhm, nh, upf
       USE electrons_base,    ONLY: nspin, iupdwn, nupdwn, nbspx_bgrp, ibgrp_g2l, i2gupdwn_bgrp, nbspx, &
                                    iupdwn_bgrp, nupdwn_bgrp
@@ -1723,7 +1774,7 @@ end subroutine dylmr2_
       !
 !$omp parallel default(none), &
 !$omp shared(nrrx,nhm,nrcx,nsp,na,nspin,nrr,nupdwn,iupdwn,idesc,nh,qq_nt,bec,becdr_bgrp,ibgrp_l2g,tmplam,fion_tmp), &
-!$omp shared(upf, ityp,nat,indv_ijkb0), &
+!$omp shared(upf, ityp,nat,ofsbeta), &
 !$omp private(tmpdr,temp,tmpbec,is,k,ia,i,iss,nss,istart,ic,nc,jv,iv,inl,ir,nr)
 
       IF( nrrx > 0 ) THEN
@@ -1754,7 +1805,7 @@ end subroutine dylmr2_
                      ic = idesc( LAX_DESC_IC, iss )
                      nc = idesc( LAX_DESC_NC, iss )
                      DO jv=1,nh(is)
-                        inl = indv_ijkb0(ia) + jv
+                        inl = ofsbeta(ia) + jv
                         DO iv=1,nh(is)
                            IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN
                               DO i=1,nc
@@ -1767,7 +1818,7 @@ end subroutine dylmr2_
                      ir = idesc( LAX_DESC_IR, iss )
                      nr = idesc( LAX_DESC_NR, iss )
                      DO iv=1,nh(is)
-                        inl = indv_ijkb0(ia) + iv
+                        inl = ofsbeta(ia) + iv
                         DO i=1,nrr(iss)
                            tmpdr(i,iv) = becdr_bgrp( inl, ibgrp_l2g(i,iss), k )
                         END DO
@@ -1884,10 +1935,9 @@ end subroutine dylmr2_
 !
 !-----------------------------------------------------------------------
       SUBROUTINE pbc(rin,a1,a2,a3,ainv,rout)
-!-----------------------------------------------------------------------
-!
-!     brings atoms inside the unit cell
-!
+      !-----------------------------------------------------------------------
+      !! Brings atoms inside the unit cell.
+      !
       USE kinds,  ONLY: DP
 
       IMPLICIT NONE
@@ -1930,27 +1980,36 @@ end subroutine dylmr2_
       USE kinds,      ONLY : DP
       USE ions_base,  ONLY : nat, ityp
       USE gvecw,      ONLY : ngw
-      USE uspp,       ONLY : beta, nhtol, indv_ijkb0
+      USE uspp,       ONLY : beta, nhtol, ofsbeta
       USE uspp_param, ONLY : nh, upf
+      USE gvect,      ONLY : gstart
 !
       IMPLICIT NONE
       COMPLEX(DP), INTENT(IN) :: eigr( :, : )
       COMPLEX(DP), INTENT(OUT) :: betae( :, : )
 !
       INTEGER     :: is, iv, ia, inl, ig, isa
+      COMPLEX(DP), PARAMETER, DIMENSION(4) :: cfact = &  ! (l == 0), (l == 1), (l == 2), (l == 3)
+      [( 1.0_dp , 0.0_dp ), ( 0.0_dp , -1.0_dp ), ( -1.0_dp , 0.0_dp ), ( 0.0_dp , 1.0_dp )]
       COMPLEX(DP) :: ci
 !
       CALL start_clock( 'prefor' )
+!$omp parallel do default(shared) private(ia,is,iv,ci,inl,ig)
       DO ia=1,nat
          is=ityp(ia)
          DO iv=1,nh(is)
-            ci=(0.0d0,-1.0d0)**nhtol(iv,is)
-            inl = indv_ijkb0(ia) + iv
+            ci=cfact( nhtol(iv,is) + 1 )
+            inl = ofsbeta(ia) + iv
             DO ig=1,ngw
                betae(ig,inl)=ci*beta(ig,iv,is)*eigr(ig,ia)
             END DO
+            !beigr(1,inl)=betae(1,inl)
+            !DO ig=gstart,ngw
+            !   beigr(ig,inl)=2.0d0 * betae(ig,inl)
+            !END DO
          END DO
       END DO
+!$omp end parallel do
       CALL stop_clock( 'prefor' )
 !
       RETURN

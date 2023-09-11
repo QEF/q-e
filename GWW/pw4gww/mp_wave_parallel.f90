@@ -282,7 +282,8 @@
       IMPLICIT NONE
 
       INTEGER, INTENT(in) :: npw1,npw2,nbands
-      COMPLEX(DP), INTENT(OUT) :: pw1(npw1,nbands),pw2(npw2,nbands)
+      COMPLEX(DP), INTENT(IN) :: pw1(npw1,nbands)
+      COMPLEX(DP), INTENT(OUT) :: pw2(npw2,nbands)
       INTEGER, INTENT(IN) :: mpime,  root, nproc
       INTEGER, INTENT(IN) :: comm    ! communicator
       INTEGER, INTENT(IN) :: ig_l2g1(ngwl1),ig_l2g2(ngwl2)

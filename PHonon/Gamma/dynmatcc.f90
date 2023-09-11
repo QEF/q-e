@@ -9,6 +9,7 @@
 !--------------------------------------------------------------------
 SUBROUTINE dynmatcc(dyncc)
   !--------------------------------------------------------------------
+  !! Calculate dynamical matrix - core correction part.
   !
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : ntyp => nsp, nat, ityp, tau
@@ -25,9 +26,12 @@ SUBROUTINE dynmatcc(dyncc)
   USE cgcom
   USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
-
+  !
   IMPLICIT NONE
+  !
   real(DP):: dyncc(3*nat,nmodes)
+  !
+  ! ... local variables
   !
   INTEGER:: i,j,na,nb,nta,ntb,ir,ig,nt, nu_i,nu_j,mu_i,mu_j
   COMPLEX(DP), POINTER:: vxc(:), work1(:), gc(:,:)
@@ -59,8 +63,7 @@ SUBROUTINE dynmatcc(dyncc)
   DO na=1,nat
      nta=ityp(na)
      IF ( upf(nta)%nlcc ) THEN
-        CALL drhoc (ngl, gl, omega, tpiba2, rgrid(nta)%mesh, rgrid(nta)%r, &
-                    rgrid(nta)%rab, upf(nta)%rho_atc, rhocg)
+        CALL interp_rhc (nta, ngl, gl, tpiba2, rhocg)
         DO ig=1,ngm
            exg = tpi* ( g(1,ig)*tau(1,na) + &
                         g(2,ig)*tau(2,na) + &
@@ -81,14 +84,12 @@ SUBROUTINE dynmatcc(dyncc)
         ENDDO
         DO i=1,3
            CALL dvb_cc  (nlcc, nt, ngm, dfftp%nnr, &
-                dfftp%nl,igtongl,rhocg,dmuxc,gc(1,i),aux3,gc(1,i))
+                dfftp%nl,igtongl,rhocg,dmuxc(:,1,1),gc(1,i),aux3,gc(1,i))
         ENDDO
         DO nb=1,nat
            ntb=ityp(nb)
            IF ( upf(ntb)%nlcc ) THEN
-              CALL drhoc (ngl, gl, omega, tpiba2, rgrid(ntb)%mesh, &
-                          rgrid(ntb)%r, rgrid(ntb)%rab, upf(ntb)%rho_atc,&
-                          rhocg)
+              CALL interp_rhc (ntb, ngl, gl, tpiba2, rhocg)
               DO ig=1,ngm
                  exg = tpi* ( g(1,ig)*tau(1,nb) + &
                               g(2,ig)*tau(2,nb) + &

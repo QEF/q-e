@@ -8,9 +8,8 @@
 !=----------------------------------------------------------------------------=!
 MODULE plugin_flags
   !=--------------------------------------------------------------------------=!
-  !
-  ! ... this module contains all basic variables that controls
-  ! ... the use or not of plugins.
+  !! This module contains all basic variables that controls
+  !! the use or not use of plugins.
   !----------------------------------------------
   !
   USE kinds
@@ -28,6 +27,8 @@ MODULE plugin_flags
   CHARACTER(LEN=256), PUBLIC :: plugin_name
   LOGICAL, PUBLIC :: use_plumed
   LOGICAL, PUBLIC :: use_pw2casino
-  LOGICAL, PUBLIC :: use_environ 
+  LOGICAL, PUBLIC :: use_environ
+  LOGICAL, PUBLIC :: use_partn
+  LOGICAL, PUBLIC :: use_oscdft
   !
 END MODULE plugin_flags

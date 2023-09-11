@@ -26,7 +26,7 @@ module dftd3_api
   
   public :: dftd3_input, dftd3_calc
   public :: dftd3_init, dftd3_set_params, dftd3_set_functional
-  public :: dftd3_dispersion, dftd3_pbc_dispersion
+  public :: dftd3_pbc_dispersion
   public :: get_atomic_number
 
 
@@ -167,56 +167,6 @@ contains
   end subroutine dftd3_set_params
 
 
-  !> Calculates the dispersion for a given non-periodic configuration.
-  !!
-  !! \param coords  Coordinates of the atoms in atomic units. Shape: [3, nAtom].
-  !! \param izp  Atomic number of each atom. Shape: [nAtom]. You can determine
-  !!    the atomic number using the get_atomic_number() function.
-  !! \param disp  Calculated dispersion energy in atomic units.
-  !! \param grads  Calculated gradients in atomic units, if present.
-  !!
-  subroutine dftd3_dispersion(this, coords, izp, disp, grads)
-    type(dftd3_calc), intent(in) :: this
-    real(wp), intent(in) :: coords(:,:)
-    integer, intent(in) :: izp(:)
-    real(wp), intent(out) :: disp
-    real(wp), optional, intent(out) :: grads(:,:)
-
-    logical, allocatable :: fix(:)
-    integer :: natom
-    real(wp) :: s6, s18, rs6, rs8, rs10, alp6, alp8, alp10
-    real(wp) :: e6, e8, e10, e12, e6abc, gdsp, gnorm
-
-    natom = size(coords, dim=2)
-    s6 = this%s6
-    s18 = this%s18
-    rs6 = this%rs6
-    rs8 = this%rs18
-    rs10 = this%rs18
-    alp6 = this%alp
-    alp8 = alp6 + 2.0_wp
-    alp10 = alp8 + 2.0_wp
-    call edisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
-        & r2r4, this%r0ab, rcov, rs6, rs8, rs10, alp6, alp8, alp10, &
-        & this%version, this%noabc, this%rthr, this%cn_thr, e6, e8, e10, e12, &
-        & e6abc)
-    disp = -e6 * this%s6 - e8 * this%s18 - e6abc
-
-    if (.not. present(grads)) then
-      return
-    end if
-
-    allocate(fix(natom))
-    fix(:) = .false.
-    grads(:,:) = 0.0_wp
-    call gdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, r2r4, &
-        & this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
-        & this%noabc, this%rthr, this%numgrad, this%version, .false., grads, &
-        & gdsp, gnorm, this%cn_thr, fix)
-    
-  end subroutine dftd3_dispersion
-
-
   !> Calculates the dispersion for a given periodic configuration.
   !!
   !! \param coords  Coordinates of the atoms in atomic units. Shape: [3, nAtom].
@@ -268,20 +218,20 @@ contains
         & this%rthr, rep_vdw, this%cn_thr, rep_cn)
     disp = -e6 * this%s6 - e8 * this%s18 - e6abc
 
-    if (.not. present(grads)) then
-      return
-    end if
+    if (present(grads)) then
 
-    grads(:,:) = 0.0_wp
-    call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
-        & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
-        & this%noabc, this%numgrad, this%version, grads, disp2, gnorm, &
-        & stress, latvecs, rep_vdw, rep_cn, this%rthr, .false., this%cn_thr)
-    ! Note, the stress variable in pbcgdisp contains the *lattice derivatives*
-    ! on return, so it needs to be converted to obtain the stress tensor.
-    stress(:,:) = -matmul(stress, transpose(latvecs))&
-        & / abs(determinant(latvecs))
+       grads(:,:) = 0.0_wp
+       call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
+           & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
+           & this%noabc, this%numgrad, this%version, grads, disp2, gnorm, &
+           & stress, latvecs, rep_vdw, rep_cn, this%rthr, .false., this%cn_thr)
+       ! Note, the stress variable in pbcgdisp contains the *lattice derivatives*
+       ! on return, so it needs to be converted to obtain the stress tensor.
+       stress(:,:) = -matmul(stress, transpose(latvecs))&
+           & / abs(determinant(latvecs))
     
+    end if 
+
   end subroutine dftd3_pbc_dispersion
 
 

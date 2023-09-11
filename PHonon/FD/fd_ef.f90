@@ -24,7 +24,7 @@ program fd_raman
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   character(len=200) :: pp_file
   logical :: uspp_spsi, ascii, single_file, raw, disp_only
-
+  logical :: needwf=.false.
   INTEGER :: apol, na, nt
   integer           :: nrx1,nrx2,nrx3,nr1,nr2,nr3,nb,nax,natx,inn
   real(kind=dp)     :: r1(3),r2(3),r3(3),rr(3,3)
@@ -80,8 +80,8 @@ program fd_raman
   endif
   if (filemodes .eq. ' ') lalpha=.false.
 
-  !reading the xml file - WILL CRASH, input variable needed
-  call read_file_new ( )
+  !reading the xml file 
+  call read_file_new ( needwf )
 
   if (ionode) then
     write(6,*) '**************************************************'
@@ -225,10 +225,10 @@ program fd_raman
    do ii=1,3
      do k=1,3
      if (lpuma)  then
-       dechi(ii,ii,k,i)=(-1.0*Fd(1,ii,k,i)+16.0*Fd(2,ii,k,i)-30.0*F0(i,k)+16.0*Fd(3,ii,k,i)   &
+       dechi(ii,ii,k,i)=(-1.0*Fd(1,ii,k,i)+16.0*Fd(2,ii,k,i)-30.0*F0(k,i)+16.0*Fd(3,ii,k,i)   &
                          -1.0*Fd(4,ii,k,i))/(12.*de**2)
      else
-       dechi(ii,ii,k,i)=(Fd(1,ii,k,i)-2*F0(i,k)+Fd(2,ii,k,i))/(de**2)
+       dechi(ii,ii,k,i)=(Fd(1,ii,k,i)-2*F0(k,i)+Fd(2,ii,k,i))/(de**2)
      end if
      end do
    end do
@@ -244,17 +244,17 @@ program fd_raman
   do i=1,nat
     do k=1,3
      if (lpuma)  then
-      dechi(1,2,k,i) = (-1.0*Fij(1,1,k,i)+16.0*Fij(2,1,k,i)-30.0*F0(i,k)+16.0*Fij(3,1,k,i)    &
+      dechi(1,2,k,i) = (-1.0*Fij(1,1,k,i)+16.0*Fij(2,1,k,i)-30.0*F0(k,i)+16.0*Fij(3,1,k,i)    &
                         -1.0*Fij(4,1,k,i))/(12.0*de**2)
       dechi(1,2,k,i) = 0.5*dechi(1,2,k,i)-0.5*dechi(1,1,k,i)-0.5*dechi(2,2,k,i)
       dechi(2,1,k,i) = dechi(1,2,k,i)
   
-      dechi(1,3,k,i) = (-1.0*Fij(1,2,k,i)+16.0*Fij(2,2,k,i)-30.0*F0(i,k)+16.0*Fij(3,2,k,i)    &
+      dechi(1,3,k,i) = (-1.0*Fij(1,2,k,i)+16.0*Fij(2,2,k,i)-30.0*F0(k,i)+16.0*Fij(3,2,k,i)    &
                         -1.0*Fij(4,2,k,i))/(12.0*de**2)
       dechi(1,3,k,i) = 0.5*dechi(1,3,k,i)-0.5*dechi(1,1,k,i)-0.5*dechi(3,3,k,i)
       dechi(3,1,k,i) = dechi(1,3,k,i)
   
-      dechi(2,3,k,i) = (-1.0*Fij(1,3,k,i)+16.0*Fij(2,3,k,i)-30.0*F0(i,k)+ 16.0*Fij(3,3,k,i)   &
+      dechi(2,3,k,i) = (-1.0*Fij(1,3,k,i)+16.0*Fij(2,3,k,i)-30.0*F0(k,i)+ 16.0*Fij(3,3,k,i)   &
                         -1.0*Fij(4,3,k,i))/(12.0*de**2)
       dechi(2,3,k,i) = 0.5*dechi(2,3,k,i)-0.5*dechi(2,2,k,i)-0.5*dechi(3,3,k,i)
       dechi(3,2,k,i) = dechi(2,3,k,i)
@@ -352,7 +352,7 @@ if (lalpha)  then
     do i=1,nat
       read(2,'(1x,1x,3 (f10.6,1x,f10.6,3x),1x)') (u(n,k,i),ui(n,k,i),k=1,3)
       do k=1,3
-        u(n,i,k)=u(n,k,i)/Sqrt(amass(ityp(i)))
+        u(n,k,i)=u(n,k,i)/Sqrt(amass(ityp(i)))
       end do
     end do
   end do
@@ -448,7 +448,7 @@ deallocate(F0,dechi,Fd,Fij)
   npol=npol_zeu
   de=de_zeu*sqrt(2.0d0)
 
-  allocate (F0(nat,3))
+  allocate (F0(3,nat))
   allocate (Fij(npol,nat,3,3))
   allocate (zeta(3,3,nat))
 
@@ -457,7 +457,7 @@ deallocate(F0,dechi,Fd,Fij)
   zeta=0.0d0
 
   do k=1,nat
-    read(5,*) (F0(k,j),j=1,3)
+    read(5,*) (F0(j,k),j=1,3)
   end do
   
   do p=1,npol
@@ -471,10 +471,10 @@ deallocate(F0,dechi,Fd,Fij)
     do i=1,3
       do j=1,3
         if (npol==2) then
-          zeta(i,j,k)=(Fij(1,k,i,j)-F0(k,j))-(Fij(2,k,i,j)-F0(k,j))
+          zeta(i,j,k)=(Fij(1,k,i,j)-F0(j,k))-(Fij(2,k,i,j)-F0(j,k))
           zeta(i,j,k)=0.5*zeta(i,j,k)/de
         else
-          zeta(i,j,k)=(Fij(1,k,i,j)-F0(k,j))
+          zeta(i,j,k)=(Fij(1,k,i,j)-F0(j,k))
           zeta(i,j,k)=zeta(i,j,k)/de
         end if
       end do

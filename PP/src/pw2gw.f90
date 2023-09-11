@@ -35,8 +35,7 @@ PROGRAM pw2gw
   USE mp_images,  ONLY : intra_image_comm
   USE mp_pools,   ONLY : kunit
   USE environment,ONLY : environment_start, environment_end
-  USE us,         ONLY : spline_ps
-  USE kinds,     ONLY : DP
+  USE kinds,      ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -98,13 +97,9 @@ PROGRAM pw2gw
   CALL mp_bcast( DeltaE, ionode_id, intra_image_comm )
 
   !
-
-  spline_ps = .false.
-
   CALL read_file
   CALL openfil_pp
   !
-  CALL mp_bcast(spline_ps, ionode_id, intra_image_comm)
 #if defined __MPI
   kunittmp = kunit
 #else
@@ -158,7 +153,7 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
 
   USE uspp_param, ONLY : upf, nh
   USE uspp,       ONLY : nhtol
-  USE us,         ONLY : tab, tab_d2y, spline_ps
+  USE uspp_data,  ONLY : tab
   USE ions_base,  ONLY : ntyp => nsp
   USE klist,      ONLY : ngk
 
@@ -194,8 +189,8 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
   INTEGER, ALLOCATABLE :: igk_l2g(:)
   INTEGER :: npol
   !
-  REAL(kind=DP), ALLOCATABLE :: vkb0(:), djl(:), vec_tab(:), vec_tab_d2y(:)
-  INTEGER :: nb, nt, size_tab, size_tab_d2y, ipw, l
+  REAL(kind=DP), ALLOCATABLE :: vkb0(:), djl(:), vec_tab(:)
+  INTEGER :: nb, nt, size_tab, ipw, l
   !
   ! REAL(kind=DP) :: norma ! Variable needed only for DEBUG
   !
@@ -485,19 +480,14 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
       ALLOCATE(vkb0(1:npw))
 
       size_tab=size(tab,1)
-      size_tab_d2y=size(tab_d2y,1)
 
       ALLOCATE(vec_tab(1:size_tab))
-      if(.not.allocated(vec_tab_d2y)) ALLOCATE(vec_tab_d2y(1:size_tab_d2y))
 
       DO nt = 1, ntyp
         DO nb = 1, upf(nt)%nbeta
           vkb0(:) = 0.0_dp
-          vec_tab(:) = 0.0_dp
-          vec_tab_d2y(:) = 0.0_dp
           vec_tab(:) = tab(:,nb,nt)
-          IF(spline_ps) vec_tab_d2y(:) = tab_d2y(:,nb,nt)
-          CALL gen_us_vkb0(ik,npw,vkb0,size_tab,vec_tab,spline_ps,vec_tab_d2y)
+          CALL gen_us_vkb0(ik,npw,vkb0,size_tab,vec_tab)
           WRITE(15,*) "---------------DEBUG-VKB0----------------------"
           WRITE(15,*) "ik= ", ik
           WRITE(15,*) "nt= ", nt
@@ -511,7 +501,6 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
 
      DEALLOCATE(vkb0)
      DEALLOCATE(vec_tab)
-     IF(allocated(vec_tab_d2y))  DEALLOCATE(vec_tab_d2y)
 
     ENDDO
 !---------------------------
@@ -523,20 +512,14 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
       ALLOCATE(djl(1:npw))
 
       size_tab=size(tab,1)
-      size_tab_d2y=size(tab_d2y,1)
 
       ALLOCATE(vec_tab(1:size_tab))
-      IF(.not. allocated(vec_tab_d2y)) ALLOCATE(vec_tab_d2y(1:size_tab_d2y))
       DO nt = 1, ntyp
         DO nb = 1, upf(nt)%nbeta
           djl(:) = 0.0_dp
-          vec_tab(:) = 0.0_dp
-          vec_tab_d2y(:) = 0.0_dp
           vec_tab(:) = tab(:,nb,nt)
-          IF(spline_ps) vec_tab_d2y(:) = tab_d2y(:,nb,nt)
-          CALL gen_us_djl(ik,npw,djl,size_tab,vec_tab,spline_ps,vec_tab_d2y)
+          CALL gen_us_djl(ik,npw,djl,size_tab,vec_tab)
   !        WRITE(0,*) "---------------DEBUG-----------------------"
-  !        WRITE(0,*) "spline: ", spline_ps
   !        WRITE(0,*) "ik= ", ik
   !        WRITE(0,*) "nt= ", nt
   !        WRITE(0,*) "nb= ", nb
@@ -549,7 +532,6 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
 
      DEALLOCATE(djl)
      DEALLOCATE(vec_tab)
-     IF(allocated(vec_tab_d2y))  DEALLOCATE(vec_tab_d2y)
 
     ENDDO
 
@@ -1154,7 +1136,7 @@ SUBROUTINE diropn_gw (unit, filename, recl, exst, mpime, nd_nmbr_ )
 END SUBROUTINE diropn_gw
 
 !----------------------------------------------------------------------
-subroutine gen_us_djl (ik,npw,djl,size_tab,vec_tab, spline_ps, vec_tab_d2y)
+subroutine gen_us_djl (ik,npw,djl,size_tab,vec_tab)
   !----------------------------------------------------------------------
   !
   !  Calculates the kleinman-bylander pseudopotentials with the
@@ -1166,8 +1148,7 @@ subroutine gen_us_djl (ik,npw,djl,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   USE cell_base,  ONLY : tpiba
   USE klist,      ONLY : xk, igk_k
   USE gvect,      ONLY : g
-  USE us,         ONLY : nqx, dq
-  USE splinelib,  ONLY : splint_deriv
+  USE uspp_data,  ONLY : nqx, dq
   USE uspp_param, ONLY : upf
   !
   implicit none
@@ -1176,8 +1157,6 @@ subroutine gen_us_djl (ik,npw,djl,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   real(DP), intent(inout) ::djl(1:npw)
   integer, intent(in) :: size_tab
   real(DP), intent(in) :: vec_tab(1:size_tab)
-  real(DP), intent(in) :: vec_tab_d2y(1:size_tab)
-  logical :: spline_ps
   !
   integer :: i0, i1, i2, &
        i3, ig
@@ -1186,7 +1165,6 @@ subroutine gen_us_djl (ik,npw,djl,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   complex(DP), allocatable :: sk (:)
 
   integer :: iq
-  real(DP), allocatable :: xdata(:)
   real(DP) :: qt
 
 
@@ -1204,20 +1182,9 @@ subroutine gen_us_djl (ik,npw,djl,size_tab,vec_tab, spline_ps, vec_tab_d2y)
      q (ig) = sqrt ( q(ig) ) * tpiba
   end do
 
-  if (spline_ps) then
-    allocate(xdata(nqx))
-    do iq = 1, nqx
-      xdata(iq) = (iq - 1) * dq
-    enddo
-  endif
-
   ! calculate beta in G-space using an interpolation table
   do ig = 1, npw
     qt = sqrt(q(ig)) * tpiba
-    if (spline_ps) then
-        djl(ig) = splint_deriv(xdata, vec_tab(:), &
-                                vec_tab_d2y(:), qt)
-    else
         px = qt / dq - int (qt / dq)
         ux = 1.d0 - px
         vx = 2.d0 - px
@@ -1230,17 +1197,15 @@ subroutine gen_us_djl (ik,npw,djl,size_tab,vec_tab, spline_ps, vec_tab_d2y)
                           vec_tab (i1) * (+vx*wx-px*wx-px*vx) / 2.d0 - &
                           vec_tab (i2) * (+ux*wx-px*wx-px*ux) / 2.d0 + &
                           vec_tab (i3) * (+ux*vx-px*vx-px*ux) / 6.d0
-    endif
   enddo
 
   deallocate (q)
   deallocate ( gk )
-  if (spline_ps) deallocate(xdata)
   return
 end subroutine gen_us_djl
 !
 !----------------------------------------------------------------------
-subroutine gen_us_vkb0 (ik,npw,vkb0,size_tab,vec_tab, spline_ps, vec_tab_d2y)
+subroutine gen_us_vkb0 (ik,npw,vkb0,size_tab,vec_tab)
   !----------------------------------------------------------------------
   !
   !  Calculates the kleinman-bylander pseudopotentials with the
@@ -1252,8 +1217,7 @@ subroutine gen_us_vkb0 (ik,npw,vkb0,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   USE cell_base,  ONLY : tpiba
   USE klist,      ONLY : xk, igk_k
   USE gvect,      ONLY : g
-  USE us,         ONLY : nqx, dq
-  USE splinelib,  ONLY : splint
+  USE uspp_data,  ONLY : nqx, dq
   USE uspp_param, ONLY : upf
   !
   implicit none
@@ -1262,8 +1226,6 @@ subroutine gen_us_vkb0 (ik,npw,vkb0,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   real(DP), intent(inout) ::vkb0(1:npw)
   integer, intent(in) :: size_tab
   real(DP), intent(in) :: vec_tab(1:size_tab)
-  real(DP), intent(in) :: vec_tab_d2y(1:size_tab)
-  logical :: spline_ps
   !
   integer :: na, nt, nb, ikb,i0, i1, i2, &
        i3, ig
@@ -1272,7 +1234,6 @@ subroutine gen_us_vkb0 (ik,npw,vkb0,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   complex(DP), allocatable :: sk (:)
 
   integer :: iq
-  real(DP), allocatable :: xdata(:)
 
   allocate ( gk(3,npw) )
   allocate ( q(npw) )
@@ -1288,19 +1249,8 @@ subroutine gen_us_vkb0 (ik,npw,vkb0,size_tab,vec_tab, spline_ps, vec_tab_d2y)
      q (ig) = sqrt ( q(ig) ) * tpiba
   end do
 
-  if (spline_ps) then
-    allocate(xdata(nqx))
-    do iq = 1, nqx
-      xdata(iq) = (iq - 1) * dq
-    enddo
-  endif
-
   ! calculate beta in G-space using an interpolation table
   do ig = 1, npw
-    if (spline_ps) then
-        vkb0(ig) = splint(xdata, vec_tab(:), &
-                                vec_tab_d2y(:), q(ig))
-    else
         px = q (ig) / dq - int (q (ig) / dq)
         ux = 1.d0 - px
         vx = 2.d0 - px
@@ -1313,11 +1263,9 @@ subroutine gen_us_vkb0 (ik,npw,vkb0,size_tab,vec_tab, spline_ps, vec_tab_d2y)
                           vec_tab (i1) * px * vx * wx / 2.d0 - &
                           vec_tab (i2) * px * ux * wx / 2.d0 + &
                           vec_tab (i3) * px * ux * vx / 6.d0
-    endif
   enddo
 
   deallocate (q)
   deallocate ( gk )
-  if (spline_ps) deallocate(xdata)
   return
 end subroutine gen_us_vkb0

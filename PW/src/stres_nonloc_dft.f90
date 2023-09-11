@@ -12,7 +12,7 @@ SUBROUTINE stres_nonloc_dft( rho, rho_core, nspin, sigma_nonloc_dft )
   !----------------------------------------------------------------------------
   !
   USE kinds,            ONLY : DP
-  USE funct,            ONLY : get_igcc, get_inlc 
+  USE funct,            ONLY : get_inlc 
   USE mp,               ONLY : mp_sum
   USE fft_base,         ONLY : dfftp
   USE vdW_DF,           ONLY : vdW_DF_stress
@@ -22,7 +22,7 @@ SUBROUTINE stres_nonloc_dft( rho, rho_core, nspin, sigma_nonloc_dft )
   IMPLICIT NONE
   !
   integer,  intent(in)     :: nspin
-  real(DP), intent(in)     :: rho (dfftp%nnr), rho_core (dfftp%nnr)
+  real(DP), intent(in)     :: rho (dfftp%nnr, nspin), rho_core (dfftp%nnr)
   real(DP), intent(inout)  :: sigma_nonloc_dft (3, 3)
 
   integer :: l, m, inlc
@@ -34,7 +34,7 @@ SUBROUTINE stres_nonloc_dft( rho, rho_core, nspin, sigma_nonloc_dft )
   IF ( inlc > 0 .AND. inlc < 26 ) THEN
      CALL vdW_DF_stress (rho, rho_core, nspin, sigma_nonloc_dft)
   ELSEIF ( inlc == 26 ) THEN
-     CALL rVV10_stress  (rho, rho_core, nspin, sigma_nonloc_dft)
+     CALL rVV10_stress  (rho(:,1), rho_core, nspin, sigma_nonloc_dft)
   END IF
 
 END SUBROUTINE stres_nonloc_dft

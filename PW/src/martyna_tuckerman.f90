@@ -201,7 +201,8 @@ CONTAINS
     !
     USE mp_bands,         ONLY : me_bgrp
     USE fft_base,         ONLY : dfftp
-    USE fft_interfaces,   ONLY : fwfft, invfft
+    USE fft_interfaces,   ONLY : invfft
+    USE fft_rho,          ONLY : rho_r2g
     USE fft_types,        ONLY : fft_index_to_3d
     USE control_flags,    ONLY : gamma_only_ => gamma_only
     USE gvect,            ONLY : ngm, gg, gstart_ => gstart, ecutrho
@@ -212,8 +213,8 @@ CONTAINS
     INTEGER :: ir, i,j,k, ig, nt
     LOGICAL :: offrange
     REAL(DP) :: r(3), rws, upperbound, rws2
-    COMPLEX (DP), ALLOCATABLE :: aux(:)
-    REAL(DP), EXTERNAL :: qe_erfc
+    REAL(DP), ALLOCATABLE :: auxr(:)
+    COMPLEX(DP), ALLOCATABLE :: aux(:), auxg(:,:)
     !
 #ifdef TESTING
     REAL(DP), ALLOCATABLE :: plot(:)
@@ -233,7 +234,7 @@ CONTAINS
        alpha = alpha - 0.1_dp  
        IF (alpha<=0._dp) CALL errore( 'init_wg_corr', 'optimal alpha not found', 1 )
        upperbound = e2 * SQRT(2.d0 * alpha / tpi) * &
-                         qe_erfc( SQRT( ecutrho / 4.d0 / alpha) )
+                         erfc( SQRT( ecutrho / 4.d0 / alpha) )
     ENDDO
     beta = 0.5_dp/alpha ! 1._dp/alpha
     ! write (*,*) " alpha, beta MT = ", alpha, beta
@@ -243,8 +244,8 @@ CONTAINS
     gstart = gstart_
     gamma_only = gamma_only_
     !
-    ALLOCATE( aux(dfftp%nnr) )
-    aux = (0._dp,0._dp)
+    ALLOCATE( auxr(dfftp%nnr), auxg(dfftp%nnr,1) )
+    auxr = (0._dp,0._dp)
     !
     DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
        !
@@ -265,14 +266,14 @@ CONTAINS
        ENDIF
 #endif
        !
-       aux(ir) = smooth_coulomb_r( rws*alat )
+       auxr(ir) = smooth_coulomb_r( rws*alat )
        !
     ENDDO
     !
-    CALL fwfft( 'Rho', aux, dfftp )
-    ! 
+    CALL rho_r2g( dfftp, auxr, auxg )
+    !
     DO ig = 1, ngm
-       wg_corr(ig) = omega * REAL(aux(dfftp%nl(ig))) - smooth_coulomb_g( tpiba2*gg(ig))
+       wg_corr(ig) = omega * REAL(auxg(ig,1)) - smooth_coulomb_g( tpiba2*gg(ig))
     ENDDO
     wg_corr(:) =  wg_corr(:) * EXP(-tpiba2*gg(:)*beta/4._dp)**2
     !
@@ -282,7 +283,7 @@ CONTAINS
     !
 #ifdef TESTING
     IF (first) THEN
-       ALLOCATE( plot(dfftp%nnr) )
+       ALLOCATE( aux(dfftp%nnr), plot(dfftp%nnr) )
        !
        filplot = 'wg_corr_r'
        CALL invfft( 'Rho', aux, dfftp )
@@ -311,13 +312,13 @@ CONTAINS
        plot(:) = REAL(aux(:))
        CALL write_wg_on_file( filplot, plot )
        !
-       DEALLOCATE( plot )
+       DEALLOCATE( aux, plot )
        !
        first = .FALSE.
     ENDIF
 #endif
     !
-    DEALLOCATE( aux )
+    DEALLOCATE( auxr, auxg )
     !
     RETURN
     !
@@ -386,11 +387,10 @@ CONTAINS
     !! Phys. 110, 2810 (1999)].
     !
     REAL(DP), INTENT(IN) :: r
-    REAL(DP), EXTERNAL :: qe_erf
     !
     !  smooth_coulomb_r = SQRT(2._dp*alpha/tpi)**3 * exp(-alpha*r*r) ! to be modified
     IF (r > 1.e-6_dp) THEN
-       smooth_coulomb_r = qe_erf(SQRT(alpha)*r)/r
+       smooth_coulomb_r = erf(SQRT(alpha)*r)/r
     ELSE
        smooth_coulomb_r = 2._dp/SQRT(pi) * SQRT(alpha)
     ENDIF

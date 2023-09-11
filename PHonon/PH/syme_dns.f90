@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,18 +9,17 @@
 !-----------------------------------------------------------------------
 SUBROUTINE syme_dns (ldim, npe, dns)
   !-----------------------------------------------------------------------
+  !! DFPT+U: This routine symmetrizes the first order variation of 
+  !! the occupation matrices dns due to the perturbation with the 
+  !! electric field.
   !
-  ! DFPT+U: This routine symmetrizes the first order variation of 
-  ! the occupation matrices dns due to the perturbation with the 
-  ! electric field.
-  !
-  ! Written  by S. de Gironcoli and A. Floris
-  ! Modified by I. Timrov (01.10.2018) 
+  !! Written  by S. de Gironcoli and A. Floris.  
+  !! Modified by I. Timrov (01.10.2018).
   !
   USE kinds,             ONLY : DP
   USE constants,         ONLY : tpi
   USE ions_base,         ONLY : nat, ityp
-  USE ldaU,              ONLY : Hubbard_l, is_hubbard, nwfcU, Hubbard_lmax
+  USE ldaU,              ONLY : Hubbard_l, is_hubbard, nwfcU, Hubbard_lmax, hubbard_occ
   USE lsda_mod,          ONLY : lsda, nspin
   USE lr_symm_base,      ONLY : nsymq, irgq, minus_q, irotmq, rtau
   USE uspp_param,        ONLY : upf
@@ -31,7 +30,7 @@ SUBROUTINE syme_dns (ldim, npe, dns)
   INTEGER, INTENT(IN) :: ldim, npe
   COMPLEX(DP), INTENT(INOUT) :: dns(ldim,ldim,nspin,nat,npe)
   !
-  ! Local variables
+  ! ... local variables
   !
   INTEGER :: nt, n, counter, l, ip, jp, na, nb, is, m1, m2, &
              m0, m00, isym, irot
@@ -49,7 +48,7 @@ SUBROUTINE syme_dns (ldim, npe, dns)
      IF (.NOT.is_hubbard(nt)) CYCLE
      DO n = 1, upf(nt)%nwfc
         l = upf(nt)%lchi(n)
-        IF (upf(nt)%oc(n) > 0.d0 .AND. l == Hubbard_l(nt)) &
+        IF (hubbard_occ(nt,1) > 0.d0 .AND. l == Hubbard_l(nt)) &
            counter = counter + 2 * l + 1
      ENDDO
   ENDDO

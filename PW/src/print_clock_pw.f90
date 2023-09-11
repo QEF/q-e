@@ -13,14 +13,25 @@ SUBROUTINE print_clock_pw()
    ! ... it tries to construct the calling tree of the program.
    !
    USE io_global,          ONLY : stdout
-   USE control_flags,      ONLY : isolve, iverbosity, gamma_only, lxdm
+   USE control_flags,      ONLY : isolve, iverbosity, gamma_only, lxdm, &
+        ts_vdw, ldftd3, llondon
    USE paw_variables,      ONLY : okpaw
    USE uspp,               ONLY : okvan
    USE realus,             ONLY : real_space
    USE noncollin_module,   ONLY : noncolin
    USE ldaU,               ONLY : lda_plus_u, lda_plus_u_kind, is_hubbard_back
-   USE funct,              ONLY : dft_is_hybrid
+   USE xc_lib,             ONLY : xclib_dft_is
    USE bp,                 ONLY : lelfield
+   USE rism_module,        ONLY : rism_print_clock
+   !
+#if defined (__ENVIRON)
+   USE plugin_flags,        ONLY : use_environ
+   USE environ_base_module, ONLY : print_environ_clocks
+#endif
+#if defined (__OSCDFT)
+   USE plugin_flags,        ONLY : use_oscdft
+   USE oscdft_base,         ONLY : print_oscdft_clocks
+#endif
    !
    IMPLICIT NONE
    !
@@ -31,9 +42,14 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'electrons' )
    CALL print_clock( 'update_pot' )
    CALL print_clock( 'forces' )
+   IF (ldftd3)  CALL print_clock('force_dftd3')
+   IF (llondon) CALL print_clock('force_london')
    CALL print_clock( 'stress' )
+   IF (ldftd3)  CALL print_clock('stres_dftd3')
+   IF (llondon) CALL print_clock('stres_london')
    !
    WRITE( stdout, '(/5x,"Called by init_run:")' )
+   CALL print_clock( 'aceinit0' )
    CALL print_clock( 'wfcinit' )
    IF ( iverbosity > 0 ) THEN
       CALL print_clock( 'wfcinit:atomic' )
@@ -47,9 +63,8 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'realus:tabp' )
    END IF
    CALL print_clock( 'hinit0' )
-   IF (lxdm) THEN
-      CALL print_clock('init_xdm')
-   ENDIF
+   IF (lxdm)   CALL print_clock('init_xdm')
+   IF (ts_vdw) CALL print_clock('tsvdw_pair')
    !
    WRITE( stdout, '(/5x,"Called by electrons:")' )
    CALL print_clock( 'c_bands' )
@@ -74,11 +89,22 @@ SUBROUTINE print_clock_pw()
       CALL print_clock('exdm:environ')
       CALL print_clock('exdm:paw_charge')
       CALL print_clock('exdm:rho')
+   ELSE IF (ts_vdw) THEN
+      CALL print_clock('tsvdw_rhotot')
+      CALL print_clock('tsvdw_screen')
+      CALL print_clock('tsvdw_veff')
+      CALL print_clock('tsvdw_dveff')
+      CALL print_clock('tsvdw_energy')
+   ELSE IF (ldftd3) THEN
+      CALL print_clock('energy_dftd3')
+   ELSE IF (llondon) THEN
+      CALL print_clock('energy_london')
    END IF
-
    !
    WRITE( stdout, '(/5x,"Called by c_bands:")' )
    CALL print_clock( 'init_us_2' )
+   CALL print_clock( 'init_us_2:cpu' )
+   CALL print_clock( 'init_us_2:gpu' )
    IF ( isolve == 0 ) THEN
       CALL print_clock( 'regterg' )    ; CALL print_clock( 'cegterg' )
    ELSE  IF (isolve == 1) THEN
@@ -89,6 +115,10 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'wfcrot' )
    ELSE  IF (isolve == 3) THEN
       CALL print_clock( 'paro_gamma' ) ; CALL print_clock( 'paro_k' )
+   ELSE IF ( isolve == 4 ) THEN
+      CALL print_clock( 'rrmmdiagg' )  ; CALL print_clock( 'crmmdiagg' )
+      CALL print_clock( 'wfcrot' )
+      CALL print_clock( 'gsorth' )
    ENDIF
    !
    IF ( iverbosity > 0)  THEN
@@ -151,7 +181,8 @@ SUBROUTINE print_clock_pw()
          CALL print_clock( 'pcg' )
          CALL print_clock( 'pcg:hs_1psi' )
          CALL print_clock( 'pcg:ortho' )
-         CALL print_clock( 'pcg:move' )
+         CALL print_clock( 'pcg:move1' )
+         CALL print_clock( 'pcg:move2' )
 
          CALL print_clock( 'rotHSw' )
          CALL print_clock( 'rotHSw:move' )
@@ -173,6 +204,8 @@ SUBROUTINE print_clock_pw()
          CALL print_clock( 'rotHSw:ev:b5' ) ; call print_clock('rotHSw:ev:sum')
          CALL print_clock( 'rotHSw:ev:s7' ) ; CALL print_clock('rotHSw:ev:b6' ) 
       END IF
+   ELSE IF ( isolve == 4 ) THEN
+      WRITE( stdout, '(/5x,"Called by *rmmdiagg:")' )
    END IF
    !
    CALL print_clock( 'h_psi' )
@@ -212,6 +245,7 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'fftw' )
    CALL print_clock( 'fftc' )
    CALL print_clock( 'fftcw' )
+   CALL print_clock( 'fftr' )
    CALL print_clock( 'interpolate' )
    CALL print_clock( 'davcio' )
    !    
@@ -245,13 +279,12 @@ SUBROUTINE print_clock_pw()
          CALL print_clock( 'new_nsg' )
          CALL print_clock( 'alloc_neigh' )
       ENDIF
-      CALL print_clock( 'new_ns' )
       CALL print_clock( 'vhpsi' )
       CALL print_clock( 'force_hub' )
       CALL print_clock( 'stres_hub' )
    ENDIF
    !
-   IF ( dft_is_hybrid() ) THEN
+   IF ( xclib_dft_is('hybrid') ) THEN
       WRITE( stdout, '(/,5X,"EXX routines")' )
       CALL print_clock( 'exx_grid' )
       CALL print_clock( 'exxinit' )
@@ -308,7 +341,17 @@ SUBROUTINE print_clock_pw()
       call print_clock('c_phase_field')
    END IF
    !
+   CALL rism_print_clock()
+   !
+#if defined(__LEGACY_PLUGINS)
    CALL plugin_clock()
+#endif 
+#if defined (__ENVIRON)
+   IF (use_environ) CALL print_environ_clocks()
+#endif
+#if defined (__OSCDFT)
+   IF (use_oscdft) CALL print_oscdft_clocks()
+#endif
    !
    RETURN
    !

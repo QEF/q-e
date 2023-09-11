@@ -26,9 +26,9 @@ MODULE io_rho_xml
       !
       USE paw_variables,    ONLY : okpaw
       USE ldaU,             ONLY : lda_plus_u, hub_back, lda_plus_u_kind, nsg
-      USE funct,            ONLY : dft_is_meta
-      USE noncollin_module, ONLY : noncolin
-      USE spin_orb,         ONLY : domag
+      USE two_chem,         ONLY : twochem
+      USE xc_lib,           ONLY : xclib_dft_is
+      USE noncollin_module, ONLY : noncolin, domag
       USE scf,              ONLY : scf_type
       !
       USE cell_base,        ONLY : bg, tpiba
@@ -48,8 +48,7 @@ MODULE io_rho_xml
       INTEGER,          INTENT(IN)           :: nspin
       !
       CHARACTER (LEN=256) :: dirname
-      INTEGER :: nspin_, iunocc, iunpaw, ierr
-      INTEGER, EXTERNAL :: find_free_unit
+      INTEGER :: nspin_, iunocc, iunpaw, iuntwochem, ierr
 
       dirname = restart_dir ( )
       CALL create_directory( dirname )
@@ -67,7 +66,7 @@ MODULE io_rho_xml
            gamma_only, mill, ig_l2g, rho%of_g(:,1:nspin_) )
       !
       ! Write kinetic energy density density
-      IF ( dft_is_meta() ) THEN 
+      IF ( xclib_dft_is('meta') ) THEN 
          IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
               CALL write_rhog( TRIM(dirname) // "ekin-density", &
               root_bgrp, intra_bgrp_comm, &
@@ -80,9 +79,8 @@ MODULE io_rho_xml
 
       IF ( lda_plus_u ) THEN
          !
-         iunocc = find_free_unit ()
          IF ( ionode ) THEN
-            OPEN ( UNIT=iunocc, FILE = TRIM(dirname) // 'occup.txt', &
+            OPEN ( NEWUNIT=iunocc, FILE = TRIM(dirname) // 'occup.txt', &
                  FORM='formatted', STATUS='unknown' )
             IF (lda_plus_u_kind.EQ.0) THEN
                WRITE( iunocc, * , iostat = ierr) rho%ns
@@ -95,8 +93,6 @@ MODULE io_rho_xml
                ENDIF
             ELSEIF (lda_plus_u_kind.EQ.2) THEN
                WRITE( iunocc, * , iostat = ierr) nsg
-               ! Write Hubbard_V to file
-               CALL write_V  
             ENDIF
          ENDIF
          CALL mp_bcast( ierr, ionode_id, intra_image_comm )
@@ -109,9 +105,8 @@ MODULE io_rho_xml
       !
       IF ( okpaw ) THEN
          !
-         iunpaw = find_free_unit ()
          IF ( ionode ) THEN
-            OPEN ( UNIT=iunpaw, FILE = TRIM(dirname) // 'paw.txt', &
+            OPEN ( NEWUNIT=iunpaw, FILE = TRIM(dirname) // 'paw.txt', &
                  FORM='formatted', STATUS='unknown' )
             WRITE( iunpaw, * , iostat = ierr) rho%bec
          END IF
@@ -121,8 +116,8 @@ MODULE io_rho_xml
             CLOSE( UNIT = iunpaw, STATUS = 'KEEP' )
          ENDIF
          !
-      END IF
-
+      END IF 
+      !
       RETURN
     END SUBROUTINE write_scf
 
@@ -132,10 +127,9 @@ MODULE io_rho_xml
       USE paw_variables,    ONLY : okpaw
       USE ldaU,             ONLY : lda_plus_u, starting_ns, hub_back, &
                                    lda_plus_u_kind, nsg
-      USE noncollin_module, ONLY : noncolin
-      USE spin_orb,         ONLY : domag
+      USE noncollin_module, ONLY : noncolin, domag
       USE gvect,            ONLY : ig_l2g
-      USE funct,            ONLY : dft_is_meta
+      USE xc_lib,           ONLY : xclib_dft_is
       USE io_files,         ONLY : restart_dir
       USE io_global,        ONLY : ionode, ionode_id, stdout
       USE mp_bands,         ONLY : root_bgrp, intra_bgrp_comm
@@ -166,7 +160,7 @@ MODULE io_rho_xml
       IF ( nspin > nspin_) rho%of_g(:,nspin_+1:nspin) = (0.0_dp, 0.0_dp)
       !
       ! read kinetic energy density
-      IF ( dft_is_meta() ) THEN
+      IF ( xclib_dft_is('meta') ) THEN
          CALL read_rhog( TRIM(dirname) // "ekin-density", &
               root_bgrp, intra_bgrp_comm, &
               ig_l2g, nspin_, rho%kin_g, gamma_only, ierr )
@@ -184,9 +178,8 @@ MODULE io_rho_xml
          ! The occupations ns also need to be read in order to build up
          ! the potential
          !
-         iunocc = find_free_unit ()
          IF ( ionode ) THEN
-            OPEN ( UNIT=iunocc, FILE = TRIM(dirname) // 'occup.txt', &
+            OPEN ( NEWUNIT=iunocc, FILE = TRIM(dirname) // 'occup.txt', &
                  FORM='formatted', STATUS='old', IOSTAT=ierr )
             IF (lda_plus_u_kind.EQ.0) THEN
                READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns
@@ -245,9 +238,8 @@ MODULE io_rho_xml
          !
          ! Also the PAW coefficients are needed:
          !
-         iunpaw = find_free_unit ()
          IF ( ionode ) THEN
-            OPEN ( UNIT=iunpaw, FILE = TRIM(dirname) // 'paw.txt', &
+            OPEN ( NEWUNIT=iunpaw, FILE = TRIM(dirname) // 'paw.txt', &
                  FORM='formatted', STATUS='old', IOSTAT=ierr )
             READ( UNIT = iunpaw, FMT = *, iostat=ierr ) rho%bec
          END IF

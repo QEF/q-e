@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: bands.x / PWscf / Quantum Espresso (version: svn)
+Program: bands.x / PWscf / Quantum ESPRESSO (version: 7.2)
 ------------------------------------------------------------------------
 
 
@@ -28,7 +28,8 @@ Output files:
 - if ("lsigma"(i)): file "filband".i, i=1,2,3, with expectation values
   of the spin operator in the noncolinear case
 - file "filband".gnu with bands in eV, directly plottable using gnuplot
-- file "filp" with matrix elements of p
+- file "filp" with matrix elements of p (including the nonlocal potential
+  contribution i*m*[V_nl,x])
 
 Structure of the input data:
 ============================
@@ -93,7 +94,11 @@ NAMELIST: &BANDS
    Default:        .false.
    Description:    If .true. matrix elements of the momentum operator p between
                    conduction and valence bands are computed and written to file
-                   specified in "filp"
+                   specified in "filp".
+                   The matrix elements include the contribution from the nonlocal
+                   potential, i*m*[V_nl, x]. In other words, the calculated matrix elements
+                   are those of the velocity operator i*m*[H, x] times mass, not those of
+                   the true momentum operator.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -145,11 +150,11 @@ NAMELIST: &BANDS
    Variables:      firstk, lastk
    
    Type:           INTEGER
-   Description:    if @ref lsym=.true. makes the symmetry analysis only for k
+   Description:    if "lsym"=.true. makes the symmetry analysis only for k
                    points between firstk to lastk
    +--------------------------------------------------------------------
    
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Jun 22 17:11:35 CEST 2018
+This file has been created by helpdoc utility on Sat Mar 18 15:50:15 CET 2023

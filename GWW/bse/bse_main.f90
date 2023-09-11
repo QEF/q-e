@@ -1,26 +1,28 @@
+! Modified by Joshua Elliott November 2020 as JDE
+
 program bse_punch
 
-use io_global, ONLY : stdout, ionode, ionode_id
-use io_files,  ONLY : psfile, pseudo_dir,diropn
-use io_files,  ONLY : prefix,tmp_dir,iunwfc
-use mp_world, ONLY : mpime
-use mp_pools, ONLY : kunit
-USE wvfct,     ONLY : nbnd, et, npwx
+use io_global,          ONLY : stdout, ionode, ionode_id
+use io_files,           ONLY : psfile, pseudo_dir,diropn
+use io_files,           ONLY : prefix,tmp_dir,iunwfc
+use mp_world,           ONLY : mpime
+use mp_pools,           ONLY : kunit
+USE wvfct,              ONLY : nbnd, et, npwx
 USE gvecw,              ONLY : ecutwfc
 USE gvecs,              ONLY : doublegrid
 use pwcom
-USE wavefunctions, ONLY : evc
-use mp, ONLY: mp_bcast
-USE mp_world, ONLY : world_comm
-USE fft_base,             ONLY : dfftp
-use scf, only : vrs, vltot, v, kedtau
+USE wavefunctions,      ONLY : evc
+use mp,                 ONLY : mp_bcast
+USE mp_world,           ONLY : world_comm
+USE fft_base,           ONLY : dfftp
+use scf,                ONLY : vrs, vltot, v, kedtau
 USE fft_custom_gwl
 use bse_basic_structures
 use exciton
-USE constants,   ONLY: RYTOEV
-USE mp,          ONLY: mp_barrier
-USE qpe_exc,         ONLY: qpc
-use bse_wannier, ONLY: num_nbndv,&
+USE constants,          ONLY : RYTOEV
+USE mp,                 ONLY : mp_barrier
+USE qpe_exc,            ONLY : qpc
+use bse_wannier,        ONLY : num_nbndv,&
            l_truncated_coulomb,&
            truncation_radius, &
            numw_prod,&
@@ -33,7 +35,9 @@ use bse_wannier, ONLY: num_nbndv,&
            spectra_e_min,spectra_e_max,spectra_nstep,spectra_broad,&
            l_restart,n_eig_start, nit_lcz,l_lanczos, l_restart_lcz, nlcz_restart,&
            l_tdhf,l_fullbse,l_lf,l_rpa, l_contraction, l_gtrick, qpe_imin, qpe_imax,&
-           l_scissor,l_dielectric
+           l_scissor,l_dielectric,&
+           l_read_www                  ! JDE
+USE direct_www
 implicit none
 INTEGER, EXTERNAL :: find_free_unit
 
@@ -74,8 +78,8 @@ NAMELIST /inputbse/ prefix,num_nbndv,dual_bse,outdir,l_truncated_coulomb,&
                     spectra_e_min,spectra_e_max,spectra_nstep,spectra_broad,&
                     l_restart,n_eig_start, nit_lcz,l_lanczos, l_restart_lcz, nlcz_restart,&
                     l_fullbse,l_tdhf,l_lf,l_rpa,l_contraction,l_gtrick, qpe_imin, qpe_imax,&
-                    l_scissor,l_dielectric 
-
+                    l_scissor,l_dielectric,& 
+                    l_read_www          ! JDE
 debug=.false.
             
 call start_bse( )
@@ -139,6 +143,7 @@ qpe_imin=1
 qpe_imax=1
 l_scissor=.true.
 l_dielectric=.false.
+l_read_www=.false.   ! JDE
 !
 !    Reading input file
 !
@@ -213,6 +218,7 @@ ENDIF
   CALL mp_bcast( qpe_imin, ionode_id, world_comm)
   CALL mp_bcast( qpe_imax, ionode_id, world_comm)
   CALL mp_bcast( l_dielectric, ionode_id, world_comm)
+  CALL mp_bcast( l_read_www, ionode_id, world_comm)   ! JDE
 
   call read_file 
 ! after read_file everything is known
@@ -282,7 +288,12 @@ ENDIF
      allocate(qpc(qpe_imax))
      call qpcorrections(wcstate)
   endif
-
+! JDE start
+  IF (l_read_www) THEN
+     ! initialize arrays for www products
+     CALL initialize_direct_www(fc)
+  END IF
+! JDE end
   if(l_tspace) then
 !    solve the BSE in transition space
      call tspace_diago(vstate,vstate_r,fc)
@@ -304,6 +315,7 @@ ENDIF
 
 
 ! free memory
+  if (l_read_www) call free_memory_direct_www  ! JDE 
   call free_v_state_r(vstate_r)
   call free_v_state(vstate)
   call free_c_state(cstate)

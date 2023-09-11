@@ -1,6 +1,6 @@
 \documentclass[12pt,a4paper]{article}
 
-\def\version{6.4}
+\input{version}
 
 \def\qe{{\sc Quantum ESPRESSO}}
 \sloppy
@@ -52,7 +52,7 @@
 \author{}
 \date{}
 
-\def\qeImage{../../../Doc/quantum_espresso.pdf}
+\def\qeImage{../../../Doc/quantum_espresso.png}
 
 \title{
   \includegraphics[width=5cm]{\qeImage} \\
@@ -84,14 +84,16 @@ The \QEmodes\ package was written by Anton Kokalj. The implementation
 of \QEmodes\ was made possible by several useful and helpful resources
 that are gratefully acknowledged, in particular: {\it Mode Tutorial}
 of Scott Andrew Borton
-(\texttt{https://www.emacswiki.org/emacs/ModeTutorial} for
-indentation code), {\it Derived Mode} and {\it Sample Mode} pages
+(\texttt{https://www.emacswiki.org/emacs/ModeTutorial} for indentation
+code), {\it Derived Mode} and {\it Sample Mode} pages
 (\texttt{https://www.emacswiki.org/emacs/DerivedMode},
 \texttt{https://www.emacswiki.org/emacs/SampleMode}) as well as the
 very useful resources of Xah Lee
-(\texttt{http://ergoemacs.org/emacs/elisp\_syntax\_coloring.html}). Last
-but not the least Sebastijan Peljhan is acknowledged for his work on
-\texttt{xsf-mode} that inspired the idea of writing the \QEmodes.
+(\texttt{http://ergoemacs.org/emacs/elisp\_syntax\_coloring.html}). Sebastijan
+Peljhan is acknowledged for his work on \texttt{xsf-mode} that
+inspired the idea of writing the \QEmodes. Last but not the least,
+Hongyi Zhao contributed the \texttt{ido-completion-read} snippet of
+Elisp code for selecting the values for the card's flags.
 
 % TODO: add infro from the net.
 
@@ -115,15 +117,16 @@ editing the \verb+user-init-file+ (typically \verb+$HOME/.emacs+).
 
 \subsection{Installing the \QEmodes\ package}
 Once the \texttt{QE-modes-\version.tar.gz} archive is unpacked and you
-are located in its root directory, the installation is trivial. Simply
-copy the whole \qemodes\ subdirectory to appropriate place. To
-facilitate this copying on Unix-like operating systems, one can use:
+are located in its root directory, the installation is trivial. Simply use:
 \begin{verbatim}
    ./install.sh
 \end{verbatim}
 which will install the package in the \qemodes\ subdirectory of the
-\texttt{\$HOME/.emacs.d/} directory. If you prefer to install it into
-other directory, then use:
+\texttt{\$HOME/.emacs.d/} directory (the script copies the \QEmodes\
+\texttt{*.el} files to \texttt{\$HOME/.emacs.d/} and byte-compiles
+them into \texttt{*.elc} files).
+
+If you prefer to install \QEmodes\ into other directory, use instead:
 \begin{flushleft}
 \verb+   prefix=+\var{where-to-install}\verb+ ./install.sh+
 \end{flushleft}
@@ -137,11 +140,17 @@ which will install the package in the \qemodes\ subdirectory of
 
 \subsection{Editing the \texttt{user-init-file} file}
 
-An example snippet of \texttt{user-init-file} for \QEmodes\ is
-provided by the \texttt{qe-modes.emacs} file in the package root
-directory and the text below explains it. In particular, to use the
-installed \QEmodes\ in Emacs, add the following to your
-\verb+user-init-file+ (e.g.\ \verb+$HOME/.emacs+):
+A default \QEmodes\ snippet for \texttt{user-init-file} is provided by
+the \texttt{qe-modes.emacs} file in the \QEmodes\ source package root
+directory. If \QEmodes\ were installed in default
+  \verb+$HOME/.emacs.d/qe-modes/+ location, {\bf then the
+  \texttt{qe-modes.emacs} file can be used verbatim; just append its
+  content to your \verb+~/.emacs+ file}.
+
+Here is a the explanation of the simplified \texttt{qe-modes.emacs}
+file.  Emacs is informed about the installed \QEmodes\ by the
+following lines in the \verb+user-init-file+ (e.g.\
+\verb+$HOME/.emacs+):
 \begin{flushleft}
 {\color{red}
 \verb+   ;; make sure package is visible to emacs (if needed)+}\\
@@ -162,8 +171,8 @@ automatically recognize from the filename if it is some variant of the
 Say that we use the \verb+.in+ extension for the \qe\ input files in
 general and more specifically, the \texttt{pw.}, \texttt{scf.},
 \texttt{relax.}, and \texttt{vc-relax.} prefixes for the \pwx\ input files
-and \texttt{neb.}, \texttt{ph.},  and \texttt{pp.} prefixes for the
-\nebx, \phx, and \ppx\ input files. These filename recognitions can be
+and \texttt{neb.}, \texttt{cp.}, \texttt{ph.},  and \texttt{pp.} prefixes for the
+\nebx, \cpx, \phx, and \ppx\ input files. These filename recognitions can be
 achieved by:
 \begin{flushleft}
 {\color{red}
@@ -172,19 +181,22 @@ achieved by:
 {\color{red}
 \verb+   ;; automatically open the pw*.in, scf*.in, relax*in, vc-relax*.in files+\\
 \verb+   ;; with pw.x mode+}\\
-\verb+   (add-to-list 'auto-mode-alist  '("pw.*\\.in\\'" . pw-mode))+\\
-\verb+   (add-to-list 'auto-mode-alist  '("scf.*\\.in\\'" . pw-mode))+\\
-\verb+   (add-to-list 'auto-mode-alist  '("relax.*\\.in\\'" . pw-mode))+\\
-\verb+   (add-to-list 'auto-mode-alist  '("vc-relax.*\\.in\\'" . pw-mode))+\\[1em]
+\verb+   (add-to-list 'auto-mode-alist  '("/pw.*\\.in\\'" . pw-mode))+\\
+\verb+   (add-to-list 'auto-mode-alist  '("/scf.*\\.in\\'" . pw-mode))+\\
+\verb+   (add-to-list 'auto-mode-alist  '("/relax.*\\.in\\'" . pw-mode))+\\
+\verb+   (add-to-list 'auto-mode-alist  '("/vc-relax.*\\.in\\'" . pw-mode))+\\[1em]
 {\color{red}
 \verb+   ;; automatically open the neb*.in files with neb.x mode+}\\
-\verb+   (add-to-list 'auto-mode-alist  '("neb.*\\.in\\'" . neb-mode))+\\[1em]
+\verb+   (add-to-list 'auto-mode-alist  '("/neb.*\\.in\\'" . neb-mode))+\\[1em]
+{\color{red}
+\verb+   ;; automatically open the cp*.in files with cp.x mode+}\\
+\verb+   (add-to-list 'auto-mode-alist  '("/cp.*\\.in\\'" . cp-mode))+\\[1em]
 {\color{red}
 \verb+   ;; automatically open the ph*.in files with ph.x mode+}\\
-\verb+   (add-to-list 'auto-mode-alist  '("ph.*\\.in\\'" . ph-mode))+\\[1em]
+\verb+   (add-to-list 'auto-mode-alist  '("/ph.*\\.in\\'" . ph-mode))+\\[1em]
 {\color{red}
 \verb+   ;; automatically open the pp*.in files with pp.x mode+}\\
-\verb+   (add-to-list 'auto-mode-alist  '("pp.*\\.in\\'" . pp-mode))+\\[1em]
+\verb+   (add-to-list 'auto-mode-alist  '("/pp.*\\.in\\'" . pp-mode))+\\[1em]
 \end{flushleft}
 Beware that the more general \texttt{*.in} pattern for the generic
 \qemode\footnote{Please note the difference between \qemodes\ and
@@ -196,12 +208,20 @@ file.
 
 For those who are fans of regular-expressions, the above four lines
 for \pwmode\ can be expressed by the following one-liner:
-
 {\footnotesize
   \begin{verbatim}
-   (add-to-list 'auto-mode-alist '("\\(pw\\|scf\\|\\(?:vc-\\)?relax\\).*\\.in\\'" . pw-mode))
+   (add-to-list 'auto-mode-alist '("/\\(pw\\|scf\\|\\(?:vc-\\)?relax\\).*\\.in\\'" . pw-mode))
 \end{verbatim}
 }
+% 
+\noindent
+If we want that emacs opens \texttt{*.pwtk} files in the PWTK QE mode,
+we can use:
+\begin{flushleft}
+{\color{red}
+\verb+   ;; automatically open the *.pwtk files with the PWTK mode+}\\
+\verb+   (add-to-list 'auto-mode-alist  '("\\.pwtk\\'" . pwtk-mode))+\\[1em]
+\end{flushleft}
 
 Once the package is installed according to the above instructions, we
 are ready to use it. Let us, for the sake of example, open an existing
@@ -254,15 +274,17 @@ The \QEmodes\ package provides the following commands:
 \item[$\bullet$ \efn{M-x \var{prog}-insert-template}]\hfill\\
   inserts a respective input file template (see Figure 2); this
   command may not be defined for all the \var{prog}s; currently
-  supported \var{prog}s are: \texttt{pw}, \texttt{pp}, \texttt{neb},
-  \texttt{ph}, \texttt{dynmat}, \texttt{ld1}, \texttt{projwfc},
-  \texttt{dos}, and \texttt{bands}.
+  supported \var{prog}s are: \texttt{pw}, \texttt{cp}, \texttt{pp},
+  \texttt{neb}, \texttt{ph}, \texttt{dynmat}, \texttt{ld1},
+  \texttt{projwfc}, \texttt{dos}, and \texttt{bands}.
 
 \item[$\bullet$ \efn{M-x \var{prog-NAMELIST}}]\hfill\\ 
   inserts a blank namelist section named \var{NAMELIST}
 
 \item[$\bullet$ \efn{M-x \var{prog-CARD}}]\hfill\\
-  inserts a blank card section named \var{CARD}
+  inserts a blank card section named \var{CARD}; the value of the
+  card's \var{flag} can be selected from the provided list by using
+  the right/left arrow keys
 
 \item[$\bullet$ \efn{M-x \var{prog-variable}}]\hfill\\
   inserts a namelist variable named \var{variable}
@@ -318,6 +340,23 @@ the point position of the current buffer:
    calculation = ''
 \end{verbatim}
 
+\subsubsection{Selection of card's flag value}
+
+Another available completion is the selection of the card's flag
+value. For example, by typing:
+\begin{verbatim}
+   M-x pw-K\_P[space][enter]
+\end{verbatim}
+the following list of possible values for the \verb+K_POINTS+'s flag
+appears:
+\begin{flushleft}
+~~~\texttt{Select the flag: \{}\textbf{tpiba}\texttt{ | automatic |
+  crystal | gamma | ...\}}.
+\end{flushleft}
+The currently active value is written in
+bold; to use it press \texttt{[enter]}, whereas to select another
+value use the right ($\rightarrow$) or left ($\leftarrow$) arrow keys.
+
 \subsection{Controlling indentation}
 
 The basic indentation offset in \qemodes\ is 3. It is controlled by
@@ -354,3 +393,8 @@ to use the \texttt{Evil} package -- an \textbf{e}xtensible \textbf{vi}
 editor, but with the \QEmodes\ support.
 
 \end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

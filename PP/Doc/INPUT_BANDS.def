@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package PWscf -program bands.x {
+input_description -distribution {Quantum ESPRESSO} -package PWscf -program bands.x {
 
     toc {}
 
@@ -24,7 +24,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
 	- if (@ref lsigma(i)): file "filband".i, i=1,2,3, with expectation values
 	  of the spin operator in the noncolinear case
 	- file "filband".gnu with bands in eV, directly plottable using gnuplot	
-	- file @ref filp with matrix elements of p
+	- file @ref filp with matrix elements of p (including the nonlocal potential
+	  contribution i*m*[V_nl,x])
 
         @b {Structure of the input data:}
 	============================
@@ -81,7 +82,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
             info {
                 If .true. matrix elements of the momentum operator p between
                 conduction and valence bands are computed and written to file
-		specified in @ref filp
+		specified in @ref filp.
+		The matrix elements include the contribution from the nonlocal
+		potential, i*m*[V_nl, x]. In other words, the calculated matrix elements
+		are those of the velocity operator i*m*[H, x] times mass, not those of
+		the true momentum operator.
             }
 
         }      

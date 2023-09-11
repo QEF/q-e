@@ -63,8 +63,21 @@
 !
 !
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 MODULE bspline
+  !----------------------------------------------------------------------------
+  !! This module contains routines for B-spline interpolation in
+  !! one, two, and three dimensions. Part of the routines are based
+  !! on the book by Carl de Boor: 'A practical guide to Splines' (Springer,
+  !! New-York 1978) and have the same calling sequence and names as
+  !! the corresponding routines from the IMSL library. For documen-
+  !! tation see the additional files.
+  !
+  !! NOTE: The results in the demo routines may vary slightly on different 
+  !! architectures.
+  !
+  !! By W. Schadow 12/04/99
+  !! Last changed by W. Schadow 07/28/2000
+  !
   USE kinds, only : dp
 
   IMPLICIT NONE
@@ -87,25 +100,25 @@ CONTAINS
   !==================================================================
   subroutine dbsnak(nx,xvec,kxord,xknot, ierr)
   !==================================================================
-  !
-  !  Compute the `not-a-knot' spline knot sequence.
-  !  (see de Boor p. 167)
-  !
-  !   nx     - number of data points.  (input)
-  !   xvec   - array of length ndata containing the location of the
-  !            data points.  (input)
-  !   kxord  - order of the spline.  (input)
-  !   xknot  - array of length ndata+korder containing the knot
-  !            sequence.  (output)
+  !! Compute the `not-a-knot' spline knot sequence (see de Boor p. 167).
   !
   implicit none
-  integer, intent(in) :: nx, kxord
-  real(dp), dimension(nx), intent(in)        :: xvec
+  integer, intent(in) :: nx
+  !! number of data points.
+  integer, intent(in) :: kxord
+  !! order of the spline.
+  real(dp), dimension(nx), intent(in) :: xvec
+  !! array of length ndata containing the location of the data points.
   real(dp), dimension(nx+kxord), intent(out) :: xknot
+  !! array of length ndata+korder containing the knot sequence.
   integer, intent(out) :: ierr
+  !! error index
+  !
+  ! ... local variables
+  !
   real(dp) :: eps
-  integer        :: ix
-  logical        :: first = .true.
+  integer  :: ix
+  logical  :: first = .true.
 
   save first,eps
 
@@ -115,8 +128,8 @@ CONTAINS
   if (first) then
      first=.false.
      eps = epsilon(1.0_dp)
-     !!write(6,*) "subroutine dbsnak: "
-     !!write(6,*) "eps = ",eps
+     !write(6,*) "subroutine dbsnak: "
+     !write(6,*) "eps = ",eps
   endif
 
   if((kxord .lt. 0) .or. (kxord .gt. nx)) then
@@ -149,35 +162,34 @@ CONTAINS
   !==================================================================
   subroutine dbsint(nx,xvec,xdata,kx,xknot,bcoef, ierr)
   !==================================================================
-  !
-  !  Computes the spline interpolant, returning the B-spline coefficients.
-  !  (see de Boor p. 204)
-  !
-  !   nx     - number of data points.  (input)
-  !   xvec   - array of length nx containing the data point
-  !            abscissas.  (input)
-  !   xdata  - array of length ndata containing the data point
-  !            ordinates.  (input)
-  !   kx     - order of the spline.  (input)
-  !            korder must be less than or equal to ndata.
-  !   xknot  - array of length nx+kx containing the knot
-  !            sequence.  (input)
-  !            xknot must be nondecreasing.
-  !   bscoef - array of length ndata containing the B-spline
-  !            coefficients.  (output)
-  !
+  !! Computes the spline interpolant, returning the B-spline coefficients
+  !! (see de Boor p. 204).
+  
   implicit none
 
-  integer, intent(in)                    :: nx, kx
-  real(dp), dimension(nx), intent(in)    :: xdata, xvec
+  integer, intent(in) :: nx
+  !! number of data points.
+  integer, intent(in) :: kx
+  !! order of the spline. \(\text{korder}\) must be less than or 
+  !! equal to \(\text{ndata}\).
+  real(dp), dimension(nx), intent(in) :: xdata
+  !! array of length \(\text{ndata}\) containing the data point ordinates.
+  real(dp), dimension(nx), intent(in) :: xvec
+  !! array of length \(\text{nx}\) containing the data point abscissas.
   real(dp), dimension(nx+kx), intent(in) :: xknot
-  real(dp), dimension(nx), intent(out)   :: bcoef
-  integer, intent(out)                   :: ierr
-
-  integer                                :: nxp1, kxm1, kpkm2, leftx, lenq
-  integer                                :: ix, ik,ilp1mx, jj, iflag
-  real(dp)                               :: xveci
-  real(dp), dimension((2*kx-1)*nx)       :: work
+  !! array of length \(nx+kx\) containing the knot sequence.  
+  !! \(\text{xknot}\) must be nondecreasing.
+  real(dp), dimension(nx), intent(out) :: bcoef
+  !! array of length \(\text{ndata}\) containing the B-spline coefficients.
+  integer, intent(out) :: ierr
+  !! error index
+  !
+  ! ... local variables
+  !
+  integer                          :: nxp1, kxm1, kpkm2, leftx, lenq
+  integer                          :: ix, ik,ilp1mx, jj, iflag
+  real(dp)                         :: xveci
+  real(dp), dimension((2*kx-1)*nx) :: work
 
 
   routine = 'dbsint'
@@ -236,27 +248,28 @@ CONTAINS
   !==================================================================
   function dbsval(x,kx,xknot,nx,bcoef, ierr)
   !==================================================================
-  !
-  !  Evaluates a spline, given its B-spline representation.
-  !
-  !   x      - point at which the spline is to be evaluated.  (input)
-  !   kx     - order of the spline.  (input)
-  !   xknot  - array of length nx+kx containing the knot
-  !            sequence.  (input)
-  !            xknot must be nondecreasing.
-  !   nx     - number of B-spline coefficients.  (input)
-  !   bcoef  - array of length nx containing the B-spline
-  !            coefficients.  (input)
-  !   dbsval - value of the spline at x.  (output)
-  !
+  !! Evaluates a spline, given its B-spline representation.
+  
   implicit none
 
-  integer, intent(in)                    :: nx, kx
-  real(dp)                               :: dbsval
-  real(dp)                               :: x
+  integer, intent(in) :: nx
+  !! number of B-spline coefficients.
+  integer, intent(in) :: kx
+  !! order of the spline.
+  real(dp) :: dbsval
+  !! value of the spline at x.
+  real(dp) :: x
+  !! point at which the spline is to be evaluated.
   real(dp), dimension(nx+kx), intent(in) :: xknot
-  real(dp), dimension(nx), intent(in)    :: bcoef
-  integer, intent(out)                   :: ierr
+  !! array of length nx+kx containing the knot sequence.  
+  !! \(\text{xknot}\) must be nondecreasing.
+  real(dp), dimension(nx), intent(in) :: bcoef
+  !! array of length nx containing the B-spline coefficients.
+  integer, intent(out) :: ierr
+  !! error index
+  !
+  ! ... local variables
+  !
   integer                 :: il, ik, ix, leftx
   real(dp)                :: save1, save2
   real(dp), dimension(kx) :: work, dl, dr
@@ -313,35 +326,33 @@ CONTAINS
   !==================================================================
   function dbsder(iderx,x,kx,xknot,nx,bcoef, ierr)
   !==================================================================
-  !
-  !  Evaluates the derivative of a spline, given its B-spline representation.
-  !
-  !
-  !   iderx  - order of the derivative to be evaluated.  (input)
-  !            in particular, iderx = 0 returns the value of the
-  !            spline.
-  !   x      - point at which the spline is to be evaluated.  (input)
-  !   kx     - order of the spline.  (input)
-  !   xknot  - array of length nx+kx containing the knot
-  !            sequence.  (input)
-  !            xknot must be nondecreasing.
-  !   nx     - number of B-spline coefficients.  (input)
-  !   bcoef  - array of length nx containing the B-spline
-  !            coefficients.  (input)
-  !   dbsder - value of the iderx-th derivative of the spline at x.
-  !            (output)
-  !
+  !! Evaluates the derivative of a spline, given its B-spline representation.
+  
   implicit none
 
-  integer, intent(in)                    :: iderx, kx, nx
-  real(dp)                               :: dbsder
-  real(dp), intent(in)                   :: x
+  integer, intent(in) :: iderx
+  !! order of the derivative to be evaluated. In particular, \(\text{iderx}=0\)
+  !! returns the value of the spline.
+  integer, intent(in) :: kx
+  !! order of the spline.
+  integer, intent(in) :: nx
+  !! number of B-spline coefficients.
+  real(dp) :: dbsder
+  !! value of the iderx-th derivative of the spline at x.
+  real(dp), intent(in) :: x
+  !! point at which the spline is to be evaluated.
   real(dp), dimension(nx+kx), intent(in) :: xknot
-  real(dp), dimension(nx), intent(in)    :: bcoef
-  integer, intent(out)                   :: ierr
-
-  integer                       :: ix, ik, il, leftx
-  real(dp)                :: save, save1, save2, y, sum, dik
+  !! array of length nx+kx containing the knot sequence. \(\text{xknot}\)
+  !! must be nondecreasing.
+  real(dp), dimension(nx), intent(in) :: bcoef
+  !! array of length nx containing the B-spline coefficients.
+  integer, intent(out) :: ierr
+  !! error index.
+  !
+  ! ... local variables
+  !
+  integer :: ix, ik, il, leftx
+  real(dp) :: save, save1, save2, y, sum, dik
   real(dp), dimension(kx) :: work, dl, dr,bsp
 
   ierr = 0
@@ -441,42 +452,43 @@ CONTAINS
   !==================================================================
   subroutine dbs1gd(iderx,nxvec,xvec,kx,xknot,nx,bcoef,val, ierr)
   !==================================================================
-  !
-  !  Evaluates the derivative of a spline on a grid, given its B-spline
-  !  representation.
-  !
-  !   iderx  - order of the derivative to be evaluated.  (input)
-  !            in particular, iderx = 0 returns the value of the
-  !            spline.
-  !   nxvec  - length of vector xvec.  (input)
-  !   xvec   - array of length nxvec containing the points at which the
-  !            spline is to be evaluated.  (input)
-  !            xvec should be strictly increasing.
-  !   kx     - order of the spline.  (input)
-  !   xknot  - array of length nx+kx containing the knot
-  !            sequence.  (input)
-  !            xknot must be nondecreasing.
-  !   nx     - number of B-spline coefficients.  (input)
-  !   bcoef  - array of length nx containing the B-spline
-  !            coefficients.  (input)
-  !   val    - array of length nxvec containing the values of the
-  !            iderx-th derivative of the spline at the points in
-  !            xvec.  (output)
-  !
+  !! Evaluates the derivative of a spline on a grid, given its B-spline
+  !! representation.
+  
   implicit none
 
-  integer, intent(in)                     :: iderx, nxvec, kx, nx
-  real(dp), dimension(nxvec), intent(in)  :: xvec
-  real(dp), dimension(nx), intent(in)     :: bcoef
-  real(dp), dimension(nx+kx), intent(in)  :: xknot
+  integer, intent(in) :: iderx
+  !! order of the derivative to be evaluated. In particular,
+  !! \(\text{iderx}=0\) returns the value of the spline.
+  integer, intent(in) :: nxvec
+  !! length of vector \(\text{xvec}\).
+  integer, intent(in) :: kx
+  !! order of the spline.
+  integer, intent(in) :: nx
+  !! number of B-spline coefficients.
+  real(dp), dimension(nxvec), intent(in) :: xvec
+  !! array of length \(\text{nxvec}\) containing the points at which the
+  !! spline is to be evaluated. \(\text{xvec}\) should be strictly
+  !! increasing.
+  real(dp), dimension(nx), intent(in) :: bcoef
+  !! array of length \(\text{nx}\) containing the B-spline coefficients.
+  real(dp), dimension(nx+kx), intent(in) :: xknot
+  !! array of length \(nx+kx\) containing the knot sequence. It must be
+  !! nondecreasing.
   real(dp), dimension(nxvec), intent(out) :: val
-  integer, intent(out)                    :: ierr
-
-  integer                             :: i, il, ik, ix
-  integer, dimension(nxvec)           :: leftx
-  real(dp)                      :: dik
+  !! array of length \(\text{nxvec}\) containing the values of the
+  !! \(\text{iderx}\)-th derivative of the spline at the points in
+  !| \(\text{xvec}\).
+  integer, intent(out) :: ierr
+  !! error index
+  !
+  ! ... local variables
+  !
+  integer :: i, il, ik, ix
+  integer, dimension(nxvec) :: leftx
+  real(dp) :: dik
   real(dp), dimension(nxvec,kx) :: dl, dr, biatx, work
-  real(dp), dimension(nxvec)    :: save1, save2, term
+  real(dp), dimension(nxvec) :: save1, save2, term
 
   logical :: same, next
 
@@ -614,38 +626,35 @@ CONTAINS
   !==================================================================
   function dbsdca(iderx,x,kx,xknot,nx,bcoef,leftx)
   !==================================================================
-  !
-  ! This routine is equivalent to the routine dbsder, but it does not
-  ! check the parameters!!!
-  !
-  ! Evaluates the derivative of a spline, given its B-spline representation.
-  !
-  !
-  !   iderx  - order of the derivative to be evaluated.  (input)
-  !            in particular, iderx = 0 returns the value of the
-  !            spline.
-  !   x      - point at which the spline is to be evaluated.  (input)
-  !   kx     - order of the spline.  (input)
-  !   xknot  - array of length nx+kx containing the knot
-  !            sequence.  (input)
-  !            xknot must be nondecreasing.
-  !   nx     - number of B-spline coefficients.  (input)
-  !   bcoef  - array of length nx containing the B-spline
-  !            coefficients.  (input)
-  !   leftx  - number of the intervall of xknot that includes x
-  !   dbsdca - value of the ideriv-th derivative of the spline at x.
-  !            (output)
-  !
+  !! This routine is equivalent to the routine dbsder, but it does not
+  !! check the parameters.  
+  !! Evaluates the derivative of a spline, given its B-spline representation.
+  
   implicit none
 
-  integer, intent(in)                    :: iderx, kx, nx
-  real(dp)                               :: dbsdca
-  real(dp), intent(in)                   :: x
+  integer, intent(in) :: iderx
+  !! order of the derivative to be evaluated. In particular,
+  !! \(\text{iderx}=0\) returns the value of the spline.
+  integer, intent(in) :: kx
+  !! order of the spline.
+  integer, intent(in) :: nx
+  !! number of B-spline coefficients.
+  real(dp) :: dbsdca
+  !! value of the ideriv-th derivative of the spline at x.
+  real(dp), intent(in) :: x
+  !! point at which the spline is to be evaluated.
   real(dp), dimension(nx+kx), intent(in) :: xknot
-  real(dp), dimension(nx), intent(in)    :: bcoef
-
-  integer                 :: i, ik, il, leftx
-  real(dp)                :: save, save1, save2, y, sum, dik
+  !! array of length \(nx+kx\) containing the knot sequence.
+  !! \(\text{xknot}\) must be nondecreasing.
+  real(dp), dimension(nx), intent(in) :: bcoef
+  !! array of length \(\text{nx}\) containing the B-spline coefficients.
+  integer :: leftx
+  !! number of the intervall of \(\text{xknot}\) that includes \(\text{x}\)
+  !
+  ! ... local variables
+  !
+  integer  :: i, ik, il
+  real(dp) :: save, save1, save2, y, sum, dik
   real(dp), dimension(kx) :: work, dl, dr,bsp
 
 
@@ -721,50 +730,49 @@ CONTAINS
   !==================================================================
   subroutine dbs2in(nx,xvec,ny,yvec,xydata,ldf,kx,ky,xknot,yknot,bcoef, ierr)
   !==================================================================
-  !
-  !  Computes a two-dimensional tensor-product spline interpolant,
-  !  returning the tensor-product B-spline coefficients.
-  !
-  !    nx     - number of data points in the x-direction.  (input)
-  !    xvec   - array of length nx containing the data points in
-  !             the x-direction.  (input)
-  !             xdata must be strictly increasing.
-  !    ny     - number of data points in the y-direction.  (input)
-  !    yvec   - array of length ny containing the data points in
-  !             the y-direction.  (input)
-  !             ydata must be strictly increasing.
-  !    xydata - array of size nx by nydata containing the values to
-  !             be interpolated.  (input)
-  !             fdata(i,j) is the value at (xdata(i),ydata(j)).
-  !    ldf    - the leading dimension of fdata exactly as specified in
-  !             the dimension statement of the calling program.
-  !             (input)
-  !    kx     - order of the spline in the x-direction.  (input)
-  !             kxord must be less than or equal to nxdata.
-  !    ky     - order of the spline in the y-direction.  (input)
-  !             kyord must be less than or equal to nydata.
-  !    xknot  - array of length nx+kx containing the knot
-  !             sequence in the x-direction.  (input)
-  !             xknot must be nondecreasing.
-  !    yknot  - array of length ny+ky containing the knot
-  !             sequence in the y-direction.  (input)
-  !             yknot must be nondecreasing.
-  !    bcoef  - array of length nx*ny containing the
-  !             tensor-product B-spline coefficients.  (output)
-  !             bscoef is treated internally as a matrix of size nxdata
-  !             by nydata.
-  !
+  !! Computes a two-dimensional tensor-product spline interpolant,
+  !! returning the tensor-product B-spline coefficients.
+  
   implicit none
 
-  integer, intent(in)                           :: nx, ny, kx, ky, ldf
-
-  real(dp), dimension(nx), intent(in)     :: xvec
-  real(dp), dimension(ny), intent(in)     :: yvec
-  real(dp), dimension(nx+kx), intent(in)  :: xknot
-  real(dp), dimension(ny+ky), intent(in)  :: yknot
-  real(dp), dimension(ldf,*), intent(in)  :: xydata
+  integer, intent(in) :: nx
+  !! number of data points in the x-direction.
+  integer, intent(in) :: ny
+  !! number of data points in the y-direction.
+  integer, intent(in) :: kx
+  !! order of the spline in the x-direction.
+  !! \(\text{kxord}\) must be less than or equal to nxdata.
+  integer, intent(in) :: ky
+  !! order of the spline in the y-direction. \(\text{kyord}\) must be
+  !! less than or equal to \(\text{nydata}\).
+  integer, intent(in) :: ldf
+  !! the leading dimension of fdata exactly as specified in
+  !! the dimension statement of the calling program.
+  real(dp), dimension(nx), intent(in) :: xvec
+  !! array of length \(\text{nx}\) containing the data points in
+  !! the x-direction. \(\text{xdata}\) must be strictly increasing.
+  real(dp), dimension(ny), intent(in) :: yvec
+  !! array of length \(\text{ny}\) containing the data points in
+  !! the y-direction. \(\text{ydata}\) must be strictly increasing.
+  real(dp), dimension(nx+kx), intent(in) :: xknot
+  !! array of length \(nx+kx\) containing the knot sequence in the
+  !! x-direction. \(\text{xknot}\) must be nondecreasing.
+  real(dp), dimension(ny+ky), intent(in) :: yknot
+  !! array of length \(ny+ky\) containing the knot sequence in the
+  !! y-direction. \(\text{yknot}\) must be nondecreasing.
+  real(dp), dimension(ldf,*), intent(in) :: xydata
+  !! array of size \(\text{nx}\) by \(\text{nydata}\) containing the
+  !! values to be interpolated. \(\text{fdata}(i,j)\) is the value
+  !! at \((\text{xdata}(i),\text{ydata}(j))\).
   real(dp), dimension(nx,ny), intent(out) :: bcoef
-  integer, intent(out)                    :: ierr
+  !! array of length \(nx*ny\) containing the tensor-product B-spline 
+  !! coefficients. bscoef is treated internally as a matrix of size 
+  !! \(\text{nxdata}\) by \(\text{nydata}\).
+  integer, intent(out) :: ierr
+  !! error index
+  !
+  ! ... local variables
+  !
   real(dp), dimension(max(nx,ny),max(nx,ny))        :: work1
   real(dp), dimension(max(nx,ny))                   :: work2
   real(dp), dimension(max((2*kx-1)*nx,(2*ky-1)*ny)) :: work3
@@ -859,43 +867,43 @@ CONTAINS
   !==================================================================
   function dbs2vl(x,y,kx,ky,xknot,yknot,nx,ny,bcoef, ierr)
   !==================================================================
-  !
-  !  evaluates a two-dimensional tensor-product spline, given its
-  !  tensor-product B-spline representation.
-  !
-  !   x      - x-coordinate of the point at which the spline is to be
-  !            evaluated.  (input)
-  !   y      - y-coordinate of the point at which the spline is to be
-  !            evaluated.  (input)
-  !   kx     - order of the spline in the x-direction.  (input)
-  !   ky     - order of the spline in the y-direction.  (input)
-  !   xknot  - array of length nx+kx containing the knot
-  !            sequence in the x-direction.  (input)
-  !            xknot must be nondecreasing.
-  !   yknot  - array of length ny+ky containing the knot
-  !            sequence in the y-direction.  (input)
-  !            yknot must be nondecreasing.
-  !   nx     - number of B-spline coefficients in the x-direction.
-  !            (input)
-  !   ny     - number of B-spline coefficients in the y-direction.
-  !            (input)
-  !   bcoef  - array of length nx*ny containing the
-  !            tensor-product B-spline coefficients.  (input)
-  !            bscoef is treated internally as a matrix of size nx
-  !            by ny.
-  !   dbs2vl - value of the spline at (x,y).  (output)
-  !
+  !! Evaluates a two-dimensional tensor-product spline, given its
+  !! tensor-product B-spline representation.
 
-    implicit none
+  implicit none
 
-  integer, intent(in)                    :: nx, ny, kx, ky
-  real(dp), intent(in)                   :: x, y
+  integer, intent(in) :: nx
+  !! number of B-spline coefficients in the x-direction.
+  integer, intent(in) :: ny
+  !! number of B-spline coefficients in the y-direction.
+  integer, intent(in) :: kx
+  !! order of the spline in the x-direction.
+  integer, intent(in) :: ky
+  !! order of the spline in the y-direction.
+  real(dp), intent(in) :: x
+  !! x-coordinate of the point at which the spline is to be
+  !! evaluated.
+  real(dp), intent(in) :: y
+  !! y-coordinate of the point at which the spline is to be
+  !! evaluated.
   real(dp), dimension(nx+kx), intent(in) :: xknot
+  !! array of length \(nx+kx\) containing the knot sequence in 
+  !! the x-direction. \(\text{xknot}\) must be nondecreasing.
   real(dp), dimension(ny+ky), intent(in) :: yknot
+  !! array of length \(ny+ky\) containing the knot sequence in
+  !! the y-direction. \(\text{yknot}\) must be nondecreasing.
   real(dp), dimension(nx,ny), intent(in) :: bcoef
-  real(dp)                               :: dbs2vl
-  integer, intent(out)                   :: ierr
-  integer                       :: ix, iy, iky, leftx, lefty
+  !! array of length \(nx\cdot ny\) containing the tensor-product B-spline
+  !! coefficients. It is treated internally as a matrix of size nx
+  !! by ny.
+  real(dp) :: dbs2vl
+  !! value of the spline at (x,y).
+  integer, intent(out) :: ierr
+  !! error index
+  !
+  ! ... local variables
+  !
+  integer :: ix, iy, iky, leftx, lefty
   real(dp), dimension(ky) :: work
 
   routine = 'dbs2vl'
@@ -953,46 +961,48 @@ CONTAINS
   !==================================================================
   function dbs2dr(iderx,idery,x,y,kx,ky,xknot,yknot,nx,ny,bcoef, ierr)
   !==================================================================
-  !
-  !  Evaluates the derivative of a two-dimensional tensor-product spline,
-  !  given its tensor-product B-spline representation.
-  !
-  !   iderx  - order of the derivative in the x-direction.  (input)
-  !   idery  - order of the derivative in the y-direction.  (input)
-  !   x      - x-coordinate of the point at which the spline is to be
-  !            evaluated.  (input)
-  !   y      - y-coordinate of the point at which the spline is to be
-  !            evaluated.  (input)
-  !   kx     - order of the spline in the x-direction.  (input)
-  !   ky     - order of the spline in the y-direction.  (input)
-  !   xknot  - array of length nx+kx containing the knot
-  !            sequence in the x-direction.  (input)
-  !            xknot must be nondecreasing.
-  !   yknot  - array of length ny+ky containing the knot
-  !            sequence in the y-direction.  (input)
-  !            yknot must be nondecreasing.
-  !   nx     - number of B-spline coefficients in the x-direction.
-  !            (input)
-  !   ny     - number of B-spline coefficients in the y-direction.
-  !            (input)
-  !   bcoef  - array of length nx*ny containing the
-  !            tensor-product B-spline coefficients.  (input)
-  !            bscoef is treated internally as a matrix of size nx
-  !            by ny.
-  !   dbs2dr  - value of the (iderx,idery) derivative of the spline at
-  !            (x,y).  (output)
-  !
+  !! Evaluates the derivative of a two-dimensional tensor-product spline,
+  !! given its tensor-product B-spline representation.
+
   implicit none
 
-  integer, intent(in)                    :: iderx, idery
-  integer, intent(in)                    :: kx, nx, ky, ny
-  real(dp)                               :: dbs2dr
-  real(dp), intent(in)                   :: x, y
+  integer, intent(in) :: iderx
+  !! order of the derivative in the x-direction.
+  integer, intent(in) :: idery
+  !! order of the derivative in the y-direction.
+  integer, intent(in) :: kx
+  !! order of the spline in the x-direction.
+  integer, intent(in) :: nx
+  !! number of B-spline coefficients in the x-direction.
+  integer, intent(in) :: ky
+  !! order of the spline in the y-direction.
+  integer, intent(in) :: ny
+  !! number of B-spline coefficients in the y-direction.
+  real(dp) :: dbs2dr
+  !! value of the \((\text{iderx},\text{idery})\) derivative of the
+  !! spline at (x,y).
+  real(dp), intent(in) :: x
+  !! x-coordinate of the point at which the spline is to be
+  !! evaluated.
+  real(dp), intent(in) :: y
+  !! y-coordinate of the point at which the spline is to be
+  !! evaluated. 
   real(dp), dimension(nx+kx), intent(in) :: xknot
+  !! array of length \(nx+kx\) containing the knot sequence in the
+  !! x-direction. \(\text{xknot}\) must be nondecreasing.
   real(dp), dimension(ny+ky), intent(in) :: yknot
+  !! array of length \(ny+ky\) containing the knot sequence in the
+  !! y-direction. \(\text{yknot}\) must be nondecreasing.
   real(dp), dimension(nx,ny), intent(in) :: bcoef
-  integer, intent(out)                   :: ierr
-  integer                       :: ix, iy, iky, nintx, ninty
+  !! array of length \(nx\cdot ny\) containing the tensor-product
+  !! B-spline coefficients. \(\text{bscoef}\) is treated internally
+  !! as a matrix of size \(\text{nx}\) by \(\text{ny}\).
+  integer, intent(out) :: ierr
+  !! error index.
+  !
+  ! ... local variables
+  !
+  integer :: ix, iy, iky, nintx, ninty
   real(dp), dimension(ky) :: work
 
   routine = 'dbs2dr'
@@ -1052,67 +1062,67 @@ CONTAINS
   subroutine dbs2gd(iderx,idery,nxvec,xvec,nyvec,yvec,kx,ky,xknot,yknot,&
        & nx,ny,bcoef,val,ldf, ierr)
   !==================================================================
-  !
-  !  Evaluates the derivative of a two-dimensional tensor-product spline,
-  !  given its tensor-product B-spline representation on a grid.
-  !
-  !   iderx   - order of the derivative in the x-direction.  (input)
-  !   idery   - order of the derivative in the y-direction.  (input)
-  !   nxvec   - number of grid points in the x-direction.  (input)
-  !   xvec    - array of length nx containing the x-coordinates at
-  !             which the spline is to be evaluated.  (input)
-  !             the points in xvec should be strictly increasing.
-  !   nyvec   - number of grid points in the y-direction.  (input)
-  !   yvec    - array of length ny containing the y-coordinates at
-  !             which the spline is to be evaluated.  (input)
-  !             the points in yvec should be strictly increasing.
-  !   kx      - order of the spline in the x-direction.  (input)
-  !   ky      - order of the spline in the y-direction.  (input)
-  !   xknot   - array of length nx+kx containing the knot
-  !             sequence in the x-direction.  (input)
-  !             xknot must be nondecreasing.
-  !   yknot   - array of length ny+ky containing the knot
-  !             sequence in the y-direction.  (input)
-  !             yknot must be nondecreasing.
-  !   nx      - number of B-spline coefficients in the x-direction.
-  !             (input)
-  !   ny      - number of B-spline coefficients in the y-direction.
-  !             (input)
-  !   bcoef   - array of length nx*ny containing the
-  !             tensor-product B-spline coefficients.  (input)
-  !             bscoef is treated internally as a matrix of size nx
-  !             by ny.
-  !   val     - value of the (iderx,idery) derivative of the spline on
-  !             the nx by ny grid.  (output)
-  !             value(i,j) contains the derivative of the spline at the
-  !             point (xvec(i),yvec(j)).
-  !   ldf     - leading dimension of value exactly as specified in the
-  !             dimension statement of the calling program.  (input)
-  !
+  !! Evaluates the derivative of a two-dimensional tensor-product spline,
+  !! given its tensor-product B-spline representation on a grid.
+
   implicit none
 
-  integer, intent(in)                           :: iderx, idery
-  integer, intent(in)                           :: nxvec, nyvec
-  integer, intent(in)                           :: kx, nx, ky, ny
-  integer, intent(in)                           :: ldf
-
+  integer, intent(in) :: iderx
+  !! order of the derivative in the x-direction.
+  integer, intent(in) :: idery
+  !! order of the derivative in the y-direction.
+  integer, intent(in) :: nxvec
+  !! number of grid points in the x-direction. 
+  integer, intent(in) :: nyvec
+  !! number of grid points in the y-direction. 
+  integer, intent(in) :: kx
+  !! order of the spline in the x-direction.
+  integer, intent(in) :: nx
+  !! number of B-spline coefficients in the x-direction.
+  integer, intent(in) :: ky
+  !! order of the spline in the y-direction.
+  integer, intent(in) :: ny
+  !! number of B-spline coefficients in the y-direction.
+  integer, intent(in) :: ldf
+  !! leading dimension of value exactly as specified in the
+  !! dimension statement of the calling program.
   real(dp), dimension(nxvec), intent(in)  :: xvec
+  !! array of length nx containing the x-coordinates at which 
+  !! the spline is to be evaluated. The points in \(\text{xvec}\)
+  !! should be strictly increasing.
   real(dp), dimension(nyvec), intent(in)  :: yvec
+  !! array of length ny containing the y-coordinates at which 
+  !! the spline is to be evaluated. The points in \(\text{yvec}\)
+  !! should be strictly increasing.
   real(dp), dimension(nx+kx), intent(in)  :: xknot
+  !! array of length \(nx+kx\) containing the knot sequence in the 
+  !! x-direction. \(\text{xknot}\) must be nondecreasing.
   real(dp), dimension(ny+ky), intent(in)  :: yknot
+  !! array of length \(ny+ky\) containing the knot sequence in
+  !! the y-direction. \(\text{yknot}\) must be nondecreasing.
   real(dp), dimension(nx,ny), intent(in)  :: bcoef
+  !! array of length \(nx\cdot ny\) containing the tensor-product
+  !! B-spline coefficients. \(\text{bscoef}\) is treated internally 
+  !! as a matrix of size \(\text{nx}\) by \(\text{ny}\).
   real(dp), dimension(ldf,*), intent(out) :: val
+  !! value of the (iderx,idery) derivative of the spline on the 
+  !! \(\text{nx}\) by \(\text{ny}\) grid.  
+  !! \(\text{value}(i,j)\) contains the derivative of the spline at the
+  !! point \((\text{xvec}(i),\text{yvec}(j))\).
   integer, intent(out) :: ierr
-
-  integer                                     :: i, ik, il, ix, iy, ikx, iky
-  integer, dimension(nxvec)                   :: leftx
-  integer, dimension(nyvec)                   :: lefty
-  real(dp), dimension(nxvec,kx)         :: dl, dr
+  !! error index
+  !
+  ! ... local variables
+  !
+  integer :: i, ik, il, ix, iy, ikx, iky
+  integer, dimension(nxvec) :: leftx
+  integer, dimension(nyvec) :: lefty
+  real(dp), dimension(nxvec,kx) :: dl, dr
   real(dp), dimension(max(nxvec,nyvec)) :: save1
-  real(dp), dimension(nxvec,kx)         :: biatx
-  real(dp), dimension(nyvec,ky)         :: biaty
+  real(dp), dimension(nxvec,kx) :: biatx
+  real(dp), dimension(nyvec,ky) :: biaty
   real(dp), dimension(max(nxvec,nyvec)) :: term
-  real(dp), dimension(ky)               :: work
+  real(dp), dimension(ky) :: work
 
   logical :: same,next
 
@@ -1286,70 +1296,68 @@ CONTAINS
   subroutine dbs3in(nx,xvec,ny,yvec,nz,zvec,xyzdata,ldf,mdf,kx,ky,kz, &
        & xknot,yknot,zknot,bcoef, ierr)
   !==================================================================
-  !
-  !  Computes a three-dimensional tensor-product spline interpolant,
-  !  returning the tensor-product B-spline coefficients.
-  !
-  !   nx      - number of data points in the x-direction.  (input)
-  !   xvec    - array of length nxdata containing the data points in
-  !             the x-direction.  (input)
-  !             xdata must be increasing.
-  !   ny      - number of data points in the y-direction.  (input)
-  !   yvec    - array of length nydata containing the data points in
-  !             the y-direction.  (input)
-  !             ydata must be increasing.
-  !   nz      - number of data points in the z-direction.  (input)
-  !   zvec    - array of length nzdata containing the data points in
-  !             the z-direction.  (input)
-  !             zdata must be increasing.
-  !   xyzdata - array of size nx by ny by nz containing the
-  !             values to be interpolated.  (input)
-  !             xyzdata(i,j,k) contains the value at
-  !             (xvec(i),yvec(j),zvec(k)).
-  !   ldf     - leading dimension of fdata exactly as specified in the
-  !             dimension statement of the calling program.  (input)
-  !   mdf     - middle dimension of fdata exactly as specified in the
-  !             dimension statement of the calling program.  (input)
-  !   kx      - order of the spline in the x-direction.  (input)
-  !             kxord must be less than or equal to nxdata.
-  !   ky      - order of the spline in the y-direction.  (input)
-  !             kyord must be less than or equal to nydata.
-  !   kz      - order of the spline in the z-direction.  (input)
-  !             kzord must be less than or equal to nzdata.
-  !   xknot   - array of length nx+kx containing the knot
-  !             sequence in the x-direction.  (input)
-  !             xknot must be nondecreasing.
-  !   yknot   - array of length ny+ky containing the knot
-  !             sequence in the y-direction.  (input)
-  !             yknot must be nondecreasing.
-  !   zknot   - array of length nz+kz containing the knot
-  !             sequence in the z-direction.  (input)
-  !             zknot must be nondecreasing.
-  !   bcoef   - array of length nx*ny*nz containing the
-  !             tensor-product B-spline coefficients.  (output)
-  !             bscoef is treated internally as a matrix of size nx
-  !             by ny by nz.
-  !
+  !! Computes a three-dimensional tensor-product spline interpolant,
+  !! returning the tensor-product B-spline coefficients.
+
   implicit none
 
-  integer, intent(in) :: nx, ny, nz, kx, ky, kz
-  integer, intent(in) :: ldf, mdf
-
-  real(dp), dimension(nx), intent(in)         :: xvec
-  real(dp), dimension(ny), intent(in)         :: yvec
-  real(dp), dimension(nz), intent(in)         :: zvec
-  real(dp), dimension(nx+kx), intent(in)      :: xknot
-  real(dp), dimension(ny+ky), intent(in)      :: yknot
-  real(dp), dimension(nz+kz), intent(in)      :: zknot
+  integer, intent(in) :: nx
+  !! number of data points in the x-direction.
+  integer, intent(in) :: ny
+  !! number of data points in the y-direction.
+  integer, intent(in) :: nz
+  !! number of data points in the z-direction.
+  integer, intent(in) :: kx
+  !! order of the spline in the x-direction. \(\text{kxord}\) must be less
+  !! than or equal to \(\text{nxdata}\).
+  integer, intent(in) :: ky
+  !! order of the spline in the y-direction. \(\text{kyord}\) must be less
+  !! than or equal to \(\text{nydata}\).
+  integer, intent(in) :: kz
+  !! order of the spline in the z-direction. \(\text{kzord}\) must be less
+  !! than or equal to \(\text{nzdata}\).
+  integer, intent(in) :: ldf
+  !! leading dimension of fdata exactly as specified in the
+  !! dimension statement of the calling program.
+  integer, intent(in) :: mdf
+  !! middle dimension of fdata exactly as specified in the
+  !! dimension statement of the calling program.
+  real(dp), dimension(nx), intent(in) :: xvec
+  !! array of length \(\text{nxdata}\) containing the data points in
+  !! the x-direction. \(\text{xdata}\) must be increasing.
+  real(dp), dimension(ny), intent(in) :: yvec
+  !! array of length \(\text{nydata}) containing the data points in
+  !! the y-direction. \(\text{ydata}\) must be increasing.
+  real(dp), dimension(nz), intent(in) :: zvec
+  !! array of length \(\text{nzdata}) containing the data points in
+  !! the z-direction. \(\text{zdata}\) must be increasing.
+  real(dp), dimension(nx+kx), intent(in) :: xknot
+  !! array of length \(nx+kx\) containing the knot sequence in the
+  !! x-direction. \(\text{xknot}\) must be nondecreasing.
+  real(dp), dimension(ny+ky), intent(in) :: yknot
+  !! array of length \(ny+ky\) containing the knot sequence in the
+  !! y-direction. \(\text{yknot}\) must be nondecreasing.
+  real(dp), dimension(nz+kz), intent(in) :: zknot
+  !! array of length \(nz+kz\) containing the knot sequence in the
+  !! z-direction. \(\text{zknot}\) must be nondecreasing.
   real(dp), dimension(ldf,mdf,nz), intent(in) :: xyzdata
+  !! array of size nx by ny by nz containing the values to be interpolated.
+  !! \(\text{xyzdata}(i,j,k)\) contains the value at \((\text{xvec}(i),
+  !! \text{yvec}(j),\text{zvec}(k))\).
   real(dp), dimension(nx,ny,nz), intent(out)  :: bcoef
-
-  integer                                :: iz
+  !! array of length nx*ny*nz containing the tensor-product B-spline
+  !! coefficients. \(\text{bscoef}\) is treated internally as a matrix
+  !! of size \(\text{nx}\) by \(\text{ny}\) by \(\text{nz}\).
+  integer, intent(out) :: ierr
+  !! Error index.
+  !
+  ! ... local variables
+  !
+  integer :: iz
   real(dp), dimension(nx,ny,nz)    :: work1
   real(dp), dimension(nz)          :: work2
   real(dp), dimension((2*kz-1)*nz) :: work3
-  integer, intent(out) :: ierr
-
+  
 
   call spli3d(zvec,ldf,mdf,xyzdata,zknot,nz,kz,nx,ny,work2,work3,work1,     &
        &     nx,ny,nz, ierr)
@@ -1450,51 +1458,53 @@ CONTAINS
   !==================================================================
   function dbs3vl(x,y,z,kx,ky,kz,xknot,yknot,zknot,nx,ny,nz,bcoef, ierr)
   !==================================================================
-  !
-  !  Evaluates a three-dimensional tensor-product spline, given its
-  !  tensor-product B-spline representation.
-  !
-  !   x      - x-coordinate of the point at which the spline is to be
-  !            evaluated.  (input)
-  !   y      - y-coordinate of the point at which the spline is to be
-  !            evaluated.  (input)
-  !   z      - z-coordinate of the point at which the spline is to be
-  !            evaluated.  (input)
-  !   kx     - order of the spline in the x-direction.  (input)
-  !   ky     - order of the spline in the y-direction.  (input)
-  !   kz     - order of the spline in the z-direction.  (input)
-  !   xknot  - array of length nx+kx containing the knot
-  !            sequence in the x-direction.  (input)
-  !            xknot must be nondecreasing.
-  !   yknot  - array of length ny+ky containing the knot
-  !            sequence in the y-direction.  (input)
-  !            yknot must be nondecreasing.
-  !   zknot  - array of length nz+kz containing the knot
-  !            sequence in the z-direction.  (input)
-  !            zknot must be nondecreasing.
-  !   nx     - number of B-spline coefficients in the x-direction.
-  !            (input)
-  !   ny     - number of B-spline coefficients in the y-direction.
-  !            (input)
-  !   nz     - number of B-spline coefficients in the z-direction.
-  !            (input)
-  !   bcoef  - array of length nx*ny*nz containing the
-  !            tensor-product B-spline coefficients.  (input)
-  !            bscoef is treated internally as a matrix of size nx
-  !            by ny by nz.
-  !   dbs3vl - value of the spline at (x,y,z).  (output)
-  !
+  !! Evaluates a three-dimensional tensor-product spline, given its
+  !! tensor-product B-spline representation.
+
   implicit none
 
-  integer, intent(in)                             :: nx, ny, nz, kx, ky, kz
-  real(dp), intent(in)                      :: x, y, z
-  real(dp), dimension(nx+kx), intent(in)    :: xknot
-  real(dp), dimension(ny+ky), intent(in)    :: yknot
-  real(dp), dimension(nz+kz), intent(in)    :: zknot
+  integer, intent(in) :: nx
+  !! number of B-spline coefficients in the x-direction.
+  integer, intent(in) :: ny
+  !! number of B-spline coefficients in the y-direction.
+  integer, intent(in) :: nz
+  !! number of B-spline coefficients in the z-direction.
+  integer, intent(in) :: kx
+  !! order of the spline in the x-direction.
+  integer, intent(in) :: ky
+  !! order of the spline in the y-direction.
+  integer, intent(in) :: kz
+  !! order of the spline in the z-direction.
+  real(dp), intent(in) :: x
+  !! x-coordinate of the point at which the spline is to be
+  !! evaluated.
+  real(dp), intent(in) :: y
+  !! y-coordinate of the point at which the spline is to be
+  !! evaluated.
+  real(dp), intent(in) :: z
+  !! z-coordinate of the point at which the spline is to be
+  !! evaluated.
+  real(dp), dimension(nx+kx), intent(in) :: xknot
+  !! array of length \(nx+kx\) containing the knot sequence in the 
+  !! x-direction. \(\text{xknot}\) must be nondecreasing.
+  real(dp), dimension(ny+ky), intent(in) :: yknot
+  !! array of length \(ny+ky\) containing the knot sequence in the 
+  !! y-direction. \(\text{yknot}\) must be nondecreasing.
+  real(dp), dimension(nz+kz), intent(in) :: zknot
+  !! array of length \(nz+kz\) containing the knot sequence in the 
+  !! z-direction. \(\text{zknot}\) must be nondecreasing.
   real(dp), dimension(nx,ny,nz), intent(in) :: bcoef
-  real(dp)                                  :: dbs3vl
+  !! array of length nx*ny*nz containing the tensor-product B-spline
+  !! coefficients. \(\text{bscoef}\) is treated internally as a matrix
+  !! of size nx by ny by nz.
+  real(dp) :: dbs3vl
+  !! value of the spline at (x,y,z).
   integer, intent(out) :: ierr
-  integer                       :: iz, nintz
+  !! Error index
+  !
+  ! ... local variables
+  !
+  integer :: iz, nintz
   real(dp), dimension(kz) :: work
 
   routine = 'dbs3vl'
@@ -1538,56 +1548,60 @@ CONTAINS
   function dbs3dr(iderx,idery,iderz,x,y,z,kx,ky,kz,xknot,yknot,zknot,         &
        & nx,ny,nz,bcoef, ierr)
   !==================================================================
-  !
-  !  Evaluates the derivative of a three-dimensional tensor-product spline,
-  !  given its tensor-product B-spline representation.
-  !
-  !   iderx  - order of the x-derivative.  (input)
-  !   idery  - order of the y-derivative.  (input)
-  !   iderz  - order of the z-derivative.  (input)
-  !   x      - x-coordinate of the point at which the spline is to be
-  !            evaluated.  (input)
-  !   y      - y-coordinate of the point at which the spline is to be
-  !            evaluated.  (input)
-  !   z      - z-coordinate of the point at which the spline is to be
-  !            evaluated.  (input)
-  !   kx     - order of the spline in the x-direction.  (input)
-  !   ky     - order of the spline in the y-direction.  (input)
-  !   kz     - order of the spline in the z-direction.  (input)
-  !   xknot  - array of length nx+kx containing the knot
-  !            sequence in the x-direction.  (input)
-  !            xknot must be nondecreasing.
-  !   yknot  - array of length ny+ky containing the knot
-  !            sequence in the y-direction.  (input)
-  !            yknot must be nondecreasing.
-  !   zknot  - array of length nz+kz containing the knot
-  !            sequence in the z-direction.  (input)
-  !            zknot must be nondecreasing.
-  !   nx     - number of B-spline coefficients in the x-direction.
-  !            (input)
-  !   ny     - number of B-spline coefficients in the y-direction.
-  !            (input)
-  !   nz     - number of B-spline coefficients in the z-direction.
-  !            (input)
-  !   bcoef  - array of length nx*ny*nz containing the
-  !            tensor-product B-spline coefficients.  (input)
-  !            bscoef is treated internally as a matrix of size nx
-  !            by ny by nz.
-  !   dbs3dr - value of the (iderx,idery,iderz) derivative of the
-  !            spline at (x,y,z).  (output)
-  !
+  !! Evaluates the derivative of a three-dimensional tensor-product spline,
+  !! given its tensor-product B-spline representation.
+
   implicit none
 
-  integer, intent(in)                              :: iderx, idery, iderz
-  integer, intent(in)                              :: nx, ny, nz, kx, ky, kz
-  real(dp), intent(in)                       :: x, y, z
-  real(dp), dimension(nx+kx), intent(in)     :: xknot
-  real(dp), dimension(ny+ky), intent(in)     :: yknot
-  real(dp), dimension(nz+kz), intent(in)     :: zknot
-  real(dp), dimension(nx,ny,nz), intent(in)  :: bcoef
-  real(dp)                                   :: dbs3dr
+  integer, intent(in) :: iderx
+  !! order of the x-derivative.
+  integer, intent(in) :: idery
+  !! order of the y-derivative.
+  integer, intent(in) :: iderz
+  !! order of the z-derivative.
+  integer, intent(in) :: nx
+  !! number of B-spline coefficients in the x-direction.
+  integer, intent(in) :: ny
+  !! number of B-spline coefficients in the y-direction.
+  integer, intent(in) :: nz
+  !! number of B-spline coefficients in the z-direction.
+  integer, intent(in) :: kx
+  !! order of the spline in the x-direction.
+  integer, intent(in) :: ky
+  !! order of the spline in the y-direction.
+  integer, intent(in) :: kz
+  !! order of the spline in the z-direction.
+  real(dp), intent(in) :: x
+  !! x-coordinate of the point at which the spline is to be
+  !! evaluated.
+  real(dp), intent(in) :: y
+  !! y-coordinate of the point at which the spline is to be
+  !! evaluated.
+  real(dp), intent(in) :: z
+  !! z-coordinate of the point at which the spline is to be
+  !! evaluated.
+  real(dp), dimension(nx+kx), intent(in) :: xknot
+  !! array of length \(nx+kx\) containing the knot sequence in
+  !! the x-direction. \(\text{xknot}\) must be nondecreasing.
+  real(dp), dimension(ny+ky), intent(in) :: yknot
+  !! array of length \(ny+ky\) containing the knot sequence in
+  !! the y-direction. \(\text{yknot}\) must be nondecreasing.
+  real(dp), dimension(nz+kz), intent(in) :: zknot
+  !! array of length \(nz+kz\) containing the knot sequence in
+  !! the z-direction. \(\text{zknot}\) must be nondecreasing.
+  real(dp), dimension(nx,ny,nz), intent(in) :: bcoef
+  !! array of length nx*ny*nz containing the tensor-product B-spline
+  !! coefficients. \(\text{bscoef}\) is treated internally as a matrix
+  !! of size nx by ny by nz.
+  real(dp) :: dbs3dr
+  !! value of the \((\text{iderx},\text{idery},\text{iderz})\) derivative
+  !! of the spline at (x,y,z).
   integer, intent(out) :: ierr
-  integer                       :: iz, nintz
+  !! Error index.
+  !
+  ! ... local variables
+  !
+  integer :: iz, nintz
   real(dp), dimension(kz) :: work
 
   routine = 'dbs3dr'
@@ -1631,82 +1645,85 @@ CONTAINS
   subroutine dbs3gd(iderx,idery,iderz,nxvec,xvec,nyvec,yvec,nzvec,zvec,       &
        & kx,ky,kz,xknot,yknot,zknot,nx,ny,nz,bcoef,val,ldf,mdf, ierr)
   !==================================================================
-  !
-  !  Evaluates the derivative of a three-dimensional tensor-product spline,
-  !  given its tensor-product B-spline representation on a grid.
-  !
-  !   iderx  - order of the x-derivative.  (input)
-  !   idery  - order of the y-derivative.  (input)
-  !   iderz  - order of the z-derivative.  (input)
-  !   nx     - number of grid points in the x-direction.  (input)
-  !   xvec   - array of length nx containing the x-coordinates at
-  !            which the spline is to be evaluated.  (input)
-  !            the points in xvec should be strictly increasing.
-  !   ny     - number of grid points in the y-direction.  (input)
-  !   yvec   - array of length ny containing the y-coordinates at
-  !            which the spline is to be evaluated.  (input)
-  !            the points in yvec should be strictly increasing.
-  !   nz     - number of grid points in the z-direction.  (input)
-  !   zvec   - array of length nz containing the z-coordinates at
-  !            which the spline is to be evaluated.  (input)
-  !            the points in yvec should be strictly increasing.
-  !   kx     - order of the spline in the x-direction.  (input)
-  !   ky     - order of the spline in the y-direction.  (input)
-  !   kz     - order of the spline in the z-direction.  (input)
-  !   xknot  - array of length nx+kx containing the knot
-  !            sequence in the x-direction.  (input)
-  !            xknot must be nondecreasing.
-  !   yknot  - array of length ny+ky containing the knot
-  !            sequence in the y-direction.  (input)
-  !            yknot must be nondecreasing.
-  !   zknot  - array of length nz+kz containing the knot
-  !            sequence in the z-direction.  (input)
-  !            zknot must be nondecreasing.
-  !   nx     - number of B-spline coefficients in the x-direction.
-  !            (input)
-  !   ny     - number of B-spline coefficients in the y-direction.
-  !            (input)
-  !   nz     - number of B-spline coefficients in the z-direction.
-  !            (input)
-  !   bcoef  - array of length nx*ny*nz containing the
-  !            tensor-product B-spline coefficients.  (input)
-  !            bscoef is treated internally as a matrix of size nx
-  !            by ny by nz.
-  !   val    - array of size nx by ny by nz containing the values of
-  !            the (iderx,idery,iderz) derivative of the spline on the
-  !            nx by ny by nz grid.  (output)
-  !            value(i,j,k) contains the derivative of the spline at
-  !            the point (xvec(i), yvec(j), zvec(k)).
-  !   ldf    - leading dimension of value exactly as specified in the
-  !            dimension statement of the calling program.  (input)
-  !   mdf    - middle dimension of value exactly as specified in the
-  !            dimension statement of the calling program.  (input)
-  !
+  !! Evaluates the derivative of a three-dimensional tensor-product spline,
+  !! given its tensor-product B-spline representation on a grid.
+
   implicit none
 
-  integer, intent(in)                               :: iderx, idery, iderz
-  integer, intent(in)                               :: nxvec, nyvec, nzvec
-  integer, intent(in)                               :: kx, nx, ky, ny, kz, nz
-  integer, intent(in)                               :: ldf,mdf
-
-  real(dp), dimension(nxvec), intent(in)      :: xvec
-  real(dp), dimension(nyvec), intent(in)      :: yvec
-  real(dp), dimension(nzvec), intent(in)      :: zvec
-  real(dp), dimension(nx+kx), intent(in)      :: xknot
-  real(dp), dimension(ny+ky), intent(in)      :: yknot
-  real(dp), dimension(nz+kz), intent(in)      :: zknot
+  integer, intent(in) :: iderx
+  !! order of the x-derivative.
+  integer, intent(in) :: idery
+  !! order of the y-derivative.
+  integer, intent(in) :: iderz
+  !! order of the z-derivative.
+  integer, intent(in) :: nxvec
+  !! number of B-spline coefficients in the x-direction.
+  integer, intent(in) :: nyvec
+  !! number of B-spline coefficients in the y-direction.
+  integer, intent(in) :: nzvec
+  !! number of B-spline coefficients in the z-direction.
+  integer, intent(in) :: kx
+  !! order of the spline in the x-direction.
+  integer, intent(in) :: nx
+  !! number of grid points in the x-direction.
+  integer, intent(in) :: ky
+  !! order of the spline in the y-direction.
+  integer, intent(in) :: ny
+  !! number of grid points in the y-direction.
+  integer, intent(in) :: kz
+  !! order of the spline in the z-direction.
+  integer, intent(in) :: nz
+  !! number of grid points in the z-direction.
+  integer, intent(in) :: ldf
+  !! leading dimension of value exactly as specified in the
+  !! dimension statement of the calling program.
+  integer, intent(in) :: mdf
+  !! middle dimension of value exactly as specified in the
+  !! dimension statement of the calling program.
+  real(dp), dimension(nxvec), intent(in) :: xvec
+  !! array of length nx containing the x-coordinates at which the
+  !! spline is to be evaluated. The points in it should be 
+  !! strictly increasing.
+  real(dp), dimension(nyvec), intent(in) :: yvec
+  !! array of length ny containing the y-coordinates at which the
+  !! spline is to be evaluated. The points in it should be 
+  !! strictly increasing.
+  real(dp), dimension(nzvec), intent(in) :: zvec
+  !! array of length nz containing the z-coordinates at which the
+  !! spline is to be evaluated. The points in it should be 
+  !! strictly increasing.
+  real(dp), dimension(nx+kx), intent(in) :: xknot
+  !! array of length \(nx+kx\) containing the knot sequence in
+  !! the x-direction. \(\text{xknot}\) must be nondecreasing.
+  real(dp), dimension(ny+ky), intent(in) :: yknot
+  !! array of length \(ny+ky\) containing the knot sequence in
+  !! the y-direction. \(\text{yknot}\) must be nondecreasing.
+  real(dp), dimension(nz+kz), intent(in) :: zknot
+  !! array of length \(nz+kz\) containing the knot sequence in
+  !! the z-direction. \(\text{zknot}\) must be nondecreasing.
   real(dp), dimension(nx,ny,nz), intent(in)   :: bcoef
+  !! array of length nx*ny*nz containing the tensor-product
+  !! B-spline coefficients. \(\text{bscoef}\) is treated 
+  !! internally as a matrix of size nx by ny by nz.
   real(dp), dimension(ldf,mdf,*), intent(out) :: val
+  !! array of size nx by ny by nz containing the values of the
+  !! \((\text{iderx},\text{idery},\text{iderz})\) derivative of
+  !! the spline on the nx by ny by nz grid.  
+  !! \(\text{value}(i,j,k)\) contains the derivative of the spline
+  !! at the point \((\text{xvec}(i), \text{yvec}(j), \text{zvec}(k))\).
   integer, intent(out) :: ierr
-
-  integer                                           :: i, ik, il, ix, iy, iz
-  integer                                           :: ikx, iky, ikz
-  integer, dimension(nxvec)                         :: leftx
-  integer, dimension(nyvec)                         :: lefty
-  integer, dimension(nzvec)                         :: leftz
-  real(dp), dimension(nxvec,kx)               :: biatx
-  real(dp), dimension(nyvec,ky)               :: biaty
-  real(dp), dimension(nzvec,kz)               :: biatz
+  !! Error index.
+  !
+  ! ... local variables
+  !
+  integer  :: i, ik, il, ix, iy, iz
+  integer  :: ikx, iky, ikz
+  integer, dimension(nxvec) :: leftx
+  integer, dimension(nyvec) :: lefty
+  integer, dimension(nzvec) :: leftz
+  real(dp), dimension(nxvec,kx) :: biatx
+  real(dp), dimension(nyvec,ky) :: biaty
+  real(dp), dimension(nzvec,kz) :: biatz
   real(dp), dimension(max(nxvec,nyvec,nzvec)) :: term, save1
 
   real(dp), dimension(max(nxvec,nyvec,nzvec), max(kx,ky,kz)) :: dl, dr

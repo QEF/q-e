@@ -7,11 +7,10 @@
 !
 !----------------------------------------------------------------------
 SUBROUTINE run_dist ( exit_status )
-!----------------------------------------------------------------------
-  !
-  ! Find distances, nearest neighbors, angles, taking into account periodicity
-  ! Requires as input: lattice vectors, types and positions of atoms
-  ! Must be run on a single process only. Output in file "dist.out"
+  !----------------------------------------------------------------------
+  !! Find distances, nearest neighbors, angles, taking into account periodicity.  
+  !! Requires as input: lattice vectors, types and positions of atoms
+  !! Must be run on a single process only. Output in file "dist.out".
   !
   USE kinds,     ONLY : dp
   USE constants, ONLY : pi, bohr_radius_angs
@@ -83,22 +82,25 @@ SUBROUTINE run_dist ( exit_status )
         dr(:) = (tau(1,na)-tau(1,nb))*bg(1,:) + &
                 (tau(2,na)-tau(2,nb))*bg(2,:) + &
                 (tau(3,na)-tau(3,nb))*bg(3,:)
-        DO nn1=-1,1
+        DO nn1=-2,2
            dn1=dr(1)-nn1
-           DO nn2=-1,1
+           DO nn2=-2,2
               dn2=dr(2)-nn2
-              DO nn3=-1,1
+              DO nn3=-2,2
                  dn3=dr(3)-nn3
                  dd = scalef * sqrt( &
                          ( dn1*at(1,1)+dn2*at(1,2)+dn3*at(1,3) )**2 + &
                          ( dn1*at(2,1)+dn2*at(2,2)+dn3*at(2,3) )**2 + &
                          ( dn1*at(3,1)+dn2*at(3,2)+dn3*at(3,3) )**2 )
                  IF (dd < dmin) THEN
-                    nbad=nbad+1
-                    IF (nn1==0 .and. nn2==0 .and. nn3==0) THEN
+                    IF (nn1==0 .and. nn2==0 .and. nn3==0 .and. na==nb ) THEN
+                       CYCLE
+                    ELSEIF (nn1==0 .and. nn2==0 .and. nn3==0 ) THEN
                        WRITE(ounit,60) na,nb
+                       nbad=nbad+1
                     ELSE
                        WRITE(ounit,61) na,nb
+                       nbad=nbad+1
                     ENDIF
                  ELSEIF (dd < dmax) THEN
                     ndist=ndist+1

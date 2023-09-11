@@ -7,13 +7,14 @@
 !
 subroutine addnlcc (imode0, drhoscf, npe)
   !
-  !     This routine adds a contribution to the dynamical matrix due
-  !     to the NLCC
+  !! This routine adds a contribution to the dynamical matrix due
+  !! to the NLCC.
   !
 
   USE kinds, only : DP
   USE ions_base, ONLY : nat
-  use funct, only : dft_is_gradient, dft_is_nonlocc
+  USE funct,  only : dft_is_nonlocc
+  USE xc_lib, only : xclib_dft_is
   USE cell_base, ONLY : omega
   use scf, only : rho, rho_core
   USE gvect, ONLY : g, ngm
@@ -32,12 +33,12 @@ subroutine addnlcc (imode0, drhoscf, npe)
 
   implicit none
 
-  integer :: imode0, npe
-  ! input: the starting mode
-  ! input: the number of perturbations
-  ! input: the change of density due to perturbation
-
+  integer :: imode0
+  !! input: the starting mode
+  integer :: npe
+  !! input: the number of perturbations
   complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe)
+  !! input: the change of density due to perturbation
 
   integer :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1
   ! the total number of points
@@ -55,9 +56,6 @@ subroutine addnlcc (imode0, drhoscf, npe)
 
   real(DP) :: fac
   ! auxiliary factor
-  complex(DP), external :: zdotc
-  ! the scalar product function
-
 
   if (.not.nlcc_any) return
 
@@ -79,12 +77,12 @@ subroutine addnlcc (imode0, drhoscf, npe)
 !
   do ipert = 1, npe
      mode = imode0 + ipert
-     dvaux (:,:) = (0.d0, 0.d0)
      call addcore (mode, drhoc)
      do is = 1, nspin_lsda
         call daxpy (2 * dfftp%nnr, fac, drhoc, 1, drhoscf (1, is, ipert), 1)
-     enddo
+     end do
      do is = 1, nspin_lsda
+        dvaux (:,is) = (0.d0, 0.d0)
         do is1 = 1, nspin_mag
            do ir = 1, dfftp%nnr
               dvaux (ir, is) = dvaux (ir, is) + dmuxc (ir, is, is1) * &
@@ -96,7 +94,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
      ! add gradient correction to xc, NB: if nlcc is true we need to add here
      ! its contribution. grho contains already the core charge
      !
-     if ( dft_is_gradient() ) call dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, &
+     if ( xclib_dft_is('gradient') ) call dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, &
                           dvxc_sr, dvxc_ss, dvxc_s, xq, drhoscf(1, 1, ipert), &
                           nspin_mag, nspin_gga, g, dvaux)
      !
@@ -112,7 +110,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
            call addcore (mode1, drhoc)
            do is = 1, nspin_lsda
               dyn1 (mode, mode1) = dyn1 (mode, mode1) + &
-                   zdotc (dfftp%nnr, dvaux (1, is), 1, drhoc, 1) * &
+                   dot_product (dvaux (:,is), drhoc) * &
                    omega * fac / DBLE (nrtot)
            enddo
         enddo

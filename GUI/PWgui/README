@@ -5,18 +5,18 @@
 
 This is the PWgui---a GUI for the PWscf set of programs within the
 open-source Quantum ESPRESSO suite for quantum simulation of materials
-(see http://www.quantum-espresso.org). PWgui is written in [incr
-Tcl]---an extension of Tcl scripting language (hence no compilation is
-needed for the PWgui source package). However the package depends on
-the [incr Tcl] and related software. Therefore you have two
-possibilities:
+(see http://www.quantum-espresso.org).
 
-   (i)  to use a standalone executable which run out of the box. Works
-	only on the platforms for which executable has been built. Currently
-	the following platforms are supported: Linux, Windows, Mac. 
+PWgui is written in [incr Tcl], an extension of Tcl scripting language
+(hence no compilation is needed for the PWgui source package). However
+the package depends on the [incr Tcl] and related software. Therefore
+there are two possibilities:
 
-   (ii) to use source package if required Tcl software is installed
-        (see SOFTWARE REQUIREMENTS section below)
+   (i)  to use a source package if the required Tcl software is installed
+
+   (ii) to use a standalone executable which runs out of the
+	box. Works only on the platforms for which executables have
+	been built. They are available at http://www-k3.ijs.si/kokalj/pwgui
 
 See the file "INSTALL" for installation instructions.
 
@@ -25,16 +25,22 @@ CURRENT STATUS
 --------------
 
 The main purpose of the PWgui is to facilitate the creation and
-manipulation (editing) of input files for PWscf set of programs. It is
-possible to run the PWscf programs by using the GUI. This feature
-requires to set the path of the PWscf executables via
-"File-->Settings" menu (tab: PWscf settings). The GUI can also use the
-XCRYSDEN program (http://www.xcrysden.org/) for the visualization of
-atomic structures from the pw.x input/output files, or for the
-visualization of properties calculated via the sequence: pw.x-->pp.x
-(when the property was saved into an XSF file).
+manipulation (editing) of input files for Quantum ESPRESSO
+programs.
 
-Currently, the following PWscf programs (modules) are supported: 
+It also provides a syntax checker and a formatted of input files
+(i.e. pwgui --reformat program input).
+
+It is possible to run the supported QE programs by using the GUI. This
+feature requires to set the path of the QE executables via
+"File-->Settings" menu (tab: PWscf settings).
+
+The GUI can also use the XCRYSDEN program (http://www.xcrysden.org/)
+for the visualization of atomic structures from the pw.x input/output
+files, or for the visualization of properties calculated via the
+sequence: pw.x-->pp.x (when the property was saved into an XSF file).
+
+Currently, the following QE programs (modules) are supported: 
 
  * pw.x
  * neb.x's neb.dat
@@ -44,6 +50,7 @@ Currently, the following PWscf programs (modules) are supported:
  * bands.x
  * dos.x
  * ld1.x (atomic)
+ * hp.x
 
 Directory structure of the PWgui source package:
 
@@ -106,4 +113,4 @@ following:
 
 
 --
-Anton Kokalj (tone.kokalj@ijs.si), Mon Jan 23 12:28:40 CET 2012
+Anton Kokalj (tone.kokalj@ijs.si), Jan 2022

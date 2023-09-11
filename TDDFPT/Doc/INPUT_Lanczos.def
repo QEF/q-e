@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package turboTDDFPT -program turbo_lanczos.x {
+input_description -distribution {Quantum ESPRESSO} -package turboTDDFPT -program turbo_lanczos.x {
 
     toc {}
 
@@ -14,31 +14,26 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
           fortran code. Comments lines in ``cards'' can be introduced by 
           either a "!" or a "#" character in the first position of a line.
 
-	  Structure of the input data:
+          @b {Structure of the input data:}
 	  ===============================================================================
 
-	  &lr_input
+	  &LR_INPUT
 	    ...
 	  /
 
-	  &lr_control
+	  &LR_CONTROL
 	    ...
 	  /	    
 
-	  [ &lr_post
+	  [ &LR_POST
 	    ...
 	   / ]
 
     }
 
-    namelist lr_input {
+    namelist LR_INPUT {
 
 	label { This namelist is always needed ! }
-
-	var title  -type CHARACTER {
-	    info { A string describing the job. }
-	    status { OPTIONAL }
-	}
 
 	var prefix -type CHARACTER { 
 	    default { 'pwscf' }
@@ -69,7 +64,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 	    default {.false.}
 	    info {
 		When set to .true., turbo_lanczos.x will attempt to restart 
-		from a previous interrupted calculation. (see restart_step 
+		from a previous interrupted calculation. (see @ref restart_step 
 		variable).
 
 		Beware, if set to .false. turbo_lanczos.x will OVERWRITE any
@@ -103,7 +98,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 	    }
 	}
     }
-    namelist lr_control {
+    namelist LR_CONTROL {
 	var itermax -type INTEGER {
 	    default {500}
 	    info {
@@ -159,6 +154,14 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
                 is used (no exchange and correlation).
                 }
         }
+
+        var scissor -type REAL {
+            default {0.0}
+            info {
+                Scissor shift (in Rydberg units).
+                }
+        }
+ 
 	var charge_response -type INTEGER {
 	    default {0}
 	    info {
@@ -193,7 +196,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
         var lshift_d0psi -type LOGICAL {
             default {.true.}
             info {
-                This variable is used only when d0psi_rs=.true.
+                This variable is used only when @ref d0psi_rs = .true.
                 a) If a molecule is placed in the corner of the 
                 supercell, there is a discontinuity problem for the
                 position operator r, which is not periodic. By setting
@@ -211,7 +214,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
     
 
     }			
-    namelist lr_post {
+    namelist LR_POST {
     	var omeg -type REAL {
 	    default {0.0}
 	    info {
@@ -221,7 +224,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 	}
 
 	var epsil -type REAL {
-	    default {0.0}
+	    default {0.02}
 	    info {
 	    	The broadening/damping term (in Rydberg units).
 		}

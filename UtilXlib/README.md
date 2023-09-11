@@ -48,16 +48,8 @@ If you encounter problems when adding the flag `__GPU_MPI` it might
 be that the MPI library does not support some CUDA-aware APIs.
 
 
-Known Issues
-============
-
-Owing to the use of the `source` option in data allocations,
-PGI versions older than 17.10 may fail with arrays having initial index
-different from 1.
-
-
 Testing
 =======
 
 Partial unit testing is available in the `tests` sub-directory. See the 
-README in that directory for further information.
+README.md file in that directory for further information.

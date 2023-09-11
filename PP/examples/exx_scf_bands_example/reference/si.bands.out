@@ -1,0 +1,94 @@
+
+     Program BANDS v.7.0 starts on 15Feb2022 at 14:21:26 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     3256 MiB available memory on the printing compute node when the environment starts
+ 
+
+     Reading xml data from directory:
+
+     /home/paulatto/espresso/tempdir/silicon.save/
+     EXX fraction changed:   0.25
+     EXX Screening parameter changed:    0.1060000
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= HSE
+                           (   1   4  12   4   0   0   0)
+     EXX-fraction              =        0.25
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         253     253    121                 2733     2733     821
+ 
+     Using Slab Decomposition
+ 
+     Reading collected, re-writing distributed wavefunctions
+     high-symmetry point: -0.2500 0.2500 0.2500   x coordinate   0.0000
+     high-symmetry point:  0.2500-0.2500 0.7500   x coordinate   0.8660
+     high-symmetry point:  0.5000 0.5000 0.5000   x coordinate   1.6952
+     high-symmetry point:  0.0000 0.0000 0.0000   x coordinate   2.5612
+     high-symmetry point:  0.0000 1.0000 0.0000   x coordinate   3.5612
+     high-symmetry point:  1.0000 1.0000 0.0000   x coordinate   3.5612
+     high-symmetry point:  0.0000 0.0000 0.0000   x coordinate   4.9754
+     high-symmetry point:  0.0000 1.0000 0.0000   x coordinate   4.9754
+     high-symmetry point: -0.5000 0.5000-0.5000   x coordinate   5.8414
+     high-symmetry point: -0.5000 1.5000-0.5000   x coordinate   6.8414
+     high-symmetry point:  0.5000 1.5000-0.5000   x coordinate   6.8414
+     high-symmetry point: -0.5000 0.5000-0.5000   x coordinate   8.2557
+     high-symmetry point:  1.0000 1.0000 1.0000   x coordinate   8.2557
+     high-symmetry point:  0.5000 0.5000 0.5000   x coordinate   9.1217
+     high-symmetry point:  0.5000 1.5000 0.5000   x coordinate  10.1217
+     high-symmetry point:  1.5000 1.5000 0.5000   x coordinate  10.1217
+     high-symmetry point:  0.5000 0.5000 0.5000   x coordinate  11.5359
+     high-symmetry point:  0.5000 1.5000 0.5000   x coordinate  11.5359
+     high-symmetry point:  0.0000 1.0000 0.0000   x coordinate  12.4019
+     high-symmetry point:  0.0000 2.0000 0.0000   x coordinate  13.4019
+     high-symmetry point:  1.0000 2.0000 0.0000   x coordinate  13.4019
+     high-symmetry point:  0.0000 1.0000 0.0000   x coordinate  14.8161
+     high-symmetry point:  0.0000 0.0000 1.0000   x coordinate  14.8161
+     high-symmetry point: -0.5000-0.5000 0.5000   x coordinate  15.6822
+     high-symmetry point: -0.5000 0.5000 0.5000   x coordinate  16.6822
+     high-symmetry point:  0.5000 0.5000 0.5000   x coordinate  16.6822
+     high-symmetry point: -0.5000-0.5000 0.5000   x coordinate  18.0964
+     high-symmetry point: -0.5000 0.5000 0.5000   x coordinate  18.0964
+     high-symmetry point: -1.0000 0.0000 0.0000   x coordinate  18.9624
+     high-symmetry point: -1.0000 1.0000 0.0000   x coordinate  19.9624
+     high-symmetry point:  0.0000 1.0000 0.0000   x coordinate  19.9624
+     high-symmetry point: -1.0000 0.0000 0.0000   x coordinate  21.3766
+     high-symmetry point:  0.5000 0.5000 1.5000   x coordinate  21.3766
+     high-symmetry point:  0.0000 0.0000 1.0000   x coordinate  22.2426
+     high-symmetry point:  0.0000 1.0000 1.0000   x coordinate  23.2426
+     high-symmetry point:  1.0000 1.0000 1.0000   x coordinate  23.2426
+     high-symmetry point:  0.0000 0.0000 1.0000   x coordinate  24.6569
+     high-symmetry point:  0.0000 1.0000 1.0000   x coordinate  24.6569
+     high-symmetry point: -0.5000 0.5000 0.5000   x coordinate  25.5229
+     high-symmetry point: -0.5000 1.5000 0.5000   x coordinate  26.5229
+     high-symmetry point:  0.5000 1.5000 0.5000   x coordinate  26.5229
+     high-symmetry point: -0.5000 0.5000 0.5000   x coordinate  27.9371
+
+     Plottable bands (eV) written to file sibands.dat.gnu
+     Bands written to file sibands.dat
+ 
+     BANDS        :      0.42s CPU      0.52s WALL
+
+ 
+   This run was terminated on:  14:21:27  15Feb2022            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

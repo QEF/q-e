@@ -68,7 +68,6 @@ SUBROUTINE set_upf_q (upf)
   ! cases. This is already the case when upf%tpawp or upf%q_with_l are .true.
   ! For vanderbilt US pseudos, where nqf and rinner are non zero, we do here
   ! what otherwise would be done multiple times in many parts of the code
-  ! (such as in init_us_1, addusforce_r, bp_calc_btq, compute_qdipol)
   ! whenever the q_l(r) were to be constructed. 
   ! For simple rrkj3 pseudos we duplicate the information contained in q(r)
   ! for all q_l(r).

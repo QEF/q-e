@@ -7,23 +7,68 @@ ________________________________________________________________________
 
 The PWgui package comes in two flavors: 
 
-   (i)  STANDALONE EXECUTABLE, which runs out of the box (but works
+   (i)  SOURCE PACKAGE
+
+   (ii) STANDALONE EXECUTABLE, which runs out of the box (but works
 	only on the platform for which it has been built)
 
-   (ii) SOURCE PACKAGE
-
-N.B.: for the usage of repository version of PWgui see file INSTALL.repository
+N.B.: for the usage of repository version of PWgui see the
+INSTALL.repository file
 
 ________________________________________________________________________
 
-(i) Installation instructions for STANDALONE EXECUTABLE
+(i) Installation instructions for SOURCE PACKAGE
 ________________________________________________________________________
+
+To use the source package you need the required Tcl software, in
+particular Tcl + Tk + Itcl + Itk + Iwidgets. PWgui requires the Tcl/Tk
+version 8.4 or later. You may install the software from your OS
+distribution.
+
+For example, for GNU/Linux Debian-based distributions, execute as root
+(or sudo):
+
+   * apt-get update; apt-get install iwidgets4 
+
+(this will install also tcl/tk/itcl/itk, because iwidgets depend on them).
+On fedora-based distributions, the analogous command is "dnf". Hence:
+
+   * dnf install iwidgets
+
+Once your computer has all the needed software, your source package is
+ready to run. You only need to untar the PWgui source tarball, i.e.:
+
+   * tar zxvf  PWgui-<version>.tgz
+or
+   * gunzip -c PWgui-<version>.tgz | tar xvf -
+
+where <version> stands for version number. To launch the PWgui
+program, type: pwgui. 
+
+You may either add the PWgui root directory to your PATH or create a
+link to pwgui launcher from some directory that is on the PATH.
+
+If you would like to copy "pwgui" launcher (but it is more convenient
+to make a link instead, see above) to some common place, such as
+/usr/local/bin or /opt/bin, then you need to define the PWGUI
+environmental variable so that "pwgui" will be able to locate its root
+directory (i.e. source files).
+
+
+________________________________________________________________________
+
+(ii) Installation instructions for STANDALONE EXECUTABLE
+________________________________________________________________________
+
+The standalone executable is available for Linux platform and
+occasionally also for Mac and Windows. They are available at
+http://www-k3.ijs.si/kokalj/pwgui
 
 For zipped pwgui-xxx.zip package do:
 	
 	* unzip pwgui-xxx.zip
 
-whereas for tar-gzipped pwgui-xxx.tgz package do either:
+For tar-gzipped pwgui-xxx.tgz package do either:
 
 	* tar zxvf pwgui-xxx.tgz 
 or: 
@@ -34,72 +79,3 @@ To launch the program type either:
         * ./pwgui
 or 
         * pwgui
-
-
-The standalone executable is always available for Linux platform, and
-occasionally also for Mac and Windows.
-
-
-________________________________________________________________________
-
-(ii) Installation instructions for SOURCE PACKAGE
-________________________________________________________________________
-
-
-To use the source package you need required Tcl software, in
-particular Tcl + Tk + Itcl + Itk + Iwidgets. PWgui requires the Tcl/Tk
-version 8.4 or later. You may install the software from your OS
-distribution. 
-
-For example, for GNU/Linux Debian-based distributions, execute as root
-(or sudo):
-
-   * apt-get update; apt-get install iwidgets4 
-
-(this will install also tcl/tk/itcl/itk, because iwidgets depend on them).
-On RedHat-based distributions, the analogous command is "yum". Hence:
-
-   * yum install iwidgets
-
-As for the Archlinux consider the following installation instructions
-(due to Gonzalo Aguirre): neither itk nor iwidgets are in the official
-repositories, so they should be obtained from the AUR using the
-following recipe:
-
-   * yaourt -S itk-cvs 
-   * yaourt -S iwidgets
-
-If an issue arises during the iwidgets installation, check where the
-itk-cvs is installed (pacman -Ql itk-cvs) and specify the directory
-explicitly while building the iwidgets package (e.g.:
---with-itk=/usr/lib/itk3.4)
-
-
-Alternatively you may install ActiveTcl8.4 (which has all the required
-software built-in) from:
-
-   http://www.activestate.com/activetcl/downloads/
-
-BEWARE: do not install the newer 8.5 or 8.6 version of ActiveTcl,
-        because they do not contain all the needed software. The
-        version 8.4 is mandatory !!!
-
-
-Once your computer has all the needed software, your source package is
-ready to run. You only need to untar the PWgui source tarball, i.e.:
-
-   * gunzip -c PWgui-<version>.tgz | tar xvf -
-or
-   * tar zxvf  PWgui-<version>.tgz
-
-where <version> stands for version number. To launch the PWgui
-program, type: pwgui. 
-
-You may add the PWgui root directory to your PATH. 
-
-If you would like to copy "pwgui" launcher to some common place, such
-as /usr/local/bin, then you need either to define PWGUI environmental
-variable so that "pwgui" will be able to locate its root directory
-(i.e. source files) or alternatively hardcode it into pwgui lanucher
-itself.
-

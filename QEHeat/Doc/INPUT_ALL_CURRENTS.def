@@ -1,0 +1,332 @@
+input_description -distribution {Quantum ESPRESSO} -package QEHeat -program all_currents.x {
+
+    toc {}
+
+    intro {
+
+        Program to compute energy current given the atomic configuration and the velocities of the atoms.
+        
+        Note that a very small conv_thr must be given in the ELECTRONS namelist, in the order of 1.D-11.
+        The numerical derivative is very sensitive to this parameter and to @ref delta_t. Careful convergence
+        tests are needed. Note that if too relaxed values are chosen, the result can depend on the algorithm
+        used to diagonalize the hamiltonian a lot (the 4th/3rd digit can be wrong). Options that allows
+        estimating the variance are provided, to reinitialize the wavefunctions and repeat each step many
+        times ( @ref n_repeat_every_step @ref re_init_wfc_1 @ref re_init_wfc_2 @ref re_init_wfc_3 ). 
+        Performance of the calculation can be tuned a little bit with the parameters @ref ethr_small_step
+        and @ref ethr_big_step, that can avoid the waste of some iterations in the diagonalization of the
+        hamiltonian in the first scf step of every scf calculation (the program does 2 scf for each step).
+        Note that in order to read atomic velocities, in the namelist CONTROL you must set calculation='md',
+        and in the namelist IONS you must set ion_velocities='from_input'. Algorithm for computing finite
+        difference derivatives can be set with the option @ref three_point_derivative .
+       
+        This program implements
+
+        Marcolongo, A., Umari, P. & Baroni, S.
+        Microscopic theory and quantum simulation of atomic heat transport.
+        Nature Phys 12, 80-84 (2016). https://doi.org/10.1038/nphys3509
+
+        and was originally written by Aris Marcolongo in 2014 at SISSA for his PhD thesis
+        ( https://iris.sissa.it/handle/20.500.11767/3897 )
+        The @b all_current driver program was rewritten from scratch by Riccardo Bertossa at SISSA in 2020.
+        Other contributions are from Davide Tisi (SISSA), Loris Ercole (SISSA - EPFL ) and Federico Grasselli (SISSA).
+        Details of the implementation are discussed in 
+        Marcolongo, Bertossa, Tisi, Baroni, https://arxiv.org/abs/2104.06383 (2021)
+
+        All the namilist but @ref ENERGY_CURRENT are the same as the program pw.x
+        
+        @b {Structure of the input data:}
+        ===============================================================================
+
+        @b &ENERGY_CURRENT
+          ...
+        @b /
+        
+        @b &CONTROL
+          MUST SET calculation='md'
+          ...
+        @b /
+
+        @b &SYSTEM
+          ...
+        @b /
+
+        @b &ELECTRONS
+          you may want startingwfc = 'random' (for better standard deviation estimation)
+          ...
+        @b /
+
+        [ @b &IONS
+          MUST SET ion_velocities='from_input'
+          ...
+         @b / ]
+
+        [ @b &CELL
+          ...
+         @b / ]
+
+        @b ATOMIC_SPECIES
+         X  Mass_X  PseudoPot_X
+         Y  Mass_Y  PseudoPot_Y
+         Z  Mass_Z  PseudoPot_Z
+
+        @b ATOMIC_POSITIONS { alat | bohr | crystal | angstrom | crystal_sg }
+          X 0.0  0.0  0.0  {if_pos(1) if_pos(2) if_pos(3)}
+          Y 0.5  0.0  0.0
+          Z O.0  0.2  0.2
+
+        @b ATOMIC_VELOCITIES 
+          X 0.0  0.0  0.0  
+          Y 0.5  0.0  0.0
+          Z O.0  0.2  0.2
+
+        @b K_POINTS { gamma }
+        if (gamma)
+           nothing to read
+
+        [ @b CELL_PARAMETERS { alat | bohr | angstrom }
+           v1(1) v1(2) v1(3)
+           v2(1) v2(2) v2(3)
+           v3(1) v3(2) v3(3) ]
+
+
+    }
+
+    #
+    # namelist ENERGY_CURRENT
+    #
+
+    namelist ENERGY_CURRENT {
+
+        var delta_t -type REAL {
+            default { 1.D0 }
+                info {
+                   Small timestep used to do the numerical derivative needed
+                   in order to compute some parts of the current. Note that is in the pw.x units.
+                }
+        }
+        
+        var file_output -type CHARACTER {
+            default {'current_hz'}
+            info {
+                The program will write the output in @ref file_output and @ref file_output  + '.dat'.
+                In the latter file the format of the output is:
+
+                   NSTEP t_ps J_x J_y J_z Jele_x Jele_y Jele_z v_cm(1)_x v_cm(1)_y v_cm(1)_z ... 
+
+                where J_x, J_y, J_z are the three components of the DFT energy current,
+                and can be easily post-processed by other external programs. 
+                Jele_* are the components of the electronic density current that may be used
+                for decorrelation and better data analysis or for calculating the electric current.
+                v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomic species.
+
+                If @ref n_repeat_every_step > 1, an additional file @ref file_output + '.stat' is
+                written with the following format:
+
+                   NSTEP t_ps mean(J_x) mean(J_y) mean(J_z) std(J_x) std(J_y) std(J_z)
+
+                only one line per step is printed in this case (in the other output files you will
+                find every calculation, also repeated ones). std is the standard deviation.
+            }
+        }
+        
+        var trajdir -type CHARACTER {
+            default { '' }
+            info {
+                Prefix of the cp.x trajectory. The program will try to open the files
+                @ref trajdir .pos and @ref trajdir .vel
+                The files, for n atoms, are formatted like this:
+       
+                   NSTEP1 t_ps1
+                   x(1) y(1) z(2)
+                   .    .    .
+                   .    .    .
+                   .    .    .
+                   x(n) y(n) z(n)
+                   NSTEP2 t_ps2
+                   x(1) y(1) z(2)
+                   .    .    .
+                   .    .    .
+                   .    .    .
+                   x(n) y(n) z(n)
+                   ...
+ 
+                the order of the atomic types must be the same of the one provided in the input file.
+                If the files are not found, only the positions and the velocities from the input file will be used.
+                Note that the units are specified by the input file. The units of the velocities are the same of 
+                the positions with time in atomic units. If a cp.x trajectory is provided (see @ref vel_input_units )
+                a factor 2 can be used for the velocities.
+            }
+             
+             
+        }
+
+        var vel_input_units -type CHARACTER {
+            default { 'PW'}
+            options {
+                info { This multiplies or not by a factor 2 the velocities given in the input.
+                       Available options are: }
+                opt -val 'CP' {
+                    assume velocities are given in cp.x time units (thus multiplying by 2 the velocities)
+                }
+                opt -val 'PW' {
+                    assume velocities are given in pw.x time units
+                }
+            }
+        }
+        var eta -type REAL {
+            default  { 1.D0  }
+            info { Convergence parameter for Ewald-like sums  }
+        }
+        var n_max -type INTEGER {
+            default { 5 }
+            info { Number of images in each direction used to converge some sums. }
+        }
+        var first_step -type INTEGER {
+            default { 0 }
+            info {
+                   The program will start with step  istep >= @ref first_step.
+                   If greater than zero the input file's positions and velocities will be ignored. 
+                   Note that this is not a sequential index but refers to the indexes reported in
+                   the input trajectory file. The index of 0 is assigned to the snapshot described
+                   in the input namelist file.
+                 }
+        }
+        var last_step -type INTEGER {
+            default { 0 }
+            info {
+                   The program will end with step  istep <= @ref last_step.
+                   If 0, it will stop at the end of the trajectory file
+                   Note that this is not a sequential index but refers to the indexes reported in
+                   the input trajectory file.
+                 }
+        }
+        var step_mul -type INTEGER {
+            default { 1 }
+            info {
+                   The program will use the step only if
+                   MOD(step, @ref step_mul) == @ref step_rem.
+                 }
+        }
+        var step_rem -type INTEGER {
+            default { 0 }
+            info {
+                   The program will use the step only if
+                   MOD(step, @ref step_mul) == @ref step_rem.
+                 }
+        }
+        var ethr_small_step -type REAL {
+            default { 1.D-7 }
+            info {
+                  Diagonalization threshold after the small @ref delta_t numerical derivative step.
+                  (the system changed a very little)
+                 }
+        }
+        var ethr_big_step -type REAL {
+            default { 1.D-3 }
+            info {
+                   Diagonalization threshold at the beginning of each step but the first,
+                   for wich the pw.x input value is used.
+                 }
+        }
+        var restart -type LOGICAL {
+            default { .false. }
+            info {
+                   If true try to read @ref file_output .dat and try to set @ref first_step to the
+                   last step in the file + 1 
+                 } 
+        }
+        var subtract_cm_vel  -type LOGICAL {
+            default { .false. }
+            info {
+                   If true subtract from the velocities of all atoms for every step
+                   the center of mass velocity for each atomic type. 
+                   It help to decorrelate a little the mass flux from the energy flux 
+                 } 
+        }
+        var add_i_current_b -type LOGICAL {
+            default { .false. }
+            info {
+                   If true adds to the energy current a part that is correctly implemented only for cubic cells.
+                   This part is in the form of a sum over the atomic types of a constant time the center of mass velocity
+                   of the atomic type. It does not change the value of the thermal conductivity when the formula for the
+                   multicomponent case with the inverse of the Schur complement is used, and in the single component
+                   or solid case this is a non-diffusive contribution.
+                 }
+        }
+
+       var save_dvpsi -type LOGICAL {
+           default { .false. }
+           info {
+                  If true allocate the space needed for saving the solution of the linear system betweew every calculation.
+                  The iterative algorithm will always start from there. By default it starts always from scratch.
+                }
+       }
+       var re_init_wfc_1 -type LOGICAL {
+          default { .false. }
+          info {
+                 If true initializes, as specified in the ELECTRON namelist of the PW section, the wavefunctions
+                 before the first ground state calculation, then compute the charge density.
+                  Otherwise use the last calculated wavefunctions.
+               }
+       }
+       var re_init_wfc_2 -type LOGICAL {
+          default { .false. }
+          info {
+                 If true initializes, as specified in the ELECTRON namelist of the PW section, the wavefunctions
+                 before the second ground state calculation, then compute the charge density.
+                 Otherwise use the last calculated wavefunctions.
+                 Note that if @ref three_point_derivative is false, this has no effect.
+               }
+       }
+       var re_init_wfc_3 -type LOGICAL {
+          default { .false. }
+          info {
+                 If true initializes, as specified in the ELECTRON namelist of the PW section, the wavefunctions
+                 before the third ground state calculation, then compute the charge density.
+                 Otherwise use the last calculated wavefunctions.
+               }
+       }
+       var three_point_derivative -type LOGICAL {
+          default { .true. }
+          info {
+                 If true calculates three ground stated: one at t - @ref delta_t /2, one at t and one at t + @ref delta_t/2.
+                 Obviously it needs more computer time, but the derivative should be better.
+               }
+       }
+       var n_repeat_every_step -type INTEGER {
+          default { 1 }
+          info {
+                 Number of repetition of the full current calculation for each step. If > 1, the file @ref file_output + '.stat'
+                 is written with some statistics. Note that if you don't specify at least @ref re_init_wfc_1 ,this may be useless.
+                 You may want to specify startingwfc = 'random' in the ELECTRONS namelist.
+               }
+       }
+       var n_workers -type INTEGER {
+           default { 0 }
+           info {
+                The calculation over all the trajectory is splitted in @ref n_workers chunks. Then to run the code over all
+                the trajectory you must run @ref n_workers input files each one with a different @ref worker_id,
+                from 0 to @ref n_workers - 1 . Those inputs can run at the same time in the same folder. The @ref worker_id
+                will be appended to the outdir folder and to the @ref file_output input variables, so you can safely run all
+                the inputs in the same directory at the same time.
+           }
+       }
+       var worker_id -type INTEGER {
+           default { 0 }
+           info {
+                See @ref n_workers variable
+           }
+       }
+       var continue_not_converged -type LOGICAL {
+           default { .false. }
+           info {
+                If it is not possible to find a ground state for a given frame of the trajectory, go to the next one.
+                You will not find this step in the output file(s).
+           }
+       }
+
+    }
+
+
+
+}

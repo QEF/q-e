@@ -37,16 +37,15 @@ SUBROUTINE clean_pw( lflag )
   USE symm_base,            ONLY : irt
   USE symme,                ONLY : sym_rho_deallocate
   USE wavefunctions,        ONLY : evc, psic, psic_nc
-  USE us,                   ONLY : qrad, tab, tab_at, tab_d2y, spline_ps
   USE uspp,                 ONLY : deallocate_uspp
+  USE uspp_data,            ONLY : deallocate_uspp_data
   USE uspp_param,           ONLY : upf
   USE m_gth,                ONLY : deallocate_gth
-  USE ldaU,                 ONLY : deallocate_ldaU
+  USE ldaU,                 ONLY : deallocate_hubbard
   USE extfield,             ONLY : forcefield, forcegate
   USE fft_base,             ONLY : dfftp, dffts  
   USE fft_base,             ONLY : pstickdealloc
   USE fft_types,            ONLY : fft_type_deallocate
-  USE spin_orb,             ONLY : lspinorb, fcoef
   USE noncollin_module,     ONLY : deallocate_noncol
   USE dynamics_module,      ONLY : deallocate_dyn_vars
   USE paw_init,             ONLY : deallocate_paw_internals
@@ -63,9 +62,24 @@ SUBROUTINE clean_pw( lflag )
   USE exx,                  ONLY : deallocate_exx
   USE Coul_cut_2D,          ONLY : cutoff_2D, lr_Vloc 
   !
-  USE control_flags,        ONLY : ts_vdw
+  USE control_flags,        ONLY : ts_vdw, mbd_vdw
   USE tsvdw_module,         ONLY : tsvdw_finalize
+  USE libmbd_interface,     ONLY : clean_mbd
   USE dftd3_qe,             ONLY : dftd3_clean
+  !
+  USE wavefunctions_gpum,   ONLY : deallocate_wavefunctions_gpu
+  USE wvfct_gpum,           ONLY : deallocate_wvfct_gpu
+  USE scf_gpum,             ONLY : deallocate_scf_gpu
+  !
+  USE control_flags,        ONLY : sic, scissor
+  USE sic_mod,              ONLY : deallocate_sic
+  USE sci_mod,              ONLY : deallocate_scissor
+  !
+  USE rism_module,          ONLY : deallocate_rism
+#if defined (__ENVIRON)
+  USE plugin_flags,         ONLY : use_environ
+  USE environ_base_module,  ONLY : clean_environ
+#endif
   !
   IMPLICIT NONE
   !
@@ -108,7 +122,7 @@ SUBROUTINE clean_pw( lflag )
   !
   CALL deallocate_bp_efield()
   !
-  CALL deallocate_ldaU( lflag )
+  CALL deallocate_hubbard( lflag )
   !
   IF ( ALLOCATED( f_inp ) .AND. lflag )  DEALLOCATE( f_inp )
   !
@@ -131,9 +145,7 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( psic    ) )    DEALLOCATE( psic    )
   IF ( ALLOCATED( psic_nc ) )    DEALLOCATE( psic_nc )
   IF ( ALLOCATED( vrs     ) )    DEALLOCATE( vrs     )
-  IF (spline_ps) THEN
-    IF ( ALLOCATED( tab_d2y) )   DEALLOCATE( tab_d2y )
-  ENDIF
+  CALL deallocate_scf_gpu()
   !
   ! ... arrays allocated in allocate_locpot.f90 ( and never deallocated )
   !
@@ -144,21 +156,18 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... arrays allocated in allocate_nlpot.f90 ( and never deallocated )
   !
-  IF ( ALLOCATED( qrad )   )     DEALLOCATE( qrad   )
-  IF ( ALLOCATED( tab )    )     DEALLOCATE( tab    )
-  IF ( ALLOCATED( tab_at ) )     DEALLOCATE( tab_at )
-  IF ( lspinorb ) THEN
-     IF ( ALLOCATED( fcoef ) )   DEALLOCATE( fcoef  )
-  ENDIF
-  !
-  CALL deallocate_igk()
+  CALL deallocate_uspp_data()
   CALL deallocate_uspp() 
+  !
   CALL deallocate_gth( lflag ) 
   CALL deallocate_noncol()
+  CALL deallocate_igk()
   !
   ! ... arrays allocated in init_run.f90 ( and never deallocated )
   !
+  !$acc exit data delete(g2kin)
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
+  CALL deallocate_wvfct_gpu()
   IF ( ALLOCATED( et ) )         DEALLOCATE( et )
   IF ( ALLOCATED( wg ) )         DEALLOCATE( wg )
   IF ( ALLOCATED( btype ) )      DEALLOCATE( btype )
@@ -167,6 +176,8 @@ SUBROUTINE clean_pw( lflag )
   !
   IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
   IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
+  !
+  CALL deallocate_wavefunctions_gpu()
   !
   ! ... fft structures allocated in data_structure.f90  
   !
@@ -206,9 +217,23 @@ SUBROUTINE clean_pw( lflag )
   !
   CALL deallocate_exx() 
   !
-  IF (ts_vdw) CALL tsvdw_finalize()
+  IF(sic) CALL deallocate_sic()
+  IF(scissor) CALL deallocate_scissor()
   !
+  IF (ts_vdw .or. mbd_vdw) CALL tsvdw_finalize()
+  IF (mbd_vdw) CALL clean_mbd()
+  !
+  ! ... arrays for RISM
+  !
+  CALL deallocate_rism( lflag )
+  !
+#if defined (__LEGACY_PLUGINS) 
   CALL plugin_clean( 'PW', lflag )
+#endif 
+#if defined (__ENVIRON)
+  IF (use_environ) CALL clean_environ('PW', lflag)
+#endif
+  CALL   plugin_clean('PW', lflag) 
   !
   RETURN
   !

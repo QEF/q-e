@@ -1,0 +1,388 @@
+input_description -distribution {Quantum ESPRESSO} -package KCW -program kcw.x {
+
+    toc {}
+
+    intro {
+	@b {Input data format:} { } = optional, [ ] = it depends, # = comment
+
+	@b {Structure of the input data:}
+	===============================================================================
+
+	@b &CONTROL
+	   ...
+	@b /
+
+        @b &WANNIER
+           ...
+        @b /
+
+        @b &SCREEN
+           ...
+        @b /
+  
+        @b &HAM
+           ...
+        @b /
+ 
+        @b K_POINTS { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c }
+        if (gamma)
+           nothing to read
+        if (automatic)
+           nk1, nk2, nk3, k1, k2, k3
+        if (not automatic)
+           nks
+           xk_x, xk_y, xk_z,  wk
+        if (tpipa_b or crystal_b in a 'bands' calculation) see Doc/brillouin_zones.pdf
+
+    }
+
+    namelist CONTROL {
+
+        var prefix -type CHARACTER {
+            default { 'pwscf' }
+            info {
+                Prepended to input/output filenames; must be the same 
+                used in the previous PW calculations.
+            }
+        }
+
+        var outdir -type CHARACTER {
+            default {
+                current directory ('./')
+            }
+            info {
+		Directory containing input, output, and scratch files; 
+                must be the same as specified in the calculation of 
+                previous PW calculation.
+            }
+        }
+ 
+        var calculation -type CHARACTER {
+            default { ' ' }
+            options {
+                info {
+                    Specify the KCW calculation to be done
+                    Possible choices:
+                }
+
+                opt -val 'wann2kcw' {
+                     Pre-processing to prepare KCW calculation. 
+                     Read previous PWSCF and possibly W90 outputs and prepare the KCW 
+                     calculation}
+
+                opt -val 'screen' {
+                     Perform the calculation of KCW screening coefficient using a
+                     LR approach as described here https://doi.org/10.1021/acs.jctc.7b01116
+                     and arXiv:2202.08155 
+                }
+
+                opt -val 'ham' {
+                     Perform the calculation interpolation and diagonalization of the KI hamiltonian 
+                }
+
+                opt -val 'cc' {
+                     Computes the (estimated) q+G=0 contribution to the bare and screened KC corrections.
+                     A report on this quantities is printed on output and can be used to correct a 
+                     posteriori a "screen" calculation performed without any corrective scheme (@ref l_vcut=.false.)
+                     avoiding the need of re-doing a "screen" calculation.
+
+                }
+
+
+            }
+        }
+        
+        var kcw_iverbosity -type INTEGER {
+            default { 1 }
+            info {
+                = 0 : minimal output
+                = 1 : as above + performs additional checks.
+                > 1 : as above + additional infos on all the steps.
+            }
+        }
+
+        var kcw_at_ks  -type LOGICAL {
+            default { .TRUE. }
+            info {
+             If true the KS canonical orbitals are used instead of Wannier
+             functions. It makes sense for isolated system only.
+            }
+        }
+
+
+        var read_unitary_matrix  -type LOGICAL {
+            default { .FALSE. }
+            info {
+             If true read the Unitary matrix written by Wannier90.
+             Implicitely means a previous wannier90 calculation was
+             performed and a KCW calculation will be performed starting 
+	     from MLWF. Requires 'write_hr = .true.' in wannier90.
+            }
+        }
+
+        var spread_thr  -type REAL {
+            default { 0.0001 Ry }
+            info {
+             HARD-CODED FOR NOW. Two or more Wannier functions are considered
+             identical if their spread (self-hartree) differ by less than spread_thr.
+	     Requires @ref check_spread = .true.
+            }
+        }
+
+       var homo_only  -type LOGICAL {
+            default { FALSE }
+            info {
+            If @ref kcw_at_ks = .TRUE. only the screening paramenter for the HOMO is
+            calculated. Mainly for a perturbative calculation of the first Ionization
+            Potential in isolated systems.
+            }
+        }
+
+       var l_vcut  -type LOGICAL {
+            default { FALSE }
+            info {
+            If .TRUE. the Gygi-Baldereschi scheme is used to deal with
+            the q->0 divergence of the Coulomb integral (bare and screened).
+            Improves the convergence wrt k/q-point sampling.
+            Requires to correctly set @ref eps_inf for the calculation of 
+            the screened interaction. 
+         
+            Use it only for periodic system. 
+            For isoleted system use @ref assume_isolated, instead.
+            }
+        }
+
+       var assume_isolated -type CHARACTER {
+            default { 'none' }
+            options {
+                info {
+                    Used to perform calculation assuming the system to be
+                    isolated (a molecule or a cluster in a 3D supercell).
+
+                    Currently available choices:
+                }
+
+                opt -val 'none' {(default): regular periodic calculation w/o any correction. }
+
+                opt -val {'martyna-tuckerman', 'm-t', 'mt'} {
+                    Martyna-Tuckerman correction
+                    to both total energy and scf potential. Adapted from:
+                    G.J. Martyna, and M.E. Tuckerman,
+                    "A reciprocal space based method for treating long
+                    range interactions in ab-initio and force-field-based
+                    calculation in clusters", J. Chem. Phys. 110, 2810 (1999),
+                    doi:10.1063/1.477923.
+                }
+
+
+            }
+        }
+
+
+
+        var spin_component -type INTEGER {
+            default { 1 }
+            info {
+             Which spin channel to calculate (only collinear calculation). 
+             1 = spin up channel
+             2 = spin down channel
+             It has to be consistent with the previous Wannier90 
+             calculation (see 'spin' keyword in Wannier90 documentation)                
+            }
+        }
+
+        vargroup -type INTEGER {
+            var mp1
+            var mp2
+            var mp3
+            default { -1,-1,-1 }
+            info {
+            Parameters of the Monkhorst-Pack grid (no offset).
+            Same meaning as for nk1, nk2, nk3 in the input of pw.x.
+            It has to coincide with the regular mesh used for the 
+            wannier90 calculation. 
+            }
+        }
+
+	var lrpa -type LOGICAL {
+	   default { .FALSE. } 
+	   info {
+	   If .true. the response function is computed neglecting xc 
+           effects both in the kernel and in the response function (RPA).
+	   }
+	}
+}  
+
+
+    namelist WANNIER {
+
+	var seedname -type CHARACTER {
+	   default { wann }
+           info {
+           The seedname of the previous Wannier90 calculation for occupied states.
+           NOTA BENE: the code implicitely assumed that the seedname for empty 
+           state is the same as that for occupied state with "_emp" appended. 
+           Keep this in mind when set up the wannier90 inputs. 
+
+           For example:
+           wann.win         is the wannier90 input file for the occupied states.
+           wann_emp.win     is the wannier90 input file for the empty states.
+           }
+        }
+
+	var num_wann_occ -type INTEGER {
+	   default { 0 }
+           info {
+           The number of wannier function for the occupied manifold.
+           It has to coincide with the number of occupied KS orbitals.
+           The whole KS manifold has to be wannierised (no 'exclude_band' 
+           option for occupied state, at the moment).
+           }
+	}
+
+	var num_wann_emp -type INTEGER {
+	   default { 0 }
+           info {
+           The number of wannier function for the empty manifold. 
+           It has to coincide with the number of empty wannier function
+           from the previous wannier90 calculation
+           }
+	}
+
+	var have_empty -type LOGICAL {
+	    default { FALSE }
+	    info {
+	    If true empty state are computed. Require a previous wannier90
+            calculation for the empty manifold. The code search for the 
+	    unitary matrices in the wannier90 file seedname_emp_u.mat
+	    }
+	}
+	
+	var has_disentangle -type LOGICAL {
+	    default { FALSE }
+	    info {
+            Specify if a disentangle unitary matrix needs to be read. Requires
+            a consisten calcuation from the previous wannier90 run.
+	    }
+	}
+
+        var check_ks -type LOGICAL {
+            default { FALSE }
+            info {
+            Specify if a diagonalization of the KS matrix build using the wannier
+            function in input has to be performed. This is mainly for debugging purpose.
+            }
+        }
+
+
+}
+
+
+    namelist SCREEN {
+
+
+        var niter -type INTEGER { 
+            default { maxter=100 }
+            info {
+                Maximum number of iterations in a scf step. If you want
+                more than 100, edit variable "maxter" in PH/phcom.f90
+            }
+        }
+ 
+        var nmix   -type INTEGER { 
+            default { 4 }
+            info { Number of iterations used in potential mixing. }
+        }
+
+        var tr2   -type REAL { 
+            default { 1e-14 }
+            info     { Threshold for self-consistency. }
+        }
+
+	var i_orb -type INTEGER {
+	default { -1 } 
+	info {
+             Perform the screening calculation for a particular orbital.
+             If i_orb = -1 (default) all the orbitals are computed.
+             Assumes values between 1 and the total number of wannier 
+	     functions. 
+	     }
+	}
+	var eps_inf -type REAL {
+	default { 1.d0 } 
+	info {
+	     The macroscopic dielectric constant. Needed for the Gygi-Baldereschi 
+             scheme if @ref l_vcut = .TRUE. 
+             Typically from exp or from a ph.x calculation.
+ 
+             NOTA BENE: This would be equivalent to a Makov-Payne correction. It works well
+             for cubic systems. Less well for anisotropic systems. 
+ 
+             ANISOTROPIC SYSTEMS: In this case a generalization of the GB scheme is implemented 
+             based on Nano Lett.,9, 975 (2009). It requires the full dielectric tensor to be provided.
+             The code searches (in the working dir) for a file named "eps.dat" containing the macrospocic
+             dielectric tensor. If it does not find it, the value @ref eps_inf provided in input will be
+             used (isotropic approximation). If not even @ref eps_inf is provided in input no correction
+             is applied to the screened KC correction. 
+	     }
+	}
+ 
+       var check_spread -type LOGICAL {
+       default {.FALSE.}
+       info {
+            If .TRUE. the spread (self-hartree) of the Wannier functions is 
+            checked and used to decide whether two or more Wannier functions
+            can be considered "identical" or not. Two Wannier functions are
+            considered identical if their spread (self-hartree) differ by less
+            than 1e-4 Ry (Hard coded for now, see @ref spread_thr). 
+            }
+       }
+
+}
+
+    namelist HAM {
+
+
+        var do_bands -type LOGICAL {
+           default { .FALSE. }
+           info {
+           If .true. the interpolated band structure is computed along 
+           a path secified with the K_POINTS card ( see PW documentation 
+           https://www.quantum-espresso.org/Doc/INPUT_PW.html#idm1487 )
+           }
+        }
+
+        var use_ws_distance -type LOGICAL {
+           default { .TRUE. }
+           info {
+           If .true. the position of the Wannier function inside the cell is used 
+           to set the proper distance and to have a smoother interpolation. Requires 
+           seedname_centres.xyz to be printed by the previous Wannier90 run. If the 
+           file is not found it is automatically switched to .FALSE. and only the 
+           distance between the cells is used (see also Wannier90 documentation)
+           }
+        }
+
+        var write_hr -type LOGICAL {
+           default { .TRUE. }
+           info {
+           If .true. the KCW hamiltonain in the Wannier basis and in real spase H(R)_m_n 
+           is printed to file. Usefull for furhter post-processing.  
+           }
+        }
+ 
+        var on_site_only -type LOGICAL {
+           default { .FALSE. }
+           info {
+           If .true. only the on-site and diagonal elements of the KCW hamiltonain 
+           are computed (R=0 and n=m).  
+           }
+        }
+
+     }
+
+    card K_POINTS { 
+      message { see https://www.quantum-espresso.org/Doc/INPUT_PW.html#idm1487 }
+      }
+}
+

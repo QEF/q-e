@@ -1,11 +1,13 @@
-MODULE set_signal
-! This module is a Fortran 2003 interface to the customize_signals.c C file
-! Compatible with Intel/PGI/Gcc(>=4.3) compilers
-
-! This module is compiled only if the following preprocessing option
-! is enabled
+!
 #if defined(__TRAP_SIGUSR1) || defined(__TERMINATE_GRACEFULLY)
-
+!
+MODULE set_signal
+!! This module is a Fortran 2003 interface to the customize_signals.c C file
+!! Compatible with Intel/PGI/Gcc(>=4.3) compilers
+!
+! This module is compiled only if the upper preprocessing option
+! is enabled
+!
 USE iso_c_binding
 USE io_global, ONLY : stdout
 USE mp_world,  ONLY : root, world_comm, mpime
@@ -159,7 +161,13 @@ FUNCTION signal_detected()
 
 END FUNCTION signal_detected
 
+END MODULE
+
 #else
+
+MODULE set_signal
+!! This module is a Fortran 2003 interface to the customize_signals.c C file
+!! Compatible with Intel/PGI/Gcc(>=4.3) compilers
 
 USE io_global, ONLY : stdout
 
@@ -175,7 +183,7 @@ FUNCTION signal_detected()
   LOGICAL::signal_detected
   signal_detected = .FALSE.
 END FUNCTION signal_detected
-  
-#endif
 
 END MODULE set_signal
+
+#endif

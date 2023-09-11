@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
@@ -15,7 +15,7 @@ $ECHO "of a simple molecule, CO, and of an Al (001) slab."
 $ECHO "In the latter case the relaxation is performed in two ways:"
 $ECHO "1) using the quasi-Newton BFGS algorithm"
 $ECHO "2) using a damped dynamics algorithm."
-
+$ECHO "3) using the FIRE algorithm."
 # set the needed environment variables
 . ../../../environment_variables
 
@@ -121,6 +121,50 @@ $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/CO*
 $ECHO " done"
 
+cat > co.fire.in << EOF
+&CONTROL
+  calculation  = "relax",
+  prefix       = "CO",
+  pseudo_dir   = "$PSEUDO_DIR",
+  outdir       = "$TMP_DIR",
+/
+&SYSTEM
+  ibrav     = 0,
+  nat       = 2,
+  ntyp      = 2,
+  ecutwfc   = 24.D0,
+  ecutrho   = 144.D0,
+/
+&ELECTRONS
+  conv_thr    = 1.D-7,
+  mixing_beta = 0.7D0,
+/
+&IONS
+ion_dynamics = 'fire'
+/
+CELL_PARAMETERS bohr
+12.0  0.0  0.0
+ 0.0 12.0  0.0
+ 0.0  0.0 12.0
+ATOMIC_SPECIES
+O  1.00  O.pz-rrkjus.UPF
+C  1.00  C.pz-rrkjus.UPF
+ATOMIC_POSITIONS {bohr}
+C  2.256  0.0  0.0
+O  0.000  0.0  0.0  0 0 0
+K_POINTS {Gamma}
+EOF
+$ECHO "  running the geometry relaxation for CO using FIRE...\c"
+$PW_COMMAND < co.fire.in > co.fire.out
+check_failure $?
+$ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/CO*
+$ECHO " done"
+
+
 # self-consistent calculation
 cat > al001.rx.in << EOF
 &CONTROL
@@ -221,6 +265,59 @@ K_POINTS
 EOF
 $ECHO "  running the geometry relaxation for Al (001) using damped MD...\c"
 $PW_COMMAND < al001.mm.in > al001.mm.out
+check_failure $?
+$ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/Al*
+$ECHO " done"
+cat > al001.fire.in << EOF
+&CONTROL
+  calculation = "relax",
+  dt          = 30.D0,
+  pseudo_dir  = "$PSEUDO_DIR",
+  outdir      = "$TMP_DIR",
+  prefix      = "Al"
+/
+&SYSTEM
+  ibrav       = 6,
+  celldm(1)   = 5.3033D0,
+  celldm(3)   = 8.D0,
+  nat         = 7,
+  ntyp        = 1,
+  ecutwfc     = 12.D0,
+  occupations = "smearing",
+  smearing    = "marzari-vanderbilt",
+  degauss     = 0.05D0,
+/
+&ELECTRONS
+  conv_thr    = 1.D-7,
+  mixing_beta = 0.3D0,
+/
+&IONS
+  ion_dynamics      = "fire",
+  pot_extrapolation = "second_order",
+  wfc_extrapolation = "second_order",
+/
+ATOMIC_SPECIES
+Al  1.D0  Al.pz-vbc.UPF
+ATOMIC_POSITIONS alat
+Al   0.5000000      0.5000000     -2.121320
+Al   0.0000000      0.0000000     -1.414213
+Al   0.5000000      0.5000000     -0.707107
+Al   0.0000000      0.0000000      0.000000
+Al   0.5000000      0.5000000      0.707107
+Al   0.0000000      0.0000000      1.414213
+Al   0.5000000      0.5000000      2.121320
+K_POINTS
+ 3
+ 0.125  0.125  0.0  1.0
+ 0.125  0.375  0.0  2.0
+ 0.375  0.375  0.0  1.0
+EOF
+$ECHO "  running the geometry relaxation for Al (001) using the FIRE algorithm...\c"
+$PW_COMMAND < al001.fire.in > al001.fire.out
 check_failure $?
 $ECHO " done"
 

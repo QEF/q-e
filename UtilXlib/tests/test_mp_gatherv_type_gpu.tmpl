@@ -8,9 +8,7 @@ PROGRAM test_mp_gatherv_{vname}_gpu
 !
 !
     USE cudafor
-#if defined(__MPI)
-    USE MPI
-#endif
+    USE parallel_include
     USE util_param, ONLY : DP
     USE mp, ONLY : mp_gather, mp_type_create_column_section
     USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &

@@ -19,6 +19,15 @@ MODULE vasp_xml
   ! vasp_readschema_*          read variables into internal varables
   !
 USE kinds, ONLY : DP
+#if defined (__fox)
+  USE FoX_dom, ONLY : parseFile, item, getElementsByTagname, destroy, &
+                      nodeList, Node, getLength, getTagName, hasAttribute, &
+                      extractDataContent, extractDataAttribute
+#else
+  USE     dom, ONLY : parseFile, item, getElementsByTagname, destroy, &
+                      nodeList, Node, getLength, getTagName, hasAttribute, &
+                      extractDataContent, extractDataAttribute
+#endif
 
 IMPLICIT NONE
 
@@ -102,15 +111,13 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
   USE klist,                ONLY : nkstot, nks, xk, wk
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, nbndx, et, wg
-  USE symm_base,            ONLY : irt, d1, d2, d3, checkallsym, nsym
   USE extfield,             ONLY : forcefield, tefield, gate, forcegate
-  USE cellmd,               ONLY : cell_factor, lmovecell
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE fft_types,            ONLY : fft_type_allocate
   USE recvec_subs,          ONLY : ggen, ggens
   USE gvect,                ONLY : gg, ngm, g, gcutm, mill, ngm_g, ig_l2g, &
-                                   eigts1, eigts2, eigts3, gstart, gshells
+                                   gstart, gshells
   USE fft_base,             ONLY : dfftp, dffts
   USE gvecs,                ONLY : ngms, gcutms
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
@@ -220,9 +227,6 @@ END SUBROUTINE readxmlfile_vasp
 SUBROUTINE vasp_readschema_file (ierr, vasp_kpoints, vasp_parameters, vasp_atominfo, vasp_structure)
   !----------------------------------------------------------------
   USE io_files,             ONLY : tmp_dir
-  USE FoX_dom,              ONLY : parseFile, item, getElementsByTagname, destroy, nodeList, Node
-  USE FoX_dom,              ONLY : getLength
-  USE FoX_dom,              ONLY : hasAttribute, getAttributes, extractDataAttribute
   IMPLICIT NONE
   !
   INTEGER                                               :: ierr, io_err
@@ -311,9 +315,6 @@ END SUBROUTINE vasp_readschema_file
   !---------------------------------------------------------
   SUBROUTINE vasp_read_atominfo(xml_node, obj, ierr)
     !
-    USE FoX_dom,              ONLY : item, getElementsByTagname, nodeList, Node
-    USE FoX_dom,              ONLY : getTagName, getLength, extractDataContent
-    USE FoX_dom,              ONLY : hasAttribute, getAttributes, extractDataAttribute
     IMPLICIT NONE
     !
     TYPE(Node), INTENT(IN), POINTER          :: xml_node
@@ -429,11 +430,6 @@ END SUBROUTINE vasp_readschema_file
   !---------------------------------------------------------
   SUBROUTINE vasp_read_kpoints(xml_node, obj, ierr)
     !
-    USE FoX_dom,              ONLY : item, getElementsByTagname, nodeList, Node
-    USE FoX_dom,              ONLY : getTagName, getLength, extractDataContent
-    USE FoX_dom,              ONLY : hasAttribute, getAttributes, extractDataAttribute
-    IMPLICIT NONE
-    !
     TYPE(Node), INTENT(IN), POINTER          :: xml_node
     TYPE(vasp_kpoints_type), INTENT(OUT)     :: obj
     INTEGER, OPTIONAL, INTENT(OUT)           :: ierr
@@ -486,11 +482,6 @@ END SUBROUTINE vasp_readschema_file
   !
   !---------------------------------------------------------
   SUBROUTINE vasp_read_parameters(xml_node, obj, ierr)
-    !
-    USE FoX_dom,              ONLY : item, getElementsByTagname, nodeList, Node
-    USE FoX_dom,              ONLY : getTagName, getLength, extractDataContent
-    USE FoX_dom,              ONLY : hasAttribute, getAttributes, extractDataAttribute
-    IMPLICIT NONE
     !
     TYPE(Node), INTENT(IN), POINTER          :: xml_node
     TYPE(vasp_parameters_type), INTENT(OUT)  :: obj
@@ -658,11 +649,6 @@ END SUBROUTINE vasp_readschema_file
   !---------------------------------------------------------
   SUBROUTINE vasp_read_structure(xml_node, obj, ierr)
     !
-    USE FoX_dom,              ONLY : item, getElementsByTagname, nodeList, Node
-    USE FoX_dom,              ONLY : getTagName, getLength, extractDataContent
-    USE FoX_dom,              ONLY : hasAttribute, getAttributes, extractDataAttribute
-    IMPLICIT NONE
-    !
     TYPE(Node), INTENT(IN), POINTER          :: xml_node
     TYPE(vasp_structure_type), INTENT(OUT)   :: obj
     INTEGER, OPTIONAL, INTENT(OUT)           :: ierr
@@ -786,14 +772,21 @@ SUBROUTINE vasp_init_xc(vasp_parameters,vasp_atominfo,iexch,icorr,igcx,igcc,inlc
   !
   IF(vasp_parameters%gga=='CA') THEN
      iexch = 1; icorr = 1; igcx = 0; igcc = 0
-  ELSE IF(vasp_parameters%gga=='91') THEN
+  ELSE IF(vasp_parameters%gga=='91') THEN 
      iexch = 1; icorr = 4; igcx = 2; igcc = 2
   ELSE IF(vasp_parameters%gga=='PE') THEN
      iexch = 1; icorr = 4; igcx = 3; igcc = 4
-  ELSE IF(vasp_parameters%gga=='CX') THEN
-     iexch = 1; icorr = 4; igcx = 27
-  ELSE IF(vasp_parameters%gga=='RE') THEN
+  ELSE IF(vasp_parameters%gga=='CX') THEN ! For vasp using vdW-DF-cx (use cx13)
+     iexch = 1; icorr = 4; igcx = 27; igcc = 0
+  ELSE IF(vasp_parameters%gga=='RE') THEN ! For vasp using revPBE OR vdW-DF1
      iexch = 1; icorr = 4; igcx = 4; igcc = 4
+     IF(vasp_parameters%luse_vdw) igcc = 0
+  ELSE IF(vasp_parameters%gga=='ML'.AND.vasp_parameters%luse_vdw) THEN ! For vasp using vdW-DF2 
+     iexch = 1; icorr = 4; igcc = 0; igcx = 13 
+  ELSE IF(vasp_parameters%gga=='MK'.AND.vasp_parameters%luse_vdw) THEN ! For vasp using vdW-DF2-b86r or vdW-DF-ob86
+     iexch = 1; icorr = 4; igcc = 0 
+     IF((ABS(vasp_parameters%zab_vdw-(-1.8867))<eps4).AND.(ABS(vasp_parameters%param2-(0.711357))<eps4)) igcx = 26
+     IF((ABS(vasp_parameters%zab_vdw-(-0.8491))<eps4).AND.(ABS(vasp_parameters%param2-(1.0000))<eps4)) igcx = 24
   ELSE IF (vasp_parameters%gga/='--') THEN
      CALL errore ("vasp_init_xc", "GGA type not implemented", 1)
   ENDIF
@@ -830,7 +823,7 @@ SUBROUTINE vasp_init_xc(vasp_parameters,vasp_atominfo,iexch,icorr,igcx,igcc,inlc
      IF(ABS(vasp_parameters%zab_vdw-(-0.8491))<eps4) THEN
         inlc_ = 1
         inlc  = 1
-     ELSEIF(ABS(vasp_parameters%zab_vdw-(-1.887))<eps4) THEN
+     ELSEIF(ABS(vasp_parameters%zab_vdw-(-1.8867))<eps4) THEN
         inlc_ = 2
         inlc  = 2
      ELSE
@@ -909,7 +902,6 @@ END SUBROUTINE vasp_init_vars_from_schema
     USE constants,        ONLY : e2
     USE cell_base,        ONLY : at, bg, alat, omega, cell_base_init
     USE ions_base,        ONLY : nat, nsp
-    USE symm_base,        ONLY : nsym
     USE gvect,            ONLY : ngm_g, ecutrho
     USE fft_base,         ONLY : dfftp
     USE gvecs,            ONLY : ngms_g, dual
@@ -994,7 +986,6 @@ END SUBROUTINE vasp_init_vars_from_schema
     USE constants,        ONLY : e2, ANGSTROM_AU 
     USE cell_base,        ONLY : at, alat, omega
     USE ions_base,        ONLY : nat, nsp, ityp, tau, zv, atm
-    USE symm_base,        ONLY : nsym
     USE gvect,            ONLY : ngm_g, ecutrho
     USE fft_base,         ONLY : dfftp
     USE gvecs,            ONLY : ngms_g, dual
@@ -1043,7 +1034,6 @@ END SUBROUTINE vasp_init_vars_from_schema
     USE constants,        ONLY : e2
     USE cell_base,        ONLY : at, alat, omega
     USE ions_base,        ONLY : nat, nsp, ityp, tau, atm
-    USE symm_base,        ONLY : nsym
     USE gvect,            ONLY : ngm_g, ecutrho
     USE fft_base,         ONLY : dfftp
     USE gvecs,            ONLY : ngms_g, dual

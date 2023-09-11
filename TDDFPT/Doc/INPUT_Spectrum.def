@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package turboTDDFPT -program turbo_spectrum.x {
+input_description -distribution {Quantum ESPRESSO} -package turboTDDFPT -program turbo_spectrum.x {
 
     toc {}
 
@@ -14,16 +14,16 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
           fortran code. Comments lines in ``cards'' can be introduced by 
           either a "!" or a "#" character in the first position of a line.
 
-	  Structure of the input data:
+          @b {Structure of the input data:}
 	  ===============================================================================
 
-	  &lr_input
+	  &LR_INPUT
 	    ...
 	  /
 
     }
 
-    namelist lr_input {
+    namelist LR_INPUT {
 
 	label { This namelist is always needed ! }
 
@@ -71,16 +71,27 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 	
 	var extrapolation -type CHARACTER {
 	    default {'no'}
-	    info {
-            	 Sets the extrapolation scheme. 'osc'= biconstant extrapolation,
-		 'constant'=constant extrapolation and 'no'=no extrapolation.
-		 }
+            options {
+                info {
+                    Sets the extrapolation scheme.
+                }
+                opt -val 'osc' {
+                    biconstant extrapolation
+                }
+                opt -val 'constant' {
+                    constant extrapolation
+                }
+                opt -val 'no' {
+                    no extrapolation.
+                }
+            }
 	}
 
 	var epsil -type REAL {
 	    default {0.02}
 	    info {
-	    	The broadening/damping term (in Rydberg units).
+	    	The broadening/damping term. In Rydberg units if magnons=.false., 
+			in meV if magnons = .true.
 		}
 	}
 	
@@ -88,9 +99,10 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 	    default {0}
 	    info {
 	    	 The unit system used for the output and the start, end and increment
-		 input parameters.
+		 input parameters. (only meV used in that case).
 
-		 0 = Rydbergs, 1 = Electron volts and 2 = Nanometres per electron volts.
+		 0 = Rydbergs, 1 = Electron volts, 2 = Nanometres per electron volts,
+                 3 = milli Electron volts (only for magnons=.true.)
 		 }
         }
 
@@ -98,7 +110,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 	    default {0.0}
 	    info {
  	 	 The polarizability and the absorption coefficient are computed 
-		 starting from this value. In units set by the units variable.
+		 starting from this value. In units set.
 		}
 	}
 
@@ -106,7 +118,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 	    default {2.5}
 	    info {
  	 	 The polarizability and the absorption coefficient are computed 
-		 up to this value. In units set by the units variable.
+		 up to this value. In units set.
 		}
 	}
 
@@ -114,7 +126,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 	    default {0.001}
 	    info {
  	 	 Incremental step used to define the mesh between start and end.
-                 In units set by the units variable.
+                 In units set.
 		}
 	}
 	
@@ -138,6 +150,13 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
                 }
         }
 
+		var magnons -type LOGICAL {
+            default {.false.}
+            info {
+                 Must be set to .true. for magnon-calculation post-processing. 
+                }
+        }
+
         var td -type CHARACTER {
             default {'lanczos'}
             info {
@@ -156,6 +175,5 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
                  in which are written the eigenvalues. 
                 }
         }
-
-}
+    }
 }				

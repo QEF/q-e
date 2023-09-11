@@ -7,143 +7,192 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
-     omega, dvloc)
+SUBROUTINE dvloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
+                       omega, dvloc )
   !----------------------------------------------------------------------
-  !
-  ! dvloc = D Vloc (g^2) / D g^2 = (1/2g) * D Vloc(g) / D g
+  !! This routine gives:
+  !! \[ \text{dvloc} = D\text{Vloc}(g^2)/Dg^2 = (1/2g)\ D\text{Vloc}(g)/Dg
+  !! \]
   !
   USE kinds
-  USE constants , ONLY : pi, fpi, e2, eps8
+  USE constants,   ONLY: pi, fpi, e2, eps8
   USE Coul_cut_2D, ONLY: do_cutoff_2D
-  USE esm, ONLY : do_comp_esm, esm_bc
-  implicit none
+  USE esm,         ONLY: do_comp_esm, esm_bc
   !
-  !    first the dummy variables
+  IMPLICIT NONE
   !
-  integer, intent(in) :: ngl, mesh, msh
-  ! the number of shell of G vectors
-  ! max number of mesh points
-  ! number of mesh points for radial integration
-
-  real(DP), intent(in) :: zp, rab (mesh), r (mesh), vloc_at (mesh), &
-                          tpiba2, omega, gl (ngl)
-  ! valence pseudocharge
-  ! the derivative of the radial grid
-  ! the radial grid
-  ! the pseudo on the radial grid
-  ! 2 pi / alat
-  ! the volume of the unit cell
-  ! the moduli of g vectors for each s
+  INTEGER, INTENT(IN) :: ngl
+  !! the number of shell of G vectors
+  INTEGER, INTENT(IN) :: mesh
+  !! max number of mesh points
+  INTEGER, INTENT(IN) :: msh
+  !! number of mesh points for radial integration
+  REAL(DP), INTENT(IN) :: zp
+  !! valence pseudocharge
+  REAL(DP), INTENT(IN) :: rab(mesh)
+  !! the derivative of the radial grid
+  REAL(DP), INTENT(IN) :: r(mesh)
+  !! the radial grid
+  REAL(DP), INTENT(IN) :: vloc_at(mesh)
+  !! the pseudo on the radial grid 
+  REAL(DP), INTENT(IN) :: tpiba2
+  !! 2 pi / alat
+  REAL(DP), INTENT(IN) :: omega
+  !! the volume of the unit cell
+  REAL(DP), INTENT(IN) :: gl(ngl)
+  !! the moduli of g vectors for each s
+  REAL(DP), INTENT(OUT) ::  dvloc(ngl)
+  !! the Fourier transform dVloc/dG
   !
-  real(DP), intent(out) ::  dvloc (ngl)
-  ! the fourier transform dVloc/dG
+  ! ... local variables
   !
-  real(DP) :: vlcp, g2a, gx
-  real(DP), allocatable ::  aux (:), aux1 (:)
-  real(DP), external ::  qe_erf
-
-  integer :: i, igl, igl0
+  REAL(DP) :: vlcp, g2a, gx, vlcp_0, vlcp_1
+  REAL(DP), ALLOCATABLE :: aux(:,:), aux1(:)
+  INTEGER :: i, igl, igl0
   ! counter on erf functions or gaussians
   ! counter on g shells vectors
   ! first shell with g != 0
-
+  REAL(DP), PARAMETER :: r12=1.0d0/3.0d0 
+  !
+  !$acc data present( dvloc, gl )
+  !
   ! the  G=0 component is not computed
-  if (gl (1) < eps8) then
-     dvloc (1) = 0.0d0
+  IF (gl(1) < eps8) THEN
+     !$acc kernels
+     dvloc(1) = 0.0d0
+     !$acc end kernels
      igl0 = 2
-  else
+  ELSE
      igl0 = 1
-  endif
-
+  ENDIF
+  !
   ! Pseudopotentials in numerical form (Vloc contains the local part)
   ! In order to perform the Fourier transform, a term erf(r)/r is
   ! subtracted in real space and added again in G space
-
-  allocate (aux1( mesh))    
   !
-  !   This is the part of the integrand function
-  !   indipendent of |G| in real space
+  ALLOCATE( aux1(mesh) )
   !
-  do i = 1, msh
-     aux1 (i) = r (i) * vloc_at (i) + zp * e2 * qe_erf (r (i) )
-  enddo
+  ! This is the part of the integrand function
+  ! indipendent of |G| in real space
   !
-!$omp parallel private(aux, gx, vlcp, g2a)
+  ALLOCATE( aux(mesh,ngl) )
   !
-  allocate (aux( mesh))
+  !$acc data copyin(r,rab) create(aux1,aux)
   !
+  !$acc parallel loop copyin(vloc_at)
+  DO i = 1, msh
+     aux1(i) = r(i)*vloc_at(i) + zp*e2*ERF(r(i))
+  ENDDO
+  !
+#if defined(_OPENACC)
+!$acc parallel loop gang present(aux,aux1,rab,r,dvloc)
+#else
+!$omp parallel private( gx, vlcp, vlcp_1, vlcp_0, g2a )
 !$omp do
-  do igl = igl0, ngl
-     gx = sqrt (gl (igl) * tpiba2)
+#endif
+  DO igl = igl0, ngl
+     !
+     gx = SQRT(gl(igl)*tpiba2)
      !
      !    and here we perform the integral, after multiplying for the |G|
      !    dependent  part
      !
      ! DV(g)/Dg = Integral of r (Dj_0(gr)/Dg) V(r) dr
-     do i = 1, msh
-        aux (i) = aux1 (i) * (r (i) * cos (gx * r (i) ) / gx - sin (gx &
-             * r (i) ) / gx**2)
-     enddo
-     call simpson (msh, aux, rab, vlcp)
+     !
+     !$acc loop seq
+     DO i = 1, msh
+       aux(i,igl) = aux1(i)*(r(i)*COS(gx*r(i))/gx - SIN(gx*r(i))/gx**2)
+     ENDDO
+     !
+     !----Simpson int.---
+     vlcp_0 = 0.0d0    
+     !$acc loop seq reduction(+:vlcp_0)
+     DO i = 2, msh-1,  2
+       vlcp_0 = vlcp_0 + ( aux(i-1,igl)*rab(i-1) + 4.0d0*aux(i,igl)*rab(i) + &
+                           aux(i+1,igl)*rab(i+1) )*r12
+     ENDDO
+     !------
+     vlcp_1 = vlcp_0 * fpi / omega / 2.0d0 / gx
+     !
      ! DV(g^2)/Dg^2 = (DV(g)/Dg)/2g
-     vlcp = fpi / omega / 2.0d0 / gx * vlcp
-
-    ! for ESM stress
+     !vlcp = fpi / omega / 2.0d0 / gx * vlcp
+     !
+     ! for ESM stress
      ! In ESM, vloc and dvloc have only short term.
-     IF ( ( .not. do_comp_esm ) .or. ( esm_bc .eq. 'pbc' ) ) THEN
+     IF ( (( .NOT. do_comp_esm ) .OR. ( esm_bc .EQ. 'pbc' )) .AND. &
+             .NOT.do_cutoff_2D ) THEN
         ! subtract the long-range term
-        IF (.not.do_cutoff_2D) then ! 2D cutoff: do not re-add LR part here (re-added later in stres_loc)
-         g2a = gl (igl) * tpiba2 / 4.d0
-         vlcp = vlcp + fpi / omega * zp * e2 * exp ( - g2a) * (g2a + &
-             1.d0) / (gl (igl) * tpiba2) **2
-        ENDIF
-     END IF
-     dvloc (igl) = vlcp
-  enddo
+        ! 2D cutoff: do not re-add LR part here re-added later in stres_loc)
+        g2a = gl(igl) * tpiba2 / 4.d0
+        vlcp = vlcp_1 + fpi / omega * zp * e2 * EXP(-g2a) * (g2a + 1.d0) / &
+                          (gl(igl)*tpiba2)**2
+     ELSE
+        vlcp = vlcp_1
+     ENDIF
+     dvloc(igl) = vlcp
+  ENDDO
+#if !defined(_OPENACC)
 !$omp end do nowait
-  deallocate (aux)
 !$omp end parallel
+#else
+!$acc end data
+!$acc end data
+#endif
   !
-  deallocate (aux1)
-
-  return
-end subroutine dvloc_of_g
+  DEALLOCATE( aux )
+  DEALLOCATE( aux1 )
+  !
+  RETURN
+  !
+END SUBROUTINE dvloc_of_g
 !
 !----------------------------------------------------------------------
-subroutine dvloc_coul (zp, tpiba2, ngl, gl, omega, dvloc)
+SUBROUTINE dvloc_coul( zp, tpiba2, ngl, gl, omega, dvloc )
   !----------------------------------------------------------------------
-  !
-  !    Fourier transform of the Coulomb potential - For all-electron
-  !    calculations, in specific cases only, for testing purposes
+  !! Fourier transform of the Coulomb potential - For all-electron
+  !! calculations, in specific cases only, for testing purposes.
   !
   USE kinds
-  USE constants , ONLY : fpi, e2, eps8
-  implicit none
+  USE constants, ONLY : fpi, e2, eps8
   !
-  integer, intent(in) :: ngl
-  ! the number of shell of G vectors
-  real(DP), intent(in) :: zp, tpiba2, omega, gl (ngl)
-  ! valence pseudocharge
-  ! 2 pi / alat
-  ! the volume of the unit cell
-  ! the moduli of g vectors for each s
-  real(DP), intent(out) :: dvloc (ngl)
-  ! fourier transform: dvloc = D Vloc (g^2) / D g^2 = 4pi e^2/omegai /G^4
+  IMPLICIT NONE
   !
-  integer :: igl0
+  INTEGER, INTENT(IN) :: ngl
+  !! the number of shell of G vectors
+  REAL(DP), INTENT(IN) :: zp
+  !! valence pseudocharge
+  REAL(DP), INTENT(IN) :: tpiba2
+  !! 2 pi / alat
+  REAL(DP), INTENT(IN) :: omega
+  !! the volume of the unit cell
+  REAL(DP), INTENT(IN) :: gl(ngl)
+  !! the moduli of g vectors for each s
+  REAL(DP), INTENT(OUT) :: dvloc(ngl)
+  !! Fourier transform:  
+  !! dvloc = D Vloc (g^2) / D g^2 = 4pi e^2/omegai /G^4
+  !
+  INTEGER :: igl0
   ! first shell with g != 0
-
+  !
+  !$acc data present( dvloc, gl )
+  !
   ! the  G=0 component is 0
-  if (gl (1) < eps8) then
-     dvloc (1) = 0.0d0
+  IF (gl(1) < eps8) THEN
+     !$acc kernels
+     dvloc(1) = 0.0d0
+     !$acc end kernels
      igl0 = 2
-  else
+  ELSE
      igl0 = 1
-  endif
-
-  dvloc  (igl0:ngl) = fpi * zp * e2 / omega / ( tpiba2 * gl (igl0:ngl) ) ** 2
-
-return
-end subroutine dvloc_coul
+  ENDIF
+  !
+  !$acc kernels
+  dvloc(igl0:ngl) = fpi*zp*e2 / omega / (tpiba2*gl(igl0:ngl))**2
+  !$acc end kernels
+  !
+  !$acc end data
+  !
+  RETURN
+  !
+END SUBROUTINE dvloc_coul
 

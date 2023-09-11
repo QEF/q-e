@@ -13,7 +13,7 @@ echo $ECHO_N "setting CPPFLAGS... $ECHO_C"
 # Note: option -C makes trouble with recent gcc versions and pgi
 case $cpp in
         cpp)  try_cppflags="-P -traditional -Uvector" ;;
-        fpp)  try_cppflags="-P "                      ;;
+        fpp)  try_cppflags="-P -allow nofpp_comments" ;;
         *)    try_cppflags=""                         ;;
 esac
 if test "$cppflags" = "" ; then cppflags=$try_cppflags ; fi

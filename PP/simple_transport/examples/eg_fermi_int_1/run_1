@@ -5,6 +5,7 @@ export kp=32
 cp ../scf/GaAs.32.a2Fsave .
 cp ../scf/info-q .
 
+mkdir results
 
 # Loop over fermi energies
 for ind in 1 2 3 4
@@ -33,12 +34,12 @@ cat > input << EOF
 &end
 EOF
 
-./fermi_int_1.x < input 
+../../src/fermi_int_1.x < input 
 
-mv Def_1.out Def.$dop.out
-mv sig_1.out sig.$dop.out
-mv Se_1.out Se.$dop.out
-mv report_1 report.$dop
+mv Def_1.out results/Def.$dop.out
+mv sig_1.out results/sig.$dop.out
+mv Se_1.out  results/Se.$dop.out
+mv report_1  results/report.$dop
 
 done
 

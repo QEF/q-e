@@ -1,11 +1,13 @@
 SUBROUTINE hpotcg(np_in_sp_me, n, rho, pot, fullgrid, mvstep)
     !=======================================================================================
-    ! Code Version 1.0 (Princeton University, September 2014)
+    !! Code Version 1.0 (Princeton University, September 2014)
     !=======================================================================================
     !-------------------------------------------------------------------------------
-    !HPOTCG -- using Conjugate Gradient method to compute the Hartree Potential.
-    ! Modified from the corresponding subroutine in PARSEC, see http://parsec.ices.utexas.edu/
-    ! Lingzhu Kong
+    !! HPOTCG -- using Conjugate Gradient method to compute the Hartree Potential.
+    !! Modified from the corresponding subroutine in PARSEC, see:
+    !! \(\texttt{http://parsec.ices.utexas.edu/}\).
+    !
+    !! Lingzhu Kong
     !-------------------------------------------------------------------------------
     !
     USE kinds,                   ONLY  :  DP
@@ -138,12 +140,12 @@ FUNCTION distdot(n,x,ix,y,iy)
     !
 END FUNCTION distdot
 
-!-----------------------------------------------------------------------------
-! The matrix-vector multiplication routine for HPOTCG(given p, return q)
-! A big assumption is made here: the finite difference neighbors of the
-! point in the sphere is still inside the total box 
 !-----------------------------------------------------------------------
 SUBROUTINE lapmvs(np_in_sp_me, n,p,q)
+    !-----------------------------------------------------------------------------
+    !! The matrix-vector multiplication routine for HPOTCG(given p, return q).  
+    !! A big assumption is made here: the finite difference neighbors of the
+    !! point in the sphere is still inside the total box.
     !
     USE kinds,            ONLY  :  DP
     USE exx_module,       ONLY  :  odtothd_in_sp,  thdtood_in_sp
@@ -639,26 +641,29 @@ END SUBROUTINE lapmvs
 !     convergence tests.
 !-----------------------------------------------------------------------
 subroutine cg(n, rhs, sol, ipar, fpar, w)
+    !-----------------------------------------------------------------------
+    !! This is an implementation of the Conjugate Gradient (CG) method
+    !! for solving linear system.
+    !
+    !! NOTE: This is not the PCG algorithm. It is a regular CG algorithm.
+    !! To be consistent with the other solvers, the preconditioners are
+    !! applied by performing \(\text{Ml}^{-1}\ A\ \text{Mr}^{-1} P \) in 
+    !! place of \(A\ P\) in the CG algorithm. The PCG uses its preconditioners
+    !! very differently.
+    !
+    !! \(\text{fpar}(7)\) is used here internally to store \(\langle r, r\rangle\).
+    !
+    !! * w(:,1) -- residual vector;
+    !! * w(:,2) -- P, the conjugate direction;
+    !! * w(:,3) -- A P, matrix multiply the conjugate direction;
+    !! * w(:,4) -- temporary storage for results of preconditioning;
+    !! * w(:,5) -- change in the solution (sol) is stored here until
+    !!             termination of this solver.
+    !-----------------------------------------------------------------------
     implicit none
     integer n, ipar(16)
     real*8 rhs(n), sol(n), fpar(16), w(n,*)
-    !-----------------------------------------------------------------------
-    !     This is a implementation of the Conjugate Gradient (CG) method
-    !     for solving linear system.
     !
-    !     NOTE: This is not the PCG algorithm. It is a regular CG algorithm.
-    !     To be consistent with the other solvers, the preconditioners are
-    !     applied by performing Ml^{-1} A Mr^{-1} P in place of A P in the
-    !     CG algorithm. The PCG uses its preconditioners very differently.
-    !
-    !     fpar(7) is used here internally to store <r, r>.
-    !     w(:,1) -- residual vector
-    !     w(:,2) -- P, the conjugate direction
-    !     w(:,3) -- A P, matrix multiply the conjugate direction
-    !     w(:,4) -- temporary storage for results of preconditioning
-    !     w(:,5) -- change in the solution (sol) is stored here until
-    !               termination of this solver
-    !-----------------------------------------------------------------------
     !     external functions used
     real*8 distdot
     logical stopbis, brkdn
@@ -837,14 +842,15 @@ end subroutine cg
 
 !-----------------------------------------------------------------------
 logical function stopbis(n,ipar,mvpi,fpar,r,delx,sx)
+    !-----------------------------------------------------------------------
+    !! Function for determining the stopping criteria. Returns value of
+    !! TRUE if the \(\text{stopbis}\) criteria is satisfied.
+    !
     implicit none
     integer n,mvpi,ipar(16)
     real*8 fpar(16), r(n), delx(n), sx, distdot
     external distdot
-    !-----------------------------------------------------------------------
-    !     function for determining the stopping criteria. return value of
-    !     true if the stopbis criteria is satisfied.
-    !-----------------------------------------------------------------------
+    !
     if (ipar(11) .eq. 1) then
       stopbis = .true.
     else
@@ -900,12 +906,13 @@ end function stopbis
 
 !-----------------------------------------------------------------------
 subroutine tidycg(n,ipar,fpar,sol,delx)
+    !-----------------------------------------------------------------------
+    !! Some common operations required before terminating the CG routines.
+    !
     implicit none
     integer i,n,ipar(16)
     real*8 fpar(16),sol(n),delx(n)
-    !-----------------------------------------------------------------------
-    !     Some common operations required before terminating the CG routines
-    !-----------------------------------------------------------------------
+    !
     real*8 zero
     parameter(zero=0.0D0)
     !
@@ -936,17 +943,18 @@ end subroutine tidycg
 
 !-----------------------------------------------------------------------
 logical function brkdn(alpha, ipar)
+    !-----------------------------------------------------------------------
+    !! Test whether alpha is zero or an abnormal number, if yes,
+    !! this routine will return TRUE.
+    !
+    !! If alpha == 0, ipar(1) = -3,
+    !! if alpha is an abnormal number, ipar(1) = -9.
+    !
     implicit none
     integer ipar(16)
     real*8 alpha, beta, zero, one
     parameter (zero=0.0D0, one=1.0D0)
-    !-----------------------------------------------------------------------
-    !     test whether alpha is zero or an abnormal number, if yes,
-    !     this routine will return .true.
-    !
-    !     If alpha == 0, ipar(1) = -3,
-    !     if alpha is an abnormal number, ipar(1) = -9.
-    !-----------------------------------------------------------------------
+    
     brkdn = .false.
     if (alpha.gt.zero) then
       beta = one / alpha
@@ -973,13 +981,14 @@ end function brkdn
 
 !-----------------------------------------------------------------------
 subroutine bisinit(ipar,fpar,wksize,dsc,lp,rp,wk)
+    !-----------------------------------------------------------------------
+    !! Some common initializations for the iterative solvers.
+    !
     implicit none
     integer i,ipar(16),wksize,dsc
     logical lp,rp
     real*8  fpar(16),wk(*)
-    !-----------------------------------------------------------------------
-    !     some common initializations for the iterative solvers
-    !-----------------------------------------------------------------------
+    !
     real*8 zero, one
     parameter(zero=0.0D0, one=1.0D0)
     !
@@ -1042,4 +1051,317 @@ subroutine bisinit(ipar,fpar,wksize,dsc,lp,rp,wk)
   return
 end subroutine bisinit
 !-----end-of-bisinit
+!-----------------------------------------------------------------------
+!
+!------------------------------------------------------------------------
+! cubic subdomain related subroutines (start)
+!-----------------------------------------------------------------------
+SUBROUTINE CG_CUBE(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
+    !
+    !! Cubic subdomain related subroutine.
+    !
+    IMPLICIT NONE
+    !------------------------------------------------------------------------
+    ! --- pass in variables ---
+    !------------------------------------------------------------------------
+    integer, intent(out) :: iter
+    integer, intent(in)  :: n(3)
+    real(8), intent(in)  :: eps
+    real(8), intent(in)  :: fbsscale
+    real(8), intent(in)  :: coemicf(-3:3,3,3)
+    real(8), intent(in)  :: coeke(-3:3,3,3)
+    real(8), intent(in)  :: rho(n(1),n(2),n(3))
+    real(8), intent(inout) :: pot(n(1),n(2),n(3))
+#ifdef __CUDA
+    attributes(device)   :: coemicf, coeke, rho, pot 
+#endif
+    !------------------------------------------------------------------------
+
+    !------------------------------------------------------------------------
+    ! --- external function ---
+    !------------------------------------------------------------------------
+    REAL(8)                   :: DDOT
+    !------------------------------------------------------------------------
+
+    !------------------------------------------------------------------------
+    ! --- local variables ---
+    !------------------------------------------------------------------------
+    integer              :: itr
+    integer              :: i, j, k
+    integer              :: nord2
+    integer              :: npt
+    integer              :: nd(6)
+    integer              :: nb(6)
+    real(8)              :: nro
+    real(8)              :: nr
+    real(8)              :: mnr
+    real(8)              :: alfa
+    real(8), allocatable :: x (:,:,:)
+    real(8), allocatable :: r (:,:,:)
+    real(8), allocatable :: d0(:,:,:)
+    real(8), allocatable :: d1(:,:,:)
+#ifdef __CUDA
+    attributes(device)   :: x, r, d0, d1
+#endif
+    !------------------------------------------------------------------------
+
+
+    !------------------------------------------------------------------------
+    ! --- allocate arrays ---
+    !------------------------------------------------------------------------
+    nord2=3
+    !
+    nd(1)=1                                      
+    nd(2)=1         
+    nd(3)=1         
+    nd(4)=n(1)      
+    nd(5)=n(2)      
+    nd(6)=n(3)      
+    !
+    nb(1)=1-nord2
+    nb(2)=1-nord2
+    nb(3)=1-nord2
+    nb(4)=n(1)+nord2
+    nb(5)=n(2)+nord2
+    nb(6)=n(3)+nord2
+    !
+    npt=(n(1)+2*nord2)*(n(2)+2*nord2)*(n(3)+2*nord2)
+    !
+    ALLOCATE( x(1-nord2:n(1)+nord2, 1-nord2:n(2)+nord2, 1-nord2:n(3)+nord2))
+    ALLOCATE( r(1-nord2:n(1)+nord2, 1-nord2:n(2)+nord2, 1-nord2:n(3)+nord2))
+    ALLOCATE(d0(1-nord2:n(1)+nord2, 1-nord2:n(2)+nord2, 1-nord2:n(3)+nord2))
+    ALLOCATE(d1(1-nord2:n(1)+nord2, 1-nord2:n(2)+nord2, 1-nord2:n(3)+nord2))
+    !
+    r = 0.d0; x = 0.d0; d1 = 0.d0
+
+#ifdef __CUDA
+    !$cuf kernel do (3)
+#else
+    !$omp parallel do
+#endif
+    do k = 1, n(3)
+        do j = 1, n(2)
+            do i = 1, n(1)
+                r(i,j,k) = rho(i,j,k)
+                x(i,j,k) = pot(i,j,k)
+            end do
+        end do
+    end do
+#ifndef __CUDA
+    !$omp end parallel do
+#endif
+    !
+    CALL PADX(nd,nb,coeke,x,d1)
+    !
+    nro = 0.d0
+#ifdef __CUDA
+    !$cuf kernel do (3)
+#else
+    !$omp parallel do reduction(+:nro)
+#endif
+    do k = nb(3), nb(6)
+      do j = nb(2), nb(5)
+        do i = nb(1), nb(4)
+          r(i,j,k) = r(i,j,k) - 1.0d0 * d1(i,j,k)
+          d0(i,j,k) = r(i,j,k) 
+          nro = nro + r(i,j,k)*r(i,j,k) 
+        end do
+      end do
+    end do   
+#ifndef __CUDA
+    !$omp end parallel do
+#endif
+    !
+    DO itr=0,1000 ! loop over the dimension of the problem                         ! std CG_4 : for i = 1:length(b)
+        !
+        CALL PADX(nd,nb,coeke,d0,d1)                                               ! std CG_5 : Ap = A * p; % p = d0_d; Ap = d1_d
+        !
+        alfa = 0.d0
+#ifdef __CUDA
+        !$cuf kernel do (3)
+#else
+        !$omp parallel do reduction(+:alfa)
+#endif
+        do k = nb(3), nb(6)
+          do j = nb(2), nb(5)
+            do i = nb(1), nb(4)
+              alfa = alfa + d0(i,j,k) * d1(i,j,k)
+            end do
+          end do
+        end do   
+#ifndef __CUDA
+        !$omp end parallel do
+#endif
+        !
+        nr = 0.d0
+        !alfa=nro/Ddot(npt,d0_d,1,d1_d,1)                                          ! std CG_6 : alfa = rsold / (p' * Ap);
+#ifdef __CUDA
+        !$cuf kernel do (3)
+#else
+        !$omp parallel do reduction(+:nr)
+#endif
+        do k = nb(3), nb(6)
+          do j = nb(2), nb(5)
+            do i = nb(1), nb(4)
+              x(i,j,k) = x(i,j,k) + nro / alfa * d0(i,j,k) 
+              r(i,j,k) = r(i,j,k) - nro / alfa * d1(i,j,k)
+              nr = nr + r(i,j,k) * r(i,j,k)
+            end do
+          end do
+        end do   
+#ifndef __CUDA
+        !$omp end parallel do
+#endif
+        !                                 ! std CG_7 : x = x + alfa * p;
+        !                                 ! std CG_8 : r = r - alfa * Ap;
+        !                                                                                          ! std CG_9 : rsnew = r' * r;
+        IF (nr < eps*eps*(1.d0+nro)) EXIT                                        ! std CG_10-12 : if (converge) : break
+#ifdef __CUDA
+        !$cuf kernel do (3)
+#else
+        !$omp parallel do
+#endif
+        do k = nb(3), nb(6)
+          do j = nb(2), nb(5)
+            do i = nb(1), nb(4)
+              d0(i,j,k) = r(i,j,k) + d0(i,j,k) * nr/nro
+            end do
+          end do
+        end do   
+#ifndef __CUDA
+        !$omp end parallel do
+#endif
+        !                                  ! std CG_13 : p = r + (rsnew / rsold) * p;
+        !                                    ! std CG_13 : p = r + (rsnew / rsold) * p;
+        nro = nr
+    END DO
+    !------------------------------------------------------------------------
+
+    !------------------------------------------------------------------------
+    ! print error
+    !------------------------------------------------------------------------
+    !r_d(nd_d(1):nd_d(4),nd_d(2):nd_d(5),nd_d(3):nd_d(6))=rho(:,:,:)
+    !CALL PADX_CUDA(nd_d,nb_d,coeke_d,x_d,d0_d) ! TODO
+    !call cublasDaxpy(npt,-1.d0,d0_d,1, r_d, 1)
+    !------------------------------------------------------------------------
+    ! WRITE(*,"(A, E15.7, A, I4, A)") "error: ", DSQRT(PDDOT(nd,nb,r,r)), "  in", iter, "  steps"
+    !------------------------------------------------------------------------
+
+#ifdef __CUDA
+    !$cuf kernel do (3)
+#else
+    !$omp parallel do
+#endif
+    do k = 1, n(3)
+        do j = 1, n(2)
+            do i = 1, n(1)
+                pot(i,j,k) = x(i,j,k)
+            end do
+        end do
+    end do
+#ifndef __CUDA
+    !$omp end parallel do
+#endif
+    !
+    iter = itr
+    !
+    DEALLOCATE(x)
+    DEALLOCATE(r)
+    DEALLOCATE(d0)
+    DEALLOCATE(d1)
+    RETURN
+END SUBROUTINE CG_CUBE
+!============================================================================
+!       OP     PCG    FLOPS      MEM         DEP
+! ------------------------------------------------
+! [01] DOT              2N       2N
+!
+! [02] MV              37N       3N
+! [03] DOT      *       2N       2N
+! [04] DOT              2N       2N        02,03
+! [05] AXPY             2N       3N        04
+! [06] AXPY             2N       3N        04
+! [07] CP               --       2N        06
+! [08] SCAL     *        N       2N        07
+! [09] FW       *      18N       2N        08 ! TODO
+! [10] BW       *      18N       2N        09 ! TODO
+! [11] CP       *       --       2N        10
+! [12] DOT              2N       2N        09
+! [13] AXPY             2N       3N        12
+
+SUBROUTINE PADX(nd,nb,coeke,d,Ad)
+    !! Cubic subdomain related subroutine.
+    !
+    IMPLICIT NONE
+    !------------------------------------------------------------------------
+    ! --- pass in variables ---
+    !------------------------------------------------------------------------
+    INTEGER     :: nd(6)
+    INTEGER     :: nb(6)
+    INTEGER     :: itr, jtr, ktr
+    REAL(8)    :: coeke(-3:3,3,3)
+    REAL(8)    :: d(nb(1):nb(4), nb(2):nb(5), nb(3):nb(6))
+    REAL(8)    :: Ad(nb(1):nb(4), nb(2):nb(5), nb(3):nb(6))
+#ifdef __CUDA
+    attributes(device) :: coeke, d, Ad
+#endif
+    !------------------------------------------------------------------------
+
+#ifdef __CUDA
+    !$cuf kernel do (3)
+#else
+    !$omp parallel do collapse(3) default(shared) private(ktr,jtr,itr)
+#endif
+    DO ktr=nd(3),nd(6)
+        DO jtr=nd(2),nd(5)
+            DO itr=nd(1),nd(4)
+                Ad(itr,jtr,ktr)= & 
+                      (coeke(0,1,1)+coeke(0,2,2)+coeke(0,3,3))*d(itr,jtr,ktr) &
+                      +coeke(1,1,1)*(d(itr-1,jtr,ktr)+d(itr+1,jtr,ktr)) &
+                      +coeke(2,1,1)*(d(itr-2,jtr,ktr)+d(itr+2,jtr,ktr)) &
+                      +coeke(3,1,1)*(d(itr-3,jtr,ktr)+d(itr+3,jtr,ktr)) &
+                      +coeke(1,2,2)*(d(itr,jtr-1,ktr)+d(itr,jtr+1,ktr)) &
+                      +coeke(2,2,2)*(d(itr,jtr-2,ktr)+d(itr,jtr+2,ktr)) &
+                      +coeke(3,2,2)*(d(itr,jtr-3,ktr)+d(itr,jtr+3,ktr)) &
+                      +coeke(1,3,3)*(d(itr,jtr,ktr-1)+d(itr,jtr,ktr+1)) &
+                      +coeke(2,3,3)*(d(itr,jtr,ktr-2)+d(itr,jtr,ktr+2)) &
+                      +coeke(3,3,3)*(d(itr,jtr,ktr-3)+d(itr,jtr,ktr+3))
+                IF (ABS(coeke(1,1,2)) .GT. 1.0e-6) THEN
+                   Ad(itr,jtr,ktr)= Ad(itr,jtr,ktr) &
+                      +coeke(1,1,2)*(d(itr+1,jtr+1,ktr) &
+                      -d(itr+1,jtr-1,ktr)-d(itr-1,jtr+1,ktr)+d(itr-1,jtr-1,ktr)) &
+                      +coeke(2,1,2)*(d(itr+2,jtr+2,ktr) &
+                      -d(itr+2,jtr-2,ktr)-d(itr-2,jtr+2,ktr)+d(itr-2,jtr-2,ktr)) &
+                      +coeke(3,1,2)*(d(itr+3,jtr+3,ktr)- &
+                      d(itr+3,jtr-3,ktr)-d(itr-3,jtr+3,ktr)+d(itr-3,jtr-3,ktr))
+
+                END IF
+
+                IF (ABS(coeke(1,1,3)) .GT. 1.0e-6) THEN
+                   Ad(itr,jtr,ktr)=Ad(itr,jtr,ktr) &
+                     + coeke(1,1,3)*(d(itr+1,jtr,ktr+1) &
+                     -d(itr+1,jtr,ktr-1)-d(itr-1,jtr,ktr+1)+d(itr-1,jtr,ktr-1)) &
+                     +coeke(2,1,3)*(d(itr+2,jtr,ktr+2) &
+                     -d(itr+2,jtr,ktr-2)-d(itr-2,jtr,ktr+2)+d(itr-2,jtr,ktr-2)) &
+                     +coeke(3,1,3)*(d(itr+3,jtr,ktr+3) &
+                     -d(itr+3,jtr,ktr-3)-d(itr-3,jtr,ktr+3)+d(itr-3,jtr,ktr-3))
+                END IF
+
+                IF (ABS(coeke(1,2,3)) .GT. 1.0e-6) THEN
+                   Ad(itr,jtr,ktr)=Ad(itr,jtr,ktr) &
+                     +coeke(1,2,3)*(d(itr,jtr+1,ktr+1) &
+                     -d(itr,jtr+1,ktr-1)-d(itr,jtr-1,ktr+1)+d(itr,jtr-1,ktr-1)) &
+                     +coeke(2,2,3)*(d(itr,jtr+2,ktr+2) &
+                     -d(itr,jtr+2,ktr-2)-d(itr,jtr-2,ktr+2)+d(itr,jtr-2,ktr-2)) &
+                     +coeke(3,2,3)*(d(itr,jtr+3,ktr+3) &
+                     -d(itr,jtr+3,ktr-3)-d(itr,jtr-3,ktr+3)+d(itr,jtr-3,ktr-3))
+                END IF
+            END DO
+        END DO
+    END DO
+#ifndef __CUDA
+    !$omp end parallel do
+#endif
+END SUBROUTINE PADX
+! cubic subdomain related subroutines (end)
 !-----------------------------------------------------------------------

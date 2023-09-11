@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
@@ -130,6 +130,7 @@ cat > $PREFIX.tddfpt.in << EOF
    restart = .false.
  /
  &lr_control
+   calculator = 'lanczos',
    itermax = 500,
    q1 = 0.621,
    q2 = 0.000,

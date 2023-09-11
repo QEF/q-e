@@ -8,10 +8,9 @@
 !----------------------------------------------------------------------------
 MODULE constants
   !----------------------------------------------------------------------------
+  !! The constants needed everywhere
   !
   USE kinds, ONLY : DP
-  !
-  ! ... The constants needed everywhere
   !
   IMPLICIT NONE
   !
@@ -106,7 +105,7 @@ MODULE constants
   REAL(DP), PARAMETER :: e2 = 2.0_DP      ! the square of the electron charge
   REAL(DP), PARAMETER :: degspin = 2.0_DP ! the number of spins per level
   !
-  !!!!!! COMPATIBIILITY
+  !---- COMPATIBIILITY
   !
   REAL(DP), PARAMETER :: BOHR_RADIUS_CM = BOHR_RADIUS_SI * 100.0_DP
   REAL(DP), PARAMETER :: BOHR_RADIUS_ANGS = BOHR_RADIUS_CM * 1.0E8_DP

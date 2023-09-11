@@ -1,0 +1,78 @@
+input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {oscdft_et.x} {
+
+    toc {}
+
+    intro {
+        @b {Input data format:} { } = optional, [ ] = it depends, | = or
+
+        @b {Purpose of oscdft_et.x:}
+        This calculates the electronic coupling of an electron transfer process.
+        This requires two scf calculations:
+        - one calculation has the system constrained to its initial state and,
+        - the other calculation has the system constrained to its final state,
+        with both calculation using the same atomic positions.
+        The transferring electron is constrained to the donor atom in the initial state
+        while it is constrained to the acceptor atom in the final state.
+
+        @b {Structure of the input data:}
+        ===============================================================================
+
+            &OSCDFT_ET_NAMELIST
+              ...
+            /
+    }
+
+    namelist OSCDFT_ET_NAMELIST {
+
+        var initial_prefix -type CHARACTER {
+            status { REQUIRED }
+            info { 
+                prefix of the initial pw.x calculation.
+            }
+        }
+
+        var final_prefix -type CHARACTER {
+            status { REQUIRED }
+            info { 
+                prefix of the final pw.x calculation.
+            }
+        }
+
+        var initial_dir -type CHARACTER {
+            status { REQUIRED }
+            info { 
+                The directory containing the input data of the initial pw.x calculation,
+                i.e. the same as in pw.x.
+            }
+        }
+
+        var final_dir -type CHARACTER {
+            status { REQUIRED }
+            info { 
+                The directory containing the input data of the final pw.x calculation,
+                i.e. the same as in pw.x.
+            }
+        }
+
+        var print_matrix -type LOGICAL {
+            default { .FALSE. }
+            info {
+                If .TRUE., prints the occupation matrices.
+            }
+        }
+
+        var print_eigvect -type LOGICAL {
+            default { .FALSE. }
+            info {
+                If .TRUE., prints the occupation eigenvectors.
+            }
+        }
+
+        var print_debug -type LOGICAL {
+            default { .FALSE. }
+            info {
+                If .TRUE., prints additional debug informations.
+            }
+        }
+    }
+}

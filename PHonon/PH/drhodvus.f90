@@ -9,14 +9,13 @@
 
 subroutine drhodvus (irr, imode0, dvscfin, npe)
   !-----------------------------------------------------------------------
-  !
-  !    This subroutine calculates the term of the dynamical matrix
-  !    which comes from the interaction of the change of the self
-  !    consistent potential with the change of the charge density
-  !    at fixed wavefunctions.
-  !    See Eq.B36 of PRB 64, 235118 (2001).
-  !    In the PAW case this part of the dynamical matrix has an additional
-  !    contribution.
+  !! This subroutine calculates the term of the dynamical matrix
+  !! which comes from the interaction of the change of the self
+  !! consistent potential with the change of the charge density
+  !! at fixed wavefunctions.  
+  !! See Eq.B36 of PRB 64, 235118 (2001).  
+  !! In the PAW case this part of the dynamical matrix has an additional
+  !! contribution.
   !
   !
   USE kinds,     ONLY : DP
@@ -41,16 +40,20 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   USE mp,        ONLY : mp_sum
 
   USE lrus,      ONLY : int3_paw
+  
   implicit none
 
-  integer :: irr, imode0, npe
-  ! input: the irreducible representation
-  ! input: starting position of this represe
-  ! input: the number of perturbations
-
+  integer :: irr
+  !! input: the irreducible representation
+  integer :: imode0
+  !! input: starting position of this represe
+  integer :: npe
+  !! input: the number of perturbations
   complex(DP) :: dvscfin (dfftp%nnr, nspin_mag, npe)
-  ! input: the change of V_Hxc
-
+  !! input: the change of \(V_{Hxc}\)
+  !
+  ! ... local variables
+  !
   integer :: ipert, irr1, mode0, mu, is, nu_i, nu_j, nrtot, &
              ih, jh, ijh, na, nt
   ! counters
@@ -78,6 +81,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
         call get_buffer (drhous,  lrdrhous, iudrhous, nu_j)
         do mu = 1, npert (irr)
            nu_i = imode0 + mu
+           ! FIXME : use zgemm instead of zdotc
            dyn1 (nu_i, nu_j) = dyn1 (nu_i, nu_j) + &
                    zdotc (dfftp%nnr*nspin_mag,dvscfin(1,1,mu),1,drhous, 1) &
                    * omega / DBLE (nrtot)

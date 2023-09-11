@@ -27,18 +27,26 @@ PROGRAM lr_dav_main
                                     ibnd_start, ibnd_end
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions,  ONLY : psic
-  USE control_flags,         ONLY : do_makov_payne
+  USE control_flags,         ONLY : do_makov_payne, use_gpu
   USE check_stop,            ONLY : check_stop_now, check_stop_init
-  USE funct,                 ONLY : dft_is_hybrid
-
+  USE xc_lib,                ONLY : xclib_dft_is
   use lr_dav_routines
   use lr_dav_variables
   use lr_dav_debug
+  !
+#if defined (__ENVIRON)
+  USE plugin_flags,          ONLY : use_environ
+  USE environ_base_module,   ONLY : print_environ_summary
+#endif
   !
   IMPLICIT NONE
   INTEGER            :: ibnd_occ,ibnd_virt,ibnd,ip
   LOGICAL            :: rflag, nomsg
   complex(dp)            :: temp
+  LOGICAL, EXTERNAL  :: check_gpu_support
+
+  use_gpu = check_gpu_support()
+  if(use_gpu) Call errore('lr_dav_main', 'turbo_davidson with GPU NYI', 1)
 
 #if defined(__MPI)
   CALL mp_startup ( )
@@ -56,7 +64,9 @@ PROGRAM lr_dav_main
 
   ! Writing a summary of plugin variables
 
-  CALL plugin_summary()
+#if defined (__ENVIRON)
+  IF (use_environ) CALL print_environ_summary()
+#endif
 
   CALL check_stop_init()
 
@@ -131,7 +141,7 @@ CONTAINS
 
     USE lr_variables,        ONLY : no_hxc, d0psi_rs
     USE uspp,                ONLY : okvan
-    USE funct,               ONLY : dft_is_hybrid
+    USE xc_lib,              ONLY : xclib_dft_is
     USE martyna_tuckerman,   ONLY : do_comp_mt
 
     IMPLICIT NONE
@@ -156,7 +166,7 @@ CONTAINS
  
     IF (no_hxc)  THEN
        WRITE(stdout,'(5x,"No Hartree/Exchange/Correlation")')
-    ELSEIF (dft_is_hybrid() .AND. .NOT.d0psi_rs) THEN
+    ELSEIF (xclib_dft_is('hybrid') .AND. .NOT.d0psi_rs) THEN
        WRITE(stdout, '(/5x,"Use of exact-exchange enabled. Note the EXX correction to the [H,X]", &
                      & /5x,"commutator is NOT included hence the f-sum rule will be violated.",   &
                      & /5x,"You can try to use the variable d0psi_rs=.true. (see the documentation).")' )

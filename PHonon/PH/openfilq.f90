@@ -8,20 +8,20 @@
 !----------------------------------------------------------------------------
 SUBROUTINE openfilq()
   !----------------------------------------------------------------------------
+  !! This subroutine opens all the files necessary for the phononq
+  !! calculation.
   !
-  ! ... This subroutine opens all the files necessary for the phononq
-  ! ... calculation.
-  !
-  USE kinds,            ONLY : DP
-  USE control_flags,    ONLY : io_level, modenum
-  USE units_ph,         ONLY : iudwf, iubar, iucom, iudvkb3, &
+  USE kinds,           ONLY : DP
+  USE control_flags,   ONLY : io_level, modenum
+  USE units_ph,        ONLY : iubar, iucom, iudvkb3, &
                               iudrhous, iuebar, iudrho, iudyn, iudvscf, &
-                              lrdwf, lrbar, lrcom, lrdvkb3, &
+                              lrbar, lrcom, lrdvkb3, &
                               lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw, &
                               iundnsscf, iudvpsi, lrdvpsi, iugauge
-  USE units_lr,         ONLY : iuwfc, lrwfc
-  USE io_files,         ONLY : tmp_dir, diropn, seqopn, nwordwfcU
-  USE control_ph,       ONLY : epsil, zue, ext_recover, trans, &
+  USE units_lr,        ONLY : iuwfc, lrwfc
+  USE io_files,        ONLY : prefix, tmp_dir, diropn, seqopn, iunhub, &
+                              iunhub_noS, nwordwfcU
+  USE control_ph,      ONLY : epsil, zue, ext_recover, trans, &
                               tmp_dir_phq, start_irr, last_irr, xmldyn, &
                               all_done, newgrid
   USE save_ph,         ONLY : tmp_dir_save
@@ -33,11 +33,9 @@ SUBROUTINE openfilq()
   USE lsda_mod,        ONLY : nspin, lsda
   USE uspp,            ONLY : nkb, okvan
   USE uspp_param,      ONLY : nhm
-  USE io_files,        ONLY : prefix
-  USE noncollin_module,ONLY : npol, nspin_mag, noncolin
+  USE noncollin_module,ONLY : npol, nspin_mag, noncolin, domag
   USE paw_variables,   ONLY : okpaw
   USE mp_bands,        ONLY : me_bgrp
-  USE spin_orb,        ONLY : domag
   USE io_global,       ONLY : ionode,stdout
   USE buffers,         ONLY : open_buffer, close_buffer
   USE ramanm,          ONLY : lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
@@ -47,7 +45,7 @@ SUBROUTINE openfilq()
   USE dfile_autoname,  ONLY : dfile_name
   USE qpoint,          ONLY : xq
   USE control_lr,      ONLY : lgamma
-  USE units_lr,        ONLY : iuatwfc, iuatswfc
+  USE units_lr,        ONLY : iuatwfc, iuatswfc, iudwf, lrdwf
   USE modes,           ONLY : nmodes
   USE ldaU,            ONLY : lda_plus_u, Hubbard_lmax, nwfcU
   USE ldaU_ph,         ONLY : dnsscf_all_modes
@@ -55,6 +53,12 @@ SUBROUTINE openfilq()
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, nrbase, nrlocal, &
                                 wpot_dir, iunwpot, lrwpot
   USE ahc,              ONLY : elph_ahc, ahc_nbnd_gauge
+  USE output,                ONLY : fildrho
+  USE io_global,     ONLY :  ionode_id,meta_ionode_id
+  USE mp_world,      ONLY : world_comm
+  USE mp,            ONLY : mp_bcast,mp_barrier
+  USE mp_pools,        ONLY : me_pool, my_pool_id, npool
+  USE mp_bands,        ONLY : intra_bgrp_comm,me_bgrp
   !
   IMPLICIT NONE
   !
@@ -63,11 +67,11 @@ SUBROUTINE openfilq()
   CHARACTER (len=256) :: filint, fildvscf_rot, filwpot
   ! the name of the file
   INTEGER :: ir, irlocal
-  !! Real space unit cell index
+  ! Real space unit cell index
   INTEGER :: unf_lrwpot, direct_io_factor
-  !! record length for opening wpot file
+  ! record length for opening wpot file
   REAL(DP) :: dummy
-  !! dummy variable for calculating direct_io_factor
+  ! dummy variable for calculating direct_io_factor
   LOGICAL :: exst, exst_mem
   ! logical variable to check file exists
   ! logical variable to check file exists in memory
@@ -84,29 +88,33 @@ SUBROUTINE openfilq()
   !     written by pw.x. In the other cases those calculated by ph.x
   !
   tmp_dir=tmp_dir_phq
- !!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
+ !************************ ACFDT TEST ********************
   IF (acfdt_is_active) THEN
      ! ACFDT -test always the wfc is read/written from/to file in tmp_dir_phq
-     IF (.not.acfdt_num_der)  then 
+     IF (.not.acfdt_num_der)  then
         IF (lgamma.AND.modenum==0) tmp_dir=tmp_dir_save
      ENDIF
-  ELSE  
+  ELSE
      ! this is the standard treatment
      IF (lgamma.AND.modenum==0.AND..NOT.newgrid ) tmp_dir=tmp_dir_save
      ! FIXME: why this case?
      IF ( noncolin.AND.domag ) tmp_dir=tmp_dir_phq
   ENDIF
-!!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
+!************************* END OF ACFDT TEST *******************
   iuwfc = 20
   lrwfc = nbnd * npwx * npol
-  CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst, tmp_dir)
-  IF (.NOT.exst.AND..NOT.exst_mem.and..not.all_done) THEN
-     CALL close_buffer(iuwfc, 'delete') 
-     !FIXME Dirty fix for obscure case
-     tmp_dir = tmp_dir_phq
+  IF (io_level > 0) THEN
      CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst, tmp_dir)
-     IF (.NOT.exst.AND..NOT.exst_mem) CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
-  END IF
+     IF (.NOT.exst.AND..NOT.exst_mem.and..not.all_done) THEN
+        CALL close_buffer(iuwfc, 'delete')
+        !FIXME Dirty fix for obscure case
+        tmp_dir = tmp_dir_phq
+        CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst, tmp_dir)
+        IF (.NOT.exst.AND..NOT.exst_mem) CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
+     END IF
+  ELSE
+     iuwfc = 10
+  ENDIF
   IF (elph_mat) then
      iunwfcwann=733
      lrwfcr= 2 * dffts%nr1x*dffts%nr2x*dffts%nr3x *npol
@@ -153,6 +161,34 @@ SUBROUTINE openfilq()
   !
   iudrho = 23
   lrdrho = 2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x * nspin_mag
+
+  if(elph_mat.and.lgamma)then
+    IF ( fildrho == ' ')      then
+      write(stdout,'(5x,A)')  'openfilq: Not provided name for fildrho file '
+      iudrho = 0
+    else
+      INQUIRE ( file=TRIM(dvscf_star%dir)//TRIM(prefix)//'.'//TRIM(fildrho)//'.E1', exist=exst )
+      IF (exst ) THEN
+        write(stdout,'(5x,A)')  'openfilq: Found file '//TRIM(prefix)//'.'//TRIM(fildrho)//'.E1'
+        iudrho = 23
+      else
+        write(stdout,'(5x,A)')  'openfilq: file '//TRIM(prefix)//'.'//TRIM(fildrho)//'.E1'//&
+          ' not found in '//dvscf_star%dir
+        iudrho = 0
+      end if
+    end if
+
+    IF ( ionode ) THEN
+      INQUIRE (UNIT = iudrho, OPENED = exst)
+      IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
+      CALL diropn (iudrho, TRIM(fildrho)//'.E', lrdrho, exst, dvscf_star%dir)
+      IF (.not.exst) then
+        write(stdout,'(5x,A)')  'openfilq: Error opening file '//TRIM(prefix)//'.'//TRIM(fildrho)//'.E1'//&
+          ' not found in '//dvscf_star%dir
+        iudrho = 0
+      end if
+    end if
+  end if
   !
   !   a formatted file which contains the dynamical matrix in cartesian
   !   coordinates is opened in the current directory
@@ -179,27 +215,37 @@ SUBROUTINE openfilq()
   !
 400 IF (trim(fildvscf).NE.' ') THEN
      iudvscf = 27
-     IF ( me_bgrp == 0 ) THEN
+     IF ( ionode ) THEN
         IF (trim(dvscf_star%ext).NE.' ' .and. elph_mat) THEN
            fildvscf_rot = dfile_name(xq, at, TRIM(dvscf_star%ext), &
                    TRIM(dvscf_star%dir)//prefix, &
                    generate=.false., index_q=iq_dummy, equiv=.false. )
-              
+
+
+           CALL diropn (iudvscf, fildvscf_rot, -1, exst, dvscf_star%dir)
+           if(.not.exst) then
+             WRITE(stdout,'(5x,5a)') "There is not a dvscf file '",TRIM(fildvscf_rot), &
+               "' in directory '",trim(dvscf_star%dir),"'"
+             iudvscf = 0
+           else
            WRITE(stdout,'(5x,5a)') "Opening dvscf file '",TRIM(fildvscf_rot), &
                    "' (for reading) in directory '",trim(dvscf_star%dir),"'"
-              
+
            CALL diropn (iudvscf, fildvscf_rot, lrdrho, exst, dvscf_star%dir)
+         end if
         ELSE
            CALL diropn (iudvscf, fildvscf, lrdrho, exst )
         ENDIF
         IF (okpaw) THEN
            filint=TRIM(fildvscf)//'_paw'
            lint3paw = 2 * nhm * nhm * nat * nspin_mag
-           iuint3paw=34
+           iuint3paw=43
            CALL diropn (iuint3paw, filint, lint3paw, exst)
         ENDIF
         END IF
      END IF
+     CALL mp_bcast(iudvscf, ionode_id,intra_bgrp_comm)
+
   !
   !    In the USPP case we need two files for the Commutator, the first is
   !    given by filbar and a second which just contains P_c x |psi>,
@@ -247,48 +293,70 @@ SUBROUTINE openfilq()
   !
   ! Files needed for DFPT+U calculation
   !
-  IF (lda_plus_u) THEN   
+  IF (lda_plus_u) THEN
      !
      nwordwfcU = npwx * nwfcU * npol
      !
      ! The unit iuatwfc contains atomic wfcs at k and k+q
-     !    
+     !
      iuatwfc = 34
      CALL open_buffer (iuatwfc, 'atwfc', nwordwfcU, io_level, exst_mem, exst, tmp_dir)
      !
      ! The unit iuatswfc contains atomic wfcs * S at k and k+q
-     !    
+     !
      iuatswfc = 35
      CALL open_buffer (iuatswfc, 'satwfc', nwordwfcU, io_level, exst_mem, exst, tmp_dir)
      !
-     ! Check whether the necessary files for the elph calculation exist 
-     ! and are read correctly
+     IF (lgamma) THEN
+        !
+        ! If q = Gamma, open units iunhub and iunhub_noS which are needed in
+        ! commutator_Vhubx_psi.f90. They contain atomic wfcs phi and S * phi at k.
+        !
+        CALL open_buffer(iunhub, 'hub', nwordwfcU, io_level, exst_mem, exst, tmp_dir)
+        CALL open_buffer(iunhub_noS, 'hubnoS', nwordwfcU, io_level, exst_mem, exst, tmp_dir)
+     ENDIF
      !
-     IF (trans.OR.elph) THEN
+     ! Open a file to write dnsscf_all_modes
+     !
+     iundnsscf = 36
+     IF (trans .OR. elph) THEN
         !
-        iundnsscf = 36
+        ! Open a file
+        ! Note: if trans=.true. then dnsscf_all_modes will be written to file (see phqscf)
         !
-        IF (ionode) THEN
+        IF (ionode) CALL seqopn (iundnsscf, 'dnsscf', 'formatted', exst)
+        !
+        ! If elph=.true. and trans=.true., then dnsscf (dnsscf_all_modes) is computed and
+        ! kept in memory and hence we can directly use it in elphel.
+        ! If elph=.true. and trans=.false. (i.e. phonons must be computed in advance),
+        ! then we read dnsscf (dnsscf_all_modes) from file.
+        !
+        IF (elph .AND. .NOT.trans) THEN ! In this case we read dnsscf_all_modes
            !
-           CALL seqopn (iundnsscf, 'dnsscf', 'formatted', exst)
-           !
-           IF (.NOT.exst .AND. elph) &
-             CALL errore ('openfilq', 'dnsscf file not found, necessary for el-ph calculation, stopping ', 1)
-           ! 
-           IF (exst) THEN
-              !
-              ALLOCATE (dnsscf_all_modes (2*Hubbard_lmax+1, 2*Hubbard_lmax+1, nspin, nat, nmodes))
-              READ(iundnsscf,*,iostat=ios) dnsscf_all_modes
-              REWIND(iundnsscf)
-              !
-              IF (elph .AND. ios.NE.0) &
-                 CALL errore ('openfilq', 'dnsscf file corrupted, necessary for el-ph calculation, stopping ', 1)
-              ! 
-              IF (elph .AND. ios==0) &
-                 WRITE( stdout,*) 'THE DNSSCF MATRIX WAS CORRECTLY READ FROM FILE, NECESSARY FOR ELPH+U'
-              !
-              DEALLOCATE(dnsscf_all_modes)
-              !
+           IF (ionode) THEN
+             !
+             IF (.NOT.exst) &
+                CALL errore ('openfilq', 'dnsscf file not found, necessary for el-ph calculation, stopping ', 1)
+             !
+             IF (exst) THEN
+                !
+                ! Here we allocate and deallocate dnsscf_all_modes just to check that it is read from file properly.
+                ! In elphel, dnsscf_all_modes will be allocated and read again (for production purposes).
+                !
+                ALLOCATE (dnsscf_all_modes (2*Hubbard_lmax+1, 2*Hubbard_lmax+1, nspin, nat, nmodes))
+                READ(iundnsscf,*,iostat=ios) dnsscf_all_modes
+                REWIND(iundnsscf)
+                !
+                IF (ios.NE.0) &
+                   CALL errore ('openfilq', 'dnsscf file corrupted, necessary for el-ph calculation, stopping ', 1)
+                !
+                IF (ios==0) &
+                   WRITE( stdout,*) 'THE DNSSCF MATRIX WAS CORRECTLY READ FROM FILE, NECESSARY FOR ELPH+U'
+                !
+                DEALLOCATE(dnsscf_all_modes)
+                !
+             ENDIF
+             !
            ENDIF
            !
         ENDIF

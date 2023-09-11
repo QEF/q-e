@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,14 +20,13 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE cell_base,            ONLY : omega, tpiba
   USE fft_base,             ONLY : dfftp
-  USE fft_interfaces,       ONLY : fwfft
+  USE fft_rho,              ONLY : rho_r2g
   USE gvect,                ONLY : g, gg, ngm, gstart, mill, &
                                    eigts1, eigts2, eigts3
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vltot
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions,        ONLY : psic
   USE noncollin_module,     ONLY : nspin_mag
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_pools,             ONLY : inter_pool_comm
@@ -63,14 +62,14 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
   !
   deeq(:,:,:,:) = 0.D0
   !
-  ! With k-point parallelization, distribute G-vectors across processors
-  ! ngm_s = index of first G-vector for this processor
-  ! ngm_e = index of last  G-vector for this processor
-  ! ngm_l = local number of G-vectors 
+  ! ... With k-point parallelization, distribute G-vectors across processors
+  ! ... ngm_s = index of first G-vector for this processor
+  ! ... ngm_e = index of last  G-vector for this processor
+  ! ... ngm_l = local number of G-vectors 
   !
   CALL divide( inter_pool_comm, ngm, ngm_s, ngm_e )
   ngm_l = ngm_e-ngm_s+1
-  ! for the extraordinary unlikely case of more processors than G-vectors
+  ! ... for the extraordinary unlikely case of more processors than G-vectors
   !
   IF ( ngm_l > 0 ) THEN
      ALLOCATE( vaux(ngm_l,nspin_mag), qmod(ngm_l), ylmk0(ngm_l,lmaxq*lmaxq) )
@@ -81,30 +80,14 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
      ENDDO
   ENDIF
   !
-  ! ... fourier transform of the total effective potential
+  ! ... Fourier transform of the total effective potential
   !
   DO is = 1, nspin_mag
-     !
-     IF ( (nspin_mag == 4 .AND. is /= 1) .OR. skip_vltot ) THEN 
-!$omp parallel do default(shared) private(ig)
-        DO ig = 1, dfftp%nnr
-           psic(ig) = vr(ig,is)
-        ENDDO
-!$omp end parallel do
-     ELSE
-!$omp parallel do default(shared) private(ig)
-        DO ig = 1, dfftp%nnr
-           psic(ig) = vltot(ig) + vr(ig,is)
-        ENDDO
-!$omp end parallel do
-     ENDIF
-     CALL fwfft( 'Rho', psic, dfftp )
-!$omp parallel do default(shared) private(ig)
-        DO ig = 1, ngm_l
-           vaux(ig,is) = psic(dfftp%nl(ngm_s+ig-1))
-        ENDDO
-!$omp end parallel do
-     !
+    IF ( (nspin_mag==4 .AND. is/=1) .OR. skip_vltot ) THEN
+       CALL rho_r2g( dfftp, vr(:,is:is), vaux(:,is:is), igs=ngm_s )
+    ELSE
+       CALL rho_r2g( dfftp, vr(:,is:is), vaux(:,is:is), v=vltot, igs=ngm_s )
+    ENDIF
   ENDDO
   !
   DO nt = 1, ntyp
@@ -142,14 +125,14 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
            DO na = 1, nat
               IF ( ityp(na) == nt ) THEN
                  nb = nb + 1
-!$omp parallel do default(shared) private(ig)
+                 !$omp parallel do default(shared) private(ig)
                  DO ig = 1, ngm_l
                     aux(ig, nb) = vaux(ig,is) * CONJG( &
                       eigts1(mill(1,ngm_s+ig-1),na) * &
                       eigts2(mill(2,ngm_s+ig-1),na) * &
                       eigts3(mill(3,ngm_s+ig-1),na) )
                  ENDDO
-!$omp end parallel do
+                 !$omp end parallel do
               ENDIF
            ENDDO
            !
@@ -184,8 +167,8 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
   ENDDO
   !
   DEALLOCATE( qmod, ylmk0, vaux )
-  CALL mp_sum( deeq( :, :, :, 1:nspin_mag ), inter_pool_comm )
-  CALL mp_sum( deeq( :, :, :, 1:nspin_mag ), intra_bgrp_comm )
+  CALL mp_sum( deeq(:,:,:,1:nspin_mag ), inter_pool_comm )
+  CALL mp_sum( deeq(:,:,:,1:nspin_mag ), intra_bgrp_comm )
   !
 END SUBROUTINE newq
   !
@@ -201,13 +184,12 @@ SUBROUTINE newd( )
   USE lsda_mod,             ONLY : nspin
   USE uspp,                 ONLY : deeq, dvan, deeq_nc, dvan_so, okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
-  USE spin_orb,             ONLY : lspinorb, domag
-  USE noncollin_module,     ONLY : noncolin, nspin_mag
+  USE noncollin_module,     ONLY : noncolin, domag, nspin_mag, lspinorb
   USE uspp,                 ONLY : nhtol, nhtolm
   USE scf,                  ONLY : v
   USE realus,               ONLY : newq_r
   USE control_flags,        ONLY : tqr
-  USE ldaU,                 ONLY : lda_plus_U, U_projection
+  USE ldaU,                 ONLY : lda_plus_U, Hubbard_projectors
   !
   IMPLICIT NONE
   !
@@ -215,6 +197,7 @@ SUBROUTINE newd( )
   ! counters on g vectors, atom type, beta functions x 2,
   !   atoms, spin, aux, aux, beta func x2 (again)
   !
+  ! Note: lspinorb implies noncolin. 
   !
   IF ( .NOT. okvan ) THEN
      !
@@ -238,15 +221,25 @@ SUBROUTINE newd( )
            !
         ELSE
            !
-           DO is = 1, nspin
-              !
-              deeq(1:nht,1:nht,na,is) = dvan(1:nht,1:nht,nt)
-              !
-           ENDDO
+           if ( nht > 0 ) THEN
+              DO is = 1, nspin
+                 deeq(1:nht,1:nht,na,is) = dvan(1:nht,1:nht,nt)
+              ENDDO
+           end if
            !
         ENDIF
         !
      ENDDO
+     !
+     IF (noncolin) THEN
+        IF (nhm>0) THEN
+          !$acc update device(deeq_nc)
+        ENDIF
+     ELSE
+        IF (nhm>0) THEN
+          !$acc update device(deeq)
+        ENDIF
+     ENDIF
      !
      ! ... early return
      !
@@ -300,7 +293,18 @@ SUBROUTINE newd( )
   !
   IF (.NOT.noncolin) CALL add_paw_to_deeq( deeq )
   !
-  IF (lda_plus_U .AND. (U_projection == 'pseudo')) CALL add_vhub_to_deeq( deeq )
+  IF (lda_plus_U .AND. (Hubbard_projectors == 'pseudo')) CALL add_vhub_to_deeq( deeq )
+  !
+  ! sync with GPUs
+  IF (noncolin) THEN
+     IF (nhm>0) THEN
+       !$acc update device(deeq_nc)
+     ENDIF
+  ELSE
+     IF (nhm>0) THEN
+       !$acc update device(deeq)
+     ENDIF
+  ENDIF
   !
   CALL stop_clock( 'newd' )
   !
@@ -312,7 +316,7 @@ SUBROUTINE newd( )
     SUBROUTINE newd_so( na )
       !------------------------------------------------------------------------
       !
-      USE spin_orb,      ONLY : fcoef
+      USE upf_spinorb,      ONLY : fcoef
       !
       IMPLICIT NONE
       !

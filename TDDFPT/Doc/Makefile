@@ -1,9 +1,10 @@
-VERSION = git
+VERSION := $(shell awk -F\' '/version_number/{print $$2}' ../../include/qe_version.h )
 HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 
 HTMLS = INPUT_Lanczos.html \
 	INPUT_Davidson.html \
 	INPUT_EELS.html \
+        INPUT_Magnon.html \
 	INPUT_Spectrum.html
 
 TXTS = $(HTMLS:.html=.txt)
@@ -13,10 +14,8 @@ all:  defs
 
 clean:
 	- rm -f input_xx.xsl
-	- rm -f INPUT_*.html INPUT_*.xml
-	- rm -f INPUT_{Spectrum,Lanczos,Davidson,EELS}.txt
-	- rm -f ../../Doc/INPUT_{Spectrum,Lanczos,Davidson,EELS}.*
-
+	- rm -f INPUT_*.html INPUT_*.xml INPUT_*.txt
+	- rm -f $(patsubst %,../../Doc/%,$(HTMLS) $(XMLS) $(TXTS)) 
 
 defs: input_xx.xsl $(HTMLS) $(TXTS) link_on_main_doc
 
@@ -37,16 +36,4 @@ $(TXTS): %.txt: %.def input_xx.xsl
 	$(HELPDOC) $<
 
 link_on_main_doc:
-	-@( cd ../../Doc ; \
-        ln -fs ../TDDFPT/Doc/INPUT_Lanczos.html . ; \
-	ln -fs ../TDDFPT/Doc/INPUT_Davidson.html . ; \
-	ln -fs ../TDDFPT/Doc/INPUT_EELS.html . ; \
-	ln -fs ../TDDFPT/Doc/INPUT_Spectrum.html . ; \
-	ln -fs ../TDDFPT/Doc/INPUT_Lanczos.xml . ; \
-	ln -fs ../TDDFPT/Doc/INPUT_Davidson.xml . ; \
-	ln -fs ../TDDFPT/Doc/INPUT_EELS.xml . ; \
-	ln -fs ../TDDFPT/Doc/INPUT_Spectrum.xml . ; \
-        ln -fs ../TDDFPT/Doc/INPUT_Lanczos.txt . ; \
-        ln -fs ../TDDFPT/Doc/INPUT_Davidson.txt . ; \
-        ln -fs ../TDDFPT/Doc/INPUT_EELS.txt . ; \
-	ln -fs ../TDDFPT/Doc/INPUT_Spectrum.txt .) 
+	-( cd ../../Doc ; for file in $(HTMLS) $(XMLS) $(TXTS); do ln -fs ../TDDFPT/Doc/$$file . ; done )

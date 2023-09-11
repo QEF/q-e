@@ -5,27 +5,45 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!----------------------------------------------------------------------
+SUBROUTINE adddvscf(ipert, ik)
+   USE lrus, ONLY : becp1
+   IMPLICIT NONE
+   INTEGER, INTENT(IN) :: ik, ipert
+   CALL adddvscf_(ipert, ik, becp1(ik))
+END SUBROUTINE adddvscf
+!----------------------------------------------------------------------
 !
 !----------------------------------------------------------------------
-subroutine adddvscf (ipert, ik)
+SUBROUTINE adddvscf_ph_mag(ipert, ik)
+   !! Use becpt instead of becp1. Used for time reversed wave functions.
+   USE qpoint_aux, ONLY : becpt
+   IMPLICIT NONE
+   INTEGER, INTENT(IN) :: ik, ipert
+   CALL adddvscf_(ipert, ik, becpt(ik))
+END SUBROUTINE adddvscf_ph_mag
+!----------------------------------------------------------------------
+!
+!----------------------------------------------------------------------
+subroutine adddvscf_(ipert, ik, becp1_ik)
   !----------------------------------------------------------------------
-  !
-  !     This routine computes the contribution of the selfconsistent
-  !     change of the potential to the known part of the linear
-  !     system and adds it to dvpsi.
-  !     It implements the second term in Eq. B30 of PRB 64, 235118 (2001).
+  !! This routine computes the contribution of the self-consistent
+  !! change of the potential to the known part of the linear
+  !! system and adds it to dvpsi.
+  !! It implements the second term in Eq. B30 of PRB 64, 235118 (2001).
   !
   USE kinds,      ONLY : DP
   USE uspp_param, ONLY : upf, nh
   USE uspp,       ONLY : vkb, okvan
-! modules from pwcom
-  USE lsda_mod,   ONLY : lsda, current_spin, isk
   USE ions_base,  ONLY : ntyp => nsp, nat, ityp
+  USE noncollin_module, ONLY : noncolin, npol
+  USE becmod,     ONLY : bec_type
+  ! modules from pwcom
+  USE lsda_mod,   ONLY : lsda, current_spin, isk
   USE wvfct,      ONLY : nbnd, npwx
   USE klist,      ONLY : ngk
-  USE noncollin_module, ONLY : noncolin, npol
-! modules from phcom
-  USE lrus,       ONLY : int3, int3_nc, becp1
+  ! modules from lrcom
+  USE lrus,       ONLY : int3, int3_nc
   USE qpoint,     ONLY : ikks, ikqs
   USE eqv,        ONLY : dvpsi
 
@@ -33,9 +51,12 @@ subroutine adddvscf (ipert, ik)
   !
   !   The dummy variables
   !
-  integer :: ik, ipert
-  ! input: the k point
-  ! input: the perturbation
+  INTEGER, INTENT(IN) :: ik
+  !! input: the k point
+  INTEGER, INTENT(IN) :: ipert
+  !! input: the perturbation
+  TYPE(bec_type), INTENT(IN) :: becp1_ik
+  !! < beta_n | psi_i > at ik
   !
   !   And the local variables
   !
@@ -91,12 +112,12 @@ subroutine adddvscf (ipert, ik)
                                 ijs=ijs+1
                                 sum_nc(is)=sum_nc(is)+               &
                                      int3_nc(ih,jh,na,ijs,ipert)*    &
-                                     becp1(ik)%nc(jkb, js, ibnd)
+                                     becp1_ik%nc(jkb, js, ibnd)
                              enddo
                           enddo
                        ELSE
                           sum = sum + int3 (ih, jh, na, current_spin, ipert)*&
-                                   becp1(ik)%k(jkb, ibnd)
+                                   becp1_ik%k(jkb, ibnd)
                        END IF
                     enddo
                     IF (noncolin) THEN
@@ -122,4 +143,4 @@ subroutine adddvscf (ipert, ik)
   !
   return
   !
-end subroutine adddvscf
+end subroutine adddvscf_

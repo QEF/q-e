@@ -8,18 +8,20 @@
 !-----------------------------------------------------------------------
 subroutine write_eigenvectors (nat,ntyp,amass,ityp,q,w2,z,iout)
   !-----------------------------------------------------------------------
-  !
-  !   write modes on output file in a readable way
+  !! Write modes on output file in a readable way.
   !
   use kinds, only: dp
   use constants, only: amu_ry, ry_to_thz, ry_to_cmm1
+  !
   implicit none
-  ! input
+  !
   integer, intent(in) :: nat, iout,ntyp
   integer ityp(nat)
   real(DP), intent(in) :: q(3), w2(3*nat),amass(ntyp)
   complex(DP), intent(in) :: z(3*nat,3*nat)
-  ! local
+  !
+  ! ... local variables
+  !
   integer nat3, na, nta, ipol, i, j
   real(DP):: freq(3*nat)
   complex(DP) :: z_(3*nat,3*nat)
@@ -64,17 +66,19 @@ end subroutine write_eigenvectors
 !-----------------------------------------------------------------------
 subroutine writemodes (nat,q,w2,z,iout)
   !-----------------------------------------------------------------------
-  !
-  !   write modes on output file in a readable way
+  !! Write modes on output file in a readable way.
   !
   use kinds, only: dp
   USE constants, ONLY : ry_to_thz, ry_to_cmm1
+  !
   implicit none
-  ! input
+  !
   integer, intent(in) :: nat, iout
   real(DP), intent(in) :: q(3), w2(3*nat)
   complex(DP), intent(in) :: z(3*nat,3*nat)
-  ! local
+  !
+  ! ... local variables
+  !
   integer nat3, na, ipol, i, j
   real(DP):: freq(3*nat)
   real(DP):: znorm
@@ -113,20 +117,22 @@ end subroutine writemodes
 !-----------------------------------------------------------------------
 subroutine writemolden (flmol, gamma, nat, atm, a0, tau, ityp, w2, z)
   !-----------------------------------------------------------------------
-  !
-  !   write modes on output file in a molden-friendly way
+  !! Write modes on output file in a molden-friendly way.
   !
   use kinds, only: dp
   USE constants, ONLY : ry_to_cmm1
+  !
   implicit none
-  ! input
+  !
   integer, intent(in) :: nat, ityp(nat)
   real(DP), intent(in) :: a0, tau(3,nat), w2(3*nat)
   complex(DP), intent(in) :: z(3*nat,3*nat)
   character(len=50), intent(in) :: flmol
   character(len=3), intent(in) :: atm(*)
   logical, intent(in) :: gamma
-  ! local
+  !
+  ! ... local variables
+  !
   integer :: nat3, na, ipol, i, j, iout
   real(DP) :: freq(3*nat)
   real(DP) :: znorm
@@ -182,20 +188,22 @@ end subroutine writemolden
 !-----------------------------------------------------------------------
 subroutine writexsf (xsffile, gamma, nat, atm, a0, at, tau, ityp, z)
   !-----------------------------------------------------------------------
-  !
-  !   write modes on output file in a xcrysden-friendly way
+  !! Write modes on output file in a \(\texttt{xcrysden}\)-friendly way.
   !
   use kinds, only: dp
   USE constants, ONLY : BOHR_RADIUS_ANGS
+  !
   implicit none
-  ! input
+  !
   integer :: nat, ityp(nat)
   real(DP) :: a0, tau(3,nat), at(3,3)
   complex(DP) :: z(3*nat,3*nat)
   character(len=50) :: xsffile
   character(len=3) :: atm(*)
   logical :: gamma
-  ! local
+  !
+  ! ... local variables
+  !
   integer :: nat3, na, ipol, i, j, iout
   real(DP) :: znorm
   !
@@ -209,7 +217,7 @@ subroutine writexsf (xsffile, gamma, nat, atm, a0, at, tau, ityp, z)
   !
   !  write atomic positions and normalised displacements
   !
-  write(iout,'("ANIMSTEPS",i4)') nat3
+  write(iout,'("ANIMSTEPS ",i4)') nat3
   !
   write(iout,'("CRYSTAL")')
   !
@@ -217,7 +225,7 @@ subroutine writexsf (xsffile, gamma, nat, atm, a0, at, tau, ityp, z)
   write(iout,'(2(3F15.9/),3f15.9)') at(:,:)*a0*BOHR_RADIUS_ANGS
   !
   do i = 1,nat3
-     write(iout,'("PRIMCOORD",i3)') i
+     write(iout,'("PRIMCOORD ",i4)') i
      write(iout,'(3x,2i4)') nat, 1
      znorm = 0.0d0
      do j=1,nat3

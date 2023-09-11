@@ -6,19 +6,25 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine write_ramtns (iudyn, ramtns)
+subroutine write_ramtns( iudyn, ramtns )
   !-----------------------------------------------------------------------
-  USE kinds, ONLY : DP
-  USE constants, ONLY : fpi, BOHR_RADIUS_ANGS
-  USE cell_base, ONLY : omega
-  USE ions_base, ONLY : nat
+  !! Write Raman tensor (\(D\chi/d\tau\) in \(A^2\)) to \(\text{iudyn}\).
+  !
+  USE kinds,      ONLY : DP
+  USE constants,  ONLY : fpi, BOHR_RADIUS_ANGS
+  USE cell_base,  ONLY : omega
+  USE ions_base,  ONLY : nat
   USE control_ph, ONLY : xmldyn
   !
   implicit none
-  integer, intent(in) :: iudyn  ! unit
-  real(DP), intent(in) :: ramtns(3, 3, 3, nat) ! raman tensor
-
-  ! local variables
+  !
+  integer, intent(in) :: iudyn
+  !! unit
+  real(DP), intent(in) :: ramtns(3,3,3,nat)
+  !! the Raman tensor
+  !
+  ! ... local variables
+  !
   integer :: na, ic, jc, kc
   ! counters
   real (DP), parameter ::   convfact = BOHR_RADIUS_ANGS**2

@@ -16,7 +16,7 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
   use radial_grids, only : ndmx
   use constants, only: e2, fpi
   use ld1inc, only : nspin, lsd, rel, nlcc, rhoc, grid, psi
-  use funct, only: dft_is_gradient
+  use xc_lib, only : xclib_dft_is
   use radial_grids, only: hartree
   implicit none
   integer :: n
@@ -31,7 +31,7 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
 
   vhn1=0.0_dp
   vhn2=0.0_dp
-  gga=dft_is_gradient()
+  gga=xclib_dft_is('gradient')
   nspin=1
   if (lsd.eq.1) nspin=2
   !

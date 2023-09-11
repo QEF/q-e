@@ -8,14 +8,13 @@
 !-----------------------------------------------------------------------
 subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
   !-----------------------------------------------------------------------
-  !
-  !    This subroutine computes the contribution of the local
-  !    potential to the electronic term <psi|dv-e ds|dpsi> of the dynamical
-  !    matrix. It can be used both for KB and for US pseudopotentials.
+  !! This subroutine computes the contribution of the local
+  !! potential to the electronic term <psi|dv-e ds|dpsi> of the dynamical
+  !! matrix. It can be used both for KB and for US pseudopotentials.
   !
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat
-  USE fft_base, ONLY : dfftp, dffts
+  USE fft_base,  ONLY : dfftp, dffts
   USE cell_base, ONLY : omega
   USE lsda_mod,  ONLY : nspin
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag
@@ -25,20 +24,24 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
 
   implicit none
 
-  integer :: npe, nu_i0
-  ! input: the number of perturbation of this representations
-  ! input: the initial position of the mode
-  complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe), wdyn (3 * nat, 3 * nat)
-  ! the change of density due to perturbations
-  ! auxiliary matrix where drhodv is stored
-
+  integer :: npe
+  !! input: the number of perturbation of this representations
+  integer :: nu_i0
+  !! input: the initial position of the mode
+  complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe)
+  !! the change of density due to perturbations
+  complex(DP) :: wdyn(3*nat, 3*nat)
+  !! auxiliary matrix where drhodv is stored
+  !
+  ! ... local variables
+  !
   integer :: ipert, is, nu_i, nu_j
   ! counter on perturbations
   ! counter on spin polarizations
   ! counter on the i modes
   ! counter on the j modes
 
-  complex(DP) :: zdotc, dynwrk (3 * nat, 3 * nat)
+  complex(DP) :: dynwrk (3 * nat, 3 * nat)
   complex(DP), allocatable :: dvloc (:)
   ! d Vloc / dtau
 
@@ -52,8 +55,9 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
      do ipert = 1, npe
         nu_i = nu_i0 + ipert
         do is = 1, nspin_lsda
+        ! FIXME : use zgemm instead of dot_product
            dynwrk (nu_i, nu_j) = dynwrk (nu_i, nu_j) + &
-                zdotc (dffts%nnr, drhoscf (1, is, ipert), 1, dvloc, 1) * &
+                dot_product(drhoscf (1:dffts%nnr, is, ipert), dvloc) * &
                   omega / (dffts%nr1 * dffts%nr2 * dffts%nr3)
         enddo
      enddo

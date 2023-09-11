@@ -13,24 +13,28 @@ subroutine which_cpmd_dft &
      (dft,mfxcx, mfxcc, mgcx, mgcc)
   !-----------------------------------------------------------------------
   !
-  use funct, only : get_iexch, get_icorr, get_igcx, get_igcc, set_dft_from_name
+  use funct,  only : set_dft_from_name
+  use xc_lib, only : xclib_get_id, xclib_dft_is_libxc
+  
   implicit none
   character(len=*), intent(IN) :: dft
   integer , intent(OUT) :: mfxcx, mfxcc, mgcx, mgcc
 
   call set_dft_from_name(dft)
-  mfxcx = get_iexch()
-  mfxcc = get_icorr()
-  mgcx = get_igcx()
-  mgcc = get_igcc()
+  mfxcx = xclib_get_id('LDA','EXCH')
+  mfxcc = xclib_get_id('LDA','CORR')
+  mgcx  = xclib_get_id('GGA','EXCH')
+  mgcc  = xclib_get_id('GGA','CORR')
 
 ! in CPMD PW91 and LYP are swapped.
-  if (mgcc.eq.3) then
-     mgcc=2
-  else if (mgcc.eq.2) then
-     mgcc=3
-  end if
-
+  if (.not.xclib_dft_is_libxc('GGA','CORR')) then
+    if (mgcc.eq.3) then
+      mgcc=2
+    else if (mgcc.eq.2) then
+      mgcc=3
+    end if
+  endif
+  
   return
 end subroutine which_cpmd_dft
 !

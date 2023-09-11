@@ -41,6 +41,10 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
     INTEGER,    ALLOCATABLE    :: sdispls1(:), sendcount1(:)
     INTEGER,    ALLOCATABLE    :: rdispls1(:), recvcount1(:)
     INTEGER                    :: igoff, idx
+#ifdef __CUDA
+    COMPLEX(DP), ALLOCATABLE, DEVICE   ::    psis_d(:), ca_d(:), c_d(:,:)
+    REAL(DP),    ALLOCATABLE, DEVICE   ::    psis2_d(:,:)
+#endif
     !
     me=me_image + 1
     !
@@ -67,32 +71,66 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
       !
       ALLOCATE ( psis(dffts%nnr)    ); psis=0.0_DP
       ALLOCATE ( psis2(sizefft,nbsp)); psis2=0.0_DP
+#ifdef __CUDA
+      ALLOCATE ( psis_d(dffts%nnr)    ); psis_d=0.0_DP
+      ALLOCATE ( psis2_d(sizefft,nbsp)); psis2_d=0.0_DP
+      ALLOCATE ( ca_d(ngw) ); ca_d = (0.0_DP, 0.0_DP)
+      ALLOCATE ( c_d, source = c);
+#endif
       !
       ca(:)=(0., 0.)
       !
       DO i = 1, nbsp, 2
         !
         IF ( (MOD(nbsp, 2) .NE. 0) .AND. (i .EQ. nbsp ) ) THEN     
-          CALL c2psi_gamma( dffts, psis(1:sizefft), c(:,i), ca(:))
+#ifdef __CUDA
+          CALL fftx_c2psi_gamma_gpu( dffts, psis_d, c_d(:,i), ca_d)
+#else
+          CALL fftx_c2psi_gamma( dffts, psis, c(:,i:i), ca)
+#endif
         ELSE
-          CALL c2psi_gamma( dffts, psis(1:sizefft), c(:,i), c(:, i+1))
+#ifdef __CUDA
+          CALL fftx_c2psi_gamma_gpu( dffts, psis_d, c_d(:,i), c_d(:, i+1))
+#else
+          CALL fftx_c2psi_gamma( dffts, psis, c(:,i:i), c(:,i+1))
+#endif
         END IF 
         !
-        CALL invfft( 'Wave', psis(1:sizefft), dffts )
+#ifdef __CUDA
+        associate(psis=>psis_d, psis2=>psis2_d)  
+#endif
+        CALL invfft( 'Wave', psis, dffts )
         !
+#ifdef __CUDA
+        !$cuf kernel do (1)
+#endif
         DO ir = 1,sizefft
           psis2(ir,i) = DBLE(psis(ir))
         END DO
         !
         IF ( (mod(nbsp, 2) .EQ. 0) .OR. (i .NE. nbsp ) ) THEN
+#ifdef __CUDA
+          !$cuf kernel do (1)
+#endif
           DO ir=1,sizefft
             psis2(ir,i+1) = AIMAG(psis(ir))
           END DO
         END IF
         !
+#ifdef __CUDA
+        end associate
+#endif
       END DO !loop over state i
+
+#ifdef __CUDA
+      psis2 = psis2_d
+#endif
       !
+#ifdef __MPI
       CALL redistwfr( psis2, psitot2, my_nxyz, my_nbsp, intra_image_comm, 1 )
+#else
+      psitot2=psis2
+#endif
       !
     ELSE ! (nproc_image .GT. nbsp) 
       !
@@ -125,7 +163,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
         rdispls1(proc) = rdispls1(proc-1) + recvcount1(proc-1)
       END DO
       !
-      ALLOCATE ( psis(dffts%nnr*nogrp) ); psis=0.0_DP 
+      ALLOCATE ( psis(dffts%nnr*nogrp) ); psis=0.0_DP
       ALLOCATE ( psis1(dffts%nnr*nogrp) ); psis1=0.0_DP
       ALLOCATE ( psis2(dffts%nnr,nproc_image/nogrp)); psis2=0.0_DP
       !
@@ -138,7 +176,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
       !
       DO i = 1, nbsp, 2*nogrp
         !
-        CALL c2psi_gamma_tg( dffts, psis, c, i, nbsp )
+        CALL fftx_c2psi_gamma_tg( dffts, psis, c(:,i:nbsp), ngw, nbsp-i+1 )
         !
         CALL invfft( 'tgWave', psis, dffts )
         !
@@ -174,8 +212,8 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
         !
       END DO !loop over state i
       !
-      ! the wavefunction is duplicated over number of processors that is integer multiple of bands
-      ! (this part can be improved to distribute wavefunction over any number of processors)
+      ! ... the wavefunction is duplicated over number of processors that is integer multiple of bands
+      ! ... (this part can be improved to distribute wavefunction over any number of processors)
       !
       DO jj=1,nbsp/nogrp
         DO i=1,sc_fac-1
@@ -188,7 +226,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
         END DO
       END DO
       !
-      !!!!!!!!!!!!!!!!!!!!
+      !******************
       !
       ALLOCATE ( psitot(nnrtot*my_nbsp(me)) ); psitot=0.0_DP
       !
@@ -245,6 +283,12 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
     IF (ALLOCATED(recvcount))    DEALLOCATE(recvcount)
     IF (ALLOCATED(sendcount1))   DEALLOCATE(sendcount1)
     IF (ALLOCATED(recvcount1))   DEALLOCATE(recvcount1)
+#ifdef __CUDA
+    DEALLOCATE (psis_d)
+    DEALLOCATE (psis2_d)
+    DEALLOCATE (ca_d)
+    DEALLOCATE (c_d)
+#endif
     !
     !=========================================================================
     !

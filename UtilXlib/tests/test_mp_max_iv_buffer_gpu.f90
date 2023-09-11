@@ -5,9 +5,7 @@ PROGRAM test_mp_max_iv_buffer_gpu
 ! with buffer implementation.
 !
 
-#if defined(__MPI)
-    USE MPI
-#endif
+    USE parallel_include
     USE cudafor
     USE util_param, ONLY : DP
     USE mp, ONLY : mp_max

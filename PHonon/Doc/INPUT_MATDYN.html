@@ -1,0 +1,771 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!-- *** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST *** --><meta http-equiv="Content-Style-Type" CONTENT="text/css">
+<style>
+	  body {
+	  background-color:#ffffff;
+	  font:normal 14px/1.8em arial, helvetica, sans-serif;
+	  width:900px;
+	  text-align:justify;
+	  margin: 30 10 10 30;
+	  }
+
+	  h1 {
+	  font-size:24px;
+	  }
+	  
+	  h2 {
+	  font-size:18px;
+	  }
+	  
+	  h3 {
+	  font-size:16px;
+	  }
+	  pre, tt, code {
+	  font-size:14px;
+	  }	  
+	  .syntax, .syntax table {
+	  font-size:14px;
+	  }
+	  span.namelist {
+	  color: #214478;
+	  }
+	  span.card {
+	  color: #782167;
+	  }
+	  span.flag {
+	  color: #008000;
+	  font-weight: bold;
+	  }
+	</style>
+<title>matdyn.x: input description</title>
+</head>
+<body>
+<a name="__top__"></a><table style="border-width: 0; table-layout: auto; width: 100%; text-align: left; vertical-align: top; background: #00395a;">
+<tr><th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
+<h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
+<h2 style="margin: 10 10 10 15; text-align: left;"> Program:
+	      matdyn.x / PHonon / Quantum ESPRESSO<span style="font-weight: normal;"> (version: 7.2)</span>
+</h2>
+</th></tr>
+<tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
+   <blockquote style="margin-bottom: 2em;">
+<h3>TABLE OF CONTENTS</h3>
+<blockquote>
+   
+   
+   <p><a href="#idm3">INTRODUCTION</a></p>
+   <p><a href="#idm12">&amp;INPUT</a></p>
+<blockquote>
+<a href="#idm13">flfrc</a> | <a href="#idm17">asr</a> | <a href="#idm29">huang</a> | <a href="#idm35">dos</a> | <a href="#idm41">nk1</a> | <a href="#idm42">nk2</a> | <a href="#idm43">nk3</a> | <a href="#idm46">deltaE</a> | <a href="#idm50">ndos</a> | <a href="#idm52">degauss</a> | <a href="#idm55">fldos</a> | <a href="#idm59">flfrq</a> | <a href="#idm62">flvec</a> | <a href="#idm65">fleig</a> | <a href="#idm68">fldyn</a> | <a href="#idm70">at</a> | <a href="#idm73">l1</a> | <a href="#idm74">l2</a> | <a href="#idm75">l3</a> | <a href="#idm78">ntyp</a> | <a href="#idm81">amass</a> | <a href="#idm84">readtau</a> | <a href="#idm87">fltau</a> | <a href="#idm91">la2F</a> | <a href="#idm94">q_in_band_form</a> | <a href="#idm98">q_in_cryst_coord</a> | <a href="#idm102">eigen_similarity</a> | <a href="#idm106">fd</a> | <a href="#idm109">na_ifc</a> | <a href="#idm113">nosym</a> | <a href="#idm116">loto_2d</a> | <a href="#idm119">loto_disable</a> | <a href="#idm123">read_lr</a> | <a href="#idm129">write_frc</a>
+</blockquote>
+   <p><a href="#idm138">AtomicPositionSpecs</a></p>
+<blockquote>
+<a href="#idm146">X</a> | <a href="#idm147">Y</a> | <a href="#idm148">Z</a> | <a href="#idm149">ityp</a>
+</blockquote>
+   <p><a href="#idm153">qPointsSpecs</a></p>
+<blockquote>
+<a href="#idm159">nq</a> | <a href="#idm167">q_x</a> | <a href="#idm168">q_y</a> | <a href="#idm169">q_z</a> | <a href="#idm170">nptq</a>
+</blockquote>
+<p><a href="#idm178">qPointsSpecs</a></p>
+<blockquote>
+<a href="#idm181">nq</a> | <a href="#idm190">q_x</a> | <a href="#idm191">q_y</a> | <a href="#idm192">q_z</a>
+</blockquote>
+   <p><a href="#idm193">Notes</a></p>
+</blockquote>
+</blockquote>
+   <blockquote>
+<a name="idm3"></a><h3>INTRODUCTION</h3>
+<blockquote><pre>
+<b>Purpose of matdyn.x:</b>
+
+This program calculates the phonon frequencies for a list of generic
+<i>q</i> vectors starting from the interatomic force constants generated
+from the dynamical matrices as written by DFPT phonon code through
+the companion program <b>q2r.x</b>
+
+<b>matdyn.x</b> can generate a supercell of the original cell for mass
+approximation calculation. If supercell data are not specified
+in input, the unit cell, lattice vectors, atom types and positions
+are read from the force constant file.
+
+<b>Input data format:</b> [ ] = it depends
+
+<b>Structure of the input data:</b>
+========================================================================
+
+<b>&amp;INPUT</b>
+   ...specs of the namelist variables...
+<b>/</b>
+
+[ X(1)   Y(1)   Z(1)    ityp(1)
+  ...
+  X(nat) Y(nat) Z(nat)  ityp(nat) ]
+
+[ nq
+  q_x(1)  q_y(1)  q_x(1)   [ nptq(1) ]
+  ...
+  q_x(nq) q_y(nq) q_x(nq)  [ nptq(1) ] ]
+   </pre></blockquote>
+</blockquote>
+   <a name="idm12"></a><a name="INPUT"></a><table border="0" width="100%" style="margin-bottom: 20;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>INPUT</span>
+</h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
+      <a name="idm13"></a><a name="flfrc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">flfrc</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+File produced by <b>q2r</b> containing force constants (needed)
+It is the same as in the input of <b>q2r.x</b> (+ the .xml extension
+if the dynamical matrices produced by ph.x were in xml
+format). No default value: must be specified.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm17"></a><a name="asr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">asr</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'no'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;">
+Indicates the type of Acoustic Sum Rule imposed.
+
+Allowed values:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'no'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+no Acoustic Sum Rules imposed (default)
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'simple'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+previous implementation of the asr used
+(3 translational asr imposed by correction of
+ the diagonal elements of the force constants matrix)
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'crystal'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+3 translational asr imposed by optimized
+correction of the force constants (projection)
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'all'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+3 translational asr + 3 rotational asr + 15 Huang
+conditions for vanishing stress tensor, imposed by
+optimized correction of the force constants (projection).
+Remember to set write_lr = .true. to write long-range
+force constants into file when running q2r and set <a href="#read_lr">read_lr</a> = .true. when running matdyn in the case of
+infrared-active solids. (See npj Comput Mater 8, 236 (2022))
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'one-dim'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+3 translational asr + 1 rotational asr imposed
+by optimized correction of the dyn. mat. (the
+rotation axis is the direction of periodicity; it
+will work only if this axis considered is one of
+the Cartesian axis).
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'zero-dim'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+3 translational asr + 3 rotational asr imposed
+by optimized correction of the dyn. mat.
+            </pre></dd>
+</dl>
+<pre style="margin-bottom: -1em;">
+Note that in certain cases, not all the rotational asr
+can be applied (e.g. if there are only 2 atoms in a
+molecule or if all the atoms are aligned, etc.).
+In these cases the supplementary asr are cancelled
+during the orthonormalization procedure (see below).
+            </pre>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm29"></a><a name="huang"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">huang</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> <tt>.true.</tt>
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+if <b>.true.</b> 15 Huang conditions for vanishing stress
+tensor are included in <a href="#asr">asr</a> = 'all'.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm35"></a><a name="dos"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">dos</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+if <b>.true.</b> calculate phonon Density of States (DOS)
+using tetrahedra and a uniform q-point grid (see below)
+<b>NB:</b> may not work properly in noncubic materials
+
+if <b>.false.</b> calculate phonon bands from the list of q-points
+supplied in input (default)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
+<a name="idm41"></a><a name="nk1"></a>nk1, <a name="idm42"></a><a name="nk2"></a>nk2, <a name="idm43"></a><a name="nk3"></a>nk3</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+uniform q-point grid for DOS calculation (includes q=0)
+(must be specified if <a href="#dos">dos</a> = .true., ignored otherwise)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm46"></a><a name="deltaE"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">deltaE</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+energy step, in cm<sup>-1,</sup> for DOS calculation: from min
+to max phonon energy (default: 1 cm<sup>-1</sup> if ndos, see
+below, is not specified)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm50"></a><a name="ndos"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ndos</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+number of energy steps for DOS calculations
+(default: calculated from deltaE if not specified)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm52"></a><a name="degauss"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">degauss</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+DOS broadening in cm<sup>-1</sup>
+
+Default: 0 - meaning use tetrahedra
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm55"></a><a name="fldos"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fldos</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+output file for dos (default: <tt>'matdyn.dos')</tt>
+the dos is in states/cm<sup>-1</sup> plotted vs omega in cm(-1)
+and is normalised to 3*nat, i.e. the number of phonons
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm59"></a><a name="flfrq"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">flfrq</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+output file for frequencies (default: <tt>'matdyn.freq')</tt>
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm62"></a><a name="flvec"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">flvec</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+output file for normalized phonon displacements
+(default: <tt>'matdyn.modes').</tt> The normalized phonon displacements
+are the eigenvectors divided by the square root of the mass,
+then normalized. As such they are not orthogonal.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm65"></a><a name="fleig"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fleig</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+output file for phonon eigenvectors (default: <tt>'matdyn.eig')</tt>
+The phonon eigenvectors are the eigenvectors of the dynamical
+matrix. They are orthogonal.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm68"></a><a name="fldyn"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fldyn</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+output file for dynamical matrix (default: ' ' i.e. not written)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm70"></a><a name="at"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">at(i,j), (i,j) = (1,1) . . . (3,3)
+                    </th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+supercell lattice vectors - must form a superlattice of the
+original lattice (default: use original cell)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
+<a name="idm73"></a><a name="l1"></a>l1, <a name="idm74"></a><a name="l2"></a>l2, <a name="idm75"></a><a name="l3"></a>l3</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+supercell lattice vectors are original cell vectors times
+l1, l2, l3 respectively (default: 1, ignored if <a href="#at">at</a> specified)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm78"></a><a name="ntyp"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ntyp</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+number of atom types in the supercell
+(default: <a href="#ntyp">ntyp</a> of the original cell)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm81"></a><a name="amass"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">amass(i), i=1,ntyp</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+masses of atoms in the supercell (a.m.u.), one per atom type
+(default: use masses read from file <tt>flfrc)</tt>
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm84"></a><a name="readtau"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">readtau</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+read  atomic positions of the supercell from input
+(used to specify different masses) (default: <tt>.false.)</tt>
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm87"></a><a name="fltau"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fltau</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+write atomic positions of the supercell to file <tt>fltau</tt>
+(default: <a href="#fltau">fltau</a> = ' ', do not write)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm91"></a><a name="la2F"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">la2F</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+if <b>.true.</b> interpolates also the el-ph coefficients
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm94"></a><a name="q_in_band_form"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">q_in_band_form</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+if <b>.true.</b> the q points are given in band form:
+only the first and last point of one or more lines
+are given. See below. (default: <tt>.false.).</tt>
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm98"></a><a name="q_in_cryst_coord"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">q_in_cryst_coord</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+if <b>.true.</b> input q points are in crystalline
+coordinates (default: <tt>.false.)</tt>
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm102"></a><a name="eigen_similarity"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">eigen_similarity</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+use similarity of the displacements to order
+frequencies  (default: <tt>.false.)</tt>
+
+<b>NB:</b> You cannot use this option with the symmetry
+analysis of the modes.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm106"></a><a name="fd"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fd</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+if <b>.true.</b> the ifc come from the finite displacement calculation
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm109"></a><a name="na_ifc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">na_ifc</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+add non analitic contributions to the interatomic force
+constants if finite displacement method is used (as in Wang et al.
+<a href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.85.224303">PRB 85, 224303 (2012)</a>) [to be used in conjunction with <b>fd.x]</b>
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm113"></a><a name="nosym"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nosym</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+if <b>.true.,</b> no symmetry and no time reversal are imposed
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm116"></a><a name="loto_2d"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">loto_2d</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+set to <b>.true.</b> to activate two-dimensional treatment of LO-TO splitting
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm119"></a><a name="loto_disable"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">loto_disable</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+if <b>.true.</b> do not apply LO-TO splitting for q=0
+(default: <tt>.false.)</tt>
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm123"></a><a name="read_lr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">read_lr</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> <tt>.false.</tt>
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+if <b>.true.</b> read also long-range force constants when they exist in
+force constant file. This is required when enforcing <a href="#asr">asr</a> = 'all'
+for infrared-active solids.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm129"></a><a name="write_frc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">write_frc</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> <tt>.false.</tt>
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+if <b>.true.</b> write force constants with <a href="#asr">asr</a> imposed into file.
+The filename would be <a href="#flfrc">flfrc</a>+".matdyn". The long-range part of
+force constants will be not written.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+   </td></tr></tbody></table></td></tr>
+</table>
+   <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; width: 100%; padding: 5 5 0 5"><tr><td>
+<b>IF </b><tt><em>readtau == .true.</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+         <a name="idm138"></a><a name="AtomicPositionSpecs"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
+	    Card: <span class="card">AtomicPositionSpecs</span> </h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
+<tr><td>
+<p><b>
+if (<a href="#readtau">readtau</a>) atomic positions must be specified as follows:
+            </b></p>
+<h3>Syntax:</h3>
+<blockquote><div class="syntax">
+<a name="idm142"></a><table>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm146">X(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm147">Y(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm148">Z(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm149">ityp(1)</a></i> </td>
+</tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm146">X(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm147">Y(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm148">Z(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm149">ityp(2)</a></i> </td>
+</tr>
+<tr><td colspan="2"> . . .</td></tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm146">X(nat)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm147">Y(nat)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm148">Z(nat)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm149">ityp(nat)</a></i> </td>
+</tr>
+</table>
+</div></blockquote>
+</td></tr>
+<tr><td>
+<h3>Description of items:</h3>
+<blockquote>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th width="20%" align="left" valign="top" style="background: #ffff99; padding: 2 2 2 10; ">
+<a name="X"><a name="idm146">X</a></a>, <a name="Y"><a name="idm147">Y</a></a>, <a name="Z"><a name="idm148">Z</a></a>
+</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+X, Y, Z atomic positions
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="ityp"><a name="idm149">ityp</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+index of the atomic type
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+</blockquote>
+</td></tr>
+</tbody></table></td></tr>
+</table>
+      </td></tr></table></blockquote>
+</td></tr></table>
+   <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; width: 100%; padding: 5 5 0 5"><tr><td>
+<b>IF </b><tt><em>q_in_band_form == .true .and. dos == .false.</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+         <a name="idm153"></a><a name="qPointsSpecs"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
+	    Card: <span class="card">qPointsSpecs</span> </h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
+<tr><td>
+<p><b>
+if (<a href="#q_in_band_form">q_in_band_form</a> .and. .not.<a href="#dos">dos</a>) q-points must be specified as follows:
+            </b></p>
+<h3>Syntax:</h3>
+<blockquote><div class="syntax">
+<i><a href="#idm159">nq</a></i>  <br><a name="idm161"></a><table>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm167">q_x(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm168">q_y(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm169">q_z(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm170">nptq(1)</a></i> </td>
+</tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm167">q_x(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm168">q_y(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm169">q_z(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm170">nptq(2)</a></i> </td>
+</tr>
+<tr><td colspan="2"> . . .</td></tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm167">q_x(nq)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm168">q_y(nq)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm169">q_z(nq)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm170">nptq(nq)</a></i> </td>
+</tr>
+</table>
+</div></blockquote>
+</td></tr>
+<tr><td>
+<h3>Description of items:</h3>
+<blockquote>
+<a name="idm159"></a><a name="nq"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nq</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+number of q points
+                     </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th width="20%" align="left" valign="top" style="background: #ffff99; padding: 2 2 2 10; ">
+<a name="q_x"><a name="idm167">q_x</a></a>, <a name="q_y"><a name="idm168">q_y</a></a>, <a name="q_z"><a name="idm169">q_z</a></a>
+</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+coordinates of the Q point
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="nptq"><a name="idm170">nptq</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The number of points between this point and the next.
+
+<a href="#nptq">nptq</a> is the number of points between this point
+and the next. These points are automatically
+generated. the q points are given in Cartesian
+coordinates, 2pi/<i>a</i> units (<i>a</i> = lattice parameters)
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+</blockquote>
+</td></tr>
+</tbody></table></td></tr>
+</table>
+      </td></tr></table></blockquote>
+<b>ELSEIF </b><tt><em>dos == .false.</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+         <p><b>
+if (.not. <a href="#dos">dos</a>) q-points must be specified as follows:
+         </b></p>
+         <a name="idm178"></a><a name="qPointsSpecs"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
+	    Card: <span class="card">qPointsSpecs</span> </h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
+<tr><td>
+<h3>Syntax:</h3>
+<blockquote><div class="syntax">
+<i><a href="#idm181">nq</a></i>  <br><a name="idm183"></a><table>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm190">q_x(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm191">q_y(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm192">q_z(1)</a></i> </td>
+</tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm190">q_x(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm191">q_y(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm192">q_z(2)</a></i> </td>
+</tr>
+<tr><td colspan="2"> . . .</td></tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm190">q_x(nq)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm191">q_y(nq)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm192">q_z(nq)</a></i> </td>
+</tr>
+</table>
+</div></blockquote>
+</td></tr>
+<tr><td>
+<h3>Description of items:</h3>
+<blockquote>
+<a name="idm181"></a><a name="nq"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nq</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+number of q points
+                     </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th width="20%" align="left" valign="top" style="background: #ffff99; padding: 2 2 2 10; ">
+<a name="q_x"><a name="idm190">q_x</a></a>, <a name="q_y"><a name="idm191">q_y</a></a>, <a name="q_z"><a name="idm192">q_z</a></a>
+</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+q-points in cartesian coordinates, 2pi/<i>a</i> units (<i>a</i> = lattice parameters)
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+</blockquote>
+</td></tr>
+</tbody></table></td></tr>
+</table>
+      </td></tr></table></blockquote>
+</td></tr></table>
+   <blockquote>
+<a name="idm193"><h3>Notes</h3></a>
+      <blockquote><pre>
+If q = 0, the direction qhat (q=&gt;0) for the non-analytic part
+is extracted from the sequence of q-points as follows:
+
+qhat = q(n) - q(n-1)   or   qhat = q(n) - q(n+1)
+
+depending on which one is available and nonzero.
+
+For low-symmetry crystals, specify twice q = 0 in the list
+if you want to have q = 0 results for two different directions
+      </pre></blockquote>
+   </blockquote>
+</td></tr>
+</table>
+<small>
+	  This file has been created by helpdoc utility on Sat Mar 18 19:08:12 CET 2023.
+	</small>
+</body>
+</html>

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,8 +18,9 @@ SUBROUTINE alloc_neighborhood()
   USE cell_base,       ONLY : at, alat
   USE kinds,           ONLY : DP
   USE constants,       ONLY : rytoev
+  USE parameters,      ONLY : sc_size
   USE control_flags,   ONLY : dfpt_hub
-  USE ldaU,            ONLY : sc_size, num_uc, max_num_neighbors, neighood, &
+  USE ldaU,            ONLY : num_uc, max_num_neighbors, neighood, &
                               at_sc, sc_at, Hubbard_V, is_hubbard, is_hubbard_back, &
                               dist_s, ityp_s, deallocate_at_center_type, eps_dist
   !
@@ -34,9 +35,6 @@ SUBROUTINE alloc_neighborhood()
              viz, atom, nb1, nb2, isym, l1, l2, l3, na, nb
   !
   CALL start_clock( 'alloc_neigh' )
-  !
-  ! Number of cells in the supercell
-  num_uc = (2*sc_size+1)**3.0d0
   !
   ! Number of atoms in the supercell
   dimn = num_uc * nat       
@@ -380,8 +378,14 @@ SUBROUTINE alloc_neighborhood()
                 !
                 CALL symonpair(i,j,isym,ii,jj)
                 !
-                IF (ABS(dist_s(i,j)-dist_s(ii,jj)).GT.eps_dist) &
-                   WRITE(stdout,'(2x,"WARNING: probably a larger sc_size is needed")')
+                IF (ABS(dist_s(i,j)-dist_s(ii,jj)).GT.eps_dist) THEN
+                   WRITE(stdout,'(/2x,"Different distances between couples!")')
+                   WRITE(stdout,'(2x,"Original couple:      ",2x,i4,2x,i4,2x,"dist =",1x,f8.4,1x,"(Bohr)")') &
+                   i, j, dist_s(i,j)
+                   WRITE(stdout,'(2x,"New additional couple:",2x,i4,2x,i4,2x,"dist =",1x,f8.4,1x,"(Bohr)")') &
+                   ii, jj, dist_s(ii,jj)
+                   CALL errore('alloc_neighborhood', 'Probably a larger sc_size is needed',1) 
+                ENDIF
                 !
                 IF ( ABS(Hubbard_V(ii,jj,1)).LT.eps1 .AND. &
                      ABS(Hubbard_V(ii,jj,2)).LT.eps1 .AND. &
@@ -389,8 +393,11 @@ SUBROUTINE alloc_neighborhood()
                      !
                      Hubbard_V(ii,jj,:) = Hubbard_V(i,j,:)
                      WRITE(stdout,'(2x,"Found a new Hubbard_V element from the symmetry analysis!")')
-                     WRITE(stdout,'(2x,"Original couple:",2x,i4,2x,i4)') i, j
-                     WRITE(stdout,'(2x,"New additional couple:",2x,i4,2x,i4)') ii, jj
+                     WRITE(stdout,'(2x,"Original couple:      ",2x,i4,2x,i4,2x,"dist =",1x,f8.4,1x,"(Bohr)")') &
+                     i, j, dist_s(i,j)
+                     WRITE(stdout,'(2x,"New additional couple:",2x,i4,2x,i4,2x,"dist =",1x,f8.4,1x,"(Bohr)")') &
+                     ii, jj, dist_s(ii,jj)
+                     !
                      nb2 = nb2 + 1
                      !
                 ELSEIF ( ABS(Hubbard_V(ii,jj,1)-Hubbard_V(i,j,1)) + &
@@ -528,8 +535,9 @@ SUBROUTINE symonpair (at1, at2, p_sym, rat1, rat2)
   USE ions_base,       ONLY : nat,ityp
   USE cell_base,       ONLY : bg
   USE fft_base,        ONLY : dfftp
-  USE ldaU,            ONLY : atom_pos, at_sc, sc_at
+  USE ldaU,            ONLY : atom_pos, at_sc, sc_at, num_uc
   USE kinds
+  USE io_global,       ONLY : stdout
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN)  :: at1, at2, p_sym
@@ -539,11 +547,14 @@ SUBROUTINE symonpair (at1, at2, p_sym, rat1, rat2)
   !
   ! Local variables
   !
-  INTEGER :: i, j, at, dr(3), equiv_2
+  INTEGER :: i, j, at, dr(3), equiv_2, dimn
   ! dr(1), dr(2), dr(3) = location of the unit cell where at2 goes after sym. operation
   !
   REAL(DP) :: diff, x2(3), r1(3), r2(3), dx(3), ss(3,3)
   REAL(DP), PARAMETER :: eps = 5.d-6
+  !
+  ! Number of atoms in the supercell
+  dimn = num_uc * nat
   !
   ! Convert the symmetry matrix from integer to real type
   ! for a given symmetry operation p_sym
@@ -605,7 +616,7 @@ SUBROUTINE symonpair (at1, at2, p_sym, rat1, rat2)
   ENDDO
   !
   IF ( diff > eps ) THEN
-     WRITE(*,*) "diff > 0, diff= ", diff, "at1= ", at1, "at2= ", at2
+     WRITE(stdout,*) "diff > 0, diff= ", diff, "at1= ", at1, "at2= ", at2
      CALL errore('symonpair', 'No atom equivalent to r2', 1)
   ENDIF
   !
@@ -633,11 +644,17 @@ SUBROUTINE symonpair (at1, at2, p_sym, rat1, rat2)
   ENDDO
   !    
   IF ( diff > eps ) THEN
-    WRITE(*,*) "diff > 0, diff= ", diff, "at1= ", at1, "at2= ", at2 
+    WRITE(stdout,*) "diff > 0, diff= ", diff, "at1= ", at1, "at2= ", at2 
     CALL errore('symonpair', 'No atom equivalent to r1', 1)
   ENDIF
   !
   rat1 = at - 1
+  !
+  IF (rat1 > nat .OR. rat1 < 1) THEN
+     WRITE(stdout,*) "Index of the first rotated atom=", rat1
+     WRITE(stdout,*) "Number of atoms in the original unit cell=", nat
+     CALL errore('symonpair', 'Out of bounds', 1)
+  ENDIF
   !
   DO i = 1, 3 
      r2(i) = r2(i) - dx(i)
@@ -645,6 +662,16 @@ SUBROUTINE symonpair (at1, at2, p_sym, rat1, rat2)
   ENDDO
   !
   rat2 = sc_at(rat2, dr(1), dr(2), dr(3))
+  !
+  IF (rat2 > dimn) THEN
+     WRITE(stdout,*) "Index of the second rotated atom=", rat2
+     WRITE(stdout,*) "Number of atoms in the supercell=", dimn
+     WRITE(stdout,*) "Probably a larger sc_size is needed"
+     CALL errore('symonpair', 'Out of bounds', 1) 
+  ELSEIF (rat2 < 1) THEN
+     WRITE(stdout,*) "Index of the second rotated atom=", rat2
+     CALL errore('symonpair', 'Out of bounds', 1)
+  ENDIF
   !
   RETURN
   !
@@ -695,7 +722,7 @@ SUBROUTINE phase_factor (ik)
   USE klist,           ONLY : xk
   USE ions_base,       ONLY : nat, ityp
   USE cell_base,       ONLY : at, tpiba
-  USE ldaU,            ONLY : at_sc, ldim_u, neighood, phase_fac, sc_size
+  USE ldaU,            ONLY : at_sc, ldim_u, neighood, phase_fac, num_uc
   USE constants,       ONLY : tpi
   !
   IMPLICIT NONE
@@ -707,7 +734,7 @@ SUBROUTINE phase_factor (ik)
   REAL(DP) :: angle, sum_j
   !
   ! Number of atoms in the supercell 
-  dimn = nat*(2*sc_size+1)**3
+  dimn = num_uc * nat
   !
   IF (.NOT.ALLOCATED(phase_fac)) ALLOCATE(phase_fac(dimn))
   !
@@ -771,84 +798,4 @@ SUBROUTINE alloc_atom_pos()
   RETURN
   !
 END SUBROUTINE alloc_atom_pos
-!-------------------------------------------------------------------------
-
-!-------------------------------------------------------------------------
-SUBROUTINE write_V
-  !-----------------------------------------------------------------------
-  !
-  ! This routine writes Hubbard_V to file
-  !
-  USE io_files,       ONLY : seqopn
-  USE io_global,      ONLY : ionode
-  USE ldaU,           ONLY : Hubbard_V
-  !
-  IMPLICIT NONE
-  INTEGER :: i, j, k, iunit
-  LOGICAL :: exst
-  INTEGER, EXTERNAL :: find_free_unit
-  !
-  iunit = find_free_unit()
-  ! 
-  IF (ionode) THEN
-     CALL seqopn( iunit, 'HubbardV.txt', 'FORMATTED', exst )
-     DO i = 1, SIZE(Hubbard_V,1)
-        DO j = 1, SIZE(Hubbard_V,2)
-           DO k = 1, SIZE(Hubbard_V,3)
-              IF (Hubbard_V(i,j,k) > 1.d-20) WRITE(iunit,*) i, j, k, Hubbard_V(i,j,k)
-           ENDDO
-        ENDDO
-     ENDDO
-     CLOSE(UNIT=iunit, STATUS='KEEP')
-  ENDIF
-  !
-  RETURN
-  ! 
-END SUBROUTINE write_V
-!-------------------------------------------------------------------------
-
-!-------------------------------------------------------------------------
-SUBROUTINE read_V
-  !-----------------------------------------------------------------------
-  !
-  ! This routine reads Hubbard_V from file
-  !
-  USE kinds,          ONLY : DP
-  USE io_files,       ONLY : seqopn
-  USE io_global,      ONLY : ionode, ionode_id
-  USE ldaU,           ONLY : Hubbard_V
-  USE mp_images,      ONLY : intra_image_comm
-  USE mp,             ONLY : mp_bcast
-  !
-  IMPLICIT NONE
-  REAL(DP) :: V
-  INTEGER :: i, j, k, iunit, ierr
-  LOGICAL :: exst
-  INTEGER, EXTERNAL :: find_free_unit
-  !
-  iunit = find_free_unit()
-  ! 
-  Hubbard_V(:,:,:) = 0.0d0
-  !
-  IF (ionode) THEN
-     CALL seqopn( iunit, 'HubbardV.txt', 'FORMATTED', exst )
-     IF (exst) THEN 
-10      READ(iunit,*,END=11,IOSTAT=ierr) i, j, k, V
-        IF ( ierr/=0 ) THEN
-           CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-           CALL errore('read_V', 'Reading Hubbard_V', 1)
-        ENDIF
-        Hubbard_V(i,j,k) = V
-        GO TO 10
-     ELSE
-        CALL errore('read_V','File HubbardV.txt was not found...',1)
-     ENDIF
-11   CLOSE( UNIT=iunit, STATUS='KEEP' )
-  ENDIF
-  ! Broadcast Hubbard_V across all processors
-  CALL mp_bcast( Hubbard_V, ionode_id, intra_image_comm )
-  !
-  RETURN
-  ! 
-END SUBROUTINE read_V
 !-------------------------------------------------------------------------

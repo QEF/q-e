@@ -31,6 +31,9 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   USE wvfct,            ONLY : nbnd, npwx, et
   USE becmod,           ONLY : calbec, bec_type, allocate_bec_type, deallocate_bec_type
   USE wavefunctions,    ONLY : evc, psic, psic_nc
+#if defined(__CUDA)
+  USE wavefunctions_gpum,   ONLY : evc_d
+#endif
   USE uspp,             ONLY : okvan, nkb, vkb
   USE uspp_param,       ONLY : upf, nh, nhm
   USE qpoint,           ONLY : nksq
@@ -39,6 +42,11 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   USE mp_pools,         ONLY : inter_pool_comm
   USE mp,               ONLY : mp_sum
   USE dfpt_tetra_mod,   ONLY : dfpt_tetra_delta
+  USE uspp_init,        ONLY : init_us_2
+#if defined(__CUDA)
+  USE becmod_gpum,      ONLY: bec_type_d
+  USE becmod_subs_gpum, ONLY: calbec_gpu, allocate_bec_type_gpu, deallocate_bec_type_gpu, synchronize_bec_type_gpu
+#endif
 
   implicit none
 
@@ -56,6 +64,9 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   ! counters
   complex(DP), allocatable :: becsum1_nc(:,:,:,:)
   TYPE(bec_type) :: becp
+#if defined(__CUDA)
+  TYPE(bec_type_d) :: becp_d
+#endif
   !
   ! local variables
   !
@@ -63,13 +74,27 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   ! weights
   real(DP), external :: w0gauss
   !
-  integer :: npw, ik, is, ig, ibnd, j, is1, is2
+  integer :: npw, ik, is, ig, ibnd, j, is1, is2, v_siz
   ! counters
   integer :: ios
   ! status flag for i/o
   !
   !  initialize ldos and dos_ef
   !
+  ! For device buffer
+#if defined(__CUDA)
+  INTEGER, POINTER, DEVICE :: nl_d(:)
+  !
+  nl_d  => dffts%nl_d
+  evc_d = evc
+#else
+  INTEGER, ALLOCATABLE :: nl_d(:)
+  !
+  ALLOCATE( nl_d(dffts%ngm) )
+  nl_d  = dffts%nl
+#endif
+  v_siz = dffts%nnr
+
   call start_clock ('localdos')
   IF (noncolin) THEN
      allocate (becsum1_nc( (nhm * (nhm + 1)) / 2, nat, npol, npol))
@@ -77,6 +102,9 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   ENDIF
 
   call allocate_bec_type (nkb, nbnd, becp)
+#if defined(__CUDA)
+  call allocate_bec_type_gpu (nkb, nbnd, becp_d)
+#endif
 
   becsum1 (:,:,:) = 0.d0
   ldos (:,:) = (0d0, 0.0d0)
@@ -85,6 +113,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   !
   !  loop over kpoints
   !
+  !$acc data create(psic, psic_nc) copy(ldoss) 
   do ik = 1, nksq
      if (lsda) current_spin = isk (ik)
      npw = ngk(ik)
@@ -92,10 +121,22 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
      !
      ! unperturbed wfs in reciprocal space read from unit iuwfc
      !
-     if (nksq > 1) call get_buffer (evc, lrwfc, iuwfc, ik)
-     call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
+     if (nksq > 1) then
+             call get_buffer (evc, lrwfc, iuwfc, ik)
+#if defined(__CUDA)
+             evc_d = evc
+#endif
+     endif
+     call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb, .true.)
      !
+#if defined(__CUDA)
+     !$acc host_data use_device(vkb)
+     call calbec_gpu ( npw, vkb(:,:), evc_d, becp_d)
+     !$acc end host_data
+     CALL synchronize_bec_type_gpu( becp_d, becp, 'h')
+#else
      call calbec ( npw, vkb, evc, becp)
+#endif
      do ibnd = 1, nbnd_occ (ik)
         !
         if(ltetra) then
@@ -109,20 +150,34 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
         ! unperturbed wf from reciprocal to real space
         !
         IF (noncolin) THEN
+           !$acc kernels
            psic_nc = (0.d0, 0.d0)
+           !$acc end kernels
+           !$acc parallel loop present(igk_k, psic_nc)
            do ig = 1, npw
-              psic_nc (dffts%nl (igk_k(ig,ik)), 1 ) = evc (ig, ibnd)
-              psic_nc (dffts%nl (igk_k(ig,ik)), 2 ) = evc (ig+npwx, ibnd)
+#if defined(__CUDA)
+              psic_nc (nl_d (igk_k(ig,ik)), 1 ) = evc_d (ig, ibnd)
+              psic_nc (nl_d (igk_k(ig,ik)), 2 ) = evc_d (ig+npwx, ibnd)
+#else
+              psic_nc (nl_d (igk_k(ig,ik)), 1 ) = evc (ig, ibnd)
+              psic_nc (nl_d (igk_k(ig,ik)), 2 ) = evc (ig+npwx, ibnd)
+#endif
            enddo
+           !$acc end parallel loop
+           !$acc host_data use_device(psic_nc)
            CALL invfft ('Rho', psic_nc(:,1), dffts)
            CALL invfft ('Rho', psic_nc(:,2), dffts)
-           do j = 1, dffts%nnr
+           !$acc end host_data
+           !$acc parallel loop present(psic_nc, ldoss)
+           do j = 1, v_siz
               ldoss (j, 1) = ldoss (j, 1) + &
                     w1 * ( DBLE(psic_nc(j,1))**2+AIMAG(psic_nc(j,1))**2 + &
                            DBLE(psic_nc(j,2))**2+AIMAG(psic_nc(j,2))**2)
            enddo
+           !$acc end parallel loop
            IF (nspin_mag==4) THEN
-              DO j = 1, dffts%nnr
+              !$acc parallel loop present(psic_nc, ldoss)
+              DO j = 1, v_siz
               !
                  ldoss(j,2) = ldoss(j,2) + w1*2.0_DP* &
                              (DBLE(psic_nc(j,1))* DBLE(psic_nc(j,2)) + &
@@ -137,17 +192,30 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
                              -DBLE(psic_nc(j,2))**2-AIMAG(psic_nc(j,2))**2)
               !
               END DO
+              !$acc end parallel loop
            END IF
         ELSE
+           !$acc kernels
            psic (:) = (0.d0, 0.d0)
+           !$acc end kernels
+           !$acc parallel loop present(psic)
            do ig = 1, npw
-              psic (dffts%nl (igk_k(ig,ik) ) ) = evc (ig, ibnd)
+#if defined(__CUDA)
+              psic (nl_d (igk_k(ig,ik) ) ) = evc_d (ig, ibnd)
+#else
+              psic (nl_d (igk_k(ig,ik) ) ) = evc (ig, ibnd)
+#endif
            enddo
+           !$acc end parallel loop
+           !$acc host_data use_device(psic)
            CALL invfft ('Rho', psic, dffts)
-           do j = 1, dffts%nnr
+           !$acc end host_data
+           !$acc parallel loop present(ldoss, psic)
+           do j = 1, v_siz
               ldoss (j, current_spin) = ldoss (j, current_spin) + &
                     w1 * ( DBLE ( psic (j) ) **2 + AIMAG (psic (j) ) **2)
            enddo
+           !$acc end parallel loop
         END IF
         !
         !    If we have a US pseudopotential we compute here the becsum term
@@ -208,6 +276,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
      enddo
 
   enddo
+  !$acc end data
   if (doublegrid) then
      do is = 1, nspin_mag
         call fft_interpolate (dffts, ldoss (:, is), dfftp, ldos (:, is))
@@ -252,6 +321,9 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   !
   IF (noncolin) deallocate(becsum1_nc)
   call deallocate_bec_type(becp)
+#if defined(__CUDA)
+  call deallocate_bec_type_gpu(becp_d)
+#endif
 
   call stop_clock ('localdos')
   return

@@ -4,7 +4,7 @@ exec tclsh "$0" "$@"
 
 #
 # Usage:   diff_gui_help module
-#          ( module = pw, ph, pp, neb,  projwfc, bands, dos, atomic, or d3 )
+#          ( module = pw, ph, pp, neb, projwfc, bands, dos, or atomic )
 #
 # Requirements: execute the check_gui first !!!
 #             

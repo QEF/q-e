@@ -37,7 +37,7 @@ SUBROUTINE hp_print_clock
   CALL print_clock ('hp_calc_chi')
   CALL print_clock ('hp_postproc')
   CALL print_clock ('hp_vpsifft')
-  CALL print_clock ('hp_ef_shift')
+  CALL print_clock ('ef_shift')
   CALL print_clock ('hp_run_nscf')
   CALL print_clock ('hp_postproc')
   !
@@ -51,6 +51,8 @@ SUBROUTINE hp_print_clock
   WRITE( stdout, * )  '    PRINTING TIMING FROM LR MODULE: '
   WRITE( stdout, * )
   !
+  CALL print_clock ('sth_kernel')
+  CALL print_clock ('apply_dpot_b')
   CALL print_clock ('ortho')
   CALL print_clock ('cgsolve')
   CALL print_clock ('ch_psi')

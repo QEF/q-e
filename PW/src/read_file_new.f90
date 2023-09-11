@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2016-2020 Quantum ESPRESSO group
+! Copyright (C) 2016-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,7 +9,10 @@
 SUBROUTINE read_file()
   !----------------------------------------------------------------------------
   !
-  ! Wrapper routine, for backwards compatibility
+  ! Wrapper routine, for backwards compatibility: reads the xml file,
+  ! then reads the wavefunctions in "collected" format and writes them
+  ! into "distributed" format, forcing write to file (not to buffer).
+  ! NOT TO BE USED IN NEW CODE. Use "read_file_new" instead.
   !
   USE io_global,        ONLY : stdout
   USE control_flags,    ONLY : io_level
@@ -20,6 +23,8 @@ SUBROUTINE read_file()
   USE klist,            ONLY : nks
   USE wavefunctions,    ONLY : evc
   USE pw_restart_new,   ONLY : read_collected_wfc
+  !
+  USE wavefunctions_gpum, ONLY : using_evc
   !
   IMPLICIT NONE
   !
@@ -34,7 +39,7 @@ SUBROUTINE read_file()
   ! ... io_level = 1 so that a real file is opened
   !
   nwordwfc = nbnd*npwx*npol
-  io_level = 1
+  IF ( io_level /= 0 ) io_level = 1
   CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst )
   !
   ! ... read wavefunctions in collected format, write them to file
@@ -43,6 +48,7 @@ SUBROUTINE read_file()
      !
      WRITE( stdout, '(5x,A)') &
           'Reading collected, re-writing distributed wavefunctions'
+     CALL using_evc(1)
      DO ik = 1, nks
         CALL read_collected_wfc ( restart_dir(), ik, evc )
         CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
@@ -53,18 +59,120 @@ SUBROUTINE read_file()
           'read_file: Wavefunctions in collected format not available'
   END IF
   !
-  CALL close_buffer  ( iunwfc, 'KEEP' )
+  IF ( io_level /= 0 ) CALL close_buffer  ( iunwfc, 'KEEP' )
   !
 END SUBROUTINE read_file
+!
+!----------------------------------------------------------------------------
+SUBROUTINE read_file_ph( needwf_ph )
+  !----------------------------------------------------------------------------
+  !
+  ! Wrapper routine, for compatibility with the phonon code: as "read_file",
+  ! but pool parallelization is done just after the reading of the xml file,
+  ! before reading the wavefunction files. To be used ONLY for codes that 
+  ! can split processors into pools at run-time depending upon the number
+  ! of k-points (unless the number of pools is explicitly specified) 
+  !
+  USE io_global,        ONLY : stdout
+  USE control_flags,    ONLY : io_level
+  USE buffers,          ONLY : open_buffer, close_buffer, save_buffer
+  USE io_files,         ONLY : nwordwfc, iunwfc, wfc_dir, tmp_dir, restart_dir
+  USE wvfct,            ONLY : nbnd, npwx, et, wg
+  USE noncollin_module, ONLY : npol
+  USE klist,            ONLY : nkstot, nks, xk, wk
+  USE lsda_mod,         ONLY : isk
+  USE wavefunctions,    ONLY : evc
+  USE pw_restart_new,   ONLY : read_collected_wfc
+  USE fft_base,         ONLY : dffts
+  !
+  USE wvfct_gpum,       ONLY : using_et, using_wg, using_wg_d
+  USE wavefunctions_gpum, ONLY : using_evc
+  USE pw_restart_new,   ONLY : read_xml_file
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: ik
+  LOGICAL :: exst, wfc_is_collected
+  LOGICAL, INTENT(IN) :: needwf_ph
+  !
+  WRITE( stdout, '(/,5x,A)') &
+       'Reading xml data from directory:', TRIM( restart_dir() )
+  !
+  ! ... Read the contents of the xml data file
+  !
+  CALL read_xml_file ( wfc_is_collected )
+  !
+  ! Guess parallelization on the basis of data from the scf calculation
+  ! Must be done before post_xml_init is called
+  !
+  CALL setup_para ( dffts%nr3, nkstot, nbnd )
+  !
+  ! ... more initializations: pseudopotentials / G-vectors / FFT arrays /
+  ! ... charge density / potential / ... , but not KS orbitals
+  !
+  CALL post_xml_init ( )
+  !
+  ! ... distribute across pools k-points and related variables.
+  ! ... nks is defined by the following routine as the number 
+  ! ... of k-points in the current pool
+  !
+  CALL divide_et_impera( nkstot, xk, wk, isk, nks )
+  CALL using_et(1)
+  CALL poolscatter( nbnd, nkstot, et, nks, et )
+  CALL using_wg(1)
+  CALL poolscatter( nbnd, nkstot, wg, nks, wg )
+#if defined(__CUDA)
+  ! Updating wg here. Should not be done and will be removed ASAP.
+  CALL using_wg_d(0)
+#endif
+  !
+  ! ... allocate_wfc_k also computes no. of plane waves and k+G indices
+  ! ... FIXME: the latter should be read from file, not recomputed
+  !
+  CALL allocate_wfc_k()
+  !
+  ! ... Open unit iunwfc, for Kohn-Sham orbitals - we assume that wfcs
+  ! ... have been written to tmp_dir, not to a different directory!
+  !
+  wfc_dir = tmp_dir
+  !
+  IF ( wfc_is_collected ) THEN
+     !
+     nwordwfc = nbnd*npwx*npol
+     CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst )
+     !
+     ! ... read wavefunctions in collected format, write them to file or buffer
+     !
+     WRITE( stdout, '(5x,A)') &
+          'Reading collected, re-writing distributed wavefunctions in '//TRIM(wfc_dir)
+     CALL using_evc(1)
+     DO ik = 1, nks
+        CALL read_collected_wfc ( restart_dir(), ik, evc )
+        CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
+     END DO
+     !
+  ELSE
+     !
+     IF ( needwf_ph ) THEN
+        CALL errore ('read_file_ph',' Wavefunctions in collected format not available',1)
+     ELSE
+        WRITE( stdout, '(5x,A)') 'read_file_ph: Wavefunctions in collected format not needed'
+     ENDIF
+     !
+  END IF
+  !
+  IF ( io_level /= 0 ) CALL close_buffer  ( iunwfc, 'KEEP' )
+  !
+END SUBROUTINE read_file_ph
 !
 !----------------------------------------------------------------------------
 SUBROUTINE read_file_new ( needwf )
   !----------------------------------------------------------------------------
   !
-  ! Reads xml data file produced by pw.x or cp.x, performs initializations
-  ! related to the contents of the xml file
-  ! If needwf=.t. performs wavefunction-related initialization as well
-  ! Does not read wfcs but returns in "wfc_is_collected" info on the wfc file
+  ! Reads xml data file produced by pw.x or cp.x;
+  ! performs initializations related to the contents of the xml file;
+  ! if needwf=.t. performs wavefunction-related initialization as well.
+  ! Does not actually read wfcs. Returns in "needwf" info on the wfc file
   !
   USE io_global,      ONLY : stdout
   USE io_files,       ONLY : nwordwfc, iunwfc, wfc_dir, tmp_dir, restart_dir
@@ -74,6 +182,8 @@ SUBROUTINE read_file_new ( needwf )
   USE lsda_mod,       ONLY : isk
   USE wvfct,          ONLY : nbnd, et, wg
   USE pw_restart_new, ONLY : read_xml_file
+  !
+  USE wvfct_gpum,     ONLY : using_et, using_wg, using_wg_d
   !
   IMPLICIT NONE
   !
@@ -99,15 +209,21 @@ SUBROUTINE read_file_new ( needwf )
      !
      ! ... initialization of KS orbitals
      !
-     wfc_dir = tmp_dir ! this is likely obsolete and no longer used
+     wfc_dir = tmp_dir
      !
      ! ... distribute across pools k-points and related variables.
      ! ... nks is defined by the following routine as the number 
      ! ... of k-points in the current pool
      !
      CALL divide_et_impera( nkstot, xk, wk, isk, nks )
+     CALL using_et(1)
      CALL poolscatter( nbnd, nkstot, et, nks, et )
+     CALL using_wg(1)
      CALL poolscatter( nbnd, nkstot, wg, nks, wg )
+#if defined(__CUDA)
+     ! Updating wg here. Should not be done and will be removed ASAP.
+     CALL using_wg_d(0)
+#endif
      !
      ! ... allocate_wfc_k also computes no. of plane waves and k+G indices
      ! ... FIXME: the latter should be read from file, not recomputed
@@ -135,15 +251,17 @@ SUBROUTINE post_xml_init (  )
   USE paw_onecenter,        ONLY : paw_potential
   USE dfunct,               ONLY : newd
   USE funct,                ONLY : get_dft_name
-  USE ldaU,                 ONLY : lda_plus_u, eth, init_lda_plus_u, U_projection, &
+  USE ldaU,                 ONLY : lda_plus_u, eth, init_hubbard, Hubbard_projectors, &
                                    lda_plus_u_kind
   USE esm,                  ONLY : do_comp_esm, esm_init
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact 
   USE ions_base,            ONLY : nat, nsp, tau, ityp
+  USE cell_base,            ONLY : omega
   USE recvec_subs,          ONLY : ggen, ggens
-  USE gvect,                ONLY : gg, ngm, g, gcutm, mill, ngm_g, ig_l2g, &
-                                   eigts1, eigts2, eigts3, gstart, gshells
+  USE gvect,                ONLY : ecutrho, gg, ngm, g, gcutm, mill, mill_d, &
+          ngm_g, ig_l2g, eigts1, eigts2, eigts3, gstart, gshells, g_d, gg_d
   USE gvecs,                ONLY : ngms, gcutms 
+  USE gvecw,                ONLY : ecutwfc
   USE fft_rho,              ONLY : rho_g2r
   USE fft_base,             ONLY : dfftp, dffts
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
@@ -154,23 +272,38 @@ SUBROUTINE post_xml_init (  )
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE wvfct,                ONLY : nbnd, nbndx, et, wg
   USE lsda_mod,             ONLY : nspin
-  USE noncollin_module,     ONLY : noncolin
-  USE spin_orb,             ONLY : lspinorb
+  USE noncollin_module,     ONLY : noncolin, lspinorb, domag
   USE cell_base,            ONLY : at, bg, set_h_ainv
   USE symm_base,            ONLY : d1, d2, d3
+  USE mp_bands,             ONLY : intra_bgrp_comm
   USE realus,               ONLY : betapointlist, generate_qpointlist, &
                                    init_realspace_vars,real_space
+  USE solvmol,              ONLY : nsolV, solVs
+  USE read_solv_module,     ONLY : read_solvents
+  USE rism_module,          ONLY : rism_tobe_alive, rism_pot3d
+  USE rism3d_facade,        ONLY : lrism3d, rism3d_initialize, rism3d_read_to_restart
+  USE xc_lib,               ONLY : xclib_dft_is_libxc, xclib_init_libxc
   !
   IMPLICIT NONE
   !
   REAL(DP) :: ehart, etxc, vtxc, etotefield, charge
-  CHARACTER(LEN=20) :: dft_name
+  CHARACTER(LEN=37) :: dft_name
+  !
+  ! ... initialize Libxc if needed
+  !
+  IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin, domag )
   !
   ! ... set G cutoffs and cell factor (FIXME: from setup.f90?)
   !
   CALL set_gcut()
   if (cell_factor == 0.d0) cell_factor = 1.D0
   nbndx = nbnd
+  !
+  ! ... activate 3D-RISM
+  !
+  IF ( lrism3d ) THEN
+     CALL rism_tobe_alive()
+  END IF
   !
   ! ... read pseudopotentials
   ! ... the following call prevents readpp from setting dft from PP files
@@ -182,10 +315,9 @@ SUBROUTINE post_xml_init (  )
   !
   okpaw = ANY ( upf(1:nsp)%tpawp )
   IF ( .NOT. lspinorb ) CALL average_pp ( nsp )
-  !! average_pp must be called before init_lda_plus_u
+  !! average_pp must be called before init_hubbard
   IF ( lda_plus_u ) THEN
-     IF (lda_plus_u_kind == 2) CALL read_V
-     CALL init_lda_plus_u ( upf(1:nsp)%psd, nspin, noncolin )
+     CALL init_hubbard ( upf(1:nsp)%psd, nspin, noncolin )
   ENDIF
   !
   ! ... allocate memory for G- and R-space fft arrays (from init_run.f90)
@@ -196,8 +328,16 @@ SUBROUTINE post_xml_init (  )
   CALL allocate_fft()
   CALL ggen ( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
        g, gg, mill, ig_l2g, gstart ) 
+#if defined(__CUDA)
+  ! FIXME: to be moved inside ggen
+  mill_d = mill
+  g_d    = g
+  gg_d   = gg
+#endif
+  !$acc update device(mill, g, gg)
+  !
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms ) 
-  CALL gshells ( lmovecell ) 
+  CALL gshells ( lmovecell )
   !
   IF (do_comp_esm) CALL esm_init()
   IF (do_cutoff_2D) CALL cutoff_fact()
@@ -224,14 +364,15 @@ SUBROUTINE post_xml_init (  )
   ! ... the core correction charge (if any) - from hinit0.f90
   !
   CALL init_vloc()
-  IF (tbeta_smoothing) CALL init_us_b0()
-  IF (tq_smoothing) CALL init_us_0()
-  CALL init_us_1()
-  IF ( lda_plus_U .AND. ( U_projection == 'pseudo' ) ) CALL init_q_aeps()
-  CALL init_at_1()
+  IF (tbeta_smoothing) CALL init_us_b0(ecutwfc,intra_bgrp_comm)
+  IF (tq_smoothing) CALL init_us_0(ecutrho,intra_bgrp_comm)
+  CALL init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
+  IF ( lda_plus_u .AND. ( Hubbard_projectors == 'pseudo' ) ) CALL init_q_aeps()
+  CALL init_tab_atwfc(omega, intra_bgrp_comm)
   !
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, dfftp%nr1, dfftp%nr2,&
                    dfftp%nr3, strf, eigts1, eigts2, eigts3 )
+  !$acc update device(eigts1(:,:), eigts2(:,:), eigts3(:,:))
   CALL setlocal()
   CALL set_rhoc()
   !
@@ -244,6 +385,14 @@ SUBROUTINE post_xml_init (  )
      WRITE (stdout,'(5X,"Real space initialisation completed")')    
   ENDIF
   !
+  ! ... read info needed for 3D-RISM
+  !
+  IF ( lrism3d ) THEN
+     CALL read_solvents( without_density=.TRUE. )
+     CALL rism3d_initialize()
+     CALL rism3d_read_to_restart()
+  END IF
+  !
   ! ... recalculate the potential - FIXME: couldn't make ts-vdw work
   !
   IF ( ts_vdw) THEN
@@ -255,6 +404,12 @@ SUBROUTINE post_xml_init (  )
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
        ehart, etxc, vtxc, eth, etotefield, charge, v )
+  !
+  ! ... recalculate the solvation potential (3D-RISM)
+  !
+  IF ( lrism3d ) THEN
+     CALL rism_pot3d(rho%of_g(:, 1), v%of_r)
+  END IF
   !
   ! ... More PAW and USPP initializations
   !

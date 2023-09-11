@@ -10,41 +10,48 @@
 subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, becp1, alphap, &
                                                             dbecq, dalpq)
   !-----------------------------------------------------------------------
-  !
-  !  This subroutine computes the electronic term 2 <dpsi|dv-e ds|psi> of 
-  !  the dynamical matrix. It can be used both for KB and for US 
-  !  pseudopotentials. All the nonlocal (and overlap matrix) terms
-  !  are computed here. The contribution of the local potential is not
-  !  computed here. This routine must be called for each k point and
-  !  accumulates in wdyn the contribution of each k point.
+  !! This subroutine computes the electronic term
+  !! \(2\langle d\psi|dv-e ds|\psi\rangle \)
+  !! of the dynamical matrix. It can be used both for KB and for US 
+  !! pseudopotentials. All the nonlocal (and overlap matrix) terms
+  !! are computed here. The contribution of the local potential is not
+  !! computed here. This routine must be called for each k-point and
+  !! accumulates in \(\text{wdyn}\) the contribution of each k-point.
   !
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
-  USE noncollin_module, ONLY : noncolin, npol
+  USE noncollin_module, ONLY : noncolin, npol, lspinorb
   USE uspp,      ONLY : okvan, nkb
   USE uspp_param,ONLY : nh, nhm
   USE becmod,    ONLY : bec_type
   USE wvfct,     ONLY : nbnd, et
   USE klist,     ONLY : wk
   USE lsda_mod,  ONLY : current_spin, nspin
-  USE spin_orb,  ONLY : lspinorb
   USE phus,      ONLY : int1, int1_nc, int2, int2_so
   USE qpoint,    ONLY : nksq
-  USE mp_bands, ONLY: intra_bgrp_comm
+  USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none
-  integer :: ik, ikk, nper, nu_i0
-  ! input: the current k point
-  ! input: the number of perturbations
-  ! input: the initial mode
-
-  TYPE(bec_type) :: dbecq(nper), dalpq(3,nper), becp1(nksq), alphap(3,nksq)
-  ! input: the becp with psi_{k+q}
-  ! input: the alphap with psi_{k}
-  complex(DP) :: wdyn (3 * nat, 3 * nat)
-  ! output: the term of the dynamical matryx
-
+  
+  integer :: ik
+  !! input: the current k point
+  integer :: ikk
+  integer :: nper
+  !! input: the number of perturbations
+  integer :: nu_i0
+  !! input: the initial mode
+  TYPE(bec_type) :: dbecq(nper)
+  !! input: the becp with \(\psi_{k+q}\)
+  TYPE(bec_type) :: dalpq(3,nper)
+  !! input: the alphap with \(\psi_{k}\)
+  TYPE(bec_type) :: becp1(nksq)
+  TYPE(bec_type) :: alphap(3,nksq)
+  complex(DP) :: wdyn(3*nat, 3*nat)
+  !! output: the term of the dynamical matryx
+  !
+  ! ... local variables
+  !
   complex(DP) :: ps, ps_nc(npol), dynwrk (3 * nat, 3 * nat)
   ! dynamical matrix
   complex(DP) , allocatable :: ps1 (:,:), ps2 (:,:,:)

@@ -1,0 +1,14 @@
+ &lr_input
+   prefix = 'Fe',
+   outdir = '/scratch/obaseggi/q-e-develop/tempdir/',
+   restart_step = 200,
+   restart = .false.
+ /
+&lr_control
+    itermax          = 150,
+    q1               = 0.1d0,
+    q2               = 0.1d0,
+    q3               = 0.0d0,
+    pseudo_hermitian = .false.
+    ipol             = 2
+/

@@ -1,0 +1,162 @@
+input_description -distribution {Quantum ESPRESSO} -package PHonon -program q2r.x {
+
+    toc {}
+
+    intro {
+        @b {Purpose of q2r.x:}
+        
+        It reads force constant matrices C(q) produced by the @b ph.x code
+        for a grid of q-points and calculates the corresponding set
+        of interatomic force constants (IFC), C(R)
+
+        @b {Input data format:} [ ] = it depends        
+        
+        @b {Structure of the input data:}
+	========================================================================
+
+        @b &INPUT
+           ...specs of namelist variables...
+	@b /
+
+        [ nr1 nr2 nr3
+          nfile
+             file(1)
+             file(2)
+             ...
+             file(nfile) ]
+    }
+
+    namelist INPUT {
+        var fildyn -type CHARACTER {
+            status { REQUIRED }
+            info {
+                
+                Input file name (must be specified).
+                
+                @b "fildyn"0 contains information on the q-point grid
+                
+                @b "fildyn"1-N contain force constants C_n = C(q_n),
+                     where @b {n = 1,...N}, where N is the number of
+                     q-points in the irreducible brillouin zone.
+                
+                Normally this should be the same as specified on input
+                to the phonon code.
+                
+                In the non collinear/spin-orbit case the files
+                produced by @b ph.x are in .xml format. In this case
+                @ref fildyn is the same as in the phonon code + the
+                .xml extension.
+            }
+        }
+
+        
+        var flfrc -type CHARACTER {
+            status { REQUIRED }
+            info {
+                Output file containing the IFC in real space (must be specified)
+            }
+        }
+        
+        var zasr -type CHARACTER {
+            default { 'no' }
+            options {
+                info {
+                    Indicates the type of Acoustic Sum Rules used for the Born
+                    effective charges.
+
+                    Allowed values:
+                }
+                opt -val 'no' {
+                    no Acoustic Sum Rules imposed (default)
+                }
+                opt -val 'simple' {
+                    previous implementation of the asr used
+                    (3 translational asr imposed by correction of
+                     the diagonal elements of the force-constants matrix)
+                }
+                opt -val 'crystal' {
+                    3 translational asr imposed by optimized
+                    correction of the IFC (projection)
+                }
+                opt -val 'one-dim' {
+                    3 translational asr + 1 rotational asr
+                    imposed by optimized correction of the IFC (the
+                    rotation axis is the direction of periodicity; it
+                    will work only if this axis considered is one of
+                    the cartesian axis).
+                }
+                opt -val 'zero-dim' {
+                    3 translational asr + 3 rotational asr
+                    imposed by optimized correction of the IFC.
+                }
+                info {
+                    Note that in certain cases, not all the rotational asr
+                    can be applied (e.g. if there are only 2 atoms in a
+                    molecule or if all the atoms are aligned, etc.).
+                    In these cases the supplementary asr are cancelled
+                    during the orthonormalization procedure (see below).
+                }
+            }
+        }
+        var loto_2d -type LOGICAL {
+            info {
+                set to @b .true. to activate two-dimensional treatment
+                of LO-TO splitting.
+            }
+        }
+        var write_lr -type LOGICAL {
+            default { @tt .false. }
+            info {
+                set to @b .true. to write long-range IFC into q2r IFC file.
+                This is required when enforcing asr='all' for infrared-
+                active solids in matdyn. An additional column will be written
+                for long-range part of IFC for text format, while a tag named 
+                IFC_LR will be created for xml format.
+            }
+        }
+    }
+
+    choose {
+        when -test {file {fildyn}0 does not exist} {
+            message {
+                If a file @b "fildyn"0 is not found, the code will ignore variable
+                @ref fildyn and will try to read from the following cards the missing
+                information on the q-point grid and file names:
+            }
+            linecard {
+                vargroup -type INTEGER {
+                    var nr1
+                    var nr2
+                    var nr3
+                    info {
+                        dimensions of the FFT grid formed by the q-point grid
+                    }
+                }
+            }
+            card fileSpecs -nameless 1 {
+                syntax {
+                    line {
+                        var nfile -type INTEGER {
+                            info {
+                                number of files containing C(q_n), n=1,@ref nfile
+                            }
+                        }
+                    }
+                    table file_n {
+                        rows -start 1 -end nfile {
+                            col file -type CHARACTER {
+                                info {
+                                    names of the files containing C(q_n), n=1,@ref nfile
+
+                                    Note that the name and order of files is not important as
+                                    long as @b {q=0 is the first}.                                
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+                        

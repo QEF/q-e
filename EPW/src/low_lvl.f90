@@ -735,7 +735,7 @@
     !!
     LOGICAL :: ifxst
     !! Does the file exists
-#if defined(__PGI) || defined(__CRAY) || defined(__XLF)
+#if defined(__PGI) || defined(__CRAY) || defined(__XLF) || defined(__FLANG)
     INTEGER, EXTERNAL :: getpid
     !! PID of the process
 #endif
@@ -864,44 +864,55 @@
     !
     !-----------------------------------------------------------------------
     FUNCTION matinv3(A) RESULT(B)
-    !-----------------------------------------------------------------------
-    !!
-    !! Performs a direct calculation of the inverse of a 3×3 matrix.
-    !!
-    USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : eps160
-    !
-    REAL(KIND = DP), INTENT(in) :: A(3, 3)
-    !! Matrix
-    !
-    ! Local variable
-    REAL(KIND = DP) :: detinv
-    !! Inverse of the determinant
-    REAL(KIND = DP) :: B(3, 3)
-    !! Inverse matrix
-    !
-    ! Calculate the inverse determinant of the matrix
-    detinv = 1 / (A(1, 1) * A(2, 2) * A(3, 3) - A(1, 1) * A(2, 3) * A(3, 2) &
-                - A(1, 2) * A(2, 1) * A(3, 3) + A(1, 2) * A(2, 3) * A(3, 1) &
-                + A(1, 3) * A(2, 1) * A(3, 2) - A(1, 3) * A(2, 2) * A(3, 1))
-    !
-    IF (detinv < eps160) THEN
-      CALL errore('matinv3', 'Inverse does not exist ', 1)
-    ENDIF
-    !
-    ! Calculate the inverse of the matrix
-    B(1, 1) = +detinv * (A(2, 2) * A(3, 3) - A(2, 3) * A(3, 2))
-    B(2, 1) = -detinv * (A(2, 1) * A(3, 3) - A(2, 3) * A(3, 1))
-    B(3, 1) = +detinv * (A(2, 1) * A(3, 2) - A(2, 2) * A(3, 1))
-    B(1, 2) = -detinv * (A(1, 2) * A(3, 3) - A(1, 3) * A(3, 2))
-    B(2, 2) = +detinv * (A(1, 1) * A(3, 3) - A(1, 3) * A(3, 1))
-    B(3, 2) = -detinv * (A(1, 1) * A(3, 2) - A(1, 2) * A(3, 1))
-    B(1, 3) = +detinv * (A(1, 2) * A(2, 3) - A(1, 3) * A(2, 2))
-    B(2, 3) = -detinv * (A(1, 1) * A(2, 3) - A(1, 3) * A(2, 1))
-    B(3, 3) = +detinv * (A(1, 1) * A(2, 2) - A(1, 2) * A(2, 1))
-    !-----------------------------------------------------------------------
-    END FUNCTION matinv3
-    !-----------------------------------------------------------------------
+      !-----------------------------------------------------------------------
+      !!
+      !! Performs a direct calculation of the inverse of a 3×3 matrix.
+      !!
+      USE kinds,         ONLY : DP
+      USE constants_epw, ONLY : eps160
+      !
+      REAL(KIND = DP), INTENT(in) :: A(3, 3)
+      !! Matrix
+      !
+      ! Local variable
+      REAL(KIND = DP) :: detinv, det
+      !! Inverse of the determinant
+      REAL(KIND = DP) :: B(3, 3)
+      !! Inverse matrix
+      !
+      !! Calculate the inverse determinant of the matrix
+      !detinv = 1 / (A(1, 1) * A(2, 2) * A(3, 3) - A(1, 1) * A(2, 3) * A(3, 2) &
+      !            - A(1, 2) * A(2, 1) * A(3, 3) + A(1, 2) * A(2, 3) * A(3, 1) &
+      !            + A(1, 3) * A(2, 1) * A(3, 2) - A(1, 3) * A(2, 2) * A(3, 1))
+      !!
+      !IF (detinv < eps160) THEN
+      !  CALL errore('matinv3', 'Inverse does not exist ', 1)
+      !ENDIF
+      !JLB
+      det = (A(1, 1) * A(2, 2) * A(3, 3) - A(1, 1) * A(2, 3) * A(3, 2)  &
+            - A(1, 2) * A(2, 1) * A(3, 3) + A(1, 2) * A(2, 3) * A(3, 1) &
+            + A(1, 3) * A(2, 1) * A(3, 2) - A(1, 3) * A(2, 2) * A(3, 1))
+      !
+      IF (ABS(det) < eps160) THEN
+        CALL errore('matinv3', 'Inverse does not exist ', 1)
+      END IF
+      !
+      detinv = 1 / det
+      !JLB
+      !
+      ! Calculate the inverse of the matrix
+      B(1, 1) = +detinv * (A(2, 2) * A(3, 3) - A(2, 3) * A(3, 2))
+      B(2, 1) = -detinv * (A(2, 1) * A(3, 3) - A(2, 3) * A(3, 1))
+      B(3, 1) = +detinv * (A(2, 1) * A(3, 2) - A(2, 2) * A(3, 1))
+      B(1, 2) = -detinv * (A(1, 2) * A(3, 3) - A(1, 3) * A(3, 2))
+      B(2, 2) = +detinv * (A(1, 1) * A(3, 3) - A(1, 3) * A(3, 1))
+      B(3, 2) = -detinv * (A(1, 1) * A(3, 2) - A(1, 2) * A(3, 1))
+      B(1, 3) = +detinv * (A(1, 2) * A(2, 3) - A(1, 3) * A(2, 2))
+      B(2, 3) = -detinv * (A(1, 1) * A(2, 3) - A(1, 3) * A(2, 1))
+      B(3, 3) = +detinv * (A(1, 1) * A(2, 2) - A(1, 2) * A(2, 1))
+      !-----------------------------------------------------------------------
+      END FUNCTION matinv3
+      !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
     PURE FUNCTION find_minimum(grid, grid_dim) RESULT(minpos)
     !-----------------------------------------------------------------------
@@ -960,86 +971,9 @@
     END FUNCTION eqvect_strict
     !----------------------------------------------------------------------
     !
-    !---------------------------------------------------------------------------
-    SUBROUTINE read_disp_pattern(iunpun, current_iq, ierr)
-    !---------------------------------------------------------------------------
-    !!
-    !! This routine reads the displacement patterns.
-    !!
-    USE modes,        ONLY : nirr, npert, u
-    USE lr_symm_base, ONLY : minus_q, nsymq
-    USE iotk_module,  ONLY : iotk_index, iotk_scan_dat, iotk_scan_begin, &
-                             iotk_scan_end
-    USE io_global,    ONLY : meta_ionode, meta_ionode_id
-    USE mp,           ONLY : mp_bcast
-    USE mp_global,    ONLY : world_comm
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(in) :: current_iq
-    !! Current q-point
-    INTEGER, INTENT(in) :: iunpun
-    !! Current q-point
-    INTEGER, INTENT(out) :: ierr
-    !! Error
-    !
-    ! Local variables
-    INTEGER :: imode0, imode
-    !! Counter on modes
-    INTEGER :: irr
-    !! Counter on irreducible representations
-    INTEGER :: ipert
-    !! Counter on perturbations at each irr
-    INTEGER :: iq
-    !! Current q-point
-    !
-    ierr = 0
-    IF (meta_ionode) THEN
-      CALL iotk_scan_begin(iunpun, "IRREPS_INFO")
-      !
-      CALL iotk_scan_dat(iunpun, "QPOINT_NUMBER", iq)
-    ENDIF
-    CALL mp_bcast(iq,  meta_ionode_id, world_comm)
-    IF (iq /= current_iq) CALL errore('read_disp_pattern', ' Problems with current_iq', 1)
-    !
-    IF (meta_ionode) THEN
-      !
-      CALL iotk_scan_dat(iunpun, "QPOINT_GROUP_RANK", nsymq)
-      CALL iotk_scan_dat(iunpun, "MINUS_Q_SYM", minus_q)
-      CALL iotk_scan_dat(iunpun, "NUMBER_IRR_REP", nirr)
-      imode0 = 0
-      DO irr = 1, nirr
-        CALL iotk_scan_begin(iunpun, "REPRESENTION" // TRIM(iotk_index(irr)))
-        CALL iotk_scan_dat(iunpun, "NUMBER_OF_PERTURBATIONS", npert(irr))
-        DO ipert = 1, npert(irr)
-          imode = imode0 + ipert
-          CALL iotk_scan_begin(iunpun, "PERTURBATION" // TRIM(iotk_index(ipert)))
-          CALL iotk_scan_dat(iunpun, "DISPLACEMENT_PATTERN", u(:, imode))
-          CALL iotk_scan_end(iunpun, "PERTURBATION" // TRIM(iotk_index(ipert)))
-        ENDDO
-        imode0 = imode0 + npert(irr)
-        CALL iotk_scan_end(iunpun, "REPRESENTION" // TRIM(iotk_index(irr)))
-      ENDDO
-      !
-      CALL iotk_scan_end(iunpun, "IRREPS_INFO")
-      !
-    ENDIF
-    !
-    CALL mp_bcast(nirr   , meta_ionode_id, world_comm)
-    CALL mp_bcast(npert  , meta_ionode_id, world_comm)
-    CALL mp_bcast(nsymq  , meta_ionode_id, world_comm)
-    CALL mp_bcast(minus_q, meta_ionode_id, world_comm)
-    CALL mp_bcast(u      , meta_ionode_id, world_comm)
-    !
-    RETURN
-    !
-    !---------------------------------------------------------------------------
-    END SUBROUTINE read_disp_pattern
-    !---------------------------------------------------------------------------
-    !
-    !------------------------------------------------------------
+    !----------------------------------------------------------------------
     SUBROUTINE fractrasl(npw, igk, evc, eigv1, eig0v)
-    !------------------------------------------------------------
+    !----------------------------------------------------------------------
     !!
     !! Routine to compute fractional translations
     !!
@@ -1139,7 +1073,10 @@
     ! Local variables
     CHARACTER(LEN = 256) :: chunit
     !! Unit name
-    INTEGER :: imelt
+    !!!!!
+    ! INTEGER :: imelt
+    INTEGER(8) :: imelt
+    !!!!!
     !! Size in number of elements
     REAL(KIND = DP) :: rmelt
     !! Size in byte
@@ -1166,10 +1103,15 @@
     !-----------------------------------------------------------------------
     SUBROUTINE mem_size_eliashberg(vmelt, imelt)
     !-----------------------------------------------------------------------
-    !
-    !  This routine estimates the amount of memory taken up or
-    !  released by different arrays
-    !
+    !!
+    !!  This routine estimates the amount of memory taken up or
+    !!  released by different arrays
+    !!!!! these comment lines are added
+    !!
+    !!  SH: The "imelt" variable type is changed to INTEGER(8) throughout the
+    !!        code to avoid issues with large Nr of k-points, etc (Nov 2021).
+    !!
+    !!!!!
     USE io_global,     ONLY : stdout
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : max_memlt
@@ -1182,7 +1124,10 @@
     !
     INTEGER, INTENT(in) :: vmelt
     !! 1 for integer variables and 2 for real variables
-    INTEGER, INTENT(in) :: imelt
+    !!!!!
+    ! INTEGER, INTENT(in) :: imelt
+    INTEGER(8), INTENT(in) :: imelt
+    !!!!!
     !! > 0 memory added or < 0 memory subtracted
     !
     REAL(KIND = DP) :: rmelt
@@ -1233,7 +1178,10 @@
     USE io_global,     ONLY : stdout
     USE epwcom,        ONLY : max_memlt, nqstep
     USE eliashbergcom, ONLY : nkfs, nbndfs, nsiw, nqfs, limag_fly, &
-                              lacon_fly, memlt_pool
+                              !!!!!
+                              ! lacon_fly, memlt_pool
+                              lacon_fly, memlt_pool, wsn
+                              !!!!!
     USE mp_global,     ONLY : inter_pool_comm, my_pool_id
     USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
     USE division,      ONLY : fkbounds
@@ -1247,7 +1195,10 @@
     !! calculation type
     !
     !Local variables
-    INTEGER :: imelt
+    !!!!!
+    ! INTEGER :: imelt
+    INTEGER(8) :: imelt
+    !!!!!
     !! size array
     INTEGER :: lower_bnd, upper_bnd
     !! Lower/upper bound index after k parallelization
@@ -1269,7 +1220,12 @@
     imelt = (upper_bnd - lower_bnd + 1) * MAXVAL(nqfs(:)) * nbndfs**2
     IF (cname == 'imag') THEN
       ! get the size of the akeri that needa to be stored in each pool
-      imelt = imelt * (2 * nsiw(itemp))
+      !!!!! first line is changed, and 3rd and 4th lines are added
+      ! imelt = imelt * (2 * nsiw(itemp))
+      !
+      ! SH: This is adjusted to accommodate the sparse sampling case
+      imelt = imelt * 2 * (wsn(nsiw(itemp)) + 1)
+      !!!!!
     ELSEIF (cname == 'acon') THEN
       ! get the size of a2fij that needs to be stored in each pool
       imelt = imelt * nqstep
@@ -1309,6 +1265,299 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE memlt_eliashberg
     !-----------------------------------------------------------------------
+    !
+    !--------------------------------------------------------------------------
+    SUBROUTINE create_interval(size_v, v, n_intval, val_intval, pos_intval)
+    !--------------------------------------------------------------------------
+    !!
+    !! This routine divide an integer vector "v" of size "size_v" into "n_intval" intervals
+    !! The routine then store the first element of each intervals into "val_intval"
+    !! and store their position in "pos_intval".
+    !!
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: size_v
+    !! Size of vector to bisect
+    INTEGER, INTENT(in) :: v(size_v)
+    !! Vector to bisect
+    INTEGER, INTENT(in) :: n_intval
+    !! Number of intervals indexes (so there are (n_intval - 1) number of intervals)
+    INTEGER, INTENT(out) :: val_intval(n_intval)
+    !! Value of the first element of each intervals
+    INTEGER, INTENT(out) :: pos_intval(n_intval)
+    !! Position of the first element of each intervals
+    !
+    !  Local variables
+    INTEGER :: nkl
+    !! Size of each intervals
+    INTEGER :: nkr
+    !! Remaining of the division of the full vector by nkl
+    INTEGER :: i
+    !! Index looping on the invervals
+    !
+    ! Initialize
+    val_intval(:) = 0
+    pos_intval(:) = 0
+    !
+    ! We want to have n_intval indexes, i.e. n_intval-1 intervals
+    nkl = size_v / (n_intval - 1)
+    nkr = size_v - nkl * (n_intval - 1)
+    !
+    ! The reminder goes to the first nkr intervals (0...nkr-1)
+    !
+    DO i = 1, n_intval
+      pos_intval(i) = nkl * (i - 1)
+      IF (i < nkr) pos_intval(i) = pos_intval(i) + i
+      IF (i >= nkr) pos_intval(i) = pos_intval(i) + nkr
+    ENDDO
+    !
+    ! In case the reminder is 0
+    IF (nkr == 0) THEN
+      DO i = 1, (n_intval - 1)
+        pos_intval(i) = pos_intval(i) + 1
+      ENDDO
+    ENDIF
+    !
+    DO i = 1, n_intval
+      val_intval(i) = v(pos_intval(i))
+    ENDDO
+    !
+    !--------------------------------------------------------------------------
+    END SUBROUTINE create_interval
+    !--------------------------------------------------------------------------
+    !
+    !--------------------------------------------------------------------------
+    SUBROUTINE bisection(size_v, v, ind, n_intval, val_intval, pos_intval)
+    !--------------------------------------------------------------------------
+    !!
+    !! The subroutine first perform a pre-serach to determine in which intervals
+    !! the index "ind" lies.
+    !! Then the subroutines find the position of the index "ind" within that interaval.
+    !!
+    USE kinds, ONLY : DP
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: size_v
+    !! Size of vector to bisect
+    INTEGER, INTENT(in) :: v(size_v)
+    !! Vector to bisect
+    INTEGER, INTENT(in) :: n_intval
+    !! Number of intervals indexes (so there are (n_intval - 1) number of intervals
+    INTEGER, INTENT(in) :: val_intval(n_intval)
+    !! Value of the first element of each intervals
+    INTEGER, INTENT(in) :: pos_intval(n_intval)
+    !! Position of the first element of each intervals
+    INTEGER, INTENT(inout) :: ind
+    !! In entry, index to find in the vector; on exit, position of the element;
+    !! If 0 on RETURN, the element is not present in the list
+    !
+    ! Local variable
+    INTEGER :: it
+    !! Iteration index
+    INTEGER :: lp
+    !! Left pointer
+    INTEGER :: rp
+    !! Right pointer
+    INTEGER :: cp
+    !! Center pointer
+    INTEGER :: nit
+    !! Number of iterations
+    INTEGER :: prod
+    !! Product to determine on which side of the interval we are
+    INTEGER :: prod_2
+    !! Product
+    INTEGER :: ierr
+    !! Error number
+    INTEGER :: subsize
+    !! Size of the chunk of v we are considering
+    INTEGER :: pre_minloc
+    !! Minimum location of presearch
+    INTEGER :: pre_minval
+    !! Minimum value of presearch
+    INTEGER, ALLOCATABLE :: v_red(:)
+    !! Reduced vector for bisection
+    INTEGER, ALLOCATABLE :: v_sgn(:)
+    !! v - ind
+    !
+    ! 1) Deal with special cases
+    !
+    ! The point is not within the fsthick window ==> return 0
+    IF (ind > v(size_v) .OR. (ind < v(1))) THEN
+      ind = 0
+      RETURN
+    ENDIF
+    !
+    ! Look at the first element of each intervals.
+    pre_minloc = MINLOC(ABS(val_intval(:) - ind), 1)
+    pre_minval = MINVAL(ABS(val_intval(:) - ind), 1)
+    !
+    ! The ind is one of those first element (special case) - we are done
+    IF (pre_minval == 0) THEN
+      ind = pos_intval(pre_minloc)
+      RETURN
+    ENDIF
+    !
+    ! The ind is the second or one before last element (special case treated here because the
+    ! algo below cannot deal with the two extreme cases.
+    ! We compute the lower left bound and upper right bound. The ind is between those two bounds.
+    IF (pre_minloc == 1) THEN
+      lp = pos_intval(1)
+      rp = pos_intval(2)
+    ELSEIF (pre_minloc == n_intval) THEN
+      lp = pos_intval(n_intval - 1)
+      rp = pos_intval(n_intval)
+    ELSE
+      !
+      ! 2) Do a pre-search to deterine in which intervals the index lies.
+      !
+      ! The sign of the product tels us on which side of the interval does the index ind lies.
+      IF ( val_intval(pre_minloc) - ind /= 0 .AND. val_intval(pre_minloc - 1) - ind /= 0) THEN
+        prod = (val_intval(pre_minloc) - ind) / ABS(val_intval(pre_minloc) - ind) &
+             * (val_intval(pre_minloc - 1) - ind) / ABS(val_intval(pre_minloc - 1) - ind)
+      ELSE
+        prod = 0
+      ENDIF
+      !
+      IF (prod < 0) THEN
+        ! Then the correspondence is in between pos_intval(pre_minloc-1) and pos_intval(pre_minloc)
+        lp = pos_intval(pre_minloc - 1)
+        rp = pos_intval(pre_minloc)
+      ELSEIF (prod > 0) THEN
+        ! Then the correspondence is in between pos_intval(pre_minloc) and pos_intval(pre_minloc+1)
+        lp = pos_intval(pre_minloc)
+        rp = pos_intval(pre_minloc + 1)
+      ELSEIF (prod == 0) THEN
+        ! It cannot be that val_intval(pre_minloc)-ind) == 0 because we already checked
+        ind = pos_intval(pre_minloc - 1)
+        RETURN
+      ENDIF
+    ENDIF
+    !
+    subsize = rp - lp + 1
+    ALLOCATE(v_red(subsize), STAT = ierr)
+    IF (ierr /= 0) CALL errore('bisection', 'Error allocating v_red', 1)
+    ALLOCATE(v_sgn(subsize), STAT = ierr)
+    IF (ierr /= 0) CALL errore('bisection', 'Error allocating v_sgn', 1)
+    !
+    !Shift lp to 1 and rp to subsize
+    IF (pre_minloc == 1) THEN
+      v_red(:) = v(pos_intval(1):pos_intval(2))
+      lp = lp - pos_intval(1) + 1
+      rp = rp - pos_intval(1) + 1
+    ELSEIF (pre_minloc == n_intval) THEN
+      v_red(:) = v(pos_intval(n_intval - 1):pos_intval(n_intval))
+      lp = lp - pos_intval(n_intval - 1) + 1
+      rp = rp - pos_intval(n_intval - 1) + 1
+    ELSE
+      IF (prod < 0) THEN
+        v_red(:) = v(pos_intval(pre_minloc - 1):pos_intval(pre_minloc))
+        lp = lp - pos_intval(pre_minloc - 1) + 1
+        rp = rp - pos_intval(pre_minloc - 1) + 1
+      ELSEIF (prod > 0) THEN
+        v_red(:) = v(pos_intval(pre_minloc):pos_intval(pre_minloc + 1))
+        lp = lp - pos_intval(pre_minloc) + 1
+        rp = rp - pos_intval(pre_minloc) + 1
+      ENDIF
+    ENDIF
+    !
+    ! 3) Do a bisection on the interval
+    !
+    v_sgn(:) = v_red(:) - ind
+    !
+    ! Each iteration of the bisection method divide the range by 2 so that the
+    ! maximum number of iteration is log2(subsize). We multiply by 2 for safety.
+    nit = (NINT(LOG(REAL(subsize, KIND = DP)) / LOG(2.0d0)) + 1) * 2 !Safe range
+    ! Add call errore if it == nit
+    !
+    bisec : DO it = 1, nit
+      !
+      IF (it == nit) CALL errore('bisection', 'Maximum number of iteration reached in bisection', 1)
+      !
+      ! Check if we found a correspondence
+      IF (v_sgn(lp) == 0) THEN
+        ind = lp
+        IF (pre_minloc == 1) THEN
+          ind = ind + pos_intval(1) - 1
+          EXIT bisec
+        ELSEIF (pre_minloc == n_intval) THEN
+          ind = ind + pos_intval(n_intval - 1) - 1
+          EXIT bisec
+        ELSE
+          IF (prod < 0) THEN
+            ind = ind + pos_intval(pre_minloc - 1) - 1
+          ELSEIF (prod > 0) THEN
+            ind = ind + pos_intval(pre_minloc) - 1
+          ENDIF
+          EXIT bisec
+        ENDIF
+      ELSEIF (v_sgn(rp) == 0) THEN
+        ind = rp
+        IF (pre_minloc == 1) THEN
+          ind = ind + pos_intval(1) - 1
+          EXIT bisec
+        ELSEIF (pre_minloc == n_intval) THEN
+          ind = ind + pos_intval(n_intval - 1) - 1
+          EXIT bisec
+        ELSE
+          IF (prod < 0) THEN
+            ind = ind + pos_intval(pre_minloc - 1) - 1
+          ELSEIF (prod > 0) THEN
+            ind = ind + pos_intval(pre_minloc) - 1
+          ENDIF
+          EXIT bisec
+        ENDIF
+      ENDIF
+      ! v_sgn(lp) and v_sgn(rp) cannot be 0 at this point
+      prod_2 = (v_sgn(lp) / ABS(v_sgn(lp))) * (v_sgn(rp) / ABS(v_sgn(rp)))
+      !
+      ! If prod not 0 but they are contiguous, ind = 0
+      IF (lp + 1 == rp) THEN
+        ind = 0
+        EXIT bisec
+      ENDIF
+      ! Check for the case prod > 0
+      IF (prod_2 > 0) THEN
+        CALL errore('bisection', 'Error in bisection algorithm', 1)
+      ENDIF
+      ! After the checks, move lp or rp
+      IF (MOD(subsize, 2) == 0) THEN
+        cp = lp + subsize / 2 - 1
+      ELSE
+        cp = lp + (subsize + 1) / 2 - 1
+      ENDIF
+      IF (v_sgn(cp) == 0) THEN
+        ind = cp
+        IF (pre_minloc == 1) THEN
+          ind = ind + pos_intval(1) - 1
+          EXIT bisec
+        ELSEIF (pre_minloc == n_intval) THEN
+          ind = ind + pos_intval(n_intval - 1) - 1
+          EXIT bisec
+        ELSE
+          IF (prod < 0) THEN
+            ind = ind + pos_intval(pre_minloc - 1) - 1
+          ELSEIF (prod > 0) THEN
+            ind = ind + pos_intval(pre_minloc) - 1
+          ENDIF
+          EXIT bisec
+        ENDIF
+      ELSE
+        ! v_sgn(lp) and v_sgn(cp) cannot be 0 at this point
+        prod_2 = (v_sgn(lp) / ABS(v_sgn(lp))) * (v_sgn(cp) / ABS(v_sgn(cp)))
+      ENDIF
+      IF (prod_2 < 0) THEN
+        rp = cp
+      ELSE
+        lp = cp
+      ENDIF
+      subsize = rp - lp + 1
+      IF (rp < lp) CALL errore('bisection', 'Error in bisection algorithm', 1)
+    ENDDO bisec
+    !
+    !--------------------------------------------------------------------------
+    END SUBROUTINE bisection
+    !--------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------
     SUBROUTINE s_crystocart(s, sr, at, bg)
@@ -1427,6 +1676,62 @@
     !
     !-----------------------------------------------------------------------
     END FUNCTION copy_sym_epw
+    !-----------------------------------------------------------------------
+    !
+    !----------------------------------------------------------------------
+    SUBROUTINE fix_sym(lcase)
+    !----------------------------------------------------------------------
+    !!
+    !! This routine tries to fix some symmetry-related issues in EPW.
+    !! This is just a temporary fix before restructuring the code.
+    !!
+    !! HL - July 2020
+    !!
+    USE kinds,         ONLY : DP
+    USE symm_base,     ONLY : t_rev, time_reversal, nrot, nsym, invsym, &
+                              nofrac, nosym_evc, find_sym
+    USE ions_base,     ONLY : nat, tau, ityp
+    USE epwcom,        ONLY : epw_no_t_rev, epw_tr, epw_nosym, epw_crysym, &
+                              mp_mesh_k, mp_mesh_q
+    USE io_global,     ONLY : stdout
+    !
+    IMPLICIT NONE
+    !
+    LOGICAL, INTENT(in) :: lcase
+    !! .FALSE.: before interpolation
+    !! .TRUE.: after interpolation
+    !
+    REAL(DP) :: mdum(3,nat)
+    !! Dummy values for local magnitization
+    !
+    IF (epw_no_t_rev) t_rev = 0
+    !
+    time_reversal = epw_tr
+    !
+    IF (lcase) THEN
+      IF (epw_crysym) THEN
+        IF (mp_mesh_k .OR. mp_mesh_q) THEN
+          !
+          nosym_evc = .FALSE.
+          nofrac = .FALSE.
+          !
+          CALL find_sym(nat, tau, ityp, .FALSE., mdum)
+          WRITE(stdout, '(a,i3)') 'fix_sym: nrot=', nrot
+          WRITE(stdout, '(a,i3)') 'fix_sym: nsym=', nsym
+          nrot = nsym
+          !
+        ENDIF
+      ENDIF
+    ENDIF
+    !
+    IF (epw_nosym) THEN
+      nrot = 1
+      nsym = 1
+      invsym = .FALSE.
+    ENDIF
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE fix_sym
     !-----------------------------------------------------------------------
   !-------------------------------------------------------------------------
   END MODULE low_lvl

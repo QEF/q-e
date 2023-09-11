@@ -1,0 +1,194 @@
+                                                                                      
+                                       ``:oss/                                        
+                           `.+s+.     .+ys--yh+     `./ss+.                           
+                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
+               -yh- ./syyooyo`                          .sys+/oyo--yh/                
+               `yy+    .-:-.                             `-/+/:`  -sh-                
+                /yh.                                              oys                 
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
+   -yh-        ````````````````    `````````              ``        ``          oys   
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
+                                                                                      
+  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 
+                                                Comput. Phys. Commun. 209, 116 (2016) 
+                                                                                      
+
+     Program EPW v.5.5 starts on 19Nov2022 at 13:31:25 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     51982 MiB available memory on the printing compute node when the environment starts
+
+     Reading input from epw5.in
+
+     Generating evenly spaced temperature list.
+                      
+     ------------------------------------------------------------------------ 
+                   RESTART - RESTART - RESTART - RESTART                         
+     Restart is done without reading PWSCF save file.                  
+     Be aware that some consistency checks are therefore not done.                  
+     ------------------------------------------------------------------------ 
+                      
+
+     --                                                                         
+
+     bravais-lattice index     =            0
+     lattice parameter (a_0)   =       0.0000  a.u.
+     unit-cell volume          =       0.0000 (a.u.)^3
+     number of atoms/cell      =            0
+     number of atomic types    =            0
+     kinetic-energy cut-off    =       0.0000  Ry
+     charge density cut-off    =       0.0000  Ry
+     Exchange-correlation= not set
+                           (  -1  -1  -1  -1  -1  -1  -1)
+
+
+     celldm(1)=    0.00000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  0.0000  0.0000  0.0000 )  
+               a(2) = (  0.0000  0.0000  0.0000 )  
+               a(3) = (  0.0000  0.0000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  0.0000  0.0000  0.0000 )  
+               b(2) = (  0.0000  0.0000  0.0000 )  
+               b(3) = (  0.0000  0.0000  0.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+
+
+     No symmetry!
+
+     G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
+     number of k points=    0
+                       cart. coord. in units 2pi/a_0
+
+     ===================================================================
+     Solve isotropic Eliashberg equations
+     ===================================================================
+
+
+     Finish reading a2f file
+
+     Electron-phonon coupling strength =    0.8713463
+ 
+     Estimated Allen-Dynes Tc =    26.400790 K for muc =    0.16000
+  
+     Estimated w_log in Allen-Dynes Tc =    61.479024 meV
+  
+     Estimated BCS superconducting gap =     4.004078 meV
+  
+     Estimated Tc from machine learning model =    31.488966 K
+  
+  
+     WARNING WARNING WARNING 
+  
+     The code may crash since tempsmax =   41.000 K is larger than Allen-Dynes Tc =    26.401 K
+
+     Start: Solving (isotropic) linearized Eliashberg equation with solver = power 
+
+     For the first Temp.    1.00  K
+       Total number of frequency points nsiw(     1) =    923
+       Cutoff frequency wscut =     0.5000
+
+     Superconducting transition temp. Tc is the one which has Max. eigenvalue close to 1
+      -----------------------------------------------------------------
+             Temp.       Max.         nsiw     wscut    Nr. of iters
+             (K)       eigenvalue    (itemp)   (eV)      to Converge
+      -----------------------------------------------------------------
+             1.00      3.4468742      923      0.5000        5
+             2.00      2.9612223      462      0.5008        6
+             3.00      2.6781363      308      0.5011        6
+             4.00      2.4778609      231      0.5014        6
+             5.00      2.3229189      185      0.5022        6
+             6.00      2.1965847      154      0.5019        6
+             7.00      2.0900056      132      0.5022        6
+             8.00      1.9977932      115      0.5003        6
+             9.00      1.9167940      103      0.5044        6
+            10.00      1.8442137       92      0.5008        6
+            11.00      1.7788716       84      0.5033        6
+            12.00      1.7192419       77      0.5035        6
+            13.00      1.6644491       71      0.5033        6
+            14.00      1.6138431       66      0.5041        6
+            15.00      1.5669441       62      0.5076        6
+            16.00      1.5229311       58      0.5068        6
+            17.00      1.4827996       54      0.5016        7
+            18.00      1.4440442       51      0.5019        7
+            19.00      1.4076222       49      0.5092        7
+            20.00      1.3727918       46      0.5035        7
+            21.00      1.3399127       44      0.5060        7
+            22.00      1.3085554       42      0.5062        7
+            23.00      1.2785795       40      0.5044        7
+            24.00      1.2498657       38      0.5003        7
+            25.00      1.2226419       37      0.5076        7
+            26.00      1.1965038       36      0.5138        7
+            27.00      1.1709986       34      0.5044        7
+            28.00      1.1467670       33      0.5079        7
+            29.00      1.1233920       32      0.5103        7
+            30.00      1.0980990       31      0.5117        8
+            31.00      1.0760932       30      0.5119        8
+            32.00      1.0547449       29      0.5111        8
+            33.00      1.0340053       28      0.5092        8
+            34.00      1.0138301       27      0.5062        8
+            35.00      0.9941798       26      0.5022        8
+            36.00      0.9761513       26      0.5165        8
+            37.00      0.9613032       25      0.5109        9
+            38.00      0.9434874       24      0.5041        9
+            39.00      0.9270475       24      0.5173        9
+            40.00      0.9101102       23      0.5090        9
+            41.00      0.8905809       23      0.5217       10
+      -----------------------------------------------------------------
+     Finish: Solving (isotropic) linearized Eliashberg equation
+
+
+     Unfolding on the coarse grid
+
+     INITIALIZATION: 
+
+
+
+
+     Electron-Phonon interpolation
+
+
+     ELIASHBERG   :      2.91s CPU      2.93s WALL (       1 calls)
+
+     Total program execution
+     EPW          :      2.91s CPU      2.93s WALL
+
+     ===============================================================================
+     The functionality-dependent EPW.bib file was created with suggested citations. 
+     Please consider citing the papers listed in EPW.bib.                           
+     ===============================================================================
+                                                                                    

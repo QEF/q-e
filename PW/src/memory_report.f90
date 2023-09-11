@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2007-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,7 @@ SUBROUTINE memory_report()
   ! Not guaranteed to be accurate for all cases (especially exotic ones).
   ! Originally written by PG, much improved by Pietro Bonfa' with:
   ! * Detailed memory report in verbose mode
-  ! * Memory buffers for LDA+U projectors now included.
+  ! * Memory buffers for DFT+Hubbard projectors now included.
   ! * Local potential and structure factors now included
   !  (small but sometimes not negligible).
   ! * Q functions (qrad) now included.
@@ -41,24 +41,25 @@ SUBROUTINE memory_report()
   USE cellmd,    ONLY : cell_factor
   USE uspp,      ONLY : nkb, okvan
   USE atom,      ONLY : rgrid
-  USE funct,     ONLY : dft_is_meta, dft_is_hybrid
-  USE ldaU,      ONLY : lda_plus_u, U_projection, nwfcU
+  USE xc_lib,    ONLY : xclib_dft_is
+  USE ldaU,      ONLY : lda_plus_u, Hubbard_projectors, nwfcU
   USE fixed_occ, ONLY : one_atom_occupations
   USE wannier_new,ONLY: use_wannier
   USE lsda_mod,  ONLY : nspin
   USE uspp_param,ONLY : lmaxkb, upf, nh, nbetam
-  USE us,        ONLY : dq
+  USE uspp_data, ONLY : dq
   USE noncollin_module, ONLY : npol, nspin_mag
   USE control_flags,    ONLY: isolve, nmix, imix, gamma_only, lscf, io_level, &
-       lxdm, smallmem, tqr, iverbosity
-  USE force_mod, ONLY : lforce, lstres
+       lxdm, smallmem, tqr, iverbosity, rmm_ndim, lforce=>tprnfor, tstress
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
+  USE rism3d_facade, ONLY : lrism3d, rism3t, rism3d_is_laue
   USE mp_bands,  ONLY : nproc_bgrp, nbgrp
   USE mp_pools,  ONLY : npool
   USE mp_images, ONLY : nproc_image  
   !
   IMPLICIT NONE
   !
+  ! please do not capitalize (FORD rules)
   include 'laxlib.fh'
   !
   INTEGER, PARAMETER :: MB=1024*1024
@@ -72,7 +73,7 @@ SUBROUTINE memory_report()
   ! these quantities are real in order to prevent integer overflow
   !
   REAL(dp), PARAMETER :: complex_size=16_dp, real_size=8_dp, int_size=4_dp
-  REAL(dp) :: ram, ram_, ram1, ram2, maxram, totram, add
+  REAL(dp) :: ram, ram_, ram1, ramk, maxram, totram, add
   INTEGER :: np_ortho(2)
   !
   IF ( gamma_only) THEN
@@ -91,6 +92,7 @@ SUBROUTINE memory_report()
   npwx_l = npwx_g/nproc_bgrp
   !
   ! ram   = dynamically (permanently) allocated RAM, per process
+  ! ramk  = dynamically allocated RAM only on pool 0
   ! maxram= "high watermark": max ram needed during a run
   ! totram= max ram needed summed over all processors
   !
@@ -115,7 +117,7 @@ SUBROUTINE memory_report()
      ram = ram + add
   END IF
   ! Hubbard wavefunctions
-  IF ( lda_plus_u .AND. U_projection .NE. 'pseudo' ) THEN
+  IF ( lda_plus_u .AND. Hubbard_projectors .NE. 'pseudo' ) THEN
      add = complex_size * nwfcU * npol * npwx_l * nk ! also buffer 
      IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'U proj.', add/nk/MB
      IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'U proj. (w. buff.)', add/MB
@@ -123,7 +125,7 @@ SUBROUTINE memory_report()
   END IF
   !
   ! hybrid functionals
-  IF ( dft_is_hybrid () ) THEN
+  IF ( xclib_dft_is('hybrid') ) THEN
      ! ngxx_g = estimated global number of G-vectors used in V_x\psi products
      ! nexx_g = estimated global size of the FFT grid used in V_x\psi products
      ! nexx_l = estimated local size of the FFT grid used in V_x\psi products
@@ -166,7 +168,7 @@ SUBROUTINE memory_report()
   ! other (possibly minor) data loads
   lmaxq = 2*lmaxkb+1
   IF (lmaxq > 0) THEN
-     ! not accurate if spline_ps .and. cell_factor <= 1.1d0
+     ! not accurate if cell_factor <= 1.1d0
      nqxq = int( ( (sqrt(ecutrho) + qnorm) / dq + 4) * cell_factor )
      ! allocate_nlpot.f90:87 qrad
      add = real_size * nqxq * nbetam*(nbetam+1)/2 * lmaxq * ntyp
@@ -179,7 +181,7 @@ SUBROUTINE memory_report()
   ! Charge density and potentials - see scf_type in scf_mod
   !=====================================================================
   scf_type_size =  (complex_size * ngm + real_size * dfftp%nnr ) * nspin ! scf_mod.f90:94-95
-  IF ( dft_is_meta() .or. lxdm ) scf_type_size =  2 * scf_type_size
+  IF ( xclib_dft_is('meta') .or. lxdm ) scf_type_size =  2 * scf_type_size
   ! rho, v, vnew (allocate_fft.f90:56) 
   add = 3 * scf_type_size
   IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'rho,v,vnew', add/MB
@@ -188,20 +190,21 @@ SUBROUTINE memory_report()
   ! vltot, vrs, rho_core, rhog_core, psic, strf, kedtau if needed
   ram =  ram + complex_size * ( dfftp%nnr + ngm *( 1 + ntyp ) ) + &
        real_size * dfftp%nnr*(2+nspin)
-  IF ( dft_is_meta() ) ram = ram + real_size * dfftp%nnr*nspin
+  IF ( xclib_dft_is('meta') ) ram = ram + real_size * dfftp%nnr*nspin
   ! arrays for rho mixing
+  ramk = 0
   IF ( lscf ) THEN
      ! rhoin (electrons.f90:439)
      ram =  ram + scf_type_size
      IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'rhoin', DBLE(scf_type_size)/MB
      ! see mix_type in scf_mod
      mix_type_size =  complex_size * ngm * nspin
-     IF ( dft_is_meta() .or. lxdm ) mix_type_size =  2 * mix_type_size
+     IF ( xclib_dft_is('meta') .or. lxdm ) mix_type_size =  2 * mix_type_size
      ! df, dv (if kept in memory)
      IF ( io_level < 2 ) THEN
         add = mix_type_size * 2 * nmix
         IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'rho*nmix', add/MB
-        ram = ram + add
+        ramk = ramk + add
      END IF
   END IF
   !=====================================================================
@@ -258,6 +261,36 @@ SUBROUTINE memory_report()
   END IF 
   !=====================================================================
   !
+  !=====================================================================
+  ! RISM calculations
+  !=====================================================================
+  IF ( lrism3d ) THEN
+     IF (.NOT. rism3d_is_laue()) THEN
+        ! in case of 3D-RISM:
+        ! 1D-RISM Susceptibility
+        ram = ram + real_size * rism3t%nsite * rism3t%mp_site%nsite * rism3t%ngs
+        ! R-space
+        ram = ram + real_size * (6 * rism3t%nsite + 2) * rism3t%nr
+        ! G-space
+        ram = ram + complex_size * (3 * rism3t%nsite + 3) * rism3t%ng
+     ELSE
+        ! in case of Laue-RISM:
+        ! 1D-RISM Susceptibility
+        ram = ram + real_size * rism3t%nsite * rism3t%mp_site%nsite * (rism3t%nrzl * rism3t%ngs)
+        ! R-space
+        ram = ram + real_size * (7 * rism3t%nsite + 2) * rism3t%nr
+        ! G-space
+        ram = ram + complex_size * 2 * rism3t%ng
+        ! Laue-rep. (short-range)
+        ram = ram + complex_size * 2 * rism3t%nsite * rism3t%nrzs * rism3t%ngxy
+        ! Laue-rep. (long-range)
+        ram = ram + complex_size * (2 * rism3t%nsite + 3) * rism3t%nrzl * rism3t%ngxy
+     END IF
+  END IF
+  !=====================================================================
+  !
+  !=====================================================================
+  !
   ! compute ram_: scratch space that raises the "high watermark"
   !
   !=====================================================================
@@ -276,6 +309,7 @@ SUBROUTINE memory_report()
   !
   ! 
   IF ( isolve == 0 ) THEN
+     ! Davidson
      add = complex_size * nbndx * npol * npwx_l              ! hpsi
      ram1 = ram1 + add
      IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'psi', add/MB
@@ -286,7 +320,36 @@ SUBROUTINE memory_report()
         IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'spsi', add/MB 
         ram1 = ram1 + add
      END IF
+  ELSE IF ( isolve == 4 ) THEN
+     ! RMM-DIIS
+     nbnd_l = NINT( DBLE(nbnd) / nbgrp )
+     add = complex_size * nbnd_l * npol * npwx_l * rmm_ndim
+     ram1 = ram1 + add     ! phi
+     IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'phi', add/MB
+     ram1 = ram1 + add     ! hphi
+     IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'hphi', add/MB
+     IF ( okvan ) THEN
+        ram1 = ram1 + add  ! sphi
+        IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'sphi', add/MB
+     END IF
+
+     add = complex_size * nbnd * npol * npwx_l
+     ram1 = ram1 + add     ! hpsi
+     IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'hpsi', add/MB
+     IF ( okvan ) THEN
+        ram1 = ram1 + add  ! spsi
+        IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'spsi', add/MB
+     END IF
+     ram1 = ram1 + add     ! kpsi
+     IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'kpsi', add/MB
+     ram1 = ram1 + add     ! hkpsi
+     IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'hkpsi', add/MB
+     IF ( okvan ) THEN
+        ram1 = ram1 + add  ! skpsi
+        IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'skpsi', add/MB
+     END IF
   END IF
+  !
   ram_ = ram1
   !=====================================================================
   !
@@ -373,7 +436,7 @@ SUBROUTINE memory_report()
         !
         ! stress
         !
-        IF (lstres) THEN
+        IF (tstress) THEN
            !                      vg                      ylmk0,dylmk0  qmod
            ram1 = real_size *  (ngm*nspin_mag + ngm_l*( 2*lmaxq*lmaxq + 1 ) )
            !                                    qgm      aux1  aux2
@@ -393,7 +456,7 @@ SUBROUTINE memory_report()
      END IF
   END IF
   !
-  maxram = ram + ram_
+  maxram = ram + ramk + ram_
   !
   ! arrays used for global sorting in ggen:
   !    igsrt, g2l, g2sort_g, total dimensions:
@@ -401,7 +464,7 @@ SUBROUTINE memory_report()
   IF ( .NOT. smallmem ) maxram = MAX ( maxram, &
        int_size * 2 * ngm_g + real_size * ngm_g )
   !
-  totram = maxram * nproc_image
+  totram = (ram + ram_) * nproc_image + ramk * nproc_image / npool
   IF ( iverbosity > 0 ) THEN
      IF ( ram .lt. GB ) WRITE( stdout, 1010 ) ram/MB, ' MB'
      IF ( ram .ge. GB ) WRITE( stdout, 1010 ) ram/GB, ' GB'
@@ -414,6 +477,10 @@ SUBROUTINE memory_report()
      IF ( totram .lt. GB ) WRITE( stdout, 1012 ) totram/MB, ' MB'
      IF ( totram .ge. GB ) WRITE( stdout, 1012 ) totram/GB, ' GB'
   END IF
+  !
+  ! check: more bands than plane waves? not good
+  !
+  IF ( npwx_g < nbndx ) CALL errore('memory_report','more bands than PWs!',1)
   !
  1010 format (/5x,'Estimated static dynamical RAM per process > ', F10.2, A3)
  1011 format (/5x,'Estimated max dynamical RAM per process > ', F10.2, A3)

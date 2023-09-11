@@ -11,8 +11,7 @@ SUBROUTINE apply_dpot(nrxxs, aux1, dv, current_spin)
   !  one wavefunction
   !
   USE kinds,            ONLY : DP
-  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
-  USE spin_orb,         ONLY : domag
+  USE noncollin_module, ONLY : noncolin, domag, npol, nspin_mag
   USE mp_bands,         ONLY : me_bgrp
   USE fft_base,         ONLY : dffts
 
@@ -50,6 +49,7 @@ SUBROUTINE apply_dpot(nrxxs, aux1, dv, current_spin)
         ! Noncollinear part without task groups
         !
         IF (domag) then
+           !$acc kernels present(aux1, dv)
            DO ir = 1, nrxxs
               sup=aux1(ir,1)*(dv(ir,1)+dv(ir,4))+ &
                   aux1(ir,2)*(dv(ir,2)-(0.d0,1.d0)*dv(ir,3))
@@ -58,10 +58,13 @@ SUBROUTINE apply_dpot(nrxxs, aux1, dv, current_spin)
               aux1(ir,1)=sup
               aux1(ir,2)=sdwn
            ENDDO
+           !$acc end kernels
         ELSE
+           !$acc kernels present(aux1, dv)
            DO ir = 1, nrxxs
               aux1(ir,:)=aux1(ir,:)*dv(ir,1)
            ENDDO
+           !$acc end kernels
         ENDIF
         !
      ENDIF
@@ -80,6 +83,7 @@ SUBROUTINE apply_dpot(nrxxs, aux1, dv, current_spin)
         !
         ! Collinear part without task groups
         !
+        !$acc parallel loop present(aux1, dv)
         DO ir = 1, nrxxs
            aux1(ir,1)=aux1(ir,1)*dv(ir,current_spin)
         ENDDO

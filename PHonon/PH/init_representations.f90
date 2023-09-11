@@ -8,12 +8,11 @@
 !-----------------------------------------------------------------------
 subroutine init_representations()
   !-----------------------------------------------------------------------
-  !
-  !  This subroutine initializes the modes of all irreducible representations
-  !  for all q points. It writes the files patterns.#q.xml in the outdir 
-  !  directory. It is used by unrecovered  phonon runs. The small group of 
-  !  q must be calculated for each q. Note that all images receives the 
-  !  same modes calculated by the root processor and save them on file. 
+  !! This subroutine initializes the modes of all irreducible representations
+  !! for all q points. It writes the files patterns.#q.xml in the outdir 
+  !! directory. It is used by unrecovered  phonon runs. The small group of 
+  !! q must be calculated for each q. Note that all images receives the 
+  !! same modes calculated by the root processor and save them on file. 
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : tau, nat
@@ -59,6 +58,8 @@ subroutine init_representations()
   IF ( .not. time_reversal ) minus_q = .false.
   ! if minus_q=.t. set_irr will search for Sq=-q+G symmetry.
   ! On output minus_q=.t. if such a symmetry has been found
+  write(stdout, '(/,5x,"Number and degeneracy of irreps per q-point" )')
+  write(stdout, '(5x,"  N         xq(1)         xq(2)         xq(3)   N irreps" )')
   DO iq=1, nqs
      xq(1:3)  = x_q(1:3,iq)
      lgamma = lgamma_iq(iq)
@@ -95,6 +96,8 @@ subroutine init_representations()
      CALL mp_bcast (num_rap_mode, root, world_comm)
 
      CALL ph_writefile('data_u',iq,0,ierr)
+     write(stdout, '(5x,i3, 3f14.9,i8)') iq,x_q(1,iq),x_q(2,iq),x_q(3,iq),nirr
+     write(stdout, '(5x,18(i4))') (npert(irr), irr=1,nirr)
   ENDDO
   u_from_file=.TRUE.
   search_sym=search_sym_save
@@ -111,12 +114,11 @@ END SUBROUTINE init_representations
 
 !-----------------------------------------------------------------------
 subroutine initialize_grid_variables()
-  !-----------------------------------------------------------------------
-  !
-  !  This subroutine initializes the grid variables by reading the
-  !  modes from file. It uses the routine check_if_partial_dyn to 
-  !  set the modes to compute according to start_irr, last_irr or
-  !  modenum and ifat flags.
+  !----------------------------------------------------------------------
+  !! This subroutine initializes the grid variables by reading the
+  !! modes from file. It uses the routine check_if_partial_dyn to 
+  !! set the modes to compute according to \(\text{start_irr}\), 
+  !! \(\text{last_irr}\) or \(\text{modenum}\) and \(\text{ifat}\) flags.
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat

@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package PWscf -program pp.x {
+input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x {
 
     toc {}
 
@@ -126,13 +126,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                         For PAW calculations only; requires a very dense real-space grid. 
 
                    22 = kinetic energy density (for meta-GGA and XDM only)
+
+                  123 = DORI: density overlap regions indicator
+		        (doi: 10.1021/ct500490b) Implemented by D. Yang & Q.Liu
             }
         }
 
         choose {
-            when -test "plot_num=0" {
+            when -test "plot_num = 0 or 9" {
                 label {
-                    Options for total charge (plot_num=0): 
+                    Options for total charge (plot_num=0)
+                    or for total minus atomic charge (plot_num=9): 
                 }
                 
                 var spin_component -type INTEGER {
@@ -202,6 +206,18 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                         in pw.x calculation.
                     }
                 }
+
+                var use_gauss_ldos -type LOGICAL {
+                    default {.false.}
+                    status OPTIONAL
+                    info {
+                        If .true., gaussian broadening (ngauss=0) is used for LDOS calculation.
+
+                        Defaults .false., in which case the broadening scheme
+                        of the pw.x calculation will be used.
+                    }
+                }
+
             }
             
             elsewhen -test "plot_num=5" {

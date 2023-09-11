@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="input_xx.xsl"?>
+<!-- FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST -->
+    
+<input_description distribution="Quantum ESPRESSO" package="PWscf" program="molecularpdos.x" >
+   <toc>
+   </toc>
+   <intro>
+<b>Purpose of molecularpdos.x:</b>
+    Takes the projections onto orthogonalized atomic wavefunctions
+    as computed by projwfc.x (see outdir/prefix.save/atomic_proj.xml)
+    to build an LCAO-like representation of the eigenvalues of a system
+    &quot;full&quot; and &quot;part&quot; of it (each should provide its own atomic_proj.xml file).
+    Then the eigenvectors of the full system are projected onto the ones
+    of the part. For example, to decompose the PDOS of an adsorbed molecule
+    into its molecular orbital, as determined by a gas-phase calculation.
+
+Reference:
+    An explanation of the keywords and the implementation
+    is provided in Scientific Reports | 6:24603 (2016)
+    <a href="https://doi.org/10.1038/srep24603">DOI: 10.1038/srep24603</a> (Supp. Info).
+
+
+<b>Structure of the input data:</b>
+============================
+
+   <b>&amp;INPUTMOPDOS</b>
+     ...
+   <b>/</b>
+   </intro>
+   <namelist name="INPUTMOPDOS" >
+      <vargroup type="CHARACTER" >
+         <var name="xmlfile_full" >
+         </var>
+         <var name="xmlfile_part" >
+         </var>
+         <info>
+xml files with atomic projections (produced by projwfc.x)
+for the full system and its molecular part
+         </info>
+      </vargroup>
+      <var name="i_atmwfc_beg_full" type="INTEGER" >
+         <default> 1
+         </default>
+         <info>
+first atomic wavefunction of the full system
+considered for the projection
+         </info>
+      </var>
+      <var name="i_atmwfc_end_full" type="INTEGER" >
+         <default> 0, i.e., all atomic wavefunctions
+         </default>
+         <info>
+last atomic wavefunction of the full system
+considered for the projection
+         </info>
+      </var>
+      <var name="i_atmwfc_beg_part" type="INTEGER" >
+         <default> 1
+         </default>
+         <info>
+first atomic wavefunction of the molecular part
+considered for the projection
+         </info>
+      </var>
+      <var name="i_atmwfc_end_part" type="INTEGER" >
+         <default> 0, i.e., all atomic wavefunctions
+         </default>
+         <info>
+first atomic wavefunction of the molecular part
+considered for the projection
+         </info>
+      </var>
+      <var name="i_bnd_beg_full" type="INTEGER" >
+         <default> 1
+         </default>
+         <info>
+first eigenstate of the full system to be taken
+into account for the projection
+         </info>
+      </var>
+      <var name="i_bnd_end_full" type="INTEGER" >
+         <default> 0, i.e., all eigenstates
+         </default>
+         <info>
+last eigenstate of the full system to be taken
+into account for the projection
+         </info>
+      </var>
+      <var name="i_bnd_beg_part" type="INTEGER" >
+         <default> 1
+         </default>
+         <info>
+first eigenstate of the molecular part to be taken
+into account for the projection
+         </info>
+      </var>
+      <var name="i_bnd_end_part" type="INTEGER" >
+         <default> 0, i.e., all eigenstates
+         </default>
+         <info>
+last eigenstate of the molecular part to be taken
+into account for the projection
+         </info>
+      </var>
+      <var name="fileout" type="CHARACTER" >
+         <info> prefix for output files containing molecular PDOS(E)
+         </info>
+         <default> &apos;molecularpdos&apos;
+         </default>
+      </var>
+      <var name="ngauss" type="INTEGER" >
+         <default> 0
+         </default>
+         <info>
+Type of gaussian broadening:
+    0 ... Simple Gaussian (default)
+    1 ... Methfessel-Paxton of order 1
+   -1 ... &quot;cold smearing&quot; (Marzari-Vanderbilt-DeVita-Payne)
+  -99 ... Fermi-Dirac function
+         </info>
+      </var>
+      <var name="degauss" type="REAL" >
+         <default> 0.0
+         </default>
+         <info> gaussian broadening, Ry (not eV!)
+         </info>
+      </var>
+      <vargroup type="REAL" >
+         <var name="Emin" >
+         </var>
+         <var name="Emax" >
+         </var>
+         <info> min &amp; max energy (eV) for DOS plot
+         </info>
+         <default> (band extrema)
+         </default>
+      </vargroup>
+      <var name="DeltaE" type="REAL" >
+         <default> 0.01
+         </default>
+         <info> energy grid step (eV)
+         </info>
+      </var>
+      <var name="kresolveddos" type="LOGICAL" >
+         <default> .false.
+         </default>
+         <info>
+if .true. the k-resolved DOS is computed: not summed over
+all k-points but written as a function of the k-point index.
+In this case all k-point weights are set to unity
+         </info>
+      </var>
+   </namelist>
+   <section title="Notes" >
+      <subsection title="Format of output files" >
+         <text>
+Projections are written to standard output.
+
+The molecular projected DOS is written to the file &quot;fileout&quot;.mopdos.
+
+* The format for the spin-unpolarized case is:
+      index_of_molecular_orbital E MOPDOS(E)
+      ...
+
+* The format for the collinear, spin-polarized case is:
+      index_of_molecular_orbital E MOPDOSup(E) MOPDOSdw(E)
+      ...
+
+The file &quot;fileout&quot;.mopdos_tot contains the sum
+over the molecular orbitals.
+
+* The format for the spin-unpolarized case is:
+      E MOPDOS(E)
+      ...
+
+* The format for the collinear, spin-polarized case is:
+      E MOPDOSup(E) MOPDOSdw(E)
+      ...
+
+All DOS(E) are in states/eV plotted vs E in eV
+         </text>
+      </subsection>
+      <subsection title="Important notices" >
+         <text>
+* The atomic wavefunctions identified by the ranges
+  i_atmwfc_beg_full:i_atmwfc_end_full (full system) and
+  i_atmwfc_beg_part:i_atmwfc_end_part (molecular part)
+  should correspond to the same atomic states. See the
+  header of the output of projwfc.x for more information.
+
+* If using k-points, the same unit cell and the same
+  k-points should be used in computing the molecular part,
+  unless you really know what you are doing.
+
+* The tetrahedron method is presently not implemented.
+
+* Gaussian broadening is used in all cases
+  (with ngauss and degauss values from input).
+         </text>
+      </subsection>
+   </section>
+</input_description>

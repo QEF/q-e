@@ -1,7 +1,7 @@
 LATEX      = pdflatex
 LATEX2HTML = latex2html
 
-VERSION = 6.4
+VERSION := $(shell awk -F\' '/version_number/{print $$2}' ../../../include/qe_version.h )
 
 PDFS = user_guide.pdf
 AUXS = $(PDFS:.pdf=.aux)
@@ -10,14 +10,14 @@ OUTS = $(PDFS:.pdf=.out)
 TOCS = $(PDFS:.pdf=.toc)
 
 doc: all
-all: version pdf html
-pdf: $(PDFS)
-html: user_guide
+all: pdf html
+pdf: version $(PDFS)
+html: version user_guide
 
 version:
 	echo '\\def\\version{$(VERSION)}' > version.tex
 
-$(PDFS): %.pdf: %.tex
+$(PDFS): %.pdf: %.tex version.tex
 	$(LATEX)  $<
 	$(LATEX)  $<
 
@@ -45,9 +45,9 @@ clean:
 	- rm -f $(AUXS) $(LOGS) $(OUTS) $(TOCS)
 
 veryclean: clean
-	- rm $(PDFS)
 	- rm version.tex
 	- rm *~
-	- rm -rf user_guide/
+	- rm -rf user_guide/ auto/
 
 distclean: veryclean
+	- rm $(PDFS)

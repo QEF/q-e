@@ -9,29 +9,29 @@
 !----------------------------------------------------------------------------
 SUBROUTINE init_run()
   !----------------------------------------------------------------------------
-  !
-  ! ... this routine initialise the cp code and allocates (calling the
-  ! ... appropriate routines) the memory
+  !! This routine initialise the CP code and allocates (calling the
+  !! appropriate routines) the memory.
   !
   USE kinds,                    ONLY : DP
   USE control_flags,            ONLY : nbeg, nomore, lwf, iverbosity, iprint, &
                                        ndr, ndw, tfor, tprnfor, tpre, ts_vdw, &
-                                       force_pairing
+                                       mbd_vdw, force_pairing, use_para_diag, &
+                                       dt_xml_old
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, cdms, ityp
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
                                        vels, velsm, velsp, fion, fionm
   USE gvecw,                    ONLY : ngw, ngw_g, g2kin, g2kin_init
   USE smallbox_gvec,            ONLY : ngb
-  USE gvect,                    ONLY : gstart, gg
+  USE gvect,                    ONLY : gstart, gg, gcutm
   USE fft_base,                 ONLY : dfftp, dffts
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
   USE core,                     ONLY : rhoc
-  USE wavefunctions,     ONLY : c0_bgrp, cm_bgrp, phi_bgrp
+  USE wavefunctions,            ONLY : c0_bgrp, cm_bgrp, allocate_cp_wavefunctions
   USE ensemble_dft,             ONLY : tens, z0t
   USE cg_module,                ONLY : tcg
-  USE electrons_base,           ONLY : nudx, nbnd
+  USE electrons_base,           ONLY : nudx
   USE efield_module,            ONLY : tefield, tefield2
   USE uspp_param,               ONLY : nhm
   USE ions_nose,                ONLY : xnhp0, xnhpm, vnhp, nhpcl, nhpdim
@@ -49,7 +49,8 @@ SUBROUTINE init_run()
   USE electrons_nose,           ONLY : xnhe0, xnhem, vnhe
   USE electrons_base,           ONLY : nbspx_bgrp
   USE cell_nose,                ONLY : xnhh0, xnhhm, vnhh
-  USE funct,                    ONLY : dft_is_meta, dft_is_hybrid
+  USE xc_lib,                   ONLY : xclib_dft_is_libxc, xclib_init_libxc
+  USE xc_lib,                   ONLY : xclib_dft_is
   USE metagga_cp,               ONLY : crosstaus, dkedtaus, gradwfc
   !
   USE efcalc,                   ONLY : clear_nbeg
@@ -70,16 +71,25 @@ SUBROUTINE init_run()
   USE ions_base,                ONLY : ions_reference_positions, cdmi
   USE mp_bands,                 ONLY : nbgrp
   USE mp,                       ONLY : mp_barrier
-  USE wrappers
+  USE clib_wrappers
   USE ldaU_cp
   USE control_flags,            ONLY : lwfpbe0nscf         ! exx_wf related 
   USE wavefunctions,     ONLY : cv0                 ! exx_wf related
   USE wannier_base,             ONLY : vnbsp               ! exx_wf related
   !!!USE cp_restart,               ONLY : cp_read_wfc_Kong    ! exx_wf related
-  USE input_parameters,         ONLY : ref_cell
+  USE input_parameters,         ONLY : ref_cell, nextffield
   USE cell_base,                ONLY : ref_tpiba2, init_tpiba2
   USE tsvdw_module,             ONLY : tsvdw_initialize
   USE exx_module,               ONLY : exx_initialize
+  USE extffield,                ONLY : init_extffield
+#if defined (__CUDA)
+  USE cudafor
+#endif
+  !
+#if defined (__ENVIRON)
+  USE plugin_flags,             ONLY : use_environ
+  USE environ_base_module,      ONLY : init_environ_base
+#endif
   !
   IMPLICIT NONE
   !
@@ -88,6 +98,10 @@ SUBROUTINE init_run()
   REAL(DP)           :: a1(3), a2(3), a3(3)
   LOGICAL            :: ftest
   !
+#if defined (__ENVIRON)
+  REAL(DP) :: at_scaled(3, 3)
+  REAL(DP) :: gcutm_scaled
+#endif
   !
   CALL start_clock( 'initialize' )
   !
@@ -119,16 +133,28 @@ SUBROUTINE init_run()
   !
   ! ... initialization of plugin variables and arrays
   !
-  CALL plugin_init_base() 
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_init_base()
+#endif 
+#if defined (__ENVIRON)
+  IF (use_environ) THEN
+     at_scaled = at * alat
+     gcutm_scaled = gcutm / alat**2
+     CALL init_environ_base(at_scaled, gcutm_scaled)
+  END IF
+#endif
   ! 
   ! ... initialize atomic positions and cell
   !
   CALL init_geometry()
   !
+  ! ... initialize communicators for parallel linear algebra
+  !
+  CALL set_para_diag ( nudx, use_para_diag )
+  !
   ! ... mesure performances of parallel routines
   !
   CALL mesure_mmul_perf( nudx )
-  !
   CALL mesure_diag_perf( nudx )
   !
   IF ( lwf ) CALL clear_nbeg( nbeg )
@@ -155,12 +181,22 @@ SUBROUTINE init_run()
   !=======================================================================
   !
   IF (ts_vdw) CALL tsvdw_initialize()
+  ! 
+  !=======================================================================
+  !     MBD is not implemented yet in CP, only in PW
+  !=======================================================================
   !
+  IF (mbd_vdw) CALL errore('init_run','mbd_vdw not yet supported for CP',1)
+  !
+  !=======================================================================
+  !     Initialization of the libxc
+  !=======================================================================
+  IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin, .FALSE. )
   !=======================================================================
   !     Initialization of the exact exchange code (exx_module)
   !=======================================================================
   !exx_wf related
-  IF ( dft_is_hybrid() .AND. lwf ) THEN
+  IF ( xclib_dft_is('hybrid') .AND. lwf ) THEN
     !
     CALL exx_initialize()
     !
@@ -168,10 +204,7 @@ SUBROUTINE init_run()
   !
   !  initialize wave functions descriptors and allocate wf
   !
-  IF(lwfpbe0nscf) ALLOCATE(cv0( ngw, vnbsp ) )   ! Lingzhu Kong
-  ALLOCATE( c0_bgrp( ngw, nbspx ) )
-  ALLOCATE( cm_bgrp( ngw, nbspx ) )
-  ALLOCATE( phi_bgrp( ngw, nbspx ) )
+  CALL allocate_cp_wavefunctions( ngw, nbspx, vnbsp, lwfpbe0nscf )
   !
   IF ( iverbosity > 1 ) THEN
      !
@@ -200,14 +233,15 @@ SUBROUTINE init_run()
   ALLOCATE( deeq( nhm, nhm, nat, nspin ) )
   !
   ALLOCATE( vkb( ngw, nkb ) )
+  !$acc enter data create(vkb(1:ngw,1:nkb))
   !
-  IF ( dft_is_meta() .AND. tens ) &
+  IF ( xclib_dft_is('meta') .AND. tens ) &
      CALL errore( ' init_run ', 'ensemble_dft not implemented for metaGGA', 1 )
   !
-  IF ( dft_is_meta() .AND. nbgrp > 1 ) &
+  IF ( xclib_dft_is('meta') .AND. nbgrp > 1 ) &
      CALL errore( ' init_run ', 'band parallelization not implemented for metaGGA', 1 )
   !
-  IF ( dft_is_meta() .AND. tpre ) THEN
+  IF ( xclib_dft_is('meta') .AND. tpre ) THEN
      !
      ALLOCATE( crosstaus( dffts%nnr, 6, nspin ) )
      ALLOCATE( dkedtaus(  dffts%nnr, 3, 3, nspin ) )
@@ -261,11 +295,6 @@ SUBROUTINE init_run()
   !
   hnew = h
   !
-  IF(lwfpbe0nscf) cv0=( 0.D0, 0.D0 )    ! Lingzhu Kong
-  cm_bgrp  = ( 0.D0, 0.D0 )
-  c0_bgrp  = ( 0.D0, 0.D0 )
-  phi_bgrp = ( 0.D0, 0.D0 )
-  !
   IF ( tens ) then
      CALL id_matrix_init( idesc, nspin )
      CALL h_matrix_init( idesc, nspin )
@@ -291,6 +320,14 @@ SUBROUTINE init_run()
     CALL emass_precond( ema0bg, g2kin, ngw, init_tpiba2, emass_cutoff ) 
     !WRITE( stdout,'(3X,"current_tpiba2=",F14.8)' ) tpiba2 !BS : DEBUG
     CALL g2kin_init( gg, tpiba2 )
+  END IF
+  !
+  !  read external force fields parameters
+  ! 
+  IF ( nextffield > 0 .AND. ionode) THEN
+     !
+     CALL init_extffield( 'CP', nextffield )
+     !
   END IF
   !
   CALL print_legend( )
@@ -325,7 +362,8 @@ SUBROUTINE init_run()
      CALL readfile( i, h, hold, nfi, c0_bgrp, cm_bgrp, taus,   &
                     tausm, vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, &
                     vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm, xnhh0, xnhhm,&
-                    vnhh, velh, fion, tps, z0t, f )
+                    vnhh, velh, fion, tps, z0t, f, dt_xml_old )
+     WRITE (stdout,*) 'old dt (from xml) = ', dt_xml_old
      !
      CALL from_restart( )
      !

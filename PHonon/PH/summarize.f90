@@ -8,10 +8,8 @@
 !-----------------------------------------------------------------------
 SUBROUTINE summarize_epsilon()
   !-----------------------------------------------------------------------
+  !! Write the dielectric tensor on output.
   !
-  !      write the dielectric tensor on output
-  !
-
   USE kinds, only : DP
   USE io_global,  ONLY : stdout
   USE constants, ONLY: fpi, bohr_radius_angs
@@ -67,8 +65,7 @@ END SUBROUTINE summarize_epsilon
 !-----------------------------------------------------------------------
 SUBROUTINE summarize_zeu()
   !-----------------------------------------------------------------------
-  !
-  !  write the zue effective charges on output
+  !! Write the zue effective charges on output
   !
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat, ityp, atm
@@ -78,16 +75,26 @@ SUBROUTINE summarize_zeu()
   USE control_ph,   ONLY : done_zeu
 
   IMPLICIT NONE
-
-  INTEGER :: jpol, na
+  INTEGER :: jpol, na,i
+  REAL(DP) :: zstarsum(3,3),zstarmean(nat),zstarmeansum
   ! counters
   !
 
   IF (.NOT. done_zeu) RETURN
-
-  WRITE( stdout, '(/,10x,"Effective charges (d Force / dE) in cartesian axis",/)')
+  zstarsum=0d0
+  zstarmeansum=0d0
+  DO na = 1, nat  
+     DO i=1,3
+        DO jpol=1,3
+           zstarsum(i,jpol)=zstarsum(i,jpol)+zstareu(i, jpol, na)
+        ENDDO
+     ENDDO
+     zstarmean(na)=(zstareu(1, 1, na)+zstareu(2, 2, na)+zstareu(3, 3, na))/3d0
+     zstarmeansum=zstarmeansum+zstarmean(na)
+  ENDDO
+  WRITE( stdout, '(/,10x,"Effective charges (d Force / dE) in cartesian axis without acoustic sum rule applied (asr)",/)')
   DO na = 1, nat
-     WRITE( stdout, '(10x," atom ",i6, a6)') na, atm(ityp(na))
+     WRITE( stdout, '(10x," atom ",i6, a6,"Mean Z*:",f15.5)') na, atm(ityp(na)),zstarmean(na)
      WRITE( stdout, '(6x,"Ex  (",3f15.5," )")')  (zstareu (1, jpol, na), &
             jpol = 1, 3)
      WRITE( stdout, '(6x,"Ey  (",3f15.5," )")')  (zstareu (2, jpol, na), &
@@ -95,16 +102,31 @@ SUBROUTINE summarize_zeu()
      WRITE( stdout, '(6x,"Ez  (",3f15.5," )")')  (zstareu (3, jpol, na), &
             jpol = 1, 3)
   ENDDO
+  WRITE( stdout, '(/,10x,"Effective charges Sum: Mean:",f15.5)') zstarmeansum
+  WRITE( stdout, '(6x,3f15.5)')  (zstarsum (:, jpol), &
+       jpol = 1, 3)
+  DO na = 1, nat
+     zstarmean(na)=zstarmean(na)-zstarmeansum/nat
+  ENDDO
+  WRITE( stdout, '(/,10x,"Effective charges (d Force / dE) in cartesian axis with asr applied: ")')
+  DO na = 1, nat
+     WRITE( stdout, '(10x," atom ",i6, a6,"Mean Z*:",f15.5)') na, atm(ityp(na)),zstarmean(na)
+     WRITE( stdout, '(6x,"E*x (",3f15.5," )")')  (zstareu (1, jpol, na)- &
+             zstarsum(1, jpol)/nat, jpol = 1, 3)
+     WRITE( stdout, '(6x,"E*y (",3f15.5," )")')  (zstareu (2, jpol, na)- &
+             zstarsum(2, jpol)/nat, jpol = 1, 3)
+     WRITE( stdout, '(6x,"E*z (",3f15.5," )")')  (zstareu (3, jpol, na)- &
+             zstarsum(3, jpol)/nat, jpol = 1, 3)
+  ENDDO
 
   RETURN
 END SUBROUTINE summarize_zeu
 
 !-----------------------------------------------------------------------
 SUBROUTINE summarize_zue
-!-----------------------------------------------------------------------
-!
-!  Write the zue effective charges on output
-!
+  !-----------------------------------------------------------------------
+  !! Write the zue effective charges on output.
+  !
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat, atm, ityp
   USE io_global,  ONLY : stdout
@@ -137,8 +159,7 @@ END SUBROUTINE summarize_zue
 !-----------------------------------------------------------------------
 SUBROUTINE summarize_elopt()
   !-----------------------------------------------------------------------
-  !
-  ! write the electro-optic tensor on output
+  !! Write the electro-optic tensor on output.
   !
   USE io_global,  ONLY : stdout
   USE ramanm,     ONLY : eloptns, done_elop

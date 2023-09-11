@@ -9,8 +9,8 @@
 !-----------------------------------------------------------------------
 subroutine hdiag( npw, max_iter, avg_iter, et_ )
   !
-  ! Diagonalizes the unperturbed Hamiltonian in a non-selfconsistent way
-  ! by Conjugate Gradient (band-by-band)
+  !! Diagonalizes the unperturbed Hamiltonian in a non-selfconsistent way
+  !! by Conjugate Gradient (band-by-band).
   !
   USE kinds,     ONLY : DP
   USE gvect,     ONLY: g, gstart
@@ -21,15 +21,16 @@ subroutine hdiag( npw, max_iter, avg_iter, et_ )
   USE ramanm,    ONLY: eth_ns
   implicit none
   !
-  !     I/O variables:
+  integer :: npw
+  !! number of plane waves
+  integer :: max_iter
+  !! maximum number of iterations
+  real(DP) :: avg_iter
+  !! iteration number in the diagonalization
+  real(DP) :: et_(nbnd)
+  !! eigenvalues of the diagonalization
   !
-  integer :: npw, max_iter
-  ! maximum number of iterations
-  real(DP) :: avg_iter, et_(nbnd)
-  ! iteration number in the diagonalization
-  ! eigenvalues of the diagonalization
-  !
-  !     Local variables:
+  ! ... local variables:
   !
   REAL(DP) :: cg_iter
   ! number of iteration in CG
@@ -57,23 +58,23 @@ subroutine hdiag( npw, max_iter, avg_iter, et_ )
   ! Conjugate-Gradient diagonalization
   !
   h_prec=1.0_DP
-  do ig = 1, npw
-     h_prec (ig) = max (1.d0, g2kin (ig) )
-  enddo
-  ntry = 0
-10 continue
-  if (ntry > 0) then
-     call rotate_wfc &
-       ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et_ )
-     avg_iter = avg_iter + 1.d0
-  endif
-  CALL ccgdiagg( hs_1psi, s_1psi, h_prec, &
-       npwx, npw, nbnd, npol, evc, et_, btype, eth_ns, &
-       max_iter, .true., notconv, cg_iter)
-  avg_iter = avg_iter + cg_iter
-  ntry = ntry + 1
+  FORALL( ig = 1 : npwx )
+      h_prec(ig) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
+  END FORALL
 
-  if (ntry.le.5.and.notconv.gt.0) goto 10
+  DO ntry = 1, 5
+    if (ntry > 1) then
+       call rotate_wfc &
+         ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et_ )
+       avg_iter = avg_iter + 1.d0
+    endif
+    CALL ccgdiagg( hs_1psi, s_1psi, h_prec, &
+         npwx, npw, nbnd, npol, evc, et_, btype, eth_ns, &
+         max_iter, .true., notconv, cg_iter)
+    avg_iter = avg_iter + cg_iter
+ 
+    IF(notconv == 0 ) EXIT
+  ENDDO
 
   deallocate (btype, h_prec)
   call stop_clock ('hdiag')

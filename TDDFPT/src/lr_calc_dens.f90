@@ -591,6 +591,7 @@ CONTAINS
     USE becmod,              ONLY : bec_type, becp, calbec
     USE lr_variables,        ONLY : becp1_c
     USE realus,              ONLY : invfft_orbital_k
+    USE uspp_init,             ONLY : init_us_2
     !
     IMPLICIT NONE
     !

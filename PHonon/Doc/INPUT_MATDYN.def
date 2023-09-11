@@ -1,0 +1,439 @@
+input_description -distribution {Quantum ESPRESSO} -package PHonon -program matdyn.x {
+
+    toc {}
+
+    intro {
+	@b {Purpose of matdyn.x:}
+
+        This program calculates the phonon frequencies for a list of generic
+        @i q vectors starting from the interatomic force constants generated
+        from the dynamical matrices as written by DFPT phonon code through
+        the companion program @b q2r.x
+  
+        @b matdyn.x can generate a supercell of the original cell for mass
+        approximation calculation. If supercell data are not specified
+        in input, the unit cell, lattice vectors, atom types and positions
+        are read from the force constant file.
+
+        @b {Input data format:} [ ] = it depends
+
+        @b {Structure of the input data:}
+	========================================================================
+
+        @b &INPUT
+	   ...specs of the namelist variables...
+	@b /
+
+        [ X(1)   Y(1)   Z(1)    ityp(1)
+          ...
+          X(nat) Y(nat) Z(nat)  ityp(nat) ]
+
+        [ nq
+          q_x(1)  q_y(1)  q_x(1)   [ nptq(1) ]
+          ...
+          q_x(nq) q_y(nq) q_x(nq)  [ nptq(1) ] ]
+    }
+
+    namelist INPUT {
+        var flfrc -type CHARACTER {
+            info {
+                File produced by @b q2r containing force constants (needed)
+                It is the same as in the input of @b q2r.x (+ the .xml extension
+                if the dynamical matrices produced by ph.x were in xml
+                format). No default value: must be specified.
+            }
+        }
+
+        var  asr -type  CHARACTER {
+	    default { 'no' }
+            options {
+                info {
+                    Indicates the type of Acoustic Sum Rule imposed.
+
+                    Allowed values:
+                }
+                opt -val 'no' {
+                    no Acoustic Sum Rules imposed (default)
+                }
+                opt -val 'simple' {
+                    previous implementation of the asr used
+                    (3 translational asr imposed by correction of
+                     the diagonal elements of the force constants matrix)
+                }
+                opt -val 'crystal' {
+                    3 translational asr imposed by optimized
+                    correction of the force constants (projection)
+                }
+                opt -val 'all' {
+                    3 translational asr + 3 rotational asr + 15 Huang
+                    conditions for vanishing stress tensor, imposed by
+                    optimized correction of the force constants (projection).
+                    Remember to set write_lr = .true. to write long-range
+                    force constants into file when running q2r and set @ref 
+                    read_lr = .true. when running matdyn in the case of 
+                    infrared-active solids. (See npj Comput Mater 8, 236 (2022))
+                }
+                opt -val 'one-dim' {
+                    3 translational asr + 1 rotational asr imposed
+                    by optimized correction of the dyn. mat. (the
+                    rotation axis is the direction of periodicity; it
+                    will work only if this axis considered is one of
+                    the Cartesian axis).
+                }         
+                opt -val 'zero-dim' {
+                    3 translational asr + 3 rotational asr imposed
+                    by optimized correction of the dyn. mat.
+                }
+                info {
+                    Note that in certain cases, not all the rotational asr
+                    can be applied (e.g. if there are only 2 atoms in a
+                    molecule or if all the atoms are aligned, etc.).
+                    In these cases the supplementary asr are cancelled
+                    during the orthonormalization procedure (see below).
+                }
+            }
+        }
+        var huang -type LOGICAL {
+            default {@tt .true.}
+            info {
+                if @b .true. 15 Huang conditions for vanishing stress
+                tensor are included in @ref asr = 'all'.
+            }
+        }
+        var dos -type LOGICAL {
+            info {
+                if @b .true. calculate phonon Density of States (DOS)
+                using tetrahedra and a uniform q-point grid (see below)
+                @b NB: may not work properly in noncubic materials
+                
+                if @b .false. calculate phonon bands from the list of q-points
+                supplied in input (default)
+            }
+        }
+
+        vargroup -type INTEGER {
+            var nk1
+            var nk2
+            var nk3
+            info {
+                uniform q-point grid for DOS calculation (includes q=0)
+                (must be specified if @ref dos = .true., ignored otherwise)
+            }
+        }
+
+        var deltaE -type REAL {
+            info {
+                energy step, in cm@sup -1, for DOS calculation: from min
+                to max phonon energy (default: 1 cm@sup -1 if ndos, see
+                below, is not specified)
+            }
+        }
+
+        var ndos -type INTEGER {
+            info {
+                number of energy steps for DOS calculations
+                (default: calculated from deltaE if not specified)
+            }
+        }
+
+        var degauss -type REAL {
+            info {
+                DOS broadening in cm@sup -1
+                
+                Default: 0 - meaning use tetrahedra
+            }
+        }
+        
+        var fldos -type CHARACTER {
+            info {
+                output file for dos (default: @tt 'matdyn.dos')
+                the dos is in states/cm@sup -1 plotted vs omega in cm(-1)
+                and is normalised to 3*nat, i.e. the number of phonons
+            }
+        }
+
+        var flfrq  -type CHARACTER {
+            info {
+                output file for frequencies (default: @tt 'matdyn.freq')
+            }
+        }
+        
+        var flvec -type CHARACTER {
+            info {
+                output file for normalized phonon displacements 
+                (default: @tt 'matdyn.modes'). The normalized phonon displacements
+                are the eigenvectors divided by the square root of the mass,
+                then normalized. As such they are not orthogonal.
+            }
+        }
+        
+        var fleig  -type CHARACTER {
+            info {
+                output file for phonon eigenvectors (default: @tt 'matdyn.eig')
+                The phonon eigenvectors are the eigenvectors of the dynamical
+                matrix. They are orthogonal.
+            }
+        }
+        
+        var fldyn -type CHARACTER {
+            info {
+                output file for dynamical matrix (default: ' ' i.e. not written)
+            }
+        }
+        
+        multidimension  at -indexes i,j -start 1,1 -end 3,3 -type REAL {
+            info {
+                supercell lattice vectors - must form a superlattice of the
+                original lattice (default: use original cell)
+            }
+        }
+
+        vargroup -type INTEGER {
+            var l1
+            var l2
+            var l3
+            info {
+                supercell lattice vectors are original cell vectors times
+                l1, l2, l3 respectively (default: 1, ignored if @ref at specified)
+            }
+        }
+        var ntyp -type INTEGER {
+            info {
+                number of atom types in the supercell
+                (default: @ref ntyp of the original cell)
+            }
+        }
+        
+        dimension amass -start 1 -end ntyp -type REAL {
+            info {
+                masses of atoms in the supercell (a.m.u.), one per atom type
+                (default: use masses read from file @tt flfrc)
+            }
+        }
+        
+        var readtau -type LOGICAL {
+            info {
+                read  atomic positions of the supercell from input
+                (used to specify different masses) (default: @tt .false.)
+            }
+        }
+        
+        var fltau -type CHARACTER {
+            info {
+                write atomic positions of the supercell to file @tt fltau
+                (default: @ref fltau = ' ', do not write)
+            }
+        }
+        var la2F -type LOGICAL {
+            info {
+                if @b .true. interpolates also the el-ph coefficients
+            }
+        }
+        
+        var q_in_band_form -type LOGICAL {
+            info {
+                if @b .true. the q points are given in band form:
+                only the first and last point of one or more lines 
+                are given. See below. (default: @tt .false.).
+            }
+        }
+        
+        var q_in_cryst_coord -type LOGICAL {
+            info {
+                if @b .true. input q points are in crystalline 
+                coordinates (default: @tt .false.)
+            }
+        }
+        
+        var eigen_similarity -type LOGICAL {
+            info {
+                use similarity of the displacements to order 
+                frequencies  (default: @tt .false.)
+
+                @b NB: You cannot use this option with the symmetry
+                analysis of the modes.
+            }
+        }
+        
+        var fd -type LOGICAL {
+            info {
+                if @b .true. the ifc come from the finite displacement calculation
+            }
+        }
+        
+        var na_ifc -type LOGICAL {
+            info {
+                add non analitic contributions to the interatomic force 
+                constants if finite displacement method is used (as in Wang et al.
+                PRB 85, 224303 (2012)) [to be used in conjunction with @b fd.x]
+            }
+        }
+        
+        var nosym -type LOGICAL {
+            info {
+                if @b .true., no symmetry and no time reversal are imposed
+            }
+        }
+
+        var  loto_2d -type LOGICAL {
+            info {
+                set to @b .true. to activate two-dimensional treatment of LO-TO splitting
+            }
+        }
+        
+        var loto_disable -type LOGICAL {
+            info {
+                if @b .true. do not apply LO-TO splitting for q=0
+                (default: @tt .false.)
+            }
+        }
+
+        var read_lr -type LOGICAL {
+            default {@tt .false.}
+            info {
+                if @b .true. read also long-range force constants when they exist in 
+                force constant file. This is required when enforcing @ref asr = 'all' 
+                for infrared-active solids.
+            }
+        }
+
+        var write_frc -type LOGICAL {
+            default {@tt .false.}
+            info {
+                if @b .true. write force constants with @ref asr imposed into file.
+                The filename would be @ref flfrc+".matdyn". The long-range part of 
+                force constants will be not written.
+            }
+        }
+    }
+
+    choose {
+        when -test "readtau == .true." {
+            card AtomicPositionSpecs -nameless 1 {
+                label {
+                    if (@ref readtau) atomic positions must be specified as follows:
+                }                       
+
+                syntax {
+                    table atomic_coordinates {
+                        rows -start 1 -end nat {
+                            colgroup -type REAL {
+                                info { 
+                                    X, Y, Z atomic positions 
+                                }
+                                col X
+                                col Y
+                                col Z
+                            }
+                            col ityp -type INTEGER {
+                                info {
+                                    index of the atomic type
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    choose {
+        when -test "q_in_band_form == .true .and. dos == .false." {
+            card qPointsSpecs -nameless 1 {
+                label {
+                    if (@ref q_in_band_form .and. .not.@ref dos) q-points must be specified as follows:
+                }                       
+
+                syntax {
+                    line {
+                        var nq -type INTEGER {
+                            info {
+                                number of q points
+                            }
+                        }
+                    }
+                    table qPoints1 {
+                        info {
+                            The format of the q-points specification is:
+
+                            (q(i,n),i=1,3), nptq
+
+                            @tt nptq is the number of points between this point
+                            and the next. These points are automatically
+                            generated. the q points are given in Cartesian
+                            coordinates, 2pi/a units (a = lattice parameters)
+                        }
+                        rows -start 1 -end nq {
+                            colgroup -type REAL {
+                                info { 
+                                    coordinates of the Q point
+                                }
+                                col q_x
+                                col q_y
+                                col q_z
+                            }
+                            col nptq -type INTEGER {
+                                info {
+                                    The number of points between this point and the next.
+
+                                    @ref nptq is the number of points between this point
+                                    and the next. These points are automatically
+                                    generated. the q points are given in Cartesian
+                                    coordinates, 2pi/@i a units (@i a = lattice parameters)
+                                }
+                            }                            
+                        }
+                    }
+                }
+            }
+        }
+        elsewhen -test "dos == .false." {
+            label {
+                if (.not. @ref dos) q-points must be specified as follows:
+            } 
+           card qPointsSpecs -nameless 1 {
+               syntax {
+                   line {
+                       var nq -type INTEGER {
+                           info {
+                               number of q points
+                           }
+                       }
+                   }
+                   table qPoints2 {
+                       info {
+                           The format of the q-points specification is:
+                           
+                           ((q(i,n),i=1,3), n=1,nq)
+                           
+                       }
+                       rows -start 1 -end nq {
+                           colgroup -type REAL {
+                               info { 
+                                   q-points in cartesian coordinates, 2pi/@i a units (@i a = lattice parameters)
+                               }
+                               col q_x
+                               col q_y
+                               col q_z
+                           }
+                       }
+                   }
+               }
+           }
+        }
+    }
+
+    section -title Notes {
+        text {
+            If q = 0, the direction qhat (q=>0) for the non-analytic part
+            is extracted from the sequence of q-points as follows:
+            
+            qhat = q(n) - q(n-1)   or   qhat = q(n) - q(n+1)
+            
+            depending on which one is available and nonzero.
+
+            For low-symmetry crystals, specify twice q = 0 in the list
+            if you want to have q = 0 results for two different directions
+        }
+    }
+}

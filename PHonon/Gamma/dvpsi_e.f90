@@ -9,25 +9,32 @@
 !----------------------------------------------------------------------
 SUBROUTINE dvpsi_e(ik,ipol)
   !----------------------------------------------------------------------
+  !! Calculates \(x\cdot \psi_k\) for each k-point and for the 3 polarizations.  
+  !! Requires on input: \(\text{vkb}, \text{evc}\).
   !
-  ! Calculates x * psi_k  for each k-point and for the 3 polarizations
-  ! Requires on input: vkb, evc
-  !
-  USE kinds, ONLY: DP
+  USE kinds,     ONLY: DP
   USE ions_base, ONLY : ntyp => nsp, nat, ityp
-  USE uspp, ONLY: nkb, vkb, dvan
-  USE uspp_param, ONLY: nh
-  USE wavefunctions,  ONLY: evc
-  USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, &
+  USE uspp,      ONLY: nkb, vkb, dvan
+  USE uspp_param,    ONLY: nh
+  USE wavefunctions, ONLY: evc
+  USE becmod,    ONLY: bec_type, becp, calbec, allocate_bec_type, &
       deallocate_bec_type
   USE cell_base, ONLY : tpiba
   USE gvect,     ONLY : g
   USE klist,     ONLY : xk, ngk
   USE wvfct,     ONLY : nbnd, npwx,g2kin, et
+  USE uspp_init, ONLY : gen_us_dj, gen_us_dy
   USE cgcom
   !
   IMPLICIT NONE
-  INTEGER :: ik, ipol
+  !
+  INTEGER :: ik
+  !! k-point index
+  INTEGER :: ipol
+  !! polarization index
+  !
+  ! ... local variables
+  !
   INTEGER :: npw, i,l, na,nt, ibnd,jbnd, info, ih,jkb, iter
   real(DP) :: upol(3,3)
   real(DP), ALLOCATABLE :: gk(:,:), q(:), overlap(:,:), &

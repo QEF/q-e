@@ -3,16 +3,17 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: projwfc.x / PWscf / Quantum Espresso (version: 6.4)
+Program: projwfc.x / PWscf / Quantum ESPRESSO (version: 7.2)
 ------------------------------------------------------------------------
 
 
 Purpose of projwfc.x:
     projects wavefunctions onto orthogonalized atomic wavefunctions,
     calculates Lowdin charges, spilling parameter, projected DOS
-    (separated into up and down components for lSDA)
-    alternatively, computes the local DOS(E), integrated in volumes
-    given in input
+    (separated into up and down components for LSDA). Alternatively:
+    computes the local DOS(E) integrated in volumes given in input
+    (see "tdosinboxes") or k-resolved DOS (see "kresolveddos").
+    Atomic projections are written to file "atomic_proj.xml".
 
 Structure of the input data:
 ============================
@@ -90,6 +91,21 @@ NAMELIST: &PROJWFC
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
+   Variable:       diag_basis
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    if .false. the projections of Kohn-Sham states are
+                                done on the orthogonalized atomic orbitals
+                                in the global XYZ coordinate frame.
+                   if .true. the projections of Kohn-Sham states are
+                                done on the orthogonalized atomic orbitals
+                                that are rotated to the basis in which the
+                                atomic occupation matrix is diagonal
+                                (i.e. local XYZ coordinate frame).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
    Variable:       pawproj
    
    Type:           LOGICAL
@@ -124,7 +140,9 @@ NAMELIST: &PROJWFC
    Type:           LOGICAL
    Default:        .false.
    Description:    if .true., the overlap matrix of the atomic orbitals
-                   prior to orthogonalization is written to the atomic_proj datafile.
+                   prior to orthogonalization is written to "atomic_proj.xml".
+                   Does not work together with parallel diagonalization:
+                   for parallel runs, use "mpirun -np N projwfc.x -nd 1 ... "
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -132,7 +150,8 @@ NAMELIST: &PROJWFC
    
    Type:           LOGICAL
    Default:        .false.
-   Description:    if .true., the atomic_proj datafile is written in binary fmt.
+   Description:    CURRENTLY DISABLED.
+                   if .true., write atomic projections to a binary file.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -168,7 +187,7 @@ NAMELIST: &PROJWFC
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       irmin(3,n_proj_boxes)
+   Variable:       irmin(i,n_proj_boxes), (i,n_proj_boxes)=(1,1) ... (3,n_proj_boxes)
    
    Type:           INTEGER
    Default:        1 for each box
@@ -178,7 +197,7 @@ NAMELIST: &PROJWFC
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       irmax(3,n_proj_boxes)
+   Variable:       irmax(i,n_proj_boxes), (i,n_proj_boxes)=(1,1) ... (3,n_proj_boxes)
    
    Type:           INTEGER
    Default:        0 for each box
@@ -265,8 +284,8 @@ NAMELIST: &PROJWFC
       
           1, cos(phi), sin(phi), cos(2*phi), sin(2*phi), .., cos(l*phi), sin(l*phi)
       
-      where phi is the polar angle:x=r cos(theta)cos(phi), y=r cos(theta)sin(phi)
-      This is determined in file Modules/ylmr2.f90 that calculates spherical harmonics.
+      where phi is the azimuthal angle: x=r cos(theta)cos(phi), y=r cos(theta)sin(phi)
+      This is determined in file upflib/ylmr2.f90 that calculates spherical harmonics.
       
       for l=1:
         1 pz     (m=0)
@@ -328,4 +347,4 @@ NAMELIST: &PROJWFC
       
 
 
-This file has been created by helpdoc utility on Thu Nov 28 10:42:25 CET 2019
+This file has been created by helpdoc utility on Sat Mar 18 15:50:17 CET 2023

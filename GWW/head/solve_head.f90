@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -27,7 +27,7 @@ subroutine solve_head
   USE wannier_gw,           ONLY : n_gauss, omega_gauss, grid_type,&
                                    nsteps_lanczos,second_grid_n,second_grid_i,&
                                    l_scissor,scissor,len_head_block_freq, &
-                                   len_head_block_wfc
+                                   len_head_block_wfc, l_easy
   USE control_ph,           ONLY : tr2_ph
   USE gvect,                ONLY : ngm, ngm_g, ig_l2g, gstart, g
   USE gvecs,                ONLY : doublegrid
@@ -45,6 +45,8 @@ subroutine solve_head
 
   use qpoint,                ONLY : npwq, nksq
   use control_lr,            ONLY : nbnd_occ, lgamma
+  use uspp_init,             ONLY : init_us_2
+  use SCF
 
   implicit none
 
@@ -92,6 +94,7 @@ subroutine solve_head
   COMPLEX(kind=DP), ALLOCATABLE :: z_dl(:),z_d(:),z_du(:),z_b(:)
   COMPLEX(kind=DP) :: csca, csca1
   COMPLEX(kind=DP), ALLOCATABLE :: t_out(:,:,:), psi_tmp(:)
+  TYPE(scf_type) :: wing
   INTEGER :: n
   INTEGER :: npwx_g
 
@@ -144,6 +147,9 @@ subroutine solve_head
      do i=1,n_gauss
         freqs(1+i)=omega_gauss*dble(i)/dble(n_gauss)
      enddo
+     if(l_easy) then
+        freqs(1)=omega_gauss/dble(n_gauss)/4.d0
+     endif
   else  if(grid_type==4) then!equally spaced grid shifted of 1/2
      freqs(1) = 0.d0
      do i=1,n_gauss
@@ -471,18 +477,19 @@ subroutine solve_head
 #else
         call syme (pola_charge(:,:,:,i))
 #endif
-     
+        call create_scf_type ( wing, .true. )
         do ipol=1,3
            CALL fwfft ('Rho',  pola_charge(1:dfftp%nnr,1,ipol,i), dfftp)
            tmp_g(:)=(0.d0,0.d0)
            tmp_g(gstart:ngm)=pola_charge(dfftp%nl(gstart:ngm),1,ipol,i) 
-          
+           wing%of_g(1:ngm,1)=-4.d0*tmp_g(1:ngm)
+           call write_wing (  wing, nspin,ipol,i)
 !loop on frequency
            do ig=gstart,ngm
               e_head_pol(ig,i,ipol)=-4.d0*tmp_g(ig)
            enddo
         enddo
-       
+       call  destroy_scf_type (wing )
 
      enddo
 
@@ -526,11 +533,7 @@ subroutine solve_head
         enddo
      enddo
      call mp_barrier( world_comm )
-     write(stdout,*) 'ATT02'
      if(ionode) close(iun)
-
-     call mp_barrier( world_comm )
-     write(stdout,*) 'ATT1'
      deallocate(pola_charge)
      deallocate(e_head_pol)
      deallocate(e_head_g)
@@ -565,12 +568,71 @@ subroutine solve_head
   deallocate( tmp_g)
   deallocate(epsilon_g)
 
-  
-
-   call mp_barrier( world_comm )
-   write(stdout,*) 'ATT2'
-
   call stop_clock ('solve_head')
   return
 end subroutine solve_head
 
+
+
+SUBROUTINE write_wing ( rho, nspin,ipol,iw)
+
+  
+  USE kinds,       ONLY : DP
+  USE io_files,    ONLY : create_directory
+  USE io_base,     ONLY : write_rhog, read_rhog
+      !
+      USE paw_variables,    ONLY : okpaw
+      USE ldaU,             ONLY : lda_plus_u
+      USE noncollin_module, ONLY : noncolin, domag
+      USE scf,              ONLY : scf_type
+      !
+      USE cell_base,        ONLY : bg, tpiba
+      USE gvect,            ONLY : ig_l2g, mill
+      USE control_flags,    ONLY : gamma_only
+      USE io_files,         ONLY : seqopn, tmp_dir, prefix, postfix
+      USE io_global,        ONLY : ionode, ionode_id, stdout
+      USE mp_pools,         ONLY : my_pool_id
+      USE mp_bands,         ONLY : my_bgrp_id, root_bgrp_id, &
+                                   root_bgrp, intra_bgrp_comm
+      USE mp_images,        ONLY : intra_image_comm
+      USE mp,               ONLY : mp_bcast
+
+      !
+      IMPLICIT NONE
+      TYPE(scf_type),   INTENT(IN)           :: rho
+      INTEGER,          INTENT(IN)           :: nspin
+      INTEGER,          INTENT(IN)           :: ipol!direction
+      INTEGER,          INTENT(IN)           :: iw !frequency
+      !
+      CHARACTER (LEN=256) :: dirname
+      LOGICAL :: lexist
+      INTEGER :: nspin_, iunocc, iunpaw, ierr
+      INTEGER, EXTERNAL :: find_free_unit
+
+      CHARACTER(5) :: nfile
+      CHARACTER :: npol
+
+      write(nfile,'(5i1)') &
+               & iw/10000,mod(iw,10000)/1000,mod(iw,1000)/100,mod(iw,100)/10,mod(iw,10)
+      write(npol,'(1i1)') ipol
+
+      dirname = TRIM(tmp_dir) // TRIM(prefix) // postfix
+      CALL create_directory( dirname )
+      ! in the following case do not read or write polarization
+      IF ( noncolin .AND. .NOT.domag ) THEN
+         nspin_ = 1
+      ELSE
+         nspin_ = nspin
+      ENDIF
+      ! Write G-space density
+      IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+           CALL write_rhog( TRIM(dirname) // "wing_" // npol // "_" //nfile, &
+           root_bgrp, intra_bgrp_comm, &
+           bg(:,1)*tpiba, bg(:,2)*tpiba, bg(:,3)*tpiba, &
+           gamma_only, mill, ig_l2g, rho%of_g(:,1:nspin_) )
+    
+
+   
+
+      RETURN
+    END SUBROUTINE write_wing

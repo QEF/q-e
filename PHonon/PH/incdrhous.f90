@@ -6,13 +6,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
-     alpq, mode)
+subroutine incdrhous( drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
+                      alpq, mode )
   !-----------------------------------------------------------------------
-  !
-  !     This routine computes the change of the charge density due
-  !     to the displacement of the augmentation charge. Only the
-  !     smooth part is computed here.
+  !! This routine computes the change of the charge density due
+  !! to the displacement of the augmentation charge. Only the
+  !! smooth part is computed here.
   !
   USE kinds, only : DP
   USE ions_base, ONLY : ntyp => nsp, nat, ityp
@@ -36,25 +35,29 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
 
   implicit none
 
-  integer :: ik, mode
-  ! input: the k point
-  ! input: the mode which is computed
-
-  real(DP) :: weight, wgg (nbnd, nbnd, nksq)
-  ! input: the weight of the k point
-  ! input: the weights
-
-  complex(DP) :: evcr (dffts%nnr, nbnd), drhoscf (dffts%nnr), &
-       dbecsum(nhm * (nhm + 1) / 2, nat)
-  ! input: the wavefunctions at k in real
-  ! output: the change of the charge densi
-  ! inp/out: the accumulated dbec
-  type(bec_type) ::  becq (nksq), &! (nkb, nbnd)
-                     alpq (3, nksq)
-  ! input: the becp with psi_{k+q}
-  ! input: the alphap with psi_{k+q}
+  integer :: ik
+  !! input: the k point
+  integer :: mode
+  !! input: the mode which is computed
+  
+  real(DP) :: weight
+  !! input: the weight of the k point
+  real(DP) :: wgg(nbnd,nbnd,nksq)
+  !! input: the weights
+  
+  complex(DP) :: evcr(dffts%nnr,nbnd)
+  !! input: the wavefunctions at k in real space
+  complex(DP) :: drhoscf(dffts%nnr)
+  !! output: the change of the charge density
+  complex(DP) :: dbecsum(nhm*(nhm+1)/2,nat)
+  !! in/out: the accumulated dbec
+  
+  type(bec_type) :: becq(nksq)  ! (nkb, nbnd)
+  !! input: the becp with \(\psi_{k+q}\)
+  type(bec_type) :: alpq(3,nksq)
+  !! input: the alphap with \(\psi_{k+q}\)
   !
-  !   here the local variable
+  ! ... local variables
   !
   real(DP) :: wgt
   ! the effective weight of the k point

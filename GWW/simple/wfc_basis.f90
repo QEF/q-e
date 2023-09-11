@@ -12,7 +12,6 @@ subroutine wfc_basis
   USE uspp_param, ONLY : upf, nh
   USE noncollin_module, ONLY: npol, noncolin
   USE mp_world, ONLY : world_comm
-  USE spin_orb, ONLY: lspinorb
   USE ions_base,  ONLY : nat, nsp, ityp
   USE io_global, ONLY : stdout, ionode
   USE input_simple
@@ -541,7 +540,6 @@ SUBROUTINE optimal_gram_schmidt_z(num_in,wfcs,ithres,thres,num_out)
   USE uspp,     ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv, okvan
   USE uspp_param, ONLY : upf, nh
   USE noncollin_module, ONLY: npol, noncolin
-  USE spin_orb, ONLY: lspinorb
   USE ions_base,  ONLY : nat, nsp, ityp
 
 

@@ -1,13 +1,16 @@
 #!/bin/sh
+# \
+exec tclsh "$0" "$@"
+
 # ----------------------------------------------------------------------
 #  PROGRAM: PWgui
-#  PURPOSE: tries to be a GUI for the PWscf
+#  PURPOSE: A GUI input builder for PWscf / Quantum ESPRESSO
 # ----------------------------------------------------------------------
 #  Anton Kokalj
 #  Jozef Stefan Institute, Ljubljana, Slovenia
-#  Email: Tone.Kokalj@ijs.si
+#  Email: tone.kokalj@ijs.si
 # ======================================================================
-#  Copyright (c) 2003--2019 Anton Kokalj
+#  Copyright (c) 2003--2023 Anton Kokalj
 # ======================================================================
 #
 #
@@ -25,55 +28,15 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-if test "x`type readlink`" = "x"; then
-    # no readlink cmd; make a function-substitute
-    readlink() {
-        echo `ls -l $1 | awk '{print $NF}'`
-    }
-fi
-
-pathname() {
-    file=`type -p $1`
-    if test $? -gt 0; then
-        file=`which $1`
-        if test $? -gt 0; then
-            # give-up
-            file=$1
-        fi
-    fi
-    echo $file
+if { ! [info exists env(PWGUI)] } {
+       set _file $argv0
+       while { [file type $_file] == "link" } {
+           set dir   [file dirname $_file]                 
+           set _file [file join $dir [file readlink $_file]]
+       }
+    set _pwguipath [auto_execok [file normalize $_file]]
+    set env(PWGUI) [file dirname $_pwguipath]
 }
 
-pathdir() {
-    file=`pathname $1`
-    
-    while test -h $file; do  
-        file=`readlink $file`
-    done
+source $env(PWGUI)/pwgui.tcl
 
-    dir=`dirname $file`
-    ( cd $dir; pwd )
-}
-
-if [ -z "$PWGUI" ]; then
-    # try to guess the PWGUI value
-     export PWGUI=`pathdir $0`
-fi
-
-
-echo "
- ==================================================
-  This is PWgui version: `cat $PWGUI/VERSION`
- --------------------------------------------------
-"
-if [ -d $PWGUI/bin ]; then
-    echo "
- PWgui: using the \"$PWGUI/bin/itkwish\" interpreter
-"
-    $PWGUI/bin/itkwish $PWGUI/pwgui.tcl
-else
-    echo "
- PWgui: using the system default \"tclsh\" interpreter
-"
-    tclsh $PWGUI/pwgui.tcl
-fi

@@ -63,15 +63,14 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    USE wavefunctions,        ONLY : evc
    USE bp,                   ONLY : nppstr_3d, mapgm_global, nx_el, mapg_owner
    USE fixed_occ
-   USE mp,                   ONLY : mp_sum,mp_barrier
+   USE mp,                   ONLY : mp_sum, mp_max, mp_barrier
    USE mp_world,             ONLY : world_comm,mpime,nproc
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE becmod,               ONLY : bec_type, becp, calbec,ALLOCATE_bec_type, &
                                     DEALLOCATE_bec_type
-   USE noncollin_module,     ONLY : noncolin, npol
-   USE spin_orb,             ONLY : lspinorb
-   USE mytime,               ONLY :
+   USE noncollin_module,     ONLY : noncolin, npol, lspinorb
    USE parallel_include
+   USE uspp_init,            ONLY : init_us_2
    !
    IMPLICIT NONE
    !
@@ -125,6 +124,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    INTEGER :: nstring
    INTEGER :: nt
    REAL(dp) :: dk(3)
+   REAL(dp) :: dk2
    REAL(dp) :: dkmod
    REAL(dp) :: el_loc
    REAL(dp) :: eps
@@ -135,7 +135,6 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    REAL(dp), ALLOCATABLE :: loc_k(:)
    REAL(dp), ALLOCATABLE :: pdl_elec(:)
    REAL(dp), ALLOCATABLE :: phik(:)
-   REAL(dp) :: qrad_dk(nbetam,nbetam,lmaxq,ntyp)
    REAL(dp) :: weight
    REAL(dp) :: pola, pola_ion
    REAL(dp), ALLOCATABLE :: wstring(:)
@@ -340,12 +339,12 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    !                     electronic polarization: form factor                     !
    !  -------------------------------------------------------------------------   !
    IF (okvan) THEN
-      !  --- Calculate Bessel transform of Q_ij(|r|) at dk [Q_ij^L(|r|)] ---
-      CALL calc_btq( dkmod, qrad_dk, 0 )
+      !  --- Bessel transform of Q_ij(|r|) at dk [Q_ij^L(|r|)] in array qrad ---
+      ! CALL calc_btq( dkmod, qrad_dk, 0 ) no longer needed
       !
       !  --- Calculate the q-space real spherical harmonics at dk [Y_LM] --- 
-      dkmod = dk(1)**2+dk(2)**2+dk(3)**2
-      CALL ylmr2( lmaxq*lmaxq, 1, dk, dkmod, ylm_dk )
+      dk2 = dk(1)**2+dk(2)**2+dk(3)**2
+      CALL ylmr2( lmaxq*lmaxq, 1, dk, dk2, ylm_dk )
       !
       ! --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
       q_dk = (0.d0,0.d0)
@@ -353,7 +352,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
          IF ( upf(np)%tvanp ) THEN
             DO iv = 1, nh(np)
                DO jv = iv, nh(np)
-                  CALL qvan3( iv, jv, np, pref, ylm_dk, qrad_dk )
+                  CALL qvan2( 1, iv, jv, np, dkmod, pref, ylm_dk )
                   q_dk(iv,jv,np) = omega*pref
                   q_dk(jv,iv,np) = omega*pref
                ENDDO
@@ -514,9 +513,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                   !
                   IF (kpar /= (nppstr_3d(pdir)+1)) THEN
                      DO mb = 1, nbnd
-                        IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
-                           IF ( nb == mb )  mat(nb,mb)=1.d0
-                        ELSE
+                        IF ( l_cal(nb) .AND. l_cal(mb) ) THEN
                            DO ig = 1, npw1
                               aux(igk1(ig)) = psi1(ig,mb)
                            ENDDO
@@ -575,12 +572,8 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                               IF (max_aux_proc>max_aux) max_aux = max_aux_proc
                            ENDIF
                         ENDDO
-                        max_aux_proc=max_aux
-
-#if defined (__MPI)                        
-                        CALL MPI_ALLREDUCE( max_aux_proc, max_aux, 1, MPI_INTEGER, MPI_MAX, &
-                                            intra_bgrp_comm, req, IERR )
-#endif
+                        !
+                        CALL mp_max(max_aux, intra_bgrp_comm )
                         ALLOCATE( aux_proc(max_aux,nproc), aux_proc_ind(max_aux,nproc) )
                         ALLOCATE( aux_rcv(max_aux,nproc), aux_rcv_ind(max_aux,nproc) )
                         aux_proc = (0.d0,0.d0)
@@ -608,9 +601,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                         aux_rcv_ind(1:max_aux,1) = aux_proc_ind(1:max_aux,1)
 #endif
                         DO nb = 1, nbnd
-                           IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
-                              IF ( nb == mb )  mat(nb,mb) = 1.d0
-                           ELSE
+                           IF ( l_cal(nb) .AND. l_cal(mb) ) THEN
                               aux = (0.d0,0.d0)
                               aux0 = (0.d0,0.d0)
                               IF (noncolin) THEN
@@ -722,6 +713,9 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                      !
                   ENDDO
                ENDDO
+               DO nb = 1, nbnd
+                  IF ( .NOT. l_cal(nb) ) mat(nb,nb) = 1.d0
+               END DO
                !
                ! --- Calculate matrix determinant ---
                !

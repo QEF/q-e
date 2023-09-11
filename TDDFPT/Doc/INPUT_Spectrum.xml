@@ -2,7 +2,7 @@
 <?xml-stylesheet type="text/xsl" href="input_xx.xsl"?>
 <!-- FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST -->
     
-<input_description distribution="Quantum Espresso" package="turboTDDFPT" program="turbo_spectrum.x" >
+<input_description distribution="Quantum ESPRESSO" package="turboTDDFPT" program="turbo_spectrum.x" >
    <toc>
    </toc>
    <intro>
@@ -17,14 +17,14 @@ Comment lines in namelists can be introduced by a &quot;!&quot;, exactly as in
 fortran code. Comments lines in ``cards&apos;&apos; can be introduced by
 either a &quot;!&quot; or a &quot;#&quot; character in the first position of a line.
 
-Structure of the input data:
+<b>Structure of the input data:</b>
 ===============================================================================
 
-&amp;lr_input
+&amp;LR_INPUT
   ...
 /
    </intro>
-   <namelist name="lr_input" >
+   <namelist name="LR_INPUT" >
       <label> This namelist is always needed !
       </label>
       <var name="prefix" type="CHARACTER" >
@@ -72,16 +72,27 @@ in between itermax0+1 and itermax will be extrapolated.
       <var name="extrapolation" type="CHARACTER" >
          <default> &apos;no&apos;
          </default>
-         <info>
-    Sets the extrapolation scheme. &apos;osc&apos;= biconstant extrapolation,
-&apos;constant&apos;=constant extrapolation and &apos;no&apos;=no extrapolation.
-         </info>
+         <options>
+            <info>
+Sets the extrapolation scheme.
+            </info>
+            <opt val="'osc'" >
+biconstant extrapolation
+            </opt>
+            <opt val="'constant'" >
+constant extrapolation
+            </opt>
+            <opt val="'no'" >
+no extrapolation.
+            </opt>
+         </options>
       </var>
       <var name="epsil" type="REAL" >
          <default> 0.02
          </default>
          <info>
-The broadening/damping term (in Rydberg units).
+The broadening/damping term. In Rydberg units if magnons=.false.,
+    in meV if magnons = .true.
          </info>
       </var>
       <var name="units" type="INTEGER" >
@@ -89,9 +100,10 @@ The broadening/damping term (in Rydberg units).
          </default>
          <info>
     The unit system used for the output and the start, end and increment
-input parameters.
+input parameters. (only meV used in that case).
 
-0 = Rydbergs, 1 = Electron volts and 2 = Nanometres per electron volts.
+0 = Rydbergs, 1 = Electron volts, 2 = Nanometres per electron volts,
+3 = milli Electron volts (only for magnons=.true.)
          </info>
       </var>
       <var name="start" type="REAL" >
@@ -99,7 +111,7 @@ input parameters.
          </default>
          <info>
   The polarizability and the absorption coefficient are computed
-starting from this value. In units set by the units variable.
+starting from this value. In units set.
          </info>
       </var>
       <var name="end" type="REAL" >
@@ -107,7 +119,7 @@ starting from this value. In units set by the units variable.
          </default>
          <info>
   The polarizability and the absorption coefficient are computed
-up to this value. In units set by the units variable.
+up to this value. In units set.
          </info>
       </var>
       <var name="increment" type="REAL" >
@@ -115,7 +127,7 @@ up to this value. In units set by the units variable.
          </default>
          <info>
   Incremental step used to define the mesh between start and end.
-In units set by the units variable.
+In units set.
          </info>
       </var>
       <var name="ipol" type="INTEGER" >
@@ -136,6 +148,13 @@ tensor and the absorption coefficient are computed.
          <info>
 Must be set to .true. for EELS. EELS-specific operations
 will be performed.
+         </info>
+      </var>
+      <var name="magnons" type="LOGICAL" >
+         <default> .false.
+         </default>
+         <info>
+Must be set to .true. for magnon-calculation post-processing.
          </info>
       </var>
       <var name="td" type="CHARACTER" >

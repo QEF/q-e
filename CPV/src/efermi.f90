@@ -6,178 +6,148 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
-     &                  entropy,ismear,nspin)
-!-----------------------------------------------------------------------
-!
-!     FERMI ENERGY & SMEARING PACKAGE WRITTEN BY A. DE VITA 
-!     IN JULY 1992 FROM R.J. NEEDS ORIGINAL VERSION.
-!
-!     THIS VERSION IS BY N. MARZARI. COLD SMEARING ADDED IN OCT 1995.
-!
-!     GIVEN A SET OF WEIGHTS AND THE EIGENVALUES ASSOCIATED TO THEIR
-!     K-POINTS FOR BZ SAMPLING, THIS SUBROUTINE PERFORMS TWO TASKS: 
-!
-!     (1) DETERMINES THE FERMI LEVEL AND THE OCCUPANCY OF THE STATES
-!         ACCORDING TO THE CHOSEN (ismear) THERMAL BROADENING
-!
-!     (2) CALCULATES -TS (for schemes 1, 2 and 4, one-half of -TS
-!         is the entropy correction that should be added to the
-!         total energy to recover the zero-broadening energy
-!         (i.e. the true ground-state energy). This is not really
-!         necessary anymore using schemes 3, 5, and 6: the free
-!         energy E-TS is automatically independent of the temperature (!)
-!         up to the fourth (3) or third order (5, 6) in T. Note that
-!         (5, 6) do not have negative occupation numbers, at variance
-!         with (3).
-!
-!     THE SUGGESTED SMEARING SCHEME IS ismear=6 (COLD SMEARING II,
-!     Marzari et al., Phys. Rev. Lett. 82, 3296 (1999) )
-!
-!     THE SIX SMEARING SCHEMES (CHOOSE ONE WITH PARAMETER ISMEAR) ARE:
-!     
-!     (1) GAUSSIAN:
-!
-!     SEE: C-L FU AND K-M HO, PHYS. REV. B 28, 5480 (1983).
-!     THEIR IMPLEMENTATION WAS VARIATIONAL BUT *NOT* CORRECTED FOR
-!     SECOND ORDER DEVIATION IN SIGMA, AS ALSO WAS THE SIMILAR SCHEME
-!     (WITH OPPOSITE SIGN DEVIATION) IN: R.J.NEEDS, R.M.MARTIN AND O.H.
-!     NIELSEN, PHYS. REV. B 33 , 3778 (1986). 
-!     USING THE CORRECTION CALCULATED HEREAFTER EVERYTHING SHOULD BE OK.
-!     THE SMEARING FUNCTION IS A GAUSSIAN NORMALISED TO 2.
-!     THE OCCUPATION FUNCTION IS THE ASSOCIATED COMPLEMENTARY 
-!     ERROR FUNCTION. 
-!
-!     (2) FERMI-DIRAC:
-!
-!     SEE: M.J.GILLAN J. PHYS. CONDENS. MATTER 1, 689 (1989), FOLLOWING 
-!     THE SCHEME OUTLINED IN J.CALLAWAY AND N.H.MARCH, SOLID STATE PHYS. 38,
-!     136 (1984), AFTER D.N.MERMIN, PHYS. REV 137, A1441 (1965).
-!     THE OCCUPATION FUNCTION IS TWICE THE SINGLE ELECTRON 
-!     FERMI-DIRAC DISTRIBUTION.
-!
-!     (3) HERMITE-DELTA_EXPANSION:
-!
-!     SEE: METHFESSEL AND PAXTON, PHYS. REV.B 40, 3616 (1989).
-!     THE SMEARING FUNCTION IS A TRUNCATED EXPANSION OF DIRAC'S DELTA
-!     IN HERMITE POLINOMIALS. 
-!     FOR THE SMEARING FUNCTION IMPLEMENTED HERE THE TRUNCATION IS 
-!     AT THE FIRST NON-TRIVIAL EXPANSION TERM D1(X).
-!     THE OCCUPATION FUNCTION IS THE ASSOCIATED PRIMITIVE. 
-!     (NOTE: THE OCCUPATION FUNCTION IS NEITHER MONOTONIC NOR LIMITED 
-!     BETWEEN 0. AND 2. : PLEASE CHECK THE COMPATIBILITY OF THIS WITH 
-!     YOUR CODE'S VERSION AND VERIFY IN A TEST CALCULATION THAT THE 
-!     FERMI LEVEL IS *UNIQUELY* DETERMINED).
-!   
-!     THE ENTROPY CORRECTION HOLDS UP TO THE THIRD ORDER IN DELTA AT LEAST,
-!     AND IT IS NOT NECESSARY (PUT = 0.) FOR THE HERMITE_DELTA EXPANSION,
-!     SINCE THE LINEAR ENTROPY TERM IN SIGMA IS ZERO BY CONSTRUCTION
-!     IN THAT CASE. (well, we still need the correct free energy. hence
-!     delcor is set to its true value, nmar)
-!
-!     (4) GAUSSIAN SPLINES:
-!
-!     similar to a Gaussian smearing, but does not require the
-!     function inversion to calculate the gradients on the occupancies. 
-!     It is thus to be preferred in a scheme in which the occ are 
-!     independent variables. (N. Marzari)
-!
-!     (5) COLD SMEARING I: 
-!
-!     similar to Methfessel-Paxton (zeroes the linear order in the entropy), 
-!     but now with positive-definite occupations (note they can be greater 
-!     than 1). This version has a=-0.5634 (minimization of the bump), not 
-!     a=-0.8165 (monotonic function in the tail) (N. Marzari)
-!
-!     (6) COLD SMEARING II: 
-!
-!     the one to use. (5) and (6) are practically identical; this is more elegant. 
-!     For a discussion, see Marzari et al., Phys. Rev. Lett. 82, 3296 (1999), 
-!     or Marzari's PhD thesis (Univ. of Cambridge, 1996), at 
-!     http://quasiamore.mit.edu/phd
-!
-!-----------------------------------------------------------------------
-!     PLEASE INQUIRE WITH ADV/NMAR FOR REFERENCE & SUGGESTIONS IF
-!     YOU PLAN TO USE THE PRESENT CORRECTED BZ SAMPLING SCHEME 
-!-----------------------------------------------------------------------
-!
-!     INPUT
-!
-!     NEL ..... NUMBER OF ELECTRONS PER UNIT CELL
-!     NBANDS .. NUMBER OF BANDS FOR EACH K-POINT
-!     DEL ..... WIDTH OF GAUSSIAN SMEARING FUNCTION
-!     NKPTS ... NUMBER OF K-POINTS
-!     WEIGHT .. THE WEIGHT OF EACH K-POINT
-!     EIGVAL .. EIGENVALUES 
-!     ISMEAR .. SMEARING SCHEME
-!     NSPIN ... 1:SPIN RESTRICTED, 2:SPIN UNRESTRICTED
-!
-!     OUTPUT
-!
-!     OCC ..... THE OCCUPANCY OF EACH STATE
-!     EF ...... THE FERMI ENERGY
-!     entropy.. -TS (such that the variational functional, i.e.
-!               the free energy, is E-TS)
-!
-!     Also available
-!
-!     SORT .... THE EIGENVALUES ARE WRITTEN INTO SORT WHICH IS
-!               THEN SORTED INTO ASCENDING NUMERICAL VALUE, FROM
-!               WHICH BOUNDS ON EF CAN EASILY BE OBTAINED
-!     DELCOR    THE CORRECTION -0.5*T*S (the correction is needed 
-!               for 1,2 and 4 only)
-!     
-!-----------------------------------------------------------------------
-!     NOTE : 
-!
-!     ISMEAR = 1 GAUSSIAN BROADENING   
-!            = 2 FERMI-DIRAC BROADENING
-!            = 3 HERMITE EXPANSION (1ST ORD.) (right delcor now, nmar)
-!            = 4 SPLINE OF GAUSSIANS (nmar)
-!            = 5 COLD SMEARING I (nmar)
-!            = 6 COLD SMEARING II (nmar)
-!
-!     JMAX       THE MAX NUMBER OF BISECTIONS TO GET EF
-!     XACC       THE DESIRED ACCURACY ON EF
-!-----------------------------------------------------------------------
-!     ANOTHER NOTE:
-!     Thanks to the possible > 2 or < 0 
-!     orbital occupancies in the general case of smearing function,
-!     (e.g. in the M-P case) the algorithm to find EF has been
-!     chosen to be the robust bisection method (from Numerical
-!     Recipes) to allow for non monotonic relation between total 
-!     NEL (see above) and EF. One value for EF which solves
-!     NEL(EF) - Z = 0   is always found.
-!-----------------------------------------------------------------------
+SUBROUTINE EFERMI( NEL, NBANDS, DEL, NKPTS, OCC, EF, EIGVAL, &
+                   entropy, ismear, nspin )
+  !-----------------------------------------------------------------------
+  !! Fermi energy & smearing package written by A. De Vita in July 1992
+  !! from R.J. Needs original version.
+  !
+  !! This version is by N. Marzari. Cold smearing added in Oct. 1995.
+  !
+  !! Given a set of weights and the eigenvalues associated to their
+  !! k-points for Bz sampling, this subroutine performs two tasks: 
+  !
+  !! * determines the fermi level and the occupancy of the states
+  !!   according to the chosen (ismear) thermal broadening;
+  !! * calculates -TS (for schemes 1, 2 and 4, one-half of -TS
+  !!   is the entropy correction that should be added to the
+  !!   total energy to recover the zero-broadening energy
+  !!   (i.e. the true ground-state energy). This is not really
+  !!   necessary anymore using schemes 3, 5, and 6: the free
+  !!   energy E-TS is automatically independent of the temperature (!)
+  !!   up to the fourth (3) or third order (5, 6) in T. Note that
+  !!   (5, 6) do not have negative occupation numbers, at variance
+  !!   with (3).
+  !
+  !! The suggested smearing scheme is ismear=6 (cold smearing II,
+  !! Marzari et al., Phys. Rev. Lett. 82, 3296 (1999) )
+  !
+  !! The six smearing schemes (choose one with parameter \(\text{ismear}\))
+  !! are:
+  !
+  !! (1) GAUSSIAN  
+  !!  See: c-l fu and k-m ho, Phys. Rev. B 28, 5480 (1983).
+  !!  Their implementation was variational but *not* corrected for
+  !!  second order deviation in sigma, as also was the similar scheme
+  !!  (with opposite sign deviation) in: R.J.Needs, R.M.Martin and O.H.
+  !!  Nielsen, Phys. Rev. B 33, 3778 (1986).  
+  !!  Using the correction calculated hereafter everything should be ok.
+  !!  The smearing function is a gaussian normalised to 2.  
+  !!  The occupation function is the associated complementary error
+  !!  function. 
+  !
+  !! (2) FERMI-DIRAC  
+  !!  See: M.J.Gillan, J. Phys. Condens. Matter 1, 689 (1989), following 
+  !!  the scheme outlined in j.callaway and n.h.march, solid state phys. 38,
+  !!  136 (1984), after d.n.mermin, phys. rev 137, a1441 (1965).
+  !!  the occupation function is twice the single electron 
+  !!  fermi-dirac distribution.
+  !
+  !! (3) HERMITE-DELTA EXPANSION (1ST ORD. - right delcor now, nmar)  
+  !!  See: Methfessel and Paxton, Phys. Rev. B 40, 3616 (1989).
+  !!  the smearing function is a truncated expansion of Dirac's delta
+  !!  in Hermite polinomials. 
+  !!  For the smearing function implemented here the truncation is 
+  !!  at the first non-trivial expansion term \(\text{d1}(x)\).
+  !!  The occupation function is the associated primitive (note: 
+  !!  the occupation function is neither monotonic nor limited 
+  !!  between 0.0 and 2.0: please check the compatibility of this with 
+  !!  your code version and verify in a test calculation that the 
+  !!  Fermi level is uniquely determined).  
+  !!  The entropy correction holds up to the third order in delta at least,
+  !!  and it is not necessary (put = 0.) for the Hermite delta expansion,
+  !!  since the linear entropy term in sigma is zero by construction
+  !!  in that case (well, we still need the correct free energy, hence
+  !!  \(\text{delcor}\) is set to its true value, \(\text{nmar}\)).
+  !
+  !! (4) GAUSSIAN SPLINES (nmar)  
+  !!  Similar to a gaussian smearing, but does not require the
+  !!  function inversion to calculate the gradients on the occupancies. 
+  !!  It is thus to be preferred in a scheme in which the occ. are 
+  !!  independent variables (N. Marzari).
+  !
+  !! (5) COLD SMEARING I (nmar)  
+  !!  Similar to Methfessel-Paxton (zeroes the linear order in the entropy), 
+  !!  but now with positive-definite occupations (note they can be greater 
+  !!  than 1). This version has a=-0.5634 (minimization of the bump), not 
+  !!  a=-0.8165 (monotonic function in the tail)- N. Marzari.
+  !
+  !! (6) COLD SMEARING II (nmar)  
+  !!  The one to use. (5) and (6) are practically identical; this is more elegant. 
+  !!  For a discussion, see Marzari et al., Phys. Rev. Lett. 82, 3296 (1999), 
+  !!  or Marzari's PhD thesis (Univ. of Cambridge, 1996), at 
+  !!  http://quasiamore.mit.edu/phd
+  !
+  !-----------------------------------------------------------------------
+  !     PLEASE INQUIRE WITH ADV/NMAR FOR REFERENCE & SUGGESTIONS IF
+  !     YOU PLAN TO USE THE PRESENT CORRECTED BZ SAMPLING SCHEME 
+  !-----------------------------------------------------------------------
+  !
+  !     ANOTHER NOTE:
+  !     Thanks to the possible > 2 or < 0 
+  !     orbital occupancies in the general case of smearing function,
+  !     (e.g. in the M-P case) the algorithm to find EF has been
+  !     chosen to be the robust bisection method (from Numerical
+  !     Recipes) to allow for non monotonic relation between total 
+  !     NEL (see above) and EF. One value for EF which solves
+  !     NEL(EF) - Z = 0   is always found.
+  !-----------------------------------------------------------------------
 
-
-        
   USE kinds, ONLY : DP
 
   implicit none
  
-  INTEGER, INTENT(IN) :: nel, nbands, nkpts
+  INTEGER, INTENT(IN) :: nel
+  !! number of electrons for each unit cell
+  INTEGER, INTENT(IN) :: nbands
+  !! number of bands for each k-point
+  INTEGER, INTENT(IN) :: nkpts
+  !! number of k-points
   REAL(kind=DP), INTENT(OUT) :: occ(nbands,nkpts)
+  !! the occupancy of each state
   REAL(kind=DP), INTENT(OUT) :: ef
-  REAL(kind=DP), INTENT(IN)  :: eigval(nbands, nkpts)
+  !! the Fermi energy
+  REAL(kind=DP), INTENT(IN) :: eigval(nbands,nkpts)
+  !! eigenvalues
   REAL(kind=DP), INTENT(OUT) :: entropy
-  INTEGER, INTENT(IN)        :: ismear, nspin
+  !! -TS (such that the variational functional, i.e.
+  !! the free energy, is E-TS)
+  INTEGER, INTENT(IN) :: ismear
+  !! smearing scheme (see routine comments)
+  INTEGER, INTENT(IN) :: nspin
+  !! 1:spin restricted, 2:spin unrestricted
   REAL(kind=DP), INTENT(IN)  :: del
-  
+  !! width of gaussian smearing function
 
+  ! ... local variables
   
-  REAL(kind=DP) :: weight(nkpts), sort(nbands*nkpts)
-  REAL(kind=DP), EXTERNAL :: qe_erfc,FERMID,DELTHM,POSHM,POSHM2, EFERMI_SPLINE
-  INTEGER, PARAMETER :: JMAX =300
-  REAL(kind=DP), PARAMETER :: XACC=1.0D-17
+  REAL(kind=DP) :: weight(nkpts)       ! The weight of each k-point.
+  REAL(kind=DP) :: sort(nbands*nkpts)  ! The eigenvalues are written into sort which is
+                                       ! then sorted into ascending numerical value, from
+                                       ! which bounds on ef can easily be obtained.
+  REAL(kind=DP), EXTERNAL :: FERMID,DELTHM,POSHM,POSHM2, EFERMI_SPLINE
+  
+  INTEGER, PARAMETER :: JMAX =300             !The max number of bisections to get Ef 
+  REAL(kind=DP), PARAMETER :: XACC=1.0D-17    !The desired accuracy on Ef
 
   INTEGER :: isppt,j,nkp,neig,nn,n, inel, nel2, j2
   REAL(kind=DP) :: fspin, entrofac,entrospin
   REAL(kind=DP) :: pi,ee,eesh,sq2i,piesqq,z,en
   REAL(kind=DP) :: eigmin, eigmax, xe1,xe2,z1
-  REAL(kind=DP) :: x,fmid, f, rtbis,dx,xmid,delcor,fi,a
+  REAL(kind=DP) :: x,fmid, f, rtbis,dx,xmid,fi,a
   REAL(kind=DP) :: zeta,elow, test
-
+  REAL(kind=DP) :: delcor              ! The correction -0.5*T*S (the correction is needed 
+                                       ! for ismear 1,2 and 4 only)
 
   if ((nspin == 1).or.(nspin == 2)) then
      continue
@@ -387,7 +357,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
      DO  J = 1,NBANDS
         X = (XE2 - EIGVAL(J,ISPPT))/DEL
         IF(ISMEAR.EQ.1) THEN
-           Z1 = Z1 + WEIGHT(ISPPT)*( 2.d0 - qe_erfc(X) )/fspin
+           Z1 = Z1 + WEIGHT(ISPPT)*( 2.d0 - erfc(X) )/fspin
         ELSEIF(ISMEAR.EQ.2) THEN
            Z1 = Z1 + WEIGHT(ISPPT)*FERMID(-X)/fspin
         ELSEIF(ISMEAR.EQ.3) THEN
@@ -413,7 +383,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
      DO J = 1,NBANDS
         X = (XE1 - EIGVAL(J,ISPPT))/DEL
         IF(ISMEAR.EQ.1) THEN
-           Z1 = Z1 + WEIGHT(ISPPT)*( 2.d0 - qe_erfc(X) )/fspin
+           Z1 = Z1 + WEIGHT(ISPPT)*( 2.d0 - erfc(X) )/fspin
         ELSEIF(ISMEAR.EQ.2) THEN
            Z1 = Z1 + WEIGHT(ISPPT)*FERMID(-X)/fspin
         ELSEIF(ISMEAR.EQ.3) THEN
@@ -454,7 +424,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
         DO  J2 = 1,NBANDS
            X = (XMID - EIGVAL(J2,ISPPT))/DEL
            IF(ISMEAR.EQ.1) THEN
-              Z1 = Z1 + WEIGHT(ISPPT)*( 2.d0 - qe_erfc(X) )/fspin
+              Z1 = Z1 + WEIGHT(ISPPT)*( 2.d0 - erfc(X) )/fspin
            ELSEIF(ISMEAR.EQ.2) THEN
               Z1 = Z1 + WEIGHT(ISPPT)*FERMID(-X)/fspin
            ELSEIF(ISMEAR.EQ.3) THEN
@@ -488,7 +458,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
      DO J = 1,NBANDS
         X = ( EF-EIGVAL(J,ISPPT))/DEL
         IF(ISMEAR.EQ.1) THEN
-           OCC(J,ISPPT) = 2.d0 - qe_erfc(X)  
+           OCC(J,ISPPT) = 2.d0 - erfc(X)  
         ELSEIF(ISMEAR.EQ.2) THEN
            OCC(J,ISPPT) = FERMID(-X)
         ELSEIF(ISMEAR.EQ.3) THEN
@@ -530,7 +500,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
      &    *(2.0d0*x*x-1.d0)*exp(-x*x)/(2.0d0*sqrt(pi))
         ELSEIF(ISMEAR.EQ.4) THEN
            x=abs(x)
-           zeta=eesh*abs(x)*exp(-(x+sq2i)**2)+piesqq*qe_erfc(x+sq2i)
+           zeta=eesh*abs(x)*exp(-(x+sq2i)**2)+piesqq*erfc(x+sq2i)
            delcor=delcor-del*WEIGHT(ISPPT)*zeta
         ELSEIF(ISMEAR.EQ.5) THEN
            a=-0.5634d0
@@ -629,7 +599,6 @@ FUNCTION delthm(xx)
 
   REAL(kind=DP) :: delthm
   REAL(kind=DP), INTENT(in) :: xx
-  REAL(kind=DP), EXTERNAL :: qe_erfc
 
   REAL(kind=DP) :: pi
 
@@ -639,7 +608,7 @@ FUNCTION delthm(xx)
   ELSEIF(XX .LT. -10.D0) THEN
      DELTHM=0.D0
   ELSE
-     DELTHM=(2.D0-qe_erfc(XX))+XX*EXP(-XX*XX)/SQRT(PI)
+     DELTHM=(2.D0-erfc(XX))+XX*EXP(-XX*XX)/SQRT(PI)
   ENDIF
 !
   RETURN
@@ -680,7 +649,6 @@ FUNCTION poshm(x)
 
   REAL(kind=DP) :: poshm
   REAL(kind=DP), INTENT(in) :: x
-  REAL(kind=DP), EXTERNAL :: qe_erfc
 
   REAL(kind=DP) :: pi,a
 
@@ -692,7 +660,7 @@ FUNCTION poshm(x)
   ELSEIF(X .LT. -10.D0) THEN
      POSHM=0.D0
   ELSE
-     POSHM=(2.D0-qe_erfc(X))+(-2.d0*a*x*x+2*x+a)*EXP(-X*X)/SQRT(PI)/2.d0
+     POSHM=(2.D0-erfc(X))+(-2.d0*a*x*x+2*x+a)*EXP(-X*X)/SQRT(PI)/2.d0
   ENDIF
 !
   RETURN
@@ -710,7 +678,6 @@ FUNCTION poshm2(x)
 
   REAL(kind=DP) :: poshm2
   REAL(kind=DP), INTENT(in) :: x
-  REAL(kind=DP), EXTERNAL :: qe_erfc
 
   REAL(kind=DP) :: pi
 
@@ -720,7 +687,7 @@ FUNCTION poshm2(x)
   ELSEIF(X .LT. -10.D0) THEN
      POSHM2=0.D0
   ELSE
-     POSHM2=(2.D0-qe_erfc(X-1.d0/sqrt(2.d0)))+ &
+     POSHM2=(2.D0-erfc(X-1.d0/sqrt(2.d0)))+ &
           &  sqrt(2.d0)*exp(-x*x+sqrt(2.d0)*x-0.5d0)/sqrt(pi)
   ENDIF
 !

@@ -16,6 +16,96 @@
   !
   CONTAINS
     !
+    !!!!!
+    !-----------------------------------------------------------------------
+    SUBROUTINE mix_wrap(ndim, deltaout, deltain, alphamix, iter, n_iter, conv, df, dv)
+    !-----------------------------------------------------------------------
+    !!
+    !!  SH: Wrapper for the linear/broyden mixings (Nov 2021).
+    !!        Note: the linear mixing option is implemented for 
+    !!        benchmarking/development purposes and can be invoked by
+    !!        setting the broyden_beta parameter to a negative value.
+    !!        
+    !
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : zero
+    !
+    IMPLICIT NONE
+    !
+    LOGICAL, INTENT(in) :: conv
+    !! If true convergence reached
+    !
+    INTEGER, INTENT(in) :: ndim
+    !! Dimension of arrays deltaout, deltain
+    INTEGER, INTENT(in) :: iter
+    !! Current iteration number
+    INTEGER, INTENT(in) :: n_iter
+    !! Number of iterations used in the mixing
+    !
+    REAL(KIND = DP), INTENT(in) :: alphamix
+    !! Mixing factor (0 < alphamix <= 1)
+    REAL(KIND = DP), INTENT(inout) :: deltaout(ndim)
+    !! output delta at current iteration
+    REAL(KIND = DP), INTENT(inout) :: deltain(ndim)
+    !! delta at previous iteration
+    REAL(KIND = DP), INTENT(inout) :: df(ndim, n_iter)
+    !! arrays containing info from previous iterations
+    REAL(KIND = DP), INTENT(inout) :: dv(ndim, n_iter)
+    !! arrays containing info from previous iterations
+    !
+    IF (alphamix < zero ) THEN
+      IF ((iter <= 3) .AND. (alphamix < -0.2d0)) THEN
+        CALL mix_linear(ndim, deltaout, deltain, -0.2d0)
+      ELSE
+        CALL mix_linear(ndim, deltaout, deltain, alphamix)
+      ENDIF
+    ELSE
+      IF ((iter <= 3) .AND. (alphamix > 0.2d0)) THEN
+        CALL mix_broyden(ndim, deltaout, deltain, 0.2d0, iter, n_iter, conv, df, dv)
+      ELSE
+        CALL mix_broyden(ndim, deltaout, deltain, alphamix, iter, n_iter, conv, df, dv)
+      ENDIF
+    ENDIF
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE mix_wrap
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE mix_linear(ndim, arout, arin, mixf)
+    !-----------------------------------------------------------------------
+    !!
+    !!  SH: Simple linear mixing for gap, normalization, shift, etc (Nov 2021).
+    !!
+    !
+    USE kinds,         ONLY : DP
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: ndim
+    !! Dimension of arrays deltaout, deltain
+    !
+    REAL(KIND = DP), INTENT(in) :: mixf
+    !! Mixing factor (0 < alphamix <= 1)
+    REAL(KIND = DP), INTENT(inout) :: arout(ndim)
+    !! output delta at current iteration
+    REAL(KIND = DP), INTENT(inout) :: arin(ndim)
+    !! delta at previous iteration
+    !
+    ! Local variables
+    INTEGER :: i
+    !
+    DO i = 1, ndim
+      arin(i) = (1.d0 - DABS(mixf)) * arin(i) + DABS(mixf) * arout(i)
+    ENDDO
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE mix_linear
+    !-----------------------------------------------------------------------
+    !
+    !!!!!
     !-----------------------------------------------------------------------
     SUBROUTINE mix_broyden(ndim, deltaout, deltain, alphamix, iter, n_iter, conv, df, dv)
     !-----------------------------------------------------------------------
@@ -224,9 +314,7 @@
     !
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
-#if ! defined(__GFORTRAN__) || (__GNUC__ > 4 )
     USE, INTRINSIC :: IEEE_ARITHMETIC
-#endif
     !
     IMPLICIT NONE
     !
@@ -282,7 +370,6 @@
       ar = REAL(a(p))
       ai = AIMAG(a(p))
       !
-#if ! defined(__GFORTRAN__) || (__GNUC__ > 4 )
       IF (IEEE_IS_NAN(ar) .OR. IEEE_IS_NAN(ai)) THEN
         !WRITE(stdout, *) (z(i), i = 1, N)
         !WRITE(stdout, *) (u(i), i = 1, N)
@@ -290,7 +377,6 @@
         WRITE(stdout, *) 'One or more Pade coefficients are NaN'
         !CALL errore('pade_coeff', 'one or more coefficients are NaN', 1)
       ENDIF
-#endif
       !
     ENDDO
     !
@@ -387,13 +473,13 @@
     !! This routine computes the adaptative broadening
     !! It requires electronic and phononic velocities
     !! The implemented equation is Eq. 18 of Computer Physics Communications 185, 1747 (2014)
-    !! Samuel Ponce & Francesco Macheda
+    !! 2019: Samuel Ponce & Francesco Macheda
     !!
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : alat, bg
     USE elph2,         ONLY : nbndfst, nkf, dmef, vmef, ibndmin, etf
     USE epwcom,        ONLY : vme, nqf1, nqf2, nqf3
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE constants_epw, ONLY : eps40, ryd2mev, twopi, zero, two, eps6, eps8, eps4
     !
     IMPLICIT NONE
@@ -471,7 +557,7 @@
         e_2 = etf(ibndmin - 1 + jbnd, ikk)
         IF (ABS(e_2 - e_1) < eps4) THEN
           n_av = n_av + 1
-          IF (vme) THEN
+          IF (vme == 'wannier') THEN
             vmek_av(:) = vmek_av(:) + REAL(vmef(:, ibndmin - 1 + jbnd, ibndmin - 1 + jbnd, ikq), KIND = DP)
           ELSE
             vmek_av(:) = vmek_av(:) + REAL(dmef(:, ibndmin - 1 + jbnd, ibndmin - 1 + jbnd, ikq), KIND = DP)
@@ -486,7 +572,7 @@
       DO imode = 1, nmodes
         IF (w(imode) > 0) THEN
           vel_diff(:) = vmeq(:, imode) / (2d0 * w(imode)) - vmek(:, ibnd)
-          !IF (vme) THEN
+          !IF (vme == 'wannier') THEN
           !  vel_diff(:) = REAL(vmefp(:, imode, imode) / &
           !                    (2d0 * w(imode)) - vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikq))
           !ELSE
@@ -521,6 +607,93 @@
     END SUBROUTINE broadening
     !--------------------------------------------------------------------------
     !
+    !--------------------------------------------------------------------------
+    SUBROUTINE broadening_imp(ik, ikk, ikq, eta)
+    !--------------------------------------------------------------------------
+    !!
+    !! This routine computes the adaptative broadening
+    !! It requires electronic and phononic velocities
+    !! The implemented equation is Eq. 18 of Computer Physics Communications 185, 1747 (2014)
+    !! 2019: Samuel Ponce & Francesco Macheda
+    !!
+    USE kinds,         ONLY : DP
+    USE cell_base,     ONLY : alat, bg
+    USE elph2,         ONLY : nbndfst, nkf, dmef, vmef, ibndmin, etf
+    USE epwcom,        ONLY : vme, nqf1, nqf2, nqf3, nkf1, nkf2, nkf3
+    USE modes,         ONLY : nmodes
+    USE constants_epw, ONLY : eps40, ryd2mev, twopi, zero, two, eps6, eps8, eps4
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: ik
+    !! Current k-point on that core
+    INTEGER, INTENT(in) :: ikk
+    !! Current k point on that core (ikk = 2 * ik + 1)
+    INTEGER, INTENT(in) :: ikq
+    !! k+q point on that core
+    REAL(KIND = DP), INTENT(out) :: eta(nbndfst, nkf)
+    !! Adaptative smearing value
+    !
+    ! Local variables
+    INTEGER :: ibnd
+    !! Band index
+    INTEGER :: jbnd
+    !! Band index
+    INTEGER :: n_av
+    !! To average eta_av
+    REAL(KIND = DP) :: vel_diff(3)
+    !! Velocity difference when computed adaptative broadening
+    REAL(KIND = DP) :: eta_tmp(3)
+    !! Temporary adaptative broadening
+    REAL(KIND = DP) :: e_1
+    !! Eigenvalue 1 for deg. testing
+    REAL(KIND = DP) :: e_2
+    !! Eigenvalue 2 for deg. testing
+    REAL(KIND = DP) :: vmek(3, nbndfst)
+    !! Local electron velocity
+    REAL(KIND = DP) :: vmek_av(3)
+    !! Average phonon velocity
+    !
+    vmek(:, :) = zero
+    !
+    ! Average electron velocity
+    DO ibnd = 1, nbndfst
+      e_1 = etf(ibndmin - 1 + ibnd, ikk)
+      vmek_av(:) = zero
+      n_av   = 0
+      DO jbnd = 1, nbndfst
+        e_2 = etf(ibndmin - 1 + jbnd, ikk)
+        IF (ABS(e_2 - e_1) < eps4) THEN
+          n_av = n_av + 1
+          IF (vme == 'wannier') THEN
+            vmek_av(:) = vmek_av(:) + REAL(vmef(:, ibndmin - 1 + jbnd, ibndmin - 1 + jbnd, ikq), KIND = DP)
+          ELSE
+            vmek_av(:) = vmek_av(:) + REAL(dmef(:, ibndmin - 1 + jbnd, ibndmin - 1 + jbnd, ikq), KIND = DP)
+          ENDIF
+        ENDIF
+      ENDDO
+      vmek(:, ibnd) = vmek_av(:) / FLOAT(n_av)
+    ENDDO
+    !
+    DO ibnd = 1, nbndfst
+      IF (SQRT(DOT_PRODUCT(vmek(:, ibnd),vmek(:,ibnd))) < eps40) THEN
+        eta(ibnd, ik) = 1.0d0 / ryd2mev
+      ELSE
+        !eta(ibnd, ik) = 1.0d0 / ryd2mev
+        eta_tmp(1) = (twopi / alat) * ABS(DOT_PRODUCT(vmek(:,ibnd),bg(:, 1)) / DBLE(nkf1))
+        eta_tmp(2) = (twopi / alat) * ABS(DOT_PRODUCT(vmek(:,ibnd),bg(:, 2)) / DBLE(nkf2))
+        eta_tmp(3) = (twopi / alat) * ABS(DOT_PRODUCT(vmek(:,ibnd),bg(:, 3)) / DBLE(nkf3))
+        eta(ibnd, ik) = (1.0d0/SQRT(12.0d0))*(1.0d0/3.0d0)*(eta_tmp(1)+eta_tmp(2)+eta_tmp(3))
+      ENDIF
+      IF (eta(ibnd, ik)*ryd2mev < 1.0d0) THEN
+        eta(ibnd, ik) = 1.0d0 / ryd2mev
+      ENDIF
+    ENDDO
+    !
+    !--------------------------------------------------------------------------
+    END SUBROUTINE broadening_imp
+    !--------------------------------------------------------------------------
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE fermicarrier(itemp, etemp, ef0, efcb, ctype)
     !-----------------------------------------------------------------------
@@ -533,7 +706,7 @@
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : omega, alat, at
     USE io_global, ONLY : stdout
-    USE elph2,     ONLY : etf, nkf, wkf, efnew, nkqf
+    USE elph2,     ONLY : etf, nkf, wkf, efnew, nkqf, partion
     USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, &
                               zero, eps80
     USE noncollin_module, ONLY : noncolin
@@ -599,7 +772,7 @@
     !! Energy of the VBM
     REAL(KIND = DP) :: ecbm
     !! Energy of the CBM
-    REAL(KIND = DP) :: ef
+    REAL(KIND = DP) :: ef_tmp
     !! Energy of the current Fermi level for the bisection method
     REAL(KIND = DP) :: elw
     !! Energy lower bound for the bisection method
@@ -611,6 +784,10 @@
     !! Electron carrier density
     REAL(KIND = DP), PARAMETER :: maxarg = 200.d0
     !! Maximum value for the argument of the exponential
+    REAL(KIND = DP) :: ncarrierp
+    !! ncarrier*fraction of ionized impurities
+    !
+    ncarrierp = ncarrier*partion(itemp)
     !
     IF (assume_metal) THEN
       !! set conduction band chemical potential to 0 since it is irrelevent
@@ -619,7 +796,7 @@
       ef0(itemp) = efermig(etf, nbndsub, nkqf, nelec, wkf, etemp, ngaussw, 0, isk_dummy)
       RETURN
     ENDIF
-    ef      = zero
+    ef_tmp  = zero
     fermi   = zero
     fermicb = zero
     inv_cell = 1.0d0 / omega
@@ -634,72 +811,113 @@
     ENDIF
     icbm = ivbm + 1 ! Nb of bands
     !
+    ! If we only Wannierze valence bands.
+    IF (icbm > nbndsub) icbm = 0
+    !
     ! Initialization value. Should be large enough ...
     evbm = -10000d0
     ecbm = 10000d0 ! In Ry
     !
-    DO ik = 1, nkf
-      ikk = 2 * ik - 1
-      DO ibnd = 1, nbndsub
-        IF (ibnd < ivbm + 1) THEN
-          IF (etf(ibnd, ikk) > evbm) THEN
-            evbm = etf (ibnd, ikk)
+    ! We Wannerize both the CB and VB
+    IF (ivbm > 0 .AND. icbm > 0) THEN
+      DO ik = 1, nkf
+        ikk = 2 * ik - 1
+        DO ibnd = 1, nbndsub
+          IF (ibnd < ivbm + 1) THEN
+            IF (etf(ibnd, ikk) > evbm) THEN
+              evbm = etf(ibnd, ikk)
+            ENDIF
           ENDIF
-        ENDIF
-        ! Find cbm index
-        IF (ibnd > ivbm) THEN
+          ! Find cbm index
+          IF (ibnd > ivbm) THEN
+            IF (etf(ibnd, ikk) < ecbm) THEN
+              ecbm = etf(ibnd, ikk)
+            ENDIF
+          ENDIF
+        ENDDO
+      ENDDO
+      ! Find max and min across pools
+      CALL mp_max(evbm, inter_pool_comm)
+      CALL mp_min(ecbm, inter_pool_comm)
+      IF (itemp == 1) THEN
+        WRITE(stdout, '(5x, "Valence band maximum    = ", f10.6, " eV")') evbm * ryd2ev
+        WRITE(stdout, '(5x, "Conduction band minimum = ", f10.6, " eV")') ecbm * ryd2ev
+      ENDIF
+    ENDIF ! ivbm > 0 .AND. icbm > 0
+    !
+    ! We only Wannierze the valence bands
+    IF (icbm == 0) THEN
+      DO ik = 1, nkf
+        ikk = 2 * ik - 1
+        DO ibnd = 1, nbndsub
+          IF (etf(ibnd, ikk) > evbm) THEN
+            evbm = etf(ibnd, ikk)
+          ENDIF
+        ENDDO
+      ENDDO
+      ! Find max across pools
+      CALL mp_max(evbm, inter_pool_comm)
+      IF (itemp == 1) THEN
+        WRITE(stdout, '(5x, "Valence band maximum    = ", f10.6, " eV")') evbm * ryd2ev
+      ENDIF
+    ENDIF ! icbm == 0
+    !
+    ! If we only Wannierized the conduction bands
+    IF (ivbm == 0) THEN
+      DO ik = 1, nkf
+        ikk = 2 * ik - 1
+        DO ibnd = 1, nbndsub
           IF (etf(ibnd, ikk) < ecbm) THEN
             ecbm = etf(ibnd, ikk)
           ENDIF
-        ENDIF
+        ENDDO
       ENDDO
-    ENDDO
-    !
-    ! Find max and min across pools
-    !
-    CALL mp_max(evbm, inter_pool_comm)
-    CALL mp_min(ecbm, inter_pool_comm)
-    !
-    IF (itemp == 1) THEN
-      WRITE(stdout, '(5x, "Valence band maximum    = ", f10.6, " eV")') evbm * ryd2ev
-      WRITE(stdout, '(5x, "Conduction band minimum = ", f10.6, " eV")') ecbm * ryd2ev
-    ENDIF
+      ! Find min across pools
+      CALL mp_min(ecbm, inter_pool_comm)
+      IF (itemp == 1) THEN
+        WRITE(stdout, '(5x, "Conduction band minimum = ", f10.6, " eV")') ecbm * ryd2ev
+      ENDIF
+    ENDIF ! ivbm == 0
     !
     ! Store e^(e_nk/kbT) on each core
-    DO ik = 1, nkf
-      DO ibnd = 1, nbndsub
-        ikk = 2 * ik - 1
-        ! Because the number are so large. It does lead to instabilities
-        ! Therefore we rescale everything to the VBM
-        IF (ABS(etemp) < eps80) THEN
-          CALL errore('fermicarrier', 'etemp cannot be 0', 1)
-        ELSE
-          arg = (etf(ibnd, ikk) - evbm) / etemp
-        ENDIF
-        !
-        IF (arg < - maxarg) THEN
-          ks_exp(ibnd, ik) = zero
-        ELSE
-          ks_exp(ibnd, ik) = EXP(arg)
-        ENDIF
+    IF (ivbm > 0) THEN
+      DO ik = 1, nkf
+        DO ibnd = 1, nbndsub
+          ikk = 2 * ik - 1
+          ! Because the number are so large. It does lead to instabilities
+          ! Therefore we rescale everything to the VBM
+          IF (ABS(etemp) < eps80) THEN
+            CALL errore('fermicarrier', 'etemp cannot be 0', 1)
+          ELSE
+            arg = (etf(ibnd, ikk) - evbm) / etemp
+          ENDIF
+          !
+          IF (arg < - maxarg) THEN
+            ks_exp(ibnd, ik) = zero
+          ELSE
+            ks_exp(ibnd, ik) = EXP(arg)
+          ENDIF
+        ENDDO
       ENDDO
-    ENDDO
+    ENDIF ! ivbm > 0
     !
     ! Store e^(e_nk/kbT) on each core for the electrons (CBM only)
-    DO ik = 1, nkf
-      DO ibnd = 1, nbndsub
-        ikk = 2 * ik - 1
-        ! Because the number are so large. It does lead to instabilities
-        ! Therefore we rescale everything to the CBM
-        arg = (etf(ibnd, ikk) - ecbm) / etemp
-        !
-        IF (arg > maxarg) THEN
-          ks_expcb(ibnd, ik) = 1.0d200
-        ELSE
-          ks_expcb(ibnd, ik) = EXP(arg)
-        ENDIF
+    IF (icbm > 0) THEN
+      DO ik = 1, nkf
+        DO ibnd = 1, nbndsub
+          ikk = 2 * ik - 1
+          ! Because the number are so large. It does lead to instabilities
+          ! Therefore we rescale everything to the CBM
+          arg = (etf(ibnd, ikk) - ecbm) / etemp
+          !
+          IF (arg > maxarg) THEN
+            ks_expcb(ibnd, ik) = 1.0d200
+          ELSE
+            ks_expcb(ibnd, ik) = EXP(arg)
+          ENDIF
+        ENDDO
       ENDDO
-    ENDDO
+    ENDIF ! icbm > 0
     !
     ! Case 1 : Intrinsic mobilities (electron and hole concentration are the same)
     ! Starting bounds energy for the biscection method. The energies are rescaled to the VBM
@@ -710,10 +928,10 @@
       DO i = 1, maxiter
         !
         !WRITE(stdout,*),'Iteration ',i
-        ! We want ef = (eup + elw) / 2.d0 but the variables are exp therefore:
-        ef = DSQRT(eup) * DSQRT(elw)
+        ! We want ef_tmp = (eup + elw) / 2.d0 but the variables are exp therefore:
+        ef_tmp = DSQRT(eup) * DSQRT(elw)
         !
-        !WRITE(stdout,*),'ef ', - log (ef) * etemp * ryd2ev
+        !WRITE(stdout,*),'ef_tmp ', - log (ef_tmp) * etemp * ryd2ev
         hole_density = zero
         electron_density = zero
         DO ik = 1, nkf
@@ -721,10 +939,10 @@
           ! Compute hole carrier concentration
           DO ibnd = 1, ivbm
             ! Discard very large numbers
-            IF (ks_exp(ibnd, ik) * ef > 1d60) THEN
+            IF (ks_exp(ibnd, ik) * ef_tmp > 1d60) THEN
               fnk = zero
             ELSE
-              fnk = 1.0d0 / (ks_exp(ibnd, ik) * ef  + 1.0d0)
+              fnk = 1.0d0 / (ks_exp(ibnd, ik) * ef_tmp  + 1.0d0)
             ENDIF
             ! The wkf(ikk) already include a factor 2
             hole_density = hole_density + wkf(ikk) * (1.0d0 - fnk)
@@ -732,10 +950,10 @@
           ! Compute electron carrier concentration
           DO ibnd = icbm, nbndsub
             ! Discard very large numbers
-            IF (ks_exp(ibnd, ik) * ef > 1d60) THEN
+            IF (ks_exp(ibnd, ik) * ef_tmp > 1d60) THEN
               fnk = zero
             ELSE
-              fnk = 1.0d0 / (ks_exp(ibnd, ik) * ef  + 1.0d0)
+              fnk = 1.0d0 / (ks_exp(ibnd, ik) * ef_tmp  + 1.0d0)
             ENDIF
             ! The wkf(ikk) already include a factor 2
             electron_density = electron_density + wkf(ikk) * fnk
@@ -756,28 +974,32 @@
         ENDIF
         !
         IF (ABS(rel_err) < eps5) THEN
-          fermi_exp = ef
+          fermi_exp = ef_tmp
           fermi = evbm - (LOG(fermi_exp) * etemp)
           EXIT
         ELSEIF ((rel_err) > eps5) THEN
-          elw = ef
+          elw = ef_tmp
         ELSE
-          eup = ef
+          eup = ef_tmp
         ENDIF
       ENDDO ! iteration
     ENDIF
     !
     ! Case 2 :
     ! Hole doped mobilities (Carrier concentration should be larger than 1E5 cm^-3)
-    factor = inv_cell * (bohr2ang * ang2cm)**(-3.d0)
+    IF (system_2d) THEN
+      factor = inv_cell * (bohr2ang * ang2cm)**(-2.d0)
+    ELSE
+      factor = inv_cell * (bohr2ang * ang2cm)**(-3.d0)
+    ENDIF
     eup = 1d-160 ! e^(-large) = 0.0 (small)
-    elw = 1.0d0 ! e^0 = 1
-    IF (ncarrier < -1E5 .OR. (int_mob .AND. carrier)) THEN
-      IF (int_mob .AND. carrier) ncarrier = -ABS(ncarrier)
+    elw = 1.0d40 ! e^0 = 1
+    IF (ncarrierp < -1E5 .OR. (int_mob .AND. carrier)) THEN
+      IF (int_mob .AND. carrier) ncarrierp = -ABS(ncarrierp)
       ! Use bisection method
       DO i = 1, maxiter
-        ! We want ef = (eup + elw) / 2.d0 but the variables are exp therefore:
-        ef = DSQRT(eup) * DSQRT(elw)
+        ! We want ef_tmp = (eup + elw) / 2.d0 but the variables are exp therefore:
+        ef_tmp = DSQRT(eup) * DSQRT(elw)
         !
         hole_density = zero
         DO ik = 1, nkf
@@ -785,10 +1007,10 @@
           ! Compute hole carrier concentration
           DO ibnd = 1, ivbm
             ! Discard very large numbers
-            IF (ks_exp(ibnd, ik) * ef > 1d60) THEN
+            IF (ks_exp(ibnd, ik) * ef_tmp > 1d60) THEN
               fnk = 0.0d0
             ELSE
-              fnk = 1.0d0 / (ks_exp(ibnd, ik) * ef  + 1.0d0)
+              fnk = 1.0d0 / (ks_exp(ibnd, ik) * ef_tmp  + 1.0d0)
             ENDIF
             ! The wkf(ikk) already include a factor 2
             hole_density = hole_density + wkf(ikk) * (1.0d0 - fnk) * factor
@@ -804,30 +1026,30 @@
           rel_err = -1000.0d0
         ELSE
           ! In this case ncarrier is a negative number
-          rel_err = (hole_density - ABS(ncarrier)) / hole_density
+          rel_err = (hole_density - ABS(ncarrierp)) / hole_density
         ENDIF
         !
         IF (ABS(rel_err) < eps5) THEN
-          fermi_exp = ef
+          fermi_exp = ef_tmp
           fermi = evbm - (LOG(fermi_exp) * etemp)
           EXIT
         ELSEIF ((rel_err) > eps5) THEN
-          elw = ef
+          elw = ef_tmp
         ELSE
-          eup = ef
+          eup = ef_tmp
         ENDIF
       ENDDO ! iteration
     ENDIF
     !
     ! Case 3 : Electron doped mobilities (Carrier concentration should be larger than 1E5 cm^-3)
-    eup = 1.0d0 ! e^(0) =1
+    eup = 1.0d-40 ! e^(0) =1
     elw = 1.0d80 ! e^large yields fnk = 1
-    IF (ncarrier > 1E5 .OR. (int_mob .AND. carrier)) THEN
-      IF (int_mob .AND. carrier) ncarrier = ABS(ncarrier)
+    IF (ncarrierp > 1E5 .OR. (int_mob .AND. carrier)) THEN
+      IF (int_mob .AND. carrier) ncarrierp = ABS(ncarrierp)
       ! Use bisection method
       DO i = 1, maxiter
-        ! We want ef = (eup + elw) / 2.d0 but the variables are exp therefore:
-        ef = DSQRT(eup) * DSQRT(elw)
+        ! We want ef_tmp = (eup + elw) / 2.d0 but the variables are exp therefore:
+        ef_tmp = DSQRT(eup) * DSQRT(elw)
         !
         electron_density = zero
         DO ik = 1, nkf
@@ -835,10 +1057,10 @@
           ! Compute electron carrier concentration
           DO ibnd = icbm, nbndsub
             ! Discard very large numbers
-            IF (ks_expcb(ibnd, ik) * ef > 1d60) THEN
+            IF (ks_expcb(ibnd, ik) * ef_tmp > 1d60) THEN
               fnk = zero
             ELSE
-              fnk = 1.0d0 / (ks_expcb(ibnd, ik) * ef  + 1.0d0)
+              fnk = 1.0d0 / (ks_expcb(ibnd, ik) * ef_tmp  + 1.0d0)
             ENDIF
             ! The wkf(ikk) already include a factor 2
             electron_density = electron_density + wkf(ikk) * fnk * factor
@@ -852,24 +1074,24 @@
           rel_err = 1000.0d0
         ELSE
           ! In this case ncarrier is a negative number
-          rel_err = (electron_density - ncarrier) / electron_density
+          rel_err = (electron_density - ncarrierp) / electron_density
         ENDIF
         !
         IF (ABS(rel_err) < eps5) THEN
-          fermi_exp = ef
+          fermi_exp = ef_tmp
           fermicb = ecbm - (LOG(fermi_exp) * etemp)
           EXIT
         ELSEIF ((rel_err) > eps5) THEN
-          eup = ef
+          eup = ef_tmp
         ELSE
-          elw = ef
+          elw = ef_tmp
         ENDIF
       ENDDO ! iteration
     ENDIF
     !
     IF (i == maxiter) THEN
       WRITE(stdout, '(5x, "Warning: too many iterations in bisection"/ &
-                    5x, "ef = ", f10.6)' ) fermi * ryd2ev
+                    5x, "ef_tmp = ", f10.6)' ) fermi * ryd2ev
     ENDIF
     !
     ! Print results
@@ -883,7 +1105,7 @@
       ef0(itemp) = fermi
       WRITE(stdout, '(5x, "Mobility Fermi level = ", f10.6, " eV")' )  ef0(itemp) * ryd2ev
       ! We only compute 1 Fermi level so we do not need the other
-      efcb(itemp) = 0
+      efcb(itemp) = zero
       ctype = -1
       !
     ENDIF
@@ -905,11 +1127,11 @@
     IF (.NOT. int_mob .AND. carrier) THEN
       !
       ! VB only
-      IF (ncarrier < 0.0d0) THEN
+      IF (ncarrierp < 0.0d0) THEN
         ef0(itemp) = fermi
         WRITE(stdout, '(5x, "Mobility VB Fermi level = ", f10.6, " eV")' )  ef0(itemp) * ryd2ev
         ! We only compute 1 Fermi level so we do not need the other
-        efcb(itemp) = 0
+        efcb(itemp) = zero
         ctype = -1
       ELSE ! CB
         efcb(itemp) = fermicb
@@ -930,7 +1152,7 @@
         ef0(itemp) = efnew
       ENDIF
       ! We only compute 1 Fermi level so we do not need the other
-      efcb(itemp) = 0
+      efcb(itemp) = zero
       ctype = -1
       !
     ENDIF
@@ -939,6 +1161,263 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE fermicarrier
     !-----------------------------------------------------------------------
+    !
+    !!!!
+    !-----------------------------------------------------------------------
+    SUBROUTINE calcpartion(itemp, etemp, ctype)
+    !-----------------------------------------------------------------------
+    !!
+    !!  This routine computes the Fermi energy associated with a given
+    !!  carrier concentration using bissection for insulators or
+    !!  semi-conductors.
+    !!
+    !-----------------------------------------------------------------------
+    USE kinds,     ONLY : DP
+    USE cell_base, ONLY : omega, alat, at
+    USE io_global, ONLY : stdout
+    USE elph2,     ONLY : etf, nkf, wkf, efnew, nkqf, partion
+    USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, &
+                              zero, eps80, cc2cb
+    USE noncollin_module, ONLY : noncolin
+    USE pwcom,     ONLY : nelec
+    USE epwcom,    ONLY : int_mob, nbndsub, ncarrier, nstemp, fermi_energy, &
+                          system_2d, carrier, efermi_read, assume_metal, ngaussw, &
+                          ii_eda, ii_n
+    USE klist_epw, ONLY : isk_dummy
+    USE mp,        ONLY : mp_barrier, mp_sum, mp_max, mp_min
+    USE mp_global, ONLY : inter_pool_comm
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: itemp
+    !! Temperature index
+    INTEGER, INTENT(out) :: ctype
+    !! Calculation type: -1 = hole, +1 = electron and 0 = both.
+    REAL(KIND = DP), INTENT(in) :: etemp
+    !! Temperature in kBT [Ry] unit.
+    !
+    ! Local variables
+    INTEGER :: i
+    !! Index for the bisection iteration
+    INTEGER :: ik
+    !! k-point index per pool
+    INTEGER :: ikk
+    !! Odd index to read etf
+    INTEGER :: ibnd
+    !! Local band index
+    INTEGER :: ivbm
+    !! Index of the VBM
+    INTEGER :: icbm
+    !! Index of the CBM
+    INTEGER, PARAMETER :: maxiter = 500 ! 300
+    !! Maximum interation
+    REAL(KIND = DP) :: fermi
+    !! Fermi level returned
+    REAL(KIND = DP) :: fermicb
+    !! Fermi level returned for second Fermi level
+    REAL(KIND = DP) :: fnk
+    !! Fermi-Diract occupation
+    REAL(KIND = DP) :: ks_exp(nbndsub, nkf)
+    !! Exponential of the eigenvalues divided by kBT
+    REAL(KIND = DP) :: ks_expcb(nbndsub, nkf)
+    !! Exponential of the eigenvalues divided by kBT for CB
+    REAL(KIND = DP) :: fermi_exp
+    !! Fermi level in exponential format
+    REAL(KIND = DP) :: rel_err
+    !! Relative error
+    REAL(KIND = DP) :: factor
+    !! Factor that goes from number of carrier per unit cell to number of
+    !! carrier per cm^-3
+    REAL(KIND = DP) :: arg
+    !! Argument of the exponential
+    REAL(KIND = DP) :: inv_cell
+    !! Inverse of the volume in [Bohr^{-3}]
+    REAL(KIND = DP) :: evbm
+    !! Energy of the VBM
+    REAL(KIND = DP) :: ecbm
+    !! Energy of the CBM
+    REAL(KIND = DP) :: ef_tmp
+    !! Energy of the current Fermi level for the bisection method
+    REAL(KIND = DP) :: elw
+    !! Energy lower bound for the bisection method
+    REAL(KIND = DP) :: eup
+    !! Energy upper bound for the bisection method
+    REAL(KIND = DP) :: hole_density
+    !! Hole carrier density
+    REAL(KIND = DP) :: electron_density
+    !! Electron carrier density
+    REAL(KIND = DP), PARAMETER :: maxarg = 200.d0
+    !! Maximum value for the argument of the exponential
+    REAL(KIND = DP) :: eimp
+    !! Ionization energy of the impurity state, relative to band energies
+    REAL(KIND = DP) :: dummy1
+    !! Dummy var, intermediate for sums
+    REAL(KIND = DP) :: impurity_partion
+    !! density of ionized impurities
+    REAL(KIND = DP) :: impurity_density
+    !! density of dopants in per cubic Bohr
+    !
+    ! Convert impurity density to per cubic Bohr
+    impurity_density = ii_n * omega / cc2cb
+    !
+    ! Decide ctype
+    ctype = 0
+    IF (ncarrier > 0.0d0) THEN
+      ctype = 1
+    ELSEIF (ncarrier < 0.0d0) THEN
+      ctype = -1
+    ENDIF
+    IF (int_mob) THEN
+      ctype = 0
+    ENDIF
+    !
+    IF (ctype == 0) THEN
+      WRITE(stdout, '(5x, "Warning! partial ionization not implemented for ctype=0")')
+      RETURN
+    ENDIF
+    IF (assume_metal) THEN
+      !! set conduction band chemical potential to 0 since it is irrelevent
+      !!ctype = -1  ! act like it's for holes
+      !!efcb(itemp) = zero
+      !!ef0(itemp) = efermig(etf, nbndsub, nkqf, nelec, wkf, etemp, ngaussw, 0, isk_dummy)
+      WRITE(stdout, '(5x, "Warning! No partial ionization for metallic systems, exiting")')
+      RETURN
+    ENDIF
+    !ef_tmp  = zero
+    !fermi   = zero
+    !fermicb = zero
+    inv_cell = 1.0d0 / omega
+    !
+    ! for 2d system need to divide by area (vacuum in z-direction)
+    IF (system_2d) inv_cell = inv_cell * at(3, 3) * alat
+    ! vbm index
+    IF (noncolin) THEN
+      ivbm = FLOOR(nelec / 1.0d0)
+    ELSE
+      ivbm = FLOOR(nelec / 2.0d0)
+    ENDIF
+    icbm = ivbm + 1 ! Nb of bands
+    !
+    ! If we only Wannierze valence bands.
+    IF (icbm > nbndsub) icbm = 0
+    !
+    ! Initialization value. Should be large enough ...
+    evbm = -10000d0
+    ecbm = 10000d0 ! In Ry
+    !
+    ! We Wannerize both the CB and VB
+    IF (ivbm > 0 .AND. icbm > 0) THEN
+      DO ik = 1, nkf
+        ikk = 2 * ik - 1
+        DO ibnd = 1, nbndsub
+          IF (ibnd < ivbm + 1) THEN
+            IF (etf(ibnd, ikk) > evbm) THEN
+              evbm = etf(ibnd, ikk)
+            ENDIF
+          ENDIF
+          ! Find cbm index
+          IF (ibnd > ivbm) THEN
+            IF (etf(ibnd, ikk) < ecbm) THEN
+              ecbm = etf(ibnd, ikk)
+            ENDIF
+          ENDIF
+        ENDDO
+      ENDDO
+      ! Find max and min across pools
+      CALL mp_max(evbm, inter_pool_comm)
+      CALL mp_min(ecbm, inter_pool_comm)
+      IF (itemp == 1) THEN
+        WRITE(stdout, '(5x, "Valence band maximum    = ", f10.6, " eV")') evbm * ryd2ev
+        WRITE(stdout, '(5x, "Conduction band minimum = ", f10.6, " eV")') ecbm * ryd2ev
+      ENDIF
+    ENDIF ! ivbm > 0 .AND. icbm > 0
+    !
+    ! We only Wannierze the valence bands
+    IF (icbm == 0) THEN
+      DO ik = 1, nkf
+        ikk = 2 * ik - 1
+        DO ibnd = 1, nbndsub
+          IF (etf(ibnd, ikk) > evbm) THEN
+            evbm = etf(ibnd, ikk)
+          ENDIF
+        ENDDO
+      ENDDO
+      ! Find max across pools
+      CALL mp_max(evbm, inter_pool_comm)
+      IF (itemp == 1) THEN
+        WRITE(stdout, '(5x, "Valence band maximum    = ", f10.6, " eV")') evbm * ryd2ev
+      ENDIF
+    ENDIF ! icbm == 0
+    !
+    ! If we only Wannierized the conduction bands
+    IF (ivbm == 0) THEN
+      DO ik = 1, nkf
+        ikk = 2 * ik - 1
+        DO ibnd = 1, nbndsub
+          IF (etf(ibnd, ikk) < ecbm) THEN
+            ecbm = etf(ibnd, ikk)
+          ENDIF
+        ENDDO
+      ENDDO
+      ! Find min across pools
+      CALL mp_min(ecbm, inter_pool_comm)
+      IF (itemp == 1) THEN
+        WRITE(stdout, '(5x, "Conduction band minimum = ", f10.6, " eV")') ecbm * ryd2ev
+      ENDIF
+    ENDIF ! ivbm == 0
+    !
+    IF (ctype == -1) THEN
+      dummy1 = 0.0d0
+      ! Calc impuirty energy relative to bands
+      eimp = evbm + ii_eda
+      ! Now, loop through temp, ik, and ibnd
+      DO ik = 1, nkf
+        ikk = 2 * ik - 1
+        DO ibnd = 1, nbndsub
+          dummy1 = dummy1 + (1.0d0 - (1.0d0 / (EXP((etf(ibnd, ikk)-eimp)/(etemp))+1.0d0)))*wkf(ikk)
+        ENDDO
+      ENDDO
+      CALL mp_sum(dummy1, inter_pool_comm)
+      !! now calculate fraction of ionized impurities in partion(itemp)
+      partion(itemp) = SQRT(impurity_density*dummy1) / impurity_density
+      !! equation will give values greater than 1, 
+      !! enforce fraction == 1.0 for full ionization
+      IF ( partion(itemp) > 1.0d0 ) THEN
+        partion(itemp) = 1.0d0
+      ENDIF
+      !WRITE(stdout, '(/5x, "Temperature ", f8.3, " K")' ) etemp * ryd2ev / kelvin2eV
+      WRITE(stdout, '(/5x, "Fraction of ionized impurities at ", f8.3," K: ", f16.12)' ) etemp * ryd2ev / kelvin2eV, partion(itemp)
+    ENDIF
+    !
+    IF (ctype == 1) THEN
+      dummy1 = 0.0d0
+      ! Calc impuirty energy relative to bands
+      eimp = ecbm - ii_eda
+      ! Now, loop through temp, ik, and ibnd
+      DO ik = 1, nkf
+        ikk = 2 * ik - 1
+        DO ibnd = 1, nbndsub
+          dummy1 = dummy1 + (1.0d0 / (EXP((etf(ibnd, ikk)-eimp)/(etemp))+1.0d0))*wkf(ikk)
+        ENDDO
+      ENDDO
+      CALL mp_sum(dummy1, inter_pool_comm)
+      !! now calculate fraction of ionized impurities in partion(itemp)
+      partion(itemp) = SQRT(impurity_density*dummy1) / impurity_density
+      !! equation will give values greater than 1, 
+      !! enforce fraction == 1.0 for full ionization
+      IF ( partion(itemp) > 1.0d0 ) THEN
+        partion(itemp) = 1.0d0
+      ENDIF
+      !WRITE(stdout, '(/5x, "Temperature ", f8.3, " K")' ) etemp * ryd2ev / kelvin2eV
+      WRITE(stdout, '(/5x, "Fraction of ionized impurities at ", f8.3," K: ", f16.12)' ) etemp * ryd2ev / kelvin2eV, partion(itemp)
+    ENDIF
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE calcpartion
+    !-----------------------------------------------------------------------
+    !!!!!
     !
     !-----------------------------------------------------------------------
     SUBROUTINE fermiwindow()
@@ -955,7 +1434,7 @@
     USE pwcom,         ONLY : ef
     USE mp,            ONLY : mp_max, mp_min
     USE mp_global,     ONLY : inter_pool_comm
-    USE epwcom,        only : wfcelec
+    USE constants_epw, ONLY : ryd2ev
     !
     IMPLICIT NONE
     !
@@ -990,22 +1469,6 @@
         !
       ENDDO
     ENDDO
-    if (wfcelec) then
-        DO ik = 1, nkqf
-          DO ibnd = 1, nbndsub
-            ebnd = etf(ibnd, ik)
-            !
-            IF (ebnd < fsthick + ef .and. ebnd > ef) THEN
-            !IF (ABS(ebnd - ef) < fsthick) THEN
-              ibndmin = MIN(ibnd, ibndmin)
-              ibndmax = MAX(ibnd, ibndmax)
-              ebndmin = MIN(ebnd, ebndmin)
-              ebndmax = MAX(ebnd, ebndmax)
-            ENDIF
-            !
-          ENDDO
-        ENDDO
-    end if
     !
     tmp = DBLE(ibndmin)
     CALL mp_min(tmp, inter_pool_comm)
@@ -1017,8 +1480,8 @@
     ibndmax = NINT(tmp)
     CALL mp_max(ebndmax, inter_pool_comm)
     !
-    WRITE(stdout,'(/14x,a,i5,2x,a,f9.3)') 'ibndmin = ', ibndmin, 'ebndmin = ', ebndmin
-    WRITE(stdout,'(14x,a,i5,2x,a,f9.3/)') 'ibndmax = ', ibndmax, 'ebndmax = ', ebndmax
+    WRITE(stdout,'(/14x,a,i5,2x,a,f9.3,a)') 'ibndmin = ', ibndmin, 'ebndmin = ', ebndmin * ryd2ev, ' eV'
+    WRITE(stdout,'(14x,a,i5,2x,a,f9.3,a/)') 'ibndmax = ', ibndmax, 'ebndmax = ', ebndmax * ryd2ev, ' eV'
     !
     !----------------------------------------------------------------------
     END SUBROUTINE fermiwindow

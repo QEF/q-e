@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
@@ -99,7 +99,7 @@ cat > $PREFIX.scf.in << EOF
     ibrav = 7,
     celldm(1) = 7.80,
     celldm(3) = 1.4142136,
-    nat = 4, 
+    nat = 4,
     ntyp = 3,
     ecutwfc = 50.0
     ecutrho = 400.0
@@ -109,27 +109,25 @@ cat > $PREFIX.scf.in << EOF
     nspin = 2,
     starting_magnetization(1) = 0.5
     starting_magnetization(2) = 0.5
-    lda_plus_u = .true.,
-    lda_plus_u_kind = 0,
-    U_projection_type = 'ortho-atomic',
-    Hubbard_U(1) = 1.d-8
-    Hubbard_U(2) = 1.d-8
  /
  &electrons
     conv_thr =  1.d-15
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
- Mn  54.938  Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF 
- Ni  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF 
+ Mn  54.938  Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF
+ Ni  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF
  Ga  69.723  Ga.pbesol-dn-rrkjus_psl.0.2.UPF
 ATOMIC_POSITIONS {crystal}
  Mn 0.0000000000   0.0000000000   0.0000000000
- Ni 0.5000000000   0.7500000000   0.2500000000 
- Ni 0.5000000000   0.2500000000   0.7500000000 
+ Ni 0.5000000000   0.7500000000   0.2500000000
+ Ni 0.5000000000   0.2500000000   0.7500000000
  Ga 0.0000000000   0.5000000000   0.5000000000
 K_POINTS {automatic}
  4 4 4 0 0 0
+HUBBARD {ortho-atomic}
+U Mn-3d 0.0001
+U Ni-3d 0.0001
 EOF
 $ECHO "  Running the SCF calculation for $PREFIX..."
 $PW_COMMAND < $PREFIX.scf.in > $PREFIX.scf.out
@@ -241,7 +239,7 @@ $HP_COMMAND < $PREFIX.hp.Ni.step3.in > $PREFIX.hp.Ni.step3.out
 $ECHO " done"
 
 
-# Final step: collect all pieces of the response matrices 
+# Final step: collect all pieces of the response matrices
 # chi0 and chi1, invert them and calculate U for Mn and Ni
 cat > $PREFIX.hp.final.in << EOF
  &inputhp

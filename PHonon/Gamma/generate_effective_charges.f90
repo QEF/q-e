@@ -8,19 +8,23 @@
 !
 !-----------------------------------------------------------------------
 SUBROUTINE generate_effective_charges (nat, nsym, s, invs, irt, at, bg, &
-     n_diff_sites, equiv_atoms, has_equivalent, zstar)
+                        n_diff_sites, equiv_atoms, has_equivalent, zstar)
   !-----------------------------------------------------------------------
-  !
-  ! generate all effective charges
+  !! Generate all effective charges.
   !
   USE kinds, ONLY : DP
   USE symme, ONLY : crys_to_cart, cart_to_crys
+  !
   IMPLICIT NONE
-  INTEGER :: nat, nsym, n_diff_sites, irt(48,nat), equiv_atoms(nat,nat),&
-       s(3,3,48), has_equivalent(nat), invs(48)
-  INTEGER :: isym, na, ni, nj, sni, i, j, k, l
+  !
+  INTEGER  :: nat, nsym, n_diff_sites, irt(48,nat), equiv_atoms(nat,nat), &
+              s(3,3,48), has_equivalent(nat), invs(48)
   real(DP) :: zstar(3,3,nat), at(3,3), bg(3,3)
+  !
+  ! ... local variables
+  !
   LOGICAL :: done(nat), no_equivalent_atoms
+  INTEGER :: isym, na, ni, nj, sni, i, j, k, l
   !
   no_equivalent_atoms=.true.
   DO na = 1,nat

@@ -1,0 +1,329 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!-- *** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST *** --><meta http-equiv="Content-Style-Type" CONTENT="text/css">
+<style>
+	  body {
+	  background-color:#ffffff;
+	  font:normal 14px/1.8em arial, helvetica, sans-serif;
+	  width:900px;
+	  text-align:justify;
+	  margin: 30 10 10 30;
+	  }
+
+	  h1 {
+	  font-size:24px;
+	  }
+	  
+	  h2 {
+	  font-size:18px;
+	  }
+	  
+	  h3 {
+	  font-size:16px;
+	  }
+	  pre, tt, code {
+	  font-size:14px;
+	  }	  
+	  .syntax, .syntax table {
+	  font-size:14px;
+	  }
+	  span.namelist {
+	  color: #214478;
+	  }
+	  span.card {
+	  color: #782167;
+	  }
+	  span.flag {
+	  color: #008000;
+	  font-weight: bold;
+	  }
+	</style>
+<title>q2r.x: input description</title>
+</head>
+<body>
+<a name="__top__"></a><table style="border-width: 0; table-layout: auto; width: 100%; text-align: left; vertical-align: top; background: #00395a;">
+<tr><th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
+<h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
+<h2 style="margin: 10 10 10 15; text-align: left;"> Program:
+	      q2r.x / PHonon / Quantum ESPRESSO<span style="font-weight: normal;"> (version: 7.2)</span>
+</h2>
+</th></tr>
+<tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
+   <blockquote style="margin-bottom: 2em;">
+<h3>TABLE OF CONTENTS</h3>
+<blockquote>
+   
+   
+   <p><a href="#idm3">INTRODUCTION</a></p>
+   <p><a href="#idm10">&amp;INPUT</a></p>
+<blockquote>
+<a href="#idm11">fildyn</a> | <a href="#idm19">flfrc</a> | <a href="#idm22">zasr</a> | <a href="#idm32">loto_2d</a> | <a href="#idm35">write_lr</a>
+</blockquote>
+   <p><a href="#idm45">Line-of-input:</a> <a href="#idm47">nr1</a> | <a href="#idm48">nr2</a> | <a href="#idm49">nr3</a></p>
+<p><a href="#idm51">fileSpecs</a></p>
+<blockquote>
+<a href="#idm54">nfile</a> | <a href="#idm59">file</a>
+</blockquote>
+</blockquote>
+</blockquote>
+   <blockquote>
+<a name="idm3"></a><h3>INTRODUCTION</h3>
+<blockquote><pre>
+<b>Purpose of q2r.x:</b>
+
+It reads force constant matrices C(q) produced by the <b>ph.x</b> code
+for a grid of q-points and calculates the corresponding set
+of interatomic force constants (IFC), C(R)
+
+<b>Input data format:</b> [ ] = it depends
+
+<b>Structure of the input data:</b>
+========================================================================
+
+<b>&amp;INPUT</b>
+   ...specs of namelist variables...
+<b>/</b>
+
+[ nr1 nr2 nr3
+  nfile
+     file(1)
+     file(2)
+     ...
+     file(nfile) ]
+   </pre></blockquote>
+</blockquote>
+   <a name="idm10"></a><a name="INPUT"></a><table border="0" width="100%" style="margin-bottom: 20;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>INPUT</span>
+</h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
+      <a name="idm11"></a><a name="fildyn"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fildyn</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> REQUIRED
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Input file name (must be specified).
+
+<b>"fildyn"0</b> contains information on the q-point grid
+
+<b>"fildyn"1-N</b> contain force constants C_n = C(q_n),
+     where <b>n = 1,...N</b>, where N is the number of
+     q-points in the irreducible brillouin zone.
+
+Normally this should be the same as specified on input
+to the phonon code.
+
+In the non collinear/spin-orbit case the files
+produced by <b>ph.x</b> are in .xml format. In this case
+<a href="#fildyn">fildyn</a> is the same as in the phonon code + the
+.xml extension.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm19"></a><a name="flfrc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">flfrc</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> REQUIRED
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Output file containing the IFC in real space (must be specified)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm22"></a><a name="zasr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">zasr</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'no'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;">
+Indicates the type of Acoustic Sum Rules used for the Born
+effective charges.
+
+Allowed values:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'no'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+no Acoustic Sum Rules imposed (default)
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'simple'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+previous implementation of the asr used
+(3 translational asr imposed by correction of
+ the diagonal elements of the force-constants matrix)
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'crystal'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+3 translational asr imposed by optimized
+correction of the IFC (projection)
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'one-dim'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+3 translational asr + 1 rotational asr
+imposed by optimized correction of the IFC (the
+rotation axis is the direction of periodicity; it
+will work only if this axis considered is one of
+the cartesian axis).
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'zero-dim'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+3 translational asr + 3 rotational asr
+imposed by optimized correction of the IFC.
+            </pre></dd>
+</dl>
+<pre style="margin-bottom: -1em;">
+Note that in certain cases, not all the rotational asr
+can be applied (e.g. if there are only 2 atoms in a
+molecule or if all the atoms are aligned, etc.).
+In these cases the supplementary asr are cancelled
+during the orthonormalization procedure (see below).
+            </pre>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm32"></a><a name="loto_2d"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">loto_2d</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+set to <b>.true.</b> to activate two-dimensional treatment
+of LO-TO splitting.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm35"></a><a name="write_lr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">write_lr</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> <tt>.false.</tt>
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+set to <b>.true.</b> to write long-range IFC into q2r IFC file.
+This is required when enforcing asr='all' for infrared-
+active solids in matdyn. An additional column will be written
+for long-range part of IFC for text format, while a tag named
+IFC_LR will be created for xml format.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+   </td></tr></tbody></table></td></tr>
+</table>
+   <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; width: 100%; padding: 5 5 0 5"><tr><td>
+<b>IF </b><tt><em>file {fildyn}0 does not exist</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+         <p><pre>
+If a file <b>"fildyn"0</b> is not found, the code will ignore variable
+<a href="#fildyn">fildyn</a> and will try to read from the following cards the missing
+information on the q-point grid and file names:
+         </pre></p>
+         <a name="idm45"></a><table border="0" width="100%" style="margin-bottom: 20; ">
+<tr><th bgcolor="#ddcba6"><h3 style="margin: 10 10 10 15; text-align: left;"> 
+	    Line of input 
+	  </h3></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%; "><tbody>
+<tr><td>
+<h3>Syntax:</h3>
+<blockquote>
+<i><a href="#idm47">nr1</a></i>  <i><a href="#idm48">nr2</a></i>  <i><a href="#idm49">nr3</a></i>  </blockquote>
+</td></tr>
+<tr><td>
+<h3>Description of items:</h3>
+<blockquote>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
+<a name="idm47"></a><a name="nr1"></a>nr1, <a name="idm48"></a><a name="nr2"></a>nr2, <a name="idm49"></a><a name="nr3"></a>nr3</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+dimensions of the FFT grid formed by the q-point grid
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+</blockquote>
+</td></tr>
+</tbody></table></td></tr>
+</table>
+         <a name="idm51"></a><a name="fileSpecs"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
+	    Card: <span class="card">fileSpecs</span> </h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
+<tr><td>
+<h3>Syntax:</h3>
+<blockquote><div class="syntax">
+<i><a href="#idm54">nfile</a></i>  <br><a name="idm57"></a><table>
+<tr><td style="white-space:nowrap"> <i><a href="#idm59">file(1)</a></i> </td></tr>
+<tr><td style="white-space:nowrap"> <i><a href="#idm59">file(2)</a></i> </td></tr>
+<tr><td colspan="2"> . . .</td></tr>
+<tr><td style="white-space:nowrap"> <i><a href="#idm59">file(nfile)</a></i> </td></tr>
+</table>
+</div></blockquote>
+</td></tr>
+<tr><td>
+<h3>Description of items:</h3>
+<blockquote>
+<a name="idm54"></a><a name="nfile"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nfile</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+number of files containing C(q_n), n=1,<a href="#nfile">nfile</a>
+                     </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="file"><a name="idm59">file</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+names of the files containing C(q_n), n=1,<a href="#nfile">nfile</a>
+
+Note that the name and order of files is not important as
+long as <b>q=0 is the first</b>.
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+</blockquote>
+</td></tr>
+</tbody></table></td></tr>
+</table>
+      </td></tr></table></blockquote>
+</td></tr></table>
+</td></tr>
+</table>
+<small>
+	  This file has been created by helpdoc utility on Sat Mar 18 19:08:13 CET 2023.
+	</small>
+</body>
+</html>

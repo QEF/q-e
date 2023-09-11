@@ -139,12 +139,17 @@ SUBROUTINE lr_smallgq (xq)
      !
   ENDDO
   !
-  ! Check if inversion (I) is a symmetry. If so, there should be nsymq/2
-  ! symmetries without inversion, followed by nsymq/2 with inversion
-  ! Since identity is always s(:,:,1), inversion should be s(:,:,1+nsymq/2)
+  ! Check if inversion (I) is a symmetry
+  ! Note that the first symmetry operation is always the identity (E)
   ! IT: it seems that invsymq is useless (used nowhere)...
   !
-  invsymq = ALL ( s(:,:,nsymq/2+1) == -s(:,:,1) )
+  invsymq =.FALSE.
+  DO isym = 1, nsymq
+     IF ( ALL ( s(:,:,isym) == -s(:,:,1) ) ) THEN
+        invsymq = .TRUE.
+        EXIT
+     END IF
+  END DO
   !
   ! The order of the s matrices has changed.
   ! Transform symmetry matrices s from crystal to cartesian axes.

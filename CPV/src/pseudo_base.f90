@@ -24,8 +24,6 @@
       PUBLIC :: compute_rhops, formfn, formfa
       PUBLIC :: compute_eself, compute_rhocg
 
-
-
 !=----------------------------------------------------------------------------=!
       CONTAINS
 !=----------------------------------------------------------------------------=!
@@ -212,7 +210,6 @@
         integer   :: ig, ir, irmax
         real(DP), allocatable:: f(:),vscr(:), figl(:)
         real(DP), allocatable:: df(:), dfigl(:)
-        real(DP), external :: qe_erf, qe_erfc
 !
         allocate( vscr(mesh), figl(ngs) )
         if (tpre) then
@@ -227,7 +224,7 @@
         end do
         !
         do ir = 1, irmax
-          vscr(ir) = 0.5d0 * r(ir) * vloc_at(ir) + zv * qe_erf( r(ir) / rcmax )
+          vscr(ir) = 0.5d0 * r(ir) * vloc_at(ir) + zv * erf( r(ir) / rcmax )
         end do
         do ir = irmax + 1, mesh
           vscr(ir)=0.0d0
@@ -250,7 +247,7 @@
            allocate( df(mesh) )
         end if
         DO ir = 1, irmax
-           f(ir) = fpi * ( zv * qe_erfc( r(ir)/rcmax ) ) * r(ir)
+           f(ir) = fpi * ( zv * erfc( r(ir)/rcmax ) ) * r(ir)
         END DO
         DO ir = irmax + 1, mesh
           f(ir)=0.0d0

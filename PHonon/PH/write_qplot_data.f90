@@ -5,12 +5,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-  SUBROUTINE write_qplot_data(auxdyn)
-!
-!  This routine writes on output the phonon frequencies in a format that
-!  can be read by the program plotband. It is used only if the qplot
-!  option is used in the phonon code. It writes in a file called fildyn.plot
-!
+  SUBROUTINE write_qplot_data( auxdyn )
+  !
+  !! This routine writes on output the phonon frequencies in a format that
+  !! can be read by the program \(\texttt{plotband}\). It is used only if
+  !! the \(\text{qplot}\) option is used in the phonon code. It writes in
+  !! a file called \(\text{fildyn.plot}\).
+  !
   USE kinds,      ONLY : DP
   USE constants,  ONLY : ry_to_cmm1
   USE ions_base,  ONLY : nat
@@ -22,7 +23,11 @@
   USE io_global,  ONLY : ionode
 
   IMPLICIT NONE
+  
   CHARACTER(LEN=256), INTENT(IN) :: auxdyn
+  !
+  ! ... local variables
+  !
   CHARACTER(LEN=256) :: filename
   INTEGER, EXTERNAL :: find_free_unit
   CHARACTER(LEN=6) :: int_to_char

@@ -8,8 +8,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE stop_ph( flag )
   !----------------------------------------------------------------------------
-  !
-  ! ... Synchronize processes before stopping.
+  !! Synchronize processes before stopping.
   !
   USE kinds,      ONLY : DP
   USE mp_global,  ONLY : mp_global_end
@@ -50,7 +49,6 @@ SUBROUTINE stop_smoothly_ph(flag)
   LOGICAL, INTENT(IN) :: flag
   
   CALL collect_grid_files()
-  CALL close_phq(.FALSE.)
   CALL stop_ph(flag)
 
 END SUBROUTINE stop_smoothly_ph

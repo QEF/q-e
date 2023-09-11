@@ -15,20 +15,20 @@ subroutine khamiltonian
      USE io_global, ONLY : stdout, ionode, ionode_id
      USE mp_world, ONLY : world_comm
      USE mp, ONLY : mp_sum,mp_barrier, mp_bcast
-     USE noncollin_module, ONLY: npol, noncolin
+     USE noncollin_module, ONLY: npol, noncolin, domag
      USE io_files,  ONLY : prefix, tmp_dir
      USE fft_base,         ONLY : dffts
      USE fft_interfaces,   ONLY : fwfft, invfft
-     USE spin_orb,      ONLY : domag
      USE cell_base, ONLY : omega
      USE ions_base,     ONLY: nat, ntyp => nsp, ityp
      USE uspp_param,    ONLY: nh, nhm
-     USE uspp,          ONLY: nkb, deeq, indv_ijkb0, deeq_nc
+     USE uspp,          ONLY: nkb, deeq, ofsbeta, deeq_nc
      USE lsda_mod,      ONLY : nspin
      USE becmod,        ONLY : bec_type, calbec, allocate_bec_type, deallocate_bec_type
      USE wvfct, ONLY : npwx
      USE klist, ONLY : nelec
      USE wannier_gw, ONLY : num_nbndv
+     USE uspp_init,        ONLY : init_us_2
      !
      IMPLICIT NONE
      !
@@ -193,7 +193,7 @@ subroutine khamiltonian
       write(iun) npol
       write(iun) ityp(1:nat)
       write(iun) nh(1:ntyp)
-      write(iun) indv_ijkb0(1:nat)
+      write(iun) ofsbeta(1:nat)
       write(iun) nkpoints
     endif
     !

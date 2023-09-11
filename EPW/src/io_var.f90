@@ -20,26 +20,31 @@
   PRIVATE
   SAVE
   !
-  PUBLIC :: lambda_phself, linewidth_phself, linewidth_elself, iospectral, &
-            iua2ffil, iudosfil, iufillambda, iuqdos, iufe, iufilker, &
-            iufilgap, iospectral_sup, iua2ftrfil, iufilgapFS, iufillambdaFS, &
+  PUBLIC :: lambda_phself, linewidth_phself, linewidth_elself, iospectral,    &
+            iua2ffil, iudosfil, iufillambda, iuqdos, iufe, iufilker, iuquad,  &
+            iufilgap, iospectral_sup, iua2ftrfil, iufilgapFS, iufillambdaFS,  &
             iospectral_cum, iuwanep, iuwane, iunukk, iudvscf, iuqpeig, iures, &
-            iuint3paw
-  PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb,&
-            iufilfreq, iufilegnv, iufileph, iufilkqmap, iunpattern, &
-            iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, &
+            !!!!!
+            ! iuint3paw
+            iuint3paw, iufildos, iufilmat
+            !!!!!
+  PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb, &
+            iufilfreq, iufilegnv, iufileph, iufilkqmap, iunpattern, iufilmu_q, &
+            iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, iufilFS,  &
             iufileig, iukmap, crystal, iunifc, iunimem, iunepmatwp2
   PUBLIC :: iuwinfil, iun_plot, iuprojfil, iudecayH, iudecayP, &
             iudecaydyn, iudecayv, iunnkp, iuamn, iummn, iubvec
-  PUBLIC :: iufilsigma, iufilseebeck, iufilkappael, iufilkappa, iufilscatt_rate,&
+  PUBLIC :: iufilsigma, iufilseebeck, iufilkappael, iufilkappa, iufilscatt_rate,   &
             iufilFi_all, iufilsigma_all, iufiltau_all, iuindabs, iuntau, iuntaucb, &
-            iufilesigma_all
+            iufilesigma_all, epwbib, iuindabs_all, iudirabs
   PUBLIC :: iunsparseq, iunsparsek, iunsparsei, iunsparsej, iunsparset, iunselecq, &
-            iunsparseqcb, iunsparsekcb, iunsparseicb, iunsparsejcb, iunsparsetcb, &
-            iunrestart, iufilibtev_sup, iunepmat, iunepmatcb, iufilF, iunepmat_merge,&
-            iunsparseq_merge, iunsparsek_merge, iunsparsei_merge, iunsparsej_merge, &
-            iunsparset_merge, iunepmatcb_merge, iunsparseqcb_merge, iunsparsekcb_merge,&
-            iunsparseicb_merge, iunsparsejcb_merge, iunsparsetcb_merge
+            iunsparseqcb, iunsparsekcb, iunsparseicb, iunsparsejcb, iunsparsetcb,  &
+            iunrestart, iufilibtev_sup, iunepmat, iunepmatcb, iufilF, iufilmu_nk,  &
+            iunsparseq_merge, iunsparsek_merge, iunsparsei_merge,iunsparsej_merge, &
+            iunsparset_merge, iunepmatcb_merge, iunsparseqcb_merge,                &
+            iunsparseicb_merge, iunsparsejcb_merge, iunsparsetcb_merge,            &
+            iunsparsekcb_merge, iunepmat_merge
+  PUBLIC :: iunRpscell, iunkgridscell, iunpsirscell
 
   !
   ! Output of physically relevant quantities (60-100)
@@ -67,17 +72,19 @@
   INTEGER :: iufillambdaFS   = 74  ! Electron-phonon coupling strength on FS with k-points
   INTEGER :: iospectral_cum  = 75  ! Electronic spectral function with the cumulant method
                                    ! [specfun_cum##.elself]
-!DBSP : iukgmap was 96. Should be the same as set_kplusq.f90.
   INTEGER :: iunukk          = 77  ! Unit with rotation matrix U(k) from wannier code
-  INTEGER :: iures           = 78  ! Resistivity in metals using Ziman formula [.res]
+  INTEGER :: iuquad          = 78  ! Unit to read the quadrupole tensor from file
   INTEGER :: iudvscf         = 80  ! Unit for the dvscf_q file
   INTEGER :: iudyn           = 81  ! Unit for the dynamical matrix file
   INTEGER :: iufilkqmap      = 82  ! Map of k+q
+  !!!!!
+  INTEGER :: iufilmat        = 87  ! Matsubara indices
+  INTEGER :: iufildos        = 88  ! electronic DOS in Fermi windows [prefix.dos]
+  !!!!!
   INTEGER :: iukgmap         = 96  ! Map of folding G-vector indexes [.kgmap]
   INTEGER :: iuwanep         = 97  ! Spatial decay of e-p matrix elements in wannier basis
                                    ! Electrons + phonons [epmat_wanep]
-  INTEGER :: iuwane          = 98  ! Spatial decay of matrix elements in Wannier basis
-                                   ! [.epwane]
+  INTEGER :: iuwane          = 98  ! Spatial decay of matrix elements in Wannier basis [.epwane]
   INTEGER :: iuint3paw       = 99  ! Unit for the dvscf_paw_q file
   !
   ! Output of quantity for restarting purposes (101-200)
@@ -128,6 +135,7 @@
   INTEGER :: iuntaucb        = 143  ! Opening the taucb file
   INTEGER :: iuqpeig         = 144  ! Reading quasi-particle eigenenergies from file
   INTEGER :: iunpattern      = 145  ! Unit for reading the pattern files.
+  INTEGER :: iufilFS         = 146  ! Unit for Fermi surface files
   !
   ! Output quantites related to Wannier (201-250)
   !
@@ -157,11 +165,25 @@
   INTEGER :: iufiltau_all    = 258 ! inv_tau_all file to retart an interpolation
   INTEGER :: iufilF          = 259 ! $\partial_E f_{nk}$ in .fmt mode
   INTEGER :: iufilesigma_all = 260 ! Sigmar_all and Sigmai_all file to retart spectral calculation
+  INTEGER :: iufilmu_nk      = 261 ! $\mu_{nk}^{\alpha\beta}$ in mobility_nk.fmt file
+  INTEGER :: iufilmu_q       = 262 ! $\mu_{\nu q}^{\alpha\beta}$ in mobility_nuq.fmt mode
+  INTEGER :: iures           = 263 ! Resistivity in metals using Ziman formula [.res]
   !
   ! Output quantities related to Indirect absorption (301-325)
   INTEGER :: iuindabs        = 301 ! Indirect absorption data
+  INTEGER :: iuindabs_all    = 302 ! Indirect absorption read/write
+  INTEGER :: iudirabs        = 303 ! Direct absorption data
+  ! 
+  ! Miscellaneous (326-350)
+  INTEGER :: epwbib          = 326 ! EPW bibliographic file.
   !
-  ! Merging of files
+  ! Output quantities related to polaron (350-400)
+  !JLB: All the other polaron I/O units should also be defined here for consistency
+  INTEGER :: iunRpscell      = 351 ! Rp unit cell list within polaron supercell
+  INTEGER :: iunkgridscell   = 352 ! Gs k-grid used for transformed supercell
+  INTEGER :: iunpsirscell    = 353 ! Polaron wf in real space for transformed supercell
+  !
+  ! Merging of files (400-450)
   INTEGER :: iunepmat_merge    = 400
   INTEGER :: iunsparseq_merge  = 401
   INTEGER :: iunsparsek_merge  = 402

@@ -1,0 +1,8 @@
+&INPUT_NAMELIST
+                    test='generate'
+                    filename_xml='xctest_data.xml'
+                    dft='all_terms'
+                    family= ''
+                    polarization= 'both'
+                    xc_derivative=.FALSE.
+                 /

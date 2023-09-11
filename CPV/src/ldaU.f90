@@ -7,14 +7,14 @@
 !
 !-------------------------------------------------------------------------
       SUBROUTINE s_wfc(nwfc,becwfc,betae,wfc,swfc)
-!-----------------------------------------------------------------------
-!
-!     input: wfc, becwfc=<wfc|beta>, betae=|beta>
-!     output: swfc=S|wfc>
-!
+      !-----------------------------------------------------------------------
+      !! Take as input the wfc, \(\text{becwfc}=\langle\text{wfc}|\text{beta}\rangle\),
+      !! \(\text{betae}=|\text{beta}\rangle\).
+      !! Gives as output: \(\text{swfc}=S|\text{wfc}\rangle\)
+      !
       USE kinds, ONLY: DP
       USE ions_base, ONLY: nat, ityp
-      USE uspp, ONLY: nkb, nkbus, qq_nt, indv_ijkb0
+      USE uspp, ONLY: nkb, nkbus, qq_nt, ofsbeta
       USE uspp_param, ONLY: nh, upf
       USE gvecw, ONLY: ngw
       IMPLICIT NONE
@@ -39,8 +39,8 @@
                DO iv=1,nh(is)
                   DO jv=1,nh(is)
                      IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN
-                        inl = indv_ijkb0(ia) + iv
-                        jnl = indv_ijkb0(ia) + jv
+                        inl = ofsbeta(ia) + iv
+                        jnl = ofsbeta(ia) + jv
                         DO i=1,nwfc
                            qtemp(inl,i) = qtemp(inl,i) + qq_nt(iv,jv,is)*becwfc(jnl,i)
                         END DO
@@ -71,7 +71,6 @@
       !
       implicit none
       integer is, nb, l
-      integer, external :: set_hubbard_l
 
       IF ( .NOT.lda_plus_u ) RETURN
       ! FIXME: wasteful allocation, should be removed
@@ -81,7 +80,7 @@
       Hubbard_lmax = -1
       do is=1,nsp
          if (Hubbard_U(is).ne.0.d0) then 
-            Hubbard_l(is) = set_hubbard_l( upf(is)%psd )
+            ! Hubbard_l is read from the HUBBARD card in the input file
             Hubbard_lmax = max(Hubbard_lmax,Hubbard_l(is))
             write (6,*) ' HUBBARD L FOR TYPE ',atm(is),' IS ', Hubbard_l(is)
          else
@@ -101,11 +100,10 @@
 !-----------------------------------------------------------------------
       subroutine new_ns( c, eigr, betae, hpsi, forceh )
 !-----------------------------------------------------------------------
-!
-! This routine computes the on site occupation numbers of the Hubbard ions.
-! It also calculates the contribution of the Hubbard Hamiltonian to the
-! electronic potential and to the forces acting on ions.
-!
+      !! This routine computes the on site occupation numbers of the Hubbard ions.
+      !! It also calculates the contribution of the Hubbard Hamiltonian to the
+      !! electronic potential and to the forces acting on ions.
+
       use kinds,              ONLY: DP        
       use control_flags,      ONLY: tfor, tprnfor
       use ions_base,          only: nat, nsp, ityp
@@ -119,10 +117,11 @@
       USE step_penalty,       ONLY: penalty_e, penalty_f
       USE mp_pools,           ONLY: intra_pool_comm, me_pool, nproc_pool
       USE mp_bands,           only: nbgrp
-      USE cp_interfaces,      only: nlsm1, nlsm2_bgrp
+      USE cp_interfaces,      only: calbec, nlsm2_bgrp
 !
       implicit none
-      complex(DP), intent(in) :: c(ngw,nx), eigr(ngw,nat), betae(ngw,nkb)
+      complex(DP), intent(in) :: c(ngw,nx), eigr(ngw,nat)
+      complex(DP), intent(inout) :: betae(ngw,nkb)
       complex(DP), intent(out) :: hpsi(ngw,nx)
       real(DP), INTENT(OUT) :: forceh(3,nat)
 !
@@ -243,10 +242,10 @@
         allocate(dns(ldmx,ldmx,nspin,nat))
         allocate (spsi(ngw,n))
 !
-        call nlsm1 ( n, 1, nsp, eigr, c, bp )
+        call calbec ( n, betae, c, bp )
         call s_wfc ( n, bp, betae, c, spsi )
-        call nlsm2_bgrp( ngw, nkb, eigr, c, dbp, nx, n )
-        call nlsm2_bgrp( ngw, nkb, eigr, wfcU, wdb, nwfcU, nwfcU )
+        call nlsm2_bgrp( ngw, nkb, betae, c, dbp, nx, n )
+        call nlsm2_bgrp( ngw, nkb, betae, wfcU, wdb, nwfcU, nwfcU )
         !
         ! poor-man parallelization over bands
         ! - if nproc_pool=1   : nb_s=1, nb_e=n, mykey=0
@@ -384,11 +383,10 @@
       subroutine dndtau(alpha_a,alpha_s,becwfc,spsi,bp,dbp,wdb,         &
                         offset,wfcU,eigr,proj,ipol,nb_s,nb_e,mykey,dns)
 !-----------------------------------------------------------------------
-!
-! This routine computes the derivative of the ns with respect to the ionic
-! displacement tau(alpha,ipol) used to obtain the Hubbard contribution to the
-! atomic forces.
-!
+      !! This routine computes the derivative of the ns with respect to the ionic
+      !! displacement \(\text{tau}(\text{alpha},\text{ipol})\) used to obtain
+      !! the Hubbard contribution to the atomic forces.
+      !
       use ions_base, only: nat, nsp, ityp
       use gvecw, only: ngw
       use electrons_base, only: nspin, n => nbsp, nx => nbspx, ispin, f
@@ -463,17 +461,17 @@
       subroutine dprojdtau(wfcU,becwfc,spsi,bp,dbp,wdb,eigr,alpha_a,    &
                            alpha_s,ipol,offset,nb_s,nb_e,mykey,dproj)
 !-----------------------------------------------------------------------
-!
-! This routine computes the first derivative of the projection
-! <\fi^{at}_{I,m1}|S|\psi_{k,v,s}> with respect to the atomic displacement
-! u(alpha,ipol) (we remember that ns_{m1,m2,s,I} = \sum_{k,v}
-! f_{kv} <\fi^{at}_{I,m1}|S|\psi_{k,v,s}><\psi_{k,v,s}|S|\fi^{at}_{I,m2}>)
-!
+      !! This routine computes the first derivative of the projection
+      !! \(\langle\phi^{at}_{I,m1}|S|\psi_{k,v,s}\rangle\) with respect to the
+      !! atomic displacement \(u(\alpha,\text{ipol})\) (we remember that 
+      !! \(ns_{m1,m2,s,I} = \sum_{k,v} f_{kv} \langle\phi^{at}_{I,m1}|S|\psi_{k,v,s}
+      !! \rangle\langle \psi_{k,v,s}|S|\phi^{at}_{I,m2}\rangle\) ).
+      !
       use ions_base, only: nat
       use gvecw, only: ngw
       use gvect, only: g, gstart
       use electrons_base, only: n => nbsp, nx => nbspx
-      USE uspp,           ONLY: nkb, qq_nt, indv_ijkb0
+      USE uspp,           ONLY: nkb, qq_nt, ofsbeta
       USE ldaU_cp,        ONLY: Hubbard_U, Hubbard_l
       USE ldaU_cp,        ONLY: nwfcU
       use cell_base,      ONLY: tpiba
@@ -547,7 +545,7 @@
          allocate (   auxwfc(nwfcU,nh(alpha_s)) )
          !
          do iv=1,nh(alpha_s)
-            inl=indv_ijkb0(alpha_a) + iv
+            inl=ofsbeta(alpha_a) + iv
             do m=1,nwfcU
                auxwfc(m,iv) = becwfc(inl,m)
             end do
@@ -558,7 +556,7 @@
                   auxwfc, nwfcU, qq_nt(1,1,alpha_s), nh(alpha_s), &
                   0.0_DP, wfcbeta, nwfcU )
          do iv=1,nh(alpha_s)
-            inl=indv_ijkb0(alpha_a) + iv
+            inl=ofsbeta(alpha_a) + iv
             do m=1,nwfcU
                auxwfc(m,iv) = wdb(inl,m,ipol)
             end do
@@ -573,7 +571,7 @@
             allocate (  betapsi(nh(alpha_s),nb_s:nb_e) )
             allocate ( dbetapsi(nh(alpha_s),nb_s:nb_e) )
             do iv=1,nh(alpha_s)
-               inl=indv_ijkb0(alpha_a) + iv
+               inl=ofsbeta(alpha_a) + iv
                do i=nb_s,nb_e
                   betapsi (iv,i)=bp(inl,i)
                   dbetapsi(iv,i)=dbp(inl,i,ipol)
@@ -608,9 +606,8 @@
       SUBROUTINE projwfc_hub( c, nx, eigr, betae, n, nwfcU,  &
      &                        offset, Hubbard_l, wfcU, becwfc, swfc, proj )
 !-----------------------------------------------------------------------
-      !
-      ! Projection on atomic wavefunctions
-      ! Atomic wavefunctions are not orthogonalized
+      !! Projection on atomic wavefunctions.  
+      !! Atomic wavefunctions are not orthogonalized.
       !
       USE kinds,              ONLY: DP
       USE io_global,          ONLY: stdout
@@ -620,12 +617,13 @@
       USE gvect,              ONLY: gstart
       USE ions_base,          ONLY: nsp, nat
       USE uspp,               ONLY: nkb
-      USE cp_interfaces,      only: nlsm1
+      USE cp_interfaces,      only: calbec
 !
       IMPLICIT NONE
       INTEGER,     INTENT(IN) :: nx, n, nwfcU, offset(nat), &
                                  Hubbard_l(nsp)
-      COMPLEX(DP), INTENT(IN) :: c( ngw, nx ), eigr(ngw,nat), betae(ngw,nkb)
+      COMPLEX(DP), INTENT(IN) :: c( ngw, nx ), eigr(ngw,nat)
+      COMPLEX(DP), INTENT(INOUT) :: betae(ngw,nkb)
 !
       COMPLEX(DP), INTENT(OUT):: wfcU(ngw, nwfcU),    &
      &                           swfc(ngw, nwfcU)
@@ -641,7 +639,7 @@
       !
       ! calculate bec = <beta|wfc>
       !
-      CALL nlsm1( nwfcU, 1, nsp, eigr, wfcU, becwfc )
+      CALL calbec( nwfcU, betae, wfcU, becwfc )
       !
       ! calculate swfc = S|wfc>
       !
@@ -663,9 +661,8 @@
 !-----------------------------------------------------------------------
       SUBROUTINE atomic_wfc_hub( offset, Hubbard_l, eigr, nwfcU, wfcU )
 !-----------------------------------------------------------------------
-!
-! Compute atomic wavefunctions (not orthogonalized) in G-space
-!
+      !! Compute atomic wavefunctions (not orthogonalized) in G-space.
+      !
       USE kinds,              ONLY: DP
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart, gg, g

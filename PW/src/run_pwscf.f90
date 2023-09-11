@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2013-2017 Quantum ESPRESSO group
+! Copyright (C) 2013-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,8 +14,7 @@ SUBROUTINE run_pwscf( exit_status )
   !
   !! Run an instance of the Plane Wave Self-Consistent Field code 
   !! MPI initialization and input data reading is performed in the 
-  !! calling code - returns in exit_status the exit code for pw.x, 
-  !! returned in the shell. Values are:  
+  !! calling code - returns in exit_status the exit code for pw.x:
   !! * 0: completed successfully
   !! * 1: an error has occurred (value returned by the errore() routine)
   !! * 2-127: convergence error
@@ -27,21 +26,29 @@ SUBROUTINE run_pwscf( exit_status )
   !!     (note: in the future, check_stop_now could also return a value
   !!     to specify the reason of exiting, and the value could be used
   !!     to return a different value for different reasons)
+  !! @Note
+  !! 20/04/23 Unless preprocessing flag __RETURN_EXIT_STATUS is set (see
+  !! routine do_stop) pw.x no longer returns an exit status != 0  to the shell
+  !! @endnote
   !
   !! @Note
   !! 10/01/17 Samuel Ponce: Add Ford documentation
   !! @endnote
   !!
   !
+  USE kinds,                ONLY : DP
+  USE mp,                   ONLY : mp_bcast, mp_sum
   USE io_global,            ONLY : stdout, ionode, ionode_id
   USE parameters,           ONLY : ntypx, npk
   USE upf_params,           ONLY : lmaxx
   USE cell_base,            ONLY : fix_volume, fix_area
   USE control_flags,        ONLY : conv_elec, gamma_only, ethr, lscf, treinit_gvecs
-  USE control_flags,        ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs, lensemb
+  USE control_flags,        ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs,&
+                                   lensemb, lforce=>tprnfor, tstress
+  USE control_flags,        ONLY : io_level
   USE cellmd,               ONLY : lmovecell
   USE command_line_options, ONLY : command_line
-  USE force_mod,            ONLY : lforce, lstres, sigma, force
+  USE force_mod,            ONLY : sigma, force
   USE check_stop,           ONLY : check_stop_init, check_stop_now
   USE mp_images,            ONLY : intra_image_comm
   USE extrapolation,        ONLY : update_file, update_pot
@@ -51,10 +58,24 @@ SUBROUTINE run_pwscf( exit_status )
   USE qmmm,                 ONLY : qmmm_initialization, qmmm_shutdown, &
                                    qmmm_update_positions, qmmm_update_forces
   USE qexsd_module,         ONLY : qexsd_set_status
-  USE funct,                ONLY : dft_is_hybrid, stop_exx 
-#ifdef use_beef
+  USE xc_lib,               ONLY : xclib_dft_is, stop_exx, exx_is_active
   USE beef,                 ONLY : beef_energies
-#endif 
+  USE ldaU,                 ONLY : lda_plus_u
+  USE add_dmft_occ,         ONLY : dmft
+  USE extffield,            ONLY : init_extffield, close_extffield
+  USE input_parameters,     ONLY : nextffield
+  !
+  USE device_fbuff_m,             ONLY : dev_buf
+  !
+#if defined (__ENVIRON)
+  USE plugin_flags,      ONLY : use_environ
+  USE environ_pw_module, ONLY : is_ms_gcs, init_ms_gcs
+#endif
+#if defined (__OSCDFT)
+  USE plugin_flags,      ONLY : use_oscdft
+  USE oscdft_base,       ONLY : oscdft_ctx
+  USE oscdft_functions,  ONLY : oscdft_run_pwscf
+#endif
   !
   IMPLICIT NONE
   !
@@ -73,6 +94,11 @@ SUBROUTINE run_pwscf( exit_status )
   ! ions_status =  2  converged, restart with nonzero magnetization
   ! ions_status =  1  converged, final step with current cell needed
   ! ions_status =  0  converged, exiting
+  !
+  LOGICAL :: optimizer_failed = .FALSE.
+  !
+  INTEGER :: ierr
+  ! collect error codes
   !
   ions_status = 3
   exit_status = 0
@@ -103,7 +129,14 @@ SUBROUTINE run_pwscf( exit_status )
   !
   ! call to void routine for user defined / plugin patches initializations
   !
+#if defined(__LEGACY_PLUGINS)
   CALL plugin_initialization()
+#endif 
+#if defined (__ENVIRON)
+  IF (use_environ) THEN
+     IF (is_ms_gcs()) CALL init_ms_gcs()
+  END IF
+#endif
   !
   CALL check_stop_init()
   !
@@ -119,18 +152,26 @@ SUBROUTINE run_pwscf( exit_status )
      CALL data_structure( gamma_only )
      CALL summary()
      CALL memory_report()
-     CALL qexsd_set_status(255)
-     CALL punch( 'config-init' )
      exit_status = 255
+     CALL qexsd_set_status( exit_status )
+     CALL punch( 'config-init' )
      RETURN
   ENDIF
   !
   CALL init_run()
   !
+  !  read external force fields parameters
+  ! 
+  IF ( nextffield > 0 .AND. ionode) THEN
+     !
+     CALL init_extffield( 'PW', nextffield )
+     !
+  END IF
+  !
   IF ( check_stop_now() ) THEN
-     CALL qexsd_set_status( 255 )
-     CALL punch( 'config' )
      exit_status = 255
+     CALL qexsd_set_status( exit_status )
+     CALL punch( 'config' )
      RETURN
   ENDIF
   !
@@ -138,19 +179,38 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ! ... electronic self-consistency or band structure calculation
      !
+#if defined (__OSCDFT)
+     IF (use_oscdft) THEN
+        CALL oscdft_run_pwscf(oscdft_ctx)
+     ELSE
+#endif
      IF ( .NOT. lscf) THEN
         CALL non_scf()
      ELSE
         CALL electrons()
      END IF
+#if defined (__OSCDFT)
+     END IF
+#endif
      !
      ! ... code stopped by user or not converged
      !
      IF ( check_stop_now() .OR. .NOT. conv_elec ) THEN
-        IF ( check_stop_now() ) exit_status = 255
-        IF ( .NOT. conv_elec )  exit_status =  2
+        IF ( check_stop_now() ) THEN
+            exit_status = 255
+        ELSE
+           IF (dmft) THEN
+              exit_status =  131
+           ELSE
+              exit_status = 2
+           ENDIF
+        ENDIF
         CALL qexsd_set_status(exit_status)
-        CALL punch( 'config' )
+        IF(exx_is_active()) then
+          CALL punch( 'all' )
+        ELSE
+          CALL punch( 'config' )
+        ENDIF
         RETURN
      ENDIF
      !
@@ -173,7 +233,7 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ! ... stress calculation
      !
-     IF ( lstres ) CALL stress( sigma )
+     IF ( tstress ) CALL stress( sigma )
      !
      IF ( lmd .OR. lbfgs ) THEN
         !
@@ -190,16 +250,17 @@ SUBROUTINE run_pwscf( exit_status )
         !
         ! ... ionic step (for molecular dynamics or optimization)
         !
-        CALL move_ions ( idone, ions_status )
+        CALL move_ions ( idone, ions_status, optimizer_failed )
         conv_ions = ( ions_status == 0 ) .OR. &
                     ( ions_status == 1 .AND. treinit_gvecs )
         !
-        IF (dft_is_hybrid() )  CALL stop_exx()
+        IF ( xclib_dft_is('hybrid') )  CALL stop_exx()
         !
         ! ... save restart information for the new configuration
         !
         IF ( idone <= nstep .AND. .NOT. conv_ions ) THEN
-            CALL qexsd_set_status( 255 )
+            exit_status = 255
+            CALL qexsd_set_status( exit_status )
             CALL punch( 'config-only' )
         END IF
         !
@@ -213,7 +274,7 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ! ... exit condition (ionic convergence) is checked here
      !
-     IF ( conv_ions ) EXIT main_loop
+     IF ( conv_ions .OR. optimizer_failed ) EXIT main_loop
      !
      ! ... receive new positions from MM code in QM/MM run
      !
@@ -230,7 +291,12 @@ SUBROUTINE run_pwscf( exit_status )
            !
            lbfgs=.FALSE.; lmd=.FALSE.
            WRITE( UNIT = stdout, FMT=9020 ) 
+           !
            CALL reset_gvectors( )
+           !
+           ! ... read atomic occupations for DFT+U(+V)
+           !
+           IF ( lda_plus_u ) CALL read_ns()
            !
         ELSE IF ( ions_status == 2 ) THEN
            !
@@ -268,19 +334,28 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ethr = 1.0D-6
      !
+     CALL dev_buf%reinit( ierr )
+     IF ( ierr .ne. 0 ) CALL infomsg( 'run_pwscf', 'Cannot reset GPU buffers! Some buffers still locked.' )
+     !
   ENDDO main_loop
+  !
+  ! Set correct exit_status
+  !
+  IF ( .NOT. conv_ions .OR. optimizer_failed ) THEN
+      exit_status =  3
+  ELSE
+      ! All good
+      exit_status = 0
+   END IF
   !
   ! ... save final data file
   !
   CALL qexsd_set_status( exit_status )
-#ifdef use_beef
   IF ( lensemb ) CALL beef_energies( )
-#endif 
-  CALL punch( 'all' )
+  IF ( io_level > -2 ) CALL punch( 'all' )
   !
   CALL qmmm_shutdown()
   !
-  IF ( .NOT. conv_ions )  exit_status =  3
   RETURN
   !
 9010 FORMAT( /,5X,'Current dimensions of program PWSCF are:', &
@@ -309,7 +384,7 @@ SUBROUTINE reset_gvectors( )
   USE basis,      ONLY : starting_wfc, starting_pot
   USE fft_base,   ONLY : dfftp
   USE fft_base,   ONLY : dffts
-  USE funct,      ONLY : dft_is_hybrid
+  USE xc_lib,     ONLY : xclib_dft_is
   ! 
   IMPLICIT NONE
   !
@@ -334,7 +409,7 @@ SUBROUTINE reset_gvectors( )
   !
   ! ... re-set and re-initialize EXX-related stuff
   !
-  IF ( dft_is_hybrid() ) CALL reset_exx( )
+  IF ( xclib_dft_is('hybrid') ) CALL reset_exx( )
   !
 END SUBROUTINE reset_gvectors
 !
@@ -411,8 +486,7 @@ SUBROUTINE reset_starting_magnetization()
   USE ions_base,          ONLY : nsp, ityp, nat
   USE lsda_mod,           ONLY : nspin, starting_magnetization
   USE scf,                ONLY : rho
-  USE spin_orb,           ONLY : domag
-  USE noncollin_module,   ONLY : noncolin, angle1, angle2
+  USE noncollin_module,   ONLY : noncolin, angle1, angle2, domag
   !
   IMPLICIT NONE
   !
