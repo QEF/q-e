@@ -285,7 +285,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
 #if defined(__OPENACC)
      !$acc loop vector 
-#else
+#elif defined(__OPENMP)
      !$omp simd
 #endif
      DO m = n + 1, nbase
@@ -653,7 +653,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !
 #if defined(__OPENACC)
         !$acc loop vector
-#else
+#elif defined(__OPENMP)
         !$omp simd
 #endif
         DO m = MAX(n+1,nb1), nbase

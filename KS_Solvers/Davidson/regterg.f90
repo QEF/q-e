@@ -212,7 +212,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      IF (gstart == 2) psi(1,k) = CMPLX( DBLE( psi(1,k) ), 0.D0 ,kind=DP)
 #if defined(__OPENACC)
      !$acc loop vector
-#else
+#elif defined(__OPENMP)
      !$omp simd
 #endif
      DO i=2,npwx
@@ -493,7 +493,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         IF (gstart == 2) psi(1,nbase+i) = CMPLX( DBLE(psi(1,nbase+i)), 0.D0 ,kind=DP)
 #if defined(__OPENACC)
         !$acc loop vector
-#else
+#elif defined(__OPENMP)
         !$omp simd
 #endif
         DO k=2,npwx
@@ -588,7 +588,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         !
 #if defined(__OPENACC)
         !$acc loop vector
-#else
+#elif defined(__OPENMP)
         !$omp simd
 #endif
         DO m = n + 1, nbase
