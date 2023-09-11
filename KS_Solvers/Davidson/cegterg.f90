@@ -120,7 +120,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
   !
+#if defined(__OPENMP_GPU)
   !$omp target data map(to:evc) map(alloc:e)
+#endif
   nhpsi = 0
   CALL start_clock( 'cegterg' ); !write(*,*) 'start cegterg' ; FLUSH(6)
   !
@@ -164,7 +166,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      ALLOCATE( spsi( npwx*npol, nvecx ), STAT=ierr )
      IF( ierr /= 0 ) &
         CALL errore( ' cegterg ',' cannot allocate spsi ', ABS(ierr) )
+#if defined(__OPENMP_GPU)
      !$omp target enter data map(alloc:spsi)
+#endif
   END IF
   !
   ALLOCATE( sc( nvecx, nvecx ), STAT=ierr )
@@ -179,7 +183,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   ALLOCATE( ew( nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate ew ', ABS(ierr) )
+#if defined(__OPENMP_GPU)
   !$omp target data map(alloc:sc, hc, vc, ew)
+#endif
   ALLOCATE( conv( nvec ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate conv ', ABS(ierr) )
@@ -221,7 +227,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   !
   if (n_start .le. n_end) &
   CALL MYZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, hpsi(1,n_start), kdmx, ZERO, hc(1,n_start), nvecx )
+#if defined(__OPENMP_GPU)
   !$omp target update from(hc)
+#endif
   !
   if (n_start .le. n_end) &
 #if defined(__CUDA)
@@ -236,14 +244,18 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      if (n_start .le. n_end) &
      CALL MYZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, spsi(1,n_start), kdmx, &
                  ZERO, sc(1,n_start), nvecx )
+#if defined(__OPENMP_GPU)
      !$omp target update from (sc)
+#endif
      !
   ELSE
      !
      if (n_start .le. n_end) &
      CALL MYZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, psi(1,n_start), kdmx, &
                  ZERO, sc(1,n_start), nvecx )
+#if defined(__OPENMP_GPU)
      !$omp target update from (sc)
+#endif
      !
   END IF
   !
@@ -260,8 +272,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   !
   !$acc parallel vector_length(64)
   !$acc loop gang
+#if defined(__OPENMP_GPU)
   !$omp target update to(hc,sc)
   !$omp target teams distribute parallel do
+#endif
   DO n = 1, nbase
      !
      ! ... the diagonal of hc and sc must be strictly real
@@ -269,8 +283,11 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      hc(n,n) = CMPLX( REAL( hc(n,n) ), 0.D0 ,kind=DP)
      sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 ,kind=DP)
      !
+#if defined(__OPENACC)
      !$acc loop vector 
+#else
      !$omp simd
+#endif
      DO m = n + 1, nbase
         !
         hc(n,m) = CONJG( hc(m,n) )
@@ -280,8 +297,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
   END DO
   !$acc end parallel
+#if defined(__OPENMP_GPU)
   !$omp end target teams distribute parallel do
   !$omp target update from(hc, sc)
+#endif
   !
   CALL stop_clock( 'cegterg:init' )
   !
@@ -301,7 +320,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
 #endif
      !
      !$acc parallel loop
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do
+#endif
      DO n = 1, nbase
         !
         e(n) = REAL( hc(n,n) )
@@ -310,9 +331,13 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !
      END DO
      !
+#if defined(__OPENMP_GPU)
      !$omp target update from(e)
+#endif
      CALL mp_bcast( e, root_bgrp_id, inter_bgrp_comm )
+#if defined(__OPENMP_GPU)
      !$omp target update to(e)
+#endif
      !
   ELSE
      !
@@ -327,7 +352,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         CALL mp_bcast( vc, root_bgrp_id, inter_bgrp_comm )
         CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
      ENDIF
+#if defined(__OPENMP_GPU)
      !$omp target update to(hc, sc, vc, ew)
+#endif
      CALL stop_clock( 'cegterg:diag' )
      !
 #if defined(__OPENMP_GPU)
@@ -366,7 +393,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
            !
            IF ( np /= n ) THEN
              !$acc parallel loop
+#if defined(__OPENMP_GPU)
              !$omp target teams distribute parallel do
+#endif
              DO i = 1, nvecx
                vc(i,np) = vc(i,n)
              END DO
@@ -375,10 +404,14 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
            ! ... for use in g_psi
            !
            !$acc kernels
+#if defined(__OPENMP_GPU)
            !$omp target
+#endif
            ew(nbase+np) = e(n)
            !$acc end kernels
+#if defined(__OPENMP_GPU)
            !$omp end target
+#endif
            !
         END IF
         !
@@ -420,7 +453,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !$acc end parallel
 #else
      !!!!omp parallel do collapse(3)
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do collapse(3)
+#endif
      DO n = 1, notcnv
         DO ipol = 1, npol
            DO m = 1, numblock
@@ -439,10 +474,14 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      if (n_start .le. n_end) &
      CALL MYZGEMM( 'N','N', kdim, notcnv, my_n, ONE, hpsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                  ONE, psi(1,nb1), kdmx )
+#if defined(__OPENMP_GPU)
      !$omp target update from(psi)
+#endif
      CALL mp_sum( psi(:,nb1:nbase+notcnv), inter_bgrp_comm )
      !
+#if defined(__OPENMP_GPU)
      !$omp target update from(ew)
+#endif
      ! clean up garbage if there is any
      IF (npw < npwx) CALL dev_memset(psi, ZERO, [npw+1,npwx], 1, [nb1, nbase+notcnv])
      IF (npol == 2)  CALL dev_memset(psi, ZERO, [npwx+npw+1,2*npwx], 1, [nb1, nbase+notcnv])
@@ -462,8 +501,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      !$acc parallel vector_length(96)
      !$acc loop gang private(nbn)
+#if defined(__OPENMP_GPU)
      !$omp target update to(psi)
      !$omp target teams distribute private(nbn)
+#endif
      DO n = 1, notcnv
         !
         nbn = nbase + n
@@ -474,20 +515,26 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      IF(npol.ne.1) THEN
        !$acc loop gang private(nbn)
+#if defined(__OPENMP_GPU)
        !$omp target teams distribute private(nbn)
+#endif
        DO n = 1, notcnv
          nbn = nbase + n
          ew(n) = ew(n)  + MYDDOT_VECTOR_GPU( 2*npw, psi(npwx+1,nbn), psi(npwx+1,nbn) )
        END DO
      END IF
      !$acc end parallel
+#if defined(__OPENMP_GPU)
      !$omp target update from(ew)
+#endif
      !
      !$acc host_data use_device(ew)
      CALL mp_sum( ew( 1:notcnv ), intra_bgrp_comm )
      !$acc end host_data
      !
+#if defined(__OPENMP_GPU)
      !$omp target update to(ew)
+#endif
      !
 #if defined(__CUDA)
      !$acc parallel loop collapse(3)
@@ -500,7 +547,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      END DO
 #else
      !!!!omp parallel do collapse(3)
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do collapse(3)
+#endif
      DO n = 1, notcnv
         DO ipol = 1, npol
            DO m = 1, numblock
@@ -532,7 +581,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      CALL MYZGEMM( 'C','N', notcnv, my_n, kdim, ONE, hpsi(1,nb1), kdmx, psi(1,n_start), kdmx, &
                  ZERO, hc(nb1,n_start), nvecx )
+#if defined(__OPENMP_GPU)
      !$omp target update from(hc)
+#endif
      !
      if (n_start .le. n_end) &
 #if defined(__CUDA)
@@ -548,13 +599,17 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !
         CALL MYZGEMM( 'C','N', notcnv, my_n, kdim, ONE, spsi(1,nb1), kdmx, psi(1,n_start), kdmx, &
                     ZERO, sc(nb1,n_start), nvecx )
+#if defined(__OPENMP_GPU)
         !$omp target update from(sc)
+#endif
         !
      ELSE
         !
         CALL MYZGEMM( 'C','N', notcnv, my_n, kdim, ONE, psi(1,nb1), kdmx, psi(1,n_start), kdmx, &
                     ZERO, sc(nb1,n_start), nvecx )
+#if defined(__OPENMP_GPU)
         !$omp target update from(sc)
+#endif
         !
      END IF
      !
@@ -565,7 +620,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
          CALL mp_sum( sc(nb1:nbase+notcnv, n_start:n_end) , intra_bgrp_comm )
 #endif
      CALL mp_gather( sc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
+#if defined(__OPENMP_GPU)
      !$omp target update to(hc,sc)
+#endif
      !$acc end host_data
      !
      CALL mp_type_free( column_section_type )
@@ -576,7 +633,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      !$acc parallel vector_length(64)
      !$acc loop gang
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do
+#endif
      DO n = 1, nbase
         !
         ! ... the diagonal of hc and sc must be strictly real
@@ -586,8 +645,11 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
            sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 ,kind=DP)
         ENDIF
         !
+#if defined(__OPENACC)
         !$acc loop vector
+#else
         !$omp simd
+#endif
         DO m = MAX(n+1,nb1), nbase
            !
            hc(n,m) = CONJG( hc(m,n) )
@@ -601,7 +663,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      ! ... diagonalize the reduced hamiltonian
      !
      !$acc host_data use_device(hc, sc, vc, ew)
+#if defined(__OPENMP_GPU)
      !$omp target update from(hc, sc, vc)
+#endif
      CALL start_clock( 'cegterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
         CALL diaghg( nbase, nvec, hc, sc, nvecx, ew, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
@@ -612,12 +676,16 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      ENDIF
      CALL stop_clock( 'cegterg:diag' )
      !$acc end host_data
+#if defined(__OPENMP_GPU)
      !$omp target update to(ew)
+#endif
      !
      ! ... test for convergence
      !
      !$acc parallel loop copy(conv(1:nvec)) copyin(btype(1:nvec))
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do map(tofrom:conv) map(to:btype)
+#endif
      DO i = 1, nvec
        IF(btype(i) == 1) THEN
          conv(i) = ( ( ABS( ew(i) - e(i) ) < ethr ) )
@@ -648,7 +716,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      ! ... the first nvec elements with the current estimate of the
      ! ... eigenvectors;  set the basis dimension to nvec.
      !
+#if defined(__OPENMP_GPU)
      !$omp target update to(hc, sc, vc)
+#endif
      IF ( notcnv == 0 .OR. &
           nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
         !
@@ -660,9 +730,13 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         CALL MYZGEMM( 'N','N', kdim, nvec, my_n, ONE, psi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                     ZERO, evc, kdmx )
         !$acc end host_data
+#if defined(__OPENMP_GPU)
         !$omp target update from(evc)
+#endif
         CALL mp_sum( evc, inter_bgrp_comm )
+#if defined(__OPENMP_GPU)
         !$omp target update to(evc)
+#endif
         !
         IF ( notcnv == 0 ) THEN
            !
@@ -704,23 +778,31 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
            !
            CALL MYZGEMM( 'N','N', kdim, nvec, my_n, ONE, spsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                        ZERO, psi(1,nvec+1), kdmx)
+#if defined(__OPENMP_GPU)
            !$omp target update from(psi,spsi)
+#endif
            CALL dev_memcpy(spsi, psi(:,nvec+1:), &
                                         (/1, npwx*npol/), 1, &
                                         (/1, nvec/), 1)
            CALL mp_sum( spsi(:,1:nvec), inter_bgrp_comm )
+#if defined(__OPENMP_GPU)
            !$omp target update to(spsi)
+#endif
            !
         END IF
         !
         CALL MYZGEMM( 'N','N', kdim, nvec, my_n, ONE, hpsi(1,n_start), kdmx, vc(n_start,1), nvecx, &
                     ZERO, psi(1,nvec+1), kdmx )
+#if defined(__OPENMP_GPU)
         !$omp target update from(psi)
+#endif
         CALL dev_memcpy(hpsi, psi(:,nvec+1:), &
                                         (/1, npwx*npol/), 1, &
                                         (/1, nvec/), 1)
         CALL mp_sum( hpsi(:,1:nvec), inter_bgrp_comm )
+#if defined(__OPENMP_GPU)
         !$omp target update to(hpsi)
+#endif
         !$acc end host_data
         !
         ! ... refresh the reduced hamiltonian
@@ -733,7 +815,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !vc(1:nbase,1:nbase) = ZERO
         !
         !$acc kernels
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do
+#endif
         DO n = 1, nbase
            hc(n,n) = CMPLX( e(n), 0.0_DP ,kind=DP)
            sc(n,n) = ONE
@@ -760,14 +844,18 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   DEALLOCATE( recv_counts )
   DEALLOCATE( displs )
   DEALLOCATE( conv )
+#if defined(__OPENMP_GPU)
   !$omp end target data
+#endif
   DEALLOCATE( ew )
   DEALLOCATE( vc )
   DEALLOCATE( hc )
   DEALLOCATE( sc )
   !
   IF ( uspp ) THEN
+#if defined(__OPENMP_GPU)
      !$omp target exit data map(delete:spsi)
+#endif
      DEALLOCATE( spsi )
   ENDIF
   !
@@ -778,8 +866,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   DEALLOCATE( psi )
   !
   !$acc end data
+#if defined(__OPENMP_GPU)
   !$omp target update from(e)
   !$omp end target data
+#endif
   !
   CALL stop_clock( 'cegterg' ); !write(*,*) 'stop cegterg' ; FLUSH(6)
   !call print_clock( 'cegterg' )
@@ -943,7 +1033,9 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
      ALLOCATE( spsi( npwx*npol, nvecx ), STAT=ierr )
      IF( ierr /= 0 ) &
         CALL errore( ' pcegterg ',' cannot allocate spsi ', ABS(ierr) )
+#if defined(__OPENMP_GPU)
      !$omp target enter data map(alloc:spsi)
+#endif
   END IF
   !
   ! ... Initialize the matrix descriptor
@@ -1010,9 +1102,13 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
   CALL h_psi( npwx, npw, nvec, psi, hpsi ) ; nhpsi = nhpsi + nvec
   !
   IF ( uspp ) THEN
+#if defined(__OPENMP_GPU)
           !$omp target update to(psi)
+#endif
           CALL s_psi( npwx, npw, nvec, psi, spsi )
+#if defined(__OPENMP_GPU)
           !$omp target update from(spsi)
+#endif
   ENDIF
   !
   ! ... hl contains the projection of the hamiltonian onto the reduced
@@ -1130,9 +1226,13 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
      CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
      !
      IF ( uspp ) THEN
+#if defined(__OPENMP_GPU)
              !$omp target update to(psi)
+#endif
              CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
+#if defined(__OPENMP_GPU)
              !$omp target update from(spsi)
+#endif
      ENDIF
      !
      ! ... update the reduced hamiltonian
@@ -1317,7 +1417,9 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
   DEALLOCATE( ew )
   !
   IF ( uspp ) THEN
+#if defined(__OPENMP_GPU)
           !$omp target exit data map(delete:spsi)
+#endif
           DEALLOCATE( spsi )
   ENDIF
   !

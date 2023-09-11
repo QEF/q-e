@@ -92,7 +92,9 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
   IF (n_start .le. n_end) THEN
      call MYZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, aux(1,n_start), kdmx, (0.D0,0.D0), hc(1,n_start), nstart, .TRUE. )
+#if defined(__OPENMP_GPU)
      !$omp target update from(hc)
+#endif
   ENDIF
   !
   CALL mp_sum( hc, inter_bgrp_comm )
@@ -105,14 +107,18 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
      CALL s_psi( npwx, npw, nstart, psi, aux )
      if (n_start .le. n_end) THEN
      CALL MYZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, aux(1,n_start), kdmx, (0.D0,0.D0), sc(1,n_start), nstart, .TRUE. )
+#if defined(__OPENMP_GPU)
      !$omp target update from(sc)
+#endif
      ENDIF
      !
   ELSE
      !
      if (n_start .le. n_end) THEN
      CALL MYZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, psi(1,n_start), kdmx, (0.D0,0.D0), sc(1,n_start), nstart, .TRUE. )
+#if defined(__OPENMP_GPU)
      !$omp target update from(sc)
+#endif
      ENDIF
      !  
   END IF
@@ -125,7 +131,9 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   !
   call start_clock('rotwfck:diag');  !write(*,*) 'start rotwfck:diag';FLUSH(6)
   CALL diaghg( nstart, nbnd, hc, sc, nstart, en, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
+#if defined(__OPENMP_GPU)
   !$omp target update to(vc)
+#endif
   call stop_clock('rotwfck:diag');  !write(*,*) 'stop rotwfck:diag';FLUSH(6)
   call start_clock('rotwfck:evc'); !write(*,*) 'start rotwfck:evc';FLUSH(6)
   !
@@ -133,7 +141,9 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   !
   ! ...  update the basis set
   !  
+#if defined(__OPENMP_GPU)
   !$omp target teams distribute parallel do collapse(2)
+#endif
   DO j = 1 , nstart
     DO i = 1 , kdmx
       aux(i,j)=(0.D0,0.D0)
@@ -142,17 +152,25 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   if (n_start .le. n_end) THEN
     CALL MYZGEMM( 'N','N', kdim, nbnd, my_n, (1.D0,0.D0), psi(1,n_start), kdmx, vc(n_start,1), nstart, (0.D0,0.D0), aux, kdmx, .TRUE. )
   ENDIF
+#if defined(__OPENMP_GPU)
   !$omp target update from(aux)
+#endif
   CALL mp_sum( aux, inter_bgrp_comm )
+#if defined(__OPENMP_GPU)
   !$omp target update to(aux)
+#endif
   !     
+#if defined(__OPENMP_GPU)
   !$omp target teams distribute parallel do collapse(2)
+#endif
   DO j = 1, nbnd
     DO i = 1, kdmx
       evc(i,j) = aux(i,j)
     END DO
   END DO
+#if defined(__OPENMP_GPU)
   !$omp end target data
+#endif
   call stop_clock('rotwfck:evc') ; !write(*,*) 'start rotwfck;evc';FLUSH(6)
   !
   DEALLOCATE( en )
