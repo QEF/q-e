@@ -452,9 +452,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      END DO
      !$acc end parallel
 #else
-     !!!!omp parallel do collapse(3)
 #if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do collapse(3)
+#elif defined(__OPENMP)
+     !$omp parallel do collapse(3)
 #endif
      DO n = 1, notcnv
         DO ipol = 1, npol
@@ -467,7 +468,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
            END DO
         END DO
      END DO
-     !!!!omp end parallel do
+#if defined(__OPENMP)
+     !$omp end parallel do
+#endif
 #endif
      !
      !$acc host_data use_device(psi, hpsi, vc, ew)
@@ -546,9 +549,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         END DO
      END DO
 #else
-     !!!!omp parallel do collapse(3)
 #if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do collapse(3)
+#elif defined(__OPENMP)
+     !$omp parallel do collapse(3)
 #endif
      DO n = 1, notcnv
         DO ipol = 1, npol
@@ -561,7 +565,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
            END DO
         END DO
      END DO
-     !!!!omp end parallel do
+#if defined(__OPENMP)
+     !$omp end parallel do
+#endif
 #endif
      !
      ! ... here compute the hpsi and spsi of the new functions
