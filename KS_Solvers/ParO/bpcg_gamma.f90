@@ -14,15 +14,15 @@
 !
 ! The approach following Algorithm is the parallel orbital updating algorithm:
 ! 1. Choose initial $E_{\mathrm{cut}}^{(0)}$ and then obtain $V_{N_G^{0}}$, use the SCF method to solve
-!    the Kohn-Sham equation in $V_{G_0}$ and get the initial $(\lambda_i^{0},u_i^{0}), i=1, \cdots, N$ 
+!    the Kohn-Sham equation in $V_{G_0}$ and get the initial $(\lambda_i^{0},u_i^{0}), i=1, \cdots, N$
 !    and let $n=0$.
 ! 2. For $i=1,2,\ldots,N$, find $e_i^{n+1/2}\in V_{G_n}$ satisfying
 !    $$a(\rho_{in}^{n}; e_i^{n+1/2}, v) = -[(a(\rho_{in}^{n}; u_i^{n}, v) - \lambda_i^{n} (u_i^{n}, v))]  $$
-!    in parallel , where $\rho_{in}^{n}$ is the input charge density obtained by the orbits obtained in the 
+!    in parallel , where $\rho_{in}^{n}$ is the input charge density obtained by the orbits obtained in the
 !    $n$-th iteration or the former iterations.
 ! 3. Find $\{\lambda_i^{n+1},u_i^{n+1}\} \in \mathbf{R}\times \tilde{V}_N$   satisfying
 !      $$a(\tilde{\rho}; u_i^{n+1}, v) = ( \lambda_i^{n+1}u_i^{n+1}, v) \quad  \forall v \in \tilde{V}_N$$
-!      where $\tilde{V}_N = \mathrm{span}\{e_1^{n+1/2},\ldots,e_N^{n+1/2},u_1^{n},\ldots,u_N^{n}\}$, 
+!      where $\tilde{V}_N = \mathrm{span}\{e_1^{n+1/2},\ldots,e_N^{n+1/2},u_1^{n},\ldots,u_N^{n}\}$,
 !      $\tilde{\rho}(x)$ is the input charge density obtained from the previous orbits.
 ! 4. Convergence check: if not converged, set $n=n+1$, go to step 2; else,  stop.
 !
@@ -30,7 +30,7 @@
 !  X. Dai, X. Gong, A. Zhou, J. Zhu,
 !   A parallel orbital-updating approach for electronic structure calculations, arXiv:1405.0260 (2014).
 ! X. Dai, Z. Liu, X. Zhang, A. Zhou,
-!  A Parallel Orbital-updating Based Optimization Method for Electronic Structure Calculations, 
+!  A Parallel Orbital-updating Based Optimization Method for Electronic Structure Calculations,
 !   arXiv:1510.07230 (2015).
 ! Yan Pan, Xiaoying Dai, Xingao Gong, Stefano de Gironcoli, Gian-Marco Rignanese, and Aihui Zhou,
 !  A Parallel Orbital-updating Based Plane Wave Basis Method. J. Comp. Phys. 348, 482-492 (2017).
@@ -68,17 +68,17 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
 
   COMPLEX(DP),INTENT(IN) :: psi0(npwx,nbnd)  ! psi0  needed to compute the Pv projection
   COMPLEX(DP),INTENT(IN) :: spsi0(npwx,nbnd) ! Spsi0  needed to compute the Pv projection
-  INTEGER,  INTENT(IN)   :: npw, npwx, nbnd, nvec ! input dimensions 
+  INTEGER,  INTENT(IN)   :: npw, npwx, nbnd, nvec ! input dimensions
   REAL(DP), INTENT(IN)   :: ethr                  ! threshold for convergence.
   REAL(DP), INTENT(INOUT)   :: e(nvec)            ! current estimate of the target eigenvalues
-  COMPLEX(DP),INTENT(INOUT) :: psi(npwx,nvec),hpsi(npwx,nvec),spsi(npwx,nvec) ! 
+  COMPLEX(DP),INTENT(INOUT) :: psi(npwx,nvec),hpsi(npwx,nvec),spsi(npwx,nvec) !
                                                   ! input: the current estimate of the wfcs
                                                   ! output: the estimated correction vectors
   INTEGER, INTENT(INOUT) :: nhpsi                 ! (updated) number of Hpsi evaluations
   !
   ! ... LOCAL variables
   !
-  INTEGER, PARAMETER :: maxter = 5 ! maximum number of CG iterations 
+  INTEGER, PARAMETER :: maxter = 5 ! maximum number of CG iterations
   !
   COMPLEX(DP), ALLOCATABLE ::  b(:,:),                        & ! RHS for testing
                                p(:,:), hp(:,:), sp(:,:), z(:,:) ! additional working vetors
@@ -112,7 +112,7 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
   !
   npw2  = 2*npw
   npwx2 = 2*npwx
-  block_size = min(nvec,64) 
+  block_size = min(nvec,64)
   !
   ALLOCATE( g0( block_size ), g1( block_size ), g2( block_size ), alpha( block_size ), gamma( block_size ) )
   ALLOCATE( ethr_cg( block_size ), ff( block_size ), ff0( block_size ), cg_iter( block_size ) )
@@ -123,7 +123,7 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
   done    = 0  ! the number of correction vectors already solved
   nactive = 0  ! the number of correction vectors currently being updated
 
-  !$acc kernels 
+  !$acc kernels
   cg_iter = 0  ! how many iteration each active vector has completed (<= maxter)
   !$acc end kernels
 
@@ -132,7 +132,7 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
      nnew = min(done+block_size,nvec)-(done+nactive) ! number of new corrections to be added to the seach
      if ( nnew > 0 ) then    ! add nnew vectors to the active list
         !write(6,*) ' nnew =', nnew
-        !$acc parallel  
+        !$acc parallel
         !$acc loop gang private(i)
         do l=nactive+1,nactive+nnew; i=l+done
            !write(6,*) ' l =',l,' i =',i
@@ -140,33 +140,33 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
            !$acc loop vector
            DO ii = 1, npwx
              b(ii,l) = e(i) * spsi(ii,i) - hpsi(ii,i)               ! initial gradient and saved RHS for later
-           END DO 
+           END DO
            !$acc loop vector
            DO ii = 1, npwx
              z(ii,l) = b(ii,l)
-           END DO 
+           END DO
         end do
         !$acc end parallel
 
-        ! initial preconditioned gradient 
+        ! initial preconditioned gradient
         !$acc host_data use_device(z, e)
         do l=nactive+1,nactive+nnew; i=l+done
-           call g_1psi(npwx,npw,z(:,l),e(i))     
+           call g_1psi(npwx,npw,z(:,l),e(i))
         end do
         !$acc end host_data
 
      !- project on conduction bands
         CALL start_clock( 'pcg:ortho' )
         !$acc host_data use_device(spsi0, psi0, z, spsi0vec)
-        CALL MYDGEMM( 'T','N', nbnd,nnew,npw2, 2.D0, spsi0, npwx2, z(:,nactive+1), npwx2, 0.D0, spsi0vec, nbnd )
-        IF ( gstart == 2 ) CALL MYDGER( nbnd, nnew, -1.D0, spsi0, npwx2, z(:,nactive+1), npwx2, spsi0vec, nbnd )
+        CALL MYDGEMM2( 'T','N', nbnd,nnew,npw2, 2.D0, spsi0, npwx2, z(:,nactive+1), npwx2, 0.D0, spsi0vec, nbnd,.FALSE. )
+        IF ( gstart == 2 ) CALL MYDGER2( nbnd, nnew, -1.D0, spsi0, npwx2, z(:,nactive+1), npwx2, spsi0vec, nbnd,.FALSE. )
         CALL mp_sum( spsi0vec, intra_bgrp_comm )
-        CALL MYDGEMM( 'N','N', npw2,nnew,nbnd,-1.D0, psi0, npwx2, spsi0vec, nbnd, 1.D0, z(:,nactive+1), npwx2 )
+        CALL MYDGEMM2( 'N','N', npw2,nnew,nbnd,-1.D0, psi0, npwx2, spsi0vec, nbnd, 1.D0, z(:,nactive+1), npwx2,.FALSE. )
         !$acc end host_data
         CALL stop_clock( 'pcg:ortho' )
      !-
 
-        !$acc parallel loop 
+        !$acc parallel loop
         do l=nactive+1,nactive+nnew
            g0(l) = 2.D0*MYDDOT_VECTOR_GPU(npw2,z(:,l),b(:,l))
            IF (gstart==2) g0(l)=g0(l)-CONJG(z(1,l))*b(1,l)
@@ -174,9 +174,9 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
 
         !$acc host_data use_device(g0)
         CALL mp_sum( g0(nactive+1:nactive+nnew), intra_bgrp_comm ) ! g0 = < initial z | initial gradient b >
-        !$acc end host_data 
+        !$acc end host_data
 
-        !$acc parallel 
+        !$acc parallel
         !$acc loop gang private(i)
         do l=nactive+1,nactive+nnew; i=l+done
            !write(6,*) ' l =',l,' i =',i
@@ -184,20 +184,20 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
            !write (6,*) 0, g0(l), ff(l)
 
            ! ethr_cg = ethr  ! CG convergence threshold could be set from input but it is not ...
-           ethr_cg(l) = 1.0D-2  ! it makes more sense to fix the convergence of the CG solution to a 
+           ethr_cg(l) = 1.0D-2  ! it makes more sense to fix the convergence of the CG solution to a
                                 ! fixed function of the RHS (see ethr_cg update later).
            ethr_cg(l) = max ( 0.01*ethr, ethr_cg(l) * g0(l) ) ! here we set the convergence of the correction
            !write(6,*) 'ethr_cg :', ethr_cg(l)
 
-           !$acc loop vector 
+           !$acc loop vector
            do ii = 1, npwx
              ! zero the trial solution
-             psi(ii,i) = ZERO 
-             hpsi(ii,i) = ZERO 
+             psi(ii,i) = ZERO
+             hpsi(ii,i) = ZERO
              spsi(ii,i) = ZERO
              ! initial search direction
              p(ii,l) = z(ii,l)
-           end do 
+           end do
            cg_iter(l) = 0 ! this is a new correction vector, reset its interation count
         end do
         !$acc end parallel
@@ -210,7 +210,7 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
 
      if ( nactive == 0 ) EXIT MAIN_LOOP               ! this is the only MAIN_LOOP EXIT condition
 
-     !$acc kernels 
+     !$acc kernels
      cg_iter(1:nactive) = cg_iter(1:nactive) + 1      ! update interation counters
      !$acc end kernels
 
@@ -223,10 +223,10 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
      !$acc end host_data
      CALL stop_clock( 'pcg:hs_1psi' )
 
-     !$acc parallel loop private(i)     
+     !$acc parallel loop private(i)
      do l = 1, nactive; i=l+done
         gamma(l) = 2.D0*MYDDOT_VECTOR_GPU(npw2,p(:,l),hp(:,l)) &
-                       - e(i) * 2.D0*MYDDOT_VECTOR_GPU(npw2,p(:,l),sp(:,l)) 
+                       - e(i) * 2.D0*MYDDOT_VECTOR_GPU(npw2,p(:,l),sp(:,l))
         IF (gstart==2) gamma(l) = gamma(l) - CONJG(p(1,l))*hp(1,l) + e(i) * CONJG(p(1,l))*sp(1,l)
      end do
 
@@ -234,19 +234,19 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
      CALL mp_sum( gamma(1:nactive), intra_bgrp_comm ) ! gamma = < p | hp - e sp >
      !$acc end host_data
 
-     !$acc parallel 
+     !$acc parallel
      !$acc loop gang private(i)
      do l = 1, nactive; i=l+done
         !write(6,*) ' l =',l,' i =',i
 
         alpha(l) = g0(l)/gamma(l)
         !write(6,*) 'g0, gamma, alpha :', g0(l), gamma(l), alpha(l)
-        !$acc loop vector 
+        !$acc loop vector
         DO ii = 1, npwx
           psi(ii,i)  = psi(ii,i)  + alpha(l) * p(ii,l)     ! updated solution
           hpsi(ii,i) = hpsi(ii,i) + alpha(l) * hp(ii,l)    ! updated solution
           spsi(ii,i) = spsi(ii,i) + alpha(l) * sp(ii,l)    ! updated solution
-        END DO 
+        END DO
 
         g2(l) = 2.D0 * ( MYDDOT_VECTOR_GPU(npw2,z(:,l),b(:,l)) &
                 + e(i) * MYDDOT_VECTOR_GPU(npw2,z(:,l),spsi(:,i)) &
@@ -263,8 +263,8 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
      do l = 1, nactive                                ! update the preconditioned gradient
         DO ii = 1, npwx
           i=l+done
-          z(ii,l) = b(ii,l) + e(i) * spsi(ii,i) - hpsi(ii,i) 
-        END DO 
+          z(ii,l) = b(ii,l) + e(i) * spsi(ii,i) - hpsi(ii,i)
+        END DO
      end do
 
      !$acc host_data use_device(z, e)
@@ -276,14 +276,14 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
   !- project on conduction bands
      CALL start_clock( 'pcg:ortho' )
      !$acc host_data use_device(spsi0, psi0, z, spsi0vec)
-     CALL MYDGEMM( 'T','N', nbnd,nactive,npw2, 2.D0, spsi0, npwx2, z, npwx2, 0.D0, spsi0vec, nbnd )
-     IF ( gstart == 2 ) CALL MYDGER( nbnd, nactive, -1.D0, spsi0, npwx2, z, npwx2, spsi0vec, nbnd )
+     CALL MYDGEMM2( 'T','N', nbnd,nactive,npw2, 2.D0, spsi0, npwx2, z, npwx2, 0.D0, spsi0vec, nbnd, .FALSE. )
+     IF ( gstart == 2 ) CALL MYDGER2( nbnd, nactive, -1.D0, spsi0, npwx2, z, npwx2, spsi0vec, nbnd, .FALSE. )
      CALL mp_sum( spsi0vec, intra_bgrp_comm )
-     CALL MYDGEMM( 'N','N', npw2,nactive,nbnd,-1.D0, psi0, npwx2, spsi0vec, nbnd, 1.D0, z, npwx2 )
+     CALL MYDGEMM2( 'N','N', npw2,nactive,nbnd,-1.D0, psi0, npwx2, spsi0vec, nbnd, 1.D0, z, npwx2, .FALSE. )
      !$acc end host_data
      CALL stop_clock( 'pcg:ortho' )
   !-
-     !$acc parallel loop private(i) 
+     !$acc parallel loop private(i)
      do l = 1, nactive; i=l+done
         g1(l) = 2.D0 * ( MYDDOT_VECTOR_GPU(npw2,z(:,l),b(:,l)) &
                 + e(i) * MYDDOT_VECTOR_GPU(npw2,z(:,l),spsi(:,i)) &
@@ -293,9 +293,9 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
 
      !$acc host_data use_device(g1)
      CALL mp_sum( g1(1:nactive), intra_bgrp_comm )   ! g1 = < new z | new gradient b + e spsi - hpsi >
-     !$acc end host_data 
+     !$acc end host_data
 
-     !$acc parallel loop private(i) 
+     !$acc parallel loop private(i)
      do l = 1, nactive; i = l + done                 ! evaluate the function ff
         ff(l) = - ( e(i)*MYDDOT_VECTOR_GPU(npw2,psi(:,i),spsi(:,i)) &
                         -MYDDOT_VECTOR_GPU(npw2,psi(:,i),hpsi(:,i)) ) &
@@ -313,22 +313,22 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
         !write (6,*) cg_iter(l), g1(l), ff(l),  gamma(l)
 
         !$acc serial copyout(ff_check, ff0_check, g1_check, cg_iter_l, iter_check) copyin(maxter)
-        ff_check   = ff(l) > ff0(l)  
-        ff0_check  = ff0(l) < 0.d0 
-        g1_check   = ABS ( g1(l) ) < ethr_cg(l)  
+        ff_check   = ff(l) > ff0(l)
+        ff0_check  = ff0(l) < 0.d0
+        g1_check   = ABS ( g1(l) ) < ethr_cg(l)
         cg_iter_l  = cg_iter(l)
-        iter_check = cg_iter_l == maxter 
-        !$acc end serial 
+        iter_check = cg_iter_l == maxter
+        !$acc end serial
 
         !write (6,*) cg_iter(l), g1(l), ff(l),  gamma(l)
 
         IF ( ff_check .AND. ff0_check ) THEN
-           !$acc parallel loop 
+           !$acc parallel loop
            DO ii = 1, npwx
              psi(ii,i)  = psi(ii,i)  - alpha(l) * p(ii,l) ! fallback solution: if last iter failed to improve ff0
              hpsi(ii,i) = hpsi(ii,i) - alpha(l) * hp(ii,l)! exit whitout updating and ...
              spsi(ii,i) = spsi(ii,i) - alpha(l) * sp(ii,l)! hope next time it'll be better
-           END DO 
+           END DO
         END IF
 
         !write(6,*) 'g0, g1, g2 :', g0(l), g1(l), g2(l)
@@ -355,10 +355,10 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
              p (ii,l) = psi (ii,done+newdone) ; psi (ii,done+newdone) = psi (ii,i) ; psi (ii,i) = p (ii,l)
              hp(ii,l) = hpsi(ii,done+newdone) ; hpsi(ii,done+newdone) = hpsi(ii,i) ; hpsi(ii,i) = hp(ii,l)
              sp(ii,l) = spsi(ii,done+newdone) ; spsi(ii,done+newdone) = spsi(ii,i) ; spsi(ii,i) = sp(ii,l)
-           END DO 
+           END DO
 
-           ee = e(done+newdone)       
-           e(done+newdone) = e(i)      
+           ee = e(done+newdone)
+           e(done+newdone) = e(i)
            e(i) = ee
 
            !write(6,*) ' overwrite converged p/hp/etc l = ',l, ' with newdone = ',newdone
@@ -383,7 +383,7 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
            !$acc loop independent
            DO ii = 1, npwx
              p(ii,l) = z(ii,l) + beta * p(ii,l)      ! updated search direction
-           END DO 
+           END DO
            !write(6,*) 'beta :', beta
 
            ff0(l) = ff(l)                       ! updated minimum value reached by the function
@@ -405,11 +405,11 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
         do l=1, nactive
 
            !write(6,*) ' l+newdone =',l+newdone,'  ->   l =',l
-           !$acc parallel loop 
+           !$acc parallel loop
            DO ii = 1, npwx
              p(ii,l) = p(ii,l+newdone) ; hp(ii,l) = hp(ii,l+newdone) ; sp(ii,l) = sp(ii,l+newdone)
-             b(ii,l) = b(ii,l+newdone) ;  z(ii,l) =  z(ii,l+newdone) 
-           END DO 
+             b(ii,l) = b(ii,l+newdone) ;  z(ii,l) =  z(ii,l+newdone)
+           END DO
            !$acc kernels
            ff0(l) = ff0(l+newdone) ; ff(l) = ff(l+newdone)
            g0(l) = g0(l+newdone) ; g1(l) = g1(l+newdone) ; g2(l) = g2(l+newdone)
@@ -421,7 +421,7 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
      END IF
 
 !  END DO iterate      Here is where the pcg loop would terminate
-    
+
   END DO  MAIN_LOOP
   !write (6,*) ' exit  pcg loop'
 

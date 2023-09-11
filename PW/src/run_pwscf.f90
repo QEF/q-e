@@ -76,6 +76,9 @@ SUBROUTINE run_pwscf( exit_status )
   USE oscdft_base,       ONLY : oscdft_ctx
   USE oscdft_functions,  ONLY : oscdft_run_pwscf
 #endif
+#if defined(__ROCBLAS)
+  USE rocblas,           ONLY : rocblas_init, rocblas_destroy
+#endif
   !
   IMPLICIT NONE
   !
@@ -136,6 +139,9 @@ SUBROUTINE run_pwscf( exit_status )
   IF (use_environ) THEN
      IF (is_ms_gcs()) CALL init_ms_gcs()
   END IF
+#endif
+#if defined(__ROCBLAS)
+  CALL rocblas_init()  
 #endif
   !
   CALL check_stop_init()
@@ -356,6 +362,9 @@ SUBROUTINE run_pwscf( exit_status )
   !
   CALL qmmm_shutdown()
   !
+#if defined(__ROCBLAS)
+  CALL rocblas_destroy()  
+#endif
   RETURN
   !
 9010 FORMAT( /,5X,'Current dimensions of program PWSCF are:', &

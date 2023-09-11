@@ -123,7 +123,6 @@ init_run.o \
 init_us_2.o \
 init_vloc.o \
 input.o \
-io_rho_xml.o \
 irrek.o \
 iweights.o \
 intersite_V.o \
@@ -196,6 +195,7 @@ ruotaijk.o \
 run_pwscf.o \
 s_1psi.o \
 s_psi.o \
+s_psi_omp.o \
 save_in_cbands.o \
 save_in_electrons.o \
 scale_h.o \
@@ -237,7 +237,6 @@ transform_becsum_so.o \
 transform_becsum_nc.o \
 transform_qq_so.o \
 trnvecc.o \
-two_chem.o\
 update_pot.o \
 us_exx.o \
 usnldiag.o \
@@ -269,7 +268,9 @@ oscdft_functions.o \
 oscdft_occupations.o \
 oscdft_wfcO.o \
 oscdft_forces.o \
-oscdft_forces_subs.o
+oscdft_forces_subs.o \
+two_chem.o\
+io_rho_xml.o
 
 
 # GPU versions of routines

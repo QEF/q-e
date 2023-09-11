@@ -71,6 +71,7 @@ SUBROUTINE stress( sigma )
   CALL start_clock( 'stress' )
   !
   !$acc update device( g, gg )
+  !$omp target update to(g)
 #if defined(__CUDA)
   gl_d = gl
 #endif

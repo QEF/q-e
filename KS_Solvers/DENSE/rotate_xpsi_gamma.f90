@@ -85,7 +85,15 @@ SUBROUTINE rotate_xpsi_gamma( h_psi, s_psi, overlap, &
   !
   CALL start_clock('rotxpsig:hpsi')
   !
+#if defined(__OPENMP_GPU)
+  !$omp target data map(alloc:psi,hpsi)
+  !$omp target update to(psi,hpsi)     
   CALL h_psi( npwx, npw, nstart, psi, hpsi )
+  !$omp target update from(hpsi)    
+  !$omp end target data
+#else
+  CALL h_psi( npwx, npw, nstart, psi, hpsi )
+#endif
   !
   CALL stop_clock('rotxpsig:hpsi')
   !
@@ -309,7 +317,11 @@ SUBROUTINE protate_xpsi_gamma( h_psi, s_psi, overlap, &
   !
   CALL start_clock('protxpsig:hpsi')
   !
+  !$omp target data map(alloc:psi,hpsi)
+  !$omp target update to(psi,hpsi)     
   CALL h_psi( npwx, npw, nstart, psi, hpsi )
+  !$omp target update from(hpsi)    
+  !$omp end target data
   !
   CALL stop_clock('protxpsig:hpsi')
   !

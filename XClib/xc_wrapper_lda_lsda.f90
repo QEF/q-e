@@ -46,9 +46,17 @@ SUBROUTINE xc( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out, gpu_arg
     !
   ELSE
     !
+#if defined(_OPENACC)
     !$acc data copyin( rho_in ), copyout( ex_out, ec_out, vx_out, vc_out )
+#elif defined(__OPENMP_GPU)
+    !$omp target data map(to:rho_in) map(from:ex_out,ec_out,vx_out,vc_out)
+#endif
     CALL xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
+#if defined(_OPENACC)
     !$acc end data
+#elif defined(__OPENMP_GPU)
+    !$omp end target data
+#endif
     !
   ENDIF
   !
@@ -273,28 +281,46 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
   CASE( 2 )
      !
      ALLOCATE( zeta(length) )
+#if defined(_OPENACC)
      !$acc data create( zeta )
      !$acc parallel loop
+#elif defined(__OPENMP_GPU)
+     !$omp target data map(alloc:zeta)
+     !$omp target teams distribute parallel do
+#endif
      DO ir = 1, length
        arho_ir = ABS(rho_in(ir,1))
        IF (arho_ir > rho_threshold_lda) zeta(ir) = rho_in(ir,2) / arho_ir
      ENDDO
      CALL xc_lsda( length, rho_in(:,1), zeta, ex_out, ec_out, vx_out, vc_out )
+#if defined(_OPENACC)
      !$acc end data
+#elif defined(__OPENMP_GPU)
+     !$omp end target data
+#endif
      DEALLOCATE( zeta )
      !
    CASE( 4 )
      !
      ALLOCATE( zeta(length) )
+#if defined(_OPENACC)
      !$acc data create( zeta )
      !$acc parallel loop
+#elif defined(__OPENMP_GPU)
+     !$omp target data map(alloc:zeta)
+     !$omp target teams distribute parallel do
+#endif
      DO ir = 1, length
        arho_ir = ABS(rho_in(ir,1))
        IF (arho_ir > rho_threshold_lda) zeta(ir) = SQRT( rho_in(ir,2)**2 + rho_in(ir,3)**2 + &
                                                        rho_in(ir,4)**2 ) / arho_ir ! amag/arho
      ENDDO
      CALL xc_lsda( length, rho_in(:,1), zeta, ex_out, ec_out, vx_out, vc_out )
+#if defined(_OPENACC)
      !$acc end data
+#elif defined(__OPENMP_GPU)
+     !$omp end target data
+#endif
      DEALLOCATE( zeta )
      !
    CASE DEFAULT

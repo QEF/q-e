@@ -10,6 +10,7 @@ set(src_util
     mp_base.f90
     mp_bands_util.f90
     nvtx_wrapper.f90
+    roctx_wrapper.f90
     parallel_include.f90
     print_mem.f90
     util_param.f90

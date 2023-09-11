@@ -142,9 +142,24 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( vltot  ) )     DEALLOCATE( vltot  )
   IF ( ALLOCATED( rho_core  ) )  DEALLOCATE( rho_core  )
   IF ( ALLOCATED( rhog_core ) )  DEALLOCATE( rhog_core )
-  IF ( ALLOCATED( psic    ) )    DEALLOCATE( psic    )
-  IF ( ALLOCATED( psic_nc ) )    DEALLOCATE( psic_nc )
-  IF ( ALLOCATED( vrs     ) )    DEALLOCATE( vrs     )
+  IF ( ALLOCATED( psic ) ) THEN
+#if defined (__OPENMP_GPU)
+     !$omp target exit data map(delete:psic)
+#endif
+     DEALLOCATE( psic )
+  ENDIF
+  IF ( ALLOCATED( psic_nc ) ) THEN
+#if defined (__OPENMP_GPU)
+     !$omp target exit data map(delete:psic_nc)
+#endif
+     DEALLOCATE( psic_nc )
+  ENDIF
+  IF ( ALLOCATED( vrs ) )    THEN
+#if defined(__OPENMP_GPU)
+    !$omp target exit data map(delete:vrs)
+#endif
+    DEALLOCATE( vrs )
+  ENDIF
   CALL deallocate_scf_gpu()
   !
   ! ... arrays allocated in allocate_locpot.f90 ( and never deallocated )
@@ -166,6 +181,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in init_run.f90 ( and never deallocated )
   !
   !$acc exit data delete(g2kin)
+  !$omp target exit data map(delete:g2kin)
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
   CALL deallocate_wvfct_gpu()
   IF ( ALLOCATED( et ) )         DEALLOCATE( et )
