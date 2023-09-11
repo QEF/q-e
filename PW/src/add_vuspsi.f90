@@ -109,9 +109,9 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        IF ( ierr /= 0 ) &
           CALL errore( ' add_vuspsi_gamma ', ' cannot allocate ps ', ABS(ierr) )
        !
+#if defined(__OPENMP_GPU)
        !$omp target data map(to:becp%r,deeq,vkb) map(alloc:ps)
        !
-#if defined(__OPENMP_GPU)
        !$omp target teams distribute parallel do collapse(2)
        DO j = 1, m_max 
           DO i = 1, nkb
@@ -184,7 +184,9 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
              !
           ENDDO
        ENDIF
+#if defined(__OPENMP_GPU)
        !$omp end target data
+#endif
        !
        DEALLOCATE( ps )
        !

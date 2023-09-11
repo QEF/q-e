@@ -91,7 +91,8 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   CALL divide(inter_bgrp_comm,nstart,n_start,n_end)
   my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
   IF (n_start .le. n_end) THEN
-     call MYZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, aux(1,n_start), kdmx, (0.D0,0.D0), hc(1,n_start), nstart, .TRUE. )
+     call MYZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, aux(1,n_start), kdmx, (0.D0,0.D0), &
+                                                                                 hc(1,n_start), nstart, .TRUE. )
 #if defined(__OPENMP_GPU)
      !$omp target update from(hc)
 #endif
@@ -106,7 +107,8 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
      !
      CALL s_psi( npwx, npw, nstart, psi, aux )
      if (n_start .le. n_end) THEN
-     CALL MYZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, aux(1,n_start), kdmx, (0.D0,0.D0), sc(1,n_start), nstart, .TRUE. )
+     CALL MYZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, aux(1,n_start), kdmx, &
+                                                           (0.D0,0.D0), sc(1,n_start), nstart, .TRUE. )
 #if defined(__OPENMP_GPU)
      !$omp target update from(sc)
 #endif
@@ -115,7 +117,8 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   ELSE
      !
      if (n_start .le. n_end) THEN
-     CALL MYZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, psi(1,n_start), kdmx, (0.D0,0.D0), sc(1,n_start), nstart, .TRUE. )
+     CALL MYZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, psi(1,n_start), kdmx, &
+                                                           (0.D0,0.D0), sc(1,n_start), nstart, .TRUE. )
 #if defined(__OPENMP_GPU)
      !$omp target update from(sc)
 #endif
@@ -150,7 +153,8 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
     END DO
   END DO
   if (n_start .le. n_end) THEN
-    CALL MYZGEMM( 'N','N', kdim, nbnd, my_n, (1.D0,0.D0), psi(1,n_start), kdmx, vc(n_start,1), nstart, (0.D0,0.D0), aux, kdmx, .TRUE. )
+    CALL MYZGEMM( 'N','N', kdim, nbnd, my_n, (1.D0,0.D0), psi(1,n_start), kdmx, vc(n_start,1), &
+                                                            nstart, (0.D0,0.D0), aux, kdmx, .TRUE. )
   ENDIF
 #if defined(__OPENMP_GPU)
   !$omp target update from(aux)

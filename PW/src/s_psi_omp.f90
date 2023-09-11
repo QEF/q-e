@@ -55,16 +55,24 @@ SUBROUTINE s_psi_omp( lda, n, m, psi, spsi )
      ! use band parallelization here
      ALLOCATE( recv_counts(mp_size(inter_bgrp_comm)), displs(mp_size(inter_bgrp_comm)) )
      CALL divide_all( inter_bgrp_comm,m,m_start,m_end, recv_counts,displs )
+#if defined(__OPENMP_GPU)
      !$omp target update from(spsi)
+#endif
      CALL mp_type_create_column_section( spsi(1,1), 0, lda*npol, lda*npol, column_type )
+#if defined(__OPENMP_GPU)
      !$omp target update to(spsi)
+#endif
      !
      ! Check if there at least one band in this band group
      IF (m_end >= m_start) &
         CALL s_psi_omp_( lda, n, m_end-m_start+1, psi(1,m_start), spsi(1,m_start) )
+#if defined(__OPENMP_GPU)
      !$omp target update from(spsi)
+#endif
      CALL mp_allgather( spsi, column_type, recv_counts, displs, inter_bgrp_comm )
+#if defined(__OPENMP_GPU)
      !$omp target update to(spsi)
+#endif
      !
      CALL mp_type_free( column_type )
      DEALLOCATE( recv_counts )
@@ -125,7 +133,9 @@ SUBROUTINE s_psi_omp_( lda, n, m, psi, spsi )
   ! ... initialize  spsi
   !
   !CALL threaded_memcpy( spsi, psi, lda*npol*m*2 )
+#if defined(__OPENMP_GPU)
   !$omp target teams distribute parallel do collapse(2)
+#endif
   DO j = 1, m
     DO i = 1, lda*npol
       spsi(i,j)=psi(i,j)
@@ -150,9 +160,13 @@ SUBROUTINE s_psi_omp_( lda, n, m, psi, spsi )
 !SdG: ... before computing the us-only contribution ...
            CALL s_psir_gamma( ibnd, m )
 !SdG: ... and add it to spsi (already containing psi).
+#if defined(__OPENMP_GPU)
            !$omp target update from(spsi)
+#endif
            CALL fwfft_orbital_gamma( spsi, ibnd, m, add_to_orbital=.TRUE. )
+#if defined(__OPENMP_GPU)
            !$omp target update to(spsi)
+#endif
         ENDDO
         !
      ELSE
@@ -177,9 +191,13 @@ SUBROUTINE s_psi_omp_( lda, n, m, psi, spsi )
 !SdG: ... before computing the us-only contribution ...
            CALL s_psir_k( ibnd, m )
 !SdG: ... and add it to spsi (already containing psi).
+#if defined(__OPENMP_GPU)
            !$omp target update from(spsi)
+#endif
            CALL fwfft_orbital_k( spsi, ibnd, m, add_to_orbital=.TRUE. )
+#if defined(__OPENMP_GPU)
            !$omp target update to(spsi)
+#endif
         ENDDO
         !
      ELSE
@@ -242,9 +260,13 @@ SUBROUTINE s_psi_omp_( lda, n, m, psi, spsi )
        ALLOCATE( ps( nkb, m_max ), STAT=ierr )
        IF( ierr /= 0 ) &
           CALL errore( ' s_psi_gamma ', ' cannot allocate memory (ps) ', ABS(ierr) )
+#if defined(__OPENMP_GPU)
        !$omp target data map(alloc:ps) map(to:qq_at,vkb,becp%r)
+#endif
        !
+#if defined(__OPENMP_GPU)
        !$omp target teams distribute parallel do collapse(2)
+#endif
        DO jh = 1, m_max    
          DO ih = 1, nkb
            ps(ih,jh) = 0.0_DP
@@ -300,9 +322,13 @@ SUBROUTINE s_psi_omp_( lda, n, m, psi, spsi )
              !
              ! block rotation
              !
+#if defined(__OPENMP_GPU)
              !$omp target update from(ps)
+#endif
              CALL mp_circular_shift_left( ps, icyc, becp%comm )
+#if defined(__OPENMP_GPU)
              !$omp target update to(ps)
+#endif
              !
              icur_blk = icur_blk + 1
              IF( icur_blk == nproc ) icur_blk = 0
@@ -311,7 +337,9 @@ SUBROUTINE s_psi_omp_( lda, n, m, psi, spsi )
           !
        ENDIF
        !
+#if defined(__OPENMP_GPU)
        !$omp end target data
+#endif
        DEALLOCATE( ps ) 
        !
        !
@@ -347,13 +375,17 @@ SUBROUTINE s_psi_omp_( lda, n, m, psi, spsi )
        IF( ierr /= 0 ) &
           CALL errore( ' s_psi_k ', ' cannot allocate buffer (qqc) ', ABS(ierr) )
        !
+#if defined(__OPENMP_GPU)
        !$omp target data map(to:qq_at,vkb,becp%k) map(alloc:qqc,ps) 
+#endif
        DO nt = 1, nsp
           !
           IF ( upf(nt)%tvanp ) THEN
              DO na = 1, nat
                 IF ( ityp(na) == nt ) THEN
+#if defined(__OPENMP_GPU)
                    !$omp target teams distribute parallel do collapse(2)
+#endif
                       DO jh = 1, nhm
                          DO ih = 1, nhm
                             qqc(ih,jh, na) = CMPLX ( qq_at(ih,jh, na), 0.0_dp, KIND=dp )
@@ -365,7 +397,9 @@ SUBROUTINE s_psi_omp_( lda, n, m, psi, spsi )
           !
        END DO
        !
+#if defined(__OPENMP_GPU)
        !$omp target teams distribute parallel do collapse(2)
+#endif
        DO jh = 1, m
           DO ih = 1, nkb
              ps(ih,jh) = ( 0.D0, 0.D0 )
@@ -397,7 +431,9 @@ SUBROUTINE s_psi_omp_( lda, n, m, psi, spsi )
                       lda, ps, nkb, ( 1.D0, 0.D0 ), spsi, lda, .TRUE.)
           !
        ENDIF
+#if defined(__OPENMP_GPU)
        !$omp end target data
+#endif
        !
        DEALLOCATE( ps )
        DEALLOCATE( qqc )
@@ -429,8 +465,10 @@ SUBROUTINE s_psi_omp_( lda, n, m, psi, spsi )
        IF( ierr /= 0 ) &
           CALL errore( ' s_psi_nc ', ' cannot allocate memory (ps) ', ABS(ierr) )
        !
+#if defined(__OPENMP_GPU)
        !$omp target data map(alloc:ps) map(to:qq_at,qq_so,vkb,becp%nc)
        !$omp target teams distribute parallel do collapse(3)
+#endif
        DO jkb = 1, m
          DO ipol = 1, npol
            DO ikb = 1, nkb
@@ -441,10 +479,14 @@ SUBROUTINE s_psi_omp_( lda, n, m, psi, spsi )
        !
        IF ( .NOT. lspinorb ) THEN
           ALLOCATE( qqc(1:nhm, 1:nhm, 1:nat), STAT=ierr )
+#if defined(__OPENMP_GPU)
           !$omp target enter data map(alloc:qqc)
+#endif
           IF( ierr /= 0 .and. ierr /= -1 ) &
              CALL errore( ' s_psi_nc ', ' cannot allocate buffer (qqc) ', ABS(ierr) )
+#if defined(__OPENMP_GPU)
           !$omp target teams distribute parallel do collapse(3)
+#endif
           DO na = 1, nat
              DO jh = 1, nhm
                 DO ih = 1, nhm
@@ -491,14 +533,18 @@ SUBROUTINE s_psi_omp_( lda, n, m, psi, spsi )
        END DO
 
        IF ( .NOT. lspinorb ) THEN
+#if defined(__OPENMP_GPU)
          !$omp target exit data map(delete:qqc)
+#endif
          DEALLOCATE( qqc )
        ENDIF
        !
        CALL MYZGEMM2 ( 'N', 'N', n, m*npol, nkb, (1.d0,0.d0) , vkb, &
                     lda, ps, nkb, (1.d0,0.d0) , spsi(1,1), lda, .true. )
        !
+#if defined(__OPENMP_GPU)
        !$omp end target data
+#endif
        DEALLOCATE( ps )
        !
        !
