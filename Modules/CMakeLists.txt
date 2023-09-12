@@ -238,6 +238,7 @@ target_link_libraries(qe_modules
         qe_upflib
         qe_fox
         qe_utilx
+        qe_device_lapack
         qe_openacc_fortran)
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_modules
