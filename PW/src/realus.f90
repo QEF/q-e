@@ -741,7 +741,8 @@ MODULE realus
                      dqxyz(:) = dqtot_int*tabp(ia)%xyz(:,ir) / &
                                      tabp(ia)%dist(ir)
                   ELSE
-                     dqxyz(:) = 0.0_dp
+                     !dqxyz(:) = 0.0_dp
+                     dqxyz(:) = dqtot_int
                   ENDIF
                   !
                   ijh = 0
