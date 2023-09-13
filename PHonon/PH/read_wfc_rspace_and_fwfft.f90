@@ -171,7 +171,7 @@ USE el_phon,    ONLY : elph_nbnd_min,elph_nbnd_max
      first_k = 1
      last_k = nks
      write(*,*) 'nks:', nks
-     first_band = elph_nbnd_min
+     first_band = 1
      last_band = elph_nbnd_max
      !
      ! 

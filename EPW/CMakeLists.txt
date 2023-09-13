@@ -51,9 +51,8 @@ set(sources
     src/loadbm.f90
     src/bfield.f90
     src/io_indabs.f90
-    src/ephblochkq.f90
-    src/wfc_elec.f90
-    src/test_tools.f90)
+    src/polaron.f90
+    )
 
 qe_add_library(qe_epw ${sources})
 target_link_libraries(

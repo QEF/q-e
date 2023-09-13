@@ -60,7 +60,8 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   USE constants_l,          ONLY: e2
   USE kind_l,               ONLY: DP
   USE dft_setting_params,   ONLY: igcx, igcc, is_libxc, rho_threshold_gga, &
-                                  grho_threshold_gga, rho_threshold_lda
+                                  grho_threshold_gga, rho_threshold_lda,   &
+                                  ishybrid, exx_started, exx_fraction
   USE qe_drivers_d_gga
 #if defined(__LIBXC)
 #include "xc_version.h"
@@ -99,7 +100,7 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
 #endif
   !
   INTEGER :: k, length_dlxc
-  REAL(DP) :: rht, zeta
+  REAL(DP) :: rht, zeta, xcoef
   REAL(DP), ALLOCATABLE :: sigma(:)
   REAL(DP), PARAMETER :: small = 1.E-10_DP, rho_trash = 0.5_DP
   REAL(DP), PARAMETER :: epsr=1.0d-6, epsg=1.0d-6
@@ -177,15 +178,18 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
                          v2rhosigma_x(1), v2sigma2_x(1) )
     !$acc data copyin( v2rho2_x, v2rhosigma_x, v2sigma2_x )
     !
+    xcoef = 1.d0
+    IF ( ishybrid .AND. exx_started .AND. exx_fraction>0.d0) xcoef = 1.d0-exx_fraction
+    !
     IF (sp==1) THEN
       !$acc parallel loop
       DO k = 1, length
         IF ( rho_lxc(k)>small .AND. SQRT(ABS(sigma(k)))>small ) THEN
           IF ( rho_lxc(k)>rho_threshold_lda ) THEN
-            dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_x(k)
-            dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_x(k)*2._DP
+            dvxc_rr(k,1,1) = xcoef * e2 * v2rho2_x(k)
+            dvxc_sr(k,1,1) = xcoef * e2 * v2rhosigma_x(k)*2._DP
           ENDIF
-          dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_x(k)*4._DP
+          dvxc_ss(k,1,1) = xcoef * e2 * v2sigma2_x(k)*4._DP
         ENDIF
       ENDDO
     ELSEIF (sp==2) THEN
@@ -193,14 +197,14 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
       DO k = 1, length
         IF ( (r_in(k,1)>epsr .AND. SQRT(ABS(sigma(3*k-2)))>epsg) .AND. &
              (r_in(k,2)>epsr .AND. SQRT(ABS(sigma(3*k)))  >epsg) ) THEN
-          dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_x(3*k-2)
-          dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_x(6*k-5)*4._DP
-          dvxc_rr(k,2,2) = dvxc_rr(k,2,2) + e2 * v2rho2_x(3*k)
-          dvxc_ss(k,2,2) = dvxc_ss(k,2,2) + e2 * v2sigma2_x(6*k)*4._DP
-          dvxc_rr(k,1,2) = dvxc_rr(k,1,2) + e2 * v2rho2_x(3*k-1)
-          dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_x(6*k-5)*2._DP
-          dvxc_rr(k,2,1) = dvxc_rr(k,2,1) + e2 * v2rho2_x(3*k-1)
-          dvxc_sr(k,2,2) = dvxc_sr(k,2,2) + e2 * v2rhosigma_x(6*k)*2._DP
+          dvxc_rr(k,1,1) = xcoef * e2 * v2rho2_x(3*k-2)
+          dvxc_ss(k,1,1) = xcoef * e2 * v2sigma2_x(6*k-5)*4._DP
+          dvxc_rr(k,2,2) = xcoef * e2 * v2rho2_x(3*k)
+          dvxc_ss(k,2,2) = xcoef * e2 * v2sigma2_x(6*k)*4._DP
+          dvxc_rr(k,1,2) = xcoef * e2 * v2rho2_x(3*k-1)
+          dvxc_sr(k,1,1) = xcoef * e2 * v2rhosigma_x(6*k-5)*2._DP
+          dvxc_rr(k,2,1) = xcoef * e2 * v2rho2_x(3*k-1)
+          dvxc_sr(k,2,2) = xcoef * e2 * v2rhosigma_x(6*k)*2._DP
         ENDIF
       ENDDO
     ENDIF

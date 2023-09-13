@@ -85,6 +85,8 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
   !! Z * G
   REAL(KIND = DP) :: fnat(3)
   !! Z * G * cos(arg)
+  REAL(KIND = DP) :: fmtx(3, 3)
+  !! Z * Z * G * cos(arg)
   REAL(KIND = DP) :: reff(2, 2)
   !! Effective screening length for 2D materials  
   REAL(KIND = DP) :: grg
@@ -177,9 +179,13 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
               zcg(:)  = g1 * zeu(1, :, nb) + g2 * zeu(2, :, nb) + g3 * zeu(3, :, nb)
               fnat(:) = fnat(:) + zcg(:) * COS(arg)
             ENDDO
+            ! Impose Hermiticity on long-range part of dynamical matrix
+            ! Symmetrize long-range part of the on-site dynamical matrix by its conjugate transpose
+            fmtx = MATMUL(RESHAPE(zag, (/3,1/)), RESHAPE(fnat, (/1,3/)))
+            fmtx = (fmtx + TRANSPOSE(fmtx)) / 2.d0
             DO j = 1, 3
               DO i = 1, 3
-                dyn(i, j, na, na) = dyn(i, j, na, na) - facgd * zag(i) * fnat(j)
+                dyn(i, j, na, na) = dyn(i, j, na, na) - facgd * fmtx(i,j)
               ENDDO ! i
             ENDDO ! j
           ENDDO ! nat

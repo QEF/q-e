@@ -112,7 +112,9 @@ SUBROUTINE addusdens_g(rho)
 #endif
   !
   !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
   !$omp target teams distribute parallel do collapse(2)
+#endif
   DO is= 1, nspin_mag
     DO ig = 1, ngm
       aux(ig,is) = (0.d0,0.d0)
@@ -120,7 +122,9 @@ SUBROUTINE addusdens_g(rho)
   ENDDO
   !
   !$acc parallel loop
+#if defined(__OPENMP_GPU)
   !$omp target teams distribute parallel do
+#endif
   DO ig = 1, ngm_l
      qmod(ig) = SQRT(gg(ngm_s+ig-1))*tpiba
   ENDDO
@@ -143,7 +147,9 @@ SUBROUTINE addusdens_g(rho)
         !
         ALLOCATE( skk(ngm_l,nab), tbecsum(nij,nab,nspin_mag), aux2(ngm_l,nij) )
         !$acc data create(skk,tbecsum,aux2)
+#if defined(__OPENMP_GPU)
         !$omp target data map(alloc:skk,tbecsum,aux2)
+#endif
         !
         CALL start_clock_gpu( 'addusd:skk' )
         nb = 0
@@ -153,7 +159,9 @@ SUBROUTINE addusdens_g(rho)
               !tbecsum(:,nb,:) = becsum(1:nij,na,1:nspin_mag)
               !
               !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
               !$omp target teams distribute parallel do collapse(2)
+#endif
               DO im = 1, nspin_mag
                  DO ij = 1, nij
 #if defined(__CUDA)
@@ -165,7 +173,9 @@ SUBROUTINE addusdens_g(rho)
               ENDDO
               !
               !$acc parallel loop present(eigts1,eigts2,eigts3,mill)
+#if defined(__OPENMP_GPU)
               !$omp target teams distribute parallel do
+#endif
               DO ig = 1, ngm_l
                  skk(ig,nb) = eigts1(mill(1,ngm_s+ig-1),na) * &
                               eigts2(mill(2,ngm_s+ig-1),na) * &
@@ -188,18 +198,15 @@ SUBROUTINE addusdens_g(rho)
            DO ih = 1, nh(nt)
               DO jh = ih, nh(nt)
                  ijh = ijh + 1
-#if defined(__CUDA) && defined(_OPENACC)
-                 !$acc host_data use_device(qmod,qgm,ylmk0)
-                 CALL qvan2_gpu( ngm_l, ih, jh, nt, qmod, qgm, ylmk0 )
-                 !$acc end host_data
-#elif defined(__OPENMP_GPU)
+#if defined(__OPENMP_GPU)
                  CALL qvan2_omp( ngm_l, ih, jh, nt, qmod, qgm, ylmk0 )
 #else
                  CALL qvan2( ngm_l, ih, jh, nt, qmod, qgm, ylmk0 )
-                 !$acc update self(ylmk0)
 #endif
                  !$acc parallel loop
+#if defined(__OPENMP_GPU)
                  !$omp target teams distribute parallel do
+#endif
                  DO ig = 1, ngm_l
                     aux(ngm_s+ig-1,is) = aux(ngm_s+ig-1,is) + aux2(ig,ijh)*qgm(ig)
                  ENDDO
@@ -208,14 +215,18 @@ SUBROUTINE addusdens_g(rho)
            ENDDO
         ENDDO
         !
+#if defined(__OPENMP_GPU)
         !$omp end target data
+#endif
         !$acc end data
         DEALLOCATE( tbecsum, skk, aux2 )
         !
      ENDIF
   ENDDO
   !
+#if defined(__OPENMP_GPU)
   !$omp end target data
+#endif
   !$acc end data
   DEALLOCATE( ylmk0 )
   DEALLOCATE( qgm, qmod )

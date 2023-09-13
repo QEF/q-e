@@ -1,7 +1,7 @@
 LATEX      = pdflatex
 LATEX2HTML = latex2html
 
-VERSION = 7.1
+VERSION := $(shell awk -F\' '/version_number/{print $$2}' ../../../include/qe_version.h )
 
 PDFS = user_guide.pdf
 AUXS = $(PDFS:.pdf=.aux)
@@ -17,7 +17,7 @@ html: version user_guide
 version:
 	echo '\\def\\version{$(VERSION)}' > version.tex
 
-$(PDFS): %.pdf: %.tex
+$(PDFS): %.pdf: %.tex version.tex
 	$(LATEX)  $<
 	$(LATEX)  $<
 

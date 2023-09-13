@@ -1,5 +1,5 @@
 !
-! Copyright (C) Quantum ESPRESSO group
+! Copyright (C) 2002-2023 Quantum ESPRESSO group
 !
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -18,12 +18,8 @@ SUBROUTINE errore( calling_routine, message, ierr )
   !
   ! ... in parallel execution unit 6 is written only by the first node;
   ! ... all other nodes have unit 6 redirected to nothing (/dev/null).
-  ! ... As a consequence an error not occurring on the first node
-  ! ... will be invisible. For T3E and ORIGIN machines, this problem
-  ! ... is solved by writing an error message to unit * instead of 6.
-  ! ... Whenever possible (IBM SP machines), we write to the standard
-  ! ... error, unit 0 (the message will appear in the error files
-  ! ... produced by loadleveler).
+  ! ... We write to the "*" unit instead, that appears on all nodes.
+  ! ... Effective but annoying!
   !
   USE util_param
 #if defined(__PTRACE) && defined(__INTEL_COMPILER)
@@ -51,19 +47,6 @@ SUBROUTINE errore( calling_routine, message, ierr )
         TRIM(calling_routine), TRIM(ADJUSTL(cerr))
   WRITE( UNIT = *, FMT = '(5X,A)' ) TRIM(message)
   WRITE( UNIT = *, FMT = '(1X,78("%"),/)' )
-  !
-#if defined (__MPI) && defined (__AIX)
-  !
-  ! ... in the case of ibm machines it is also written on the "0" unit
-  ! ... which is automatically connected to stderr
-  !
-  WRITE( UNIT = 0, FMT = '(/,1X,78("%"))')
-  WRITE( UNIT = 0, FMT = '(5X,"Error in routine ",A," (",A,"):")' ) &
-        TRIM(calling_routine), TRIM(ADJUSTL(cerr))
-  WRITE( UNIT = 0, FMT = '(5X,A)' ) TRIM(message)
-  WRITE( UNIT = 0, FMT = '(1X,78("%"),/)' )
-  !
-#endif
   !
   WRITE( *, '("     stopping ...")' )
   !

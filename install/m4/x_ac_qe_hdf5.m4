@@ -11,7 +11,7 @@ AC_ARG_WITH(hdf5,
       skip_hdf5_module_check=1 
    else
       with_hdf5_path="$withval"
-      skip_hdf5_module_chek=0
+      skip_hdf5_module_check=0
       with_hdf5=1
    fi],
    [with_hdf5=0])
@@ -107,7 +107,7 @@ if test "$use_parallel" -ne 0; then
               AC_CHECK_FILE($with_hdf5_include_line/hdf5.mod,,[
                   AC_MSG_WARN([***HDF5 Fortran extensions not found])
                   have_hdf5=0])
-          elif skip_hdf5_module_chek -eq 0; then  
+          elif test "$skip_hdf5_module_check" -eq 0; then  
               AC_CHECK_FILE($with_hdf5_path/include/hdf5.mod,,[
                   AC_MSG_WARN([***HDF5 Fortran extensions not found])
                   have_hdf5=0])

@@ -27,6 +27,7 @@ dist.o \
 electrons_base.o \
 environ_base_module.o \
 environment.o \
+extffield.o \
 fd_gradient.o \
 fft_base.o \
 fft_rho.o \
@@ -43,6 +44,8 @@ io_global.o  \
 ions_base.o \
 kind.o \
 lmdif.o \
+plugin_flags.o \
+makov_payne.o \
 mdiis.o \
 mm_dispersion.o \
 mp_bands.o \
@@ -56,7 +59,6 @@ noncol.o \
 open_close_input_file.o \
 parameters.o \
 parser.o \
-plugin_flags.o \
 plugin_arguments.o \
 plugin_variables.o \
 pw_dot.o \

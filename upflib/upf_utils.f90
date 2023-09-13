@@ -12,16 +12,20 @@ MODULE upf_utils
 
   PUBLIC :: capital, lowercase, isnumeric, matches, version_compare
 
-! ... FUNCTION capital : converts a lowercase letter to uppercase
-!                        returns input character if not a lowercase letter
-! ... FUNCTION lowercase : as above, in reverse
-! ... FUNCTION isnumeric : returns .true. if input character is a digit
-!
-! ... FUNCTION matches   : returns .true. if string1 matches string2  
-!
-! ... FUNCTION version_compare: Compare two version strings; the result can be
-!                               "newer", "equal", "older", ""
-! 
+!! FUNCTION capital : converts a lowercase letter to uppercase
+!!                    returns input character if not a lowercase letter
+!! FUNCTION lowercase : as above, in reverse
+!! FUNCTION isnumeric : returns .true. if input character is a digit
+!!
+!! FUNCTION matches   : returns .true. if string1 matches string2  
+!!
+!! FUNCTION version_compare: Compare two version strings; the result can be
+!!
+  PUBLIC :: spdf_to_l, l_to_spdf
+
+!! FUNCTION spdf_to_l: converts from 's' to l=0, from 'p' to l=1, and so on
+!! FUNCTION l_to_psdf: the opposite of spdf_to_l
+  
   CHARACTER(LEN=26), PARAMETER :: lower = 'abcdefghijklmnopqrstuvwxyz', &
                                   upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -199,7 +203,6 @@ END FUNCTION matches
     INTEGER   :: basis, icheck1, icheck2
     INTEGER   :: ierr
     !   
-
     version_compare = " " 
     !   
     CALL version_parse( str1, version1(1), version1(2), version1(3), ierr) 
@@ -229,5 +232,70 @@ END FUNCTION matches
     ENDIF
     !   
   END FUNCTION version_compare
-
+  !
+  FUNCTION spdf_to_l (spdf) RESULT(l)
+    !
+    ! Returns the value of the orbital quantum number
+    !
+    IMPLICIT NONE
+    CHARACTER(len=1), INTENT(IN) :: spdf
+    INTEGER :: l
+    !
+    IF ( spdf == 's' .OR. spdf == 'S' ) THEN
+       l = 0
+    ELSEIF ( spdf == 'p' .OR. spdf == 'P' ) THEN
+       l = 1
+    ELSEIF ( spdf == 'd' .or. spdf == 'D' ) THEN
+       l = 2
+    ELSEIF ( spdf == 'f' .OR. spdf == 'F' ) THEN
+       l = 3
+    ELSE
+       l =-1
+    ENDIF
+    !
+  END FUNCTION spdf_to_l
+  !
+  FUNCTION l_to_spdf (l, flag) RESULT(spdf)
+    !
+    ! Convert the value of the orbital quantum number into a character
+    ! flag=.TRUE.  or flag not present: returns capital letters
+    ! flag=.FALSE.                    : returns small letters
+    !
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: l
+    LOGICAL, INTENT(IN), OPTIONAL :: flag
+    CHARACTER(LEN=1) :: spdf
+    LOGICAL :: flag_
+    !
+    flag_=.true.
+    IF ( PRESENT(flag) ) flag_=flag
+    IF (flag_) THEN
+       IF (l == 0) THEN
+          spdf = 'S'
+       ELSEIF (l == 1) THEN
+          spdf = 'P'
+       ELSEIF (l == 2) THEN
+          spdf = 'D'
+       ELSEIF (l == 3) THEN
+          spdf = 'F'
+       ELSE
+          spdf = '?'
+       ENDIF
+    ELSE
+       IF (l == 0) THEN
+          spdf = 's'
+       ELSEIF (l == 1) THEN
+          spdf = 'p'
+       ELSEIF (l == 2) THEN
+          spdf = 'd'
+       ELSEIF (l == 3) THEN
+          spdf = 'f'
+       ELSE
+          spdf = '?'
+       ENDIF
+    ENDIF
+    ! IF ( spdf == '?' ) WRITE(*,'("l_to_spdf: incorrect l value")')
+    !
+  END FUNCTION l_to_spdf
+  !
 END MODULE upf_utils

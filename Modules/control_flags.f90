@@ -37,7 +37,8 @@ MODULE control_flags
             tnosee, tnosep, tnoseh, tcp, tcap,                               &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
             tscreen, gamma_only, force_pairing, lecrpa, tddfpt, smallmem,    &
-            tfirst, tlast, tprint, trescalee, max_xml_steps, dfpt_hub  
+            tfirst, tlast, tprint, trescalee, max_xml_steps, dfpt_hub,       &
+            dt_xml_old
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tksw, trhor, thdyn, trhow
@@ -108,6 +109,11 @@ MODULE control_flags
   !
   REAL(DP) :: dt_old = -1.0_DP
   !
+  ! This is necessary to mantain compatibility with the old way of changing the molecular dynamics integration timestep.
+  ! The code needs to check, in case the old method is used, that the input old timestep and the xml old timestep are the same
+  !
+  REAL(DP) :: dt_xml_old = -1.0_DP 
+  !
   ! ... Wave function randomization
   !
   LOGICAL  :: trane = .FALSE.
@@ -174,6 +180,7 @@ MODULE control_flags
   !
   INTEGER, PUBLIC :: &
     ngm0,             &! used in mix_rho
+    nexxiter,         &! the maximum number of outer iteration (exx)
     niter,            &! the maximum number of iteration
     nmix,             &! the number of iteration kept in the history
     imix               ! the type of mixing (0=plain,1=TF,2=local-TF)

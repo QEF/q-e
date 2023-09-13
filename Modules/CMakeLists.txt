@@ -18,6 +18,7 @@ set(src_modules
     electrons_base.f90 
     environ_base_module.f90
     environment.f90 
+    extffield.f90
     fd_gradient.f90 
     fft_base.f90 
     fft_rho.f90 
@@ -34,6 +35,7 @@ set(src_modules
     ions_base.f90 
     kind.f90 
     lmdif.f90
+    makov_payne.f90
     mdiis.f90 
     mm_dispersion.f90 
     mp_bands.f90 
@@ -236,6 +238,7 @@ target_link_libraries(qe_modules
         qe_upflib
         qe_fox
         qe_utilx
+        qe_device_lapack
         qe_openacc_fortran)
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_modules

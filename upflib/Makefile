@@ -18,6 +18,8 @@ init_us_1.o \
 init_us_2_base.o \
 init_tab_atwfc.o \
 init_tab_beta.o \
+init_tab_rho.o \
+init_tab_rhc.o \
 init_tab_qrad.o
 
 OBJS_NODEP= \
@@ -27,6 +29,8 @@ dqvan2.o \
 dylmr2.o \
 gth.o \
 interp_atwfc.o \
+interp_rhc.o \
+interp_drhc.o \
 paw_variables.o \
 pseudo_types.o \
 qvan2.o \
@@ -34,6 +38,9 @@ radial_grids.o \
 read_cpmd.o \
 read_fhi.o \
 read_ncpp.o \
+xmltools.o \
+splinelib.o \
+read_psml.o \
 read_ps.o \
 read_upf_new.o \
 read_upf_v1.o \
@@ -41,7 +48,6 @@ read_uspp.o \
 spinor.o \
 sph_ind.o \
 sph_bes.o \
-splinelib.o \
 simpsn.o \
 upf_auxtools.o \
 upf_const.o \
@@ -59,19 +65,13 @@ uspp.o \
 uspp_data.o \
 uspp_param.o \
 write_upf_new.o \
-xmltools.o \
 ylmr2.o
 
 # GPU versions of routines
 OBJS_GPU= \
   dylmr2_gpu.o \
   init_us_2_base_gpu.o \
-  interp_atwfc_gpu.o \
-  qvan2_gpu.o \
-  simpsn_gpu.o \
-  sph_bes_gpu.o \
-  ylmr2_gpu.o \
-  upf_acc_interfaces.o
+  ylmr2_gpu.o
 
 OBJS_NODEP+= dom.o wxml.o
 

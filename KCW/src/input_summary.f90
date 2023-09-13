@@ -33,6 +33,7 @@ subroutine input_summary ( )
     WRITE(stdout, 42)  "# calculation         =", TRIM(calculation)
     WRITE(stdout, 45)  "# kcw_iverbosity      =", kcw_iverbosity
     WRITE(stdout, 43)  "# kcw_at_ks           =", kcw_at_ks     
+    WRITE(stdout, 47)  "# MP grid             =", mp1, mp2, mp3
     WRITE(stdout, 45)  "# spin_component      =", spin_component
     WRITE(stdout, 43)  "# homo_only           =", homo_only    
     WRITE(stdout, 43)  "# read_unitary_matrix =", read_unitary_matrix  
@@ -40,7 +41,7 @@ subroutine input_summary ( )
     WRITE(stdout, 43)  "# l_vcut              =", l_vcut    
     WRITE(stdout, 42)  "# assume_isolated     =", TRIM(assume_isolated)
     !
-    IF ( .NOT. kcw_at_ks) THEN 
+    IF ( .NOT. kcw_at_ks .AND. .NOT. calculation=='cc' ) THEN 
 !!! WANNIER
       WRITE( stdout, '(/, 6X, "WANNIER ")') 
       WRITE(stdout, 42)  "# seedname            =", TRIM(seedname)
@@ -59,7 +60,6 @@ subroutine input_summary ( )
       WRITE(stdout, 46)  "# tr2                 =", tr2
       WRITE(stdout, 45)  "# niter               =", niter
       WRITE(stdout, 45)  "# nmix                =", nmix
-      WRITE(stdout, 47)  "# MP grid             =", mp1, mp2, mp3
       WRITE(stdout, 46)  "# eps_inf             =", eps_inf
       IF (i_orb /= -1 )   WRITE(stdout, 45)  "# i_orb               =", i_orb
       WRITE(stdout, 43)  "# check_spread        =", check_spread     

@@ -292,12 +292,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                ishift = ishift_list(i) ; ikb = ishift + ih
                !
                IF (.NOT. is_multinp(i)) THEN
-                  ps(ikb) =  CMPLX(deff(ih,ih,na) * becpr(ikb,ibnd_loc))
+                  ps(ikb) =  CMPLX(deff(ih,ih,na) * becpr(ikb,ibnd_loc), KIND=DP)
                ELSE
                   nh_np = nh_list(i)
                   !
                   ps(ikb) = CMPLX( SUM( becpr(ishift+1:ishift+nh_np,ibnd_loc) &
-                                    * deff(ih,1:nh_np,na) ) )
+                                    * deff(ih,1:nh_np,na) ), KIND=DP )
                ENDIF
              ENDDO
              !
@@ -321,22 +321,22 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                    gk1  = gk(i,1) ;  gk2 = gk(i,2) ;  gk3 = gk(i,3)
                    qm1i = qm1(i)
                    !
-                   cv = evci * CMPLX(gk1 * gk1  * qm1i)
+                   cv = evci * CMPLX(gk1 * gk1  * qm1i, KIND=DP)
                    dot11 = dot11 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
                    !
-                   cv = evci * CMPLX(gk2 * gk1 * qm1i)
+                   cv = evci * CMPLX(gk2 * gk1 * qm1i, KIND=DP)
                    dot21 = dot21 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
                    !
-                   cv = evci * CMPLX(gk3 * gk1 * qm1i)
+                   cv = evci * CMPLX(gk3 * gk1 * qm1i, KIND=DP)
                    dot31 = dot31 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
                    !
-                   cv = evci * CMPLX(gk2 * gk2 * qm1i)
+                   cv = evci * CMPLX(gk2 * gk2 * qm1i, KIND=DP)
                    dot22 = dot22 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
                    !
-                   cv = evci * CMPLX(gk3 * gk2 * qm1i)
+                   cv = evci * CMPLX(gk3 * gk2 * qm1i, KIND=DP)
                    dot32 = dot32 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
                    !
-                   cv = evci * CMPLX(gk3 * gk3 * qm1i)
+                   cv = evci * CMPLX(gk3 * gk3 * qm1i, KIND=DP)
                    dot33 = dot33 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
                 ENDDO
              ENDDO
@@ -365,16 +365,16 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                    gk2 = gk(i,2)
                    gk3 = gk(i,3)
                    !
-                   cv = evci * CMPLX(gk1)
+                   cv = evci * CMPLX(gk1, KIND=DP)
                    dot11 = dot11 + DBLE(wsum1)* DBLE(cv) + DIMAG(wsum1)*DIMAG(cv)
                    dot21 = dot21 + DBLE(wsum2)* DBLE(cv) + DIMAG(wsum2)*DIMAG(cv)
                    dot31 = dot31 + DBLE(wsum3)* DBLE(cv) + DIMAG(wsum3)*DIMAG(cv)
                    !
-                   cv = evci * CMPLX(gk2)
+                   cv = evci * CMPLX(gk2, KIND=DP)
                    dot22 = dot22 + DBLE(wsum2)* DBLE(cv) + DIMAG(wsum2)*DIMAG(cv) 
                    dot32 = dot32 + DBLE(wsum3)* DBLE(cv) + DIMAG(wsum3)*DIMAG(cv)
                    ! 
-                   cv =  evci * CMPLX(gk3)
+                   cv =  evci * CMPLX(gk3, KIND=DP)
                    dot33 = dot33 + DBLE(wsum3)* DBLE(cv) + DIMAG(wsum3)*DIMAG(cv)
                 ENDDO
              ENDDO 
@@ -669,7 +669,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                ishift = ishift_list(i) ; ikb = ishift + ih
                !
                IF (.NOT. is_multinp(i)) THEN
-                  ps(ikb) = CMPLX(deeq(ih,ih,na,current_spin)) * &
+                  ps(ikb) = CMPLX(deeq(ih,ih,na,current_spin), KIND=DP) * &
                                                becpk(ikb,ibnd)
                ELSE 
                   nh_np = nh_list(i)
@@ -700,10 +700,10 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                DO i = 1, npw
                   evc1i = evcv(i)
                   evc2i = evcv(i+npwx)
-                  qm1i = CMPLX(qm1(i))
-                  gk1 = CMPLX(gk(i,1))
-                  gk2 = CMPLX(gk(i,2))
-                  gk3 = CMPLX(gk(i,3))
+                  qm1i = CMPLX(qm1(i), KIND=DP)
+                  gk1 = CMPLX(gk(i,1), KIND=DP)
+                  gk2 = CMPLX(gk(i,2), KIND=DP)
+                  gk3 = CMPLX(gk(i,3), KIND=DP)
                   worksum1 = ps_nc(ikb,1) * dvkb(i,ikb,4)
                   worksum2 = ps_nc(ikb,2) * dvkb(i,ikb,4)
                   Re_worksum1 = DBLE(worksum1) ;  Im_worksum1 = DIMAG(worksum1)
@@ -760,10 +760,10 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                   Re_worksum = DBLE(worksum) ;  Im_worksum = DIMAG(worksum)
                   !
                   evci = evcv(i)
-                  qm1i = CMPLX(qm1(i))
-                  gk1 = CMPLX(gk(i,1))
-                  gk2 = CMPLX(gk(i,2))
-                  gk3 = CMPLX(gk(i,3))
+                  qm1i = CMPLX(qm1(i), KIND=DP)
+                  gk1 = CMPLX(gk(i,1), KIND=DP)
+                  gk2 = CMPLX(gk(i,2), KIND=DP)
+                  gk3 = CMPLX(gk(i,3), KIND=DP)
                   !
                   cv = evci * gk1 * gk1 * qm1i
                   dot11 = dot11 + Re_worksum*DBLE(cv) + Im_worksum*DIMAG(cv)
@@ -815,9 +815,9 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
             DO ikb =1, nkb
                DO i = 1, npw
                   !
-                  gk1 = CMPLX(gk(i,1))
-                  gk2 = CMPLX(gk(i,2))
-                  gk3 = CMPLX(gk(i,3))
+                  gk1 = CMPLX(gk(i,1), KIND=DP)
+                  gk2 = CMPLX(gk(i,2), KIND=DP)
+                  gk3 = CMPLX(gk(i,3), KIND=DP)
                   !
                   ps1 = ps_nc(ikb,1)
                   ps2 = ps_nc(ikb,2)
@@ -879,9 +879,9 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                  psd2 = pss*dvkb(i,ikb,2)
                  psd3 = pss*dvkb(i,ikb,3)
                  evci = evcv(i)
-                 gk1  = CMPLX(gk(i,1))
-                 gk2  = CMPLX(gk(i,2))
-                 gk3  = CMPLX(gk(i,3))
+                 gk1  = CMPLX(gk(i,1), KIND=DP)
+                 gk2  = CMPLX(gk(i,2), KIND=DP)
+                 gk3  = CMPLX(gk(i,3), KIND=DP)
                  !
                  cv = evci * gk1
                  dot11 = dot11 + DBLE(psd1)*DBLE(cv) + DIMAG(psd1)*DIMAG(cv)

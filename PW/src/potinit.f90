@@ -250,6 +250,9 @@ SUBROUTINE potinit()
   !
   ! ... plugin contribution to local potential
   !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_scf_potential(rho, .FALSE., -1.d0, vltot)
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) CALL calc_environ_potential(rho, .FALSE., -1.D0, vltot)
 #endif

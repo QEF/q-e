@@ -75,7 +75,7 @@ SUBROUTINE kcw_prepare_q(do_band, setup_pw, iq)
      nbnd_old = nbnd 
      degspin = 2
      !
-     nbnd = MAX ( NINT( nelec / degspin ), NINT(nelup), NINT(neldw) ) + 2
+     nbnd = MAX ( NINT( nelec / degspin ), NINT(nelup), NINT(neldw) ) + 3
      !
      IF ( lgauss .OR. ltetra ) THEN
         !

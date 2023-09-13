@@ -41,6 +41,7 @@ SUBROUTINE force_cc( forcecc )
   ! counter on FFT grid points
   ! counter on types of atoms
   ! counter on atoms
+  INTEGER :: dfftp_nnr
   REAL(DP), ALLOCATABLE :: vxc(:,:), rhocg(:)
   ! exchange-correlation potential
   ! radial fourier transform of rho core
@@ -58,6 +59,8 @@ SUBROUTINE force_cc( forcecc )
      fact = 1.d0
   ENDIF
   !
+  dfftp_nnr = dfftp%nnr !to avoid unnecessary copies in acc loop
+  !
   ! ... recalculate the exchange-correlation potential
   !
   ALLOCATE( vxc(dfftp%nnr,nspin), vaux(dfftp%nnr,1) )
@@ -68,7 +71,7 @@ SUBROUTINE force_cc( forcecc )
   !
   IF ( nspin==2 ) THEN
      !$acc parallel loop
-     DO ir = 1, dfftp%nnr
+     DO ir = 1, dfftp_nnr
         vxc(ir,1) = 0.5d0 * ( vxc(ir,1) + vxc(ir,2) )
      ENDDO
   ENDIF
@@ -86,12 +89,7 @@ SUBROUTINE force_cc( forcecc )
   DO nt = 1, ntyp
      IF ( upf(nt)%nlcc ) THEN
         !
-        !$acc data copyin(rgrid(nt:nt),upf(nt:nt))
-        !$acc data copyin(rgrid(nt)%r,rgrid(nt)%rab,upf(nt)%rho_atc)
-        CALL drhoc( ngl, gl, omega, tpiba2, msh(nt), rgrid(nt)%r, &
-                    rgrid(nt)%rab, upf(nt)%rho_atc, rhocg )
-        !$acc end data
-        !$acc end data
+        CALL interp_rhc( nt, ngl, gl, tpiba2, rhocg )
         !
 #if !defined(_OPENACC)
         !$omp parallel do private( tau1,tau2,tau3,forcecc_x,forcecc_y,forcecc_z,&

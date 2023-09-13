@@ -17,7 +17,7 @@ SUBROUTINE init_tab_qrad (omega, intra_bgrp_comm)
   USE upf_const,    ONLY : fpi
   USE atom,         ONLY : rgrid
   USE uspp_param,   ONLY : upf, lmaxq, nbetam, nsp
-  USE uspp_data,    ONLY : nqxq, dq, qrad, qrad_d
+  USE uspp_data,    ONLY : nqxq, dq, qrad
   USE mp,           ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -91,10 +91,6 @@ SUBROUTINE init_tab_qrad (omega, intra_bgrp_comm)
   DEALLOCATE (besr)
   DEALLOCATE (aux)
   !
-  ! update GPU memory (taking care of zero-dim allocations)
-  !
-#if defined __CUDA
-  if ( nbetam > 0 .and. lmaxq > 0 ) qrad_d=qrad
-#endif
+  !$acc update device(qrad)
   !
 END SUBROUTINE init_tab_qrad

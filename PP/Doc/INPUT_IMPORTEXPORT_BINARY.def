@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package PWscf -program importexport_binary.x {
+input_description -distribution {Quantum ESPRESSO} -package PWscf -program importexport_binary.x {
 
     toc {}
 

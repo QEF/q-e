@@ -23,6 +23,7 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
   USE ldaU,             ONLY : Hubbard_l, Hubbard_n, Hubbard_l2, Hubbard_n2,        &
                                Hubbard_l3, Hubbard_n3, is_hubbard, is_hubbard_back, &
                                backall, hubbard_occ
+  USE upf_utils,        ONLY : l_to_spdf, capital
   !
   IMPLICIT NONE
   !
@@ -39,8 +40,6 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
   CHARACTER(LEN=2) :: label_aux
   CHARACTER(LEN=2), ALLOCATABLE :: label(:)
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
-  CHARACTER(LEN=1), EXTERNAL :: l_to_spdf
-  CHARACTER(LEN=1), EXTERNAL :: capital
   !
   counter = 0
   offset(:) = -1
@@ -62,14 +61,14 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
      !
      IF (is_hubbard(nt)) &
            label_hub = TRIM(int_to_char(Hubbard_n(nt))) // &
-                            l_to_spdf(Hubbard_l(nt),.TRUE.)
+                            l_to_spdf(Hubbard_l(nt))
      !
      IF (is_hubbard_back(nt)) THEN
            label_hub2 = TRIM(int_to_char(Hubbard_n2(nt))) // &
-                             l_to_spdf(Hubbard_l2(nt),.TRUE.)
+                             l_to_spdf(Hubbard_l2(nt))
         IF (backall(nt)) &
            label_hub3 = TRIM(int_to_char(Hubbard_n3(nt))) // &
-                             l_to_spdf(Hubbard_l3(nt),.TRUE.)
+                             l_to_spdf(Hubbard_l3(nt))
      ENDIF
      !
      ALLOCATE(label(ldim))
@@ -101,6 +100,15 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
                  ELSE
                     CALL errore('offset_atom_wfc', 'Hubbard manifold with &
                             &zero occupations is not allowed',1) 
+                 ENDIF
+                 ! For FR-PPs, hubbard_occ cannot be used here because it does not
+                 ! allow to distinguish between the occupied and unoccupied channels.
+                 IF (noncolin .AND. upf(nt)%has_so) THEN
+                    IF (upf(nt)%oc(n) > 0.D0) THEN
+                       hubbard_wfc = .TRUE.
+                    ELSE
+                       hubbard_wfc = .FALSE.
+                    ENDIF
                  ENDIF
               ENDIF
            ENDIF

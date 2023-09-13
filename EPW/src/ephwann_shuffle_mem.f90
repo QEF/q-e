@@ -72,7 +72,8 @@
   USE io_eliashberg, ONLY : write_ephmat, count_kpoints, kmesh_fine,kqmap_fine, &
                             !!!!!
                             !check_restart_ephwrite
-                            check_restart_ephwrite, write_dos, write_phdos
+                            check_restart_ephwrite, write_dos, write_phdos,     &
+                            file_open_ephmat 
                             !!!!!
   USE transport,     ONLY : transport_coeffs, scattering_rate_q
   USE grid,          ONLY : qwindow
@@ -1058,15 +1059,15 @@
 #endif
         IF (ierr /= 0) CALL errore('ephwann_shuffle', 'error in MPI_BCAST', 1)
         !
-        IF(ephwrite .AND. iq_restart > 1) THEN
+        IF(ephwrite .AND. iq_restart + 1 <= totq) THEN
           first_cycle = .TRUE.
-          CALL check_restart_ephwrite
+          CALL check_restart_ephwrite(iq_restart)
         ENDIF
         !
         ! Now, the iq_restart point has been done, so we need to do the next
         iq_restart = iq_restart + 1
         !
-        IF (iq_restart < totq) THEN
+        IF (iq_restart <= totq) THEN
           WRITE(stdout, '(5x,a,i8,a)')'We restart from ', iq_restart, ' q-points'
         ELSE
           WRITE(stdout, '(5x,a)')'All q-points are done, no need to restart !!'
@@ -1349,13 +1350,14 @@
       IF (specfun_ph) CALL spectral_func_ph_q(iqq, iq, totq)
       IF (specfun_pl .AND. vme == 'dipole') CALL spectral_func_pl_q(iqq, iq, totq, first_cycle)
       IF (ephwrite) THEN
-        IF (first_cycle .OR. iq == 1) THEN
+        IF (first_cycle .OR. iqq == 1) THEN
           CALL kmesh_fine
           CALL kqmap_fine
           CALL count_kpoints
+          CALL file_open_ephmat(lrepmatw2_restart)
           first_cycle = .FALSE.
         ENDIF
-        CALL write_ephmat(iqq, iq, totq)
+        CALL write_ephmat(iqq, iq, totq, lrepmatw2_restart)
       ENDIF
       !
       IF (.NOT. scatread) THEN
@@ -1375,7 +1377,7 @@
             IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating ef0_fca', 1)
             DO itemp = 1, nstemp
               etemp_fca = gtemp(itemp)
-              CALL fermi_carrier_indabs(itemp, etemp_fca, ef0_fca)
+              CALL fermi_carrier_indabs(itemp, etemp_fca, ef0_fca, ctype)
             ENDDO
           ENDIF
           CALL indabs_main(iq, totq, first_cycle, iq_restart)

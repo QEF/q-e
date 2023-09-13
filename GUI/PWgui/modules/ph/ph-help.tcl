@@ -227,6 +227,23 @@ help max_seconds -helpfmt helpdoc -helptext {
 
 
 # ------------------------------------------------------------------------
+help dftd3_hess -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>dftd3_hess</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'prefix.hess'
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre> File where the D3 dispersion hessian matrix is read.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help fildyn -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>fildyn</b></big>

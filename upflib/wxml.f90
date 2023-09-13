@@ -325,7 +325,7 @@ CONTAINS
           if ( ierr /= 0 ) print *, 'xml_addcharacter: ierr = ', ierr
           opentag = ''
        end if
-       write( cfield, '(1pes24.15)' ) field
+       write( cfield, '(1pes24.15e3)' ) field
        write( xf%unit, '(A)', advance='no' ) trim(adjustl(cfield))
     end if
     !
@@ -352,10 +352,10 @@ CONTAINS
           newline = .false.
        end if
        if ( sameline) then
-          write( cfield, '(1p3es24.15)' ) field
+          write( cfield, '(1p3es24.15e3)' ) field
           write( xf%unit, '(A)', advance='no' ) trim(adjustl(cfield))
        else
-          write( xf%unit, '(1p3es24.15)' ) field
+          write( xf%unit, '(1p3es24.15e3)' ) field
        endif
     end if
     !
@@ -378,7 +378,7 @@ CONTAINS
           if ( ierr /= 0 ) print *, 'xml_addcharacter: ierr = ', ierr
           opentag = ''
        end if
-       write( xf%unit, '(1p3es24.15)' ) field
+       write( xf%unit, '(1p3es24.15e3)' ) field
     end if
     !
   end subroutine xml_addcharacters_rm

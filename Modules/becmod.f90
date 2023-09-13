@@ -598,7 +598,9 @@ CONTAINS
     !
     CALL start_clock( 'calbec_omp' )
     IF ( npw == 0 ) betapsi(:,:)=0.0_DP
+#if defined(__OPENMP_GPU)
     !$omp target data map(tofrom:betapsi)
+#endif
     npwx= size (beta, 1)
     IF ( npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
     IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
@@ -614,7 +616,9 @@ CONTAINS
         CALL MYDGEMV2( 'C', 2*npw, nkb, 2.0_DP, beta, 2*npwx, psi, 1, 0.0_DP, &
                      betapsi, 1 )
         IF ( gstart == 2 ) THEN
+#if defined(__OPENMP_GPU)
              !$omp target teams distribute parallel do
+#endif
              DO i=1, nkb 
                 betapsi(i,1) = betapsi(i,1) - beta(1,i)*psi(1,1)
              END DO
@@ -630,7 +634,9 @@ CONTAINS
         !
     ENDIF
     !
+#if defined(__OPENMP_GPU)
     !$omp end target data
+#endif
     CALL mp_sum( betapsi( :, 1:m ), comm )
     !
     CALL stop_clock( 'calbec_omp' )
@@ -662,7 +668,9 @@ CONTAINS
     !
     CALL start_clock( 'calbec_omp' )
     IF ( npw == 0 ) betapsi(:,:)=(0.0_DP,0.0_DP)
+#if defined(__OPENMP_GPU)
     !$omp target data map(tofrom:betapsi)
+#endif
     npwx= size (beta, 1)
     IF ( npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
     IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
@@ -689,7 +697,9 @@ CONTAINS
                  beta, npwx, psi, npwx, (0.0_DP,0.0_DP), betapsi, nkb, .TRUE. )
        !
     ENDIF
+#if defined(__OPENMP_GPU)
     !$omp end target data
+#endif
     !
     CALL mp_sum( betapsi( :, 1:m ), intra_bgrp_comm )
     !
@@ -724,7 +734,9 @@ CONTAINS
     !
     CALL start_clock ('calbec_omp')
     IF ( npw == 0 ) betapsi(:,:,:)=(0.0_DP,0.0_DP)
+#if defined(__OPENMP_GPU)
     !$omp target data map(tofrom:betapsi)
+#endif
     npwx= size (beta, 1)
     IF ( 2*npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
     IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
@@ -744,7 +756,9 @@ CONTAINS
     CALL MYZGEMM2 ('C', 'N', nkb, m*npol, npw, (1.0_DP, 0.0_DP), beta, &
               npwx, psi, npwx, (0.0_DP, 0.0_DP),  betapsi, nkb, .TRUE.)
     !
+#if defined(__OPENMP_GPU)
     !$omp end target data
+#endif
     CALL mp_sum( betapsi( :, :, 1:m ), intra_bgrp_comm )
     !
     CALL stop_clock( 'calbec_omp' )

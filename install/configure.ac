@@ -6,7 +6,7 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-AC_INIT(ESPRESSO, 7.1, , espresso)
+AC_INIT(ESPRESSO, 7.2, , espresso)
 
 AC_PREREQ(2.64)
 AC_CONFIG_MACRO_DIR([m4/])
@@ -95,8 +95,14 @@ X_AC_QE_HDF5()
 # Checking environ...
 X_AC_QE_ENVIRON()
 
+# Checking for optional compilation macros
+X_AC_QE_PLUGINS() 
+
 # Checking SIGNAL...
 X_AC_QE_SIGNAL()
+
+# Checking STATUS...
+X_AC_QE_STATUS()
 
 # Checking for ranlib...
 X_AC_QE_RANLIB()

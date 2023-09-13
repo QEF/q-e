@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package PWscf -program projwfc.x {
+input_description -distribution {Quantum ESPRESSO} -package PWscf -program projwfc.x {
 
     toc {}
 
@@ -157,9 +157,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
             info {
                 number of boxes where the local DOS is computed
             }
-        }       
-
-        var irmin(3,n_proj_boxes) -type INTEGER {
+        }
+        
+        multidimension irmin -start 1,1 -end 3,n_proj_boxes -indexes i,n_proj_boxes -type INTEGER {
             default { 1 for each box }
             info {
                 
@@ -169,7 +169,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
             }
         }       
 
-        var irmax(3,n_proj_boxes) -type INTEGER {
+        multidimension irmax -start 1,1 -end 3,n_proj_boxes -indexes i,n_proj_boxes -type INTEGER {
             default { 0 for each box }
             info {
                 
@@ -251,8 +251,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 		
 		    1, cos(phi), sin(phi), cos(2*phi), sin(2*phi), .., cos(l*phi), sin(l*phi)
 		
-		where phi is the polar angle:x=r cos(theta)cos(phi), y=r cos(theta)sin(phi)
-		This is determined in file Modules/ylmr2.f90 that calculates spherical harmonics.
+		where phi is the azimuthal angle: x=r cos(theta)cos(phi), y=r cos(theta)sin(phi)
+		This is determined in file upflib/ylmr2.f90 that calculates spherical harmonics.
 
 	        for l=1:
 	          1 pz     (m=0)

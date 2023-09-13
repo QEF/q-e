@@ -26,6 +26,7 @@ MODULE ldaU_hp
              sum_pertq,               &     ! If .true. collects dns0 and dnsscf for all q points
                                             ! (for the specific perturbed atom) and computes their 
                                             ! sum with the phase factor
+             determine_q_mesh_only,   &     ! If .true. determine the q mesh for a given perturbed atom and exit
              determine_num_pert_only, &     ! If .true. determine only which atoms must be perterbed
              skip_equivalence_q,      &     ! If .true. the full frid of q points will be used
              disable_type_analysis,   &     ! If .true. disable the algorithm which detects whether

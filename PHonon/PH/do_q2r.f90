@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d)
+SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d, write_lr)
   !-----------------------------------------------------------------------
   !! This is the main driver of the \(\texttt{q2r}\) code.
   !
@@ -27,69 +27,102 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d)
   !
   IMPLICIT NONE
   !
-  CHARACTER(len=256), INTENT(IN) :: fildyn_, flfrc, prefix
-  CHARACTER (LEN=10), INTENT(IN) :: zasr
+  CHARACTER(LEN=256), INTENT(IN) :: fildyn_
+  !! Name of the dynamical matrix file
+  CHARACTER(LEN=256), INTENT(IN) :: flfrc
+  !! Name of the IFC file
+  CHARACTER(LEN=256), INTENT(IN) :: prefix
+  !! Prefix character of the calculation
+  CHARACTER(LEN=10), INTENT(IN) :: zasr
+  !! Born effective charge ASR
+  LOGICAL, INTENT(IN) :: la2F
+  !! Input to write the Eliashberg spectral function to file a2F
+  LOGICAL, INTENT(IN) :: loto_2d
+  !! Input to treat the 2D LO-TO splitting
+  LOGICAL, INTENT(IN) :: write_lr
+  !! Input to write the long-range IFC
   !
-  INTEGER,       PARAMETER :: ntypx = 10
-  REAL(DP), PARAMETER :: eps=1.D-5, eps12=1.d-12
-  INTEGER                  :: nr1, nr2, nr3, nr(3)
-  !     dimensions of the FFT grid formed by the q-point grid
-  !
-  CHARACTER(len=20)  :: crystal
-  CHARACTER(len=3)   :: atm(ntypx)
-  CHARACTER(LEN=6), EXTERNAL :: int_to_char
-  CHARACTER(len=4) :: post=''
-  CHARACTER(len=256) :: fildyn, filin, filj, filf
-  !
-  LOGICAL :: lq, lrigid, lrigid1, lnogridinfo, xmldyn
+  ! Local variables
+  INTEGER :: nr1, nr2, nr3, nr(3)
+  !! Dimensions of the FFT grid formed by the q-point grid
   INTEGER :: m1, m2, m3, m(3), l1, l2, l3, i, j, j1, j2, na1, na2, ipol, nn
   INTEGER :: nat, nq, ntyp, iq, icar, nfile, ifile, nqs, nq_log
   INTEGER :: na, nt
-  !
   INTEGER :: gid, ibrav, ierr, nspin_mag, ios
-  !
+  INTEGER,  PARAMETER :: ntypx = 10
   INTEGER, ALLOCATABLE ::  nc(:,:,:)
-  COMPLEX(DP), ALLOCATABLE :: phid(:,:,:,:,:)
-  REAL(DP), ALLOCATABLE :: m_loc(:,:)
   !
+  CHARACTER(LEN=20)  :: crystal
+  CHARACTER(LEN=3)   :: atm(ntypx)
+  CHARACTER(LEN=4)   :: post=''
+  CHARACTER(LEN=256) :: fildyn, filin, filj, filf
+  CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  ! 
+  LOGICAL :: lq, lrigid, lrigid1, lnogridinfo, xmldyn
+  LOGICAL, EXTERNAL :: has_xml
+  ! 
   REAL(DP) :: celldm(6), at(3,3), bg(3,3)
   REAL(DP) :: q(3,48), omega, xq, amass(ntypx), resi
   REAL(DP) :: epsil(3,3)
+  REAL(DP), PARAMETER :: eps = 1.D-5
+  REAL(DP), PARAMETER :: eps12 = 1.d-12
+  REAL(DP), ALLOCATABLE :: m_loc(:,:)
   !
-  logical, INTENT(IN) :: la2F, loto_2d
-  LOGICAL, EXTERNAL :: has_xml
-     !
-     ! check input
-     !
+  COMPLEX(DP), ALLOCATABLE :: phid(:,:,:,:,:)
+  !! Interatomic force constant
+  COMPlEX(DP), ALLOCATABLE :: phid_lr(:,:,:,:,:)
+  !! Long-range part of the interatomic force constant
+  COMPlEX(DP), ALLOCATABLE :: phiq_lr(:,:,:,:,:)
+  !! Long-range dynamical matrix 
+  !
+  ! check input
+  !
   IF (flfrc == ' ')  CALL errore ('q2r',' bad flfrc',1)
-     !
+  !
   xmldyn=has_xml(fildyn_)
   IF(xmldyn) post='.xml'
-
+  ! 
   IF ( trim( prefix ) /= ' ' ) THEN
      fildyn = trim(prefix) // postfix //trim(fildyn_)
   ELSE
      fildyn = trim(fildyn_)
   END IF
   CALL mp_bcast(fildyn, ionode_id, world_comm)
-  
+  ! 
   IF (ionode) THEN
      OPEN (unit=1, file=TRIM(fildyn)//'0'//post, status='old', form='formatted', &
           iostat=ierr)
-     lnogridinfo = ( ierr /= 0 )
-     IF (lnogridinfo) THEN
+     IF (ierr /= 0) THEN
         WRITE (stdout,*)
         WRITE (stdout,*) ' file ',TRIM(fildyn)//'0'//post, ' not found'
-        WRITE (stdout,*) ' reading grid info from input'
-        READ (5, *) nr1, nr2, nr3
-        READ (5, *) nfile
+        IF (xmldyn) THEN
+           OPEN (unit=1, file=TRIM(fildyn)//'0', status='old', form='formatted', &
+                 iostat=ierr)
+           IF (ierr /= 0) THEN
+              WRITE (stdout,*) ' file ',TRIM(fildyn)//'0', ' not found'
+              WRITE (stdout,*) ' reading grid info from input'
+              READ (5, *) nr1, nr2, nr3
+              READ (5, *) nfile
+           ELSE
+              WRITE (stdout,'(/,1x," reading grid info from file ",a/)') &
+                     TRIM(fildyn)//'0'
+              READ (1, *) nr1, nr2, nr3
+              READ (1, *) nfile
+              CLOSE (unit=1, status='keep')
+           ENDIF
+        ELSE
+           WRITE (stdout,*) ' reading grid info from input'
+           READ (5, *) nr1, nr2, nr3
+           READ (5, *) nfile
+        ENDIF
      ELSE
-        WRITE (stdout,'(/,4x," reading grid info from file ",a)') &
-                                                          TRIM(fildyn)//'0'//post
+        WRITE (stdout,'(/,1x," reading grid info from file ",a/)') &
+               TRIM(fildyn)//'0'//post
         READ (1, *) nr1, nr2, nr3
         READ (1, *) nfile
         CLOSE (unit=1, status='keep')
      END IF
+     lnogridinfo = ( ierr /= 0 )
   ENDIF
 
 
@@ -146,7 +179,8 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d)
               CALL read_dyn_mat_header(ntyp, nat, ibrav, nspin_mag, &
                  celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, nqs)
            ENDIF
-           ALLOCATE (phiq(3,3,nat,nat,nqs) )
+           ALLOCATE (phiq(3,3,nat,nat,nqs))
+           ALLOCATE (phiq_lr(3,3,nat,nat,nqs))
            DO iq=1,nqs
               CALL read_dyn_mat(nat,iq,q(:,iq),phiq(:,:,:,:,iq))
            ENDDO
@@ -158,11 +192,17 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d)
            IF (ierr /= 0) CALL errore('q2r','file '//TRIM(filin)//' missing!',1)
            CALL read_dyn_from_file (nqs, q, epsil, lrigid,  &
                 ntyp, nat, ibrav, celldm, at, atm, amass)
+           IF (ifile==1) THEN
+              ALLOCATE (phiq_lr(3,3,nat,nat,48))
+              phiq_lr = (0.0d0,0.0d0)
+           ENDIF
            IF (ionode) CLOSE(unit=1)
         ENDIF
         IF (ifile == 1) THEN
            ! it must be allocated here because nat is read from file
-           ALLOCATE (phid(nr1*nr2*nr3,3,3,nat,nat) )
+           ALLOCATE (phid(nr1*nr2*nr3,3,3,nat,nat))
+           ALLOCATE (phid_lr(nr1*nr2*nr3,3,3,nat,nat))
+           phid_lr = (0.0d0,0.0d0)
            !
            lrigid1=lrigid
 
@@ -199,8 +239,13 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d)
            IF(nc(m(1),m(2),m(3)).EQ.0) THEN
               nc(m(1),m(2),m(3))=1
               IF (lrigid) THEN
+                 phiq_lr(:,:,:,:,nq) = phiq(:,:,:,:,nq)
                  CALL rgd_blk (nr1,nr2,nr3,nat,phiq(1,1,1,1,nq),q(1,nq), &
                   tau,epsil,zeu,bg,omega,celldm(1), loto_2d,-1.d0) ! 2D added celldm and flag
+                 IF (write_lr) THEN
+                    phiq_lr(:,:,:,:,nq) = phiq_lr(:,:,:,:,nq) - phiq(:,:,:,:,nq)
+                    CALL trasl ( phid_lr, phiq_lr, nq, nr1,nr2,nr3, nat, m(1),m(2),m(3))
+                 END IF
               END IF
               CALL trasl ( phid, phiq, nq, nr1,nr2,nr3, nat, m(1),m(2),m(3))
            ELSE
@@ -209,7 +254,12 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d)
            END IF
         END DO &
         NQ_LOOP
-        IF (xmldyn) DEALLOCATE(phiq)
+        IF (xmldyn) THEN
+          DEALLOCATE(phiq, STAT = ierr)
+          IF (ierr /= 0) CALL errore('do_q2r', 'Error deallocating phiq', 1)
+          DEALLOCATE(phiq_lr, STAT = ierr)
+          IF (ierr /= 0) CALL errore('do_q2r', 'Error deallocating phiq_lr', 1)
+        END IF
      END DO &
      NFILE_LOOP
      !
@@ -237,6 +287,21 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d)
         END DO
      END DO
      !
+     IF (lrigid .AND. write_lr) THEN
+        DO j1=1,3
+           DO j2=1,3
+              DO na1=1,nat
+                 DO na2=1,nat
+                    CALL cfft3d ( phid_lr (:,j1,j2,na1,na2), &
+                         nr1,nr2,nr3, nr1,nr2,nr3, 1, 1 )
+                    phid_lr(:,j1,j2,na1,na2) = &
+                         phid_lr(:,j1,j2,na1,na2) / DBLE(nr1*nr2*nr3)
+                 END DO
+              END DO
+           END DO
+        END DO
+     END IF
+     !
      ! Real space force constants written to file (analytical part)
      !
      IF (xmldyn) THEN
@@ -248,7 +313,11 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d)
            CALL write_dyn_mat_header( flfrc, ntyp, nat, ibrav, nspin_mag,  &
                 celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, nqs)
         ENDIF
-        CALL write_ifc(nr1,nr2,nr3,nat,phid)
+        IF (write_lr) THEN
+           CALL write_ifc(nr1,nr2,nr3,nat,phid,phid_lr)
+        ELSE
+           CALL write_ifc(nr1,nr2,nr3,nat,phid)
+        ENDIF
      ELSE IF (ionode) THEN
      OPEN(unit=2,file=flfrc,status='unknown',form='formatted')
      WRITE(2,'(i3,i5,i4,6f11.7)') ntyp,nat,ibrav,celldm
@@ -280,8 +349,13 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d)
                     DO m2=1,nr2
                        DO m1=1,nr1
                           nn=nn+1
-                          WRITE (2,'(3i4,2x,1pe18.11)')   &
-                               m1,m2,m3, DBLE(phid(nn,j1,j2,na1,na2))
+                          IF (write_lr) THEN
+                              WRITE (2,'(3i4,2x,1pe18.11,2x,1pe18.11)')   &
+                                    m1,m2,m3, DBLE(phid(nn,j1,j2,na1,na2)), DBLE(phid_lr(nn,j1,j2,na1,na2))
+                          ELSE
+                              WRITE (2,'(3i4,2x,1pe18.11)')   &
+                                    m1,m2,m3, DBLE(phid(nn,j1,j2,na1,na2))
+                          END IF
                        END DO
                     END DO
                  END DO
@@ -298,8 +372,14 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d)
         WRITE (stdout,"(/5x,' fft-check success (sum of imaginary terms < 10^-12)')")
      END IF
      !
-     DEALLOCATE(phid, zeu, nc)
-     IF (.NOT.xmldyn) DEALLOCATE(phiq)
+     DEALLOCATE(phid, phid_lr, zeu, nc)
+     !
+     IF (.NOT. xmldyn) THEN
+       DEALLOCATE(phiq, STAT = ierr)
+       IF (ierr /= 0) CALL errore('do_q2r', 'Error deallocating phiq', 1)
+       DEALLOCATE(phiq_lr, STAT = ierr)
+       IF (ierr /= 0) CALL errore('do_q2r', 'Error deallocating phiq_lr', 1)
+     END IF
      !
      IF(la2F) CALL gammaq2r ( nfile, nat, nr1, nr2, nr3, at )
      !
@@ -586,7 +666,7 @@ subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
   !
   if((zasr.ne.'simple').and.(zasr.ne.'crystal').and.(zasr.ne.'one-dim') &
                        .and.(zasr.ne.'zero-dim')) then
-      call errore('q2r','invalid Acoustic Sum Rulei for Z*:' // zasr, 1)
+      call errore('q2r','invalid Acoustic Sum Rule for Z*:' // zasr, 1)
   endif
   if(zasr.eq.'crystal') n=3
   if(zasr.eq.'one-dim') then
@@ -724,7 +804,7 @@ subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
       !
       zeu_new(:,:,:)=zeu_new(:,:,:) - zeu_w(:,:,:)
       call sp_zeu(zeu_w,zeu_w,nat,norm2)
-      write(stdout,'("Norm of the difference between old and new effective ", &
+      write(stdout,'(2x,"Norm of the difference between old and new effective ", &
            &  "charges: " , F25.20)') SQRT(norm2)
       !
       ! Check projection

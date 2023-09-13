@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,7 @@ SUBROUTINE init_run()
                                  g_d, gg_d, mill_d, gshells, &
                                  gstart ! to be communicated to the Solvers if gamma_only
   USE gvecs,              ONLY : gcutms, ngms
-  USE cell_base,          ONLY : alat, at, bg, set_h_ainv
+  USE cell_base,          ONLY : alat, at, bg, set_h_ainv, omega
   USE cellmd,             ONLY : lmovecell
   USE dynamics_module,    ONLY : allocate_dyn_vars
   USE paw_variables,      ONLY : okpaw
@@ -38,14 +38,18 @@ SUBROUTINE init_run()
   USE tsvdw_module,       ONLY : tsvdw_initialize
   USE libmbd_interface,   ONLY : init_mbd
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
+  USE two_chem,           ONLY : init_twochem, twochem
   USE lsda_mod,           ONLY : nspin
   USE noncollin_module,   ONLY : domag
-  USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc, xclib_dft_is 
+  USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc, &
+                                 xclib_dft_is, xclib_set_finite_size_volume, &
+                                 dft_has_finite_size_correction
   !
   USE control_flags,      ONLY : use_gpu
   USE dfunct_gpum,        ONLY : newd_gpu
   USE wvfct_gpum,         ONLY : using_et, using_wg, using_wg_d
   USE rism_module,        ONLY : lrism, rism_alloc3d
+  USE extffield,          ONLY : init_extffield
   USE control_flags,      ONLY : scissor
   USE sci_mod,            ONLY : allocate_scissor
   !
@@ -101,13 +105,19 @@ SUBROUTINE init_run()
   END IF
 #endif
   !$acc update device(mill, g, gg)
+#if defined(__OPENMP_GPU)
   !$omp target update to(g)
+#endif
   !
   IF (do_comp_esm) CALL esm_init(.NOT. lrism)
   !
   ! ... setup the 2D cutoff factor
   !
   IF (do_cutoff_2D) CALL cutoff_fact()
+  !
+  ! ... setup two chemical potentials calculation
+  !
+  IF (twochem) CALL init_twochem()
   !
   CALL gshells ( lmovecell )
   !
@@ -129,6 +139,9 @@ SUBROUTINE init_run()
   IF (lrism) CALL rism_alloc3d()
   !
   call plugin_initbase()
+#if defined (__LEGACY_PLUGINS)
+  CALL plugin_initbase()
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) THEN
     IF (alat < 1.D-8) CALL errore('init_run', "Wrong alat", 1)
@@ -137,8 +150,6 @@ SUBROUTINE init_run()
     call init_environ_base(at_scaled, gcutm_scaled, do_comp_mt)
   END IF
 #endif
-  !
-  IF(scissor) CALL allocate_scissor()
   !
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ), btype( nbnd, nkstot ) )
   !
@@ -166,8 +177,13 @@ SUBROUTINE init_run()
   CALL openfil()
   !
   IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin, domag )
-  !
-  IF (xclib_dft_is('hybrid')) CALL aceinit0()
+  IF (dft_has_finite_size_correction()) &
+       CALL xclib_set_finite_size_volume(REAL(omega*nk1*nk2*nk3))
+  IF ( xclib_dft_is('hybrid') ) THEN
+     IF ( lmovecell ) CALL infomsg('iosys', &
+          'Variable cell and hybrid XC little tested')
+     CALL aceinit0()
+  END IF
   !
   CALL hinit0()
   !
@@ -177,15 +193,13 @@ SUBROUTINE init_run()
     !
     CALL newd_gpu()
     !
-    CALL wfcinit_gpu()
-    !
   ELSE
     !
     CALL newd()
     !
-    CALL wfcinit()
-    !
   END IF
+  !
+  CALL wfcinit()
   !
   IF(use_wannier) CALL wannier_init()
   !

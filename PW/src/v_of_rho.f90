@@ -187,7 +187,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
   REAL(DP) :: zeta, rh, sgn_is
   REAL(DP) :: etxc0, vtxc0
-  INTEGER  :: k, ipol, is, np
+  INTEGER  :: k, ipol, is, np, dfftp_nnr
   LOGICAL  :: lda_gga_terms
   !
   REAL(DP), ALLOCATABLE :: ex(:), ec(:), v0(:,:)
@@ -211,6 +211,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   fac = 1.D0 / DBLE( nspin )
   np = 1
   IF (nspin==2) np=3
+  dfftp_nnr = dfftp%nnr !to avoid unnecessary copies in acc loop
   !
   !$acc data copyin( rho ) copyout( kedtaur, v )
   !
@@ -242,7 +243,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
   !$acc parallel loop collapse(2) present(rho)
   DO is = 1, nspin
-    DO k = 1, dfftp%nnr
+    DO k = 1, dfftp_nnr
       tau(k,is) = rho%kin_r(k,is)/e2
     ENDDO
   ENDDO
@@ -254,12 +255,11 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !$acc data create( ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   IF (nspin == 1) THEN
     !
-    CALL xc_metagcx( dfftp%nnr, 1, np, rho%of_r, grho, tau, ex, ec, &
+    CALL xc_metagcx( dfftp_nnr, 1, np, rho%of_r, grho, tau, ex, ec, &
                      v1x, v2x, v3x, v1c, v2c, v3c, gpu_args_=.TRUE. )
     !
-    !$acc parallel loop reduction(+:etxc,vtxc) reduction(-:rhoneg1,rhoneg2) &
-    !$acc&              present(rho)
-    DO k = 1, dfftp%nnr
+    !$acc parallel loop reduction(+:etxc,vtxc,rhoneg1,rhoneg2) present(rho)
+    DO k = 1, dfftp_nnr
        !
        v(k,1) = (v1x(k,1)+v1c(k,1)) * e2
        !
@@ -283,18 +283,18 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
     !$acc data create( rho_updw )
     !
     !$acc parallel loop present(rho)
-    DO k = 1, dfftp%nnr
+    DO k = 1, dfftp_nnr  
         rho_updw(k,1) = ( rho%of_r(k,1) + rho%of_r(k,2) ) * 0.5d0
         rho_updw(k,2) = ( rho%of_r(k,1) - rho%of_r(k,2) ) * 0.5d0
     ENDDO
     !
-    CALL xc_metagcx( dfftp%nnr, 2, np, rho_updw, grho, tau, ex, ec, &
+    CALL xc_metagcx( dfftp_nnr, 2, np, rho_updw, grho, tau, ex, ec, &
                      v1x, v2x, v3x, v1c, v2c, v3c, gpu_args_=.TRUE. )
     !
     ! ... first term of the gradient correction : D(rho*Exc)/D(rho)
     !
-    !$acc parallel loop reduction(+:etxc,vtxc) reduction(-:rhoneg1,rhoneg2)
-    DO k = 1, dfftp%nnr
+    !$acc parallel loop reduction(+:etxc,vtxc,rhoneg1,rhoneg2)
+    DO k = 1, dfftp_nnr
        !
        v(k,1) = (v1x(k,1) + v1c(k,1)) * e2
        v(k,2) = (v1x(k,2) + v1c(k,2)) * e2
@@ -339,8 +339,8 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
      !
      sgn_is = (-1.d0)**(is+1)
      !
-     !$acc parallel loop reduction(-:vtxc) present(rho)
-     DO k = 1, dfftp%nnr
+     !$acc parallel loop reduction(+:vtxc) present(rho)
+     DO k = 1, dfftp_nnr
        v(k,is) = v(k,is) - dh(k)
        vtxc = vtxc - dh(k) * ( rho%of_r(k,1) + sgn_is*rho%of_r(k,nspin) )*0.5D0
      ENDDO
@@ -456,7 +456,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !
   CALL start_clock( 'v_xc' )
   !
-  dfftp_nnr = dfftp%nnr
+  dfftp_nnr = dfftp%nnr !to avoid unnecessary copies in acc loop
   !
   etxc = 0.D0 ;  rhoneg1 = 0.D0
   vtxc = 0.D0 ;  rhoneg2 = 0.D0

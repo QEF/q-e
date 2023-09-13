@@ -32,7 +32,7 @@ SUBROUTINE do_phonon(auxdyn)
   USE control_flags,   ONLY : use_gpu
   USE control_ph,      ONLY : epsil, trans, qplot, only_init, &
                               only_wfc, rec_code, where_rec, reduce_io
-  USE el_phon,         ONLY : elph, elph_mat, elph_simple, elph_epa
+  USE el_phon,         ONLY : elph, elph_mat, elph_simple, elph_epa, elph_print
   !
   ! YAMBO >
   USE YAMBO,           ONLY : elph_yambo
@@ -46,7 +46,8 @@ SUBROUTINE do_phonon(auxdyn)
   USE ahc,            ONLY : elph_ahc, elph_do_ahc
   USE io_files,       ONLY : iunwfc
   USE buffers,        ONLY : close_buffer
-  USE control_flags,   ONLY : use_gpu
+  USE control_flags,  ONLY : use_gpu
+  USE environment,   ONLY : print_cuda_info
   
   IMPLICIT NONE
   !
@@ -81,6 +82,8 @@ SUBROUTINE do_phonon(auxdyn)
            CALL close_buffer( iunwfc, 'DELETE' )
         ENDIF
         CALL run_nscf(do_band, iq)
+     ELSE 
+        CALL print_cuda_info(check_use_gpu=.true.) 
      ENDIF
      !
      !  If only_wfc=.TRUE. the code computes only the wavefunctions 
@@ -151,7 +154,9 @@ SUBROUTINE do_phonon(auxdyn)
            CALL elph_scdft()
         ELSEIF( elph_ahc ) THEN
            CALL elph_do_ahc()
-        ELSE 
+        ELSEIF( elph_print ) THEN
+           CALL elph_prt()
+        ELSE
            CALL elphsum()
         END IF
         !

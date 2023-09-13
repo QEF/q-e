@@ -20,7 +20,7 @@
   USE mp_global, ONLY : inter_pool_comm, mp_global_end
   USE io_global, ONLY : stdout
   USE printing,  ONLY : print_clock_epw
-  USE epwcom,    ONLY : eliashberg, plselfen, specfun_pl, scattering, iterative_bte, lpolar
+  USE epwcom,    ONLY : eliashberg, plselfen, specfun_pl, scattering, iterative_bte, lpolar, lindabs
   USE elph2,     ONLY : adapt_smearing
   USE io_var,    ONLY : epwbib
   USE mp_world,  ONLY : mpime
@@ -167,6 +167,32 @@
       WRITE(epwbib, '(a)') "   Volume  = {98}                                                                        "
       WRITE(epwbib, '(a)') "   Pages   = {201201},                                                                   "
       WRITE(epwbib, '(a)') "   Doi     = {10.1103/PhysRevB.98.201201}                                                "
+      WRITE(epwbib, '(a)') " }                                                                                       "
+    ENDIF
+    !
+    ! Indirect optics
+    IF (lindabs) THEN
+      WRITE(epwbib, '(a)') "                                                                                         "
+      WRITE(epwbib, '(a)') " % Since you used the [indabs] input, please consider also citing                        "
+      WRITE(epwbib, '(a)') " @Article{Noffsinger2012,                                                                "
+      WRITE(epwbib, '(a)') "   Title   = {Phonon-Assisted Optical Absorption in Silicon from First Principles},      "
+      WRITE(epwbib, '(a)') "   Author  = {J. Noffsinger and E. Kioupakis and C. G. Van de Walle &
+                                         &and S. G. Louie and M. L. Cohen}, "
+      WRITE(epwbib, '(a)') "   Journal = {Phys. Rev. Lett.},                                                         "
+      WRITE(epwbib, '(a)') "   Year    = {2012},                                                                     "
+      WRITE(epwbib, '(a)') "   Volume  = {108}                                                                       "
+      WRITE(epwbib, '(a)') "   Pages   = {167402},                                                                   "
+      WRITE(epwbib, '(a)') "   Doi     = {10.1103/PhysRevLett.108.167402}                                            "
+      WRITE(epwbib, '(a)') " }                                                                                       "
+      WRITE(epwbib, '(a)') "                                                                                         "
+      WRITE(epwbib, '(a)') " @Article{zhang2022,                                                                     "
+      WRITE(epwbib, '(a)') "   Title   = {Ab initio theory of free-carrier absorption in semiconductors},            "
+      WRITE(epwbib, '(a)') "   Author  = {X. Zhang and G. Shi and J. A. Leveillee and F. Giustino and E. Kioupakis}, "
+      WRITE(epwbib, '(a)') "   Journal = {Phys. Rev. B},                                                             "
+      WRITE(epwbib, '(a)') "   Year    = {2022},                                                                     "
+      WRITE(epwbib, '(a)') "   Volume  = {106}                                                                       "
+      WRITE(epwbib, '(a)') "   Pages   = {205203},                                                                   "
+      WRITE(epwbib, '(a)') "   Doi     = {10.1103/PhysRevB.106.205203}                                               "
       WRITE(epwbib, '(a)') " }                                                                                       "
     ENDIF
     ! 

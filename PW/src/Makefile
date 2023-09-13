@@ -55,11 +55,9 @@ coset.o \
 Coul_cut_2D.o \
 d_matrix.o \
 data_structure.o \
-deriv_drhoc.o \
 divide_class.o \
 divide_class_so.o \
 divide_et_impera.o \
-drhoc.o \
 rotate_wfc.o \
 run_driver.o \
 dvloc_of_g.o \
@@ -125,7 +123,6 @@ init_run.o \
 init_us_2.o \
 init_vloc.o \
 input.o \
-io_rho_xml.o \
 irrek.o \
 iweights.o \
 intersite_V.o \
@@ -136,7 +133,6 @@ kpoint_grid.o \
 lchk_tauxk.o \
 ldaU.o \
 make_pointlists.o \
-makov_payne.o \
 manypw.o \
 martyna_tuckerman.o \
 memory_report.o \
@@ -261,6 +257,20 @@ wannier_init.o \
 wannier_check.o \
 wannier_clean.o \
 wannier_occ.o \
+oscdft_input.o \
+oscdft_context.o \
+oscdft_base.o \
+oscdft_enums.o \
+oscdft_indices.o \
+oscdft_wavefunction.o \
+oscdft_wavefunction_subs.o \
+oscdft_functions.o \
+oscdft_occupations.o \
+oscdft_wfcO.o \
+oscdft_forces.o \
+oscdft_forces_subs.o \
+two_chem.o\
+io_rho_xml.o
 
 
 # GPU versions of routines
@@ -279,16 +289,18 @@ PWLIBS += \
   newd_gpu.o \
   add_paw_to_deeq_gpu.o \
   add_vhub_to_deeq_gpu.o \
-  wfcinit_gpu.o \
   rotate_wfc_gpu.o \
   hs_1psi_gpu.o \
   hs_psi_gpu.o \
   s_1psi_gpu.o \
   utils_gpu.o \
-  force_hub_gpu.o \
-  drhoc_gpu.o \
-  orthoatwfc_gpu.o \
-  atomic_wfc_gpu.o
+  atomic_wfc_gpu.o \
+  oscdft_wavefunction_subs_gpu.o \
+  oscdft_wfcO_gpu.o \
+  oscdft_functions_gpu.o \
+  additional_cusolver_subs.o
+
+
 
 QEMODS=../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a $(BASEMODS)
 

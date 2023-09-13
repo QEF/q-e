@@ -372,9 +372,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
             !
             DO nb = 1, nbnd
                 DO mb = 1, nbnd
-                  IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
-                     IF ( nb == mb )  mat(nb,mb)=0.d0
-                  ELSE
+                  IF ( l_cal(nb) .AND. l_cal(mb) ) THEN
                      aux = (0.d0,0.d0)
                      aux0 = (0.d0,0.d0)
                      IF (noncolin) THEN

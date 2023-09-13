@@ -101,7 +101,7 @@ MODULE pw_restart_new
       USE ktetra,               ONLY : tetra_type
       USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_projectors, &
                                        Hubbard_lmax, Hubbard_l, Hubbard_n, Hubbard_U, Hubbard_J, &
-                                       Hubbard_n2, Hubbard_l2, Hubbard_l3, Hubbard_V, &
+                                       Hubbard_n2, Hubbard_n3, Hubbard_l2, Hubbard_l3, Hubbard_V, Hubbard_occ,&
                                        Hubbard_alpha, Hubbard_alpha_back, nsg, &
                                        Hubbard_J0, Hubbard_beta, Hubbard_U2, ityp_s, &
                                        is_hubbard, is_hubbard_back, backall, neighood, nsg
@@ -234,7 +234,7 @@ MODULE pw_restart_new
       REAL(DP), ALLOCATABLE :: london_c6_(:), bp_el_pol(:), bp_ion_pol(:), &
            U_opt(:), J0_opt(:), alpha_opt(:), J_opt(:,:), beta_opt(:), &
            U2_opt(:), alpha_back_opt(:), ef_updw(:), nsg_(:,:,:,:)
-      INTEGER,ALLOCATABLE :: n_opt(:), l_opt(:), l2_opt(:), l3_opt(:), n2_opt(:)
+      INTEGER,ALLOCATABLE :: n_opt(:), l_opt(:), l2_opt(:), l3_opt(:), n2_opt(:), n3_opt(:)
       LOGICAL, ALLOCATABLE :: backall_opt(:) 
       !
       !
@@ -492,6 +492,7 @@ MODULE pw_restart_new
             CALL check_and_allocate_integer(n2_opt, Hubbard_n2)
             CALL check_and_allocate_integer(l2_opt, Hubbard_l2)
             CALL check_and_allocate_integer(l3_opt, Hubbard_l3)
+            CALL check_and_allocate_integer(n3_opt, Hubbard_n3)
             CALL check_and_allocate_logical(backall_opt, backall)
             IF ( ANY(Hubbard_J(:,1:nsp) /= 0.0_DP)) THEN
                ALLOCATE (J_opt(3,nsp)) 
@@ -523,10 +524,10 @@ MODULE pw_restart_new
             !
             CALL qexsd_init_dftU (dftU_obj_opt, NSP = nsp, PSD = upf(1:nsp)%psd, SPECIES = atm(1:nsp),                & 
                     ITYP = ityp(1:nat), IS_HUBBARD = is_hubbard, IS_HUBBARD_BACK = is_hubbard_back, BACKALL = backall,& 
-                    HUBB_n2 = n2_opt, HUBB_L2 = l2_opt, HUBB_L3 = l3_opt, NONCOLIN = noncolin,                        & 
-                    LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION_TYPE = Hubbard_projectors, U =U_opt,              &
-                    U2 = U2_opt, J0 = J0_opt, J = J_opt, n = n_opt, l = l_opt, Hubbard_V = Hubbard_V *Ry_to_Ha,       &
-                    alpha = alpha_opt, beta = beta_opt, alpha_back = alpha_back_opt,                                  & 
+                    HUBB_OCC = Hubbard_occ, HUBB_n2 = n2_opt, HUBB_L2 = l2_opt, HUBB_L3 = l3_opt, NONCOLIN = noncolin,& 
+                    HUBB_N3 = n3_opt, LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION_TYPE = Hubbard_projectors,      &
+                    U =U_opt, U2 = U2_opt, J0 = J0_opt, J = J_opt, n = n_opt, l = l_opt,                              &
+                    Hubbard_V = Hubbard_V *Ry_to_Ha, alpha = alpha_opt, beta = beta_opt, alpha_back = alpha_back_opt, & 
                     starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc, Hub_nsg = nsg_)
             !
             IF (ALLOCATED(J_opt)) DEALLOCATE(J_opt)
@@ -1134,9 +1135,9 @@ MODULE pw_restart_new
            time_reversal, no_t_rev, nosym, checkallsym
       USE ldaU,            ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax, Hubbard_lmax_back, &
                                   Hubbard_n, Hubbard_l, Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, &
-                                  Hubbard_U, Hubbard_U2, Hubbard_J, Hubbard_V, Hubbard_alpha, &
+                                  Hubbard_U, Hubbard_U2, Hubbard_J, Hubbard_V, Hubbard_alpha, Hubbard_occ, &
                                   Hubbard_alpha_back, Hubbard_J0, Hubbard_beta, Hubbard_projectors
-      USE funct,           ONLY : enforce_input_dft
+      USE funct,           ONLY : enforce_input_dft, get_dft_short
       USE xc_lib,          ONLY : start_exx, exx_is_active,xclib_dft_is,      &
                                   set_screening_parameter, set_gau_parameter, &
                                   xclib_set_exx_fraction, stop_exx, start_exx  
@@ -1165,13 +1166,16 @@ MODULE pw_restart_new
       !
       USE mp_images,       ONLY : intra_image_comm
       USE mp,              ONLY : mp_bcast
+      USE dftd3_qe,        ONLY : dftd3_in, dftd3, dftd3_xc 
+      USE dftd3_api,       ONLY : dftd3_init, dftd3_set_functional 
       !
       IMPLICIT NONE
       LOGICAL, INTENT(OUT) :: wfc_is_collected
       !
-      INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3
-      LOGICAL  :: magnetic_sym, lvalid_input
-      CHARACTER(LEN=37) :: dft_name
+      INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3, dftd3_version
+      LOGICAL  :: magnetic_sym, lvalid_input, dftd3_3body
+      CHARACTER(LEN=37)  :: dft_name
+      CHARACTER(LEN=256) ::dft_
       CHARACTER(LEN=20) :: vdw_corr, occupations
       CHARACTER(LEN=320):: filename
       REAL(dp) :: exx_fraction, screening_parameter
@@ -1243,10 +1247,10 @@ MODULE pw_restart_new
       CALL qexsd_copy_dft ( output_obj%dft, nsp, atm, &
            dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
-           lda_plus_u, lda_plus_u_kind, Hubbard_projectors, Hubbard_n, Hubbard_l, Hubbard_lmax, &
+           lda_plus_u, lda_plus_u_kind, Hubbard_projectors, Hubbard_n, Hubbard_l, Hubbard_lmax, Hubbard_occ,&
            Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
            Hubbard_U, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, Hubbard_V, &
-           vdw_corr, scal6, lon_rcut, vdw_isolated )
+           vdw_corr, dftd3_version, dftd3_3body, scal6, lon_rcut, vdw_isolated )
       Hubbard_alpha_back = Hubbard_alpha_back * e2 
       Hubbard_alpha      = Hubbard_alpha      * e2
       Hubbard_beta       = Hubbard_beta       * e2 
@@ -1256,13 +1260,23 @@ MODULE pw_restart_new
       Hubbard_J0         = Hubbard_J0         * e2 
       Hubbard_J          = Hubbard_J          * e2  
       !! More DFT initializations
+
       CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, mbd_vdw, lxdm )
+      !FIXME this maybe should be done directly in set_vdw_corr 
       CALL enforce_input_dft ( dft_name, .TRUE. )
+      IF (ldftd3) THEN 
+         IF (dftd3_version == 2 ) dftd3_3body = .FALSE. 
+         dftd3_in%threebody = dftd3_3body 
+         CALL dftd3_init(dftd3, dftd3_in)
+         dft_ = get_dft_short() 
+         dft_ = dftd3_xc(dft_) 
+         CALL dftd3_set_functional(dftd3, func = dft_, version = dftd3_version, tz=.FALSE.) 
+      END IF  
       IF ( xclib_dft_is('hybrid') ) THEN
-         ecutvcut=ecutvcut*e2
-         ecutfock=ecutfock*e2
+         ecutvcut = ecutvcut*e2
+         ecutfock = ecutfock*e2
          CALL xclib_set_exx_fraction( exx_fraction ) 
-         CALL set_screening_parameter ( screening_parameter )
+         CALL set_screening_parameter( screening_parameter )
          CALL start_exx ()
       END IF
       !! Band structure section
@@ -1383,17 +1397,16 @@ MODULE pw_restart_new
       !
       USE control_flags,        ONLY : gamma_only
       USE lsda_mod,             ONLY : nspin, isk
-      USE noncollin_module,     ONLY : noncolin, npol
-      USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k
-      USE wvfct,                ONLY : npwx, et, wg, nbnd
+      USE klist,                ONLY : nkstot, nks, ngk, igk_k
+      USE wvfct,                ONLY : npwx, nbnd
       USE gvect,                ONLY : ig_l2g
       USE mp_bands,             ONLY : root_bgrp, intra_bgrp_comm
-      USE mp_pools,             ONLY : me_pool, root_pool, &
-                                       intra_pool_comm, inter_pool_comm
+      USE mp_pools,             ONLY : me_pool, root_pool, intra_pool_comm
       USE mp,                   ONLY : mp_sum, mp_max
       USE io_base,              ONLY : read_wfc
       USE xc_lib,               ONLY : exx_is_active
       USE exx,                  ONLY : nbndproj
+      USE io_global,            ONLY : stdout
       !
       IMPLICIT NONE
       !
@@ -1407,13 +1420,13 @@ MODULE pw_restart_new
       CHARACTER(LEN=320)   :: filename, msg 
       CHARACTER(LEN=3)     :: label 
       LOGICAL              :: read_ace
-      INTEGER              :: i, ik_g, ig, ipol, ik_s
+      INTEGER              :: i, ik_g, ig
       INTEGER              :: npol_, nbnd_
-      INTEGER              :: nupdwn(2), ike, iks, ngk_g, npw_g, ispin
+      INTEGER              :: ike, iks, ngk_g, npw_g, ispin
       INTEGER, EXTERNAL    :: global_kpoint_index
       INTEGER, ALLOCATABLE :: mill_k(:,:)
       INTEGER, ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:)
-      LOGICAL              :: opnd, ionode_k
+      LOGICAL              :: ionode_k
       REAL(DP)             :: scalef, xk_(3), b1(3), b2(3), b3(3)
       !
       ! ... decide whether to read wfc or ace
@@ -1511,7 +1524,7 @@ MODULE pw_restart_new
       !
       IF(read_ace) THEN
         !
-        write(*,*) 'ACE potential read for ', nbnd_ , 'bands'
+        WRITE(stdout, '(5X,A,I8,A)') 'ACE potential read for ', nbnd_, ' bands'
         nbndproj = nbnd_
         !
       ELSE IF ( nbnd_ < nbnd .and..not. read_ace) THEN

@@ -190,7 +190,17 @@ DEV_ACC enter data create(drhot(1:p_ngm_, 1:6))
       if (abivol.or.abisur) call vol_clu(rhor,rhog,nfi)
       !
       plugin_etot = 0.0_dp
+#if defined(__LEGACY_PLUGINS)
+      ! compute plugin contributions to the potential, add it later 
+      CALL plugin_get_potential(rhor, nfi)
       !
+      ! compute plugin contribution to energy 
+      !
+      CALL plugin_energy(rhor, plugin_etot)
+#endif 
+  !
+      !
+
 #if defined (__ENVIRON)
       IF (use_environ) THEN
          ! compute plugin contributions to the potential, add it later
@@ -460,7 +470,9 @@ DEV_ACC exit data delete(rhotmp)
          ENDIF
       END IF
       !
+      !FIXME : need to complete the offloading of this part rhog rhor and nlc call shou
       IF ( nlcc_any ) CALL add_cc( rhoc, rhog, rhor )
+DEV_ACC update device(rhog)
       CALL exch_corr_h( nspin, rhog, rhor, rhoc, sfac, exc, dxc, self_exc )
       !
       ! ... add non local corrections (if any)
@@ -523,6 +535,9 @@ DEV_ACC exit data delete(rhotmp)
       !
       !     add plugin contributions to potential here... 
       !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_add_potential( rhor) 
+#endif 
 #if defined (__ENVIRON)
       IF (use_environ) CALL add_environ_potential(rhor)
 #endif
@@ -581,6 +596,9 @@ DEV_ACC end data
          !
          !     plugin patches on internal forces
          !
+#if defined (__LEGACY_PLUGINS)
+  CALL plugin_int_forces(fion)
+#endif 
 #if defined (__ENVIRON)
          IF (use_environ) THEN
             ALLOCATE (force_environ(3, nat))

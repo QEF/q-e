@@ -211,7 +211,7 @@ MODULE qe_dft_refs
   DATA dft_GGAx(29)%ref / 'K. Berland, Y. Jiao, J.-H. Lee, T. Rangel, J. B. Neaton &
                            &and P. Hyldgaard, J. Chem. Phys. 146, 234106 (2017)' /
   DATA dft_GGAx(29)%wrn / 'none' /
-  ! rPW86+HF/4 (rw86-0) (for DF0)
+  ! rPW86+HF/4 (rw86-0) (for DF2-0)
   DATA dft_GGAx(30)%ref / 'K. Berland, Y. Jiao, J.-H. Lee, T. Rangel, J. B.  Neaton &
                            &and P. Hyldgaard, J. Chem. Phys. 146, 234106 (2017)' /
   DATA dft_GGAx(30)%wrn / 'none' /
@@ -242,15 +242,15 @@ MODULE qe_dft_refs
   DATA dft_GGAx(37)%ref / 'Reserved, no ref. available' /
   DATA dft_GGAx(37)%wrn / 'never called in QE' /
   ! BR0 
-  DATA dft_GGAx(38)%ref / 'vdW-DF2-b86r+HF/4 - framework defined by &
-                           &Phys. Rev. B 89, 121103(R) (2014) + J. Chem. Phys. 146, 234106 (2017)' /
+  DATA dft_GGAx(38)%ref / 'vdW-DF2-b86r+HF/4: Phys. Rev. B 89, 121103(R) (2014)+&
+                           &J. Chem. Phys. 146, 234106 (2017), PRX 12, 041003 (2022)' /
   DATA dft_GGAx(38)%wrn / 'none' /
   ! CX16  (reserved P.H.)
   DATA dft_GGAx(39)%ref / 'Reserved, no ref. available' /
   DATA dft_GGAx(39)%wrn / 'none' /
   ! C090
-  DATA dft_GGAx(40)%ref / 'vdW-DF-c09+HF/4 - framework defined by &
-                           &Phys. Rev. B 81, 161104(R) (2010) + J. Chem. Phys. 146, 234106 (2017)' /
+  DATA dft_GGAx(40)%ref / 'vdW-DF-c09+HF/4: Phys. Rev. B 81, 161104(R) (2010)+&
+                           &J. Chem. Phys. 146, 234106 (2017)' /
   DATA dft_GGAx(40)%wrn / 'none' /
   ! B86X
   DATA dft_GGAx(41)%ref / '[B86B exchange * 0.75]' /
@@ -270,20 +270,19 @@ MODULE qe_dft_refs
   ! W32X  vdW-DF3-opt2 exchange
   DATA dft_GGAx(46)%ref / 'D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)' /
   DATA dft_GGAx(46)%wrn / 'none' /
-  ! AHTR  (reserved P.H., testing)
-  DATA dft_GGAx(47)%ref / 'Reserved, No ref. available' /
-  DATA dft_GGAx(47)%wrn / 'testing stage' /
+  ! AHRR  (reserved P.H., testing)
+  DATA dft_GGAx(47)%ref / 'V. Shukla et al, PRX 12, 041003 (2022)' /
   ! EHPB  (reserved P.H.)
   DATA dft_GGAx(48)%ref / 'Reserved, No ref. available' /
-  DATA dft_GGAx(48)%wrn / 'never called, ongoing development' /
+  DATA dft_GGAx(48)%wrn / 'none' /
   ! HJPB  (Short-ranged PBE exchange by HJS08 parameters, cross-reference)
   DATA dft_GGAx(49)%ref / 'Short-ranged pbe exchange as set by Henderson et al, &
                            &J. Chem. Phys. 128, 194105 (2008); Compare PBE-AH' /
-  DATA dft_GGAx(49)%wrn / 'never called, for cross-comparison' /
+  DATA dft_GGAx(49)%wrn / 'none' /
   ! HJPS  (Short-ranged PBEsol exchange by HJS08 param, cross-reference)
   DATA dft_GGAx(50)%ref / 'Short-ranged pbesol exchange as set by Henderson et al, &
                            & J. Chem. Phys. 128, 194105 (2008); Compare PBESOL-AH' /
-  DATA dft_GGAx(50)%wrn / 'never called, for cross-comparison' /
+  DATA dft_GGAx(50)%wrn / 'none' /
   !
   !
   ! ---- GGA correlation ----
@@ -362,6 +361,9 @@ MODULE qe_dft_refs
   DATA dft_MGGA(7)%ref  / 'J. W. Furness, A. D. Kaplan, J. Ning, J. P. Perdew, &
                           &and J. Sun, JPCL 11, 8208 (2020)' /
   DATA dft_MGGA(7)%wrn  / 'needs Libxc' /
+  ! RSCAN
+  DATA dft_MGGA(8)%ref  / 'A. P. Bartók, J. R. Yates., JCP 150, 161101 (2019)' /
+  DATA dft_MGGA(8)%wrn  / 'needs Libxc' /
   !
   !
   ! ---- Full DFTs ----
@@ -448,6 +450,8 @@ MODULE qe_dft_refs
   DATA dft_full_descr(40) / 'PBE-AH: HJS implementation (PBE params).' /
   ! PBESOL-AH
   DATA dft_full_descr(41) / 'PBESOL-AH: HJS implementation (PBEsol params).' /
+  ! RSCAN
+  DATA dft_full_descr(42) / 'RSCAN Meta-GGA - needs Libxc.' /
   !
 END MODULE qe_dft_refs
 

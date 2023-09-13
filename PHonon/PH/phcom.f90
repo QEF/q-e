@@ -112,8 +112,8 @@ MODULE nlcc_ph
   !
   SAVE
   !
-  COMPLEX (DP), ALLOCATABLE, TARGET :: drc(:,:) ! (ngm, ntyp)
-  !! contain the rhoc (without structure fac) for all atomic types.
+  REAL (DP), ALLOCATABLE, TARGET :: drc(:,:) ! (ngm, ntyp)
+  !! contain rho core (without structure fac) for all atomic types.
   !
 END MODULE nlcc_ph
 !
@@ -125,6 +125,9 @@ MODULE phus
   !
   USE kinds, ONLY :  DP
   USE becmod, ONLY : bec_type
+#if defined(__CUDA)
+  USE becmod_gpum, ONLY : bec_type_d
+#endif
   !
   SAVE
   !
@@ -160,6 +163,9 @@ MODULE phus
   !
   !
   type(bec_type),  ALLOCATABLE, TARGET :: alphap(:,:)  ! nkbtot, nbnd, 3, nksq)
+#if defined(__CUDA)
+  type(bec_type_d),  ALLOCATABLE, TARGET :: alphap_d(:,:)
+#endif
   !! contains \( \langle d\du (\beta_n) | \psi_i \rangle\)
   !
 END MODULE phus
@@ -334,6 +340,9 @@ MODULE control_ph
   !! if TRUE use new k-point grid nk1,nk2,nk3
   INTEGER :: nk1,nk2,nk3, k1,k2,k3
   !! new Monkhorst-Pack k-point grid
+  !
+  CHARACTER(LEN=256) :: dftd3_hess 
+  ! file from where the dftd3 hessian is read
   !
 END MODULE control_ph
 !

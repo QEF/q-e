@@ -13,15 +13,16 @@ SUBROUTINE weights()
   !! Fermi energies, HOMO and LUMO, "-TS" term (gaussian).
   !
   USE kinds,                ONLY : DP
-  USE ener,                 ONLY : demet, ef, ef_up, ef_dw
+  USE ener,                 ONLY : demet, ef, ef_up, ef_dw, ef_cond
   USE fixed_occ,            ONLY : f_inp, tfixed_occ
   USE klist,                ONLY : ltetra, lgauss, degauss, ngauss, nks, &
                                    nkstot, wk, xk, nelec, nelup, neldw, &
-                                   two_fermi_energies
+                                   two_fermi_energies, degauss_cond, &
+                                   nelec_cond
   USE ktetra,               ONLY : ntetra, tetra, tetra_type, tetra_weights, &
                                    opt_tetra_weights
   USE lsda_mod,             ONLY : nspin, current_spin, isk
-  USE wvfct,                ONLY : nbnd, wg, et
+  USE wvfct,                ONLY : nbnd, wg, et, nbnd_cond
   USE gcscf_module,         ONLY : lgcscf, gcscf_mu, gcscf_beta
   USE mp_images,            ONLY : intra_image_comm
   USE mp_pools,             ONLY : inter_pool_comm
@@ -29,6 +30,7 @@ SUBROUTINE weights()
   USE io_global,            ONLY : ionode, ionode_id
   USE gcscf_module,         ONLY : lgcscf, gcscf_mu, gcscf_beta
   USE wvfct_gpum,           ONLY : using_et, using_wg, using_wg_d
+  USE two_chem,             ONLY : twochem, gweights_twochem
   !
   IMPLICIT NONE
   !
@@ -135,9 +137,22 @@ SUBROUTINE weights()
               !
            ELSE
               !
-              CALL gweights( nks, wk, nbnd, nelec, degauss, &
-                             ngauss, et, ef, demet, wg, 0, isk )
+              IF (twochem) then 
               !
+              !... two chemical potentials method
+              !
+                 CALL gweights_twochem( nks, wk, nbnd, nbnd_cond, nelec, &
+                                        nelec_cond, degauss, degauss_cond, &
+                                        ngauss, et, ef, ef_cond, demet, wg, 0, isk)
+              !
+              ELSE
+              !
+                 CALL gweights( nks, wk, nbnd, nelec, degauss, &
+                                ngauss, et, ef, demet, wg, 0, isk )
+              !          
+              END IF
+              !
+
            END IF
            !
         ENDIF
@@ -188,19 +203,21 @@ SUBROUTINE weights_only()
   !! given in input.
   !
   USE kinds,                ONLY : DP
-  USE ener,                 ONLY : demet, ef, ef_up, ef_dw
+  USE ener,                 ONLY : demet, ef, ef_up, ef_dw, ef_cond
   USE fixed_occ,            ONLY : f_inp, tfixed_occ
   USE klist,                ONLY : ltetra, lgauss, degauss, ngauss, nks, &
                                    nkstot, wk, xk, nelec, nelup, neldw,  &
-                                   two_fermi_energies
+                                   two_fermi_energies, degauss_cond, &
+                                   nelec_cond
   USE ktetra,               ONLY : ntetra, tetra, tetra_type, &
                                    tetra_weights_only, opt_tetra_weights_only
   USE lsda_mod,             ONLY : nspin, current_spin, isk
-  USE wvfct,                ONLY : nbnd, wg, et
+  USE wvfct,                ONLY : nbnd, wg, et, nbnd_cond
   USE mp_images,            ONLY : intra_image_comm
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
   USE io_global,            ONLY : ionode, ionode_id
+  USE two_chem,             ONLY : twochem, gweights_only_twochem
   !
   USE wvfct_gpum,           ONLY : using_et, using_wg, using_wg_d
   !
@@ -292,8 +309,19 @@ SUBROUTINE weights_only()
            !
         ELSE
            !
-           CALL gweights_only( nks, wk, 0, isk, nbnd, nelec, degauss, &
-                               ngauss, et, ef, demet, wg )
+           IF (twochem) then
+              !     
+              !... two chemical potentials method
+              !
+              CALL gweights_only_twochem( nks, wk, 0, isk, nbnd, nbnd_cond, &
+                                          nelec, nelec_cond, degauss, degauss_cond, &
+                                          ngauss, et, ef, ef_cond, demet, wg ) 
+           ELSE
+              !     
+              CALL gweights_only( nks, wk, 0, isk, nbnd, nelec, degauss, &
+                                  ngauss, et, ef, demet, wg )
+              !            
+           ENDIF 
         ENDIF
         !
         CALL mp_sum( demet, inter_pool_comm )

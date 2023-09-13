@@ -51,6 +51,11 @@ SUBROUTINE sum_band()
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto
   USE fft_interfaces,       ONLY : invfft
+#if defined (__OSCDFT)
+  USE plugin_flags,     ONLY : use_oscdft
+  USE oscdft_base,      ONLY : oscdft_ctx
+  USE oscdft_functions, ONLY : oscdft_sum_band
+#endif
   !
   IMPLICIT NONE
   !
@@ -135,6 +140,9 @@ SUBROUTINE sum_band()
        !
     ENDIF
   ENDIF
+#if defined (__OSCDFT)
+  IF (use_oscdft) CALL oscdft_sum_band(oscdft_ctx)
+#endif
   !
   ! ... for band parallelization: set band computed by this processor
   !
@@ -223,9 +231,13 @@ SUBROUTINE sum_band()
      !
      ! ... Here we add the (unsymmetrized) Ultrasoft contribution to the charge
      !
+#if defined(__OPENMP_GPU)
      !$omp target data map(to:becsum)
+#endif
      CALL addusdens( rho%of_g(:,:) )
+#if defined(__OPENMP_GPU)
      !$omp end target data
+#endif
      !
   ENDIF
   !
@@ -416,8 +428,8 @@ SUBROUTINE sum_band()
                 DO j = 1, 3
                    DO i = 1, npw
                      kplusgi = (xk(j,ik)+g(j,i)) * tpiba
-                     kplusg_evc(i,1) = CMPLX(0.D0,kplusgi) * evc(i,ibnd)
-                     IF ( ibnd < ibnd_end ) kplusg_evc(i,2) = CMPLX(0.d0,kplusgi) * evc(i,ibnd+1)
+                     kplusg_evc(i,1) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(i,ibnd)
+                     IF ( ibnd < ibnd_end ) kplusg_evc(i,2) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(i,ibnd+1)
                    ENDDO
                    !
                    ebnd = ibnd
@@ -534,8 +546,10 @@ SUBROUTINE sum_band()
        ns = SIZE(rho%of_r,2)
        dffts_nnr = dffts%nnr
        !
+#if defined(__OPENMP_GPU)
        !$omp target data map(alloc:rho%of_r)
        !$omp target teams distribute parallel do collapse(2)
+#endif
        DO j = 1, ns
          DO i = 1, dffts_nnr
            rho%of_r(i,j)=0.d0
@@ -573,7 +587,7 @@ SUBROUTINE sum_band()
           IF ( dmft .AND. .NOT. dmft_updated) THEN
              ! 
              DO j = 1, npw
-                CALL ZGEMM( 'C', 'N', nbnd, 1, nbnd, (1.d0,0.d0), v_dmft(:,:,ik), &
+                CALL ZGEMM( 'T', 'N', nbnd, 1, nbnd, (1.d0,0.d0), v_dmft(:,:,ik), &
                             nbnd, evc(j,:), nbnd, (0.d0,0.d0), evc(j,:), nbnd )
              ENDDO
              !
@@ -584,24 +598,18 @@ SUBROUTINE sum_band()
           !
           ! ... calculate polaron density
           !
-          IF(sic .and. current_spin == isp) THEN
-             psic_p(:) = (0.d0, 0.d0)
-             !$omp parallel
-             CALL threaded_barrier_memset(psic_p, 0.D0, dffts%nnr*2)
-             !$omp do
-             DO j = 1, npw
-                psic_p(dffts%nl(igk_k(j,ik))) = evc(j,ibnd_p)
-             ENDDO
-             !$omp end do nowait
-             !$omp end parallel
-             CALL invfft ('Wave', psic_p, dffts)
+          IF ( sic .AND. current_spin==isp ) THEN
+             CALL wave_g2r( evc(1:npw,ibnd_p:ibnd_p), psic_p, dffts, igk=igk_k(:,ik) )
+             !
              CALL get_rho(rho%pol_r(:,1), dffts%nnr, wg(1,ik)/omega, psic_p)
              wg_p = wg_p + wg(ibnd_p,ik)
-          END IF
+          ENDIF
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
           !
+#if defined(__OPENMP_GPU)
           !$omp target data map(to:evc)
+#endif
           !
           DO ibnd = ibnd_start, ibnd_end, incr
              !
@@ -727,7 +735,7 @@ SUBROUTINE sum_band()
                    DO j = 1, 3
                       DO i = 1, npw
                         kplusgi = (xk(j,ik)+g(j,igk_k(i,ik))) * tpiba
-                        kplusg_evc(i,1) = CMPLX(0.D0,kplusgi,kind=DP) * evc(i,ibnd)
+                        kplusg_evc(i,1) = CMPLX(0._DP,kplusgi,KIND=DP) * evc(i,ibnd)
                       ENDDO
                       !
                       CALL wave_g2r( kplusg_evc(1:npw,1:1), psic, dffts, igk=igk_k(:,ik) )
@@ -755,15 +763,21 @@ SUBROUTINE sum_band()
           IF ( okvan ) CALL sum_bec ( ik, current_spin, ibnd_start,ibnd_end,this_bgrp_nbnd ) 
           !
           !*evc
+#if defined(__OPENMP_GPU)
           !$omp end target data
+#endif
           !
        END DO k_loop
        !
        IF ((.NOT.noncolin).AND.(.NOT.use_tg)) THEN
+#if defined(__OPENMP_GPU)
          !$omp target update from(rho%of_r)
+#endif
        ENDIF
        !*rho%of_r
+#if defined(__OPENMP_GPU)
        !$omp end target data
+#endif
        !
        ! ... with distributed <beta|psi>, sum over bands
        !
@@ -809,7 +823,9 @@ SUBROUTINE sum_band()
 #endif
         !
         IF (omp_offload) THEN
+#if defined(__OPENMP_GPU)
           !$omp target teams distribute parallel do
+#endif
           DO ir = 1, nrxxs_loc
              !
              rho_loc(ir) = rho_loc(ir) + &

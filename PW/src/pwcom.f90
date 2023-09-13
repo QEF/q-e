@@ -31,8 +31,12 @@ MODULE klist
   !! coordinates of q point (used in the ACFDT part)
   REAL(DP) :: degauss
   !! smearing parameter
+  REAL(DP) :: degauss_cond
+  !! smeraing parameter for the conduction band in the case of two chemical potentials
   REAL(DP) :: nelec
   !! number of electrons
+  REAL(DP) :: nelec_cond
+  !! number of electrons in the conudction bad in the case of two chemical potentials 
   REAL(DP) :: nelup=0.0_dp
   !! number of spin-up electrons (if two_fermi_energies=t)
   REAL(DP) :: neldw=0.0_dp
@@ -92,7 +96,9 @@ CONTAINS
     IF (.NOT.ALLOCATED(igk_k)) THEN
       ALLOCATE( igk_k(npwx,nks) )
       !$acc enter data create(igk_k(1:npwx,1:nks))
+#if defined(__OPENMP_GPU)
       !$omp target enter data map(alloc: igk_k)
+#endif
     END IF
     !
     IF (.NOT.ALLOCATED(ngk))   ALLOCATE( ngk(nks) )
@@ -107,7 +113,9 @@ CONTAINS
        CALL gk_sort( xk(1,ik), ngm, g, gcutw, ngk(ik), igk_k(1,ik), gk )
     ENDDO
     !$acc update device(igk_k)
+#if defined(__OPENMP_GPU)
     !$omp target update to(igk_k)
+#endif
     !
     DEALLOCATE( gk )
 #if defined (__CUDA)
@@ -123,7 +131,9 @@ CONTAINS
     !
     IF (ALLOCATED(ngk))     DEALLOCATE( ngk )
     !
+#if defined(__OPENMP_GPU)
     !$omp target exit data map(delete:igk_k)
+#endif
     !$acc exit data delete(igk_k)
     IF (ALLOCATED(igk_k))   THEN
       DEALLOCATE( igk_k )
@@ -299,6 +309,8 @@ MODULE wvfct
   !! max number of bands use in iterative diag
   INTEGER ::  nbnd
   !! number of bands
+  INTEGER :: nbnd_cond
+  !! number of conduction bands for the case of two chemical potentials
   INTEGER ::  npw
   !! the number of plane waves
   INTEGER ::  current_k
@@ -369,6 +381,8 @@ MODULE ener
   !! the solvation energy, from 3D-RISM
   REAL(DP) :: vsol
   !! another solvation energy, from 3D-RISM
+  REAL(DP) :: ef_cond
+  !! the conduction band chemical potential for a two chemical potential simulation
   !
 END MODULE ener
 !
@@ -389,12 +403,15 @@ MODULE force_mod
   REAL(DP) :: sigma(3,3)
   !! the stress acting on the system
   REAL(DP), ALLOCATABLE :: eigenval(:)
+  !$acc declare device_resident(eigenval)
   !! eigenvalues of the overlap matrix
   COMPLEX(DP), ALLOCATABLE :: eigenvect(:,:)
+  !$acc declare device_resident(eigenvect)
   !! eigenvectors of the overlap matrix
   COMPLEX(DP), ALLOCATABLE :: overlap_inv(:,:)
   !! overlap matrix (transposed): (O^{-1/2})^T
   COMPLEX(DP), ALLOCATABLE :: doverlap_inv(:,:)
+  !$acc declare device_resident(doverlap_inv)
   !! derivative of the overlap matrix (not transposed): d(O^{-1/2})
   COMPLEX (DP), ALLOCATABLE :: at_dy(:,:), at_dj(:,:)
   !! derivatives of spherical harmonics and spherical Bessel functions (for atomic functions)

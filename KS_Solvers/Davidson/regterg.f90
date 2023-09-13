@@ -111,7 +111,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
     !    the first nvec columns contain the trial eigenvectors
   !
   CALL start_clock( 'regterg' ) !; write(6,*) 'enter regterg' ; FLUSH(6)
+#if defined(__OPENMP_GPU)
   !$omp target data map(to:evc) map(alloc:e)
+#endif
   !
   !$acc data deviceptr(evc, e)
   !
@@ -141,7 +143,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      ALLOCATE( spsi( npwx, nvecx ), STAT=ierr )
      IF( ierr /= 0 ) &
         CALL errore( ' regterg ',' cannot allocate spsi ', ABS(ierr) )
+#if defined(__OPENMP_GPU)
      !$omp target enter data map(alloc:spsi)
+#endif
   END IF
   !
   ALLOCATE( sr( nvecx, nvecx ), STAT=ierr )
@@ -156,7 +160,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   ALLOCATE( ew( nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( 'regterg ',' cannot allocate ew ', ABS(ierr) )
+#if defined(__OPENMP_GPU)
   !$omp target data map(alloc:sr, hr, vr, ew)
+#endif
   ALLOCATE( conv( nvec ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( 'regterg ',' cannot allocate conv ', ABS(ierr) )
@@ -204,8 +210,11 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      psi(1,k) = evc(1,k)
   ! ... set Im[ psi(G=0) ] -  needed for numerical stability
      IF (gstart == 2) psi(1,k) = CMPLX( DBLE( psi(1,k) ), 0.D0 ,kind=DP)
+#if defined(__OPENACC)
      !$acc loop vector
+#elif defined(__OPENMP)
      !$omp simd
+#endif
      DO i=2,npwx
          psi(i,k) = evc(i,k)
      END DO
@@ -253,11 +262,15 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   IF ( gstart == 2 ) THEN
      CALL MYDGER( nbase, my_n, -1.D0, psi, npwx2, hpsi(1,n_start), npwx2, hr(1,n_start), nvecx )
   ENDIF
+#if defined(__OPENMP_GPU)
   !$omp target update from(hr)
+#endif
   CALL mp_sum( hr( :, 1:nbase ), inter_bgrp_comm )
   !
   CALL mp_sum( hr( :, 1:nbase ), intra_bgrp_comm )
+#if defined(__OPENMP_GPU)
   !$omp target update to(hr)
+#endif
   !
   IF ( uspp ) THEN
      !
@@ -275,11 +288,15 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      IF ( gstart == 2 ) CALL MYDGER( nbase, my_n, -1.D0, psi, npwx2, psi(1,n_start), npwx2, sr(1,n_start), nvecx )
      !
   END IF
+#if defined(__OPENMP_GPU)
   !$omp target update from(sr)
+#endif
   CALL mp_sum( sr( :, 1:nbase ), inter_bgrp_comm )
   !
   CALL mp_sum( sr( :, 1:nbase ), intra_bgrp_comm )
+#if defined(__OPENMP_GPU)
   !$omp target update to(sr)
+#endif
   !$acc end host_data
   !
   CALL stop_clock( 'regterg:init' )
@@ -287,7 +304,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   IF ( lrot ) THEN
      !
      !$acc parallel loop
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do
+#endif
      DO n = 1, nbase
         !
         e(n) = hr(n,n)
@@ -310,10 +329,14 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      ENDIF
      CALL stop_clock( 'regterg:diag' )
      !$acc end host_data
+#if defined(__OPENMP_GPU)
      !$omp target update to(hr,sr,vr,ew)
+#endif
      !
      !$acc parallel loop
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do
+#endif
      DO i = 1, nvec
         e(i) = ew(i)
      END DO
@@ -344,7 +367,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
            !
            IF ( np /= n ) THEN
              !$acc parallel loop
+#if defined(__OPENMP_GPU)
              !$omp target teams distribute parallel do
+#endif
              DO i = 1, nvecx
                vr(i,np) = vr(i,n)
              END DO
@@ -353,10 +378,14 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
            ! ... for use in g_psi
            !
            !$acc kernels
+#if defined(__OPENMP_GPU)
            !$omp target
+#endif
            ew(nbase+np) = e(n)
            !$acc end kernels
+#if defined(__OPENMP_GPU)
            !$omp end target
+#endif
            !
         END IF
         !
@@ -369,7 +398,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
      my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
      !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do collapse(2)
+#endif
      DO i=1, notcnv
         DO k=1,npwx
            psi(k,nbase+i)=ZERO
@@ -391,7 +422,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
 ! NB: must not call mp_sum over inter_bgrp_comm here because it is done later to the full correction
      !
      !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do collapse(2)
+#endif
      DO np=1,notcnv
         DO k=1,npwx
           psi(k,nbase+np) = - ew(nbase+np) * psi(k,nbase+np)
@@ -402,14 +435,18 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      if (n_start .le. n_end) &
         CALL MYDGEMM( 'N','N', npw2, notcnv, my_n, 1.D0, hpsi(1,n_start), npwx2, vr(n_start,1), nvecx, 1.D0, psi(1,nb1), npwx2 )
      !
+#if defined(__OPENMP_GPU)
      !$omp target update from(psi)
+#endif
      CALL mp_sum( psi(:,nb1:nbase+notcnv), inter_bgrp_comm )
      !
      CALL stop_clock( 'regterg:update' )
      !
      ! ... approximate inverse iteration
      !
+#if defined(__OPENMP_GPU)
      !$omp target update from(ew)
+#endif
      CALL g_psi( npwx, npw, notcnv, 1, psi(1,nb1), ew(nb1) )
      !$acc end host_data
      !
@@ -421,8 +458,10 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !
      !$acc parallel vector_length(96)
      !$acc loop gang private(nbn)
+#if defined(__OPENMP_GPU)
      !$omp target update to(psi,ew)
      !$omp target teams distribute parallel do private(nbn)
+#endif
      DO n = 1, notcnv
         !
         nbn = nbase + n
@@ -432,22 +471,31 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         !
      END DO
      !$acc end parallel
+#if defined(__OPENMP_GPU)
      !$omp target update from(ew)
+#endif
      !
      !$acc host_data use_device(ew)
      CALL mp_sum( ew( 1:notcnv ), intra_bgrp_comm )
      !$acc end host_data
      !
+#if defined(__OPENMP_GPU)
      !$omp target update to(ew)
+#endif
      !$acc parallel vector_length(96)
      !$acc loop gang
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do
+#endif
      DO i = 1,notcnv
         psi(1,nbase+i) = psi(1,nbase+i)/SQRT( ew(i) )
         ! ... set Im[ psi(G=0) ] -  needed for numerical stability
         IF (gstart == 2) psi(1,nbase+i) = CMPLX( DBLE(psi(1,nbase+i)), 0.D0 ,kind=DP)
+#if defined(__OPENACC)
         !$acc loop vector
+#elif defined(__OPENMP)
         !$omp simd
+#endif
         DO k=2,npwx
            psi(k,nbase+i) = psi(k,nbase+i)/SQRT( ew(i) )
         END DO
@@ -467,7 +515,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      CALL start_clock( 'regterg:overlap' )
      !
      !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do collapse(2)
+#endif
      DO i=0,notcnv-1
         DO j=1, nvecx
           hr( j, nb1+i )=0.d0
@@ -479,15 +529,21 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      CALL MYDGEMM( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, hpsi(1,nb1), npwx2, 0.D0, hr(n_start,nb1), nvecx )
      IF ( gstart == 2 ) CALL MYDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, hpsi(1,nb1), npwx2, hr(n_start,nb1), nvecx )
+#if defined(__OPENMP_GPU)
      !$omp target update from(hr)
+#endif
      CALL mp_sum( hr( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
      !
      CALL mp_sum( hr( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
+#if defined(__OPENMP_GPU)
      !$omp target update to(hr)
+#endif
      !$acc end host_data
      !
      !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do collapse(2)
+#endif
      DO i=0,notcnv-1
         DO j=1, nvecx
           sr( j, nb1+i )=0.d0
@@ -508,11 +564,15 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         IF ( gstart == 2 ) CALL MYDGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, psi(1,nb1), npwx2, sr(n_start,nb1), nvecx )
         !
      END IF
+#if defined(__OPENMP_GPU)
      !$omp target update from(sr)
+#endif
      CALL mp_sum( sr( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
      !
      CALL mp_sum( sr( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm  )
+#if defined(__OPENMP_GPU)
      !$omp target update to(sr)
+#endif
      !$acc end host_data
      !
      CALL stop_clock( 'regterg:overlap' )
@@ -521,11 +581,16 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !
      !$acc parallel
      !$acc loop gang
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do
+#endif
      DO n = 1, nbase
         !
+#if defined(__OPENACC)
         !$acc loop vector
+#elif defined(__OPENMP)
         !$omp simd
+#endif
         DO m = n + 1, nbase
            !
            hr(m,n) = hr(n,m)
@@ -540,7 +605,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !
      CALL start_clock( 'regterg:diag' )
      !$acc host_data use_device(hr, sr, ew, vr)
+#if defined(__OPENMP_GPU)
      !$omp target update from(hr, sr)
+#endif
      IF( my_bgrp_id == root_bgrp_id ) THEN
         CALL diaghg( nbase, nvec, hr, sr, nvecx, ew, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
      END IF
@@ -549,13 +616,17 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
      ENDIF
      !$acc end host_data
+#if defined(__OPENMP_GPU)
      !$omp target update to(hr,sr,vr,ew)
+#endif
      CALL stop_clock( 'regterg:diag' )
      !
      ! ... test for convergence
      !
      !$acc parallel loop copy(conv(1:nvec)) copyin(btype(1:nvec))
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do map(tofrom:conv) map(to:btype)
+#endif
      DO i = 1, nvec
        IF(btype(i) == 1) THEN
          conv(i) = ( ( ABS( ew(i) - e(i) ) < ethr ) )
@@ -570,7 +641,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      notcnv = COUNT( .NOT. conv(:) )
      !
      !$acc parallel loop
+#if defined(__OPENMP_GPU)
      !$omp target teams distribute parallel do
+#endif
      DO i=1,nvec
        e(i) = ew(i)
      END DO
@@ -587,7 +660,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         CALL start_clock( 'regterg:last' )
         !
         !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do collapse(2)
+#endif
         DO k=1,nvec
            DO i=1,npwx
               evc(i,k) = ZERO
@@ -598,10 +673,14 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
         !$acc host_data use_device(psi, vr)
         CALL MYDGEMM( 'N','N', npw2, nvec, my_n, 1.D0, psi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, evc, npwx2 )
+#if defined(__OPENMP_GPU)
         !$omp target update from(evc)
+#endif
         !$acc end host_data
         CALL mp_sum( evc, inter_bgrp_comm )
+#if defined(__OPENMP_GPU)
         !$omp target update to(evc)
+#endif
         !
         IF ( notcnv == 0 ) THEN
            !
@@ -627,7 +706,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         ! ... refresh psi, H*psi and S*psi
         !
         !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do collapse(2)
+#endif
         DO i=1,nvec
            DO k=1,npwx
               psi(k,i) = evc(k,i)
@@ -637,7 +718,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         IF ( uspp ) THEN
            !
            !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
            !$omp target teams distribute parallel do collapse(2)
+#endif
            DO i = 1, npwx
              DO j = nvec+1, nvec+nvec
                psi(i,j) = ZERO
@@ -646,13 +729,19 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
            !
            !$acc host_data use_device(psi, spsi, vr)
            CALL MYDGEMM( 'N','N', npw2, nvec, my_n, 1.D0, spsi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, psi(1,nvec+1), npwx2 )
+#if defined(__OPENMP_GPU)
            !$omp target update from(psi)
+#endif
            CALL mp_sum( psi(:,nvec+1:nvec+nvec), inter_bgrp_comm )
+#if defined(__OPENMP_GPU)
            !$omp target update to(psi)
+#endif
            !$acc end host_data
            !
            !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
            !$omp target teams distribute parallel do collapse(2)
+#endif
            DO i=1,nvec
               DO k=1,npwx
                  spsi(k,i) = psi(k,i+nvec)
@@ -675,13 +764,19 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
 #endif
         !$acc host_data use_device(psi, hpsi, vr)
         CALL MYDGEMM( 'N','N', npw2, nvec, my_n, 1.D0, hpsi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, psi(1,nvec+1), npwx2 )
+#if defined(__OPENMP_GPU)
         !$omp target update from(psi)
+#endif
         CALL mp_sum( psi(:,nvec+1:nvec+nvec), inter_bgrp_comm )
+#if defined(__OPENMP_GPU)
         !$omp target update to(psi)
+#endif
         !$acc end host_data
         !
         !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do collapse(2)
+#endif
         DO i=1,nvec
            DO k=1, npwx
               hpsi(k,i) = psi(k,i+nvec)
@@ -693,7 +788,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         nbase = nvec
         !
         !$acc parallel loop collapse(2)
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do collapse(2)
+#endif
         DO i = 1, nvecx
           DO j = 1, nbase
             hr(i,j) = 0.D0
@@ -703,7 +800,9 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         END DO
         !
         !$acc parallel loop
+#if defined(__OPENMP_GPU)
         !$omp target teams distribute parallel do
+#endif
         DO j = 1, nbase
           hr(j,j) = e(j)
           sr(j,j) = 1.D0
@@ -717,14 +816,18 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   END DO iterate
   !
   DEALLOCATE( conv )
+#if defined(__OPENMP_GPU)
   !$omp end target data
+#endif
   DEALLOCATE( ew )
   DEALLOCATE( vr )
   DEALLOCATE( hr )
   DEALLOCATE( sr )
   !
   IF ( uspp ) THEN
+#if defined(__OPENMP_GPU)
      !$omp target exit data map(delete:spsi)
+#endif
      DEALLOCATE( spsi )
   ENDIF
   !
@@ -735,8 +838,10 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   DEALLOCATE( psi )
   !
   !$acc end data
+#if defined(__OPENMP_GPU)
   !$omp target update from(e)
   !$omp end target data
+#endif
   !
   CALL stop_clock( 'regterg' )
   !call print_clock( 'regterg' )
