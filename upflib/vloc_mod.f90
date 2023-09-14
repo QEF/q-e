@@ -17,7 +17,7 @@ MODULE vloc_mod
   IMPLICIT NONE
   !
   PRIVATE
-  PUBLIC :: vloc_of_g, vloc_coul
+  PUBLIC :: vloc_of_g
   PUBLIC ::dvloc_of_g,dvloc_coul
   !
 CONTAINS
@@ -35,7 +35,7 @@ SUBROUTINE vloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, vloc )
   !
   USE atom,         ONLY : rgrid, msh
   USE uspp_param,   ONLY : upf
-  ! USE m_gth,        ONLY : vloc_gth
+  USE m_gth,        ONLY : vloc_gth
   !
   IMPLICIT NONE
   !
@@ -65,99 +65,74 @@ SUBROUTINE vloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, vloc )
   ! igl0: position of first nonzero G
   ! ir  : counter on mesh points
   !
-  ALLOCATE (aux(msh(nt)), aux1(msh(nt)))
-  !
   IF (gl (1) < eps8) THEN
+     igl0 = 2
+  ELSE
+     igl0 = 1
+  END IF
+  IF ( upf(nt)%is_gth ) THEN
+     ! special case: GTH pseudopotential
+     CALL vloc_gth( nt, upf(nt)%zp, tpiba2, ngl, gl, omega, vloc )
+  ELSE IF ( upf(nt)%tcoulombp ) THEN
+     ! special case: pure Coulomb pseudopotential
+     IF ( igl0 > 1 ) vloc(1) = 0.0_dp
+     vloc (igl0:ngl) = - fpi * upf(nt)%zp*e2 / omega / tpiba2 / gl (igl0:ngl)
+  ELSE
+     ! normal case
+     ALLOCATE (aux(msh(nt)), aux1(msh(nt)))
      !
-     IF ( modified_coulomb ) THEN
-        ! G=0 limit for the modified Coulomb potential (ESM, 2D)
+     IF ( igl0 == 2 ) THEN
+        !
+        IF ( modified_coulomb ) THEN
+           ! G=0 limit for the modified Coulomb potential (ESM, 2D)
+           DO ir = 1, msh(nt)
+              aux (ir) = rgrid(nt)%r(ir) * (rgrid(nt)%r(ir)*upf(nt)%vloc (ir) +&
+                   upf(nt)%zp * e2 *  erf (rgrid(nt)%r(ir)) )
+           END DO
+        ELSE
+           ! G=0 limit for Coulomb potential
+           DO ir = 1, msh(nt)
+              aux (ir) = rgrid(nt)%r(ir) * (rgrid(nt)%r(ir)*upf(nt)%vloc (ir) +&
+                   upf(nt)%zp * e2 )
+           END DO
+        END IF
+        !
+        CALL simpson (msh(nt), aux, upf(nt)%rab, vloc(1))
+        !
+     END IF
+     !   here the G<>0 terms with long range removed
+     !
+     ! G-independent term 
+     DO ir = 1, msh(nt)
+        aux (ir) = rgrid(nt)%r(ir)*upf(nt)%vloc (ir) + &
+             upf(nt)%zp * e2 * erf (rgrid(nt)%r(ir))
+     END DO
+     !
+     !    and here we perform the integral, after multiplying for the |G|
+     !    dependent part
+     !
+     DO igl = igl0, ngl
+        gx = sqrt ( gl(igl)*tpiba2 )
         DO ir = 1, msh(nt)
-           aux (ir) = rgrid(nt)%r(ir) * ( rgrid(nt)%r(ir)*upf(nt)%vloc (ir) + &
-                      upf(nt)%zp * e2 *  erf (rgrid(nt)%r(ir)) )
+           aux1(ir) = aux (ir) * sin ( gx*upf(nt)%r(ir) ) / gx
         END DO
-     ELSE
-        ! G=0 limit for Coulomb potential
-        DO ir = 1, msh(nt)
-           aux (ir) = rgrid(nt)%r(ir) * ( rgrid(nt)%r(ir)*upf(nt)%vloc (ir) + &
-                      upf(nt)%zp * e2 )
+        CALL simpson (msh(nt), aux1, upf(nt)%rab, vloc(igl))
+     END DO
+     DEALLOCATE (aux, aux1)
+     !
+     IF ( .not. modified_coulomb ) THEN
+        fac = upf(nt)%zp * e2 / tpiba2
+        DO igl = igl0, ngl
+           !
+           !   here we re-add the analytic fourier transform of the erf function
+           !
+           vloc(igl) = vloc(igl) - fac * exp (-gl (igl)*tpiba2*0.25d0) / gl (igl)
         END DO
      END IF
-     !
-     CALL simpson (msh(nt), aux, upf(nt)%rab, vloc(1))
-     !
-     igl0 = 2
-     !
-  ELSE
-     !
-     igl0 = 1
-     !
+     vloc (:) = vloc(:) * fpi / omega
   END IF
-  !   here the G<>0 terms with long range removed
-  !
-  ! G-independent term 
-  DO ir = 1, msh(nt)
-     aux (ir) = rgrid(nt)%r(ir)*upf(nt)%vloc (ir) + &
-          upf(nt)%zp * e2 * erf (rgrid(nt)%r(ir))
-  END DO
-  !
-  !    and here we perform the integral, after multiplying for the |G|
-  !    dependent part
-  !
-  DO igl = igl0, ngl
-     gx = sqrt ( gl(igl)*tpiba2 )
-     DO ir = 1, msh(nt)
-        aux1(ir) = aux (ir) * sin ( gx*upf(nt)%r(ir) ) / gx
-     END DO
-     CALL simpson (msh(nt), aux1, upf(nt)%rab, vloc(igl))
-  END DO
-  !
-  IF ( .not. modified_coulomb ) THEN
-     fac = upf(nt)%zp * e2 / tpiba2
-     DO igl = igl0, ngl
-        !
-        !   here we re-add the analytic fourier transform of the erf function
-        !
-        vloc(igl) = vloc(igl) - fac * exp (-gl (igl)*tpiba2*0.25d0) / gl (igl)
-     END DO
-  END IF
-  vloc (:) = vloc(:) * fpi / omega
-  DEALLOCATE (aux, aux1)
 
 END SUBROUTINE vloc_of_g
-!
-!----------------------------------------------------------------------
-SUBROUTINE vloc_coul( zp, tpiba2, ngl, gl, omega, vloc )
-  !----------------------------------------------------------------------
-  !! Fourier transform of the Coulomb potential - For all-electron
-  !! calculations, in specific cases only, for testing purposes.
-  !
-  INTEGER, INTENT(IN) :: ngl
-  !! the number of shells of G vectors
-  REAL(DP), INTENT(IN) :: zp
-  !! valence pseudocharge
-  REAL(DP), INTENT(IN) :: tpiba2
-  !! 2 pi / alat
-  REAL(DP), INTENT(IN) :: omega
-  !! the volume of the unit cell
-  REAL(DP), INTENT(IN) :: gl(ngl)
-  !! the moduli of g vectors for each shell
-  !
-  ! ... local variables
-  !
-  REAL(DP), INTENT(OUT) :: vloc(ngl)
-  ! the fourier transform of the potential
-  INTEGER :: igl0
-  !
-  IF (gl (1) < eps8) THEN
-     igl0 = 2
-     vloc(1) = 0.0_dp
-  ELSE
-     igl0 = 1
-  END IF
-
-  vloc (igl0:ngl) = - fpi * zp *e2 / omega / tpiba2 / gl (igl0:ngl)
-
-END SUBROUTINE vloc_coul
 !
 !----------------------------------------------------------------------
 SUBROUTINE dvloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &

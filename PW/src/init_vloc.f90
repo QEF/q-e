@@ -13,8 +13,7 @@ SUBROUTINE init_vloc()
   !! potential vloc(ig,it) for each type of atom.
   !
   USE kinds,          ONLY : dp
-  USE vloc_mod,       ONLY : vloc_of_g, vloc_coul
-  USE m_gth,          ONLY : vloc_gth
+  USE vloc_mod,       ONLY : vloc_of_g
   USE uspp_param,     ONLY : upf
   USE ions_base,      ONLY : ntyp => nsp
   USE cell_base,      ONLY : omega, tpiba2
@@ -37,32 +36,14 @@ SUBROUTINE init_vloc()
   modified_coulomb = do_cutoff_2D .OR. (do_comp_esm .and. ( esm_bc .ne. 'pbc' ))
   !
   DO nt = 1, ntyp
-     IF (do_cutoff_2D .AND. rgrid(nt)%r(msh(nt)) > lz) THEN 
+     IF (rgrid(nt)%r(msh(nt)) > lz) THEN 
         call errore('init_vloc','2D cutoff smaller than pseudo cutoff radius: &
-             & increase interlayer distance (or see Modules/read_pseudo.f90)',1)
+           & increase interlayer distance (or see Modules/read_pseudo.f90)',nt)
      END IF
      !
      ! compute V_loc(G) for a given type of atom
      !
-     IF ( upf(nt)%is_gth ) THEN
-        !
-        ! special case: GTH pseudopotential
-        !
-        CALL vloc_gth( nt, upf(nt)%zp, tpiba2, ngl, gl, omega, vloc(1,nt) )
-        !
-     ELSE IF ( upf(nt)%tcoulombp ) THEN
-        !
-        ! special case: pseudopotential is coulomb 1/r potential
-        !
-        CALL vloc_coul( upf(nt)%zp, tpiba2, ngl, gl, omega, vloc(1,nt) )
-        !
-     ELSE
-        !
-        ! normal case
-        !
-        CALL vloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, vloc(1,nt) )
-        !
-     ENDIF
+     CALL vloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, vloc(1,nt) )
      !
   ENDDO
   !
