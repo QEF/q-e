@@ -60,7 +60,6 @@ divide_class_so.o \
 divide_et_impera.o \
 rotate_wfc.o \
 run_driver.o \
-dvloc_of_g.o \
 dynamics_module.o \
 efermig.o \
 efermit.o \
@@ -245,7 +244,6 @@ v_of_rho.o \
 vcsmd.o \
 vcsubs.o \
 vhpsi.o \
-vloc_of_g.o \
 vloc_psi.o \
 utils.o \
 xdm_dispersion.o \

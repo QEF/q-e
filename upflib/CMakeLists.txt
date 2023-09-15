@@ -49,6 +49,7 @@ set(src_upflib
     uspp.f90
     uspp_data.f90
     uspp_param.f90
+    vloc_mod.f90
     write_upf_new.f90
     ylmr2.f90
     dylmr2.f90
