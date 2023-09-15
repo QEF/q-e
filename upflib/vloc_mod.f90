@@ -22,7 +22,8 @@ MODULE vloc_mod
   !
 CONTAINS
 !----------------------------------------------------------------------
-SUBROUTINE vloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, vloc )
+SUBROUTINE vloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, &
+                vloc, ierr )
   !----------------------------------------------------------------------
   !! This routine computes the Fourier transform of the local
   !! part of an atomic pseudopotential, given in numerical form.
@@ -40,11 +41,11 @@ SUBROUTINE vloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, vloc )
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: nt
-  !! the index of type of pseudpotential
+  !! the index of type of pseudopotential
   INTEGER, INTENT(IN) :: ngl
   !! the number of shells of G vectors
   LOGICAL, INTENT(IN) :: modified_coulomb
-  !! for ESM and 2D calculations
+  !! for ESM and 2D calculations - ierr = 1 is returned if not implemented 
   REAL(DP), INTENT(IN) :: tpiba2
   !! 2 pi / alat
   REAL(DP), INTENT(IN) :: omega
@@ -53,6 +54,8 @@ SUBROUTINE vloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, vloc )
   !! the (ordered!) moduli of g vectors for each shell 
   REAL(DP), INTENT(OUT) :: vloc(ngl)
   !! the fourier transform of the potential
+  INTEGER, INTENT(OUT) :: ierr
+  !! error code (ierr = 0 all good)
   !
   ! ... local variables
   !
@@ -65,6 +68,11 @@ SUBROUTINE vloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, vloc )
   ! igl0: position of first nonzero G
   ! ir  : counter on mesh points
   !
+  IF ( modified_coulomb .AND. (upf(nt)%is_gth .OR. upf(nt)%tcoulombp) ) THEN
+     ierr = 1
+     RETURN
+  END IF
+  ierr = 0
   IF (gl (1) < eps8) THEN
      igl0 = 2
   ELSE

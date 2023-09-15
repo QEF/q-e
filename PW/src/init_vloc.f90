@@ -26,7 +26,9 @@ SUBROUTINE init_vloc()
   IMPLICIT NONE
   !
   INTEGER :: nt
-  ! counter on atomic types
+  !! counter on atomic types
+  INTEGER :: ierr
+  !! counter on atomic types
   LOGICAL :: modified_coulomb
   !
   CALL start_clock( 'init_vloc' )
@@ -36,14 +38,17 @@ SUBROUTINE init_vloc()
   modified_coulomb = do_cutoff_2D .OR. (do_comp_esm .and. ( esm_bc .ne. 'pbc' ))
   !
   DO nt = 1, ntyp
-     IF (rgrid(nt)%r(msh(nt)) > lz) THEN 
-        call errore('init_vloc','2D cutoff smaller than pseudo cutoff radius: &
+     IF (do_cutoff_2D .AND. rgrid(nt)%r(msh(nt)) > lz) THEN 
+        CALL errore('init_vloc','2D cutoff smaller than pseudo cutoff radius: &
            & increase interlayer distance (or see Modules/read_pseudo.f90)',nt)
      END IF
      !
      ! compute V_loc(G) for a given type of atom
      !
-     CALL vloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, vloc(1,nt) )
+     CALL vloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, &
+             vloc(1,nt), ierr )
+     CALL errore('init_vloc','Coulomb or GTH PPs incompatible with 2D cutoff &
+             & or ESM (see upflib/vloc_mod.f90)',ierr)
      !
   ENDDO
   !
