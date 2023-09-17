@@ -18,7 +18,7 @@ MODULE vloc_mod
   !
   PRIVATE
   PUBLIC :: vloc_of_g
-  PUBLIC ::dvloc_of_g,dvloc_coul
+  PUBLIC ::dvloc_of_g
   !
 CONTAINS
 !----------------------------------------------------------------------
@@ -144,7 +144,7 @@ END SUBROUTINE vloc_of_g
 !
 !----------------------------------------------------------------------
 SUBROUTINE dvloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
-                       modified_coulomb, omega, dvloc )
+                       is_coulomb, modified_coulomb, omega, dvloc )
   !----------------------------------------------------------------------
   !! This routine computes:
   !! \[ \text{dvloc} = D\text{Vloc}(g^2)/Dg^2 = (1/2g)\ D\text{Vloc}(g)/Dg
@@ -156,6 +156,8 @@ SUBROUTINE dvloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
   !! max number of mesh points
   INTEGER, INTENT(IN) :: msh
   !! number of mesh points for radial integration
+  LOGICAL, INTENT(IN) :: is_coulomb
+  !! for pure Coulomb pseudopotentials
   LOGICAL, INTENT(IN) :: modified_coulomb
   !! for ESM and 2D calculations
   REAL(DP), INTENT(IN) :: zp
@@ -196,6 +198,13 @@ SUBROUTINE dvloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
   ELSE
      igl0 = 1
   ENDIF
+  !
+  IF ( is_coulomb ) THEN
+     !$acc kernels
+     dvloc(igl0:ngl) = fpi*zp*e2 / omega / (tpiba2*gl(igl0:ngl))**2
+     !$acc end kernels
+     RETURN
+  END IF
   !
   ! Pseudopotentials in numerical form (Vloc contains the local part)
   ! In order to perform the Fourier transform, a term erf(r)/r is
@@ -276,50 +285,4 @@ SUBROUTINE dvloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
   !
 END SUBROUTINE dvloc_of_g
 !
-!----------------------------------------------------------------------
-SUBROUTINE dvloc_coul( zp, tpiba2, ngl, gl, omega, dvloc )
-  !----------------------------------------------------------------------
-  !! Fourier transform of the Coulomb potential - For all-electron
-  !! calculations, in specific cases only, for testing purposes.
-  !
-  INTEGER, INTENT(IN) :: ngl
-  !! the number of shell of G vectors
-  REAL(DP), INTENT(IN) :: zp
-  !! valence pseudocharge
-  REAL(DP), INTENT(IN) :: tpiba2
-  !! 2 pi / alat
-  REAL(DP), INTENT(IN) :: omega
-  !! the volume of the unit cell
-  REAL(DP), INTENT(IN) :: gl(ngl)
-  !! the moduli of g vectors for each s
-  REAL(DP), INTENT(OUT) :: dvloc(ngl)
-  !! Fourier transform:  
-  !! dvloc = D Vloc (g^2) / D g^2 = 4pi e^2/omegai /G^4
-  !
-  INTEGER :: igl0
-  ! first shell with g != 0
-  !
-  !$acc data present( dvloc, gl )
-  !
-  ! the  G=0 component is 0
-  IF (gl(1) < eps8) THEN
-     !$acc kernels
-     dvloc(1) = 0.0d0
-     !$acc end kernels
-     igl0 = 2
-  ELSE
-     igl0 = 1
-  ENDIF
-  !
-  !$acc kernels
-  dvloc(igl0:ngl) = fpi*zp*e2 / omega / (tpiba2*gl(igl0:ngl))**2
-  !$acc end kernels
-  !
-  !$acc end data
-  !
-  RETURN
-  !
-END SUBROUTINE dvloc_coul
-
-
 END MODULE vloc_mod

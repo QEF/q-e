@@ -11,7 +11,7 @@ SUBROUTINE stres_loc( sigmaloc )
   !! Calculate the local term of the stress.
   !
   USE kinds,                ONLY : DP
-  USE vloc_mod,             ONLY : dvloc_of_g, dvloc_coul
+  USE vloc_mod,             ONLY : dvloc_of_g
   USE atom,                 ONLY : msh, rgrid
   USE m_gth,                ONLY : dvloc_gth
   USE ions_base,            ONLY : ntyp => nsp
@@ -89,19 +89,13 @@ SUBROUTINE stres_loc( sigmaloc )
         !
         CALL dvloc_gth( nt, upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc )
         !
-     ELSEIF ( upf(nt)%tcoulombp ) THEN
-        !
-        ! special case: pseudopotential is coulomb 1/r potential
-        !
-        CALL dvloc_coul( upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc )
-        !
      ELSE
         !
         ! normal case: dvloc contains dV_loc(G)/dG
         !
         CALL dvloc_of_g( rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r, &
                          upf(nt)%vloc(:), upf(nt)%zp, tpiba2, ngl, gl, &
-                         modified_coulomb, omega, dvloc )
+                         upf(nt)%tcoulombp, modified_coulomb, omega, dvloc )
         !
      ENDIF
      ! ... no G=0 contribution
