@@ -6,17 +6,17 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE initbox ( tau0, alat, at, ainv, taub, irb )
+      SUBROUTINE initbox ( tau0, alat, at, ainv, taub, irb, iabox, nabox )
 !-----------------------------------------------------------------------
-!
-!     sets the indexes irb and positions taub for the small boxes 
-!     around atoms
+      !! Sets the indexes \(\text{irb}\) and positions \(\text{taub}\) for
+      !! the small boxes around atoms.
 !
       USE kinds,                    ONLY: DP
-      USE ions_base,                ONLY: nat
+      USE ions_base,                ONLY: nat, ityp
+      USE uspp_param,               ONLY: upf
       USE control_flags,            ONLY: iverbosity
       USE io_global,                ONLY: stdout
-      USE mp_global,                ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
+      USE mp_global,                ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, my_bgrp_id, nbgrp
       USE fft_base,                 ONLY: dfftb, dfftp, fft_type_descriptor
       USE fft_smallbox_type,        ONLY: fft_box_set
 
@@ -26,9 +26,10 @@
 ! output
       INTEGER,  INTENT(out) :: irb(3,nat)
       REAL(DP), INTENT(out) :: taub(3,nat)
+      INTEGER,  INTENT(out) :: iabox(nat), nabox
 ! local
       REAL(DP) :: x(3), xmod
-      INTEGER  :: nr(3), nrb(3), xint, ia, i
+      INTEGER  :: nr(3), nrb(3), xint, ia, i, is
 !
       IF ( dfftb%nr1 < 1) CALL errore ('initbox', 'incorrect value for box grid dimensions', 1)
       IF ( dfftb%nr2 < 1) CALL errore ('initbox', 'incorrect value for box grid dimensions', 2)
@@ -96,6 +97,19 @@
 
       CALL fft_box_set( dfftb, nat, irb, dfftp )
 
+      ! build the local list of atom 
+      nabox = 0
+      DO ia = 1, nat
+         IF( .NOT. upf(ityp(ia))%tvanp )  CYCLE
+#if defined(__MPI)
+         IF(  ( dfftb%np3( ia ) <= 0 ) .OR. ( dfftb%np2( ia ) <= 0 ) .OR. ( my_bgrp_id /= MOD( ia, nbgrp ) ) ) THEN
+            CYCLE
+         END IF
+#endif
+         nabox = nabox + 1
+         iabox( nabox ) = ia
+      END DO
+
       IF( iverbosity > 1 ) THEN
            DO ia=1,nat
               WRITE( stdout,2000) ia, (irb(i,ia),i=1,3)
@@ -119,10 +133,10 @@
 !-----------------------------------------------------------------------
       SUBROUTINE phbox( taub, iverbosity, eigrb )
 !-----------------------------------------------------------------------
-!     calculates the phase factors for the g's of the little box
-!     eigrt=exp(-i*g*tau) .
-!     Uses the same logic for fast calculation as in phfac
-!        
+      !! Calculates the phase factors for the g's of the little box:
+      !! \[ \text{eigrt}=\exp(-i\ g\ \text{tau})\ . \]
+      !! Uses the same logic for fast calculation as in \(\texttt{phfac}\).
+!
       USE kinds,         only: DP
       use io_global,     only: stdout
       use ions_base,     only: nsp, na, nat

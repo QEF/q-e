@@ -22,7 +22,7 @@ This directory contains the following three subdirectories:
 Info about the QE-modes package:
 --------------------------------
 
-See the QE-modes/README and QE-modes/README.svn files.
+See the QE-modes/README and QE-modes/README.repository files.
 
 
 Info about the PWgui package:
@@ -33,7 +33,7 @@ http://www-k3.ijs.si/kokalj/guib/guib.html), which is provided in the
 Guib/ subdirectory.
 
 See the following files in PWgui/ directory:
-	INSTALL.svn      
+	INSTALL.repository
 	INSTALL          
 	README           
 	README.developer 

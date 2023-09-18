@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,11 +11,6 @@
 ! search for 'TB' 
 !----------------------------------------------------------------------------
 !
-#undef __NPT
-#if defined (__NPT)
-#define RELAXTIME 2000.D0
-#define TARGPRESS 2.39D0
-#endif
 !
 !----------------------------------------------------------------------------
 MODULE dynamics_module
@@ -39,10 +34,12 @@ MODULE dynamics_module
    !
    SAVE
    PRIVATE
-   PUBLIC :: verlet, proj_verlet, terminate_verlet, &
-             langevin_md, smart_MC, allocate_dyn_vars, deallocate_dyn_vars
+   PUBLIC :: verlet, verlet_read_tau_from_conf, proj_verlet, terminate_verlet, &
+             fire, langevin_md, smart_MC, allocate_dyn_vars, deallocate_dyn_vars
    PUBLIC :: temperature, refold_pos, vel
    PUBLIC :: dt, delta_t, nraise, control_temp, thermostat
+   ! FIRE parameters
+   PUBLIC :: fire_nmin, fire_f_inc, fire_f_dec, fire_alpha_init, fire_falpha, fire_dtmax
    !
    !
    REAL(DP) :: dt
@@ -69,6 +66,18 @@ MODULE dynamics_module
    !! true if this is the first ionic iteration
    CHARACTER(len=10) :: thermostat
    !! the thermostat used to control the temperature
+   INTEGER ::  fire_nmin
+   !! FIRE: minimum number of steps for time step increase 
+   REAL(DP) :: fire_f_inc
+   !! FIRE: factor for time step increase  
+   REAL(DP) :: fire_f_dec
+   !! FIRE: factor for time step decrease
+   REAL(DP) :: fire_alpha_init
+   !! FIRE: initial value of mixing factor
+   REAL(DP) :: fire_falpha
+   !! FIRE: modify the mixing factor
+   REAL(DP) :: fire_dtmax
+   !! FIRE: factor for max time step 
    REAL(DP), ALLOCATABLE :: tau_smart(:,:)
    !! used for smart Monte Carlo to store the atomic position of the
    !! previous step.
@@ -97,6 +106,10 @@ MODULE dynamics_module
    !! radial distribution
    !
    INTEGER, PARAMETER :: hist_len = 1000
+   !
+   ! Restart type
+   INTEGER, PARAMETER :: restart_verlet = 1, restart_proj_verlet = 2, &
+                         restart_fire = 3, restart_langevin = 4
    !
 CONTAINS
    !
@@ -149,28 +162,30 @@ CONTAINS
    SUBROUTINE verlet()
       !------------------------------------------------------------------------
       !! This routine performs one step of molecular dynamics evolution
-      !! using the Verlet algorithm.  
-      !! The parameters:
+      !! using the Verlet algorithm. Parameters:
       !
       !! * mass: mass of the atoms;
       !! * dt: time step;
       !! * temperature: starting temperature.
       !
-      !! The starting velocities of atoms are set accordingly
-      !! to the starting temperature, in random directions. 
-      !! The initial velocity distribution is therefore a
-      !! constant.
+      !! The starting velocities of atoms are set accordingly to the
+      !! starting temperature, in random directions. 
+      !! The initial velocity distribution is therefore a constant.
       !
-      !! Dario Alfe' 1997  and  Carlo Sbraccia 2004-2006.
+      !! Must be run on a single processor, results broadcast to all other procs
+      !! Unpredictable behavoiour may otherwise result due to I/O operations
+      !!
+      !! Original code: Dario Alfe' 1997  and  Carlo Sbraccia 2004-2006.
       !
       USE ions_base,          ONLY : nat, nsp, ityp, tau, if_pos, atm
       USE cell_base,          ONLY : alat, omega
       USE ener,               ONLY : etot
-      USE force_mod,          ONLY : force, lstres
-      USE control_flags,      ONLY : istep, lconstrain, tv0rd
-      !
-      USE constraints_module, ONLY : nconstr, check_constraint
-      USE constraints_module, ONLY : remove_constr_force, remove_constr_vec
+      USE force_mod,          ONLY : force
+      USE control_flags,      ONLY : istep, lconstrain, tv0rd, tstress
+      ! istep counts all MD steps, including those of previous runs
+      USE constraints_module, ONLY : check_constraint, remove_constr_force, &
+         remove_constr_vec, check_wall_constraint
+      USE input_parameters,   ONLY : nextffield
       !
       IMPLICIT NONE
       !
@@ -180,57 +195,50 @@ CONTAINS
       REAL(DP) :: total_mass, temp_new, temp_av, elapsed_time
       REAL(DP) :: delta(3), ml(3), mlt
       INTEGER  :: na
-      ! istep counts all MD steps, including those of previous runs
+! FIXME: is it useful to keep trace of this possibility?
+#undef __NPT
 #if defined (__NPT)
+#define RELAXTIME 2000.D0
+#define TARGPRESS 2.39D0
       REAL(DP) :: chi, press_new
 #endif
-      LOGICAL  :: file_exists, leof
+      LOGICAL  :: is_restart
       REAL(DP), EXTERNAL :: dnrm2
-      REAL(DP) :: kstress(3,3)
-      INTEGER :: i, j
+      REAL(DP) :: kstress(3,3), tau_tmp(3, nat)
+      INTEGER :: i, j, restart_id
       !
-      ! ... the number of degrees of freedom
-      !
-      IF ( ANY( if_pos(:,:) == 0 ) ) THEN
-         !
-         ndof = 3*nat - COUNT( if_pos(:,:) == 0 ) - nconstr
-         !
-      ELSE
-         !
-         ndof = 3*nat - 3 - nconstr
-         !
-      ENDIF
+      ndof = get_ndof()
       !
       vel_defined  = .TRUE.
       temp_av      = 0.D0
       !
-      CALL seqopn( 4, 'md', 'FORMATTED', file_exists )
+      CALL seqopn( 4, 'md', 'FORMATTED', is_restart )
       !
-      IF ( file_exists ) THEN
+      IF ( is_restart ) THEN
          !
          ! ... the file is read :  simulation is continuing
          !
-         READ( UNIT = 4, FMT = * ) etotold, istep, tau_old(:,:), leof
+         READ( UNIT = 4, FMT = * ) restart_id
          !
-         IF ( leof ) THEN
-            !
-            ! ... the file was created by projected_verlet:  Ignore it
-            !
-            CALL md_init()
-            !
-         ELSE
-            !
+         IF ( restart_id .EQ. restart_verlet ) THEN
+            ! Restarting...
             vel_defined = .FALSE.
             !
-            READ( UNIT = 4, FMT = * ) &
-               temp_new, temp_av, mass(:), total_mass, elapsed_time, &
-               tau_ref(:,:)
+            ! tau_tmp is read here but not used. It is used for restart in
+            ! verlet_read_tau_from_conf
             !
+            READ( UNIT = 4, FMT = * ) istep, etotold, tau_tmp(:,:), &
+               tau_old(:,:), temp_new, temp_av, mass(:), total_mass, &
+               elapsed_time, tau_ref(:,:)
+            !
+            CLOSE( UNIT = 4, STATUS = 'KEEP' )
+            !
+         ELSE
+            is_restart = .FALSE.
          ENDIF
-         !
-         CLOSE( UNIT = 4, STATUS = 'KEEP' )
-         !
-      ELSE
+      ENDIF
+      !
+      IF (.NOT.is_restart) THEN
          !
          CLOSE( UNIT = 4, STATUS = 'DELETE' )
          !
@@ -252,6 +260,11 @@ CONTAINS
           istep, elapsed_time
       !
       IF ( control_temp ) CALL apply_thermostat()
+      !
+      ! ... Update forces if potential wall constraint was requested
+      !
+      IF (lconstrain) &
+         CALL check_wall_constraint( nat, tau, if_pos, ityp, alat, force )
       !
       ! ... we first remove the component of the force along the
       ! ... constraint gradient ( this constitutes the initial
@@ -283,11 +296,13 @@ CONTAINS
          !
       ENDIF
       !
-      IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
+      IF ( .NOT. ANY( if_pos(:,:) == 0 ) .AND. nextffield == 0 ) THEN
          !
          ! ... if no atom has been fixed  we compute the displacement of the
          ! ... center of mass and we subtract it from the displaced positions
          !
+         ! ... bypassed if external ionic force fields are activated
+         ! 
          delta(:) = 0.D0
          DO na = 1, nat
             delta(:) = delta(:) + mass(na)*( tau_new(:,na) - tau(:,na) )
@@ -336,19 +351,24 @@ CONTAINS
          !
       ENDIF
       !
-      ! ... the linear momentum and the kinetic energy are computed here
+      ! ... kinetic energy and new temperature are computed here
       !
       vel = ( tau_new - tau_old ) / ( 2.D0*dt ) * DBLE( if_pos )
       !
+      CALL compute_ekin( ekin, temp_new )
+      !
+      ! ... update average temperature
+      !
+      temp_av = temp_av + temp_new
+      !
+      ! ... linear momentum and kinetic stress
+      !
       ml   = 0.D0
-      ekin = 0.D0
       kstress = 0.d0
       !
       DO na = 1, nat
          !
          ml(:) = ml(:) + vel(:,na) * mass(na)
-         ekin  = ekin + 0.5D0 * mass(na) * &
-                        ( vel(1,na)**2 + vel(2,na)**2 + vel(3,na)**2 )
          DO i = 1, 3
              DO j = 1, 3
                  kstress(i,j) = kstress(i,j) + mass(na)*vel(i,na)*vel(j,na)
@@ -357,15 +377,9 @@ CONTAINS
          !
       ENDDO
       !
-      ekin = ekin*alat**2
       kstress = kstress * alat**2 / omega
       !
-      ! ... find the new temperature and update the average
-      !
-      temp_new = 2.D0 / DBLE( ndof ) * ekin * ry_to_kelvin
-      !
-      temp_av = temp_av + temp_new
-      !
+      ! FIXME: still useful?
 #if defined (__NPT)
       !
       ! ... find the new pressure (in Kbar)
@@ -384,15 +398,15 @@ CONTAINS
       !
       ! ... save all the needed quantities on file
       !
-      CALL seqopn( 4, 'md', 'FORMATTED',  file_exists )
+      CALL seqopn( 4, 'md', 'FORMATTED',  is_restart )
       !
-      leof = .FALSE.
-      WRITE( UNIT = 4, FMT = * ) etot, istep, tau(:,:), leof
-      !
-      WRITE( UNIT = 4, FMT = * ) &
-          temp_new, temp_av, mass(:), total_mass, elapsed_time, tau_ref(:,:)
+      WRITE( UNIT = 4, FMT = * ) restart_verlet
+      WRITE( UNIT = 4, FMT = * ) istep, etot, tau_new(:,:), tau(:,:), &
+         temp_new, temp_av, mass(:), total_mass, elapsed_time, tau_ref(:,:)
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
+      !
+      CALL dump_trajectory_frame( elapsed_time, temperature )
       !
       ! ... here the tau are shifted
       !
@@ -411,7 +425,7 @@ CONTAINS
                      & 5X,"Ekin + Etot (const)   = ",F20.8," Ry")' ) &
              ekin, temp_new, ( ekin  + etot )
       !
-      IF (lstres) WRITE ( stdout, &
+      IF (tstress) WRITE ( stdout, &
       '(5X,"Ions kinetic stress = ",F15.2," (kbar)",/3(27X,3F15.2/)/)') &
               ((kstress(1,1)+kstress(2,2)+kstress(3,3))/3.d0*ry_kbar), &
               (kstress(i,1)*ry_kbar,kstress(i,2)*ry_kbar,kstress(i,3)*ry_kbar, i=1,3)
@@ -523,9 +537,14 @@ CONTAINS
             !
          ENDDO
          !
-         IF ( tv0rd ) THEN ! initial velocities available from input file
+         IF ( tv0rd ) THEN
+            !
+            ! ... initial velocities available from input file
             !
             vel(:,:) = vel(:,:) / alat
+            vel_defined = .true.
+            !
+            CALL compute_ekin ( ekin, temp_new )
             !
          ELSEIF ( control_temp ) THEN
             !
@@ -561,7 +580,7 @@ CONTAINS
          REAL(DP) :: sigma, kt
          !
          IF (.NOT. vel_defined) THEN
-            vel(:,:) = (tau(:,:) - tau_old(:,:)) / dt
+            vel(:,:) = ( tau(:,:) - tau_old(:,:) ) / dt * dble( if_pos(:,:) )
          ENDIF
          !
          SELECT CASE( TRIM( thermostat ) )
@@ -692,17 +711,13 @@ CONTAINS
          USE symm_base,      ONLY : invsym, nsym, irt
          USE cell_base,      ONLY : alat
          USE ions_base,      ONLY : nat, if_pos
-         USE random_numbers, ONLY : gauss_dist, set_random_seed
+         USE random_numbers, ONLY : gauss_dist
          !
          IMPLICIT NONE
          !
          INTEGER  :: na, nb
          REAL(DP) :: total_mass, kt, sigma, ek, ml(3), system_temp
          !
-         ! ... next command prevents different MD runs to start
-         ! ... with exactly the same "random" velocities
-         !
-         CALL set_random_seed( )
          kt = temperature / ry_to_kelvin
          !
          ! ... starting velocities have a Maxwell-Boltzmann distribution
@@ -789,6 +804,24 @@ CONTAINS
       !
    END SUBROUTINE verlet
    !
+   !------------------------------------------------------------------------
+   SUBROUTINE compute_ekin ( ekin, temp_new )
+     !------------------------------------------------------------------------
+     USE cell_base,      ONLY : alat
+     USE ions_base,      ONLY : nat
+     IMPLICIT NONE
+     REAL (dp), INTENT (out) :: ekin, temp_new
+     INTEGER :: na
+     !
+     ekin = 0.0_dp
+     DO na = 1, nat
+        ekin  = ekin + 0.5_dp * mass(na) * &
+             ( vel(1,na)**2 + vel(2,na)**2 + vel(3,na)**2 )
+     ENDDO
+     ekin = ekin*alat**2
+     temp_new = 2.D0 / DBLE( ndof ) * ekin * ry_to_kelvin
+     !
+   END SUBROUTINE compute_ekin
    !
    !------------------------------------------------------------------------
    SUBROUTINE terminate_verlet
@@ -796,13 +829,14 @@ CONTAINS
      !! Terminate Verlet molecular dynamics calculation.
      !
      USE io_global, ONLY : stdout
+     USE control_flags, ONLY : istep
      !
      WRITE( UNIT = stdout, &
           FMT = '(/,5X,"The maximum number of steps has been reached.")' )
      WRITE( UNIT = stdout, &
           FMT = '(/,5X,"End of molecular dynamics calculation")' )
      !
-     CALL print_averages()
+     IF (istep > 0) CALL print_averages()
      !
    END SUBROUTINE terminate_verlet
    !
@@ -821,6 +855,7 @@ CONTAINS
       USE control_flags,      ONLY : istep, lconstrain
       !
       USE constraints_module, ONLY : remove_constr_force, check_constraint
+      USE input_parameters,   ONLY : nextffield
       ! TB
       USE extfield,           ONLY : relaxz
       !
@@ -830,8 +865,8 @@ CONTAINS
       !
       REAL(DP), ALLOCATABLE :: step(:,:)
       REAL(DP)              :: norm_step, etotold, delta(3)
-      INTEGER               :: na
-      LOGICAL               :: file_exists,leof
+      INTEGER               :: na, restart_id
+      LOGICAL               :: is_restart
       !
       REAL(DP), PARAMETER :: step_max = 0.6D0  ! bohr
       !
@@ -846,17 +881,25 @@ CONTAINS
       acc(:,:)     = 0.D0
       conv_ions = .FALSE.
       !
-      CALL seqopn( 4, 'md', 'FORMATTED', file_exists )
+      CALL seqopn( 4, 'md', 'FORMATTED', is_restart )
       !
-      IF ( file_exists ) THEN
+      IF ( is_restart ) THEN
          !
          ! ... the file is read
          !
-         READ( UNIT = 4, FMT = * ) etotold, istep, tau_old(:,:)
+         READ( UNIT = 4, FMT = * ) restart_id
          !
-         CLOSE( UNIT = 4, STATUS = 'KEEP' )
-         !
-      ELSE
+         IF ( restart_id .EQ. restart_proj_verlet ) THEN
+            !
+            READ( UNIT = 4, FMT = * ) istep, etotold, tau_old(:,:)
+            CLOSE( UNIT = 4, STATUS = 'KEEP' )
+            !
+         ELSE
+            is_restart = .FALSE.
+         END IF
+      END iF
+      !
+      IF (.NOT.is_restart) THEN
          !
          CLOSE( UNIT = 4, STATUS = 'DELETE' )
          !
@@ -947,11 +990,13 @@ CONTAINS
       IF ( .NOT. ANY( if_pos(:,:) == 0 ) .AND. (relaxz) ) THEN
          WRITE( stdout, '("relaxz = .TRUE. => displacement of the center of mass is not subtracted")')
       ENDIF
-      IF ( (.NOT. ANY( if_pos(:,:) == 0 )) .AND. (.NOT. relaxz) ) THEN
+      IF ( (.NOT. ANY( if_pos(:,:) == 0 )) .AND. (.NOT. relaxz) .AND. nextffield==0 ) THEN
          !
          ! ... if no atom has been fixed  we compute the displacement of the
          ! ... center of mass and we subtract it from the displaced positions
          !
+         ! ... also bypassed if external ionic force fields are activated
+         ! 
          delta(:) = 0.D0
          !
          DO na = 1, nat
@@ -977,10 +1022,10 @@ CONTAINS
       !
       ! ... save on file all the needed quantities
       !
-      CALL seqopn( 4, 'md', 'FORMATTED',  file_exists )
+      CALL seqopn( 4, 'md', 'FORMATTED',  is_restart )
       !
-      leof = .TRUE.
-      WRITE( UNIT = 4, FMT = * ) etot, istep, tau(:,:), leof
+      WRITE( UNIT = 4, FMT = * ) restart_proj_verlet
+      WRITE( UNIT = 4, FMT = * ) istep, etot, tau(:,:)
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
@@ -997,6 +1042,309 @@ CONTAINS
       DEALLOCATE( step )
       !
    END SUBROUTINE proj_verlet
+
+   SUBROUTINE fire( conv_ions )
+
+     !------------------------------------------------------------------------
+     !! This routine performs one step of structural relaxation using
+     !! the FIRE (Fast Inertial Relaxation Engine) algorithm using the
+     !! semi-implicit Euler integration scheme with an energy monitor;
+     !! 
+     !! References: (1) Bitzek et al., Phys. Rev. Lett.,  97, 170201, (2006),
+     !!                  doi: 10.1103/PhysRevLett.97.170201
+     !!             (2) Shuang et al., Comp. Mater. Sci., 156, 135-141 (2019),
+     !!                  doi: 10.1016/j.commatsci.2018.09.049
+     !!             (3) (FIRE 2.0) Guénolé et al., Comp. Mater. Sci., 175, 109584, (2020),
+     !!                  doi: 10.1016/j.commatsci.2020.109584
+     !! 
+     !!  There are seven global parameters that can be modified by the user:
+     !!
+     !!  dt .... initial time step of calculation
+     !!  fire_nmin ... number of steps with P > 0 before dt is increased 
+     !!  fire_f_inc ... factor for the increase of the time step
+     !!  fire_f_dec ... factor for the decrease of the time step
+     !!  fire_alpha_init ... initial value of the velocity mixing factor
+     !!  fire_falpha ... modifies the velocity mixing factor
+     !!  fire_dtmax ... maximum time step; calculated as dtmax = fire_dtmax*dt 
+     !!
+     !! Defaults are (taken from ref (2)):
+     !!   dt = 20.0  (the default time step in PW ==  20.0 a.u. or 0.9674 fs )
+     !!   fire_f_inc = 1.1 
+     !!   fire_f_dec = 0.5
+     !!   fire_f_alpha_init = 0.2
+     !!   fire_falpha = 0.99
+     !!----------------------------------------------------------------------- 
+     USE ions_base,          ONLY : nat, ityp, tau, if_pos
+     USE cell_base,          ONLY : alat
+     USE ener,               ONLY : etot
+     USE force_mod,          ONLY : force
+     USE relax,              ONLY : epse, epsf
+     USE control_flags,      only : istep, lconstrain
+     !
+     USE constraints_module, ONLY : remove_constr_force, remove_constr_vec, check_constraint
+     ! TB
+     USE extfield,      ONLY : relaxz
+     !
+     IMPLICIT NONE
+     !
+     LOGICAL, INTENT(OUT) :: conv_ions
+     !
+     REAL(DP), ALLOCATABLE :: step(:,:)
+     REAL(DP)              :: norm_step, etotold, delta(3)
+     INTEGER               :: na, i, restart_id
+     LOGICAL               :: is_restart
+     !
+     REAL(DP), PARAMETER :: step_max = 0.6D0  ! bohr
+     ! 
+     REAL(DP), EXTERNAL :: dnrm2,ddot
+     !
+     ! FIRE local variables 
+     !
+     REAL(DP) :: P, alpha, fmax, dt_max, dt_curr
+     INTEGER :: nsteppos
+     ! 
+     ! FIRE  parameters; read from input ...   
+     !
+     INTEGER ::  Nmin  ! minimum number of steps for time step increase 
+     REAL(DP) :: f_inc ! factor for time step increase  
+     REAL(DP) :: f_dec ! factor for time step decrease
+     REAL(DP) :: alpha_init ! initial value of mixing factor
+     REAL(DP) :: falpha ! modify the mixing factor 
+     !
+     ALLOCATE( step( 3, nat ) )
+     !
+     ! set up local variables for global input parameters (better readability) ... 
+     !
+     Nmin = fire_nmin
+     f_inc = fire_f_inc
+     f_dec = fire_f_dec
+     alpha_init = fire_alpha_init
+     falpha = fire_falpha
+     !
+     ! initialize alpha
+     ! 
+     tau_new(:,:) = 0.D0
+     alpha = alpha_init
+     ! maximum time step 
+     dt_curr = dt
+     dt_max = fire_dtmax*dt
+     ! acc_old and vel_old are here to keep track of acceleration/velocity in the previous time step
+     nsteppos = 0
+     conv_ions = .FALSE.
+     !
+     CALL seqopn( 4, 'fire', 'FORMATTED', is_restart )
+     !
+     IF ( is_restart ) THEN
+        !
+        ! ... the file is read ...
+        !
+        READ( UNIT = 4, FMT = * ) restart_id
+        !
+        IF (restart_id .EQ. restart_fire) THEN
+           !
+           READ( UNIT = 4, FMT = * ) etotold, nsteppos, dt_curr, alpha
+           CLOSE( UNIT = 4, STATUS = 'KEEP' )
+           !
+        ELSE
+           !
+           is_restart = .FALSE.
+           !
+        END IF
+        !
+     END IF
+     !
+     IF (.NOT.is_restart) THEN
+        !
+        CLOSE( UNIT = 4, STATUS = 'DELETE' )
+        !
+        ! ... atoms are refolded in the central box
+        !
+        IF ( refold_pos ) CALL refold_tau()
+        !
+        vel(:,:) = 0.D0
+        acc(:,:) = 0.D0
+        etotold = etot
+        istep = 0
+        WRITE( UNIT = stdout, &
+             FMT = '(/,5X,"Minimization using the FIRE algorithm")' )
+        !
+        ! write out the input parameters 
+        WRITE (UNIT = stdout, &
+             FMT = '(/,5X,"FIRE input parameters:")')
+        WRITE (UNIT = stdout, &
+             FMT = '(/,5X," fire_nmin = ",I2," fire_f_inc = ", F4.2, & 
+             " fire_f_dec = ",F4.2," fire_alpha = ",F4.2, & 
+             " fire_falpha = ",F4.2, " dtmax = ",F5.1 )') &
+             fire_nmin, fire_f_inc, fire_f_dec, &
+             fire_alpha_init, fire_falpha, dt_max 
+        !
+     ENDIF
+     !
+     IF ( lconstrain ) THEN
+        !
+        ! ... we first remove the component of the force along the
+        ! ... constraint gradient (this constitutes the initial guess
+        ! ... for the calculation of the lagrange multipliers)
+        !
+        write (*,*) "Called remove constr" 
+        CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
+        !
+#if ! defined (__REDUCE_OUTPUT)
+        !
+        WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
+        !
+        DO na = 1, nat
+           !
+           WRITE( stdout, &
+                '(5X,"atom ",I3," type ",I2,3X,"force = ",3F14.8)' ) &
+                na, ityp(na), force(:,na)
+           !
+        ENDDO
+        !
+        WRITE( stdout, &
+             '(/5X,"Total force = ",F12.6)') dnrm2( 3*nat, force, 1 )
+        !
+#endif
+        !
+     ENDIF
+     !
+     ! ... check if convergence for structural minimization is achieved
+     !
+     conv_ions = ( etotold - etot ) < epse
+     conv_ions = conv_ions .and. ( MAXVAL( ABS( force ) ) < epsf )
+     !
+     IF ( conv_ions ) THEN
+        !
+        WRITE( UNIT = stdout, &
+             FMT = '(/,5X,"FIRE: convergence achieved in " &
+             & ,I3," steps")' ) istep
+        WRITE( UNIT = stdout, &
+             FMT = '(/,5X,"End of FIRE minimization")' )
+        WRITE( UNIT = stdout, &
+             FMT = '(/,5X,"Final energy = ",F18.10," Ry"/)' ) etot
+        !
+        CALL output_tau( .TRUE., .TRUE. )
+        !
+        RETURN
+        !
+     ENDIF
+     !
+     istep = istep + 1
+     WRITE( stdout, '(/,5X,"Entering FIRE :",&
+          & T28,"iteration",T37," = ",I5)' ) istep
+
+     !
+     ! calculate acceleration
+     !
+     acc(:,:) = force(:,:) / alat / amu_ry
+     ! 
+     ! calculate the projection of the velocity on the force 
+     P = ddot(3*nat,force, 1, vel, 1)
+     ! 
+     step(:,:) = 0.0_DP
+     ! 
+     IF ( P < 0.0_DP  )  THEN 
+        ! FIRE 2.0 algorithm: if P < 0 go back by half a step 
+        ! for details see reference (2), doi: 10.1016/j.commatsci.2020.109584
+        step(:,:) = step(:,:) - 0.5_DP*dt_curr*vel(:,:)
+     ENDIF
+     !
+     ! ... manipulate the time step ... 
+     !
+     ! NOTEs:
+     ! in original FIRE the condition is P > 0,
+     ! however to prevent the time step decrease in the first step where v=0
+     ! (P=0 and etot=etotold) the equality was changed to P >= 0
+     ! The energy difference criterion is also added to prevent
+     ! the minimization from going uphill  
+     ! 
+
+     IF ( P >= 0.0_DP  .AND. (etot - etotold) <= 0.D0 ) THEN
+        ! 
+        ! 
+        nsteppos = nsteppos + 1
+        ! increase time step and modify mixing factor only after Nmin steps in positive direction
+        IF ( nsteppos > Nmin ) THEN 
+           dt_curr = MIN(dt_curr*f_inc, dt_max )
+           alpha = alpha*falpha
+        END IF
+     ELSE   
+        !
+        ! set velocity to 0; return alpha to the initial value; reduce time step
+        !
+        vel(:,:) = 0.D0
+        alpha = alpha_init
+        nsteppos = 0
+        dt_curr = dt_curr*f_dec        
+     END IF
+     ! report current parameters 
+     WRITE (stdout, '(/,5X, "FIRE Parameters: P = ", F10.8 ", dt = " F5.2", & 
+          alpha = " F5.3, " nsteppos = ", I3, " at step", I3, /)' ) P, dt_curr, alpha, nsteppos, istep
+     !
+     ! calculate v(t+dt) = v(t) + a(t)*dt  
+     !
+     vel(:,:) = vel(:,:) + dt_curr*acc(:,:)
+     ! 
+     ! velocity mixing 
+     !
+     vel(:,:) = (1.D0 - alpha)*vel(:,:) + alpha*force(:,:)*dnrm2(3*nat,vel,1)/dnrm2(3*nat,force,1)
+     !
+     !
+     ! ... the velocity of fixed ions must be zero
+     !
+     vel = vel * DBLE( if_pos )
+     ! 
+     IF ( lconstrain )  THEN
+        !
+        ! apply constraints to the velocity as well  
+        !
+        CALL remove_constr_vec( nat, tau, if_pos, ityp, alat, vel )
+     ENDIF
+     ! 
+     ! 
+     ! calculate the displacement x(t+dt) = x(t) + v(t+dt)*dt 
+     ! 
+     step(:,:) = step(:,:) +  vel(:,:)*dt_curr
+     !
+     norm_step = dnrm2( 3*nat, step, 1 )
+     !
+     step(:,:) = step(:,:) / norm_step
+     !
+     ! keep the step within a threshold (taken from damped dynamics)  
+     !
+     tau_new(:,:) = tau(:,:) + step(:,:)*MIN(norm_step, step_max/alat)
+     !  
+     IF ( lconstrain ) THEN
+        !
+        ! ... check if the new positions satisfy the constrain equation
+        !
+        CALL check_constraint( nat, tau_new, tau, &
+             force, if_pos, ityp, alat, dt, amu_ry )
+        !
+     ENDIF
+     !
+     ! ... save the needed quantities to a file 
+     !
+     CALL seqopn( 4, 'fire', 'FORMATTED',  is_restart )
+     !
+     WRITE( UNIT = 4, FMT = * ) restart_fire
+     WRITE( UNIT = 4, FMT = * ) etot, nsteppos, dt_curr, alpha      !
+     CLOSE( UNIT = 4, STATUS = 'KEEP' )
+     !
+     ! ... displace tau, and output new positions   
+     !
+     tau(:,:) = tau_new(:,:)
+     !
+     !
+#if ! defined (__REDUCE_OUTPUT)
+     !
+     CALL output_tau( .FALSE., .FALSE. )
+     !
+#endif
+     !
+     DEALLOCATE( step )
+     !
+   END SUBROUTINE fire 
    !
    !
    !------------------------------------------------------------------------
@@ -1011,14 +1359,14 @@ CONTAINS
       USE control_flags,  ONLY : istep, lconstrain
       USE random_numbers, ONLY : gauss_dist
       !
-      USE constraints_module, ONLY : nconstr
       USE constraints_module, ONLY : remove_constr_force, check_constraint
+      USE input_parameters,   ONLY : nextffield
       !
       IMPLICIT NONE
       !
       REAL(DP) :: sigma, kt
       REAL(DP) :: delta(3)
-      INTEGER  :: na
+      INTEGER  :: na, restart_id
       LOGICAL  :: file_exists
       !
       REAL(DP), EXTERNAL :: dnrm2
@@ -1029,13 +1377,18 @@ CONTAINS
          !
          ! ... the file is read :  simulation is continuing
          !
-         READ( UNIT = 4, FMT = * ) istep
+         READ( UNIT = 4, FMT = * ) restart_id
+         IF ( restart_id == restart_langevin ) THEN
+            READ( UNIT = 4, FMT = * ) istep
+            CLOSE( UNIT = 4, STATUS = 'KEEP' )
+         ELSE
+            file_exists = .FALSE.
+            CLOSE( UNIT = 4, STATUS = 'DELETE' )
+         END IF
          !
-         CLOSE( UNIT = 4, STATUS = 'KEEP' )
-         !
-      ELSE
-         !
-         CLOSE( UNIT = 4, STATUS = 'DELETE' )
+      END IF
+      !
+      IF ( .NOT.file_exists ) THEN
          !
          ! ... the file is absent :  simulation is starting from scratch
          !
@@ -1093,11 +1446,13 @@ CONTAINS
       !
       tau_new(:,:) = tau(:,:) + ( dt*force(:,:) + chi(:,:) ) / alat
       !
-      IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
+      IF ( .NOT. ANY( if_pos(:,:) == 0 ) .AND. nextffield==0) THEN
          !
          ! ... here we compute the displacement of the center of mass and we
          ! ... subtract it from the displaced positions
          !
+         ! ... also bypassed if external ionic force fields are activated
+         ! 
          delta(:) = 0.D0
          !
          DO na = 1, nat
@@ -1139,6 +1494,7 @@ CONTAINS
       !
       CALL seqopn( 4, 'md', 'FORMATTED',  file_exists )
       !
+      WRITE( UNIT = 4, FMT = * ) restart_langevin
       WRITE( UNIT = 4, FMT = * ) istep
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
@@ -1337,7 +1693,6 @@ CONTAINS
       USE ener,        ONLY : etot
       USE cell_base,   ONLY : alat
       USE ions_base,   ONLY : nat, tau
-      USE io_files,    ONLY : iunbfgs, tmp_dir
       !
       IMPLICIT NONE
       !
@@ -1352,6 +1707,7 @@ CONTAINS
       REAL(DP), ALLOCATABLE :: Hy(:), yH(:)
       REAL(DP)              :: sdoty, pg_norm
       INTEGER               :: dim
+      INTEGER               :: iunbfgs
       CHARACTER(LEN=256)    :: bfgs_file
       LOGICAL               :: file_exists
       !
@@ -1376,7 +1732,7 @@ CONTAINS
       !
       IF ( file_exists ) THEN
          !
-         OPEN( UNIT = iunbfgs, &
+         OPEN( NEWUNIT = iunbfgs, &
                FILE = TRIM( bfgs_file ), STATUS = 'OLD', ACTION = 'READ' )
          !
          READ( iunbfgs, * ) pos_p
@@ -1432,7 +1788,7 @@ CONTAINS
          !
       ENDIF
       !
-      OPEN( UNIT = iunbfgs, &
+      OPEN( NEWUNIT = iunbfgs, &
             FILE = TRIM( bfgs_file ), STATUS = 'UNKNOWN', ACTION = 'WRITE' )
       !
       WRITE( iunbfgs, * ) pos(:)
@@ -1553,7 +1909,6 @@ CONTAINS
      USE constraints_module,  ONLY : remove_constr_force, check_constraint
      USE random_numbers,      ONLY : randy
      USE io_files,            ONLY : prefix
-     USE io_global,           ONLY : ionode
      USE constants,           ONLY : bohr_radius_angs
      !
      IMPLICIT NONE
@@ -1625,9 +1980,7 @@ CONTAINS
      WRITE (stdout, '(5x,"The current acceptance is :",3x,F10.6)') DBLE(num_accept)/istep
      !
      ! Print the trajectory
-#if defined(__MPI)
-     IF(ionode) THEN
-#endif
+     !
      OPEN(117,file="trajectory-"//TRIM(prefix)//".xyz", STATUS="unknown", POSITION='APPEND')
      WRITE(117,'(I5)') nat
      WRITE(117,'("# Step: ",I5,5x,"Total energy: ",F17.8,5x,"Ry")') istep-1, etot
@@ -1635,9 +1988,6 @@ CONTAINS
         WRITE( 117, '(A3,3X,3F14.9)') atm(ityp(ia)),tau(:,ia)*alat*bohr_radius_angs
      ENDDO
      CLOSE(117)
-#if defined(__MPI)
-     ENDIF
-#endif
      !
      RETURN
      !
@@ -1654,7 +2004,6 @@ CONTAINS
       !! Theory and Simulations of Materials Laboratory, EPFL.
       !
       USE ions_base,          ONLY : nat, if_pos
-      USE constraints_module, ONLY : nconstr
       USE cell_base,          ONLY : alat
       USE random_numbers,     ONLY : gauss_dist, sum_of_gaussians2
       !
@@ -1669,17 +2018,7 @@ CONTAINS
       real(DP), external :: gasdev, sumnoises
       INTEGER  :: na
       !
-      ! ... the number of degrees of freedom
-      !
-      IF ( ANY( if_pos(:,:) == 0 ) ) THEN
-         !
-         ndof = 3*nat - count( if_pos(:,:) == 0 ) - nconstr
-         !
-      ELSE
-         !
-         ndof = 3*nat - 3 - nconstr
-         !
-      ENDIF
+      ndof = get_ndof()
       !
       IF ( nraise > 0 ) THEN
          !
@@ -1714,5 +2053,122 @@ CONTAINS
       vel(:,:) = vel(:,:) * aux
       !
    END SUBROUTINE thermalize_resamp_vscaling
+   !
+   !-----------------------------------------------------------------------
+   SUBROUTINE dump_trajectory_frame( time, temp )
+      !-----------------------------------------------------------------------
+      !! Dump trajectory frame into a file in tmp_dir with name:
+      !! prefix.istep.mdtrj. Don't append, create a new file for each step,
+      !! let the caller worry about merging. Safer for limited wall times,
+      !! when the job can be killed anytime.
+      !
+      USE cell_base,   ONLY : alat, at
+      USE constants,   ONLY : bohr_radius_angs
+      USE ener,        ONLY : etot
+      USE io_files,    ONLY : prefix, tmp_dir
+      USE ions_base,   ONLY : nat, tau
+      !
+      IMPLICIT NONE
+      !
+      REAL(DP), INTENT(in) :: time, temp ! in ps, K
+      INTEGER              :: iunit, i, k
+      !
+      OPEN(NEWUNIT = iunit, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // ".mdtrj", &
+         STATUS="unknown", POSITION="APPEND")
+      !
+      ! Time (ps), temp (K), total energy (Ry), unit cell (9 values, Ang),
+      ! atom coordinates (3 * nat values, Ang)
+      !
+      WRITE(iunit, *) time, temp, etot, &
+         ( ( at(i,k) * alat * bohr_radius_angs, i = 1, 3), k = 1, 3 ), &
+         ( ( tau(i,k) * alat * bohr_radius_angs, i = 1, 3), k = 1, nat )
+      WRITE(iunit, *) ! new line
+      !
+      CLOSE(iunit)
+      !
+   END SUBROUTINE dump_trajectory_frame
+   !
+   !--------------------------------------------------------------------------
+   SUBROUTINE verlet_read_tau_from_conf( )
+      !-----------------------------------------------------------------------
+      !! Try to set tau from restart prefix.md file.
+      !
+      USE io_files,  ONLY : prefix, seqopn
+      USE ions_base, ONLY : nat, tau
+      USE io_global, ONLY : ionode, ionode_id
+      USE mp,        ONLY : mp_bcast
+      USE mp_images, ONLY : intra_image_comm
+      !
+      IMPLICIT NONE
+      !
+      LOGICAL  :: is_restart = .FALSE.
+      INTEGER  :: restart_id = 0
+      REAL(DP) :: etotold = 0.0_DP
+      REAL(DP) :: tau_tmp(3, nat)
+      INTEGER  :: istep
+      !
+      ! Try to read restart file on the ionode only
+      IF ( ionode ) THEN
+         !
+         CALL seqopn( 4, 'md', 'FORMATTED', is_restart )
+         !
+         IF ( is_restart ) THEN
+            !
+            READ( UNIT = 4, FMT = * ) restart_id
+            !
+            IF ( restart_id .EQ. restart_verlet ) THEN
+               !
+               READ( UNIT = 4, FMT = * ) istep, etotold, tau_tmp(:,:)
+               !
+               IF ( SUM ( (tau_tmp(:,1:nat)-tau(:,1:nat))**2 ) > eps8 ) THEN
+                  !
+                  tau(:, 1:nat) = tau_tmp(:, 1:nat)
+                  !
+                  WRITE( stdout, '(/5X,"Atomic positions read from:", &
+                     /,5X,A)') TRIM(prefix) // ".md"
+               END IF
+               !
+            END IF
+            !
+            CLOSE( UNIT = 4 )
+            !
+         ELSE
+            !
+            CLOSE( UNIT = 4, STATUS = 'DELETE' )
+            !
+         END IF
+      !
+      END IF
+      !
+      CALL mp_bcast( tau, ionode_id, intra_image_comm )
+      !
+   END SUBROUTINE verlet_read_tau_from_conf
+   !
+   !-----------------------------------------------------------------------
+   FUNCTION get_ndof()
+      !-----------------------------------------------------------------------
+      !! Get the number of degrees of freedom. Use number of constraints
+      !! requested from the constraints_module.
+      !
+      USE ions_base,          ONLY : nat, if_pos
+      USE constraints_module, ONLY : nconstr_ndof
+      !
+      IMPLICIT NONE
+      !
+      REAL(DP) :: get_ndof
+      !
+      ! ... the number of degrees of freedom
+      !
+      IF ( ANY( if_pos(:,:) == 0 ) ) THEN
+         !
+         get_ndof = 3*nat - count( if_pos(:,:) == 0 ) - nconstr_ndof
+         !
+      ELSE
+         !
+         get_ndof = 3*nat - 3 - nconstr_ndof
+         !
+      ENDIF
+      !
+   END FUNCTION get_ndof
    !
 END MODULE dynamics_module

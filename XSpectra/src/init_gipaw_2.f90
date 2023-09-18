@@ -20,7 +20,7 @@ subroutine init_gipaw_2 (npw_, igk_, q_, vkb_)
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
   USE gvect ,     ONLY : eigts1, eigts2, eigts3, g, mill
   USE paw_gipaw,  ONLY : paw_nkb, paw_recon, paw_lmaxkb
-  USE us,         ONLY : nqx, dq, spline_ps
+  USE uspp_data,  ONLY : nqx, dq
   USE splinelib
   !
   implicit none
@@ -71,13 +71,6 @@ subroutine init_gipaw_2 (npw_, igk_, q_, vkb_)
      qg(ig) = sqrt(qg(ig))*tpiba
   enddo
 
-  if (spline_ps) then
-    allocate(xdata(nqx))
-    do iq = 1, nqx
-      xdata(iq) = (iq - 1) * dq
-    enddo
-  endif
-
   jkb = 0
   do nt = 1, ntyp
      allocate ( vkb1(npw_,paw_recon(nt)%paw_nh) )
@@ -85,10 +78,6 @@ subroutine init_gipaw_2 (npw_, igk_, q_, vkb_)
      ! calculate beta in G-space using an interpolation table
      do nb = 1, paw_recon(nt)%paw_nbeta
         do ig = 1, npw_
-           if (spline_ps) then
-             vq(ig) = splint ( xdata, paw_recon(nt)%paw_tab(:,nb), &
-                  paw_recon(nt)%paw_tab_d2y(:,nb), qg(ig) )
-           else
              px = qg (ig) / dq - int (qg (ig) / dq)
              ux = 1.d0 - px
              vx = 2.d0 - px
@@ -101,7 +90,6 @@ subroutine init_gipaw_2 (npw_, igk_, q_, vkb_)
                        paw_recon(nt)%paw_tab(i1,nb) * px * vx * wx / 2.d0 - &
                        paw_recon(nt)%paw_tab(i2,nb) * px * ux * wx / 2.d0 + &
                        paw_recon(nt)%paw_tab(i3,nb) * px * ux * vx / 6.d0
-           endif
         enddo
         ! add spherical harmonic part
         do ih = 1, paw_recon(nt)%paw_nh

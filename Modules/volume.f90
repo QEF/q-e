@@ -9,11 +9,11 @@
 !---------------------------------------------------------------------
 SUBROUTINE volume (alat, a1, a2, a3, omega)
   !---------------------------------------------------------------------
-  !
-  !     Compute the volume of the unit cell defined by 3 vectors
-  !     a1, a2, a3, given in units of "alat" (alat may be 1):
-  !        omega = alat^3 * [ a1 . (a2 x a3) ]
-  !     ( . = scalar product, x = vector product )
+  !! Compute the volume of the unit cell defined by 3 vectors
+  !! \({\bf a}_1, {\bf a}_2, {\bf a}_3 \), given in units of "alat" 
+  !! (alat may be 1):
+  !! $$ \text{omega} = \text{alat}^3 [ {\bf a}_1 \cdot ({\bf a}_2 \times
+  !! {\bf a}_3) ] $$
   !
   USE kinds, ONLY: dp
   IMPLICIT NONE

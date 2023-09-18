@@ -36,11 +36,15 @@ proc ::pwscf::pwSelectPseudoDir {moduleObj} {
 
 
 # ------------------------------------------------------------------------
-#  ::pwscf::pwSelectPseudopotential --
-# ------------------------------------------------------------------------
+#  ::pwscf::pwSelectPPFile_
+#
+#  This "master" routine is used by ::pwscf::pwSelectPseudopotential &
+#  ::pwscf::pwSelectMOLfile because both PP and MOL files are read
+#  from pseudo_dir
+#  ------------------------------------------------------------------------
 
-proc ::pwscf::pwSelectPseudopotential {moduleObj variable ir ic} {
-    variable pwscf
+proc ::pwscf::pwSelectPPFile_ {moduleObj variable ir ic label} {
+     variable pwscf
     global env
         
     set _dir [string trim [$moduleObj varvalue pseudo_dir] "'"]
@@ -57,13 +61,20 @@ proc ::pwscf::pwSelectPseudopotential {moduleObj variable ir ic} {
         
     set file [tk_getOpenFile \
 		  -initialdir $dir \
-		  -title      "Select a Pseudopotential File"]    
+		  -title      $label]    
     if { $file == "" } {
 	return
     }
     set pwscf($moduleObj,LASTDIR,pseudopotential) [file dirname $file]
     
-    $moduleObj varset ${variable}($ir,$ic) -value [file tail $file]
+    $moduleObj varset ${variable}($ir,$ic) -value [file tail $file]    
+}
+proc ::pwscf::pwSelectPseudopotential {moduleObj variable ir ic} {
+    ::pwscf::pwSelectPPFile_ $moduleObj $variable $ir $ic "Select a Pseudopotential File" 
+}
+proc ::pwscf::pwSelectMOLfile {moduleObj variable ir ic} {
+    # MOL files are read from psudo_dir, hence use the ::pwscf::pwSelectPPFile_ routine
+    ::pwscf::pwSelectPPFile_ $moduleObj $variable $ir $ic "Select a Pseudopotential File" 
 }
 
 
@@ -328,6 +339,65 @@ proc ::pwscf::pwLoadKPoints {moduleObj} {
 
 
 # ------------------------------------------------------------------------
+#  ::pwscf::pwLoadAddKPoints --
+# ------------------------------------------------------------------------
+
+proc ::pwscf::pwLoadAddKPoints {moduleObj} {
+    variable pwscf
+
+    if { [info exists pwscf($moduleObj,LASTDIR,add_k_points)] } {
+	set dir $pwscf($moduleObj,LASTDIR,add_k_points)
+    } else {
+	set dir pwscf(PWD)	
+    }
+
+    #
+    # query filename
+    #
+    set file [tk_getOpenFile -initialdir [pwd] -title "Load Additional K-Points"]
+    if { $file == "" } {
+	return
+    }
+    set pwscf($moduleObj,LASTDIR,k_points) [file dirname $file]
+
+    #
+    # read the file
+    #
+    set channel [open $file r]
+    # find the K_POINTS card
+    while {1} {
+	set _line [_getsNonEmptyLine $channel]
+
+	if { [string match "ADDITIONAL_K_POINTS*" $_line] } {
+	    set _line [readFilter::purifyCardLine $_line]
+	    set _UNIT [lindex $_line 1]
+	    # assing the ADDITIONAL_K_POINTS_flags variable
+	    $moduleObj varset ADDITIONAL_K_POINTS_flags -value [$moduleObj valueToTextvalue ADDITIONAL_K_POINTS_flags $_UNIT]
+	    break
+	}
+    }	    
+    # read NKS
+    set NKS [_getsNonEmptyLine $channel]
+    if { [string is integer $NKS] } {
+	$moduleObj varset nks_add -value $NKS
+    } else {
+	# TODO: raise an error
+	return
+    }
+    # read Add. K-POINTS
+    for {set ia 1} {$ia <= $NKS} {incr ia} {
+	set _line [_getsNonEmptyLine $channel]
+	if { [llength $_line] != 4 } {
+	    # TODO: raise an error
+	}
+	for {set i 1} {$i <= 4} {incr i} {
+	    $moduleObj varset add_kpoints($ia,$i) -value [lindex $_line [expr $i - 1]]
+	}
+    }
+}
+
+
+# ------------------------------------------------------------------------
 #  ::pwscf::pwLoadAtomicForces --
 # ------------------------------------------------------------------------
 
@@ -386,6 +456,63 @@ proc ::pwscf::pwLoadAtomicForces {moduleObj} {
 
 
 # ------------------------------------------------------------------------
+#  ::pwscf::pwLoadAtomicVelocities --
+# ------------------------------------------------------------------------
+
+proc ::pwscf::pwLoadAtomicVelocities {moduleObj} {
+    variable pwscf
+
+    if { [info exists pwscf($moduleObj,LASTDIR,atomic_velocities)] } {
+	set dir $pwscf($moduleObj,LASTDIR,atomic_velocities)
+    } else {
+	set dir pwscf(PWD)	
+    }
+
+    #
+    # query filename
+    #
+    set file [tk_getOpenFile -initialdir [pwd] -title "Load Atomic Velocities"]
+    if { $file == "" } {
+	return
+    }
+    set pwscf($moduleObj,LASTDIR,atomic_velocities) [file dirname $file]
+    
+    #
+    # read the file
+    #
+    set channel [open $file r]
+
+    # find the ATOMIC_VELOCITIES card
+
+    set ifor 0
+    set _readVelocities 0
+    
+    while {1} {
+	
+	set _line [_getsNonEmptyLine $channel]
+	
+	if { [string match "ATOMIC_VELOCITIES" $_line] } {
+	    set _readVelocities 1
+	    continue
+	} 
+	
+	if { $_readVelocities } {
+	    
+	    incr ifor
+	    
+	    if {[llength $_line] == 4 } {
+		$moduleObj varset atomic_velocities($ifor,1)  -value [lindex $_line 0]
+		$moduleObj varset atomic_velocities($ifor,2)  -value [lindex $_line 1]
+		$moduleObj varset atomic_velocities($ifor,3)  -value [lindex $_line 2]
+		$moduleObj varset atomic_velocities($ifor,4)  -value [lindex $_line 3]
+	    } else {
+		# TODO: raise an error
+	    }
+	}
+    }
+}
+
+# ------------------------------------------------------------------------
 #  ::pwscf::pwReadFilter --
 #  
 # TODO: check is &SYSTEM exists, if not the input file is not pw.x input
@@ -400,7 +527,9 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
     set pwscf($moduleObj,inputHeadContent) {}
     #set pwscf($moduleObj,inputTailContent) {}
     set pwscf($moduleObj,OCCUPATIONS)      {}
-
+    set pwscf($moduleObj,HUBBARD)          {}
+    set hubbard_line                       {}
+    
     #
     # Check if input file is a pw.x formatted ...
     #    
@@ -441,13 +570,15 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
     }
 
     foreach record [split $SYSTEM_namelist_content ,\n] {
-	set var [lindex [split $record =] 0]
-	if { [::tclu::stringMatch celldm* $var $::guib::settings(INPUT.nocase)] } {
-	    $moduleObj varset how_lattice -value celldm
-	} elseif  { [::tclu::stringMatch A $var $::guib::settings(INPUT.nocase)] } {
-	    $moduleObj varset how_lattice -value abc
-	}
-    }    
+	set var [string trim [lindex [split $record =] 0] { \t}]
+        if { $var != "" } {
+            if { [string match -nocase celldm* $var] } {
+                $moduleObj varset how_lattice -value celldm
+            } elseif  { [string match -nocase A $var] } {
+                $moduleObj varset how_lattice -value abc
+            }
+        }
+    }
 
     seek $channel 0 start
 
@@ -479,12 +610,15 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
     #   ATOMIC_SPECIES
     #   ATOMIC_POSITIONS
     #   K_POINTS
+    #   ADDITIONAL_K_POINTS
     #   CONSTRAINTS
+    #   HUBBARD
     #   OCCUPATIONS
+    #   ATOMIC_VELOCITIES
     #   ATOMIC_FORCES
 
-    # The content of OCCUPATIONS card is managed by the "text"
-    # keyword, hence we have to store the content of OCCUPATIONS
+    # The content of OCCUPATIONS & HUBBARD cards is managed by the "text"
+    # keyword, hence we have to store the content of OCCUPATIONS & HUBBARD
 
     set what  {}
     set ind   1
@@ -510,14 +644,22 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 	} elseif { [string match "K_POINTS*" $_line] } {
 	    set what K_POINTS
 	    set _line [readFilter::purifyCardLine $_line]
-	} elseif { [string match "OCCUPATIONS*" $_line] } {
-	    set what OCCUPATIONS
+	} elseif { [string match "ADDITIONAL_K_POINTS*" $_line] } {
+	    set what ADDITIONAL_K_POINTS
 	    set _line [readFilter::purifyCardLine $_line]
 	} elseif { [string match "CONSTRAINTS*" $_line] } {
 	    set what CONSTRAINTS
 	    set _line [readFilter::purifyCardLine $_line]
+	} elseif { [string match "HUBBARD*" $_line] } {
+	    set what HUBBARD
+	    set _line [readFilter::purifyCardLine $_line]
+	} elseif { [string match "OCCUPATIONS*" $_line] } {
+	    set what OCCUPATIONS
+	    set _line [readFilter::purifyCardLine $_line]
+	} elseif { [string match "ATOMIC_VELOCITIES*" $_line] } {
+	    set what ATOMIC_VELOCITIES
+	    set _line [readFilter::purifyCardLine $_line]
 	} elseif { [string match "ATOMIC_FORCES*" $_line] } {
-	    puts stderr "ATOMIC_FORCES record found"
 	    set what ATOMIC_FORCES
 	    set _line [readFilter::purifyCardLine $_line]
 	}
@@ -539,20 +681,23 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 		    {'martyna-tuckerman' 'm-t' 'mt'}
 		}
 		vdw_corr {
+		    {'grimme-d2' 'Grimme-D2' 'DFT-D'  'dft-d'}
 		    {'grimme-d3' 'Grimme-D3' 'DFT-D3' 'dft-d3'}
-		    {'grimme-d2' 'Grimme-D2' 'DFT-D' 'dft-d'}
-		    {'ts-vdw' 'TS', 'ts', ''ts-vdW', 'tkatchenko-scheffler'}
-		    {'xdm''XDM'}
+		    {'TS'        'ts'        'ts-vdw' 'ts-vdW' 'tkatchenko-scheffler'}
+                    {'MBD'       'mbd'       'many-body-dispersion' 'mbd_vdw'}
+		    {'XDM'       'xdm' }
 		}
+                diagonalization {
+                    'david'
+                    'cg'
+                    'ppcg'
+                    {'paro' 'ParO'}
+                    {'rmm-davidson' 'rmm-paro'}
+                }                    
 	    } {		
 		set _line [readFilter::replaceVarFlag $_line $var $optList]
 	    }
     
-	    # # VARIABLE: diagonalization; handle multiple flags
-	    # #-------------------------------------------------
-	    # # 'david' 'david_overlap' 'david_nooverlap' --> 'david'
-	    # set _line [readFilter::replaceFlag $_line david david_overlap david_nooverlap]
-
 	    # logical VARIABLES: use only .true. and .false.
 	    #-----------------------------------------------
 	    set _line [readFilter::logicalFlag $_line]
@@ -562,8 +707,11 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 	} else {
 	    # fortranreal --> real translation
 	    regsub -all -nocase {([0-9]|[0-9].)(d)([+-]?[0-9]+)} $_line {\1e\3} _transline
-	    if { ! [string match "OCCUPATIONS*" $_line] } {
-		# the OCCUPATIONS are treated specially (see below)
+
+            # the OCCUPATIONS & HUBBARD are treated specially (see below)            
+            if { [string match "HUBBARD*" $_line] } {
+                set hubbard_line $_line
+            } elseif { ! [string match "OCCUPATIONS*" $_line] } {
 		append $what "$_transline\n"
 	    }
 	}
@@ -600,9 +748,19 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
     if { [info exists K_POINTS] } {
 	puts $newChannel $K_POINTS
     }
+    # write the ADDITIONAL_K_POINTS
+    if { [info exists ADDITIONAL_K_POINTS] } {
+        $moduleObj varset specify_add_kpoints -value .true.
+	puts $newChannel $ADDITIONAL_K_POINTS
+    }
     # write the CONSTRAINTS
     if { [info exists CONSTRAINTS] } {
+        $moduleObj varset constraints_enable -value Yes
 	puts $newChannel $CONSTRAINTS
+    }
+    # write the ATOMIC_VELOCITIES
+    if { [info exists ATOMIC_VELOCITIES] } {
+	puts $newChannel $ATOMIC_VELOCITIES
     }
     # write the ATOMIC_FORCES
     if { [info exists ATOMIC_FORCES] } {
@@ -610,15 +768,24 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 	puts $newChannel $ATOMIC_FORCES
     }
 
+    # store the HUBBARD record
+    if { [info exists HUBBARD] } {
+	puts $newChannel $hubbard_line\n
+        $moduleObj varset hubbard_enable -value Yes
+	set pwscf($moduleObj,HUBBARD) [string trim $HUBBARD \n]
+    }
+
     # store the OCCUPATIONS record
     if { [info exists OCCUPATIONS] } {
 	puts $newChannel "OCCUPATIONS\n"
-	set pwscf($moduleObj,OCCUPATIONS) $OCCUPATIONS
+	set pwscf($moduleObj,OCCUPATIONS) [string trim $OCCUPATIONS \n]
     }
+    
     flush $newChannel
 
     # rewind the newChannel
     seek $newChannel 0 start
+
     return $newChannel
 }
 

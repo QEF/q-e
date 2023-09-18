@@ -12,10 +12,9 @@
 !        (2\pi/a) that maybe should be taken out from here?
 !--------------------------------------------------------------------
 SUBROUTINE external_gradient( a, grada )
-!--------------------------------------------------------------------
-  ! 
-  ! Interface for computing gradients of a real function in real space,
-  ! to be called by an external module
+  !--------------------------------------------------------------------
+  !! Interface for computing gradients of a real function in real space,
+  !! to be called by an external module.
   !
   USE kinds,            ONLY : DP
   USE fft_base,         ONLY : dfftp
@@ -24,34 +23,39 @@ SUBROUTINE external_gradient( a, grada )
   IMPLICIT NONE
   !
   REAL( DP ), INTENT(IN)   :: a( dfftp%nnr )
+  !! a real function on the real-space
   REAL( DP ), INTENT(OUT)  :: grada( 3, dfftp%nnr )
-
-! A in real space, grad(A) in real space
+  !! grad(A) in real space
+  !
+  ! A in real space, grad(A) in real space
   CALL fft_gradient_r2r( dfftp, a, g, grada )
-
+  !
   RETURN
-
+  !
 END SUBROUTINE external_gradient
+!
 !----------------------------------------------------------------------------
 SUBROUTINE fft_gradient_r2r( dfft, a, g, ga )
   !----------------------------------------------------------------------------
+  !! Calculates \({\bf ga}\), the gradient of \({\bf a}\).
   !
-  ! ... Calculates ga = \grad a
-  ! ... input : dfft     FFT descriptor
-  ! ...         a(:)     a real function on the real-space FFT grid
-  ! ...         g(3,:)   G-vectors, in 2\pi/a units
-  ! ... output: ga(3,:)  \grad a, real, on the real-space FFT grid
-  !
-  USE kinds,     ONLY : DP
-  USE cell_base, ONLY : tpiba
-  USE fft_interfaces,ONLY : fwfft, invfft 
-  USE fft_types, ONLY : fft_type_descriptor
+  USE kinds,           ONLY : DP
+  USE cell_base,       ONLY : tpiba
+  USE fft_interfaces,  ONLY : fwfft, invfft 
+  USE fft_types,       ONLY : fft_type_descriptor
   !
   IMPLICIT NONE
   !
   TYPE(fft_type_descriptor),INTENT(IN) :: dfft
-  REAL(DP), INTENT(IN)  :: a(dfft%nnr), g(3,dfft%ngm)
+  !! FFT descriptor
+  REAL(DP), INTENT(IN)  :: a(dfft%nnr)
+  !! a real function on the real-space FFT grid
+  REAL(DP), INTENT(IN)  :: g(3,dfft%ngm)
+  !! G-vectors, in 2\pi/a units
   REAL(DP), INTENT(OUT) :: ga(3,dfft%nnr)
+  !! gradient of a, real, on the real-space FFT grid
+  !
+  ! ... local variables
   !
   INTEGER  :: ipol
   COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:)
@@ -99,15 +103,10 @@ SUBROUTINE fft_gradient_r2r( dfft, a, g, ga )
 END SUBROUTINE fft_gradient_r2r
 !
 !--------------------------------------------------------------------
-SUBROUTINE fft_qgradient (dfft, a, xq, g, ga)
+SUBROUTINE fft_qgradient( dfft, a, xq, g, ga )
   !--------------------------------------------------------------------
-  !
-  ! Like fft_gradient_r2r, for complex arrays having a e^{iqr} behavior
-  ! ... input : dfft     FFT descriptor
-  ! ...         a(:)     a complex function on the real-space FFT grid
-  ! ...         xq(3)    q-vector, in 2\pi/a units
-  ! ...         g(3,:)   G-vectors, in 2\pi/a units
-  ! ... output: ga(3,:)  \grad a, complex, on the real-space FFT grid
+  !! Like \texttt{fft\_gradient\_r2r}, for complex arrays having a 
+  !! \(e^{iqr}\) behavior.
   !
   USE kinds,     ONLY: dp
   USE cell_base, ONLY: tpiba
@@ -117,11 +116,18 @@ SUBROUTINE fft_qgradient (dfft, a, xq, g, ga)
   IMPLICIT NONE
   !
   TYPE(fft_type_descriptor),INTENT(IN) :: dfft
-  !
+  !! FFT descriptor
   COMPLEX(DP), INTENT(IN)  :: a(dfft%nnr)
-  REAL(DP), INTENT(IN):: xq(3), g(3,dfft%ngm)
+  !! A complex function on the real-space FFT grid
+  REAL(DP), INTENT(IN):: xq(3)
+  !! q-vector, in 2\pi/a units
+  REAL(DP), INTENT(IN) :: g(3,dfft%ngm)
+  !! G-vectors, in 2\pi/a units
   COMPLEX(DP), INTENT(OUT) :: ga(3,dfft%nnr)
-
+  !! The gradient of \({\bf a}\), complex, on the real-space FFT grid
+  !
+  ! ... local variables
+  !
   INTEGER  :: n, ipol
   COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:)
 
@@ -156,237 +162,363 @@ SUBROUTINE fft_qgradient (dfft, a, xq, g, ga)
 
 END SUBROUTINE fft_qgradient
 !
+!
 !----------------------------------------------------------------------------
 SUBROUTINE fft_gradient_g2r( dfft, a, g, ga )
   !----------------------------------------------------------------------------
+  !! Calculates \({\bf ga}\), the gradient of \({\bf a}\) - like
+  !! \(\textrm{fft_gradient}\), but with \({\bf a(G)}\) instead of \({\bf a(r)}\).
   !
-  ! ... Calculates ga = \grad a - like fft_gradient with a(G) instead of a(r)
-  ! ... input : dfft     FFT descriptor
-  ! ...         a(:)     a(G), a complex function in G-space
-  ! ...         g(3,:)   G-vectors, in 2\pi/a units
-  ! ... output: ga(3,:)  \grad a, real, on the real-space FFT grid
-  !
-  USE cell_base, ONLY : tpiba
-  USE kinds,     ONLY : DP
-  USE fft_interfaces,ONLY : invfft
-  USE fft_types, ONLY : fft_type_descriptor
+  USE kinds,          ONLY : DP
+  USE cell_base,      ONLY : tpiba
+  USE fft_types,      ONLY : fft_type_descriptor
+  USE fft_interfaces, ONLY : invfft
   !
   IMPLICIT NONE
   !
   TYPE(fft_type_descriptor),INTENT(IN) :: dfft
-  COMPLEX(DP), INTENT(IN)  :: a(dfft%ngm)
-  REAL(DP),    INTENT(IN)  :: g(3,dfft%ngm)
-  REAL(DP),    INTENT(OUT) :: ga(3,dfft%nnr)
+  !! FFT descriptor
+  COMPLEX(DP), INTENT(IN) :: a(dfft%ngm)
+  !! a(G), a complex function in G-space
+  REAL(DP), INTENT(IN)  :: g(3,dfft%ngm)
+  !! G-vectors, in \( 2\pi/a \) units
+  REAL(DP), INTENT(OUT) :: ga(3,dfft%nnr)
+  !! The gradient of \({\bf a}\), real, on the real-space FFT grid
   !
-  INTEGER                  :: ipol, n
+  ! ... local variables
+  !
+  INTEGER :: ipol, n, ip
   COMPLEX(DP), ALLOCATABLE :: gaux(:)
   !
+#if defined(__CUDA) && defined(_OPENACC)
+  INTEGER, POINTER, DEVICE :: nl_d(:), nlm_d(:)
   !
-  ALLOCATE( gaux( dfft%nnr ) )
-  ga(:,:) = 0.D0
+  nl_d  => dfft%nl_d
+  nlm_d => dfft%nlm_d
+#else
+  INTEGER, ALLOCATABLE :: nl_d(:), nlm_d(:)
   !
-  IF ( dfft%lgamma) THEN
+  ALLOCATE( nl_d(dfft%ngm) )
+  nl_d = dfft%nl
+  IF ( dfft%lgamma ) THEN
+    ALLOCATE( nlm_d(dfft%ngm) )
+    nlm_d = dfft%nlm
+  ENDIF
+  !$acc data copyin( nl_d, nlm_d )
+#endif
+  !
+  !$acc data present_or_copyin( a, g ) present_or_copyout( ga )
+  !
+  ALLOCATE( gaux(dfft%nnr) )
+  !$acc data create( gaux )
+  !
+  IF ( dfft%lgamma ) THEN
      !
      ! ... Gamma tricks: perform 2 FFT's in a single shot
      ! x and y
      ipol = 1
-     gaux(:) = (0.0_dp,0.0_dp)
+     !$acc parallel loop
+     DO n = 1, dfft%nnr
+       DO ip = 1, 3
+         ga(ip,n) = 0.D0
+       ENDDO
+       gaux(n) = (0.0_dp,0.0_dp)
+     ENDDO
      !
      ! ... multiply a(G) by iG to get the gradient in real space
      !
+     !$acc parallel loop
      DO n = 1, dfft%ngm
-        gaux(dfft%nl (n)) = CMPLX( 0.0_dp, g(ipol,  n), kind=DP )* a(n) - &
-                                           g(ipol+1,n) * a(n)
-        gaux(dfft%nlm(n)) = CMPLX( 0.0_dp,-g(ipol,  n), kind=DP )*CONJG(a(n)) +&
-                                            g(ipol+1,n) * CONJG(a(n))
+        gaux(nl_d(n) ) = CMPLX( 0.0_dp, g(ipol,n),kind=DP)* a(n) - &
+                                      CMPLX(g(ipol+1,n),kind=DP) * a(n)
+        gaux(nlm_d(n)) = CMPLX( 0.0_dp,-g(ipol,n),kind=DP)*CONJG(a(n)) + &
+                                      CMPLX(g(ipol+1,n),kind=DP) * CONJG(a(n))
      ENDDO
      !
      ! ... bring back to R-space, (\grad_ipol a)(r) ...
      !
-     CALL invfft ('Rho', gaux, dfft)
+     !$acc host_data use_device( gaux )
+     CALL invfft( 'Rho', gaux, dfft )
+     !$acc end host_data
      !
      ! ... bring back to R-space, (\grad_ipol a)(r)
      ! ... add the factor 2\pi/a  missing in the definition of q+G
      !
+     !$acc parallel loop
      DO n = 1, dfft%nnr
-        ga (ipol  , n) =  REAL( gaux(n) ) * tpiba
-        ga (ipol+1, n) = AIMAG( gaux(n) ) * tpiba
+        ga(ipol,n) = REAL( gaux(n), kind=DP ) * tpiba
+        ga(ipol+1,n) = AIMAG( gaux(n) ) * tpiba
      ENDDO
-     ! z
+     ! ... for z
      ipol = 3
-     gaux(:) = (0.0_dp,0.0_dp)
+     !$acc parallel loop
+     DO n = 1, dfft%nnr
+        gaux(n) = (0.0_dp,0.0_dp)
+     ENDDO
      !
      ! ... multiply a(G) by iG to get the gradient in real space
      !
-     gaux(dfft%nl (:)) = g(ipol,:) * CMPLX( -AIMAG(a(:)), REAL(a(:)), kind=DP)
-     gaux(dfft%nlm(:)) = CONJG( gaux(dfft%nl(:)) )
+     !$acc parallel loop
+     DO n = 1, dfft%ngm
+        gaux(nl_d(n)) = CMPLX(g(ipol,n),kind=DP) * &
+                        CMPLX( -AIMAG(a(n)), REAL(a(n)),kind=DP)
+        gaux(nlm_d(n)) = CONJG( gaux(nl_d(n)) )
+     ENDDO
      !
      ! ... bring back to R-space, (\grad_ipol a)(r) ...
      !
-     CALL invfft ('Rho', gaux, dfft)
+     !$acc host_data use_device( gaux )
+     CALL invfft( 'Rho', gaux, dfft )
+     !$acc end host_data
      !
      ! ...and add the factor 2\pi/a  missing in the definition of G
      !
-     ga(ipol,:) = tpiba * REAL( gaux(:) )
+     !$acc parallel loop
+     DO n = 1, dfft%nnr
+       ga(ipol,n) = tpiba * REAL( gaux(n), kind=DP )
+     ENDDO
      !
   ELSE
      !
      DO ipol = 1, 3
         !
-        gaux(:) = (0.0_dp,0.0_dp)
+        !$acc parallel loop
+        DO n = 1, dfft%nnr
+           ga(ipol,n) = 0.D0
+           gaux(n) = (0.0_dp,0.0_dp)
+        ENDDO
         !
         ! ... multiply a(G) by iG to get the gradient in real space
         !
-        gaux(dfft%nl(:)) = g(ipol,:) * CMPLX( -AIMAG(a(:)), REAL(a(:)), kind=DP)
+        !$acc parallel loop
+        DO n = 1, dfft%ngm
+          gaux(nl_d(n)) = CMPLX(g(ipol,n), kind=DP) * &
+                          CMPLX( -AIMAG(a(n)), REAL(a(n)), kind=DP)
+        ENDDO
         !
         ! ... bring back to R-space, (\grad_ipol a)(r) ...
         !
-        CALL invfft ('Rho', gaux, dfft)
+        !$acc host_data use_device( gaux )
+        CALL invfft( 'Rho', gaux, dfft )
+        !$acc end host_data
         !
         ! ...and add the factor 2\pi/a  missing in the definition of G
         !
-        ga(ipol,:) = tpiba * REAL( gaux(:) )
+        !$acc parallel loop
+        DO n = 1, dfft%nnr
+          ga(ipol,n) = tpiba * REAL( gaux(n), kind=DP )
+        ENDDO
         !
-     END DO
+     ENDDO
      !
-  END IF
+  ENDIF
   !
+  !$acc end data
   DEALLOCATE( gaux )
+  !
+  !$acc end data
+  !
+#if !defined(__CUDA) || !defined(_OPENACC)
+  !$acc end data
+  DEALLOCATE( nl_d )
+  IF ( dfft%lgamma ) DEALLOCATE( nlm_d )
+#endif
   !
   RETURN
   !
 END SUBROUTINE fft_gradient_g2r
-
+!
+!
 !----------------------------------------------------------------------------
 SUBROUTINE fft_graddot( dfft, a, g, da )
-  !----------------------------------------------------------------------------
+  !---------------------------------------------------------------------------
+  !! Calculates \( da = \sum_i \nabla_i a_i \) in R-space.
   !
-  ! ... Calculates da = \sum_i \grad_i a_i in R-space
-  ! ... input : dfft     FFT descriptor
-  ! ...         a(3,:)   a real function on the real-space FFT grid
-  ! ...         g(3,:)   G-vectors, in 2\pi/a units
-  ! ... output: ga(:)    \sum_i \grad_i a_i, real, on the real-space FFT grid
-  !
-  USE cell_base, ONLY : tpiba
-  USE kinds,     ONLY : DP
-  USE fft_interfaces,ONLY : fwfft, invfft
-  USE fft_types, ONLY : fft_type_descriptor
+  USE kinds,          ONLY : DP
+  USE cell_base,      ONLY : tpiba
+  USE fft_types,      ONLY : fft_type_descriptor
+  USE fft_interfaces, ONLY : fwfft, invfft
   !
   IMPLICIT NONE
   !
-  TYPE(fft_type_descriptor),INTENT(IN) :: dfft
-  REAL(DP), INTENT(IN)     :: a(3,dfft%nnr), g(3,dfft%ngm)
-  REAL(DP), INTENT(OUT)    :: da(dfft%nnr)
+  TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+  !! FFT descriptor
+  REAL(DP), INTENT(IN) :: a(3,dfft%nnr)
+  !! A real function on the real-space FFT grid
+  REAL(DP), INTENT(IN) :: g(3,dfft%ngm)
+  !! G-vectors, in \( 2\pi/a \) units
+  REAL(DP), INTENT(OUT) :: da(dfft%nnr)
+  !! \( \sum_i \nabla_i a_i \), real, on the real-space FFT grid
   !
-  INTEGER                  :: n, ipol
+  ! ... local variables
+  !
+  INTEGER :: n, ipol
   COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:)
   COMPLEX(DP) :: fp, fm, aux1, aux2
   !
-  ALLOCATE( aux(dfft%nnr) )
-  ALLOCATE( gaux(dfft%nnr) )
+#if defined(__CUDA) && defined(_OPENACC)
+  INTEGER, POINTER, DEVICE :: nl_d(:), nlm_d(:)
   !
-  gaux(:) = (0.0_dp,0.0_dp)
+  nl_d  => dfft%nl_d
+  nlm_d => dfft%nlm_d
+#else
+  INTEGER, ALLOCATABLE :: nl_d(:), nlm_d(:)
+  !
+  ALLOCATE( nl_d(dfft%ngm) )
+  nl_d = dfft%nl
+  IF ( dfft%lgamma ) THEN
+    ALLOCATE( nlm_d(dfft%ngm) )
+    nlm_d = dfft%nlm
+  ENDIF
+  !$acc data copyin( nl_d, nlm_d )
+#endif
+  !
+  !$acc data present_or_copyin( a, g ) present_or_copyout( da )
+  !
+  ALLOCATE( aux(dfft%nnr), gaux(dfft%nnr) )
+  !$acc data create( aux, gaux )
+  !
+  !$acc parallel loop
+  DO n = 1, dfft%nnr
+     gaux(n) = (0.0_dp,0.0_dp)
+  ENDDO
   !
   IF ( dfft%lgamma ) THEN
      !
      ! Gamma tricks: perform 2 FFT's in a single shot
      ! x and y
      ipol = 1
-     aux(:) = CMPLX( a(ipol,:), a(ipol+1,:), kind=DP)
+     !
+     !$acc parallel loop
+     DO n = 1, dfft%nnr
+       aux(n) = CMPLX( a(ipol,n), a(ipol+1,n), kind=DP)
+     ENDDO
      !
      ! ... bring a(ipol,r) to G-space, a(G) ...
      !
-     CALL fwfft ('Rho', aux, dfft)
+     !$acc host_data use_device( aux )
+     CALL fwfft( 'Rho', aux, dfft )
+     !$acc end host_data
      !
      ! ... multiply by iG to get the gradient in G-space
      !
+     !$acc parallel loop
      DO n = 1, dfft%ngm
-        !
-        fp = (aux(dfft%nl(n)) + aux (dfft%nlm(n)))*0.5_dp
-        fm = (aux(dfft%nl(n)) - aux (dfft%nlm(n)))*0.5_dp
+        fp = (aux(nl_d(n)) + aux(nlm_d(n)))*0.5_dp
+        fm = (aux(nl_d(n)) - aux(nlm_d(n)))*0.5_dp
         aux1 = CMPLX( REAL(fp), AIMAG(fm), kind=DP)
         aux2 = CMPLX(AIMAG(fp), -REAL(fm), kind=DP)
-        gaux (dfft%nl(n)) = &
+        gaux(nl_d(n)) = &
              CMPLX(0.0_dp, g(ipol  ,n),kind=DP) * aux1 + &
              CMPLX(0.0_dp, g(ipol+1,n),kind=DP) * aux2
      ENDDO
-     ! z
+     ! ... for z
      ipol = 3
-     aux(:) = CMPLX( a(ipol,:), 0.0_dp, kind=DP)
+     !$acc parallel loop
+     DO n = 1, dfft%nnr
+       aux(n) = CMPLX( a(ipol,n), 0.0_dp, kind=DP)
+     ENDDO
      !
      ! ... bring a(ipol,r) to G-space, a(G) ...
      !
-     CALL fwfft ('Rho', aux, dfft)
+     !$acc host_data use_device( aux )
+     CALL fwfft( 'Rho', aux, dfft )
+     !$acc end host_data
      !
      ! ... multiply by iG to get the gradient in G-space
      ! ... fill both gaux(G) and gaux(-G) = gaux*(G)
      !
+     !$acc parallel loop
      DO n = 1, dfft%ngm
-        gaux(dfft%nl(n)) = gaux(dfft%nl(n)) + g(ipol,n) * &
-             CMPLX( -AIMAG( aux(dfft%nl(n)) ), &
-                      REAL( aux(dfft%nl(n)) ), kind=DP)
-        gaux(dfft%nlm(n)) = CONJG( gaux(dfft%nl(n)) )
-     END DO
+        gaux(nl_d(n)) = gaux(nl_d(n)) + CMPLX(g(ipol,n),kind=DP) * &
+             CMPLX( -AIMAG( aux(nl_d(n)) ), &
+                      REAL( aux(nl_d(n)) ), kind=DP)
+        gaux(nlm_d(n)) = CONJG( gaux(nl_d(n)) )
+     ENDDO
      !
   ELSE
      !
      DO ipol = 1, 3
         !
-        aux = CMPLX( a(ipol,:), 0.0_dp, kind=DP)
+        !$acc parallel loop
+        DO n = 1, dfft%nnr
+          aux(n) = CMPLX( a(ipol,n), 0.0_dp, kind=DP)
+        ENDDO
         !
         ! ... bring a(ipol,r) to G-space, a(G) ...
         !
-        CALL fwfft ('Rho', aux, dfft)
+        !$acc host_data use_device( aux )
+        CALL fwfft( 'Rho', aux, dfft )
+        !$acc end host_data
         !
         ! ... multiply by iG to get the gradient in G-space
         !
+        !$acc parallel loop
         DO n = 1, dfft%ngm
-           gaux(dfft%nl(n)) = gaux(dfft%nl(n)) + g(ipol,n) * &
-                CMPLX( -AIMAG( aux(dfft%nl(n)) ), &
-                         REAL( aux(dfft%nl(n)) ), kind=DP)
-        END DO
+           gaux(nl_d(n)) = gaux(nl_d(n)) + CMPLX(g(ipol,n),kind=DP) * &
+                CMPLX( -AIMAG( aux(nl_d(n)) ), &
+                         REAL( aux(nl_d(n)),kind=DP ), kind=DP)
+        ENDDO
         !
-     END DO
+     ENDDO
      !
-  END IF
+  ENDIF
   !
   ! ... bring back to R-space, (\grad_ipol a)(r) ...
   !
-  CALL invfft ('Rho', gaux, dfft)
+  !$acc host_data use_device( gaux )
+  CALL invfft( 'Rho', gaux, dfft )
+  !$acc end host_data
   !
   ! ... add the factor 2\pi/a  missing in the definition of G and sum
   !
-  da(:) = tpiba * REAL( gaux(:) )
+  !$acc parallel loop
+  DO n = 1, dfft%nnr
+    da(n) = tpiba * REAL( gaux(n), kind=DP )
+  ENDDO
   !
+  !$acc end data
   DEALLOCATE( aux, gaux )
+  !
+  !$acc end data
+  !
+#if !defined(__CUDA) || !defined(_OPENACC)
+  !$acc end data
+  DEALLOCATE( nl_d )
+  IF ( dfft%lgamma ) DEALLOCATE( nlm_d )
+#endif  
   !
   RETURN
   !
 END SUBROUTINE fft_graddot
-
+!
+!
 !--------------------------------------------------------------------
 SUBROUTINE fft_qgraddot ( dfft, a, xq, g, da)
   !--------------------------------------------------------------------
-  !
-  ! Like fft_graddot, for complex arrays having a e^{iqr} dependency
-  ! ... input : dfft     FFT descriptor
-  ! ...         a(3,:)   a complex function on the real-space FFT grid
-  ! ...         xq(3)    q-vector, in 2\pi/a units
-  ! ...         g(3,:)   G-vectors, in 2\pi/a units
-  ! ... output: ga(:)    \sum_i \grad_i a_i, complex, on the real-space FFT grid
+  !! Like \(\textrm{fft_graddot}\), for complex arrays having a \(e^{iqr}\)
+  !! dependency.
   !
   USE kinds,          ONLY : DP
   USE cell_base,      ONLY : tpiba
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE fft_types, ONLY : fft_type_descriptor
+  USE fft_types,      ONLY : fft_type_descriptor
   !
   IMPLICIT NONE
   !
-  TYPE(fft_type_descriptor),INTENT(IN) :: dfft
+  TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+  !! FFT descriptor
   COMPLEX(DP), INTENT(IN)  :: a(3,dfft%nnr)
-  REAL(DP), INTENT(IN)     :: xq(3), g(3,dfft%ngm)
+  !! a complex function on the real-space FFT grid
+  REAL(DP), INTENT(IN) :: xq(3)
+  !! q-vector, in \( 2\pi/a \) units
+  REAL(DP), INTENT(IN) :: g(3,dfft%ngm)
+  !! G-vectors, in \( 2\pi/a \) units
   COMPLEX(DP), INTENT(OUT) :: da(dfft%nnr)
-  
+  !! \( \sum_i \nabla_i a_i \), complex, on the real-space FFT grid
+  !
+  ! ... local variables
+  !
   INTEGER :: n, ipol
   COMPLEX(DP), allocatable :: aux (:)
 
@@ -427,10 +559,9 @@ END SUBROUTINE fft_qgraddot
 
 !--------------------------------------------------------------------
 SUBROUTINE external_laplacian( a, lapla )
-!--------------------------------------------------------------------
-  ! 
-  ! Interface for computing laplacian in real space, to be called by 
-  ! an external module
+  !--------------------------------------------------------------------
+  !! Interface for computing laplacian in real space, to be called by 
+  !! an external module.
   !
   USE kinds,            ONLY : DP
   USE fft_base,         ONLY : dfftp
@@ -438,10 +569,12 @@ SUBROUTINE external_laplacian( a, lapla )
   !
   IMPLICIT NONE
   !
-  REAL( DP ), INTENT(IN)   :: a( dfftp%nnr )
-  REAL( DP ), INTENT(OUT)  :: lapla( dfftp%nnr )
-
-! A in real space, lapl(A) in real space
+  REAL(DP), INTENT(IN)  :: a( dfftp%nnr )
+  !! A real function on the real-space FFT grid
+  REAL(DP), INTENT(OUT) :: lapla( dfftp%nnr )
+  !! Laplacian of \( {\bf a} \) in real space.
+  !
+  ! A in real space, lapl(A) in real space
   CALL fft_laplacian( dfftp, a, gg, lapla )
 
   RETURN
@@ -450,26 +583,28 @@ END SUBROUTINE external_laplacian
 
 !--------------------------------------------------------------------
 SUBROUTINE fft_laplacian( dfft, a, gg, lapla )
-!--------------------------------------------------------------------
+  !--------------------------------------------------------------------
+  !! Calculates \(\text{lapla} = \nabla^2(a)\).
   !
-  ! ... Calculates lapla = laplacian(a)
-  ! ... input : dfft     FFT descriptor
-  ! ...         a(:)     a real function on the real-space FFT grid
-  ! ...         gg(:)    square modules of G-vectors, in (2\pi/a)^2 units
-  ! ... output: lapla(:) \nabla^2 a, real, on the real-space FFT grid
-  !
-  USE kinds,     ONLY : DP
-  USE cell_base, ONLY : tpiba2
-  USE fft_types, ONLY : fft_type_descriptor
-  USE fft_interfaces,ONLY : fwfft, invfft
+  USE kinds,          ONLY : DP
+  USE cell_base,      ONLY : tpiba2
+  USE fft_types,      ONLY : fft_type_descriptor
+  USE fft_interfaces, ONLY : fwfft, invfft
   !
   IMPLICIT NONE
   !
   TYPE(fft_type_descriptor),INTENT(IN) :: dfft
-  REAL(DP), INTENT(IN)  :: a(dfft%nnr), gg(dfft%ngm)
+  !! FFT descriptor
+  REAL(DP), INTENT(IN) :: a(dfft%nnr)
+  !! A real function on the real-space FFT grid
+  REAL(DP), INTENT(IN) :: gg(dfft%ngm)
+  !! Square modules of G-vectors, in \( (2\pi/a)^2 \) units
   REAL(DP), INTENT(OUT) :: lapla(dfft%nnr)
+  !! \(\text{lapla}(:)=\nabla^2(a)\), real, on the real-space FFT grid
   !
-  INTEGER                  :: ig
+  ! ... local variables
+  !
+  INTEGER :: ig
   COMPLEX(DP), ALLOCATABLE :: aux(:), laux(:)
   !
   !
@@ -520,28 +655,29 @@ END SUBROUTINE fft_laplacian
 !
 !----------------------------------------------------------------------
 SUBROUTINE fft_hessian_g2r ( dfft, a, g, ha )
-!----------------------------------------------------------------------
+  !----------------------------------------------------------------------
+  !! Calculates \( \text{ha} = \text{hessian}(a) \)
   !
-  ! ... Calculates ha = hessian(a)
-  ! ... input : dfft     FFT descriptor
-  ! ...         a(:)     a real function on the real-space FFT grid
-  ! ...         g(3,:)   G-vectors, in (2\pi/a)^2 units
-  ! ... output: ha(6,:)  hessian(a), real, on the real-space FFT grid
-  ! ...                  lower-packed matrix indeces 1-6 correspond to:
-  ! ...                  1 = xx, 2 = yx, 3 = yy, 4 = zx, 5 = zy, 6 = zz
-  !
-  USE kinds,     ONLY : DP
-  USE cell_base, ONLY : tpiba
-  USE fft_types, ONLY : fft_type_descriptor
-  USE fft_interfaces,ONLY : fwfft, invfft
-  USE fft_helper_subroutines, ONLY: fftx_oned2threed
+  USE kinds,                  ONLY : DP
+  USE cell_base,              ONLY : tpiba
+  USE fft_types,              ONLY : fft_type_descriptor
+  USE fft_interfaces,         ONLY : fwfft, invfft
+  USE fft_helper_subroutines, ONLY : fftx_oned2threed
   !
   IMPLICIT NONE
   !
   TYPE(fft_type_descriptor),INTENT(IN) :: dfft
-  REAL(DP), INTENT(IN)  :: g(3,dfft%ngm)
-  COMPLEX(DP), INTENT(IN)  :: a(dfft%ngm)
+  !! FFT descriptor
+  REAL(DP), INTENT(IN) :: g(3,dfft%ngm)
+  !! G-vectors, in \( (2\pi/a)^2 \) units.
+  COMPLEX(DP), INTENT(IN) :: a(dfft%ngm)
+  !! A real function on the real-space FFT grid.
   REAL(DP), INTENT(OUT) :: ha( 6, dfft%nnr )
+  !! \( \text{Hessian}(a) \), real, on the real-space FFT grid.  
+  !! Lower-packed matrix indeces 1-6 correspond to:
+  !! \(1=xx\), \(2=yx\), \(3=yy\), \(4=zx\), \(5=zy\), \(6=zz\).
+  !
+  ! ... local variables
   !
   INTEGER                  :: ig, ir
   COMPLEX(DP), ALLOCATABLE :: aux(:), haux(:,:)
@@ -590,28 +726,30 @@ SUBROUTINE fft_hessian_g2r ( dfft, a, g, ha )
 END SUBROUTINE fft_hessian_g2r
 !--------------------------------------------------------------------
 SUBROUTINE fft_hessian( dfft, a, g, ga, ha )
-!--------------------------------------------------------------------
+  !--------------------------------------------------------------------
+  !! Calculates \( \text{ga} = \nabla a\) and \(\text{ha} = \text{hessian}(a)\)
   !
-  ! ... Calculates ga = \grad a and ha = hessian(a)
-  ! ... input : dfft     FFT descriptor
-  ! ...         a(:)     a real function on the real-space FFT grid
-  ! ...         g(3,:)   G-vectors, in (2\pi/a)^2 units
-  ! ... output: ga(3,:)  \grad a, real, on the real-space FFT grid
-  ! ...         ha(3,3,:)  hessian(a), real, on the real-space FFT grid
-  !
-  USE kinds,     ONLY : DP
-  USE cell_base, ONLY : tpiba
-  USE fft_types, ONLY : fft_type_descriptor
-  USE fft_interfaces,ONLY : fwfft, invfft
+  USE kinds,          ONLY : DP
+  USE cell_base,      ONLY : tpiba
+  USE fft_types,      ONLY : fft_type_descriptor
+  USE fft_interfaces, ONLY : fwfft, invfft
   !
   IMPLICIT NONE
   !
   TYPE(fft_type_descriptor),INTENT(IN) :: dfft
-  REAL(DP), INTENT(IN)  :: a(dfft%nnr), g(3,dfft%ngm)
-  REAL(DP), INTENT(OUT) :: ga( 3, dfft%nnr )
-  REAL(DP), INTENT(OUT) :: ha( 3, 3, dfft%nnr )
+  !! FFT descriptor
+  REAL(DP), INTENT(IN) :: a(dfft%nnr)
+  !! A real function on the real-space FFT grid
+  REAL(DP), INTENT(IN) :: g(3,dfft%ngm)
+  !! G-vectors, in \( (2\pi/a)^2 \) units
+  REAL(DP), INTENT(OUT) :: ga(3,dfft%nnr)
+  !! \(\nabla a\), real, on the real-space FFT grid
+  REAL(DP), INTENT(OUT) :: ha(3,3,dfft%nnr)
+  !! \(text{hessian}(a)\), real, on the real-space FFT grid
   !
-  INTEGER                  :: ipol, jpol
+  ! ... local variables
+  !
+  INTEGER :: ipol, jpol
   COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:), haux(:)
   !
   !
@@ -689,10 +827,9 @@ SUBROUTINE fft_hessian( dfft, a, g, ga, ha )
 END SUBROUTINE fft_hessian
 !--------------------------------------------------------------------
 SUBROUTINE external_hessian( a, grada, hessa )
-!--------------------------------------------------------------------
-  ! 
-  ! Interface for computing hessian in real space, to be called by
-  ! an external module
+  !--------------------------------------------------------------------
+  !! Interface for computing hessian in real space, to be called by
+  !! an external module.
   !
   USE kinds,            ONLY : DP
   USE fft_base,         ONLY : dfftp
@@ -700,11 +837,14 @@ SUBROUTINE external_hessian( a, grada, hessa )
   !
   IMPLICIT NONE
   !
-  REAL( DP ), INTENT(IN)   :: a( dfftp%nnr )
-  REAL( DP ), INTENT(OUT)  :: grada( 3, dfftp%nnr )
-  REAL( DP ), INTENT(OUT)  :: hessa( 3, 3, dfftp%nnr )
-
-! A in real space, grad(A) and hess(A) in real space
+  REAL(DP), INTENT(IN)   :: a( dfftp%nnr )
+  !! A real function on the real-space FFT grid.
+  REAL(DP), INTENT(OUT)  :: grada( 3, dfftp%nnr )
+  !! gradient in real space.
+  REAL(DP), INTENT(OUT)  :: hessa( 3, 3, dfftp%nnr )
+  !! Hessian in real space.
+  !
+  ! A in real space, grad(A) and hess(A) in real space
   CALL fft_hessian( dfftp, a, g, grada, hessa )
 
   RETURN

@@ -8,11 +8,10 @@
 !----------------------------------------------------------------------------
 SUBROUTINE plugin_arguments()
   !-----------------------------------------------------------------------------
-  !
-  ! check for presence of command-line option "-plugin_name" or "--plugin_name"
-  ! where "plugin_name" has to be set here. If such option is found, variable
-  ! "use_plugin_name" is set and usage of "plugin_name" is thus enabled.
-  ! Currently implemented: "plumed", "pw2casino" (both case-sensitive)
+  !! Check for presence of command-line option "-plugin\_name" or "--plugin_name"
+  !! where "plugin\_name" has to be set here. If such option is found, variable
+  !! \(\text{use_plugin_name}\) is set and usage of "plugin\_name" is thus enabled.
+  !! Currently implemented: "plumed", "pw2casino" (both case-sensitive).
   !
   USE kinds,         ONLY : DP
   !
@@ -31,6 +30,7 @@ SUBROUTINE plugin_arguments()
   use_plumed = .false.
   use_pw2casino = .false.
   use_environ = .false.
+  use_partn = .false.
   !
   DO iiarg = 1, nargs 
     CALL get_command_argument( iiarg, plugin_name)
@@ -52,6 +52,14 @@ SUBROUTINE plugin_arguments()
        IF ( TRIM(arg)=='environ' ) THEN
           use_environ = .true.
        ENDIF
+       IF ( TRIM(arg)=='partn' ) THEN
+          use_partn = .true.
+       ENDIF
+       ! ***OSCDFT BEGIN***
+       IF ( TRIM(arg)=='oscdft' ) THEN
+          use_oscdft = .true.
+       ENDIF
+       ! ***OSCDFT END***
     ENDIF
   ENDDO
   !
@@ -62,8 +70,7 @@ END SUBROUTINE plugin_arguments
 !----------------------------------------------------------------------------
   SUBROUTINE plugin_arguments_bcast(root,comm)
   !----------------------------------------------------------------------------
-  !
-  ! broadcast plugin arguments
+  !! Broadcast plugin arguments.
   !
   USE mp, ONLY : mp_bcast
   USE plugin_flags
@@ -79,8 +86,13 @@ END SUBROUTINE plugin_arguments
   !
   CALL mp_bcast(use_environ,root,comm)
   !
+  CALL mp_bcast(use_partn,root,comm)
+  !
 !  write(0,*) "use_plumed: ", use_plumed
   !
+  ! ***OSCDFT BEGIN***
+  CALL mp_bcast(use_oscdft,root,comm)
+  ! ***OSCDFT END***
   RETURN
   !
 END SUBROUTINE plugin_arguments_bcast

@@ -10,8 +10,7 @@ MODFLAGS= $(BASEMOD_FLAGS)
 TESTOBJ = \
 test_code.o
 
-QEMODS= ../Modules/libqemod.a ../UtilXlib/libutil.a
-
+QELIBS= ../Modules/libqemod.a ../UtilXlib/libutil.a ../LAXlib/libqela.a
 
 TESTMODS = \
 libdftd3qe.a
@@ -27,16 +26,16 @@ dftd3_qe.o
 
 TLDEPS=mods
 
-all : tldeps libdftd3qe.a 
+all : libdftd3qe.a 
 
 
 libdftd3qe.a: $(DFTD3OBJ)
 	$(AR) $(ARFLAGS) $@ $(DFTD3OBJ)        
 	$(RANLIB) $@    
 
-test.x : $(TESTOBJ) $(TESTMODS) $(QEMODS)
+test.x : tldeps $(TESTOBJ) $(TESTMODS)
 	$(LD) $(LDFLAGS) $(MODFLAGS) -o $@ \
-        $(TESTOBJ) $(TESTMODS) $(QEMODS) $(QELIBS) $(LIBOBJS)
+        $(TESTOBJ) $(TESTMODS) $(QELIBS) 
 
 tldeps :
 	if test -n "$(TLDEPS)" ; then \
@@ -46,4 +45,4 @@ tldeps :
 clean :
 	( /bin/rm -f *.o *.a *.d *.i *.x *~ *_tmp.f90 *.mod *.L ); \
 
-include make.depend.dftd3
+include make.depend

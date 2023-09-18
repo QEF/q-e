@@ -34,6 +34,7 @@ SUBROUTINE wfc_gamma_real(itask,ispin)
   USE control_flags,    ONLY : gamma_only
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
+  USE uspp_init,        ONLY : init_us_2
  
   IMPLICIT NONE
 

@@ -9,10 +9,12 @@
 SUBROUTINE from_scratch( )
     !
     USE kinds,                ONLY : DP
+    USE atomic_wfc_init,      ONLY : atomic_wfc_cp
     USE control_flags,        ONLY : tranp, trane, iverbosity, tpre, tv0rd, &
                                      tfor, thdyn, &
                                      lwf, tprnfor, tortho, amprp, ampre,  &
                                      tsde, force_pairing, tcap
+    USE input_parameters,     ONLY : startingwfc
     USE ions_positions,       ONLY : taus, tau0, tausm, vels, velsm, fion, fionm, &
                                      taum 
     USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel, vel, ityp, &
@@ -21,7 +23,7 @@ SUBROUTINE from_scratch( )
     USE ions_nose,            ONLY : xnhp0, xnhpm, vnhp, tempw
     USE cell_base,            ONLY : ainv, h, s_to_r, ibrav, omega, press, &
                                      hold, r_to_s, deth, wmass, iforceh,   &
-                                     cell_force, velh, at, alat
+                                     cell_force, velh, at, alat, tpiba
     USE cell_nose,            ONLY : xnhh0, xnhhm, vnhh
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
     use electrons_base,       ONLY : nbsp, f, nspin, nupdwn, iupdwn, nbsp_bgrp, nbspx_bgrp, nbspx, nudx
@@ -33,7 +35,7 @@ SUBROUTINE from_scratch( )
     USE io_global,            ONLY : stdout, ionode
     USE core,                 ONLY : rhoc
     USE gvecw,                ONLY : ngw
-    USE gvect,                ONLY : gg
+    USE gvect,                ONLY : gg, g
     USE gvect,                ONLY : gstart, mill, eigts1, eigts2, eigts3
     USE cp_electronic_mass,   ONLY : emass
     USE efield_module,        ONLY : tefield, efield_berry_setup, berry_energy, &
@@ -43,21 +45,31 @@ SUBROUTINE from_scratch( )
     USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
                                      strucf, phfacs, nlfh, vofrho, nlfl_bgrp, prefor
     USE cp_interfaces,        ONLY : rhoofr, ortho, wave_rand_init, elec_fakekine
-    USE cp_interfaces,        ONLY : compute_stress, dotcsc, calbec_bgrp, caldbec_bgrp
+    USE cp_interfaces,        ONLY : compute_stress, dotcsc, calbec, caldbec_bgrp
     USE cp_interfaces,        ONLY : nlfq_bgrp
     USE printout_base,        ONLY : printout_pos
     USE orthogonalize_base,   ONLY : updatc, calphi_bgrp
+    USE upf_ions,             ONLY : n_atom_wfc
     USE wave_base,            ONLY : wave_steepest
-    USE wavefunctions, ONLY : c0_bgrp, cm_bgrp, phi_bgrp
+    USE wavefunctions,        ONLY : c0_bgrp, cm_bgrp, c0_d, phi, cm_d
     USE fft_base,             ONLY : dfftp, dffts
     USE time_step,            ONLY : delt
-    USE cp_main_variables,    ONLY : idesc, bephi, becp_bgrp, nfi, &
-                                     sfac, eigr, taub, irb, eigrb, bec_bgrp, &
+    USE cp_main_variables,    ONLY : idesc, bephi, becp_bgrp, nfi, iabox, nabox, &
+                                     sfac, eigr, taub, irb, eigrb, bec_bgrp, bec_d, &
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
                                      vpot, ht0, edft, becdr_bgrp, dbec, drhor, drhog
     USE mp_global,            ONLY : inter_bgrp_comm, nbgrp, me_bgrp
-    USE mp,                   ONLY : mp_sum
+    USE mp_world,             ONLY : mpime, world_comm
+    USE mp,                   ONLY : mp_sum, mp_barrier
     USE matrix_inversion
+    USE device_memcpy_m,        ONLY : dev_memcpy
+    USE uspp_param,             ONLY : upf, nwfcm
+
+#if defined (__ENVIRON)
+    USE plugin_flags,         ONLY : use_environ
+    USE environ_base_module,  ONLY : update_environ_ions
+#endif
+
     !
     IMPLICIT NONE
     !
@@ -78,7 +90,7 @@ SUBROUTINE from_scratch( )
     INTEGER                  :: n_spin_start 
     LOGICAL                  :: tfirst = .TRUE.
     REAL(DP)                 :: stress(3,3)
-    INTEGER                  :: i1, i2 
+    INTEGER                  :: i1, i2, natomwfc
     !
     ! ... Subroutine body
     !
@@ -115,13 +127,18 @@ SUBROUTINE from_scratch( )
     CALL strucf( sfac, eigts1, eigts2, eigts3, mill, dffts%ngm )
     !     
     IF ( okvan .OR. nlcc_any ) THEN
-       CALL initbox ( tau0, alat, at, ainv, taub, irb )
+       CALL initbox ( tau0, alat, at, ainv, taub, irb, iabox, nabox )
        CALL phbox( taub, iverbosity, eigrb )
     END IF
     !
     !     pass ions informations to plugins
     !
-    CALL plugin_init_ions( tau0 )
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_init_ions(tau0)
+#endif
+#if defined (__ENVIRON)
+    IF (use_environ) CALL update_environ_ions(tau0)
+#endif
     !
     !     wfc initialization with random numbers
     !     
@@ -129,10 +146,23 @@ SUBROUTINE from_scratch( )
     !
     IF ( ionode ) &
        WRITE( stdout, fmt = '(//,3X, "Wave Initialization: random initial wave-functions" )' )
+
+    ! if asked, use as much atomic wavefunctions as possible
+    if ( trim(startingwfc) == 'atomic') then
+       if ( ionode ) &
+         WRITE (stdout, '("Using also atomic wavefunctions as much as possible")') 
+       natomwfc = n_atom_wfc ( nat, ityp )
+       call atomic_wfc_cp(cm_bgrp, omega, tpiba, nat, nsp, ityp, tau0, natomwfc, &
+                   mill, eigts1, eigts2, eigts3, g, iupdwn, ngw, upf, nwfcm, nspin )
+    endif
+
+
     !
     ! ... prefor calculates vkb (used by gram)
     !
     CALL prefor( eigr, vkb )
+    !
+    !$acc update device(vkb)
     !
     nspin_wfc = nspin
     IF( force_pairing ) nspin_wfc = 1
@@ -141,7 +171,11 @@ SUBROUTINE from_scratch( )
 
     IF( force_pairing ) cm_bgrp(:,iupdwn(2):iupdwn(2)+nupdwn(2)-1) = cm_bgrp(:,1:nupdwn(2))
     !
-    if( iverbosity > 1 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp )
+    if( iverbosity > 1 ) CALL dotcsc( vkb, cm_bgrp, ngw, nbsp )
+    !
+#if defined(__CUDA)
+    CALL dev_memcpy( cm_d, cm_bgrp )
+#endif
     !
     ! ... initialize bands
     !
@@ -188,11 +222,11 @@ SUBROUTINE from_scratch( )
     !
     IF( .NOT. tcg ) THEN
        !
-       CALL calbec_bgrp ( 1, nsp, eigr, cm_bgrp, bec_bgrp )
+       CALL calbec ( nbsp_bgrp, vkb, cm_bgrp, bec_bgrp, 0 )
        !
        if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
        !
-       CALL rhoofr( nfi, cm_bgrp, irb, eigrb, bec_bgrp, dbec, becsum, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
+       CALL rhoofr( nfi, cm_bgrp, cm_d, bec_bgrp, dbec, becsum, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
        !
        edft%enl  = enl
        edft%ekin = ekin
@@ -201,7 +235,7 @@ SUBROUTINE from_scratch( )
     !
     !     put core charge (if present) in rhoc(r)
     !
-    if ( nlcc_any ) CALL set_cc( irb, eigrb, rhoc )
+    if ( nlcc_any ) CALL set_cc( rhoc )
     !
     IF( .NOT. tcg ) THEN
    
@@ -229,7 +263,7 @@ SUBROUTINE from_scratch( )
       if( iverbosity > 1 ) &
              CALL printout_pos( stdout, fion, nat, ityp, head = ' fion ' )
 
-      CALL newd( vpot, irb, eigrb, becsum, fion )
+      CALL newd( vpot, becsum, fion, .true. )
       !
       IF( force_pairing ) THEN
          !
@@ -240,26 +274,56 @@ SUBROUTINE from_scratch( )
          !
       ELSE
          !
-         CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, cm_bgrp, c0_bgrp, fromscra = .TRUE. )
+         CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, cm_bgrp, cm_d, c0_bgrp, c0_d, fromscra = .TRUE. )
          !
       ENDIF
+      !
+#if defined(__CUDA)
+      CALL dev_memcpy( c0_d, c0_bgrp )  ! c0 contains the updated wave functions
+#endif
       !
       !     nlfq needs deeq bec
       !
       IF( ttforce ) THEN
-         CALL nlfq_bgrp( cm_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
+#if defined (__CUDA)
+         !$acc data present(vkb)
+         !$acc host_data use_device(vkb)
+         CALL nlfq_bgrp( cm_d, vkb, bec_bgrp, becdr_bgrp, fion )
+         !$acc end host_data 
+         !$acc end data 
+#else
+         CALL nlfq_bgrp( cm_bgrp, vkb, bec_bgrp, becdr_bgrp, fion )
+#endif
       END IF
       !
       !     calphi calculates phi
       !     the electron mass rises with g**2
       !
-      CALL calphi_bgrp( cm_bgrp, ngw, bec_bgrp, nkb, vkb, phi_bgrp, nbspx_bgrp, ema0bg )
+#if defined (__CUDA)
+      !$acc data present(vkb)
+      !$acc host_data use_device(vkb)
+      CALL calphi_bgrp( cm_d, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
+      !$acc end host_data 
+      !$acc end data 
+#else
+      CALL calphi_bgrp( cm_bgrp, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
+#endif
       !
-      IF( force_pairing ) &
-         &   phi_bgrp( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =    phi_bgrp( :, 1:nupdwn(2))
-
+      IF( force_pairing ) THEN
+         !   phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =    phi( :, 1:nupdwn(2))
+         CALL dev_memcpy(phi(:,iupdwn(2):), phi(:,1:),  [1, ngw], 1 , [1, nupdwn(2)], 1)
+      END IF
+      !
       if( tortho ) then
-         CALL ortho( eigr, c0_bgrp, phi_bgrp, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+#if defined (__CUDA)
+         !$acc data present(vkb)
+         !$acc host_data use_device(vkb)
+         CALL ortho( vkb, c0_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+         !$acc end host_data 
+         !$acc end data 
+#else
+         CALL ortho( vkb, c0_bgrp, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+#endif
       else
          CALL gram_bgrp( vkb, bec_bgrp, nkb, c0_bgrp, ngw )
       endif
@@ -275,23 +339,30 @@ SUBROUTINE from_scratch( )
       if ( tstress ) CALL nlfh( stress, bec_bgrp, dbec, lambda, idesc )
       !
       IF ( tortho ) THEN
-         CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, c0_bgrp, idesc )
+#if defined (__CUDA)
+         CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_d, c0_d, idesc )
+         CALL dev_memcpy( c0_bgrp, c0_d )
+         CALL dev_memcpy( bec_bgrp, bec_d )
+#else
+         CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_bgrp, c0_bgrp, idesc )
+#endif
       END IF
       !
       IF( force_pairing ) THEN
          !
          c0_bgrp ( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) = c0_bgrp( :, 1:nupdwn(2))
-         phi_bgrp( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) = phi_bgrp( :, 1:nupdwn(2))
+         CALL dev_memcpy(phi(:,iupdwn(2):), phi(:,1:),  [1, ngw], 1 , [1, nupdwn(2)], 1)
+         !phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) = phi( :, 1:nupdwn(2))
          lambda(:,:,2) = lambda(:,:,1)
          !
       ENDIF
       !
-      !
-      CALL calbec_bgrp ( 1, nsp, eigr, c0_bgrp, bec_bgrp, 1 )
+      ! the following compute only on NC pseudo components
+      CALL calbec ( nbsp_bgrp, vkb, c0_bgrp, bec_bgrp, 1 )
       !
       if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
 
-      if ( iverbosity > 1 ) CALL dotcsc( eigr, c0_bgrp, ngw, nbsp_bgrp )
+      if ( iverbosity > 1 ) CALL dotcsc( vkb, c0_bgrp, ngw, nbsp_bgrp )
       !
       xnhp0 = 0.0d0
       xnhpm = 0.0d0
@@ -325,3 +396,10 @@ SUBROUTINE from_scratch( )
     RETURN
     !
 END SUBROUTINE from_scratch
+
+subroutine hangup
+    USE mp_world,             ONLY : mpime, world_comm
+    USE mp,                   ONLY : mp_sum, mp_barrier
+    call mp_barrier(world_comm)
+    CALL stop_cp_run()
+end subroutine

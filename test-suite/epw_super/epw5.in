@@ -1,0 +1,67 @@
+--
+&inputepw
+  prefix      = 'MgB2',
+  amass(1)    = 24.305,
+  amass(2)    = 10.811
+  outdir      = './'
+
+  ep_coupling = .false.
+  elph        = .false.
+  epwwrite    = .false.
+  epwread     = .true.
+  etf_mem     = 1
+  vme         = 'dipole'
+
+  nbndsub     =  5,
+
+  wannierize  = .false.
+  num_iter    = 500
+  dis_froz_max= 8.8
+  proj(1)     = 'B:pz'
+  proj(2)     = 'f=0.5,1.0,0.5:s'
+  proj(3)     = 'f=0.0,0.5,0.5:s'
+  proj(4)     = 'f=0.5,0.5,0.5:s'
+
+  iverbosity  = 0
+
+  eps_acustic = 5.0    ! Lowest boundary for the
+  ephwrite    = .false. ! Writes .ephmat files used when Eliasberg = .true.
+
+  fsthick     = 20.0  ! eV
+  degaussw    = 0.10 ! eV
+  degaussq    = 0.5 ! meV
+  nqstep      = 500
+
+  eliashberg = .true.
+  mp_mesh_k  = .true.
+  fila2f = 'MgB2.a2f'
+  liso   = .true.
+  limag  = .true.
+  tc_linear  = .true.
+  tc_linear_solver  = 'power'  ! OR 'lapack'
+
+  conv_thr_iaxis = 1.0d-2
+  wscut          = 0.5  ! eV   Upper limit over frequency integration/summation in the Elisashberg eq
+
+  nstemp = 41     ! Nr. of temps
+  temps  = 1 41 ! K  temps = tempsmin  tempsmax for even space mode
+
+  nsiter = 500
+  muc    = 0.16
+
+  dvscf_dir   = './save'
+
+  nk1  = 3
+  nk2  = 3
+  nk3  = 3
+  nq1  = 3
+  nq2  = 3
+  nq3  = 3
+
+  nkf1 = 6
+  nkf2 = 6
+  nkf3 = 6
+  nqf1 = 6
+  nqf2 = 6
+  nqf3 = 6
+ /

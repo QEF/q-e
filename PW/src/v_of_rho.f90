@@ -21,11 +21,14 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   USE ions_base,        ONLY : nat, tau
   USE ldaU,             ONLY : lda_plus_u, lda_plus_u_kind, ldmx_b, &
                                nsg, v_nsg 
-  USE funct,            ONLY : dft_is_meta, get_meta
+  USE xc_lib,           ONLY : xclib_dft_is
   USE scf,              ONLY : scf_type
   USE cell_base,        ONLY : alat
-  USE control_flags,    ONLY : ts_vdw
+  USE io_global,        ONLY : stdout
+  USE control_flags,    ONLY : ts_vdw, mbd_vdw, sic
   USE tsvdw_module,     ONLY : tsvdw_calculate, UtsvdW
+  USE libmbd_interface, ONLY : mbd_interface
+  USE sic_mod,          ONLY : add_vsic
   !
   IMPLICIT NONE
   !
@@ -61,7 +64,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !
   ! ... calculate exchange-correlation potential
   !
-  IF (dft_is_meta()) then
+  IF (xclib_dft_is('meta')) THEN
      CALL v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
   ELSE
      CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, v%of_r )
@@ -123,7 +126,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !
   ! ... add Tkatchenko-Scheffler potential (factor 2: Ha -> Ry)
   !
-  IF (ts_vdw) THEN
+  IF (ts_vdw .or. mbd_vdw) THEN
      CALL tsvdw_calculate(tau*alat,rho%of_r(:,1))
      DO is = 1, nspin_lsda
         DO ir=1,dfftp%nnr
@@ -131,6 +134,12 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
         END DO
      END DO
   END IF
+  !
+  IF (mbd_vdw) THEN
+    call mbd_interface() ! self-consistent but only up to TS level
+  END IF
+  !
+  IF (sic) CALL add_vsic(rho, rho_core, rhog_core, v)
   !
   CALL stop_clock( 'v_of_rho' )
   !
@@ -151,9 +160,9 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE gvect,            ONLY : g, ngm
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
-  USE funct,            ONLY : get_meta, dft_is_nonlocc, nlc, is_libxc
-  USE xc_mgga,          ONLY : xc_metagcx
-  USE scf,              ONLY : scf_type, rhoz_or_updw
+  USE funct,            ONLY : dft_is_nonlocc, nlc
+  USE scf,              ONLY : scf_type
+  USE xc_lib,           ONLY : xc_metagcx, xclib_get_ID
   USE mp,               ONLY : mp_sum
   USE mp_bands,         ONLY : intra_bgrp_comm
   !
@@ -176,20 +185,21 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
   ! ... local variables
   !
-  REAL(DP) :: zeta, rh, sgn(2)
-  INTEGER  :: k, ipol, is, np
+  REAL(DP) :: zeta, rh, sgn_is
+  REAL(DP) :: etxc0, vtxc0
+  INTEGER  :: k, ipol, is, np, dfftp_nnr
+  LOGICAL  :: lda_gga_terms
   !
-  REAL(DP), ALLOCATABLE :: ex(:), ec(:)
+  REAL(DP), ALLOCATABLE :: ex(:), ec(:), v0(:,:)
   REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:), v3x(:,:)
   REAL(DP), ALLOCATABLE :: v1c(:,:), v2c(:,:,:), v3c(:,:)
   !
-  REAL(DP) :: fac
-       
-  REAL(DP), DIMENSION(2) :: grho2, rhoneg
+  REAL(DP) :: fac, rhoneg1, rhoneg2
+  REAL(DP), DIMENSION(2) :: grho2
   REAL(DP), DIMENSION(3) :: grhoup, grhodw
   !
-  REAL(DP), ALLOCATABLE :: grho(:,:,:), h(:,:,:), dh(:)
-  REAL(DP), ALLOCATABLE :: rhoout(:)
+  REAL(DP), ALLOCATABLE :: h(:,:,:), dh(:)
+  REAL(DP), ALLOCATABLE :: rho_updw(:,:), grho(:,:,:), tau(:,:)
   COMPLEX(DP), ALLOCATABLE :: rhogsum(:)
   REAL(DP), PARAMETER :: eps12 = 1.0d-12, zero=0._dp
   !
@@ -197,16 +207,18 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
   etxc = zero
   vtxc = zero
-  v(:,:) = zero
-  rhoneg(:) = zero
-  sgn(1) = 1._dp  ;   sgn(2) = -1._dp
+  rhoneg1 = zero ; rhoneg2 = zero
   fac = 1.D0 / DBLE( nspin )
   np = 1
   IF (nspin==2) np=3
+  dfftp_nnr = dfftp%nnr !to avoid unnecessary copies in acc loop
+  !
+  !$acc data copyin( rho ) copyout( kedtaur, v )
   !
   ALLOCATE( grho(3,dfftp%nnr,nspin) )
   ALLOCATE( h(3,dfftp%nnr,nspin) )
-  ALLOCATE( rhogsum(ngm) )
+  ALLOCATE( rhogsum(ngm), tau(dfftp%nnr,nspin) )
+  !$acc data create( tau, grho, h )
   !
   ALLOCATE( ex(dfftp%nnr), ec(dfftp%nnr) )
   ALLOCATE( v1x(dfftp%nnr,nspin), v2x(dfftp%nnr,nspin)   , v3x(dfftp%nnr,nspin) )
@@ -215,104 +227,140 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   ! ... calculate the gradient of rho + rho_core in real space
   ! ... in LSDA case rhogsum is in (up,down) format
   !
+  !$acc data create( rhogsum ) copyin( rhog_core, rho%of_g, rho%kin_r )
   DO is = 1, nspin
      !
-     rhogsum(:) = fac*rhog_core(:) + ( rho%of_g(:,1) + sgn(is)*rho%of_g(:,nspin) )*0.5D0
+     sgn_is = (-1.d0)**(is+1)
      !
-     CALL fft_gradient_g2r( dfftp, rhogsum, g, grho(1,1,is) )
+     !$acc parallel loop present(rho)
+     DO k = 1, ngm
+       rhogsum(k) = fac*rhog_core(k) + ( rho%of_g(k,1) + sgn_is*rho%of_g(k,nspin) )*0.5D0
+     ENDDO
+     !
+     CALL fft_gradient_g2r( dfftp, rhogsum, g, grho(:,:,is) ) 
      !
   ENDDO
-  DEALLOCATE(rhogsum)
   !
+  !$acc parallel loop collapse(2) present(rho)
+  DO is = 1, nspin
+    DO k = 1, dfftp_nnr
+      tau(k,is) = rho%kin_r(k,is)/e2
+    ENDDO
+  ENDDO
   !
+  !$acc end data
+  DEALLOCATE( rhogsum )
+  !
+  !$acc data copyin( rho%of_r )
+  !$acc data create( ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   IF (nspin == 1) THEN
     !
-    CALL xc_metagcx( dfftp%nnr, 1, np, rho%of_r, grho, rho%kin_r/e2, ex, ec, &
-                      v1x, v2x, v3x, v1c, v2c, v3c )
+    CALL xc_metagcx( dfftp_nnr, 1, np, rho%of_r, grho, tau, ex, ec, &
+                     v1x, v2x, v3x, v1c, v2c, v3c, gpu_args_=.TRUE. )
     !
-    DO k = 1, dfftp%nnr
+    !$acc parallel loop reduction(+:etxc,vtxc,rhoneg1,rhoneg2) present(rho)
+    DO k = 1, dfftp_nnr
        !
        v(k,1) = (v1x(k,1)+v1c(k,1)) * e2
        !
-       ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
-       h(:,k,1) = (v2x(k,1)+v2c(1,k,1)) * grho(:,k,1) * e2 
+       ! ... h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
+       DO ipol = 1, 3
+         h(ipol,k,1) = (v2x(k,1)+v2c(1,k,1)) * grho(ipol,k,1) * e2
+       ENDDO
        !
        kedtaur(k,1) = (v3x(k,1)+v3c(k,1)) * 0.5d0 * e2
        !
        etxc = etxc + (ex(k)+ec(k)) * e2
        vtxc = vtxc + (v1x(k,1)+v1c(k,1)) * e2 * ABS(rho%of_r(k,1))
        !
-       IF (rho%of_r(k,1) < zero) rhoneg(1) = rhoneg(1)-rho%of_r(k,1)
+       IF (rho%of_r(k,1) < zero) rhoneg1 = rhoneg1-rho%of_r(k,1)
        !
     ENDDO
     !
   ELSE
     !
-    CALL rhoz_or_updw( rho, 'only_r', '->updw' )
+    ALLOCATE( rho_updw(dfftp%nnr,2) )
+    !$acc data create( rho_updw )
     !
-    CALL xc_metagcx( dfftp%nnr, 2, np, rho%of_r, grho, rho%kin_r/e2, ex, ec, &
-                     v1x, v2x, v3x, v1c, v2c, v3c )
+    !$acc parallel loop present(rho)
+    DO k = 1, dfftp_nnr  
+        rho_updw(k,1) = ( rho%of_r(k,1) + rho%of_r(k,2) ) * 0.5d0
+        rho_updw(k,2) = ( rho%of_r(k,1) - rho%of_r(k,2) ) * 0.5d0
+    ENDDO
     !
-    ! first term of the gradient correction : D(rho*Exc)/D(rho)
+    CALL xc_metagcx( dfftp_nnr, 2, np, rho_updw, grho, tau, ex, ec, &
+                     v1x, v2x, v3x, v1c, v2c, v3c, gpu_args_=.TRUE. )
     !
-    DO k = 1, dfftp%nnr
+    ! ... first term of the gradient correction : D(rho*Exc)/D(rho)
+    !
+    !$acc parallel loop reduction(+:etxc,vtxc,rhoneg1,rhoneg2)
+    DO k = 1, dfftp_nnr
        !
        v(k,1) = (v1x(k,1) + v1c(k,1)) * e2
        v(k,2) = (v1x(k,2) + v1c(k,2)) * e2
        !
-       ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
+       ! ... h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
        !
-       h(:,k,1) = (v2x(k,1) * grho(:,k,1) + v2c(:,k,1)) * e2
-       h(:,k,2) = (v2x(k,2) * grho(:,k,2) + v2c(:,k,2)) * e2
+       DO ipol = 1, 3
+         h(ipol,k,1) = (v2x(k,1) * grho(ipol,k,1) + v2c(ipol,k,1)) * e2
+         h(ipol,k,2) = (v2x(k,2) * grho(ipol,k,2) + v2c(ipol,k,2)) * e2
+       ENDDO
        !
        kedtaur(k,1) = (v3x(k,1) + v3c(k,1)) * 0.5d0 * e2
        kedtaur(k,2) = (v3x(k,2) + v3c(k,2)) * 0.5d0 * e2
        !
        etxc = etxc + (ex(k)+ec(k)) * e2
-       vtxc = vtxc + (v1x(k,1)+v1c(k,1)) * ABS(rho%of_r(k,1)) * e2
-       vtxc = vtxc + (v1x(k,2)+v1c(k,2)) * ABS(rho%of_r(k,2)) * e2
+       vtxc = vtxc + (v1x(k,1)+v1c(k,1)) * ABS(rho_updw(k,1)) * e2 + &
+                     (v1x(k,2)+v1c(k,2)) * ABS(rho_updw(k,2)) * e2
        !
-       IF ( rho%of_r(k,1) < 0.d0 ) rhoneg(1) = rhoneg(1) - rho%of_r(k,1)
-       IF ( rho%of_r(k,2) < 0.d0 ) rhoneg(2) = rhoneg(2) - rho%of_r(k,2)
+       IF ( rho_updw(k,1) < 0.d0 ) rhoneg1 = rhoneg1 - rho_updw(k,1)
+       IF ( rho_updw(k,2) < 0.d0 ) rhoneg2 = rhoneg2 - rho_updw(k,2)
        !
     ENDDO
     !
-    CALL rhoz_or_updw( rho, 'only_r', '->rhoz' )
+    !$acc end data
+    DEALLOCATE( rho_updw )
     !
   ENDIF
   !
+  !$acc end data
   DEALLOCATE( ex, ec )
   DEALLOCATE( v1x, v2x, v3x )
   DEALLOCATE( v1c, v2c, v3c )
   !
-  !
-  ALLOCATE( dh( dfftp%nnr ) )    
+  ALLOCATE( dh( dfftp%nnr ) )
+  !$acc data create( dh )
   !
   ! ... second term of the gradient correction :
   ! ... \sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )
   !
-  ALLOCATE (rhoout(dfftp%nnr))
   DO is = 1, nspin
-     !
      CALL fft_graddot( dfftp, h(1,1,is), g, dh )
      !
-     v(:,is) = v(:,is) - dh(:)
+     sgn_is = (-1.d0)**(is+1)
      !
-     ! ... rhoout is in (up,down) format 
-     !
-     rhoout(:) = ( rho%of_r(:,1) + sgn(is)*rho%of_r(:,nspin) )*0.5D0
-     vtxc = vtxc - SUM( dh(:) * rhoout(:) )
-     !
-  END DO
-  DEALLOCATE(rhoout)
-  DEALLOCATE(dh)
+     !$acc parallel loop reduction(+:vtxc) present(rho)
+     DO k = 1, dfftp_nnr
+       v(k,is) = v(k,is) - dh(k)
+       vtxc = vtxc - dh(k) * ( rho%of_r(k,1) + sgn_is*rho%of_r(k,nspin) )*0.5D0
+     ENDDO
+  ENDDO
   !
-  CALL mp_sum( rhoneg, intra_bgrp_comm )
+  !$acc end data
+  DEALLOCATE( dh )
   !
-  rhoneg(:) = rhoneg(:) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+  !$acc end data
+  !$acc end data
+  !$acc end data
   !
-  IF ((rhoneg(1) > eps8) .OR. (rhoneg(2) > eps8)) THEN
-    write (stdout, '(/,5x, "negative rho (up,down): ", 2es10.3)') rhoneg(:)
+  CALL mp_sum( rhoneg1, intra_bgrp_comm )
+  CALL mp_sum( rhoneg2, intra_bgrp_comm )
+  !
+  rhoneg1 = rhoneg1 * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+  rhoneg2 = rhoneg2 * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+  !
+  IF ((rhoneg1 > eps8) .OR. (rhoneg2 > eps8)) THEN
+    write (stdout, '(/,5x, "negative rho (up,down): ", 2es10.3)') rhoneg1, rhoneg2
   ENDIF
   !
   vtxc = omega * vtxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 ) 
@@ -320,11 +368,29 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
   IF ( dft_is_nonlocc() ) CALL nlc( rho%of_r, rho_core, nspin, etxc, vtxc, v )
   !
-  CALL mp_sum(  vtxc , intra_bgrp_comm )
-  CALL mp_sum(  etxc , intra_bgrp_comm )
+  CALL mp_sum( vtxc, intra_bgrp_comm )
+  CALL mp_sum( etxc, intra_bgrp_comm )
   !
-  DEALLOCATE(grho)
-  DEALLOCATE(h)
+  !
+  ! ... calculate and add LDA+GGA terms separately, if needed (not standard)
+  !
+  lda_gga_terms = (xclib_get_ID('LDA','EXCH') + xclib_get_ID('LDA','CORR') + &
+                   xclib_get_ID('GGA','EXCH') + xclib_get_ID('GGA','CORR')) /= 0
+  !
+  IF ( lda_gga_terms ) THEN
+    ALLOCATE(v0(dfftp%nnr,nspin))
+    !
+    CALL v_xc( rho, rho_core, rhog_core, etxc0, vtxc0, v0 )
+    !
+    etxc = etxc + etxc0
+    vtxc = vtxc + vtxc0
+    v = v + v0
+    !
+    DEALLOCATE(v0)
+  ENDIF
+  !
+  DEALLOCATE( tau, grho )
+  DEALLOCATE( h )
   !
   CALL stop_clock( 'v_xc_meta' )
   !
@@ -332,10 +398,10 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
 END SUBROUTINE v_xc_meta
 !
-!
+!------------------------------------------------------------------------------
 SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !----------------------------------------------------------------------------
-  !! Exchange-Correlation potential Vxc(r) from n(r)
+  !! Exchange-Correlation potential from charge density.
   !
   USE kinds,            ONLY : DP
   USE constants,        ONLY : e2, eps8
@@ -344,10 +410,10 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE gvect,            ONLY : ngm
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
-  USE spin_orb,         ONLY : domag
+  USE noncollin_module, ONLY : domag
   USE funct,            ONLY : nlc, dft_is_nonlocc
-  USE xc_lda_lsda,      ONLY : xc
   USE scf,              ONLY : scf_type
+  USE xc_lib,           ONLY : xc
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   !
@@ -360,19 +426,17 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   COMPLEX(DP), INTENT(IN) :: rhog_core(ngm)
   !! the core charge in reciprocal space
   REAL(DP), INTENT(OUT) :: v(dfftp%nnr,nspin)
-  !! V_xc potential
+  !! \(V_{xc}\) potential
   REAL(DP), INTENT(OUT) :: vtxc
-  !! integral V_xc * rho
+  !! integral \(V_{xc}\cdot\text{rho}\)
   REAL(DP), INTENT(OUT) :: etxc
-  !! E_xc energy
+  !! \(E_{xc}\) energy
   !
   ! ... local variables
   !
   REAL(DP) :: rhoneg(2), vs
-  !
-  !REAL(DP), ALLOCATABLE :: arhox(:), amag(:), zeta(:)
-  REAL(DP) :: arho, amag
-  REAL(DP) :: rhoup2, rhodw2
+  REAL(DP) :: rhoup2, rhodw2, rhoneg1, rhoneg2
+  REAL(DP) :: arho, amag, vtxc24
   REAL(DP), ALLOCATABLE :: ex(:), ec(:)
   REAL(DP), ALLOCATABLE :: vx(:,:), vc(:,:)
   ! In order:
@@ -383,101 +447,117 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
     ! local correlation energy
     ! local exchange potential
     ! local correlation potential
-  INTEGER :: ir, ipol
+  INTEGER :: ir, ipol, dfftp_nnr
     ! counter on mesh points
-    ! counter on nspin
-  !
+    ! counter on polarization components
+    ! number of mesh points (=dfftp%nnr)
   REAL(DP), PARAMETER :: vanishing_charge = 1.D-10, &
                          vanishing_mag    = 1.D-20
   !
-  !
   CALL start_clock( 'v_xc' )
   !
-  ALLOCATE( ex(dfftp%nnr) )
-  ALLOCATE( ec(dfftp%nnr) )
-  ALLOCATE( vx(dfftp%nnr,nspin) )
-  ALLOCATE( vc(dfftp%nnr,nspin) )
+  dfftp_nnr = dfftp%nnr !to avoid unnecessary copies in acc loop
   !
-  etxc   = 0.D0
-  vtxc   = 0.D0
-  v(:,:) = 0.D0
-  rhoneg = 0.D0
+  etxc = 0.D0 ;  rhoneg1 = 0.D0
+  vtxc = 0.D0 ;  rhoneg2 = 0.D0
   !
+  !$acc data copyin( rho_core, rhog_core, rho ) copyout( v )
+  !$acc data copyin( rho%of_r, rho%of_g )
   !
-  rho%of_r(:,1) = rho%of_r(:,1) + rho_core(:)
+  ALLOCATE( ex(dfftp%nnr), vx(dfftp%nnr,nspin) )
+  ALLOCATE( ec(dfftp%nnr), vc(dfftp%nnr,nspin) )
+  !$acc data create( ex, ec, vx, vc )
+  !
+  !$acc parallel loop
+  DO ir = 1, dfftp_nnr
+    rho%of_r(ir,1) = rho%of_r(ir,1) + rho_core(ir)
+  ENDDO
   !
   IF ( nspin == 1 .OR. ( nspin == 4 .AND. .NOT. domag ) ) THEN
      ! ... spin-unpolarized case
      !
-     CALL xc( dfftp%nnr, 1, 1, rho%of_r, ex, ec, vx, vc )
+     CALL xc( dfftp_nnr, 1, 1, rho%of_r, ex, ec, vx, vc, gpu_args_=.TRUE. )
      !
-     DO ir = 1, dfftp%nnr
+     !$acc parallel loop reduction(+:etxc,vtxc,rhoneg1) present(rho)
+     DO ir = 1, dfftp_nnr
         v(ir,1) = e2*( vx(ir,1) + vc(ir,1) )
         etxc = etxc + e2*( ex(ir) + ec(ir) )*rho%of_r(ir,1)
         rho%of_r(ir,1) = rho%of_r(ir,1) - rho_core(ir)
         vtxc = vtxc + v(ir,1)*rho%of_r(ir,1)
-        IF (rho%of_r(ir,1) < 0.D0) rhoneg(1) = rhoneg(1)-rho%of_r(ir,1)
+        IF (rho%of_r(ir,1) < 0.D0) rhoneg1 = rhoneg1-rho%of_r(ir,1)
      ENDDO
      !
      !
   ELSEIF ( nspin == 2 ) THEN
      ! ... spin-polarized case
      !
-     CALL xc( dfftp%nnr, 2, 2, rho%of_r, ex, ec, vx, vc )
+     CALL xc( dfftp_nnr, 2, 2, rho%of_r, ex, ec, vx, vc, gpu_args_=.TRUE. )
      !
-     DO ir = 1, dfftp%nnr   !OMP ?
-        v(ir,:) = e2*( vx(ir,:) + vc(ir,:) )
+     !$acc parallel loop reduction(+:etxc,vtxc,rhoneg1,rhoneg2) &
+     !$acc&              present(rho)
+     DO ir = 1, dfftp_nnr
+        v(ir,1) = e2*( vx(ir,1) + vc(ir,1) )
+        v(ir,2) = e2*( vx(ir,2) + vc(ir,2) )
         etxc = etxc + e2*( (ex(ir) + ec(ir))*rho%of_r(ir,1) )
         rho%of_r(ir,1) = rho%of_r(ir,1) - rho_core(ir)
         vtxc = vtxc + ( ( v(ir,1) + v(ir,2) )*rho%of_r(ir,1) + &
-                        ( v(ir,1) - v(ir,2) )*rho%of_r(ir,2) )
+                        ( v(ir,1) - v(ir,2) )*rho%of_r(ir,2) )*0.5d0
         !
         rhoup2 = rho%of_r(ir,1)+rho%of_r(ir,2)
         rhodw2 = rho%of_r(ir,1)-rho%of_r(ir,2)
-        IF (rhoup2 < 0.d0) rhoneg(1) = rhoneg(1) + rhoup2
-        IF (rhodw2 < 0.d0) rhoneg(2) = rhoneg(2) + rhodw2
+        IF (rhoup2 < 0.d0) rhoneg1 = rhoneg1 - rhoup2*0.5d0
+        IF (rhodw2 < 0.d0) rhoneg2 = rhoneg2 - rhodw2*0.5d0
      ENDDO
      !
-     vtxc   = 0.5d0 * vtxc
-     rhoneg = 0.5d0 * rhoneg
-     !
-     !
-  ELSE IF ( nspin == 4 ) THEN
-     ! ... noncolinear case
-     !
-     CALL xc( dfftp%nnr, 4, 2, rho%of_r, ex, ec, vx, vc )
-     !
-     DO ir = 1, dfftp%nnr  !OMP ?
-        arho = ABS( rho%of_r(ir,1) )
-        IF ( arho < vanishing_charge ) CYCLE
-        vs = 0.5D0*( vx(ir,1) + vc(ir,1) - vx(ir,2) - vc(ir,2) )
-        v(ir,1) = e2*( 0.5D0*( vx(ir,1) + vc(ir,1) + vx(ir,2) + vc(ir,2) ) )
-        !
-        amag = SQRT( SUM( rho%of_r(ir,2:4)**2 ) )
-        IF ( amag > vanishing_mag ) THEN
-           v(ir,2:4) = e2 * vs * rho%of_r(ir,2:4) / amag
-           vtxc = vtxc + SUM( v(ir,2:4) * rho%of_r(ir,2:4) )
-        ENDIF
-        etxc = etxc + e2*( ex(ir) + ec(ir) ) * arho
-        !
-        rho%of_r(ir,1) = rho%of_r(ir,1) - rho_core(ir)
-        IF ( rho%of_r(ir,1) < 0.D0 )  rhoneg(1) = rhoneg(1) - rho%of_r(ir,1)
-        IF ( amag / arho > 1.D0 )  rhoneg(2) = rhoneg(2) + 1.D0/omega
-        vtxc = vtxc + v(ir,1) * rho%of_r(ir,1)
-     ENDDO
-     !
-     !
+   ELSEIF ( nspin == 4 ) THEN
+      ! ... noncollinear case
+      !
+      CALL xc( dfftp_nnr, 4, 2, rho%of_r, ex, ec, vx, vc, gpu_args_=.TRUE. )
+      !
+      !$acc parallel loop reduction(+:etxc,vtxc,rhoneg1,rhoneg2) present(rho)
+      DO ir = 1, dfftp_nnr
+         arho = ABS( rho%of_r(ir,1) )
+         IF ( arho < vanishing_charge ) THEN
+           v(ir,1) = 0.d0 ;  v(ir,2) = 0.d0
+           v(ir,3) = 0.d0 ;  v(ir,4) = 0.d0
+           CYCLE
+         ENDIF
+         vs = 0.5D0*( vx(ir,1) + vc(ir,1) - vx(ir,2) - vc(ir,2) )
+         v(ir,1) = e2*( 0.5D0*( vx(ir,1) + vc(ir,1) + vx(ir,2) + vc(ir,2) ) )
+         !
+         amag = SQRT( rho%of_r(ir,2)**2 + rho%of_r(ir,3)**2 + rho%of_r(ir,4)**2 )
+         IF ( amag > vanishing_mag ) THEN
+            v(ir,2) = e2 * vs * rho%of_r(ir,2) / amag
+            v(ir,3) = e2 * vs * rho%of_r(ir,3) / amag
+            v(ir,4) = e2 * vs * rho%of_r(ir,4) / amag
+            vtxc24 = v(ir,2) * rho%of_r(ir,2) + v(ir,3) * rho%of_r(ir,3) + &
+                     v(ir,4) * rho%of_r(ir,4)
+         ELSE
+            v(ir,2) = 0.d0 ;  v(ir,3) = 0.d0 ;  v(ir,4) = 0.d0
+            vtxc24 = 0.d0
+         ENDIF
+         etxc = etxc + e2*( ex(ir) + ec(ir) ) * arho
+         !
+         rho%of_r(ir,1) = rho%of_r(ir,1) - rho_core(ir)
+         IF ( rho%of_r(ir,1) < 0.D0 )  rhoneg1 = rhoneg1 - rho%of_r(ir,1)
+         IF (   amag / arho  > 1.D0 )  rhoneg2 = rhoneg2 + 1.D0/omega
+         vtxc = vtxc + vtxc24 + v(ir,1) * rho%of_r(ir,1)
+      ENDDO
+      !
   ENDIF
   !
-  DEALLOCATE( ex, ec )
-  DEALLOCATE( vx, vc )
+  !$acc end data
+  DEALLOCATE( ex, vx )
+  DEALLOCATE( ec, vc )
   !
-  CALL mp_sum(  rhoneg , intra_bgrp_comm )
+  CALL mp_sum(  rhoneg1 , intra_bgrp_comm )
+  CALL mp_sum(  rhoneg2 , intra_bgrp_comm )
   !
-  rhoneg(:) = rhoneg(:) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+  rhoneg1 = rhoneg1 * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+  rhoneg2 = rhoneg2 * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   !
-  IF ( rhoneg(1) > eps8 .OR. rhoneg(2) > eps8 ) &
-     WRITE( stdout,'(/,5X,"negative rho (up, down): ",2ES10.3)') rhoneg
+  IF ( rhoneg1 > eps8 .OR. rhoneg2 > eps8 ) &
+     WRITE( stdout,'(/,5X,"negative rho (up, down): ",2ES10.3)') rhoneg1, rhoneg2
   !
   ! ... energy terms, local-density contribution
   !
@@ -487,6 +567,12 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   ! ... add gradient corrections (if any)
   !
   CALL gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, etxc, vtxc, v )
+  !
+  !$acc end data
+  !$acc end data
+  !
+  ! ... to avoid NaN in some rare cases (see summations in subroutine delta_e)
+  IF ( nspin==4 .AND. .NOT.domag ) v(:,2:nspin) = 0.D0
   !
   ! ... add non local corrections (if any)
   !
@@ -509,7 +595,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   USE constants,         ONLY : fpi, e2
   USE kinds,             ONLY : DP
   USE fft_base,          ONLY : dfftp
-  USE fft_interfaces,    ONLY : invfft
+  USE fft_rho,           ONLY : rho_g2r
   USE gvect,             ONLY : ngm, gg, gstart
   USE lsda_mod,          ONLY : nspin
   USE cell_base,         ONLY : omega, tpiba2
@@ -533,7 +619,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   !  ... local variables
   !
   REAL(DP)              :: fac
-  REAL(DP), ALLOCATABLE :: aux1(:,:)
+  REAL(DP), ALLOCATABLE :: aux1(:,:), vh(:)
   REAL(DP)              :: rgtot_re, rgtot_im, eh_corr
   INTEGER               :: is, ig
   COMPLEX(DP), ALLOCATABLE :: aux(:), rgtot(:), vaux(:)
@@ -541,24 +627,24 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   !
   CALL start_clock( 'v_h' )
   !
-  ALLOCATE( aux( dfftp%nnr ), aux1( 2, ngm ) )
+  ALLOCATE( aux(dfftp%nnr), aux1(2,ngm), vh(dfftp%nnr) )
   charge = 0.D0
   !
   IF ( gstart == 2 ) THEN
      !
      charge = omega*REAL( rhog(1) )
      !
-  END IF
+  ENDIF
   !
-  CALL mp_sum(  charge , intra_bgrp_comm )
+  CALL mp_sum( charge, intra_bgrp_comm )
   !
   ! ... calculate hartree potential in G-space (NB: V(G=0)=0 )
   !
-  IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) THEN
+  IF ( do_comp_esm .AND. ( esm_bc .NE. 'pbc' ) ) THEN
      !
      ! ... calculate modified Hartree potential for ESM
      !
-     CALL esm_hartree (rhog, ehart, aux)
+     CALL esm_hartree( rhog, ehart, aux )
      !
   ELSE
      !
@@ -595,62 +681,84 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
         !
         ehart = ehart * omega
         !
-     ELSE 
+     ELSE
         !
         ehart = ehart * 0.5D0 * omega
         !
-     END IF
-     ! 
-     if (do_comp_mt) then
-        ALLOCATE( vaux( ngm ), rgtot(ngm) )
+     ENDIF
+     !
+     IF (do_comp_mt) THEN
+        ALLOCATE( vaux(ngm), rgtot(ngm) )
         rgtot(:) = rhog(:)
-        CALL wg_corr_h (omega, ngm, rgtot, vaux, eh_corr)
+        CALL wg_corr_h( omega, ngm, rgtot, vaux, eh_corr )
         aux1(1,1:ngm) = aux1(1,1:ngm) + REAL( vaux(1:ngm))
         aux1(2,1:ngm) = aux1(2,1:ngm) + AIMAG(vaux(1:ngm))
         ehart = ehart + eh_corr
         DEALLOCATE( rgtot, vaux )
-     end if
+     ENDIF
      !
-     CALL mp_sum(  ehart , intra_bgrp_comm )
-     ! 
-     aux(:) = 0.D0
+     CALL mp_sum( ehart, intra_bgrp_comm )
      !
-     aux(dfftp%nl(1:ngm)) = CMPLX( aux1(1,1:ngm), aux1(2,1:ngm), KIND=dp )
+     aux(1:ngm) = CMPLX( aux1(1,1:ngm), aux1(2,1:ngm), KIND=DP )
      !
-     IF ( gamma_only ) THEN
-        !
-        aux(dfftp%nlm(1:ngm)) = CMPLX( aux1(1,1:ngm), -aux1(2,1:ngm), KIND=dp )
-        !
-     END IF
-  END IF
+  ENDIF
   !
-  ! ... transform hartree potential to real space
+  ! ... transform Hartree potential to real space
   !
-  CALL invfft('Rho', aux, dfftp)
+  CALL rho_g2r( dfftp, aux, vh )
   !
-  ! ... add hartree potential to the xc potential
+  ! ... add Hartree potential to the xc potential
   !
   IF ( nspin == 4 ) THEN
      !
-     v(:,1) = v(:,1) + DBLE(aux(:))
+     v(:,1) = v(:,1) + vh(:)
      !
   ELSE
      !
      DO is = 1, nspin
         !
-        v(:,is) = v(:,is) + DBLE(aux(:))
+        v(:,is) = v(:,is) + vh(:)
         !
-     END DO
+     ENDDO
      !
-  END IF
+  ENDIF
   !
-  DEALLOCATE( aux, aux1 )
+  DEALLOCATE( aux, aux1, vh )
   !
   CALL stop_clock( 'v_h' )
   !
   RETURN
   !
 END SUBROUTINE v_h
+!
+!----------------------------------------------------------------------------
+SUBROUTINE v_h_without_esm( rhog, ehart, charge, v )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Hartree potential VH(r) from n(G), with do_comp_esm = .FALSE.
+  !
+  USE kinds,    ONLY : DP
+  USE fft_base, ONLY : dfftp
+  USE gvect,    ONLY : ngm
+  USE lsda_mod, ONLY : nspin
+  USE esm,      ONLY : do_comp_esm
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(IN)    :: rhog(ngm)
+  REAL(DP),    INTENT(INOUT) :: v(dfftp%nnr,nspin)
+  REAL(DP),    INTENT(OUT)   :: ehart, charge
+  !
+  LOGICAL :: do_comp_esm_org
+  !
+  do_comp_esm_org = do_comp_esm
+  do_comp_esm = .FALSE.
+  !
+  CALL v_h( rhog, ehart, charge, v )
+  !
+  do_comp_esm = do_comp_esm_org
+  !
+END SUBROUTINE v_h_without_esm
 !
 !-----------------------------------------------------------------------
 SUBROUTINE v_hubbard( ns, v_hub, eth )
@@ -741,9 +849,7 @@ SUBROUTINE v_hubbard( ns, v_hub, eth )
   ! Hubbard energy
   !
   IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
-     WRITE(stdout,*) '--- in v_hubbard ---'
-     WRITE(stdout,'("Hubbard energy ",f9.4)') eth
-     WRITE(stdout,*) '-------'
+     WRITE(stdout,'(/5x,"HUBBARD ENERGY = ",f9.4,1x," (Ry)")') eth
   ENDIF
   !
   RETURN
@@ -761,7 +867,7 @@ SUBROUTINE v_hubbard_b (ns, v_hub, eth)
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp
-  USE ldaU,                 ONLY : Hubbard_J0, Hubbard_beta, Hubbard_U_back, &
+  USE ldaU,                 ONLY : Hubbard_J0, Hubbard_beta, Hubbard_U2,  &
                                    ldim_back, ldmx_b, Hubbard_alpha_back, &
                                    is_hubbard_back
   USE lsda_mod,             ONLY : nspin
@@ -784,12 +890,15 @@ SUBROUTINE v_hubbard_b (ns, v_hub, eth)
      !
      nt = ityp (na)
      !
-     IF (Hubbard_J0(nt).NE.0.d0 .OR. Hubbard_beta(nt).NE.0.d0) &
-     CALL errore('v_hubbard_b', 'Hubbard_J0 and Hubbard_beta are not supported',1) 
+     IF (Hubbard_J0(nt).NE.0.d0) &
+          CALL errore('v_hubbard_b', 'J0 is not supported in DFT+U with multiple channels per atomic type',1)
+     !
+     IF (Hubbard_beta(nt).NE.0.d0) &
+     CALL errore('v_hubbard_b', 'Hubbard_beta is not supported in DFT+U with multiple channels per atomic type',1) 
      !
      IF (is_hubbard_back(nt)) THEN
         !
-        effU = Hubbard_U_back(nt)
+        effU = Hubbard_U2(nt)
         !
         DO is = 1, nspin
            !
@@ -822,9 +931,7 @@ SUBROUTINE v_hubbard_b (ns, v_hub, eth)
   ! Hubbard energy
   !
   IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
-     WRITE(stdout,*) '--- in v_hubbard_b ---'
-     WRITE(stdout,'(''Hubbard_back energy '',f9.4)') eth
-     WRITE(stdout,*) '-------'
+     WRITE(stdout,'(/5x,"HUBBARD BACKGROUND ENERGY = ",f9.4,1x," (Ry)")') eth
   ENDIF
   !
   RETURN
@@ -959,9 +1066,7 @@ SUBROUTINE v_hubbard_full( ns, v_hub, eth )
   ! Hubbard energy
   !
   IF ( iverbosity > 0 ) THEN
-     WRITE(stdout,*) '--- in v_hubbard ---'
-     WRITE(stdout,'("Hubbard energies (dc, U, total) ",3f9.4)') eth_dc, eth_u, eth
-     WRITE(stdout,*) '-------'
+     WRITE(stdout,'(/5x,"HUBBARD ENERGIES (dc, U, total) ",3f9.4,1x," (Ry)")') eth_dc, eth_u, eth
   ENDIF
   !
   DEALLOCATE (u_matrix)
@@ -1331,9 +1436,7 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
   ! Hubbard energy
   !
   IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
-     WRITE(stdout,*) '--- in v_hubbard_extended ---'
-     WRITE(stdout,'("Hubbard energy ",f9.4)') eth
-     WRITE(stdout,*) '-----------------------------'
+     WRITE(stdout,'(/5x,"HUBBARD ENERGY = ",f9.4,1x," (Ry)")') eth
   ENDIF
   !
   RETURN

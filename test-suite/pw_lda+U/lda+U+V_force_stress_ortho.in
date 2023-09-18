@@ -1,0 +1,33 @@
+ &control
+    calculation ='scf'
+    tprnfor = .true.
+    tstress = .true.
+ /
+ &system
+    ibrav     = 5,
+    celldm(1) = 9.3705,
+    celldm(4) = 0.83874,
+    nat       = 4, 
+    ntyp      = 3,
+    ecutwfc   = 45.0
+    ecutrho   = 360.0
+ /
+ &electrons
+    conv_thr    = 1.d-8
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+Co  59.0   Co.pbesol-spn-rrkjus_psl.0.3.1.UPF 
+O   16.0   O.pbesol-n-rrkjus_psl.0.1.UPF 
+Li   7.0   Li.pbesol-s-rrkjus_psl.0.2.1.UPF 
+ATOMIC_POSITIONS {crystal}
+ Co  0.0010000000   0.0010000000   0.0010000000
+ O   0.2594885000   0.2594885000   0.2594885000
+ O   0.7405115000   0.7405115000   0.7405115000
+ Li  0.4990000000   0.4990000000   0.4990000000
+K_POINTS {automatic}
+ 2 2 2 0 0 0
+HUBBARD {ortho-atomic}
+U Co-3d 5.0
+U O-2p  1.0
+V Co-3d O-2p 1 2 0.3

@@ -10,7 +10,13 @@
         
         USE io_global,  ONLY : stdout
         USE kinds
-        USE funct,      ONLY : dft_is_hybrid, get_exx_fraction
+        USE xc_lib,     ONLY : xclib_dft_is, xclib_get_exx_fraction
+        
+#if defined (__ENVIRON)
+        USE plugin_flags,        ONLY : use_environ
+        USE environ_base_module, ONLY : print_environ_energies
+#endif
+
         IMPLICIT NONE
         SAVE
 
@@ -171,8 +177,8 @@
 
 !====================================================================================
 !exx_wf related
-             if(dft_is_hybrid()) then
-                WRITE( stdout,101) -exx*get_exx_fraction(), etot
+             if(xclib_dft_is('hybrid')) then
+                WRITE( stdout,101) -exx*xclib_get_exx_fraction(), etot
              end if
 !====================================================================================
 
@@ -197,7 +203,12 @@
              IF( textfor ) WRITE( stdout, 16 ) eextfor
           END IF
           !
-          CALL plugin_print_energies()
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_print_energies()
+#endif 
+#if defined (__ENVIRON)
+          IF (use_environ) CALL print_environ_energies('CP')
+#endif
           !
 1         FORMAT(6X,'                total energy = ',F18.10,' Hartree a.u.')
 2         FORMAT(6X,'              kinetic energy = ',F18.10,' Hartree a.u.')

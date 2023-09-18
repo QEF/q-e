@@ -26,6 +26,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   USE gvect,                ONLY : ngm, ngm_g,g, gstart, ig_l2g, mill
 !  USE pwcom, ONLY : igk_k
   USE cell_base,            ONLY : tpiba2
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
 

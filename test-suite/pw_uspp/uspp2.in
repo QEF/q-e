@@ -9,6 +9,7 @@
  /
  &electrons
     conv_thr=1.0e-8
+    diago_david_ndim=4
  /
 ATOMIC_SPECIES
  Ni 58.69 Ni.pz-nd-rrkjus.UPF

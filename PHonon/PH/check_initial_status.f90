@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2012-2013 Quantum ESPRESSO group
+! Copyright (C) 2012-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,63 +8,59 @@
 !-----------------------------------------------------------------------
 SUBROUTINE check_initial_status(auxdyn)
   !-----------------------------------------------------------------------
-  !
-  ! This routine checks the initial status of the phonon run and sets
-  ! the variables that control the run, dealing with the image
-  ! and GRID parallelization features of the phonon code.
+  !! This routine checks the initial status of the phonon run and sets
+  !! the variables that control the run, dealing with the image
+  !! and GRID parallelization features of the phonon code.
   ! 
-  ! The size of the grid is determined by the following variables:
-  ! nqs : the number of q points
-  ! x_q : the coordinates of the q points
+  !! The size of the grid is determined by the following variables:  
+  !! - \(\text{nqs}\): the number of q points;  
+  !! - \(\text{x_q}\): the coordinates of the q points.
   !
-  ! nfs : the number of imaginary frequencies
-  ! fiu : which frequencies 
+  ! - nfs: the number of imaginary frequencies;  
+  ! - fiu: which frequencies.
+  ! The flags that control which tensors to calculate.
   !
-  ! The flags that control which tensors to calculate
+  !! In a recover calculation the q grid variables are already known, 
+  !! read from file in \(\texttt{phq_readin}\). In a calculation starting
+  !! from scratch this routine sets them. The frequencies variables and
+  !! the tensors flags are read from input.  
+  !! The amount of work to do for each representation of each q
+  !! point depends on the size of the representation and the 
+  !! order of the small group of q. In a recover calculation
+  !! these information are on file, when recover=.false. this
+  !! routine writes the modes and their degeneration on files 
+  !! and calculates the order of the small group of q.  
+  !! The following variables are set:
+  !! - \(\text{irr_iq}\): for each q point how many irreducible representations;  
+  !! - \(\text{npert_irr_iq}\): how many perturbation per representation and per q;  
+  !! - \(\text{nsymq_iq}\): the order of the small group of q for each q.
   !
-  ! In a recover calculation the q grid variables are already known, 
-  ! read from file in phq_readin. In a calculation starting from
-  ! scratch this routine sets them. The frequencies variables and the
-  ! tensors flags are read from input. 
-  ! The amount of work to do for each representation of each q
-  ! point depends on the size of the representation and the 
-  ! order of the small group of q. In a recover calculation
-  ! these information are on file, when recover=.false. this
-  ! routine writes the modes and their degeneration on files 
-  ! and calculates the order of the small group of q. The following
-  ! variables are set
-  !
-  ! irr_iq : for each q point how many irreducible representations
-  ! npert_irr_iq : how many perturbation per representation and per q
-  ! nsymq_iq : the order of the small group of q for each q
-  !
-  ! The following variables are set by this routine on the basis of
-  ! start_irr, last_irr, start_q, last_q, OR of modenum, OR of ifat and 
-  ! atomo:
-  !
-  ! comp_iq : =.TRUE. if the q point is calculated in this run
-  ! comp_irr_iq : =.TRUE. if the representation is calculated in this run
-  ! comp_iu : =.TRUE. if this frequency is calculated in this run
+  !! The following variables are set by this routine on the basis of
+  !! start_irr, last_irr, start_q, last_q, OR of modenum, OR of ifat and 
+  !! atomo:  
+  !! - \(\text{comp_iq}\): TRUE if the q point is calculated in this run;  
+  !! - \(\text{comp_irr_iq}\): TRUE if the representation is calculated in this run;  
+  !! - \(\text{comp_iu}\): TRUE if this frequency is calculated in this run.
   !                   NB: start_iu, last_iu is not yet programmed
   ! 
-  ! After knowing this info the routine divides the total work among
-  ! the images (when nimage > 1) INDEPENDENTLY of what has been already
-  ! calculated and is available on file.
+  !! After knowing this info the routine divides the total work among
+  !! the images (when nimage > 1) INDEPENDENTLY of what has been already
+  !! calculated and is available on file.  
+  !! Then, when \(\text{recover}\)=TRUE, the routine looks on files for pieces
+  !! already calculated and sets the array.
   !
-  ! Then, when recover=.true., the routine looks on files for pieces
-  ! already calculated and sets the array
+  !! - \(\text{done_irr_iq}\): TRUE if the representation has been already calculated;  
+  !! - \(\text{done_iq}\): TRUE if the q point has been already calculated;  
+  !! - \(\text{done_iu}\): TRUE if already calculated;  
+  !! - \(\text{done_bands_iq}\): TRUE if the bands for the q point are on file.
   !
-  ! done_irr_iq : =.TRUE. if the representation has been already calculated
-  ! done_iq : =.TRUE. if the q point has been already calculated
-  ! done_iu : =.TRUE. if already calculated
-  ! done_bands_iq : .TRUE. if the bands for the q point are on file.
+  !! If \(\text{recover}\)=FALSE all these array are initialized to FALSE.
   !
-  ! If recover=.false. all these array are initialized to .false.
-  !
-  ! Finally this routine creates a file fildyn0 and writes the q mesh, if
-  ! this file is not present in the current directory, or if recover=.false..
-  ! It also creates a directory for each q inside outdir/_ph# 
-  ! if this directory does not exist and lqdir=.true.
+  !! Finally this routine creates a file \(\texttt{fildyn0}\) and writes the
+  !! q mesh, if this file is not present in the current directory, or if 
+  !! \(\text{recover}\)=FALSE.  
+  !! It also creates a directory for each q inside outdir/_ph# 
+  !! if this directory does not exist and \(\text{lqdir}\)=TRUE.
   !
   USE io_global,       ONLY : stdout
   USE control_flags,   ONLY : modenum
@@ -76,14 +72,14 @@ SUBROUTINE check_initial_status(auxdyn)
                               done_iq, lgamma_iq
   USE qpoint,          ONLY : xq
   USE control_lr,      ONLY : lgamma
-  USE output,          ONLY : fildyn
+  USE output,          ONLY : fildyn, fildvscf
   USE control_ph,      ONLY : ldisp, recover, where_rec, rec_code, &
                               start_q, last_q, current_iq, tmp_dir_ph, &
                               ext_recover, ext_restart, tmp_dir_phq, lqdir, &
                               start_irr, last_irr, newgrid, qplot, &
                               done_zeu, done_start_zstar, done_epsil, &
                               done_zue, with_ext_images, always_run, trans, &
-                              u_from_file
+                              u_from_file, epsil
   USE save_ph,         ONLY : tmp_dir_save
   USE units_ph,        ONLY : iudyn
   USE ph_restart,      ONLY : check_directory_phsave, check_available_bands,&
@@ -96,6 +92,7 @@ SUBROUTINE check_initial_status(auxdyn)
   USE mp,              ONLY : mp_bcast
   USE mp_global,       ONLY : mp_global_end
   USE el_phon,         ONLY : elph_mat
+  USE noncollin_module, ONLY : noncolin, domag
   ! YAMBO >
   USE YAMBO,           ONLY : elph_yambo,dvscf_yambo
   ! YAMBO <
@@ -109,6 +106,7 @@ SUBROUTINE check_initial_status(auxdyn)
   CHARACTER (LEN=256), EXTERNAL :: trimcheck
   CHARACTER (LEN=6  ), EXTERNAL :: int_to_char
   LOGICAL :: exst
+  LOGICAL :: distribute_irrep
   INTEGER :: iq, iq_start, ierr
   !
   tmp_dir=tmp_dir_ph
@@ -154,7 +152,7 @@ SUBROUTINE check_initial_status(auxdyn)
      !
      !   Initialize the representations and write them on file.
      !
-     IF (trans .OR. ldvscf_interpolate) THEN
+     IF (trans .OR. epsil .OR. ldvscf_interpolate.or.elph_mat) THEN
         CALL init_representations()
      ELSE
         u_from_file = .TRUE.
@@ -191,7 +189,18 @@ SUBROUTINE check_initial_status(auxdyn)
 !
 ! If there are more than one image, divide the work among the images
 !
-  IF (nimage > 1 .AND. .NOT. with_ext_images) CALL image_q_irr()
+! If writing dvscf file, distribute only q points to images.
+! Otherwise, distribute both q points and irreps to images.
+!
+  distribute_irrep = .TRUE.
+  IF (fildvscf /= ' ') THEN
+    WRITE(stdout, '(5x,a)')
+    WRITE(stdout, '(5x,a)') 'Saving dvscf to file. Distribute only q points, &
+                            &not irreducible representations.'
+    distribute_irrep = .FALSE.
+  ENDIF
+!
+  IF (nimage > 1 .AND. .NOT. with_ext_images) CALL image_q_irr(distribute_irrep)
 !
   IF (recover) THEN
 !
@@ -258,7 +267,7 @@ SUBROUTINE check_initial_status(auxdyn)
   !
   !  Create a new directory where the ph variables are saved and copy
   !  the charge density there.
-!!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
+!********************** ACFDT TEST ***************
   IF (acfdt_is_active) THEN
      ! ACFDT -test always write rho on file
      IF (acfdt_num_der) THEN
@@ -270,9 +279,9 @@ SUBROUTINE check_initial_status(auxdyn)
   ELSE  
      ! this is the standard treatment
      IF ( ( ( ldisp.OR..NOT.lgamma .OR. modenum/=0 ) .AND. (.NOT.lqdir) ) &
-          .OR. newgrid .OR. always_run ) CALL write_scf( rho, nspin )
+          .OR. newgrid .OR. always_run .OR. (noncolin.AND.domag) ) CALL write_scf( rho, nspin )
   ENDIF
-!!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
+!*********************** END OF ACFDT TEST *****************
   !
   !  Write the file fildyn0 with the mesh of q points. This file is used
   !  by postprocessing programs such as q2r.x and we write it again if
@@ -337,20 +346,20 @@ SUBROUTINE check_initial_status(auxdyn)
   RETURN
   END SUBROUTINE check_initial_status
 
-  SUBROUTINE image_q_irr()
-!
-!  This routine is an example of the load balancing among images.
-!  It decides which image makes which q and which irreducible representation
-!  The algorithm at the moment is straightforward. Possibly better
-!  methods could be found.
-!  It receives as input:
-!  nsym  : the dimension of the point group
-!  nsymq_iq  : the dimension of the small group of q for each q
-!  irr_iq : the number of irreps for each q
-!  npert_irr_iq : for each q and each irrep its dimension
-!  It provides as output the two arrays
-!  comp_iq : if this q has to be calculated by the present image
-!  comp_irr_iq : for each q the array to be copied into comp_irr
+  SUBROUTINE image_q_irr(distribute_irrep)
+   !
+   !! This routine is an example of the load balancing among images.
+   !! It decides which image makes which q and which irreducible representation.
+   !! The algorithm at the moment is straightforward. Possibly better
+   !! methods could be found.  
+   !! It receives as input:  
+   !! - \(\text{nsym}\): the dimension of the point group;  
+   !! - \(\text{nsymq_iq}\): the dimension of the small group of q for each q;  
+   !! - \(\text{irr_iq}\): the number of irreps for each q;  
+   !! - \(\text{npert_irr_iq}\): for each q and each irrep its dimension.  
+   !! It provides as output the two arrays:  
+   !! - \(\text{comp_iq}\): if this q has to be calculated by the present image;  
+   !! - \(\text{comp_irr_iq}\): for each q the array to be copied into comp_irr.
 
    USE ions_base, ONLY : nat
    USE disp, ONLY : comp_iq, nqs, nq1, nq2, nq3
@@ -359,10 +368,16 @@ SUBROUTINE check_initial_status(auxdyn)
    USE io_global,  ONLY : stdout
    USE mp_images,  ONLY : nimage, my_image_id
    USE symm_base,  ONLY : nsym
+   USE modes,      ONLY : nmodes
 
    IMPLICIT NONE
+   LOGICAL, INTENT(IN) :: distribute_irrep
+   !! If TRUE, distribute both irreps and q-points (default behavior).  
+   !! If FALSE, distribute only q-points. Used when writing dvscf file.
+   !
    INTEGER :: total_work,  &  ! total amount of work to do
               total_nrapp, &  ! total number of representations
+              total_nq,    &  ! total number of q points
               work_per_image  ! approximate minimum work per image
 
    INTEGER, ALLOCATABLE :: image_iq(:,:), work(:)
@@ -373,74 +388,135 @@ SUBROUTINE check_initial_status(auxdyn)
    ALLOCATE (image_iq(0:3*nat,nqs))
    ALLOCATE (work(0:nimage-1))
 
-   total_work=0
-   total_nrapp=0
-   DO iq = start_q, last_q
-      DO irr = 1, irr_iq(iq)
+   IF (distribute_irrep) THEN
+    total_work=0
+     total_nrapp=0
+     DO iq = start_q, last_q
+        DO irr = 1, irr_iq(iq)
+           IF (comp_irr_iq(irr,iq)) THEN
+              total_work = total_work + npert_irr_iq(irr, iq) * nsym / nsymq_iq(iq)
+              IF (irr==1) total_work = total_work + nsym / nsymq_iq(iq)
+              total_nrapp = total_nrapp + 1
+           ENDIF
+        END DO
+     END DO
+     IF (nimage > total_nrapp) &
+        CALL errore('image_q_irr','some images have no rapp', 1)
+
+     work_per_image = total_work / nimage
+  !
+  !  If nimage=total_nrapp we put one representation per image
+  !  No load balancing is possible. Otherwise we try to minimize the number of
+  !  different q per image doing all representations of a given q until
+  !  the work becomes too large.
+  !  The initialization is done by the image with the first representation of
+  !  each q point.
+  !
+     image=0
+     work=0
+     work_so_far=0
+     DO iq = start_q, last_q
+        DO irr = 1, irr_iq(iq)
          IF (comp_irr_iq(irr,iq)) THEN
-            total_work = total_work + npert_irr_iq(irr, iq) * nsym / nsymq_iq(iq)
-            IF (irr==1) total_work = total_work + nsym / nsymq_iq(iq)
-            total_nrapp = total_nrapp + 1
-         ENDIF
-      END DO
-   END DO
-   IF (nimage > total_nrapp) &
-      CALL errore('image_q_irr','some images have no rapp', 1)
+           image_iq(irr,iq) = image
+           work(image)=work(image) + npert_irr_iq(irr, iq) * nsym / nsymq_iq(iq)
+           work_so_far=work_so_far + npert_irr_iq(irr, iq) * nsym / nsymq_iq(iq)
+           IF (irr==1) THEN
+              image_iq(0,iq)=image
+              work(image)=work(image) + nsym / nsymq_iq(iq)
+              work_so_far=work_so_far + nsym / nsymq_iq(iq)
+           ENDIF
 
-   work_per_image = total_work / nimage
-!
-!  If nimage=total_nrapp we put one representation per image
-!  No load balancing is possible. Otherwise we try to minimize the number of
-!  different q per image doing all representations of a given q until
-!  the work becomes too large.
-!  The initialization is done by the image with the first representation of
-!  each q point.
-!
-   image=0
-   work=0
-   work_so_far=0
-   DO iq = start_q, last_q
-      DO irr = 1, irr_iq(iq)
-       IF (comp_irr_iq(irr,iq)) THEN
-         image_iq(irr,iq) = image
-         work(image)=work(image) + npert_irr_iq(irr, iq) * nsym / nsymq_iq(iq)
-         work_so_far=work_so_far + npert_irr_iq(irr, iq) * nsym / nsymq_iq(iq)
-         IF (irr==1) THEN
-            image_iq(0,iq)=image
-            work(image)=work(image) + nsym / nsymq_iq(iq)
-            work_so_far=work_so_far + nsym / nsymq_iq(iq)
-         ENDIF
+  !
+  !  The logic is the following. We know how much work the current image
+  !  has already accumulated and we calculate how far it is from the target.
+  !  Note that actual_diff is a positive number in the usual case in which
+  !  we are below the target. Then we calculate the work that the current
+  !  image would do if we would give it the next representation. If the work is
+  !  still below the target, diff_for_next is negative and we give the
+  !  representation to the current image. If the work is above the target,
+  !  we give it to the current image only if its distance from the target
+  !  is less than actual_diff.
+  !
+           actual_diff=-work(image)+work_per_image
+           IF (irr<irr_iq(iq)) THEN
+              diff_for_next= work(image)+npert_irr_iq(irr+1, iq)*nsym/nsymq_iq(iq) &
+                             - work_per_image
+           ELSEIF (irr==irr_iq(iq).and.iq<last_q) THEN
+              diff_for_next= work(image)+npert_irr_iq(1, iq+1)* &
+                         nsym/nsymq_iq(iq+1) + nsym/nsymq_iq(iq+1)-work_per_image
+           ELSE
+              diff_for_next=0
+           ENDIF
 
-!
-!  The logic is the following. We know how much work the current image
-!  has already accumulated and we calculate how far it is from the target.
-!  Note that actual_diff is a positive number in the usual case in which
-!  we are below the target. Then we calculate the work that the current
-!  image would do if we would give it the next representation. If the work is
-!  still below the target, diff_for_next is negative and we give the
-!  representation to the current image. If the work is above the target,
-!  we give it to the current image only if its distance from the target
-!  is less than actual_diff.
-!
-         actual_diff=-work(image)+work_per_image
-         IF (irr<irr_iq(iq)) THEN
-            diff_for_next= work(image)+npert_irr_iq(irr+1, iq)*nsym/nsymq_iq(iq) &
-                           - work_per_image
-         ELSEIF (irr==irr_iq(iq).and.iq<last_q) THEN
-            diff_for_next= work(image)+npert_irr_iq(1, iq+1)* &
-                       nsym/nsymq_iq(iq+1) + nsym/nsymq_iq(iq+1)-work_per_image
-         ELSE
-            diff_for_next=0
+           IF ((nimage==total_nrapp.OR.diff_for_next>actual_diff).AND. &
+                                (image < nimage-1)) THEN
+              work_per_image= (total_work-work_so_far) / (nimage-image-1)
+              image=image+1
+           ENDIF
          ENDIF
+        ENDDO
+     ENDDO
+     !
+   ELSE ! .NOT. distribute_irrep
+     !
+     ! We distribute only q-points.
+     ! The work for each q-point is (nmodes + 1) * nsym / nsymq_iq(iq).
+     !
+     total_work = 0
+     total_nq = 0
+     DO iq = start_q, last_q
+        total_work = total_work + (nmodes + 1) * nsym / nsymq_iq(iq)
+        total_nq = total_nq + 1
+     ENDDO
+     IF (nimage > total_nq) &
+        CALL errore('image_q_irr','some images have no rapp', 1)
 
-         IF ((nimage==total_nrapp.OR.diff_for_next>actual_diff).AND. &
-                              (image < nimage-1)) THEN
-            work_per_image= (total_work-work_so_far) / (nimage-image-1)
-            image=image+1
+     work_per_image = total_work / nimage
+  !
+  !  If nimage=total_nq we put one representation per image
+  !  No load balancing is possible. Otherwise we try to minimize the number of
+  !  different q per image doing all representations of a given q until
+  !  the work becomes too large.
+  !  The initialization is done by the image with the first representation of
+  !  each q point.
+  !
+     image = 0
+     work = 0
+     work_so_far =0
+     DO iq = start_q, last_q
+        !
+        ! Assign iq to this image
+        work(image) = work(image) + (nmodes + 1) * nsym / nsymq_iq(iq)
+        work_so_far = work_so_far + (nmodes + 1) * nsym / nsymq_iq(iq)
+        !
+        ! Assign all irrs of iq to this image
+        DO irr = 1, irr_iq(iq)
+         IF (comp_irr_iq(irr, iq)) THEN
+           image_iq(irr, iq) = image
          ENDIF
-       ENDIF
-      ENDDO
-   ENDDO
+        ENDDO
+        image_iq(0, iq) = image
+        !
+        !  See the comment above for an explanation of the logic.
+        !
+        actual_diff = work_per_image - work(image)
+
+        IF (iq < last_q) THEN
+           diff_for_next = work(image) + (nmodes + 1) * nsym / nsymq_iq(iq + 1) &
+                         - work_per_image
+        ELSE
+           diff_for_next = 0
+        ENDIF
+
+        IF ((nimage == total_nq .OR. diff_for_next > actual_diff) &
+            .AND. (image < nimage - 1)) THEN
+           work_per_image = (total_work - work_so_far) / (nimage - image - 1)
+           image = image + 1
+        ENDIF
+     ENDDO ! iq
+     !
+   ENDIF ! distribute_irrep
 !
 !  Here we actually distribute the work. This image makes only
 !  the representations calculated before.
@@ -493,9 +569,9 @@ SUBROUTINE check_initial_status(auxdyn)
 
    SUBROUTINE collect_grid_files()
    !
-   !  This subroutine collects all the xml files contained in different
-   !  directories and created by the diffent images in the phsave directory
-   !  of the image 0
+   !!  This subroutine collects all the xml files contained in different
+   !!  directories and created by the diffent images in the phsave directory
+   !!  of the image 0.
    !
    USE io_files,  ONLY : tmp_dir, prefix
    USE control_ph, ONLY : tmp_dir_ph
@@ -505,7 +581,7 @@ SUBROUTINE check_initial_status(auxdyn)
    USE control_ph,  ONLY : ldisp, epsil, zue, zeu
    USE klist,       ONLY : lgauss, ltetra
    USE el_phon,     ONLY : elph
-   USE wrappers,  ONLY : f_copy
+   USE clib_wrappers,  ONLY : f_copy
    USE mp,        ONLY : mp_barrier
    USE mp_images, ONLY : my_image_id, nimage, intra_image_comm
    USE io_global, ONLY : stdout, ionode

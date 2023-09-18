@@ -5,16 +5,21 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
-SUBROUTINE writedyn ( )
+!--------------------------------------------------------------------
+SUBROUTINE writedyn( )
+  !-----------------------------------------------------------------
+  !! Write the dynamical matrix, dielectric tensor and effective
+  !! charges to file.
   !
   USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp, atm, amass
   USE run_info,  ONLY : title
   USE cell_base, ONLY : ibrav, celldm, at
-
+  !
   USE constants, ONLY : amu_ry
   USE cgcom
+  !
   IMPLICIT NONE
+  !
   INTEGER :: iudyn, nt, na, nb, i, j
   !
   iudyn = 20

@@ -1,0 +1,11 @@
+&INTERPOLATION 
+  method = 'idw-sphere'
+  p_metric = 7
+/
+K_POINTS tpiba_b
+ 5
+  0.00  0.00  0.00 10
+  1.00  0.00  0.00 10
+  1.00  0.25  0.25 10
+  0.50  0.50  0.50 10
+  0.00  0.00  0.00 2

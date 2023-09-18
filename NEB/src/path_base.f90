@@ -35,7 +35,8 @@ MODULE path_base
   ! ... Code written and maintained by Carlo Sbraccia ( 2003-2007 )
   !
   USE kinds,     ONLY : DP
-  USE constants, ONLY : eps32, pi, autoev, bohr_radius_angs, eV_to_kelvin
+  USE constants, ONLY : eps16, eps32, pi, e2, &
+                        autoev, bohr_radius_angs, eV_to_kelvin
   USE path_io_units_module,  ONLY : iunpath
   USE io_global, ONLY : meta_ionode, meta_ionode_id
   USE mp,        ONLY : mp_bcast
@@ -57,14 +58,16 @@ MODULE path_base
       !-----------------------------------------------------------------------
       !
       USE control_flags,    ONLY : conv_elec
-      USE ions_base,        ONLY : amass, ityp
+      USE ions_base,        ONLY : amass, ityp, zv
       USE io_files,         ONLY : prefix, tmp_dir
+      USE klist,            ONLY : tot_charge
       USE mp_images,        ONLY : nimage
       USE path_input_parameters_module, ONLY : pos_      => pos, &
                                    climbing_ => climbing, &
                                    input_images, nstep_path_ => nstep_path
       USE path_input_parameters_module, ONLY : restart_mode
       USE path_input_parameters_module, ONLY : nat
+      USE path_input_parameters_module, ONLY : tot_charge_ => tot_charge
       USE path_variables, ONLY : fix_atom_pos
       USE path_variables,   ONLY : climbing, pos, istep_path, nstep_path,    &
                                    dim1, num_of_images, pes, grad_pes, mass, &
@@ -76,13 +79,19 @@ MODULE path_base
       USE path_io_routines, ONLY : read_restart
       USE path_io_units_module, ONLY : path_file, dat_file, crd_file, &
                                    int_file, xyz_file, axsf_file, broy_file
-      USE fcp_variables,        ONLY : lfcpopt
-      USE fcp_opt_routines,     ONLY : fcp_opt_allocation
+      USE fcp_variables,    ONLY : lfcp, fcp_allocation, &
+                                   fcp_nelec, fcp_ef, fcp_dos, fcp_error
+      USE gcscf_module,     ONLY : lgcscf_   => lgcscf, &
+                                   gcscf_mu_ => gcscf_mu
+      USE gcscf_variables,  ONLY : lgcscf, gcscf_allocation, &
+                                   gcscf_mu, gcscf_nelec, gcscf_ef
       !
       IMPLICIT NONE
       !
       INTEGER :: i, fii, lii
       LOGICAL :: file_exists
+      !
+      REAL(DP) :: ionic_charge
       !
       ! ... output files are set
       !
@@ -104,9 +113,18 @@ MODULE path_base
       ! ... the dimension of all "path" arrays (dim1) is set here
       ! ... ( it corresponds to the dimension of the configurational space )
       !
-      !
       dim1 = 3*nat
       !
+      ! ... set variables of GC-SCF
+      !
+      lgcscf   = lgcscf_
+      gcscf_mu = gcscf_mu_ / e2
+      CALL mp_bcast( lgcscf,   meta_ionode_id, world_comm )
+      CALL mp_bcast( gcscf_mu, meta_ionode_id, world_comm )
+      !
+      IF ( lgcscf .AND. lfcp ) &
+         CALL errore( 'initialize_path', &
+                    & 'cannot use GC-SCF and FCP simultaneously', 1 )
       !
       IF ( nimage > 1 ) THEN
          !
@@ -139,7 +157,8 @@ MODULE path_base
       ! ... dynamical allocation of arrays
       !
       CALL path_allocation()
-      if ( lfcpopt ) CALL fcp_opt_allocation()
+      if ( lfcp ) CALL fcp_allocation()
+      if ( lgcscf ) CALL gcscf_allocation()
       !
       IF ( use_masses ) THEN
          !
@@ -172,6 +191,40 @@ MODULE path_base
       frozen       = .FALSE.
       !
       k = k_min
+      !
+      IF ( lfcp ) THEN
+         !
+         ionic_charge = SUM( zv(ityp(1:nat)) )
+         !
+         fcp_nelec(1:input_images) = ionic_charge - tot_charge_(1:input_images)
+         !
+         fcp_ef    = 0.0_DP
+         fcp_dos   = 0.0_DP
+         fcp_error = 0.0_DP
+         !
+      ELSE
+         !
+         ! ... the total charge of the first image is used,
+         ! ... also for the other images.
+         !
+         tot_charge = tot_charge_(1)
+         !
+         IF ( ANY( ABS( tot_charge - tot_charge_(1:input_images) ) > eps16 ) ) THEN
+            !
+            WRITE( iunpath, &
+                   & '(/,5X,"the tot_charge of the first image (", &
+                   & F10.6,") is used for the all images.")') tot_charge
+            !
+         END IF
+         !
+      END IF
+      !
+      IF ( lgcscf ) THEN
+         !
+         gcscf_nelec = 0.0_DP
+         gcscf_ef    = 0.0_DP
+         !
+      END IF
       !
       IF ( ALLOCATED( climbing_ ) ) THEN
          !
@@ -275,6 +328,7 @@ MODULE path_base
       USE path_input_parameters_module, ONLY : input_images
       USE path_variables,   ONLY : pos, dim1, num_of_images, path_length
       USE path_io_units_module,         ONLY : iunpath
+      USE fcp_variables,    ONLY : lfcp, fcp_nelec
       !
       IMPLICIT NONE
       !
@@ -282,6 +336,7 @@ MODULE path_base
       INTEGER  :: i, j
       LOGICAL  :: tooclose
       REAL(DP), ALLOCATABLE :: pos_n(:,:), dr(:,:), image_spacing(:)
+      REAL(DP), ALLOCATABLE :: fcp_nelec_n(:), delec(:)
       !
       !
       IF ( meta_ionode ) THEN
@@ -290,6 +345,11 @@ MODULE path_base
          ALLOCATE( dr( dim1, input_images - 1 ) )
          ALLOCATE( image_spacing( input_images - 1 ) )
          !
+         IF ( lfcp ) THEN
+            ALLOCATE( fcp_nelec_n( num_of_images ) )
+            ALLOCATE( delec( input_images - 1 ) )
+         END IF
+         !
          tooclose = .false.
          image_spacing(:) = 0.0_dp
          DO i = 1, input_images - 1
@@ -297,7 +357,9 @@ MODULE path_base
             dr(:,i) = ( pos(:,i+1) - pos(:,i) )
             !
             image_spacing(i) = norm( dr(:,i) )
-            tooclose = tooclose .OR. ( image_spacing(i) < 0.01 )
+            tooclose = tooclose .OR. ( image_spacing(i) < 0.01d0 )
+            !
+            IF ( lfcp ) delec(i) = ( fcp_nelec(i+1) - fcp_nelec(i) )
             !
          END DO
          IF ( tooclose) CALL errore ('initial_guess', &
@@ -312,6 +374,8 @@ MODULE path_base
          END DO
          !
          pos_n(:,1) = pos(:,1)
+         !
+         IF ( lfcp ) fcp_nelec_n(:) = fcp_nelec(:)
          !
          i = 1
          s = 0.0_DP
@@ -333,11 +397,18 @@ MODULE path_base
             !
             pos_n(:,j) = pos(:,i) + s * dr(:,i)
             !
+            IF ( lfcp ) &
+            fcp_nelec_n(j) = fcp_nelec(i) + s / image_spacing(i) * delec(i)
+            !
          END DO
          !
          pos_n(:,num_of_images) = pos(:,input_images)
          !
+         IF ( lfcp ) fcp_nelec_n(num_of_images) = fcp_nelec(input_images)
+         !
          pos(:,:) = pos_n(:,:)
+         !
+         IF ( lfcp ) fcp_nelec(:) = fcp_nelec_n(:)
          !
          path_length = 0.0_DP
          !
@@ -357,10 +428,14 @@ MODULE path_base
          !
          DEALLOCATE( image_spacing, dr, pos_n )
          !
+         IF ( lfcp ) DEALLOCATE( fcp_nelec_n, delec )
+         !
       END IF
       !
       CALL mp_bcast( pos,         meta_ionode_id, world_comm )
       CALL mp_bcast( path_length, meta_ionode_id, world_comm )
+      !
+      IF ( lfcp ) CALL mp_bcast( fcp_nelec, meta_ionode_id, world_comm )
       !
       RETURN
       !
@@ -759,8 +834,7 @@ MODULE path_base
       !-----------------------------------------------------------------------
       !
       USE path_variables,   ONLY : num_of_images, first_last_opt
-      USE fcp_variables,    ONLY : fcp_mu
-      USE fcp_opt_routines, ONLY : fcp_neb_ef
+      USE fcp_variables,    ONLY : fcp_mu, fcp_ef, fcp_error
       !
       IMPLICIT NONE
       !
@@ -785,10 +859,17 @@ MODULE path_base
       !
       IF ( meta_ionode ) THEN
          !
-         err_max = MAXVAL( ABS( fcp_mu - fcp_neb_ef(fii:lii) ), 1 )
+         DO i = 1, num_of_images
+            !
+            fcp_error(i) = ABS( fcp_mu - fcp_ef(i) ) * autoev
+            !
+         END DO
+         !
+         err_max = MAXVAL( fcp_error(fii:lii), 1 )
          !
       END IF
       !
+      CALL mp_bcast( fcp_error, meta_ionode_id, world_comm )
       CALL mp_bcast( err_max, meta_ionode_id, world_comm )
       !
       IF ( PRESENT( err_out ) ) err_out = err_max
@@ -879,14 +960,13 @@ MODULE path_base
                                    Emax_index, fixed_tan, tangent
       USE path_io_routines, ONLY : write_restart, write_dat_files, write_output
       USE path_formats,     ONLY : scf_iter_fmt
-      USE fcp_variables,    ONLY : lfcpopt
+      USE fcp_variables,    ONLY : lfcp, fcp_err_max
       !
       USE path_reparametrisation
       !
       IMPLICIT NONE
       !
       LOGICAL :: stat
-      REAL(DP) :: fcp_err_max = 0.0_DP
       !
       REAL(DP), EXTERNAL :: get_clock
       !
@@ -968,7 +1048,7 @@ MODULE path_base
          ! ... the error is computed here (frozen images are also set here)
          !
          CALL compute_error( err_max )
-         IF ( lfcpopt ) CALL fcp_compute_error( fcp_err_max )
+         IF ( lfcp ) CALL fcp_compute_error( fcp_err_max )
          !
          ! ... information is written on the files
          !
@@ -1034,7 +1114,7 @@ MODULE path_base
                                    conv_path, pending_image, &
                                    num_of_images, llangevin
       USE path_formats,     ONLY : final_fmt
-      USE fcp_variables,    ONLY : lfcpopt, fcp_relax_crit
+      USE fcp_variables,    ONLY : lfcp, fcp_thr
       !
       IMPLICIT NONE
       !
@@ -1052,7 +1132,7 @@ MODULE path_base
                          ( num_of_images == num_of_images_inp ) .AND. &
                          ( err_max <= path_thr ) )
       !
-      IF ( lfcpopt .AND. fcp_err_max > fcp_relax_crit ) THEN
+      IF ( lfcp .AND. fcp_err_max > fcp_thr ) THEN
          exit_condition = .FALSE.
       END IF
       !
@@ -1123,21 +1203,27 @@ MODULE path_base
                                     llangevin, istep_path
       USE path_opt_routines, ONLY : quick_min, broyden, broyden2, &
                                     steepest_descent, langevin
-      USE fcp_variables,     ONLY : lfcpopt
+      USE fcp_variables,     ONLY : lfcp, lfcp_coupled
       USE fcp_opt_routines,  ONLY : fcp_opt_perform
       !
       IMPLICIT NONE
       !
       INTEGER :: image
+      LOGICAL :: single_fcp
+      LOGICAL :: couple_fcp
+      !
+      !
+      single_fcp = lfcp .AND. (.NOT. lfcp_coupled)
+      couple_fcp = lfcp .AND. lfcp_coupled
       !
       !
       IF ( lbroyden ) THEN
          !
-         CALL broyden()
+         CALL broyden( couple_fcp )
          !
       ELSE IF (lbroyden2 ) THEN
          !
-         CALL broyden2()
+         CALL broyden2( couple_fcp )
          !
       ELSE
          !
@@ -1163,7 +1249,11 @@ MODULE path_base
          !
       END IF
       !
-      IF ( lfcpopt ) CALL fcp_opt_perform()
+      IF ( single_fcp ) THEN
+         !
+         CALL fcp_opt_perform()
+         !
+      END IF
       !
       RETURN
       !

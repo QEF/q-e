@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
+! Modified by Joshua Elliott November 2020 as JDE
 
  SUBROUTINE produce_wannier_gamma
 
@@ -22,7 +22,7 @@
        USE wavefunctions, ONLY : evc
        USE exx,      ONLY : ecutfock,vexx, exxinit
        USE exx_base, ONLY : exx_div_check, exx_grid_init, exx_grid_check
-       USE funct,    ONLY : exx_is_active, dft_is_hybrid,start_exx,stop_exx
+       USE xc_lib,   ONLY : exx_is_active, xclib_dft_is, start_exx, stop_exx
        USE wvfct,    ONLY : current_k, et
        USE gvecw,    ONLY : ecutwfc
        USE scf,                  ONLY : scf_type, scf_type_COPY, &
@@ -73,6 +73,19 @@
        INTEGER :: numw_prod_all
 
        TYPE(exchange_cus) :: exx_cus
+
+       INTERFACE
+          SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin, v_states )
+            USE kinds, ONLY : DP
+            USE fft_base,             ONLY : dffts
+            USE lsda_mod,             ONLY : nspin
+            INTEGER          :: lda, n, m
+            COMPLEX(kind=DP) :: psi(lda,m)
+            REAL(kind=DP) :: e_xc(m), e_h(m)
+            INTEGER, INTENT(in) :: ispin !spin 1,2                                                                                                                                    
+            REAL(kind=DP), OPTIONAL :: v_states(dffts%nnr,m, nspin)
+          END SUBROUTINE energies_xc
+       END INTERFACE
 
 !       interface
 !          subroutine fake_conduction_wannier(fcw_n,fcw_s,fcw_m,cut,s_cut)
@@ -171,7 +184,7 @@
          endif
 
 
-         if( dft_is_hybrid()) then
+         if( xclib_dft_is('hybrid')) then
 !NOT_TO_BE_INCLUDED_START                                                                                                                                   
             ecutfock=exchange_fast_dual*ecutwfc
             
@@ -241,7 +254,14 @@
              endif
              deallocate(evc)
           endif
-          write(stdout,*) 'USE RESTART: 1'
+! JDE start
+          if (l_no_GW_just_screening) THEN
+             ! If no GW skip to bse
+             restart_gww=7
+          else
+             write(stdout,*) 'USE RESTART: 1'
+          end if
+! JDE end
           FLUSH(stdout)
 
           if(restart_gww <= 1) then
@@ -431,7 +451,7 @@
                 endif
 
 !if EXX is one calculates stuff for Fock operator
-                if(dft_is_hybrid()) then
+                if(xclib_dft_is('hybrid')) then
 !NOT_TO_BE_INCLUDED_START
                    call  exxinit(.false.)
                    current_k= 1
@@ -615,10 +635,22 @@
           allocate(tmp_rot(nbnd,nbnd))
           allocate( evc( npwx, nbnd ) )
 
+          ! JDE
+          IF (l_no_GW_just_screening) THEN
+             ALLOCATE (ewvc(npwx, nbnd, nspin))
+          END IF
+          ! JDE
+
           do is=1,nspin
              allocate(o_mat(num_nbndv(is),num_nbndv(is)))
              call davcio(evc,2*nwordwfc,iunwfc,is,-1)
-             
+
+             ! JDE
+             IF (l_no_GW_just_screening) THEN
+                ewvc(1:npwx,1:nbnd,is) = evc(1:npwx,1:nbnd)
+             END IF
+             ! JDE
+
              tmp_rot(:,:)=dble(u_trans(:,:,is))
              call rotate_wannier_gamma( tmp_rot,1,0)
              
@@ -630,7 +662,11 @@
 
           deallocate(tmp_rot)
           deallocate(evc)
-
+          ! JDE
+          IF (l_no_GW_just_screening) THEN
+             DEALLOCATE(ewvc)
+          END IF
+          ! JDE
           endif
 !NOT_TO_BE_INCLUDED_END
 

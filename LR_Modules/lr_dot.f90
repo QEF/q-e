@@ -16,6 +16,7 @@ FUNCTION lr_dot(x,y)
   ! Brent Walker, ICTP, 2004
   ! Modified by Osman Baris Malcioglu, SISSA, 2009
   ! Modified by Iurii Timrov, SISSA, 2013 (extension to EELS)
+  ! Modified by PG, 2020: replacement of zdotc with dot_product
   !
   USE kinds,                ONLY : dp
   USE io_global,            ONLY : stdout
@@ -39,7 +40,6 @@ FUNCTION lr_dot(x,y)
   REAL(kind=dp) :: temp_gamma, degspin
   INTEGER :: ibnd, ik
   REAL(kind=dp), EXTERNAL    :: DDOT
-  COMPLEX(kind=dp), EXTERNAL :: ZDOTC
   !
   CALL start_clock ('lr_dot')
   !
@@ -120,7 +120,7 @@ CONTAINS
        !
        DO ibnd = 1, nbnd_occ(ikk)
           !
-          lr_dot = lr_dot + wk(ikk) *ZDOTC(npwx*npol,x(1,ibnd,ik),1,y(1,ibnd,ik),1)
+          lr_dot = lr_dot + wk(ikk) * dot_product(x(:,ibnd,ik),y(:,ibnd,ik))
           !
        ENDDO
        !
@@ -156,7 +156,8 @@ CONTAINS
        !
        DO ibnd = 1, nbnd_occ(ikk)
           !
-          lr_dot = lr_dot + wk(ikk) * ZDOTC(npwq,x(1,ibnd,ik),1,y(1,ibnd,ik),1)
+          lr_dot = lr_dot + wk(ikk) * &
+                  dot_product( x(1:npwq,ibnd,ik), y(1:npwq,ibnd,ik) )
           !
        ENDDO
        !
@@ -235,9 +236,8 @@ SUBROUTINE check_vector_f (x)
    ! local variables
    !
    COMPLEX(kind=dp) :: temp_f
-   COMPLEX(kind=dp), EXTERNAL :: ZDOTC
    !
-   temp_f = ZDOTC(ngk(1),x(:),1,x(:),1)
+   temp_f = dot_product( x(1:ngk(1)), x(1:ngk(1)) )
    !
 #if defined(__MPI)
    CALL mp_sum(temp_f, intra_bgrp_comm)

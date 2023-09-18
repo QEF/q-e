@@ -9,9 +9,8 @@
 !---------------------------------------------------------------------
 SUBROUTINE impose_deviatoric_strain ( at_old, at )
   !---------------------------------------------------------------------
-  !
-  !     Impose a pure deviatoric (volume-conserving) deformation
-  !     Needed to enforce volume conservation in variable-cell MD/optimization
+  !! Impose a pure deviatoric (volume-conserving) deformation.  
+  !! Needed to enforce volume conservation in variable-cell MD/optimization.
   !
   USE kinds, ONLY: dp
   IMPLICIT NONE
@@ -37,10 +36,10 @@ END SUBROUTINE impose_deviatoric_strain
 !---------------------------------------------------------------------
 SUBROUTINE impose_deviatoric_strain_2d ( at_old, at )
   !---------------------------------------------------------------------
-  !     Modif. of impose_deviatoric_strain but for
-  !     Area conserving deformation (2DSHAPE) added by Richard Charles Andrew
-  !     Physics Department, University if Pretoria,
-  !     South Africa, august 2012
+  !! Modification of \(\texttt{impose\_deviatoric\_strain}\) but for
+  !! Area conserving deformation (2DSHAPE).  
+  !! Added by Richard Charles Andrew, Physics Department, University if Pretoria,
+  !! South Africa, august 2012.
   !
   USE kinds, ONLY: dp
   IMPLICIT NONE
@@ -65,8 +64,7 @@ END SUBROUTINE impose_deviatoric_strain_2d
 !---------------------------------------------------------------------
 SUBROUTINE impose_deviatoric_stress ( sigma )
   !---------------------------------------------------------------------
-  !
-  !     Impose a pure deviatoric stress
+  !! Impose a pure deviatoric stress.
   !
   USE kinds, ONLY: dp
   USE io_global, ONLY: stdout
@@ -85,11 +83,10 @@ END SUBROUTINE impose_deviatoric_stress
 !---------------------------------------------------------------------
 SUBROUTINE impose_deviatoric_stress_2d ( sigma )
   !---------------------------------------------------------------------
-  !
-  !     Modif. of impose_deviatoric_stress but for
-  !     Area conserving deformation (2DSHAPE) added by Richard Charles Andrew
-  !     Physics Department, University if Pretoria,
-  !     South Africa, august 2012
+  !! Modification of \(\texttt{impose_deviatoric_stress} but for
+  !! Area conserving deformation (2DSHAPE).
+  !! Added by Richard Charles Andrew, Physics Department, University if Pretoria,
+  !! South Africa, august 2012
   !
   USE kinds, ONLY: dp
   USE io_global, ONLY: stdout

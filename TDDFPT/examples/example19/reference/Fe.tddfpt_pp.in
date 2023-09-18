@@ -1,0 +1,14 @@
+ &lr_input
+   prefix = 'Fe',
+   outdir = '/scratch/obaseggi/q-e-develop/tempdir/',
+   magnons = .true.,
+   units = 3
+   itermax0 = 150,
+   itermax = 150,
+   extrapolation='no',
+   epsil = 0.5,
+   ipol = 2,
+   start = 1780.0d0,
+   increment = 0.1d0,
+   end = 1820.0d0
+ /

@@ -39,6 +39,7 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
   USE io_files,              ONLY : iunwfc, nwordwfc
   USE buffers,               ONLY : get_buffer
   USE fft_interfaces,        ONLY : fft_interpolate
+  USE uspp_init,             ONLY : init_us_2
   !
   IMPLICIT NONE
   !
@@ -89,7 +90,7 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
      !
      ! Calculation of the response charge density
      !
-     CALL incdrhoscf_nc(drhoscfh(:,:), weight, ik, dbecsum_nc(:,:,:,:), dpsi(:,:,ik),1)
+     CALL incdrhoscf_nc(drhoscfh(:,:), weight, ik, dbecsum_nc(:,:,:,:), dpsi(:,:,ik),1.0d0)
      !
   ENDDO 
   !

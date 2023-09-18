@@ -71,11 +71,13 @@ SUBROUTINE run_manypw()
   ! ... Here open image-specific output files
   !     Note: this operation is also done in environment_start when nimage>1
   !     which causes the creation of annoying out.#_0 empty files
-  !     here we delete these files, which is not optimal but a bit more tidy
+  !
   IF ( ionode ) THEN
      !
      INQUIRE ( UNIT = stdout, OPENED = opnd )
-     IF (opnd) CLOSE ( UNIT = stdout, status="DELETE" )
+     ! set status="DELETE" below to delete the out.#_0 files mentioned above 
+     ! does not work (an error is issued) for some compilers (e.g. ifort)
+     IF (opnd) CLOSE ( UNIT = stdout, status="KEEP" )
      IF ( TRIM (input_file_) == ' ') THEN
         filout = 'pw' // TRIM(image_label)  // '.out'
      ELSE

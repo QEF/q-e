@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -95,7 +95,7 @@ $ECHO "#                                         #"
 $ECHO "#   The parameters of this run are not    #"
 $ECHO "#     converged. To obtain converged      #"
 $ECHO "#            parameters see :             #"
-$ECHO "#      C. Gougoussis, M.Calandra,         #" 
+$ECHO "#      C. Gougoussis, M.Calandra,         #"
 $ECHO "#       A. Seitsonen, F. Mauri            #"
 $ECHO "#   Phys. Rev. B 80, 075102 (2009)        #"
 $ECHO "###########################################"
@@ -169,7 +169,7 @@ $ECHO " done"
 $ECHO "#"
 $ECHO "# xanes calculations : Si K-edge"
 $ECHO "# ultrasoft pseudopotentials are being used"
-$ECHO "# cutting occupied states " 
+$ECHO "# cutting occupied states "
 $ECHO "#"
 $ECHO "# x-ray absorption spectrum calculation"
 $ECHO "# dipolar part"
@@ -190,7 +190,7 @@ cat > SiO2.xspectra_dip_plane.in << EOF
     xiabs=1,
     x_save_file='SiO2.xspectra_dip_plane.sav',
     xerror=0.001,
- / 
+ /
  &plot
     xnepoint=1000,
     xgamma=0.8,

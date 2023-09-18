@@ -10,11 +10,11 @@ MODFLAGS= $(BASEMOD_FLAGS) \
 XOBJS = \
 ./gaunt_mod.o \
 ./xspectra_mod.o \
+./xspectra_utils.o \
 ./radin_mod.o \
 ./mygetK.o \
 ./ipoolscatter.o \
 ./lr_sm1_psi.o \
-./orthoUatwfc_k.o \
 ./read_k_points.o \
 ./reset_k_points_and_reinit.o \
 ./select_nl_init.o \
@@ -32,16 +32,13 @@ XOBJS = \
 ./xanes_quadrupole.o 
 
 GIPAWOBJS=./paw_gipaw.o \
-./gipaw_module.o \
 ./init_gipaw_1.o \
 ./init_gipaw_2.o
 
 MANIP_XS_OBJ=./gaunt_mod.o 
              
-QEMODS = ../../Modules/libqemod.a  ../../upflib/libupf.a \
-         ../../FFTXlib/libqefft.a ../../KS_Solvers/libks_solvers.a \
-	 ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
-PWOBJS = ../../PW/src/libpw.a 
+QEMODS = $(BASEMODS)
+PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
 
 TLDEPS = pwlibs
 
@@ -49,12 +46,12 @@ all : tldeps xspectra.x spectra_correction.x molecularnexafs.x
 
 xspectra.x :   xspectra.o $(XOBJS) $(GIPAWOBJS) $(QEMODS) $(PWOBJS)
 	$(MPIF90) -o $@  xspectra.o $(XOBJS) $(GIPAWOBJS) \
-		$(PWOBJS) $(QEMODS) $(LDFLAGS) $(LIBOBJS) $(QELIBS)
+		$(PWOBJS) $(QEMODS) $(LDFLAGS)  $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../XSpectra/src/$@ . )
 
 spectra_correction.x : spectra_correction.o $(MANIP_XS_OBJ) $(QEMODS) $(PWOBJS)
 	$(MPIF90) -o $@  spectra_correction.o $(MANIP_XS_OBJ) $(PWOBJS) $(QEMODS) \
-                $(LDFLAGS) $(LIBOBJS) $(QELIBS)
+                $(LDFLAGS)  $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../XSpectra/src/$@ . )
 
 molecularnexafs.x : molecularnexafs.o 

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -164,7 +164,7 @@ phonon dispersions of Pt
   prefix='platinum',
   outdir='$TMP_DIR'
   fildyn='ptdyn',
-  tr2_ph=1.0d-16, 
+  tr2_ph=1.0d-16,
   ldisp=.true., nq1=4,nq2=4,nq3=4
  /
 EOF

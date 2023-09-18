@@ -8,9 +8,8 @@
 !-----------------------------------------------------------------------
       subroutine set_dvscf (dvscfs)
   !-----------------------------------------------------------------------
-  !
-  !   Read the variation of the charge and
-  !   calculates the local part of the scf potential
+  !! Read the variation of the charge and calculates the local part of
+  !! the scf potential.
   !
 
   use kinds, only : DP

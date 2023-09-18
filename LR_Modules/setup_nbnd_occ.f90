@@ -17,7 +17,7 @@ SUBROUTINE setup_nbnd_occ
                                nelec, nelup, neldw, two_fermi_energies, wk
   USE ener,             ONLY : ef
   USE wvfct,            ONLY : nbnd, et
-  USE control_lr,       ONLY : nbnd_occ
+  USE control_lr,       ONLY : nbnd_occ, nbnd_occx
   USE io_global,        ONLY : stdout
   USE noncollin_module, ONLY : noncolin
   USE lsda_mod,         ONLY : lsda, isk
@@ -93,6 +93,9 @@ SUBROUTINE setup_nbnd_occ
      ENDIF
      !
   ENDIF
+  !
+!  nbnd_occx = MAXVAL(nbnd_occ)
+  nbnd_occx = nbnd
   !
   CALL stop_clock ('setup_nbnd_occ')
   !

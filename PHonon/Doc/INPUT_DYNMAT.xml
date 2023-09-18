@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="input_xx.xsl"?>
+<!-- FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST -->
+    
+<input_description distribution="Quantum ESPRESSO" package="PHonon" program="dynmat.x" >
+   <toc>
+   </toc>
+   <intro>
+<b>Purpose of dynmat.x:</b>
+
+- reads a dynamical matrix file produced by the phonon code
+
+- adds the non-analytical part (if Z* and epsilon are read from
+  file), applies the chosen Acoustic Sum Rule (if q=0)
+
+- diagonalise the dynamical matrix
+
+- calculates IR and Raman cross sections (if Z* and Raman
+  tensors are read from file, respectively)
+
+- writes the results to files, both for inspection and for
+  plotting
+
+
+<b>Structure of the input data:</b>
+========================================================================
+
+<b>&amp;INPUT</b>
+   ...specs of namelist variables...
+<b>/</b>
+   </intro>
+   <namelist name="INPUT" >
+      <var name="fildyn" type="CHARACTER" >
+         <info>
+input file containing the dynamical matrix
+         </info>
+         <default> &apos;matdyn&apos;
+         </default>
+      </var>
+      <dimension name="q" start="1" end="3" type="REAL" >
+         <info>
+calculate LO modes (add non-analytic terms) along the direction q (Cartesian axis)
+         </info>
+         <default> q = (0,0,0)
+         </default>
+      </dimension>
+      <dimension name="amass" start="1" end="ntyp" type="REAL" >
+         <info>
+mass for each atom type
+         </info>
+         <default> amass is read from file <ref>fildyn</ref>
+         </default>
+      </dimension>
+      <var name="asr" type="CHARACTER" >
+         <default> &apos;no&apos;
+         </default>
+         <options>
+            <info>
+Indicates the type of Acoustic Sum Rule imposed.
+
+Allowed values:
+            </info>
+            <opt val="'no'" >
+no Acoustic Sum Rules imposed <b>(default)</b>
+            </opt>
+            <opt val="'simple'" >
+previous implementation of the asr used
+(3 translational asr imposed by correction of
+ the diagonal elements of the dynamical matrix)
+            </opt>
+            <opt val="'crystal'" >
+3 translational asr imposed by optimized
+correction of the dyn. matrix (projection)
+            </opt>
+            <opt val="'one-dim'" >
+3 translational asr + 1 rotational asr imposed
+by optimized correction of the dyn. mat. (the
+rotation axis is the direction of periodicity; it
+will work only if this axis considered is one of
+the Cartesian axis).
+            </opt>
+            <opt val="'zero-dim'" >
+3 translational asr + 3 rotational asr imposed
+by optimized correction of the dyn. mat.
+            </opt>
+            <info>
+Note that in certain cases, not all the rotational asr
+can be applied (e.g. if there are only 2 atoms in a
+molecule or if all the atoms are aligned, etc.).  In
+these cases the supplementary asr are canceled during
+the orthonormalization procedure (see below).
+
+Finally, in all cases except <b>&apos;no&apos;</b> a simple correction
+on the effective charges is performed (same as in the
+previous implementation).
+            </info>
+         </options>
+      </var>
+      <var name="remove_interaction_blocks" type="LOGICAL" >
+         <info>
+If .true. lines and rows corresponding to atoms that are not displaced
+are set to 0. This can be used for ph.x calculations with nat_todo set
+in ph.x, to remove the interaction between the diplaced and fixed parts of the system.
+         </info>
+         <default> .false.
+         </default>
+      </var>
+      <var name="axis" type="INTEGER" >
+         <info>
+indicates the rotation axis for a 1D system (1=Ox, 2=Oy, 3=Oz)
+         </info>
+         <default> 3
+         </default>
+      </var>
+      <var name="lperm" type="LOGICAL" >
+         <info>
+if .true. then calculate Gamma-point mode contributions to
+dielectric permittivity tensor
+         </info>
+         <default> .false.
+         </default>
+      </var>
+      <var name="lplasma" type="LOGICAL" >
+         <info>
+if .true. then calculate Gamma-point mode effective plasma
+frequencies, automatically triggers <ref>lperm</ref> = .true.
+         </info>
+         <default> .false.
+         </default>
+      </var>
+      <var name="filout" type="CHARACTER" >
+         <info>
+output file containing phonon frequencies and normalized
+phonon displacements (i.e. eigenvectors divided by the
+square root of the mass and then normalized; they are
+not orthogonal)
+         </info>
+         <default> &apos;dynmat.out&apos;
+         </default>
+      </var>
+      <var name="fileig" type="CHARACTER" >
+         <info>
+output file containing phonon frequencies and eigenvectors
+of the dynamical matrix (they are orthogonal)
+         </info>
+         <default> &apos; &apos;
+         </default>
+      </var>
+      <var name="filmol" type="CHARACTER" >
+         <info>
+as above, in a format suitable for molden
+         </info>
+         <default> &apos;dynmat.mold&apos;
+         </default>
+      </var>
+      <var name="filxsf" type="CHARACTER" >
+         <info>
+as above, in axsf format suitable for xcrysden
+         </info>
+         <default> &apos;dynmat.axsf&apos;
+         </default>
+      </var>
+      <var name="loto_2d" type="LOGICAL" >
+         <info>
+set to .true. to activate two-dimensional treatment of LO-TO splitting.
+         </info>
+         <default> &apos;.false.&apos;
+         </default>
+      </var>
+      <var name="el_ph_nsig" type="INTEGER" >
+         <info>
+The number of double-delta smearing values used in an electron-phonon
+coupling calculation.
+         </info>
+      </var>
+      <var name="el_ph_sigma" type="REAL" >
+         <info>
+The spacing of double-delta smearing values used in an electron-phonon
+coupling calculation.
+         </info>
+      </var>
+   </namelist>
+</input_description>

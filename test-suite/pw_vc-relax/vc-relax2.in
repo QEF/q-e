@@ -15,6 +15,7 @@
  /
  &ELECTRONS
                     conv_thr  =  1.0d-7 
+    diago_david_ndim=4
  /
  &IONS
  /

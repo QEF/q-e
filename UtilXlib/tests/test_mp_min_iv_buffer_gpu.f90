@@ -5,9 +5,7 @@ PROGRAM test_mp_min_iv_buffer_gpu
 ! with buffer implementation.
 !
 
-#if defined(__MPI)
-    USE MPI
-#endif
+    USE parallel_include
     USE cudafor
     USE mp, ONLY : mp_min
     USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &

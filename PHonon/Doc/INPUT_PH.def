@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package PWscf -program ph.x {
+input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x {
 
     toc {}
 
@@ -87,7 +87,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 
         var nmix_ph   -type INTEGER { 
             default { 4 }
-            info { Number of iterations used in potential mixing. }
+            info {
+                Number of iterations used in potential mixing. Using a larger value (8~20)
+                can significantly speed up convergence, at the cost of using more memory.
+            }
         }
 
         var verbosity -type CHARACTER { 
@@ -101,12 +104,23 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 
         var reduce_io -type LOGICAL { 
             default { .false. }
-            info { Reduce I/O to the strict minimum. }
+            info {
+                Reduce I/O to the strict minimum.
+
+                @b BEWARE: If the input flag @ref reduce_io=.true. was
+                used, it is not allowed to restart from an interrupted
+                run.
+            }
         }
 
         var max_seconds  -type REAL { 
             default { 1.d7 }
             info { Maximum allowed run time before the job stops smoothly. }
+        }
+
+        var dftd3_hess -type CHARACTER { 
+            default { 'prefix.hess' }
+            info { File where the D3 dispersion hessian matrix is read. }
         }
 
         var fildyn -type CHARACTER { 
@@ -116,10 +130,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 
         var fildrho -type CHARACTER { 
             default { ' ' }
-            info { File where the charge density responses are written. Note that the file
-                   will actually be saved as ${outdir}/_ph0/${prefix}.${fildrho}1  
-                   where  ${outdir}, ${prefix} and ${fildrho} are the values of the 
-                   corresponding input variables }
+            info {
+                File where the charge density responses are written. Note that the file
+                will actually be saved as @b {${outdir}/_ph0/${prefix}.${fildrho}1}
+                where  @b ${outdir}, @b ${prefix} and @b ${fildrho} are the values of the 
+                corresponding input variables
+            }
         }
 
         var fildvscf  -type CHARACTER { 
@@ -138,6 +154,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
                 macroscopic dielectric constant of the system is 
                 computed. Do not set @ref epsil to .true. if you have a
                 metallic system or q/=0: the code will complain and stop.
+                
+                Note: the input value of @ref epsil will be ignored if @ref ldisp=.true.
+                (the code will automatically set @ref epsil to .false. for metals,
+                to .true. for insulators: see routine PHonon/PH/prepare_q.f90).
             }
         }
 
@@ -160,9 +180,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
         var trans  -type LOGICAL { 
             default { .true. }
             info {
-                If .true. the phonons are computed.
-                If @ref trans .and. @ref epsil are .true. effective charges are 
-                calculated.
+                If .false. the phonons are not computed.
+                If @ref trans .and. @ref epsil are both .true.,
+		the effective charges are calculated.
+		If @ref ldisp is .true., @ref trans=.false. is overridden
+                (except for the case of electron-phonon calculations)
             }      
         }
         
@@ -247,7 +269,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		opt -val 'simple' {
 		    Electron-phonon lambda coefficients are computed
 		    for a given q and a grid of k-points specified by
-		    the variables nk1, nk2, nk3, k1, k2, k3.
+		    the variables @ref nk1, @ref nk2, @ref nk3, @ref k1, @ref k2, @ref k3.
 		}
 		opt -val 'interpolated' {
 		    Electron-phonon is calculated by interpolation
@@ -271,14 +293,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
                     Adv. Energy Mater. 2018, 1800246 doi:10.1002/aenm.201800246
                     arXiv:1511.08115
                 }
-    opt -val 'ahc' {
-        Quantities required for the calculation of phonon-induced
-        electron self-energy are computed and written to the directory
-        @ref ahc_dir. The output files can be read by postahc.x for
-        the calculation of electron self-energy.
-        Available for both metals and insulators.
-        @ref trans=.false. is required.
-    }
+                opt -val 'ahc' {
+                    Quantities required for the calculation of phonon-induced
+                    electron self-energy are computed and written to the directory
+                    @ref ahc_dir. The output files can be read by postahc.x for
+                    the calculation of electron self-energy.
+                    Available for both metals and insulators.
+                    @ref trans=.false. is required.
+                }
 		info {
 		    For metals only, requires gaussian smearing (except for 'ahc').
 		
@@ -474,8 +496,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
                 runs a pw non-self consistent calculation with a different
                 k-point grid thant that used for the charge density.
                 This occurs even in the Gamma case.
-                nk1,nk2,nk3 are the parameters of the Monkhorst-Pack grid
-                with offset determined by k1,k2,k3.
+                @ref nk1, @ref nk2, @ref nk3 are the parameters of the Monkhorst-Pack grid
+                with offset determined by @ref k1, @ref k2, @ref k3.
             }
         }
 
@@ -530,8 +552,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
                 default { outdir // 'w_pot/' }
                 info {
                     Directory where the w_pot binary files are written.
-                    Must be the same with wpot_dir used in dvscf_q2r.x.
-                    The real space potential files are stored in wpot_dir
+                    Must be the same with @ref wpot_dir used in dvscf_q2r.x.
+                    The real space potential files are stored in @ref wpot_dir
                     with names ${prefix}.wpot.irc${irc}//"1".
                 }
             }
@@ -789,11 +811,11 @@ is the number of the representation. These files contain the
 contribution to the dynamical matrix of the irr representation for the
 iq point. 
 
-If recover=.true. ph.x does not recalculate the
+If @ref recover=.true. ph.x does not recalculate the
 representations already saved in the tmp_dir/_ph0/{prefix}.phsave
 directory.  Moreover ph.x writes on the files patterns.#iq.xml in the
 tmp_dir/_ph0/{prefix}.phsave directory the displacement patterns that it
-is using. If recover=.true. ph.x does not recalculate the
+is using. If @ref recover=.true. ph.x does not recalculate the
 displacement patterns found in the tmp_dir/_ph0/{prefix}.phsave directory.
 
 This mechanism allows:

@@ -10,6 +10,7 @@ case $1 in
  -h, --help           print this manual    
  -r, --revert         revert to original state
  DIRS                 list of directories to be processed
+                      (also accepted: list of files to be processsed)
                       if absent, search all directories below the current one"
  exit 0;;
     ("-r" | "--revert" )  revert=1; shift;;
@@ -18,7 +19,14 @@ esac
 if [[ $# == 0 ]] ; then
     fnames=$(find -type f -name "*.f90" )
 else
-    for dir in $@ ; do fnames="$fnames $dir/*.f90"; done
+    for dir in $@
+    do
+	if [[ -d $dir ]] ; then
+	    fnames="$fnames $dir/*.f90"
+	else
+	    fnames="$fnames $dir"
+	fi
+    done
 fi
 
 if [[ $revert == 0 ]] ; then

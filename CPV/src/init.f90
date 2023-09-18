@@ -15,7 +15,7 @@
   subroutine init_dimensions(  )
 
       !
-      !     initialize G-vectors and related quantities
+      !! Initialize G-vectors and related quantities.
       !
 
       USE kinds,                ONLY : dp
@@ -29,7 +29,7 @@
       use ions_base,            only : nat
       USE recvec_subs,          ONLY : ggen, ggens
       USE gvect,                ONLY : mill_g, eigts1,eigts2,eigts3, g, gg, &
-                                       ecutrho, gcutm, gvect_init, mill, &
+                                       ecutrho, gcutm, gvect_init, mill,&
                                        ig_l2g, gstart, ngm, ngm_g, gshells
       use gvecs,                only : gcutms, gvecs_init, ngms
       use gvecw,                only : gkcut, gvecw_init, g2kin_init
@@ -47,7 +47,7 @@
       USE input_parameters,     ONLY : ref_cell, ref_alat
       use cell_base,            ONLY : ref_at, ref_bg
       USE exx_module,           ONLY : h_init
-      USE command_line_options, ONLY : nmany_
+      USE command_line_options, ONLY : nmany_, pencil_decomposition_ 
 
       implicit none
 !
@@ -104,16 +104,16 @@
         WRITE( stdout,'(3X,"ref_cell_a3 =",1X,3f14.8,3x,"ref_cell_b3 =",3f14.8)') ref_at(:,3)*ref_alat,ref_bg(:,3)/ref_alat
         !
         CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, ref_at, ref_bg, &
-                            gkcut, nyfft=nyfft_, nmany=nmany_ )
+                            gkcut, nyfft=nyfft_, nmany=nmany_ , use_pd=pencil_decomposition_)
         CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, ref_at, ref_bg, &
-                            gcutm, nyfft=nyfft_, nmany=nmany_ )
+                            gcutm, nyfft=nyfft_, nmany=nmany_ ,use_pd=pencil_decomposition_ )
         !
       ELSE
         !
         CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, at, bg, &
-                            gkcut, nyfft=nyfft_, nmany=nmany_ )
+                            gkcut, nyfft=nyfft_, nmany=nmany_ , use_pd=pencil_decomposition_ )
         CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, at, bg, &
-                            gcutm, nyfft=nyfft_, nmany=nmany_ )
+                            gcutm, nyfft=nyfft_, nmany=nmany_ , use_pd=pencil_decomposition_ )
         !
       END IF
       ! define the clock labels ( this enables the corresponding fft too ! )
@@ -173,28 +173,22 @@
         WRITE( stdout,'(/,3X,"Reference Cell is Used to Initialize Reciprocal Space Mesh")' )
         WRITE( stdout,'(3X,"Reference Cell alat  =",F14.8,1X,"A.U.")' ) ref_alat
         !
-        IF( smallmem ) THEN
-           CALL ggen( dfftp, gamma_only, ref_at, ref_bg, gcutm, ngm_g, ngm, &
-                g, gg, mill, ig_l2g, gstart, no_global_sort = .TRUE. )
-        ELSE
-           CALL ggen( dfftp, gamma_only, ref_at, ref_bg, gcutm, ngm_g, ngm, &
-                g, gg, mill, ig_l2g, gstart )
-        END IF
+        CALL ggen( dfftp, gamma_only, ref_at, ref_bg, gcutm, ngm_g, ngm, &
+                g, gg, mill, ig_l2g, gstart, no_global_sort = smallmem )
         CALL ggens( dffts, gamma_only, ref_at, g, gg, mill, gcutms, ngms )
         !
       ELSE
         !
-        IF( smallmem ) THEN
-           CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
-                g, gg, mill, ig_l2g, gstart, no_global_sort = .TRUE. )
-        ELSE
-           CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
-                g, gg, mill, ig_l2g, gstart )
-        END IF
+        CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
+                g, gg, mill, ig_l2g, gstart, no_global_sort = smallmem )
         CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
         !
       END IF
-
+!NOTE g, gg and mill already allocate in the device they are initialized below. 
+!$acc data present(g,gg,mill) 
+!$acc update device(g,gg,mill) 
+!$acc end data 
+      !
       CALL gshells (.TRUE.)
       !
       ! ... allocate and generate (modified) kinetic energy
@@ -390,10 +384,11 @@
 
     subroutine newinit_x( h, iverbosity )
       !
-      !     re-initialization of lattice parameters and g-space vectors.
-      !     Note that direct and reciprocal lattice primitive vectors
-      !     at, ainv, and corresponding quantities for small boxes
-      !     are recalculated according to the value of cell parameter h
+      !! Re-initialization of lattice parameters and g-space vectors.
+      !! Note that direct and reciprocal lattice primitive vectors
+      !! \(\text{at}\), \(\text{ainv}\), and corresponding quantities
+      !! for small boxes are recalculated according to the value of 
+      !! cell parameter h.
       !
       USE kinds,                 ONLY : DP
       USE constants,             ONLY : tpi
@@ -406,13 +401,22 @@
       USE smallbox_subs,         ONLY : gcalb
       USE io_global,             ONLY : stdout, ionode
       !
+#if defined (__ENVIRON)
+      USE plugin_flags,          ONLY : use_environ
+      USE environ_base_module,   ONLY : update_environ_cell
+#endif
+      !
       implicit none
       !
       REAL(DP), INTENT(IN) :: h(3,3)
       INTEGER,  INTENT(IN) :: iverbosity
       !
       REAL(DP) :: rat1, rat2, rat3
-      INTEGER :: ig
+      INTEGER :: ig, dfftp_ngm
+      !
+#if defined (__ENVIRON)
+      REAL(DP) :: at_scaled(3, 3)
+#endif
       !
       !WRITE( stdout, "(4x,'h from newinit')" )
       !do i=1,3
@@ -425,10 +429,14 @@
       !
       !  re-calculate G-vectors and kinetic energy
       !
-      do ig = 1, dfftp%ngm
+      dfftp_ngm = dfftp%ngm 
+!$acc parallel loop present(g,gg,mill) copyin(bg)
+      do ig = 1, dfftp_ngm
          g(:,ig)= mill(1,ig)*bg(:,1) + mill(2,ig)*bg(:,2) + mill(3,ig)*bg(:,3)
-         gg(ig)=g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2
+         gg(ig)=g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2 
       enddo
+!$acc end parallel loop
+!$acc update host(g,gg)
       !
       call g2kin_init ( gg, tpiba2 )
       !
@@ -445,14 +453,22 @@
       !
       !   pass new cell parameters to plugins
       !
-      CALL plugin_init_cell( )
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_init_cell() 
+#endif 
+#if defined (__ENVIRON)
+      IF (use_environ) THEN
+         at_scaled = at * alat
+         CALL update_environ_cell(at_scaled)
+      END IF
+#endif
       !
       return
     end subroutine newinit_x
 
     SUBROUTINE realspace_grids_info ( dfftp, dffts )
 
-      !  Print info on local and global dimensions for real space grids
+      !!  Print info on local and global dimensions for real space grids.
 
       USE fft_types, ONLY: fft_type_descriptor
       use io_global, only: stdout, ionode

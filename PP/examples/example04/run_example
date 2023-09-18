@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -82,8 +82,6 @@ $ECHO
 
 # self-consistent calculation
 cat > pt.scf.in << EOF
-Pt
-Pt
  &control
     calculation = 'scf'
     restart_mode='from_scratch',
@@ -122,8 +120,6 @@ $ECHO " done"
 
 # a non self-consistent calculation
 cat > pt.nscf.in << EOF
-Pt
-Pt
  &control
     calculation = 'nscf'
     restart_mode='from_scratch',
@@ -148,7 +144,7 @@ Pt
     conv_thr =  1.0d-8
  /
 ATOMIC_SPECIES
-Pt  0.0   Pt.rel-pz-n-rrkjus.UPF 
+Pt  0.0   Pt.rel-pz-n-rrkjus.UPF
 ATOMIC_POSITIONS alat
 Pt  0.0000000   0.00000000   0.0
 K_POINTS
@@ -190,10 +186,10 @@ cat > pt.pdos.in << EOF
  /
 EOF
 
-$ECHO "  running projuected DOS for Pt with spin-orbit ...\c"
+$ECHO "  running projected DOS for Pt with spin-orbit ...\c"
 $PDOS_COMMAND -in pt.pdos.in > pt.pdos.out
 check_failure $?
-$ECHO " done\c"
+$ECHO " done"
 
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/Pt.*

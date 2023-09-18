@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -87,7 +87,7 @@ $ECHO " done"
 #
 # self-consistent calculation. This example demonstrates the use of spin-orbit
 # together with gga-pbe. Dielectric constant and effective charges
-# 
+#
 cat > si.scf.in << EOF
  &control
     calculation='scf',
@@ -136,11 +136,11 @@ $PH_COMMAND < si.phG.in > si.phG.out
 check_failure $?
 $ECHO " done"
 
-# self-consistent calculation. This example demonstrates the use of 
+# self-consistent calculation. This example demonstrates the use of
 # the noncollinear dielectric constants and effective charges.
-# For diamond these quantities are calculated in example02. The same 
-# calculation is repeated here after setting noncolin=.true. 
-# 
+# For diamond these quantities are calculated in example02. The same
+# calculation is repeated here after setting noncolin=.true.
+#
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/carbon*
@@ -290,8 +290,8 @@ o2 molecule in a cubic box
 ATOMIC_SPECIES
 O  0.0   O.pbe-rrkjus.UPF
 ATOMIC_POSITIONS BOHR
-O    0.0 0.0  -1.156  
-O    0.0 0.0   1.156  
+O    0.0 0.0  -1.156
+O    0.0 0.0   1.156
 K_POINTS AUTOMATIC
 1 1 1 0 0 0
 EOF
@@ -303,7 +303,7 @@ $ECHO " done"
 cat > o2_nc.phG.in << EOF
 phonons of O2 at Gamma
  &inputph
-  tr2_ph=1.0d-15,
+  tr2_ph=1.0d-12,
   epsil=.true.,
   zue=.true.,
   prefix='o2_nc_mol',

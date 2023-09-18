@@ -1,4 +1,4 @@
-VERSION = git
+VERSION := $(shell awk -F\' '/version_number/{print $$2}' ../../include/qe_version.h )
 HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 LATEX   = pdflatex
 LATEX2HTML = latex2html
@@ -9,6 +9,9 @@ LOGS = $(PDFS:.pdf=.log)
 OUTS = $(PDFS:.pdf=.out)
 TOCS = $(PDFS:.pdf=.toc)
 
+HTMLS = INPUT_PW.html INPUT_OSCDFT.html
+XMLS = $(HTMLS:.html=.xml)
+TXTS = $(HTMLS:.html=.txt)
 
 doc:  all
 all:  defs pdf html 
@@ -23,9 +26,8 @@ clean:
 	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) *~
 	- rm -rf user_guide/
 	- rm -rf input_xx.xsl
-	- rm -f INPUT_PW.html INPUT_PW.txt INPUT_PW.xml
-	- rm -rf ../../Doc/INPUT_PW.*
-
+	- rm -f $(HTMLS) $(XMLS) $(TXTS)
+	- rm -f $(patsubst %,../../Doc/%,$(HTMLS) $(XMLS) $(TXTS))
 
 user_guide: user_guide.pdf
 	- rm -rf user_guide/
@@ -48,7 +50,7 @@ user_guide: user_guide.pdf
 	@echo ""
 
 
-defs: input_xx.xsl INPUT_PW.html INPUT_PW.txt link_on_main_doc
+defs: input_xx.xsl INPUT_PW.html INPUT_PW.txt INPUT_OSCDFT.html INPUT_OSCDFT.txt link_on_main_doc
 
 input_xx.xsl:
 	@(if test ! -f input_xx.xsl; then \
@@ -65,7 +67,10 @@ INPUT_PW.html: %.html: %.def input_xx.xsl
 INPUT_PW.txt: %.txt: %.def input_xx.xsl
 	$(HELPDOC) $<
 
+INPUT_OSCDFT.html: %.html: %.def input_xx.xsl
+	$(HELPDOC) $<
+INPUT_OSCDFT.txt: %.txt: %.def input_xx.xsl
+	$(HELPDOC) $<
+
 link_on_main_doc:
-	-@( cd ../../Doc ; ln -fs ../PW/Doc/INPUT_PW.html . ; \
-	ln -fs ../PW/Doc/INPUT_PW.xml . ; \
-	ln -fs ../PW/Doc/INPUT_PW.txt .) 
+	-@( cd ../../Doc ; for file in $(HTMLS) $(XMLS) $(TXTS); do ln -fs ../PW/Doc/$$file . ; done )

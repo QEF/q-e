@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -162,7 +162,7 @@ BEGIN_PATH_INPUT
 &PATH
   restart_mode      = 'from_scratch'
   string_method     = 'neb',
-  nstep_path        = 20, 
+  nstep_path        = 20,
   ds                = 2.D0,
   opt_scheme        = "broyden",
   num_of_images     = 8,
@@ -240,7 +240,7 @@ BEGIN_PATH_INPUT
 &PATH
   restart_mode      = 'restart'
   string_method     = 'neb',
-  nstep_path        = 20, 
+  nstep_path        = 20,
   ds                = 2.D0,
   opt_scheme        = "broyden",
   num_of_images     = 8,

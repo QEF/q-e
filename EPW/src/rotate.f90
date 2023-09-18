@@ -51,7 +51,7 @@
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
     USE elph2,         ONLY : dynq
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE constants_epw, ONLY : cone, czero, twopi, rydcm1, eps10, cmm12meV
     USE control_flags, ONLY : iverbosity
     USE cell_base,     ONLY : at, bg
@@ -310,8 +310,7 @@
     !! SP - Sep. 2019: Cleaning.
     !--------------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE elph2,         ONLY : epmatq, zstar, epsi, bmat, &
-                              nbndep
+    USE elph2,         ONLY : epmatq, zstar, epsi, bmat, nbndep, qrpl
     USE epwcom,        ONLY : lpolar, nqc1, nqc2, nqc3
     USE modes,         ONLY : nmodes
     USE constants_epw, ONLY : cone, czero, one, ryd2mev, eps8
@@ -416,7 +415,7 @@
           CALL ZGEMV('t', nmodes, nmodes, cone, cz1, nmodes,  &
                      epmatq_opt(ibnd, jbnd, ik, :), 1, czero, eptmp, 1)
           !
-          IF (lpolar) THEN
+          IF (lpolar .OR. qrpl) THEN
             IF ((ABS(xq(1)) > eps8) .OR. (ABS(xq(2)) > eps8) .OR. (ABS(xq(3)) > eps8)) THEN
               CALL rgd_blk_epw(nqc1, nqc2, nqc3, xq, cz2t, eptmp, &
                        nmodes, epsi, zstar, bmat(ibnd, jbnd, ik, iq), -one)
@@ -436,7 +435,7 @@
     !---------------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE star_q2(xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity, sym_smallq)
+    SUBROUTINE star_q2(xq, at, bg, nsym, s, invs, t_rev, nq, sxq, isq, imq, verbosity, sym_smallq)
     !-----------------------------------------------------------------------
     !!
     !! Generate the star of q vectors that are equivalent to the input one
@@ -457,6 +456,8 @@
     !! Symmetry operations
     INTEGER, INTENT(in) :: invs(48)
     !! list of inverse operation indices
+    INTEGER, INTENT(in) :: t_rev(48)
+    !! Time-reveral sym
     INTEGER, INTENT(out) :: nq
     !! degeneracy of the star of q
     INTEGER, INTENT(out) :: isq(48)
@@ -469,7 +470,7 @@
     !! direct lattice vectors
     REAL(KIND = DP), INTENT(in) :: bg(3, 3)
     !! reciprocal lattice vectors
-    REAL(KIND = DP), INTENT(out) :: sxq(3, 48)
+    REAL(KIND = DP), INTENT(inout) :: sxq(3, 48)
     !! list of vectors in the star of q
     !
     ! Local variables
@@ -499,6 +500,7 @@
     !! Tolerence
     !
     zero(:) = 0.d0
+    saq(:, :) = 0.0d0
     !
     ! go to  crystal coordinates
     !
@@ -525,6 +527,8 @@
                    + bg(i, 2) * raq(2) &
                    + bg(i, 3) * raq(3)
       ENDDO
+      IF (t_rev(isym) == 1) raq = -raq
+      !
       DO iq = 1, nq
         IF (eqvect(raq, saq(1, iq), zero, accep)) THEN
           isq(isym) = iq
@@ -600,11 +604,11 @@
     !! the number of symmetries of the crystal
     INTEGER, INTENT(in) :: s(3, 3, 48)
     !! the symmetry matrices
-    INTEGER, INTENT(out) :: gmapsym(ngxxf, 48)
+    INTEGER, INTENT(out) :: gmapsym(ngxxf, nsym)
     !! the map S(G) = gmapsym (G,S) 1...nsym
     REAL(KIND = DP), INTENT(in) :: ft(3, 48)
     !! the fractional traslations in crystal axis
-    COMPLEX(KIND = DP), INTENT(out) :: eigv(ngxxf, 48)
+    COMPLEX(KIND = DP), INTENT(out) :: eigv(ngxxf, nsym)
     !! e^{ iGv} for 1...nsym
     !
     ! Local variables

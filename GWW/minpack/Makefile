@@ -17,15 +17,11 @@ lmpar.o \
 mlegzo.o \
 qrsolv.o
 
-
 all : minpacklib.a 
 
 minpacklib.a : $(MINOBJS)
 	$(AR) $(ARFLAGS) $@ $(MINOBJS)
 
 clean :
-	- /bin/rm -fv minpacklib.a *.o 
+	- /bin/rm -f minpacklib.a *.o 
 
-include make.depend
-
-# DO NOT DELETE

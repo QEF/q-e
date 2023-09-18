@@ -417,8 +417,8 @@ END {
 
 if (SG==2) {
    print "                 space_group = " tmptablenumber
-   print "                rhombhoedral = .TRUE."
-   print "                    unique_b = .FALSE."
+   print "                rhombohedral = .TRUE."
+   print "                    uniqueb = .FALSE."
    print "               origin_choice = 1"
    print "                         nat = " natom
    print "                        ntyp = " ntyp

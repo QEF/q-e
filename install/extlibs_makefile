@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2016 Quantum ESPRESSO group
+# Copyright (C) 2001-2020 Quantum ESPRESSO group
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -11,174 +11,99 @@
 include ../make.inc
 include install_utils
 
-#.NOTPARALLEL: liblapack_internal
-
-# NETLIB targets
-#BLAS_NETLIB=blas-3.6.0.tgz
-#BLAS_NETLIB_NAME=BLAS-3.6.0
-#BLAS_NETLIB_URL=http://www.netlib.org/blas/${BLAS_NETLIB}
-
-LAPACK_NETLIB=lapack-3.6.1.tgz
-LAPACK_NETLIB_NAME=lapack-3.6.1
-LAPACK_NETLIB_URL=http://www.netlib.org/lapack/${LAPACK_NETLIB}
-
-# NVIDIA Eigensolver targets
-EIGENSOLVER_VERSION=0.3.1
-EIGENSOLVER_GPU=v${EIGENSOLVER_VERSION}.tar.gz
-EIGENSOLVER_GPU_NAME=Eigensolver_gpu-${EIGENSOLVER_VERSION}
-EIGENSOLVER_GPU_URL=https://github.com/NVIDIA/Eigensolver_gpu/archive/${EIGENSOLVER_GPU}
-
-#
 # MAIN target
-#
+
 all: libcuda
-	$(MAKE) libblas_$(BLAS_LIBS_SWITCH) 
-	$(MAKE) liblapack_$(LAPACK_LIBS_SWITCH) 
-	$(MAKE) libelpa_internal 
-	$(MAKE) libiotk 
 
-libblas : libblas_$(BLAS_LIBS_SWITCH)
+###################################
+# LAPACK (includes BLAS)
+###################################
 
-libblas_external : fake_blas_external
-
-fake_blas_external :
-	touch fake_libblas.a
-	-rm fake_libblas.a
-
-#libblas_internal:
-#	$(call download_and_unpack,$(BLAS_NETLIB_NAME),$(BLAS_NETLIB_URL),BLAS,BLAS)
-#	if test -e make_blas.inc; then \
-#	(cp make_blas.inc ../BLAS/make.inc; \
-#	cd ../BLAS; $(MAKE) ); else \
-#        (echo "no configuration file found for blas"; \
-#	echo "run configure from main QE dir"; exit); fi
-
-liblapack : liblapack_$(LAPACK_LIBS_SWITCH) 
-
-liblapack_external : fake_lapack_external
-
-fake_lapack_external :
-	touch fake_liblapack.a
-	-rm fake_liblapack.a
-
-liblapack_internal:
-	$(call download_and_unpack,$(LAPACK_NETLIB_NAME),$(LAPACK_NETLIB_URL),LAPACK,LAPACK)
-	if test ! -e ../LAPACK/liblapack.a && test -e make_lapack.inc; then \
-	  (cp make_lapack.inc ../LAPACK/make.inc; \
-	  cd ../LAPACK; $(MAKE) blaslib lapacklib); else \
+liblapack:
+	$(call update_submodule,external,lapack)
+	if test ! -e $(TOPDIR)/external/lapack/liblapack.a && test -e make_lapack.inc; then \
+	  (cp make_lapack.inc $(TOPDIR)/external/lapack/make.inc; \
+	  cd $(TOPDIR)/external/lapack; $(MAKE) blaslib lapacklib); else \
         (echo "no configuration file found for lapack"; \
          echo "run configure from main QE dir"; exit); fi 
+lapack_clean:
+	if test -d $(TOPDIR)/external/lapack; then cd $(TOPDIR)/external/lapack; \
+          (if test -f make.inc; then $(MAKE) clean; fi); fi
 
-libiotk:
-	if test ! -d ../S3DE; then \
-	(gzip -dc ../archive/iotk-1.2.beta.tar.gz | (cd ../; tar -xvf -)) ; \
-	if test -e Makefile_iotk; then \
-        (cp Makefile_iotk ../S3DE/iotk/src/Makefile); fi; \
-	if test -e iotk_config.h; then \
-	(cp iotk_config.h ../S3DE/iotk/include/iotk_config.h); fi; fi
-	cd ../S3DE/iotk/src; $(MAKE) lib+util; 
-	cd ../bin; ln -fs ../S3DE/iotk/tools/iotk .; \
-	ln -fs ../S3DE/iotk/src/iotk.x .; \
-	ln -fs ../S3DE/iotk/src/iotk_print_kinds.x .; \
-	# middle instruction needed for windows
-	cd ../; rm -rf iotk ; ln -fs S3DE/iotk iotk
+###################################
+# FoX
+###################################
 
 libfox:
-	echo $(HOST)
-	if test ! -d ../FoX; then \
-        mkdir ../FoX; \
-	(gzip -dc ../archive/fox.tgz | (cd ../FoX; tar -xvf -)); \
-	cd ../FoX/fox/; export FC=$(F90); export FCFLAGS="$(FOX_FLAGS)"; \
-	./configure --prefix=$(TOPDIR)/FoX ;\
+	$(call update_submodule,external,fox)
+	if test ! -d ../FoX ; then \
+  cd $(TOPDIR)/external/fox; \
+    ./configure --prefix=$(TOPDIR)/FoX FC=$(F90) FCFLAGS="$(FOX_FLAGS)"; \
     touch cp_test; \
     if cp -p cp_test cp_test_1; then \
+        rm cp_test_1; \
         echo "cp -p works"; \
     else \
         find -type f | xargs sed -i 's/cp -p/cp/g'; \
     fi; \
-	$(MAKE) install; cd ../; rm -fr fox;fi
-# ELPA
-libelpa : libelpa_$(ELPA_LIBS_SWITCH)
+    rm cp_test; \
+    $(MAKE) install && make clean; \
+ cd -; \
+fi
+fox_clean:
+	if test -d ../FoX; then (rm -R -f ../FoX); fi
+	if test -d $(TOPDIR)/external/fox; then cd $(TOPDIR)/external/fox; \
+          (if test -f FoX-config; then $(MAKE) clean; fi); fi
 
-libelpa_ : fake_elpa_external
-libelpa_disabled : fake_elpa_external
-
-fake_elpa_external :
-	touch fake_libelpa.a
-	-rm fake_libelpa.a
-
-libelpa_enabled:
-	if test ! -d ../ELPA; then \
-	( gzip -dc ../archive/ELPA-0.3.tar.gz |(cd ../; tar -xvf -)); fi
-	cd ../ELPA; $(MAKE)
-
+###################################
 # CUDA
+###################################
+
 libcuda : $(addprefix libcuda_,$(CUDA_EXTLIBS))
 
-libcuda_eigensolver :
-	$(call download_and_unpack,$(EIGENSOLVER_GPU_NAME),$(EIGENSOLVER_GPU_URL),EIGENSOLVER_GPU,EIGENSOLVER_GPU)
-	if test ! -e ../EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a ; then \
-    (cp Makefile.lib_eigsolve ../EIGENSOLVER_GPU/lib_eigsolve/Makefile; \
-    cd ../EIGENSOLVER_GPU/lib_eigsolve/; $(MAKE) ); else \
-	(echo "No configuration file found for GPU custom eigensolver"; exit); fi
+CUDA_PATH := $(if $(GPU_ARCH),$(CUDA_PATH),no)
+libcuda_devxlib :
+	$(call update_submodule,external,devxlib)
+	cd $(TOPDIR)/external/devxlib/src; \
+	ln -fs $(TOPDIR)/make.inc ../; \
+	$(MAKE) all; \
+	touch $(TOPDIR)/install/libcuda_devxlib # do not download and configure again
 
-# libbeef
-libbeef : libbeef_$(BEEF_LIBS_SWITCH)
+libcuda_devxlib_clean:
+	if test -f libcuda_devxlib; then rm libcuda_devxlib; fi
+	if test -d ../external/devxlib; then \
+	   (cd ../external/devxlib; if test -f make.inc; then $(MAKE) clean; fi); fi
+libcuda_devxlib_veryclean:
+	if test -d ../external/devxlib; then \
+	   (cd ../external/devxlib; if test -f make.inc; then \
+	      ($(MAKE) distclean && rm -f make.inc); fi); fi
 
-libbeef_ : fake_libbeef_external
-libbeef_external : fake_elpa_external
+###################################
+# LIBMBD
+###################################
 
-fake_libbeef_external :
-	touch fake_libbeef.a
-	-rm fake_libbeef.a
+libmbd:
+	$(call update_submodule,external,mbd)
+	if test ! -d ../MBD; then \
+        mkdir ../MBD; \
+        cd $(TOPDIR)/external/mbd/src; \
+	export FXX=$(F90); export FXXOPT="$(F90FLAGS)"; \
+	$(MAKE) -f ../../mbd.make; cp *.mod *.a $(TOPDIR)/MBD; cd ../../.. ;fi
 
-libbeef_internal:
-	if test ! -d ../LIBBEEF; then mkdir ../LIBBEEF; \
-	( gzip -dc ../archive/libbeef-0.1.2.tar.gz |(cd ../LIBBEEF; tar -xvf -)); fi
-	cd ../LIBBEEF; $(MAKE)
+libmbd_clean:
+	if test -d ../MBD; then (rm -R -f ../MBD); fi
+	if test -d $(TOPDIR)/external/mbd/src; then cd $(TOPDIR)/external/mbd/src; \
+          $(MAKE) -f ../../mbd.make clean; fi
+
+libmbd_distclean:
+	if test -d ../MBD; then (rm -R -f ../MBD); fi
+	if test -d $(TOPDIR)/external/mbd/src; then cd $(TOPDIR)/external/mbd/src; \
+          $(MAKE) -f ../../mbd.make distclean; fi
 
 ###################################
 # cleaning
 ###################################
-# each lib independently
-#blas_clean:
-#	if test -d ../BLAS; then (cd ../BLAS; $(MAKE) clean); fi
-#blas_veryclean:
-#	if test -d ../BLAS; then (rm -R -f ../BLAS ../${BLAS_NETLIB_NAME}); fi
-lapack_clean:
-	if test -d ../LAPACK; then (cd ../LAPACK; $(MAKE) clean); fi
-lapack_veryclean:
-	if test -d ../LAPACK; then (rm -R -f ../LAPACK ../${LAPACK_NETLIB_NAME}); fi
-elpa_clean:
-	if test -d ../ELPA; then (cd ../ELPA; $(MAKE) clean); fi
-elpa_veryclean:
-	if test -d ../ELPA; then (rm -R -f ../ELPA); fi
-fox_clean:
-	if test -d ../FoX; then (rm -R -f ../FoX); fi
-iotk_clean:
-	if test -d ../S3DE; then (cd ../S3DE; $(MAKE) clean); fi
-	if test -d ../iotk; then (rm -R -f ../iotk); fi
-	if test -e ../S3DE/iotk/src/iotk.x; then \
-	rm -f ../S3DE/iotk/src/iotk.x; fi
-	(rm -f ../bin/iotk; \
-	rm -f ../bin/iotk.x; \
-	rm -f ../bin/iotk_print_kinds.x)
-iotk_veryclean:
-	if test -d ../S3DE; then (rm -R -f ../S3DE); fi
-	if test -d ../iotk; then (rm -R -f ../iotk); fi
-	if test -e ../S3DE/iotk/src/iotk.x; then (rm -f ../S3DE/iotk/src/iotk.x); fi
-	rm -f ../bin/iotk; \
-	rm -f ../bin/iotk.x; \
-	rm -f ../bin/iotk_print_kinds.x; \
-	rm -f ../iotk
-libcuda_eigensolver_clean:
-	if test -d ../EIGENSOLVER_GPU; then (cd ../EIGENSOLVER_GPU/lib_eigsolve ; $(MAKE) clean); fi
-libcuda_eigensolver_veryclean:
-	if test -d ../EIGENSOLVER_GPU; then (rm -R -f ../EIGENSOLVER_GPU ../${EIGENSOLVER_GPU_NAME}); fi
-libbeef_clean:
-	if test -d ../LIBBEEF; then (cd ../LIBBEEF ; $(MAKE) clean); fi
-libbeef_veryclean:
-	if test -d ../LIBBEEF; then (rm -R -f ../LIBBEEF); fi
-# general cleaning
-clean: lapack_clean elpa_clean iotk_clean fox_clean libcuda_eigensolver_clean libbeef_clean
-veryclean: lapack_veryclean elpa_veryclean iotk_veryclean fox_clean libcuda_eigensolver_veryclean libbeef_veryclean
+
+clean: lapack_clean fox_clean libcuda_devxlib_clean libmbd_clean
+
+veryclean: fox_clean libcuda_devxlib_veryclean libmbd_distclean

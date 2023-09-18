@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.4}
+\def\version{7.2}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -15,27 +15,23 @@
 
 \def\pwx{\texttt{pw.x}}
 \def\cpx{\texttt{cp.x}}
-\def\phx{\texttt{ph.x}}
-\def\nebx{\texttt{neb.x}}
 \def\configure{\texttt{configure}}
 \def\PWscf{\texttt{PWscf}}
-\def\PHonon{\texttt{PHonon}}
 \def\CP{\texttt{CP}}
+\def\PHonon{\texttt{PHonon}}
 \def\PostProc{\texttt{PostProc}}
-\def\NEB{\texttt{PWneb}}
 \def\make{\texttt{make}}
 
 \begin{document} 
 \author{}
 \date{}
 
-\def\qeImage{../../Doc/quantum_espresso.pdf}
+\def\qeImage{../../Doc/quantum_espresso}
 
 \title{
   \includegraphics[width=5cm]{\qeImage} \\
   % title
   \Huge \PostProc\ User's Guide (v.\version) 
-  \\ \Large (only partially updated)
 }
 
 \maketitle
@@ -46,27 +42,22 @@
 
 This guide covers the usage of \PostProc, version \version: 
 an open-source package for postprocessing of data produced by
-\PWscf\ and \CP. \PostProc\ is part of the \qe\ distribution 
-and requires \PWscf\ to be installed.
-
-{\em Important notice: due to the lack of time and of manpower, this
-manual is only partially updated and may contain outdated information.}
+\PWscf\ and \CP.
 
 This guide assumes that you know the physics 
 that \PostProc\ describes and the methods it implements.
 It also assumes  that you have already installed,
 or know how to install, \qe. If not, please read
 the general User's Guide for \qe, found in 
-directory \texttt{Doc/} two levels above the 
-one containing this guide; or consult the web site:\\
+subdirectory \texttt{Doc/} of the main \qe\ directory,
+or consult the web site:\\
 \texttt{http://www.quantum-espresso.org}.
 
 Further documentation, beyond what is provided 
 in this guide, can be found in the directory
 \texttt{PP/Doc/}, containing a copy of this guide.
-People who want to contribute to \qe\ should read the 
-Developer Manual, found in directory \texttt{Doc/} two levels
-above the one containing this guide: \texttt{Doc/developer\_man.pdf}.
+People who want to contribute to \qe\ should read the
+Wiki pages on GitLab: \texttt{https://gitlab.com/QEF/q-e/-/wikis}.
 
 \section{People and terms of use}
 
@@ -74,6 +65,11 @@ The \PostProc\ package was originally developed by Stefano Baroni,
 Stefano de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi 
 (Univ. Udine), and many others. We mention in particular: 
 \begin{itemize}
+\item Dong Yang and Qin Liu (JSG) for calculation of DORI (10.1021/ct500490b)
+      and for spin-polarized ELF;
+\item Minsu Ghim (Seoul National U.) for Ji Hoon Ryoo's spin-current matrix
+      elements (Phys. Rev. B 99, 235113) for spin Hall conductivity using
+      Wannier interpolation, in pw2wannier.f90;
 \item Yang Jiao, Elsebeth Schr\"oder, Per Hyldgaard (Chalmers) for the
   \texttt{ppacf.x} code;
 \item Alberto Otero-de-la-Roza for the \texttt{pw2critic.x} utility;
@@ -88,7 +84,8 @@ Stefano de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi
 \item Dmitry Korotin (Inst. Met. Phys. Ekaterinburg) for the
       \texttt{wannier\_ham} utility;
 \item Georgy Samsonidze (Bosch Research) for the interface
-      with the Berkeley GW code;
+      with the Berkeley GW code, Fangzhou Zhao (Berkeley) 
+      for its extension to hybrid and meta-GGA functionals;
 \item The late Prof. Eyvaz Isaev for the Fermi Surface code;
 \item Natalie Holzwarth (WFU) for the PAW projection in code
      \texttt{projwfc.f90};
@@ -109,7 +106,8 @@ or the file License in the distribution).
 
 \section{Compilation}
 
-\PostProc\ is distributed together with \qe.
+\PostProc \ is part of the \qe \ distribution
+and depends upon \PWscf\ for compilation.
 For instruction on how to download and compile \qe, please refer 
 to the general Users' Guide, available in file \texttt{Doc/user\_guide.pdf}
 under the main \qe\ directory, or in web site 
@@ -126,8 +124,8 @@ and linked to \texttt{bin/}.
 All codes for which input documentation is not explicitly mentioned below
 have some documentation in the header of the fortran sources.
 In the following, subdirectories containing examples are found in
-\texttt{examples/}; ``Example N'' stands for subdirectory 
-\texttt{examples/exampleN/}.
+\texttt{PP/examples/}; ``Example N'' stands for subdirectory 
+\texttt{PP/examples/exampleN/}.
 
 All quantities whose dimensions are not explicitly specified are in
 RYDBERG ATOMIC UNITS. Charge is "number" charge (i.e. not multiplied 
@@ -157,31 +155,34 @@ Quantities that can be read or calculated are:
 Various types of plotting (along a line, on a plane, three-dimensional, polar)
 and output formats (including the popular cube format) can be specified.
 Moreover data can be saved to an intermediate (formatted) file so that
-more data set can be summed or subracted in a later run.
+more data sets can be summed or subracted in a later run.
 The output files can be directly read by the free plotting system Gnuplot
 (1D or 2D plots), or by code \texttt{plotrho.x} that comes with \PostProc\ 
 and produces PostScript 2D plots,
-or by advanced plotting software XCrySDen and gOpenMol (3D plots).
+or by advanced plotting software XCrySDen (3D plots).
 
-See file \texttt{Doc/INPUT\_PP.*} for a detailed description of the input
+See file \texttt{PP/Doc/INPUT\_PP.*} for a detailed description of the input
 for code \texttt{pp.x}.
 See Example 01 for an example of a charge density plot, Example 03
 for an example of STM image simulation.
 
 \paragraph{Planar averages}
 Code \texttt{plan\_avg.x} calculates planar averages of Kohn-Sham orbitals.
-Code \texttt{average.x} calculates planar averages of quantities calculated
+Input documentation is in the header of\texttt{PP/src/plan\_avg.f90}.
+
+Code \texttt{average.x} calculates planar averages of quantities produced
 by \texttt{pp.x} (e.g. potentials, charge, magnetization densities).
 Note that \texttt{average.x} reads the intermediate file produced
 by \texttt{pp.x}, not data files produced by \pwx. Examples of usage 
-of \texttt{average.x} can be found in \texttt{WorkFct\_example/} 
-and in \texttt{dipole\_example/}.
+of \texttt{average.x} can be found in \texttt{PP/examples/WorkFct\_example/} 
+and in \texttt{PP/examples/dipole\_example/}.
 
 \paragraph{All-electron charge}
 \texttt{pawplot.x} produces plots of the all-electron charge
-for PAW calculations.
+for PAW calculations. Input documentation in the header of
+\texttt{PP/src/pawplot.f90}. 
 
-\paragraph{About Bader's analysis}
+\subsection{About Bader's analysis}
 In \texttt{http://theory.cm.utexas.edu/henkelman/code/bader/} 
 one can find a software that performs Bader's analysis starting 
 from charge on a regular grid. One should use PAW to compute the
@@ -212,7 +213,7 @@ symmetry analysis of the band structure. For a complete input description,
 see \texttt{Doc/INPUT\_bands.*}. See Example 01, Example 04 and Example 06 
 for simple band plots.
 
-The calculation of Fermi surface can be performed using code \texttt{fs.x}.
+The plotting of Fermi surfaces can be performed using code \texttt{fs.x}.
 The resulting file in .bxsf format can be read and plotted
 using XCrySDen. See Example 02 for an example of Fermi surface 
 visualization (Ni, including the spin-polarized case).
@@ -225,7 +226,7 @@ in the pseudopotential file(s). The L\"owdin population analysis (similar to
 Mulliken analysis) is presently implemented. The projected DOS (or PDOS:
 the DOS projected onto atomic orbitals) can also be calculated and written
 to file(s). More details on the input data are found in file
-\texttt{Doc/INPUT\_PROJWFC.*}. The ordering of the various 
+\texttt{PP/Doc/INPUT\_PROJWFC.*}. The ordering of the various 
 angular momentum components (defined in routine \texttt{ylmr2.f90})
 is as follows:
 $P_{0,0}(t)$, $P_{1,0}(t)$, $P_{1,1}(t)cos\phi$, $P_{1,1}(t)sin\phi$,
@@ -239,25 +240,25 @@ analysed using auxiliary codes \texttt{sumpdos.x} (sums selected PDOS
 by specifying the names of files containing the desired PDOS: type 
 \texttt{sumpdos.x -h} or look into the source code for more details) 
 and \texttt{plotproj.x} . A more sophisticated tools is the script
-\texttt{tools/sum\_states.py}, by Julen Larrucea: documentation in
+\texttt{PP/tools/sum\_states.py}, by Julen Larrucea: documentation in
 \texttt{http://larrucea.eu/sum\_states-py-2/}.
 
 The total electronic DOS can also be calculated by code \texttt{dos.x},
-whose complete input documentation is in \texttt{Doc/INPUT\_DOS.*}
+whose complete input documentation is in \texttt{PP/Doc/INPUT\_DOS.*}
 See Example 02 for total and projected electronic DOS calculations,
 -and for projected band structure;
 see Example 03 for projected and local DOS calculations.
 
 The DOS projected over {\em molecular} states (e.g. for a molecule on
 a surface system) can be computed using code \texttt{molecularpdos.x}
-(courtesy of Guido Fratesi). See file \texttt{Doc/INPUT\_MOLDOS.*}
-for input documentation and directory \texttt{MolDos\_example/} for
+(courtesy of Guido Fratesi). See file \texttt{PP/Doc/INPUT\_MOLDOS.*}
+for input documentation and directory \texttt{PP/examples/MolDos\_example/} for
 an example.
 
 The calculation of magnetic anisotropy using the Force Theorem is described
 in the following paper:
 https://journals.aps.org/prb/abstract/10.1103/PhysRevB.90.205409. An
-example and a README can be found in \texttt{ForceTheorem\_example/}
+example and a README can be found in \texttt{PP/examples/ForceTheorem\_example/}
 
 \subsection{Color plot of the Fermi velocity and the orbital character
   on Fermi surfaces}
@@ -313,22 +314,31 @@ in \verb|fermisurf_example/|.
 There are several Wannier-related utilities in \PostProc:
 \begin{enumerate}
 \item The "Poor Man Wannier" code \texttt{pmw.x}, to be used
-in conjunction with DFT+U calculations (see Example 05)
+in conjunction with DFT+U calculations: see Example 05.
 \item The interface with Wannier90 code, \texttt{pw2wannier.x}:
-see the documentation in \texttt{W90/} (you have to install the 
-Wannier90 plug-in)
+see the documentation in \texttt{W90/} (you may install the 
+Wannier90 plug-in via \texttt{make w90} ). For spin-current
+matrix elements, implemented in routine \texttt{compute\_shc}:
+``it writes .sIu and .sHu files used for
+WANNIER-BERRI (https://github.com/stepan-tsirkin/wannier-berri/),
+and also will be utilized through postw90.x
+(https://github.com/manxkim/wannier90/tree/SHC/src) in Wannier90.
+In WANNIER-BERRI, .sHu and .sIu files can be used to calculate the
+quantity "opt\_SHCryoo". In Wannier90, add "berry\_task = shc" and
+"shc\_ryoo=.true.". in the input parameters of postw90.x. They
+activate the calculation of SHC using .sHu and .sIu.''
 \item The \texttt{wannier\_ham.x} code generates a model Hamiltonian 
-in Wannier functions basis: see \texttt{WannierHam\_example/}.
+in Wannier functions basis: see \texttt{PP/examples/WannierHam\_example/}.
 \end{enumerate}
 Note that the \texttt{wfdd.x} code has been moved to \CP.
 
 \subsection{Interfaces to/from other code}
 
-Codes \texttt{pw2bgw.x} and \texttt{bgw2pw.x} convert data files from
-\pwx\ to a format suitable for usage by the Berkeley GW code, and vice
-versa. See files \texttt{Doc/INPUT\_pw2bgw.*} and \texttt{Doc/INPUT\_bgw2pw.*}
-for input data documentation. NOTE: \texttt{bgw2pw.x} works only with the
-"old" and no longer supported I/O format.
+Codes \texttt{pw2bgw.x} convert data files from \pwx\ to a format suitable
+for usage by the Berkeley GW code. See file \texttt{Doc/INPUT\_pw2bgw.*}
+for input data documentation. Code \texttt{bgw2pw.x}, performing the
+inverse conversion, no longer works: a copy that worked for the old
+file format is kept for reference in \texttt{bgw2pw.f90.orig}.
 
 Code \texttt{pw2gw.x} converts data files from \pwx\ to a format suitable 
 for usage by another GW code, computes optical properties in single-particle 
@@ -337,7 +347,7 @@ for input data documentation, directory \texttt{pw2gw\_example/}
 for an example of usage.
 
 Code \texttt{open\_grid.x} writes Kohn-Sham orbitals for the complete
-k-point grid (not symetry-independent points only) in real space.
+k-point grid (not symmetry-independent points only) in real space.
 Useful for further processing. It can be used to generate the
 Kohn-Sham state data required in \texttt{pw2wannier.x} and Wannier90
 from the initial SCF calculation, bypassing the non-SCF calculation
@@ -349,11 +359,11 @@ containing the Kohn-Sham orbitals from an SCF calculation (or from the
 output of \texttt{open\_grid.x}). These orbitals are used for
 post-processing in CRITIC2.
 
-Code \texttt{pw\_export.f90}, no longer compiled by default and obsolete,
-is an interface to other codes, documented in \texttt{Doc/INPUT\_pw\_export.*}.
+Code \texttt{pw\_export.f90} no longer works and is no longer present.
 
 \subsection{Other tools}
 
+\paragraph{Exchange-correlation}
 Code \texttt{ppacf.x} computes the coupling constant dependency of the
 exchange correlation potential $E_{xc,\lambda}, \lambda \in [0:1]$
 and the spatial distribution of the exchange-correlation energy density
@@ -361,16 +371,19 @@ and kinetic correlation energy density according to:
 Y. Jiao, E. Schr\"oder, and P. Hyldgaard, Phys. Rev. B 97, 085115 (2018).
 See \texttt{PP/Doc/INPUT\_PPACF.html}.
 
+\paragraph{Wavefunction conversion}
 Code \texttt{wfck2r.x} converts Kohn-Sham orbitals from reciprocal to real 
 space. It is a useful starting point if you need to access wavefunctions
 and perform postprocessing operations that are not implemented in \qe.
 
+\paragraph{Dielectric function}
 Code \texttt{epsilon.x} calculates RPA frequency-dependent complex dielectric 
 function. Documentation is in file \texttt{Doc/eps\_man.tex}.
 
+\paragraph{Core-level shifts}
 Code \texttt{initial\_state.x} calculates the initial state contribution
 to the Core-level shift. See \texttt{CLS\_IS\_example/} for
-an example, and \texttt{CLS\_FS\_example/} for the corrsponding
+an example, and \texttt{CLS\_FS\_example/} for the corresponding
 final state calculation of Core-level shifts.
 
 \section{Troubleshooting}
@@ -382,18 +395,14 @@ pay attention to it but do not assume that something is necessarily wrong in
 your calculation: most warning messages signal harmless problems.
 
 \paragraph{Some postprocessing codes complain that they do not find some files}
+Most likely you are not reading the correct data files, or you are not
+following the correct procedure for postprocessing.
+
 For Linux PC clusters in parallel execution: in at least some versions
 of MPICH, the current directory is set to the directory where the executable
 code resides, instead of being set to the directory where the code is executed.
 This MPICH weirdness may cause unexpected failures in some postprocessing
 codes that expect a data file in the current directory. Workaround: use
 symbolic links, or copy the executable to the current directory.
-
-\paragraph{{\em error in davcio} in postprocessing codes}
-Most likely you are not reading the correct data files, or you are not
-following the correct procedure for postprocessing. In parallel execution: 
-if you did not set \texttt{wf\_collect=.true.}, the number of processors and 
-pools for the phonon run should be the same as for the
-self-consistent run; all files must be visible to all processors.
 
 \end{document}

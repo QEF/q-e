@@ -18,9 +18,11 @@
 ;; (https://www.emacswiki.org/emacs/DerivedMode,
 ;; https://www.emacswiki.org/emacs/SampleMode) as well as the very
 ;; useful resources of Xah Lee
-;; (http://ergoemacs.org/emacs/elisp_syntax_coloring.html).  Last but
-;; not the least Sebastijan Peljhan is acknowledged for his work on
-;; `xsf-mode' that inspired the idea of writing the qe-modes.
+;; (http://ergoemacs.org/emacs/elisp_syntax_coloring.html). Sebastijan
+;; Peljhan is acknowledged for his work on `xsf-mode' that inspired
+;; the idea of writing the qe-modes. Last but not the least,
+;; Hongyi Zhao contributed the ido-completion-read snippet of
+;; code for selecting the values for the card's flags.
 
 
 ;; This file is not part of GNU Emacs.
@@ -78,7 +80,7 @@
 (defvar qe-end-namelist (list "&END" "/"))
 
 ;; pp's variables
-(defvar pp-vars (list "degauss_ldos" "delta_e" "e1" "e2" "e3" "emax" "emin" "fileout" "filepp" "filplot" "iflag" "interpolation" "kband" "kpoint" "lsign" "nfile" "nx" "ny" "nz" "outdir" "output_format" "plot_num" "prefix" "radius" "sample_bias" "spin_component" "weight" "x0" ))
+(defvar pp-vars (list "degauss_ldos" "delta_e" "e1" "e2" "e3" "emax" "emin" "fileout" "filepp" "filplot" "iflag" "interpolation" "kband" "kpoint" "lsign" "nfile" "nx" "ny" "nz" "outdir" "output_format" "plot_num" "prefix" "radius" "sample_bias" "spin_component" "use_gauss_ldos" "weight" "x0" ))
 
 ;; pp's cards & keywords
 (defvar pp-cards (list "__NO-CARDS" ))

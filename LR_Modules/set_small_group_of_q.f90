@@ -30,7 +30,7 @@ SUBROUTINE set_small_group_of_q(nsymq, invsymq, minus_q)
   LOGICAL, INTENT(INOUT) :: minus_q, invsymq
   !
   REAL(DP), ALLOCATABLE :: rtau(:,:,:)
-
+  INTEGER :: isym
   LOGICAL :: sym(48)
   !
   sym(1:nsym)=.true.
@@ -55,11 +55,16 @@ SUBROUTINE set_small_group_of_q(nsymq, invsymq, minus_q)
   !
   CALL inverse_s ( )
   !
-  ! check if inversion (I) is a symmetry. If so, there should be nsymq/2
-  ! symmetries without inversion, followed by nsymq/2 with inversion
-  ! Since identity is always s(:,:,1), inversion should be s(:,:,1+nsymq/2)
+  ! Check if inversion (I) is a symmetry
+  ! Note that the first symmetry operation is always the identity (E)
   !
-  invsymq = ALL ( s(:,:,nsymq/2+1) == -s(:,:,1) )
+  invsymq =.FALSE.
+  DO isym = 1, nsymq
+     IF ( ALL ( s(:,:,isym) == -s(:,:,1) ) ) THEN
+        invsymq = .TRUE.
+        EXIT
+     END IF
+  END DO
   !
   !  Since the order of the s matrices is changed we need to recalculate:
   !

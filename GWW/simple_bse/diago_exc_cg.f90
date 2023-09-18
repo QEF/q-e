@@ -16,7 +16,7 @@ subroutine diago_exc_cg(data_input, bd, pp, pt, pm, x)
   TYPE(prod_proj), INTENT(in) :: pp
   TYPE(potential), INTENT(in) :: pt
   TYPE(prod_mix), INTENT(in) :: pm
-  TYPE(exc) :: xd, x2d, Hxd, Hx2d, h, Hx, Hx1, Hh, xtest
+  TYPE(exc) ::   h, Hx, Hx1, Hh, xtest
   TYPE(exc) :: x(data_input%nvec)
   INTEGER :: i, j, k, count=1, beginning, rate, end,kf
   COMPLEX(kind=DP) :: d=(0.1d0,0.0d0), a, b, c, fd, f2d, alpha,stim, minus=(-1.0d0,0.0d0), echeck
@@ -29,8 +29,12 @@ subroutine diago_exc_cg(data_input, bd, pp, pt, pm, x)
   LOGICAL :: l_ok
   REAL(kind=DP) :: norm
   INTEGER :: icon
+  INTEGER :: jj
+  COMPLEX(kind=DP),ALLOCATABLE :: prods(:)
+  TYPE(exc):: exc_a, exc_b
 
-
+  allocate(prods(data_input%nvec))
+  
   call setup_exc(bd,h)
   call setup_exc(bd,Hx)
   call setup_exc(bd,Hx1)
@@ -41,6 +45,8 @@ subroutine diago_exc_cg(data_input, bd, pp, pt, pm, x)
   call setup_exc(bd,etmp2)
   call setup_exc(bd,etmp3)
   call setup_exc(bd,etmp4)
+  call setup_exc(bd,exc_a)
+  call setup_exc(bd,exc_b)
 
 
 
@@ -49,12 +55,32 @@ subroutine diago_exc_cg(data_input, bd, pp, pt, pm, x)
   write(stdout,*)data_input%nvec
   vectors: do j=1,data_input%nvec
      icon=0
+     call setup_exc(bd,x(j))
      call randomize_exc(x(j))
+     !project out previously found states
+     do jj=1,j-1
+        prods(jj)=-x(jj)*x(j)
+     enddo
+     do jj=1,j-1
+        exc_a=x(j)
+        exc_b=prods(jj)*x(jj)
+        !write(stdout,*) 'ENTRA DEBUG'
+        x(j)=exc_a+exc_b
+        !write(stdout,*) 'ESCI DEBUG'
+     enddo
      call normalize_exc(x(j))
      !x(j)%avc=0.d0
      !x(j)%avc(1,1,1)=(1.d0,0.d0)
      
      call hamiltonian(data_input, 1, bd, pp, pt, pm, x(j), Hx,0)
+      do jj=1,j-1
+        prods(jj)=-x(jj)*Hx
+     enddo
+     do jj=1,j-1
+        exc_a=Hx
+        exc_b=prods(jj)*x(jj)
+        Hx=exc_a+exc_b
+     enddo
      call mp_barrier(world_comm)
      energy(j)=x(j)*Hx*rytoev!energy initialization
      h=(-1.d0,0.d0)*Hx!search direction initialization
@@ -66,6 +92,16 @@ subroutine diago_exc_cg(data_input, bd, pp, pt, pm, x)
             echeck=energy(j)
            call mp_barrier(world_comm)
            call hamiltonian(data_input, 1, bd, pp, pt, pm, h, Hh,0)
+           do jj=1,j-1
+              prods(jj)=-x(jj)*Hh
+           enddo
+           do jj=1,j-1
+              exc_a=Hh
+              exc_b=prods(jj)*x(jj)
+              !write(stdout,*) 'ENTRA DEBUG'
+              Hh=exc_a+exc_b
+              !write(stdout,*) 'ESCI DEBUG'
+           enddo
            
            ene0=dble(x(j)*Hx)
            dene0=2.d0*dble(x(j)*Hh)-2.d0*ene0*dble(x(j)*h)
@@ -91,14 +127,46 @@ subroutine diago_exc_cg(data_input, bd, pp, pt, pm, x)
            endif
            etmp1=passot*h
            call sum_exc_sub(etmp2,x(j),etmp1)
+            do jj=1,j-1
+              prods(jj)=-x(jj)*etmp2
+           enddo
+           do jj=1,j-1
+              exc_a=etmp2
+              exc_b=prods(jj)*x(jj)
+              etmp2=exc_a+exc_b
+           enddo
            call normalize_exc(etmp2)
            call hamiltonian(data_input, 1, bd, pp, pt, pm, etmp2, etmp3,0)
+           do jj=1,j-1
+              prods(jj)=-x(jj)*etmp3
+           enddo
+           do jj=1,j-1
+              exc_a=etmp3
+              exc_b=prods(jj)*x(jj)
+              etmp3=exc_a+exc_b
+           enddo
            ene1=dble(etmp2*etmp3)
         
            etmp1=passot2*h
            call sum_exc_sub(etmp2,x(j),etmp1)
+           do jj=1,j-1
+              prods(jj)=-x(jj)*etmp2
+           enddo
+           do jj=1,j-1
+              exc_a=etmp2
+              exc_b=prods(jj)*x(jj)
+              etmp2=exc_a+exc_b
+           enddo
            call normalize_exc(etmp2)
            call hamiltonian(data_input, 1, bd, pp, pt, pm, etmp2, etmp3,0)
+           do jj=1,j-1
+              prods(jj)=-x(jj)*etmp3
+           enddo
+           do jj=1,j-1
+              exc_a=etmp3
+              exc_b=prods(jj)*x(jj)
+              etmp3=exc_a+exc_b
+           enddo
            ene2=dble(etmp2*etmp3)
 
            !call minparabola(ene0,dene0,ene1,dble(passot),passo,stima,l_ok)
@@ -142,10 +210,25 @@ subroutine diago_exc_cg(data_input, bd, pp, pt, pm, x)
               etmp1=sca*h
               call sum_exc_sub(xtest,x(j),etmp1)
            endif
-
+           do jj=1,j-1
+              prods(jj)=-x(jj)*xtest
+           enddo
+           do jj=1,j-1
+              exc_a=xtest
+              exc_b=prods(jj)*x(jj)
+              xtest=exc_a+exc_b
+           enddo
            call normalize_exc(xtest)
           
            call hamiltonian(data_input, 1, bd, pp, pt, pm, xtest, Hx1,0)
+           do jj=1,j-1
+              prods(jj)=-x(jj)*Hx1
+           enddo
+           do jj=1,j-1
+              exc_a=Hx1
+              exc_b=prods(jj)*x(jj)
+              Hx1=exc_a+exc_b
+           enddo
            call mp_barrier(world_comm)
               !     write(stdout,*)i,'check:',real(echeck),real(xtest*Hx1*rytoev)
            enew=dble(xtest*Hx1)
@@ -163,10 +246,26 @@ subroutine diago_exc_cg(data_input, bd, pp, pt, pm, x)
               
 
               x(j) = xtest
+              do jj=1,j-1
+                 prods(jj)=-x(jj)*x(j)
+              enddo
+              do jj=1,j-1
+                 exc_a=x(j)
+                 exc_b=prods(jj)*x(jj)
+                 x(j)=exc_a+exc_b
+              enddo
               call normalize_exc(x(j))
          
               call mp_barrier(world_comm)
               call hamiltonian(data_input, 1, bd, pp, pt, pm, x(j), Hx,0)
+              do jj=1,j-1
+                 prods(jj)=-x(jj)*Hx
+              enddo
+              do jj=1,j-1
+                 exc_a=Hx
+                 exc_b=prods(jj)*x(jj)
+                 Hx=exc_a+exc_b
+              enddo
               call mp_barrier(world_comm)
               h=Hx
               esse=dble(h*h)
@@ -211,10 +310,34 @@ subroutine diago_exc_cg(data_input, bd, pp, pt, pm, x)
      end do iterate
      x(j)%ene(1)=dble(energy(j))
      call hamiltonian(data_input, 1, bd, pp, pt, pm, x(j), Hx,1)
+      do jj=1,j-1
+        prods(jj)=-x(jj)*Hx
+     enddo
+     do jj=1,j-1
+        exc_a=Hx
+        exc_b=prods(jj)*x(jj)
+        Hx=exc_a+exc_b
+     enddo
      x(j)%ene(2)=dble(x(j)*Hx*rytoev)
      call hamiltonian(data_input, 1, bd, pp, pt, pm, x(j), Hx,2)
+      do jj=1,j-1
+        prods(jj)=-x(jj)*Hx
+     enddo
+     do jj=1,j-1
+        exc_a=Hx
+        exc_b=prods(jj)*x(jj)
+        Hx=exc_a+exc_b
+     enddo
      x(j)%ene(3)=dble(x(j)*Hx*rytoev)
      call hamiltonian(data_input, 1, bd, pp, pt, pm, x(j), Hx,3)
+     do jj=1,j-1
+        prods(jj)=-x(jj)*Hx
+     enddo
+     do jj=1,j-1
+        exc_a=Hx
+        exc_b=prods(jj)*x(jj)
+        Hx=exc_a+exc_b
+     enddo
      x(j)%ene(4)=dble(x(j)*Hx*rytoev)
 
 
@@ -237,6 +360,11 @@ subroutine diago_exc_cg(data_input, bd, pp, pt, pm, x)
   call deallocate_exc(etmp3)
   call deallocate_exc(etmp4)
 
+  call deallocate_exc(exc_a)
+  call deallocate_exc(exc_b)
+
+  deallocate(prods)
+  
   return
   
 end subroutine diago_exc_cg

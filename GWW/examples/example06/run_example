@@ -1,0 +1,192 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `dirname $0`
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x pw4gww.x & bse.x to calculate"
+$ECHO "the excitonic state with iterative W(r,r')w_v(r)w_v'(r') scheme"
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x pw4gww.x bse_main.x"
+PSEUDO_LIST="Si.pbe-rrkj.UPF H.pbe-vbc.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO
+PW4GWW_COMMAND="$PARA_PREFIX $BIN_DIR/pw4gww.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw4gww.x as: $PW4GWW_COMMAND"
+$ECHO
+BSE_COMMAND="$PARA_PREFIX $BIN_DIR/bse_main.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running bse.x as: $BSE_COMMAND"
+$ECHO
+
+
+    # self-consistent calculation
+    cat > silane_scf.in << EOF
+&control
+    calculation = 'scf',
+    restart_mode='from_scratch',
+    prefix='SiH4',
+    tprnfor = .true.,
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav =  1,
+    celldm(1) = 20.0,
+    nat = 5,
+    ntyp = 2,
+    ecutwfc = 40.0,
+    nbnd = 8
+ /
+ &electrons
+    diagonalization = 'cg'
+    mixing_beta = 0.5,
+    conv_thr = 1.0d-8
+ /
+ATOMIC_SPECIES
+ H    1.0   H.pbe-vbc.UPF
+ Si  28.0  Si.pbe-rrkj.UPF
+ATOMIC_POSITIONS {angstrom}
+Si       0.000000000   0.000000000   0.000000000
+H        0.861290004   0.861290004   0.861290004
+H       -0.861290004  -0.861290004   0.861290004
+H       -0.861290004   0.861290004  -0.861290004
+H        0.861290004  -0.861290004  -0.861290004
+K_POINTS {gamma}
+EOF
+    $ECHO "  running the scf calculation for Silane...\c"
+    $PW_COMMAND < silane_scf.in > silane_scf.out
+    check_failure $?
+    $ECHO " done"
+
+    #
+    cat > silane_pw4gww.in << EOF
+&inputpw4gww
+    prefix='SiH4'
+    num_nbndv(1)=4
+    num_nbnds=8
+    l_truncated_coulomb=.true.
+    truncation_radius=10.d0
+    !numw_prod=50
+    l_bse=.true.
+    l_no_GW_just_screening=.true.
+    l_no_GW_bare_coulomb=.false.
+    no_GW_cg_maxit = 10
+    no_GW_cg_threshold = 5.D-7
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+/
+
+EOF
+    $ECHO "  running the pw4gww calculation for silane...\c"
+    $PW4GWW_COMMAND < silane_pw4gww.in > silane_pw4gww.out
+    check_failure $?
+    $ECHO " done"
+
+    cat > $TMP_DIR/SiH4-bands.dat << EOF
+       5
+       1
+    1 -16.61249 -20.44779 -20.21290 -25.31691
+    2  -9.11165 -13.67612 -13.59143 -14.42309
+    3  -9.11165 -13.67021 -13.58364 -14.42309
+    4  -9.11165 -13.67111 -13.58495 -14.42309
+    5  -0.56519   0.21252   0.21196   0.90046
+EOF
+    #
+    cat > silane_bse.in << EOF
+&inputbse
+    prefix='SiH4'
+    outdir='$TMP_DIR/'
+    num_nbndv(1)=4
+    numw_prod=50
+    n_eig=1
+    l_truncated_coulomb=.true.
+    truncation_radius=10.d0
+    lambda=1.d0
+    eps=1.d-4
+    eps_eig=1.d-5
+    lm_delta=2.d0
+    l_scissor=.false.
+    qpe_imin=1
+    qpe_imax=5
+    scissor=0.0d0
+    dual_bse=1.d0
+    l_read_www=.true.
+    l_contraction=.false.
+/
+EOF
+    $ECHO "  running the bse calculation for Silane...\c"
+    $BSE_COMMAND < silane_bse.in > silane_bse.out
+    check_failure $?
+    $ECHO " done"
+
+    # clean TMP_DIR
+    $ECHO "  cleaning $TMP_DIR...\c"
+    rm -rf $TMP_DIR/SiH4*
+    $ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : done"

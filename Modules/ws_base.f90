@@ -7,14 +7,13 @@
 !
 MODULE ws_base
   !============================================================================
+  !! Module containing type definitions and auxiliary routines to deal with
+  !! basic operations on the Wigner-Seitz cell associated to a given set
+  !! of Bravais fundamental lattice vectors.
   !
-  !   Module containing type definitions and auxiliary routines to deal with
-  !   basic operations on the Wigner-Seitz cell associated to a given set
-  !   of Bravais fundamental lattice vectors.
-  !
-  !   Should contain low level routines and no reference to other modules
-  !   (with the possible exception of kinds and parameters) so as to be 
-  !   call-able from any other module.
+  ! It should contain low level routines and no reference to other modules
+  ! (with the possible exception of kinds and parameters) so as to be 
+  ! call-able from any other module.
   !
   ! content:
   !
@@ -50,34 +49,39 @@ MODULE ws_base
   !
   !============================================================================
   !
-  USE kinds, ONLY: dp
+  USE kinds, ONLY: DP
   !
   IMPLICIT NONE
   !
   TYPE ws_type
-
+    !! derived type definition used to encode the auxiliary 
+    !! quantities needed by the other WS functions or routines.
     PRIVATE ! this means (I hope) that internal variables can only
             ! be accessed through calls of routines inside the module.
-    REAL(DP) ::  &
-        a(3,3),  & ! the fundamental Bravais lattice vectors
-        aa(3,3), & ! a^T*a
-        b(3,3),  & ! the inverse of a, i.e. the transponse of the fundamental 
-                   ! reciprocal lattice vectors
-        norm_b(3)  ! the norm of the fundamental reciprocal lattice vectors
-    LOGICAL  ::  &
-        initialized = .FALSE. ! .TRUE. when  initialized
-
+    REAL(DP) :: a(3,3)
+    !! the fundamental Bravais lattice vectors
+    REAL(DP) :: aa(3,3)
+    !! a^T*a
+    REAL(DP) :: b(3,3)
+    !! the inverse of a, i.e. the transponse of the fundamental 
+    !! reciprocal lattice vectors
+    REAL(DP) :: norm_b(3)
+    !! the norm of the fundamental reciprocal lattice vectors
+    LOGICAL  :: initialized = .FALSE.
+    !! .TRUE. when  initialized
   END TYPE ws_type
-
+  !
   PRIVATE
   PUBLIC :: ws_type, ws_init, ws_clean, ws_test, ws_vect, ws_dist, ws_weight, ws_dist_stupid
-
+  !
   !============================================================================
   !
  CONTAINS
-!---------------------------------------------------------------
+    !---------------------------------------------------------------
     SUBROUTINE ws_init(a,ws)
-!---------------------------------------------------------------
+      !---------------------------------------------------------------
+      !! Initializes a \(\texttt{ws_type}\) variable.
+      !
       USE matrix_inversion
       REAL(DP), INTENT(IN) :: a(3,3)
       TYPE(ws_type), INTENT(OUT) :: ws
@@ -92,32 +96,38 @@ MODULE ws_base
       ws%initialized = .TRUE.
 
       RETURN
-    END SUBROUTINE ws_init
-!
-!---------------------------------------------------------------
+    END SUBROUTINE ws_init 
+    ! 
+    !---------------------------------------------------------------
     SUBROUTINE ws_clean(ws)
-!---------------------------------------------------------------
+      !---------------------------------------------------------------
+      !! Un-sets a \(\texttt{ws_type}\) variable.
+      !
       TYPE(ws_type), INTENT(OUT) :: ws
-
+      !
       ws%initialized = .FALSE.
-
+      !
       RETURN
     END SUBROUTINE ws_clean
-!
-!---------------------------------------------------------------
+    !
+    !---------------------------------------------------------------
     SUBROUTINE ws_test(ws)
-!---------------------------------------------------------------
+      !---------------------------------------------------------------
+      !! Tests whether a ws_type variable has been initialized.
+      !
       TYPE(ws_type), INTENT(IN) :: ws
-
+      !
       IF (.NOT.ws%initialized) CALL errore &
                ('ws_test','trying to use an uninitialized ws_type variable',1)
-
+      !
       RETURN
     END SUBROUTINE ws_test
-
-!---------------------------------------------------------------
+    !
+    !---------------------------------------------------------------
     SUBROUTINE ws_vect(r,ws,r_ws)
-!---------------------------------------------------------------
+      !---------------------------------------------------------------
+      !! Given a vector returns an equivalent vector inside the WS cell.
+      !
       REAL(DP), INTENT(IN) :: r(3)
       TYPE(ws_type), INTENT(IN) :: ws
       REAL(DP), INTENT(OUT) :: r_ws(3)
@@ -154,10 +164,11 @@ MODULE ws_base
 
       RETURN
     END SUBROUTINE ws_vect
-!
-!---------------------------------------------------------------
+    !
+    !---------------------------------------------------------------
     FUNCTION ws_dist_stupid(r,ws)
-!---------------------------------------------------------------
+      !---------------------------------------------------------------
+      !
       REAL(DP), INTENT(IN) :: r(3)
       TYPE(ws_type), INTENT(IN) :: ws
       REAL(DP) :: ws_dist_stupid
@@ -183,11 +194,14 @@ MODULE ws_base
       ws_dist_stupid = DSQRT(rmin)
 
       RETURN
-    END FUNCTION ws_dist_stupid
-!
-!---------------------------------------------------------------
+    END FUNCTION ws_dist_stupid 
+    !
+    !---------------------------------------------------------------
     FUNCTION ws_dist(r,ws)
-!---------------------------------------------------------------
+      !---------------------------------------------------------------
+      !! Given a vector, returns the shortest distance from any point
+      !! in the Bravais lattice.
+      !
       REAL(DP), INTENT(IN) :: r(3)
       TYPE(ws_type), INTENT(IN) :: ws
       REAL(DP) :: ws_dist
@@ -201,10 +215,18 @@ MODULE ws_base
 
       RETURN
     END FUNCTION ws_dist
-!
-!---------------------------------------------------------------
+    !
+    !---------------------------------------------------------------
     FUNCTION ws_weight(r,ws)
-!---------------------------------------------------------------
+      !---------------------------------------------------------------
+      !! Given a vector, it returns:
+      !
+      !! * 1.0 if the vector is inside the WS cell;
+      !! * 0.0 if the vector is outside the WS cell;
+      !! * 1/(1+NR) if the vector is on the frontier of the WS cell 
+      !!   and NR is the number of Bravais lattice points whose 
+      !!   distance is the same as the one from the origin.
+      !
       REAL(DP), INTENT(IN) :: r(3)
       TYPE(ws_type), INTENT(IN) :: ws
       REAL(DP) :: ws_weight

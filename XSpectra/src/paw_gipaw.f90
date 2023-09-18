@@ -8,7 +8,6 @@
 MODULE paw_gipaw
 
   USE kinds,        ONLY: DP
-  USE upf_params,   ONLY: npsx
   use radial_grids, ONLY: ndmx
   !
   ! ... These parameters are needed for the paw variables
@@ -60,9 +59,6 @@ MODULE paw_gipaw
           paw_iltonh(:,:)       ! corresp l, num <--> n for each type
      REAL(DP), POINTER :: &
           paw_tab(:,:)          ! interpolation table for PPs
-
-     REAL(DP), POINTER :: &
-          paw_tab_d2y(:,:)      ! for cubic splines
 
      TYPE ( at_wfc ), POINTER :: aephi(:)
      TYPE ( at_wfc ), POINTER :: psphi(:)

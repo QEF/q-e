@@ -5,13 +5,19 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#if defined(__CUDA)
+#define PINMEM 
+#else
+#define PINMEM
+#endif
 !
 !----------------------------------------------------------------------------
 MODULE cp_main_variables
   !----------------------------------------------------------------------------
+  !! Main global variables for CP and allocation routines.
   !
   USE kinds,             ONLY : DP
-  USE funct,             ONLY : dft_is_meta
+  USE xc_lib,            ONLY : xclib_dft_is
   USE metagga_cp,        ONLY : kedtaur, kedtaus, kedtaug
   USE cell_base,         ONLY : boxdimensions
   USE wave_types,        ONLY : wave_descriptor, wave_descriptor_init
@@ -20,6 +26,7 @@ MODULE cp_main_variables
                                 v_vol, posv, f_vol
   !
   IMPLICIT NONE
+  !
   SAVE
   !
   ! ... structure factors e^{-ig*R}
@@ -27,7 +34,13 @@ MODULE cp_main_variables
   ! ...  G = reciprocal lattice vectors
   ! ...  R_I = ionic positions
   !
-  COMPLEX(DP), ALLOCATABLE :: eigr(:,:)        ! exp (i G   dot R_I)
+  COMPLEX(DP), ALLOCATABLE  PINMEM :: eigr(:,:)
+  !! it is \(e^{i G \cdot R_I}\), where \(G\) reciprocal 
+  !! lattice vectors and \(R_I\) ionic positions.
+#if defined (__CUDA)
+  COMPLEX(DP), ALLOCATABLE, DEVICE :: eigr_d(:,:)
+  !! GPU double of \(\text{eigr}\)
+#endif
   !
   ! ... structure factors (summed over atoms of the same kind)
   !
@@ -36,12 +49,15 @@ MODULE cp_main_variables
   ! R_(s,I) = position of the I-th atom of the "s" specie
   !
   COMPLEX(DP), ALLOCATABLE:: sfac(:,:)
+  !! structure factor
   !
   ! ... indexes, positions, and structure factors for the box grid
   !
   REAL(DP), ALLOCATABLE :: taub(:,:)
-  COMPLEX(DP), ALLOCATABLE :: eigrb(:,:)
+  COMPLEX(DP), ALLOCATABLE PINMEM :: eigrb(:,:)
   INTEGER,     ALLOCATABLE :: irb(:,:)
+  INTEGER,     ALLOCATABLE :: iabox(:)
+  INTEGER :: nabox
   ! 
   ! ... nonlocal projectors:
   ! ...    bec   = scalar product of projectors and wave functions
@@ -50,24 +66,42 @@ MODULE cp_main_variables
   ! ...    rhovan= \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
   ! ...    deeq  = \int V_eff(r) q_lm(r) dr
   !
-  REAL(DP), ALLOCATABLE :: bephi(:,:)      ! distributed (orhto group)
-  REAL(DP), ALLOCATABLE :: becp_bgrp(:,:)  ! distributed becp (band group)
-  REAL(DP), ALLOCATABLE :: bec_bgrp(:,:)  ! distributed bec (band group)
-  REAL(DP), ALLOCATABLE :: becdr_bgrp(:,:,:)  ! distributed becdr (band group)
-  REAL(DP), ALLOCATABLE :: dbec(:,:,:,:)    ! derivative of bec distributed(ortho group) 
-  !
-  ! ... mass preconditioning
+  REAL(DP), ALLOCATABLE :: bephi(:,:)
+  !! distributed (orhto group)
+  REAL(DP), ALLOCATABLE :: becp_bgrp(:,:)
+  !! distributed becp (band group)
+  REAL(DP), ALLOCATABLE PINMEM :: bec_bgrp(:,:)
+  !! scalar product of projectors and wave functions.
+  !! Distributed (band group)
+  REAL(DP), ALLOCATABLE :: bec_d(:,:)
+  !! GPU double of bec (band group)
+  REAL(DP), ALLOCATABLE PINMEM :: becdr_bgrp(:,:,:)
+  !! \(\langle\text{betae}|g|\text{psi}\rangle\) used in force calculation,
+  !! with \(\text{betae}\) nonlocal projectors in g space.  
+  !! Distributed (band group)
+  REAL(DP), ALLOCATABLE PINMEM :: dbec(:,:,:,:)
+  !! derivative of bec distributed (ortho group).
+#if defined (__CUDA)
+  REAL(DP), ALLOCATABLE, DEVICE :: dbec_d(:,:,:,:)
+  !! GPU double of \(\text{dbec}\) 
+  ATTRIBUTES( DEVICE ) :: becp_bgrp, bephi, bec_d
+#endif
   !
   REAL(DP), ALLOCATABLE :: ema0bg(:)
+  !! mass preconditioning
   !
-  ! ... constraints (lambda at t, lambdam at t-dt, lambdap at t+dt)
+  REAL(DP), ALLOCATABLE :: lambda(:,:,:)
+  !! constraints (lambda at t)
+  REAL(DP), ALLOCATABLE :: lambdam(:,:,:)
+  !! constraints (lambda at t-dt)
+  REAL(DP), ALLOCATABLE :: lambdap(:,:,:)
+  !! constraints (lambda at t+dt)
   !
-  REAL(DP), ALLOCATABLE :: lambda(:,:,:), lambdam(:,:,:), lambdap(:,:,:)
+  INTEGER, ALLOCATABLE :: idesc(:,:)
+  !! laxlib descriptor of the lambda distribution
   !
-  INTEGER, ALLOCATABLE :: idesc(:,:) ! laxlib descriptor of the lambda distribution
-  !
-  INTEGER, PARAMETER :: nacx = 10      ! max number of averaged
-                                       ! quantities saved to the restart
+  INTEGER, PARAMETER :: nacx = 10
+  !! max number of averaged quantities saved to the restart
   REAL(DP) :: acc(nacx)
   REAL(DP) :: acc_this_run(nacx)
   !
@@ -77,31 +111,47 @@ MODULE cp_main_variables
   !
   ! charge densities and potentials
   !
-  ! rhog  = charge density in g space
-  ! rhor  = charge density in r space (dense grid)
-  ! rhos  = charge density in r space (smooth grid)
-  ! vpot  = potential in r space (dense grid)
-  !
   COMPLEX(DP), ALLOCATABLE :: rhog(:,:)
-  REAL(DP),    ALLOCATABLE :: rhor(:,:), rhos(:,:)
+  !! charge density in g space
+  REAL(DP),    ALLOCATABLE :: rhor(:,:)
+  !! charge density in r space (dense grid)
+  REAL(DP),    ALLOCATABLE :: rhos(:,:)
+  !! charge density in r space (smooth grid)
   REAL(DP),    ALLOCATABLE :: vpot(:,:)
+  !! potential in r space (dense grid)
   !
   ! derivative wrt cell
   !
   COMPLEX(DP), ALLOCATABLE :: drhog(:,:,:,:)
+  !! derivative of \(\text{rhog}\) wrt cell
   REAL(DP),    ALLOCATABLE :: drhor(:,:,:,:)
-
-  TYPE (wave_descriptor) :: wfill     ! wave function descriptor for filled
+  !! derivative of \(\text{rhor}\) wrt cell
+  !
+  TYPE (wave_descriptor) :: wfill
+  !! wave function descriptor for filled
   !
   TYPE(dft_energy_type) :: edft
   !
-  INTEGER :: nfi             ! counter on the electronic iterations
-  INTEGER :: nprint_nfi=-1   ! counter indicating the last time data have been
-                             ! printed on file ( prefix.pos, ... ), it is used
-                             ! to avoid printing stuff two times .
-  INTEGER :: nfi_run=0       ! counter on the electronic iterations,
-                             ! for the present run
-  INTEGER :: iprint_stdout=1 ! define how often CP writes verbose information to stdout
+  INTEGER :: nfi
+  !! counter on the electronic iterations
+  INTEGER :: nprint_nfi=-1
+  !! counter indicating the last time data have been printed on file
+  !! ( prefix.pos, ... ), it is used to avoid printing stuff two times.
+  INTEGER :: nfi_run=0
+  !! counter on the electronic iterations, for the present run
+  INTEGER :: iprint_stdout=1
+  !! define how often CP writes verbose information to stdout
+  !
+  ! working buffers
+  !
+#if defined (__CUDA)
+  REAL(DP), ALLOCATABLE, DEVICE :: nlsm1_wrk_d(:,:)
+  !! working buffer for nlsm1 function
+  COMPLEX(DP), ALLOCATABLE, DEVICE :: caldbec_wrk_d(:,:,:,:)
+  !! working buffer for caldbec_bgrp function
+  REAL(DP),    ALLOCATABLE, DEVICE :: caldbec_dwrk_d(:,:)
+  !! working buffer for caldbec_bgrp function
+#endif
   !
   CONTAINS
     !
@@ -111,6 +161,7 @@ MODULE cp_main_variables
                                  nsp, nspin, n, nx, nupdwn, nhsa, &
                                  gstart, nudx, tpre, nbspx_bgrp )
       !------------------------------------------------------------------------
+      !! Allocate CP main global variables.
       !
       USE mp_bands,    ONLY: intra_bgrp_comm, me_bgrp
       USE mp,          ONLY: mp_max, mp_min
@@ -139,6 +190,11 @@ MODULE cp_main_variables
       ALLOCATE( eigr( ngw, nat ), STAT=ierr )
       IF( ierr /= 0 ) &
          CALL errore( ' allocate_mainvar ', ' unable to allocate eigr ', ierr )
+#if defined (__CUDA)
+      ALLOCATE( eigr_d( ngw, nat ), STAT=ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( ' allocate_mainvar ', ' unable to allocate eigr_d ', ierr )
+#endif
       ALLOCATE( sfac( ngs, nsp ), STAT=ierr )
       IF( ierr /= 0 ) &
          CALL errore( ' allocate_mainvar ', ' unable to allocate sfac ', ierr )
@@ -148,8 +204,12 @@ MODULE cp_main_variables
       ALLOCATE( irb( 3, nat ), STAT=ierr )
       IF( ierr /= 0 ) &
          CALL errore( ' allocate_mainvar ', ' unable to allocate irb ', ierr )
+      ALLOCATE( iabox( nat ), STAT=ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( ' allocate_mainvar ', ' unable to allocate iabox ', ierr )
+      nabox = 0
       !
-      IF ( dft_is_meta() ) THEN
+      IF ( xclib_dft_is('meta') ) THEN
          !
          ! ... METAGGA
          !
@@ -249,6 +309,11 @@ MODULE cp_main_variables
       ALLOCATE( bec_bgrp( nhsa, nbspx_bgrp ), STAT=ierr )
       IF( ierr /= 0 ) &
          CALL errore( ' allocate_mainvar ', ' unable to allocate bec_bgrp ', ierr )
+#if defined (__CUDA)
+      ALLOCATE( bec_d( nhsa, nbspx_bgrp ), STAT=ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( ' allocate_mainvar ', ' unable to allocate bec_d ', ierr )
+#endif
       ALLOCATE( bephi( nhsa, nspin*nrcx ), STAT=ierr )
       IF( ierr /= 0 ) &
          CALL errore( ' allocate_mainvar ', ' unable to allocate becphi ', ierr )
@@ -263,11 +328,39 @@ MODULE cp_main_variables
       ELSE
         ALLOCATE( dbec( 1, 1, 1, 1 ) )
       END IF
+#if defined (__CUDA)
+      IF ( tpre ) THEN
+        ALLOCATE( dbec_d( nhsa, 2*nrcx, 3, 3 ), STAT=ierr )
+        IF( ierr /= 0 ) &
+           CALL errore( ' allocate_mainvar ', ' unable to allocate dbec_d ', ierr )
+      ELSE
+        ALLOCATE( dbec_d( 1, 1, 1, 1 ) )
+      END IF
+#endif
 
       gzero =  (gstart == 2)
       !
       CALL wave_descriptor_init( wfill, ngw, ngw_g, nupdwn,  nupdwn, &
             1, 1, nspin, 'gamma', gzero )
+      !
+      ! allocating working buffers
+      !
+#if defined (__CUDA)
+      ALLOCATE( nlsm1_wrk_d( nhsa, nbspx_bgrp ), STAT=ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( ' allocate_mainvar ', ' unable to allocate nlsm1_wrk_d ', ierr )
+      IF ( tpre ) THEN
+        ALLOCATE( caldbec_wrk_d( ngw, nhsa, 3, 3 ), STAT=ierr )
+        IF( ierr /= 0 ) &
+           CALL errore( ' allocate_mainvar ', ' unable to allocate caldbec_wrk_d ', ierr )
+        ALLOCATE( caldbec_dwrk_d( nhsa, nbspx_bgrp ), STAT=ierr )
+        IF( ierr /= 0 ) &
+           CALL errore( ' allocate_mainvar ', ' unable to allocate caldbec_wrk_d ', ierr )
+      ELSE
+        ALLOCATE( caldbec_wrk_d( 1, 1, 1, 1 ) )
+        ALLOCATE( caldbec_dwrk_d( 1, 1 ) )
+      END IF
+#endif
       !
       RETURN
       !
@@ -276,17 +369,20 @@ MODULE cp_main_variables
     !------------------------------------------------------------------------
     SUBROUTINE deallocate_mainvar()
       !------------------------------------------------------------------------
+      !! Deallocate main CP global variables.
       !
       IF( ALLOCATED( eigr ) )    DEALLOCATE( eigr )
       IF( ALLOCATED( sfac ) )    DEALLOCATE( sfac )
       IF( ALLOCATED( eigrb ) )   DEALLOCATE( eigrb )
       IF( ALLOCATED( irb ) )     DEALLOCATE( irb )
+      IF( ALLOCATED( iabox ) )     DEALLOCATE( iabox )
       IF( ALLOCATED( rhor ) )    DEALLOCATE( rhor )
       IF( ALLOCATED( rhos ) )    DEALLOCATE( rhos )
       IF( ALLOCATED( rhog ) )    DEALLOCATE( rhog )
       IF( ALLOCATED( drhog ) )   DEALLOCATE( drhog )
       IF( ALLOCATED( drhor ) )   DEALLOCATE( drhor )
       IF( ALLOCATED( bec_bgrp ) )     DEALLOCATE( bec_bgrp )
+      IF( ALLOCATED( bec_d ) )     DEALLOCATE( bec_d )
       IF( ALLOCATED( becdr_bgrp ) )   DEALLOCATE( becdr_bgrp )
       IF( ALLOCATED( bephi ) )   DEALLOCATE( bephi )
       IF( ALLOCATED( becp_bgrp ) )    DEALLOCATE( becp_bgrp )
@@ -301,6 +397,14 @@ MODULE cp_main_variables
       IF( ALLOCATED( vpot ) )    DEALLOCATE( vpot )
       IF( ALLOCATED( taub ) )    DEALLOCATE( taub )
       IF( ALLOCATED( idesc ) )  DEALLOCATE( idesc )
+      !
+#if defined (__CUDA)
+      IF( ALLOCATED( eigr_d ) )    DEALLOCATE( eigr_d )
+      IF( ALLOCATED( dbec_d ) )    DEALLOCATE( dbec_d )
+      IF( ALLOCATED( nlsm1_wrk_d ) )  DEALLOCATE( nlsm1_wrk_d )
+      IF( ALLOCATED( caldbec_wrk_d ) )  DEALLOCATE( caldbec_wrk_d )
+      IF( ALLOCATED( caldbec_dwrk_d ) )  DEALLOCATE( caldbec_dwrk_d )
+#endif
       !
       RETURN
       !

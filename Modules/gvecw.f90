@@ -8,6 +8,8 @@
 !=----------------------------------------------------------------------------=!
    MODULE gvecw
 !=----------------------------------------------------------------------------=!
+     !! G vectors module.
+     
      USE kinds, ONLY: DP
 
      IMPLICIT NONE
@@ -19,19 +21,26 @@
      PUBLIC :: gvecw_init, g2kin_init, deallocate_gvecw
 
      ! ...   G vectors less than the wave function cut-off ( ecutwfc )
-     INTEGER :: ngw  = 0  ! local number of G vectors
-     INTEGER :: ngw_g= 0  ! in parallel execution global number of G vectors,
-                       ! in serial execution this is equal to ngw
-     INTEGER :: ngwx = 0  ! maximum local number of G vectors
+     INTEGER :: ngw  = 0
+     !! local number of G vectors
+     INTEGER :: ngw_g= 0
+     !! in parallel execution global number of G vectors, in serial execution
+     !! this is equal to \(\text{ngw}\).
+     INTEGER :: ngwx = 0
+     !! maximum local number of G vectors
 
      REAL(DP) :: ecutwfc = 0.0_DP
+     !! wave function cut-off
      REAL(DP) :: gcutw = 0.0_DP
 
-     !   values for costant cut-off computations
+     ! values for costant cut-off computations
 
-     REAL(DP) :: ecfixed=0.0_DP     ! value of the constant cut-off
-     REAL(DP) :: qcutz = 0.0_DP     ! height of the penalty function (above ecfix)
-     REAL(DP) :: q2sigma=0.0_DP     ! spread of the penalty function around ecfix
+     REAL(DP) :: ecfixed=0.0_DP
+     !! value of the constant cut-off
+     REAL(DP) :: qcutz = 0.0_DP
+     !! height of the penalty function (above ecfix)
+     REAL(DP) :: q2sigma=0.0_DP
+     !! spread of the penalty function around ecfix
      ! augmented cut-off for k-point calculation
 
      REAL(DP) :: ekcut = 0.0_DP
@@ -39,9 +48,10 @@
     
      ! array of G vectors module plus penalty function for constant cut-off 
      ! simulation.
-     ! g2kin = g + ( agg / tpiba**2 ) * ( 1 + erf( ( tpiba2*g - e0gg ) / sgg ) )
-
+     
      REAL(DP), ALLOCATABLE :: g2kin(:)
+     !! \(\text{g2kin} = g + (\text{agg} / \text{tpiba}^2)\cdot(1+\text{erf}
+     !! ((\text{tpiba2}\cdot g-\text{e0gg})/\text{sgg}))\)
 
    CONTAINS
 
@@ -67,39 +77,40 @@
        !  allocate kinetic energy
        !
        ALLOCATE( g2kin(ngw) )
+       !$acc enter data create(g2kin)
        !
        RETURN 
-
-     END SUBROUTINE gvecw_init
-
-     SUBROUTINE g2kin_init( gg, tpiba2 )
        !
+     END SUBROUTINE gvecw_init
+     !
+     SUBROUTINE g2kin_init( ggg, tpiba2 )
+       !! Initialize kinetic energy
+       USE gvect, ONLY : gg
        IMPLICIT NONE
-       REAL(DP), INTENT(IN) :: gg(:), tpiba2
-       REAL(DP), EXTERNAL :: qe_erf
+       REAL(DP), INTENT(IN) :: ggg(:), tpiba2
        REAL(DP) :: gcutz
        INTEGER :: ig
-       !
-       !  initialize kinetic energy
        !
        gcutz  = qcutz / tpiba2
        IF( gcutz > 0.0d0 ) THEN
           DO ig=1,ngw
              g2kin(ig) = gg(ig) + gcutz * &
-                     ( 1.0d0 + qe_erf( ( tpiba2 *gg(ig) - ecfixed )/q2sigma ) )
+                     ( 1.0d0 + ERF( ( tpiba2 *gg(ig) - ecfixed )/q2sigma ) )
           ENDDO
        ELSE
           g2kin( 1 : ngw ) = gg( 1 : ngw )
        END IF
-
+       !
+       !$acc update device(g2kin)
+       !
        RETURN 
-
+       !
      END SUBROUTINE g2kin_init
-
+     !
      SUBROUTINE deallocate_gvecw
+       !$acc exit data delete(g2kin)
        IF( ALLOCATED( g2kin ) ) DEALLOCATE( g2kin )
      END SUBROUTINE deallocate_gvecw
-
-!=----------------------------------------------------------------------------=!
+     !=----------------------------------------------------------------------------=!
    END MODULE gvecw
 !=----------------------------------------------------------------------------=!

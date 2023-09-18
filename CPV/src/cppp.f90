@@ -45,7 +45,7 @@ PROGRAM cp_postproc
 
   CHARACTER(len=256) :: filepp, fileout, output, outdir
   CHARACTER(len=256) :: filecel, filepos, filefor, filepdb
-  CHARACTER(len=3)   :: atm( maxsp ), lab
+  CHARACTER(len=6)   :: atm( maxsp ), lab
   LOGICAL            :: lforces, ldynamics, lpdb, lrotation
   INTEGER            :: nframes
   INTEGER            :: ios, ndr

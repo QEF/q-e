@@ -9,11 +9,9 @@
 !-------------------------------------------------------------------
 SUBROUTINE dwfc (npw_ , igk_ , ik_ , icart_ , func, dfunc)
   !-----------------------------------------------------------------
-  !
-  ! This routine calculates the first derivative of a wave function 
-  ! w.r.t. the position operator r_icart:
-  !
-  ! dpsi/d(icart) = \sum_G [i(k+G)_icart] psi(G)
+  !! This routine calculates the first derivative of a wave function 
+  !! w.r.t. the position operator r_icart:
+  !! $$ d\psi/d(\text{icart}) = \sum_G [i(k+G)_\text{icart}] \psi(G) $$
   !
   USE kinds,      ONLY : DP
   USE wvfct,      ONLY : npwx
@@ -29,7 +27,7 @@ SUBROUTINE dwfc (npw_ , igk_ , ik_ , icart_ , func, dfunc)
   COMPLEX(DP), INTENT(IN) :: func(npwx)
   COMPLEX(DP), INTENT(OUT) :: dfunc(npwx)
   !
-  ! Local variables
+  ! ... local variables
   !
   INTEGER :: ig
   REAL(DP) :: gvec, xk_aux
@@ -54,11 +52,11 @@ END SUBROUTINE dwfc
 !------------------------------------------------------------------------
 SUBROUTINE d2wfc (npw_ , igk_ , ik_ , icart_ , jcart_, func, d2func)
   !----------------------------------------------------------------------
-  !
-  ! This routine calculates the second derivative of a wave function 
-  ! w.r.t. the position operator r_icart and r_jcart:
-  !
-  ! d2 psi/d(icart)d(jcart) = \sum_G [-(k+G)_icart * -(k+G)_gcart] psi(G)
+  !! This routine calculates the second derivative of a wave function 
+  !! with respect to the position operator \(r_\text{icart}\) and 
+  !! \(r_\text{jcart}\):
+  !! $$ d^2 \psi/d\text{icart}\ d\text{jcart} = \sum_G [-(k+G)_\text{icart}
+  !! \cdot (-(k+G)_\text{gcart})] \psi(G) $$
   !
   USE kinds,      ONLY : DP
   USE wvfct,      ONLY : npwx
@@ -74,7 +72,7 @@ SUBROUTINE d2wfc (npw_ , igk_ , ik_ , icart_ , jcart_, func, d2func)
   COMPLEX(DP), INTENT(IN)  :: func(npwx)
   COMPLEX(DP), INTENT(OUT) :: d2func(npwx)
   !
-  ! Local variables
+  ! ... local variables
   !
   INTEGER :: ig
   REAL(DP) :: gvec, xk_aux, gvec2, xk_aux2

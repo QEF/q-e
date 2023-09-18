@@ -1,0 +1,612 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!-- *** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST *** --><meta http-equiv="Content-Style-Type" CONTENT="text/css">
+<style>
+	  body {
+	  background-color:#ffffff;
+	  font:normal 14px/1.8em arial, helvetica, sans-serif;
+	  width:900px;
+	  text-align:justify;
+	  margin: 30 10 10 30;
+	  }
+
+	  h1 {
+	  font-size:24px;
+	  }
+	  
+	  h2 {
+	  font-size:18px;
+	  }
+	  
+	  h3 {
+	  font-size:16px;
+	  }
+	  pre, tt, code {
+	  font-size:14px;
+	  }	  
+	  .syntax, .syntax table {
+	  font-size:14px;
+	  }
+	  span.namelist {
+	  color: #214478;
+	  }
+	  span.card {
+	  color: #782167;
+	  }
+	  span.flag {
+	  color: #008000;
+	  font-weight: bold;
+	  }
+	</style>
+<title>all_currents.x: input description</title>
+</head>
+<body>
+<a name="__top__"></a><table style="border-width: 0; table-layout: auto; width: 100%; text-align: left; vertical-align: top; background: #00395a;">
+<tr><th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
+<h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
+<h2 style="margin: 10 10 10 15; text-align: left;"> Program:
+	      all_currents.x / QEHeat / Quantum ESPRESSO<span style="font-weight: normal;"> (version: 7.2)</span>
+</h2>
+</th></tr>
+<tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
+   <blockquote style="margin-bottom: 2em;">
+<h3>TABLE OF CONTENTS</h3>
+<blockquote>
+   
+   
+   <p><a href="#idm3">INTRODUCTION</a></p>
+   <p><a href="#idm35">&amp;ENERGY_CURRENT</a></p>
+<blockquote>
+<a href="#idm36">delta_t</a> | <a href="#idm39">file_output</a> | <a href="#idm46">trajdir</a> | <a href="#idm52">vel_input_units</a> | <a href="#idm58">eta</a> | <a href="#idm61">n_max</a> | <a href="#idm64">first_step</a> | <a href="#idm68">last_step</a> | <a href="#idm72">step_mul</a> | <a href="#idm77">step_rem</a> | <a href="#idm82">ethr_small_step</a> | <a href="#idm86">ethr_big_step</a> | <a href="#idm89">restart</a> | <a href="#idm94">subtract_cm_vel</a> | <a href="#idm97">add_i_current_b</a> | <a href="#idm100">save_dvpsi</a> | <a href="#idm103">re_init_wfc_1</a> | <a href="#idm106">re_init_wfc_2</a> | <a href="#idm110">re_init_wfc_3</a> | <a href="#idm113">three_point_derivative</a> | <a href="#idm118">n_repeat_every_step</a> | <a href="#idm123">n_workers</a> | <a href="#idm132">worker_id</a> | <a href="#idm136">continue_not_converged</a>
+</blockquote>
+</blockquote>
+</blockquote>
+   <blockquote>
+<a name="idm3"></a><h3>INTRODUCTION</h3>
+<blockquote><pre>
+Program to compute energy current given the atomic configuration and the velocities of the atoms.
+
+Note that a very small conv_thr must be given in the ELECTRONS namelist, in the order of 1.D-11.
+The numerical derivative is very sensitive to this parameter and to <a href="#delta_t">delta_t</a>. Careful convergence
+tests are needed. Note that if too relaxed values are chosen, the result can depend on the algorithm
+used to diagonalize the hamiltonian a lot (the 4th/3rd digit can be wrong). Options that allows
+estimating the variance are provided, to reinitialize the wavefunctions and repeat each step many
+times ( <a href="#n_repeat_every_step">n_repeat_every_step</a> <a href="#re_init_wfc_1">re_init_wfc_1</a> <a href="#re_init_wfc_2">re_init_wfc_2</a> <a href="#re_init_wfc_3">re_init_wfc_3</a> ).
+Performance of the calculation can be tuned a little bit with the parameters <a href="#ethr_small_step">ethr_small_step</a>
+and <a href="#ethr_big_step">ethr_big_step</a>, that can avoid the waste of some iterations in the diagonalization of the
+hamiltonian in the first scf step of every scf calculation (the program does 2 scf for each step).
+Note that in order to read atomic velocities, in the namelist CONTROL you must set calculation='md',
+and in the namelist IONS you must set ion_velocities='from_input'. Algorithm for computing finite
+difference derivatives can be set with the option <a href="#three_point_derivative">three_point_derivative</a> .
+
+This program implements
+
+Marcolongo, A., Umari, P. &amp; Baroni, S.
+Microscopic theory and quantum simulation of atomic heat transport.
+Nature Phys 12, 80-84 (2016). <a href="https://doi.org/10.1038/nphys3509">https://doi.org/10.1038/nphys3509</a>
+
+and was originally written by Aris Marcolongo in 2014 at SISSA for his PhD thesis
+( <a href="https://iris.sissa.it/handle/20.500.11767/3897">https://iris.sissa.it/handle/20.500.11767/3897</a> )
+The <b>all_current</b> driver program was rewritten from scratch by Riccardo Bertossa at SISSA in 2020.
+Other contributions are from Davide Tisi (SISSA), Loris Ercole (SISSA - EPFL ) and Federico Grasselli (SISSA).
+Details of the implementation are discussed in
+Marcolongo, Bertossa, Tisi, Baroni, <a href="https://arxiv.org/abs/2104.06383">https://arxiv.org/abs/2104.06383</a> (2021)
+
+All the namilist but <a href="#ENERGY_CURRENT">ENERGY_CURRENT</a> are the same as the program pw.x
+
+<b>Structure of the input data:</b>
+===============================================================================
+
+<b>&amp;ENERGY_CURRENT</b>
+  ...
+<b>/</b>
+
+<b>&amp;CONTROL</b>
+  MUST SET calculation='md'
+  ...
+<b>/</b>
+
+<b>&amp;SYSTEM</b>
+  ...
+<b>/</b>
+
+<b>&amp;ELECTRONS</b>
+  you may want startingwfc = 'random' (for better standard deviation estimation)
+  ...
+<b>/</b>
+
+[ <b>&amp;IONS</b>
+  MUST SET ion_velocities='from_input'
+  ...
+ <b>/</b> ]
+
+[ <b>&amp;CELL</b>
+  ...
+ <b>/</b> ]
+
+<b>ATOMIC_SPECIES</b>
+ X  Mass_X  PseudoPot_X
+ Y  Mass_Y  PseudoPot_Y
+ Z  Mass_Z  PseudoPot_Z
+
+<b>ATOMIC_POSITIONS</b> { alat | bohr | crystal | angstrom | crystal_sg }
+  X 0.0  0.0  0.0  {if_pos(1) if_pos(2) if_pos(3)}
+  Y 0.5  0.0  0.0
+  Z O.0  0.2  0.2
+
+<b>ATOMIC_VELOCITIES</b>
+  X 0.0  0.0  0.0
+  Y 0.5  0.0  0.0
+  Z O.0  0.2  0.2
+
+<b>K_POINTS</b> { gamma }
+if (gamma)
+   nothing to read
+
+[ <b>CELL_PARAMETERS</b> { alat | bohr | angstrom }
+   v1(1) v1(2) v1(3)
+   v2(1) v2(2) v2(3)
+   v3(1) v3(2) v3(3) ]
+   </pre></blockquote>
+</blockquote>
+   <a name="idm35"></a><a name="ENERGY_CURRENT"></a><table border="0" width="100%" style="margin-bottom: 20;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>ENERGY_CURRENT</span>
+</h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
+      <a name="idm36"></a><a name="delta_t"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">delta_t</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1.D0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Small timestep used to do the numerical derivative needed
+in order to compute some parts of the current. Note that is in the pw.x units.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm39"></a><a name="file_output"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">file_output</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'current_hz'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The program will write the output in <a href="#file_output">file_output</a> and <a href="#file_output">file_output</a>  + '.dat'.
+In the latter file the format of the output is:
+
+   NSTEP t_ps J_x J_y J_z Jele_x Jele_y Jele_z v_cm(1)_x v_cm(1)_y v_cm(1)_z ...
+
+where J_x, J_y, J_z are the three components of the DFT energy current,
+and can be easily post-processed by other external programs.
+Jele_* are the components of the electronic density current that may be used
+for decorrelation and better data analysis or for calculating the electric current.
+v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomic species.
+
+If <a href="#n_repeat_every_step">n_repeat_every_step</a> &gt; 1, an additional file <a href="#file_output">file_output</a> + '.stat' is
+written with the following format:
+
+   NSTEP t_ps mean(J_x) mean(J_y) mean(J_z) std(J_x) std(J_y) std(J_z)
+
+only one line per step is printed in this case (in the other output files you will
+find every calculation, also repeated ones). std is the standard deviation.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm46"></a><a name="trajdir"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">trajdir</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ''
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Prefix of the cp.x trajectory. The program will try to open the files
+<a href="#trajdir">trajdir</a> .pos and <a href="#trajdir">trajdir</a> .vel
+The files, for n atoms, are formatted like this:
+
+   NSTEP1 t_ps1
+   x(1) y(1) z(2)
+   .    .    .
+   .    .    .
+   .    .    .
+   x(n) y(n) z(n)
+   NSTEP2 t_ps2
+   x(1) y(1) z(2)
+   .    .    .
+   .    .    .
+   .    .    .
+   x(n) y(n) z(n)
+   ...
+
+the order of the atomic types must be the same of the one provided in the input file.
+If the files are not found, only the positions and the velocities from the input file will be used.
+Note that the units are specified by the input file. The units of the velocities are the same of
+the positions with time in atomic units. If a cp.x trajectory is provided (see <a href="#vel_input_units">vel_input_units</a> )
+a factor 2 can be used for the velocities.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm52"></a><a name="vel_input_units"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">vel_input_units</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'PW'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;">
+This multiplies or not by a factor 2 the velocities given in the input.
+                      Available options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'CP'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+assume velocities are given in cp.x time units (thus multiplying by 2 the velocities)
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'PW'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+assume velocities are given in pw.x time units
+            </pre></dd>
+</dl>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm58"></a><a name="eta"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">eta</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1.D0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Convergence parameter for Ewald-like sums
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm61"></a><a name="n_max"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">n_max</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 5
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Number of images in each direction used to converge some sums.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm64"></a><a name="first_step"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">first_step</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The program will start with step  istep &gt;= <a href="#first_step">first_step</a>.
+If greater than zero the input file's positions and velocities will be ignored.
+Note that this is not a sequential index but refers to the indexes reported in
+the input trajectory file. The index of 0 is assigned to the snapshot described
+in the input namelist file.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm68"></a><a name="last_step"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">last_step</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The program will end with step  istep &lt;= <a href="#last_step">last_step</a>.
+If 0, it will stop at the end of the trajectory file
+Note that this is not a sequential index but refers to the indexes reported in
+the input trajectory file.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm72"></a><a name="step_mul"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">step_mul</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The program will use the step only if
+MOD(step, <a href="#step_mul">step_mul</a>) == <a href="#step_rem">step_rem</a>.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm77"></a><a name="step_rem"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">step_rem</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The program will use the step only if
+MOD(step, <a href="#step_mul">step_mul</a>) == <a href="#step_rem">step_rem</a>.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm82"></a><a name="ethr_small_step"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ethr_small_step</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1.D-7
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Diagonalization threshold after the small <a href="#delta_t">delta_t</a> numerical derivative step.
+(the system changed a very little)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm86"></a><a name="ethr_big_step"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ethr_big_step</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1.D-3
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Diagonalization threshold at the beginning of each step but the first,
+for wich the pw.x input value is used.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm89"></a><a name="restart"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">restart</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If true try to read <a href="#file_output">file_output</a> .dat and try to set <a href="#first_step">first_step</a> to the
+last step in the file + 1
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm94"></a><a name="subtract_cm_vel"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">subtract_cm_vel</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If true subtract from the velocities of all atoms for every step
+the center of mass velocity for each atomic type.
+It help to decorrelate a little the mass flux from the energy flux
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm97"></a><a name="add_i_current_b"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">add_i_current_b</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If true adds to the energy current a part that is correctly implemented only for cubic cells.
+This part is in the form of a sum over the atomic types of a constant time the center of mass velocity
+of the atomic type. It does not change the value of the thermal conductivity when the formula for the
+multicomponent case with the inverse of the Schur complement is used, and in the single component
+or solid case this is a non-diffusive contribution.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm100"></a><a name="save_dvpsi"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">save_dvpsi</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If true allocate the space needed for saving the solution of the linear system betweew every calculation.
+The iterative algorithm will always start from there. By default it starts always from scratch.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm103"></a><a name="re_init_wfc_1"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">re_init_wfc_1</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If true initializes, as specified in the ELECTRON namelist of the PW section, the wavefunctions
+before the first ground state calculation, then compute the charge density.
+ Otherwise use the last calculated wavefunctions.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm106"></a><a name="re_init_wfc_2"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">re_init_wfc_2</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If true initializes, as specified in the ELECTRON namelist of the PW section, the wavefunctions
+before the second ground state calculation, then compute the charge density.
+Otherwise use the last calculated wavefunctions.
+Note that if <a href="#three_point_derivative">three_point_derivative</a> is false, this has no effect.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm110"></a><a name="re_init_wfc_3"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">re_init_wfc_3</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If true initializes, as specified in the ELECTRON namelist of the PW section, the wavefunctions
+before the third ground state calculation, then compute the charge density.
+Otherwise use the last calculated wavefunctions.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm113"></a><a name="three_point_derivative"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">three_point_derivative</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .true.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If true calculates three ground stated: one at t - <a href="#delta_t">delta_t</a> /2, one at t and one at t + <a href="#delta_t">delta_t</a>/2.
+Obviously it needs more computer time, but the derivative should be better.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm118"></a><a name="n_repeat_every_step"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">n_repeat_every_step</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Number of repetition of the full current calculation for each step. If &gt; 1, the file <a href="#file_output">file_output</a> + '.stat'
+is written with some statistics. Note that if you don't specify at least <a href="#re_init_wfc_1">re_init_wfc_1</a> ,this may be useless.
+You may want to specify startingwfc = 'random' in the ELECTRONS namelist.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm123"></a><a name="n_workers"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">n_workers</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The calculation over all the trajectory is splitted in <a href="#n_workers">n_workers</a> chunks. Then to run the code over all
+the trajectory you must run <a href="#n_workers">n_workers</a> input files each one with a different <a href="#worker_id">worker_id</a>,
+from 0 to <a href="#n_workers">n_workers</a> - 1 . Those inputs can run at the same time in the same folder. The <a href="#worker_id">worker_id</a>
+will be appended to the outdir folder and to the <a href="#file_output">file_output</a> input variables, so you can safely run all
+the inputs in the same directory at the same time.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm132"></a><a name="worker_id"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">worker_id</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+See <a href="#n_workers">n_workers</a> variable
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm136"></a><a name="continue_not_converged"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">continue_not_converged</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If it is not possible to find a ground state for a given frame of the trajectory, go to the next one.
+You will not find this step in the output file(s).
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+   </td></tr></tbody></table></td></tr>
+</table>
+</td></tr>
+</table>
+<small>
+	  This file has been created by helpdoc utility on Sat Mar 18 13:46:52 CET 2023.
+	</small>
+</body>
+</html>

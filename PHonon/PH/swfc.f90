@@ -9,21 +9,22 @@
 !----------------------------------------------------------------
 SUBROUTINE swfc (npw_, nbnd_, vkb_, wfc_, swfc_) 
   !---------------------------------------------------------------
+  !! This routine applies the S operator to the function \(\text{wfc_}\)
+  !! and puts the result in \(\text{swfc_}\), i.e.
+  !! \(\text{swfc_} = S * \text{wfc_}\).
   !
-  ! This routine applies the S operator to the function wfc_
-  ! and puts the result in swfc_, i.e.
-  ! swfc_ = S * wfc_
+  !! Important notice: here, the global array \(\text{vkb}\) is used as 
+  !! a workspace, because the routine \(\texttt{s_psi}\) uses 
+  !! \(\text{vkb}\) internally.  
+  !! \(\text{vkb_}\) can be a beta function at k or k+q, therefore, 
+  !! before changing the global array \(\text{vkb}\), we need to be very 
+  !! careful: save \(\text{vkb}\) to a temporary array \(\text{vkb_save}\).
+  !! Then we copy \(\text{vkb_save}\) back to \(\text{vkb}\), such that
+  !! the meaning of \(\text{vkb}\) outside of this routine is restored
+  !! (whatever it is).
   !
-  ! Important notice: here, the global array vkb is used as 
-  ! a workspace, because the routine s_psi uses vkb internally.
-  ! vkb_ can be a beta function at k or k+q, therefore, 
-  ! before changing the global array vkb, we need to be very 
-  ! careful: save vkb to a temporary array vkb_save.
-  ! Then we copy vkb_save back to vkb, such that the meaning of 
-  ! vkb outside of this routine is restored (whatever it is).
-  !
-  ! Written by A. Floris
-  ! Modified by I. Timrov (01.10.2018)
+  !! Written by A. Floris.  
+  !! Modified by I. Timrov (01.10.2018).
   !
   USE kinds,  ONLY : DP
   USE becmod, ONLY : becp, calbec

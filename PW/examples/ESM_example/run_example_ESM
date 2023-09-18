@@ -1,0 +1,468 @@
+#!/bin/sh
+
+###############################################################################
+##
+##  ESM EXAMPLE
+##
+###############################################################################
+
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "run_example_ESM : starting"
+$ECHO
+$ECHO "This example shows how to use ESM to calculate H2O and Al(001)"
+$ECHO "using the three available sets of boundary conditions."
+$ECHO
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x"
+PSEUDO_LIST="Al.pbe-n-van.UPF H.pbe-van_ak.UPF O.pbe-van_ak.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+       echo $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x     as: $PW_COMMAND"
+$ECHO
+
+
+# scf calculation for H2O with no ESM
+cat > H2O_pbc.in << EOF
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='H2O_pbc',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    tprnfor = .TRUE.
+ /
+ &system
+    ibrav = 0,
+    nat= 3, ntyp= 2,
+    ecutwfc = 25.0, ecutrho = 200.0,
+    occupations='smearing', smearing='mp', degauss=0.03,
+    assume_isolated = 'esm', esm_bc='pbc'
+ /
+ &electrons
+    diagonalization = 'rmm-davidson'
+    mixing_beta = 0.3
+ /
+ATOMIC_SPECIES
+ H  1.00794  H.pbe-van_ak.UPF
+ O  55.847   O.pbe-van_ak.UPF
+CELL_PARAMETERS angstrom
+    10.5835400000    0.0000000000    0.0000000000
+     0.0000000000   10.5835400000    0.0000000000
+     0.0000000000    0.0000000000   12.7002480000
+ATOMIC_POSITIONS angstrom
+O    0.0000000000    5.2917700000    0.0000000000
+H    0.4565612154    4.5618084292    0.4559209112
+H    0.3877322213    6.1004201907    0.3804697962
+K_POINTS gamma
+EOF
+$ECHO "  running the calculation for H2O without ESM...\c"
+$PW_COMMAND < H2O_pbc.in > H2O_pbc.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/H2O_pbc.esm1 $TMP_DIR/H2O_pbc.xml .
+
+# scf calculation for H2O with ESM bc1 (vacuum-slab-vacuum)
+cat > H2O_bc1.in << EOF
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='H2O_bc1',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    tprnfor = .TRUE.
+ /
+ &system
+    ibrav = 0,
+    nat= 3, ntyp= 2,
+    ecutwfc = 25.0, ecutrho = 200.0,
+    occupations='smearing', smearing='mp', degauss=0.03,
+    assume_isolated = 'esm', esm_bc='bc1'
+ /
+ &electrons
+    mixing_beta = 0.3
+ /
+ATOMIC_SPECIES
+ H  1.00794  H.pbe-van_ak.UPF
+ O  55.847   O.pbe-van_ak.UPF
+CELL_PARAMETERS angstrom
+    10.5835400000    0.0000000000    0.0000000000
+     0.0000000000   10.5835400000    0.0000000000
+     0.0000000000    0.0000000000   12.7002480000
+ATOMIC_POSITIONS angstrom
+O    0.0000000000    5.2917700000    0.0000000000
+H    0.4565612154    4.5618084292    0.4559209112
+H    0.3877322213    6.1004201907    0.3804697962
+K_POINTS gamma
+EOF
+$ECHO "  running the calculation for H2O with ESM bc1 (vacuum-slab-vacuum)...\c"
+$PW_COMMAND < H2O_bc1.in > H2O_bc1.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/H2O_bc1.esm1 $TMP_DIR/H2O_bc1.xml .
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/H2O*
+$ECHO " done"
+
+# calculation for Al(001) without ESM
+cat > Al001_pbc.in << EOF
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='Al001_pbc',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    tprnfor = .TRUE.
+ /
+ &system
+    ibrav = 0,
+    nat= 4, ntyp= 1,
+    ecutwfc = 20.0,
+    occupations='smearing', smearing='mp', degauss=0.03
+    assume_isolated='esm', esm_bc='pbc'
+ /
+ &electrons
+    diagonalization = 'rmm-davidson'
+    mixing_beta = 0.3
+ /
+ATOMIC_SPECIES
+ Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS angstrom
+     5.7269000760    0.0000000000    0.0000000000
+     0.0000000000    5.7269000760    0.0000000000
+     0.0000000000    0.0000000000   11.9999975199
+ATOMIC_POSITIONS angstrom
+Al   0.0000000000    0.0000000000    0.0000000000
+Al   2.8634500380    0.0000000000    0.0000000000
+Al   0.0000000000    2.8634500380    0.0000000000
+Al   2.8634500380    2.8634500380    0.0000000000
+ K_POINTS automatic
+ 6 6 1 1 1 0
+EOF
+$ECHO "  running the calculation for Al(001) without ESM\c"
+$PW_COMMAND < Al001_pbc.in > Al001_pbc.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/Al001_pbc.esm1 $TMP_DIR/Al001_pbc.xml .
+
+# calculation for Al(001) with ESM bc1 (vacuum-slab-vacuum)
+cat > Al001_bc1.in << EOF
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='Al001_bc1',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    tprnfor = .TRUE.
+ /
+ &system
+    ibrav = 0,
+    nat= 4, ntyp= 1,
+    ecutwfc = 20.0,
+    occupations='smearing', smearing='mp', degauss=0.03
+    assume_isolated='esm', esm_bc='bc1'
+ /
+ &electrons
+    diagonalization = 'rmm-davidson'
+    mixing_beta = 0.3
+ /
+ATOMIC_SPECIES
+ Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS angstrom
+     5.7269000760    0.0000000000    0.0000000000
+     0.0000000000    5.7269000760    0.0000000000
+     0.0000000000    0.0000000000   11.9999975199
+ATOMIC_POSITIONS angstrom
+Al   0.0000000000    0.0000000000    0.0000000000
+Al   2.8634500380    0.0000000000    0.0000000000
+Al   0.0000000000    2.8634500380    0.0000000000
+Al   2.8634500380    2.8634500380    0.0000000000
+ K_POINTS automatic
+ 6 6 1 1 1 0
+EOF
+$ECHO "  running the calculation for Al(001) with ESM bc1 (vacuum-slab-vacuuml)"
+$PW_COMMAND < Al001_bc1.in > Al001_bc1.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/Al001_bc1.esm1 $TMP_DIR/Al001_bc1.xml .
+
+# calculation for Al(001) with ESM bc2 (metal-slab-metal), no field
+cat > Al001_bc2.in << EOF
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='Al001_bc2',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    tprnfor = .TRUE.
+ /
+ &system
+    ibrav = 0,
+    nat= 4, ntyp= 1,
+    ecutwfc = 20.0,
+    occupations='smearing', smearing='mp', degauss=0.03
+    assume_isolated='esm', esm_bc='bc2'
+ /
+ &electrons
+    diagonalization = 'rmm-davidson'
+    mixing_beta = 0.3
+ /
+ATOMIC_SPECIES
+ Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS angstrom
+     5.7269000760    0.0000000000    0.0000000000
+     0.0000000000    5.7269000760    0.0000000000
+     0.0000000000    0.0000000000   11.9999975199
+ATOMIC_POSITIONS angstrom
+Al   0.0000000000    0.0000000000    0.0000000000
+Al   2.8634500380    0.0000000000    0.0000000000
+Al   0.0000000000    2.8634500380    0.0000000000
+Al   2.8634500380    2.8634500380    0.0000000000
+ K_POINTS automatic
+ 6 6 1 1 1 0
+EOF
+$ECHO "  running the calculation for Al(001) with ESM bc2 (metal-slab-metal)"
+$ECHO "  (no applied field)...\c"
+$PW_COMMAND < Al001_bc2.in > Al001_bc2.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/Al001_bc2.esm1 $TMP_DIR/Al001_bc2.xml .
+
+# calculation for Al(001) with ESM bc2 (metal-slab-metal), with field
+cat > Al001_bc2_efield.in << EOF
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='Al001_bc2_efield',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    tprnfor = .TRUE.
+ /
+ &system
+    ibrav = 0,
+    nat= 4, ntyp= 1,
+    ecutwfc = 20.0,
+    occupations='smearing', smearing='mp', degauss=0.03
+    assume_isolated='esm', esm_bc='bc2', esm_efield=0.00192148511256006
+ /
+ &electrons
+    diagonalization = 'rmm-davidson'
+    mixing_beta = 0.3
+ /
+ATOMIC_SPECIES
+ Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS angstrom
+     5.7269000760    0.0000000000    0.0000000000
+     0.0000000000    5.7269000760    0.0000000000
+     0.0000000000    0.0000000000   11.9999975199
+ATOMIC_POSITIONS angstrom
+Al   0.0000000000    0.0000000000    0.0000000000
+Al   2.8634500380    0.0000000000    0.0000000000
+Al   0.0000000000    2.8634500380    0.0000000000
+Al   2.8634500380    2.8634500380    0.0000000000
+ K_POINTS automatic
+ 6 6 1 1 1 0
+EOF
+$ECHO "  running the calculation for Al(001) with ESM bc2 (metal-slab-metal)"
+$ECHO "  with applied electric field...\c"
+$PW_COMMAND < Al001_bc2_efield.in > Al001_bc2_efield.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/Al001_bc2_efield.esm1 $TMP_DIR/Al001_bc2_efield.xml .
+
+# calculation for Al(001) with ESM bc3 (vacuum-slab-metal), uncharged
+cat > Al001_bc3.in << EOF
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='Al001_bc3',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    tprnfor = .TRUE.
+ /
+ &system
+    ibrav = 0,
+    nat= 4, ntyp= 1,
+    ecutwfc = 20.0,
+    occupations='smearing', smearing='mp', degauss=0.03
+    assume_isolated='esm', esm_bc='bc3'
+ /
+ &electrons
+    diagonalization = 'rmm-davidson'
+    mixing_beta = 0.3
+ /
+ATOMIC_SPECIES
+ Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS angstrom
+     5.7269000760    0.0000000000    0.0000000000
+     0.0000000000    5.7269000760    0.0000000000
+     0.0000000000    0.0000000000   11.9999975199
+ATOMIC_POSITIONS angstrom
+Al   0.0000000000    0.0000000000    0.0000000000
+Al   2.8634500380    0.0000000000    0.0000000000
+Al   0.0000000000    2.8634500380    0.0000000000
+Al   2.8634500380    2.8634500380    0.0000000000
+ K_POINTS automatic
+ 6 6 1 1 1 0
+EOF
+$ECHO "  running the calculation for Al(001) with ESM bc3 (vacuum-slab-metal)"
+$ECHO "  (neutrally charged)...\c"
+$PW_COMMAND < Al001_bc3.in > Al001_bc3.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/Al001_bc3.esm1 $TMP_DIR/Al001_bc3.xml .
+
+# calculation for Al(001) with ESM bc3 (vacuum-slab-metal), - charged
+cat > Al001_bc3_m002.in << EOF
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='Al001_bc3_m002',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    tprnfor = .TRUE.
+ /
+ &system
+    ibrav = 0,
+    nat= 4, ntyp= 1,
+    ecutwfc = 20.0,
+    occupations='smearing', smearing='mp', degauss=0.03
+    assume_isolated='esm', esm_bc='bc3'
+    tot_charge = -0.02,
+ /
+ &electrons
+    diagonalization = 'rmm-davidson'
+    mixing_beta = 0.3
+ /
+ATOMIC_SPECIES
+ Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS angstrom
+     5.7269000760    0.0000000000    0.0000000000
+     0.0000000000    5.7269000760    0.0000000000
+     0.0000000000    0.0000000000   11.9999975199
+ATOMIC_POSITIONS angstrom
+Al   0.0000000000    0.0000000000    0.0000000000
+Al   2.8634500380    0.0000000000    0.0000000000
+Al   0.0000000000    2.8634500380    0.0000000000
+Al   2.8634500380    2.8634500380    0.0000000000
+ K_POINTS automatic
+ 6 6 1 1 1 0
+EOF
+$ECHO "  running the calculation for Al(001) with ESM bc3 (vacuum-slab-metal)"
+$ECHO "  (-0.02e charged)...\c"
+$PW_COMMAND < Al001_bc3_m002.in > Al001_bc3_m002.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/Al001_bc3_m002.esm1 $TMP_DIR/Al001_bc3_m002.xml .
+
+# calculation for Al(001) with ESM bc3 (vacuum-slab-metal), + charged
+cat > Al001_bc3_p002.in << EOF
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='Al001_bc3_p002',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    tprnfor = .TRUE.
+ /
+ &system
+    ibrav = 0,
+    nat= 4, ntyp= 1,
+    ecutwfc = 20.0,
+    occupations='smearing', smearing='mp', degauss=0.03
+    assume_isolated='esm', esm_bc='bc3'
+    tot_charge = 0.02,
+ /
+ &electrons
+    diagonalization = 'rmm-davidson'
+    mixing_beta = 0.3
+ /
+ATOMIC_SPECIES
+ Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS angstrom
+     5.7269000760    0.0000000000    0.0000000000
+     0.0000000000    5.7269000760    0.0000000000
+     0.0000000000    0.0000000000   11.9999975199
+ATOMIC_POSITIONS angstrom
+Al   0.0000000000    0.0000000000    0.0000000000
+Al   2.8634500380    0.0000000000    0.0000000000
+Al   0.0000000000    2.8634500380    0.0000000000
+Al   2.8634500380    2.8634500380    0.0000000000
+ K_POINTS automatic
+ 6 6 1 1 1 0
+EOF
+$ECHO "  running the calculation for Al(001) with ESM bc3 (vacuum-slab-metal)"
+$ECHO "  (+0.02e charged)...\c"
+$PW_COMMAND < Al001_bc3_p002.in > Al001_bc3_p002.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/Al001_bc3_p002.esm1 $TMP_DIR/Al001_bc3_p002.xml .
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/
+$ECHO " done"
+
+$ECHO
+$ECHO "run_example_ESM: done"

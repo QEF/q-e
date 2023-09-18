@@ -1,17 +1,17 @@
-input_description -distribution {Quantum Espresso} -package PWscf -program postahc.x {
+input_description -distribution {Quantum ESPRESSO} -package PHonon -program postahc.x {
 
     toc {}
 
     intro {
     @b {Purpose of postahc.x:}
 
-    - Read the electron-phonon quantities calculated by ph.x with the
-    electron_phonon='ahc' option.
+    - Read the electron-phonon quantities calculated by @b ph.x with the
+    @b electron_phonon='ahc' option.
 
     - Calculate the phonon-induced electron self-energy in the full matrix form
     at a given temperature.
 
-        @b {Structure of the input data:}
+    @b {Structure of the input data:}
     ========================================================================
 
     @b &INPUT

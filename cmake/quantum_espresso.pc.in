@@ -1,0 +1,13 @@
+prefix="@CMAKE_INSTALL_PREFIX@"
+exec_prefix="${prefix}"
+libdir="${prefix}/@CMAKE_INSTALL_LIBDIR@"
+includedir="${prefix}/include/qe"
+
+Name: Quantum Espresso
+Description: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization
+URL: https://gitlab.com/QEF/q-e.git
+Version: @CMAKE_PROJECT_VERSION@
+
+Requires: @PKGCONF_REQ_PUB@
+Cflags: -I"${includedir}"/qe_fox -I"${includedir}"/qe_iotk -I"${includedir}"/qe_wannier90 -I"${includedir}"/qe_fftx -I"${includedir}"/qe_clib -I"${includedir}"/qe_utilx_tests -I"${includedir}"/qe_utilx -I"${includedir}"/qe_xclib -I"${includedir}"/qe_modules -I"${includedir}"/qe_lax -I"${includedir}"/qe_dftd3 -I"${includedir}"/qe_pw -I"${includedir}"/qe_cpv -I"${includedir}"/qe_atomic -I"${includedir}"/qe_couple -I"${includedir}"/qe_lr_modules -I"${includedir}"/qe_phonon_ph -I"${includedir}"/qe_pp -I"${includedir}"/qe_epw -I"${includedir}"/qe_hp -I"${includedir}"/qe_plotphon_kforbands_exe -I"${includedir}"/qe_neb -I"${includedir}"/qe_qha_atominfo_exe -I"${includedir}"/qe_pwcond_exe -I"${includedir}"/qe_tddfpt -I"${includedir}"/qe_kssolver_davidson -I"${includedir}"/qe_gww -I"${includedir}"/qe_upftools_extractcore_exe -I"${includedir}"/qe_xspectra_gipaw -I"${includedir}"/qe_upflib  
+Libs: -lqe_clib -lFoX_fsys -lFoX_utils -lqe_utilx -lqe_utilx_tests -lqe_fftx -lFoX_common -lqe_iotk -lFoX_wxml -lqe_lax -lqe_kssolver_davidsonrci -lqe_kssolver_dense -lFoX_sax -lqe_kssolver_davidson -lqe_kssolver_cg -lqe_kssolver_paro -lqe_kssolver_ppcg -lFoX_dom -lqe_wannier90 -lqe_xclib -lqe_modules -lqe_gww_minpack -lqe_gww_simplebse -lqe_gww_simpleip -lqe_atomic -lqe_dftd3 -lqe_gww -lqe_cpv -lqe_couple -lqe_pw -lqe_xspectra_gipaw -lqe_gww_simple -lqe_neb -lqe_xspectra -lqe_lr_modules -lqe_phonon_fd -lqe_pp -lqe_phonon_phaux -lqe_phonon_gamma -lqe_hp -lqe_gww_pw4gww -lqe_tddfpt -lqe_gww_bse -lqe_phonon_ph -lqe_gww_head -lqe_epw

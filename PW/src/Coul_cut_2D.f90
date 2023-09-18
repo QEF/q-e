@@ -140,24 +140,21 @@ SUBROUTINE cutoff_local( aux )
   !! See Eq. (33) of PRB 96, 075448
   !
   USE kinds
-  USE fft_base,   ONLY : dfftp
   USE gvect,      ONLY : ngm
   USE vlocal,     ONLY : strf
   USE ions_base,  ONLY : nsp
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP), INTENT(INOUT):: aux(dfftp%nnr)
+  COMPLEX(DP), INTENT(INOUT):: aux(ngm)
   !! input: local part of ionic potential 
   !
   ! ... local variables
   !
-  INTEGER :: ng, nt 
+  INTEGER :: nt
   !
   DO nt = 1, nsp
-     DO ng = 1, ngm
-        aux(dfftp%nl(ng)) = aux(dfftp%nl(ng)) + lr_Vloc(ng,nt) * strf(ng,nt)
-     ENDDO
+     aux(1:ngm) = aux(1:ngm) + lr_Vloc(1:ngm,nt) * strf(1:ngm,nt)
   ENDDO
   !
   RETURN
@@ -344,7 +341,7 @@ SUBROUTINE cutoff_force_lc( aux, forcelc )
         DO ipol = 1, 3
            forcelc(ipol,na) = forcelc (ipol,na) + tpi / alat * &
                  g(ipol,ig) * lr_Vloc(ig, ityp(na)) * omega  * &
-                ( SIN(arg)*DBLE(aux(dfftp%nl(ig))) + COS(arg)*AIMAG(aux(dfftp%nl(ig))) )
+                ( SIN(arg)*DBLE(aux(ig)) + COS(arg)*AIMAG(aux(ig)) )
         ENDDO
      ENDDO 
   ENDDO
@@ -355,7 +352,7 @@ END SUBROUTINE cutoff_force_lc
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE cutoff_stres_evloc( psic_G, evloc )
+SUBROUTINE cutoff_stres_evloc( rho_G, strf, evloc )
   !----------------------------------------------------------------------
   !! This subroutine adds the contribution from the cutoff long-range part
   !! of the local part of the ionic potential to \(\text{evloc}\).  
@@ -366,16 +363,17 @@ SUBROUTINE cutoff_stres_evloc( psic_G, evloc )
   !! to re-compute it here for the stress.
   !
   USE kinds
-  USE ions_base,  ONLY : ntyp => nsp
-  USE vlocal,     ONLY : strf
-  USE gvect,      ONLY : ngm , gstart
-  USE io_global,  ONLY : stdout
-  USE fft_base,   ONLY : dfftp
+  USE ions_base,  ONLY: ntyp => nsp
+  USE gvect,      ONLY: ngm, gstart
+  USE io_global,  ONLY: stdout
+  USE fft_base,   ONLY: dfftp
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP), INTENT(IN) :: psic_G(dfftp%nnr)
+  COMPLEX(DP), INTENT(IN) :: rho_G(dfftp%nnr)
   !! charge density in G space
+  COMPLEX(DP), INTENT(IN) :: strf(ngm,ntyp)
+  !! the structure factor
   REAL(DP), INTENT(INOUT) :: evloc
   !! the energy of the electrons in the local ionic potential
   !
@@ -383,14 +381,20 @@ SUBROUTINE cutoff_stres_evloc( psic_G, evloc )
   !
   INTEGER :: ng, nt
   !
-  ! If gstart=2, it means g(1) is G=0, but we have nothing to add for G=0
-  ! So we start at gstart.
+  !$acc data present_or_copyin(rho_G,strf)
+  !
+  ! ... If gstart=2, it means g(1) is G=0, but we have nothing to add for G=0
+  !     So we start at gstart.
+  !
+  !$acc parallel loop collapse(2) reduction(+:evloc) copyin(lr_Vloc)
   DO nt = 1, ntyp
-     DO ng = gstart, ngm
-        evloc = evloc + DBLE( CONJG(psic_G(dfftp%nl(ng))) * strf(ng,nt) ) &
-                        * lr_Vloc(ng,nt) 
-     ENDDO
+    DO ng = gstart, ngm
+       evloc = evloc + DBLE( CONJG(rho_G(ng)) * strf(ng,nt) ) &
+                       * lr_Vloc(ng,nt)
+    ENDDO
   ENDDO
+  !
+  !$acc end data
   !
   RETURN
   !
@@ -398,7 +402,7 @@ END SUBROUTINE cutoff_stres_evloc
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE cutoff_stres_sigmaloc( psic_G, sigmaloc )
+SUBROUTINE cutoff_stres_sigmaloc( rho_G, strf, sigmaloc )
   !----------------------------------------------------------------------
   !! This subroutine adds the contribution from the cutoff long-range part 
   !! of the local part of the ionic potential to the rest of the 
@@ -406,59 +410,80 @@ SUBROUTINE cutoff_stres_sigmaloc( psic_G, sigmaloc )
   !
   USE kinds
   USE ions_base,   ONLY : ntyp => nsp
-  USE vlocal,      ONLY : strf
   USE constants,   ONLY : eps8
-  USE gvect,       ONLY : ngm, g, gg, gstart
+  USE gvect,       ONLY : ngm, gstart, g, gg
   USE cell_base,   ONLY : tpiba, tpiba2, alat, omega
   USE io_global,   ONLY : stdout
   USE fft_base,    ONLY : dfftp
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP), INTENT(IN) :: psic_G(dfftp%nnr)
+  COMPLEX(DP), INTENT(IN) :: rho_G(dfftp%nnr)
   !! charge density in G space
+  COMPLEX(DP), INTENT(IN) :: strf(ngm,ntyp)
   REAL(DP), INTENT(INOUT) :: sigmaloc(3,3)
   !! stress contribution for the local ionic potential
   !
   ! ... local variables
   !
-  INTEGER :: ng, nt, l, m
-  REAL(DP) :: Gp, G2lzo2Gp, beta, dlr_Vloc
+  INTEGER  :: ng, nt, l, m
+  REAL(DP) :: Gp, G2lzo2Gp, beta, dlr_Vloc1, dlr_Vloc2, dlr_Vloc3, &
+              no_lm_dep
+  REAL(DP) :: sigmaloc11, sigmaloc31, sigmaloc21, sigmaloc32, &
+              sigmaloc22, sigmaloc33
+  ! 
+  !$acc data present_or_copyin(rho_G,strf)
   !
-  ! no G=0 contribution
+  sigmaloc11 = 0._DP  ;  sigmaloc31 = 0._DP
+  sigmaloc21 = 0._DP  ;  sigmaloc32 = 0._DP
+  sigmaloc22 = 0._DP  ;  sigmaloc33 = 0._DP
+  !
+  ! ... no G=0 contribution
+  !
+  !$acc parallel loop collapse(2) copyin(lr_Vloc,cutoff_2D)         &
+  !$acc     reduction(+:sigmaloc11,sigmaloc21,sigmaloc22,sigmaloc31,&
+  !$acc                 sigmaloc32,sigmaloc33)
   DO nt = 1, ntyp
      DO ng = gstart, ngm
         !
         Gp = SQRT( g(1,ng)**2 + g(2,ng)**2 )*tpiba
-        ! below is a somewhat cumbersome way to define beta of Eq. (61) of PRB 96, 075448
+        ! ... below is a somewhat cumbersome way to define beta of Eq. (61) of PRB 96, 075448
         IF (Gp < eps8) THEN
-           ! G^2*lz/2|Gp|
-           G2lzo2Gp = 0.0d0
-           beta = 0.0d0
+           ! ... G^2*lz/2|Gp|
+           G2lzo2Gp = 0._DP
+           beta = 0._DP
         ELSE
-           G2lzo2Gp = gg(ng)*tpiba2*lz/2.0d0/Gp
-           beta = G2lzo2Gp*(1.0d0-cutoff_2D(ng))/cutoff_2D(ng)
+           G2lzo2Gp = gg(ng)*tpiba2*lz/2._DP/Gp
+           beta = G2lzo2Gp*(1._DP-cutoff_2D(ng))/cutoff_2D(ng)
         ENDIF
-        ! dlr_vloc corresponds to the derivative of the long-range local ionic potential
-        ! with respect to G
-        DO l = 1, 3
-           IF (l == 3) THEN
-              dlr_Vloc = - 1.0d0/ (gg(ng)*tpiba2) * lr_Vloc(ng,nt)  &
-                               * (1.0d0+ gg(ng)*tpiba2/4.0d0)
-           ELSE
-              dlr_Vloc = - 1.0d0/ (gg(ng)*tpiba2) * lr_Vloc(ng,nt)  &
-                               * (1.0d0- beta + gg(ng)*tpiba2/4.0d0)
-           ENDIF
-           !
-           DO m = 1, l
-              sigmaloc(l,m) = sigmaloc(l,m) +  DBLE( CONJG( psic_G(dfftp%nl(ng) ) ) &
-                              * strf(ng,nt) ) * 2.0d0 * dlr_Vloc  &
-                              * tpiba2 * g(l,ng) * g(m,ng) 
-           ENDDO
-        ENDDO
+        ! ... dlrVloc corresponds to the derivative of the long-range local ionic potential
+        !     with respect to G
+        dlr_Vloc1 = -1._DP / (gg(ng)*tpiba2) * lr_Vloc(ng,nt) &
+                               * (1._DP- beta + gg(ng)*tpiba2/4._DP)
+        dlr_Vloc2 = -1._DP / (gg(ng)*tpiba2) * lr_Vloc(ng,nt) &
+                               * (1._DP- beta + gg(ng)*tpiba2/4._DP)
+        dlr_Vloc3 = -1._DP / (gg(ng)*tpiba2) * lr_Vloc(ng,nt) &
+                               * (1._DP+ gg(ng)*tpiba2/4._DP)
+        no_lm_dep = DBLE( CONJG( rho_G(ng) ) &
+                          * strf(ng,nt) ) * 2._DP * tpiba2
+        sigmaloc11 = sigmaloc11 + no_lm_dep * dlr_Vloc1 * g(1,ng) * g(1,ng)
+        sigmaloc21 = sigmaloc21 + no_lm_dep * dlr_Vloc2 * g(2,ng) * g(1,ng)
+        sigmaloc22 = sigmaloc22 + no_lm_dep * dlr_Vloc2 * g(2,ng) * g(2,ng)
+        sigmaloc31 = sigmaloc31 + no_lm_dep * dlr_Vloc3 * g(3,ng) * g(1,ng)
+        sigmaloc32 = sigmaloc32 + no_lm_dep * dlr_Vloc3 * g(3,ng) * g(2,ng)
+        sigmaloc33 = sigmaloc33 + no_lm_dep * dlr_Vloc3 * g(3,ng) * g(3,ng)
         !
      ENDDO
   ENDDO
+  !
+  sigmaloc(1,1) = sigmaloc(1,1) + sigmaloc11
+  sigmaloc(2,1) = sigmaloc(2,1) + sigmaloc21
+  sigmaloc(2,2) = sigmaloc(2,2) + sigmaloc22
+  sigmaloc(3,1) = sigmaloc(3,1) + sigmaloc31
+  sigmaloc(3,2) = sigmaloc(3,2) + sigmaloc32
+  sigmaloc(3,3) = sigmaloc(3,3) + sigmaloc33
+  !
+  !$acc end data
   !
   RETURN
   !
@@ -466,54 +491,82 @@ END SUBROUTINE cutoff_stres_sigmaloc
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE cutoff_stres_sigmahar( psic_G, sigmahar )
+SUBROUTINE cutoff_stres_sigmahar( rho_G, sigmahar )
   !----------------------------------------------------------------------
   !! This subroutine cuts off the Hartree part of the stress.  
   !! See Eq. (62) of PRB 96, 075448.
   !
   USE kinds
-  USE gvect,      ONLY : ngm, g, gg, gstart
-  USE constants,  ONLY : eps8
-  USE cell_base,  ONLY : tpiba2, alat, tpiba
-  USE io_global,  ONLY : stdout
-  USE fft_base,   ONLY : dfftp
+  USE gvect,      ONLY: ngm, gstart
+  USE constants,  ONLY: eps8
+  USE cell_base,  ONLY: tpiba2, alat, tpiba
+  USE io_global,  ONLY: stdout
+  USE fft_base,   ONLY: dfftp
+  USE gvect,      ONLY: g, gg
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP), INTENT(IN) :: psic_G(dfftp%nnr)
+  COMPLEX(DP), INTENT(IN) :: rho_G(dfftp%nnr)
   !! charge density in G-space
   REAL(DP), INTENT(INOUT) :: sigmahar(3,3)
-  !! hartree contribution to stress
+  !! Hartree contribution to stress
   !
   ! ... local variables
   !
   INTEGER :: ng, nt, l, m
   REAL(DP) :: Gp, G2lzo2Gp, beta, shart, g2, fact
+  REAL(DP) :: sigmahar11, sigmahar31, sigmahar21, &
+              sigmahar32, sigmahar22, sigmahar33
   !
+  !$acc data present_or_copyin(rho_G)
+  !
+  sigmahar11 = 0._DP  ;  sigmahar31 = 0._DP
+  sigmahar21 = 0._DP  ;  sigmahar32 = 0._DP
+  sigmahar22 = 0._DP  ;  sigmahar33 = 0._DP
+  !
+  !$acc parallel loop copyin(cutoff_2D)                             &
+  !$acc     reduction(+:sigmahar11,sigmahar21,sigmahar22,sigmahar31,&
+  !$acc                 sigmahar32,sigmahar33)
   DO ng = gstart, ngm
-     Gp = SQRT( g(1,ng)**2 + g(2,ng)**2 )*tpiba
+     Gp = SQRT(g(1,ng)**2 + g(2,ng)**2)*tpiba
      IF (Gp < eps8) THEN
-        G2lzo2Gp = 0.0d0
-        beta = 0.0d0
+        G2lzo2Gp = 0._DP
+        beta = 0._DP
      ELSE
-        G2lzo2Gp = gg(ng)*tpiba2*lz/2.0d0/Gp
-        beta = G2lzo2Gp*(1.0d0-cutoff_2D(ng))/cutoff_2D(ng)
+        G2lzo2Gp = gg(ng)*tpiba2*lz/2._DP/Gp
+        beta = G2lzo2Gp*(1._DP-cutoff_2D(ng))/cutoff_2D(ng)
      ENDIF
-     g2 = gg (ng) * tpiba2
-     shart = psic_G(dfftp%nl(ng)) * CONJG(psic_G(dfftp%nl(ng))) / g2 * cutoff_2D(ng)
-     DO l = 1, 3
-        IF (l == 3) THEN
-           fact = 1.0d0
-        ELSE
-           fact = 1.0d0 - beta
-        ENDIF
-        DO m = 1, l
-           sigmahar(l,m) = sigmahar(l,m) + shart * tpiba2 * 2 * &
-                           g(l,ng) * g(m,ng) / g2  * fact
-        ENDDO
-     ENDDO
-  ENDDO
+     !
+     g2 = gg(ng) * tpiba2
+     !
+     shart = DBLE(rho_G(ng)*CONJG(rho_G(ng))) / &
+             g2 * cutoff_2D(ng)
+     !
+     fact = 1._DP - beta
+     !
+     sigmahar11 = sigmahar11 + shart *tpiba2*2._DP * &
+                               g(1,ng) * g(1,ng) / g2 * fact
+     sigmahar21 = sigmahar21 + shart *tpiba2*2._DP * &
+                               g(2,ng) * g(1,ng) / g2 * fact
+     sigmahar22 = sigmahar22 + shart *tpiba2*2._DP * &
+                               g(2,ng) * g(2,ng) / g2 * fact
+     sigmahar31 = sigmahar31 + shart *tpiba2*2._DP * &
+                               g(3,ng) * g(1,ng) / g2
+     sigmahar32 = sigmahar32 + shart *tpiba2*2._DP * &
+                               g(3,ng) * g(2,ng) / g2
+     sigmahar33 = sigmahar33 + shart *tpiba2*2._DP * &
+                               g(3,ng) * g(3,ng) / g2
+  ENDDO   
+  !
+  sigmahar(1,1) = sigmahar(1,1) + sigmahar11
+  sigmahar(2,1) = sigmahar(2,1) + sigmahar21
+  sigmahar(2,2) = sigmahar(2,2) + sigmahar22
+  sigmahar(3,1) = sigmahar(3,1) + sigmahar31
+  sigmahar(3,2) = sigmahar(3,2) + sigmahar32
+  sigmahar(3,3) = sigmahar(3,3) + sigmahar33
   !sigma is multiplied by 0.5*fpi*e2 after
+  !
+  !$acc end data
   !
   RETURN
   !
@@ -529,7 +582,7 @@ SUBROUTINE cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
   USE kinds
   USE ions_base,   ONLY : nat, zv, tau, ityp
   USE constants,   ONLY : e2, eps8
-  USE gvect,       ONLY : ngm, g, gg, gstart
+  USE gvect,       ONLY : ngm, gstart, g, gg
   USE cell_base,   ONLY : tpiba2, alat, omega, tpiba
   USE io_global,   ONLY : stdout
   !
@@ -544,57 +597,75 @@ SUBROUTINE cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
   !
   ! ... local variables
   !
-  INTEGER :: ng, na, l, m
+  INTEGER :: ng, na, l, m, ntyp
   REAL(DP) :: Gp, G2lzo2Gp, beta, sewald, g2, g2a, arg, fact
+  REAL(DP) :: sigma11, sigma21, sigma22, sigma31, sigma32, sigma33
   COMPLEX(DP) :: rhostar
   !
-  ! g(1) is a problem if it's G=0, because we divide by G^2. 
-  ! So start at gstart.
-  ! fact=1.0d0, gamma_only not implemented
-  ! G=0 componenent of the long-range part of the local part of the 
-  ! pseudopotminus the Hartree potential is set to 0.
-  ! in other words, sdewald=0.  
-  ! sdewald is the last term in equation B1 of PRB 32 3792.
-  ! See also similar comment for ewaldg in cutoff_ewald routine
+  ntyp = SIZE(zv)
   !
-  sdewald = 0.0D0
+  ! ... g(1) is a problem if it's G=0, because we divide by G^2. 
+  !     So start at gstart.
+  !     fact=1.0d0, gamma_only not implemented
+  !     G=0 componenent of the long-range part of the local part of the 
+  !     pseudopotminus the Hartree potential is set to 0.
+  !     in other words, sdewald=0.  
+  !     sdewald is the last term in equation B1 of PRB 32 3792.
+  !     See also similar comment for ewaldg in cutoff_ewald routine
+  !
+  sigma11 = 0._DP ; sigma21 = 0._DP ; sigma22 = 0._DP
+  sigma31 = 0._DP ; sigma32 = 0._DP ; sigma33 = 0._DP
+  !
+  sdewald = 0._DP
+  !
+  !$acc parallel loop copyin(cutoff_2D,tau,zv,ityp) &
+  !$acc& reduction(+:sigma11,sigma21,sigma22,sigma31,sigma32, &
+  !$acc&             sigma33,sdewald)
   DO ng = gstart, ngm
      Gp = SQRT( g(1,ng)**2 + g(2,ng)**2 )*tpiba
      IF (Gp < eps8) THEN
-        G2lzo2Gp = 0.0d0
-        beta = 0.0d0
+        G2lzo2Gp = 0._DP
+        beta = 0._DP
      ELSE
-        G2lzo2Gp = gg(ng)*tpiba2*lz/2.0d0/Gp
-        beta = G2lzo2Gp*(1.0d0-cutoff_2D(ng))/cutoff_2D(ng)
+        G2lzo2Gp = gg(ng)*tpiba2*lz/2._DP/Gp
+        beta = G2lzo2Gp*(1._DP-cutoff_2D(ng))/cutoff_2D(ng)
      ENDIF
      g2 = gg(ng) * tpiba2
-     g2a = g2 / 4.d0 / alpha
-     rhostar = (0.d0, 0.d0)
+     g2a = g2 / 4._DP / alpha
+     rhostar = (0._DP,0._DP)
      DO na = 1, nat
         arg = (g(1,ng) * tau(1,na) + g(2,ng) * tau(2,na) + &
                g(3,ng) * tau(3,na) ) * tpi
-        rhostar = rhostar + zv (ityp(na) ) * CMPLX(COS(arg), SIN(arg), KIND=DP)
+        rhostar = rhostar + CMPLX(zv(ityp(na)),KIND=DP) * CMPLX(COS(arg),SIN(arg),KIND=DP)
      ENDDO
-     rhostar = rhostar / omega
+     rhostar = rhostar / CMPLX(omega,KIND=DP)
      sewald = tpi * e2 * EXP(-g2a) / g2* cutoff_2D(ng) * ABS(rhostar)**2
      ! ... sewald is an other diagonal term that is similar to the diagonal terms 
-     ! in the other stress contributions. It basically gives a term prop to 
-     ! the ewald energy
-     sdewald = sdewald-sewald
-     DO l = 1, 3
-        IF (l == 3) THEN
-           fact = (g2a + 1.0d0)
-        ELSE
-           fact = (1.0d0+g2a-beta)
-        ENDIF
-        !
-        DO m = 1, l
-           sigmaewa(l,m) = sigmaewa(l,m) + sewald * tpiba2 * 2.d0 * &
-                 g(l,ng) * g(m,ng) / g2 * fact
-        ENDDO
-     ENDDO
+     !     in the other stress contributions. It basically gives a term prop to 
+     !     the ewald energy
+     !
+     sdewald = sdewald - sewald
+     sigma11 = sigma11 + sewald * tpiba2 * 2._DP * &
+                 g(1,ng) * g(1,ng) / g2 * (1._DP+g2a-beta)
+     sigma21 = sigma21 + sewald * tpiba2 * 2._DP * &
+                 g(2,ng) * g(1,ng) / g2 * (1._DP+g2a-beta)          
+     sigma22 = sigma22 + sewald * tpiba2 * 2._DP * &
+                 g(2,ng) * g(2,ng) / g2 * (1._DP+g2a-beta)         
+     sigma31 = sigma31 + sewald * tpiba2 * 2._DP * &
+                 g(3,ng) * g(1,ng) / g2 * (g2a+1._DP)          
+     sigma32 = sigma32 + sewald * tpiba2 * 2._DP * &
+                 g(3,ng) * g(2,ng) / g2 * (g2a+1._DP)          
+     sigma33 = sigma33 + sewald * tpiba2 * 2._DP * &
+                 g(3,ng) * g(3,ng) / g2 * (g2a+1._DP)
      !
   ENDDO
+  !
+  sigmaewa(1,1) = sigmaewa(1,1) + sigma11
+  sigmaewa(2,1) = sigmaewa(2,1) + sigma21
+  sigmaewa(2,2) = sigmaewa(2,2) + sigma22
+  sigmaewa(3,1) = sigmaewa(3,1) + sigma31
+  sigmaewa(3,2) = sigmaewa(3,2) + sigma32
+  sigmaewa(3,3) = sigmaewa(3,3) + sigma33
   !
   RETURN
   !

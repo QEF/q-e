@@ -159,6 +159,27 @@ proc ::pwscf::readFilter::purifyCardLine {cardLine} {
 }
 
 
+proc ::pwscf::readFilter::ntypIndex {line varList {maxIndex 0}} { 
+    # PURPOSE
+    # search for the largest index of var()-dimension in $line and
+    # return the largest index found, where "var" is a collection of
+    # variables specified by $varList; $line is a line of input
+
+    foreach var $varList {
+        foreach field [split $line =] {
+            set pattern [subst -nocommands -nobackslashes {${var}\([0-9]+\)}]
+            if { [regexp -nocase \
+                      [subst -nocommands -nobackslashes {${var}\([0-9]+\)}] \
+                      $field matchVar] } {
+                regexp {[0-9]+} $matchVar index
+                if { $index > $maxIndex } { 
+                    set maxIndex $index 
+                }
+            }
+        }
+    }
+    return $maxIndex
+}
 proc ::pwscf::readFilter::amassIndex {line {maxIndex 0}} { 
     # PURPOSE
     # search for the largest index of amass()-dimension in $line and
@@ -186,7 +207,11 @@ proc ::pwscf::readFilter::default {moduleObj channel {filterMode logical} {replL
     # Variable: filterMode
     # Description:
     # mode=amass   search for largest amass(*) index and assign the
-    #              ntyp variables
+    #              ntyp variable
+    #
+    #
+    # mode={ntyp varList} search for largest index in the list of
+    #                     variables specified by var(*) and assign the ntyp variable    
     #
     # mode=logical repleace all possible values of Fortran logical
     #              variables with .true. or .false.
@@ -201,12 +226,21 @@ proc ::pwscf::readFilter::default {moduleObj channel {filterMode logical} {replL
     # Description: replList are double list of the form
     # { {replaceFromList1  replaceToItem1} {replaceFromList2  replaceToItem2} ... }
     # 
-    set amass   0
-    set logical 0
+    set amass     0
+    set logical   0
     set verbosity 0
-    if { [string match "*amass*"   $filterMode] } { set amass   1 }
-    if { [string match "*logical*" $filterMode] } { set logical 1 }
+    set ntyp      0
+    if { [string match "*amass*"     $filterMode] } { set amass   1 }
+    if { [string match "*logical*"   $filterMode] } { set logical 1 }
     if { [string match "*verbosity*" $filterMode] } { set verbosity 1 }
+    if { [string match "*ntyp*"      $filterMode] } {
+        foreach mode $filterMode {
+            if { [lindex $mode 0] == "ntyp" } {
+                set ntyp 1
+                set varList [lindex $mode 1]
+            }
+        }
+    }
 
     set maxIndex 0
     set output   {}
@@ -215,6 +249,9 @@ proc ::pwscf::readFilter::default {moduleObj channel {filterMode logical} {replL
 	if { $amass } {
 	    set maxIndex [amassIndex $_line $maxIndex]
 	}
+        if { $ntyp } {
+            set maxIndex [ntypIndex $_line $varList $maxIndex]
+        }
 	if { $logical } {
 	    set _line    [logicalFlag $_line]       
 	}
@@ -233,7 +270,8 @@ proc ::pwscf::readFilter::default {moduleObj channel {filterMode logical} {replL
 	}
 	append output $_line\n
     }
-    if { $maxIndex > 0 && $amass } {
+    
+    if { $maxIndex > 0 && ( $amass || $ntyp ) } {
 	$moduleObj varset ntyp -value $maxIndex
     }
     # close the old channel

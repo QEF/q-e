@@ -41,7 +41,7 @@ proc ::helpdoc::xml_doi {content} {
     set re {([dD][oO][iI]:?\s*)(10.[0-9]{4})(\.[0-9]+)?(/[-#%/=&@!,:\.\?\w\(\)]+[^\s\.,;:\)\]])}    
     #       1                  2            3          4
 
-    return [regsub -all $re $content  {<a href="http://dx.doi.org/\2\3\4">\0</a>}]
+    return [regsub -all $re $content  {<a href="https://doi.org/\2\3\4">\0</a>}]
 }
 
 proc ::helpdoc::xml_prb {content} {

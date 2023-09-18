@@ -8,20 +8,19 @@
 !----------------------------------------------------------------------------
 SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
   !----------------------------------------------------------------------------
+  !! Reads/writes variation of the charge with respect to a perturbation
+  !! on a file.  
+  !! \(\text{isw}=+1\): gathers data from the processors, writes to a single file;  
+  !! \(\text{isw}=-1\): reads data from a single file and distributes them.
   !
-  ! ... reads/writes variation of the charge with respect to a perturbation
-  ! ... on a file.
-  ! ... isw = +1 : gathers data from the processors, writes to a single file
-  ! ... isw = -1 : reads data from a single file and distributes them
-  !
-  USE kinds,     ONLY : DP
-  USE fft_base,  ONLY : dfftp
+  USE kinds,        ONLY : DP
+  USE fft_base,     ONLY : dfftp
   USE scatter_mod,  ONLY : gather_grid, scatter_grid
-  USE io_global, ONLY : ionode, ionode_id
-  USE mp_pools,  ONLY : inter_pool_comm, me_pool
-  USE mp_images, ONLY : intra_image_comm
-  USE mp,        ONLY : mp_bcast, mp_barrier
-  USE noncollin_module,  ONLY : nspin_mag
+  USE io_global,    ONLY : ionode, ionode_id
+  USE mp_pools,     ONLY : inter_pool_comm, me_pool
+  USE mp_images,    ONLY : intra_image_comm
+  USE mp,           ONLY : mp_bcast, mp_barrier
+  USE noncollin_module, ONLY : nspin_mag
   !
   IMPLICIT NONE
   !

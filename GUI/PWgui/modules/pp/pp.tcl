@@ -52,24 +52,30 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    "reduced density gradient"
 		    "product of density and 2nd-eigenvalue of density Hessian matrix"
 		    "all-electron charge density (valence+core, for PAW)"
+                    "kinetic energy density (for meta-GGA and XDM only)"
+                    "DORI: density overlap regions indicator"
 		}
-		-value { 0 1 2 3 4 5 6 7 7 8 9 10 11 12 13 17 18 19 20 21 }
+		-value { 0 1 2 3 4 5 6 7 7 8 9 10 11 12 13 17 18 19 20 21 22 123 }
 		-fmt %d
 	    }
 	    dimension spin_component {
 		-label    "Spin component (spin_component):"
 		-widget   optionmenu
 		-textvalue {
-		    "total charge/potential"
-		    "spin up charge/potential"
-		    "spin down charge/potential"
+                    "spin up + spin down"
+                    "spin up only"
+                    "spin down only"		
+
 		    "charge"
 		    "absolute value"
 		    "x component of the magnetization"
 		    "y component of the magnetization"
 		    "z component of the magnetization"
 		}
-		-value { 0 1 2  0  0 1 2 3 }
+		-value {
+                    0 1 2
+                    0 0 1 2 3
+                }
 		-start 1 -end 2 
 	    }	
 	    
@@ -129,6 +135,12 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    -label "Broadening of energy levels for LDOS in eV (degauss_ldos):"
 		    -validate fortrannonnegreal
 		}
+                var use_gauss_ldos {
+                    -label "Use gaussian broadening or LDOS (use_gauss_ldos):"
+                    -widget    radiobox
+                    -textvalue { Yes No }	      
+                    -value     { .true. .false. }
+                }
 	    }
 	}
     }
@@ -186,20 +198,20 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 	    var output_format {
 		-label     "Format of the output (output_format):"
 		-textvalue {
-		    "XCRYSDEN's XSF format (2D or 3D)" 
-		    "XCRYSDEN's XSF format (whole unit cell) (3D)"
+		    "XCRYSDEN's XSF format - fast (whole unit cell, 3D)"
+		    "XCRYSDEN's XSF format - slow (2D or 3D)" 
 		    "format suitable for gnuplot (1D)"
 		    "format suitable for plotrho (2D)"
 		    "Gaussian cube-file format (3D)"
 		    "format suitable for gnuplot (2D)"
 		}
-		-value     { 3 5 0 2 6 7 }
+		-value     { 5 3 0 2 6 7 }
 		-widget    optionmenu
 	    }
 	    var interpolation { 
 		-label     "Interpolation (interpolation):"
+                -textvalue { Fourier   bspline }
 		-value     { 'fourier' 'bspline' }
-		-textvalue { Fourier bspline }
 		-widget    optionmenu
 	    }
 	    

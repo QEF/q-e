@@ -2,14 +2,14 @@
 
 AC_DEFUN([X_AC_QE_CC], [
 
-# candidate C and f77 compilers good for all cases
+# candidate C compilers good for all cases
 try_cc="cc gcc"
 
 case "$arch:$f90_flavor" in
 *:ifort* )
-        try_cc="icc ecc $try_cc"
+        try_cc="icc $try_cc"
         ;;
-*:pgf90 )
+*:pgf90 | *:nvfortran )
         try_cc="pgcc $try_cc"
         ;;
 cray*:* )
@@ -24,7 +24,7 @@ ppc64-bg*:*xlf90_r )
 ppc64-bg*:*xlf90 )
         try_cc="bgxlc"
         ;;
-ppc64:*xlf* | ppc64-mn:*xlf* )
+ppc64:*xlf* | ppc64le:*xlf* )
         try_cc="xlc_r $try_cc"
         ;;
 esac
@@ -45,10 +45,11 @@ try_cpp="cpp"
 
 case "$arch:$cc" in
 *:pgcc )
-        # Do I need preprocessing here?
         try_cflags="-fast -Mpreprocess"
+        # Workaround for BEEF compilation with PGI v.19 and previous 
+        if test "$f90_flavor" = "pgf90"; then try_cflags="-c11 $try_cflags"; fi
         ;;
-crayxt*:cc )
+craype*:cc )
         # Actually we need something like is done for ftn to detect 
         # the proper compiler used (NdFilippo)
         try_cflags="-O3"
@@ -57,8 +58,8 @@ necsx:* )
         #try_cflags="-D__SX6 \$(IFLAGS) \$(MODFLAGS)"
         try_cflags=""
         ;;
-ppc64-mn:* )
-        try_cflags="-O3 -q64"
+ppc64le:* )
+        try_cflags="-O3"
         ;;
 ppc64-bg:* )
         try_cflags="-O3 -q32"

@@ -10,7 +10,7 @@
 ! Real space interpolation by B-splines
 
 !-----------------------------------------------------------------------
-SUBROUTINE bspline_interpolation (nptx, rg, rhor, rhoint)
+SUBROUTINE bspline_interpolation (nptx, rg, rhor, rhoint, laue)
   !---------------------------------------------------------------------
   !
   ! Use B-spline interpolation instead of Fourier interpolation
@@ -26,11 +26,13 @@ SUBROUTINE bspline_interpolation (nptx, rg, rhor, rhoint)
   real(dp), intent(inout) :: rg(3,nptx) ! in alat units
   real(dp), intent(in) :: rhor(dfftp%nr1x,dfftp%nr2x,dfftp%nr3x)
   real(dp), intent(out) :: rhoint(nptx)
+  logical, intent(in) :: laue
   !---------------------------------------------------------------------
   real(dp), allocatable :: xv(:), yv(:), zv(:)
   real(dp), allocatable :: xknot(:), yknot(:), zknot(:)
   real(dp), allocatable :: bcoef(:)
   real(dp), allocatable :: rhoext(:,:,:)
+  real(dp) :: drho1, drho2
   integer, parameter :: kx = 5, ky = 5, kz = 5   ! order of B-spline
   integer :: nx, ny, nz, i, j, k, ii, jj, kk, ierr
 
@@ -50,12 +52,31 @@ SUBROUTINE bspline_interpolation (nptx, rg, rhor, rhoint)
         jj = j
         if (j <= 0) jj = j+ny
         if (j > ny) jj = j-ny
-        do k = -kz+1, nz+kz
-           kk = k
-           if (k <= 0) kk = k+nz
-           if (k > nz) kk = k-nz
-           rhoext(i,j,k) = rhor(ii, jj, kk)
-        enddo
+        if (.not. laue) then
+           do k = -kz+1, nz+kz
+              kk = k
+              if (k <= 0) kk = k+nz
+              if (k > nz) kk = k-nz
+              rhoext(i,j,k) = rhor(ii, jj, kk)
+           enddo
+        else
+           if (nz > 1) then
+              drho1 = rhor(ii, jj, 2)  - rhor(ii, jj, 1)
+              drho2 = rhor(ii, jj, nz) - rhor(ii, jj, nz - 1)
+           else
+              drho1 = 0.d0
+              drho2 = 0.d0
+           endif
+           do k = -kz+1, nz+kz
+              if (k <= 0) then
+                rhoext(i,j,k) = rhor(ii, jj, 1)  + drho1 * dble(k - 1)
+              else if (k > nz) then
+                rhoext(i,j,k) = rhor(ii, jj, nz) + drho2 * dble(k - nz)
+              else
+                rhoext(i,j,k) = rhor(ii, jj, k)
+              endif
+           enddo
+        endif
      enddo
   enddo
   nx = nx + 2*kx
@@ -98,7 +119,12 @@ SUBROUTINE bspline_interpolation (nptx, rg, rhor, rhoint)
   ! interpolate
   do i = 1, nptx
      if (mod(i*100,nptx) == 0) write(stdout,'(5X,I3,''% done...'')') i*100/nptx
-     rg(:,i) = modulo(rg(:,i), 1.d0)
+     if (.not. laue) then
+        rg(:,i) = modulo(rg(:,i), 1.d0)
+     else
+        rg(1:2,i) = modulo(rg(1:2,i), 1.d0)
+        rg(3,i) = min(max(0.d0, rg(3,i)), 1.d0)
+     endif
      rhoint(i) = dbs3vl(rg(1,i),rg(2,i),rg(3,i),kx,ky,kz,xknot,yknot,zknot,nx,ny,nz,bcoef,ierr)
      if (ierr /= 0) then
         write(stdout,'(5X,''BSPLINE ERROR MESSAGE:'',A)') get_error_message()
@@ -113,7 +139,7 @@ END SUBROUTINE bspline_interpolation
 
 
 !-----------------------------------------------------------------------
-SUBROUTINE plot_1d_bspline (nptx, m1, x0, e, rhor, alat, iflag, ounit)
+SUBROUTINE plot_1d_bspline (nptx, m1, x0, e, rhor, alat, iflag, ounit, laue)
   !---------------------------------------------------------------------
   !
   ! Use B-spline interpolation instead of Fourier
@@ -126,6 +152,7 @@ SUBROUTINE plot_1d_bspline (nptx, m1, x0, e, rhor, alat, iflag, ounit)
   integer, intent(in) :: nptx, iflag, ounit
   real(dp), intent(in) :: e(3), x0(3), m1, alat
   real(dp), intent(in) :: rhor(dfftp%nr1x,dfftp%nr2x,dfftp%nr3x)
+  logical, intent(in) :: laue
   !---------------------------------------------------------------------
   real(dp), allocatable :: rg(:,:), carica(:)
   real(dp) :: deltax
@@ -144,7 +171,7 @@ SUBROUTINE plot_1d_bspline (nptx, m1, x0, e, rhor, alat, iflag, ounit)
   enddo
 
   ! interpolate
-  call bspline_interpolation(nptx, rg, rhor, carica) 
+  call bspline_interpolation(nptx, rg, rhor, carica, laue)
 
   ! we print the charge on output
   if (ionode) then
@@ -158,7 +185,7 @@ END SUBROUTINE plot_1d_bspline
 
 !-----------------------------------------------------------------------
 SUBROUTINE plot_2d_bspline (nx, ny, m1, m2, x0, e1, e2, rhor, alat, &
-     at, nat, tau, atm, ityp, output_format, ounit)
+     at, nat, tau, atm, ityp, output_format, ounit, laue)
   !-----------------------------------------------------------------------
   !
   ! Use B-spline interpolation instead of Fourier
@@ -172,6 +199,7 @@ SUBROUTINE plot_2d_bspline (nx, ny, m1, m2, x0, e1, e2, rhor, alat, &
   real(dp), intent(in) :: e1(3), e2(3), x0(3), m1, m2, alat, tau(3,nat), at(3,3)
   character(len=3), intent(in) :: atm(*)
   real(dp), intent(in) :: rhor(dfftp%nr1x,dfftp%nr2x,dfftp%nr3x)
+  logical, intent(in) :: laue
   !---------------------------------------------------------------------
   real(dp), allocatable :: rg(:,:,:), carica(:,:)
   real(dp) :: deltax, deltay
@@ -189,7 +217,7 @@ SUBROUTINE plot_2d_bspline (nx, ny, m1, m2, x0, e1, e2, rhor, alat, &
 
   ! interpolate
   nptx = nx*ny
-  call bspline_interpolation(nptx, rg(1,1,1), rhor, carica(1,1)) 
+  call bspline_interpolation(nptx, rg(1,1,1), rhor, carica(1,1), laue)
 
   ! and we print the charge on output
   if (ionode) then
@@ -244,7 +272,7 @@ END SUBROUTINE plot_2d_bspline
 
 !-----------------------------------------------------------------------
 SUBROUTINE plot_3d_bspline (alat, at, nat, tau, atm, ityp, rhor, &
-     nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, ounit)
+     nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, laue)
   !-----------------------------------------------------------------------
   !
   ! Use B-spline interpolation instead of Fourier
@@ -259,6 +287,7 @@ SUBROUTINE plot_3d_bspline (alat, at, nat, tau, atm, ityp, rhor, &
   real(dp), intent(in) :: alat, tau(3,nat), at(3,3)
   character(len=3), intent(in) :: atm(*)
   real(dp), intent(in) :: rhor(dfftp%nr1x,dfftp%nr2x,dfftp%nr3x)
+  logical, intent(in) :: laue
   !---------------------------------------------------------------------
   real(dp), allocatable :: rg(:,:,:,:), carica(:,:,:)
   real(dp) :: deltax, deltay, deltaz, rhomax
@@ -279,7 +308,7 @@ SUBROUTINE plot_3d_bspline (alat, at, nat, tau, atm, ityp, rhor, &
 
   ! interpolate
   nptx = nx*ny*nz
-  call bspline_interpolation(nptx, rg(1,1,1,1), rhor, carica(1,1,1)) 
+  call bspline_interpolation(nptx, rg(1,1,1,1), rhor, carica(1,1,1), laue)
 
   rhomax = maxval(carica)
   if (ionode) then

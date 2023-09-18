@@ -5,8 +5,7 @@ XSPECTRA : X-ray spectra calculation
 by C. Gougoussis, O. Bunau, A. Seitsonen, F. Mauri and M. Calandra
 
 K 
-The theoretical approach on which XSpectra is based was
-described in:
+The theoretical approach on which XSpectra is based was described in:
 
 L23 edges,
 
@@ -27,15 +26,21 @@ If you use only Norm Conserving pseudopotentials, you should also
 cite the following publication:
 
 M. Taillefumier, D. Cabaret, A. M. Flank, and F. Mauri
-"X-ray absorption near-edge structure calculations with the pseudopotentials: Application to the K edge in diamond and αalpha
--quartz"
-Phys. Rev. B 66, 195107 (2002)
+"X-ray absorption near-edge structure calculations with the pseudopotentials: Application to the K edge in diamond 
+and alpha-quartz", Phys. Rev. B 66, 195107 (2002)
 
 The implementation of the DFT+U approximation and its application to
 K-edge XAS in NiO was performed in:
 
 C. Gougoussis, M. Calandra, A. Seitsonen, Ch. Brouder, A. Shukla, F. Mauri
 " Intrinsic charge transfer gap in NiO from  Ni K -edge x-ray absorption spectroscopy", Phys. Rev. B 79, 045118 (2009)
+
+The interface of the DFT+U+V code and the XSpectra code and its application to
+oxygen K-edge XAS in LaFeO3 and LaFe0.75Ni0.25O3 is described in:
+
+I. Timrov, P. Agrawal, X. Zhang, S. Erat, R. Liu, A. Braun, M. Cococcioni, M. Calandra, N. Marzari, D. Passerone,
+"Electronic structure of pristine and Ni-substituted LaFeO3 from near edge x-ray absorption fine structure experiments 
+and first-principles simulations", Phys. Rev. Research 2, 033265 (2020)
 
 Finally you should cite properly the Quantum Espresso package.
 

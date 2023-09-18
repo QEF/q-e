@@ -1,0 +1,1097 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!-- *** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST *** --><meta http-equiv="Content-Style-Type" CONTENT="text/css">
+<style>
+	  body {
+	  background-color:#ffffff;
+	  font:normal 14px/1.8em arial, helvetica, sans-serif;
+	  width:900px;
+	  text-align:justify;
+	  margin: 30 10 10 30;
+	  }
+
+	  h1 {
+	  font-size:24px;
+	  }
+	  
+	  h2 {
+	  font-size:18px;
+	  }
+	  
+	  h3 {
+	  font-size:16px;
+	  }
+	  pre, tt, code {
+	  font-size:14px;
+	  }	  
+	  .syntax, .syntax table {
+	  font-size:14px;
+	  }
+	  span.namelist {
+	  color: #214478;
+	  }
+	  span.card {
+	  color: #782167;
+	  }
+	  span.flag {
+	  color: #008000;
+	  font-weight: bold;
+	  }
+	</style>
+<title>pw.x with OS-CDFT: input description</title>
+</head>
+<body>
+<a name="__top__"></a><table style="border-width: 0; table-layout: auto; width: 100%; text-align: left; vertical-align: top; background: #00395a;">
+<tr><th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
+<h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
+<h2 style="margin: 10 10 10 15; text-align: left;"> Program:
+	      pw.x with OS-CDFT / PWscf / Quantum ESPRESSO<span style="font-weight: normal;"> (version: 7.2)</span>
+</h2>
+</th></tr>
+<tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
+   <blockquote style="margin-bottom: 2em;">
+<h3>TABLE OF CONTENTS</h3>
+<blockquote>
+   
+   
+   <p><a href="#idm3"> ABOUT </a></p>
+   <p><a href="#idm7"> COMPILATION </a></p>
+   <p><a href="#idm9"> USAGE </a></p>
+   <p><a href="#idm12">INTRODUCTION</a></p>
+   <p><a href="#idm20">&amp;OSCDFT</a></p>
+<blockquote>
+<a href="#idm21">n_oscdft</a> | <a href="#idm25">get_ground_state_first</a> | <a href="#idm28">warm_up_niter</a> | <a href="#idm33">convergence_type</a> | <a href="#idm42">iteration_type</a> | <a href="#idm57">optimization_method</a> | <a href="#idm66">array_convergence_func</a> | <a href="#idm77">max_conv_thr</a> | <a href="#idm83">min_conv_thr</a> | <a href="#idm89">final_conv_thr</a> | <a href="#idm95">conv_thr_multiplier</a> | <a href="#idm100">print_occupation_matrix</a> | <a href="#idm103">print_occupation_eigenvectors</a> | <a href="#idm106">min_gamma_n</a> | <a href="#idm110">has_min_multiplier</a> | <a href="#idm114">min_multiplier</a> | <a href="#idm119">has_max_multiplier</a> | <a href="#idm123">max_multiplier</a> | <a href="#idm128">miniter</a> | <a href="#idm131">maxiter</a> | <a href="#idm134">swapping_technique</a> | <a href="#idm142">print_debug</a> | <a href="#idm145">orthogonalize_swfc</a> | <a href="#idm148">normalize_swfc</a>
+</blockquote>
+   <p><a href="#idm151">TARGET_OCCUPATION_NUMBERS</a></p>
+<blockquote>
+<a href="#idm156">applied</a> | <a href="#idm169">spin</a> | <a href="#idm174">orbital_desc</a> | <a href="#idm188">constr_idx</a> | <a href="#idm208">target</a> | <a href="#idm212">start_mul</a> | <a href="#idm217">start_index</a>
+</blockquote>
+   <p><a href="#idm223">GAMMA_VAL</a></p>
+<blockquote><a href="#idm229">gamma_val</a></blockquote>
+   <p><a href="#idm234"> ADDITIONAL NOTES </a></p>
+   <p><a href="#idm245"> ADDITIONAL EXAMPLES FOR TARGET_OCCUPATION_NUMBERS </a></p>
+</blockquote>
+</blockquote>
+   <blockquote>
+<a name="idm3"><h3> ABOUT </h3></a>
+      <blockquote><pre>
+OS-CDFT allows control of the oxidation state of a transition metal element by
+constraining the occupation numbers.
+For information on the method, see <a href="http://doi.org/10.1021/acs.jctc.9b00281">http://doi.org/10.1021/acs.jctc.9b00281</a>
+C. Ku, P. H. L. Sit, J. Chem. Theory Comput. 2019, 15, 9, 4781-4789
+      </pre></blockquote>
+   </blockquote>
+   <blockquote>
+<a name="idm7"><h3> COMPILATION </h3></a>
+      <blockquote><pre>
+Using autoconf:
+    ./configure ...
+    nano make.inc # append -D__OSCDFT into DFLAGS = ... (or MANUAL_DFLAGS = ...)
+    make pw pp ...
+
+Using cmake:
+    cmake -DQE_ENABLE_OSCDFT=ON ... &lt;path-to-qe-source&gt;
+    make pw pp ...
+      </pre></blockquote>
+   </blockquote>
+   <blockquote>
+<a name="idm9"><h3> USAGE </h3></a>
+      <blockquote><pre>
+Requires oscdft.in file, described below, in the same directory as where the pw.x command is ran. <code>
+    pw.x -inp &lt;input-file&gt; -oscdft ...
+</code>
+      </pre></blockquote>
+   </blockquote>
+   <blockquote>
+<a name="idm12"></a><h3>INTRODUCTION</h3>
+<blockquote><pre>
+<b>Input data format:</b> { } = optional, [ ] = it depends, | = or
+
+<b>Structure of the oscdft.in file:</b>
+===============================================================================
+
+    <b>&amp;OSCDFT</b>
+      ...
+    <b>/</b>
+
+    <b>TARGET_OCCUPATION_NUMBERS</b>
+      see <a href="#TARGET_OCCUPATION_NUMBERS">TARGET_OCCUPATION_NUMBERS</a>
+
+    [ <b>GAMMA_VAL</b>
+      gamma_val(1)
+      ...
+      gamma_val(n_oscdft) ]
+   </pre></blockquote>
+</blockquote>
+   <a name="idm20"></a><a name="OSCDFT"></a><table border="0" width="100%" style="margin-bottom: 20;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>OSCDFT</span>
+</h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
+      <a name="idm21"></a><a name="n_oscdft"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">n_oscdft</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> REQUIRED
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Number of entries of the <a href="#TARGET_OCCUPATION_NUMBERS">TARGET_OCCUPATION_NUMBERS</a> card.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm25"></a><a name="get_ground_state_first"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">get_ground_state_first</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .TRUE., perform an scf calculation to convergence before applying constraint.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm28"></a><a name="warm_up_niter"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">warm_up_niter</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Runs warm_up_niter scf iterations first before applying constraint.
+If <a href="#get_ground_state_first">get_ground_state_first</a> is .TRUE. then scf convergence is achieved first
+before running <a href="#warm_up_niter">warm_up_niter</a> scf iterations without applying the constraints.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm33"></a><a name="convergence_type"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">convergence_type</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'gradient'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;">
+The variable that is checked for convergence with the convergence threshold.
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'multipliers'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Converges when the change in multipliers between iterations
+is less than the threshold.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'gradient'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Converges when (occupation number - target occupation number)
+is less than the threshold.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'energy'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Converges when the change in total energy between iterations
+is less than the threshold.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'always_false'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Never converges (for debugging).
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'always_true'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Always converges (for debugging).
+            </pre></dd>
+</dl>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm42"></a><a name="iteration_type"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">iteration_type</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> REQUIRED
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;">
+Order of charge density and OS-CDFT multipliers optimizations.
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">0</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+OS-CDFT multipliers optimization is a micro-iteration inside
+the charge density iteration. The convergence threshold of the
+OS-CDFT multipliers iterations can be set to start loose at
+<a href="#max_conv_thr">max_conv_thr</a> and gradually tighten to a minimum of <a href="#min_conv_thr">min_conv_thr</a>
+by multiplying the threshold with <a href="#conv_thr_multiplier">conv_thr_multiplier</a> after
+every successful OS-CDFT multipliers iteration. A final
+convergence threshold of <a href="#final_conv_thr">final_conv_thr</a> can also be set
+to prevent the charge density iteration from converging when
+the OS-CDFT convergence test is larger than <a href="#final_conv_thr">final_conv_thr</a>.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">1</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Charge density optimization is a micro-iteration inside the
+OS-CDFT multiplier optimization. The convergence threshold of
+the OS-CDFT multipliers is set by <a href="#max_conv_thr">max_conv_thr</a>.
+<a href="#min_conv_thr">min_conv_thr</a>, <a href="#conv_thr_multiplier">conv_thr_multiplier</a>, and <a href="#final_conv_thr">final_conv_thr</a> are
+ignored.
+            </pre></dd>
+</dl>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm57"></a><a name="optimization_method"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">optimization_method</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'gradient descent'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;">
+Method to update the OS-CDFT multipliers.
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'gradient descent'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+multipliers -= <a href="#min_gamma_n">min_gamma_n</a>
+               * (occupation number - target occupation number)
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'gradient descent2'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+multipliers -= <a href="#gamma_val">gamma_val</a> * <a href="#min_gamma_n">min_gamma_n</a>
+               * (occupation number - target occupation number)
+            </pre></dd>
+</dl>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm66"></a><a name="array_convergence_func"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">array_convergence_func</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'maxval'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;">
+Specify the method of multiple values to scalar for convergence test
+when <a href="#convergence_type">convergence_type</a> is either 'gradient' or 'multipliers'.
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'maxval'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Takes the maximum of the <a href="#convergence_type">convergence_type</a> before comparing with
+threshold.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'norm'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Takes the root sum squared of the <a href="#convergence_type">convergence_type</a> before
+comparing with threshold.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'rms'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Takes the root mean squared of the <a href="#convergence_type">convergence_type</a> before
+comparing with threshold.
+            </pre></dd>
+</dl>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm77"></a><a name="max_conv_thr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">max_conv_thr</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">DOUBLE</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1.D-1
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If <a href="#iteration_type">iteration_type</a> is 0, this is the starting convergence threshold.
+If <a href="#iteration_type">iteration_type</a> is 1, this is the convergence threshold.
+See <a href="#iteration_type">iteration_type</a> for more explanations.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm83"></a><a name="min_conv_thr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">min_conv_thr</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">DOUBLE</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1.D-3
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If <a href="#iteration_type">iteration_type</a> is 0, this is the minimum convergence threshold.
+If <a href="#iteration_type">iteration_type</a> is 1, this is ignored.
+See <a href="#iteration_type">iteration_type</a> for more explanations.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm89"></a><a name="final_conv_thr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">final_conv_thr</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">DOUBLE</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> -1.D0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If <a href="#iteration_type">iteration_type</a> is 0 and <a href="#final_conv_thr">final_conv_thr</a> &gt; 0.D0, the charge density
+convergence is prevented when the OS-CDFT convergence test is
+larger than <a href="#final_conv_thr">final_conv_thr</a>. Otherwise, this is ignored.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm95"></a><a name="conv_thr_multiplier"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">conv_thr_multiplier</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">DOUBLE</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0.5D0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If <a href="#iteration_type">iteration_type</a> is 0, see <a href="#iteration_type">iteration_type</a> for explanations.
+Otherwise, this is ignored.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm100"></a><a name="print_occupation_matrix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">print_occupation_matrix</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .TRUE., prints the occupation matrices.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm103"></a><a name="print_occupation_eigenvectors"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">print_occupation_eigenvectors</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .TRUE., prints the occupation eigenvectors.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm106"></a><a name="min_gamma_n"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">min_gamma_n</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">DOUBLE</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1.D0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Learning rate of optimizations. See <a href="#optimization_method">optimization_method</a>.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm110"></a><a name="has_min_multiplier"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">has_min_multiplier</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .TRUE., sets the minimum value of the OS-CDFT multipliers
+to <a href="#min_multiplier">min_multiplier</a>.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm114"></a><a name="min_multiplier"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">min_multiplier</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">DOUBLE</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> REQUIRED if <a href="#has_min_multiplier">has_min_multiplier</a> is .TRUE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Minimum value of the OS-CDFT multipliers.
+Enabled using <a href="#has_min_multiplier">has_min_multiplier</a>
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm119"></a><a name="has_max_multiplier"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">has_max_multiplier</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .TRUE., sets the maximum value of the OS-CDFT multipliers
+to <a href="#max_multiplier">max_multiplier</a>.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm123"></a><a name="max_multiplier"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">max_multiplier</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">DOUBLE</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> REQUIRED if <a href="#has_max_multiplier">has_max_multiplier</a> is .TRUE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Maximum value of the OS-CDFT multipliers.
+Enabled using <a href="#has_max_multiplier">has_max_multiplier</a>
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm128"></a><a name="miniter"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">miniter</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Minimum OS-CDFT iterations.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm131"></a><a name="maxiter"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">maxiter</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Maximum OS-CDFT iterations.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm134"></a><a name="swapping_technique"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">swapping_technique</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'none'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;">
+See <a href="https://doi.org/10.1021/acs.jctc.9b00281">https://doi.org/10.1021/acs.jctc.9b00281</a>
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'none'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+No swapping technique.
+Always chooses the occupation number in ascending order.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'permute'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Chooses the occupation number associated with the
+occupation eigenvector that is most similar compared
+to previous iteration (using dot product)
+            </pre></dd>
+</dl>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm142"></a><a name="print_debug"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">print_debug</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .TRUE., prints additional debug informations.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm145"></a><a name="orthogonalize_swfc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">orthogonalize_swfc</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .TRUE., uses Lowdin orthogonalized atomic orbitals.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm148"></a><a name="normalize_swfc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">normalize_swfc</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .TRUE., uses Lowdin normalized atomic orbitals.
+Atomic orbitals are not orthogonalized in this case.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+   </td></tr></tbody></table></td></tr>
+</table>
+   <a name="idm151"></a><a name="TARGET_OCCUPATION_NUMBERS"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
+	    Card: <span class="card">TARGET_OCCUPATION_NUMBERS</span> </h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
+<tr><td>
+<p><b>
+Specifies the OS-CDFT constraint to apply.
+Also allows printing of occupation matrix without applying OS-CDFT constraints.
+      </b></p>
+<h3>Syntax:</h3>
+<blockquote>
+<b style="white-space: nowrap;">TARGET_OCCUPATION_NUMBERS </b><br><div class="syntax">
+<a name="idm154"></a><table>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm156">applied(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm169">spin(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm174">orbital_desc(1)</a></i> </td>
+<td> [ </td>
+<td style="white-space:nowrap"> <i><a href="#idm188">constr_idx(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm208">target(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm212">start_mul(1)</a></i> </td>
+<td> { </td>
+<td style="white-space:nowrap"> <i><a href="#idm217">start_index(1)</a></i> </td>
+<td> } </td>
+<td> ] </td>
+</tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm156">applied(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm169">spin(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm174">orbital_desc(2)</a></i> </td>
+<td> [ </td>
+<td style="white-space:nowrap"> <i><a href="#idm188">constr_idx(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm208">target(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm212">start_mul(2)</a></i> </td>
+<td> { </td>
+<td style="white-space:nowrap"> <i><a href="#idm217">start_index(2)</a></i> </td>
+<td> } </td>
+<td> ] </td>
+</tr>
+<tr><td colspan="2"> . . .</td></tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm156">applied(n_oscdft)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm169">spin(n_oscdft)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm174">orbital_desc(n_oscdft)</a></i> </td>
+<td> [ </td>
+<td style="white-space:nowrap"> <i><a href="#idm188">constr_idx(n_oscdft)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm208">target(n_oscdft)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm212">start_mul(n_oscdft)</a></i> </td>
+<td> { </td>
+<td style="white-space:nowrap"> <i><a href="#idm217">start_index(n_oscdft)</a></i> </td>
+<td> } </td>
+<td> ] </td>
+</tr>
+</table>
+</div>
+</blockquote>
+</td></tr>
+<tr><td>
+<h3>Description of items:</h3>
+<blockquote>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="applied"><a name="idm156">applied</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> REQUIRED
+                  </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">T</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Applies a constraint.
+
+<a href="#spin">spin</a>, <a href="#orbital_desc">orbital_desc</a>, <a href="#constr_idx">constr_idx</a>, <a href="#target">target</a>,
+and <a href="#start_mul">start_mul</a> are requried.
+<a href="#spin">spin</a> is optional.
+                     </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">F</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Just prints the occupation number.
+
+Only <a href="#spin">spin</a> and <a href="#orbital_desc">orbital_desc</a> are requried.
+Others are ignored.
+                     </pre></dd>
+</dl>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="spin"><a name="idm169">spin</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> REQUIRED
+                  </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">1</span>, <span class="flag">UP</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Spin up channel
+                     </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">2</span>, <span class="flag">DOWN</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Spin down channel
+                     </pre></dd>
+</dl>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="orbital_desc"><a name="idm174">orbital_desc</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> REQUIRED
+                  </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Orbitals included in the occupation number
+
+<b>Syntax</b> of the orbital descriptor:
+    <i> atom_index(manifold...)... </i>
+
+<b>Where:</b>
+<i>atom_index</i> = atom index in the order of ATOMIC_POSITIONS
+<i>manifold</i>   = principal and azimuthal quantum numbers
+                (can specify more than one manifolds)
+                (eg. 3d, 2s2p)
+
+<b>Examples:</b>
+5(3d)   describes a 5x5 occupation matrix which includes:
+- <i>3d</i> orbital of atom 5.
+
+3(2s2p) describes a 4x4 occupation matrix which includes:
+- <i>2s</i> orbital of atom 3.
+- <i>2p</i> orbital of atom 3.
+
+<b>Additional notes:</b> See ADDITIONAL NOTES below.
+                  </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="constr_idx"><a name="idm188">constr_idx</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">VARIOUS</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> REQUIRED if <a href="#applied">applied</a>(I) == T
+                     </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Specifies how the constraint is applied:
+
+<b>To apply a constraint on an occupation number</b>:
+  Write the index of the occupation numbers, sorted in ascending order,
+  where the OS-CDFT constraint is applied.
+  See <a href="#swapping_technique">swapping_technique</a>.
+
+  <b>Example:</b>
+  Apply a constraint to the 5th spin-up occupation number of
+  the <i>3d</i> orbital of atom 2 to a target of 0.9
+  &amp;OSCDFT
+    n_oscdft=1
+    ...
+  /
+  TARGET_OCCUPATION_NUMBERS
+    T UP 2(3d) 5 0.9 0.0
+
+<b>To apply a constraint on the trace of the occupation matrix</b>:
+  Write trace for this variable.
+  <a href="#swapping_technique">swapping_technique</a> is ignored when this is used.
+
+  <b>Example:</b>
+  Apply a constraint to the trace of the spin-up occupation number of
+  the <i>3d</i> orbital of atom 2 to a target of 3.2
+  &amp;OSCDFT
+    n_oscdft=1
+    ...
+  /
+  TARGET_OCCUPATION_NUMBERS
+    T UP 2(3d) trace 3.2 0.0
+
+<b>To apply a cosntraint on the sum of occupation numbers</b>:
+  sum number orbital_index row_index(1) ... row_index(number-1)
+  Applies constraint on orbital_index-th occupation number
+  of the occupation matrix.
+  However, the occupation number inputted to the optimization subroutines
+  is the sum of this orbital index along with the occupation number of
+  row_index(1) ... row_index(number-1)
+  <a href="#swapping_technique">swapping_technique</a> is ignored when this is used.
+
+  <b>Example:</b>
+  Apply a constraint to the sum of the 3rd, 4th, and 5th
+  occupation numbers of the <i>3d</i> orbital of atom 2 to a target of 2.8
+  &amp;OSCDFT
+    n_oscdft=3
+    ...
+  /
+  TARGET_OCCUPATION_NUMBERS
+    T UP 2(3d) sum 3 3 2 3 2.8 0.0
+    T UP 2(3d) sum 3 4 1 3 2.8 0.0
+    T UP 2(3d) sum 3 5 1 2 2.8 0.0
+
+  <b>Explanation:</b>
+  Row 1: Applies constraint to 3rd occupation number. However, the multiplier is
+         optimized until the sum of the 3rd occupation number, along with the
+         occupation numbers of row 2 and row 3 of the <a href="#TARGET_OCCUPATION_NUMBERS">TARGET_OCCUPATION_NUMBERS</a>
+         card equals 2.8
+  Row 2: Applies constraint to 4th occupation number. However, the multiplier is
+         optimized until the sum of the 4th occupation number, along with the
+         occupation numbers of row 1 and row 3 of the <a href="#TARGET_OCCUPATION_NUMBERS">TARGET_OCCUPATION_NUMBERS</a>
+         card equals 2.8
+  Row 3: Applies constraint to 5th occupation number. However, the multiplier is
+         optimized until the sum of the 5th occupation number, along with the
+         occupation numbers of row 1 and row 2 of the <a href="#TARGET_OCCUPATION_NUMBERS">TARGET_OCCUPATION_NUMBERS</a>
+         card equals 2.8
+                     </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="target"><a name="idm208">target</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">DOUBLE</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> REQUIRED if <a href="#applied">applied</a>(I) == T
+                     </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The target occupation number for the constraint.
+                     </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="start_mul"><a name="idm212">start_mul</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">DOUBLE</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> REQUIRED if <a href="#applied">applied</a>(I) == T
+                     </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Starting value of the multiplier.
+For normal operations, set this to 0.D0.
+                     </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="start_index"><a name="idm217">start_index</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1
+                        </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If <a href="#iteration_type">iteration_type</a> is 0, delays the application of this
+row of OS-CDFT constraint until the rest of the constraint is
+converged. Otherwise, this is ignored.
+
+<b>Example</b> (<a href="#n_oscdft">n_oscdft</a> = 4):
+TARGET_OCCUPATION_NUMBERS
+  T UP 3(3d) 5 0.9 0.0 1
+  T UP 4(3d) 5 0.9 0.0 1
+  T UP 5(3d) 5 0.9 0.0 2
+  T UP 6(3d) 5 0.9 0.0 3
+The constraints on atom 3 and 4 are applied first until convergence.
+Then, the constraints on atom 3, 4, and 5 are applied until convergence.
+Finally, the constraints on atom 3, 4, 5, and 6 are applied until convergence.
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+</blockquote>
+</td></tr>
+</tbody></table></td></tr>
+</table>
+   <a name="idm223"></a><a name="GAMMA_VAL"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
+	    Card: <span class="card">GAMMA_VAL</span> </h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
+<tr><td>
+<p><b> Conditional card, used only if <a href="#optimization_method">optimization_method</a> == 'gradient descent2', ignored otherwise !
+      </b></p>
+<h3>Syntax:</h3>
+<blockquote>
+<b style="white-space: nowrap;">GAMMA_VAL </b><br><div class="syntax">
+<a name="idm227"></a><table>
+<tr><td style="white-space:nowrap"> <i><a href="#idm229">gamma_val(1)</a></i> </td></tr>
+<tr><td style="white-space:nowrap"> <i><a href="#idm229">gamma_val(2)</a></i> </td></tr>
+<tr><td colspan="2"> . . .</td></tr>
+<tr><td style="white-space:nowrap"> <i><a href="#idm229">gamma_val(n_oscdft)</a></i> </td></tr>
+</table>
+</div>
+</blockquote>
+</td></tr>
+<tr><td>
+<h3>Description of items:</h3>
+<blockquote>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="gamma_val"><a name="idm229">gamma_val</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">DOUBLE</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> REQUIRED if <a href="#optimization_method">optimization_method</a> == 'gradient descent2'
+                  </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+This sets the learning rate for each multipliers,
+allowing different learning rate for each multipliers.
+See <a href="#optimization_method">optimization_method</a> for more details.
+                  </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+</blockquote>
+</td></tr>
+</tbody></table></td></tr>
+</table>
+   <blockquote>
+<a name="idm234"><h3> ADDITIONAL NOTES </h3></a>
+      <blockquote><pre>
+1. The default values are the recommeded options for <a href="#convergence_type">convergence_type</a>
+   and <a href="#array_convergence_func">array_convergence_func</a>
+
+2. When using diagonalization='davidson', OS-CDFT may fail with
+   'S matrix not positive definite' as an error. When that occurs,
+   use diagonalization='cg'.
+
+3. Use <a href="#iteration_type">iteration_type</a>=0 for most cases. <a href="#iteration_type">iteration_type</a>=0 is faster,
+   due to the ability to gradually tighten the convergence threshold.
+   However, <a href="#iteration_type">iteration_type</a>=1 is more robust.
+
+4. <a href="#orbital_desc">orbital_desc</a> in the <a href="#TARGET_OCCUPATION_NUMBERS">TARGET_OCCUPATION_NUMBERS</a> card:
+   While one <a href="#orbital_desc">orbital_desc</a> can be composed of multiple atoms,
+   the occupation number may not be accurate.
+   For example, 5(3d)6(2s2p) will be accepted, however the
+   atomic wavefunction of atom 5 and atom 6 may not be orthogonal.
+   (unless <a href="#orthogonalize_swfc">orthogonalize_swfc</a> is .true.)
+      </pre></blockquote>
+   </blockquote>
+   <blockquote>
+<a name="idm245"><h3> ADDITIONAL EXAMPLES FOR TARGET_OCCUPATION_NUMBERS </h3></a>
+      <blockquote><pre>
+<b>Input File:</b>
+&amp;OSCDFT
+  n_oscdft=2
+  ...
+/
+TARGET_OCCUPATION_NUMBERS
+  T UP   5(3d) 5 0.9075202 0.0
+  F DOWN 5(3d)
+<b>Explanations:</b>
+Row 1: Apply a constraint on the 5th spin-up occupation number of the
+       <i>3d</i> orbital of atom 5 to a target of 0.9075202
+Row 2: Print the occupation numbers of the spin-down occupation numbers
+       of the <i>3d</i> orbital of atom 5
+
+
+<b>Input File:</b>
+&amp;OSCDFT
+  n_oscdft=2
+  ...
+/
+TARGET_OCCUPATION_NUMBERS
+  F UP   1(3d)
+  T DOWN 1(3d) 5 0.9369434 0.0
+  F UP   2(3d)
+  T DOWN 2(3d) 5 0.261727 0.0
+<b>Explanations:</b>
+Row 1: Print the occupation numbers of the spin-up occupation numbers of the
+       <i>3d</i> orbital of atom 1
+Row 2: Apply a constraint on the 5th spin-down occupation number of the
+       <i>3d</i> orbital of atom 1 to a target of 0.9369434
+Row 3: Print the occupation numbers of the spin-up occupation numbers of the
+       <i>3d</i> orbital of atom 2
+Row 4: Apply a constraint on the 5th spin-down occupation number of the
+       <i>3d</i> orbital of atom 2 to a target of 0.261727
+
+
+<b>Input File:</b>
+&amp;OSCDFT
+  n_oscdft=7
+  ...
+/
+TARGET_OCCUPATION_NUMBERS
+  T UP    9(3d) sum 4 2 2 3 4 4.0135939 0.0
+  T UP    9(3d) sum 4 3 1 3 4 4.0135939 0.0
+  T UP    9(3d) sum 4 4 1 2 4 4.0135939 0.0
+  T UP    9(3d) sum 4 5 1 2 3 4.0135939 0.0
+  F DOWN  9(3d)
+  F UP   16(3d)
+  F DOWN 16(3d)
+<b>Explanations:</b>
+Row 1-4: Apply a constraint on the sum of the 2nd, 3rd, 4th, and 5th spin-up
+         occupation number of the <i>3d</i> orbital of atom 9 to a target of 4.0135939
+Row 5  : Print the occupation numbers of the spin-down occupation numbers of the
+         <i>3d</i> orbital of atom 9
+Row 6  : Print the occupation numbers of the spin-up occupation numbers of the
+         <i>3d</i> orbital of atom 16
+Row 7  : Print the occupation numbers of the spin-down occupation numbers of the
+         <i>3d</i> orbital of atom 16
+
+
+<b>Input File:</b>
+&amp;OSCDFT
+  n_oscdft=7
+  ...
+/
+TARGET_OCCUPATION_NUMBERS
+  F UP    9(3d)
+  F DOWN  9(3d)
+  T UP   16(3d) sum 4 2 4 5 6 4.0135939 0.0
+  T UP   16(3d) sum 4 3 3 5 6 4.0135939 0.0
+  T UP   16(3d) sum 4 4 3 4 6 4.0135939 0.0
+  T UP   16(3d) sum 4 5 3 4 5 4.0135939 0.0
+  F DOWN 16(3d)
+<b>Explanations:</b>
+Row 1  : Print the occupation numbers of the spin-up occupation numbers of the
+         <i>3d</i> orbital of atom 9
+Row 2  : Print the occupation numbers of the spin-down occupation numbers of the
+         <i>3d</i> orbital of atom 9
+Row 3-6: Apply a constraint on the sum of the 2nd, 3rd, 4th, and 5th spin-up
+         occupation number of the <i>3d</i> orbital of atom 16 to a target of 4.0135939
+Row 7  : Print the occupation numbers of the spin-down occupation numbers of the
+         <i>3d</i> orbital of atom 16
+
+
+<b>Input File:</b>
+&amp;OSCDFT
+  n_oscdft=7
+  ...
+/
+TARGET_OCCUPATION_NUMBERS
+  T UP   39(3d) sum 4 2 2 3 4 4.0135939 0.0
+  T UP   39(3d) sum 4 3 1 3 4 4.0135939 0.0
+  T UP   39(3d) sum 4 4 1 2 4 4.0135939 0.0
+  T UP   39(3d) sum 4 5 1 2 3 4.0135939 0.0
+  T DOWN 39(3d) sum 3 3 6 7   3.0020503 0.0
+  T DOWN 39(3d) sum 3 4 5 7   3.0020503 0.0
+  T DOWN 39(3d) sum 3 5 5 6   3.0020503 0.0
+<b>Explanations:</b>
+Row 1-4: Apply a constraint on the sum of the 2nd, 3rd, 4th, and 5th spin-up
+         occupation number of the <i>3d</i> orbital of atom 39 to a target of 4.0135939
+Row 5-7: Apply a constraint on the sum of the 3rd, 4th, and 5th spin-down
+         occupation number of the <i>3d</i> orbital of atom 39 to a target of 3.0020503
+      </pre></blockquote>
+   </blockquote>
+</td></tr>
+</table>
+<small>
+	  This file has been created by helpdoc utility on Sat Mar 18 16:00:16 CET 2023.
+	</small>
+</body>
+</html>

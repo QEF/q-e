@@ -9,6 +9,7 @@
     ecutwfc=30.0,
  /
  &electrons
+    diago_david_ndim=4
  /
 ATOMIC_SPECIES
  H 1.007825035 H.tpss-mt.UPF

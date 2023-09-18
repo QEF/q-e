@@ -52,7 +52,7 @@ help bz_sum -helpfmt helpdoc -helptext {
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>Default: </em>
-'smearing' if degauss in given in input 'smearing',
+'smearing' if degauss is given in input;
                         options read from the xml data file otherwise.
          </li>
 <br><li> <em>Description:</em>
@@ -116,7 +116,7 @@ Type of gaussian broadening:
 
     =  1  Methfessel-Paxton of order 1
 
-    = -1  Marzari-Vanderbilt "cold smearing"
+    = -1  "cold smearing" (Marzari-Vanderbilt-DeVita-Payne)
 
     =-99  Fermi-Dirac function
          </pre></blockquote>

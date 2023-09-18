@@ -31,6 +31,14 @@ proc ::helpdoc::quote_list {lst {prefix {}}} {
 }
 
 
+# Purpose: transform the QE flags list {alat | bohr | angstroms} to emacs list {"alat" "bohr" "angstroms"}
+proc ::helpdoc::flags_to_elist {flags} {
+    foreach f [regsub -all {\|} $flags { }] {
+        append res "\"$f\" "
+    }
+    return $res
+}
+
 # Purpose: store the namelists, variables, cards, etc. that are stated in the def file
 #          (this proc is used by tree's walkproc method; see qe_mode_process_def)
 proc ::helpdoc::getFontlockKeys {tree node action} {    
@@ -72,7 +80,7 @@ proc ::helpdoc::getFontlockKeys {tree node action} {
 		    set bare_name [lindex [split $name \(] 0]; # strips "(index)" from variable's name if var is a dimension
 		    lappend fontlock(vars) $bare_name
 		    lappend defun($module,vars) $bare_name
-		    
+
 		    # is the variable of string-type ?
 		    set type [arr type]
 		    if { "$type" eq "CHARACTER" } {
@@ -106,10 +114,12 @@ proc ::helpdoc::getFontlockKeys {tree node action} {
 			
 			if { $flags_use == "optional" } {
 			    #set fontlock(card_flags,$name) "\{ [string trim $flags_txt { }] \}"
-			    set defun($module,card_flags,$name) "\{ [string trim $flags_txt { }] \}"
+			    #set defun($module,card_flags,$name) "\{ [string trim $flags_txt { }] \}"
+			    set defun($module,card_flags_elist,$name) [flags_to_elist $flags_txt]
 			} else {
 			    #set fontlock(card_flags,$name) [string trim $flags_txt { }]
-			    set defun($module,card_flags,$name) [string trim $flags_txt { }]
+			    #set defun($module,card_flags,$name) [string trim $flags_txt { }]
+			    set defun($module,card_flags_elist,$name) [flags_to_elist $flags_txt]
 			}
 		    }
 		}
@@ -188,7 +198,7 @@ proc ::helpdoc::qe_mode_generate {module_list} {
     variable defun
     variable opt
     global qe_modes_template_dir
-    # load the variables needed by qe-mode.el.tcl
+    # load the variables needed by $opt(template), e.g., qe-mode.el.tcl
     
     set mode [string tolower $opt(mode)]
     
@@ -216,12 +226,31 @@ proc ::helpdoc::qe_mode_generate {module_list} {
     set cards     [quote_list [lsort -unique $cards_l]]
     
     set flags     [quote_list [lsort -unique [value_of fontlock(flags)]]]
-    set namelists [quote_list [lsort -nocase -unique [value_of fontlock(namelists)]] $opt(nmlprefix)]
-    set vars      [quote_list [lsort -nocase -unique [value_of fontlock(vars)]]]
+    set namelists [quote_list [lsort -unique [value_of fontlock(namelists)]] $opt(nmlprefix)]
+    set vars      [quote_list [lsort -unique [value_of fontlock(vars)]]]
+    set cmds      [quote_list [lsort -unique [value_of opt(cmds)]]]
+    #set namelists [quote_list [lsort -nocase -unique [value_of fontlock(namelists)]] $opt(nmlprefix)]
+    #set vars      [quote_list [lsort -nocase -unique [value_of fontlock(vars)]]]
+    #set cmds      [quote_list [lsort -nocase -unique [value_of opt(cmds)]]]
 
+    # PWTK uses uppercase namelist and card names !!!
+    if { $opt(mode) == "pwtk" } {
+        set namelists [string toupper $namelists]
+        set cards     [string toupper $cards]
+
+        # filter-out cmds that already exists in cards
+        set newL {}
+        foreach cmd $cmds {
+            if { [lsearch $cards $cmd] < 0 && [lsearch $namelists $cmd] < 0 } {
+                lappend newL $cmd
+            }
+        }
+        set cmds [quote_list $newL]
+    }         
+    
     # load the templates
     
-    set qe_template  [tclu::readFile [file join $qe_modes_template_dir qe-mode.el.tcl]]
+    set qe_template  [tclu::readFile [file join $qe_modes_template_dir $opt(template)]]; # default for opt(template) = qe-mode.el.tcl
 
     set header_template    [tclu::readFile [file join $qe_modes_template_dir header.el.tcl]] 
     set namelist_template  [tclu::readFile [file join $qe_modes_template_dir namelist.el.tcl]]
@@ -401,10 +430,12 @@ writing Emacs major-mode file : $file
 		set card_uc [string toupper $card]
 		set card_lc [string tolower $card]
 		
-		if { [info exists defun($module,card_flags,$card)] } {
+		#if { [info exists defun($module,card_flags,$card)] } {}
+		if { [info exists defun($module,card_flags_elist,$card)] } {
 		    # it's a card with flags
 		
-		    set card_flags $defun($module,card_flags,$card)
+		    #set card_flags $defun($module,card_flags,$card)
+                    set card_flags_elist $defun($module,card_flags_elist,$card)
 		    append keyword_functions [subst -nocommands -nobackslashes $card_template]\n\n
 		} else {
 		    # it's a flagless card

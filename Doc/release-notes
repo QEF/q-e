@@ -1,6 +1,258 @@
-New in dev branch:
+New in development version:
+  * Experimental support for pseudopotentials in PSML format
+
+Incompatible changes in development version:
+  * None known
+
+Fixed in development version:
+  * Incorrect PP_SEMILOCAL field written for old-style pseudopotentials.
+    May cause crashes (but not bad numbers). Reported by Jibiao Li.
+  * Wrong output from Libxc-based gga-exchange functionals (gga_x) due to
+    a bad multiplicative factor (v7.2 only, noticed by Peter Kraus).
+    The exchange+correlation ones (gga_xc) were not affected.
+  * The seed for random numbers was not set after the first run. As a result,
+    all subsequent runs used the same sequence of random numbers. Affects only
+    thermostats in Verlet dynamics for pw.x. Noticed by Han Hsu, NCU Taiwan.
+
+New in v.7.2:
+  * Oxidation state constrained DFT [Ku and Sit, JCTC 15, 4781 (2019)]
+  * Self-consistent calculation with a two-chemical potential approach
+    by G. Marini, M. Calandra [Phys. Rev. B 104, 144103(2021)].
+  * Polaron localization with semi-local functionals via correction of
+    self interaction (S. Falletta, A. Pasquarello):
+    https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.129.126401
+    https://journals.aps.org/prb/abstract/10.1103/PhysRevB.106.125119
+  * GPU-accelerated phonon code (CINECA Team)
+  * First steps towards GPU acceleration for AMD and Intel via OpenMP
+  * More CUDA Fortran code removed and replaced by ACC (Ivan Carnimeo)
+  * EPW v.5.7.
+    (1) Polaron
+    For the full list of new features, bug fixes, and changes leading to backward incompatibility issues,
+    please visit the Releases page of the EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
+
+Incompatible changes in v.7.2:
+  * None known
+
+Fixed in v.7.2:
+  * Mysterious MPI errors in "custom" parallel diagonalization, produced
+    on some MPI libraries by destruction of nonexistent communicators
+  * v.7.1 of CP for GPU was not working for pseudopotentials with nonlinear 
+    core correction
+  * in v.7.0 and 7.1 of pw.x the calculation of forces under a macroscopic
+    electric field in parallel execution was crashing due to a misspell
+  * pw.x was not able to read J0 using the new Hubbard input syntax,
+    and it was not printing the correct manifolds in the output when
+    two Hubbard channels per atomic type are used
+  * hp.x was not checking the compatibility of the q-mesh and FFT mesh
+  * ppacf.x was not working any longer in parallel in v7.1 
+  * neb.x was unable to read the HUBBARD card from input since v7.1
+  * r2r4 coefficient for Ba in DFT-D3 was incorrect since the original
+    release in v.6.2.1 (noticed by Valid Askarpour)
+  * Fully-relativistic PPs generated with QE versions 6.7 to 7.1 may contain
+    an incorrect "PP_AEWFC_rel" tag instead of the correct one "PP_AEWFC_REL" 
+    (noticed by Andrea Dal Corso)
+  * Non-magnetic spin-orbit calculations could in some rare case produce
+    NaN's in the energy (noticed by Andrea Dal Corso)
+  * CP wasn't honoring "exx_fraction" in v.7.1  (fixed by Hsin-Yu Ko)
+  * QEHeat and KCW were not working if compiled for GPU
+  * SCF failure to converge wasn't always exiting with a non-zero code since
+    v7.0 (fixed by A. Fonari)
+
+New in 7.1 version:
+  * DFT+RISM (1D, 3D, Laue) by S. Nishihara & M. Otani [Phys. Rev. B 96, 115429 (2017)].
+  * Improved, streamlined and extended porting to NVidia GPUs
+  * KCW package for Koopmans-compliant functionals in a Wannier representation:
+    https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.021051.
+    Developed and maintained by N. Colonna, R. de Gennaro, E. Linscott
+  * If no explicit parallelization options -nk, -nt, -nd are provided,
+    pw.x will figure out suitable values for optimal, or at least, not
+    too bad, parallelization
+  * EPW v.5.5. For the full list of new features, bug fixes, and changes leading
+    to backward incompatibility issues, please visit the Releases page of the 
+    EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
+
+Incompatible changes in 7.1 version:
+  * Source files previously found in FFTXLIB/ moved to FFTXLIB/src/
+  * gen_us_dj, gen_us_dj moved to upflib/ and into module uspp_init
+  * DFT+Hubbard codes have new input syntax (check Doc/Hubbard_input.pdf)
+
+Fixed in 7.1 version:
+  * Berry phases could in some cases be off by a factor eR/V.
+    Present since v.6.6 (noticed by S. Spreafico, fixed by R. Cohen)
+  * `divide_class_so` routine could yield the wrong irreducible representations
+    classification in the D3_h  group (G.J. Ferreira, A. Dal Corso) 
+  * XSPECTRA gave incorrect results with k-point parallelization, since
+    at least v. 6.6, due to missing broadcast of recomputed Fermi energy
+    (found and fixed by Fanchan Meng, Brookhaven)
+  * Bugfix in DFPT+U with PAW pseudos and when fildvscf/=''
+  * Makov-Payne correction wasn't working with ibrav=0 and cubic cell (A. Fonari)
+  * Card ADDITIONAL_KPOINTS wasn't working as expected (Prasenjit Ghosh)
+  * Subtle bug in G-vector ordering, usually triggered by almost-but-not-quite
+    symmetric primitive lattice vectors, was affecting k=0 calculations (not CP)
+    since v.6.0. The ultimate fix would require to change routine hpsort_eps; 
+    the current workaround consists in not recomputing k+G indices if k=0.
+  * In CMake GPU builds, one routine fftx_threed2oned_gpu was not compiled with
+    a proper GPU compiler option and caused failure in GGA-noncolin calculations.
+  * CP with Hubbard U was crashing also when reading the xml file (v.7.0)
+  * Bugfix in turboMagnon for k point grids that have Gamma or points at the
+    Brillouin zone edge (the weights were not correct)
+  * Libxc (5.2.x) linking failure when using CMake.
+
+New in 7.0 version:
+  * Unscreened and screened (range-separated) vdW-DF hybrids
+    (Per Hyldgaard and collaborators)
+  * GPU support for PWscf and CP significantly extended
+  * RMM-DIIS for CPU (S. Nisihara) and GPU (E. de Paoli, P. Delugas)
+  * DFT-D3: MPI parallelization and GPU acceleration with OpenACC
+  * projwfc.x can be used to compute the PDOS in a local basis (I. Timrov)
+  * Charge self-consistent DFT+DMFT calculations with the TRIQS software package
+    via Wannier90 (S. Beck, CCQ Flatiron Institute)
+  * EPW:
+    (1) Addition of spectral decomposition capability in the transport module
+    (2) Support for the frmsf file format of FermiSurfer
+    (3) The cumulant module updated
+    For the full list of new features, bug fixes, and changes leading to backward incompatibility issues,
+    please visit the Releases page of the EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
+
+Fixed in 7.0 version:
+  * Possible out-of-bound error (gfortran only) could crash DFT+U
+  * incorrect exx factor multiplication in the gga term of polarized cx0 
+    functional (v.6.8 only)
+  * Some build problems occurring under special circumstances
+  * Some PP files were not correctly read since v.6.7
+  * DFT-D3 with dftd3_version=4 or 6 could produce NaN's in parallel runs
+    due to missing zero initialization of some work arrays
+  * Ensemble-DFT in CP ("cg") wasn't working any longer for norm-conserving PPs
+  * In DFT+U (lda_plus_u_kind = 0 and 1) the pw.x code was printing the squared 
+    eigenvectors instead of simply eigenvectors. Now it prints the
+    eigenvectors (consistent with lda_plus_u_kind = 2).
+  * plotband.x wasn't correctly plotting the bands, under some not-so-special
+    circumstances
+  * CP with DFT+U could crash when writing the xml file (since v.6.6)
+  * Restart of electron-phonon calculations was not working due to a missing
+    tag (thanks to Miguel Marques for reporting this)
+  * atomic: the exchange of two lines in import_upf.f90 had broken PAW tests
+    since v.6.5 (thanks to Chiara Biz for reporting, to AdC for fixing)
+  * Calculation of ELF for spin-unpolarized cases was grossly wrong in v.6.8
+  * Changes to the i-Pi interface to adapt it to usage with ASE had broken 
+    the original functionality
+
+Incompatible changes in 7.0 version:
+  * Changes to Makefiles and to file "make.inc" (they must be regenerated)
+  * clib/ deleted, files clib/*.c moved to UtilXlib/ or to Modules/
+  * Some reshuffling of variables for noncollinear and spin-orbit calculations
+
+Known problems in 6.8 version:
+  * electron-phonon calculation in the non-colinear/spinorbit case is broken
+  * some obscure problem still affects variable-cell with hybrid functionals
+
+New in 6.8 version:
+  * Grand-Canonical SCF (J. Chem. Phys. 146, 114101 (2017)) for constant-mu
+    method is implemented by S. Nishihara and S. Hagiwara. [arXiv:2012.10090]
+  * Calculation of spin-current matrix elements (Phys. Rev. B 99, 235113) 
+    for spin Hall conductivity using Wannier interpolation, in pw2wannier.x
+    (Minsu Ghim, Seoul National U.)
+  * GWL iterative Www method from JCTC 15 (6) 3710, 2019: Joshua Elliot 
+    (U. Manchester), N. Colonna, M. Marsili, N. Marzari, P. Umari
+  * Many-Body Dispersion (MBD) correction: Szabolcs Goger (U. Luxembourg),
+    Hsin-Yu Ko (Cornell), et al.
+  * Support for GPU via CUDA Fortran brought to the main repository
+  * Calculation of DORI and of ELF for nspin=2 (Dong Yang, Qin Liu, JSG)
+  * Interface for BerkeleyGW extended to hybrid and meta-GGA functionals:
+    Fangzhou Zhao (Berkeley)
+  * Implementation of the turboMagnon code in TDDFPT [EPJB 91, 249 (2018)]
+    (T. Gorni, O. Baseggio, I. Timrov, P. Delugas, S. Baroni)
+  * EPW: 
+    (1) Hall mobility and Hall factor.
+    (2) Isotropic linearized Eliashberg equation to get Tc
+    For the full list of new features, bug fixes, and changes leading to backward incompatibility issues, 
+    please visit the Releases page of the EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
+
+Fixed in 6.8 version:
+  * Fictitious charge particle (FCP) works again. [arXiv:2012.10090]
+  * Bugfix in HP: the hp.x calculation was not stopping smoothly when
+    "perturb_only_atom" was used (this bug is not present in earlier 
+    versions, i.e. <6.7)
+  * Phonon restart was broken in some cases due to bad occupations
+    written to xml file
+  * ELF with nspin=2 was not correct (noticed by Dong Yang, JSG)
+  * "cube" file with data interpolated by B-splines was not correct 
+    (fixed by Satomichi Nisihara)
+  * Dumb and horrible bug in PAW relativistic calculations (QE 6.7 only):
+    a bad tag name was searched for in PP, leading to a small but non
+    negligible error. Noticed by Minkyu Park (Univ. of Ulsan, Rep. of Korea).
+    Also fixed a "wrong offset" error that could occur in DFT+U for some
+    relativistic PP files (found in a report by Ignacio Martin Alliati)
+  * Solution to the long-standing problem of non-monotonic N(E) in 
+    Methfessel-Paxton and Marzari-Vanderbilt smearing, occasionally resulting 
+    in an incorrect choice of the Fermi energy (Flaviano José dos Santos, EPFL).
+    Results, in particular for the Fermi energy, may change a little bit, but
+    either they are the same or are systematically improved wrt previous ones.
+  * There was a missing 2pi/a factor in the case of loto_2d = .true.. Found 
+    and explained in M. Royo and M. Stengel, https://arxiv.org/abs/2012.07961.
+  * The rho => 0 limit of spin-polarized BEEF XC energy was not correct,
+    leading to funny total energy numbers and problems in structural optimization
+    (fixed by Gabriel S. Gusmão, Georgia Tech)
+  * In some cases the new xml code of v.6.7 wrote UPF files that could not be read
+    because they contained too long lines (noticed by Felix Goudreault, U. Montreal)
+  * Bug in variable-cell hybrid DFT fixed: it was broken since v.6.5.
+  * Small random errors in some XC spin-polarized functionals in OMP execution
+  * The new fit introduced in v.6.7 of ev.x wasn't always working as expected
+  * alpha2f.x wasn't reading the input any longer in v.6.7
+    (noticed by Rico Pratama, Chungbuk Nat.U. Cheongju, Rep. of Korea)
+  * turboLanczos with hybrids + (d0psi_rs=.true.) + (ipol/=4) was crashing
+  * Restart for DFT+U+V was not working  
+  * Restart for "Force theorem" was not working properly and gave wrong results
+  * ld1.x may crash while writing UPF files due to unallocated r and rab arrays
+    (noticed and fixed by Hitoshi Mori)
+
+Incompatible changes in 6.8 version:
+  * lfcpopt & lfcpdyn are replaced by lfcp. Only static optimization of the
+    Fermi energy works. Currently, molecular dynamics with FCP does not work.
+  * Exchange-correlation code (vdW excepted) moved to XClib/
+  * Much more pseudopotential-related code re-organized and moved to upflib/
+    Variables ofsbeta ("offset of beta functions") and indv_ijkb0 merged
+    Now only ofsbeta is used
+  * Code computing [H,x] commutator moved from LR_Modules/ to PW/src/ and
+    disentangled from linear-response variables - now is used in PP/ as well
+
+New in 6.7 version:
+  * Support for CMake (F. Ficarelli and D. Cesarini, CINECA, with help from
+    Ye Luo, P. Delugas, S. Gsaenger)
+  * In vc-relax with Hubbard corrections, the final SCF calculation is done by 
+    reading atomic occupations from file produced during the vc-relax 
+    (rather than recomputing them from scratch).
+  * EPW: 
+    (1) ZG package to generate special displacements for first-principles non-perturbative calculations 
+    at finite temperatures [Marios Zacharias and Feliciano Giustino, Phys. Rev. Research 2, 013357, (2020)].
+    (2) Plotting of Fermi surface.
+    For the full list of new features, bug fixes, and changes leading to backward incompatibility issues, 
+    please visit the Releases page of the EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
+
+Fixed in 6.7 version:
+  * Some linkers yield "missing references to ddot_" in libbeef
+  * Bogus errors in scale_sym_ops in some cases of almost-symmetric crystals
+  * FFT test in FFTXlib was not always compiling 
+  * angle1, angle2, starting_magnetization incorrectly written to xml file
+  * Bug in Hubbard forces and stress for bands parallelization (when nproc_pool>nbnd) 
+  * Bug in DFT+U+V when starting_ns_eigenvalue is used (courtesy of M. Cococcioni)
+  * Crash in the calculation of Z* with ultrasoft PP when the number of bands
+    is larger than the number of occupied bands (thanks to Sasha Fonari)
+  * Crash in matdyn.x when ibrav=0 (thanks to Sasha Fonari)
+  * Some postprocessing cases not working properly with k-point parallelization
+    and ultrasoft pseudopotentials (noticed by Kristjan Eimre)
+  * Ensemble dynamics in CP was broken in v.6.6 (not in previous versions)
+
+Incompatible changes in 6.7 version:
+  * FoX  no longer used to read and write pseudopotential files
+  * iotk no longer used to read and write any file
+  * Developer manual moved to the Wiki
+
+New in v.6.6:
+  * vdW-DF3-opt1, vdW-DF3-opt2, and vdW-DF-C6 van der Waals functionals
+    implemented (T. Thonhauser, supported by NSF Grant No. 1712425)
   * More FORD documentation
-  * Stress for noncolinear case
+  * Stress for non-collinear case
   * QE can be compiled on Windows 10 using PGI v.19.10 Community Edition
     configure works, except FoX: use script install/build_fox_with_pgi.sh
   * ParO and PPCG iterative diagonalization algorithms
@@ -10,6 +262,8 @@ New in dev branch:
     Extension of the HP code to compute also inter-site Hubbard V parameters;
     Extension of the XSpectra code to work on top of DFT+U+V [arXiv:2004.04142]
     (I. Timrov, N. Marzari, M. Cococcioni).
+    Extension of Hubbard forces and stress to ortho-atomic orbitals
+    (I. Timrov, F. Aquilante, L. Binci, N. Marzari)
   * Support for BEEF-vdW XC (by Johannes Voss) compilation link has been included; 
     e.g. BEEF_LIBS="-L$LIBBEEF/src -lbeef", where $LIBBEEF is the path 
     to the compiled libbeef folder. If "calculation='ensemble'", 
@@ -21,23 +275,48 @@ New in dev branch:
   * Phonon-induced electron self-energy implemented in ph.x and
     a new post-processing program PHonon/postahc.x added.
     (Jae-Mo Lihm, Seoul Natl. Univ.)
+  * Implementation of the Sternheimer algorithm in the turboEELS code
+    (O. Motornyi, N. Vast, I. Timrov, O. Baseggio, S. Baroni, and A. Dal Corso,
+    Phys. Rev. B  102, 035156 (2020).)
+  * EPW:
+    (1) Use of the band manifold determined by Wannierization step
+        when evaluating electron-phonon vertex on coarse grids
+    (2) Support for PAW
+    For the full list of new features and changes leading to backward incompatibility issues,
+    please visit the Releases page of the EPW documentation site 
+    [https://docs.epw-code.org/doc/Releases.html].
   
-Fixed in dev branch:
+Fixed in v.6.6:
   * PW: Restart from interrupted calculations  simplified. As a side effect,
     NEB restart now works again
-  * A few LIBXC glitches
+  * Various LIBXC glitches, missing check on metaGGA+USPP/PAW not implemented
   * Fermi energy incorrectly written to xml file in 'bands' calculation
     (did not affect results, just Fermi energy position in band plotting)
     Also: Fermi energy always written to xml file, also for insulators
-  * Phonon code in the noncolinear case with magnetization ("domag" case)
+  * Phonon code in the non-collinear case with magnetization ("domag" case)
     now works properly - courtesy Andrea Urru and Andrea Dal Corso.
   * Incorrect forces, and slightly inconsistent atomic positions, were
     written to xml file for structural optimization and molecular dynamics
-  * Some Bravais lattices with special axis orientations were not correctly
+    now works properly - courtesy Andrea Urru and Andrea Dal Corso.
     written to xml file, leading to errors in some codes (e.g., thermo_pw)
     using that piece of information (fixed by Alberto Otero de la Roza)
+  * PPACF wasn't working with the "lfock" option: wavefunctions were no longer
+    read from file because read_file had been replaced by read_file_new
+  * Wrong phonons could result in some cases from an incompatibility between
+    the FFT grid and the symmetry (typically occurrence: actual symmetry higher
+    than the symmetry of the Bravais lattice) - Noticed by Matteo Calandra.
+  * Bug in PHonon+U for the symmetrization in the spin-polarized case when 
+    the Hubbard channel is "s" (noticed by Jin-Jian Zhou)
  
-Incompatible changes in dev branch:
+Incompatible changes in v.6.6:
+  * If no starting magnetization is set in a non-collinear or spin-orbit
+    calculation, the magnetization is set to zero and remains zero.
+    Previously, the magnetization was zero in practise (although numerical
+    noise could lead to nonzero values) but was not forced to be zero.
+  * Default value of parameter "diago_david_ndim" changed to 2:
+    uses less RAM, execution time sometimes shorter, sometimes longer.
+  * Grouping of inlc values into ranges for different developments.
+    WARNING: inlc for rVV10 has been changed to inlc=26.
   * Conversion from 1D FFT real-space index to 3D positions moved into a
     small routine for all cases where such conversion is used
   * CP: atomic positions are now in array tau(1:3,1:nat), information on the
@@ -48,7 +327,7 @@ Incompatible changes in dev branch:
     'laxlib.fh', descriptors replaced by integer values
   * Interpolation table for Q(G) is in a.u. and no longer in 2pi/a units
   * Part of pseudopotential-related code moved to new directory upflib/ and
-    into library libupf.a. Directory upftools/ deleted.
+    into library libupf.a. Directory upftools/ is obsolescent.
 
 New in 6.5 branch:
   * For non-local functionals of the vdW-DF and rVV10 families the kernel is
@@ -68,7 +347,7 @@ New in 6.5 branch:
     implemented in dynamics_module (Leonid Kahle, Ngoc Linh Nguyen)
 
 Known problems in 6.5 branch:
-  * The phonon code in the noncolinear case with the "domag" option does 
+  * The phonon code in the non-collinear case with the "domag" option does 
     not work properly: there is a problem with time reversal symmmetry.
     Such calculation is currently disabled until a fix is found.
 
@@ -162,7 +441,7 @@ Problems fixed in version 6.4 (+ = in qe-6.3-backports as well) :
     This produced confusing output and had the potential to break some codes
   + index not correctly initialized in LSDA phonon with core corrections 
   + GTH pseudopotentials in analytical form wrongly computed in some cases
-  + projwfc.x not working with new xml format in noncolinear/spinorbit case 
+  + projwfc.x not working with new xml format in non-collinear/spinorbit case 
   + Starting with .EXIT file present ("dry run") crashed with new file format
   + Some space groups were missing
   + Random MPI crashes with DFT+U due to small discrepancies between values
@@ -440,7 +719,7 @@ Fixed in 6.2 version
   * reset_grid wasn't resetting grid properly if k1,k2,k3=0. Thanks to
     Giuliana Barbarino (r13462)
 
-  * EXX in noncolinear/spin-orbit case wasn't correct (r13453)
+  * EXX in non-collinear/spin-orbit case wasn't correct (r13453)
 
   * Fixed a small bug in two subroutines only called by Environ (r13451)
 
@@ -488,7 +767,7 @@ Incompatible changes in 6.2 version:
 New in 6.1 version:
 
   * Hybrid functionals: Band parallelization over pair of bands, contributed
-    by Taylor Barnes et al, http://dx.doi.org/10.1016/j.cpc.2017.01.008
+    by Taylor Barnes et al, https://doi.org/10.1016/j.cpc.2017.01.008
   * Hybrid functionals with PAW now work
   * Optimized tetrahedron method, contributed by Mitsuaki Kawamura, U. Tokyo
   * PostProcessing: pp.x can now plot many bands in a single run.
@@ -555,7 +834,7 @@ Fixed in 6.0 version:
 
   * TDDFPT, PWCOND, GWW: redirection to /dev/null broke Windows executable
     (commit 12357)
-  * PDOS in the noncolinear case was broken by recent changes in indexing 
+  * PDOS in the non-collinear case was broken by recent changes in indexing 
     (courtesy Mitsuaki Kawamura) (commit (12366)
   * Incorrect format (old version) of the dynamical matrix if ibrav=0 in PHCG
     (commit 12367,12369) and incorrect format if more than 99 atoms
@@ -760,7 +1039,7 @@ New in 5.2.0 version:
 
 Fixed in 5.2.0 version:
 
-  * PP: projwfc.x wasn't working any longer for noncolinear case without
+  * PP: projwfc.x wasn't working any longer for non-collinear case without
     spin-orbit in 5.1.x versions
   * PW: ordering of beta functions incorrect in USPP + hybrid functionals.
   * PW: floating-point error could occur in rVV10 functional
@@ -801,7 +1080,7 @@ Fixed in 5.1.2 version:
     to mysterious crashes due to usage of unitialized communicator
   * PH: option only_init + US or PAW was not working.
   * Minor printout bug: the printed number of symmetries with fractional
-    translations was sometimes incorrect in the noncollinear magnetic case.
+    translations was sometimes incorrect in the non-collinear magnetic case.
 
                                * * * * * 
 
@@ -900,7 +1179,7 @@ Incompatible changes in 5.1 version:
 
 Fixed in 5.1 version:
 
-  * PWscf: bug in finite electric field in noncolinear case
+  * PWscf: bug in finite electric field in non-collinear case
   * PHonon: G=0 component of the deformation potential at q=0 was incorrect
     (the contribution from the average coulomb potential, i.e. the integral 
     of the Coulomb contribution on the unit cell, was missing). For more 
@@ -990,7 +1269,7 @@ Fixed in 5.0.2 version:
 New in 5.0.1 version:
 
   * vdW-DF functional and DFT-D extended to CP (experimental)
-  * PWscf: Noncollinear/spin-orbit Berry Phases (experimental)
+  * PWscf: Non-Collinear/spin-orbit Berry Phases (experimental)
   * New functionals: SOGGA, M06L (courtesy of Yves Ferro), 
                       PBEQ2D (courtesy of Letizia Chiodo)
 
@@ -1038,10 +1317,10 @@ Fixed in 5.0 version:
   * A few glitches when the standard input is copied to file
   * PW: LDA+U crash in the final step of a vc-relax run, due to a
     premature deallocation of a variable
-  * PW: constraint 'atomic direction' on noncolinear magnetization
+  * PW: constraint 'atomic direction' on non-collinear magnetization
     wasn't working properly
   * PW: tetrahedra were not working with magnetic symmetries, 
-    and not yet working in the noncolinear case as well.
+    and not yet working in the non-collinear case as well.
   * Velocity rescaling in variable-cell MD wasn't really working
   * Workaround for frequent crashes in PAW with vc-relax
   * In some cases spin-polarized HSE was yielding NaN's
@@ -1051,7 +1330,7 @@ Fixed in 5.0 version:
     previous run was found
   * CP + OpenMP without MPI wasn't working with ultrasoft pseudopotentials
   * Bug in CASINO to UPF converter
-  * Bug in k-point generation in the noncollinear case
+  * Bug in k-point generation in the non-collinear case
   * ESM with spin polarization fixed
   * Weird problem with irreps in PHonon
   * Bug in turbo_lanczos.x . Restarts of polarizations other than ipol=1 
@@ -1181,8 +1460,8 @@ Fixed in 4.3 version:
   * PW: corrected an old bug for Berry's phase finite electric field 
         calculations with non-orthorhombic simulation cells. Also fixed 
         an old but minor bug on averaging of Berry phases between strings
-  * PW: problem with symmetrization in the noncollinear case
-  * PW: tetrahedra+noncolinear case fixed (courtesy of Yurii Timrov)
+  * PW: problem with symmetrization in the non-collinear case
+  * PW: tetrahedra+non-collinear case fixed (courtesy of Yurii Timrov)
   * option -D__USE_3D_FFT wasn't working any longer in v.4.2.x
   * PP: calculation of ILDOS with USPP wasn't working in v.4.2.x
   * PH: elph=.true. and trans=.false. was not working any longer. 
@@ -1196,7 +1475,7 @@ Fixed in 4.3 version:
 Fixed in version 4.2.1:
 
   * CP: problem in electronic forces with OpenMP parallelization
-  * real-space Q functions (tqr=.true.) not working in noncollinear case
+  * real-space Q functions (tqr=.true.) not working in non-collinear case
   * XC potential in CP was not initialized when condition (rho > 10^(-30)) 
     was not satisfied; this is usually harmless but potentially dangerous
   * CP could not read data written from PW in spin-polarized cases
@@ -1206,7 +1485,7 @@ Fixed in version 4.2.1:
   * linking error when compiling qexml
   * misc problems in plotband.f90
   * the new G-space symmetrization was not working properly 
-    for the magnetization in the noncollinear case
+    for the magnetization in the non-collinear case
   * CP: incorrect results in parallel execution if the card K_POINTS
     was present in input and contained a point different from Gamma
   * D3: Fermi energy shift was only symmetrized on the sub-set of the
@@ -1381,7 +1660,7 @@ Fixed in version 4.0.5:
   * more problems in symmetry analysis in special cases for C_4h and
     D_2h symmetry
   * various small memory leaks or double allocations in special cases
-  * problem with effective charges d Force / d E in the noncollinear+NLCC case
+  * problem with effective charges d Force / d E in the non-collinear+NLCC case
   * calculation of ionic dipole, used for calculations with sawtooth 
     potential, used wrong reference point assuming the field parallel
     to z axis (while it can be parallel to any reciprocal basis vector). 
@@ -1501,7 +1780,7 @@ Fixed in version 4.0:
     There were three different bugs, one introduced when the spherical
     harmonics were modified in the rest of the code, two that I think
     have been there from the beginning.
-  * various glitches with wf_collect option in the noncollinear case
+  * various glitches with wf_collect option in the non-collinear case
   * mix_rho was not working properly for lsda with data saved to file
     and double grid
 

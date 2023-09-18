@@ -13,6 +13,12 @@ SUBROUTINE restart_in_electrons (iter, dr2, ethr, et)
   USE io_files,      ONLY: iunres, seqopn
   USE klist,         ONLY: nks
   USE wvfct,         ONLY: nbnd
+  USE add_dmft_occ,  ONLY: dmft
+#if defined(__OSCDFT)
+  USE plugin_flags,     ONLY : use_oscdft
+  USE oscdft_base,      ONLY : oscdft_ctx
+  USE oscdft_functions, ONLY : oscdft_electrons_restart
+#endif
   !
   IMPLICIT NONE
   !
@@ -30,7 +36,7 @@ SUBROUTINE restart_in_electrons (iter, dr2, ethr, et)
      READ (iunres, *, iostat=ios) iter, dr2_, ethr_
      IF ( ios /= 0 ) THEN
         iter = 0
-     ELSE IF ( iter < 1 ) THEN
+     ELSE IF ( iter < 1 .AND. .NOT. dmft) THEN
         iter = 0
      ELSE
         ALLOCATE (et_(nbnd,nks))
@@ -38,14 +44,24 @@ SUBROUTINE restart_in_electrons (iter, dr2, ethr, et)
         IF ( ios /= 0 ) THEN
            iter = 0
         ELSE
-           WRITE( stdout, &
-           '(5x,"Calculation restarted from scf iteration #",i6)' ) iter + 1
+           IF (dmft) THEN
+               WRITE( stdout, &
+               '(5x,"Calculation restarted from a previous run, expecting DMFT hdf5 archive")' )
+           ELSE
+               WRITE( stdout, &
+               '(5x,"Calculation restarted from scf iteration #",i6)' ) iter + 1
+           ENDIF
            dr2 = dr2_
            ethr= ethr_
            et (:,:) = et_(:,:)
         END IF
         DEALLOCATE (et_)
      END IF
+#if defined(__OSCDFT)
+     IF (use_oscdft) THEN
+        CALL oscdft_electrons_restart(oscdft_ctx)
+     END IF
+#endif
   ELSE
      iter = 0
   END IF

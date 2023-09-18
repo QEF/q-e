@@ -1,0 +1,24 @@
+[submodule "external/lapack"]
+	path = external/lapack
+	url = https://github.com/Reference-LAPACK/lapack.git
+[submodule "external/fox"]
+	path = external/fox
+	url = https://github.com/pietrodelugas/fox.git
+[submodule "external/wannier90"]
+	path = external/wannier90
+	url = https://github.com/wannier-developers/wannier90.git
+[submodule "external/mbd"]
+	path = external/mbd
+	url = https://github.com/libmbd/libmbd.git
+[submodule "external/devxlib"]
+	path = external/devxlib
+	url = https://gitlab.com/max-centre/components/devicexlib.git
+[submodule "external/d3q"]
+	path = external/d3q
+	url = https://github.com/anharmonic/d3q.git
+[submodule "external/pw2qmcpack"]
+	path = external/pw2qmcpack
+	url = https://github.com/QMCPACK/pw2qmcpack.git
+[submodule "external/qe-gipaw"]
+	path = external/qe-gipaw
+	url = https://github.com/dceresoli/qe-gipaw

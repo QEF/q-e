@@ -18,9 +18,11 @@
 ;; (https://www.emacswiki.org/emacs/DerivedMode,
 ;; https://www.emacswiki.org/emacs/SampleMode) as well as the very
 ;; useful resources of Xah Lee
-;; (http://ergoemacs.org/emacs/elisp_syntax_coloring.html).  Last but
-;; not the least Sebastijan Peljhan is acknowledged for his work on
-;; `xsf-mode' that inspired the idea of writing the qe-modes.
+;; (http://ergoemacs.org/emacs/elisp_syntax_coloring.html). Sebastijan
+;; Peljhan is acknowledged for his work on `xsf-mode' that inspired
+;; the idea of writing the qe-modes. Last but not the least,
+;; Hongyi Zhao contributed the ido-completion-read snippet of
+;; code for selecting the values for the card's flags.
 
 
 ;; This file is not part of GNU Emacs.
@@ -78,7 +80,7 @@
 (defvar qe-end-namelist (list "&END" "/"))
 
 ;; ph's variables
-(defvar ph-vars (list "alpha_mix" "amass" "asr" "dek" "drho_star" "dvscf_star" "electron_phonon" "elop" "epsil" "eth_ns" "eth_rps" "fildrho" "fildvscf" "fildyn" "fpol" "k1" "k2" "k3" "last_irr" "last_q" "ldiag" "ldisp" "lnoloc" "low_directory_check" "lqdir" "lraman" "lrpa" "lshift_q" "max_seconds" "modenum" "nat_todo" "niter_ph" "nk1" "nk2" "nk3" "nmix_ph" "nogg" "nq1" "nq2" "nq3" "only_init" "outdir" "prefix" "q2d" "q_in_band_form" "qplot" "read_dns_bare" "recover" "reduce_io" "search_sym" "start_irr" "start_q" "tr2_ph" "trans" "verbosity" "zeu" "zue" ))
+(defvar ph-vars (list "ahc_dir" "ahc_nbnd" "ahc_nbndskip" "alpha_mix" "amass" "asr" "dek" "dftd3_hess" "diagonalization" "do_charge_neutral" "do_long_range" "drho_star" "dvscf_star" "el_ph_nsigma" "el_ph_sigma" "electron_phonon" "elop" "epsil" "eth_ns" "eth_rps" "fildrho" "fildvscf" "fildyn" "fpol" "k1" "k2" "k3" "last_irr" "last_q" "ldiag" "ldisp" "ldvscf_interpolate" "lnoloc" "low_directory_check" "lqdir" "lraman" "lrpa" "lshift_q" "max_seconds" "modenum" "nat_todo" "niter_ph" "nk1" "nk2" "nk3" "nmix_ph" "nogg" "nq1" "nq2" "nq3" "only_init" "outdir" "prefix" "q2d" "q_in_band_form" "qplot" "read_dns_bare" "recover" "reduce_io" "search_sym" "skip_upperfan" "start_irr" "start_q" "tr2_ph" "trans" "verbosity" "wpot_dir" "zeu" "zue" ))
 
 ;; ph's cards & keywords
 (defvar ph-cards (list "__NO-CARDS" ))

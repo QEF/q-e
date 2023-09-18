@@ -5,11 +5,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! NOTE Aug 2018 (PG): reading of old xml input file using iotk deleted
 ! 
 !----------------------------------------------------------------------------
 MODULE read_input
    !---------------------------------------------------------------------------
+   !! Read input data in PW and CP from text file (xml file to be implemented).
+   !
+   ! NOTE Aug 2018 (PG): reading of old xml input file using iotk deleted
    !
    USE kinds,     ONLY: DP
    !
@@ -43,10 +45,7 @@ MODULE read_input
      LOGICAL :: xmlinput
      INTEGER :: ierr
      !
-     IF ( ionode ) THEN
-        ierr = open_input_file( input_file_, xmlinput ) 
-     END IF
-     !
+     IF ( ionode ) ierr = open_input_file( input_file_, xmlinput )
      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
      IF ( ierr > 0 ) CALL errore('read_input', 'opening input file',ierr)
      CALL mp_bcast( xmlinput, ionode_id, intra_image_comm )

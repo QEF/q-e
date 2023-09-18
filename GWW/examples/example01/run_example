@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -122,9 +122,9 @@ EOF
     check_failure $?
     $ECHO " done"
 
-    # 
+    #
     cat > methane_pw4gww.in << EOF
-&inputpw4gww    
+&inputpw4gww
     prefix='ch4'
     num_nbndv(1)=4
     num_nbnds=5
@@ -142,7 +142,7 @@ EOF
     $ECHO " done"
 
 
-    # 
+    #
     cat > methane_gww.in << EOF
 &inputgww
 ggwin%prefix='ch4'
@@ -173,7 +173,7 @@ EOF
     $ECHO  "copying self-energy files..\c"
     cp $TMP_DIR/ch4-im_on_im* .
     cp $TMP_DIR/ch4-re_on_im* .
-    cp $TMP_DIR/ch4-bands.dat .	 
+    cp $TMP_DIR/ch4-bands.dat .
 
     # clean TMP_DIR
     $ECHO "  cleaning $TMP_DIR...\c"

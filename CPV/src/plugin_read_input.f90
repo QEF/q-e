@@ -15,15 +15,8 @@ USE plugin_flags
 USE input_parameters, ONLY : nat, ntyp
 USE input_parameters, ONLY : assume_isolated, ibrav 
 !
-! ***Environ MODULES BEGIN***
-! ***Environ MODULES END***
 !
 implicit none
 !
-! ***Environ VARIABLES BEGIN***
-! ***Environ VARIABLES END***
-!
-! ***Environ CALLS BEGIN***
-! ***Environ CALLS END***
 !
 end subroutine plugin_read_input

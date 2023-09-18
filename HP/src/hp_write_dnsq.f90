@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,7 +18,8 @@ SUBROUTINE hp_write_dnsq(iq)
   USE lsda_mod,      ONLY : nspin
   USE io_files,      ONLY : prefix, tmp_dir
   USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, is_hubbard
-  USE ldaU_hp,       ONLY : nah_pert, dns0, dnsscf, x_q
+  USE ldaU_lr,       ONLY : dnsscf
+  USE ldaU_hp,       ONLY : nah_pert, dns0, x_q
   !
   IMPLICIT NONE
   !
@@ -74,7 +75,7 @@ SUBROUTINE write_dnsq (dns, name_)
                                                               TRIM(name_), TRIM(name_)
            DO m1 = 1, 2*Hubbard_l(nt)+1
               DO m2 = 1, 2*Hubbard_l(nt)+1
-                 WRITE(iunitdnsq,'(1x,i2,6x,i2,4x,f20.15,2x,f20.15)') &
+                 WRITE(iunitdnsq,'(1x,i2,6x,i2,4x,f21.15,2x,f21.15)') &
                       m1, m2, DBLE(dns(m1,m2,is,na)), AIMAG(dns(m1,m2,is,na))
               ENDDO
            ENDDO

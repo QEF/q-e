@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -14,7 +14,7 @@ $ECHO "This example tests pw.x and ph.x in several cases that require "
 $ECHO "the noncollinear or the spin-orbit part of the code together "
 $ECHO "with the gga."
 $ECHO "ph.x is used to calculate the phonons at X and Gamma of fcc-Pt with gga,"
-$ECHO "and to calculate the phonons at X and Gamma of fcc-Ni to test" 
+$ECHO "and to calculate the phonons at X, X/2, and Gamma of fcc-Ni to test"
 $ECHO "the magnetic case with gga with or without spin-orbit "
 
 # set the needed environment variables
@@ -148,7 +148,7 @@ check_failure $?
 $ECHO " done"
 
 # Phonon at X. This example demonstrates the use of spin-orbit
-# together with gga-pbe. 
+# together with gga-pbe.
 
 cat > pt.phX.in << EOF
 phonons of Pt at X
@@ -165,8 +165,8 @@ $PH_COMMAND < pt.phX.in > pt.phX.out
 check_failure $?
 $ECHO " done"
 #
-# self-consistent calculation. This example demonstrates the use of the 
-# noncollinear calculation together with gga-pbe in the spin-polarized case. 
+# self-consistent calculation. This example demonstrates the use of the
+# noncollinear calculation together with gga-pbe in the spin-polarized case.
 #
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
@@ -214,7 +214,7 @@ $PW_COMMAND < ni.scf.in > ni.scf.out
 check_failure $?
 $ECHO " done"
 
-# The phonon at gamma 
+# The phonon at gamma
 
 cat > ni.phG.in << EOF
 phonons of Ni at Gamma
@@ -231,7 +231,7 @@ $PH_COMMAND < ni.phG.in > ni.phG.out
 check_failure $?
 $ECHO " done"
 
-# Phonon at X 
+# Phonon at X
 
 cat > ni.phX.in << EOF
 phonons of Ni at X
@@ -249,9 +249,27 @@ $PH_COMMAND < ni.phX.in > ni.phX.out
 check_failure $?
 $ECHO " done"
 
-# self-consistent calculation. This example demonstrates the use of the 
+# Phonon at X/2
+
+cat > ni.phX2.in << EOF
+phonons of Ni at X/2
+ &inputph
+  tr2_ph=1.0d-16,
+  prefix='nickel',
+  fildyn='nix.dyn',
+  outdir='$TMP_DIR/'
+ /
+0.0 0.0 0.5
+EOF
+
+$ECHO "  running ph.x at X/2 (0.5, 0., 0.) for noncollinear Ni with gga-pbe...\c"
+$PH_COMMAND < ni.phX2.in > ni.phX2.out
+check_failure $?
+$ECHO " done"
+
+# self-consistent calculation. This example demonstrates the use of the
 # noncollinear calculations together with gga-pbe and spin-orbit
-# in the spin-polarized case. 
+# in the spin-polarized case.
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/ni_so*
@@ -298,7 +316,7 @@ $PW_COMMAND < ni_so.scf.in > ni_so.scf.out
 check_failure $?
 $ECHO " done"
 
-# The phonon at gamma 
+# The phonon at gamma
 
 cat > ni_so.phG.in << EOF
 phonons of Ni at Gamma
@@ -315,7 +333,7 @@ $PH_COMMAND < ni_so.phG.in > ni_so.phG.out
 check_failure $?
 $ECHO " done"
 
-# The phonon at X 
+# The phonon at X
 
 cat > ni_so.phX.in << EOF
 phonons of Ni at X
@@ -330,6 +348,24 @@ EOF
 
 $ECHO "  running ph.x at X for Ni with gga-pbe with spin-orbit...\c"
 $PH_COMMAND < ni_so.phX.in > ni_so.phX.out
+check_failure $?
+$ECHO " done"
+
+# The phonon at X/2
+
+cat > ni_so.phX2.in << EOF
+phonons of Ni at X/2
+ &inputph
+  tr2_ph=1.0d-14,
+  prefix='ni_so',
+  fildyn='nix.dyn',
+  outdir='$TMP_DIR/'
+ /
+0.0 0.0 0.5
+EOF
+
+$ECHO "  running ph.x at X/2 (0.5, 0., 0.) for Ni with gga-pbe with spin-orbit...\c"
+$PH_COMMAND < ni_so.phX2.in > ni_so.phX2.out
 check_failure $?
 $ECHO " done"
 

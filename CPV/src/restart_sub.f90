@@ -13,7 +13,7 @@ SUBROUTINE from_restart( )
                                      tsde, tzeroe, tzerop, nbeg, tranp, amprp,&
                                      thdyn, tzeroc, force_pairing, trhor, &
                                      ampre, trane, tpre, dt_old, tv0rd, &
-                                     trescalee, tcap
+                                     trescalee, tcap, dt_xml_old
    USE wavefunctions,  ONLY : c0_bgrp, cm_bgrp
    USE electrons_module,      ONLY : occn_info
    USE electrons_base,        ONLY : nspin, iupdwn, nupdwn, f, nbsp, nbsp_bgrp
@@ -28,17 +28,23 @@ SUBROUTINE from_restart( )
    USE gvect,    ONLY : mill, eigts1, eigts2, eigts3 
    USE printout_base,         ONLY : printout_pos
    USE gvecw,                 ONLY : ngw
-   USE cp_interfaces,         ONLY : phfacs, strucf, prefor, calbec_bgrp, caldbec_bgrp
+   USE cp_interfaces,         ONLY : phfacs, strucf, prefor, calbec, caldbec_bgrp
    USE energies,              ONLY : eself, dft_energy_type
    USE wave_base,             ONLY : rande_base
    USE efield_module,         ONLY : efield_berry_setup,  tefield, &
                                      efield_berry_setup2, tefield2
    USE uspp,                  ONLY : okvan, vkb, nkb, nlcc_any
    USE cp_main_variables,     ONLY : ht0, htm, lambdap, lambda, lambdam, eigr, &
-                                     sfac, taub, irb, eigrb, edft, bec_bgrp, dbec, idesc
+                                     sfac, taub, irb, eigrb, edft, bec_bgrp, dbec, idesc, iabox, nabox
    USE time_step,             ONLY : delt
    USE fft_base,              ONLY : dfftp, dffts
+   USE device_memcpy_m,       ONLY : dev_memcpy
    USE matrix_inversion
+   !
+#if defined (__ENVIRON)
+   USE plugin_flags,          ONLY : use_environ
+   USE environ_base_module,   ONLY : update_environ_ions
+#endif
    !
    IMPLICIT NONE
 
@@ -63,6 +69,39 @@ SUBROUTINE from_restart( )
       CALL r_to_s( tau0, taus, nat, ainv )
       !
    END IF
+
+   !check equality between xml old timestep and input old timestep, if specified
+   !if necessary change the timestep
+
+   IF (dt_old > 0.0d0) THEN
+       WRITE (stdout,*) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+       WRITE (stdout,*) '!! WARNING !! USE OF TOLP FOR CHANGING THE TIMESTEP IS DEPRECATED !!'
+       WRITE (stdout,*) '!! WARNING !!        THIS FEATURE WILL BE REMOVED SOON            !!'
+       WRITE (stdout,*) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+       WRITE (stdout,*) 'NOTE: specifying tolp for changing the timestep is deprecated and error-prone'
+       WRITE (stdout,*) '      the changing of timestep is performed automatically when the input timestep is'
+       WRITE (stdout,*) '      different from the one read from the xml file and no changing timestep input variable'
+       WRITE (stdout,*) '      is specified (tolp, ion_velocities and electron_velocities = change_step )'
+       IF (abs(dt_old - dt_xml_old) > 1.0d-6) THEN
+           CALL errore (' from_restart ', ' input tolp and old dt written in the xml file are different ', 1)
+       ENDIF
+   ELSE IF ( abs(dt_xml_old - delt) > 1.0d-6 ) THEN
+       dt_old = dt_xml_old
+       trescalee = .true.
+       WRITE (stdout,*) 'NOTE: the new behavior is to automatically perform a change of timestep when the old'
+       WRITE (stdout,*) '      timestep written in the xml file is different from the input one'
+       WRITE (stdout,*) '!! RESCALING IONS AND ELECTRONS VELOCITIES'
+       WRITE (stdout,*) 'old dt = ', dt_old
+       WRITE (stdout,*) 'new dt = ', delt
+   END IF
+   !
+   ! dt_old should be -1.0 here if untouched. Rescale velocities
+   !
+   if ( dt_old > 0.0d0 ) then
+      tausm = taus - (taus-tausm)*delt/dt_old
+      xnhpm = xnhp0 - (xnhp0-xnhpm)*delt/dt_old
+      WRITE( stdout, '(" tausm & xnhpm were rescaled ")' )
+   endif
    !
    ! MCA
    IF ( tv0rd .AND. tfor ) THEN
@@ -131,6 +170,8 @@ SUBROUTINE from_restart( )
       lambdam( :, :, 2) = lambdam( :, :, 1)
    END IF 
    !
+
+
    IF ( tzeroe ) THEN
       !
       lambdam = lambda
@@ -143,9 +184,9 @@ SUBROUTINE from_restart( )
       IF (dt_old > 0.0d0 ) THEN
          lambdam = lambda - (lambda-lambdam)*delt/dt_old
          cm_bgrp = c0_bgrp - (c0_bgrp-cm_bgrp)*delt/dt_old
-         WRITE (stdout, '(" Electron velocities rescaled with tolp")')
+         WRITE (stdout, '(" Electron velocities rescaled")')
       ELSE
-         WRITE (stdout, '(" Cannot rescale electron velocities without tolp!")')
+         WRITE (stdout, '("!Internal error: dt_old cannot be < 0!")')
       END IF
    END IF
    !
@@ -153,7 +194,7 @@ SUBROUTINE from_restart( )
    ! ... to starting cell (from ndr or again standard input)
    !
    IF ( okvan .or. nlcc_any ) THEN
-      CALL initbox( tau0, alat, at, ainv, taub, irb )
+      CALL initbox( tau0, alat, at, ainv, taub, irb, iabox, nabox )
       CALL phbox( taub, iverbosity, eigrb )
    END IF
    !
@@ -162,6 +203,8 @@ SUBROUTINE from_restart( )
    CALL strucf( sfac, eigts1, eigts2, eigts3, mill, dffts%ngm )
    !
    CALL prefor( eigr, vkb )
+   !
+   !$acc update device(vkb)
    !
    CALL formf( .TRUE. , eself )
    !
@@ -187,14 +230,19 @@ SUBROUTINE from_restart( )
       !
    END IF
    !
-   CALL calbec_bgrp( 1, nsp, eigr, c0_bgrp, bec_bgrp )
+   CALL calbec( nbsp_bgrp, vkb, c0_bgrp, bec_bgrp, 0 )
    !
    IF ( tpre     ) CALL caldbec_bgrp( eigr, c0_bgrp, dbec, idesc )
    !
    IF ( tefield  ) CALL efield_berry_setup( eigr, tau0 )
    IF ( tefield2 ) CALL efield_berry_setup2( eigr, tau0 )
    !
-   CALL plugin_init_ions( tau0 )
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_init_ions(tau0)
+#endif 
+#if defined (__ENVIRON)
+   IF (use_environ) CALL update_environ_ions(tau0)
+#endif
    !
    edft%eself = eself
    !
@@ -202,18 +250,10 @@ SUBROUTINE from_restart( )
       IF( .not. ( tzerop .and. tzeroe .and. ( tzeroc .or. .not. thdyn ) ) ) THEN
          IF( ionode ) THEN
             WRITE( stdout, * ) 'WARNING setting to ZERO ions, electrons and cell velocities without '
-            WRITE( stdout, * ) 'setting to ZERO all velocities could generate meaningles trajectories '
+            WRITE( stdout, * ) 'setting to ZERO all velocities could generate meaningless trajectories '
          END IF
       END IF
    END IF
-   !
-   ! dt_old should be -1.0 here if untouched ...
-   !
-   if ( dt_old > 0.0d0 ) then
-      tausm = taus - (taus-tausm)*delt/dt_old
-      xnhpm = xnhp0 - (xnhp0-xnhpm)*delt/dt_old
-      WRITE( stdout, '(" tausm & xnhpm were rescaled ")' )
-   endif
 
    CALL stop_clock( 'from_restart' )
    !

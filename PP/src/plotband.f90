@@ -30,7 +30,8 @@ PROGRAM plotband
   real, ALLOCATABLE :: e_rap(:,:), k_rap(:,:)
   INTEGER, ALLOCATABLE :: nbnd_rapk(:), rap(:,:)
   INTEGER, ALLOCATABLE :: npoints(:)
-  INTEGER :: nks = 0, nbnd = 0, ios, nlines, n,i,j,ni,nf,nl
+  CHARACTER(len=1024) aux
+  INTEGER :: nks = 0, nbnd = 0, ios, nlines, n,i,j,ni,nf,nl, firstk, lastk
   INTEGER :: nks_rap = 0, nbnd_rap = 0
   LOGICAL, ALLOCATABLE :: high_symmetry(:), is_in_range(:), is_in_range_rap(:)
   CHARACTER(len=256) :: filename, filename1, filenamegnu
@@ -41,7 +42,7 @@ PROGRAM plotband
 
   real :: emin = 1.e10, emax =-1.e10, etic, eref, deltaE, Ef
 
-  INTEGER, PARAMETER :: max_lines=99
+  INTEGER, PARAMETER :: max_lines=999
   real :: mine, dxmod, dxmod_save
   INTEGER :: point(max_lines+1), nrap(max_lines)
   INTEGER :: ilines, irap, ibnd, ipoint, jnow
@@ -74,21 +75,23 @@ PROGRAM plotband
   ENDIF
 
   filename1=trim(filename)//".rap"
-  !!! replace with inquire statement?
-  exist_rap=.true.
-  OPEN(unit=21,file=filename1,form='formatted',status='old',err=100,iostat=ios)
-
-100 IF (ios /= 0) THEN
-     exist_rap=.false.
-  ENDIF
-  !!!
+  !
+  inquire(file=filename1, exist=exist_rap)
   IF (exist_rap) THEN
+     OPEN(unit=21,file=filename1,form='formatted',status='old',iostat=ios)
+     IF ( ios /= 0 ) THEN
+        WRITE(6,'("error opening file with representations")')
+        exist_rap=.false.
+        GO TO 100
+     ENDIF
      READ (21, plot_rap, iostat=ios)
      IF (nks_rap/=nks.or.nbnd_rap/=nbnd.or.ios/=0) THEN
         WRITE(6,'("file with representations not compatible with bands")')
         exist_rap=.false.
      ENDIF
   ENDIF
+  !
+100 CONTINUE
   !
   ALLOCATE (e(nbnd,nks))
   ALLOCATE (k(3,nks), e_in(nks), kx(nks), npoints(nks), high_symmetry(nks))
@@ -104,7 +107,6 @@ PROGRAM plotband
   ENDIF
   !!!
   filename2=trim(filename)//".proj"
-  exist_proj=.false.
   INQUIRE(file=filename2,exist=exist_proj)
   IF (exist_proj) THEN
      OPEN(UNIT=22, FILE=filename2, FORM='formatted', STATUS='old', IOSTAT=ios)
@@ -134,7 +136,6 @@ PROGRAM plotband
      ENDIF
   ENDIF
   !!!
-
 
   high_symmetry=.false.
 
@@ -193,12 +194,31 @@ PROGRAM plotband
   ENDIF
   !!!
 
+
+  DO n=1,nks
+     DO i=1,nbnd
+        emin = min(emin, e(i,n))
+        emax = max(emax, e(i,n))
+     ENDDO
+  ENDDO
+  WRITE(*,'("Range:",2f10.4,"eV  Emin, Emax, [firstk, lastk] > ")', advance="NO") emin, emax
+  READ(5,'(a1024)') aux
+  READ(aux,*,iostat=ios) emin, emax,firstk,lastk
+  IF(ios/=0) THEN
+    READ(aux,*) emin, emax
+    firstk=1
+    lastk=nks
+  ENDIF
+!  IF(firstk>1)  kx = kx-kx(firstk)
+!  high_symmetry(firstk) = .true.
+!  high_symmetry(lastk)  = .true.
+
 !
 !  Now find the high symmetry points in addition to those already identified
 !  in the representation file
 !
-  DO n=1,nks
-     IF (n==1 .or. n==nks) THEN
+  DO n=firstk,lastk
+     IF (n==firstk.or. n==lastk) THEN
         high_symmetry(n) = .true.
      ELSE
         k1(:) = k(:,n) - k(:,n-1)
@@ -214,17 +234,17 @@ PROGRAM plotband
 !
 !   save the typical length of dk
 !
-        IF (n==2) dxmod_save = sqrt( k1(1)**2 + k1(2)**2 + k1(3)**2)
+        IF (n==firstk+1) dxmod_save = sqrt( k1(1)**2 + k1(2)**2 + k1(3)**2)
 
      ENDIF
   ENDDO
 
   kx(1) = 0.d0
-  DO n=2,nks
+  DO n=firstk+1,lastk
      dxmod=sqrt ( (k(1,n)-k(1,n-1))**2 + &
                   (k(2,n)-k(2,n-1))**2 + &
                   (k(3,n)-k(3,n-1))**2 )
-     IF (dxmod > 5*dxmod_save) THEN
+     IF (dxmod >10*dxmod_save) THEN
 !
 !   A big jump in dxmod is a sign that the point k(:,n) and k(:,n-1)
 !   are quite distant and belong to two different lines. We put them on
@@ -237,7 +257,6 @@ PROGRAM plotband
 !  same path.
 !
         kx(n) = kx(n-1) +  dxmod
-        dxmod_save = dxmod
      ELSE
 !
 !  This is the case in which dxmod is almost zero. The two points coincide
@@ -248,14 +267,8 @@ PROGRAM plotband
      ENDIF
   ENDDO
 
-  DO n=1,nks
-     DO i=1,nbnd
-        emin = min(emin, e(i,n))
-        emax = max(emax, e(i,n))
-     ENDDO
-  ENDDO
-  WRITE(*,'("Range:",2f10.4,"eV  Emin, Emax > ")', advance="NO") emin, emax
-  READ(5,*) emin, emax
+
+
 !
 !  Since the minimum and miximum energies are given in input we can
 !  sign the bands that are completely outside this range.
@@ -269,9 +282,9 @@ PROGRAM plotband
 !  The first point of this path: point(iline)
 !  How many points are in each path: npoints(iline)
 !
-  DO n=1,nks
+  DO n=firstk,lastk
      IF (high_symmetry(n)) THEN
-        IF (n==1) THEN
+        IF (n==firstk) THEN
 !
 !   first point. Initialize the number of lines, and the number of point
 !   and say that this line start at the first point
@@ -279,7 +292,7 @@ PROGRAM plotband
            nlines=1
            npoints(1)=1
            point(1)=1
-        ELSEIF (n==nks) THEN
+        ELSEIF (n==lastk) THEN
 !
 !    Last point. Here we save the last point of this line, but
 !    do not increase the number of lines
@@ -333,9 +346,9 @@ PROGRAM plotband
      DO i=1,nbnd
         IF (is_in_range(i)) THEN
           IF (exist_proj) THEN
-            WRITE (2,'(3f10.4)') (kx(n), e(i,n), sumproj(i,n),n=1,nks)
+            WRITE (2,'(3f10.4)') (kx(n), e(i,n), sumproj(i,n),n=firstk,lastk)
           ELSE
-            WRITE (2,'(2f10.4)') (kx(n), e(i,n),n=1,nks)
+            WRITE (2,'(2f10.4)') (kx(n), e(i,n),n=firstk,lastk)
           ENDIF
           WRITE (2,*)
         ENDIF

@@ -1,0 +1,32 @@
+#------------------------------------------------------------------------
+# PURPOSE OF THE SCRIPT:
+# ------------------------------------------------------------------------
+# list all PWTK commands that are exported and should be highlighted
+# in QE-emacs-modes
+#
+# Run this script as:  pwtk -s exported-cmds.pwtk
+#------------------------------------------------------------------------
+
+#
+# ::pwtk  and  specific ::pwtk::* cmds 
+#
+foreach child_ns [concat ::pwtk [namespace children ::pwtk]] {
+    # BEWARE that majority of $namelist_flow_list and $card_flow_list
+    # are known in pwtk-mode already from the *.def files, but they
+    # will be filtered out by the gen-emacs-mode.tcl as to remove the
+    # duplicates !
+    foreach listName {
+        input_flow_list
+        exportList
+    } {
+        if { [info exists ${child_ns}::$listName] } {
+            upvar #0 ${child_ns}::$listName listVar
+            append pwtk_cmds $listVar\n
+        }
+    }
+}
+
+foreach cmd [lsort $pwtk_cmds] {
+    puts -nonewline "$cmd "
+}
+puts ""

@@ -5,7 +5,7 @@ AC_DEFUN([X_AC_QE_ARCH], [
   AC_MSG_CHECKING([ARCH])
 
 # many HPC systems are configured so that running parallel programs
-# interactively is disabled: on those systems, AC_PROG_FC / _F77 / _CC
+# interactively is disabled: on those systems, AC_PROG_FC / _CC
 # would fail because they can't run the compiled executables.
 # to work around that, let's pretend we are cross-compiling even if we aren't
 # !!! this relies on undocumented Autoconf behavior !!!
@@ -39,14 +39,16 @@ then
                 * )                     AC_MSG_WARN(Unrecognized build architecture)
         ;;
         esac
-            # workaround for Cray-XT machines
-        test -d /proc/cray_xt && arch=crayxt
-            # workaround for IBM BG machines
+        # check for Cray machines
+        if test -d /proc/cray_xt && test "$arch" != "craype"; then
+            AC_MSG_WARN(This seems to be a cray but ARCH is not "craype")
+        fi
+        # workaround for IBM BG machines
         test -d /bgsys && arch=ppc64-bg
         test -f /bgsys/drivers/ppcfloor/bin/runjob && arch=ppc64-bgq
 fi
 	case $arch in
-	ia32 | ia64 | necsx | crayxt | ppc64-bg )
+	ia32 | ia64 | necsx | ppc64-bg )
             AC_MSG_WARN(Obsolete architecture? $arch)
 	    ;;
 	esac

@@ -9,8 +9,7 @@
 !-----------------------------------------------------------------------
   SUBROUTINE non_scf_ph ( )
   !-----------------------------------------------------------------------
-  !
-  ! ... diagonalization of the KS hamiltonian in the non-scf case
+  !! Diagonalization of the KS hamiltonian in the non-scf case.
   !
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : lelfield, lberry, lorbm
@@ -23,6 +22,7 @@
   USE klist,                ONLY : xk, wk, nks, nkstot
   USE lsda_mod,             ONLY : lsda, nspin
   USE wvfct,                ONLY : nbnd, et, npwx
+  USE wvfct_gpum,           ONLY : using_et
   USE wavefunctions, ONLY : evc
   !
   IMPLICIT NONE
@@ -62,6 +62,7 @@
   ! ... explicitly collected to the first node
   ! ... this is done here for et, in weights () for wg
   !
+  CALL using_et(1)
   CALL poolrecover( et, nbnd, nkstot, nks )
   !
   ! ... calculate weights of Kohn-Sham orbitals (only weights, not Ef,

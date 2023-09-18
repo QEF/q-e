@@ -14,6 +14,7 @@
  &electrons
     mixing_beta = 0.2
     conv_thr=1.0e-8
+    diago_david_ndim=4
  /
 ATOMIC_SPECIES
  Fe 55.847 Fe.pbe-nd-rrkjus.UPF

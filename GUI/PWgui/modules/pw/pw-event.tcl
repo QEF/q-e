@@ -8,43 +8,57 @@ tracevar calculation w {
     set nat    [varvalue nat]
     set calc   [varvalue calculation]    
 
-    set ion_dynamics [varvalue ion_dynamics] 
+    set ion_dynamics [varvalue ion_dynamics]
+    set fcp_dynamics [varvalue fcp_dynamics]
     set widget       [getWidgetFromVarident ion_dynamics]
     
-    set all {ions cell vc_md constraints_card}
+    set all {ions cell fcp vc_md constraints_card}
     
     set disable {}
     set enable  {}
 
     switch -exact -- $calc {
 	'scf' - 
-	'nscf' {
+	'nscf' -
+        'bands' {
 	    set disable $all
 	    varset ion_dynamics -value {}
 	}
+        
 	'relax' {
-	    set enable  {ions constraints_card}
-	    set disable {cell vc_md}
+	    set enable  {ions fcp constraints_card}
+	    set disable {cell vc_md for_fcp_dynamics}
 	    
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
 		"BFGS quasi-newton method for structural optimization  <bfgs>"
 		"damped dynamics (quick-min Verlet) for structural optimization  <damp>"
+                "FIRE minimization algorithm  <fire>"
 	    }
-
-	    if { ! [regexp bfgs|damp $ion_dynamics] } {
+	    if { ! [regexp bfgs|damp|fire $ion_dynamics] } {
 		varset ion_dynamics -value {}
 	    }
+
+            widgetconfigure fcp_dynamics -textvalues {
+                "BFGS quasi-newton algorithm  <bfgs>"
+                "Newton-Raphson algorithm with DIIS  <newton>"
+                "damped (quick-min Verlet) dynamics  <damp>"
+                "line-minimization algorithm  <lm>"                
+            }
+	    if { ! [regexp bfgs|newton|damp|lm $fcp_dynamics] } {
+		varset fcp_dynamics -value {}
+	    }
 	}
+        
 	'vc-relax' {
 	    set enable  {ions cell vc_md constraints_card}
+            set disable {fcp}
 
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
 		"BFGS quasi-newton method for structural optimization  <bfgs>"
 		"Beeman algorithm for variable cell damped dynamics  <damp>"
 	    }
-
 	    if { ! [regexp bfgs|damp $ion_dynamics] } {
 		varset ion_dynamics -value {}
 	    }
@@ -57,23 +71,33 @@ tracevar calculation w {
 		"BFGS quasi-newton algorithm (ion_dynamics must be 'bfgs' too)  <bfgs>"
 	    }
 	}
+        
 	'md' {
-	    set enable  {ions constraints_card}
+	    set enable  {ions fcp constraints_card}
 	    set disable {cell vc_md}	
 	    
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
 		"Verlet algorithm for molecular dynamics  <verlet>"
 		"over-damped Langevin dynamics  <langevin>"
-		"over-damped Langevin with Smart Monte Carlo <langevin-smc>"
-	    }
-	    
+		"over-damped Langevin with Smart Monte Carlo  <langevin-smc>"
+	    }	    
 	    if { ! [regexp verlet|langevin $ion_dynamics] } {
 		varset ion_dynamics -value {}
 	    }
+
+            widgetconfigure fcp_dynamics -textvalues {
+                "Velocity-Verlet algorithm  <velocity-verlet>"
+                "Verlet algorithm  <verlet>"                
+            }
+            if { ! [regexp verlet $fcp_dynamics] } {
+		varset fcp_dynamics -value {}
+	    }
 	}
+        
 	'vc-md' {
 	    set enable  {ions cell vc_md constraints_card}
+            set disable {fcp}
 
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
@@ -84,14 +108,14 @@ tracevar calculation w {
 		varset ion_dynamics -value {}
 	    }
 
-	    widgetconfigure ion_temperature -textvalues {
-		"velocity rescaling via tempw&tolp  <rescaling>"
-		"not controlled  <not_controlled>"
-	    }
-
-	    if { ! [regexp rescaling [varvalue ion_temperature]] } {
-		varset ion_temperature -value {}
-	    }
+	    #widgetconfigure ion_temperature -textvalues {
+	    #    "velocity rescaling via tempw&tolp  <rescaling>"
+	    #    "not controlled  <not_controlled>"
+	    #}
+            #
+	    #if { ! [regexp rescaling [varvalue ion_temperature]] } {
+	    #    varset ion_temperature -value {}
+	    #}
 
 	    widget cell_dynamics enable
 	    widgetconfigure cell_dynamics -textvalues {
@@ -103,7 +127,13 @@ tracevar calculation w {
     }
 
     foreach group $enable {
-	groupwidget $group enable
+        if { $group != "fcp" } {
+            groupwidget $group enable
+        } else {
+            if { [vartextvalue lfcp] == "Yes" } {
+                groupwidget $group enable
+            }
+        }
     }
     foreach group $disable {
 	groupwidget $group disable
@@ -112,18 +142,47 @@ tracevar calculation w {
     # force to update the state of widgets by resetting corresponding variables
 
     varset ion_dynamics       -value [varvalue ion_dynamics]
-    varset ion_temperature    -value [varvalue ion_temperature]
+    #varset ion_temperature    -value [varvalue ion_temperature]
     varset cell_dynamics      -value [varvalue cell_dynamics]
     varset constraints_enable -value [varvalue constraints_enable]
 
     widgetconfigure atomic_coordinates -caption "Enter atomic coordinates:"    	
 }
 
+tracevar lfcp w {
+    if { [vartextvalue lfcp] == "Yes" } {
+	groupwidget fcp enable
+        if { [varvalue calculation] != "'md'" } {
+            groupwidget for_fcp_dynamics disable
+        }
+    } else {
+	groupwidget fcp disable
+    }
+}
+
+tracevar trism w {
+    if { [vartextvalue trism] == "Yes" } {
+	groupwidget rism enable
+        groupwidget solvents_card enable
+    } else {
+       	groupwidget rism disable
+        groupwidget solvents_card disable
+    } 
+}
+  
 tracevar gate w {
     if { [vartextvalue gate] == "Yes" } {
 	groupwidget gate_group enable
     } else {
 	groupwidget gate_group disable
+    }
+}
+
+tracevar twochem w {
+    if { [vartextvalue twochem] == "Yes" } {
+	groupwidget twochem_group enable
+    } else {
+	groupwidget twochem_group disable
     }
 }
 
@@ -209,12 +268,14 @@ tracevar nat w {
     set nat [varvalue nat]
     widgetconfigure atomic_coordinates  -rows $nat
     widgetconfigure atomic_forces       -rows $nat
+    widgetconfigure atomic_velocities   -rows $nat    
     varset specify_atomic_forces -value [varvalue specify_atomic_forces]
+    varset ion_velocities -value [varvalue ion_velocities]
 }
 
 tracevar ntyp w {
     set ntyp [varvalue ntyp]
-    widgetconfigure atomic_species -rows $ntyp;
+    widgetconfigure atomic_species -rows $ntyp
 
     widgetconfigure starting_charge -end $ntyp
     widgetconfigure starting_magnetization -end $ntyp; # nspin-dependent
@@ -224,12 +285,9 @@ tracevar ntyp w {
     widgetconfigure angle2 -end $ntyp
     varset noncolin -value [varvalue noncolin]
     
-    widgetconfigure Hubbard_U     -end $ntyp; # lda_plus_u
-    widgetconfigure Hubbard_J0    -end $ntyp
+    widgetconfigure Hubbard_occ   -rows $ntyp
     widgetconfigure Hubbard_alpha -end $ntyp
     widgetconfigure Hubbard_beta  -end $ntyp
-
-    varset lda_plus_u -value [varvalue lda_plus_u]
 
     widgetconfigure london_c6 -end $ntyp
     widgetconfigure london_rvdw -end $ntyp
@@ -306,13 +364,6 @@ tracevar lelfield w {
     }
 }
 
-tracevar lda_plus_u w {
-    switch -- [vartextvalue lda_plus_u] {
-	Yes     { widget mixing_fixed_ns enable;  groupwidget hubbard enable }
-	default { widget mixing_fixed_ns disable; groupwidget hubbard disable }
-    }
-}
-
 tracevar occupations w {
     if { [varvalue occupations] == "'from_input'" } {
 	groupwidget occupations_card enable
@@ -366,10 +417,20 @@ tracevar vdw_corr w {
 	groupwidget dftdG enable 
     } elseif { [varvalue vdw_corr] == "'grimme-d3'" } {
 	groupwidget dftd3G enable 
-    } elseif { [varvalue vdw_corr] == "'xdm'" } {
+    } elseif { [varvalue vdw_corr] == "'XDM'" } {
 	groupwidget xdmG  enable
-    } elseif { [varvalue vdw_corr] == "'ts-vdw'" } {
+    } elseif { [varvalue vdw_corr] == "'TS'" } {
 	groupwidget tsG   enable
+    } elseif { [varvalue vdw_corr] == "'MBD'" } {
+        widget ts_vdw_isolated enable
+    }
+}
+
+tracevar lgcscf w {
+    if { [vartextvalue lgcscf] == "Yes" } {
+	groupwidget gcscf_group enable
+    } else {
+	groupwidget gcscf_group disable
     }
 }
 
@@ -389,22 +450,37 @@ tracevar adaptive_thr w {
 tracevar diagonalization w {
     switch -glob -- [varvalue diagonalization] {
 	'david*' {
-	    widget diago_cg_maxiter disable
 	    widget diago_david_ndim enable
-	    widget ortho_para       enable
-	    #groupwidget diis        disable
+	    widget diago_cg_maxiter disable
+	    widget diago_ppcg_maxiter disable
+            widget diago_rmm_ndim disable
+            widget diago_rmm_conv disable
 	}
 	'cg' {
 	    widget diago_cg_maxiter enable
+	    widget diago_ppcg_maxiter disable
 	    widget diago_david_ndim disable
-	    widget ortho_para       disable
-	    #groupwidget diis        disable
+            widget diago_rmm_ndim disable
+            widget diago_rmm_conv disable
 	}
+        'ppcg' {
+            widget diago_ppcg_maxiter enable
+            widget diago_cg_maxiter disable
+	    widget diago_david_ndim disable
+            widget diago_rmm_ndim disable
+            widget diago_rmm_conv disable
+        }
+        'rmm*' {
+            widget diago_david_ndim enable
+            widget diago_rmm_ndim enable
+            widget diago_rmm_conv enable
+            widget diago_cg_maxiter disable
+            widget diago_ppcg_maxiter disable
+        }
 	default {
+            # 'paro'
 	    widget diago_cg_maxiter disable
 	    widget diago_david_ndim disable
-	    widget ortho_para       disable
-	    #groupwidget diis        disable
 	}
     }
 }
@@ -445,6 +521,13 @@ tracevar ion_dynamics w {
 	groupwidget bfgs enable
     } else {
 	groupwidget bfgs disable
+    }
+
+    # FIRE
+    if { $iond == "'fire'" && $calc == "'relax'" } {
+	groupwidget fire enable
+    } else {
+	groupwidget fire disable
     }
 }
 
@@ -498,11 +581,22 @@ tracevar K_POINTS_flags w {
 tracevar nks w {
     widgetconfigure kpoints -rows [varvalue nks]    
 }
+tracevar nks_add w {
+    widgetconfigure add_kpoints -rows [varvalue nks_add]    
+}
 
 
 # ------------------------------------------------------------------------
 # Page: Other cards
 # ------------------------------------------------------------------------
+
+tracevar hubbard_enable w {
+    if { [varvalue hubbard_enable] == "Yes" } {
+	groupwidget hubbard_group enable
+    } else {
+	groupwidget hubbard_group disable
+    }
+}
 
 tracevar constraints_enable w {
 
@@ -528,17 +622,6 @@ tracevar nconstr w {
     widgetconfigure constraints_table -rows $nc
 }
 
-tracevar assume_isolated w {    
-    switch -- [varvalue assume_isolated] {
-	'dcc' { 
-	    groupwidget ee enable 
-	}
-	default {
-	    groupwidget ee disable
-	}
-    }
-}
-
 tracevar specify_atomic_forces w {
     if { [vartextvalue specify_atomic_forces] == "Yes" } {
 	groupwidget atomic_forces_specs enable
@@ -546,32 +629,74 @@ tracevar specify_atomic_forces w {
 	groupwidget atomic_forces_specs disable
     }
 }
+tracevar specify_add_kpoints w {
+    if { [vartextvalue specify_add_kpoints] == "Yes" } {
+	groupwidget add_kpoints_specs enable
+    } else {
+	groupwidget add_kpoints_specs disable
+    }
+}
+tracevar ion_velocities w {
+    if { [varvalue ion_velocities] == "'from_input'" } {
+	groupwidget atomic_velocities_group enable
+    } else {
+	groupwidget atomic_velocities_group disable
+    }
+}
+
+tracevar laue_both_hands w {
+    if { [vartextvalue laue_both_hands] == "Yes" } {
+        widget laue_one_hand_table forget
+        widget laue_both_hands_table create
+        widget laue_both_hands_table enable
+    } else {
+        widget laue_one_hand_table create
+        widget laue_one_hand_table enable
+        widget laue_both_hands_table forget
+    }
+}
+
+tracevar nsolv w {
+    set nsolv [varvalue nsolv]
+    if { $nsolv == "" || ! [string is integer $nsolv] || $nsolv < 1 } {
+        set nsolv 1
+    }
+    widgetconfigure laue_one_hand_table -rows $nsolv
+    widgetconfigure laue_both_hands_table -rows $nsolv
+}
 
 # ------------------------------------------------------------------------
 # POST-PROCESSING: assign default values for "traced" variables, ...
 # ------------------------------------------------------------------------
 postprocess {    
     varset calculation     -value 'scf'
-    varset gate        -value {}
+    varset lfcp            -value {}
+    varset trism           -value {}
+    varset laue_both_hands -value {}
+    varset twochem         -value {}
+    varset gate            -value {}
     varset ibrav           -value {}
     varset how_lattice     -value celldm
     varset nspin           -value {}
     varset tefield         -value {}
-    varset lda_plus_u      -value {}
     varset occupations     -value {}
     varset assume_isolated -value {}
     varset vdw_corr        -value {}
     varset london          -value {}
+    varset lgcscf          -value {}
     varset xdm             -value {}
     varset adaptive_thr    -value {}
     varset diagonalization -value {}
     varset ion_dynamics    -value {}
+    varset ion_velocities  -value {}
     varset K_POINTS_flags  -value automatic
     varset CELL_PARAMETERS_flags -value {}
-
+    varset hubbard_enable -value No
+    varset HUBBARD_flags  -value ortho-atomic
     # unused variables
     groupwidget unused_1 disable
     #groupwidget vdw_obsolete disable
-
+    
     varset specify_atomic_forces -value .false.
+    varset specify_add_kpoints   -value .false.
 }

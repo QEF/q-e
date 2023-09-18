@@ -93,7 +93,7 @@ MODULE ld1inc
        rcut(nwfsx),      & ! the cut-off radius for pseudowavefunctions
        rcutus(nwfsx),    & ! the cut-off radius for us-pseudowavefunctions
        rcloc,            & ! cut-off for local potential
-       ecutrho,          & ! suggested cut-off for the change
+       ecutrho,          & ! suggested cut-off for the charge
        ecutwfc,          & ! suggested cut-off for the wavefunctions
        zval,             & ! the ionic pseudo charge
        phis(ndmx,nwfsx),  & ! the pseudo wavefunctions

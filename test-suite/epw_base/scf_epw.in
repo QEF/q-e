@@ -23,7 +23,7 @@
  &electrons
     diagonalization = 'david'
     mixing_beta     = 0.7
-    conv_thr        = 1.0d-20
+    conv_thr        = 1.0d-18
  /
 ATOMIC_SPECIES
   C  12.01078  C_3.98148.UPF

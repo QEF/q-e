@@ -1,0 +1,32 @@
+ &control
+    calculation  = 'scf'
+    restart_mode = 'from_scratch'
+    prefix       = 'O2'
+    tstress      = .true.
+    tprnfor      = .true.
+ /
+ &system
+    ibrav       = -5
+    celldm(1)   = 7.95
+    celldm(4)   = 0.683
+    nat         = 2
+    ntyp        = 1
+    ecutwfc     = 30.0
+    ecutrho     = 180.0
+    nspin       = 2
+    occupations = 'smearing'
+    smearing    = 'gauss'
+    degauss     = 0.01
+    starting_magnetization(1) = 0.5
+ /
+ &electrons
+    conv_thr =  1.d-10
+    mixing_beta = 0.5
+ /
+ATOMIC_SPECIES
+O  16.0  O.pz-kjpaw.UPF
+ATOMIC_POSITIONS crystal
+O  0.95  0.95  0.95
+O  0.05  0.05  0.05
+K_POINTS automatic
+ 2 2 2 0 0 0

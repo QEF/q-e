@@ -1,0 +1,197 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: q2r.x / PHonon / Quantum ESPRESSO (version: 7.2)
+------------------------------------------------------------------------
+
+
+Purpose of q2r.x:
+
+It reads force constant matrices C(q) produced by the ph.x code
+for a grid of q-points and calculates the corresponding set
+of interatomic force constants (IFC), C(R)
+
+Input data format: [ ] = it depends
+
+Structure of the input data:
+========================================================================
+
+&INPUT
+   ...specs of namelist variables...
+/
+
+[ nr1 nr2 nr3
+  nfile
+     file(1)
+     file(2)
+     ...
+     file(nfile) ]
+
+
+
+========================================================================
+NAMELIST: &INPUT
+
+   +--------------------------------------------------------------------
+   Variable:       fildyn
+   
+   Type:           CHARACTER
+   Status:         REQUIRED
+   Description:    Input file name (must be specified).
+                   
+                   "fildyn"0 contains information on the q-point grid
+                   
+                   "fildyn"1-N contain force constants C_n = C(q_n),
+                        where n = 1,...N, where N is the number of
+                        q-points in the irreducible brillouin zone.
+                   
+                   Normally this should be the same as specified on input
+                   to the phonon code.
+                   
+                   In the non collinear/spin-orbit case the files
+                   produced by ph.x are in .xml format. In this case
+                   "fildyn" is the same as in the phonon code + the
+                   .xml extension.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       flfrc
+   
+   Type:           CHARACTER
+   Status:         REQUIRED
+   Description:    Output file containing the IFC in real space (must be specified)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       zasr
+   
+   Type:           CHARACTER
+   Default:        'no'
+   Description:   
+                   Indicates the type of Acoustic Sum Rules used for the Born
+                   effective charges.
+                   
+                   Allowed values:
+    
+                   'no' :
+                        no Acoustic Sum Rules imposed (default)
+    
+                   'simple' :
+                        previous implementation of the asr used
+                        (3 translational asr imposed by correction of
+                         the diagonal elements of the force-constants matrix)
+    
+                   'crystal' :
+                        3 translational asr imposed by optimized
+                        correction of the IFC (projection)
+    
+                   'one-dim' :
+                        3 translational asr + 1 rotational asr
+                        imposed by optimized correction of the IFC (the
+                        rotation axis is the direction of periodicity; it
+                        will work only if this axis considered is one of
+                        the cartesian axis).
+    
+                   'zero-dim' :
+                        3 translational asr + 3 rotational asr
+                        imposed by optimized correction of the IFC.
+    
+                   Note that in certain cases, not all the rotational asr
+                   can be applied (e.g. if there are only 2 atoms in a
+                   molecule or if all the atoms are aligned, etc.).
+                   In these cases the supplementary asr are cancelled
+                   during the orthonormalization procedure (see below).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       loto_2d
+   
+   Type:           LOGICAL
+   Description:    set to .true. to activate two-dimensional treatment
+                   of LO-TO splitting.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       write_lr
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    set to .true. to write long-range IFC into q2r IFC file.
+                   This is required when enforcing asr='all' for infrared-
+                   active solids in matdyn. An additional column will be written
+                   for long-range part of IFC for text format, while a tag named
+                   IFC_LR will be created for xml format.
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+________________________________________________________________________
+* IF file {fildyn}0 does not exist : 
+
+   If a file "fildyn"0 is not found, the code will ignore variable
+   "fildyn" and will try to read from the following cards the missing
+   information on the q-point grid and file names:
+   
+   ========================================================================
+   Line of input:
+   
+         nr1 nr2 nr3
+      
+      
+      DESCRIPTION OF ITEMS:
+      
+         +--------------------------------------------------------------------
+         Variables:      nr1, nr2, nr3
+         
+         Type:           INTEGER
+         Description:    dimensions of the FFT grid formed by the q-point grid
+         +--------------------------------------------------------------------
+         
+   ===End of line-of-input=================================================
+   
+   
+   ========================================================================
+   CARD:  
+   
+      /////////////////////////////////////////
+      // Syntax:                             //
+      /////////////////////////////////////////
+      
+            nfile
+            file(1)      
+            file(2)      
+            . . . 
+            file(nfile)  
+      
+      /////////////////////////////////////////
+      
+      DESCRIPTION OF ITEMS:
+      
+         +--------------------------------------------------------------------
+         Variable:       nfile
+         
+         Type:           INTEGER
+         Description:    number of files containing C(q_n), n=1,"nfile"
+         +--------------------------------------------------------------------
+         
+         +--------------------------------------------------------------------
+         Variable:       file
+         
+         Type:           CHARACTER
+         Description:    names of the files containing C(q_n), n=1,"nfile"
+                         
+                         Note that the name and order of files is not important as
+                         long as q=0 is the first.
+         +--------------------------------------------------------------------
+         
+   ===END OF CARD==========================================================
+   
+   
+    
+ENDIF
+________________________________________________________________________
+
+This file has been created by helpdoc utility on Sat Mar 18 19:08:13 CET 2023

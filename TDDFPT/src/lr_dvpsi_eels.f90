@@ -31,7 +31,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   USE gvecw,                 ONLY : gcutw
   USE qpoint,                ONLY : ikks, ikqs, nksq 
   USE eqv,                   ONLY : evq, dpsi 
-  USE wavefunctions,  ONLY : evc
+  USE wavefunctions,         ONLY : evc
   USE noncollin_module,      ONLY : npol
   use klist,                 only : xk, igk_k, ngk
   use gvect,                 only : ngm, g
@@ -40,7 +40,9 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   use uspp,                  only : vkb, okvan
   USE mp_bands,              ONLY : ntask_groups
   USE buffers,               ONLY : get_buffer
+  USE lr_variables,          ONLY : calculator
   USE fft_helper_subroutines
+  USE uspp_init,             ONLY : init_us_2
  
   IMPLICIT NONE
   !
@@ -102,10 +104,12 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
      ELSE
         !
         ! FFT to R-space
+        !$acc data copyin(evc) copy(revc, dvpsi1)    
         CALL cft_wave(ik, evc(1,ibnd), revc, +1)
         !
         ! back-FFT to G-space
         CALL cft_wave(ik, dvpsi1(1,ibnd), revc, -1) 
+        !$acc end data
         !
      ENDIF
      !
@@ -135,7 +139,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   !
   ! In the ultrasoft case apply the S^{-1} operator.
   !
-  IF (okvan) THEN
+  IF (okvan .AND. trim(calculator)=='lanczos') THEN
      !
      dpsi(:,:) = (0.0d0, 0.0d0)
      !

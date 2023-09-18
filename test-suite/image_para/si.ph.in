@@ -1,0 +1,13 @@
+phonons of Si
+ &inputph
+  tr2_ph=1.0d-16,
+  prefix='silicon',
+  epsil=.true.,
+  ldisp=.true.,
+  amass(1)=28.08,
+  fildyn='si.dyn.xml',
+  fildvscf='dvscf',
+  nq1=2,
+  nq2=2, 
+  nq3=2
+ /

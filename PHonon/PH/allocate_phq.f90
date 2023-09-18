@@ -9,9 +9,8 @@
 !-----------------------------------------------------------------------
 subroutine allocate_phq
   !-----------------------------------------------------------------------
-  !
-  ! Dynamical allocation of arrays: quantities needed for the linear
-  ! response problem
+  !! Dynamical allocation of arrays: quantities needed for the linear
+  !! response problem.
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat, ntyp => nsp
@@ -19,10 +18,9 @@ subroutine allocate_phq
   USE wvfct,         ONLY : nbnd, npwx
   USE gvect,         ONLY : ngm
   USE lsda_mod,      ONLY : nspin
-  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE noncollin_module, ONLY : noncolin, domag, npol, nspin_mag, lspinorb
   USE fft_base,      ONLY : dfftp
   USE wavefunctions, ONLY : evc
-  USE spin_orb,      ONLY : lspinorb, domag
   USE nc_mag_aux,    ONLY : int1_nc_save, deeq_nc_save
   USE becmod,        ONLY : bec_type, becp, allocate_bec_type
   USE uspp,          ONLY : okvan, nkb, vkb
@@ -32,23 +30,34 @@ subroutine allocate_phq
   USE phus,          ONLY : int1, int1_nc, int2, int2_so, &
                             int4, int4_nc, int5, int5_so, becsumort, &
                             alphasum, alphasum_nc, becsum_nc, alphap
+#if defined(__CUDA)
+  USE phus,          ONLY : alphap_d
+#endif
   USE efield_mod,    ONLY : zstareu, zstareu0, zstarue0, zstarue0_rec, zstarue
   USE units_ph,      ONLY : this_pcxpsi_is_on_file, this_dvkb3_is_on_file
   USE dynmat,        ONLY : dyn00, dyn, dyn_rec, w2
   USE modes,         ONLY : u, npert, name_rap_mode, num_rap_mode
-  USE el_phon,       ONLY : el_ph_mat, elph
+  USE el_phon,       ONLY : el_ph_mat, el_ph_mat_nc_mag, elph
   USE freq_ph,       ONLY : polar, nfs
   USE lrus,          ONLY : becp1, dpqq, dpqq_so
+#if defined(__CUDA)
+  USE lrus,          ONLY : becp1_d
+#endif
   USE qpoint,        ONLY : nksq, eigqts, xk_col
   USE eqv,           ONLY : dpsi, evq, vlocq, dmuxc, dvpsi
   USE lr_symm_base,  ONLY : rtau
-  USE control_lr,    ONLY : lgamma, ofsbeta
+  USE control_lr,    ONLY : lgamma
   USE ldaU,          ONLY : lda_plus_u, Hubbard_lmax, nwfcU
   USE ldaU_ph,       ONLY : dnsbare, dnsorth, dnsbare_all_modes, wfcatomk, &
                             dwfcatomk, sdwfcatomk, wfcatomkpq, dwfcatomkpq,  &
-                            swfcatomk, swfcatomkpq, sdwfcatomkpq, dvkb, vkbkpq, &
-                            dvkbkpq
+                            sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq
+  USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq
   USE qpoint_aux,    ONLY : becpt, alphapt
+#if defined(__CUDA)
+  USE becmod_gpum,      ONLY: becp_d
+  USE becmod_subs_gpum, ONLY: allocate_bec_type_gpu
+  USE qpoint_aux,    ONLY : becpt_d, alphapt_d
+#endif
 
   IMPLICIT NONE
   INTEGER :: ik, ipol, ldim
@@ -98,10 +107,20 @@ subroutine allocate_phq
   IF (noncolin.AND.domag) THEN
      ALLOCATE (becpt(nksq))
      ALLOCATE (alphapt(3,nksq))
+#if defined(__CUDA)
+     ALLOCATE (becpt_d(nksq))
+     ALLOCATE (alphapt_d(3,nksq))
+#endif
      DO ik=1,nksq
         CALL allocate_bec_type ( nkb, nbnd, becpt(ik) )
+#if defined(__CUDA)
+        CALL allocate_bec_type_gpu ( nkb, nbnd, becpt_d(ik) )
+#endif
         DO ipol=1,3
            CALL allocate_bec_type ( nkb, nbnd, alphapt(ipol,ik) )
+#if defined(__CUDA)
+           CALL allocate_bec_type_gpu ( nkb, nbnd, alphapt_d(ipol,ik) )
+#endif
         ENDDO
      ENDDO
      IF (okvan) THEN
@@ -145,16 +164,32 @@ subroutine allocate_phq
 
   ALLOCATE (becp1(nksq))
   ALLOCATE (alphap(3,nksq))
+#if defined(__CUDA)
+  ALLOCATE (becp1_d(nksq))
+  ALLOCATE (alphap_d(3,nksq))
+#endif
   DO ik=1,nksq
      call allocate_bec_type ( nkb, nbnd, becp1(ik) )
+#if defined(__CUDA)
+     CALL allocate_bec_type_gpu ( nkb, nbnd, becp1_d(ik) )
+#endif
      DO ipol=1,3
         call allocate_bec_type ( nkb, nbnd, alphap(ipol,ik) )
+#if defined(__CUDA)
+        call allocate_bec_type_gpu ( nkb, nbnd, alphap_d(ipol,ik) )
+#endif
      ENDDO
   END DO
   CALL allocate_bec_type ( nkb, nbnd, becp )
+#if defined(__CUDA)
+  CALL allocate_bec_type_gpu ( nkb, nbnd, becp_d )
+#endif
 
   if (elph) then
     allocate (el_ph_mat( nbnd, nbnd, nksq, 3*nat))
+    if(noncolin .AND. domag) then
+       allocate (el_ph_mat_nc_mag( nbnd, nbnd, nksq, 3*nat))
+    endif
   endif
   allocate ( ramtns (3, 3, 3, nat) )
 
@@ -168,7 +203,6 @@ subroutine allocate_phq
      ALLOCATE (dwfcatomk(npwx,nwfcU,3))
      ALLOCATE (sdwfcatomk(npwx,nwfcU))
      ALLOCATE (dvkb(npwx,nkb,3))
-     ALLOCATE (ofsbeta(nat))
      !
      ALLOCATE (dnsbare(ldim,ldim,nspin,nat,3,nat))
      ALLOCATE (dnsbare_all_modes(ldim,ldim,nspin,nat,3*nat))

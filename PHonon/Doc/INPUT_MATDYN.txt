@@ -1,0 +1,505 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: matdyn.x / PHonon / Quantum ESPRESSO (version: 7.2)
+------------------------------------------------------------------------
+
+
+Purpose of matdyn.x:
+
+This program calculates the phonon frequencies for a list of generic
+q vectors starting from the interatomic force constants generated
+from the dynamical matrices as written by DFPT phonon code through
+the companion program q2r.x
+
+matdyn.x can generate a supercell of the original cell for mass
+approximation calculation. If supercell data are not specified
+in input, the unit cell, lattice vectors, atom types and positions
+are read from the force constant file.
+
+Input data format: [ ] = it depends
+
+Structure of the input data:
+========================================================================
+
+&INPUT
+   ...specs of the namelist variables...
+/
+
+[ X(1)   Y(1)   Z(1)    ityp(1)
+  ...
+  X(nat) Y(nat) Z(nat)  ityp(nat) ]
+
+[ nq
+  q_x(1)  q_y(1)  q_x(1)   [ nptq(1) ]
+  ...
+  q_x(nq) q_y(nq) q_x(nq)  [ nptq(1) ] ]
+
+
+
+========================================================================
+NAMELIST: &INPUT
+
+   +--------------------------------------------------------------------
+   Variable:       flfrc
+   
+   Type:           CHARACTER
+   Description:    File produced by q2r containing force constants (needed)
+                   It is the same as in the input of q2r.x (+ the .xml extension
+                   if the dynamical matrices produced by ph.x were in xml
+                   format). No default value: must be specified.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       asr
+   
+   Type:           CHARACTER
+   Default:        'no'
+   Description:   
+                   Indicates the type of Acoustic Sum Rule imposed.
+                   
+                   Allowed values:
+    
+                   'no' :
+                        no Acoustic Sum Rules imposed (default)
+    
+                   'simple' :
+                        previous implementation of the asr used
+                        (3 translational asr imposed by correction of
+                         the diagonal elements of the force constants matrix)
+    
+                   'crystal' :
+                        3 translational asr imposed by optimized
+                        correction of the force constants (projection)
+    
+                   'all' :
+                        3 translational asr + 3 rotational asr + 15 Huang
+                        conditions for vanishing stress tensor, imposed by
+                        optimized correction of the force constants (projection).
+                        Remember to set write_lr = .true. to write long-range
+                        force constants into file when running q2r and set "read_lr" = .true. when running matdyn in the case of
+                        infrared-active solids. (See npj Comput Mater 8, 236 (2022))
+    
+                   'one-dim' :
+                        3 translational asr + 1 rotational asr imposed
+                        by optimized correction of the dyn. mat. (the
+                        rotation axis is the direction of periodicity; it
+                        will work only if this axis considered is one of
+                        the Cartesian axis).
+    
+                   'zero-dim' :
+                        3 translational asr + 3 rotational asr imposed
+                        by optimized correction of the dyn. mat.
+    
+                   Note that in certain cases, not all the rotational asr
+                   can be applied (e.g. if there are only 2 atoms in a
+                   molecule or if all the atoms are aligned, etc.).
+                   In these cases the supplementary asr are cancelled
+                   during the orthonormalization procedure (see below).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       huang
+   
+   Type:           LOGICAL
+   Default:        .true.
+   Description:    if .true. 15 Huang conditions for vanishing stress
+                   tensor are included in "asr" = 'all'.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       dos
+   
+   Type:           LOGICAL
+   Description:    if .true. calculate phonon Density of States (DOS)
+                   using tetrahedra and a uniform q-point grid (see below)
+                   NB: may not work properly in noncubic materials
+                   
+                   if .false. calculate phonon bands from the list of q-points
+                   supplied in input (default)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variables:      nk1, nk2, nk3
+   
+   Type:           INTEGER
+   Description:    uniform q-point grid for DOS calculation (includes q=0)
+                   (must be specified if "dos" = .true., ignored otherwise)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       deltaE
+   
+   Type:           REAL
+   Description:    energy step, in cm-1, for DOS calculation: from min
+                   to max phonon energy (default: 1 cm-1 if ndos, see
+                   below, is not specified)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ndos
+   
+   Type:           INTEGER
+   Description:    number of energy steps for DOS calculations
+                   (default: calculated from deltaE if not specified)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       degauss
+   
+   Type:           REAL
+   Description:    DOS broadening in cm-1
+                   
+                   Default: 0 - meaning use tetrahedra
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fldos
+   
+   Type:           CHARACTER
+   Description:    output file for dos (default: 'matdyn.dos')
+                   the dos is in states/cm-1 plotted vs omega in cm(-1)
+                   and is normalised to 3*nat, i.e. the number of phonons
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       flfrq
+   
+   Type:           CHARACTER
+   Description:    output file for frequencies (default: 'matdyn.freq')
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       flvec
+   
+   Type:           CHARACTER
+   Description:    output file for normalized phonon displacements
+                   (default: 'matdyn.modes'). The normalized phonon displacements
+                   are the eigenvectors divided by the square root of the mass,
+                   then normalized. As such they are not orthogonal.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fleig
+   
+   Type:           CHARACTER
+   Description:    output file for phonon eigenvectors (default: 'matdyn.eig')
+                   The phonon eigenvectors are the eigenvectors of the dynamical
+                   matrix. They are orthogonal.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fldyn
+   
+   Type:           CHARACTER
+   Description:    output file for dynamical matrix (default: ' ' i.e. not written)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       at(i,j), (i,j)=(1,1) ... (3,3)
+   
+   Type:           REAL
+   Description:    supercell lattice vectors - must form a superlattice of the
+                   original lattice (default: use original cell)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variables:      l1, l2, l3
+   
+   Type:           INTEGER
+   Description:    supercell lattice vectors are original cell vectors times
+                   l1, l2, l3 respectively (default: 1, ignored if "at" specified)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ntyp
+   
+   Type:           INTEGER
+   Description:    number of atom types in the supercell
+                   (default: "ntyp" of the original cell)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       amass(i), i=1,ntyp
+   
+   Type:           REAL
+   Description:    masses of atoms in the supercell (a.m.u.), one per atom type
+                   (default: use masses read from file flfrc)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       readtau
+   
+   Type:           LOGICAL
+   Description:    read  atomic positions of the supercell from input
+                   (used to specify different masses) (default: .false.)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fltau
+   
+   Type:           CHARACTER
+   Description:    write atomic positions of the supercell to file fltau
+                   (default: "fltau" = ' ', do not write)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       la2F
+   
+   Type:           LOGICAL
+   Description:    if .true. interpolates also the el-ph coefficients
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       q_in_band_form
+   
+   Type:           LOGICAL
+   Description:    if .true. the q points are given in band form:
+                   only the first and last point of one or more lines
+                   are given. See below. (default: .false.).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       q_in_cryst_coord
+   
+   Type:           LOGICAL
+   Description:    if .true. input q points are in crystalline
+                   coordinates (default: .false.)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       eigen_similarity
+   
+   Type:           LOGICAL
+   Description:    use similarity of the displacements to order
+                   frequencies  (default: .false.)
+                   
+                   NB: You cannot use this option with the symmetry
+                   analysis of the modes.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fd
+   
+   Type:           LOGICAL
+   Description:    if .true. the ifc come from the finite displacement calculation
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       na_ifc
+   
+   Type:           LOGICAL
+   Description:    add non analitic contributions to the interatomic force
+                   constants if finite displacement method is used (as in Wang et al.
+                   PRB 85, 224303 (2012)) [to be used in conjunction with fd.x]
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       nosym
+   
+   Type:           LOGICAL
+   Description:    if .true., no symmetry and no time reversal are imposed
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       loto_2d
+   
+   Type:           LOGICAL
+   Description:    set to .true. to activate two-dimensional treatment of LO-TO splitting
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       loto_disable
+   
+   Type:           LOGICAL
+   Description:    if .true. do not apply LO-TO splitting for q=0
+                   (default: .false.)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       read_lr
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    if .true. read also long-range force constants when they exist in
+                   force constant file. This is required when enforcing "asr" = 'all'
+                   for infrared-active solids.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       write_frc
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    if .true. write force constants with "asr" imposed into file.
+                   The filename would be "flfrc"+".matdyn". The long-range part of
+                   force constants will be not written.
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+________________________________________________________________________
+* IF readtau == .true. : 
+
+   ========================================================================
+   CARD:  
+   
+      IF ("READTAU") ATOMIC POSITIONS MUST BE SPECIFIED AS FOLLOWS:
+      
+      /////////////////////////////////////////
+      // Syntax:                             //
+      /////////////////////////////////////////
+      
+            X(1)    Y(1)    Z(1)    ityp(1)    
+            X(2)    Y(2)    Z(2)    ityp(2)    
+            . . . 
+            X(nat)  Y(nat)  Z(nat)  ityp(nat)  
+      
+      /////////////////////////////////////////
+      
+      DESCRIPTION OF ITEMS:
+      
+         +--------------------------------------------------------------------
+         Variables:      X, Y, Z
+         
+         Type:           REAL
+         Description:    X, Y, Z atomic positions
+         +--------------------------------------------------------------------
+         
+         +--------------------------------------------------------------------
+         Variable:       ityp
+         
+         Type:           INTEGER
+         Description:    index of the atomic type
+         +--------------------------------------------------------------------
+         
+   ===END OF CARD==========================================================
+   
+   
+    
+ENDIF
+________________________________________________________________________
+
+________________________________________________________________________
+* IF q_in_band_form == .true .and. dos == .false. : 
+
+   ========================================================================
+   CARD:  
+   
+      IF ("Q_IN_BAND_FORM" .AND. .NOT."DOS") Q-POINTS MUST BE SPECIFIED AS FOLLOWS:
+      
+      /////////////////////////////////////////
+      // Syntax:                             //
+      /////////////////////////////////////////
+      
+            nq
+            q_x(1)   q_y(1)   q_z(1)   nptq(1)   
+            q_x(2)   q_y(2)   q_z(2)   nptq(2)   
+            . . . 
+            q_x(nq)  q_y(nq)  q_z(nq)  nptq(nq)  
+      
+      /////////////////////////////////////////
+      
+      DESCRIPTION OF ITEMS:
+      
+         +--------------------------------------------------------------------
+         Variable:       nq
+         
+         Type:           INTEGER
+         Description:    number of q points
+         +--------------------------------------------------------------------
+         
+         Description:    The format of the q-points specification is:
+                         
+                         (q(i,n),i=1,3), nptq
+                         
+                         nptq is the number of points between this point
+                         and the next. These points are automatically
+                         generated. the q points are given in Cartesian
+                         coordinates, 2pi/a units (a = lattice parameters)
+         +--------------------------------------------------------------------
+         Variables:      q_x, q_y, q_z
+         
+         Type:           REAL
+         Description:    coordinates of the Q point
+         +--------------------------------------------------------------------
+         
+         +--------------------------------------------------------------------
+         Variable:       nptq
+         
+         Type:           INTEGER
+         Description:    The number of points between this point and the next.
+                         
+                         "nptq" is the number of points between this point
+                         and the next. These points are automatically
+                         generated. the q points are given in Cartesian
+                         coordinates, 2pi/a units (a = lattice parameters)
+         +--------------------------------------------------------------------
+         
+   ===END OF CARD==========================================================
+   
+   
+    
+* ELSE IF dos == .false. : 
+
+   IF (.NOT. "DOS") Q-POINTS MUST BE SPECIFIED AS FOLLOWS:
+   
+   ========================================================================
+   CARD:  
+   
+      /////////////////////////////////////////
+      // Syntax:                             //
+      /////////////////////////////////////////
+      
+            nq
+            q_x(1)   q_y(1)   q_z(1)   
+            q_x(2)   q_y(2)   q_z(2)   
+            . . . 
+            q_x(nq)  q_y(nq)  q_z(nq)  
+      
+      /////////////////////////////////////////
+      
+      DESCRIPTION OF ITEMS:
+      
+         +--------------------------------------------------------------------
+         Variable:       nq
+         
+         Type:           INTEGER
+         Description:    number of q points
+         +--------------------------------------------------------------------
+         
+         Description:    The format of the q-points specification is:
+                         
+                         ((q(i,n),i=1,3), n=1,nq)
+         +--------------------------------------------------------------------
+         Variables:      q_x, q_y, q_z
+         
+         Type:           REAL
+         Description:    q-points in cartesian coordinates, 2pi/a units (a = lattice parameters)
+         +--------------------------------------------------------------------
+         
+   ===END OF CARD==========================================================
+   
+   
+    
+ENDIF
+________________________________________________________________________
+
+
+:::: Notes
+
+   If q = 0, the direction qhat (q=>0) for the non-analytic part
+   is extracted from the sequence of q-points as follows:
+   
+   qhat = q(n) - q(n-1)   or   qhat = q(n) - q(n+1)
+   
+   depending on which one is available and nonzero.
+   
+   For low-symmetry crystals, specify twice q = 0 in the list
+   if you want to have q = 0 results for two different directions
+   
+
+This file has been created by helpdoc utility on Sat Mar 18 19:08:12 CET 2023

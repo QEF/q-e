@@ -52,9 +52,6 @@ subroutine newdq (dvscf, npe)
   ! the values of q+G
   ! the spherical harmonics
 
-  complex(DP), external :: zdotc
-  ! the scalar product function
-
   complex(DP), allocatable :: aux1 (:), aux2 (:,:), veff (:), qgm(:)
   ! work space
 
@@ -118,7 +115,7 @@ subroutine newdq (dvscf, npe)
                        enddo
                        do is = 1, nspin_mag
                           int3(ih,jh,na,is,ipert) = omega * &
-                                             zdotc(ngm,aux1,1,aux2(1,is),1)
+                                             dot_product(aux1(:),aux2(:,is))
                        enddo
                     endif
                  enddo

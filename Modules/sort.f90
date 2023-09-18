@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2022 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,18 +8,27 @@
 !---------------------------------------------------------------------
 subroutine hpsort_eps (n, ra, ind, eps)
   !---------------------------------------------------------------------
-  ! sort an array ra(1:n) into ascending order using heapsort algorithm,
-  ! and considering two elements being equal if their values differ
-  ! for less than "eps".
-  ! n is input, ra is replaced on output by its sorted rearrangement.
-  ! create an index table (ind) by making an exchange in the index array
-  ! whenever an exchange is made on the sorted data array (ra).
-  ! in case of equal values in the data array (ra) the values in the
-  ! index array (ind) are used to order the entries.
-  ! if on input ind(1)  = 0 then indices are initialized in the routine,
-  ! if on input ind(1) != 0 then indices are assumed to have been
-  !                initialized before entering the routine and these
-  !                indices are carried around during the sorting process
+  !! Sort an array ra(1:n) into ascending order using heapsort algorithm,
+  !! and considering two elements being equal if their values differ
+  !! for less than "eps". IMPORTANT NOTICE (PG February 2022):
+  !! Assume you have in input a,b,c with c < b < a and a-b < eps, b-c < eps,
+  !! but a-c > eps. The resulting output order should be c,a,b, but may turn
+  !! out to be a,b,c instead. I think this is a bug. I don't know how to fix
+  !! it, I am not sure it does any harm, but re-ordering k+G with this same
+  !! routine may yield a different ordering for k+G and G vectors even if k=0.
+  !! This is a bug that has been around for years. The current work-around 
+  !! (in routine gk_sort) is to avoid recomputing indices for k+G if k=0.
+  !!
+  !! \(\text{n}\) is input, \(\text{ra}\) is replaced on output by its 
+  !! sorted rearrangement.  
+  !! Create an index table (ind) by making an exchange in the index array
+  !! whenever an exchange is made on the sorted data array (\(\text{ra}\)).  
+  !! In case of equal values in the data array (\(\text{ra}\)) the values
+  !! in the index array (ind) are used to order the entries.  
+  !! If on input ind(1) = 0 then indices are initialized in the routine,
+  !! if on input ind(1) != 0 then indices are assumed to have been
+  !! initialized before entering the routine and these indices are carried
+  !! around during the sorting process.
   !
   ! no work space needed !
   ! free us from machine-dependent sorting-routines !
@@ -123,32 +132,12 @@ subroutine hpsort_eps (n, ra, ind, eps)
   end do sorting    
   !
 end subroutine hpsort_eps
-
-!
-! Copyright (C) 2001 PWSCF group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------
 subroutine hpsort (n, ra, ind)  
   !---------------------------------------------------------------------
-  ! sort an array ra(1:n) into ascending order using heapsort algorithm.
-  ! n is input, ra is replaced on output by its sorted rearrangement.
-  ! create an index table (ind) by making an exchange in the index array
-  ! whenever an exchange is made on the sorted data array (ra).
-  ! in case of equal values in the data array (ra) the values in the
-  ! index array (ind) are used to order the entries.
-  ! if on input ind(1)  = 0 then indices are initialized in the routine,
-  ! if on input ind(1) != 0 then indices are assumed to have been
-  !                initialized before entering the routine and these
-  !                indices are carried around during the sorting process
-  !
-  ! no work space needed !
-  ! free us from machine-dependent sorting-routines !
-  !
-  ! adapted from Numerical Recipes pg. 329 (new edition)
+  !! Sort an array ra(1:n) into ascending order using heapsort algorithm.
+  !! As hpsort_eps, without the "eps" trick (or equivalently, eps=0)
   !
   use kinds, only : DP
   implicit none  
@@ -239,33 +228,11 @@ subroutine hpsort (n, ra, ind)
   goto 10  
   !
 end subroutine hpsort
-
-
-!
-! Copyright (C) 2001 PWSCF group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------
 subroutine ihpsort (n, ia, ind)  
   !---------------------------------------------------------------------
-  ! sort an integer array ia(1:n) into ascending order using heapsort algorithm.
-  ! n is input, ia is replaced on output by its sorted rearrangement.
-  ! create an index table (ind) by making an exchange in the index array
-  ! whenever an exchange is made on the sorted data array (ia).
-  ! in case of equal values in the data array (ia) the values in the
-  ! index array (ind) are used to order the entries.
-  ! if on input ind(1)  = 0 then indices are initialized in the routine,
-  ! if on input ind(1) != 0 then indices are assumed to have been
-  !                initialized before entering the routine and these
-  !                indices are carried around during the sorting process
-  !
-  ! no work space needed !
-  ! free us from machine-dependent sorting-routines !
-  !
-  ! adapted from Numerical Recipes pg. 329 (new edition)
+  !! As "hpsort", for integer array ia(1:n)
   !
   implicit none  
   !-input/output variables

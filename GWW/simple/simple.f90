@@ -28,7 +28,7 @@ program simple
   USE input_simple, ONLY : num_val,  num_cond, s_bands, deallocate_simple,s_product,&
                        &l_truncated_coulomb,truncation_radius, allocate_simple, &
                        &nkpoints,numpw,l_debug,n_debug,w_type,epsm,lambdam, &
-                       &prefix_small , nonlocal_commutator , calc_mode
+                       &nonlocal_commutator , calc_mode, n_shrink
   USE pwcom, ONLY : igk_k
   !
   IMPLICIT NONE
@@ -47,14 +47,15 @@ program simple
   !
   NAMELIST /inputsimple/ prefix,outdir,num_nbndv,num_val,num_cond,s_bands, &
        & s_product,l_truncated_coulomb,truncation_radius,nkpoints,numpw,&
-       & l_debug,n_debug,w_type,epsm,lambdam,prefix_small, nonlocal_commutator,&
-       & calc_mode
+       & l_debug,n_debug,w_type,epsm,lambdam, nonlocal_commutator,&
+       & calc_mode, n_shrink
   !
   CALL mp_startup ( )
   CALL environment_start ( code )
   !
   CALL start_clock('simple')
   !
+  n_shrink=1
   prefix='export'
   CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
@@ -82,9 +83,9 @@ program simple
   CALL mp_bcast(w_type,  ionode_id, world_comm)
   CALL mp_bcast(epsm,  ionode_id, world_comm)
   CALL mp_bcast(lambdam,  ionode_id, world_comm)
-  CALL mp_bcast(prefix_small,  ionode_id, world_comm)
   CALL mp_bcast(nonlocal_commutator,  ionode_id, world_comm)
   CALL mp_bcast(calc_mode,  ionode_id, world_comm)
+  CALL mp_bcast(n_shrink, ionode_id, world_comm)
   !
   IF (.not.l_truncated_coulomb .and. numpw/=0) numpw=numpw+1
   !

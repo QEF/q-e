@@ -1,0 +1,696 @@
+\documentclass[12pt,a4paper]{article}
+
+\def\version{7.1}
+\def\qe{{\sc Quantum ESPRESSO}}
+
+%\usepackage{html}
+
+% BEWARE: don't revert from graphicx for epsfig, because latex2html
+% doesn't handle epsfig commands !!!
+\usepackage{graphicx}
+\usepackage{alltt}
+\usepackage{xcolor}
+
+\textwidth = 17cm
+\textheight = 24cm
+\topmargin =-1 cm
+\oddsidemargin = 0 cm
+
+\def\pw{\texttt{pw.x}}
+\def\hp{\texttt{hp.x}}
+
+\begin{document}
+\author{}
+\date{}
+
+%\def\qeImage{quantum_espresso}
+
+\title{
+  %\includegraphics[width=5cm]{\qeImage} \\
+  % title
+  \Huge New DFT+Hubbard input in \\ \qe\ (since v.\version)
+  %\vskip 1 cm
+  %\Large Iurii Timrov (EPFL)
+  \date{\today}
+}
+
+\maketitle
+
+\tableofcontents
+
+\section{History}
+\label{sec:history}
+
+Density-functional theory (DFT) with the on-site Hubbard $U$ correction (DFT+$U$) was implemented in \qe\ since the early days of the \qe\ project (early 2000's). In the literature, this method used to be called (and still often is) as ``LDA+$U$'', since in the original paper that first introduced this method the local density approximation (LDA) for the exchange-correlation functional was used~\cite{Anisimov:1991}. However, other functionals other than LDA can be used with the Hubbard correction, and hence we obtain e.g. GGA+$U$, SCAN+$U$, etc. Therefore, it might be confusing to continue using the old name ``LDA+$U$''. Instead, for the sake of generality it is better to use a generic name ``DFT+$U$'' and then specify which functional is used. 
+
+In 1995 Liechtenstein and coworkers introduced a formulation of the Hubbard-corrected DFT that includes not only the Hubbard $U$ correction but also the Hund $J$ correction~\cite{Liechtenstein:1995}. Sometimes in is called in the literature as DFT+$U$+$J$. Within this formulation it is possible to set $J=0$ and thus obtain DFT+$U$.  
+
+In 1998 Dudarev and coworkers introduced the rotationally invariant (``simplified'') formulation of DFT+$U$~\cite{Dudarev:1998}. In this formulation, instead of having $U$ and $J$ individually we have just one effective parameter: $U_\mathrm{eff} = U - J$ (and often the subscript eff is dropped). 
+
+In 2011 Himmetoglu and coworkers introduced an extension of the Dudarev's DFT+$U$ to take into account $J$ in a simplified manner~\cite{Himmetoglu:2011}. In order to distinguish from $J$ in the Liechtenstein's DFT+$U$+$J$, here we use the name ``$J_0$''. This DFT+$U$+$J_0$ formulation is not yet a well-established method and it is an active field of research (see e.g. Refs.~\cite{Bajaj:2017, Linscott:2018}).
+
+One year earlier, in 2010 Campto Jr and Cococcioni extended Dudarev's formulation of DFT+$U$ to include inter-site Hubbard $V$ interactions~\cite{Campo:2010}. This is known as the DFT+$U$+$V$ approach.
+
+All the aforementioned methods are implemented in the official \qe\ \version.
+
+
+\section{Why changing the old input?}
+
+In \qe\ 7.0 and earlier, the input parameters for the \pw\ code were the following:
+\begin{itemize}
+    \item \texttt{lda\_plus\_u}
+    \item \texttt{lda\_plus\_u\_kind}
+    \item \texttt{Hubbard\_U}
+    \item \texttt{Hubbard\_J}
+    \item \texttt{Hubbard\_J0}
+    \item \texttt{Hubbard\_V}
+    \item \texttt{U\_projection\_type}
+\end{itemize}
+
+Moreover, the Hubbard manifold and the initial atomic occupations were hard-coded in\\ \texttt{Modules/set\_hubbard\_l.f90} and \texttt{PW/src/tabd.f90}. The data in these routines was far from being complete. So the user had to modify these routines each time when there were missing chemical elements and recompile the code. Of course, this was not user friendly especially when \qe\ was already compiled on some clusters and the user had to ask system administrators to recompile the code to adapt it to user's needs. 
+
+In addition, the name \texttt{lda\_plus\_u} refers to the old name ``LDA+$U$'', which is mentioned in Sec.~\ref{sec:history}. So this was confusing if e.g. the user want to use GGA (so actually doing GGA+$U$ and not LDA+$U$). The name \texttt{U\_projection\_type} again refers to $U$, but what if we use also $J$ or $V$? So it makes sense to get rid of ``U'' in the naming and use a generic term ``Hubbard'' that covers all cases (DFT+$U$, DFT+$U$+$J$, DFT+$U$+$V$, etc.).
+
+A subgroup of \qe\ developers came up with the idea to try and improve the input syntax in the DFT+Hubbard codes to make it more user-friendly. This new DFT+Hubbard input syntax replaces the old one starting from \qe\ \version.
+
+
+\section{New DFT+Hubbard input}
+
+In this section we present the new DFT+Hubbard input syntax that replaces the old one starting from \qe\ \version. Let us give examples for different flavors of DFT+Hubbard.
+
+\subsection{DFT+$U$ (Dudarev's formulation)}
+
+\textbf{Important notice:} The Hubbard $U$ values shown in the examples below are random values chosen just for the sake of demonstration purposes and they must not be used for production calculations.\\ 
+
+\noindent
+In the past, to use this case the user had to specify in the \pw\ input file e.g. the following:
+%
+\noindent
+\begin{verbatim}
+   &system
+      ...
+      lda_plus_u = .true.
+      lda_plus_u_kind = 0
+      U_projection_type = 'ortho-atomic'
+      Hubbard_U(1) = 5.0
+      Hubbard_U(2) = 6.0
+   /
+\end{verbatim}
+
+\noindent
+Below is the example of the new input syntax of DFT+$U$ (Dudarev's formulation) for Ni2MnGa:
+%
+\noindent
+\begin{alltt}
+&control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='Ni2MnGa'
+    pseudo_dir = '../pseudo'
+    outdir='./tmp'
+ /
+ &system
+    ibrav = 7, celldm(1) = 7.80, celldm(3) = 1.4142136,
+    nat = 4, ntyp = 3, ecutwfc = 50.0, ecutrho = 400.0, nspin = 2,
+    occupations ='smearing', smearing ='mv', degauss = 0.01, 
+    starting_magnetization(1) = 0.5,
+    starting_magnetization(2) = 0.5
+ /
+ &electrons
+    conv_thr =  1.d-10
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Mn  54.938  Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF 
+ Ni  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF 
+ Ga  69.723  Ga.pbesol-dn-rrkjus_psl.0.2.UPF
+ATOMIC_POSITIONS (crystal)
+ Mn 0.0000000000   0.0000000000   0.0000000000
+ Ni 0.5000000000   0.7500000000   0.2500000000 
+ Ni 0.5000000000   0.2500000000   0.7500000000 
+ Ga 0.0000000000   0.5000000000   0.5000000000
+K_POINTS (automatic)
+ 4 4 4 0 0 0
+\textcolor{red}{HUBBARD (ortho-atomic)}
+\textcolor{red}{U Mn-3d 5.0}
+\textcolor{red}{U Ni-3d 6.0}
+\end{alltt}
+%
+Note that in the example above we do not specify any parameters related to DFT+$U$ in the \texttt{system} namelist (contrary to what was done in the past). All Hubbard-related parameters are now specified in the new card called ``HUBBARD''. The user has to specify the type of the Hubbard projectors that will be used in DFT+$U$. This is done by writing the type of projectors on the same line where the HUBBARD card name appears. In the past the type of Hubbard projectors was specified using the input keyword \texttt{U\_projection\_type}, which is no longer used. And now it is not needed to specify \texttt{lda\_plus\_u=.true.} 
+
+The possible options for Hubbard projectors are: \texttt{atomic}, \texttt{ortho-atomic}, \texttt{norm-atomic}, \texttt{wf}, and \texttt{pseudo}. There is no default for Hubbard projectors, i.e. the user must specify it. Please see \texttt{/Doc/INPUT\_PW.txt} for the description of these options. The most frequently used types of projectors are \texttt{atomic} and \texttt{ortho-atomic}. It is recommended use \texttt{ortho-atomic} whenever possible. The advantage of \texttt{ortho-atomic} over \texttt{atomic} is that the Hubbard corrections are applied only once in the former case, while in the latter case they are applied twice in the orbital overlap regions. So generally \texttt{ortho-atomic} Hubbard projectors give more accurate results (e.g. atomic occupations) that those obtained using the \texttt{atomic} Hubbard projectors. If you are interested to learn more about the Hubbard projectors you are invited to check e.g. Refs.~\cite{Wang:2016, Mahajan:2021}.
+
+In the example above, we specified the Hubbard $U$ values of 5.0 and 6.0~eV for Mn-$3d$ and Ni-$3d$ states, respectively. Here, $3d$ are the Hubbard manifolds. Previously these manifolds were tabulated and hard-coded in the routines \texttt{Modules/set\_hubbard\_l.f90}. Now these manifolds must be specified in the HUBBARD card for each chemical element. The initial occupations of these manifolds were previously tabulated and hard-coded in \texttt{PW/src/tabd.f90}, but now the initial occupations are read from the pseudopotentials. If the user is not happy with this default behavior of the code, then it is possible to overwrite these initial occupations by specifying them in the input file in the \texttt{system} namelist using a new keyword \texttt{Hubbard\_occ(ityp,i)}, where \texttt{ityp} is the atomic type number (see \texttt{ATOMIC\_SPECIES}), and \texttt{i} runs from 1 to 3 (because there can be up to 3 Hubbard manifolds per one atomic type - see more below). The example is given below:
+%
+\noindent
+\begin{alltt}
+&control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='Ni2MnGa'
+    pseudo_dir = '../pseudo'
+    outdir='./tmp'
+ /
+ &system
+    ibrav = 7, celldm(1) = 7.80, celldm(3) = 1.4142136,
+    nat = 4, ntyp = 3, ecutwfc = 50.0, ecutrho = 400.0, nspin = 2,
+    occupations ='smearing', smearing ='mv', degauss = 0.01, 
+    starting_magnetization(1) = 0.5,
+    starting_magnetization(2) = 0.5,
+    \textcolor{red}{Hubbard_occ(1,1) = 5.00}
+    \textcolor{red}{Hubbard_occ(2,1) = 8.00}
+ /
+ &electrons
+    conv_thr =  1.d-10
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Mn  54.938  Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF 
+ Ni  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF 
+ Ga  69.723  Ga.pbesol-dn-rrkjus_psl.0.2.UPF
+ATOMIC_POSITIONS (crystal)
+ Mn 0.0000000000   0.0000000000   0.0000000000
+ Ni 0.5000000000   0.7500000000   0.2500000000 
+ Ni 0.5000000000   0.2500000000   0.7500000000 
+ Ga 0.0000000000   0.5000000000   0.5000000000
+K_POINTS (automatic)
+ 4 4 4 0 0 0
+\textcolor{red}{HUBBARD (ortho-atomic)}
+\textcolor{red}{U Mn-3d 5.0}
+\textcolor{red}{U Ni-3d 6.0}
+\end{alltt}
+%
+Some pseudopotentials are generated in the ionized state (this is not the case here), and the occupations of e.g. $3d$ shell in these pseudopotentials can be different from what is expected in a neutral atom. In this case it might be useful to use the keyword \texttt{Hubbard\_occ(ityp,i)} as shown above. Note that in magnetic systems there are many local minima and the DFT+$U$ calculation can converge to different ground states depending on the initial occupation of the Hubbard manifold. 
+
+It is possible to specify 2 Hubbard channels/manifolds per atomic type, as shown in the example below:
+\noindent
+\begin{alltt}
+&control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='Ni2MnGa'
+    pseudo_dir = '../pseudo'
+    outdir='./tmp'
+ /
+ &system
+    ibrav = 7, celldm(1) = 7.80, celldm(3) = 1.4142136,
+    nat = 4, ntyp = 3, ecutwfc = 50.0, ecutrho = 400.0, nspin = 2,
+    occupations ='smearing', smearing ='mv', degauss = 0.01, 
+    starting_magnetization(1) = 0.5,
+    starting_magnetization(2) = 0.5
+ /
+ &electrons
+    conv_thr =  1.d-10
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Mn  54.938  Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF 
+ Ni  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF 
+ Ga  69.723  Ga.pbesol-dn-rrkjus_psl.0.2.UPF
+ATOMIC_POSITIONS (crystal)
+ Mn 0.0000000000   0.0000000000   0.0000000000
+ Ni 0.5000000000   0.7500000000   0.2500000000 
+ Ni 0.5000000000   0.2500000000   0.7500000000 
+ Ga 0.0000000000   0.5000000000   0.5000000000
+K_POINTS (automatic)
+ 4 4 4 0 0 0
+\textcolor{red}{HUBBARD (ortho-atomic)}
+\textcolor{red}{U Mn-3d 5.0}
+\textcolor{red}{U Mn-3p 3.0}
+\textcolor{red}{U Ni-3d 6.0}
+\textcolor{red}{U Ni-4s 2.0}
+\end{alltt}
+%
+In this example we apply $U=5.0$~eV to Mn-$3d$ states and $U=3.0$~eV to Mn-$3p$ states, where $3d$ appears first in the list and hence this is the first Hubbard channel/manifold for Mn while $3p$ appears second and hence this is the second Hubbard channel/manifold for Mn. Similarly, we apply $U=6.0$~eV to Ni-$3d$ states and $U=2.0$~eV to Ni-$4s$ states. It is important to remark that when the user specifies the Hubbard manifolds he/she must make sure that these states are present in the pseudopotentials that are used.
+
+Moreover, it is possible to specify even 3 Hubbard channels/manifolds per atomic type. However, in this case the 2nd and the 3rd Hubbard manifolds will be considered as one effective manifold, and the same Hubbard $U$ will be applied to this effective manifold. Please see the example below:
+\noindent
+\begin{alltt}
+&control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='Ni2MnGa'
+    pseudo_dir = '../pseudo'
+    outdir='./tmp'
+ /
+ &system
+    ibrav = 7, celldm(1) = 7.80, celldm(3) = 1.4142136,
+    nat = 4, ntyp = 3, ecutwfc = 50.0, ecutrho = 400.0, nspin = 2,
+    occupations ='smearing', smearing ='mv', degauss = 0.01, 
+    starting_magnetization(1) = 0.5,
+    starting_magnetization(2) = 0.5
+ /
+ &electrons
+    conv_thr =  1.d-10
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Mn  54.938  Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF 
+ Ni  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF 
+ Ga  69.723  Ga.pbesol-dn-rrkjus_psl.0.2.UPF
+ATOMIC_POSITIONS (crystal)
+ Mn 0.0000000000   0.0000000000   0.0000000000
+ Ni 0.5000000000   0.7500000000   0.2500000000 
+ Ni 0.5000000000   0.2500000000   0.7500000000 
+ Ga 0.0000000000   0.5000000000   0.5000000000
+K_POINTS (automatic)
+ 4 4 4 0 0 0
+\textcolor{red}{HUBBARD (ortho-atomic)}
+\textcolor{red}{U Mn-3d    5.0}
+\textcolor{red}{U Mn-3p-3s 3.0}
+\textcolor{red}{U Ni-3d    6.0}
+\textcolor{red}{U Ni-4s    2.0}
+\end{alltt}
+%
+In this example we apply $U=5.0$~eV to Mn-$3d$ states (1st Hubbard manifold) and $U=3.0$~eV to Mn-$3p$ and Mn-$3s$ states (2nd and 3rd Hubbard manifolds that are considered as one effective manifold). For Ni it is the same as in the previous example.\\
+
+\noindent
+It is possible to specify the initial occupations of all Hubbard manifolds of each atomic type from the input. This will overwrite the occupations that are read by default from the pseudopotentials. The example is shown below:
+\noindent
+\begin{alltt}
+&control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='Ni2MnGa'
+    pseudo_dir = '../pseudo'
+    outdir='./tmp'
+ /
+ &system
+    ibrav = 7, celldm(1) = 7.80, celldm(3) = 1.4142136,
+    nat = 4, ntyp = 3, ecutwfc = 50.0, ecutrho = 400.0, nspin = 2,
+    occupations ='smearing', smearing ='mv', degauss = 0.01, 
+    starting_magnetization(1) = 0.5,
+    starting_magnetization(2) = 0.5,
+    \textcolor{red}{Hubbard_occ(1,1) = 5.00}
+    \textcolor{red}{Hubbard_occ(1,2) = 6.00}
+    \textcolor{red}{Hubbard_occ(1,3) = 2.00}
+    \textcolor{red}{Hubbard_occ(2,1) = 8.00}
+    \textcolor{red}{Hubbard_occ(2,2) = 2.00}
+ /
+ &electrons
+    conv_thr =  1.d-10
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Mn  54.938  Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF 
+ Ni  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF 
+ Ga  69.723  Ga.pbesol-dn-rrkjus_psl.0.2.UPF
+ATOMIC_POSITIONS (crystal)
+ Mn 0.0000000000   0.0000000000   0.0000000000
+ Ni 0.5000000000   0.7500000000   0.2500000000 
+ Ni 0.5000000000   0.2500000000   0.7500000000 
+ Ga 0.0000000000   0.5000000000   0.5000000000
+K_POINTS (automatic)
+ 4 4 4 0 0 0
+\textcolor{red}{HUBBARD (ortho-atomic)}
+\textcolor{red}{U Mn-3d    5.0}
+\textcolor{red}{U Mn-3p-3s 3.0}
+\textcolor{red}{U Ni-3d    6.0}
+\textcolor{red}{U Ni-4s    2.0}
+\end{alltt}
+%
+In this example, \texttt{Hubbard\_occ(1,1)} corresponds to the occupations of Mn-$3d$ states,\\ \texttt{Hubbard\_occ(1,2)} corresponds to the occupations of Mn-$3p$ states, and\\ \texttt{Hubbard\_occ(1,3)} corresponds to the occupations of Mn-$3s$ states. Similarly,\\ \texttt{Hubbard\_occ(2,1)} corresponds to the occupations of Ni-$3d$ states, and\\ \texttt{Hubbard\_occ(2,2)} corresponds to the occupations of Ni-$4s$ states.\\
+
+\noindent
+Below is the example showing how to perform DFT+$U$+$J_0$ calculation:
+\noindent
+\begin{alltt}
+&control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='Ni2MnGa'
+    pseudo_dir = '../pseudo'
+    outdir='./tmp'
+ /
+ &system
+    ibrav = 7, celldm(1) = 7.80, celldm(3) = 1.4142136,
+    nat = 4, ntyp = 3, ecutwfc = 50.0, ecutrho = 400.0, nspin = 2,
+    occupations ='smearing', smearing ='mv', degauss = 0.01, 
+    starting_magnetization(1) = 0.5,
+    starting_magnetization(2) = 0.5
+ /
+ &electrons
+    conv_thr =  1.d-10
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Mn  54.938  Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF 
+ Ni  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF 
+ Ga  69.723  Ga.pbesol-dn-rrkjus_psl.0.2.UPF
+ATOMIC_POSITIONS (crystal)
+ Mn 0.0000000000   0.0000000000   0.0000000000
+ Ni 0.5000000000   0.7500000000   0.2500000000 
+ Ni 0.5000000000   0.2500000000   0.7500000000 
+ Ga 0.0000000000   0.5000000000   0.5000000000
+K_POINTS (automatic)
+ 4 4 4 0 0 0
+\textcolor{red}{HUBBARD (ortho-atomic)}
+\textcolor{red}{U  Mn-3d 5.0}
+\textcolor{red}{J0 Mn-3d 1.0}
+\textcolor{red}{U  Ni-3d 6.0}
+\textcolor{red}{J0 Ni-3d 1.2}
+\end{alltt}
+%
+In the example above we apply Hubbard $U=5.0$~eV and Hund $J_0 = 1.0$~eV to Mn-$3d$ states, and Hubbard $U=6.0$~eV and Hund $J_0 = 1.2$~eV to Ni-$3d$ states. In the past, \texttt{J0} was specifed using the parameter \texttt{Hubbard\_J0} in the \texttt{system} namelist. Note that \texttt{J0} currently can be used only for one Hubbard channel.\\ 
+
+\noindent
+The code reads all lines in the \texttt{HUBBARD} card until the end of file is reached or until the next card is found in the input.\\
+
+\noindent
+Finally, note that currently the Dudarev's DFT+$U$ is not implemented for the noncollinear spin-polarized case. However, Liechtenstein's DFT+$U$ supports the noncollinear spin-polarized case, and so if you use this case then the code will automatically switch to the Liechtenstein's DFT+$U$.
+
+\subsection{DFT+$U$+$J$ (Liechtenstein's formulation)}
+
+\textbf{Important notice:} The Hubbard $U$ and Hund $J$ values shown in the examples below are random values chosen just for the sake of demonstration purposes and they must not be used for production calculations.\\ 
+
+\noindent
+In the past, to use this case the user had to specify in the \pw\ input file e.g. the following:
+%
+\noindent
+\begin{verbatim}
+   &system
+      ...
+      lda_plus_u = .true.
+      lda_plus_u_kind = 1
+      U_projection_type = 'ortho-atomic'
+      Hubbard_U(1)   = 5.0
+      Hubbard_J(1,1) = 1.0
+      Hubbard_J(2,1) = 1.1
+      Hubbard_U(2)   = 6.0
+      Hubbard_J(1,2) = 1.2
+      Hubbard_J(2,2) = 1.3
+   /
+\end{verbatim}
+%
+The meaning of \texttt{Hubbard\_J(i,ityp)} was the following (\texttt{i} runs from 1 to 3, and \texttt{ityp} is the atomic type):
+\begin{itemize}
+    \item For $p$ orbitals: $J$ = \texttt{Hubbard\_J(1,ityp)};
+    \item For $d$ orbitals: $J$ = \texttt{Hubbard\_J(1,ityp)}, $B$ = \texttt{Hubbard\_J(2,ityp)};
+    \item For $f$ orbitals: $J$ = \texttt{Hubbard\_J(1,ityp)}, $E2$ = \texttt{Hubbard\_J(2,ityp)}, $E3$ = \texttt{Hubbard\_J(3,ityp)} ;
+\end{itemize}
+(If $B$ or $E2$ or $E3$ were not specified or set to 0 they were calculated from $J$ using atomic ratios.)\\
+
+Where these name conventions come from? There are many possible choices how to parametrize Hubbard interactions: $i)$ Slater integrals $F^0$, $F^2$, $F^4$, ..., $ii)$ standard Racah parameters $A$, $B$, $C$, $D$, ..., $iii)$ another set of Racah parameters $E^0$, ..., $E^3$, $iv)$ more physical choice $U$ and $J$ plus other missing like $B$ for the $d$ shell or $E^2$ and $E^3$ for the $f$ shell. In \qe\ the latter notation is used. Check the following references for further reading~\cite{Liechtenstein:1995, Racah:1942, Racah:1942b, Racah:1943, Racah:1949, Griffith:1961}.\\
+
+\noindent
+Below is the example of the new input syntax of DFT+$U$+$J$ (Liechtenstein's formulation) for Ni2MnGa:
+%
+\noindent
+\begin{alltt}
+&control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='Ni2MnGa'
+    pseudo_dir = '../pseudo'
+    outdir='./tmp'
+ /
+ &system
+    ibrav = 7, celldm(1) = 7.80, celldm(3) = 1.4142136,
+    nat = 4, ntyp = 3, ecutwfc = 50.0, ecutrho = 400.0, nspin = 2,
+    occupations ='smearing', smearing ='mv', degauss = 0.01, 
+    starting_magnetization(1) = 0.5,
+    starting_magnetization(2) = 0.5
+ /
+ &electrons
+    conv_thr =  1.d-10
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Mn  54.938  Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF 
+ Ni  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF 
+ Ga  69.723  Ga.pbesol-dn-rrkjus_psl.0.2.UPF
+ATOMIC_POSITIONS (crystal)
+ Mn 0.0000000000   0.0000000000   0.0000000000
+ Ni 0.5000000000   0.7500000000   0.2500000000 
+ Ni 0.5000000000   0.2500000000   0.7500000000 
+ Ga 0.0000000000   0.5000000000   0.5000000000
+K_POINTS (automatic)
+ 4 4 4 0 0 0
+\textcolor{red}{HUBBARD (ortho-atomic)}
+\textcolor{red}{U Mn-3d 5.0}
+\textcolor{red}{J Mn-3d 1.0}
+\textcolor{red}{B Mn-3d 1.1}
+\textcolor{blue}{U Ni-3d 6.0}
+\textcolor{blue}{J Ni-3d 1.2}
+\textcolor{blue}{B Ni-3d 1.3}
+\end{alltt}
+%
+
+\noindent
+If you want to use DFT+$U$ in the Liechtenstein's formulation (without $J$) then you still need to specify some very small value of $J$ (e.g. \texttt{1.d-12}) so that the automatic algorithm decides that this is the Liechtenstein's formulation. If \texttt{J} is not present in the \texttt{HUBBARD} card then the code will automatically assume that this is DFT+$U$ in the Dudarev's formulation.
+
+\subsection{DFT+$U$+$V$ (Dudarev's formulation)}
+
+\textbf{Important notice:} The Hubbard $U$ and $V$ values shown in the examples below are random values chosen just for the sake of demonstration purposes and they must not be used for production calculations.\\ 
+
+\noindent
+In the past, to use this case the user had to specify in the \pw\ input file e.g. the following:
+%
+\noindent
+\begin{verbatim}
+   &system
+      ...
+      lda_plus_u = .true.
+      lda_plus_u_kind = 2
+      U_projection_type = 'ortho-atomic'
+      Hubbard_V(1,1,1)  = 7.70
+      Hubbard_V(1,19,1) = 0.75
+      Hubbard_V(1,46,1) = 0.75
+      Hubbard_V(1,43,1) = 0.75
+      Hubbard_V(1,54,1) = 0.75
+      Hubbard_V(1,11,1) = 0.75
+      Hubbard_V(1,22,1) = 0.75
+   /
+\end{verbatim}
+%
+The meaning of \texttt{Hubbard\_V(na,nb,k)}, where \texttt{na} and \texttt{nb} label atoms as they are specified in the \texttt{ATOMIC\_POSITIONS} card (not in the \texttt{ATOMIC\_SPECIES} card!), and \texttt{k} controls the ``interaction type''. When \texttt{na}=\texttt{nb}, \texttt{Hubbard\_V(na,na,k)} corresponds to \texttt{Hubbard\_U(ityp(na))}, where \texttt{ityp(na)} is the atomic type of atom \texttt{na}. The index \texttt{k} could take the following values:
+\begin{itemize}
+    \item \texttt{k}=1: interaction between standard orbitals (both on na and nb);
+    \item \texttt{k}=2: interaction between standard (on na) and background (on nb) orbitals;
+    \item \texttt{k}=3: interaction between background orbitals (both on na and nb);
+    \item \texttt{k}=4: interaction between background (on na) and standard (on nb) orbitals.
+\end{itemize}
+Standard orbitals correspond to the main Hubbard channel (e.g. d electrons in transition metals) and background orbitals correspond to the secondary Hubbard channel (e.g. p electrons in transition metals).\\
+
+\noindent
+The second index of \texttt{Hubbard\_V(na,nb,k)} (i.e. the index \texttt{nb}) corresponds to atoms that are neighbors to atom \texttt{na}. You can notice that \texttt{nb} can take quite large values (even larger than the total number of atoms in the simulation cell). This is so because we are using periodic boundary conditions and hence some neighbors fall outside of our simulation cell. For this reason, the code generates virtual cells around our real cells. This way we can find all neighbors. In practice, this is achieved by constructing a virtual $3 \times 3 \times 3$ supercell and by replicating atoms. This is why the indices of neighboring atoms are so strange. If you are interested how these indices are generated, please check the subroutine \texttt{PW/src/intersiteV.f90}. {\it A priori}, it is not obvious how to find the indices of neighbors. For this reason you can use the \hp\ code of \qe\ that will determine the values of $U$ and $V$ and the indices of couples.\\
+
+\noindent
+In the new input, the same logic holds but the input syntax has changed. Below is the example of the new input syntax of DFT+$U$+$V$ (Dudarev's formulation) for LiCoO$_2$:
+%
+\noindent
+\begin{alltt}
+&control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='LiCoO2'
+    pseudo_dir = '../pseudo'
+    outdir='./tmp'
+ /
+ &system
+    ibrav = 5, celldm(1) = 9.3705, celldm(4) = 0.83874,
+    nat = 4, ntyp = 3, ecutwfc = 50.0, ecutrho = 400.0
+ /
+ &electrons
+    conv_thr =  1.d-10
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Co  59.0   Co.pbesol-spn-rrkjus_psl.0.3.1.UPF
+ O   16.0   O.pbesol-n-rrkjus_psl.0.1.UPF
+ Li   7.0   Li.pbesol-s-rrkjus_psl.0.2.1.UPF
+ATOMIC_POSITIONS (crystal)
+ Co  0.0000000000   0.0000000000   0.0000000000
+ O   0.2604885000   0.2604885000   0.2604885000
+ O   0.7395115000   0.7395115000   0.7395115000
+ Li  0.5000000000   0.5000000000   0.5000000000
+K_POINTS (automatic)
+ 4 4 4 0 0 0
+\textcolor{red}{HUBBARD (ortho-atomic)}
+\textcolor{red}{U Co-3d 7.70}
+\textcolor{red}{V Co-3d O-2p 1 19 0.75}
+\textcolor{red}{V Co-3d O-2p 1 46 0.75}
+\textcolor{red}{V Co-3d O-2p 1 43 0.75}
+\textcolor{red}{V Co-3d O-2p 1 54 0.75}
+\textcolor{red}{V Co-3d O-2p 1 11 0.75}
+\textcolor{red}{V Co-3d O-2p 1 22 0.75}
+\end{alltt}
+%
+In this case, the code will detect \texttt{U} and \texttt{V} parameters in the \texttt{HUBBARD} card, and so the code will consider this as being a DFT+$U$+$V$ calculation. The first line in the \texttt{HUBBARD} card corresponds to the on-site Hubbard $U$ parameter that is used for Co-$3d$ states, and the value of this parameter is 7.70~eV. Note that the equivalent allowed syntax for this first line is the following:
+%
+\noindent
+\begin{alltt}
+\textcolor{red}{V Co-3d Co-3d 1 1 7.70}
+\end{alltt}
+%
+All the other lines in the \texttt{HUBBARD} card above correspond to the inter-site Hubbard $V$ parameters between Co-$3d$ and O-$2p$ states. Why do we have 6 of them? Because in LiCoO$_2$ each Co atom has 6 nearest neighbors (octahedral coordination geometry for Co atoms). In this example, all 6 O atoms are at the same distance from Co, so the value of $V$ parameters are all equal to 0.75~eV. but in general, there might be complex distortion of the structure, and hence there might be different Co-O distances and hence the values of $V$ parameters will be somewhat different. The indices that appear in the 4th and 5th columns of the \texttt{V} entries correspond to the \texttt{na} and \texttt{nb} indices of the arrays \texttt{Hubbard\_V(na,nb,k)} that are still used internally in the \pw\ code. If we have just one occurrence of \texttt{V} for a given couple of indices \texttt{na} and \texttt{nb}, then this will be attributed to \texttt{k=1}, i.e. the so-called ``standard-standard'' interaction. In this example, the ``standard-standard'' interaction means that we take into account the interaction between Co-$3d$ and O-$2p$ states.\\
+
+\noindent
+Below we give a more advanced example that shows how to take into account also other types of inter-site interactions.
+%
+\noindent
+\begin{alltt}
+&control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='LiCoO2'
+    pseudo_dir = '../pseudo'
+    outdir='./tmp'
+ /
+ &system
+    ibrav = 5, celldm(1) = 9.3705, celldm(4) = 0.83874,
+    nat = 4, ntyp = 3, ecutwfc = 50.0, ecutrho = 400.0
+ /
+ &electrons
+    conv_thr =  1.d-10
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Co  59.0   Co.pbesol-spn-rrkjus_psl.0.3.1.UPF
+ O   16.0   O.pbesol-n-rrkjus_psl.0.1.UPF
+ Li   7.0   Li.pbesol-s-rrkjus_psl.0.2.1.UPF
+ATOMIC_POSITIONS (crystal)
+ Co  0.0000000000   0.0000000000   0.0000000000
+ O   0.2604885000   0.2604885000   0.2604885000
+ O   0.7395115000   0.7395115000   0.7395115000
+ Li  0.5000000000   0.5000000000   0.5000000000
+K_POINTS (automatic)
+ 4 4 4 0 0 0
+HUBBARD (ortho-atomic)
+\textcolor{red}{V Co-3d Co-3d  1  1  7.70}
+\textcolor{red}{V Co-3d Co-3p  1  1  1.00}
+\textcolor{red}{V Co-3p Co-3p  1  1  2.00}
+\textcolor{red}{V Co-3p Co-3d  1  1  1.00}
+\textcolor{blue}{V Co-3d O-2p   1 19  0.75}
+\textcolor{blue}{V Co-3d O-2s   1 19  0.60}
+\textcolor{blue}{V Co-3p O-2s   1 19  0.50}
+\textcolor{blue}{V Co-3p O-2p   1 19  0.60}
+...
+\end{alltt}
+%
+In this example, we have specified 4 types of interactions per couple. Note that in this example we replaced \texttt{U} for Co-$3d$ states using \texttt{V}, as was discussed above (``standard-standard'', i.e. \texttt{k=1}). In red and blue we highlight two groups of couples. In red we show the first group that describes 4 types of interactions for the Co atoms. The first line in the red block corresponds to the on-site $U$ value for Co-$3d$ states. The second line in the red block corresponds to the on-site interaction between Co-$3d$ and Co-$3p$ states (``standard-background'', i.e. \texttt{k=2}), the third line in the red block corresponds to the on-site interaction between Co-$3p$ and Co-$3p$ states (``background-background'', i.e. \texttt{k=3}), and the fourth line in the red block corresponds to the on-site interaction between Co-$3p$ and Co-$3d$ states (``background-standard'', i.e. \texttt{k=4}). Note that second and the fourth lines in the red block describe the same thing, so it is ok to drop the fourth line. {\bf Important notice:} It is obligatory to keep the order of entries as shown in the example above: 1) standard-standard, 2) standard-background, 3) background-background, 4) background-standard. If you do not respect this order then the code will complain and stop. The second block above (shown in blue) has the same logic as the one we presented above for the red block. The only difference is that in the blue block we describe various types of interactions centered on different atoms (thus inter-site, not on-site).\\  
+
+\noindent
+To make things even more complicated, it is possible to specify two Hubbard manifolds in the ``background'' channel. The example is shown below.
+%
+\noindent
+\begin{alltt}
+&control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='LiCoO2'
+    pseudo_dir = '../pseudo'
+    outdir='./tmp'
+ /
+ &system
+    ibrav = 5, celldm(1) = 9.3705, celldm(4) = 0.83874,
+    nat = 4, ntyp = 3, ecutwfc = 50.0, ecutrho = 400.0
+ /
+ &electrons
+    conv_thr =  1.d-10
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Co  59.0   Co.pbesol-spn-rrkjus_psl.0.3.1.UPF
+ O   16.0   O.pbesol-n-rrkjus_psl.0.1.UPF
+ Li   7.0   Li.pbesol-s-rrkjus_psl.0.2.1.UPF
+ATOMIC_POSITIONS (crystal)
+ Co  0.0000000000   0.0000000000   0.0000000000
+ O   0.2604885000   0.2604885000   0.2604885000
+ O   0.7395115000   0.7395115000   0.7395115000
+ Li  0.5000000000   0.5000000000   0.5000000000
+K_POINTS (automatic)
+ 4 4 4 0 0 0
+HUBBARD (ortho-atomic)
+\textcolor{red}{V Co-3d    Co-3d    1  1  7.70}
+\textcolor{red}{V Co-3d    Co-3p-3s 1  1  1.00}
+\textcolor{red}{V Co-3p-3s Co-3p-3s 1  1  2.00}
+\textcolor{red}{V Co-3p-3s Co-3d    1  1  1.00}
+\textcolor{blue}{V Co-3d    O-2p     1 19  0.75}
+\textcolor{blue}{V Co-3d    O-2s-1s  1 19  0.60}
+\textcolor{blue}{V Co-3p-3s O-2s-1s  1 19  0.50}
+\textcolor{blue}{V Co-3p-3s O-2p     1 19  0.60}
+...
+\end{alltt}
+%
+Note that pseudopotentials for O do not include $1s$ states. So the example above is just to show that if you have other elements instead of O and there are more deeper-lying states you may include them in the ``background'' channel. As before, it is possible to control the initial occupations of all these Hubbard manifolds using the keyword \texttt{Hubbard\_occ} (i.e. if you are not happy with the initial occupations that are read from pseudopotentials).\\
+
+\noindent
+Hubbard parameters $U$ and $V$ can be computed using the \hp\ code of \qe. However, the \hp\ currently supports the calculations of $U$ and $V$ for one Hubbard channel per atomic type. In other words, the advanced features presented above (i.e. cross-manifold interactions) are currently not implemented in \hp.
+
+
+\section{Calculation of Hubbard parameters}
+
+In Hubbard-corrected DFT the values of Hubbard parameters are not known {\it a priori}. It is a common practice in literature to evaluate them semi-empirically by fitting various experimental properties (when available), which prevents this method from being fully {\it ab initio} and from being predictive for novel materials. Most importantly, it is often forgotten that $U$ acts on a Hubbard manifold that is defined in terms of different Hubbard projector functions such of e.g. atomic orbitals (\texttt{atomic}) or L\"owdin orthogonalized atomic orbitals (\texttt{ortho-atomic}). These are typically taken from the atomic calculations used to generate the respective pseudopotentials, that can be constructed with different degrees of oxidation. Hence, these manifolds, and the relative $U$ parameters, are not transferable and one should not consider $U$ as a universal number for a given element or material (see the appendix in Ref.~\cite{Kulik:2008}). There are other types of Hubbard projector functions (e.g. truncated atomic orbitals (\texttt{Abinit}), PAW projectors (VASP), etc.), and the value of $U$ depends on which type of projector functions are used. Therefore, in general it is not correct to take $U$ from the literature and use it for your DFT+$U$ calculations without paying attention to what pseudopotentials were used, which Hubbard projector functions, etc.  
+
+During the past 30 years there has been a large effort to develop methods for the first-principles calculation of $U$. Among these, the constrained DFT (cDFT) approach, the Hartree-Fock-based approaches, and the constrained random phase approximation (cRPA) approach are the most popular. A linear-response formulation of cDFT (LR-cDFT) was introduced in Ref.~\cite{Cococcioni:2005} and generalized to the calculation of the inter-site Hubbard parameters $V$ in Ref.~\cite{Campo:2010}. Calculation of $U$ and $V$ using LR-cDFT can be done using the \pw\ code (see \texttt{Hubbard\_alpha} in the \pw\ documentation). However, this method requires using supercells which makes LR-cDFT computationally expensive. Moreover, the postprocessing of the data requires writing some small programs and/or scripts. Recently, LR-cDFT has been recast via density-functional perturbation theory (DFPT)~\cite{Timrov:2018, Timrov:2021}, allowing us to overcome several challenges of the supercell approach of Ref.~\cite{Cococcioni:2005}. In fact, by constructing the response of the system to a localized perturbation through a series of independent monochromatic perturbations to the primitive unit cell (rather than from finite-differences between calculations in supercells as in LR-cDFT), it improves significantly the computational efficiency, accuracy, user-friendliness, and automation. Key to this is indeed the capability to express perturbation theory in reciprocal space~\cite{Baroni:1987, Giannozzi:1991, Baroni:2001}. It is important to mention that the present formulation (be it in a LR-cDFT or DFPT implementation) aims to correct the over-delocalization and over-hybridization of the electrons in the localized Hubbard manifold; for this reason it is not appropriate to deal with closed-shell systems, where the electrons are fully contained in the localized manifold~\cite{Yu:2014}. 
+
+The DFPT method for computing Hubbard parameters is implemented in the \hp\ code which is part of the \qe\ distribution. Check the examples in the \texttt{HP} directory to get started. If you have any questions or problems, please read carefully the posting guidelines~\cite{QE} and ask your questions on the QE users forum (users@lists.quantum-espresso.org). 
+
+
+\section{Pseudopotentials}
+
+Since \qe\ \version, the DFT+$U$ codes and its extensions require that pseudopotentials not only contain the atomic orbitals but also the ``label'' for these orbitals. Most of the pseudopotential libraries contain ``labels'' however some do not have them (e.g. pseudopotentials genrated using the ATOMPAW code with versions older than 4.2.0.2):\par 
+\noindent
+http://users.wfu.edu/natalie/papers/pwpaw/man.html
+ 
+It is possible to fix the pseudopotentials that do not contain the atomic ``labels''. To do so, one has to open the pseudopotential file and look for ``PP\_CHI''. Then simply add the atomic ``label'' at the end of the string, e.g. for Gd.GGA-PBESOL-paw.UPF we have
+\noindent
+\begin{alltt}
+	<PP_CHI.1 type="real" size="1110" l="0" occupation="2.0" columns="3" \textcolor{red}{label="6S"}>
+\end{alltt}
+The orbital quantum number and the occupation of the corresponding level are reported (l=``0" and occupation=`` 2.0000") so it is easy to guess that this is the ``S'' orbital. In order to guess what is the principal quantum number (n="6" in this example) one has to check what is the electronic structure for a given atom in the Periodic table and what atomic orbitals were included in the valence region. 
+
+
+\begin{thebibliography}{100}
+  
+  \bibitem{Anisimov:1991} V.I. Anisimov, J. Zaanen, and O.K. Andersen, \textit{Band theory and Mott insulators: Hubbard $U$ instead of Stoner $I$}, Phys. Rev. B. {\bf 44}, 943 (1991).
+  
+  \bibitem{Liechtenstein:1995} A.I. Liechtenstein, V.I. Anisimov, J. Zaanen, \textit{Density-functional theory and strong interactions: Orbital ordering in Mott-Hubbard insulators}, Phys. Rev. B {\bf 52}, R5467 (1995).
+  
+  \bibitem{Dudarev:1998} S.L. Dudarev, G.A. Botton, S.Y. Savrasov, C.J. Humphreys, A.P. Sutton, \textit{Electron-energy-loss spectra and the structural stability of nickel oxide: An LSDA+U study}, Phys. Rev. B {\bf 57}, 1505 (1998).
+  
+  \bibitem{Himmetoglu:2011} B. Himmetoglu, R.M. Wentzcovitch, M. Cococcioni, \textit{First-principles study of electronic and structural properties of CuO}, Phys. Rev. B {\bf 84}, 115108 (2011). 
+  
+  \bibitem{Bajaj:2017} A. Bajaj, J.P. Janet, and H.J. Kulik, \textit{Communication: Recovering the flat-plane condition in electronic structure theory at semi-local DFT cost}, J. Chem. Phys. {\bf 147}, 191101 (2017).
+  
+  \bibitem{Linscott:2018} E.B. Linscott, D.J. Cole, M.C. Payne, and D.D. O'Regan, \textit{Role of spin in the calculation of Hubbard $U$ and Hund's $J$ parameters from first principles}, Phys. Rev. B {\bf 98}, 235157 (2018).
+  
+  \bibitem{Racah:1942} G. Racah, \textit{Theory of Complex Spectra. I}, Phys. Rev. {\bf 61}, 186 (1942).
+  
+  \bibitem{Racah:1942b} G. Racah, \textit{Theory of Complex Spectra. II}, Phys. Rev. {\bf 62}, 438 (1942).
+  
+  \bibitem{Racah:1943} G. Racah, \textit{Theory of Complex Spectra. III}, Phys. Rev. {\bf 63}, 367 (1943).
+  
+  \bibitem{Racah:1949} G. Racah, \textit{Theory of Complex Spectra. IV}, Phys. Rev. {\bf 76}, 1352 (1949).
+  
+  \bibitem{Griffith:1961} J. Griffith, \textit{Book ``The Theory of Transition Metal Ions''}, Cambridge University Press (1961).
+  
+  \bibitem{Campo:2010} V.L. Campo Jr and M. Cococcioni, \textit{Extended DFT+$U$+$V$ method with on-site and inter-site electronic interactions}, J. Phys.: Condens. Matter {\bf 22}, 055602 (2010).
+  
+  \bibitem{Wang:2016} Y.-C. Wang, Z.-H. Chen, and H. Jiang, \textit{The local projection in the density functional theory plus $U$ approach: A critical assessment}, J. Chem. Phys. {\bf 144}, 144106 (2016).
+  
+  \bibitem{Mahajan:2021} R. Mahajan, I. Timrov, N. Marzari, and A. Kashyap, \textit{Importance of intersite Hubbard interactions in $\beta$-MnO$_2$: A first-principles DFT+$U$+$V$ study}, Phys. Rev. Materials {\bf 5}, 104402 (2021).
+  
+  \bibitem{Kulik:2008} H.J. Kulik and N. Marzari, \textit{A self-consistent Hubbard $U$ density-functional theory approach to the addition-elemination reactions of hydrocarbons on bare FeO$^+$}, J. Chem. Phys. {\bf 129}, 134314 (2008).
+  
+  \bibitem{Cococcioni:2005} M. Cococcioni and S. de Gironcoli, \texttt{Linear response approach to the calculation of the effective interaction parameters in the LDA+U method}, Phys. Rev. B {\bf 71}, 035105 (2005).
+  
+  \bibitem{Timrov:2018} I. Timrov, N. Marzari, and M. Cococcioni, \textit{Hubbard parameters from density-functional perturbation theory}, Phys. Rev. B {\bf 98}, 085127 (2018).
+  
+  \bibitem{Timrov:2021} I. Timrov, N. Marzari, and M. Cococcioni, \textit{Self-consistent Hubbard parameters from density-functional perturbation theory in the ultrasoft and projector-augmented wave formulations}, Phys. Rev. B {\bf 103}, 045141 (2021).
+  
+  \bibitem{Baroni:1987} S. Baroni, P. Giannozzi, and A. Testa \textit{Green's-Function Approach to Linear Response in Solids}, Phys. Rev. Lett. {\bf 58}, 1861 (1987).
+  
+  \bibitem{Giannozzi:1991} P. Giannozzi, S. de Gironcoli, P. Pavone, and S. Baroni, \textit{Ab initio calculation of phonon dispersions in semiconductors}, Phys. Rev. B {\bf 43}, 7231 (1991).
+  
+  \bibitem{Baroni:2001} S. Baroni, S. de Gironcoli, A. Dal Corso, and P. Giannozzi, \textit{Phonons and related crystal properties from density-functional perturbation theory}, Rev. Mod. Phys. {\bf 73}, 515 (2001).
+  
+  \bibitem{Yu:2014} K. Yu and E.A. Carter, \textit{Communication: Comparing ab initio methods of obtaining effective U parameters for closed-shell materials}, J. Chem. Phys. {\bf 140}, 121105 (2014).
+  
+  \bibitem{QE} https://www.quantum-espresso.org/users-forum/
+  
+\end{thebibliography}
+
+
+\end{document}

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
@@ -96,9 +96,9 @@ cat > $PREFIX.scf.in << EOF
     verbosity='high'
  /
  &system
-    ibrav = 2, 
-    celldm(1) = 6.48, 
-    nat = 1, 
+    ibrav = 2,
+    celldm(1) = 6.48,
+    nat = 1,
     ntyp = 1,
     ecutwfc = 50.0,
     ecutrho = 400.0,
@@ -107,10 +107,6 @@ cat > $PREFIX.scf.in << EOF
     degauss = 0.02,
     nspin = 2,
     starting_magnetization(1) = 0.5,
-    lda_plus_u = .true.,
-    lda_plus_u_kind = 0,
-    U_projection_type = 'ortho-atomic',
-    Hubbard_U(1) = 1.d-8
  /
  &electrons
     conv_thr =  1.d-15
@@ -122,6 +118,8 @@ ATOMIC_POSITIONS {crystal}
  Ni   0.0000000000  0.000000000  0.000000000
 K_POINTS {automatic}
  2 2 2 0 0 0
+HUBBARD {ortho-atomic}
+U Ni-3d 0.0001
 EOF
 $ECHO "  Running the SCF calculation for $PREFIX..."
 $PW_COMMAND < $PREFIX.scf.in > $PREFIX.scf.out

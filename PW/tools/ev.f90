@@ -176,13 +176,14 @@ PROGRAM ev
     CONTAINS
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE eqstate(npar,par,chisq)
+      SUBROUTINE eqstate(npar,par,chisq,ediff)
 !-----------------------------------------------------------------------
 !
       IMPLICIT NONE
       INTEGER, INTENT(in) :: npar
       REAL(DP), INTENT(in) :: par(npar)
       REAL(DP), INTENT(out):: chisq
+      REAL(DP), OPTIONAL, INTENT(out):: ediff(npt)
       INTEGER :: i
       REAL(DP) :: k0, dk0, d2k0, c0, c1, x, vol0, ddk
 !
@@ -231,7 +232,8 @@ PROGRAM ev
       DO i = 1,npt
           efit(i) = efit(i)+emin
           chisq   = chisq + (etot(i)-efit(i))**2
-      ENDDO
+          IF(present(ediff)) ediff(i) = efit(i)-etot(i)
+       ENDDO
       chisq = chisq/npt
 !
       RETURN
@@ -364,38 +366,50 @@ PROGRAM ev
  99   RETURN
     END SUBROUTINE write_results
 !
-
-      ! This funtion is passed to POWELL to be minimized
-      REAL(DP) FUNCTION FCHISQ(par_)
-           IMPLICIT NONE
-           REAL(DP),INTENT(in) :: par_(nmaxpar)
-           REAL(DP) :: chisq_
-           CALL eqstate(npar,par_,chisq_)
-           FCHISQ = chisq_
-        END FUNCTION
-
+      
+      ! This subroutine is passed to LMDIF to be minimized
+      ! LMDIF takes as input the difference between f_fit and f_real
+      !       and computes the chi^2 internally.
+      SUBROUTINE EOSDIFF(m_, n_, par_, f_, i_)
+       IMPLICIT NONE
+         INTEGER,INTENT(in)  :: m_, n_
+         INTEGER,INTENT(inout)   :: i_
+         REAL(DP),INTENT(in)    :: par_(n_)
+         REAL(DP),INTENT(out)   :: f_(m_)
+         REAL(DP) :: chisq_
+         !
+         CALL eqstate(n_,par_,chisq_, f_)
+      END SUBROUTINE
 
 !-----------------------------------------------------------------------
       SUBROUTINE find_minimum(npar,par,chisq)
 !-----------------------------------------------------------------------
 !
-      USE powell, ONLY : POWELL_MIN
+      USE lmdif_module, ONLY : lmdif0
       IMPLICIT NONE
       INTEGER ,INTENT(in)  :: npar
       REAL(DP),INTENT(out) :: par(nmaxpar)
       REAL(DP),INTENT(out) :: chisq
       !
-      REAL(DP) :: xi(npar,npar)
+      REAL(DP) :: vchisq(npar)
+      REAL(DP) :: ediff(npt)
       INTEGER :: i
       !
-      xi = 0._dp
-      FORALL(i=1:npar) xi(i,i) = 1._dp
       par(1) = v0(npt/2)
       par(2) = 500.0d0
       par(3) = 5.0d0
       par(4) = -0.01d0 ! unused for some eos
+      !      
+      CALL lmdif0(EOSDIFF, npt, npar, par, ediff, 1.d-12, i)
       !
-      CALL POWELL_MIN(FCHISQ,par,xi,npar,npar,1.d-12,i,chisq)
+      IF(i>0 .and. i<5) THEN
+         PRINT*, "Minimization succeeded"
+      ELSEIF(i>=5) THEN
+         PRINT*, "Minimization stopped before convergence"
+      ELSEIF(i<=0) THEN 
+        PRINT*, "Minimization error"
+        STOP
+      ENDIF
       !
       CALL eqstate(npar,par,chisq)
 

@@ -176,6 +176,7 @@ SUBROUTINE convert_fhi (upf)
   !     ----------------------------------------------------------
   !
   USE upf_const,    ONLY : fpi
+  USE upf_utils,    ONLY : spdf_to_l
   !
   IMPLICIT NONE
   !
@@ -205,10 +206,20 @@ SUBROUTINE convert_fhi (upf)
      READ (5,'(a)') upf%psd
   ENDIF
   upf%typ = 'SL'
-  upf%tvanp = .false.
-  upf%tpawp = .false.
-  upf%tcoulombp=.false.
   upf%nlcc = nlcc_
+  !
+  ! for compatibility with USPP and other formats
+  !
+  upf%nqf = 0
+  upf%nqlc= 0
+  upf%tvanp =.false.
+  upf%tpawp =.false.
+  upf%has_so=.false.
+  upf%has_wfc=.false.
+  upf%has_gipaw=.false.
+  upf%tcoulombp=.false.
+  upf%is_gth=.false.
+  upf%is_multiproj=.false.
   !
   IF (pspxc == 7) THEN
      upf%dft = 'SLA-PW'
@@ -261,17 +272,7 @@ SUBROUTINE convert_fhi (upf)
      READ (label(1:1),*, err=10) l
      upf%els(i)  = label
      upf%nchi(i)  = l
-     IF ( label(2:2) == 's' .or. label(2:2) == 'S') THEN
-        l=0
-     ELSEIF ( label(2:2) == 'p' .or. label(2:2) == 'P') THEN
-        l=1
-     ELSEIF ( label(2:2) == 'd' .or. label(2:2) == 'D') THEN
-        l=2
-     ELSEIF ( label(2:2) == 'f' .or. label(2:2) == 'F') THEN
-        l=3
-     ELSE
-        l=i-1
-     ENDIF
+     l = spdf_to_l(label(2:2))
      upf%lchi(i)  = l
      upf%rcut_chi(i)  = 0.0d0
      upf%rcutus_chi(i)= 0.0d0

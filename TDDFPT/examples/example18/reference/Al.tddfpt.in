@@ -1,0 +1,17 @@
+ &lr_input
+   prefix = 'Al',
+   outdir = '/marconi/home/userexternal/obaseggi/q-e/tempdir/',
+   restart = .false.
+/
+&lr_control
+   calculator = 'sternheimer'
+   itermax = 100
+   q1 = 0.621
+   q2 = 0.0
+   q3 = 0.0
+   units = 0
+   start = 0.0
+   end = 3.6 
+   increment = 0.036
+   epsil = 0.1
+/

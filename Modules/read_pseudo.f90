@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,16 +9,17 @@
 MODULE read_pseudo_mod
 !=----------------------------------------------------------------------------=!
   !
-  !! read pseudopotential files and store the data on internal variables of the 
-  !! program. Note that all processors read the same file!
+  !! read pseudopotential files and store the data in a few internal variables
+  !! (mainly in the "upf" structure). The files are read only by one processor.
+  !! The data is subsequently broadcast to all other processors.
   !
-  USE io_files,     ONLY: pseudo_dir, pseudo_dir_cur, psfile, tmp_dir
+  USE io_files,     ONLY: pseudo_dir, pseudo_dir_cur, psfile
   USE ions_base,    ONLY: ntyp => nsp
   !! global variables  required on input 
   !
   USE atom,         ONLY: msh, rgrid
   USE ions_base,    ONLY: zv
-  USE uspp_param,   ONLY: upf, nvb
+  USE uspp_param,   ONLY: upf
   USE uspp,         ONLY: okvan, nlcc_any
   !! global variables modified on output 
   ! 
@@ -36,25 +37,20 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   !
   !! Reads PP files and puts the result into the "upf" structure of module uspp_param
   !! Sets  DFT to input_dft if present, to the value read in PP files otherwise
-  !! Sets  number of valence electrons Zv, control variables okvan and nlcc_any,
-  !! compatibility variable nvb
+  !! Sets  number of valence electrons Zv, control variables okvan and nlcc_any
   !! Optionally returns cutoffs read from PP files into ecutwfc_pp, ecutrho_pp
   !
   USE kinds,        ONLY: DP
-  USE mp,           ONLY: mp_bcast, mp_sum
+  USE mp,           ONLY: mp_bcast
   USE mp_images,    ONLY: intra_image_comm
   USE io_global,    ONLY: stdout, ionode, ionode_id
   USE pseudo_types, ONLY: pseudo_upf, deallocate_pseudo_upf
-  USE funct,        ONLY: enforce_input_dft, set_dft_from_name, &
-       get_iexch, get_icorr, get_igcx, get_igcc, get_inlc
-  use radial_grids, ONLY: deallocate_radial_grid, nullify_radial_grid
-  USE wrappers,     ONLY: md5_from_file, f_remove
-  USE read_upf_v1_module,   ONLY: read_upf_v1
-  USE upf_module,   ONLY: read_upf_new
-  USE upf_auxtools, ONLY: upf_get_pp_format, upf_check_atwfc_norm
-  USE emend_upf_module, ONLY: make_emended_upf_copy
+  USE funct,        ONLY: enforce_input_dft, set_dft_from_name, get_inlc
+  USE xc_lib,       ONLY: xclib_get_id
+  USE radial_grids, ONLY: deallocate_radial_grid, nullify_radial_grid
+  USE clib_wrappers,     ONLY: md5_from_file
+  USE upf_auxtools, ONLY: upf_check_atwfc_norm
   USE upf_to_internal,  ONLY: add_upf_grid, set_upf_q
-  USE read_uspp_module, ONLY: readvan, readrrkj
   USE m_gth,            ONLY: readgth
   !
   IMPLICIT NONE
@@ -66,15 +62,14 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   REAL(DP), parameter :: rcut = 10.d0 
   ! 2D Coulomb cutoff: modify this (at your own risks) if problems with cutoff 
   ! being smaller than pseudo rcut. original value=10.0
-  CHARACTER(len=256) :: file_pseudo ! file name complete with path
-  CHARACTER(len=256) :: file_fixed, msg
-  LOGICAL :: printout_ = .FALSE., exst, is_xml
-  INTEGER :: iunps, isupf, nt, nb, ir, ios
+  CHARACTER(len=512) :: file_pseudo
+  ! file name complete with path
+  LOGICAL :: printout_ = .FALSE., exst
+  INTEGER :: ierr, nt, nb, ir, ios
   INTEGER :: iexch_, icorr_, igcx_, igcc_, inlc_
+  INTEGER :: iexch1, icorr1, igcx1, igcc1, inlc1
   !
   ! ... initializations, allocations, etc
-  !
-  iunps = 4
   !
   IF( ALLOCATED( upf ) ) THEN
      DO nt = 1, SIZE( upf )
@@ -87,9 +82,8 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   !
   IF ( PRESENT(printout) ) THEN
      printout_ = printout .AND. ionode
-  END IF
-  IF ( printout_) THEN
-     WRITE( stdout,"(//,3X,'Atomic Pseudopotentials Parameters',/, &
+     IF (printout_) &
+            &  WRITE( stdout,"(//,3X,'Atomic Pseudopotentials Parameters',/, &
                    &    3X,'----------------------------------' )" )
   END IF
   !
@@ -101,11 +95,11 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      ios = 1
      IF ( pseudo_dir_cur /= ' ' ) THEN
         file_pseudo  = TRIM (pseudo_dir_cur) // TRIM (psfile(nt))
-        INQUIRE(file = file_pseudo, EXIST = exst) 
-        IF (exst) ios = 0
-        CALL mp_sum (ios,intra_image_comm)
-        IF ( ios /= 0 ) CALL infomsg &
-                     ('readpp', 'file '//TRIM(file_pseudo)//' not found')
+        IF ( ionode ) THEN
+           INQUIRE(file = file_pseudo, EXIST = exst) 
+           IF (exst) ios = 0
+        END IF
+        CALL mp_bcast (ios,ionode_id,intra_image_comm)
      END IF
      !
      ! file not found? no panic (yet): try the original location pseudo_dir
@@ -113,9 +107,11 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !
      IF ( ios /= 0 ) THEN
         file_pseudo = TRIM (pseudo_dir) // TRIM (psfile(nt))
-        INQUIRE ( file = file_pseudo, EXIST = exst) 
-        IF (exst) ios = 0
-        CALL mp_sum (ios,intra_image_comm)
+        IF ( ionode ) THEN
+           INQUIRE ( file = file_pseudo, EXIST = exst) 
+           IF (exst) ios = 0
+        END IF
+        CALL mp_bcast (ios,ionode_id,intra_image_comm)
         CALL errore('readpp', 'file '//TRIM(file_pseudo)//' not found',ABS(ios))
      END IF
      !
@@ -125,105 +121,27 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      END IF
      !
      IF ( ionode ) THEN
-        isupf = 0
-        CALL  read_upf_new( file_pseudo, upf(nt), isupf )
         !
-        !! start reading - check  first if files are readable as xml files,
-        !! then as UPF v.2, then as UPF v.1
-        !
-        IF (isupf ==-81 ) THEN
-           !! error -81 may mean that file contains offending characters
-           !! fix and write file to tmp_dir
-           !! the underscore is added to distinguish this "fixed" file 
-           !! from the original one, in case the latter is in tmp_dir
-           !
-           file_fixed = TRIM(tmp_dir)//TRIM(psfile(nt))//'_'
-           is_xml = make_emended_upf_copy( file_pseudo, file_fixed ) 
-           !
-           IF (is_xml) THEN
-              !
-              CALL  read_upf_new( file_fixed, upf(nt), isupf )
-              !! try again to read from the corrected file
-              WRITE ( msg, '(A)') 'Pseudo file '// trim(psfile(nt)) // ' has been fixed on the fly.' &
-            &    // new_line('a') // '     To avoid this message in the future, permanently fix ' &
-            &    // new_line('a') // '     your pseudo files following these instructions: ' &
-            &    // new_line('a') // '     https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md'
-             CALL infomsg('read_upf', trim(msg) )
-           ELSE
-              !
-              CALL  read_upf_v1 (file_pseudo, upf(nt), isupf )
-              !! try to read UPF v.1 file
-              IF ( isupf == 0 ) isupf = -1
-              !
-           END IF
-           !
-           ios = f_remove( file_fixed )
-        END IF
+        CALL  read_ps_new( file_pseudo, upf(nt), printout_, ierr )
+        !! Try to read first UPF or PSML format
         !
      END IF
      !
-     CALL mp_bcast (isupf,ionode_id,intra_image_comm)
+     CALL mp_bcast (ierr,ionode_id,intra_image_comm)
      !
-     IF (isupf == -2 .OR. isupf == -1 .OR. isupf == 0) THEN
-        !
-        CALL upf_bcast(upf(nt), ionode, ionode_id, intra_image_comm)
-        !! broadcast the pseudopotential to all processors
-        !
-        IF( printout_) THEN
-           IF ( isupf == 0 ) THEN
-              WRITE( stdout, "(3X,'file type is xml')") 
-           ELSE
-              WRITE( stdout, "(3X,'file type is UPF v.',I1)") ABS(isupf) 
-           END IF
-        END IF
-        !
+     IF ( ierr == -7 ) THEN
+        CALL  readgth( file_pseudo, nt, upf(nt), ierr )
+        !! FIXME: GTH PP files must be read from all processors
+        IF ( ierr > 0 ) CALL errore('readpp', &
+             'file '//TRIM(file_pseudo)//' not readable',1)
+        !! Unrecoverable error
      ELSE
-        !
-        OPEN ( UNIT = iunps, FILE = TRIM(file_pseudo), STATUS = 'old', FORM = 'formatted' ) 
-        !
-        !     The type of the pseudopotential is determined by the file name:
-        !    *.xml or *.XML  UPF format with schema              pp_format=0
-        !    *.upf or *.UPF  UPF format                          pp_format=1
-        !    *.vdb or *.van  Vanderbilt US pseudopotential code  pp_format=2
-        !    *.gth           Goedecker-Teter-Hutter NC pseudo    pp_format=3
-        !    *.RRKJ3         Andrea's   US new code              pp_format=4
-        !    none of the above: PWSCF norm-conserving format     pp_format=5
-        !
-        IF ( upf_get_pp_format( psfile(nt) ) == 2  ) THEN
-           !
-           IF( printout_ ) &
-              WRITE( stdout, "(3X,'file type is Vanderbilt US PP')")
-           CALL readvan (iunps, nt, upf(nt))
-           !
-        ELSE IF ( upf_get_pp_format( psfile(nt) ) == 3 ) THEN
-           !
-           IF( printout_ ) &
-              WRITE( stdout, "(3X,'file type is GTH (analytical)')")
-           CALL readgth (iunps, nt, upf(nt))
-           !
-        ELSE IF ( upf_get_pp_format( psfile(nt) ) == 4 ) THEN
-           !
-           IF( printout_ ) &
-              WRITE( stdout, "(3X,'file type is RRKJ3')")
-           CALL readrrkj (iunps, nt, upf(nt))
-           !
-        ELSE IF ( upf_get_pp_format( psfile(nt) ) == 5 ) THEN
-           !
-           IF( printout_ ) &
-              WRITE( stdout, "(3X,'file type is old PWscf NC format')")
-           CALL read_ncpp (iunps, nt, upf(nt))
-           !
-        ELSE
-           !
-           CALL errore('readpp', 'file '//TRIM(file_pseudo)//' not readable',1)
-           !
-        ENDIF
-        !
-        ! end of reading
-        !
-        CLOSE (iunps)
-        !
-     ENDIF
+        IF ( ierr > 0 ) CALL errore('readpp', &
+             'file '//TRIM(file_pseudo)//' not readable',1)
+        !! Unrecoverable error
+        CALL upf_bcast(upf(nt), ionode, ionode_id, intra_image_comm)
+        !! Success: broadcast the pseudopotential to all processors
+     END IF
      !
      ! reconstruct Q(r) if needed
      !
@@ -249,10 +167,8 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   END IF
   ALLOCATE( rgrid( ntyp ), msh( ntyp ) )
   !
-  nvb = 0
   DO nt = 1, ntyp
      !
-     CALL nullify_radial_grid( rgrid( nt ) )
      CALL add_upf_grid (upf(nt), rgrid(nt))
      !
      ! the radial grid is defined up to r(mesh) but we introduce 
@@ -276,10 +192,6 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !
      zv(nt) = upf(nt)%zp
      !
-     ! ... count US species (obsolete?)
-     !
-     IF (upf(nt)%tvanp) nvb=nvb+1
-     !
      ! check for zero atomic wfc, 
      ! check that (occupied) atomic wfc are properly normalized
      !
@@ -297,16 +209,20 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !
      ! ... Check for DFT consistency - ignored if dft enforced from input
      !
+     iexch_ = xclib_get_id('LDA','EXCH')
+     icorr_ = xclib_get_id('LDA','CORR')
+     igcx_  = xclib_get_id('GGA','EXCH')
+     igcc_  = xclib_get_id('GGA','CORR')
+     inlc_  = get_inlc()
+     !
      IF (nt == 1) THEN
-        iexch_ = get_iexch()
-        icorr_ = get_icorr()
-        igcx_  = get_igcx()
-        igcc_  = get_igcc()
-        inlc_  = get_inlc()
+        iexch1 = iexch_  ; icorr1 = icorr_
+        igcx1  = igcx_   ; igcc1  = igcc_
+        inlc1  = inlc_
      ELSE
-        IF ( iexch_ /= get_iexch() .OR. icorr_ /= get_icorr() .OR. &
-             igcx_  /= get_igcx()  .OR. igcc_  /= get_igcc()  .OR.  &
-             inlc_  /= get_inlc() ) THEN
+        IF ( iexch1 /= iexch_ .OR. icorr1 /= icorr_ .OR. &
+             igcx1  /= igcx_  .OR. igcc1  /= igcc_  .OR. &
+             inlc1  /= inlc_ ) THEN
            CALL errore( 'readpp','inconsistent DFT read from PP files', nt)
         END IF
      END IF
@@ -315,7 +231,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   !
   ! more initializations
   !
-  okvan = ( nvb > 0 )
+  okvan = ANY ( upf(1:ntyp)%tvanp )
   nlcc_any = ANY ( upf(1:ntyp)%nlcc )
   !
   ! return cutoff read from PP file, if required
@@ -401,8 +317,11 @@ SUBROUTINE upf_bcast(upf, ionode, ionode_id, comm)
   CALL mp_bcast (upf%r,   ionode_id, comm )
   CALL mp_bcast (upf%rab, ionode_id, comm )
   !
-  IF ( .NOT. ionode) ALLOCATE( upf%rho_atc(upf%mesh) )
-  CALL mp_bcast (upf%rho_atc, ionode_id, comm )
+  IF ( upf%nlcc .OR. upf%tpawp ) THEN
+     !! FIXME: PAW uses the pseudo-core charge even when nlcc is not present
+     IF ( .NOT. ionode) ALLOCATE( upf%rho_atc(upf%mesh) )
+     CALL mp_bcast (upf%rho_atc, ionode_id, comm )
+  END IF
   !
   IF(.not. upf%tcoulombp) THEN
      IF ( .NOT. ionode) ALLOCATE( upf%vloc(upf%mesh) )
@@ -464,13 +383,13 @@ SUBROUTINE upf_bcast(upf, ionode, ionode_id, comm)
              IF ( upf%q_with_l ) &
                 ALLOCATE( upf%qfuncl ( upf%mesh, 1, 1 ) )
         ELSE
-           ALLOCATE( upf%rinner( upf%nqlc ) )
            ALLOCATE( upf%qqq   ( upf%nbeta, upf%nbeta ) )
            IF ( upf%q_with_l ) THEN
               ALLOCATE( upf%qfuncl ( upf%mesh, upf%nbeta*(upf%nbeta+1)/2, 0:2*upf%lmax ) )
            ELSE
               ALLOCATE( upf%qfunc (upf%mesh, upf%nbeta*(upf%nbeta+1)/2) )
            ENDIF
+           ALLOCATE( upf%rinner( upf%nqlc ) )
            IF(upf%nqf <= 0) THEN
               ALLOCATE( upf%qfcoef(1,1,1,1) )
            ELSE
@@ -531,11 +450,9 @@ SUBROUTINE upf_bcast(upf, ionode, ionode_id, comm)
   
   IF (upf%has_so) THEN
      IF ( .NOT. ionode) THEN
-        ALLOCATE (upf%nn(upf%nwfc))
         ALLOCATE (upf%jchi(upf%nwfc))
         ALLOCATE(upf%jjj(upf%nbeta))
      END IF
-     CALL mp_bcast (upf%nn,ionode_id,comm )
      CALL mp_bcast (upf%jchi,ionode_id,comm )
      CALL mp_bcast (upf%jjj,ionode_id,comm )
   END IF

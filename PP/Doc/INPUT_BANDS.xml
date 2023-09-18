@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="input_xx.xsl"?>
+<!-- FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST -->
+    
+<input_description distribution="Quantum ESPRESSO" package="PWscf" program="bands.x" >
+   <toc>
+   </toc>
+   <intro>
+<b>Purpose of bands.x:</b>
+   Re-order bands, computes band-related properties. Currently,
+   re-ordering can be done with two different algorithms:
+   (a) by maximising the overlap with bands at previous k-point
+   (b) by computing symmetry properties of each wavefunction
+   Bands-related properties that can be computed are currently
+   (a) The expectation value of the spin operator on each spinor
+       wave-function (noncolinear case only)
+   (b) The expectation value of p
+
+The input data can be read from standard input or from file using
+command-line options &quot;bands.x -i file-name&quot; (same syntax as for pw.x)
+
+Output files:
+- file <ref>filband</ref> containing the band structure, in a format
+  suitable for plotting code &quot;plotband.x&quot;
+- file &quot;filband&quot;.rap (if <ref>lsym</ref> is .t.)  with symmetry information,
+  to be read by plotting code &quot;plotband.x&quot;
+- if (<ref>lsigma</ref>(i)): file &quot;filband&quot;.i, i=1,2,3, with expectation values
+  of the spin operator in the noncolinear case
+- file &quot;filband&quot;.gnu with bands in eV, directly plottable using gnuplot
+- file <ref>filp</ref> with matrix elements of p (including the nonlocal potential
+  contribution i*m*[V_nl,x])
+
+<b>Structure of the input data:</b>
+============================
+
+   <b>&amp;BANDS</b>
+     ...
+   <b>/</b>
+   </intro>
+   <namelist name="BANDS" >
+      <var name="prefix" type="CHARACTER" >
+         <default> &apos;pwscf&apos;
+         </default>
+         <info>
+prefix of files saved by program pw.x
+         </info>
+      </var>
+      <var name="outdir" type="CHARACTER" >
+         <info>
+directory containing the input data, i.e. the same as in pw.x
+         </info>
+         <default>
+value of the ESPRESSO_TMPDIR environment variable if set;
+current directory (&apos;./&apos;) otherwise
+         </default>
+      </var>
+      <var name="filband" type="CHARACTER" >
+         <default> &apos;bands.out&apos;
+         </default>
+         <info>
+file name for band output (to be read by &quot;plotband.x&quot;)
+         </info>
+      </var>
+      <var name="spin_component" type="INTEGER" >
+         <info>
+In the lsda case select:
+
+   1 = spin-up
+   2 = spin-down
+         </info>
+      </var>
+      <dimension name="lsigma" start="1" end="3" type="LOGICAL" >
+         <info>
+If true computes expectation values of the spin operator
+on the spinor wave-functions (only in the noncollinear case),
+writes them to a file &quot;filband&quot;.i, i=1,2,3
+         </info>
+      </dimension>
+      <var name="lp" type="LOGICAL" >
+         <default> .false.
+         </default>
+         <info>
+If .true. matrix elements of the momentum operator p between
+conduction and valence bands are computed and written to file
+specified in <ref>filp</ref>.
+The matrix elements include the contribution from the nonlocal
+potential, i*m*[V_nl, x]. In other words, the calculated matrix elements
+are those of the velocity operator i*m*[H, x] times mass, not those of
+the true momentum operator.
+         </info>
+      </var>
+      <var name="filp" type="CHARACTER" >
+         <default> &apos;p_avg.dat&apos;
+         </default>
+         <info>
+If <ref>lp</ref> is set to .true., file name for matrix elements of p
+         </info>
+      </var>
+      <var name="lsym" type="LOGICAL" >
+         <default> .true.
+         </default>
+         <info>
+If .true. the bands are classified according to the
+irreducible representations of the small group of k.
+A file &quot;filband&quot;.rap with the same format of &quot;filband&quot;
+is written, for usage by &quot;plotband.x&quot;
+         </info>
+      </var>
+      <var name="no_overlap" type="LOGICAL" >
+         <default> .true.
+         </default>
+         <info>
+If .false., and if <ref>lsym</ref> is .false., writes the eigenvalues
+in the order that maximises overlap with the neighbor k-points
+         </info>
+      </var>
+      <var name="plot_2d" type="LOGICAL" >
+         <default> .false.
+         </default>
+         <info>
+If .true. writes the eigenvalues in the output file
+in a 2D format readable by gnuplot. Band ordering is not
+changed. Each band is written in a different file called
+filband.# with the format:
+<i>
+   xk, yk, energy
+   xk, yk, energy
+   ..  ..  ..
+</i>
+energies are written in eV and xk in units 2\pi/a.
+         </info>
+      </var>
+      <vargroup type="INTEGER" >
+         <var name="firstk" >
+         </var>
+         <var name="lastk" >
+         </var>
+         <info>
+if <ref>lsym</ref>=.true. makes the symmetry analysis only for k
+points between firstk to lastk
+         </info>
+      </vargroup>
+   </namelist>
+</input_description>

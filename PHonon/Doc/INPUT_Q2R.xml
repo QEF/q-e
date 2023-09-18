@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="input_xx.xsl"?>
+<!-- FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST -->
+    
+<input_description distribution="Quantum ESPRESSO" package="PHonon" program="q2r.x" >
+   <toc>
+   </toc>
+   <intro>
+<b>Purpose of q2r.x:</b>
+
+It reads force constant matrices C(q) produced by the <b>ph.x</b> code
+for a grid of q-points and calculates the corresponding set
+of interatomic force constants (IFC), C(R)
+
+<b>Input data format:</b> [ ] = it depends
+
+<b>Structure of the input data:</b>
+========================================================================
+
+<b>&amp;INPUT</b>
+   ...specs of namelist variables...
+<b>/</b>
+
+[ nr1 nr2 nr3
+  nfile
+     file(1)
+     file(2)
+     ...
+     file(nfile) ]
+   </intro>
+   <namelist name="INPUT" >
+      <var name="fildyn" type="CHARACTER" >
+         <status> REQUIRED
+         </status>
+         <info>
+Input file name (must be specified).
+
+<b>&quot;fildyn&quot;0</b> contains information on the q-point grid
+
+<b>&quot;fildyn&quot;1-N</b> contain force constants C_n = C(q_n),
+     where <b>n = 1,...N</b>, where N is the number of
+     q-points in the irreducible brillouin zone.
+
+Normally this should be the same as specified on input
+to the phonon code.
+
+In the non collinear/spin-orbit case the files
+produced by <b>ph.x</b> are in .xml format. In this case
+<ref>fildyn</ref> is the same as in the phonon code + the
+.xml extension.
+         </info>
+      </var>
+      <var name="flfrc" type="CHARACTER" >
+         <status> REQUIRED
+         </status>
+         <info>
+Output file containing the IFC in real space (must be specified)
+         </info>
+      </var>
+      <var name="zasr" type="CHARACTER" >
+         <default> &apos;no&apos;
+         </default>
+         <options>
+            <info>
+Indicates the type of Acoustic Sum Rules used for the Born
+effective charges.
+
+Allowed values:
+            </info>
+            <opt val="'no'" >
+no Acoustic Sum Rules imposed (default)
+            </opt>
+            <opt val="'simple'" >
+previous implementation of the asr used
+(3 translational asr imposed by correction of
+ the diagonal elements of the force-constants matrix)
+            </opt>
+            <opt val="'crystal'" >
+3 translational asr imposed by optimized
+correction of the IFC (projection)
+            </opt>
+            <opt val="'one-dim'" >
+3 translational asr + 1 rotational asr
+imposed by optimized correction of the IFC (the
+rotation axis is the direction of periodicity; it
+will work only if this axis considered is one of
+the cartesian axis).
+            </opt>
+            <opt val="'zero-dim'" >
+3 translational asr + 3 rotational asr
+imposed by optimized correction of the IFC.
+            </opt>
+            <info>
+Note that in certain cases, not all the rotational asr
+can be applied (e.g. if there are only 2 atoms in a
+molecule or if all the atoms are aligned, etc.).
+In these cases the supplementary asr are cancelled
+during the orthonormalization procedure (see below).
+            </info>
+         </options>
+      </var>
+      <var name="loto_2d" type="LOGICAL" >
+         <info>
+set to <b>.true.</b> to activate two-dimensional treatment
+of LO-TO splitting.
+         </info>
+      </var>
+      <var name="write_lr" type="LOGICAL" >
+         <default> <tt>.false.</tt>
+         </default>
+         <info>
+set to <b>.true.</b> to write long-range IFC into q2r IFC file.
+This is required when enforcing asr=&apos;all&apos; for infrared-
+active solids in matdyn. An additional column will be written
+for long-range part of IFC for text format, while a tag named
+IFC_LR will be created for xml format.
+         </info>
+      </var>
+   </namelist>
+   <choose>
+      <when test="file {fildyn}0 does not exist" >
+         <message>
+If a file <b>&quot;fildyn&quot;0</b> is not found, the code will ignore variable
+<ref>fildyn</ref> and will try to read from the following cards the missing
+information on the q-point grid and file names:
+         </message>
+         <linecard>
+            <vargroup type="INTEGER" >
+               <var name="nr1" >
+               </var>
+               <var name="nr2" >
+               </var>
+               <var name="nr3" >
+               </var>
+               <info>
+dimensions of the FFT grid formed by the q-point grid
+               </info>
+            </vargroup>
+         </linecard>
+         <card name="fileSpecs" nameless="1" >
+            <syntax>
+               <line>
+                  <var name="nfile" type="INTEGER" >
+                     <info>
+number of files containing C(q_n), n=1,<ref>nfile</ref>
+                     </info>
+                  </var>
+               </line>
+               <table name="file_n" >
+                  <rows start="1" end="nfile" >
+                     <col name="file" type="CHARACTER" >
+                        <info>
+names of the files containing C(q_n), n=1,<ref>nfile</ref>
+
+Note that the name and order of files is not important as
+long as <b>q=0 is the first</b>.
+                        </info>
+                     </col>
+                  </rows>
+               </table>
+            </syntax>
+         </card>
+      </when>
+   </choose>
+</input_description>

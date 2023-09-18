@@ -7,12 +7,15 @@ epw:
 	(cd src ; make all )
 	- (mkdir -p bin)
 	(cd bin ; ln -fs ../src/epw.x . )
+	(cd ZG/src ; make )
 
 clean:
-	cd src ; rm -f *.o *.mod  *~ *.F90
+	cd src ; rm -f *.o *.a *.mod  *~ *.F90
+	cd ZG/src ; rm -f *.o *.a *.mod  *~
 
 distclean : clean
 	rm -f src/epw.x bin/epw.x
+	rm -f ZG/src/*.x
 
 release:
 	cd ../ ; cp -r EPW EPW-release; cd EPW-release ; \

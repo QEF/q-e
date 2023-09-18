@@ -7,13 +7,12 @@
 !
 !
 !====================================================================
-   SUBROUTINE inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+   SUBROUTINE inner_loop_cold( nfi, tfirst, tlast, eigr, irb, eigrb, &
                           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
                           sfac, c0, bec, dbec, firstiter, vpot )
 !====================================================================
       !
-      ! minimizes the total free energy
-      ! using cold smearing,
+      !! Minimizes the total free energy using cold smearing.
       !
       !
 
@@ -50,6 +49,7 @@
       USE cp_interfaces,  ONLY: rhoofr, dforce, protate, vofrho, calbec
       USE cg_module,      ONLY: itercg
       USE cp_main_variables, ONLY: idesc, drhor, drhog
+      use cg_sub, only: rotate
       !
       IMPLICIT NONE
 
@@ -109,7 +109,7 @@
 
         ! calculates the overlaps bec between the wavefunctions c0
         ! and the beta functions
-        CALL calbec( 1, nsp, eigr, c0, bec )
+        CALL calbec( n, betae, c0, bec )
  
         ! rotates the wavefunctions c0 and the overlaps bec
         ! (the occupation matrix f_ij becomes diagonal f_i)      
@@ -119,7 +119,7 @@
         ! calculates the electronic charge density
         CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, dbec, rhovan, &
                      rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
-        IF(nlcc_any) CALL set_cc( irb, eigrb, rhoc )
+        IF(nlcc_any) CALL set_cc( rhoc )
   
         ! calculates the SCF potential, the total energy
         ! and the ionic forces
@@ -141,11 +141,11 @@
       ! the augmentation charges and the 
       ! corresponding contribution to the ionic force
        
-         CALL newd( vpot, irb, eigrb, rhovan, fion2 )
+         CALL newd( vpot, rhovan, fion2, .true. )
 
          ! operates the Hamiltonian on the wavefunction c0
          h0c0( :, : )= 0.D0
-         DO i= 1, n, 2                      
+         DO i= 1, n, 2
             CALL dforce( i, bec, betae, c0, h0c0(:,i), h0c0(:,i+1), rhos, dffts%nnr, ispin, f, n, nspin )
          END DO
 
@@ -260,7 +260,7 @@
         ! calculates the electronic charge density
          CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, dbec, rhovan, &
                      rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
-         IF(nlcc_any) CALL set_cc( irb, eigrb, rhoc )
+         IF(nlcc_any) CALL set_cc( rhoc )
   
         ! calculates the SCF potential, the total energy
         ! and the ionic forces
@@ -309,11 +309,11 @@
 
    SUBROUTINE inner_loop_lambda( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
-                          sfac, c0, bec, dbec, firstiter,c0hc0,c1hc1,lambda,  &
+                          sfac, c0, bec, dbec, firstiter,c0hc0,c1hc1,lambda, &
                           free_energy, vpot )
     
-!this subroutine for the energy matrix (1-lambda)c0hc0+labda*c1hc1
-!calculates the corresponding free energy
+      !! This subroutine for the energy matrix (1-lambda)c0hc0+labda*c1hc1
+      !! calculates the corresponding free energy.
 
 
       ! declares modules
@@ -409,7 +409,7 @@
       ! calculates the electronic charge density
       CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, dbec, rhovan, &
                    rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
-      IF(nlcc_any) CALL set_cc( irb, eigrb, rhoc )
+      IF(nlcc_any) CALL set_cc( rhoc )
   
       ! calculates the SCF potential, the total energy
       ! and the ionic forces
@@ -527,6 +527,7 @@
       USE cp_interfaces,  ONLY: rhoofr, dforce, protate
       USE cg_module,      ONLY: itercg
       USE cp_main_variables, ONLY: idesc
+      use cg_sub, only: rotate
       !
       IMPLICIT NONE
 

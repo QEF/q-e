@@ -1,0 +1,130 @@
+                 --------------------------
+                 - XClib TESTING PROGRAMS -
+                 --------------------------
+
+To compile the following side programs, once you have properly 
+configured QE, go to XClib directory and type:
+
+	make test
+
+for the xclib testing program (xclib_test.x) and
+ 
+	make infos
+
+for the dft infos one (xc_infos.x). With CMake they will be compiled
+automatically if 'QE_ENABLE_TEST' is set to true (default).
+
+
+---------------------- XC_INFO -----------------------------------
+
+xc_info is a small serial program that provides infos on XC 
+functionals, both the ones from internal QE library and the ones
+from Libxc. Just run the command:
+
+	./xc_info.x
+
+then type the functional name (or any allowed combination). It
+will show a brief description, the list of the external parameters, 
+and all the available references. For Libxc functionals it will also
+tell if they are currently usable in QE or not.
+
+
+--------------------- XCLIB_TEST ---------------------------------
+
+xclib_test is a testing program for the XClib library routines.
+Due to the high number of available dfts (including those from
+the external library Libxc) and the different parallelization 
+schemes available already or in experimental phase, this program
+is intended to be a tool that helps developers to maintain and
+develop XClib by keeping an overview on all the available options
+(which cannot be covered by test-suite only).
+The program generates an xml file with a set of XC-output data 
+produced according to the input options and use it for later
+comparison with other differently generated sets of XC-output data.
+It first calculates averages of the XC-output data over a large
+arbitrary grid (the number of points can be modified by changing the
+'npoints' parameter in the code) -this is a 'naive' way to compare
+outputs over a large number of points without storing a large amount
+of data, however more sophisticated estimates than the arithmetic
+averages can be replaced in a second time with minimal effort (and
+the grid itself too). Then the same program calculates the XC output
+data over a selected number of grid points, including threshold 
+points, and perform the comparison between xml data and current ones.
+
+You can run the program by using commands like:
+
+	./xclib_test.x < input_file                [ serial ]
+        mpirun -np XX xclib_test.x < input_file    [parallel]
+
+Different options are available and the program can be used for
+different purposes.
+An example of input file content is the following:
+
+        &INPUT_NAMELIST
+                 test='generate'
+                 filename_xml='xctest_data.xml'
+                 dft='all_terms'
+                 family=''
+                 polarization='both'
+                 xc_derivative=.FALSE.
+        /
+
+This input generates an xml file 'xctest_data.xml' whith a set of XC
+output data (both polarized and unpolarized) for each single dft term
+in the QE internal library. If 'execute' was present instead of 'generate'
+it would span all the dft terms and compare the outputs with the data in
+the xml file.
+Another example:
+
+        &INPUT_NAMELIST
+                 test='execute'
+                 filename_xml='xctest_data.xml'
+                 dft='pbe'
+                 family='GGA'
+                 polarization='unpolarized'
+                 xc_derivative=.FALSE.
+                 show_time = .TRUE.
+        /
+
+This input reads data from the xml file and compare the output for the pbe
+functional only. It also shows an estimate of the XClib execution wall time.
+
+In general, the following input options have to be set (capital or 
+lowercase is the same):
+
+- test: The 'GENERATE' option generates the xml file with the benchmark set
+        of XClib output data. The 'EXECUTE' option calculates a set of
+        XClib output data and compares it with the one previously stored
+        in the xml file.
+
+- filename_xml: the name of the xml file.
+
+- dft: the input functional. Besides the specific functionals, three
+       other options are available:
+       - 'ALL_TERMS' spans all the available single term functionals
+         of QE (e.g. LDA exchange, LDA correlation, GGA exchange, ...);
+       - 'ALL_SHORT' spans all the full dfts (identified by the 'shortnames')
+         available in XClib, e.g. LDA, PBESOL, PW86PBE, etc.
+       - 'ALL_LIBXC' spans all the available Libxc functionals. Those
+         that are not usable in the current QE version will be skipped
+         with a notice.  
+
+- family: the dft family (needed in order to distinguish those few cases
+          where LDA terms have the same name of the GGA ones, e.g. B3LP).
+          If dft='ALL_...' then input family will be ignored.
+          
+- polarization: 'UNPOLARIZED', 'POLARIZED', 'BOTH'.
+
+- xc_derivative: if .TRUE. calculates the derivative terms (needed,
+                 for example, by linear response code) instead of
+                 the ordinary energy&potential output.
+
+- show_time: if .TRUE. stores WALL time spent by xc-routines during
+             'GENERATE' test and shows increment (in percentage) during
+             'EXECUTE' test.
+
+Obviously the program can be used to compare QE and Libxc functionals,
+to check differences from one version to another or to check differences
+in the output by changing external parameters or other stuff.
+          
+

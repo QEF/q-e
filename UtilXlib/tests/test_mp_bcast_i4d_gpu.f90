@@ -4,9 +4,7 @@ PROGRAM test_mp_bcast_i4d_gpu
 ! Simple program to check the functionalities of test_mp_bcast_i4d.
 !
     USE cudafor
-#if defined(__MPI)
-    USE MPI
-#endif
+    USE parallel_include
     USE mp, ONLY : mp_bcast
     USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &
                           root, nproc, world_comm

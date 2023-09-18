@@ -20,10 +20,10 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !    tr2       threshold for selfconsistency
   !    iter      current iteration number
   !    n_iter    number of iterations used in the mixing
-  !    file_extension  if present save previous iterations on 
+  !    file_extension  if present save previous iterations on
   !                    file 'prefix'.'file_extension'
   !                    otherwise keep everything in memory
-  ! 
+  !
   ! On output:
   !    dr2       [(vout-vin)/ndim]^2
   !    vin       mixed potential
@@ -46,31 +46,29 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !
   !   Here the local variables
   !
-  ! max number of iterations used in mixing: n_iter must be .le. maxter
-  integer :: maxter
-  parameter (maxter = 8)
-  !
-  integer :: iunit, iunmix, n, i, j, iwork (maxter), info, iter_used, &
-       ipos, inext, ndimtot
-  ! work space containing info from previous iterations:
-  ! must be kept in memory and saved between calls if file_extension=' '
+  logical :: saveonfile, exst
+  integer :: iunmix, n, i, j, info, iter_used, ipos, inext, ndimtot
+  real(DP) :: gamma, norm
   real(DP), allocatable, save :: df (:,:), dv (:,:)
+  !! work space containing info from previous iterations:
+  !! must be kept in memory and saved between calls if file_extension=' '
   !
-  real(DP), allocatable :: vinsave (:)
-  real(DP) :: beta (maxter, maxter), gamma, work (maxter), norm
-  logical :: saveonfile, opnd, exst
-  real(DP), external :: ddot, dnrm2
-  ! adjustable parameters as suggested in the original paper
-  real(DP) w (maxter), w0
-  data w0 / 0.01d0 /, w / maxter * 1.d0 /
+  integer, allocatable :: iwork(:)
+  real(DP), allocatable :: vinsave(:), beta(:, :), work(:), w(:)
+  !
+  real(DP) :: w0 = 0.01_dp
+  real(DP) :: w1 = 1.0_dp
+  !! adjustable parameters as suggested in the original paper. w(:) is set to w1.
+  !
+  INTEGER, EXTERNAL :: find_free_unit
+  REAL(DP), EXTERNAL :: ddot, dnrm2
   !
   call start_clock ('mix_pot')
   !
-  if (iter.lt.1) call errore ('mix_potential', 'iter is wrong', 1)
-  if (n_iter.gt.maxter) call errore ('mix_potential', 'n_iter too big', 1)
-  if (ndim.le.0) call errore ('mix_potential', 'ndim .le. 0', 3)
+  if (iter < 1) call errore ('mix_potential', 'iter must be positive', 1)
+  if (ndim < 1) call errore ('mix_potential', 'ndim must be positive', 3)
   !
-  saveonfile = file_extension.ne.' '
+  saveonfile = file_extension /= ' '
   !
   do n = 1, ndim
      vout (n) = vout (n) - vin (n)
@@ -84,16 +82,10 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !
   dr2 = (sqrt (dr2) / ndimtot) **2
   !
-  conv = dr2.lt.tr2
+  conv = dr2 < tr2
   !
   if (saveonfile) then
-     do iunit = 99, 1, - 1
-        inquire (unit = iunit, opened = opnd)
-        iunmix = iunit
-        if (.not.opnd) goto 10
-     enddo
-     call errore ('mix_potential', 'free unit not found?!?', 1)
-10   continue
+     iunmix = find_free_unit()
      if (conv) then
         ! remove temporary file (open and close it)
         call diropn (iunmix, file_extension, ndim, exst)
@@ -102,16 +94,16 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
         return
      endif
      call diropn (iunmix, file_extension, ndim, exst)
-     if (iter.gt.1.and..not.exst) then
+     if (iter > 1 .AND. .NOT. exst) then
         call infomsg ('mix_potential', 'file not found, restarting')
         iter = 1
      endif
-     allocate (df( ndim , n_iter))    
-     allocate (dv( ndim , n_iter))    
+     allocate (df( ndim , n_iter))
+     allocate (dv( ndim , n_iter))
   else
-     if (iter.eq.1) then
-        allocate (df( ndim , n_iter))    
-        allocate (dv( ndim , n_iter))    
+     if (iter == 1) then
+        allocate (df( ndim , n_iter))
+        allocate (dv( ndim , n_iter))
      endif
      if (conv) then
         deallocate (dv)
@@ -119,7 +111,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
         call stop_clock ('mix_pot')
         return
      endif
-     allocate (vinsave( ndim))    
+     allocate (vinsave( ndim))
   endif
   !
   ! iter_used = iter-1  if iter <= n_iter
@@ -132,7 +124,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !
   ipos = iter - 1 - ( (iter - 2) / n_iter) * n_iter
   !
-  if (iter.gt.1) then
+  if (iter > 1) then
      if (saveonfile) then
         call davcio (df (1, ipos), ndim, iunmix, 1, - 1)
         call davcio (dv (1, ipos), ndim, iunmix, 2, - 1)
@@ -150,14 +142,14 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !
   if (saveonfile) then
      do i = 1, iter_used
-        if (i.ne.ipos) then
+        if (i /= ipos) then
            call davcio (df (1, i), ndim, iunmix, 2 * i + 1, - 1)
            call davcio (dv (1, i), ndim, iunmix, 2 * i + 2, - 1)
         endif
      enddo
      call davcio (vout, ndim, iunmix, 1, 1)
      call davcio (vin, ndim, iunmix, 2, 1)
-     if (iter.gt.1) then
+     if (iter > 1) then
         call davcio (df (1, ipos), ndim, iunmix, 2 * ipos + 1, 1)
         call davcio (dv (1, ipos), ndim, iunmix, 2 * ipos + 2, 1)
      endif
@@ -165,29 +157,41 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
      call DCOPY (ndim, vin, 1, vinsave, 1)
   endif
   !
-  do i = 1, iter_used
-     do j = i + 1, iter_used
-        beta (i, j) = w (i) * w (j) * ddot (ndim, df (1, j), 1, df (1, i), 1)
-        call mp_sum ( beta (i, j), intra_bgrp_comm )
+  if ( iter_used > 0 ) then
+     !
+     ALLOCATE(beta(iter_used, iter_used))
+     ALLOCATE(w(iter_used))
+     ALLOCATE(work(iter_used))
+     ALLOCATE(iwork(iter_used))
+     w(:) = w1
+     !
+     beta = 0.0_dp
+     do i = 1, iter_used
+        do j = i + 1, iter_used
+           beta (i, j) = w (i) * w (j) * ddot (ndim, df (1, j), 1, df (1, i), 1)
+           call mp_sum ( beta (i, j), intra_bgrp_comm )
+        enddo
+        beta (i, i) = w0**2 + w (i) **2
      enddo
-     beta (i, i) = w0**2 + w (i) **2
-  enddo
-  !
-  call DSYTRF ('U', iter_used, beta, maxter, iwork, work, maxter, info)
-  call errore ('broyden', 'factorization', info)
-  call DSYTRI ('U', iter_used, beta, maxter, iwork, work, info)
-  call errore ('broyden', 'DSYTRI', info)
-  !
-  do i = 1, iter_used
-     do j = i + 1, iter_used
-        beta (j, i) = beta (i, j)
+     !
+     call DSYTRF ('U', iter_used, beta, iter_used, iwork, work, iter_used, info)
+     call errore ('broyden', 'factorization', info)
+     call DSYTRI ('U', iter_used, beta, iter_used, iwork, work, info)
+     call errore ('broyden', 'DSYTRI', info)
+     deallocate ( iwork )
+     !
+     do i = 1, iter_used
+        do j = i + 1, iter_used
+           beta (j, i) = beta (i, j)
+        enddo
      enddo
-  enddo
-  !
-  do i = 1, iter_used
-     work (i) = ddot (ndim, df (1, i), 1, vout, 1)
-  enddo
-  call mp_sum ( work(1:iter_used), intra_bgrp_comm )
+     !
+     do i = 1, iter_used
+        work (i) = ddot (ndim, df (1, i), 1, vout, 1)
+     enddo
+     call mp_sum ( work, intra_bgrp_comm )
+     !
+  end if
   !
   do n = 1, ndim
      vin (n) = vin (n) + alphamix * vout (n)
@@ -203,6 +207,12 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
         vin (n) = vin (n) - w (i) * gamma * (alphamix * df (n, i) + dv (n, i) )
      enddo
   enddo
+  !
+  IF ( iter_used > 0 ) THEN
+     deallocate(beta)
+     deallocate(w)
+     deallocate(work)
+  ENDIF
   !
   if (saveonfile) then
      close (iunmix, status='keep')

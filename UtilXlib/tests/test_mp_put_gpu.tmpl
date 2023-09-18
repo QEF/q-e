@@ -7,9 +7,7 @@ PROGRAM test_mp_put_{vname}_gpu
 ! Simple program to check the functionalities of test_mp_put.
 !
     USE cudafor
-#if defined(__MPI)
-    USE MPI
-#endif
+    USE parallel_include
     USE util_param, ONLY : DP
     USE mp, ONLY : mp_put
     USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &

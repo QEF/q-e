@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package CP -program cp.x {
+input_description -distribution {Quantum ESPRESSO} -package CP -program cp.x {
 
     toc {}
 
@@ -9,11 +9,16 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	HARTREE ATOMIC UNITS. Charge is "number" charge (i.e. not multiplied 
         by e); potentials are in energy units (i.e. they are multiplied by e)
 
-        BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE
+        @b BEWARE: TABS, CRLF, ANY OTHER STRANGE CHARACTER, ARE A SOURCES OF TROUBLE 
+        @b USE ONLY PLAIN ASCII TEXT FILES (CHECK THE FILE TYPE WITH UNIX COMMAND "file")
+
+        Namelists must appear in the order given below.
         Comment lines in namelists can be introduced by a "!", exactly as in
         fortran code. Comments lines in ``cards'' can be introduced by
         either a "!" or a "#" character in the first position of a line.
         Do not start any line in ``cards'' with a "/" character.
+        Leave a space between card names and card options, e.g.
+        ATOMIC_POSITIONS (bohr), not ATOMIC_POSITIONS(bohr)
 
 	Structure of the input data:
 	===============================================================================
@@ -157,8 +162,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
             default { .false. }
 	    info {
 		Write stress tensor to standard output each "iprint" steps.
-                It is set to .TRUE. automatically if
-                calculation='vc-relax'
+                It is set to .TRUE. automatically if calculation='vc-relax'
 	    }
 	}
 	
@@ -201,7 +205,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	var prefix -type CHARACTER { 
 	    default { 'cp' }
 	    info {
-		prepended to input/output filenames:
+		prepended to input/output filenames and restart folders:
 		  prefix.pos : atomic positions
 		  prefix.vel : atomic velocities 
 		  prefix.for : atomic forces 
@@ -214,20 +218,29 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 		  prefix.spr : spread of Wannier orbitals
 		  prefix.wfc : center of Wannier orbitals
 		  prefix.ncg : number of Poisson CG steps (PBE0)
+                  prefix_ndw.save/ : write restart folder
+                  prefix_ndr.save/ : read restart folder
+                where ndr and ndw are the integers number described below
 	    }
 	}
 
 	var ndr -type INTEGER { 
 	    default { 50 }
 	    info {
-               Units for input and output restart file.
+               The restart files are read from the folder
+                 outdir/prefix_ndr.save/
+               where outdir, prefix and ndr are the input variables described
+               in this document
 	    }
 	}
        
 	var ndw -type INTEGER { 
 	    default { 50 }
 	    info {
-               Units for input and output restart file.
+               The restart files are write in the folder
+                 outdir/prefix_ndw.save/
+               where outdir, prefix and ndw are the input variables described
+               in this document
 	    }
 	}
 
@@ -604,17 +617,18 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	var occupations -type CHARACTER {
 	    info {
                a string describing the occupation of the electronic states.
+               Allowed values are 'fixed' (default) and 'ensemble'.
                In the case of conjugate gradient style of minimization
                of the electronic states, if occupations is set to 'ensemble',
-               this allows ensemble DFT calculations for metallic systems
+               this allows ensemble DFT calculations for metallic systems.
 	    }
 	}
 
 	var degauss -type REAL { 
-	    default { 0.D0 Ry }
+	    default { 0.D0 Ha }
 	    info {
                parameter for the smearing function, only used for ensemble DFT
-               calculations
+               calculations. Hartree atomic units
 	    }
 	}
 	
@@ -622,7 +636,9 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	    info {
                a string describing the kind of occupations for electronic states
                in the case of ensemble DFT (occupations == 'ensemble' );
-               now only Fermi-Dirac ('fd') case is implemented
+               possible values are: 'gaussian', 'fermi-dirac', 'hermite-delta',
+               'gaussian-splines', 'cold-smearing', 'marzari-vanderbilt', '0', '-1'.
+               Warning: only 'gaussian' is tested.
 	    }
 	}
 	
@@ -674,7 +690,8 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	    default { it depends on the specified functional }
 	    info {
 		Fraction of EXX for hybrid functional calculations. In the case of 
-		input_dft='PBE0', the default value is 0.25.
+		input_dft='PBE0', the default value is 0.25. This entry overrides
+    the default (as well as the restart file) value of a given functional.
 	    }
 	}
 
@@ -778,6 +795,14 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                          "Periodic boundary conditions in ab initio
                          calculations" , Phys.Rev.B 51, 4014 (1995)
 
+
+        var nextffield -type INTEGER {
+          default { 0 }
+          info {
+              Number of activated external ionic force fields. 
+              See Doc/ExternalForceFields.tex for further explanation and parameterizations
+          }
+        }
 
             }
         }
@@ -902,7 +927,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 
 
         var ortho_max -type INTEGER {
-            default { 20 }
+            default {300 }
             info {
                maximum number of iterations for orthonormalization
                meaningful only if orthogonalization = 'ortho'
@@ -1017,6 +1042,14 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
             }
         }
 
+        var pre_state -type LOGICAL {
+            default { .FALSE. }
+            info {
+               if .TRUE. perform the precondition of the CG gradient
+               using the kinetic energy of the state.
+            }
+        }
+
 
        var n_inner -type INTEGER {
             default { 2 }
@@ -1027,7 +1060,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
         }      
 
 
-       var ninter_cold_restart -type INTEGER {
+       var niter_cold_restart -type INTEGER {
             default { 1 }
             info {
                frequency in iterations at which a full inner cycle, only
@@ -1360,7 +1393,9 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 
 
 	var cell_dynamics -type CHARACTER {
-            default { 'none' }
+            default { 'pr'      if @ref calculation = 'vc-md', 'vc'cp', 'vc-cp-wf';
+	              'damp-pr' if  @ref calculation = 'vc-relax';
+		      'none'    otherwise }
 	    info {
                set how cell should be moved
                'none'      : cell is kept fixed
@@ -1841,15 +1876,16 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
 	var exx_neigh -type INTEGER {
             default { 60 }
             info {
-              An initial guess on the maximum number of neighboring (overlapping) Wannier functions. 
+              An initial guess on the maximum number of neighboring (overlapping) MLWFs. 
             }
         }
 
 	var exx_dis_cutoff -type REAL {
             default { 8.0 }
             info {
-              Radial cutoff distance (in bohr) for including overlapping Wannier function pairs
+              Radial cutoff distance (in bohr) for including overlapping MLWF pairs
               in EXX calculations.
+              See J. Chem. Theory Comput. 16, 3757–3785 (2020).
             }
         }
 
@@ -1860,14 +1896,26 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
             }
         }
 
+	var exx_use_cube_domain -type LOGICAL {
+            default { .false. }
+            info {
+              Use cubic instead of spherical subdomains as local supports during computation
+              of the EXX potential. If set to .TRUE., the spherical domain
+              radii (exx_ps_rcut_self, exx_ps_rcut_pair, exx_me_rcut_self, exx_me_rcut_pair)
+              will be treated as half of the side length of the cubic subdomain.
+            }
+        }
+
 	var exx_ps_rcut_self -type REAL {
             default { 6.0 }
             info {
               Radial cutoff distance (in bohr) to compute the self EXX energy.
               This distance determines the radius of the Poisson sphere centered at 
-              a given Wannier function center, and should be large enough to cover 
-              the majority of the orbital charge density.
+              a given MLWF center, and should be large enough to cover 
+              the majority of the MLWF charge density.
+              See J. Chem. Theory Comput. 16, 3757–3785 (2020).
             }
+            see { exx_use_cube_domain }
         }
 
 	var exx_ps_rcut_pair -type REAL {
@@ -1875,31 +1923,41 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
             info {
               Radial cutoff distance (in bohr) to compute the pair EXX energy.
               This distance determines the radius of the Poisson sphere centered at 
-              the midpoint of two overlapping Wannier functions, and should be 
-              large enough to cover the majority of the orbital overlap charge density.
+              the midpoint of two overlapping MLWFs, and should be 
+              large enough to cover the majority of the MLWF product density.
               This parameter can generally be chosen as smaller than exx_ps_rcut_self.
+              See J. Chem. Theory Comput. 16, 3757–3785 (2020).
             }
+            see { exx_use_cube_domain }
         }
 
 	var exx_me_rcut_self -type REAL {
             default { 10.0 }
             info {
-              Radial cutoff distance (in bohr) for the multipole-expansion sphere 
-              centered at a given Wannier function center.
-              The far-field self EXX potential in this sphere is generated with 
-              multipole expansion of the orbital charge density.
+              Radial cutoff distance (in bohr) for the multipole-expansion sphere
+              centered at a given MLWF center.
+              The far-field self EXX potential in this sphere is generated with a 
+              multipole expansion of the MLWF charge density.
+              This parameter must be larger than exx_ps_rcut_self by at least 3 
+              real-space grid point spacings.
+              See J. Chem. Theory Comput. 16, 3757–3785 (2020).
             }
+            see { exx_use_cube_domain }
         }
 
 	var exx_me_rcut_pair -type REAL {
             default { 7.0 }
             info {
               Radial cutoff distance (in bohr) for the multipole-expansion sphere 
-              centered at the midpoint of two overlapping Wannier functions.
+              centered at the midpoint of two overlapping MLWFs.
               The far-field pair EXX potential in this sphere is generated with 
-              a multipole expansion of the orbital overlap charge density.
-              This parameter can generally be chosen as smaller than exx_me_rcut_self.
+              a multipole expansion of the MLWF product density.
+              This parameter must be larger than exx_ps_rcut_pair by at least 3 
+              real-space grid point spacings. Also, this parameter can generally 
+              be chosen as smaller than exx_me_rcut_self.
+              See J. Chem. Theory Comput. 16, 3757–3785 (2020).
             }
+            see { exx_use_cube_domain }
         }
 
 
@@ -2027,9 +2085,9 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
     # ATOMIC_VELOCITIES
     #
     card ATOMIC_VELOCITIES {
-	flag atomvel_type -use optional {
-	    enum {  a.u }
-	    	}
+	#flag atomvel_type -use optional {
+	#    enum {  a.u }
+        #}
 
 	label { 
 	    Optional card, reads velocities from standard input  
@@ -2037,10 +2095,10 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
 
 
         message {
-               when starting with ion_velocities="from_input" it is convenient
+               when starting with @ref ion_velocities = "from_input" it is convenient
                to perform a few steps (~5-10) with a small time step (0.5 a.u.).
                The velocities must be expressed using the same length units
-               indicated in the card ATOMIC_POSITIONS, divided by time
+               indicated in the card @ref ATOMIC_POSITIONS, divided by time
                in atomic units.
 	}
 
@@ -2048,11 +2106,11 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
                     table atomic_velocities {
                        rows -start 1 -end nat {
                             col V -type CHARACTER {
-                                info { label of the atom as specified in ATOMIC_SPECIES }
+                                info { label of the atom as specified in @ref ATOMIC_SPECIES }
                             }
 
                             colgroup -type REAL {
-                                info { atomic velocities along x y and z direction}
+                                info { atomic velocities along @i x, @i y and @i z direction}
                                 col vx
                                 col vy
                                 col vz
@@ -2355,40 +2413,31 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
     #
     # AUTOPILOT
     #
-    card AUTOPILOT {
 
-      label {
-        Optional card, changes some variables on the fly of the calculation.
-
-        Notice that the rules has to be ordered in with time step and the Card has
-        to be terminated with "ENDRULES"
-      }
-
-
-      syntax {
-        table state_index {
-          rows -start 1 -end nevent {
-            col pilot_rule -type RULE {
-              info {
-                To set up a rule, one can add the scheduled steps with on_step and
-                separate the corresponding change in parameters with a column.
-
-                See a simple example bellow:
-
-                AUTOPILOT
-                    on_step =  31  : dt               = 5.0
-                    on_step =  91  : iprint           = 100
-                    on_step =  91  : isave            = 100
-                    on_step = 191  : ion_dynamics     = 'damp'
-                    on_step = 191  : electron_damping = 0.00
-                    on_step = 691  : ion_temperature  = 'nose'
-                    on_step = 691  : tempw            = 150.0
-                ENDRULES
-              }
-            }
-          }
+    supercard AUTOPILOT -endtag ENDRULES {
+        message {
+            Optional card, changes some variables on the fly of the calculation.
+            
+            Notice that the rules has to be ordered in with time step and the
+            @b AUTOPILOT card has to be terminated with the @b ENDRULES keyword.
+            
+            To set up a rule, one can add the scheduled steps with @b on_step and
+            separate the corresponding change in parameters with a column.
+            
+            @i {A simple example:}
+            
+            @b AUTOPILOT
+                @b on_step =  31  : @ref dt               = 5.0
+                @b on_step =  91  : @ref iprint           = 100
+                @b on_step =  91  : @ref isave            = 100
+                @b on_step = 191  : @ref ion_dynamics     = 'damp'
+                @b on_step = 191  : @ref electron_damping = 0.00
+                @b on_step = 691  : @ref ion_temperature  = 'nose'
+                @b on_step = 691  : @ref tempw            = 150.0
+            @b ENDRULES
         }
-      }
-
+        # a trick to make "on_step" known to QE-emacs-modes
+        keyword on_step
     }
 }
+

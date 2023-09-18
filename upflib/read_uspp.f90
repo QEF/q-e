@@ -24,12 +24,11 @@ MODULE read_uspp_module
   !
 CONTAINS
   !---------------------------------------------------------------------
-  subroutine readvan( iunps, is, upf )
+  subroutine readvan( iunps, upf, ierr )
     !---------------------------------------------------------------------
     !
     !     Read Vanderbilt pseudopotential from unit "iunps"
-    !     for species "is" into the structure "upf"
-    !     info on DFT level in module "funct"
+    !     into structure "upf" - info on DFT level in module "funct"
     !unf  For the "unformatted" data file: open file as "unformatted", 
     !unf  remove all formats from reads, look for comments introduced by
     !unf  like this one - Beware: may or may not work - PG 2020
@@ -88,10 +87,9 @@ CONTAINS
     !
     !    First the arguments passed to the subroutine
     !  
-    TYPE (pseudo_upf) :: upf
-    integer                                                           &
-         &      is,        &! The number of the pseudopotential
-         &      iunps       ! The unit of the pseudo file
+    TYPE (pseudo_upf)   :: upf
+    integer, intent(in) ::  iunps ! The unit of the pseudo file
+    integer, intent(out)::  ierr  ! Error code: 0 = ok, not 0 = not ok
     !
     !   Local variables
 
@@ -128,15 +126,9 @@ CONTAINS
          &       ir              ! mesh points counter
     !
     character(len=20) :: title
-    character(len=60) fmt
+    character(len=60) :: fmt
     !
-    !     We first check the input variables
-    !
-    if (is <= 0) &
-         call upf_error('readvan','routine called with wrong 1st argument', 1)
-    if (iunps <= 0 .or. iunps >= 100000) &
-         call upf_error('readvan','routine called with wrong 2nd argument', 1)
-    !
+    ierr = 1
     read(iunps, *, err=100, iostat=ios ) &
          (iver(i),i=1,3), (idmy(i),i=1,3)
     write(upf%generated, &
@@ -144,8 +136,10 @@ CONTAINS
     !
     if ( iver(1) > 7 .or. iver(1) < 1 .or. &
          iver(2) > 9 .or. iver(2) < 0 .or. &
-         iver(3) > 9 .or. iver(3) < 0 ) & 
-         call upf_error('readvan','wrong file version read',1)
+         iver(3) > 9 .or. iver(3) < 0 ) then 
+       write(stdout,'(5x,"readvan: wrong file version read")')
+       return
+    end if
     !
     read( iunps, '(a20,3f15.9)', err=100, iostat=ios ) &
          title, upf%zmesh, upf%zp, exfact 
@@ -162,34 +156,46 @@ CONTAINS
     !
     upf%psd = title(1:2)
     !
-    if ( upf%zmesh < 1 .or. upf%zmesh > 100.0_DP) &
-         call upf_error( 'readvan','wrong zmesh read', is )
-    if ( upf%zp <= 0.0_DP .or. upf%zp > 100.0_DP) &
-         call upf_error('readvan','wrong atomic charge read', is )
-    if ( exfact < -6 .or. exfact > 6) &
-         &     call upf_error('readvan','Wrong xc in pseudopotential',1)
-    ! convert from Vanderbilt conventions to "our" conventions 
-    call dftname_cp (nint(exfact), upf%dft)
+    if ( upf%zmesh < 1 .or. upf%zmesh > 100.0_DP) then
+       write(stdout,'(5x,"readvan: wrong zmesh read")')
+       return
+    end if
+    if ( upf%zp <= 0.0_DP .or. upf%zp > 100.0_DP) then
+       write(stdout,'(5x,"readvan: wrong atomic charge read")')
+       return
+    end if
+    if ( exfact < -6 .or. exfact > 6) then
+       write(stdout,'(5x,"readvan: wrong exch-corr read")')
+       return
+    end if
+    ! convert from Vanderbilt conventions to QE conventions 
+    call dftname_qe (nint(exfact), upf%dft)
+    if ( upf%dft == 'UNKNOWN' ) return
     !
     read( iunps, '(2i5,1pe19.11)', err=100, iostat=ios ) &
          upf%nwfc, upf%mesh, etotpseu
     !unf replace the two reads above with 
     !unf read (iunps, err=100, iostat=ios ) title, &
     !unf    upf%zmesh, upf%zp, exfact, upf%nwfc, upf%mesh, etotpseu
-    if ( upf%nwfc < 0 ) &
-         call upf_error( 'readvan', 'wrong nchi read', upf%nwfc )
-    if ( upf%mesh < 0 ) &
-         call upf_error( 'readvan','wrong mesh', is )
+    if ( upf%nwfc < 0 ) then
+       write(stdout,'(5x,"readvan: wrong nchi read")')
+       return
+    end if
+    if ( upf%mesh < 0 ) then
+       write(stdout,'(5x,"readvan: wrong mesh read")')
+       return
+    end if
     !
     !     info on pseudo eigenstates - energies are not used
     !
-    ALLOCATE ( upf%oc(upf%nwfc), upf%lchi(upf%nwfc) ) 
+    ALLOCATE ( upf%oc(upf%nwfc), upf%lchi(upf%nwfc), upf%nchi(upf%nwfc) ) 
     ALLOCATE ( nnlz(upf%nwfc), ee(upf%nwfc) )
     read( iunps, '(i5,2f15.9)', err=100, iostat=ios ) &
          ( nnlz(iv), upf%oc(iv), ee(iv), iv=1,upf%nwfc )
     do iv = 1, upf%nwfc
        i = nnlz(iv) / 100
        upf%lchi(iv) = nnlz(iv)/10 - i * 10
+       upf%nchi(iv) = i
     enddo
     read( iunps, '(2i5,f15.9)', err=100, iostat=ios ) &
          keyps, ifpcor, rinner1
@@ -200,10 +206,9 @@ CONTAINS
     !            2 --> vanderbilt modifications using defaults
     !            3 --> new generalized eigenvalue pseudopotentials
     !            4 --> frozen core all-electron case
-    if ( keyps < 0 .or. keyps > 4 ) then
-       call upf_error('readvan','wrong keyps',keyps)
-    else if (keyps == 4) then
-       call upf_error('readvan','keyps not implemented',keyps)
+    if ( keyps < 0 .or. keyps >= 4 ) then
+       write(stdout,'(5x,"readvan: wrong or unimplemented keyps")')
+       return
     end if
     upf%tvanp = (keyps == 3)
     !
@@ -218,15 +223,23 @@ CONTAINS
        !    NB: In the Vanderbilt atomic code the angular momentum goes 
        !        from 1 to nang
        !
-       if ( nang < 0 ) &
-            call upf_error(' readvan', 'Wrong nang read', nang)
+       if ( nang < 0 ) then
+          write(stdout,'(5x,"readvan: wrong nang read")')
+          return
+       end if
        if ( lloc == -1 ) lloc = nang+1
-       if ( lloc > nang+1 .or. lloc < 0 ) &
-            call upf_error( 'readvan', 'wrong lloc read', is )
-       if ( upf%nqf < 0 ) &
-            call upf_error(' readvan', 'Wrong nqf read', upf%nqf)
-       if ( ifqopt < 0 ) &
-            call upf_error( 'readvan', 'wrong ifqopt read', is )
+       if ( lloc > nang+1 .or. lloc < 0 ) then
+          write(stdout,'(5x,"readvan: wrong lloc read")')
+          return
+       end if
+       if ( upf%nqf < 0 ) then
+          write(stdout,'(5x,"readvan: wrong nqf read")')
+          return
+       end if
+       if ( ifqopt < 0 ) then
+          write(stdout,'(5x,"readvan: wrong ifqopt read")')
+          return
+       end if
     else
        ! old format: no distinction between nang and nchi
        nang = upf%nwfc
@@ -242,8 +255,10 @@ CONTAINS
             (upf%rinner(lp), lp=1,2*nang-1 )
        !
        do lp = 1, 2*nang-1
-          if (upf%rinner(lp) < 0.0_DP) &
-               call upf_error('readvan','Wrong rinner read', is )
+          if (upf%rinner(lp) < 0.0_DP) then
+             write(stdout,'(5x,"readvan: wrong rinner read")')
+             return
+          end if
        enddo
     else if (iver(1) > 3) then
        do lp = 2, 2*nang-1
@@ -268,8 +283,10 @@ CONTAINS
        upf%nqlc = 2*nang - 1
     end if
     !
-    if ( upf%nqlc > lqmax .or. upf%nqlc < 0 ) &
-         call upf_error(' readvan', 'Wrong  nqlc read', upf%nqlc )
+    if ( upf%nqlc > lqmax .or. upf%nqlc < 0 ) then
+       write(stdout,'(5x,"readvan: wrong nqlc read")')
+       return
+    end if
     !
     ALLOCATE ( rc(nang) )
     read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
@@ -283,10 +300,14 @@ CONTAINS
     ALLOCATE ( upf%kbeta(upf%nbeta) )
     upf%kbeta(:) = upf%kkbeta
     !
-    if( upf%nbeta < 0 ) &
-         call upf_error( 'readvan','nbeta wrong', is )
-    if( upf%kkbeta > upf%mesh .or. upf%kkbeta < 0 ) &
-         call upf_error( 'readvan','kkbeta wrong or too large', is )
+    if( upf%nbeta < 0 ) then
+       write(stdout,'(5x,"readvan: wrong nbeta read")')
+       return
+    end if
+    if( upf%kkbeta > upf%mesh .or. upf%kkbeta < 0 ) then
+       write(stdout,'(5x,"readvan: kkbeta wrong or too large")')
+       return
+    end if
     !
     !    Now reads the main Vanderbilt parameters
     !
@@ -306,8 +327,10 @@ CONTAINS
        do ir=upf%kkbeta+1,upf%mesh
           upf%beta(ir,iv)=0.0_DP
        enddo
-       if ( upf%lll(iv) > lmaxx .or. upf%lll(iv) < 0 ) &
-            call upf_error( 'readvan', 'lll wrong or too large ', is )
+       if ( upf%lll(iv) > lmaxx .or. upf%lll(iv) < 0 ) then
+          write(stdout,'(5x,"readvan: lll wrong or too large")')
+          return
+       end if
        do jv=iv,upf%nbeta
           !
           !  the symmetric matric Q_{nb,mb} is stored in packed form
@@ -333,8 +356,12 @@ CONTAINS
     enddo
     !
     ! Set additional, not present, variables to dummy values
-    ALLOCATE(upf%els(upf%nwfc))
+    ALLOCATE(upf%els(upf%nwfc), upf%epseu(upf%nwfc))
     upf%els(:) = 'nX'
+    upf%epseu(:) = 0._dp
+    ALLOCATE(upf%rcut_chi(upf%nwfc), upf%rcutus_chi(upf%nwfc))
+    upf%rcut_chi(:) = 0._dp
+    upf%rcutus_chi(:) = 0._dp
     ALLOCATE(upf%els_beta(upf%nbeta))
     upf%els_beta(:) = 'nX'
     ALLOCATE(upf%rcut(upf%nbeta), upf%rcutus(upf%nbeta))
@@ -422,8 +449,10 @@ CONTAINS
     !
     if (iver(1) >= 7) then
        read( iunps, *, err=100, iostat=ios ) i
-       if (i /= upf%nwfc) &
-            call upf_error('readvan','unexpected or unimplemented case',1)
+       if (i /= upf%nwfc) then
+          write(stdout,'(5x,"readvan: unexpected or unimplemented case")')
+          return
+       end if
     end if
     !
     ALLOCATE ( upf%chi(upf%mesh, upf%nwfc) )
@@ -435,22 +464,25 @@ CONTAINS
        !
        !   old version: read the q_l(r) and fit them with the Vanderbilt's form
        ! 
-       call fit_qrl ( )
+       call fit_qrl ( ierr )
+       if ( ierr /= 0 ) return
        !
     end if
     !
+    ierr = 0
+    !    Pseudopotential successfully read
     !    Here we write on output information on the pseudopotential 
     !
-    WRITE( stdout,200) is
+    WRITE( stdout,200) upf%psd
 200 format (/4x,60('=')/4x,'|  pseudopotential report',               &
-         &        ' for atomic species:',i3,11x,'|')
+         &        ' for atomic species: ',a2,11x,'|')
     WRITE( stdout,300) 'pseudo potential version', &
          iver(1), iver(2), iver(3)
 300 format (4x,'|  ',1a30,3i4,13x,' |' /4x,60('-'))
     WRITE( stdout,400) title, upf%dft
 400 format (4x,'|  ',2a20,' exchange-corr  |')
-    WRITE( stdout,500) upf%zmesh, is, upf%zp, exfact
-500 format (4x,'|  z =',f5.0,4x,'zv(',i2,') =',f5.0,4x,'exfact =',    &
+    WRITE( stdout,500) upf%zmesh, upf%zp, exfact
+500 format (4x,'|  z =',f5.0,4x,'zval =',f5.0,5x,'exfact =',    &
          &     f10.5, 9x,'|')
     WRITE( stdout,600) ifpcor, etotpseu
 600 format (4x,'|  ifpcor = ',i2,10x,' atomic energy =',f10.5,        &
@@ -484,11 +516,11 @@ CONTAINS
     !
     DEALLOCATE (eee, rc)
     return
-100 call upf_error('readvan','error reading pseudo file', abs(ios) )
+100 write(stdout,'(5x,"readvan: error reading pseudo file")')
   !
   CONTAINS
   !-----------------------------------------------------------------------
-  subroutine fit_qrl ( )
+  subroutine fit_qrl ( ierr )
     !-----------------------------------------------------------------------
     !
     ! find coefficients qfcoef that fit the pseudized qrl in US PP
@@ -497,9 +529,11 @@ CONTAINS
     !
     implicit none
     !
+    integer, intent(out) :: ierr
     real (kind=DP), allocatable :: qrl(:,:), a(:,:), ainv(:,:), b(:), x(:)
     integer :: iv, jv, ijv, lmin, lmax, l, ir, irinner, i,j
     !
+    ierr = 1
     !
     allocate ( a(upf%nqf,upf%nqf), ainv(upf%nqf,upf%nqf) )
     allocate ( b(upf%nqf), x(upf%nqf) )
@@ -515,8 +549,10 @@ CONTAINS
           !
           lmin = ABS( upf%lll(jv) - upf%lll(iv) ) + 1
           lmax =      upf%lll(jv) + upf%lll(iv)   + 1
-          IF ( lmin < 1 .OR. lmax >  SIZE(qrl,2)) &
-               CALL upf_error ('fit_qrl', 'bad 2rd dimension for array qrl', 1)
+          IF ( lmin < 1 .OR. lmax >  SIZE(qrl,2)) then
+             write(stdout,'(5x,"fit_qrl: bad 2rd dimension for array qrl")')
+             return
+          end if
           !
           !  read q_l(r) for all l
           !
@@ -564,9 +600,10 @@ CONTAINS
     end do
     !
     deallocate ( qrl, x, b , ainv, a )
+    ierr = 0 
     return
     !
-100 call upf_error('readvan','error reading Q_L(r)', 1 )
+100 write(stdout,'("fit_qrl: error reading Q_L(r)")')
   end subroutine fit_qrl
   !
   end subroutine readvan
@@ -603,7 +640,7 @@ CONTAINS
   END SUBROUTINE herman_skillman_grid
   !
   !---------------------------------------------------------------------
-  subroutine readrrkj( iunps, is, upf )
+  subroutine readrrkj( iunps, upf, ierr )
     !---------------------------------------------------------------------
     !
     !     This routine reads Vanderbilt pseudopotentials produced by the
@@ -622,9 +659,8 @@ CONTAINS
     !    First the arguments passed to the subroutine
     !
     TYPE (pseudo_upf) :: upf
-    integer :: &
-         is,        &! The index of the pseudopotential
-         iunps       ! the unit from with pseudopotential is read
+    integer, intent(in) ::  iunps ! The unit of the pseudo file
+    integer, intent(out)::  ierr  ! Error code: 0 = ok, not 0 = not ok
     !
     !    Local variables
     !
@@ -654,12 +690,7 @@ CONTAINS
     character(len=2) :: &
          adum       ! dummy character variable
     !
-    !     We first check the input variables
-    !
-    if (is <= 0) &
-         call upf_error('readrrkj','routine called with wrong 1st argument', 1)
-    if (iunps <= 0 .or. iunps >= 100000) &
-         call upf_error('readrrkj','routine called with wrong 2nd argument', 1)
+    ierr = 1
     !
     read( iunps, '(a75)', err=100, iostat=ios ) &
          titleps
@@ -697,34 +728,44 @@ CONTAINS
 
     read( iunps, '(2e17.11,i5)') &
          upf%zp, etotps, lmax
-    if ( upf%zp < 1 .or. upf%zp > 100 ) &
-         call upf_error('readrrkj','wrong potential read',is)
+    if ( upf%zp < 1 .or. upf%zp > 100 ) then
+       write(stdout,'("readrrkj: wrong potential read")')
+       return
+    end if
     !
     read( iunps, '(4e17.11,i5)',err=100, iostat=ios ) &
          upf%xmin, rdum, upf%zmesh, upf%dx, upf%mesh
     !
-    if ( upf%mesh < 0) &
-         call upf_error('readrrkj', 'wrong mesh',is)
+    if ( upf%mesh < 0) then
+       write(stdout,'("readrrkj: wrong number of grid points")')
+       return
+    end if
     !
     read( iunps, '(2i5)', err=100, iostat=ios ) &
          upf%nwfc, upf%nbeta
     !
-    if ( upf%nbeta < 0) &
-         call upf_error('readrrkj', 'wrong nbeta', is)
-    if ( upf%nwfc < 0 ) &
-         call upf_error('readrrkj', 'wrong nchi', is)
+    if ( upf%nbeta < 0) then
+       write(stdout,'("readrrkj: wrong nbeta")')
+       return
+    end if
+    if ( upf%nwfc < 0 ) then
+       write(stdout,'("readrrkj: wrong nchi")')
+       return
+    end if
     !
     read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
          ( rdum, nb=1,upf%nwfc )
     read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
          ( rdum, nb=1,upf%nwfc )
     !
-    ALLOCATE ( upf%oc(upf%nwfc), upf%lchi(upf%nwfc), upf%lll(upf%nwfc) ) 
+    ALLOCATE ( upf%oc(upf%nwfc), upf%lchi(upf%nwfc), upf%nchi(upf%nwfc) )
+    ALLOCATE ( upf%lll(upf%nwfc) ) 
     !
     do nb=1,upf%nwfc
        read(iunps,'(a2,2i3,f6.2)',err=100,iostat=ios) &
             adum, ndum, upf%lchi(nb), upf%oc(nb)
        upf%lll(nb)=upf%lchi(nb)
+       upf%nchi(nb)=ndum
        !
        ! oc < 0 distinguishes between bound states from unbound states
        !
@@ -798,8 +839,10 @@ CONTAINS
     !
     upf%nqf=0
     upf%nqlc=2*lmax+1
-    if ( upf%nqlc > lqmax .or. upf%nqlc < 0 ) &
-         call upf_error(' readrrkj', 'Wrong  nqlc', upf%nqlc )
+    if ( upf%nqlc > lqmax .or. upf%nqlc < 0 ) then
+       write(stdout,'("readrrkj: wrong nqlc")')
+       return
+    end if
     ALLOCATE ( upf%rinner(upf%nqlc) )
     do l=1,upf%nqlc
        upf%rinner(l)=0.0_DP
@@ -823,21 +866,27 @@ CONTAINS
     end if
     !
     ! Set additional, not present, variables to dummy values
-    allocate(upf%els(upf%nwfc))
+    ALLOCATE(upf%els(upf%nwfc), upf%epseu(upf%nwfc))
     upf%els(:) = 'nX'
+    upf%epseu(:) = 0._dp
+    ALLOCATE(upf%rcut_chi(upf%nwfc), upf%rcutus_chi(upf%nwfc))
+    upf%rcut_chi(:) = 0._dp
+    upf%rcutus_chi(:) = 0._dp
     allocate(upf%els_beta(upf%nbeta))
     upf%els_beta(:) = 'nX'
     allocate(upf%rcut(upf%nbeta), upf%rcutus(upf%nbeta))
     upf%rcut(:) = 0._dp
     upf%rcutus(:) = 0._dp
     !
+    ierr = 0
+    !
     return
-100 call upf_error('readrrkj','Reading pseudo file',abs(ios))
+100 write(stdout,'(5x,"readrrkj: error reading PP file")')
   end subroutine readrrkj
   !
 
 !-----------------------------------------------------------------------
-      subroutine dftname_cp (exfact, dft)
+      subroutine dftname_qe (exfact, dft)
 !-----------------------------------------------------------------------
 !
       implicit none
@@ -864,11 +913,11 @@ CONTAINS
          dft = 'GL'
       elseif (exfact == 6) then
          dft = 'TPSS'
-      else
-         call upf_error ('dftname','unknown exch-corr functional',exfact)
+      else 
+         dft = 'UNKNOWN'
+         write(stdout,'("dftname_qe: unknown DFT name")')
       end if
 
-      return
-      end subroutine dftname_cp
+      end subroutine dftname_qe
 
 end module read_uspp_module

@@ -9,11 +9,10 @@
 
 subroutine drho
   !-----------------------------------------------------------------------
-  !
-  !    Here we compute, for each mode the change of the charge density
-  !    due to the displacement, at fixed wavefunctions. These terms
-  !    are saved on disk. The orthogonality part is included in the
-  !    computed change.
+  !! Here we compute, for each mode the change of the charge density
+  !! due to the displacement, at fixed wavefunctions. These terms
+  !! are saved on disk. The orthogonality part is included in the
+  !! computed change.
   !
   !
   !
@@ -64,7 +63,7 @@ subroutine drho
   ! the weight of each point
 
 
-  complex(DP) :: zdotc, wdyn (3 * nat, 3 * nat)
+  complex(DP) :: wdyn (3 * nat, 3 * nat)
   type (bec_type), pointer :: becq(:), alpq(:,:)
   complex(DP), allocatable :: dvlocin (:), drhous (:,:,:),&
        drhoust (:,:,:), dbecsum(:,:,:,:), dbecsum_nc(:,:,:,:,:)
@@ -95,6 +94,7 @@ subroutine drho
   !
   !    then compute the weights
   !
+  call start_clock('compute_wgg')
   allocate (wgg (nbnd ,nbnd , nksq))
   if (lgamma) then
      becq => becp1
@@ -110,12 +110,15 @@ subroutine drho
      end do
   endif
   call compute_weight (wgg)
+  call stop_clock('compute_wgg')
   !
   !    becq and alpq are sufficient to compute the part of C^3 (See Eq. 37
   !    which does not contain the local potential
   !
   IF (.not.lgamma) call compute_becalp (becq, alpq)
+  call start_clock('nldyntot')
   call compute_nldyn (dyn00, wgg, becq, alpq)
+  call stop_clock('nldyntot')
   !
   !   now we compute the change of the charge density due to the change of
   !   the orthogonality constraint
@@ -123,6 +126,7 @@ subroutine drho
   allocate (drhous ( dfftp%nnr, nspin_mag , 3 * nat))
   allocate (dbecsum( nhm * (nhm + 1) /2, nat, nspin_mag, 3 * nat))
   dbecsum=(0.d0,0.d0)
+  call start_clock('drhous')
   IF (noncolin) THEN
      allocate (dbecsum_nc( nhm, nhm, nat, nspin, 3 * nat))
      dbecsum_nc=(0.d0,0.d0)
@@ -130,6 +134,7 @@ subroutine drho
   ELSE
      call compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   ENDIF
+  call stop_clock('drhous')
 
   if (.not.lgamma) then
      do ik=1,nksq
@@ -154,8 +159,9 @@ subroutine drho
      call compute_dvloc (nu_i, dvlocin)
      do nu_j = 1, 3 * nat
         do is = 1, nspin_lsda
+        ! FIXME: use zgemm instead of dot_product
            wdyn (nu_j, nu_i) = wdyn (nu_j, nu_i) + &
-                zdotc (dffts%nnr, drhous(1,is,nu_j), 1, dvlocin, 1) * &
+                dot_product (drhous(1:dffts%nnr,is,nu_j), dvlocin) * &
                 omega / DBLE (nrstot)
         enddo
      enddo

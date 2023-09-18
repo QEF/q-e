@@ -29,8 +29,8 @@ SUBROUTINE lr_addus_dvpsi (npwq, ik, psi, dvpsi)
   USE wvfct,            ONLY : nbnd, npwx
   USE noncollin_module, ONLY : noncolin, npol
   USE qpoint,           ONLY : ikks
-  USE lr_variables,     ONLY : intq, intq_nc
-  USE lrus,             ONLY : becp1
+!  USE lr_variables,     ONLY : intq, intq_nc
+  USE lrus,             ONLY : becp1, intq, intq_nc
   
   IMPLICIT NONE
   !

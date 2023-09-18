@@ -47,6 +47,8 @@ SUBROUTINE hp_find_inequiv_sites()
      CALL select_pert_based_on_type()
   ELSEIF ( find_atpert == 3 ) THEN
      CALL select_pert_based_on_sym()
+  ELSEIF ( find_atpert == 4 ) THEN
+     CALL select_pert_all()
   ELSE
      CALL errore ('hp_find_inequiv_sites', 'Not allowed value of find_atpert', 1)
   ENDIF
@@ -281,5 +283,22 @@ SUBROUTINE select_pert_based_on_sym()
   RETURN
   !
 END SUBROUTINE select_pert_based_on_sym
+
+SUBROUTINE select_pert_all()
+  !
+  ! Perturb all Hubbard atoms
+  !
+  IMPLICIT NONE
+  !
+  todo_atom(:) = .false.
+  !
+  DO na = 1, nat
+     nt = ityp(na)
+     IF (is_hubbard(nt)) todo_atom(na) = .true.
+  ENDDO
+  !
+  RETURN
+  !
+END SUBROUTINE select_pert_all
 
 END SUBROUTINE hp_find_inequiv_sites

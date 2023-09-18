@@ -75,18 +75,17 @@
 
 MODULE cp_autopilot
   !---------------------------------------------------------------------------
-  !
-  ! This module handles the Autopilot Feature Suite
-  ! Written by Lee Atkinson, with help from the ATP team at Targacept, Inc 
-  ! Created June 2005
-  ! Modified by Yonas Abrahm Sept 2006
+  !! This module handles the Autopilot Feature Suite.  
+  !! Written by Lee Atkinson, with help from the ATP team at Targacept, Inc  
+  !! Created June 2005  
+  !! Modified by Yonas Abrahm Sept 2006
   !
   !   The address for Targacept, Inc. is:
   !     200 East First Street, Suite
   !     300, Winston-Salem, North Carolina 27101; 
   !     Attn: Molecular Design.
   !
-  ! See README.AUTOPILOT in the Doc directory for more information.
+  !! See README.AUTOPILOT in the Doc directory for more information.
   !---------------------------------------------------------------------------
 
   USE kinds
@@ -436,11 +435,11 @@ CONTAINS
 
   !-----------------------------------------------------------------------
   ! PILOT
-  !
-  ! Here is the main pilot routine called in CPR, at the top
-  ! of the basic dynamics loop just after nose hoover update 
   !-----------------------------------------------------------------------
   subroutine pilot (nfi)
+    !! Here is the main pilot routine called in CPR, at the top
+    !! of the basic dynamics loop just after nose hoover update.
+    !
     USE parser, ONLY: parse_unit
     USE io_global, ONLY: ionode, ionode_id
     USE mp,        ONLY : mp_bcast, mp_barrier
@@ -566,15 +565,17 @@ CONTAINS
   end subroutine pilot
 
   function  need_tprint_true()
-  ! Check if next step is a Verlet. In such case returns .true.
-  ! Used whenever tprint == .true. is needed, e.g. to let CG
-  ! calculate wavefunctions at time t and (t - dt) via projections
-  ! onto the occupied manifold.
-  ! This function has to be called after 'call employ_rules()'!
+      !! Check if next step is a Verlet. In such case returns .TRUE.  
+      !! Used whenever \(\text{tprint}=\text{.TRUE.}\) is needed, e.g. to let CG
+      !! calculate wavefunctions at time t and (t - dt) via projections
+      !! onto the occupied manifold.  
+      !! This function has to be called after \(\texttt{call employ_rules}()\)!
+      !
       USE cg_module, ONLY : tcg
+      !
       LOGICAL :: need_tprint_true
       INTEGER :: event_idx
-
+      !
       need_tprint_true = .FALSE.
       event_idx = event_index
       do while ( event_idx .le. size(event_step) .and. (event_step(event_idx)==current_nfi+1) ) 

@@ -25,6 +25,7 @@ PROGRAM do_bands
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
   USE mp_images, ONLY : intra_image_comm
+  USE parameters,ONLY : npk
   !
   IMPLICIT NONE
   !
@@ -58,7 +59,7 @@ PROGRAM do_bands
   lp=.false.
   filp='p_avg.dat'
   firstk=0
-  lastk=10000000
+  lastk=npk
   spin_component = 1
   !
   ios = 0
@@ -161,6 +162,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   USE mp_images,            ONLY : intra_image_comm
   USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
                                    deallocate_bec_type, becp
+  USE uspp_init,            ONLY : init_us_2
 
   IMPLICIT NONE
   CHARACTER (len=*) :: filband
@@ -168,11 +170,12 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   LOGICAL, INTENT(IN) :: lsigma(4), no_overlap
 
   ! becp   : <psi|beta> at current  k-point
-  INTEGER :: ibnd, jbnd, i, ik, ig, ig1, ig2, ipol, npw, ngmax, jmax
+  INTEGER :: ibnd, jbnd, iter, i, ik, ig, ig1, ig2, ipol, npw, ngmax, jmax
   INTEGER :: nks1tot, nks2tot, nks1, nks2
-  INTEGER :: iunpun_sigma(4), ios(0:4), done(nbnd)
+  INTEGER :: iunpun_sigma(4), ios(0:4), maxpos(2)
   CHARACTER(len=256) :: nomefile
-  REAL(dp):: pscur, psmax, psr(nbnd)
+  REAL(dp):: pscur, psmax, psr(nbnd,nbnd)
+  LOGICAL :: mask(nbnd,nbnd)
   COMPLEX(dp), ALLOCATABLE :: psi(:,:), spsi(:,:), ps(:,:)
   INTEGER, ALLOCATABLE :: work(:), igg(:)
   INTEGER, ALLOCATABLE :: closest_band(:,:)! index for band ordering
@@ -279,58 +282,41 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
         !
         ! ps(ibnd,jbnd) = <S\psi_{k-1,ibnd} | \psi_{k,jbnd}>
         !
-        ! assign bands on the basis of the relative overlap
-        ! simple cases first: large or very small overlap
+        ! assign bands on the basis of the relative overlap square modulus
         !
         closest_band(:,ik) = -1
-        done(:) =0
-        !ndone = 0
-        !nlost = 0
-        DO ibnd=1,nbnd
-           !
-           psr(:) = real(ps(ibnd,:))**2+aimag(ps(ibnd,:))**2
-           psmax = MAXVAL( psr )
-           !
-           IF ( psmax > 0.75 ) THEN
-              ! simple case: large overlap with one specific band
-              closest_band(ibnd,ik) = MAXLOC( psr, 1 )
-              ! record that this band at ik has been linked to a band at ik-1 
-              done( closest_band(ibnd,ik) ) = 1
-              ! ndone = ndone + 1
-              !
-        !   ELSE IF ( psmax < 0.05 ) THEN
-        !      ! simple case: negligible overlap with all bands
-        !      closest_band(ibnd,ik) = 0
-        !      nlost = nlost + 1
-              !
-           END IF
-        END DO
-        !  
-        ! assign remaining bands so as to maximise overlap
+        psr(:,:) = DBLE(ps*DCONJG(ps)) ! square modulus of overlap
+        
+        ! Set-up a mask that is .true. only for bands that are less than 0.5 eV apart
+        DO ibnd = 1,nbnd
+        DO jbnd = 1,nbnd
+          mask(ibnd,jbnd) = ABS(et(jbnd,ik)-et(ibnd,ik-1))<0.5/rytoev
+        ENDDO
+        ENDDO
         !
-        DO ibnd=1,nbnd
-           !
-           ! for unassigned bands ...
-           !
-           IF ( closest_band(ibnd,ik) == -1 ) THEN
-              psmax = 0.0_dp
-              jmax  = 0
-              DO jbnd = 1, nbnd
-                 !
-                 ! check if this band was already assigne ...
-                 !
-                 IF ( done(jbnd) > 0 ) CYCLE
-                 pscur = real(ps(ibnd,jbnd))**2+aimag(ps(ibnd,jbnd))**2
-                 IF ( pscur > psmax ) THEN
-                    psmax = pscur
-                    jmax = jbnd
-                 END IF
-              END DO
-              closest_band(ibnd,ik) = jmax
-              done(jmax) = 1
-           END IF
+        DO iter=1,nbnd
+          maxpos = MAXLOC(psr, MASK=mask) ! find the maximum of all overlaps
+          ibnd = maxpos(1) 
+          jbnd = maxpos(2)
+          !WRITE(*, '(3i3,f12.6)') iter, ibnd, jbnd, psr(ibnd,jbnd)
+          IF(ibnd==0 .or. jbnd==0) CALL errore("overlap", "mask has killed me", 2)
+          closest_band(jbnd,ik) = ibnd ! wfvc closer to jbnd at ik was iband at ik-1
+
+          IF(ABS(et(jbnd,ik)-et(ibnd,ik-1))>0.1/rytoev) THEN
+             WRITE(*,'(7x, "Overlap warning: bands", i3, " and", i3, '&
+                         //'" are very far away! (ik, e1, e2)", i4, 2f12.6)') &
+                   jbnd, ibnd, ik, et(jbnd,ik)*rytoev,et(ibnd,ik-1)*rytoev
+             
+          ENDIF
+          ! Set the entire line and entire row of overlap matrix to -1:
+          !  The line, because I have found where bands jbnd,(ik-1) has gone
+          !  The row, because I have found where band ibnd,ik comes from
+          psr(:,jbnd) = -1._dp 
+          psr(ibnd,:) = -1._dp
         END DO
-     ENDIF
+        !
+        IF(ANY(psr/=-1._dp)) CALL errore("overlap", "Something went wrong", 1)
+    ENDIF
      !
      IF ( ik < nks2 .AND. .NOT. no_overlap ) THEN
         !
@@ -364,16 +350,14 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
      CALL punch_plottable_bands ( filband, nks1tot, nks2tot, nkstot, nbnd, &
                                   xk, et_ )
      !
-     DO ik=nks1tot,nks2tot
-        IF (ik == nks1) THEN
-           WRITE (iunpun, '(" &plot nbnd=",i4,", nks=",i6," /")') &
+     WRITE (iunpun, '(" &plot nbnd=",i4,", nks=",i6," /")') &
              nbnd, nks2tot-nks1tot+1
-           DO ipol=1,4
-              IF (lsigma(ipol)) WRITE(iunpun_sigma(ipol), &
-                            '(" &plot nbnd=",i4,", nks=",i6," /")') &
-                             nbnd, nks2tot-nks1tot+1
-           ENDDO
-        ENDIF
+     DO ipol=1,4
+        IF (lsigma(ipol)) WRITE(iunpun_sigma(ipol), &
+                         '(" &plot nbnd=",i4,", nks=",i6," /")') &
+                          nbnd, nks2tot-nks1tot+1
+     ENDDO
+     DO ik=nks1tot,nks2tot
         WRITE (iunpun, '(10x,3f10.6)') xk(1,ik),xk(2,ik),xk(3,ik)
         WRITE (iunpun, '(10f9.3)') (et_(ibnd, ik), ibnd = 1, nbnd)
         DO ipol=1,4

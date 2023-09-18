@@ -124,6 +124,11 @@ Selects what to save in filplot:
 
    21 = all-electron charge density (valence+core).
         For PAW calculations only; requires a very dense real-space grid.
+
+   22 = kinetic energy density (for meta-GGA and XDM only)
+
+  123 = DORI: density overlap regions indicator
+        ("doi: 10.1021/ct500490b") Implemented by D. Yang &amp; Q.Liu
          </pre></blockquote>
 </ul>      
       
@@ -241,6 +246,22 @@ for LSDA case only: plot the contribution to ILDOS of
                </pre></blockquote>
 </ul>      
       
+
+      <ul>
+<li> <em>Variable: </em><big><b>spin_component</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 0
+               </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+0 = total density (default value),
+1 = spin up density,
+2 = spin down density.
+               </pre></blockquote>
+</ul>      
+      
 }
 
 
@@ -289,7 +310,7 @@ help emax -helpfmt helpdoc -helptext {
 <blockquote><pre>
 upper boundary of energy grid (in eV).
 
-If not specified, LDOS is computed just for energy "emin"
+Defaults to Fermi energy.
                </pre></blockquote>
 </ul>      
       
@@ -346,6 +367,29 @@ broadening of energy levels for LDOS (in eV).
 
 Defaults to broadening degauss specified for electronic smearing
 in pw.x calculation.
+               </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help use_gauss_ldos -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>use_gauss_ldos</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+               </li>
+<br><li> <em>Status: </em> OPTIONAL
+               </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true., gaussian broadening (ngauss=0) is used for LDOS calculation.
+
+Defaults .false., in which case the broadening scheme
+of the pw.x calculation will be used.
                </pre></blockquote>
 </ul>      
       
