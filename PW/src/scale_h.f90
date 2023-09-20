@@ -29,6 +29,7 @@ SUBROUTINE scale_h
   USE rism_module,    ONLY : lrism, rism_reinit3d
   USE mp,             ONLY : mp_max
   USE mp_bands,       ONLY : intra_bgrp_comm
+  USE vloc_mod,       ONLY : scale_tab_vloc
   !
   IMPLICIT NONE
   !
@@ -87,10 +88,10 @@ SUBROUTINE scale_h
   ! scale the non-local pseudopotential tables
   !
   call scale_uspp_data( omega_old/omega )
-
   !
   ! recalculate the local part of the pseudopotential
   !
+  CALL scale_tab_vloc( omega_old/omega )
   CALL init_vloc( )
   !
   ! for hybrid functionals
