@@ -21,7 +21,7 @@ SUBROUTINE data_structure( gamma_only )
   USE mp_bands,   ONLY : nproc_bgrp, intra_bgrp_comm, nyfft, ntask_groups
   USE mp_pools,   ONLY : inter_pool_comm
   USE fft_base,   ONLY : dfftp, dffts, fft_base_info, smap
-  USE fft_types,  ONLY : fft_type_init, dfft_a2a_comp
+  USE fft_types,  ONLY : fft_type_init
   USE cell_base,  ONLY : at, bg, tpiba
   USE klist,      ONLY : xk, nks
   USE gvect,      ONLY : gcutm, gvect_init
@@ -100,7 +100,7 @@ SUBROUTINE data_structure( gamma_only )
   CALL gvecs_init( ngs_, intra_bgrp_comm )
   !
 #if defined(__ROCBLAS)
-  CALL rocblas_a2a_set(dfft_a2a_comp)
+  CALL rocblas_a2a_set(dffts%a2a_comp)
 #endif
 
 END SUBROUTINE data_structure

@@ -349,7 +349,7 @@ CONTAINS
 
       TYPE(C_PTR) :: stream
 
-      CALL hipcheck(hipEventDestroy(stream))
+      CALL hipcheck(hipStreamDestroy(stream))
 
   END SUBROUTINE myStreamDestroy
 
