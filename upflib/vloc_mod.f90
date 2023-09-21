@@ -174,7 +174,7 @@ CONTAINS
   !! the Fourier transform of the local potential (short-range only)
   !
   REAL(DP) :: gx, px, ux, vx, wx
-  ! the modulus of g for a given shell
+  ! gx: the modulus of g for a given shell
   ! variables used for interpolation
   INTEGER :: igl, i0, i1, i2, i3
   ! counters
@@ -282,32 +282,73 @@ CONTAINS
   END IF
   !
   END SUBROUTINE vloc_of_g
-!----------------------------------------------------------------------
-SUBROUTINE dvloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
-                       is_coulomb, modified_coulomb, omega, dvloc )
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE interp_dvloc( nt, ngl, igl0, gl, tpiba2, dvlocg )
+  !--------------------------------------------------------------------------
+  !! Calculates the Fourier transform of \(dV_\text{loc}/dG\).
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: nt
+  !! input: atomic type
+  INTEGER :: ngl
+  !! input: the number of g shell
+  INTEGER :: igl0
+  !! input: indes of first nonzero G
+  REAL(dp), INTENT(IN) :: gl(ngl)
+  !! input: the number of G shells
+  REAL(dp), INTENT(IN) :: tpiba2
+  !! input: 2 times pi / alat
+  REAL(dp), INTENT(OUT) :: dvlocg(ngl)
+  !! Derivative dVloc/dG^2 of Fourier transform Vloc(G) 
+  !
+  ! ... local variables
+  !
+  REAL(dp) :: gx, px, ux, vx, wx
+  ! gx: the modulus of g for a given shell
+  ! variables used for interpolation
+  INTEGER :: igl, i0, i1, i2, i3
+  ! counters
+  !
+  !$acc data present_or_copyin(gl) present_or_copyout(dvlocg)
+  !$acc parallel loop
+  DO igl = igl0, ngl
+     gx = SQRT( gl(igl) * tpiba2 )
+     px = gx / dq - int (gx/dq)
+     ux = 1.d0 - px
+     vx = 2.d0 - px
+     wx = 3.d0 - px
+     i0 = INT(gx/dq) + 1
+     i1 = i0 + 1
+     i2 = i0 + 2
+     i3 = i0 + 3
+     dvlocg(igl) = (- tab_vloc(i0, nt) * (ux*vx + vx*wx + ux*wx) / 6.0_dp &
+                    + tab_vloc(i1, nt) * (wx*vx - px*wx - px*vx) / 2.0_dp &
+                    - tab_vloc(i2, nt) * (wx*ux - px*wx - px*ux) / 2.0_dp &
+                    + tab_vloc(i3, nt) * (ux*vx - px*ux - px*vx) / 6.0_dp ) / dq
+     ! DV(g^2)/Dg^2 = (DV(g)/Dg)/2g
+     dvlocg(igl) = dvlocg(igl) / (2.0_dp*gx) 
+  ENDDO
+  !$acc end data
+  !
+  END SUBROUTINE interp_dvloc
+
+  !----------------------------------------------------------------------
+  SUBROUTINE dvloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, &
+         dvloc )
   !----------------------------------------------------------------------
   !! This routine computes:
   !! \[ \text{dvloc} = D\text{Vloc}(g^2)/Dg^2 = (1/2g)\ D\text{Vloc}(g)/Dg
   !! \]
   !
+  USE uspp_param, ONLY : upf
+  INTEGER, INTENT(IN) :: nt
+  !! index of pseudopotential type
   INTEGER, INTENT(IN) :: ngl
   !! the number of shell of G vectors
-  INTEGER, INTENT(IN) :: mesh
-  !! max number of mesh points
-  INTEGER, INTENT(IN) :: msh
-  !! number of mesh points for radial integration
-  LOGICAL, INTENT(IN) :: is_coulomb
-  !! for pure Coulomb pseudopotentials
   LOGICAL, INTENT(IN) :: modified_coulomb
   !! for ESM and 2D calculations
-  REAL(DP), INTENT(IN) :: zp
-  !! valence pseudocharge
-  REAL(DP), INTENT(IN) :: rab(mesh)
-  !! the derivative of the radial grid
-  REAL(DP), INTENT(IN) :: r(mesh)
-  !! the radial grid
-  REAL(DP), INTENT(IN) :: vloc_at(mesh)
-  !! the pseudo on the radial grid 
   REAL(DP), INTENT(IN) :: tpiba2
   !! 2 pi / alat
   REAL(DP), INTENT(IN) :: omega
@@ -319,13 +360,11 @@ SUBROUTINE dvloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
   !
   ! ... local variables
   !
-  REAL(DP) :: vlcp, g2a, gx, vlcp_0, vlcp_1
-  REAL(DP), ALLOCATABLE :: aux(:,:), aux1(:)
-  INTEGER :: i, igl, igl0
+  REAL(DP) :: g2a
+  INTEGER :: igl, igl0
   ! counter on erf functions or gaussians
   ! counter on g shells vectors
   ! first shell with g != 0
-  REAL(DP), PARAMETER :: r12=1.0d0/3.0d0 
   !
   !$acc data present( dvloc, gl )
   !
@@ -339,89 +378,29 @@ SUBROUTINE dvloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
      igl0 = 1
   ENDIF
   !
-  IF ( is_coulomb ) THEN
+  IF ( upf(nt)%tcoulombp ) THEN
      !$acc kernels
-     dvloc(igl0:ngl) = fpi*zp*e2 / omega / (tpiba2*gl(igl0:ngl))**2
+     dvloc(igl0:ngl) = fpi*upf(nt)%zp*e2 / omega / (tpiba2*gl(igl0:ngl))**2
      !$acc end kernels
      RETURN
   END IF
   !
   ! Pseudopotentials in numerical form (Vloc contains the local part)
-  ! In order to perform the Fourier transform, a term erf(r)/r is
-  ! subtracted in real space and added again in G space
   !
-  ALLOCATE( aux1(mesh) )
+  CALL interp_dvloc( nt, ngl, igl0, gl, tpiba2, dvloc )
   !
-  ! This is the part of the integrand function
-  ! indipendent of |G| in real space
-  !
-  ALLOCATE( aux(mesh,ngl) )
-  !
-  !$acc data copyin(r,rab) create(aux1,aux)
-  !
-  !$acc parallel loop copyin(vloc_at)
-  DO i = 1, msh
-     aux1(i) = r(i)*vloc_at(i) + zp*e2*ERF(r(i))
-  ENDDO
-  !
-#if defined(_OPENACC)
-!$acc parallel loop gang present(aux,aux1,rab,r,dvloc)
-#else
-!$omp parallel private( gx, vlcp, vlcp_1, vlcp_0, g2a )
-!$omp do
-#endif
-  DO igl = igl0, ngl
-     !
-     gx = SQRT(gl(igl)*tpiba2)
-     !
-     !    and here we perform the integral, after multiplying for the |G|
-     !    dependent  part
-     !
-     ! DV(g)/Dg = Integral of r (Dj_0(gr)/Dg) V(r) dr
-     !
-     !$acc loop seq
-     DO i = 1, msh
-       aux(i,igl) = aux1(i)*(r(i)*COS(gx*r(i))/gx - SIN(gx*r(i))/gx**2)
-     ENDDO
-     !
-     !----Simpson int.---
-     vlcp_0 = 0.0d0    
-     !$acc loop seq reduction(+:vlcp_0)
-     DO i = 2, msh-1,  2
-       vlcp_0 = vlcp_0 + ( aux(i-1,igl)*rab(i-1) + 4.0d0*aux(i,igl)*rab(i) + &
-                           aux(i+1,igl)*rab(i+1) )*r12
-     ENDDO
-     !------
-     vlcp_1 = vlcp_0 * fpi / omega / 2.0d0 / gx
-     !
-     ! DV(g^2)/Dg^2 = (DV(g)/Dg)/2g
-     !vlcp = fpi / omega / 2.0d0 / gx * vlcp
-     !
-     ! for ESM stress
-     ! In ESM, vloc and dvloc have only short term.
-     IF ( .NOT. modified_coulomb ) THEN
+  ! In ESM, vloc and dvloc have only short term.
+  IF ( .NOT. modified_coulomb ) THEN
+  !$acc parallel loop
+     DO igl = igl0, ngl
         ! subtract the long-range term
         ! 2D cutoff: do not re-add LR part here re-added later in stres_loc)
         g2a = gl(igl) * tpiba2 / 4.d0
-        vlcp = vlcp_1 + fpi / omega * zp * e2 * EXP(-g2a) * (g2a + 1.d0) / &
-                          (gl(igl)*tpiba2)**2
-     ELSE
-        vlcp = vlcp_1
-     ENDIF
-     dvloc(igl) = vlcp
-  ENDDO
-#if !defined(_OPENACC)
-!$omp end do nowait
-!$omp end parallel
-#else
-!$acc end data
-!$acc end data
-#endif
-  !
-  DEALLOCATE( aux )
-  DEALLOCATE( aux1 )
-  !
-  RETURN
+        dvloc(igl) = dvloc(igl)  + fpi/omega * upf(nt)%zp * e2 * EXP(-g2a) * &
+             (g2a + 1.d0) / (gl(igl)*tpiba2)**2
+     ENDDO
+  ENDIF
+  !$acc end data
   !
 END SUBROUTINE dvloc_of_g
 !

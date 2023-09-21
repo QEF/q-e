@@ -1,4 +1,4 @@
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -93,9 +93,7 @@ SUBROUTINE stres_loc( sigmaloc )
         !
         ! normal case: dvloc contains dV_loc(G)/dG
         !
-        CALL dvloc_of_g( rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r, &
-                         upf(nt)%vloc(:), upf(nt)%zp, tpiba2, ngl, gl, &
-                         upf(nt)%tcoulombp, modified_coulomb, omega, dvloc )
+        CALL dvloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, dvloc )
         !
      ENDIF
      ! ... no G=0 contribution
