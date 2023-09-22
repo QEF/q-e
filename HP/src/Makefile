@@ -55,7 +55,6 @@ hp_write_dnsq.o
 
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
-PHOBJS = ../../PHonon/PH/libph.a
 QEMODS = $(BASEMODS)
 
 TLDEPS= hplibs
@@ -66,7 +65,7 @@ libs-hp : libhp.a
 
 hp.x : hp_main.o libhp.a $(PWOBJS) $(PHOBJS) $(LRMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ hp_main.o libhp.a \
-		$(LRMODS) $(PWOBJS) $(PHOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+		$(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../HP/src/hp.x . )
 
 tldeps :

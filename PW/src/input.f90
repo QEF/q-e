@@ -1949,10 +1949,6 @@ SUBROUTINE dftu_iosys ( ntyp, noncolin )
   lda_plus_u_      = lda_plus_u
   lda_plus_u_kind_ = lda_plus_u_kind
   !
-  IF ( lda_plus_u .AND. (lda_plus_u_kind==0 .OR. lda_plus_u_kind==2) .AND. noncolin ) THEN
-     CALL errore('iosys', 'simplified DFT+U(+V) is not implemented with &
-          &noncol. magnetism, use DFT+U+J', 1)
-  ENDIF
   !
   Hubbard_U_(1:ntyp)          = hubbard_u(1:ntyp) / rytoev
   Hubbard_J_(1:3,1:ntyp)      = hubbard_j(1:3,1:ntyp) / rytoev

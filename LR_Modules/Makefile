@@ -15,11 +15,13 @@ apply_dpot_mod.o \
 addusldos.o \
 adddvepsi_us.o \
 addusddenseq.o \
+apply_trev.o \
 cft_wave.o \
 cgsolve_all.o \
 ccgsolve_all.o \
 cg_psi.o \
 ccg_psi.o \
+c_bands_ph.o \
 ch_psi_all.o \
 ch_psi_all_complex.o \
 Coul_cut_2D_ph.o \
@@ -67,6 +69,7 @@ lanczos_nonhermitian.o \
 lanczos_pseudohermitian_c.o \
 lanczos_nonhermitian_c.o \
 response_kernels.o \
+non_scf_ph.o \
 efermi_shift.o
 
 TLDEPS=mods pwlibs

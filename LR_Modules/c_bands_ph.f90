@@ -34,7 +34,6 @@ SUBROUTINE c_bands_nscf_ph( )
   USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now
   USE noncollin_module,     ONLY : noncolin, npol, domag
-  USE save_ph,              ONLY : tmp_dir_save
   USE io_files,             ONLY : tmp_dir, prefix
   USE uspp_init,            ONLY : init_us_2
   USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d
