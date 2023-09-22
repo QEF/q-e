@@ -113,6 +113,7 @@ CONTAINS
       !----------------------------------------------------------------------
       !
       USE autopilot, ONLY : card_autopilot
+      USE upf_utils, ONLY : capital
       !
       IMPLICIT NONE
       !
@@ -121,7 +122,6 @@ CONTAINS
       CHARACTER(len=2)           :: prog   ! calling program ( PW, CP, WA )
       CHARACTER(len=256)         :: input_line
       CHARACTER(len=80)          :: card
-      CHARACTER(len=1), EXTERNAL :: capital
       LOGICAL                    :: tend
       INTEGER                    :: i
       !
@@ -290,7 +290,7 @@ CONTAINS
       !
       CHARACTER(len=256) :: input_line
       INTEGER            :: is, ip, ierr
-      CHARACTER(len=4)   :: lb_pos
+      CHARACTER(len=6)   :: lb_pos
       CHARACTER(len=256) :: psfile
       !
       !
@@ -373,7 +373,7 @@ CONTAINS
       !
       CHARACTER(len=256) :: input_line
       CHARACTER(len=2)   :: prog
-      CHARACTER(len=4)   :: lb_pos
+      CHARACTER(len=6)   :: lb_pos
       INTEGER            :: ia, k, is, nfield, idx, rep_i
       LOGICAL, EXTERNAL  :: matches
       LOGICAL            :: tend
@@ -2180,6 +2180,7 @@ CONTAINS
       !
       USE parameters,  ONLY : natx, sc_size
       USE constants,   ONLY : eps16
+      USE upf_utils,   ONLY : spdf_to_l
       !
       IMPLICIT NONE
       !
@@ -2199,7 +2200,6 @@ CONTAINS
       INTEGER, ALLOCATABLE :: counter_u(:), counter_j0(:), counter_j(:), counter_b(:), &
                               counter_e2(:), counter_e3(:), counter_v(:,:), ityp(:)
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
-      INTEGER, EXTERNAL :: spdf_to_l
       !
       ! Output variables
       REAL(DP) :: hu_u,  &   ! Hubbard U (on-site)

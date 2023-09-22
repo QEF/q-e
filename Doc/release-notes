@@ -1,3 +1,19 @@
+New in development version:
+  * Experimental support for pseudopotentials in PSML format
+
+Incompatible changes in development version:
+  * None known
+
+Fixed in development version:
+  * Incorrect PP_SEMILOCAL field written for old-style pseudopotentials.
+    May cause crashes (but not bad numbers). Reported by Jibiao Li.
+  * Wrong output from Libxc-based gga-exchange functionals (gga_x) due to
+    a bad multiplicative factor (v7.2 only, noticed by Peter Kraus).
+    The exchange+correlation ones (gga_xc) were not affected.
+  * The seed for random numbers was not set after the first run. As a result,
+    all subsequent runs used the same sequence of random numbers. Affects only
+    thermostats in Verlet dynamics for pw.x. Noticed by Han Hsu, NCU Taiwan.
+
 New in v.7.2:
   * Oxidation state constrained DFT [Ku and Sit, JCTC 15, 4781 (2019)]
   * Self-consistent calculation with a two-chemical potential approach
@@ -18,6 +34,8 @@ Incompatible changes in v.7.2:
   * None known
 
 Fixed in v.7.2:
+  * Mysterious MPI errors in "custom" parallel diagonalization, produced
+    on some MPI libraries by destruction of nonexistent communicators
   * v.7.1 of CP for GPU was not working for pseudopotentials with nonlinear 
     core correction
   * in v.7.0 and 7.1 of pw.x the calculation of forces under a macroscopic

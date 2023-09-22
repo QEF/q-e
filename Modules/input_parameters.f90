@@ -1758,7 +1758,7 @@ MODULE input_parameters
 !
 !    ATOMIC_SPECIES
 !
-        CHARACTER(len=3)  :: atom_label(nsx) = 'XX'
+        CHARACTER(len=6)  :: atom_label(nsx) = 'XX'
         !! label of the atomic species being read
         CHARACTER(len=80) :: atom_pfile(nsx) = 'YY'
         !! pseudopotential file name

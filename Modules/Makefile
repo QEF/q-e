@@ -44,6 +44,7 @@ io_global.o  \
 ions_base.o \
 kind.o \
 lmdif.o \
+makov_payne.o \
 mdiis.o \
 mm_dispersion.o \
 mp_bands.o \

@@ -295,7 +295,6 @@ subroutine phq_setup
 
   if (fildrho.ne.' '.and.ionode) call io_pattern (nat,fildrho,nirr,npert,u,xq,tmp_dir,+1)
 
-  if (start_irr < 0) call errore('phq_setup', 'wrong start_irr', 1)
   last_irr_eff=last_irr
   if (last_irr > nirr.or.last_irr<0) last_irr_eff=nirr
   !

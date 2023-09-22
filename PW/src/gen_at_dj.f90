@@ -16,7 +16,6 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
    USE kinds,       ONLY: DP
    USE io_global,   ONLY: stdout
    USE constants,   ONLY: tpi
-   USE atom,        ONLY: msh
    USE ions_base,   ONLY: nat, ntyp => nsp, ityp, tau
    USE cell_base,   ONLY: omega, at, bg, tpiba
    USE klist,       ONLY: xk, ngk, igk_k

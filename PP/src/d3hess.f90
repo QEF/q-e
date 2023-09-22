@@ -15,7 +15,7 @@ program d3hess
   USE mp_world,         ONLY: world_comm
   USE environment,      ONLY: environment_start, environment_end
   !
-  USE cell_base,        ONLY: alat, at
+  USE cell_base,        ONLY: alat, at, bg
   USE ions_base,        ONLY: nat, tau, ityp, atm
   USE funct,            ONLY: get_dft_short
   USE dftd3_api,        ONLY: dftd3_init, dftd3_set_functional, get_atomic_number, dftd3_pbc_dispersion
@@ -103,7 +103,12 @@ program d3hess
   ALLOCATE( xyz(3,nat), atnum(nat), force_d3(3,nat) )
   force_d3(:,:) = 0.0_DP
   latvecs(:,:)=at(:,:)*alat
-  xyz(:,:)=tau(:,:)*alat
+  ! xyz are atomic positions centered around r=0 (in bohr units)
+  xyz(:,:) = tau(:,:)
+  CALL cryst_to_cart( nat, xyz, bg, -1 ) 
+  xyz(:,:) = xyz(:,:) - NINT(xyz(:,:))
+  CALL cryst_to_cart( nat, xyz, at,  1 )
+  xyz(:,:) = xyz(:,:)*alat
   DO iat = 1, nat
      atnum(iat) = get_atomic_number(TRIM(atm(ityp(iat))))
   ENDDO

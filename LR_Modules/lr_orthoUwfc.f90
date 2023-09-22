@@ -113,8 +113,11 @@ SUBROUTINE lr_orthoUwfc (lflag)
      !
      ! Orthonormalize or normalize the atomic orbitals (if needed) 
      !
-     IF (orthogonalize_wfc) &
+     IF (orthogonalize_wfc) THEN
+        !$acc data copy(wfcatom, swfcatom)
         CALL ortho_swfc (npw, normalize_only, natomwfc, wfcatom, swfcatom, lflag)
+        !$acc end data
+     END IF
      !
      ! If lflag=.TRUE. copy the result from (orthonormalized) wfcatom 
      ! (which uses the offset oatwfc) to wfcU (which uses the offset offsetU),
@@ -155,8 +158,11 @@ SUBROUTINE lr_orthoUwfc (lflag)
         !
         ! Orthonormalize or normalize the atomic orbitals (if needed)
         !
-        IF (orthogonalize_wfc) &
+        IF (orthogonalize_wfc) THEN 
+           !$acc data copy(wfcatom, swfcatom)
            CALL ortho_swfc (npwq, normalize_only, natomwfc, wfcatom, swfcatom, lflag)
+           !$acc end data
+        END IF
         !
         ! If lflag=.TRUE. copy the result from (orthonormalized) wfcatom 
         ! (which uses the offset oatwfc) to wfcU (which uses the offset offsetU),

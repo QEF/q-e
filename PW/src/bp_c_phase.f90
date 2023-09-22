@@ -565,9 +565,7 @@ SUBROUTINE c_phase
                CALL using_evc(0)
                mat(:,:) = (0.d0, 0.d0)
                DO mb=1,nbnd
-                  IF ( .NOT. l_cal(mb) ) THEN
-                      mat(mb,mb)=(1.d0, 0.d0)
-                  ELSE
+                  IF ( l_cal(mb) ) THEN
                      aux(:) = (0.d0, 0.d0)
                      IF (kpar /= nppstr) THEN
                         DO ig=1,npw1
@@ -632,7 +630,6 @@ SUBROUTINE c_phase
                !
                call mp_sum( mat, intra_bgrp_comm )
                !
-
                DO nb=1,nbnd
 !$omp parallel &
 !$omp   shared ( nbnd, l_cal, nb, okvan, nkb,  nkbtonh, ityp, nh, nkbtona  ) &
@@ -689,7 +686,9 @@ SUBROUTINE c_phase
 !$omp end do
 !$omp end parallel   
                ENDDO
-
+               do nb=1,nbnd
+                  if ( .not. l_cal(nb) ) mat(nb,nb)=(1.d0, 0.d0)
+               end do
 !              --- Calculate matrix determinant ---
                CALL ZGETRF (nbnd,nbnd,mat,nbnd,ivpt,info)
                CALL errore('c_phase','error in factorization',abs(info))
@@ -716,8 +715,8 @@ SUBROUTINE c_phase
          zeta_mod= DBLE(CONJG(zeta)*zeta)
 !REC if zeta_mod=0 then angle is zero!
          if(zeta_mod.le.eps)then
-            phik(istring)=0d0
-            cphik(istring)=cmplx(1d0,0d0)
+            phik(istring)=0._DP
+            cphik(istring)=CMPLX(1._DP,0._DP,KIND=DP)
          endif
 
 !     --- End loop over orthogonal k-points ---

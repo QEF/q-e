@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,7 +12,6 @@ SUBROUTINE stres_cc( sigmaxcc )
   !! Core correction term of the stress.
   !
   USE kinds,                ONLY : DP
-  USE atom,                 ONLY : rgrid, msh
   USE uspp_param,           ONLY : upf
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : alat, omega, tpiba, tpiba2
@@ -88,11 +87,7 @@ SUBROUTINE stres_cc( sigmaxcc )
   DO nt = 1, ntyp
      IF ( upf(nt)%nlcc ) THEN
         !
-        !$acc data copyin(rgrid(nt:nt),upf(nt:nt))
-        !$acc data copyin(rgrid(nt)%r,rgrid(nt)%rab,upf(nt)%rho_atc)
-        
-        CALL drhoc( ngl, gl, omega, tpiba2, msh(nt), rgrid(nt)%r, &
-                    rgrid(nt)%rab, upf(nt)%rho_atc, rhocg )
+        CALL interp_rhc( nt, ngl, gl, tpiba2, rhocg )
         !
         ! ... diagonal term
         IF (gstart==2) THEN
@@ -109,9 +104,7 @@ SUBROUTINE stres_cc( sigmaxcc )
                                    strf(ng,nt)) * rhocg(igtongl(ng)) * fact
         ENDDO
         !
-        CALL deriv_drhoc( ngl, gl, omega, tpiba2, msh(nt), &
-                          rgrid(nt)%r, rgrid(nt)%rab, upf(nt)%rho_atc, &
-                          rhocg )
+        CALL interp_drhc( nt, ngl, gl, tpiba2, rhocg )
         !
         ! ... non diagonal term (g=0 contribution missing)
         !
@@ -129,9 +122,6 @@ SUBROUTINE stres_cc( sigmaxcc )
           sigma6 = sigma6 + sigma_rid * g(3,ng)*g(3,ng)
           !
         ENDDO
-        !
-        !$acc end data
-        !$acc end data
         !
      ENDIF
      !

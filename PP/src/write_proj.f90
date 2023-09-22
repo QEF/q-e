@@ -119,14 +119,13 @@ SUBROUTINE write_proj_file ( filproj, proj )
   USE gvect,     ONLY : gcutm 
   USE gvecs,     ONLY : dual
   USE gvecw,     ONLY : ecutwfc
-  USE projections, ONLY : nlmchi
+  USE projections, ONLY : nlmchi, compute_mj
   !
   IMPLICIT NONE
   CHARACTER (len=*), INTENT(in) :: filproj
   REAL(DP), INTENT(IN) :: proj(natomwfc,nbnd,nkstot)
   !
   CHARACTER(256) :: filename
-  REAL (DP), EXTERNAL :: compute_mj
   INTEGER :: is, ik, nwfc, ibnd, nk_, nksinit, nkslast, iunproj=33
   !
   IF ( TRIM(filproj) == ' ' ) RETURN

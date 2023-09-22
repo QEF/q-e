@@ -31,11 +31,11 @@ user_guide.pdf: user_guide.md pandoc_template.tex tp.tex
 autopilot_guide.pdf: autopilot_guide.md pandoc_template.tex tp.tex
 	$(shell sed -e '/[[_TOC_]]/d' -e 's/\$$`/$$/g' -e 's/`\$$/$$/g' $< | $(PANDOC) -N --toc --metadata title="CP's AUTOPILOT user guide" --metadata customtitlepage='tp' --metadata graphics --metadata geometry='top=3cm' --metadata geometry='left=3cm' --metadata geometry='right=3cm' --metadata geometry='bottom=3cm' --metadata hyperrefoptions='linktoc=all' ${PANDOC_PDF_ENGINE_CMD}=xelatex ${PANDOC_ADDITIONAL_DEF} -o $@ --template $(word 2,$^) )
 
-user_guide.html: user_guide.md
-	$(shell sed -e '/[[_TOC_]]/d' -e 's/\$$`/$$/g' -e 's/`\$$/$$/g' $< | $(PANDOC) -s --toc --metadata title="CP's user guide" --mathml -o $@ )
+user_guide.html: user_guide.md pandoc_template.html ../../Doc/quantum_espresso.png
+	$(shell sed -e '/[[_TOC_]]/d' -e 's/\$$`/$$/g' -e 's/`\$$/$$/g' $< | $(PANDOC) -s --toc --metadata title="CP's user guide (v.$(VERSION))" --metadata title_image='$(word 3,$^)' --mathml -o $@ --template $(word 2,$^) )
 
-autopilot_guide.html: autopilot_guide.md
-	$(shell sed -e '/[[_TOC_]]/d' -e 's/\$$`/$$/g' -e 's/`\$$/$$/g' $< | $(PANDOC) -s --toc --metadata title="CP's AUTOPILOT user guide" --mathml -o $@ )
+autopilot_guide.html: autopilot_guide.md pandoc_template.html ../../Doc/quantum_espresso.png
+	$(shell sed -e '/[[_TOC_]]/d' -e 's/\$$`/$$/g' -e 's/`\$$/$$/g' $< | $(PANDOC) -s --toc --metadata title="CP's AUTOPILOT user guide (v.$(VERSION))" --metadata title_image='$(word 3,$^)'  --mathml -o $@ --template $(word 2,$^) )
 
 clean:
 	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) $(USER_GUIDES) *~

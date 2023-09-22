@@ -58,7 +58,7 @@ SUBROUTINE stress( sigma )
   ! ... Auxiliary variables for Grimme-D3
   !
   INTEGER  :: atnum(1:nat)
-  REAL(DP) :: latvecs(3,3)
+  REAL(DP), ALLOCATABLE :: taupbc(:,:)
   REAL(DP), ALLOCATABLE :: force_d3(:,:)
   !
   WRITE( stdout, '(//5x,"Computing stress (Cartesian axis) and pressure"/)' )
@@ -137,13 +137,17 @@ SUBROUTINE stress( sigma )
     CALL start_clock('stres_dftd3')
     ALLOCATE( force_d3(3,nat) )
     force_d3( : , : ) = 0.0_DP
-    latvecs(:,:) = at(:,:)*alat
-    tau(:,:) = tau(:,:)*alat
+    ! taupbc are atomic positions in alat units, centered around r=0
+    ALLOCATE ( taupbc(3,nat) )
+    taupbc(:,:) = tau(:,:)
+    CALL cryst_to_cart( nat, taupbc, bg, -1 ) 
+    taupbc(:,:) = taupbc(:,:) - NINT(taupbc(:,:))
+    CALL cryst_to_cart( nat, taupbc, at,  1 ) 
     atnum(:) = get_atomic_number(atm(ityp(:)))
-    CALL dftd3_pbc_gdisp( dftd3, tau, atnum, latvecs, &
+    CALL dftd3_pbc_gdisp( dftd3, alat*taupbc, atnum, alat*at, &
                          force_d3, sigmad23 )
     sigmad23 = 2.d0*sigmad23
-    tau(:,:)=tau(:,:)/alat
+    DEALLOCATE( taupbc )
     DEALLOCATE( force_d3 )
     CALL stop_clock('stres_dftd3')
   END IF

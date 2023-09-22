@@ -9,7 +9,7 @@ Installation
 ============
 
 This version requires the nvfortran (previously PGI) compiler from the
-NVidia HPC SDK, v.19.10 or later (freely downloadable from NVidia). 
+NVidia HPC SDK, v.21.7 or later (freely downloadable from NVidia). 
 Earlier versions may or may not work and are no longer supported. 
 You are advised to use the most recent version of NVidia software you can find. 
 
@@ -23,9 +23,9 @@ must be present in `LD_LIBRARY_PATH`. A template for the configure command is:
 ```
 
 where `XX` is the location of the CUDA Toolkit (in HPC environments is 
-generally `$CUDA_HOME`), `YY` is the version of the cuda toolkit and `ZZ`
-is the compute capability of the card. You can get those numbers from
-command `nvaccelinfo`, if you have a properly configured HPC SDK:
+typically `$NVHPC_CUDA_HOME` or `$CUDA_HOME`), `YY` is the version of 
+the cuda toolkit and `ZZ` is the compute capability of the card. You can get 
+those numbers from command `nvaccelinfo`, if you have a properly configured HPC SDK:
 ```
 $ nvaccelinfo | grep -e 'Target' -e 'Driver'
 CUDA Driver Version:           11000

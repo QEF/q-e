@@ -442,7 +442,7 @@ MODULE input
      ! ... Electronic randomization
         
      SELECT CASE ( TRIM(startingwfc) )
-       CASE ('default','none')
+       CASE ('default','none','atomic')
          trane_ = .FALSE.
        CASE ('random')
          trane_ = .TRUE.

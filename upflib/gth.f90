@@ -518,31 +518,36 @@ subroutine deallocate_gth( lflag )
   !
 end subroutine deallocate_gth
 !-----------------------------------------------------------------------
-subroutine readgth (iunps, np, upf)
+subroutine readgth (psfile, np, upf, ierr)
   !-----------------------------------------------------------------------
   !
   USE upf_kinds,    ONLY: dp
+  USE upf_io,       ONLY: stdout
   USE upf_const,    ONLY: e2, tpi
   USE upf_params,   ONLY: lmaxx
+  USE upf_utils,    ONLY: l_to_spdf
   USE pseudo_types, ONLY: pseudo_upf
 
   implicit none
   !
   ! I/O
   TYPE (pseudo_upf) :: upf
-  integer :: iunps, np
+  character(LEN=*), intent(in) :: psfile
+  integer, intent(in) :: np
+  integer, intent(out):: ierr
   !
   ! Local variables
-  integer  :: ios, pspdat, pspcod, pspxc, lmax, lloc, mmax, ii, jj, ll, nn, nnonloc, &
-              nprl, os, ns, iv, jv
+  integer  :: iunps, ios, pspdat, pspcod, pspxc, lmax, lloc, mmax, &
+              ii, jj, ll, nn, nnonloc, nprl, os, ns, iv, jv
   real(dp) :: rcore, qcore, rc2, prefact, znucl, r2well, rloc, rrl, cc(4)
   character(len=256)            :: info
-  character(len=  1), parameter :: ch10=char(10), spdf(0:3) = ['S','P','D','F']
+  character(len=  1), parameter :: ch10=char(10)
   character(len=  2), external  :: atom_name
   integer,  allocatable         :: nproj(:)
   real(dp), allocatable         :: hij(:,:,:), kij(:,:,:)
   type(gth_parameters), pointer, dimension(:) :: gth_tmp_p
   !
+  ierr = 1
   os=0; if (associated(gth_p)) os=size(gth_p)
   ns=os+1; allocate(gth_tmp_p(ns))
   if (os>0) then
@@ -579,15 +584,22 @@ subroutine readgth (iunps, np, upf)
   allocate(upf%lchi(upf%nwfc))
   upf%lchi(:) = 0
 
+  open(newunit=iunps, file=psfile, form='formatted', status='old', iostat = ios)
+  if ( ios .ne. 0 ) go to 400
   read (iunps, '(a)', end=400, err=400, iostat=ios) info
   read (iunps, *, err=400) znucl, upf%zp, pspdat
-  if (upf%zp <= 0._dp .or. upf%zp > 100 ) call upf_error ('readgth', 'Wrong zp ', np)
+  if (upf%zp <= 0._dp .or. upf%zp > 100 ) then
+     write(stdout,'(5x,"readgth: Wrong zp ")')
+     return
+  end if
   upf%psd=atom_name ( NINT(znucl) )
   call gth_grid_for_rho(upf,znucl)
 
   read (iunps, *, err=400) pspcod,pspxc,lmax,lloc,mmax,r2well
-  IF ( pspcod /= 10 .AND. pspcod /= 12 ) &
-     call upf_error ('readgth', 'unknown/invalid pspcod:', pspcod )
+  IF ( pspcod /= 10 .AND. pspcod /= 12 ) then
+     write(stdout,'(5x,"readgth: unknown/invalid pspcod")')
+     return
+  end if
   IF ( pspcod == 12 ) THEN
      ! pseudo with NLCC
      upf%nlcc=.true.
@@ -617,7 +629,8 @@ subroutine readgth (iunps, np, upf)
   ELSE IF (pspxc == -101130) THEN ! PBE from libXC
      upf%dft = 'PBE'
   ELSE
-     call upf_error ('readgth', 'pspxc cod. cannot be understood', abs (np) )
+     write(stdout,'(5x,"readgth: unknown/invalid pspxc code")')
+     return
   ENDIF
   !
   cc(:)=0._dp
@@ -666,6 +679,7 @@ subroutine readgth (iunps, np, upf)
       upf%rho_atc(ii) = prefact * exp(-0.5_dp * upf%r(ii)**2 / rc2)
     enddo
   end if
+  close (unit=iunps)
   !
   allocate(upf%lll(upf%nbeta), upf%els_beta(upf%nbeta), upf%dion(upf%nbeta,upf%nbeta))
   allocate(upf%rcut(upf%nbeta), upf%rcutus(upf%nbeta), upf%kbeta(upf%nbeta))
@@ -680,7 +694,7 @@ subroutine readgth (iunps, np, upf)
       iv = iv+1
       gth_p(ns)%lll(iv)=ll
       gth_p(ns)%ipr(iv)=ii
-      upf%lll(iv)=ll; WRITE (upf%els_beta(iv), '(I1,A1)' ) ii, spdf(ll)
+      upf%lll(iv)=ll; WRITE (upf%els_beta(iv), '(I1,A1)' ) ii, l_to_spdf(ll)
       jloop: do jj=ii, nprl
         jv = iv+jj-ii
         upf%dion(iv,jv) = hij(ll,ii,jj)/e2
@@ -690,9 +704,11 @@ subroutine readgth (iunps, np, upf)
   enddo lloop
   !
   deallocate(hij,kij,nproj)
+  ierr = 0 
   return
   !
-400 call upf_error ('readgth', 'pseudo file is empty or wrong', abs (np) )
+400 write(stdout,'(5x,"readgth: pseudo file is empty or wrong")' )
+  !
 end subroutine readgth
 !*****************************************************************************************
 subroutine gth_grid_for_rho(upf,znucl)

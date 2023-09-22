@@ -89,7 +89,7 @@ esac
 unset FC ac_cv_prog_ac_ct_FC ac_cv_fc_compiler_gnu ac_cv_prog_fc_g
 
 if test "$use_parallel" -eq 0 ; then
-# serial case - use F90 if set
+# scalar case - use F90 if set
     	if test "$f90" = "" ; then
 	   mpif90="$try_f90"
 	else

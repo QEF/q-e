@@ -19,16 +19,15 @@ SUBROUTINE force_corr( forcescc )
   !
   USE kinds,                ONLY : DP
   USE constants,            ONLY : tpi
-  USE atom,                 ONLY : msh, rgrid
   USE uspp_param,           ONLY : upf
+  USE uspp_data,            ONLY : tab_rho, dq
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
-  USE cell_base,            ONLY : tpiba
+  USE cell_base,            ONLY : tpiba, omega
   USE fft_base,             ONLY : dfftp
   USE fft_rho,              ONLY : rho_r2g
   USE gvect,                ONLY : ngm, gstart, g, ngl, gl, igtongl
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vnew
-  USE upf_acc_interfaces,   ONLY : simpson
   USE control_flags,        ONLY : gamma_only
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
@@ -40,13 +39,13 @@ SUBROUTINE force_corr( forcescc )
   ! ... local variables
   !
   ! work space
-  REAL(DP), ALLOCATABLE :: rhocgnt(:), aux(:), vauxr(:)
+  REAL(DP), ALLOCATABLE :: rhocgnt(:), vauxr(:)
   COMPLEX(DP), ALLOCATABLE :: vauxg(:,:)
   ! temp factors
   REAL(DP) :: gx, arg, fact, forcesccx, forcesccy, forcesccz, &
-              rhocgnt_ig
+       ux, px, wx, vx
   ! counters
-  INTEGER :: ir, isup, isdw, ig, nt, na, ndm, msh_nt
+  INTEGER :: ir, isup, isdw, ig, nt, na, i0,i1,i2,i3
   !
   ! ... vnew is V_out - V_in, psic is the temp space
   !
@@ -60,58 +59,38 @@ SUBROUTINE force_corr( forcescc )
      vauxr(:) = (vnew%of_r(:,isup) + vnew%of_r(:,isdw)) * 0.5d0
   ENDIF
   !
-  ndm = MAXVAL( msh(1:ntyp) )
+  ALLOCATE( rhocgnt(ngl) )
   !
-  ALLOCATE( rhocgnt(ngl), aux(ndm) )
-  !
-  !$acc data copyin(tau,gl,ityp) create(rhocgnt,vauxg)
+  !$acc data copyin(tau,gl,ityp) create(rhocgnt,vauxg) present(tab_rho)
   !
   CALL rho_r2g( dfftp, vauxr, vauxg )
   !
   IF (gamma_only) THEN
-     fact = 2.d0
+     fact = 2.d0*omega
   ELSE
-     fact = 1.d0
+     fact = 1.d0*omega
   ENDIF
   !
   DO nt = 1, ntyp
      !
-     ! ... here we compute the G /= 0 term
-     !
-     msh_nt = msh(nt)
-     !
-     !$acc data copyin(rgrid(nt:nt),upf(nt:nt))
-     !$acc data copyin(rgrid(nt)%r,rgrid(nt)%rab,upf(nt)%rho_at)
-     !
-#if defined(_OPENACC)
-     !$acc parallel loop gang private(aux)
-#else
-     !$omp parallel do private(gx,ir,aux,rhocgnt_ig)
-#endif
+     !$acc parallel loop 
      DO ig = 1, ngl
         !
         gx = SQRT(gl(ig)) * tpiba
-        !
-        !$acc loop vector
-        DO ir = 1, msh_nt
-           IF (rgrid(nt)%r(ir) < 1.0d-8) THEN
-              aux(ir) = upf(nt)%rho_at(ir)
-           ELSE
-              aux(ir) = upf(nt)%rho_at(ir) * SIN(gx*rgrid(nt)%r(ir)) / (gx*rgrid(nt)%r(ir))
-           ENDIF
-        ENDDO
-        !
-#if defined(_OPENACC)
-        CALL simpson( msh_nt, aux(1:msh_nt), rgrid(nt)%rab(1), rhocgnt_ig )
-#else
-        CALL simpson( msh_nt, aux(1:msh_nt), rgrid(nt)%rab, rhocgnt_ig )
-#endif
-        rhocgnt(ig) = rhocgnt_ig
-        !
+        px = gx / dq - int (gx/dq)
+        ux = 1.d0 - px
+        vx = 2.d0 - px
+        wx = 3.d0 - px
+        i0 = INT(gx/dq) + 1
+        i1 = i0 + 1
+        i2 = i0 + 2
+        i3 = i0 + 3
+        rhocgnt (ig) = &
+                     tab_rho(i0, nt) * ux * vx * wx / 6.d0 + &
+                     tab_rho(i1, nt) * px * vx * wx / 2.d0 - &
+                     tab_rho(i2, nt) * px * ux * wx / 2.d0 + &
+                     tab_rho(i3, nt) * px * ux * vx / 6.d0
      ENDDO
-     !
-     !$acc end data
-     !$acc end data
      !
 #if defined(_OPENACC)
      !$acc parallel loop gang copy(forcescc)
@@ -148,7 +127,7 @@ SUBROUTINE force_corr( forcescc )
   !
   !$acc end data
   !
-  DEALLOCATE( rhocgnt, aux )
+  DEALLOCATE( rhocgnt )
   DEALLOCATE( vauxr, vauxg )
   !
   RETURN

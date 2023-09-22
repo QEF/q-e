@@ -99,7 +99,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
     DO is = 1, nspin0
       DO ir = 1, ngm
         sgn_is = DBLE(3-2*is)
-        rhogaux(ir,is) = ( rhog(ir,1) + CMPLX(sgn_is) * rhog(ir,nspin0) ) &
+        rhogaux(ir,is) = ( rhog(ir,1) + CMPLX(sgn_is,KIND=DP) * rhog(ir,nspin0) ) &
                          * (0.5_DP,0._DP)
       ENDDO
     ENDDO

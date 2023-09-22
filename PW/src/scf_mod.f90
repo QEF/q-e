@@ -4,8 +4,6 @@
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
-!--------------------------------------------------------------------------
 MODULE scf
   !--------------------------------------------------------------------------
   !! This module contains variables and auxiliary routines needed for
@@ -219,12 +217,18 @@ CONTAINS
    TYPE(mix_type) :: rho
    !
    ALLOCATE( rho%of_g(ngms,nspin) )
+  !$acc enter data copyin(rho) create(rho%of_g(1:ngms, 1:nspin))
    !
+  !$acc kernels 
    rho%of_g = 0._dp
+  !$acc end kernels
    !
    IF (xclib_dft_is('meta') .OR. lxdm) THEN
       ALLOCATE( rho%kin_g(ngms,nspin) )
+     !$acc enter data create(rho%kin_g(1:ngms, 1:nspin))
+     !$acc kernels
       rho%kin_g = 0._dp
+     !$acc end kernels
    ENDIF
    !
    lda_plus_u_co = lda_plus_u .AND. .NOT. (nspin == 4 ) .AND. .NOT. ( lda_plus_u_kind == 2)
@@ -277,8 +281,16 @@ CONTAINS
    !
    TYPE(mix_type) :: rho
    !
-   IF (ALLOCATED(rho%of_g) )  DEALLOCATE( rho%of_g  )
-   IF (ALLOCATED(rho%kin_g))  DEALLOCATE( rho%kin_g )
+   
+   IF (ALLOCATED(rho%of_g) )  THEN
+    !$acc exit data finalize delete(rho%of_g) 
+     DEALLOCATE( rho%of_g  )
+   END IF 
+   IF (ALLOCATED(rho%kin_g))  THEN
+    !$acc exit data finalize delete(rho%kin_g) 
+     DEALLOCATE( rho%kin_g )
+   END IF
+  !$acc exit data finalize delete(rho)  
    IF (ALLOCATED(rho%ns)   )  DEALLOCATE( rho%ns    )
    IF (ALLOCATED(rho%nsb)  )  DEALLOCATE( rho%nsb   )
    IF (ALLOCATED(rho%ns_nc))  DEALLOCATE( rho%ns_nc )
@@ -302,10 +314,20 @@ CONTAINS
    !
    REAL(DP) :: e_dipole
    !
-   rho_m%of_g(1:ngms,:) = rho_s%of_g(1:ngms,:)
+  !$acc enter data present_or_copyin(rho_s, rho_s%of_g) 
+  !$acc kernels present(rho_m, rho_m%of_g, rho_s%of_g) 
+   rho_m%of_g(1:ngms,1:nspin) = rho_s%of_g(1:ngms,1:nspin)
+  !$acc end kernels 
    IF (sic) rho_m%pol_g(1:ngms,:) = rho_s%pol_g(1:ngms,:)
    !
-   IF (xclib_dft_is('meta') .OR. lxdm) rho_m%kin_g(1:ngms,:) = rho_s%kin_g(1:ngms,:)
+   IF (xclib_dft_is('meta') .OR. lxdm) THEN
+    !$acc enter data present_or_copyin(rho_s%kin_g)
+    !$acc kernels present(rho_m%kin_g, rho_s%kin_g) 
+     rho_m%kin_g(1:ngms,:) = rho_s%kin_g(1:ngms,:)
+    !$acc end kernels
+    !$acc exit data delete(rho_s%kin_g)
+   END IF 
+  !$acc exit data delete(rho_s, rho_s%of_g)  
    IF (lda_plus_u_nc)  rho_m%ns_nc  = rho_s%ns_nc
    IF (lda_plus_u_co)  rho_m%ns     = rho_s%ns
    IF (lda_plus_u_cob) rho_m%nsb    = rho_s%nsb
@@ -334,8 +356,12 @@ CONTAINS
    !
    INTEGER :: is
    !   
+  !$acc enter data present_or_copyin(rho_s) present_or_copyin(rho_s%of_g, rho_s%of_r)    
+  !$acc kernels 
    rho_s%of_g(1:ngms,:) = rho_m%of_g(1:ngms,:)
+  !$acc end kernels 
    CALL rho_g2r( dfftp, rho_s%of_g, rho_s%of_r )
+  !$acc exit data copyout(rho_s%of_r, rho_s%of_g)  
    !
    IF (sic) THEN
       rho_s%pol_g(1:ngms,:) = rho_m%pol_g(1:ngms,:)
@@ -343,10 +369,15 @@ CONTAINS
    END IF
    !
    IF ( xclib_dft_is('meta') .OR. lxdm ) THEN
+     !$acc enter data present_or_copyin(rho_s%kin_g, rho_s%kin_r)
+     !$acc kernels
       rho_s%kin_g(1:ngms,:) = rho_m%kin_g(:,:)
+     !$acc end kernels
       CALL rho_g2r( dfftp, rho_s%kin_g, rho_s%kin_r )
+     !$acc exit data copyout(rho_s%kin_r, rho_s%kin_g) 
    ENDIF
    !
+  !$acc exit data delete(rho_s) 
    IF (lda_plus_u_nc)  rho_s%ns_nc(:,:,:,:) = rho_m%ns_nc(:,:,:,:)
    IF (lda_plus_u_co)  rho_s%ns(:,:,:,:)    = rho_m%ns(:,:,:,:)
    IF (lda_plus_u_cob) rho_s%nsb(:,:,:,:)   = rho_m%nsb(:,:,:,:)
@@ -405,9 +436,18 @@ CONTAINS
   TYPE(mix_type), INTENT(IN)    :: X
   TYPE(mix_type), INTENT(INOUT) :: Y
   !
+  integer :: calls = 0 
+  calls = calls + 1 
+ !$acc data  present(X,Y)
+ !$acc kernels present(X%of_g, Y%of_g) 
   Y%of_g = Y%of_g  + A * X%of_g
+ !$acc end kernels 
   !
-  IF (xclib_dft_is('meta') .OR. lxdm) Y%kin_g     = Y%kin_g     + A * X%kin_g
+  IF (xclib_dft_is('meta') .OR. lxdm) THEN 
+   !$acc kernels present(X%kin_g, Y%kin_g)
+    Y%kin_g     = Y%kin_g     + A * X%kin_g
+   !$acc end kernels
+  END IF 
   IF (lda_plus_u_nc)           Y%ns_nc     = Y%ns_nc     + A * X%ns_nc
   IF (lda_plus_u_co)           Y%ns        = Y%ns        + A * X%ns
   IF (lda_plus_u_cob)          Y%nsb       = Y%nsb       + A * X%nsb
@@ -415,6 +455,7 @@ CONTAINS
   IF (dipfield)                Y%el_dipole = Y%el_dipole + A * X%el_dipole
   IF (sic)                     Y%pol_g     = Y%pol_g     + A * X%pol_g
   !
+ !$acc end data
   RETURN
   !
  END SUBROUTINE mix_type_AXPY
@@ -432,9 +473,16 @@ CONTAINS
   TYPE(mix_type), INTENT(IN)    :: X
   TYPE(mix_type), INTENT(INOUT) :: Y
   !
+ !$acc data present_or_copyin(Y,X)
+ !$acc kernels  present_or_copyin(X%of_g, Y%of_g) 
   Y%of_g  = X%of_g
+ !$acc end kernels
   !
-  IF (xclib_dft_is('meta') .OR. lxdm) Y%kin_g     = X%kin_g
+  IF (xclib_dft_is('meta') .OR. lxdm) THEN
+   !$acc kernels present_or_copyin(X%kin_g, Y%kin_g) 
+    Y%kin_g     = X%kin_g
+   !$acc end kernels
+  END IF
   IF (lda_plus_u_nc)           Y%ns_nc     = X%ns_nc
   IF (lda_plus_u_co)           Y%ns        = X%ns
   IF (lda_plus_u_cob)          Y%nsb       = X%nsb
@@ -442,6 +490,7 @@ CONTAINS
   IF (dipfield)                Y%el_dipole = X%el_dipole
   IF (sic)                     Y%pol_g     = X%pol_g
   !
+ !$acc end data
   RETURN
   !
  END SUBROUTINE mix_type_COPY
@@ -454,15 +503,22 @@ CONTAINS
   !! NB: A is a REAL(DP) number
   !
   USE kinds, ONLY : DP
-  !
   IMPLICIT NONE
   !
   REAL(DP),       INTENT(IN)    :: A
   TYPE(mix_type), INTENT(INOUT) :: X
   !
-  X%of_g(:,:) = A * X%of_g(:,:)
   !
-  IF (xclib_dft_is('meta') .OR. lxdm) X%kin_g     = A * X%kin_g
+ !$acc data present_or_copyin(X)
+ !$acc kernels present_or_copyin(X%of_g) 
+  X%of_g(:,:) = A * X%of_g(:,:)
+ !$acc end kernels
+  !
+  IF (xclib_dft_is('meta') .OR. lxdm) THEN
+   !$acc kernels present_or_copyin(X%kin_g)
+    X%kin_g     = A * X%kin_g
+   !$acc end kernels
+  END IF 
   IF (lda_plus_u_nc)           X%ns_nc     = A * X%ns_nc
   IF (lda_plus_u_co)           X%ns        = A * X%ns
   IF (lda_plus_u_cob)          X%nsb       = A * X%nsb
@@ -470,6 +526,7 @@ CONTAINS
   IF (dipfield)                X%el_dipole = A * X%el_dipole
   IF (sic)                     X%pol_g     = A * X%pol_g
   !
+ !$acc end data
   RETURN
   !
  END SUBROUTINE mix_type_SCAL
@@ -488,7 +545,10 @@ CONTAINS
    ! ... local variable
    !
    INTEGER :: is
+
+   call start_clock('high_freq_mix') 
    !
+   !$acc data present_or_copyin(rhoin, rhoin%of_g, rhoin%of_r) 
    IF (ngms < ngm ) THEN
       !
       rhoin%of_g = rhoin%of_g + alphamix * (input_rhout%of_g-rhoin%of_g)
@@ -526,6 +586,8 @@ CONTAINS
    IF (lda_plus_u_co)  rhoin%ns(:,:,:,:)    = 0.d0
    IF (lda_plus_u_cob) rhoin%nsb(:,:,:,:)   = 0.d0
    !
+   !$acc end data 
+   call stop_clock('high_freq_mix') 
    RETURN
    !
  END SUBROUTINE high_frequency_mixing 
@@ -614,15 +676,19 @@ CONTAINS
    !
    IF (iflag > 0) THEN
       !
+     !$acc update self(rho%of_g) 
       CALL DCOPY(rlen_rho,rho%of_g,1,io_buffer(start_rho),1)
       !
-      IF (xclib_dft_is('meta') .OR. lxdm) CALL DCOPY(rlen_kin, rho%kin_g,1,io_buffer(start_kin), 1)
+      IF (xclib_dft_is('meta') .OR. lxdm) THEN
+       !$acc update self(rho%kin_g) 
+        CALL DCOPY(rlen_kin, rho%kin_g,1,io_buffer(start_kin), 1)
+      END IF 
       IF (lda_plus_u_nc)           CALL DCOPY(rlen_ldaU,rho%ns_nc,1,io_buffer(start_ldaU),1)
       IF (lda_plus_u_co)           CALL DCOPY(rlen_ldaU,rho%ns,   1,io_buffer(start_ldaU),1)
       IF (lda_plus_u_cob)          CALL DCOPY(rlen_ldaUb,rho%nsb, 1,io_buffer(start_ldaUb),1)
       IF (okpaw)                   CALL DCOPY(rlen_bec, rho%bec,  1,io_buffer(start_bec), 1)
       !
-      IF (dipfield) io_buffer(start_dipole) = CMPLX( rho%el_dipole, 0.0_dp )
+      IF (dipfield) io_buffer(start_dipole) = CMPLX( rho%el_dipole, 0.0_dp, KIND=DP )
       IF (sic)                     CALL DCOPY(rlen_pol, rho%pol_g, 1,io_buffer(start_pol),1)
       !
       CALL save_buffer( io_buffer, record_length, iunit, record )   
@@ -632,8 +698,12 @@ CONTAINS
       CALL get_buffer( io_buffer, record_length, iunit, record )
       !
       CALL DCOPY(rlen_rho,io_buffer(start_rho),1,rho%of_g,1)
+     !$acc update device(rho%of_g)
       !
-      IF (xclib_dft_is('meta') .OR. lxdm) CALL DCOPY(rlen_kin, io_buffer(start_kin), 1,rho%kin_g,1)
+      IF (xclib_dft_is('meta') .OR. lxdm) THEN 
+        CALL DCOPY(rlen_kin, io_buffer(start_kin), 1,rho%kin_g,1)
+       !$acc update device(rho%kin_g) 
+      END IF
       IF (lda_plus_u_co)           CALL DCOPY(rlen_ldaU,io_buffer(start_ldaU),1,rho%ns,   1)
       IF (lda_plus_u_cob)          CALL DCOPY(rlen_ldaUb,io_buffer(start_ldaUb),1,rho%nsb,1)
       IF (lda_plus_u_nc)           CALL DCOPY(rlen_ldaU,io_buffer(start_ldaU),1,rho%ns_nc,1)
@@ -675,6 +745,7 @@ FUNCTION rho_ddot( rho1, rho2, gf, g0 )
   REAL(DP) :: rho_ddot
   !! output: see function comments
   !
+ !$acc declare present(rho1, rho2)
   ! ... local variables
   !
   REAL(DP) :: fac
@@ -698,17 +769,20 @@ FUNCTION rho_ddot( rho1, rho2, gf, g0 )
   !
   IF ( gg0 > 0.0_DP ) THEN
      !
+    !$acc parallel loop reduction(+:rho_ddot)
      DO ig = gstart, gf
         !
         rho_ddot = rho_ddot + &
                    REAL( CONJG( rho1%of_g(ig,1) )*rho2%of_g(ig,1), DP ) / ( gg(ig) + gg0 )
         !
      END DO
+    !$acc end parallel loop 
      !
      IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
      !
      IF ( gstart == 2 ) THEN
         !
+       !$acc update host(rho1%of_g(1,1), rho2%of_g(1,1))
         rho_ddot = rho_ddot + &
                    REAL( CONJG( rho1%of_g(1,1) )*rho2%of_g(1,1), DP ) / ( gg(1) + gg0 )
         !
@@ -716,12 +790,14 @@ FUNCTION rho_ddot( rho1, rho2, gf, g0 )
      !
   ELSE
      !
+    !$acc parallel loop reduction(+:rho_ddot)
      DO ig = gstart, gf
         !
         rho_ddot = rho_ddot + &
                    REAL( CONJG( rho1%of_g(ig,1) )*rho2%of_g(ig,1), DP ) / gg(ig)
         !
      END DO
+    !$acc end parallel loop
      !
      IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
      !
@@ -732,16 +808,19 @@ FUNCTION rho_ddot( rho1, rho2, gf, g0 )
   IF ( nspin >= 2 )  THEN
      fac = e2*fpi / tpi**2  ! lambda=1 a.u.
      IF ( gstart == 2 ) THEN
+        !$acc update host(rho1%of_g(1,2:nspin), rho2%of_g(1,2:nspin))
         rho_ddot = rho_ddot + &
                 fac * SUM(REAL(CONJG( rho1%of_g(1,2:nspin))*(rho2%of_g(1,2:nspin) ), DP))
      ENDIF
      !
      IF ( gamma_only ) fac = 2.D0 * fac
      !
+    !$acc parallel loop reduction(+:rho_ddot)
      DO ig = gstart, gf
         rho_ddot = rho_ddot + &
               fac * SUM(REAL(CONJG( rho1%of_g(ig,2:nspin))*(rho2%of_g(ig,2:nspin) ), DP))
      ENDDO
+    !$acc end parallel do
   ENDIF
   !
   rho_ddot = rho_ddot * omega * 0.5D0
@@ -782,8 +861,10 @@ FUNCTION tauk_ddot( rho1, rho2, gf )
   !
   TYPE(mix_type), INTENT(IN) :: rho1
   !! first kinetic density
+ !$acc declare present(rho1)
   TYPE(mix_type), INTENT(IN) :: rho2
   !! second kinetic density
+ !$acc declare present(rho2)
   INTEGER, INTENT(IN) :: gf
   !! point delimiter
   REAL(DP) :: tauk_ddot
@@ -799,6 +880,7 @@ FUNCTION tauk_ddot( rho1, rho2, gf )
   !  write (*,*) rho1%kin_g(1:4,1)
   !  if (.true. ) stop
   !
+ !$acc parallel loop reduction(+:tauk_ddot)
   DO ig = gstart, gf
      tauk_ddot = tauk_ddot + DBLE( CONJG( rho1%kin_g(ig,1) )*rho2%kin_g(ig,1) ) 
   ENDDO
@@ -808,21 +890,24 @@ FUNCTION tauk_ddot( rho1, rho2, gf )
   ! ... G=0 term
   !
   IF ( gstart == 2 ) THEN
+    !$acc update host(rho1%kin_g(1,1:nspin), rho2%kin_g(1,1:nspin))
      tauk_ddot = tauk_ddot + DBLE( CONJG( rho1%kin_g(1,1) ) * rho2%kin_g(1,1) )
   ENDIF
   !
   IF ( nspin >= 2 ) THEN
+    !$acc parallel loop reduction (+: tauk_ddot)
      DO ig = gstart, gf
         tauk_ddot = tauk_ddot + &
-          SUM( REAL( CONJG( rho1%kin_g(1,2:nspin))*(rho2%kin_g(1,2:nspin) ), DP))
+          SUM( REAL( CONJG( rho1%kin_g(ig,2:nspin))*(rho2%kin_g(ig,2:nspin) ), DP))
      ENDDO
+    !$acc end parallel loop
      !
      IF ( gamma_only ) tauk_ddot = 2.D0 * tauk_ddot
      !
      ! ... G=0 term
      IF ( gstart == 2 ) THEN
         tauk_ddot = tauk_ddot + &
-          SUM(REAL(CONJG( rho1%kin_g(1,1:nspin))*(rho2%kin_g(1,1:nspin) ), DP))
+          SUM(REAL(CONJG( rho1%kin_g(1,2:nspin))*(rho2%kin_g(1,2:nspin) ), DP))
      ENDIF
      !
      IF ( nspin == 2 ) tauk_ddot = 0.5D0 *  tauk_ddot 
@@ -992,8 +1077,11 @@ FUNCTION local_tf_ddot( rho1, rho2, ngm0, g0 )
   REAL(DP) :: fac
   REAL(DP) :: gg0
   INTEGER  :: ig
+  ! 
   !
+  !$acc data present_or_copyin(rho1, rho2)
   local_tf_ddot = 0.D0
+  !$acc update self(rho1(1), rho2(1)) async(2) 
   !
   fac = e2 * fpi / tpiba2
   !
@@ -1009,25 +1097,38 @@ FUNCTION local_tf_ddot( rho1, rho2, ngm0, g0 )
   !
   IF ( gg0 > 0.0_DP ) THEN
      !
+#if defined(_OPENACC)
+     !$acc parallel loop reduction(+:local_tf_ddot) 
+#else
      !$omp parallel do reduction(+:local_tf_ddot)
+#endif
      DO ig = gstart, ngm0
         local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(ig))*rho2(ig) ) / ( gg(ig) + gg0 )
      END DO
+#if !defined(_OPENACC) 
      !$omp end parallel do
+#endif
      !
      IF ( gamma_only ) local_tf_ddot = 2.D0 * local_tf_ddot
      !
      IF ( gstart == 2 ) THEN
+        !$acc wait(2) 
         local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(1))*rho2(1) ) / ( gg(1) + gg0 )
      END IF
      !
   ELSE
      !
+#if !defined(_OPENACC) 
      !$omp parallel do reduction(+:local_tf_ddot)
+#else
+    !$acc parallel loop reduction(+:local_tf_ddot) 
+#endif
      DO ig = gstart, ngm0
         local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(ig))*rho2(ig) ) / gg(ig)
      END DO
+#if !defined(_OPENACC) 
      !$omp end parallel do
+#endif 
      !
      IF ( gamma_only ) local_tf_ddot = 2.D0 * local_tf_ddot
      !
@@ -1035,6 +1136,7 @@ FUNCTION local_tf_ddot( rho1, rho2, ngm0, g0 )
   !
   local_tf_ddot = fac * local_tf_ddot * omega * 0.5D0
   !
+  !$acc end data
   CALL mp_sum( local_tf_ddot, intra_bgrp_comm )
   !
   RETURN
@@ -1097,7 +1199,7 @@ SUBROUTINE rhoz_or_updw( rho, sp, dir )
   !
   IF ( nspin /= 2 ) RETURN
   !
-  !$acc data present_or_copy(rho)
+ !$acc data present_or_copy(rho)
   !
   vi = 0._dp
   IF (dir == '->updw')  vi = 0.5_dp
@@ -1107,7 +1209,7 @@ SUBROUTINE rhoz_or_updw( rho, sp, dir )
   IF ( sp /= 'only_g' ) THEN
      !
      dfftp_nnr = dfftp%nnr
-     !$acc parallel loop present_or_copy(rho%of_r)
+    !$acc parallel loop present_or_copy(rho%of_r)
      DO ir = 1, dfftp_nnr
         rho%of_r(ir,1) = ( rho%of_r(ir,1) + rho%of_r(ir,nspin) ) * vi
         rho%of_r(ir,nspin) = rho%of_r(ir,1) - rho%of_r(ir,nspin) * vi * 2._dp
@@ -1116,7 +1218,7 @@ SUBROUTINE rhoz_or_updw( rho, sp, dir )
   ENDIF
   IF ( sp /= 'only_r' ) THEN
      !
-     !$acc parallel loop present_or_copy(rho%of_g)
+    !$acc parallel loop present_or_copy(rho%of_g)
      DO ir = 1, ngm
         rho%of_g(ir,1) = ( rho%of_g(ir,1) + rho%of_g(ir,nspin) ) * vi
         rho%of_g(ir,nspin) = rho%of_g(ir,1) - rho%of_g(ir,nspin) * vi * 2._dp
@@ -1124,7 +1226,7 @@ SUBROUTINE rhoz_or_updw( rho, sp, dir )
      !
   ENDIF
   !
-  !$acc end data
+ !$acc end data
   !
   RETURN
   !

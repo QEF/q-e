@@ -472,7 +472,7 @@ CONTAINS
              IF ( l > 0 .AND. ABS(upf%jjj(nb)-l-0.5_dp) < 0.001_dp ) ind = 2
           END IF
           IF ( v2 ) THEN
-             tag = 'PP_VNL.'//i2c(ind)
+             tag = 'PP_VNL.'//i2c(l)
           ELSE
              tag = 'vnl'
           END IF
@@ -667,7 +667,7 @@ CONTAINS
        call add_attr( 'label', upf%els(nw) )
        call add_attr( 'l', upf%lchi(nw) )
        IF ( upf%has_so) THEN
-          call add_attr( 'nn', upf%nn(nw) )
+          call add_attr( 'nn', upf%nchi(nw) )
           call add_attr( 'jchi', upf%jchi(nw) )
        END IF
        call add_attr( 'occupation', upf%oc(nw) )
@@ -764,7 +764,7 @@ CONTAINS
     DO nw = 1,upf%nwfc
        CALL add_attr( 'index' , nw )
        CALL add_attr( 'els',   upf%els(nw) )
-       CALL add_attr( 'nn',    upf%nn(nw) )
+       CALL add_attr( 'nn',    upf%nchi(nw) )
        CALL add_attr( 'lchi',  upf%lchi(nw) )
        CALL add_attr( 'jchi',  upf%jchi(nw) )
        CALL add_attr( 'oc',    upf%oc(nw) )

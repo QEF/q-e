@@ -104,7 +104,7 @@ SUBROUTINE compute_deff_nc( deff_nc, et )
           DO j = 1, nhm
             na = na_v(ias)
             nt = nt_v(ias)
-            deff_nc(i,j,na,:) = deeq_nc(i,j,na,:) - CMPLX(et)*qq_so(i,j,:,nt)
+            deff_nc(i,j,na,:) = deeq_nc(i,j,na,:) - CMPLX(et,KIND=DP)*qq_so(i,j,:,nt)
           ENDDO
         ENDDO
       ENDDO
@@ -119,7 +119,7 @@ SUBROUTINE compute_deff_nc( deff_nc, et )
             !$acc loop seq
             DO is = 1, npol
               ijs = (is-1)*npol + is
-              deff_nc(i,j,na,ijs) = deeq_nc(i,j,na,ijs) - CMPLX(et*qq_at(i,j,na))
+              deff_nc(i,j,na,ijs) = deeq_nc(i,j,na,ijs) - CMPLX(et*qq_at(i,j,na),KIND=DP)
             ENDDO
           ENDDO
         ENDDO

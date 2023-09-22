@@ -71,9 +71,6 @@ SUBROUTINE forces()
   USE oscdft_base,         ONLY : oscdft_ctx
   USE oscdft_forces_subs,  ONLY : oscdft_apply_forces, oscdft_print_forces
 #endif
-#if defined(__LEGACY_PLUGINS) 
-  USE plugin_flags,        ONLY : plugin_ext_forces, plugin_int_forces
-#endif 
   !
   IMPLICIT NONE
   !
@@ -102,7 +99,7 @@ SUBROUTINE forces()
   ! counter on polarization
   ! counter on atoms
   !
-  REAL(DP) :: latvecs(3,3)
+  REAL(DP), ALLOCATABLE :: taupbc(:,:)
   INTEGER :: atnum(1:nat)
   REAL(DP) :: stress_dftd3(3,3)
   !
@@ -179,13 +176,17 @@ SUBROUTINE forces()
     CALL start_clock('force_dftd3')
     ALLOCATE( force_d3(3, nat) )
     force_d3(:,:) = 0.0_DP
-    latvecs(:,:) = at(:,:)*alat
-    tau(:,:) = tau(:,:)*alat
+    ! taupbc are atomic positions in alat units, centered around r=0
+    ALLOCATE ( taupbc(3,nat) )
+    taupbc(:,:) = tau(:,:)
+    CALL cryst_to_cart( nat, taupbc, bg, -1 ) 
+    taupbc(:,:) = taupbc(:,:) - NINT(taupbc(:,:))
+    CALL cryst_to_cart( nat, taupbc, at,  1 ) 
     atnum(:) = get_atomic_number(atm(ityp(:)))
-    CALL dftd3_pbc_gdisp( dftd3, tau, atnum, latvecs, &
+    CALL dftd3_pbc_gdisp( dftd3, alat*taupbc, atnum, alat*at, &
                           force_d3, stress_dftd3 )
     force_d3 = -2.d0*force_d3
-    tau(:,:) = tau(:,:)/alat
+    DEALLOCATE( taupbc)
     CALL stop_clock('force_dftd3')
   ENDIF
   !
@@ -356,10 +357,8 @@ SUBROUTINE forces()
   force(:,:)    = force(:,:)    * DBLE( if_pos )
   forcescc(:,:) = forcescc(:,:) * DBLE( if_pos )
   !
-!civn 
-! IF ( iverbosity > 0 ) THEN
-  IF ( .true.         ) THEN
-!
+  IF ( iverbosity > 0 ) THEN
+     !
      IF ( do_comp_mt ) THEN
         WRITE( stdout, '(5x,"The Martyna-Tuckerman correction term to forces")')
         DO na = 1, nat
