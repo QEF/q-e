@@ -13,7 +13,6 @@ SUBROUTINE stres_loc( sigmaloc )
   USE kinds,                ONLY : DP
   USE vloc_mod,             ONLY : dvloc_of_g
   USE atom,                 ONLY : msh, rgrid
-  USE m_gth,                ONLY : dvloc_gth
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : omega, tpiba2
   USE fft_base,             ONLY : dfftp
@@ -83,20 +82,8 @@ SUBROUTINE stres_loc( sigmaloc )
   !
   DO nt = 1, ntyp
      !
-     IF ( upf(nt)%is_gth ) THEN
-        !
-        ! special case: GTH pseudopotential
-        !
-        CALL dvloc_gth( nt, upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc )
-        !
-     ELSE
-        !
-        ! normal case: dvloc contains dV_loc(G)/dG
-        !
-        CALL dvloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, dvloc )
-        !
-     ENDIF
-     ! ... no G=0 contribution
+     CALL dvloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, dvloc )
+     !
      sigma11 = 0._DP ; sigma21 = 0._DP ; sigma22 = 0._DP
      sigma31 = 0._DP ; sigma32 = 0._DP ; sigma33 = 0._DP
      !

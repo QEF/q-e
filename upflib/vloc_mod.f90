@@ -342,7 +342,9 @@ CONTAINS
   !! \[ \text{dvloc} = D\text{Vloc}(g^2)/Dg^2 = (1/2g)\ D\text{Vloc}(g)/Dg
   !! \]
   !
-  USE uspp_param, ONLY : upf
+  USE uspp_param, ONLY : upf 
+  USE m_gth,      ONLY : dvloc_gth
+  !
   INTEGER, INTENT(IN) :: nt
   !! index of pseudopotential type
   INTEGER, INTENT(IN) :: ngl
@@ -368,7 +370,7 @@ CONTAINS
   !
   !$acc data present( dvloc, gl )
   !
-  ! the  G=0 component is not computed
+  ! the  G=0 component gives no contribution and is not computed
   IF (gl(1) < eps8) THEN
      !$acc kernels
      dvloc(1) = 0.0d0
@@ -379,16 +381,26 @@ CONTAINS
   ENDIF
   !
   IF ( upf(nt)%tcoulombp ) THEN
+     !
+     ! special case: Coulomb pseudopotential
+     !
      !$acc kernels
      dvloc(igl0:ngl) = fpi*upf(nt)%zp*e2 / omega / (tpiba2*gl(igl0:ngl))**2
      !$acc end kernels
      RETURN
+  ELSE IF ( upf(nt)%is_gth ) THEN
+     !
+     ! special case: GTH pseudopotential
+     !
+     CALL dvloc_gth( nt, upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc )
+     !
+  ELSE
+     !
+     ! Pseudopotentials in numerical form (Vloc contains the local part)
+     !
+     CALL interp_dvloc( nt, ngl, igl0, gl, tpiba2, dvloc )
+     !
   END IF
-  !
-  ! Pseudopotentials in numerical form (Vloc contains the local part)
-  !
-  CALL interp_dvloc( nt, ngl, igl0, gl, tpiba2, dvloc )
-  !
   ! In ESM, vloc and dvloc have only short term.
   IF ( .NOT. modified_coulomb ) THEN
   !$acc parallel loop
