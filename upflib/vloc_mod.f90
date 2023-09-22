@@ -387,7 +387,7 @@ CONTAINS
      !$acc kernels
      dvloc(igl0:ngl) = fpi*upf(nt)%zp*e2 / omega / (tpiba2*gl(igl0:ngl))**2
      !$acc end kernels
-     RETURN
+     !
   ELSE IF ( upf(nt)%is_gth ) THEN
      !
      ! special case: GTH pseudopotential
@@ -400,18 +400,18 @@ CONTAINS
      !
      CALL interp_dvloc( nt, ngl, igl0, gl, tpiba2, dvloc )
      !
-  END IF
-  ! In ESM, vloc and dvloc have only short term.
-  IF ( .NOT. modified_coulomb ) THEN
-  !$acc parallel loop
-     DO igl = igl0, ngl
-        ! subtract the long-range term
-        ! 2D cutoff: do not re-add LR part here re-added later in stres_loc)
-        g2a = gl(igl) * tpiba2 / 4.d0
-        dvloc(igl) = dvloc(igl)  + fpi/omega * upf(nt)%zp * e2 * EXP(-g2a) * &
+     ! In ESM, vloc and dvloc have only short term.
+     IF ( .NOT. modified_coulomb ) THEN
+     !$acc parallel loop
+        DO igl = igl0, ngl
+           ! subtract the long-range term
+           ! 2D cutoff: do not re-add LR part here re-added later in stres_loc)
+           g2a = gl(igl) * tpiba2 / 4.d0
+           dvloc(igl) = dvloc(igl)  + fpi/omega * upf(nt)%zp * e2 * EXP(-g2a) *&
              (g2a + 1.d0) / (gl(igl)*tpiba2)**2
-     ENDDO
-  ENDIF
+       END DO
+     END IF
+  END IF
   !$acc end data
   !
 END SUBROUTINE dvloc_of_g
