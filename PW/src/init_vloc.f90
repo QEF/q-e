@@ -13,15 +13,17 @@ SUBROUTINE init_vloc()
   !! potential vloc(ig,it) for each type of atom.
   !
   USE kinds,          ONLY : dp
-  USE vloc_mod,       ONLY : vloc_of_g
-  USE uspp_param,     ONLY : upf
+  USE vloc_mod,       ONLY : init_tab_vloc, vloc_of_g
   USE ions_base,      ONLY : ntyp => nsp
   USE cell_base,      ONLY : omega, tpiba2
-  USE gvect,          ONLY : ngl, gl
+  USE gvect,          ONLY : ngl, gl, ecutrho
   USE atom,           ONLY : msh, rgrid
   USE Coul_cut_2D,    ONLY : do_cutoff_2D, cutoff_lr_Vloc, lz
   USE esm,            ONLY : do_comp_esm, esm_bc
   USE vlocal,         ONLY : vloc
+  USE mp_bands,       ONLY : intra_bgrp_comm ! FIXME: maybe intra_image_comm?
+  USE klist,          ONLY : qnorm
+  USE cellmd,         ONLY : cell_factor
   !
   IMPLICIT NONE
   !
@@ -30,12 +32,22 @@ SUBROUTINE init_vloc()
   INTEGER :: ierr
   !! counter on atomic types
   LOGICAL :: modified_coulomb
+  !! For  ESM and 2D cutoff, special treatment of long-range Coulomb potential
+  REAL(dp):: qmax
+  !! maximum value of G for the interpolation table
   !
   CALL start_clock( 'init_vloc' )
   !
   vloc(:,:) = 0._dp
   !
   modified_coulomb = do_cutoff_2D .OR. (do_comp_esm .and. ( esm_bc .ne. 'pbc' ))
+  qmax = (sqrt(ecutrho)+qnorm)*cell_factor
+  !! Ths should work both for phonon calculation (q+G is needed, |q|=qnorm)
+  !! and for variable-cell calculations (cell_factor = 1.2 or so)
+  !
+  CALL init_tab_vloc (qmax, modified_coulomb, omega, intra_bgrp_comm, ierr )
+  CALL errore('init_vloc','Coulomb or GTH PPs incompatible with 2D cutoff &
+             & or ESM (see upflib/vloc_mod.f90)',ierr)
   !
   DO nt = 1, ntyp
      IF (do_cutoff_2D .AND. rgrid(nt)%r(msh(nt)) > lz) THEN 
@@ -46,9 +58,7 @@ SUBROUTINE init_vloc()
      ! compute V_loc(G) for a given type of atom
      !
      CALL vloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, &
-             vloc(1,nt), ierr )
-     CALL errore('init_vloc','Coulomb or GTH PPs incompatible with 2D cutoff &
-             & or ESM (see upflib/vloc_mod.f90)',ierr)
+             vloc(1,nt) )
      !
   ENDDO
   !
