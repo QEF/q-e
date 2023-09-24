@@ -41,6 +41,9 @@ MODULE gcscf_module
   USE mp_pools,        ONLY : inter_pool_comm
   USE rism_module,     ONLY : lrism
   USE wvfct,           ONLY : nbnd, wg
+#if defined (__ENVIRON)
+  USE plugin_flags,          ONLY : use_environ
+#endif
   !
   IMPLICIT NONE
   SAVE
@@ -49,6 +52,7 @@ MODULE gcscf_module
   ! ... variables for GC-SCF method
   LOGICAL  :: lgcscf           = .FALSE.  ! to calculate GC-SCF method, or not
   LOGICAL  :: gcscf_ignore_mun = .FALSE.  ! ignore -mu * N, or not
+  LOGICAL  :: gcscf_environ    = .FALSE.
   REAL(DP) :: gcscf_mu         = 0.0_DP   ! target Fermi energy (in Ry)
   REAL(DP) :: gcscf_eps        = 0.0_DP   ! convergence threshold (in Ry)
   REAL(DP) :: gcscf_gk         = 0.0_DP   ! wavenumber shift for Kerker operator (in 1/bohr)
@@ -83,20 +87,27 @@ CONTAINS
     !
     ! ... only ESM
     !
-    IF (.NOT. do_comp_esm) THEN
-       CALL errore('gcscf_check', 'please set assume_isolated = "esm", for GC-SCF', 1)
-    END IF
-    !
-    ! ... cannot use PBC
-    !
-    IF (TRIM(esm_bc) == 'pbc') THEN
-       CALL errore('gcscf_check', 'please do not set esm_bc = "pbc", for GC-SCF', 1)
-    END IF
-    !
-    ! ... cannot use Vacuum/Slab/Vacuum
-    !
-    IF (TRIM(esm_bc) == 'bc1' .AND. (.NOT. lrism)) THEN
-       CALL errore('gcscf_check', 'cannot use ESM-BC1 without RISM, for GC-SCF', 1)
+#if defined (__ENVIRON)
+    IF (use_environ) THEN
+      gcscf_environ = .TRUE.
+    ENDIF
+#endif
+    IF (.NOT. gcscf_environ) THEN
+         IF (.NOT. do_comp_esm) THEN
+            CALL errore('gcscf_check', 'please set assume_isolated = "esm", for GC-SCF', 1)
+         END IF
+         !
+         ! ... cannot use PBC
+         !
+         IF (TRIM(esm_bc) == 'pbc') THEN
+            CALL errore('gcscf_check', 'please do not set esm_bc = "pbc", for GC-SCF', 1)
+         END IF
+         !
+         ! ... cannot use Vacuum/Slab/Vacuum
+         !
+         IF (TRIM(esm_bc) == 'bc1' .AND. (.NOT. lrism)) THEN
+            CALL errore('gcscf_check', 'cannot use ESM-BC1 without RISM, for GC-SCF', 1)
+         END IF
     END IF
     !
     ! ... correct Vexx(G=0) ?
@@ -134,6 +145,7 @@ CONTAINS
     IF (.NOT. lscf) THEN
        CALL infomsg('gcscf_check', 'cannot use calculation=nscf for GC-SCF, lgcscf is ignored')
     END IF
+   
     !
   END SUBROUTINE gcscf_check
   !
