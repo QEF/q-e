@@ -82,6 +82,23 @@ SUBROUTINE MYDGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
 #endif
 END SUBROUTINE MYDGEMV
 
+SUBROUTINE MYZGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
+#if defined(__CUDA)
+    use cudafor
+    use cublas
+#endif
+      COMPLEX*16, INTENT(IN) :: ALPHA,BETA
+      INTEGER, INTENT(IN) :: INCX,INCY,LDA,M,N
+      CHARACTER*1, INTENT(IN) :: TRANS
+      COMPLEX*16 :: A(LDA,*),X(*),Y(*)
+#if defined(__CUDA)
+    attributes(device) :: A, X, Y
+    CALL cublaszgemv(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
+#else
+    CALL zgemv(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
+#endif
+END SUBROUTINE MYZGEMV
+
 !=----------------------------------------------------------------------------=
 
 DOUBLE PRECISION FUNCTION MYDDOT(N,DX,INCX,DY,INCY)
