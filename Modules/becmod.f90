@@ -629,7 +629,7 @@ CONTAINS
       CALL errore ('calbec', 'size mismatch', 3)
     !
     !$acc host_data use_device(beta, psi, betapsi)
-    CALL ZGEMM ('C', 'N', nkb, m*npol, npw, (1.0_DP, 0.0_DP), beta, &
+    CALL MYZGEMM ('C', 'N', nkb, m*npol, npw, (1.0_DP, 0.0_DP), beta, &
               npwx, psi, npwx, (0.0_DP, 0.0_DP),  betapsi, nkb)
     !$acc end host_data
     !
