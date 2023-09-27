@@ -60,12 +60,12 @@ MODULE hip_kernels
   END INTERFACE
 
   INTERFACE
-    SUBROUTINE loop2d_scatter_hip_( f_in, f_out, dft_ismap, nppx, nnp, of1, of2, npp, nswip, stream ) &
+    SUBROUTINE loop2d_scatter_hip_( drz, f_in, f_out, dft_ismap, nppx, nnp, of1, of2, npp, nswip, stream ) &
         & BIND(C, name="loop2d_scatter_hip_")
       USE iso_c_binding
       TYPE(C_PTR), VALUE  :: f_in, dft_ismap
       TYPE(C_PTR), VALUE :: f_out
-      INTEGER(C_INT), INTENT(in), VALUE :: nppx, nnp, npp, nswip, of1, of2
+      INTEGER(C_INT), INTENT(in), VALUE :: drz, nppx, nnp, npp, nswip, of1, of2
       TYPE(C_PTR), VALUE :: stream
     END SUBROUTINE loop2d_scatter_hip_
   END INTERFACE
@@ -96,15 +96,15 @@ MODULE hip_kernels
 
   END SUBROUTINE scalar_multiply_3D
 
-  SUBROUTINE loop2d_scatter_hip( f_in, f_out, dft_ismap, nppx, nnp, of1, of2, npp, nswip, stream )
+  SUBROUTINE loop2d_scatter_hip( drz, f_in, f_out, dft_ismap, nppx, nnp, of1, of2, npp, nswip, stream )
     COMPLEX(8), INTENT(in)  :: f_in(:)
     COMPLEX(8), INTENT(inout) :: f_out(:)
     INTEGER, INTENT(in) :: dft_ismap(:)
-    INTEGER(C_INT), INTENT(in) :: nppx, nnp, npp, nswip, of1, of2
+    INTEGER(C_INT), INTENT(in) :: drz, nppx, nnp, npp, nswip, of1, of2
     TYPE(C_PTR) :: stream
     !
     !$omp target data use_device_addr(f_in, f_out, dft_ismap)
-    CALL loop2d_scatter_hip_( c_loc(f_in), c_loc(f_out), c_loc(dft_ismap), nppx, nnp, of1, of2, &
+    CALL loop2d_scatter_hip_( drz, c_loc(f_in), c_loc(f_out), c_loc(dft_ismap), nppx, nnp, of1, of2, &
                               npp, nswip, stream )
     !$omp end target data
     !
