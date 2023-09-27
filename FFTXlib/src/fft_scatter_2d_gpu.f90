@@ -2513,6 +2513,9 @@ END SUBROUTINE fft_scatter_many_planes_to_columns_store_omp
 
 SUBROUTINE fft_scatter_many_planes_to_columns_send_omp ( dfft, f_in, nr3x, nxx_, f_aux, f_aux2, ncp_, npp_, isgn, batchsize, batch_id )
    !
+   USE hipfft, ONLY: hipEventRecord, hipMemcpy2DAsync, hipMemcpy,hipMemcpyAsync, &
+                     hipcheck, hipdevicesynchronize
+   !
    IMPLICIT NONE
    !
    TYPE (fft_type_descriptor), INTENT(in) :: dfft
@@ -2526,6 +2529,7 @@ SUBROUTINE fft_scatter_many_planes_to_columns_send_omp ( dfft, f_in, nr3x, nxx_,
 
    INTEGER :: iter, dest, sorc, req_cnt, npp_gproc, npp_me
    INTEGER :: istatus(MPI_STATUS_SIZE)
+   COMPLEX(DP) :: dummy
 
    me     = dfft%mype + 1
    !
@@ -2614,16 +2618,33 @@ SUBROUTINE fft_scatter_many_planes_to_columns_send_omp ( dfft, f_in, nr3x, nxx_,
    ! directly from f_aux_2 to f_in. The rest will be done below.
    offset = 0
    DO proc = 1, me-1
-      offset = offset + npp_ ( proc )
+      offset = offset + npp_(proc)
    ENDDO
    npp_me=npp_(me)
-!$omp target teams distribute parallel do collapse(2)
-    DO k = 1, batchsize * ncpx
-       DO i = 1, npp_me
-         f_in( offset + i + (k-1)*nr3x ) = f_aux2( (me - 1) * sendsiz + i + (k-1)*nppx )
-       END DO
-    END DO
-!$omp end target teams distribute parallel do
+   !!$omp target teams distribute parallel do collapse(2)
+!    DO k = 1, batchsize * ncpx
+!       DO i = 1, npp_me
+!         f_in( offset + i + (k-1)*nr3x ) = f_aux2( (me - 1) * sendsiz + i + (k-1)*nppx )
+!       END DO
+!    END DO
+!!$omp end target teams distribute parallel do
+   kfrom = (me-1)*sendsiz
+   kdest = offset
+   !
+   !$omp target data use_device_addr(f_in,f_aux2)
+   istat = hipMemcpy2DAsync( int(sizeof(dummy)),        &
+                                c_loc(f_in(kdest+1)),   &
+                                c_loc(f_aux2(kfrom+1)), &
+                                nr3x,                  &
+                                nppx,                  &
+                                npp_me,                &
+                                batchsize*ncpx,        &
+                                int(3,c_int),          &
+                                dfft%bstreams(batch_id) )
+   !$omp end target data
+   !
+   CALL hipCheck(hipDeviceSynchronize())   
+   !
    IF(req_cnt .gt. 0) then
       call MPI_WAITALL(req_cnt, dfft%srh(1:req_cnt, batch_id), MPI_STATUSES_IGNORE, ierr)
    ENDIF
@@ -2640,8 +2661,8 @@ SUBROUTINE fft_scatter_many_planes_to_columns_send_omp ( dfft, f_in, nr3x, nxx_,
    !! f_in = 0.0_DP
    !
    offset = 0
-!$omp target update to (f_aux)
-! $ omp taskgroup
+!!$omp target update to (f_aux)
+   !
    DO gproc = 1, nprocp
       kdest = ( gproc - 1 ) * sendsiz
       kfrom = offset
@@ -2675,21 +2696,36 @@ SUBROUTINE fft_scatter_many_planes_to_columns_send_omp ( dfft, f_in, nr3x, nxx_,
 !$omp end target teams distribute parallel do
         ENDIF
 #else
-!!$omp target teams distribute parallel do collapse(2) nowait
-!$omp target teams distribute parallel do collapse(2)
-           DO k = 1, batchsize * ncpx
-              DO i = 1, npp_gproc
-                f_in( kfrom + (k-1)*nr3x + i ) = f_aux( kdest + (k-1)*nppx + i )
-              END DO
-           END DO
-!$omp end target teams distribute parallel do
+!!$omp target teams distribute parallel do collapse(2)
+!           DO k = 1, batchsize * ncpx
+!              DO i = 1, npp_gproc
+!                f_in( kfrom + (k-1)*nr3x + i ) = f_aux( kdest + (k-1)*nppx + i )
+!              END DO
+!           END DO
+!!$omp end target teams distribute parallel do
+        kfrom = offset
+        kdest = (gproc-1)*sendsiz
+        !
+        !$omp target data use_device_addr(f_in)
+        istat = hipMemcpy2DAsync( int(sizeof(dummy)),       &
+                                c_loc(f_in(kfrom+1)),  &
+                                c_loc(f_aux(kdest+1)), &
+                                nr3x,                  &
+                                nppx,                  &
+                                npp_gproc,             &
+                                batchsize*ncpx,        &
+                                int(1,c_int),          &
+                                dfft%bstreams(batch_id) )
+        !$omp end target data
+        !
 #endif
 #endif
       ENDIF
       offset = offset + npp_gproc
    ENDDO
-! $ omp end taskgroup
-
+   !
+   CALL hipCheck(hipDeviceSynchronize())
+   !
 20 CONTINUE
 
 #endif
