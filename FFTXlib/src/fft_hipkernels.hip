@@ -29,3 +29,33 @@ extern "C" {
 
   }
 }
+
+__global__ void loop2d_scatter_kernel(double *dev_ptr2, double *dev_ptr, int *pmap, unsigned nppx, unsigned nnp, unsigned of2, int of, unsigned npp, unsigned nswip)
+{
+        int i = blockIdx.x * blockDim.x + threadIdx.x+1;
+        int j = blockIdx.y * blockDim.y + threadIdx.y+1;
+
+        if (j<=npp && i<=nswip) {
+
+           dev_ptr[pmap[i-1]*2+of+(j-1)*nnp*2 -2] = dev_ptr2[j*2+of2+(i-1)*nppx*2 -2];
+           dev_ptr[pmap[i-1]*2+of+(j-1)*nnp*2 -1] = dev_ptr2[j*2+of2+(i-1)*nppx*2 -1];
+
+        }
+}
+
+extern "C" {
+  void loop2d_scatter_hip_(double *dev_ptr2, double *dev_ptr, int *pmap, unsigned nppx, unsigned nnp, unsigned of2, int of, unsigned npp, unsigned nswip, hipStream_t stream ) {
+
+   const int blocks_i = (nswip+31)/32;
+   const int blocks_j = (npp+31)/32;
+   const int threads_i = 32;
+   const int threads_j = 32;
+
+   hipError_t err;
+
+   hipLaunchKernelGGL(loop2d_scatter_kernel, dim3(blocks_i,blocks_j), dim3(threads_i,threads_j), 0, stream, dev_ptr2, dev_ptr, pmap, nppx, nnp, of2, of, npp, nswip );
+//   err = hipDeviceSynchronize();
+
+  }
+}
+

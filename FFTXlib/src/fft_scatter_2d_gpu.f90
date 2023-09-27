@@ -2137,6 +2137,7 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
    !
    USE hipfft, ONLY: hipEventRecord, hipMemcpy2DAsync, hipMemcpy,hipMemcpyAsync, &
                      hipcheck, hipdevicesynchronize, hipStreamWaitEvent
+   USE hip_kernels, ONLY: loop2d_scatter_hip
    !
    IMPLICIT NONE
    !
@@ -2340,13 +2341,13 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
          ENDDO
 !$omp end target teams distribute parallel do
       ENDDO
-! $ omp end taskgroup
+      !
    ELSE
-! $ omp taskgroup
+      !
       DO gproc = 1, nprocp
          ioff = dfft_iss( gproc )
          nswip =  dfft_nsw( gproc )
-!!$omp target teams distribute parallel do collapse(3) nowait
+#if defined(__NO_HIPKERN)
 !$omp target teams distribute parallel do collapse(3)
          DO i = 0, batchsize-1
             DO cuf_j = 1, npp
@@ -2358,10 +2359,19 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
             ENDDO
          ENDDO
 !$omp end target teams distribute parallel do
+#else
+         DO i = 0, batchsize-1
+            CALL loop2d_scatter_hip( f_aux2(:), f_aux(:), dfft_ismap(ioff+1:ioff+nswip), nppx, &
+                                     nnp, 2*(gproc-1)*sendsiz+2*i*nppx*ncpx, 2*i*nnr, npp, nswip,&
+                                     dfft%a2a_comp )
+         ENDDO
+#endif
       ENDDO
-! $ omp end taskgroup
+      !
+      CALL hipCheck(hipDeviceSynchronize())
+      !
    END IF
-
+   !
 #endif
 
   RETURN
