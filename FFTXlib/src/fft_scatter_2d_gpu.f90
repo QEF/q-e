@@ -2384,7 +2384,7 @@ SUBROUTINE fft_scatter_many_planes_to_columns_store_omp ( dfft, nr3x, nxx_, f_au
                                 batch_id, dfft_iss, dfft_nsw, dfft_nsp, dfft_ismap )
    !
    USE hipfft, ONLY: hipEventRecord, hipMemcpy2DAsync, hipMemcpy,hipMemcpyAsync, &
-                     hipcheck, hipdevicesynchronize
+                     hipcheck, hipdevicesynchronize,hipStreamWaitEvent,hipEventRecord
    USE hip_kernels, ONLY: loop2d_scatter_hip
    !
    IMPLICIT NONE
@@ -2407,6 +2407,7 @@ SUBROUTINE fft_scatter_many_planes_to_columns_store_omp ( dfft, nr3x, nxx_, f_au
    LOGICAL :: use_tg
    INTEGER :: iter, dest, sorc
    INTEGER :: istatus(MPI_STATUS_SIZE)
+   COMPLEX(DP) :: dummy
 
    me     = dfft%mype + 1
    !
@@ -2491,11 +2492,14 @@ SUBROUTINE fft_scatter_many_planes_to_columns_store_omp ( dfft, nr3x, nxx_, f_au
 #endif
       ENDDO
       !
-      CALL hipCheck(hipDeviceSynchronize())
+      !CALL hipCheck(hipDeviceSynchronize())
       !
    END IF
 
 #ifndef __GPU_MPI
+   i = hipEventRecord( dfft%bevents(batch_id), dfft%a2a_comp )
+   i = hipStreamWaitEvent( dfft%bstreams(batch_id), dfft%bevents(batch_id), 0 )
+
    DO proc = 1, nprocp
       IF (proc .ne. me) THEN
 #ifdef __IPC
@@ -2505,10 +2509,21 @@ SUBROUTINE fft_scatter_many_planes_to_columns_store_omp ( dfft, nr3x, nxx_, f_au
 #else
          kdest = ( proc - 1 ) * sendsiz
 #endif
-!$omp target update from (f_aux2(kdest+1:kdest+sendsiz))
+         !$omp target data use_device_ptr(f_aux2)
+         istat = hipMemcpyAsync( int(sizeof(dummy)), c_loc(f_aux(kdest+1)), c_loc(f_aux2(kdest+1)), &
+                                 sendsiz,int(2,c_int), dfft%bstreams(batch_id) )
+         !$omp end target data
+         istat = hipMemcpyAsync( int(sizeof(dummy)), c_loc(f_aux2(kdest+1)), c_loc(f_aux(kdest+1)), &
+                                 sendsiz,int(0,c_int), dfft%bstreams(batch_id) )
       ENDIF
    ENDDO
 #endif
+#endif
+
+#ifdef __GPU_MPI
+   istat = hipEventRecord( dfft%bevents(batch_id), dfft%a2a_comp )
+#else
+   istat = hipEventRecord( dfft%bevents(batch_id), dfft%bstreams(batch_id) )
 #endif
 
   RETURN
@@ -2518,7 +2533,7 @@ END SUBROUTINE fft_scatter_many_planes_to_columns_store_omp
 SUBROUTINE fft_scatter_many_planes_to_columns_send_omp ( dfft, f_in, nr3x, nxx_, f_aux, f_aux2, ncp_, npp_, isgn, batchsize, batch_id )
    !
    USE hipfft, ONLY: hipEventRecord, hipMemcpy2DAsync, hipMemcpy,hipMemcpyAsync, &
-                     hipcheck, hipdevicesynchronize
+                     hipcheck, hipdevicesynchronize, hipEventSynchronize
    !
    IMPLICIT NONE
    !
@@ -2565,6 +2580,7 @@ SUBROUTINE fft_scatter_many_planes_to_columns_send_omp ( dfft, f_in, nr3x, nxx_,
    gcomm = dfft%comm
    !
    ! JR Note: Holding off staging receives until buffer is packed.
+   istat = hipEventSynchronize( dfft%bevents(batch_id) )
    CALL start_clock ('A2A')
 #ifdef __IPC
    ! TODO: possibly remove this barrier
@@ -2647,7 +2663,7 @@ SUBROUTINE fft_scatter_many_planes_to_columns_send_omp ( dfft, f_in, nr3x, nxx_,
                                 dfft%bstreams(batch_id) )
    !$omp end target data
    !
-   CALL hipCheck(hipDeviceSynchronize())   
+   !CALL hipCheck(hipDeviceSynchronize())   
    !
    IF(req_cnt .gt. 0) then
       call MPI_WAITALL(req_cnt, dfft%srh(1:req_cnt, batch_id), MPI_STATUSES_IGNORE, ierr)
@@ -2728,7 +2744,7 @@ SUBROUTINE fft_scatter_many_planes_to_columns_send_omp ( dfft, f_in, nr3x, nxx_,
       offset = offset + npp_gproc
    ENDDO
    !
-   CALL hipCheck(hipDeviceSynchronize())
+   !CALL hipCheck(hipDeviceSynchronize())
    !
 20 CONTINUE
 
