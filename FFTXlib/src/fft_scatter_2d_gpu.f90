@@ -2136,8 +2136,8 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
                                                          isgn, batchsize, batch_id, dfft_iss, dfft_nsw, dfft_nsp, dfft_ismap )
    !
    USE hipfft, ONLY: hipEventRecord, hipMemcpy2DAsync, hipMemcpy,hipMemcpyAsync, &
-                     hipcheck, hipdevicesynchronize, hipStreamWaitEvent
-   USE hip_kernels, ONLY: loop2d_scatter_hip
+                     hipCheck, hipDeviceSynchronize, hipStreamWaitEvent, hipEventSynchronize
+   USE hip_kernels, ONLY: scalar_multiply, loop2d_scatter_hip
    !
    IMPLICIT NONE
    !
@@ -2191,6 +2191,7 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
    gcomm = dfft%comm
    !
    ! JR Note: Holding off staging receives until buffer is packed.
+   istat = hipEventSynchronize(dfft%bevents(batch_id))
    CALL start_clock ('A2A')
 #ifdef __IPC
    !TODO: possibly remove this barrier by ensuring recv buffer is not used by previous operation
@@ -2271,8 +2272,8 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
                                 dfft%bstreams(batch_id) )
    !$omp end target data
    !
-   CALL hipCheck(hipDeviceSynchronize())
-
+   !CALL hipCheck(hipDeviceSynchronize())
+   !
    IF(req_cnt .gt. 0) CALL MPI_WAITALL(req_cnt, dfft%srh(1:req_cnt, batch_id), MPI_STATUSES_IGNORE, ierr)
 
 #ifdef __IPC
@@ -2304,23 +2305,26 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
    ENDDO
 #endif
    !
-   !i = cudaEventRecord(dfft%bevents(batch_id), dfft%bstreams(batch_id))
-   !i = cudaStreamW(dfft%a2a_comp, dfft%bevents(batch_id), 0)
-   !istat = hipEventRecord( dfft%bevents(batch_id), dfft%bstreams(batch_id) )
-   !istat = hipStreamWaitEvent( dfft%a2a_comp, dfft%bstreams(batch_id), 0)
+   istat = hipEventRecord( dfft%bevents(batch_id), dfft%bstreams(batch_id) )
+   istat = hipStreamWaitEvent( dfft%a2a_comp, dfft%bevents(batch_id), 0)
    !
-   CALL hipCheck(hipDeviceSynchronize())
+   !CALL hipCheck(hipDeviceSynchronize())
    !
    !
 10 CONTINUE
    !
    ! Zero out f_aux_d
+#if defined(__NO_HIPKERN)
 !$omp target teams distribute parallel do
    do i = lbound(f_aux,1), ubound(f_aux,1)
      f_aux(i) = (0.d0, 0.d0)
    end do
 !$omp end target teams distribute parallel do
-
+#else
+   nnp = 2*(ubound(f_aux,1)-lbound(f_aux,1)+1)
+   CALL scalar_multiply(f_aux(lbound(f_aux,1):ubound(f_aux,1)),0.d0,nnp,dfft%a2a_comp)
+#endif
+   !
    npp = dfft%nr3p( me )
    nnp = dfft%nnp
    IF( isgn == 1 ) THEN
@@ -2366,7 +2370,7 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
 #endif
       ENDDO
       !
-      CALL hipCheck(hipDeviceSynchronize())
+      !CALL hipCheck(hipDeviceSynchronize())
       !
    END IF
    !

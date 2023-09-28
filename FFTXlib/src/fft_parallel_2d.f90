@@ -511,7 +511,7 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        !
      ENDDO
      !
-     CALL hipCheck(hipDeviceSynchronize())
+   !  CALL hipCheck(hipDeviceSynchronize())
      !
      !------------------------------------
      !
