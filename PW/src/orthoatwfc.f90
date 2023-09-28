@@ -32,11 +32,9 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
                          bec_type, becp, calbec
-  USE control_flags,    ONLY : gamma_only, use_gpu
+  USE control_flags,    ONLY : gamma_only, use_gpu, offload_type
   USE noncollin_module, ONLY : noncolin, npol
   USE mp_bands,         ONLY : use_bgrp_in_hpsi
-  USE becmod_gpum,      ONLY : becp_d
-  USE becmod_subs_gpum, ONLY : using_becp_auto, using_becp_d_auto, calbec_gpu
   USE uspp_init,        ONLY : init_us_2
   IMPLICIT NONE
   !
@@ -91,7 +89,6 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   !
   ! Allocate the array becp = <beta|wfcatom>
   CALL allocate_bec_type (nkb,natomwfc, becp)
-  CALL using_becp_auto(2)
   !
   DO ik = 1, nks
      !
@@ -109,19 +106,14 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      ENDIF
      npw = ngk (ik)
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb, use_gpu)
-     if(use_gpu) then 
-       CALL using_becp_d_auto(2)
-       !$acc host_data use_device(vkb, wfcatom)
-       CALL calbec_gpu( npw, vkb, wfcatom, becp_d )
-       !$acc end host_data
-
-       !$acc host_data use_device(wfcatom, swfcatom)
-       CALL s_psi_gpu( npwx, npw, natomwfc, wfcatom, swfcatom )
-       !$acc end host_data
-     else
-       CALL calbec (npw, vkb, wfcatom, becp)
-       CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
-     end if 
+     CALL calbec (offload_type, npw, vkb, wfcatom, becp)
+#if defined(__CUDA)
+     !$acc host_data use_device(wfcatom, swfcatom)
+     CALL s_psi_acc (npwx, npw, natomwfc, wfcatom, swfcatom)
+     !$acc end host_data
+#else
+     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
+#endif
      !
      IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
      !
@@ -146,7 +138,6 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   !$acc exit data delete(wfcatom, swfcatom)
   DEALLOCATE (wfcatom, swfcatom)
   CALL deallocate_bec_type ( becp )
-  CALL using_becp_auto(2)
   !
   use_bgrp_in_hpsi = save_flag
   !
@@ -180,7 +171,6 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
                                bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin 
-  USE becmod_subs_gpum, ONLY : using_becp_auto
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: ik ! the k point under consideration
@@ -229,12 +219,10 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
   IF (orthogonalize_wfc .OR. .NOT.lflag) THEN
      ! Allocate the array becp = <beta|wfcatom>
      CALL allocate_bec_type (nkb,natomwfc, becp)
-     CALL using_becp_auto(2)
      CALL calbec (npw, vkb, wfcatom, becp)
      ! Calculate swfcatom = S * phi
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
      CALL deallocate_bec_type (becp)
-     CALL using_becp_auto(2)
   ENDIF
   !
   ! Compute the overlap matrix
@@ -284,11 +272,9 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
   USE klist,            ONLY : nks, xk, ngk, igk_k
   USE wvfct,            ONLY : npwx
   USE uspp,             ONLY : nkb, vkb
-  USE becmod_gpum,      ONLY : becp_d
-  USE becmod_subs_gpum, ONLY : using_becp_auto, using_becp_d_auto, calbec_gpu
   USE becmod,           ONLY : allocate_bec_type, deallocate_bec_type, &
                                bec_type, becp, calbec
-  USE control_flags,    ONLY : gamma_only, use_gpu
+  USE control_flags,    ONLY : gamma_only, use_gpu, offload_type
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_init,        ONLY : init_us_2
   IMPLICIT NONE
@@ -327,20 +313,14 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
      !
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb, use_gpu)
      !
-     IF(use_gpu) THEN 
-       CALL using_becp_auto(2)
-       CALL using_becp_d_auto(2)
-       !$acc host_data use_device(vkb, wfcatom)
-       CALL calbec_gpu( npw, vkb, wfcatom, becp_d )
-       !$acc end host_data
-       !
-       !$acc host_data use_device(wfcatom, swfcatom)
-       CALL s_psi_gpu( npwx, npw, natomwfc, wfcatom, swfcatom )
-       !$acc end host_data
-     ELSE
-       CALL calbec (npw, vkb, wfcatom, becp) 
-       CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
-     END IF
+     CALL calbec (offload_type, npw, vkb, wfcatom, becp)     
+#if defined(__CUDA)
+     !$acc host_data use_device(wfcatom, swfcatom)
+     CALL s_psi_acc( npwx, npw, natomwfc, wfcatom, swfcatom )
+     !$acc end host_data
+#else
+     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
+#endif
 
      IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
      !
