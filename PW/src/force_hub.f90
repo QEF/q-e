@@ -64,6 +64,7 @@ SUBROUTINE force_hub( forceh )
    TYPE(bec_type) :: proj
 #endif
    COMPLEX(DP), ALLOCATABLE :: spsi(:,:)
+   !$acc declare device_resident(spsi)
    REAL(DP), ALLOCATABLE :: dns(:,:,:,:), dnsb(:,:,:,:)
    COMPLEX (DP), ALLOCATABLE ::  dnsg(:,:,:,:,:)
    ! dns(ldim,ldim,nspin,nat) ! the derivative of the atomic occupations
@@ -116,7 +117,7 @@ SUBROUTINE force_hub( forceh )
       ALLOCATE( overlap_inv(natomwfc,natomwfc) )
    ENDIF
    !
-   !$acc data create(spsi) copyin(wfcU)
+   !$acc data copyin(wfcU)
    !
 #if defined(__CUDA)
    CALL allocate_bec_type_gpu( nwfcU, nbnd, proj )
@@ -431,7 +432,7 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    IF (okvan) ALLOCATE( dproj_us(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present_or_copyin(spsi,proj,wfcU) create(dproj,dproj_us)
+   !$acc data present_or_copyin(proj,wfcU) create(dproj,dproj_us)
    !
    ! ... Compute the derivative of occupation matrices (the quantities dns(m1,m2))
    ! ... of the atomic orbitals. They are real quantities as well as ns(m1,m2).
@@ -624,7 +625,7 @@ SUBROUTINE dndtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
    !
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present_or_copyin(rproj,spsi) create(dproj)
+   !$acc data present_or_copyin(rproj) create(dproj)
    !
    ! ... Compute the derivative of occupation matrices (the quantities dns(m1,m2))
    ! ... of the atomic orbitals. They are real quantities as well as ns(m1,m2).
@@ -787,7 +788,7 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ALLOCATE( dproj2(nwfcU,nb_s:nb_e) )
    IF (okvan) ALLOCATE( dproj_us(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present_or_copyin(proj,spsi,wfcU) create(dproj1,dproj2,dproj_us)
+   !$acc data present_or_copyin(proj,wfcU) create(dproj1,dproj2,dproj_us)
    !
    ! ... Compute the derivative of the generalized occupation matrices 
    ! ... (the quantities dnsg(m1,m2)) of the atomic orbitals. 
@@ -1021,7 +1022,7 @@ SUBROUTINE dngdtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present_or_copyin(rproj,spsi) create(dproj)
+   !$acc data present_or_copyin(rproj) create(dproj)
    !
    ! ... Compute the derivative of the generalized occupation matrices 
    ! ... (the quantities dnsg(m1,m2)) of the atomic orbitals. 
@@ -1199,7 +1200,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    !
    CALL start_clock_gpu( 'dprojdtau' )
    !
-   !$acc data present_or_copyin(spsi,dproj)
+   !$acc data present_or_copyin(dproj)
    !
    nt  = ityp(na)
    npw = ngk(ik)
@@ -1831,7 +1832,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    !
    CALL start_clock_gpu( 'dprojdtau' )
    !
-   !$acc data present_or_copyin(dproj,spsi,wfcU)
+   !$acc data present_or_copyin(dproj,wfcU)
    !
    nt = ityp(alpha)
    npw = ngk(ik)
