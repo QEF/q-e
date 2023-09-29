@@ -194,7 +194,7 @@ SUBROUTINE force_hub( forceh )
       ELSE
          projkd = proj%k_d
       ENDIF
-      !$acc data copyin(projrd,projkd,wfcatom,overlap_inv)
+      !$acc data copyin(wfcatom,overlap_inv)
 #else
       CALL calbec( npw, wfcU, spsi, proj )
       !
@@ -432,7 +432,7 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    IF (okvan) ALLOCATE( dproj_us(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present_or_copyin(proj,wfcU) create(dproj,dproj_us)
+   !$acc data present_or_copyin(wfcU) create(dproj,dproj_us)
    !
    ! ... Compute the derivative of occupation matrices (the quantities dns(m1,m2))
    ! ... of the atomic orbitals. They are real quantities as well as ns(m1,m2).
@@ -625,7 +625,7 @@ SUBROUTINE dndtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
    !
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present_or_copyin(rproj) create(dproj)
+   !$acc data create(dproj)
    !
    ! ... Compute the derivative of occupation matrices (the quantities dns(m1,m2))
    ! ... of the atomic orbitals. They are real quantities as well as ns(m1,m2).
@@ -788,7 +788,7 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ALLOCATE( dproj2(nwfcU,nb_s:nb_e) )
    IF (okvan) ALLOCATE( dproj_us(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present_or_copyin(proj,wfcU) create(dproj1,dproj2,dproj_us)
+   !$acc data present_or_copyin(wfcU) create(dproj1,dproj2,dproj_us)
    !
    ! ... Compute the derivative of the generalized occupation matrices 
    ! ... (the quantities dnsg(m1,m2)) of the atomic orbitals. 
@@ -799,8 +799,6 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ! ... Compute the phases for each atom at this ik
    !
    CALL phase_factor( ik )
-   !
-   !$acc update self(proj(:,nb_s:nb_e))
    !
    ! ... Compute the USPP contribution to dproj1:
    ! ... <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
@@ -1022,7 +1020,7 @@ SUBROUTINE dngdtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    !
-   !$acc data present_or_copyin(rproj) create(dproj)
+   !$acc data create(dproj)
    !
    ! ... Compute the derivative of the generalized occupation matrices 
    ! ... (the quantities dnsg(m1,m2)) of the atomic orbitals. 
