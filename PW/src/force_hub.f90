@@ -1761,13 +1761,12 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : calbec
-   USE becmod_gpum,          ONLY : bec_type_d, becp_d
-   USE becmod_subs_gpum,     ONLY : calbec_gpu
    USE wavefunctions,        ONLY : evc
    USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d, evc_d
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
+   USE control_flags,        ONLY : offload_type
    !
    IMPLICIT NONE
    !
@@ -1912,17 +1911,10 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
       ENDDO
    ENDDO
    !
-#if defined(__CUDA)
-   !$acc host_data use_device(wfcU,dbeta,wfatbeta,betapsi0)
-   CALL calbec_gpu( npw, wfcU, dbeta, wfatbeta ) 
-   CALL using_evc_d(0)
-   CALL calbec_gpu( npw, dbeta, evc_d, betapsi0 )
-   !$acc end host_data
-#else
-   CALL calbec( npw, wfcU, dbeta, wfatbeta ) 
-   CALL using_evc(0)
-   CALL calbec( npw, dbeta, evc, betapsi0 )
-#endif
+   CALL calbec( offload_type, npw, wfcU, dbeta, wfatbeta ) 
+   !$acc data copyin(evc)
+   CALL calbec( offload_type, npw, dbeta, evc, betapsi0 )
+   !$acc end data
    !
    !$acc parallel loop collapse(2)
    DO ih = 1, nh(nt)
@@ -1933,17 +1925,11 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    ENDDO
    !
 ! !omp end parallel do
-#if defined(__CUDA)
-   CALL using_evc_d(0)
-   !$acc host_data use_device(wfcU,dbeta,wfatdbeta,dbetapsi)
-   CALL calbec_gpu( npw, dbeta, evc_d, dbetapsi ) 
-   CALL calbec_gpu( npw, wfcU, dbeta, wfatdbeta ) 
-   !$acc end host_data
-#else
-   CALL using_evc(0)
-   CALL calbec( npw, dbeta, evc, dbetapsi ) 
-   CALL calbec( npw, wfcU, dbeta, wfatdbeta )
-#endif
+   !
+   !$acc data copyin(evc)
+   CALL calbec( offload_type, npw, dbeta, evc, dbetapsi ) 
+   !$acc end data
+   CALL calbec( offload_type, npw, wfcU, dbeta, wfatdbeta )
    !
    !$acc end data
    DEALLOCATE( dbeta )
