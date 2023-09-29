@@ -27,7 +27,7 @@ SUBROUTINE force_hub( forceh )
    USE basis,                ONLY : natomwfc, wfcatom, swfcatom
    USE symme,                ONLY : symvector
    USE wvfct,                ONLY : nbnd, npwx
-   USE control_flags,        ONLY : gamma_only
+   USE control_flags,        ONLY : gamma_only, offload_type
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE scf,                  ONLY : v
    USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type, &
@@ -155,21 +155,13 @@ SUBROUTINE force_hub( forceh )
       !
       ! ... Compute spsi = S * psi
       CALL allocate_bec_type( nkb, nbnd, becp )
-      CALL using_becp_auto(2)
-      !
-#if defined(__CUDA)
-      CALL using_evc_d(0)
-      CALL using_becp_d_auto(2)
-      !$acc host_data use_device(vkb,spsi)
-      CALL calbec_gpu( npw, vkb, evc_d, becp_d )
-      CALL s_psi_gpu( npwx, npw, nbnd, evc_d, spsi )
+      !$acc data copyin(evc)
+      Call calbec(offload_type, npw, vkb, evc, becp ) 
+      !$acc host_data use_device(spsi, evc)
+      CALL s_psi_acc( npwx, npw, nbnd, evc, spsi )
       !$acc end host_data
-#else
-      CALL calbec( npw, vkb, evc, becp )
-      CALL s_psi( npwx, npw, nbnd, evc, spsi )
-#endif
+      !$acc end data
       CALL deallocate_bec_type( becp )
-      CALL using_becp_auto(2)
       !
       ! ... Set up various quantities, in particular wfcU which 
       ! ... contains Hubbard-U (ortho-)atomic wavefunctions (without ultrasoft S)
