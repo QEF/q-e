@@ -42,9 +42,6 @@ SUBROUTINE force_hub( forceh )
    USE mp_bands,             ONLY : use_bgrp_in_hpsi
    USE noncollin_module,     ONLY : noncolin
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv
-   USE becmod_gpum,          ONLY : bec_type_d, becp_d
-   USE becmod_subs_gpum,     ONLY : calbec_gpu, using_becp_auto, using_becp_d_auto, &
-                                    allocate_bec_type_gpu, deallocate_bec_type_gpu
    USE uspp_init,            ONLY : init_us_2
    USE constants,            ONLY : eps16
    USE mp_pools,             ONLY : inter_pool_comm, intra_pool_comm, me_pool, &
@@ -58,11 +55,7 @@ SUBROUTINE force_hub( forceh )
    !
    ! ... local variables
    !
-#if defined(__CUDA)
-   TYPE(bec_type_d) :: proj     ! proj(nwfcU,nbnd)
-#else
-   TYPE(bec_type) :: proj
-#endif
+   TYPE(bec_type) :: proj   ! proj(nwfcU,nbnd)
    COMPLEX(DP), ALLOCATABLE :: spsi(:,:)
    !$acc declare device_resident(spsi)
    REAL(DP), ALLOCATABLE :: dns(:,:,:,:), dnsb(:,:,:,:)
@@ -119,13 +112,7 @@ SUBROUTINE force_hub( forceh )
    !
    !$acc data copyin(wfcU)
    !
-#if defined(__CUDA)
-   CALL allocate_bec_type_gpu( nwfcU, nbnd, proj )
-   CALL using_evc_d(0)
-#else
    CALL allocate_bec_type( nwfcU, nbnd, proj )
-   CALL using_evc(0)
-#endif
    !
    ! ... poor-man parallelization over bands:
    !      - if nproc_pool=1 : nb_s=1, nb_e=nbnd, mykey=0;
@@ -175,27 +162,21 @@ SUBROUTINE force_hub( forceh )
       ENDIF
       !
       ! ... proj=<wfcU|S|evc>
-#if defined(__CUDA)
-      CALL using_becp_d_auto(2)
-      !$acc host_data use_device( spsi, wfcU )
-      CALL calbec_gpu( npw, wfcU, spsi, proj )
-      !$acc end host_data
+      !
+      CALL calbec( offload_type, npw, wfcU, spsi, proj )
       !
       IF ( gamma_only ) THEN
-         projrd = proj%r_d
-      ELSE
-         projkd = proj%k_d
-      ENDIF
-      !$acc data copyin(wfcatom,overlap_inv)
-#else
-      CALL calbec( npw, wfcU, spsi, proj )
-      !
-      IF ( gamma_only ) THEN
+         !$acc kernels copyout(projrd)
          projrd = proj%r
+         !$acc end kernels
       ELSE
+         !$acc kernels copyout(projkd)
          projkd = proj%k
+         !$acc end kernels
       ENDIF
-#endif
+      !
+      !$acc data copyin(wfcatom,overlap_inv)
+      !
       ! ... now we need the first derivative of proj with respect to tau(alpha,ipol)
       !
       DO alpha = 1, nat  ! forces are calculated by displacing atom alpha ...
@@ -312,11 +293,7 @@ SUBROUTINE force_hub( forceh )
    !
    CALL mp_sum( forceh, inter_pool_comm )
    !
-#if defined(__CUDA)
-   CALL deallocate_bec_type_gpu( proj )
-#else
    CALL deallocate_bec_type( proj )
-#endif
    !
    IF (lda_plus_u_kind==0) THEN
       DEALLOCATE( dns )
