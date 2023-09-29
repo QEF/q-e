@@ -46,7 +46,7 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
   USE basic_algebra_routines, ONLY : norm
   USE dynamics_module,        ONLY : verlet, terminate_verlet, proj_verlet, fire
-  USE dynamics_module,        ONLY : smart_MC, langevin_md, dt
+  USE dynamics_module,        ONLY : smart_MC, langevin_md, dt, vel
   USE dynamics_module,        ONLY : fire_nmin, fire_f_inc, fire_f_dec, &
                                      fire_alpha_init, fire_falpha, fire_dtmax
   USE klist,                  ONLY : nelec, tot_charge
@@ -54,6 +54,8 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   USE fcp_module,             ONLY : lfcp, fcp_eps, fcp_mu, fcp_relax, &
                                      fcp_verlet, fcp_terminate, output_fcp
   USE rism_module,            ONLY : lrism, rism_new_conv_thr
+  USE printout_base,          ONLY : printout_base_open, printout_base_close, &
+                                     printout_cell, printout_pos, printout_stress
   !
   IMPLICIT NONE
   !
@@ -72,6 +74,8 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   REAL(DP)              :: relec, felec, helec, capacitance, tot_charge_
   LOGICAL               :: conv_ions
   CHARACTER(LEN=320)    :: filebfgs
+  INTEGER               :: iunit
+  REAL(DP)              :: tps !time in picoseconds
   !
   optimizer_failed = .FALSE.
   !
@@ -389,6 +393,24 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
      ! ... FIXME 2: why not impose symmetry instead of just checking it?
      !
      CALL checkallsym( nat, tau, ityp)
+
+     ! write trajectory output files
+
+     tps = dt*real(istep,DP) !TODO: this is wrong if we change the timestep during the run!
+     iunit = printout_base_open('.pos')
+     call printout_pos(iunit, tau, nat, tps=tps, nfi=istep)
+     call printout_base_close(iunit)
+     iunit = printout_base_open('.cel')
+     call printout_cell(iunit,at,istep,tps)
+     call printout_base_close(iunit)
+     iunit = printout_base_open('.for')
+     call printout_pos(iunit, force, nat, tps=tps, nfi=istep)
+     call printout_base_close(iunit)
+     iunit = printout_base_open('.vel')
+     call printout_pos(iunit, vel, nat, tps=tps, nfi=istep)
+     call printout_base_close(iunit)
+
+
      !
   ENDIF
   !

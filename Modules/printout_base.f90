@@ -57,7 +57,8 @@ end function
   SUBROUTINE printout_pos( iunit, tau, nat, ityp, what, nfi, tps, label, fact, head )
     !
     !
-    INTEGER,          INTENT(IN)           :: iunit, nat, ityp(:)
+    INTEGER,          INTENT(IN)           :: iunit, nat
+    INTEGER,          INTENT(IN), OPTIONAL :: ityp(:)
     REAL(DP),        INTENT(IN)           :: tau( :, : )
     CHARACTER(LEN=3), INTENT(IN), OPTIONAL :: what
     INTEGER,          INTENT(IN), OPTIONAL :: nfi
@@ -95,7 +96,7 @@ end function
        END IF
     END IF
     !
-    IF( PRESENT( label ) ) THEN
+    IF( PRESENT( label ) .and. PRESENT(ityp) ) THEN
        DO ia = 1, nat
          WRITE( iunit, 255 ) label(ityp(ia)), ( f * tau(k,ia),k = 1,3)
        END DO
