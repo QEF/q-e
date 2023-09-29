@@ -1581,8 +1581,8 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    USE uspp_param,           ONLY : nh
    USE klist,                ONLY : igk_k, ngk
    USE becmod,               ONLY : calbec
-   USE becmod_subs_gpum,     ONLY : calbec_gpu
    USE gvect,                ONLY : g
+   USE control_flags,        ONLY : offload_type
    !
    IMPLICIT NONE
    !
@@ -1657,17 +1657,10 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    ENDDO
 ! !omp end parallel do
    !
-#if defined(__CUDA)
-   !$acc host_data use_device(A,Abeta,B,betaB,aux)
-   CALL calbec_gpu( npw, A, aux, Abeta )
-   CALL calbec_gpu( npw, aux, B, betaB )
-   !$acc end host_data
-#else
    ! ... Calculate Abeta = <A|beta>
-   CALL calbec( npw, A, aux, Abeta )
+   CALL calbec( offload_type, npw, A, aux, Abeta )
    ! ... Calculate betaB = <beta|B>
-   CALL calbec( npw, aux, B, betaB )
-#endif
+   CALL calbec( offload_type, npw, aux, B, betaB )
    !
    ! ... Calculate the derivative of the beta function
 ! !omp parallel do default(shared) private(ig,ih)
@@ -1681,17 +1674,11 @@ SUBROUTINE matrix_element_of_dSdtau( alpha, ipol, ik, ijkb0, lA, A, &
    ENDDO
 ! !omp end parallel do
    !
-#if defined(__CUDA)
-   !$acc host_data use_device(A,Adbeta,B,dbetaB,aux)
-   CALL calbec_gpu( npw, A, aux, Adbeta )
-   CALL calbec_gpu( npw, aux, B, dbetaB )
-   !$acc end host_data
-#else
    ! ... Calculate Abeta = <A|beta>
-   CALL calbec( npw, A, aux, Adbeta )
+   CALL calbec( offload_type, npw, A, aux, Adbeta )
    ! ... Calculate betaB = <beta|B>
-   CALL calbec( npw, aux, B, dbetaB )
-#endif
+   CALL calbec( offload_type, npw, aux, B, dbetaB )
+   !
    !$acc end data
    DEALLOCATE( aux )
    ALLOCATE( aux(nh(nt),lB) )
