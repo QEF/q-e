@@ -35,7 +35,6 @@ SUBROUTINE force_hub( forceh )
    USE uspp,                 ONLY : nkb, vkb, ofsbeta
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
-   USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
    USE klist,                ONLY : nks, xk, ngk, igk_k
    USE io_files,             ONLY : nwordwfc, iunwfc
    USE buffers,              ONLY : get_buffer
@@ -131,7 +130,6 @@ SUBROUTINE force_hub( forceh )
       IF (lsda) current_spin = isk(ik)
       npw = ngk(ik)
       !
-      IF (nks > 1) CALL using_evc(2)
       IF (nks > 1) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
       !
       CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
@@ -353,7 +351,6 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    USE force_mod,            ONLY : doverlap_inv
    USE basis,                ONLY : natomwfc
    USE wavefunctions,        ONLY : evc
-   USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
    !
@@ -392,11 +389,6 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    COMPLEX(DP), ALLOCATABLE :: dproj(:,:), dproj_us(:,:)
    !
    CALL start_clock( 'dndtau' )
-   !
-#if defined(__CUDA)
-  CALL using_evc(0)
-  CALL using_evc_d(0)
-#endif
    !
    ALLOCATE( dproj(nwfcU,nb_s:nb_e) )
    IF (okvan) ALLOCATE( dproj_us(nwfcU,nb_s:nb_e) )
@@ -709,7 +701,6 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    USE force_mod,            ONLY : doverlap_inv
    USE basis,                ONLY : natomwfc
    USE wavefunctions,        ONLY : evc
-   USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
    !
@@ -747,11 +738,6 @@ SUBROUTINE dngdtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    INTEGER, EXTERNAL :: find_viz
    !
    CALL start_clock( 'dngdtau' )
-   !
-#if defined(__CUDA)
-   CALL using_evc(0)
-   CALL using_evc_d(0)
-#endif
    !
    ALLOCATE( dproj1(nwfcU,nb_s:nb_e) )
    ALLOCATE( dproj2(nwfcU,nb_s:nb_e) )
@@ -1730,8 +1716,6 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : calbec
-   USE wavefunctions,        ONLY : evc
-   USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d, evc_d
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
