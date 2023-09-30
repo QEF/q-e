@@ -271,6 +271,9 @@ contains
 subroutine vloc_gth(itype, zion, tpiba2, ngl, gl, omega, vloc)
   !-----------------------------------------------------------------------
   !
+  ! compute vloc(G), including the correct G=0 limit, making no assumption
+  ! that G=0 is the first vector (so we can compute Vloc(q+G) as well)
+  !
   USE upf_kinds, ONLY: dp
   USE upf_const, ONLY: pi, fpi, e2, eps8
 
@@ -283,7 +286,7 @@ subroutine vloc_gth(itype, zion, tpiba2, ngl, gl, omega, vloc)
   !
   ! Local variables
   integer  :: ii, my_gth, igl, igl0
-  real(dp) :: cc1, cc2, cc3, cc4, rloc, epsatm, gx, gx2, rq2, rl3, e_rq2h, fact
+  real(dp) :: cc1, cc2, cc3, cc4, rloc, epsatm, gx2, rq2, rl3, e_rq2h
   !
   ! Find gtp param. set for type itype
   my_gth=0
@@ -303,41 +306,29 @@ subroutine vloc_gth(itype, zion, tpiba2, ngl, gl, omega, vloc)
   ! Compute epsatm = lim(q->0) [Vloc(q) + zion/(Pi*q^2)]
   epsatm=2._dp*pi*rloc**2*zion+(2._dp*pi)**(1.5_dp)*rloc**3*(cc1+3._dp*cc2+15._dp*cc3+105._dp*cc4)
   ! 1/\Omega * \sum_i epsatm(i) is v_loc(G=0)
-
-  ! Compute vloc(q)
-  if (gl (1) < eps8) then
-     !
-     ! first the G=0 term
-     !
-!    vloc (1) = 0._dp
-     vloc (1) = epsatm
-     igl0 = 2
-  else
-     igl0 = 1
-  endif
   !
-  !   here the G<>0 terms, we first compute the part of the integrand 
-  !   function independent of |G| in real space
-  !
-  do igl = igl0, ngl
-     gx     = sqrt (gl (igl) * tpiba2)
-     gx2    = gx**2
-     rq2    = (gx*rloc)**2
-     rl3    = rloc**3
-     e_rq2h = exp(-0.5_dp*rq2)
-     vloc (igl) = &
-         fpi * e_rq2h*(-zion/gx2 + sqrt(pi/2._dp)*rl3* &
-           ( &
+  do igl = 1, ngl
+     if ( gl(igl) < eps8 ) then
+        !   here the G=0 terms
+        !   NOTE: not assuming G are ordered
+        vloc(igl) = epsatm * e2 / omega
+     else
+        !   here the G<>0 terms
+        gx2    = gl(igl) * tpiba2
+        rq2    = gx2*rloc**2
+        rl3    = rloc**3
+        e_rq2h = exp(-0.5_dp*rq2)
+        vloc (igl) = &
+             fpi * e_rq2h*(-zion/gx2 + sqrt(pi/2._dp)*rl3* &
+             ( &
              cc1 + &
              cc2*(3._dp-rq2) + &
              cc3*(15._dp-10._dp*rq2+rq2**2) + &
              cc4*(105._dp-rq2*(105._dp-rq2*(21._dp-rq2))) &
-           ) &
-        )
+             ) &
+             )* e2 / omega
+     end if
   enddo
-  !
-  fact = e2 / omega
-  vloc (:) = vloc(:) * fact
   !
 end subroutine vloc_gth
 !

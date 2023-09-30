@@ -38,8 +38,7 @@ MODULE vloc_mod
   !
 CONTAINS
   !----------------------------------------------------------------------
-  SUBROUTINE init_tab_vloc (qmax_, modified_coulomb, omega, comm,&
-       ierr)
+  SUBROUTINE init_tab_vloc (qmax_, modified_coulomb, omega, comm, ierr)
     !----------------------------------------------------------------------
     !
     !! Allocate and fill interpolation table for numerical pseudopotentials
@@ -47,9 +46,10 @@ CONTAINS
     !! of the local potential MINUS the long-range term (see below) for atom
     !! type n on grid q_i=(i-1)*dq extending up to qmax.
     !! A term erf(r)/r is subtracted in real space (thus making the
-    !! function short-ranged) and added again in G space (for G<>0)
-    !! The G=0 term contains \int (V_loc(r)+ Ze^2/r) 4pi r^2 dr.
-    !! This is the "alpha" in the so-called "alpha Z" term of the energy.
+    !! function short-ranged) and added again in G space
+    !! Note that the "alpha" of the so-called "alpha Z" energy term, 
+    !! alpha = \int (V_loc(r)+ Ze^2/r) 4pi r^2 dr, needed to get the
+    !! correct G=0 limit, is stored into tab_vloc(0,n)
     !! Atomic Ry units everywhere.
     !
     USE upf_const,    ONLY : fpi, e2
@@ -88,7 +88,7 @@ CONTAINS
        !! table not yet allocated
        qmax = qmax_
        nqx = INT( qmax/dq + 4)
-       ALLOCATE ( tab_vloc(nqx,nsp) )
+       ALLOCATE ( tab_vloc(0:nqx,nsp) )
        !$acc enter data create(tab_vloc)
     ELSE IF ( qmax_ > qmax ) THEN
        DEALLOCATE ( tab_vloc )
@@ -96,7 +96,7 @@ CONTAINS
        !! (with some margin so that this does not happen too often)
        qmax = qmax_ + MAX(dq,qmax_-qmax) * 10
        nqx = INT( qmax/dq + 4)
-       ALLOCATE ( tab_vloc(nqx,nsp) )
+       ALLOCATE ( tab_vloc(0:nqx,nsp) )
        !$acc enter data create(tab_vloc)
     ELSE
        RETURN
@@ -106,20 +106,23 @@ CONTAINS
     ALLOCATE (aux(ndm))
     !
     CALL divide (comm, nqx, startq, lastq)
-    !
+    !! Distribute across MPI processes the workload
     DO nt = 1, nsp
        !
        tab_vloc(:,nt)= 0.d0
        !
        IF ( upf(nt)%is_gth ) THEN
           !! Compute analytical transform of GTH PP even if not actually used
-          !! For testing purposes
-          DO iq = startq, lastq
-             q2(1) = ( (iq-1)*dq )**2
-             CALL vloc_gth( nt, upf(nt)%zp, 1.0_dp, 1, q2, omega, tab_vloc(iq,nt) )
-          END DO
+          !! Uncomment for testing purposes
+          !DO iq = startq, lastq
+          !   q2(1) = ( (iq-1)*dq )**2
+          !   CALL vloc_gth( nt, upf(nt)%zp, 1.0_dp, 1, q2, omega, tab_vloc(iq,nt) )
+          !END DO
+          !IF ( startq == 1 ) tab_vloc (0,nt) = tab_vloc (1,nt)
+          CONTINUE
+          !
        ELSE IF ( .NOT.upf(nt)%tcoulombp ) THEN
-          !! If pure Coulomb potential, do nothing
+          !! For pure Coulomb potential do nothing
           !
           DO iq = startq, lastq
              !
@@ -131,12 +134,10 @@ CONTAINS
                    !! q > 0 case: notice removal of erf(r)/r term
                    aux (ir) = (r*aux(ir) + upf(nt)%zp*e2*erf(r)) * sin(q*r)/q
                 ELSE
-                   !! The q = 0 case require a special treatment
-                   IF ( modified_coulomb ) THEN
-                      aux (ir) = r * ( r*aux(ir) + upf(nt)%zp*e2 * erf(r) )
-                   ELSE
-                      aux (ir) = r * ( r*aux(ir) + upf(nt)%zp*e2 )
-                   ENDIF
+                   !! q = 0 case, continuous for q -> 0
+                   !! NOT THE SAME AS THE G=0 TERM, computed below
+                   !! (except for modified Coulomb calculations)
+                   aux (ir) = r * ( r*aux(ir) + upf(nt)%zp*e2 * erf(r) )
                 END IF
              ENDDO
              !
@@ -144,6 +145,21 @@ CONTAINS
              tab_vloc (iq,nt) = tab_vloc (iq,nt) * fpi / omega 
              !
           ENDDO
+          !! Compute G=0 term only once
+          IF ( startq == 1 ) THEN
+             IF ( modified_coulomb ) THEN
+                tab_vloc (0,nt) = tab_vloc (1,nt)
+                !! G = 0 term for modified Coulomb calculations
+             ELSE IF ( .NOT. upf(nt)%is_gth ) THEN
+                !! G = 0 term for ordinary calculations
+                DO ir = 1, msh(nt)
+                   r = rgrid(nt)%r(ir)
+                   aux (ir) = r * ( r*upf(nt)%vloc(ir) + upf(nt)%zp*e2 )
+                END DO
+                CALL simpson ( msh(nt), aux, rgrid(nt)%rab, tab_vloc(0,nt) )
+                tab_vloc (0,nt) = tab_vloc (0,nt) * fpi / omega
+             END IF
+          END IF
           !
        END IF
        !
@@ -182,20 +198,24 @@ CONTAINS
   !$acc data present_or_copyin(gl) present_or_copyout(vlocg) present(tab_vloc)
   !$acc parallel loop
   DO igl = 1, ngl
-     gx = SQRT(gl(igl) * tpiba2)
-     px = gx / dq - int (gx/dq)
-     ux = 1.d0 - px
-     vx = 2.d0 - px
-     wx = 3.d0 - px
-     i0 = INT(gx/dq) + 1
-     i1 = i0 + 1
-     i2 = i0 + 2
-     i3 = i0 + 3
-     vlocg (igl) = tab_vloc(i0, nt) * ux * vx * wx / 6.d0 + &
-                   tab_vloc(i1, nt) * px * vx * wx / 2.d0 - &
-                   tab_vloc(i2, nt) * px * ux * wx / 2.d0 + &
-                   tab_vloc(i3, nt) * px * ux * vx / 6.d0
-
+     IF ( gl(igl) < eps8 ) THEN
+        vlocg (igl) = tab_vloc(0, nt)
+        !! G=0 case
+     ELSE
+        gx = SQRT(gl(igl)*tpiba2)
+        px = gx / dq - int (gx/dq)
+        ux = 1.d0 - px
+        vx = 2.d0 - px
+        wx = 3.d0 - px
+        i0 = INT(gx/dq) + 1
+        i1 = i0 + 1
+        i2 = i0 + 2
+        i3 = i0 + 3
+        vlocg (igl) = tab_vloc(i0, nt) * ux * vx * wx / 6.d0 + &
+             tab_vloc(i1, nt) * px * vx * wx / 2.d0 - &
+             tab_vloc(i2, nt) * px * ux * wx / 2.d0 + &
+             tab_vloc(i3, nt) * px * ux * vx / 6.d0
+     END IF
   ENDDO
   !$acc end data
   !
@@ -249,34 +269,33 @@ CONTAINS
   !
   REAL(DP) :: fac
   ! auxiliary variables
-  INTEGER :: igl, igl0
+  INTEGER :: igl
   ! igl : counter on g shells vectors
-  ! igl0: position of first nonzero G
-  !
-  IF (gl (1) < eps8) THEN
-     igl0 = 2
-  ELSE
-     igl0 = 1
-  END IF
   !
   IF ( upf(nt)%is_gth ) THEN
      ! special case: GTH pseudopotential
      CALL vloc_gth( nt, upf(nt)%zp, tpiba2, ngl, gl, omega, vloc )
   ELSE IF ( upf(nt)%tcoulombp ) THEN
      ! special case: pure Coulomb pseudopotential
-     IF ( igl0 > 1 ) vloc(1) = 0.0_dp
-     vloc (igl0:ngl) = - fpi * upf(nt)%zp*e2 / omega / tpiba2 / gl (igl0:ngl)
+     DO igl = 1, ngl
+        IF ( gl(igl) < eps8 ) THEN
+           vloc(igl) = 0.0_dp
+        ELSE
+           vloc (igl) = - fpi * upf(nt)%zp*e2 / omega / tpiba2 / gl (igl)
+        END IF
+     END DO
   ELSE
      ! normal case: interpolation of short-range terms
      CALL  interp_vloc ( nt, ngl, gl, tpiba2, vloc )
      !
      IF ( .not. modified_coulomb ) THEN
         fac = fpi / omega * upf(nt)%zp * e2 / tpiba2
-        DO igl = igl0, ngl
+        DO igl = 1, ngl
            !
            !   here we re-add the analytic fourier transform of erf(r)/r
            !
-           vloc(igl) = vloc(igl) - fac * exp (-gl (igl)*tpiba2*0.25d0)/gl (igl)
+           IF ( gl(igl) > eps8 ) &
+                vloc(igl) = vloc(igl) - fac*exp(-gl(igl)*tpiba2*0.25d0)/gl(igl)
         END DO
      END IF
   END IF
@@ -333,7 +352,7 @@ CONTAINS
   !$acc end data
   !
   END SUBROUTINE interp_dvloc
-
+  !
   !----------------------------------------------------------------------
   SUBROUTINE dvloc_of_g( nt, ngl, gl, tpiba2, modified_coulomb, omega, &
          dvloc )
@@ -341,6 +360,7 @@ CONTAINS
   !! This routine computes:
   !! \[ \text{dvloc} = D\text{Vloc}(g^2)/Dg^2 = (1/2g)\ D\text{Vloc}(g)/Dg
   !! \]
+  !! IMPORTANT NOTE: we assume gl(1) = 0 on at least one processor
   !
   USE uspp_param, ONLY : upf 
   USE m_gth,      ONLY : dvloc_gth
