@@ -114,14 +114,15 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
   !! the m wavefunctions
   COMPLEX(DP), INTENT(OUT)::spsi(lda*npol,m)
   !! S matrix dot wavefunctions psi
-#if defined(__CUDA)
   !
   ! ... local variables
   !
   INTEGER :: ibnd
+#if defined(__CUDA)
   COMPLEX(DP), PINNED, ALLOCATABLE :: psi_host(:,:)
   COMPLEX(DP), PINNED, ALLOCATABLE ::spsi_host(:,:)
   LOGICAL :: need_host_copy
+#endif
   !
   ! ... initialize  spsi
   !
@@ -130,8 +131,6 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
 #if defined(__CUDA)  
   CALL dev_memcpy( spsi , psi )
 #else
-  ! civn: this is never true now, 
-  !       but hopefully one day this routine will used for both cpu and gpu execution
   CALL threaded_memcpy( spsi, psi, lda*npol*m*2 )
 #endif
   !
@@ -139,12 +138,14 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
   !
   CALL start_clock( 's_psi' )  
   !
+#if defined(__CUDA)  
   need_host_copy = real_space
   IF (need_host_copy) THEN
       ALLOCATE(psi_host(lda*npol,m), spsi_host(lda*npol,m))
       psi_host  = psi
       spsi_host = spsi
   END IF
+#endif
   !
   ! ... The product with the beta functions
   !
@@ -160,10 +161,16 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
 !SdG: ... before computing the us-only contribution ...
            CALL s_psir_gamma( ibnd, m )
 !SdG: ... and add it to spsi (already containing psi).
+#if defined(__CUDA)
            CALL fwfft_orbital_gamma( spsi_host, ibnd, m, add_to_orbital=.TRUE. )
+#else
+           CALL fwfft_orbital_gamma( spsi, ibnd, m, add_to_orbital=.TRUE. )
+#endif
         ENDDO
         !
+#if defined(__CUDA)
         spsi = spsi_host
+#endif
         !
      ELSE
         !
@@ -187,10 +194,16 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
 !SdG: ... before computing the us-only contribution ...
            CALL s_psir_k( ibnd, m )
 !SdG: ... and add it to spsi (already containing psi).
+#if defined(__CUDA)
            CALL fwfft_orbital_k( spsi_host, ibnd, m, add_to_orbital=.TRUE. )
+#else
+           CALL fwfft_orbital_k( spsi, ibnd, m, add_to_orbital=.TRUE. )
+#endif
         ENDDO
         !
+#if defined(__CUDA)
         spsi = spsi_host
+#endif
         !
      ELSE
         !
@@ -203,7 +216,6 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
   !$acc end data
   !
   CALL stop_clock( 's_psi' )
-#endif
   !
   RETURN
   !
