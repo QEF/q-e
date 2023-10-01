@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2020-2020 Quantum ESPRESSO group
+! Copyright (C) 2020-2023 Quantum ESPRESSO group
 !
 ! This file is distributed under the terms of the GNU General Public
 ! License. See the file `LICENSE' in the root directory of the
@@ -1190,7 +1190,6 @@ SUBROUTINE init_phq_dvscf_q2r(xq)
   USE gvect,       ONLY : g, ngm
   USE uspp,        ONLY : nlcc_any
   USE uspp_param,  ONLY : upf
-  USE m_gth,       ONLY : setlocq_gth
   !
   IMPLICIT NONE
   !
@@ -1215,24 +1214,7 @@ SUBROUTINE init_phq_dvscf_q2r(xq)
     !
   END DO
   !
-  ! ... b) the fourier components of the local potential at q+G
-  !
-  ALLOCATE(vlocq(ngm , ntyp))
-  vlocq(:,:) = 0.D0
-  !
-  DO nt = 1, ntyp
-     !
-     IF (upf(nt)%tcoulombp) THEN
-        CALL setlocq_coul( xq, upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1,nt))
-     ELSE IF (upf(nt)%is_gth) THEN
-        CALL setlocq_gth( nt, xq, upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1,nt) )
-     ELSE
-        CALL setlocq( xq, rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r,&
-                   upf(nt)%vloc(1), upf(nt)%zp, tpiba2, ngm, g, omega, &
-                   vlocq(1,nt) )
-     ENDIF
-     !
-  END DO
+  CALL init_vlocq ( ) 
   !
 !------------------------------------------------------------------------------
 END SUBROUTINE init_phq_dvscf_q2r
