@@ -121,7 +121,6 @@ PROGRAM dvscf_q2r
   USE cell_base,   ONLY : at, bg
   USE fft_base,    ONLY : dfftp
   USE lsda_mod,    ONLY : nspin
-  USE gvect,       ONLY : ngm
   USE noncollin_module, ONLY : nspin_mag
   USE uspp,        ONLY : nlcc_any
   USE paw_variables, ONLY : okpaw
@@ -1181,15 +1180,10 @@ SUBROUTINE init_phq_dvscf_q2r(xq)
   !!
   !----------------------------------------------------------------------------
   USE kinds,       ONLY : DP
-  USE constants,   ONLY : tpi
-  USE cell_base,   ONLY : tpiba2, omega
-  USE ions_base,   ONLY : ntyp => nsp, nat, tau
-  USE eqv,         ONLY : vlocq
+  USE ions_base,   ONLY : nsp, nat, tau
   USE qpoint,      ONLY : eigqts
-  USE atom,        ONLY : rgrid, msh
-  USE gvect,       ONLY : g, ngm
-  USE uspp,        ONLY : nlcc_any
-  USE uspp_param,  ONLY : upf
+  USE gvect,       ONLY : ngm
+  USE eqv,         ONLY : vlocq
   !
   IMPLICIT NONE
   !
@@ -1199,8 +1193,7 @@ SUBROUTINE init_phq_dvscf_q2r(xq)
   INTEGER :: na, nt
   REAL(DP) :: arg
   !
-  ! First, calculate vlocq
-  ! Adapted from PH/phq_init.f90, step 0, a and b
+  ! Adapted from PH/phq_init.f90, step 0 and b
   !
   ALLOCATE(eigqts(nat))
   !
@@ -1214,7 +1207,10 @@ SUBROUTINE init_phq_dvscf_q2r(xq)
     !
   END DO
   !
-  CALL init_vlocq ( ) 
+  ALLOCATE ( vlocq (ngm, nsp) ) 
+  CALL init_vlocq ( xq ) 
+  !
+  RETURN
   !
 !------------------------------------------------------------------------------
 END SUBROUTINE init_phq_dvscf_q2r

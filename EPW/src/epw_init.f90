@@ -160,7 +160,7 @@
   ! ... b) the fourier components of the local potential at q+G
   !        From PHonon/PH/phq_init.f90
   !
-  CALL init_vlocq ( ) 
+  CALL init_vlocq ( xq ) 
   ! 
   IF (first_run) THEN
     ALLOCATE(igk_k_all(npwx, nkstot), STAT = ierr)

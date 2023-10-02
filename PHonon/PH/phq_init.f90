@@ -117,7 +117,7 @@ SUBROUTINE phq_init()
   !
   ! ... b) the fourier components of the local potential at q+G
   !
-  CALL init_vlocq ( ) 
+  CALL init_vlocq ( xq ) 
   !
   ! only for electron-phonon coupling with wannier functions
   ! 

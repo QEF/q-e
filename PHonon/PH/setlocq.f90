@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------
-SUBROUTINE init_vlocq ( )
+SUBROUTINE init_vlocq ( xq )
   !----------------------------------------------------------------------
   !
   USE kinds,                ONLY : dp
@@ -14,8 +14,6 @@ SUBROUTINE init_vlocq ( )
   USE gvect,                ONLY : g, ngm, ecutrho
   USE cell_base,            ONLY : omega, tpiba2
   USE ions_base,            ONLY : nsp
-  USE klist,                ONLY : qnorm
-  USE qpoint,               ONLY : xq
   USE vloc_mod,             ONLY : vloc_of_g, init_tab_vloc
   USE Coul_cut_2D,          ONLY : do_cutoff_2D     
   USE Coul_cut_2D_ph,       ONLY : cutoff_lr_Vlocq , cutoff_fact_qg
@@ -24,14 +22,15 @@ SUBROUTINE init_vlocq ( )
   IMPLICIT NONE
   INTEGER :: ig, nt, ierr
   REAL(dp) :: qmax
+  REAL(dp), INTENT(IN) :: xq(3)
   REAL(dp), ALLOCATABLE :: qg(:)
   !
-  qmax = (sqrt(ecutrho)+qnorm)
+  qmax = sqrt ( tpiba2 * ( xq(1)**2+xq(2)**2+xq(3)**2 ) ) + sqrt(ecutrho)
   CALL init_tab_vloc (qmax, do_cutoff_2d, omega, intra_bgrp_comm, ierr )
   !
   ALLOCATE ( qg(ngm) )
   DO ig = 1 , ngm
-     qg(ig) = (xq(1)+G(1,ig))**2 + (xq(2)+G(2,ig))**2 + (xq(3)+G(3,ig))**2
+     qg(ig) = (xq(1)+g(1,ig))**2 + (xq(2)+g(2,ig))**2 + (xq(3)+g(3,ig))**2
   END DO
   DO nt = 1, nsp
      CALL vloc_of_g( nt, ngm, qg, tpiba2, do_cutoff_2d, omega, vlocq(:,nt) )
