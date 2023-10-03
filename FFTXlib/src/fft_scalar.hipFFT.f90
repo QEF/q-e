@@ -46,7 +46,18 @@ MODULE hip_kernels
 
   IMPLICIT NONE
   PRIVATE
-  PUBLIC :: scalar_multiply, scalar_multiply_3D, loop2d_scatter_hip
+  PUBLIC :: scalar_init, scalar_multiply, scalar_multiply_3D, loop2d_scatter_hip
+
+  INTERFACE
+    SUBROUTINE scalar_init_(s, dev_ptr,val, stream) &
+        & BIND(C, name="c_scalar_init_")
+      USE iso_c_binding
+      INTEGER(C_INT), INTENT(IN), VALUE   :: s
+      TYPE(C_PTR), VALUE                  :: dev_ptr
+      REAL(C_DOUBLE), VALUE               :: val
+      TYPE(C_PTR),    VALUE               :: stream
+    END SUBROUTINE scalar_init_
+  END INTERFACE
 
   INTERFACE
     SUBROUTINE scalar_multiply_(s, dev_ptr,val, stream) &
@@ -71,6 +82,18 @@ MODULE hip_kernels
   END INTERFACE
 
   CONTAINS
+
+  SUBROUTINE scalar_init(a,val,s,stream)
+    COMPLEX(8), INTENT(inout)  :: a(:)
+    REAL(8), INTENT(in)        :: val
+    INTEGER(C_INT), INTENT(in) :: s
+    TYPE(C_PTR)                :: stream
+
+    !$omp target data use_device_addr(a)
+    CALL scalar_init_(s,c_loc(a),val,stream)
+    !$omp end target data
+
+  END SUBROUTINE scalar_init
 
   SUBROUTINE scalar_multiply(a,val,s,stream)
     COMPLEX(8), INTENT(inout)  :: a(:)

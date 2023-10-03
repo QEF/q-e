@@ -2137,7 +2137,7 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
    !
    USE hipfft, ONLY: hipEventRecord, hipMemcpy2DAsync, hipMemcpy,hipMemcpyAsync, &
                      hipCheck, hipDeviceSynchronize, hipStreamWaitEvent, hipEventSynchronize
-   USE hip_kernels, ONLY: scalar_multiply, loop2d_scatter_hip
+   USE hip_kernels, ONLY: scalar_init, loop2d_scatter_hip
    !
    IMPLICIT NONE
    !
@@ -2322,7 +2322,7 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
 !$omp end target teams distribute parallel do
 #else
    nnp = 2*(ubound(f_aux,1)-lbound(f_aux,1)+1)
-   CALL scalar_multiply(f_aux(lbound(f_aux,1):ubound(f_aux,1)),0.d0,nnp,dfft%a2a_comp)
+   CALL scalar_init(f_aux(lbound(f_aux,1):ubound(f_aux,1)),0.d0,nnp, dfft%a2a_comp)
 #endif
    !
    npp = dfft%nr3p( me )

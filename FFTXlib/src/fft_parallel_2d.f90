@@ -592,13 +592,12 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
      !
   ENDIF
   !
-
 !-------------HIGHLY PROVISIONAL-------------------
  !$omp target exit data map(delete:dfft_iss,dfft_nsw,dfft_nsp,dfft_ismap)
   DEALLOCATE( dfft_iss, dfft_nsw, dfft_nsp )
   DEALLOCATE( dfft_ismap )
 !---------------------------------------------------
-
+  !
   RETURN
   !
 END SUBROUTINE many_cft3s_omp
