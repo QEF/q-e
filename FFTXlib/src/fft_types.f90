@@ -343,7 +343,7 @@ CONTAINS
 
     nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
     ALLOCATE( desc%srh(2*nproc, nsubbatches))
-    !$omp target enter data map(always,alloc:desc%srh)
+    !!$omp target enter data map(always,alloc:desc%srh)
 #endif
 
 #if defined(__CUDA)
@@ -439,7 +439,7 @@ CONTAINS
         !$omp target exit data map(delete:desc%indw_tg)
     ENDIF
     IF (OMP_TARGET_IS_PRESENT(c_loc(desc%srh), OMP_GET_DEFAULT_DEVICE()) == 1) THEN
-        !$omp target exit data map(delete:desc%srh)
+        !!$omp target exit data map(delete:desc%srh)
     ENDIF
     IF (OMP_TARGET_IS_PRESENT(c_loc(desc%aux), OMP_GET_DEFAULT_DEVICE()) == 1) THEN
         !$omp target exit data map(delete:desc%aux)
