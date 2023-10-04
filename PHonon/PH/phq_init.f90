@@ -13,9 +13,7 @@ SUBROUTINE phq_init()
   !! local and nonlocal pseudopotential in the phononq program.
   !! In detail it computes:  
   !! 0)  initialize the structure factors;  
-  !! a0) compute rhocore for each atomic-type if needed for nlcc;  
-  !! a)  the local potential at G-G'. Needed for the part of the dynamic
-  !!     matrix independent of deltapsi;  
+  !! a)  compute rhocore for each atomic-type if needed for nlcc;  
   !! b)  the local potential at q+G-G'. Needed for the second
   !!     second part of the dynamical matrix;  
   !! c)  the D coefficients for the US pseudopotential or the E_l parame
@@ -31,18 +29,16 @@ SUBROUTINE phq_init()
   !
   !
   USE kinds,                ONLY : DP
-  USE cell_base,            ONLY : bg, tpiba, tpiba2, omega
-  USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
+  USE cell_base,            ONLY : bg, tpiba
+  USE ions_base,            ONLY : nat, ityp, tau
   USE becmod,               ONLY : calbec, becp, allocate_bec_type, &
                                    deallocate_bec_type
   USE constants,            ONLY : eps8, tpi
-  USE gvect,                ONLY : g, ngm
+  USE gvect,                ONLY : g
   USE klist,                ONLY : xk, ngk, igk_k
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE buffers,              ONLY : get_buffer
   USE io_global,            ONLY : stdout
-  USE atom,                 ONLY : msh, rgrid
-  USE vlocal,               ONLY : strf
   USE wvfct,                ONLY : npwx, nbnd
   USE gvecw,                ONLY : gcutw
   USE wavefunctions,        ONLY : evc
@@ -51,8 +47,6 @@ SUBROUTINE phq_init()
 #endif
   USE noncollin_module,     ONLY : noncolin, domag, npol, lspinorb
   USE uspp,                 ONLY : okvan, vkb, nlcc_any, nkb
-  USE uspp_param,           ONLY : upf
-  USE m_gth,                ONLY : setlocq_gth
   USE phus,                 ONLY : alphap
 #if defined(__CUDA)
   USE phus,                 ONLY : alphap_d
@@ -60,14 +54,11 @@ SUBROUTINE phq_init()
   USE nlcc_ph,              ONLY : drc
   USE control_ph,           ONLY : trans, zue, epsil, all_done
   USE units_lr,             ONLY : lrwfc, iuwfc
-  USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   USE acfdtest,             ONLY : acfdt_is_active, acfdt_num_der
   USE el_phon,              ONLY : elph_mat, iunwfcwann, npwq_refolded, &
                                    kpq,g_kpq,igqg,xk_gamma, lrwfcr
   USE wannier_gw,           ONLY : l_head
-  USE Coul_cut_2D,          ONLY : do_cutoff_2D     
-  USE Coul_cut_2D_ph,       ONLY : cutoff_lr_Vlocq , cutoff_fact_qg 
   USE lrus,                 ONLY : becp1, dpqq, dpqq_so
 #if defined(__CUDA)
   USE lrus,                 ONLY : becp1_d
@@ -77,7 +68,7 @@ SUBROUTINE phq_init()
 #if defined(__CUDA)
   USE  qpoint_aux,          ONLY : becpt_d, alphapt_d
 #endif
-  USE eqv,                  ONLY : vlocq, evq
+  USE eqv,                  ONLY : evq
   USE control_lr,           ONLY : nbnd_occ, lgamma
   USE ldaU,                 ONLY : lda_plus_u
   USE uspp_init,            ONLY : init_us_2
@@ -120,37 +111,13 @@ SUBROUTINE phq_init()
      !
   END DO
   !
-  ! ... a0) compute rhocore for each atomic-type if needed for nlcc
+  ! ... a) compute rhocore for each atomic-type if needed for nlcc
   !
   IF ( nlcc_any ) CALL set_drhoc( xq, drc )
   !
   ! ... b) the fourier components of the local potential at q+G
   !
-  vlocq(:,:) = 0.D0
-  !
-  DO nt = 1, ntyp
-     !
-     IF (upf(nt)%tcoulombp) then
-        CALL setlocq_coul ( xq, upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1,nt) )
-     ELSE IF (upf(nt)%is_gth) then
-        CALL setlocq_gth ( nt, xq, upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1,nt) )
-     ELSE
-        CALL setlocq( xq, rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r,&
-                   upf(nt)%vloc(1), upf(nt)%zp, tpiba2, ngm, g, omega, &
-                   vlocq(1,nt) )
-     END IF
-     !
-  END DO
-  ! for 2d calculations, we need to initialize the fact for the q+G 
-  ! component of the cutoff of the COulomb interaction
-  IF (do_cutoff_2D) call cutoff_fact_qg() 
-  !  in 2D calculations the long range part of vlocq(g) (erf/r part)
-  ! was not re-added in g-space because everything is calculated in
-  ! radial coordinates, which is not compatible with 2D cutoff. 
-  ! It will be re-added each time vlocq(g) is used in the code. 
-  ! Here, this cutoff long-range part of vlocq(g) is computed only once
-  ! by the routine below and stored
-  IF (do_cutoff_2D) call cutoff_lr_Vlocq() 
+  CALL init_vlocq ( xq ) 
   !
   ! only for electron-phonon coupling with wannier functions
   ! 
