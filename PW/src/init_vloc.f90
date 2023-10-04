@@ -10,7 +10,7 @@
 SUBROUTINE init_vloc()
   !----------------------------------------------------------------------
   !! This routine computes the fourier coefficient of the local
-  !! potential vloc(ig,it) for each type of atom.
+  !! potential vloc(ig,it) (in module vlocal) for each type of atom
   !
   USE kinds,          ONLY : dp
   USE vloc_mod,       ONLY : init_tab_vloc, vloc_of_g
@@ -20,17 +20,17 @@ SUBROUTINE init_vloc()
   USE atom,           ONLY : msh, rgrid
   USE Coul_cut_2D,    ONLY : do_cutoff_2D, cutoff_lr_Vloc, lz
   USE esm,            ONLY : do_comp_esm, esm_bc
-  USE vlocal,         ONLY : vloc
-  USE mp_bands,       ONLY : intra_bgrp_comm ! FIXME: maybe intra_image_comm?
-  USE klist,          ONLY : qnorm
+  USE mp,             ONLY : mp_max
+  USE mp_bands,       ONLY : intra_bgrp_comm
   USE cellmd,         ONLY : cell_factor
+  USE vlocal,         ONLY : vloc
   !
   IMPLICIT NONE
   !
   INTEGER :: nt
   !! counter on atomic types
   INTEGER :: ierr
-  !! counter on atomic types
+  !! error code
   LOGICAL :: modified_coulomb
   !! For  ESM and 2D cutoff, special treatment of long-range Coulomb potential
   REAL(dp):: qmax
@@ -41,13 +41,23 @@ SUBROUTINE init_vloc()
   vloc(:,:) = 0._dp
   !
   modified_coulomb = do_cutoff_2D .OR. (do_comp_esm .and. ( esm_bc .ne. 'pbc' ))
-  qmax = (sqrt(ecutrho)+qnorm)*cell_factor
-  !! Ths should work both for phonon calculation (q+G is needed, |q|=qnorm)
-  !! and for variable-cell calculations (cell_factor = 1.2 or so)
+  !
+  qmax = tpiba2 * MAXVAL ( gl )
+  CALL mp_max (qmax, intra_bgrp_comm)
+  !! this is the actual maximum |G|^2 needed in the interpolation table
+  !! for variable-cell calculations this may exceed ecutrho, so we use
+  !! "cell_factor" (1.2 or so) as below, in order to avoid too frequent 
+  !! re-allocations of the interpolation table
+  !
+  qmax = MAX (sqrt(qmax), sqrt(ecutrho)*cell_factor)
   !
   CALL init_tab_vloc (qmax, modified_coulomb, omega, intra_bgrp_comm, ierr )
-  CALL errore('init_vloc','Coulomb or GTH PPs incompatible with 2D cutoff &
+  IF ( ierr == 1 ) THEN
+     CALL errore('init_vloc','Coulomb or GTH PPs incompatible with 2D cutoff &
              & or ESM (see upflib/vloc_mod.f90)',ierr)
+  ELSE IF ( ierr == -1 ) THEN
+     CALL infomsg('init_vloc','Interpolation table for Vloc re-allocated')
+  END IF
   !
   DO nt = 1, ntyp
      IF (do_cutoff_2D .AND. rgrid(nt)%r(msh(nt)) > lz) THEN 

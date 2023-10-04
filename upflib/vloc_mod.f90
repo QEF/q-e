@@ -65,7 +65,10 @@ CONTAINS
     LOGICAL, INTENT(IN)  :: modified_coulomb
     !! if true subtract out a modified Coulomb potential
     INTEGER, INTENT(OUT) :: ierr
-    !! error code: ierr = 1 if modifed Coulomb not implemented 
+    !! error code: ierr = 1 if modified Coulomb not implemented 
+    !!             ierr = 0 if interpolation table (IT) was allocated
+    !!             ierr =-1 if IT had insufficent dimension and was re-allocated
+    !!             ierr =-2 if IT was already present and nothing is done
     REAL(dp), INTENT(IN) :: omega
     !! Unit-cell volume
     REAL(dp), INTENT(IN) :: qmax_
@@ -82,7 +85,6 @@ CONTAINS
        ierr = 1
        RETURN
     END IF
-    ierr = 0
     !
     IF ( .NOT. ALLOCATED(tab_vloc) ) THEN
        !! table not yet allocated
@@ -90,6 +92,7 @@ CONTAINS
        nqx = INT( qmax/dq + 4)
        ALLOCATE ( tab_vloc(0:nqx,nsp) )
        !$acc enter data create(tab_vloc)
+       ierr = 0
     ELSE IF ( qmax_ > qmax ) THEN
        DEALLOCATE ( tab_vloc )
        !! table ìs allocated but dimension insufficient: re-allocate
@@ -98,7 +101,9 @@ CONTAINS
        nqx = INT( qmax/dq + 4)
        ALLOCATE ( tab_vloc(0:nqx,nsp) )
        !$acc enter data create(tab_vloc)
+       ierr =-1
     ELSE
+       ierr =-2
        RETURN
     END IF
     !
