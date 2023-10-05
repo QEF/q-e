@@ -56,9 +56,9 @@ MODULE becmod
      !
   END INTERFACE
   !
-  PUBLIC :: bec_type, becp, allocate_bec_type, deallocate_bec_type, &
-            allocate_bec_type_cpu, deallocate_bec_type_cpu, calbec, &
-            beccopy, becscal, is_allocated_bec_type
+  PUBLIC :: bec_type, becp, calbec, beccopy, becscal, is_allocated_bec_type, &
+            allocate_bec_type,     deallocate_bec_type, &
+            allocate_bec_type_acc, deallocate_bec_type_acc
   !
 CONTAINS
   !-----------------------------------------------------------------------
@@ -734,7 +734,7 @@ CONTAINS
   !-----------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE allocate_bec_type ( nkb, nbnd, bec, comm )
+  SUBROUTINE allocate_bec_type_acc ( nkb, nbnd, bec, comm )
     !-----------------------------------------------------------------------
     USE mp, ONLY: mp_size, mp_rank, mp_get_comm_null
     IMPLICIT NONE
@@ -770,7 +770,7 @@ CONTAINS
        !
        ALLOCATE( bec%r( nkb, nbnd_siz ), STAT=ierr )
        IF( ierr /= 0 ) &
-          CALL errore( ' allocate_bec_type ', ' cannot allocate bec%r ', ABS(ierr) )
+          CALL errore( ' allocate_bec_type_acc ', ' cannot allocate bec%r ', ABS(ierr) )
        !
        bec%r(:,:)=0.0D0
        !$acc enter data copyin(bec%r)
@@ -779,7 +779,7 @@ CONTAINS
        !
        ALLOCATE( bec%nc( nkb, npol, nbnd_siz ), STAT=ierr )
        IF( ierr /= 0 ) &
-          CALL errore( ' allocate_bec_type ', ' cannot allocate bec%nc ', ABS(ierr) )
+          CALL errore( ' allocate_bec_type_acc ', ' cannot allocate bec%nc ', ABS(ierr) )
        !
        bec%nc(:,:,:)=(0.0D0,0.0D0)
        !$acc enter data copyin(bec%nc)
@@ -788,7 +788,7 @@ CONTAINS
        !
        ALLOCATE( bec%k( nkb, nbnd_siz ), STAT=ierr )
        IF( ierr /= 0 ) &
-          CALL errore( ' allocate_bec_type ', ' cannot allocate bec%k ', ABS(ierr) )
+          CALL errore( ' allocate_bec_type_acc ', ' cannot allocate bec%k ', ABS(ierr) )
        !
        bec%k(:,:)=(0.0D0,0.0D0)
        !$acc enter data copyin(bec%k)
@@ -797,11 +797,11 @@ CONTAINS
     !
     RETURN
     !
-  END SUBROUTINE allocate_bec_type
+  END SUBROUTINE allocate_bec_type_acc
   !
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE allocate_bec_type_cpu ( nkb, nbnd, bec, comm )
+  SUBROUTINE allocate_bec_type ( nkb, nbnd, bec, comm )
     !-----------------------------------------------------------------------
     USE mp, ONLY: mp_size, mp_rank, mp_get_comm_null
     IMPLICIT NONE
@@ -835,7 +835,7 @@ CONTAINS
        !
        ALLOCATE( bec%r( nkb, nbnd_siz ), STAT=ierr )
        IF( ierr /= 0 ) &
-          CALL errore( ' allocate_bec_type_cpu ', ' cannot allocate bec%r ', ABS(ierr) )
+          CALL errore( ' allocate_bec_type ', ' cannot allocate bec%r ', ABS(ierr) )
        !
        bec%r(:,:)=0.0D0
        !
@@ -843,7 +843,7 @@ CONTAINS
        !
        ALLOCATE( bec%nc( nkb, npol, nbnd_siz ), STAT=ierr )
        IF( ierr /= 0 ) &
-          CALL errore( ' allocate_bec_type_cpu ', ' cannot allocate bec%nc ', ABS(ierr) )
+          CALL errore( ' allocate_bec_type ', ' cannot allocate bec%nc ', ABS(ierr) )
        !
        bec%nc(:,:,:)=(0.0D0,0.0D0)
        !
@@ -851,7 +851,7 @@ CONTAINS
        !
        ALLOCATE( bec%k( nkb, nbnd_siz ), STAT=ierr )
        IF( ierr /= 0 ) &
-          CALL errore( ' allocate_bec_type_cpu ', ' cannot allocate bec%k ', ABS(ierr) )
+          CALL errore( ' allocate_bec_type ', ' cannot allocate bec%k ', ABS(ierr) )
        !
        bec%k(:,:)=(0.0D0,0.0D0)
        !
@@ -859,10 +859,10 @@ CONTAINS
     !
     RETURN
     !
-  END SUBROUTINE allocate_bec_type_cpu
+  END SUBROUTINE allocate_bec_type
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE deallocate_bec_type (bec)
+  SUBROUTINE deallocate_bec_type_acc (bec)
     !-----------------------------------------------------------------------
     !
     USE mp, ONLY: mp_get_comm_null
@@ -889,11 +889,11 @@ CONTAINS
     !
     RETURN
     !
-  END SUBROUTINE deallocate_bec_type
+  END SUBROUTINE deallocate_bec_type_acc
 
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE deallocate_bec_type_cpu (bec)
+  SUBROUTINE deallocate_bec_type (bec)
     !-----------------------------------------------------------------------
     !
     USE mp, ONLY: mp_get_comm_null
@@ -915,7 +915,7 @@ CONTAINS
     !
     RETURN
     !
-  END SUBROUTINE deallocate_bec_type_cpu
+  END SUBROUTINE deallocate_bec_type
 
   SUBROUTINE beccopy(bec, bec1, nkb, nbnd, comm)
     USE mp, ONLY: mp_size, mp_sum

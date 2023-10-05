@@ -30,8 +30,8 @@ SUBROUTINE force_hub( forceh )
    USE control_flags,        ONLY : gamma_only, offload_type
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE scf,                  ONLY : v
-   USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type, &
-                                    deallocate_bec_type
+   USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type_acc, &
+                                    deallocate_bec_type_acc
    USE uspp,                 ONLY : nkb, vkb, ofsbeta
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
@@ -111,7 +111,7 @@ SUBROUTINE force_hub( forceh )
    !
    !$acc data copyin(wfcU)
    !
-   CALL allocate_bec_type( nwfcU, nbnd, proj )
+   CALL allocate_bec_type_acc( nwfcU, nbnd, proj )
    !
    ! ... poor-man parallelization over bands:
    !      - if nproc_pool=1 : nb_s=1, nb_e=nbnd, mykey=0;
@@ -139,14 +139,14 @@ SUBROUTINE force_hub( forceh )
       !$acc update self(vkb)
       !
       ! ... Compute spsi = S * psi
-      CALL allocate_bec_type( nkb, nbnd, becp )
+      CALL allocate_bec_type_acc( nkb, nbnd, becp )
       !$acc data copyin(evc)
       Call calbec(offload_type, npw, vkb, evc, becp ) 
       !$acc host_data use_device(spsi, evc)
       CALL s_psi_acc( npwx, npw, nbnd, evc, spsi )
       !$acc end host_data
       !$acc end data
-      CALL deallocate_bec_type( becp )
+      CALL deallocate_bec_type_acc( becp )
       !
       ! ... Set up various quantities, in particular wfcU which 
       ! ... contains Hubbard-U (ortho-)atomic wavefunctions (without ultrasoft S)
@@ -291,7 +291,7 @@ SUBROUTINE force_hub( forceh )
    !
    CALL mp_sum( forceh, inter_pool_comm )
    !
-   CALL deallocate_bec_type( proj )
+   CALL deallocate_bec_type_acc( proj )
    !
    IF (lda_plus_u_kind==0) THEN
       DEALLOCATE( dns )

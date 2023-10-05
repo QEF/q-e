@@ -12,7 +12,8 @@ subroutine deallocate_phq
   !! Deallocates the variables allocated by \(\texttt{allocate_phq}\).
   !
   USE noncollin_module, ONLY : m_loc
-  USE becmod,           ONLY: bec_type, becp, deallocate_bec_type
+  USE becmod,           ONLY: bec_type, becp, deallocate_bec_type_acc, &
+                              deallocate_bec_type
   USE wavefunctions,    ONLY: evc
   USE ramanm,       ONLY: ramtns
   USE modes,        ONLY : tmq, t, npert, u, name_rap_mode, num_rap_mode
@@ -48,7 +49,6 @@ subroutine deallocate_phq
                            dvkb, vkbkpq, dvkbkpq
   USE ldaU_lr,      ONLY : swfcatomk, swfcatomkpq
   USE qpoint_aux,   ONLY : ikmks, ikmkmqs, becpt, alphapt
-  USE becmod,       ONLY : deallocate_bec_type
 #if defined(__CUDA)
   USE becmod_gpum,  ONLY : becp_d
   USE becmod_subs_gpum, ONLY : deallocate_bec_type_gpu
@@ -184,7 +184,7 @@ subroutine deallocate_phq
      DEALLOCATE(becpt_d)
   ENDIF
 #endif
-  call deallocate_bec_type ( becp )
+  call deallocate_bec_type_acc ( becp )
 
   if(allocated(el_ph_mat)) deallocate (el_ph_mat)
   if(allocated(el_ph_mat_nc_mag)) deallocate (el_ph_mat_nc_mag)

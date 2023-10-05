@@ -30,7 +30,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   USE ldaU,       ONLY : Hubbard_projectors, wfcU, nwfcU, copy_U_wfc
   USE wvfct,      ONLY : npwx
   USE uspp,       ONLY : nkb, vkb
-  USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
+  USE becmod,     ONLY : allocate_bec_type_acc, deallocate_bec_type_acc, &
                          bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only, use_gpu, offload_type
   USE noncollin_module, ONLY : noncolin, npol
@@ -88,7 +88,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
   !
   ! Allocate the array becp = <beta|wfcatom>
-  CALL allocate_bec_type (nkb,natomwfc, becp)
+  CALL allocate_bec_type_acc (nkb,natomwfc, becp)
   !
   DO ik = 1, nks
      !
@@ -133,7 +133,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   ENDDO
   !$acc exit data delete(wfcatom, swfcatom)
   DEALLOCATE (wfcatom, swfcatom)
-  CALL deallocate_bec_type ( becp )
+  CALL deallocate_bec_type_acc ( becp )
   !
   use_bgrp_in_hpsi = save_flag
   !
@@ -163,7 +163,7 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
   USE ldaU,             ONLY : Hubbard_projectors, wfcU, nwfcU, copy_U_wfc
   USE wvfct,            ONLY : npwx
   USE uspp,             ONLY : nkb, vkb
-  USE becmod,           ONLY : allocate_bec_type, deallocate_bec_type, &
+  USE becmod,           ONLY : allocate_bec_type_acc, deallocate_bec_type_acc, &
                                bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin 
@@ -214,11 +214,11 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
   !
   IF (orthogonalize_wfc .OR. .NOT.lflag) THEN
      ! Allocate the array becp = <beta|wfcatom>
-     CALL allocate_bec_type (nkb,natomwfc, becp)
+     CALL allocate_bec_type_acc (nkb,natomwfc, becp)
      CALL calbec (npw, vkb, wfcatom, becp)
      ! Calculate swfcatom = S * phi
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
-     CALL deallocate_bec_type (becp)
+     CALL deallocate_bec_type_acc (becp)
   ENDIF
   !
   ! Compute the overlap matrix
@@ -268,7 +268,7 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
   USE klist,            ONLY : nks, xk, ngk, igk_k
   USE wvfct,            ONLY : npwx
   USE uspp,             ONLY : nkb, vkb
-  USE becmod,           ONLY : allocate_bec_type, deallocate_bec_type, &
+  USE becmod,           ONLY : allocate_bec_type_acc, deallocate_bec_type_acc, &
                                bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only, use_gpu, offload_type
   USE noncollin_module, ONLY : noncolin, npol
@@ -289,7 +289,7 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
   !$acc enter data create(wfcatom, swfcatom)
 
   ! Allocate the array becp = <beta|wfcatom>
-  CALL allocate_bec_type (nkb,natomwfc, becp) 
+  CALL allocate_bec_type_acc (nkb,natomwfc, becp) 
   
   DO ik = 1, nks
      
@@ -324,7 +324,7 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
   ENDDO
   !$acc exit data delete(wfcatom, swfcatom)
   DEALLOCATE (wfcatom)
-  CALL deallocate_bec_type ( becp )
+  CALL deallocate_bec_type_acc ( becp )
   !
   RETURN
      

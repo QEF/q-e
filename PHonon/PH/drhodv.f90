@@ -32,9 +32,9 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE lsda_mod,  ONLY : current_spin, lsda, isk, nspin
   USE wvfct,     ONLY : npwx, nbnd
   USE uspp,      ONLY : nkb, vkb, deeq_nc, okvan
-  USE becmod,    ONLY : calbec, bec_type, becscal, allocate_bec_type, &
-                        deallocate_bec_type, allocate_bec_type_cpu, &
-                        deallocate_bec_type_cpu
+  USE becmod,    ONLY : calbec, bec_type, becscal, &
+                        allocate_bec_type, deallocate_bec_type, &
+                        allocate_bec_type_acc, deallocate_bec_type_acc
   USE fft_base,  ONLY : dfftp
   USE io_global, ONLY : stdout
   USE buffers,   ONLY : get_buffer
@@ -83,13 +83,13 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !   Initialize the auxiliary matrix wdyn
   !
   call start_clock ('drhodv')
-  Call allocate_bec_type( nkb, nbnd, bectmp ) 
+  Call allocate_bec_type_acc( nkb, nbnd, bectmp ) 
   ALLOCATE (dbecq(nper))
   ALLOCATE (dalpq(3,nper))
   DO ipert=1,nper
-     call allocate_bec_type_cpu ( nkb, nbnd, dbecq(ipert) )
+     call allocate_bec_type ( nkb, nbnd, dbecq(ipert) )
      DO ipol=1,3
-        call allocate_bec_type_cpu ( nkb, nbnd, dalpq(ipol,ipert) )
+        call allocate_bec_type ( nkb, nbnd, dalpq(ipol,ipert) )
      ENDDO
   END DO
   allocate (aux   ( npwx*npol , nbnd))
@@ -238,15 +238,15 @@ subroutine drhodv (nu_i0, nper, drhoscf)
 
   deallocate (aux)
 
+  call deallocate_bec_type_acc( bectmp )
   do ipert=1,nper
      do ipol=1,3
-        call deallocate_bec_type_cpu ( dalpq(ipol,ipert) )
+        call deallocate_bec_type ( dalpq(ipol,ipert) )
      enddo
   end do
-  call deallocate_bec_type( bectmp )
   deallocate (dalpq)
   do ipert=1,nper
-     call deallocate_bec_type_cpu ( dbecq(ipert) )
+     call deallocate_bec_type ( dbecq(ipert) )
   end do
   deallocate(dbecq)
 

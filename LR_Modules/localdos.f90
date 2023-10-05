@@ -29,7 +29,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   USE lsda_mod,         ONLY : nspin, lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wvfct,            ONLY : nbnd, npwx, et
-  USE becmod,           ONLY : calbec, bec_type, allocate_bec_type, deallocate_bec_type
+  USE becmod,           ONLY : calbec, bec_type, allocate_bec_type_acc, deallocate_bec_type_acc
   USE wavefunctions,    ONLY : evc, psic, psic_nc
 #if defined(__CUDA)
   USE wavefunctions_gpum,   ONLY : evc_d
@@ -95,7 +95,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
      becsum1_nc=(0.d0,0.d0)
   ENDIF
 
-  call allocate_bec_type (nkb, nbnd, becp)
+  call allocate_bec_type_acc (nkb, nbnd, becp)
 
   becsum1 (:,:,:) = 0.d0
   ldos (:,:) = (0d0, 0.0d0)
@@ -307,7 +307,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   !check
   !
   IF (noncolin) deallocate(becsum1_nc)
-  call deallocate_bec_type(becp)
+  call deallocate_bec_type_acc(becp)
 
   call stop_clock ('localdos')
   return

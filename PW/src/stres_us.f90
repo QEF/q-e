@@ -25,7 +25,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE noncollin_module,     ONLY : noncolin, npol, lspinorb
   USE mp_pools,             ONLY : me_pool, root_pool
   USE mp_bands,             ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
-  USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
+  USE becmod,               ONLY : allocate_bec_type_acc, deallocate_bec_type_acc, &
                                    bec_type, becp, calbec
   USE mp,                   ONLY : mp_sum, mp_get_comm_null, &
                                    mp_circular_shift_left 
@@ -63,7 +63,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   !
   IF ( nks > 1 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE. )
   !
-  CALL allocate_bec_type( nkb, nbnd, becp, intra_bgrp_comm )
+  CALL allocate_bec_type_acc( nkb, nbnd, becp, intra_bgrp_comm )
   !$acc data present( vkb, evc, becp )
   CALL calbec( offload_type, npw, vkb, evc, becp )
   !$acc end data
@@ -151,7 +151,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   DEALLOCATE( na_list, nh_list, ih_list, ishift_list )
   DEALLOCATE( shift )
   !
-  CALL deallocate_bec_type( becp ) 
+  CALL deallocate_bec_type_acc( becp ) 
   !
   RETURN
   !

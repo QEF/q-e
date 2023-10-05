@@ -31,8 +31,8 @@ SUBROUTINE phq_init()
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : bg, tpiba
   USE ions_base,            ONLY : nat, ityp, tau
-  USE becmod,               ONLY : calbec, becp, allocate_bec_type, &
-                                   deallocate_bec_type
+  USE becmod,               ONLY : calbec, becp, allocate_bec_type_acc, &
+                                   deallocate_bec_type_acc
   USE constants,            ONLY : eps8, tpi
   USE gvect,                ONLY : g
   USE klist,                ONLY : xk, ngk, igk_k
@@ -356,9 +356,9 @@ SUBROUTINE phq_init()
      ! Note: the array becp will be temporarily used
      ! in the routine lr_orthoUwfc.
      !
-     CALL deallocate_bec_type(becp)
+     CALL deallocate_bec_type_acc(becp)
      CALL lr_orthoUwfc (.TRUE.)
-     CALL allocate_bec_type(nkb,nbnd,becp)   
+     CALL allocate_bec_type_acc(nkb,nbnd,becp)   
      !
      ! Calculate dnsbare, i.e. the bare variation of ns, 
      ! for all cartesian coordinates

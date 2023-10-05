@@ -22,7 +22,7 @@ subroutine allocate_phq
   USE fft_base,      ONLY : dfftp
   USE wavefunctions, ONLY : evc
   USE nc_mag_aux,    ONLY : int1_nc_save, deeq_nc_save
-  USE becmod,        ONLY : bec_type, becp, allocate_bec_type
+  USE becmod,        ONLY : bec_type, becp, allocate_bec_type, allocate_bec_type_acc
   USE uspp,          ONLY : okvan, nkb, vkb
   USE paw_variables, ONLY : okpaw
   USE uspp_param,    ONLY : nhm
@@ -180,7 +180,7 @@ subroutine allocate_phq
 #endif
      ENDDO
   END DO
-  CALL allocate_bec_type ( nkb, nbnd, becp )
+  CALL allocate_bec_type_acc ( nkb, nbnd, becp )
 #if defined(__CUDA)
   CALL allocate_bec_type_gpu ( nkb, nbnd, becp_d )
 #endif
