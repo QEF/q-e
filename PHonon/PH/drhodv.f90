@@ -21,6 +21,8 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !! theoretical background please refer to: 
   !! Phys. Rev. B 100, 045115 (2019).
   !
+  !civn: at the time I am doing this OpenACC hardly manages offloading arrays of data structures.
+  !      probably in future we can remove bectmp and directly use dbecq(mu) and dalpq(ipol,mu)
   !
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat
@@ -53,11 +55,6 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE mp,               ONLY : mp_sum
   USE uspp_init,        ONLY : init_us_2
   USE control_flags,    ONLY : offload_type
-#if defined(__CUDA)
-  USE lrus,            ONLY : becp1_d
-  USE becmod_gpum,      ONLY: bec_type_d
-  USE becmod_subs_gpum, ONLY: calbec_gpu, allocate_bec_type_gpu, deallocate_bec_type_gpu, synchronize_bec_type_gpu
-#endif
 
   implicit none
 
@@ -119,15 +116,6 @@ subroutine drhodv (nu_i0, nper, drhoscf)
                              call get_buffer(dpsi, lrdwf, iudwf, nrec)
                              !$acc update device(dpsi)
            endif
-!civn
-!#if defined(__CUDA)
-!           !$acc host_data use_device(vkb, dpsi)
-!           call calbec_gpu (npwq, vkb(:,:), dpsi, dbecq_d(mu) )
-!           !$acc end host_data
-!           CALL synchronize_bec_type_gpu( dbecq_d(mu), dbecq(mu), 'h')
-!#else
-!           call calbec (npwq, vkb, dpsi, dbecq(mu) )
-!#endif
            call calbec( offload_type, npwq, vkb, dpsi, bectmp )
            !$acc data copy(dbecq(mu))
            if(allocated(bectmp%r)) then
@@ -171,31 +159,22 @@ subroutine drhodv (nu_i0, nper, drhoscf)
                     enddo
                  enddo
               endif
-!civn 
-!#if defined(__CUDA)
-!              !$acc host_data use_device(vkb, aux)
-!              call calbec_gpu (npwq, vkb(:,:), aux, dalpq_d(ipol,mu) )
-!              !$acc end host_data
-!              CALL synchronize_bec_type_gpu( dalpq_d(ipol,mu), dalpq(ipol,mu), 'h')
-!#else
-!              call calbec (npwq, vkb, aux, dalpq(ipol,mu) )
-!#endif
-           call calbec( offload_type, npwq, vkb, aux, bectmp )
-           !$acc data copy(dalpq(ipol,mu))
-           if(allocated(bectmp%r)) then
-             !$acc kernels copyout(dalpq(ipol,mu)%r)
-             dalpq(ipol,mu)%r(:,:) = bectmp%r(:,:)
-             !$acc end kernels
-           elseif(allocated(bectmp%k)) then
-             !$acc kernels copyout(dalpq(ipol,mu)%k)
-             dalpq(ipol,mu)%k(:,:) = bectmp%k(:,:)
-             !$acc end kernels
-           elseif(allocated(bectmp%nc)) then
-             !$acc kernels copyout(dalpq(ipol,mu)%nc)
-             dalpq(ipol,mu)%nc(:,:,:) = bectmp%nc(:,:,:)
-             !$acc end kernels
-           endif  
-           !$acc end data
+              call calbec( offload_type, npwq, vkb, aux, bectmp )
+              !$acc data copy(dalpq(ipol,mu))
+              if(allocated(bectmp%r)) then
+                !$acc kernels copyout(dalpq(ipol,mu)%r)
+                dalpq(ipol,mu)%r(:,:) = bectmp%r(:,:)
+                !$acc end kernels
+              elseif(allocated(bectmp%k)) then
+                !$acc kernels copyout(dalpq(ipol,mu)%k)
+                dalpq(ipol,mu)%k(:,:) = bectmp%k(:,:)
+                !$acc end kernels
+              elseif(allocated(bectmp%nc)) then
+                !$acc kernels copyout(dalpq(ipol,mu)%nc)
+                dalpq(ipol,mu)%nc(:,:,:) = bectmp%nc(:,:,:)
+                !$acc end kernels
+              endif  
+              !$acc end data
            enddo
 
         enddo
