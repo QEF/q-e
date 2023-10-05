@@ -56,7 +56,8 @@ MODULE becmod
      !
   END INTERFACE
   !
-  PUBLIC :: bec_type, becp, allocate_bec_type, deallocate_bec_type, calbec, &
+  PUBLIC :: bec_type, becp, allocate_bec_type, deallocate_bec_type, &
+            allocate_bec_type_cpu, deallocate_bec_type_cpu, calbec, &
             beccopy, becscal, is_allocated_bec_type
   !
 CONTAINS
@@ -798,6 +799,68 @@ CONTAINS
     !
   END SUBROUTINE allocate_bec_type
   !
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE allocate_bec_type_cpu ( nkb, nbnd, bec, comm )
+    !-----------------------------------------------------------------------
+    USE mp, ONLY: mp_size, mp_rank, mp_get_comm_null
+    IMPLICIT NONE
+    TYPE (bec_type) :: bec
+    INTEGER, INTENT (in) :: nkb, nbnd
+    INTEGER, INTENT (in), OPTIONAL :: comm
+    INTEGER :: ierr, nbnd_siz
+    INTEGER, EXTERNAL :: ldim_block, gind_block
+    !
+    nbnd_siz = nbnd
+    bec%comm = mp_get_comm_null()
+    bec%nbnd = nbnd
+    bec%mype = 0
+    bec%nproc = 1
+    bec%nbnd_loc = nbnd
+    bec%ibnd_begin = 1
+    !
+    IF( PRESENT( comm ) .AND. gamma_only .AND. smallmem ) THEN
+       bec%comm = comm
+       bec%nproc = mp_size( comm )
+       IF( bec%nproc > 1 ) THEN
+          nbnd_siz   = nbnd / bec%nproc
+          IF( MOD( nbnd, bec%nproc ) /= 0 ) nbnd_siz = nbnd_siz + 1
+          bec%mype  = mp_rank( bec%comm )
+          bec%nbnd_loc   = ldim_block( becp%nbnd , bec%nproc, bec%mype )
+          bec%ibnd_begin = gind_block( 1,  becp%nbnd, bec%nproc, bec%mype )
+       END IF
+    END IF
+    !
+    IF ( gamma_only ) THEN
+       !
+       ALLOCATE( bec%r( nkb, nbnd_siz ), STAT=ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( ' allocate_bec_type_cpu ', ' cannot allocate bec%r ', ABS(ierr) )
+       !
+       bec%r(:,:)=0.0D0
+       !
+    ELSEIF ( noncolin) THEN
+       !
+       ALLOCATE( bec%nc( nkb, npol, nbnd_siz ), STAT=ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( ' allocate_bec_type_cpu ', ' cannot allocate bec%nc ', ABS(ierr) )
+       !
+       bec%nc(:,:,:)=(0.0D0,0.0D0)
+       !
+    ELSE
+       !
+       ALLOCATE( bec%k( nkb, nbnd_siz ), STAT=ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( ' allocate_bec_type_cpu ', ' cannot allocate bec%k ', ABS(ierr) )
+       !
+       bec%k(:,:)=(0.0D0,0.0D0)
+       !
+    ENDIF
+    !
+    RETURN
+    !
+  END SUBROUTINE allocate_bec_type_cpu
+  !
   !-----------------------------------------------------------------------
   SUBROUTINE deallocate_bec_type (bec)
     !-----------------------------------------------------------------------
@@ -827,6 +890,32 @@ CONTAINS
     RETURN
     !
   END SUBROUTINE deallocate_bec_type
+
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE deallocate_bec_type_cpu (bec)
+    !-----------------------------------------------------------------------
+    !
+    USE mp, ONLY: mp_get_comm_null
+    IMPLICIT NONE
+    TYPE (bec_type) :: bec
+    !
+    bec%comm = mp_get_comm_null()
+    bec%nbnd = 0
+    !
+    IF (allocated(bec%r))  THEN
+      DEALLOCATE(bec%r)
+    END IF
+    IF (allocated(bec%nc)) THEN
+       DEALLOCATE(bec%nc)
+    END IF
+    IF (allocated(bec%k))  THEN
+      DEALLOCATE(bec%k)
+    END IF
+    !
+    RETURN
+    !
+  END SUBROUTINE deallocate_bec_type_cpu
 
   SUBROUTINE beccopy(bec, bec1, nkb, nbnd, comm)
     USE mp, ONLY: mp_size, mp_sum

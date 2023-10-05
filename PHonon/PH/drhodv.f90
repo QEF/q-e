@@ -31,7 +31,8 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE wvfct,     ONLY : npwx, nbnd
   USE uspp,      ONLY : nkb, vkb, deeq_nc, okvan
   USE becmod,    ONLY : calbec, bec_type, becscal, allocate_bec_type, &
-                        deallocate_bec_type
+                        deallocate_bec_type, allocate_bec_type_cpu, &
+                        deallocate_bec_type_cpu
   USE fft_base,  ONLY : dfftp
   USE io_global, ONLY : stdout
   USE buffers,   ONLY : get_buffer
@@ -51,6 +52,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE mp_pools,         ONLY : inter_pool_comm
   USE mp,               ONLY : mp_sum
   USE uspp_init,        ONLY : init_us_2
+  USE control_flags,    ONLY : offload_type
 #if defined(__CUDA)
   USE lrus,            ONLY : becp1_d
   USE becmod_gpum,      ONLY: bec_type_d
@@ -78,30 +80,19 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   complex(DP), allocatable ::  aux (:,:)
   ! work space
 
-#if defined(__CUDA)
-  TYPE (bec_type_d), POINTER :: dbecq_d(:), dalpq_d(:,:)
-#endif
-  TYPE (bec_type), POINTER :: dbecq(:), dalpq(:,:)
+  TYPE (bec_type) :: bectmp
+  TYPE (bec_type), ALLOCATABLE :: dbecq(:), dalpq(:,:)
   !
   !   Initialize the auxiliary matrix wdyn
   !
   call start_clock ('drhodv')
-#if defined(__CUDA)
-  ALLOCATE (dbecq_d(nper))
-  ALLOCATE (dalpq_d(3,nper))
-#endif
+  Call allocate_bec_type( nkb, nbnd, bectmp ) 
   ALLOCATE (dbecq(nper))
   ALLOCATE (dalpq(3,nper))
   DO ipert=1,nper
-     call allocate_bec_type ( nkb, nbnd, dbecq(ipert) )
-#if defined(__CUDA)
-     call allocate_bec_type_gpu ( nkb, nbnd, dbecq_d(ipert) )
-#endif
+     call allocate_bec_type_cpu ( nkb, nbnd, dbecq(ipert) )
      DO ipol=1,3
-        call allocate_bec_type ( nkb, nbnd, dalpq(ipol,ipert) )
-#if defined(__CUDA)
-        call allocate_bec_type_gpu ( nkb, nbnd, dalpq_d(ipol,ipert) )
-#endif
+        call allocate_bec_type_cpu ( nkb, nbnd, dalpq(ipol,ipert) )
      ENDDO
   END DO
   allocate (aux   ( npwx*npol , nbnd))
@@ -128,14 +119,31 @@ subroutine drhodv (nu_i0, nper, drhoscf)
                              call get_buffer(dpsi, lrdwf, iudwf, nrec)
                              !$acc update device(dpsi)
            endif
-#if defined(__CUDA)
-           !$acc host_data use_device(vkb, dpsi)
-           call calbec_gpu (npwq, vkb(:,:), dpsi, dbecq_d(mu) )
-           !$acc end host_data
-           CALL synchronize_bec_type_gpu( dbecq_d(mu), dbecq(mu), 'h')
-#else
-           call calbec (npwq, vkb, dpsi, dbecq(mu) )
-#endif
+!civn
+!#if defined(__CUDA)
+!           !$acc host_data use_device(vkb, dpsi)
+!           call calbec_gpu (npwq, vkb(:,:), dpsi, dbecq_d(mu) )
+!           !$acc end host_data
+!           CALL synchronize_bec_type_gpu( dbecq_d(mu), dbecq(mu), 'h')
+!#else
+!           call calbec (npwq, vkb, dpsi, dbecq(mu) )
+!#endif
+           call calbec( offload_type, npwq, vkb, dpsi, bectmp )
+           !$acc data copy(dbecq(mu))
+           if(allocated(bectmp%r)) then
+             !$acc kernels copyout(dbecq(mu)%r)
+             dbecq(mu)%r(:,:) = bectmp%r(:,:)
+             !$acc end kernels
+           elseif(allocated(bectmp%k)) then
+             !$acc kernels copyout(dbecq(mu)%k)
+             dbecq(mu)%k(:,:) = bectmp%k(:,:)
+             !$acc end kernels
+           elseif(allocated(bectmp%nc)) then
+             !$acc kernels copyout(dbecq(mu)%nc)
+             dbecq(mu)%nc(:,:,:) = bectmp%nc(:,:,:)
+             !$acc end kernels
+           endif  
+           !$acc end data
            do ipol = 1, 3
 #if defined(__CUDA)
               !$acc parallel loop collapse(2)
@@ -163,14 +171,31 @@ subroutine drhodv (nu_i0, nper, drhoscf)
                     enddo
                  enddo
               endif
-#if defined(__CUDA)
-              !$acc host_data use_device(vkb, aux)
-              call calbec_gpu (npwq, vkb(:,:), aux, dalpq_d(ipol,mu) )
-              !$acc end host_data
-              CALL synchronize_bec_type_gpu( dalpq_d(ipol,mu), dalpq(ipol,mu), 'h')
-#else
-              call calbec (npwq, vkb, aux, dalpq(ipol,mu) )
-#endif
+!civn 
+!#if defined(__CUDA)
+!              !$acc host_data use_device(vkb, aux)
+!              call calbec_gpu (npwq, vkb(:,:), aux, dalpq_d(ipol,mu) )
+!              !$acc end host_data
+!              CALL synchronize_bec_type_gpu( dalpq_d(ipol,mu), dalpq(ipol,mu), 'h')
+!#else
+!              call calbec (npwq, vkb, aux, dalpq(ipol,mu) )
+!#endif
+           call calbec( offload_type, npwq, vkb, aux, bectmp )
+           !$acc data copy(dalpq(ipol,mu))
+           if(allocated(bectmp%r)) then
+             !$acc kernels copyout(dalpq(ipol,mu)%r)
+             dalpq(ipol,mu)%r(:,:) = bectmp%r(:,:)
+             !$acc end kernels
+           elseif(allocated(bectmp%k)) then
+             !$acc kernels copyout(dalpq(ipol,mu)%k)
+             dalpq(ipol,mu)%k(:,:) = bectmp%k(:,:)
+             !$acc end kernels
+           elseif(allocated(bectmp%nc)) then
+             !$acc kernels copyout(dalpq(ipol,mu)%nc)
+             dalpq(ipol,mu)%nc(:,:,:) = bectmp%nc(:,:,:)
+             !$acc end kernels
+           endif  
+           !$acc end data
            enddo
 
         enddo
@@ -236,26 +261,15 @@ subroutine drhodv (nu_i0, nper, drhoscf)
 
   do ipert=1,nper
      do ipol=1,3
-        call deallocate_bec_type ( dalpq(ipol,ipert) )
-#if defined(__CUDA)
-        call deallocate_bec_type_gpu ( dalpq_d(ipol,ipert) )
-#endif
+        call deallocate_bec_type_cpu ( dalpq(ipol,ipert) )
      enddo
   end do
+  call deallocate_bec_type( bectmp )
   deallocate (dalpq)
-#if defined(__CUDA)
-  deallocate (dalpq_d)
-#endif
   do ipert=1,nper
-     call deallocate_bec_type ( dbecq(ipert) )
-#if defined(__CUDA) 
-     call deallocate_bec_type_gpu ( dbecq_d(ipert) )
-#endif
+     call deallocate_bec_type_cpu ( dbecq(ipert) )
   end do
   deallocate(dbecq)
-#if defined(__CUDA)
-  deallocate(dbecq_d)
-#endif
 
   call stop_clock ('drhodv')
   return
