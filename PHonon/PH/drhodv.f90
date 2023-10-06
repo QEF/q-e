@@ -32,7 +32,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE lsda_mod,  ONLY : current_spin, lsda, isk, nspin
   USE wvfct,     ONLY : npwx, nbnd
   USE uspp,      ONLY : nkb, vkb, deeq_nc, okvan
-  USE becmod,    ONLY : calbec, bec_type, becscal, &
+  USE becmod,    ONLY : calbec, bec_type, becscal, becupdate, &
                         allocate_bec_type, deallocate_bec_type, &
                         allocate_bec_type_acc, deallocate_bec_type_acc
   USE fft_base,  ONLY : dfftp
@@ -117,21 +117,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
                              !$acc update device(dpsi)
            endif
            call calbec( offload_type, npwq, vkb, dpsi, bectmp )
-           !$acc data copy(dbecq(mu))
-           if(allocated(bectmp%r)) then
-             !$acc kernels copyout(dbecq(mu)%r)
-             dbecq(mu)%r(:,:) = bectmp%r(:,:)
-             !$acc end kernels
-           elseif(allocated(bectmp%k)) then
-             !$acc kernels copyout(dbecq(mu)%k)
-             dbecq(mu)%k(:,:) = bectmp%k(:,:)
-             !$acc end kernels
-           elseif(allocated(bectmp%nc)) then
-             !$acc kernels copyout(dbecq(mu)%nc)
-             dbecq(mu)%nc(:,:,:) = bectmp%nc(:,:,:)
-             !$acc end kernels
-           endif  
-           !$acc end data
+           call becupdate( offload_type, dbecq, mu, nper, bectmp )
            do ipol = 1, 3
 #if defined(__CUDA)
               !$acc parallel loop collapse(2)
@@ -160,21 +146,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
                  enddo
               endif
               call calbec( offload_type, npwq, vkb, aux, bectmp )
-              !$acc data copy(dalpq(ipol,mu))
-              if(allocated(bectmp%r)) then
-                !$acc kernels copyout(dalpq(ipol,mu)%r)
-                dalpq(ipol,mu)%r(:,:) = bectmp%r(:,:)
-                !$acc end kernels
-              elseif(allocated(bectmp%k)) then
-                !$acc kernels copyout(dalpq(ipol,mu)%k)
-                dalpq(ipol,mu)%k(:,:) = bectmp%k(:,:)
-                !$acc end kernels
-              elseif(allocated(bectmp%nc)) then
-                !$acc kernels copyout(dalpq(ipol,mu)%nc)
-                dalpq(ipol,mu)%nc(:,:,:) = bectmp%nc(:,:,:)
-                !$acc end kernels
-              endif  
-              !$acc end data
+              call becupdate( offload_type, dalpq, ipol, 3, mu, nper, bectmp )
            enddo
 
         enddo

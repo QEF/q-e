@@ -44,19 +44,33 @@ MODULE becmod
   !
   INTERFACE calbec
      !
-     MODULE PROCEDURE calbec_k,     calbec_gamma,     calbec_gamma_nocomm,     calbec_nc,     calbec_bec_type, &
+     MODULE PROCEDURE &
+!                     the following are triggered with: "call calbec( ...args... )"
+!                             - args on cpu
+                      calbec_k,     calbec_gamma,     calbec_gamma_nocomm,     calbec_nc,     calbec_bec_type, &
+!
+!                     the following are triggered with: "call calbec( offload_type, ...args... )" 
+!                             - args cannot distinguish between CPU, OpenACC and OpenMP5 cases, 
+!                             - calbec_*_acc and calbec_*_cpu routines are distinguished by type(offload_type)
                       calbec_k_acc, calbec_gamma_acc, calbec_gamma_nocomm_acc, calbec_nc_acc, calbec_bec_type_acc, &
                       calbec_k_cpu, calbec_gamma_cpu, calbec_gamma_nocomm_cpu, calbec_nc_cpu, calbec_bec_type_cpu
      !
   END INTERFACE
-
+  !
   INTERFACE becscal
      !
      MODULE PROCEDURE becscal_nck, becscal_gamma
      !
   END INTERFACE
   !
-  PUBLIC :: bec_type, becp, calbec, beccopy, becscal, is_allocated_bec_type, &
+  INTERFACE becupdate
+     !
+     MODULE PROCEDURE becupdate_0D_cpu, becupdate_1D_cpu, becupdate_2D_cpu, &
+                      becupdate_0D_acc, becupdate_1D_acc, becupdate_2D_acc 
+     !
+  END INTERFACE
+  !
+  PUBLIC :: bec_type, becp, calbec, beccopy, becscal, becupdate, is_allocated_bec_type, &
             allocate_bec_type,     deallocate_bec_type, &
             allocate_bec_type_acc, deallocate_bec_type_acc
   !
@@ -981,5 +995,123 @@ CONTAINS
 
     RETURN
   END SUBROUTINE becscal_gamma
+
+  SUBROUTINE becupdate_0D_cpu( offload, bec_host, bec_device )
+  IMPLICIT NONE
+  TYPE(offload_kind_cpu), INTENT(IN)  :: offload 
+  TYPE(bec_type),         INTENT(IN)  :: bec_device
+  TYPE(bec_type),         INTENT(OUT) :: bec_host
+  !
+  RETURN
+  !
+  END SUBROUTINE becupdate_0D_cpu
+
+  SUBROUTINE becupdate_1D_cpu( offload, bec_host, idx, ni, bec_device )
+  IMPLICIT NONE
+  TYPE(offload_kind_cpu), INTENT(IN)  :: offload
+  INTEGER,                INTENT(IN)  :: idx, ni  
+  TYPE(bec_type),         INTENT(IN)  :: bec_device
+  TYPE(bec_type),         INTENT(OUT) :: bec_host(ni)
+  !
+  RETURN
+  !
+  END SUBROUTINE becupdate_1D_cpu
+
+  SUBROUTINE becupdate_2D_cpu( offload, bec_host, idx, ni, jdx, nj, bec_device )
+  IMPLICIT NONE
+  TYPE(offload_kind_cpu), INTENT(IN)  :: offload
+  INTEGER,                INTENT(IN)  :: idx, ni, jdx, nj
+  TYPE(bec_type),         INTENT(IN)  :: bec_device
+  TYPE(bec_type),         INTENT(OUT) :: bec_host(ni,nj)
+  !
+  RETURN
+  !
+  END SUBROUTINE becupdate_2D_cpu
+
+  SUBROUTINE becupdate_0D_acc( offload, bec_host, bec_device )
+  IMPLICIT NONE
+  TYPE(offload_kind_acc), INTENT(IN)  :: offload 
+  TYPE(bec_type),         INTENT(IN)  :: bec_device
+  TYPE(bec_type),         INTENT(OUT) :: bec_host
+  !
+  !$acc data copy(bec_host) present(bec_device)
+  !
+  if(allocated(bec_device%r)) then
+    !$acc kernels copyout(bec_host%r)
+    bec_host%r(:,:) = bec_device%r(:,:)
+    !$acc end kernels
+  elseif(allocated(bec_device%k)) then
+    !$acc kernels copyout(bec_host%k)
+    bec_host%k(:,:) = bec_device%k(:,:)
+    !$acc end kernels
+  elseif(allocated(bec_device%nc)) then
+    !$acc kernels copyout(bec_host%nc)
+    bec_host%nc(:,:,:) = bec_device%nc(:,:,:)
+    !$acc end kernels
+  endif  
+  !
+  !$acc end data
+  !
+  RETURN
+  !
+  END SUBROUTINE becupdate_0D_acc
+
+  SUBROUTINE becupdate_1D_acc( offload, bec_host, idx, ni, bec_device )
+  IMPLICIT NONE
+  TYPE(offload_kind_acc), INTENT(IN)  :: offload
+  INTEGER,                INTENT(IN)  :: idx, ni  
+  TYPE(bec_type),         INTENT(IN)  :: bec_device
+  TYPE(bec_type),         INTENT(OUT) :: bec_host(ni)
+  !
+  !$acc data copy(bec_host(idx)) present(bec_device)
+  !
+  if(allocated(bec_device%r)) then
+    !$acc kernels copyout(bec_host(idx)%r)
+    bec_host(idx)%r(:,:) = bec_device%r(:,:)
+    !$acc end kernels
+  elseif(allocated(bec_device%k)) then
+    !$acc kernels copyout(bec_host(idx)%k)
+    bec_host(idx)%k(:,:) = bec_device%k(:,:)
+    !$acc end kernels
+  elseif(allocated(bec_device%nc)) then
+    !$acc kernels copyout(bec_host(idx)%nc)
+    bec_host(idx)%nc(:,:,:) = bec_device%nc(:,:,:)
+    !$acc end kernels
+  endif  
+  !
+  !$acc end data
+  !
+  RETURN
+  !
+  END SUBROUTINE becupdate_1D_acc
+
+  SUBROUTINE becupdate_2D_acc( offload, bec_host, idx, ni, jdx, nj, bec_device )
+  IMPLICIT NONE
+  TYPE(offload_kind_acc), INTENT(IN)  :: offload
+  INTEGER,                INTENT(IN)  :: idx, ni, jdx, nj
+  TYPE(bec_type),         INTENT(IN)  :: bec_device
+  TYPE(bec_type),         INTENT(OUT) :: bec_host(ni,nj)
+  !
+  !$acc data copy(bec_host(idx,jdx)) present(bec_device)
+  !
+  if(allocated(bec_device%r)) then
+    !$acc kernels copyout(bec_host(idx,jdx)%r)
+    bec_host(idx,jdx)%r(:,:) = bec_device%r(:,:)
+    !$acc end kernels
+  elseif(allocated(bec_device%k)) then
+    !$acc kernels copyout(bec_host(idx,jdx)%k)
+    bec_host(idx,jdx)%k(:,:) = bec_device%k(:,:)
+    !$acc end kernels
+  elseif(allocated(bec_device%nc)) then
+    !$acc kernels copyout(bec_host(idx,jdx)%nc)
+    bec_host(idx,jdx)%nc(:,:,:) = bec_device%nc(:,:,:)
+    !$acc end kernels
+  endif  
+  !
+  !$acc end data
+  !
+  RETURN
+  !
+  END SUBROUTINE becupdate_2D_acc
 
 END MODULE becmod
