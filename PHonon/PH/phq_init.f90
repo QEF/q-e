@@ -31,8 +31,9 @@ SUBROUTINE phq_init()
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : bg, tpiba
   USE ions_base,            ONLY : nat, ityp, tau
-  USE becmod,               ONLY : calbec, becp, allocate_bec_type_acc, &
-                                   deallocate_bec_type_acc
+  USE becmod,               ONLY : calbec, becp, becupdate, bec_type, &
+                                   allocate_bec_type_acc, deallocate_bec_type_acc
+  USE control_flags,        ONLY : offload_type
   USE constants,            ONLY : eps8, tpi
   USE gvect,                ONLY : g
   USE klist,                ONLY : xk, ngk, igk_k
@@ -66,7 +67,7 @@ SUBROUTINE phq_init()
   USE qpoint,               ONLY : xq, nksq, eigqts, ikks, ikqs
   USE qpoint_aux,           ONLY : becpt, alphapt, ikmks
 #if defined(__CUDA)
-  USE  qpoint_aux,          ONLY : becpt_d, alphapt_d
+  USE  qpoint_aux,          ONLY : alphapt_d
 #endif
   USE eqv,                  ONLY : evq
   USE control_lr,           ONLY : nbnd_occ, lgamma
@@ -95,11 +96,14 @@ SUBROUTINE phq_init()
     ! the argument of the phase
   COMPLEX(DP), ALLOCATABLE :: aux1(:,:), tevc(:,:)
     ! used to compute alphap
+  TYPE(bec_type) :: bectmp
   !
   !
   IF (all_done) RETURN
   !
   CALL start_clock( 'phq_init' )
+  !
+  Call allocate_bec_type_acc ( nkb, nbnd, bectmp )
   !
   DO na = 1, nat
      !
@@ -184,14 +188,8 @@ SUBROUTINE phq_init()
         IF (noncolin.AND.domag) THEN
            CALL get_buffer( tevc, lrwfc, iuwfc, ikmks(ik) )
            !$acc update device(tevc)
-#if defined(__CUDA)
-           !$acc host_data use_device(vkb, tevc)
-           CALL calbec_gpu (npw, vkb(:,:), tevc, becpt_d(ik) )
-           !$acc end host_data
-           CALL synchronize_bec_type_gpu( becpt_d(ik), becpt(ik), 'h')
-#else
-           CALL calbec (npw, vkb, tevc, becpt(ik) )
-#endif
+           Call calbec ( offload_type, npw, vkb, tevc, bectmp )
+           Call becupdate( offload_type, becpt, ik, nksq, bectmp )
         ENDIF
      endif
      !
@@ -372,6 +370,8 @@ SUBROUTINE phq_init()
   ENDIF
   !
   IF ( trans ) CALL dynmat0_new()
+  !
+  Call deallocate_bec_type_acc ( bectmp )
   !
   CALL stop_clock( 'phq_init' )
   !

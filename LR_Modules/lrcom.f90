@@ -51,7 +51,7 @@ MODULE qpoint_aux
 
   TYPE(bec_type), ALLOCATABLE :: becpt(:), alphapt(:,:)
 #if defined(__CUDA)
-  TYPE(bec_type_d), ALLOCATABLE :: becpt_d(:), alphapt_d(:,:)
+  TYPE(bec_type_d), ALLOCATABLE :: alphapt_d(:,:)
 #endif
 END MODULE qpoint_aux
 !
