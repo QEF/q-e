@@ -94,6 +94,7 @@ CONTAINS
        !$acc enter data create(tab_vloc)
        ierr = 0
     ELSE IF ( qmax_ > qmax ) THEN
+       !$acc exit data delete(tab_vloc)
        DEALLOCATE ( tab_vloc )
        !! table ìs allocated but dimension insufficient: re-allocate
        !! (with some margin so that this does not happen too often)
