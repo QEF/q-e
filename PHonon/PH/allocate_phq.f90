@@ -37,9 +37,6 @@ subroutine allocate_phq
   USE el_phon,       ONLY : el_ph_mat, el_ph_mat_nc_mag, elph
   USE freq_ph,       ONLY : polar, nfs
   USE lrus,          ONLY : becp1, dpqq, dpqq_so
-#if defined(__CUDA)
-  USE lrus,          ONLY : becp1_d
-#endif
   USE qpoint,        ONLY : nksq, eigqts, xk_col
   USE eqv,           ONLY : dpsi, evq, vlocq, dmuxc, dvpsi
   USE lr_symm_base,  ONLY : rtau
@@ -147,17 +144,10 @@ subroutine allocate_phq
   endif
   allocate (this_pcxpsi_is_on_file(nksq,3))
   this_pcxpsi_is_on_file(:,:)=.false.
-
   ALLOCATE (becp1(nksq))
   ALLOCATE (alphap(3,nksq))
-#if defined(__CUDA)
-  ALLOCATE (becp1_d(nksq))
-#endif
   DO ik=1,nksq
      call allocate_bec_type ( nkb, nbnd, becp1(ik) )
-#if defined(__CUDA)
-     CALL allocate_bec_type_gpu ( nkb, nbnd, becp1_d(ik) )
-#endif
      DO ipol=1,3
         call allocate_bec_type ( nkb, nbnd, alphap(ipol,ik) )
      ENDDO

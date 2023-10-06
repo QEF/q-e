@@ -58,9 +58,6 @@ SUBROUTINE phq_init()
                                    kpq,g_kpq,igqg,xk_gamma, lrwfcr
   USE wannier_gw,           ONLY : l_head
   USE lrus,                 ONLY : becp1, dpqq, dpqq_so
-#if defined(__CUDA)
-  USE lrus,                 ONLY : becp1_d
-#endif
   USE qpoint,               ONLY : xq, nksq, eigqts, ikks, ikqs
   USE qpoint_aux,           ONLY : becpt, alphapt, ikmks
   USE eqv,                  ONLY : evq
@@ -192,14 +189,11 @@ SUBROUTINE phq_init()
      !
 #if defined(__CUDA)
      evc_d = evc
-     !$acc host_data use_device(vkb)
-     CALL calbec_gpu (npw, vkb(:,:), evc_d, becp1_d(ik) )
-     !$acc end host_data
-     CALL synchronize_bec_type_gpu( becp1_d(ik), becp1(ik), 'h')
-#else
-     CALL calbec (npw, vkb, evc, becp1(ik) )
 #endif
-     
+     !$acc data present_or_copyin(evc)
+     Call calbec( offload_type, npw, vkb, evc, bectmp )
+     !$acc end data
+     Call becupdate( offload_type, becp1, ik, nksq, bectmp ) 
      !
      ! ... e') we compute the derivative of the becp term with respect to an
      !         atomic displacement

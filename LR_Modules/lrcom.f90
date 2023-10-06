@@ -179,9 +179,6 @@ MODULE lrus
   ! dpqq and dpqq_so: dipole moment of each Q multiplied by the fcoef factors 
   !
   type (bec_type), ALLOCATABLE, TARGET :: becp1(:) ! nksq)
-#if defined(__CUDA)
-  type (bec_type_d), ALLOCATABLE, TARGET :: becp1_d(:) 
-#endif
   ! becp1 contains < beta_n | psi_i >
   !
   REAL (DP),    ALLOCATABLE :: bbg(:,:)      ! nkb, nkb)
