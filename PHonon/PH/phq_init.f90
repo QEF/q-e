@@ -63,9 +63,6 @@ SUBROUTINE phq_init()
 #endif
   USE qpoint,               ONLY : xq, nksq, eigqts, ikks, ikqs
   USE qpoint_aux,           ONLY : becpt, alphapt, ikmks
-#if defined(__CUDA)
-  USE  qpoint_aux,          ONLY : alphapt_d
-#endif
   USE eqv,                  ONLY : evq
   USE control_lr,           ONLY : nbnd_occ, lgamma
   USE ldaU,                 ONLY : lda_plus_u
@@ -280,14 +277,8 @@ SUBROUTINE phq_init()
                  END DO
               END DO
            END IF
-#if defined(__CUDA)
-           !$acc host_data use_device(vkb, aux1)
-           CALL calbec_gpu (npw, vkb(:,:), aux1, alphapt_d(ipol,ik) )
-           !$acc end host_data
-           CALL synchronize_bec_type_gpu( alphapt_d(ipol,ik), alphapt(ipol,ik), 'h')
-#else
-           CALL calbec (npw, vkb, aux1, alphapt(ipol,ik) )
-#endif
+           Call calbec( offload_type, npw, vkb, aux1, bectmp )
+           Call becupdate( offload_type, alphapt, ipol, 3, ik, nksq, bectmp )
          END DO
       ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!

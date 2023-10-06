@@ -53,7 +53,6 @@ subroutine allocate_phq
 #if defined(__CUDA)
   USE becmod_gpum,      ONLY: becp_d
   USE becmod_subs_gpum, ONLY: allocate_bec_type_gpu
-  USE qpoint_aux,    ONLY : alphapt_d
 #endif
 
   IMPLICIT NONE
@@ -104,16 +103,10 @@ subroutine allocate_phq
   IF (noncolin.AND.domag) THEN
      ALLOCATE (becpt(nksq))
      ALLOCATE (alphapt(3,nksq))
-#if defined(__CUDA)
-     ALLOCATE (alphapt_d(3,nksq))
-#endif
      DO ik=1,nksq
         CALL allocate_bec_type ( nkb, nbnd, becpt(ik) )
         DO ipol=1,3
            CALL allocate_bec_type ( nkb, nbnd, alphapt(ipol,ik) )
-#if defined(__CUDA)
-           CALL allocate_bec_type_gpu ( nkb, nbnd, alphapt_d(ipol,ik) )
-#endif
         ENDDO
      ENDDO
      IF (okvan) THEN

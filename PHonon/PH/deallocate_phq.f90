@@ -33,7 +33,6 @@ subroutine deallocate_phq
   USE lrus,         ONLY : int3, int3_nc, int3_paw, becp1, dpqq, dpqq_so
 #if defined(__CUDA)
   USE lrus,         ONLY : becp1_d
-  USE qpoint_aux,   ONLY : alphapt_d
 #endif
   USE lr_symm_base, ONLY : rtau
   USE gc_lr,        ONLY : grho, gmag, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s, &
@@ -149,16 +148,6 @@ subroutine deallocate_phq
      ENDDO
      DEALLOCATE (alphapt)
   ENDIF
-#if defined(__CUDA)
-  IF (ALLOCATED(alphapt_d)) THEN
-     DO ik=1,nksq
-        DO ipol=1,3
-           CALL deallocate_bec_type_gpu ( alphapt_d(ipol,ik) )
-        ENDDO
-     ENDDO
-     DEALLOCATE (alphapt_d)
-  ENDIF
-#endif
   IF (ALLOCATED(becpt))  THEN
      DO ik=1, nksq
         CALL deallocate_bec_type ( becpt(ik) )

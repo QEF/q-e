@@ -40,9 +40,7 @@ END MODULE qpoint
 MODULE qpoint_aux
   USE kinds,      ONLY : DP
   USE becmod,     ONLY : bec_type
-#if defined(__CUDA)
-  USE becmod_gpum, ONLY : bec_type_d
-#endif
+ 
   SAVE
   
   INTEGER, ALLOCATABLE :: ikmks(:)    ! index of -k for magnetic calculations
@@ -50,9 +48,7 @@ MODULE qpoint_aux
   INTEGER, ALLOCATABLE :: ikmkmqs(:)  ! index of -k-q for magnetic calculations
 
   TYPE(bec_type), ALLOCATABLE :: becpt(:), alphapt(:,:)
-#if defined(__CUDA)
-  TYPE(bec_type_d), ALLOCATABLE :: alphapt_d(:,:)
-#endif
+
 END MODULE qpoint_aux
 !
 !
