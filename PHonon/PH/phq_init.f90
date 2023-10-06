@@ -64,9 +64,6 @@ SUBROUTINE phq_init()
   USE control_lr,           ONLY : nbnd_occ, lgamma
   USE ldaU,                 ONLY : lda_plus_u
   USE uspp_init,            ONLY : init_us_2
-#if defined(__CUDA)
-  USE becmod_subs_gpum,     ONLY : calbec_gpu, synchronize_bec_type_gpu
-#endif
   !
   IMPLICIT NONE
   !
@@ -88,6 +85,7 @@ SUBROUTINE phq_init()
   COMPLEX(DP), ALLOCATABLE :: aux1(:,:), tevc(:,:)
     ! used to compute alphap
   TYPE(bec_type) :: bectmp
+    ! temporary buffer to work with offload of arrays of derived types
   !
   !
   IF (all_done) RETURN

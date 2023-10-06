@@ -153,9 +153,6 @@ MODULE lrus
   !
   USE kinds,  ONLY : DP
   USE becmod, ONLY : bec_type
-#if defined(__CUDA)
-  USE becmod_gpum, ONLY : bec_type_d
-#endif
   !
   ! ... These are additional variables needed for the linear response
   ! ... with US pseudopotentials and a generic perturbation Delta Vscf
