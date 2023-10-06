@@ -49,9 +49,6 @@ SUBROUTINE phq_init()
   USE noncollin_module,     ONLY : noncolin, domag, npol, lspinorb
   USE uspp,                 ONLY : okvan, vkb, nlcc_any, nkb
   USE phus,                 ONLY : alphap
-#if defined(__CUDA)
-  USE phus,                 ONLY : alphap_d
-#endif
   USE nlcc_ph,              ONLY : drc
   USE control_ph,           ONLY : trans, zue, epsil, all_done
   USE units_lr,             ONLY : lrwfc, iuwfc
@@ -249,14 +246,8 @@ SUBROUTINE phq_init()
               END DO
            END DO
         END IF
-#if defined(__CUDA)
-        !$acc host_data use_device(vkb,aux1)
-        CALL calbec_gpu (npw, vkb(:,:), aux1, alphap_d(ipol,ik) )
-        !$acc end host_data
-        CALL synchronize_bec_type_gpu( alphap_d(ipol,ik), alphap(ipol,ik), 'h')
-#else
-        CALL calbec (npw, vkb, aux1, alphap(ipol,ik) )
-#endif
+        Call calbec ( offload_type, npw, vkb, aux1, bectmp )
+        Call becupdate( offload_type, alphap, ipol, 3, ik, nksq, bectmp )
      END DO
      !
      IF (noncolin.AND.domag) THEN

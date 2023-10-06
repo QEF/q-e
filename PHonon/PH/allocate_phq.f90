@@ -30,9 +30,6 @@ subroutine allocate_phq
   USE phus,          ONLY : int1, int1_nc, int2, int2_so, &
                             int4, int4_nc, int5, int5_so, becsumort, &
                             alphasum, alphasum_nc, becsum_nc, alphap
-#if defined(__CUDA)
-  USE phus,          ONLY : alphap_d
-#endif
   USE efield_mod,    ONLY : zstareu, zstareu0, zstarue0, zstarue0_rec, zstarue
   USE units_ph,      ONLY : this_pcxpsi_is_on_file, this_dvkb3_is_on_file
   USE dynmat,        ONLY : dyn00, dyn, dyn_rec, w2
@@ -162,7 +159,6 @@ subroutine allocate_phq
   ALLOCATE (alphap(3,nksq))
 #if defined(__CUDA)
   ALLOCATE (becp1_d(nksq))
-  ALLOCATE (alphap_d(3,nksq))
 #endif
   DO ik=1,nksq
      call allocate_bec_type ( nkb, nbnd, becp1(ik) )
@@ -171,9 +167,6 @@ subroutine allocate_phq
 #endif
      DO ipol=1,3
         call allocate_bec_type ( nkb, nbnd, alphap(ipol,ik) )
-#if defined(__CUDA)
-        call allocate_bec_type_gpu ( nkb, nbnd, alphap_d(ipol,ik) )
-#endif
      ENDDO
   END DO
   CALL allocate_bec_type_acc ( nkb, nbnd, becp )

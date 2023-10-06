@@ -163,9 +163,6 @@ MODULE phus
   !
   !
   type(bec_type),  ALLOCATABLE, TARGET :: alphap(:,:)  ! nkbtot, nbnd, 3, nksq)
-#if defined(__CUDA)
-  type(bec_type_d),  ALLOCATABLE, TARGET :: alphap_d(:,:)
-#endif
   !! contains \( \langle d\du (\beta_n) | \psi_i \rangle\)
   !
 END MODULE phus
