@@ -309,7 +309,6 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   !
   CALL init_tab_beta ( omega, intra_bgrp_comm )
   CALL init_tab_rho  ( omega, intra_bgrp_comm )
-  CALL init_tab_rhc  ( omega, intra_bgrp_comm )
   !
 #if defined __CUDA
   !
@@ -322,9 +321,11 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      nhtoj_d=nhtoj
      ijtoh_d=ijtoh
      qq_nt_d=qq_nt
+    !$acc update device(qq_at)
      if (is_spinorbit) then
         dvan_so_d=dvan_so
         fcoef_d=fcoef
+      !$acc update device(qq_so)
      else
         dvan_d=dvan
      endif
@@ -332,14 +333,6 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   ofsbeta_d=ofsbeta
   !
 #endif
-  !
-  if (nhm>0) then
-    !$acc update device(qq_at)
-    if (is_spinorbit) then
-      !$acc update device(qq_so)
-    endif
-  endif
-  !
   call stop_clock ('init_us_1')
   return
   !

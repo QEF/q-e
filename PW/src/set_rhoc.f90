@@ -22,17 +22,19 @@ SUBROUTINE set_rhoc
   USE cell_base, ONLY : omega, tpiba2
   USE fft_base,  ONLY : dfftp
   USE fft_rho,   ONLY : rho_g2r
-  USE gvect,     ONLY : ngm, ngl, gl, igtongl
+  USE gvect,     ONLY : ngm, ngl, gl, igtongl, ecutrho
   USE vlocal,    ONLY : strf
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE scf,       ONLY : rho_core, rhog_core
+  USE cellmd,    ONLY : cell_factor
+  USE rhoc_mod,  ONLY : init_tab_rhc, interp_rhc
   !
   IMPLICIT NONE
   !
   REAL(DP) , ALLOCATABLE ::  rhocg(:)
   ! the radial fourier transform
-  REAL(DP) ::  rhoneg
+  REAL(DP) ::  qmax, rhoneg
   ! used to check the core charge
   INTEGER :: ir, nt, ng
   ! counter on mesh points
@@ -43,6 +45,10 @@ SUBROUTINE set_rhoc
   rho_core(:)  = 0.0_DP
 
   IF ( ANY( upf(1:ntyp)%nlcc ) ) THEN
+     !
+     qmax = sqrt(ecutrho)*cell_factor
+     CALL init_tab_rhc  ( qmax, omega, intra_bgrp_comm, ir )
+     !
      ALLOCATE (rhocg( ngl))
      !$acc data create(rhocg) copyin(gl, igtongl, strf, rhog_core, rho_core)
      !

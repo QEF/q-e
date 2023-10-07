@@ -27,6 +27,7 @@ SUBROUTINE force_cc( forcecc )
   USE noncollin_module,     ONLY : noncolin
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
+  USE rhoc_mod,             ONLY : interp_rhc
   !
   IMPLICIT NONE
   !
