@@ -11,10 +11,7 @@ set(src_upflib
     init_tab_beta.f90
     init_tab_qrad.f90
     init_tab_rho.f90
-    init_tab_rhc.f90
     interp_atwfc.f90
-    interp_rhc.f90
-    interp_drhc.f90
     init_us_2_base.f90
     gth.f90
     paw_variables.f90
@@ -50,6 +47,7 @@ set(src_upflib
     uspp_data.f90
     uspp_param.f90
     vloc_mod.f90
+    rhoc_mod.f90
     write_upf_new.f90
     ylmr2.f90
     dylmr2.f90

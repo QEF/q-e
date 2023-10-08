@@ -20,10 +20,10 @@ MODULE rhoc_mod
   !
   PRIVATE
   PUBLIC :: init_tab_rhc
-  PUBLIC :: deallocate_tab_rhc
-  PUBLIC :: scale_tab_rhc
   PUBLIC :: interp_rhc
   PUBLIC :: interp_drhc
+  PUBLIC :: scale_tab_rhc
+  PUBLIC :: deallocate_tab_rhc
   !
   SAVE
   !
@@ -73,22 +73,20 @@ CONTAINS
   IF ( .NOT. ALLOCATED(tab_rhc) ) THEN
      !! table not yet allocated
      qmax = qmax_
-     nqx = INT( qmax/dq + 4)
-     ALLOCATE ( tab_rhc(0:nqx,nsp) )
-     !$acc enter data create(tab_rhc)
   ELSE IF ( qmax_ > qmax ) THEN
-     DEALLOCATE ( tab_rhc )
      !! table ìs allocated but dimension insufficient: re-allocate
      !! (with some margin so that this does not happen too often)
-     qmax = qmax_ + MAX(dq,qmax_-qmax) * 10
-     nqx = INT( qmax/dq + 4)
-     ALLOCATE ( tab_rhc(0:nqx,nsp) )
-     !$acc enter data create(tab_rhc)
+     CALL deallocate_tab_rhc ( )
+     qmax = qmax_ + MAX(dq*100,qmax_-qmax)
      ierr =-1
   ELSE
+     !! table already computed: exit
      ierr =-2
      RETURN
   END IF
+  nqx = INT( qmax/dq + 4)
+  ALLOCATE ( tab_rhc(0:nqx,nsp) )
+  !$acc enter data create(tab_rhc)
   !
   ndm = MAXVAL( msh(1:nsp) )
   ALLOCATE (aux(ndm))
@@ -218,20 +216,26 @@ SUBROUTINE interp_drhc( nt, ngl, gl, tpiba2, drhocg )
   !$acc end data
   !
 END SUBROUTINE interp_drhc
-
-  !
-  subroutine deallocate_tab_rhc
-     !$acc exit data delete(tab_rhc)
-     if( allocated( tab_rhc) )    deallocate( tab_rhc)
-  end subroutine deallocate_tab_rhc
   !
   subroutine scale_tab_rhc( vol_ratio_m1 )
      ! vol_ratio_m1 = omega_old / omega
      real(DP), intent(in) :: vol_ratio_m1
      !
-     tab_rhc(:,:)  = tab_rhc(:,:) * vol_ratio_m1
-!$acc update device (tab_rhc)
+     if ( allocated(tab_rhc) ) then
+         tab_rhc(:,:)  = tab_rhc(:,:) * vol_ratio_m1
+         !$acc update device (tab_rhc)
+     end if
+     !
   end subroutine scale_tab_rhc
+  !
+  subroutine deallocate_tab_rhc(  )
+     !
+     if ( allocated(tab_rhc) ) then
+         !$acc exit data delete(tab_rhc)
+         deallocate (tab_rhc)
+     end if
+     !
+  end subroutine deallocate_tab_rhc
   !
 END MODULE rhoc_mod
 

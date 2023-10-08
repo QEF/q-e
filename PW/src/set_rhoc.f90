@@ -25,7 +25,7 @@ SUBROUTINE set_rhoc
   USE gvect,     ONLY : ngm, ngl, gl, igtongl, ecutrho
   USE vlocal,    ONLY : strf
   USE mp_bands,  ONLY : intra_bgrp_comm
-  USE mp,        ONLY : mp_sum
+  USE mp,        ONLY : mp_sum, mp_max
   USE scf,       ONLY : rho_core, rhog_core
   USE cellmd,    ONLY : cell_factor
   USE rhoc_mod,  ONLY : init_tab_rhc, interp_rhc
@@ -46,7 +46,14 @@ SUBROUTINE set_rhoc
 
   IF ( ANY( upf(1:ntyp)%nlcc ) ) THEN
      !
-     qmax = sqrt(ecutrho)*cell_factor
+     qmax = tpiba2 * MAXVAL ( gl )
+     CALL mp_max (qmax, intra_bgrp_comm)
+     !! this is the actual maximum |G|^2 needed in the interpolation table
+     !! for variable-cell calculations. It may exceed ecutrho, so we use
+     !! "cell_factor" (1.2 or so) as below, in order to avoid too frequent
+     !! re-allocations of the interpolation table
+     !
+     qmax = MAX (sqrt(qmax), sqrt(ecutrho)*cell_factor)
      CALL init_tab_rhc  ( qmax, omega, intra_bgrp_comm, ir )
      !
      ALLOCATE (rhocg( ngl))
@@ -121,4 +128,3 @@ SUBROUTINE set_rhoc
   RETURN
 
 END SUBROUTINE set_rhoc
-
