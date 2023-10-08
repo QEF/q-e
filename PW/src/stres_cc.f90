@@ -20,6 +20,7 @@ SUBROUTINE stres_cc( sigmaxcc )
   USE gvect,                ONLY : ngm, gstart, ngl, gl, igtongl, g, gg
   USE ener,                 ONLY : etxc, vtxc
   USE lsda_mod,             ONLY : nspin
+  USE rhoc_mod,             ONLY : interp_rhc, interp_drhc
   USE scf,                  ONLY : rho, rho_core, rhog_core
   USE vlocal,               ONLY : strf
   USE control_flags,        ONLY : gamma_only

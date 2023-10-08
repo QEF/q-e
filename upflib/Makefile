@@ -11,6 +11,7 @@ MODFLAGS= $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../external/devxlib/src
 
 OBJS_DEP= \
 vloc_mod.o \
+rhoc_mod.o \
 gen_us_dj.o \
 gen_us_dy.o \
 init_us_0.o \
@@ -20,7 +21,6 @@ init_us_2_base.o \
 init_tab_atwfc.o \
 init_tab_beta.o \
 init_tab_rho.o \
-init_tab_rhc.o \
 init_tab_qrad.o
 
 OBJS_NODEP= \
@@ -30,8 +30,6 @@ dqvan2.o \
 dylmr2.o \
 gth.o \
 interp_atwfc.o \
-interp_rhc.o \
-interp_drhc.o \
 paw_variables.o \
 pseudo_types.o \
 qvan2.o \

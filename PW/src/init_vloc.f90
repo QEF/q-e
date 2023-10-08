@@ -45,7 +45,7 @@ SUBROUTINE init_vloc()
   qmax = tpiba2 * MAXVAL ( gl )
   CALL mp_max (qmax, intra_bgrp_comm)
   !! this is the actual maximum |G|^2 needed in the interpolation table
-  !! for variable-cell calculations this may exceed ecutrho, so we use
+  !! for variable-cell calculations. It may exceed ecutrho, so we use
   !! "cell_factor" (1.2 or so) as below, in order to avoid too frequent 
   !! re-allocations of the interpolation table
   !

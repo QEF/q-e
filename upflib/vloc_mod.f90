@@ -89,24 +89,22 @@ CONTAINS
     IF ( .NOT. ALLOCATED(tab_vloc) ) THEN
        !! table not yet allocated
        qmax = qmax_
-       nqx = INT( qmax/dq + 4)
-       ALLOCATE ( tab_vloc(0:nqx,nsp) )
-       !$acc enter data create(tab_vloc)
        ierr = 0
     ELSE IF ( qmax_ > qmax ) THEN
-       !$acc exit data delete(tab_vloc)
-       DEALLOCATE ( tab_vloc )
        !! table ìs allocated but dimension insufficient: re-allocate
        !! (with some margin so that this does not happen too often)
-       qmax = qmax_ + MAX(dq,qmax_-qmax) * 10
-       nqx = INT( qmax/dq + 4)
-       ALLOCATE ( tab_vloc(0:nqx,nsp) )
-       !$acc enter data create(tab_vloc)
+       !$acc exit data delete(tab_vloc)
+       DEALLOCATE ( tab_vloc )
+       qmax = qmax_ + MAX(dq*100,qmax_-qmax)
        ierr =-1
     ELSE
+       !! table already computed: exit
        ierr =-2
        RETURN
     END IF
+    nqx = INT( qmax/dq + 4)
+    ALLOCATE ( tab_vloc(0:nqx,nsp) )
+    !$acc enter data create(tab_vloc)
     !
     ndm = MAXVAL( msh(1:nsp) )
     ALLOCATE (aux(ndm))
