@@ -42,7 +42,9 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   USE gvect,            ONLY : gstart
   USE control_lr,       ONLY : alpha_pv, nbnd_occ
   USE dfpt_tetra_mod,   ONLY : dfpt_tetra_beta
+#if defined(__CUDA)
   USE cublas
+#endif
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ikk, ikq   ! the index of the k and k+q points

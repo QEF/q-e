@@ -77,13 +77,17 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   complex(DP), allocatable ::  aux (:,:)
   ! work space
 
+#if defined(__CUDA)
   TYPE (bec_type) :: bectmp
+#endif
   TYPE (bec_type), ALLOCATABLE :: dbecq(:), dalpq(:,:)
   !
   !   Initialize the auxiliary matrix wdyn
   !
   call start_clock ('drhodv')
+#if defined(__CUDA)
   Call allocate_bec_type_acc( nkb, nbnd, bectmp ) 
+#endif
   ALLOCATE (dbecq(nper))
   ALLOCATE (dalpq(3,nper))
   DO ipert=1,nper
@@ -116,8 +120,12 @@ subroutine drhodv (nu_i0, nper, drhoscf)
                              call get_buffer(dpsi, lrdwf, iudwf, nrec)
                              !$acc update device(dpsi)
            endif
+#if defined(__CUDA)
            call calbec( offload_type, npwq, vkb, dpsi, bectmp )
            call becupdate( offload_type, dbecq, mu, nper, bectmp )
+#else
+           call calbec( offload_type, npwq, vkb, dpsi, dbecq(mu) )
+#endif
            do ipol = 1, 3
 #if defined(__CUDA)
               !$acc parallel loop collapse(2)
@@ -145,8 +153,12 @@ subroutine drhodv (nu_i0, nper, drhoscf)
                     enddo
                  enddo
               endif
+#if defined(__CUDA)
               call calbec( offload_type, npwq, vkb, aux, bectmp )
               call becupdate( offload_type, dalpq, ipol, 3, mu, nper, bectmp )
+#else
+              call calbec( offload_type, npwq, vkb, aux, dalpq(ipol,mu) )
+#endif
            enddo
 
         enddo
@@ -209,8 +221,9 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   dyn_rec(:,:) = dyn_rec(:,:) + wdyn(:,:)
 
   deallocate (aux)
-
+#if defined(__CUDA)
   call deallocate_bec_type_acc( bectmp )
+#endif
   do ipert=1,nper
      do ipol=1,3
         call deallocate_bec_type ( dalpq(ipol,ipert) )

@@ -84,15 +84,19 @@ SUBROUTINE phq_init()
     ! the argument of the phase
   COMPLEX(DP), ALLOCATABLE :: aux1(:,:), tevc(:,:)
     ! used to compute alphap
+#if defined(__CUDA)
   TYPE(bec_type) :: bectmp
     ! temporary buffer to work with offload of arrays of derived types
+#endif
   !
   !
   IF (all_done) RETURN
   !
   CALL start_clock( 'phq_init' )
   !
+#if defined(__CUDA)
   Call allocate_bec_type_acc ( nkb, nbnd, bectmp )
+#endif
   !
   DO na = 1, nat
      !
@@ -176,9 +180,13 @@ SUBROUTINE phq_init()
         CALL get_buffer( evc, lrwfc, iuwfc, ikk )
         IF (noncolin.AND.domag) THEN
            CALL get_buffer( tevc, lrwfc, iuwfc, ikmks(ik) )
+#if defined(__CUDA)
            !$acc update device(tevc)
            Call calbec ( offload_type, npw, vkb, tevc, bectmp )
            Call becupdate( offload_type, becpt, ik, nksq, bectmp )
+#else
+           Call calbec ( offload_type, npw, vkb, tevc, becpt(ik) )
+#endif
         ENDIF
      endif
      !
@@ -187,11 +195,13 @@ SUBROUTINE phq_init()
      !
 #if defined(__CUDA)
      evc_d = evc
-#endif
      !$acc data present_or_copyin(evc)
      Call calbec( offload_type, npw, vkb, evc, bectmp )
      !$acc end data
      Call becupdate( offload_type, becp1, ik, nksq, bectmp ) 
+#else
+     Call calbec( offload_type, npw, vkb, evc, becp1(ik) )
+#endif
      !
      ! ... e') we compute the derivative of the becp term with respect to an
      !         atomic displacement
@@ -235,8 +245,12 @@ SUBROUTINE phq_init()
               END DO
            END DO
         END IF
+#if defined(__CUDA)
         Call calbec ( offload_type, npw, vkb, aux1, bectmp )
         Call becupdate( offload_type, alphap, ipol, 3, ik, nksq, bectmp )
+#else
+        Call calbec ( offload_type, npw, vkb, aux1, alphap(ipol,ik) )
+#endif
      END DO
      !
      IF (noncolin.AND.domag) THEN
@@ -269,8 +283,12 @@ SUBROUTINE phq_init()
                  END DO
               END DO
            END IF
+#if defined(__CUDA)
            Call calbec( offload_type, npw, vkb, aux1, bectmp )
            Call becupdate( offload_type, alphapt, ipol, 3, ik, nksq, bectmp )
+#else
+           Call calbec( offload_type, npw, vkb, aux1, alphapt(ipol,ik) )
+#endif
          END DO
       ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
@@ -345,7 +363,9 @@ SUBROUTINE phq_init()
   !
   IF ( trans ) CALL dynmat0_new()
   !
+#if defined(__CUDA)
   Call deallocate_bec_type_acc ( bectmp )
+#endif
   !
   CALL stop_clock( 'phq_init' )
   !
