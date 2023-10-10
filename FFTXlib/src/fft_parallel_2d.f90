@@ -505,14 +505,12 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        i = hipEventRecord(dfft%bevents(j/dfft%subbatchsize+1), dfft%a2a_comp)
        i = hipStreamWaitEvent( dfft%bstreams(j/dfft%subbatchsize+1), dfft%bevents(j/dfft%subbatchsize+1), 0)
        !
-       IF (j > 0) i = hipStreamWaitEvent( dfft%bstreams(j/dfft%subbatchsize), dfft%bevents(j/dfft%subbatchsize+1), 0)
+       IF (j > 0) i = hipStreamWaitEvent( dfft%bstreams(j/dfft%subbatchsize+1), dfft%bevents(j/dfft%subbatchsize), 0)
        !
        CALL fft_scatter_many_columns_to_planes_store_omp( dfft, aux(j*dfft_nnr+1:), nx3, dfft_nnr, f(j*dfft_nnr+1:), &
                                                           sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize+1 )
        !
      ENDDO
-     !
-   !  CALL hipCheck(hipDeviceSynchronize())
      !
      !------------------------------------
      !
@@ -536,7 +534,6 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        !
      ENDDO
      !
-    ! CALL hipCheck(hipDeviceSynchronize())
      !
   ELSE
      !
@@ -561,8 +558,6 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
          ENDDO
        ENDIF
 
-       !CALL hipCheck(hipDeviceSynchronize())
-
        IF (j > 0) i = hipStreamWaitEvent(dfft%bstreams(j/dfft%subbatchsize + 1), dfft%bevents(j/dfft%subbatchsize), 0) 
 
        CALL fft_scatter_many_planes_to_columns_store_omp( dfft, nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
@@ -571,16 +566,17 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
 
      ENDDO
 
+
+
+
      DO j = 0, batchsize-1, dfft%subbatchsize
        currsize = min(dfft%subbatchsize, batchsize - j)
 
        CALL fft_scatter_many_planes_to_columns_send_omp( dfft, aux(j*dfft_nnr + 1:), nx3, dfft_nnr, f(j*dfft_nnr + 1:), &
          aux2(j*dfft_nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
 
-       i = hipEventRecord(dfft%bevents(j/dfft%subbatchsize + 0), dfft%bstreams(j/dfft%subbatchsize + 1))
+       i = hipEventRecord(dfft%bevents(j/dfft%subbatchsize + 1), dfft%bstreams(j/dfft%subbatchsize + 1))
        i = hipStreamWaitEvent(dfft%a2a_comp, dfft%bevents(j/dfft%subbatchsize + 1), 0)
-
-       !CALL hipCheck(hipDeviceSynchronize())
 
        DO i = 0, currsize - 1
          CALL cft_1z_omp( aux(j*dfft_nnr + i*ncpx*nx3 + 1:), sticks( me_p ), n3, nx3, isgn, f((j+i)*dfft_nnr + 1:), stream=dfft%a2a_comp )
@@ -588,7 +584,6 @@ SUBROUTINE many_cft3s_omp( f, dfft, isgn, batchsize )
        !
      ENDDO
      !
-     !CALL hipCheck(hipDeviceSynchronize())
      !
   ENDIF
   !

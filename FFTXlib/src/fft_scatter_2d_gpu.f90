@@ -1996,7 +1996,7 @@ END SUBROUTINE fft_scatter_omp_batch
 
 SUBROUTINE fft_scatter_many_columns_to_planes_store_omp( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, batchsize, batch_id )
    !
-   USE hipfft, ONLY: hipEventRecord, hipMemcpy2DAsync, hipcheck, hipdevicesynchronize
+   USE hipfft, ONLY: hipEventRecord, hipMemcpy2DAsync, hipmemcpy2D, hipcheck, hipdevicesynchronize
    !
    IMPLICIT NONE
    !
@@ -2070,6 +2070,7 @@ SUBROUTINE fft_scatter_many_columns_to_planes_store_omp( dfft, f_in, nr3x, nxx_,
 !         END DO
 !      END DO
 !!$omp end target data
+      
       !
       !$omp target data use_device_ptr(f_in,f_aux)
       istat = hipMemcpy2DAsync( int(sizeof(dummy)),    &
@@ -2122,6 +2123,7 @@ SUBROUTINE fft_scatter_many_columns_to_planes_store_omp( dfft, f_in, nr3x, nxx_,
    ENDDO
    !
    istat = hipEventRecord( dfft%bevents(batch_id), dfft%bstreams(batch_id) )
+   !
    DEALLOCATE( offset_proc )
    !
 10 CONTINUE
@@ -2206,7 +2208,7 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
       IF(dfft%IPC_PEER( sorc + 1 ) .eq. 0) THEN
 #endif
 #if defined(__GPU_MPI_OMP)
-!$omp target data use_device_ptr(f_aux2)
+!$omp target data use_device_addr(f_aux2)
          CALL MPI_IRECV( f_aux2((sorc)*sendsiz + 1), sendsiz, MPI_DOUBLE_COMPLEX, sorc, 0, gcomm, dfft%srh(req_cnt+1, batch_id), ierr )
 !$omp end target data
 #else
@@ -2217,7 +2219,7 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
       ENDIF
 #endif
    ENDDO
-
+   !
    DO iter = 2, nprocp
       IF(IAND(nprocp, nprocp-1) == 0) THEN
          dest = IEOR( me-1, iter-1 )
@@ -2230,7 +2232,7 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
       ELSE
 #endif
 #if defined(__GPU_MPI_OMP)
-!$omp target data use_device_ptr(f_aux)
+!$omp target data use_device_addr(f_aux)
          CALL MPI_ISEND( f_aux((dest)*sendsiz + 1), sendsiz, MPI_DOUBLE_COMPLEX, dest, 0, gcomm, dfft%srh(req_cnt+1, batch_id), ierr )
 !$omp end target data
 #else
@@ -2269,10 +2271,8 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
                                 dfft%bstreams(batch_id) )
    !$omp end target data
    !
-   !CALL hipCheck(hipDeviceSynchronize())
-   !
    IF(req_cnt .gt. 0) CALL MPI_WAITALL(req_cnt, dfft%srh(1:req_cnt, batch_id), MPI_STATUSES_IGNORE, ierr)
-
+   !
 #ifdef __IPC
    CALL sync_ipc_sends( gcomm )
    CALL MPI_Barrier( gcomm, ierr )
@@ -2305,9 +2305,6 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
    istat = hipEventRecord( dfft%bevents(batch_id), dfft%bstreams(batch_id) )
    istat = hipStreamWaitEvent( dfft%a2a_comp, dfft%bevents(batch_id), 0)
    !
-   !CALL hipCheck(hipDeviceSynchronize())
-   !
-   !
 10 CONTINUE
    !
    ! Zero out f_aux_d
@@ -2317,8 +2314,8 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
      f_aux(i) = (0.d0, 0.d0)
    end do
 #else
-   nnp = 2*(ubound(f_aux,1)-lbound(f_aux,1)+1)
-   CALL scalar_init(f_aux(lbound(f_aux,1):ubound(f_aux,1)),0.d0,nnp, dfft%a2a_comp)
+   nnp = 2*batchsize*nxx_
+   CALL scalar_init(f_aux,0.d0,nnp, dfft%a2a_comp)
 #endif
    !
    npp = dfft%nr3p( me )
@@ -2366,14 +2363,12 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send_omp ( dfft, f_in, nr3x, nxx_,
 #endif
       ENDDO
       !
-      !CALL hipCheck(hipDeviceSynchronize())
-      !
    END IF
    !
 #endif
-
+   !
   RETURN
-
+   !
 END SUBROUTINE fft_scatter_many_columns_to_planes_send_omp
 
 SUBROUTINE fft_scatter_many_planes_to_columns_store_omp ( dfft, nr3x, nxx_, f_aux, f_aux2, ncp_, npp_, isgn, batchsize, &
@@ -2486,8 +2481,6 @@ SUBROUTINE fft_scatter_many_planes_to_columns_store_omp ( dfft, nr3x, nxx_, f_au
          ENDDO
 #endif
       ENDDO
-      !
-      !CALL hipCheck(hipDeviceSynchronize())
       !
    END IF
 
@@ -2617,6 +2610,7 @@ SUBROUTINE fft_scatter_many_planes_to_columns_send_omp ( dfft, f_in, nr3x, nxx_,
          CALL ipc_send( f_aux2_d((dest)*sendsiz + 1), sendsiz, f_aux_d((me-1)*sendsiz + 1), 0, dest, gcomm, ierr )
       ELSE
 #endif
+
 #ifdef __GPU_MPI_OMP
 !$omp target data use_device_ptr(f_aux2)
          call MPI_ISEND( f_aux2((dest)*sendsiz + 1), sendsiz, MPI_DOUBLE_COMPLEX, dest, 0, gcomm, dfft%srh(req_cnt+1, batch_id), ierr )
@@ -2659,11 +2653,10 @@ SUBROUTINE fft_scatter_many_planes_to_columns_send_omp ( dfft, f_in, nr3x, nxx_,
                                 dfft%bstreams(batch_id) )
    !$omp end target data
    !
-   !CALL hipCheck(hipDeviceSynchronize())   
-   !
    IF(req_cnt .gt. 0) then
       call MPI_WAITALL(req_cnt, dfft%srh(1:req_cnt, batch_id), MPI_STATUSES_IGNORE, ierr)
    ENDIF
+   !
 #ifdef __IPC
    call sync_ipc_sends( gcomm )
    call MPI_Barrier( gcomm, ierr )
@@ -2674,10 +2667,7 @@ SUBROUTINE fft_scatter_many_planes_to_columns_send_omp ( dfft, f_in, nr3x, nxx_,
    !
    !  Store contiguously the (remaining) columns (one already done above).
    !
-   !! f_in = 0.0_DP
-   !
    offset = 0
-!!$omp target update to (f_aux)
    !
    DO gproc = 1, nprocp
       kdest = ( gproc - 1 ) * sendsiz
@@ -2753,8 +2743,6 @@ SUBROUTINE fft_scatter_many_planes_to_columns_send_omp ( dfft, f_in, nr3x, nxx_,
       ENDIF
       offset = offset + npp_gproc
    ENDDO
-   !
-   !CALL hipCheck(hipDeviceSynchronize())
    !
 20 CONTINUE
 
