@@ -31,6 +31,7 @@ SUBROUTINE scale_h
   USE mp_bands,       ONLY : intra_bgrp_comm
   USE vloc_mod,       ONLY : scale_tab_vloc
   USE rhoc_mod,       ONLY : scale_tab_rhc
+  USE rhoat_mod,      ONLY : scale_tab_rhoat
   !
   IMPLICIT NONE
   !
@@ -90,6 +91,7 @@ SUBROUTINE scale_h
   !
   call scale_uspp_data( omega_old/omega )
   CALL scale_tab_rhc( omega_old/omega )
+  CALL scale_tab_rhoat( omega_old/omega )
   !
   ! recalculate the local part of the pseudopotential
   !
