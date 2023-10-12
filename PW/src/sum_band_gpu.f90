@@ -1006,25 +1006,9 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   CALL start_clock_gpu( 'sum_band:calbec' )
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN
-     !$acc data present_or_copyin(evc) present(vkb,becp)
+     !$acc data present_or_copyin(evc) 
      CAll calbec(offload_type, npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
      !$acc end data
-     if(allocated(becp%r)) then
-       allocate( becp_d_r_d(size(becp%r,1),size(becp%r,2)) ) 
-       !$acc kernels present(becp%r) deviceptr(becp_d_r_d)
-       becp_d_r_d = becp%r 
-       !$acc end kernels
-     elseif(allocated(becp%k)) then
-       allocate( becp_d_k_d(size(becp%k,1),size(becp%k,2)) ) 
-       !$acc kernels present(becp%k) deviceptr(becp_d_k_d) 
-       becp_d_k_d = becp%k 
-       !$acc end kernels
-     elseif(allocated(becp%nc)) then
-       allocate( becp_d_nc_d(size(becp%nc,1),size(becp%nc,2),size(becp%nc,3)) ) 
-       !$acc kernels present(becp%nc) deviceptr(becp_d_nc_d) 
-       becp_d_nc_d = becp%nc 
-       !$acc end kernels
-     endif
   ELSE
      CALL using_evc(0) 
      if (gamma_only) then
@@ -1033,6 +1017,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
            call calbec_rs_gamma(ibnd,ibnd_end,becp%r)
         enddo
         call mp_sum(becp%r,inter_bgrp_comm)
+        !$acc update device(becp%r)
      else
         current_k = ik
         becp%k = (0.d0,0.d0)
@@ -1040,9 +1025,26 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
            call invfft_orbital_k(evc,ibnd,ibnd_end)
            call calbec_rs_k(ibnd,ibnd_end)
         enddo
-       call mp_sum(becp%k,inter_bgrp_comm)
+        call mp_sum(becp%k,inter_bgrp_comm)
+        !$acc update device(becp%k)
      endif
   ENDIF
+  if(allocated(becp%r)) then
+    allocate( becp_d_r_d(size(becp%r,1),size(becp%r,2)) ) 
+    !$acc kernels deviceptr(becp_d_r_d)
+    becp_d_r_d = becp%r 
+    !$acc end kernels
+  elseif(allocated(becp%k)) then
+    allocate( becp_d_k_d(size(becp%k,1),size(becp%k,2)) ) 
+    !$acc kernels deviceptr(becp_d_k_d) 
+    becp_d_k_d = becp%k 
+    !$acc end kernels
+  elseif(allocated(becp%nc)) then
+    allocate( becp_d_nc_d(size(becp%nc,1),size(becp%nc,2),size(becp%nc,3)) ) 
+    !$acc kernels deviceptr(becp_d_nc_d) 
+    becp_d_nc_d = becp%nc 
+    !$acc end kernels
+  endif
   CALL stop_clock_gpu( 'sum_band:calbec' )
   !
   ! In the EXX case with ultrasoft or PAW, a copy of becp will be
