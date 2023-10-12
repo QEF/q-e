@@ -62,6 +62,7 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   !$acc data copyin(wfcU)
   !
   ! proj = <wfcU|psip>
+#if defined(__CUDA)
   if(gamma_only) then
     allocate( proj_r(nwfcU, mps) )
     Call calbec(offload_type, .true., np, wfcU, psip_d, proj_r)
@@ -69,6 +70,7 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
     allocate( proj_k(nwfcU, mps) )
     Call calbec(offload_type, .true., np, wfcU, psip_d, proj_k)
   endif
+#endif
   !
   IF ( lda_plus_u_kind.EQ.0 .OR. lda_plus_u_kind.EQ.1 ) THEN
      CALL vhpsi_U_gpu()  ! DFT+U
