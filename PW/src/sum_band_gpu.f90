@@ -48,7 +48,6 @@ SUBROUTINE sum_band_gpu()
   USE becmod,               ONLY : allocate_bec_type_acc, deallocate_bec_type_acc, &
                                    becp
   USE gcscf_module,         ONLY : lgcscf, gcscf_calc_nelec
-  USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
   USE wvfct_gpum,           ONLY : using_et
   !
   IMPLICIT NONE
@@ -296,7 +295,7 @@ SUBROUTINE sum_band_gpu()
        attributes(pinned) :: tg_rho_h
 #endif
        !
-       CALL using_evc_d(0); CALL using_et(0)
+       CALL using_et(0)
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -331,8 +330,6 @@ SUBROUTINE sum_band_gpu()
           CALL start_clock_gpu( 'sum_band:buffer' )
           IF ( nks > 1 ) &
              CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-          IF ( nks > 1 ) CALL using_evc(2) ! get_buffer(evc, ...) evc is updated (intent out)
-          IF ( nks > 1 ) CALL using_evc_d(0) ! sync on the GPU
           !$acc update device(evc)
           !
           CALL stop_clock_gpu( 'sum_band:buffer' )
@@ -424,8 +421,6 @@ SUBROUTINE sum_band_gpu()
              ENDIF
              !
              IF (xclib_dft_is('meta') .OR. lxdm) THEN
-                !
-                CALL using_evc(0)
                 !
                 DO j = 1, 3
                    DO i = 1, npw
@@ -533,7 +528,7 @@ SUBROUTINE sum_band_gpu()
        attributes(pinned) :: tg_rho_h, tg_rho_nc_h
 #endif
        !
-       CALL using_evc(0); CALL using_evc_d(0); CALL using_et(0)
+       CALL using_et(0)
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -591,8 +586,6 @@ SUBROUTINE sum_band_gpu()
           CALL start_clock_gpu( 'sum_band:buffer' )
           IF ( nks > 1 ) THEN
              CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-             CALL using_evc(2)
-             CALL using_evc_d(0)  ! sync evc on GPU, OPTIMIZE (use async here)
           ENDIF
           !$acc update device(evc)
           CALL stop_clock_gpu( 'sum_band:buffer' )
@@ -976,7 +969,6 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   USE us_exx,             ONLY : store_becxx0
   USE mp_bands,           ONLY : nbgrp,inter_bgrp_comm
   USE mp,                 ONLY : mp_sum
-  USE wavefunctions_gpum, ONLY : evc_d, using_evc, using_evc_d
   USE wvfct_gpum,         ONLY : et_d, wg_d, using_et, using_et_d, using_wg_d
   !
   ! Used to avoid unnecessary memcopy
@@ -1010,7 +1002,6 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
      CAll calbec(offload_type, npw, vkb, evc(:,ibnd_start:ibnd_end), becp )
      !$acc end data
   ELSE
-     CALL using_evc(0) 
      if (gamma_only) then
         do ibnd = ibnd_start, ibnd_end, 2
            call invfft_orbital_gamma(evc,ibnd,ibnd_end) 
