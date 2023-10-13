@@ -47,7 +47,7 @@ SUBROUTINE atomic_rho_g( rhocg, nspina )
   !
   ! ... local variables
   !
-  REAL(DP) :: rhoneg, rhoima, rhoscale, fac
+  REAL(DP) :: rhoscale, fac
   REAL(DP), ALLOCATABLE :: rhoatg(:)
   REAL(DP) :: angular(nspina)
   REAL(DP) :: qmax
@@ -67,6 +67,8 @@ SUBROUTINE atomic_rho_g( rhocg, nspina )
   ALLOCATE (rhoatg( ngl))
   !$acc data create(rhoatg) copyin( gl, strf, igtongl )
   !
+  !$acc kernels
+  rhocg(:,1:nspina) = (0.0_dp, 0.0_dp)
   DO nt = 1, ntyp
      !
      ! interpolate atomic rho(G)

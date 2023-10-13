@@ -85,7 +85,7 @@ CONTAINS
      RETURN
   END IF
   nqx = INT( qmax/dq + 4)
-  ALLOCATE ( tab_rhc(0:nqx,nsp) )
+  ALLOCATE ( tab_rhc(nqx,nsp) )
   !$acc enter data create(tab_rhc)
   !
   ndm = MAXVAL( msh(1:nsp) )
