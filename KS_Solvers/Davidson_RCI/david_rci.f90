@@ -293,7 +293,7 @@ contains
           !
           IF ( np /= n ) vc(:,np) = vc(:,n)
           !
-          ! ... for use in g_psi
+          ! ... for use in g_psi_ptr
           !
           work%ew(nbase+np) = e(n)
           !

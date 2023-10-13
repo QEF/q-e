@@ -10,7 +10,7 @@
 #define ONE  ( 1._DP, 0._DP )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE crmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, &
+SUBROUTINE crmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, &
                       g2kin_d, btype, ethr, ndiis, uspp, do_hpsi, is_exx, notconv, rmm_iter )
   !----------------------------------------------------------------------------
   !
@@ -60,10 +60,10 @@ SUBROUTINE crmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, npol, psi_d, hp
   REAL(DP),    PARAMETER   :: SMIN = 0.05_DP
   REAL(DP),    PARAMETER   :: SMAX = 1.00_DP
   !
-  EXTERNAL :: h_psi_gpu, s_psi_gpu
-    ! h_psi_gpu(npwx,npw,nbnd,psi,hpsi)
+  EXTERNAL :: h_psi_ptr, s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nbnd,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi_gpu(npwx,npw,nbnd,psi,spsi)
+    ! s_psi_ptr(npwx,npw,nbnd,psi,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,nbnd)
   !
@@ -320,7 +320,7 @@ CONTAINS
     !
     hpsi_d = ZERO
     !
-    CALL h_psi_gpu( npwx, npw, nbnd, psi_d, hpsi_d )
+    CALL h_psi_ptr( npwx, npw, nbnd, psi_d, hpsi_d )
     !
     ! ... Operate the Overlap : S |psi>
     !
@@ -328,7 +328,7 @@ CONTAINS
        !
        spsi_d = ZERO
        !
-       CALL s_psi_gpu( npwx, npw, nbnd, psi_d, spsi_d )
+       CALL s_psi_ptr( npwx, npw, nbnd, psi_d, spsi_d )
        !
     END IF
     !
@@ -903,11 +903,11 @@ CONTAINS
     !
     ! ... Operate the Hamiltonian : H K (H - eS) |psi>
     !
-    CALL h_psi_gpu( npwx, npw, notconv, kpsi_d, hkpsi_d )
+    CALL h_psi_ptr( npwx, npw, notconv, kpsi_d, hkpsi_d )
     !
     ! ... Operate the Overlap : S K (H - eS) |psi>
     !
-    IF ( uspp ) CALL s_psi_gpu( npwx, npw, notconv, kpsi_d, skpsi_d )
+    IF ( uspp ) CALL s_psi_ptr( npwx, npw, notconv, kpsi_d, skpsi_d )
     !
     ! ... Create 2 x 2 matrix
     !
