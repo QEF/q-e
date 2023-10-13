@@ -216,6 +216,7 @@ SUBROUTINE init_wfc ( ik )
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : lelfield
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
+                                   allocate_bec_type_acc, deallocate_bec_type_acc, &
                                    bec_type, becp
   USE constants,            ONLY : tpi
   USE basis,                ONLY : natomwfc, starting_wfc
@@ -410,7 +411,7 @@ SUBROUTINE init_wfc ( ik )
 !civn: becp_d to be removed as soon as calbec is fixed
   IF(use_gpu) THEN
     CALL using_becp_auto (2)
-    CALL allocate_bec_type ( nkb, n_starting_wfc, becp, intra_bgrp_comm )
+    CALL allocate_bec_type_acc ( nkb, n_starting_wfc, becp, intra_bgrp_comm )
     CALL using_becp_d_auto (2)
   ELSE
     CALL allocate_bec_type ( nkb, n_starting_wfc, becp, intra_bgrp_comm )
@@ -459,7 +460,7 @@ SUBROUTINE init_wfc ( ik )
   !
   if(use_gpu) then 
     CALL using_becp_auto (2)
-    CALL deallocate_bec_type ( becp )
+    CALL deallocate_bec_type_acc ( becp )
     CALL using_becp_d_auto (2)
   else
     CALL deallocate_bec_type ( becp )

@@ -101,7 +101,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE uspp,                    ONLY: nkb, vkb
   USE ldaU,                    ONLY: lda_plus_u, lda_plus_u_kind, Hubbard_projectors
   USE gvect,                   ONLY: gstart
-  USE control_flags,           ONLY: gamma_only
+  USE control_flags,           ONLY: gamma_only, offload_type
   USE noncollin_module,        ONLY: npol, noncolin
   USE realus,                  ONLY: real_space, invfft_orbital_gamma, fwfft_orbital_gamma, &
                                      calbec_rs_gamma, add_vuspsir_gamma, invfft_orbital_k,  &
@@ -190,7 +190,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
         !
         IF ( dffts%has_task_groups ) &
              CALL errore( 'h_psi', 'task_groups not implemented with real_space', 1 )
-
         CALL using_becp_auto(1)
         DO ibnd = 1, m, 2
            ! ... transform psi to real space -> psic 
@@ -198,6 +197,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
            ! ... compute becp%r = < beta|psi> from psic in real space
            CALL start_clock_gpu( 'h_psi:calbec' )
            CALL calbec_rs_gamma( ibnd, m, becp%r )
+           !$acc update device(becp%r)
            CALL stop_clock_gpu( 'h_psi:calbec' )
            ! ... psic -> vrs * psic (psic overwritten will become hpsi)
            CALL v_loc_psir_inplace( ibnd, m ) 
@@ -234,6 +234,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
            ! ... compute becp%r = < beta|psi> from psic in real space
            CALL start_clock_gpu( 'h_psi:calbec' )
            CALL calbec_rs_k( ibnd, m )
+           !$acc update device(becp%k)
            CALL stop_clock_gpu( 'h_psi:calbec' )
            ! ... psic -> vrs * psic (psic overwritten will become hpsi)
            CALL v_loc_psir_inplace( ibnd, m )
@@ -259,14 +260,15 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
      CALL start_clock_gpu( 'h_psi:calbec' )
-     CALL using_becp_d_auto(2)
-!ATTENTION HERE: calling without (:,:) causes segfaults
-!$acc data present(vkb(:,:))
-!$acc host_data use_device(vkb)
-     CALL calbec_gpu ( n, vkb(:,:), psi_d, becp_d, m )
-!$acc end host_data
-!$acc end data
-!
+!!     CALL using_becp_d_auto(2)
+!!!ATTENTION HERE: calling without (:,:) causes segfaults
+!!!$acc data present(vkb(:,:))
+!!!$acc host_data use_device(vkb)
+!!     CALL calbec_gpu ( n, vkb(:,:), psi_d, becp_d, m )
+!!!$acc end host_data
+!!!$acc end data
+!!!
+     Call calbec(offload_type, .true.,  n, vkb, psi_d, becp, m )
      CALL stop_clock_gpu( 'h_psi:calbec' )
      CALL add_vuspsi_gpu( lda, n, m, hpsi_d )
      !
