@@ -111,7 +111,7 @@ SUBROUTINE force_corr( forcescc )
   !
   CALL mp_sum( forcescc, intra_bgrp_comm )
   !
-  !$acc end data delete ( rhoatg )
+  !$acc end data 
   !
   DEALLOCATE( rhoatg )
   DEALLOCATE( vauxr, vauxg )

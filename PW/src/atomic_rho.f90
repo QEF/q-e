@@ -69,6 +69,7 @@ SUBROUTINE atomic_rho_g( rhocg, nspina )
   !
   !$acc kernels
   rhocg(:,1:nspina) = (0.0_dp, 0.0_dp)
+  !$acc end kernels
   DO nt = 1, ntyp
      !
      ! interpolate atomic rho(G)
@@ -108,7 +109,7 @@ SUBROUTINE atomic_rho_g( rhocg, nspina )
      ENDIF
      !
   ENDDO
-  !$acc exit data delete (rhoatg)
+  !$acc end data
   DEALLOCATE (rhoatg)
 
 END SUBROUTINE atomic_rho_g
