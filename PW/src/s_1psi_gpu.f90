@@ -58,7 +58,6 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
            ! global becp%r is updated
            CALL using_becp_r(2)
            CALL calbec_rs_gamma(ibnd,nbnd,becp%r) 
-           !$acc update device(becp%r)
         ENDDO
         !
         CALL s_psir_gamma(1,1)
@@ -71,7 +70,6 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
            CALL invfft_orbital_k(psi_h,ibnd,nbnd) 
            ! global becp%r is updated
            CALL calbec_rs_k( ibnd, nbnd )
-           !$acc update device(becp%k)
         ENDDO
         !
         CALL s_psir_k( 1, 1 )

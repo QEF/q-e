@@ -38,11 +38,6 @@ SUBROUTINE hs_1psi_gpu( lda, n, psi_d, hpsi_d, spsi_d )
   !OBM: I know this form is somewhat inelegant but, leaving the pre-real_space part intact
   !     makes it easier to debug probable errors, please do not "beautify" 
         if (real_space) then
-           if(gamma_only) then
-             !$acc update self(becp%r)
-           else
-             !$acc update self(becp%k)
-           endif
            ALLOCATE(psi_h(lda*npol,1), spsi_h(n,1))
            psi_h(1:lda*npol,1) = psi_d(1:lda*npol,1)
            CALL h_psi_gpu( lda, n, 1, psi_d, hpsi_d )
