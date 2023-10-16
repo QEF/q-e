@@ -133,9 +133,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   !
   IF (okvan) ALLOCATE (int3 ( nhm, nhm, nat, nspin_mag, 1))
   IF (okpaw) ALLOCATE (int3_paw ( nhm, nhm, nat, nspin_mag, 1))
-write(*,*) '@2a'
   CALL allocate_bec_type_acc (nkb, nbnd, becp)
-write(*,*) '@2b'
   !
   ALLOCATE (dbecsum((nhm*(nhm+1))/2, nat, nspin_mag, 1))
   !

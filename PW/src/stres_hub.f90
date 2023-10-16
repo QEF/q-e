@@ -429,7 +429,6 @@ SUBROUTINE dndepsilon_k ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,dns )
                                  ldim_back, offsetU_back, offsetU_back1, &
                                  is_hubbard_back, Hubbard_l2, backall
    USE wavefunctions_gpum,ONLY : using_evc
-   USE becmod_subs_gpum,  ONLY : using_becp_auto
    !
    IMPLICIT NONE
    !
@@ -474,7 +473,6 @@ SUBROUTINE dndepsilon_k ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,dns )
    CALL allocate_bec_type ( nwfcU,nbnd, dproj )
    !
    CALL using_evc(0)
-   CALL using_becp_auto(2)
    !
    ! D_Sl for l=1 and l=2 are already initialized, for l=0 D_S0 is 1
    !
