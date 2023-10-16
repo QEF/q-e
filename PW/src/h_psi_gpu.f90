@@ -268,7 +268,9 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
 !!!$acc end host_data
 !!!$acc end data
 !!!
+#if defined(__CUDA)
      Call calbec(offload_type, .true.,  n, vkb, psi_d, becp, m )
+#endif
      CALL stop_clock_gpu( 'h_psi:calbec' )
      CALL add_vuspsi_gpu( lda, n, m, hpsi_d )
      !

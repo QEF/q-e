@@ -90,7 +90,9 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
 !!!!$acc end host_data 
 !!!!$acc end data 
 !!!     CALL s_psi_gpu( npwx, n, 1, psi_d, spsi_d )
+#if defined(__CUDA)
      CAll calbec(offload_type, .true., n, vkb, psi_d, becp )
+#endif
      CALL s_psi_acc( npwx, n, 1, psi_d, spsi_d )
      
      !
