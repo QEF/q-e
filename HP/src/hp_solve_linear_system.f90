@@ -407,9 +407,7 @@ write(*,*) '@2b'
      DEALLOCATE (t)
      DEALLOCATE (tmq)
   ENDIF
-write(*,*) '@2c'
   CALL deallocate_bec_type_acc (becp)
-write(*,*) '@2d'
   !
   WRITE( stdout,*) "     "
   WRITE( stdout,*) "     =--------------------------------------------="

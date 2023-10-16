@@ -19,7 +19,7 @@ subroutine hp_allocate_q
   USE noncollin_module,     ONLY : npol, nspin_mag
   USE fft_base,             ONLY : dfftp
   USE wavefunctions,        ONLY : evc
-  USE becmod,               ONLY : allocate_bec_type, allocate_bec_type_acc, becp
+  USE becmod,               ONLY : allocate_bec_type
   USE uspp,                 ONLY : nkb, okvan
   USE qpoint,               ONLY : nksq, eigqts
   USE lrus,                 ONLY : becp1
@@ -49,7 +49,6 @@ subroutine hp_allocate_q
      DO ik = 1,nksq
         CALL allocate_bec_type ( nkb, nbnd, becp1(ik) )
      ENDDO
-     CALL allocate_bec_type_acc(nkb,nbnd,becp)
   ENDIF
   !
   ALLOCATE (swfcatomk(npwx,nwfcU))     
