@@ -134,7 +134,11 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
   CALL threaded_memcpy( spsi, psi, lda*npol*m*2 )
 #endif
   !
+  !$acc end data
+  !
   IF ( nkb == 0 .OR. .NOT. okvan ) RETURN
+  !
+  !$acc data deviceptr( psi, spsi )
   !
   CALL start_clock( 's_psi' )  
   !
@@ -142,8 +146,10 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
   need_host_copy = real_space
   IF (need_host_copy) THEN
       ALLOCATE(psi_host(lda*npol,m), spsi_host(lda*npol,m))
+      !$acc kernels copyout(psi_host,spsi_host)
       psi_host  = psi
       spsi_host = spsi
+      !$acc end kernels
   END IF
 #endif
   !
@@ -169,7 +175,9 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
         ENDDO
         !
 #if defined(__CUDA)
+        !$acc kernels copyin(spsi_host)
         spsi = spsi_host
+        !$acc end kernels
 #endif
         !
      ELSE
@@ -202,7 +210,9 @@ SUBROUTINE s_psi__acc( lda, n, m, psi, spsi )
         ENDDO
         !
 #if defined(__CUDA)
+        !$acc kernels copyin(spsi_host)
         spsi = spsi_host
+        !$acc end kernels
 #endif
         !
      ELSE
