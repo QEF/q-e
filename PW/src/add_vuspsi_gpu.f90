@@ -22,8 +22,6 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
   USE uspp,            ONLY: ofsbeta, nkb, vkb, deeq, deeq_nc
   USE uspp_param,      ONLY: nh, nhm
   USE becmod,          ONLY: becp
-  USE becmod_gpum,     ONLY: bec_type_d, becp_d, using_becp_r_d, &
-                             using_becp_k_d, using_becp_nc_d
   IMPLICIT NONE
   !
   ! ... I/O variables
@@ -160,12 +158,10 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
           ! Normal case: hpsi(n,i) = \sum_l beta(n,l) ps(l,i) 
           ! (l runs from 1 to nkb)
           !
-!$acc data present(vkb(:,:))
-!$acc host_data use_device(vkb)
+          !$acc host_data use_device(vkb)
           CALL DGEMM( 'N', 'N', ( 2 * n ), m, nkb, 1.D0, vkb, &
                    ( 2 * lda ), ps_d, nkb, 1.D0, hpsi_d, ( 2 * lda ) )
-!$acc end host_data
-!$acc end data
+          !$acc end host_data
        ELSE
           !
           ! parallel block multiplication of vkb and ps
@@ -180,12 +176,10 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
              IF( ( m_begin + m_loc - 1 ) > m ) m_loc = m - m_begin + 1
 
              IF( m_loc > 0 ) THEN
-!$acc data present(vkb(:,:))
-!$acc host_data use_device(vkb)
+                !$acc host_data use_device(vkb)
                 CALL DGEMM( 'N', 'N', ( 2 * n ), m_loc, nkb, 1.D0, vkb, &
                    ( 2 * lda ), ps_d, nkb, 1.D0, hpsi_d( 1, m_begin ), ( 2 * lda ) )
-!$acc end host_data
-!$acc end data
+                !$acc end host_data
              ENDIF
 
              ! block rotation
@@ -281,12 +275,10 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        END DO
        CALL dev_buf%release_buffer(deeaux_d, ierr) ! DEALLOCATE (deeaux_d)
        !
-!$acc data present(vkb(:,:))
-!$acc host_data use_device(vkb)
+       !$acc host_data use_device(vkb)
        CALL ZGEMM( 'N', 'N', n, m, nkb, ( 1.D0, 0.D0 ) , vkb, &
                    lda, ps_d, nkb, ( 1.D0, 0.D0 ) , hpsi_d, lda )
-!$acc end host_data
-!$acc end data
+       !$acc end host_data
        !
        CALL dev_buf%release_buffer(ps_d, ierr) !DEALLOCATE (ps_d)
        !
@@ -393,12 +385,10 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
           !
        END DO
        !
-!$acc data present(vkb(:,:))
-!$acc host_data use_device(vkb)
+       !$acc host_data use_device(vkb)
        call ZGEMM ('N', 'N', n, m*npol, nkb, ( 1.D0, 0.D0 ) , vkb, &
                    lda, ps_d, nkb, ( 1.D0, 0.D0 ) , hpsi_d, lda )
-!$acc end host_data
-!$acc end data
+       !$acc end host_data
        !
        CALL dev_buf%release_buffer(ps_d, ierr ) ! DEALLOCATE (ps_d)
        !

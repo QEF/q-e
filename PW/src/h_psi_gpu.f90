@@ -95,7 +95,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE kinds,                   ONLY: DP
   USE bp,                      ONLY: lelfield, l3dstring, gdir, efield, efield_cry
   USE becmod,                  ONLY: bec_type, becp, calbec
-  USE becmod_gpum,             ONLY: becp_d
   USE lsda_mod,                ONLY: current_spin
   USE scf_gpum,                ONLY: vrs_d, using_vrs_d
   USE uspp,                    ONLY: nkb, vkb
@@ -114,7 +113,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE device_memcpy_m,         ONLY: dev_memcpy, dev_memset
   !
   USE wvfct,                   ONLY: g2kin  
-  USE becmod_subs_gpum,        ONLY: calbec_gpu, using_becp_auto, using_becp_d_auto
 #if defined(__OSCDFT)
   USE plugin_flags,            ONLY : use_oscdft
   USE oscdft_base,             ONLY : oscdft_ctx
@@ -190,7 +188,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
         !
         IF ( dffts%has_task_groups ) &
              CALL errore( 'h_psi', 'task_groups not implemented with real_space', 1 )
-        CALL using_becp_auto(1)
         DO ibnd = 1, m, 2
            ! ... transform psi to real space -> psic 
            CALL invfft_orbital_gamma(psi_host, ibnd, m )
@@ -260,14 +257,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
      CALL start_clock_gpu( 'h_psi:calbec' )
-!!     CALL using_becp_d_auto(2)
-!!!ATTENTION HERE: calling without (:,:) causes segfaults
-!!!$acc data present(vkb(:,:))
-!!!$acc host_data use_device(vkb)
-!!     CALL calbec_gpu ( n, vkb(:,:), psi_d, becp_d, m )
-!!!$acc end host_data
-!!!$acc end data
-!!!
 #if defined(__CUDA)
      Call calbec(offload_type, .true.,  n, vkb, psi_d, becp, m )
 #endif
@@ -314,7 +303,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
         END IF
      ELSE
         CALL dev_memcpy(hpsi_host, hpsi_d ) ! hpsi_host = hpsi_d
-        CALL using_becp_auto(0)
         CALL vexx( lda, n, m, psi_host, hpsi_host, becp )
         CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
      END IF

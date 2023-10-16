@@ -21,8 +21,6 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
                                 s_psir_gamma, invfft_orbital_k,       &
                                 fwfft_orbital_k, calbec_rs_k, s_psir_k
   USE wvfct,              ONLY: nbnd
-  USE becmod_gpum,        ONLY: becp_d, using_becp_r
-  USE becmod_subs_gpum,   ONLY: using_becp_d_auto, calbec_gpu
   IMPLICIT NONE
   !
   INTEGER :: npwx
@@ -56,7 +54,6 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
            ! transform the orbital to real space
            CALL invfft_orbital_gamma(psi_h,ibnd,nbnd) 
            ! global becp%r is updated
-           CALL using_becp_r(2)
            CALL calbec_rs_gamma(ibnd,nbnd,becp%r) 
         ENDDO
         !
@@ -81,13 +78,6 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
      DEALLOCATE(psi_h, spsi_h)
   ELSE
      !
-!!!     CALL using_becp_d_auto(1)
-!!!!$acc data present(vkb(:,:))
-!!!!$acc host_data use_device(vkb)
-!!!     CALL calbec_gpu( n, vkb, psi_d, becp_d )
-!!!!$acc end host_data 
-!!!!$acc end data 
-!!!     CALL s_psi_gpu( npwx, n, 1, psi_d, spsi_d )
 #if defined(__CUDA)
      CAll calbec(offload_type, .true., n, vkb, psi_d, becp )
 #endif

@@ -88,7 +88,6 @@ SUBROUTINE matcalc_k_gpu (label, DoE, PrtMat, ik, ninner, n, m, U, V, mat, ee)
   USE io_global,ONLY : stdout
   USE wvfct,                ONLY : wg, npwx
   USE wvfct_gpum,           ONLY : using_wg_d,wg_d
-  USE becmod_subs_gpum,     ONLY : calbec_gpu
   USE noncollin_module,     ONLY : noncolin, npol
   USE mp,                   ONLY : mp_sum
   USE mp_bands,             ONLY : intra_bgrp_comm

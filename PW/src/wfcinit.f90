@@ -241,7 +241,6 @@ SUBROUTINE init_wfc ( ik )
   !
   USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d, evc_d
   USE wvfct_gpum,           ONLY : using_et, using_et_d, et_d
-  USE becmod_subs_gpum,     ONLY : using_becp_auto, using_becp_d_auto
   USE control_flags,        ONLY : lscf, use_gpu
   !
   IMPLICIT NONE
@@ -408,15 +407,7 @@ SUBROUTINE init_wfc ( ik )
   !
   ! ... Allocate space for <beta|psi>
   !
-!civn: becp_d to be removed as soon as calbec is fixed
-  IF(use_gpu) THEN
-    CALL using_becp_auto (2)
-    CALL allocate_bec_type_acc ( nkb, n_starting_wfc, becp, intra_bgrp_comm )
-    CALL using_becp_d_auto (2)
-  ELSE
-    CALL allocate_bec_type ( nkb, n_starting_wfc, becp, intra_bgrp_comm )
-    CALL using_becp_auto (2)
-  END IF 
+  CALL allocate_bec_type_acc ( nkb, n_starting_wfc, becp, intra_bgrp_comm )
   !
   ! ... the following trick is for electric fields with Berry's phase:
   ! ... by setting lelfield = .false. one prevents the calculation of
@@ -458,14 +449,7 @@ SUBROUTINE init_wfc ( ik )
     et(1:nbnd,ik) = etatom(1:nbnd)
   end if 
   !
-  if(use_gpu) then 
-    CALL using_becp_auto (2)
-    CALL deallocate_bec_type_acc ( becp )
-    CALL using_becp_d_auto (2)
-  else
-    CALL deallocate_bec_type ( becp )
-    CALL using_becp_auto (2)
-  end if
+  CALL deallocate_bec_type_acc ( becp )
   !
   DEALLOCATE( etatom )
   DEALLOCATE( wfcatom )
