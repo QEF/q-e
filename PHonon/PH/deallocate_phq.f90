@@ -12,7 +12,7 @@ subroutine deallocate_phq
   !! Deallocates the variables allocated by \(\texttt{allocate_phq}\).
   !
   USE noncollin_module, ONLY : m_loc
-  USE becmod,           ONLY: bec_type, becp, deallocate_bec_type_acc, &
+  USE becmod,           ONLY: becp, deallocate_bec_type_acc, &
                               deallocate_bec_type
   USE wavefunctions,    ONLY: evc
   USE ramanm,       ONLY: ramtns
@@ -44,10 +44,6 @@ subroutine deallocate_phq
                            dvkb, vkbkpq, dvkbkpq
   USE ldaU_lr,      ONLY : swfcatomk, swfcatomkpq
   USE qpoint_aux,   ONLY : ikmks, ikmkmqs, becpt, alphapt
-#if defined(__CUDA)
-  USE becmod_gpum,  ONLY : becp_d
-  USE becmod_subs_gpum, ONLY : deallocate_bec_type_gpu
-#endif
   USE nc_mag_aux,   ONLY : int1_nc_save, deeq_nc_save
   USE Coul_cut_2D_ph, ONLY : deallocate_2d_arrays
 

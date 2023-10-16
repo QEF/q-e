@@ -16,7 +16,7 @@ SUBROUTINE ch_psi_all_complex (n, h, ah, e, ik, m)
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : tpiba
   USE wvfct,                ONLY : npwx, nbnd, current_k
-  USE becmod,               ONLY : bec_type, becp, calbec
+  USE becmod,               ONLY : becp, calbec
   USE uspp,                 ONLY : nkb, vkb
   USE fft_base,             ONLY : dffts
   USE gvect,                ONLY : g
@@ -99,7 +99,7 @@ SUBROUTINE ch_psi_all_complex (n, h, ah, e, ik, m)
   !$acc data present(h, hpsi, spsi)
   !$acc host_data use_device(h, hpsi, spsi)
   CALL h_psi_gpu (npwx, n, m, h, hpsi)
-  CALL s_psi_gpu (npwx, n, m, h, spsi)
+  CALL s_psi_acc (npwx, n, m, h, spsi)
   !$acc end host_data
   !$acc end data
 
@@ -167,7 +167,6 @@ CONTAINS
     !
     ! K-point part
     !
-    USE becmod, ONLY : becp, calbec
 #if defined(__CUDA)
     USE cublas
 #endif
@@ -259,7 +258,6 @@ CONTAINS
     !
     ! gamma_only case
     !  
-    USE becmod, ONLY : becp,  calbec
     USE realus, ONLY : real_space, invfft_orbital_gamma, &
                        fwfft_orbital_gamma, calbec_rs_gamma,  s_psir_gamma
     use gvect,  only : gstart

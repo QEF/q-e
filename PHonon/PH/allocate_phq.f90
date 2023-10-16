@@ -22,7 +22,7 @@ subroutine allocate_phq
   USE fft_base,      ONLY : dfftp
   USE wavefunctions, ONLY : evc
   USE nc_mag_aux,    ONLY : int1_nc_save, deeq_nc_save
-  USE becmod,        ONLY : bec_type, becp, allocate_bec_type, allocate_bec_type_acc
+  USE becmod,        ONLY : becp, allocate_bec_type, allocate_bec_type_acc
   USE uspp,          ONLY : okvan, nkb, vkb
   USE paw_variables, ONLY : okpaw
   USE uspp_param,    ONLY : nhm
@@ -47,10 +47,6 @@ subroutine allocate_phq
                             sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq
   USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq
   USE qpoint_aux,    ONLY : becpt, alphapt
-#if defined(__CUDA)
-  USE becmod_gpum,      ONLY: becp_d
-  USE becmod_subs_gpum, ONLY: allocate_bec_type_gpu
-#endif
 
   IMPLICIT NONE
   INTEGER :: ik, ipol, ldim
@@ -153,9 +149,6 @@ subroutine allocate_phq
      ENDDO
   END DO
   CALL allocate_bec_type_acc ( nkb, nbnd, becp )
-#if defined(__CUDA)
-  CALL allocate_bec_type_gpu ( nkb, nbnd, becp_d )
-#endif
 
   if (elph) then
     allocate (el_ph_mat( nbnd, nbnd, nksq, 3*nat))
