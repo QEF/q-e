@@ -125,9 +125,6 @@ MODULE phus
   !
   USE kinds, ONLY :  DP
   USE becmod, ONLY : bec_type
-#if defined(__CUDA)
-  USE becmod_gpum, ONLY : bec_type_d
-#endif
   !
   SAVE
   !
