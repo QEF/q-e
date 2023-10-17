@@ -207,6 +207,12 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
         !
         !    If we have a US pseudopotential we compute here the becsum term
         !
+        if(noncolin) then
+        !$acc update self(becp%nc)
+        else
+        !$acc update self(becp%k)
+        endif
+        !
         w1 = weight * wdelta
         ijkb0 = 0
         do nt = 1, ntyp
