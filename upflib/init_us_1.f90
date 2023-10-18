@@ -263,7 +263,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   if ( is_spinorbit) call transform_qq_so( qq_nt, qq_so )
 #if defined(__MPI)
 100 continue
-  if (is_spinorbit) 
+  if (is_spinorbit) then
      call mp_sum(  qq_so , intra_bgrp_comm )
   end if
   call mp_sum(  qq_nt, intra_bgrp_comm )
