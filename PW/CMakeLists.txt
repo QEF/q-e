@@ -221,7 +221,6 @@ set(src_pw
    src/tetra.f90 
    src/transform_becsum_so.f90 
    src/transform_becsum_nc.f90 
-   src/transform_qq_so.f90 
    src/trnvecc.f90 
    src/two_chem.f90
    src/update_pot.f90 

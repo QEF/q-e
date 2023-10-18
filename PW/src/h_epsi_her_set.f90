@@ -24,6 +24,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
   USE fft_base,           ONLY: dfftp
   USE uspp,               ONLY: okvan, nkb, vkb
   USE uspp_param,         ONLY: upf, nh, nhm, nbetam, lmaxq
+  USE upf_spinorb,        ONLY: transform_qq_so
   USE bp,                 ONLY: nppstr_3d, fact_hepsi, evcel, evcp=>evcelp, &
                                 evcm=>evcelm, mapgp_global, mapgm_global, nx_el
   USE klist

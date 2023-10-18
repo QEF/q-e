@@ -30,6 +30,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    USE gvect,                ONLY: ngm, g, gcutm, ngm_g
    USE uspp,                 ONLY: nkb, vkb, okvan
    USE uspp_param,           ONLY: upf, lmaxq, nbetam, nh, nhm
+   USE upf_spinorb,          ONLY: transform_qq_so
    USE lsda_mod,             ONLY: nspin
    USE klist,                ONLY: nelec, degauss, nks, xk, wk, ngk, igk_k
    USE wvfct,                ONLY: npwx, nbnd
