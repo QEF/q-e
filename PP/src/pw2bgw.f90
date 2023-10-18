@@ -3578,8 +3578,7 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
   USE wvfct, ONLY : npwx, nbnd, g2kin, et  !FZ: added g2kin
   USE g_psi_mod,            ONLY : h_diag, s_diag 
   USE noncollin_module, ONLY: noncolin, npol  
-  !USE uspp,                 ONLY : vkb, nkb, okvan, deeq, qq_at, qq_so, deeq_nc, indv_ijkb0 !FZ: 
-  USE uspp,                 ONLY : vkb, nkb, okvan, deeq, qq_at, qq_so, deeq_nc, ofsbeta !FZ: 
+  USE uspp,                 ONLY : vkb, nkb, okvan, deeq, deeq_nc, ofsbeta !FZ: 
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp 
   USE wvfct, ONLY: npwx, current_k !FZ: 
   USE uspp_param, ONLY: upf, nh    !FZ: 
