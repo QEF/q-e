@@ -25,6 +25,10 @@ SUBROUTINE allocate_fft
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : pointlist, factlist, report, noncolin, npol
   USE wavefunctions,    ONLY : psic, psic_nc
+#if defined(__OPENMP_GPU)
+  USE wavefunctions,    ONLY : pinned_alloc, ntraits, traits
+  USE omp_lib
+#endif
   USE xc_lib,           ONLY : xclib_dft_is
   !
   USE scf_gpum,  ONLY : using_vrs
@@ -69,6 +73,10 @@ SUBROUTINE allocate_fft
      ALLOCATE( kedtau(1,nspin) )
   ENDIF
   ALLOCATE( rhog_core(ngm)  )
+#if defined(__OPENMP_GPU)
+  pinned_alloc = omp_init_allocator(omp_default_mem_alloc, ntraits, traits)
+  !$omp allocate(psic) allocator(pinned_alloc)
+#endif
   ALLOCATE( psic(dfftp%nnr) )
 #if defined (__OPENMP_GPU)
   !$omp target enter data map(alloc:psic)
