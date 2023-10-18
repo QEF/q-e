@@ -452,7 +452,7 @@ SUBROUTINE control_iosys()
   CASE( 'scf' )
      !
      lscf  = .true.
-     nstep = 1
+     nstep = min(1, nstep)
      !
   CASE( 'ensemble' )
      !
