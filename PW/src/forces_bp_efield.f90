@@ -57,6 +57,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    USE fft_base,             ONLY : dfftp
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
+   USE upf_spinorb,          ONLY : transform_qq_so
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk, ngk, igk_k
    USE wvfct,                ONLY : npwx, nbnd
@@ -79,7 +80,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    INTEGER, INTENT(in) :: pdir
    !! direction of electric field
    REAL(DP), INTENT(in) :: e_field
-   !! initensity of the field
+   !! intensity of the field
    !
    ! ... local variables
    !
