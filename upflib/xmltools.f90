@@ -839,7 +839,7 @@ CONTAINS
        end if
     else
        CALL xmlr_opentag (name, ier_)
-       if ( ier_ == 0  ) then
+       if ( ier_ == 0 .or. ier_ == -10 ) then
           READ(xmlunit, *, iostat=ier_) rvec
           CALL xmlr_closetag ( )
        else
