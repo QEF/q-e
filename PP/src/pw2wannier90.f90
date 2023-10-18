@@ -2544,6 +2544,7 @@ SUBROUTINE compute_mmn
    USE constants,       ONLY : tpi
    USE uspp,            ONLY : nkb, vkb
    USE uspp_param,      ONLY : upf, nh, lmaxq, nhm
+   USE upf_spinorb,     ONLY : transform_qq_so
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
    USE mp_pools,        ONLY : intra_pool_comm
@@ -3775,7 +3776,7 @@ SUBROUTINE compute_mmn_ibz
    SUBROUTINE init_qb_so(qb, qq_so)
       ! TODO: Use this also in compute_mmn
       USE uspp_param,      ONLY : upf, nh, lmaxq, nhm
-      !USE ions_base,       ONLY : nat, ntyp, ityp, tau
+      USE upf_spinorb,     ONLY : transform_qq_so
       USE cell_base,       ONLY : omega, tpiba
       USE ions_base,       ONLY : ntyp => nsp
       USE noncollin_module,ONLY : lspinorb
