@@ -9,7 +9,7 @@
 #define ZERO ( 0._DP, 0._DP )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
+SUBROUTINE rrmmdiagg_gpu( h_psi_ptr, s_psi_ptr, npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
                       g2kin_d, btype, ethr, ndiis, uspp, do_hpsi, is_exx, notconv, rmm_iter )
   !----------------------------------------------------------------------------
   !
@@ -69,10 +69,10 @@ SUBROUTINE rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, psi_d, hpsi_d, 
   attributes(device) :: psi_d, hpsi_d, spsi_d, g2kin_d
   attributes(device) :: phi_d, hphi_d, sphi_d, kpsi_d, hkpsi_d, skpsi_d
 #endif
-  EXTERNAL :: h_psi_gpu, s_psi_gpu
-    ! h_psi(npwx,npw,nbnd,psi,hpsi)
+  EXTERNAL :: h_psi_ptr, s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nbnd,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nbnd,psi,spsi)
+    ! s_psi_ptr(npwx,npw,nbnd,psi,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,nbnd)
   !
@@ -340,7 +340,7 @@ CONTAINS
       END DO 
     END DO 
     !
-    CALL h_psi_gpu( npwx, npw, nbnd, psi_d, hpsi_d )
+    CALL h_psi_ptr( npwx, npw, nbnd, psi_d, hpsi_d )
     !
     ! ... Operate the Overlap : S |psi>
     !
@@ -353,7 +353,7 @@ CONTAINS
          END DO 
        END DO 
        !
-       CALL s_psi_gpu( npwx, npw, nbnd, psi_d, spsi_d )
+       CALL s_psi_ptr( npwx, npw, nbnd, psi_d, spsi_d )
        !
     END IF
     !
@@ -979,11 +979,11 @@ CONTAINS
     !
     ! ... Operate the Hamiltonian : H K (H - eS) |psi>
     !
-    CALL h_psi_gpu( npwx, npw, notconv, kpsi_d, hkpsi_d )
+    CALL h_psi_ptr( npwx, npw, notconv, kpsi_d, hkpsi_d )
     !
     ! ... Operate the Overlap : S K (H - eS) |psi>
     !
-    IF ( uspp ) CALL s_psi_gpu( npwx, npw, notconv, kpsi_d, skpsi_d )
+    IF ( uspp ) CALL s_psi_ptr( npwx, npw, notconv, kpsi_d, skpsi_d )
     !
     ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
     IF ( gstart == 2 ) THEN

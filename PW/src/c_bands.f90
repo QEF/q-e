@@ -524,12 +524,14 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              !
              IF (.not. use_gpu) THEN
                 CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
-                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
+                CALL rotate_xpsi( h_psi, s_psi, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
                                evc, hevc, sevc, et(:,ik), USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = .TRUE. )
+#if defined(__CUDA)
              ELSE
                 CALL using_evc_d(1);  CALL using_et_d(1); !precontidtion has intent(in)
-                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
+                CALL rotate_xpsi( h_psi, s_psi, h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
                                evc_d, hevc_d, sevc_d, et_d(:,ik), USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = .TRUE.)
+#endif
              END IF
              !
              avg_iter = avg_iter + 1.D0
@@ -896,14 +898,16 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              !
              IF ( .not. use_gpu ) THEN
                 CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
-                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
+                CALL rotate_xpsi( h_psi, s_psi, npwx, npw, nbnd, nbnd, evc, npol, okvan, &
                                   evc, hevc, sevc, et(:,ik), & 
                                   USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = gamma_only )
+#if defined(__CUDA)
              ELSE
                 CALL using_evc_d(1);  CALL using_et_d(1); !precontidtion has intent(in)
-                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
+                CALL rotate_xpsi( h_psi, s_psi, h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
                                   evc_d, hevc_d, sevc_d, et_d(:,ik), &
                                   USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = gamma_only )
+#endif
              END IF
              !
              avg_iter = avg_iter + 1.D0

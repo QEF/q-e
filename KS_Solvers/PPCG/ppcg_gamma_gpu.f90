@@ -1,5 +1,5 @@
 !
-SUBROUTINE ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
+SUBROUTINE ppcg_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, precondition_d, &
                  npwx, npw, nbnd, psi_d, e_d, btype, &
                  ethr, maxter, notconv, avg_iter, sbsize, rr_step, scf_iter)
   !
@@ -70,10 +70,10 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
   INTEGER                  ::  print_info     ! If > 0 then iteration information is printed
   REAL(DP), EXTERNAL :: DLANGE, DDOT
 
-  EXTERNAL h_psi_gpu, s_psi_gpu
-    ! h_psi(npwx,npw,nvec,psi,hpsi)
+  EXTERNAL h_psi_ptr, s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nvec,psi,spsi)
+    ! s_psi_ptr(npwx,npw,nvec,psi,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,nvec)
 
@@ -162,8 +162,8 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
   call start_clock('ppcg:hpsi')
   IF ( gstart == 2 ) psi(1,1:nbnd) = CMPLX( DBLE( psi(1,1:nbnd) ), 0.D0, kind=DP)
   psi_d = psi
-  CALL h_psi_gpu( npwx, npw, nbnd, psi_d, hpsi_d )
-  if (overlap) CALL s_psi_gpu( npwx, npw, nbnd, psi_d, spsi_d)
+  CALL h_psi_ptr( npwx, npw, nbnd, psi_d, hpsi_d )
+  if (overlap) CALL s_psi_ptr( npwx, npw, nbnd, psi_d, spsi_d)
   avg_iter = 1.d0
   call stop_clock('ppcg:hpsi')  
   !
@@ -275,11 +275,11 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
        END DO 
      END IF
      call gpu_threaded_assign( buffer1_d, w_d, npwx, nact, .true., act_idx_d, .false. )
-     CALL h_psi_gpu( npwx, npw, nact, buffer1_d, buffer_d )
+     CALL h_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )
 !     hw(:,act_idx(1:nact)) = buffer(:,1:nact)
      call gpu_threaded_backassign( hw_d, act_idx_d, buffer_d, npwx, nact, .false., hw_d )
      if (overlap) then ! ... Compute s*w
-        CALL s_psi_gpu( npwx, npw, nact, buffer1_d, buffer_d )
+        CALL s_psi_ptr( npwx, npw, nact, buffer1_d, buffer_d )
 !        sw(:,act_idx(1:nact)) = buffer(:,1:nact)
         call gpu_threaded_backassign( sw_d, act_idx_d, buffer_d, npwx, nact, .false., sw_d )
      end if

@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rotate_wfc_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
+SUBROUTINE rotate_wfc_gamma_gpu( h_psi_ptr, s_psi_ptr, overlap, &
                              npwx, npw, nstart, nbnd, psi_d, evc_d, e_d )
   !----------------------------------------------------------------------------
   !
@@ -59,10 +59,10 @@ SUBROUTINE rotate_wfc_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
 #endif
   INTEGER :: n_start, n_end, my_n, i, j
   !
-  EXTERNAL  h_psi_gpu,    s_psi_gpu
-    ! h_psi(npwx,npw,nvec,psi_d,hpsi)
+  EXTERNAL  h_psi_ptr,    s_psi_ptr
+    ! h_psi_ptr(npwx,npw,nvec,psi_d,hpsi)
     !     calculates H|psi_d>
-    ! s_psi(npwx,npw,nvec,spsi)
+    ! s_psi_ptr(npwx,npw,nvec,spsi)
     !     calculates S|psi_d> (if needed)
     !     Vectors psi_d,hpsi,spsi are dimensioned (npwx,npol,nvec)
 
@@ -93,7 +93,7 @@ SUBROUTINE rotate_wfc_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   END IF
   !
   call start_clock('rotwfcg:hpsi'); !write(*,*) 'start rotwfcg:hpsi' ; FLUSH(6)
-  CALL h_psi_gpu( npwx, npw, nstart, psi_d, aux_d )
+  CALL h_psi_ptr( npwx, npw, nstart, psi_d, aux_d )
   call stop_clock('rotwfcg:hpsi'); !write(*,*) 'stop rotwfcg:hpsi' ; FLUSH(6)
   !
   call start_clock('rotwfcg:hc'); !write(*,*) 'start rotwfcg:hc' ; FLUSH(6)
@@ -112,7 +112,7 @@ SUBROUTINE rotate_wfc_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   sr_d=0.D0
   IF ( overlap ) THEN
      !
-     CALL s_psi_gpu( npwx, npw, nstart, psi_d, aux_d )
+     CALL s_psi_ptr( npwx, npw, nstart, psi_d, aux_d )
      !
      if (n_start .le. n_end) &
      CALL cublasDGEMM( 'T','N', nstart, my_n, npw2, 2.D0, psi_d, &

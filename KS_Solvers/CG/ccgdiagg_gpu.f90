@@ -43,7 +43,7 @@ END FUNCTION KSDdot
 ! define __VERBOSE to print a message after each eigenvalue is computed
 !
 !----------------------------------------------------------------------------
-SUBROUTINE ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
+SUBROUTINE ccgdiagg_gpu( hs_1psi_ptr, s_1psi_ptr, precondition_d, &
      npwx, npw, nbnd, npol, psi_d, e_d, btype, &
      ethr, maxter, reorder, notconv, avg_iter )
   !----------------------------------------------------------------------------
@@ -105,7 +105,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
   ! ... external functions
   !
   REAL (DP), EXTERNAL :: ksDdot
-  EXTERNAL  hs_1psi_gpu, s_1psi_gpu
+  EXTERNAL  hs_1psi_ptr, s_1psi_ptr
   ! hs_1psi( npwx, npw, psi, hpsi, spsi )
   ! s_1psi( npwx, npw, psi, spsi )
   !
@@ -187,7 +187,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
      !
      ! ... calculate S|psi>
      !
-     CALL s_1psi_gpu( npwx, npw, psi_d(1,m), spsi_d )
+     CALL s_1psi_ptr( npwx, npw, psi_d(1,m), spsi_d )
      !
      ! ... orthogonalize starting eigenfunction to those already calculated
      !
@@ -226,7 +226,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
      !
      ! ... calculate starting gradient (|hpsi> = H|psi>) ...
      !
-     CALL hs_1psi_gpu( npwx, npw, psi_d(1,m), hpsi_d, spsi_d )
+     CALL hs_1psi_ptr( npwx, npw, psi_d(1,m), hpsi_d, spsi_d )
      !
      ! ... and starting eigenvalue (e = <y|PHP|y> = <psi|H|psi>)
      !
@@ -270,7 +270,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
         !
         ! ... scg is used as workspace
         !
-        CALL s_1psi_gpu( npwx, npw, g_d(1), scg_d(1) )
+        CALL s_1psi_ptr( npwx, npw, g_d(1), scg_d(1) )
         !
         lagrange(1:m-1) = ZERO
         call divide(inter_bgrp_comm,m-1,m_start,m_end); !write(*,*) m-1,m_start,m_end
@@ -360,7 +360,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
         !
         ! ... |scg> is S|cg>
         !
-        CALL hs_1psi_gpu( npwx, npw, cg_d(1), ppsi_d(1), scg_d(1) )
+        CALL hs_1psi_ptr( npwx, npw, cg_d(1), ppsi_d(1), scg_d(1) )
         !
         cg0 = ksDdot( kdim2, cg_d(1), 1, scg_d(1), 1 )
         !
