@@ -292,7 +292,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   ! ... Here we add the Hubbard potential times psi
   !
   IF ( lda_plus_u .AND. Hubbard_projectors.NE."pseudo" ) THEN
-     !
+!
 #if defined(__OPENMP_GPU)
      !$omp target update from(psi,hpsi)
 #endif

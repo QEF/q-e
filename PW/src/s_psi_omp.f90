@@ -258,7 +258,7 @@ SUBROUTINE s_psi_omp_( lda, n, m, psi, spsi )
        IF( ierr /= 0 ) &
           CALL errore( ' s_psi_gamma ', ' cannot allocate memory (ps) ', ABS(ierr) )
 #if defined(__OPENMP_GPU)
-       !$omp target data map(alloc:ps) map(to:qq_at,vkb,becp%r)
+       !$omp target data map(alloc:ps) map(to:qq_at,becp%r)
 #endif
        !
 #if defined(__OPENMP_GPU)
@@ -369,7 +369,7 @@ SUBROUTINE s_psi_omp_( lda, n, m, psi, spsi )
           CALL errore( ' s_psi_k ', ' cannot allocate buffer (qqc) ', ABS(ierr) )
        !
 #if defined(__OPENMP_GPU)
-       !$omp target data map(to:qq_at,vkb,becp%k) map(alloc:qqc,ps) 
+       !$omp target data map(to:qq_at,becp%k) map(alloc:qqc,ps) 
 #endif
        DO nt = 1, nsp
           !
@@ -455,7 +455,7 @@ SUBROUTINE s_psi_omp_( lda, n, m, psi, spsi )
           CALL errore( ' s_psi_nc ', ' cannot allocate memory (ps) ', ABS(ierr) )
        !
 #if defined(__OPENMP_GPU)
-       !$omp target data map(alloc:ps) map(to:qq_at,qq_so,vkb,becp%nc)
+       !$omp target data map(alloc:ps) map(to:qq_at,qq_so,becp%nc)
        !$omp target teams distribute parallel do collapse(3)
 #endif
        DO jkb = 1, m
