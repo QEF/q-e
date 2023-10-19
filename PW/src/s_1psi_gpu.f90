@@ -13,7 +13,10 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
   !
   USE kinds,              ONLY: DP
   USE uspp,               ONLY: nkb, vkb
-  USE becmod,             ONLY: bec_type, becp, calbec_cuf
+  USE becmod,             ONLY: bec_type, becp
+#if defined(__CUDA)
+  USE becmod,             ONLY: calbec_cuf
+#endif
   USE control_flags,      ONLY: gamma_only, offload_type
   USE noncollin_module,   ONLY: noncolin, npol 
   USE realus,             ONLY: real_space, invfft_orbital_gamma,     &

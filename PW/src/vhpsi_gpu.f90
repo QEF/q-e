@@ -16,7 +16,9 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   !! structure of the current k-point. The result is added to hpsi.
   !
   USE kinds,         ONLY : DP
+#if defined(__CUDA)
   USE becmod,        ONLY : calbec_cuf
+#endif
   USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, is_hubbard,   &
                             nwfcU, wfcU, offsetU, lda_plus_u_kind, &
                             is_hubbard_back, Hubbard_l2, offsetU_back, &

@@ -91,10 +91,11 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !
 #if defined(__CUDA)
   USE cudafor
+  USE becmod,                  ONLY: calbec_cuf
 #endif
   USE kinds,                   ONLY: DP
   USE bp,                      ONLY: lelfield, l3dstring, gdir, efield, efield_cry
-  USE becmod,                  ONLY: bec_type, becp, calbec_cuf
+  USE becmod,                  ONLY: bec_type, becp
   USE lsda_mod,                ONLY: current_spin
   USE scf_gpum,                ONLY: vrs_d, using_vrs_d
   USE uspp,                    ONLY: nkb, vkb
