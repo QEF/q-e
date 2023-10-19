@@ -16,7 +16,7 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   !! structure of the current k-point. The result is added to hpsi.
   !
   USE kinds,         ONLY : DP
-  USE becmod,        ONLY : calbec
+  USE becmod,        ONLY : calbec_cuf
   USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, is_hubbard,   &
                             nwfcU, wfcU, offsetU, lda_plus_u_kind, &
                             is_hubbard_back, Hubbard_l2, offsetU_back, &
@@ -63,12 +63,13 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   !
   ! proj = <wfcU|psip>
 #if defined(__CUDA)
+!civn: remove psip_d and use calbec instead
   if(gamma_only) then
     allocate( proj_r(nwfcU, mps) )
-    Call calbec(offload_type, .true., np, wfcU, psip_d, proj_r)
+    Call calbec_cuf(offload_type, np, wfcU, psip_d, proj_r)
   else
     allocate( proj_k(nwfcU, mps) )
-    Call calbec(offload_type, .true., np, wfcU, psip_d, proj_k)
+    Call calbec_cuf(offload_type, np, wfcU, psip_d, proj_k)
   endif
 #endif
   !

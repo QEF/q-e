@@ -94,7 +94,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
 #endif
   USE kinds,                   ONLY: DP
   USE bp,                      ONLY: lelfield, l3dstring, gdir, efield, efield_cry
-  USE becmod,                  ONLY: bec_type, becp, calbec
+  USE becmod,                  ONLY: bec_type, becp, calbec_cuf
   USE lsda_mod,                ONLY: current_spin
   USE scf_gpum,                ONLY: vrs_d, using_vrs_d
   USE uspp,                    ONLY: nkb, vkb
@@ -258,7 +258,8 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
      !
      CALL start_clock_gpu( 'h_psi:calbec' )
 #if defined(__CUDA)
-     Call calbec(offload_type, .true.,  n, vkb, psi_d, becp, m )
+!civn: remove evc_d and use calbec instead
+     Call calbec_cuf(offload_type, n, vkb, psi_d, becp, m )
 #endif
      CALL stop_clock_gpu( 'h_psi:calbec' )
      CALL add_vuspsi_gpu( lda, n, m, hpsi_d )

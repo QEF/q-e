@@ -50,20 +50,27 @@ MODULE becmod
 !                             - CPU, OpenACC (and OpenMP5) cases are distinguished by type(offload_type)
                       calbec_k_acc, calbec_gamma_acc, calbec_gamma_nocomm_acc, calbec_nc_acc, calbec_bec_type_acc, &
                       calbec_k_cpu, calbec_gamma_cpu, calbec_gamma_nocomm_cpu, calbec_nc_cpu, calbec_bec_type_cpu, &
-#if defined(__CUDA)
-!
-!                     usage: call calbec( offload_type, cuf, beta, psi_d, betapsi )
-!                             - cuf is a logical, beta and betapsi are OpenACC, psi_d is CUDA Fortran 
-!                             - this allows to call calbec passing evc_d 
-!                             - this can be removed once evc_d will be removed
-                      calbec_k_cuf, calbec_gamma_cuf, calbec_gamma_nocomm_cuf, calbec_nc_cuf, calbec_bec_type_cuf, &
-#endif
 !                     usage: call calbec( beta, psi, betapsi ) ("old" way to call calbec on CPU)
 !                             - beta, psi, betapsi are CPU-only 
 !                             - this allows to keep unchanged ALL the "old" calbec calls in the code
                       calbec_k,     calbec_gamma,     calbec_gamma_nocomm,     calbec_nc,     calbec_bec_type
      !
   END INTERFACE
+  !
+#if defined(__CUDA)
+  INTERFACE calbec_cuf
+!civn: this is a TEMPORARY interface used only in
+!          PW/src/h_psi_gpu.f90
+!          PW/src/s_1psi_gpu.f90 
+!          PW/src/vhpsi_gpu.f90 
+!      to avoid too many data movements with evc_d. 
+!      TO BE REMOVED AS SOON evc_d will be removed!
+  MODULE PROCEDURE calbec_k_cuf, calbec_gamma_cuf, calbec_gamma_nocomm_cuf, calbec_nc_cuf, calbec_bec_type_cuf
+!                     usage: call calbec( offload_type, beta, psi_d, betapsi )
+!                             - beta and betapsi are OpenACC, psi_d is CUDA Fortran 
+!                             - this allows to call calbec passing evc_d 
+  END INTERFACE
+#endif
   !
   INTERFACE becscal
      !
@@ -157,7 +164,7 @@ CONTAINS
   !
 #if defined(__CUDA)
   !-----------------------------------------------------------------------
-  SUBROUTINE calbec_bec_type_cuf ( offload, cuf, npw, beta, psi_d, betapsi, nbnd )
+  SUBROUTINE calbec_bec_type_cuf ( offload, npw, beta, psi_d, betapsi, nbnd )
     !-----------------------------------------------------------------------
     !
     ! beta and betapsi, are assumed OpenACC data on GPU
@@ -168,7 +175,6 @@ CONTAINS
     !
     IMPLICIT NONE
     TYPE(offload_kind_acc), INTENT(IN) :: offload
-    LOGICAL, INTENT(IN) :: cuf
     COMPLEX (DP), INTENT (in) :: beta(:,:)
     COMPLEX (DP), DEVICE, INTENT (in) :: psi_d(:,:)
     TYPE (bec_type), INTENT (inout) :: betapsi ! NB: must be INOUT otherwise
@@ -192,7 +198,7 @@ CONTAINS
        !
        IF( betapsi%comm == mp_get_comm_null() ) THEN
           !
-          CALL calbec_gamma_cuf ( offload_acc, cuf, npw, beta, psi_d, betapsi%r, local_nbnd, intra_bgrp_comm )
+          CALL calbec_gamma_cuf ( offload_acc, npw, beta, psi_d, betapsi%r, local_nbnd, intra_bgrp_comm )
           !
        ELSE
           !
@@ -203,7 +209,7 @@ CONTAINS
              m_begin = gind_block( 1,  betapsi%nbnd, betapsi%nproc, ip )
              IF( ( m_begin + m_loc - 1 ) > local_nbnd ) m_loc = local_nbnd - m_begin + 1
              IF( m_loc > 0 ) THEN
-                CALL calbec_gamma_cuf ( offload_acc, cuf, npw, beta, psi_d(:,m_begin:m_begin+m_loc-1), dtmp, m_loc, betapsi%comm )
+                CALL calbec_gamma_cuf ( offload_acc, npw, beta, psi_d(:,m_begin:m_begin+m_loc-1), dtmp, m_loc, betapsi%comm )
                 IF( ip == betapsi%mype ) THEN
                    !$acc kernels
                    betapsi%r(:,1:m_loc) = dtmp(:,1:m_loc)
@@ -218,11 +224,11 @@ CONTAINS
        !
     ELSEIF ( noncolin) THEN
        !
-       CALL  calbec_nc_cuf ( offload_acc, cuf, npw, beta, psi_d, betapsi%nc, local_nbnd )
+       CALL  calbec_nc_cuf ( offload_acc, npw, beta, psi_d, betapsi%nc, local_nbnd )
        !
     ELSE
        !
-       CALL  calbec_k_cuf ( offload_acc, cuf, npw, beta, psi_d, betapsi%k, local_nbnd )
+       CALL  calbec_k_cuf ( offload_acc, npw, beta, psi_d, betapsi%k, local_nbnd )
        !
     ENDIF
     !
@@ -345,7 +351,7 @@ CONTAINS
   !
 #if defined(__CUDA)
   !-----------------------------------------------------------------------
-  SUBROUTINE calbec_gamma_nocomm_cuf ( offload, cuf, npw, beta, psi_d, betapsi, nbnd )
+  SUBROUTINE calbec_gamma_nocomm_cuf ( offload, npw, beta, psi_d, betapsi, nbnd )
     !-----------------------------------------------------------------------
     !
     ! beta, psi, betapsi, are assumed OpenACC data on GPU
@@ -353,7 +359,6 @@ CONTAINS
     USE mp_bands, ONLY: intra_bgrp_comm
     IMPLICIT NONE
     TYPE(offload_kind_acc), INTENT(IN) :: offload
-    LOGICAL, INTENT(IN) :: cuf
     COMPLEX (DP), INTENT (in) :: beta(:,:)
     COMPLEX (DP), DEVICE, INTENT (in) :: psi_d(:,:)
     REAL (DP), INTENT (out) :: betapsi(:,:)
@@ -365,7 +370,7 @@ CONTAINS
     ELSE
         m = size ( psi_d, 2)
     ENDIF
-    CALL calbec_gamma_cuf ( offload_acc, cuf, npw, beta, psi_d, betapsi, m, intra_bgrp_comm )
+    CALL calbec_gamma_cuf ( offload_acc, npw, beta, psi_d, betapsi, m, intra_bgrp_comm )
     RETURN
     !
   END SUBROUTINE calbec_gamma_nocomm_cuf
@@ -492,7 +497,7 @@ CONTAINS
   !
 #if defined(__CUDA)
   !-----------------------------------------------------------------------
-  SUBROUTINE calbec_gamma_cuf ( offload, cuf, npw, beta, psi_d, betapsi, nbnd, comm )
+  SUBROUTINE calbec_gamma_cuf ( offload, npw, beta, psi_d, betapsi, nbnd, comm )
     !-----------------------------------------------------------------------
     !! matrix times matrix with summation index (k=1,npw) running on
     !! half of the G-vectors or PWs - assuming k=0 is the G=0 component:
@@ -505,7 +510,6 @@ CONTAINS
     !
     IMPLICIT NONE
     TYPE(offload_kind_acc), INTENT(IN) :: offload
-    LOGICAL, INTENT(IN) :: cuf
     COMPLEX (DP), INTENT (in) :: beta(:,:)
     COMPLEX (DP), DEVICE, INTENT (in) :: psi_d(:,:)
     REAL (DP), INTENT (out) :: betapsi(:,:)
@@ -718,7 +722,7 @@ CONTAINS
   !
 #if defined(__CUDA)
   !-----------------------------------------------------------------------
-  SUBROUTINE calbec_k_cuf ( offload, cuf, npw, beta, psi_d, betapsi, nbnd )
+  SUBROUTINE calbec_k_cuf ( offload, npw, beta, psi_d, betapsi, nbnd )
     !-----------------------------------------------------------------------
     !! Matrix times matrix with summation index (k=1,npw) running on
     !! G-vectors or PWs:
@@ -729,7 +733,6 @@ CONTAINS
 
     IMPLICIT NONE
     TYPE(offload_kind_acc), INTENT(IN) :: offload
-    LOGICAL, INTENT(IN) :: cuf
     COMPLEX (DP), INTENT (in) :: beta(:,:)
     COMPLEX (DP), DEVICE, INTENT (in) :: psi_d(:,:)
     COMPLEX (DP), INTENT (out) :: betapsi(:,:)
@@ -933,7 +936,7 @@ CONTAINS
   !
 #if defined(__CUDA)
   !-----------------------------------------------------------------------
-  SUBROUTINE calbec_nc_cuf ( offload, cuf, npw, beta, psi_d, betapsi, nbnd )
+  SUBROUTINE calbec_nc_cuf ( offload, npw, beta, psi_d, betapsi, nbnd )
     !-----------------------------------------------------------------------
     !! Matrix times matrix with summation index (k below) running on
     !! G-vectors or PWs corresponding to two different polarizations:
@@ -946,7 +949,6 @@ CONTAINS
 
     IMPLICIT NONE
     TYPE(offload_kind_acc), INTENT(IN) :: offload
-    LOGICAL, INTENT(IN) :: cuf
     COMPLEX (DP), INTENT (in) :: beta(:,:)
     COMPLEX (DP), DEVICE, INTENT (in) :: psi_d(:,:)
     COMPLEX (DP), INTENT (out) :: betapsi(:,:,:)

@@ -13,7 +13,7 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
   !
   USE kinds,              ONLY: DP
   USE uspp,               ONLY: nkb, vkb
-  USE becmod,             ONLY: bec_type, becp, calbec
+  USE becmod,             ONLY: bec_type, becp, calbec_cuf
   USE control_flags,      ONLY: gamma_only, offload_type
   USE noncollin_module,   ONLY: noncolin, npol 
   USE realus,             ONLY: real_space, invfft_orbital_gamma,     &
@@ -79,7 +79,8 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
   ELSE
      !
 #if defined(__CUDA)
-     CAll calbec(offload_type, .true., n, vkb, psi_d, becp )
+!civn: remove psi_d and use calbec instead
+     CAll calbec_cuf(offload_type, n, vkb, psi_d, becp )
 #endif
      CALL s_psi_acc( npwx, n, 1, psi_d, spsi_d )
      
