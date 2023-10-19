@@ -225,6 +225,7 @@ endif()
 
 target_link_libraries(qe_modules
     PRIVATE
+        qe_device_lapack  
         qe_modules_c
         qe_openmp_fortran
         qe_fftx
