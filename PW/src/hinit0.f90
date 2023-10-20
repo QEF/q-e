@@ -18,7 +18,7 @@ SUBROUTINE hinit0()
   USE cellmd,           ONLY : omega_old, at_old, lmovecell, calc
   USE dynamics_module,  ONLY : verlet_read_tau_from_conf
   USE fft_base,         ONLY : dfftp
-  USE gvect,            ONLY : ecutrho, ngm, g, gg, eigts1, eigts2, eigts3
+  USE gvect,            ONLY : ecutrho, ngm, g, eigts1, eigts2, eigts3
 #if defined (__CUDA)
   USE gvect,            ONLY : eigts1_d, eigts2_d, eigts3_d
 #endif
@@ -61,7 +61,7 @@ SUBROUTINE hinit0()
   !
   IF (tbeta_smoothing) CALL init_us_b0(ecutwfc,intra_bgrp_comm)
   IF (tq_smoothing) CALL init_us_0(ecutrho,intra_bgrp_comm)
-  CALL init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
+  CALL init_us_1(nat, ityp, omega, intra_bgrp_comm)
   IF ( lda_plus_U .AND. ( Hubbard_projectors == 'pseudo' ) ) CALL init_q_aeps()
   CALL init_tab_atwfc (omega, intra_bgrp_comm)
   !

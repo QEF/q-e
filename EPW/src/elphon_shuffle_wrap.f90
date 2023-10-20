@@ -29,7 +29,7 @@
   USE mp,            ONLY : mp_barrier, mp_bcast
   USE io_global,     ONLY : stdout, meta_ionode, meta_ionode_id, ionode_id
   USE uspp_data,     ONLY : nqxq, dq, qrad
-  USE gvect,         ONLY : gcutm, ngm, g, gg
+  USE gvect,         ONLY : gcutm
   USE cellmd,        ONLY : cell_factor
   USE uspp_param,    ONLY : lmaxq, nbetam
   USE io_files,      ONLY : prefix, tmp_dir
@@ -254,7 +254,7 @@
         qrad(:, :, :, :) = zero
         ! RM - need to call init_us_1 to re-calculate qrad
         ! PG - maybe it would be sufficient to call init_tab_qrad?
-        CALL init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
+        CALL init_us_1(nat, ityp, omega, intra_bgrp_comm)
       ENDIF
     ENDIF
     !
