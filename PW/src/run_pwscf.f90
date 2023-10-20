@@ -45,7 +45,6 @@ SUBROUTINE run_pwscf( exit_status )
   USE control_flags,        ONLY : conv_elec, gamma_only, ethr, lscf, treinit_gvecs
   USE control_flags,        ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs,&
                                    lensemb, lforce=>tprnfor, tstress
-  USE control_flags,        ONLY : io_level
   USE cellmd,               ONLY : lmovecell
   USE command_line_options, ONLY : command_line
   USE force_mod,            ONLY : sigma, force
@@ -352,7 +351,7 @@ SUBROUTINE run_pwscf( exit_status )
   !
   CALL qexsd_set_status( exit_status )
   IF ( lensemb ) CALL beef_energies( )
-  IF ( io_level > -2 ) CALL punch( 'all' )
+  CALL punch( 'all' )
   !
   CALL qmmm_shutdown()
   !

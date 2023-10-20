@@ -1187,14 +1187,14 @@ SUBROUTINE electrons_scf ( printout, exxen )
   !
 10  FLUSH( stdout )
   !
-  ! ... exiting: write (unless disabled) the charge density to file
-  ! ... (also write ldaU ns coefficients and PAW becsum)
+  ! ... exiting: unless disabled by user (disk_io='minimal' or 'none'),
+  ! ... write charge density (also ldaU ns coefficients and PAW becsum) 
   !
-  IF ( io_level > -1 ) CALL write_scf( rho, nspin )
+  IF ( io_level > -2 ) CALL write_scf( rho, nspin )
   !
-  ! ... delete mixing info if converged, keep it if not
+  ! ... keep mixing info if no converged achieved, delete it otherwise
   !
-  IF ( conv_elec ) THEN
+  IF ( conv_elec .or. io_level < 0 ) THEN
      CALL close_mix_file( iunmix, 'delete' )
   ELSE
      CALL close_mix_file( iunmix, 'keep' )

@@ -361,8 +361,13 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
                 }
 
                 opt -val 'nowf' {
-                    save to disk only the xml data file,
-                    never save wavefunctions and charge density
+                    save to disk only the xml data file and the charge density
+                    at convergence, never save wavefunctions. Restarting from
+                    an interrupted calculation is not possible with this option.
+                }
+
+                opt -val 'minimal' {
+                    save to disk only the xml data file at convergence
                 }
 
                 opt -val 'none' {
