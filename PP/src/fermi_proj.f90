@@ -194,6 +194,7 @@ PROGRAM fermi_proj
   ! {Number of target WFCs}
   ! {Index of WFC1} {Index of WFC2} {Index of WFC3} ...
   !
+  USE io_files,             ONLY : prefix, tmp_dir
   USE mp_global,            ONLY : mp_startup
   USE environment,          ONLY : environment_start, environment_end
   USE kinds,                ONLY : DP
@@ -212,6 +213,7 @@ PROGRAM fermi_proj
   INTEGER,ALLOCATABLE :: equiv(:,:,:)
   REAL(DP),ALLOCATABLE :: eig(:,:,:,:,:), wfc(:,:,:,:,:), wt(:,:)
   LOGICAL :: lbinary_data, needwf = .FALSE.
+  CHARACTER(LEN=256) :: outdir
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
@@ -277,12 +279,15 @@ PROGRAM fermi_proj
   !
   IF (nspin == 2) THEN
      CALL write_fermisurfer(eig(b_low:b_high, 1:nk1, 1:nk2, 1:nk3, 1), &
-     &                      wfc(b_low:b_high, 1:nk1, 1:nk2, 1:nk3, 1), "proj1.frmsf")
+     &                      wfc(b_low:b_high, 1:nk1, 1:nk2, 1:nk3, 1), &
+     &                      TRIM(tmp_dir) // TRIM(prefix) // "_proj1.frmsf")
      CALL write_fermisurfer(eig(b_low:b_high, 1:nk1, 1:nk2, 1:nk3, 2), &
-     &                      wfc(b_low:b_high, 1:nk1, 1:nk2, 1:nk3, 2), "proj2.frmsf")
+     &                      wfc(b_low:b_high, 1:nk1, 1:nk2, 1:nk3, 2), &
+     &                      TRIM(tmp_dir) // TRIM(prefix) // "_proj2.frmsf")
   ELSE
      CALL write_fermisurfer(eig(b_low:b_high, 1:nk1, 1:nk2, 1:nk3, 1), &
-     &                      wfc(b_low:b_high, 1:nk1, 1:nk2, 1:nk3, 1), "proj.frmsf")
+     &                      wfc(b_low:b_high, 1:nk1, 1:nk2, 1:nk3, 1), &
+     &                      TRIM(tmp_dir) // TRIM(prefix) // "_proj.frmsf")
   END IF
   !
   DEALLOCATE(eig, equiv, wfc, wt)
