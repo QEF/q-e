@@ -9,10 +9,12 @@
 SUBROUTINE from_scratch( )
     !
     USE kinds,                ONLY : DP
+    USE atomic_wfc_init,      ONLY : atomic_wfc_cp
     USE control_flags,        ONLY : tranp, trane, iverbosity, tpre, tv0rd, &
                                      tfor, thdyn, &
                                      lwf, tprnfor, tortho, amprp, ampre,  &
                                      tsde, force_pairing, tcap
+    USE input_parameters,     ONLY : startingwfc
     USE ions_positions,       ONLY : taus, tau0, tausm, vels, velsm, fion, fionm, &
                                      taum 
     USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel, vel, ityp, &
@@ -21,7 +23,7 @@ SUBROUTINE from_scratch( )
     USE ions_nose,            ONLY : xnhp0, xnhpm, vnhp, tempw
     USE cell_base,            ONLY : ainv, h, s_to_r, ibrav, omega, press, &
                                      hold, r_to_s, deth, wmass, iforceh,   &
-                                     cell_force, velh, at, alat
+                                     cell_force, velh, at, alat, tpiba
     USE cell_nose,            ONLY : xnhh0, xnhhm, vnhh
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
     use electrons_base,       ONLY : nbsp, f, nspin, nupdwn, iupdwn, nbsp_bgrp, nbspx_bgrp, nbspx, nudx
@@ -33,7 +35,7 @@ SUBROUTINE from_scratch( )
     USE io_global,            ONLY : stdout, ionode
     USE core,                 ONLY : rhoc
     USE gvecw,                ONLY : ngw
-    USE gvect,                ONLY : gg
+    USE gvect,                ONLY : gg, g
     USE gvect,                ONLY : gstart, mill, eigts1, eigts2, eigts3
     USE cp_electronic_mass,   ONLY : emass
     USE efield_module,        ONLY : tefield, efield_berry_setup, berry_energy, &
@@ -47,6 +49,7 @@ SUBROUTINE from_scratch( )
     USE cp_interfaces,        ONLY : nlfq_bgrp
     USE printout_base,        ONLY : printout_pos
     USE orthogonalize_base,   ONLY : updatc, calphi_bgrp
+    USE upf_ions,             ONLY : n_atom_wfc
     USE wave_base,            ONLY : wave_steepest
     USE wavefunctions,        ONLY : c0_bgrp, cm_bgrp, c0_d, phi, cm_d
     USE fft_base,             ONLY : dfftp, dffts
@@ -60,6 +63,7 @@ SUBROUTINE from_scratch( )
     USE mp,                   ONLY : mp_sum, mp_barrier
     USE matrix_inversion
     USE device_memcpy_m,        ONLY : dev_memcpy
+    USE uspp_param,             ONLY : upf, nwfcm
 
 #if defined (__ENVIRON)
     USE plugin_flags,         ONLY : use_environ
@@ -86,7 +90,7 @@ SUBROUTINE from_scratch( )
     INTEGER                  :: n_spin_start 
     LOGICAL                  :: tfirst = .TRUE.
     REAL(DP)                 :: stress(3,3)
-    INTEGER                  :: i1, i2 
+    INTEGER                  :: i1, i2, natomwfc
     !
     ! ... Subroutine body
     !
@@ -142,6 +146,17 @@ SUBROUTINE from_scratch( )
     !
     IF ( ionode ) &
        WRITE( stdout, fmt = '(//,3X, "Wave Initialization: random initial wave-functions" )' )
+
+    ! if asked, use as much atomic wavefunctions as possible
+    if ( trim(startingwfc) == 'atomic') then
+       if ( ionode ) &
+         WRITE (stdout, '("Using also atomic wavefunctions as much as possible")') 
+       natomwfc = n_atom_wfc ( nat, ityp )
+       call atomic_wfc_cp(cm_bgrp, omega, tpiba, nat, nsp, ityp, tau0, natomwfc, &
+                   mill, eigts1, eigts2, eigts3, g, iupdwn, ngw, upf, nwfcm, nspin )
+    endif
+
+
     !
     ! ... prefor calculates vkb (used by gram)
     !

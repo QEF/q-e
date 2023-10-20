@@ -463,7 +463,7 @@ CONTAINS
     !
   END SUBROUTINE deallocate_uspp
   !
-  ! In the following, allocations are not checked and assume
+  ! In the following, allocations are not checked and are assumed
   ! to be dimensioned correctly.
   !
   ! intento is used to specify what the variable will  be used for :

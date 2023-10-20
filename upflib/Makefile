@@ -10,6 +10,9 @@ MODFLAGS= $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../external/devxlib/src
 # OBJS_GPU   depend upon modules in devxlib
 
 OBJS_DEP= \
+vloc_mod.o \
+rhoc_mod.o \
+rhoat_mod.o \
 gen_us_dj.o \
 gen_us_dy.o \
 init_us_0.o \
@@ -18,7 +21,6 @@ init_us_1.o \
 init_us_2_base.o \
 init_tab_atwfc.o \
 init_tab_beta.o \
-init_tab_rho.o \
 init_tab_qrad.o
 
 OBJS_NODEP= \
@@ -68,10 +70,7 @@ ylmr2.o
 OBJS_GPU= \
   dylmr2_gpu.o \
   init_us_2_base_gpu.o \
-  interp_atwfc_gpu.o \
-  qvan2_gpu.o \
-  ylmr2_gpu.o \
-  upf_acc_interfaces.o
+  ylmr2_gpu.o
 
 OBJS_NODEP+= dom.o wxml.o
 

@@ -417,9 +417,9 @@ environment, that is: a command shell (e.g., bash, sh) and utilities \make,
 libraries from scratch, you will also need \texttt{git} v.2.13 or later.
 For MS-Windows, see Sec.\ref{SubSec:Windows}.
 If you prefer installation with CMake (supported since v.6.7), 
-you will need a recent (v.3.14 or later) working CMake software;
-otherwise you will need the \configure\ command from autoconf and,
-for FoX compilation, \texttt{m4}.
+you will need a recent (v.3.20 or later) working CMake software;
+otherwise you will need the \configure\ command from autoconf
+(and, for FoX compilation only, \texttt{m4}).
 
 Note that the scripts contained
 in the distribution assume that the local  language is set to the
@@ -441,8 +441,8 @@ avoiding nonstandard extensions and newer features that are not
 widespread or stabilized. If however your compiler is older than
 a few ($\sim 5$) years, it is likely that something will not work.
 The same applies to mathematical and MPI libraries.
-For GPU compilation, you need v.19.10 or later of the NVidia HPC SDK
-(previous versions are no longer supported).
+For GPU compilation, you need v.21.7 or later of the NVidia HPC SDK
+(previous versions may or may not work).
 
 Big computing centers typically provide a Fortran compiler complete
 with all needed libraries. Workstations or ``commodity'' machines
@@ -634,11 +634,12 @@ and the following optional packages:\\
 \end{tabular}\\
 \\
 In order to compile the code for NVidia GPU's you will need a recent version
-(v.19.10 or later: the more recent, the better) of the NVidia HPC software
-development kit (SDK). Ensure that you have properly defined all needed environmental
-variables, e.g. by running the "module" file provided in the HPC SDK with command
+(v.21.7 or later) of the NVidia HPC software development kit (SDK). Beware:
+some versions are known to miscompile QE. Ensure that all needed environmental
+variables
+are properly defined, e.g. by running the "module" file provided in the HPC SDK with command
 \texttt{module}. Specify \texttt{--with-cuda} and \texttt{--with-cuda-cc} as explained 
-below. This enables OpenMP and disables ScaLAPACK by default. Other options below
+below. Other options below
 are optional. Enabling faster communications between GPUs, via NVlink or Infiniband RDMA, 
 is essential for optimal parallel performance. 
 

@@ -57,32 +57,29 @@ AC_ARG_WITH([cuda-mpi],
 
 AC_ARG_ENABLE([nvtx],
    [AS_HELP_STRING([--enable-nvtx],[Enable compilation for NVTX @<:@default=no@:>@])],
-   [],
+   []
    [enable_nvtx=no])
 
 
 if test "x$with_cuda" != "xno"
 then
+   # NVHPC v.< 21.7 too old (FIXME: still allowing 21.2 for CI)
+   if (test "$f90_major_version" -lt 21 ) || (test "$f90_major_version" -eq 21 && test "$f90_minor_version" -lt 2 ) ; then
+      AC_MSG_WARN([Compiler version too old, use at least 21.7])
+   fi
+   if (test "$f90_major_version" -lt 21 ) ; then
+      AC_MSG_ERROR([Compiler version too old, use at least 21.7])
+   fi
    # NVHPC v. 21.11-22.1 buggy
    if (test "$f90_major_version" -eq 21 && test "$f90_minor_version" -ge 11) ||
       (test "$f90_major_version" -eq 22 && test "$f90_minor_version" -le 1 ) ; then
       AC_MSG_ERROR([Buggy compiler version, upgrade to 22.3 or downgrade to 21.9])
    fi
 
-   if test "$f90_major_version" -gt 20 || (test "$f90_major_version" -eq 20 && test "$f90_minor_version" -ge 7); then
-      # NVHPC v. 20.7 and later
-      mMcuda="-cuda -gpu"
-      mMcudalib="-cudalib"
-   else
-      # NVHPC previous to v. 20.7
-      mMcuda="-Mcuda"
-      mMcudalib="-Mcudalib"
-   fi
-
    # -----------------------------------------
    # Check compiler
    # -----------------------------------------
-   AX_CHECK_COMPILE_FLAG([$mMcuda=cuda$with_cuda_runtime], [have_cudafor=yes], [have_cudafor=no], [], [MODULE test; use cudafor; END MODULE])
+   AX_CHECK_COMPILE_FLAG([-cuda -gpu=cuda$with_cuda_runtime], [have_cudafor=yes], [have_cudafor=no], [], [MODULE test; use cudafor; END MODULE])
    if test "x$have_cudafor" != "xyes"
    then
       AC_MSG_ERROR([You do not have the cudafor module. Are you using NVHPC compiler?])
@@ -95,9 +92,9 @@ then
       try_dflags="$try_dflags -D__GPU_MPI"
    fi
    cuda_extlibs="devxlib"
-   cuda_libs="$mMcudalib=cufft,cublas,cusolver,curand \$(TOPDIR)/external/devxlib/src/libdevXlib.a"
+   cuda_libs="-cudalib=cufft,cublas,cusolver,curand \$(TOPDIR)/external/devxlib/src/libdevXlib.a"
    
-   cuda_fflags="$mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
+   cuda_fflags="-cuda -gpu=cc$with_cuda_cc,cuda$with_cuda_runtime"
    cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/external/devxlib/src"
    cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/external/devxlib/include"
    #
@@ -119,8 +116,8 @@ then
    # -----------------------------------------
    # C flags 
    # -----------------------------------------   
-   cuda_cflags=" -I$with_cuda/include $mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
-   ldflags="$ldflags $mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
+   cuda_cflags=" -I$with_cuda/include -cuda -gpu=cc$with_cuda_cc,cuda$with_cuda_runtime"
+   ldflags="$ldflags -cuda -gpu=cc$with_cuda_cc,cuda$with_cuda_runtime"
    gpu_arch="$with_cuda_cc"
    cuda_runtime="$with_cuda_runtime"
    ldflags="$ldflags -acc"

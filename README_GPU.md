@@ -9,7 +9,7 @@ Installation
 ============
 
 This version requires the nvfortran (previously PGI) compiler from the
-NVidia HPC SDK, v.19.10 or later (freely downloadable from NVidia). 
+NVidia HPC SDK, v.21.7 or later (freely downloadable from NVidia). 
 Earlier versions may or may not work and are no longer supported. 
 You are advised to use the most recent version of NVidia software you can find. 
 

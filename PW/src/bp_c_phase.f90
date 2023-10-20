@@ -169,6 +169,7 @@ SUBROUTINE c_phase
    USE fft_base,             ONLY : dfftp
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
+   USE upf_spinorb,          ONLY : transform_qq_so
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk, igk_k, ngk
    USE wvfct,                ONLY : npwx, nbnd, wg
@@ -565,9 +566,7 @@ SUBROUTINE c_phase
                CALL using_evc(0)
                mat(:,:) = (0.d0, 0.d0)
                DO mb=1,nbnd
-                  IF ( .NOT. l_cal(mb) ) THEN
-                      mat(mb,mb)=(1.d0, 0.d0)
-                  ELSE
+                  IF ( l_cal(mb) ) THEN
                      aux(:) = (0.d0, 0.d0)
                      IF (kpar /= nppstr) THEN
                         DO ig=1,npw1
@@ -632,7 +631,6 @@ SUBROUTINE c_phase
                !
                call mp_sum( mat, intra_bgrp_comm )
                !
-
                DO nb=1,nbnd
 !$omp parallel &
 !$omp   shared ( nbnd, l_cal, nb, okvan, nkb,  nkbtonh, ityp, nh, nkbtona  ) &
@@ -689,7 +687,9 @@ SUBROUTINE c_phase
 !$omp end do
 !$omp end parallel   
                ENDDO
-
+               do nb=1,nbnd
+                  if ( .not. l_cal(nb) ) mat(nb,nb)=(1.d0, 0.d0)
+               end do
 !              --- Calculate matrix determinant ---
                CALL ZGETRF (nbnd,nbnd,mat,nbnd,ivpt,info)
                CALL errore('c_phase','error in factorization',abs(info))

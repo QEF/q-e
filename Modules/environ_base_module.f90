@@ -22,6 +22,8 @@ MODULE environ_base_module
     !
     USE uspp_param, ONLY: upf
     !
+    USE input_parameters, ONLY : lgcscf
+    !
     !------------------------------------------------------------------------------------
     !
     IMPLICIT NONE
@@ -117,7 +119,7 @@ CONTAINS
         !
         CALL environ%setup%init_numerical(do_comp_mt)
         !
-        CALL environ%main%init(nat, nsp, ityp, zv, label=upf%psd)
+        CALL environ%main%init(nat, nsp, ityp, zv, label=upf%psd, lgcscf=lgcscf)
         !
         !--------------------------------------------------------------------------------
     END SUBROUTINE init_environ_base

@@ -27,13 +27,13 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   !
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : fpi, sqrt2
-  USE atom,         ONLY : rgrid
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv, &
                            ap, aainit, qq_so, dvan_so, okvan, ofsbeta, &
                            nhtol_d, nhtoj_d, nhtolm_d, ijtoh_d, dvan_d, &
                            qq_nt_d, indv_d, dvan_so_d, ofsbeta_d
   USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nsp
-  USE upf_spinorb,  ONLY : is_spinorbit, rot_ylm, fcoef, fcoef_d, lmaxx
+  USE upf_spinorb,  ONLY : is_spinorbit, rot_ylm, fcoef, fcoef_d, lmaxx, &
+                           transform_qq_so
   USE paw_variables,ONLY : okpaw
   USE mp,           ONLY : mp_sum
   implicit none
@@ -249,55 +249,24 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   allocate (ylmk0( lmaxq * lmaxq))
   call ylmr2 (lmaxq * lmaxq, 1, g, gg, ylmk0)
   do nt = 1, nsp
-    if ( upf(nt)%tvanp ) then
-      if (upf(nt)%has_so) then
-        do ih=1,nh(nt)
-          do jh=1,nh(nt)
-            call qvan2 (1, ih, jh, nt, gg, qgm, ylmk0)
-            qq_nt(ih,jh,nt) = omega * DBLE(qgm (1) )
-            do kh=1,nh(nt)
-              do lh=1,nh(nt)
-                ijs=0
-                do is1=1,2
-                  do is2=1,2
-                    ijs=ijs+1
-                    do is=1,2
-                      qq_so(kh,lh,ijs,nt) = qq_so(kh,lh,ijs,nt)       &
-                          + omega* DBLE(qgm(1))*fcoef(kh,ih,is1,is,nt)&
-                                               *fcoef(jh,lh,is,is2,nt)
-                    enddo
-                  enddo
-                enddo
-              enddo
-            enddo
-          enddo
-        enddo
-      else
+     if ( upf(nt)%tvanp ) then
         do ih = 1, nh (nt)
-          do jh = ih, nh (nt)
-             call qvan2 (1, ih, jh, nt, gg, qgm, ylmk0)
-             if (is_spinorbit) then
-                 qq_so (ih, jh, 1, nt) = omega *  DBLE (qgm (1) )
-                 qq_so (jh, ih, 1, nt) = qq_so (ih, jh, 1, nt)
-                 qq_so (ih, jh, 4, nt) = qq_so (ih, jh, 1, nt)
-                 qq_so (jh, ih, 4, nt) = qq_so (ih, jh, 4, nt)
-             endif
-             qq_nt(ih,jh,nt) = omega * DBLE(qgm (1) )
-             qq_nt(jh,ih,nt) = omega * DBLE(qgm (1) )
-          enddo
+           do jh = ih, nh (nt)
+              call qvan2 (1, ih, jh, nt, gg, qgm, ylmk0)
+              qq_nt(ih,jh,nt) = omega * DBLE(qgm (1) )
+              qq_nt(jh,ih,nt) = omega * DBLE(qgm (1) )
+           enddo
         enddo
-      endif
-    endif
+     endif
   enddo
   deallocate (ylmk0)
+  if ( is_spinorbit) call transform_qq_so( qq_nt, qq_so )
 #if defined(__MPI)
 100 continue
   if (is_spinorbit) then
-    call mp_sum(  qq_so , intra_bgrp_comm )
-    call mp_sum(  qq_nt, intra_bgrp_comm )
-  else
-    call mp_sum(  qq_nt, intra_bgrp_comm )
-  endif
+     call mp_sum(  qq_so , intra_bgrp_comm )
+  end if
+  call mp_sum(  qq_nt, intra_bgrp_comm )
 #endif
   ! finally we set the atomic specific qq_at matrices
   if ( nhm > 0 ) then
@@ -306,10 +275,9 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      end do
   end if
   !
-  ! fill interpolation table for beta functions and for atomic charge
+  ! fill interpolation table for beta functions 
   !
   CALL init_tab_beta ( omega, intra_bgrp_comm )
-  CALL init_tab_rho  ( omega, intra_bgrp_comm )
   !
 #if defined __CUDA
   !
@@ -322,9 +290,11 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      nhtoj_d=nhtoj
      ijtoh_d=ijtoh
      qq_nt_d=qq_nt
+    !$acc update device(qq_at)
      if (is_spinorbit) then
         dvan_so_d=dvan_so
         fcoef_d=fcoef
+      !$acc update device(qq_so)
      else
         dvan_d=dvan
      endif
@@ -332,14 +302,6 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   ofsbeta_d=ofsbeta
   !
 #endif
-  !
-  if (nhm>0) then
-    !$acc update device(qq_at)
-    if (is_spinorbit) then
-      !$acc update device(qq_so)
-    endif
-  endif
-  !
   call stop_clock ('init_us_1')
   return
   !

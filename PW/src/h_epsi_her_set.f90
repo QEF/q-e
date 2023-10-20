@@ -24,6 +24,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
   USE fft_base,           ONLY: dfftp
   USE uspp,               ONLY: okvan, nkb, vkb
   USE uspp_param,         ONLY: upf, nh, nhm, nbetam, lmaxq
+  USE upf_spinorb,        ONLY: transform_qq_so
   USE bp,                 ONLY: nppstr_3d, fact_hepsi, evcel, evcp=>evcelp, &
                                 evcm=>evcelm, mapgp_global, mapgm_global, nx_el
   USE klist
@@ -372,9 +373,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
             !
             DO nb = 1, nbnd
                 DO mb = 1, nbnd
-                  IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
-                     IF ( nb == mb )  mat(nb,mb)=0.d0
-                  ELSE
+                  IF ( l_cal(nb) .AND. l_cal(mb) ) THEN
                      aux = (0.d0,0.d0)
                      aux0 = (0.d0,0.d0)
                      IF (noncolin) THEN

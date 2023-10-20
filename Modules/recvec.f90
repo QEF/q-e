@@ -185,7 +185,10 @@
      END SUBROUTINE deallocate_gvect
 
      SUBROUTINE deallocate_gvect_exx()
-       IF( ALLOCATED( gg ) )      DEALLOCATE( gg )
+       IF( ALLOCATED( gg ) ) THEN
+!$acc    exit data delete(gg)
+         DEALLOCATE( gg )
+       END IF
        IF( ALLOCATED( g ) )  THEN
 !$acc    exit data delete(g) 
          DEALLOCATE( g )

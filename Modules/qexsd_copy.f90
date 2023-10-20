@@ -135,7 +135,7 @@ CONTAINS
     !
     TYPE ( atomic_structure_type ),INTENT(IN)  :: atomic_structure
     INTEGER, INTENT(in) :: nsp 
-    CHARACTER(LEN = 3), INTENT(in) :: atm(:)
+    CHARACTER(LEN = 6), INTENT(in) :: atm(:)
     !
     INTEGER, INTENT(out)  :: nat, ibrav
     REAL(dp), INTENT(out) :: alat, a1(:), a2(:), a3(:)

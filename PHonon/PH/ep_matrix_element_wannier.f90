@@ -97,8 +97,8 @@ SUBROUTINE ep_matrix_element_wannier()
   INQUIRE ( file=fname, exist=exst )
   IF (exst ) THEN
       write(stdout,*)
-      write(stdout,*) 'Reading xml file:  '
-      write(stdout,*) fname
+      write(stdout,'(5x,A)') 'Reading xml file:  '
+      write(stdout,'(8x,A)') trim(fname)
       write(stdout,*)
      !
      ! ... in these cases, we need (or it is useful) to read the Fermi energy
@@ -134,7 +134,7 @@ SUBROUTINE ep_matrix_element_wannier()
     if(elph_mat) read_dvscf_cart=.true.
     if(read_dvscf_cart) then
       write(stdout,*)
-      write(stdout,*) 'Reading dvscf in cartesian coordinates !'
+      write(stdout,'(5x,A)') 'Reading dvscf in cartesian coordinates '
       write(stdout,*)
 
       u=(0.d0,0.d0)
@@ -210,8 +210,8 @@ SUBROUTINE ep_matrix_element_wannier()
 
   IF(lgamma) then
     write(stdout,*)
-    write(stdout,*)  '     Writing momentum operator'
-    write(stdout,*)  '     (estimated size:',3*nksq*nbnd*nbnd*0.059571,'kB)'
+    write(stdout,'(5x,A)')  'Writing momentum operator'
+    write(stdout,'(5x,A,f13.6,A)')  '(estimated size:',3*nksq*nbnd*nbnd*0.059571,'kB)'
 
 
     IF((iudrho .ne. 0)) then
@@ -400,7 +400,7 @@ SUBROUTINE elphsum_wannier(q_index)
   if(iudvscf.eq.0)return
 
   write_ascii=.false.
-  write_ascii=.true.
+  !write_ascii=.true.
 
   nmodes=3*nat
 
@@ -419,7 +419,7 @@ SUBROUTINE elphsum_wannier(q_index)
 
     if(write_ascii)then
       iobabby = find_free_unit()
-      write(filelph,'(A,A)') trim(file_elphmat),'.asci'
+      write(filelph,'(A,A)') trim(file_elphmat),'.ascii'
 
       OPEN (unit = iobabby, file = filelph, status = 'unknown', err = &
         1111, iostat = ios, form='formatted')
@@ -439,7 +439,7 @@ SUBROUTINE elphsum_wannier(q_index)
     WRITE (iuelphmat) elph_nbnd_min,elph_nbnd_max,nbnd
     WRITE (iuelphmat) nmodes, nksq, nat, ntyp
     WRITE (iuelphmat) ibrav,(celldm(j),j=1,6)
-    WRITE(iuelphmat)  (atm(j),j=1,ntyp),(amass(j),j=1,ntyp), &
+    WRITE(iuelphmat)  (atm(j)(1:3),j=1,ntyp),(amass(j),j=1,ntyp), &
       (ityp(j),j=1,nat),((tau(j,i),j=1,3),i=1,nat)
     WRITE (iuelphmat) (w2 (nu) , nu = 1, nmodes)
     WRITE (iuelphmat) ((u(ipert,jpert),ipert=1,nmodes),jpert=1,nmodes)
@@ -570,6 +570,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   USE phus,       ONLY : alphap
   USE apply_dpot_mod,   ONLY : apply_dpot_allocate, apply_dpot_deallocate, apply_dpot_bands
   USE uspp_init,        ONLY : init_us_2
+  USE el_phon,        ONLY : elph_nbnd_min, elph_nbnd_max
 
   IMPLICIT NONE
   !
@@ -672,8 +673,8 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
       !
       ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
       !
-      DO ibnd =1, nbnd
-        DO jbnd = 1, nbnd
+      DO ibnd =elph_nbnd_min, elph_nbnd_max
+        DO jbnd = elph_nbnd_min, elph_nbnd_max
           elphmat (jbnd, ibnd, ipert) = zdotc (npwq_refolded, evq (1, jbnd), 1, &
             dvpsi (1, ibnd), 1)
           IF (noncolin) &
@@ -688,8 +689,9 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
     !  save all e-ph matrix elements into el_ph_mat
     !
     DO ipert = 1, npe
-      DO jbnd = 1, nbnd
-        DO ibnd = 1, nbnd
+      el_ph_mat (:, :, ik, ipert + imode0) = 0
+      DO jbnd = elph_nbnd_min, elph_nbnd_max
+        DO ibnd = elph_nbnd_min, elph_nbnd_max
           el_ph_mat (ibnd, jbnd, ik, ipert + imode0) = elphmat (ibnd, jbnd, ipert)
         ENDDO
       ENDDO

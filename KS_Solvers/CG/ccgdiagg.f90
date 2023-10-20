@@ -11,7 +11,7 @@
 ! define __VERBOSE to print a message after each eigenvalue is computed
 !
 !----------------------------------------------------------------------------
-SUBROUTINE ccgdiagg( hs_1psi, s_1psi, precondition, &
+SUBROUTINE ccgdiagg( hs_1psi_ptr, s_1psi_ptr, precondition, &
                      npwx, npw, nbnd, npol, psi, e, btype, &
                      ethr, maxter, reorder, notconv, avg_iter )
   !----------------------------------------------------------------------------
@@ -61,9 +61,9 @@ SUBROUTINE ccgdiagg( hs_1psi, s_1psi, precondition, &
   ! ... external functions
   !
   REAL (DP), EXTERNAL :: ddot
-  EXTERNAL  hs_1psi,    s_1psi 
-  ! hs_1psi( npwx, npw, psi, hpsi, spsi )
-  ! s_1psi( npwx, npw, psi, spsi )
+  EXTERNAL  hs_1psi_ptr,    s_1psi_ptr
+  ! hs_1psi_ptr( npwx, npw, psi, hpsi, spsi )
+  ! s_1psi_ptr( npwx, npw, psi, spsi )
   !
   CALL start_clock( 'ccgdiagg' )
   !
@@ -121,7 +121,7 @@ SUBROUTINE ccgdiagg( hs_1psi, s_1psi, precondition, &
      !
      ! ... calculate S|psi>
      !
-     CALL s_1psi( npwx, npw, psi(1,m), spsi )
+     CALL s_1psi_ptr( npwx, npw, psi(1,m), spsi )
      !
      ! ... orthogonalize starting eigenfunction to those already calculated
      !
@@ -149,7 +149,7 @@ SUBROUTINE ccgdiagg( hs_1psi, s_1psi, precondition, &
      !
      ! ... calculate starting gradient (|hpsi> = H|psi>) ...
      !
-     CALL hs_1psi( npwx, npw, psi(1,m), hpsi, spsi )
+     CALL hs_1psi_ptr( npwx, npw, psi(1,m), hpsi, spsi )
      !
      ! ... and starting eigenvalue (e = <y|PHP|y> = <psi|H|psi>)
      !
@@ -186,7 +186,7 @@ SUBROUTINE ccgdiagg( hs_1psi, s_1psi, precondition, &
         !
         ! ... scg is used as workspace
         !
-        CALL s_1psi( npwx, npw, g(1), scg(1) )
+        CALL s_1psi_ptr( npwx, npw, g(1), scg(1) )
         !
         lagrange(1:m-1) = ZERO
         call divide(inter_bgrp_comm,m-1,m_start,m_end); !write(*,*) m-1,m_start,m_end
@@ -257,7 +257,7 @@ SUBROUTINE ccgdiagg( hs_1psi, s_1psi, precondition, &
         !
         ! ... |scg> is S|cg>
         !
-        CALL hs_1psi( npwx, npw, cg(1), ppsi(1), scg(1) )
+        CALL hs_1psi_ptr( npwx, npw, cg(1), ppsi(1), scg(1) )
         !
         cg0 = ddot( kdim2, cg(1), 1, scg(1), 1 )
         !

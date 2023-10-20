@@ -251,7 +251,6 @@
         IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating qrad', 1)
         ALLOCATE(qrad(maxvalue, nbetam * (nbetam + 1) / 2, lmaxq, nsp), STAT = ierr)
         IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating qrad ', 1)
-        !
         qrad(:, :, :, :) = zero
         ! RM - need to call init_us_1 to re-calculate qrad
         ! PG - maybe it would be sufficient to call init_tab_qrad?

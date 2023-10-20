@@ -57,6 +57,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    USE fft_base,             ONLY : dfftp
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
+   USE upf_spinorb,          ONLY : transform_qq_so
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk, ngk, igk_k
    USE wvfct,                ONLY : npwx, nbnd
@@ -79,7 +80,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    INTEGER, INTENT(in) :: pdir
    !! direction of electric field
    REAL(DP), INTENT(in) :: e_field
-   !! initensity of the field
+   !! intensity of the field
    !
    ! ... local variables
    !
@@ -513,9 +514,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                   !
                   IF (kpar /= (nppstr_3d(pdir)+1)) THEN
                      DO mb = 1, nbnd
-                        IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
-                           IF ( nb == mb )  mat(nb,mb)=1.d0
-                        ELSE
+                        IF ( l_cal(nb) .AND. l_cal(mb) ) THEN
                            DO ig = 1, npw1
                               aux(igk1(ig)) = psi1(ig,mb)
                            ENDDO
@@ -603,9 +602,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                         aux_rcv_ind(1:max_aux,1) = aux_proc_ind(1:max_aux,1)
 #endif
                         DO nb = 1, nbnd
-                           IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
-                              IF ( nb == mb )  mat(nb,mb) = 1.d0
-                           ELSE
+                           IF ( l_cal(nb) .AND. l_cal(mb) ) THEN
                               aux = (0.d0,0.d0)
                               aux0 = (0.d0,0.d0)
                               IF (noncolin) THEN
@@ -717,6 +714,9 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                      !
                   ENDDO
                ENDDO
+               DO nb = 1, nbnd
+                  IF ( .NOT. l_cal(nb) ) mat(nb,nb) = 1.d0
+               END DO
                !
                ! --- Calculate matrix determinant ---
                !

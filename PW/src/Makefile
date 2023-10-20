@@ -55,14 +55,11 @@ coset.o \
 Coul_cut_2D.o \
 d_matrix.o \
 data_structure.o \
-deriv_drhoc.o \
 divide_class.o \
 divide_class_so.o \
 divide_et_impera.o \
-drhoc.o \
 rotate_wfc.o \
 run_driver.o \
-dvloc_of_g.o \
 dynamics_module.o \
 efermig.o \
 efermit.o \
@@ -136,7 +133,6 @@ kpoint_grid.o \
 lchk_tauxk.o \
 ldaU.o \
 make_pointlists.o \
-makov_payne.o \
 manypw.o \
 martyna_tuckerman.o \
 memory_report.o \
@@ -238,7 +234,6 @@ symmetrize_at.o \
 tetra.o \
 transform_becsum_so.o \
 transform_becsum_nc.o \
-transform_qq_so.o \
 trnvecc.o \
 two_chem.o\
 update_pot.o \
@@ -248,7 +243,6 @@ v_of_rho.o \
 vcsmd.o \
 vcsubs.o \
 vhpsi.o \
-vloc_of_g.o \
 vloc_psi.o \
 utils.o \
 xdm_dispersion.o \

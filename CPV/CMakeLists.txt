@@ -102,7 +102,6 @@ set(src_cpv
     src/wave_base.f90
     src/wave_types.f90
     src/wf.f90
-    src/makov_payne.f90
     src/entropy.f90)
 qe_enable_cuda_fortran("${src_cpv}")
 
