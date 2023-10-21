@@ -115,7 +115,6 @@ contains
       npw = npwx
       call update_pot()
       call hinit1()
-      call init_us_1(nat, ityp, omega, intra_bgrp_comm)
       call init_us_2(npw, igk_k(:, 1), xk(1, 1), vkb)
 
       evc = t%evc

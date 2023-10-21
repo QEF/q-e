@@ -51,7 +51,6 @@ contains
       spsi = (0.d0, 0.d0)
       chxpsi = (0.d0, 0.d0)
       npw = npwx
-      call init_us_1(nat, ityp, omega, intra_bgrp_comm)
       call init_us_2(npw, igk_k(:, 1), xk(1, 1), vkb)
 
       call allocate_bec_type(nkb, nbnd, becp)
