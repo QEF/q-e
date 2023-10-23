@@ -397,16 +397,16 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
 
      if (mod(istep, iprint)==0) then
         iunit = printout_base_open('.pos')
-        call printout_pos(iunit, tau, nat, tps=elapsed_time, nfi=istep)
+        call printout_pos(iunit, tau*alat, nat, tps=elapsed_time, nfi=istep)
         call printout_base_close(iunit)
         iunit = printout_base_open('.cel')
-        call printout_cell(iunit,at,istep,elapsed_time)
+        call printout_cell(iunit,at*alat,istep,elapsed_time)
         call printout_base_close(iunit)
         iunit = printout_base_open('.for')
-        call printout_pos(iunit, force, nat, tps=elapsed_time, nfi=istep)
+        call printout_pos(iunit, force*alat, nat, tps=elapsed_time, nfi=istep)
         call printout_base_close(iunit)
         iunit = printout_base_open('.vel')
-        call printout_pos(iunit, vel, nat, tps=elapsed_time, nfi=istep)
+        call printout_pos(iunit, vel*alat, nat, tps=elapsed_time, nfi=istep)
         call printout_base_close(iunit)
      endif
 
