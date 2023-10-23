@@ -53,8 +53,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE mp_global,                ONLY : nproc_bgrp, me_bgrp, root_bgrp, intra_bgrp_comm
   USE fft_interfaces,           ONLY : invfft
   USE fft_base,                 ONLY : dfftp, dfftb
-  USE printout_base,            ONLY : printout_base_open, printout_base_unit, &
-                                       printout_base_close
+  USE printout_base,            ONLY : printout_base_open, printout_base_close
   USE cp_main_variables,        ONLY : nfi, iprint_stdout
   USE time_step,                ONLY : tps
   USE input_parameters,         ONLY : tcpbo
@@ -712,8 +711,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   USE electrons_base,   ONLY : nbsp
   USE control_flags,    ONLY : iverbosity,conv_elec
   USE mp_global,        ONLY : me_bgrp
-  USE printout_base,    ONLY : printout_base_open, printout_base_unit, &
-                               printout_base_close
+  USE printout_base,    ONLY : printout_base_open, printout_base_close
   USE cp_main_variables,        ONLY : nfi, iprint_stdout
   USE time_step,                ONLY : tps
   USE input_parameters,         ONLY : tcpbo
@@ -912,8 +910,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
   IF( ( MOD( nfi, iprint_stdout ) == 0 ) )  THEN
      IF ( ionode ) THEN
-        iunit = printout_base_unit( "spr" )
-        CALL printout_base_open( "spr" )
+        iunit = printout_base_open( ".spr" )
         IF (.NOT.tcpbo) THEN
            WRITE( iunit, '(I8,f16.8)' )nfi,tps
         ELSE   
@@ -949,7 +946,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
 
   !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
   IF( ( MOD( nfi, iprint_stdout ) == 0 ) ) THEN
-     IF ( ionode ) CALL printout_base_close( "spr" )
+     IF ( ionode ) CALL printout_base_close( iunit )
   END IF
 
   spread=spread/m
@@ -2343,8 +2340,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   USE cell_base,              ONLY : alat
   USE constants,              ONLY : tpi, bohr_radius_angs
   USE mp_global,              ONLY : me_bgrp
-  USE printout_base,          ONLY : printout_base_open, printout_base_unit, &
-                                     printout_base_close
+  USE printout_base,          ONLY : printout_base_open, printout_base_close
   USE cp_main_variables,      ONLY : nfi, iprint_stdout
   USE time_step,              ONLY : tps
   USE input_parameters,         ONLY : tcpbo
@@ -2644,8 +2640,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
   IF( ( MOD( nfi, iprint_stdout ) == 0 ) )  THEN
      IF ( ionode ) THEN
-        iunit = printout_base_unit( "spr" )
-        CALL printout_base_open( "spr" )
+        iunit = printout_base_open( ".spr" )
         IF (.NOT.tcpbo) THEN
            WRITE( iunit, '(I8,f16.8)' )nfi,tps
         ELSE   
@@ -2681,7 +2676,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
 
   !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
   IF( ( MOD( nfi, iprint_stdout ) == 0 ) ) THEN
-     IF ( ionode ) CALL printout_base_close( "spr" )
+     IF ( ionode ) CALL printout_base_close( iunit )
   END IF
 
   spread=spread/DBLE(m)
@@ -2781,8 +2776,7 @@ SUBROUTINE jacobi_rotation( m, Omat, Umat, b1, b2, b3 )
   USE cell_base,              ONLY : alat
   USE constants,              ONLY : tpi
   USE mp_global,              ONLY : me_bgrp
-  USE printout_base,          ONLY : printout_base_open, printout_base_unit, &
-                                     printout_base_close
+  USE printout_base,          ONLY : printout_base_open, printout_base_close
   USE parallel_include
   !
   IMPLICIT NONE
@@ -2995,7 +2989,7 @@ END SUBROUTINE jacobi_rotation
        USE constants,        ONLY : tpi, autoaf => BOHR_RADIUS_ANGS
        USE mp_global,        ONLY : nproc_image, me_image, intra_image_comm
        USE cp_main_variables, ONLY: idesc
-       USE printout_base,     ONLY : printout_base_open, printout_base_unit, printout_base_close
+       USE printout_base,     ONLY : printout_base_open, printout_base_close
        USE cp_main_variables, ONLY : nfi, iprint_stdout
        USE time_step,         ONLY : tps
        USE input_parameters,  ONLY : tcpbo
@@ -3150,8 +3144,7 @@ END SUBROUTINE jacobi_rotation
      !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
      IF( ( MOD( nfi, iprint_stdout ) == 0 ) )  THEN
         IF ( ionode ) THEN
-           iunit = printout_base_unit( "spr" )
-           CALL printout_base_open( "spr" )
+           iunit = printout_base_open( ".spr" )
            IF (.NOT.tcpbo) THEN
               WRITE( iunit, '(I8,f16.8)' )nfi,tps
            ELSE   
@@ -3183,7 +3176,7 @@ END SUBROUTINE jacobi_rotation
 
      !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
      IF( ( MOD( nfi, iprint_stdout ) == 0 ) ) THEN
-        IF ( ionode ) CALL printout_base_close( "spr" )
+        IF ( ionode ) CALL printout_base_close( iunit )
      END IF
 
      spread=spread/nbsp

@@ -26,7 +26,7 @@ SUBROUTINE from_restart( )
    USE ions_positions,        ONLY : taus, tau0, tausm, taum, vels, fion, fionm, set_velocities, velsm
    USE ions_nose,             ONLY : xnhp0, xnhpm, tempw
    USE gvect,    ONLY : mill, eigts1, eigts2, eigts3 
-   USE printout_base,         ONLY : printout_pos
+   !USE printout_base,         ONLY : printout_pos
    USE gvecw,                 ONLY : ngw
    USE cp_interfaces,         ONLY : phfacs, strucf, prefor, calbec, caldbec_bgrp
    USE energies,              ONLY : eself, dft_energy_type

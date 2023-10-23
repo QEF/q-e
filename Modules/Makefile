@@ -61,6 +61,7 @@ parser.o \
 plugin_flags.o \
 plugin_arguments.o \
 plugin_variables.o \
+printout_base.o \
 pw_dot.o \
 qmmm.o \
 random_numbers.o \
