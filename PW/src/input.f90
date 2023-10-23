@@ -1063,9 +1063,13 @@ SUBROUTINE control_iosys()
      !
      io_level = -1
      !
-  CASE ( 'none' )
+  CASE ( 'minimal' )
      !
      io_level = -2
+     !
+  CASE ( 'none' )
+     !
+     io_level = -3
      !
   CASE DEFAULT
      !
