@@ -227,7 +227,8 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw.x 
         var iprint -type INTEGER {
             default { write only at convergence }
             info {
-                band energies are written every @i iprint iterations
+		When @ref calculation == 'md' (molecular dynamics)  
+                trajectory is written every @i iprint md steps.
             }
         }
         

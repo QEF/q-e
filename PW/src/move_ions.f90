@@ -37,7 +37,7 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   USE ener,                   ONLY : etot, ef
   USE force_mod,              ONLY : force, sigma
   USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, &
-                                     lconstrain, lmd, tr2
+                                     lconstrain, lmd, tr2, iprint
   USE relax,                  ONLY : epse, epsf, epsp, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
   USE mp_images,              ONLY : intra_image_comm
@@ -46,7 +46,7 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
   USE basic_algebra_routines, ONLY : norm
   USE dynamics_module,        ONLY : verlet, terminate_verlet, proj_verlet, fire
-  USE dynamics_module,        ONLY : smart_MC, langevin_md, dt, vel
+  USE dynamics_module,        ONLY : smart_MC, langevin_md, dt, vel, elapsed_time
   USE dynamics_module,        ONLY : fire_nmin, fire_f_inc, fire_f_dec, &
                                      fire_alpha_init, fire_falpha, fire_dtmax
   USE klist,                  ONLY : nelec, tot_charge
@@ -75,7 +75,6 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   LOGICAL               :: conv_ions
   CHARACTER(LEN=320)    :: filebfgs
   INTEGER               :: iunit
-  REAL(DP)              :: tps !time in picoseconds
   !
   optimizer_failed = .FALSE.
   !
@@ -396,19 +395,20 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
 
      ! write trajectory output files
 
-     tps = dt*real(istep,DP) !TODO: this is wrong if we change the timestep during the run!
-     iunit = printout_base_open('.pos')
-     call printout_pos(iunit, tau, nat, tps=tps, nfi=istep)
-     call printout_base_close(iunit)
-     iunit = printout_base_open('.cel')
-     call printout_cell(iunit,at,istep,tps)
-     call printout_base_close(iunit)
-     iunit = printout_base_open('.for')
-     call printout_pos(iunit, force, nat, tps=tps, nfi=istep)
-     call printout_base_close(iunit)
-     iunit = printout_base_open('.vel')
-     call printout_pos(iunit, vel, nat, tps=tps, nfi=istep)
-     call printout_base_close(iunit)
+     if (mod(istep, iprint)==0) then
+        iunit = printout_base_open('.pos')
+        call printout_pos(iunit, tau, nat, tps=elapsed_time, nfi=istep)
+        call printout_base_close(iunit)
+        iunit = printout_base_open('.cel')
+        call printout_cell(iunit,at,istep,elapsed_time)
+        call printout_base_close(iunit)
+        iunit = printout_base_open('.for')
+        call printout_pos(iunit, force, nat, tps=elapsed_time, nfi=istep)
+        call printout_base_close(iunit)
+        iunit = printout_base_open('.vel')
+        call printout_pos(iunit, vel, nat, tps=elapsed_time, nfi=istep)
+        call printout_base_close(iunit)
+     endif
 
 
      !

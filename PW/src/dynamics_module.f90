@@ -37,7 +37,7 @@ MODULE dynamics_module
    PUBLIC :: verlet, verlet_read_tau_from_conf, proj_verlet, terminate_verlet, &
              fire, langevin_md, smart_MC, allocate_dyn_vars, deallocate_dyn_vars
    PUBLIC :: temperature, refold_pos, vel
-   PUBLIC :: dt, delta_t, nraise, control_temp, thermostat
+   PUBLIC :: dt, delta_t, nraise, control_temp, thermostat, elapsed_time
    ! FIRE parameters
    PUBLIC :: fire_nmin, fire_f_inc, fire_f_dec, fire_alpha_init, fire_falpha, fire_dtmax
    !
@@ -105,6 +105,8 @@ MODULE dynamics_module
    REAL(DP), ALLOCATABLE :: radial_distr(:,:)
    !! radial distribution
    !
+   REAL(DP)  :: elapsed_time
+   !! elapsed time in ps (picoseconds)
    INTEGER, PARAMETER :: hist_len = 1000
    !
    ! Restart type
@@ -192,7 +194,7 @@ CONTAINS
       ! ... local variables
       !
       REAL(DP) :: ekin, etotold
-      REAL(DP) :: total_mass, temp_new, temp_av, elapsed_time
+      REAL(DP) :: total_mass, temp_new, temp_av
       REAL(DP) :: delta(3), ml(3), mlt
       INTEGER  :: na
 ! FIXME: is it useful to keep trace of this possibility?
