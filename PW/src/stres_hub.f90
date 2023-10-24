@@ -23,7 +23,7 @@ SUBROUTINE stres_hub ( sigmah )
                                   ldim_back, ldmx_b, nsg, v_nsg, max_num_neighbors, &
                                   ldim_u, Hubbard_V, at_sc, neighood, ldmx_tot, &
                                   wfcU, nwfcU, copy_U_wfc, Hubbard_J
-   USE becmod,             ONLY : bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
+   USE becmod,             ONLY : becp, calbec, allocate_bec_type_acc, deallocate_bec_type_acc
    USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
    USE uspp,               ONLY : nkb, vkb, okvan
    USE klist,              ONLY : nks, xk, ngk, igk_k
@@ -35,18 +35,13 @@ SUBROUTINE stres_hub ( sigmah )
    USE io_global,          ONLY : stdout
    USE mp_pools,           ONLY : inter_pool_comm, me_pool, nproc_pool
    USE mp,                 ONLY : mp_sum
-   USE control_flags,      ONLY : gamma_only
+   USE control_flags,      ONLY : gamma_only, offload_type
    USE mp_bands,           ONLY : use_bgrp_in_hpsi
    USE noncollin_module,   ONLY : noncolin
    USE force_mod,          ONLY : eigenval, eigenvect, overlap_inv, at_dy, at_dj, &
                                   us_dy, us_dj
-   USE wavefunctions_gpum, ONLY : using_evc
    USE uspp_init,          ONLY : init_us_2, gen_us_dj, gen_us_dy
    USE constants,          ONLY : eps16
-   USE becmod_gpum,        ONLY : bec_type_d, becp_d
-   USE becmod_subs_gpum,   ONLY : calbec_gpu, using_becp_auto, using_becp_d_auto, &
-                                  allocate_bec_type_gpu, deallocate_bec_type_gpu
-   USE wavefunctions_gpum, ONLY : evc_d, using_evc, using_evc_d
    !
    IMPLICIT NONE
    !
@@ -63,12 +58,6 @@ SUBROUTINE stres_hub ( sigmah )
    !! the derivative of the atomic occupations
    COMPLEX(DP), ALLOCATABLE :: spsi(:,:)
 
-#if defined(__CUDA)
-   TYPE(bec_type_d) :: proj     ! proj(nwfcU,nbnd)
-#else
-   TYPE(bec_type) :: proj
-#endif
-         
    LOGICAL :: lhubb
    LOGICAL :: save_flag
    !
@@ -102,14 +91,6 @@ SUBROUTINE stres_hub ( sigmah )
    ENDIF
    !
    !$acc data create(spsi) copyin(wfcU)
-   !
-#if defined(__CUDA)
-   CALL allocate_bec_type_gpu( nwfcU, nbnd, proj )
-   CALL using_evc_d(0)
-#else
-   CALL allocate_bec_type( nwfcU, nbnd, proj )
-   CALL using_evc(0)
-#endif
    !
    IF (gamma_only) THEN
       ALLOCATE( projrd(nwfcU,nbnd))
@@ -171,30 +152,22 @@ SUBROUTINE stres_hub ( sigmah )
       npw = ngk(ik)
       !
       IF (nks > 1) CALL get_buffer (evc, nwordwfc, iunwfc, ik)
-      IF (nks > 1) CALL using_evc(2)
       !
       CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb, .TRUE.)
       !
       !$acc update self(vkb)
       !
       ! Compute spsi = S * psi
-      CALL allocate_bec_type ( nkb, nbnd, becp)
-      CALL using_becp_auto(2)
+      CALL allocate_bec_type_acc ( nkb, nbnd, becp)
       !
-#if defined(__CUDA)
-      CALL using_evc_d(0)
-      CALL using_becp_d_auto(2)
-      !$acc host_data use_device(vkb,spsi)
-      CALL calbec_gpu( npw, vkb, evc_d, becp_d )
-      CALL s_psi_gpu( npwx, npw, nbnd, evc_d, spsi )
+      !$acc data present_or_copyin(evc)
+      CALL calbec( offload_type, npw, vkb, evc, becp )
+      !$acc host_data use_device(evc, spsi)
+      CALL s_psi_acc( npwx, npw, nbnd, evc, spsi )
       !$acc end host_data
-#else
-      CALL calbec( npw, vkb, evc, becp )
-      CALL s_psi( npwx, npw, nbnd, evc, spsi )
-#endif
+      !$acc end data
       !
-      CALL deallocate_bec_type (becp)
-      CALL using_becp_auto(2)
+      CALL deallocate_bec_type_acc (becp)
       !
       ! Set up various quantities, in particular wfcU which 
       ! contains Hubbard-U (ortho-)atomic wavefunctions (without ultrasoft S)
@@ -202,26 +175,13 @@ SUBROUTINE stres_hub ( sigmah )
       !$acc update device(wfcU)
       !
       ! proj=<wfcU|S|evc>
-#if defined(__CUDA)
-      CALL using_becp_d_auto(2)
-      !$acc host_data use_device( spsi, wfcU )
-      CALL calbec_gpu( npw, wfcU, spsi, proj )
-      !$acc end host_data
       IF (gamma_only) THEN
-         projrd = proj%r_d
+         CALL calbec( offload_type, npw, wfcU, spsi, projrd )
+         !$acc update self(projrd)
       ELSE
-         projkd = proj%k_d
+         CALL calbec( offload_type, npw, wfcU, spsi, projkd )
+         !$acc update self(projkd)
       ENDIF
-#else
-      !
-      CALL calbec( npw, wfcU, spsi, proj )
-      IF (gamma_only) THEN
-         projrd = proj%r
-      ELSE
-         projkd = proj%k
-      ENDIF
-      !
-#endif
       !
       ! Compute derivatives of spherical harmonics and spherical Bessel functions
       !
@@ -379,11 +339,6 @@ SUBROUTINE stres_hub ( sigmah )
    ELSE
       DEALLOCATE( projkd)
    ENDIF
-#if defined(__CUDA)
-   CALL deallocate_bec_type_gpu( proj )
-#else
-   CALL deallocate_bec_type( proj )
-#endif
    !
    IF (ALLOCATED(dns))  DEALLOCATE (dns)
    IF (ALLOCATED(dnsb)) DEALLOCATE (dnsb)
@@ -428,8 +383,6 @@ SUBROUTINE dndepsilon_k ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,dns )
    USE ldaU,              ONLY : nwfcU, offsetU, Hubbard_l, is_hubbard,  &
                                  ldim_back, offsetU_back, offsetU_back1, &
                                  is_hubbard_back, Hubbard_l2, backall
-   USE wavefunctions_gpum,ONLY : using_evc
-   USE becmod_subs_gpum,  ONLY : using_becp_auto
    !
    IMPLICIT NONE
    !
@@ -472,9 +425,6 @@ SUBROUTINE dndepsilon_k ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,dns )
    TYPE (bec_type) :: dproj
    !
    CALL allocate_bec_type ( nwfcU,nbnd, dproj )
-   !
-   CALL using_evc(0)
-   CALL using_becp_auto(2)
    !
    ! D_Sl for l=1 and l=2 are already initialized, for l=0 D_S0 is 1
    !
@@ -1035,12 +985,11 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : becp, calbec
+   USE control_flags,        ONLY : offload_type
    USE basis,                ONLY : natomwfc, wfcatom, swfcatom
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv, at_dy, at_dj
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
-   USE wavefunctions_gpum,   ONLY : using_evc
-   USE becmod_subs_gpum,     ONLY : calbec_gpu
    !
    IMPLICIT NONE
    !
@@ -1082,7 +1031,6 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    a1_temp(:), a2_temp(:) 
    COMPLEX (DP) :: temp
    !
-   CALL using_evc(0)
    CALL start_clock_gpu('dprojdepsilon')
    ! 
    !$acc data present_or_copyin(spsi) present_or_copyout(dproj)
@@ -1279,15 +1227,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    ENDIF
    !
    ! Compute dproj = <dwfc|S|psi> = <dwfc|spsi>
-#if defined(__CUDA)
-   !$acc host_data use_device( spsi, dwfc, dproj )
-   CALL calbec_gpu( npw, dwfc, spsi, dproj )
-   !$acc end host_data
-#else
-   !
-   CALL calbec( npw, dwfc, spsi, dproj )
-   !
-#endif
+   CALL calbec( offload_type, npw, dwfc, spsi, dproj )
    !
    !$acc end data
    !$acc end data
@@ -1335,7 +1275,7 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : calbec
-   USE becmod_subs_gpum,     ONLY : calbec_gpu
+   USE control_flags,        ONLY : offload_type
    USE klist,                ONLY : xk, igk_k, ngk
    USE force_mod,            ONLY : us_dy, us_dj
    !
@@ -1441,19 +1381,11 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
                ENDDO   
             ENDIF        
             !
-#if defined(__CUDA)
-            ! Calculate dbetaB = <dbeta|B>
-            !$acc host_data use_device(A,B,aux,dbetaB,Adbeta)
-            CALL calbec_gpu(npw, aux, B, dbetaB )
-            CALL calbec_gpu(npw, A, aux, Adbeta )
-            !$acc end host_data
-#else            
             ! Calculate dbetaB = <dbeta|B> 
-            CALL calbec(npw, aux, B, dbetaB )
+            CALL calbec(offload_type, npw, aux, B, dbetaB )
             !
             ! Calculate Adbeta = <A|dbeta>
-            CALL calbec(npw, A, aux, Adbeta )
-#endif            
+            CALL calbec(offload_type, npw, A, aux, Adbeta )
             !
             ! aux is now used as a work space to store vkb
             !$acc parallel loop collapse(2)
@@ -1463,19 +1395,11 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
                ENDDO
             ENDDO
             !
-#if defined(__CUDA)
-            ! Calculate dbetaB = <dbeta|B>
-            !$acc host_data use_device(A,B,aux,betaB,Abeta)
-            CALL calbec_gpu(npw, A, aux, Abeta )
-            CALL calbec_gpu(npw, aux, B, betaB )
-            !$acc end host_data
-#else            
             ! Calculate Abeta = <A|beta>
-            CALL calbec( npw, A, aux, Abeta )
+            CALL calbec( offload_type, npw, A, aux, Abeta )
             !
             ! Calculate betaB = <beta|B>
-            CALL calbec( npw, aux, B, betaB )
-#endif            
+            CALL calbec( offload_type, npw, aux, B, betaB )
             !
             !$acc end data
             DEALLOCATE ( aux )
@@ -1569,9 +1493,8 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : becp, calbec
+   USE control_flags,        ONLY : offload_type
    USE force_mod,            ONLY : at_dy, at_dj, us_dy, us_dj
-   USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
-   USE becmod_subs_gpum,     ONLY : calbec_gpu
    !
    IMPLICIT NONE
    !
@@ -1617,7 +1540,6 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    !       qm1(npwx)
    REAL (DP) :: temp
    !
-   CALL using_evc(0)
    CALL start_clock_gpu('dprojdepsilon')
    !
    ! See the implementation in dprojdepsilon_k
@@ -1694,13 +1616,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
       !$acc end kernels
    ENDIF
    !
-#if defined(__CUDA)
-   !$acc host_data use_device(dwfc,spsi,dproj)
-   CALL calbec_gpu ( npw, dwfc, spsi, dproj )
-   !$acc end host_data
-#else
-   CALL calbec ( npw, dwfc, spsi, dproj )
-#endif
+   CALL calbec ( offload_type, npw, dwfc, spsi, dproj )
    !
    !$acc end data
    !
@@ -1742,16 +1658,10 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
                   ENDDO
                ENDIF   
                !
-#if defined(__CUDA)
-               CALL using_evc_d(0)
-               !$acc host_data use_device(dbeta,dbetapsi,wfcU,wfatdbeta)
-               CALL calbec_gpu(npw, dbeta, evc_d, dbetapsi )
-               CALL calbec_gpu(npw, wfcU, dbeta, wfatdbeta )
-               !$acc end host_data
-#else
-               CALL calbec(npw, dbeta, evc, dbetapsi )
-               CALL calbec(npw, wfcU, dbeta, wfatdbeta )
-#endif
+               !$acc data present_or_copyin(evc)
+               CALL calbec(offload_type, npw, dbeta, evc, dbetapsi )
+               !$acc end data
+               CALL calbec(offload_type, npw, wfcU, dbeta, wfatdbeta )
                !
                ! dbeta is now used as work space to store vkb
                !$acc parallel loop collapse(2)
@@ -1761,16 +1671,10 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
                   ENDDO
                ENDDO
                !
-#if defined(__CUDA)
-               CALL using_evc_d(0)
-               !$acc host_data use_device(dbeta,betapsi0,wfcU,wfatbeta)
-               CALL calbec_gpu(npw, wfcU, dbeta, wfatbeta )
-               CALL calbec_gpu(npw, dbeta, evc_d, betapsi0 )
-               !$acc end host_data
-#else               
-               CALL calbec(npw, wfcU, dbeta, wfatbeta )
-               CALL calbec(npw, dbeta, evc, betapsi0 )
-#endif
+               CALL calbec(offload_type, npw, wfcU, dbeta, wfatbeta )
+               !$acc data present_or_copyin(evc)
+               CALL calbec(offload_type, npw, dbeta, evc, betapsi0 )
+               !$acc end data
                !
                ! here starts band parallelization
                ! beta is here used as work space to calculate dbetapsi

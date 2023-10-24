@@ -342,8 +342,9 @@ MODULE oscdft_occupations
          USE wvfct_gpum,          ONLY : wg_d, using_wg_d
          USE io_files,            ONLY : nwordwfc, iunwfc
          USE buffers,             ONLY : get_buffer
-         USE becmod_gpum,         ONLY : bec_type_d
-         USE becmod_subs_gpum,    ONLY : calbec_gpu, allocate_bec_type_gpu, deallocate_bec_type_gpu
+!civn
+         !USE becmod_gpum,         ONLY : bec_type_d
+         !USE becmod_subs_gpum,    ONLY : calbec_gpu, allocate_bec_type_gpu, deallocate_bec_type_gpu
          USE lsda_mod,            ONLY : isk, nspin
          USE wavefunctions,       ONLY : evc
          USE wavefunctions_gpum,  ONLY : using_evc, using_evc_d, evc_d
@@ -359,7 +360,8 @@ MODULE oscdft_occupations
          TYPE(oscdft_wavefunction_type), TARGET,   INTENT(INOUT) :: wfcS
          TYPE(oscdft_ns_type),                     INTENT(INOUT) :: nst
          TYPE(oscdft_wavefunction_type), OPTIONAL, INTENT(INOUT) :: wfc_evc
-         TYPE(bec_type_d), TARGET                                :: proj_d
+!civn
+         !TYPE(bec_type_d), TARGET                                :: proj_d
          REAL(DP)                                                :: temp
          REAL(DP),    ALLOCATABLE                                :: nr(:,:,:,:)
          COMPLEX(DP), ALLOCATABLE                                :: nrtemp(:,:), nrtemp2(:,:)
@@ -378,7 +380,8 @@ MODULE oscdft_occupations
 
          CALL start_clock("oscdftGns")
          CALL check_bec_type_unallocated_gpu(proj_d)
-         CALL allocate_bec_type_gpu(wfcS%n, nbnd, proj_d)
+!civn
+         !CALL allocate_bec_type_gpu(wfcS%n, nbnd, proj_d)
          maxl = idx%max_ns_dim
          ALLOCATE(nr(maxl,maxl,nsym,inp%noscdft))
          IF (inp%orthogonalize_ns) THEN
@@ -415,8 +418,9 @@ MODULE oscdft_occupations
 
             CALL using_evc_d(1)
             CALL using_wg_d(1)
+!civn
             !$acc host_data use_device(wfcS_wfc(:,:))
-            CALL calbec_gpu(npw, wfcS_wfc, evc_d, proj_d)
+            !CALL calbec_gpu(npw, wfcS_wfc, evc_d, proj_d)
             !$acc end host_data
             DO ioscdft=1,inp%noscdft
                IF (inp%spin_index(ioscdft) /= isk(ik)) CYCLE
@@ -468,7 +472,8 @@ MODULE oscdft_occupations
             END DO
          END DO
          !$acc end data
-         CALL deallocate_bec_type_gpu(proj_d)
+!civn
+         !CALL deallocate_bec_type_gpu(proj_d)
          CALL mp_sum(nr, inter_pool_comm)
 
          IF (inp%orthogonalize_ns) THEN

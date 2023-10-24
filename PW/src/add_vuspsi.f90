@@ -21,8 +21,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
   USE noncollin_module
   USE uspp,             ONLY: vkb, nkb, deeq, deeq_nc, ofsbeta
   USE uspp_param,       ONLY: nh, nhm
-  USE becmod,           ONLY: bec_type, becp
-  USE becmod_subs_gpum, ONLY: using_becp_auto
+  USE becmod,           ONLY: becp
   !
   IMPLICIT NONE
   !
@@ -44,7 +43,6 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
   !
   !
   CALL start_clock( 'add_vuspsi' )  
-  CALL using_becp_auto(0)
   !
   IF ( gamma_only ) THEN
      !

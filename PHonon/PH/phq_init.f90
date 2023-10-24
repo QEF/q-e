@@ -31,8 +31,9 @@ SUBROUTINE phq_init()
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : bg, tpiba
   USE ions_base,            ONLY : nat, ityp, tau
-  USE becmod,               ONLY : calbec, becp, allocate_bec_type, &
-                                   deallocate_bec_type
+  USE becmod,               ONLY : calbec, becp, becupdate, bec_type, &
+                                   allocate_bec_type_acc, deallocate_bec_type_acc
+  USE control_flags,        ONLY : offload_type
   USE constants,            ONLY : eps8, tpi
   USE gvect,                ONLY : g
   USE klist,                ONLY : xk, ngk, igk_k
@@ -48,9 +49,6 @@ SUBROUTINE phq_init()
   USE noncollin_module,     ONLY : noncolin, domag, npol, lspinorb
   USE uspp,                 ONLY : okvan, vkb, nlcc_any, nkb
   USE phus,                 ONLY : alphap
-#if defined(__CUDA)
-  USE phus,                 ONLY : alphap_d
-#endif
   USE nlcc_ph,              ONLY : drc
   USE control_ph,           ONLY : trans, zue, epsil, all_done
   USE units_lr,             ONLY : lrwfc, iuwfc
@@ -60,21 +58,12 @@ SUBROUTINE phq_init()
                                    kpq,g_kpq,igqg,xk_gamma, lrwfcr
   USE wannier_gw,           ONLY : l_head
   USE lrus,                 ONLY : becp1, dpqq, dpqq_so
-#if defined(__CUDA)
-  USE lrus,                 ONLY : becp1_d
-#endif
   USE qpoint,               ONLY : xq, nksq, eigqts, ikks, ikqs
   USE qpoint_aux,           ONLY : becpt, alphapt, ikmks
-#if defined(__CUDA)
-  USE  qpoint_aux,          ONLY : becpt_d, alphapt_d
-#endif
   USE eqv,                  ONLY : evq
   USE control_lr,           ONLY : nbnd_occ, lgamma
   USE ldaU,                 ONLY : lda_plus_u
   USE uspp_init,            ONLY : init_us_2
-#if defined(__CUDA)
-  USE becmod_subs_gpum,     ONLY : calbec_gpu, synchronize_bec_type_gpu
-#endif
   !
   IMPLICIT NONE
   !
@@ -95,11 +84,19 @@ SUBROUTINE phq_init()
     ! the argument of the phase
   COMPLEX(DP), ALLOCATABLE :: aux1(:,:), tevc(:,:)
     ! used to compute alphap
+#if defined(__CUDA)
+  TYPE(bec_type) :: bectmp
+    ! temporary buffer to work with offload of arrays of derived types
+#endif
   !
   !
   IF (all_done) RETURN
   !
   CALL start_clock( 'phq_init' )
+  !
+#if defined(__CUDA)
+  Call allocate_bec_type_acc ( nkb, nbnd, bectmp )
+#endif
   !
   DO na = 1, nat
      !
@@ -183,14 +180,12 @@ SUBROUTINE phq_init()
         CALL get_buffer( evc, lrwfc, iuwfc, ikk )
         IF (noncolin.AND.domag) THEN
            CALL get_buffer( tevc, lrwfc, iuwfc, ikmks(ik) )
-           !$acc update device(tevc)
 #if defined(__CUDA)
-           !$acc host_data use_device(vkb, tevc)
-           CALL calbec_gpu (npw, vkb(:,:), tevc, becpt_d(ik) )
-           !$acc end host_data
-           CALL synchronize_bec_type_gpu( becpt_d(ik), becpt(ik), 'h')
+           !$acc update device(tevc)
+           Call calbec ( offload_type, npw, vkb, tevc, bectmp )
+           Call becupdate( offload_type, becpt, ik, nksq, bectmp )
 #else
-           CALL calbec (npw, vkb, tevc, becpt(ik) )
+           Call calbec ( offload_type, npw, vkb, tevc, becpt(ik) )
 #endif
         ENDIF
      endif
@@ -200,14 +195,13 @@ SUBROUTINE phq_init()
      !
 #if defined(__CUDA)
      evc_d = evc
-     !$acc host_data use_device(vkb)
-     CALL calbec_gpu (npw, vkb(:,:), evc_d, becp1_d(ik) )
-     !$acc end host_data
-     CALL synchronize_bec_type_gpu( becp1_d(ik), becp1(ik), 'h')
+     !$acc data present_or_copyin(evc)
+     Call calbec( offload_type, npw, vkb, evc, bectmp )
+     !$acc end data
+     Call becupdate( offload_type, becp1, ik, nksq, bectmp ) 
 #else
-     CALL calbec (npw, vkb, evc, becp1(ik) )
+     Call calbec( offload_type, npw, vkb, evc, becp1(ik) )
 #endif
-     
      !
      ! ... e') we compute the derivative of the becp term with respect to an
      !         atomic displacement
@@ -252,12 +246,10 @@ SUBROUTINE phq_init()
            END DO
         END IF
 #if defined(__CUDA)
-        !$acc host_data use_device(vkb,aux1)
-        CALL calbec_gpu (npw, vkb(:,:), aux1, alphap_d(ipol,ik) )
-        !$acc end host_data
-        CALL synchronize_bec_type_gpu( alphap_d(ipol,ik), alphap(ipol,ik), 'h')
+        Call calbec ( offload_type, npw, vkb, aux1, bectmp )
+        Call becupdate( offload_type, alphap, ipol, 3, ik, nksq, bectmp )
 #else
-        CALL calbec (npw, vkb, aux1, alphap(ipol,ik) )
+        Call calbec ( offload_type, npw, vkb, aux1, alphap(ipol,ik) )
 #endif
      END DO
      !
@@ -292,12 +284,10 @@ SUBROUTINE phq_init()
               END DO
            END IF
 #if defined(__CUDA)
-           !$acc host_data use_device(vkb, aux1)
-           CALL calbec_gpu (npw, vkb(:,:), aux1, alphapt_d(ipol,ik) )
-           !$acc end host_data
-           CALL synchronize_bec_type_gpu( alphapt_d(ipol,ik), alphapt(ipol,ik), 'h')
+           Call calbec( offload_type, npw, vkb, aux1, bectmp )
+           Call becupdate( offload_type, alphapt, ipol, 3, ik, nksq, bectmp )
 #else
-           CALL calbec (npw, vkb, aux1, alphapt(ipol,ik) )
+           Call calbec( offload_type, npw, vkb, aux1, alphapt(ipol,ik) )
 #endif
          END DO
       ENDIF
@@ -356,9 +346,9 @@ SUBROUTINE phq_init()
      ! Note: the array becp will be temporarily used
      ! in the routine lr_orthoUwfc.
      !
-     CALL deallocate_bec_type(becp)
+     CALL deallocate_bec_type_acc(becp)
      CALL lr_orthoUwfc (.TRUE.)
-     CALL allocate_bec_type(nkb,nbnd,becp)   
+     CALL allocate_bec_type_acc(nkb,nbnd,becp)   
      !
      ! Calculate dnsbare, i.e. the bare variation of ns, 
      ! for all cartesian coordinates
@@ -372,6 +362,10 @@ SUBROUTINE phq_init()
   ENDIF
   !
   IF ( trans ) CALL dynmat0_new()
+  !
+#if defined(__CUDA)
+  Call deallocate_bec_type_acc ( bectmp )
+#endif
   !
   CALL stop_clock( 'phq_init' )
   !

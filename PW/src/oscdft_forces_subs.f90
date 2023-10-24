@@ -72,13 +72,15 @@ MODULE oscdft_forces_subs
          USE symm_base,          ONLY : nsym
          USE uspp_init,          ONLY : init_us_2
          USE control_flags,      ONLY : use_gpu
-         USE becmod_subs_gpum,   ONLY : using_becp_auto, using_becp_d_auto
+!civn
+         !USE becmod_subs_gpum,   ONLY : using_becp_auto, using_becp_d_auto
          USE wavefunctions_gpum, ONLY : using_evc
 #if defined(__CUDA)
-         USE becmod_gpum,        ONLY : bec_type_d, becp_d
-         USE becmod_subs_gpum,   ONLY : allocate_bec_type_gpu,&
-                                        deallocate_bec_type_gpu,&
-                                        calbec_gpu
+!civn
+         !USE becmod_gpum,        ONLY : bec_type_d, becp_d
+         !USE becmod_subs_gpum,   ONLY : allocate_bec_type_gpu,&
+         !                               deallocate_bec_type_gpu,&
+         !                               calbec_gpu
          USE wvfct_gpum,         ONLY : using_wg_d
          USE wavefunctions_gpum, ONLY : evc_d, using_evc_d
 #endif
@@ -99,7 +101,8 @@ MODULE oscdft_forces_subs
                                      ijkb0, ik, ioscdft, ipos, na, nt, ierr, oidx, i,&
                                      isum, osum, angular_momentum, isym
 #if defined(__CUDA)
-         TYPE(bec_type_d)         :: proj
+!civn
+         !TYPE(bec_type_d)         :: proj
 #else
          TYPE(bec_type)           :: proj
 #endif
@@ -127,9 +130,11 @@ MODULE oscdft_forces_subs
          END IF
 
          CALL allocate_bec_type(nkb, nbnd, becp) ! using_becp_auto takes care of allocating becp_d?
-         CALL using_becp_auto(2)
+!civn
+         !CALL using_becp_auto(2)
 #if defined(__CUDA)
-         CALL allocate_bec_type_gpu(wfcF%n, nbnd, proj)
+!civn
+         !CALL allocate_bec_type_gpu(wfcF%n, nbnd, proj)
 #else
          CALL allocate_bec_type(wfcF%n, nbnd, proj)
 #endif
@@ -172,11 +177,12 @@ MODULE oscdft_forces_subs
             ! proj = <wfcF|S|psi>
 #if defined(__CUDA)
             CALL using_evc_d(0)
-            CALL using_becp_d_auto(2)
+!civn
+            !CALL using_becp_d_auto(2)
             !$acc host_data use_device(vkb,spsi,wfcF_wfc(:,:))
-            CALL calbec_gpu(npw, vkb, evc_d, becp_d)
-            CALL s_psi_gpu(npwx, npw, nbnd, evc_d, spsi)
-            CALL calbec_gpu(npw, wfcF_wfc, spsi, proj)
+            !CALL calbec_gpu(npw, vkb, evc_d, becp_d)
+            !CALL s_psi_gpu(npwx, npw, nbnd, evc_d, spsi)
+            !CALL calbec_gpu(npw, wfcF_wfc, spsi, proj)
             !$acc end host_data
 #else
             CALL calbec(npw, vkb, evc, becp)
@@ -263,9 +269,10 @@ MODULE oscdft_forces_subs
          DEALLOCATE(spsi, dns)
 
          CALL deallocate_bec_type(becp)
-         CALL using_becp_auto(2)
+!civn
+         !CALL using_becp_auto(2)
 #if defined(__CUDA)
-         CALL deallocate_bec_type_gpu(proj)
+         !CALL deallocate_bec_type_gpu(proj)
 #else
          CALL deallocate_bec_type(proj)
 #endif
@@ -292,7 +299,8 @@ MODULE oscdft_forces_subs
          USE uspp,               ONLY : ofsbeta, qq_at
          USE uspp_param,         ONLY : nh
          USE becmod,             ONLY : becp
-         USE becmod_gpum,        ONLY : becp_d
+!civn
+         !USE becmod_gpum,        ONLY : becp_d
          IMPLICIT NONE
 
          REAL(DP), INTENT(OUT) :: betapsi(:,:)
@@ -308,7 +316,8 @@ MODULE oscdft_forces_subs
          !$acc data present(qq_at)
 
 #if defined(__CUDA)
-         becp_r_d => becp_d%r_d
+!civn
+         !becp_r_d => becp_d%r_d
          !$acc data present(becp_r_d)
 #endif
 
@@ -356,7 +365,8 @@ MODULE oscdft_forces_subs
          USE uspp,               ONLY : ofsbeta, qq_at
          USE uspp_param,         ONLY : nh
          USE becmod,             ONLY : becp
-         USE becmod_gpum,        ONLY : becp_d
+!civn
+         !USE becmod_gpum,        ONLY : becp_d
          IMPLICIT NONE
 
          COMPLEX(DP), INTENT(OUT) :: betapsi(:,:)
@@ -372,7 +382,8 @@ MODULE oscdft_forces_subs
          !$acc data present(qq_at)
 
 #if defined(__CUDA)
-         becp_k_d => becp_d%k_d
+!civn
+         !becp_k_d => becp_d%k_d
          !$acc data present(becp_k_d)
 #endif
 
@@ -473,7 +484,8 @@ MODULE oscdft_forces_subs
          USE symm_base,     ONLY : nsym
          USE mp_bands,      ONLY : intra_bgrp_comm
 #if defined(__CUDA)
-         USE becmod_subs_gpum,   ONLY : calbec_gpu
+!civn
+         !USE becmod_subs_gpum,   ONLY : calbec_gpu
          USE wavefunctions_gpum, ONLY : evc_d
 #endif
 
@@ -557,7 +569,8 @@ MODULE oscdft_forces_subs
 
 #if defined(__CUDA)
          !$acc host_data use_device(dwfc, spsi, dwfatpsi)
-         CALL calbec_gpu(npw, dwfc, spsi, dwfatpsi)
+!civn
+         !CALL calbec_gpu(npw, dwfc, spsi, dwfatpsi)
          !$acc end host_data
 #else
          CALL calbec(npw, dwfc, spsi, dwfatpsi)
@@ -574,7 +587,8 @@ MODULE oscdft_forces_subs
 
 #if defined(__CUDA)
          !$acc host_data use_device(vkb, wfatbeta, wfcF_wfc(:,:))
-         CALL calbec_gpu(npw, wfcF_wfc, vkb, wfatbeta)
+!civn
+         !CALL calbec_gpu(npw, wfcF_wfc, vkb, wfatbeta)
          !$acc end host_data
 #else
          CALL calbec(npw, wfcF_wfc, vkb, wfatbeta)
@@ -597,8 +611,9 @@ MODULE oscdft_forces_subs
 
 #if defined(__CUDA)
          !$acc host_data use_device(dbeta, dbetapsi_temp, wfatdbeta, wfcF_wfc(:,:))
-         CALL calbec_gpu(npw, dbeta, evc_d, dbetapsi_temp)
-         CALL calbec_gpu(npw, wfcF_wfc, dbeta, wfatdbeta)
+!civn
+         !CALL calbec_gpu(npw, dbeta, evc_d, dbetapsi_temp)
+         !CALL calbec_gpu(npw, wfcF_wfc, dbeta, wfatdbeta)
          !$acc end host_data
 #else
          CALL calbec(npw, dbeta, evc, dbetapsi_temp)
@@ -647,7 +662,8 @@ MODULE oscdft_forces_subs
          USE uspp_param,    ONLY : nh
          USE symm_base,     ONLY : nsym
 #if defined(__CUDA)
-         USE becmod_subs_gpum,   ONLY : calbec_gpu
+!civn
+         !USE becmod_subs_gpum,   ONLY : calbec_gpu
          USE wavefunctions_gpum, ONLY : evc_d
 #endif
 
@@ -731,7 +747,8 @@ MODULE oscdft_forces_subs
 
 #if defined(__CUDA)
          !$acc host_data use_device(dwfc, spsi, dwfatpsi)
-         CALL calbec_gpu(npw, dwfc, spsi, dwfatpsi)
+!civn
+         !CALL calbec_gpu(npw, dwfc, spsi, dwfatpsi)
          !$acc end host_data
 #else
          CALL calbec(npw, dwfc, spsi, dwfatpsi)
@@ -748,7 +765,8 @@ MODULE oscdft_forces_subs
 
 #if defined(__CUDA)
          !$acc host_data use_device(vkb, wfatbeta, wfcF_wfc(:,:))
-         CALL calbec_gpu(npw, wfcF_wfc, vkb, wfatbeta)
+!civn
+         !CALL calbec_gpu(npw, wfcF_wfc, vkb, wfatbeta)
          !$acc end host_data
 #else
          CALL calbec(npw, wfcF_wfc, vkb, wfatbeta)
@@ -772,8 +790,9 @@ MODULE oscdft_forces_subs
 #if defined(__CUDA)
          !$acc data present(evc_d)
          !$acc host_data use_device(dbeta, dbetapsi_temp, wfatdbeta, wfcF_wfc(:,:))
-         CALL calbec_gpu(npw, dbeta, evc_d, dbetapsi_temp)
-         CALL calbec_gpu(npw, wfcF_wfc, dbeta, wfatdbeta)
+!civn
+         !CALL calbec_gpu(npw, dbeta, evc_d, dbetapsi_temp)
+         !CALL calbec_gpu(npw, wfcF_wfc, dbeta, wfatdbeta)
          !$acc end host_data
          !$acc end data
 #else

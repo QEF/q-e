@@ -12,7 +12,8 @@ subroutine deallocate_phq
   !! Deallocates the variables allocated by \(\texttt{allocate_phq}\).
   !
   USE noncollin_module, ONLY : m_loc
-  USE becmod,           ONLY: bec_type, becp, deallocate_bec_type
+  USE becmod,           ONLY: becp, deallocate_bec_type_acc, &
+                              deallocate_bec_type
   USE wavefunctions,    ONLY: evc
   USE ramanm,       ONLY: ramtns
   USE modes,        ONLY : tmq, t, npert, u, name_rap_mode, num_rap_mode
@@ -30,11 +31,6 @@ subroutine deallocate_phq
   USE el_phon,      ONLY : el_ph_mat, el_ph_mat_nc_mag
   USE freq_ph,      ONLY : polar
   USE lrus,         ONLY : int3, int3_nc, int3_paw, becp1, dpqq, dpqq_so
-#if defined(__CUDA)
-  USE lrus,         ONLY : becp1_d
-  USE phus,         ONLY : alphap_d
-  USE qpoint_aux,   ONLY : becpt_d, alphapt_d
-#endif
   USE lr_symm_base, ONLY : rtau
   USE gc_lr,        ONLY : grho, gmag, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s, &
                            vsgga, segni
@@ -48,11 +44,6 @@ subroutine deallocate_phq
                            dvkb, vkbkpq, dvkbkpq
   USE ldaU_lr,      ONLY : swfcatomk, swfcatomkpq
   USE qpoint_aux,   ONLY : ikmks, ikmkmqs, becpt, alphapt
-  USE becmod,       ONLY : deallocate_bec_type
-#if defined(__CUDA)
-  USE becmod_gpum,  ONLY : becp_d
-  USE becmod_subs_gpum, ONLY : deallocate_bec_type_gpu
-#endif
   USE nc_mag_aux,   ONLY : int1_nc_save, deeq_nc_save
   USE Coul_cut_2D_ph, ONLY : deallocate_2d_arrays
 
@@ -128,30 +119,12 @@ subroutine deallocate_phq
      end do
      deallocate (alphap)
   endif
-#if defined(__CUDA)
-  if(allocated(alphap_d)) then
-     do ik=1,nksq
-        do ipol=1,3
-           call deallocate_bec_type_gpu ( alphap_d(ipol,ik) )
-        enddo
-     end do
-     deallocate (alphap_d)
-  endif
-#endif
   if(allocated(becp1))  then
      do ik=1,size(becp1)
         call deallocate_bec_type ( becp1(ik) )
      end do
      deallocate(becp1)
   end if
-#if defined(__CUDA)
-  if(allocated(becp1_d)) then
-     do ik=1,size(becp1_d)
-        call deallocate_bec_type_gpu ( becp1_d(ik) )
-     end do
-     deallocate(becp1_d)
-  end if
-#endif
   IF (ALLOCATED(alphapt)) THEN
      DO ik=1,nksq
         DO ipol=1,3
@@ -160,31 +133,13 @@ subroutine deallocate_phq
      ENDDO
      DEALLOCATE (alphapt)
   ENDIF
-#if defined(__CUDA)
-  IF (ALLOCATED(alphapt_d)) THEN
-     DO ik=1,nksq
-        DO ipol=1,3
-           CALL deallocate_bec_type_gpu ( alphapt_d(ipol,ik) )
-        ENDDO
-     ENDDO
-     DEALLOCATE (alphapt_d)
-  ENDIF
-#endif
   IF (ALLOCATED(becpt))  THEN
      DO ik=1, nksq
         CALL deallocate_bec_type ( becpt(ik) )
      ENDDO
      DEALLOCATE(becpt)
   ENDIF
-#if defined(__CUDA)
-  IF (ALLOCATED(becpt_d))  THEN
-     DO ik=1, nksq
-        CALL deallocate_bec_type_gpu ( becpt_d(ik) )
-     ENDDO
-     DEALLOCATE(becpt_d)
-  ENDIF
-#endif
-  call deallocate_bec_type ( becp )
+  call deallocate_bec_type_acc ( becp )
 
   if(allocated(el_ph_mat)) deallocate (el_ph_mat)
   if(allocated(el_ph_mat_nc_mag)) deallocate (el_ph_mat_nc_mag)

@@ -184,6 +184,7 @@ set(src_pw
    src/run_pwscf.f90 
    src/s_1psi.f90 
    src/s_psi.f90 
+   src/s_psi_acc.f90 
    src/save_in_cbands.f90 
    src/save_in_electrons.f90 
    src/scale_h.f90 
@@ -249,7 +250,6 @@ set(src_pw
    src/newd_gpu.f90
    src/sum_band_gpu.f90
    src/add_paw_to_deeq_gpu.f90
-   src/s_psi_gpu.f90
    src/rotate_wfc_gpu.f90
    src/usnldiag_gpu.f90
    src/add_vuspsi_gpu.f90

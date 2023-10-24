@@ -21,6 +21,8 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !! theoretical background please refer to: 
   !! Phys. Rev. B 100, 045115 (2019).
   !
+  !civn: at the time I am doing this OpenACC hardly manages offloading arrays of data structures.
+  !      probably in future we can remove bectmp and directly use dbecq(mu) and dalpq(ipol,mu)
   !
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat
@@ -30,8 +32,9 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE lsda_mod,  ONLY : current_spin, lsda, isk, nspin
   USE wvfct,     ONLY : npwx, nbnd
   USE uspp,      ONLY : nkb, vkb, deeq_nc, okvan
-  USE becmod,    ONLY : calbec, bec_type, becscal, allocate_bec_type, &
-                        deallocate_bec_type
+  USE becmod,    ONLY : calbec, bec_type, becscal, becupdate, &
+                        allocate_bec_type, deallocate_bec_type, &
+                        allocate_bec_type_acc, deallocate_bec_type_acc
   USE fft_base,  ONLY : dfftp
   USE io_global, ONLY : stdout
   USE buffers,   ONLY : get_buffer
@@ -51,11 +54,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE mp_pools,         ONLY : inter_pool_comm
   USE mp,               ONLY : mp_sum
   USE uspp_init,        ONLY : init_us_2
-#if defined(__CUDA)
-  USE lrus,            ONLY : becp1_d
-  USE becmod_gpum,      ONLY: bec_type_d
-  USE becmod_subs_gpum, ONLY: calbec_gpu, allocate_bec_type_gpu, deallocate_bec_type_gpu, synchronize_bec_type_gpu
-#endif
+  USE control_flags,    ONLY : offload_type
 
   implicit none
 
@@ -79,29 +78,22 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   ! work space
 
 #if defined(__CUDA)
-  TYPE (bec_type_d), POINTER :: dbecq_d(:), dalpq_d(:,:)
+  TYPE (bec_type) :: bectmp
 #endif
-  TYPE (bec_type), POINTER :: dbecq(:), dalpq(:,:)
+  TYPE (bec_type), ALLOCATABLE :: dbecq(:), dalpq(:,:)
   !
   !   Initialize the auxiliary matrix wdyn
   !
   call start_clock ('drhodv')
 #if defined(__CUDA)
-  ALLOCATE (dbecq_d(nper))
-  ALLOCATE (dalpq_d(3,nper))
+  Call allocate_bec_type_acc( nkb, nbnd, bectmp ) 
 #endif
   ALLOCATE (dbecq(nper))
   ALLOCATE (dalpq(3,nper))
   DO ipert=1,nper
      call allocate_bec_type ( nkb, nbnd, dbecq(ipert) )
-#if defined(__CUDA)
-     call allocate_bec_type_gpu ( nkb, nbnd, dbecq_d(ipert) )
-#endif
      DO ipol=1,3
         call allocate_bec_type ( nkb, nbnd, dalpq(ipol,ipert) )
-#if defined(__CUDA)
-        call allocate_bec_type_gpu ( nkb, nbnd, dalpq_d(ipol,ipert) )
-#endif
      ENDDO
   END DO
   allocate (aux   ( npwx*npol , nbnd))
@@ -129,12 +121,10 @@ subroutine drhodv (nu_i0, nper, drhoscf)
                              !$acc update device(dpsi)
            endif
 #if defined(__CUDA)
-           !$acc host_data use_device(vkb, dpsi)
-           call calbec_gpu (npwq, vkb(:,:), dpsi, dbecq_d(mu) )
-           !$acc end host_data
-           CALL synchronize_bec_type_gpu( dbecq_d(mu), dbecq(mu), 'h')
+           call calbec( offload_type, npwq, vkb, dpsi, bectmp )
+           call becupdate( offload_type, dbecq, mu, nper, bectmp )
 #else
-           call calbec (npwq, vkb, dpsi, dbecq(mu) )
+           call calbec( offload_type, npwq, vkb, dpsi, dbecq(mu) )
 #endif
            do ipol = 1, 3
 #if defined(__CUDA)
@@ -164,12 +154,10 @@ subroutine drhodv (nu_i0, nper, drhoscf)
                  enddo
               endif
 #if defined(__CUDA)
-              !$acc host_data use_device(vkb, aux)
-              call calbec_gpu (npwq, vkb(:,:), aux, dalpq_d(ipol,mu) )
-              !$acc end host_data
-              CALL synchronize_bec_type_gpu( dalpq_d(ipol,mu), dalpq(ipol,mu), 'h')
+              call calbec( offload_type, npwq, vkb, aux, bectmp )
+              call becupdate( offload_type, dalpq, ipol, 3, mu, nper, bectmp )
 #else
-              call calbec (npwq, vkb, aux, dalpq(ipol,mu) )
+              call calbec( offload_type, npwq, vkb, aux, dalpq(ipol,mu) )
 #endif
            enddo
 
@@ -233,29 +221,19 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   dyn_rec(:,:) = dyn_rec(:,:) + wdyn(:,:)
 
   deallocate (aux)
-
+#if defined(__CUDA)
+  call deallocate_bec_type_acc( bectmp )
+#endif
   do ipert=1,nper
      do ipol=1,3
         call deallocate_bec_type ( dalpq(ipol,ipert) )
-#if defined(__CUDA)
-        call deallocate_bec_type_gpu ( dalpq_d(ipol,ipert) )
-#endif
      enddo
   end do
   deallocate (dalpq)
-#if defined(__CUDA)
-  deallocate (dalpq_d)
-#endif
   do ipert=1,nper
      call deallocate_bec_type ( dbecq(ipert) )
-#if defined(__CUDA) 
-     call deallocate_bec_type_gpu ( dbecq_d(ipert) )
-#endif
   end do
   deallocate(dbecq)
-#if defined(__CUDA)
-  deallocate(dbecq_d)
-#endif
 
   call stop_clock ('drhodv')
   return

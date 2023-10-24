@@ -16,7 +16,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : tpiba
   USE wvfct,                ONLY : npwx, nbnd, current_k
-  USE becmod,               ONLY : bec_type, becp, calbec
+  USE becmod,               ONLY : becp, calbec
   USE uspp,                 ONLY : nkb, vkb
   USE fft_base,             ONLY : dffts
   USE gvect,                ONLY : g
@@ -28,15 +28,12 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE xc_lib,               ONLY : exx_is_active
   USE mp,                   ONLY : mp_sum
   USE control_lr,           ONLY : alpha_pv, nbnd_occ, lgamma
-  USE control_flags,        ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only, offload_type
   USE wavefunctions,        ONLY : evc
   USE buffers,              ONLY : get_buffer
   USE io_files,             ONLY : nwordwfcU
   USE ldaU,                 ONLY : lda_plus_u, wfcU, lda_plus_u_kind
   USE units_lr,             ONLY : iuatswfc
-#if defined(__CUDA)
-  USE becmod_gpum,          ONLY : becp_d
-#endif
 
   IMPLICIT NONE
 
@@ -103,7 +100,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
 #if defined(__CUDA)
   !$acc host_data use_device(h, hpsi, spsi)
   CALL h_psi_gpu (npwx, n, m, h, hpsi)
-  CALL s_psi_gpu (npwx, n, m, h, spsi)
+  CALL s_psi_acc (npwx, n, m, h, spsi)
   !$acc end host_data
 #else
   CALL h_psi (npwx, n, m, h, hpsi)
@@ -162,8 +159,6 @@ CONTAINS
     USE becmod, ONLY : becp, calbec
     USE control_lr,  ONLY : alpha_pv
 #if defined(__CUDA)
-    USE becmod_gpum, ONLY : becp_d
-    USE becmod_subs_gpum, ONLY : calbec_gpu,  using_becp_d_auto
     USE cublas
 #endif
     
@@ -224,35 +219,16 @@ CONTAINS
     CALL start_clock_gpu ('ch_psi_calbec')
     if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
        call divide (inter_bgrp_comm, m, m_start, m_end)
-#if defined(__CUDA)
        if (m_end >= m_start) then
-          CALL using_becp_d_auto(2)
-          !$acc host_data use_device(hpsi(:,m_start:m_end),vkb)
-          CALL calbec_gpu (n, vkb(:,:), hpsi(:,m_start:m_end), becp_d, m_end- m_start + 1)    !
-          !$acc end host_data
+          CALL calbec (offload_type, n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
        endif
     else
-       CALL using_becp_d_auto(2)
-       !$acc host_data use_device(hpsi,vkb)
-       CALL calbec_gpu (n, vkb(:,:), hpsi, becp_d, m)
-       !$acc end host_data
+       CALL calbec (offload_type, n, vkb, hpsi, becp, m)
     endif
-#else
-       if (m_end >= m_start) then
-          CALL calbec (n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
-       endif
-    else
-       CALL calbec (n, vkb, hpsi, becp, m)
-    endif
-#endif
     CALL stop_clock_gpu ('ch_psi_calbec')
-#if defined(__CUDA)
     !$acc host_data use_device(hpsi, spsi)
-    CALL s_psi_gpu (npwx, n, m, hpsi, spsi)
+    CALL s_psi_acc (npwx, n, m, hpsi, spsi)
     !$acc end host_data
-#else
-    CALL s_psi (npwx, n, m, hpsi, spsi)
-#endif
     !$acc parallel loop collapse(2)
     DO ibnd = 1, m
        DO ig = 1, n
@@ -284,8 +260,6 @@ CONTAINS
                        fwfft_orbital_gamma, calbec_rs_gamma,  s_psir_gamma
     use gvect,  only : gstart
 #if defined(__CUDA)
-    USE becmod_gpum, ONLY : becp_d
-    USE becmod_subs_gpum, ONLY : calbec_gpu,  using_becp_d_auto
     USE cublas
 #endif
 
@@ -347,34 +321,14 @@ CONTAINS
        CALL start_clock_gpu ('ch_psi_calbec')
        if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
           call divide( inter_bgrp_comm, m, m_start, m_end)
-#if defined(__CUDA)
-          if (m_end >= m_start) then
-             CALL using_becp_d_auto(2)
-             !$acc host_data use_device(hpsi(:,m_start:m_end),vkb)
-             CALL calbec_gpu (n, vkb(:,:), hpsi(:,m_start:m_end), becp_d, m_end- m_start + 1)    !
-             !$acc end host_data
-          endif
+          if (m_end >= m_start) CALL calbec (offload_type, n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
        else
-          CALL using_becp_d_auto(2)
-          !$acc host_data use_device(hpsi,vkb)
-          CALL calbec_gpu (n, vkb(:,:), hpsi, becp_d, m)
-          !$acc end host_data
-       endif
-#else          
-          if (m_end >= m_start) CALL calbec (n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
-
-       else
-          CALL calbec (n, vkb, hpsi, becp, m)
+          CALL calbec (offload_type, n, vkb, hpsi, becp, m)
        end if
-#endif 
        CALL stop_clock_gpu ('ch_psi_calbec')
-#if defined(__CUDA)
        !$acc host_data use_device(hpsi, spsi)
-       CALL s_psi_gpu (npwx, n, m, hpsi, spsi)
+       CALL s_psi_acc (npwx, n, m, hpsi, spsi)
        !$acc end host_data
-#else       
-       CALL s_psi (npwx, n, m, hpsi, spsi)
-#endif       
     ENDIF
     !$acc parallel loop collapse(2)
     DO ibnd = 1, m

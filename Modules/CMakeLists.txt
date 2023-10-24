@@ -202,8 +202,6 @@ set(src_modules
     deviatoric.f90
     # GPU
     wavefunctions_gpu.f90
-    becmod_gpu.f90
-    becmod_subs_gpu.f90
     random_numbers_gpu.f90
     cuda_subroutines.f90)
 qe_enable_cuda_fortran("${src_modules}")
@@ -225,6 +223,7 @@ endif()
 
 target_link_libraries(qe_modules
     PRIVATE
+        qe_device_lapack  
         qe_modules_c
         qe_openmp_fortran
         qe_fftx

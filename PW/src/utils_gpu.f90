@@ -19,7 +19,9 @@ SUBROUTINE matcalc_gpu( label, DoE, PrtMat, ninner, n, m, U, V, mat, ee )
   USE io_global,            ONLY : stdout
   USE wvfct,                ONLY : current_k
   USE wvfct_gpum,           ONLY : using_wg_d,wg_d
-  USE becmod_subs_gpum,     ONLY : calbec_gpu
+  USE gvect,                ONLY : gstart
+  USE mp,                   ONLY : mp_sum
+  USE mp_bands,             ONLY : intra_bgrp_comm
   !
   IMPLICIT NONE
   !
@@ -56,7 +58,9 @@ SUBROUTINE matcalc_gpu( label, DoE, PrtMat, ninner, n, m, U, V, mat, ee )
 
   string = 'M-'
   mat = 0.0_dp
-  CALL calbec_gpu(ninner, U, V, mat, m)
+  CALL MYDGEMM( 'C', 'N', n, m, 2*ninner, 2.0_DP, U, 2*ninner, V, 2*ninner, 0.0_DP, mat, n )
+  IF ( gstart == 2 ) CALL MYDGER( n, m, -1.0_DP, U, 2*ninner, V, 2*ninner, mat, n )
+  CALL mp_sum( mat( :, 1:m ), intra_bgrp_comm )
 
   IF( PrtMat > 1 ) CALL errore('matcalc_gpu', 'cannot print matrix', 1)
 
@@ -84,8 +88,9 @@ SUBROUTINE matcalc_k_gpu (label, DoE, PrtMat, ik, ninner, n, m, U, V, mat, ee)
   USE io_global,ONLY : stdout
   USE wvfct,                ONLY : wg, npwx
   USE wvfct_gpum,           ONLY : using_wg_d,wg_d
-  USE becmod_subs_gpum,     ONLY : calbec_gpu
   USE noncollin_module,     ONLY : noncolin, npol
+  USE mp,                   ONLY : mp_sum
+  USE mp_bands,             ONLY : intra_bgrp_comm
   IMPLICIT NONE
   !
   ! compute the (n,n) matrix representation <U|V>
@@ -107,13 +112,8 @@ SUBROUTINE matcalc_k_gpu (label, DoE, PrtMat, ik, ninner, n, m, U, V, mat, ee)
 
   string = 'M-'
   mat = (0.0_dp, 0.0_dp)
-  IF(noncolin) THEN
-    noncolin = .false.
-    CALL calbec_gpu(ninner, U, V, mat, m)
-    noncolin = .true.
-  ELSE
-    CALL calbec_gpu(ninner, U, V, mat, m)
-  ENDIF
+  CALL MYZGEMM( 'C', 'N', n, m, ninner, (1.0_DP,0.0_DP), U, ninner, V, ninner, (0.0_DP,0.0_DP), mat, n )
+  CALL mp_sum( mat( :, 1:m ), intra_bgrp_comm )
 
   IF( PrtMat > 1 ) CALL errore('matcalc_k_gpu', 'cannot print matrix', 1)
 

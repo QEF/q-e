@@ -17,8 +17,15 @@ MODULE kinds
   INTEGER, PARAMETER :: sgl = selected_real_kind(6,30)
   INTEGER, PARAMETER :: i4b = selected_int_kind(9)
   INTEGER, PARAMETER :: i8b = selected_int_kind(18)
+  TYPE :: offload_kind_cpu  ! no offload (CPU compilation and execution)
+  END TYPE
+  TYPE :: offload_kind_acc  ! CUF/OpenACC offload (NVIDIA GPU hardware and software stack)
+  END TYPE
+  TYPE :: offload_kind_omp  ! OpenMP5 offload (Intel and AMD GPU hardware and software stack)
+  END TYPE
   PRIVATE
   PUBLIC :: i4b, i8b, sgl, DP, print_kind_info
+  PUBLIC :: offload_kind_cpu, offload_kind_acc, offload_kind_omp
   !
   !------------------------------------------------------------------------------!
   CONTAINS
