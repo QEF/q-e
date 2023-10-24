@@ -27,15 +27,9 @@ SUBROUTINE lr_compute_intq
   IMPLICIT NONE
 
   INTEGER :: na, ig, nt, ir, ih, jh
-  ! countera
-
-  REAL(DP), ALLOCATABLE ::  ylmk0 (:,:)
-  ! the modulus of q+G
-  ! the values of q+G
-  ! the spherical harmonics
-
-  ! work space
+  ! counters
   COMPLEX(DP) :: qq_nt(nhm,nhm,ntyp)
+  ! work space
 
   IF (.NOT.okvan) RETURN
   CALL start_clock ('lr_compute_intq')
@@ -70,8 +64,6 @@ SUBROUTINE lr_compute_intq
   ENDDO
 
   IF (noncolin) CALL lr_set_intq_nc()
-
-  DEALLOCATE (ylmk0)
 
   CALL stop_clock ('lr_compute_intq')
   RETURN
