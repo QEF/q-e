@@ -13,6 +13,9 @@ OBJS_DEP= \
 vloc_mod.o \
 rhoc_mod.o \
 rhoat_mod.o \
+qrad_mod.o  \
+qvan2.o \
+dqvan2.o \
 gen_us_dj.o \
 gen_us_dy.o \
 init_us_0.o \
@@ -20,19 +23,16 @@ init_us_b0.o \
 init_us_1.o \
 init_us_2_base.o \
 init_tab_atwfc.o \
-init_tab_beta.o \
-init_tab_qrad.o
+init_tab_beta.o
 
 OBJS_NODEP= \
 atom.o \
 atomic_number.o \
-dqvan2.o \
 dylmr2.o \
 gth.o \
 interp_atwfc.o \
 paw_variables.o \
 pseudo_types.o \
-qvan2.o \
 radial_grids.o \
 read_cpmd.o \
 read_fhi.o \
