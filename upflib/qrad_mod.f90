@@ -153,15 +153,19 @@ SUBROUTINE scale_tab_qrad ( vol_ratio_m1 )
   REAL(DP), INTENT(in) :: vol_ratio_m1
   !! vol_ratio_m1 = omega_old / omega
   !
-  IF ( ALLOCATED ( tab_qrad ) ) &
-       tab_qrad(:,:,:,:) = tab_qrad(:,:,:,:) * vol_ratio_m1
-  !$acc update device (tab_qrad)
+  IF ( ALLOCATED ( tab_qrad ) ) THEN
+     tab_qrad(:,:,:,:) = tab_qrad(:,:,:,:) * vol_ratio_m1
+     !$acc update device (tab_qrad)
+  END IF
+  !
 END SUBROUTINE scale_tab_qrad
 !
 SUBROUTINE deallocate_tab_qrad ( )
   !
-  !$acc exit data delete(tab_qrad)
-  IF ( ALLOCATED ( tab_qrad ) ) DEALLOCATE (tab_qrad)
+  IF ( ALLOCATED ( tab_qrad ) ) THEN
+     !$acc exit data delete(tab_qrad)
+     DEALLOCATE (tab_qrad)
+  END IF
   qmax = 0.0_dp
   !
 END SUBROUTINE deallocate_tab_qrad
