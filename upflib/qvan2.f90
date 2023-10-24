@@ -65,7 +65,7 @@ SUBROUTINE qvan2( ngy, ih, jh, np, qmod, qg, ylmk0 )
   ! auxiliary variables for intepolation
   ! auxiliary variables
   !
-!$acc data present_or_copyin(qmod,ylmk0) present_or_copyout(qg) present(qrad)
+!$acc data present_or_copyin(qmod,ylmk0) present_or_copyout(qg) present(tab_qrad)
   !
   ! This should not happen, but better to check
   ! FIXME: why is the following not working?
