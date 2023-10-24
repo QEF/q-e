@@ -222,8 +222,6 @@ stack.o
 # GPU versions of modules
 MODULES += \
   wavefunctions_gpu.o \
-  becmod_gpu.o \
-  becmod_subs_gpu.o \
   cuda_subroutines.o \
   random_numbers_gpu.o
 

@@ -93,7 +93,8 @@ MODULE oscdft_wavefunction
          END IF
       END SUBROUTINE check_bec_type_unallocated
       SUBROUTINE check_bec_type_unallocated_gpu(bec_d)
-         USE becmod_gpum, ONLY : bec_type_d
+!civn
+         !USE becmod_gpum, ONLY : bec_type_d
          IMPLICIT NONE
 
          TYPE(bec_type_d), INTENT(INOUT) :: bec_d

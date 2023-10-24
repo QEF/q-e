@@ -117,8 +117,9 @@ MODULE oscdft_functions_gpu
       SUBROUTINE oscdft_h_psi_gpu(ctx, lda, n, m, psi_d, hpsi_d)
          USE noncollin_module,    ONLY : npol
          ! USE becmod,              ONLY : bec_type, calbec, allocate_bec_type, deallocate_bec_type
-         USE becmod_gpum,         ONLY : bec_type_d
-         USE becmod_subs_gpum,    ONLY : calbec_gpu, allocate_bec_type_gpu, deallocate_bec_type_gpu
+!civn
+         !USE becmod_gpum,         ONLY : bec_type_d
+         !USE becmod_subs_gpum,    ONLY : calbec_gpu, allocate_bec_type_gpu, deallocate_bec_type_gpu
          USE klist,               ONLY : nks, nelup, neldw
          USE buffers,             ONLY : get_buffer
          USE lsda_mod,            ONLY : isk, current_spin
@@ -140,7 +141,8 @@ MODULE oscdft_functions_gpu
          INTEGER,                   INTENT(IN)            :: lda, n, m
          COMPLEX(DP),               INTENT(IN)            :: psi_d(lda*npol,m)
          COMPLEX(DP),               INTENT(INOUT)         :: hpsi_d(lda*npol,m)
-         TYPE(bec_type_d)                                 :: proj_d
+!civn
+         !TYPE(bec_type_d)                                 :: proj_d
          LOGICAL                                          :: done_calbec
          INTEGER                                          :: iconstr, ioscdft,&
                                                              ik, h, k, curr_dim,&
@@ -167,7 +169,8 @@ MODULE oscdft_functions_gpu
          ! sum_hk u_h^I u_k^I |phi_k> <phi_h|psi>
          CALL check_bec_type_unallocated_gpu(proj_d)
          ik = current_k
-         CALL allocate_bec_type_gpu(m, wfcO%n, proj_d)
+!civn
+         !CALL allocate_bec_type_gpu(m, wfcO%n, proj_d)
          IF (nks > 1) THEN
             CALL oscdft_get_buffer(wfcO, ik)
          END IF
@@ -176,7 +179,8 @@ MODULE oscdft_functions_gpu
 
          ! gets <psi|phi_h>, then call ZGERC where this term is turned to its complex conjugate (<phi_h|psi>)
          !$acc host_data use_device(wfcO_wfc(:,:))
-         CALL calbec_gpu(n, psi_d, wfcO_wfc, proj_d)
+!civn
+         !CALL calbec_gpu(n, psi_d, wfcO_wfc, proj_d)
          !$acc end host_data
          ! deriv_f = (0.D0, 0.D0)
 
@@ -228,8 +232,8 @@ MODULE oscdft_functions_gpu
          ! hpsi(1:n,1:m) = hpsi(1:n,1:m) + deriv_f(1:n,1:m)
          ! IF (gamma_only.AND.gstart==2) hpsi(1,1:m) = CMPLX(DBLE(hpsi(1,1:m)), 0.D0, kind=DP)
          !$acc end data
-
-         CALL deallocate_bec_type_gpu(proj_d)
+!civn
+         !CALL deallocate_bec_type_gpu(proj_d)
          CALL mp_barrier(intra_bgrp_comm)
          CALL stop_clock("oscdftGhpsi")
       END SUBROUTINE oscdft_h_psi_gpu

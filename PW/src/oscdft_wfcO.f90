@@ -97,7 +97,8 @@ MODULE oscdft_wfcO
          USE becmod,                   ONLY : allocate_bec_type,&
                                               deallocate_bec_type,&
                                               becp, calbec, bec_type
-         USE becmod_subs_gpum,         ONLY : using_becp_auto
+!civn
+         !USE becmod_subs_gpum,         ONLY : using_becp_auto
          USE noncollin_module,         ONLY : npol
          USE basis,                    ONLY : natomwfc
          USE ions_base,                ONLY : nat, ityp
