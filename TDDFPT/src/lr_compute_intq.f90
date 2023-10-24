@@ -35,31 +35,21 @@ SUBROUTINE lr_compute_intq
   ! the spherical harmonics
 
   ! work space
-  COMPLEX(DP) :: qgm(1), aux1
-  REAL(DP)    :: qmod(1), zero(3,1), qg(3,1)
+  COMPLEX(DP) :: qq_nt(nhm,nhm,ntyp)
 
   IF (.NOT.okvan) RETURN
   CALL start_clock ('lr_compute_intq')
-
+  !
+  CALL compute_qqc ( tpiba, xq, omega, qq_nt )
+  !
   intq (:,:,:) = (0.D0, 0.0D0)
-  ALLOCATE (ylmk0(1 , lmaxq * lmaxq))
-  !
-  !    first compute the spherical harmonics
-  !
-  zero=0.0_DP
-  CALL setqmod (1, xq, zero, qmod, qg)
-  CALL ylmr2 (lmaxq * lmaxq, 1, qg, qmod, ylmk0)
-  qmod(1) = SQRT (qmod(1))*tpiba
-
   DO nt = 1, ntyp
      IF (upf(nt)%tvanp ) THEN
         DO ih = 1, nh (nt)
            DO jh = ih, nh (nt)
-              CALL qvan2 (1, ih, jh, nt, qmod, qgm, ylmk0)
               DO na = 1, nat
                  IF (ityp (na) == nt) THEN
-                    aux1 = qgm(1) * eigqts(na)
-                    intq(ih,jh,na) = omega * CONJG(aux1)
+                    intq(ih,jh,na) = CONJG( qq_nt(ih,jh,nt) * eigqts(na) )
                  ENDIF
               ENDDO
            ENDDO
