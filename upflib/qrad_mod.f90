@@ -17,6 +17,7 @@ MODULE qrad_mod
   IMPLICIT NONE
   !
   PRIVATE
+  PUBLIC :: dq, tab_qrad
   PUBLIC :: init_tab_qrad
   PUBLIC :: scale_tab_qrad
   PUBLIC :: deallocate_tab_qrad
@@ -163,6 +164,6 @@ SUBROUTINE deallocate_tab_qrad ( )
   IF ( ALLOCATED ( tab_qrad ) ) DEALLOCATE (tab_qrad)
   qmax = 0.0_dp
   !
-END SUBROUTINE scale_tab_qrad
+END SUBROUTINE deallocate_tab_qrad
 !
 END MODULE qrad_mod
