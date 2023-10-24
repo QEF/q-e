@@ -139,7 +139,6 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    REAL(dp) :: weight
    REAL(dp) :: pola, pola_ion
    REAL(dp), ALLOCATABLE :: wstring(:)
-   REAL(dp) :: ylm_dk(lmaxq*lmaxq)
    REAL(dp) :: zeta_mod
    COMPLEX(dp), ALLOCATABLE :: aux(:),aux_2(:)
    COMPLEX(dp), ALLOCATABLE :: aux0(:),aux0_2(:)
@@ -342,24 +341,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    IF (okvan) THEN
       !  --- Bessel transform of Q_ij(|r|) at dk [Q_ij^L(|r|)] in array qrad ---
       ! CALL calc_btq( dkmod, qrad_dk, 0 ) no longer needed
-      !
-      !  --- Calculate the q-space real spherical harmonics at dk [Y_LM] --- 
-      dk2 = dk(1)**2+dk(2)**2+dk(3)**2
-      CALL ylmr2( lmaxq*lmaxq, 1, dk, dk2, ylm_dk )
-      !
-      ! --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
-      q_dk = (0.d0,0.d0)
-      DO np = 1, ntyp
-         IF ( upf(np)%tvanp ) THEN
-            DO iv = 1, nh(np)
-               DO jv = iv, nh(np)
-                  CALL qvan2( 1, iv, jv, np, dkmod, pref, ylm_dk )
-                  q_dk(iv,jv,np) = omega*pref
-                  q_dk(jv,iv,np) = omega*pref
-               ENDDO
-            ENDDO
-         ENDIF
-      ENDDO
+      CALL compute_qqc ( tpiba, dk, omega, q_dk )
       IF (lspinorb) CALL transform_qq_so( q_dk, q_dk_so )
    ENDIF
    !

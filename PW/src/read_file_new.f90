@@ -176,7 +176,6 @@ SUBROUTINE read_file_new ( needwf )
   !
   USE io_global,      ONLY : stdout
   USE io_files,       ONLY : nwordwfc, iunwfc, wfc_dir, tmp_dir, restart_dir
-  USE gvect,          ONLY : ngm, g
   USE gvecw,          ONLY : gcutw
   USE klist,          ONLY : nkstot, nks, xk, wk
   USE lsda_mod,       ONLY : isk
@@ -366,7 +365,7 @@ SUBROUTINE post_xml_init (  )
   CALL init_vloc()
   IF (tbeta_smoothing) CALL init_us_b0(ecutwfc,intra_bgrp_comm)
   IF (tq_smoothing) CALL init_us_0(ecutrho,intra_bgrp_comm)
-  CALL init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
+  CALL init_us_1(nat, ityp, omega, intra_bgrp_comm)
   IF ( lda_plus_u .AND. ( Hubbard_projectors == 'pseudo' ) ) CALL init_q_aeps()
   CALL init_tab_atwfc(omega, intra_bgrp_comm)
   !
