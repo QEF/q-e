@@ -456,7 +456,7 @@ MODULE paw_onecenter
     INTEGER :: ix,k                             ! counters on directions and radial grid
     INTEGER :: lsd                              ! switch for local spin density
     REAL(DP) :: vs, amag
-    INTEGER :: kpol , is, ixk_e, ixk_s, ixk, ispin, im_sum, ixk0
+    INTEGER :: kpol , is, ixk_e, ixk_s, ixk, ispin, im_sum, ixk0, ix0
     !
     REAL(DP) :: e_radik, rho_loc1, rho_loc2
     LOGICAL  :: en_pres
@@ -484,117 +484,157 @@ MODULE paw_onecenter
     ENDIF
     !
 #if defined(_OPENMP)
-    mytid = omp_get_thread_num()+1 ! take the thread ID
+    !$omp parallel
     ntids = omp_get_num_threads()  ! take the number of threads
+    !$omp end parallel
 #else
     mytid = 1
     ntids = 1
 #endif
     !
-    ALLOCATE( rho_rad(i%m,rad(i%t)%nx,nspin_mag) )
-    ALLOCATE( arho(im_sum,2) )
+    ALLOCATE( rho_rad(i%m,ix_e-ix_s+1,nspin_mag) )
+    ALLOCATE( arho(im_sum,nspin) )
     ALLOCATE( ex(im_sum),   ec(im_sum) )
     ALLOCATE( vx(im_sum,2), vc(im_sum,2) )
     !
     IF (PRESENT(energy)) THEN
        energy = 0._DP
 #if !defined(_OPENACC)
-!$omp single
        ALLOCATE( e_of_tid(ntids) )
-!$omp end single
-       e_of_tid(mytid) = 0._DP
+       e_of_tid = 0._DP
 #endif
-       ALLOCATE( e_rad(rad(i%t)%nx*i%m) )
+       ALLOCATE( e_rad(im_sum) )
     ENDIF
     !
     !$acc data copyin( rho_lm, rho_core ), copyout( v_rad )
     !$acc data create( arho, rho_rad, ex, ec, vx, vc, e_rad )
     !$acc data copyin( g(i%t:i%t), g(i%t)%r2, g(i%t)%rm2, g(i%t)%rab )
     !$acc data copyin( rad(i%t:i%t), rad(i%t)%ylm, rad(i%t)%ww )
+    IF ( with_small_so ) THEN
+      !$acc enter data copyin( rad(i%t)%sin_th, rad(i%t)%cos_th, rad(i%t)%sin_phi, rad(i%t)%cos_phi )
+      !$acc enter data copyin( msmall_lm) copyin( g_rad )
+    ENDIF
     !
     !$acc kernels
     v_rad(:,:,:) = 0.d0
     !$acc end kernels
     !
 #if defined(_OPENACC)
-!$acc parallel loop collapse(2) present(g(i%t:i%t))
+!$acc parallel loop collapse(2) present(g(i%t:i%t),rad(i%t:i%t))
 #else
-!$omp parallel default(private), &
-!$omp shared(i,rho_rad,rad,rho_lm,rho_core,arho,ix_s,ix_e,nspin,g)
-!$omp do
+!$omp parallel do default(private), &
+!$omp shared(i,rho_rad,rad,rho_lm,rho_core,arho,msmall_lm,ix_s,ix_e,nspin,nspin_mag,g,with_small_so)
 #endif
     DO ix = ix_s, ix_e
       DO k = 1, i%m
+        !
+        ix0 = ix-ix_s+1
         ixk0 = (ix-ix_s)*i%m+k
-        rho_rad(k,ix,1) = SUM(rad(i%t)%ylm(ix,1:i%l**2)*rho_lm(k,1:i%l**2,1))
-        rho_loc1 = rho_rad(k,ix,1)*g(i%t)%rm2(k)
+        !
+        CALL PAW_lm2rad_gpu( i, rad(i%t)%ylm(ix,1:i%l**2),rho_lm(k,:,:), rho_rad(k,ix0,:), nspin_mag )
+        !
+        rho_loc1 = rho_rad(k,ix0,1)*g(i%t)%rm2(k)
         IF (nspin==1) THEN
           arho(ixk0,1) = rho_loc1 + rho_core(k)
         ELSEIF (nspin==2) THEN
-          rho_rad(k,ix,nspin) = SUM(rad(i%t)%ylm(ix,1:i%l**2)*rho_lm(k,1:i%l**2,nspin))
-          rho_loc2 = rho_rad(k,ix,nspin)*g(i%t)%rm2(k)
+          rho_loc2 = rho_rad(k,ix0,nspin)*g(i%t)%rm2(k)
           arho(ixk0,1) = rho_loc1 + rho_loc2 + rho_core(k)
-          arho(ixk0,nspin) = rho_loc1 - rho_loc2
+          arho(ixk0,2) = rho_loc1 - rho_loc2
+        ELSEIF (nspin_mag==4) THEN
+          IF (with_small_so .AND. i%ae==1) &
+            CALL add_small_mag_gpu( i, rad(i%t)%sin_th(ix), rad(i%t)%cos_th(ix), &
+            rad(i%t)%sin_phi(ix), rad(i%t)%cos_phi(ix), msmall_lm(k,1:i%l**2,:), &
+            rad(i%t)%ylm(ix,1:i%l**2), rho_rad(k,ix0,1:nspin), nspin_mag )
+          !
+          arho(ixk0,1) = rho_rad(k,ix0,1)*g(i%t)%rm2(k) + rho_core(k)
+          arho(ixk0,2:nspin) = rho_rad(k,ix0,2:nspin)*g(i%t)%rm2(k)
         ENDIF
       ENDDO
     ENDDO
-#if !defined(_OPENACC)
-!$omp end do
-!$omp end parallel
-#endif
+    !
     !
     IF (nspin_mag <= 2 ) THEN
+      IF ( lsd == 0 ) CALL xc( im_sum, 1, 1, arho(:,1:1), ex, ec, vx(:,1:1), vc(:,1:1), gpu_args_=.TRUE. )
+      IF ( lsd /= 0 ) CALL xc( im_sum, 2, 2, arho, ex, ec, vx, vc, gpu_args_=.TRUE. )
+    ELSEIF (nspin_mag==4) THEN
+      CALL xc( im_sum, 4, 2, arho, ex, ec, vx, vc, gpu_args_=.TRUE. )
+    ENDIF
+    !
+    !
+    IF (nspin_mag==4) THEN
+      !
+#if defined(_OPENACC)
+!$acc parallel loop collapse(2) present(g(i%t:i%t),rad(i%t:i%t))
+#else
+!$omp parallel do default(private), shared(en_pres,i,arho,rad,rho_core,rho_rad, &
+!$omp                     v_rad,e_rad,vx,vc,ex,ec,ix_s,ix_e, g, g_rad,with_small_so)
+#endif
+      DO ix = ix_s, ix_e
+        DO k = 1, i%m
+          !
+          ix0 = ix-ix_s+1
+          ixk0 = (ix-ix_s)*i%m+k
+          !
+          IF (en_pres) e_rad(ixk0) = e2*(ex(ixk0)+ec(ixk0))*(rho_rad(k,ix0,1) + &
+                                     rho_core(k)*g(i%t)%r2(k))
+          v_rad(k,ix,1) = e2*(0.5_DP*( vx(ixk0,1) + vc(ixk0,1) + vx(ixk0,2) + vc(ixk0,2)))
+          amag = SQRT(arho(ixk0,2)**2+arho(ixk0,3)**2+arho(ixk0,4)**2)
+          IF ( amag > eps12 ) THEN
+            vs = e2*0.5_DP*( vx(ixk0,1) + vc(ixk0,1) - vx(ixk0,2) - vc(ixk0,2) )
+            v_rad(k,ix,2:4) = vs * arho(ixk0,2:4) / amag
+          ELSE
+            v_rad(k,ix,2:4) = 0.0_DP
+            IF (en_pres) e_rad(ixk0) = 0.0_DP
+          ENDIF
+          !
+          IF ( with_small_so ) CALL compute_g_gpu( rad(i%t)%sin_th(ix), rad(i%t)%cos_th(ix),  &
+                                                   rad(i%t)%sin_phi(ix), rad(i%t)%cos_phi(ix),&
+                                                   v_rad(k,ix,1:4), g_rad(k,ix,1:4) )
+        ENDDO
+      ENDDO
+      !
+    ELSEIF (nspin_mag <= 2 ) THEN
       IF ( lsd == 0 ) THEN
         !
-        CALL xc( im_sum, 1, 1, arho(:,1:1), ex, ec, vx(:,1:1), vc(:,1:1), gpu_args_=.TRUE. )
-        !
 #if defined(_OPENACC)
-!$acc parallel loop collapse(2) present(g(i%t:i%t))
+!$acc parallel loop collapse(2) present(g(i%t:i%t),rad(i%t:i%t))
 #else
-!$omp parallel default(private), &
-!$omp shared(en_pres,e2,i,rho_core,rho_rad,v_rad,vx,vc,ex,ec,ix_s,ix_e,g,nspin_mag,e_rad,g_rad)
-!$omp do
+!$omp parallel do default(private), &
+!$omp shared(en_pres,i,rho_core,rho_rad,v_rad,e_rad,vx,vc,ex,ec,ix_s,ix_e,g,nspin_mag)
 #endif
         DO ix = ix_s, ix_e
           DO k = 1, i%m
             !
+            ix0 = ix-ix_s+1
             ixk0 = (ix-ix_s)*i%m + k
-            ixk = (ix-1)*i%m + k
             !
             v_rad(k,ix,1) = e2*( vx(ixk0,1) + vc(ixk0,1) )
             !
             IF (en_pres) THEN
               e_radik = e2*( ex(ixk0) + ec(ixk0) )
               IF (nspin_mag < 2) THEN
-                 e_rad(ixk) = e_radik * ( rho_rad(k,ix,1) + rho_core(k)*g(i%t)%r2(k) )
+                 e_rad(ixk0) = e_radik * ( rho_rad(k,ix0,1) + rho_core(k)*g(i%t)%r2(k) )
               ELSEIF (nspin_mag == 2) THEN
-                 e_rad(ixk) = e_radik * ( rho_rad(k,ix,1)+rho_rad(k,ix,2)+rho_core(k)*g(i%t)%r2(k) )
+                 e_rad(ixk0) = e_radik * ( rho_rad(k,ix0,1)+rho_rad(k,ix0,2)+rho_core(k)*g(i%t)%r2(k) )
               ENDIF
             ENDIF
             !
           ENDDO
         ENDDO
-#if !defined(_OPENACC)
-!$omp end do
-!$omp end parallel
-#endif
         !
       ELSE
-        !
-        CALL xc( im_sum, 2, 2, arho, ex, ec, vx, vc, gpu_args_=.TRUE. )
         !
 #if defined(_OPENACC)
 !$acc parallel loop collapse(2) present(g(i%t:i%t))
 #else
-!$omp parallel default(private), &
-!$omp shared(en_pres,e2,i,rho_core,rho_rad,v_rad,e_rad,vx,vc,ex,ec,ix_s,ix_e,g,nspin_mag,g_rad)
-!$omp do
+!$omp parallel do default(private), &
+!$omp shared(en_pres,i,rho_core,rho_rad,v_rad,e_rad,vx,vc,ex,ec,ix_s,ix_e,g,nspin,nspin_mag)
 #endif
         DO ix = ix_s, ix_e
           DO k = 1, i%m
             !
+            ix0 = ix-ix_s+1
             ixk0 = (ix-ix_s)*i%m + k
-            ixk = (ix-1)*i%m + k
             !
             DO is = 1, nspin
               v_rad(k,ix,is) = e2*( vx(ixk0,is) + vc(ixk0,is) )
@@ -603,19 +643,15 @@ MODULE paw_onecenter
             IF (en_pres) THEN
               e_radik = e2*( ex(ixk0) + ec(ixk0) )
               IF (nspin_mag < 2) THEN
-                 e_rad(ixk) = e_radik * ( rho_rad(k,ix,1) + rho_core(k)*g(i%t)%r2(k) )
+                 e_rad(ixk0) = e_radik * ( rho_rad(k,ix0,1) + rho_core(k)*g(i%t)%r2(k) )
               ELSEIF (nspin_mag == 2) THEN
-                 e_rad(ixk) = e_radik * ( rho_rad(k,ix,1)+rho_rad(k,ix,2)+rho_core(k)*g(i%t)%r2(k) )
+                 e_rad(ixk0) = e_radik * ( rho_rad(k,ix0,1) + rho_rad(k,ix0,2) + rho_core(k)*g(i%t)%r2(k) )
               ENDIF
             ENDIF
             !
           ENDDO
         ENDDO
-#if !defined(_OPENACC)
-!$omp end do
-!$omp end parallel
-#endif
-      !
+        !
       ENDIF
     ENDIF
     !
@@ -625,17 +661,19 @@ MODULE paw_onecenter
       !$acc parallel loop collapse(2) reduction(+:energy) present(g(i%t:i%t),rad(i%t:i%t))
       DO ix = ix_s, ix_e
         DO k = 2, i%m-1, 2
-          ixk = (ix-1)*i%m + k
-          energy = energy + (e_rad(ixk-1)*g(i%t)%rab(k-1) + 4.d0*e_rad(ixk)*g(i%t)%rab(k) + e_rad(ixk+1)*g(i%t)%rab(k+1))* div3 * rad(i%t)%ww(ix)
+          ixk0 = (ix-ix_s)*i%m + k
+          energy = energy + (e_rad(ixk0-1)*g(i%t)%rab(k-1) + 4.d0*e_rad(ixk0)*g(i%t)%rab(k) + &
+                             e_rad(ixk0+1)*g(i%t)%rab(k+1))* div3 * rad(i%t)%ww(ix)
         ENDDO
       ENDDO
 #else
 !$omp parallel default(private), &
 !$omp shared(i,rad,ix_s,ix_e,e_rad,e_of_tid,g)
+      mytid = omp_get_thread_num()+1 ! take the thread ID
 !$omp do
       DO ix = ix_s, ix_e
-        ixk_s = (ix-1)*i%m + 1
-        ixk_e = ix*i%m
+        ixk_s = (ix-ix_s)*i%m+1
+        ixk_e = (ix-ix_s+1)*i%m
         CALL simpson( i%m, e_rad(ixk_s:ixk_e), g(i%t)%rab, e )
         e_of_tid(mytid) = e_of_tid(mytid) + e * rad(i%t)%ww(ix)
       ENDDO
@@ -648,6 +686,11 @@ MODULE paw_onecenter
     !$acc end data
     !$acc end data
     !$acc end data
+    IF ( with_small_so ) THEN
+      !$acc update self(g_rad)
+      !$acc exit data delete( rad(i%t)%sin_th, rad(i%t)%cos_th, rad(i%t)%sin_phi, rad(i%t)%cos_phi )
+      !$acc exit data delete( msmall_lm, g_rad)
+    ENDIF
     !
     IF ( PRESENT(energy) ) DEALLOCATE( e_rad )
     DEALLOCATE( rho_rad, arho )
@@ -1350,11 +1393,11 @@ MODULE paw_onecenter
     !
     TYPE(paw_info), INTENT(IN) :: i
     !! atom's minimal info
+    INTEGER, INTENT(IN) :: nspin
+    !! number of spin components
     INTEGER :: ix
     !! line of the ylm matrix to use
     !! actually it is one of the nx directions
-    INTEGER, INTENT(IN) :: nspin
-    !! number of spin components
     REAL(DP), INTENT(IN) :: F_lm(i%m,i%l**2,nspin)
     !! Y_lm expansion of rho
     REAL(DP), INTENT(OUT) :: F_rad(i%m,nspin)
@@ -1380,6 +1423,29 @@ MODULE paw_onecenter
   END SUBROUTINE PAW_lm2rad
   !
   !
+  SUBROUTINE PAW_lm2rad_gpu( i, rad_y, F_lm, F_rad, nspin )
+  !$acc routine seq
+
+    !USE paw_variables,  ONLY : rad , rad_tst
+
+    TYPE(paw_info), INTENT(IN) :: i
+    !! atom's minimal info
+    INTEGER :: ix
+    INTEGER, INTENT(IN) :: nspin
+    REAL(DP), INTENT(IN) :: rad_y(i%l**2)
+    REAL(DP), INTENT(IN) :: F_lm(i%l**2,nspin)
+    REAL(DP), INTENT(OUT) :: F_rad(nspin)
+    !
+    INTEGER :: ispin ! counters on spin
+    !
+    DO ispin = 1,nspin
+       F_rad(ispin) = SUM(rad_y(1:i%l**2)*F_lm(1:i%l**2,ispin))
+    ENDDO
+    !
+  END SUBROUTINE PAW_lm2rad_gpu
+
+
+
   !--------------------------------------------------------------------------------
   SUBROUTINE PAW_rad2lm( i, F_rad, F_lm, lmax_loc, nspin )
     !------------------------------------------------------------------------------
@@ -2543,6 +2609,44 @@ MODULE paw_onecenter
   END SUBROUTINE add_small_mag
   !
   !
+  SUBROUTINE add_small_mag_gpu( i, sin_th, cos_th, sin_phi, cos_phi, msmall_lm_, rad_y, rho_rad, nspin_mag )
+  !$acc routine seq
+    !-----------------------------------------------------------------------
+    !USE noncollin_module,   ONLY : nspin_mag
+    !
+    TYPE(paw_info), INTENT(IN) :: i
+    !! atom's minimal info
+    REAL(DP), INTENT(IN) :: rad_y(i%l**2)
+    REAL(DP), INTENT(INOUT) :: rho_rad(nspin_mag)
+    !
+    REAL(DP), INTENT(IN) :: msmall_lm_(i%l**2,nspin_mag)
+    REAL(DP), INTENT(IN) :: sin_th, cos_th, sin_phi, cos_phi
+    integer, intent(in) :: nspin_mag
+    !
+    ! ... local variables
+    !
+    REAL(DP) :: msmall_rad(nspin_mag)
+    ! auxiliary: the mag of the small components along a line
+    REAL(DP) :: hatr(3)
+    INTEGER  :: k, ipol, kpol
+    !
+    CALL PAW_lm2rad_gpu( i, rad_y, msmall_lm_, msmall_rad, nspin_mag )
+    !
+    hatr(1)=sin_th*cos_phi
+    hatr(2)=sin_th*sin_phi
+    hatr(3)=cos_th
+    !
+    DO ipol = 1, 3
+       DO kpol = 1, 3
+          rho_rad(ipol+1) = rho_rad(ipol+1) - &
+                  msmall_rad(kpol+1) * hatr(ipol) * hatr(kpol) * 2.0_DP
+       ENDDO
+    ENDDO
+    !
+    RETURN
+    !
+  END SUBROUTINE add_small_mag_gpu
+  !
   !---------------------------------------------------------------------------------
   SUBROUTINE compute_g( i, ix, v_rad, g_rad )
     !-------------------------------------------------------------------------------
@@ -2582,5 +2686,32 @@ MODULE paw_onecenter
     !
   END SUBROUTINE compute_g
   !
+  !---------------------------------------------------------------------------------
+  SUBROUTINE compute_g_gpu( sin_th, cos_th, sin_phi, cos_phi, v_rad, g_rad )
+  !$acc routine seq
+    !-------------------------------------------------------------------------------
+    !
+    REAL(DP), INTENT(IN) :: v_rad(4)    ! radial pot
+    REAL(DP), INTENT(INOUT) :: g_rad(4) ! radial potential (small comp)
+    REAL(DP), INTENT(IN) :: sin_th, cos_th, sin_phi, cos_phi
+    REAL(DP) :: hatr(3)
+    !
+    INTEGER :: ipol, kpol
+    REAL(DP) :: grad
+    !
+    hatr(1) = sin_th*cos_phi
+    hatr(2) = sin_th*sin_phi
+    hatr(3) = cos_th
+    !
+    DO ipol = 1, 3
+       DO kpol = 1, 3
+         !
+         ! v_rad contains -B_{xc} with the notation of the papers
+         !
+         g_rad(ipol+1) = g_rad(ipol+1) - v_rad(kpol+1)*hatr(kpol)*hatr(ipol)*2.0_DP
+       ENDDO
+    ENDDO
+    !
+  END SUBROUTINE compute_g_gpu
   !
 END MODULE paw_onecenter
