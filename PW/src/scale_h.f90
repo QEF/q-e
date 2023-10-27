@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,7 +19,7 @@ SUBROUTINE scale_h
   USE cellmd,         ONLY : at_old, omega_old
   USE constants,      ONLY : eps8
   USE gvect,          ONLY : g, gg, ngm, g_d, gg_d
-  USE klist,          ONLY : xk, wk, nkstot
+  USE klist,          ONLY : xk, wk, nkstot, qnorm
   USE uspp_data,      ONLY : nqxq, dq, scale_uspp_data
   USE control_flags,  ONLY : iverbosity
   USE start_k,        ONLY : nks_start, xk_start, nk1,nk2,nk3
@@ -81,8 +81,8 @@ SUBROUTINE scale_h
   !$acc update device(g,gg)
   !
   CALL mp_max( gg_max, intra_bgrp_comm )
-  !
   qmax = SQRT(gg_max)*tpiba
+  ! qmax is the largest |G| actually needed in interpolation tables
   IF ( nqxq < INT(qmax/dq)+4 ) THEN
      CALL errore( 'scale_h', 'Not enough space allocated for radial FFT: '//&
                              'try restarting with a larger cell_factor.', 1 )
@@ -93,16 +93,7 @@ SUBROUTINE scale_h
   call scale_uspp_data( omega_old/omega )
   CALL scale_tab_rhc( omega_old/omega )
   CALL scale_tab_rhoat( omega_old/omega )
-  !
-  ! Check interpolation table, re-allocate if needed
-  !
   CALL scale_tab_qrad( omega_old/omega )
-  CALL init_tab_qrad ( qmax, omega, intra_bgrp_comm, ierr)
-  !
-  ! recalculate the local part of the pseudopotential
-  !
-  CALL scale_tab_vloc( omega_old/omega )
-  CALL init_vloc( )
   !
   ! for hybrid functionals
   !
@@ -111,7 +102,19 @@ SUBROUTINE scale_h
      ! not sure next line is needed
      CALL exx_mp_init( )
      CALL exx_gvec_reinit( at_old )
-  ENDIF
+     qmax = qmax + qnorm
+     ! For USPP + hybrid, qmax is the largest |q+G| needed
+     ! Note that qnorm is recomputed in exx_grid_init
+  END IF
+  !
+  ! Check interpolation table, re-allocate if needed
+  !
+  CALL init_tab_qrad ( qmax, omega, intra_bgrp_comm, ierr)
+  !
+  ! recalculate the local part of the pseudopotential
+  !
+  CALL scale_tab_vloc( omega_old/omega )
+  CALL init_vloc( )
   !
   ! for ts-vdw
   !

@@ -53,6 +53,7 @@ CONTAINS
   !! error code: ierr = 0 if interpolation table (IT) was allocated
   !!             ierr =-1 if IT had insufficent dimension and was re-allocated
   !!             ierr =-2 if IT was already present and nothing is done
+  !!             ierr =-3 if IT not needed and nothing is done
   REAL(dp), INTENT(IN) :: omega
   !! Unit-cell volume
   REAL(dp), INTENT(IN) :: qmax_
@@ -64,8 +65,8 @@ CONTAINS
   REAL(dp), ALLOCATABLE :: aux (:), besr (:)
   ! various work space
   !
-  !
-  IF ( lmaxq <= 0 .OR. ALL ( upf(1:nsp)%tvanp .EQV. .false. ) ) RETURN
+  ierr = -3
+  IF ( lmaxq <= 0 .OR. ALL ( .NOT. upf(1:nsp)%tvanp ) ) RETURN
   IF ( .NOT. ALLOCATED(tab_qrad) ) THEN
      !! table not yet allocated
      qmax = qmax_

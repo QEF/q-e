@@ -63,6 +63,9 @@ SUBROUTINE hinit0()
   IF (tbeta_smoothing) CALL init_us_b0(ecutwfc,intra_bgrp_comm)
   IF (tq_smoothing) CALL init_us_0(ecutrho,intra_bgrp_comm)
   qmax = (qnorm + sqrt(ecutrho))*cell_factor
+  ! qmax is the maximum needed |q+G|, increased by a factor (20% or so)
+  ! to avoid too frequent reallocations in variable-cell calculations
+  ! (qnorm=max|q| may be needed for hybrid EXX or phonon calculations)
   CALL init_us_1(nat, ityp, omega, qmax, intra_bgrp_comm)
   IF ( lda_plus_U .AND. ( Hubbard_projectors == 'pseudo' ) ) CALL init_q_aeps()
   CALL init_tab_atwfc (omega, intra_bgrp_comm)
