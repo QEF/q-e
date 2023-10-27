@@ -32,14 +32,13 @@ SUBROUTINE scale_h
   USE vloc_mod,       ONLY : scale_tab_vloc
   USE rhoc_mod,       ONLY : scale_tab_rhc
   USE rhoat_mod,      ONLY : scale_tab_rhoat
-  USE qrad_mod,       ONLY : scale_tab_qrad
+  USE qrad_mod,       ONLY : scale_tab_qrad, init_tab_qrad
   !
   IMPLICIT NONE
   !
-  INTEGER :: ig
-  ! counter on G vectors
-  INTEGER  :: ik, ipol
-  REAL(DP) :: gg_max
+  INTEGER :: ig, ik, ipol, ierr
+  ! counters
+  REAL(DP) :: gg_max, qmax
   !
   ! scale the k points
   !
@@ -83,7 +82,8 @@ SUBROUTINE scale_h
   !
   CALL mp_max( gg_max, intra_bgrp_comm )
   !
-  IF (nqxq < INT(SQRT(gg_max)*tpiba/dq)+4) THEN
+  qmax = SQRT(gg_max)*tpiba
+  IF ( nqxq < INT(qmax/dq)+4 ) THEN
      CALL errore( 'scale_h', 'Not enough space allocated for radial FFT: '//&
                              'try restarting with a larger cell_factor.', 1 )
   ENDIF
@@ -91,9 +91,13 @@ SUBROUTINE scale_h
   ! scale the non-local pseudopotential tables
   !
   call scale_uspp_data( omega_old/omega )
-  CALL scale_tab_qrad( omega_old/omega )
   CALL scale_tab_rhc( omega_old/omega )
   CALL scale_tab_rhoat( omega_old/omega )
+  !
+  ! Check interpolation table, re-allocate if needed
+  !
+  CALL scale_tab_qrad( omega_old/omega )
+  CALL init_tab_qrad ( qmax, omega, intra_bgrp_comm, ierr)
   !
   ! recalculate the local part of the pseudopotential
   !
