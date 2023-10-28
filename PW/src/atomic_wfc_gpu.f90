@@ -66,7 +66,7 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   xk2 = xk(2,ik)
   xk3 = xk(3,ik)
   !
-  !$cuf kernel do (1) <<<*,*>>>
+  !$acc parallel loop
   DO ig = 1, npw
      iig = igk_k_d(ig,ik)
      gk_d(1,ig) = xk1 + g(1,iig)
