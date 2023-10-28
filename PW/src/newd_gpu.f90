@@ -30,7 +30,7 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   USE fft_base,             ONLY : dfftp
   USE fft_rho,              ONLY : rho_r2g
   USE gvect,                ONLY : g, gg, ngm, gstart, mill, eigts1, eigts2, eigts3,&
-                                   g_d, gg_d, mill_d, eigts1_d, eigts2_d, eigts3_d
+                                   mill_d, eigts1_d, eigts2_d, eigts3_d
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vltot
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
@@ -97,13 +97,13 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   ALLOCATE( vaux(ngm_l,nspin_mag), qmod(ngm_l), ylmk0( ngm_l, lmaxq*lmaxq ) )
   !$acc data create( vaux, qmod, ylmk0 )
   !
-  !$acc host_data use_device(ylmk0)
-  CALL ylmr2_gpu( lmaxq*lmaxq, ngm_l, g_d(1,ngm_s), gg_d(ngm_s), ylmk0 )
+  !$acc host_data use_device(ylmk0, g, gg)
+  CALL ylmr2_gpu( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0 )
   !$acc end host_data
   !
   !$acc parallel loop
   DO ig = 1, ngm_l
-     qmod (ig) = SQRT(gg_d(ngm_s+ig-1))*tpiba
+     qmod (ig) = SQRT(gg(ngm_s+ig-1))*tpiba
   ENDDO
   ! ... Fourier transform of the total effective potential
   !

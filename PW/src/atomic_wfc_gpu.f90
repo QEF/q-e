@@ -17,7 +17,7 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   USE cell_base,        ONLY : omega, tpiba
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau
   USE basis,            ONLY : natomwfc
-  USE gvect,            ONLY : mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
+  USE gvect,            ONLY : mill_d, eigts1_d, eigts2_d, eigts3_d, g
   USE klist,            ONLY : xk, ngk, igk_k_d !, igk_k
   USE wvfct,            ONLY : npwx
   USE uspp_param,       ONLY : upf, nwfcm
@@ -69,9 +69,9 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   !$cuf kernel do (1) <<<*,*>>>
   DO ig = 1, npw
      iig = igk_k_d(ig,ik)
-     gk_d(1,ig) = xk1 + g_d(1,iig)
-     gk_d(2,ig) = xk2 + g_d(2,iig)
-     gk_d(3,ig) = xk3 + g_d(3,iig)
+     gk_d(1,ig) = xk1 + g(1,iig)
+     gk_d(2,ig) = xk2 + g(2,iig)
+     gk_d(3,ig) = xk3 + g(3,iig)
   END DO
   !
   !  ylm = spherical harmonics

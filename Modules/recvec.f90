@@ -41,8 +41,6 @@
 
      REAL(DP), ALLOCATABLE, TARGET :: gg(:) 
      !! \(G^2\) in increasing order (in units of \(\text{tpiba2}=(2\pi/a)^2\) )
-     REAL(DP), ALLOCATABLE         :: gg_d(:)
-     !! device
 
      REAL(DP), POINTER, PROTECTED :: gl(:)
      !! gl(i) = i-th shell of G^2 (in units of tpiba2)
@@ -50,12 +48,10 @@
      !! igtongl(n) = shell index for n-th G-vector
      
      ! Duplicate of the above variables (new style duplication).
-     REAL(DP), ALLOCATABLE                   :: gl_d(:)      ! device
      INTEGER, ALLOCATABLE, TARGET            :: igtongl_d(:) ! device
      !
      REAL(DP), ALLOCATABLE, TARGET :: g(:,:) 
      !! G-vectors cartesian components ( in units \(\text{tpiba} =(2\pi/a)\) )
-     REAL(DP), ALLOCATABLE         :: g_d(:,:)   ! device
      !
      INTEGER, ALLOCATABLE, TARGET :: mill(:,:)
      !! miller index of G vectors (local to each processor)
@@ -79,8 +75,8 @@
      COMPLEX(DP), ALLOCATABLE :: eigts3_d(:,:)
      !   
 #if defined(__CUDA)
-     attributes(DEVICE) :: gl_d, igtongl_d
-     attributes(DEVICE) :: gg_d, g_d, mill_d, eigts1_d, eigts2_d, eigts3_d
+     attributes(DEVICE) :: igtongl_d
+     attributes(DEVICE) :: mill_d, eigts1_d, eigts2_d, eigts3_d
 #endif
    CONTAINS
 
@@ -118,7 +114,6 @@
        IF (use_gpu) THEN
           ALLOCATE( mill_d(3, ngm) )
           ALLOCATE( igtongl_d(ngm) )
-          ALLOCATE( gl_d(ngm) )
        ENDIF  
        !$acc enter data create( mill(1:3,1:ngm), g(1:3,1:ngm), gg(1:ngm) ) 
        !
@@ -173,9 +168,6 @@
        ! GPU vars
        IF (use_gpu) THEN
           IF (ALLOCATED( igtongl_d )) DEALLOCATE( igtongl_d )
-          IF (ALLOCATED( gl_d ) )     DEALLOCATE( gl_d )
-          IF (ALLOCATED( gg_d ) )     DEALLOCATE( gg_d )
-          IF (ALLOCATED( g_d ) )      DEALLOCATE( g_d )
           IF (ALLOCATED( mill_d ) )   DEALLOCATE( mill_d )
           IF (ALLOCATED( eigts1_d ) ) DEALLOCATE( eigts1_d )
           IF (ALLOCATED( eigts2_d ) ) DEALLOCATE( eigts2_d )
@@ -252,7 +244,6 @@
            IF (igl /= ngl) CALL errore ('gshells', 'igl <> ngl', ngl)
 
         ENDIF
-        IF (use_gpu)      gl_d = gl
         IF (use_gpu) igtongl_d = igtongl
      END SUBROUTINE gshells
 !=----------------------------------------------------------------------------=!
