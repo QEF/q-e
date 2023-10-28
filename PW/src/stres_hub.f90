@@ -176,11 +176,15 @@ SUBROUTINE stres_hub ( sigmah )
       !
       ! proj=<wfcU|S|evc>
       IF (gamma_only) THEN
+         !$acc data create(projrd)
          CALL calbec( offload_type, npw, wfcU, spsi, projrd )
          !$acc update self(projrd)
+         !$acc end data
       ELSE
+         !$acc data create(projkd)
          CALL calbec( offload_type, npw, wfcU, spsi, projkd )
          !$acc update self(projkd)
+         !$acc end data
       ENDIF
       !
       ! Compute derivatives of spherical harmonics and spherical Bessel functions
