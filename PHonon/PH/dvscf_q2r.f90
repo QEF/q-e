@@ -283,9 +283,7 @@ PROGRAM dvscf_q2r
   !
   ! Create output directory
   !
-  IF (ionode) INQUIRE(FILE=TRIM(wpot_dir), EXIST=exst)
-  CALL mp_bcast(exst, ionode_id, world_comm)
-  IF (.NOT. exst) CALL create_directory(wpot_dir)
+  CALL create_directory(wpot_dir)
   !
   ! ---------------------------------------------------------------------------
   !
