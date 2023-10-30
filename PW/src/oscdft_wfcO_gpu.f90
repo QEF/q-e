@@ -20,8 +20,9 @@ MODULE oscdft_wfcO_gpu
          USE becmod,                   ONLY : allocate_bec_type,&
                                               deallocate_bec_type,&
                                               becp, calbec, bec_type
-         USE becmod_gpum,              ONLY : becp_d
-         USE becmod_subs_gpum,         ONLY : using_becp_auto, using_becp_d_auto, calbec_gpu
+!civn
+         !USE becmod_gpum,              ONLY : becp_d
+         !USE becmod_subs_gpum,         ONLY : using_becp_auto, using_becp_d_auto, calbec_gpu
          USE noncollin_module,         ONLY : npol
          USE basis,                    ONLY : natomwfc
          USE ions_base,                ONLY : nat, ityp
@@ -65,20 +66,25 @@ MODULE oscdft_wfcO_gpu
          !$acc data create(wfcatom, swfcatom)
          CALL check_bec_type_unallocated(becp)
          CALL allocate_bec_type(nkb, natomwfc, becp)
-         CALL using_becp_auto(2)
+!civn
+         !CALL using_becp_auto(2)
 
          DO ik=1,nks
             !$acc host_data use_device(wfcatom, swfcatom)
             CALL atomic_wfc_gpu(ik, wfcatom)
             npw = ngk(ik)
             CALL init_us_2(npw, igk_k(1,ik), xk(1,ik), vkb, .true.)
-            CALL using_becp_d_auto(2)
+!civn
+            !CALL using_becp_d_auto(2)
             !$acc data present(vkb(:,:))
             !$acc host_data use_device(vkb)
-            CALL calbec_gpu(npw, vkb, wfcatom, becp_d)
+!civn
+            !CALL calbec_gpu(npw, vkb, wfcatom, becp_d)
             !$acc end host_data
             !$acc end data
-            CALL s_psi_gpu(npwx, npw, natomwfc, wfcatom, swfcatom)
+!civn
+            !CALL s_psi_gpu(npwx, npw, natomwfc, wfcatom, swfcatom)
+            !--> CALL s_psi_acc(npwx, npw, natomwfc, wfcatom, swfcatom)
             !$acc end host_data
 
             IF (inp%orthogonalize_swfc) THEN
@@ -97,7 +103,8 @@ MODULE oscdft_wfcO_gpu
             END IF
          END DO
          CALL deallocate_bec_type(becp)
-         CALL using_becp_auto(2)
+!civn
+         !CALL using_becp_auto(2)
          !$acc end data
          DEALLOCATE(wfcatom, swfcatom)
 

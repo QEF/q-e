@@ -959,7 +959,6 @@ MODULE exx_band
     USE wvfct,                ONLY : npwx
     USE gvect,                ONLY : gcutm, ig_l2g, g, gg, ngm, ngm_g, mill, mill_d, &
                                      gstart, gvect_init, deallocate_gvect_exx, gshells
-    USE gvect,                ONLY : g_d, gg_d
     USE gvecs,                ONLY : gcutms, ngms, ngms_g, gvecs_init
     USE gvecw,                ONLY : gkcut, ecutwfc, gcutw
     USE klist,                ONLY : xk, nks, ngk
@@ -1068,8 +1067,6 @@ MODULE exx_band
        ! Sync duplicated data
        ! All these variables are actually set by ggen which has intent out
        mill_d = mill
-       g_d    = g
-       gg_d   = gg
 #endif
        !$acc update device(mill, g)
        !
@@ -1101,8 +1098,6 @@ MODULE exx_band
 #if defined(__CUDA)
        ! Sync duplicated data
        mill_d = mill
-       g_d    = g
-       gg_d   = gg
 #endif
        !$acc update device(mill, g)
        !
@@ -1153,8 +1148,6 @@ MODULE exx_band
 #if defined(__CUDA)
        ! Sync duplicated data
        mill_d = mill
-       g_d    = g
-       gg_d   = gg
 #endif
        !$acc update device(mill, g)
        !

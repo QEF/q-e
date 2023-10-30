@@ -30,7 +30,7 @@
       USE exx_module,              ONLY  : exx_setup_nscf, getnpinsp
       USE exx_module,              ONLY  : exxalfa
       USE constants,               ONLY  : fpi
-      USE printout_base,           ONLY  : printout_base_open, printout_base_unit, printout_base_close
+!      USE printout_base,           ONLY  : printout_base_open, printout_base_unit, printout_base_close
       USE wannier_base,            ONLY  : neigh, dis_cutoff, vnbsp
       USE control_flags,           ONLY  : lwfpbe0nscf
       USE fft_base,                ONLY  : dffts,dfftp

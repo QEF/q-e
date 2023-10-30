@@ -16,8 +16,9 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   !! structure of the current k-point. The result is added to hpsi.
   !
   USE kinds,         ONLY : DP
-  USE becmod,        ONLY : bec_type, calbec, allocate_bec_type, &
-                            deallocate_bec_type
+#if defined(__CUDA)
+  USE becmod,        ONLY : calbec_cuf
+#endif
   USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, is_hubbard,   &
                             nwfcU, wfcU, offsetU, lda_plus_u_kind, &
                             is_hubbard_back, Hubbard_l2, offsetU_back, &
@@ -25,13 +26,8 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   USE lsda_mod,      ONLY : current_spin
   USE scf,           ONLY : v
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
-  USE control_flags, ONLY : gamma_only
+  USE control_flags, ONLY : gamma_only, offload_type
   USE mp,            ONLY : mp_sum
-  !
-  USE becmod_gpum,      ONLY : bec_type_d
-  USE becmod_subs_gpum, ONLY : allocate_bec_type_gpu, deallocate_bec_type_gpu, &
-                               calbec_gpu
-  USE device_memcpy_m,    ONLY: dev_memcpy, dev_memset
   !
 #if defined(__CUDA)
   USE cudafor
@@ -53,27 +49,31 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   !
   ! ... local variables
   !
-  INTEGER :: dimwf1
-  TYPE(bec_type_d), TARGET :: proj_d
-  COMPLEX(DP), ALLOCATABLE :: wfcU_d(:,:)
-  !
+  COMPLEX(DP), ALLOCATABLE :: proj_k(:,:)
+  !$acc declare device_resident(proj_k)
+  REAL(DP), ALLOCATABLE    :: proj_r(:,:)
+  !$acc declare device_resident(proj_r)
 #if defined(__CUDA)
-  attributes(DEVICE) :: wfcU_d, psip_d, hpsi_d
+  attributes(DEVICE) :: psip_d, hpsi_d
 #endif
   !
   CALL start_clock_gpu( 'vhpsi' )
   !
   ! Offset of atomic wavefunctions initialized in setup and stored in offsetU
   !
-  ! Allocate the array proj
-  CALL allocate_bec_type_gpu( nwfcU, mps, proj_d ) 
-  !
-  dimwf1 = SIZE(wfcU(:,1))
-  ALLOCATE( wfcU_d(dimwf1,nwfcU) )
-  CALL dev_memcpy(wfcU_d, wfcU)
+  !$acc data copyin(wfcU)
   !
   ! proj = <wfcU|psip>
-  CALL calbec_gpu( np, wfcU_d, psip_d, proj_d )
+#if defined(__CUDA)
+!civn: remove psip_d and use calbec instead
+  if(gamma_only) then
+    allocate( proj_r(nwfcU, mps) )
+    Call calbec_cuf(offload_type, np, wfcU, psip_d, proj_r)
+  else
+    allocate( proj_k(nwfcU, mps) )
+    Call calbec_cuf(offload_type, np, wfcU, psip_d, proj_k)
+  endif
+#endif
   !
   IF ( lda_plus_u_kind.EQ.0 .OR. lda_plus_u_kind.EQ.1 ) THEN
      CALL vhpsi_U_gpu()  ! DFT+U
@@ -81,9 +81,13 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
      CALL errore('vhpsi', 'DFT+U+V case not implemented for GPU', 1 )
   ENDIF
   !
-  CALL deallocate_bec_type_gpu( proj_d )
+  !$acc end data
   !
-  DEALLOCATE( wfcU_d )
+  if(gamma_only) then
+    deallocate( proj_r )
+  else
+    deallocate( proj_k )
+  endif
   !
   CALL stop_clock_gpu( 'vhpsi' )
   !
@@ -150,23 +154,31 @@ SUBROUTINE vhpsi_U_gpu()
            IF ( nt == ityp(na) ) THEN
               IF (gamma_only) THEN
                  !
+                 !$acc host_data use_device(proj_r)
                  CALL cublasDgemm( 'N','N', ldim,mps,ldim, 1.0_dp, &
                       vns_d(1,1,na), ldimax, &
-                      proj_d%r_d(offsetU(na)+1,1), nwfcU, 0.0_dp, rtemp_d, ldimaxt )
+                      proj_r(offsetU(na)+1,1), nwfcU, 0.0_dp, rtemp_d, ldimaxt )
+                 !$acc end host_data
                  !
+                 !$acc host_data use_device(wfcU)
                  CALL cublasDgemm( 'N','N', 2*np, mps, ldim, 1.0_dp, &
-                      wfcU_d(1,offsetU(na)+1), 2*ldap, rtemp_d, ldimaxt, &
+                      wfcU(1,offsetU(na)+1), 2*ldap, rtemp_d, ldimaxt, &
                       1.0_dp, hpsi_d, 2*ldap )
+                 !$acc end host_data
                  !
               ELSE
                  !
+                 !$acc host_data use_device(proj_k)
                  CALL cublasZgemm( 'N', 'N', ldim, mps, ldim, (1.0_dp,0.0_dp), &
-                      vaux_d(:,:,na), ldimax, proj_d%k_d(offsetU(na)+1,1), nwfcU, &
+                      vaux_d(:,:,na), ldimax, proj_k(offsetU(na)+1,1), nwfcU, &
                       (0.0_dp,0.0_dp), ctemp_d, ldimaxt )
+                 !$acc end host_data
                  !
+                 !$acc host_data use_device(wfcU)
                  CALL cublasZgemm( 'N', 'N', np, mps, ldim, (1.0_dp,0.0_dp), &
-                      wfcU_d(1,offsetU(na)+1), ldap, ctemp_d, ldimaxt, &
+                      wfcU(1,offsetU(na)+1), ldap, ctemp_d, ldimaxt, &
                       (1.0_dp,0.0_dp), hpsi_d, ldap)
+                 !$acc end host_data
                  !
               ENDIF
            ENDIF
@@ -188,28 +200,36 @@ SUBROUTINE vhpsi_U_gpu()
                  !
                  ldim = 2*Hubbard_l2(nt)+1
                  !
+                 !$acc host_data use_device(proj_r)
                  CALL cublasDgemm( 'N','N', ldim,mps,ldim, 1.0_dp, &
                       vnsb_d(1,1,na),ldmx_b, &
-                      proj_d%r_d(offsetU_back(na)+1,1), &
+                      proj_r(offsetU_back(na)+1,1), &
                       nwfcU, 0.0_dp, rtemp_d, ldimaxt )
+                 !$acc end host_data
                  !
+                 !$acc host_data use_device(wfcU)
                  CALL cublasDgemm( 'N','N', 2*np, mps, ldim, 1.0_dp, &
-                      wfcU_d(1,offsetU_back(na)+1), 2*ldap, rtemp_d, &
+                      wfcU(1,offsetU_back(na)+1), 2*ldap, rtemp_d, &
                       ldimaxt, 1.0_dp, hpsi_d, 2*ldap )
+                 !$acc end host_data
                  !
                  IF (backall(nt)) THEN
                     !
                     ldim0 = 2*Hubbard_l2(nt)+1
                     ldim  = 2*Hubbard_l3(nt)+1
                     !
+                    !$acc host_data use_device(proj_r)
                     CALL cublasDgemm( 'N', 'N', ldim,mps,ldim, 1.0_dp,     &
                          vnsb_d(ldim0+1,ldim0+1,na),                       &
-                         ldim_back(nt), proj_d%r_d(offsetU_back1(na)+1,1), &
+                         ldim_back(nt), proj_r(offsetU_back1(na)+1,1), &
                          nwfcU, 0.0_dp, rtemp_d, ldimaxt )
+                    !$acc end host_data
                     !
+                    !$acc host_data use_device(wfcU)
                     CALL cublasDgemm( 'N', 'N', 2*np, mps, ldim, 1.0_dp, &
-                         wfcU_d(1,offsetU_back1(na)+1), 2*ldap, rtemp_d, &
+                         wfcU(1,offsetU_back1(na)+1), 2*ldap, rtemp_d, &
                          ldimaxt, 1.0_dp, hpsi_d, 2*ldap )
+                    !$acc end host_data
                     !
                  ENDIF
                  !
@@ -217,27 +237,35 @@ SUBROUTINE vhpsi_U_gpu()
                  !
                  ldim = 2*Hubbard_l2(nt)+1
                  !
+                 !$acc host_data use_device(proj_k)
                  CALL cublasZgemm( 'N', 'N', ldim,mps,ldim, (1.0_dp,0.0_dp),     &
-                      vauxb_d(:,:,na), ldmx_b, proj_d%k_d(offsetU_back(na)+1,1), &
+                      vauxb_d(:,:,na), ldmx_b, proj_k(offsetU_back(na)+1,1), &
                       nwfcU, (0.0_dp,0.0_dp), ctemp_d, ldimaxt )
+                 !$acc end host_data
                  !
+                 !$acc host_data use_device(wfcU)
                  CALL cublasZgemm( 'N', 'N', np, mps, ldim, (1.0_dp,0.0_dp), &
-                      wfcU_d(1,offsetU_back(na)+1), ldap, ctemp_d,           &
+                      wfcU(1,offsetU_back(na)+1), ldap, ctemp_d,           &
                       ldimaxt, (1.0_dp,0.0_dp), hpsi_d, ldap )
+                 !$acc end host_data
                  !
                  IF (backall(nt)) THEN
                     !
                     ldim0 = 2*Hubbard_l2(nt)+1
                     ldim  = 2*Hubbard_l3(nt)+1
                     !
+                    !$acc host_data use_device(proj_k)
                     CALL cublasZgemm( 'N', 'N', ldim,mps,ldim,(1.0_dp,0.0_dp), &
                          vauxb_d(ldim0+1,ldim0+1,na),ldmx_b,                   &
-                         proj_d%k_d(offsetU_back1(na)+1,1), nwfcU,             &
+                         proj_k(offsetU_back1(na)+1,1), nwfcU,             &
                          (0.0_dp,0.0_dp), ctemp_d, ldimaxt )
+                    !$acc end host_data
                     ! 
+                    !$acc host_data use_device(wfcU)
                     CALL cublasZgemm( 'N', 'N', np, mps, ldim, (1.0_dp,0.0_dp), &
-                         wfcU_d(1,offsetU_back1(na)+1), ldap, ctemp_d,          &
+                         wfcU(1,offsetU_back1(na)+1), ldap, ctemp_d,          &
                          ldimaxt, (1.0_dp,0.0_dp), hpsi_d, ldap )
+                    !$acc end host_data
                     !
                  ENDIF
                  !

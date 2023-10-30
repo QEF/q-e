@@ -61,6 +61,7 @@ parser.o \
 plugin_flags.o \
 plugin_arguments.o \
 plugin_variables.o \
+printout_base.o \
 pw_dot.o \
 qmmm.o \
 random_numbers.o \
@@ -221,8 +222,6 @@ stack.o
 # GPU versions of modules
 MODULES += \
   wavefunctions_gpu.o \
-  becmod_gpu.o \
-  becmod_subs_gpu.o \
   cuda_subroutines.o \
   random_numbers_gpu.o
 

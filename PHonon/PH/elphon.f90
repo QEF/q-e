@@ -801,9 +801,7 @@ SUBROUTINE elphsum ( )
   CALL start_clock('elphsum')
 
   elph_dir='elph_dir/'
-  IF (ionode) INQUIRE(file=TRIM(elph_dir), EXIST=exst)
-  CALL mp_bcast(exst, ionode_id, intra_image_comm) 
-  IF (.NOT.exst) CALL create_directory( elph_dir )
+  CALL create_directory( elph_dir )
   WRITE (6, '(5x,"electron-phonon interaction  ..."/)')
   ngauss1 = 0
 

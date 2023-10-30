@@ -73,7 +73,8 @@ MODULE oscdft_pp_mod
          USE becmod,                   ONLY : allocate_bec_type,&
                                               deallocate_bec_type,&
                                               becp, calbec, bec_type
-         USE becmod_subs_gpum,         ONLY : using_becp_auto
+!civn
+         !USE becmod_subs_gpum,         ONLY : using_becp_auto
          USE symm_base,                ONLY : nsym
          USE oscdft_wavefunction_subs, ONLY : oscdft_ortho_swfc, oscdft_get_overlap,&
                                               oscdft_write_overlap,&

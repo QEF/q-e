@@ -258,7 +258,7 @@ SUBROUTINE post_xml_init (  )
   USE cell_base,            ONLY : omega
   USE recvec_subs,          ONLY : ggen, ggens
   USE gvect,                ONLY : ecutrho, gg, ngm, g, gcutm, mill, mill_d, &
-          ngm_g, ig_l2g, eigts1, eigts2, eigts3, gstart, gshells, g_d, gg_d
+          ngm_g, ig_l2g, eigts1, eigts2, eigts3, gstart, gshells
   USE gvecs,                ONLY : ngms, gcutms 
   USE gvecw,                ONLY : ecutwfc
   USE fft_rho,              ONLY : rho_g2r
@@ -330,8 +330,6 @@ SUBROUTINE post_xml_init (  )
 #if defined(__CUDA)
   ! FIXME: to be moved inside ggen
   mill_d = mill
-  g_d    = g
-  gg_d   = gg
 #endif
   !$acc update device(mill, g, gg)
   !

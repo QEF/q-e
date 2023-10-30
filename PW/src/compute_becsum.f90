@@ -30,9 +30,8 @@ SUBROUTINE compute_becsum( iflag )
   USE paw_symmetry,         ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
-                                   bec_type, becp
+                                   becp
   USE wavefunctions_gpum,   ONLY : using_evc
-  USE becmod_subs_gpum,     ONLY : using_becp_auto
   USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
@@ -54,7 +53,6 @@ SUBROUTINE compute_becsum( iflag )
   !
   becsum(:,:,:) = 0.D0
   CALL allocate_bec_type( nkb,nbnd, becp,intra_bgrp_comm )
-  CALL using_becp_auto(2)
   CALL divide( inter_bgrp_comm, nbnd, ibnd_start, ibnd_end )
   this_bgrp_nbnd = ibnd_end - ibnd_start + 1
   !
@@ -96,7 +94,6 @@ SUBROUTINE compute_becsum( iflag )
   ENDIF
   !
   CALL deallocate_bec_type( becp )
-  CALL using_becp_auto(2)
   !
   CALL stop_clock( 'compute_becsum' )
   !

@@ -956,10 +956,9 @@ SUBROUTINE elph_ahc_setup()
   !! set \(\text{ahc_nbnd_gauge}\), the number of bands to compute \(\text{dvpsi}\)
   !
   USE kinds,        ONLY : DP
-  USE io_global,    ONLY : ionode, ionode_id
+  USE io_global,    ONLY : ionode
   USE io_files,     ONLY : create_directory
   USE mp,           ONLY : mp_min, mp_max, mp_bcast
-  USE mp_images,    ONLY : intra_image_comm
   USE mp_pools,     ONLY : intra_pool_comm, root_pool, me_pool
   USE wvfct,        ONLY : nbnd, et
   USE qpoint,       ONLY : nksq, ikks, nksqtot
@@ -968,8 +967,6 @@ SUBROUTINE elph_ahc_setup()
   !
   IMPLICIT NONE
   !
-  LOGICAL :: exst
-  !! True if folder exists
   CHARACTER(LEN=256) :: filoutetk
   !! Filename for \(e_n(k)\) energy eigenvalue output
   CHARACTER(LEN=256) :: filoutetq
@@ -1000,9 +997,7 @@ SUBROUTINE elph_ahc_setup()
   !
   ! Create output directory
   !
-  IF (ionode) INQUIRE(FILE=TRIM(ahc_dir), EXIST=exst)
-  CALL mp_bcast(exst, ionode_id, intra_image_comm)
-  IF (.NOT. exst) CALL create_directory(ahc_dir)
+  CALL create_directory(ahc_dir)
   !
   ib_ahc_min = ahc_nbndskip + 1
   ib_ahc_max = ahc_nbndskip + ahc_nbnd
