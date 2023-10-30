@@ -18,7 +18,7 @@ SUBROUTINE scale_h
   USE cell_base,      ONLY : bg, omega, set_h_ainv, tpiba
   USE cellmd,         ONLY : at_old, omega_old
   USE constants,      ONLY : eps8
-  USE gvect,          ONLY : g, gg, ngm, g_d, gg_d
+  USE gvect,          ONLY : g, gg, ngm
   USE klist,          ONLY : xk, wk, nkstot
   USE uspp_data,      ONLY : nqxq, dq, scale_uspp_data
   USE control_flags,  ONLY : iverbosity
@@ -73,11 +73,6 @@ SUBROUTINE scale_h
      gg (ig) = g(1,ig) * g(1,ig) + g(2,ig) * g(2,ig) + g(3,ig) * g(3,ig)
      gg_max = MAX(gg(ig), gg_max)
   ENDDO
-#if defined(__CUDA)
-  ! update GPU copies of variables as well
-  g_d  = g
-  gg_d = gg
-#endif
   !$acc update device(g,gg)
   !
   CALL mp_max( gg_max, intra_bgrp_comm )

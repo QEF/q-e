@@ -17,7 +17,7 @@ SUBROUTINE init_run()
   USE control_flags,      ONLY : lmd, gamma_only, smallmem, ts_vdw, mbd_vdw, &
                                  lforce => tprnfor, tstress
   USE gvect,              ONLY : g, gg, mill, gcutm, ig_l2g, ngm, ngm_g, &
-                                 g_d, gg_d, mill_d, gshells, &
+                                 mill_d, gshells, &
                                  gstart ! to be communicated to the Solvers if gamma_only
   USE gvecs,              ONLY : gcutms, ngms
   USE cell_base,          ONLY : alat, at, bg, set_h_ainv, omega
@@ -100,8 +100,6 @@ SUBROUTINE init_run()
   IF ( use_gpu) THEN
      ! All these variables are actually set by ggen which has intent out
      mill_d = mill
-     g_d    = g
-     gg_d   = gg
   END IF
 #endif
   !$acc update device(mill, g, gg)
