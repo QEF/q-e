@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine init_us_1( nat, ityp, omega, intra_bgrp_comm )
+subroutine init_us_1( nat, ityp, omega, qmax, intra_bgrp_comm )
   !----------------------------------------------------------------------
   !
   !   This routine performs the following tasks:
@@ -34,12 +34,14 @@ subroutine init_us_1( nat, ityp, omega, intra_bgrp_comm )
   USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nsp
   USE upf_spinorb,  ONLY : is_spinorbit, rot_ylm, fcoef, fcoef_d, lmaxx, &
                            transform_qq_so
+  USE qrad_mod,     ONLY : init_tab_qrad
   USE paw_variables,ONLY : okpaw
   USE mp,           ONLY : mp_sum
   implicit none
   !
   integer,  intent(in) :: nat
   integer,  intent(in) :: ityp(nat)
+  real(DP), intent(in) :: qmax
   real(DP), intent(in) :: omega
   integer,  intent(in) :: intra_bgrp_comm
   !
@@ -234,7 +236,7 @@ subroutine init_us_1( nat, ityp, omega, intra_bgrp_comm )
   !   here for the US types we compute the Fourier transform of the
   !   Q functions.
   !
-  IF ( lmaxq > 0 ) CALL init_tab_qrad(omega, intra_bgrp_comm)
+  IF ( lmaxq > 0 ) CALL init_tab_qrad(qmax, omega, intra_bgrp_comm, ir)
   !
   !   and finally we compute the qq coefficients by integrating the Q.
   !   The qq are the g=0 components of Q

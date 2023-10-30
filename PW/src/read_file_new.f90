@@ -285,7 +285,7 @@ SUBROUTINE post_xml_init (  )
   !
   IMPLICIT NONE
   !
-  REAL(DP) :: ehart, etxc, vtxc, etotefield, charge
+  REAL(DP) :: ehart, etxc, vtxc, etotefield, charge, qmax
   CHARACTER(LEN=37) :: dft_name
   !
   ! ... initialize Libxc if needed
@@ -363,7 +363,8 @@ SUBROUTINE post_xml_init (  )
   CALL init_vloc()
   IF (tbeta_smoothing) CALL init_us_b0(ecutwfc,intra_bgrp_comm)
   IF (tq_smoothing) CALL init_us_0(ecutrho,intra_bgrp_comm)
-  CALL init_us_1(nat, ityp, omega, intra_bgrp_comm)
+  qmax = sqrt(ecutrho)*cell_factor
+  CALL init_us_1(nat, ityp, omega, qmax, intra_bgrp_comm)
   IF ( lda_plus_u .AND. ( Hubbard_projectors == 'pseudo' ) ) CALL init_q_aeps()
   CALL init_tab_atwfc(omega, intra_bgrp_comm)
   !
