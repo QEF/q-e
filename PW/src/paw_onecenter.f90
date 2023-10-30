@@ -476,7 +476,7 @@ MODULE paw_onecenter
     im_sum = i%m*(ix_e-ix_s+1)
     en_pres = PRESENT(energy)
     !
-    ! true if using spin
+    ! ... 1 if using spin
     lsd = 0
     IF (nspin == 2)  lsd = 1
     IF (with_small_so) THEN
@@ -486,7 +486,7 @@ MODULE paw_onecenter
     !
 #if defined(_OPENMP) && !defined(_OPENACC)
     !$omp parallel
-    ntids = omp_get_num_threads()  ! take the number of threads
+    ntids = omp_get_num_threads()
     !$omp end parallel
 #endif
     !
@@ -502,8 +502,8 @@ MODULE paw_onecenter
        ALLOCATE( e_rad(im_sum) )
     ENDIF
     !
-    !$acc data copyin( rho_lm, rho_core ), copyout( v_rad )
-    !$acc data create( arho, rho_rad, ex, ec, vx, vc, e_rad )
+    !$acc data copyin( rho_lm, rho_core )
+    !$acc data create( arho, rho_rad, ex, ec, vx, vc, e_rad ) copyout(v_rad)
     !$acc data copyin( g(i%t:i%t), g(i%t)%r2, g(i%t)%rm2, g(i%t)%rab )
     !$acc data copyin( rad(i%t:i%t), rad(i%t)%ylm, rad(i%t)%ww )
     IF ( with_small_so ) THEN
@@ -586,65 +586,35 @@ MODULE paw_onecenter
       ENDDO
       !
     ELSEIF (nspin_mag <= 2 ) THEN
-      IF ( lsd == 0 ) THEN
-        !
-#if defined(_OPENACC)
-!$acc parallel loop collapse(2) present(g(i%t:i%t),rad(i%t:i%t))
-#else
-!$omp parallel do default(private), &
-!$omp shared(en_pres,i,rho_core,rho_rad,v_rad,e_rad,vx,vc,ex,ec,ix_s,ix_e,g,nspin_mag)
-#endif
-        DO ix = ix_s, ix_e
-          DO k = 1, i%m
-            !
-            ix0 = ix-ix_s+1
-            ixk0 = (ix-ix_s)*i%m + k
-            !
-            v_rad(k,ix,1) = e2*( vx(ixk0,1) + vc(ixk0,1) )
-            !
-            IF (en_pres) THEN
-              e_radik = e2*( ex(ixk0) + ec(ixk0) )
-              IF (nspin_mag < 2) THEN
-                 e_rad(ixk0) = e_radik * ( rho_rad(k,ix0,1) + rho_core(k)*g(i%t)%r2(k) )
-              ELSEIF (nspin_mag == 2) THEN
-                 e_rad(ixk0) = e_radik * ( rho_rad(k,ix0,1)+rho_rad(k,ix0,2)+rho_core(k)*g(i%t)%r2(k) )
-              ENDIF
-            ENDIF
-            !
-          ENDDO
-        ENDDO
-        !
-      ELSE
-        !
+      !
 #if defined(_OPENACC)
 !$acc parallel loop collapse(2) present(g(i%t:i%t))
 #else
 !$omp parallel do default(private), &
 !$omp shared(en_pres,i,rho_core,rho_rad,v_rad,e_rad,vx,vc,ex,ec,ix_s,ix_e,g,nspin,nspin_mag)
 #endif
-        DO ix = ix_s, ix_e
-          DO k = 1, i%m
-            !
-            ix0 = ix-ix_s+1
-            ixk0 = (ix-ix_s)*i%m + k
-            !
-            DO is = 1, nspin
-              v_rad(k,ix,is) = e2*( vx(ixk0,is) + vc(ixk0,is) )
-            ENDDO
-            !
-            IF (en_pres) THEN
-              e_radik = e2*( ex(ixk0) + ec(ixk0) )
-              IF (nspin_mag < 2) THEN
-                 e_rad(ixk0) = e_radik * ( rho_rad(k,ix0,1) + rho_core(k)*g(i%t)%r2(k) )
-              ELSEIF (nspin_mag == 2) THEN
-                 e_rad(ixk0) = e_radik * ( rho_rad(k,ix0,1) + rho_rad(k,ix0,2) + rho_core(k)*g(i%t)%r2(k) )
-              ENDIF
-            ENDIF
-            !
+      DO ix = ix_s, ix_e
+        DO k = 1, i%m
+          !
+          ix0 = ix-ix_s+1
+          ixk0 = (ix-ix_s)*i%m + k
+          !
+          DO is = 1, lsd+1
+            v_rad(k,ix,is) = e2*( vx(ixk0,is) + vc(ixk0,is) )
           ENDDO
+          !
+          IF (en_pres) THEN
+            e_radik = e2*( ex(ixk0) + ec(ixk0) )
+            IF (nspin_mag < 2) THEN
+               e_rad(ixk0) = e_radik * ( rho_rad(k,ix0,1) + rho_core(k)*g(i%t)%r2(k) )
+            ELSEIF (nspin_mag == 2) THEN
+               e_rad(ixk0) = e_radik * ( rho_rad(k,ix0,1) + rho_rad(k,ix0,2) + rho_core(k)*g(i%t)%r2(k) )
+            ENDIF
+          ENDIF
+          !
         ENDDO
-        !
-      ENDIF
+      ENDDO
+      !
     ENDIF
     !
     !
@@ -653,7 +623,7 @@ MODULE paw_onecenter
 #if defined(_OPENMP) && !defined(OPENACC)
 !$omp parallel default(private), &
 !$omp shared(i,rad,ix_s,ix_e,e_rad,e_of_tid,g)
-      mytid = omp_get_thread_num()+1 ! take the thread ID
+      mytid = omp_get_thread_num()+1
 #endif
 !$omp do
       DO ix = ix_s, ix_e
@@ -666,7 +636,6 @@ MODULE paw_onecenter
 !$omp end parallel
     ENDIF
     !
-    !$acc end data
     !$acc end data
     !$acc end data
     !$acc end data
@@ -685,12 +654,12 @@ MODULE paw_onecenter
     IF (TIMING) CALL stop_clock( 'PAW_xc_pot' )
     !
     IF (PRESENT(energy)) THEN
-       energy = SUM(e_of_tid)
-       DEALLOCATE( e_of_tid )
-       CALL mp_sum( energy, paw_comm )
+      energy = SUM(e_of_tid)
+      DEALLOCATE( e_of_tid )
+      CALL mp_sum( energy, paw_comm )
     ENDIF
     !
-    ! Recompose the sph. harm. expansion
+    ! ... Recompose the sph. harm. expansion
     CALL PAW_rad2lm( i, v_rad, v_lm, i%l, nspin_mag )
     !
     IF ( with_small_so ) THEN
@@ -698,10 +667,16 @@ MODULE paw_onecenter
        DEALLOCATE( g_rad )
     ENDIF
     !
-    ! Add gradient correction, if necessary
+   
+    !$acc data copy(v_lm)
+
+    ! ... Add gradient correction, if necessary
     IF ( xclib_dft_is('gradient') ) &
         CALL PAW_gcxc_potential( i, rho_lm, rho_core, v_lm, energy )
-        !
+    !
+    !$acc end data
+    !$acc end data
+
     !IF (TIMING) CALL stop_clock( 'PAW_xc_pot' )
     !
     RETURN
@@ -1495,8 +1470,6 @@ MODULE paw_onecenter
 !$omp end do
     ENDDO
 !$omp end parallel
-    !
-    ! This routine recollects the result within the paw communicator
     !
     CALL mp_sum( F_lm, paw_comm )
     !
