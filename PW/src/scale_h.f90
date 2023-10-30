@@ -19,7 +19,7 @@ SUBROUTINE scale_h
   USE cellmd,         ONLY : at_old, omega_old
   USE constants,      ONLY : eps8
   USE gvect,          ONLY : g, gg, ngm
-  USE klist,          ONLY : xk, wk, nkstot
+  USE klist,          ONLY : xk, wk, nkstot, qnorm
   USE uspp_data,      ONLY : nqxq, dq, scale_uspp_data
   USE control_flags,  ONLY : iverbosity
   USE start_k,        ONLY : nks_start, xk_start, nk1,nk2,nk3
