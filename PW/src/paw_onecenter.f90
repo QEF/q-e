@@ -472,6 +472,7 @@ MODULE paw_onecenter
     !
     IF (TIMING) CALL start_clock( 'PAW_xc_pot' )
     !
+    mytid = 1 ; ntids = 1
     im_sum = i%m*(ix_e-ix_s+1)
     en_pres = PRESENT(energy)
     !
@@ -483,13 +484,10 @@ MODULE paw_onecenter
        g_rad = 0.0_DP
     ENDIF
     !
-#if defined(_OPENMP)
+#if defined(_OPENMP) && !defined(_OPENACC)
     !$omp parallel
     ntids = omp_get_num_threads()  ! take the number of threads
     !$omp end parallel
-#else
-    mytid = 1
-    ntids = 1
 #endif
     !
     ALLOCATE( rho_rad(i%m,ix_e-ix_s+1,nspin_mag) )
@@ -499,10 +497,8 @@ MODULE paw_onecenter
     !
     IF (PRESENT(energy)) THEN
        energy = 0._DP
-#if !defined(_OPENACC)
        ALLOCATE( e_of_tid(ntids) )
        e_of_tid = 0._DP
-#endif
        ALLOCATE( e_rad(im_sum) )
     ENDIF
     !
@@ -519,6 +515,9 @@ MODULE paw_onecenter
     v_rad(:,:,:) = 0.d0
     !$acc end kernels
     !
+    CALL PAW_lm2rad_gpu( i, ix_s, rho_lm, rho_rad, nspin_mag, ix_e-ix_s+1 )
+    IF (with_small_so .AND. i%ae==1) CALL add_small_mag_gpu( i, ix_s, rho_rad, ix_e-ix_s+1 )
+    !
 #if defined(_OPENACC)
 !$acc parallel loop collapse(2) present(g(i%t:i%t),rad(i%t:i%t))
 #else
@@ -531,8 +530,6 @@ MODULE paw_onecenter
         ix0 = ix-ix_s+1
         ixk0 = (ix-ix_s)*i%m+k
         !
-        CALL PAW_lm2rad_gpu( i, rad(i%t)%ylm(ix,1:i%l**2),rho_lm(k,:,:), rho_rad(k,ix0,:), nspin_mag )
-        !
         rho_loc1 = rho_rad(k,ix0,1)*g(i%t)%rm2(k)
         IF (nspin==1) THEN
           arho(ixk0,1) = rho_loc1 + rho_core(k)
@@ -541,11 +538,6 @@ MODULE paw_onecenter
           arho(ixk0,1) = rho_loc1 + rho_loc2 + rho_core(k)
           arho(ixk0,2) = rho_loc1 - rho_loc2
         ELSEIF (nspin_mag==4) THEN
-          IF (with_small_so .AND. i%ae==1) &
-            CALL add_small_mag_gpu( i, rad(i%t)%sin_th(ix), rad(i%t)%cos_th(ix), &
-            rad(i%t)%sin_phi(ix), rad(i%t)%cos_phi(ix), msmall_lm(k,1:i%l**2,:), &
-            rad(i%t)%ylm(ix,1:i%l**2), rho_rad(k,ix0,1:nspin), nspin_mag )
-          !
           arho(ixk0,1) = rho_rad(k,ix0,1)*g(i%t)%rm2(k) + rho_core(k)
           arho(ixk0,2:nspin) = rho_rad(k,ix0,2:nspin)*g(i%t)%rm2(k)
         ENDIF
@@ -657,19 +649,12 @@ MODULE paw_onecenter
     !
     !
     IF ( en_pres ) THEN
-#if defined(_OPENACC)
-      !$acc parallel loop collapse(2) reduction(+:energy) present(g(i%t:i%t),rad(i%t:i%t))
-      DO ix = ix_s, ix_e
-        DO k = 2, i%m-1, 2
-          ixk0 = (ix-ix_s)*i%m + k
-          energy = energy + (e_rad(ixk0-1)*g(i%t)%rab(k-1) + 4.d0*e_rad(ixk0)*g(i%t)%rab(k) + &
-                             e_rad(ixk0+1)*g(i%t)%rab(k+1))* div3 * rad(i%t)%ww(ix)
-        ENDDO
-      ENDDO
-#else
+!$acc update self(e_rad)
+#if defined(_OPENMP) && !defined(OPENACC)
 !$omp parallel default(private), &
 !$omp shared(i,rad,ix_s,ix_e,e_rad,e_of_tid,g)
       mytid = omp_get_thread_num()+1 ! take the thread ID
+#endif
 !$omp do
       DO ix = ix_s, ix_e
         ixk_s = (ix-ix_s)*i%m+1
@@ -679,7 +664,6 @@ MODULE paw_onecenter
       ENDDO
 !$omp end do
 !$omp end parallel
-#endif
     ENDIF
     !
     !$acc end data
@@ -701,10 +685,8 @@ MODULE paw_onecenter
     IF (TIMING) CALL stop_clock( 'PAW_xc_pot' )
     !
     IF (PRESENT(energy)) THEN
-#if !defined(_OPENACC)
        energy = SUM(e_of_tid)
        DEALLOCATE( e_of_tid )
-#endif
        CALL mp_sum( energy, paw_comm )
     ENDIF
     !
@@ -1423,27 +1405,52 @@ MODULE paw_onecenter
   END SUBROUTINE PAW_lm2rad
   !
   !
-  SUBROUTINE PAW_lm2rad_gpu( i, rad_y, F_lm, F_rad, nspin )
-  !$acc routine seq
-
-    !USE paw_variables,  ONLY : rad , rad_tst
-
+  !-----------------------------------------------------------------------------------
+  SUBROUTINE PAW_lm2rad_gpu( i, ix, F_lm, F_rad, nspin, ix_l )
+    !---------------------------------------------------------------------------------
+    !! Build radial charge distribution from its spherical harmonics expansion.
+    !
     TYPE(paw_info), INTENT(IN) :: i
     !! atom's minimal info
     INTEGER :: ix
+    !! line of the ylm matrix to use
+    !! actually it is one of the nx directions
     INTEGER, INTENT(IN) :: nspin
-    REAL(DP), INTENT(IN) :: rad_y(i%l**2)
-    REAL(DP), INTENT(IN) :: F_lm(i%l**2,nspin)
-    REAL(DP), INTENT(OUT) :: F_rad(nspin)
+    !! number of spin components
+    REAL(DP), INTENT(IN) :: F_lm(i%m,i%l**2,nspin)
+    !! Y_lm expansion of rho
+    REAL(DP), INTENT(OUT) :: F_rad(i%m*ix_l,nspin)
+    !! charge density on rad. grid
+    INTEGER, INTENT(IN) :: ix_l
     !
-    INTEGER :: ispin ! counters on spin
+    ! ... local variables
     !
-    DO ispin = 1,nspin
-       F_rad(ispin) = SUM(rad_y(1:i%l**2)*F_lm(1:i%l**2,ispin))
+    INTEGER :: jx, ixk, k, ispin, lm ! counters on angmom and spin
+    REAL(DP) :: F_rads
+    !
+    IF (TIMING) CALL start_clock( 'PAW_lm2rad' )
+    !
+    !$acc data present_or_copyin(F_lm) present_or_copyout(F_rad)
+    !$acc parallel loop collapse(3) present(rad(i%t:i%t))
+    DO jx = ix, ix+ix_l-1
+      DO k = 1, i%m
+        DO ispin = 1, nspin
+          !
+          ixk = (jx-ix)*i%m + k
+          F_rads = 0._DP
+          DO lm = 1, i%l**2
+            F_rads = F_rads + rad(i%t)%ylm(jx,lm)*F_lm(k,lm,ispin)
+          ENDDO ! lm
+          F_rad(ixk,ispin) = F_rads
+          !
+        ENDDO
+      ENDDO
     ENDDO
+    !$acc end data
+    !
+    IF (TIMING) CALL stop_clock( 'PAW_lm2rad' )
     !
   END SUBROUTINE PAW_lm2rad_gpu
-
 
 
   !--------------------------------------------------------------------------------
@@ -2609,39 +2616,60 @@ MODULE paw_onecenter
   END SUBROUTINE add_small_mag
   !
   !
-  SUBROUTINE add_small_mag_gpu( i, sin_th, cos_th, sin_phi, cos_phi, msmall_lm_, rad_y, rho_rad, nspin_mag )
-  !$acc routine seq
+  !---------------------------------------------------------------------------
+  SUBROUTINE add_small_mag_gpu( i, ix, rho_rad, ix_l )
     !-----------------------------------------------------------------------
-    !USE noncollin_module,   ONLY : nspin_mag
+    !! This subroutine computes the contribution of the small component to the
+    !! magnetization in the noncollinear case and adds its to rho_rad.
+    !! The calculation is done along the radial line ix.
+    !
+    !! NB: Both the input and the output magnetizations are multiplied by r^2.
+    !
+    USE noncollin_module,   ONLY : nspin_mag
     !
     TYPE(paw_info), INTENT(IN) :: i
     !! atom's minimal info
-    REAL(DP), INTENT(IN) :: rad_y(i%l**2)
-    REAL(DP), INTENT(INOUT) :: rho_rad(nspin_mag)
-    !
-    REAL(DP), INTENT(IN) :: msmall_lm_(i%l**2,nspin_mag)
-    REAL(DP), INTENT(IN) :: sin_th, cos_th, sin_phi, cos_phi
-    integer, intent(in) :: nspin_mag
+    INTEGER, INTENT(IN) :: ix
+    !! the line
+    REAL(DP), INTENT(INOUT) :: rho_rad(i%m*ix_l,nspin_mag)
+    !! the magnetization 
+    INTEGER, INTENT(IN) :: ix_l
     !
     ! ... local variables
     !
-    REAL(DP) :: msmall_rad(nspin_mag)
+    REAL(DP) :: msmall_rad(i%m*ix_l,nspin_mag)
     ! auxiliary: the mag of the small components along a line
     REAL(DP) :: hatr(3)
-    INTEGER  :: k, ipol, kpol
+    INTEGER  :: k, ipol, kpol, jx, ixk
     !
-    CALL PAW_lm2rad_gpu( i, rad_y, msmall_lm_, msmall_rad, nspin_mag )
+    
+    !$acc data present_or_copyin(msmall_lm) present_or_copy(rho_rad)
+    !$acc data create( msmall_rad )
+    
+    CALL PAW_lm2rad_gpu( i, ix, msmall_lm, msmall_rad, nspin_mag, ix_l )
     !
-    hatr(1)=sin_th*cos_phi
-    hatr(2)=sin_th*sin_phi
-    hatr(3)=cos_th
+    hatr(1)=rad(i%t)%sin_th(ix)*rad(i%t)%cos_phi(ix)
+    hatr(2)=rad(i%t)%sin_th(ix)*rad(i%t)%sin_phi(ix)
+    hatr(3)=rad(i%t)%cos_th(ix)
     !
-    DO ipol = 1, 3
-       DO kpol = 1, 3
-          rho_rad(ipol+1) = rho_rad(ipol+1) - &
-                  msmall_rad(kpol+1) * hatr(ipol) * hatr(kpol) * 2.0_DP
-       ENDDO
+    !$acc parallel loop collapse(2) present(rad(i%t:i%t)) private(hatr)
+    DO jx = ix, ix+ix_l-1
+      DO k = 1, i%m
+        !
+        ixk = (jx-ix)*i%m + k
+        !
+        DO ipol = 1, 3
+          DO kpol = 1, 3
+            rho_rad(ixk,ipol+1) = rho_rad(ixk,ipol+1) - &
+                   msmall_rad(ixk,kpol+1) * hatr(ipol) * hatr(kpol) * 2.0_DP
+          ENDDO
+        ENDDO
+        !
+      ENDDO
     ENDDO
+    !$acc end data
+    !
+    !$acc end data
     !
     RETURN
     !
