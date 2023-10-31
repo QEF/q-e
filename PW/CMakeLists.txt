@@ -281,10 +281,7 @@ if (QE_ENABLE_OSCDFT)
         src/oscdft_forces.f90
         src/oscdft_forces_subs.f90
         # GPU
-        src/oscdft_wavefunction_subs_gpu.f90
-        src/oscdft_wfcO_gpu.f90
-        src/oscdft_functions_gpu.f90
-        src/additional_cusolver_subs.f90)
+        src/oscdft_functions_gpu.f90)
 endif()
 qe_enable_cuda_fortran("${src_pw}")
     
