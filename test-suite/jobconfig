@@ -282,6 +282,13 @@ program = QEHeat_h2o_mol_t
 [image_*/]
 program = IMAGE
 
+[oscdft_pw]
+program = OSCDFT
+inputs_args = ('nooscdft.in', '1'), ('view.in', '2 view.oscdft.in'), ('scf.in', '2 scf.oscdft.in'), ('relax.in', '2 scf.oscdft.in'), ('k.in', '2 k.oscdft.in'), ('normcons.in', '2 normcons.oscdft.in')
+
+[oscdft_pp]
+program = OSCDFT_PP
+inputs_args = ('view.in', '3 view.oscdft.in pw.in'), ('normalize.in', '3 normalize.oscdft.in pw.in')
 
 
 [categories]
@@ -298,3 +305,4 @@ image_all = image_*??
 all_currents_all = QEHeat_*
 _default_ = pw_*?? cp_*?? ph_*?? epw_*?? tddfpt_*?? hp_*?? all_currents_*??
 kcw_all = kcw_*??
+oscdft_all = oscdft_pw oscdft_pp

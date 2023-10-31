@@ -291,10 +291,7 @@ PWLIBS += \
   s_1psi_gpu.o \
   utils_gpu.o \
   atomic_wfc_gpu.o \
-  oscdft_wavefunction_subs_gpu.o \
-  oscdft_wfcO_gpu.o \
-  oscdft_functions_gpu.o \
-  additional_cusolver_subs.o
+  oscdft_functions_gpu.o
 
 
 

@@ -27,6 +27,25 @@ SUBROUTINE MYDGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
 
 END SUBROUTINE MYDGER
 
+SUBROUTINE MYZGERC ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
+#if defined(__CUDA)
+    use cudafor
+    use cublas
+#endif
+!     .. Scalar Arguments ..
+    COMPLEX*16, INTENT(IN) :: ALPHA
+    INTEGER,    INTENT(IN) :: INCX, INCY, LDA, M, N
+!     .. Array Arguments ..
+    COMPLEX*16 :: A( LDA, * ), X( * ), Y( * )
+#if defined(__CUDA)
+    attributes(device) :: A, X, Y
+    CALL cublasZgerc( M, N, ALPHA, X, INCX, Y, INCY, A, LDA)
+#else
+    CALL ZGERC  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
+#endif
+
+END SUBROUTINE MYZGERC
+
 !=----------------------------------------------------------------------------=!
 
 SUBROUTINE MYDGEMM( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
