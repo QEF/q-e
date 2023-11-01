@@ -13,7 +13,7 @@ SUBROUTINE iosys()
   !! Wrapper routine: the original "iosys" was too long and was split into
   !! more *iosys* routines, containing input_parameters module
   !
-  USE input_parameters,      ONLY : deallocate_input_parameters
+  USE input_parameters,      ONLY : lrescalemag, deallocate_input_parameters
   !
   USE qexsd_input,           ONLY : qexsd_input_obj
   USE qes_types_module,      ONLY : input_type
@@ -26,6 +26,8 @@ SUBROUTINE iosys()
   USE oscdft_base,           ONLY : oscdft_ctx
   USE oscdft_input,          ONLY : oscdft_read_input
 #endif
+ USE lsda_mod,               ONLY : starting_magnetization
+ USE ions_base,              ONLY : nsp
   INTERFACE
      SUBROUTINE   pw_init_qexsd_input(obj,obj_tagname)
      IMPORT                       :: input_type
@@ -47,6 +49,12 @@ SUBROUTINE iosys()
   !
   CALL pseudo_iosys()
   !
+  ! ... set up magnetization variables; done here because we need zv values
+  !     initialized in pseudo_iosys 
+  !
+  IF (lrescalemag) CALL rescale_starting_mag_from_pseudo()
+  CALL magnetization_iosys() 
+  ! 
   ! ... set atomic structure (read from xml file if required)
   !
   CALL structure_iosys()
@@ -268,7 +276,6 @@ SUBROUTINE control_iosys()
   USE a2F,           ONLY : la2F_ => la2F
   !
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
-                            starting_magnetization_ => starting_magnetization, &
                             lsda
   !
   USE relax,         ONLY : epse, epsf, epsp, starting_scf_threshold
@@ -367,9 +374,8 @@ SUBROUTINE control_iosys()
   USE input_parameters, ONLY : ntyp, nbnd,tot_charge,tot_magnetization,     &
                                ecutwfc, ecutrho, noinv, nosym, nosym_evc,   &
                                no_t_rev, use_all_frac, force_symmorphic,    &
-                               starting_charge, starting_magnetization,     &
-                               occupations, degauss, smearing, nspin,       &
-                               ecfixed, qcutz, q2sigma,                     &
+                               starting_charge, occupations, degauss,       &
+                               smearing, nspin, ecfixed, qcutz, q2sigma,    &
                                la2F, dmft, dmft_prefix,                     &
                                pol_type, sic_gamma, sic_energy, sci_vb, sci_cb, &
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
@@ -818,159 +824,7 @@ SUBROUTINE control_iosys()
      angle2=0.d0
   ENDIF
   !
-  noncolin_ = noncolin
-  lspinorb_ = lspinorb
-  lforcet_ = lforcet
-  !
-  ! ... starting_magnetization(nt) = sm_not_set means "not set"
-  ! ... take notice and set to the default (zero)
-  !
-  sm_wasnt_set = ALL (starting_magnetization(1:nsp) == sm_not_set)
-  DO nt = 1, nsp
-     IF ( starting_magnetization(nt) == sm_not_set ) &
-          starting_magnetization(nt) = 0.0_dp
-  END DO
-  !
-  SELECT CASE( trim( constrained_magnetization ) )
-  CASE( 'none' )
-     !
-     ! ... if no constraints are imposed on the magnetization, 
-     ! ... starting_magnetization must be set for at least one atomic type
-     !
-     IF ( lscf .AND. lsda .AND. ( .NOT. tfixed_occ ) .AND. &
-          ( .not. two_fermi_energies )  .AND. sm_wasnt_set ) &
-        CALL errore('iosys','some starting_magnetization MUST be set', 1 )
-     !
-     ! ... bring starting_magnetization between -1 and 1
-     !
-     DO nt = 1, nsp
-        starting_magnetization(nt) = MIN( 1.0_dp,starting_magnetization(nt))
-        starting_magnetization(nt) = MAX(-1.0_dp,starting_magnetization(nt))
-     ENDDO
-     !
-     i_cons = 0
-     !
-  CASE( 'atomic' )
-     !
-     ! ... if "atomic" constraints are imposed on the magnetization, 
-     ! ... starting_magnetization must be set for at least one atomic type
-     !
-     IF ( nspin == 1 ) &
-        CALL errore( 'iosys','constrained atomic magnetizations ' // &
-                   & 'require nspin=2 or 4 ', 1 )
-     IF ( sm_wasnt_set ) &
-        CALL errore( 'iosys','constrained atomic magnetizations ' // &
-                   & 'require that some starting_magnetization is set', 1 )
-     !
-     i_cons = 1
-     !
-     IF (nspin == 4) THEN
-        ! non-collinear case
-        DO nt = 1, nsp
-           !
-           theta = angle1(nt)
-           phi   = angle2(nt)
-           !
-           mcons(1,nt) = starting_magnetization(nt) * sin( theta ) * cos( phi )
-           mcons(2,nt) = starting_magnetization(nt) * sin( theta ) * sin( phi )
-           mcons(3,nt) = starting_magnetization(nt) * cos( theta )
-           !
-        ENDDO
-     ELSE
-        ! collinear case
-        DO nt = 1, nsp
-           !
-           mcons(1,nt) = starting_magnetization(nt)
-           !
-        ENDDO
-     ENDIF
-     !
-  CASE( 'atomic direction' )
-     !
-     IF ( nspin == 1 ) &
-        CALL errore( 'iosys','constrained atomic magnetization ' // &
-                   & 'directions require nspin=2 or 4 ', 1 )
-     !
-     i_cons = 2
-     !
-     DO nt = 1, nsp
-        !
-        ! ... angle between the magnetic moments and the z-axis is
-        ! ... constrained
-        !
-        theta = angle1(nt)
-        mcons(3,nt) = cos(theta)
-        !
-     ENDDO
-     !
-  CASE( 'total' )
-     !
-     IF ( nspin == 4 ) THEN
-        !
-        i_cons = 3
-        !
-        mcons(1,1) = fixed_magnetization(1)
-        mcons(2,1) = fixed_magnetization(2)
-        mcons(3,1) = fixed_magnetization(3)
-        !
-     ELSE
-        !
-        CALL errore( 'iosys','constrained total magnetization ' // &
-                   & 'requires nspin= 4 ', 1 )
-        !
-     ENDIF
-     !
-  CASE( 'total direction' )
-     i_cons = 6
-     mcons(3,1) = fixed_magnetization(3)
-     IF ( mcons(3,1) < 0.D0 .or. mcons(3,1) > 180.D0 ) &
-        CALL errore( 'iosys','constrained magnetization angle: ' // &
-                   & 'theta must be within [0,180] degrees', 1 )
-     !
-  CASE DEFAULT
-     !
-     CALL errore( 'iosys','constrained magnetization ' // &
-                & trim( constrained_magnetization ) // 'not implemented', 1 )
-     !
-  END SELECT
-  !
-  IF ( B_field(1) /= 0.D0 .or. &
-       B_field(2) /= 0.D0 .or. &
-       B_field(3) /= 0.D0 ) THEN
-     !
-     IF ( nspin == 1 ) CALL errore( 'iosys', &
-          & 'non-zero external B_field requires nspin=2 or 4', 1 )
-     IF ( TRIM( constrained_magnetization ) /= 'none' ) &
-          CALL errore( 'iosys', 'constrained_magnetization and ' // &
-                     & 'non-zero external B_field are conflicting flags', 1 )
-     IF ( nspin == 2 .AND. ( B_field(1) /= 0.D0 .OR. B_field(2) /= 0.D0 ) ) &
-        CALL errore('iosys','only B_field(3) can be specified with nspin=2', 1)
-     IF ( i_cons /= 0 ) CALL errore( 'iosys', &
-          & 'non-zero external B_field and constrained magnetization?', i_cons)
-     !
-     ! i_cons=4 signals the presence of an external B field
-     ! this should be done in a cleaner way
-     !
-     i_cons = 4
-     bfield(:)=B_field(:)
-     !
-  ENDIF
-  !
-  starting_magnetization_ = starting_magnetization
-  starting_spin_angle_ = starting_spin_angle
-  angle1_   = angle1
-  angle2_   = angle2
-  lambda_   = lambda
-  domag     = ANY ( ABS( starting_magnetization(1:nsp) ) > 1.D-6 )
-  !
-  IF ( (i_cons == 1 .OR. nspin == 2) .AND. (report /= 0) ) THEN
-     report_ = -1
-  ELSE IF ( (i_cons /= 0 .OR. report /= 0) .AND. ( domag .AND. noncolin) ) THEN
-     report_ = report
-  ELSE
-     report_ = 0
-  END IF
-  !
+ !
   ! STARTING AND RESTARTING
   !
   SELECT CASE( trim( restart_mode ) )
@@ -1556,6 +1410,194 @@ SUBROUTINE control_iosys()
   !
 END SUBROUTINE control_iosys
 !
+!
+SUBROUTINE magnetization_iosys()
+  USE kinds, ONLY: DP
+  USE control_flags, ONLY: lscf
+  USE input_parameters, ONLY : tot_magnetization, starting_magnetization,          &
+                              lambda, angle1, angle2, constrained_magnetization,  &
+                              B_field, fixed_magnetization, report, lspinorb,&
+                              starting_spin_angle, noncolin, lforcet
+ 
+  USE lsda_mod,      ONLY : nspin, &
+                            starting_magnetization_ => starting_magnetization, &
+                            lsda
+  !
+  USE noncollin_module, ONLY: i_cons, mcons, bfield, &
+                              noncolin_  => noncolin, &
+                              lambda_    => lambda, &
+                              angle1_    => angle1, &
+                              angle2_    => angle2, &
+                              report_    => report, &
+                              lspinorb_ => lspinorb,  &
+                              lforcet_ => lforcet,    &
+                              starting_spin_angle_ => starting_spin_angle
+  !
+  USE fixed_occ, ONLY: tfixed_occ
+  USE klist, ONLY: tot_magnetization_ => tot_magnetization, &
+                   two_fermi_energies 
+  USE ions_base, ONLY: nsp
+  USE read_namelists_module, ONLY: sm_not_set
+  IMPLICIT NONE
+  !
+  LOGICAL  :: sm_wasnt_set, domag
+  REAL(DP) :: theta, phi
+  INTEGER ::  nt  
+  !
+  noncolin_ = noncolin
+  lspinorb_ = lspinorb
+  lforcet_ = lforcet
+  !
+  ! ... starting_magnetization(nt) = sm_not_set means "not set"
+  ! ... take notice and set to the default (zero)
+  !
+  sm_wasnt_set = ALL (starting_magnetization(1:nsp) == sm_not_set)
+  DO nt = 1, nsp
+     IF ( starting_magnetization(nt) == sm_not_set ) &
+          starting_magnetization(nt) = 0.0_dp
+  END DO
+  !
+  SELECT CASE( trim( constrained_magnetization ) )
+  CASE( 'none' )
+     !
+     ! ... if no constraints are imposed on the magnetization, 
+     ! ... starting_magnetization must be set for at least one atomic type
+     !
+     IF ( lscf .AND. lsda .AND. ( .NOT. tfixed_occ ) .AND. &
+          ( .not. two_fermi_energies )  .AND. sm_wasnt_set ) &
+        CALL errore('iosys','some starting_magnetization MUST be set', 1 )
+     !
+     ! ... bring starting_magnetization between -1 and 1
+     !
+     DO nt = 1, nsp
+        starting_magnetization(nt) = MIN( 1.0_dp,starting_magnetization(nt))
+        starting_magnetization(nt) = MAX(-1.0_dp,starting_magnetization(nt))
+     ENDDO
+     !
+     i_cons = 0
+     !
+  CASE( 'atomic' )
+     !
+     ! ... if "atomic" constraints are imposed on the magnetization, 
+     ! ... starting_magnetization must be set for at least one atomic type
+     !
+     IF ( nspin == 1 ) &
+        CALL errore( 'iosys','constrained atomic magnetizations ' // &
+                   & 'require nspin=2 or 4 ', 1 )
+     IF ( sm_wasnt_set ) &
+        CALL errore( 'iosys','constrained atomic magnetizations ' // &
+                   & 'require that some starting_magnetization is set', 1 )
+     !
+     i_cons = 1
+     !
+     IF (nspin == 4) THEN
+        ! non-collinear case
+        DO nt = 1, nsp
+           !
+           theta = angle1(nt)
+           phi   = angle2(nt)
+           !
+           mcons(1,nt) = starting_magnetization(nt) * sin( theta ) * cos( phi )
+           mcons(2,nt) = starting_magnetization(nt) * sin( theta ) * sin( phi )
+           mcons(3,nt) = starting_magnetization(nt) * cos( theta )
+           !
+        ENDDO
+     ELSE
+        ! collinear case
+        DO nt = 1, nsp
+           !
+           mcons(1,nt) = starting_magnetization(nt)
+           !
+        ENDDO
+     ENDIF
+     !
+  CASE( 'atomic direction' )
+     !
+     IF ( nspin == 1 ) &
+        CALL errore( 'iosys','constrained atomic magnetization ' // &
+                   & 'directions require nspin=2 or 4 ', 1 )
+     !
+     i_cons = 2
+     !
+     DO nt = 1, nsp
+        !
+        ! ... angle between the magnetic moments and the z-axis is
+        ! ... constrained
+        !
+        theta = angle1(nt)
+        mcons(3,nt) = cos(theta)
+        !
+     ENDDO
+     !
+  CASE( 'total' )
+     !
+     IF ( nspin == 4 ) THEN
+        !
+        i_cons = 3
+        !
+        mcons(1,1) = fixed_magnetization(1)
+        mcons(2,1) = fixed_magnetization(2)
+        mcons(3,1) = fixed_magnetization(3)
+        !
+     ELSE
+        !
+        CALL errore( 'iosys','constrained total magnetization ' // &
+                   & 'requires nspin= 4 ', 1 )
+        !
+     ENDIF
+     !
+  CASE( 'total direction' )
+     i_cons = 6
+     mcons(3,1) = fixed_magnetization(3)
+     IF ( mcons(3,1) < 0.D0 .or. mcons(3,1) > 180.D0 ) &
+        CALL errore( 'iosys','constrained magnetization angle: ' // &
+                   & 'theta must be within [0,180] degrees', 1 )
+     !
+  CASE DEFAULT
+     !
+     CALL errore( 'iosys','constrained magnetization ' // &
+                & trim( constrained_magnetization ) // 'not implemented', 1 )
+     !
+  END SELECT
+  !
+  IF ( B_field(1) /= 0.D0 .or. &
+       B_field(2) /= 0.D0 .or. &
+       B_field(3) /= 0.D0 ) THEN
+     !
+     IF ( nspin == 1 ) CALL errore( 'iosys', &
+          & 'non-zero external B_field requires nspin=2 or 4', 1 )
+     IF ( TRIM( constrained_magnetization ) /= 'none' ) &
+          CALL errore( 'iosys', 'constrained_magnetization and ' // &
+                     & 'non-zero external B_field are conflicting flags', 1 )
+     IF ( nspin == 2 .AND. ( B_field(1) /= 0.D0 .OR. B_field(2) /= 0.D0 ) ) &
+        CALL errore('iosys','only B_field(3) can be specified with nspin=2', 1)
+     IF ( i_cons /= 0 ) CALL errore( 'iosys', &
+          & 'non-zero external B_field and constrained magnetization?', i_cons)
+     !
+     ! i_cons=4 signals the presence of an external B field
+     ! this should be done in a cleaner way
+     !
+     i_cons = 4
+     bfield(:)=B_field(:)
+     !
+  ENDIF
+  !
+  starting_magnetization_ = starting_magnetization
+  starting_spin_angle_ = starting_spin_angle
+  angle1_   = angle1
+  angle2_   = angle2
+  lambda_   = lambda
+  domag     = ANY ( ABS( starting_magnetization(1:nsp) ) > 1.D-6 )
+  !
+  IF ( (i_cons == 1 .OR. nspin == 2) .AND. (report /= 0) ) THEN
+     report_ = -1
+  ELSE IF ( (i_cons /= 0 .OR. report /= 0) .AND. ( domag .AND. noncolin) ) THEN
+     report_ = report
+  ELSE
+     report_ = 0
+  END IF
+
+END SUBROUTINE magnetization_iosys
 !----------------------------------------------------------------------------
 SUBROUTINE structure_iosys ( )
   !----------------------------------------------------------------------------
@@ -2115,3 +2157,15 @@ SUBROUTINE set_wmass ( )
             & 'vcsmd: a positive value for cell mass is required', 1 )
   !
 END SUBROUTINE set_wmass
+
+SUBROUTINE rescale_starting_mag_from_pseudo()
+  USE ions_base, ONLY:  zv 
+  USE input_parameters, ONLY: ntyp, starting_magnetization
+  IMPLICIT NONE
+  ! 
+  INTEGER :: nt 
+  DO  nt = 1, ntyp 
+    starting_magnetization(nt) = starting_magnetization(nt)/zv(nt)
+  END DO
+END SUBROUTINE rescale_starting_mag_from_pseudo
+
