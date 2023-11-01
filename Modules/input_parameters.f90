@@ -224,7 +224,12 @@ MODULE input_parameters
         LOGICAL :: dipfield = .false.
         !! if TRUE the dipole field is subtracted only used in PW for 
         !! surface calculations
-
+        
+        LOGICAL :: lrescalemag = .false. 
+        !! if TRUE the magnetization in input will be divided by the valence read from the
+        !! pseudopotential file. This will become the new default behavior in next versions
+        !! and  this variable be initialized as .true. 
+        
         LOGICAL :: lberry = .false.
         !! if TRUE, use modern theory of the polarization
 
@@ -290,7 +295,7 @@ MODULE input_parameters
           prefix, wfcdir, max_seconds, ekin_conv_thr, etot_conv_thr,      &
           forc_conv_thr, pseudo_dir, disk_io, tefield, dipfield, lberry,  &
           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
-          tefield2, saverho, tabps, use_wannier, lecrpa,                  &
+          tefield2, saverho, tabps, use_wannier, lecrpa, lrescalemag,     &
           lfcp, tqmmm, vdw_table_name, lorbm, memory, point_label_type,   &
           input_xml_schema_file, gate, trism, twochem
 !
