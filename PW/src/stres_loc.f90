@@ -49,7 +49,7 @@ SUBROUTINE stres_loc( sigmaloc )
   !$acc data create(rhog)
   CALL rho_r2g( dfftp, rho%of_r(:,1), rhog )
   !
-  !$acc data copyin(vloc,strf,gl,igtongl) create(dvloc)
+  !$acc data copyin(vloc,strf,gl) present(igtongl) create(dvloc)
   !
   modified_coulomb = do_cutoff_2D .OR. (do_comp_esm .and. ( esm_bc .ne. 'pbc' ))
   IF (gamma_only) THEN

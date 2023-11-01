@@ -57,7 +57,7 @@ SUBROUTINE set_rhoc
      CALL init_tab_rhc  ( qmax, omega, intra_bgrp_comm, ir )
      !
      ALLOCATE (rhocg( ngl))
-     !$acc data create(rhocg) copyin(gl, igtongl, strf, rhog_core, rho_core)
+     !$acc data create(rhocg) copyin(gl, strf, rhog_core, rho_core) present(igtongl)
      !
      !    the sum is on atom types
      !
