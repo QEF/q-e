@@ -22,7 +22,7 @@ program elph
   !! formula.
 
   implicit none
-  integer, parameter:: npk=200, nsigx=50, nmodex=100, nex=200
+  integer, parameter:: npk=200, nsigx=50, nmodex=100, nex=2000
   integer :: nks, ios, iuelph, ngauss, ngauss1, ngaussq, nsig, nmodes
   integer :: ik, ng, mu, nu, i
   real(kind=8) :: q(3,npk), wk(npk), degauss(nsigx), w2(nmodex), &
