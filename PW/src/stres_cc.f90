@@ -75,7 +75,7 @@ SUBROUTINE stres_cc( sigmaxcc )
   fact = 1._DP
   IF (gamma_only) fact = 2._DP
   !
-  !$acc data copyin( gl, strf, igtongl )
+  !$acc data copyin( gl, strf ) present( igtongl )
   !
   ALLOCATE( rhocg(ngl) )
   !$acc data create( rhocg )

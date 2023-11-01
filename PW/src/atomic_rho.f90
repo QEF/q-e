@@ -65,7 +65,7 @@ SUBROUTINE atomic_rho_g( rhocg, nspina )
   !! Initialize  interpolation tables (if not already done)
   !
   ALLOCATE (rhoatg( ngl))
-  !$acc data create(rhoatg) copyin( gl, strf, igtongl )
+  !$acc data create(rhoatg) copyin( gl, strf ) present ( igtongl )
   !
   !$acc kernels
   rhocg(:,1:nspina) = (0.0_dp, 0.0_dp)

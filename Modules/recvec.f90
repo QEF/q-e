@@ -47,9 +47,6 @@
      INTEGER, ALLOCATABLE, TARGET, PROTECTED :: igtongl(:)
      !! igtongl(n) = shell index for n-th G-vector
      
-     ! Duplicate of the above variables (new style duplication).
-     INTEGER, ALLOCATABLE, TARGET            :: igtongl_d(:) ! device
-     !
      REAL(DP), ALLOCATABLE, TARGET :: g(:,:) 
      !! G-vectors cartesian components ( in units \(\text{tpiba} =(2\pi/a)\) )
      !
@@ -75,7 +72,6 @@
      COMPLEX(DP), ALLOCATABLE :: eigts3_d(:,:)
      !   
 #if defined(__CUDA)
-     attributes(DEVICE) :: igtongl_d
      attributes(DEVICE) :: mill_d, eigts1_d, eigts2_d, eigts3_d
 #endif
    CONTAINS
@@ -113,9 +109,8 @@
        !
        IF (use_gpu) THEN
           ALLOCATE( mill_d(3, ngm) )
-          ALLOCATE( igtongl_d(ngm) )
        ENDIF  
-       !$acc enter data create( mill(1:3,1:ngm), g(1:3,1:ngm), gg(1:ngm) ) 
+       !$acc enter data create( mill(1:3,1:ngm), g(1:3,1:ngm), gg(1:ngm), igtongl(1:ngm) ) 
        !
        RETURN 
        !
@@ -151,6 +146,7 @@
          DEALLOCATE( mill )
        END IF 
        IF( ALLOCATED( igtongl )) DEALLOCATE( igtongl )
+!$acc    exit data delete(igtongl)         
        IF( ALLOCATED( ig_l2g ) ) DEALLOCATE( ig_l2g )
        IF( ALLOCATED( eigts1 ) ) THEN
 !$acc    exit data delete(eigts1)         
@@ -167,7 +163,6 @@
        !
        ! GPU vars
        IF (use_gpu) THEN
-          IF (ALLOCATED( igtongl_d )) DEALLOCATE( igtongl_d )
           IF (ALLOCATED( mill_d ) )   DEALLOCATE( mill_d )
           IF (ALLOCATED( eigts1_d ) ) DEALLOCATE( eigts1_d )
           IF (ALLOCATED( eigts2_d ) ) DEALLOCATE( eigts2_d )
@@ -190,6 +185,7 @@
          DEALLOCATE( mill )
        END IF 
        IF( ALLOCATED( igtongl ) ) DEALLOCATE( igtongl )
+!$acc    exit data delete(igtongl)         
        IF( ALLOCATED( ig_l2g ) )  DEALLOCATE( ig_l2g )
      END SUBROUTINE deallocate_gvect_exx
      !
@@ -244,7 +240,7 @@
            IF (igl /= ngl) CALL errore ('gshells', 'igl <> ngl', ngl)
 
         ENDIF
-        IF (use_gpu) igtongl_d = igtongl
+!$acc update device(igtongl)         
      END SUBROUTINE gshells
 !=----------------------------------------------------------------------------=!
    END MODULE gvect

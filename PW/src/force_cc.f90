@@ -82,7 +82,7 @@ SUBROUTINE force_cc( forcecc )
   ! ... vaux contains now Vxc(G)
   !
   ALLOCATE( rhocg(ngl) )
-  !$acc data create(rhocg) copyin(igtongl)
+  !$acc data create(rhocg) present(igtongl)
   !
   ! ... core correction term: sum on g of omega*ig*exp(-i*r_i*g)*n_core(g)*vxc
   !     g = 0 term gives no contribution
