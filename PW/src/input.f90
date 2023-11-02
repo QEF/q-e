@@ -13,7 +13,7 @@ SUBROUTINE iosys()
   !! Wrapper routine: the original "iosys" was too long and was split into
   !! more *iosys* routines, containing input_parameters module
   !
-  USE input_parameters,      ONLY : lrescalemag, deallocate_input_parameters
+  USE input_parameters,      ONLY : deallocate_input_parameters
   !
   USE qexsd_input,           ONLY : qexsd_input_obj
   USE qes_types_module,      ONLY : input_type
@@ -52,7 +52,6 @@ SUBROUTINE iosys()
   ! ... set up magnetization variables; done here because we need zv values
   !     initialized in pseudo_iosys 
   !
-  IF (lrescalemag) CALL rescale_starting_mag_from_pseudo()
   CALL magnetization_iosys() 
   ! 
   ! ... set atomic structure (read from xml file if required)
@@ -330,8 +329,6 @@ SUBROUTINE control_iosys()
   USE noncollin_module, ONLY : i_cons, mcons, bfield, &
                                noncolin_  => noncolin, &
                                lambda_    => lambda, &
-                               angle1_    => angle1, &
-                               angle2_    => angle2, &
                                report_    => report, &
                                lspinorb_ => lspinorb,  &
                                lforcet_ => lforcet,    &
@@ -379,9 +376,7 @@ SUBROUTINE control_iosys()
                                la2F, dmft, dmft_prefix,                     &
                                pol_type, sic_gamma, sic_energy, sci_vb, sci_cb, &
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
-                               angle1, angle2, constrained_magnetization,     &
-                               B_field, fixed_magnetization, report, lspinorb,&
-                               starting_spin_angle, assume_isolated,        &
+                               report, lspinorb, assume_isolated,        &
                                vdw_corr, london, london_s6, london_rcut, london_c6, &
                                london_rvdw, &
                                ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,     &
@@ -810,21 +805,7 @@ SUBROUTINE control_iosys()
   !
   nsp = ntyp
   !
-  ! NONCOLLINEAR MAGNETISM, MAGNETIC CONSTRAINTS
   !
-  IF (noncolin) THEN
-     DO nt = 1, nsp
-        !
-        angle1(nt) = pi * angle1(nt) / 180.D0
-        angle2(nt) = pi * angle2(nt) / 180.D0
-        !
-     ENDDO
-  ELSE
-     angle1=0.d0
-     angle2=0.d0
-  ENDIF
-  !
- !
   ! STARTING AND RESTARTING
   !
   SELECT CASE( trim( restart_mode ) )
@@ -1413,6 +1394,7 @@ END SUBROUTINE control_iosys
 !
 SUBROUTINE magnetization_iosys()
   USE kinds, ONLY: DP
+  USE constants, ONLY: pi
   USE control_flags, ONLY: lscf
   USE input_parameters, ONLY : tot_magnetization, starting_magnetization,          &
                               lambda, angle1, angle2, constrained_magnetization,  &
@@ -1436,7 +1418,7 @@ SUBROUTINE magnetization_iosys()
   USE fixed_occ, ONLY: tfixed_occ
   USE klist, ONLY: tot_magnetization_ => tot_magnetization, &
                    two_fermi_energies 
-  USE ions_base, ONLY: nsp
+  USE ions_base, ONLY: nsp, zv
   USE read_namelists_module, ONLY: sm_not_set
   IMPLICIT NONE
   !
@@ -1456,7 +1438,24 @@ SUBROUTINE magnetization_iosys()
      IF ( starting_magnetization(nt) == sm_not_set ) &
           starting_magnetization(nt) = 0.0_dp
   END DO
+  IF (ANY(ABS(starting_magnetization(1:nsp)) .ge. 1._DP)) &
+    starting_magnetization(1:nsp) = starting_magnetization(1:nsp) / zv(1:nsp)
   !
+  !
+  ! NONCOLLINEAR MAGNETISM, MAGNETIC CONSTRAINTS
+  !
+  IF (noncolin) THEN
+     DO nt = 1, nsp
+        !
+        angle1(nt) = pi * angle1(nt) / 180.D0
+        angle2(nt) = pi * angle2(nt) / 180.D0
+        !
+     ENDDO
+  ELSE
+     angle1=0.d0
+     angle2=0.d0
+  ENDIF
+
   SELECT CASE( trim( constrained_magnetization ) )
   CASE( 'none' )
      !
@@ -2157,15 +2156,3 @@ SUBROUTINE set_wmass ( )
             & 'vcsmd: a positive value for cell mass is required', 1 )
   !
 END SUBROUTINE set_wmass
-
-SUBROUTINE rescale_starting_mag_from_pseudo()
-  USE ions_base, ONLY:  zv 
-  USE input_parameters, ONLY: ntyp, starting_magnetization
-  IMPLICIT NONE
-  ! 
-  INTEGER :: nt 
-  DO  nt = 1, ntyp 
-    starting_magnetization(nt) = starting_magnetization(nt)/zv(nt)
-  END DO
-END SUBROUTINE rescale_starting_mag_from_pseudo
-
