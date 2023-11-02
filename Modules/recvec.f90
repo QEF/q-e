@@ -99,7 +99,7 @@
        ALLOCATE( mill(3, ngm) )
        ALLOCATE( ig_l2g(ngm) )
        ALLOCATE( igtongl(ngm) )
-       !
+       ! FIXME  why dimensions in the following directive?
        !$acc enter data create( mill(1:3,1:ngm), g(1:3,1:ngm), gg(1:ngm), igtongl(1:ngm) ) 
        !
        RETURN 
@@ -135,8 +135,10 @@
 !$acc    exit data delete(mill) 
          DEALLOCATE( mill )
        END IF 
-       IF( ALLOCATED( igtongl )) DEALLOCATE( igtongl )
+       IF( ALLOCATED( igtongl )) THEN
 !$acc    exit data delete(igtongl)         
+         DEALLOCATE( igtongl )
+       END IF
        IF( ALLOCATED( ig_l2g ) ) DEALLOCATE( ig_l2g )
        IF( ALLOCATED( eigts1 ) ) THEN
 !$acc    exit data delete(eigts1)         
@@ -166,8 +168,10 @@
 !$acc    exit data delete(mill) 
          DEALLOCATE( mill )
        END IF 
-       IF( ALLOCATED( igtongl ) ) DEALLOCATE( igtongl )
+       IF( ALLOCATED( igtongl ) ) THEN
 !$acc    exit data delete(igtongl)         
+         DEALLOCATE( igtongl )
+       END IF
        IF( ALLOCATED( ig_l2g ) )  DEALLOCATE( ig_l2g )
      END SUBROUTINE deallocate_gvect_exx
      !
