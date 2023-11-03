@@ -20,9 +20,6 @@ SUBROUTINE hinit0()
   USE fft_base,         ONLY : dfftp
   USE gvect,            ONLY : ecutrho, ngm, g, gl, eigts1, eigts2, eigts3
   USE klist,            ONLY : qnorm
-#if defined (__CUDA)
-  USE gvect,            ONLY : eigts1_d, eigts2_d, eigts3_d
-#endif
   USE gvecw,            ONLY : ecutwfc
   USE vlocal,           ONLY : strf
   USE realus,           ONLY : generate_qpointlist, betapointlist, &
@@ -109,11 +106,6 @@ SUBROUTINE hinit0()
                    dfftp%nr1, dfftp%nr2, dfftp%nr3, &
                    strf, eigts1, eigts2, eigts3 )
   ! sync duplicated version
-#if defined(__CUDA)
-  eigts1_d = eigts1
-  eigts2_d = eigts2
-  eigts3_d = eigts3
-#endif
   !$acc update device(eigts1, eigts2, eigts3) 
   !
   ! these routines can be used to patch quantities that are dependent

@@ -54,7 +54,6 @@
      !! miller index of G vectors (local to each processor)
      !! G(:) = mill(1)*bg(:,1)+mill(2)*bg(:,2)+mill(3)*bg(:,3) 
      !! where bg are the reciprocal lattice basis vectors.
-     INTEGER, ALLOCATABLE         :: mill_d(:,:) ! device
      !
      INTEGER, ALLOCATABLE, TARGET :: ig_l2g(:)
      !! converts a local G-vector index into the global index
@@ -67,13 +66,7 @@
      COMPLEX(DP), ALLOCATABLE :: eigts1(:,:)
      !! the phases \(e^{-iG\text{tau}_s}\) used to calculate structure factors.
      COMPLEX(DP), ALLOCATABLE :: eigts2(:,:), eigts3(:,:)
-     COMPLEX(DP), ALLOCATABLE :: eigts1_d(:,:)    ! device
-     COMPLEX(DP), ALLOCATABLE :: eigts2_d(:,:)
-     COMPLEX(DP), ALLOCATABLE :: eigts3_d(:,:)
      !   
-#if defined(__CUDA)
-     attributes(DEVICE) :: mill_d, eigts1_d, eigts2_d, eigts3_d
-#endif
    CONTAINS
 
      SUBROUTINE gvect_init( ngm_ , comm )
@@ -106,10 +99,6 @@
        ALLOCATE( mill(3, ngm) )
        ALLOCATE( ig_l2g(ngm) )
        ALLOCATE( igtongl(ngm) )
-       !
-       IF (use_gpu) THEN
-          ALLOCATE( mill_d(3, ngm) )
-       ENDIF  
        ! FIXME  why dimensions in the following directive?
        !$acc enter data create( mill(1:3,1:ngm), g(1:3,1:ngm), gg(1:ngm), igtongl(1:ngm) ) 
        !
@@ -164,14 +153,6 @@
          DEALLOCATE( eigts3 )
        END IF 
        !
-       ! GPU vars
-       IF (use_gpu) THEN
-          IF (ALLOCATED( mill_d ) )   DEALLOCATE( mill_d )
-          IF (ALLOCATED( eigts1_d ) ) DEALLOCATE( eigts1_d )
-          IF (ALLOCATED( eigts2_d ) ) DEALLOCATE( eigts2_d )
-          IF (ALLOCATED( eigts3_d ) ) DEALLOCATE( eigts3_d )
-       ENDIF
-       ! 
      END SUBROUTINE deallocate_gvect
 
      SUBROUTINE deallocate_gvect_exx()

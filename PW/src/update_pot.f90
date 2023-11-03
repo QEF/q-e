@@ -103,9 +103,6 @@ SUBROUTINE update_neb( )
   USE mp_images, ONLY : intra_image_comm
   USE ions_base, ONLY : nat, tau, nsp, ityp
   USE gvect,     ONLY : ngm, g, eigts1, eigts2, eigts3
-#if defined(__CUDA)
-  USE gvect,     ONLY : eigts1_d, eigts2_d, eigts3_d
-#endif
   USE vlocal,    ONLY : strf
   USE cell_base, ONLY : bg
   USE fft_base,  ONLY : dfftp
@@ -159,11 +156,6 @@ SUBROUTINE update_neb( )
                           dfftp%nr1, dfftp%nr2, dfftp%nr3, strf,     &
                           eigts1, eigts2, eigts3 )
          ! sync duplicated version
-#if defined(__CUDA)
-         eigts1_d = eigts1
-         eigts2_d = eigts2
-         eigts3_d = eigts3
-#endif
          !$acc update device(eigts1, eigts2, eigts3) 
          !
       END IF
@@ -391,9 +383,6 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
   USE control_flags,        ONLY : gamma_only
   USE gvect,                ONLY : ngm, g, gg, gstart, eigts1, eigts2, eigts3, &
                                    mill, ig_l2g
-#if defined(__CUDA)
-  USE gvect,                ONLY : eigts1_d, eigts2_d, eigts3_d
-#endif
   USE lsda_mod,             ONLY : lsda, nspin
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE ldaU,                 ONLY : eth
@@ -436,11 +425,6 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
           dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
      ! sync duplicated version
-#if defined(__CUDA)
-     eigts1_d = eigts1
-     eigts2_d = eigts2
-     eigts3_d = eigts3
-#endif
      !$acc update device(eigts1, eigts2, eigts3) 
      !
      ! ... new charge density from extrapolated wfcs
@@ -582,11 +566,6 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
           dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
      ! sync duplicated version
-#if defined(__CUDA)
-     eigts1_d = eigts1
-     eigts2_d = eigts2
-     eigts3_d = eigts3
-#endif
      !$acc update device(eigts1, eigts2, eigts3) 
      !
      CALL set_rhoc()
