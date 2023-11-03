@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,7 +22,7 @@ SUBROUTINE hp_symdnsq (dnsq)
   USE symm_base,    ONLY : d1, d2, d3, nsym, irt, t_rev, s
   USE qpoint,       ONLY : xq
   USE lr_symm_base, ONLY : nsymq, minus_q, irotmq, rtau, gi
-  USE ldaU,         ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, nwfcU, d_spin_ldau
+  USE ldaU,         ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, nwfcU, hubbard_occ, d_spin_ldau
   USE ldaU_hp,      ONLY : nah_pert
   USE noncollin_module, ONLY: npol, noncolin, domag
   USE cell_base,        ONLY : bg, at
@@ -66,7 +66,7 @@ SUBROUTINE hp_symdnsq (dnsq)
      DO n = 1, upf(nt)%nwfc
         l = upf(nt)%lchi(n)
         ! ------------- LUCA ---------------------
-        IF (upf(nt)%oc(n) > 0.d0 .AND. l == Hubbard_l(nt)) then
+        IF (hubbard_occ(nt,1) > 0.d0 .AND. l == Hubbard_l(nt)) then
            !     
            IF (noncolin) then
               IF ( upf(nt)%has_so ) THEN

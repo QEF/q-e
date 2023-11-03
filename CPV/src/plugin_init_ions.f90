@@ -14,17 +14,10 @@ USE fft_base,         ONLY : dfftp
 USE ions_base,        ONLY : nat, nsp, na
 USE plugin_flags
 !
-! ***Environ MODULES BEGIN***
-! ***Environ MODULES END***
 !
 IMPLICIT NONE
 !
 REAL(DP), INTENT(IN) :: tau(3,nat)
 !
-! ***Environ VARIABLES BEGIN***
-! ***Environ VARIABLES END***
-!
-! ***Environ CALLS BEGIN***
-! ***Environ CALLS END***
 !
 END SUBROUTINE plugin_init_ions

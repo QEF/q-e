@@ -28,98 +28,19 @@
      INTEGER :: iverbosity = 0 
 #endif
      !
-     REAL(DP), ALLOCATABLE :: g2kin_d(:)
      REAL(DP), ALLOCATABLE :: et_d(:, :)
      REAL(DP), ALLOCATABLE :: wg_d(:, :)
      !
 #if defined(__CUDA)
-     attributes (DEVICE) :: g2kin_d, et_d, wg_d
+     attributes (DEVICE) :: et_d, wg_d
 #endif
 
-     LOGICAL :: g2kin_ood = .false.    ! used to flag out of date variables
-     LOGICAL :: g2kin_d_ood = .false.    ! used to flag out of date variables
      LOGICAL :: et_ood = .false.    ! used to flag out of date variables
      LOGICAL :: et_d_ood = .false.    ! used to flag out of date variables
      LOGICAL :: wg_ood = .false.    ! used to flag out of date variables
      LOGICAL :: wg_d_ood = .false.    ! used to flag out of date variables
      !
      CONTAINS
-     !
-     SUBROUTINE using_g2kin(intento, debug_info)
-         !
-         ! intento is used to specify what the variable will  be used for :
-         !  0 -> in , the variable needs to be synchronized but won't be changed
-         !  1 -> inout , the variable needs to be synchronized AND will be changed
-         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
-         !
-         USE wvfct, ONLY : g2kin
-         implicit none
-         INTEGER, INTENT(IN) :: intento
-         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)  || defined(__CUDA_GNU)
-         INTEGER :: intento_
-         intento_ = intento
-         !
-         IF (PRESENT(debug_info) ) print *, "using_g2kin ", debug_info, g2kin_ood
-         !
-         IF (g2kin_ood) THEN
-             IF ((.not. allocated(g2kin_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_g2kin_d', 'PANIC: sync of g2kin from g2kin_d with unallocated array. Bye!!', 1)
-                stop
-             END IF
-             IF (.not. allocated(g2kin)) THEN
-                IF (intento_ /= 2) THEN
-                   print *, "WARNING: sync of g2kin with unallocated array and intento /= 2? Changed to 2!"
-                   intento_ = 2
-                END IF
-                ! IF (intento_ > 0)    g2kin_d_ood = .true.
-             END IF
-             IF (intento_ < 2) THEN
-                IF ( iverbosity > 0 ) print *, "Really copied g2kin D->H"
-                g2kin = g2kin_d
-             END IF
-             g2kin_ood = .false.
-         ENDIF
-         IF (intento_ > 0)    g2kin_d_ood = .true.
-#endif
-     END SUBROUTINE using_g2kin
-     !
-     SUBROUTINE using_g2kin_d(intento, debug_info)
-         !
-         USE wvfct, ONLY : g2kin
-         implicit none
-         INTEGER, INTENT(IN) :: intento
-         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA) || defined(__CUDA_GNU)
-         !
-         IF (PRESENT(debug_info) ) print *, "using_g2kin_d ", debug_info, g2kin_d_ood
-         !
-         IF (.not. allocated(g2kin)) THEN
-             IF (intento /= 2) print *, "WARNING: sync of g2kin_d with unallocated array and intento /= 2?"
-             IF (allocated(g2kin_d)) DEALLOCATE(g2kin_d)
-             g2kin_d_ood = .false.
-             RETURN
-         END IF
-         ! here we know that g2kin is allocated, check if size is 0
-         IF ( SIZE(g2kin) == 0 ) THEN
-             print *, "Refusing to allocate 0 dimensional array g2kin_d. If used, code will crash."
-             RETURN
-         END IF
-         !
-         IF (g2kin_d_ood) THEN
-             IF ( allocated(g2kin_d) .and. (SIZE(g2kin_d)/=SIZE(g2kin))) deallocate(g2kin_d)
-             IF (.not. allocated(g2kin_d)) ALLOCATE(g2kin_d(DIMS1D(g2kin)))  ! MOLD does not work on all compilers
-             IF (intento < 2) THEN
-                IF ( iverbosity > 0 ) print *, "Really copied g2kin H->D"
-                g2kin_d = g2kin
-             END IF
-             g2kin_d_ood = .false.
-         ENDIF
-         IF (intento > 0)    g2kin_ood = .true.
-#else
-         CALL errore('using_g2kin_d', 'Trying to use device data without device compilated code!', 1)
-#endif
-     END SUBROUTINE using_g2kin_d
      !
      SUBROUTINE using_et(intento, debug_info)
          !
@@ -193,7 +114,7 @@
          ENDIF
          IF (intento > 0)    et_ood = .true.
 #else
-         CALL errore('using_et_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_et_d', 'Trying to use device data without device compiled code!', 1)
 #endif
      END SUBROUTINE using_et_d
      !
@@ -269,13 +190,11 @@
          ENDIF
          IF (intento > 0)    wg_ood = .true.
 #else
-         CALL errore('using_wg_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_wg_d', 'Trying to use device data without device compiled code!', 1)
 #endif
      END SUBROUTINE using_wg_d
      !
      SUBROUTINE deallocate_wvfct_gpu
-       IF( ALLOCATED( g2kin_d ) ) DEALLOCATE( g2kin_d )
-       g2kin_d_ood = .false.
        IF( ALLOCATED( et_d ) ) DEALLOCATE( et_d )
        et_d_ood = .false.
        IF( ALLOCATED( wg_d ) ) DEALLOCATE( wg_d )

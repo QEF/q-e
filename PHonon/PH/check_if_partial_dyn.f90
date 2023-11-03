@@ -106,3 +106,62 @@ INTEGER :: last_irr_eff
 
   RETURN
 END SUBROUTINE check_if_partial_dyn
+
+SUBROUTINE set_ifat(nat,   nat_todo, atomo, nsym, irt, ifat)
+  !! sets to 1 the value in ifat for each atom in atomo list and for their 
+  !! symmetry equivalents. 
+  IMPLICIT NONE
+  INTEGER,INTENT(IN)   :: nat 
+  !! total of number of atoms, size of ifat 
+  INTEGER,INTENT(IN)   :: nat_todo
+  !! number of displacicng atoms, size of atomo 
+  INTEGER,INTENT(IN)   :: atomo(nat_todo) 
+  !! contains the atomic index of the displacing atoms 
+  INTEGER,INTENT(IN)   :: nsym 
+  !! number of symmetries 
+  INTEGER,INTENT(IN)   :: irt(48,nat)
+  !! list of equivalent atoms per each operation symmetries,
+  !! the routine uses only the irt(1:nsym,1:nat) slice   
+  INTEGER,INTENT(OUT)  :: ifat(nat) 
+  !! on output contains 0 for fixed atoms and 1 for displacing ones 
+  ! 
+  INTEGER :: na, isym  
+  !  
+  IF (nat_todo == 0) THEN 
+   ifat = 1 
+   RETURN  
+  END IF 
+
+  IF (MAXVAL(atomo) > nat .OR. MINVAL(atomo) < 1) & 
+   CALL errore("set_ifat:", "internal error: atomo list is inconsistent",1)
+  !
+  ifat = 0  
+  DO na = 1, nat_todo
+    DO isym = 1, nsym 
+      ifat( irt( isym, atomo(na)) ) = 1
+    END DO 
+  END DO 
+END SUBROUTINE set_ifat  
+   
+SUBROUTINE set_local_atomo(nat, nat_todo, atomo, nsym, irt,  nat_l, atomo_l) 
+   IMPLICIT NONE 
+   INTEGER,INTENT(IN)               :: nat, nat_todo, nsym, atomo(nat_todo), irt(48,nat)
+   !! :nat: total number of atoms
+   !! :nat_todo: number of atoms effectively displaced 
+   !! :nsym: number of symmetries in the system
+   !! :atomo: list of atoms to be displaced before symmetrization 
+   !! :irt: atoms corresponding atom for each sym operation and atom
+   INTEGER,INTENT(OUT)              :: nat_l 
+   !! actual number of atoms to be displaced considering symmetries
+   INTEGER,ALLOCATABLE,INTENT(OUT)  :: atomo_l(:)
+   !! list with the indeces of all the atoms to be displaced 
+   !
+   INTEGER,ALLOCATABLE  :: ifat(:)
+   INTEGER              :: na
+   ALLOCATE(ifat(nat))
+   CALL set_ifat(nat, nat_todo, atomo, nsym, irt, ifat)
+   nat_l = COUNT(ifat == 1)
+   ALLOCATE (atomo_l(nat_l))
+   atomo_l = PACK([(na,na=1,nat)], MASK = ifat == 1)
+   DEALLOCATE(ifat)
+END SUBROUTINE set_local_atomo 

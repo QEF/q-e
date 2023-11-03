@@ -44,7 +44,7 @@
 
       REAL(DP), ALLOCATABLE :: tau(:,:)     !  initial positions read from stdin (in bohr)
       REAL(DP), ALLOCATABLE :: vel(:,:)     !  initial velocities read from stdin (in bohr)
-      CHARACTER(LEN=3)      :: atm( ntypx )
+      CHARACTER(LEN=6)      :: atm( ntypx )
       CHARACTER(LEN=80)     :: tau_format   ! format of input atomic positions:
                                             ! 'alat','crystal','bohr','angstrom'
 

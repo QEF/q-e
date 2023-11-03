@@ -54,7 +54,6 @@ SUBROUTINE allocate_wfc_k()
   USE gvecw,            ONLY : gcutw
   USE gvect,            ONLY : ngm, g
   USE klist,            ONLY : xk, nks, init_igk
-  USE wvfct_gpum,       ONLY : using_g2kin
   !
   IMPLICIT NONE
   !
@@ -74,14 +73,14 @@ SUBROUTINE allocate_wfc_k()
   !   beta functions
   !
   ALLOCATE( vkb(npwx,nkb) )
-#if defined __CUDA
-!$acc enter data create(vkb(1:npwx,1:nkb) ) 
-#endif
   !
   !   g2kin contains the kinetic energy \hbar^2(k+G)^2/2m
   !
   ALLOCATE( g2kin(npwx) )
-  CALL using_g2kin(2)
+  !
+#if defined __CUDA
+!$acc enter data create(vkb(1:npwx,1:nkb), g2kin(1:npwx) ) 
+#endif
   !
   RETURN
   !

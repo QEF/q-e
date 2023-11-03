@@ -92,6 +92,10 @@ CONTAINS
       !
       tavel = .false.
       !
+      ! ... hubbard_card
+      !
+      tahub = .false. 
+      !
       ! ... solvent's density initialization
       !
       solv_dens1 = 0.0_DP
@@ -109,6 +113,7 @@ CONTAINS
       !----------------------------------------------------------------------
       !
       USE autopilot, ONLY : card_autopilot
+      USE upf_utils, ONLY : capital
       !
       IMPLICIT NONE
       !
@@ -117,7 +122,6 @@ CONTAINS
       CHARACTER(len=2)           :: prog   ! calling program ( PW, CP, WA )
       CHARACTER(len=256)         :: input_line
       CHARACTER(len=80)          :: card
-      CHARACTER(len=1), EXTERNAL :: capital
       LOGICAL                    :: tend
       INTEGER                    :: i
       !
@@ -137,11 +141,11 @@ CONTAINS
       IF( input_line == ' ' .OR. input_line(1:1) == '#' .OR. &
                                  input_line(1:1) == '!' ) GOTO 100
       !
-      READ (input_line, *) card
-      !
       DO i = 1, len_trim( input_line )
          input_line( i : i ) = capital( input_line( i : i ) )
       ENDDO
+      !
+      READ (input_line, *) card
       !
       IF ( trim(card) == 'AUTOPILOT' ) THEN
          !
@@ -286,7 +290,7 @@ CONTAINS
       !
       CHARACTER(len=256) :: input_line
       INTEGER            :: is, ip, ierr
-      CHARACTER(len=4)   :: lb_pos
+      CHARACTER(len=6)   :: lb_pos
       CHARACTER(len=256) :: psfile
       !
       !
@@ -369,7 +373,7 @@ CONTAINS
       !
       CHARACTER(len=256) :: input_line
       CHARACTER(len=2)   :: prog
-      CHARACTER(len=4)   :: lb_pos
+      CHARACTER(len=6)   :: lb_pos
       INTEGER            :: ia, k, is, nfield, idx, rep_i
       LOGICAL, EXTERNAL  :: matches
       LOGICAL            :: tend
@@ -1530,6 +1534,31 @@ CONTAINS
                !
             ENDIF
             !
+         CASE( 'potential_wall' )
+            !
+            IF ( nfield == 4 ) THEN
+               !
+               READ( input_line, * ) constr_type_inp(i), &
+                                    constr_inp(1,i), &
+                                    constr_inp(2,i), &
+                                    constr_inp(3,i)
+               !
+               WRITE(stdout, '(7x,i3,a)') &
+                  i,') potential wall at origin normal to z-axis is requested'
+               WRITE(stdout, '(9x,a)') 'External force is proportional to:'
+               WRITE(stdout, '(11x,f12.6,a,f12.6,a,f12.6,a)') constr_inp(1,i), &
+                  ' (a.u.) * ', constr_inp(2,i), ' (a.u.) * exp(', &
+                  (-1._dp) * constr_inp(2,i), ').'
+               WRITE(stdout, '(9x,a,f12.6,a)') 'Force is applied when atom is within ',&
+                  constr_inp(3,i), ' (a.u.) from the wall.'
+            !
+            ELSE
+               !
+               CALL errore( 'card_constraints', &
+                           & 'potential_wall: wrong number of fields', nfield )
+               !
+            ENDIF
+            !
          CASE DEFAULT
             !
             CALL errore( 'card_constraints', 'unknown constraint ' // &
@@ -2151,6 +2180,7 @@ CONTAINS
       !
       USE parameters,  ONLY : natx, sc_size
       USE constants,   ONLY : eps16
+      USE upf_utils,   ONLY : spdf_to_l
       !
       IMPLICIT NONE
       !
@@ -2167,11 +2197,9 @@ CONTAINS
       CHARACTER(LEN=20)  :: hu_param, field_str, hu_val, &
                             hu_at, hu_wfc, hu_at2, hu_wfc2, string, str, &
                             temp, hu_wfc_, hu_wfc2_
-      INTEGER, ALLOCATABLE :: counter_u(:), counter_j(:), counter_b(:), &
+      INTEGER, ALLOCATABLE :: counter_u(:), counter_j0(:), counter_j(:), counter_b(:), &
                               counter_e2(:), counter_e3(:), counter_v(:,:), ityp(:)
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
-      CHARACTER(LEN=1), EXTERNAL :: capital
-      INTEGER, EXTERNAL :: spdf_to_l
       !
       ! Output variables
       REAL(DP) :: hu_u,  &   ! Hubbard U (on-site)
@@ -2202,6 +2230,15 @@ CONTAINS
          Hubbard_projectors = 'ortho-atomic'
       ELSEIF ( imatches( "NORM-ATOMIC", input_line ) ) THEN
          Hubbard_projectors = 'norm-atomic'
+      ELSEIF ( imatches( "-ATOMIC", input_line ) ) THEN
+         ! Sanity check
+         ! This is the case when the first part of the name was misspelled 
+         CALL errore( 'card_hubbard', 'Wrong name of the Hubbard projectors',1)
+      ELSEIF ( imatches( "ORTHOATOMIC", input_line ) .OR. &
+               imatches( "NORMATOMIC", input_line ) ) THEN
+         ! Sanity check
+         ! This is the case when the dash was forgotten in the name
+         CALL errore( 'card_hubbard', 'Wrong name of the Hubbard projectors',1)
       ELSEIF ( imatches( "ATOMIC", input_line ) ) THEN
          Hubbard_projectors = 'atomic'
       ELSEIF ( imatches( "WF", input_line ) ) THEN 
@@ -2215,7 +2252,7 @@ CONTAINS
                         & // input_line, 1 )
          ELSE
            CALL errore( 'card_hubbard', &
-                        & 'No Hubbard projectors specified in the HUBBARD card: ',1)
+                        & 'None or wrong Hubbard projectors specified in the HUBBARD card: ',1)
          ENDIF
       ENDIF
       !
@@ -2223,6 +2260,8 @@ CONTAINS
       !
       ALLOCATE(counter_u(ntyp))
       counter_u(:) = 0
+      ALLOCATE(counter_j0(ntyp))
+      counter_j0(:) = 0
       ALLOCATE(counter_j(ntyp))
       counter_j(:) = 0
       ALLOCATE(counter_b(ntyp))
@@ -2327,10 +2366,14 @@ CONTAINS
 16          CONTINUE
             !
             ! Setup the counter to monitor how many Hubbard manifolds per atomic type do we have
-            IF (is_u .OR. is_j0) THEN
+            IF (is_u) THEN
                counter_u(hu_nt) = counter_u(hu_nt) + 1
                IF (counter_u(hu_nt)>3) CALL errore( 'card_hubbard', &
-                  'Too many entries for the same atomic type', i )
+                  'Too many entries for U for the same atomic type', i )
+            ELSEIF (is_j0) THEN
+               counter_j0(hu_nt) = counter_j0(hu_nt) + 1
+               IF (counter_j0(hu_nt)>3) CALL errore( 'card_hubbard', &
+                  'Too many entries for J0 for the same atomic type', i )
             ELSEIF (is_j) THEN
                counter_j(hu_nt) = counter_j(hu_nt) + 1
                IF (counter_j(hu_nt) > 1) CALL errore( 'card_hubbard', &
@@ -2352,11 +2395,13 @@ CONTAINS
             ! Read the Hubbard manifold(s)
             ! Note: There may be two manifolds at the same time, though this is not 
             ! allowed for the first (main) Hubbard channel.
-            IF ( ((is_u.OR.is_j0) .AND. counter_u(hu_nt)==1) .OR. is_j &
-                 .OR. is_b .OR. is_e2 .OR. is_e3 ) THEN
+            IF ( (is_u  .AND. counter_u(hu_nt)==1)  .OR. &
+                 (is_j0 .AND. counter_j0(hu_nt)==1) .OR. &
+                  is_j .OR. is_b .OR. is_e2 .OR. is_e3 ) THEN
                ! e.g. Fe-3d
                hu_wfc = between( field_str, '-', '' )
-            ELSEIF ((is_u.OR.is_j0) .AND. counter_u(hu_nt)==2) THEN
+            ELSEIF ((is_u  .AND. counter_u(hu_nt)==2) .OR. &
+                    (is_j0 .AND. counter_j0(hu_nt)==2) ) THEN
                ! e.g. Fe-3p or Fe-3p-3s
                temp = between( field_str, '-', '' ) 
                hu_wfc = between( temp, '', '-' )
@@ -2412,8 +2457,9 @@ CONTAINS
             ENDIF
             !
             ! Assign the principal and orbital quantum numbers
-            IF ( ((is_u.OR.is_j0) .AND. counter_u(hu_nt)==1) .OR. is_j &
-                 .OR. is_b .OR. is_e2 .OR. is_e3 ) THEN
+            IF ( (is_u  .AND. counter_u(hu_nt)==1)  .OR. &
+                 (is_j0 .AND. counter_j0(hu_nt)==1) .OR. &
+                  is_j .OR. is_b .OR. is_e2 .OR. is_e3 ) THEN
                ! First Hubbard manifold
                IF (Hubbard_n(hu_nt)<0 .AND. Hubbard_l(hu_nt)<0) THEN
                   ! initialization
@@ -2423,6 +2469,8 @@ CONTAINS
                   ! sanity check (needed for DFT+U+V)
                   IF (hu_n/=Hubbard_n(hu_nt) .OR. hu_l/=Hubbard_l(hu_nt)) THEN
                      WRITE(stdout,'(/5x,"Problem in the HUBBARD card on line ",i5)') i
+                     IF (is_j0) CALL errore( 'card_hubbard', &
+                          & 'Mismatch in the quantum numbers for U and J0 for the same atomic type', i )
                      IF (is_j)  WRITE(stdout,'(/5x,"Only one manifold is allowed for Hund J")')
                      IF (is_b)  WRITE(stdout,'(/5x,"Only one manifold is allowed for Hund B")')
                      IF (is_e2) WRITE(stdout,'(/5x,"Only one manifold is allowed for Hund E2")')
@@ -2431,7 +2479,8 @@ CONTAINS
                           & 'Mismatch in the quantum numbers for the same atomic type', i )
                   ENDIF
                ENDIF
-            ELSEIF ((is_u.OR.is_j0) .AND. counter_u(hu_nt)==2) THEN
+            ELSEIF ((is_u  .AND. counter_u(hu_nt)==2) .OR. &
+                    (is_j0 .AND. counter_j0(hu_nt)==2)) THEN
                ! Second Hubbard manifold
                ! Check whether we have different Hubbard manifolds for the same atomic type
                IF ( hu_n==Hubbard_n(hu_nt) .AND. hu_l==Hubbard_l(hu_nt) ) THEN
@@ -2448,6 +2497,8 @@ CONTAINS
                   ! sanity check (needed for DFT+U+V)
                   IF (hu_n/=Hubbard_n2(hu_nt) .OR. hu_l/=Hubbard_l2(hu_nt)) THEN
                      WRITE(stdout,'(/5x,"Problem in the HUBBARD card for U on line ",i5)') i
+                     IF (is_j0) CALL errore( 'card_hubbard', &
+                          & 'Mismatch in the quantum numbers for U and J0 for the same atomic type (2nd channel)', i )
                      CALL errore( 'card_hubbard', &
                           & 'Mismatch in the quantum numbers for the same atomic type', i )
                   ENDIF
@@ -2471,6 +2522,8 @@ CONTAINS
                      ! sanity check (needed for DFT+U+V)
                      IF (hu_n_/=Hubbard_n3(hu_nt) .OR. hu_l_/=Hubbard_l3(hu_nt)) THEN
                         WRITE(stdout,'(/5x,"Problem in the HUBBARD card for U on line ",i5)') i
+                        IF (is_j0) CALL errore( 'card_hubbard', &
+                          & 'Mismatch in the quantum numbers for U and J0 for the same atomic type (3rd channel)', i )
                         CALL errore( 'card_hubbard', &
                              & 'Mismatch in the quantum numbers for the same atomic type', i )
                      ENDIF
@@ -2491,6 +2544,8 @@ CONTAINS
             ! PW/src/intersite_V.f90
             ! sp_pos(na) is the atomic type of the atom na
             IF (.NOT.ALLOCATED(ityp)) THEN
+               IF (.NOT.ALLOCATED(sp_pos)) CALL errore ('card_hubbard', &
+                       'card HUBBARD must follow card ATOMIC_SPECIES',1)
                ALLOCATE(ityp(natx*(2*sc_size+1)**3))
                ityp(1:nat) = sp_pos(1:nat)
                i = nat
@@ -2907,12 +2962,18 @@ CONTAINS
                ENDIF
             ENDIF
          ELSEIF (is_j0) THEN
-            IF (Hubbard_J0(hu_nt)<eps16) THEN
-                Hubbard_J0(hu_nt) = hu_j0
-            ELSE
-                WRITE(stdout,'(/5x,"Problem in the HUBBARD card for J0 on line ",i5)') i
-                CALL errore( 'card_hubbard', &
-                        & 'J0 for this atomic type was already set', i )
+            IF (counter_j0(hu_nt)==1) THEN
+               ! Hubbard parameter for the first (main) channel of the atomic type hu_nt
+               IF (Hubbard_J0(hu_nt)<eps16) THEN
+                   Hubbard_J0(hu_nt) = hu_j0
+               ELSE
+                   WRITE(stdout,'(/5x,"Problem in the HUBBARD card for J0 on line ",i5)') i
+                   CALL errore( 'card_hubbard', &
+                           & 'J0 for this atomic type was already set', i )
+               ENDIF
+            ELSEIF (counter_j0(hu_nt)==2) THEN
+               CALL errore( 'card_hubbard', &
+                       & 'Two channels for J0 for the same atomic type is not implemented', i )
             ENDIF
          ELSEIF (is_j) THEN
             IF (Hubbard_J(1,hu_nt)<eps16) THEN
@@ -2965,16 +3026,18 @@ CONTAINS
          lda_plus_u = .TRUE.
          !
          ! We need to determine automatically which case we are dealing with,
-         ! based on what Hubbard parameters we found in the HUBBARD card
+         ! based on what Hubbard parameters we found in the HUBBARD card.
+         ! Allow positive and negative values of Hubbard parameters
+         ! (just in case if users want to experiment with negative values)
          !
-         IF (ANY(Hubbard_J(:,:)>eps16)) THEN
+         IF (ANY(ABS(Hubbard_J(:,:))>eps16)) THEN
             ! DFT+U+J
             lda_plus_u_kind = 1
-            IF (ANY(Hubbard_J0(:)>eps16)) CALL errore('card_hubbard', &
-                    'Hund J is not compatible with Hund J0', i)
-            IF (ANY(Hubbard_V(:,:,:)>eps16)) CALL errore('card_hubbard', &
-                    'Currently Hund J is not compatible with Hubbard V', i)
-         ELSEIF (ANY(Hubbard_V(:,:,:)>eps16)) THEN
+            IF (ANY(ABS(Hubbard_J0(:))>eps16)) CALL errore('card_hubbard', &
+                    & 'Hund J is not compatible with Hund J0', i)
+            IF (ANY(ABS(Hubbard_V(:,:,:))>eps16)) CALL errore('card_hubbard', &
+                    & 'Currently Hund J is not compatible with Hubbard V', i)
+         ELSEIF (ANY(ABS(Hubbard_V(:,:,:))>eps16)) THEN
             ! DFT+U+V(+J0)
             lda_plus_u_kind = 2
            ! ----------- LUCA (spawoc) ------------------------
@@ -3022,6 +3085,7 @@ CONTAINS
       ENDIF
       !
       DEALLOCATE(counter_u)
+      DEALLOCATE(counter_j0)
       DEALLOCATE(counter_j)
       DEALLOCATE(counter_b)
       DEALLOCATE(counter_e2)

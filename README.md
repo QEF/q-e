@@ -54,6 +54,7 @@ can be found on [Wiki page on gitlab](https://gitlab.com/QEF/q-e/-/wikis/home).
 - PWneb: reaction pathways and transition states with the Nudged Elastic Band method;
 - GWL: many-body perturbation theory in the GW approach using ultra-localised Wannier functions and Lanczos chains;
 - QEHeat: energy current in insulators for thermal transport calculations in DFT.
+- KCW: Koopmans-compliant functionals in a Wannier representation
 
 ## Modular libraries
 The following libraries have been isolated and partially encapsulated in view of their release for usage in other codes as well:
@@ -64,6 +65,7 @@ The following libraries have been isolated and partially encapsulated in view of
 - KS Solvers: parallel iterative diagonalization for the Kohn-Sham Hamiltonian (represented as an operator),using block Davidson and band-by-band or block Conjugate-Gradient algorithms.
 - LRlib: performs a variety of tasks connected with (time-dependent) DFPT, to be used also in connection with Many-Body Perturbation Theory.
 - upflib: pseudopotential-related code.
+- devXlib: low-level utilities for GPU execution
 
 ## Contributing
 Quantum ESPRESSO is an open project: contributions are welcome.

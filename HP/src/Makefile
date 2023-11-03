@@ -63,9 +63,9 @@ all : tldeps libs-hp hp.x
 
 libs-hp : libhp.a 
 
-hp.x : hp_main.o $(PWOBJS) $(LRMODS) $(LIBOBJS)
+hp.x : hp_main.o libhp.a $(PWOBJS) $(LRMODS)
 	$(LD) $(LDFLAGS) -o $@ hp_main.o libhp.a \
-		$(LRMODS) $(PWOBJS) $(PHOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+		$(LRMODS) $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../HP/src/hp.x . )
 
 tldeps :

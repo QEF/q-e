@@ -12,6 +12,7 @@ MODULE  read_upf_new_module
   !! pseudopotential files in either UPF v.2 or xml
   !
   USE xmltools
+  USE upf_io,    ONLY: stdout
   USE upf_kinds, ONLY: dp
   USE pseudo_types, ONLY: pseudo_upf, pseudo_config
   !
@@ -37,11 +38,16 @@ CONTAINS
     TYPE(pseudo_upf),INTENT(OUT) :: upf
     !! the derived type storing the pseudo data
     INTEGER, INTENT(OUT) :: ierr
-    !! ierr=0  : xml schema, ierr=-2: UPF v.2
-    !! ierr=-81: error reading PP file
+    !! ierr= -2 : UPF v.2
+    !! ierr=  0 : xml schema
+    !! ierr=1-4 : error reading PP file
+    !! ierr= 81 : error opening PP file
     !
     iun = xml_open_file ( filename )
-    IF ( iun == -1 ) CALL upf_error('read_upf', 'cannot open file',1)
+    if ( iun == -1 ) THEN
+       ierr = 81
+       go to 10
+    end if
     call xmlr_opentag ( 'qe_pp:pseudo', IERR = ierr )
     if ( ierr == 0 ) then
        v2 =.false.
@@ -50,15 +56,12 @@ CONTAINS
        call xmlr_opentag ( 'UPF', IERR = ierr )
        if ( ierr == 0 ) then
           v2 =.true.
-          ierr = -2
           CALL get_attr ( 'version', upf%nv )
        end if
+    else
+       go to 10
     end if
-    if ( ierr /= 0 .and. ierr /= -2 ) then
-       call xml_closefile( )
-       ierr = -81
-       return
-    end if
+    if ( ierr > 0 ) go to 10
     !
     ! The header sections differ a lot between UPF v.2 and UPF with schema
     !
@@ -78,6 +81,8 @@ CONTAINS
     CALL read_pp_mesh ( upf )
     !
     allocate ( upf%rho_atc(upf%mesh) )
+    !! FIXME: this is needed only if the nonlinear core correction is used,
+    !! FIXME: but with PAW the pseudo-core charge is used also if no nlcc
     IF(upf%nlcc) then
        CALL xmlr_readtag( capitalize_if_v2('pp_nlcc'), &
             upf%rho_atc(:) )
@@ -92,29 +97,34 @@ CONTAINS
        ! existing PP files may have pp_nlcc first, pp_local later,
        ! but also the other way round - check that everything was right
        !
-       if ( ierr /= 0 ) then
-          ierr = -81
-          return
-       end if
+       if ( ierr ==-10 ) ierr = 0
+       if ( ierr /= 0 ) go to 10
     end if
     !
-    CALL read_pp_semilocal ( upf )
+    CALL read_pp_semilocal ( upf, ierr )
+    if ( ierr > 0 ) go to 10
     !
-    CALL read_pp_nonlocal ( upf )
+    CALL read_pp_nonlocal ( upf, ierr )
+    if ( ierr > 0 ) go to 10
     !
-    CALL read_pp_pswfc ( upf )
+    CALL read_pp_pswfc ( upf, ierr )
+    if ( ierr > 0 ) go to 10
     !
-    CALL read_pp_full_wfc ( upf )
+    CALL read_pp_full_wfc ( upf, ierr )
+    if ( ierr > 0 ) go to 10
     !
     allocate( upf%rho_at(1:upf%mesh) )
     CALL xmlr_readtag( capitalize_if_v2('pp_rhoatom'), &
          upf%rho_at(1:upf%mesh) )
     !
-    CALL read_pp_spinorb ( upf )
+    CALL read_pp_spinorb ( upf, ierr )
+    if ( ierr > 0 ) go to 10
     !
-    CALL read_pp_paw ( upf )
+    CALL read_pp_paw ( upf, ierr )
+    if ( ierr > 0 ) go to 10
     !
-    CALL read_pp_gipaw ( upf )
+    CALL read_pp_gipaw ( upf, ierr )
+    if ( ierr > 0 ) go to 10
     !
     ! close initial tag, qe_pp:pseudo or UPF
     !
@@ -122,6 +132,14 @@ CONTAINS
     !
     CALL xml_closefile ( )
     !
+    ! normal return
+    if ( v2 ) ierr = -2
+    return
+    !
+    ! error return
+10  call xml_closefile( )
+    return
+
   END SUBROUTINE read_upf_new
   !
   FUNCTION capitalize_if_v2 ( strin ) RESULT ( strout )
@@ -233,14 +251,12 @@ CONTAINS
     CALL get_attr ( 'mesh', mesh )
     if ( mesh == 0 ) THEN
 #if defined (__debug)
-       call upf_error('read_pp_mesh',&
-         'mesh size missing, using the one in header',-1)
+       WRITE(stdout,'("read_pp_mesh: mesh size missing, using the one in header")'
 #else
        continue
 #endif
     else if ( mesh /= upf%mesh ) THEN
-       call upf_error('read_pp_mesh',&
-         'mismatch in mesh size, discarding the one in header',-1)
+       WRITE(stdout,'("read_pp_mesh; mismatch in mesh size, discarding the one in header")')
        upf%mesh = mesh
     end if
     CALL get_attr ( 'dx'  , upf%dx   )
@@ -257,13 +273,14 @@ CONTAINS
   END SUBROUTINE read_pp_mesh
   !
   !--------------------------------------------------------
-  SUBROUTINE read_pp_semilocal ( upf )
+  SUBROUTINE read_pp_semilocal ( upf, ierr )
     !--------------------------------------------------------
     !
     IMPLICIT NONE
     TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
+    INTEGER, INTENT(INOUT) :: ierr
     !
-    INTEGER :: nb, ind, l, j, ierr
+    INTEGER :: nb, ind, l, j
     CHARACTER(LEN=8) :: tag
     real(dp), allocatable :: vnl(:)
     !
@@ -286,16 +303,21 @@ CONTAINS
              tag = 'PP_VNL.'//i2c(nb-1)
           END IF
           CALL xmlr_readtag( tag, vnl, ierr )
-          if ( ierr /= 0 ) &
-               call upf_error('read_pp_semilocal','error reading SL PPs',1)
+          if ( ierr /= 0 ) then
+             WRITE(stdout,'("read_pp_semiloca: error reading SL PPs")')
+             return
+          end if
           CALL get_attr ( 'l', l)
           ind = 1
           IF ( upf%has_so ) then
              CALL get_attr ( 'j', j)
              IF ( l > 0 .AND. ABS(j-l-0.5_dp) < 0.001_dp ) ind = 2
              ! FIXME: what about spin-orbit case for v.2 upf?
-             if ( v2 ) &
-                  call upf_error('read_pp_semilocal','check spin-orbit',1)
+             if ( v2 ) then
+                WRITE(stdout,'("read_pp_semiloca: check spinorbit case")')
+                ierr = 1
+                return
+             end if
           END IF
           upf%vnl(:,l,ind) = vnl(:)
        END DO
@@ -308,11 +330,12 @@ CONTAINS
   END SUBROUTINE read_pp_semilocal
   !
   !--------------------------------------------------------
-  SUBROUTINE read_pp_nonlocal ( upf )
+  SUBROUTINE read_pp_nonlocal ( upf, ierr )
     !--------------------------------------------------------
     !
     IMPLICIT NONE
     TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
+    INTEGER, INTENT(INOUT) :: ierr
     !
     LOGICAL :: isnull
     INTEGER :: nb, ind, l, l_, ln, lm, mb, nmb
@@ -352,8 +375,11 @@ CONTAINS
        CALL xmlr_readtag( tag, upf%beta(1:upf%mesh,nb) )
        CALL get_attr('index', mb)
        ! not-so-strict test: index is absent or incorrect in some UPF v.2 files
-       IF ( .NOT. v2 .AND. nb /= mb ) &
-            CALL upf_error('read_pp_nonlocal','mismatch',nb)
+       IF ( .NOT. v2 .AND. nb /= mb ) then
+          write(stdout,'("read_pp_nonlocal: mismatch")')
+          ierr = nb
+          return
+       end if
        CALL get_attr('label', upf%els_beta(nb))
        CALL get_attr('angular_momentum', upf%lll(nb))
        IF ( .NOT. v2 .AND. upf%has_so ) &
@@ -455,10 +481,17 @@ CONTAINS
                    END IF
                    CALL xmlr_readtag( tag, aux )
                    CALL get_attr ('composite_index', nmb)
-                   IF ( nmb /= mb*(mb-1)/2 + nb ) &
-                        CALL upf_error ('read_pp_nonlocal','mismatch',1)
+                   IF ( nmb /= mb*(mb-1)/2 + nb ) then
+                      write(stdout,'("read_pp_nonlocal: mismatch")')
+                      ierr = 1
+                      return
+                   end if
                    CALL get_attr ('angular_momentum', l_)
-                   IF ( l /= l_ ) CALL upf_error ('read_pp_nonlocal','mismatch',2)                 
+                   IF ( l /= l_ ) then
+                      write(stdout,'("read_pp_nonlocal: mismatch")')
+                      ierr = 2
+                      return
+                   end if
                    upf%qfuncl(:,nmb,l) = aux(:)
                    IF (upf%tpawp) upf%qfuncl(upf%paw%iraug+1:,nmb,l) = 0._DP
                 ENDDO loop_on_l
@@ -473,8 +506,11 @@ CONTAINS
                 END IF
                 CALL xmlr_readtag( tag, aux )
                 CALL get_attr ('composite_index', nmb)
-                IF ( nmb /= mb*(mb-1)/2 + nb ) &
-                     CALL upf_error ('read_pp_nonlocal','mismatch',3)
+                IF ( nmb /= mb*(mb-1)/2 + nb ) then
+                   write(stdout,'("read_pp_nonlocal: mismatch")')
+                   ierr = 3
+                   return
+                end if
                 upf%qfunc(:,nmb) = aux(:)
                 !
              ENDIF
@@ -495,11 +531,12 @@ CONTAINS
   END SUBROUTINE read_pp_nonlocal
   !
   !--------------------------------------------------------
-  SUBROUTINE read_pp_pswfc ( upf )
+  SUBROUTINE read_pp_pswfc ( upf, ierr )
     !--------------------------------------------------------
     !
     IMPLICIT NONE
     TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
+    INTEGER, INTENT(INOUT) :: ierr
     !
     INTEGER :: nw, ind, l
     CHARACTER(LEN=8) :: tag
@@ -512,10 +549,7 @@ CONTAINS
                 upf%rcut_chi(upf%nwfc), &
                 upf%rcutus_chi(upf%nwfc), &
                 upf%epseu(upf%nwfc) )
-    IF ( upf%has_so ) THEN
-       allocate ( upf%nn(upf%nwfc) )
-       allocate ( upf%jchi(upf%nwfc) )
-    END IF
+    IF ( upf%has_so ) allocate ( upf%jchi(upf%nwfc) )
     !
     CALL xmlr_opentag( capitalize_if_v2('pp_pswfc') )
     DO nw=1,upf%nwfc
@@ -527,14 +561,14 @@ CONTAINS
        CALL xmlr_readtag( tag, upf%chi(1:upf%mesh,nw) )
        call get_attr('index', ind)
        ! not-so-strict test: index is absent or incorrect in some UPF v.2 files
-       if ( .NOT. v2 .AND. ind /= nw ) &
-            call upf_error('read_pp_pswfc','mismatch reading PSWFC', nw)
+       if ( .NOT. v2 .AND. ind /= nw ) then
+          write(stdout,'("read_pp_pswfc: mismatch reading PSWFC")')
+          ierr = nw
+          return
+       end if
        call get_attr( 'label', upf%els(nw) )
        call get_attr( 'l', upf%lchi(nw) )
-       IF ( .not. v2 .and. upf%has_so ) THEN
-          call get_attr( 'nn', upf%nn(nw) )
-          call get_attr( 'jchi', upf%jchi(nw) )
-       END IF
+       IF ( .not. v2 .and. upf%has_so ) call get_attr( 'jchi', upf%jchi(nw) )
        call get_attr( 'occupation', upf%oc(nw) )
        call get_attr( 'n', upf%nchi(nw) )
        call get_attr( 'pseudo_energy', upf%epseu(nw) )
@@ -546,11 +580,12 @@ CONTAINS
   END SUBROUTINE read_pp_pswfc
   !
   !--------------------------------------------------------
-  SUBROUTINE read_pp_full_wfc ( upf )
+  SUBROUTINE read_pp_full_wfc ( upf, ierr )
     !--------------------------------------------------------
     !
     IMPLICIT NONE
     TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
+    INTEGER, INTENT(INOUT) :: ierr
     !
     INTEGER :: nb, mb
     CHARACTER(LEN=15) :: tag
@@ -570,7 +605,11 @@ CONTAINS
           CALL get_attr ('index',mb)
           ! not-so-strict test (and two more below):
           ! index may be absent or incorrect in some UPF v.2 files
-          IF ( .NOT. v2 .AND. nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',1)
+          IF ( .NOT. v2 .AND. nb /= mb ) THEN
+             WRITE(stdout,'("read_pp_full_wfc: mismatch")')
+             ierr = 1
+             return
+          END IF
        END DO
        !
        IF ( upf%has_so .AND. upf%tpawp ) THEN
@@ -583,7 +622,11 @@ CONTAINS
              END IF
              CALL xmlr_readtag(tag, upf%paw%aewfc_rel(1:upf%mesh,nb) )
              CALL get_attr ('index',mb)
-             IF ( .NOT. v2 .AND. nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',2)
+             IF ( .NOT. v2 .AND. nb /= mb ) THEN
+                WRITE(stdout,'("read_pp_full_wfc: mismatch")')
+                ierr = 2
+                return
+             END IF
           END DO
        END IF
        !
@@ -596,7 +639,11 @@ CONTAINS
           END IF
           CALL xmlr_readtag(tag, upf%pswfc(1:upf%mesh,nb) )
           CALL get_attr ('index',mb)
-          IF ( .NOT. v2 .AND. nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',3)
+          IF ( .NOT. v2 .AND. nb /= mb )  THEN
+             WRITE(stdout,'("read_pp_full_wfc: mismatch")')
+             ierr = 3
+             return
+          END IF
        END DO
        !
        CALL xmlr_closetag( )
@@ -606,12 +653,13 @@ CONTAINS
   END SUBROUTINE read_pp_full_wfc
   !
   !--------------------------------------------------------
-  SUBROUTINE read_pp_spinorb ( upf )
+  SUBROUTINE read_pp_spinorb ( upf, ierr )
     !--------------------------------------------------------
     !
     IMPLICIT NONE
     TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
-    INTEGER :: nw, nb, ierr
+    INTEGER, INTENT(INOUT) :: ierr
+    INTEGER :: nw, nb, nn
     CHARACTER(LEN=1) :: dummy
     !
     IF ( .NOT. v2 .OR. .NOT. upf%has_so ) RETURN
@@ -621,8 +669,12 @@ CONTAINS
        CALL xmlr_readtag( 'PP_RELWFC.'//i2c(nw), dummy )
        CALL get_attr( 'index' , nb )
        ! not-so-strict test: index absent or incorrect in some UPF v.2 files
-       IF ( .NOT. v2 .AND. nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',1)
-       CALL get_attr( 'nn',    upf%nn(nw) )
+       IF ( .NOT. v2 .AND. nb /= nw ) THEN
+          WRITE(stdout,'("read_pp_spinor: mismatch")')
+          ierr = 1
+          return
+       end if
+       CALL get_attr( 'nn',    nn ) ! obsolete
        CALL get_attr( 'jchi',  upf%jchi(nw) )
        !
        ! the following data is already known and was not read in old versions
@@ -638,14 +690,14 @@ CONTAINS
        CALL xmlr_readtag( 'PP_RELBETA.'//i2c(nb), dummy, ierr )
        !
        ! existing PP files may have pp_relbeta first, pp_relwfc later,
-       ! but also the other way round - check that everything was right
+       ! but also the other way round
        !
-       if ( ierr > 0 ) then
-          ierr = -81
-          return
-       end if
+       if ( ierr > 0 ) return
        CALL get_attr( 'index' , nw )
-       IF ( .NOT.v2 .AND. nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',2)
+       IF ( .NOT.v2 .AND. nb /= nw ) THEN
+          WRITE(stdout,'("read_pp_spinorb: mismatch")')
+          ierr = 2
+       END IF
        CALL get_attr( 'lll',  upf%lll(nb) )
        CALL get_attr( 'jjj',  upf%jjj(nb) )
     ENDDO
@@ -654,11 +706,12 @@ CONTAINS
   END SUBROUTINE read_pp_spinorb
   !
   !--------------------------------------------------------
-  SUBROUTINE read_pp_paw ( upf )
+  SUBROUTINE read_pp_paw ( upf, ierr )
     !--------------------------------------------------------
     !
     IMPLICIT NONE
     TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
+    INTEGER, INTENT(INOUT) :: ierr
     INTEGER :: nb, mb
     !
     IF ( .NOT. upf%tpawp ) RETURN
@@ -726,13 +779,14 @@ CONTAINS
     !
   END SUBROUTINE read_pp_paw
   !--------------------------------------------------------
-  SUBROUTINE read_pp_gipaw ( upf )
+  SUBROUTINE read_pp_gipaw ( upf, ierr )
     !--------------------------------------------------------
     !
     IMPLICIT NONE
     TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
+    INTEGER, INTENT(INOUT) :: ierr
     !
-    INTEGER :: nb, mb, ierr
+    INTEGER :: nb, mb
     CHARACTER(LEN=24) :: tag
     !
     IF (.NOT. upf%has_gipaw) RETURN
@@ -761,7 +815,11 @@ CONTAINS
        END IF
        CALL xmlr_readtag( tag, upf%gipaw_core_orbital(1:upf%mesh,nb) )
        CALL get_attr ('index', mb)
-       IF ( nb /= mb ) CALL upf_error('read_pp_gipaw','mismatch',1)
+       IF ( nb /= mb ) THEN
+          WRITE(stdout,'("read_pp_gipaw: mismatch")')
+          ierr = 1
+          return
+       END IF
        CALL get_attr ('label', upf%gipaw_core_orbital_el(nb) )
        CALL get_attr ('n', upf%gipaw_core_orbital_n(nb) )
        CALL get_attr ('l', upf%gipaw_core_orbital_l(nb) )
@@ -820,7 +878,11 @@ CONTAINS
           END IF
           CALL xmlr_opentag( tag )
           CALL get_attr ('index', mb)
-          IF ( nb /= mb ) CALL upf_error('read_pp_gipaw','mismatch',2)
+          IF ( nb /= mb ) THEN
+             WRITE(stdout,'("read_pp_gipaw: mismatch")')
+             ierr = 2
+             return
+          end if
           CALL get_attr ('label', upf%gipaw_wfs_el(nb) )
           CALL get_attr ('l',     upf%gipaw_wfs_ll(nb) )
           CALL get_attr ('cutoff_radius', upf%gipaw_wfs_rcut(nb) )

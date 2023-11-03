@@ -5,6 +5,14 @@ MODULE esm_stres_mod
                              mill_2d, imill_2d, ngm_2d, exp_erfc
   IMPLICIT NONE
 
+  ! Workaround for Cray bug - note that exp, cosh, sinh with complex argument
+  ! are in the F2008 standard so qe_exp, qe_cosh, qe_sinh are no longer needed
+
+#if defined(__CRAY)
+#define QE_EXP  exp
+#define QE_COSH cosh
+#define QE_SINH sinh
+#endif  
 CONTAINS
 
   !-----------------------------------------------------------------------
@@ -214,10 +222,10 @@ CONTAINS
         gz = dble(igz)*tpi/L
 
         rg3 = rhog3(iz, igp)
-        sum1p = sum1p + rg3*qe_exp(+ci*gz*z0)/(gp - ci*gz)
-        sum1m = sum1m + rg3*qe_exp(-ci*gz*z0)/(gp + ci*gz)
-        sum2p = sum2p + rg3*qe_exp(+ci*gz*z0)/(gp - ci*gz)**2
-        sum2m = sum2m + rg3*qe_exp(-ci*gz*z0)/(gp + ci*gz)**2
+        sum1p = sum1p + rg3*QE_EXP(+ci*gz*z0)/(gp - ci*gz)
+        sum1m = sum1m + rg3*QE_EXP(-ci*gz*z0)/(gp + ci*gz)
+        sum2p = sum2p + rg3*QE_EXP(+ci*gz*z0)/(gp - ci*gz)**2
+        sum2m = sum2m + rg3*QE_EXP(-ci*gz*z0)/(gp + ci*gz)**2
       END DO ! igz
 
       ! calculate dV(z)/deps
@@ -506,19 +514,19 @@ CONTAINS
 
         rg3 = rhog3(iz, igp)
 
-        sum1p = sum1p + rg3*qe_exp(+ci*gz*z0)/(gp - ci*gz)
-        sum1m = sum1m + rg3*qe_exp(-ci*gz*z0)/(gp + ci*gz)
-        sum2p = sum2p + rg3*qe_exp(+ci*gz*z0)/(gp - ci*gz)**2
-        sum2m = sum2m + rg3*qe_exp(-ci*gz*z0)/(gp + ci*gz)**2
+        sum1p = sum1p + rg3*QE_EXP(+ci*gz*z0)/(gp - ci*gz)
+        sum1m = sum1m + rg3*QE_EXP(-ci*gz*z0)/(gp + ci*gz)
+        sum2p = sum2p + rg3*QE_EXP(+ci*gz*z0)/(gp - ci*gz)**2
+        sum2m = sum2m + rg3*QE_EXP(-ci*gz*z0)/(gp + ci*gz)**2
 
-        sum1sp = sum1sp + rg3*qe_sinh(gp*z0 + ci*gz*z0)/(gp + ci*gz)
-        sum1sm = sum1sm + rg3*qe_sinh(gp*z0 - ci*gz*z0)/(gp - ci*gz)
+        sum1sp = sum1sp + rg3*QE_SINH(gp*z0 + ci*gz*z0)/(gp + ci*gz)
+        sum1sm = sum1sm + rg3*QE_SINH(gp*z0 - ci*gz*z0)/(gp - ci*gz)
 
-        sum1cp = sum1cp + rg3*qe_cosh(gp*z0 + ci*gz*z0)/(gp + ci*gz)*z0
-        sum1cm = sum1cm + rg3*qe_cosh(gp*z0 - ci*gz*z0)/(gp - ci*gz)*z0
+        sum1cp = sum1cp + rg3*QE_COSH(gp*z0 + ci*gz*z0)/(gp + ci*gz)*z0
+        sum1cm = sum1cm + rg3*QE_COSH(gp*z0 - ci*gz*z0)/(gp - ci*gz)*z0
 
-        sum2sp = sum2sp + rg3*qe_sinh(gp*z0 + ci*gz*z0)/(gp + ci*gz)**2
-        sum2sm = sum2sm + rg3*qe_sinh(gp*z0 - ci*gz*z0)/(gp - ci*gz)**2
+        sum2sp = sum2sp + rg3*QE_SINH(gp*z0 + ci*gz*z0)/(gp + ci*gz)**2
+        sum2sm = sum2sm + rg3*QE_SINH(gp*z0 - ci*gz*z0)/(gp - ci*gz)**2
       END DO ! igz
 
       ! calculate dV(z)/deps
@@ -843,13 +851,13 @@ CONTAINS
         gz = dble(igz)*tpi/L
 
         rg3 = rhog3(iz, igp)
-        sum1p = sum1p + rg3*qe_exp(+ci*gz*z0)/(gp - ci*gz)
-        sum1m = sum1m + rg3*qe_exp(-ci*gz*z0)/(gp + ci*gz)
-        sum2p = sum2p + rg3*qe_exp(+ci*gz*z0)/(gp - ci*gz)**2
-        sum2m = sum2m + rg3*qe_exp(-ci*gz*z0)/(gp + ci*gz)**2
-        sum1sh = sum1sh + rg3*qe_sinh(gp*z0 + ci*gz*z0)/(gp + ci*gz)
-        sum1ch = sum1ch + rg3*qe_cosh(gp*z0 + ci*gz*z0)/(gp + ci*gz)*z0
-        sum2sh = sum2sh + rg3*qe_sinh(gp*z0 + ci*gz*z0)/(gp + ci*gz)**2
+        sum1p = sum1p + rg3*QE_EXP(+ci*gz*z0)/(gp - ci*gz)
+        sum1m = sum1m + rg3*QE_EXP(-ci*gz*z0)/(gp + ci*gz)
+        sum2p = sum2p + rg3*QE_EXP(+ci*gz*z0)/(gp - ci*gz)**2
+        sum2m = sum2m + rg3*QE_EXP(-ci*gz*z0)/(gp + ci*gz)**2
+        sum1sh = sum1sh + rg3*QE_SINH(gp*z0 + ci*gz*z0)/(gp + ci*gz)
+        sum1ch = sum1ch + rg3*QE_COSH(gp*z0 + ci*gz*z0)/(gp + ci*gz)*z0
+        sum2sh = sum2sh + rg3*QE_SINH(gp*z0 + ci*gz*z0)/(gp + ci*gz)**2
       END DO ! igz
 
       ! calculate dV(z)/deps
@@ -1817,7 +1825,7 @@ CONTAINS
           g2a_maza = gp*0.5d0*isalp - salp * zza
           g2a_paza = gp*0.5d0*isalp + salp * zza
           !
-          expimgpr = qe_exp(-ci*(g(1)*ra(1) + g(2)*ra(2)))
+          expimgpr = QE_EXP(-ci*(g(1)*ra(1) + g(2)*ra(2)))
           experfcm = exp_erfc(mgza, g2a_maza)
           experfcp = exp_erfc(pgza, g2a_paza)
           dexperfcm_dgp = -zza * experfcm &
@@ -2094,7 +2102,7 @@ CONTAINS
           g2a_maza = gp*0.5d0*isalp - salp * zza
           g2a_paza = gp*0.5d0*isalp + salp * zza
           !
-          expimgpr = qe_exp(-ci*(g(1)*ra(1) + g(2)*ra(2)))
+          expimgpr = QE_EXP(-ci*(g(1)*ra(1) + g(2)*ra(2)))
           experfcm = exp_erfc(mgza, g2a_maza)
           experfcp = exp_erfc(pgza, g2a_paza)
           dexperfcm_dgp = -zza * experfcm &
@@ -2403,7 +2411,7 @@ CONTAINS
           g2a_maza = gp*0.5d0*isalp - salp * zza
           g2a_paza = gp*0.5d0*isalp + salp * zza
           !
-          expimgpr = qe_exp(-ci*(g(1)*ra(1) + g(2)*ra(2)))
+          expimgpr = QE_EXP(-ci*(g(1)*ra(1) + g(2)*ra(2)))
           experfcm = exp_erfc(mgza, g2a_maza)
           experfcp = exp_erfc(pgza, g2a_paza)
           dexperfcm_dgp = -zza * experfcm &

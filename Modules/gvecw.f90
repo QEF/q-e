@@ -17,7 +17,7 @@
 
      PRIVATE
      PUBLIC :: ngw, ngw_g, ngwx, ecutwfc, gcutw, ekcut, gkcut
-     PUBLIC :: g2kin, g2kin_d, ecfixed, qcutz, q2sigma
+     PUBLIC :: g2kin, ecfixed, qcutz, q2sigma
      PUBLIC :: gvecw_init, g2kin_init, deallocate_gvecw
 
      ! ...   G vectors less than the wave function cut-off ( ecutwfc )
@@ -52,11 +52,6 @@
      REAL(DP), ALLOCATABLE :: g2kin(:)
      !! \(\text{g2kin} = g + (\text{agg} / \text{tpiba}^2)\cdot(1+\text{erf}
      !! ((\text{tpiba2}\cdot g-\text{e0gg})/\text{sgg}))\)
-     REAL(DP), ALLOCATABLE :: g2kin_d(:)
-     !! \(\text{g2kin}\) on device
-#if defined (__CUDA)
-     ATTRIBUTES( DEVICE ) :: g2kin_d
-#endif
 
    CONTAINS
 
@@ -82,18 +77,17 @@
        !  allocate kinetic energy
        !
        ALLOCATE( g2kin(ngw) )
+       !$acc enter data create(g2kin)
        !
        RETURN 
-
+       !
      END SUBROUTINE gvecw_init
-
-     SUBROUTINE g2kin_init( gg, tpiba2 )
+     !
+     SUBROUTINE g2kin_init( ggg, tpiba2 )
        !! Initialize kinetic energy
-#if defined (__CUDA)
-       USE cudafor
-#endif
+       USE gvect, ONLY : gg
        IMPLICIT NONE
-       REAL(DP), INTENT(IN) :: gg(:), tpiba2
+       REAL(DP), INTENT(IN) :: ggg(:), tpiba2
        REAL(DP) :: gcutz
        INTEGER :: ig
        !
@@ -106,20 +100,17 @@
        ELSE
           g2kin( 1 : ngw ) = gg( 1 : ngw )
        END IF
-
-#if defined (__CUDA)
-       ALLOCATE( g2kin_d, SOURCE = g2kin )
-#endif
-
+       !
+       !$acc update device(g2kin)
+       !
        RETURN 
-
+       !
      END SUBROUTINE g2kin_init
-
+     !
      SUBROUTINE deallocate_gvecw
+       !$acc exit data delete(g2kin)
        IF( ALLOCATED( g2kin ) ) DEALLOCATE( g2kin )
-       IF( ALLOCATED( g2kin_d ) ) DEALLOCATE( g2kin_d )
      END SUBROUTINE deallocate_gvecw
-
-!=----------------------------------------------------------------------------=!
+     !=----------------------------------------------------------------------------=!
    END MODULE gvecw
 !=----------------------------------------------------------------------------=!

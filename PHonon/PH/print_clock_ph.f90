@@ -19,6 +19,7 @@ subroutine print_clock_ph
   USE dvscf_interpolate, ONLY : ldvscf_interpolate
   USE ahc,        ONLY : elph_ahc
   USE el_phon,    ONLY : elph
+  USE control_flags,     ONLY : ldftd3
   !
   implicit none
   !
@@ -36,6 +37,8 @@ subroutine print_clock_ph
   call print_clock ('newd')
   call print_clock ('dvanqq')
   call print_clock ('drho')
+  call print_clock('drhous')
+  call print_clock ('nldyntot')
   if ((epsil.or.zue).and.okvan) call print_clock ('cmpt_qdipol')
 
   if(epsil) then
@@ -76,43 +79,40 @@ subroutine print_clock_ph
      WRITE( stdout, * )
      WRITE( stdout,  * ) '    DYNAMICAL MATRIX:'
      call print_clock ('dynmat0')
+     call print_clock ('dynmat_us')
+     call print_clock ('addusdynmat')
+     call print_clock ('d2ionq')
+     if (nlcc_any) call print_clock ('dynmatcc')
+     if (ldftd3) THEN
+       call print_clock('dftd3')
+       call print_clock('dftd3:frc')
+       call print_clock('dftd3:ene')
+     end if
      call print_clock ('phqscf')
      call print_clock ('dynmatrix')
      WRITE( stdout, * )
      call print_clock ('phqscf')
      call print_clock ('solve_linter')
+     call print_clock ('sth_kernel')
+     call print_clock ('h_prec')
+     call print_clock ('apply_dpot_b')
+     call print_clock ('ortho')
+     call print_clock ('cgsolve')
+     call print_clock ('incdrhoscf')
+     call print_clock ('addusddens')
+     call print_clock ('vpsifft')
+     call print_clock ('dv_of_drho')
+     call print_clock ('mix_pot')
+     call print_clock ('ef_shift')
+     call print_clock ('ef_shift_wfc')
+     call print_clock ('localdos')
      call print_clock ('drhodv')
+
      if (zue) call print_clock('add_zstar_ue')
      if (zue) call print_clock('add_zstar_1')
      if (zue.and.okvan) call print_clock('add_zstar_us')
   endif
-  WRITE( stdout, * )
-  call print_clock ('dynmat0')
-  call print_clock ('dynmat_us')
-  call print_clock ('addusdynmat1')
-  call print_clock ('d2ionq')
-  if (nlcc_any) call print_clock ('dynmatcc')
-  WRITE( stdout, * )
-  call print_clock ('dynmat_us')
-  call print_clock ('addusdynmat')
-  WRITE( stdout, * )
-  call print_clock ('phqscf')
-  call print_clock ('solve_linter')
-  WRITE( stdout, * )
-  call print_clock ('solve_linter')
-  call print_clock ('dvqpsi_us')
-  call print_clock ('sth_kernel')
-  call print_clock ('apply_dpot_b')
-  call print_clock ('ortho')
-  call print_clock ('cgsolve')
-  call print_clock ('incdrhoscf')
-  call print_clock ('addusddens')
-  call print_clock ('vpsifft')
-  call print_clock ('dv_of_drho')
-  call print_clock ('mix_pot')
-  call print_clock ('ef_shift')
-  call print_clock ('ef_shift_wfc')
-  call print_clock ('localdos')
+
 #if defined(__MPI)
   call print_clock ('psymdvscf')
 #else
@@ -127,25 +127,13 @@ subroutine print_clock_ph
   call print_clock ('dvqpsi_us')
 
   call print_clock ('dvqpsi_us_on')
-  WRITE( stdout, * )
-  call print_clock ('cgsolve')
 
-  call print_clock ('ch_psi')
   WRITE( stdout, * )
-  call print_clock ('ch_psi')
-  call print_clock ('first')
-  call print_clock ('h_psi')
-
-  call print_clock ('last')
-  WRITE( stdout, * )
-  call print_clock ('h_psi')
   call print_clock ('firstfft')
   call print_clock ('product')
   call print_clock ('secondfft')
 
   call print_clock ('add_vuspsi')
-  WRITE( stdout, * )
-  call print_clock ('incdrhoscf')
 
   call print_clock ('addusdbec')
   WRITE( stdout, * )
@@ -172,14 +160,6 @@ subroutine print_clock_ph
      WRITE( stdout, * )
   ENDIF
 
-  IF (elph) THEN
-     WRITE( stdout, * ) '     Electron-phonon coupling'
-     CALL print_clock('elphon')
-     CALL print_clock('elphel')
-     CALL print_clock('elphsum')
-     WRITE( stdout, * )
-  ENDIF
-
   IF (ldvscf_interpolate) THEN
      WRITE( stdout, * ) '     Fourier interpolation of dVscf'
      ! CALL print_clock('dvscf_setup')
@@ -193,6 +173,14 @@ subroutine print_clock_ph
      ! CALL print_clock('dvscf_long')
      CALL print_clock('dvscf_bare')
      ! CALL print_clock('dvscf_cart2u')
+     WRITE( stdout, * )
+  ENDIF
+
+  IF (elph) THEN
+     WRITE( stdout, * ) '     Electron-phonon coupling'
+     CALL print_clock('elphon')
+     CALL print_clock('elphel')
+     CALL print_clock('elphsum')
      WRITE( stdout, * )
   ENDIF
 
@@ -215,5 +203,23 @@ subroutine print_clock_ph
   call print_clock ('davcio')
   call print_clock ('write_rec')
   WRITE( stdout, * )
+
+  WRITE( stdout,  * ) '     Additional routines'
+  call print_clock ('ch_psi')
+  call print_clock ('equalch')
+  call print_clock ('last')
+  call print_clock ('Hesh')
+  call print_clock ('Hesh:noncolin')
+  call print_clock ('ch_psi_all_k')
+  call print_clock ('ch_psi_all_gamma')
+  call print_clock ('ch_psi_calbec')
+  call print_clock ('h_psi_bgrp')
+  call print_clock ('h_psi')
+  call print_clock ('h_psi:pot')
+  call print_clock ('h_psi:calbec')
+  call print_clock ('s_psi_bgrp')
+  call print_clock ('s_psi')
+  WRITE( stdout, * )
+
   return
 end subroutine print_clock_ph

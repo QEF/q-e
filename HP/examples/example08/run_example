@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
@@ -97,7 +97,7 @@ cat > $PREFIX.scf.in << EOF
  /
  &system
     ibrav = 0,
-    nat = 3, 
+    nat = 3,
     ntyp = 2,
     ecutwfc = 45.0
     ecutrho = 360.0

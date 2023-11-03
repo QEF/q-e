@@ -113,11 +113,7 @@ PROGRAM head
      !
      !  electric field perturbation
      !
-
-     IF (epsil) CALL phescf()
-     
      if(l_head) then
-
         call solve_head
      endif
      !
@@ -149,19 +145,14 @@ PROGRAM head
      !
      ! ... cleanup of the variables for the next q point
      !
-     write(stdout,*) 'DEBUG 1'
-     CALL clean_pw_ph(iq)
-     write(stdout,*) 'DEBUG 2'
+     CALL clean_pw_ph(iq)  
      !
   END DO
 
-  write(stdout,*) 'DEBUG 3'
-   CALL ph_writefile('init',0,0,ierr)
-  write(stdout,*) 'DEBUG 4'
+  
+  CALL ph_writefile('init',0,0,ierr)
   CALL collect_grid_files()
-  write(stdout,*) 'DEBUG 5'
   CALL destroy_status_run()
-  write(stdout,*) 'DEBUG 6'
   !
   IF (bands_computed) CALL print_clock_pw()
   !

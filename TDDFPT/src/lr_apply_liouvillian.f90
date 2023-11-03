@@ -541,7 +541,15 @@ CONTAINS
     !
     ! Compute sevc1_new = H*evc1
     !
+#if defined(__CUDA)
+    !$acc data copyin(evc1) copyout(sevc1_new)
+    !$acc host_data use_device(evc1, sevc1_new)
+    CALL h_psi_gpu (npwx,ngk(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1))
+    !$acc end host_data
+    !$acc end data
+#else
     CALL h_psi(npwx,ngk(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1))
+#endif
     !
     IF (lr_exx) CALL start_exx()
     !
@@ -554,7 +562,15 @@ CONTAINS
            CALL fwfft_orbital_gamma(spsi1,ibnd,nbnd)
         ENDDO
     ELSE
+#if defined(__CUDA)
+       !$acc data copyin(evc1) copyout(spsi1)
+       !$acc host_data use_device(evc1, spsi1)
+       CALL s_psi_gpu (npwx,ngk(1),nbnd,evc1(1,1,1),spsi1)
+       !$acc end host_data
+       !$acc end data
+#else            
        CALL s_psi(npwx,ngk(1),nbnd,evc1(1,1,1),spsi1)
+#endif
     ENDIF
     !
     !   Subtract the eigenvalues

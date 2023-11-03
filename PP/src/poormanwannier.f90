@@ -124,7 +124,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   USE gvect
   USE klist,      ONLY:  nks, nkstot, ngk, igk_k, xk 
   USE wvfct,      ONLY : nbnd, npwx, et
-  USE ldaU,       ONLY : is_Hubbard, Hubbard_lmax, Hubbard_l, &
+  USE ldaU,       ONLY : is_hubbard, Hubbard_lmax, Hubbard_l, &
                          oatwfc, offsetU, nwfcU, wfcU, copy_U_wfc
   USE symm_base,  ONLY : nrot, nsym, nsym_ns, nsym_na, irt, s, sname, sr, ft
   USE mp_pools,   ONLY : me_pool, root_pool, my_pool_id, kunit, npool

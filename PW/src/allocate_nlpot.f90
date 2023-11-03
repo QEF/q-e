@@ -15,7 +15,7 @@ SUBROUTINE allocate_nlpot
   !! Requires in input:  
   !! * dimensions: nhm, nsp, nat, lmaxkb, nbetam, nwfcm, nspin
   !! * parameters: ecutrho, qnorm, dq, ecutwfc, cell_factor
-  !! * options: tqr, noncolin, lspinorb, spline_ps
+  !! * options: tqr, noncolin, lspinorb
   !
   !! Computes the following global quantities:  
   !! * nqx: number of points of the interpolation table
@@ -29,7 +29,7 @@ SUBROUTINE allocate_nlpot
   USE noncollin_module, ONLY : noncolin, lspinorb
   USE gvect,            ONLY : ecutrho
   USE gvecw,            ONLY : ecutwfc
-  USE uspp_data,        ONLY : dq, nqx, nqxq, spline_ps, allocate_uspp_data
+  USE uspp_data,        ONLY : dq, nqx, nqxq, allocate_uspp_data
   USE uspp,             ONLY : allocate_uspp
   USE uspp_param,       ONLY : upf, lmaxq, lmaxkb, nh, nhm, nsp, nbetam, nwfcm
   IMPLICIT NONE
@@ -40,10 +40,6 @@ SUBROUTINE allocate_nlpot
   ! moved to init_run.f90 : pre_init()
   !
   call allocate_uspp(use_gpu,noncolin,lspinorb,tqr,nhm,nsp,nat,nspin)
-  !
-  ! GIPAW needs a slighly larger q-space interpolation for quantities calculated
-  ! at k+q_gipaw, and I'm using the spline_ps=.true. flag to signal that
-  IF ( spline_ps .AND. cell_factor <= 1.1d0 ) cell_factor = 1.1d0
   !
   ! This routine is called also by the phonon code, in which case it should
   ! allocate an array that includes q+G vectors up to |q+G|_max <= |Gmax|+|q|

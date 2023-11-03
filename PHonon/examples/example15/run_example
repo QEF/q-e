@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
@@ -181,12 +181,12 @@ $ECHO "Trying to plot it with gnuplot..."
 cat > plot_command_co2.cmd << EOF
  set lmargin 8
  set rmargin 3
- 
+
  set multiplot
  set key left top
  set origin 0.0,0.5
  set size 1,0.5
- set yrange [0:] 
+ set yrange [0:]
  set format x ""
  set tmargin 1
  plot 'plotdata_co2.dat' u (\$2):(\$3) title ' CO2-RAMAN' w i lw 2
@@ -199,7 +199,7 @@ cat > plot_command_co2.cmd << EOF
  set xlabel "Wavenumber [cm-1]"
  set bmargin 3
  set ylabel "Intensity" offset 0,5
- plot 'plotdata_co2.dat' u (\$2):(\$4) title 'CO2-IR' w i lw 2 lc 2 
+ plot 'plotdata_co2.dat' u (\$2):(\$4) title 'CO2-IR' w i lw 2 lc 2
  set nomultiplot
 EOF
 
@@ -209,7 +209,7 @@ if [ "$GP_COMMAND" = "" ]; then
     break
 else
   $GP_COMMAND -persist plot_command_co2.cmd &
-   
+
 fi
 
 # clean TMP_DIR
@@ -307,7 +307,7 @@ cat > plot_command_zno.cmd << EOF
  set key left top
  set origin 0.0,0.5
  set size 1,0.5
- set yrange [0:] 
+ set yrange [0:]
  set format x ""
  set tmargin 1
  plot 'plotdata_zno.dat' u (\$2):(\$3) title ' ZnO-RAMAN' w i lw 2
@@ -320,7 +320,7 @@ cat > plot_command_zno.cmd << EOF
  set xlabel "Frequency [cm-1]"
  set bmargin 3
  set ylabel "Intensity" offset 0,5
- plot 'plotdata_zno.dat' u (\$2):(\$4) title 'ZnO-IR' w i lw 2 lc 2 
+ plot 'plotdata_zno.dat' u (\$2):(\$4) title 'ZnO-IR' w i lw 2 lc 2
  set nomultiplot
 EOF
 
@@ -330,7 +330,7 @@ if [ "$GP_COMMAND" = "" ]; then
     break
 else
   $GP_COMMAND -persist plot_command_zno.cmd &
-   
+
 fi
 
 

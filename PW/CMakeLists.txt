@@ -44,14 +44,11 @@ set(src_pw
    src/Coul_cut_2D.f90 
    src/d_matrix.f90 
    src/data_structure.f90 
-   src/deriv_drhoc.f90 
    src/divide_class.f90 
    src/divide_class_so.f90 
    src/divide_et_impera.f90 
-   src/drhoc.f90 
    src/rotate_wfc.f90 
    src/run_driver.f90 
-   src/dvloc_of_g.f90 
    src/dynamics_module.f90 
    src/efermig.f90 
    src/efermit.f90 
@@ -125,7 +122,6 @@ set(src_pw
    src/lchk_tauxk.f90 
    src/ldaU.f90 
    src/make_pointlists.f90 
-   src/makov_payne.f90 
    src/manypw.f90 
    src/martyna_tuckerman.f90 
    src/memory_report.f90 
@@ -227,6 +223,7 @@ set(src_pw
    src/transform_becsum_nc.f90 
    src/transform_qq_so.f90 
    src/trnvecc.f90 
+   src/two_chem.f90
    src/update_pot.f90 
    src/us_exx.f90 
    src/usnldiag.f90 
@@ -234,7 +231,6 @@ set(src_pw
    src/vcsmd.f90 
    src/vcsubs.f90 
    src/vhpsi.f90 
-   src/vloc_of_g.f90 
    src/vloc_psi.f90 
    src/utils.f90 
    src/xdm_dispersion.f90 
@@ -253,47 +249,50 @@ set(src_pw
    src/g_psi_mod_gpu.f90
    src/newd_gpu.f90
    src/sum_band_gpu.f90
-   src/force_us_gpu.f90
-   src/force_lc_gpu.f90
-   src/force_cc_gpu.f90
-   src/force_hub_gpu.f90
-   src/force_corr_gpu.f90
-   src/orthoatwfc_gpu.f90
-   src/wfcinit_gpu.f90
-   src/stres_loc_gpu.f90
    src/add_paw_to_deeq_gpu.f90
-   src/addusdens_gpu.f90
-   src/addusforce_gpu.f90
-   src/deriv_drhoc_gpu.f90
    src/s_psi_gpu.f90
-   src/g2_kin_gpu.f90
    src/rotate_wfc_gpu.f90
    src/usnldiag_gpu.f90
    src/add_vuspsi_gpu.f90
    src/hs_1psi_gpu.f90
    src/g_psi_gpu.f90
-   src/stres_mgga_gpu.f90
    src/atomic_wfc_gpu.f90
-   src/dvloc_of_g_gpu.f90
-   src/stres_ewa_gpu.f90
-   src/stres_knl_gpu.f90
-   src/compute_deff_gpu.f90
    src/add_vhub_to_deeq_gpu.f90
    src/s_1psi_gpu.f90
    src/h_psi_gpu.f90
-   src/stres_us_gpu.f90
-   src/stres_cc_gpu.f90
    src/utils_gpu.f90
    src/vhpsi_gpu.f90
-   src/drhoc_gpu.f90
-   src/stres_har_gpu.f90
    src/vloc_psi_gpu.f90
-   src/hs_psi_gpu.f90)
+   src/hs_psi_gpu.f90
+   src/sic.f90
+   src/scissor.f90)
+# OSCDFT
+if (QE_ENABLE_OSCDFT)
+    list(APPEND src_pw
+        src/oscdft_input.f90
+        src/oscdft_context.f90
+        src/oscdft_base.f90
+        src/oscdft_enums.f90
+        src/oscdft_indices.f90
+        src/oscdft_wavefunction.f90
+        src/oscdft_wavefunction_subs.f90
+        src/oscdft_functions.f90
+        src/oscdft_occupations.f90
+        src/oscdft_wfcO.f90
+        src/oscdft_forces.f90
+        src/oscdft_forces_subs.f90
+        # GPU
+        src/oscdft_wavefunction_subs_gpu.f90
+        src/oscdft_wfcO_gpu.f90
+        src/oscdft_functions_gpu.f90
+        src/additional_cusolver_subs.f90)
+endif()
 qe_enable_cuda_fortran("${src_pw}")
     
 qe_add_library(qe_pw ${src_pw})
 target_link_libraries(qe_pw
     PRIVATE
+        qe_device_lapack  
         qe_hdf5_fortran
         qe_elpa
         qe_scalapack
@@ -320,6 +319,9 @@ if(QE_ENABLE_CUDA)
     target_link_libraries(qe_pw
         PRIVATE
             CUDA::cublas)
+endif()
+if ("legacy" IN_LIST QE_ENABLE_PLUGINS) 
+  target_compile_definitions(qe_pw PUBLIC __LEGACY_PLUGINS)
 endif()
 
 ###########################################################

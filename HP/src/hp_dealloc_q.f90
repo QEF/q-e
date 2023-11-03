@@ -56,16 +56,16 @@ SUBROUTINE hp_dealloc_q()
         enddo
         deallocate(becp1)
      endif
-     ! -------------- LUCA -----------------
-     if (allocated(becpt)) then  
-        do ik=1,size(becpt)
-           call deallocate_bec_type ( becpt(ik) )
-        enddo
-        deallocate(becpt)
-     endif
-     if (allocated(deeq_nc_save)) deallocate(deeq_nc_save)
-     ! -------------------------------------
   ENDIF
+  ! -------------- LUCA -----------------
+  if (allocated(becpt)) then  
+      do ik=1,size(becpt)
+         call deallocate_bec_type ( becpt(ik) )
+      enddo
+      deallocate(becpt)
+  endif
+  if (allocated(deeq_nc_save)) deallocate(deeq_nc_save)
+! -------------------------------------
   !
   ! GGA-specific arrays
   !

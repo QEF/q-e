@@ -8,8 +8,8 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-if [[ $QE_USE_MPI == 1 ]]; then
-  export PARA_PREFIX="mpirun -np ${TESTCODE_NPROCS}"
+if [[ "$QE_USE_MPI" != "" ]]; then
+  export PARA_PREFIX="mpirun -np $QE_USE_MPI"
 else
   unset PARA_PREFIX
 fi
@@ -18,8 +18,8 @@ echo $0" "$@
 if [[ "$1" == "0" ]]
  then
  echo "Running ZG ..."
- echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ZG.x -input $1 > $2 2> $3"
- ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ZG.x -input $1 > $2 2> $3
+ echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ZG.x -input $2 > $3 2> $4"
+ ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ZG.x -input $2 > $3 2> $4
 fi
 #
 if [[ -e CRASH ]]

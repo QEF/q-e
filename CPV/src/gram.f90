@@ -8,9 +8,9 @@
 #include <cpv_device_macros.h> 
 !-------------------------------------------------------------------------
 SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )
-!-----------------------------------------------------------------------
-!     gram-schmidt orthogonalization of the set of wavefunctions cp
-!
+      !-----------------------------------------------------------------------
+      !! Gram-Schmidt orthogonalization of the set of wavefunctions cp.
+      !
       USE gvecw,          ONLY : ngw
       USE electrons_base, ONLY : nbspx_bgrp, ibgrp_g2l, nupdwn, iupdwn, nbspx, iupdwn_bgrp, nspin
       USE kinds,          ONLY : DP
@@ -116,11 +116,11 @@ DEV_ACC end data
 CONTAINS   
 !-----------------------------------------------------------------------
    FUNCTION cscnorm( bec, cp, i, n )
-!-----------------------------------------------------------------------
-!
-!     Compute the norm of the i-th electronic state = (<c|S|c>)^(1/2) 
-!     requires in input the updated bec(i)
-!
+      !-----------------------------------------------------------------------
+      !! Compute the norm of the i-th electronic state:
+      !! \[ (\langle c|S|c \rangle)^{1/2} \ .\]
+      !! Requires in input the updated \(\text{bec}(i)\).
+      !
       USE ions_base,          ONLY: nat, ityp
       USE gvecw,              ONLY: ngw
       USE uspp_param,         ONLY: nh, upf
@@ -186,8 +186,8 @@ DEV_ACC end data
 !-------------------------------------------------------------------------
       SUBROUTINE gracsc_bgrp( i, csc, iss, nk )
 !-----------------------------------------------------------------------
-!     requires in input the updated bec(k) for k<i
-!     on output: bec(i) is recalculated
+      !! Requires in input the updated \(\text{bec}(k)\) for \(k<i\).
+      !! On output: \(\text{bec}(i)\) is recalculated.
 !
       USE ions_base,      ONLY: na, nat, ityp
       USE uspp,           ONLY: qq_nt, ofsbeta
@@ -218,13 +218,15 @@ DEV_ACC kernels present(csc)
       csc    = 0.0d0
 DEV_ACC end kernels 
       ibgrp_i = ibgrp_g2l( i )
-DEV_ACC kernels present(cp_tmp) 
       IF( ibgrp_i > 0 ) THEN
+DEV_ACC kernels present(cp_tmp) 
          cp_tmp = cp_bgrp( :, ibgrp_i )
-      ELSE
-         cp_tmp = 0.0d0
-      END IF
 DEV_ACC end kernels 
+      ELSE
+DEV_ACC kernels present(cp_tmp) 
+         cp_tmp = 0.0d0
+DEV_ACC end kernels
+      END IF
 !!DEV_ACC host_data use_device(cp_tmp) 
 
 !!DEV_ACC update self(cp_tmp)
@@ -254,7 +256,7 @@ DEV_ACC end host_data
       END IF 
       nk = 0
       iupdwn_iss = iupdwn( iss) 
-DEV_ACC serial  present(ibgrp_g2l)      
+DEV_ACC serial copy(nk)  present(ibgrp_g2l)      
       DO k = iupdwn_iss, kmax
          ibgrp_k = ibgrp_g2l( k )
          IF( ibgrp_k > 0 ) THEN
@@ -374,7 +376,7 @@ DEV_ACC end kernels
 
 
       nk = 0
-DEV_ACC serial present(ibgrp_g2l, csc) 
+DEV_ACC serial copy(nk) present(ibgrp_g2l, csc) 
       DO k = iupdwn_iss, kmax
          ibgrp_k = ibgrp_g2l( k )
          IF( ibgrp_k > 0 ) THEN

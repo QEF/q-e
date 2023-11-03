@@ -13,8 +13,13 @@ MODULE xml_io_rism
   ! ... this module contains subroutines used to read and write
   ! ... 1D- and 3D-RISM data in XML format
   !
+#if defined(__fox)
   USE FoX_dom
   USE FoX_wxml
+#else
+  USE dom
+  USE wxml
+#endif
   USE constants, ONLY : eps8
   USE fft_types, ONLY : fft_type_descriptor
   USE io_files,  ONLY : check_file_exist

@@ -13,12 +13,10 @@ subroutine raman
   USE kinds,    ONLY : DP
   USE klist,    ONLY : ltetra, lgauss
   USE lsda_mod, ONLY : lsda
-  USE control_flags, ONLY : gamma_only
   USE uspp, ONLY: okvan
   USE control_ph, ONLY : epsil, convt, rec_code_read
   USE ph_restart, ONLY : ph_writefile
   USE ramanm, ONLY: lraman, elop, done_lraman, done_elop
-
   USE control_lr, ONLY : lgamma
 
   implicit none

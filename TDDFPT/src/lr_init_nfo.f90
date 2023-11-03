@@ -170,7 +170,8 @@ SUBROUTINE lr_init_nfo()
            CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
            !
            ! Calculate beta-functions vkb at point k
-           CALL init_us_2(npw, igk_k(1,ikk), xk(1,ikk), vkb)
+           CALL init_us_2(npw, igk_k(1,ikk), xk(1,ikk), vkb, .true.)
+           !$acc update host(vkb)
            !
            ! Calculate becp1=<vkb|evc>
            CALL calbec (npw, vkb, evc, becp1(ik))

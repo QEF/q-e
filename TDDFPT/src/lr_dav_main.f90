@@ -27,7 +27,7 @@ PROGRAM lr_dav_main
                                     ibnd_start, ibnd_end
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions,  ONLY : psic
-  USE control_flags,         ONLY : do_makov_payne
+  USE control_flags,         ONLY : do_makov_payne, use_gpu
   USE check_stop,            ONLY : check_stop_now, check_stop_init
   USE xc_lib,                ONLY : xclib_dft_is
   use lr_dav_routines
@@ -43,6 +43,10 @@ PROGRAM lr_dav_main
   INTEGER            :: ibnd_occ,ibnd_virt,ibnd,ip
   LOGICAL            :: rflag, nomsg
   complex(dp)            :: temp
+  LOGICAL, EXTERNAL  :: check_gpu_support
+
+  use_gpu = check_gpu_support()
+  if(use_gpu) Call errore('lr_dav_main', 'turbo_davidson with GPU NYI', 1)
 
 #if defined(__MPI)
   CALL mp_startup ( )

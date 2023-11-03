@@ -73,6 +73,8 @@ SUBROUTINE stres_hub ( sigmah )
       CALL errore("stres_hub", &
                    " stress for this Hubbard_projectors type not implemented",1)
    !
+   ! IF (noncolin) CALL errore ("stres_hub","Noncollinear case is not supported",1)
+   !
    IF (ANY(Hubbard_J(:,:)>eps16)) CALL errore("stres_hub", &
                    " stress in the DFT+U+J scheme is not implemented", 1 ) 
    !
@@ -1336,7 +1338,6 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE mp,                   ONLY : mp_sum
    USE noncollin_module,     ONLY : noncolin, npol
    USE wavefunctions_gpum,   ONLY : using_evc
-   USE io_global,          ONLY : stdout 
    IMPLICIT NONE
    !
    ! I/O variables 
@@ -1532,8 +1533,10 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
       ! Now compute dO^{-1/2}_JI/d\epsilon(ipol,jpol) using dO_IJ/d\epsilon(ipol,jpol)
       ! Note the transposition!
       ! 
+      !$acc data copyin(doverlap) copyout(doverlap_inv)
       CALL calculate_doverlap_inv (natomwfc, eigenval, eigenvect, &
                                      doverlap, doverlap_inv)
+      !$acc end data
       !
       ! Now compute \sum_J dO^{-1/2}_JI/d\epsilon(ipol,jpol) \phi_J
       ! and add it to another term (see above).

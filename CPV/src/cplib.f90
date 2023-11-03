@@ -152,8 +152,8 @@
 !  ----------------------------------------------
 
       SUBROUTINE cutoffs_print_info()
-
-        !  Print out information about different cut-offs
+      
+        !!  Print out information about different cut-offs.
 
         USE gvecw, ONLY: ecutwfc,  gcutw
         USE gvect, ONLY: ecutrho,  gcutm
@@ -275,7 +275,7 @@
 
        SUBROUTINE ions_print_info( )
             
-         !  Print info about input parameter for ion dynamic
+         !! Print info about input parameter for ion dynamic
 
          USE io_global,     ONLY: ionode, stdout
          USE control_flags, ONLY: tranp, amprp, tnosep, tolp, tfor, tsdp, &
@@ -503,7 +503,7 @@
 SUBROUTINE gmeshinfo( )
 !----------------------------------------------
    !
-   !   Print out the number of g vectors for the different mesh
+   !! Print out the number of g vectors for the different mesh.
    !
    USE kinds,     ONLY: DP
    USE mp_global, ONLY: nproc_bgrp, intra_bgrp_comm
@@ -653,6 +653,10 @@ END SUBROUTINE constraint_info
 
 SUBROUTINE new_atomind_constraints()
    !
+   !! Substitute the atom index given in the input file
+   !! with the new atom index, after the sort in the
+   !! atomic coordinates.
+   !
    USE kinds,              ONLY: DP
    USE constraints_module, ONLY: constr
    !
@@ -661,10 +665,6 @@ SUBROUTINE new_atomind_constraints()
    INTEGER  :: ic, ia
    INTEGER  :: iaa
    REAL(DP) :: aa
-   !
-   !  Substitute the atom index given in the input file
-   !  with the new atom index, after the sort in the
-   !  atomic coordinates.
    !
    DO ic = 1, SIZE( constr, 2 )
       DO ia = 1, SIZE( constr, 1 )
@@ -698,12 +698,12 @@ END SUBROUTINE compute_stress_x
 !-----------------------------------------------------------------------
 subroutine formf( tfirst, eself )
   !-----------------------------------------------------------------------
-
-  !computes (a) the self-energy eself of the ionic pseudocharges;
-  !         (b) the form factors of: (i) pseudopotential (vps),
-  !             (ii) ionic pseudocharge (rhops)
-  !         also calculated the derivative of vps with respect to
-  !         g^2 (dvps)
+  !! Computes:  
+  !! (a) the self-energy \(\text{eself}\) of the ionic pseudocharges;  
+  !! (b) the form factors of: (i) pseudopotential (vps), (ii) ionic 
+  !!                          pseudocharge (rhops).  
+  !! Also calculates the derivative of \(\text{vps}\) with respect to
+  !! \(g^2(\text{dvps})\).
   ! 
   USE kinds,           ONLY : DP
   use mp,              ONLY : mp_sum
@@ -823,10 +823,9 @@ end subroutine formf
 !-----------------------------------------------------------------------
 SUBROUTINE newnlinit()
   !-----------------------------------------------------------------------
-  !
-  ! ... this routine calculates arrays beta, qq, qgb, rhocb
-  ! ... and derivatives w.r.t. cell parameters dbeta
-  ! ... See also comments in nlinit
+  !! This routine calculates arrays \(\text{beta}\), \(\text{qq}\), \(\text{qgb}\),
+  !! \(\text{rhocb}\) and derivatives w.r.t. cell parameters \(\text{dbeta}\).
+  !! See also comments in \(\texttt{nlinit}\).
   !
   use control_flags,    ONLY : tpre
   use pseudopotential,  ONLY : tpstab
@@ -896,8 +895,7 @@ END SUBROUTINE newnlinit
 !-----------------------------------------------------------------------
 subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, idesc )
   !-----------------------------------------------------------------------
-  !
-  !     contribution to the internal stress tensor due to the constraints
+  !! Contribution to the internal stress tensor due to the constraints.
   !
   USE kinds,             ONLY : DP
   use uspp,              ONLY : nkb, qq_nt, ofsbeta
@@ -1066,22 +1064,27 @@ end subroutine nlfh_x
 
 !-----------------------------------------------------------------------
 subroutine nlinit
-  !-----------------------------------------------------------------------
-  !
-  !     this routine allocates and initializes arrays beta, qq, qgb,
-  !     rhocb, and derivatives w.r.t. cell parameters dbeta
-  !
-  !       beta(ig,l,is) = 4pi/sqrt(omega) y^r(l,q^)
-  !                               int_0^inf dr r^2 j_l(qr) betar(l,is,r)
-  !
-  !       Note that beta(g)_lm,is = (-i)^l*beta(ig,l,is) (?)
-  !
-  !       qq_ij=int_0^r q_ij(r)=omega*qg(g=0)
-  !
-  !     beta and qradb are first calculated on a fixed linear grid in |G|
-  !     (betax, qradx) then calculated on the box grid by interpolation
-  !     (this is done in routine newnlinit)
-  !
+      !-----------------------------------------------------------------------
+      !! This routine allocates and initializes arrays \(\text{beta}\), 
+      !! \(\text{qq}\), \(\text{qgb}\), \(\text{rhocb}\), and derivatives w.r.t.
+      !! cell parameters \(\text{dbeta}\).
+      !
+      !! \[  \text{beta}(\text{ig},l,\text{is}) = 4\pi/\sqrt(\Omega) y^r(l,q)
+      !!         \int_0^inf dr r^2 j_l(\text{qr}) \text{betar}(l,\text{is},r) \]
+      !
+      !  beta(ig,l,is) = 4pi/sqrt(Omega) y^r(l,q^)
+      !         \int_0^inf dr r^2 j_l(qr) betar(l,is,r)
+      !
+      !! Note that \(\text{beta}(g)_{lm,is} = (-i)^l \text{beta}(\text{ig},l,\text{is})\)
+      !
+      !! \[ \text{qq}_{ij}=\int_0^r q_{ij}(r)=\Omega \text{qg}(g=0) \]
+      !
+      !  qq_ij=int_0^r q_ij(r)=omega*qg(g=0)
+      !
+      !! \(\text{beta}\) and \(\text{qradb}\) are first calculated on a fixed linear
+      !! grid in |G| (\(\text{betax}\), \(\text{qradx}\)) then calculated on the box
+      !! grid by interpolation (this is done in routine \(\texttt{newnlinit}\)).
+      !
       use kinds,           ONLY : dp
       use control_flags,   ONLY : iprint, tpre
       use io_global,       ONLY : stdout, ionode
@@ -1199,8 +1202,11 @@ end subroutine nlinit
 !-------------------------------------------------------------------------
 subroutine qvan2b(ngy,iv,jv,is,ylm,qg,qradb)
   !--------------------------------------------------------------------------
+  !! Implements: 
+  !! \[ q(g,l,k) = \sum_{lm} (-i)^l \text{ap}(lm,l,k)
+  !!             \text{yr}_{lm}(g) \text{qrad}(g,l,l,k) \]
   !
-  !     q(g,l,k) = sum_lm (-i)^l ap(lm,l,k) yr_lm(g^) qrad(g,l,l,k)
+  !   q(g,l,k) = sum_lm (-i)^l ap(lm,l,k) yr_lm(g^) qrad(g,l,l,k)
   !
   USE kinds,         ONLY : DP
   use control_flags, ONLY : iprint, tpre
@@ -1281,8 +1287,8 @@ end subroutine qvan2b
 !-------------------------------------------------------------------------
 subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg,dqrad,qradb)
   !--------------------------------------------------------------------------
-  !
-  !     dq(i,j) derivatives wrt to h(i,j) of q(g,l,k) calculated in qvan2b
+  !! The \(\text{dq}(i,j)\) are the derivatives with respect to \(h(i,j)\)
+  !! of \(q(g,l,k)\) calculated in \(\texttt{qvan2b}\).
   !
   USE kinds,         ONLY : DP
   use control_flags, ONLY : iprint, tpre
@@ -1381,10 +1387,10 @@ end subroutine dqvan2b
 !-----------------------------------------------------------------------
 subroutine dylmr2_( nylm, ngy, g, gg, ainv, dylm )
   !-----------------------------------------------------------------------
-  !
-  ! temporary CP interface for PW routine dylmr2
-  ! dylmr2  calculates d Y_{lm} /d G_ipol
-  ! dylmr2_ calculates G_ipol \sum_k h^(-1)(jpol,k) (dY_{lm} /dG_k)
+  !! Temporary CP interface for PW routine \(\texttt{dylmr2}\):  
+  !! \(\text{dylmr2}\) calculates \(d Y_{lm} /d G_\text{ipol}\);  
+  !! \(\text{dylmr2}\_\) calculates \(G_\text{ipol} \sum_k h^{-1}
+  !!                                  (\text{jpol},k) (dY_{lm} /dG_k)\).
   !
   USE kinds, ONLY: DP
 
@@ -1426,12 +1432,11 @@ end subroutine dylmr2_
 
 !-----------------------------------------------------------------------
    SUBROUTINE denlcc_x( nnr, nspin, vxcr, sfac, drhocg, dcc )
-!-----------------------------------------------------------------------
-!
-! derivative of non linear core correction exchange energy wrt cell 
-! parameters h 
-! Output in dcc
-!
+      !-----------------------------------------------------------------------
+      !! Derivative of non linear core correction exchange energy with respect
+      !! to cell parameters h.
+      !! Output in dcc.
+      !
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
       USE gvect, ONLY: gstart, g, gg
@@ -1618,9 +1623,8 @@ end subroutine dylmr2_
 !
 !-----------------------------------------------------------------------
    FUNCTION enkin_x( c, f, n )
-!-----------------------------------------------------------------------
-      !
-      ! calculation of kinetic energy term
+      !-----------------------------------------------------------------------
+      !! Calculation of kinetic energy term.
       !
       USE kinds,              ONLY: DP
       USE constants,          ONLY: pi, fpi
@@ -1676,7 +1680,7 @@ end subroutine dylmr2_
       USE constants,          ONLY: pi, fpi
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
-      USE gvecw,              ONLY: g2kin_d
+      USE gvecw,              ONLY: g2kin
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm
       USE cell_base,          ONLY: tpiba2
@@ -1696,10 +1700,10 @@ end subroutine dylmr2_
       REAL(DP) :: sk
       !
       sk=0.0d0
-!$cuf kernel do(2) <<<*,*>>>
+!$acc parallel loop collapse(2) present(g2kin, f, c) 
       DO i=1,n
          DO ig=gstart,ngw
-            sk = sk + f(i) * DBLE(CONJG(c(ig,i))*c(ig,i)) * g2kin_d(ig)
+            sk = sk + f(i) * DBLE(CONJG(c(ig,i))*c(ig,i)) * g2kin(ig)
          END DO
       END DO
 
@@ -1713,10 +1717,10 @@ end subroutine dylmr2_
 
 !-------------------------------------------------------------------------
       SUBROUTINE nlfl_bgrp_x( bec_bgrp, becdr_bgrp, lambda, idesc, fion )
-!-----------------------------------------------------------------------
-!     contribution to fion due to the orthonormality constraint
-! 
-!
+      !-----------------------------------------------------------------------
+      !! Contribution to \(\text{fion}\) due to the orthonormality constraint.
+      !
+      !
       USE kinds,             ONLY: DP
       USE io_global,         ONLY: stdout
       USE ions_base,         ONLY: na, nsp, nat, ityp
@@ -1931,10 +1935,9 @@ end subroutine dylmr2_
 !
 !-----------------------------------------------------------------------
       SUBROUTINE pbc(rin,a1,a2,a3,ainv,rout)
-!-----------------------------------------------------------------------
-!
-!     brings atoms inside the unit cell
-!
+      !-----------------------------------------------------------------------
+      !! Brings atoms inside the unit cell.
+      !
       USE kinds,  ONLY: DP
 
       IMPLICIT NONE

@@ -102,7 +102,6 @@ set(src_cpv
     src/wave_base.f90
     src/wave_types.f90
     src/wf.f90
-    src/makov_payne.f90
     src/entropy.f90)
 qe_enable_cuda_fortran("${src_cpv}")
 
@@ -121,6 +120,9 @@ target_link_libraries(qe_cpv
      PUBLIC 
         qe_openacc_fortran)
 
+if ("legacy" IN_LIST QE_ENABLE_PLUGINS) 
+  target_compile_definitions(qe_cpv PUBLIC __LEGACY_PLUGINS)
+endif() 
 ###########################################################
 # cp.x
 ###########################################################

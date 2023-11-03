@@ -48,6 +48,8 @@ MODULE qes_reset_module
     MODULE PROCEDURE qes_reset_HubbardInterSpecieV
     MODULE PROCEDURE qes_reset_SiteMoment
     MODULE PROCEDURE qes_reset_HubbardJ
+    MODULE PROCEDURE qes_reset_ChannelOcc
+    MODULE PROCEDURE qes_reset_HubbardOcc
     MODULE PROCEDURE qes_reset_SitMag
     MODULE PROCEDURE qes_reset_starting_ns
     MODULE PROCEDURE qes_reset_Hubbard_ns
@@ -654,6 +656,16 @@ MODULE qes_reset_module
     obj%lread  = .FALSE.
     !
     obj%lda_plus_u_kind_ispresent = .FALSE.
+    IF (obj%Hubbard_Occ_ispresent) THEN
+      IF (ALLOCATED(obj%Hubbard_Occ)) THEN
+        DO i=1, SIZE(obj%Hubbard_Occ)
+          CALL qes_reset_HubbardOcc(obj%Hubbard_Occ(i))
+        ENDDO
+        DEALLOCATE(obj%Hubbard_Occ)
+      ENDIF
+      obj%ndim_Hubbard_Occ = 0
+      obj%Hubbard_Occ_ispresent = .FALSE.
+    ENDIF
     IF (obj%Hubbard_U_ispresent) THEN
       IF (ALLOCATED(obj%Hubbard_U)) THEN
         DO i=1, SIZE(obj%Hubbard_U)
@@ -765,6 +777,7 @@ MODULE qes_reset_module
       obj%ndim_Hubbard_ns_nc = 0
       obj%Hubbard_ns_nc_ispresent = .FALSE.
     ENDIF
+    obj%new_format_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_dftU
   !
@@ -828,6 +841,42 @@ MODULE qes_reset_module
     obj%label_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_HubbardJ
+  !
+  !
+  SUBROUTINE qes_reset_ChannelOcc(obj)
+    !
+    IMPLICIT NONE
+    TYPE(ChannelOcc_type),INTENT(INOUT)    :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    obj%specie_ispresent = .FALSE.
+    obj%label_ispresent = .FALSE.
+    !
+  END SUBROUTINE qes_reset_ChannelOcc
+  !
+  !
+  SUBROUTINE qes_reset_HubbardOcc(obj)
+    !
+    IMPLICIT NONE
+    TYPE(HubbardOcc_type),INTENT(INOUT)    :: obj
+    INTEGER :: i
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    IF (ALLOCATED(obj%channel_occ)) THEN
+      DO i=1, SIZE(obj%channel_occ)
+        CALL qes_reset_ChannelOcc(obj%channel_occ(i))
+      ENDDO
+      DEALLOCATE(obj%channel_occ)
+    ENDIF
+    obj%ndim_channel_occ = 0
+    !
+  END SUBROUTINE qes_reset_HubbardOcc
   !
   !
   SUBROUTINE qes_reset_SitMag(obj)
@@ -903,6 +952,7 @@ MODULE qes_reset_module
     !
     obj%n3_number_ispresent = .FALSE.
     obj%l3_number_ispresent = .FALSE.
+    obj%label_ispresent = .FALSE.
     obj%species_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_HubbardBack
@@ -1102,6 +1152,7 @@ MODULE qes_reset_module
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
+    obj%exx_nstep_ispresent = .FALSE.
     obj%real_space_q_ispresent = .FALSE.
     obj%real_space_beta_ispresent = .FALSE.
     obj%diago_cg_maxiter_ispresent = .FALSE.
@@ -1556,6 +1607,7 @@ MODULE qes_reset_module
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
+    obj%constr_target_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_atomic_constraint
   !

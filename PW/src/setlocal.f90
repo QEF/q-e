@@ -26,7 +26,7 @@ SUBROUTINE setlocal
   USE scf,               ONLY : rho, v_of_0, vltot
   USE vlocal,            ONLY : strf, vloc
   USE fft_base,          ONLY : dfftp
-  USE fft_interfaces,    ONLY : invfft
+  USE fft_rho,           ONLY : rho_g2r
   USE gvect,             ONLY : ngm
   USE control_flags,     ONLY : gamma_only
   USE mp_bands,          ONLY : intra_bgrp_comm
@@ -46,36 +46,27 @@ SUBROUTINE setlocal
   !
   COMPLEX(DP), ALLOCATABLE :: aux(:), v_corr(:)
   COMPLEX(DP), ALLOCATABLE :: vlesm(:)
-  REAL(DP),    ALLOCATABLE :: vrism(:)
+  REAL(DP),    ALLOCATABLE :: vrism(:), vlesmr(:)
   ! auxiliary variable
   INTEGER :: nt, ng
   ! counter on atom types
   ! counter on g vectors
   !
-  ALLOCATE( aux(dfftp%nnr) )
+  ALLOCATE( aux(ngm) )
   aux(:) = (0.d0,0.d0)
-  ALLOCATE (vlesm(dfftp%nnr))
+  ALLOCATE (vlesm(ngm))
   vlesm(:)=(0.d0,0.d0)
   !
   IF (do_comp_mt) THEN
      ALLOCATE( v_corr(ngm) )
      CALL wg_corr_loc( omega, ntyp, ngm, zv, strf, v_corr )
-     aux(dfftp%nl(:)) = v_corr(:)
+     aux(:) = v_corr(:)
      DEALLOCATE( v_corr )
   ENDIF
   !
   DO nt = 1, ntyp
-     DO ng = 1, ngm
-        aux(dfftp%nl(ng)) = aux(dfftp%nl(ng)) + vloc(igtongl(ng),nt) &
-                            * strf(ng,nt)
-     ENDDO
+     aux(1:ngm) = aux(1:ngm) + vloc(igtongl(1:ngm),nt) * strf(1:ngm,nt)
   ENDDO
-  !
-  IF (gamma_only) THEN
-     DO ng = 1, ngm
-        aux(dfftp%nlm(ng)) = CONJG( aux(dfftp%nl(ng)) )
-     ENDDO
-  ENDIF
   !
   IF ( do_comp_esm .AND. ( esm_bc .NE. 'pbc' ) ) THEN
      !
@@ -89,7 +80,7 @@ SUBROUTINE setlocal
   ! 2D: re-add the erf/r function
   IF ( do_cutoff_2D ) THEN
      !
-     ! ... re-add the CUTOFF fourier transform of erf function
+     ! ... re-add the CUTOFF Fourier transform of erf function
      !
      CALL cutoff_local( aux )
      !
@@ -98,15 +89,11 @@ SUBROUTINE setlocal
   ! ... v_of_0 is (Vloc)(G=0)
   !
   v_of_0 = 0.0_DP
-  IF (gg(1) < eps8) v_of_0 = DBLE( aux(dfftp%nl(1)) )
+  IF (gg(1) < eps8) v_of_0 = DBLE( aux(1) )
   !
   CALL mp_sum( v_of_0, intra_bgrp_comm )
   !
-  ! ... aux = potential in G-space . FFT to real space
-  !
-  CALL invfft( 'Rho', aux, dfftp )
-  !
-  vltot(:) =  DBLE( aux(:) )
+  CALL rho_g2r( dfftp, aux, vltot )
   !
   ! ... If required add an electric field to the local potential 
   !
@@ -130,11 +117,11 @@ SUBROUTINE setlocal
           !
           ! ... for Laue-RISM
           !
-          ALLOCATE(vrism(dfftp%nnr))
-          CALL invfft ('Rho', vlesm, dfftp)
-          vrism(:) = vltot(:) - DBLE(vlesm(:))
+          ALLOCATE(vrism(dfftp%nnr),vlesmr(dfftp%nnr))
+          CALL rho_g2r(dfftp, vlesm, vlesmr)
+          vrism(:) = vltot(:) - vlesmr(:)
           CALL rism_setlocal(vrism)
-          DEALLOCATE(vrism)
+          DEALLOCATE(vrism, vlesmr)
       ELSE
           !
           ! ... for 3D-RISM
@@ -145,6 +132,9 @@ SUBROUTINE setlocal
   !
   ! ... Save vltot for possible modifications in plugins
   !
+#if defined (__LEGACY_PLUGINS)
+  CALL plugin_init_potential( vltot)
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) CALL update_environ_potential(vltot)
 #endif

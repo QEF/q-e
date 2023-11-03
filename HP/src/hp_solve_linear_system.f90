@@ -56,6 +56,10 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE qpoint_aux,           ONLY : ikmks, ikmkmqs, becpt  
   USE lsda_mod,             ONLY : nspin     
   USE scf,                  ONLY : vrs    
+#if defined(__CUDA)
+  USE becmod_gpum,      ONLY: becp_d
+  USE becmod_subs_gpum, ONLY: allocate_bec_type_gpu
+#endif
   !
   IMPLICIT NONE
   !
@@ -115,6 +119,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
              isolv,      & ! counter on linear systems    
              ikmk,       & ! index of mk
              nrec          ! the record number for dvpsi
+  INTEGER :: nnr 
 
   REAL(DP) :: tcpu, get_clock ! timing variables
   CHARACTER(LEN=256) :: flmixdpot = 'mixd'
@@ -138,12 +143,17 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   ELSE
      dvscfins(1:dffts%nnr, 1:nspin_mag, 1:1) => dvscfin
   ENDIF
+  nnr = dfftp%nnr
+  !$acc enter data create(dvscfins(1:nnr, 1:nspin_mag, 1))
   !
   ! USPP-specific allocations
   !
   IF (okvan) ALLOCATE (int3 ( nhm, nhm, nat, nspin_mag, 1))
   IF (okpaw) ALLOCATE (int3_paw ( nhm, nhm, nat, nspin_mag, 1))
   CALL allocate_bec_type (nkb, nbnd, becp)
+#if defined(__CUDA)
+  CALL allocate_bec_type_gpu(nkb,nbnd,becp_d)
+#endif
   !
   ALLOCATE (dbecsum((nhm*(nhm+1))/2, nat, nspin_mag, 1))
   !
@@ -369,22 +379,30 @@ SUBROUTINE hp_solve_linear_system (na, iq)
         !
         ! Check that def is not too large (it is in Ry). 
         !
+        ! Note: This check might be skipped, like in the PHonon code
         IF ( ABS(DBLE(def(1))) < 1.0d-18 .OR. ABS(DBLE(def(1))) > 5.0d0 ) THEN
            !
-           WRITE( stdout, '(/6x,"WARNING: The Fermi energy shift is zero or too big!")')
-           WRITE( stdout, '(6x, "This may happen in two cases:")')
-           WRITE( stdout, '(6x, "1. The DOS at the Fermi level is too small:")')
-           WRITE( stdout, '(6x, "   DOS(E_Fermi) = ",1x,2e12.4)') dos_ef
-           WRITE( stdout, '(6x, "   This means that most likely the system has a gap,")')
-           WRITE( stdout, '(6x, "   and hence it should NOT be treated as a metal")')
-           WRITE( stdout, '(6x, "   (otherwise numerical instabilities will appear).")')
-           WRITE( stdout, '(6x, "2. Numerical instabilities due to too low cutoff")')
-           WRITE( stdout, '(6x, "   for hard pseudopotentials.")')
-           WRITE( stdout, '(/6x,"Stopping...")')
-           WRITE( stdout, '(/6x,"Solution: Try to use the 2-step scf procedure as in HP/example02")')
-           !
-           CALL hp_stop_smoothly (.FALSE.)
-           !
+           IF (noncolin .and. (ABS(DBLE(def(1))) > 5.0d0)) THEN
+              !
+              WRITE( stdout, '(/6x,"The Fermi energy shift too big!")')
+              CALL hp_stop_smoothly (.FALSE.)
+           ELSE
+              !
+              WRITE( stdout, '(/6x,"WARNING: The Fermi energy shift is zero or too big!")')
+              WRITE( stdout, '(6x, "This may happen in two cases:")')
+              WRITE( stdout, '(6x, "1. The DOS at the Fermi level is too small:")')
+              WRITE( stdout, '(6x, "   DOS(E_Fermi) = ",1x,2e12.4)') dos_ef
+              WRITE( stdout, '(6x, "   This means that most likely the system has a gap,")')
+              WRITE( stdout, '(6x, "   and hence it should NOT be treated as a metal")')
+              WRITE( stdout, '(6x, "   (otherwise numerical instabilities will appear).")')
+              WRITE( stdout, '(6x, "2. Numerical instabilities due to too low cutoff")')
+              WRITE( stdout, '(6x, "   for hard pseudopotentials.")')
+              WRITE( stdout, '(/6x,"Stopping...")')
+              WRITE( stdout, '(/6x,"Solution (for magnetic insulators):")')
+              WRITE( stdout, '(6x,"Try to use the 2-step scf procedure as in HP/example02")')
+              !
+              CALL hp_stop_smoothly (.FALSE.)
+              !
         ENDIF    
         !
      ENDIF
@@ -532,15 +550,12 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   DEALLOCATE (dvscfout)
   DEALLOCATE (trace_dns_tot_old)
   ! --------------- LUCA --------------------------
-  IF (noncolin) THEN
-     DEALLOCATE (dbecsum_nc)
-     DEALLOCATE(int3_nc)
-  ENDIF  
-  IF (noncolin.AND.domag.AND.okvan) THEN
-     DEALLOCATE (int3_save)
-     DEALLOCATE (dbecsum_aux)
-  ENDIF
-! -----------------------------------------------
+  IF (ALLOCATED(dbecsum_nc)) DEALLOCATE (dbecsum_nc)
+  IF (ALLOCATED(int3_nc)) DEALLOCATE(int3_nc)
+  IF (ALLOCATED(int3_save)) DEALLOCATE (int3_save)
+  IF (ALLOCATED(dbecsum_aux)) DEALLOCATE (dbecsum_aux)
+  ! -----------------------------------------------
+  !$acc exit data delete(dvscfins)
   IF (doublegrid)       DEALLOCATE (dvscfins)
   IF (ALLOCATED(ldoss)) DEALLOCATE (ldoss)
   IF (ALLOCATED(ldos))  DEALLOCATE (ldos)

@@ -180,6 +180,7 @@ set(src_ph
     PH/c_bands_ph.f90
     PH/dvscf_interpolate.f90
     PH/ahc.f90)
+qe_enable_cuda_fortran("${src_ph}")
 
 set(src_phaux
     PH/write_eigenvectors.f90)
@@ -219,11 +220,14 @@ target_link_libraries(qe_phonon_ph
     PRIVATE
         qe_hdf5_fortran
         qe_openmp_fortran
+	qe_openacc_fortran
+        qe_mpi_fortran
         qe_pw
         qe_modules
         qe_lr_modules
         qe_upflib
         qe_fftx
+        qe_dftd3
         qe_fox
         qe_xclib)
 
@@ -250,7 +254,12 @@ target_link_libraries(qe_phonon_fd
         qe_pw
         qe_modules
         qe_lr_modules)
-        
+
+if(QE_ENABLE_CUDA)
+    target_link_libraries(qe_modules
+        PRIVATE
+            CUDA::cublas)
+endif()
 
 ###########################################################
 # ph.x
@@ -261,6 +270,9 @@ qe_add_executable(qe_phonon_ph_exe ${src_phonon_x})
 set_target_properties(qe_phonon_ph_exe PROPERTIES OUTPUT_NAME ph.x)
 target_link_libraries(qe_phonon_ph_exe
     PRIVATE
+        qe_openacc_fortran
+	qe_openmp_fortran
+	qe_mpi_fortran
         qe_pw
         qe_lax
         qe_modules
@@ -352,6 +364,7 @@ qe_add_executable(qe_phonon_alpha2f_exe ${src_alpha2f_x})
 set_target_properties(qe_phonon_alpha2f_exe PROPERTIES OUTPUT_NAME alpha2f.x)
 target_link_libraries(qe_phonon_alpha2f_exe
     PRIVATE
+        qe_openacc_fortran
         qe_pw
         qe_modules
         qe_phonon_ph)

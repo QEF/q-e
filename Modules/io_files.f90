@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2020 Quantum ESPRESSO group
+! Copyright (C) 2002-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -600,68 +600,3 @@ SUBROUTINE davcio( vect, nword, unit, nrec, io )
   RETURN
   !
 END SUBROUTINE davcio
-
-FUNCTION spdf_to_l (spdf) RESULT(l)
-  !
-  ! Returns the value of the orbital quantum number
-  !
-  IMPLICIT NONE
-  CHARACTER(len=1), INTENT(IN) :: spdf
-  INTEGER :: l
-  !
-  IF ( spdf == 's' .OR. spdf == 'S' ) THEN
-     l = 0
-  ELSEIF ( spdf == 'p' .OR. spdf == 'P' ) THEN
-     l = 1
-  ELSEIF ( spdf == 'd' .or. spdf == 'D' ) THEN
-     l = 2
-  ELSEIF ( spdf == 'f' .OR. spdf == 'F' ) THEN
-     l = 3
-  ELSE
-     l =-1
-  ENDIF
-  !
-  RETURN
-  !
-END FUNCTION spdf_to_l
-
-FUNCTION l_to_spdf (l, flag) RESULT(spdf)
-  !
-  ! Convert the value of the orbital quantum number into a character
-  ! flag=.TRUE.  returns capital letters
-  ! flag=.FALSE. returns small letters
-  !
-  IMPLICIT NONE
-  INTEGER, INTENT(IN) :: l
-  LOGICAL, INTENT(IN) :: flag
-  CHARACTER(LEN=1) :: spdf
-  !
-  IF (flag) THEN
-     IF (l == 0) THEN
-        spdf = 'S'
-     ELSEIF (l == 1) THEN
-        spdf = 'P'
-     ELSEIF (l == 2) THEN
-        spdf = 'D'
-     ELSEIF (l == 3) THEN
-        spdf = 'F'
-     ELSE
-        CALL errore( 'l_to_spdf', 'Incorrect value of the orbital quantum number l', l )
-     ENDIF
-  ELSE
-     IF (l == 0) THEN
-        spdf = 's'
-     ELSEIF (l == 1) THEN
-        spdf = 'p'
-     ELSEIF (l == 2) THEN
-        spdf = 'd'
-     ELSEIF (l == 3) THEN
-        spdf = 'f'
-     ELSE
-        CALL errore( 'l_to_spdf', 'Incorrect value of the orbital quantum number l', l )
-     ENDIF
-  ENDIF
-  !
-  RETURN
-  !
-END FUNCTION l_to_spdf

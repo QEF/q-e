@@ -47,7 +47,6 @@ SUBROUTINE init_nsg
          ldim = 2*Hubbard_l(nt)+1
          nm = .TRUE.
          !
-         IF (hubbard_occ(nt,1)<0.0d0) CALL determine_hubbard_occ(nt,1)
          totoc = hubbard_occ(nt,1)
          !
          ! --- LUCA (spawoc) changed condition on magnetization --------
@@ -132,7 +131,6 @@ SUBROUTINE init_nsg
             IF (.NOT.backall(nt)) THEN
                ! Fill in the second Hubbard manifold
                ldim2 = 2*Hubbard_l2(nt)+1
-               IF (hubbard_occ(nt,2)<0.0d0) CALL determine_hubbard_occ(nt,2)
                totoc_b = hubbard_occ(nt,2)
                DO is = 1, nspin
                   DO m1 = ldim+1, ldim_u(nt)
@@ -142,7 +140,6 @@ SUBROUTINE init_nsg
             ELSE
                ! Fill in the second Hubbard manifold
                ldim2 = 2*Hubbard_l2(nt)+1
-               IF (hubbard_occ(nt,2)<0.0d0) CALL determine_hubbard_occ(nt,2)
                totoc_b = hubbard_occ(nt,2)
                DO is = 1, nspin
                   DO m1 = ldim+1, ldim+2*Hubbard_l2(nt)+1
@@ -151,7 +148,6 @@ SUBROUTINE init_nsg
                ENDDO
                ! Fill in the third Hubbard manifold
                ldim2 = 2*(Hubbard_l2(nt) + Hubbard_l3(nt)) + 2
-               IF (hubbard_occ(nt,3)<0.0d0) CALL determine_hubbard_occ(nt,3)
                totoc_b = hubbard_occ(nt,3)
                DO is = 1, nspin
                   DO m1 = ldim+2*Hubbard_l2(nt)+2, ldim_u(nt)

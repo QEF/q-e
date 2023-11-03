@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -68,7 +68,7 @@ SUBROUTINE hp_setup_q()
   USE qpoint,           ONLY : xq
   USE control_lr,       ONLY : lgamma
   USE lr_symm_base,     ONLY : gi, gimq, irotmq, minus_q, invsymq, nsymq, rtau
-  USE ldaU_hp,          ONLY : niter_max, search_sym, alpha_mix, skip_equivalence_q
+  USE ldaU_hp,          ONLY : niter_max, alpha_mix, skip_equivalence_q
   ! USE funct,            ONLY : dft_is_gradient
   USE control_flags,    ONLY : modenum
   USE hp_nc_mag_aux,    ONLY : deeq_nc_save
@@ -193,18 +193,18 @@ SUBROUTINE hp_setup_q()
   !  LUCA: to be CHECKED with what is done in PHonon/PH/phq_setup.f90
   is_symmorphic = .NOT.( ANY( ABS(ft(:,1:nsymq)) > 1.d-8 ) )
   !
-  IF (skip_equivalence_q) THEN
-     search_sym = .FALSE.
-  ELSE
-     search_sym = .TRUE.
-     IF (.NOT.is_symmorphic) THEN
-        DO isym = 1, nsymq
-           search_sym = ( search_sym.AND.(ABS(gi(1,isym))<1.d-8).and.  &
-                                         (ABS(gi(2,isym))<1.d-8).and.  &
-                                         (ABS(gi(3,isym))<1.d-8) )
-        ENDDO
-     ENDIF
-  ENDIF
+  !IF (skip_equivalence_q) THEN
+  !   search_sym = .FALSE.
+  !ELSE
+  !   search_sym = .TRUE.
+  !   IF (.NOT.is_symmorphic) THEN
+  !      DO isym = 1, nsymq
+  !         search_sym = ( search_sym.AND.(ABS(gi(1,isym))<1.d-8).and.  &
+  !                                       (ABS(gi(2,isym))<1.d-8).and.  &
+  !                                       (ABS(gi(3,isym))<1.d-8) )
+  !      ENDDO
+  !   ENDIF
+  !ENDIF
   !
   ! 10) Setup the parameters alpha_mix
   !

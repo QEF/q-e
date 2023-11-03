@@ -8,20 +8,22 @@
 !----------------------------------------------------------------------------
 PROGRAM manycp
   !----------------------------------------------------------------------------
+  !! Poor-man cp.x parallel launcher. Usage (for mpirun):
   !
-  ! ... Poor-man cp.x parallel launcher. Usage (for mpirun):
-  ! ...    mpirun -np Np manycp.x -ni Ni [other options]
-  ! ... or whatever is appropriate for your parallel environment
-  ! ... Starts Ni cp.x instances each running on Np/Ni processors
-  ! ... Each cp.x instances
-  ! ... * reads input data from from cp_N.in, N=0,..,,Ni-1 if no input
-  ! ...   file is specified via the -i option; from "input_file"_N
-  ! ...   if command-line options -i "input_file" is specified
-  ! ... * saves temporary and final data to "outdir"_N/ directory
-  ! ...   (or to tmp_N/ if outdir='./')
-  ! ... * writes output to cp_N.out in the current directory if no input
-  ! ...   file is specified via the -i option; to "input_file"_N.out
-  ! ...   if command-line options -i "input_file" is specified
+  !!     mpirun -np Np manycp.x -ni Ni [other options]
+  !
+  !! or whatever is appropriate for your parallel environment
+  !! Starts Ni cp.x instances each running on Np/Ni processors.
+  !! Each cp.x instances:
+  !
+  !! * reads input data from from cp_N.in, N=0,..,,Ni-1 if no input
+  !!   file is specified via the -i option; from "input_file"_N
+  !!   if command-line options -i "input_file" is specified;
+  !! * saves temporary and final data to "outdir"_N/ directory
+  !!   (or to tmp_N/ if outdir='./');
+  !! * writes output to cp_N.out in the current directory if no input
+  !!   file is specified via the -i option; to "input_file"_N.out
+  !!   if command-line options -i "input_file" is specified.
   !
   USE input,             ONLY : iosys_pseudo, iosys
   USE input_parameters,  ONLY : outdir

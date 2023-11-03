@@ -864,44 +864,55 @@
     !
     !-----------------------------------------------------------------------
     FUNCTION matinv3(A) RESULT(B)
-    !-----------------------------------------------------------------------
-    !!
-    !! Performs a direct calculation of the inverse of a 3×3 matrix.
-    !!
-    USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : eps160
-    !
-    REAL(KIND = DP), INTENT(in) :: A(3, 3)
-    !! Matrix
-    !
-    ! Local variable
-    REAL(KIND = DP) :: detinv
-    !! Inverse of the determinant
-    REAL(KIND = DP) :: B(3, 3)
-    !! Inverse matrix
-    !
-    ! Calculate the inverse determinant of the matrix
-    detinv = 1 / (A(1, 1) * A(2, 2) * A(3, 3) - A(1, 1) * A(2, 3) * A(3, 2) &
-                - A(1, 2) * A(2, 1) * A(3, 3) + A(1, 2) * A(2, 3) * A(3, 1) &
-                + A(1, 3) * A(2, 1) * A(3, 2) - A(1, 3) * A(2, 2) * A(3, 1))
-    !
-    IF (detinv < eps160) THEN
-      CALL errore('matinv3', 'Inverse does not exist ', 1)
-    ENDIF
-    !
-    ! Calculate the inverse of the matrix
-    B(1, 1) = +detinv * (A(2, 2) * A(3, 3) - A(2, 3) * A(3, 2))
-    B(2, 1) = -detinv * (A(2, 1) * A(3, 3) - A(2, 3) * A(3, 1))
-    B(3, 1) = +detinv * (A(2, 1) * A(3, 2) - A(2, 2) * A(3, 1))
-    B(1, 2) = -detinv * (A(1, 2) * A(3, 3) - A(1, 3) * A(3, 2))
-    B(2, 2) = +detinv * (A(1, 1) * A(3, 3) - A(1, 3) * A(3, 1))
-    B(3, 2) = -detinv * (A(1, 1) * A(3, 2) - A(1, 2) * A(3, 1))
-    B(1, 3) = +detinv * (A(1, 2) * A(2, 3) - A(1, 3) * A(2, 2))
-    B(2, 3) = -detinv * (A(1, 1) * A(2, 3) - A(1, 3) * A(2, 1))
-    B(3, 3) = +detinv * (A(1, 1) * A(2, 2) - A(1, 2) * A(2, 1))
-    !-----------------------------------------------------------------------
-    END FUNCTION matinv3
-    !-----------------------------------------------------------------------
+      !-----------------------------------------------------------------------
+      !!
+      !! Performs a direct calculation of the inverse of a 3×3 matrix.
+      !!
+      USE kinds,         ONLY : DP
+      USE constants_epw, ONLY : eps160
+      !
+      REAL(KIND = DP), INTENT(in) :: A(3, 3)
+      !! Matrix
+      !
+      ! Local variable
+      REAL(KIND = DP) :: detinv, det
+      !! Inverse of the determinant
+      REAL(KIND = DP) :: B(3, 3)
+      !! Inverse matrix
+      !
+      !! Calculate the inverse determinant of the matrix
+      !detinv = 1 / (A(1, 1) * A(2, 2) * A(3, 3) - A(1, 1) * A(2, 3) * A(3, 2) &
+      !            - A(1, 2) * A(2, 1) * A(3, 3) + A(1, 2) * A(2, 3) * A(3, 1) &
+      !            + A(1, 3) * A(2, 1) * A(3, 2) - A(1, 3) * A(2, 2) * A(3, 1))
+      !!
+      !IF (detinv < eps160) THEN
+      !  CALL errore('matinv3', 'Inverse does not exist ', 1)
+      !ENDIF
+      !JLB
+      det = (A(1, 1) * A(2, 2) * A(3, 3) - A(1, 1) * A(2, 3) * A(3, 2)  &
+            - A(1, 2) * A(2, 1) * A(3, 3) + A(1, 2) * A(2, 3) * A(3, 1) &
+            + A(1, 3) * A(2, 1) * A(3, 2) - A(1, 3) * A(2, 2) * A(3, 1))
+      !
+      IF (ABS(det) < eps160) THEN
+        CALL errore('matinv3', 'Inverse does not exist ', 1)
+      END IF
+      !
+      detinv = 1 / det
+      !JLB
+      !
+      ! Calculate the inverse of the matrix
+      B(1, 1) = +detinv * (A(2, 2) * A(3, 3) - A(2, 3) * A(3, 2))
+      B(2, 1) = -detinv * (A(2, 1) * A(3, 3) - A(2, 3) * A(3, 1))
+      B(3, 1) = +detinv * (A(2, 1) * A(3, 2) - A(2, 2) * A(3, 1))
+      B(1, 2) = -detinv * (A(1, 2) * A(3, 3) - A(1, 3) * A(3, 2))
+      B(2, 2) = +detinv * (A(1, 1) * A(3, 3) - A(1, 3) * A(3, 1))
+      B(3, 2) = -detinv * (A(1, 1) * A(3, 2) - A(1, 2) * A(3, 1))
+      B(1, 3) = +detinv * (A(1, 2) * A(2, 3) - A(1, 3) * A(2, 2))
+      B(2, 3) = -detinv * (A(1, 1) * A(2, 3) - A(1, 3) * A(2, 1))
+      B(3, 3) = +detinv * (A(1, 1) * A(2, 2) - A(1, 2) * A(2, 1))
+      !-----------------------------------------------------------------------
+      END FUNCTION matinv3
+      !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
     PURE FUNCTION find_minimum(grid, grid_dim) RESULT(minpos)
     !-----------------------------------------------------------------------

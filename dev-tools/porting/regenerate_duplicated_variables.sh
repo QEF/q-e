@@ -9,7 +9,7 @@ mv wavefunctions_gpu.f90 ../../Modules/wavefunctions_gpu.f90
 python gen_intrinsic.py wvfct "g2kin:REAL(DP):1" "et:REAL(DP):2" "wg:REAL(DP):2"
 mv wvfct_gpu.f90 ../../PW/src/pwcom_gpu.f90
 
-python gen_intrinsic.py us "qrad:REAL(DP):4" "tab:REAL(DP):3" "tab_at:REAL(DP):3" "tab_d2y:REAL(DP):3"
+python gen_intrinsic.py us "qrad:REAL(DP):4" "tab:REAL(DP):3" "tab_at:REAL(DP):3" 
 cat us_gpu.f90 >> ../../PW/src/pwcom_gpu.f90
 rm us_gpu.f90
 

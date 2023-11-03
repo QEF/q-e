@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2021 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -26,11 +26,12 @@ MODULE ldaU_hp
              sum_pertq,               &     ! If .true. collects dns0 and dnsscf for all q points
                                             ! (for the specific perturbed atom) and computes their 
                                             ! sum with the phase factor
+             determine_q_mesh_only,   &     ! If .true. determine the q mesh for a given perturbed atom and exit
              determine_num_pert_only, &     ! If .true. determine only which atoms must be perterbed
              skip_equivalence_q,      &     ! If .true. the full frid of q points will be used
              disable_type_analysis,   &     ! If .true. disable the algorithm which detects whether
                                             ! there are atoms of the same type but with different occupations
-             skip_atom(500),          &     ! If .true. no LR calculation will be performed 
+             skip_atom(500)                 ! If .true. no LR calculation will be performed 
                                             ! for a selected atomic site.
                                             ! skip_atom(i), where i runs over atoms. If skip_atom(i)=.true.
                                             ! then no linear-response calculation will be performed for the
@@ -44,7 +45,6 @@ MODULE ldaU_hp
                                             !   at least one atom of the same type which was perturbed (this can
                                             !   happen only when find_atpert=3), otherwise the post-processing
                                             !   calculation of U will fail.
-             search_sym                     ! If .TRUE. search for the symmetry of q
   !
   LOGICAL, ALLOCATABLE :: todo_atom(:),              & ! Which atoms must be perturbed
                           perturbed_atom(:),         & ! Controls which atom is perturbed in the HP

@@ -1,5 +1,5 @@
 TOPDIR   = $(shell cd ../..; pwd)
-VERSION  = 7.1
+VERSION := $(shell awk -F\' '/version_number/{print $$2}' ../../include/qe_version.h )
 GEN_MODE = $(TOPDIR)/dev-tools/gen-emacs-mode
 LATEX    = pdflatex
 

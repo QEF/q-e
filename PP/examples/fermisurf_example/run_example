@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run from directory where this script is
-cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+cd `dirname $0`
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
@@ -78,7 +78,7 @@ $ECHO "  running projwfc.x as:        $PROJWFC_COMMAND"
 $ECHO "  running fermi_velocity.x as: $FERMI_VELOCITY_COMMAND"
 $ECHO "  running fermi_proj.x as:     $FERMI_PROJ_COMMAND"
 $ECHO
- 
+
 # self-consistent calculation
 cat > mgb2.scf.in << EOF
 &CONTROL
@@ -103,10 +103,10 @@ ATOMIC_SPECIES
  Mg    24.3050   Mg.pbe-n-kjpaw_psl.0.3.0.upf
   B    10.811    B.pbe-n-kjpaw_psl.0.1.upf
 ATOMIC_POSITIONS crystal
- Mg    0.000000000    0.000000000    0.000000000    
-  B    0.333333333    0.666666667    0.500000000    
-  B    0.666666667    0.333333333    0.500000000    
-K_POINTS automatic 
+ Mg    0.000000000    0.000000000    0.000000000
+  B    0.333333333    0.666666667    0.500000000
+  B    0.666666667    0.333333333    0.500000000
+K_POINTS automatic
  16 16 12 0 0 0
 EOF
 $ECHO "  running the scf calculation for MgB2...\c"
@@ -127,8 +127,8 @@ cat > mgb2.proj.in << EOF
 &projwfc
    outdir = '$TMP_DIR/'
     prefix='mgb2'
-    Emin=-0.3422, 
-    Emax=10.0578, 
+    Emin=-0.3422,
+    Emax=10.0578,
     DeltaE=0.1
 /
 2

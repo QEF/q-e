@@ -18,9 +18,11 @@ set(src_modules
     electrons_base.f90 
     environ_base_module.f90
     environment.f90 
+    extffield.f90
     fd_gradient.f90 
     fft_base.f90 
     fft_rho.f90 
+    fft_wave.f90 
     fsockets.f90 
     funct.f90 
     generate_function.f90 
@@ -33,6 +35,7 @@ set(src_modules
     ions_base.f90 
     kind.f90 
     lmdif.f90
+    makov_payne.f90
     mdiis.f90 
     mm_dispersion.f90 
     mp_bands.f90 

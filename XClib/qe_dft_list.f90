@@ -25,7 +25,7 @@ MODULE qe_dft_list
   !
   SAVE
   !
-  INTEGER, PARAMETER :: nxc=10, ncc=14, ngcx=50, ngcc=14, nmeta=7
+  INTEGER, PARAMETER :: nxc=10, ncc=14, ngcx=50, ngcc=14, nmeta=8
   CHARACTER(LEN=4)   :: dft_LDAx_name(0:nxc),  dft_LDAc_name(0:ncc),  &
                         dft_GGAx_name(0:ngcx), dft_GGAc_name(0:ngcc), &
                         dft_MGGA_name(0:nmeta)
@@ -36,7 +36,7 @@ MODULE qe_dft_list
      INTEGER :: IDs(6)
   END TYPE dft_label
   !
-  INTEGER, PARAMETER :: n_dft=41
+  INTEGER, PARAMETER :: n_dft=42
   TYPE(dft_label) :: dft_full(n_dft)
   !
   !
@@ -56,7 +56,7 @@ MODULE qe_dft_list
                        'OB86', 'EVX',  'B86R', 'CX13', 'X3LP', 'CX0',   & !24 "  29
                        'R860', 'CX0P', 'AHCX', 'AHF2', 'AHPB', 'AHPS',  & !30 "  35
                        'CX14', 'CX15', 'BR0',  'CX16', 'C090', 'B86X',  & !36 "  41
-                       'B88X', 'BEEX', 'HHNX', 'W31X', 'W32X', 'AHTR',  & !42 "  47 
+                       'B88X', 'BEEX', 'HHNX', 'W31X', 'W32X', 'AHBR',  & !42 "  47 
                        'EHPB', 'HJPB', 'HJPS' /                           !48 "  50 
   ! GGA correlation terms
   DATA dft_GGAc_name / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH',     & ! 0 to  5
@@ -64,7 +64,7 @@ MODULE qe_dft_list
                        'Q2DC', 'xxxx','BEEC' /                            !12 "  14
   ! MGGA exchange+correlation terms
   DATA dft_MGGA_name / 'NONE', 'TPSS', 'M06L', 'TB09', 'NONE', 'SCAN',  & ! 0 to  5
-                       'SCA0', 'xxxx' /                                   ! 6 "   7
+                       'SCA0', 'xxxx', 'xxxx' /                           ! 6 "   8
   !
   !
   ! ---- Full DFTs (except vdW-DFs, those are still under Modules) ----
@@ -243,6 +243,9 @@ MODULE qe_dft_list
   DATA dft_full(41)%name2    / 'none' /
   DATA dft_full(41)%IDs(1:6) / 1,4,35,8,0,0 /   ! P.H.: sla+pw+ahps+psc
   !
+  DATA dft_full(42)%name     / 'RSCAN' /
+  DATA dft_full(42)%name2    / 'none' /
+  DATA dft_full(42)%IDs(1:6) / 0,0,0,0,8,0 /
   !
 CONTAINS
   !

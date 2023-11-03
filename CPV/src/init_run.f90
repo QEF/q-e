@@ -9,14 +9,14 @@
 !----------------------------------------------------------------------------
 SUBROUTINE init_run()
   !----------------------------------------------------------------------------
-  !
-  ! ... this routine initialise the cp code and allocates (calling the
-  ! ... appropriate routines) the memory
+  !! This routine initialise the CP code and allocates (calling the
+  !! appropriate routines) the memory.
   !
   USE kinds,                    ONLY : DP
   USE control_flags,            ONLY : nbeg, nomore, lwf, iverbosity, iprint, &
                                        ndr, ndw, tfor, tprnfor, tpre, ts_vdw, &
-                                       mbd_vdw, force_pairing, use_para_diag
+                                       mbd_vdw, force_pairing, use_para_diag, &
+                                       dt_xml_old
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, cdms, ityp
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
@@ -26,7 +26,6 @@ SUBROUTINE init_run()
   USE gvect,                    ONLY : gstart, gg, gcutm
   USE fft_base,                 ONLY : dfftp, dffts
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
-  USE pseudo_base,              ONLY : vkb_d
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
   USE core,                     ONLY : rhoc
   USE wavefunctions,            ONLY : c0_bgrp, cm_bgrp, allocate_cp_wavefunctions
@@ -78,10 +77,11 @@ SUBROUTINE init_run()
   USE wavefunctions,     ONLY : cv0                 ! exx_wf related
   USE wannier_base,             ONLY : vnbsp               ! exx_wf related
   !!!USE cp_restart,               ONLY : cp_read_wfc_Kong    ! exx_wf related
-  USE input_parameters,         ONLY : ref_cell
+  USE input_parameters,         ONLY : ref_cell, nextffield
   USE cell_base,                ONLY : ref_tpiba2, init_tpiba2
   USE tsvdw_module,             ONLY : tsvdw_initialize
   USE exx_module,               ONLY : exx_initialize
+  USE extffield,                ONLY : init_extffield
 #if defined (__CUDA)
   USE cudafor
 #endif
@@ -133,6 +133,9 @@ SUBROUTINE init_run()
   !
   ! ... initialization of plugin variables and arrays
   !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_init_base()
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) THEN
      at_scaled = at * alat
@@ -230,9 +233,7 @@ SUBROUTINE init_run()
   ALLOCATE( deeq( nhm, nhm, nat, nspin ) )
   !
   ALLOCATE( vkb( ngw, nkb ) )
-#if defined(_CUDA)
-  ALLOCATE( vkb_d( ngw, nkb ) )
-#endif
+  !$acc enter data create(vkb(1:ngw,1:nkb))
   !
   IF ( xclib_dft_is('meta') .AND. tens ) &
      CALL errore( ' init_run ', 'ensemble_dft not implemented for metaGGA', 1 )
@@ -321,6 +322,14 @@ SUBROUTINE init_run()
     CALL g2kin_init( gg, tpiba2 )
   END IF
   !
+  !  read external force fields parameters
+  ! 
+  IF ( nextffield > 0 .AND. ionode) THEN
+     !
+     CALL init_extffield( 'CP', nextffield )
+     !
+  END IF
+  !
   CALL print_legend( )
   !
   CALL ldaU_init()
@@ -353,7 +362,8 @@ SUBROUTINE init_run()
      CALL readfile( i, h, hold, nfi, c0_bgrp, cm_bgrp, taus,   &
                     tausm, vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, &
                     vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm, xnhh0, xnhhm,&
-                    vnhh, velh, fion, tps, z0t, f )
+                    vnhh, velh, fion, tps, z0t, f, dt_xml_old )
+     WRITE (stdout,*) 'old dt (from xml) = ', dt_xml_old
      !
      CALL from_restart( )
      !

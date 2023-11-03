@@ -766,6 +766,222 @@ nat_todo-list-of-atoms
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; oscdft- namelists functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun oscdft-OSCDFT ()
+  (interactive)
+  (insert "&OSCDFT")
+  (newline 2)
+  (insert "/")
+  (forward-line -1)
+  )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; oscdft- namelist's variables functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun oscdft-array_convergence_func ()
+  (interactive)
+  (let ((value (read-string "Value of array_convergence_func: ")))
+    (insert "array_convergence_func = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun oscdft-conv_thr_multiplier ()
+  (interactive)
+  (let ((value (read-string "Value of conv_thr_multiplier: ")))
+    (insert "conv_thr_multiplier = " value))
+  )
+
+
+(defun oscdft-convergence_type ()
+  (interactive)
+  (let ((value (read-string "Value of convergence_type: ")))
+    (insert "convergence_type = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun oscdft-final_conv_thr ()
+  (interactive)
+  (let ((value (read-string "Value of final_conv_thr: ")))
+    (insert "final_conv_thr = " value))
+  )
+
+
+(defun oscdft-get_ground_state_first ()
+  (interactive)
+  (let ((value (read-string "Value of get_ground_state_first: ")))
+    (insert "get_ground_state_first = " value))
+  )
+
+
+(defun oscdft-has_max_multiplier ()
+  (interactive)
+  (let ((value (read-string "Value of has_max_multiplier: ")))
+    (insert "has_max_multiplier = " value))
+  )
+
+
+(defun oscdft-has_min_multiplier ()
+  (interactive)
+  (let ((value (read-string "Value of has_min_multiplier: ")))
+    (insert "has_min_multiplier = " value))
+  )
+
+
+(defun oscdft-iteration_type ()
+  (interactive)
+  (let ((value (read-string "Value of iteration_type: ")))
+    (insert "iteration_type = " value))
+  )
+
+
+(defun oscdft-max_conv_thr ()
+  (interactive)
+  (let ((value (read-string "Value of max_conv_thr: ")))
+    (insert "max_conv_thr = " value))
+  )
+
+
+(defun oscdft-max_multiplier ()
+  (interactive)
+  (let ((value (read-string "Value of max_multiplier: ")))
+    (insert "max_multiplier = " value))
+  )
+
+
+(defun oscdft-maxiter ()
+  (interactive)
+  (let ((value (read-string "Value of maxiter: ")))
+    (insert "maxiter = " value))
+  )
+
+
+(defun oscdft-min_conv_thr ()
+  (interactive)
+  (let ((value (read-string "Value of min_conv_thr: ")))
+    (insert "min_conv_thr = " value))
+  )
+
+
+(defun oscdft-min_gamma_n ()
+  (interactive)
+  (let ((value (read-string "Value of min_gamma_n: ")))
+    (insert "min_gamma_n = " value))
+  )
+
+
+(defun oscdft-min_multiplier ()
+  (interactive)
+  (let ((value (read-string "Value of min_multiplier: ")))
+    (insert "min_multiplier = " value))
+  )
+
+
+(defun oscdft-miniter ()
+  (interactive)
+  (let ((value (read-string "Value of miniter: ")))
+    (insert "miniter = " value))
+  )
+
+
+(defun oscdft-n_oscdft ()
+  (interactive)
+  (let ((value (read-string "Value of n_oscdft: ")))
+    (insert "n_oscdft = " value))
+  )
+
+
+(defun oscdft-normalize_swfc ()
+  (interactive)
+  (let ((value (read-string "Value of normalize_swfc: ")))
+    (insert "normalize_swfc = " value))
+  )
+
+
+(defun oscdft-optimization_method ()
+  (interactive)
+  (let ((value (read-string "Value of optimization_method: ")))
+    (insert "optimization_method = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun oscdft-orthogonalize_swfc ()
+  (interactive)
+  (let ((value (read-string "Value of orthogonalize_swfc: ")))
+    (insert "orthogonalize_swfc = " value))
+  )
+
+
+(defun oscdft-print_debug ()
+  (interactive)
+  (let ((value (read-string "Value of print_debug: ")))
+    (insert "print_debug = " value))
+  )
+
+
+(defun oscdft-print_occupation_eigenvectors ()
+  (interactive)
+  (let ((value (read-string "Value of print_occupation_eigenvectors: ")))
+    (insert "print_occupation_eigenvectors = " value))
+  )
+
+
+(defun oscdft-print_occupation_matrix ()
+  (interactive)
+  (let ((value (read-string "Value of print_occupation_matrix: ")))
+    (insert "print_occupation_matrix = " value))
+  )
+
+
+(defun oscdft-swapping_technique ()
+  (interactive)
+  (let ((value (read-string "Value of swapping_technique: ")))
+    (insert "swapping_technique = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun oscdft-warm_up_niter ()
+  (interactive)
+  (let ((value (read-string "Value of warm_up_niter: ")))
+    (insert "warm_up_niter = " value))
+  )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; oscdft- cards functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun oscdft-GAMMA_VAL ()
+ (interactive)
+ (insert "GAMMA_VAL")
+ (newline 1)
+ )
+
+
+(defun oscdft-TARGET_OCCUPATION_NUMBERS ()
+ (interactive)
+ (insert "TARGET_OCCUPATION_NUMBERS")
+ (newline 1)
+ )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; pw- namelists functions ...
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1032,6 +1248,13 @@ nat_todo-list-of-atoms
   (interactive)
   (let ((value (read-string "Value of degauss: ")))
     (insert "degauss = " value))
+  )
+
+
+(defun pw-degauss_cond ()
+  (interactive)
+  (let ((value (read-string "Value of degauss_cond: ")))
+    (insert "degauss_cond = " value))
   )
 
 
@@ -1303,6 +1526,13 @@ nat_todo-list-of-atoms
   (interactive)
   (let ((value (read-string "Value of exx_fraction: ")))
     (insert "exx_fraction = " value))
+  )
+
+
+(defun pw-exx_maxstep ()
+  (interactive)
+  (let ((value (read-string "Value of exx_maxstep: ")))
+    (insert "exx_maxstep = " value))
   )
 
 
@@ -1862,6 +2092,27 @@ nat_todo-list-of-atoms
   )
 
 
+(defun pw-nbnd_cond ()
+  (interactive)
+  (let ((value (read-string "Value of nbnd_cond: ")))
+    (insert "nbnd_cond = " value))
+  )
+
+
+(defun pw-nelec_cond ()
+  (interactive)
+  (let ((value (read-string "Value of nelec_cond: ")))
+    (insert "nelec_cond = " value))
+  )
+
+
+(defun pw-nextffield ()
+  (interactive)
+  (let ((value (read-string "Value of nextffield: ")))
+    (insert "nextffield = " value))
+  )
+
+
 (defun pw-no_t_rev ()
   (interactive)
   (let ((value (read-string "Value of no_t_rev: ")))
@@ -2028,6 +2279,14 @@ nat_todo-list-of-atoms
   (interactive)
   (let ((value (read-directory-name "Value of outdir: ")))
     (insert "outdir = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun pw-pol_type ()
+  (interactive)
+  (let ((value (read-string "Value of pol_type: ")))
+    (insert "pol_type = '" value "'"))
   (backward-char 1)
   )
 
@@ -2211,10 +2470,38 @@ nat_todo-list-of-atoms
   )
 
 
+(defun pw-sci_cb ()
+  (interactive)
+  (let ((value (read-string "Value of sci_cb: ")))
+    (insert "sci_cb = " value))
+  )
+
+
+(defun pw-sci_vb ()
+  (interactive)
+  (let ((value (read-string "Value of sci_vb: ")))
+    (insert "sci_vb = " value))
+  )
+
+
 (defun pw-screening_parameter ()
   (interactive)
   (let ((value (read-string "Value of screening_parameter: ")))
     (insert "screening_parameter = " value))
+  )
+
+
+(defun pw-sic_energy ()
+  (interactive)
+  (let ((value (read-string "Value of sic_energy: ")))
+    (insert "sic_energy = " value))
+  )
+
+
+(defun pw-sic_gamma ()
+  (interactive)
+  (let ((value (read-string "Value of sic_gamma: ")))
+    (insert "sic_gamma = " value))
   )
 
 
@@ -2439,6 +2726,13 @@ nat_todo-list-of-atoms
   (interactive)
   (let ((value (read-string "Value of tstress: ")))
     (insert "tstress = " value))
+  )
+
+
+(defun pw-twochem ()
+  (interactive)
+  (let ((value (read-string "Value of twochem: ")))
+    (insert "twochem = " value))
   )
 
 
@@ -3554,13 +3848,6 @@ nat_todo-list-of-atoms
   )
 
 
-(defun cp-ninter_cold_restart ()
-  (interactive)
-  (let ((value (read-string "Value of ninter_cold_restart: ")))
-    (insert "ninter_cold_restart = " value))
-  )
-
-
 (defun cp-nit ()
   (interactive)
   (let ((value (read-string "Value of nit: ")))
@@ -3572,6 +3859,13 @@ nat_todo-list-of-atoms
   (interactive)
   (let ((value (read-string "Value of niter_cg_restart: ")))
     (insert "niter_cg_restart = " value))
+  )
+
+
+(defun cp-niter_cold_restart ()
+  (interactive)
+  (let ((value (read-string "Value of niter_cold_restart: ")))
+    (insert "niter_cold_restart = " value))
   )
 
 
@@ -4707,6 +5001,60 @@ nat_todo-list-of-atoms
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; d3hess- namelists functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun d3hess-INPUT ()
+  (interactive)
+  (insert "&INPUT")
+  (newline 2)
+  (insert "/")
+  (forward-line -1)
+  )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; d3hess- namelist's variables functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun d3hess-filhess ()
+  (interactive)
+  (let ((value (read-string "Value of filhess: ")))
+    (insert "filhess = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun d3hess-outdir ()
+  (interactive)
+  (let ((value (read-directory-name "Value of outdir: ")))
+    (insert "outdir = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun d3hess-prefix ()
+  (interactive)
+  (let ((value (read-string "Value of prefix: ")))
+    (insert "prefix = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun d3hess-step ()
+  (interactive)
+  (let ((value (read-string "Value of step: ")))
+    (insert "step = " value))
+  )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; bands- namelists functions ...
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4898,6 +5246,45 @@ nat_todo-list-of-atoms
   (interactive)
   (let ((value (read-string "Value of what: ")))
     (insert "what = " value))
+  )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; oscdft_pp- namelists functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun oscdft_pp-OSCDFT_PP_NAMELIST ()
+  (interactive)
+  (insert "&OSCDFT_PP_NAMELIST")
+  (newline 2)
+  (insert "/")
+  (forward-line -1)
+  )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; oscdft_pp- namelist's variables functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun oscdft_pp-outdir ()
+  (interactive)
+  (let ((value (read-directory-name "Value of outdir: ")))
+    (insert "outdir = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun oscdft_pp-prefix ()
+  (interactive)
+  (let ((value (read-string "Value of prefix: ")))
+    (insert "prefix = '" value "'"))
+  (backward-char 1)
   )
 
 
@@ -5618,6 +6005,13 @@ nat_todo-list-of-atoms
   )
 
 
+(defun pp-use_gauss_ldos ()
+  (interactive)
+  (let ((value (read-string "Value of use_gauss_ldos: ")))
+    (insert "use_gauss_ldos = " value))
+  )
+
+
 (defun pp-weight ()
   (interactive)
   (let ((value (read-string "Value of weight: ")))
@@ -5722,6 +6116,82 @@ nat_todo-list-of-atoms
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; oscdft_et- namelists functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun oscdft_et-OSCDFT_ET_NAMELIST ()
+  (interactive)
+  (insert "&OSCDFT_ET_NAMELIST")
+  (newline 2)
+  (insert "/")
+  (forward-line -1)
+  )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; oscdft_et- namelist's variables functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun oscdft_et-final_dir ()
+  (interactive)
+  (let ((value (read-directory-name "Value of final_dir: ")))
+    (insert "final_dir = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun oscdft_et-final_prefix ()
+  (interactive)
+  (let ((value (read-string "Value of final_prefix: ")))
+    (insert "final_prefix = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun oscdft_et-initial_dir ()
+  (interactive)
+  (let ((value (read-directory-name "Value of initial_dir: ")))
+    (insert "initial_dir = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun oscdft_et-initial_prefix ()
+  (interactive)
+  (let ((value (read-string "Value of initial_prefix: ")))
+    (insert "initial_prefix = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun oscdft_et-print_debug ()
+  (interactive)
+  (let ((value (read-string "Value of print_debug: ")))
+    (insert "print_debug = " value))
+  )
+
+
+(defun oscdft_et-print_eigvect ()
+  (interactive)
+  (let ((value (read-string "Value of print_eigvect: ")))
+    (insert "print_eigvect = " value))
+  )
+
+
+(defun oscdft_et-print_matrix ()
+  (interactive)
+  (let ((value (read-string "Value of print_matrix: ")))
+    (insert "print_matrix = " value))
+  )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; hp- namelists functions ...
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5767,6 +6237,13 @@ nat_todo-list-of-atoms
   (interactive)
   (let ((value (read-string "Value of determine_num_pert_only: ")))
     (insert "determine_num_pert_only = " value))
+  )
+
+
+(defun hp-determine_q_mesh_only ()
+  (interactive)
+  (let ((value (read-string "Value of determine_q_mesh_only: ")))
+    (insert "determine_q_mesh_only = " value))
   )
 
 
@@ -6819,6 +7296,14 @@ nat_todo-list-of-atoms
   )
 
 
+(defun ph-dftd3_hess ()
+  (interactive)
+  (let ((value (read-string "Value of dftd3_hess: ")))
+    (insert "dftd3_hess = '" value "'"))
+  (backward-char 1)
+  )
+
+
 (defun ph-diagonalization ()
   (interactive)
   (let ((value (read-string "Value of diagonalization: ")))
@@ -7435,6 +7920,13 @@ nat_todo-list-of-atoms
   )
 
 
+(defun q2r-write_lr ()
+  (interactive)
+  (let ((value (read-string "Value of write_lr: ")))
+    (insert "write_lr = " value))
+  )
+
+
 (defun q2r-zasr ()
   (interactive)
   (let ((value (read-string "Value of zasr: ")))
@@ -7579,6 +8071,13 @@ nat_todo-list-of-atoms
   )
 
 
+(defun matdyn-huang ()
+  (interactive)
+  (let ((value (read-string "Value of huang: ")))
+    (insert "huang = " value))
+  )
+
+
 (defun matdyn-l1 ()
   (interactive)
   (let ((value (read-string "Value of l1: ")))
@@ -7684,10 +8183,24 @@ nat_todo-list-of-atoms
   )
 
 
+(defun matdyn-read_lr ()
+  (interactive)
+  (let ((value (read-string "Value of read_lr: ")))
+    (insert "read_lr = " value))
+  )
+
+
 (defun matdyn-readtau ()
   (interactive)
   (let ((value (read-string "Value of readtau: ")))
     (insert "readtau = " value))
+  )
+
+
+(defun matdyn-write_frc ()
+  (interactive)
+  (let ((value (read-string "Value of write_frc: ")))
+    (insert "write_frc = " value))
   )
 
 

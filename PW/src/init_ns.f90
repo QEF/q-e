@@ -42,7 +42,6 @@ SUBROUTINE init_ns
          ldim = 2*Hubbard_l(nt)+1
          nm = .TRUE.
          !
-         IF (hubbard_occ(nt,1)<0.0d0) CALL determine_hubbard_occ(nt,1)
          totoc = hubbard_occ(nt,1)
          !
          IF (nspin==2) THEN
@@ -88,7 +87,6 @@ SUBROUTINE init_ns
          IF (.NOT.backall(nt)) THEN
             ! Fill in the second Hubbard manifold
             ldim = ldim_back(nt)
-            IF (hubbard_occ(nt,2)<0.0d0) CALL determine_hubbard_occ(nt,2)
             totoc_b = hubbard_occ(nt,2)
             DO is = 1, nspin
               DO m1 = 1, ldim
@@ -98,7 +96,6 @@ SUBROUTINE init_ns
          ELSE
             ! Fill in the second Hubbard manifold
             ldim = 2*Hubbard_l2(nt)+1
-            IF (hubbard_occ(nt,2)<0.0d0) CALL determine_hubbard_occ(nt,2)
             totoc_b = hubbard_occ(nt,2)
             DO is = 1, nspin
               DO m1 = 1, ldim
@@ -107,7 +104,6 @@ SUBROUTINE init_ns
             ENDDO
             ! Fill in the third Hubbard manifold
             ldim = 2*Hubbard_l3(nt)+1
-            IF (hubbard_occ(nt,3)<0.0d0) CALL determine_hubbard_occ(nt,3)
             totoc_b = hubbard_occ(nt,3)
             DO is = 1, nspin
               DO m1 = 2*Hubbard_l2(nt)+2, ldim_back(nt)
@@ -155,7 +151,6 @@ SUBROUTINE init_ns_nc
          ldim = 2*Hubbard_l(nt) + 1
          nm=.TRUE.
          !
-         IF (hubbard_occ(nt,1)<0.0d0) CALL determine_hubbard_occ(nt,1)
          totoc = hubbard_occ(nt,1)
          !
          IF (starting_magnetization(nt) > 0.d0) THEN  

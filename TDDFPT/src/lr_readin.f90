@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2021 Quantum ESPRESSO group
+! Copyright (C) 2001-2023 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -55,7 +55,7 @@ SUBROUTINE lr_readin
   USE constants,           ONLY : eps4, rytoev
   USE control_lr,          ONLY : lrpa, alpha_mix, ethr_nscf
   USE mp_world,            ONLY : world_comm
-  
+  USE scf_gpum,            ONLY: vrs_d
 #if defined (__ENVIRON)
   USE plugin_flags,          ONLY : use_environ
   USE environ_base_module,   ONLY : read_environ_input, init_environ_setup, &
@@ -489,6 +489,9 @@ SUBROUTINE lr_readin
   ! vrs = vltot + v%of_r
   !
   CALL set_vrs ( vrs, vltot, v%of_r, 0, 0, dfftp%nnr, nspin, doublegrid )
+#if defined(__CUDA)  
+  vrs_d = vrs     
+#endif
   !
   DEALLOCATE( vltot )
   CALL destroy_scf_type(v)
@@ -521,6 +524,7 @@ CONTAINS
     USE uspp,             ONLY : okvan
     USE xc_lib,           ONLY : xclib_dft_is
     USE ldaU,             ONLY : lda_plus_u
+    USE noncollin_module, ONLY : domag
 
     IMPLICIT NONE
     !
@@ -575,6 +579,8 @@ CONTAINS
        IF (.NOT. gamma_only ) CALL errore('lr_readin', 'k-point algorithm is not tested yet',1)
        !
     ENDIF
+    !
+    IF (eels .AND. domag) CALL errore('lr_readin', 'EELS for magnetic systems is not implemented',1)
     !
     ! No taskgroups and EXX.
     !

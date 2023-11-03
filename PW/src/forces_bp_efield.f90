@@ -513,9 +513,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                   !
                   IF (kpar /= (nppstr_3d(pdir)+1)) THEN
                      DO mb = 1, nbnd
-                        IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
-                           IF ( nb == mb )  mat(nb,mb)=1.d0
-                        ELSE
+                        IF ( l_cal(nb) .AND. l_cal(mb) ) THEN
                            DO ig = 1, npw1
                               aux(igk1(ig)) = psi1(ig,mb)
                            ENDDO
@@ -574,8 +572,8 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                               IF (max_aux_proc>max_aux) max_aux = max_aux_proc
                            ENDIF
                         ENDDO
-                        max_aux_proc=max_aux
-                        CALL mp_max(max_aux_proc, intra_bgrp_comm )
+                        !
+                        CALL mp_max(max_aux, intra_bgrp_comm )
                         ALLOCATE( aux_proc(max_aux,nproc), aux_proc_ind(max_aux,nproc) )
                         ALLOCATE( aux_rcv(max_aux,nproc), aux_rcv_ind(max_aux,nproc) )
                         aux_proc = (0.d0,0.d0)
@@ -603,9 +601,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                         aux_rcv_ind(1:max_aux,1) = aux_proc_ind(1:max_aux,1)
 #endif
                         DO nb = 1, nbnd
-                           IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
-                              IF ( nb == mb )  mat(nb,mb) = 1.d0
-                           ELSE
+                           IF ( l_cal(nb) .AND. l_cal(mb) ) THEN
                               aux = (0.d0,0.d0)
                               aux0 = (0.d0,0.d0)
                               IF (noncolin) THEN
@@ -717,6 +713,9 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                      !
                   ENDDO
                ENDDO
+               DO nb = 1, nbnd
+                  IF ( .NOT. l_cal(nb) ) mat(nb,nb) = 1.d0
+               END DO
                !
                ! --- Calculate matrix determinant ---
                !

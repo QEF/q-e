@@ -40,7 +40,7 @@ SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, alat, at, &
   INTEGER :: ierr, nat_, ibrav_
   INTEGER, ALLOCATABLE :: ityp_(:)
   REAL(dp), ALLOCATABLE :: tau_(:,:)
-  CHARACTER (LEN=3) :: atm_(nsp)
+  CHARACTER (LEN=6) :: atm_(nsp)
   !
   is_tau_read = .FALSE.
   !

@@ -7,41 +7,52 @@
 !
 !------------------------------------------------------------------------------!
   MODULE ions_nose
-!------------------------------------------------------------------------------!
-
+      !------------------------------------------------------------------------------!
+      !! The present code allows one to use "massive" Nose-Hoover chains:  
+      !! TOBIAS DJ, MARTYNA GJ, KLEIN ML  
+      !! JOURNAL OF PHYSICAL CHEMISTRY 97 (49): 12959-12966 DEC 9 1993.
+      !
       USE kinds, ONLY: DP
-!
+      !
       IMPLICIT NONE
-! Some comments are in order on how Nose-Hoover chains work here (K.N. Kudin)
-! the present code allows one to use "massive" Nose-Hoover chains:
-! TOBIAS DJ, MARTYNA GJ, KLEIN ML
-! JOURNAL OF PHYSICAL CHEMISTRY 97 (49): 12959-12966 DEC 9 1993
-!
-! one chain for the whole system is specified by nhptyp=0 (or nothing)
-! currently input options allow one chain per atomic type (nhptyp=1),
-! one chain per atom (nhptyp=2), and fancy stuff with nhptyp=3 (& nhgrp)
-!
-! nhpdim is the total number of the resulting NH chains
-! nhpend is 1 if there is a chain above all chains, otherwise it is 0
-! nhpbeg is usually 0, however, if using groups (nhptyp = 3), it might
-! be desirable to have atoms with uncontrolled temperature, so then
-! nhpbeg becomes 1, and all the "uncontrolled" atoms are assigned to the
-! 1st thermostat that is always zero in velocity and so it does not
-! affect ionic motion
-! array atm2nhp(1:nat) gives the chain number from the atom list (which
-! is sorted by type)
-! anum2nhp is the number of degrees of freedom per chain (now just 3*nat_i)
-! ekin2nhp is the kinetic energy of the present chain
-! gkbt2nhp are the NH chain parameters
-! qnp are the chain masses, qnp_ is a temporary array for now
-! see subroutine ions_nose_allocate on what are the dimensions of these
-! variables
-!
-      INTEGER   :: nhpcl=1, ndega, nhpdim=1, nhptyp=0, nhpbeg=0, nhpend=0
+      !
+      ! Some comments are in order on how Nose-Hoover chains work here (K.N. Kudin)
+      !
+      INTEGER :: nhpdim=1
+      !! the total number of the resulting NH chains
+      INTEGER :: nhpend=0
+      !! it is 1 if there is a chain above all chains, otherwise it is 0
+      INTEGER :: nhpbeg=0
+      !! it is usually 0, however, if using groups (nhptyp = 3), it might
+      !! be desirable to have atoms with uncontrolled temperature, so then
+      !! nhpbeg becomes 1, and all the "uncontrolled" atoms are assigned to the
+      !! 1st thermostat that is always zero in velocity and so it does not
+      !! affect ionic motion.
+      INTEGER :: nhptyp=0
+      !! one chain for the whole system is specified by nhptyp=0 (or nothing)
+      !! currently input options allow one chain per atomic type (nhptyp=1),
+      !! one chain per atom (nhptyp=2), and fancy stuff with nhptyp=3 (& nhgrp).
+      !
+      INTEGER :: nhpcl=1, ndega 
+      !
+      ! see subroutine ions_nose_allocate on what are the dimensions of these
+      ! variables
+      !
       INTEGER, ALLOCATABLE   :: atm2nhp(:)
+      !! gives the chain number from the atom list (which is sorted by type)
       INTEGER, ALLOCATABLE   :: anum2nhp(:)
+      !! the number of degrees of freedom per chain (now just 3*nat_i)
+      REAL(DP), ALLOCATABLE :: ekin2nhp(:)
+      !! the kinetic energy of the present chain
+      REAL(DP), ALLOCATABLE :: gkbt2nhp(:)
+      !! the NH chain parameters
+      REAL(DP), ALLOCATABLE :: qnp(:)
+      !! the chain masses
+      REAL(DP), ALLOCATABLE :: qnp_(:)
+      !! a temporary array
+      !
       REAL(DP), ALLOCATABLE :: vnhp(:), xnhp0(:), xnhpm(:), xnhpp(:), &
-      ekin2nhp(:), gkbt2nhp(:), scal2nhp(:), qnp(:), qnp_(:), fnosep(:)
+       scal2nhp(:), fnosep(:)
 
       REAL(DP) :: gkbt = 0.0_DP
       REAL(DP) :: kbt = 0.0_DP

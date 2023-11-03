@@ -28,6 +28,8 @@ SUBROUTINE hp_run_nscf (do_band)
   USE control_lr,      ONLY : lgamma
   USE lr_symm_base,    ONLY : nsymq, invsymq
   USE ldaU_hp,         ONLY : tmp_dir_save, tmp_dir_hp
+  USE noncollin_module,ONLY : noncolin, domag
+  USE ldaU,            ONLY : lda_plus_u_kind
   USE rism_module,     ONLY : lrism, rism_set_restart
   USE noncollin_module,     ONLY : noncolin, domag
   USE ldaU,                 ONLY : lda_plus_u_kind

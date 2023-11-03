@@ -32,6 +32,7 @@ SUBROUTINE hinit1()
   USE paw_onecenter,       ONLY : paw_potential
   USE paw_symmetry,        ONLY : paw_symmetrize_ddd
   USE dfunct,              ONLY : newd
+  USE dfunct_gpum,         ONLY : newd_gpu
   USE exx_base,            ONLY : coulomb_fac, coulomb_done
   !
   USE scf_gpum,            ONLY : using_vrs
@@ -42,6 +43,11 @@ SUBROUTINE hinit1()
   USE plugin_flags,        ONLY : use_environ
   USE environ_base_module, ONLY : update_environ_ions, update_environ_cell
   USE environ_pw_module,   ONLY : calc_environ_potential
+#endif
+#if defined (__OSCDFT)
+  USE plugin_flags,        ONLY : use_oscdft
+  USE oscdft_base,         ONLY : oscdft_ctx
+  USE oscdft_context,      ONLY : oscdft_init_context
 #endif
   !
   IMPLICIT NONE
@@ -57,12 +63,21 @@ SUBROUTINE hinit1()
   ! these routines can be used to patch quantities that are dependent
   ! on the ions and cell parameters
   !
+#if defined(__LEGACY_PLUGINS)
+  CALL plugin_init_ions(tau)
+  CALL plugin_init_cell()
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) THEN
      at_scaled = at * alat
      tau_scaled = tau * alat
      CALL update_environ_ions(tau_scaled)
      CALL update_environ_cell(at_scaled)
+  END IF
+#endif
+#if defined (__OSCDFT)
+  IF (use_oscdft) THEN
+     CALL oscdft_init_context(oscdft_ctx)
   END IF
 #endif
   !
@@ -89,6 +104,9 @@ SUBROUTINE hinit1()
   !
   ! ... plugin contribution to local potential
   !
+#if defined(__LEGACY_PLUGINS) 
+  CALL plugin_scf_potential(rho, .FALSE., -1.d0, vltot) 
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) CALL calc_environ_potential(rho, .FALSE., -1.D0, vltot)
 #endif
@@ -107,18 +125,14 @@ SUBROUTINE hinit1()
      CALL PAW_symmetrize_ddd( ddd_paw )
   ENDIF
   ! 
-  CALL newd()
+  IF (.not. use_gpu) CALL newd()
+  IF (      use_gpu) CALL newd_gpu()
   !
   ! ... and recalculate the products of the S with the atomic wfcs used 
   ! ... in DFT+Hubbard calculations
   !
-  IF (.NOT. use_gpu) THEN
-    IF ( lda_plus_u  ) CALL orthoUwfc(.FALSE.)
-    IF ( use_wannier ) CALL orthoatwfc( .TRUE. )
-  ELSE
-    IF ( lda_plus_u  ) CALL orthoUwfc_gpu() 
-    IF ( use_wannier ) CALL orthoatwfc_gpu( .TRUE. )
-  ENDIF
+  IF ( lda_plus_u  ) CALL orthoUwfc(.FALSE.)
+  IF ( use_wannier ) CALL orthoatwfc( .TRUE. )
   !
   ! ... The following line forces recalculation of terms used by EXX
   ! ... It is actually needed only in case of variable-cell calculations

@@ -10,4 +10,6 @@ tracevar bz_sum w {
         }
     }
 }
-varset bz_sum -value {}
+postprocess {
+    varset bz_sum -value {}
+}

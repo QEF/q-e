@@ -6,6 +6,154 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------------
+SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
+  !------------------------------------------------------------------------
+  USE kinds,         ONLY: DP
+  USE io_global,     ONLY: ionode, ionode_id, stdout
+  USE control_ph,    ONLY: dftd3_hess
+  USE constants,     ONLY: tpi
+  USE control_lr,    ONLY: lgamma
+  USE dftd3_qe,      ONLY: print_dftd3_hessian
+  USE mp_images,     ONLY: intra_image_comm
+  USE mp,            ONLY: mp_bcast
+
+  IMPLICIT NONE
+
+  REAL(DP), INTENT(IN) :: alat
+  !! cell parameter (celldm(1))
+  INTEGER, INTENT(IN) :: nat
+  !! number of atoms in the unit cell
+  REAL(DP), INTENT(IN) :: at(3,3)
+  !! at(:,i) is lattice vector i in alat units
+  REAL(DP), INTENT(IN) :: q(3)
+  !! wavevector in 2pi/alat units
+  COMPLEX(DP), INTENT(INOUT) :: der2disp(3,nat,3,nat)
+  !! dispersion contribution to the (massless) dynamical matrix
+  ! 
+  INTEGER :: n, nn, nnn, rep(3), nrep, nhess, irep, jrep, krep, irp, jrp, krp
+  INTEGER :: i, j, iat, jat, ixyz, jxyz
+  INTEGER :: iprint
+  CHARACTER(LEN=100) :: string
+  REAL(DP), ALLOCATABLE :: d3hess(:,:,:,:,:,:,:), buffer(:)
+  COMPLEX(DP), ALLOCATABLE :: mmat(:,:,:,:)
+  COMPLEX(DP) :: eiqr, tt(3)
+  LOGICAL :: q_gamma ! whether the Hessian stored in the file has been computed for q=0,0,0 only 
+  ! 
+  if( ionode ) then 
+    !
+    der2disp = (0._dp, 0._dp)
+    !
+    write(stdout,'(/,5x,2A)') 'Reading Grimme-D3 Hessian from file: ', TRIM(dftd3_hess)
+    !
+    ! Reading Hessian from file
+    !
+    OPEN (unit = 1, file = dftd3_hess, status = 'unknown')
+    READ(1, * ) 
+    READ(1, * ) string, rep(1:3), n, nn, q_gamma
+    !
+    ! some consistency checks before allocation
+    IF((q_gamma.eqv..true.) .and. (lgamma.eqv..false.)) THEN
+      Call errore('d2ionq_dispd3', 'The Hessian in the file is only good for q=0,0,0. Recompute it with q_gamma=.false.', 1)
+    ELSE 
+      WRITE( stdout, '(/,5x,A,3I4)') 'Number of cells replicated along each semiaxis: ', rep(1), rep(2), rep(3)
+    END IF
+    !
+    iprint = 1
+    if(q_gamma) iprint = 0
+    !
+    nrep = (2*rep(1)+1) * (2*rep(2)+1) * (2*rep(3)+1)  ! number of unit cells in the supercell 
+    nnn = nat * nrep                                   ! number of atoms in the supercell 
+    nhess = (3 * nat)**2 * nrep                        ! Hessian dimensions
+    IF((n.ne.nat).or.(nn.ne.nnn)) THEN
+      WRITE(stdout, '(/,5x,4I9)' ) nat, n, nn, nnn
+      Call errore('d2ionq_dispd3', 'Wrong cell or supercell size', 1)
+    END IF
+
+    WRITE( stdout, '(5x,A,I9)') 'Number of cells in the supercell: ', nrep 
+    WRITE( stdout, '(5x,A,I9)') 'Number of atoms in the supercell: ', nn  
+    WRITE( stdout, '(5x,A,I9)') 'Hessian allocation dimension: ', nhess 
+
+    ALLOCATE( d3hess(-rep(3):rep(3),-rep(2):rep(2),-rep(1):rep(1), 3,nat,3,nat), buffer(3*nat), mmat(3,nat,3,nat) )
+    IF( size(d3hess) .ne. nhess ) Call errore('d2ionq_dispd3', "Wrong Hessian dimensions", 1)
+    d3hess(:,:,:,:,:,:,:)=0.0_dp
+    !
+    DO irep = -rep(1), rep(1)
+      DO jrep = -rep(2), rep(2)
+        DO krep = -rep(3), rep(3)
+          !
+          READ(1, * ) string,string, string,irp, string,jrp, string,krp
+          IF(irep.ne.irp .or. jrep.ne.jrp .or. krep.ne.krp ) Call errore('d2ionq_dispd3', "Wrong Hessian I/O", 1)
+          !
+          DO i = 1, 3*nat         ! 1 2 3 4 5 6 7 8 9 ... 3*nat
+            iat  = (i+2)/3        ! 1 1 1 2 2 2 3 3 3 ... nat 
+            ixyz = i - 3* (iat-1) ! 1 2 3 1 2 3 1 2 3 ... 3 
+            READ(1, * ) buffer(1:3*nat) 
+            !
+            DO j = 1, 3*nat
+              jat  = (j+2)/3 
+              jxyz = j - 3* (jat-1) 
+              d3hess(krep,jrep,irep,ixyz,iat,jxyz,jat) = buffer(j)
+            END DO 
+            !  
+          END DO 
+          !
+        END DO 
+      END DO 
+    END DO 
+    !
+    CLOSE (1)
+    !
+    DEALLOCATE( buffer) 
+    !
+    write(stdout,'(/,5x,A)') 'Grimme-D3 Hessian read '
+    !
+    ! Computing dynamical matrix 
+    !
+    WRITE(stdout,'(/,5x,A,3f12.6)') 'Computing dynamical matrix for q: ', q(1:3) 
+    !
+    mmat = (0.0_dp, 0.0_dp)
+    DO krep = -rep(3), rep(3)
+      DO jrep = -rep(2), rep(2)
+        DO irep = -rep(1), rep(1)
+          !
+          tt(:) = alat * ( irep * at(:,1) + jrep * at(:,2) + krep * at(:,3) )
+          eiqr = EXP(- tpi * (0_dp,1_dp) * ( q(1)*tt(1)+q(2)*tt(2)+q(3)*tt(3) ) )
+          DO ixyz = 1, 3
+            DO iat = 1, nat
+              DO jxyz = 1, 3
+                DO jat = 1, nat
+                  der2disp(ixyz,iat,jxyz,jat) = der2disp(ixyz,iat,jxyz,jat) &
+                            + d3hess(krep,jrep,irep,ixyz,iat,jxyz,jat) * eiqr
+ 
+                  mmat(ixyz,iat,jxyz,jat) = mmat(ixyz,iat,jxyz,jat) &
+                            + d3hess(krep,jrep,irep,ixyz,iat,jxyz,jat) * eiqr
+                END DO 
+              END DO 
+            END DO 
+          END DO 
+          !
+        END DO 
+      END DO 
+    END DO 
+    !
+    if(q_gamma) then 
+      write(string,'(A)' ) 'true'
+    else
+      write(string,'(A)' ) 'false'
+    end if 
+    CALL print_dftd3_hessian( mmat, n, string )
+    !
+    DEALLOCATE( d3hess, mmat ) 
+    !
+    WRITE(stdout,'(/,5x,A)') 'Dynamical matrix computed'
+    !
+  end if 
+  CALL mp_bcast(der2disp, ionode_id, intra_image_comm)
+  !
+  RETURN
+  !
+END SUBROUTINE d2ionq_dispd3
+!---------------------------------------------------------------------------
 SUBROUTINE d2ionq_disp( alat, nat, ityp, at, bg, tau, q, der2disp )
   !------------------------------------------------------------------------
   !! This routine calculates the XDM contribution to the dynamical matrix.

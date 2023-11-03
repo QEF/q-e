@@ -1,0 +1,69 @@
+&CONTROL
+  calculation='cp'
+  verbosity='medium'
+  restart_mode='from_scratch'
+  nstep=2
+  tstress=.false.
+  tprnfor=.true.
+  dt=20.d0
+  outdir='./out'
+  ndr=50
+  ndw=51
+  iprint=1
+  isave=1
+/
+&SYSTEM
+  ibrav=0
+  nat=8
+  ntyp=1
+  ecutwfc=15.d0
+  ecutrho=70.d0
+  nr1b=10, nr2b=10, nr3b=10
+  occupations='ensemble'
+  degauss=0.02d0 !note that this is in Hartree!!
+  smearing='gaussian'
+  nbnd=16
+/
+&ELECTRONS
+  electron_dynamics='cg'
+  conv_thr=.5d-5
+  maxiter = 75
+  pre_state=.false.     
+  n_inner=2             !number of internal cycles for conjugate gradient iteration
+  niter_cold_restart=1  ! frequency in iterations at which a full inner cycle, only for cold smearing, is performed
+  lambda_cold=0.03      ! step for inner cycle with cold smearing, used when a not full cycle is performed
+/
+&IONS
+  ion_dynamics='verlet'
+  ion_velocities='from_input'
+/
+&CELL
+  cell_dynamics='none'
+/
+ATOMIC_SPECIES
+  Al 26.98 Al.pbe-nl-rrkjus_psl.1.0.0.UPF
+
+ATOMIC_POSITIONS (bohr)
+ Al    0.38638979680975E+01     0.25351466820189E+01     0.17356974571287E+00
+ Al    0.11170084475651E+02     0.24820991267141E+01     0.15045756123243E+00
+ Al    0.36121307652007E+01     0.77949716785593E+01    -0.29876770172640E+00
+ Al    0.11236263095572E+02     0.78334633854816E+01     0.63240544340651E-01
+ Al   -0.34487039977790E-01     0.12335962378173E+00     0.26508904624709E+01
+ Al    0.75132921890052E+01     0.18396126069875E+00     0.26361896205086E+01
+ Al   -0.44299531873588E-01     0.54165860908632E+01     0.25955987272612E+01
+ Al    0.75830107994327E+01     0.53793228264951E+01     0.26120432285539E+01
+ATOMIC_VELOCITIES
+ Al     -0.54185968422100E-04    -0.91086371743559E-04     0.11225351944843E-03
+ Al     -0.14206721794647E-03    -0.82841860221267E-04    -0.16037087804444E-04
+ Al      0.14774563914571E-03    -0.98885048109135E-04    -0.97624743452438E-04
+ Al      0.25453445839662E-03    -0.22434029433772E-05    -0.35144661875216E-04
+ Al      0.15214825983471E-04     0.19250354232461E-04     0.22875179004728E-04
+ Al      0.22230081311983E-04     0.22283422854674E-03     0.25044108439757E-04
+ Al     -0.12110390414974E-03     0.75672869462039E-04     0.22392328996021E-04
+ Al     -0.12236791431932E-03    -0.42700769224023E-04    -0.33758642756781E-04
+
+CELL_PARAMETERS (angstrom)
+7.9200 0.0000 0.0000
+0.0000 5.6003 0.0000
+0.0000 0.0000 2.8000
+ 

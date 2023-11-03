@@ -374,6 +374,29 @@ in pw.x calculation.
 
 
 # ------------------------------------------------------------------------
+help use_gauss_ldos -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>use_gauss_ldos</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+               </li>
+<br><li> <em>Status: </em> OPTIONAL
+               </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true., gaussian broadening (ngauss=0) is used for LDOS calculation.
+
+Defaults .false., in which case the broadening scheme
+of the pw.x calculation will be used.
+               </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help sample_bias -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>sample_bias</b></big>

@@ -71,6 +71,10 @@ SUBROUTINE clean_pw( lflag )
   USE wvfct_gpum,           ONLY : deallocate_wvfct_gpu
   USE scf_gpum,             ONLY : deallocate_scf_gpu
   !
+  USE control_flags,        ONLY : sic, scissor
+  USE sic_mod,              ONLY : deallocate_sic
+  USE sci_mod,              ONLY : deallocate_scissor
+  !
   USE rism_module,          ONLY : deallocate_rism
 #if defined (__ENVIRON)
   USE plugin_flags,         ONLY : use_environ
@@ -161,6 +165,7 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... arrays allocated in init_run.f90 ( and never deallocated )
   !
+  !$acc exit data delete(g2kin)
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
   CALL deallocate_wvfct_gpu()
   IF ( ALLOCATED( et ) )         DEALLOCATE( et )
@@ -212,6 +217,9 @@ SUBROUTINE clean_pw( lflag )
   !
   CALL deallocate_exx() 
   !
+  IF(sic) CALL deallocate_sic()
+  IF(scissor) CALL deallocate_scissor()
+  !
   IF (ts_vdw .or. mbd_vdw) CALL tsvdw_finalize()
   IF (mbd_vdw) CALL clean_mbd()
   !
@@ -219,10 +227,13 @@ SUBROUTINE clean_pw( lflag )
   !
   CALL deallocate_rism( lflag )
   !
+#if defined (__LEGACY_PLUGINS) 
   CALL plugin_clean( 'PW', lflag )
+#endif 
 #if defined (__ENVIRON)
   IF (use_environ) CALL clean_environ('PW', lflag)
 #endif
+  CALL   plugin_clean('PW', lflag) 
   !
   RETURN
   !

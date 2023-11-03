@@ -46,17 +46,21 @@ SUBROUTINE cft_wave (ik, evc_g, evc_r, isw)
 
   CALL start_clock ('cft_wave')
 
+  !$acc data present(igk_k)
+
   IF (isw == 1) THEN
      ikk = ikks(ik) ! points to k+G indices
      npw = ngk(ikk) 
      CALL invfft_wave (npw, igk_k (1,ikk), evc_g, evc_r )
- ELSE IF (isw == -1) then
+  ELSE IF (isw == -1) then
      ikq = ikqs(ik) ! points to k+q+G indices
      npwq= ngk(ikq)
      CALL fwfft_wave (npwq, igk_k (1,ikq), evc_g, evc_r )
   ELSE
      CALL  errore ('cft_wave',' Wrong value for isw',1)
   ENDIF
+
+  !$acc end data
  
   CALL stop_clock ('cft_wave')
  
@@ -75,18 +79,39 @@ SUBROUTINE fwfft_wave (npwq, igkq, evc_g, evc_r )
   INTEGER, INTENT(IN) :: npwq, igkq(npwq)
   COMPLEX(DP), INTENT(INOUT) :: evc_g (npwx*npol), evc_r (dffts%nnr,npol)
   !
-  INTEGER :: ig
+  INTEGER :: ig, ik
 
+#if defined(__CUDA) && defined(_OPENACC)
+  INTEGER, POINTER, DEVICE :: nl(:)
+  nl => dffts%nl_d
+#else
+  INTEGER, ALLOCATABLE :: nl(:)
+  ALLOCATE( nl(dffts%ngm) )
+  nl = dffts%nl
+#endif
+
+  !$acc host_data use_device(evc_r)
   CALL fwfft ('Wave', evc_r(:,1), dffts)
+  !$acc end host_data
+  !$acc parallel loop private(ik)
   DO ig = 1, npwq
-     evc_g (ig) = evc_g (ig) + evc_r (dffts%nl (igkq(ig) ), 1 )
+     ik = nl(igkq(ig))
+     evc_g (ig) = evc_g (ig) + evc_r (ik,1)
   ENDDO
   IF (noncolin) THEN
+     !$acc host_data use_device(evc_r)
      CALL fwfft ('Wave', evc_r(:,2), dffts)
+     !$acc end host_data
+     !$acc parallel loop private(ik) 
      DO ig = 1, npwq
-        evc_g (ig+npwx) = evc_g (ig+npwx) + evc_r (dffts%nl(igkq(ig)),2)
+        ik = nl(igkq(ig))
+        evc_g (ig+npwx) = evc_g (ig+npwx) + evc_r (ik,2)
      ENDDO
   ENDIF
+
+#if !defined(__CUDA) || !defined(_OPENACC)
+  DEALLOCATE(nl)
+#endif
 END SUBROUTINE fwfft_wave
 
 SUBROUTINE invfft_wave (npw, igk, evc_g, evc_r )
@@ -101,20 +126,42 @@ SUBROUTINE invfft_wave (npw, igk, evc_g, evc_r )
   COMPLEX(DP), INTENT(IN) :: evc_g (npwx*npol)
   COMPLEX(DP), INTENT(OUT):: evc_r (dffts%nnr,npol)
   !
-  INTEGER :: ig
-  
-  evc_r = (0.0_dp, 0.0_dp)
+  INTEGER :: ig, ik
+
+#if defined(__CUDA) && defined(_OPENACC)
+  INTEGER, POINTER, DEVICE :: nl(:)
+  nl => dffts%nl_d
+#else
+  INTEGER, ALLOCATABLE :: nl(:)
+  ALLOCATE( nl(dffts%ngm) )
+  nl = dffts%nl
+#endif
+
+  !$acc kernels
+  evc_r(:,:) = (0.0_dp, 0.0_dp)
+  !$acc end kernels
+  !$acc parallel loop private(ik)
   DO ig = 1, npw
-     evc_r (dffts%nl (igk(ig) ),1 ) = evc_g (ig)
+     ik = nl(igk(ig))
+     evc_r (ik, 1) = evc_g (ig)
   ENDDO
+  !$acc host_data use_device(evc_r)
   CALL invfft ('Wave', evc_r(:,1), dffts)
+  !$acc end host_data
   IF (noncolin) THEN
+     !$acc parallel loop private(ik)
      DO ig = 1, npw
-        evc_r (dffts%nl(igk(ig)),2) = evc_g (ig+npwx)
+        ik = nl(igk(ig))
+        evc_r (ik, 2) = evc_g (ig+npwx)
      ENDDO
+     !$acc host_data use_device(evc_r)
      CALL invfft ('Wave', evc_r(:,2), dffts)
+     !$acc end host_data
   ENDIF
 
+#if !defined(__CUDA) || !defined(_OPENACC)
+  DEALLOCATE(nl)
+#endif
 END SUBROUTINE invfft_wave
 !
 !-----------------------------------------------------------------------
